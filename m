@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAC0ualH183646 for <xfs@oss.sgi.com>; Sun, 11 Nov 2012 18:56:36 -0600
+	qAC29um5187017 for <xfs@oss.sgi.com>; Sun, 11 Nov 2012 20:09:56 -0600
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	QEGYTycxQTK4EzOf for <xfs@oss.sgi.com>;
-	Sun, 11 Nov 2012 16:58:36 -0800 (PST)
-Received: from dave by dastard with local (Exim 4.76)
-	(envelope-from <david@fromorbit.com>) id 1TXiMF-00040Z-AR
-	for xfs@oss.sgi.com; Mon, 12 Nov 2012 11:58:35 +1100
-Date: Mon, 12 Nov 2012 11:58:35 +1100
+	R8Hiro8lNfM21bVy for <xfs@oss.sgi.com>;
+	Sun, 11 Nov 2012 18:11:56 -0800 (PST)
+Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1TXjVC-00047h-5j
+	for xfs@oss.sgi.com; Mon, 12 Nov 2012 13:11:54 +1100
+Received: from dave by disappointment with local (Exim 4.80)
+	(envelope-from <dave@disappointment.disaster>) id 1TXjV7-0007iM-1L
+	for xfs@oss.sgi.com; Mon, 12 Nov 2012 13:11:49 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: fix broken error handling in xfs_vm_writepage
-Message-ID: <20121112005835.GP24575@dastard>
-References: <1352681350-28541-1-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1352681350-28541-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH] xfs: drop buffer io reference when a bad bio is built
+Date: Mon, 12 Nov 2012 13:11:48 +1100
+Message-Id: <1352686309-29624-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,59 +24,76 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-On Mon, Nov 12, 2012 at 11:49:10AM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> When we shut down the filesystem, it might first be detected in
-> writeback when we are allocating a inode size transaction. This
-> happens after we have moved all the pages into the writeback state
-> and unlocked them. Unfortunately, if we fail to set up the
-> transaction we then abort writeback and try to invalidate the
-> current page. This then triggers are BUG() in block_invalidatepage()
-> because we are trying to invalidate an unlocked page.
+From: Dave Chinner <dchinner@redhat.com>
 
-FWIW, I found this problem when testing recovery of wrapped log
-buffers. The test:
+Error handling in xfs_buf_ioapply_map() does not handle IO reference
+counts correctly. We increment the b_io_remaining count before
+building the bio, but then fail to decrement it in the failure case.
+This leads to the buffer never running IO completion and releasing
+the reference that the IO holds, so at unmount we can leak the
+buffer. This leak is captured by this assert failure during unmount:
 
-$ cat t.sh
-#!/bin/bash
+XFS: Assertion failed: atomic_read(&pag->pag_ref) == 0, file: fs/xfs/xfs_mount.c, line: 273
 
-while [ 1 ]; do
-        mkfs.xfs -f /dev/vdb > /dev/null 2>&1
-        mount /dev/vdb /mnt/scratch
-        ./compilebench -D /mnt/scratch > /dev/null 2>&1 &
-        sleep 36
-        /home/dave/src/xfstests-dev/src/godown /mnt/scratch
-        sleep 5
-        umount /mnt/scratch
-        xfs_logprint -d /dev/vdb |grep -B 1 "^\["
-        mount /dev/vdb /mnt/scratch
-        umount /mnt/scratch
-done
+This is not a new bug - the b_io_remaining accounting has had this
+problem for a long, long time - it's just very hard to get a
+zero length bio being built by this code...
 
-would fail after 3-4 iterations due to the BUG() in
-block_invalidatepage().  This fix has been running that loop for 2
-hours now, so it's gone through over a hundred iterations without
-failing now - it takes about 45s an iteration to run. Note that this
-is also exercising the wrapped log buffer recovery fix on every
-iteration, too.... :)
+Further, the buffer IO error can be overwritten on a multi-segment
+buffer by subsequent bio completions for partial sections of the
+buffer. Hence we should only set the buffer error status if the
+buffer is not already carrying an error status. This ensures that a
+partial IO error on a multi-segment buffer will not be lost. This
+part of the problem is a regression, however.
 
-And FWIW, this probably should have a cc: <stable@vger.kernel.org>
-on it as well, as it is a recent regression that turns a shutdown
-into hard failure....
+cc: <stable@vger.kernel.org>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_buf.c |   14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
 
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index aacd017..26673a0 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1210,9 +1210,14 @@ xfs_buf_bio_end_io(
+ {
+ 	xfs_buf_t		*bp = (xfs_buf_t *)bio->bi_private;
+ 
+-	xfs_buf_ioerror(bp, -error);
++	/*
++	 * don't overwrite existing errors - otherwise we can lose errors on
++	 * buffers that require multiple bios to complete.
++	 */
++	if (!bp->b_error)
++		xfs_buf_ioerror(bp, -error);
+ 
+-	if (!error && xfs_buf_is_vmapped(bp) && (bp->b_flags & XBF_READ))
++	if (!bp->b_error && xfs_buf_is_vmapped(bp) && (bp->b_flags & XBF_READ))
+ 		invalidate_kernel_vmap_range(bp->b_addr, xfs_buf_vmap_len(bp));
+ 
+ 	_xfs_buf_ioend(bp, 1);
+@@ -1292,6 +1297,11 @@ next_chunk:
+ 		if (size)
+ 			goto next_chunk;
+ 	} else {
++		/*
++		 * This is guaranteed not to be the last io reference count
++		 * because the caller (xfs_buf_iorequest) holds a count itself.
++		 */
++		atomic_dec(&bp->b_io_remaining);
+ 		xfs_buf_ioerror(bp, EIO);
+ 		bio_put(bio);
+ 	}
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.10
 
 _______________________________________________
 xfs mailing list
