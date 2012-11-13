@@ -1,15 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qADEPYJb093406 for <xfs@oss.sgi.com>; Tue, 13 Nov 2012 08:25:34 -0600
-Message-ID: <50A258D6.8070606@sgi.com>
-Date: Tue, 13 Nov 2012 08:27:34 -0600
-From: Mark Tinguely <tinguely@sgi.com>
+	qADFEgLD099487 for <xfs@oss.sgi.com>; Tue, 13 Nov 2012 09:14:42 -0600
+Received: from mail-la0-f53.google.com (mail-la0-f53.google.com
+	[209.85.215.53]) by cuda.sgi.com with ESMTP id JNEnmlC4lnaiv60Q
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 13 Nov 2012 07:16:45 -0800 (PST)
+Received: by mail-la0-f53.google.com with SMTP id w12so3220703lag.26
+	for <xfs@oss.sgi.com>; Tue, 13 Nov 2012 07:16:43 -0800 (PST)
 MIME-Version: 1.0
-Subject: Re: [PATCH 2/3] xfs: fix broken error handling in xfs_vm_writepage
-References: <1352718586-3538-1-git-send-email-david@fromorbit.com>
-	<1352718586-3538-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1352718586-3538-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <20121113023207.GZ9783@sgi.com>
+References: <CACnwZYd2kPaK1urLYc8BBuuqD7_Oo1oF+KvqWYj7DAEGy6grHQ@mail.gmail.com>
+	<20121113015318.GD25039@dastard>
+	<CACnwZYeutkdb+=yYx8XcXHSDhaP6QBjgn1BEnGAMYDO7biAtFw@mail.gmail.com>
+	<20121113023207.GZ9783@sgi.com>
+Date: Tue, 13 Nov 2012 13:16:43 -0200
+Message-ID: <CACnwZYfVXmy74Fpn0eqa63Zgc89fP9BPoRxXf-=_MhENddjnSw@mail.gmail.com>
+Subject: Re: xfs: Remove boolean_t typedef completely.
+From: Thiago Farina <tfransosi@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,55 +26,39 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: Alex Elder <elder@kernel.org>, xfs@oss.sgi.com
 
-On 11/12/12 05:09, Dave Chinner wrote:
-> From: Dave Chinner<dchinner@redhat.com>
->
-> When we shut down the filesystem, it might first be detected in
-> writeback when we are allocating a inode size transaction. This
-> happens after we have moved all the pages into the writeback state
-> and unlocked them. Unfortunately, if we fail to set up the
-> transaction we then abort writeback and try to invalidate the
-> current page. This then triggers are BUG() in block_invalidatepage()
-> because we are trying to invalidate an unlocked page.
->
-> Fixing this is a bit of a chicken and egg problem - we can't
-> allocate the transaction until we've clustered all the pages into
-> the IO and we know the size of it (i.e. whether the last block of
-> the IO is beyond the current EOF or not). However, we don't want to
-> hold pages locked for long periods of time, especially while we lock
-> other pages to cluster them into the write.
->
-> To fix this, we need to make a clear delineation in writeback where
-> errors can only be handled by IO completion processing. That is,
-> once we have marked a page for writeback and unlocked it, we have to
-> report errors via IO completion because we've already started the
-> IO. We may not have submitted any IO, but we've changed the page
-> state to indicate that it is under IO so we must now use the IO
-> completion path to report errors.
->
-> To do this, add an error field to xfs_submit_ioend() to pass it the
-> error that occurred during the building on the ioend chain. When
-> this is non-zero, mark each ioend with the error and call
-> xfs_finish_ioend() directly rather than building bios. This will
-> immediately push the ioends through completion processing with the
-> error that has occurred.
->
-> Signed-off-by: Dave Chinner<dchinner@redhat.com>
-> ---
+On Tue, Nov 13, 2012 at 12:32 AM, Ben Myers <bpm@sgi.com> wrote:
+>> >> > Also, can you please place patches in line rather than attaching
+>> >> > them. Attaching them means they cannot be quoted in reply. See
+>> >> > Documentation/SubmittingPatches and Documentation/email-clients.txt
+>> >> > for guidelines.
+None of these docs say anything about send-email.
 
-I could not recreate the problem with my test machines, which is not
-surprising - it is a matter of timing.
+>> > It's still attached as a base64 encoded attachment, not as inline
+>> > text....
+>> >
+>> Yep, sorry about that. Is just a text file from $(git format-patch master);
+>
+> If you don't mind another try...
+No, thanks. It's too painful to use git send-email, the patch is
+attached, if you want to take it, then fine, if not then it's fine too
+:)
 
-The patch looks sound to me.
+> it would be helpful if you could resend the
+> patch inline.  It helps to facilitate a discussion of the patch along with your
+> text should it be necessary.
+>
+> You're only touching xfs, so you can drop linux-kernel if you want.
+>
+Dropped linux-kernel
 
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+Thanks,
 
 _______________________________________________
 xfs mailing list
