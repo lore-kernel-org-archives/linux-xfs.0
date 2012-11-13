@@ -1,19 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qADFMxNt101260 for <xfs@oss.sgi.com>; Tue, 13 Nov 2012 09:22:59 -0600
-Date: Tue, 13 Nov 2012 09:24:59 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: xfs: Remove boolean_t typedef completely.
-Message-ID: <20121113152459.GW31970@sgi.com>
-References: <CACnwZYd2kPaK1urLYc8BBuuqD7_Oo1oF+KvqWYj7DAEGy6grHQ@mail.gmail.com>
-	<20121113015318.GD25039@dastard>
-	<CACnwZYeutkdb+=yYx8XcXHSDhaP6QBjgn1BEnGAMYDO7biAtFw@mail.gmail.com>
-	<20121113023207.GZ9783@sgi.com>
-	<CACnwZYfVXmy74Fpn0eqa63Zgc89fP9BPoRxXf-=_MhENddjnSw@mail.gmail.com>
+	qADHhUsQ109200 for <xfs@oss.sgi.com>; Tue, 13 Nov 2012 11:43:30 -0600
+Message-ID: <50A2873A.8080707@sgi.com>
+Date: Tue, 13 Nov 2012 11:45:30 -0600
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CACnwZYfVXmy74Fpn0eqa63Zgc89fP9BPoRxXf-=_MhENddjnSw@mail.gmail.com>
+Subject: Re: [PATCH 1/2] xfs_db: flush devices before exiting
+References: <1352444578-14600-1-git-send-email-david@fromorbit.com>
+	<1352444578-14600-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1352444578-14600-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,41 +18,40 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Thiago Farina <tfransosi@gmail.com>
-Cc: Alex Elder <elder@kernel.org>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Hey Thiago,
+On 11/09/12 01:02, Dave Chinner wrote:
+> From: Dave Chinner<dchinner@redhat.com>
+>
+> Test 287 uses xfs_db to change 32-bit project ID support while the
+> filesystem is unmounted. On a large filesystem the test was failing
+> due to the mount not seeing the feature bit in the superblock.
+>
+> xfs_db uses a different address space to the filesystem when it is
+> mounte dby the kernel, so the only way to keep them coherent is to
+> ensure that all buffered data is written to disk before the other
+> entity tries to read it. xfs_db uses buffered IO, but does not close
+> the devices when it exits, thereby leaving changes it has written in
+> the block device cache rather than on disk. Hence when th ekernel
+> tries to mount the filesystem, it reads what is on disk and does not
+> see xfs_db's changes.
+>
+> Fix this by ensuring that xfs_db flushes it's changes to disk before
+> it exits by caling libxfs_device_close(). This fsyncs the data and
+> flushes the caches to ensure that it is present on disk before
+> xfs_db exits.
+>
+> Signed-off-by: Dave Chinner<dchinner@redhat.com>
+> ---
 
-On Tue, Nov 13, 2012 at 01:16:43PM -0200, Thiago Farina wrote:
-> On Tue, Nov 13, 2012 at 12:32 AM, Ben Myers <bpm@sgi.com> wrote:
-> >> >> > Also, can you please place patches in line rather than attaching
-> >> >> > them. Attaching them means they cannot be quoted in reply. See
-> >> >> > Documentation/SubmittingPatches and Documentation/email-clients.txt
-> >> >> > for guidelines.
-> None of these docs say anything about send-email.
-> 
-> >> > It's still attached as a base64 encoded attachment, not as inline
-> >> > text....
-> >> >
-> >> Yep, sorry about that. Is just a text file from $(git format-patch master);
-> >
-> > If you don't mind another try...
-> No, thanks. It's too painful to use git send-email, the patch is
-> attached, if you want to take it, then fine, if not then it's fine too
-> :)
+Looks good. Consistent to mkfs.xfs and xfs_repair.
 
-Ok then, no problem.  I can make an accomodation.  Thanks for the patch!  :)
-
-FYI, there are other options than git send-email that work fine too.  Plenty of
-folks are using 'quilt mail' and that is fairly painless.  I suggest you take a
-peek at that if you're going to post on a regular basis.
-
-Thanks again,
-Ben
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
