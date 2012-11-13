@@ -1,22 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qADJmP2r120238 for <xfs@oss.sgi.com>; Tue, 13 Nov 2012 13:48:25 -0600
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	8TCqWpGGwwqdtxwX for <xfs@oss.sgi.com>;
-	Tue, 13 Nov 2012 11:50:28 -0800 (PST)
-Date: Wed, 14 Nov 2012 06:50:26 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Slow performance after ~4.5TB
-Message-ID: <20121113195026.GH25039@dastard>
-References: <50A0AFD5.2020607@iv.lt> <20121112090448.GS24575@dastard>
-	<50A0C590.6020602@iv.lt> <20121112123222.GT24575@dastard>
-	<50A10077.2060908@iv.lt> <20121112223623.GV24575@dastard>
-	<50A20F53.80405@iv.lt>
+	qADKMGNj142006 for <xfs@oss.sgi.com>; Tue, 13 Nov 2012 14:22:16 -0600
+Message-ID: <50A2AC73.7060307@sgi.com>
+Date: Tue, 13 Nov 2012 14:24:19 -0600
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <50A20F53.80405@iv.lt>
+Subject: Re: [PATCH 2/3] xfstests: remove unused conditional NO_XFS
+References: <20121109132358.256359544@sgi.com>
+	<20121109132714.002714897@sgi.com>
+In-Reply-To: <20121109132714.002714897@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,26 +18,29 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Linas Jankauskas <linas.j@iv.lt>
+To: rjohnston@sgi.com
 Cc: xfs@oss.sgi.com
 
-On Tue, Nov 13, 2012 at 11:13:55AM +0200, Linas Jankauskas wrote:
-> trace-cmd output was about 300mb, so im pasting first 100 lines of
-> it, is it enough?:
+On 11/09/12 07:24, rjohnston@sgi.com wrote:
+> This patch removes the unused conditional NO_XFS which was added with
+> commit 332ee29d1ab7a8690ca8f6d06b0d116e3a4a4f0f:
+>    "xfstests updates - rework build to be like other xfs packages ..."
+>
+> Signed-off-by: Rich Johnston<rjohnston@sgi.com>
+>
+> ---
+>   ltp/doio.c      |   70 --------------------------------------------------------
+>   ltp/growfiles.c |   20 ----------------
+>   ltp/iogen.c     |   30 ------------------------
+>   3 files changed, 120 deletions(-)
 
-Not, compress it (it'll compress well) and post a link for me to
-download or send it directly to me.
+Looks good.
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
