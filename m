@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAD0YIiP001818 for <xfs@oss.sgi.com>; Mon, 12 Nov 2012 18:34:18 -0600
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id 43yC1sEiFEBLPEpw (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 12 Nov 2012 16:36:18 -0800 (PST)
-Received: from relay2.suse.de (unknown [195.135.220.254])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mx2.suse.de (Postfix) with ESMTP id 36153A3E1C
-	for <xfs@oss.sgi.com>; Tue, 13 Nov 2012 01:36:17 +0100 (CET)
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH] xfs: Don't flush inodes when project quota exceeded
-Date: Tue, 13 Nov 2012 01:36:13 +0100
-Message-Id: <1352766973-14197-1-git-send-email-jack@suse.cz>
+	qAD0Yl7S001894 for <xfs@oss.sgi.com>; Mon, 12 Nov 2012 18:34:47 -0600
+Received: from mail-lb0-f181.google.com (mail-lb0-f181.google.com
+	[209.85.217.181]) by cuda.sgi.com with ESMTP id
+	5YWXrGfJoAbqseeD (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 12 Nov 2012 16:36:49 -0800 (PST)
+Received: by mail-lb0-f181.google.com with SMTP id ge1so1283920lbb.26
+	for <xfs@oss.sgi.com>; Mon, 12 Nov 2012 16:36:47 -0800 (PST)
+MIME-Version: 1.0
+Date: Mon, 12 Nov 2012 22:36:47 -0200
+Message-ID: <CACnwZYd2kPaK1urLYc8BBuuqD7_Oo1oF+KvqWYj7DAEGy6grHQ@mail.gmail.com>
+Subject: xfs: Remove boolean_t typedef completely.
+From: Thiago Farina <tfransosi@gmail.com>
+Content-Type: multipart/mixed; boundary=f46d04016d4df49e3204ce559c45
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,223 +23,165 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Jan Kara <jack@suse.cz>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Ben Myers <bpm@sgi.com>, Alex Elder <elder@kernel.org>, linux list <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-When project quota gets exceeded xfs_iomap_write_delay() ends up flushing
-inodes because ENOSPC gets returned from xfs_bmapi_delay() instead of EDQUOT.
-This makes handling of writes over project quota rather slow as a simple test
-program shows:
-	fd = open(argv[1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
-	for (i = 0; i < 50000; i++)
-		pwrite(fd, buf, 4096, i*4096);
+--f46d04016d4df49e3204ce559c45
+Content-Type: text/plain; charset=UTF-8
 
-Writing 200 MB like this into a directory with 100 MB project quota takes
-around 6 minutes while it takes about 2 seconds with this patch applied. This
-actually happens in a real world load when nfs pushes data into a directory
-which is over project quota.
+On Mon, Nov 12, 2012 at 10:24 PM, Dave Chinner <david@fromorbit.com> wrote:
+> On Mon, Nov 12, 2012 at 09:36:17PM -0200, Thiago Farina wrote:
+>> Hi,
+>>
+>> Please, take a look.
+>>
+>> Patch attached.
+>
+> It's a good start for a cleanup, but there's no point in removing
+> the boolean_t from one file and then not removing it from the rest
+> of the XFS code.  It's only used in a handful of places, so just
+> remove it completely.
+>
+Done.
 
-Fix the problem by replacing XFS_QMOPT_ENOSPC flag with XFS_QMOPT_EPDQUOT.
-That makes xfs_trans_reserve_quota_bydquots() return new error EPDQUOT when
-project quota is exceeded. xfs_bmapi_delay() then uses this flag so that
-xfs_iomap_write_delay() can distinguish real ENOSPC (requiring flushing)
-from exceeded project quota (not requiring flushing).
+Please, take another look.
 
-As a side effect this patch fixes inconsistency where e.g. xfs_create()
-returned EDQUOT even when project quota was exceeded.
+> Also, can you please place patches in line rather than attaching
+> them. Attaching them means they cannot be quoted in reply. See
+> Documentation/SubmittingPatches and Documentation/email-clients.txt
+> for guidelines.
+>
+Sorry, patch attached.
 
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/xfs/xfs_bmap.c        |    3 ++-
- fs/xfs/xfs_iomap.c       |    8 ++++++--
- fs/xfs/xfs_linux.h       |    1 +
- fs/xfs/xfs_qm.c          |   13 +++++--------
- fs/xfs/xfs_quota.h       |    2 +-
- fs/xfs/xfs_trans_dquot.c |   18 +++++++++---------
- 6 files changed, 24 insertions(+), 21 deletions(-)
+Thanks,
 
-diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-index 848ffa7..027398f 100644
---- a/fs/xfs/xfs_bmap.c
-+++ b/fs/xfs/xfs_bmap.c
-@@ -4471,7 +4471,8 @@ xfs_bmapi_reserve_delalloc(
- 	 * allocated blocks already inside this loop.
- 	 */
- 	error = xfs_trans_reserve_quota_nblks(NULL, ip, (long)alen, 0,
--			rt ? XFS_QMOPT_RES_RTBLKS : XFS_QMOPT_RES_REGBLKS);
-+			XFS_QMOPT_EPDQUOT |
-+			(rt ? XFS_QMOPT_RES_RTBLKS : XFS_QMOPT_RES_REGBLKS));
- 	if (error)
- 		return error;
- 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 973dff6..86e8016 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -428,6 +428,7 @@ retry:
- 	case 0:
- 	case ENOSPC:
- 	case EDQUOT:
-+	case EPDQUOT:
- 		break;
- 	default:
- 		return XFS_ERROR(error);
-@@ -441,8 +442,11 @@ retry:
- 	 */
- 	if (nimaps == 0) {
- 		trace_xfs_delalloc_enospc(ip, offset, count);
--		if (flushed)
--			return XFS_ERROR(error ? error : ENOSPC);
-+		if (flushed) {
-+			if (error == 0 || error == EPDQUOT)
-+				error = ENOSPC;
-+			return XFS_ERROR(error);
-+		}
- 
- 		if (error == ENOSPC) {
- 			xfs_iunlock(ip, XFS_ILOCK_EXCL);
-diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-index 828662f..31368df 100644
---- a/fs/xfs/xfs_linux.h
-+++ b/fs/xfs/xfs_linux.h
-@@ -145,6 +145,7 @@
- #define ENOATTR		ENODATA		/* Attribute not found */
- #define EWRONGFS	EINVAL		/* Mount with wrong filesystem type */
- #define EFSCORRUPTED	EUCLEAN		/* Filesystem is corrupted */
-+#define EPDQUOT		EXFULL		/* Project quota exceeded */
- 
- #define SYNCHRONIZE()	barrier()
- #define __return_address __builtin_return_address(0)
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index 2e86fa0..99ace03 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -1790,7 +1790,7 @@ xfs_qm_vop_chown_reserve(
- 	uint		flags)
- {
- 	xfs_mount_t	*mp = ip->i_mount;
--	uint		delblks, blkflags, prjflags = 0;
-+	uint		delblks, blkflags;
- 	xfs_dquot_t	*unresudq, *unresgdq, *delblksudq, *delblksgdq;
- 	int		error;
- 
-@@ -1817,11 +1817,8 @@ xfs_qm_vop_chown_reserve(
- 		}
- 	}
- 	if (XFS_IS_OQUOTA_ON(ip->i_mount) && gdqp) {
--		if (XFS_IS_PQUOTA_ON(ip->i_mount) &&
--		     xfs_get_projid(ip) != be32_to_cpu(gdqp->q_core.d_id))
--			prjflags = XFS_QMOPT_ENOSPC;
--
--		if (prjflags ||
-+		if ((XFS_IS_PQUOTA_ON(ip->i_mount) &&
-+		     xfs_get_projid(ip) != be32_to_cpu(gdqp->q_core.d_id)) ||
- 		    (XFS_IS_GQUOTA_ON(ip->i_mount) &&
- 		     ip->i_d.di_gid != be32_to_cpu(gdqp->q_core.d_id))) {
- 			delblksgdq = gdqp;
-@@ -1834,7 +1831,7 @@ xfs_qm_vop_chown_reserve(
- 
- 	if ((error = xfs_trans_reserve_quota_bydquots(tp, ip->i_mount,
- 				delblksudq, delblksgdq, ip->i_d.di_nblocks, 1,
--				flags | blkflags | prjflags)))
-+				flags | blkflags)))
- 		return (error);
- 
- 	/*
-@@ -1851,7 +1848,7 @@ xfs_qm_vop_chown_reserve(
- 		ASSERT(unresudq || unresgdq);
- 		if ((error = xfs_trans_reserve_quota_bydquots(NULL, ip->i_mount,
- 				delblksudq, delblksgdq, (xfs_qcnt_t)delblks, 0,
--				flags | blkflags | prjflags)))
-+				flags | blkflags)))
- 			return (error);
- 		xfs_trans_reserve_quota_bydquots(NULL, ip->i_mount,
- 				unresudq, unresgdq, -((xfs_qcnt_t)delblks), 0,
-diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
-index b50ec5b..264b455 100644
---- a/fs/xfs/xfs_quota.h
-+++ b/fs/xfs/xfs_quota.h
-@@ -203,7 +203,7 @@ typedef struct xfs_qoff_logformat {
- #define XFS_QMOPT_DOWARN        0x0000400 /* increase warning cnt if needed */
- #define XFS_QMOPT_DQREPAIR	0x0001000 /* repair dquot if damaged */
- #define XFS_QMOPT_GQUOTA	0x0002000 /* group dquot requested */
--#define XFS_QMOPT_ENOSPC	0x0004000 /* enospc instead of edquot (prj) */
-+#define XFS_QMOPT_EPDQUOT	0x0004000 /* return EPDQUOT when project quota exceeded */
- 
- /*
-  * flags to xfs_trans_mod_dquot to indicate which field needs to be
-diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
-index 0c7fa54..27acce3 100644
---- a/fs/xfs/xfs_trans_dquot.c
-+++ b/fs/xfs/xfs_trans_dquot.c
-@@ -728,8 +728,6 @@ xfs_trans_dqresv(
- 
- error_return:
- 	xfs_dqunlock(dqp);
--	if (flags & XFS_QMOPT_ENOSPC)
--		return ENOSPC;
- 	return EDQUOT;
- }
- 
-@@ -741,7 +739,6 @@ error_return:
-  * approach.
-  *
-  * flags = XFS_QMOPT_FORCE_RES evades limit enforcement. Used by chown.
-- *	   XFS_QMOPT_ENOSPC returns ENOSPC not EDQUOT.  Used by pquota.
-  *	   XFS_TRANS_DQ_RES_BLKS reserves regular disk blocks
-  *	   XFS_TRANS_DQ_RES_RTBLKS reserves realtime disk blocks
-  * dquots are unlocked on return, if they were not locked by caller.
-@@ -767,8 +764,7 @@ xfs_trans_reserve_quota_bydquots(
- 	ASSERT(flags & XFS_QMOPT_RESBLK_MASK);
- 
- 	if (udqp) {
--		error = xfs_trans_dqresv(tp, mp, udqp, nblks, ninos,
--					(flags & ~XFS_QMOPT_ENOSPC));
-+		error = xfs_trans_dqresv(tp, mp, udqp, nblks, ninos, flags);
- 		if (error)
- 			return error;
- 		resvd = 1;
-@@ -785,6 +781,12 @@ xfs_trans_reserve_quota_bydquots(
- 				xfs_trans_dqresv(tp, mp, udqp,
- 						 -nblks, -ninos, flags);
- 			}
-+			if (error == EDQUOT && XFS_IS_PQUOTA_ON(mp)) {
-+				if (flags & XFS_QMOPT_EPDQUOT)
-+					error = EPDQUOT;
-+				else
-+					error = ENOSPC;
-+			}
- 			return error;
- 		}
- 	}
-@@ -813,16 +815,14 @@ xfs_trans_reserve_quota_nblks(
- 
- 	if (!XFS_IS_QUOTA_RUNNING(mp) || !XFS_IS_QUOTA_ON(mp))
- 		return 0;
--	if (XFS_IS_PQUOTA_ON(mp))
--		flags |= XFS_QMOPT_ENOSPC;
- 
- 	ASSERT(ip->i_ino != mp->m_sb.sb_uquotino);
- 	ASSERT(ip->i_ino != mp->m_sb.sb_gquotino);
- 
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
--	ASSERT((flags & ~(XFS_QMOPT_FORCE_RES | XFS_QMOPT_ENOSPC)) ==
-+	ASSERT((flags & ~(XFS_QMOPT_FORCE_RES | XFS_QMOPT_EPDQUOT)) ==
- 				XFS_TRANS_DQ_RES_RTBLKS ||
--	       (flags & ~(XFS_QMOPT_FORCE_RES | XFS_QMOPT_ENOSPC)) ==
-+	       (flags & ~(XFS_QMOPT_FORCE_RES | XFS_QMOPT_EPDQUOT)) ==
- 				XFS_TRANS_DQ_RES_BLKS);
- 
- 	/*
--- 
-1.7.1
+--f46d04016d4df49e3204ce559c45
+Content-Type: application/octet-stream;
+	name="0001-xfs-Remove-boolean_t-typedef-completely.patch"
+Content-Disposition: attachment;
+	filename="0001-xfs-Remove-boolean_t-typedef-completely.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_h9gaj30w0
+
+RnJvbSAzODUyYWYwZmY4ZDY4NGRjMDQ5NDNjZmI3YjI4Njk2NGRjODMwNjQwIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBUaGlhZ28gRmFyaW5hIDx0ZmFyaW5hQGNocm9taXVtLm9yZz4K
+RGF0ZTogTW9uLCAxMiBOb3YgMjAxMiAyMTozMjo1OSAtMDIwMApTdWJqZWN0OiBbUEFUQ0hdIHhm
+czogUmVtb3ZlIGJvb2xlYW5fdCB0eXBlZGVmIGNvbXBsZXRlbHkuCgpTaW5jZSB3ZSBhcmUgdXNp
+bmcgQzk5IHdlIGhhdmUgb25lIGJ1aWx0aW4gZGVmaW5lZCBpbiBpbmNsdWRlL2xpbnV4L3R5cGVz
+LmgsCnVzZSB0aGF0IGluc3RlYWQuCgpTaWduZWQtb2ZmLWJ5OiBUaGlhZ28gRmFyaW5hIDx0ZmFy
+aW5hQGNocm9taXVtLm9yZz4KLS0tCiBmcy94ZnMveGZzX2xvZy5jICAgICAgICAgfCAgOCArKysr
+LS0tLQogZnMveGZzL3hmc19xbV9zeXNjYWxscy5jIHwgIDggKysrKy0tLS0KIGZzL3hmcy94ZnNf
+dHJhbnNfZHF1b3QuYyB8IDEwICsrKysrLS0tLS0KIGZzL3hmcy94ZnNfdHlwZXMuaCAgICAgICB8
+ICAxIC0KIGZzL3hmcy94ZnNfdm5vZGVvcHMuYyAgICB8IDEyICsrKysrKy0tLS0tLQogNSBmaWxl
+cyBjaGFuZ2VkLCAxOSBpbnNlcnRpb25zKCspLCAyMCBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQg
+YS9mcy94ZnMveGZzX2xvZy5jIGIvZnMveGZzL3hmc19sb2cuYwppbmRleCA0ZGFkNzU2Li40ZTdl
+Yjc2IDEwMDY0NAotLS0gYS9mcy94ZnMveGZzX2xvZy5jCisrKyBiL2ZzL3hmcy94ZnNfbG9nLmMK
+QEAgLTExOCw3ICsxMTgsNyBAQCB4bG9nX3ZlcmlmeV9pY2xvZygKIAlzdHJ1Y3QgeGxvZwkJKmxv
+ZywKIAlzdHJ1Y3QgeGxvZ19pbl9jb3JlCSppY2xvZywKIAlpbnQJCQljb3VudCwKLQlib29sZWFu
+X3QJCXN5bmNpbmcpOworCWJvb2wgICAgICAgICAgICAgICAgICAgIHN5bmNpbmcpOwogU1RBVElD
+IHZvaWQKIHhsb2dfdmVyaWZ5X3RhaWxfbHNuKAogCXN0cnVjdCB4bG9nCQkqbG9nLApAQCAtMzQ1
+MSw3ICszNDUxLDcgQEAgeGxvZ192ZXJpZnlfaWNsb2coCiAJc3RydWN0IHhsb2cJCSpsb2csCiAJ
+c3RydWN0IHhsb2dfaW5fY29yZQkqaWNsb2csCiAJaW50CQkJY291bnQsCi0JYm9vbGVhbl90CQlz
+eW5jaW5nKQorCWJvb2wgICAgICAgICAgICAgICAgICAgIHN5bmNpbmcpCiB7CiAJeGxvZ19vcF9o
+ZWFkZXJfdAkqb3BoZWFkOwogCXhsb2dfaW5fY29yZV90CQkqaWNwdHI7CkBAIC0zNDk5LDcgKzM0
+OTksNyBAQCB4bG9nX3ZlcmlmeV9pY2xvZygKIAkJLyogY2xpZW50aWQgaXMgb25seSAxIGJ5dGUg
+Ki8KIAkJZmllbGRfb2Zmc2V0ID0gKF9fcHNpbnRfdCkKIAkJCSAgICAgICAoKHhmc19jYWRkcl90
+KSYob3BoZWFkLT5vaF9jbGllbnRpZCkgLSBiYXNlX3B0cik7Ci0JCWlmIChzeW5jaW5nID09IEJf
+RkFMU0UgfHwgKGZpZWxkX29mZnNldCAmIDB4MWZmKSkgeworCQlpZiAoIXN5bmNpbmcgfHwgKGZp
+ZWxkX29mZnNldCAmIDB4MWZmKSkgewogCQkJY2xpZW50aWQgPSBvcGhlYWQtPm9oX2NsaWVudGlk
+OwogCQl9IGVsc2UgewogCQkJaWR4ID0gQlRPQkJUKCh4ZnNfY2FkZHJfdCkmKG9waGVhZC0+b2hf
+Y2xpZW50aWQpIC0gaWNsb2ctPmljX2RhdGFwKTsKQEAgLTM1MjIsNyArMzUyMiw3IEBAIHhsb2df
+dmVyaWZ5X2ljbG9nKAogCQkvKiBjaGVjayBsZW5ndGggKi8KIAkJZmllbGRfb2Zmc2V0ID0gKF9f
+cHNpbnRfdCkKIAkJCSAgICAgICAoKHhmc19jYWRkcl90KSYob3BoZWFkLT5vaF9sZW4pIC0gYmFz
+ZV9wdHIpOwotCQlpZiAoc3luY2luZyA9PSBCX0ZBTFNFIHx8IChmaWVsZF9vZmZzZXQgJiAweDFm
+ZikpIHsKKwkJaWYgKCFzeW5jaW5nIHx8IChmaWVsZF9vZmZzZXQgJiAweDFmZikpIHsKIAkJCW9w
+X2xlbiA9IGJlMzJfdG9fY3B1KG9waGVhZC0+b2hfbGVuKTsKIAkJfSBlbHNlIHsKIAkJCWlkeCA9
+IEJUT0JCVCgoX19wc2ludF90KSZvcGhlYWQtPm9oX2xlbiAtCmRpZmYgLS1naXQgYS9mcy94ZnMv
+eGZzX3FtX3N5c2NhbGxzLmMgYi9mcy94ZnMveGZzX3FtX3N5c2NhbGxzLmMKaW5kZXggODU4YTNi
+MS4uMDdiMTE1NiAxMDA2NDQKLS0tIGEvZnMveGZzL3hmc19xbV9zeXNjYWxscy5jCisrKyBiL2Zz
+L3hmcy94ZnNfcW1fc3lzY2FsbHMuYwpAQCAtNDA3LDEwICs0MDcsMTAgQEAgeGZzX3FtX3NjYWxs
+X2dldHFzdGF0KAogewogCXN0cnVjdCB4ZnNfcXVvdGFpbmZvCSpxID0gbXAtPm1fcXVvdGFpbmZv
+OwogCXN0cnVjdCB4ZnNfaW5vZGUJKnVpcCwgKmdpcDsKLQlib29sZWFuX3QJCXRlbXB1cWlwLCB0
+ZW1wZ3FpcDsKKwlib29sICAgICAgICAgICAgICAgICAgICB0ZW1wdXFpcCwgdGVtcGdxaXA7CiAK
+IAl1aXAgPSBnaXAgPSBOVUxMOwotCXRlbXB1cWlwID0gdGVtcGdxaXAgPSBCX0ZBTFNFOworCXRl
+bXB1cWlwID0gdGVtcGdxaXAgPSBmYWxzZTsKIAltZW1zZXQob3V0LCAwLCBzaXplb2YoZnNfcXVv
+dGFfc3RhdF90KSk7CiAKIAlvdXQtPnFzX3ZlcnNpb24gPSBGU19RU1RBVF9WRVJTSU9OOwpAQCAt
+NDMzLDEyICs0MzMsMTIgQEAgeGZzX3FtX3NjYWxsX2dldHFzdGF0KAogCWlmICghdWlwICYmIG1w
+LT5tX3NiLnNiX3VxdW90aW5vICE9IE5VTExGU0lOTykgewogCQlpZiAoeGZzX2lnZXQobXAsIE5V
+TEwsIG1wLT5tX3NiLnNiX3VxdW90aW5vLAogCQkJCQkwLCAwLCAmdWlwKSA9PSAwKQotCQkJdGVt
+cHVxaXAgPSBCX1RSVUU7CisJCQl0ZW1wdXFpcCA9IHRydWU7CiAJfQogCWlmICghZ2lwICYmIG1w
+LT5tX3NiLnNiX2dxdW90aW5vICE9IE5VTExGU0lOTykgewogCQlpZiAoeGZzX2lnZXQobXAsIE5V
+TEwsIG1wLT5tX3NiLnNiX2dxdW90aW5vLAogCQkJCQkwLCAwLCAmZ2lwKSA9PSAwKQotCQkJdGVt
+cGdxaXAgPSBCX1RSVUU7CisJCQl0ZW1wZ3FpcCA9IHRydWU7CiAJfQogCWlmICh1aXApIHsKIAkJ
+b3V0LT5xc191cXVvdGEucWZzX25ibGtzID0gdWlwLT5pX2QuZGlfbmJsb2NrczsKZGlmZiAtLWdp
+dCBhL2ZzL3hmcy94ZnNfdHJhbnNfZHF1b3QuYyBiL2ZzL3hmcy94ZnNfdHJhbnNfZHF1b3QuYwpp
+bmRleCAwYzdmYTU0Li42NDJjMmQ2IDEwMDY0NAotLS0gYS9mcy94ZnMveGZzX3RyYW5zX2RxdW90
+LmMKKysrIGIvZnMveGZzL3hmc190cmFuc19kcXVvdC5jCkBAIC01MTYsNyArNTE2LDcgQEAgeGZz
+X3RyYW5zX3VucmVzZXJ2ZV9hbmRfbW9kX2RxdW90cygKIAlpbnQJCQlpLCBqOwogCXhmc19kcXVv
+dF90CQkqZHFwOwogCXhmc19kcXRyeF90CQkqcXRyeCwgKnFhOwotCWJvb2xlYW5fdAkJbG9ja2Vk
+OworCWJvb2wgICAgICAgICAgICAgICAgICAgIGxvY2tlZDsKIAogCWlmICghdHAtPnRfZHFpbmZv
+IHx8ICEodHAtPnRfZmxhZ3MgJiBYRlNfVFJBTlNfRFFfRElSVFkpKQogCQlyZXR1cm47CkBAIC01
+MzcsMTcgKzUzNywxNyBAQCB4ZnNfdHJhbnNfdW5yZXNlcnZlX2FuZF9tb2RfZHF1b3RzKAogCQkJ
+ICogYWJvdXQgdGhlIG51bWJlciBvZiBibG9ja3MgdXNlZCBmaWVsZCwgb3IgZGVsdGFzLgogCQkJ
+ICogQWxzbyB3ZSBkb24ndCBib3RoZXIgdG8gemVybyB0aGUgZmllbGRzLgogCQkJICovCi0JCQls
+b2NrZWQgPSBCX0ZBTFNFOworCQkJbG9ja2VkID0gZmFsc2U7CiAJCQlpZiAocXRyeC0+cXRfYmxr
+X3JlcykgewogCQkJCXhmc19kcWxvY2soZHFwKTsKLQkJCQlsb2NrZWQgPSBCX1RSVUU7CisJCQkJ
+bG9ja2VkID0gdHJ1ZTsKIAkJCQlkcXAtPnFfcmVzX2Jjb3VudCAtPQogCQkJCQkoeGZzX3FjbnRf
+dClxdHJ4LT5xdF9ibGtfcmVzOwogCQkJfQogCQkJaWYgKHF0cngtPnF0X2lub19yZXMpIHsKIAkJ
+CQlpZiAoIWxvY2tlZCkgewogCQkJCQl4ZnNfZHFsb2NrKGRxcCk7Ci0JCQkJCWxvY2tlZCA9IEJf
+VFJVRTsKKwkJCQkJbG9ja2VkID0gdHJ1ZTsKIAkJCQl9CiAJCQkJZHFwLT5xX3Jlc19pY291bnQg
+LT0KIAkJCQkJKHhmc19xY250X3QpcXRyeC0+cXRfaW5vX3JlczsKQEAgLTU1Niw3ICs1NTYsNyBA
+QCB4ZnNfdHJhbnNfdW5yZXNlcnZlX2FuZF9tb2RfZHF1b3RzKAogCQkJaWYgKHF0cngtPnF0X3J0
+YmxrX3JlcykgewogCQkJCWlmICghbG9ja2VkKSB7CiAJCQkJCXhmc19kcWxvY2soZHFwKTsKLQkJ
+CQkJbG9ja2VkID0gQl9UUlVFOworCQkJCQlsb2NrZWQgPSB0cnVlOwogCQkJCX0KIAkJCQlkcXAt
+PnFfcmVzX3J0YmNvdW50IC09CiAJCQkJCSh4ZnNfcWNudF90KXF0cngtPnF0X3J0YmxrX3JlczsK
+ZGlmZiAtLWdpdCBhL2ZzL3hmcy94ZnNfdHlwZXMuaCBiL2ZzL3hmcy94ZnNfdHlwZXMuaAppbmRl
+eCA3YTQxODc0Li42MWJhMWNmIDEwMDY0NAotLS0gYS9mcy94ZnMveGZzX3R5cGVzLmgKKysrIGIv
+ZnMveGZzL3hmc190eXBlcy5oCkBAIC0zMiw3ICszMiw2IEBAIHR5cGVkZWYgdW5zaWduZWQgaW50
+CQlfX3VpbnQzMl90OwogdHlwZWRlZiBzaWduZWQgbG9uZyBsb25nIGludAlfX2ludDY0X3Q7CiB0
+eXBlZGVmIHVuc2lnbmVkIGxvbmcgbG9uZyBpbnQJX191aW50NjRfdDsKIAotdHlwZWRlZiBlbnVt
+IHsgQl9GQUxTRSxCX1RSVUUgfQlib29sZWFuX3Q7CiB0eXBlZGVmIF9fdWludDMyX3QJCXByaWRf
+dDsJCS8qIHByb2plY3QgSUQgKi8KIHR5cGVkZWYgX191aW50MzJfdAkJaW5zdF90OwkJLyogYW4g
+aW5zdHJ1Y3Rpb24gKi8KIApkaWZmIC0tZ2l0IGEvZnMveGZzL3hmc192bm9kZW9wcy5jIGIvZnMv
+eGZzL3hmc192bm9kZW9wcy5jCmluZGV4IDJhNWM2MzczLi43M2Q1MGI3IDEwMDY0NAotLS0gYS9m
+cy94ZnMveGZzX3Zub2Rlb3BzLmMKKysrIGIvZnMveGZzL3hmc192bm9kZW9wcy5jCkBAIC03MjQs
+NyArNzI0LDcgQEAgeGZzX2NyZWF0ZSgKIAlpbnQJCQllcnJvcjsKIAl4ZnNfYm1hcF9mcmVlX3QJ
+CWZyZWVfbGlzdDsKIAl4ZnNfZnNibG9ja190CQlmaXJzdF9ibG9jazsKLQlib29sZWFuX3QJCXVu
+bG9ja19kcF9vbl9lcnJvciA9IEJfRkFMU0U7CisJYm9vbCAgICAgICAgICAgICAgICAgICAgdW5s
+b2NrX2RwX29uX2Vycm9yID0gZmFsc2U7CiAJdWludAkJCWNhbmNlbF9mbGFnczsKIAlpbnQJCQlj
+b21taXR0ZWQ7CiAJcHJpZF90CQkJcHJpZDsKQEAgLTc5Myw3ICs3OTMsNyBAQCB4ZnNfY3JlYXRl
+KAogCX0KIAogCXhmc19pbG9jayhkcCwgWEZTX0lMT0NLX0VYQ0wgfCBYRlNfSUxPQ0tfUEFSRU5U
+KTsKLQl1bmxvY2tfZHBfb25fZXJyb3IgPSBCX1RSVUU7CisJdW5sb2NrX2RwX29uX2Vycm9yID0g
+dHJ1ZTsKIAogCXhmc19ibWFwX2luaXQoJmZyZWVfbGlzdCwgJmZpcnN0X2Jsb2NrKTsKIApAQCAt
+ODI5LDcgKzgyOSw3IEBAIHhmc19jcmVhdGUoCiAJICogZXJyb3IgcGF0aC4KIAkgKi8KIAl4ZnNf
+dHJhbnNfaWpvaW4odHAsIGRwLCBYRlNfSUxPQ0tfRVhDTCk7Ci0JdW5sb2NrX2RwX29uX2Vycm9y
+ID0gQl9GQUxTRTsKKwl1bmxvY2tfZHBfb25fZXJyb3IgPSBmYWxzZTsKIAogCWVycm9yID0geGZz
+X2Rpcl9jcmVhdGVuYW1lKHRwLCBkcCwgbmFtZSwgaXAtPmlfaW5vLAogCQkJCQkmZmlyc3RfYmxv
+Y2ssICZmcmVlX2xpc3QsIHJlc2Jsa3MgPwpAQCAtMTM2Niw3ICsxMzY2LDcgQEAgeGZzX3N5bWxp
+bmsoCiAJaW50CQkJcGF0aGxlbjsKIAl4ZnNfYm1hcF9mcmVlX3QJCWZyZWVfbGlzdDsKIAl4ZnNf
+ZnNibG9ja190CQlmaXJzdF9ibG9jazsKLQlib29sZWFuX3QJCXVubG9ja19kcF9vbl9lcnJvciA9
+IEJfRkFMU0U7CisJYm9vbCAgICAgICAgICAgICAgICAgICAgdW5sb2NrX2RwX29uX2Vycm9yID0g
+ZmFsc2U7CiAJdWludAkJCWNhbmNlbF9mbGFnczsKIAlpbnQJCQljb21taXR0ZWQ7CiAJeGZzX2Zp
+bGVvZmZfdAkJZmlyc3RfZnNiOwpAQCAtMTQzNyw3ICsxNDM3LDcgQEAgeGZzX3N5bWxpbmsoCiAJ
+fQogCiAJeGZzX2lsb2NrKGRwLCBYRlNfSUxPQ0tfRVhDTCB8IFhGU19JTE9DS19QQVJFTlQpOwot
+CXVubG9ja19kcF9vbl9lcnJvciA9IEJfVFJVRTsKKwl1bmxvY2tfZHBfb25fZXJyb3IgPSB0cnVl
+OwogCiAJLyoKIAkgKiBDaGVjayB3aGV0aGVyIHRoZSBkaXJlY3RvcnkgYWxsb3dzIG5ldyBzeW1s
+aW5rcyBvciBub3QuCkBAIC0xNDgzLDcgKzE0ODMsNyBAQCB4ZnNfc3ltbGluaygKIAkgKiBlcnJv
+ciBwYXRoLgogCSAqLwogCXhmc190cmFuc19pam9pbih0cCwgZHAsIFhGU19JTE9DS19FWENMKTsK
+LQl1bmxvY2tfZHBfb25fZXJyb3IgPSBCX0ZBTFNFOworCXVubG9ja19kcF9vbl9lcnJvciA9IGZh
+bHNlOwogCiAJLyoKIAkgKiBBbHNvIGF0dGFjaCB0aGUgZHF1b3QocykgdG8gaXQsIGlmIGFwcGxp
+Y2FibGUuCi0tIAoxLjguMC5yYzIKCg==
+--f46d04016d4df49e3204ce559c45
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--f46d04016d4df49e3204ce559c45--
