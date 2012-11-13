@@ -1,15 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qADKMnej142318 for <xfs@oss.sgi.com>; Tue, 13 Nov 2012 14:22:49 -0600
-Message-ID: <50A2AC91.9080103@sgi.com>
-Date: Tue, 13 Nov 2012 14:24:49 -0600
-From: Mark Tinguely <tinguely@sgi.com>
+	qADLGeHO152109 for <xfs@oss.sgi.com>; Tue, 13 Nov 2012 15:16:40 -0600
+Message-ID: <50A2B92F.80303@sgi.com>
+Date: Tue, 13 Nov 2012 15:18:39 -0600
+From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 3/3] xfstests: resolve compiler warnings
-References: <20121109132358.256359544@sgi.com>
-	<20121109132714.075017013@sgi.com>
-In-Reply-To: <20121109132714.075017013@sgi.com>
+Subject: Re: [PATCH 06/32] xfs: use btree block initialisation functions in
+	growfs
+References: <1352721264-3700-1-git-send-email-david@fromorbit.com>
+	<1352721264-3700-7-git-send-email-david@fromorbit.com>
+In-Reply-To: <1352721264-3700-7-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,24 +23,29 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: rjohnston@sgi.com
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On 11/09/12 07:24, rjohnston@sgi.com wrote:
-> This patch resolves the following compiler/configure warnings:
+On 11/12/2012 05:53 AM, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 >
->   configure: WARNING: unrecognized options: --enable-lib64
->   warning: 'xxxx' may be used uninitialized in this function [-Wuninitialized]
->   warning: variable 'xxx' set but not used [-Wunused-but-set-variable]
->   warning: call to function 'foo' without a real prototype [-Wunprototyped-calls]
+> Factor xfs_btree_init_block() to be independent of the btree cursor,
+> and use the function to initialise btree blocks in the growfs code.
+> This makes adding support for different format btree blocks simple.
 >
-> Signed-off-by: Rich Johnston<rjohnston@sgi.com>
->
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
+>   fs/xfs/xfs_btree.c |   33 ++++++++++++++++++++++++---------
+>   fs/xfs/xfs_btree.h |   11 +++++++++++
+>   fs/xfs/xfs_fsops.c |   37 +++++++++++++------------------------
+>   3 files changed, 48 insertions(+), 33 deletions(-)
+>
 
 Looks good.
 
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+Reviewed-by Rich Johnston <rjohnston@sgi.com>
+
+--Rich
 
 _______________________________________________
 xfs mailing list
