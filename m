@@ -1,20 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cthulhu.engr.sgi.com (cthulhu.engr.sgi.com [150.166.39.100])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAD0Yl7S001894 for <xfs@oss.sgi.com>; Mon, 12 Nov 2012 18:34:47 -0600
-Received: from mail-lb0-f181.google.com (mail-lb0-f181.google.com
-	[209.85.217.181]) by cuda.sgi.com with ESMTP id
-	5YWXrGfJoAbqseeD (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 12 Nov 2012 16:36:49 -0800 (PST)
-Received: by mail-lb0-f181.google.com with SMTP id ge1so1283920lbb.26
-	for <xfs@oss.sgi.com>; Mon, 12 Nov 2012 16:36:47 -0800 (PST)
+	qAD16wPs004496 for <xfs@oss.sgi.com>; Mon, 12 Nov 2012 19:06:58 -0600
+Date: Mon, 12 Nov 2012 17:09:00 -0800
+From: Phil White <pwhite@sgi.com>
+Subject: Re: [PATCH 12/32] xfs: verify AGF blocks as they are read from disk
+Message-ID: <20121113010900.GE27231@caliban.engr.sgi.com>
+References: <1352721264-3700-1-git-send-email-david@fromorbit.com>
+	<1352721264-3700-13-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Date: Mon, 12 Nov 2012 22:36:47 -0200
-Message-ID: <CACnwZYd2kPaK1urLYc8BBuuqD7_Oo1oF+KvqWYj7DAEGy6grHQ@mail.gmail.com>
-Subject: xfs: Remove boolean_t typedef completely.
-From: Thiago Farina <tfransosi@gmail.com>
-Content-Type: multipart/mixed; boundary=f46d04016d4df49e3204ce559c45
+Content-Disposition: inline
+In-Reply-To: <1352721264-3700-13-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,165 +19,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Ben Myers <bpm@sgi.com>, Alex Elder <elder@kernel.org>, linux list <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
---f46d04016d4df49e3204ce559c45
-Content-Type: text/plain; charset=UTF-8
+Dave, you botched a copy & paste here:
 
-On Mon, Nov 12, 2012 at 10:24 PM, Dave Chinner <david@fromorbit.com> wrote:
-> On Mon, Nov 12, 2012 at 09:36:17PM -0200, Thiago Farina wrote:
->> Hi,
->>
->> Please, take a look.
->>
->> Patch attached.
->
-> It's a good start for a cleanup, but there's no point in removing
-> the boolean_t from one file and then not removing it from the rest
-> of the XFS code.  It's only used in a handful of places, so just
-> remove it completely.
->
-Done.
+On Mon, Nov 12, 2012 at 10:54:04PM +1100, Dave Chinner wrote:
+> +	agf_ok = agf->agf_magicnum == cpu_to_be32(XFS_AGF_MAGIC) &&
+> +		XFS_AGF_GOOD_VERSION(be32_to_cpu(agf->agf_versionnum)) &&
+> +		be32_to_cpu(agf->agf_freeblks) <= be32_to_cpu(agf->agf_length) &&
+> +		be32_to_cpu(agf->agf_flfirst) < XFS_AGFL_SIZE(mp) &&
+> +		be32_to_cpu(agf->agf_fllast) < XFS_AGFL_SIZE(mp) &&
+> +		be32_to_cpu(agf->agf_flcount) <= XFS_AGFL_SIZE(mp) &&
+> +		be32_to_cpu(agf->agf_flcount) <= XFS_AGFL_SIZE(mp);
 
-Please, take another look.
+See: 
+> -	agf_ok =
+> -		agf->agf_magicnum == cpu_to_be32(XFS_AGF_MAGIC) &&
+> -		XFS_AGF_GOOD_VERSION(be32_to_cpu(agf->agf_versionnum)) &&
+> -		be32_to_cpu(agf->agf_freeblks) <= be32_to_cpu(agf->agf_length) &&
+> -		be32_to_cpu(agf->agf_flfirst) < XFS_AGFL_SIZE(mp) &&
+> -		be32_to_cpu(agf->agf_fllast) < XFS_AGFL_SIZE(mp) &&
+> -		be32_to_cpu(agf->agf_flcount) <= XFS_AGFL_SIZE(mp) &&
+> -		be32_to_cpu(agf->agf_seqno) == agno;
 
-> Also, can you please place patches in line rather than attaching
-> them. Attaching them means they cannot be quoted in reply. See
-> Documentation/SubmittingPatches and Documentation/email-clients.txt
-> for guidelines.
->
-Sorry, patch attached.
-
-Thanks,
-
---f46d04016d4df49e3204ce559c45
-Content-Type: application/octet-stream;
-	name="0001-xfs-Remove-boolean_t-typedef-completely.patch"
-Content-Disposition: attachment;
-	filename="0001-xfs-Remove-boolean_t-typedef-completely.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_h9gaj30w0
-
-RnJvbSAzODUyYWYwZmY4ZDY4NGRjMDQ5NDNjZmI3YjI4Njk2NGRjODMwNjQwIE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBUaGlhZ28gRmFyaW5hIDx0ZmFyaW5hQGNocm9taXVtLm9yZz4K
-RGF0ZTogTW9uLCAxMiBOb3YgMjAxMiAyMTozMjo1OSAtMDIwMApTdWJqZWN0OiBbUEFUQ0hdIHhm
-czogUmVtb3ZlIGJvb2xlYW5fdCB0eXBlZGVmIGNvbXBsZXRlbHkuCgpTaW5jZSB3ZSBhcmUgdXNp
-bmcgQzk5IHdlIGhhdmUgb25lIGJ1aWx0aW4gZGVmaW5lZCBpbiBpbmNsdWRlL2xpbnV4L3R5cGVz
-LmgsCnVzZSB0aGF0IGluc3RlYWQuCgpTaWduZWQtb2ZmLWJ5OiBUaGlhZ28gRmFyaW5hIDx0ZmFy
-aW5hQGNocm9taXVtLm9yZz4KLS0tCiBmcy94ZnMveGZzX2xvZy5jICAgICAgICAgfCAgOCArKysr
-LS0tLQogZnMveGZzL3hmc19xbV9zeXNjYWxscy5jIHwgIDggKysrKy0tLS0KIGZzL3hmcy94ZnNf
-dHJhbnNfZHF1b3QuYyB8IDEwICsrKysrLS0tLS0KIGZzL3hmcy94ZnNfdHlwZXMuaCAgICAgICB8
-ICAxIC0KIGZzL3hmcy94ZnNfdm5vZGVvcHMuYyAgICB8IDEyICsrKysrKy0tLS0tLQogNSBmaWxl
-cyBjaGFuZ2VkLCAxOSBpbnNlcnRpb25zKCspLCAyMCBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQg
-YS9mcy94ZnMveGZzX2xvZy5jIGIvZnMveGZzL3hmc19sb2cuYwppbmRleCA0ZGFkNzU2Li40ZTdl
-Yjc2IDEwMDY0NAotLS0gYS9mcy94ZnMveGZzX2xvZy5jCisrKyBiL2ZzL3hmcy94ZnNfbG9nLmMK
-QEAgLTExOCw3ICsxMTgsNyBAQCB4bG9nX3ZlcmlmeV9pY2xvZygKIAlzdHJ1Y3QgeGxvZwkJKmxv
-ZywKIAlzdHJ1Y3QgeGxvZ19pbl9jb3JlCSppY2xvZywKIAlpbnQJCQljb3VudCwKLQlib29sZWFu
-X3QJCXN5bmNpbmcpOworCWJvb2wgICAgICAgICAgICAgICAgICAgIHN5bmNpbmcpOwogU1RBVElD
-IHZvaWQKIHhsb2dfdmVyaWZ5X3RhaWxfbHNuKAogCXN0cnVjdCB4bG9nCQkqbG9nLApAQCAtMzQ1
-MSw3ICszNDUxLDcgQEAgeGxvZ192ZXJpZnlfaWNsb2coCiAJc3RydWN0IHhsb2cJCSpsb2csCiAJ
-c3RydWN0IHhsb2dfaW5fY29yZQkqaWNsb2csCiAJaW50CQkJY291bnQsCi0JYm9vbGVhbl90CQlz
-eW5jaW5nKQorCWJvb2wgICAgICAgICAgICAgICAgICAgIHN5bmNpbmcpCiB7CiAJeGxvZ19vcF9o
-ZWFkZXJfdAkqb3BoZWFkOwogCXhsb2dfaW5fY29yZV90CQkqaWNwdHI7CkBAIC0zNDk5LDcgKzM0
-OTksNyBAQCB4bG9nX3ZlcmlmeV9pY2xvZygKIAkJLyogY2xpZW50aWQgaXMgb25seSAxIGJ5dGUg
-Ki8KIAkJZmllbGRfb2Zmc2V0ID0gKF9fcHNpbnRfdCkKIAkJCSAgICAgICAoKHhmc19jYWRkcl90
-KSYob3BoZWFkLT5vaF9jbGllbnRpZCkgLSBiYXNlX3B0cik7Ci0JCWlmIChzeW5jaW5nID09IEJf
-RkFMU0UgfHwgKGZpZWxkX29mZnNldCAmIDB4MWZmKSkgeworCQlpZiAoIXN5bmNpbmcgfHwgKGZp
-ZWxkX29mZnNldCAmIDB4MWZmKSkgewogCQkJY2xpZW50aWQgPSBvcGhlYWQtPm9oX2NsaWVudGlk
-OwogCQl9IGVsc2UgewogCQkJaWR4ID0gQlRPQkJUKCh4ZnNfY2FkZHJfdCkmKG9waGVhZC0+b2hf
-Y2xpZW50aWQpIC0gaWNsb2ctPmljX2RhdGFwKTsKQEAgLTM1MjIsNyArMzUyMiw3IEBAIHhsb2df
-dmVyaWZ5X2ljbG9nKAogCQkvKiBjaGVjayBsZW5ndGggKi8KIAkJZmllbGRfb2Zmc2V0ID0gKF9f
-cHNpbnRfdCkKIAkJCSAgICAgICAoKHhmc19jYWRkcl90KSYob3BoZWFkLT5vaF9sZW4pIC0gYmFz
-ZV9wdHIpOwotCQlpZiAoc3luY2luZyA9PSBCX0ZBTFNFIHx8IChmaWVsZF9vZmZzZXQgJiAweDFm
-ZikpIHsKKwkJaWYgKCFzeW5jaW5nIHx8IChmaWVsZF9vZmZzZXQgJiAweDFmZikpIHsKIAkJCW9w
-X2xlbiA9IGJlMzJfdG9fY3B1KG9waGVhZC0+b2hfbGVuKTsKIAkJfSBlbHNlIHsKIAkJCWlkeCA9
-IEJUT0JCVCgoX19wc2ludF90KSZvcGhlYWQtPm9oX2xlbiAtCmRpZmYgLS1naXQgYS9mcy94ZnMv
-eGZzX3FtX3N5c2NhbGxzLmMgYi9mcy94ZnMveGZzX3FtX3N5c2NhbGxzLmMKaW5kZXggODU4YTNi
-MS4uMDdiMTE1NiAxMDA2NDQKLS0tIGEvZnMveGZzL3hmc19xbV9zeXNjYWxscy5jCisrKyBiL2Zz
-L3hmcy94ZnNfcW1fc3lzY2FsbHMuYwpAQCAtNDA3LDEwICs0MDcsMTAgQEAgeGZzX3FtX3NjYWxs
-X2dldHFzdGF0KAogewogCXN0cnVjdCB4ZnNfcXVvdGFpbmZvCSpxID0gbXAtPm1fcXVvdGFpbmZv
-OwogCXN0cnVjdCB4ZnNfaW5vZGUJKnVpcCwgKmdpcDsKLQlib29sZWFuX3QJCXRlbXB1cWlwLCB0
-ZW1wZ3FpcDsKKwlib29sICAgICAgICAgICAgICAgICAgICB0ZW1wdXFpcCwgdGVtcGdxaXA7CiAK
-IAl1aXAgPSBnaXAgPSBOVUxMOwotCXRlbXB1cWlwID0gdGVtcGdxaXAgPSBCX0ZBTFNFOworCXRl
-bXB1cWlwID0gdGVtcGdxaXAgPSBmYWxzZTsKIAltZW1zZXQob3V0LCAwLCBzaXplb2YoZnNfcXVv
-dGFfc3RhdF90KSk7CiAKIAlvdXQtPnFzX3ZlcnNpb24gPSBGU19RU1RBVF9WRVJTSU9OOwpAQCAt
-NDMzLDEyICs0MzMsMTIgQEAgeGZzX3FtX3NjYWxsX2dldHFzdGF0KAogCWlmICghdWlwICYmIG1w
-LT5tX3NiLnNiX3VxdW90aW5vICE9IE5VTExGU0lOTykgewogCQlpZiAoeGZzX2lnZXQobXAsIE5V
-TEwsIG1wLT5tX3NiLnNiX3VxdW90aW5vLAogCQkJCQkwLCAwLCAmdWlwKSA9PSAwKQotCQkJdGVt
-cHVxaXAgPSBCX1RSVUU7CisJCQl0ZW1wdXFpcCA9IHRydWU7CiAJfQogCWlmICghZ2lwICYmIG1w
-LT5tX3NiLnNiX2dxdW90aW5vICE9IE5VTExGU0lOTykgewogCQlpZiAoeGZzX2lnZXQobXAsIE5V
-TEwsIG1wLT5tX3NiLnNiX2dxdW90aW5vLAogCQkJCQkwLCAwLCAmZ2lwKSA9PSAwKQotCQkJdGVt
-cGdxaXAgPSBCX1RSVUU7CisJCQl0ZW1wZ3FpcCA9IHRydWU7CiAJfQogCWlmICh1aXApIHsKIAkJ
-b3V0LT5xc191cXVvdGEucWZzX25ibGtzID0gdWlwLT5pX2QuZGlfbmJsb2NrczsKZGlmZiAtLWdp
-dCBhL2ZzL3hmcy94ZnNfdHJhbnNfZHF1b3QuYyBiL2ZzL3hmcy94ZnNfdHJhbnNfZHF1b3QuYwpp
-bmRleCAwYzdmYTU0Li42NDJjMmQ2IDEwMDY0NAotLS0gYS9mcy94ZnMveGZzX3RyYW5zX2RxdW90
-LmMKKysrIGIvZnMveGZzL3hmc190cmFuc19kcXVvdC5jCkBAIC01MTYsNyArNTE2LDcgQEAgeGZz
-X3RyYW5zX3VucmVzZXJ2ZV9hbmRfbW9kX2RxdW90cygKIAlpbnQJCQlpLCBqOwogCXhmc19kcXVv
-dF90CQkqZHFwOwogCXhmc19kcXRyeF90CQkqcXRyeCwgKnFhOwotCWJvb2xlYW5fdAkJbG9ja2Vk
-OworCWJvb2wgICAgICAgICAgICAgICAgICAgIGxvY2tlZDsKIAogCWlmICghdHAtPnRfZHFpbmZv
-IHx8ICEodHAtPnRfZmxhZ3MgJiBYRlNfVFJBTlNfRFFfRElSVFkpKQogCQlyZXR1cm47CkBAIC01
-MzcsMTcgKzUzNywxNyBAQCB4ZnNfdHJhbnNfdW5yZXNlcnZlX2FuZF9tb2RfZHF1b3RzKAogCQkJ
-ICogYWJvdXQgdGhlIG51bWJlciBvZiBibG9ja3MgdXNlZCBmaWVsZCwgb3IgZGVsdGFzLgogCQkJ
-ICogQWxzbyB3ZSBkb24ndCBib3RoZXIgdG8gemVybyB0aGUgZmllbGRzLgogCQkJICovCi0JCQls
-b2NrZWQgPSBCX0ZBTFNFOworCQkJbG9ja2VkID0gZmFsc2U7CiAJCQlpZiAocXRyeC0+cXRfYmxr
-X3JlcykgewogCQkJCXhmc19kcWxvY2soZHFwKTsKLQkJCQlsb2NrZWQgPSBCX1RSVUU7CisJCQkJ
-bG9ja2VkID0gdHJ1ZTsKIAkJCQlkcXAtPnFfcmVzX2Jjb3VudCAtPQogCQkJCQkoeGZzX3FjbnRf
-dClxdHJ4LT5xdF9ibGtfcmVzOwogCQkJfQogCQkJaWYgKHF0cngtPnF0X2lub19yZXMpIHsKIAkJ
-CQlpZiAoIWxvY2tlZCkgewogCQkJCQl4ZnNfZHFsb2NrKGRxcCk7Ci0JCQkJCWxvY2tlZCA9IEJf
-VFJVRTsKKwkJCQkJbG9ja2VkID0gdHJ1ZTsKIAkJCQl9CiAJCQkJZHFwLT5xX3Jlc19pY291bnQg
-LT0KIAkJCQkJKHhmc19xY250X3QpcXRyeC0+cXRfaW5vX3JlczsKQEAgLTU1Niw3ICs1NTYsNyBA
-QCB4ZnNfdHJhbnNfdW5yZXNlcnZlX2FuZF9tb2RfZHF1b3RzKAogCQkJaWYgKHF0cngtPnF0X3J0
-YmxrX3JlcykgewogCQkJCWlmICghbG9ja2VkKSB7CiAJCQkJCXhmc19kcWxvY2soZHFwKTsKLQkJ
-CQkJbG9ja2VkID0gQl9UUlVFOworCQkJCQlsb2NrZWQgPSB0cnVlOwogCQkJCX0KIAkJCQlkcXAt
-PnFfcmVzX3J0YmNvdW50IC09CiAJCQkJCSh4ZnNfcWNudF90KXF0cngtPnF0X3J0YmxrX3JlczsK
-ZGlmZiAtLWdpdCBhL2ZzL3hmcy94ZnNfdHlwZXMuaCBiL2ZzL3hmcy94ZnNfdHlwZXMuaAppbmRl
-eCA3YTQxODc0Li42MWJhMWNmIDEwMDY0NAotLS0gYS9mcy94ZnMveGZzX3R5cGVzLmgKKysrIGIv
-ZnMveGZzL3hmc190eXBlcy5oCkBAIC0zMiw3ICszMiw2IEBAIHR5cGVkZWYgdW5zaWduZWQgaW50
-CQlfX3VpbnQzMl90OwogdHlwZWRlZiBzaWduZWQgbG9uZyBsb25nIGludAlfX2ludDY0X3Q7CiB0
-eXBlZGVmIHVuc2lnbmVkIGxvbmcgbG9uZyBpbnQJX191aW50NjRfdDsKIAotdHlwZWRlZiBlbnVt
-IHsgQl9GQUxTRSxCX1RSVUUgfQlib29sZWFuX3Q7CiB0eXBlZGVmIF9fdWludDMyX3QJCXByaWRf
-dDsJCS8qIHByb2plY3QgSUQgKi8KIHR5cGVkZWYgX191aW50MzJfdAkJaW5zdF90OwkJLyogYW4g
-aW5zdHJ1Y3Rpb24gKi8KIApkaWZmIC0tZ2l0IGEvZnMveGZzL3hmc192bm9kZW9wcy5jIGIvZnMv
-eGZzL3hmc192bm9kZW9wcy5jCmluZGV4IDJhNWM2MzczLi43M2Q1MGI3IDEwMDY0NAotLS0gYS9m
-cy94ZnMveGZzX3Zub2Rlb3BzLmMKKysrIGIvZnMveGZzL3hmc192bm9kZW9wcy5jCkBAIC03MjQs
-NyArNzI0LDcgQEAgeGZzX2NyZWF0ZSgKIAlpbnQJCQllcnJvcjsKIAl4ZnNfYm1hcF9mcmVlX3QJ
-CWZyZWVfbGlzdDsKIAl4ZnNfZnNibG9ja190CQlmaXJzdF9ibG9jazsKLQlib29sZWFuX3QJCXVu
-bG9ja19kcF9vbl9lcnJvciA9IEJfRkFMU0U7CisJYm9vbCAgICAgICAgICAgICAgICAgICAgdW5s
-b2NrX2RwX29uX2Vycm9yID0gZmFsc2U7CiAJdWludAkJCWNhbmNlbF9mbGFnczsKIAlpbnQJCQlj
-b21taXR0ZWQ7CiAJcHJpZF90CQkJcHJpZDsKQEAgLTc5Myw3ICs3OTMsNyBAQCB4ZnNfY3JlYXRl
-KAogCX0KIAogCXhmc19pbG9jayhkcCwgWEZTX0lMT0NLX0VYQ0wgfCBYRlNfSUxPQ0tfUEFSRU5U
-KTsKLQl1bmxvY2tfZHBfb25fZXJyb3IgPSBCX1RSVUU7CisJdW5sb2NrX2RwX29uX2Vycm9yID0g
-dHJ1ZTsKIAogCXhmc19ibWFwX2luaXQoJmZyZWVfbGlzdCwgJmZpcnN0X2Jsb2NrKTsKIApAQCAt
-ODI5LDcgKzgyOSw3IEBAIHhmc19jcmVhdGUoCiAJICogZXJyb3IgcGF0aC4KIAkgKi8KIAl4ZnNf
-dHJhbnNfaWpvaW4odHAsIGRwLCBYRlNfSUxPQ0tfRVhDTCk7Ci0JdW5sb2NrX2RwX29uX2Vycm9y
-ID0gQl9GQUxTRTsKKwl1bmxvY2tfZHBfb25fZXJyb3IgPSBmYWxzZTsKIAogCWVycm9yID0geGZz
-X2Rpcl9jcmVhdGVuYW1lKHRwLCBkcCwgbmFtZSwgaXAtPmlfaW5vLAogCQkJCQkmZmlyc3RfYmxv
-Y2ssICZmcmVlX2xpc3QsIHJlc2Jsa3MgPwpAQCAtMTM2Niw3ICsxMzY2LDcgQEAgeGZzX3N5bWxp
-bmsoCiAJaW50CQkJcGF0aGxlbjsKIAl4ZnNfYm1hcF9mcmVlX3QJCWZyZWVfbGlzdDsKIAl4ZnNf
-ZnNibG9ja190CQlmaXJzdF9ibG9jazsKLQlib29sZWFuX3QJCXVubG9ja19kcF9vbl9lcnJvciA9
-IEJfRkFMU0U7CisJYm9vbCAgICAgICAgICAgICAgICAgICAgdW5sb2NrX2RwX29uX2Vycm9yID0g
-ZmFsc2U7CiAJdWludAkJCWNhbmNlbF9mbGFnczsKIAlpbnQJCQljb21taXR0ZWQ7CiAJeGZzX2Zp
-bGVvZmZfdAkJZmlyc3RfZnNiOwpAQCAtMTQzNyw3ICsxNDM3LDcgQEAgeGZzX3N5bWxpbmsoCiAJ
-fQogCiAJeGZzX2lsb2NrKGRwLCBYRlNfSUxPQ0tfRVhDTCB8IFhGU19JTE9DS19QQVJFTlQpOwot
-CXVubG9ja19kcF9vbl9lcnJvciA9IEJfVFJVRTsKKwl1bmxvY2tfZHBfb25fZXJyb3IgPSB0cnVl
-OwogCiAJLyoKIAkgKiBDaGVjayB3aGV0aGVyIHRoZSBkaXJlY3RvcnkgYWxsb3dzIG5ldyBzeW1s
-aW5rcyBvciBub3QuCkBAIC0xNDgzLDcgKzE0ODMsNyBAQCB4ZnNfc3ltbGluaygKIAkgKiBlcnJv
-ciBwYXRoLgogCSAqLwogCXhmc190cmFuc19pam9pbih0cCwgZHAsIFhGU19JTE9DS19FWENMKTsK
-LQl1bmxvY2tfZHBfb25fZXJyb3IgPSBCX0ZBTFNFOworCXVubG9ja19kcF9vbl9lcnJvciA9IGZh
-bHNlOwogCiAJLyoKIAkgKiBBbHNvIGF0dGFjaCB0aGUgZHF1b3QocykgdG8gaXQsIGlmIGFwcGxp
-Y2FibGUuCi0tIAoxLjguMC5yYzIKCg==
---f46d04016d4df49e3204ce559c45
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+-Phil
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---f46d04016d4df49e3204ce559c45--
