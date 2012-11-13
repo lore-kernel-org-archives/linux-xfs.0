@@ -1,17 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAD2U7jU012709 for <xfs@oss.sgi.com>; Mon, 12 Nov 2012 20:30:07 -0600
-Date: Mon, 12 Nov 2012 20:32:07 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: xfs: Remove boolean_t typedef completely.
-Message-ID: <20121113023207.GZ9783@sgi.com>
-References: <CACnwZYd2kPaK1urLYc8BBuuqD7_Oo1oF+KvqWYj7DAEGy6grHQ@mail.gmail.com>
-	<20121113015318.GD25039@dastard>
-	<CACnwZYeutkdb+=yYx8XcXHSDhaP6QBjgn1BEnGAMYDO7biAtFw@mail.gmail.com>
+	qAD339oV015027 for <xfs@oss.sgi.com>; Mon, 12 Nov 2012 21:03:09 -0600
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	S58qH93DNomaUQu6 for <xfs@oss.sgi.com>;
+	Mon, 12 Nov 2012 19:05:10 -0800 (PST)
+Date: Tue, 13 Nov 2012 14:05:07 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 0/3] xfs: fixes for 3.7-rc6
+Message-ID: <20121113030507.GE25039@dastard>
+References: <1352718586-3538-1-git-send-email-david@fromorbit.com>
+	<20121113020150.GY9783@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CACnwZYeutkdb+=yYx8XcXHSDhaP6QBjgn1BEnGAMYDO7biAtFw@mail.gmail.com>
+In-Reply-To: <20121113020150.GY9783@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,51 +27,60 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Thiago Farina <tfransosi@gmail.com>
-Cc: Alex Elder <elder@kernel.org>, linux list <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: xfs@oss.sgi.com
 
-Hi Thiago,
+On Mon, Nov 12, 2012 at 08:01:50PM -0600, Ben Myers wrote:
+> Hi Dave,
+> 
+> On Mon, Nov 12, 2012 at 10:09:43PM +1100, Dave Chinner wrote:
+> > These are the remaining fixes I have in my tree for the 3.7 cycle.
+> > One is a corruption fix, the other two are problems I'm seeing
+> > during shutdown and recovery testing. That testing lasts 400-500
+> > cycles (3-4 hours) now before it fails with another, as yet unknown
+> > buffer/perag reference assert failure. Without these fixes, it lasts
+> > 3-4 cycles before assert failing or triggering a BUG.
+> > 
+> > I'd like these fixes to be in the 3.7 cycle if at all possible, with
+> > both patch 1 and 2 being stable kernel candidates.
+> 
+> I think we can make that happen.  I noticed that you posted patches 2 and 3
+> earlier today and had to chuckle, but I understand.
 
-On Tue, Nov 13, 2012 at 12:02:14AM -0200, Thiago Farina wrote:
-> On Mon, Nov 12, 2012 at 11:53 PM, Dave Chinner <david@fromorbit.com> wrote:
-> > On Mon, Nov 12, 2012 at 10:36:47PM -0200, Thiago Farina wrote:
-> >> On Mon, Nov 12, 2012 at 10:24 PM, Dave Chinner <david@fromorbit.com> wrote:
-> >> > On Mon, Nov 12, 2012 at 09:36:17PM -0200, Thiago Farina wrote:
-> >> >> Hi,
-> >> >>
-> >> >> Please, take a look.
-> >> >>
-> >> >> Patch attached.
-> >> >
-> >> > It's a good start for a cleanup, but there's no point in removing
-> >> > the boolean_t from one file and then not removing it from the rest
-> >> > of the XFS code.  It's only used in a handful of places, so just
-> >> > remove it completely.
-> >> >
-> >> Done.
-> >>
-> >> Please, take another look.
-> >>
-> >> > Also, can you please place patches in line rather than attaching
-> >> > them. Attaching them means they cannot be quoted in reply. See
-> >> > Documentation/SubmittingPatches and Documentation/email-clients.txt
-> >> > for guidelines.
-> >> >
-> >> Sorry, patch attached.
-> >
-> > It's still attached as a base64 encoded attachment, not as inline
-> > text....
-> >
-> Yep, sorry about that. Is just a text file from $(git format-patch master);
+Fixing a nasty bug or regression bug and asking it be merged into
+the current -rc cycle after initial testing is not unusual, so I'm
+not sure why you'd chuckle at that....
 
-If you don't mind another try... it would be helpful if you could resend the
-patch inline.  It helps to facilitate a discussion of the patch along with your
-text should it be necessary.
+> We'll put this 3.7 work at
+> the top of the priority queue, followed by your 3.8 queue, and then the few
+> items left for the userspace release.
 
-You're only touching xfs, so you can drop linux-kernel if you want.
+Just FYI, the first thing that needs to be done after the userspace
+release is to resync the libxfs/libxlog code with the kernel code.
+That needs to be done before any of the CRC changes can be merged,
+so be prepared for a pretty major update that'll need review soon
+after the release.
 
-Thanks,
-	Ben
+IIRC, the last kernel/user resync I did was about 15,000 lines of
+change I don't expect this to be quite as big (the previous one
+contained the btree consolidation changes), but I'd expect it to be
+in the order of 2-3000 lines of change to be needed.
+
+> Thanks for reposting your 3.8 queue, BTW.  Sometimes I think that frequent
+> reposts are inconvenient, but in this case I think it will be helpful.
+
+When I'm having trouble tracking of several of my own patch sets for
+the same release, it's time for re-organisation and a repost.
+Besides, it's a habit Christoph and I got into a while back when we
+had lots of work going on and we needed to make sure nothing
+slipped through the cracks..... :)
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
