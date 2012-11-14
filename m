@@ -1,15 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAELPKcV176111 for <xfs@oss.sgi.com>; Wed, 14 Nov 2012 15:25:20 -0600
-Date: Wed, 14 Nov 2012 15:27:21 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 00/32] xfs: current queue for 3.8
-Message-ID: <20121114212721.GG19387@sgi.com>
-References: <1352721264-3700-1-git-send-email-david@fromorbit.com>
+	qAELQY4S176250 for <xfs@oss.sgi.com>; Wed, 14 Nov 2012 15:26:34 -0600
+Message-ID: <50A40D03.6040307@sgi.com>
+Date: Wed, 14 Nov 2012 15:28:35 -0600
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1352721264-3700-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 12/32 V2] xfs: verify AGF blocks as they are read from disk
+References: <1352721264-3700-1-git-send-email-david@fromorbit.com>
+	<1352721264-3700-13-git-send-email-david@fromorbit.com>
+	<20121114064456.GD1710@dastard>
+In-Reply-To: <20121114064456.GD1710@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,20 +19,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, adahl@sgi.com
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Nov 12, 2012 at 10:53:52PM +1100, Dave Chinner wrote:
-> This is my current patch queue for the 3.8 merge window.
+On 11/14/12 00:44, Dave Chinner wrote:
+> xfs: verify AGF blocks as they are read from disk
+>
+> From: Dave Chinner<dchinner@redhat.com>
+>
+> Add an AGF block verify callback function and pass it into the
+> buffer read functions. This replaces the existing verification that
+> is done after the read completes.
+>
+> Signed-off-by: Dave Chinner<dchinner@redhat.com>
+> Reviewed-by: Christoph Hellwig<hch@lst.de>
+> ---
+> V2: fix duplicate logic in verifier function.
+>
 
-Patches 2-5 and 2.5 of this series are pushed to git://oss.sgi.com/xfs/xfs.git,
-master and for-next branches.
+looks good.
 
--Ben
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
