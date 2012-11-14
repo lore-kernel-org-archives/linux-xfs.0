@@ -1,22 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAEKWUG4173672 for <xfs@oss.sgi.com>; Wed, 14 Nov 2012 14:32:30 -0600
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	rEhQsLL1Er5R1Ksj for <xfs@oss.sgi.com>;
-	Wed, 14 Nov 2012 12:34:33 -0800 (PST)
-Date: Thu, 15 Nov 2012 07:34:30 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [patch 2/2 V3] xfstests: xfs_tosspages() test addition
-Message-ID: <20121114203430.GI1710@dastard>
-References: <20121108222315.505370321@sgi.com>
-	<20121108222315.709683665@sgi.com> <20121108232726.GV6434@dastard>
-	<50A19EC0.4040405@sgi.com> <50A3DC58.4080704@sgi.com>
-	<50A3E46E.9040508@sgi.com> <50A3E99F.8070303@sgi.com>
+	qAEKeiSi173990 for <xfs@oss.sgi.com>; Wed, 14 Nov 2012 14:40:44 -0600
+Date: Wed, 14 Nov 2012 14:42:44 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 00/32] xfs: current queue for 3.8
+Message-ID: <20121114204244.GF19387@sgi.com>
+References: <1352721264-3700-1-git-send-email-david@fromorbit.com>
+	<20121113232657.GE19387@sgi.com> <20121114060202.GB1710@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <50A3E99F.8070303@sgi.com>
+In-Reply-To: <20121114060202.GB1710@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,37 +23,26 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Andrew Dahl <adahl@sgi.com>
-Cc: Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, Nov 14, 2012 at 12:57:35PM -0600, Andrew Dahl wrote:
+On Wed, Nov 14, 2012 at 05:02:02PM +1100, Dave Chinner wrote:
+> On Tue, Nov 13, 2012 at 05:26:57PM -0600, Ben Myers wrote:
+> > On Mon, Nov 12, 2012 at 10:53:52PM +1100, Dave Chinner wrote:
+> > > This is my current patch queue for the 3.8 merge window.
+> > 
+> > Patches 1, and 6-8 of this series have been pushed to 
+> > git://oss.sgi.com/xfs/xfs.git, master and for-next branches.
 > 
-> 
-> -- 
-> This message has been scanned for viruses and
-> dangerous content by MailScanner, and is
-> believed to be clean.
-> 
+> I've been rather busy the last couple of days with other stuff, I'll
+> get the updates to the remaining patches out this evening after a
+> test run. I'll just reply to the patches with a V2 version of the
+> patches that I've got fixes for....
 
-> Tests the XFS_IOC_ZERO_RANGE ioctl by way of the "xfs_io zero" utility
-> to ensure it is tossing the expected ranges.
-> 
-> The ranges tested are [0,1] [0,4095] [0,4096] [0,4097] [4095,8191]
->   [4095,8192] [4095,8193] [4096,8192] [1024,4096]
-> 
-> Signed-off-by: Andrew Dahl <adahl@sgi.com>
+Thanks Dave, that's perfect.  I'll pull these in today.
 
-looks good.
-
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
-Cheers,
-
-Dave.
-
--- 
-Dave Chinner
-david@fromorbit.com
+Regards,
+	Ben
 
 _______________________________________________
 xfs mailing list
