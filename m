@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAE6gthW033390 for <xfs@oss.sgi.com>; Wed, 14 Nov 2012 00:42:55 -0600
+	qAE6mC4j034896 for <xfs@oss.sgi.com>; Wed, 14 Nov 2012 00:48:12 -0600
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	O7sW0PhPjbWmBvEq for <xfs@oss.sgi.com>;
-	Tue, 13 Nov 2012 22:44:58 -0800 (PST)
+	jkdFSZKTeiLA9lBM for <xfs@oss.sgi.com>;
+	Tue, 13 Nov 2012 22:50:14 -0800 (PST)
 Received: from dave by dastard with local (Exim 4.76)
-	(envelope-from <david@fromorbit.com>) id 1TYWiW-0001mt-JT
-	for xfs@oss.sgi.com; Wed, 14 Nov 2012 17:44:56 +1100
-Date: Wed, 14 Nov 2012 17:44:56 +1100
+	(envelope-from <david@fromorbit.com>) id 1TYWnd-0001ns-3o
+	for xfs@oss.sgi.com; Wed, 14 Nov 2012 17:50:13 +1100
+Date: Wed, 14 Nov 2012 17:50:13 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 12/32 V2] xfs: verify AGF blocks as they are read from disk
-Message-ID: <20121114064456.GD1710@dastard>
+Subject: [PATCH 17/32 V2] xfs: verify dquot blocks as they are read from disk
+Message-ID: <20121114065013.GE1710@dastard>
 References: <1352721264-3700-1-git-send-email-david@fromorbit.com>
-	<1352721264-3700-13-git-send-email-david@fromorbit.com>
+	<1352721264-3700-18-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1352721264-3700-13-git-send-email-david@fromorbit.com>
+In-Reply-To: <1352721264-3700-18-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,120 +32,201 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-xfs: verify AGF blocks as they are read from disk
+xfs: verify dquot blocks as they are read from disk
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Add an AGF block verify callback function and pass it into the
-buffer read functions. This replaces the existing verification that
-is done after the read completes.
+Add a dquot buffer verify callback function and pass it into the
+buffer read functions. This checks all the dquots in a buffer, but
+cannot completely verify the dquot ids are correct. Also, errors
+cannot be repaired, so an additional function is added to repair bad
+dquots in the buffer if such an error is detected in a context where
+repair is allowed.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Phil White <pwhite@sgi.com>
 ---
-V2: fix duplicate logic in verifier function.
+V2: quotacheck wasn't verifying dquots as they were read from disk
 
- fs/xfs/xfs_alloc.c |   68 ++++++++++++++++++++++++++++++++--------------------
- 1 file changed, 42 insertions(+), 26 deletions(-)
+ fs/xfs/xfs_dquot.c |  117 ++++++++++++++++++++++++++++++++++++++++++----------
+ fs/xfs/xfs_dquot.h |    1 +
+ fs/xfs/xfs_qm.c    |    3 +-
+ 3 files changed, 98 insertions(+), 23 deletions(-)
 
-diff --git a/fs/xfs/xfs_alloc.c b/fs/xfs/xfs_alloc.c
-index 34dcb7c..c916e7e 100644
---- a/fs/xfs/xfs_alloc.c
-+++ b/fs/xfs/xfs_alloc.c
-@@ -2091,6 +2091,47 @@ xfs_alloc_put_freelist(
- 	return 0;
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index e95f800..0ba0f09 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -360,6 +360,89 @@ xfs_qm_dqalloc(
+ 	return (error);
  }
  
-+static void
-+xfs_agf_read_verify(
-+	struct xfs_buf	*bp)
-+ {
-+	struct xfs_mount *mp = bp->b_target->bt_mount;
-+	struct xfs_agf	*agf;
-+	int		agf_ok;
-+
-+	agf = XFS_BUF_TO_AGF(bp);
-+
-+	agf_ok = agf->agf_magicnum == cpu_to_be32(XFS_AGF_MAGIC) &&
-+		XFS_AGF_GOOD_VERSION(be32_to_cpu(agf->agf_versionnum)) &&
-+		be32_to_cpu(agf->agf_freeblks) <= be32_to_cpu(agf->agf_length) &&
-+		be32_to_cpu(agf->agf_flfirst) < XFS_AGFL_SIZE(mp) &&
-+		be32_to_cpu(agf->agf_fllast) < XFS_AGFL_SIZE(mp) &&
-+		be32_to_cpu(agf->agf_flcount) <= XFS_AGFL_SIZE(mp);
++void
++xfs_dquot_read_verify(
++	struct xfs_buf		*bp)
++{
++	struct xfs_mount	*mp = bp->b_target->bt_mount;
++	struct xfs_dqblk	*d = (struct xfs_dqblk *)bp->b_addr;
++	struct xfs_disk_dquot	*ddq;
++	xfs_dqid_t		id = 0;
++	int			i;
 +
 +	/*
-+	 * during growfs operations, the perag is not fully initialised,
-+	 * so we can't use it for any useful checking. growfs ensures we can't
-+	 * use it by using uncached buffers that don't have the perag attached
-+	 * so we can detect and avoid this problem.
++	 * On the first read of the buffer, verify that each dquot is valid.
++	 * We don't know what the id of the dquot is supposed to be, just that
++	 * they should be increasing monotonically within the buffer. If the
++	 * first id is corrupt, then it will fail on the second dquot in the
++	 * buffer so corruptions could point to the wrong dquot in this case.
 +	 */
-+	if (bp->b_pag)
-+		agf_ok = agf_ok && be32_to_cpu(agf->agf_seqno) ==
-+						bp->b_pag->pag_agno;
++	for (i = 0; i < mp->m_quotainfo->qi_dqperchunk; i++) {
++		int	error;
 +
-+	if (xfs_sb_version_haslazysbcount(&mp->m_sb))
-+		agf_ok = agf_ok && be32_to_cpu(agf->agf_btreeblks) <=
-+						be32_to_cpu(agf->agf_length);
++		ddq = &d[i].dd_diskdq;
 +
-+	if (unlikely(XFS_TEST_ERROR(!agf_ok, mp, XFS_ERRTAG_ALLOC_READ_AGF,
-+			XFS_RANDOM_ALLOC_READ_AGF))) {
-+		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, agf);
-+		xfs_buf_ioerror(bp, EFSCORRUPTED);
++		if (i == 0)
++			id = be32_to_cpu(ddq->d_id);
++
++		error = xfs_qm_dqcheck(mp, ddq, id + i, 0, XFS_QMOPT_DOWARN,
++					"xfs_dquot_read_verify");
++		if (error) {
++			XFS_CORRUPTION_ERROR("xfs_dquot_read_verify",
++					     XFS_ERRLEVEL_LOW, mp, d);
++			xfs_buf_ioerror(bp, EFSCORRUPTED);
++			break;
++		}
 +	}
-+
 +	bp->b_iodone = NULL;
 +	xfs_buf_ioend(bp, 0);
 +}
 +
++STATIC int
++xfs_qm_dqrepair(
++	struct xfs_mount	*mp,
++	struct xfs_trans	*tp,
++	struct xfs_dquot	*dqp,
++	xfs_dqid_t		firstid,
++	struct xfs_buf		**bpp)
++{
++	int			error;
++	struct xfs_disk_dquot	*ddq;
++	struct xfs_dqblk	*d;
++	int			i;
++
++	/*
++	 * Read the buffer without verification so we get the corrupted
++	 * buffer returned to us.
++	 */
++	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp, dqp->q_blkno,
++				   mp->m_quotainfo->qi_dqchunklen,
++				   0, bpp, NULL);
++
++	if (error) {
++		ASSERT(*bpp == NULL);
++		return XFS_ERROR(error);
++	}
++
++	ASSERT(xfs_buf_islocked(*bpp));
++	d = (struct xfs_dqblk *)(*bpp)->b_addr;
++
++	/* Do the actual repair of dquots in this buffer */
++	for (i = 0; i < mp->m_quotainfo->qi_dqperchunk; i++) {
++		ddq = &d[i].dd_diskdq;
++		error = xfs_qm_dqcheck(mp, ddq, firstid + i,
++				       dqp->dq_flags & XFS_DQ_ALLTYPES,
++				       XFS_QMOPT_DQREPAIR, "xfs_qm_dqrepair");
++		if (error) {
++			/* repair failed, we're screwed */
++			xfs_trans_brelse(tp, *bpp);
++			return XFS_ERROR(EIO);
++		}
++	}
++
++	return 0;
++}
++
  /*
-  * Read in the allocation group header (free/alloc section).
-  */
-@@ -2102,44 +2143,19 @@ xfs_read_agf(
- 	int			flags,	/* XFS_BUF_ */
- 	struct xfs_buf		**bpp)	/* buffer for the ag freelist header */
- {
--	struct xfs_agf	*agf;		/* ag freelist header */
--	int		agf_ok;		/* set if agf is consistent */
- 	int		error;
+  * Maps a dquot to the buffer containing its on-disk version.
+  * This returns a ptr to the buffer containing the on-disk dquot
+@@ -378,7 +461,6 @@ xfs_qm_dqtobp(
+ 	xfs_buf_t	*bp;
+ 	xfs_inode_t	*quotip = XFS_DQ_TO_QIP(dqp);
+ 	xfs_mount_t	*mp = dqp->q_mount;
+-	xfs_disk_dquot_t *ddq;
+ 	xfs_dqid_t	id = be32_to_cpu(dqp->q_core.d_id);
+ 	xfs_trans_t	*tp = (tpp ? *tpp : NULL);
  
- 	ASSERT(agno != NULLAGNUMBER);
- 	error = xfs_trans_read_buf(
- 			mp, tp, mp->m_ddev_targp,
- 			XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
--			XFS_FSS_TO_BB(mp, 1), flags, bpp, NULL);
-+			XFS_FSS_TO_BB(mp, 1), flags, bpp, xfs_agf_read_verify);
- 	if (error)
- 		return error;
- 	if (!*bpp)
- 		return 0;
+@@ -439,33 +521,24 @@ xfs_qm_dqtobp(
+ 		error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp,
+ 					   dqp->q_blkno,
+ 					   mp->m_quotainfo->qi_dqchunklen,
+-					   0, &bp, NULL);
+-		if (error || !bp)
+-			return XFS_ERROR(error);
+-	}
++					   0, &bp, xfs_dquot_read_verify);
  
- 	ASSERT(!(*bpp)->b_error);
--	agf = XFS_BUF_TO_AGF(*bpp);
+-	ASSERT(xfs_buf_islocked(bp));
 -
 -	/*
--	 * Validate the magic number of the agf block.
+-	 * calculate the location of the dquot inside the buffer.
 -	 */
--	agf_ok =
--		agf->agf_magicnum == cpu_to_be32(XFS_AGF_MAGIC) &&
--		XFS_AGF_GOOD_VERSION(be32_to_cpu(agf->agf_versionnum)) &&
--		be32_to_cpu(agf->agf_freeblks) <= be32_to_cpu(agf->agf_length) &&
--		be32_to_cpu(agf->agf_flfirst) < XFS_AGFL_SIZE(mp) &&
--		be32_to_cpu(agf->agf_fllast) < XFS_AGFL_SIZE(mp) &&
--		be32_to_cpu(agf->agf_flcount) <= XFS_AGFL_SIZE(mp) &&
--		be32_to_cpu(agf->agf_seqno) == agno;
--	if (xfs_sb_version_haslazysbcount(&mp->m_sb))
--		agf_ok = agf_ok && be32_to_cpu(agf->agf_btreeblks) <=
--						be32_to_cpu(agf->agf_length);
--	if (unlikely(XFS_TEST_ERROR(!agf_ok, mp, XFS_ERRTAG_ALLOC_READ_AGF,
--			XFS_RANDOM_ALLOC_READ_AGF))) {
--		XFS_CORRUPTION_ERROR("xfs_alloc_read_agf",
--				     XFS_ERRLEVEL_LOW, mp, agf);
--		xfs_trans_brelse(tp, *bpp);
--		return XFS_ERROR(EFSCORRUPTED);
--	}
- 	xfs_buf_set_ref(*bpp, XFS_AGF_REF);
- 	return 0;
+-	ddq = bp->b_addr + dqp->q_bufoffset;
++		if (error == EFSCORRUPTED && (flags & XFS_QMOPT_DQREPAIR)) {
++			xfs_dqid_t firstid = (xfs_dqid_t)map.br_startoff *
++						mp->m_quotainfo->qi_dqperchunk;
++			ASSERT(bp == NULL);
++			error = xfs_qm_dqrepair(mp, tp, dqp, firstid, &bp);
++		}
+ 
+-	/*
+-	 * A simple sanity check in case we got a corrupted dquot...
+-	 */
+-	error = xfs_qm_dqcheck(mp, ddq, id, dqp->dq_flags & XFS_DQ_ALLTYPES,
+-			   flags & (XFS_QMOPT_DQREPAIR|XFS_QMOPT_DOWARN),
+-			   "dqtobp");
+-	if (error) {
+-		if (!(flags & XFS_QMOPT_DQREPAIR)) {
+-			xfs_trans_brelse(tp, bp);
+-			return XFS_ERROR(EIO);
++		if (error) {
++			ASSERT(bp == NULL);
++			return XFS_ERROR(error);
+ 		}
+ 	}
+ 
++	ASSERT(xfs_buf_islocked(bp));
+ 	*O_bpp = bp;
+-	*O_ddpp = ddq;
++	*O_ddpp = bp->b_addr + dqp->q_bufoffset;
+ 
+ 	return (0);
  }
+diff --git a/fs/xfs/xfs_dquot.h b/fs/xfs/xfs_dquot.h
+index 7d20af2..a08ba92 100644
+--- a/fs/xfs/xfs_dquot.h
++++ b/fs/xfs/xfs_dquot.h
+@@ -140,6 +140,7 @@ static inline xfs_dquot_t *xfs_inode_dquot(struct xfs_inode *ip, int type)
+ 
+ extern int		xfs_qm_dqread(struct xfs_mount *, xfs_dqid_t, uint,
+ 					uint, struct xfs_dquot	**);
++extern void		xfs_dquot_read_verify(struct xfs_buf *bp);
+ extern void		xfs_qm_dqdestroy(xfs_dquot_t *);
+ extern int		xfs_qm_dqflush(struct xfs_dquot *, struct xfs_buf **);
+ extern void		xfs_qm_dqunpin_wait(xfs_dquot_t *);
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 688f608..a6dfb97 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -892,7 +892,8 @@ xfs_qm_dqiter_bufs(
+ 	while (blkcnt--) {
+ 		error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp,
+ 			      XFS_FSB_TO_DADDR(mp, bno),
+-			      mp->m_quotainfo->qi_dqchunklen, 0, &bp, NULL);
++			      mp->m_quotainfo->qi_dqchunklen, 0, &bp,
++			      xfs_dquot_read_verify);
+ 		if (error)
+ 			break;
+ 
 
 _______________________________________________
 xfs mailing list
