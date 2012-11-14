@@ -1,17 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAEIoRVk156756 for <xfs@oss.sgi.com>; Wed, 14 Nov 2012 12:50:27 -0600
-Message-ID: <50A3E86A.2060402@sgi.com>
-Date: Wed, 14 Nov 2012 12:52:26 -0600
+	qAEItXM1157127 for <xfs@oss.sgi.com>; Wed, 14 Nov 2012 12:55:33 -0600
+Received: from xmail.sgi.com (pv-excas3-dc21-nlb.corp.sgi.com [137.38.102.207])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 543FD8F804B
+	for <xfs@oss.sgi.com>; Wed, 14 Nov 2012 10:57:38 -0800 (PST)
+Message-ID: <50A3E99F.8070303@sgi.com>
+Date: Wed, 14 Nov 2012 12:57:35 -0600
 From: Andrew Dahl <adahl@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 02.5/32] xfs: remove xfs_tosspages
-References: <1352721264-3700-1-git-send-email-david@fromorbit.com>
-	<1352721264-3700-3-git-send-email-david@fromorbit.com>
-	<20121114064247.GC1710@dastard> <50A3E807.5010403@sgi.com>
-In-Reply-To: <50A3E807.5010403@sgi.com>
-Content-Type: multipart/mixed; boundary="------------090105000206000902040309"
+Subject: Re: [patch 2/2 V3] xfstests: xfs_tosspages() test addition
+References: <20121108222315.505370321@sgi.com>
+	<20121108222315.709683665@sgi.com>
+	<20121108232726.GV6434@dastard> <50A19EC0.4040405@sgi.com>
+	<50A3DC58.4080704@sgi.com> <50A3E46E.9040508@sgi.com>
+In-Reply-To: <50A3E46E.9040508@sgi.com>
+Content-Type: multipart/mixed; boundary="------------020109090709090001020104"
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,44 +26,261 @@ List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Mark Tinguely <tinguely@sgi.com>
 Cc: xfs@oss.sgi.com
 
---------------090105000206000902040309
+--------------020109090709090001020104
 Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
 
 
 
---------------090105000206000902040309
-Content-Type: text/plain; charset="UTF-8"; name="xfs_zero_condition_reverse"
+--------------020109090709090001020104
+Content-Type: text/plain; charset="UTF-8"; name="xfstests_zero"
 Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename="xfs_zero_condition_reverse"
+Content-Disposition: attachment; filename="xfstests_zero"
 
-Reversing the check on XFS_IOC_ZERO_RANGE.
+Tests the XFS_IOC_ZERO_RANGE ioctl by way of the "xfs_io zero" utility
+to ensure it is tossing the expected ranges.
 
-Range should be zeroed if the start is less than or equal to the end.
+The ranges tested are [0,1] [0,4095] [0,4096] [0,4097] [4095,8191]
+  [4095,8192] [4095,8193] [4096,8192] [1024,4096]
 
 Signed-off-by: Andrew Dahl <adahl@sgi.com>
 
 ---
 
-Index: xfs/fs/xfs/xfs_vnodeops.c
+Index: xfstests/290
 ===================================================================
---- xfs.orig/fs/xfs/xfs_vnodeops.c
-+++ xfs/fs/xfs/xfs_vnodeops.c
-@@ -2188,7 +2188,7 @@ xfs_change_file_space(
- 	case XFS_IOC_ZERO_RANGE:
- 		prealloc_type |= XFS_BMAPI_CONVERT;
- 		end = round_down(startoffset + bf->l_len, PAGE_SIZE) - 1;
--		if (startoffset > end)
-+		if (startoffset <= end)
- 			truncate_pagecache_range(VFS_I(ip), startoffset, end);
- 		/* FALLTHRU */
- 	case XFS_IOC_RESVSP:
+--- /dev/null
++++ xfstests/290
+@@ -0,0 +1,94 @@
++#! /bin/bash
++# FS QA Test No. 290
++#
++# Makes calls to XFS_IOC_ZERO_RANGE and checks tossed ranges
++#
++# Nothing should be tossed unless the range includes a page boundry
++#
++# Primarily tests page boundries and boundries that are
++#  off-by-one to ensure we're only tossing what's expected
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2012 SGI.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++# creator
++owner=adahl@sgi.com
++
++seq=`basename $0`
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "exit \$status" 0 1 2 3 15
++
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
++
++# real QA test starts here
++
++# Modify as appropriate.
++_supported_fs xfs
++_supported_os Linux
++
++_require_xfs_io_zero
++
++testfile=$TEST_DIR/290.$$
++
++test_zero()
++{
++	zero_start=$1
++	zero_len=$2
++
++	$XFS_IO_PROG -f -t -c "pwrite -S 0x41 0 4096" \
++                      -c "pwrite -S 0x42 4096 4096" \
++                      -c "zero $zero_start $zero_len" \
++                      -c "pread -v 0 8192" \
++                      $testfile | _filter_xfs_io_unique
++}
++
++# [0,1] -- Shouldn't toss anything
++test_zero    0    1
++
++#[0,4095] -- Shouldn't toss anything
++test_zero    0 4095
++
++#[0,4096] -- Should toss first page
++test_zero    0 4096
++
++#[0,4097] -- Should toss first page
++test_zero    0 4097
++
++#[4095,8191] -- Should toss last byte of first page
++test_zero 4095 4096
++
++#[4095,8192] -- Should toss second page & last byte of first page
++test_zero 4095 4097
++
++#[4095,8193] -- Should toss second page & last byte of first page
++test_zero 4095 4098
++
++#[4096,8192] -- Should toss second page
++test_zero 4096 4096
++
++#[1024,5120] -- Should toss from 1024 to end of first page
++test_zero 1024 4096
++
++# success, all done
++status=0
++exit
+Index: xfstests/290.out
+===================================================================
+--- /dev/null
++++ xfstests/290.out
+@@ -0,0 +1,96 @@
++QA output created by 290
++wrote 4096/4096 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 4096/4096 bytes at offset 4096
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++00000000:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  AAAAAAAAAAAAAAAA
++*
++00001000:  42 42 42 42 42 42 42 42 42 42 42 42 42 42 42 42  BBBBBBBBBBBBBBBB
++*
++read 8192/8192 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 4096/4096 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 4096/4096 bytes at offset 4096
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++00000000:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  AAAAAAAAAAAAAAAA
++*
++00001000:  42 42 42 42 42 42 42 42 42 42 42 42 42 42 42 42  BBBBBBBBBBBBBBBB
++*
++read 8192/8192 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 4096/4096 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 4096/4096 bytes at offset 4096
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++00000000:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
++*
++00001000:  42 42 42 42 42 42 42 42 42 42 42 42 42 42 42 42  BBBBBBBBBBBBBBBB
++*
++read 8192/8192 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 4096/4096 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 4096/4096 bytes at offset 4096
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++00000000:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
++*
++00001000:  42 42 42 42 42 42 42 42 42 42 42 42 42 42 42 42  BBBBBBBBBBBBBBBB
++*
++read 8192/8192 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 4096/4096 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 4096/4096 bytes at offset 4096
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++00000000:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  AAAAAAAAAAAAAAAA
++*
++00000ff0:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 00  AAAAAAAAAAAAAAA.
++00001000:  42 42 42 42 42 42 42 42 42 42 42 42 42 42 42 42  BBBBBBBBBBBBBBBB
++*
++read 8192/8192 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 4096/4096 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 4096/4096 bytes at offset 4096
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++00000000:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  AAAAAAAAAAAAAAAA
++*
++00000ff0:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 00  AAAAAAAAAAAAAAA.
++00001000:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
++*
++read 8192/8192 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 4096/4096 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 4096/4096 bytes at offset 4096
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++00000000:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  AAAAAAAAAAAAAAAA
++*
++00000ff0:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 00  AAAAAAAAAAAAAAA.
++00001000:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
++*
++read 8192/8192 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 4096/4096 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 4096/4096 bytes at offset 4096
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++00000000:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  AAAAAAAAAAAAAAAA
++*
++00001000:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
++*
++read 8192/8192 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 4096/4096 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 4096/4096 bytes at offset 4096
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++00000000:  41 41 41 41 41 41 41 41 41 41 41 41 41 41 41 41  AAAAAAAAAAAAAAAA
++*
++00000400:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
++*
++00001000:  42 42 42 42 42 42 42 42 42 42 42 42 42 42 42 42  BBBBBBBBBBBBBBBB
++*
++read 8192/8192 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+Index: xfstests/group
+===================================================================
+--- xfstests.orig/group
++++ xfstests/group
+@@ -408,3 +408,4 @@ deprecated
+ 287 auto dump quota quick
+ 288 auto quick ioctl trim
+ 289 auto quick
++290 auto rw prealloc quick ioctl
+Index: xfstests/common.rc
+===================================================================
+--- xfstests.orig/common.rc
++++ xfstests/common.rc
+@@ -957,6 +957,14 @@ _user_do()
+     fi
+ }
+ 
++# check that xfs_io, kernel, and filesystem all support zero
++_require_xfs_io_zero()
++{
++	testio=`$XFS_IO_PROG -c "zero help" 2>&1`
++	echo $testio | grep -q 'command "zero" not found' && \
++		_notrun "zero command not supported"
++}
++
+ # check that xfs_io, glibc, kernel, and filesystem all (!) support
+ # fallocate
+ #
 
 
---------------090105000206000902040309
+--------------020109090709090001020104
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -70,4 +291,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---------------090105000206000902040309--
+--------------020109090709090001020104--
