@@ -1,21 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAE8xExV055193 for <xfs@oss.sgi.com>; Wed, 14 Nov 2012 02:59:14 -0600
-Received: from galenis.iv.lt (galenis.iv.lt [195.14.170.242]) by cuda.sgi.com
-	with ESMTP id AB3X7rHAvKnngIC0 (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 14 Nov 2012 01:01:16 -0800 (PST)
-Message-ID: <50A35DD8.801@iv.lt>
-Date: Wed, 14 Nov 2012 11:01:12 +0200
-From: Linas Jankauskas <linas.j@iv.lt>
+	qAEHwsmn154217 for <xfs@oss.sgi.com>; Wed, 14 Nov 2012 11:58:54 -0600
+Message-ID: <50A3DC58.4080704@sgi.com>
+Date: Wed, 14 Nov 2012 12:00:56 -0600
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: Slow performance after ~4.5TB
-References: <50A0AFD5.2020607@iv.lt> <20121112090448.GS24575@dastard>
-	<50A0C590.6020602@iv.lt> <20121112123222.GT24575@dastard>
-	<50A10077.2060908@iv.lt> <20121112223623.GV24575@dastard>
-	<50A20F53.80405@iv.lt> <20121113195026.GH25039@dastard>
-In-Reply-To: <20121113195026.GH25039@dastard>
+Subject: Re: [patch 2/2 V2] xfstests: xfs_tosspages() test addition
+References: <20121108222315.505370321@sgi.com>
+	<20121108222315.709683665@sgi.com>
+	<20121108232726.GV6434@dastard> <50A19EC0.4040405@sgi.com>
+In-Reply-To: <50A19EC0.4040405@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,26 +23,33 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Andrew Dahl <adahl@sgi.com>
 Cc: xfs@oss.sgi.com
 
-I made new smaller report with only one rsync proccess running. Here it 
-is http://www63.zippyshare.com/v/42810808/file.html
+On 11/12/12 19:13, Andrew Dahl wrote:
+>
+> Tests the XFS_IOC_ZERO_RANGE ioctl by way of the "xfs_io zero" utility
+> to ensure it is tossing the expected ranges.
+>
+> The ranges tested are [0,1] [0,4095] [0,4096] [0,4097] [4095,8191]
+>    [4095,8192] [4095,8193] [4096,8192] [1024,4096]
+>
+> Signed-off-by: Andrew Dahl<adahl@sgi.com>
+>
+> ---
+>
+
+...
 
 
-Linas
+> +
+> +	$XFS_IO_PROG -F -f -t -c "pwrite -S 0x41 0 4096" \
 
-On 11/13/2012 09:50 PM, Dave Chinner wrote:
-> On Tue, Nov 13, 2012 at 11:13:55AM +0200, Linas Jankauskas wrote:
->> trace-cmd output was about 300mb, so im pasting first 100 lines of
->> it, is it enough?:
->
-> Not, compress it (it'll compress well) and post a link for me to
-> download or send it directly to me.
->
-> Cheers,
->
-> Dave.
+-F is deprecated in xfs_io.
+
+Looks good.
+
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
