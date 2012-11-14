@@ -1,16 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAEIml4f156577 for <xfs@oss.sgi.com>; Wed, 14 Nov 2012 12:48:47 -0600
-Message-ID: <50A3E807.5010403@sgi.com>
-Date: Wed, 14 Nov 2012 12:50:47 -0600
+	qAEIoRVk156756 for <xfs@oss.sgi.com>; Wed, 14 Nov 2012 12:50:27 -0600
+Message-ID: <50A3E86A.2060402@sgi.com>
+Date: Wed, 14 Nov 2012 12:52:26 -0600
 From: Andrew Dahl <adahl@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 02/32 V2] xfs: remove xfs_tosspages
+Subject: Re: [PATCH 02.5/32] xfs: remove xfs_tosspages
 References: <1352721264-3700-1-git-send-email-david@fromorbit.com>
 	<1352721264-3700-3-git-send-email-david@fromorbit.com>
-	<20121114064247.GC1710@dastard>
-In-Reply-To: <20121114064247.GC1710@dastard>
+	<20121114064247.GC1710@dastard> <50A3E807.5010403@sgi.com>
+In-Reply-To: <50A3E807.5010403@sgi.com>
+Content-Type: multipart/mixed; boundary="------------090105000206000902040309"
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,55 +20,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On 11/14/2012 12:42 AM, Dave Chinner wrote:
-> xfs: remove xfs_tosspages
-> 
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> It's a buggy, unnecessary wrapper that is duplicating
-> truncate_pagecache_range().
-> 
-> When replacing the call in xfs_change_file_space(), also ensure that
-> the length being allocated/freed is always positive before making
-> any changes. These checks are done in the lower extent manipulation
-> functions, too, but we need to do them before any page cache
-> operations.
-> 
-> Reported-by: Andrew Dahl <adahl@sgi.com>
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
+--------------090105000206000902040309
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
 
->  	case XFS_IOC_ZERO_RANGE:
->  		prealloc_type |= XFS_BMAPI_CONVERT;
-> -		xfs_tosspages(ip, startoffset, startoffset + bf->l_len, 0);
-> +		end = round_down(startoffset + bf->l_len, PAGE_SIZE) - 1;
-> +		if (startoffset > end)
 
-This should be
 
-if (startoffset <= end)
+--------------090105000206000902040309
+Content-Type: text/plain; charset="UTF-8"; name="xfs_zero_condition_reverse"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="xfs_zero_condition_reverse"
 
-This exact like was in my original patch, though it returned if this was
-true. -- Also, it needs to be "or equal to" for the case of passing
-[4095,4096] -- after we round down and subtract one, they'll be equal
-and the call will zero one byte.
+Reversing the check on XFS_IOC_ZERO_RANGE.
 
---
+Range should be zeroed if the start is less than or equal to the end.
 
-I'll follow up with a patch just so Ben can get this pulled today.
+Signed-off-by: Andrew Dahl <adahl@sgi.com>
 
-Looks great though!
+---
 
-Reviewed-By: Andrew Dahl <adahl@sgi.com>
+Index: xfs/fs/xfs/xfs_vnodeops.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_vnodeops.c
++++ xfs/fs/xfs/xfs_vnodeops.c
+@@ -2188,7 +2188,7 @@ xfs_change_file_space(
+ 	case XFS_IOC_ZERO_RANGE:
+ 		prealloc_type |= XFS_BMAPI_CONVERT;
+ 		end = round_down(startoffset + bf->l_len, PAGE_SIZE) - 1;
+-		if (startoffset > end)
++		if (startoffset <= end)
+ 			truncate_pagecache_range(VFS_I(ip), startoffset, end);
+ 		/* FALLTHRU */
+ 	case XFS_IOC_RESVSP:
+
+
+--------------090105000206000902040309
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--------------090105000206000902040309--
