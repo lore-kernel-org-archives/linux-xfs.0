@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAF61Rsb221668 for <xfs@oss.sgi.com>; Thu, 15 Nov 2012 00:01:27 -0600
+	qAF60vfK221634 for <xfs@oss.sgi.com>; Thu, 15 Nov 2012 00:00:57 -0600
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	j8qmQdnoFeBtJEnV for <xfs@oss.sgi.com>;
-	Wed, 14 Nov 2012 22:03:31 -0800 (PST)
-Date: Thu, 15 Nov 2012 17:03:19 +1100
+	4TzFt26sLJtzOKOD for <xfs@oss.sgi.com>;
+	Wed, 14 Nov 2012 22:02:59 -0800 (PST)
+Received: from dave by dastard with local (Exim 4.76)
+	(envelope-from <david@fromorbit.com>) id 1TYsXR-0004gh-GX
+	for xfs@oss.sgi.com; Thu, 15 Nov 2012 17:02:57 +1100
+Date: Thu, 15 Nov 2012 17:02:57 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 00/32] xfs: current queue for 3.8
-Message-ID: <20121115060319.GD14281@dastard>
+Subject: [PATCH 27/32 REPOST] xfs: add buffer pre-write callback
+Message-ID: <20121115060257.GC14281@dastard>
 References: <1352721264-3700-1-git-send-email-david@fromorbit.com>
-	<20121114212721.GG19387@sgi.com> <20121115043959.GB27055@sgi.com>
+	<1352721264-3700-28-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20121115043959.GB27055@sgi.com>
+In-Reply-To: <1352721264-3700-28-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,30 +30,82 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, Nov 14, 2012 at 10:40:00PM -0600, Ben Myers wrote:
-> Hi Dave,
-> 
-> On Wed, Nov 14, 2012 at 03:27:21PM -0600, Ben Myers wrote:
-> > On Mon, Nov 12, 2012 at 10:53:52PM +1100, Dave Chinner wrote:
-> > > This is my current patch queue for the 3.8 merge window.
-> > 
-> > Patches 2-5 and 2.5 of this series are pushed to git://oss.sgi.com/xfs/xfs.git,
-> > master and for-next branches.
-> 
-> I tried to pull in the rest of your series today, but ran into a conflict on
-> patch 27.  It's probably a PEBKAC.  Will try again tomorrow.
+xfs: add buffer pre-write callback
 
-I reposted my current version just in case.
+From: Dave Chinner <dchinner@redhat.com>
 
-Cheers,
+Add a callback to the buffer write path to enable verification of
+the buffer and CRC calculation prior to issuing the write to the
+underlying storage.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+If the callback function detects some kind of failure or error
+condition, it must mark the buffer with an error so that the caller
+can take appropriate action. In the case of xfs_buf_ioapply(), a
+corrupt metadta buffer willt rigger a shutdown of the filesystem,
+because something is clearly wrong and we can't allow corrupt
+metadata to be written to disk.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Phil White <pwhite@sgi.com>
+---
+
+Reposting the version I have in case there was a missing update.
+
+ fs/xfs/xfs_buf.c |   16 ++++++++++++++++
+ fs/xfs/xfs_buf.h |    3 +++
+ 2 files changed, 19 insertions(+)
+
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 62b7e89..c073236 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -569,7 +569,9 @@ found:
+ 	 */
+ 	if (bp->b_flags & XBF_STALE) {
+ 		ASSERT((bp->b_flags & _XBF_DELWRI_Q) == 0);
++		ASSERT(bp->b_iodone == NULL);
+ 		bp->b_flags &= _XBF_KMEM | _XBF_PAGES;
++		bp->b_pre_io = NULL;
+ 	}
+ 
+ 	trace_xfs_buf_find(bp, flags, _RET_IP_);
+@@ -1314,6 +1316,20 @@ _xfs_buf_ioapply(
+ 	rw |= REQ_META;
+ 
+ 	/*
++	 * run the pre-io callback function if it exists. If this function
++	 * fails it will mark the buffer with an error and the IO should
++	 * not be dispatched.
++	 */
++	if (bp->b_pre_io) {
++		bp->b_pre_io(bp);
++		if (bp->b_error) {
++			xfs_force_shutdown(bp->b_target->bt_mount,
++					   SHUTDOWN_CORRUPT_INCORE);
++			return;
++		}
++	}
++
++	/*
+ 	 * Walk all the vectors issuing IO on them. Set up the initial offset
+ 	 * into the buffer and the desired IO size before we start -
+ 	 * _xfs_buf_ioapply_vec() will modify them appropriately for each
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index 677b1dc..51bc16a 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -155,6 +155,9 @@ typedef struct xfs_buf {
+ 	unsigned int		b_offset;	/* page offset in first page */
+ 	unsigned short		b_error;	/* error code on I/O */
+ 
++	void			(*b_pre_io)(struct xfs_buf *);
++						/* pre-io callback function */
++
+ #ifdef XFS_BUF_LOCK_TRACKING
+ 	int			b_last_holder;
+ #endif
 
 _______________________________________________
 xfs mailing list
