@@ -1,22 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAFGQ4hR015632 for <xfs@oss.sgi.com>; Thu, 15 Nov 2012 10:26:04 -0600
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	MYLnI3v5EJEKJ2Ua (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 15 Nov 2012 08:28:08 -0800 (PST)
-Date: Thu, 15 Nov 2012 11:28:07 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 05/32] xfs: remove xfs_flushinval_pages
-Message-ID: <20121115162807.GE4019@infradead.org>
-References: <1352721264-3700-1-git-send-email-david@fromorbit.com>
-	<1352721264-3700-6-git-send-email-david@fromorbit.com>
+	qAFHrjQW020684 for <xfs@oss.sgi.com>; Thu, 15 Nov 2012 11:53:45 -0600
+Message-ID: <50A52CA3.3060604@sgi.com>
+Date: Thu, 15 Nov 2012 11:55:47 -0600
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1352721264-3700-6-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 17/32 V2] xfs: verify dquot blocks as they are read from
+	disk
+References: <1352721264-3700-1-git-send-email-david@fromorbit.com>
+	<1352721264-3700-18-git-send-email-david@fromorbit.com>
+	<20121114065013.GE1710@dastard>
+In-Reply-To: <20121114065013.GE1710@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,64 +20,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-> -		if ((iocb->ki_pos & target->bt_smask) ||
-> -		    (size & target->bt_smask)) {
-> -			if (iocb->ki_pos == i_size_read(inode))
-> +		if ((pos & target->bt_smask) || (size & target->bt_smask)) {
-> +			if (pos == i_size_read(inode))
->  				return 0;
->  			return -XFS_ERROR(EINVAL);
->  		}
->  	}
->  
-> -	n = mp->m_super->s_maxbytes - iocb->ki_pos;
-> +	n = mp->m_super->s_maxbytes - pos;
+On 11/14/12 00:50, Dave Chinner wrote:
+> xfs: verify dquot blocks as they are read from disk
+>
+> From: Dave Chinner<dchinner@redhat.com>
+>
+> Add a dquot buffer verify callback function and pass it into the
+> buffer read functions. This checks all the dquots in a buffer, but
+> cannot completely verify the dquot ids are correct. Also, errors
+> cannot be repaired, so an additional function is added to repair bad
+> dquots in the buffer if such an error is detected in a context where
+> repair is allowed.
+>
+> Signed-off-by: Dave Chinner<dchinner@redhat.com>
+> Reviewed-by: Phil White<pwhite@sgi.com>
+> ---
+> V2: quotacheck wasn't verifying dquots as they were read from disk
+>
 
-What does this have to do with the recent of the patch?
+FYI:
 
-Not that is diapprove, but I don't think it fits here.
+The xfs_quota program does not generate output with V2 which causes 
+xfstest 050 to fails.
 
->  		if (inode->i_mapping->nrpages) {
-> -			ret = -xfs_flushinval_pages(ip,
-> -					(iocb->ki_pos & PAGE_CACHE_MASK),
-> -					-1, FI_REMAPF_LOCKED);
-> +			ret = -filemap_write_and_wait_range(
-> +							VFS_I(ip)->i_mapping,
-> +							pos, -1);
->  			if (ret) {
->  				xfs_rw_iunlock(ip, XFS_IOLOCK_EXCL);
->  				return ret;
->  			}
-> +			truncate_pagecache_range(VFS_I(ip), pos, -1);
-
-We already have a local "inode" variable that can be used in these two
-places.
-
-Also the -1 end might be a 1:1 translation of what was there, but is not what
-we really want.  At very least it needs an XXX comment that the range should
-be revisited.
-
-> @@ -670,10 +670,11 @@ xfs_file_dio_aio_write(
->  		goto out;
->  
->  	if (mapping->nrpages) {
-> -		ret = -xfs_flushinval_pages(ip, (pos & PAGE_CACHE_MASK), -1,
-> -							FI_REMAPF_LOCKED);
-> +		ret = -filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
-> +						    pos, -1);
->  		if (ret)
->  			goto out;
-> +		truncate_pagecache_range(VFS_I(ip), pos, -1);
-
-We already have local mapping and inode variables here, same comment
-about the -1 len.
+--Mark.
 
 _______________________________________________
 xfs mailing list
