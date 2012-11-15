@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAFKkX6p027607 for <xfs@oss.sgi.com>; Thu, 15 Nov 2012 14:46:33 -0600
+	qAFKqOoZ027989 for <xfs@oss.sgi.com>; Thu, 15 Nov 2012 14:52:24 -0600
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	K4zByu1W7MlyGvoj for <xfs@oss.sgi.com>;
-	Thu, 15 Nov 2012 12:48:37 -0800 (PST)
-Date: Fri, 16 Nov 2012 07:48:31 +1100
+	3FTNfEIkR9EHp69Q for <xfs@oss.sgi.com>;
+	Thu, 15 Nov 2012 12:54:29 -0800 (PST)
+Date: Fri, 16 Nov 2012 07:54:27 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 17/32 V2] xfs: verify dquot blocks as they are read from
-	disk
-Message-ID: <20121115204830.GG14281@dastard>
+Subject: Re: [PATCH 05/32] xfs: remove xfs_flushinval_pages
+Message-ID: <20121115205427.GH14281@dastard>
 References: <1352721264-3700-1-git-send-email-david@fromorbit.com>
-	<1352721264-3700-18-git-send-email-david@fromorbit.com>
-	<20121114065013.GE1710@dastard> <50A52CA3.3060604@sgi.com>
+	<1352721264-3700-6-git-send-email-david@fromorbit.com>
+	<20121115162807.GE4019@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <50A52CA3.3060604@sgi.com>
+In-Reply-To: <20121115162807.GE4019@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,48 +28,57 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Thu, Nov 15, 2012 at 11:55:47AM -0600, Mark Tinguely wrote:
-> On 11/14/12 00:50, Dave Chinner wrote:
-> >xfs: verify dquot blocks as they are read from disk
-> >
-> >From: Dave Chinner<dchinner@redhat.com>
-> >
-> >Add a dquot buffer verify callback function and pass it into the
-> >buffer read functions. This checks all the dquots in a buffer, but
-> >cannot completely verify the dquot ids are correct. Also, errors
-> >cannot be repaired, so an additional function is added to repair bad
-> >dquots in the buffer if such an error is detected in a context where
-> >repair is allowed.
-> >
-> >Signed-off-by: Dave Chinner<dchinner@redhat.com>
-> >Reviewed-by: Phil White<pwhite@sgi.com>
-> >---
-> >V2: quotacheck wasn't verifying dquots as they were read from disk
-> >
+On Thu, Nov 15, 2012 at 11:28:07AM -0500, Christoph Hellwig wrote:
+> > -		if ((iocb->ki_pos & target->bt_smask) ||
+> > -		    (size & target->bt_smask)) {
+> > -			if (iocb->ki_pos == i_size_read(inode))
+> > +		if ((pos & target->bt_smask) || (size & target->bt_smask)) {
+> > +			if (pos == i_size_read(inode))
+> >  				return 0;
+> >  			return -XFS_ERROR(EINVAL);
+> >  		}
+> >  	}
+> >  
+> > -	n = mp->m_super->s_maxbytes - iocb->ki_pos;
+> > +	n = mp->m_super->s_maxbytes - pos;
 > 
-> FYI:
+> What does this have to do with the recent of the patch?
+
+Left over from an original version of the patch that also changed
+the ranges of the flushes.
+
+> Not that is diapprove, but I don't think it fits here.
 > 
-> The xfs_quota program does not generate output with V2 which causes
-> xfstest 050 to fails.
+> >  		if (inode->i_mapping->nrpages) {
+> > -			ret = -xfs_flushinval_pages(ip,
+> > -					(iocb->ki_pos & PAGE_CACHE_MASK),
+> > -					-1, FI_REMAPF_LOCKED);
+> > +			ret = -filemap_write_and_wait_range(
+> > +							VFS_I(ip)->i_mapping,
+> > +							pos, -1);
+> >  			if (ret) {
+> >  				xfs_rw_iunlock(ip, XFS_IOLOCK_EXCL);
+> >  				return ret;
+> >  			}
+> > +			truncate_pagecache_range(VFS_I(ip), pos, -1);
+> 
+> We already have a local "inode" variable that can be used in these two
+> places.
 
-I don't think that has anything to do with this patch orthechange
-for V2 - V2 only changes quotacheck behaviour, and that doesn't
-impact xfs_quota behaviour. The test passes just fine here:
+Ah, copy-n-waste problem.
 
-$ sudo ./check 050
-FSTYP         -- xfs (debug)
-PLATFORM      -- Linux/x86_64 test-2 3.7.0-rc5-dgc+
-MKFS_OPTIONS  -- -f -bsize=4096 /dev/vdb
-MOUNT_OPTIONS -- /dev/vdb /mnt/scratch
+> Also the -1 end might be a 1:1 translation of what was there, but is not what
+> we really want.  At very least it needs an XXX comment that the range should
+> be revisited.
 
-050 14s ... 15s
-Ran: 050
-Passed all 1 tests
-
-So perhaps there's something else going wrong on your machine?
+Yes, I know, but the original patch I had that changed the ranges to
+something sensible was causing fsx and other failures all over the
+place. It appears that setting the ranges appropriately here exposes
+other (worse) bugs, so I decided to leave doing that until I have
+time to go on a wild goose chase....
 
 Cheers,
 
