@@ -1,21 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAFKqOoZ027989 for <xfs@oss.sgi.com>; Thu, 15 Nov 2012 14:52:24 -0600
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	3FTNfEIkR9EHp69Q for <xfs@oss.sgi.com>;
-	Thu, 15 Nov 2012 12:54:29 -0800 (PST)
-Date: Fri, 16 Nov 2012 07:54:27 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 05/32] xfs: remove xfs_flushinval_pages
-Message-ID: <20121115205427.GH14281@dastard>
-References: <1352721264-3700-1-git-send-email-david@fromorbit.com>
-	<1352721264-3700-6-git-send-email-david@fromorbit.com>
-	<20121115162807.GE4019@infradead.org>
+	qAFKxlc0028383 for <xfs@oss.sgi.com>; Thu, 15 Nov 2012 14:59:47 -0600
+Message-ID: <50A5583D.5070101@sgi.com>
+Date: Thu, 15 Nov 2012 15:01:49 -0600
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20121115162807.GE4019@infradead.org>
+Subject: Re: [PATCH 17/32 V2] xfs: verify dquot blocks as they are read from
+	disk
+References: <1352721264-3700-1-git-send-email-david@fromorbit.com>
+	<1352721264-3700-18-git-send-email-david@fromorbit.com>
+	<20121114065013.GE1710@dastard> <50A52CA3.3060604@sgi.com>
+	<20121115204830.GG14281@dastard>
+In-Reply-To: <20121115204830.GG14281@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,68 +21,83 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Nov 15, 2012 at 11:28:07AM -0500, Christoph Hellwig wrote:
-> > -		if ((iocb->ki_pos & target->bt_smask) ||
-> > -		    (size & target->bt_smask)) {
-> > -			if (iocb->ki_pos == i_size_read(inode))
-> > +		if ((pos & target->bt_smask) || (size & target->bt_smask)) {
-> > +			if (pos == i_size_read(inode))
-> >  				return 0;
-> >  			return -XFS_ERROR(EINVAL);
-> >  		}
-> >  	}
-> >  
-> > -	n = mp->m_super->s_maxbytes - iocb->ki_pos;
-> > +	n = mp->m_super->s_maxbytes - pos;
-> 
-> What does this have to do with the recent of the patch?
+On 11/15/12 14:48, Dave Chinner wrote:
+> On Thu, Nov 15, 2012 at 11:55:47AM -0600, Mark Tinguely wrote:
+>> On 11/14/12 00:50, Dave Chinner wrote:
+>>> xfs: verify dquot blocks as they are read from disk
+>>>
+>>> From: Dave Chinner<dchinner@redhat.com>
+>>>
+>>> Add a dquot buffer verify callback function and pass it into the
+>>> buffer read functions. This checks all the dquots in a buffer, but
+>>> cannot completely verify the dquot ids are correct. Also, errors
+>>> cannot be repaired, so an additional function is added to repair bad
+>>> dquots in the buffer if such an error is detected in a context where
+>>> repair is allowed.
+>>>
+>>> Signed-off-by: Dave Chinner<dchinner@redhat.com>
+>>> Reviewed-by: Phil White<pwhite@sgi.com>
+>>> ---
+>>> V2: quotacheck wasn't verifying dquots as they were read from disk
+>>>
+>>
+>> FYI:
+>>
+>> The xfs_quota program does not generate output with V2 which causes
+>> xfstest 050 to fails.
+>
+> I don't think that has anything to do with this patch orthechange
+> for V2 - V2 only changes quotacheck behaviour, and that doesn't
+> impact xfs_quota behaviour. The test passes just fine here:
+>
+> $ sudo ./check 050
+> FSTYP         -- xfs (debug)
+> PLATFORM      -- Linux/x86_64 test-2 3.7.0-rc5-dgc+
+> MKFS_OPTIONS  -- -f -bsize=4096 /dev/vdb
+> MOUNT_OPTIONS -- /dev/vdb /mnt/scratch
+>
+> 050 14s ... 15s
+> Ran: 050
+> Passed all 1 tests
+>
+> So perhaps there's something else going wrong on your machine?
+>
+> Cheers,
+>
+> Dave.
 
-Left over from an original version of the patch that also changed
-the ranges of the flushes.
+I will do more investigating. With V2 050 output:
 
-> Not that is diapprove, but I don't think it fits here.
-> 
-> >  		if (inode->i_mapping->nrpages) {
-> > -			ret = -xfs_flushinval_pages(ip,
-> > -					(iocb->ki_pos & PAGE_CACHE_MASK),
-> > -					-1, FI_REMAPF_LOCKED);
-> > +			ret = -filemap_write_and_wait_range(
-> > +							VFS_I(ip)->i_mapping,
-> > +							pos, -1);
-> >  			if (ret) {
-> >  				xfs_rw_iunlock(ip, XFS_IOLOCK_EXCL);
-> >  				return ret;
-> >  			}
-> > +			truncate_pagecache_range(VFS_I(ip), pos, -1);
-> 
-> We already have a local "inode" variable that can be used in these two
-> places.
+QA output created by 050
+*** user
+meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
+data     = bsize=XXX blocks=XXX, imaxpct=PCT
+          = sunit=XXX swidth=XXX, unwritten=X
+naming   =VERN bsize=XXX
+log      =LDEV bsize=XXX blocks=XXX
+realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
 
-Ah, copy-n-waste problem.
+*** report no quota settings
 
-> Also the -1 end might be a 1:1 translation of what was there, but is not what
-> we really want.  At very least it needs an XXX comment that the range should
-> be revisited.
+*** report initial settings
 
-Yes, I know, but the original patch I had that changed the ranges to
-something sensible was causing fsx and other failures all over the
-place. It appears that setting the ranges appropriately here exposes
-other (worse) bugs, so I decided to leave doing that until I have
-time to go on a wild goose chase....
+*** push past the soft inode limit
 
-Cheers,
+*** push past the soft block limit
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+...
+
+Maybe it is my xfs_quota app, although it works fine with V1 kernel sources.
+
+--Mark.
+
 
 _______________________________________________
 xfs mailing list
