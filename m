@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAF37Rwp203827 for <xfs@oss.sgi.com>; Wed, 14 Nov 2012 21:07:27 -0600
-Date: Wed, 14 Nov 2012 21:09:28 -0600
+	qAF4bwRF212232 for <xfs@oss.sgi.com>; Wed, 14 Nov 2012 22:37:59 -0600
+Date: Wed, 14 Nov 2012 22:40:00 -0600
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 19/32] xfs: factor dir2 block read operations
-Message-ID: <20121115030928.GA27055@sgi.com>
+Subject: Re: [PATCH 00/32] xfs: current queue for 3.8
+Message-ID: <20121115043959.GB27055@sgi.com>
 References: <1352721264-3700-1-git-send-email-david@fromorbit.com>
-	<1352721264-3700-20-git-send-email-david@fromorbit.com>
+	<20121114212721.GG19387@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1352721264-3700-20-git-send-email-david@fromorbit.com>
+In-Reply-To: <20121114212721.GG19387@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,20 +26,20 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Nov 12, 2012 at 10:54:11PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> In preparation for verifying dir2 block format buffers, factor
-> the read operations out of the block operations (lookup, addname,
-> getdents) and some of the additional logic to make it easier to
-> understand an dmodify the code.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Hi Dave,
 
-This was a difficult review.  I think you have at least three ideas in here
-which could be split up.  Please keep the reviewer in mind.
+On Wed, Nov 14, 2012 at 03:27:21PM -0600, Ben Myers wrote:
+> On Mon, Nov 12, 2012 at 10:53:52PM +1100, Dave Chinner wrote:
+> > This is my current patch queue for the 3.8 merge window.
+> 
+> Patches 2-5 and 2.5 of this series are pushed to git://oss.sgi.com/xfs/xfs.git,
+> master and for-next branches.
 
-Reviewed-by: Ben Myers <bpm@sgi.com>
+I tried to pull in the rest of your series today, but ran into a conflict on
+patch 27.  It's probably a PEBKAC.  Will try again tomorrow.
+
+Regards,
+	Ben
 
 _______________________________________________
 xfs mailing list
