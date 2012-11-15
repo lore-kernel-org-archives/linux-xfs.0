@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAFGMDYU015338 for <xfs@oss.sgi.com>; Thu, 15 Nov 2012 10:22:13 -0600
+	qAFGQ4hR015632 for <xfs@oss.sgi.com>; Thu, 15 Nov 2012 10:26:04 -0600
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	YvloG2e0vvw3JLNe (version=TLSv1 cipher=AES256-SHA bits=256
+	MYLnI3v5EJEKJ2Ua (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 15 Nov 2012 08:24:18 -0800 (PST)
-Date: Thu, 15 Nov 2012 11:24:17 -0500
+	Thu, 15 Nov 2012 08:28:08 -0800 (PST)
+Date: Thu, 15 Nov 2012 11:28:07 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 04/32] xfs: remove xfs_flush_pages
-Message-ID: <20121115162417.GD4019@infradead.org>
+Subject: Re: [PATCH 05/32] xfs: remove xfs_flushinval_pages
+Message-ID: <20121115162807.GE4019@infradead.org>
 References: <1352721264-3700-1-git-send-email-david@fromorbit.com>
-	<1352721264-3700-5-git-send-email-david@fromorbit.com>
+	<1352721264-3700-6-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1352721264-3700-5-git-send-email-david@fromorbit.com>
+In-Reply-To: <1352721264-3700-6-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,23 +32,57 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Nov 12, 2012 at 10:53:56PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> It is a complex wrapper around VFS functions, but there are VFS
-> functions that provide exactly the same functionality. Call the VFS
-> functions directly and remove the unnecessary indirection and
-> complexity.
-> 
-> We don't need to care about clearing the XFS_ITRUNCATED flag, as
-> that is done during .writepages. Hence is cleared by the VFS
-> writeback path if there is anything to write back during the flush.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> -		if ((iocb->ki_pos & target->bt_smask) ||
+> -		    (size & target->bt_smask)) {
+> -			if (iocb->ki_pos == i_size_read(inode))
+> +		if ((pos & target->bt_smask) || (size & target->bt_smask)) {
+> +			if (pos == i_size_read(inode))
+>  				return 0;
+>  			return -XFS_ERROR(EINVAL);
+>  		}
+>  	}
+>  
+> -	n = mp->m_super->s_maxbytes - iocb->ki_pos;
+> +	n = mp->m_super->s_maxbytes - pos;
 
-Looks good,
+What does this have to do with the recent of the patch?
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Not that is diapprove, but I don't think it fits here.
+
+>  		if (inode->i_mapping->nrpages) {
+> -			ret = -xfs_flushinval_pages(ip,
+> -					(iocb->ki_pos & PAGE_CACHE_MASK),
+> -					-1, FI_REMAPF_LOCKED);
+> +			ret = -filemap_write_and_wait_range(
+> +							VFS_I(ip)->i_mapping,
+> +							pos, -1);
+>  			if (ret) {
+>  				xfs_rw_iunlock(ip, XFS_IOLOCK_EXCL);
+>  				return ret;
+>  			}
+> +			truncate_pagecache_range(VFS_I(ip), pos, -1);
+
+We already have a local "inode" variable that can be used in these two
+places.
+
+Also the -1 end might be a 1:1 translation of what was there, but is not what
+we really want.  At very least it needs an XXX comment that the range should
+be revisited.
+
+> @@ -670,10 +670,11 @@ xfs_file_dio_aio_write(
+>  		goto out;
+>  
+>  	if (mapping->nrpages) {
+> -		ret = -xfs_flushinval_pages(ip, (pos & PAGE_CACHE_MASK), -1,
+> -							FI_REMAPF_LOCKED);
+> +		ret = -filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
+> +						    pos, -1);
+>  		if (ret)
+>  			goto out;
+> +		truncate_pagecache_range(VFS_I(ip), pos, -1);
+
+We already have local mapping and inode variables here, same comment
+about the -1 len.
 
 _______________________________________________
 xfs mailing list
