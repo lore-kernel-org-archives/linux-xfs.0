@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAFGK8TS015120 for <xfs@oss.sgi.com>; Thu, 15 Nov 2012 10:20:08 -0600
+	qAFGLFBw015234 for <xfs@oss.sgi.com>; Thu, 15 Nov 2012 10:21:15 -0600
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	aThBmeTRxHn9IEJM (version=TLSv1 cipher=AES256-SHA bits=256
+	ABpjHHuF18sBAvJT (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 15 Nov 2012 08:22:13 -0800 (PST)
-Date: Thu, 15 Nov 2012 11:22:12 -0500
+	Thu, 15 Nov 2012 08:23:19 -0800 (PST)
+Date: Thu, 15 Nov 2012 11:23:18 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 02/32 V2] xfs: remove xfs_tosspages
-Message-ID: <20121115162212.GB4019@infradead.org>
+Subject: Re: [PATCH 03/32] xfs: remove xfs_wait_on_pages()
+Message-ID: <20121115162318.GC4019@infradead.org>
 References: <1352721264-3700-1-git-send-email-david@fromorbit.com>
-	<1352721264-3700-3-git-send-email-david@fromorbit.com>
-	<20121114064247.GC1710@dastard>
+	<1352721264-3700-4-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20121114064247.GC1710@dastard>
+In-Reply-To: <1352721264-3700-4-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,30 +32,16 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, Nov 14, 2012 at 05:42:47PM +1100, Dave Chinner wrote:
-> xfs: remove xfs_tosspages
-> 
+On Mon, Nov 12, 2012 at 10:53:55PM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> It's a buggy, unnecessary wrapper that is duplicating
-> truncate_pagecache_range().
-> 
-> When replacing the call in xfs_change_file_space(), also ensure that
-> the length being allocated/freed is always positive before making
-> any changes. These checks are done in the lower extent manipulation
-> functions, too, but we need to do them before any page cache
-> operations.
-> 
-> Reported-by: Andrew Dahl <adahl@sgi.com>
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> It's just a simple wrapper around a VFS function that is only called
+> by another function in xfs_fs_subr.c. Remove it and call the VFS
+> function directly.
 
-Looks good as long as Andrews fix is included.
-
-I wonder if we should just fix the two places with checks for easy
-backportability in a first patch and then have a second on top to
-kill the useless wrapper?
-
-Either way,
+And what we really should do is call filemap_write_and_wait_range,
+but that fits into the later patches better (if you haven't done it
+already..)
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 
