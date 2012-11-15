@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAFM7YOS031794 for <xfs@oss.sgi.com>; Thu, 15 Nov 2012 16:07:34 -0600
+	qAFMIYL1032351 for <xfs@oss.sgi.com>; Thu, 15 Nov 2012 16:18:34 -0600
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	qM2BnrnxD0zsH919 for <xfs@oss.sgi.com>;
-	Thu, 15 Nov 2012 14:09:38 -0800 (PST)
-Date: Fri, 16 Nov 2012 09:09:36 +1100
+	wpfKh5VqTrEy3PIW for <xfs@oss.sgi.com>;
+	Thu, 15 Nov 2012 14:20:39 -0800 (PST)
+Received: from dave by dastard with local (Exim 4.76)
+	(envelope-from <david@fromorbit.com>) id 1TZ7nZ-0006dp-8h
+	for xfs@oss.sgi.com; Fri, 16 Nov 2012 09:20:37 +1100
+Date: Fri, 16 Nov 2012 09:20:37 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 17/32 V2] xfs: verify dquot blocks as they are read from
-	disk
-Message-ID: <20121115220936.GK14281@dastard>
+Subject: [PATCH 31/32 V2] xfs: add CRC infrastructure
+Message-ID: <20121115222037.GL14281@dastard>
 References: <1352721264-3700-1-git-send-email-david@fromorbit.com>
-	<1352721264-3700-18-git-send-email-david@fromorbit.com>
-	<20121114065013.GE1710@dastard> <50A52CA3.3060604@sgi.com>
-	<20121115204830.GG14281@dastard> <50A5583D.5070101@sgi.com>
-	<20121115211608.GI14281@dastard> <50A55FEC.30106@sgi.com>
-	<20121115220117.GJ14281@dastard>
+	<1352721264-3700-32-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20121115220117.GJ14281@dastard>
+In-Reply-To: <1352721264-3700-32-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,84 +30,167 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, Nov 16, 2012 at 09:01:17AM +1100, Dave Chinner wrote:
-> On Thu, Nov 15, 2012 at 03:34:36PM -0600, Mark Tinguely wrote:
-> > On 11/15/12 15:16, Dave Chinner wrote:
-> > >On Thu, Nov 15, 2012 at 03:01:49PM -0600, Mark Tinguely wrote:
-> > >>On 11/15/12 14:48, Dave Chinner wrote:
-> > >>>On Thu, Nov 15, 2012 at 11:55:47AM -0600, Mark Tinguely wrote:
-> > >>>>The xfs_quota program does not generate output with V2 which causes
-> > >>>>xfstest 050 to fails.
-> > >>>
-> > >>>I don't think that has anything to do with this patch orthechange
-> > >>>for V2 - V2 only changes quotacheck behaviour, and that doesn't
-> > >>>impact xfs_quota behaviour. The test passes just fine here:
-> > >>>
-> > >>>$ sudo ./check 050
-> > >>>FSTYP         -- xfs (debug)
-> > >>>PLATFORM      -- Linux/x86_64 test-2 3.7.0-rc5-dgc+
-> > >>>MKFS_OPTIONS  -- -f -bsize=4096 /dev/vdb
-> > >>>MOUNT_OPTIONS -- /dev/vdb /mnt/scratch
-> > >>>
-> > >>>050 14s ... 15s
-> > >>>Ran: 050
-> > >>>Passed all 1 tests
-> > >>>
-> > >>>So perhaps there's something else going wrong on your machine?
-> > >
-> > >Curious. There aren't any errors in the syslog/dmesg saying that
-> > >buffers failed verification during the quota check runs, are there?
-> > >Also, what platform are you testing on?
-> > 
-> > No error message in dmesg nor /var/log/messages
-> > 
-> > This is a x86_64.
-> > 
-> > It is running OSS with most recent commit:
-> > 
-> >  commit 579b62faa5fb16ffeeb88cda5e2c4e95730881af
-> > 
-> > Your two series:
-> > 	xfs: fixes for 3.7-rc6
-> > 	xfs: current queue for 3.8
-> > 
-> > I added the XFS_SB_VERSION2_CRCBIT attribute to xfsprogs and enabled
-> > it in mkfs.xfs and remade the test/scratch filesystems.
-> 
-> That's likely your problem. Why are you testing with this bit set -
-> that's to indicate that there are on disk format changes, and none
-> of them occur in this patch set. Hence the kernel should be refusing
-> to mount any filesystem with that bit set. As such, I'm using a
-> standard userspace for all this regression testing, because
-> filesystems with the CRC bit should be failed during mount on 3.8.
-> 
-> /me goes looking....
-> 
-> Ok, the kernel isn't refusing to mount when that bit is set. That's
-> a bug in the patch that introduces the CRC bit that I borked when
-> splitting it out of a larger patch. I'll send an updated patch (it's
-> the xfs: add CRC infrastructure patch).
+xfs: add CRC infrastructure
 
-FWIW, if I intended this patch set to be tested with a feature bit
-set or modified userspace, I would have posted patches that modify
-the userspace tools appropriately. If you see something that
-requires userspace tool modification to make use of, then you should
-be asking questions about that during review rather than quietly
-modifying userspace tools yourself to test said changes.
+From: Christoph Hellwig <hch@lst.de>
 
-In most cases, enabling kernel feature bits (i.e. presence in the
-GOOD flags) without corresponding changes to userspace is a bug, as
-demonstrated here...
+ - add a mount feature bit for CRC enabled filesystems
+ - add some helpers for generating and verifying the CRCs
+ - add a copy_uuid helper
 
-Cheers,
+The checksumming helpers are losely based on similar ones in sctp,
+all other bits come from Dave Chinner.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+Version 2:
+
+- Make sure that CRC enable filesystems are not mountable at this
+  point in time.
+
+ fs/xfs/Kconfig     |    1 +
+ fs/xfs/uuid.h      |    6 +++++
+ fs/xfs/xfs_cksum.h |   63 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_linux.h |    1 +
+ fs/xfs/xfs_sb.h    |    7 ++++++
+ 5 files changed, 78 insertions(+)
+
+diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
+index 6100ec0..5a7ffe5 100644
+--- a/fs/xfs/Kconfig
++++ b/fs/xfs/Kconfig
+@@ -2,6 +2,7 @@ config XFS_FS
+ 	tristate "XFS filesystem support"
+ 	depends on BLOCK
+ 	select EXPORTFS
++	select LIBCRC32C
+ 	help
+ 	  XFS is a high performance journaling filesystem which originated
+ 	  on the SGI IRIX platform.  It is completely multi-threaded, can
+diff --git a/fs/xfs/uuid.h b/fs/xfs/uuid.h
+index 4732d71..104db0f 100644
+--- a/fs/xfs/uuid.h
++++ b/fs/xfs/uuid.h
+@@ -26,4 +26,10 @@ extern int uuid_is_nil(uuid_t *uuid);
+ extern int uuid_equal(uuid_t *uuid1, uuid_t *uuid2);
+ extern void uuid_getnodeuniq(uuid_t *uuid, int fsid [2]);
+ 
++static inline void
++uuid_copy(uuid_t *dst, uuid_t *src)
++{
++	memcpy(dst, src, sizeof(uuid_t));
++}
++
+ #endif	/* __XFS_SUPPORT_UUID_H__ */
+diff --git a/fs/xfs/xfs_cksum.h b/fs/xfs/xfs_cksum.h
+new file mode 100644
+index 0000000..fad1676
+--- /dev/null
++++ b/fs/xfs/xfs_cksum.h
+@@ -0,0 +1,63 @@
++#ifndef _XFS_CKSUM_H
++#define _XFS_CKSUM_H 1
++
++#define XFS_CRC_SEED	(~(__uint32_t)0)
++
++/*
++ * Calculate the intermediate checksum for a buffer that has the CRC field
++ * inside it.  The offset of the 32bit crc fields is passed as the
++ * cksum_offset parameter.
++ */
++static inline __uint32_t
++xfs_start_cksum(char *buffer, size_t length, unsigned long cksum_offset)
++{
++	__uint32_t zero = 0;
++	__uint32_t crc;
++
++	/* Calculate CRC up to the checksum. */
++	crc = crc32c(XFS_CRC_SEED, buffer, cksum_offset);
++
++	/* Skip checksum field */
++	crc = crc32c(crc, &zero, sizeof(__u32));
++
++	/* Calculate the rest of the CRC. */
++	return crc32c(crc, &buffer[cksum_offset + sizeof(__be32)],
++		      length - (cksum_offset + sizeof(__be32)));
++}
++
++/*
++ * Convert the intermediate checksum to the final ondisk format.
++ *
++ * The CRC32c calculation uses LE format even on BE machines, but returns the
++ * result in host endian format. Hence we need to byte swap it back to LE format
++ * so that it is consistent on disk.
++ */
++static inline __le32
++xfs_end_cksum(__uint32_t crc)
++{
++	return ~cpu_to_le32(crc);
++}
++
++/*
++ * Helper to generate the checksum for a buffer.
++ */
++static inline void
++xfs_update_cksum(char *buffer, size_t length, unsigned long cksum_offset)
++{
++	__uint32_t crc = xfs_start_cksum(buffer, length, cksum_offset);
++
++	*(__le32 *)(buffer + cksum_offset) = xfs_end_cksum(crc);
++}
++
++/*
++ * Helper to verify the checksum for a buffer.
++ */
++static inline int
++xfs_verify_cksum(char *buffer, size_t length, unsigned long cksum_offset)
++{
++	__uint32_t crc = xfs_start_cksum(buffer, length, cksum_offset);
++
++	return *(__le32 *)(buffer + cksum_offset) == xfs_end_cksum(crc);
++}
++
++#endif /* _XFS_CKSUM_H */
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index 0a134ca..fe7e4df 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -44,6 +44,7 @@
+ #include <linux/kernel.h>
+ #include <linux/blkdev.h>
+ #include <linux/slab.h>
++#include <linux/crc32c.h>
+ #include <linux/module.h>
+ #include <linux/mutex.h>
+ #include <linux/file.h>
+diff --git a/fs/xfs/xfs_sb.h b/fs/xfs/xfs_sb.h
+index f429d9d..a05b451 100644
+--- a/fs/xfs/xfs_sb.h
++++ b/fs/xfs/xfs_sb.h
+@@ -81,6 +81,7 @@ struct xfs_mount;
+ #define XFS_SB_VERSION2_ATTR2BIT	0x00000008	/* Inline attr rework */
+ #define XFS_SB_VERSION2_PARENTBIT	0x00000010	/* parent pointers */
+ #define XFS_SB_VERSION2_PROJID32BIT	0x00000080	/* 32 bit project id */
++#define XFS_SB_VERSION2_CRCBIT		0x00000100	/* metadata CRCs */
+ 
+ #define	XFS_SB_VERSION2_OKREALFBITS	\
+ 	(XFS_SB_VERSION2_LAZYSBCOUNTBIT	| \
+@@ -503,6 +504,12 @@ static inline int xfs_sb_version_hasprojid32bit(xfs_sb_t *sbp)
+ 		(sbp->sb_features2 & XFS_SB_VERSION2_PROJID32BIT);
+ }
+ 
++static inline int xfs_sb_version_hascrc(xfs_sb_t *sbp)
++{
++	return (xfs_sb_version_hasmorebits(sbp) &&
++		(sbp->sb_features2 & XFS_SB_VERSION2_CRCBIT));
++}
++
+ /*
+  * end of superblock version macros
+  */
 
 _______________________________________________
 xfs mailing list
