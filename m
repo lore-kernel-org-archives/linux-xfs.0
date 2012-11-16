@@ -1,30 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAG6ia8k067459 for <xfs@oss.sgi.com>; Fri, 16 Nov 2012 00:44:36 -0600
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id ANu9b6e5M6jBK9so (version=TLSv1
+	qAG6ijJc067503 for <xfs@oss.sgi.com>; Fri, 16 Nov 2012 00:44:45 -0600
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id etCKOkAWTYMfeUF2 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 15 Nov 2012 22:46:41 -0800 (PST)
+	Thu, 15 Nov 2012 22:46:50 -0800 (PST)
 Received: from acsinet21.oracle.com (acsinet21.oracle.com [141.146.126.237])
-	by userp1040.oracle.com (Sentrion-MTA-4.2.2/Sentrion-MTA-4.2.2) with
-	ESMTP id qAG6kem7004223
+	by aserp1040.oracle.com (Sentrion-MTA-4.2.2/Sentrion-MTA-4.2.2) with
+	ESMTP id qAG6kncb020824
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Fri, 16 Nov 2012 06:46:41 GMT
+	for <xfs@oss.sgi.com>; Fri, 16 Nov 2012 06:46:49 GMT
 Received: from acsmt357.oracle.com (acsmt357.oracle.com [141.146.40.157])
 	by acsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	qAG6keR7024318
+	qAG6km1x024429
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 16 Nov 2012 06:46:40 GMT
+	for <xfs@oss.sgi.com>; Fri, 16 Nov 2012 06:46:49 GMT
 Received: from abhmt120.oracle.com (abhmt120.oracle.com [141.146.116.72])
 	by acsmt357.oracle.com (8.12.11.20060308/8.12.11) with ESMTP id
-	qAG6keNY005614 for <xfs@oss.sgi.com>; Fri, 16 Nov 2012 00:46:40 -0600
-Message-ID: <50A5E14B.4030800@oracle.com>
-Date: Fri, 16 Nov 2012 14:46:35 +0800
+	qAG6kmoP005707 for <xfs@oss.sgi.com>; Fri, 16 Nov 2012 00:46:48 -0600
+Message-ID: <50A5E153.2030008@oracle.com>
+Date: Fri, 16 Nov 2012 14:46:43 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: [PATCH 11/15] xfs: Introduce a helper to check if an AG is empty
-	or not
+Subject: [PATCH 12/15] xfs: Introduce a helper to remove an empty
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,110 +38,166 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-We need to check if an affected AG is empty or not during FS shrink, this is a helper could be used for this purpose.
+If a given AG is empty, we can totally wipe it out of the disk via this
+helper by cleaning up the AG metadata blocks.
 
-Maybe it's better to isolate AG related routines to a dedicated file: xfs_ag.c?
- 
 
 Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 ---
- fs/xfs/xfs_fsops.c |   92 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 92 insertions(+), 0 deletions(-)
+ fs/xfs/xfs_fsops.c |  149 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 149 insertions(+), 0 deletions(-)
 
 diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 029ab6d..6623d9a 100644
+index 6623d9a..24de23f 100644
 --- a/fs/xfs/xfs_fsops.c
 +++ b/fs/xfs/xfs_fsops.c
-@@ -614,6 +614,98 @@ xfs_growfs_log(
+@@ -706,6 +706,155 @@ error0:
  }
  
  /*
-+ * Get the reserved blocks of metadatas per AG which are includes:
-+ * 	Superblock (1 sector)
-+ *	AG free block info (1 sector)
-+ *	AG inode B+tree info (1 sector)
-+ *	AG internal free list (1 sector)
-+ *	Root of inode B+tree (1 block)
-+ *	Root of free space B+tree, key is block number (1 block)
-+ *	Root of free space B+tree, key is block count  (1 block)
-+ *	Free list (4 blocks)
-+ * The reserved block number of the aboves can be fetched via:
-+ *	XFS_PREALLOC_BLOCKS(mp).
-+ *
-+ * The left blocks are used for Primary AG only.
-+ * - Inodes (64 inodes)
-+ */
-+static xfs_extlen_t
-+xfs_ag_metadata_blocks(
-+	xfs_mount_t	*mp,
-+	xfs_agnumber_t	agno)
-+{
-+	xfs_extlen_t	mdblocks;
-+
-+	mdblocks = XFS_PREALLOC_BLOCKS(mp);
-+	/*
-+	 * For primary AG, we need to figure out how many blocks are
-+	 * reserved for those 64 inodes which are used for the root
-+	 * of inodes B+tree.
-+	 */
-+	if (agno == 0)
-+		mdblocks += (64 / mp->m_sb.sb_inopblock);
-+
-+	return mdblocks;
-+}
-+
-+/*
-+ * An empty AG means that there has no data/inodes allocated
-+ * at it except those metadata blocks, and the agi_count should
-+ * be ZERO.
++ * This function is used to remove an empty AG out of the disk
++ * by cleaning up it's metadata info and free the related perag
++ * object.
 + */
 +static int
-+xfs_ag_is_empty(
-+	xfs_mount_t	*mp,
-+	xfs_agnumber_t	agno,
-+	bool		*empty)
++xfs_remove_empty_ag(
++	xfs_mount_t		*mp,
++	xfs_agnumber_t		agno,
++	xfs_extlen_t		*nfree)
 +{
-+	xfs_extlen_t	agblocks;
-+	xfs_extlen_t	agfblocks;
-+	xfs_extlen_t	agmblocks;
-+	xfs_extlen_t	agicount;
-+	xfs_agf_t	*agf;
-+	xfs_agi_t	*agi;
-+	xfs_buf_t	*bp;
-+	int		error = 0;
++	xfs_agf_t		*agf;
++	xfs_agi_t		*agi;
++	xfs_buf_t		*bp;
++	xfs_dsb_t		*sbp;
++	xfs_agfl_t		*agfl;
++	xfs_perag_t		*pag;
++	__uint32_t		agfl_bno;
++	__uint32_t		bno_btree_blkno;
++	__uint32_t		cnt_btree_blkno;
++	__uint32_t		ino_btree_blkno;
++	struct xfs_btree_block	*block;
++	int			error;
++
++	/* Wipe out superblock in sector size */
++	error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp,
++			  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
++			  XFS_FSS_TO_BB(mp, 1), 0, &bp);
++	if (error)
++		goto error0;
++	sbp = XFS_BUF_TO_SBP(bp);
++	memset(sbp, 0, mp->m_sb.sb_sectsize);
++	error = xfs_bwrite(bp);
++	xfs_buf_relse(bp);
++	if (error)
++		goto error0;
 +
 +	bp = xfs_buf_get(mp->m_ddev_targp,
 +			 XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
 +			 XFS_FSS_TO_BB(mp, 1), 0);
 +	if (!bp) {
-+		error = XFS_ERROR(ENOMEM);
++		error = ENOMEM;
 +		goto error0;
 +	}
 +	agf = XFS_BUF_TO_AGF(bp);
-+	agmblocks = xfs_ag_metadata_blocks(mp, agno);
-+	/*
-+	 * The latest AG might has different size to others.
-+	 */
-+	if (agno == mp->m_sb.sb_agcount - 1)
-+		agblocks = (be32_to_cpu(agf->agf_length) - agmblocks);
-+	else
-+		agblocks = mp->m_sb.sb_agblocks - agmblocks;
-+	agfblocks = be32_to_cpu(agf->agf_freeblks);
++	if (nfree) {
++		/*
++		 * Don't use the mp->m_sb.sb_agcount since the end
++		 * AG might has different size to others.
++		 */
++		*nfree = be32_to_cpu(agf->agf_length);
++	}
++	bno_btree_blkno = be32_to_cpu(agf->agf_roots[XFS_BTNUM_BNOi]);
++	cnt_btree_blkno = be32_to_cpu(agf->agf_roots[XFS_BTNUM_CNTi]);
++	memset(agf, 0, mp->m_sb.sb_sectsize);
++	error = xfs_bwrite(bp);
 +	xfs_buf_relse(bp);
++	if (error)
++		goto error0;
 +
 +	bp = xfs_buf_get(mp->m_ddev_targp,
 +			 XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
 +			 XFS_FSS_TO_BB(mp, 1), 0);
 +	if (!bp) {
-+		error = XFS_ERROR(ENOMEM);
++		error = ENOMEM;
 +		goto error0;
 +	}
 +	agi = XFS_BUF_TO_AGI(bp);
-+	agicount = be32_to_cpu(agi->agi_count);
++	ino_btree_blkno = be32_to_cpu(agi->agi_root);
++	memset(agi, 0, mp->m_sb.sb_sectsize);
++	error = xfs_bwrite(bp);
 +	xfs_buf_relse(bp);
++	if (error)
++		goto error0;
 +
-+	*empty = ((agblocks == agfblocks && agicount == 0) ?
-+		  true : false);
++	bp = xfs_buf_get(mp->m_ddev_targp,
++			 XFS_AGB_TO_DADDR(mp, agno, XFS_AGFL_BLOCK(mp)),
++			 XFS_FSS_TO_BB(mp, 1), 0);
++	if (!bp) {
++		error = XFS_ERROR(ENOMEM);
++		goto error0;
++	}
++	agfl = XFS_BUF_TO_AGFL(bp);
++	agfl_bno = be32_to_cpu(agfl->agfl_bno[0]);
++	memset(agfl, 0, mp->m_sb.sb_sectsize);
++	error = xfs_bwrite(bp);
++	xfs_buf_relse(bp);
++	if (error)
++		goto error0;
++
++	/* BNO btree root block */
++	bp = xfs_buf_get(mp->m_ddev_targp,
++			 XFS_AGB_TO_DADDR(mp, agno, bno_btree_blkno),
++			 BTOBB(mp->m_sb.sb_blocksize), 0);
++	if (!bp) {
++		error = XFS_ERROR(ENOMEM);
++		goto error0;
++	}
++	block = XFS_BUF_TO_BLOCK(bp);
++	memset(block, 0, mp->m_sb.sb_blocksize);
++	error = xfs_bwrite(bp);
++	xfs_buf_relse(bp);
++	if (error)
++		goto error0;
++
++	/* CNT btree root block */
++	bp = xfs_buf_get(mp->m_ddev_targp,
++			 XFS_AGB_TO_DADDR(mp, agno, cnt_btree_blkno),
++			 BTOBB(mp->m_sb.sb_blocksize), 0);
++	if (!bp) {
++		error = XFS_ERROR(ENOMEM);
++		goto error0;
++	}
++	block = XFS_BUF_TO_BLOCK(bp);
++	memset(block, 0, mp->m_sb.sb_blocksize);
++	error = xfs_bwrite(bp);
++	xfs_buf_relse(bp);
++	if (error)
++		goto error0;
++
++	/* INO btree root block */
++	bp = xfs_buf_get(mp->m_ddev_targp,
++			 XFS_AGB_TO_DADDR(mp, agno, ino_btree_blkno),
++			 BTOBB(mp->m_sb.sb_blocksize), 0);
++	if (!bp) {
++		error = XFS_ERROR(ENOMEM);
++		goto error0;
++	}
++	block = XFS_BUF_TO_BLOCK(bp);
++	memset(block, 0, mp->m_sb.sb_blocksize);
++	error = xfs_bwrite(bp);
++	xfs_buf_relse(bp);
++	if (error)
++		goto error0;
++
++	/* Free perag object from the radix tree */
++	spin_lock(&mp->m_perag_lock);
++	pag = radix_tree_delete(&mp->m_perag_tree, agno);
++	spin_unlock(&mp->m_perag_lock);
++	ASSERT(pag);
++	ASSERT(atomic_read(&pag->pag_ref) == 0);
++	kmem_free(pag);
++
++	*nfree += xfs_ag_metadata_blocks(mp, agno);
 +
 +error0:
 +	return error;
