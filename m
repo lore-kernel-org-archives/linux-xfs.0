@@ -1,29 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAG6ijJc067503 for <xfs@oss.sgi.com>; Fri, 16 Nov 2012 00:44:45 -0600
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id etCKOkAWTYMfeUF2 (version=TLSv1
+	qAG6j1MM067555 for <xfs@oss.sgi.com>; Fri, 16 Nov 2012 00:45:01 -0600
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id Agpr6HQxsuSzqe7d (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 15 Nov 2012 22:46:50 -0800 (PST)
-Received: from acsinet21.oracle.com (acsinet21.oracle.com [141.146.126.237])
-	by aserp1040.oracle.com (Sentrion-MTA-4.2.2/Sentrion-MTA-4.2.2) with
-	ESMTP id qAG6kncb020824
+	Thu, 15 Nov 2012 22:47:06 -0800 (PST)
+Received: from ucsinet21.oracle.com (ucsinet21.oracle.com [156.151.31.93])
+	by userp1040.oracle.com (Sentrion-MTA-4.2.2/Sentrion-MTA-4.2.2) with
+	ESMTP id qAG6l5ZT004581
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Fri, 16 Nov 2012 06:46:49 GMT
-Received: from acsmt357.oracle.com (acsmt357.oracle.com [141.146.40.157])
-	by acsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	qAG6km1x024429
+	for <xfs@oss.sgi.com>; Fri, 16 Nov 2012 06:47:06 GMT
+Received: from acsmt356.oracle.com (acsmt356.oracle.com [141.146.40.156])
+	by ucsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	qAG6l4mC020820
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 16 Nov 2012 06:46:49 GMT
-Received: from abhmt120.oracle.com (abhmt120.oracle.com [141.146.116.72])
-	by acsmt357.oracle.com (8.12.11.20060308/8.12.11) with ESMTP id
-	qAG6kmoP005707 for <xfs@oss.sgi.com>; Fri, 16 Nov 2012 00:46:48 -0600
-Message-ID: <50A5E153.2030008@oracle.com>
-Date: Fri, 16 Nov 2012 14:46:43 +0800
+	for <xfs@oss.sgi.com>; Fri, 16 Nov 2012 06:47:05 GMT
+Received: from abhmt104.oracle.com (abhmt104.oracle.com [141.146.116.56])
+	by acsmt356.oracle.com (8.12.11.20060308/8.12.11) with ESMTP id
+	qAG6l4e8011665 for <xfs@oss.sgi.com>; Fri, 16 Nov 2012 00:47:04 -0600
+Message-ID: <50A5E163.2080006@oracle.com>
+Date: Fri, 16 Nov 2012 14:46:59 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: [PATCH 12/15] xfs: Introduce a helper to remove an empty
+Subject: [PATCH 14/15] xfs: Add shrink data ioctl(2)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,175 +38,310 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-If a given AG is empty, we can totally wipe it out of the disk via this
-helper by cleaning up the AG metadata blocks.
+So the real FS data section shrink function via ioctl(2) is here.
 
 
 Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 ---
- fs/xfs/xfs_fsops.c |  149 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 149 insertions(+), 0 deletions(-)
+ fs/xfs/xfs_fs.h    |    8 ++
+ fs/xfs/xfs_fsops.c |  212 +++++++++++++++++++++++++++++++++++++++++++++++++++-
+ fs/xfs/xfs_fsops.h |    1 +
+ fs/xfs/xfs_ioctl.c |   15 ++++
+ 4 files changed, 234 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 6623d9a..24de23f 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -706,6 +706,155 @@ error0:
- }
+diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
+index c459d52..3a85979 100644
+--- a/fs/xfs/xfs_fs.h
++++ b/fs/xfs/xfs_fs.h
+@@ -272,6 +272,13 @@ typedef struct xfs_growfs_rt {
+ 	__u32		extsize;	/* new realtime extent size, fsblocks */
+ } xfs_growfs_rt_t;
+ 
++/*
++ * Structure for XFS_IOC_SHRINKFS_DATA.
++ */
++typedef struct xfs_shrinkfs_data {
++	__u64		newblocks;	/* new data subvol size, fsblocks */
++	__u32		imaxpct;	/* new inode space percentage limit */
++} xfs_shrinkfs_data_t;
  
  /*
-+ * This function is used to remove an empty AG out of the disk
-+ * by cleaning up it's metadata info and free the related perag
-+ * object.
-+ */
+  * Structures returned from ioctl XFS_IOC_FSBULKSTAT & XFS_IOC_FSBULKSTAT_SINGLE
+@@ -489,6 +496,7 @@ typedef struct xfs_handle {
+ #define XFS_IOC_SET_AGSTATE	     _IOW('X', 126, struct xfs_ioc_agstate)
+ #define XFS_IOC_GET_AGSTATE	     _IOR('X', 127, struct xfs_ioc_agstate)
+ #define XFS_IOC_SWAPINO		     _IOWR('X', 128, struct xfs_swapino)
++#define XFS_IOC_FSSHRINKFS_DATA	     _IOW('X', 129, struct xfs_shrinkfs_data)
+ /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
+ 
+ 
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 04a21d1..e5aa564 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -579,8 +579,6 @@ xfs_growfs_log_private(
+  * point - exported through ioctls: XFS_IOC_FSGROWFSDATA, XFS_IOC_FSGROWFSLOG,
+  * XFS_IOC_FSGROWFSRT
+  */
+-
+-
+ int
+ xfs_growfs_data(
+ 	xfs_mount_t		*mp,
+@@ -948,6 +946,216 @@ error0:
+ 	return error;
+ }
+ 
 +static int
-+xfs_remove_empty_ag(
++xfs_shrinkfs_process_ag(
 +	xfs_mount_t		*mp,
++	xfs_trans_t		*tp,
 +	xfs_agnumber_t		agno,
++	xfs_rfsblock_t		tsize,
 +	xfs_extlen_t		*nfree)
 +{
-+	xfs_agf_t		*agf;
-+	xfs_agi_t		*agi;
-+	xfs_buf_t		*bp;
-+	xfs_dsb_t		*sbp;
-+	xfs_agfl_t		*agfl;
 +	xfs_perag_t		*pag;
-+	__uint32_t		agfl_bno;
-+	__uint32_t		bno_btree_blkno;
-+	__uint32_t		cnt_btree_blkno;
-+	__uint32_t		ino_btree_blkno;
-+	struct xfs_btree_block	*block;
++	bool			empty;
 +	int			error;
 +
-+	/* Wipe out superblock in sector size */
-+	error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp,
-+			  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
-+			  XFS_FSS_TO_BB(mp, 1), 0, &bp);
-+	if (error)
-+		goto error0;
-+	sbp = XFS_BUF_TO_SBP(bp);
-+	memset(sbp, 0, mp->m_sb.sb_sectsize);
-+	error = xfs_bwrite(bp);
-+	xfs_buf_relse(bp);
++	/*
++	 * The a.g. state must has already been set to offline
++	 * by xfs_shrinkfs(8).
++	 */
++	pag = xfs_perag_get(mp, agno);
++	if (!(pag->pag_state & XFS_AG_STATE_ALLOC_DENY)) {
++		xfs_perag_put(pag);
++		return XFS_ERROR(EINVAL);
++	}
++	xfs_perag_put(pag);
++
++	error = xfs_ag_is_empty(mp, agno, &empty);
 +	if (error)
 +		goto error0;
 +
-+	bp = xfs_buf_get(mp->m_ddev_targp,
-+			 XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
-+			 XFS_FSS_TO_BB(mp, 1), 0);
-+	if (!bp) {
-+		error = ENOMEM;
-+		goto error0;
-+	}
-+	agf = XFS_BUF_TO_AGF(bp);
-+	if (nfree) {
++	if (!empty)
++		error = xfs_truncate_ag(mp, agno, tsize, nfree);
++	else {
 +		/*
-+		 * Don't use the mp->m_sb.sb_agcount since the end
-+		 * AG might has different size to others.
++		 * The Primary AG must not be empty except at the
++		 * invitial phase(mkfs.xfs).  But we should not
++		 * remove it anyway.
 +		 */
-+		*nfree = be32_to_cpu(agf->agf_length);
++		if (agno == 0) {
++			error = XFS_ERROR(EINVAL);
++			goto error0;
++		}
++		error = xfs_remove_empty_ag(mp, agno, nfree);
 +	}
-+	bno_btree_blkno = be32_to_cpu(agf->agf_roots[XFS_BTNUM_BNOi]);
-+	cnt_btree_blkno = be32_to_cpu(agf->agf_roots[XFS_BTNUM_CNTi]);
-+	memset(agf, 0, mp->m_sb.sb_sectsize);
-+	error = xfs_bwrite(bp);
-+	xfs_buf_relse(bp);
-+	if (error)
-+		goto error0;
-+
-+	bp = xfs_buf_get(mp->m_ddev_targp,
-+			 XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
-+			 XFS_FSS_TO_BB(mp, 1), 0);
-+	if (!bp) {
-+		error = ENOMEM;
-+		goto error0;
-+	}
-+	agi = XFS_BUF_TO_AGI(bp);
-+	ino_btree_blkno = be32_to_cpu(agi->agi_root);
-+	memset(agi, 0, mp->m_sb.sb_sectsize);
-+	error = xfs_bwrite(bp);
-+	xfs_buf_relse(bp);
-+	if (error)
-+		goto error0;
-+
-+	bp = xfs_buf_get(mp->m_ddev_targp,
-+			 XFS_AGB_TO_DADDR(mp, agno, XFS_AGFL_BLOCK(mp)),
-+			 XFS_FSS_TO_BB(mp, 1), 0);
-+	if (!bp) {
-+		error = XFS_ERROR(ENOMEM);
-+		goto error0;
-+	}
-+	agfl = XFS_BUF_TO_AGFL(bp);
-+	agfl_bno = be32_to_cpu(agfl->agfl_bno[0]);
-+	memset(agfl, 0, mp->m_sb.sb_sectsize);
-+	error = xfs_bwrite(bp);
-+	xfs_buf_relse(bp);
-+	if (error)
-+		goto error0;
-+
-+	/* BNO btree root block */
-+	bp = xfs_buf_get(mp->m_ddev_targp,
-+			 XFS_AGB_TO_DADDR(mp, agno, bno_btree_blkno),
-+			 BTOBB(mp->m_sb.sb_blocksize), 0);
-+	if (!bp) {
-+		error = XFS_ERROR(ENOMEM);
-+		goto error0;
-+	}
-+	block = XFS_BUF_TO_BLOCK(bp);
-+	memset(block, 0, mp->m_sb.sb_blocksize);
-+	error = xfs_bwrite(bp);
-+	xfs_buf_relse(bp);
-+	if (error)
-+		goto error0;
-+
-+	/* CNT btree root block */
-+	bp = xfs_buf_get(mp->m_ddev_targp,
-+			 XFS_AGB_TO_DADDR(mp, agno, cnt_btree_blkno),
-+			 BTOBB(mp->m_sb.sb_blocksize), 0);
-+	if (!bp) {
-+		error = XFS_ERROR(ENOMEM);
-+		goto error0;
-+	}
-+	block = XFS_BUF_TO_BLOCK(bp);
-+	memset(block, 0, mp->m_sb.sb_blocksize);
-+	error = xfs_bwrite(bp);
-+	xfs_buf_relse(bp);
-+	if (error)
-+		goto error0;
-+
-+	/* INO btree root block */
-+	bp = xfs_buf_get(mp->m_ddev_targp,
-+			 XFS_AGB_TO_DADDR(mp, agno, ino_btree_blkno),
-+			 BTOBB(mp->m_sb.sb_blocksize), 0);
-+	if (!bp) {
-+		error = XFS_ERROR(ENOMEM);
-+		goto error0;
-+	}
-+	block = XFS_BUF_TO_BLOCK(bp);
-+	memset(block, 0, mp->m_sb.sb_blocksize);
-+	error = xfs_bwrite(bp);
-+	xfs_buf_relse(bp);
-+	if (error)
-+		goto error0;
-+
-+	/* Free perag object from the radix tree */
-+	spin_lock(&mp->m_perag_lock);
-+	pag = radix_tree_delete(&mp->m_perag_tree, agno);
-+	spin_unlock(&mp->m_perag_lock);
-+	ASSERT(pag);
-+	ASSERT(atomic_read(&pag->pag_ref) == 0);
-+	kmem_free(pag);
-+
-+	*nfree += xfs_ag_metadata_blocks(mp, agno);
 +
 +error0:
++	if (error)
++		*nfree = 0;
++
++	return error;
++}
++
++static int
++xfs_shrinkfs_data_private(
++	xfs_mount_t		*mp,
++	xfs_shrinkfs_data_t	*in)
++{
++	xfs_agnumber_t		oagcount; /* old AG count */
++	xfs_agnumber_t		nagcount; /* new AG count */
++	xfs_agnumber_t		agno;
++	xfs_rfsblock_t		nb, nb_mod;
++	xfs_rfsblock_t		new;
++	xfs_rfsblock_t		tsize;
++	xfs_rfsblock_t		nfree;
++	xfs_trans_t		*tp;
++	int			pct;
++	int			dpct;
++	int			error;
++
++	new = nb = in->newblocks;
++	pct = in->imaxpct;
++
++	if (new > mp->m_sb.sb_dblocks)
++		return XFS_ERROR(EINVAL);
++	if (new == mp->m_sb.sb_dblocks)
++		return 0;
++	if (pct < 0 || pct > 100)
++		return XFS_ERROR(EINVAL);
++
++	tsize = mp->m_sb.sb_dblocks - new;
++
++	/*
++	 * If the filesystem has internal logs, cannot shrink beyond the
++	 * end block of the log area for now.
++	 */
++	if (mp->m_sb.sb_logstart > 0 &&
++	    new < mp->m_sb.sb_logstart + mp->m_sb.sb_logblocks)
++		return XFS_ERROR(EINVAL);
++
++	nb_mod = do_div(new, mp->m_sb.sb_agblocks);
++	nagcount = new + (nb_mod != 0);
++	if (nb_mod && nb_mod < XFS_MIN_AG_BLOCKS) {
++		nagcount--;
++		nb_mod = 0;
++		nb = (xfs_rfsblock_t)nagcount * mp->m_sb.sb_agblocks;
++	}
++
++	tp = xfs_trans_alloc(mp, XFS_TRANS_SHRINKFS);
++	tp->t_flags |= XFS_TRANS_RESERVE;
++	error = xfs_trans_reserve(tp, XFS_SHRINKFS_SPACE_RES(mp),
++				  XFS_SHRINKDATA_LOG_RES(mp),
++				  0, 0, 0);
++	if (error) {
++		xfs_trans_cancel(tp, 0);
++		goto out;
++	}
++
++	oagcount = mp->m_sb.sb_agcount;
++	nfree = 0;
++	for (agno = nagcount - 1; agno < oagcount; agno++) {
++		xfs_extlen_t		freed;
++
++		error = xfs_shrinkfs_process_ag(mp, tp, agno, tsize, &freed);
++		if (error)
++			goto out_trans_cancel;
++		nfree += freed;
++		tsize -= freed;
++	}
++
++	xfs_trans_agblocks_delta(tp, -nfree);
++
++	/*
++	 * Update superblock to reflect current agcount if possbile.
++	 */
++	if (nagcount < oagcount)
++		xfs_trans_mod_sb(tp, XFS_TRANS_SB_AGCOUNT, nagcount - oagcount);
++
++	xfs_trans_mod_sb(tp, XFS_TRANS_SB_FDBLOCKS, -nfree);
++
++	/*
++	 * Update superblock to reflect current data blocks.
++	 */
++	xfs_trans_mod_sb(tp, XFS_TRANS_SB_DBLOCKS, -nfree);
++	dpct = pct - mp->m_sb.sb_imax_pct;
++	if (dpct)
++		xfs_trans_mod_sb(tp, XFS_TRANS_SB_IMAXPCT, dpct);
++	error = xfs_trans_commit(tp, 0);
++	if (error)
++		goto out;
++
++	/* FIXME: iterate perag to find out the maximum agi */
++	if (mp->m_maxagi > nagcount)
++		mp->m_maxagi = nagcount;
++	if (!mp->m_sb.sb_imax_pct)
++		mp->m_maxicount = 0;
++	else {
++		__uint64_t icount = mp->m_sb.sb_dblocks * mp->m_sb.sb_imax_pct;
++		do_div(icount, 100);
++		mp->m_maxicount = icount << mp->m_sb.sb_inopblog;
++	}
++	xfs_set_low_space_thresholds(mp);
++
++	/*
++	 * Update secondary superblocks.
++	 */
++	for (agno = 1; agno < nagcount; agno++) {
++		xfs_buf_t	*bp = NULL;
++
++		error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp,
++				XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
++				XFS_FSS_TO_BB(mp, 1), 0, &bp);
++		if (error) {
++			xfs_warn(mp,
++		"error %d reading secondary superblock for ag %d",
++				error, agno);
++			break;
++		}
++
++		xfs_sb_to_disk(XFS_BUF_TO_SBP(bp), &mp->m_sb, XFS_SB_ALL_BITS);
++		/*
++		 * If we get an error writing out the alternate superblocks,
++		 * just issue a warning and continue.  The real work is
++		 * already done and committed.
++		 */
++		error = xfs_bwrite(bp);
++		xfs_buf_relse(bp);
++		if (error) {
++			xfs_warn(mp,
++		"write error %d updating secondary superblock for ag %d",
++				error, agno);
++			break; /* no point in continuing */
++		}
++	}
++
++out:
++	return error;
++
++out_trans_cancel:
++	xfs_trans_cancel(tp, XFS_TRANS_ABORT);
 +	return error;
 +}
 +
 +/*
++ * Interface of shrinking file system data section via ioctl(2).
++ */
++int
++xfs_shrinkfs_data(
++	xfs_mount_t		*mp,
++	xfs_shrinkfs_data_t	*in)
++{
++	int error;
++
++	if (!capable(CAP_SYS_ADMIN))
++		return XFS_ERROR(EPERM);
++
++	if (!mutex_trylock(&mp->m_shrinklock))
++		return XFS_ERROR(EWOULDBLOCK);
++	error = xfs_shrinkfs_data_private(mp, in);
++	mutex_unlock(&mp->m_shrinklock);
++
++	return error;
++}
++
+ /*
   * exported through ioctl XFS_IOC_FSCOUNTS
   */
+diff --git a/fs/xfs/xfs_fsops.h b/fs/xfs/xfs_fsops.h
+index 1b6a98b..40be112 100644
+--- a/fs/xfs/xfs_fsops.h
++++ b/fs/xfs/xfs_fsops.h
+@@ -26,5 +26,6 @@ extern int xfs_reserve_blocks(xfs_mount_t *mp, __uint64_t *inval,
+ 				xfs_fsop_resblks_t *outval);
+ extern int xfs_fs_goingdown(xfs_mount_t *mp, __uint32_t inflags);
+ extern int xfs_fs_log_dummy(struct xfs_mount *mp);
++extern int xfs_shrinkfs_data(xfs_mount_t *mp, xfs_shrinkfs_data_t *in);
  
+ #endif	/* __XFS_FSOPS_H__ */
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 0e0c03f..41b2900 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1649,6 +1649,21 @@ xfs_file_ioctl(
+ 		return -error;
+ 	}
+ 
++	case XFS_IOC_FSSHRINKFS_DATA: {
++		xfs_shrinkfs_data_t	in;
++
++		if (copy_from_user(&in, arg, sizeof(in)))
++			return -XFS_ERROR(EFAULT);
++
++		error = mnt_want_write_file(filp);
++		if (error)
++			return error;
++
++		error = xfs_shrinkfs_data(mp, &in);
++		mnt_drop_write_file(filp);
++		return -error;
++	}
++
+ 	default:
+ 		return -ENOTTY;
+ 	}
 -- 
 1.7.4.1
 
