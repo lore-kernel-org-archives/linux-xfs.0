@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAHMvO6l064316 for <xfs@oss.sgi.com>; Sat, 17 Nov 2012 16:57:24 -0600
+	qAHNSsvG068660 for <xfs@oss.sgi.com>; Sat, 17 Nov 2012 17:28:54 -0600
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	HRwE42p42WdJ33rB for <xfs@oss.sgi.com>;
-	Sat, 17 Nov 2012 14:59:30 -0800 (PST)
-Date: Sun, 18 Nov 2012 09:59:27 +1100
+	RdDgTaGINdu8aIol for <xfs@oss.sgi.com>;
+	Sat, 17 Nov 2012 15:31:00 -0800 (PST)
+Date: Sun, 18 Nov 2012 10:30:57 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/2] xfsprogs: Introduce a new subcommand agstate to
-	xfs_fio
-Message-ID: <20121117225927.GQ14281@dastard>
-References: <50A5E258.3000509@oracle.com> <20121117020231.GP14281@dastard>
-	<50A71386.80100@oracle.com>
+Subject: Re: [xfs:for-next 68/70] fs/xfs/xfs_ialloc_btree.c:186:1: sparse:
+	symbol 'xfs_inobt_verify' was not declared. Should it be static?
+Message-ID: <20121117233057.GR14281@dastard>
+References: <50a5e062.XN/BRFaWJHYKYG4f%fengguang.wu@intel.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <50A71386.80100@oracle.com>
+In-Reply-To: <50a5e062.XN/BRFaWJHYKYG4f%fengguang.wu@intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,69 +27,62 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
-Cc: xfs@oss.sgi.com
+To: kbuild test robot <fengguang.wu@intel.com>
+Cc: Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com, Dave Chinner <dchinner@redhat.com>
 
-On Sat, Nov 17, 2012 at 12:33:10PM +0800, Jeff Liu wrote:
-> On 11/17/2012 10:02 AM, Dave Chinner wrote:
-> > On Fri, Nov 16, 2012 at 02:51:04PM +0800, Jeff Liu wrote:
-> >> Introduce a new xfs_io command: agstate.
-> >>
-> >> This command is used to get/set state for a given allocation group.
-> > 
-> > xfs_io is not the place for this command.
-> I was also wonder why we place the agflags command on there since xfs_io is aimed
-> at examining the regular file I/O paths, but I can not found out a better place
-> while implementing it.
-
-Right. That's exactly why I'm adding the xfs_spaceman command :)
-
-> > A couple of weeks ago I started writing an xfs_spaceman module
-> > and an ioctl interface for exactly this purpose, I just hadn't
-> > got around to completing it and the kernel patch to test it so I
-> > hadn't posted it.  Once the userspace release is out of the way,
-> > I'll post the patches to get xfs_spaceman into xfs_progs, and we
-> > can use that for this AG control from the start.
-> > 
-> > The reason for this is that the AG state in future is going to
-> > be a lot more complex than just enabling/disabling allocation,
-> > and the ioctl interface I prototyped supports a lot of that
-> > future functionality.
-> Definitely, so that we can have fine-granted AG controls, that's
-> why I didn't chose to re-base/post the previous agflags patch but
-> proposed the agstate command because the naming would sounds more
-> reasonable.
-
-*nod*
-
-> > 
-> > The patch is below so you can see what sort of AG control/state
-> > functionality I think we'll be needing sooner rather than later,
-> > and the interface I think we should be using...
-> Ok, I'll waiting for this feature. :)
+On Fri, Nov 16, 2012 at 02:42:42PM +0800, kbuild test robot wrote:
+> tree:   git://oss.sgi.com/xfs/xfs for-next
+> head:   1813dd64057490e7a0678a885c4fe6d02f78bdc1
+> commit: 612cfbfe174a89d565363fff7f3961a2dda5fb71 [68/70] xfs: add pre-write metadata buffer verifier callbacks
 > 
-> BTW, Does it sounds make sense if we implement parent pointer
-> support at first?
-> http://www.xfs.org/index.php/Unfinished_work#Parent_Pointers.2FCreate.2BEA
-> I propose this because it would reduce many efforts for
-> implementing xfs_shrinkfs command, and reduce the overhead for
-> iterating overall file systems to find out files which are located
-> at offline AGs.
+> 
+> sparse warnings:
+> 
+> + fs/xfs/xfs_ialloc_btree.c:186:1: sparse: symbol 'xfs_inobt_verify' was not declared. Should it be static?
+> fs/xfs/xfs_ialloc_btree.c:227:1: sparse: symbol 'xfs_inobt_read_verify' was not declared. Should it be static?
 
-That does need to be completed, though it's more of an optimisation
-for the shrink process than absolutely necessary functionality.
-Similarly for the rmap allocation btree (tracks used space and it's
-owner) that I'm also working on. Being able to walk the used space
-in an AG directly and immediately resolve the owner without a
-directory tree walk or inode scan will make things ever faster....
+Hi Fengguang,
 
-Hence I think just having shrink dumb and slow as a first step is
-just fine and speed can wait until we have all the necessary
-infrastructure in place.
+For a short while these probably should be static, but they will be
+externally visible soon - there are subsequent patches that will hit
+3.9 require this to be available externally, so I'm not sure it's
+worth fixing this right now, only to change it back again shortly.
+
+> Please consider folding the attached diff :-)
+
+No, because it changes more than just what the above sparse error
+reports.....
+
+> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+> index b38a10e..6a714b5 100644
+> --- a/fs/xfs/xfs_dquot.c
+> +++ b/fs/xfs/xfs_dquot.c
+> @@ -52,10 +52,10 @@
+>   */
+>  
+>  #ifdef DEBUG
+> -xfs_buftarg_t *xfs_dqerror_target;
+> -int xfs_do_dqerror;
+> -int xfs_dqreq_num;
+> -int xfs_dqerror_mod = 33;
+> +static xfs_buftarg_t *xfs_dqerror_target;
+> +static int xfs_do_dqerror;
+> +static int xfs_dqreq_num;
+> +static int xfs_dqerror_mod = 33;
+>  #endif
+
+These are debug build only, and intended to be globally visible so
+they can be changed with a debugger. And sparse didn't warn about
+them, because you didn't do a debug build, so the script shouldn't
+be changing them.(*)
 
 Cheers,
 
 Dave.
+
+(*) Please don't do debug XFS builds with this automated checker. We
+pretty much turn all static functions to global "noinline" functions
+for debug builds, and sparse will throw hundreds of useless warnings.
 -- 
 Dave Chinner
 david@fromorbit.com
