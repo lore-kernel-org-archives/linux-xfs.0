@@ -1,29 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAG6hHS8067199 for <xfs@oss.sgi.com>; Fri, 16 Nov 2012 00:43:17 -0600
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id mt3E0k8nX4IHegTt (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 15 Nov 2012 22:45:22 -0800 (PST)
-Received: from acsinet21.oracle.com (acsinet21.oracle.com [141.146.126.237])
-	by userp1040.oracle.com (Sentrion-MTA-4.2.2/Sentrion-MTA-4.2.2) with
-	ESMTP id qAG6jKKw003325
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Fri, 16 Nov 2012 06:45:21 GMT
-Received: from acsmt358.oracle.com (acsmt358.oracle.com [141.146.40.158])
-	by acsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	qAG6jKlK022405
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 16 Nov 2012 06:45:20 GMT
-Received: from abhmt103.oracle.com (abhmt103.oracle.com [141.146.116.55])
-	by acsmt358.oracle.com (8.12.11.20060308/8.12.11) with ESMTP id
-	qAG6jKRB010004 for <xfs@oss.sgi.com>; Fri, 16 Nov 2012 00:45:20 -0600
-Message-ID: <50A5E0FB.5060201@oracle.com>
-Date: Fri, 16 Nov 2012 14:45:15 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+	qAH20UHY181723 for <xfs@oss.sgi.com>; Fri, 16 Nov 2012 20:00:30 -0600
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	T43TYdPwfWMp2phc for <xfs@oss.sgi.com>;
+	Fri, 16 Nov 2012 18:02:34 -0800 (PST)
+Date: Sat, 17 Nov 2012 13:02:31 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/2] xfsprogs: Introduce a new subcommand agstate to
+	xfs_fio
+Message-ID: <20121117020231.GP14281@dastard>
+References: <50A5E258.3000509@oracle.com>
 MIME-Version: 1.0
-Subject: [PATCH 03/15] xfs: Introduce a new ioctl(2) to set AG state
+Content-Disposition: inline
+In-Reply-To: <50A5E258.3000509@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,203 +27,306 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: xfs@oss.sgi.com
 
-Introduce a new ioctl(2) for setting a.g. state.
+On Fri, Nov 16, 2012 at 02:51:04PM +0800, Jeff Liu wrote:
+> Introduce a new xfs_io command: agstate.
+> 
+> This command is used to get/set state for a given allocation group.
 
-- Add a new structure xfs_ioc_agstate.
-- Add a macro to indicate an a.g. is offline.
-- Add XFS_IOC_SET_AGSTATE for ioctl(2).
-- Teach xfs_alloc_log_agf() aware of agf_state.
+xfs_io is not the place for this command. 
 
+A couple of weeks ago I started writing an xfs_spaceman module and
+an ioctl interface for exactly this purpose, I just hadn't got
+around to completing it and the kernel patch to test it so I hadn't
+posted it.  Once the userspace release is out of the way, I'll post
+the patches to get xfs_spaceman into xfs_progs, and we can use that
+for this AG control from the start.
 
-Signed-off-by: Jie Liu <jeff.liu@oracle.com>
----
- fs/xfs/xfs_ag.h    |   17 ++++++++++++
- fs/xfs/xfs_alloc.c |    1 +
- fs/xfs/xfs_fs.h    |    1 +
- fs/xfs/xfs_fsops.c |   73 ++++++++++++++++++++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_ioctl.c |   13 +++++++++
- fs/xfs/xfs_trans.h |    2 +-
- 6 files changed, 104 insertions(+), 3 deletions(-)
+The reason for this is that the AG state in future is going to be a
+lot more complex than just enabling/disabling allocation, and the
+ioctl interface I prototyped supports a lot of that future
+functionality. 
 
-diff --git a/fs/xfs/xfs_ag.h b/fs/xfs/xfs_ag.h
-index fd578e6..e2588d9 100644
---- a/fs/xfs/xfs_ag.h
-+++ b/fs/xfs/xfs_ag.h
-@@ -235,6 +235,23 @@ typedef struct xfs_perag {
- } xfs_perag_t;
- 
- /*
-+ * Structure for ioctl per a.g. state get/set.
-+ */
-+typedef struct xfs_ioc_agstate {
-+	xfs_agnumber_t	agno;
-+	__uint32_t	state;
-+} xfs_ioc_agstate_t;
-+
-+/*
-+ * Skip an AG with below state for inodes/blocks allocation.
-+ */
-+#define XFS_AG_STATE_ALLOC_DENY		(1 << 0)
-+#define XFS_AG_ALL_STATE		(XFS_AG_STATE_ALLOC_DENY)
-+
-+extern int xfs_set_agstate(struct xfs_mount *mp,
-+			   struct xfs_ioc_agstate *agstate);
-+
-+/*
-  * tags for inode radix tree
-  */
- #define XFS_ICI_NO_TAG		(-1)	/* special flag for an untagged lookup
-diff --git a/fs/xfs/xfs_alloc.c b/fs/xfs/xfs_alloc.c
-index 4f33c32..bd9cc41 100644
---- a/fs/xfs/xfs_alloc.c
-+++ b/fs/xfs/xfs_alloc.c
-@@ -2005,6 +2005,7 @@ xfs_alloc_log_agf(
- 		offsetof(xfs_agf_t, agf_freeblks),
- 		offsetof(xfs_agf_t, agf_longest),
- 		offsetof(xfs_agf_t, agf_btreeblks),
-+		offsetof(xfs_agf_t, agf_state),
- 		sizeof(xfs_agf_t)
- 	};
- 
-diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
-index c13fed8..991c09e 100644
---- a/fs/xfs/xfs_fs.h
-+++ b/fs/xfs/xfs_fs.h
-@@ -486,6 +486,7 @@ typedef struct xfs_handle {
- #define XFS_IOC_ATTRMULTI_BY_HANDLE  _IOW ('X', 123, struct xfs_fsop_attrmulti_handlereq)
- #define XFS_IOC_FSGEOMETRY	     _IOR ('X', 124, struct xfs_fsop_geom)
- #define XFS_IOC_GOINGDOWN	     _IOR ('X', 125, __uint32_t)
-+#define XFS_IOC_SET_AGSTATE	     _IOW('X', 126, struct xfs_ioc_agstate)
- /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
- 
- 
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index c25b094..3742511 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -112,10 +112,79 @@ xfs_fs_geometry(
- 	return 0;
- }
- 
-+/*
-+ * Setting a.g. persistent state as well as perag incore state.
-+ */
-+static void
-+xfs_set_agstate_private(
-+	xfs_trans_t	*tp,	/* transaction pointer */
-+	xfs_buf_t	*agbp,	/* buffer for a.g. freelist header */
-+	xfs_perag_t	*pag,	/* incore perag structure */
-+	__uint32_t	state)  /* a.g. state to be set */
-+{
-+	xfs_agf_t	*agf;	/* a.g. free space */
-+
-+	agf = XFS_BUF_TO_AGF(agbp);
-+	agf->agf_state |= cpu_to_be32(state);
-+	pag->pag_state |= state;
-+
-+	xfs_alloc_log_agf(tp, agbp, XFS_AGF_STATE);
-+}
-+
-+/*
-+ * Setting the state of the given AG.
-+ *
-+ * For now, we can set a given AG to be offline or online, and
-+ * allocaters will skip an AG being offline to allocate inodes
-+ * or free space.
-+ */
-+int
-+xfs_set_agstate(
-+	xfs_mount_t		*mp,
-+	xfs_ioc_agstate_t	*agstate)
-+{
-+	xfs_agnumber_t		agno;
-+	xfs_perag_t		*pag;
-+	xfs_trans_t		*tp;
-+	xfs_buf_t		*bp;
-+	int			error;
-+
-+	agno = agstate->agno;
-+	if (agno >= mp->m_sb.sb_agcount)
-+		return XFS_ERROR(EINVAL);
-+
-+	if ((agstate->state & XFS_AG_ALL_STATE) != agstate->state)
-+		return XFS_ERROR(EINVAL);
-+
-+	tp = xfs_trans_alloc(mp, XFS_TRANS_SET_AGSTATE);
-+	error = xfs_trans_reserve(tp, 0, XFS_SETAGSTATE_LOG_RES(mp), 0, 0,
-+				  XFS_DEFAULT_LOG_COUNT);
-+	if (error) {
-+		xfs_trans_cancel(tp, 0);
-+		return error;
-+	}
-+
-+	error = xfs_alloc_read_agf(mp, tp, agno, 0, &bp);
-+	if (error)
-+		goto error0;
-+
-+	pag = xfs_perag_get(mp, agno);
-+	xfs_set_agstate_private(tp, bp, pag, agstate->state);
-+	xfs_perag_put(pag);
-+
-+	xfs_trans_set_sync(tp);
-+	xfs_trans_commit(tp, 0);
-+	return error;
-+
-+error0:
-+	xfs_trans_cancel(tp, XFS_TRANS_ABORT);
-+	return error;
-+}
-+
- static int
- xfs_growfs_data_private(
--	xfs_mount_t		*mp,		/* mount point for filesystem */
--	xfs_growfs_data_t	*in)		/* growfs data input struct */
-+	xfs_mount_t		*mp,	/* mount point for filesystem */
-+	xfs_growfs_data_t	*in)	/* growfs data input struct */
- {
- 	xfs_agf_t		*agf;
- 	xfs_agi_t		*agi;
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 8305f2a..efe39ef 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1602,6 +1602,19 @@ xfs_file_ioctl(
- 		error = xfs_errortag_clearall(mp, 1);
- 		return -error;
- 
-+	case XFS_IOC_SET_AGSTATE: {
-+		xfs_ioc_agstate_t in;
-+
-+		if (!capable(CAP_SYS_ADMIN))
-+			return -EPERM;
-+
-+		if (copy_from_user(&in, arg, sizeof(in)))
-+			return -XFS_ERROR(EFAULT);
-+
-+		error = xfs_set_agstate(mp, &in);
-+		return -error;
-+	}
-+
- 	default:
- 		return -ENOTTY;
- 	}
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index a4f4092..14f897d 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -264,7 +264,7 @@ struct xfs_log_item_desc {
- 	 (128 * (ext + (ext * XFS_BM_MAXLEVELS(mp, XFS_ATTR_FORK)))))
- #define	XFS_ATTRRM_LOG_RES(mp)	((mp)->m_reservations.tr_attrrm)
- #define	XFS_CLEAR_AGI_BUCKET_LOG_RES(mp)  ((mp)->m_reservations.tr_clearagi)
--#define XFS_SETAGSTATE_LOG_RES ((mp)->m_reservations.tr_setagstate)
-+#define XFS_SETAGSTATE_LOG_RES(mp) ((mp)->m_reservations.tr_setagstate)
- 
- /*
-  * Various log count values.
+The patch is below so you can see what sort of AG control/state
+functionality I think we'll be needing sooner rather than later, and
+the interface I think we should be using...
+
+> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+> ---
+>  include/xfs_ag.h |   32 ++++++++++++++++++++++++++++----
+>  include/xfs_fs.h |    2 ++
+>  io/Makefile      |    2 +-
+>  io/init.c        |    1 +
+>  4 files changed, 32 insertions(+), 5 deletions(-)
+
+FWIW, I think you forgot to include the file that introduces the
+command in the patch :)
+
+Cheers,
+
+Dave.
 -- 
-1.7.4.1
+Dave Chinner
+david@fromorbit.com
+
+
+spaceman: AG state control
+
+From: Dave Chinner <dchinner@redhat.com>
+
+Add support for a new allocation group state control ioctl. This
+allows control of various AG parameters, such as whether inode
+allocation is allowed in the AG, metadata preference, whether new
+allocations are allowed, etc. This requires a new ioctl.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ spaceman/Makefile |    2 +-
+ spaceman/ag.c     |  221 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 222 insertions(+), 1 deletion(-)
+
+diff --git a/spaceman/Makefile b/spaceman/Makefile
+index 4743ad8..dd19cb0 100644
+--- a/spaceman/Makefile
++++ b/spaceman/Makefile
+@@ -8,7 +8,7 @@ include $(TOPDIR)/include/builddefs
+ LTCOMMAND = xfs_spaceman
+ HFILES = init.h space.h
+ CFILES = init.c \
+-	file.c freesp.c prealloc.c trim.c
++	ag.c file.c freesp.c prealloc.c trim.c
+ 
+ LLDLIBS = $(LIBXCMD)
+ LTDEPENDENCIES = $(LIBXCMD)
+diff --git a/spaceman/ag.c b/spaceman/ag.c
+new file mode 100644
+index 0000000..40333c2
+--- /dev/null
++++ b/spaceman/ag.c
+@@ -0,0 +1,221 @@
++/*
++ * Copyright (c) 2012 Red Hat, Inc.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++
++#include <xfs/xfs.h>
++#include <xfs/xfs_types.h>
++#include <xfs/command.h>
++#include <linux/dqblk_xfs.h>
++#include "input.h"
++#include "init.h"
++#include "space.h"
++
++#ifndef XFS_IOC_AGCONTROL
++#define XFS_IOC_AGCONTROL _IOWR ('X', 60, struct xfs_agcontrol)
++
++#define XFS_AGCONTROL_VERSION		1
++struct xfs_agcontrol {
++	__u32		version;
++	__u32		flags;
++	__u32		agno;
++	__u32		state;
++	__u64		pad[8];
++};
++
++/* control flags */
++#define XFS_AGCONTROL_GETAGFSTATE	(1 << 0)	/* get AGF state */
++#define XFS_AGCONTROL_SETAGFSTATE	(1 << 1)	/* set AGF state */
++#define XFS_AGCONTROL_GETAGISTATE	(1 << 2)	/* get AGI state */
++#define XFS_AGCONTROL_SETAGISTATE	(1 << 3)	/* set AGI state */
++
++/* state flags */
++
++/*
++ * inode and allocation states are split. AGF and AGI online state will move in
++ * sync as it is really a whole AG state. No allocation flags imply no new
++ * allocations, but inodes and extents can be removed. Readonly means no
++ * modification (alloc or free) is allowed. This is to allow different
++ * operations to be performed. e.g. emptying an AG in preparation for a shrink
++ * require NOALLOC state, but an AG that has a corrupted freespace btree might
++ * be switched to READONLY until the freespace tree is rebuilt. An AGF/AGI in
++ * this corrupt/ro state will set the relevant corruption flag in the state
++ * field....
++ */
++#define XFS_AGFSTATE_ONLINE		(1 << 0)	/* AGF online */
++#define XFS_AGFSTATE_NOALLOC		(1 << 1)	/* No new allocation */
++#define XFS_AGFSTATE_READONLY		(1 << 2)	/* AGF is immutable */
++#define XFS_AGFSTATE_METADATA		(1 << 3)	/* metadata preferred */
++#define XFS_AGFSTATE_CORRUPT_BNO	(1 << 4)	/* bno freespace corrupt */
++#define XFS_AGFSTATE_CORRUPT_CNT	(1 << 5)	/* cnt freespace corrupt */
++#define XFS_AGFSTATE_CORRUPT_AGFL	(1 << 6)	/* AGFL freespace corrupt */
++
++#define XFS_AGISTATE_ONLINE		(1 << 0)	/* AGI online */
++#define XFS_AGISTATE_NOALLOC		(1 << 1)	/* No new allocation */
++#define XFS_AGISTATE_READONLY		(1 << 2)	/* AGI is immutable */
++#define XFS_AGISTATE_CORRUPT_TREE	(1 << 2)	/* AGI btree corrupt */
++
++#endif
++
++static cmdinfo_t agfctl_cmd;
++static cmdinfo_t agictl_cmd;
++
++static int
++agfctl_f(
++	int		argc,
++	char		**argv)
++{
++	struct xfs_agcontrol agctl = {0};
++	xfs_agnumber_t	agno;
++	int		gflag = 0;
++	int		c;
++
++	while ((c = getopt(argc, argv, "gs")) != EOF) {
++		switch (c) {
++		case 'g':
++			gflag = 1;
++			break;
++		default:
++			return command_usage(&agfctl_cmd);
++		}
++	}
++	if (optind != argc - 1)
++		return command_usage(&agfctl_cmd);
++
++	agno = atoi(argv[optind]);
++	if (agno >= file->geom.agcount) {
++		fprintf(stderr, _("%s: agno %d out of range (max %d)\n"),
++			progname, agno, file->geom.agcount);
++		exitcode = 1;
++		return 0;
++	}
++
++	agctl.version = XFS_AGCONTROL_VERSION;
++	agctl.agno = agno;
++	if (gflag)
++		agctl.flags = XFS_AGCONTROL_GETAGFSTATE;
++
++	if (xfsctl(file->name, file->fd, XFS_IOC_AGCONTROL, &agctl) < 0) {
++		fprintf(stderr, _("%s: XFS_IOC_AGCONTROL on %s: %s\n"),
++			progname, file->name, strerror(errno));
++	}
++	return 0;
++}
++
++static void
++agfctl_help(void)
++{
++	printf(_(
++"\n"
++"AGF state control\n"
++"\n"
++"Options: [-g] agno\n"
++"\n"
++" -g -- get state\n"
++" agno -- AG to operate on\n"
++"\n"));
++
++}
++
++void
++agfctl_init(void)
++{
++	agfctl_cmd.name = "agfctl";
++	agfctl_cmd.altname = "agfctl";
++	agfctl_cmd.cfunc = agfctl_f;
++	agfctl_cmd.argmin = 2;
++	agfctl_cmd.argmax = -1;
++	agfctl_cmd.args = "agno\n";
++	agfctl_cmd.flags = CMD_FLAG_GLOBAL;
++	agfctl_cmd.oneline = _("AGF state control");
++	agfctl_cmd.help = agfctl_help;
++
++	add_command(&agfctl_cmd);
++}
++
++static int
++agictl_f(
++	int		argc,
++	char		**argv)
++{
++	struct xfs_agcontrol agctl = {0};
++	xfs_agnumber_t	agno;
++	int		gflag = 0;
++	int		c;
++
++	while ((c = getopt(argc, argv, "gs")) != EOF) {
++		switch (c) {
++		case 'g':
++			gflag = 1;
++			break;
++		default:
++			return command_usage(&agictl_cmd);
++		}
++	}
++	if (optind != argc - 1)
++		return command_usage(&agictl_cmd);
++
++	agno = atoi(argv[optind]);
++	if (agno >= file->geom.agcount) {
++		fprintf(stderr, _("%s: agno %d out of range (max %d)\n"),
++			progname, agno, file->geom.agcount);
++		exitcode = 1;
++		return 0;
++	}
++
++	agctl.version = XFS_AGCONTROL_VERSION;
++	agctl.agno = agno;
++	if (gflag)
++		agctl.flags = XFS_AGCONTROL_GETAGISTATE;
++
++	if (xfsctl(file->name, file->fd, XFS_IOC_AGCONTROL, &agctl) < 0) {
++		fprintf(stderr, _("%s: XFS_IOC_AGCONTROL on %s: %s\n"),
++			progname, file->name, strerror(errno));
++		exitcode = 1;
++		return 0;
++	}
++	return 0;
++}
++static void
++agictl_help(void)
++{
++	printf(_(
++"\n"
++"AGI state control\n"
++"\n"
++"Options: [-g] agno\n"
++"\n"
++" -g -- get state\n"
++" agno -- AG to operate on\n"
++"\n"));
++
++}
++
++void
++agictl_init(void)
++{
++	agictl_cmd.name = "agictl";
++	agictl_cmd.altname = "agictl";
++	agictl_cmd.cfunc = agictl_f;
++	agictl_cmd.argmin = 2;
++	agictl_cmd.argmax = -1;
++	agictl_cmd.args = "agno\n";
++	agictl_cmd.flags = CMD_FLAG_GLOBAL;
++	agictl_cmd.oneline = _("AGI state control");
++	agictl_cmd.help = agictl_help;
++
++	add_command(&agictl_cmd);
++}
 
 _______________________________________________
 xfs mailing list
