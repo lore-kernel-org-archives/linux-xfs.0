@@ -1,11 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAHGhxgY029542 for <xfs@oss.sgi.com>; Sat, 17 Nov 2012 10:43:59 -0600
-Subject: [GIT PULL] XFS update for 3.7-rc7
-Message-Id: <20121117164602.EFAF74266DC@whiskey.americas.sgi.com>
-Date: Sat, 17 Nov 2012 10:46:02 -0600 (CST)
-From: bpm@sgi.com (Ben Myers)
+	qAHLDLx4054075 for <xfs@oss.sgi.com>; Sat, 17 Nov 2012 15:13:21 -0600
+Message-ID: <50A7FE6D.6050206@sgi.com>
+Date: Sat, 17 Nov 2012 15:15:25 -0600
+From: Mark Tinguely <tinguely@sgi.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH] xfs_quota: correctly initialise the default path
+References: <1353028488-24436-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1353028488-24436-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -14,52 +17,45 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Hi Linus,
+On 11/15/12 19:14, Dave Chinner wrote:
+> From: Dave Chinner<dchinner@redhat.com>
+>
+> When we initial xfs_quota, we place lots of information into the
+> fs_table. This includes all the devices/mount points the user has
+> specified as a global command line parameter to report on, as well
+> as all the paths under project quota control.
+>
+> There is a "current path" pointer (fs_path) maintained by the code
+> that points somewhere into the fs_table. After the table is
+> initialised, fs_path always points to the last entry in the table,
+> and hence has to be re-initialised to point at the desired entry
+> before it can be used properly.
 
-   Please pull these 3 bug fixes for XFS.  This includes a fix for attribute
-   corruption, a fix for error handling in xfs_vm_writepage, and a fix for
-   reference counts on xfs_bufs.
+...
 
-Thanks,
-	Ben
+fun code read :)
 
-The following changes since commit 6ce377afd1755eae5c93410ca9a1121dfead7b87:
+>   	init_commands();
+>   	add_args_command(init_args_command);
+> +
+> +	/*
+> +	 * Ensure that global commands don't end up with an invalid path pointer
+> +	 * by setting the default device at the first specified on the CLI
+> +	 */
+> +	if (argc != optind)
+> +		fs_path = fs_table_lookup(argv[optind], FS_MOUNT_POINT);
 
-  xfs: fix reading of wrapped log data (2012-11-08 11:10:51 -0600)
+fs_table_lookup() can return NULL - especially the way I type.
 
-are available in the git repository at:
 
-  git://oss.sgi.com/xfs/xfs tags/for-linus-v3.7-rc7
-
-for you to fetch changes up to d69043c42d8c6414fa28ad18d99973aa6c1c2e24:
-
-  xfs: drop buffer io reference when a bad bio is built (2012-11-17 09:36:57 -0600)
-
-----------------------------------------------------------------
-xfs: bugfixes for 3.7-rc7
-
-- fix attr tree double split corruption
-- fix broken error handling in xfs_vm_writepage
-- drop buffer io reference when a bad bio is built
-
-----------------------------------------------------------------
-Dave Chinner (3):
-      xfs: fix attr tree double split corruption
-      xfs: fix broken error handling in xfs_vm_writepage
-      xfs: drop buffer io reference when a bad bio is built
-
- fs/xfs/xfs_aops.c      | 54 ++++++++++++++++++++++++++++++++++++--------------
- fs/xfs/xfs_attr_leaf.c | 20 +++++++++++++++++--
- fs/xfs/xfs_buf.c       | 14 +++++++++++--
- 3 files changed, 69 insertions(+), 19 deletions(-)
+--Mark.
 
 _______________________________________________
 xfs mailing list
