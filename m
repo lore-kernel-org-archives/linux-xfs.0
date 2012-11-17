@@ -1,19 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAH4VP7g203198 for <xfs@oss.sgi.com>; Fri, 16 Nov 2012 22:31:25 -0600
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id 3ZLcnGjPDuKcYV8Q (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 16 Nov 2012 20:33:30 -0800 (PST)
-Message-ID: <50A71386.80100@oracle.com>
-Date: Sat, 17 Nov 2012 12:33:10 +0800
+	qAH64iNV216584 for <xfs@oss.sgi.com>; Sat, 17 Nov 2012 00:04:44 -0600
+Message-ID: <50A72963.7090306@oracle.com>
+Date: Sat, 17 Nov 2012 14:06:27 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/2] xfsprogs: Introduce a new subcommand agstate to
-	xfs_fio
-References: <50A5E258.3000509@oracle.com> <20121117020231.GP14281@dastard>
-In-Reply-To: <20121117020231.GP14281@dastard>
+Subject: Re: [PATCH v2] xfstests: get return value in seek_sanity_test
+References: <1350825309-30733-1-git-send-email-wenqing.lz@taobao.com>
+	<20121109032551.GA28325@gmail.com> <509D139F.1050607@sgi.com>
+In-Reply-To: <509D139F.1050607@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,61 +22,93 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: xfs@oss.sgi.com, Zheng Liu <gnehzuil.liu@gmail.com>, Zheng Liu <wenqing.lz@taobao.com>
 
-On 11/17/2012 10:02 AM, Dave Chinner wrote:
-> On Fri, Nov 16, 2012 at 02:51:04PM +0800, Jeff Liu wrote:
->> Introduce a new xfs_io command: agstate.
+On 11/09/2012 10:30 PM, Mark Tinguely wrote:
+> On 11/08/12 21:25, Zheng Liu wrote:
+>> On Sun, Oct 21, 2012 at 09:15:09PM +0800, wenqing.lz wrote:
 >>
->> This command is used to get/set state for a given allocation group.
+>> ping?
+>>
+>> Regards,
+>> Zheng
+>>
+>>> From: Zheng Liu<wenqing.lz@taobao.com>
+>>>
+>>> In seek_sanity_test getting return value is missing.  Thus we couldn't get the
+>>> result unless someone read the log file (e.g. # 285).
+>>>
+>>> CC: Jeff Liu<jeff.liu@oracle.com>
+>>> Signed-off-by: Zheng Liu<wenqing.lz@taobao.com>
+>>> ---
+>>> v2<- v1:
+>>> 	* put return value check below the run_test()
+>>>
+>>> Hi Jeff,
+>>>
+>>> Could you please review this patch again?  Thanks.
+>>>
+>>> Regards,
+>>> Zheng
+>>>
+>>>   src/seek_sanity_test.c | 4 ++--
+>>>   1 file changed, 2 insertions(+), 2 deletions(-)
+>>>
+>>> diff --git a/src/seek_sanity_test.c b/src/seek_sanity_test.c
+>>> index 34f5508..3897f02 100644
+>>> --- a/src/seek_sanity_test.c
+>>> +++ b/src/seek_sanity_test.c
+>>> @@ -674,9 +674,9 @@ int main(int argc, char **argv)
+>>>   		goto out;
+>>>
+>>>   	for (i = 0; i<  numtests; ++i) {
+>>> +		ret = run_test(&seek_tests[i]);
+>>>   		if (ret)
+>>> -			goto out;
+>>> -		run_test(&seek_tests[i]);
+>>> +			break;
+>>>   	}
+>>>
+>>>   out:
+>>> --
+>>> 1.7.12.rc2.18.g61b472e
+>>>
+>>
+>> _______________________________________________
+>> xfs mailing list
+>> xfs@oss.sgi.com
+>> http://oss.sgi.com/mailman/listinfo/xfs
 > 
-> xfs_io is not the place for this command.
-I was also wonder why we place the agflags command on there since xfs_io is aimed
-at examining the regular file I/O paths, but I can not found out a better place
-while implementing it.
+> Hi Jeff and Zheng,
+> 
+> Jeff, can I assume by your email:
+> 
+>    http://oss.sgi.com/archives/xfs/2012-10/msg00412.html
+> 
+> that you are giving your Reviewed-by:?
+Hi Mark,
 
-> 
-> A couple of weeks ago I started writing an xfs_spaceman module and
-> an ioctl interface for exactly this purpose, I just hadn't got
-> around to completing it and the kernel patch to test it so I hadn't
-> posted it.  Once the userspace release is out of the way, I'll post
-> the patches to get xfs_spaceman into xfs_progs, and we can use that
-> for this AG control from the start.
-> 
-> The reason for this is that the AG state in future is going to be a
-> lot more complex than just enabling/disabling allocation, and the
-> ioctl interface I prototyped supports a lot of that future
-> functionality.
-Definitely, so that we can have fine-granted AG controls, that's why I didn't
-chose to re-base/post the previous agflags patch but proposed the agstate command
-because the naming would sounds more reasonable.
-> 
-> The patch is below so you can see what sort of AG control/state
-> functionality I think we'll be needing sooner rather than later, and
-> the interface I think we should be using...
-Ok, I'll waiting for this feature. :)
+Sure, it looks good to me. :)
 
-BTW, Does it sounds make sense if we implement parent pointer support at first?
-http://www.xfs.org/index.php/Unfinished_work#Parent_Pointers.2FCreate.2BEA
-I propose this because it would reduce many efforts for implementing xfs_shrinkfs
-command, and reduce the overhead for iterating overall file systems to find out
-files which are located at offline AGs.
-> 
->> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
->> ---
->>  include/xfs_ag.h |   32 ++++++++++++++++++++++++++++----
->>  include/xfs_fs.h |    2 ++
->>  io/Makefile      |    2 +-
->>  io/init.c        |    1 +
->>  4 files changed, 32 insertions(+), 5 deletions(-)
-> 
-> FWIW, I think you forgot to include the file that introduces the
-> command in the patch :)
-Oops! sorry for the mistake.
+Reviewed-by: Jie Liu <jeff.liu@oracle.com>
 
 Thanks,
 -Jeff
+> 
+> It also looks good to me too:
+> 
+> Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+> 
+> I will make sure it gets committed.
+> 
+> --Mark.
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
