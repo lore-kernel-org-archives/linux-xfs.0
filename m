@@ -1,20 +1,35 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAJ2tMNT207122 for <xfs@oss.sgi.com>; Sun, 18 Nov 2012 20:55:23 -0600
-Received: from mga09.intel.com (mga09.intel.com [134.134.136.24]) by
-	cuda.sgi.com with ESMTP id XJxvqyCRpyc9eo8C for
-	<xfs@oss.sgi.com>; Sun, 18 Nov 2012 18:57:30 -0800 (PST)
-Date: Mon, 19 Nov 2012 10:56:32 +0800
-From: Fengguang Wu <fengguang.wu@intel.com>
-Subject: Re: [xfs:for-next 70/70] fs/xfs/xfs_da_btree.c:153:26: sparse:
-	symbol 'xfs_da_node_buf_ops' was not declared. Should it be static?
-Message-ID: <20121119025632.GA27610@localhost>
-References: <50a5ea70.Lft3JDA+/WxpLnoh%fengguang.wu@intel.com>
-	<20121117235051.GS14281@dastard>
+	qAJ3Pto8209943 for <xfs@oss.sgi.com>; Sun, 18 Nov 2012 21:25:56 -0600
+Received: from fgwmail5.fujitsu.co.jp (fgwmail5.fujitsu.co.jp [192.51.44.35])
+	by cuda.sgi.com with ESMTP id 2ObZKlRWqrViNme1 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 18 Nov 2012 19:28:03 -0800 (PST)
+Received: from m3.gw.fujitsu.co.jp (unknown [10.0.50.73])
+	by fgwmail5.fujitsu.co.jp (Postfix) with ESMTP id 29DE93EE0BC
+	for <xfs@oss.sgi.com>; Mon, 19 Nov 2012 12:28:01 +0900 (JST)
+Received: from smail (m3 [127.0.0.1])
+	by outgoing.m3.gw.fujitsu.co.jp (Postfix) with ESMTP id 0DC2D45DEB7
+	for <xfs@oss.sgi.com>; Mon, 19 Nov 2012 12:28:01 +0900 (JST)
+Received: from s3.gw.fujitsu.co.jp (s3.gw.fujitsu.co.jp [10.0.50.93])
+	by m3.gw.fujitsu.co.jp (Postfix) with ESMTP id EB87045DEBA
+	for <xfs@oss.sgi.com>; Mon, 19 Nov 2012 12:28:00 +0900 (JST)
+Received: from s3.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id C668C1DB803F
+	for <xfs@oss.sgi.com>; Mon, 19 Nov 2012 12:28:00 +0900 (JST)
+Received: from g01jpexchkw32.g01.fujitsu.local
+	(g01jpexchkw32.g01.fujitsu.local [10.0.193.115])
+	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id 85A661DB803B
+	for <xfs@oss.sgi.com>; Mon, 19 Nov 2012 12:28:00 +0900 (JST)
+Message-ID: <50A9A6FE.1080106@jp.fujitsu.com>
+Date: Mon, 19 Nov 2012 12:26:54 +0900
+From: sat <takeuchi_satoru@jp.fujitsu.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20121117235051.GS14281@dastard>
+Subject: [PATCH] xfstests: fix to build src/realpath and the correct the
+	existence of target devices
+References: <4C0EA21B.8020703@sandeen.net> <508ABE75.4030703@sgi.com>
+In-Reply-To: <508ABE75.4030703@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,90 +42,96 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com
+To: Rich Johnston <rjohnston@sgi.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs mailing list <xfs@oss.sgi.com>
 
-Hi Dave,
+Hi Rich, Eric
 
-> > + fs/xfs/xfs_dquot.c:294:1: sparse: symbol 'xfs_dquot_buf_write_verify' was not declared. Should it be static?
-> > 
-> > Please consider folding the attached diff :-)
+(2012/10/27 1:46), Rich Johnston wrote:
+> On 06/08/2010 03:03 PM, Eric Sandeen wrote:
+>> If you try running xfstests on lvm volumes which are symlinks,
+>> it'll fail to run several tests because our _require_scratch
+>> framework ultimately uses lstat not stat, and does not think
+>> the lvm device (which is usually a symlink to a dm-X device)
+>> is a block device.  Sigh.
+>>
+>> Last try at this - just resolve any symlinked devicenames
+>> into their realpath(3) in common.config.
+>>
+>> This actually seems to work.
+>>
+>> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+>>
+>> ---
+>>
+>>
+>> diff --git a/common.config b/common.config
+>> index 926846b..e5b2483 100644
+>> --- a/common.config
+>> +++ b/common.config
 > 
-> No, for the same reason as the last one. Though I'll fix the new
-> ones (the read/write verifier functions) as they should now be
-> static as a separate patch.
-
-OK, thanks.
-
-> > diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-> > index 0e92d12..3216738 100644
-> > --- a/fs/xfs/xfs_bmap.c
-> > +++ b/fs/xfs/xfs_bmap.c
-> > @@ -4180,7 +4180,7 @@ error0:
-> >  /*
-> >   * Add bmap trace insert entries for all the contents of the extent records.
-> >   */
-> > -void
-> > +static void
-> >  xfs_bmap_trace_exlist(
-> >  	xfs_inode_t	*ip,		/* incore inode pointer */
-> >  	xfs_extnum_t	cnt,		/* count of entries in the list */
+> Looks good
 > 
-> And, again, there are lots of changes in this that are unrelated to
-> the patch.  In this case, the change is plain wrong. It's a debug
-> only function, called via the macro XFS_BMAP_TRACE_EXLIST:
+> Reviewed-by: Rich Johnston <rjohnston@sgi.com>
 > 
-> $ git grep XFS_BMAP_TRACE_EXLIST
-> fs/xfs/xfs_bmap.c:      XFS_BMAP_TRACE_EXLIST(ip, i, whichfork);
-> fs/xfs/xfs_bmap.h:#define       XFS_BMAP_TRACE_EXLIST(ip,c,w)   \
-> fs/xfs/xfs_bmap.h:#define       XFS_BMAP_TRACE_EXLIST(ip,c,w)
-> fs/xfs/xfs_inode.c:             XFS_BMAP_TRACE_EXLIST(ip, nex, whichfork);
-> fs/xfs/xfs_inode.c:     XFS_BMAP_TRACE_EXLIST(ip, nrecs, whichfork);
+> Eric,
 > 
-> And so it clearly needs to be non-static.
+> This patch has been committed to git://oss.sgi.com/xfs/cmds/xfstests, master branch, commit ID d5ea873f.
 
-Ah OK, that macro does confuse sparse..
+From: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
 
-> If you are going throw commit-by-commit build warnings and patches
-> to fix them, please only include the fixes for the *new* warnings
-> generated by a single commit, not an aggregate of everything that is
-> found. 
+Commit d5ea873f is not the same as the the following original Eric's patch.
 
-Fair enough. However I'd like to do it in a slightly different way.
+http://oss.sgi.com/archives/xfs/2010-06/msg00080.html
 
-The problem is that there are lots of existing (ie. old) valid
-warnings on the missing "static". I'd still like the auto generated
-patch to fix these old ones by the way. At the same time, to avoid the
-*duplicated* chunks, I'll tell the script to remember the list of
-symbols that have been made static by the generated patches. This
-should address your concern, while still be able to gradually get rid
-of the existing static warnings.
+It does not modify src/Makefile and realpath is never compiled.
 
-> For that reason, I think I'd prefer it if your build bot
-> just sent build warnings, not patches.
+In addition, `[ -L $TEST_DEV ]' and `[ -L $SCRATCH_DEV ]' always returns 0
+if $TEST_DEV or $SCRATCH_DEV are not defined.
 
-I think the patches could be improved rather than removed. I'll fix
-the duplicated patches like in this case.
+Cc: Eric Sandeen <sandeen@sandeen.net>
+Cc: Rich Johnston <rjohnston@sgi.com>
+Signed-off-by: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
 
-Since there tend to be lots of "Should it be static?" warnings, it
-would save some (boring) human time by providing an auto generated
-patch for consideration.
+---
+ common.config |    4 ++--
+ src/Makefile  |    2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-> FWIW, what happens when a problem is fixed by a later patch in the
-> tree in the same push? Do you still throw a mail out to the list?
-> i.e. are you culling spurious warning detections?
+diff --git a/common.config b/common.config
+index 585b150..3240ee9 100644
+--- a/common.config
++++ b/common.config
+@@ -221,11 +221,11 @@ else
+ fi
+ 
+ # Scripts just don't deal well with symlinked devices
+-if [ -L $TEST_DEV ]; then
++if [ -L "$TEST_DEV" ]; then
+         TEST_DEV=`src/realpath $TEST_DEV`
+ fi
+ 
+-if [ -L $SCRATCH_DEV ]; then
++if [ -L "$SCRATCH_DEV" ]; then
+         SCRATCH_DEV=`src/realpath $SCRATCH_DEV`
+ fi
+ 
+diff --git a/src/Makefile b/src/Makefile
+index f7362a2..9f7281d 100644
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -11,7 +11,7 @@ TARGETS = dirstress fill fill2 getpagesize holes lstat64 \
+        devzero feature alloc fault fstest t_access_root \
+        godown resvtest writemod makeextents itrash rename \
+        multi_open_unlink dmiperf unwritten_sync genhashnames t_holes \
+-       t_mmap_writev
++       t_mmap_writev realpath
+ 
+ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
+        preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
+-- 
+1.7.7.6
 
-Yes, the build script has code to avoid sending reports on interim
-warnings.
-
-It will double check the branch HEAD and if the warnings to be
-reported have disappeared there, nothing will be reported. However if
-it's a build *error* fixed in the HEAD, it's a potential problem for
-bisection, so will still be reported unless it's a known tree that
-won't do rebase (ie. net/master).
-
-Thanks,
-Fengguang
 
 _______________________________________________
 xfs mailing list
