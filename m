@@ -1,16 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAN7YwZf041675 for <xfs@oss.sgi.com>; Fri, 23 Nov 2012 01:34:59 -0600
-Date: Fri, 23 Nov 2012 02:37:09 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/2] xfs: fix the buffer log format for contiguous buffers
-Message-ID: <20121123073708.GA5159@infradead.org>
-References: <20121120224120.224166649@sgi.com>
-	<20121120224146.479983109@sgi.com> <20121123014714.GB32450@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20121123014714.GB32450@dastard>
+	qAN7g9fB042552 for <xfs@oss.sgi.com>; Fri, 23 Nov 2012 01:42:09 -0600
+Received: from smtpout17-01.prod.mesa1.secureserver.net
+	(smtpout17-01.prod.mesa1.secureserver.net [68.178.232.13]) by
+	cuda.sgi.com with SMTP id WYwCaTROsbiWvj4v for
+	<xfs@oss.sgi.com>; Thu, 22 Nov 2012 23:44:20 -0800 (PST)
+Received: from unknown (HELO linhost154.prod.mesa1.secureserver.net)
+	([68.178.211.40])
+	(envelope-sender <rimsdontstop@linhost154.prod.mesa1.secureserver.net>)
+	by smtpout17-01.prod.mesa1.secureserver.net (qmail-ldap-1.03) with SMTP
+	for <xfs@oss.sgi.com>; 23 Nov 2012 07:44:16 -0000
+Received: from linhost154.prod.mesa1.secureserver.net (localhost [127.0.0.1])
+	by linhost154.prod.mesa1.secureserver.net (8.13.8/8.12.11) with
+	ESMTP id qAN7GYQg031238
+	for <xfs@oss.sgi.com>; Fri, 23 Nov 2012 00:44:16 -0700
+Date: Mon, 19 Nov 2012 13:15:50 -0700
+Message-Id: <201211192015.qAJKFoeU012020@linhost154.prod.mesa1.secureserver.net>
+Subject: полTора меc€ца сброcиTь Bес без м€са ...!1
+From: irinka_2001@mail.ru
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,22 +27,14 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, Nov 23, 2012 at 12:47:14PM +1100, Dave Chinner wrote:
-> This debug code is a lot more broken than just this. It's completely
-> unaware of discontiguous buffers....
-> 
-> I'm wondering if we should just remove the XFS_TRANS_DEBUG code
-> because it doesn't ever get used....
-
-As far as I know it has been unused since I started working on XFS,
-so removing it sounds fine to me.
+www.tl-webdevelopment.nl/pic/cxz
 
 _______________________________________________
 xfs mailing list
