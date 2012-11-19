@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAINplfK195328 for <xfs@oss.sgi.com>; Sun, 18 Nov 2012 17:51:47 -0600
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	oVLgMUCojQyLXwgO for <xfs@oss.sgi.com>;
-	Sun, 18 Nov 2012 15:53:54 -0800 (PST)
-Date: Mon, 19 Nov 2012 10:53:11 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [xfs:for-next 68/70] fs/xfs/xfs_ialloc_btree.c:186:1: sparse:
-	symbol 'xfs_inobt_verify' was not declared. Should it be static?
-Message-ID: <20121118235311.GU14281@dastard>
-References: <50a5e062.XN/BRFaWJHYKYG4f%fengguang.wu@intel.com>
-	<20121117233057.GR14281@dastard> <20121118040217.GA26302@localhost>
+	qAJ2tMNT207122 for <xfs@oss.sgi.com>; Sun, 18 Nov 2012 20:55:23 -0600
+Received: from mga09.intel.com (mga09.intel.com [134.134.136.24]) by
+	cuda.sgi.com with ESMTP id XJxvqyCRpyc9eo8C for
+	<xfs@oss.sgi.com>; Sun, 18 Nov 2012 18:57:30 -0800 (PST)
+Date: Mon, 19 Nov 2012 10:56:32 +0800
+From: Fengguang Wu <fengguang.wu@intel.com>
+Subject: Re: [xfs:for-next 70/70] fs/xfs/xfs_da_btree.c:153:26: sparse:
+	symbol 'xfs_da_node_buf_ops' was not declared. Should it be static?
+Message-ID: <20121119025632.GA27610@localhost>
+References: <50a5ea70.Lft3JDA+/WxpLnoh%fengguang.wu@intel.com>
+	<20121117235051.GS14281@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20121118040217.GA26302@localhost>
+In-Reply-To: <20121117235051.GS14281@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,49 +27,90 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Fengguang Wu <fengguang.wu@intel.com>
-Cc: Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com, Dave Chinner <dchinner@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com
 
-On Sun, Nov 18, 2012 at 12:02:17PM +0800, Fengguang Wu wrote:
-> On Sun, Nov 18, 2012 at 10:30:57AM +1100, Dave Chinner wrote:
-> > On Fri, Nov 16, 2012 at 02:42:42PM +0800, kbuild test robot wrote:
-> > > tree:   git://oss.sgi.com/xfs/xfs for-next
-> > > head:   1813dd64057490e7a0678a885c4fe6d02f78bdc1
-> > > commit: 612cfbfe174a89d565363fff7f3961a2dda5fb71 [68/70] xfs: add pre-write metadata buffer verifier callbacks
-> > > 
-> > > 
-> > > sparse warnings:
-> > > 
-> > > + fs/xfs/xfs_ialloc_btree.c:186:1: sparse: symbol 'xfs_inobt_verify' was not declared. Should it be static?
-> > > fs/xfs/xfs_ialloc_btree.c:227:1: sparse: symbol 'xfs_inobt_read_verify' was not declared. Should it be static?
-....
+Hi Dave,
+
+> > + fs/xfs/xfs_dquot.c:294:1: sparse: symbol 'xfs_dquot_buf_write_verify' was not declared. Should it be static?
 > > 
-> > These are debug build only, and intended to be globally visible so
-> > they can be changed with a debugger. And sparse didn't warn about
-> > them, because you didn't do a debug build, so the script shouldn't
-> > be changing them.(*)
-> > 
-> > Cheers,
-> > 
-> > Dave.
-> > 
-> > (*) Please don't do debug XFS builds with this automated checker. We
-> > pretty much turn all static functions to global "noinline" functions
-> > for debug builds, and sparse will throw hundreds of useless warnings.
+> > Please consider folding the attached diff :-)
 > 
-> Dave, thanks for the explanations. And sorry for the noises!  
-> I'll disable the "Should it be static" checks against the xfs tree.
+> No, for the same reason as the last one. Though I'll fix the new
+> ones (the read/write verifier functions) as they should now be
+> static as a separate patch.
 
-I didn't say that - I'm suggesting that you should be more selective
-about what the bot throws out as a fix. i.e. only fix the newly
-discovered problem rather than everything that is found....
+OK, thanks.
 
-Cheers,
+> > diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
+> > index 0e92d12..3216738 100644
+> > --- a/fs/xfs/xfs_bmap.c
+> > +++ b/fs/xfs/xfs_bmap.c
+> > @@ -4180,7 +4180,7 @@ error0:
+> >  /*
+> >   * Add bmap trace insert entries for all the contents of the extent records.
+> >   */
+> > -void
+> > +static void
+> >  xfs_bmap_trace_exlist(
+> >  	xfs_inode_t	*ip,		/* incore inode pointer */
+> >  	xfs_extnum_t	cnt,		/* count of entries in the list */
+> 
+> And, again, there are lots of changes in this that are unrelated to
+> the patch.  In this case, the change is plain wrong. It's a debug
+> only function, called via the macro XFS_BMAP_TRACE_EXLIST:
+> 
+> $ git grep XFS_BMAP_TRACE_EXLIST
+> fs/xfs/xfs_bmap.c:      XFS_BMAP_TRACE_EXLIST(ip, i, whichfork);
+> fs/xfs/xfs_bmap.h:#define       XFS_BMAP_TRACE_EXLIST(ip,c,w)   \
+> fs/xfs/xfs_bmap.h:#define       XFS_BMAP_TRACE_EXLIST(ip,c,w)
+> fs/xfs/xfs_inode.c:             XFS_BMAP_TRACE_EXLIST(ip, nex, whichfork);
+> fs/xfs/xfs_inode.c:     XFS_BMAP_TRACE_EXLIST(ip, nrecs, whichfork);
+> 
+> And so it clearly needs to be non-static.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Ah OK, that macro does confuse sparse..
+
+> If you are going throw commit-by-commit build warnings and patches
+> to fix them, please only include the fixes for the *new* warnings
+> generated by a single commit, not an aggregate of everything that is
+> found. 
+
+Fair enough. However I'd like to do it in a slightly different way.
+
+The problem is that there are lots of existing (ie. old) valid
+warnings on the missing "static". I'd still like the auto generated
+patch to fix these old ones by the way. At the same time, to avoid the
+*duplicated* chunks, I'll tell the script to remember the list of
+symbols that have been made static by the generated patches. This
+should address your concern, while still be able to gradually get rid
+of the existing static warnings.
+
+> For that reason, I think I'd prefer it if your build bot
+> just sent build warnings, not patches.
+
+I think the patches could be improved rather than removed. I'll fix
+the duplicated patches like in this case.
+
+Since there tend to be lots of "Should it be static?" warnings, it
+would save some (boring) human time by providing an auto generated
+patch for consideration.
+
+> FWIW, what happens when a problem is fixed by a later patch in the
+> tree in the same push? Do you still throw a mail out to the list?
+> i.e. are you culling spurious warning detections?
+
+Yes, the build script has code to avoid sending reports on interim
+warnings.
+
+It will double check the branch HEAD and if the warnings to be
+reported have disappeared there, nothing will be reported. However if
+it's a build *error* fixed in the HEAD, it's a potential problem for
+bisection, so will still be reported unless it's a known tree that
+won't do rebase (ie. net/master).
+
+Thanks,
+Fengguang
 
 _______________________________________________
 xfs mailing list
