@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAJLb8OG037061 for <xfs@oss.sgi.com>; Mon, 19 Nov 2012 15:37:08 -0600
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id GdLCTEYM1c5Xm9UX (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 19 Nov 2012 13:39:15 -0800 (PST)
-Received: from relay2.suse.de (unknown [195.135.220.254])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mx2.suse.de (Postfix) with ESMTP id 7BD73A398D
-	for <xfs@oss.sgi.com>; Mon, 19 Nov 2012 22:39:14 +0100 (CET)
-Date: Mon, 19 Nov 2012 22:39:13 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH] xfs: Don't flush inodes when project quota exceeded
-Message-ID: <20121119213913.GB29498@quack.suse.cz>
-References: <1352766973-14197-1-git-send-email-jack@suse.cz>
+	qAJNp4gi070748 for <xfs@oss.sgi.com>; Mon, 19 Nov 2012 17:51:04 -0600
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	74CGdNNLZXfNNTcS for <xfs@oss.sgi.com>;
+	Mon, 19 Nov 2012 15:53:11 -0800 (PST)
+Date: Tue, 20 Nov 2012 10:53:06 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Hang in XFS reclaim on 3.7.0-rc3
+Message-ID: <20121119235306.GX14281@dastard>
+References: <CAPVoSvSM9=hictqwT2rzZA-fU_XSwd-_FRzW_J+HQYj7iohTWQ@mail.gmail.com>
+	<20121029222613.GU29378@dastard>
+	<CAPVoSvQATjAVu-D477mrr6K9d0FeY7sH27cH-zNBYMJcRoUY0Q@mail.gmail.com>
+	<CAPVoSvRks32ZM7n6U8but-vEj622TEFqAFdxXqS_6mRxyv=0Ew@mail.gmail.com>
+	<CAPVoSvSKn2FuBhMF+3U1ueuEzBqL4CFTYFGXqGczTa42PgMjRw@mail.gmail.com>
+	<20121118235105.GT14281@dastard>
+	<CAPVoSvR+Gk6ggSZ6=ZMpyvwhosjd4BSGsUqRT=txkzGDGLMTPw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1352766973-14197-1-git-send-email-jack@suse.cz>
+In-Reply-To: <CAPVoSvR+Gk6ggSZ6=ZMpyvwhosjd4BSGsUqRT=txkzGDGLMTPw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,223 +32,139 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Torsten Kaiser <just.for.lkml@googlemail.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-On Tue 13-11-12 01:36:13, Jan Kara wrote:
-> When project quota gets exceeded xfs_iomap_write_delay() ends up flushing
-> inodes because ENOSPC gets returned from xfs_bmapi_delay() instead of EDQUOT.
-> This makes handling of writes over project quota rather slow as a simple test
-> program shows:
-> 	fd = open(argv[1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
-> 	for (i = 0; i < 50000; i++)
-> 		pwrite(fd, buf, 4096, i*4096);
+On Mon, Nov 19, 2012 at 07:50:06AM +0100, Torsten Kaiser wrote:
+> On Mon, Nov 19, 2012 at 12:51 AM, Dave Chinner <david@fromorbit.com> wrote:
+> > On Sun, Nov 18, 2012 at 04:29:22PM +0100, Torsten Kaiser wrote:
+> >> On Sun, Nov 18, 2012 at 11:24 AM, Torsten Kaiser
+> >> <just.for.lkml@googlemail.com> wrote:
+> >> > On Tue, Oct 30, 2012 at 9:37 PM, Torsten Kaiser
+> >> > <just.for.lkml@googlemail.com> wrote:
+> >> >> I will keep LOCKDEP enabled on that system, and if there really is
+> >> >> another splat, I will report back here. But I rather doubt that this
+> >> >> will be needed.
+> >> >
+> >> > After the patch, I did not see this problem again, but today I found
+> >> > another LOCKDEP report that also looks XFS related.
+> >> > I found it twice in the logs, and as both were slightly different, I
+> >> > will attach both versions.
+> >>
+> >> > Nov  6 21:57:09 thoregon kernel: [ 9941.104353] 3.7.0-rc4 #1 Not tainted
+> >> > Nov  6 21:57:09 thoregon kernel: [ 9941.104355] inconsistent
+> >> > {RECLAIM_FS-ON-W} -> {IN-RECLAIM_FS-W} usage.
+> >> > Nov  6 21:57:09 thoregon kernel: [ 9941.104430]        CPU0
+> >> > Nov  6 21:57:09 thoregon kernel: [ 9941.104431]        ----
+> >> > Nov  6 21:57:09 thoregon kernel: [ 9941.104432]   lock(&(&ip->i_lock)->mr_lock);
+> >> > Nov  6 21:57:09 thoregon kernel: [ 9941.104433]   <Interrupt>
+> >> > Nov  6 21:57:09 thoregon kernel: [ 9941.104434]
+> >> > lock(&(&ip->i_lock)->mr_lock);
+> >> > Nov  6 21:57:09 thoregon kernel: [ 9941.104435]
+> >> > Nov  6 21:57:09 thoregon kernel: [ 9941.104435]  *** DEADLOCK ***
+> >>
+> >> Sorry! Copied the wrong report. Your fix only landed in -rc5, so my
+> >> vanilla -rc4 did (also) report the old problem again.
+> >> And I copy&pasted that report instead of the second appearance of the
+> >> new problem.
+> >
+> > Can you repost it with line wrapping turned off? The output simply
+> > becomes unreadable when it wraps....
+> >
+> > Yeah, I know I can put it back together, but I've got better things
+> > to do with my time than stitch a couple of hundred lines of debug
+> > back into a readable format....
 > 
-> Writing 200 MB like this into a directory with 100 MB project quota takes
-> around 6 minutes while it takes about 2 seconds with this patch applied. This
-> actually happens in a real world load when nfs pushes data into a directory
-> which is over project quota.
-> 
-> Fix the problem by replacing XFS_QMOPT_ENOSPC flag with XFS_QMOPT_EPDQUOT.
-> That makes xfs_trans_reserve_quota_bydquots() return new error EPDQUOT when
-> project quota is exceeded. xfs_bmapi_delay() then uses this flag so that
-> xfs_iomap_write_delay() can distinguish real ENOSPC (requiring flushing)
-> from exceeded project quota (not requiring flushing).
-> 
-> As a side effect this patch fixes inconsistency where e.g. xfs_create()
-> returned EDQUOT even when project quota was exceeded.
-  Ping? Any opinions?
+> Sorry about that, but I can't find any option to turn that off in Gmail.
 
-								Honza
-> 
-> Signed-off-by: Jan Kara <jack@suse.cz>
-> ---
->  fs/xfs/xfs_bmap.c        |    3 ++-
->  fs/xfs/xfs_iomap.c       |    8 ++++++--
->  fs/xfs/xfs_linux.h       |    1 +
->  fs/xfs/xfs_qm.c          |   13 +++++--------
->  fs/xfs/xfs_quota.h       |    2 +-
->  fs/xfs/xfs_trans_dquot.c |   18 +++++++++---------
->  6 files changed, 24 insertions(+), 21 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-> index 848ffa7..027398f 100644
-> --- a/fs/xfs/xfs_bmap.c
-> +++ b/fs/xfs/xfs_bmap.c
-> @@ -4471,7 +4471,8 @@ xfs_bmapi_reserve_delalloc(
->  	 * allocated blocks already inside this loop.
->  	 */
->  	error = xfs_trans_reserve_quota_nblks(NULL, ip, (long)alen, 0,
-> -			rt ? XFS_QMOPT_RES_RTBLKS : XFS_QMOPT_RES_REGBLKS);
-> +			XFS_QMOPT_EPDQUOT |
-> +			(rt ? XFS_QMOPT_RES_RTBLKS : XFS_QMOPT_RES_REGBLKS));
->  	if (error)
->  		return error;
->  
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 973dff6..86e8016 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -428,6 +428,7 @@ retry:
->  	case 0:
->  	case ENOSPC:
->  	case EDQUOT:
-> +	case EPDQUOT:
->  		break;
->  	default:
->  		return XFS_ERROR(error);
-> @@ -441,8 +442,11 @@ retry:
->  	 */
->  	if (nimaps == 0) {
->  		trace_xfs_delalloc_enospc(ip, offset, count);
-> -		if (flushed)
-> -			return XFS_ERROR(error ? error : ENOSPC);
-> +		if (flushed) {
-> +			if (error == 0 || error == EPDQUOT)
-> +				error = ENOSPC;
-> +			return XFS_ERROR(error);
-> +		}
->  
->  		if (error == ENOSPC) {
->  			xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-> index 828662f..31368df 100644
-> --- a/fs/xfs/xfs_linux.h
-> +++ b/fs/xfs/xfs_linux.h
-> @@ -145,6 +145,7 @@
->  #define ENOATTR		ENODATA		/* Attribute not found */
->  #define EWRONGFS	EINVAL		/* Mount with wrong filesystem type */
->  #define EFSCORRUPTED	EUCLEAN		/* Filesystem is corrupted */
-> +#define EPDQUOT		EXFULL		/* Project quota exceeded */
->  
->  #define SYNCHRONIZE()	barrier()
->  #define __return_address __builtin_return_address(0)
-> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-> index 2e86fa0..99ace03 100644
-> --- a/fs/xfs/xfs_qm.c
-> +++ b/fs/xfs/xfs_qm.c
-> @@ -1790,7 +1790,7 @@ xfs_qm_vop_chown_reserve(
->  	uint		flags)
->  {
->  	xfs_mount_t	*mp = ip->i_mount;
-> -	uint		delblks, blkflags, prjflags = 0;
-> +	uint		delblks, blkflags;
->  	xfs_dquot_t	*unresudq, *unresgdq, *delblksudq, *delblksgdq;
->  	int		error;
->  
-> @@ -1817,11 +1817,8 @@ xfs_qm_vop_chown_reserve(
->  		}
->  	}
->  	if (XFS_IS_OQUOTA_ON(ip->i_mount) && gdqp) {
-> -		if (XFS_IS_PQUOTA_ON(ip->i_mount) &&
-> -		     xfs_get_projid(ip) != be32_to_cpu(gdqp->q_core.d_id))
-> -			prjflags = XFS_QMOPT_ENOSPC;
-> -
-> -		if (prjflags ||
-> +		if ((XFS_IS_PQUOTA_ON(ip->i_mount) &&
-> +		     xfs_get_projid(ip) != be32_to_cpu(gdqp->q_core.d_id)) ||
->  		    (XFS_IS_GQUOTA_ON(ip->i_mount) &&
->  		     ip->i_d.di_gid != be32_to_cpu(gdqp->q_core.d_id))) {
->  			delblksgdq = gdqp;
-> @@ -1834,7 +1831,7 @@ xfs_qm_vop_chown_reserve(
->  
->  	if ((error = xfs_trans_reserve_quota_bydquots(tp, ip->i_mount,
->  				delblksudq, delblksgdq, ip->i_d.di_nblocks, 1,
-> -				flags | blkflags | prjflags)))
-> +				flags | blkflags)))
->  		return (error);
->  
->  	/*
-> @@ -1851,7 +1848,7 @@ xfs_qm_vop_chown_reserve(
->  		ASSERT(unresudq || unresgdq);
->  		if ((error = xfs_trans_reserve_quota_bydquots(NULL, ip->i_mount,
->  				delblksudq, delblksgdq, (xfs_qcnt_t)delblks, 0,
-> -				flags | blkflags | prjflags)))
-> +				flags | blkflags)))
->  			return (error);
->  		xfs_trans_reserve_quota_bydquots(NULL, ip->i_mount,
->  				unresudq, unresgdq, -((xfs_qcnt_t)delblks), 0,
-> diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
-> index b50ec5b..264b455 100644
-> --- a/fs/xfs/xfs_quota.h
-> +++ b/fs/xfs/xfs_quota.h
-> @@ -203,7 +203,7 @@ typedef struct xfs_qoff_logformat {
->  #define XFS_QMOPT_DOWARN        0x0000400 /* increase warning cnt if needed */
->  #define XFS_QMOPT_DQREPAIR	0x0001000 /* repair dquot if damaged */
->  #define XFS_QMOPT_GQUOTA	0x0002000 /* group dquot requested */
-> -#define XFS_QMOPT_ENOSPC	0x0004000 /* enospc instead of edquot (prj) */
-> +#define XFS_QMOPT_EPDQUOT	0x0004000 /* return EPDQUOT when project quota exceeded */
->  
->  /*
->   * flags to xfs_trans_mod_dquot to indicate which field needs to be
-> diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
-> index 0c7fa54..27acce3 100644
-> --- a/fs/xfs/xfs_trans_dquot.c
-> +++ b/fs/xfs/xfs_trans_dquot.c
-> @@ -728,8 +728,6 @@ xfs_trans_dqresv(
->  
->  error_return:
->  	xfs_dqunlock(dqp);
-> -	if (flags & XFS_QMOPT_ENOSPC)
-> -		return ENOSPC;
->  	return EDQUOT;
->  }
->  
-> @@ -741,7 +739,6 @@ error_return:
->   * approach.
->   *
->   * flags = XFS_QMOPT_FORCE_RES evades limit enforcement. Used by chown.
-> - *	   XFS_QMOPT_ENOSPC returns ENOSPC not EDQUOT.  Used by pquota.
->   *	   XFS_TRANS_DQ_RES_BLKS reserves regular disk blocks
->   *	   XFS_TRANS_DQ_RES_RTBLKS reserves realtime disk blocks
->   * dquots are unlocked on return, if they were not locked by caller.
-> @@ -767,8 +764,7 @@ xfs_trans_reserve_quota_bydquots(
->  	ASSERT(flags & XFS_QMOPT_RESBLK_MASK);
->  
->  	if (udqp) {
-> -		error = xfs_trans_dqresv(tp, mp, udqp, nblks, ninos,
-> -					(flags & ~XFS_QMOPT_ENOSPC));
-> +		error = xfs_trans_dqresv(tp, mp, udqp, nblks, ninos, flags);
->  		if (error)
->  			return error;
->  		resvd = 1;
-> @@ -785,6 +781,12 @@ xfs_trans_reserve_quota_bydquots(
->  				xfs_trans_dqresv(tp, mp, udqp,
->  						 -nblks, -ninos, flags);
->  			}
-> +			if (error == EDQUOT && XFS_IS_PQUOTA_ON(mp)) {
-> +				if (flags & XFS_QMOPT_EPDQUOT)
-> +					error = EPDQUOT;
-> +				else
-> +					error = ENOSPC;
-> +			}
->  			return error;
->  		}
->  	}
-> @@ -813,16 +815,14 @@ xfs_trans_reserve_quota_nblks(
->  
->  	if (!XFS_IS_QUOTA_RUNNING(mp) || !XFS_IS_QUOTA_ON(mp))
->  		return 0;
-> -	if (XFS_IS_PQUOTA_ON(mp))
-> -		flags |= XFS_QMOPT_ENOSPC;
->  
->  	ASSERT(ip->i_ino != mp->m_sb.sb_uquotino);
->  	ASSERT(ip->i_ino != mp->m_sb.sb_gquotino);
->  
->  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-> -	ASSERT((flags & ~(XFS_QMOPT_FORCE_RES | XFS_QMOPT_ENOSPC)) ==
-> +	ASSERT((flags & ~(XFS_QMOPT_FORCE_RES | XFS_QMOPT_EPDQUOT)) ==
->  				XFS_TRANS_DQ_RES_RTBLKS ||
-> -	       (flags & ~(XFS_QMOPT_FORCE_RES | XFS_QMOPT_ENOSPC)) ==
-> +	       (flags & ~(XFS_QMOPT_FORCE_RES | XFS_QMOPT_EPDQUOT)) ==
->  				XFS_TRANS_DQ_RES_BLKS);
->  
->  	/*
-> -- 
-> 1.7.1
-> 
+Seems like you can't, as per Documentation/email-clients.txt
+
+> I have added the reports as attachment, I hope thats OK for you.
+
+Encoded as text, so it does.
+
+So, both lockdep thingy's are the same:
+
+> [110926.972482] =========================================================
+> [110926.972484] [ INFO: possible irq lock inversion dependency detected ]
+> [110926.972486] 3.7.0-rc4 #1 Not tainted
+> [110926.972487] ---------------------------------------------------------
+> [110926.972489] kswapd0/725 just changed the state of lock:
+> [110926.972490]  (sb_internal){.+.+.?}, at: [<ffffffff8122b268>] xfs_trans_alloc+0x28/0x50
+> [110926.972499] but this lock took another, RECLAIM_FS-unsafe lock in the past:
+> [110926.972500]  (&(&ip->i_lock)->mr_lock/1){+.+.+.}
+
+Ah, what? Since when has the ilock been reclaim unsafe?
+
+> [110926.972500] and interrupts could create inverse lock ordering between them.
+> [110926.972500] 
+> [110926.972503] 
+> [110926.972503] other info that might help us debug this:
+> [110926.972504]  Possible interrupt unsafe locking scenario:
+> [110926.972504] 
+> [110926.972505]        CPU0                    CPU1
+> [110926.972506]        ----                    ----
+> [110926.972507]   lock(&(&ip->i_lock)->mr_lock/1);
+> [110926.972509]                                local_irq_disable();
+> [110926.972509]                                lock(sb_internal);
+> [110926.972511]                                lock(&(&ip->i_lock)->mr_lock/1);
+> [110926.972512]   <Interrupt>
+> [110926.972513]     lock(sb_internal);
+
+Um, that's just bizzare. No XFS code runs with interrupts disabled,
+so I cannot see how this possible.
+
+.....
+
+
+       [<ffffffff8108137e>] mark_held_locks+0x7e/0x130
+       [<ffffffff81081a63>] lockdep_trace_alloc+0x63/0xc0
+       [<ffffffff810e9dd5>] kmem_cache_alloc+0x35/0xe0
+       [<ffffffff810dba31>] vm_map_ram+0x271/0x770
+       [<ffffffff811e1316>] _xfs_buf_map_pages+0x46/0xe0
+       [<ffffffff811e222a>] xfs_buf_get_map+0x8a/0x130
+       [<ffffffff81233ab9>] xfs_trans_get_buf_map+0xa9/0xd0
+       [<ffffffff8121bced>] xfs_ialloc_inode_init+0xcd/0x1d0
+
+We shouldn't be mapping buffers there, there's a patch below to fix
+this. It's probably the source of this report, even though I cannot
+lockdep seems to be off with the fairies...
+
+Cheers,
+
+Dave.
 -- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+Dave Chinner
+david@fromorbit.com
+
+xfs: inode allocation should use unmapped buffers.
+
+From: Dave Chinner <dchinner@redhat.com>
+
+Inode buffers do not need to be mapped as inodes are read or written
+directly from/to the pages underlying the buffer. This fixes a
+regression introduced by commit 611c994 ("xfs: make XBF_MAPPED the
+default behaviour").
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_ialloc.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
+index 2d6495e..a815412 100644
+--- a/fs/xfs/xfs_ialloc.c
++++ b/fs/xfs/xfs_ialloc.c
+@@ -200,7 +200,8 @@ xfs_ialloc_inode_init(
+ 		 */
+ 		d = XFS_AGB_TO_DADDR(mp, agno, agbno + (j * blks_per_cluster));
+ 		fbuf = xfs_trans_get_buf(tp, mp->m_ddev_targp, d,
+-					 mp->m_bsize * blks_per_cluster, 0);
++					 mp->m_bsize * blks_per_cluster,
++					 XBF_UNMAPPED);
+ 		if (!fbuf)
+ 			return ENOMEM;
+ 		/*
 
 _______________________________________________
 xfs mailing list
