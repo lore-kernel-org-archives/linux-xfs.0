@@ -1,21 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAKJpdd6207196 for <xfs@oss.sgi.com>; Tue, 20 Nov 2012 13:51:39 -0600
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	Dtiy4NnFK0tPUYag for <xfs@oss.sgi.com>;
-	Tue, 20 Nov 2012 11:53:48 -0800 (PST)
-Date: Wed, 21 Nov 2012 06:53:44 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] xfs: fix direct IO nested transaction deadlock.
-Message-ID: <20121120195344.GD2591@dastard>
-References: <1353410831-22653-1-git-send-email-david@fromorbit.com>
-	<1353410831-22653-3-git-send-email-david@fromorbit.com>
-	<20121120161015.GB18244@infradead.org>
+	qAKK0H36207716 for <xfs@oss.sgi.com>; Tue, 20 Nov 2012 14:00:17 -0600
+From: Jeff Moyer <jmoyer@redhat.com>
+Subject: Re: [PATCH 2/9] ext4: honor the O_SYNC flag for aysnchronous direct
+	I/O requests
+References: <20121120074116.24645.36369.stgit@blackbox.djwong.org>
+	<20121120074131.24645.38489.stgit@blackbox.djwong.org>
+	<20121120100751.GB1408@quack.suse.cz>
+Date: Tue, 20 Nov 2012 15:02:15 -0500
+In-Reply-To: <20121120100751.GB1408@quack.suse.cz> (Jan Kara's message of
+	"Tue, 20 Nov 2012 11:07:51 +0100")
+Message-ID: <x49sj84hwl4.fsf@segfault.boston.devel.redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20121120161015.GB18244@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,124 +25,65 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
+To: Jan Kara <jack@suse.cz>
+Cc: axboe@kernel.dk, tytso@mit.edu, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, bpm@sgi.com, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
-On Tue, Nov 20, 2012 at 11:10:15AM -0500, Christoph Hellwig wrote:
-> On Tue, Nov 20, 2012 at 10:27:11PM +1100, Dave Chinner wrote:
-> > This was discovered on a filesystem with a log of only 10MB, and a
-> > log stripe unit of 256k whih increased the base reservations by
-> > 512k. Hence a allocation transaction requires 1.2MB of log space to
-> > be available instead of only 260k, and so greatly increased the
-> > chance that there wouldn't be enough log space available for the
-> > nested transaction to succeed. The key to reproducing it is this
-> > mkfs command:
-> > 
-> > mkfs.xfs -f -d agcount=16,su=256k,sw=12 -l su=256k,size=2560b $SCRATCH_DEV
-> > 
-> > The test case was a 1000 fsstress processes running with random
-> > freeze and unfreezes every few seconds. Thanks to Eryu Guan
-> > (eguan@redhat.com) for writing the test that found this on a system
-> > with a somewhat unique default configuration....
-> 
-> That sounds like something that could fit xfstests fairly easily.
-> 
-> Re the patch - you're moving the transaction allocation back into the
-> end_io handler.  That's what my original version did, and I'm pretty
-> sure you talked me out of it back then.  I can't remember the details
-> but the list should have it.
+Jan Kara <jack@suse.cz> writes:
 
-Right, I was concerned about blocking IO completion workers waiting
-for log reservations. I'm still concerned about that, but I don't
-see any way around it.
+>> @@ -1279,6 +1280,9 @@ struct ext4_sb_info {
+>>  	/* workqueue for dio unwritten */
+>>  	struct workqueue_struct *dio_unwritten_wq;
+>>  
+>> +	/* workqueue for aio+dio+o_sync disk cache flushing */
+>> +	struct workqueue_struct *aio_dio_flush_wq;
+>> +
+>   Umm, I'm not completely decided whether we really need a separate
+> workqueue. But it doesn't cost too much so I guess it makes some sense -
+> fsync() is rather heavy so syncing won't starve extent conversion...
 
-> 
-> > @@ -151,9 +151,11 @@ xfs_setfilesize(
-> >  	/*
-> >  	 * The transaction was allocated in the I/O submission thread,
-> >  	 * thus we need to mark ourselves as beeing in a transaction
-> > -	 * manually.
-> > +	 * manually. Similarly for freeze protection.
-> >  	 */
-> >  	current_set_flags_nested(&tp->t_pflags, PF_FSTRANS);
-> > +	rwsem_acquire_read(&VFS_I(ip)->i_sb->s_writers.lock_map[SB_FREEZE_FS-1],
-> > +			   0, 1, _THIS_IP_);
-> 
-> The comment above isn't true anymore, and the flags hack should be
-> removed.
+I'm assuming you'd like me to convert the names from flush to fsync,
+yes?
 
-It's still used by buffered IO in that way.
+>> +
+>> +	/*
+>> +	 * If we are running in nojournal mode, just flush the disk
+>> +	 * cache and return.
+>> +	 */
+>> +	if (!journal)
+>> +		return blkdev_issue_flush(inode->i_sb->s_bdev, GFP_NOIO, NULL);
+>   And this is wrong as well - you need to do work similar to what
+> ext4_sync_file() does. Actually it would be *much* better if these two
+> sites used the same helper function. Which also poses an interesting
+> question about locking - do we need i_mutex or not? Forcing a transaction
+> commit is definitely OK without it, similarly as grabbing transaction ids
+> from inode or ext4_should_journal_data() test. __sync_inode() call seems
+> to be OK without i_mutex as well so I believe we can just get rid of it
+> (getting i_mutex from the workqueue is a locking nightmare we don't want to
+> return to).
 
-> I'm also not sure the freeze protection still works if the acquire is
-> outside the original broader scope protection.
+Just to be clear, are you saying you would like me to remove the
+mutex_lock/unlock pair from ext4_sync_file?  (I had already factored out
+the common code between this new code path and the fsync path in my tree.)
 
-We've still got a write level freeze reference, so that has to
-expire before the transaction level freeze is done. hence I don't
-see a problem here.
+>> @@ -149,8 +209,11 @@ void ext4_add_complete_io(ext4_io_end_t *io_end)
+>>  	struct workqueue_struct *wq;
+>>  	unsigned long flags;
+>>  
+>> -	BUG_ON(!(io_end->flag & EXT4_IO_END_UNWRITTEN));
+>> -	wq = EXT4_SB(io_end->inode->i_sb)->dio_unwritten_wq;
+>> +	BUG_ON(!ext4_io_end_deferred(io_end));
+>> +	if (io_end->flag & EXT4_IO_END_UNWRITTEN)
+>> +		wq = EXT4_SB(io_end->inode->i_sb)->dio_unwritten_wq;
+>> +	else
+>> +		wq = EXT4_SB(io_end->inode->i_sb)->aio_dio_flush_wq;
+>   Umm, I'd prefer if we used aio_dio_flush_wq when EXT4_IO_END_NEEDS_SYNC
+> is set. That way slow syncing works will be always offloaded to a separate
+> workqueue.
 
-Indeed, the problem was exposed by freezing and unfreezing every few
-seconds and typically tripped within 10-15s of starting. The fix has
-survived all night under the same load, so I think the freeze code is
-fine.
+OK.
 
-> I'll defer to Jan on
-> this as I don't really understand this magic enough.q
-> should be removed respectively replaced with sb_start_intwrite/sb_end_intwrite
-> >  	if (ioend->io_type == XFS_IO_UNWRITTEN) {
-> >  		error = xfs_iomap_write_unwritten(ip, ioend->io_offset,
-> > +						  ioend->io_size);
-> > +		goto done;
-> > +	}
-> > +
-> > +	/*
-> > +	 * For direct I/O we do not know if we need to allocate blocks or not so
-> > +	 * we can't preallocate an append transaction as that results in nested
-> > +	 * reservations and log space deadlocks. Hence allocate the transaction
-> > +	 * here.  For buffered I/O we preallocate a transaction when submitting
-> > +	 * the IO.
-> > +	 */
-> > +	if (ioend->io_isdirect && xfs_ioend_is_append(ioend)) {
-> 
-> xfs_iomap_write_unwritten already updates the inode size, so this should
-> be an "else if"
-
-The unwritten branch jumps over this completely if it is taken, so
-it makes no difference. I can change it is you want....
-
-> 
-> > +		error = xfs_setfilesize_trans_alloc(ioend);
-> > +		if (error)
-> > +	}
-> > +
-> > +	if (ioend->io_append_trans) {
-> >  		error = xfs_setfilesize(ioend);
-> >  	} else {
-> >  		ASSERT(!xfs_ioend_is_append(ioend));
-> >  	}
-> 
-> Does it really make sense to have different allocation points for
-> buffered vs direct I/O? At least it needs a comment explaining why
-> it's done differently.
-
-It does, I think, because if we can avoid blocking IO completion for
-transaction reservation we should. I'll add a comment. 
-
-> While it's probably too much work for a quick fix I'd much rather
-> replace the hacks we currently do in the direct I/O code with a
-> scheme where the dio code has a hook to allocate the transaction if
-> needed at the right point.
-
-The dio code needs an enema. There's plenty wrong with it that needs
-optimising (e.g. allocation call on every iovec element) but the
-code is so complex, fast-pathy and fragile that it I'm not about to
-touch it and complicate what is a relatively simple XFS bug fix...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks!
+Jeff
 
 _______________________________________________
 xfs mailing list
