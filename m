@@ -1,16 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAKGWKCm194173 for <xfs@oss.sgi.com>; Tue, 20 Nov 2012 10:32:20 -0600
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id aonBqjXLf3x2pL4Z for <xfs@oss.sgi.com>;
-	Tue, 20 Nov 2012 08:34:29 -0800 (PST)
-Message-ID: <50ABB115.9070905@sandeen.net>
-Date: Tue, 20 Nov 2012 10:34:29 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	qAKGiSvP194883 for <xfs@oss.sgi.com>; Tue, 20 Nov 2012 10:44:28 -0600
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id M5vwyxHZwDrWotSt (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 20 Nov 2012 08:46:37 -0800 (PST)
+Date: Tue, 20 Nov 2012 17:37:34 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 2/2] xfs: fix direct IO nested transaction deadlock.
+Message-ID: <20121120163734.GE1408@quack.suse.cz>
+References: <1353410831-22653-1-git-send-email-david@fromorbit.com>
+	<1353410831-22653-3-git-send-email-david@fromorbit.com>
+	<20121120161015.GB18244@infradead.org>
 MIME-Version: 1.0
-Subject: [PATCH, RFC] mkfs.xfs: go into multidisk mode when geometry is on
-	cmdline
+Content-Disposition: inline
+In-Reply-To: <20121120161015.GB18244@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,94 +28,60 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
-Cc: Ben England <bengland@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
 
-In the course of some other investigations, I found that 
-calc_default_ag_geometry() doesn't go into "multidisk" mode
-unless stripe geometry is *detected* (i.e. by the blkid routines).
+On Tue 20-11-12 11:10:15, Christoph Hellwig wrote:
+> On Tue, Nov 20, 2012 at 10:27:11PM +1100, Dave Chinner wrote:
+> > This was discovered on a filesystem with a log of only 10MB, and a
+> > log stripe unit of 256k whih increased the base reservations by
+> > 512k. Hence a allocation transaction requires 1.2MB of log space to
+> > be available instead of only 260k, and so greatly increased the
+> > chance that there wouldn't be enough log space available for the
+> > nested transaction to succeed. The key to reproducing it is this
+> > mkfs command:
+> > 
+> > mkfs.xfs -f -d agcount=16,su=256k,sw=12 -l su=256k,size=2560b $SCRATCH_DEV
+> > 
+> > The test case was a 1000 fsstress processes running with random
+> > freeze and unfreezes every few seconds. Thanks to Eryu Guan
+> > (eguan@redhat.com) for writing the test that found this on a system
+> > with a somewhat unique default configuration....
+> 
+> That sounds like something that could fit xfstests fairly easily.
+> 
+> Re the patch - you're moving the transaction allocation back into the
+> end_io handler.  That's what my original version did, and I'm pretty
+> sure you talked me out of it back then.  I can't remember the details
+> but the list should have it.
+> 
+> > @@ -151,9 +151,11 @@ xfs_setfilesize(
+> >  	/*
+> >  	 * The transaction was allocated in the I/O submission thread,
+> >  	 * thus we need to mark ourselves as beeing in a transaction
+> > -	 * manually.
+> > +	 * manually. Similarly for freeze protection.
+> >  	 */
+> >  	current_set_flags_nested(&tp->t_pflags, PF_FSTRANS);
+> > +	rwsem_acquire_read(&VFS_I(ip)->i_sb->s_writers.lock_map[SB_FREEZE_FS-1],
+> > +			   0, 1, _THIS_IP_);
+> 
+> The comment above isn't true anymore, and the flags hack should be
+> removed.
+  It still seems to be true for buffered IO or am I misreading the code?
 
-Specifying a geometry on the cmdline is *not* sufficient, because
-we test (ft.dsunit | ft.dswidth) which are not set by the cmdline
-options.
+> I'm also not sure the freeze protection still works if the acquire is
+> outside the original broader scope protection.  I'll defer to Jan on
+> this as I don't really understand this magic enough.q
+> should be removed respectively replaced with sb_start_intwrite/sb_end_intwrite
+  It seems to work OK. If it were not for buffered IO path which allocates
+a transaction (and thus freeze protection) in xfs_vm_writepage() we could
+get rid of this lockdep magic. But so far we can't...
 
-If we move the AG calculations to after we have set dsunit & dswdith,
-then we'll pick up either cmdline-specified or blkid-detected
-geometry, and go into "multidisk" mode for AG size/count
-calculations in both cases.
-
-So now for a ~5T fs, for example, we'd make several more
-AGs:
-
-# truncate --size=5t fsfile
-# mkfs.xfs -N -d su=128k,sw=8 fsfile | grep agcount
-meta-data=fsfile                 isize=256    agcount=5, agsize=268435424 blks
-# mkfs/mkfs.xfs -N -d su=128k,sw=8 fsfile | grep agcount
-meta-data=fsfile                 isize=256    agcount=32, agsize=41943008 blks
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-TBH, though, is there ever any value in treating a very large
-fs as "!multidisk?"  When would we ever want to pretend that
-a 16T filesystem doesn't have a lot of spindles behind it?
-
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index be931e3..42a7b5b 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -2090,25 +2091,6 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 		nbmblocks = 0;
- 	}
- 
--	if (dasize) {		/* User-specified AG size */
--		/*
--		 * Check specified agsize is a multiple of blocksize.
--		 */
--		if (agsize % blocksize) {
--			fprintf(stderr,
--		_("agsize (%lld) not a multiple of fs blk size (%d)\n"),
--				(long long)agsize, blocksize);
--			usage();
--		}
--		agsize /= blocksize;
--		agcount = dblocks / agsize + (dblocks % agsize != 0);
--
--	} else if (daflag)	/* User-specified AG count */
--		agsize = dblocks / agcount + (dblocks % agcount != 0);
--	else
--		calc_default_ag_geometry(blocklog, dblocks,
--				ft.dsunit | ft.dswidth, &agsize, &agcount);
--
- 	if (!nodsflag) {
- 		if (dsunit) {
- 			if (ft.dsunit && ft.dsunit != dsunit) {
-@@ -2132,6 +2114,25 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 		}
- 	} /* else dsunit & dswidth can't be set if nodsflag is set */
- 
-+	if (dasize) {		/* User-specified AG size */
-+		/*
-+		 * Check specified agsize is a multiple of blocksize.
-+		 */
-+		if (agsize % blocksize) {
-+			fprintf(stderr,
-+		_("agsize (%lld) not a multiple of fs blk size (%d)\n"),
-+				(long long)agsize, blocksize);
-+			usage();
-+		}
-+		agsize /= blocksize;
-+		agcount = dblocks / agsize + (dblocks % agsize != 0);
-+
-+	} else if (daflag)	/* User-specified AG count */
-+		agsize = dblocks / agcount + (dblocks % agcount != 0);
-+	else
-+		calc_default_ag_geometry(blocklog, dblocks,
-+				dsunit | dswidth, &agsize, &agcount);
-+
- 	/*
- 	 * If dsunit is a multiple of fs blocksize, then check that is a
- 	 * multiple of the agsize too
+								Honza
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
