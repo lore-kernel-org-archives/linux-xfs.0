@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAJNrRS4071071 for <xfs@oss.sgi.com>; Mon, 19 Nov 2012 17:53:27 -0600
+	qAK02M74072461 for <xfs@oss.sgi.com>; Mon, 19 Nov 2012 18:02:22 -0600
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	wZ1KwdZ1nsKf1rLk for <xfs@oss.sgi.com>;
-	Mon, 19 Nov 2012 15:55:35 -0800 (PST)
-Date: Tue, 20 Nov 2012 10:55:30 +1100
+	GZAKBmGkRMfHqxW9 for <xfs@oss.sgi.com>;
+	Mon, 19 Nov 2012 16:04:30 -0800 (PST)
+Date: Tue, 20 Nov 2012 11:04:28 +1100
 From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH] xfs: Don't flush inodes when project quota exceeded
-Message-ID: <20121119235530.GY14281@dastard>
+Message-ID: <20121120000428.GZ14281@dastard>
 References: <1352766973-14197-1-git-send-email-jack@suse.cz>
 	<20121119213913.GB29498@quack.suse.cz>
 MIME-Version: 1.0
@@ -55,7 +55,42 @@ On Mon, Nov 19, 2012 at 10:39:13PM +0100, Jan Kara wrote:
 > > returned EDQUOT even when project quota was exceeded.
 >   Ping? Any opinions?
 
-Busy, haven't had a chance to look at it.
+FWIW, it doesn't look like it'll apply to a current XFs tree:
+
+> > @@ -441,8 +442,11 @@ retry:
+> >  	 */
+> >  	if (nimaps == 0) {
+> >  		trace_xfs_delalloc_enospc(ip, offset, count);
+> > -		if (flushed)
+> > -			return XFS_ERROR(error ? error : ENOSPC);
+> > +		if (flushed) {
+> > +			if (error == 0 || error == EPDQUOT)
+> > +				error = ENOSPC;
+> > +			return XFS_ERROR(error);
+> > +		}
+> >  
+> >  		if (error == ENOSPC) {
+> >  			xfs_iunlock(ip, XFS_ILOCK_EXCL);
+
+This xfs_iomap_write_delay() looks like this now:
+
+        /*
+         * If bmapi returned us nothing, we got either ENOSPC or EDQUOT. Retry
+         * without EOF preallocation.
+         */
+        if (nimaps == 0) {
+                trace_xfs_delalloc_enospc(ip, offset, count);
+                if (prealloc) {
+                        prealloc = 0;
+                        error = 0;
+                        goto retry;
+                }
+                return XFS_ERROR(error ? error : ENOSPC);
+        }
+
+The flushing is now way up in xfs_file_buffered_aio_write(), and the
+implementation of xfs_flush_inodes() has changed as well. Hence it
+may or may not behave differently not....
 
 Cheers,
 
