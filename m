@@ -1,22 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAKKIVpQ208926 for <xfs@oss.sgi.com>; Tue, 20 Nov 2012 14:18:31 -0600
+	qAKKPduP209323 for <xfs@oss.sgi.com>; Tue, 20 Nov 2012 14:25:39 -0600
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	eYq3KbENCrAz6jQp for <xfs@oss.sgi.com>;
-	Tue, 20 Nov 2012 12:20:40 -0800 (PST)
-Date: Wed, 21 Nov 2012 07:20:38 +1100
+	uPCDL250yrC0inQJ for <xfs@oss.sgi.com>;
+	Tue, 20 Nov 2012 12:27:47 -0800 (PST)
+Date: Wed, 21 Nov 2012 07:27:45 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: Don't flush inodes when project quota exceeded
-Message-ID: <20121120202038.GF2591@dastard>
-References: <1352766973-14197-1-git-send-email-jack@suse.cz>
-	<20121119213913.GB29498@quack.suse.cz>
-	<20121120161511.GE27055@sgi.com>
-	<20121120170354.GF1408@quack.suse.cz>
+Subject: Re: Hang in XFS reclaim on 3.7.0-rc3
+Message-ID: <20121120202745.GG2591@dastard>
+References: <CAPVoSvSM9=hictqwT2rzZA-fU_XSwd-_FRzW_J+HQYj7iohTWQ@mail.gmail.com>
+	<20121029222613.GU29378@dastard>
+	<CAPVoSvQATjAVu-D477mrr6K9d0FeY7sH27cH-zNBYMJcRoUY0Q@mail.gmail.com>
+	<CAPVoSvRks32ZM7n6U8but-vEj622TEFqAFdxXqS_6mRxyv=0Ew@mail.gmail.com>
+	<CAPVoSvSKn2FuBhMF+3U1ueuEzBqL4CFTYFGXqGczTa42PgMjRw@mail.gmail.com>
+	<20121118235105.GT14281@dastard>
+	<CAPVoSvR+Gk6ggSZ6=ZMpyvwhosjd4BSGsUqRT=txkzGDGLMTPw@mail.gmail.com>
+	<20121119235306.GX14281@dastard>
+	<CAPVoSvStEdD2uhGQmtb6+qOrme_Cs_AWAuE+dP_XYD5BZyp-kA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20121120170354.GF1408@quack.suse.cz>
+In-Reply-To: <CAPVoSvStEdD2uhGQmtb6+qOrme_Cs_AWAuE+dP_XYD5BZyp-kA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,90 +34,94 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com
+To: Torsten Kaiser <just.for.lkml@googlemail.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-On Tue, Nov 20, 2012 at 06:03:54PM +0100, Jan Kara wrote:
-> On Tue 20-11-12 10:15:11, Ben Myers wrote:
-> > Hi Jan,
-> > 
-> > On Mon, Nov 19, 2012 at 10:39:13PM +0100, Jan Kara wrote:
-> > > On Tue 13-11-12 01:36:13, Jan Kara wrote:
-> > > > When project quota gets exceeded xfs_iomap_write_delay() ends up flushing
-> > > > inodes because ENOSPC gets returned from xfs_bmapi_delay() instead of EDQUOT.
-> > > > This makes handling of writes over project quota rather slow as a simple test
-> > > > program shows:
-> > > > 	fd = open(argv[1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
-> > > > 	for (i = 0; i < 50000; i++)
-> > > > 		pwrite(fd, buf, 4096, i*4096);
-> > > > 
-> > > > Writing 200 MB like this into a directory with 100 MB project quota takes
-> > > > around 6 minutes while it takes about 2 seconds with this patch applied. This
-> > > > actually happens in a real world load when nfs pushes data into a directory
-> > > > which is over project quota.
-> > > > 
-> > > > Fix the problem by replacing XFS_QMOPT_ENOSPC flag with XFS_QMOPT_EPDQUOT.
-> > > > That makes xfs_trans_reserve_quota_bydquots() return new error EPDQUOT when
-> > > > project quota is exceeded. xfs_bmapi_delay() then uses this flag so that
-> > > > xfs_iomap_write_delay() can distinguish real ENOSPC (requiring flushing)
-> > > > from exceeded project quota (not requiring flushing).
-> > > > 
-> > > > As a side effect this patch fixes inconsistency where e.g. xfs_create()
-> > > > returned EDQUOT even when project quota was exceeded.
-> > >   Ping? Any opinions?
-> > 
-> > I think that there may be good reason to flush inodes even in the project quota
-> > case.  Speculative allocation beyond EOF might need to be cleaned up.
-
-The flushing at ENOSPC doesn't clear up speculative preallocation.
-It writes back data which releases metadata reservations that
-delalloc extents hold in addition to the data. The reservations are
-held so that tree splits during allocation have block reserved and
-we don't ENOSPC on delalloc all the time.
-
+On Tue, Nov 20, 2012 at 08:45:03PM +0100, Torsten Kaiser wrote:
+> On Tue, Nov 20, 2012 at 12:53 AM, Dave Chinner <david@fromorbit.com> wrote:
+> >        [<ffffffff8108137e>] mark_held_locks+0x7e/0x130
+> >        [<ffffffff81081a63>] lockdep_trace_alloc+0x63/0xc0
+> >        [<ffffffff810e9dd5>] kmem_cache_alloc+0x35/0xe0
+> >        [<ffffffff810dba31>] vm_map_ram+0x271/0x770
+> >        [<ffffffff811e1316>] _xfs_buf_map_pages+0x46/0xe0
+> >        [<ffffffff811e222a>] xfs_buf_get_map+0x8a/0x130
+> >        [<ffffffff81233ab9>] xfs_trans_get_buf_map+0xa9/0xd0
+> >        [<ffffffff8121bced>] xfs_ialloc_inode_init+0xcd/0x1d0
 > >
-> > I'm all
-> > for passing back some data about why we hit ENOSPC.  Then we can combine this
-> > with Brian Foster's work and flush only inodes that touch a given project,
-> > user, or group quota.
+> > We shouldn't be mapping buffers there, there's a patch below to fix
+> > this. It's probably the source of this report, even though I cannot
+> > lockdep seems to be off with the fairies...
+> 
+> That patch seems to break my system.
 
-Brian had more patches that throttled specualtive prealloc when
-quota got low, as well as triggered a specific specualtive
-allocation trimming passes when EDQUOT is hit. This will remove the
-global inode flush from the project uota cae when it is done.
+You've got an IO problem, not an XFS problem. Everything is hung up
+on MD.
 
->   Yes, I agree flushing might be useful even for project quota but then why
-> don't we flush inodes also for user quota?
+ INFO: task kswapd0:725 blocked for more than 120 seconds.
+ "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+ kswapd0         D 0000000000000001     0   725      2 0x00000000
+  ffff8803280d13f8 0000000000000046 ffff880329a0ab80 ffff8803280d1fd8
+  ffff8803280d1fd8 ffff8803280d1fd8 ffff880046b7c880 ffff880329a0ab80
+  ffff8803280d1408 ffff8803278dbbd0 ffff8803278db800 00000000ffffffff
+ Call Trace:
+  [<ffffffff816b1224>] schedule+0x24/0x60
+  [<ffffffff814f9dad>] md_super_wait+0x4d/0x80
+  [<ffffffff81500753>] bitmap_unplug+0x173/0x180
+  [<ffffffff814e8eb8>] raid1_unplug+0x98/0x110
+  [<ffffffff81278a6d>] blk_flush_plug_list+0xad/0x240
+  [<ffffffff816b15c3>] io_schedule_timeout+0x83/0xf0
+  [<ffffffff810b0e1d>] mempool_alloc+0x12d/0x160
+  [<ffffffff811263da>] bvec_alloc_bs+0xda/0x100
+  [<ffffffff811264ea>] bio_alloc_bioset+0xea/0x110
+  [<ffffffff81126656>] bio_clone_bioset+0x16/0x40
+  [<ffffffff814f471a>] bio_clone_mddev+0x1a/0x30
+  [<ffffffff814edbb1>] make_request+0x551/0xde0
+  [<ffffffff814f80bb>] md_make_request+0x21b/0x4d0
+  [<ffffffff81276e52>] generic_make_request+0xc2/0x100
+  [<ffffffff81276ef5>] submit_bio+0x65/0x110
+  [<ffffffff811e07bf>] xfs_submit_ioend_bio.isra.21+0x2f/0x40
+  [<ffffffff811e088e>] xfs_submit_ioend+0xbe/0x110
+  [<ffffffff811e0c91>] xfs_vm_writepage+0x3b1/0x540
+  [<ffffffff810bcd84>] shrink_page_list+0x564/0x890
+  [<ffffffff810bd637>] shrink_inactive_list+0x1d7/0x310
+  [<ffffffff810bdb9d>] shrink_lruvec+0x42d/0x530
+  [<ffffffff810be323>] kswapd+0x683/0xa20
+  [<ffffffff8105c246>] kthread+0xd6/0xe0
+  [<ffffffff816b31ac>] ret_from_fork+0x7c/0xb0
+ no locks held by kswapd0/725.
 
-It's by design. Directory tree quota is used as a method of
-exporting multiple sub-dirs from a single filesystem but having them
-appear to NFS clients just like a standalone filesystem. Hence when
-you run out of projet quota, it is treated like an ENOSPC condition
-for the directory sub-tree - it flushes as much of the metadata
-reservations out as possible to maximise the data space for the
-directory tree.
+So kswapd is trying to clean pages, but it's blocked in an unplug
+during IO submission. Probably one to report to the linux-raid list.
 
-For user/group quotas, this requirement of behaving like a
-standalone filesystem does not exist, and so when you EDQUOT a
-user/group there is no need to reclaim metadata reservations to make
-more data space available....
+ INFO: task xfsaild/md4:1742 blocked for more than 120 seconds.
+ "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+ xfsaild/md4     D 0000000000000003     0  1742      2 0x00000000
+  ffff88032438bb68 0000000000000046 ffff880329965700 ffff88032438bfd8
+  ffff88032438bfd8 ffff88032438bfd8 ffff88032827e580 ffff880329965700
+  ffff88032438bb78 ffff8803278dbbd0 ffff8803278db800 00000000ffffffff
+ Call Trace:
+  [<ffffffff816b1224>] schedule+0x24/0x60
+  [<ffffffff814f9dad>] md_super_wait+0x4d/0x80
+  [<ffffffff8105ca30>] ? __init_waitqueue_head+0x60/0x60
+  [<ffffffff81500753>] bitmap_unplug+0x173/0x180
+  [<ffffffff81278c13>] ? blk_finish_plug+0x13/0x50
+  [<ffffffff814e8eb8>] raid1_unplug+0x98/0x110
+  [<ffffffff81278a6d>] blk_flush_plug_list+0xad/0x240
+  [<ffffffff81278c13>] blk_finish_plug+0x13/0x50
+  [<ffffffff811e296a>] __xfs_buf_delwri_submit+0x1ca/0x1e0
+  [<ffffffff811e2ffb>] xfs_buf_delwri_submit_nowait+0x1b/0x20
+  [<ffffffff81233066>] xfsaild+0x226/0x4c0
+  [<ffffffff81065dfa>] ? finish_task_switch+0x3a/0x100
+  [<ffffffff81232e40>] ? xfs_trans_ail_cursor_first+0xa0/0xa0
+  [<ffffffff8105c246>] kthread+0xd6/0xe0
+  [<ffffffff816b246b>] ? _raw_spin_unlock_irq+0x2b/0x50
+  [<ffffffff8105c170>] ? flush_kthread_worker+0xe0/0xe0
+  [<ffffffff816b31ac>] ret_from_fork+0x7c/0xb0
+  [<ffffffff8105c170>] ? flush_kthread_worker+0xe0/0xe0
+ no locks held by xfsaild/md4/1742.
 
-> Also the performance impact
-> is really huge - and here I agree that unless you are writing over NFS you
-> won't notice because only NFS tries to push X MB to the filesystem page by
-> page only to get ENOSPC each time...
-
-The problem is the speculative allocation can trigger this behaviour
-prematurely and repeatedly. That's where Brians prealloc throttle
-patches come in - it reduces the occurrence of ENOSPC as the quota
-limit is approached, and hence reduces the number of inode flushes.
-
-> And NFS is arguably doing a stupid
-> thing but it is a common setup and you don't always have the freedom to fix
-> clients to be more clever. So I'd be happy if XFS accomodated such use.
-
-Sure, but there's more to it than just avoiding the inode flush,
-unfortunately...
+Same here - metadata writes are backed up waiting for MD to submit
+IO. Everything else is stuck on thesei or MD, too...
 
 Cheers,
 
