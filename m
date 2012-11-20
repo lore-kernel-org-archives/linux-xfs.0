@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAKKjub2211400 for <xfs@oss.sgi.com>; Tue, 20 Nov 2012 14:45:56 -0600
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: [PATCH 9/9] blkdev: Fix up AIO+DIO+O_SYNC to do the sync part
-	correctly
-References: <20121120074116.24645.36369.stgit@blackbox.djwong.org>
-	<20121120075115.25270.62451.stgit@blackbox.djwong.org>
-	<20121120101559.GC1408@quack.suse.cz>
-Date: Tue, 20 Nov 2012 15:47:54 -0500
-In-Reply-To: <20121120101559.GC1408@quack.suse.cz> (Jan Kara's message of
-	"Tue, 20 Nov 2012 11:15:59 +0100")
-Message-ID: <x49obishuh1.fsf@segfault.boston.devel.redhat.com>
+	qAKLPIxU214138 for <xfs@oss.sgi.com>; Tue, 20 Nov 2012 15:25:18 -0600
+Message-ID: <50ABF54E.6070508@redhat.com>
+Date: Tue, 20 Nov 2012 16:25:34 -0500
+From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
+Subject: Re: [PATCH] xfs: Don't flush inodes when project quota exceeded
+References: <1352766973-14197-1-git-send-email-jack@suse.cz>
+	<20121119213913.GB29498@quack.suse.cz>
+	<20121120161511.GE27055@sgi.com>
+	<20121120170354.GF1408@quack.suse.cz>
+	<20121120202038.GF2591@dastard>
+In-Reply-To: <20121120202038.GF2591@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,72 +25,106 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: axboe@kernel.dk, tytso@mit.edu, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, bpm@sgi.com, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Ben Myers <bpm@sgi.com>, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
 
-Jan Kara <jack@suse.cz> writes:
+On 11/20/2012 03:20 PM, Dave Chinner wrote:
+> On Tue, Nov 20, 2012 at 06:03:54PM +0100, Jan Kara wrote:
+>> On Tue 20-11-12 10:15:11, Ben Myers wrote:
+>>> Hi Jan,
+>>>
+>>> On Mon, Nov 19, 2012 at 10:39:13PM +0100, Jan Kara wrote:
+>>>> On Tue 13-11-12 01:36:13, Jan Kara wrote:
+...
+>>>
+>>> I think that there may be good reason to flush inodes even in the project quota
+>>> case.  Speculative allocation beyond EOF might need to be cleaned up.
+> 
+> The flushing at ENOSPC doesn't clear up speculative preallocation.
+> It writes back data which releases metadata reservations that
+> delalloc extents hold in addition to the data. The reservations are
+> held so that tree splits during allocation have block reserved and
+> we don't ENOSPC on delalloc all the time.
+> 
 
-> On Mon 19-11-12 23:51:15, Darrick J. Wong wrote:
->> When performing O_SYNC+AIO+DIO writes to block devices, use the DIO_SYNC_WRITES
->> flag so that flushes are issued /after/ the write completes, not before.
->> 
->> Note, however, that for block devices, the DIO setup code ensures that a flush
->> wq is attached to the superblock of the bdevfs filesystem, not the filesystem
->> that the device node happens to reside in.  This means that unlike regular
->> files, iocb->ki_filp->f_mapping->host->i_sb != inode->i_sb.  Therefore, adjust
->> Jeff's earlier patch to keep the pointer use consistent and avoid a NULL deref.
->> 
->> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
->> ---
->>  fs/block_dev.c |    5 +++--
->>  fs/direct-io.c |    3 ++-
->>  2 files changed, 5 insertions(+), 3 deletions(-)
->> 
->> 
->> diff --git a/fs/block_dev.c b/fs/block_dev.c
->> index 1a1e5e3..05ff33a 100644
->> --- a/fs/block_dev.c
->> +++ b/fs/block_dev.c
->> @@ -235,7 +235,8 @@ blkdev_direct_IO(int rw, struct kiocb *iocb, const struct iovec *iov,
->>  	struct inode *inode = file->f_mapping->host;
->>  
->>  	return __blockdev_direct_IO(rw, iocb, inode, I_BDEV(inode), iov, offset,
->> -				    nr_segs, blkdev_get_blocks, NULL, NULL, 0);
->> +				    nr_segs, blkdev_get_blocks, NULL, NULL,
->> +				    DIO_SYNC_WRITES);
->>  }
->>  
->>  int __sync_blockdev(struct block_device *bdev, int wait)
->> @@ -1631,7 +1632,7 @@ ssize_t blkdev_aio_write(struct kiocb *iocb, const struct iovec *iov,
->>  	percpu_down_read(&bdev->bd_block_size_semaphore);
->>  
->>  	ret = __generic_file_aio_write(iocb, iov, nr_segs, &iocb->ki_pos);
->> -	if (ret > 0 || ret == -EIOCBQUEUED) {
->> +	if (ret > 0) {
->>  		ssize_t err;
->>  
->>  		err = generic_write_sync(file, pos, ret);
->> diff --git a/fs/direct-io.c b/fs/direct-io.c
->> index b7391d4..c626c43 100644
->> --- a/fs/direct-io.c
->> +++ b/fs/direct-io.c
->> @@ -258,7 +258,8 @@ void generic_dio_end_io(struct kiocb *iocb, loff_t offset, ssize_t bytes,
->>  		work->ret = ret;
->>  		work->offset = offset;
->>  		work->len = bytes;
->> -		queue_work(inode->i_sb->s_dio_flush_wq, &work->work);
->> +		queue_work(iocb->ki_filp->f_mapping->host->i_sb->s_dio_flush_wq,
->> +			   &work->work);
->   This should be folded into the original patch introducing the
-> s_dio_flush_wq. And please add a comment before this line saying that block
-> devices need a dereference exactly like this... Otherwise the patch looks
-> good so you can add:
->   Reviewed-by: Jan Kara <jack@suse.cz>
+So does this apply to EDQUOT just the same as ENOSPC? In other words,
+must we always do the flush, or can we replace the flush in EDQUOT
+situations with a targeted eofblocks scan and retry?
 
-When you say, "This," do you mean that one change, or the whole patch?
+Are these metadata reservations accounted against the particular quota?
 
-Cheers,
-Jeff
+>>>
+>>> I'm all
+>>> for passing back some data about why we hit ENOSPC.  Then we can combine this
+>>> with Brian Foster's work and flush only inodes that touch a given project,
+>>> user, or group quota.
+> 
+> Brian had more patches that throttled specualtive prealloc when
+> quota got low, as well as triggered a specific specualtive
+> allocation trimming passes when EDQUOT is hit. This will remove the
+> global inode flush from the project uota cae when it is done.
+> 
+
+Yes, I need to resurrect those throttling patches as my next order of
+business. They never had the eofblocks bits originally but it seems like
+a logical add on at this point.
+
+A point of confusion for me... above you reference removing the global
+inode flush from the project quota case, which I'm taking as we can do
+some kind of eofblocks scan here...
+
+>>   Yes, I agree flushing might be useful even for project quota but then why
+>> don't we flush inodes also for user quota?
+> 
+> It's by design. Directory tree quota is used as a method of
+> exporting multiple sub-dirs from a single filesystem but having them
+> appear to NFS clients just like a standalone filesystem. Hence when
+> you run out of projet quota, it is treated like an ENOSPC condition
+> for the directory sub-tree - it flushes as much of the metadata
+> reservations out as possible to maximise the data space for the
+> directory tree.
+> 
+> For user/group quotas, this requirement of behaving like a
+> standalone filesystem does not exist, and so when you EDQUOT a
+> user/group there is no need to reclaim metadata reservations to make
+> more data space available....
+> 
+
+... but the metadata reservation issue discussed here sounds like it
+could still be a problem. Is the implication that we could still do a
+project quota filtered eofblocks scan, but it must also (or instead, if
+a flush implies trimming post-eof space) include an inode flush in the
+project quota case?
+
+Otherwise, unless I'm mistaken it sounds like we can use the existing
+eofblocks scan on user/group EDQUOT situations.
+
+>> Also the performance impact
+>> is really huge - and here I agree that unless you are writing over NFS you
+>> won't notice because only NFS tries to push X MB to the filesystem page by
+>> page only to get ENOSPC each time...
+> 
+> The problem is the speculative allocation can trigger this behaviour
+> prematurely and repeatedly. That's where Brians prealloc throttle
+> patches come in - it reduces the occurrence of ENOSPC as the quota
+> limit is approached, and hence reduces the number of inode flushes.
+> 
+
+I'll include this use case in my testing when I get back to those patches.
+
+Brian
+
+>> And NFS is arguably doing a stupid
+>> thing but it is a common setup and you don't always have the freedom to fix
+>> clients to be more clever. So I'd be happy if XFS accomodated such use.
+> 
+> Sure, but there's more to it than just avoiding the inode flush,
+> unfortunately...
+> 
+> Cheers,
+> 
+> Dave.
+> 
 
 _______________________________________________
 xfs mailing list
