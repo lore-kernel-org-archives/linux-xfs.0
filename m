@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAKAMFRW139705 for <xfs@oss.sgi.com>; Tue, 20 Nov 2012 04:22:15 -0600
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id RpACMRH6bBr1c158 (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 20 Nov 2012 02:24:23 -0800 (PST)
-Date: Tue, 20 Nov 2012 11:24:20 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 4/9] xfs: honor the O_SYNC flag for aysnchronous direct
-	I/O requests
-Message-ID: <20121120102420.GD1408@quack.suse.cz>
-References: <20121120074116.24645.36369.stgit@blackbox.djwong.org>
-	<20121120075114.25270.40680.stgit@blackbox.djwong.org>
+	qAKAVtGx141303 for <xfs@oss.sgi.com>; Tue, 20 Nov 2012 04:31:55 -0600
+Received: from mail-pb0-f53.google.com (mail-pb0-f53.google.com
+	[209.85.160.53]) by cuda.sgi.com with ESMTP id SGMNrbFTXgNHvNcH
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 20 Nov 2012 02:34:04 -0800 (PST)
+Received: by mail-pb0-f53.google.com with SMTP id jt11so4790599pbb.26
+	for <xfs@oss.sgi.com>; Tue, 20 Nov 2012 02:34:04 -0800 (PST)
+Date: Tue, 20 Nov 2012 18:46:46 +0800
+From: Zheng Liu <gnehzuil.liu@gmail.com>
+Subject: Re: [PATCH 0/4][RFC] remove duplicated check from ext4, xfs, btrfs,
+	and ocfs2
+Message-ID: <20121120104646.GA3726@gmail.com>
+References: <1353403785-3489-1-git-send-email-wenqing.lz@taobao.com>
+	<20121120101452.GA692@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20121120075114.25270.40680.stgit@blackbox.djwong.org>
+In-Reply-To: <20121120101452.GA692@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,122 +30,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: axboe@kernel.dk, djwong+kernel@djwong.org, xfs@oss.sgi.com, tytso@mit.edu, bpm@sgi.com, linux-kernel@vger.kernel.org, hch@infradead.org, jmoyer@redhat.com, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, jack@suse.cz, linux-ext4@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com, yan@linux.vnet.ibm.com, linux-btrfs@vger.kernel.org, Zheng Liu <wenqing.lz@taobao.com>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, ocfs2-devel@oss.oracle.com
 
-On Mon 19-11-12 23:51:14, Darrick J. Wong wrote:
-> If a file is opened with O_SYNC|O_DIRECT, the drive cache does not get
-> flushed after the write completion for AIOs.  This patch attempts to fix
-> that problem by marking an I/O as requiring a cache flush in endio
-> processing, and then issuing the cache flush after any unwritten extent
-> conversion is done.
+On Tue, Nov 20, 2012 at 05:14:53AM -0500, Christoph Hellwig wrote:
+> On Tue, Nov 20, 2012 at 05:29:41PM +0800, Zheng Liu wrote:
+> > Hi all,
+> > 
+> > This patch series tries to remove a sanity check in fallocate from specific
+> > filesystems because vfs has already checked it.
+> > 
+> > I am not very familiar with why we need to do this duplicated check.  Please let
+> > me know if I miss something.
 > 
-> From: Jeff Moyer <jmoyer@redhat.com>
-> Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
-> [darrick.wong@oracle.com: Rework patch to use per-mount workqueues]
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/xfs_aops.c  |   52 +++++++++++++++++++++++++++++++++++++++++++++++++++-
->  fs/xfs/xfs_aops.h  |    1 +
->  fs/xfs/xfs_mount.h |    1 +
->  fs/xfs/xfs_super.c |    8 ++++++++
->  4 files changed, 61 insertions(+), 1 deletion(-)
-> 
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index e57e2da..9cebbb7 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -173,6 +173,24 @@ xfs_setfilesize(
->  }
->  
->  /*
-> + * In the case of synchronous, AIO, O_DIRECT writes, we need to flush
-> + * the disk cache when the I/O is complete.
-> + */
-> +STATIC bool
-> +xfs_ioend_needs_cache_flush(
-> +	struct xfs_ioend	*ioend)
-> +{
-> +	struct xfs_inode *ip = XFS_I(ioend->io_inode);
-> +	struct xfs_mount *mp = ip->i_mount;
-> +
-> +	if (!(mp->m_flags & XFS_MOUNT_BARRIER))
-> +		return false;
-> +
-> +	return IS_SYNC(ioend->io_inode) ||
-> +	       (ioend->io_iocb->ki_filp->f_flags & O_DSYNC);
-> +}
-  I'm not really a XFS developer but calling things "...cache_flush" when
-you actually mean fsync is IMHO misleading.
+> Each filesystem driver checks to see if a flag that it doesn't support
+> gets passed down.  This was done with the intention that we can add new
+> flags to the VFS without having to update every filesystem.
 
-> +
-> +/*
->   * Schedule IO completion handling on the final put of an ioend.
->   *
->   * If there is no work to do we might as well call it a day and free the
-> @@ -189,11 +207,30 @@ xfs_finish_ioend(
->  			queue_work(mp->m_unwritten_workqueue, &ioend->io_work);
->  		else if (ioend->io_append_trans)
->  			queue_work(mp->m_data_workqueue, &ioend->io_work);
-> +		else if (ioend->io_needs_fsync)
-> +			queue_work(mp->m_aio_blkdev_flush_wq, &ioend->io_work);
->  		else
->  			xfs_destroy_ioend(ioend);
->  	}
->  }
->  
-> +STATIC int
-> +xfs_ioend_force_cache_flush(
-> +	xfs_ioend_t	*ioend)
-> +{
-> +	struct xfs_inode *ip = XFS_I(ioend->io_inode);
-> +	struct xfs_mount *mp = ip->i_mount;
-> +	int		err = 0;
-> +	int		datasync;
-> +
-> +	datasync = !IS_SYNC(ioend->io_inode) &&
-> +		!(ioend->io_iocb->ki_filp->f_flags & __O_SYNC);
-> +	err = do_xfs_file_fsync(ip, mp, datasync);
-> +	xfs_destroy_ioend(ioend);
-> +	/* do_xfs_file_fsync returns -errno. our caller expects positive. */
-> +	return -err;
-> +}
-> +
->  /*
->   * IO write completion.
->   */
-> @@ -250,12 +287,22 @@ xfs_end_io(
->  		error = xfs_setfilesize(ioend);
->  		if (error)
->  			ioend->io_error = -error;
-> +	} else if (ioend->io_needs_fsync) {
-> +		error = xfs_ioend_force_cache_flush(ioend);
-> +		if (error && ioend->io_result > 0)
-> +			ioend->io_error = -error;
-> +		ioend->io_needs_fsync = 0;
->  	} else {
->  		ASSERT(!xfs_ioend_is_append(ioend));
->  	}
->  
->  done:
-> -	xfs_destroy_ioend(ioend);
-> +	/* the honoring of O_SYNC has to be done last */
-> +	if (ioend->io_needs_fsync) {
-> +		atomic_inc(&ioend->io_remaining);
-> +		xfs_finish_ioend(ioend);
-> +	} else
-> +		xfs_destroy_ioend(ioend);
->  }
-  Umm, I don't quite get why you do things the way you do in xfs_end_io().
-Why don't you handle fsync there always but offload it instead to workqueue
-again in some cases? Is it so that it gets processed in the right workqueue
-or why?
+Thanks for your explanation.
 
-								Honza
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+Regards,
+                                                - Zheng
 
 _______________________________________________
 xfs mailing list
