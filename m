@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAKH1kSB195990 for <xfs@oss.sgi.com>; Tue, 20 Nov 2012 11:01:47 -0600
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id qBjw0EFof91mBbXq (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 20 Nov 2012 09:03:56 -0800 (PST)
-Date: Tue, 20 Nov 2012 18:03:54 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH] xfs: Don't flush inodes when project quota exceeded
-Message-ID: <20121120170354.GF1408@quack.suse.cz>
-References: <1352766973-14197-1-git-send-email-jack@suse.cz>
-	<20121119213913.GB29498@quack.suse.cz>
-	<20121120161511.GE27055@sgi.com>
+	qAKItASr204275 for <xfs@oss.sgi.com>; Tue, 20 Nov 2012 12:55:11 -0600
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id 016nxkjx5OOo0T5a (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 20 Nov 2012 10:57:20 -0800 (PST)
+Date: Tue, 20 Nov 2012 10:57:00 -0800
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v1 0/9] fs: fix up AIO+DIO+O_SYNC to actually do the sync
+	part
+Message-ID: <20121120185700.GD8740@blackbox.djwong.org>
+References: <20121120074116.24645.36369.stgit@blackbox.djwong.org>
+	<x49pq38jquh.fsf@segfault.boston.devel.redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20121120161511.GE27055@sgi.com>
+In-Reply-To: <x49pq38jquh.fsf@segfault.boston.devel.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,54 +28,65 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
+To: Jeff Moyer <jmoyer@redhat.com>
+Cc: axboe@kernel.dk, tytso@mit.edu, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, bpm@sgi.com, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, jack@suse.cz, linux-ext4@vger.kernel.org
 
-On Tue 20-11-12 10:15:11, Ben Myers wrote:
-> Hi Jan,
+On Tue, Nov 20, 2012 at 09:23:18AM -0500, Jeff Moyer wrote:
+> "Darrick J. Wong" <darrick.wong@oracle.com> writes:
 > 
-> On Mon, Nov 19, 2012 at 10:39:13PM +0100, Jan Kara wrote:
-> > On Tue 13-11-12 01:36:13, Jan Kara wrote:
-> > > When project quota gets exceeded xfs_iomap_write_delay() ends up flushing
-> > > inodes because ENOSPC gets returned from xfs_bmapi_delay() instead of EDQUOT.
-> > > This makes handling of writes over project quota rather slow as a simple test
-> > > program shows:
-> > > 	fd = open(argv[1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
-> > > 	for (i = 0; i < 50000; i++)
-> > > 		pwrite(fd, buf, 4096, i*4096);
-> > > 
-> > > Writing 200 MB like this into a directory with 100 MB project quota takes
-> > > around 6 minutes while it takes about 2 seconds with this patch applied. This
-> > > actually happens in a real world load when nfs pushes data into a directory
-> > > which is over project quota.
-> > > 
-> > > Fix the problem by replacing XFS_QMOPT_ENOSPC flag with XFS_QMOPT_EPDQUOT.
-> > > That makes xfs_trans_reserve_quota_bydquots() return new error EPDQUOT when
-> > > project quota is exceeded. xfs_bmapi_delay() then uses this flag so that
-> > > xfs_iomap_write_delay() can distinguish real ENOSPC (requiring flushing)
-> > > from exceeded project quota (not requiring flushing).
-> > > 
-> > > As a side effect this patch fixes inconsistency where e.g. xfs_create()
-> > > returned EDQUOT even when project quota was exceeded.
-> >   Ping? Any opinions?
+> > Hi everybody,
+> >
+> > On March 29th, Jeff Moyer posted to lkml a patchset with this note:
+> >
+> >> Currently, AIO+DIO+O_SYNC writes are not actually sync'd (for xfs), or they
+> >> are sync'd before the I/O is actually issued (everybody else).  The following
+> >> patch series fixes this in two parts.  First, for the file systems that use
+> >> the generic routines, Jan has provided some generic infrastructure to perform
+> >> the syncs after the I/O is completed.  Second, for those file systems which
+> >> require some endio processing of their own for O_DIRECT writes (xfs and
+> >> ext4), [Jeff] implemented file system specific syncing.  This passes the
+> >> updated xfs-tests 113 test [Jeff] posted earlier, as well as all of the tests
+> >> in the aio group.  [Jeff] tested ext3, ext4, xfs, and btrfs only.
+> >
+> > Since the original post a few months ago, this patchset doesn't seem to have
+> > made any progress.  An internal testing team here discovered that the issue
+> > also affects O_SYNC+AIO+DIO writes to block devices.  Worse yet, since the
+> > flushes were being issued (and waited upon) directly in the io_submit call
+> > graph, the io_submit calls themselves would take a very long time to complete.
+> > Therefore, I added another patch to move the flush to the io_end processing.
+> >
+> > The blockdev patch was written by me.  The ext4 patch had to be updated to
+> > accomodate a rework of the ext4 endio code that landed since March.  Everything
+> > else has been passed through from Jeff's March 30th resend, with few changes.
+> >
+> > This patchset has been tested (albeit lightly) against 3.7-rc6 on x64, with
+> > ext4, xfs, btrfs, vfat, jfs, hfsplus, ext2, ext3, and raw block devices.
+> >
+> > Comments and questions are, as always, welcome.
 > 
-> I think that there may be good reason to flush inodes even in the project quota
-> case.  Speculative allocation beyond EOF might need to be cleaned up.  I'm all
-> for passing back some data about why we hit ENOSPC.  Then we can combine this
-> with Brian Foster's work and flush only inodes that touch a given project,
-> user, or group quota.
-  Yes, I agree flushing might be useful even for project quota but then why
-don't we flush inodes also for user quota? Also the performance impact
-is really huge - and here I agree that unless you are writing over NFS you
-won't notice because only NFS tries to push X MB to the filesystem page by
-page only to get ENOSPC each time... And NFS is arguably doing a stupid
-thing but it is a common setup and you don't always have the freedom to fix
-clients to be more clever. So I'd be happy if XFS accomodated such use.
+> Hi, Darrick,
+> 
+> I just finished testing my version of this patch set on ext4 and xfs
+> (btrfs is next), but you beat me to the posting!  Sorry, I should have
+> been more clear when I said I would see about refreshing the series.
+> 
+> How have you tested these patches?  You just said "lightly", and I'm
+> afraid I don't know what that means.  xfstests?  You should at least run
+> them through test 113.
 
-								Honza
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+xfstest'd for ext4, but only sanity checked on the rest.
+
+> Would you like to push the set in, or should I post the patches I've
+> got?  Doesn't matter to me, just let me know.
+
+Since you're the original author of most of the patches in my set anyway, would
+you mind simply picking up my blockdev patch for your next submission?  It
+sounds like you're a little further along in the testing than I am anyway.
+
+--D
+> 
+> Cheers,
+> Jeff
 
 _______________________________________________
 xfs mailing list
