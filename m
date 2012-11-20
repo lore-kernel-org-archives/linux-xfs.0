@@ -1,16 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAK8HWxx126219 for <xfs@oss.sgi.com>; Tue, 20 Nov 2012 02:17:32 -0600
+	qAK8HG57126177 for <xfs@oss.sgi.com>; Tue, 20 Nov 2012 02:17:16 -0600
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id l6VPV83BntqlQC7n (version=TLSv1
+	cuda.sgi.com with ESMTP id B50ZspIe1VDPEkQp (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 20 Nov 2012 00:19:41 -0800 (PST)
-Subject: [PATCH 9/9] blkdev: Fix up AIO+DIO+O_SYNC to do the sync part
-	correctly
+	Tue, 20 Nov 2012 00:19:26 -0800 (PST)
+Subject: [PATCH 7/9] ocfs2: Use generic handlers of O_SYNC AIO DIO
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 19 Nov 2012 23:51:15 -0800
-Message-ID: <20121120075115.25270.62451.stgit@blackbox.djwong.org>
+Date: Mon, 19 Nov 2012 23:51:14 -0800
+Message-ID: <20121120075114.25270.83181.stgit@blackbox.djwong.org>
 In-Reply-To: <20121120074116.24645.36369.stgit@blackbox.djwong.org>
 References: <20121120074116.24645.36369.stgit@blackbox.djwong.org>
 MIME-Version: 1.0
@@ -29,59 +28,41 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: axboe@kernel.dk, tytso@mit.edu, david@fromorbit.com, jmoyer@redhat.com, bpm@sgi.com, viro@zeniv.linux.org.uk, jack@suse.cz
 Cc: linux-fsdevel@vger.kernel.org, hch@infradead.org, linux-ext4@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-When performing O_SYNC+AIO+DIO writes to block devices, use the DIO_SYNC_WRITES
-flag so that flushes are issued /after/ the write completes, not before.
+Use generic handlers to queue fsync() when AIO DIO is completed for O_SYNC
+file.
 
-Note, however, that for block devices, the DIO setup code ensures that a flush
-wq is attached to the superblock of the bdevfs filesystem, not the filesystem
-that the device node happens to reside in.  This means that unlike regular
-files, iocb->ki_filp->f_mapping->host->i_sb != inode->i_sb.  Therefore, adjust
-Jeff's earlier patch to keep the pointer use consistent and avoid a NULL deref.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+From: Jan Kara <jack@suse.cz>
+Signed-off-by: Jan Kara <jack@suse.cz>
+Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
 ---
- fs/block_dev.c |    5 +++--
- fs/direct-io.c |    3 ++-
- 2 files changed, 5 insertions(+), 3 deletions(-)
+ fs/ocfs2/aops.c |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
 
-diff --git a/fs/block_dev.c b/fs/block_dev.c
-index 1a1e5e3..05ff33a 100644
---- a/fs/block_dev.c
-+++ b/fs/block_dev.c
-@@ -235,7 +235,8 @@ blkdev_direct_IO(int rw, struct kiocb *iocb, const struct iovec *iov,
- 	struct inode *inode = file->f_mapping->host;
+diff --git a/fs/ocfs2/aops.c b/fs/ocfs2/aops.c
+index 6577432..60457cc 100644
+--- a/fs/ocfs2/aops.c
++++ b/fs/ocfs2/aops.c
+@@ -593,9 +593,7 @@ static void ocfs2_dio_end_io(struct kiocb *iocb,
+ 	level = ocfs2_iocb_rw_locked_level(iocb);
+ 	ocfs2_rw_unlock(inode, level);
  
- 	return __blockdev_direct_IO(rw, iocb, inode, I_BDEV(inode), iov, offset,
--				    nr_segs, blkdev_get_blocks, NULL, NULL, 0);
-+				    nr_segs, blkdev_get_blocks, NULL, NULL,
-+				    DIO_SYNC_WRITES);
+-	if (is_async)
+-		aio_complete(iocb, ret, 0);
+-	inode_dio_done(inode);
++	generic_dio_end_io(iocb, offset, bytes, private, ret, is_async);
  }
  
- int __sync_blockdev(struct block_device *bdev, int wait)
-@@ -1631,7 +1632,7 @@ ssize_t blkdev_aio_write(struct kiocb *iocb, const struct iovec *iov,
- 	percpu_down_read(&bdev->bd_block_size_semaphore);
+ /*
+@@ -642,7 +640,7 @@ static ssize_t ocfs2_direct_IO(int rw,
+ 	return __blockdev_direct_IO(rw, iocb, inode, inode->i_sb->s_bdev,
+ 				    iov, offset, nr_segs,
+ 				    ocfs2_direct_IO_get_blocks,
+-				    ocfs2_dio_end_io, NULL, 0);
++				    ocfs2_dio_end_io, NULL, DIO_SYNC_WRITES);
+ }
  
- 	ret = __generic_file_aio_write(iocb, iov, nr_segs, &iocb->ki_pos);
--	if (ret > 0 || ret == -EIOCBQUEUED) {
-+	if (ret > 0) {
- 		ssize_t err;
- 
- 		err = generic_write_sync(file, pos, ret);
-diff --git a/fs/direct-io.c b/fs/direct-io.c
-index b7391d4..c626c43 100644
---- a/fs/direct-io.c
-+++ b/fs/direct-io.c
-@@ -258,7 +258,8 @@ void generic_dio_end_io(struct kiocb *iocb, loff_t offset, ssize_t bytes,
- 		work->ret = ret;
- 		work->offset = offset;
- 		work->len = bytes;
--		queue_work(inode->i_sb->s_dio_flush_wq, &work->work);
-+		queue_work(iocb->ki_filp->f_mapping->host->i_sb->s_dio_flush_wq,
-+			   &work->work);
- 	} else {
- 		aio_complete(iocb, ret, 0);
- 		inode_dio_done(inode);
+ static void ocfs2_figure_cluster_boundaries(struct ocfs2_super *osb,
 
 
 _______________________________________________
