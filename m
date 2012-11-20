@@ -1,15 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAK2Pekx088620 for <xfs@oss.sgi.com>; Mon, 19 Nov 2012 20:25:41 -0600
-Date: Mon, 19 Nov 2012 20:27:46 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 00/32] xfs: current queue for 3.8
-Message-ID: <20121120022746.GD27055@sgi.com>
-References: <1352721264-3700-1-git-send-email-david@fromorbit.com>
+	qAK3djAA095086 for <xfs@oss.sgi.com>; Mon, 19 Nov 2012 21:39:45 -0600
+Message-ID: <50AAFBFF.10900@sgi.com>
+Date: Mon, 19 Nov 2012 21:41:51 -0600
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1352721264-3700-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH] xfs_quota: correctly initialise the default path
+References: <1353028488-24436-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1353028488-24436-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,25 +17,24 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-Hi Dave,
+On 11/15/12 19:14, Dave Chinner wrote:
+> From: Dave Chinner<dchinner@redhat.com>
 
-On Mon, Nov 12, 2012 at 10:53:52PM +1100, Dave Chinner wrote:
-> This is my current patch queue for the 3.8 merge window.
+> +	if (argc != optind)
+> +		fs_path = fs_table_lookup(argv[optind], FS_MOUNT_POINT);
 
-Patches 31 (v2) and 32 have been pushed to git://oss.sgi.com/xfs/xfs.git,
-master and for-next branches.
+If specified device is not in the table, then the program will give an 
+error before getting here, so this cannot return a NULL as I previously 
+was concerned about. So this does in fact look good.
 
-I'll be focusing on the userspace release in coming days.
-
-Regards,
-	Ben
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
