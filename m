@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAKGiSvP194883 for <xfs@oss.sgi.com>; Tue, 20 Nov 2012 10:44:28 -0600
+	qAKH1kSB195990 for <xfs@oss.sgi.com>; Tue, 20 Nov 2012 11:01:47 -0600
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id M5vwyxHZwDrWotSt (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id qBjw0EFof91mBbXq (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 20 Nov 2012 08:46:37 -0800 (PST)
-Date: Tue, 20 Nov 2012 17:37:34 +0100
+	Tue, 20 Nov 2012 09:03:56 -0800 (PST)
+Date: Tue, 20 Nov 2012 18:03:54 +0100
 From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 2/2] xfs: fix direct IO nested transaction deadlock.
-Message-ID: <20121120163734.GE1408@quack.suse.cz>
-References: <1353410831-22653-1-git-send-email-david@fromorbit.com>
-	<1353410831-22653-3-git-send-email-david@fromorbit.com>
-	<20121120161015.GB18244@infradead.org>
+Subject: Re: [PATCH] xfs: Don't flush inodes when project quota exceeded
+Message-ID: <20121120170354.GF1408@quack.suse.cz>
+References: <1352766973-14197-1-git-send-email-jack@suse.cz>
+	<20121119213913.GB29498@quack.suse.cz>
+	<20121120161511.GE27055@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20121120161015.GB18244@infradead.org>
+In-Reply-To: <20121120161511.GE27055@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,55 +28,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Ben Myers <bpm@sgi.com>
 Cc: Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
 
-On Tue 20-11-12 11:10:15, Christoph Hellwig wrote:
-> On Tue, Nov 20, 2012 at 10:27:11PM +1100, Dave Chinner wrote:
-> > This was discovered on a filesystem with a log of only 10MB, and a
-> > log stripe unit of 256k whih increased the base reservations by
-> > 512k. Hence a allocation transaction requires 1.2MB of log space to
-> > be available instead of only 260k, and so greatly increased the
-> > chance that there wouldn't be enough log space available for the
-> > nested transaction to succeed. The key to reproducing it is this
-> > mkfs command:
-> > 
-> > mkfs.xfs -f -d agcount=16,su=256k,sw=12 -l su=256k,size=2560b $SCRATCH_DEV
-> > 
-> > The test case was a 1000 fsstress processes running with random
-> > freeze and unfreezes every few seconds. Thanks to Eryu Guan
-> > (eguan@redhat.com) for writing the test that found this on a system
-> > with a somewhat unique default configuration....
+On Tue 20-11-12 10:15:11, Ben Myers wrote:
+> Hi Jan,
 > 
-> That sounds like something that could fit xfstests fairly easily.
+> On Mon, Nov 19, 2012 at 10:39:13PM +0100, Jan Kara wrote:
+> > On Tue 13-11-12 01:36:13, Jan Kara wrote:
+> > > When project quota gets exceeded xfs_iomap_write_delay() ends up flushing
+> > > inodes because ENOSPC gets returned from xfs_bmapi_delay() instead of EDQUOT.
+> > > This makes handling of writes over project quota rather slow as a simple test
+> > > program shows:
+> > > 	fd = open(argv[1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+> > > 	for (i = 0; i < 50000; i++)
+> > > 		pwrite(fd, buf, 4096, i*4096);
+> > > 
+> > > Writing 200 MB like this into a directory with 100 MB project quota takes
+> > > around 6 minutes while it takes about 2 seconds with this patch applied. This
+> > > actually happens in a real world load when nfs pushes data into a directory
+> > > which is over project quota.
+> > > 
+> > > Fix the problem by replacing XFS_QMOPT_ENOSPC flag with XFS_QMOPT_EPDQUOT.
+> > > That makes xfs_trans_reserve_quota_bydquots() return new error EPDQUOT when
+> > > project quota is exceeded. xfs_bmapi_delay() then uses this flag so that
+> > > xfs_iomap_write_delay() can distinguish real ENOSPC (requiring flushing)
+> > > from exceeded project quota (not requiring flushing).
+> > > 
+> > > As a side effect this patch fixes inconsistency where e.g. xfs_create()
+> > > returned EDQUOT even when project quota was exceeded.
+> >   Ping? Any opinions?
 > 
-> Re the patch - you're moving the transaction allocation back into the
-> end_io handler.  That's what my original version did, and I'm pretty
-> sure you talked me out of it back then.  I can't remember the details
-> but the list should have it.
-> 
-> > @@ -151,9 +151,11 @@ xfs_setfilesize(
-> >  	/*
-> >  	 * The transaction was allocated in the I/O submission thread,
-> >  	 * thus we need to mark ourselves as beeing in a transaction
-> > -	 * manually.
-> > +	 * manually. Similarly for freeze protection.
-> >  	 */
-> >  	current_set_flags_nested(&tp->t_pflags, PF_FSTRANS);
-> > +	rwsem_acquire_read(&VFS_I(ip)->i_sb->s_writers.lock_map[SB_FREEZE_FS-1],
-> > +			   0, 1, _THIS_IP_);
-> 
-> The comment above isn't true anymore, and the flags hack should be
-> removed.
-  It still seems to be true for buffered IO or am I misreading the code?
-
-> I'm also not sure the freeze protection still works if the acquire is
-> outside the original broader scope protection.  I'll defer to Jan on
-> this as I don't really understand this magic enough.q
-> should be removed respectively replaced with sb_start_intwrite/sb_end_intwrite
-  It seems to work OK. If it were not for buffered IO path which allocates
-a transaction (and thus freeze protection) in xfs_vm_writepage() we could
-get rid of this lockdep magic. But so far we can't...
+> I think that there may be good reason to flush inodes even in the project quota
+> case.  Speculative allocation beyond EOF might need to be cleaned up.  I'm all
+> for passing back some data about why we hit ENOSPC.  Then we can combine this
+> with Brian Foster's work and flush only inodes that touch a given project,
+> user, or group quota.
+  Yes, I agree flushing might be useful even for project quota but then why
+don't we flush inodes also for user quota? Also the performance impact
+is really huge - and here I agree that unless you are writing over NFS you
+won't notice because only NFS tries to push X MB to the filesystem page by
+page only to get ENOSPC each time... And NFS is arguably doing a stupid
+thing but it is a common setup and you don't always have the freedom to fix
+clients to be more clever. So I'd be happy if XFS accomodated such use.
 
 								Honza
 -- 
