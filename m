@@ -1,19 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qALIavP1082809 for <xfs@oss.sgi.com>; Wed, 21 Nov 2012 12:36:57 -0600
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: [PATCH 1/9] vfs: Handle O_SYNC AIO DIO in generic code properly
-References: <20121120074116.24645.36369.stgit@blackbox.djwong.org>
-	<20121120074123.24645.41965.stgit@blackbox.djwong.org>
-	<20121121100809.GE23339@infradead.org>
-	<x497gpevqoy.fsf@segfault.boston.devel.redhat.com>
-	<20121121182901.GA4519@infradead.org>
-Date: Wed, 21 Nov 2012 13:38:55 -0500
-In-Reply-To: <20121121182901.GA4519@infradead.org> (Christoph Hellwig's
-	message of "Wed, 21 Nov 2012 13:29:01 -0500")
-Message-ID: <x49y5huu7gg.fsf@segfault.boston.devel.redhat.com>
+	qALJKbrE085703 for <xfs@oss.sgi.com>; Wed, 21 Nov 2012 13:20:37 -0600
+Message-ID: <50AD2A1A.6020500@sgi.com>
+Date: Wed, 21 Nov 2012 13:23:06 -0600
+From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
+Subject: Re: [PATCH 0/3] xfstests: remove unused code and resolve warnings
+References: <CCD27E03.AFEC5%jellis@dhnet.us>
+In-Reply-To: <CCD27E03.AFEC5%jellis@dhnet.us>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,28 +17,63 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: axboe@kernel.dk, tytso@mit.edu, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, bpm@sgi.com, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, jack@suse.cz, linux-ext4@vger.kernel.org
+To: "J. Ellis" <jellis@dhnet.us>
+Cc: Jan Kara <jack@suse.cz>, Mark Tinguely <tinguely@sgi.com>, Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>
 
-Christoph Hellwig <hch@infradead.org> writes:
-
-> On Wed, Nov 21, 2012 at 11:58:05AM -0500, Jeff Moyer wrote:
->> > I'd like to use this as a vehicle to revisit how dio completions work.
->> 
->> I don't like the sound of that.  ;-)  It sounds like this bugfix may get
->> further delayed by the desire for unrelated code cleanup.
+On 11/21/2012 11:48 AM, J. Ellis wrote:
+> Hi--
 >
-> I've got a prototype that isn't much more invasive than the current
-> series.  I'll finish it up and run it through QA and will post it
-> tomorrow.
+> I don't know whether any of you are a list admin or not. I've successfully
+> subscribed to the list, but all my emails to xfs@oss.sgi.com are being
+> bounced as <access denied>. My email is jellis@dhnet.us.
+>
+> Can you please forward this to an admin so I can submit my question to the
+> list?
+>
+> Thanks.
+>
+> Best,
+> J.
+>
+>
+> on 11/21/12 9:58 AM, Rich Johnston at rjohnston@sgi.com wrote:
+>
+>> On 11/09/2012 07:23 AM, rjohnston@sgi.com wrote:
+>>> This patchset:
+>>>      1. Removes the unsupported sgi and CRAY conditionals
+>>>      2. Removes the unused conditional NO_XFS
+>>>      3. Resolves compiler/configure warnings
+>>>
+>>> _______________________________________________
+>>> xfs mailing list
+>>> xfs@oss.sgi.com
+>>> http://oss.sgi.com/mailman/listinfo/xfs
+>>>
+>>
+>> Christoph and Mark thanks for the review. This series has been committed
+>> to git://oss.sgi.com/xfs/cmds/xfstests master branch, commit 062f9b,
+>> a07ce0, and 2924ad.
+>>
+>>
+>> --Rich
+>>
+>> _______________________________________________
+>> xfs mailing list
+>> xfs@oss.sgi.com
+>> http://oss.sgi.com/mailman/listinfo/xfs
+>
+>
+Hey J,
 
-Works for me.  Thanks!
+We have let the system administrator know, with it being so close to the 
+Thanksgiving holiday I am not sure how quickly this will be resolved. 
+Sorry for the inconvenience.
 
--Jeff
+--Rich
 
 _______________________________________________
 xfs mailing list
