@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAL0tWKK229715 for <xfs@oss.sgi.com>; Tue, 20 Nov 2012 18:55:32 -0600
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id u7U0KgilA2GYbKO3 (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 20 Nov 2012 16:57:41 -0800 (PST)
-Date: Wed, 21 Nov 2012 01:57:39 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 9/9] blkdev: Fix up AIO+DIO+O_SYNC to do the sync part
-	correctly
-Message-ID: <20121121005739.GD10507@quack.suse.cz>
-References: <20121120074116.24645.36369.stgit@blackbox.djwong.org>
-	<20121120075115.25270.62451.stgit@blackbox.djwong.org>
-	<20121120101559.GC1408@quack.suse.cz>
-	<x49obishuh1.fsf@segfault.boston.devel.redhat.com>
+	qAL1aG3W232068 for <xfs@oss.sgi.com>; Tue, 20 Nov 2012 19:36:16 -0600
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	BBirHaSeLvRXZ7uT for <xfs@oss.sgi.com>;
+	Tue, 20 Nov 2012 17:38:25 -0800 (PST)
+Date: Wed, 21 Nov 2012 12:38:21 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: Don't flush inodes when project quota exceeded
+Message-ID: <20121121013821.GM2591@dastard>
+References: <1352766973-14197-1-git-send-email-jack@suse.cz>
+	<20121119213913.GB29498@quack.suse.cz>
+	<20121120000428.GZ14281@dastard>
+	<20121121002459.GA10507@quack.suse.cz>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <x49obishuh1.fsf@segfault.boston.devel.redhat.com>
+In-Reply-To: <20121121002459.GA10507@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,76 +29,92 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jeff Moyer <jmoyer@redhat.com>
-Cc: axboe@kernel.dk, tytso@mit.edu, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, bpm@sgi.com, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: xfs@oss.sgi.com
 
-On Tue 20-11-12 15:47:54, Jeff Moyer wrote:
-> Jan Kara <jack@suse.cz> writes:
-> 
-> > On Mon 19-11-12 23:51:15, Darrick J. Wong wrote:
-> >> When performing O_SYNC+AIO+DIO writes to block devices, use the DIO_SYNC_WRITES
-> >> flag so that flushes are issued /after/ the write completes, not before.
-> >> 
-> >> Note, however, that for block devices, the DIO setup code ensures that a flush
-> >> wq is attached to the superblock of the bdevfs filesystem, not the filesystem
-> >> that the device node happens to reside in.  This means that unlike regular
-> >> files, iocb->ki_filp->f_mapping->host->i_sb != inode->i_sb.  Therefore, adjust
-> >> Jeff's earlier patch to keep the pointer use consistent and avoid a NULL deref.
-> >> 
-> >> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> >> ---
-> >>  fs/block_dev.c |    5 +++--
-> >>  fs/direct-io.c |    3 ++-
-> >>  2 files changed, 5 insertions(+), 3 deletions(-)
-> >> 
-> >> 
-> >> diff --git a/fs/block_dev.c b/fs/block_dev.c
-> >> index 1a1e5e3..05ff33a 100644
-> >> --- a/fs/block_dev.c
-> >> +++ b/fs/block_dev.c
-> >> @@ -235,7 +235,8 @@ blkdev_direct_IO(int rw, struct kiocb *iocb, const struct iovec *iov,
-> >>  	struct inode *inode = file->f_mapping->host;
-> >>  
-> >>  	return __blockdev_direct_IO(rw, iocb, inode, I_BDEV(inode), iov, offset,
-> >> -				    nr_segs, blkdev_get_blocks, NULL, NULL, 0);
-> >> +				    nr_segs, blkdev_get_blocks, NULL, NULL,
-> >> +				    DIO_SYNC_WRITES);
-> >>  }
-> >>  
-> >>  int __sync_blockdev(struct block_device *bdev, int wait)
-> >> @@ -1631,7 +1632,7 @@ ssize_t blkdev_aio_write(struct kiocb *iocb, const struct iovec *iov,
-> >>  	percpu_down_read(&bdev->bd_block_size_semaphore);
-> >>  
-> >>  	ret = __generic_file_aio_write(iocb, iov, nr_segs, &iocb->ki_pos);
-> >> -	if (ret > 0 || ret == -EIOCBQUEUED) {
-> >> +	if (ret > 0) {
-> >>  		ssize_t err;
-> >>  
-> >>  		err = generic_write_sync(file, pos, ret);
-> >> diff --git a/fs/direct-io.c b/fs/direct-io.c
-> >> index b7391d4..c626c43 100644
-> >> --- a/fs/direct-io.c
-> >> +++ b/fs/direct-io.c
-> >> @@ -258,7 +258,8 @@ void generic_dio_end_io(struct kiocb *iocb, loff_t offset, ssize_t bytes,
-> >>  		work->ret = ret;
-> >>  		work->offset = offset;
-> >>  		work->len = bytes;
-> >> -		queue_work(inode->i_sb->s_dio_flush_wq, &work->work);
-> >> +		queue_work(iocb->ki_filp->f_mapping->host->i_sb->s_dio_flush_wq,
-> >> +			   &work->work);
-> >   This should be folded into the original patch introducing the
-> > s_dio_flush_wq. And please add a comment before this line saying that block
-> > devices need a dereference exactly like this... Otherwise the patch looks
-> > good so you can add:
-> >   Reviewed-by: Jan Kara <jack@suse.cz>
-> 
-> When you say, "This," do you mean that one change, or the whole patch?
-  I meant the whole patch after that hung is folded ;)
+On Wed, Nov 21, 2012 at 01:24:59AM +0100, Jan Kara wrote:
+> On Tue 20-11-12 11:04:28, Dave Chinner wrote:
+> > On Mon, Nov 19, 2012 at 10:39:13PM +0100, Jan Kara wrote:
+> > > On Tue 13-11-12 01:36:13, Jan Kara wrote:
+> > > > When project quota gets exceeded xfs_iomap_write_delay() ends up flushing
+> > > > inodes because ENOSPC gets returned from xfs_bmapi_delay() instead of EDQUOT.
+> > > > This makes handling of writes over project quota rather slow as a simple test
+> > > > program shows:
+> > > > 	fd = open(argv[1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+> > > > 	for (i = 0; i < 50000; i++)
+> > > > 		pwrite(fd, buf, 4096, i*4096);
+> > > > 
+> > > > Writing 200 MB like this into a directory with 100 MB project quota takes
+> > > > around 6 minutes while it takes about 2 seconds with this patch applied. This
+> > > > actually happens in a real world load when nfs pushes data into a directory
+> > > > which is over project quota.
+> > > > 
+> > > > Fix the problem by replacing XFS_QMOPT_ENOSPC flag with XFS_QMOPT_EPDQUOT.
+> > > > That makes xfs_trans_reserve_quota_bydquots() return new error EPDQUOT when
+> > > > project quota is exceeded. xfs_bmapi_delay() then uses this flag so that
+> > > > xfs_iomap_write_delay() can distinguish real ENOSPC (requiring flushing)
+> > > > from exceeded project quota (not requiring flushing).
+> > > > 
+> > > > As a side effect this patch fixes inconsistency where e.g. xfs_create()
+> > > > returned EDQUOT even when project quota was exceeded.
+> > >   Ping? Any opinions?
+> > 
+> > FWIW, it doesn't look like it'll apply to a current XFs tree:
+> > 
+> > > > @@ -441,8 +442,11 @@ retry:
+> > > >  	 */
+> > > >  	if (nimaps == 0) {
+> > > >  		trace_xfs_delalloc_enospc(ip, offset, count);
+> > > > -		if (flushed)
+> > > > -			return XFS_ERROR(error ? error : ENOSPC);
+> > > > +		if (flushed) {
+> > > > +			if (error == 0 || error == EPDQUOT)
+> > > > +				error = ENOSPC;
+> > > > +			return XFS_ERROR(error);
+> > > > +		}
+> > > >  
+> > > >  		if (error == ENOSPC) {
+> > > >  			xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> > 
+> > This xfs_iomap_write_delay() looks like this now:
+> > 
+> >         /*
+> >          * If bmapi returned us nothing, we got either ENOSPC or EDQUOT. Retry
+> >          * without EOF preallocation.
+> >          */
+> >         if (nimaps == 0) {
+> >                 trace_xfs_delalloc_enospc(ip, offset, count);
+> >                 if (prealloc) {
+> >                         prealloc = 0;
+> >                         error = 0;
+> >                         goto retry;
+> >                 }
+> >                 return XFS_ERROR(error ? error : ENOSPC);
+> >         }
+> > 
+> > The flushing is now way up in xfs_file_buffered_aio_write(), and the
+> > implementation of xfs_flush_inodes() has changed as well. Hence it
+> > may or may not behave differently not....
+>   OK, so I tested latest XFS tree and changes by commit 9aa05000 (changing
+> xfs_flush_inodes()) indeed improve the performace from those ~6 minutes to
+> ~6 seconds which is good enough I believe. Thanks for the pointer! I was
+> thinking for a while why sync_inodes_sb() is so much faster than the
+> original XFS implementation and I believe it's because we don't force the
+> log on each sync now.
 
-								Honza
+I think it's detter because we now don't scan every inode in the
+inode cache doing a mapping_tagged(PAGECACHE_TAG_DIRTY) check to see
+if they are dirty or not to decide whether it needs writeback. The
+overhead of doing that adds up very quickly when you have lots of
+cached inodes and you are scanning them for every page that is
+written to....
+
+Cheers,
+
+Dave.
 -- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
