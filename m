@@ -1,24 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qALM7mEn101406 for <xfs@oss.sgi.com>; Wed, 21 Nov 2012 16:07:48 -0600
+	qALMKWkq102407 for <xfs@oss.sgi.com>; Wed, 21 Nov 2012 16:20:32 -0600
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	bNnsgeQpWjJy97sX for <xfs@oss.sgi.com>;
-	Wed, 21 Nov 2012 14:09:58 -0800 (PST)
-Date: Thu, 22 Nov 2012 09:09:50 +1100
+	fPJv8pH88mKfhbUx for <xfs@oss.sgi.com>;
+	Wed, 21 Nov 2012 14:22:42 -0800 (PST)
+Date: Thu, 22 Nov 2012 09:22:25 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: Don't flush inodes when project quota exceeded
-Message-ID: <20121121220950.GR2591@dastard>
-References: <1352766973-14197-1-git-send-email-jack@suse.cz>
-	<20121119213913.GB29498@quack.suse.cz>
-	<20121120161511.GE27055@sgi.com>
-	<20121120170354.GF1408@quack.suse.cz>
-	<20121120202038.GF2591@dastard> <50ABF54E.6070508@redhat.com>
-	<20121120222215.GH2591@dastard> <50ACF289.2080901@redhat.com>
+Subject: Re: Oops with to traces on v3.7-rc6
+Message-ID: <20121121222225.GS2591@dastard>
+References: <20121121141811.665a1074@ilfaris>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <50ACF289.2080901@redhat.com>
+In-Reply-To: <20121121141811.665a1074@ilfaris>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,33 +26,26 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: Ben Myers <bpm@sgi.com>, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
+To: Julian Wollrath <jwollrath@web.de>
+Cc: xfs@oss.sgi.com
 
-On Wed, Nov 21, 2012 at 10:26:01AM -0500, Brian Foster wrote:
-> On 11/20/2012 05:22 PM, Dave Chinner wrote:
-> > On Tue, Nov 20, 2012 at 04:25:34PM -0500, Brian Foster wrote:
-> >> Otherwise, unless I'm mistaken it sounds like we can use the existing
-> >> eofblocks scan on user/group EDQUOT situations.
-> > 
-> > That we can. And for the project case, it's a simply and extra flag
-> > and a call to filemap_flush() to do an async writeback before
-> > trimming the specualtive preallocation.
+On Wed, Nov 21, 2012 at 02:18:11PM +0100, Julian Wollrath wrote:
+> Hello,
 > 
-> This makes sense generally. I'll need to dig further into this code to
-> wrap my head around it. If my current understanding is correct, it
-> sounds like we could do the same thing in general, non-quota ENOSPC
-> handling, right? E.g., an unfiltered eofblocks scan (plus the flush bit)
-> followed by a retry, rather than a complete flush of all dirty inodes.
+> while doing a xfs_fsr or shortly after it I got the following to traces:
+> [12859.936850] BUG: unable to handle kernel NULL pointer dereference at 0000000000000018
+> [12859.936952] IP: [<ffffffff811f2008>] xfs_trans_log_inode+0x8/0x30
+> [12859.937020] PGD 101efd067 PUD 1020ac067 PMD 0 
+> [12859.937075] Oops: 0000 [#1] SMP 
+> [12859.937113] Modules linked in: deflate zlib_deflate des_generic ecb sha512_generic sha1_generic hmac af_key xfrm_algo acpi_cpufreq mperf loop fuse snd_hda_codec_conexant snd_hda_codec_hdmi btusb bluetooth crc16 arc4 rtl8192ce rtlwifi rtl8192c_common snd_hda_intel snd_hda_codec rts_pstor(C) snd_hwdep thinkpad_acpi mac80211 snd_pcm uvcvideo videobuf2_vmalloc videobuf2_memops videobuf2_core radeon snd_page_alloc videodev psmouse cfg80211 evdev nvram pcspkr snd_timer i2c_piix4 i2c_algo_bit drm_kms_helper serio_raw ttm drm agpgart k10temp snd i2c_core rfkill soundcore video ac processor wmi battery button sha256_generic twofish_x86_64_3way xts lrw gf128mul glue_helper twofish_x86_64 twofish_common cbc dm_crypt dm_mod sd_mod crc_t10dif microcode ohci_hcd thermal thermal_sys ahci libahci ehci_hcd atl1c usbcore libata scsi_mod usb_common
+> [12859.938008] CPU 0 
+> [12859.938035] Pid: 2977, comm: xfs_fsr Tainted: G         C   3.7.0-rc6-wl+ #1 LENOVO 30515YG/30515YG
+                                                           ^^^^^
 
-Possibly, though we can also have dirty inodes that don't have
-speculative prealloc (e.g. hole filling writes) and we really need to
-flush them at ENOSPC, too. In general, I think the real ENOSPC case
-needs the big hammer because we have to reclaim every last piece of
-unnecessary reservation as possible to allow anything to proceed.
-Porject quota ENOSPC isn't such a problem here, as there's still
-other free space in the filesystem that allow normal operation to
-take place...
+You have a module loaded that is tagged as "crap". IOWs, your
+using modules from the staging tree. There should be an earlier
+warning in dmesg telling you what it is. Can you reproduce the
+problem without a tainted kernel?
 
 Cheers,
 
