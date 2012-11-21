@@ -1,19 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qALFPiaP065060 for <xfs@oss.sgi.com>; Wed, 21 Nov 2012 09:25:44 -0600
-Message-ID: <50ACF289.2080901@redhat.com>
-Date: Wed, 21 Nov 2012 10:26:01 -0500
-From: Brian Foster <bfoster@redhat.com>
+	qALGqVZ7073813 for <xfs@oss.sgi.com>; Wed, 21 Nov 2012 10:52:31 -0600
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id YAKOBkG4892yLirJ (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 21 Nov 2012 08:54:42 -0800 (PST)
+Date: Wed, 21 Nov 2012 17:54:36 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 2/9] ext4: honor the O_SYNC flag for aysnchronous
+	direct I/O requests
+Message-ID: <20121121165436.GB30250@quack.suse.cz>
+References: <20121120074116.24645.36369.stgit@blackbox.djwong.org>
+	<20121120074131.24645.38489.stgit@blackbox.djwong.org>
+	<20121120100751.GB1408@quack.suse.cz>
+	<x49sj84hwl4.fsf@segfault.boston.devel.redhat.com>
+	<20121121005626.GC10507@quack.suse.cz>
+	<x49r4nnujx6.fsf@segfault.boston.devel.redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: Don't flush inodes when project quota exceeded
-References: <1352766973-14197-1-git-send-email-jack@suse.cz>
-	<20121119213913.GB29498@quack.suse.cz>
-	<20121120161511.GE27055@sgi.com>
-	<20121120170354.GF1408@quack.suse.cz>
-	<20121120202038.GF2591@dastard> <50ABF54E.6070508@redhat.com>
-	<20121120222215.GH2591@dastard>
-In-Reply-To: <20121120222215.GH2591@dastard>
+Content-Disposition: inline
+In-Reply-To: <x49r4nnujx6.fsf@segfault.boston.devel.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,77 +32,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Ben Myers <bpm@sgi.com>, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
+To: Jeff Moyer <jmoyer@redhat.com>
+Cc: axboe@kernel.dk, tytso@mit.edu, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, bpm@sgi.com, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org
 
-On 11/20/2012 05:22 PM, Dave Chinner wrote:
-> On Tue, Nov 20, 2012 at 04:25:34PM -0500, Brian Foster wrote:
->> On 11/20/2012 03:20 PM, Dave Chinner wrote:
-...
->>> It's by design. Directory tree quota is used as a method of
->>> exporting multiple sub-dirs from a single filesystem but having them
->>> appear to NFS clients just like a standalone filesystem. Hence when
->>> you run out of projet quota, it is treated like an ENOSPC condition
->>> for the directory sub-tree - it flushes as much of the metadata
->>> reservations out as possible to maximise the data space for the
->>> directory tree.
+On Wed 21-11-12 09:09:41, Jeff Moyer wrote:
+> Jan Kara <jack@suse.cz> writes:
 > 
-> And FWIW, returning ENOSPC to the NFS client inthese situations is
-> the correct error to be returning as they know nothing about the
-> fact that project quotas are used on the server to limit the size of
-> the export the client has mounted.
+> >> Just to be clear, are you saying you would like me to remove the
+> >> mutex_lock/unlock pair from ext4_sync_file?  (I had already factored out
+> >> the common code between this new code path and the fsync path in my tree.)
+> >   Yes, after some thinking I came to that conclusion. We actually need to
+> > keep i_mutex around ext4_flush_unwritten_io() to avoid livelocks but the
+> > rest doesn't need it. The change should be definitely a separate patch just
+> > in case there's something subtle I missed and we need to bisect in
+> > future... I've attached a patch for that so that blame for bugs goes my way
+> > ;) Compile tested only so far. I'll give it some more testing overnight.
 > 
+> Great, thanks Jan!  I'll include this in the next posting.
+  OK, patch passed xfstests and a test banging one file with random IO and
+fsyncs from 8 processes (in data=ordered, data=journal, and nojournal
+modes). So it seems I didn't miss anything substantial. So ship it! ;)
 
-Ok, I initially missed that we returned ENOSPC in the project quota
-situation, so I might have mixed up what I was referring to as EDQUOT
-vs. ENOSPC. I see the XFS_QMOPT_ENOSPC logic that appears to cause that
-behavior.
-
->>> For user/group quotas, this requirement of behaving like a
->>> standalone filesystem does not exist, and so when you EDQUOT a
->>> user/group there is no need to reclaim metadata reservations to make
->>> more data space available....
->>
->> ... but the metadata reservation issue discussed here sounds like it
->> could still be a problem. Is the implication that we could still do a
->> project quota filtered eofblocks scan, but it must also (or instead, if
->> a flush implies trimming post-eof space) include an inode flush in the
->> project quota case?
-> 
-> It's never been reported as a problem. In the absence of problems
-> being reported over the past 10+ years, I don't think we should be
-> changing the behaviour of inode flushing at EDQUOT. Trimming
-> speculative prealloc, yes, but I don't think flushing inodes is
-> necessary.
-> 
-
-I was unclear. By problem, I just meant that replacing the inode flush
-after a project quota ENOSPC with an eofblocks scan would be a problem
-(e.g., a flush + eofblocks trim is the right approach, as you outline
-below).
-
->> Otherwise, unless I'm mistaken it sounds like we can use the existing
->> eofblocks scan on user/group EDQUOT situations.
-> 
-> That we can. And for the project case, it's a simply and extra flag
-> and a call to filemap_flush() to do an async writeback before
-> trimming the specualtive preallocation.
-> 
-
-This makes sense generally. I'll need to dig further into this code to
-wrap my head around it. If my current understanding is correct, it
-sounds like we could do the same thing in general, non-quota ENOSPC
-handling, right? E.g., an unfiltered eofblocks scan (plus the flush bit)
-followed by a retry, rather than a complete flush of all dirty inodes.
-
-Brian
-
-...
-> 
-> Cheers,
-> 
-> Dave.
-> 
+								Honza
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
