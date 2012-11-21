@@ -1,20 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qALE7iCd050614 for <xfs@oss.sgi.com>; Wed, 21 Nov 2012 08:07:44 -0600
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: [PATCH 2/9] ext4: honor the O_SYNC flag for aysnchronous direct
-	I/O requests
-References: <20121120074116.24645.36369.stgit@blackbox.djwong.org>
-	<20121120074131.24645.38489.stgit@blackbox.djwong.org>
-	<20121120100751.GB1408@quack.suse.cz>
-	<x49sj84hwl4.fsf@segfault.boston.devel.redhat.com>
-	<20121121005626.GC10507@quack.suse.cz>
-Date: Wed, 21 Nov 2012 09:09:41 -0500
-In-Reply-To: <20121121005626.GC10507@quack.suse.cz> (Jan Kara's message of
-	"Wed, 21 Nov 2012 01:56:26 +0100")
-Message-ID: <x49r4nnujx6.fsf@segfault.boston.devel.redhat.com>
+	qALEJ12e052322 for <xfs@oss.sgi.com>; Wed, 21 Nov 2012 08:19:01 -0600
+Message-ID: <50ACD545.8030102@sgi.com>
+Date: Wed, 21 Nov 2012 07:21:09 -0600
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
+Subject: Re: [PATCH 2/2] xfs: fix the buffer log format for contiguous buffers
+References: <20121120224120.224166649@sgi.com>
+	<20121120224146.479983109@sgi.com>
+	<20121121095422.GB23339@infradead.org>
+In-Reply-To: <20121121095422.GB23339@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,29 +19,56 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: axboe@kernel.dk, tytso@mit.edu, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, bpm@sgi.com, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-Jan Kara <jack@suse.cz> writes:
+On 11/21/12 03:54, Christoph Hellwig wrote:
+> Do we have proper test coverage for the xfs_buf_item_format_segment
+> changes?  Given that they change what gets written into the log I'd
+> prefer them separate from a big cleanup patch, and including test
+> coverage verifying everything works fine when hitting these corner
+> cases.
+>
+>>   		chunk_num = byte>>  XFS_BLF_SHIFT;
+>>   		word_num = chunk_num>>  BIT_TO_WORD_SHIFT;
+>>   		bit_num = chunk_num&  (NBWORD - 1);
+>> -		wordp =&(bip->bli_format.blf_data_map[word_num]);
+>> +		wordp =&(bip->bli_formats[0].blf_data_map[word_num]);
+>
+> This change doesn't seem to be mentioned in the changelog?
+>
+>> @@ -644,8 +652,14 @@ xfs_buf_item_unlock(
+>>   	 * If the buf item isn't tracking any data, free it, otherwise drop the
+>>   	 * reference we hold to it.
+>>   	 */
+>> -	if (xfs_bitmap_empty(bip->bli_format.blf_data_map,
+>> -			     bip->bli_format.blf_map_size))
+>> +	empty = 1;
+>> +	for (i = 0; i<  bip->bli_format_count; i++)
+>> +		if (!xfs_bitmap_empty(bip->bli_formats[i].blf_data_map,
+>> +			     bip->bli_formats[i].blf_map_size)) {
+>> +			empty = 0;
+>> +			break;
+>> +		}
+>> +	if (empty)
+>>   		xfs_buf_item_relse(bp);
+>
+> This looks like a bug fix, not just a cleanup.  Again I'd prefer this to
+> be a patch on its own, with a good description.
+>
 
->> Just to be clear, are you saying you would like me to remove the
->> mutex_lock/unlock pair from ext4_sync_file?  (I had already factored out
->> the common code between this new code path and the fsync path in my tree.)
->   Yes, after some thinking I came to that conclusion. We actually need to
-> keep i_mutex around ext4_flush_unwritten_io() to avoid livelocks but the
-> rest doesn't need it. The change should be definitely a separate patch just
-> in case there's something subtle I missed and we need to bisect in
-> future... I've attached a patch for that so that blame for bugs goes my way
-> ;) Compile tested only so far. I'll give it some more testing overnight.
+The bli_format -> bli_formats changes are bug fixes - the description 
+should say this is a bug fix not just a cleanup.
 
-Great, thanks Jan!  I'll include this in the next posting.
+Eric's test 291 created a buffer with 4 mapped segments. It found most 
+of the issues in the buffer map and in the buffer log format. Dave 
+pointed out the xfs_bitmap_empty() error.
 
-Cheers,
-Jeff
+--Mark.
 
 _______________________________________________
 xfs mailing list
