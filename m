@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAL9n5Z2028157 for <xfs@oss.sgi.com>; Wed, 21 Nov 2012 03:49:06 -0600
-Date: Wed, 21 Nov 2012 04:51:13 -0500
+	qAL9qDcE028774 for <xfs@oss.sgi.com>; Wed, 21 Nov 2012 03:52:14 -0600
+Date: Wed, 21 Nov 2012 04:54:22 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/2] xfs: use b_maps[] for discontiguous buffers
-Message-ID: <20121121095113.GA23339@infradead.org>
+Subject: Re: [PATCH 2/2] xfs: fix the buffer log format for contiguous buffers
+Message-ID: <20121121095422.GB23339@infradead.org>
 References: <20121120224120.224166649@sgi.com>
-	<20121120224146.376767354@sgi.com>
+	<20121120224146.479983109@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20121120224146.376767354@sgi.com>
+In-Reply-To: <20121120224146.479983109@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,20 +26,41 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Mark Tinguely <tinguely@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Nov 20, 2012 at 04:41:21PM -0600, Mark Tinguely wrote:
-> This patch sets all the b_bmap accesses to be b_maps[0]. b_maps[0]
-> works for single and multiple segment buffers.
-> 
-> This fixes a bug where xfs_trans_buf_item_match() could not find a
-> multi-segment buffer associated with the transaction because it was
-> looking for the block number in the single segment location
-> b_map.bm.bn rather than the new generic b_maps[0].bm.bn. This
-> resulted in recursive buffer lock that can never be satisfied.
+Do we have proper test coverage for the xfs_buf_item_format_segment
+changes?  Given that they change what gets written into the log I'd
+prefer them separate from a big cleanup patch, and including test
+coverage verifying everything works fine when hitting these corner
+cases.
 
-Should b_map be renamed to __b_map so that accesses to it are cought
-more easily?
+>  		chunk_num = byte >> XFS_BLF_SHIFT;
+>  		word_num = chunk_num >> BIT_TO_WORD_SHIFT;
+>  		bit_num = chunk_num & (NBWORD - 1);
+> -		wordp = &(bip->bli_format.blf_data_map[word_num]);
+> +		wordp = &(bip->bli_formats[0].blf_data_map[word_num]);
 
-Also do hyou have a test case for the issue?
+This change doesn't seem to be mentioned in the changelog?
+
+> @@ -644,8 +652,14 @@ xfs_buf_item_unlock(
+>  	 * If the buf item isn't tracking any data, free it, otherwise drop the
+>  	 * reference we hold to it.
+>  	 */
+> -	if (xfs_bitmap_empty(bip->bli_format.blf_data_map,
+> -			     bip->bli_format.blf_map_size))
+> +	empty = 1;
+> +	for (i = 0; i < bip->bli_format_count; i++)
+> +		if (!xfs_bitmap_empty(bip->bli_formats[i].blf_data_map,
+> +			     bip->bli_formats[i].blf_map_size)) {
+> +			empty = 0;
+> +			break;
+> +		}
+> +	if (empty)
+>  		xfs_buf_item_relse(bp);
+
+This looks like a bug fix, not just a cleanup.  Again I'd prefer this to
+be a patch on its own, with a good description.
+
+Also as in the last patch should we rename bli_format to __bli_format
+to catch accidental references to it?
 
 _______________________________________________
 xfs mailing list
