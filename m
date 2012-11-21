@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qALLZNkg098959 for <xfs@oss.sgi.com>; Wed, 21 Nov 2012 15:35:24 -0600
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id UfzyZQ7Zl5yI4VQ7 (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 21 Nov 2012 13:37:34 -0800 (PST)
-Date: Wed, 21 Nov 2012 22:37:32 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 1/9] vfs: Handle O_SYNC AIO DIO in generic code properly
-Message-ID: <20121121213732.GG30250@quack.suse.cz>
-References: <20121120074116.24645.36369.stgit@blackbox.djwong.org>
-	<20121120074123.24645.41965.stgit@blackbox.djwong.org>
-	<20121121100809.GE23339@infradead.org>
-	<x497gpevqoy.fsf@segfault.boston.devel.redhat.com>
-	<20121121182901.GA4519@infradead.org>
+	qALM7mEn101406 for <xfs@oss.sgi.com>; Wed, 21 Nov 2012 16:07:48 -0600
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	bNnsgeQpWjJy97sX for <xfs@oss.sgi.com>;
+	Wed, 21 Nov 2012 14:09:58 -0800 (PST)
+Date: Thu, 22 Nov 2012 09:09:50 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: Don't flush inodes when project quota exceeded
+Message-ID: <20121121220950.GR2591@dastard>
+References: <1352766973-14197-1-git-send-email-jack@suse.cz>
+	<20121119213913.GB29498@quack.suse.cz>
+	<20121120161511.GE27055@sgi.com>
+	<20121120170354.GF1408@quack.suse.cz>
+	<20121120202038.GF2591@dastard> <50ABF54E.6070508@redhat.com>
+	<20121120222215.GH2591@dastard> <50ACF289.2080901@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20121121182901.GA4519@infradead.org>
+In-Reply-To: <50ACF289.2080901@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,25 +31,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: axboe@kernel.dk, xfs@oss.sgi.com, tytso@mit.edu, "Darrick J. Wong" <darrick.wong@oracle.com>, bpm@sgi.com, linux-kernel@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, jack@suse.cz, linux-ext4@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Ben Myers <bpm@sgi.com>, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
 
-On Wed 21-11-12 13:29:01, Christoph Hellwig wrote:
-> On Wed, Nov 21, 2012 at 11:58:05AM -0500, Jeff Moyer wrote:
-> > > I'd like to use this as a vehicle to revisit how dio completions work.
+On Wed, Nov 21, 2012 at 10:26:01AM -0500, Brian Foster wrote:
+> On 11/20/2012 05:22 PM, Dave Chinner wrote:
+> > On Tue, Nov 20, 2012 at 04:25:34PM -0500, Brian Foster wrote:
+> >> Otherwise, unless I'm mistaken it sounds like we can use the existing
+> >> eofblocks scan on user/group EDQUOT situations.
 > > 
-> > I don't like the sound of that.  ;-)  It sounds like this bugfix may get
-> > further delayed by the desire for unrelated code cleanup.
+> > That we can. And for the project case, it's a simply and extra flag
+> > and a call to filemap_flush() to do an async writeback before
+> > trimming the specualtive preallocation.
 > 
-> I've got a prototype that isn't much more invasive than the current
-> series.  I'll finish it up and run it through QA and will post it
-> tomorrow.
-  Great, I wanted to have a look into it but you beat me to it ;)
+> This makes sense generally. I'll need to dig further into this code to
+> wrap my head around it. If my current understanding is correct, it
+> sounds like we could do the same thing in general, non-quota ENOSPC
+> handling, right? E.g., an unfiltered eofblocks scan (plus the flush bit)
+> followed by a retry, rather than a complete flush of all dirty inodes.
 
-								Honza
+Possibly, though we can also have dirty inodes that don't have
+speculative prealloc (e.g. hole filling writes) and we really need to
+flush them at ENOSPC, too. In general, I think the real ENOSPC case
+needs the big hammer because we have to reclaim every last piece of
+unnecessary reservation as possible to allow anything to proceed.
+Porject quota ENOSPC isn't such a problem here, as there's still
+other free space in the filesystem that allow normal operation to
+take place...
+
+Cheers,
+
+Dave.
 -- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
