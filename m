@@ -1,32 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAM53bjd148883 for <xfs@oss.sgi.com>; Wed, 21 Nov 2012 23:03:38 -0600
-Received: from fgwmail6.fujitsu.co.jp (fgwmail6.fujitsu.co.jp [192.51.44.36])
-	by cuda.sgi.com with ESMTP id Fk5jkixTXscPTwGH (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 21 Nov 2012 21:05:48 -0800 (PST)
-Received: from m3.gw.fujitsu.co.jp (unknown [10.0.50.73])
-	by fgwmail6.fujitsu.co.jp (Postfix) with ESMTP id 6A3D83EE0BB
-	for <xfs@oss.sgi.com>; Thu, 22 Nov 2012 14:05:46 +0900 (JST)
-Received: from smail (m3 [127.0.0.1])
-	by outgoing.m3.gw.fujitsu.co.jp (Postfix) with ESMTP id 4EC6145DEBC
-	for <xfs@oss.sgi.com>; Thu, 22 Nov 2012 14:05:46 +0900 (JST)
-Received: from s3.gw.fujitsu.co.jp (s3.gw.fujitsu.co.jp [10.0.50.93])
-	by m3.gw.fujitsu.co.jp (Postfix) with ESMTP id 378D545DEB7
-	for <xfs@oss.sgi.com>; Thu, 22 Nov 2012 14:05:46 +0900 (JST)
-Received: from s3.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id 218C91DB803E
-	for <xfs@oss.sgi.com>; Thu, 22 Nov 2012 14:05:46 +0900 (JST)
-Received: from g01jpexchkw09.g01.fujitsu.local
-	(g01jpexchkw09.g01.fujitsu.local [10.0.194.48])
-	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id D12D81DB803C
-	for <xfs@oss.sgi.com>; Thu, 22 Nov 2012 14:05:45 +0900 (JST)
-Message-ID: <50ADB27F.8070806@jp.fujitsu.com>
-Date: Thu, 22 Nov 2012 14:05:03 +0900
-From: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
+	qAM58KiQ149366 for <xfs@oss.sgi.com>; Wed, 21 Nov 2012 23:08:20 -0600
+Message-ID: <50ADB3AA.302@sgi.com>
+Date: Wed, 21 Nov 2012 23:10:02 -0600
+From: Andrew Dahl <adahl@sgi.com>
 MIME-Version: 1.0
-Subject: [BUG] xfs_quota: can't handle the users managed by LDAP
+Subject: Re: [PATCH 02.5/32] xfs: remove xfs_tosspages
+References: <1352721264-3700-1-git-send-email-david@fromorbit.com>
+	<1352721264-3700-3-git-send-email-david@fromorbit.com>
+	<20121114064247.GC1710@dastard> <50A3E807.5010403@sgi.com>
+	<50A3E86A.2060402@sgi.com> <50A3F80C.7050502@sgi.com>
+	<20121121080502.GP2591@dastard>
+In-Reply-To: <20121121080502.GP2591@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,30 +25,93 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs ML <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
 
-Hi,
+On 11/21/2012 02:05 AM, Dave Chinner wrote:
+...
+> 
+> [ Here's a tip for the future: anything that changes allocation
+> corner cases needs to be run through the entire of xfstests suite
+> because they have a nasty habit of causing secondary problems.... ]
+> 
+Makes sense -- I'll keep that in mind for the future. (Thanks!)
 
-Current xfs_quota (I pulled xfsprogs today) seems not be able to the users
-managed by LDAP. There is no patch since I'm not good at LDAP and don't know
-the root cause yet ;-(
+...
 
-Step to reproduce(in this case, "sat" is the user managed by LDAP):
-===============================================================================
-# uname -r
-3.7.0-rc5
-# mount -o loop,usrquota xfs.img mnt
-# xfsprogs/quota/xfs_quota -xc "limit bsoft=10M bhard=10M sat" /dev/loop0
-xfs_quota: invalid user name: sat                                          # denied
-# su sat
-$                                                                          # But this user acutally exists.
-===============================================================================
+> +
+> +STATIC int
+> +xfs_zero_file_space(
+> +	struct xfs_inode	*ip,
+> +	xfs_off_t		offset,
+> +	xfs_off_t		len,
+> +	int			attr_flags)
+> +{
+> +	struct xfs_mount	*mp = ip->i_mount;
+> +	uint			rounding;
+> +	xfs_off_t		start;
+> +	xfs_off_t		end;
+> +	int			error;
+> +
+> +	rounding = max_t(uint, 1 << mp->m_sb.sb_blocklog, PAGE_CACHE_SIZE);
+Let's say rounding is 4K
+> +
+> +	/* round the range iof extents we are going to convert inwards */
+> +	start = round_up(offset, rounding);
+> +	end = round_down(offset + len, rounding);
+Now, let's say we pass in (4K-1) for the offset and (4K-1).
 
-The kernel is a bit old, but I suspect this is a userland problem.
-I'll try to reproduce it on 3.7.0-rc6 too.
+Then start would be 4K and the end would be 4K, right?
+
+> +
+> +	ASSERT(start >= offset);
+> +	ASSERT(end <= offset + len);
+These are both true, so this is good.
+> +
+> +	if (!(attr_flags & XFS_ATTR_NOLOCK))
+> +		xfs_ilock(ip, XFS_IOLOCK_EXCL);
+> +
+> +	if (start < end - 1) {
+This is false, as expected.
+> +		/* punch out the page cache over the conversion range */
+> +		truncate_pagecache_range(VFS_I(ip), start, end - 1);
+> +		/* convert the blocks */
+> +		error = xfs_alloc_file_space(ip, start, end - start - 1,
+> +				    XFS_BMAPI_PREALLOC | XFS_BMAPI_CONVERT,
+> +				    attr_flags);
+> +		if (error)
+> +			goto out_unlock;
+> +	} else {
+> +		/* it's a sub-rounding range */
+> +		ASSERT(offset + len <= rounding);
+This is false. (8K - 2) <= 4K -- Not so good.
+
+Maybe (2*rounding) would be better, as offset + len could never be
+greater than 2rounding (but can be greater than 1rounding). Or removing
+this assert altogether.
+
+> +		error = xfs_iozero(ip, offset, len);
+> +		goto out_unlock;
+> +	}
+> +
+> +	/* now we've handled the interior of the range, handle the edges */
+> +	if (start != offset)
+> +		error = xfs_iozero(ip, offset, start - offset);
+> +	if (!error && end != offset + len)
+> +		error = xfs_iozero(ip, end, offset + len - end);
+This looks good.
+> +
+> +out_unlock:
+> +	if (!(attr_flags & XFS_ATTR_NOLOCK))
+> +		xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+> +	return error;
+...
+
+Beyond that, I think it all looks good and like what you've done!
 
 Thanks,
-Satoru Takeuchi
+
+Andrew
 
 _______________________________________________
 xfs mailing list
