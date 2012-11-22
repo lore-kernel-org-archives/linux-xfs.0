@@ -1,23 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAM0kbIi115361 for <xfs@oss.sgi.com>; Wed, 21 Nov 2012 18:46:37 -0600
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	ombjQE92QyGmwv4B for <xfs@oss.sgi.com>;
-	Wed, 21 Nov 2012 16:48:46 -0800 (PST)
-Date: Thu, 22 Nov 2012 11:48:43 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] xfs: fix direct IO nested transaction deadlock.
-Message-ID: <20121122004843.GT2591@dastard>
-References: <1353410831-22653-1-git-send-email-david@fromorbit.com>
-	<1353410831-22653-3-git-send-email-david@fromorbit.com>
-	<20121120161015.GB18244@infradead.org>
-	<20121120195344.GD2591@dastard>
-	<20121121095900.GD23339@infradead.org>
+	qAM53bjd148883 for <xfs@oss.sgi.com>; Wed, 21 Nov 2012 23:03:38 -0600
+Received: from fgwmail6.fujitsu.co.jp (fgwmail6.fujitsu.co.jp [192.51.44.36])
+	by cuda.sgi.com with ESMTP id Fk5jkixTXscPTwGH (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 21 Nov 2012 21:05:48 -0800 (PST)
+Received: from m3.gw.fujitsu.co.jp (unknown [10.0.50.73])
+	by fgwmail6.fujitsu.co.jp (Postfix) with ESMTP id 6A3D83EE0BB
+	for <xfs@oss.sgi.com>; Thu, 22 Nov 2012 14:05:46 +0900 (JST)
+Received: from smail (m3 [127.0.0.1])
+	by outgoing.m3.gw.fujitsu.co.jp (Postfix) with ESMTP id 4EC6145DEBC
+	for <xfs@oss.sgi.com>; Thu, 22 Nov 2012 14:05:46 +0900 (JST)
+Received: from s3.gw.fujitsu.co.jp (s3.gw.fujitsu.co.jp [10.0.50.93])
+	by m3.gw.fujitsu.co.jp (Postfix) with ESMTP id 378D545DEB7
+	for <xfs@oss.sgi.com>; Thu, 22 Nov 2012 14:05:46 +0900 (JST)
+Received: from s3.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id 218C91DB803E
+	for <xfs@oss.sgi.com>; Thu, 22 Nov 2012 14:05:46 +0900 (JST)
+Received: from g01jpexchkw09.g01.fujitsu.local
+	(g01jpexchkw09.g01.fujitsu.local [10.0.194.48])
+	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id D12D81DB803C
+	for <xfs@oss.sgi.com>; Thu, 22 Nov 2012 14:05:45 +0900 (JST)
+Message-ID: <50ADB27F.8070806@jp.fujitsu.com>
+Date: Thu, 22 Nov 2012 14:05:03 +0900
+From: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20121121095900.GD23339@infradead.org>
+Subject: [BUG] xfs_quota: can't handle the users managed by LDAP
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,70 +39,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
+To: xfs ML <xfs@oss.sgi.com>
 
-On Wed, Nov 21, 2012 at 04:59:00AM -0500, Christoph Hellwig wrote:
-> On Wed, Nov 21, 2012 at 06:53:44AM +1100, Dave Chinner wrote:
-> > Right, I was concerned about blocking IO completion workers waiting
-> > for log reservations. I'm still concerned about that, but I don't
-> > see any way around it.
-> 
-> That's information that should be added to a comment..
-> 
-> > > >  	/*
-> > > >  	 * The transaction was allocated in the I/O submission thread,
-> > > >  	 * thus we need to mark ourselves as beeing in a transaction
-> > > > -	 * manually.
-> > > > +	 * manually. Similarly for freeze protection.
-> > > >  	 */
-> > > >  	current_set_flags_nested(&tp->t_pflags, PF_FSTRANS);
-> > > > +	rwsem_acquire_read(&VFS_I(ip)->i_sb->s_writers.lock_map[SB_FREEZE_FS-1],
-> > > > +			   0, 1, _THIS_IP_);
-> > > 
-> > > The comment above isn't true anymore, and the flags hack should be
-> > > removed.
-> > 
-> > It's still used by buffered IO in that way.
-> 
-> It's conditionaly though, so there should at least be a "may" in the
-> sentence.
+Hi,
 
-OK.
+Current xfs_quota (I pulled xfsprogs today) seems not be able to the users
+managed by LDAP. There is no patch since I'm not good at LDAP and don't know
+the root cause yet ;-(
 
-> > > >  	if (ioend->io_type == XFS_IO_UNWRITTEN) {
-> > > >  		error = xfs_iomap_write_unwritten(ip, ioend->io_offset,
-> > > > +						  ioend->io_size);
-> > > > +		goto done;
-> > > > +	}
-> > > > +
-> > > > +	/*
-> > > > +	 * For direct I/O we do not know if we need to allocate blocks or not so
-> > > > +	 * we can't preallocate an append transaction as that results in nested
-> > > > +	 * reservations and log space deadlocks. Hence allocate the transaction
-> > > > +	 * here.  For buffered I/O we preallocate a transaction when submitting
-> > > > +	 * the IO.
-> > > > +	 */
-> > > > +	if (ioend->io_isdirect && xfs_ioend_is_append(ioend)) {
-> > > 
-> > > xfs_iomap_write_unwritten already updates the inode size, so this should
-> > > be an "else if"
-> > 
-> > The unwritten branch jumps over this completely if it is taken, so
-> > it makes no difference. I can change it is you want....
-> 
-> Oh, right - I missed that.  But it seems the else would do the same as
-> the goto done in your new version, and I generally prefer else if style
-> control flow for this over gotos.
+Step to reproduce(in this case, "sat" is the user managed by LDAP):
+===============================================================================
+# uname -r
+3.7.0-rc5
+# mount -o loop,usrquota xfs.img mnt
+# xfsprogs/quota/xfs_quota -xc "limit bsoft=10M bhard=10M sat" /dev/loop0
+xfs_quota: invalid user name: sat                                          # denied
+# su sat
+$                                                                          # But this user acutally exists.
+===============================================================================
 
-OK, I'll fix that.
+The kernel is a bit old, but I suspect this is a userland problem.
+I'll try to reproduce it on 3.7.0-rc6 too.
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+Satoru Takeuchi
 
 _______________________________________________
 xfs mailing list
