@@ -1,18 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAM58KiQ149366 for <xfs@oss.sgi.com>; Wed, 21 Nov 2012 23:08:20 -0600
-Message-ID: <50ADB3AA.302@sgi.com>
-Date: Wed, 21 Nov 2012 23:10:02 -0600
-From: Andrew Dahl <adahl@sgi.com>
+	qAMB2oqk191100
+	for <linux-xfs@oss.sgi.com>; Thu, 22 Nov 2012 05:02:50 -0600
+Received: from mailmx.dns.com.cn ([119.254.72.226]) by cuda.sgi.com with ESMTP
+	id hLWfnGTOFZq7qdnU (version=TLSv1 cipher=DES-CBC3-SHA bits=168
+	verify=NO) for <linux-xfs@oss.sgi.com>;
+	Thu, 22 Nov 2012 03:04:58 -0800 (PST)
+Date: Thu, 22 Nov 2012 19:04:55 +0800
+From: Mail Delivery Subsystem <MAILER-DAEMON@mailmx.dns.com.cn>
+Message-Id: <201211221104.ARN51256@mailmx.dns.com.cn>
 MIME-Version: 1.0
-Subject: Re: [PATCH 02.5/32] xfs: remove xfs_tosspages
-References: <1352721264-3700-1-git-send-email-david@fromorbit.com>
-	<1352721264-3700-3-git-send-email-david@fromorbit.com>
-	<20121114064247.GC1710@dastard> <50A3E807.5010403@sgi.com>
-	<50A3E86A.2060402@sgi.com> <50A3F80C.7050502@sgi.com>
-	<20121121080502.GP2591@dastard>
-In-Reply-To: <20121121080502.GP2591@dastard>
+Subject: Returned mail: Cannot send message within 5 hours
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,99 +20,169 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============4567384780805586872=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-On 11/21/2012 02:05 AM, Dave Chinner wrote:
-...
-> 
-> [ Here's a tip for the future: anything that changes allocation
-> corner cases needs to be run through the entire of xfstests suite
-> because they have a nasty habit of causing secondary problems.... ]
-> 
-Makes sense -- I'll keep that in mind for the future. (Thanks!)
+This is a MIME-encapsulated message
 
-...
+--===============4567384780805586872==
+Content-Type: multipart/report; report-type=delivery-status;
+	boundary="ARN51256.1353582295/mailmx.dns.com.cn"
+Content-Transfer-Encoding: 8bit
 
-> +
-> +STATIC int
-> +xfs_zero_file_space(
-> +	struct xfs_inode	*ip,
-> +	xfs_off_t		offset,
-> +	xfs_off_t		len,
-> +	int			attr_flags)
-> +{
-> +	struct xfs_mount	*mp = ip->i_mount;
-> +	uint			rounding;
-> +	xfs_off_t		start;
-> +	xfs_off_t		end;
-> +	int			error;
-> +
-> +	rounding = max_t(uint, 1 << mp->m_sb.sb_blocklog, PAGE_CACHE_SIZE);
-Let's say rounding is 4K
-> +
-> +	/* round the range iof extents we are going to convert inwards */
-> +	start = round_up(offset, rounding);
-> +	end = round_down(offset + len, rounding);
-Now, let's say we pass in (4K-1) for the offset and (4K-1).
+This is a MIME-encapsulated message
 
-Then start would be 4K and the end would be 4K, right?
+--ARN51256.1353582295/mailmx.dns.com.cn
 
-> +
-> +	ASSERT(start >= offset);
-> +	ASSERT(end <= offset + len);
-These are both true, so this is good.
-> +
-> +	if (!(attr_flags & XFS_ATTR_NOLOCK))
-> +		xfs_ilock(ip, XFS_IOLOCK_EXCL);
-> +
-> +	if (start < end - 1) {
-This is false, as expected.
-> +		/* punch out the page cache over the conversion range */
-> +		truncate_pagecache_range(VFS_I(ip), start, end - 1);
-> +		/* convert the blocks */
-> +		error = xfs_alloc_file_space(ip, start, end - start - 1,
-> +				    XFS_BMAPI_PREALLOC | XFS_BMAPI_CONVERT,
-> +				    attr_flags);
-> +		if (error)
-> +			goto out_unlock;
-> +	} else {
-> +		/* it's a sub-rounding range */
-> +		ASSERT(offset + len <= rounding);
-This is false. (8K - 2) <= 4K -- Not so good.
+The original message was received at Thu, 22 Nov 2012 13:58:55 +0800
+from 218.80.250.34 [218.80.250.34]
 
-Maybe (2*rounding) would be better, as offset + len could never be
-greater than 2rounding (but can be greater than 1rounding). Or removing
-this assert altogether.
+   ----- The following addresses had permanent delivery errors -----
+huanminqi@gstonechina.com
 
-> +		error = xfs_iozero(ip, offset, len);
-> +		goto out_unlock;
-> +	}
-> +
-> +	/* now we've handled the interior of the range, handle the edges */
-> +	if (start != offset)
-> +		error = xfs_iozero(ip, offset, start - offset);
-> +	if (!error && end != offset + len)
-> +		error = xfs_iozero(ip, end, offset + len - end);
-This looks good.
-> +
-> +out_unlock:
-> +	if (!(attr_flags & XFS_ATTR_NOLOCK))
-> +		xfs_iunlock(ip, XFS_IOLOCK_EXCL);
-> +	return error;
-...
 
-Beyond that, I think it all looks good and like what you've done!
+--ARN51256.1353582295/mailmx.dns.com.cn
+Content-Type: message/delivery-status
 
-Thanks,
+Reporting-MTA: dns; mailmx.dns.com.cn
+Arrival-Date: Thu, 22 Nov 2012 13:58:55 +0800
 
-Andrew
+Final-Recipient: RFC822; huanminqi@gstonechina.com
+Action: failed
+Status: 4.4.7
+Last-Attempt-Date: Thu, 22 Nov 2012 19:04:55 +0800
+
+--ARN51256.1353582295/mailmx.dns.com.cn
+Content-Type: message/rfc822
+Content-Transfer-Encoding: 8bit
+
+Received: from 218.80.250.34 (EHLO oss.sgi.com) ([218.80.250.34])
+	by mailmx.dns.com.cn (MOS 4.3.3-GA FastPath queued)
+	with ESMTP id ARM73592;
+	Thu, 22 Nov 2012 13:58:54 +0800 (CST)
+From: linux-xfs@oss.sgi.com
+To: huanminqi@gstonechina.com
+Subject: Test
+Date: Thu, 22 Nov 2012 13:58:52 +0800
+X-Priority: 3
+X-MSMail-Priority: Normal
+X-Mailer: Microsoft Outlook Express 6.00.2600.0000
+X-MIMEOLE: Produced By Microsoft MimeOLE V6.00.2600.0000
+Message-Id: <201211220558.ARM73592@mailmx.dns.com.cn>
+X-Mirapoint-Virus: VIRUSFOUND;
+	host=mailmx.dns.com.cn;
+	attachment=[2.2];
+	virus=W32/MyDoom-N
+X-Mirapoint-Virus: VIRUSFOUND;
+	host=mailmx.dns.com.cn;
+	attachment=[2.2.2];
+	virus=W32/MyDoom-N
+X-Mirapoint-Virus: VIRUSFOUND;
+	host=mailmx.dns.com.cn;
+	attachment=[2.2.2.2];
+	virus=W32/MyDoom-N
+X-Mirapoint-Virus: VIRUSFOUND;
+	host=mailmx.dns.com.cn;
+	attachment=[2.2.2.2.2];
+	virus=W32/MyDoom-N
+X-Mirapoint-Virus: VIRUSFOUND;
+	host=mailmx.dns.com.cn;
+	attachment=[2.2.2.2.2.2];
+	virus=W32/MyDoom-N
+X-Mirapoint-Virus: VIRUSFOUND;
+	host=mailmx.dns.com.cn;
+	attachment=[2.2.2.2.2.2.2];
+	virus=W32/MyDoom-N
+X-Mirapoint-Virus: VIRUSFOUND;
+	host=mailmx.dns.com.cn;
+	attachment=[2.2.2.2.2.2.2.2];
+	virus=W32/MyDoom-N
+X-Mirapoint-Virus: VIRUSFOUND;
+	host=mailmx.dns.com.cn;
+	attachment=[2.2.2.2.2.2.2.2.2];
+	virus=W32/MyDoom-N
+X-Mirapoint-Virus: VIRUSFOUND;
+	host=mailmx.dns.com.cn;
+	attachment=[2.2.2.2.2.2.2.2.2.2];
+	virus=W32/MyDoom-N
+X-Mirapoint-Virus: VIRUSFOUND;
+	host=mailmx.dns.com.cn;
+	attachment=[2.2.2.2.2.2.2.2.2.2.2];
+	virus=W32/MyDoom-N
+X-Mirapoint-Virus: VIRUSFOUND;
+	host=mailmx.dns.com.cn;
+	attachment=[2.2.2.2.2.2.2.2.2.2.2.2];
+	virus=W32/MyDoom-N
+X-Mirapoint-Virus: VIRUSFOUND;
+	host=mailmx.dns.com.cn;
+	attachment=[2.2.2.2.2.2.2.2.2.2.2.2.2];
+	virus=W32/MyDoom-N
+X-Junkmail: UCE(300)
+X-Junkmail-Premium-Raw: score=83/59,
+	refid=2.7.2:2012.11.22.100916:17:83.889,
+	ip=218.80.250.34,
+	rules=__HAS_FROM,
+		NO_REAL_NAME,
+		__TO_MALFORMED_2,
+		__TO_NO_NAME,
+		SUBJ_1WORD,
+		__DATE_TZ_HK,
+		__MIME_VERSION,
+		__HAS_X_PRIORITY,
+		__HAS_MSMAIL_PRI,
+		__HAS_X_MAILER,
+		USER_AGENT_OE,
+		__OUTLOOK_MUA_1,
+		__USER_AGENT_MS_GENERIC,
+		__HAS_MSGID,
+		__SANE_MSGID,
+		__CT,
+		__CTYPE_HAS_BOUNDARY,
+		__CTYPE_MULTIPART,
+		__CTYPE_MULTIPART_MIXED,
+		KNOWN_SPAM_ATTACHMENTSIG[607cec47852e938f0c02006da898c256],
+		__ANY_URI,
+		CN_TLD,
+		__URI_NO_WWW,
+		__URI_NO_PATH,
+		__HIGHBITS,
+		__CHAR_CHINESE_UTF8,
+		BODY_SIZE_10000_PLUS,
+		BODYTEXTP_SIZE_3000_LESS,
+		RDNS_NXDOMAIN,
+		HTML_00_01,
+		HTML_00_10,
+		RDNS_SUSP_GENERIC,
+		LOCALE_CHINESE,
+		__OUTLOOK_MUA,
+		RDNS_SUSP,
+		FORGED_MUA_OUTLOOK
+X-Junkmail-Status: score=300/59, host=mailmx.dns.com.cn
+X-Junkmail-Signature-Raw: score=confirmed,
+	refid=str=0001.0A090206.50AE056C.0071,ss=4,sh,vtr=,vl=2,pt=DBB_65837,fgs=12,
+	ip=218.80.250.34,
+	so=2011-07-25 19:15:43,
+	dmn=2009-09-10 00:05:08,
+	mode=multiengine
+X-Junkmail-IWF: false
+Content-Transfer-Encoding: 8bit
+
+
+
+--ARN51256.1353582295/mailmx.dns.com.cn--
+
+
+--===============4567384780805586872==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============4567384780805586872==--
