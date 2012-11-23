@@ -1,21 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAN8vKbt050154 for <xfs@oss.sgi.com>; Fri, 23 Nov 2012 02:57:20 -0600
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	09jrfj3Kl3bgIbd0 for <xfs@oss.sgi.com>;
-	Fri, 23 Nov 2012 00:59:31 -0800 (PST)
-Date: Fri, 23 Nov 2012 19:59:30 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/3] xfs: byte range granularity for XFS_IOC_ZERO_RANGE
-Message-ID: <20121123085930.GF32450@dastard>
-References: <1353641065-14983-1-git-send-email-david@fromorbit.com>
-	<1353641065-14983-4-git-send-email-david@fromorbit.com>
-	<20121123083403.GB24938@infradead.org>
+	qANCZViu072433 for <xfs@oss.sgi.com>; Fri, 23 Nov 2012 06:35:31 -0600
+Date: Fri, 23 Nov 2012 07:37:40 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfstests: fix to build src/realpath and the correct the
+	existence of target devices
+Message-ID: <20121123123740.GA12150@infradead.org>
+References: <20121121135123.092349449@sgi.com>
+	<20121121135210.840563563@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20121123083403.GB24938@infradead.org>
+In-Reply-To: <20121121135210.840563563@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,70 +24,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: rjohnston@sgi.com
+Cc: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-On Fri, Nov 23, 2012 at 03:34:03AM -0500, Christoph Hellwig wrote:
-> On Fri, Nov 23, 2012 at 02:24:25PM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > XFS_IOC_ZERO_RANGE simply does not work properly for non page cache
-> > aligned ranges. Neither test 242 or 290 exercise this correctly, so
-> > the behaviour is completely busted even though the tests pass.
-> > 
-> > Fix it to support full byte range granularity as was originally
-> > intended for this ioctl.
+On Wed, Nov 21, 2012 at 07:51:24AM -0600, rjohnston@sgi.com wrote:
+> From: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
 > 
-> Looks good, but a couple cosmetic comments below:
+> Commit d5ea873f is not the same as the the following original Eric's patch.
 > 
-> > +	rounding = max_t(uint, 1 << mp->m_sb.sb_blocklog, PAGE_CACHE_SIZE);
+> http://oss.sgi.com/archives/xfs/2010-06/msg00080.html
 > 
-> I'd call this granularity.
-
-OK. I just copied that from the hole punch code. ;)
-
-> > +	/* round the range iof extents we are going to convert inwards */
-> > +	start = round_up(offset, rounding);
-> > +	end = round_down(offset + len, rounding);
+> It does not modify src/Makefile and realpath is never compiled.
 > 
-> start_boundary, end_boundary?
-
-OK.
-
-> > +	if (start < end - 1) {
-> > +		/* punch out the page cache over the conversion range */
-> > +		truncate_pagecache_range(VFS_I(ip), start, end - 1);
-> > +		/* convert the blocks */
-> > +		error = xfs_alloc_file_space(ip, start, end - start - 1,
-> > +				    XFS_BMAPI_PREALLOC | XFS_BMAPI_CONVERT,
-> > +				    attr_flags);
-> > +		if (error)
-> > +			goto out_unlock;
-> > +	} else {
-> > +		/* it's a sub-rounding range */
-> > +		ASSERT(offset + len <= start);
-> > +		error = xfs_iozero(ip, offset, len);
-> > +		goto out_unlock;
-> > +	}
-> > +
-> > +	/* now we've handled the interior of the range, handle the edges */
-> > +	if (start != offset)
-> > +		error = xfs_iozero(ip, offset, start - offset);
-> > +	if (!error && end != offset + len)
-> > +		error = xfs_iozero(ip, end, offset + len - end);
+> In addition, `[ -L $TEST_DEV ]' and `[ -L $SCRATCH_DEV ]' always returns 0
+> if $TEST_DEV or $SCRATCH_DEV are not defined.
 > 
-> I'd move the edge iozero calls into the if branch, that gives a natural
-> code flow and avoids the goto unlock in the sub-page case.
+> Cc: Eric Sandeen <sandeen@sandeen.net>
+> Cc: Rich Johnston <rjohnston@sgi.com>
 
-Sure. I added the sub-page case after the edge cases when I realised
-the edge cases didn't handle that. I'll rework it.
+Thanks for the fixes, this looks good.
 
-Cheers,
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
