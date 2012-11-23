@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qANLVeif119868
-	for <linux-xfs@oss.sgi.com>; Fri, 23 Nov 2012 15:31:40 -0600
+	qANLNYfi119123 for <xfs@oss.sgi.com>; Fri, 23 Nov 2012 15:23:34 -0600
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	1p3VAZC901tFfj5Y for <linux-xfs@oss.sgi.com>;
-	Fri, 23 Nov 2012 13:33:52 -0800 (PST)
-Date: Sat, 24 Nov 2012 08:33:50 +1100
+	4In4dQMkdpBsKYqS for <xfs@oss.sgi.com>;
+	Fri, 23 Nov 2012 13:25:46 -0800 (PST)
+Date: Sat, 24 Nov 2012 08:25:44 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: high load and xfsaild in d
-Message-ID: <20121123213350.GL32450@dastard>
-References: <sn23o9xkh3.ln2@goaway.wombat.san-francisco.ca.us>
-	<20121123025624.GC32450@dastard>
-	<uua3o9x9q5.ln2@goaway.wombat.san-francisco.ca.us>
-	<20121123053913.GD32450@dastard>
-	<fc25o9xgfg.ln2@goaway.wombat.san-francisco.ca.us>
+Subject: Re: [PATCH 06/32] xfs: use btree block initialisation functions in
+	growfs
+Message-ID: <20121123212544.GJ32450@dastard>
+References: <1352721264-3700-1-git-send-email-david@fromorbit.com>
+	<1352721264-3700-7-git-send-email-david@fromorbit.com>
+	<20121123124015.GB12150@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <fc25o9xgfg.ln2@goaway.wombat.san-francisco.ca.us>
+In-Reply-To: <20121123124015.GB12150@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,44 +29,76 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Keith Keller <kkeller@wombat.san-francisco.ca.us>
-Cc: linux-xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Fri, Nov 23, 2012 at 12:19:59PM -0800, Keith Keller wrote:
-> On 2012-11-23, Dave Chinner <david@fromorbit.com> wrote:
-> >
-> > Do whatever you want - you might be waiting a while for CentOS to
-> > fix it, though, because they don't fix user reported bugs. They just
-> > repackage whatever Red Hat releases as RHEL.
+On Fri, Nov 23, 2012 at 07:40:15AM -0500, Christoph Hellwig wrote:
+> On Mon, Nov 12, 2012 at 10:53:58PM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Factor xfs_btree_init_block() to be independent of the btree cursor,
+> > and use the function to initialise btree blocks in the growfs code.
+> > This makes adding support for different format btree blocks simple.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > ---
+> >  fs/xfs/xfs_btree.c |   33 ++++++++++++++++++++++++---------
+> >  fs/xfs/xfs_btree.h |   11 +++++++++++
+> >  fs/xfs/xfs_fsops.c |   37 +++++++++++++------------------------
+> >  3 files changed, 48 insertions(+), 33 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_btree.c b/fs/xfs/xfs_btree.c
+> > index e53e317..121ea99 100644
+> > --- a/fs/xfs/xfs_btree.c
+> > +++ b/fs/xfs/xfs_btree.c
+> > @@ -853,18 +853,22 @@ xfs_btree_set_sibling(
+> >  	}
+> >  }
+> >  
+> > -STATIC void
+> > +void
+> >  xfs_btree_init_block(
+> > -	struct xfs_btree_cur	*cur,
+> > -	int			level,
+> > -	int			numrecs,
+> > -	struct xfs_btree_block	*new)	/* new block */
+> > +	struct xfs_mount *mp,
+> > +	struct xfs_buf	*bp,
 > 
-> Yes, that's why I was asking--I was wondering whether it is safe to wait
-> for what could be some time for a) RHEL to decide to patch (if they do
-> so at all), b) RHEL to patch, and c) CentOS to patch.  IOW, is the high
-> load the only likely symptom of the originail aild patch, or are there
-> potentially other problems, such as performance degradation that I
-> haven't seen yet, that would make waiting for CentOS unwise?
+> Do we need the mount argument here?  bp->b_mount should always
+> be initialized.
 
-There is no side effect other than the load. There are not
-performance issues with the ailds behaving like this.
+Possible.
 
-> >> Do you know why I might not see this behavior on a different CentOS 6.x
-> >> kernel?
-> >> 
-> >> Linux xxxxxx 2.6.32-279.5.2.el6.x86_64 #1 SMP Fri Aug 24 01:07:11 UTC 2012 x86_64 x86_64 x86_64 GNU/Linux
-> >
-> > Because the log hang bug hadn't been fixed in that kernel.
+> > +	__u32		magic,
+> > +	__u16		level,
+> > +	__u16		numrecs,
+> > +	unsigned int	flags)
+> >  {
+> > -	new->bb_magic = cpu_to_be32(xfs_magics[cur->bc_btnum]);
+> > +	struct xfs_btree_block	*new = XFS_BUF_TO_BLOCK(bp);
 > 
-> This actually gives me some optimism that RHEL might introduce a new
-> kernel sooner rather than later--that kernel wasn't all that long ago,
-> and there have been quite a few (mostly unrelated) patches since.
+> Any reaosn not to pass the btree_block directly instead of the buffer?
 
-Doubt it. Given that I'm the RHEL XFS maintainer....
+CRC additions require the block number to be put into the structure,
+so we need to pass the buffer.
 
-> (That's why I was so surprised--I'm not used to the RHEL kernel moving
-> so quickly!)
+> 
+> > +STATIC void
+> > +xfs_btree_init_block_cur(
+> > +	struct xfs_btree_cur	*cur,
+> > +	int			level,
+> > +	int			numrecs,
+> > +	struct xfs_buf		*bp)
+> > +{
+> > +	xfs_btree_init_block(cur->bc_mp, bp, xfs_magics[cur->bc_btnum],
+> > +			       level, numrecs, cur->bc_flags);
+> 
+> I'd scrapt this helper.
 
-What, you're not used to having serious bugs fixed quickly? That's
-why people pay for RHEL...
+I only used it to avoid changing existing code. I can remove it when
+CRCs are introduced if you want, as this touches all this code
+again.
 
 Cheers,
 
