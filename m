@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAN0ldGT004824 for <xfs@oss.sgi.com>; Thu, 22 Nov 2012 18:47:39 -0600
-Date: Fri, 23 Nov 2012 11:49:37 +1100
+	qAN0xNDi005917 for <xfs@oss.sgi.com>; Thu, 22 Nov 2012 18:59:24 -0600
+Date: Fri, 23 Nov 2012 12:01:23 +1100
 From: Dave Chinner <dchinner@redhat.com>
-Subject: Re: [PATCH] xfs: fix attr tree double split corruption
-Message-ID: <20121123004937.GC18889@devil.redhat.com>
-References: <1353625175-29479-1-git-send-email-peterhuewe@gmx.de>
+Subject: Re: [PATCH] xfs: fix broken error handling in xfs_vm_writepage
+Message-ID: <20121123010123.GD18889@devil.redhat.com>
+References: <1353625410-1413-1-git-send-email-peterhuewe@gmx.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1353625175-29479-1-git-send-email-peterhuewe@gmx.de>
+In-Reply-To: <1353625410-1413-1-git-send-email-peterhuewe@gmx.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,44 +25,63 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Peter Huewe <peterhuewe@gmx.de>
 Cc: Ben Myers <bpm@sgi.com>, stable@vger.kernel.org, xfs@oss.sgi.com
 
-[added xfs@oss.sgi.com]
+[add xfs@oss.sgi.com cc]
 
-On Thu, Nov 22, 2012 at 11:59:35PM +0100, Peter Huewe wrote:
-> In certain circumstances, a double split of an attribute tree is
-> needed to insert or replace an attribute. In rare situations, this
-> can go wrong, leaving the attribute tree corrupted. In this case,
-> the attr being replaced is the last attr in a leaf node, and the
-> replacement is larger so doesn't fit in the same leaf node.
-> When we have the initial condition of a node format attribute
-> btree with two leaves at index 1 and 2. Call them L1 and L2.  The
-> leaf L1 is completely full, there is not a single byte of free space
-> in it. L2 is mostly empty.  The attribute being replaced - call it X
-> - is the last attribute in L1.
-
-Hi Peter,
-
-While I appreciate what you are doing here, can you please send
-stable backport patches to the xfs@oss.sgi.com list for review
-before sending them to stable@vger.kernel.org? There may already be
-someone doing this work, and we want to make sure that backports are
-correct, tested and worth the risk of fixing before asking the
-(already overworked) stable kernel maintainers to include it.
-
-As such, how did you test that the fix works on the stable kernels
-you are targetting? AFAIK, I'm the only person who has the
-filesystem images that reproducably triggered this corruption
-problem....
-
+On Fri, Nov 23, 2012 at 12:03:30AM +0100, Peter Huewe wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> When we shut down the filesystem, it might first be detected in
+> writeback when we are allocating a inode size transaction. This
+> happens after we have moved all the pages into the writeback state
+> and unlocked them. Unfortunately, if we fail to set up the
+> transaction we then abort writeback and try to invalidate the
+> current page. This then triggers are BUG() in block_invalidatepage()
+> because we are trying to invalidate an unlocked page.
+> 
+> Fixing this is a bit of a chicken and egg problem - we can't
+> allocate the transaction until we've clustered all the pages into
+> the IO and we know the size of it (i.e. whether the last block of
+> the IO is beyond the current EOF or not). However, we don't want to
+> hold pages locked for long periods of time, especially while we lock
+> other pages to cluster them into the write.
+> 
+> To fix this, we need to make a clear delineation in writeback where
+> errors can only be handled by IO completion processing. That is,
+> once we have marked a page for writeback and unlocked it, we have to
+> report errors via IO completion because we've already started the
+> IO. We may not have submitted any IO, but we've changed the page
+> state to indicate that it is under IO so we must now use the IO
+> completion path to report errors.
+> 
+> To do this, add an error field to xfs_submit_ioend() to pass it the
+> error that occurred during the building on the ioend chain. When
+> this is non-zero, mark each ioend with the error and call
+> xfs_finish_ioend() directly rather than building bios. This will
+> immediately push the ioends through completion processing with the
+> error that has occurred.
+> 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 > Signed-off-by: Ben Myers <bpm@sgi.com>
-> 
-> Cc: <stable@vger.kernel.org> # 3.6.x
-> Cc: <stable@vger.kernel.org> # 3.4.x
-> Cc: <stable@vger.kernel.org> # 3.2.x
 
-If we are pushing this fix back to stable kernels, then it
-should go back to 3.0.x as well.
+Any particular reason you picked this patch for a backport and not
+many of the other fixes that went into the 3.7 series?
+
+As it is, this problem is not that easy to hit, and I'm wary of
+backporting changes to the io completion/Io submission error
+handling paths to stable kernels without wider testing of the fix
+(i.e. release of 3.7 and then a couple of weeks of people using it).
+That's the reason why I didn't put a cc to the stable kernel on the
+commit in the first place.
+
+Sometimes there's good reason for being cautious about
+backporting fixes to stable kernels - if the problem is not being
+reported by users then letting the fixes get out into the real world
+for a while before backporting them to the stable kernels is the
+right approach. Stable kernels are supposed to be stable, and as
+such we want to be certain that changes are not going to have
+unintneded consequences and then have to rush more fixes back to the
+stable kernels because we broke them....
 
 Cheers,
 
