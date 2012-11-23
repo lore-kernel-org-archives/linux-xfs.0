@@ -1,17 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qANCZViu072433 for <xfs@oss.sgi.com>; Fri, 23 Nov 2012 06:35:31 -0600
-Date: Fri, 23 Nov 2012 07:37:40 -0500
+	qANCc4kk072854 for <xfs@oss.sgi.com>; Fri, 23 Nov 2012 06:38:04 -0600
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	7pt2S3oO0V7HXOEg (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 23 Nov 2012 04:40:16 -0800 (PST)
+Date: Fri, 23 Nov 2012 07:40:15 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfstests: fix to build src/realpath and the correct the
-	existence of target devices
-Message-ID: <20121123123740.GA12150@infradead.org>
-References: <20121121135123.092349449@sgi.com>
-	<20121121135210.840563563@sgi.com>
+Subject: Re: [PATCH 06/32] xfs: use btree block initialisation functions in
+	growfs
+Message-ID: <20121123124015.GB12150@infradead.org>
+References: <1352721264-3700-1-git-send-email-david@fromorbit.com>
+	<1352721264-3700-7-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20121121135210.840563563@sgi.com>
+In-Reply-To: <1352721264-3700-7-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,28 +30,65 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: rjohnston@sgi.com
-Cc: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, Nov 21, 2012 at 07:51:24AM -0600, rjohnston@sgi.com wrote:
-> From: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
+On Mon, Nov 12, 2012 at 10:53:58PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Commit d5ea873f is not the same as the the following original Eric's patch.
+> Factor xfs_btree_init_block() to be independent of the btree cursor,
+> and use the function to initialise btree blocks in the growfs code.
+> This makes adding support for different format btree blocks simple.
 > 
-> http://oss.sgi.com/archives/xfs/2010-06/msg00080.html
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_btree.c |   33 ++++++++++++++++++++++++---------
+>  fs/xfs/xfs_btree.h |   11 +++++++++++
+>  fs/xfs/xfs_fsops.c |   37 +++++++++++++------------------------
+>  3 files changed, 48 insertions(+), 33 deletions(-)
 > 
-> It does not modify src/Makefile and realpath is never compiled.
-> 
-> In addition, `[ -L $TEST_DEV ]' and `[ -L $SCRATCH_DEV ]' always returns 0
-> if $TEST_DEV or $SCRATCH_DEV are not defined.
-> 
-> Cc: Eric Sandeen <sandeen@sandeen.net>
-> Cc: Rich Johnston <rjohnston@sgi.com>
+> diff --git a/fs/xfs/xfs_btree.c b/fs/xfs/xfs_btree.c
+> index e53e317..121ea99 100644
+> --- a/fs/xfs/xfs_btree.c
+> +++ b/fs/xfs/xfs_btree.c
+> @@ -853,18 +853,22 @@ xfs_btree_set_sibling(
+>  	}
+>  }
+>  
+> -STATIC void
+> +void
+>  xfs_btree_init_block(
+> -	struct xfs_btree_cur	*cur,
+> -	int			level,
+> -	int			numrecs,
+> -	struct xfs_btree_block	*new)	/* new block */
+> +	struct xfs_mount *mp,
+> +	struct xfs_buf	*bp,
 
-Thanks for the fixes, this looks good.
+Do we need the mount argument here?  bp->b_mount should always
+be initialized.
 
+> +	__u32		magic,
+> +	__u16		level,
+> +	__u16		numrecs,
+> +	unsigned int	flags)
+>  {
+> -	new->bb_magic = cpu_to_be32(xfs_magics[cur->bc_btnum]);
+> +	struct xfs_btree_block	*new = XFS_BUF_TO_BLOCK(bp);
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Any reaosn not to pass the btree_block directly instead of the buffer?
+
+> +STATIC void
+> +xfs_btree_init_block_cur(
+> +	struct xfs_btree_cur	*cur,
+> +	int			level,
+> +	int			numrecs,
+> +	struct xfs_buf		*bp)
+> +{
+> +	xfs_btree_init_block(cur->bc_mp, bp, xfs_magics[cur->bc_btnum],
+> +			       level, numrecs, cur->bc_flags);
+
+I'd scrapt this helper.
 
 _______________________________________________
 xfs mailing list
