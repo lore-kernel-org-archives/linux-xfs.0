@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAN7g9fB042552 for <xfs@oss.sgi.com>; Fri, 23 Nov 2012 01:42:09 -0600
-Received: from smtpout17-01.prod.mesa1.secureserver.net
-	(smtpout17-01.prod.mesa1.secureserver.net [68.178.232.13]) by
-	cuda.sgi.com with SMTP id WYwCaTROsbiWvj4v for
-	<xfs@oss.sgi.com>; Thu, 22 Nov 2012 23:44:20 -0800 (PST)
-Received: from unknown (HELO linhost154.prod.mesa1.secureserver.net)
-	([68.178.211.40])
-	(envelope-sender <rimsdontstop@linhost154.prod.mesa1.secureserver.net>)
-	by smtpout17-01.prod.mesa1.secureserver.net (qmail-ldap-1.03) with SMTP
-	for <xfs@oss.sgi.com>; 23 Nov 2012 07:44:16 -0000
-Received: from linhost154.prod.mesa1.secureserver.net (localhost [127.0.0.1])
-	by linhost154.prod.mesa1.secureserver.net (8.13.8/8.12.11) with
-	ESMTP id qAN7GYQg031238
-	for <xfs@oss.sgi.com>; Fri, 23 Nov 2012 00:44:16 -0700
-Date: Mon, 19 Nov 2012 13:15:50 -0700
-Message-Id: <201211192015.qAJKFoeU012020@linhost154.prod.mesa1.secureserver.net>
-Subject: полTора меc€ца сброcиTь Bес без м€са ...!1
-From: irinka_2001@mail.ru
+	qAN8T2rn047945 for <xfs@oss.sgi.com>; Fri, 23 Nov 2012 02:29:02 -0600
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	puszVFB0rZ67z0XP (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 23 Nov 2012 00:31:14 -0800 (PST)
+Date: Fri, 23 Nov 2012 03:31:13 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 2/3] xfs: fix direct IO nested transaction deadlock.
+Message-ID: <20121123083113.GA24938@infradead.org>
+References: <1353641065-14983-1-git-send-email-david@fromorbit.com>
+	<1353641065-14983-3-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1353641065-14983-3-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,14 +25,16 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-www.tl-webdevelopment.nl/pic/cxz
+Looks good,
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
