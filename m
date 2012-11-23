@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAN8VsX4048253 for <xfs@oss.sgi.com>; Fri, 23 Nov 2012 02:31:55 -0600
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	6tEWqgv3rbU5HAEH (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 23 Nov 2012 00:34:04 -0800 (PST)
-Date: Fri, 23 Nov 2012 03:34:03 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/3] xfs: byte range granularity for XFS_IOC_ZERO_RANGE
-Message-ID: <20121123083403.GB24938@infradead.org>
-References: <1353641065-14983-1-git-send-email-david@fromorbit.com>
-	<1353641065-14983-4-git-send-email-david@fromorbit.com>
+	qAN8rGsu049728 for <xfs@oss.sgi.com>; Fri, 23 Nov 2012 02:53:16 -0600
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	XwjFUisNqJkRBIjx for <xfs@oss.sgi.com>;
+	Fri, 23 Nov 2012 00:55:27 -0800 (PST)
+Date: Fri, 23 Nov 2012 19:55:23 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: fix attr tree double split corruption
+Message-ID: <20121123085523.GE32450@dastard>
+References: <1353625175-29479-1-git-send-email-peterhuewe@gmx.de>
+	<20121123004937.GC18889@devil.redhat.com>
+	<201211230832.44881.PeterHuewe@gmx.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1353641065-14983-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <201211230832.44881.PeterHuewe@gmx.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,59 +24,145 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Peter =?iso-8859-1?Q?H=FCwe?= <PeterHuewe@gmx.de>
+Cc: Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com, stable@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-On Fri, Nov 23, 2012 at 02:24:25PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> XFS_IOC_ZERO_RANGE simply does not work properly for non page cache
-> aligned ranges. Neither test 242 or 290 exercise this correctly, so
-> the behaviour is completely busted even though the tests pass.
-> 
-> Fix it to support full byte range granularity as was originally
-> intended for this ioctl.
+On Fri, Nov 23, 2012 at 08:32:44AM +0100, Peter H=FCwe wrote:
+> Hi David,
+> =
 
-Looks good, but a couple cosmetic comments below:
+> thanks for your response!
+> Am Freitag, 23. November 2012, 01:49:37 schrieb Dave Chinner:
+> > [added xfs@oss.sgi.com]
+> > =
 
-> +	rounding = max_t(uint, 1 << mp->m_sb.sb_blocklog, PAGE_CACHE_SIZE);
+> > On Thu, Nov 22, 2012 at 11:59:35PM +0100, Peter Huewe wrote:
+> > =
 
-I'd call this granularity.
+> > Hi Peter,
+> > =
 
-> +	/* round the range iof extents we are going to convert inwards */
-> +	start = round_up(offset, rounding);
-> +	end = round_down(offset + len, rounding);
+> > While I appreciate what you are doing here, can you please send
+> > stable backport patches to the xfs@oss.sgi.com list for review
+> > before sending them to stable@vger.kernel.org? There may already be
+> > someone doing this work, and we want to make sure that backports are
+> > correct, tested and worth the risk of fixing before asking the
+> > (already overworked) stable kernel maintainers to include it.
+> =
 
-start_boundary, end_boundary?
+> Yeah you're right, especially with fs changes we should be more cautious, =
 
-> +	if (start < end - 1) {
-> +		/* punch out the page cache over the conversion range */
-> +		truncate_pagecache_range(VFS_I(ip), start, end - 1);
-> +		/* convert the blocks */
-> +		error = xfs_alloc_file_space(ip, start, end - start - 1,
-> +				    XFS_BMAPI_PREALLOC | XFS_BMAPI_CONVERT,
-> +				    attr_flags);
-> +		if (error)
-> +			goto out_unlock;
-> +	} else {
-> +		/* it's a sub-rounding range */
-> +		ASSERT(offset + len <= start);
-> +		error = xfs_iozero(ip, offset, len);
-> +		goto out_unlock;
-> +	}
-> +
-> +	/* now we've handled the interior of the range, handle the edges */
-> +	if (start != offset)
-> +		error = xfs_iozero(ip, offset, start - offset);
-> +	if (!error && end != offset + len)
-> +		error = xfs_iozero(ip, end, offset + len - end);
+> sorry about the noise then.
 
-I'd move the edge iozero calls into the if branch, that gives a natural
-code flow and avoids the goto unlock in the sub-page case.
+It's not noise, just an opportunity to sort a a good process ;)
+
+> I'm one of the few people who offered Greg KH a hand after his 'help want=
+ed' =
+
+> message/blog post and one of the 'todos' was to look through git-commits@=
+ and =
+
+> pick those who look worth of including into stable.
+
+That's great to hear.
+
+> I was probably a bit too eager here, and skimming from top to bottom of g=
+it-
+> commits might also not have been a really good idea either ;)
+
+Probably not. But like I said, this is an opportunity....
+
+> > As such, how did you test that the fix works on the stable kernels
+> > you are targetting? AFAIK, I'm the only person who has the
+> > filesystem images that reproducably triggered this corruption
+> > problem....
+> =
+
+> I was mainly looking at:
+> - does it apply cleanly
+> - does it still boot
+> - basic functional test
+> - short review of the affected code after applying the patch i.e. does it=
+ still =
+
+> look okay/as intended?
+
+I can see that this is a good process for most changes, especially
+for drivers and non-core functionality where mistakes won't cause
+permanent or unrecoverable damage.
+
+Filesystems, though, are a slightly different case - make a mistake,
+you can corrupt and/or lose people's data. That's what we need to
+avoid at all costs. Hence there's a higher bar for backports and
+it pays to involve the guys in the trenches when deciding what to
+backport.
+
+I'll give you an idea of my normal process for doing a backport to
+stable:
+
+1. identify backport candidates based on how critical the bug is,
+risk of regression, how certain I am that the problem properly
+fixed, etc.
+1a. let people know I'm doing this
+2. do the set of backports
+3. run xfstests several times, a couple of load tests (e.g. dbench,
+compilebench, fsmark for a couple of hours each). Generally I get
+24hrs of testing on backports before moving onwards...
+4. post the backport for review. If there are multiple versions for
+different stable kernels, they all get sent for review (rare). If
+the code is already tested and very little change from upstream is
+needed, then I'll cc stable@vger.kernel.org at this point too.
+5. after review, send to stable@....
+
+We do send some stuff to stable via CC's in commit messages - they
+typically aren't the complex fixes that we are cautious about,
+though.
+
+Essentially, 1a and 3 are the main things I'm concerned about -
+knowing what is going on and what testing has been done. If you are
+unsure/scared by the testing requirements, I'm sure that if you ask
+nicely one of us will be able to do a test cycle as part of the
+review process. :)
+
+> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > > Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+> > > Signed-off-by: Ben Myers <bpm@sgi.com>
+> > > =
+
+> > > Cc: <stable@vger.kernel.org> # 3.6.x
+> > > Cc: <stable@vger.kernel.org> # 3.4.x
+> > > Cc: <stable@vger.kernel.org> # 3.2.x
+> > =
+
+> > If we are pushing this fix back to stable kernels, then it
+> > should go back to 3.0.x as well.
+> =
+
+> 3.0.x failed my first test (does it apply cleanly?) so I left it out, as =
+a =
+
+> dedicated backport is needed.
+
+And we can help with that. If you want learn a lot quickly, then
+doing these sorts of backports is a fine way to acheive that.
+
+I'd really, really like what you are doing to work - keeping track
+of all the stable kernels and what is in them and what has/hasn't
+been back ported is more that I can keep up with (and I've got
+distro kernels to worry about, too). Any help we can get would be
+greatly appreciated.
+
+Cheers,
+
+Dave.
+-- =
+
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
