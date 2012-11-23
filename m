@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qANCc4kk072854 for <xfs@oss.sgi.com>; Fri, 23 Nov 2012 06:38:04 -0600
+	qANCd8k6073091 for <xfs@oss.sgi.com>; Fri, 23 Nov 2012 06:39:08 -0600
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	7pt2S3oO0V7HXOEg (version=TLSv1 cipher=AES256-SHA bits=256
+	E5nhCuYDBCOfr2yi (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 23 Nov 2012 04:40:16 -0800 (PST)
-Date: Fri, 23 Nov 2012 07:40:15 -0500
+	Fri, 23 Nov 2012 04:41:20 -0800 (PST)
+Date: Fri, 23 Nov 2012 07:41:19 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 06/32] xfs: use btree block initialisation functions in
-	growfs
-Message-ID: <20121123124015.GB12150@infradead.org>
+Subject: Re: [PATCH 08/32] xfs: make growfs initialise the AGFL header
+Message-ID: <20121123124119.GC12150@infradead.org>
 References: <1352721264-3700-1-git-send-email-david@fromorbit.com>
-	<1352721264-3700-7-git-send-email-david@fromorbit.com>
+	<1352721264-3700-9-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1352721264-3700-7-git-send-email-david@fromorbit.com>
+In-Reply-To: <1352721264-3700-9-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,62 +32,25 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Nov 12, 2012 at 10:53:58PM +1100, Dave Chinner wrote:
+On Mon, Nov 12, 2012 at 10:54:00PM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> Factor xfs_btree_init_block() to be independent of the btree cursor,
-> and use the function to initialise btree blocks in the growfs code.
-> This makes adding support for different format btree blocks simple.
+> For verification purposes, AGFLs need to be initialised to a known
+> set of values. For upcoming CRC changes, they are also headers that
+> need to be initialised. Currently, growfs does neither for the AGFLs
+> - it ignores them completely. Add initialisation of the AGFL to be
+> full of invalid block numbers (NULLAGBLOCK) to put the
+> infrastructure in place needed for CRC support.
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_btree.c |   33 ++++++++++++++++++++++++---------
->  fs/xfs/xfs_btree.h |   11 +++++++++++
->  fs/xfs/xfs_fsops.c |   37 +++++++++++++------------------------
->  3 files changed, 48 insertions(+), 33 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_btree.c b/fs/xfs/xfs_btree.c
-> index e53e317..121ea99 100644
-> --- a/fs/xfs/xfs_btree.c
-> +++ b/fs/xfs/xfs_btree.c
-> @@ -853,18 +853,22 @@ xfs_btree_set_sibling(
->  	}
->  }
->  
-> -STATIC void
-> +void
->  xfs_btree_init_block(
-> -	struct xfs_btree_cur	*cur,
-> -	int			level,
-> -	int			numrecs,
-> -	struct xfs_btree_block	*new)	/* new block */
-> +	struct xfs_mount *mp,
-> +	struct xfs_buf	*bp,
+> Includes a comment clarification from Jeff Liu.
 
-Do we need the mount argument here?  bp->b_mount should always
-be initialized.
+Looks good.
 
-> +	__u32		magic,
-> +	__u16		level,
-> +	__u16		numrecs,
-> +	unsigned int	flags)
->  {
-> -	new->bb_magic = cpu_to_be32(xfs_magics[cur->bc_btnum]);
-> +	struct xfs_btree_block	*new = XFS_BUF_TO_BLOCK(bp);
+If you plan to touch this code even more I'd suggst splitting out a
+helper for each kinda of block / header that is initialized from
+xfs_growfs_data_private.
 
-Any reaosn not to pass the btree_block directly instead of the buffer?
-
-> +STATIC void
-> +xfs_btree_init_block_cur(
-> +	struct xfs_btree_cur	*cur,
-> +	int			level,
-> +	int			numrecs,
-> +	struct xfs_buf		*bp)
-> +{
-> +	xfs_btree_init_block(cur->bc_mp, bp, xfs_magics[cur->bc_btnum],
-> +			       level, numrecs, cur->bc_flags);
-
-I'd scrapt this helper.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
