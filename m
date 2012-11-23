@@ -1,20 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAN1j56Z009838 for <xfs@oss.sgi.com>; Thu, 22 Nov 2012 19:45:05 -0600
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	vxrPbqS7yhbEdm4v for <xfs@oss.sgi.com>;
-	Thu, 22 Nov 2012 17:47:16 -0800 (PST)
-Date: Fri, 23 Nov 2012 12:47:14 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] xfs: fix the buffer log format for contiguous buffers
-Message-ID: <20121123014714.GB32450@dastard>
-References: <20121120224120.224166649@sgi.com>
-	<20121120224146.479983109@sgi.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20121120224146.479983109@sgi.com>
+	qAN2CQPW012303
+	for <linux-xfs@oss.sgi.com>; Thu, 22 Nov 2012 20:12:27 -0600
+Received: from plane.gmane.org (plane.gmane.org [80.91.229.3]) by cuda.sgi.com
+	with ESMTP id iknAcoGCmT4vdg09 (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <linux-xfs@oss.sgi.com>;
+	Thu, 22 Nov 2012 18:14:37 -0800 (PST)
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1Tbin0-0004HK-4o
+	for linux-xfs@oss.sgi.com; Fri, 23 Nov 2012 03:14:46 +0100
+Received: from wombat.san-francisco.ca.us ([75.101.60.140])
+	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+	id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Fri, 23 Nov 2012 03:14:46 +0100
+Received: from kkeller by wombat.san-francisco.ca.us with local (Gmexim 0.1
+	(Debian)) id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Fri, 23 Nov 2012 03:14:46 +0100
+From: Keith Keller <kkeller@wombat.san-francisco.ca.us>
+Subject: high load and xfsaild in d
+Date: Thu, 22 Nov 2012 18:13:48 -0800
+Message-ID: <sn23o9xkh3.ln2@goaway.wombat.san-francisco.ca.us>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,150 +34,55 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-On Tue, Nov 20, 2012 at 04:41:22PM -0600, Mark Tinguely wrote:
-> A few buffer log format clean-ups for contiguous buffers.
-> 
-> In xfs_buf_item_format_segment(), when a segment is not dirty in
-> the transaction, do not increment format vector pointer.
-> 
-> In xfs_buf_item_unlock(), every segment must be empty before
-> considering the buf item empty.
-> 
-> In xfs_trans_binval(), clear the correct buffer log format structure.
-> 
-> Signed-off-by: Mark Tinguely <tinguely@sgi.com>
-> 
-> ---
->  fs/xfs/xfs_buf_item.c  |   32 +++++++++++++++++++++++---------
->  fs/xfs/xfs_trans_buf.c |    4 ++--
->  2 files changed, 25 insertions(+), 11 deletions(-)
-> 
-> Index: b/fs/xfs/xfs_buf_item.c
-> ===================================================================
-> --- a/fs/xfs/xfs_buf_item.c
-> +++ b/fs/xfs/xfs_buf_item.c
-> @@ -71,7 +71,7 @@ xfs_buf_item_log_debug(
->  		chunk_num = byte >> XFS_BLF_SHIFT;
->  		word_num = chunk_num >> BIT_TO_WORD_SHIFT;
->  		bit_num = chunk_num & (NBWORD - 1);
-> -		wordp = &(bip->bli_format.blf_data_map[word_num]);
-> +		wordp = &(bip->bli_formats[0].blf_data_map[word_num]);
->  		bit_set = *wordp & (1 << bit_num);
->  		ASSERT(bit_set);
->  		byte++;
+Hello all,
 
-This debug code is a lot more broken than just this. It's completely
-unaware of discontiguous buffers....
+I recently deployed a new CentOS 6.3 file server, and soon after I
+noticed that the load was consistenly at around 4, even with no obvious
+activity.  After checking around a bit, the only unusual thing I could
+find is that the xfsaild threads are all consistently in D state:
 
-I'm wondering if we should just remove the XFS_TRANS_DEBUG code
-because it doesn't ever get used....
+root      1744  0.0  0.0      0     0 ?        D    Nov16   7:46 [xfsaild/dm-2]
+root      1756  0.0  0.0      0     0 ?        D    Nov16   7:44 [xfsaild/dm-1]
+root      1759  0.0  0.0      0     0 ?        D    Nov16   7:57 [xfsaild/dm-3]
+root      1762  0.0  0.0      0     0 ?        D    Nov16   5:59 [xfsaild/dm-0]
 
-> @@ -290,8 +290,6 @@ xfs_buf_item_format_segment(
->  	vecp->i_addr = blfp;
->  	vecp->i_len = base_size;
->  	vecp->i_type = XLOG_REG_TYPE_BFORMAT;
-> -	vecp++;
-> -	nvecs = 1;
->  
->  	if (bip->bli_flags & XFS_BLI_STALE) {
->  		/*
-> @@ -301,7 +299,8 @@ xfs_buf_item_format_segment(
->  		 */
->  		trace_xfs_buf_item_format_stale(bip);
->  		ASSERT(blfp->blf_flags & XFS_BLF_CANCEL);
-> -		blfp->blf_size = nvecs;
-> +		vecp++;
-> +		blfp->blf_size = 1;
->  		return vecp;
->  	}
+On another CentOS 6.2 box, I don't see this symptom; the xfsaild threads
+are all in S state.  I checked around for many other things that I'd
+normally expect to be pegging the load, but didn't find anything out of
+the ordinary.  (See
+https://groups.google.com/group/comp.os.linux.misc/browse_thread/thread/c9b2a1d60eb25fac
+for more details.)
 
-I don't really like this separation of the blf vector initialisation
-and the decision to use the vector. If we are not going to use it,
-then we should really be initialising it.....
+The new box is an up to date CentOS 6.3 box with the stock kernel:
 
->  
-> @@ -309,7 +308,16 @@ xfs_buf_item_format_segment(
->  	 * Fill in an iovec for each set of contiguous chunks.
->  	 */
->  	first_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size, 0);
-> -	ASSERT(first_bit != -1);
-> +	if (first_bit == -1) {
-> +		/* If the map is not be dirty in the transaction, mark
-> +		 * the size as zero and do not advance the vector pointer.
-> +		 */
-> +		blfp->blf_size = 0;
-> +		return(vecp);
-> +	}
+Linux xxxxxxxx 2.6.32-279.14.1.el6.x86_64 #1 SMP Tue Nov 6 23:43:09 UTC 2012 x86_64 x86_64 x86_64 GNU/Linux
 
-Indeed, if this is the last segment in the discontiguous buffer,
-the above vecp initialisation could be writing beyond then end of
-the vector space that has been allocated. i.e. we should only
-initialise it if we are going to consume the vector.
+The storage backends are a software RAID1 (three of the filesystems) and
+a 3ware 9750-backed 11-disk RAID6.  I don't have any unusual mount
+options, and the filesystems were created with mkfs.xfs with no options.
 
+I searched the web and the list archives, and did find some issues with
+xfsaild, but they all either seemed out of date (one thread mentioned
+that an issue would be fixed in 2.6.30) or with more complicated
+symptoms (other processes hanging in D state).  But this server seems
+perfectly fine from what I can tell; I've noticed no performance issues
+either in informal observations or with actual measured read/write
+speeds, and the smbd and nfsd processes are all generally in S, so they
+are not waiting on IO.
 
-> @@ -601,7 +609,7 @@ xfs_buf_item_unlock(
->  {
->  	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
->  	struct xfs_buf		*bp = bip->bli_buf;
-> -	int			aborted;
-> +	int			aborted, empty, i;
->  	uint			hold;
->  
->  	/* Clear the buffer's association with this transaction. */
-> @@ -644,8 +652,14 @@ xfs_buf_item_unlock(
->  	 * If the buf item isn't tracking any data, free it, otherwise drop the
->  	 * reference we hold to it.
->  	 */
-> -	if (xfs_bitmap_empty(bip->bli_format.blf_data_map,
-> -			     bip->bli_format.blf_map_size))
-> +	empty = 1;
-> +	for (i = 0; i < bip->bli_format_count; i++)
-> +		if (!xfs_bitmap_empty(bip->bli_formats[i].blf_data_map,
-> +			     bip->bli_formats[i].blf_map_size)) {
-> +			empty = 0;
-> +			break;
-> +		}
+The big question is, is this actually a problem, or is it nothing to
+worry about?  If it's a problem, is it in XFS, or if not, what other
+steps can I take to try to determine the root cause?
 
-Landmine warning!
+Thanks,
 
-Please put {} around the body of the for loop.
+--keith
 
-FWIW this is a separate problem so it should be in it's own patch.
-
-> +	if (empty)
->  		xfs_buf_item_relse(bp);
->  	else
->  		atomic_dec(&bip->bli_refcount);
-> Index: b/fs/xfs/xfs_trans_buf.c
-> ===================================================================
-> --- a/fs/xfs/xfs_trans_buf.c
-> +++ b/fs/xfs/xfs_trans_buf.c
-> @@ -670,8 +670,8 @@ xfs_trans_binval(
->  	bip->bli_flags &= ~(XFS_BLI_INODE_BUF | XFS_BLI_LOGGED | XFS_BLI_DIRTY);
->  	bip->bli_format.blf_flags &= ~XFS_BLF_INODE_BUF;
->  	bip->bli_format.blf_flags |= XFS_BLF_CANCEL;
-> -	memset((char *)(bip->bli_format.blf_data_map), 0,
-> -	      (bip->bli_format.blf_map_size * sizeof(uint)));
-> +	memset((char *)(bip->bli_formats[0].blf_data_map), 0,
-> +	      (bip->bli_formats[0].blf_map_size * sizeof(uint)));
-
-This is also wrong. i.e. Why is the code only zeroing a single map
-and not all maps? If the above xfs_bitmap_empty() check is checking
-all the segments, then we have to ensure that we zero all the
-segments here.  This is why the current code works and doesn't cause
-problems - matching bugs that cancel each other out - but only
-fixing one of the bugs will cause regressions. This should also be
-in the patch that fixes the xfs_bitmap_empty() problem.
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+kkeller@wombat.san-francisco.ca.us
+
 
 _______________________________________________
 xfs mailing list
