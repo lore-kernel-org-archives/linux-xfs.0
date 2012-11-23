@@ -1,18 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAN7XU0u041525 for <xfs@oss.sgi.com>; Fri, 23 Nov 2012 01:33:30 -0600
-Received: from mailout-de.gmx.net (mailout-de.gmx.net [213.165.64.22]) by
-	cuda.sgi.com with SMTP id LY6x2MQ2xDr1ubM3 for
-	<xfs@oss.sgi.com>; Thu, 22 Nov 2012 23:35:41 -0800 (PST)
-From: Peter =?iso-8859-1?q?H=FCwe?= <PeterHuewe@gmx.de>
-Subject: Re: [PATCH] xfs: fix broken error handling in xfs_vm_writepage
-Date: Fri, 23 Nov 2012 08:44:22 +0100
-References: <1353625410-1413-1-git-send-email-peterhuewe@gmx.de>
-	<20121123010123.GD18889@devil.redhat.com>
-In-Reply-To: <20121123010123.GD18889@devil.redhat.com>
+	qAN7YwZf041675 for <xfs@oss.sgi.com>; Fri, 23 Nov 2012 01:34:59 -0600
+Date: Fri, 23 Nov 2012 02:37:09 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 2/2] xfs: fix the buffer log format for contiguous buffers
+Message-ID: <20121123073708.GA5159@infradead.org>
+References: <20121120224120.224166649@sgi.com>
+	<20121120224146.479983109@sgi.com> <20121123014714.GB32450@dastard>
 MIME-Version: 1.0
-Message-Id: <201211230844.22438.PeterHuewe@gmx.de>
+Content-Disposition: inline
+In-Reply-To: <20121123014714.GB32450@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,49 +23,18 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <dchinner@redhat.com>
-Cc: Ben Myers <bpm@sgi.com>, stable@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
 
-Hi Dave,
-
-Am Freitag, 23. November 2012, 02:01:23 schrieb Dave Chinner:
-> Any particular reason you picked this patch for a backport and not
-> many of the other fixes that went into the 3.7 series?
-
-Mainly two reasons:
-time and before spending many hours trying to 'backport' all this stuff, I first 
-wanted to see what the response would be like in general.
-I'm still new to the stable kernel business, so I already expected that there 
-will be some learning curve ;)
-
-Maybe I should add a "Learners Sticker" to my first xx stable related messages 
-:P
-
-So I really appreciate your feedback.
-
-
+On Fri, Nov 23, 2012 at 12:47:14PM +1100, Dave Chinner wrote:
+> This debug code is a lot more broken than just this. It's completely
+> unaware of discontiguous buffers....
 > 
-> As it is, this problem is not that easy to hit, and I'm wary of
-> backporting changes to the io completion/Io submission error
-> handling paths to stable kernels without wider testing of the fix
-> (i.e. release of 3.7 and then a couple of weeks of people using it).
-> That's the reason why I didn't put a cc to the stable kernel on the
-> commit in the first place.
-> 
-> Sometimes there's good reason for being cautious about
-> backporting fixes to stable kernels - if the problem is not being
-> reported by users then letting the fixes get out into the real world
-> for a while before backporting them to the stable kernels is the
-> right approach. Stable kernels are supposed to be stable, and as
-> such we want to be certain that changes are not going to have
-> unintneded consequences and then have to rush more fixes back to the
-> stable kernels because we broke them....
+> I'm wondering if we should just remove the XFS_TRANS_DEBUG code
+> because it doesn't ever get used....
 
-As stated in the other mail, I was a bit too eager here as well ;)
-We should probably wait with the inclusion - so sorry for the noise.
-
-Thanks,
-PeterH
+As far as I know it has been unused since I started working on XFS,
+so removing it sounds fine to me.
 
 _______________________________________________
 xfs mailing list
