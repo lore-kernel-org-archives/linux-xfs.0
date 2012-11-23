@@ -1,19 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAMNZn3J260487 for <xfs@oss.sgi.com>; Thu, 22 Nov 2012 17:35:49 -0600
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	qKIjTqBvHRkG9sEt for <xfs@oss.sgi.com>;
-	Thu, 22 Nov 2012 15:37:59 -0800 (PST)
-Date: Fri, 23 Nov 2012 10:37:57 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [BUG] xfs_quota: can't handle the users managed by LDAP
-Message-ID: <20121122233757.GY2591@dastard>
-References: <50ADB27F.8070806@jp.fujitsu.com>
+	qAN0ldGT004824 for <xfs@oss.sgi.com>; Thu, 22 Nov 2012 18:47:39 -0600
+Date: Fri, 23 Nov 2012 11:49:37 +1100
+From: Dave Chinner <dchinner@redhat.com>
+Subject: Re: [PATCH] xfs: fix attr tree double split corruption
+Message-ID: <20121123004937.GC18889@devil.redhat.com>
+References: <1353625175-29479-1-git-send-email-peterhuewe@gmx.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <50ADB27F.8070806@jp.fujitsu.com>
+In-Reply-To: <1353625175-29479-1-git-send-email-peterhuewe@gmx.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,45 +22,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
-Cc: xfs ML <xfs@oss.sgi.com>
+To: Peter Huewe <peterhuewe@gmx.de>
+Cc: Ben Myers <bpm@sgi.com>, stable@vger.kernel.org, xfs@oss.sgi.com
 
-On Thu, Nov 22, 2012 at 02:05:03PM +0900, Satoru Takeuchi wrote:
-> Hi,
-> 
-> Current xfs_quota (I pulled xfsprogs today) seems not be able to the users
-> managed by LDAP. There is no patch since I'm not good at LDAP and don't know
-> the root cause yet ;-(
-> 
-> Step to reproduce(in this case, "sat" is the user managed by LDAP):
-> ===============================================================================
-> # uname -r
-> 3.7.0-rc5
-> # mount -o loop,usrquota xfs.img mnt
-> # xfsprogs/quota/xfs_quota -xc "limit bsoft=10M bhard=10M sat" /dev/loop0
-> xfs_quota: invalid user name: sat                                          # denied
-> # su sat
-> $                                                                          # But this user acutally exists.
-> ===============================================================================
-> 
-> The kernel is a bit old, but I suspect this is a userland problem.
+[added xfs@oss.sgi.com]
 
-Yes, userland.
+On Thu, Nov 22, 2012 at 11:59:35PM +0100, Peter Huewe wrote:
+> In certain circumstances, a double split of an attribute tree is
+> needed to insert or replace an attribute. In rare situations, this
+> can go wrong, leaving the attribute tree corrupted. In this case,
+> the attr being replaced is the last attr in a leaf node, and the
+> replacement is larger so doesn't fit in the same leaf node.
+> When we have the initial condition of a node format attribute
+> btree with two leaves at index 1 and 2. Call them L1 and L2.  The
+> leaf L1 is completely full, there is not a single byte of free space
+> in it. L2 is mostly empty.  The attribute being replaced - call it X
+> - is the last attribute in L1.
 
-However, xfs_quota is not supposed to know about LDAP, or NIS, or
-any other user database. It uses the getpwnam() to convert the user
-name to a UID, and that call is failing to find "sat". This is
-supposed to work with LDAP (as mentioned in the man page), and if it
-isn't it generally means something is broken with your LDAP setup
-(/etc/nsswitch.conf not correct?) rather than there being something
-wrong with xfs_quota....
+Hi Peter,
+
+While I appreciate what you are doing here, can you please send
+stable backport patches to the xfs@oss.sgi.com list for review
+before sending them to stable@vger.kernel.org? There may already be
+someone doing this work, and we want to make sure that backports are
+correct, tested and worth the risk of fixing before asking the
+(already overworked) stable kernel maintainers to include it.
+
+As such, how did you test that the fix works on the stable kernels
+you are targetting? AFAIK, I'm the only person who has the
+filesystem images that reproducably triggered this corruption
+problem....
+
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+> Signed-off-by: Ben Myers <bpm@sgi.com>
+> 
+> Cc: <stable@vger.kernel.org> # 3.6.x
+> Cc: <stable@vger.kernel.org> # 3.4.x
+> Cc: <stable@vger.kernel.org> # 3.2.x
+
+If we are pushing this fix back to stable kernels, then it
+should go back to 3.0.x as well.
 
 Cheers,
 
 Dave.
 -- 
 Dave Chinner
-david@fromorbit.com
+dchinner@redhat.com
 
 _______________________________________________
 xfs mailing list
