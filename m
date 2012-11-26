@@ -1,19 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAQ1bR3Y132944 for <xfs@oss.sgi.com>; Sun, 25 Nov 2012 19:37:27 -0600
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	CI2ZnUmYygEl9ZwS for <xfs@oss.sgi.com>;
-	Sun, 25 Nov 2012 17:39:40 -0800 (PST)
-Date: Mon, 26 Nov 2012 12:39:31 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: How to run xfstests against btrfs on multipath disks on SuSE?
-Message-ID: <20121126013931.GN32450@dastard>
-References: <CAPxxNQ=SRZ33U8nLjK8a3+MPfy3Qz98ALcALXWK_x=dmW9+BoA@mail.gmail.com>
+	qAQ6NL0Y158514 for <xfs@oss.sgi.com>; Mon, 26 Nov 2012 00:23:22 -0600
+Received: from fgwmail5.fujitsu.co.jp (fgwmail5.fujitsu.co.jp [192.51.44.35])
+	by cuda.sgi.com with ESMTP id 4bDQXYp60VlsbFVr (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 25 Nov 2012 22:25:36 -0800 (PST)
+Received: from m1.gw.fujitsu.co.jp (unknown [10.0.50.71])
+	by fgwmail5.fujitsu.co.jp (Postfix) with ESMTP id 3D1343EE0BC
+	for <xfs@oss.sgi.com>; Mon, 26 Nov 2012 15:25:34 +0900 (JST)
+Received: from smail (m1 [127.0.0.1])
+	by outgoing.m1.gw.fujitsu.co.jp (Postfix) with ESMTP id 250E845DE58
+	for <xfs@oss.sgi.com>; Mon, 26 Nov 2012 15:25:34 +0900 (JST)
+Received: from s1.gw.fujitsu.co.jp (s1.gw.fujitsu.co.jp [10.0.50.91])
+	by m1.gw.fujitsu.co.jp (Postfix) with ESMTP id 0DAEE45DE56
+	for <xfs@oss.sgi.com>; Mon, 26 Nov 2012 15:25:34 +0900 (JST)
+Received: from s1.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s1.gw.fujitsu.co.jp (Postfix) with ESMTP id 00EEE1DB804B
+	for <xfs@oss.sgi.com>; Mon, 26 Nov 2012 15:25:34 +0900 (JST)
+Received: from g01jpexchkw31.g01.fujitsu.local
+	(g01jpexchkw31.g01.fujitsu.local [10.0.193.114])
+	by s1.gw.fujitsu.co.jp (Postfix) with ESMTP id B4D9B1DB804A
+	for <xfs@oss.sgi.com>; Mon, 26 Nov 2012 15:25:33 +0900 (JST)
+Message-ID: <50B30B41.8040400@jp.fujitsu.com>
+Date: Mon, 26 Nov 2012 15:25:05 +0900
+From: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAPxxNQ=SRZ33U8nLjK8a3+MPfy3Qz98ALcALXWK_x=dmW9+BoA@mail.gmail.com>
+Subject: [PATCH] xfs: Remove the description about nodelaylog mount option
+	from, the xfs document.
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,43 +40,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ryan Wang <openspace.wang@gmail.com>
-Cc: linux-xfs@vger.kernel.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: xfs ML <xfs@oss.sgi.com>
 
-On Mon, Nov 26, 2012 at 09:26:31AM +0800, Ryan Wang wrote:
-> Hello,
-> 
-> I tried to kick off xfstests against btrfs on multipath device,
-> e.g I set TEST_DEV="/dev/mapper/mpatha", which is a
-> symlink to "/dev/dm-0". I mkfs.btrfs mpatha beforehand.
-> 
-> When I run "./check 001", it said:
-> "
-> common.rc: Error: $TEST_DEV (/dev/dm-0) is not a MOUNTED btrfs filesystem
-> "
-> 
-> The I checked the script common.rc, and found that it uses
-> df to determine the filesystem type and it uses the realpath
-> "/dev/dm-0" instead of "/dev/mapper/mpatha", while df always
-> shows "devtmpfs" instead of "btrfs" for /dev/dm-0.
-> 
-> I run "mount" and found that devtmpfs is mount on /dev/ ***by default***
-> in SuSE.
-> Even though  I run "mount -t btrfs /dev/dm-0 /somedir", df still showed
-> devtmpfs.
-> 
-> Any ideas to kick off the xfstests?
+From: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
 
-seeing as you've now sent this to 3 lists that the xfstests
-maintainers are likely not to read, I've added the proper list to
-the cc list. i.e. xfs@oss.sgi.com.
+nodelaylog mount option is removed by commit 93b8a585. But there still be
+the description about it in the xfs document. This patch removes it.
 
-Cheers,
+Signed-off-by: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
+---
+ Documentation/filesystems/xfs.txt |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/Documentation/filesystems/xfs.txt b/Documentation/filesystems/xfs.txt
+index 3fc0c31..860b845 100644
+--- a/Documentation/filesystems/xfs.txt
++++ b/Documentation/filesystems/xfs.txt
+@@ -43,7 +43,7 @@ When mounting an XFS filesystem, the following options are accepted.
+        Issue command to let the block device reclaim space freed by the
+        filesystem.  This is useful for SSD devices, thinly provisioned
+        LUNs and virtual machine images, but may have a performance
+-       impact.  This option is incompatible with the nodelaylog option.
++       impact.
+ 
+   dmapi
+        Enable the DMAPI (Data Management API) event callouts.
 
 _______________________________________________
 xfs mailing list
