@@ -1,16 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAQFqtkC209917 for <xfs@oss.sgi.com>; Mon, 26 Nov 2012 09:52:55 -0600
-Date: Mon, 26 Nov 2012 09:55:11 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] xfs: Remove the description about nodelaylog mount
-	option from, the xfs document.
-Message-ID: <20121126155511.GF27055@sgi.com>
-References: <50B30B41.8040400@jp.fujitsu.com>
+	qAQI1sBt215855 for <xfs@oss.sgi.com>; Mon, 26 Nov 2012 12:01:54 -0600
+Message-ID: <50B3AF15.7060205@sgi.com>
+Date: Mon, 26 Nov 2012 12:04:05 -0600
+From: Andrew Dahl <adahl@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <50B30B41.8040400@jp.fujitsu.com>
+Subject: Re: [PATCH 02.5/32] xfs: remove xfs_tosspages
+References: <1352721264-3700-1-git-send-email-david@fromorbit.com>
+	<1352721264-3700-3-git-send-email-david@fromorbit.com>
+	<20121114064247.GC1710@dastard> <50A3E807.5010403@sgi.com>
+	<50A3E86A.2060402@sgi.com> <50A3F80C.7050502@sgi.com>
+	<20121121080502.GP2591@dastard> <50ADB3AA.302@sgi.com>
+	<20121122232920.GX2591@dastard>
+In-Reply-To: <20121122232920.GX2591@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,38 +26,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
-Cc: xfs ML <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
 
-On Mon, Nov 26, 2012 at 03:25:05PM +0900, Satoru Takeuchi wrote:
-> From: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
+
+
+On 11/22/2012 05:29 PM, Dave Chinner wrote:
+> On Wed, Nov 21, 2012 at 11:10:02PM -0600, Andrew Dahl wrote:
+>> On 11/21/2012 02:05 AM, Dave Chinner wrote:
+>> ...
+>>>
+...
+
+>>> +	} else {
+>>> +		/* it's a sub-rounding range */
+>>> +		ASSERT(offset + len <= rounding);
+>> This is false. (8K - 2) <= 4K -- Not so good.
 > 
-> nodelaylog mount option is removed by commit 93b8a585. But there still be
-> the description about it in the xfs document. This patch removes it.
+> Right, I put this in after testing without thinking too hard about
+> it. It's always completely wrong, because offset can be an arbitrary
+> 64 bit number, and rounding will always be <=64k...
 > 
-> Signed-off-by: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
-> ---
->  Documentation/filesystems/xfs.txt |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
+>> Maybe (2*rounding) would be better, as offset + len could never be
+>> greater than 2rounding (but can be greater than 1rounding). Or removing
+>> this assert altogether.
 > 
-> diff --git a/Documentation/filesystems/xfs.txt b/Documentation/filesystems/xfs.txt
-> index 3fc0c31..860b845 100644
-> --- a/Documentation/filesystems/xfs.txt
-> +++ b/Documentation/filesystems/xfs.txt
-> @@ -43,7 +43,7 @@ When mounting an XFS filesystem, the following options are accepted.
->         Issue command to let the block device reclaim space freed by the
->         filesystem.  This is useful for SSD devices, thinly provisioned
->         LUNs and virtual machine images, but may have a performance
-> -       impact.  This option is incompatible with the nodelaylog option.
-> +       impact.
+> No, the correct thing to assert is:
+> 
+> 		ASSERT(offset + len <= start);
+> 
+> That is, start is rounded up, and end is rounded down, so for a
+> sub-block range the end should always be less than the start of the
+> next block. That's what my current code has in it.
 
-Looks good.
+Ah... that makes sense.  Yeah, with that change, I'd say it looks great!
 
-Reviewed-by: Ben Myers <bpm@sgi.com>
+Thanks, Dave.
 
-Thanks Satoru!
-
--Ben
+-Andrew
 
 _______________________________________________
 xfs mailing list
