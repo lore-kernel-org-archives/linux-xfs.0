@@ -1,34 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAQ8kCXY170493 for <xfs@oss.sgi.com>; Mon, 26 Nov 2012 02:46:12 -0600
-Received: from fgwmail5.fujitsu.co.jp (fgwmail5.fujitsu.co.jp [192.51.44.35])
-	by cuda.sgi.com with ESMTP id BOQBPk2miXDQwXwd (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 26 Nov 2012 00:48:27 -0800 (PST)
-Received: from m4.gw.fujitsu.co.jp (unknown [10.0.50.74])
-	by fgwmail5.fujitsu.co.jp (Postfix) with ESMTP id E59AA3EE0BC
-	for <xfs@oss.sgi.com>; Mon, 26 Nov 2012 17:48:25 +0900 (JST)
-Received: from smail (m4 [127.0.0.1])
-	by outgoing.m4.gw.fujitsu.co.jp (Postfix) with ESMTP id CD1B645DE4F
-	for <xfs@oss.sgi.com>; Mon, 26 Nov 2012 17:48:25 +0900 (JST)
-Received: from s4.gw.fujitsu.co.jp (s4.gw.fujitsu.co.jp [10.0.50.94])
-	by m4.gw.fujitsu.co.jp (Postfix) with ESMTP id B3E2F45DE4E
-	for <xfs@oss.sgi.com>; Mon, 26 Nov 2012 17:48:25 +0900 (JST)
-Received: from s4.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s4.gw.fujitsu.co.jp (Postfix) with ESMTP id A55FA1DB803B
-	for <xfs@oss.sgi.com>; Mon, 26 Nov 2012 17:48:25 +0900 (JST)
-Received: from g01jpexchkw32.g01.fujitsu.local
-	(g01jpexchkw32.g01.fujitsu.local [10.0.193.115])
-	by s4.gw.fujitsu.co.jp (Postfix) with ESMTP id 5FC771DB802F
-	for <xfs@oss.sgi.com>; Mon, 26 Nov 2012 17:48:25 +0900 (JST)
-Message-ID: <50B32CC1.3020907@jp.fujitsu.com>
-Date: Mon, 26 Nov 2012 17:48:01 +0900
-From: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
+	qAQDfWtP198032 for <xfs@oss.sgi.com>; Mon, 26 Nov 2012 07:41:32 -0600
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id AirF7OCmM2idi06x for
+	<xfs@oss.sgi.com>; Mon, 26 Nov 2012 05:43:47 -0800 (PST)
+Date: Mon, 26 Nov 2012 14:43:40 +0100 (CET)
+From: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>
+Subject: Re: How to run xfstests against multipath disks on SuSE?
+In-Reply-To: <CAPxxNQmwX+TmJ=B-H0f+bzpx5JdijyyRrxCAAZRi9+c8HjQL9Q@mail.gmail.com>
+Message-ID: <alpine.LFD.2.00.1211261442490.18234@localhost>
+References: <CAPxxNQmwX+TmJ=B-H0f+bzpx5JdijyyRrxCAAZRi9+c8HjQL9Q@mail.gmail.com>
 MIME-Version: 1.0
-Subject: Re: [BUG] xfs_quota: can't handle the users managed by LDAP
-References: <50ADB27F.8070806@jp.fujitsu.com> <20121122233757.GY2591@dastard>
-In-Reply-To: <20121122233757.GY2591@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -41,73 +24,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs ML <xfs@oss.sgi.com>
+To: Ryan Wang <openspace.wang@gmail.com>
+Cc: linux-ext4@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, xfs@oss.sgi.com
 
-(2012/11/23 8:37), Dave Chinner wrote:
-> On Thu, Nov 22, 2012 at 02:05:03PM +0900, Satoru Takeuchi wrote:
->> Hi,
->>
->> Current xfs_quota (I pulled xfsprogs today) seems not be able to the users
->> managed by LDAP. There is no patch since I'm not good at LDAP and don't know
->> the root cause yet ;-(
->>
->> Step to reproduce(in this case, "sat" is the user managed by LDAP):
->> ===============================================================================
->> # uname -r
->> 3.7.0-rc5
->> # mount -o loop,usrquota xfs.img mnt
->> # xfsprogs/quota/xfs_quota -xc "limit bsoft=10M bhard=10M sat" /dev/loop0
->> xfs_quota: invalid user name: sat                                          # denied
->> # su sat
->> $                                                                          # But this user acutally exists.
->> ===============================================================================
->>
->> The kernel is a bit old, but I suspect this is a userland problem.
+On Mon, 26 Nov 2012, Ryan Wang wrote:
+
+> Date: Mon, 26 Nov 2012 08:00:05 +0800
+> From: Ryan Wang <openspace.wang@gmail.com>
+> To: linux-ext4@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>
+> Subject: How to run xfstests against multipath disks on SuSE?
+
+Maybe cc xfstests developers as well ?
+
+xfs@oss.sgi.com added to cc.
+
 > 
-> Yes, userland.
+> Hello,
 > 
-> However, xfs_quota is not supposed to know about LDAP, or NIS, or
-> any other user database. It uses the getpwnam() to convert the user
-> name to a UID, and that call is failing to find "sat". This is
-> supposed to work with LDAP (as mentioned in the man page), and if it
-> isn't it generally means something is broken with your LDAP setup
-> (/etc/nsswitch.conf not correct?) rather than there being something
-> wrong with xfs_quota....
-
-Probably this behaivor comes from the difference between the test machine
-and the build machine which I built the upstream xfsprogs.
-
-I made the following simple program which just calls getpwnam().
-
-===============================================================================
-#include <sys/types.h>
-#include <pwd.h>
-#include <err.h>
-#include <stdio.h>
-#include <stdlib.h>
-
-int main(void)
-{
-        struct passwd *p;
-        if ((p = getpwnam("sat")) == NULL)
-                err(EXIT_FAILURE, "getpwnam() failed.");
-        printf("name = %s, id = %d\n", p->pw_name, p->pw_uid);
-        exit(EXIT_SUCCESS);
-}
-===============================================================================
-
-Here is the result of this problem at the test machine.
-
- - SUCCEEDED: build at the test machine
- - FAILED: built at the build machine
-
-I will build xfsprogs at the test machine and confirm whether this behavior
-(getpwnam() fails) happens or not again.
-
-Thanks,
-Satoru
-
+> I tried to kick off xfstests on multipath device, e.g I set
+> TEST_DEV="/dev/mapper/mpatha", which is a symlink
+> to "/dev/dm-0". I run mkfs on mpatha beforehand.
+> 
+> When I run "./check 001", it said:
+> "
+> common.rc: Error: $TEST_DEV (/dev/dm-0) is not a MOUNTED ext4 filesystem
+> "
+> 
+> The I checked the script common.rc, and found that it uses
+> df to determine the filesystem type and it uses the realpath
+> "/dev/dm-0" instead of "/dev/mapper/mpatha", while df always
+> shows "devtmpfs" instead of "ext4" for /dev/dm-0.
+> 
+> I run "mount" and found that devtmpfs is mount on /dev/ on opensuse
+> ***by default***. Even though  I run "mount -t btrfs /dev/dm-0 /somedir",
+> df still showed devtmpfs.
+> 
+> Any ideas to kick off the xfstests?
+> 
+> thanks,
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ext4" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
 _______________________________________________
 xfs mailing list
