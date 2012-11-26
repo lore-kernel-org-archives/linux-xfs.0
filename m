@@ -1,33 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAQ6NL0Y158514 for <xfs@oss.sgi.com>; Mon, 26 Nov 2012 00:23:22 -0600
-Received: from fgwmail5.fujitsu.co.jp (fgwmail5.fujitsu.co.jp [192.51.44.35])
-	by cuda.sgi.com with ESMTP id 4bDQXYp60VlsbFVr (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 25 Nov 2012 22:25:36 -0800 (PST)
-Received: from m1.gw.fujitsu.co.jp (unknown [10.0.50.71])
-	by fgwmail5.fujitsu.co.jp (Postfix) with ESMTP id 3D1343EE0BC
-	for <xfs@oss.sgi.com>; Mon, 26 Nov 2012 15:25:34 +0900 (JST)
-Received: from smail (m1 [127.0.0.1])
-	by outgoing.m1.gw.fujitsu.co.jp (Postfix) with ESMTP id 250E845DE58
-	for <xfs@oss.sgi.com>; Mon, 26 Nov 2012 15:25:34 +0900 (JST)
-Received: from s1.gw.fujitsu.co.jp (s1.gw.fujitsu.co.jp [10.0.50.91])
-	by m1.gw.fujitsu.co.jp (Postfix) with ESMTP id 0DAEE45DE56
-	for <xfs@oss.sgi.com>; Mon, 26 Nov 2012 15:25:34 +0900 (JST)
-Received: from s1.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s1.gw.fujitsu.co.jp (Postfix) with ESMTP id 00EEE1DB804B
-	for <xfs@oss.sgi.com>; Mon, 26 Nov 2012 15:25:34 +0900 (JST)
-Received: from g01jpexchkw31.g01.fujitsu.local
-	(g01jpexchkw31.g01.fujitsu.local [10.0.193.114])
-	by s1.gw.fujitsu.co.jp (Postfix) with ESMTP id B4D9B1DB804A
-	for <xfs@oss.sgi.com>; Mon, 26 Nov 2012 15:25:33 +0900 (JST)
-Message-ID: <50B30B41.8040400@jp.fujitsu.com>
-Date: Mon, 26 Nov 2012 15:25:05 +0900
-From: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
+	qAQ75qYg160914 for <xfs@oss.sgi.com>; Mon, 26 Nov 2012 01:05:52 -0600
+Received: from mail-vb0-f53.google.com (mail-vb0-f53.google.com
+	[209.85.212.53]) by cuda.sgi.com with ESMTP id A6GZcPqLPLUY7Xgw
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sun, 25 Nov 2012 23:08:07 -0800 (PST)
+Received: by mail-vb0-f53.google.com with SMTP id b23so6509626vbz.26
+	for <xfs@oss.sgi.com>; Sun, 25 Nov 2012 23:08:07 -0800 (PST)
 MIME-Version: 1.0
-Subject: [PATCH] xfs: Remove the description about nodelaylog mount option
-	from, the xfs document.
+Date: Mon, 26 Nov 2012 12:38:06 +0530
+Message-ID: <CAB+GMR9ngvq0D-tBD-qW3YxO26h0BBo2Adao0iSquKtJY40GzA@mail.gmail.com>
+Subject: Project quota behaviour on Hardlinks on different tree structures
+From: Varun Shastry <vrn.shastry@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,37 +21,38 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============6007507600708073283=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs ML <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-From: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
+--===============6007507600708073283==
+Content-Type: multipart/alternative; boundary=f46d043bdf4c5ef68504cf609847
 
-nodelaylog mount option is removed by commit 93b8a585. But there still be
-the description about it in the xfs document. This patch removes it.
+--f46d043bdf4c5ef68504cf609847
+Content-Type: text/plain; charset=ISO-8859-1
 
-Signed-off-by: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
----
- Documentation/filesystems/xfs.txt |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Hello everyone,
 
-diff --git a/Documentation/filesystems/xfs.txt b/Documentation/filesystems/xfs.txt
-index 3fc0c31..860b845 100644
---- a/Documentation/filesystems/xfs.txt
-+++ b/Documentation/filesystems/xfs.txt
-@@ -43,7 +43,7 @@ When mounting an XFS filesystem, the following options are accepted.
-        Issue command to let the block device reclaim space freed by the
-        filesystem.  This is useful for SSD devices, thinly provisioned
-        LUNs and virtual machine images, but may have a performance
--       impact.  This option is incompatible with the nodelaylog option.
-+       impact.
- 
-   dmapi
-        Enable the DMAPI (Data Management API) event callouts.
+I wanted to know how project quota behaves on hardlinks on dif
+
+--f46d043bdf4c5ef68504cf609847
+Content-Type: text/html; charset=ISO-8859-1
+
+Hello everyone,<br><br>I wanted to know how project quota behaves on hardlinks on dif<br>
+
+--f46d043bdf4c5ef68504cf609847--
+
+
+--===============6007507600708073283==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============6007507600708073283==--
