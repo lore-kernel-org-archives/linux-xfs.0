@@ -1,19 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAQLmTxk232743 for <xfs@oss.sgi.com>; Mon, 26 Nov 2012 15:48:29 -0600
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	K10tGPjfATFbYFsk for <xfs@oss.sgi.com>;
-	Mon, 26 Nov 2012 13:50:43 -0800 (PST)
-Date: Tue, 27 Nov 2012 08:50:32 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Project quota behaviour on hardlinks
-Message-ID: <20121126215032.GQ32450@dastard>
-References: <CAB+GMR8yU4LaU7EwXboKQLDsGGD0N6EuDT4CgxYLpVFPsROKXg@mail.gmail.com>
+	qAQM5Opc234395 for <xfs@oss.sgi.com>; Mon, 26 Nov 2012 16:05:24 -0600
+Date: Mon, 26 Nov 2012 16:07:36 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH] xfs: Remove the description about nodelaylog mount
+	option from, the xfs document.
+Message-ID: <20121126220736.GG27055@sgi.com>
+References: <50B30B41.8040400@jp.fujitsu.com> <20121126155511.GF27055@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAB+GMR8yU4LaU7EwXboKQLDsGGD0N6EuDT4CgxYLpVFPsROKXg@mail.gmail.com>
+In-Reply-To: <20121126155511.GF27055@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,33 +23,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Varun Shastry <vrn.shastry@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
+Cc: xfs ML <xfs@oss.sgi.com>
 
-On Mon, Nov 26, 2012 at 12:47:08PM +0530, Varun Shastry wrote:
-> Hello everyone,
+Hey Satoru,
+
+On Mon, Nov 26, 2012 at 09:55:11AM -0600, Ben Myers wrote:
+> On Mon, Nov 26, 2012 at 03:25:05PM +0900, Satoru Takeuchi wrote:
+> > From: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
+> > 
+> > nodelaylog mount option is removed by commit 93b8a585. But there still be
+> > the description about it in the xfs document. This patch removes it.
+> > 
+> > Signed-off-by: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
+> > ---
+> >  Documentation/filesystems/xfs.txt |    2 +-
+> >  1 files changed, 1 insertions(+), 1 deletions(-)
+> > 
+> > diff --git a/Documentation/filesystems/xfs.txt b/Documentation/filesystems/xfs.txt
+> > index 3fc0c31..860b845 100644
+> > --- a/Documentation/filesystems/xfs.txt
+> > +++ b/Documentation/filesystems/xfs.txt
+> > @@ -43,7 +43,7 @@ When mounting an XFS filesystem, the following options are accepted.
+> >         Issue command to let the block device reclaim space freed by the
+> >         filesystem.  This is useful for SSD devices, thinly provisioned
+> >         LUNs and virtual machine images, but may have a performance
+> > -       impact.  This option is incompatible with the nodelaylog option.
+> > +       impact.
 > 
-> I wanted to know how project quota behaves on hardlinks when created in
-> different tree structures based on below 2 situations.
+> Looks good.
+> 
+> Reviewed-by: Ben Myers <bpm@sgi.com>
 
-Test it and see.
+This has been committed to git://oss.sgi.com/xfs/xfs.git, master and for-next
+branches.  It seems like your mailer replaced tabs with spaces so I cleaned
+that up.  Just a heads-up... you may want to look into that.
 
-> * Does it account twice if the file is hard linked in the same parent?
-
-Hard links are only accounted once to the owner of the inode.
-
-> * Does it account twice if the file is hard linked in a different tree
-> which is also set quota in other project?
-
-You can't hard link across directory tree quota boundaries - you'll
-get EXDEV. Similarly for rename across directory tree boundaries.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks!
+	Ben
 
 _______________________________________________
 xfs mailing list
