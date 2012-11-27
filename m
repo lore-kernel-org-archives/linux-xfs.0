@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qARNCuQK104936 for <xfs@oss.sgi.com>; Tue, 27 Nov 2012 17:12:56 -0600
+	qARND7PA105041 for <xfs@oss.sgi.com>; Tue, 27 Nov 2012 17:13:07 -0600
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	y4VrCQZWL7QYAbQt for <xfs@oss.sgi.com>;
-	Tue, 27 Nov 2012 15:15:11 -0800 (PST)
+	xGJHkqEKAdoGJ6Rw for <xfs@oss.sgi.com>;
+	Tue, 27 Nov 2012 15:15:22 -0800 (PST)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 11/19] fs: convert inode and dentry shrinking to be node aware
-Date: Wed, 28 Nov 2012 10:14:38 +1100
-Message-Id: <1354058086-27937-12-git-send-email-david@fromorbit.com>
+Subject: [PATCH 14/19] xfs: use generic AG walk for background inode reclaim
+Date: Wed, 28 Nov 2012 10:14:41 +1100
+Message-Id: <1354058086-27937-15-git-send-email-david@fromorbit.com>
 In-Reply-To: <1354058086-27937-1-git-send-email-david@fromorbit.com>
 References: <1354058086-27937-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,277 +30,407 @@ Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Now that the shrinker is passing a nodemask in the scan control
-structure, we can pass this to the the generic LRU list code to
-isolate reclaim to the lists on matching nodes.
-
-This requires a small amount of refactoring of the LRU list API,
-which might be best split out into a separate patch.
+The per-ag inode cache radix trees are not walked by the shrinkers
+any more, so there is no need for a special walker that contained
+heurisitcs to prevent multiple shrinker instances from colliding
+with each other. Hence we can just remote that and convert the code
+to use the generic walker.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/dcache.c              |    7 ++++---
- fs/inode.c               |    7 ++++---
- fs/internal.h            |    6 ++++--
- fs/super.c               |   22 +++++++++++++---------
- fs/xfs/xfs_super.c       |    6 ++++--
- include/linux/fs.h       |    4 ++--
- include/linux/list_lru.h |   19 ++++++++++++++++---
- lib/list_lru.c           |   18 ++++++++++--------
- 8 files changed, 57 insertions(+), 32 deletions(-)
+ fs/xfs/xfs_ag.h          |    2 -
+ fs/xfs/xfs_icache.c      |  217 +++++++++++-----------------------------------
+ fs/xfs/xfs_icache.h      |    4 +-
+ fs/xfs/xfs_mount.c       |    1 -
+ fs/xfs/xfs_qm_syscalls.c |    2 +-
+ 5 files changed, 55 insertions(+), 171 deletions(-)
 
-diff --git a/fs/dcache.c b/fs/dcache.c
-index d72e388..7f107fb 100644
---- a/fs/dcache.c
-+++ b/fs/dcache.c
-@@ -907,13 +907,14 @@ static int dentry_lru_isolate(struct list_head *item, spinlock_t *lru_lock,
-  * This function may fail to free any resources if all the dentries are in
-  * use.
-  */
--long prune_dcache_sb(struct super_block *sb, long nr_to_scan)
-+long prune_dcache_sb(struct super_block *sb, long nr_to_scan,
-+		     nodemask_t *nodes_to_walk)
+diff --git a/fs/xfs/xfs_ag.h b/fs/xfs/xfs_ag.h
+index f2aeedb..40a7df9 100644
+--- a/fs/xfs/xfs_ag.h
++++ b/fs/xfs/xfs_ag.h
+@@ -218,8 +218,6 @@ typedef struct xfs_perag {
+ 	spinlock_t	pag_ici_lock;	/* incore inode cache lock */
+ 	struct radix_tree_root pag_ici_root;	/* incore inode cache root */
+ 	int		pag_ici_reclaimable;	/* reclaimable inodes */
+-	struct mutex	pag_ici_reclaim_lock;	/* serialisation point */
+-	unsigned long	pag_ici_reclaim_cursor;	/* reclaim restart point */
+ 
+ 	/* buffer cache index */
+ 	spinlock_t	pag_buf_lock;	/* lock for pag_buf_tree */
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 82b053f..5cfc2eb 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -468,7 +468,8 @@ out_error_or_again:
+ 
+ STATIC int
+ xfs_inode_ag_walk_grab(
+-	struct xfs_inode	*ip)
++	struct xfs_inode	*ip,
++	int			flags)
  {
- 	LIST_HEAD(dispose);
- 	long freed;
+ 	struct inode		*inode = VFS_I(ip);
  
--	freed = list_lru_walk(&sb->s_dentry_lru, dentry_lru_isolate,
--			      &dispose, nr_to_scan);
-+	freed = list_lru_walk_nodemask(&sb->s_dentry_lru, dentry_lru_isolate,
-+				       &dispose, nr_to_scan, nodes_to_walk);
- 	shrink_dentry_list(&dispose);
- 	return freed;
+@@ -517,6 +518,7 @@ STATIC int
+ xfs_inode_ag_walk(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_perag	*pag,
++	int			(*grab)(struct xfs_inode *ip, int flags),
+ 	int			(*execute)(struct xfs_inode *ip,
+ 					   struct xfs_perag *pag, int flags,
+ 					   void *args),
+@@ -530,6 +532,9 @@ xfs_inode_ag_walk(
+ 	int			done;
+ 	int			nr_found;
+ 
++	if (!grab)
++		grab = xfs_inode_ag_walk_grab;
++
+ restart:
+ 	done = 0;
+ 	skipped = 0;
+@@ -564,7 +569,7 @@ restart:
+ 		for (i = 0; i < nr_found; i++) {
+ 			struct xfs_inode *ip = batch[i];
+ 
+-			if (done || xfs_inode_ag_walk_grab(ip))
++			if (done || grab(ip, flags))
+ 				batch[i] = NULL;
+ 
+ 			/*
+@@ -593,7 +598,8 @@ restart:
+ 			if (!batch[i])
+ 				continue;
+ 			error = execute(batch[i], pag, flags, args);
+-			IRELE(batch[i]);
++			if (grab == xfs_inode_ag_walk_grab)
++				IRELE(batch[i]);
+ 			if (error == EAGAIN) {
+ 				skipped++;
+ 				continue;
+@@ -617,35 +623,10 @@ restart:
+ 	return last_error;
  }
-diff --git a/fs/inode.c b/fs/inode.c
-index 2662305..3857f9f 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -731,13 +731,14 @@ static int inode_lru_isolate(struct list_head *item, spinlock_t *lru_lock,
-  * to trim from the LRU. Inodes to be freed are moved to a temporary list and
-  * then are freed outside inode_lock by dispose_list().
-  */
--long prune_icache_sb(struct super_block *sb, long nr_to_scan)
-+long prune_icache_sb(struct super_block *sb, long nr_to_scan,
-+		     nodemask_t *nodes_to_walk)
+ 
+-/*
+- * Background scanning to trim post-EOF preallocated space. This is queued
+- * based on the 'background_prealloc_discard_period' tunable (5m by default).
+- */
+-STATIC void
+-xfs_queue_eofblocks(
+-	struct xfs_mount *mp)
+-{
+-	rcu_read_lock();
+-	if (radix_tree_tagged(&mp->m_perag_tree, XFS_ICI_EOFBLOCKS_TAG))
+-		queue_delayed_work(mp->m_eofblocks_workqueue,
+-				   &mp->m_eofblocks_work,
+-				   msecs_to_jiffies(xfs_eofb_secs * 1000));
+-	rcu_read_unlock();
+-}
+-
+-void
+-xfs_eofblocks_worker(
+-	struct work_struct *work)
+-{
+-	struct xfs_mount *mp = container_of(to_delayed_work(work),
+-				struct xfs_mount, m_eofblocks_work);
+-	xfs_icache_free_eofblocks(mp, NULL);
+-	xfs_queue_eofblocks(mp);
+-}
+-
+ int
+ xfs_inode_ag_iterator(
+ 	struct xfs_mount	*mp,
++	int			(*grab)(struct xfs_inode *ip, int flags),
+ 	int			(*execute)(struct xfs_inode *ip,
+ 					   struct xfs_perag *pag, int flags,
+ 					   void *args),
+@@ -660,7 +641,8 @@ xfs_inode_ag_iterator(
+ 	ag = 0;
+ 	while ((pag = xfs_perag_get(mp, ag))) {
+ 		ag = pag->pag_agno + 1;
+-		error = xfs_inode_ag_walk(mp, pag, execute, flags, args, -1);
++		error = xfs_inode_ag_walk(mp, pag, grab, execute,
++					  flags, args, -1);
+ 		xfs_perag_put(pag);
+ 		if (error) {
+ 			last_error = error;
+@@ -674,6 +656,7 @@ xfs_inode_ag_iterator(
+ int
+ xfs_inode_ag_iterator_tag(
+ 	struct xfs_mount	*mp,
++	int			(*grab)(struct xfs_inode *ip, int flags),
+ 	int			(*execute)(struct xfs_inode *ip,
+ 					   struct xfs_perag *pag, int flags,
+ 					   void *args),
+@@ -689,7 +672,8 @@ xfs_inode_ag_iterator_tag(
+ 	ag = 0;
+ 	while ((pag = xfs_perag_get_tag(mp, ag, tag))) {
+ 		ag = pag->pag_agno + 1;
+-		error = xfs_inode_ag_walk(mp, pag, execute, flags, args, tag);
++		error = xfs_inode_ag_walk(mp, pag, grab, execute,
++					  flags, args, tag);
+ 		xfs_perag_put(pag);
+ 		if (error) {
+ 			last_error = error;
+@@ -904,7 +888,8 @@ STATIC int
+ xfs_reclaim_inode(
+ 	struct xfs_inode	*ip,
+ 	struct xfs_perag	*pag,
+-	int			sync_mode)
++	int			sync_mode,
++	void			*args)
  {
- 	LIST_HEAD(freeable);
- 	long freed;
- 
--	freed = list_lru_walk(&sb->s_inode_lru, inode_lru_isolate,
--						&freeable, nr_to_scan);
-+	freed = list_lru_walk_nodemask(&sb->s_inode_lru, inode_lru_isolate,
-+				       &freeable, nr_to_scan, nodes_to_walk);
- 	dispose_list(&freeable);
- 	return freed;
+ 	struct xfs_buf		*bp = NULL;
+ 	int			error;
+@@ -1032,140 +1017,14 @@ out:
+ 	return 0;
  }
-diff --git a/fs/internal.h b/fs/internal.h
-index 7d7908b..95c4e9b 100644
---- a/fs/internal.h
-+++ b/fs/internal.h
-@@ -110,7 +110,8 @@ extern int open_check_o_direct(struct file *f);
-  * inode.c
-  */
- extern spinlock_t inode_sb_list_lock;
--extern long prune_icache_sb(struct super_block *sb, long nr_to_scan);
-+extern long prune_icache_sb(struct super_block *sb, long nr_to_scan,
-+			    nodemask_t *nodes_to_scan);
  
+-/*
+- * Walk the AGs and reclaim the inodes in them. Even if the filesystem is
+- * corrupted, we still want to try to reclaim all the inodes. If we don't,
+- * then a shut down during filesystem unmount reclaim walk leak all the
+- * unreclaimed inodes.
+- */
+-STATIC int
+-xfs_reclaim_inodes_ag(
+-	struct xfs_mount	*mp,
+-	int			flags,
+-	long			*nr_to_scan)
+-{
+-	struct xfs_perag	*pag;
+-	int			error = 0;
+-	int			last_error = 0;
+-	xfs_agnumber_t		ag;
+-	int			trylock = flags & SYNC_TRYLOCK;
+-	int			skipped;
+-
+-restart:
+-	ag = 0;
+-	skipped = 0;
+-	while ((pag = xfs_perag_get_tag(mp, ag, XFS_ICI_RECLAIM_TAG))) {
+-		unsigned long	first_index = 0;
+-		int		done = 0;
+-		int		nr_found = 0;
+-
+-		ag = pag->pag_agno + 1;
+-
+-		if (trylock) {
+-			if (!mutex_trylock(&pag->pag_ici_reclaim_lock)) {
+-				skipped++;
+-				xfs_perag_put(pag);
+-				continue;
+-			}
+-			first_index = pag->pag_ici_reclaim_cursor;
+-		} else
+-			mutex_lock(&pag->pag_ici_reclaim_lock);
+-
+-		do {
+-			struct xfs_inode *batch[XFS_LOOKUP_BATCH];
+-			int	i;
+-
+-			rcu_read_lock();
+-			nr_found = radix_tree_gang_lookup_tag(
+-					&pag->pag_ici_root,
+-					(void **)batch, first_index,
+-					XFS_LOOKUP_BATCH,
+-					XFS_ICI_RECLAIM_TAG);
+-			if (!nr_found) {
+-				done = 1;
+-				rcu_read_unlock();
+-				break;
+-			}
+-
+-			/*
+-			 * Grab the inodes before we drop the lock. if we found
+-			 * nothing, nr == 0 and the loop will be skipped.
+-			 */
+-			for (i = 0; i < nr_found; i++) {
+-				struct xfs_inode *ip = batch[i];
+-
+-				if (done || xfs_reclaim_inode_grab(ip, flags))
+-					batch[i] = NULL;
+-
+-				/*
+-				 * Update the index for the next lookup. Catch
+-				 * overflows into the next AG range which can
+-				 * occur if we have inodes in the last block of
+-				 * the AG and we are currently pointing to the
+-				 * last inode.
+-				 *
+-				 * Because we may see inodes that are from the
+-				 * wrong AG due to RCU freeing and
+-				 * reallocation, only update the index if it
+-				 * lies in this AG. It was a race that lead us
+-				 * to see this inode, so another lookup from
+-				 * the same index will not find it again.
+-				 */
+-				if (XFS_INO_TO_AGNO(mp, ip->i_ino) !=
+-								pag->pag_agno)
+-					continue;
+-				first_index = XFS_INO_TO_AGINO(mp, ip->i_ino + 1);
+-				if (first_index < XFS_INO_TO_AGINO(mp, ip->i_ino))
+-					done = 1;
+-			}
+-
+-			/* unlock now we've grabbed the inodes. */
+-			rcu_read_unlock();
+-
+-			for (i = 0; i < nr_found; i++) {
+-				if (!batch[i])
+-					continue;
+-				error = xfs_reclaim_inode(batch[i], pag, flags);
+-				if (error && last_error != EFSCORRUPTED)
+-					last_error = error;
+-			}
+-
+-			*nr_to_scan -= XFS_LOOKUP_BATCH;
+-
+-			cond_resched();
+-
+-		} while (nr_found && !done && *nr_to_scan > 0);
+-
+-		if (trylock && !done)
+-			pag->pag_ici_reclaim_cursor = first_index;
+-		else
+-			pag->pag_ici_reclaim_cursor = 0;
+-		mutex_unlock(&pag->pag_ici_reclaim_lock);
+-		xfs_perag_put(pag);
+-	}
+-
+-	/*
+-	 * if we skipped any AG, and we still have scan count remaining, do
+-	 * another pass this time using blocking reclaim semantics (i.e
+-	 * waiting on the reclaim locks and ignoring the reclaim cursors). This
+-	 * ensure that when we get more reclaimers than AGs we block rather
+-	 * than spin trying to execute reclaim.
+-	 */
+-	if (skipped && (flags & SYNC_WAIT) && *nr_to_scan > 0) {
+-		trylock = 0;
+-		goto restart;
+-	}
+-	return XFS_ERROR(last_error);
+-}
+-
+ int
+ xfs_reclaim_inodes(
+-	xfs_mount_t	*mp,
+-	int		mode)
++	struct xfs_mount	*mp,
++	int			flags)
+ {
+-	long		nr_to_scan = LONG_MAX;
+-
+-	return xfs_reclaim_inodes_ag(mp, mode, &nr_to_scan);
++	return xfs_inode_ag_iterator_tag(mp, xfs_reclaim_inode_grab,
++					 xfs_reclaim_inode, flags,
++					 NULL, XFS_ICI_RECLAIM_TAG);
+ }
  
- /*
-@@ -126,4 +127,5 @@ extern int invalidate_inodes(struct super_block *, bool);
-  * dcache.c
-  */
- extern struct dentry *__d_alloc(struct super_block *, const struct qstr *);
--extern long prune_dcache_sb(struct super_block *sb, long nr_to_scan);
-+extern long prune_dcache_sb(struct super_block *sb, long nr_to_scan,
-+			    nodemask_t *nodes_to_scan);
-diff --git a/fs/super.c b/fs/super.c
-index b1d24ef..3c975b1 100644
---- a/fs/super.c
-+++ b/fs/super.c
-@@ -75,10 +75,10 @@ static long super_cache_scan(struct shrinker *shrink, struct shrink_control *sc)
- 		return -1;
+ static int
+@@ -1229,13 +1088,39 @@ xfs_reclaim_inodes_nr(
  
- 	if (sb->s_op && sb->s_op->nr_cached_objects)
--		fs_objects = sb->s_op->nr_cached_objects(sb);
-+		fs_objects = sb->s_op->nr_cached_objects(sb, &sc->nodes_to_scan);
- 
--	inodes = list_lru_count(&sb->s_inode_lru);
--	dentries = list_lru_count(&sb->s_dentry_lru);
-+	inodes = list_lru_count_nodemask(&sb->s_inode_lru, &sc->nodes_to_scan);
-+	dentries = list_lru_count_nodemask(&sb->s_dentry_lru, &sc->nodes_to_scan);
- 	total_objects = dentries + inodes + fs_objects + 1;
- 
- 	/* proportion the scan between the caches */
-@@ -89,12 +89,13 @@ static long super_cache_scan(struct shrinker *shrink, struct shrink_control *sc)
- 	 * prune the dcache first as the icache is pinned by it, then
- 	 * prune the icache, followed by the filesystem specific caches
- 	 */
--	freed = prune_dcache_sb(sb, dentries);
--	freed += prune_icache_sb(sb, inodes);
-+	freed = prune_dcache_sb(sb, dentries, &sc->nodes_to_scan);
-+	freed += prune_icache_sb(sb, inodes, &sc->nodes_to_scan);
- 
- 	if (fs_objects) {
- 		fs_objects = (sc->nr_to_scan * fs_objects) / total_objects;
--		freed += sb->s_op->free_cached_objects(sb, fs_objects);
-+		freed += sb->s_op->free_cached_objects(sb, fs_objects,
-+						       &sc->nodes_to_scan);
+ 		pag = xfs_perag_get(mp,
+ 				    XFS_INO_TO_AGNO(mp, XFS_I(inode)->i_ino));
+-		xfs_reclaim_inode(XFS_I(inode), pag, SYNC_WAIT);
++		xfs_reclaim_inode(XFS_I(inode), pag, SYNC_WAIT, NULL);
+ 		xfs_perag_put(pag);
  	}
  
- 	drop_super(sb);
-@@ -112,10 +113,13 @@ static long super_cache_count(struct shrinker *shrink, struct shrink_control *sc
- 		return -1;
- 
- 	if (sb->s_op && sb->s_op->nr_cached_objects)
--		total_objects = sb->s_op->nr_cached_objects(sb);
-+		total_objects = sb->s_op->nr_cached_objects(sb,
-+						 &sc->nodes_to_scan);
- 
--	total_objects += list_lru_count(&sb->s_dentry_lru);
--	total_objects += list_lru_count(&sb->s_inode_lru);
-+	total_objects += list_lru_count_nodemask(&sb->s_dentry_lru,
-+						 &sc->nodes_to_scan);
-+	total_objects += list_lru_count_nodemask(&sb->s_inode_lru,
-+						 &sc->nodes_to_scan);
- 
- 	total_objects = (total_objects / 100) * sysctl_vfs_cache_pressure;
- 	drop_super(sb);
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 00aa61d..33d67d5 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1516,7 +1516,8 @@ xfs_fs_mount(
- 
- static long
- xfs_fs_nr_cached_objects(
--	struct super_block	*sb)
-+	struct super_block	*sb,
-+	nodemask_t		*nodes_to_count)
- {
- 	return xfs_reclaim_inodes_count(XFS_M(sb));
+ 	return freed;
  }
-@@ -1524,7 +1525,8 @@ xfs_fs_nr_cached_objects(
- static long
- xfs_fs_free_cached_objects(
- 	struct super_block	*sb,
--	long			nr_to_scan)
-+	long			nr_to_scan,
-+	nodemask_t		*nodes_to_scan)
- {
- 	return xfs_reclaim_inodes_nr(XFS_M(sb), nr_to_scan);
- }
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index befa46f..fda4ee2 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1614,8 +1614,8 @@ struct super_operations {
- 	ssize_t (*quota_write)(struct super_block *, int, const char *, size_t, loff_t);
- #endif
- 	int (*bdev_try_to_free_page)(struct super_block*, struct page*, gfp_t);
--	long (*nr_cached_objects)(struct super_block *);
--	long (*free_cached_objects)(struct super_block *, long);
-+	long (*nr_cached_objects)(struct super_block *, nodemask_t *);
-+	long (*free_cached_objects)(struct super_block *, long, nodemask_t *);
- };
  
- /*
-diff --git a/include/linux/list_lru.h b/include/linux/list_lru.h
-index b0e3ba2..02796da 100644
---- a/include/linux/list_lru.h
-+++ b/include/linux/list_lru.h
-@@ -24,14 +24,27 @@ struct list_lru {
- int list_lru_init(struct list_lru *lru);
- int list_lru_add(struct list_lru *lru, struct list_head *item);
- int list_lru_del(struct list_lru *lru, struct list_head *item);
--long list_lru_count(struct list_lru *lru);
-+long list_lru_count_nodemask(struct list_lru *lru, nodemask_t *nodes_to_count);
-+
-+static inline long list_lru_count(struct list_lru *lru)
++/*
++ * Background scanning to trim post-EOF preallocated space. This is queued
++ * based on the 'background_prealloc_discard_period' tunable (5m by default).
++ */
++STATIC void
++xfs_queue_eofblocks(
++	struct xfs_mount *mp)
 +{
-+	return list_lru_count_nodemask(lru, &lru->active_nodes);
++	rcu_read_lock();
++	if (radix_tree_tagged(&mp->m_perag_tree, XFS_ICI_EOFBLOCKS_TAG))
++		queue_delayed_work(mp->m_eofblocks_workqueue,
++				   &mp->m_eofblocks_work,
++				   msecs_to_jiffies(xfs_eofb_secs * 1000));
++	rcu_read_unlock();
 +}
 +
- 
- typedef int (*list_lru_walk_cb)(struct list_head *item, spinlock_t *lock,
- 				void *cb_arg);
- typedef void (*list_lru_dispose_cb)(struct list_head *dispose_list);
- 
--long list_lru_walk(struct list_lru *lru, list_lru_walk_cb isolate,
--		   void *cb_arg, long nr_to_walk);
-+long list_lru_walk_nodemask(struct list_lru *lru, list_lru_walk_cb isolate,
-+		   void *cb_arg, long nr_to_walk, nodemask_t *nodes_to_walk);
-+
-+static inline long list_lru_walk(struct list_lru *lru, list_lru_walk_cb isolate,
-+				 void *cb_arg, long nr_to_walk)
++void
++xfs_eofblocks_worker(
++	struct work_struct *work)
 +{
-+	return list_lru_walk_nodemask(lru, isolate, cb_arg, nr_to_walk,
-+				      &lru->active_nodes);
++	struct xfs_mount *mp = container_of(to_delayed_work(work),
++				struct xfs_mount, m_eofblocks_work);
++	xfs_icache_free_eofblocks(mp, NULL);
++	xfs_queue_eofblocks(mp);
 +}
++
+ STATIC int
+ xfs_inode_match_id(
+ 	struct xfs_inode	*ip,
+@@ -1310,8 +1195,8 @@ xfs_icache_free_eofblocks(
+ 	if (eofb && (eofb->eof_flags & XFS_EOF_FLAGS_SYNC))
+ 		flags = SYNC_WAIT;
  
- long list_lru_dispose_all(struct list_lru *lru, list_lru_dispose_cb dispose);
+-	return xfs_inode_ag_iterator_tag(mp, xfs_inode_free_eofblocks, flags,
+-					 eofb, XFS_ICI_EOFBLOCKS_TAG);
++	return xfs_inode_ag_iterator_tag(mp, NULL, xfs_inode_free_eofblocks,
++					 flags, eofb, XFS_ICI_EOFBLOCKS_TAG);
+ }
  
-diff --git a/lib/list_lru.c b/lib/list_lru.c
-index 881e342..0f08ed6 100644
---- a/lib/list_lru.c
-+++ b/lib/list_lru.c
-@@ -54,13 +54,14 @@ list_lru_del(
- EXPORT_SYMBOL_GPL(list_lru_del);
+ void
+diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
+index 4214518..a3380bf 100644
+--- a/fs/xfs/xfs_icache.h
++++ b/fs/xfs/xfs_icache.h
+@@ -29,7 +29,7 @@ int xfs_iget(struct xfs_mount *mp, struct xfs_trans *tp, xfs_ino_t ino,
  
- long
--list_lru_count(
--	struct list_lru *lru)
-+list_lru_count_nodemask(
-+	struct list_lru *lru,
-+	nodemask_t	*nodes_to_count)
+ void xfs_reclaim_worker(struct work_struct *work);
+ 
+-int xfs_reclaim_inodes(struct xfs_mount *mp, int mode);
++int xfs_reclaim_inodes(struct xfs_mount *mp, int flags);
+ long xfs_reclaim_inodes_nr(struct xfs_mount *mp, long nr_to_scan,
+ 			   nodemask_t *nodes_to_scan);
+ 
+@@ -42,10 +42,12 @@ void xfs_eofblocks_worker(struct work_struct *);
+ 
+ int xfs_sync_inode_grab(struct xfs_inode *ip);
+ int xfs_inode_ag_iterator(struct xfs_mount *mp,
++	int (*grab)(struct xfs_inode *ip, int flags),
+ 	int (*execute)(struct xfs_inode *ip, struct xfs_perag *pag,
+ 		int flags, void *args),
+ 	int flags, void *args);
+ int xfs_inode_ag_iterator_tag(struct xfs_mount *mp,
++	int (*grab)(struct xfs_inode *ip, int flags),
+ 	int (*execute)(struct xfs_inode *ip, struct xfs_perag *pag,
+ 		int flags, void *args),
+ 	int flags, void *args, int tag);
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index da50846..6985a32 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -456,7 +456,6 @@ xfs_initialize_perag(
+ 		pag->pag_agno = index;
+ 		pag->pag_mount = mp;
+ 		spin_lock_init(&pag->pag_ici_lock);
+-		mutex_init(&pag->pag_ici_reclaim_lock);
+ 		INIT_RADIX_TREE(&pag->pag_ici_root, GFP_ATOMIC);
+ 		spin_lock_init(&pag->pag_buf_lock);
+ 		pag->pag_buf_tree = RB_ROOT;
+diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+index 5f53e75..85294a6 100644
+--- a/fs/xfs/xfs_qm_syscalls.c
++++ b/fs/xfs/xfs_qm_syscalls.c
+@@ -883,5 +883,5 @@ xfs_qm_dqrele_all_inodes(
+ 	uint		 flags)
  {
- 	long count = 0;
- 	int nid;
- 
--	for_each_node_mask(nid, lru->active_nodes) {
-+	for_each_node_mask(nid, *nodes_to_count) {
- 		struct list_lru_node *nlru = &lru->node[nid];
- 
- 		spin_lock(&nlru->lock);
-@@ -71,7 +72,7 @@ list_lru_count(
- 
- 	return count;
+ 	ASSERT(mp->m_quotainfo);
+-	xfs_inode_ag_iterator(mp, xfs_dqrele_inode, flags, NULL);
++	xfs_inode_ag_iterator(mp, NULL, xfs_dqrele_inode, flags, NULL);
  }
--EXPORT_SYMBOL_GPL(list_lru_count);
-+EXPORT_SYMBOL_GPL(list_lru_count_nodemask);
- 
- static long
- list_lru_walk_node(
-@@ -116,16 +117,17 @@ restart:
- }
- 
- long
--list_lru_walk(
-+list_lru_walk_nodemask(
- 	struct list_lru	*lru,
- 	list_lru_walk_cb isolate,
- 	void		*cb_arg,
--	long		nr_to_walk)
-+	long		nr_to_walk,
-+	nodemask_t	*nodes_to_walk)
- {
- 	long isolated = 0;
- 	int nid;
- 
--	for_each_node_mask(nid, lru->active_nodes) {
-+	for_each_node_mask(nid, *nodes_to_walk) {
- 		isolated += list_lru_walk_node(lru, nid, isolate,
- 					       cb_arg, &nr_to_walk);
- 		if (nr_to_walk <= 0)
-@@ -133,7 +135,7 @@ list_lru_walk(
- 	}
- 	return isolated;
- }
--EXPORT_SYMBOL_GPL(list_lru_walk);
-+EXPORT_SYMBOL_GPL(list_lru_walk_nodemask);
- 
- long
- list_lru_dispose_all_node(
 -- 
 1.7.10
 
