@@ -1,21 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qARH6VRl069313 for <xfs@oss.sgi.com>; Tue, 27 Nov 2012 11:06:31 -0600
+	qARHAA8w069912 for <xfs@oss.sgi.com>; Tue, 27 Nov 2012 11:10:10 -0600
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 6XIeS1A5kJfbvqO4 for
-	<xfs@oss.sgi.com>; Tue, 27 Nov 2012 09:08:47 -0800 (PST)
-Message-ID: <50B4F38E.8060806@redhat.com>
-Date: Tue, 27 Nov 2012 11:08:30 -0600
-From: Eric Sandeen <sandeen@redhat.com>
+	cuda.sgi.com with ESMTP id vnzdqvKIvKqdgeQa for
+	<xfs@oss.sgi.com>; Tue, 27 Nov 2012 09:12:26 -0800 (PST)
+Date: Tue, 27 Nov 2012 14:50:01 -0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [RFC] [PATCH] xfs_quota: support relative path as `path' arguments
+Message-ID: <20121127165001.GA11620@andromeda.usersys.redhat.com>
+References: <50B49074.1020000@jp.fujitsu.com>
 MIME-Version: 1.0
-Subject: Re: How to run xfstests against multipath disks on SuSE?
-References: <CAPxxNQmwX+TmJ=B-H0f+bzpx5JdijyyRrxCAAZRi9+c8HjQL9Q@mail.gmail.com>
-	<alpine.LFD.2.00.1211261442490.18234@localhost>
-	<20121126145559.GK31891@thunk.org>
-	<CAPxxNQmgOmEzkmzL7Tei4KAxaP49yx1fmhNgxvwaFNiYVosGtA@mail.gmail.com>
-	<20121127031438.GK6434@dastard>
-In-Reply-To: <20121127031438.GK6434@dastard>
+Content-Disposition: inline
+In-Reply-To: <50B49074.1020000@jp.fujitsu.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,68 +21,56 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: =?UTF-8?B?THVrw6HFoSBDemVybmVy?= <lczerner@redhat.com>, Ryan Wang <openspace.wang@gmail.com>, linux-ext4@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, xfs@oss.sgi.com
+To: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
+Cc: xfs ML <xfs@oss.sgi.com>
 
-T24gMTEvMjYvMTIgOToxNCBQTSwgRGF2ZSBDaGlubmVyIHdyb3RlOgo+IE9uIFR1ZSwgTm92IDI3
-LCAyMDEyIGF0IDA5OjIwOjQ3QU0gKzA4MDAsIFJ5YW4gV2FuZyB3cm90ZToKPj4gMjAxMi8xMS8y
-NiBUaGVvZG9yZSBUcydvIDx0eXRzb0BtaXQuZWR1PjoKPj4+IE9uIE1vbiwgTm92IDI2LCAyMDEy
-IGF0IDAyOjQzOjQwUE0gKzAxMDAsIEx1a8OhxaEgQ3plcm5lciB3cm90ZToKPj4+Pj4gVGhlIEkg
-Y2hlY2tlZCB0aGUgc2NyaXB0IGNvbW1vbi5yYywgYW5kIGZvdW5kIHRoYXQgaXQgdXNlcwo+Pj4+
-PiBkZiB0byBkZXRlcm1pbmUgdGhlIGZpbGVzeXN0ZW0gdHlwZSBhbmQgaXQgdXNlcyB0aGUgcmVh
-bHBhdGgKPj4+Pj4gIi9kZXYvZG0tMCIgaW5zdGVhZCBvZiAiL2Rldi9tYXBwZXIvbXBhdGhhIiwg
-d2hpbGUgZGYgYWx3YXlzCj4+Pj4+IHNob3dzICJkZXZ0bXBmcyIgaW5zdGVhZCBvZiAiZXh0NCIg
-Zm9yIC9kZXYvZG0tMC4KPj4+Pj4KPj4+Pj4gSSBydW4gIm1vdW50IiBhbmQgZm91bmQgdGhhdCBk
-ZXZ0bXBmcyBpcyBtb3VudCBvbiAvZGV2LyBvbiBvcGVuc3VzZQo+Pj4+PiAqKipieSBkZWZhdWx0
-KioqLiBFdmVuIHRob3VnaCAgSSBydW4gIm1vdW50IC10IGJ0cmZzIC9kZXYvZG0tMCAvc29tZWRp
-ciIsCj4+Pj4+IGRmIHN0aWxsIHNob3dlZCBkZXZ0bXBmcy4KPj4+Pj4KPj4+Pj4gQW55IGlkZWFz
-IHRvIGtpY2sgb2ZmIHRoZSB4ZnN0ZXN0cz8KPj4+Cj4+PiBBdCBsZWFzdCB3aXRoIHRoZSBkZiB3
-aGljaCBzaGlwcyB3aXRoIERlYmlhbiBUZXN0aW5nLCBkZiB3aWxsIGRpc3BsYXkKPj4+IHRoZSBm
-aWxlIHN5c3RlbSBpbiB1c2UgaWYgaXQgbWF0Y2hlcyB0aGUgZGV2aWNlIG5hbWUgd2hpY2ggaXMK
-Pj4+IC9ldGMvbXRhYi4gIEl0IGxvb2tzIHRoZSBpc3N1ZSBpcyB0aGF0IG1vdW50IGlzIGNhbm9u
-aWNhbGl6aW5nIHRoZQo+Pj4gZGV2aWNlIG5hbWUgdG8gYmUgdGhlIGh1bWFuIGZyaWVuZGx5IHZl
-cnNpb246Cj4+Pgo+Pj4gIyBscyAtbCAvZGV2L21hcHBlci9jbG9zdXJlLWJpZ3NjcmF0Y2gKPj4+
-IDAgbHJ3eHJ3eHJ3eCAxIHJvb3Qgcm9vdCA3IE5vdiAxNiAxNToxNSAvZGV2L21hcHBlci9jbG9z
-dXJlLWJpZ3NjcmF0Y2ggLT4gLi4vZG0tNwo+Pj4gPHR5dHNvLnJvb3RAY2xvc3VyZT4gey9ob21l
-L3R5dHNvL2Jpbn0sIGxldmVsIDIKPj4+ICMgbW91bnQgL2Rldi9kbS03IC91Mgo+Pj4gIyBkZiAv
-dTIKPj4+IEZpbGVzeXN0ZW0gICAgICAgICAgICAgICAgICAgICAxSy1ibG9ja3MgICBVc2VkIEF2
-YWlsYWJsZSBVc2UlIE1vdW50ZWQgb24KPj4+IC9kZXYvbWFwcGVyL2Nsb3N1cmUtYmlnc2NyYXRj
-aCAgNTI0MDMyMDAgMjI0NzcyICA1MjE3ODQyOCAgIDElIC91Mgo+Pj4gIyBncmVwIC91MiAvZXRj
-L210YWIKPj4+IC9kZXYvbWFwcGVyL2Nsb3N1cmUtYmlnc2NyYXRjaCAvdTIgeGZzIHJ3LHJlbGF0
-aW1lLGF0dHIyLGlub2RlNjQsbm9xdW90YSAwIDAKPj4+Cj4+PiBTbyB0aGUgc2ltcGxlc3Qgc29s
-dXRpb24gaXMgdG8ganVzdCB1c2UgL2Rldi9tYXBwZXIvbXBhdGhhIGluc3RlYWQgb2YKPj4+IGlu
-c2lzdGluZyBvbiB1c2luZyAvZGV2L2RtLTAuICBUaGF0J3Mgd2hhdCBJIGRvLi4uLgo+Pgo+PiBJ
-biB4ZnN0ZXN0cy9jb21tb24ucmMsIGl0IHdpbGwgdXNlIHJlYWxwYXRoIHRvIG9idGFpbiAvZGV2
-L2RtLTAsIGV2ZW4gaWYgeW91Cj4+IHNwZWNpZmllZCAvZGV2L21hcHBlci9tcGF0aGEuCj4+IE15
-IHByb2JsZW0gaXMgaW4gU3VTRSwgdGhlIGRldnRtcGZzIGlzIG1vdW50ZWQgb24gL2RldiBieSBk
-ZWZhdWx0LCBzZWVtcwo+PiB1c2VkIGJ5IHVkZXYuIEFuZCBkZiByZXBvcnRzIGRldnRtcGZzIG9u
-IC9kZXYvZG0tMCwgaW5zdGVhZCBvZiBleHQ0Lgo+IAo+IFdoYXQgdmVyc2lvbiBvZiB4ZnN0ZXN0
-cyBhcmUgeW91IHVzaW5nPyBEbyB5b3UgaGF2ZSBhCj4gIlJFQURNRS5kZXZpY2UtbWFwcGVyIiBm
-aWxlIGluIHRoZSBiYXNlIGRpcmVjdG9yeT8gSWYgbm90LCB1cGdyYWRlCj4gdG8gdGhlIGxhdGVz
-dCB2ZXJzaW9uIGFuZCByZXRyeS4KPiAKPiAkIGdsIC1uIDEgLXAgMGE4MTg4Ngo+IGNvbW1pdCAw
-YTgxODg2MmJiNzQ5MzJlMTU5NzFlYzhiZWRiNTU3NjVlYzNhM2Y2Cj4gQXV0aG9yOiBDaHJpc3Rv
-cGggSGVsbHdpZyA8aGNoQGxzdC5kZT4KPiBEYXRlOiAgIFdlZCBNYXkgNCAxNjoyODozMiAyMDEx
-ICswMjAwCj4gCj4gICAgIHhmc3Rlc3RzOiBzdXBwb3J0IHBvc3QtdWRldiBkZXZpY2UgbWFwcGVy
-IG5vZGVzCj4gCj4gICAgIEJlY2F1c2Ugb2YgdWRldnMgY29tcGxhaW5pbmcgZGV2aWNlIG1hcHBl
-ciBub3cgY3JlYXRlcyAvZGV2L2RtLU4gYXMgdGhlIHJlYWwKPiAgICAgZGV2aWNlIG5vZGVzLCBh
-bmQganVzdCBzeW1saW5rcyB0aGUgL2Rldi9tYXBwZXIvIG5hbWVzIHRvIGl0LiAgVGhpcyB3b3Vs
-ZCBiZQo+ICAgICBlYXN5IGlmIGV2ZXJ5dGhpbmcgdXNlZCB0aGUgL2Rldi9tYXBwZXIgY2xlYXIg
-bmFtZXMsIGJ1dCBtb3N0IHN5c3RlbSB1dGlsaXRpZXMKPiAgICAgdHJhbnNsYXRlIHRoZW0gYmFj
-ayB0byB0aGUgL2Rldi9tYXBwZXIvIG5hbWVzIGFuZCB0aHVzIGNvbmZ1c2UgdmFyaW91cyB0ZXN0
-Cj4gICAgIGNhc2VzLiAgQWRkIHN1cHBvcnQgdG8gX2lzX2Jsb2NrX2RldiB0byByZWFkIHN5bWxp
-bmtzLCBhbmQgYWRkIGRvY3VtZW50YXRpb24KPiAgICAgb24gaG93IHRvIHJ1biB4ZnN0ZXN0cyBv
-biBkZXZpY2UgbWFwcGVyIHZvbHVtZXMuCj4gCj4gICAgIFNpZ25lZC1vZmYtYnk6IENocmlzdG9w
-aCBIZWxsd2lnIDxoY2hAbHN0LmRlPgo+ICAgICBSZXZpZXdlZC1ieTogQWxleCBFbGRlciA8YWVs
-ZGVyQHNnaS5jb20+Cj4gCj4gQ2hlZXJzLAo+IAo+IERhdmUuCj4gCgpSZWNlbnQgInJlYWxwYXRo
-IiBjaGFuZ2VzIGFsc28gd2VudCBpbjoKCmIwM2M2NjIzOTk5NTY2MDk5MzRmZjA2M2U5MDY0ZTE1
-ZGM3NDU5YWMgeGZzdGVzdHM6IGZpeCB0byBidWlsZCBzcmMvcmVhbHBhdGggYW5kIHRoZSBjb3Jy
-ZWN0IHRoZSBleGlzdGVuY2Ugb2YgdGFyZ2V0IGRldmljZXMKZDVlYTg3M2ZjYmYwMGI4NDFmMDUx
-MWEyNmZiMzQxMzY0YTVjNjQyNSB4ZnN0ZXN0czogcmVzb2x2ZSBzeW1saW5rZWQgZGV2aWNlcyB0
-byByZWFsIHBhdGhzCgpzbyBlaXRoZXIgb2YgdGhvc2UgY291bGQgaGF2ZSBicm9rZW4gYW5kL29y
-IGZpeGVkIGl0IGZvciB5b3UgOikKCi1FcmljCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRw
-Oi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On Tue, Nov 27, 2012 at 07:05:40PM +0900, Satoru Takeuchi wrote:
+
+> From: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
+> 
+> Current xfs_quota only accepts absolute path as its `path' arguments.
+> This patch adds the support of relative path for user's convenience.
+> 
+> Signed-off-by: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
+>
+
+Using realpath() to handle the path being passed by user, not only makes able
+the usage of relative paths, but also fixes the problem in having a "/" at the
+end of the path. For those who abuses of TABs, this is very annoying.
+
+Looks good,
+
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com> 
+Tested-by: Carlos Maiolino <cmaiolino@redhat.com>
+
+> ---
+>  libxcmd/paths.c |   42 +++++++++++++++++++++++++++++-------------
+>  1 file changed, 29 insertions(+), 13 deletions(-)
+> 
+> diff --git a/libxcmd/paths.c b/libxcmd/paths.c
+> index 2a92299..bd84cde 100644
+> --- a/libxcmd/paths.c
+> +++ b/libxcmd/paths.c
+> @@ -27,6 +27,7 @@
+>  #include <xfs/path.h>
+>  #include <xfs/input.h>
+>  #include <xfs/project.h>
+> +#include <limits.h>
+>  
+>  extern char *progname;
+>  
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+
+-- 
+Carlos
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
