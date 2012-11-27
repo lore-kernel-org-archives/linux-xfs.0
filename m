@@ -1,36 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAR7VwO3022920 for <xfs@oss.sgi.com>; Tue, 27 Nov 2012 01:31:58 -0600
+	qARA3o2A034304 for <xfs@oss.sgi.com>; Tue, 27 Nov 2012 04:03:51 -0600
 Received: from fgwmail6.fujitsu.co.jp (fgwmail6.fujitsu.co.jp [192.51.44.36])
-	by cuda.sgi.com with ESMTP id iJ5otKgetx5gGj9r (version=TLSv1
+	by cuda.sgi.com with ESMTP id DNPeKvE4D0DgPcMF (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 26 Nov 2012 23:34:13 -0800 (PST)
-Received: from m2.gw.fujitsu.co.jp (unknown [10.0.50.72])
-	by fgwmail6.fujitsu.co.jp (Postfix) with ESMTP id 325DB3EE0BD
-	for <xfs@oss.sgi.com>; Tue, 27 Nov 2012 16:34:12 +0900 (JST)
-Received: from smail (m2 [127.0.0.1])
-	by outgoing.m2.gw.fujitsu.co.jp (Postfix) with ESMTP id 1B2DA45DE4E
-	for <xfs@oss.sgi.com>; Tue, 27 Nov 2012 16:34:12 +0900 (JST)
-Received: from s2.gw.fujitsu.co.jp (s2.gw.fujitsu.co.jp [10.0.50.92])
-	by m2.gw.fujitsu.co.jp (Postfix) with ESMTP id F3E7845DD78
-	for <xfs@oss.sgi.com>; Tue, 27 Nov 2012 16:34:11 +0900 (JST)
-Received: from s2.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s2.gw.fujitsu.co.jp (Postfix) with ESMTP id E64711DB803A
-	for <xfs@oss.sgi.com>; Tue, 27 Nov 2012 16:34:11 +0900 (JST)
-Received: from g01jpexchkw12.g01.fujitsu.local
-	(g01jpexchkw12.g01.fujitsu.local [10.0.194.51])
-	by s2.gw.fujitsu.co.jp (Postfix) with ESMTP id 80DD01DB8040
-	for <xfs@oss.sgi.com>; Tue, 27 Nov 2012 16:34:11 +0900 (JST)
-Message-ID: <50B46CDF.6020807@jp.fujitsu.com>
-Date: Tue, 27 Nov 2012 16:33:51 +0900
+	Tue, 27 Nov 2012 02:06:06 -0800 (PST)
+Received: from m3.gw.fujitsu.co.jp (unknown [10.0.50.73])
+	by fgwmail6.fujitsu.co.jp (Postfix) with ESMTP id 9FF8C3EE0B5
+	for <xfs@oss.sgi.com>; Tue, 27 Nov 2012 19:06:04 +0900 (JST)
+Received: from smail (m3 [127.0.0.1])
+	by outgoing.m3.gw.fujitsu.co.jp (Postfix) with ESMTP id 80A5C45DEB6
+	for <xfs@oss.sgi.com>; Tue, 27 Nov 2012 19:06:04 +0900 (JST)
+Received: from s3.gw.fujitsu.co.jp (s3.gw.fujitsu.co.jp [10.0.50.93])
+	by m3.gw.fujitsu.co.jp (Postfix) with ESMTP id 6A60A45DEB2
+	for <xfs@oss.sgi.com>; Tue, 27 Nov 2012 19:06:04 +0900 (JST)
+Received: from s3.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id 5E1001DB803C
+	for <xfs@oss.sgi.com>; Tue, 27 Nov 2012 19:06:04 +0900 (JST)
+Received: from g01jpexchkw02.g01.fujitsu.local
+	(g01jpexchkw02.g01.fujitsu.local [10.0.194.41])
+	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id 1C7221DB803B
+	for <xfs@oss.sgi.com>; Tue, 27 Nov 2012 19:06:04 +0900 (JST)
+Message-ID: <50B49074.1020000@jp.fujitsu.com>
+Date: Tue, 27 Nov 2012 19:05:40 +0900
 From: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: Remove the description about nodelaylog mount option
-	from, the xfs document.
-References: <50B30B41.8040400@jp.fujitsu.com> <20121126155511.GF27055@sgi.com>
-	<20121126220736.GG27055@sgi.com>
-In-Reply-To: <20121126220736.GG27055@sgi.com>
+Subject: [RFC] [PATCH] xfs_quota: support relative path as `path' arguments
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -43,59 +39,127 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: xfs ML <xfs@oss.sgi.com>
+To: xfs ML <xfs@oss.sgi.com>
 
-(2012/11/27 7:07), Ben Myers wrote:
-> Hey Satoru,
-> 
-> On Mon, Nov 26, 2012 at 09:55:11AM -0600, Ben Myers wrote:
->> On Mon, Nov 26, 2012 at 03:25:05PM +0900, Satoru Takeuchi wrote:
->>> From: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
->>>
->>> nodelaylog mount option is removed by commit 93b8a585. But there still be
->>> the description about it in the xfs document. This patch removes it.
->>>
->>> Signed-off-by: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
->>> ---
->>>  Documentation/filesystems/xfs.txt |    2 +-
->>>  1 files changed, 1 insertions(+), 1 deletions(-)
->>>
->>> diff --git a/Documentation/filesystems/xfs.txt b/Documentation/filesystems/xfs.txt
->>> index 3fc0c31..860b845 100644
->>> --- a/Documentation/filesystems/xfs.txt
->>> +++ b/Documentation/filesystems/xfs.txt
->>> @@ -43,7 +43,7 @@ When mounting an XFS filesystem, the following options are accepted.
->>>         Issue command to let the block device reclaim space freed by the
->>>         filesystem.  This is useful for SSD devices, thinly provisioned
->>>         LUNs and virtual machine images, but may have a performance
->>> -       impact.  This option is incompatible with the nodelaylog option.
->>> +       impact.
->>
->> Looks good.
->>
->> Reviewed-by: Ben Myers <bpm@sgi.com>
-> 
-> This has been committed to git://oss.sgi.com/xfs/xfs.git, master and for-next
-> branches.  It seems like your mailer replaced tabs with spaces so I cleaned
-> that up.  Just a heads-up... you may want to look into that.
+From: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
 
-I apologize to you. I copy-and-past this patch from my terminal and it converts
-tab to spaces. I'll be careful from now on.
+Current xfs_quota only accepts absolute path as its `path' arguments.
+This patch adds the support of relative path for user's convenience.
 
-Thanks,
-Satoru
+Signed-off-by: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
 
-> 
-> Thanks!
-> 	Ben
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+---
+ libxcmd/paths.c |   42 +++++++++++++++++++++++++++++-------------
+ 1 file changed, 29 insertions(+), 13 deletions(-)
 
+diff --git a/libxcmd/paths.c b/libxcmd/paths.c
+index 2a92299..bd84cde 100644
+--- a/libxcmd/paths.c
++++ b/libxcmd/paths.c
+@@ -27,6 +27,7 @@
+ #include <xfs/path.h>
+ #include <xfs/input.h>
+ #include <xfs/project.h>
++#include <limits.h>
+ 
+ extern char *progname;
+ 
+@@ -273,6 +274,7 @@ fs_table_initialise_mounts(
+ 	FILE		*mtp;
+ 	char		*fslog, *fsrt;
+ 	int		error, found;
++	char		*rpath = NULL;
+ 
+ 	error = found = 0;
+ 	fslog = fsrt = NULL;
+@@ -286,26 +288,32 @@ fs_table_initialise_mounts(
+ 	if ((mtp = setmntent(mtab_file, "r")) == NULL)
+ 		return ENOENT;
+ 
++	if (path)
++		if ((rpath = realpath(path, NULL)) == NULL)
++			return ENOENT;
++
+ 	while ((mnt = getmntent(mtp)) != NULL) {
+ 		if (strcmp(mnt->mnt_type, "xfs") != 0)
+ 			continue;
+-		if (path &&
+-		    ((strcmp(path, mnt->mnt_dir) != 0) &&
+-		     (strcmp(path, mnt->mnt_fsname) != 0)))
++		if (rpath &&
++		    ((strcmp(rpath, mnt->mnt_dir) != 0) &&
++		     (strcmp(rpath, mnt->mnt_fsname) != 0)))
+ 			continue;
+ 		if (fs_extract_mount_options(mnt, &fslog, &fsrt))
+ 			continue;
+ 		(void) fs_table_insert(mnt->mnt_dir, 0, FS_MOUNT_POINT,
+ 					mnt->mnt_fsname, fslog, fsrt);
+-		if (path) {
++		if (rpath) {
+ 			found = 1;
+ 			break;
+ 		}
+ 	}
+ 	endmntent(mtp);
+-	if (path && !found)
+-		error = ENXIO;
+-
++	if (rpath) {
++		free(rpath);
++		if (!found)
++			error = ENXIO;
++	}
+ 	return error;
+ }
+ 
+@@ -318,6 +326,7 @@ fs_table_initialise_mounts(
+ {
+ 	struct statfs	*stats;
+ 	int		i, count, error, found;
++	char		*rpath = NULL;
+ 
+ 	error = found = 0;
+ 	if ((count = getmntinfo(&stats, 0)) < 0) {
+@@ -326,24 +335,31 @@ fs_table_initialise_mounts(
+ 		return 0;
+ 	}
+ 
++	if (path)
++		if ((rpath = realpath(path, NULL)) == NULL)
++			return ENOENT;
++
+ 	for (i = 0; i < count; i++) {
+ 		if (strcmp(stats[i].f_fstypename, "xfs") != 0)
+ 			continue;
+-		if (path &&
+-		    ((strcmp(path, stats[i].f_mntonname) != 0) &&
+-		     (strcmp(path, stats[i].f_mntfromname) != 0)))
++		if (rpath &&
++		    ((strcmp(rpath, stats[i].f_mntonname) != 0) &&
++		     (strcmp(rpath, stats[i].f_mntfromname) != 0)))
+ 			continue;
+ 		/* TODO: external log and realtime device? */
+ 		(void) fs_table_insert(stats[i].f_mntonname, 0,
+ 					FS_MOUNT_POINT, stats[i].f_mntfromname,
+ 					NULL, NULL);
+-		if (path) {
++		if (rpath) {
+ 			found = 1;
+ 			break;
+ 		}
+ 	}
+-	if (path && !found)
+-		error = ENXIO;
++	if (rpath) {
++		free(rpath);
++		if (!found)
++			error = ENXIO;
++	}
+ 
+ 	return error;
+ }
+-- 
+1.7.10.2
 
 _______________________________________________
 xfs mailing list
