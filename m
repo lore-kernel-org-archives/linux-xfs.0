@@ -1,16 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qARNCsA9104915 for <xfs@oss.sgi.com>; Tue, 27 Nov 2012 17:12:54 -0600
+	qARNCjIr104886 for <xfs@oss.sgi.com>; Tue, 27 Nov 2012 17:12:45 -0600
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	ikh5sfih8uJpttuV for <xfs@oss.sgi.com>;
-	Tue, 27 Nov 2012 15:15:09 -0800 (PST)
+	tG7xwazrYDZe4CgP for <xfs@oss.sgi.com>;
+	Tue, 27 Nov 2012 15:15:00 -0800 (PST)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 03/19] dcache: remove dentries from LRU before putting on
-	dispose list
-Date: Wed, 28 Nov 2012 10:14:30 +1100
-Message-Id: <1354058086-27937-4-git-send-email-david@fromorbit.com>
+Subject: [PATCH 06/19] list: add a new LRU list type
+Date: Wed, 28 Nov 2012 10:14:33 +1100
+Message-Id: <1354058086-27937-7-git-send-email-david@fromorbit.com>
 In-Reply-To: <1354058086-27937-1-git-send-email-david@fromorbit.com>
 References: <1354058086-27937-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,189 +30,201 @@ Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.
 
 From: Dave Chinner <dchinner@redhat.com>
 
-One of the big problems with modifying the way the dcache shrinker
-and LRU implementation works is that the LRU is abused in several
-ways. One of these is shrink_dentry_list().
+Several subsystems use the same construct for LRU lists - a list
+head, a spin lock and and item count. They also use exactly the same
+code for adding and removing items from the LRU. Create a generic
+type for these LRU lists.
 
-Basically, we can move a dentry off the LRU onto a different list
-without doing any accounting changes, and then use dentry_lru_prune()
-to remove it from what-ever list it is now on to do the LRU
-accounting at that point.
-
-This makes it -really hard- to change the LRU implementation. The
-use of the per-sb LRU lock serialises movement of the dentries
-between the different lists and the removal of them, and this is the
-only reason that it works. If we want to break up the dentry LRU
-lock and lists into, say, per-node lists, we remove the only
-serialisation that allows this lru list/dispose list abuse to work.
-
-To make this work effectively, the dispose list has to be isolated
-from the LRU list - dentries have to be removed from the LRU
-*before* being placed on the dispose list. This means that the LRU
-accounting and isolation is completed before disposal is started,
-and that means we can change the LRU implementation freely in
-future.
-
-This means that dentries *must* be marked with DCACHE_SHRINK_LIST
-when they are placed on the dispose list so that we don't think that
-parent dentries found in try_prune_one_dentry() are on the LRU when
-the are actually on the dispose list. This would result in
-accounting the dentry to the LRU a second time. Hence
-dentry_lru_prune() has to handle the DCACHE_SHRINK_LIST case
-differently because the dentry isn't on the LRU list.
+This is the beginning of generic, node aware LRUs for shrinkers to
+work with.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/dcache.c |   73 +++++++++++++++++++++++++++++++++++++++++++++++++++--------
- 1 file changed, 63 insertions(+), 10 deletions(-)
+ include/linux/list_lru.h |   36 ++++++++++++++
+ lib/Makefile             |    2 +-
+ lib/list_lru.c           |  117 ++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 154 insertions(+), 1 deletion(-)
+ create mode 100644 include/linux/list_lru.h
+ create mode 100644 lib/list_lru.c
 
-diff --git a/fs/dcache.c b/fs/dcache.c
-index e0c97fe..0124a84 100644
---- a/fs/dcache.c
-+++ b/fs/dcache.c
-@@ -330,7 +330,6 @@ static void dentry_lru_add(struct dentry *dentry)
- static void __dentry_lru_del(struct dentry *dentry)
- {
- 	list_del_init(&dentry->d_lru);
--	dentry->d_flags &= ~DCACHE_SHRINK_LIST;
- 	dentry->d_sb->s_nr_dentry_unused--;
- 	this_cpu_dec(nr_dentry_unused);
- }
-@@ -340,6 +339,8 @@ static void __dentry_lru_del(struct dentry *dentry)
-  */
- static void dentry_lru_del(struct dentry *dentry)
- {
-+	BUG_ON(dentry->d_flags & DCACHE_SHRINK_LIST);
-+
- 	if (!list_empty(&dentry->d_lru)) {
- 		spin_lock(&dentry->d_sb->s_dentry_lru_lock);
- 		__dentry_lru_del(dentry);
-@@ -351,28 +352,42 @@ static void dentry_lru_del(struct dentry *dentry)
-  * Remove a dentry that is unreferenced and about to be pruned
-  * (unhashed and destroyed) from the LRU, and inform the file system.
-  * This wrapper should be called _prior_ to unhashing a victim dentry.
-+ *
-+ * Check that the dentry really is on the LRU as it may be on a private dispose
-+ * list and in that case we do not want to call the generic LRU removal
-+ * functions. This typically happens when shrink_dcache_sb() clears the LRU in
-+ * one go and then try_prune_one_dentry() walks back up the parent chain finding
-+ * dentries that are also on the dispose list.
-  */
- static void dentry_lru_prune(struct dentry *dentry)
- {
- 	if (!list_empty(&dentry->d_lru)) {
-+
- 		if (dentry->d_flags & DCACHE_OP_PRUNE)
- 			dentry->d_op->d_prune(dentry);
- 
--		spin_lock(&dentry->d_sb->s_dentry_lru_lock);
--		__dentry_lru_del(dentry);
--		spin_unlock(&dentry->d_sb->s_dentry_lru_lock);
-+		if ((dentry->d_flags & DCACHE_SHRINK_LIST))
-+			list_del_init(&dentry->d_lru);
-+		else {
-+			spin_lock(&dentry->d_sb->s_dentry_lru_lock);
-+			__dentry_lru_del(dentry);
-+			spin_unlock(&dentry->d_sb->s_dentry_lru_lock);
-+		}
-+		dentry->d_flags &= ~DCACHE_SHRINK_LIST;
- 	}
- }
- 
- static void dentry_lru_move_list(struct dentry *dentry, struct list_head *list)
- {
-+	BUG_ON(dentry->d_flags & DCACHE_SHRINK_LIST);
-+
- 	spin_lock(&dentry->d_sb->s_dentry_lru_lock);
- 	if (list_empty(&dentry->d_lru)) {
- 		list_add_tail(&dentry->d_lru, list);
--		dentry->d_sb->s_nr_dentry_unused++;
--		this_cpu_inc(nr_dentry_unused);
- 	} else {
- 		list_move_tail(&dentry->d_lru, list);
-+		dentry->d_sb->s_nr_dentry_unused--;
-+		this_cpu_dec(nr_dentry_unused);
- 	}
- 	spin_unlock(&dentry->d_sb->s_dentry_lru_lock);
- }
-@@ -840,12 +855,18 @@ static void shrink_dentry_list(struct list_head *list)
- 		}
- 
- 		/*
-+		 * The dispose list is isolated and dentries are not accounted
-+		 * to the LRU here, so we can simply remove it from the list
-+		 * here regardless of whether it is referenced or not.
-+		 */
-+		list_del_init(&dentry->d_lru);
-+
-+		/*
- 		 * We found an inuse dentry which was not removed from
--		 * the LRU because of laziness during lookup.  Do not free
--		 * it - just keep it off the LRU list.
-+		 * the LRU because of laziness during lookup. Do not free it.
- 		 */
- 		if (dentry->d_count) {
--			dentry_lru_del(dentry);
-+			dentry->d_flags &= ~DCACHE_SHRINK_LIST;
- 			spin_unlock(&dentry->d_lock);
- 			continue;
- 		}
-@@ -897,6 +918,8 @@ relock:
- 		} else {
- 			list_move_tail(&dentry->d_lru, &tmp);
- 			dentry->d_flags |= DCACHE_SHRINK_LIST;
-+			this_cpu_dec(nr_dentry_unused);
-+			sb->s_nr_dentry_unused--;
- 			spin_unlock(&dentry->d_lock);
- 			if (!--count)
- 				break;
-@@ -910,6 +933,28 @@ relock:
- 	shrink_dentry_list(&tmp);
- }
- 
+diff --git a/include/linux/list_lru.h b/include/linux/list_lru.h
+new file mode 100644
+index 0000000..3423949
+--- /dev/null
++++ b/include/linux/list_lru.h
+@@ -0,0 +1,36 @@
 +/*
-+ * Mark all the dentries as on being the dispose list so we don't think they are
-+ * still on the LRU if we try to kill them from ascending the parent chain in
-+ * try_prune_one_dentry() rather than directly from the dispose list.
++ * Copyright (c) 2010-2012 Red Hat, Inc. All rights reserved.
++ * Author: David Chinner
++ *
++ * Generic LRU infrastructure
 + */
-+static void
-+shrink_dcache_list(
-+	struct list_head *dispose)
-+{
-+	struct dentry *dentry;
++#ifndef _LRU_LIST_H
++#define _LRU_LIST_H 0
 +
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(dentry, dispose, d_lru) {
-+		spin_lock(&dentry->d_lock);
-+		dentry->d_flags |= DCACHE_SHRINK_LIST;
-+		this_cpu_dec(nr_dentry_unused);
-+		spin_unlock(&dentry->d_lock);
-+	}
-+	rcu_read_unlock();
-+	shrink_dentry_list(dispose);
++#include <linux/list.h>
++
++struct list_lru {
++	spinlock_t		lock;
++	struct list_head	list;
++	long			nr_items;
++};
++
++int list_lru_init(struct list_lru *lru);
++int list_lru_add(struct list_lru *lru, struct list_head *item);
++int list_lru_del(struct list_lru *lru, struct list_head *item);
++
++static inline long list_lru_count(struct list_lru *lru)
++{
++	return lru->nr_items;
 +}
 +
- /**
-  * shrink_dcache_sb - shrink dcache for a superblock
-  * @sb: superblock
-@@ -924,8 +969,16 @@ void shrink_dcache_sb(struct super_block *sb)
- 	spin_lock(&sb->s_dentry_lru_lock);
- 	while (!list_empty(&sb->s_dentry_lru)) {
- 		list_splice_init(&sb->s_dentry_lru, &tmp);
++typedef int (*list_lru_walk_cb)(struct list_head *item, spinlock_t *lock,
++				void *cb_arg);
++typedef void (*list_lru_dispose_cb)(struct list_head *dispose_list);
 +
-+		/*
-+		 * account for removal here so we don't need to handle it later
-+		 * even though the dentry is no longer on the lru list.
-+		 */
-+		this_cpu_sub(nr_dentry_unused, sb->s_nr_dentry_unused);
-+		sb->s_nr_dentry_unused = 0;
++long list_lru_walk(struct list_lru *lru, list_lru_walk_cb isolate,
++		   void *cb_arg, long nr_to_walk);
 +
- 		spin_unlock(&sb->s_dentry_lru_lock);
--		shrink_dentry_list(&tmp);
-+		shrink_dcache_list(&tmp);
- 		spin_lock(&sb->s_dentry_lru_lock);
- 	}
- 	spin_unlock(&sb->s_dentry_lru_lock);
++long list_lru_dispose_all(struct list_lru *lru, list_lru_dispose_cb dispose);
++
++#endif /* _LRU_LIST_H */
+diff --git a/lib/Makefile b/lib/Makefile
+index 821a162..a0849d7 100644
+--- a/lib/Makefile
++++ b/lib/Makefile
+@@ -12,7 +12,7 @@ lib-y := ctype.o string.o vsprintf.o cmdline.o \
+ 	 idr.o int_sqrt.o extable.o \
+ 	 sha1.o md5.o irq_regs.o reciprocal_div.o argv_split.o \
+ 	 proportions.o flex_proportions.o prio_heap.o ratelimit.o show_mem.o \
+-	 is_single_threaded.o plist.o decompress.o
++	 is_single_threaded.o plist.o decompress.o list_lru.o
+ 
+ lib-$(CONFIG_MMU) += ioremap.o
+ lib-$(CONFIG_SMP) += cpumask.o
+diff --git a/lib/list_lru.c b/lib/list_lru.c
+new file mode 100644
+index 0000000..475d0e9
+--- /dev/null
++++ b/lib/list_lru.c
+@@ -0,0 +1,117 @@
++/*
++ * Copyright (c) 2010-2012 Red Hat, Inc. All rights reserved.
++ * Author: David Chinner
++ *
++ * Generic LRU infrastructure
++ */
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/list_lru.h>
++
++int
++list_lru_add(
++	struct list_lru	*lru,
++	struct list_head *item)
++{
++	spin_lock(&lru->lock);
++	if (list_empty(item)) {
++		list_add_tail(item, &lru->list);
++		lru->nr_items++;
++		spin_unlock(&lru->lock);
++		return 1;
++	}
++	spin_unlock(&lru->lock);
++	return 0;
++}
++EXPORT_SYMBOL_GPL(list_lru_add);
++
++int
++list_lru_del(
++	struct list_lru	*lru,
++	struct list_head *item)
++{
++	spin_lock(&lru->lock);
++	if (!list_empty(item)) {
++		list_del_init(item);
++		lru->nr_items--;
++		spin_unlock(&lru->lock);
++		return 1;
++	}
++	spin_unlock(&lru->lock);
++	return 0;
++}
++EXPORT_SYMBOL_GPL(list_lru_del);
++
++long
++list_lru_walk(
++	struct list_lru *lru,
++	list_lru_walk_cb isolate,
++	void		*cb_arg,
++	long		nr_to_walk)
++{
++	struct list_head *item, *n;
++	long removed = 0;
++restart:
++	spin_lock(&lru->lock);
++	list_for_each_safe(item, n, &lru->list) {
++		int ret;
++
++		if (nr_to_walk-- < 0)
++			break;
++
++		ret = isolate(item, &lru->lock, cb_arg);
++		switch (ret) {
++		case 0:	/* item removed from list */
++			lru->nr_items--;
++			removed++;
++			break;
++		case 1: /* item referenced, give another pass */
++			list_move_tail(item, &lru->list);
++			break;
++		case 2: /* item cannot be locked, skip */
++			break;
++		case 3: /* item not freeable, lock dropped */
++			goto restart;
++		default:
++			BUG();
++		}
++	}
++	spin_unlock(&lru->lock);
++	return removed;
++}
++EXPORT_SYMBOL_GPL(list_lru_walk);
++
++long
++list_lru_dispose_all(
++	struct list_lru *lru,
++	list_lru_dispose_cb dispose)
++{
++	long disposed = 0;
++	LIST_HEAD(dispose_list);
++
++	spin_lock(&lru->lock);
++	while (!list_empty(&lru->list)) {
++		list_splice_init(&lru->list, &dispose_list);
++		disposed += lru->nr_items;
++		lru->nr_items = 0;
++		spin_unlock(&lru->lock);
++
++		dispose(&dispose_list);
++
++		spin_lock(&lru->lock);
++	}
++	spin_unlock(&lru->lock);
++	return disposed;
++}
++
++int
++list_lru_init(
++	struct list_lru	*lru)
++{
++	spin_lock_init(&lru->lock);
++	INIT_LIST_HEAD(&lru->list);
++	lru->nr_items = 0;
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(list_lru_init);
 -- 
 1.7.10
 
