@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qARNDD4A105118 for <xfs@oss.sgi.com>; Tue, 27 Nov 2012 17:13:13 -0600
+	qARND612105034 for <xfs@oss.sgi.com>; Tue, 27 Nov 2012 17:13:06 -0600
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	lqrhC9BrBCkrFmQj for <xfs@oss.sgi.com>;
-	Tue, 27 Nov 2012 15:15:29 -0800 (PST)
+	D6jBDeQNNQI6YY8C for <xfs@oss.sgi.com>;
+	Tue, 27 Nov 2012 15:15:21 -0800 (PST)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 19/19] shrinker: Kill old ->shrink API.
-Date: Wed, 28 Nov 2012 10:14:46 +1100
-Message-Id: <1354058086-27937-20-git-send-email-david@fromorbit.com>
+Subject: [PATCH 10/19] shrinker: add node awareness
+Date: Wed, 28 Nov 2012 10:14:37 +1100
+Message-Id: <1354058086-27937-11-git-send-email-david@fromorbit.com>
 In-Reply-To: <1354058086-27937-1-git-send-email-david@fromorbit.com>
 References: <1354058086-27937-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,154 +30,107 @@ Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.
 
 From: Dave Chinner <dchinner@redhat.com>
 
-There are no more users of this API, so kill it dead, dead, dead and
-quietly bury the corpse in a shallow, unmarked grave in a dark
-forest deep in the hills...
+Pass the node of the current zone being reclaimed to shrink_slab(),
+allowing the shrinker control nodemask to be set appropriately for
+node aware shrinkers.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/linux/shrinker.h      |   15 +++++----------
- include/trace/events/vmscan.h |    4 ++--
- mm/vmscan.c                   |   39 ++++++++-------------------------------
- 3 files changed, 15 insertions(+), 43 deletions(-)
+ fs/drop_caches.c         |    1 +
+ include/linux/shrinker.h |    3 +++
+ mm/memory-failure.c      |    2 ++
+ mm/vmscan.c              |   12 +++++++++---
+ 4 files changed, 15 insertions(+), 3 deletions(-)
 
+diff --git a/fs/drop_caches.c b/fs/drop_caches.c
+index c00e055..9fd702f 100644
+--- a/fs/drop_caches.c
++++ b/fs/drop_caches.c
+@@ -44,6 +44,7 @@ static void drop_slab(void)
+ 		.gfp_mask = GFP_KERNEL,
+ 	};
+ 
++	nodes_setall(shrink.nodes_to_scan);
+ 	do {
+ 		nr_objects = shrink_slab(&shrink, 1000, 1000);
+ 	} while (nr_objects > 10);
 diff --git a/include/linux/shrinker.h b/include/linux/shrinker.h
-index e71286f..d4636a0 100644
+index 4f59615..e71286f 100644
 --- a/include/linux/shrinker.h
 +++ b/include/linux/shrinker.h
-@@ -7,14 +7,15 @@
-  *
-  * The 'gfpmask' refers to the allocation we are currently trying to
-  * fulfil.
-- *
-- * Note that 'shrink' will be passed nr_to_scan == 0 when the VM is
-- * querying the cache size, so a fastpath for that case is appropriate.
-  */
- struct shrink_control {
- 	gfp_t gfp_mask;
+@@ -16,6 +16,9 @@ struct shrink_control {
  
--	/* How many slab objects shrinker() should scan and try to reclaim */
-+	/*
-+	 * How many objects scan_objects should scan and try to reclaim.
-+	 * This is reset before every call, so it is safe for callees
-+	 * to modify.
-+	 */
+ 	/* How many slab objects shrinker() should scan and try to reclaim */
  	long nr_to_scan;
++
++	/* shrink from these nodes */
++	nodemask_t nodes_to_scan;
+ };
  
- 	/* shrink from these nodes */
-@@ -24,11 +25,6 @@ struct shrink_control {
  /*
-  * A callback you can register to apply pressure to ageable caches.
-  *
-- * @shrink() should look through the least-recently-used 'nr_to_scan' entries
-- * and attempt to free them up.  It should return the number of objects which
-- * remain in the cache.  If it returns -1, it means it cannot do any scanning at
-- * this time (eg. there is a risk of deadlock).
-- *
-  * @count_objects should return the number of freeable items in the cache. If
-  * there are no objects to free or the number of freeable items cannot be
-  * determined, it should return 0. No deadlock checks should be done during the
-@@ -44,7 +40,6 @@ struct shrink_control {
-  * @scan_objects will be made from the current reclaim context.
-  */
- struct shrinker {
--	int (*shrink)(struct shrinker *, struct shrink_control *sc);
- 	long (*count_objects)(struct shrinker *, struct shrink_control *sc);
- 	long (*scan_objects)(struct shrinker *, struct shrink_control *sc);
+diff --git a/mm/memory-failure.c b/mm/memory-failure.c
+index 6c5899b..7bcbde4 100644
+--- a/mm/memory-failure.c
++++ b/mm/memory-failure.c
+@@ -248,10 +248,12 @@ void shake_page(struct page *p, int access)
+ 	 */
+ 	if (access) {
+ 		int nr;
++		int nid = page_to_nid(p);
+ 		do {
+ 			struct shrink_control shrink = {
+ 				.gfp_mask = GFP_KERNEL,
+ 			};
++			node_set(nid, shrink.nodes_to_scan);
  
-diff --git a/include/trace/events/vmscan.h b/include/trace/events/vmscan.h
-index 63cfccc..132a985 100644
---- a/include/trace/events/vmscan.h
-+++ b/include/trace/events/vmscan.h
-@@ -202,7 +202,7 @@ TRACE_EVENT(mm_shrink_slab_start,
- 
- 	TP_fast_assign(
- 		__entry->shr = shr;
--		__entry->shrink = shr->shrink;
-+		__entry->shrink = shr->scan_objects;
- 		__entry->nr_objects_to_shrink = nr_objects_to_shrink;
- 		__entry->gfp_flags = sc->gfp_mask;
- 		__entry->pgs_scanned = pgs_scanned;
-@@ -241,7 +241,7 @@ TRACE_EVENT(mm_shrink_slab_end,
- 
- 	TP_fast_assign(
- 		__entry->shr = shr;
--		__entry->shrink = shr->shrink;
-+		__entry->shrink = shr->scan_objects;
- 		__entry->unused_scan = unused_scan_cnt;
- 		__entry->new_scan = new_scan_cnt;
- 		__entry->retval = shrinker_retval;
+ 			nr = shrink_slab(&shrink, 1000, 1000);
+ 			if (page_count(p) == 1)
 diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 4a602ec..81731f5 100644
+index 55c4fc9..4a602ec 100644
 --- a/mm/vmscan.c
 +++ b/mm/vmscan.c
-@@ -176,14 +176,6 @@ void unregister_shrinker(struct shrinker *shrinker)
- }
- EXPORT_SYMBOL(unregister_shrinker);
+@@ -2122,15 +2122,20 @@ static unsigned long do_try_to_free_pages(struct zonelist *zonelist,
+ 		 */
+ 		if (global_reclaim(sc)) {
+ 			unsigned long lru_pages = 0;
++
++			nodes_clear(shrink->nodes_to_scan);
+ 			for_each_zone_zonelist(zone, z, zonelist,
+ 					gfp_zone(sc->gfp_mask)) {
+ 				if (!cpuset_zone_allowed_hardwall(zone, GFP_KERNEL))
+ 					continue;
  
--static inline int do_shrinker_shrink(struct shrinker *shrinker,
--				     struct shrink_control *sc,
--				     unsigned long nr_to_scan)
--{
--	sc->nr_to_scan = nr_to_scan;
--	return (*shrinker->shrink)(shrinker, sc);
--}
--
- #define SHRINK_BATCH 128
- /*
-  * Call the shrink functions to age shrinkable caches
-@@ -229,11 +221,8 @@ unsigned long shrink_slab(struct shrink_control *sc,
- 		long batch_size = shrinker->batch ? shrinker->batch
- 						  : SHRINK_BATCH;
+ 				lru_pages += zone_reclaimable_pages(zone);
++				node_set(zone_to_nid(zone),
++					 shrink->nodes_to_scan);
+ 			}
  
--		if (shrinker->scan_objects) {
--			max_pass = shrinker->count_objects(shrinker, sc);
--			WARN_ON(max_pass < 0);
--		} else
--			max_pass = do_shrinker_shrink(shrinker, sc, 0);
-+		max_pass = shrinker->count_objects(shrinker, sc);
-+		WARN_ON(max_pass < 0);
- 		if (max_pass <= 0)
- 			continue;
+ 			shrink_slab(shrink, sc->nr_scanned, lru_pages);
++
+ 			if (reclaim_state) {
+ 				sc->nr_reclaimed += reclaim_state->reclaimed_slab;
+ 				reclaim_state->reclaimed_slab = 0;
+@@ -2682,6 +2687,8 @@ loop_again:
+ 				shrink_zone(zone, &sc);
  
-@@ -252,7 +241,7 @@ unsigned long shrink_slab(struct shrink_control *sc,
- 		if (total_scan < 0) {
- 			printk(KERN_ERR
- 			"shrink_slab: %pF negative objects to delete nr=%ld\n",
--			       shrinker->shrink, total_scan);
-+			       shrinker->scan_objects, total_scan);
- 			total_scan = max_pass;
- 		}
- 
-@@ -286,24 +275,12 @@ unsigned long shrink_slab(struct shrink_control *sc,
- 		while (total_scan >= batch_size) {
- 			long ret;
- 
--			if (shrinker->scan_objects) {
--				sc->nr_to_scan = batch_size;
--				ret = shrinker->scan_objects(shrinker, sc);
-+			sc->nr_to_scan = batch_size;
-+			ret = shrinker->scan_objects(shrinker, sc);
- 
--				if (ret == -1)
--					break;
--				freed += ret;
--			} else {
--				int nr_before;
--
--				nr_before = do_shrinker_shrink(shrinker, sc, 0);
--				ret = do_shrinker_shrink(shrinker, sc,
--								batch_size);
--				if (ret == -1)
--					break;
--				if (ret < nr_before)
--					freed += nr_before - ret;
--			}
-+			if (ret == -1)
-+				break;
-+			freed += ret;
- 			count_vm_events(SLABS_SCANNED, batch_size);
- 			total_scan -= batch_size;
+ 				reclaim_state->reclaimed_slab = 0;
++				nodes_clear(shrink.nodes_to_scan);
++				node_set(zone_to_nid(zone), shrink.nodes_to_scan);
+ 				nr_slab = shrink_slab(&shrink, sc.nr_scanned, lru_pages);
+ 				sc.nr_reclaimed += reclaim_state->reclaimed_slab;
+ 				total_scanned += sc.nr_scanned;
+@@ -3318,10 +3325,9 @@ static int __zone_reclaim(struct zone *zone, gfp_t gfp_mask, unsigned int order)
+ 		 * number of slab pages and shake the slab until it is reduced
+ 		 * by the same nr_pages that we used for reclaiming unmapped
+ 		 * pages.
+-		 *
+-		 * Note that shrink_slab will free memory on all zones and may
+-		 * take a long time.
+ 		 */
++		nodes_clear(shrink.nodes_to_scan);
++		node_set(zone_to_nid(zone), shrink.nodes_to_scan);
+ 		for (;;) {
+ 			unsigned long lru_pages = zone_reclaimable_pages(zone);
  
 -- 
 1.7.10
