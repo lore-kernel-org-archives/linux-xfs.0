@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAR2tHJ0256590 for <xfs@oss.sgi.com>; Mon, 26 Nov 2012 20:55:18 -0600
+	qAR3CPY4257899 for <xfs@oss.sgi.com>; Mon, 26 Nov 2012 21:12:25 -0600
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	vGDYPgiPdDsTdiMR for <xfs@oss.sgi.com>;
-	Mon, 26 Nov 2012 18:57:32 -0800 (PST)
-Date: Tue, 27 Nov 2012 13:57:28 +1100
+	DikyFHHj2JADC5NL for <xfs@oss.sgi.com>;
+	Mon, 26 Nov 2012 19:14:39 -0800 (PST)
+Date: Tue, 27 Nov 2012 14:14:38 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [BUG] xfs_quota: can't handle the users managed by LDAP
-Message-ID: <20121127025728.GU32450@dastard>
-References: <50ADB27F.8070806@jp.fujitsu.com> <20121122233757.GY2591@dastard>
-	<50B32CC1.3020907@jp.fujitsu.com> <50B4198E.7080408@jp.fujitsu.com>
+Subject: Re: How to run xfstests against multipath disks on SuSE?
+Message-ID: <20121127031438.GK6434@dastard>
+References: <CAPxxNQmwX+TmJ=B-H0f+bzpx5JdijyyRrxCAAZRi9+c8HjQL9Q@mail.gmail.com>
+	<alpine.LFD.2.00.1211261442490.18234@localhost>
+	<20121126145559.GK31891@thunk.org>
+	<CAPxxNQmgOmEzkmzL7Tei4KAxaP49yx1fmhNgxvwaFNiYVosGtA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <50B4198E.7080408@jp.fujitsu.com>
+In-Reply-To: <CAPxxNQmgOmEzkmzL7Tei4KAxaP49yx1fmhNgxvwaFNiYVosGtA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,133 +25,61 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
-Cc: xfs ML <xfs@oss.sgi.com>
+To: Ryan Wang <openspace.wang@gmail.com>
+Cc: =?utf-8?B?THVrw6HFoQ==?= Czerner <lczerner@redhat.com>, linux-ext4@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, xfs@oss.sgi.com
 
-On Tue, Nov 27, 2012 at 10:38:22AM +0900, Satoru Takeuchi wrote:
-> Hi Dave and all,
-> 
-> (2012/11/26 17:48), Satoru Takeuchi wrote:
-> > (2012/11/23 8:37), Dave Chinner wrote:
-> >> On Thu, Nov 22, 2012 at 02:05:03PM +0900, Satoru Takeuchi wrote:
-> >>> Hi,
-> >>>
-> >>> Current xfs_quota (I pulled xfsprogs today) seems not be able to the users
-> >>> managed by LDAP. There is no patch since I'm not good at LDAP and don't know
-> >>> the root cause yet ;-(
-> >>>
-> >>> Step to reproduce(in this case, "sat" is the user managed by LDAP):
-> >>> ===============================================================================
-> >>> # uname -r
-> >>> 3.7.0-rc5
-> >>> # mount -o loop,usrquota xfs.img mnt
-> >>> # xfsprogs/quota/xfs_quota -xc "limit bsoft=10M bhard=10M sat" /dev/loop0
-> >>> xfs_quota: invalid user name: sat                                          # denied
-> >>> # su sat
-> >>> $                                                                          # But this user acutally exists.
-> >>> ===============================================================================
-> >>>
-> >>> The kernel is a bit old, but I suspect this is a userland problem.
-> >>
-> >> Yes, userland.
-> >>
-> >> However, xfs_quota is not supposed to know about LDAP, or NIS, or
-> >> any other user database. It uses the getpwnam() to convert the user
-> >> name to a UID, and that call is failing to find "sat". This is
-> >> supposed to work with LDAP (as mentioned in the man page), and if it
-> >> isn't it generally means something is broken with your LDAP setup
-> >> (/etc/nsswitch.conf not correct?) rather than there being something
-> >> wrong with xfs_quota....
-> > 
-> > Probably this behaivor comes from the difference between the test machine
-> > and the build machine which I built the upstream xfsprogs.
-> > 
-> > I made the following simple program which just calls getpwnam().
-> > 
-> > ===============================================================================
-> > #include <sys/types.h>
-> > #include <pwd.h>
-> > #include <err.h>
-> > #include <stdio.h>
-> > #include <stdlib.h>
-> > 
-> > int main(void)
-> > {
-> >         struct passwd *p;
-> >         if ((p = getpwnam("sat")) == NULL)
-> >                 err(EXIT_FAILURE, "getpwnam() failed.");
-> >         printf("name = %s, id = %d\n", p->pw_name, p->pw_uid);
-> >         exit(EXIT_SUCCESS);
-> > }
-> > ===============================================================================
-> > 
-> > Here is the result of this problem at the test machine.
-> > 
-> >  - SUCCEEDED: build at the test machine
-> >  - FAILED: built at the build machine
-> > 
-> > I will build xfsprogs at the test machine and confirm whether this behavior
-> > (getpwnam() fails) happens or not again.
-> 
-> I retried the step to reproduce and encountered the anotehr behavior with the
-> newest xfsprogs built at the test machine. In this test, getpwnam()
-> worked fine, but quota didn't work for LDAP user.
-> 
-> test result("testquota" is local user and "sat" is LDAP user here):
-> ===============================================================================
-> # mount -t xfs -o loop,usrquota xfs.img mnt
-> # ~sat/src/xfsprogs/quota/xfs_quota -xc "report -h" /dev/loop0
-> User quota on /home/sat/work/xfs/mnt (/dev/loop0)
->                         Blocks              
-> User ID      Used   Soft   Hard Warn/Grace   
-> ---------- --------------------------------- 
-> root            0      0      0  00 [------]    # There is no limit yet
-> 
-> # ~sat/src/xfsprogs/quota/xfs_quota -xc "limit bsoft=10M bhard=10M testquota" /dev/loop0
-> # echo $?
-> 0
-> # ~sat/src/xfsprogs/quota/xfs_quota -xc "report -h" /dev/loop0
-> User quota on /home/sat/work/xfs/mnt (/dev/loop0)
->                         Blocks              
-> User ID      Used   Soft   Hard Warn/Grace   
-> ---------- --------------------------------- 
-> root            0      0      0  00 [------]
-> testquota       0    10M    10M  00 [------]     # limit to local user works fine
-> # ~sat/src/xfsprogs/quota/xfs_quota -xc "limit bsoft=10M bhard=10M sat" /dev/loop0
-> # echo $?
-> 0
-> # ~sat/src/xfsprogs/quota/xfs_quota -xc "report -h" /dev/loop0
-> User quota on /home/sat/work/xfs/mnt (/dev/loop0)
->                         Blocks              
-> User ID      Used   Soft   Hard Warn/Grace   
-> ---------- --------------------------------- 
-> root            0      0      0  00 [------]
-> testquota       0    10M    10M  00 [------]      # limit to LDAP user does not work although xfs_quota returns 0
-> ===============================================================================
-> 
-> I tried it with real partition rather than loopback device, but the result
-> was the same.
-
-Can you strace the limit set and report of the ldap user and attach
-it? that will tell us directly whether xfs_quota saw the ldap user
-or not as we'll see a quotactl() being issued.
-
-Also, instead of using a user name, can you  find out the user ID of
-"sat" and use "report -U <uid + 1> -h" so avoid the getpwent lookup
-and just report raw quota ids?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVHVlLCBOb3YgMjcsIDIwMTIgYXQgMDk6MjA6NDdBTSArMDgwMCwgUnlhbiBXYW5nIHdyb3Rl
+Ogo+IDIwMTIvMTEvMjYgVGhlb2RvcmUgVHMnbyA8dHl0c29AbWl0LmVkdT46Cj4gPiBPbiBNb24s
+IE5vdiAyNiwgMjAxMiBhdCAwMjo0Mzo0MFBNICswMTAwLCBMdWvDocWhIEN6ZXJuZXIgd3JvdGU6
+Cj4gPj4gPiBUaGUgSSBjaGVja2VkIHRoZSBzY3JpcHQgY29tbW9uLnJjLCBhbmQgZm91bmQgdGhh
+dCBpdCB1c2VzCj4gPj4gPiBkZiB0byBkZXRlcm1pbmUgdGhlIGZpbGVzeXN0ZW0gdHlwZSBhbmQg
+aXQgdXNlcyB0aGUgcmVhbHBhdGgKPiA+PiA+ICIvZGV2L2RtLTAiIGluc3RlYWQgb2YgIi9kZXYv
+bWFwcGVyL21wYXRoYSIsIHdoaWxlIGRmIGFsd2F5cwo+ID4+ID4gc2hvd3MgImRldnRtcGZzIiBp
+bnN0ZWFkIG9mICJleHQ0IiBmb3IgL2Rldi9kbS0wLgo+ID4+ID4KPiA+PiA+IEkgcnVuICJtb3Vu
+dCIgYW5kIGZvdW5kIHRoYXQgZGV2dG1wZnMgaXMgbW91bnQgb24gL2Rldi8gb24gb3BlbnN1c2UK
+PiA+PiA+ICoqKmJ5IGRlZmF1bHQqKiouIEV2ZW4gdGhvdWdoICBJIHJ1biAibW91bnQgLXQgYnRy
+ZnMgL2Rldi9kbS0wIC9zb21lZGlyIiwKPiA+PiA+IGRmIHN0aWxsIHNob3dlZCBkZXZ0bXBmcy4K
+PiA+PiA+Cj4gPj4gPiBBbnkgaWRlYXMgdG8ga2ljayBvZmYgdGhlIHhmc3Rlc3RzPwo+ID4KPiA+
+IEF0IGxlYXN0IHdpdGggdGhlIGRmIHdoaWNoIHNoaXBzIHdpdGggRGViaWFuIFRlc3RpbmcsIGRm
+IHdpbGwgZGlzcGxheQo+ID4gdGhlIGZpbGUgc3lzdGVtIGluIHVzZSBpZiBpdCBtYXRjaGVzIHRo
+ZSBkZXZpY2UgbmFtZSB3aGljaCBpcwo+ID4gL2V0Yy9tdGFiLiAgSXQgbG9va3MgdGhlIGlzc3Vl
+IGlzIHRoYXQgbW91bnQgaXMgY2Fub25pY2FsaXppbmcgdGhlCj4gPiBkZXZpY2UgbmFtZSB0byBi
+ZSB0aGUgaHVtYW4gZnJpZW5kbHkgdmVyc2lvbjoKPiA+Cj4gPiAjIGxzIC1sIC9kZXYvbWFwcGVy
+L2Nsb3N1cmUtYmlnc2NyYXRjaAo+ID4gMCBscnd4cnd4cnd4IDEgcm9vdCByb290IDcgTm92IDE2
+IDE1OjE1IC9kZXYvbWFwcGVyL2Nsb3N1cmUtYmlnc2NyYXRjaCAtPiAuLi9kbS03Cj4gPiA8dHl0
+c28ucm9vdEBjbG9zdXJlPiB7L2hvbWUvdHl0c28vYmlufSwgbGV2ZWwgMgo+ID4gIyBtb3VudCAv
+ZGV2L2RtLTcgL3UyCj4gPiAjIGRmIC91Mgo+ID4gRmlsZXN5c3RlbSAgICAgICAgICAgICAgICAg
+ICAgIDFLLWJsb2NrcyAgIFVzZWQgQXZhaWxhYmxlIFVzZSUgTW91bnRlZCBvbgo+ID4gL2Rldi9t
+YXBwZXIvY2xvc3VyZS1iaWdzY3JhdGNoICA1MjQwMzIwMCAyMjQ3NzIgIDUyMTc4NDI4ICAgMSUg
+L3UyCj4gPiAjIGdyZXAgL3UyIC9ldGMvbXRhYgo+ID4gL2Rldi9tYXBwZXIvY2xvc3VyZS1iaWdz
+Y3JhdGNoIC91MiB4ZnMgcncscmVsYXRpbWUsYXR0cjIsaW5vZGU2NCxub3F1b3RhIDAgMAo+ID4K
+PiA+IFNvIHRoZSBzaW1wbGVzdCBzb2x1dGlvbiBpcyB0byBqdXN0IHVzZSAvZGV2L21hcHBlci9t
+cGF0aGEgaW5zdGVhZCBvZgo+ID4gaW5zaXN0aW5nIG9uIHVzaW5nIC9kZXYvZG0tMC4gIFRoYXQn
+cyB3aGF0IEkgZG8uLi4uCj4gCj4gSW4geGZzdGVzdHMvY29tbW9uLnJjLCBpdCB3aWxsIHVzZSBy
+ZWFscGF0aCB0byBvYnRhaW4gL2Rldi9kbS0wLCBldmVuIGlmIHlvdQo+IHNwZWNpZmllZCAvZGV2
+L21hcHBlci9tcGF0aGEuCj4gTXkgcHJvYmxlbSBpcyBpbiBTdVNFLCB0aGUgZGV2dG1wZnMgaXMg
+bW91bnRlZCBvbiAvZGV2IGJ5IGRlZmF1bHQsIHNlZW1zCj4gdXNlZCBieSB1ZGV2LiBBbmQgZGYg
+cmVwb3J0cyBkZXZ0bXBmcyBvbiAvZGV2L2RtLTAsIGluc3RlYWQgb2YgZXh0NC4KCldoYXQgdmVy
+c2lvbiBvZiB4ZnN0ZXN0cyBhcmUgeW91IHVzaW5nPyBEbyB5b3UgaGF2ZSBhCiJSRUFETUUuZGV2
+aWNlLW1hcHBlciIgZmlsZSBpbiB0aGUgYmFzZSBkaXJlY3Rvcnk/IElmIG5vdCwgdXBncmFkZQp0
+byB0aGUgbGF0ZXN0IHZlcnNpb24gYW5kIHJldHJ5LgoKJCBnbCAtbiAxIC1wIDBhODE4ODYKY29t
+bWl0IDBhODE4ODYyYmI3NDkzMmUxNTk3MWVjOGJlZGI1NTc2NWVjM2EzZjYKQXV0aG9yOiBDaHJp
+c3RvcGggSGVsbHdpZyA8aGNoQGxzdC5kZT4KRGF0ZTogICBXZWQgTWF5IDQgMTY6Mjg6MzIgMjAx
+MSArMDIwMAoKICAgIHhmc3Rlc3RzOiBzdXBwb3J0IHBvc3QtdWRldiBkZXZpY2UgbWFwcGVyIG5v
+ZGVzCgogICAgQmVjYXVzZSBvZiB1ZGV2cyBjb21wbGFpbmluZyBkZXZpY2UgbWFwcGVyIG5vdyBj
+cmVhdGVzIC9kZXYvZG0tTiBhcyB0aGUgcmVhbAogICAgZGV2aWNlIG5vZGVzLCBhbmQganVzdCBz
+eW1saW5rcyB0aGUgL2Rldi9tYXBwZXIvIG5hbWVzIHRvIGl0LiAgVGhpcyB3b3VsZCBiZQogICAg
+ZWFzeSBpZiBldmVyeXRoaW5nIHVzZWQgdGhlIC9kZXYvbWFwcGVyIGNsZWFyIG5hbWVzLCBidXQg
+bW9zdCBzeXN0ZW0gdXRpbGl0aWVzCiAgICB0cmFuc2xhdGUgdGhlbSBiYWNrIHRvIHRoZSAvZGV2
+L21hcHBlci8gbmFtZXMgYW5kIHRodXMgY29uZnVzZSB2YXJpb3VzIHRlc3QKICAgIGNhc2VzLiAg
+QWRkIHN1cHBvcnQgdG8gX2lzX2Jsb2NrX2RldiB0byByZWFkIHN5bWxpbmtzLCBhbmQgYWRkIGRv
+Y3VtZW50YXRpb24KICAgIG9uIGhvdyB0byBydW4geGZzdGVzdHMgb24gZGV2aWNlIG1hcHBlciB2
+b2x1bWVzLgoKICAgIFNpZ25lZC1vZmYtYnk6IENocmlzdG9waCBIZWxsd2lnIDxoY2hAbHN0LmRl
+PgogICAgUmV2aWV3ZWQtYnk6IEFsZXggRWxkZXIgPGFlbGRlckBzZ2kuY29tPgoKQ2hlZXJzLAoK
+RGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bv
+c3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
