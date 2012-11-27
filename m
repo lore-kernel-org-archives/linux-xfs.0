@@ -1,19 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qARKqSdH087885 for <xfs@oss.sgi.com>; Tue, 27 Nov 2012 14:52:28 -0600
-Message-ID: <50B528B0.9080208@sgi.com>
-Date: Tue, 27 Nov 2012 14:55:12 -0600
-From: Rich Johnston <rjohnston@sgi.com>
+	qARL34WP089084 for <xfs@oss.sgi.com>; Tue, 27 Nov 2012 15:03:04 -0600
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	leWgm2kr6mlfLzXO for <xfs@oss.sgi.com>;
+	Tue, 27 Nov 2012 13:05:20 -0800 (PST)
+Date: Wed, 28 Nov 2012 08:05:18 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [BUG] xfs_quota: can't handle the users managed by LDAP
+Message-ID: <20121127210518.GN6434@dastard>
+References: <50ADB27F.8070806@jp.fujitsu.com> <20121122233757.GY2591@dastard>
+	<50B32CC1.3020907@jp.fujitsu.com> <50B4198E.7080408@jp.fujitsu.com>
+	<20121127025728.GU32450@dastard> <50B46B66.2040908@jp.fujitsu.com>
 MIME-Version: 1.0
-Subject: Re: How to run xfstests against multipath disks on SuSE?
-References: <CAPxxNQmwX+TmJ=B-H0f+bzpx5JdijyyRrxCAAZRi9+c8HjQL9Q@mail.gmail.com>
-	<alpine.LFD.2.00.1211261442490.18234@localhost>
-	<20121126145559.GK31891@thunk.org>
-	<CAPxxNQmgOmEzkmzL7Tei4KAxaP49yx1fmhNgxvwaFNiYVosGtA@mail.gmail.com>
-	<20121127031438.GK6434@dastard> <50B4F38E.8060806@redhat.com>
-	<20121127203537.GM6434@dastard> <50B52475.1020603@redhat.com>
-In-Reply-To: <50B52475.1020603@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <50B46B66.2040908@jp.fujitsu.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,89 +24,91 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: Theodore Ts'o <tytso@mit.edu>, xfs@oss.sgi.com, Ryan Wang <openspace.wang@gmail.com>, =?UTF-8?B?THVrw6HFoSBDemVybmVy?= <lczerner@redhat.com>, linux-ext4@vger.kernel.org
+To: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
+Cc: xfs ML <xfs@oss.sgi.com>
 
-T24gMTEvMjcvMjAxMiAwMjozNyBQTSwgRXJpYyBTYW5kZWVuIHdyb3RlOgo+IE9uIDExLzI3LzEy
-IDI6MzUgUE0sIERhdmUgQ2hpbm5lciB3cm90ZToKPj4gT24gVHVlLCBOb3YgMjcsIDIwMTIgYXQg
-MTE6MDg6MzBBTSAtMDYwMCwgRXJpYyBTYW5kZWVuIHdyb3RlOgo+Pj4gT24gMTEvMjYvMTIgOTox
-NCBQTSwgRGF2ZSBDaGlubmVyIHdyb3RlOgo+Pj4+IE9uIFR1ZSwgTm92IDI3LCAyMDEyIGF0IDA5
-OjIwOjQ3QU0gKzA4MDAsIFJ5YW4gV2FuZyB3cm90ZToKPj4+Pj4gMjAxMi8xMS8yNiBUaGVvZG9y
-ZSBUcydvIDx0eXRzb0BtaXQuZWR1PjoKPj4+Pj4+IE9uIE1vbiwgTm92IDI2LCAyMDEyIGF0IDAy
-OjQzOjQwUE0gKzAxMDAsIEx1a8OhxaEgQ3plcm5lciB3cm90ZToKPj4+Pj4+Pj4gVGhlIEkgY2hl
-Y2tlZCB0aGUgc2NyaXB0IGNvbW1vbi5yYywgYW5kIGZvdW5kIHRoYXQgaXQgdXNlcwo+Pj4+Pj4+
-PiBkZiB0byBkZXRlcm1pbmUgdGhlIGZpbGVzeXN0ZW0gdHlwZSBhbmQgaXQgdXNlcyB0aGUgcmVh
-bHBhdGgKPj4+Pj4+Pj4gIi9kZXYvZG0tMCIgaW5zdGVhZCBvZiAiL2Rldi9tYXBwZXIvbXBhdGhh
-Iiwgd2hpbGUgZGYgYWx3YXlzCj4+Pj4+Pj4+IHNob3dzICJkZXZ0bXBmcyIgaW5zdGVhZCBvZiAi
-ZXh0NCIgZm9yIC9kZXYvZG0tMC4KPj4+Pj4+Pj4KPj4+Pj4+Pj4gSSBydW4gIm1vdW50IiBhbmQg
-Zm91bmQgdGhhdCBkZXZ0bXBmcyBpcyBtb3VudCBvbiAvZGV2LyBvbiBvcGVuc3VzZQo+Pj4+Pj4+
-PiAqKipieSBkZWZhdWx0KioqLiBFdmVuIHRob3VnaCAgSSBydW4gIm1vdW50IC10IGJ0cmZzIC9k
-ZXYvZG0tMCAvc29tZWRpciIsCj4+Pj4+Pj4+IGRmIHN0aWxsIHNob3dlZCBkZXZ0bXBmcy4KPj4+
-Pj4+Pj4KPj4+Pj4+Pj4gQW55IGlkZWFzIHRvIGtpY2sgb2ZmIHRoZSB4ZnN0ZXN0cz8KPj4+Pj4+
-Cj4+Pj4+PiBBdCBsZWFzdCB3aXRoIHRoZSBkZiB3aGljaCBzaGlwcyB3aXRoIERlYmlhbiBUZXN0
-aW5nLCBkZiB3aWxsIGRpc3BsYXkKPj4+Pj4+IHRoZSBmaWxlIHN5c3RlbSBpbiB1c2UgaWYgaXQg
-bWF0Y2hlcyB0aGUgZGV2aWNlIG5hbWUgd2hpY2ggaXMKPj4+Pj4+IC9ldGMvbXRhYi4gIEl0IGxv
-b2tzIHRoZSBpc3N1ZSBpcyB0aGF0IG1vdW50IGlzIGNhbm9uaWNhbGl6aW5nIHRoZQo+Pj4+Pj4g
-ZGV2aWNlIG5hbWUgdG8gYmUgdGhlIGh1bWFuIGZyaWVuZGx5IHZlcnNpb246Cj4+Pj4+Pgo+Pj4+
-Pj4gIyBscyAtbCAvZGV2L21hcHBlci9jbG9zdXJlLWJpZ3NjcmF0Y2gKPj4+Pj4+IDAgbHJ3eHJ3
-eHJ3eCAxIHJvb3Qgcm9vdCA3IE5vdiAxNiAxNToxNSAvZGV2L21hcHBlci9jbG9zdXJlLWJpZ3Nj
-cmF0Y2ggLT4gLi4vZG0tNwo+Pj4+Pj4gPHR5dHNvLnJvb3RAY2xvc3VyZT4gey9ob21lL3R5dHNv
-L2Jpbn0sIGxldmVsIDIKPj4+Pj4+ICMgbW91bnQgL2Rldi9kbS03IC91Mgo+Pj4+Pj4gIyBkZiAv
-dTIKPj4+Pj4+IEZpbGVzeXN0ZW0gICAgICAgICAgICAgICAgICAgICAxSy1ibG9ja3MgICBVc2Vk
-IEF2YWlsYWJsZSBVc2UlIE1vdW50ZWQgb24KPj4+Pj4+IC9kZXYvbWFwcGVyL2Nsb3N1cmUtYmln
-c2NyYXRjaCAgNTI0MDMyMDAgMjI0NzcyICA1MjE3ODQyOCAgIDElIC91Mgo+Pj4+Pj4gIyBncmVw
-IC91MiAvZXRjL210YWIKPj4+Pj4+IC9kZXYvbWFwcGVyL2Nsb3N1cmUtYmlnc2NyYXRjaCAvdTIg
-eGZzIHJ3LHJlbGF0aW1lLGF0dHIyLGlub2RlNjQsbm9xdW90YSAwIDAKPj4+Pj4+Cj4+Pj4+PiBT
-byB0aGUgc2ltcGxlc3Qgc29sdXRpb24gaXMgdG8ganVzdCB1c2UgL2Rldi9tYXBwZXIvbXBhdGhh
-IGluc3RlYWQgb2YKPj4+Pj4+IGluc2lzdGluZyBvbiB1c2luZyAvZGV2L2RtLTAuICBUaGF0J3Mg
-d2hhdCBJIGRvLi4uLgo+Pj4+Pgo+Pj4+PiBJbiB4ZnN0ZXN0cy9jb21tb24ucmMsIGl0IHdpbGwg
-dXNlIHJlYWxwYXRoIHRvIG9idGFpbiAvZGV2L2RtLTAsIGV2ZW4gaWYgeW91Cj4+Pj4+IHNwZWNp
-ZmllZCAvZGV2L21hcHBlci9tcGF0aGEuCj4+Pj4+IE15IHByb2JsZW0gaXMgaW4gU3VTRSwgdGhl
-IGRldnRtcGZzIGlzIG1vdW50ZWQgb24gL2RldiBieSBkZWZhdWx0LCBzZWVtcwo+Pj4+PiB1c2Vk
-IGJ5IHVkZXYuIEFuZCBkZiByZXBvcnRzIGRldnRtcGZzIG9uIC9kZXYvZG0tMCwgaW5zdGVhZCBv
-ZiBleHQ0Lgo+Pj4+Cj4+Pj4gV2hhdCB2ZXJzaW9uIG9mIHhmc3Rlc3RzIGFyZSB5b3UgdXNpbmc/
-IERvIHlvdSBoYXZlIGEKPj4+PiAiUkVBRE1FLmRldmljZS1tYXBwZXIiIGZpbGUgaW4gdGhlIGJh
-c2UgZGlyZWN0b3J5PyBJZiBub3QsIHVwZ3JhZGUKPj4+PiB0byB0aGUgbGF0ZXN0IHZlcnNpb24g
-YW5kIHJldHJ5Lgo+Pj4+Cj4+Pj4gJCBnbCAtbiAxIC1wIDBhODE4ODYKPj4+PiBjb21taXQgMGE4
-MTg4NjJiYjc0OTMyZTE1OTcxZWM4YmVkYjU1NzY1ZWMzYTNmNgo+Pj4+IEF1dGhvcjogQ2hyaXN0
-b3BoIEhlbGx3aWcgPGhjaEBsc3QuZGU+Cj4+Pj4gRGF0ZTogICBXZWQgTWF5IDQgMTY6Mjg6MzIg
-MjAxMSArMDIwMAo+Pj4+Cj4+Pj4gICAgICB4ZnN0ZXN0czogc3VwcG9ydCBwb3N0LXVkZXYgZGV2
-aWNlIG1hcHBlciBub2Rlcwo+Pj4+Cj4+Pj4gICAgICBCZWNhdXNlIG9mIHVkZXZzIGNvbXBsYWlu
-aW5nIGRldmljZSBtYXBwZXIgbm93IGNyZWF0ZXMgL2Rldi9kbS1OIGFzIHRoZSByZWFsCj4+Pj4g
-ICAgICBkZXZpY2Ugbm9kZXMsIGFuZCBqdXN0IHN5bWxpbmtzIHRoZSAvZGV2L21hcHBlci8gbmFt
-ZXMgdG8gaXQuICBUaGlzIHdvdWxkIGJlCj4+Pj4gICAgICBlYXN5IGlmIGV2ZXJ5dGhpbmcgdXNl
-ZCB0aGUgL2Rldi9tYXBwZXIgY2xlYXIgbmFtZXMsIGJ1dCBtb3N0IHN5c3RlbSB1dGlsaXRpZXMK
-Pj4+PiAgICAgIHRyYW5zbGF0ZSB0aGVtIGJhY2sgdG8gdGhlIC9kZXYvbWFwcGVyLyBuYW1lcyBh
-bmQgdGh1cyBjb25mdXNlIHZhcmlvdXMgdGVzdAo+Pj4+ICAgICAgY2FzZXMuICBBZGQgc3VwcG9y
-dCB0byBfaXNfYmxvY2tfZGV2IHRvIHJlYWQgc3ltbGlua3MsIGFuZCBhZGQgZG9jdW1lbnRhdGlv
-bgo+Pj4+ICAgICAgb24gaG93IHRvIHJ1biB4ZnN0ZXN0cyBvbiBkZXZpY2UgbWFwcGVyIHZvbHVt
-ZXMuCj4+Pj4KPj4+PiAgICAgIFNpZ25lZC1vZmYtYnk6IENocmlzdG9waCBIZWxsd2lnIDxoY2hA
-bHN0LmRlPgo+Pj4+ICAgICAgUmV2aWV3ZWQtYnk6IEFsZXggRWxkZXIgPGFlbGRlckBzZ2kuY29t
-Pgo+Pj4+Cj4+Pj4gQ2hlZXJzLAo+Pj4+Cj4+Pj4gRGF2ZS4KPj4+Pgo+Pj4KPj4+IFJlY2VudCAi
-cmVhbHBhdGgiIGNoYW5nZXMgYWxzbyB3ZW50IGluOgo+Pj4KPj4+IGIwM2M2NjIzOTk5NTY2MDk5
-MzRmZjA2M2U5MDY0ZTE1ZGM3NDU5YWMgeGZzdGVzdHM6IGZpeCB0byBidWlsZCBzcmMvcmVhbHBh
-dGggYW5kIHRoZSBjb3JyZWN0IHRoZSBleGlzdGVuY2Ugb2YgdGFyZ2V0IGRldmljZXMKPj4+IGQ1
-ZWE4NzNmY2JmMDBiODQxZjA1MTFhMjZmYjM0MTM2NGE1YzY0MjUgeGZzdGVzdHM6IHJlc29sdmUg
-c3ltbGlua2VkIGRldmljZXMgdG8gcmVhbCBwYXRocwo+Pj4KPj4+IHNvIGVpdGhlciBvZiB0aG9z
-ZSBjb3VsZCBoYXZlIGJyb2tlbiBhbmQvb3IgZml4ZWQgaXQgZm9yIHlvdSA6KQo+Pgo+PiBZdXAs
-IHRob3NlIGFyZSBhbG1vc3QgY2VydGFpbmx5IHRoZSBwYXRjaGVzIHRoYXQgYnJva2UgZGV2aWNl
-IG1hcHBlcgo+PiBzdXBwb3J0LiBUaGVyZScgYXJlbid0IGNoYW5nZXMgdG8gY29tbW9uLnJjLCBz
-byBJIGRpZG4ndCBub3RpY2UgdGhlbS4KPj4gVGhleSBiYXNpY2FsbHkgb3ZlcnJpZGUgdGhlIGZp
-eCB0aGF0IENocmlzdG9waCBtYWRlIHRvIHN1cHBvcnQKPj4gL2Rldi9tYXBwZXIgbGlua3MgcHJv
-cGVybHkuCj4+Cj4+IEknZCBzdWdnZXN0IGEgcmV2ZXJ0IGlzIGluIG9yZGVyLCB0aGUgdHdvIHBh
-dGNoZXMgYWJvdmUgd2VyZSBwYXJ0Cj4+IG9mIFJpY2gncyBob3ZlcmluZyBvZiBvbGQsIHVucmV2
-aWV3ZWQgcGF0Y2hlcy4gVGhpcyBwcm9ibGVtIHdhcwo+PiBhbHJlYWR5IGZpeGVkIGluIGEgZGlm
-ZmVyZW50IHdheSBieSBDaHJpc3RvcGgsIHNvIGFkZGluZyB0aGVzZQo+PiBwYXRjaGVzIHdhcyB3
-cm9uZy4KPgo+IEZpbmUgd2l0aCBtZSAuLi4KPgo+IFJ5YW4sIGNhbiB5b3UgdGVzdCB3L28gdGhv
-c2UsIGFuZCBpZiBpdCB3b3JrcyAtCj4KPiBSaWNoLCBjYW4geW91IHJldmVydCB0aG9zZSBwbGVh
-c2U/CgpTdXJlLCBJIHdpbGwgd2FpdCB0byBoZWFyIGZyb20gUnlhbiBmaXJzdC4KCj4KPiAtRXJp
-Ywo+Cj4+IENoZWVycywKPj4KPj4gRGF2ZS4KPj4KPgo+IF9fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fCj4geGZzIG1haWxpbmcgbGlzdAo+IHhmc0Bvc3Muc2dp
-LmNvbQo+IGh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo+CgoKX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlz
-dAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZz
-Cg==
+On Tue, Nov 27, 2012 at 04:27:34PM +0900, Satoru Takeuchi wrote:
+> >>>>> Current xfs_quota (I pulled xfsprogs today) seems not be able to th=
+e users
+> >>>>> managed by LDAP. There is no patch since I'm not good at LDAP and d=
+on't know
+> >>>>> the root cause yet ;-(
+> >>>>>
+> >>>>> Step to reproduce(in this case, "sat" is the user managed by LDAP):
+> >>>>> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D
+> >>>>> # uname -r
+> >>>>> 3.7.0-rc5
+> >>>>> # mount -o loop,usrquota xfs.img mnt
+> >>>>> # xfsprogs/quota/xfs_quota -xc "limit bsoft=3D10M bhard=3D10M sat" =
+/dev/loop0
+> >>>>> xfs_quota: invalid user name: sat                                  =
+        # denied
+> >>>>> # su sat
+> >>>>> $                                                                  =
+        # But this user acutally exists.
+> >>>>> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D
+.....
+
+> So there is a problem in "report" subcommand. Refer to report_without_U.l=
+og,
+> I found "quotactl(Q_XGETQUOTA|GRPQUOTA, ...) is only called for local use=
+rs
+> and it's because that getpwent() only returned only local users.
+
+Yes, it appears from the strace that glibc is only reading
+/etc/passwd and not querying the ldap server.
+
+> open("/etc/nsswitch.conf", O_RDONLY|O_CLOEXEC) =3D 3
+> fstat(3, {st_mode=3DS_IFREG|0644, st_size=3D1724, ...}) =3D 0
+> mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) =
+=3D 0x7f851afee000
+> read(3, "#=A5n# /etc/nsswitch.conf=A5n#=A5n# An ex"..., 4096) =3D 1724
+> read(3, "", 4096)                       =3D 0
+> close(3)                                =3D 0
+...
+> open("/lib64/libnss_files.so.2", O_RDONLY|O_CLOEXEC) =3D 3
+...
+> open("/etc/passwd", O_RDONLY|O_CLOEXEC) =3D 3
+> fstat(3, {st_mode=3DS_IFREG|0644, st_size=3D2005, ...}) =3D 0
+> mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) =
+=3D 0x7f851afee000
+> lseek(3, 0, SEEK_CUR)                   =3D 0
+> read(3, "root:x:0:0:root:/root:/bin/bash=A5n"..., 4096) =3D 2005
+> quotactl(Q_XGETQUOTA|USRQUOTA, "/dev/loop0", 0, {version=3D1, flags=3DXFS=
+_USER_QUOTA, fieldmask=3D0, id=3D0, blk_hardlimit=3D0, blk_softlimit=3D0, i=
+no_hardlimit=3D0, ino_softlimit=3D0, bcount=3D0, icount=3D3, ...}) =3D 0
+
+As you can see, it only dynamically loads the local files name
+service library, not the ones that do ldap lookups.
+
+Can you run ldd on the test binary you had and on xfs_quota to see
+if they are linked against the same libraries?
+
+Other than that, I've go no idea why glibc would be behaving
+differently for the same library call from different binaries.
+it tends to imply a problem outside of xfs_quota, but I know close
+to nothing about LDAP and the glibc name services, so I don't know
+what more I can do to help here....
+
+Cheers,
+
+Dave.
+-- =
+
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
