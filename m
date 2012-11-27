@@ -1,18 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qARHAA8w069912 for <xfs@oss.sgi.com>; Tue, 27 Nov 2012 11:10:10 -0600
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id vnzdqvKIvKqdgeQa for
-	<xfs@oss.sgi.com>; Tue, 27 Nov 2012 09:12:26 -0800 (PST)
-Date: Tue, 27 Nov 2012 14:50:01 -0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [RFC] [PATCH] xfs_quota: support relative path as `path' arguments
-Message-ID: <20121127165001.GA11620@andromeda.usersys.redhat.com>
-References: <50B49074.1020000@jp.fujitsu.com>
+	qARKXW5i085338 for <xfs@oss.sgi.com>; Tue, 27 Nov 2012 14:33:32 -0600
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	MHhPkTNdkqm5PkrL for <xfs@oss.sgi.com>;
+	Tue, 27 Nov 2012 12:35:47 -0800 (PST)
+Date: Wed, 28 Nov 2012 07:35:37 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: How to run xfstests against multipath disks on SuSE?
+Message-ID: <20121127203537.GM6434@dastard>
+References: <CAPxxNQmwX+TmJ=B-H0f+bzpx5JdijyyRrxCAAZRi9+c8HjQL9Q@mail.gmail.com>
+	<alpine.LFD.2.00.1211261442490.18234@localhost>
+	<20121126145559.GK31891@thunk.org>
+	<CAPxxNQmgOmEzkmzL7Tei4KAxaP49yx1fmhNgxvwaFNiYVosGtA@mail.gmail.com>
+	<20121127031438.GK6434@dastard> <50B4F38E.8060806@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <50B49074.1020000@jp.fujitsu.com>
+In-Reply-To: <50B4F38E.8060806@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,56 +26,80 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
-Cc: xfs ML <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: =?utf-8?B?THVrw6HFoQ==?= Czerner <lczerner@redhat.com>, Ryan Wang <openspace.wang@gmail.com>, linux-ext4@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, xfs@oss.sgi.com
 
-On Tue, Nov 27, 2012 at 07:05:40PM +0900, Satoru Takeuchi wrote:
-
-> From: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
-> 
-> Current xfs_quota only accepts absolute path as its `path' arguments.
-> This patch adds the support of relative path for user's convenience.
-> 
-> Signed-off-by: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
->
-
-Using realpath() to handle the path being passed by user, not only makes able
-the usage of relative paths, but also fixes the problem in having a "/" at the
-end of the path. For those who abuses of TABs, this is very annoying.
-
-Looks good,
-
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com> 
-Tested-by: Carlos Maiolino <cmaiolino@redhat.com>
-
-> ---
->  libxcmd/paths.c |   42 +++++++++++++++++++++++++++++-------------
->  1 file changed, 29 insertions(+), 13 deletions(-)
-> 
-> diff --git a/libxcmd/paths.c b/libxcmd/paths.c
-> index 2a92299..bd84cde 100644
-> --- a/libxcmd/paths.c
-> +++ b/libxcmd/paths.c
-> @@ -27,6 +27,7 @@
->  #include <xfs/path.h>
->  #include <xfs/input.h>
->  #include <xfs/project.h>
-> +#include <limits.h>
->  
->  extern char *progname;
->  
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-
--- 
-Carlos
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVHVlLCBOb3YgMjcsIDIwMTIgYXQgMTE6MDg6MzBBTSAtMDYwMCwgRXJpYyBTYW5kZWVuIHdy
+b3RlOgo+IE9uIDExLzI2LzEyIDk6MTQgUE0sIERhdmUgQ2hpbm5lciB3cm90ZToKPiA+IE9uIFR1
+ZSwgTm92IDI3LCAyMDEyIGF0IDA5OjIwOjQ3QU0gKzA4MDAsIFJ5YW4gV2FuZyB3cm90ZToKPiA+
+PiAyMDEyLzExLzI2IFRoZW9kb3JlIFRzJ28gPHR5dHNvQG1pdC5lZHU+Ogo+ID4+PiBPbiBNb24s
+IE5vdiAyNiwgMjAxMiBhdCAwMjo0Mzo0MFBNICswMTAwLCBMdWvDocWhIEN6ZXJuZXIgd3JvdGU6
+Cj4gPj4+Pj4gVGhlIEkgY2hlY2tlZCB0aGUgc2NyaXB0IGNvbW1vbi5yYywgYW5kIGZvdW5kIHRo
+YXQgaXQgdXNlcwo+ID4+Pj4+IGRmIHRvIGRldGVybWluZSB0aGUgZmlsZXN5c3RlbSB0eXBlIGFu
+ZCBpdCB1c2VzIHRoZSByZWFscGF0aAo+ID4+Pj4+ICIvZGV2L2RtLTAiIGluc3RlYWQgb2YgIi9k
+ZXYvbWFwcGVyL21wYXRoYSIsIHdoaWxlIGRmIGFsd2F5cwo+ID4+Pj4+IHNob3dzICJkZXZ0bXBm
+cyIgaW5zdGVhZCBvZiAiZXh0NCIgZm9yIC9kZXYvZG0tMC4KPiA+Pj4+Pgo+ID4+Pj4+IEkgcnVu
+ICJtb3VudCIgYW5kIGZvdW5kIHRoYXQgZGV2dG1wZnMgaXMgbW91bnQgb24gL2Rldi8gb24gb3Bl
+bnN1c2UKPiA+Pj4+PiAqKipieSBkZWZhdWx0KioqLiBFdmVuIHRob3VnaCAgSSBydW4gIm1vdW50
+IC10IGJ0cmZzIC9kZXYvZG0tMCAvc29tZWRpciIsCj4gPj4+Pj4gZGYgc3RpbGwgc2hvd2VkIGRl
+dnRtcGZzLgo+ID4+Pj4+Cj4gPj4+Pj4gQW55IGlkZWFzIHRvIGtpY2sgb2ZmIHRoZSB4ZnN0ZXN0
+cz8KPiA+Pj4KPiA+Pj4gQXQgbGVhc3Qgd2l0aCB0aGUgZGYgd2hpY2ggc2hpcHMgd2l0aCBEZWJp
+YW4gVGVzdGluZywgZGYgd2lsbCBkaXNwbGF5Cj4gPj4+IHRoZSBmaWxlIHN5c3RlbSBpbiB1c2Ug
+aWYgaXQgbWF0Y2hlcyB0aGUgZGV2aWNlIG5hbWUgd2hpY2ggaXMKPiA+Pj4gL2V0Yy9tdGFiLiAg
+SXQgbG9va3MgdGhlIGlzc3VlIGlzIHRoYXQgbW91bnQgaXMgY2Fub25pY2FsaXppbmcgdGhlCj4g
+Pj4+IGRldmljZSBuYW1lIHRvIGJlIHRoZSBodW1hbiBmcmllbmRseSB2ZXJzaW9uOgo+ID4+Pgo+
+ID4+PiAjIGxzIC1sIC9kZXYvbWFwcGVyL2Nsb3N1cmUtYmlnc2NyYXRjaAo+ID4+PiAwIGxyd3hy
+d3hyd3ggMSByb290IHJvb3QgNyBOb3YgMTYgMTU6MTUgL2Rldi9tYXBwZXIvY2xvc3VyZS1iaWdz
+Y3JhdGNoIC0+IC4uL2RtLTcKPiA+Pj4gPHR5dHNvLnJvb3RAY2xvc3VyZT4gey9ob21lL3R5dHNv
+L2Jpbn0sIGxldmVsIDIKPiA+Pj4gIyBtb3VudCAvZGV2L2RtLTcgL3UyCj4gPj4+ICMgZGYgL3Uy
+Cj4gPj4+IEZpbGVzeXN0ZW0gICAgICAgICAgICAgICAgICAgICAxSy1ibG9ja3MgICBVc2VkIEF2
+YWlsYWJsZSBVc2UlIE1vdW50ZWQgb24KPiA+Pj4gL2Rldi9tYXBwZXIvY2xvc3VyZS1iaWdzY3Jh
+dGNoICA1MjQwMzIwMCAyMjQ3NzIgIDUyMTc4NDI4ICAgMSUgL3UyCj4gPj4+ICMgZ3JlcCAvdTIg
+L2V0Yy9tdGFiCj4gPj4+IC9kZXYvbWFwcGVyL2Nsb3N1cmUtYmlnc2NyYXRjaCAvdTIgeGZzIHJ3
+LHJlbGF0aW1lLGF0dHIyLGlub2RlNjQsbm9xdW90YSAwIDAKPiA+Pj4KPiA+Pj4gU28gdGhlIHNp
+bXBsZXN0IHNvbHV0aW9uIGlzIHRvIGp1c3QgdXNlIC9kZXYvbWFwcGVyL21wYXRoYSBpbnN0ZWFk
+IG9mCj4gPj4+IGluc2lzdGluZyBvbiB1c2luZyAvZGV2L2RtLTAuICBUaGF0J3Mgd2hhdCBJIGRv
+Li4uLgo+ID4+Cj4gPj4gSW4geGZzdGVzdHMvY29tbW9uLnJjLCBpdCB3aWxsIHVzZSByZWFscGF0
+aCB0byBvYnRhaW4gL2Rldi9kbS0wLCBldmVuIGlmIHlvdQo+ID4+IHNwZWNpZmllZCAvZGV2L21h
+cHBlci9tcGF0aGEuCj4gPj4gTXkgcHJvYmxlbSBpcyBpbiBTdVNFLCB0aGUgZGV2dG1wZnMgaXMg
+bW91bnRlZCBvbiAvZGV2IGJ5IGRlZmF1bHQsIHNlZW1zCj4gPj4gdXNlZCBieSB1ZGV2LiBBbmQg
+ZGYgcmVwb3J0cyBkZXZ0bXBmcyBvbiAvZGV2L2RtLTAsIGluc3RlYWQgb2YgZXh0NC4KPiA+IAo+
+ID4gV2hhdCB2ZXJzaW9uIG9mIHhmc3Rlc3RzIGFyZSB5b3UgdXNpbmc/IERvIHlvdSBoYXZlIGEK
+PiA+ICJSRUFETUUuZGV2aWNlLW1hcHBlciIgZmlsZSBpbiB0aGUgYmFzZSBkaXJlY3Rvcnk/IElm
+IG5vdCwgdXBncmFkZQo+ID4gdG8gdGhlIGxhdGVzdCB2ZXJzaW9uIGFuZCByZXRyeS4KPiA+IAo+
+ID4gJCBnbCAtbiAxIC1wIDBhODE4ODYKPiA+IGNvbW1pdCAwYTgxODg2MmJiNzQ5MzJlMTU5NzFl
+YzhiZWRiNTU3NjVlYzNhM2Y2Cj4gPiBBdXRob3I6IENocmlzdG9waCBIZWxsd2lnIDxoY2hAbHN0
+LmRlPgo+ID4gRGF0ZTogICBXZWQgTWF5IDQgMTY6Mjg6MzIgMjAxMSArMDIwMAo+ID4gCj4gPiAg
+ICAgeGZzdGVzdHM6IHN1cHBvcnQgcG9zdC11ZGV2IGRldmljZSBtYXBwZXIgbm9kZXMKPiA+IAo+
+ID4gICAgIEJlY2F1c2Ugb2YgdWRldnMgY29tcGxhaW5pbmcgZGV2aWNlIG1hcHBlciBub3cgY3Jl
+YXRlcyAvZGV2L2RtLU4gYXMgdGhlIHJlYWwKPiA+ICAgICBkZXZpY2Ugbm9kZXMsIGFuZCBqdXN0
+IHN5bWxpbmtzIHRoZSAvZGV2L21hcHBlci8gbmFtZXMgdG8gaXQuICBUaGlzIHdvdWxkIGJlCj4g
+PiAgICAgZWFzeSBpZiBldmVyeXRoaW5nIHVzZWQgdGhlIC9kZXYvbWFwcGVyIGNsZWFyIG5hbWVz
+LCBidXQgbW9zdCBzeXN0ZW0gdXRpbGl0aWVzCj4gPiAgICAgdHJhbnNsYXRlIHRoZW0gYmFjayB0
+byB0aGUgL2Rldi9tYXBwZXIvIG5hbWVzIGFuZCB0aHVzIGNvbmZ1c2UgdmFyaW91cyB0ZXN0Cj4g
+PiAgICAgY2FzZXMuICBBZGQgc3VwcG9ydCB0byBfaXNfYmxvY2tfZGV2IHRvIHJlYWQgc3ltbGlu
+a3MsIGFuZCBhZGQgZG9jdW1lbnRhdGlvbgo+ID4gICAgIG9uIGhvdyB0byBydW4geGZzdGVzdHMg
+b24gZGV2aWNlIG1hcHBlciB2b2x1bWVzLgo+ID4gCj4gPiAgICAgU2lnbmVkLW9mZi1ieTogQ2hy
+aXN0b3BoIEhlbGx3aWcgPGhjaEBsc3QuZGU+Cj4gPiAgICAgUmV2aWV3ZWQtYnk6IEFsZXggRWxk
+ZXIgPGFlbGRlckBzZ2kuY29tPgo+ID4gCj4gPiBDaGVlcnMsCj4gPiAKPiA+IERhdmUuCj4gPiAK
+PiAKPiBSZWNlbnQgInJlYWxwYXRoIiBjaGFuZ2VzIGFsc28gd2VudCBpbjoKPiAKPiBiMDNjNjYy
+Mzk5OTU2NjA5OTM0ZmYwNjNlOTA2NGUxNWRjNzQ1OWFjIHhmc3Rlc3RzOiBmaXggdG8gYnVpbGQg
+c3JjL3JlYWxwYXRoIGFuZCB0aGUgY29ycmVjdCB0aGUgZXhpc3RlbmNlIG9mIHRhcmdldCBkZXZp
+Y2VzCj4gZDVlYTg3M2ZjYmYwMGI4NDFmMDUxMWEyNmZiMzQxMzY0YTVjNjQyNSB4ZnN0ZXN0czog
+cmVzb2x2ZSBzeW1saW5rZWQgZGV2aWNlcyB0byByZWFsIHBhdGhzCj4gCj4gc28gZWl0aGVyIG9m
+IHRob3NlIGNvdWxkIGhhdmUgYnJva2VuIGFuZC9vciBmaXhlZCBpdCBmb3IgeW91IDopCgpZdXAs
+IHRob3NlIGFyZSBhbG1vc3QgY2VydGFpbmx5IHRoZSBwYXRjaGVzIHRoYXQgYnJva2UgZGV2aWNl
+IG1hcHBlcgpzdXBwb3J0LiBUaGVyZScgYXJlbid0IGNoYW5nZXMgdG8gY29tbW9uLnJjLCBzbyBJ
+IGRpZG4ndCBub3RpY2UgdGhlbS4KVGhleSBiYXNpY2FsbHkgb3ZlcnJpZGUgdGhlIGZpeCB0aGF0
+IENocmlzdG9waCBtYWRlIHRvIHN1cHBvcnQKL2Rldi9tYXBwZXIgbGlua3MgcHJvcGVybHkuCgpJ
+J2Qgc3VnZ2VzdCBhIHJldmVydCBpcyBpbiBvcmRlciwgdGhlIHR3byBwYXRjaGVzIGFib3ZlIHdl
+cmUgcGFydApvZiBSaWNoJ3MgaG92ZXJpbmcgb2Ygb2xkLCB1bnJldmlld2VkIHBhdGNoZXMuIFRo
+aXMgcHJvYmxlbSB3YXMKYWxyZWFkeSBmaXhlZCBpbiBhIGRpZmZlcmVudCB3YXkgYnkgQ2hyaXN0
+b3BoLCBzbyBhZGRpbmcgdGhlc2UKcGF0Y2hlcyB3YXMgd3JvbmcuCgpDaGVlcnMsCgpEYXZlLgot
+LSAKRGF2ZSBDaGlubmVyCmRhdmlkQGZyb21vcmJpdC5jb20KCl9fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2ku
+Y29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
