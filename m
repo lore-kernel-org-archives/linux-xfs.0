@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qARN1rWN104084 for <xfs@oss.sgi.com>; Tue, 27 Nov 2012 17:01:53 -0600
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id S2n59M7uOFU0vJv0 for
-	<xfs@oss.sgi.com>; Tue, 27 Nov 2012 15:04:10 -0800 (PST)
-Message-ID: <50B53A3D.8060501@redhat.com>
-Date: Tue, 27 Nov 2012 16:10:05 -0600
-From: Eric Sandeen <sandeen@redhat.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: test EROFS vs. EEXIST when creating on an RO
-	filesystem
-References: <50B52DB7.3030506@redhat.com> <20121127220803.GO6434@dastard>
-In-Reply-To: <20121127220803.GO6434@dastard>
+	qARNCsA9104915 for <xfs@oss.sgi.com>; Tue, 27 Nov 2012 17:12:54 -0600
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	ikh5sfih8uJpttuV for <xfs@oss.sgi.com>;
+	Tue, 27 Nov 2012 15:15:09 -0800 (PST)
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 03/19] dcache: remove dentries from LRU before putting on
+	dispose list
+Date: Wed, 28 Nov 2012 10:14:30 +1100
+Message-Id: <1354058086-27937-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1354058086-27937-1-git-send-email-david@fromorbit.com>
+References: <1354058086-27937-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,137 +21,201 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: glommer@parallels.com
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On 11/27/12 4:08 PM, Dave Chinner wrote:
-> On Tue, Nov 27, 2012 at 03:16:39PM -0600, Eric Sandeen wrote:
->> TBH, I don't know if this is posix-specified, but I found out the
->> hard way that when trying to re-create existing files on a readonly 
->> filesystem, some apps expect/handle EEXIST, but fail on EROFS.
->>
->> This will test mkdir, mknod, and symlinks for that behavior.
->>
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->> ---
->>
->> Note:  Think the command output is fixed enough, or should I
->> be grepping for keywords?
-> 
-> Command output is good enough at this point.
-> 
->>
->> diff --git a/292 b/292
->> new file mode 100755
->> index 0000000..a14bb7f
->> --- /dev/null
->> +++ b/292
->> @@ -0,0 +1,73 @@
->> +#! /bin/bash
->> +# FS QA Test No. 292
->> +#
->> +# Tests for EEXIST (not EROFS) for inode creations, if
->> +# we ask to create an already-existing entity on an RO filesystem
->> +#
->> +#-----------------------------------------------------------------------
->> +# Copyright (c) 2012 Red Hat, Inc.  All Rights Reserved.
->> +#
->> +# This program is free software; you can redistribute it and/or
->> +# modify it under the terms of the GNU General Public License as
->> +# published by the Free Software Foundation.
->> +#
->> +# This program is distributed in the hope that it would be useful,
->> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
->> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
->> +# GNU General Public License for more details.
->> +#
->> +# You should have received a copy of the GNU General Public License
->> +# along with this program; if not, write the Free Software Foundation,
->> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
->> +#-----------------------------------------------------------------------
->> +#
->> +# creator
->> +owner=sandeen@redhat.com
->> +
->> +seq=`basename $0`
->> +echo "QA output created by $seq"
->> +
->> +here=`pwd`
->> +tmp=/tmp/$$
->> +status=1	# failure is the default!
->> +trap "_cleanup; exit \$status" 0 1 2 3 15
->> +
->> +_cleanup()
->> +{
->> +    cd /
->> +    rm -f $tmp.*
->> +}
->> +
->> +# get standard environment, filters and checks
->> +. ./common.rc
->> +. ./common.filter
->> +
->> +# real QA test starts here
->> +
->> +# Modify as appropriate.
->> +_supported_fs generic
->> +_supported_os Linux
->> +_require_scratch
->> +
->> +THIS_TEST_DIR=$SCRATCH_MNT/$seq.test
-> 
-> Confusing. $TEST_DIR is test filesystem mount point. This points
-> something very similarly names at the scratch filesystem....
+From: Dave Chinner <dchinner@redhat.com>
 
-Meh, ok.  $FOZZIE_BEAR_DIR or something; I'll change it.
+One of the big problems with modifying the way the dcache shrinker
+and LRU implementation works is that the LRU is abused in several
+ways. One of these is shrink_dentry_list().
 
->> +_create_files()
->> +{
->> +	mknod $THIS_TEST_DIR/testnode c 1 3
->> +	mkdir $THIS_TEST_DIR/testdir
->> +	touch $THIS_TEST_DIR/testtarget
->> +	ln -s $THIS_TEST_DIR/testtarget $THIS_TEST_DIR/testlink
->> +}
->> +
->> +_scratch_mount
+Basically, we can move a dentry off the LRU onto a different list
+without doing any accounting changes, and then use dentry_lru_prune()
+to remove it from what-ever list it is now on to do the LRU
+accounting at that point.
 
-Sigh, right.  I started w/ the test dev but I'm not sure there's
-a simple helper to remount it ro, so I was lazy.  Then forgot to
-add this.
+This makes it -really hard- to change the LRU implementation. The
+use of the per-sb LRU lock serialises movement of the dentries
+between the different lists and the removal of them, and this is the
+only reason that it works. If we want to break up the dentry LRU
+lock and lists into, say, per-node lists, we remove the only
+serialisation that allows this lru list/dispose list abuse to work.
 
-> You need to mkfs the scratch device before using it. There is no
-> guarantee that it is inmountable shape, or even contains the right
-> filesytsem type when the test starts.
-> 
->> +
->> +rm -rf $THIS_TEST_DIR
->> +mkdir $THIS_TEST_DIR || _fail "Could not create dir for test"
-> 
-> The error will dump into the output file and fail the golden output
-> match. Using _fail means there's no .out.bad file for analysis of
-> the failure.
+To make this work effectively, the dispose list has to be isolated
+from the LRU list - dentries have to be removed from the LRU
+*before* being placed on the dispose list. This means that the LRU
+accounting and isolation is completed before disposal is started,
+and that means we can change the LRU implementation freely in
+future.
 
->> +
->> +_create_files 2>&1 | _filter_scratch
->> +_scratch_mount -o remount,ro || _fail "Could not remount scratch readonly"
-> 
-> Ditto.
+This means that dentries *must* be marked with DCACHE_SHRINK_LIST
+when they are placed on the dispose list so that we don't think that
+parent dentries found in try_prune_one_dentry() are on the LRU when
+the are actually on the dispose list. This would result in
+accounting the dentry to the LRU a second time. Hence
+dentry_lru_prune() has to handle the DCACHE_SHRINK_LIST case
+differently because the dentry isn't on the LRU list.
 
-OK.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/dcache.c |   73 +++++++++++++++++++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 63 insertions(+), 10 deletions(-)
 
-Thanks,
--Eric
+diff --git a/fs/dcache.c b/fs/dcache.c
+index e0c97fe..0124a84 100644
+--- a/fs/dcache.c
++++ b/fs/dcache.c
+@@ -330,7 +330,6 @@ static void dentry_lru_add(struct dentry *dentry)
+ static void __dentry_lru_del(struct dentry *dentry)
+ {
+ 	list_del_init(&dentry->d_lru);
+-	dentry->d_flags &= ~DCACHE_SHRINK_LIST;
+ 	dentry->d_sb->s_nr_dentry_unused--;
+ 	this_cpu_dec(nr_dentry_unused);
+ }
+@@ -340,6 +339,8 @@ static void __dentry_lru_del(struct dentry *dentry)
+  */
+ static void dentry_lru_del(struct dentry *dentry)
+ {
++	BUG_ON(dentry->d_flags & DCACHE_SHRINK_LIST);
++
+ 	if (!list_empty(&dentry->d_lru)) {
+ 		spin_lock(&dentry->d_sb->s_dentry_lru_lock);
+ 		__dentry_lru_del(dentry);
+@@ -351,28 +352,42 @@ static void dentry_lru_del(struct dentry *dentry)
+  * Remove a dentry that is unreferenced and about to be pruned
+  * (unhashed and destroyed) from the LRU, and inform the file system.
+  * This wrapper should be called _prior_ to unhashing a victim dentry.
++ *
++ * Check that the dentry really is on the LRU as it may be on a private dispose
++ * list and in that case we do not want to call the generic LRU removal
++ * functions. This typically happens when shrink_dcache_sb() clears the LRU in
++ * one go and then try_prune_one_dentry() walks back up the parent chain finding
++ * dentries that are also on the dispose list.
+  */
+ static void dentry_lru_prune(struct dentry *dentry)
+ {
+ 	if (!list_empty(&dentry->d_lru)) {
++
+ 		if (dentry->d_flags & DCACHE_OP_PRUNE)
+ 			dentry->d_op->d_prune(dentry);
  
-> Otherwise looks OK.
-> 
-> Cheers,
-> 
-> Dave.
-> 
+-		spin_lock(&dentry->d_sb->s_dentry_lru_lock);
+-		__dentry_lru_del(dentry);
+-		spin_unlock(&dentry->d_sb->s_dentry_lru_lock);
++		if ((dentry->d_flags & DCACHE_SHRINK_LIST))
++			list_del_init(&dentry->d_lru);
++		else {
++			spin_lock(&dentry->d_sb->s_dentry_lru_lock);
++			__dentry_lru_del(dentry);
++			spin_unlock(&dentry->d_sb->s_dentry_lru_lock);
++		}
++		dentry->d_flags &= ~DCACHE_SHRINK_LIST;
+ 	}
+ }
+ 
+ static void dentry_lru_move_list(struct dentry *dentry, struct list_head *list)
+ {
++	BUG_ON(dentry->d_flags & DCACHE_SHRINK_LIST);
++
+ 	spin_lock(&dentry->d_sb->s_dentry_lru_lock);
+ 	if (list_empty(&dentry->d_lru)) {
+ 		list_add_tail(&dentry->d_lru, list);
+-		dentry->d_sb->s_nr_dentry_unused++;
+-		this_cpu_inc(nr_dentry_unused);
+ 	} else {
+ 		list_move_tail(&dentry->d_lru, list);
++		dentry->d_sb->s_nr_dentry_unused--;
++		this_cpu_dec(nr_dentry_unused);
+ 	}
+ 	spin_unlock(&dentry->d_sb->s_dentry_lru_lock);
+ }
+@@ -840,12 +855,18 @@ static void shrink_dentry_list(struct list_head *list)
+ 		}
+ 
+ 		/*
++		 * The dispose list is isolated and dentries are not accounted
++		 * to the LRU here, so we can simply remove it from the list
++		 * here regardless of whether it is referenced or not.
++		 */
++		list_del_init(&dentry->d_lru);
++
++		/*
+ 		 * We found an inuse dentry which was not removed from
+-		 * the LRU because of laziness during lookup.  Do not free
+-		 * it - just keep it off the LRU list.
++		 * the LRU because of laziness during lookup. Do not free it.
+ 		 */
+ 		if (dentry->d_count) {
+-			dentry_lru_del(dentry);
++			dentry->d_flags &= ~DCACHE_SHRINK_LIST;
+ 			spin_unlock(&dentry->d_lock);
+ 			continue;
+ 		}
+@@ -897,6 +918,8 @@ relock:
+ 		} else {
+ 			list_move_tail(&dentry->d_lru, &tmp);
+ 			dentry->d_flags |= DCACHE_SHRINK_LIST;
++			this_cpu_dec(nr_dentry_unused);
++			sb->s_nr_dentry_unused--;
+ 			spin_unlock(&dentry->d_lock);
+ 			if (!--count)
+ 				break;
+@@ -910,6 +933,28 @@ relock:
+ 	shrink_dentry_list(&tmp);
+ }
+ 
++/*
++ * Mark all the dentries as on being the dispose list so we don't think they are
++ * still on the LRU if we try to kill them from ascending the parent chain in
++ * try_prune_one_dentry() rather than directly from the dispose list.
++ */
++static void
++shrink_dcache_list(
++	struct list_head *dispose)
++{
++	struct dentry *dentry;
++
++	rcu_read_lock();
++	list_for_each_entry_rcu(dentry, dispose, d_lru) {
++		spin_lock(&dentry->d_lock);
++		dentry->d_flags |= DCACHE_SHRINK_LIST;
++		this_cpu_dec(nr_dentry_unused);
++		spin_unlock(&dentry->d_lock);
++	}
++	rcu_read_unlock();
++	shrink_dentry_list(dispose);
++}
++
+ /**
+  * shrink_dcache_sb - shrink dcache for a superblock
+  * @sb: superblock
+@@ -924,8 +969,16 @@ void shrink_dcache_sb(struct super_block *sb)
+ 	spin_lock(&sb->s_dentry_lru_lock);
+ 	while (!list_empty(&sb->s_dentry_lru)) {
+ 		list_splice_init(&sb->s_dentry_lru, &tmp);
++
++		/*
++		 * account for removal here so we don't need to handle it later
++		 * even though the dentry is no longer on the lru list.
++		 */
++		this_cpu_sub(nr_dentry_unused, sb->s_nr_dentry_unused);
++		sb->s_nr_dentry_unused = 0;
++
+ 		spin_unlock(&sb->s_dentry_lru_lock);
+-		shrink_dentry_list(&tmp);
++		shrink_dcache_list(&tmp);
+ 		spin_lock(&sb->s_dentry_lru_lock);
+ 	}
+ 	spin_unlock(&sb->s_dentry_lru_lock);
+-- 
+1.7.10
 
 _______________________________________________
 xfs mailing list
