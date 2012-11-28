@@ -1,20 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qASDpoe8183289 for <xfs@oss.sgi.com>; Wed, 28 Nov 2012 07:51:50 -0600
-Received: from buxtehude.debian.org (buxtehude.debian.org [140.211.166.26]) by
-	cuda.sgi.com with ESMTP id GnTUF5COKuZoLxFt (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 28 Nov 2012 05:54:06 -0800 (PST)
-Subject: Bug#694624: /usr/sbin/xfs_freeze: freezes under lying (root)
-	filesystem if mountpoint is not currently mounted
-Resent-To: debian-bugs-dist@lists.debian.org
-Resent-Message-ID: <handler.694624.B.13541106404199@bugs.debian.org>
+	qASE8FkK184407 for <xfs@oss.sgi.com>; Wed, 28 Nov 2012 08:08:15 -0600
+Received: from mail-ea0-f181.google.com (mail-ea0-f181.google.com
+	[209.85.215.181]) by cuda.sgi.com with ESMTP id
+	EFmd4I8FZ0ctSp26 (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 28 Nov 2012 06:10:31 -0800 (PST)
+Received: by mail-ea0-f181.google.com with SMTP id k14so4477582eaa.26
+	for <xfs@oss.sgi.com>; Wed, 28 Nov 2012 06:10:30 -0800 (PST)
 MIME-Version: 1.0
-From: Patrick Emblen <support@talbragar.com.au>
-Message-ID: <20121128134342.4359.51203.reportbug@t5>
-Date: Thu, 29 Nov 2012 00:43:42 +1100
-Reply-To: Patrick Emblen <support@talbragar.com.au>, 694624@bugs.debian.org
+In-Reply-To: <50B528B0.9080208@sgi.com>
+References: <CAPxxNQmwX+TmJ=B-H0f+bzpx5JdijyyRrxCAAZRi9+c8HjQL9Q@mail.gmail.com>
+	<alpine.LFD.2.00.1211261442490.18234@localhost>
+	<20121126145559.GK31891@thunk.org>
+	<CAPxxNQmgOmEzkmzL7Tei4KAxaP49yx1fmhNgxvwaFNiYVosGtA@mail.gmail.com>
+	<20121127031438.GK6434@dastard> <50B4F38E.8060806@redhat.com>
+	<20121127203537.GM6434@dastard> <50B52475.1020603@redhat.com>
+	<50B528B0.9080208@sgi.com>
+Date: Wed, 28 Nov 2012 22:10:29 +0800
+Message-ID: <CAPxxNQnGE_L2xdOimA-czk1RhnhvLdcY=swRYYucZM+bzNBn9w@mail.gmail.com>
+Subject: Re: How to run xfstests against multipath disks on SuSE?
+From: Ryan Wang <openspace.wang@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,57 +30,97 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Debian Bug Tracking System <submit@bugs.debian.org>
+To: Rich Johnston <rjohnston@sgi.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs@oss.sgi.com, Theodore Ts'o <tytso@mit.edu>, =?ISO-8859-2?Q?Luk=E1=B9_Czerner?= <lczerner@redhat.com>
 
-Package: xfsprogs
-Version: 3.1.7+b1
-Severity: important
-File: /usr/sbin/xfs_freeze
-
-Dear Maintainer,
-When xfs_freeze -f /some/path is executed and /some/path does not contain a
-mounted file system the under lying (in my case root) file system was frozen, 
-this then required travelling to the site to power cycle the machine. The
-mount point normally hosted a removable drive, but it had been ejected.
- 
-Please have xfs_freeze return an error if the mountpoint argument does not
-contain a mounted file system.
-The documentation implies that the argument must be a mount point, but _any_
-path provided as an argument will freeze the parent file system.
-
-
-
--- System Information:
-Debian Release: wheezy/sid
-  APT prefers testing
-  APT policy: (500, 'testing')
-Architecture: i386 (i686)
-
-Kernel: Linux 3.2.0-3-686-pae (SMP w/2 CPU cores)
-Locale: LANG=en_AU.UTF-8, LC_CTYPE=en_AU.UTF-8 (charmap=UTF-8)
-Shell: /bin/sh linked to /bin/dash
-
-Versions of packages xfsprogs depends on:
-ii  libblkid1     2.20.1-5.1
-ii  libc6         2.13-33
-ii  libreadline5  5.2-11
-ii  libuuid1      2.20.1-5.1
-
-xfsprogs recommends no packages.
-
-Versions of packages xfsprogs suggests:
-ii  acl      2.2.51-8
-pn  attr     <none>
-pn  quota    <none>
-pn  xfsdump  <none>
-
--- no debconf information
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+MjAxMi8xMS8yOCBSaWNoIEpvaG5zdG9uIDxyam9obnN0b25Ac2dpLmNvbT46Cj4gT24gMTEvMjcv
+MjAxMiAwMjozNyBQTSwgRXJpYyBTYW5kZWVuIHdyb3RlOgo+Pgo+PiBPbiAxMS8yNy8xMiAyOjM1
+IFBNLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4+Pgo+Pj4gT24gVHVlLCBOb3YgMjcsIDIwMTIgYXQg
+MTE6MDg6MzBBTSAtMDYwMCwgRXJpYyBTYW5kZWVuIHdyb3RlOgo+Pj4+Cj4+Pj4gT24gMTEvMjYv
+MTIgOToxNCBQTSwgRGF2ZSBDaGlubmVyIHdyb3RlOgo+Pj4+Pgo+Pj4+PiBPbiBUdWUsIE5vdiAy
+NywgMjAxMiBhdCAwOToyMDo0N0FNICswODAwLCBSeWFuIFdhbmcgd3JvdGU6Cj4+Pj4+Pgo+Pj4+
+Pj4gMjAxMi8xMS8yNiBUaGVvZG9yZSBUcydvIDx0eXRzb0BtaXQuZWR1PjoKPj4+Pj4+Pgo+Pj4+
+Pj4+IE9uIE1vbiwgTm92IDI2LCAyMDEyIGF0IDAyOjQzOjQwUE0gKzAxMDAsIEx1a8OhxaEgQ3pl
+cm5lciB3cm90ZToKPj4+Pj4+Pj4+Cj4+Pj4+Pj4+PiBUaGUgSSBjaGVja2VkIHRoZSBzY3JpcHQg
+Y29tbW9uLnJjLCBhbmQgZm91bmQgdGhhdCBpdCB1c2VzCj4+Pj4+Pj4+PiBkZiB0byBkZXRlcm1p
+bmUgdGhlIGZpbGVzeXN0ZW0gdHlwZSBhbmQgaXQgdXNlcyB0aGUgcmVhbHBhdGgKPj4+Pj4+Pj4+
+ICIvZGV2L2RtLTAiIGluc3RlYWQgb2YgIi9kZXYvbWFwcGVyL21wYXRoYSIsIHdoaWxlIGRmIGFs
+d2F5cwo+Pj4+Pj4+Pj4gc2hvd3MgImRldnRtcGZzIiBpbnN0ZWFkIG9mICJleHQ0IiBmb3IgL2Rl
+di9kbS0wLgo+Pj4+Pj4+Pj4KPj4+Pj4+Pj4+IEkgcnVuICJtb3VudCIgYW5kIGZvdW5kIHRoYXQg
+ZGV2dG1wZnMgaXMgbW91bnQgb24gL2Rldi8gb24gb3BlbnN1c2UKPj4+Pj4+Pj4+ICoqKmJ5IGRl
+ZmF1bHQqKiouIEV2ZW4gdGhvdWdoICBJIHJ1biAibW91bnQgLXQgYnRyZnMgL2Rldi9kbS0wCj4+
+Pj4+Pj4+PiAvc29tZWRpciIsCj4+Pj4+Pj4+PiBkZiBzdGlsbCBzaG93ZWQgZGV2dG1wZnMuCj4+
+Pj4+Pj4+Pgo+Pj4+Pj4+Pj4gQW55IGlkZWFzIHRvIGtpY2sgb2ZmIHRoZSB4ZnN0ZXN0cz8KPj4+
+Pj4+Pgo+Pj4+Pj4+Cj4+Pj4+Pj4gQXQgbGVhc3Qgd2l0aCB0aGUgZGYgd2hpY2ggc2hpcHMgd2l0
+aCBEZWJpYW4gVGVzdGluZywgZGYgd2lsbCBkaXNwbGF5Cj4+Pj4+Pj4gdGhlIGZpbGUgc3lzdGVt
+IGluIHVzZSBpZiBpdCBtYXRjaGVzIHRoZSBkZXZpY2UgbmFtZSB3aGljaCBpcwo+Pj4+Pj4+IC9l
+dGMvbXRhYi4gIEl0IGxvb2tzIHRoZSBpc3N1ZSBpcyB0aGF0IG1vdW50IGlzIGNhbm9uaWNhbGl6
+aW5nIHRoZQo+Pj4+Pj4+IGRldmljZSBuYW1lIHRvIGJlIHRoZSBodW1hbiBmcmllbmRseSB2ZXJz
+aW9uOgo+Pj4+Pj4+Cj4+Pj4+Pj4gIyBscyAtbCAvZGV2L21hcHBlci9jbG9zdXJlLWJpZ3NjcmF0
+Y2gKPj4+Pj4+PiAwIGxyd3hyd3hyd3ggMSByb290IHJvb3QgNyBOb3YgMTYgMTU6MTUKPj4+Pj4+
+PiAvZGV2L21hcHBlci9jbG9zdXJlLWJpZ3NjcmF0Y2ggLT4gLi4vZG0tNwo+Pj4+Pj4+IDx0eXRz
+by5yb290QGNsb3N1cmU+IHsvaG9tZS90eXRzby9iaW59LCBsZXZlbCAyCj4+Pj4+Pj4gIyBtb3Vu
+dCAvZGV2L2RtLTcgL3UyCj4+Pj4+Pj4gIyBkZiAvdTIKPj4+Pj4+PiBGaWxlc3lzdGVtICAgICAg
+ICAgICAgICAgICAgICAgMUstYmxvY2tzICAgVXNlZCBBdmFpbGFibGUgVXNlJQo+Pj4+Pj4+IE1v
+dW50ZWQgb24KPj4+Pj4+PiAvZGV2L21hcHBlci9jbG9zdXJlLWJpZ3NjcmF0Y2ggIDUyNDAzMjAw
+IDIyNDc3MiAgNTIxNzg0MjggICAxJSAvdTIKPj4+Pj4+PiAjIGdyZXAgL3UyIC9ldGMvbXRhYgo+
+Pj4+Pj4+IC9kZXYvbWFwcGVyL2Nsb3N1cmUtYmlnc2NyYXRjaCAvdTIgeGZzCj4+Pj4+Pj4gcncs
+cmVsYXRpbWUsYXR0cjIsaW5vZGU2NCxub3F1b3RhIDAgMAo+Pj4+Pj4+Cj4+Pj4+Pj4gU28gdGhl
+IHNpbXBsZXN0IHNvbHV0aW9uIGlzIHRvIGp1c3QgdXNlIC9kZXYvbWFwcGVyL21wYXRoYSBpbnN0
+ZWFkIG9mCj4+Pj4+Pj4gaW5zaXN0aW5nIG9uIHVzaW5nIC9kZXYvZG0tMC4gIFRoYXQncyB3aGF0
+IEkgZG8uLi4uCj4+Pj4+Pgo+Pj4+Pj4KPj4+Pj4+IEluIHhmc3Rlc3RzL2NvbW1vbi5yYywgaXQg
+d2lsbCB1c2UgcmVhbHBhdGggdG8gb2J0YWluIC9kZXYvZG0tMCwgZXZlbgo+Pj4+Pj4gaWYgeW91
+Cj4+Pj4+PiBzcGVjaWZpZWQgL2Rldi9tYXBwZXIvbXBhdGhhLgo+Pj4+Pj4gTXkgcHJvYmxlbSBp
+cyBpbiBTdVNFLCB0aGUgZGV2dG1wZnMgaXMgbW91bnRlZCBvbiAvZGV2IGJ5IGRlZmF1bHQsCj4+
+Pj4+PiBzZWVtcwo+Pj4+Pj4gdXNlZCBieSB1ZGV2LiBBbmQgZGYgcmVwb3J0cyBkZXZ0bXBmcyBv
+biAvZGV2L2RtLTAsIGluc3RlYWQgb2YgZXh0NC4KPj4+Pj4KPj4+Pj4KPj4+Pj4gV2hhdCB2ZXJz
+aW9uIG9mIHhmc3Rlc3RzIGFyZSB5b3UgdXNpbmc/IERvIHlvdSBoYXZlIGEKPj4+Pj4gIlJFQURN
+RS5kZXZpY2UtbWFwcGVyIiBmaWxlIGluIHRoZSBiYXNlIGRpcmVjdG9yeT8gSWYgbm90LCB1cGdy
+YWRlCj4+Pj4+IHRvIHRoZSBsYXRlc3QgdmVyc2lvbiBhbmQgcmV0cnkuCj4+Pj4+Cj4+Pj4+ICQg
+Z2wgLW4gMSAtcCAwYTgxODg2Cj4+Pj4+IGNvbW1pdCAwYTgxODg2MmJiNzQ5MzJlMTU5NzFlYzhi
+ZWRiNTU3NjVlYzNhM2Y2Cj4+Pj4+IEF1dGhvcjogQ2hyaXN0b3BoIEhlbGx3aWcgPGhjaEBsc3Qu
+ZGU+Cj4+Pj4+IERhdGU6ICAgV2VkIE1heSA0IDE2OjI4OjMyIDIwMTEgKzAyMDAKPj4+Pj4KPj4+
+Pj4gICAgICB4ZnN0ZXN0czogc3VwcG9ydCBwb3N0LXVkZXYgZGV2aWNlIG1hcHBlciBub2Rlcwo+
+Pj4+Pgo+Pj4+PiAgICAgIEJlY2F1c2Ugb2YgdWRldnMgY29tcGxhaW5pbmcgZGV2aWNlIG1hcHBl
+ciBub3cgY3JlYXRlcyAvZGV2L2RtLU4KPj4+Pj4gYXMgdGhlIHJlYWwKPj4+Pj4gICAgICBkZXZp
+Y2Ugbm9kZXMsIGFuZCBqdXN0IHN5bWxpbmtzIHRoZSAvZGV2L21hcHBlci8gbmFtZXMgdG8gaXQu
+Cj4+Pj4+IFRoaXMgd291bGQgYmUKPj4+Pj4gICAgICBlYXN5IGlmIGV2ZXJ5dGhpbmcgdXNlZCB0
+aGUgL2Rldi9tYXBwZXIgY2xlYXIgbmFtZXMsIGJ1dCBtb3N0Cj4+Pj4+IHN5c3RlbSB1dGlsaXRp
+ZXMKPj4+Pj4gICAgICB0cmFuc2xhdGUgdGhlbSBiYWNrIHRvIHRoZSAvZGV2L21hcHBlci8gbmFt
+ZXMgYW5kIHRodXMgY29uZnVzZQo+Pj4+PiB2YXJpb3VzIHRlc3QKPj4+Pj4gICAgICBjYXNlcy4g
+IEFkZCBzdXBwb3J0IHRvIF9pc19ibG9ja19kZXYgdG8gcmVhZCBzeW1saW5rcywgYW5kIGFkZAo+
+Pj4+PiBkb2N1bWVudGF0aW9uCj4+Pj4+ICAgICAgb24gaG93IHRvIHJ1biB4ZnN0ZXN0cyBvbiBk
+ZXZpY2UgbWFwcGVyIHZvbHVtZXMuCj4+Pj4+Cj4+Pj4+ICAgICAgU2lnbmVkLW9mZi1ieTogQ2hy
+aXN0b3BoIEhlbGx3aWcgPGhjaEBsc3QuZGU+Cj4+Pj4+ICAgICAgUmV2aWV3ZWQtYnk6IEFsZXgg
+RWxkZXIgPGFlbGRlckBzZ2kuY29tPgo+Pj4+Pgo+Pj4+PiBDaGVlcnMsCj4+Pj4+Cj4+Pj4+IERh
+dmUuCj4+Pj4+Cj4+Pj4KPj4+PiBSZWNlbnQgInJlYWxwYXRoIiBjaGFuZ2VzIGFsc28gd2VudCBp
+bjoKPj4+Pgo+Pj4+IGIwM2M2NjIzOTk5NTY2MDk5MzRmZjA2M2U5MDY0ZTE1ZGM3NDU5YWMgeGZz
+dGVzdHM6IGZpeCB0byBidWlsZAo+Pj4+IHNyYy9yZWFscGF0aCBhbmQgdGhlIGNvcnJlY3QgdGhl
+IGV4aXN0ZW5jZSBvZiB0YXJnZXQgZGV2aWNlcwo+Pj4+IGQ1ZWE4NzNmY2JmMDBiODQxZjA1MTFh
+MjZmYjM0MTM2NGE1YzY0MjUgeGZzdGVzdHM6IHJlc29sdmUgc3ltbGlua2VkCj4+Pj4gZGV2aWNl
+cyB0byByZWFsIHBhdGhzCj4+Pj4KPj4+PiBzbyBlaXRoZXIgb2YgdGhvc2UgY291bGQgaGF2ZSBi
+cm9rZW4gYW5kL29yIGZpeGVkIGl0IGZvciB5b3UgOikKPj4+Cj4+Pgo+Pj4gWXVwLCB0aG9zZSBh
+cmUgYWxtb3N0IGNlcnRhaW5seSB0aGUgcGF0Y2hlcyB0aGF0IGJyb2tlIGRldmljZSBtYXBwZXIK
+Pj4+IHN1cHBvcnQuIFRoZXJlJyBhcmVuJ3QgY2hhbmdlcyB0byBjb21tb24ucmMsIHNvIEkgZGlk
+bid0IG5vdGljZSB0aGVtLgo+Pj4gVGhleSBiYXNpY2FsbHkgb3ZlcnJpZGUgdGhlIGZpeCB0aGF0
+IENocmlzdG9waCBtYWRlIHRvIHN1cHBvcnQKPj4+IC9kZXYvbWFwcGVyIGxpbmtzIHByb3Blcmx5
+Lgo+Pj4KPj4+IEknZCBzdWdnZXN0IGEgcmV2ZXJ0IGlzIGluIG9yZGVyLCB0aGUgdHdvIHBhdGNo
+ZXMgYWJvdmUgd2VyZSBwYXJ0Cj4+PiBvZiBSaWNoJ3MgaG92ZXJpbmcgb2Ygb2xkLCB1bnJldmll
+d2VkIHBhdGNoZXMuIFRoaXMgcHJvYmxlbSB3YXMKPj4+IGFscmVhZHkgZml4ZWQgaW4gYSBkaWZm
+ZXJlbnQgd2F5IGJ5IENocmlzdG9waCwgc28gYWRkaW5nIHRoZXNlCj4+PiBwYXRjaGVzIHdhcyB3
+cm9uZy4KPj4KPj4KPj4gRmluZSB3aXRoIG1lIC4uLgo+Pgo+PiBSeWFuLCBjYW4geW91IHRlc3Qg
+dy9vIHRob3NlLCBhbmQgaWYgaXQgd29ya3MgLQo+Pgo+PiBSaWNoLCBjYW4geW91IHJldmVydCB0
+aG9zZSBwbGVhc2U/Cj4KPgo+IFN1cmUsIEkgd2lsbCB3YWl0IHRvIGhlYXIgZnJvbSBSeWFuIGZp
+cnN0Lgo+CgpTb3JyeSBmb3IgbXkgbGF0ZSByZXNwb25zZS4KCkkgcmV2ZXJ0ZWQgdGhlIDIgcGF0
+Y2hlcyBhbmQgcmVidWlsdCB4ZnN0ZXN0cyBvbiBteSBib3guCkl0IGNhbiB3b3JrIG5vdyBvbiB0
+aGUgbXVsdGlwYXRoIGRpc2tzLgoKVGhhbmtzIGZvciB5b3VyIHN1cHBvcnQhCgpSeWFuCgo+Pgo+
+PiAtRXJpYwo+Pgo+Pj4gQ2hlZXJzLAo+Pj4KPj4+IERhdmUuCj4+Pgo+Pgo+PiBfX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwo+PiB4ZnMgbWFpbGluZyBsaXN0
+Cj4+IHhmc0Bvc3Muc2dpLmNvbQo+PiBodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5m
+by94ZnMKPj4KPgo+CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20v
+bWFpbG1hbi9saXN0aW5mby94ZnMK
