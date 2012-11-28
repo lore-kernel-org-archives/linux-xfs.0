@@ -1,18 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAS2oWHA125370 for <xfs@oss.sgi.com>; Tue, 27 Nov 2012 20:50:32 -0600
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id VPTUGzrkeMTzwEFY for <xfs@oss.sgi.com>;
-	Tue, 27 Nov 2012 18:52:48 -0800 (PST)
-Message-ID: <50B57C7E.40002@sandeen.net>
-Date: Tue, 27 Nov 2012 20:52:46 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	qAS3F8g0126841 for <xfs@oss.sgi.com>; Tue, 27 Nov 2012 21:15:08 -0600
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	vLFKSmVmM9cPbCa2 for <xfs@oss.sgi.com>;
+	Tue, 27 Nov 2012 19:17:22 -0800 (PST)
+Date: Wed, 28 Nov 2012 14:17:19 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 17/19] drivers: convert shrinkers to new count/scan API
+Message-ID: <20121128031719.GR6434@dastard>
+References: <1354058086-27937-1-git-send-email-david@fromorbit.com>
+	<1354058086-27937-18-git-send-email-david@fromorbit.com>
+	<b94cdc$7i2bv3@fmsmga001.fm.intel.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH v3 0/3] Print when ENOSPC due to lack of inodes.
-References: <cover.1348639531.git.rprabhu@wnohang.net>
-	<CAEtq3tN20oZ6NjT37tXo8XYW=N=AFTdsZxWTuD681RPbQeS_iw@mail.gmail.com>
-In-Reply-To: <CAEtq3tN20oZ6NjT37tXo8XYW=N=AFTdsZxWTuD681RPbQeS_iw@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <b94cdc$7i2bv3@fmsmga001.fm.intel.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,60 +28,136 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Raghavendra Prabhu <raghu.prabhu13@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Chris Wilson <chris@chris-wilson.co.uk>
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, xfs@oss.sgi.com, linux-kernel@vger.kernel.org, glommer@parallels.com
 
-On 10/24/12 3:56 PM, Raghavendra Prabhu wrote:
-> Hi,
+On Wed, Nov 28, 2012 at 01:13:11AM +0000, Chris Wilson wrote:
+> On Wed, 28 Nov 2012 10:14:44 +1100, Dave Chinner <david@fromorbit.com> wrote:
+> > +/*
+> > + * XXX: (dchinner) This is one of the worst cases of shrinker abuse I've seen.
+> > + *
+> > + * i915_gem_purge() expects a byte count to be passed, and the minimum object
+> > + * size is PAGE_SIZE.
 > 
-> Checking back on this, whether it has been reviewed and if so, any comments.
+> No, purge() expects a count of pages to be freed. Each pass of the
+> shrinker therefore tries to free a minimum of 128 pages.
 
-Please see Dave's comments down-thread, there are apparently still
-some unaddressed concerns.  If you'd like to do a V4 I think this
-would be nice to get in.
+Ah, I got the shifts mixed up. I'd been looking at way too much crap
+already when I saw this. But the fact this can be misunderstood says
+something about the level of documentation that the code has (i.e.
+none).
 
--Eric
-
-> On Wed, Sep 26, 2012 at 12:26 PM,  <raghu.prabhu13@gmail.com> wrote:
->> From: Raghavendra D Prabhu <rprabhu@wnohang.net>
->>
->> Currently, when there are no free inodes left / free space to allocate them (usually
->> without inode64), there is no indication anywhere of this case, making it harder
->> to diagnose this case.
->>
->> Hence, this series prints the causes/reasons to kernel log in a ratelimited
->> manner, when such a situation arises.
->>
->> Regarding why it is printed at callee location instead at caller, it gives
->> greater granularity in expressing the precise reason and give more details, and
->> also some along the path are not ENOSPC (such in xfs_ialloc where ialloc_context is not NULL but
->> ino is) along with the fact that it (xfs_ialloc) is called at multiple sites, so to avoid duplication.
->>
->> Version 1: Initial series.
->> Version 2: Added ratelimited printing to xfs_message and used that.
->> Version 3: Kept the logic intact in few places, fixed the column requirement.
->>
->> Raghavendra D Prabhu (3):
->>   xfs: Add ratelimited printk for different alert levels
->>   xfs: Print error when xfs_ialloc_ag_select fails to find continuous
->>     free space.
->>   xfs: Print error when unable to allocate inodes or out of free
->>     inodes.
->>
->>  fs/xfs/xfs_ialloc.c  | 31 ++++++++++++++++++++++++++++---
->>  fs/xfs/xfs_linux.h   |  1 +
->>  fs/xfs/xfs_message.h | 26 ++++++++++++++++++++++++++
->>  3 files changed, 55 insertions(+), 3 deletions(-)
->>
->> --
->> 1.7.12.1
->>
+> > The shrinker doesn't work on bytes - it works on
+> > + * *objects*.
 > 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> And I thought you were reviewing the shrinker API to be useful where a
+> single object may range between 4K and 4G.
+
+Which requires rewriting all the algorithms to not be dependent on
+the subsystems using a fixed size object. The shrinker control
+function is called shrink_slab() for a reason - it was expected to
+be used to shrink caches of fixed sized objects allocated from slab
+memory.
+
+It has no concept of the amount of memory that each object consumes,
+just an idea of how much *IO* it takes to replace the object in
+memory once it's been reclaimed. The DEFAULT_SEEKS is design to
+encode the fact it generally takes 2 IOs to replace either a LRU
+page or a filesystem slab object, and so balances the scanning based
+on that value. i.e. the shrinker algorithms are solidly based around
+fixed sized objects that have some relationship to the cost of
+physical IO operations to replace them in the cache.
+
+The API change is the first step in the path to removing these built
+in assumptions. The current API is just insane and any attempt to
+build on it is going to be futile. The way I see this developing is
+this:
+
+	- make the shrink_slab count -> scan algorithm per node
+
+	- add information about size of objects in the cache for
+	  fixed size object caches.
+		- the shrinker now has some idea of how many objects
+		  need to be freed to be able to free a page of
+		  memory, as well as the relative penalty for
+		  replacing them.
+		- tells the shrinker the size of the cache
+		  in bytes so overall memory footprint of the caches
+		  can be taken into account
+
+	- add new count and scan operations for caches that are
+	  based on memory used, not object counts
+		- allows us to use the same count/scan algorithm for
+		  calculating how much pressure to put on caches
+		  with variable size objects.
+
+My care factor mostly ends here, as it will allow XFS to corectly
+balance the metadata buffer cache (variable size objects) against the
+inode, dentry and dquot caches which are object based. The next
+steps that I'm about to give you are based on some discussions with
+some MM people over bottles of red wine, so take it with a grain of
+salt...
+
+	- calculate a "pressure" value for each cache controlled by a
+	  shrinker so that the relative memory pressure between
+	  caches can be compared. This allows the shrinkers to bias
+	  reclaim based on where the memory pressure is being
+	  generated
+
+	- start grouping shrinkers into a heirarchy, allowing
+	  related shrinkers (e.g. all the caches in a memcg) to be
+	  shrunk according resource limits that can be placed on the
+	  group. i.e. memory pressure is proportioned across
+	  groups rather than many individual shrinkers.
+
+	- comments have been made to the extent that with generic
+	  per-node lists and a node aware shrinker, all of the page
+	  scanning could be driven by the shrinker infrastructure,
+	  rather than the shrinkers being driven by how many pages
+	  in the page cache just got scanned for reclaim.
+
+	  IOWs, the main memory reclaim algorithm walks all the
+	  shrinkers groups to calculate overall memory pressure,
+	  calculate how much reclaim is necessary, and then
+	  proportion reclaim across all the shrinker groups. i.e.
+	  everything is a shrinker.
+
+This patch set is really just the start of a long process. balance
+between the page cache and VFS/filesystem shrinkers is critical to
+the efficient operation of the OS under many, many workloads, so I'm
+not about to change more than oe little thing at a time. This API
+change is just one little step. You'll get what you want eventually,
+but you're not going to get it as a first step.
+
+> > + * But the craziest part comes when i915_gem_purge() has walked all the objects
+> > + * and can't free any memory. That results in i915_gem_shrink_all() being
+> > + * called, which idles the GPU and frees everything the driver has in it's
+> > + * active and inactive lists. It's basically hitting the driver with a great big
+> > + * hammer because it was busy doing stuff when something else generated memory
+> > + * pressure. This doesn't seem particularly wise...
+> > + */
 > 
+> As opposed to triggering an OOM? The choice was between custom code for
+> a hopefully rare code path in a situation of last resort, or first
+> implementing the simplest code that stopped i915 from starving the
+> system of memory.
+
+And when it's something else that is causing the memory pressue?
+The shrinker gets called whenever somethign runs low on memory - it
+might be called thousands of times a second so there's a very good
+chance you have very little to free after the first purge has
+occurred. After than you're going to idle the GPU and purge all the
+memory on every single shrinker call, even though the GPU is not
+generating memory pressure and not causing the shrinkers to run.
+That's why it's crazy - it's got close to worst case behaviour when
+the GPU is already using as little memory as possible.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
