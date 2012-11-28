@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAS2B7ZC122957 for <xfs@oss.sgi.com>; Tue, 27 Nov 2012 20:11:07 -0600
+	qAS2B4tY122939 for <xfs@oss.sgi.com>; Tue, 27 Nov 2012 20:11:05 -0600
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	jFJfEg7t0M8c2XZm for <xfs@oss.sgi.com>;
-	Tue, 27 Nov 2012 18:13:22 -0800 (PST)
+	ANQNAjZIRzsg1FIW for <xfs@oss.sgi.com>;
+	Tue, 27 Nov 2012 18:13:20 -0800 (PST)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/2] xfs: fix splice/direct-IO deadlock
-Date: Wed, 28 Nov 2012 13:12:48 +1100
-Message-Id: <1354068768-4316-3-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/2] vfs: split generic splice code from i_mutex locking
+Date: Wed, 28 Nov 2012 13:12:47 +1100
+Message-Id: <1354068768-4316-2-git-send-email-david@fromorbit.com>
 In-Reply-To: <1354068768-4316-1-git-send-email-david@fromorbit.com>
 References: <1354068768-4316-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,88 +30,162 @@ Cc: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-lockdep reports splice vs direct-io write lock inversions due to
-generic_file_splice_write() taking the inode->i_mutex inside
-XFS_IOLOCK_EXCL context. These lock contexts are inverted, hence can
-deadlock.  Remove the XFS_IOLOCK_EXCL locking context from the outer
-function and drive it inwards to the actor function that only locks
-the inode when the lock is really needed,
+XFS holds locks that should be nested inside the inode->i_mutex when
+generic_file_splice_write is called. This function takes the
+i_mutex, and so we get a lock inversion that triggers lockdep
+warnings and has been found to cause real deadlocks.
+
+XFS does not need the splice code to take the i_mutex to do the page
+cache manipulation, so modify the generic splice code to use an
+actor function for the code that currently requires the i_mutex to
+be taken.  Convert generic_file_splice_write() to use this new
+interface supplying a generic actor function that performs the same
+actions as the existing code.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_file.c |   40 +++++++++++++++++++++++++++++-----------
- 1 file changed, 29 insertions(+), 11 deletions(-)
+ fs/splice.c            |   64 ++++++++++++++++++++++++++++++++++++------------
+ include/linux/splice.h |    5 ++++
+ 2 files changed, 53 insertions(+), 16 deletions(-)
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 2e79c54..21b6f0b 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -39,6 +39,7 @@
- #include <linux/dcache.h>
- #include <linux/falloc.h>
- #include <linux/pagevec.h>
-+#include <linux/splice.h>
- 
- static const struct vm_operations_struct xfs_file_vm_ops;
- 
-@@ -344,13 +345,33 @@ xfs_file_splice_read(
- 	return ret;
+diff --git a/fs/splice.c b/fs/splice.c
+index 13e5b47..66d4f24 100644
+--- a/fs/splice.c
++++ b/fs/splice.c
+@@ -970,24 +970,24 @@ ssize_t splice_from_pipe(struct pipe_inode_info *pipe, struct file *out,
  }
  
-+static ssize_t
-+xfs_file_splice_write_actor(
-+	struct pipe_inode_info	*pipe,
-+	struct splice_desc	*sd)
+ /**
+- * generic_file_splice_write - splice data from a pipe to a file
++ * splice_write_to_file - splice data from a pipe to a file
+  * @pipe:	pipe info
+  * @out:	file to write to
+  * @ppos:	position in @out
+  * @len:	number of bytes to splice
+  * @flags:	splice modifier flags
++ * @actor:	worker that does the splicing from the pipe to the file
+  *
+  * Description:
+  *    Will either move or copy pages (determined by @flags options) from
+  *    the given pipe inode to the given file.
+  *
+  */
+-ssize_t
+-generic_file_splice_write(struct pipe_inode_info *pipe, struct file *out,
+-			  loff_t *ppos, size_t len, unsigned int flags)
++ssize_t splice_write_to_file(struct pipe_inode_info *pipe, struct file *out,
++			     loff_t *ppos, size_t len, unsigned int flags,
++			     splice_write_actor actor)
+ {
+ 	struct address_space *mapping = out->f_mapping;
+-	struct inode *inode = mapping->host;
+ 	struct splice_desc sd = {
+ 		.total_len = len,
+ 		.flags = flags,
+@@ -996,7 +996,7 @@ generic_file_splice_write(struct pipe_inode_info *pipe, struct file *out,
+ 	};
+ 	ssize_t ret;
+ 
+-	sb_start_write(inode->i_sb);
++	sb_start_write(mapping->host->i_sb);
+ 
+ 	pipe_lock(pipe);
+ 
+@@ -1006,15 +1006,7 @@ generic_file_splice_write(struct pipe_inode_info *pipe, struct file *out,
+ 		if (ret <= 0)
+ 			break;
+ 
+-		mutex_lock_nested(&inode->i_mutex, I_MUTEX_CHILD);
+-		ret = file_remove_suid(out);
+-		if (!ret) {
+-			ret = file_update_time(out);
+-			if (!ret)
+-				ret = splice_from_pipe_feed(pipe, &sd,
+-							    pipe_to_file);
+-		}
+-		mutex_unlock(&inode->i_mutex);
++		ret = actor(pipe, &sd);
+ 	} while (ret > 0);
+ 	splice_from_pipe_end(pipe, &sd);
+ 
+@@ -1036,11 +1028,51 @@ generic_file_splice_write(struct pipe_inode_info *pipe, struct file *out,
+ 			*ppos += ret;
+ 		balance_dirty_pages_ratelimited_nr(mapping, nr_pages);
+ 	}
+-	sb_end_write(inode->i_sb);
++	sb_end_write(mapping->host->i_sb);
+ 
+ 	return ret;
+ }
++EXPORT_SYMBOL(splice_write_to_file);
+ 
++static ssize_t generic_file_splice_write_actor(struct pipe_inode_info *pipe,
++					       struct splice_desc *sd)
 +{
-+	struct file		*out = sd->u.file;
-+	struct xfs_inode	*ip = XFS_I(out->f_mapping->host);
++	struct file *out = sd->u.file;
++	struct inode *inode = out->f_mapping->host;
 +	ssize_t ret;
 +
-+	xfs_rw_ilock(ip, XFS_IOLOCK_EXCL);
++	mutex_lock_nested(&inode->i_mutex, I_MUTEX_CHILD);
 +	ret = file_remove_suid(out);
 +	if (!ret) {
 +		ret = file_update_time(out);
 +		if (!ret)
 +			ret = splice_from_pipe_feed(pipe, sd, pipe_to_file);
 +	}
-+	xfs_rw_iunlock(ip, XFS_IOLOCK_EXCL);
++	mutex_unlock(&inode->i_mutex);
 +
 +	return ret;
 +}
 +
++/**
++ * generic_file_splice_write - splice data from a pipe to a file
++ * @pipe:	pipe info
++ * @out:	file to write to
++ * @ppos:	position in @out
++ * @len:	number of bytes to splice
++ * @flags:	splice modifier flags
++ *
++ * Description:
++ *    Will either move or copy pages (determined by @flags options) from
++ *    the given pipe inode to the given file.
++ *
++ */
++ssize_t
++generic_file_splice_write(struct pipe_inode_info *pipe, struct file *out,
++			  loff_t *ppos, size_t len, unsigned int flags)
++{
++	return splice_write_to_file(pipe, out, ppos, len, flags,
++				    generic_file_splice_write_actor);
++}
+ EXPORT_SYMBOL(generic_file_splice_write);
+ 
+ static int write_pipe_buf(struct pipe_inode_info *pipe, struct pipe_buffer *buf,
+diff --git a/include/linux/splice.h b/include/linux/splice.h
+index 09a545a..44ce6f6b 100644
+--- a/include/linux/splice.h
++++ b/include/linux/splice.h
+@@ -62,6 +62,8 @@ typedef int (splice_actor)(struct pipe_inode_info *, struct pipe_buffer *,
+ 			   struct splice_desc *);
+ typedef int (splice_direct_actor)(struct pipe_inode_info *,
+ 				  struct splice_desc *);
++typedef ssize_t (splice_write_actor)(struct pipe_inode_info *,
++				  struct splice_desc *);
+ 
+ extern ssize_t splice_from_pipe(struct pipe_inode_info *, struct file *,
+ 				loff_t *, size_t, unsigned int,
+@@ -83,6 +85,9 @@ extern ssize_t splice_to_pipe(struct pipe_inode_info *,
+ extern ssize_t splice_direct_to_actor(struct file *, struct splice_desc *,
+ 				      splice_direct_actor *);
+ 
++extern ssize_t splice_write_to_file(struct pipe_inode_info *, struct file *,
++				    loff_t *, size_t, unsigned int,
++				    splice_write_actor *);
  /*
-- * xfs_file_splice_write() does not use xfs_rw_ilock() because
-- * generic_file_splice_write() takes the i_mutex itself. This, in theory,
-- * couuld cause lock inversions between the aio_write path and the splice path
-- * if someone is doing concurrent splice(2) based writes and write(2) based
-- * writes to the same inode. The only real way to fix this is to re-implement
-- * the generic code here with correct locking orders.
-+ * xfs_file_splice_write() does not use the generic file splice write path
-+ * because that takes the i_mutex, causing lock inversions with the IOLOCK.
-+ * Instead, we call splice_write_to_file() directly with our own actor that does
-+ * not take the i_mutex. This allows us to use the xfs_rw_ilock() functions like
-+ * the rest of the code and hence avoid lock inversions and deadlocks.
+  * for dynamic pipe sizing
   */
- STATIC ssize_t
- xfs_file_splice_write(
-@@ -373,15 +394,12 @@ xfs_file_splice_write(
- 	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
- 		return -EIO;
- 
--	xfs_ilock(ip, XFS_IOLOCK_EXCL);
--
- 	trace_xfs_file_splice_write(ip, count, *ppos, ioflags);
- 
--	ret = generic_file_splice_write(pipe, outfilp, ppos, count, flags);
-+	ret = splice_write_to_file(pipe, outfilp, ppos, count, flags,
-+					xfs_file_splice_write_actor);
- 	if (ret > 0)
- 		XFS_STATS_ADD(xs_write_bytes, ret);
--
--	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
- 	return ret;
- }
- 
 -- 
 1.7.10
 
