@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qASFENNK188405 for <xfs@oss.sgi.com>; Wed, 28 Nov 2012 09:14:23 -0600
-Message-ID: <50B62AF7.6030907@sgi.com>
-Date: Wed, 28 Nov 2012 09:17:11 -0600
-From: Rich Johnston <rjohnston@sgi.com>
+	qASG5Lr7192322 for <xfs@oss.sgi.com>; Wed, 28 Nov 2012 10:05:21 -0600
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	Zac3NIe4GEOUdH1S (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 28 Nov 2012 08:07:38 -0800 (PST)
+Date: Wed, 28 Nov 2012 11:07:36 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 2/2] xfs: fix splice/direct-IO deadlock
+Message-ID: <20121128160736.GA14888@infradead.org>
+References: <1354068768-4316-1-git-send-email-david@fromorbit.com>
+	<1354068768-4316-3-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Subject: Re: How to run xfstests against multipath disks on SuSE?
-References: <CAPxxNQmwX+TmJ=B-H0f+bzpx5JdijyyRrxCAAZRi9+c8HjQL9Q@mail.gmail.com>
-	<alpine.LFD.2.00.1211261442490.18234@localhost>
-	<20121126145559.GK31891@thunk.org>
-	<CAPxxNQmgOmEzkmzL7Tei4KAxaP49yx1fmhNgxvwaFNiYVosGtA@mail.gmail.com>
-	<20121127031438.GK6434@dastard> <50B4F38E.8060806@redhat.com>
-	<20121127203537.GM6434@dastard> <50B52475.1020603@redhat.com>
-	<50B528B0.9080208@sgi.com>
-	<CAPxxNQnGE_L2xdOimA-czk1RhnhvLdcY=swRYYucZM+bzNBn9w@mail.gmail.com>
-In-Reply-To: <CAPxxNQnGE_L2xdOimA-czk1RhnhvLdcY=swRYYucZM+bzNBn9w@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <1354068768-4316-3-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,103 +25,32 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ryan Wang <openspace.wang@gmail.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs@oss.sgi.com, Theodore Ts'o <tytso@mit.edu>, =?UTF-8?B?THVrw6HFoSBDemVybmVy?= <lczerner@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-T24gMTEvMjgvMjAxMiAwODoxMCBBTSwgUnlhbiBXYW5nIHdyb3RlOgo+IDIwMTIvMTEvMjggUmlj
-aCBKb2huc3RvbiA8cmpvaG5zdG9uQHNnaS5jb20+Ogo+PiBPbiAxMS8yNy8yMDEyIDAyOjM3IFBN
-LCBFcmljIFNhbmRlZW4gd3JvdGU6Cj4+Pgo+Pj4gT24gMTEvMjcvMTIgMjozNSBQTSwgRGF2ZSBD
-aGlubmVyIHdyb3RlOgo+Pj4+Cj4+Pj4gT24gVHVlLCBOb3YgMjcsIDIwMTIgYXQgMTE6MDg6MzBB
-TSAtMDYwMCwgRXJpYyBTYW5kZWVuIHdyb3RlOgo+Pj4+Pgo+Pj4+PiBPbiAxMS8yNi8xMiA5OjE0
-IFBNLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4+Pj4+Pgo+Pj4+Pj4gT24gVHVlLCBOb3YgMjcsIDIw
-MTIgYXQgMDk6MjA6NDdBTSArMDgwMCwgUnlhbiBXYW5nIHdyb3RlOgo+Pj4+Pj4+Cj4+Pj4+Pj4g
-MjAxMi8xMS8yNiBUaGVvZG9yZSBUcydvIDx0eXRzb0BtaXQuZWR1PjoKPj4+Pj4+Pj4KPj4+Pj4+
-Pj4gT24gTW9uLCBOb3YgMjYsIDIwMTIgYXQgMDI6NDM6NDBQTSArMDEwMCwgTHVrw6HFoSBDemVy
-bmVyIHdyb3RlOgo+Pj4+Pj4+Pj4+Cj4+Pj4+Pj4+Pj4gVGhlIEkgY2hlY2tlZCB0aGUgc2NyaXB0
-IGNvbW1vbi5yYywgYW5kIGZvdW5kIHRoYXQgaXQgdXNlcwo+Pj4+Pj4+Pj4+IGRmIHRvIGRldGVy
-bWluZSB0aGUgZmlsZXN5c3RlbSB0eXBlIGFuZCBpdCB1c2VzIHRoZSByZWFscGF0aAo+Pj4+Pj4+
-Pj4+ICIvZGV2L2RtLTAiIGluc3RlYWQgb2YgIi9kZXYvbWFwcGVyL21wYXRoYSIsIHdoaWxlIGRm
-IGFsd2F5cwo+Pj4+Pj4+Pj4+IHNob3dzICJkZXZ0bXBmcyIgaW5zdGVhZCBvZiAiZXh0NCIgZm9y
-IC9kZXYvZG0tMC4KPj4+Pj4+Pj4+Pgo+Pj4+Pj4+Pj4+IEkgcnVuICJtb3VudCIgYW5kIGZvdW5k
-IHRoYXQgZGV2dG1wZnMgaXMgbW91bnQgb24gL2Rldi8gb24gb3BlbnN1c2UKPj4+Pj4+Pj4+PiAq
-KipieSBkZWZhdWx0KioqLiBFdmVuIHRob3VnaCAgSSBydW4gIm1vdW50IC10IGJ0cmZzIC9kZXYv
-ZG0tMAo+Pj4+Pj4+Pj4+IC9zb21lZGlyIiwKPj4+Pj4+Pj4+PiBkZiBzdGlsbCBzaG93ZWQgZGV2
-dG1wZnMuCj4+Pj4+Pj4+Pj4KPj4+Pj4+Pj4+PiBBbnkgaWRlYXMgdG8ga2ljayBvZmYgdGhlIHhm
-c3Rlc3RzPwo+Pj4+Pj4+Pgo+Pj4+Pj4+Pgo+Pj4+Pj4+PiBBdCBsZWFzdCB3aXRoIHRoZSBkZiB3
-aGljaCBzaGlwcyB3aXRoIERlYmlhbiBUZXN0aW5nLCBkZiB3aWxsIGRpc3BsYXkKPj4+Pj4+Pj4g
-dGhlIGZpbGUgc3lzdGVtIGluIHVzZSBpZiBpdCBtYXRjaGVzIHRoZSBkZXZpY2UgbmFtZSB3aGlj
-aCBpcwo+Pj4+Pj4+PiAvZXRjL210YWIuICBJdCBsb29rcyB0aGUgaXNzdWUgaXMgdGhhdCBtb3Vu
-dCBpcyBjYW5vbmljYWxpemluZyB0aGUKPj4+Pj4+Pj4gZGV2aWNlIG5hbWUgdG8gYmUgdGhlIGh1
-bWFuIGZyaWVuZGx5IHZlcnNpb246Cj4+Pj4+Pj4+Cj4+Pj4+Pj4+ICMgbHMgLWwgL2Rldi9tYXBw
-ZXIvY2xvc3VyZS1iaWdzY3JhdGNoCj4+Pj4+Pj4+IDAgbHJ3eHJ3eHJ3eCAxIHJvb3Qgcm9vdCA3
-IE5vdiAxNiAxNToxNQo+Pj4+Pj4+PiAvZGV2L21hcHBlci9jbG9zdXJlLWJpZ3NjcmF0Y2ggLT4g
-Li4vZG0tNwo+Pj4+Pj4+PiA8dHl0c28ucm9vdEBjbG9zdXJlPiB7L2hvbWUvdHl0c28vYmlufSwg
-bGV2ZWwgMgo+Pj4+Pj4+PiAjIG1vdW50IC9kZXYvZG0tNyAvdTIKPj4+Pj4+Pj4gIyBkZiAvdTIK
-Pj4+Pj4+Pj4gRmlsZXN5c3RlbSAgICAgICAgICAgICAgICAgICAgIDFLLWJsb2NrcyAgIFVzZWQg
-QXZhaWxhYmxlIFVzZSUKPj4+Pj4+Pj4gTW91bnRlZCBvbgo+Pj4+Pj4+PiAvZGV2L21hcHBlci9j
-bG9zdXJlLWJpZ3NjcmF0Y2ggIDUyNDAzMjAwIDIyNDc3MiAgNTIxNzg0MjggICAxJSAvdTIKPj4+
-Pj4+Pj4gIyBncmVwIC91MiAvZXRjL210YWIKPj4+Pj4+Pj4gL2Rldi9tYXBwZXIvY2xvc3VyZS1i
-aWdzY3JhdGNoIC91MiB4ZnMKPj4+Pj4+Pj4gcncscmVsYXRpbWUsYXR0cjIsaW5vZGU2NCxub3F1
-b3RhIDAgMAo+Pj4+Pj4+Pgo+Pj4+Pj4+PiBTbyB0aGUgc2ltcGxlc3Qgc29sdXRpb24gaXMgdG8g
-anVzdCB1c2UgL2Rldi9tYXBwZXIvbXBhdGhhIGluc3RlYWQgb2YKPj4+Pj4+Pj4gaW5zaXN0aW5n
-IG9uIHVzaW5nIC9kZXYvZG0tMC4gIFRoYXQncyB3aGF0IEkgZG8uLi4uCj4+Pj4+Pj4KPj4+Pj4+
-Pgo+Pj4+Pj4+IEluIHhmc3Rlc3RzL2NvbW1vbi5yYywgaXQgd2lsbCB1c2UgcmVhbHBhdGggdG8g
-b2J0YWluIC9kZXYvZG0tMCwgZXZlbgo+Pj4+Pj4+IGlmIHlvdQo+Pj4+Pj4+IHNwZWNpZmllZCAv
-ZGV2L21hcHBlci9tcGF0aGEuCj4+Pj4+Pj4gTXkgcHJvYmxlbSBpcyBpbiBTdVNFLCB0aGUgZGV2
-dG1wZnMgaXMgbW91bnRlZCBvbiAvZGV2IGJ5IGRlZmF1bHQsCj4+Pj4+Pj4gc2VlbXMKPj4+Pj4+
-PiB1c2VkIGJ5IHVkZXYuIEFuZCBkZiByZXBvcnRzIGRldnRtcGZzIG9uIC9kZXYvZG0tMCwgaW5z
-dGVhZCBvZiBleHQ0Lgo+Pj4+Pj4KPj4+Pj4+Cj4+Pj4+PiBXaGF0IHZlcnNpb24gb2YgeGZzdGVz
-dHMgYXJlIHlvdSB1c2luZz8gRG8geW91IGhhdmUgYQo+Pj4+Pj4gIlJFQURNRS5kZXZpY2UtbWFw
-cGVyIiBmaWxlIGluIHRoZSBiYXNlIGRpcmVjdG9yeT8gSWYgbm90LCB1cGdyYWRlCj4+Pj4+PiB0
-byB0aGUgbGF0ZXN0IHZlcnNpb24gYW5kIHJldHJ5Lgo+Pj4+Pj4KPj4+Pj4+ICQgZ2wgLW4gMSAt
-cCAwYTgxODg2Cj4+Pj4+PiBjb21taXQgMGE4MTg4NjJiYjc0OTMyZTE1OTcxZWM4YmVkYjU1NzY1
-ZWMzYTNmNgo+Pj4+Pj4gQXV0aG9yOiBDaHJpc3RvcGggSGVsbHdpZyA8aGNoQGxzdC5kZT4KPj4+
-Pj4+IERhdGU6ICAgV2VkIE1heSA0IDE2OjI4OjMyIDIwMTEgKzAyMDAKPj4+Pj4+Cj4+Pj4+PiAg
-ICAgICB4ZnN0ZXN0czogc3VwcG9ydCBwb3N0LXVkZXYgZGV2aWNlIG1hcHBlciBub2Rlcwo+Pj4+
-Pj4KPj4+Pj4+ICAgICAgIEJlY2F1c2Ugb2YgdWRldnMgY29tcGxhaW5pbmcgZGV2aWNlIG1hcHBl
-ciBub3cgY3JlYXRlcyAvZGV2L2RtLU4KPj4+Pj4+IGFzIHRoZSByZWFsCj4+Pj4+PiAgICAgICBk
-ZXZpY2Ugbm9kZXMsIGFuZCBqdXN0IHN5bWxpbmtzIHRoZSAvZGV2L21hcHBlci8gbmFtZXMgdG8g
-aXQuCj4+Pj4+PiBUaGlzIHdvdWxkIGJlCj4+Pj4+PiAgICAgICBlYXN5IGlmIGV2ZXJ5dGhpbmcg
-dXNlZCB0aGUgL2Rldi9tYXBwZXIgY2xlYXIgbmFtZXMsIGJ1dCBtb3N0Cj4+Pj4+PiBzeXN0ZW0g
-dXRpbGl0aWVzCj4+Pj4+PiAgICAgICB0cmFuc2xhdGUgdGhlbSBiYWNrIHRvIHRoZSAvZGV2L21h
-cHBlci8gbmFtZXMgYW5kIHRodXMgY29uZnVzZQo+Pj4+Pj4gdmFyaW91cyB0ZXN0Cj4+Pj4+PiAg
-ICAgICBjYXNlcy4gIEFkZCBzdXBwb3J0IHRvIF9pc19ibG9ja19kZXYgdG8gcmVhZCBzeW1saW5r
-cywgYW5kIGFkZAo+Pj4+Pj4gZG9jdW1lbnRhdGlvbgo+Pj4+Pj4gICAgICAgb24gaG93IHRvIHJ1
-biB4ZnN0ZXN0cyBvbiBkZXZpY2UgbWFwcGVyIHZvbHVtZXMuCj4+Pj4+Pgo+Pj4+Pj4gICAgICAg
-U2lnbmVkLW9mZi1ieTogQ2hyaXN0b3BoIEhlbGx3aWcgPGhjaEBsc3QuZGU+Cj4+Pj4+PiAgICAg
-ICBSZXZpZXdlZC1ieTogQWxleCBFbGRlciA8YWVsZGVyQHNnaS5jb20+Cj4+Pj4+Pgo+Pj4+Pj4g
-Q2hlZXJzLAo+Pj4+Pj4KPj4+Pj4+IERhdmUuCj4+Pj4+Pgo+Pj4+Pgo+Pj4+PiBSZWNlbnQgInJl
-YWxwYXRoIiBjaGFuZ2VzIGFsc28gd2VudCBpbjoKPj4+Pj4KPj4+Pj4gYjAzYzY2MjM5OTk1NjYw
-OTkzNGZmMDYzZTkwNjRlMTVkYzc0NTlhYyB4ZnN0ZXN0czogZml4IHRvIGJ1aWxkCj4+Pj4+IHNy
-Yy9yZWFscGF0aCBhbmQgdGhlIGNvcnJlY3QgdGhlIGV4aXN0ZW5jZSBvZiB0YXJnZXQgZGV2aWNl
-cwo+Pj4+PiBkNWVhODczZmNiZjAwYjg0MWYwNTExYTI2ZmIzNDEzNjRhNWM2NDI1IHhmc3Rlc3Rz
-OiByZXNvbHZlIHN5bWxpbmtlZAo+Pj4+PiBkZXZpY2VzIHRvIHJlYWwgcGF0aHMKPj4+Pj4KPj4+
-Pj4gc28gZWl0aGVyIG9mIHRob3NlIGNvdWxkIGhhdmUgYnJva2VuIGFuZC9vciBmaXhlZCBpdCBm
-b3IgeW91IDopCj4+Pj4KPj4+Pgo+Pj4+IFl1cCwgdGhvc2UgYXJlIGFsbW9zdCBjZXJ0YWlubHkg
-dGhlIHBhdGNoZXMgdGhhdCBicm9rZSBkZXZpY2UgbWFwcGVyCj4+Pj4gc3VwcG9ydC4gVGhlcmUn
-IGFyZW4ndCBjaGFuZ2VzIHRvIGNvbW1vbi5yYywgc28gSSBkaWRuJ3Qgbm90aWNlIHRoZW0uCj4+
-Pj4gVGhleSBiYXNpY2FsbHkgb3ZlcnJpZGUgdGhlIGZpeCB0aGF0IENocmlzdG9waCBtYWRlIHRv
-IHN1cHBvcnQKPj4+PiAvZGV2L21hcHBlciBsaW5rcyBwcm9wZXJseS4KPj4+Pgo+Pj4+IEknZCBz
-dWdnZXN0IGEgcmV2ZXJ0IGlzIGluIG9yZGVyLCB0aGUgdHdvIHBhdGNoZXMgYWJvdmUgd2VyZSBw
-YXJ0Cj4+Pj4gb2YgUmljaCdzIGhvdmVyaW5nIG9mIG9sZCwgdW5yZXZpZXdlZCBwYXRjaGVzLiBU
-aGlzIHByb2JsZW0gd2FzCj4+Pj4gYWxyZWFkeSBmaXhlZCBpbiBhIGRpZmZlcmVudCB3YXkgYnkg
-Q2hyaXN0b3BoLCBzbyBhZGRpbmcgdGhlc2UKPj4+PiBwYXRjaGVzIHdhcyB3cm9uZy4KPj4+Cj4+
-Pgo+Pj4gRmluZSB3aXRoIG1lIC4uLgo+Pj4KPj4+IFJ5YW4sIGNhbiB5b3UgdGVzdCB3L28gdGhv
-c2UsIGFuZCBpZiBpdCB3b3JrcyAtCj4+Pgo+Pj4gUmljaCwgY2FuIHlvdSByZXZlcnQgdGhvc2Ug
-cGxlYXNlPwo+Pgo+Pgo+PiBTdXJlLCBJIHdpbGwgd2FpdCB0byBoZWFyIGZyb20gUnlhbiBmaXJz
-dC4KPj4KPgo+IFNvcnJ5IGZvciBteSBsYXRlIHJlc3BvbnNlLgo+Cj4gSSByZXZlcnRlZCB0aGUg
-MiBwYXRjaGVzIGFuZCByZWJ1aWx0IHhmc3Rlc3RzIG9uIG15IGJveC4KPiBJdCBjYW4gd29yayBu
-b3cgb24gdGhlIG11bHRpcGF0aCBkaXNrcy4KPgo+IFRoYW5rcyBmb3IgeW91ciBzdXBwb3J0IQo+
-Cj4gUnlhbgoKUGF0Y2hlcyBjNzQ1OWFjIGFuZCA1YzY0MjUgaGF2ZSBiZWVuIHJldmVydGVkIG9u
-CmdpdDovL29zcy5zZ2kuY29tL3hmcy9jbWRzL3hmc3Rlc3RzIG1hc3RlciBicmFuY2gsIGNvbW1p
-dHMgODZjZjc3IGFuZCAKODJlODg5LgoKLS1SaWNoCgo+Cj4+Pgo+Pj4gLUVyaWMKPj4+Cj4+Pj4g
-Q2hlZXJzLAo+Pj4+Cj4+Pj4gRGF2ZS4KPj4+Pgo+Pj4KPj4+IF9fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fCj4+PiB4ZnMgbWFpbGluZyBsaXN0Cj4+PiB4ZnNA
-b3NzLnNnaS5jb20KPj4+IGh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo+
-Pj4KPj4KPj4KCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-Xwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFp
-bG1hbi9saXN0aW5mby94ZnMK
+On Wed, Nov 28, 2012 at 01:12:48PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> lockdep reports splice vs direct-io write lock inversions due to
+> generic_file_splice_write() taking the inode->i_mutex inside
+> XFS_IOLOCK_EXCL context. These lock contexts are inverted, hence can
+> deadlock.  Remove the XFS_IOLOCK_EXCL locking context from the outer
+> function and drive it inwards to the actor function that only locks
+> the inode when the lock is really needed,
+
+punctuation?
+
+Otherwise the patch looks fine, but I'd love to understand why the
+generic code thes te I_MUTEX_CHILD annotation and we can get away
+without it.
+
+Also can you add a testcase for this to xfstests?
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
