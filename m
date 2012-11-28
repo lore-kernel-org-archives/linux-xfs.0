@@ -1,18 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAS3Gv9Y127003 for <xfs@oss.sgi.com>; Tue, 27 Nov 2012 21:16:58 -0600
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 6NV445gO9LFRafqk for <xfs@oss.sgi.com>;
-	Tue, 27 Nov 2012 19:19:13 -0800 (PST)
-Message-ID: <50B582B0.4050305@sandeen.net>
-Date: Tue, 27 Nov 2012 21:19:12 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	qAS8Jkve152205 for <xfs@oss.sgi.com>; Wed, 28 Nov 2012 02:19:46 -0600
+Received: from mx2.parallels.com (mx2.parallels.com [64.131.90.16]) by
+	cuda.sgi.com with ESMTP id 1IbbEfyHnztYGVsz (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 28 Nov 2012 00:22:02 -0800 (PST)
+Message-ID: <50B5C9A2.6000408@parallels.com>
+Date: Wed, 28 Nov 2012 12:21:54 +0400
+From: Glauber Costa <glommer@parallels.com>
 MIME-Version: 1.0
-Subject: [PATCH V2] xfstests: test EROFS vs. EEXIST when creating on an RO
-	filesystem
-References: <50B52DB7.3030506@redhat.com>
-In-Reply-To: <50B52DB7.3030506@redhat.com>
+Subject: Re: [PATCH 17/19] drivers: convert shrinkers to new count/scan API
+References: <1354058086-27937-1-git-send-email-david@fromorbit.com>
+	<1354058086-27937-18-git-send-email-david@fromorbit.com>
+	<b94cdc$7i2bv3@fmsmga001.fm.intel.com>
+	<20121128031719.GR6434@dastard>
+In-Reply-To: <20121128031719.GR6434@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,121 +28,160 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, xfs@oss.sgi.com, linux-kernel@vger.kernel.org, Chris Wilson <chris@chris-wilson.co.uk>
 
-TBH, I don't know if this is posix-specified, but I found out the
-hard way that when trying to re-create existing files on a readonly 
-filesystem, some apps expect/handle EEXIST, but fail on EROFS.
+On 11/28/2012 07:17 AM, Dave Chinner wrote:
+> On Wed, Nov 28, 2012 at 01:13:11AM +0000, Chris Wilson wrote:
+>> On Wed, 28 Nov 2012 10:14:44 +1100, Dave Chinner <david@fromorbit.com> wrote:
+>>> +/*
+>>> + * XXX: (dchinner) This is one of the worst cases of shrinker abuse I've seen.
+>>> + *
+>>> + * i915_gem_purge() expects a byte count to be passed, and the minimum object
+>>> + * size is PAGE_SIZE.
+>>
+>> No, purge() expects a count of pages to be freed. Each pass of the
+>> shrinker therefore tries to free a minimum of 128 pages.
+> 
+> Ah, I got the shifts mixed up. I'd been looking at way too much crap
+> already when I saw this. But the fact this can be misunderstood says
+> something about the level of documentation that the code has (i.e.
+> none).
+> 
+>>> The shrinker doesn't work on bytes - it works on
+>>> + * *objects*.
+>>
+>> And I thought you were reviewing the shrinker API to be useful where a
+>> single object may range between 4K and 4G.
+> 
+> Which requires rewriting all the algorithms to not be dependent on
+> the subsystems using a fixed size object. The shrinker control
+> function is called shrink_slab() for a reason - it was expected to
+> be used to shrink caches of fixed sized objects allocated from slab
+> memory.
+> 
+> It has no concept of the amount of memory that each object consumes,
+> just an idea of how much *IO* it takes to replace the object in
+> memory once it's been reclaimed. The DEFAULT_SEEKS is design to
+> encode the fact it generally takes 2 IOs to replace either a LRU
+> page or a filesystem slab object, and so balances the scanning based
+> on that value. i.e. the shrinker algorithms are solidly based around
+> fixed sized objects that have some relationship to the cost of
+> physical IO operations to replace them in the cache.
 
-This will test mkdir, mknod, and symlinks for that behavior.
+One nit: It shouldn't take 2IOs to replace a slab object, right? This
+should be the cost of allocating a new page, that can contain, multiple
+objects.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+Once the page is in, a new object should be quite cheap to come up with.
 
-V2:  Change test dir var name, do scratch mkfs, drop _fail
+This is a very wild thought, but now that I am diving deep in the
+shrinker API, and seeing things like this:
 
-diff --git a/292 b/292
-new file mode 100755
-index 0000000..4f0cc87
---- /dev/null
-+++ b/292
-@@ -0,0 +1,74 @@
-+#! /bin/bash
-+# FS QA Test No. 292
-+#
-+# Tests for EEXIST (not EROFS) for inode creations, if
-+# we ask to create an already-existing entity on an RO filesystem
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2012 Red Hat, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+# creator
-+owner=sandeen@redhat.com
-+
-+seq=`basename $0`
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common.rc
-+. ./common.filter
-+
-+# real QA test starts here
-+
-+# Modify as appropriate.
-+_supported_fs generic
-+_supported_os Linux
-+_require_scratch
-+
-+MYDIR=$SCRATCH_MNT/$seq.test
-+
-+_create_files()
-+{
-+	mknod $MYDIR/testnode c 1 3
-+	mkdir $MYDIR/testdir
-+	touch $MYDIR/testtarget
-+	ln -s $MYDIR/testtarget $MYDIR/testlink
-+}
-+
-+_scratch_mkfs >/dev/null 2>&1
-+_scratch_mount
-+
-+rm -rf $MYDIR
-+mkdir $MYDIR
-+
-+_create_files 2>&1 | _filter_scratch
-+_scratch_mount -o remount,ro
-+_create_files 2>&1 | _filter_scratch
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/292.out b/292.out
-new file mode 100644
-index 0000000..485c567
---- /dev/null
-+++ b/292.out
-@@ -0,0 +1,5 @@
-+QA output created by 292
-+mknod: `SCRATCH_MNT/292.test/testnode': File exists
-+mkdir: cannot create directory `SCRATCH_MNT/292.test/testdir': File exists
-+touch: cannot touch `SCRATCH_MNT/292.test/testtarget': Read-only file system
-+ln: creating symbolic link `SCRATCH_MNT/292.test/testlink': File exists
-diff --git a/group b/group
-index dc8db65..030082b 100644
---- a/group
-+++ b/group
-@@ -410,3 +410,4 @@ deprecated
- 289 auto quick
- 290 auto rw prealloc quick ioctl
- 291 repair
-+292 auto quick
+if (reclaim_state) {
+    sc->nr_reclaimed += reclaim_state->reclaimed_slab;
+    reclaim_state->reclaimed_slab = 0;
+}
 
+I am becoming more convinced that we should have a page-based mechanism,
+like the rest of vmscan.
+
+Also, if we are seeing pressure from someone requesting user pages, what
+good does it make to free, say, 35 Mb of memory, if this means we are
+freeing objects across 5k different pages, without actually releasing
+any of them? (still is TBD if this is a theoretical problem or a
+practical one). It would maybe be better to free objects that are
+moderately hot, but are on pages dominated by cold objects...
+
+
+> 
+> The API change is the first step in the path to removing these built
+> in assumptions. The current API is just insane and any attempt to
+> build on it is going to be futile. 
+
+Amen, brother!
+
+> The way I see this developing is
+> this:
+> 
+> 	- make the shrink_slab count -> scan algorithm per node
+> 
+pages are per-node.
+
+> 	- add information about size of objects in the cache for
+> 	  fixed size object caches.
+> 		- the shrinker now has some idea of how many objects
+> 		  need to be freed to be able to free a page of
+> 		  memory, as well as the relative penalty for
+> 		  replacing them.
+this is still guesswork, telling how many pages it should free, could
+be a better idea.
+
+> 		- tells the shrinker the size of the cache
+> 		  in bytes so overall memory footprint of the caches
+> 		  can be taken into account
+
+> 	- add new count and scan operations for caches that are
+> 	  based on memory used, not object counts
+> 		- allows us to use the same count/scan algorithm for
+> 		  calculating how much pressure to put on caches
+> 		  with variable size objects.
+
+IOW, pages.
+
+> My care factor mostly ends here, as it will allow XFS to corectly
+> balance the metadata buffer cache (variable size objects) against the
+> inode, dentry and dquot caches which are object based. The next
+> steps that I'm about to give you are based on some discussions with
+> some MM people over bottles of red wine, so take it with a grain of
+> salt...
+> 
+> 	- calculate a "pressure" value for each cache controlled by a
+> 	  shrinker so that the relative memory pressure between
+> 	  caches can be compared. This allows the shrinkers to bias
+> 	  reclaim based on where the memory pressure is being
+> 	  generated
+> 
+
+Ok, if a cache is using a lot of memory, this would indicate it has the
+dominant workload, right? Should we free from it, or should we free from
+the others, so this ones gets the pages it needs?
+
+> 	- start grouping shrinkers into a heirarchy, allowing
+> 	  related shrinkers (e.g. all the caches in a memcg) to be
+> 	  shrunk according resource limits that can be placed on the
+> 	  group. i.e. memory pressure is proportioned across
+> 	  groups rather than many individual shrinkers.
+> 
+pages are already grouped like that!
+
+> 	- comments have been made to the extent that with generic
+> 	  per-node lists and a node aware shrinker, all of the page
+> 	  scanning could be driven by the shrinker infrastructure,
+> 	  rather than the shrinkers being driven by how many pages
+> 	  in the page cache just got scanned for reclaim.
+> 
+> 	  IOWs, the main memory reclaim algorithm walks all the
+> 	  shrinkers groups to calculate overall memory pressure,
+> 	  calculate how much reclaim is necessary, and then
+> 	  proportion reclaim across all the shrinker groups. i.e.
+> 	  everything is a shrinker.
+> 
+> This patch set is really just the start of a long process. balance
+> between the page cache and VFS/filesystem shrinkers is critical to
+> the efficient operation of the OS under many, many workloads, so I'm
+> not about to change more than oe little thing at a time. This API
+> change is just one little step. You'll get what you want eventually,
+> but you're not going to get it as a first step.
+> 
+
+I have to note again that this is my first *serious* look at the
+problem... but this is a summary of what I got, that fits in the context
+of this particular discussion =)
+
+I still have to go through all your other patches...
+
+But one thing we seem to agree is that we have quite a long road ahead
 
 _______________________________________________
 xfs mailing list
