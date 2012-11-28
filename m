@@ -1,17 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAS1B29Y118365 for <xfs@oss.sgi.com>; Tue, 27 Nov 2012 19:11:02 -0600
-Received: from mga11.intel.com (mga11.intel.com [192.55.52.93]) by
-	cuda.sgi.com with ESMTP id 1KDwNoLegJZqVC5N for
-	<xfs@oss.sgi.com>; Tue, 27 Nov 2012 17:13:18 -0800 (PST)
-Message-Id: <b94cdc$7i2bv3@fmsmga001.fm.intel.com>
-From: Chris Wilson <chris@chris-wilson.co.uk>
-Subject: Re: [PATCH 17/19] drivers: convert shrinkers to new count/scan API
-In-Reply-To: <1354058086-27937-18-git-send-email-david@fromorbit.com>
-References: <1354058086-27937-1-git-send-email-david@fromorbit.com>
-	<1354058086-27937-18-git-send-email-david@fromorbit.com>
-Date: Wed, 28 Nov 2012 01:13:11 +0000
+	qAS1x4UB121970 for <xfs@oss.sgi.com>; Tue, 27 Nov 2012 19:59:04 -0600
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	LlP2F0SV0o4iyMd2 for <xfs@oss.sgi.com>;
+	Tue, 27 Nov 2012 18:01:19 -0800 (PST)
+Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1TdWxf-0003zh-Rm
+	for xfs@oss.sgi.com; Wed, 28 Nov 2012 13:01:15 +1100
+Received: from dave by disappointment with local (Exim 4.80)
+	(envelope-from <dave@disappointment.disaster>) id 1TdWxV-0000SN-NJ
+	for xfs@oss.sgi.com; Wed, 28 Nov 2012 13:01:05 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 2/4] xfs: byte range granularity for XFS_IOC_ZERO_RANGE
+Date: Wed, 28 Nov 2012 13:01:01 +1100
+Message-Id: <1354068063-1692-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1354068063-1692-1-git-send-email-david@fromorbit.com>
+References: <1354068063-1692-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,45 +31,179 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, glommer@parallels.com
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, 28 Nov 2012 10:14:44 +1100, Dave Chinner <david@fromorbit.com> wrote:
-> +/*
-> + * XXX: (dchinner) This is one of the worst cases of shrinker abuse I've seen.
-> + *
-> + * i915_gem_purge() expects a byte count to be passed, and the minimum object
-> + * size is PAGE_SIZE.
+From: Dave Chinner <dchinner@redhat.com>
 
-No, purge() expects a count of pages to be freed. Each pass of the
-shrinker therefore tries to free a minimum of 128 pages.
+XFS_IOC_ZERO_RANGE simply does not work properly for non page cache
+aligned ranges. Neither test 242 or 290 exercise this correctly, so
+the behaviour is completely busted even though the tests pass.
 
-> The shrinker doesn't work on bytes - it works on
-> + * *objects*.
+Fix it to support full byte range granularity as was originally
+intended for this ioctl.
 
-And I thought you were reviewing the shrinker API to be useful where a
-single object may range between 4K and 4G.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_file.c     |    2 +-
+ fs/xfs/xfs_vnodeops.c |   95 ++++++++++++++++++++++++++++++++++++++-----------
+ fs/xfs/xfs_vnodeops.h |    1 +
+ 3 files changed, 76 insertions(+), 22 deletions(-)
 
-> So it passes a nr_to_scan of 128 objects, which is interpreted
-> + * here to mean "free 128 bytes". That means a single object will be freed, as
-> + * the minimum object size is a page.
-> + *
-> + * But the craziest part comes when i915_gem_purge() has walked all the objects
-> + * and can't free any memory. That results in i915_gem_shrink_all() being
-> + * called, which idles the GPU and frees everything the driver has in it's
-> + * active and inactive lists. It's basically hitting the driver with a great big
-> + * hammer because it was busy doing stuff when something else generated memory
-> + * pressure. This doesn't seem particularly wise...
-> + */
-
-As opposed to triggering an OOM? The choice was between custom code for
-a hopefully rare code path in a situation of last resort, or first
-implementing the simplest code that stopped i915 from starving the
-system of memory.
--Chris
-
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 400b187..67284ed 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -86,7 +86,7 @@ xfs_rw_ilock_demote(
+  *	valid before the operation, it will be read from disk before
+  *	being partially zeroed.
+  */
+-STATIC int
++int
+ xfs_iozero(
+ 	struct xfs_inode	*ip,	/* inode			*/
+ 	loff_t			pos,	/* offset in file		*/
+diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+index 2688079..87c71a7 100644
+--- a/fs/xfs/xfs_vnodeops.c
++++ b/fs/xfs/xfs_vnodeops.c
+@@ -2095,6 +2095,72 @@ xfs_free_file_space(
+ 	return error;
+ }
+ 
++
++STATIC int
++xfs_zero_file_space(
++	struct xfs_inode	*ip,
++	xfs_off_t		offset,
++	xfs_off_t		len,
++	int			attr_flags)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++	uint			granularity;
++	xfs_off_t		start_boundary;
++	xfs_off_t		end_boundary;
++	int			error;
++
++	granularity = max_t(uint, 1 << mp->m_sb.sb_blocklog, PAGE_CACHE_SIZE);
++
++	/*
++	 * Round the range of extents we are going to convert inwards.  If the
++	 * offset is aligned, then it doesn't get changed so we zero from the
++	 * start of the block offset points to.
++	 */
++	start_boundary = round_up(offset, granularity);
++	end_boundary = round_down(offset + len, granularity);
++
++	ASSERT(start_boundary >= offset);
++	ASSERT(end_boundary <= offset + len);
++
++	if (!(attr_flags & XFS_ATTR_NOLOCK))
++		xfs_ilock(ip, XFS_IOLOCK_EXCL);
++
++	if (start_boundary < end_boundary - 1) {
++		/* punch out the page cache over the conversion range */
++		truncate_pagecache_range(VFS_I(ip), start_boundary,
++					 end_boundary - 1);
++		/* convert the blocks */
++		error = xfs_alloc_file_space(ip, start_boundary,
++					end_boundary - start_boundary - 1,
++					XFS_BMAPI_PREALLOC | XFS_BMAPI_CONVERT,
++					attr_flags);
++		if (error)
++			goto out_unlock;
++
++		/* We've handled the interior of the range, now for the edges */
++		if (start_boundary != offset)
++			error = xfs_iozero(ip, offset, start_boundary - offset);
++		if (error)
++			goto out_unlock;
++
++		if (end_boundary != offset + len)
++			error = xfs_iozero(ip, end_boundary,
++					   offset + len - end_boundary);
++
++	} else {
++		/* it's a sub-granularity range, but offset may be aligned. */
++		ASSERT(offset + len <= start_boundary ||
++		       offset == start_boundary);
++		error = xfs_iozero(ip, offset, len);
++	}
++
++out_unlock:
++	if (!(attr_flags & XFS_ATTR_NOLOCK))
++		xfs_iunlock(ip, XFS_IOLOCK_EXCL);
++	return error;
++
++}
++
+ /*
+  * xfs_change_file_space()
+  *      This routine allocates or frees disk space for the given file.
+@@ -2120,10 +2186,8 @@ xfs_change_file_space(
+ 	xfs_fsize_t	fsize;
+ 	int		setprealloc;
+ 	xfs_off_t	startoffset;
+-	xfs_off_t	end;
+ 	xfs_trans_t	*tp;
+ 	struct iattr	iattr;
+-	int		prealloc_type;
+ 
+ 	if (!S_ISREG(ip->i_d.di_mode))
+ 		return XFS_ERROR(EINVAL);
+@@ -2172,31 +2236,20 @@ xfs_change_file_space(
+ 	startoffset = bf->l_start;
+ 	fsize = XFS_ISIZE(ip);
+ 
+-	/*
+-	 * XFS_IOC_RESVSP and XFS_IOC_UNRESVSP will reserve or unreserve
+-	 * file space.
+-	 * These calls do NOT zero the data space allocated to the file,
+-	 * nor do they change the file size.
+-	 *
+-	 * XFS_IOC_ALLOCSP and XFS_IOC_FREESP will allocate and free file
+-	 * space.
+-	 * These calls cause the new file data to be zeroed and the file
+-	 * size to be changed.
+-	 */
+ 	setprealloc = clrprealloc = 0;
+-	prealloc_type = XFS_BMAPI_PREALLOC;
+-
+ 	switch (cmd) {
+ 	case XFS_IOC_ZERO_RANGE:
+-		prealloc_type |= XFS_BMAPI_CONVERT;
+-		end = round_down(startoffset + bf->l_len, PAGE_SIZE) - 1;
+-		if (startoffset <= end)
+-			truncate_pagecache_range(VFS_I(ip), startoffset, end);
+-		/* FALLTHRU */
++		error = xfs_zero_file_space(ip, startoffset, bf->l_len,
++						attr_flags);
++		if (error)
++			return error;
++		setprealloc = 1;
++		break;
++
+ 	case XFS_IOC_RESVSP:
+ 	case XFS_IOC_RESVSP64:
+ 		error = xfs_alloc_file_space(ip, startoffset, bf->l_len,
+-						prealloc_type, attr_flags);
++						XFS_BMAPI_PREALLOC, attr_flags);
+ 		if (error)
+ 			return error;
+ 		setprealloc = 1;
+diff --git a/fs/xfs/xfs_vnodeops.h b/fs/xfs/xfs_vnodeops.h
+index 91a03fa..5163022 100644
+--- a/fs/xfs/xfs_vnodeops.h
++++ b/fs/xfs/xfs_vnodeops.h
+@@ -49,6 +49,7 @@ int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
+ int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
+ 		int flags, struct attrlist_cursor_kern *cursor);
+ 
++int xfs_iozero(struct xfs_inode *, loff_t, size_t);
+ int xfs_zero_eof(struct xfs_inode *, xfs_off_t, xfs_fsize_t);
+ int xfs_free_eofblocks(struct xfs_mount *, struct xfs_inode *, bool);
+ 
 -- 
-Chris Wilson, Intel Open Source Technology Centre
+1.7.10
 
 _______________________________________________
 xfs mailing list
