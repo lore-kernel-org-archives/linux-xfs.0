@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qASMOpdD218569 for <xfs@oss.sgi.com>; Wed, 28 Nov 2012 16:24:51 -0600
-Received: from eagdhcp-232-125.americas.sgi.com
-	(eagdhcp-232-125.americas.sgi.com [128.162.232.125])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id BC799AC003
-	for <xfs@oss.sgi.com>; Wed, 28 Nov 2012 14:27:05 -0800 (PST)
-Received: from eagdhcp-232-125.americas.sgi.com (localhost [127.0.0.1])
-	by eagdhcp-232-125.americas.sgi.com (8.14.5/8.14.5) with ESMTP id
-	qASMR5Ti003583
-	for <xfs@oss.sgi.com>; Wed, 28 Nov 2012 16:27:05 -0600 (CST)
-	(envelope-from tinguely@sgi.com)
-Message-Id: <20121128222309.109033307@.sgi.com>
-Date: Wed, 28 Nov 2012 16:23:09 -0600
-From: Mark Tinguely <tinguely@sgi.com>
-Subject: [PATCH v2 0/3] discontiguous buffer patches
+	qAT04deJ229747 for <xfs@oss.sgi.com>; Wed, 28 Nov 2012 18:04:39 -0600
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	571rMm5FdGRaS4CV (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 28 Nov 2012 16:06:56 -0800 (PST)
+Date: Wed, 28 Nov 2012 19:06:55 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 2/4] xfs: byte range granularity for XFS_IOC_ZERO_RANGE
+Message-ID: <20121129000655.GA6673@infradead.org>
+References: <1354068063-1692-1-git-send-email-david@fromorbit.com>
+	<1354068063-1692-3-git-send-email-david@fromorbit.com>
+	<20121128133305.GA7426@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20121128133305.GA7426@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,60 +26,60 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Eric Sundeen's "userspace vs. fragmented multiblock dir2", xfstest 291
-commit 2a4ed, causes a xfs_buf lock hang:
+Actually this seems to trip up an assert in xfstests 290 for me:
 
-[<ffffffff81065d87>] down+0x47/0x50
-[<ffffffffa03a25c6>] xfs_buf_lock+0x66/0xe0 [xfs]
-[<ffffffffa03a33c9>] _xfs_buf_find+0x1f9/0x320 [xfs]
-[<ffffffffa03a393f>] xfs_buf_get_map+0x2f/0x170 [xfs]
-[<ffffffffa03a3f7a>] xfs_buf_read_map+0x2a/0x100 [xfs]
-[<ffffffffa0411630>] xfs_trans_read_buf_map+0x3b0/0x590 [xfs]
-[<ffffffffa03e1c5e>] xfs_da_read_buf+0xbe/0x230 [xfs]
-[<ffffffffa03e78dc>] xfs_dir2_block_addname+0x7c/0x980 [xfs]
-[<ffffffffa03f1468>] xfs_dir2_sf_addname+0x3e8/0x450 [xfs]
-[<ffffffffa03e634c>] xfs_dir_createname+0x17c/0x1e0 [xfs]
-[<ffffffffa03b9fe2>] xfs_create+0x4c2/0x5f0 [xfs]
-[<ffffffffa03b0c8a>] xfs_vn_mknod+0x8a/0x1a0 [xfs]
-[<ffffffffa03b0dce>] xfs_vn_create+0xe/0x10 [xfs]
-[<ffffffff8115695c>] vfs_create+0xac/0xd0
-[<ffffffff811587de>] do_last+0x8be/0x960
-[<ffffffff8115940c>] path_openat+0xdc/0x410
-[<ffffffff81159853>] do_filp_open+0x43/0xa0
-[<ffffffff8114a502>] do_sys_open+0x152/0x1e0
-[<ffffffff8114a5cc>] sys_open+0x1c/0x20
-[<ffffffff81423df9>] system_call_fastpath+0x16/0x1b
-[<ffffffffffffffff>] 0xffffffffffffffff
-
-That bisect a problem to the discontiguous xfs_buf support series. 
-xfs_trans_buf_item_match() is looking for the block number of the
-buffer in the single segment map area. After fixing the b_map issue,
-there were couple asserts associated with the buffer log format
-not correctly using the bli_formats[] structure.
-
-Changes to the series from version 1:
-
-Patch 1: Moved b_map structure to __b_map to avoid future confusion
-	  per Christoph's suggestion.
-
-Patch 2: Moved bli_format structure to __bli_format to avoid future
-	  confusion per Christoph's suggestion.
-
-	 Removed the buffer XFS_TRANS_DEBUG routines per Dave's suggestion.
-
-Patch 3: Moved the detection of an empty format to a new file and
-	  add parenthesis per Dave's suggestion.
-
-	 Cleared all buffer log formats per Dave's suggestion.
-
---Mark.
+290 0s ...[   45.997814] XFS: Assertion failed: offset + len <= start_boundary || offset == start_boundary, file: fs/xfs/xfs_vnodeops.c, line: 2153
+[   46.000534] ------------[ cut here ]------------
+[   46.001523] kernel BUG at fs/xfs/xfs_message.c:100!
+[   46.002517] invalid opcode: 0000 [#1] SMP 
+[   46.003614] Modules linked in:
+[   46.003797] CPU 0 
+[   46.003797] Pid: 4026, comm: xfs_io Not tainted 3.7.0-rc1+ #513 Bochs Bochs
+[   46.003797] RIP: 0010:[<ffffffff8145f5fd>]  [<ffffffff8145f5fd>] assfail+0x1d/0x20
+[   46.003797] RSP: 0018:ffff88005961dc28  EFLAGS: 00010292
+[   46.003797] RAX: 000000000000007a RBX: 0000000000000fff RCX: 0000000000000006
+[   46.003797] RDX: 0000000000000006 RSI: ffff88005658e710 RDI: ffff88005658e080
+[   46.003797] RBP: ffff88005961dc28 R08: 0000000000000000 R09: 0000000000000000
+[   46.003797] R10: 0000000000000001 R11: 0000000000000000 R12: 0000000000001000
+[   46.003797] R13: 0000000000001000 R14: ffff88005b3de640 R15: 0000000000001fff
+[   46.003797] FS:  0000000000000000(0000) GS:ffff88005d800000(0063) knlGS:00000000f76198d0
+[   46.003797] CS:  0010 DS: 002b ES: 002b CR0: 0000000080050033
+[   46.003797] CR2: 00000000f7780000 CR3: 0000000059f61000 CR4: 00000000000006f0
+[   46.003797] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[   46.003797] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+[   46.003797] Process xfs_io (pid: 4026, threadinfo ffff88005961c000, task ffff88005658e080)
+[   46.003797] Stack:
+[   46.003797]  ffff88005961dc88 ffffffff81467bcb ffff88005964b800 0000000000000000
+[   46.003797]  0000000000001000 0000000000000000 ffffffff811a2a33 ffff88005b3de640
+[   46.003797]  0000000000000000 0000000000000fff 0000000000002000 ffff880059f14800
+[   46.003797] Call Trace:
+[   46.003797]  [<ffffffff81467bcb>] xfs_zero_file_space+0xdb/0x1c0
+[   46.003797]  [<ffffffff811a2a33>] ? mnt_want_write_file+0x23/0x50
+[   46.003797]  [<ffffffff81467e11>] xfs_change_file_space+0x161/0x390
+[   46.003797]  [<ffffffff811a1aad>] ? mnt_clone_write+0xd/0x40
+[   46.003797]  [<ffffffff811a29fc>] ? __mnt_want_write_file+0x3c/0x50
+[   46.003797]  [<ffffffff8145914c>] xfs_ioc_space+0xbc/0x120
+[   46.003797]  [<ffffffff8115ec6e>] ? might_fault+0x4e/0xa0
+[   46.003797]  [<ffffffff814dd85c>] xfs_file_compat_ioctl+0x4dc/0x6d0
+[   46.003797]  [<ffffffff8119e6ca>] ? fget_light+0x3da/0x4d0
+[   46.003797]  [<ffffffff811d72c7>] compat_sys_ioctl+0x97/0x14c0
+[   46.003797]  [<ffffffff8115ec6e>] ? might_fault+0x4e/0xa0
+[   46.003797]  [<ffffffff8115ecb7>] ? might_fault+0x97/0xa0
+[   46.003797]  [<ffffffff8115ec6e>] ? might_fault+0x4e/0xa0
+[   46.003797]  [<ffffffff816f661d>] ? trace_hardirqs_off_thunk+0x3a/0x3c
+[   46.003797]  [<ffffffff81b883e1>] sysenter_dispatch+0x7/0x23
+[   46.003797]  [<ffffffff816f65de>] ? trace_hardirqs_on_thunk+0x3a/0x3f
+[   46.003797] Code: ff ff 0f 0b 66 2e 0f 1f 84 00 00 00 00 00 55 48 89 f1 41 89 d0 48 89 e5 48 89 fa 48 c7 c6 78 2f f4 81 31 ff 31 c0 e8 a3 fc ff ff <0f> 0b 90 55 48 63 f6 49 89 f9 48 89 e5 48 83 ec 10 41 b8 01 00 
+[   46.003797] RIP  [<ffffffff8145f5fd>] assfail+0x1d/0x20
+[   46.003797]  RSP <ffff88005961dc28>
+[   46.080287] ---[ end trace 512c2106b365194f ]---
 
 _______________________________________________
 xfs mailing list
