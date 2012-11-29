@@ -1,16 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qATIH03h066118 for <xfs@oss.sgi.com>; Thu, 29 Nov 2012 12:17:00 -0600
-Message-ID: <50B7A722.3030905@sgi.com>
-Date: Thu, 29 Nov 2012 12:19:14 -0600
-From: Andrew Dahl <adahl@sgi.com>
+	qATIj6rn068273 for <xfs@oss.sgi.com>; Thu, 29 Nov 2012 12:45:06 -0600
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id EvTVutPyZ4FxsBhS for
+	<xfs@oss.sgi.com>; Thu, 29 Nov 2012 10:47:24 -0800 (PST)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id qATIlN2r032715
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Thu, 29 Nov 2012 13:47:23 -0500
+Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id qATIlMMW009856
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Thu, 29 Nov 2012 13:47:23 -0500
+Message-ID: <50B7ADBA.5020509@redhat.com>
+Date: Thu, 29 Nov 2012 12:47:22 -0600
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 2/4 V2] xfs: byte range granularity for XFS_IOC_ZERO_RANGE
-References: <1354068063-1692-1-git-send-email-david@fromorbit.com>
-	<1354068063-1692-3-git-send-email-david@fromorbit.com>
-	<20121129042633.GA6434@dastard>
-In-Reply-To: <20121129042633.GA6434@dastard>
+Subject: [PATCH] xfstests: _fail in _scratch_mkfs_sized if device is too small
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,27 +33,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-On 11/28/2012 10:26 PM, Dave Chinner wrote:
-> xfs: byte range granularity for XFS_IOC_ZERO_RANGE
-> 
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> XFS_IOC_ZERO_RANGE simply does not work properly for non page cache
-> aligned ranges. Neither test 242 or 290 exercise this correctly, so
-> the behaviour is completely busted even though the tests pass.
-> 
-> Fix it to support full byte range granularity as was originally
-> intended for this ioctl.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-...
+Without this, 273 was failing in cryptic ways for me
+if the device size was < 2G.
 
-Looks good!
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-Reviewed-by: Andrew Dahl <adahl@sgi.com>
+diff --git a/common.rc b/common.rc
+index bf9c86f..8906067 100644
+--- a/common.rc
++++ b/common.rc
+@@ -348,6 +348,11 @@ _scratch_mkfs_sized()
+     [ -z "$blocksize" ] && blocksize=4096
+     blocks=`expr $fssize / $blocksize`
+ 
++    if [ "$HOSTOS" == "Linux" ]; then
++	devsize=`blockdev --getsize64 $SCRATCH_DEV`
++	[ "$fssize" -gt "$devsize" ] && _notrun "Scratch device too small"
++    fi
++
+     case $FSTYP in
+     xfs)
+ 	_scratch_mkfs_xfs -d size=$fssize -b size=$blocksize
 
 _______________________________________________
 xfs mailing list
