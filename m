@@ -1,23 +1,37 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAT04deJ229747 for <xfs@oss.sgi.com>; Wed, 28 Nov 2012 18:04:39 -0600
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	571rMm5FdGRaS4CV (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 28 Nov 2012 16:06:56 -0800 (PST)
-Date: Wed, 28 Nov 2012 19:06:55 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/4] xfs: byte range granularity for XFS_IOC_ZERO_RANGE
-Message-ID: <20121129000655.GA6673@infradead.org>
-References: <1354068063-1692-1-git-send-email-david@fromorbit.com>
-	<1354068063-1692-3-git-send-email-david@fromorbit.com>
-	<20121128133305.GA7426@infradead.org>
+	qAT0WMfn231775 for <xfs@oss.sgi.com>; Wed, 28 Nov 2012 18:32:23 -0600
+Received: from fgwmail6.fujitsu.co.jp (fgwmail6.fujitsu.co.jp [192.51.44.36])
+	by cuda.sgi.com with ESMTP id CsW1rJGC4sUhxUBk (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 28 Nov 2012 16:34:39 -0800 (PST)
+Received: from m4.gw.fujitsu.co.jp (unknown [10.0.50.74])
+	by fgwmail6.fujitsu.co.jp (Postfix) with ESMTP id DD6163EE0B5
+	for <xfs@oss.sgi.com>; Thu, 29 Nov 2012 09:34:37 +0900 (JST)
+Received: from smail (m4 [127.0.0.1])
+	by outgoing.m4.gw.fujitsu.co.jp (Postfix) with ESMTP id C3C8745DE4E
+	for <xfs@oss.sgi.com>; Thu, 29 Nov 2012 09:34:37 +0900 (JST)
+Received: from s4.gw.fujitsu.co.jp (s4.gw.fujitsu.co.jp [10.0.50.94])
+	by m4.gw.fujitsu.co.jp (Postfix) with ESMTP id A520845DE4D
+	for <xfs@oss.sgi.com>; Thu, 29 Nov 2012 09:34:37 +0900 (JST)
+Received: from s4.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s4.gw.fujitsu.co.jp (Postfix) with ESMTP id 98BDA1DB8040
+	for <xfs@oss.sgi.com>; Thu, 29 Nov 2012 09:34:37 +0900 (JST)
+Received: from g01jpexchkw02.g01.fujitsu.local
+	(g01jpexchkw02.g01.fujitsu.local [10.0.194.41])
+	by s4.gw.fujitsu.co.jp (Postfix) with ESMTP id 54B7B1DB803B
+	for <xfs@oss.sgi.com>; Thu, 29 Nov 2012 09:34:37 +0900 (JST)
+Message-ID: <50B6AD80.4090900@jp.fujitsu.com>
+Date: Thu, 29 Nov 2012 09:34:08 +0900
+From: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20121128133305.GA7426@infradead.org>
+Subject: Re: [BUG] xfs_quota: can't handle the users managed by LDAP
+References: <50ADB27F.8070806@jp.fujitsu.com> <20121122233757.GY2591@dastard>
+	<50B32CC1.3020907@jp.fujitsu.com> <50B4198E.7080408@jp.fujitsu.com>
+	<20121127025728.GU32450@dastard> <50B46B66.2040908@jp.fujitsu.com>
+	<20121127210518.GN6434@dastard>
+In-Reply-To: <20121127210518.GN6434@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,60 +40,124 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+Cc: xfs ML <xfs@oss.sgi.com>
 
-Actually this seems to trip up an assert in xfstests 290 for me:
+(2012/11/28 6:05), Dave Chinner wrote:
+> On Tue, Nov 27, 2012 at 04:27:34PM +0900, Satoru Takeuchi wrote:
+>>>>>>> Current xfs_quota (I pulled xfsprogs today) seems not be able to th=
+e users
+>>>>>>> managed by LDAP. There is no patch since I'm not good at LDAP and d=
+on't know
+>>>>>>> the root cause yet ;-(
+>>>>>>>
+>>>>>>> Step to reproduce(in this case, "sat" is the user managed by LDAP):
+>>>>>>> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D
+>>>>>>> # uname -r
+>>>>>>> 3.7.0-rc5
+>>>>>>> # mount -o loop,usrquota xfs.img mnt
+>>>>>>> # xfsprogs/quota/xfs_quota -xc "limit bsoft=3D10M bhard=3D10M sat" =
+/dev/loop0
+>>>>>>> xfs_quota: invalid user name: sat                                  =
+        # denied
+>>>>>>> # su sat
+>>>>>>> $                                                                  =
+        # But this user acutally exists.
+>>>>>>> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D
+> .....
+> =
 
-290 0s ...[   45.997814] XFS: Assertion failed: offset + len <= start_boundary || offset == start_boundary, file: fs/xfs/xfs_vnodeops.c, line: 2153
-[   46.000534] ------------[ cut here ]------------
-[   46.001523] kernel BUG at fs/xfs/xfs_message.c:100!
-[   46.002517] invalid opcode: 0000 [#1] SMP 
-[   46.003614] Modules linked in:
-[   46.003797] CPU 0 
-[   46.003797] Pid: 4026, comm: xfs_io Not tainted 3.7.0-rc1+ #513 Bochs Bochs
-[   46.003797] RIP: 0010:[<ffffffff8145f5fd>]  [<ffffffff8145f5fd>] assfail+0x1d/0x20
-[   46.003797] RSP: 0018:ffff88005961dc28  EFLAGS: 00010292
-[   46.003797] RAX: 000000000000007a RBX: 0000000000000fff RCX: 0000000000000006
-[   46.003797] RDX: 0000000000000006 RSI: ffff88005658e710 RDI: ffff88005658e080
-[   46.003797] RBP: ffff88005961dc28 R08: 0000000000000000 R09: 0000000000000000
-[   46.003797] R10: 0000000000000001 R11: 0000000000000000 R12: 0000000000001000
-[   46.003797] R13: 0000000000001000 R14: ffff88005b3de640 R15: 0000000000001fff
-[   46.003797] FS:  0000000000000000(0000) GS:ffff88005d800000(0063) knlGS:00000000f76198d0
-[   46.003797] CS:  0010 DS: 002b ES: 002b CR0: 0000000080050033
-[   46.003797] CR2: 00000000f7780000 CR3: 0000000059f61000 CR4: 00000000000006f0
-[   46.003797] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-[   46.003797] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-[   46.003797] Process xfs_io (pid: 4026, threadinfo ffff88005961c000, task ffff88005658e080)
-[   46.003797] Stack:
-[   46.003797]  ffff88005961dc88 ffffffff81467bcb ffff88005964b800 0000000000000000
-[   46.003797]  0000000000001000 0000000000000000 ffffffff811a2a33 ffff88005b3de640
-[   46.003797]  0000000000000000 0000000000000fff 0000000000002000 ffff880059f14800
-[   46.003797] Call Trace:
-[   46.003797]  [<ffffffff81467bcb>] xfs_zero_file_space+0xdb/0x1c0
-[   46.003797]  [<ffffffff811a2a33>] ? mnt_want_write_file+0x23/0x50
-[   46.003797]  [<ffffffff81467e11>] xfs_change_file_space+0x161/0x390
-[   46.003797]  [<ffffffff811a1aad>] ? mnt_clone_write+0xd/0x40
-[   46.003797]  [<ffffffff811a29fc>] ? __mnt_want_write_file+0x3c/0x50
-[   46.003797]  [<ffffffff8145914c>] xfs_ioc_space+0xbc/0x120
-[   46.003797]  [<ffffffff8115ec6e>] ? might_fault+0x4e/0xa0
-[   46.003797]  [<ffffffff814dd85c>] xfs_file_compat_ioctl+0x4dc/0x6d0
-[   46.003797]  [<ffffffff8119e6ca>] ? fget_light+0x3da/0x4d0
-[   46.003797]  [<ffffffff811d72c7>] compat_sys_ioctl+0x97/0x14c0
-[   46.003797]  [<ffffffff8115ec6e>] ? might_fault+0x4e/0xa0
-[   46.003797]  [<ffffffff8115ecb7>] ? might_fault+0x97/0xa0
-[   46.003797]  [<ffffffff8115ec6e>] ? might_fault+0x4e/0xa0
-[   46.003797]  [<ffffffff816f661d>] ? trace_hardirqs_off_thunk+0x3a/0x3c
-[   46.003797]  [<ffffffff81b883e1>] sysenter_dispatch+0x7/0x23
-[   46.003797]  [<ffffffff816f65de>] ? trace_hardirqs_on_thunk+0x3a/0x3f
-[   46.003797] Code: ff ff 0f 0b 66 2e 0f 1f 84 00 00 00 00 00 55 48 89 f1 41 89 d0 48 89 e5 48 89 fa 48 c7 c6 78 2f f4 81 31 ff 31 c0 e8 a3 fc ff ff <0f> 0b 90 55 48 63 f6 49 89 f9 48 89 e5 48 83 ec 10 41 b8 01 00 
-[   46.003797] RIP  [<ffffffff8145f5fd>] assfail+0x1d/0x20
-[   46.003797]  RSP <ffff88005961dc28>
-[   46.080287] ---[ end trace 512c2106b365194f ]---
+>> So there is a problem in "report" subcommand. Refer to report_without_U.=
+log,
+>> I found "quotactl(Q_XGETQUOTA|GRPQUOTA, ...) is only called for local us=
+ers
+>> and it's because that getpwent() only returned only local users.
+> =
+
+> Yes, it appears from the strace that glibc is only reading
+> /etc/passwd and not querying the ldap server.
+> =
+
+>> open("/etc/nsswitch.conf", O_RDONLY|O_CLOEXEC) =3D 3
+>> fstat(3, {st_mode=3DS_IFREG|0644, st_size=3D1724, ...}) =3D 0
+>> mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0)=
+ =3D 0x7f851afee000
+>> read(3, "#=A5n# /etc/nsswitch.conf=A5n#=A5n# An ex"..., 4096) =3D 1724
+>> read(3, "", 4096)                       =3D 0
+>> close(3)                                =3D 0
+> ...
+>> open("/lib64/libnss_files.so.2", O_RDONLY|O_CLOEXEC) =3D 3
+> ...
+>> open("/etc/passwd", O_RDONLY|O_CLOEXEC) =3D 3
+>> fstat(3, {st_mode=3DS_IFREG|0644, st_size=3D2005, ...}) =3D 0
+>> mmap(NULL, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0)=
+ =3D 0x7f851afee000
+>> lseek(3, 0, SEEK_CUR)                   =3D 0
+>> read(3, "root:x:0:0:root:/root:/bin/bash=A5n"..., 4096) =3D 2005
+>> quotactl(Q_XGETQUOTA|USRQUOTA, "/dev/loop0", 0, {version=3D1, flags=3DXF=
+S_USER_QUOTA, fieldmask=3D0, id=3D0, blk_hardlimit=3D0, blk_softlimit=3D0, =
+ino_hardlimit=3D0, ino_softlimit=3D0, bcount=3D0, icount=3D3, ...}) =3D 0
+> =
+
+> As you can see, it only dynamically loads the local files name
+> service library, not the ones that do ldap lookups.
+> =
+
+> Can you run ldd on the test binary you had and on xfs_quota to see
+> if they are linked against the same libraries?
+
+I ran ldd on the test binary and found that I built it on i686
+machine and the test machine is x86_64. So the test binary
+couldn't find the suitable 32 bit nss library on the test machine.
+I found the test binary built on the test machine works the same
+as xfs_quota.
+
+             | build machine | getpwnam  | getpwent
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D+=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D
+test binary  | 32 bit        | NG        | NG
+             | 64 bit        | OK        | NG
+-------------+---------------+-----------+----------
+xfs_quota    | 64 bit        | OK        | NG
+-------------+---------------+-----------+----------
+
+Since the test binary(64bit) and xfs_quota load the same
+nss library and have the same behavior, it's apparently
+not the xfs_quota problem but the LDAP/libnss related problem.
+
+I will dig this problem more as the LDAP/libnss perspective.
+
+Thank you very much for helping me, Dave.
+
+Satoru
+
+> =
+
+> Other than that, I've go no idea why glibc would be behaving
+> differently for the same library call from different binaries.
+> it tends to imply a problem outside of xfs_quota, but I know close
+> to nothing about LDAP and the glibc name services, so I don't know
+> what more I can do to help here....
+> =
+
+> Cheers,
+> =
+
+> Dave.
+> =
+
+
 
 _______________________________________________
 xfs mailing list
