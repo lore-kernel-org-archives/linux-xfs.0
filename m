@@ -1,15 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qATLKKCQ084655 for <xfs@oss.sgi.com>; Thu, 29 Nov 2012 15:20:20 -0600
-Date: Thu, 29 Nov 2012 15:22:34 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 0/4] xfs: patch queue for 3.8
-Message-ID: <20121129212234.GJ27055@sgi.com>
-References: <1354068063-1692-1-git-send-email-david@fromorbit.com>
+	qATLf2aa087046 for <xfs@oss.sgi.com>; Thu, 29 Nov 2012 15:41:02 -0600
+Message-ID: <50B7D6F7.4090309@sgi.com>
+Date: Thu, 29 Nov 2012 15:43:19 -0600
+From: Andrew Dahl <adahl@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1354068063-1692-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH] xfstests: update XFS_IOC_ZERO_RANGE byte range test output
+References: <1354163243-16916-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1354163243-16916-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,20 +24,17 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, Nov 28, 2012 at 01:00:59PM +1100, Dave Chinner wrote:
-> More bug fixes for 3.8. This series contains:
+On 11/28/2012 10:27 PM, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> - the DIO transaction deadlock patch (unmodified),
-> - addressed Christoph's zero-range review points and fixes the
->   ASSERT in the sub-block zeroing case. (updated)
-> - a dquot locking issue that has been causing me random hangs in
->   xfstests 232 for months (new)
-> - fixes for the log CRC sparse endian warnings. (new)
+> Kernel code now does true byte range zeroing. Update the tests to
+> validate true byte range zeroing correctly.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-committed 1-3.  We'll see what Christoph says about #4.
+Looks good!
 
-Regards,
-	Ben
+Reviewed-by: Andrew Dahl <adahl@sgi.com>
 
 _______________________________________________
 xfs mailing list
