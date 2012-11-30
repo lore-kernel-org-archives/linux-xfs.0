@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAUG3vKK189271 for <xfs@oss.sgi.com>; Fri, 30 Nov 2012 10:03:57 -0600
+	qAUG5F8A189465 for <xfs@oss.sgi.com>; Fri, 30 Nov 2012 10:05:15 -0600
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	DRukTLGuVzIpvv61 (version=TLSv1 cipher=AES256-SHA bits=256
+	LZMg4ex64tsV8MgN (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 30 Nov 2012 08:06:16 -0800 (PST)
-Date: Fri, 30 Nov 2012 11:06:16 -0500
+	Fri, 30 Nov 2012 08:07:34 -0800 (PST)
+Date: Fri, 30 Nov 2012 11:07:33 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfstests: fsck scratch device if it got used
-Message-ID: <20121130160616.GD5667@infradead.org>
-References: <50B7B0AB.6040406@redhat.com>
+Subject: Re: [PATCH 2/4 V2] xfs: byte range granularity for XFS_IOC_ZERO_RANGE
+Message-ID: <20121130160733.GE5667@infradead.org>
+References: <1354068063-1692-1-git-send-email-david@fromorbit.com>
+	<1354068063-1692-3-git-send-email-david@fromorbit.com>
+	<20121129042633.GA6434@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <50B7B0AB.6040406@redhat.com>
+In-Reply-To: <20121129042633.GA6434@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,22 +30,26 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, Nov 29, 2012 at 12:59:55PM -0600, Eric Sandeen wrote:
-> This will cause the $SCRATCH_DEV to be fscked if it
-> was used in the prior test.  Without this I don't
-> think it gets done unless specifically requested
-> by the test.
+On Thu, Nov 29, 2012 at 03:26:33PM +1100, Dave Chinner wrote:
+> xfs: byte range granularity for XFS_IOC_ZERO_RANGE
+> 
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> XFS_IOC_ZERO_RANGE simply does not work properly for non page cache
+> aligned ranges. Neither test 242 or 290 exercise this correctly, so
+> the behaviour is completely busted even though the tests pass.
+> 
+> Fix it to support full byte range granularity as was originally
+> intended for this ioctl.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-This one looks good.
+Looks good,
 
-> Also recreate lost+found/ in one test so that e2fsck
-> doesn't complain.
-
-This one I can't make any sense of.  Care to send it separately with a
-good explanation?
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
