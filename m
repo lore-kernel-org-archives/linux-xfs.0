@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAUMIwBb234858 for <xfs@oss.sgi.com>; Fri, 30 Nov 2012 16:18:58 -0600
+	qAUMPXmT235476 for <xfs@oss.sgi.com>; Fri, 30 Nov 2012 16:25:33 -0600
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	C0Cr7CV0WlPp1VdF for <xfs@oss.sgi.com>;
-	Fri, 30 Nov 2012 14:21:17 -0800 (PST)
-Date: Sat, 1 Dec 2012 09:21:10 +1100
+	zgUzGahL8PXwthuV for <xfs@oss.sgi.com>;
+	Fri, 30 Nov 2012 14:27:51 -0800 (PST)
+Date: Sat, 1 Dec 2012 09:27:50 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 1/3] xfs: use b_maps[] for discontiguous buffers
-Message-ID: <20121130222110.GB12955@dastard>
-References: <20121128222309.109033307@.sgi.com>
-	<20121128222622.688093599@sgi.com>
-	<20121130160920.GA9873@infradead.org> <50B8F2FC.6060501@sgi.com>
+Subject: Re: [PATCH] xfstests: fsck scratch device if it got used
+Message-ID: <20121130222750.GC12955@dastard>
+References: <50B7B0AB.6040406@redhat.com> <20121130160616.GD5667@infradead.org>
+	<50B8DA0E.4000605@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <50B8F2FC.6060501@sgi.com>
+In-Reply-To: <50B8DA0E.4000605@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,32 +27,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>
 
-On Fri, Nov 30, 2012 at 11:55:08AM -0600, Mark Tinguely wrote:
-> On 11/30/12 10:09, Christoph Hellwig wrote:
-> >>  use_alloc_page:
-> >>-	start = BBTOB(bp->b_map.bm_bn)>>  PAGE_SHIFT;
-> >>-	end = (BBTOB(bp->b_map.bm_bn + bp->b_length) + PAGE_SIZE - 1)
-> >>+	start = BBTOB(bp->b_maps[0].bm_bn)>>  PAGE_SHIFT;
-> >>+	end = (BBTOB(bp->b_maps[0].bm_bn + bp->b_length) + PAGE_SIZE - 1)
-> >
-> >Btw, how is this logic supposed to work for discontiguous buffers?
-> >
-> >Each of them might straddle boundaries individually, so doing the
-> >start/end calculation for the number of pages isn't going to be correct.
-> >
+On Fri, Nov 30, 2012 at 10:08:46AM -0600, Eric Sandeen wrote:
+> On 11/30/12 10:06 AM, Christoph Hellwig wrote:
+> > On Thu, Nov 29, 2012 at 12:59:55PM -0600, Eric Sandeen wrote:
+> >> This will cause the $SCRATCH_DEV to be fscked if it was used in
+> >> the prior test.  Without this I don't think it gets done unless
+> >> specifically requested by the test.
+> > 
+> > This one looks good.
 > 
-> eeek. yep, I will loop through and count the pages needed in each
-> segment.
+> Hm now that I think of it perhaps I should remove the explicit
+> _check_scratch-es if they happen at the end of the run, just to
+> try to speed things up.
 
-That's wrong - the pages must be mappable as a contiguous memory
-range. That's how this code avoids copying the data from
-discontiguous page ranges into a contiguous mapped memory range.
-If you separate each IO into to it's own set of pages, then you have
-to completely rewrite _xfs_buf_ioapply(), which AFAICT works just
-fine with the page allocation that is done right now....
+*nod*
+
+> >> Also recreate lost+found/ in one test so that e2fsck doesn't
+> >> complain.
+> > 
+> > This one I can't make any sense of.  Care to send it separately
+> > with a good explanation?
+> > 
+> 
+> Ok, sure.
+> 
+> Basically, test does an rm -rf of the scrach mnt, but e2fsck
+> thinks that a missing lost+found/ is cause for complaint and a
+> failure exit code, which then stops the tests :(
+
+Shouldn't e2fsck be fixed? i.e. if you have a corrupted filesystem
+and it's missing lost+found, how are you expected to create it? by
+mounting your corrupted filesystem and modifying it and potentially
+making the corruption worse?
+
+> (hum, now that I think about it, maybe a broken scratch device
+> shouldn't stop the test series, but should just log a test
+> failure?  What do you think?)
+
+Stop it - we should be leaving a corpse that we can dissect to find
+out what went wrong. For a corrupted scratch filesystem, running
+another test will eat the slowly rotting corpse and leave nothing
+useful behind for diagnosing the failure...
 
 Cheers,
 
