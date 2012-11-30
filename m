@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAUG3B88189145 for <xfs@oss.sgi.com>; Fri, 30 Nov 2012 10:03:11 -0600
+	qAUG3vKK189271 for <xfs@oss.sgi.com>; Fri, 30 Nov 2012 10:03:57 -0600
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	Gk8FFmGHws0KB0W1 (version=TLSv1 cipher=AES256-SHA bits=256
+	DRukTLGuVzIpvv61 (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 30 Nov 2012 08:05:30 -0800 (PST)
-Date: Fri, 30 Nov 2012 11:05:29 -0500
+	Fri, 30 Nov 2012 08:06:16 -0800 (PST)
+Date: Fri, 30 Nov 2012 11:06:16 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfstests: _fail in _scratch_mkfs_sized if device is too
-	small
-Message-ID: <20121130160529.GC5667@infradead.org>
-References: <50B7ADBA.5020509@redhat.com>
+Subject: Re: [PATCH] xfstests: fsck scratch device if it got used
+Message-ID: <20121130160616.GD5667@infradead.org>
+References: <50B7B0AB.6040406@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <50B7ADBA.5020509@redhat.com>
+In-Reply-To: <50B7B0AB.6040406@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,15 +31,19 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@redhat.com>
 Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Nov 29, 2012 at 12:47:22PM -0600, Eric Sandeen wrote:
-> Without this, 273 was failing in cryptic ways for me
-> if the device size was < 2G.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+On Thu, Nov 29, 2012 at 12:59:55PM -0600, Eric Sandeen wrote:
+> This will cause the $SCRATCH_DEV to be fscked if it
+> was used in the prior test.  Without this I don't
+> think it gets done unless specifically requested
+> by the test.
 
-Looks good,
+This one looks good.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Also recreate lost+found/ in one test so that e2fsck
+> doesn't complain.
+
+This one I can't make any sense of.  Care to send it separately with a
+good explanation?
 
 _______________________________________________
 xfs mailing list
