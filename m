@@ -1,15 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qATNP7J9094511 for <xfs@oss.sgi.com>; Thu, 29 Nov 2012 17:25:07 -0600
-Date: Thu, 29 Nov 2012 17:27:23 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] xfstests: update XFS_IOC_ZERO_RANGE byte range test output
-Message-ID: <20121129232723.GL27055@sgi.com>
-References: <1354163243-16916-1-git-send-email-david@fromorbit.com>
+	qAUG1Dnp188806 for <xfs@oss.sgi.com>; Fri, 30 Nov 2012 10:01:14 -0600
+Date: Fri, 30 Nov 2012 11:03:30 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 4/4] xfs: fix sparse reported log CRC endian issue
+Message-ID: <20121130160330.GA5667@infradead.org>
+References: <1354068063-1692-1-git-send-email-david@fromorbit.com>
+	<1354068063-1692-5-git-send-email-david@fromorbit.com>
+	<20121128133059.GC2765@infradead.org>
+	<20121128213110.GV6434@dastard> <20121129203250.GI27055@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1354163243-16916-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <20121129203250.GI27055@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,16 +25,16 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Thu, Nov 29, 2012 at 03:27:23PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Kernel code now does true byte range zeroing. Update the tests to
-> validate true byte range zeroing correctly.
+On Thu, Nov 29, 2012 at 02:32:50PM -0600, Ben Myers wrote:
+> This seems reasonable to me, and the patch looks fine.  Christoph, do have any
+> further objection?
 
-committed to git://oss.sgi.com/xfs/cmds/xfstests.git, master branch.
+No, although adding the explanation as a comment would be useful.
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
