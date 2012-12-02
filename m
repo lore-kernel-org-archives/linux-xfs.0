@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qB2NhfAS024748 for <xfs@oss.sgi.com>; Sun, 2 Dec 2012 17:43:41 -0600
+	qB2NnqxB025425 for <xfs@oss.sgi.com>; Sun, 2 Dec 2012 17:49:52 -0600
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	NLO4anmYJRSUPc7r for <xfs@oss.sgi.com>;
-	Sun, 02 Dec 2012 15:46:01 -0800 (PST)
-Date: Mon, 3 Dec 2012 10:46:00 +1100
+	kwI3jMiunGfGIfK1 for <xfs@oss.sgi.com>;
+	Sun, 02 Dec 2012 15:52:12 -0800 (PST)
+Date: Mon, 3 Dec 2012 10:52:11 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 2/3] xfs: fix the buffer log format for contiguous
-	buffers
-Message-ID: <20121202234600.GD29399@dastard>
+Subject: Re: [PATCH v2 3/3] xfs: fix the multi-segment log buffer format
+Message-ID: <20121202235211.GE29399@dastard>
 References: <20121128222309.109033307@.sgi.com>
-	<20121128222622.792433915@sgi.com>
+	<20121128222622.908368793@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20121128222622.792433915@sgi.com>
+In-Reply-To: <20121128222622.908368793@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,119 +30,78 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Mark Tinguely <tinguely@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, Nov 28, 2012 at 04:23:11PM -0600, Mark Tinguely wrote:
-> Not every segment in a multi-segment buffer is dirty in a
-> transaction and they will not be outputted. The assert in
-> xfs_buf_item_format_segment() that checks for the at least
-> one chunk of data in the segment to be used is not necessary
-> true for multi-segmented buffers.
+On Wed, Nov 28, 2012 at 04:23:12PM -0600, Mark Tinguely wrote:
+> Per Dave Chinner suggestion, this patch:
+>  1) Corrects the detection of whether a multi-segment buffer is
+>     still tracking data.
+>  2) Clears all the buffer log formats for a multi-segment buffer.
 > 
-> This patch:
-
-Has three separate, unrelated changes. That usually means 3
-separate patches....
-
->  1) Change xfs_buf_item_format_segment() to skip over non-dirty
->     segments.
-
-Comments about this below.
-
->  2) Change the bli_format structure to __bli_format so it is not
->     accidently confused with the bli_formats pointer.
-
-This change looks ok.
-
->  3) Remove the buffer XFS_TRANS_DEBUG routines xfs_buf_item_log_debug()
->     and xfs_buf_item_log_check(). They are not used and are not
->     multi-segment aware.
-
-Removing XFS_TRANS_DEBUG should definitely be done as a separate
-patch and it should remove it from everywhere (there's several stale
-uses) rather than just this one place. If we don't use it here, we
-don't use it anywhere....
-
-....
-
-> @@ -287,11 +184,6 @@ xfs_buf_item_format_segment(
->  	 */
->  	base_size = offsetof(struct xfs_buf_log_format, blf_data_map) +
->  			(blfp->blf_map_size * sizeof(blfp->blf_data_map[0]));
-> -	vecp->i_addr = blfp;
-> -	vecp->i_len = base_size;
-> -	vecp->i_type = XLOG_REG_TYPE_BFORMAT;
-> -	vecp++;
-> -	nvecs = 1;
+> Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+> 
+> ---
+>  fs/xfs/xfs_buf_item.c  |   13 ++++++++++---
+>  fs/xfs/xfs_trans_buf.c |    7 +++++--
+>  2 files changed, 15 insertions(+), 5 deletions(-)
+> 
+> Index: b/fs/xfs/xfs_buf_item.c
+> ===================================================================
+> --- a/fs/xfs/xfs_buf_item.c
+> +++ b/fs/xfs/xfs_buf_item.c
+> @@ -508,7 +508,7 @@ xfs_buf_item_unlock(
+>  {
+>  	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
+>  	struct xfs_buf		*bp = bip->bli_buf;
+> -	int			aborted;
+> +	int			aborted, empty, i;
+>  	uint			hold;
 >  
->  	if (bip->bli_flags & XFS_BLI_STALE) {
->  		/*
-> @@ -301,7 +193,11 @@ xfs_buf_item_format_segment(
->  		 */
->  		trace_xfs_buf_item_format_stale(bip);
->  		ASSERT(blfp->blf_flags & XFS_BLF_CANCEL);
-> -		blfp->blf_size = nvecs;
-> +		vecp->i_addr = blfp;
-> +		vecp->i_len = base_size;
-> +		vecp->i_type = XLOG_REG_TYPE_BFORMAT;
-> +		vecp++;
-> +		blfp->blf_size = 1;
->  		return vecp;
->  	}
->  
-> @@ -309,7 +205,19 @@ xfs_buf_item_format_segment(
->  	 * Fill in an iovec for each set of contiguous chunks.
+>  	/* Clear the buffer's association with this transaction. */
+> @@ -551,8 +551,15 @@ xfs_buf_item_unlock(
+>  	 * If the buf item isn't tracking any data, free it, otherwise drop the
+>  	 * reference we hold to it.
 >  	 */
->  	first_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size, 0);
-> -	ASSERT(first_bit != -1);
-> +	if (first_bit == -1) {
-> +		/* If the map is not be dirty in the transaction, mark
-> +		 * the size as zero and do not advance the vector pointer.
-> +		 */
-
-Comment format.
-
-> +		blfp->blf_size = 0;
-> +		return(vecp);
-
-		return vecp;
+> -	if (xfs_bitmap_empty(bip->__bli_format.blf_data_map,
+> -			     bip->__bli_format.blf_map_size))
+> +	empty = 1;
+> +	for (i = 0; i < bip->bli_format_count; i++) {
+> +		if (!xfs_bitmap_empty(bip->bli_formats[i].blf_data_map,
+> +			     bip->bli_formats[i].blf_map_size)) {
+> +			empty = 0;
+> +			break;
+> +		}
 > +	}
-> +
-> +	vecp->i_addr = blfp;
-> +	vecp->i_len = base_size;
-> +	vecp->i_type = XLOG_REG_TYPE_BFORMAT;
-> +	vecp++;
-> +	nvecs = 1;
+> +	if (empty)
+>  		xfs_buf_item_relse(bp);
+>  	else
+>  		atomic_dec(&bip->bli_refcount);
 
-This results in duplicating the code. Perhaps it woul dbe better to
-rearrange the code slightly to avoid needing to do that. i.e:
+I think "clean" is a better name for the temporary variable, as what
+we are actually checking is whether the buffer has been modified or
+not (i.e. whether it is clean or dirty)....
 
-{
-	nvecs = 0;
-	first_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size, 0);
+> Index: b/fs/xfs/xfs_trans_buf.c
+> ===================================================================
+> --- a/fs/xfs/xfs_trans_buf.c
+> +++ b/fs/xfs/xfs_trans_buf.c
+> @@ -643,6 +643,7 @@ xfs_trans_binval(
+>  	xfs_buf_t	*bp)
+>  {
+>  	xfs_buf_log_item_t	*bip = bp->b_fspriv;
+> +	int			i;
+>  
+>  	ASSERT(bp->b_transp == tp);
+>  	ASSERT(bip != NULL);
+> @@ -670,8 +671,10 @@ xfs_trans_binval(
+>  	bip->bli_flags &= ~(XFS_BLI_INODE_BUF | XFS_BLI_LOGGED | XFS_BLI_DIRTY);
+>  	bip->__bli_format.blf_flags &= ~XFS_BLF_INODE_BUF;
+>  	bip->__bli_format.blf_flags |= XFS_BLF_CANCEL;
+> -	memset((char *)(bip->__bli_format.blf_data_map), 0,
+> -	      (bip->__bli_format.blf_map_size * sizeof(uint)));
+> +	for (i = 0; i < bip->bli_format_count; i++) {
+> +		memset((char *)(bip->bli_formats[i].blf_data_map), 0,
+> +		       (bip->bli_formats[i].blf_map_size * sizeof(uint)));
 
-	if (!(bip->bli_flags & XFS_BLI_STALE) && first_bit == -1) {
-		/*
-		 * If the map is not be dirty in the transaction, mark
-		 * the size as zero and do not advance the vector pointer.
-		 */
-		goto out;
-	}
-
-	vecp->i_addr = blfp;
-	vecp->i_len = base_size;
-	vecp->i_type = XLOG_REG_TYPE_BFORMAT;
-	vecp++;
-	nvecs = 1;
-
-	if (bip->bli_flags & XFS_BLI_STALE) {
-		.....
-		goto out;
-	}
-	.....
-
-out:
-	blfp->blf_size = nvecs;
-	return vecp;
-}
+No cast needed - memset() takes a void pointer....
 
 Cheers,
 
