@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qB3Nei5n067748 for <xfs@oss.sgi.com>; Mon, 3 Dec 2012 17:40:46 -0600
-Message-Id: <20121203144311.750289577@sgi.com>
-Date: Mon, 03 Dec 2012 17:42:40 -0600
+	qB3NegN8067698 for <xfs@oss.sgi.com>; Mon, 3 Dec 2012 17:40:43 -0600
+Message-Id: <20121203144309.366183710@sgi.com>
+Date: Mon, 03 Dec 2012 17:42:14 -0600
 From: Mark Tinguely <tinguely@sgi.com>
-Subject: [3.0-stable PATCH 32/36] xfs: really fix the cursor leak in
-	xfs_alloc_ag_vextent_near
+Subject: [3.0-stable PATCH 06/36] xfs: fallback to vmalloc for large buffers
+	in xfs_attrmulti_attr_get
 References: <20121203144208.143464631@sgi.com>
-Content-Disposition: inline; filename=099
+Content-Disposition: inline; filename=057
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,39 +27,55 @@ Cc: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Upstream commit: e3a746f5aab71f2dd0a83116772922fb37ae29d6
+Upstream commit: ad650f5b27bc9858360b42aaa0d9204d16115316
 
-The current cursor is reallocated when retrying the allocation, so
-the existing cursor needs to be destroyed in both the restart and
-the failure cases.
+xfsdump uses for a large buffer for extended attributes, which has a
+kmalloc'd shadow buffer in the kernel. This can fail after the
+system has been running for some time as it is a high order
+allocation. Add a fallback to vmalloc so that it doesn't require
+contiguous memory and so won't randomly fail while xfsdump is
+running.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Tested-by: Mike Snitzer <snitzer@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 Signed-off-by: Ben Myers <bpm@sgi.com>
 ---
- fs/xfs/xfs_alloc.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ fs/xfs/linux-2.6/xfs_ioctl.c |   14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
-Index: b/fs/xfs/xfs_alloc.c
-===================================================================
---- a/fs/xfs/xfs_alloc.c
-+++ b/fs/xfs/xfs_alloc.c
-@@ -1080,13 +1080,13 @@ restart:
- 	 * If we couldn't get anything, give up.
- 	 */
- 	if (bno_cur_lt == NULL && bno_cur_gt == NULL) {
-+		xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
-+
- 		if (!forced++) {
- 			trace_xfs_alloc_near_busy(args);
- 			xfs_log_force(args->mp, XFS_LOG_SYNC);
- 			goto restart;
- 		}
--
--		xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
- 		trace_xfs_alloc_size_neither(args);
- 		args->agbno = NULLAGBLOCK;
- 		return 0;
+diff --git a/fs/xfs/linux-2.6/xfs_ioctl.c b/fs/xfs/linux-2.6/xfs_ioctl.c
+index acca2c5..ada7da9 100644
+--- a/fs/xfs/linux-2.6/xfs_ioctl.c
++++ b/fs/xfs/linux-2.6/xfs_ioctl.c
+@@ -450,9 +450,12 @@ xfs_attrmulti_attr_get(
+ 
+ 	if (*len > XATTR_SIZE_MAX)
+ 		return EINVAL;
+-	kbuf = kmalloc(*len, GFP_KERNEL);
+-	if (!kbuf)
+-		return ENOMEM;
++	kbuf = kmem_zalloc(*len, KM_SLEEP | KM_MAYFAIL);
++	if (!kbuf) {
++		kbuf = kmem_zalloc_large(*len);
++		if (!kbuf)
++			return ENOMEM;
++	}
+ 
+ 	error = xfs_attr_get(XFS_I(inode), name, kbuf, (int *)len, flags);
+ 	if (error)
+@@ -462,7 +465,10 @@ xfs_attrmulti_attr_get(
+ 		error = EFAULT;
+ 
+  out_kfree:
+-	kfree(kbuf);
++	if (is_vmalloc_addr(kbuf))
++		kmem_free_large(kbuf);
++	else
++		kmem_free(kbuf);
+ 	return error;
+ }
+ 
 
 
 _______________________________________________
