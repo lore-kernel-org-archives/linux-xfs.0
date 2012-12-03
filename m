@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qB3IsGfu246092 for <xfs@oss.sgi.com>; Mon, 3 Dec 2012 12:54:16 -0600
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id CZmuZyXIbgryaz7M for
-	<xfs@oss.sgi.com>; Mon, 03 Dec 2012 10:56:38 -0800 (PST)
-Message-ID: <50BCF5DE.8010301@redhat.com>
-Date: Mon, 03 Dec 2012 12:56:30 -0600
-From: Eric Sandeen <sandeen@redhat.com>
+	qB3LQ9xA026041 for <xfs@oss.sgi.com>; Mon, 3 Dec 2012 15:26:09 -0600
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	b8enVII22dCAe4qi for <xfs@oss.sgi.com>;
+	Mon, 03 Dec 2012 13:28:30 -0800 (PST)
+Date: Tue, 4 Dec 2012 08:28:09 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 01/15] xfs: Add a new transaction for changing ag state
+Message-ID: <20121203212809.GZ32450@dastard>
+References: <50A5E0E7.7010002@oracle.com> <20121203012453.GF29399@dastard>
+	<50BC1458.2000609@oracle.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: fsck scratch device if it got used
-References: <50B7B0AB.6040406@redhat.com> <20121130160616.GD5667@infradead.org>
-	<50B8DA0E.4000605@redhat.com> <20121130222750.GC12955@dastard>
-	<50B9335B.3000105@redhat.com>
-	<20121203140344.GA3546@andromeda.usersys.redhat.com>
-In-Reply-To: <20121203140344.GA3546@andromeda.usersys.redhat.com>
+Content-Disposition: inline
+In-Reply-To: <50BC1458.2000609@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,57 +27,51 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Carlos Maiolino <cmaiolino@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: xfs@oss.sgi.com
 
-On 12/3/12 8:03 AM, Carlos Maiolino wrote:
->>>>> This one looks good.
->>>>
->>>> Hm now that I think of it perhaps I should remove the explicit
->>>> _check_scratch-es if they happen at the end of the run, just to
->>>> try to speed things up.
->>>
->>> *nod*
->>
->> I'll send as another patch; I don't think there are really very
->> many TBH.
->>
->>>>>> Also recreate lost+found/ in one test so that e2fsck doesn't
->>>>>> complain.
->>>>>
->>>>> This one I can't make any sense of.  Care to send it separately
->>>>> with a good explanation?
->>>>>
->>>>
->>>> Ok, sure.
->>>>
->>>> Basically, test does an rm -rf of the scrach mnt, but e2fsck
->>>> thinks that a missing lost+found/ is cause for complaint and a
->>>> failure exit code, which then stops the tests :(
->>>
->>> Shouldn't e2fsck be fixed? i.e. if you have a corrupted filesystem
->>> and it's missing lost+found, how are you expected to create it? by
->>> mounting your corrupted filesystem and modifying it and potentially
->>> making the corruption worse?
->>
->> No, e2fsck fixes it, but reports that as an exit error condition
->> even if nothing else is found.
->>
+On Mon, Dec 03, 2012 at 10:54:16AM +0800, Jeff Liu wrote:
+> On 12/03/2012 09:24 AM, Dave Chinner wrote:
+> > As such I'd like to see this sort of thing encoded in a macro or
+> > inline function so the above code becomes something like:
+> > 
+> > 	return mp->m_sb.sb_sectsize + xfs_buf_log_overhead(mp);
+> > 
+> > 
+> > and
+> > 
+> > /*
+> >  * A buffer has a format structure overhead in the log in addition
+> >  * to the data, so we need to take this into account when reserving
+> >  * space in a transaction for a buffer. Round the space required up
+> >  * to a multiple of 128 bytes so that we don't change the historical
+> >  * reservation that has ben used for this overhead.
+> >  */
+> > static inline int
+> > xfs_buf_log_overhead()
+> > {
+> > 	return round_up(sizeof(struct xlog_op_header) +
+> > 			sizeof(struct xfs_buf_log_format), 128);
+> > }
+> Thanks for your teaching!
 > 
-> I know lots of users who use to just delete lost+found directory, so making the
-> lack of l+f an error is wrong.
-> IMHO, there is no reason to report an error when a l+f is not found, unless you
-> need to recover orphan'ed inodes, I've never seen any other usage for it, unless
-> during FS recovery time. (maybe I lack some knowledge of another usages for
-> lost+found directory?)
+> We hard-coded '128' in almost all of those transaction reservations,
+> is it time to get rid of it according to your comments above?
 > 
-> So, I believe that might be useful to print a warning about it, but consider it
-> as an error is wrong IMHO.
+> I'd like to do it if you have no time to deal with such trivial things. 
 
-I agree, maybe we can change that in e2fsck, and not bother creating it
-unless some other error means we need it.
+Yes please!
 
--Eric
+It's been on my "clean-ups for a rainy day" list for a long time,
+but I've never managed to get around to it. So if you want to do
+this, it would make me very happy :)
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
