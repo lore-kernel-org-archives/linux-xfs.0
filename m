@@ -1,14 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qB3NegE2067679 for <xfs@oss.sgi.com>; Mon, 3 Dec 2012 17:40:43 -0600
-Message-Id: <20121203144311.580325568@sgi.com>
-Date: Mon, 03 Dec 2012 17:42:38 -0600
+	qB3Neide067744 for <xfs@oss.sgi.com>; Mon, 3 Dec 2012 17:40:44 -0600
+Message-Id: <20121203144312.044410710@sgi.com>
+Date: Mon, 03 Dec 2012 17:42:43 -0600
 From: Mark Tinguely <tinguely@sgi.com>
-Subject: [3.0-stable PATCH 30/36] xfs: fix allocbt cursor leak in
-	xfs_alloc_ag_vextent_near
+Subject: [3.0-stable PATCH 35/36] xfs: zero allocation_args on the kernel stack
 References: <20121203144208.143464631@sgi.com>
-Content-Disposition: inline; filename=097
+Content-Disposition: inline; filename=xfs-zero-allocation-args-on-stack.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,35 +24,76 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: stable@vger.kernel.org
 Cc: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Mark Tinguely <tinguely@sgi.com>
 
-Upstream commit: 76d095388b040229ea1aad7dea45be0cfa20f589
+Upstream commit: a00416844b8f4b0106344bdfd90fe45a854b1d05
 
-When we fail to find an matching extent near the requested extent
-specification during a left-right distance search in
-xfs_alloc_ag_vextent_near, we fail to free the original cursor that
-we used to look up the XFS_BTNUM_CNT tree and hence leak it.
+    xfs: zero allocation_args on the kernel stack
+    
+    Zero the kernel stack space that makes up the xfs_alloc_arg structures.
+    
+    Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+    Reviewed-by: Ben Myers <bpm@sgi.com>
+    Signed-off-by: Ben Myers <bpm@sgi.com>
 
-Reported-by: Chris J Arges <chris.j.arges@canonical.com>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Ben Myers <bpm@sgi.com>
 ---
- fs/xfs/xfs_alloc.c |    1 +
- 1 file changed, 1 insertion(+)
+ fs/xfs/xfs_alloc.c  |    1 +
+ fs/xfs/xfs_bmap.c   |    3 +++
+ fs/xfs/xfs_ialloc.c |    1 +
+ 3 files changed, 5 insertions(+)
 
 Index: b/fs/xfs/xfs_alloc.c
 ===================================================================
 --- a/fs/xfs/xfs_alloc.c
 +++ b/fs/xfs/xfs_alloc.c
-@@ -1086,6 +1086,7 @@ restart:
- 			goto restart;
- 		}
+@@ -1872,6 +1872,7 @@ xfs_alloc_fix_freelist(
+ 	/*
+ 	 * Initialize the args structure.
+ 	 */
++	memset(&targs, 0, sizeof(targs));
+ 	targs.tp = tp;
+ 	targs.mp = mp;
+ 	targs.agbp = agbp;
+Index: b/fs/xfs/xfs_bmap.c
+===================================================================
+--- a/fs/xfs/xfs_bmap.c
++++ b/fs/xfs/xfs_bmap.c
+@@ -2561,6 +2561,7 @@ xfs_bmap_btalloc(
+ 	 * Normal allocation, done through xfs_alloc_vextent.
+ 	 */
+ 	tryagain = isaligned = 0;
++	memset(&args, 0, sizeof(args));
+ 	args.tp = ap->tp;
+ 	args.mp = mp;
+ 	args.fsbno = ap->rval;
+@@ -3194,6 +3195,7 @@ xfs_bmap_extents_to_btree(
+ 	 * Convert to a btree with two levels, one record in root.
+ 	 */
+ 	XFS_IFORK_FMT_SET(ip, whichfork, XFS_DINODE_FMT_BTREE);
++	memset(&args, 0, sizeof(args));
+ 	args.tp = tp;
+ 	args.mp = mp;
+ 	args.firstblock = *firstblock;
+@@ -3355,6 +3357,7 @@ xfs_bmap_local_to_extents(
+ 		xfs_buf_t	*bp;	/* buffer for extent block */
+ 		xfs_bmbt_rec_host_t *ep;/* extent record pointer */
  
-+		xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
- 		trace_xfs_alloc_size_neither(args);
- 		args->agbno = NULLAGBLOCK;
- 		return 0;
++		memset(&args, 0, sizeof(args));
+ 		args.tp = tp;
+ 		args.mp = ip->i_mount;
+ 		args.firstblock = *firstblock;
+Index: b/fs/xfs/xfs_ialloc.c
+===================================================================
+--- a/fs/xfs/xfs_ialloc.c
++++ b/fs/xfs/xfs_ialloc.c
+@@ -251,6 +251,7 @@ xfs_ialloc_ag_alloc(
+ 					/* boundary */
+ 	struct xfs_perag *pag;
+ 
++	memset(&args, 0, sizeof(args));
+ 	args.tp = tp;
+ 	args.mp = tp->t_mountp;
+ 
 
 
 _______________________________________________
