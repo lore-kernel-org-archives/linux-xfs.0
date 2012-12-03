@@ -1,14 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qB3NeeJ5067594 for <xfs@oss.sgi.com>; Mon, 3 Dec 2012 17:40:40 -0600
-Message-Id: <20121203144309.451341355@sgi.com>
-Date: Mon, 03 Dec 2012 17:42:15 -0600
+	qB3Nee8T067599 for <xfs@oss.sgi.com>; Mon, 3 Dec 2012 17:40:40 -0600
+Message-Id: <20121203144309.540365371@sgi.com>
+Date: Mon, 03 Dec 2012 17:42:16 -0600
 From: Mark Tinguely <tinguely@sgi.com>
-Subject: [3.0-stable PATCH 07/36] xfs: fallback to vmalloc for large buffers
-	in xfs_getbmap
+Subject: [3.0-stable PATCH 08/36] xfs: fix deadlock in xfs_rtfree_extent
 References: <20121203144208.143464631@sgi.com>
-Content-Disposition: inline; filename=058
+Content-Disposition: inline; filename=059
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,55 +24,76 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: stable@vger.kernel.org
 Cc: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Kamal Dasu <kdasu.kdev@gmail.com>
 
-Upstream commit: f074211f6041305b645669464343d504f4e6a290
+Upstream commit: 5575acc7807595687288b3bbac15103f2a5462e1
 
-xfs_getbmap uses for a large buffer for extents, which is kmalloc'd.
-This can fail after the system has been running for some time as it
-is a high order allocation. Add a fallback to vmalloc so that it
-doesn't require contiguous memory and so won't randomly fail on
-files with large extent lists.
+To fix the deadlock caused by repeatedly calling xfs_rtfree_extent
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+ - removed xfs_ilock() and xfs_trans_ijoin() from xfs_rtfree_extent(),
+   instead added asserts that the inode is locked and has an inode_item
+   attached to it.
+ - in xfs_bunmapi() when dealing with an inode with the rt flag
+   call xfs_ilock() and xfs_trans_ijoin() so that the
+   reference count is bumped on the inode and attached it to the
+   transaction before calling into xfs_bmap_del_extent, similar to
+   what we do in xfs_bmap_rtalloc.
+
+Signed-off-by: Kamal Dasu <kdasu.kdev@gmail.com>
+Reviewed-by: Christoph Hellwig <hch@infradead.org>
 Signed-off-by: Ben Myers <bpm@sgi.com>
 ---
- fs/xfs/xfs_bmap.c |   13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_bmap.c    |    9 +++++++++
+ fs/xfs/xfs_rtalloc.c |    9 ++++-----
+ 2 files changed, 13 insertions(+), 5 deletions(-)
 
 Index: b/fs/xfs/xfs_bmap.c
 ===================================================================
 --- a/fs/xfs/xfs_bmap.c
 +++ b/fs/xfs/xfs_bmap.c
-@@ -5457,8 +5457,12 @@ xfs_getbmap(
- 	if (bmv->bmv_count > ULONG_MAX / sizeof(struct getbmapx))
- 		return XFS_ERROR(ENOMEM);
- 	out = kmem_zalloc(bmv->bmv_count * sizeof(struct getbmapx), KM_MAYFAIL);
--	if (!out)
--		return XFS_ERROR(ENOMEM);
-+	if (!out) {
-+		out = kmem_zalloc_large(bmv->bmv_count *
-+					sizeof(struct getbmapx));
-+		if (!out)
-+			return XFS_ERROR(ENOMEM);
+@@ -5041,6 +5041,15 @@ xfs_bunmapi(
+ 		cur->bc_private.b.flags = 0;
+ 	} else
+ 		cur = NULL;
++
++	if (isrt) {
++		/*
++		 * Synchronize by locking the bitmap inode.
++		 */
++		xfs_ilock(mp->m_rbmip, XFS_ILOCK_EXCL);
++		xfs_trans_ijoin(tp, mp->m_rbmip);
 +	}
- 
- 	xfs_ilock(ip, XFS_IOLOCK_SHARED);
- 	if (whichfork == XFS_DATA_FORK && !(iflags & BMV_IF_DELALLOC)) {
-@@ -5583,7 +5587,10 @@ xfs_getbmap(
- 			break;
++
+ 	extno = 0;
+ 	while (bno != (xfs_fileoff_t)-1 && bno >= start && lastx >= 0 &&
+ 	       (nexts == 0 || extno < nexts)) {
+Index: b/fs/xfs/xfs_rtalloc.c
+===================================================================
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -183,6 +183,7 @@ error_cancel:
+ 		oblocks = map.br_startoff + map.br_blockcount;
  	}
- 
--	kmem_free(out);
-+	if (is_vmalloc_addr(out))
-+		kmem_free_large(out);
-+	else
-+		kmem_free(out);
+ 	return 0;
++
+ error:
  	return error;
  }
+@@ -2149,11 +2150,9 @@ xfs_rtfree_extent(
+ 	xfs_buf_t	*sumbp;		/* summary file block buffer */
  
+ 	mp = tp->t_mountp;
+-	/*
+-	 * Synchronize by locking the bitmap inode.
+-	 */
+-	xfs_ilock(mp->m_rbmip, XFS_ILOCK_EXCL);
+-	xfs_trans_ijoin_ref(tp, mp->m_rbmip, XFS_ILOCK_EXCL);
++
++	ASSERT(mp->m_rbmip->i_itemp != NULL);
++	ASSERT(xfs_isilocked(mp->m_rbmip, XFS_ILOCK_EXCL));
+ 
+ #if defined(__KERNEL__) && defined(DEBUG)
+ 	/*
 
 
 _______________________________________________
