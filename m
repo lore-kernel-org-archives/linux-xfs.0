@@ -1,13 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qB3NefTA067661 for <xfs@oss.sgi.com>; Mon, 3 Dec 2012 17:40:42 -0600
-Message-Id: <20121203144310.552816763@sgi.com>
-Date: Mon, 03 Dec 2012 17:42:27 -0600
+	qB3NeeCA067601 for <xfs@oss.sgi.com>; Mon, 3 Dec 2012 17:40:40 -0600
+Message-Id: <20121203144309.644469343@sgi.com>
+Date: Mon, 03 Dec 2012 17:42:17 -0600
 From: Mark Tinguely <tinguely@sgi.com>
-Subject: [3.0-stable PATCH 19/36] xfs: limit specualtive delalloc to maxioffset
+Subject: [3.0-stable PATCH 09/36] xfs: Fix open flag handling in
+	open_by_handle code
 References: <20121203144208.143464631@sgi.com>
-Content-Disposition: inline; filename=079
+Content-Disposition: inline; filename=060
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,45 +27,63 @@ Cc: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Upstream commit: 3ed9116e8a3e9c0870b2076340b3da9b8f900f3b
+Upstream commit: 1a1d772433d42aaff7315b3468fef5951604f5c6
 
-Speculative delayed allocation beyond EOF near the maximum supported
-file offset can result in creating delalloc extents beyond
-mp->m_maxioffset (8EB). These can never be trimmed during
-xfs_free_eof_blocks() because they are beyond mp->m_maxioffset, and
-that results in assert failures in xfs_fs_destroy_inode() due to
-delalloc blocks still being present. xfstests 071 exposes this
-problem.
-
-Limit speculative delalloc to mp->m_maxioffset to avoid this
-problem.
+Sparse identified some unsafe handling of open flags in the xfs open
+by handle ioctl code. Update the code to use the correct access
+macros to ensure that we handle the open flags correctly.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 Signed-off-by: Ben Myers <bpm@sgi.com>
 ---
- fs/xfs/xfs_iomap.c |    9 +++++++++
- 1 file changed, 9 insertions(+)
+ fs/xfs/linux-2.6/xfs_ioctl.c |   14 +++++---------
+ 1 file changed, 5 insertions(+), 9 deletions(-)
 
-Index: b/fs/xfs/xfs_iomap.c
-===================================================================
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -417,6 +417,15 @@ retry:
- 			return error;
+diff --git a/fs/xfs/linux-2.6/xfs_ioctl.c b/fs/xfs/linux-2.6/xfs_ioctl.c
+index ada7da9..b27fb6d 100644
+--- a/fs/xfs/linux-2.6/xfs_ioctl.c
++++ b/fs/xfs/linux-2.6/xfs_ioctl.c
+@@ -209,6 +209,7 @@ xfs_open_by_handle(
+ 	struct file		*filp;
+ 	struct inode		*inode;
+ 	struct dentry		*dentry;
++	fmode_t			fmode;
+ 
+ 	if (!capable(CAP_SYS_ADMIN))
+ 		return -XFS_ERROR(EPERM);
+@@ -228,26 +229,21 @@ xfs_open_by_handle(
+ 	hreq->oflags |= O_LARGEFILE;
+ #endif
+ 
+-	/* Put open permission in namei format. */
+ 	permflag = hreq->oflags;
+-	if ((permflag+1) & O_ACCMODE)
+-		permflag++;
+-	if (permflag & O_TRUNC)
+-		permflag |= 2;
+-
++	fmode = OPEN_FMODE(permflag);
+ 	if ((!(permflag & O_APPEND) || (permflag & O_TRUNC)) &&
+-	    (permflag & FMODE_WRITE) && IS_APPEND(inode)) {
++	    (fmode & FMODE_WRITE) && IS_APPEND(inode)) {
+ 		error = -XFS_ERROR(EPERM);
+ 		goto out_dput;
  	}
  
-+	/*
-+	 * Make sure preallocation does not create extents beyond the range we
-+	 * actually support in this filesystem.
-+	 */
-+	if (last_fsb > XFS_B_TO_FSB(mp, mp->m_maxioffset))
-+		last_fsb = XFS_B_TO_FSB(mp, mp->m_maxioffset);
-+
-+	ASSERT(last_fsb > offset_fsb);
-+
- 	nimaps = XFS_WRITE_IMAPS;
- 	firstblock = NULLFSBLOCK;
- 	error = xfs_bmapi(NULL, ip, offset_fsb,
+-	if ((permflag & FMODE_WRITE) && IS_IMMUTABLE(inode)) {
++	if ((fmode & FMODE_WRITE) && IS_IMMUTABLE(inode)) {
+ 		error = -XFS_ERROR(EACCES);
+ 		goto out_dput;
+ 	}
+ 
+ 	/* Can't write directories. */
+-	if (S_ISDIR(inode->i_mode) && (permflag & FMODE_WRITE)) {
++	if (S_ISDIR(inode->i_mode) && (fmode & FMODE_WRITE)) {
+ 		error = -XFS_ERROR(EISDIR);
+ 		goto out_dput;
+ 	}
 
 
 _______________________________________________
