@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qB3NegVg067667 for <xfs@oss.sgi.com>; Mon, 3 Dec 2012 17:40:46 -0600
-Message-Id: <20121203144311.853211105@sgi.com>
-Date: Mon, 03 Dec 2012 17:42:41 -0600
+	qB3NehjN067721 for <xfs@oss.sgi.com>; Mon, 3 Dec 2012 17:40:43 -0600
+Message-Id: <20121203144308.943514303@sgi.com>
+Date: Mon, 03 Dec 2012 17:42:10 -0600
 From: Mark Tinguely <tinguely@sgi.com>
-Subject: [3.0-stable PATCH 33/36] xfs: check for stale inode before acquiring
-	iflock on push
+Subject: [3.0-stable PATCH 02/36] xfs: fix allocation length overflow in
+	xfs_bmapi_write()
 References: <20121203144208.143464631@sgi.com>
-Content-Disposition: inline; filename=103
+Content-Disposition: inline; filename=022
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,76 +25,60 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: stable@vger.kernel.org
 Cc: xfs@oss.sgi.com
 
-From: Brian Foster <bfoster@redhat.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-Upstream commit: 9a3a5dab63461b84213052888bf38a962b22d035
+Upstream commit: a99ebf43f49f4499ab0e2a8a9132ad6ed6ba2409
 
-    An inode in the AIL can be flush locked and marked stale if
-    a cluster free transaction occurs at the right time. The
-    inode item is then marked as flushing, which causes xfsaild
-    to spin and leaves the filesystem stalled. This is
-    reproduced by running xfstests 273 in a loop for an
-    extended period of time.
- 
-    Check for stale inodes before the flush lock. This marks
-    the inode as pinned, leads to a log flush and allows the
-    filesystem to proceed.
+When testing the new xfstests --large-fs option that does very large
+file preallocations, this assert was tripped deep in
+xfs_alloc_vextent():
 
-    Signed-off-by: Brian Foster <bfoster@redhat.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Christoph Hellwig <hch@lst.de>
-    Reviewed-by: Mark Tinguely <tinguely@sgi.com>
-    Signed-off-by: Ben Myers <bpm@sgi.com>
+XFS: Assertion failed: args->minlen <= args->maxlen, file: fs/xfs/xfs_alloc.c, line: 2239
 
+The allocation was trying to allocate a zero length extent because
+the lower 32 bits of the allocation length was zero. The remaining
+length of the allocation to be done was an exact multiple of 2^32 -
+the first case I saw was at 496TB remaining to be allocated.
 
+This turns out to be an overflow when converting the allocation
+length (a 64 bit quantity) into the extent length to allocate (a 32
+bit quantity), and it requires the length to be allocated an exact
+multiple of 2^32 blocks to trip the assert.
+
+Fix it by limiting the extent lenth to allocate to MAXEXTLEN.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Ben Myers <bpm@sgi.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_inode_item.c |   26 +++++++++++++++-----------
- 1 file changed, 15 insertions(+), 11 deletions(-)
+ fs/xfs/xfs_bmap.c |   14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
 
-Index: b/fs/xfs/xfs_inode_item.c
+Index: b/fs/xfs/xfs_bmap.c
 ===================================================================
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -588,6 +588,21 @@ xfs_inode_item_trylock(
- 	if (!xfs_ilock_nowait(ip, XFS_ILOCK_SHARED))
- 		return XFS_ITEM_LOCKED;
- 
-+	/*
-+	 * Re-check the pincount now that we stabilized the value by
-+	 * taking the ilock.
-+	 */
-+	if (xfs_ipincount(ip) > 0) {
-+		xfs_iunlock(ip, XFS_ILOCK_SHARED);
-+		return XFS_ITEM_PINNED;
-+	}
-+
-+	/* Stale items should force out the iclog */
-+	if (ip->i_flags & XFS_ISTALE) {
-+		xfs_iunlock(ip, XFS_ILOCK_SHARED);
-+		return XFS_ITEM_PINNED;
-+	}
-+
- 	if (!xfs_iflock_nowait(ip)) {
- 		/*
- 		 * inode has already been flushed to the backing buffer,
-@@ -597,17 +612,6 @@ xfs_inode_item_trylock(
- 		return XFS_ITEM_PUSHBUF;
- 	}
- 
--	/* Stale items should force out the iclog */
--	if (ip->i_flags & XFS_ISTALE) {
--		xfs_ifunlock(ip);
--		/*
--		 * we hold the AIL lock - notify the unlock routine of this
--		 * so it doesn't try to get the lock again.
--		 */
--		xfs_iunlock(ip, XFS_ILOCK_SHARED|XFS_IUNLOCK_NONOTIFY);
--		return XFS_ITEM_PINNED;
--	}
--
- #ifdef DEBUG
- 	if (!XFS_FORCED_SHUTDOWN(ip->i_mount)) {
- 		ASSERT(iip->ili_format.ilf_fields != 0);
+--- a/fs/xfs/xfs_bmap.c
++++ b/fs/xfs/xfs_bmap.c
+@@ -4453,8 +4453,18 @@ xfs_bmapi(
+ 					xfs_bmbt_get_all(ep, &prev);
+ 				}
+ 			} else {
+-				alen = (xfs_extlen_t)
+-					XFS_FILBLKS_MIN(len, MAXEXTLEN);
++				/*
++				 * There's a 32/64 bit type mismatch between the
++				 * allocation length request (which can be 64
++				 * bits in length) and the bma length request,
++				 * which is xfs_extlen_t and therefore 32 bits.
++				 * Hence we have to check for 32-bit overflows
++				 * and handle them here.
++				 */
++				if (len > (xfs_filblks_t)MAXEXTLEN)
++					alen = MAXEXTLEN;
++				else
++					alen = len;
+ 				if (!eof)
+ 					alen = (xfs_extlen_t)
+ 						XFS_FILBLKS_MIN(alen,
 
 
 _______________________________________________
