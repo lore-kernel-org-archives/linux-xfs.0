@@ -1,14 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qB3NegGZ067714 for <xfs@oss.sgi.com>; Mon, 3 Dec 2012 17:40:43 -0600
-Message-Id: <20121203144311.221176799@sgi.com>
-Date: Mon, 03 Dec 2012 17:42:34 -0600
+	qB3NegAN067694 for <xfs@oss.sgi.com>; Mon, 3 Dec 2012 17:40:43 -0600
+Message-Id: <20121203144311.494771080@sgi.com>
+Date: Mon, 03 Dec 2012 17:42:37 -0600
 From: Mark Tinguely <tinguely@sgi.com>
-Subject: [3.0-stable PATCH 26/36] xfs: flush outstanding buffers on log mount
-	failure
+Subject: [3.0-stable PATCH 29/36] xfs: xfs_vm_writepage clear iomap_valid when
 References: <20121203144208.143464631@sgi.com>
-Content-Disposition: inline; filename=087
+Content-Disposition: inline; filename=092
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,61 +24,71 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: stable@vger.kernel.org
 Cc: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Alain Renaud <arenaud@sgi.com>
 
-Upstream commit: d4f3512b0891658b6b4d5fc99567242b3fc2d6b7
+Upstream commit: 66f9311381b4772003d595fb6c518f1647450db0
+ !buffer_uptodate (REV2)
 
-When we fail to mount the log in xfs_mountfs(), we tear down all the
-infrastructure we have already allocated. However, the process of
-mounting the log may have progressed to the point of reading,
-caching and modifying buffers in memory. Hence before we can free
-all the infrastructure, we have to flush and remove all the buffers
-from memory.
+On filesytems with a block size smaller than PAGE_SIZE we currently have
+a problem with unwritten extents.  If a we have multi-block page for
+which an unwritten extent has been allocated, and only some of the
+buffers have been written to, and they are not contiguous, we can expose
+stale data from disk in the blocks between the writes after extent
+conversion.
 
-Problem first reported by Eric Sandeen, later a different incarnation
-was reported by Ben Myers.
+Example of a page with unwritten and real data.
+buffer  content
+0       empty  b_state = 0
+1       DATA   b_state = 0x1023 Uptodate,Dirty,Mapped,Unwritten
+2       DATA   b_state = 0x1023 Uptodate,Dirty,Mapped,Unwritten
+3       empty  b_state = 0
+4       empty  b_state = 0
+5       DATA   b_state = 0x1023 Uptodate,Dirty,Mapped,Unwritten
+6       DATA   b_state = 0x1023 Uptodate,Dirty,Mapped,Unwritten
+7       empty  b_state = 0
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Buffers 1, 2, 5, and 6 have been written to, leaving 0, 3, 4, and 7
+empty.  Currently buffers 1, 2, 5, and 6 are added to a single ioend,
+and when IO has completed, extent conversion creates a real extent from
+block 1 through block 6, leaving 0 and 7 unwritten.  However buffers 3
+and 4 were not written to disk, so stale data is exposed from those
+blocks on a subsequent read.
+
+Fix this by setting iomap_valid = 0 when we find a buffer that is not
+Uptodate.  This ensures that buffers 5 and 6 are not added to the same
+ioend as buffers 1 and 2.  Later these blocks will be converted into two
+separate real extents, leaving the blocks in between unwritten.
+
+Signed-off-by: Alain Renaud <arenaud@sgi.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Ben Myers <bpm@sgi.com>
 ---
- fs/xfs/xfs_mount.c |    8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ fs/xfs/linux-2.6/xfs_aops.c |   11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 2f011fd..beb9968 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -1297,7 +1297,7 @@ xfs_mountfs(
- 			      XFS_FSB_TO_BB(mp, sbp->sb_logblocks));
- 	if (error) {
- 		xfs_warn(mp, "log mount failed");
--		goto out_free_perag;
-+		goto out_fail_wait;
- 	}
+Index: b/fs/xfs/linux-2.6/xfs_aops.c
+===================================================================
+--- a/fs/xfs/linux-2.6/xfs_aops.c
++++ b/fs/xfs/linux-2.6/xfs_aops.c
+@@ -1008,10 +1008,15 @@ xfs_vm_writepage(
+ 				imap_valid = 0;
+ 			}
+ 		} else {
+-			if (PageUptodate(page)) {
++			if (PageUptodate(page))
+ 				ASSERT(buffer_mapped(bh));
+-				imap_valid = 0;
+-			}
++			/*
++			 * This buffer is not uptodate and will not be
++			 * written to disk.  Ensure that we will put any
++			 * subsequent writeable buffers into a new
++			 * ioend.
++			 */
++			imap_valid = 0;
+ 			continue;
+ 		}
  
- 	/*
-@@ -1324,7 +1324,7 @@ xfs_mountfs(
- 	     !mp->m_sb.sb_inprogress) {
- 		error = xfs_initialize_perag_data(mp, sbp->sb_agcount);
- 		if (error)
--			goto out_free_perag;
-+			goto out_fail_wait;
- 	}
- 
- 	/*
-@@ -1448,6 +1448,10 @@ xfs_mountfs(
- 	IRELE(rip);
-  out_log_dealloc:
- 	xfs_log_unmount(mp);
-+ out_fail_wait:
-+	if (mp->m_logdev_targp && mp->m_logdev_targp != mp->m_ddev_targp)
-+		xfs_wait_buftarg(mp->m_logdev_targp);
-+	xfs_wait_buftarg(mp->m_ddev_targp);
-  out_free_perag:
- 	xfs_free_perag(mp);
-  out_remove_uuid:
 
 
 _______________________________________________
