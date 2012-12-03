@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qB3NefZ4067636 for <xfs@oss.sgi.com>; Mon, 3 Dec 2012 17:40:41 -0600
-Message-Id: <20121203144310.289239261@sgi.com>
-Date: Mon, 03 Dec 2012 17:42:24 -0600
+	qB3Nefxh067643 for <xfs@oss.sgi.com>; Mon, 3 Dec 2012 17:40:41 -0600
+Message-Id: <20121203144310.465551719@sgi.com>
+Date: Mon, 03 Dec 2012 17:42:26 -0600
 From: Mark Tinguely <tinguely@sgi.com>
-Subject: [3.0-stable PATCH 16/36] xfs: page type check in writeback only
-	checks last buffer
+Subject: [3.0-stable PATCH 18/36] xfs: dont assert on delalloc regions beyond
+	EOF
 References: <20121203144208.143464631@sgi.com>
-Content-Disposition: inline; filename=075
+Content-Disposition: inline; filename=078
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,82 +27,92 @@ Cc: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Upstream commit: 6ffc4db5de61d36e969a26bc94509c59246c81f8
+Upstream commit: 58e20770646932fe9b758c94e8c278ea9ec93878
 
-xfs_is_delayed_page() checks to see if a page has buffers matching
-the given IO type passed in. It does so by walking the buffer heads
-on the page and checking if the state flags match the IO type.
+When we are doing speculative delayed allocation beyond EOF,
+conversion of the region allocated beyond EOF is dependent on the
+largest free space extent available. If the largest free extent is
+smaller than the delalloc range, then after allocation we leave
+a delalloc extent that starts beyond EOF. This extent cannot *ever*
+be converted by flushing data, and so will remain there until either
+the EOF moves into the extent or it is truncated away.
 
-However, the "acceptable" variable that is calculated is overwritten
-every time a new buffer is checked. Hence if the first buffer on the
-page is of the right type, this state is lost if the second buffer
-is not of the correct type. This means that xfs_aops_discard_page()
-may not discard delalloc regions when it is supposed to, and
-xfs_convert_page() may not cluster IO as efficiently as possible.
-
-This problem only occurs on filesystems with a block size smaller
-than page size.
-
-Also, rename xfs_is_delayed_page() to xfs_check_page_type() to
-better describe what it is doing - it is not delalloc specific
-anymore.
-
-The problem was first noticed by Peter Watkins.
+Hence if xfs_getbmap() runs on such an inode and is asked to return
+extents beyond EOF, it will assert fail on this extent even though
+there is nothing xfs_getbmap() can do to convert it to a real
+extent. Hence we should simply report these delalloc extents rather
+than assert that there should be none.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 Signed-off-by: Ben Myers <bpm@sgi.com>
----
- fs/xfs/linux-2.6/xfs_aops.c |   12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
 
-Index: b/fs/xfs/linux-2.6/xfs_aops.c
+A modified XFS_ISIZE() inline function came from:
+
+From: Christoph Hellwig <hch@infradead.org>
+upstream commit: ce7ae151ddada3dbf67301464343c154903166b3
+xfs: remove the i_size field in struct xfs_inode
+
+---
+ fs/xfs/xfs_bmap.c  |   19 +++++++++++++++----
+ fs/xfs/xfs_inode.h |    8 ++++++--
+ 2 files changed, 21 insertions(+), 6 deletions(-)
+
+Index: b/fs/xfs/xfs_bmap.c
 ===================================================================
---- a/fs/xfs/linux-2.6/xfs_aops.c
-+++ b/fs/xfs/linux-2.6/xfs_aops.c
-@@ -636,7 +636,7 @@ xfs_map_at_offset(
-  * or delayed allocate extent.
-  */
- STATIC int
--xfs_is_delayed_page(
-+xfs_check_page_type(
- 	struct page		*page,
- 	unsigned int		type)
- {
-@@ -650,11 +650,11 @@ xfs_is_delayed_page(
- 		bh = head = page_buffers(page);
- 		do {
- 			if (buffer_unwritten(bh))
--				acceptable = (type == IO_UNWRITTEN);
-+				acceptable += (type == IO_UNWRITTEN);
- 			else if (buffer_delay(bh))
--				acceptable = (type == IO_DELALLOC);
-+				acceptable += (type == IO_DELALLOC);
- 			else if (buffer_dirty(bh) && buffer_mapped(bh))
--				acceptable = (type == IO_OVERWRITE);
-+				acceptable += (type == IO_OVERWRITE);
- 			else
- 				break;
- 		} while ((bh = bh->b_this_page) != head);
-@@ -697,7 +697,7 @@ xfs_convert_page(
- 		goto fail_unlock_page;
- 	if (page->mapping != inode->i_mapping)
- 		goto fail_unlock_page;
--	if (!xfs_is_delayed_page(page, (*ioendp)->io_type))
-+	if (!xfs_check_page_type(page, (*ioendp)->io_type))
- 		goto fail_unlock_page;
+--- a/fs/xfs/xfs_bmap.c
++++ b/fs/xfs/xfs_bmap.c
+@@ -53,7 +53,6 @@
+ #include "xfs_vnodeops.h"
+ #include "xfs_trace.h"
  
- 	/*
-@@ -847,7 +847,7 @@ xfs_aops_discard_page(
- 	struct buffer_head	*bh, *head;
- 	loff_t			offset = page_offset(page);
+-
+ #ifdef DEBUG
+ STATIC void
+ xfs_bmap_check_leaf_extents(xfs_btree_cur_t *cur, xfs_inode_t *ip, int whichfork);
+@@ -5543,9 +5542,21 @@ xfs_getbmap(
+ 				XFS_FSB_TO_BB(mp, map[i].br_blockcount);
+ 			out[cur_ext].bmv_unused1 = 0;
+ 			out[cur_ext].bmv_unused2 = 0;
+-			ASSERT(((iflags & BMV_IF_DELALLOC) != 0) ||
+-			      (map[i].br_startblock != DELAYSTARTBLOCK));
+-                        if (map[i].br_startblock == HOLESTARTBLOCK &&
++
++			/*
++			 * delayed allocation extents that start beyond EOF can
++			 * occur due to speculative EOF allocation when the
++			 * delalloc extent is larger than the largest freespace
++			 * extent at conversion time. These extents cannot be
++			 * converted by data writeback, so can exist here even
++			 * if we are not supposed to be finding delalloc
++			 * extents.
++			 */
++			if (map[i].br_startblock == DELAYSTARTBLOCK &&
++			    map[i].br_startoff <= XFS_B_TO_FSB(mp, XFS_ISIZE(ip)))
++				ASSERT((iflags & BMV_IF_DELALLOC) != 0);
++
++			if (map[i].br_startblock == HOLESTARTBLOCK &&
+ 			    whichfork == XFS_ATTR_FORK) {
+ 				/* came to the end of attribute fork */
+ 				out[cur_ext].bmv_oflags |= BMV_OF_LAST;
+Index: b/fs/xfs/xfs_inode.h
+===================================================================
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -264,8 +264,12 @@ typedef struct xfs_inode {
+ 	struct inode		i_vnode;	/* embedded VFS inode */
+ } xfs_inode_t;
  
--	if (!xfs_is_delayed_page(page, IO_DELALLOC))
-+	if (!xfs_check_page_type(page, IO_DELALLOC))
- 		goto out_invalidate;
+-#define XFS_ISIZE(ip)	(((ip)->i_d.di_mode & S_IFMT) == S_IFREG) ? \
+-				(ip)->i_size : (ip)->i_d.di_size;
++static inline xfs_fsize_t XFS_ISIZE(struct xfs_inode *ip)
++{
++	if (S_ISREG(ip->i_d.di_mode))
++		return ip->i_size;
++	return ip->i_d.di_size;
++}
  
- 	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
+ /* Convert from vfs inode to xfs inode */
+ static inline struct xfs_inode *XFS_I(struct inode *inode)
 
 
 _______________________________________________
