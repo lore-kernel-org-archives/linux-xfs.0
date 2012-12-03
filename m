@@ -1,13 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qB3NeiLF067743 for <xfs@oss.sgi.com>; Mon, 3 Dec 2012 17:40:46 -0600
-Message-Id: <20121203144311.665142015@sgi.com>
-Date: Mon, 03 Dec 2012 17:42:39 -0600
+	qB3Nei5n067748 for <xfs@oss.sgi.com>; Mon, 3 Dec 2012 17:40:46 -0600
+Message-Id: <20121203144311.750289577@sgi.com>
+Date: Mon, 03 Dec 2012 17:42:40 -0600
 From: Mark Tinguely <tinguely@sgi.com>
-Subject: [3.0-stable PATCH 31/36] xfs: shutdown xfs_sync_worker before the log
+Subject: [3.0-stable PATCH 32/36] xfs: really fix the cursor leak in
+	xfs_alloc_ag_vextent_near
 References: <20121203144208.143464631@sgi.com>
-Content-Disposition: inline; filename=098
+Content-Disposition: inline; filename=099
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,80 +25,41 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: stable@vger.kernel.org
 Cc: xfs@oss.sgi.com
 
-From: Ben Myers <bpm@sgi.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-Upstream commit: 8866fc6fa55e31b2bce931b7963ff16641b39dc7
+Upstream commit: e3a746f5aab71f2dd0a83116772922fb37ae29d6
 
-Revert commit 1307bbd, which uses the s_umount semaphore to provide
-exclusion between xfs_sync_worker and unmount, in favor of shutting down
-the sync worker before freeing the log in xfs_log_unmount.  This is a
-cleaner way of resolving the race between xfs_sync_worker and unmount
-than using s_umount.
+The current cursor is reallocated when retrying the allocation, so
+the existing cursor needs to be destroyed in both the restart and
+the failure cases.
 
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Tested-by: Mike Snitzer <snitzer@redhat.com>
 Signed-off-by: Ben Myers <bpm@sgi.com>
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/linux-2.6/xfs_sync.c |   31 +++++++++++++++----------------
- fs/xfs/xfs_log.c            |    1 +
- 2 files changed, 16 insertions(+), 16 deletions(-)
+ fs/xfs/xfs_alloc.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Index: b/fs/xfs/linux-2.6/xfs_sync.c
+Index: b/fs/xfs/xfs_alloc.c
 ===================================================================
---- a/fs/xfs/linux-2.6/xfs_sync.c
-+++ b/fs/xfs/linux-2.6/xfs_sync.c
-@@ -506,24 +506,23 @@ xfs_sync_worker(
- 	 * We shouldn't write/force the log if we are in the mount/unmount
- 	 * process or on a read only filesystem. The workqueue still needs to be
- 	 * active in both cases, however, because it is used for inode reclaim
--	 * during these times.  Use the s_umount semaphore to provide exclusion
--	 * with unmount.
-+	 * during these times.  Use the MS_ACTIVE flag to avoid doing anything
-+	 * during mount.  Doing work during unmount is avoided by calling
-+	 * cancel_delayed_work_sync on this work queue before tearing down
-+	 * the ail and the log in xfs_log_unmount.
+--- a/fs/xfs/xfs_alloc.c
++++ b/fs/xfs/xfs_alloc.c
+@@ -1080,13 +1080,13 @@ restart:
+ 	 * If we couldn't get anything, give up.
  	 */
--	if (down_read_trylock(&mp->m_super->s_umount)) {
--		if (!(mp->m_super->s_flags & MS_ACTIVE) &&
--		    !(mp->m_flags & XFS_MOUNT_RDONLY)) {
--			/* dgc: errors ignored here */
--			if (mp->m_super->s_frozen == SB_UNFROZEN &&
--			    xfs_log_need_covered(mp))
--				error = xfs_fs_log_dummy(mp);
--			else
--				xfs_log_force(mp, 0);
--			error = xfs_qm_sync(mp, SYNC_TRYLOCK);
-+	if (!(mp->m_super->s_flags & MS_ACTIVE) &&
-+	    !(mp->m_flags & XFS_MOUNT_RDONLY)) {
-+		/* dgc: errors ignored here */
-+		if (mp->m_super->s_frozen == SB_UNFROZEN &&
-+		    xfs_log_need_covered(mp))
-+			error = xfs_fs_log_dummy(mp);
-+		else
-+			xfs_log_force(mp, 0);
-+		error = xfs_qm_sync(mp, SYNC_TRYLOCK);
- 
--			/* start pushing all the metadata that is currently dirty */
--			xfs_ail_push_all(mp->m_ail);
--		}
--		up_read(&mp->m_super->s_umount);
-+		/* start pushing all the metadata that is currently dirty */
-+		xfs_ail_push_all(mp->m_ail);
- 	}
- 
- 	/* queue us up again */
-Index: b/fs/xfs/xfs_log.c
-===================================================================
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -618,6 +618,7 @@ xfs_log_unmount_write(xfs_mount_t *mp)
- void
- xfs_log_unmount(xfs_mount_t *mp)
- {
-+	cancel_delayed_work_sync(&mp->m_sync_work);
- 	xfs_trans_ail_destroy(mp);
- 	xlog_dealloc_log(mp->m_log);
- }
+ 	if (bno_cur_lt == NULL && bno_cur_gt == NULL) {
++		xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
++
+ 		if (!forced++) {
+ 			trace_xfs_alloc_near_busy(args);
+ 			xfs_log_force(args->mp, XFS_LOG_SYNC);
+ 			goto restart;
+ 		}
+-
+-		xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
+ 		trace_xfs_alloc_size_neither(args);
+ 		args->agbno = NULLAGBLOCK;
+ 		return 0;
 
 
 _______________________________________________
