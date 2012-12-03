@@ -1,13 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qB3Neide067744 for <xfs@oss.sgi.com>; Mon, 3 Dec 2012 17:40:44 -0600
-Message-Id: <20121203144312.044410710@sgi.com>
-Date: Mon, 03 Dec 2012 17:42:43 -0600
-From: Mark Tinguely <tinguely@sgi.com>
-Subject: [3.0-stable PATCH 35/36] xfs: zero allocation_args on the kernel stack
-References: <20121203144208.143464631@sgi.com>
-Content-Disposition: inline; filename=xfs-zero-allocation-args-on-stack.patch
+	qB3Nsjn2070307 for <xfs@oss.sgi.com>; Mon, 3 Dec 2012 17:54:45 -0600
+Received: from buxtehude.debian.org (buxtehude.debian.org [140.211.166.26]) by
+	cuda.sgi.com with ESMTP id ctqK5G7WdVcRivHF (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 03 Dec 2012 15:57:06 -0800 (PST)
+Subject: Bug#694624: /usr/sbin/xfs_freeze: freezes under lying (root)
+Resent-To: debian-bugs-dist@lists.debian.org
+Resent-Message-ID: <handler.694624.B694624.13545788459726@bugs.debian.org>
+Message-ID: <50BD3B94.4070505@talbragar.com.au>
+Date: Tue, 04 Dec 2012 10:53:56 +1100
+From: Pat Emblen <support@talbragar.com.au>
+MIME-Version: 1.0
+Reply-To: Pat Emblen <support@talbragar.com.au>, 694624@bugs.debian.org
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -16,85 +22,32 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: stable@vger.kernel.org
-Cc: xfs@oss.sgi.com
+To: 694624@bugs.debian.org
 
-From: Mark Tinguely <tinguely@sgi.com>
+ > If you are running scripts remotely and they don't handle errors
+ > properly, then that's your problem....
 
-Upstream commit: a00416844b8f4b0106344bdfd90fe45a854b1d05
+OK, can you then fix the man page to describe the real behaviour of the
+program so that users have a chance to intelligently decide what error
+checking to do in their scripts.
+I.E the argument isn't a mount point, it's a path, and perhaps use
+'filesystem' rather than 'xfs' consistently.
 
-    xfs: zero allocation_args on the kernel stack
-    
-    Zero the kernel stack space that makes up the xfs_alloc_arg structures.
-    
-    Signed-off-by: Mark Tinguely <tinguely@sgi.com>
-    Reviewed-by: Ben Myers <bpm@sgi.com>
-    Signed-off-by: Ben Myers <bpm@sgi.com>
+ > If you can't unfreeze the root filesystem by running xfs-freeze -u
+ > immediately afterwards then that's a filesystem bug, not a problem
+ > with the userspace command.
 
----
- fs/xfs/xfs_alloc.c  |    1 +
- fs/xfs/xfs_bmap.c   |    3 +++
- fs/xfs/xfs_ialloc.c |    1 +
- 3 files changed, 5 insertions(+)
-
-Index: b/fs/xfs/xfs_alloc.c
-===================================================================
---- a/fs/xfs/xfs_alloc.c
-+++ b/fs/xfs/xfs_alloc.c
-@@ -1872,6 +1872,7 @@ xfs_alloc_fix_freelist(
- 	/*
- 	 * Initialize the args structure.
- 	 */
-+	memset(&targs, 0, sizeof(targs));
- 	targs.tp = tp;
- 	targs.mp = mp;
- 	targs.agbp = agbp;
-Index: b/fs/xfs/xfs_bmap.c
-===================================================================
---- a/fs/xfs/xfs_bmap.c
-+++ b/fs/xfs/xfs_bmap.c
-@@ -2561,6 +2561,7 @@ xfs_bmap_btalloc(
- 	 * Normal allocation, done through xfs_alloc_vextent.
- 	 */
- 	tryagain = isaligned = 0;
-+	memset(&args, 0, sizeof(args));
- 	args.tp = ap->tp;
- 	args.mp = mp;
- 	args.fsbno = ap->rval;
-@@ -3194,6 +3195,7 @@ xfs_bmap_extents_to_btree(
- 	 * Convert to a btree with two levels, one record in root.
- 	 */
- 	XFS_IFORK_FMT_SET(ip, whichfork, XFS_DINODE_FMT_BTREE);
-+	memset(&args, 0, sizeof(args));
- 	args.tp = tp;
- 	args.mp = mp;
- 	args.firstblock = *firstblock;
-@@ -3355,6 +3357,7 @@ xfs_bmap_local_to_extents(
- 		xfs_buf_t	*bp;	/* buffer for extent block */
- 		xfs_bmbt_rec_host_t *ep;/* extent record pointer */
- 
-+		memset(&args, 0, sizeof(args));
- 		args.tp = tp;
- 		args.mp = ip->i_mount;
- 		args.firstblock = *firstblock;
-Index: b/fs/xfs/xfs_ialloc.c
-===================================================================
---- a/fs/xfs/xfs_ialloc.c
-+++ b/fs/xfs/xfs_ialloc.c
-@@ -251,6 +251,7 @@ xfs_ialloc_ag_alloc(
- 					/* boundary */
- 	struct xfs_perag *pag;
- 
-+	memset(&args, 0, sizeof(args));
- 	args.tp = tp;
- 	args.mp = tp->t_mountp;
- 
-
+It may also be a good idea to point out in the man page that you should be
+extremely careful running this if you are not logged in interactively, 
+even a
+disconnected ssh session will prevent you running xfs_freeze -u to manually
+unfreeze the root filesystem.
+Thanks
+Pat Emblen
 
 _______________________________________________
 xfs mailing list
