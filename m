@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qB3NegOr067673 for <xfs@oss.sgi.com>; Mon, 3 Dec 2012 17:40:42 -0600
-Message-Id: <20121203144310.380163216@sgi.com>
-Date: Mon, 03 Dec 2012 17:42:25 -0600
+	qB3NefNt067622 for <xfs@oss.sgi.com>; Mon, 3 Dec 2012 17:40:41 -0600
+Message-Id: <20121203144309.729176306@sgi.com>
+Date: Mon, 03 Dec 2012 17:42:18 -0600
 From: Mark Tinguely <tinguely@sgi.com>
-Subject: [3.0-stable PATCH 17/36] xfs: punch new delalloc blocks out of failed
-	writes inside EOF.
+Subject: [3.0-stable PATCH 10/36] xfs: Account log unmount transaction
+	correctly
 References: <20121203144208.143464631@sgi.com>
-Content-Disposition: inline; filename=076
+Content-Disposition: inline; filename=063
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,359 +27,49 @@ Cc: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Upstream commit: d3bc815afb549eecb3679a4b2f0df216e34df998
+Upstream commit: 3948659e30808fbaa7673bbe89de2ae9769e20a7
 
-When a partial write inside EOF fails, it can leave delayed
-allocation blocks lying around because they don't get punched back
-out. This leads to assert failures like:
+There have been a few reports of this warning appearing recently:
 
-XFS: Assertion failed: XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0, file: fs/xfs/linux-2.6/xfs_super.c, line: 847
+XFS (dm-4): xlog_space_left: head behind tail
+ tail_cycle = 129, tail_bytes = 20163072
+ GH   cycle = 129, GH   bytes = 20162880
 
-when evicting inodes from the cache. This can be trivially triggered
-by xfstests 083, which takes between 5 and 15 executions on a 512
-byte block size filesystem to trip over this. Debugging shows a
-failed write due to ENOSPC calling xfs_vm_write_failed such as:
+The common cause appears to be lots of freeze and unfreeze cycles,
+and the output from the warnings indicates that we are leaking
+around 8 bytes of log space per freeze/unfreeze cycle.
 
-[ 5012.329024] ino 0xa0026: vwf to 0x17000, sze 0x1c85ae
+When we freeze the filesystem, we write an unmount record and that
+uses xlog_write directly - a special type of transaction,
+effectively. What it doesn't do, however, is correctly account for
+the log space it uses. The unmount record writes an 8 byte structure
+with a special magic number into the log, and the space this
+consumes is not accounted for in the log ticket tracking the
+operation. Hence we leak 8 bytes every unmount record that is
+written.
 
-and no action is taken on it. This leaves behind a delayed
-allocation extent that has no page covering it and no data in it:
-
-[ 5015.867162] ino 0xa0026: blks: 0x83 delay blocks 0x1, size 0x2538c0
-[ 5015.868293] ext 0: off 0x4a, fsb 0x50306, len 0x1
-[ 5015.869095] ext 1: off 0x4b, fsb 0x7899, len 0x6b
-[ 5015.869900] ext 2: off 0xb6, fsb 0xffffffffe0008, len 0x1
-                                    ^^^^^^^^^^^^^^^
-[ 5015.871027] ext 3: off 0x36e, fsb 0x7a27, len 0xd
-[ 5015.872206] ext 4: off 0x4cf, fsb 0x7a1d, len 0xa
-
-So the delayed allocation extent is one block long at offset
-0x16c00. Tracing shows that a bigger write:
-
-xfs_file_buffered_write: size 0x1c85ae offset 0x959d count 0x1ca3f ioflags
-
-allocates the block, and then fails with ENOSPC trying to allocate
-the last block on the page, leading to a failed write with stale
-delalloc blocks on it.
-
-Because we've had an ENOSPC when trying to allocate 0x16e00, it
-means that we are never goinge to call ->write_end on the page and
-so the allocated new buffer will not get marked dirty or have the
-buffer_new state cleared. In other works, what the above write is
-supposed to end up with is this mapping for the page:
-
-    +------+------+------+------+------+------+------+------+
-      UMA    UMA    UMA    UMA    UMA    UMA    UND    FAIL
-
-where:  U = uptodate
-        M = mapped
-        N = new
-        A = allocated
-        D = delalloc
-        FAIL = block we ENOSPC'd on.
-
-and the key point being the buffer_new() state for the newly
-allocated delayed allocation block. Except it doesn't - we're not
-marking buffers new correctly.
-
-That buffer_new() problem goes back to the xfs_iomap removal days,
-where xfs_iomap() used to return a "new" status for any map with
-newly allocated blocks, so that __xfs_get_blocks() could call
-set_buffer_new() on it. We still have the "new" variable and the
-check for it in the set_buffer_new() logic - except we never set it
-now!
-
-Hence that newly allocated delalloc block doesn't have the new flag
-set on it, so when the write fails we cannot tell which blocks we
-are supposed to punch out. WHy do we need the buffer_new flag? Well,
-that's because we can have this case:
-
-    +------+------+------+------+------+------+------+------+
-      UMD    UMD    UMD    UMD    UMD    UMD    UND    FAIL
-
-where all the UMD buffers contain valid data from a previously
-successful write() system call. We only want to punch the UND buffer
-because that's the only one that we added in this write and it was
-only this write that failed.
-
-That implies that even the old buffer_new() logic was wrong -
-because it would result in all those UMD buffers on the page having
-set_buffer_new() called on them even though they aren't new. Hence
-we shoul donly be calling set_buffer_new() for delalloc buffers that
-were allocated (i.e. were a hole before xfs_iomap_write_delay() was
-called).
-
-So, fix this set_buffer_new logic according to how we need it to
-work for handling failed writes correctly. Also, restore the new
-buffer logic handling for blocks allocated via
-xfs_iomap_write_direct(), because it should still set the buffer_new
-flag appropriately for newly allocated blocks, too.
-
-SO, now we have the buffer_new() being set appropriately in
-__xfs_get_blocks(), we can detect the exact delalloc ranges that
-we allocated in a failed write, and hence can now do a walk of the
-buffers on a page to find them.
-
-Except, it's not that easy. When block_write_begin() fails, it
-unlocks and releases the page that we just had an error on, so we
-can't use that page to handle errors anymore. We have to get access
-to the page while it is still locked to walk the buffers. Hence we
-have to open code block_write_begin() in xfs_vm_write_begin() to be
-able to insert xfs_vm_write_failed() is the right place.
-
-With that, we can pass the page and write range to
-xfs_vm_write_failed() and walk the buffers on the page, looking for
-delalloc buffers that are either new or beyond EOF and punch them
-out. Handling buffers beyond EOF ensures we still handle the
-existing case that xfs_vm_write_failed() handles.
-
-Of special note is the truncate_pagecache() handling - that only
-should be done for pages outside EOF - pages within EOF can still
-contain valid, dirty data so we must not punch them out of the
-cache.
-
-That just leaves the xfs_vm_write_end() failure handling.
-The only failure case here is that we didn't copy the entire range,
-and generic_write_end() handles that by zeroing the region of the
-page that wasn't copied, we don't have to punch out blocks within
-the file because they are guaranteed to contain zeros. Hence we only
-have to handle the existing "beyond EOF" case and don't need access
-to the buffers on the page. Hence it remains largely unchanged.
-
-Note that xfs_getbmap() can still trip over delalloc blocks beyond
-EOF that are left there by speculative delayed allocation. Hence
-this bug fix does not solve all known issues with bmap vs delalloc,
-but it does fix all the the known accidental occurances of the
-problem.
-
-Signed-off-by: Dave Chinner <david@fromorbit.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Ben Myers <bpm@sgi.com>
 ---
- fs/xfs/linux-2.6/xfs_aops.c |  173 ++++++++++++++++++++++++++++++++------------
- 1 file changed, 126 insertions(+), 47 deletions(-)
+ fs/xfs/xfs_log.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Index: b/fs/xfs/linux-2.6/xfs_aops.c
+Index: b/fs/xfs/xfs_log.c
 ===================================================================
---- a/fs/xfs/linux-2.6/xfs_aops.c
-+++ b/fs/xfs/linux-2.6/xfs_aops.c
-@@ -1199,11 +1199,18 @@ __xfs_get_blocks(
- 						       &imap, nimaps);
- 			if (error)
- 				return -error;
-+			new = 1;
- 		} else {
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -531,8 +531,9 @@ xfs_log_unmount_write(xfs_mount_t *mp)
+ 				.lv_iovecp = &reg,
+ 			};
+ 
+-			/* remove inited flag */
++			/* remove inited flag, and account for space used */
+ 			tic->t_flags = 0;
++			tic->t_curr_res -= sizeof(magic);
+ 			error = xlog_write(log, &vec, tic, &lsn,
+ 					   NULL, XLOG_UNMOUNT_TRANS);
  			/*
- 			 * Delalloc reservations do not require a transaction,
--			 * we can go on without dropping the lock here.
-+			 * we can go on without dropping the lock here. If we
-+			 * are allocating a new delalloc block, make sure that
-+			 * we set the new flag so that we mark the buffer new so
-+			 * that we know that it is newly allocated if the write
-+			 * fails.
- 			 */
-+			if (nimaps && imap.br_startblock == HOLESTARTBLOCK)
-+				new = 1;
- 			error = xfs_iomap_write_delay(ip, offset, size, &imap);
- 			if (error)
- 				goto out_unlock;
-@@ -1394,53 +1401,90 @@ xfs_vm_direct_IO(
- 	return ret;
- }
- 
-+/*
-+ * Punch out the delalloc blocks we have already allocated.
-+ *
-+ * Don't bother with xfs_setattr given that nothing can have made it to disk yet
-+ * as the page is still locked at this point.
-+ */
-+STATIC void
-+xfs_vm_kill_delalloc_range(
-+	struct inode		*inode,
-+	loff_t			start,
-+	loff_t			end)
-+{
-+	struct xfs_inode	*ip = XFS_I(inode);
-+	xfs_fileoff_t		start_fsb;
-+	xfs_fileoff_t		end_fsb;
-+	int			error;
-+
-+	start_fsb = XFS_B_TO_FSB(ip->i_mount, start);
-+	end_fsb = XFS_B_TO_FSB(ip->i_mount, end);
-+	if (end_fsb <= start_fsb)
-+		return;
-+
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
-+	error = xfs_bmap_punch_delalloc_range(ip, start_fsb,
-+						end_fsb - start_fsb);
-+	if (error) {
-+		/* something screwed, just bail */
-+		if (!XFS_FORCED_SHUTDOWN(ip->i_mount)) {
-+			xfs_alert(ip->i_mount,
-+		"xfs_vm_write_failed: unable to clean up ino %lld",
-+					ip->i_ino);
-+		}
-+	}
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+}
-+
- STATIC void
- xfs_vm_write_failed(
--	struct address_space	*mapping,
--	loff_t			to)
-+	struct inode		*inode,
-+	struct page		*page,
-+	loff_t			pos,
-+	unsigned		len)
- {
--	struct inode		*inode = mapping->host;
-+	loff_t			block_offset = pos & PAGE_MASK;
-+	loff_t			block_start;
-+	loff_t			block_end;
-+	loff_t			from = pos & (PAGE_CACHE_SIZE - 1);
-+	loff_t			to = from + len;
-+	struct buffer_head	*bh, *head;
-+
-+	ASSERT(block_offset + from == pos);
-+
-+	head = page_buffers(page);
-+	block_start = 0;
-+	for (bh = head; bh != head || !block_start;
-+	     bh = bh->b_this_page, block_start = block_end,
-+				   block_offset += bh->b_size) {
-+		block_end = block_start + bh->b_size;
-+		/* skip buffers before the write */
-+		if (block_end <= from)
-+			continue;
-+
-+		/* if the buffer is after the write, we're done */
-+		if (block_start >= to)
-+			break;
- 
--	if (to > inode->i_size) {
--		/*
--		 * punch out the delalloc blocks we have already allocated. We
--		 * don't call xfs_setattr() to do this as we may be in the
--		 * middle of a multi-iovec write and so the vfs inode->i_size
--		 * will not match the xfs ip->i_size and so it will zero too
--		 * much. Hence we jus truncate the page cache to zero what is
--		 * necessary and punch the delalloc blocks directly.
--		 */
--		struct xfs_inode	*ip = XFS_I(inode);
--		xfs_fileoff_t		start_fsb;
--		xfs_fileoff_t		end_fsb;
--		int			error;
-+		if (!buffer_delay(bh))
-+			continue;
- 
--		truncate_pagecache(inode, to, inode->i_size);
-+		if (!buffer_new(bh) && block_offset < i_size_read(inode))
-+			continue;
- 
--		/*
--		 * Check if there are any blocks that are outside of i_size
--		 * that need to be trimmed back.
--		 */
--		start_fsb = XFS_B_TO_FSB(ip->i_mount, inode->i_size);
--		end_fsb = XFS_B_TO_FSB(ip->i_mount, to);
--		if (end_fsb <= start_fsb)
--			return;
--
--		xfs_ilock(ip, XFS_ILOCK_EXCL);
--		error = xfs_bmap_punch_delalloc_range(ip, start_fsb,
--							end_fsb - start_fsb);
--		if (error) {
--			/* something screwed, just bail */
--			if (!XFS_FORCED_SHUTDOWN(ip->i_mount)) {
--				xfs_alert(ip->i_mount,
--			"xfs_vm_write_failed: unable to clean up ino %lld",
--						ip->i_ino);
--			}
--		}
--		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+		xfs_vm_kill_delalloc_range(inode, block_offset,
-+					   block_offset + bh->b_size);
- 	}
-+
- }
- 
-+/*
-+ * This used to call block_write_begin(), but it unlocks and releases the page
-+ * on error, and we need that page to be able to punch stale delalloc blocks out
-+ * on failure. hence we copy-n-waste it here and call xfs_vm_write_failed() at
-+ * the appropriate point.
-+*/
- STATIC int
- xfs_vm_write_begin(
- 	struct file		*file,
-@@ -1451,15 +1495,40 @@ xfs_vm_write_begin(
- 	struct page		**pagep,
- 	void			**fsdata)
- {
--	int			ret;
-+	pgoff_t			index = pos >> PAGE_CACHE_SHIFT;
-+	struct page		*page;
-+	int			status;
- 
--	ret = block_write_begin(mapping, pos, len, flags | AOP_FLAG_NOFS,
--				pagep, xfs_get_blocks);
--	if (unlikely(ret))
--		xfs_vm_write_failed(mapping, pos + len);
--	return ret;
-+	ASSERT(len <= PAGE_CACHE_SIZE);
-+
-+	page = grab_cache_page_write_begin(mapping, index,
-+					   flags | AOP_FLAG_NOFS);
-+	if (!page)
-+		return -ENOMEM;
-+
-+	status = __block_write_begin(page, pos, len, xfs_get_blocks);
-+	if (unlikely(status)) {
-+		struct inode	*inode = mapping->host;
-+
-+		xfs_vm_write_failed(inode, page, pos, len);
-+		unlock_page(page);
-+
-+		if (pos + len > i_size_read(inode))
-+			truncate_pagecache(inode, pos + len, i_size_read(inode));
-+
-+		page_cache_release(page);
-+		page = NULL;
-+	}
-+
-+	*pagep = page;
-+	return status;
- }
- 
-+/*
-+ * On failure, we only need to kill delalloc blocks beyond EOF because they
-+ * will never be written. For blocks within EOF, generic_write_end() zeros them
-+ * so they are safe to leave alone and be written with all the other valid data.
-+ */
- STATIC int
- xfs_vm_write_end(
- 	struct file		*file,
-@@ -1472,9 +1541,19 @@ xfs_vm_write_end(
- {
- 	int			ret;
- 
-+	ASSERT(len <= PAGE_CACHE_SIZE);
-+
- 	ret = generic_write_end(file, mapping, pos, len, copied, page, fsdata);
--	if (unlikely(ret < len))
--		xfs_vm_write_failed(mapping, pos + len);
-+	if (unlikely(ret < len)) {
-+		struct inode	*inode = mapping->host;
-+		size_t		isize = i_size_read(inode);
-+		loff_t		to = pos + len;
-+
-+		if (to > isize) {
-+			truncate_pagecache(inode, to, isize);
-+			xfs_vm_kill_delalloc_range(inode, isize, to);
-+		}
-+	}
- 	return ret;
- }
- 
 
 
 _______________________________________________
