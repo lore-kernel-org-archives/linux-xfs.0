@@ -1,14 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qB3NefTb067631 for <xfs@oss.sgi.com>; Mon, 3 Dec 2012 17:40:41 -0600
-Message-Id: <20121203144310.186918896@sgi.com>
-Date: Mon, 03 Dec 2012 17:42:23 -0600
+	qB3NegE0067679 for <xfs@oss.sgi.com>; Mon, 3 Dec 2012 17:40:42 -0600
+Message-Id: <20121203144310.826211099@sgi.com>
+Date: Mon, 03 Dec 2012 17:42:30 -0600
 From: Mark Tinguely <tinguely@sgi.com>
-Subject: [3.0-stable PATCH 15/36] xfs: punch all delalloc blocks beyond EOF on
-	write failure.
+Subject: [3.0-stable PATCH 22/36] xfs: clean up buffer allocation
 References: <20121203144208.143464631@sgi.com>
-Content-Disposition: inline; filename=073
+Content-Disposition: inline; filename=015
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,128 +24,179 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: stable@vger.kernel.org
 Cc: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Christoph Hellwig <hch@infradead.org>
 
-Upstream commit: 01c84d2dc1311fb76ea217dadfd5b3a5f3cab563
+Upstream commit: 4347b9d7ad4223474d315c3ab6bc1ce7cce7fa2d
 
-I've been seeing regular ASSERT failures in xfstests when running
-fsstress based tests over the past month. xfs_getbmap() has been
-failing this test:
+Change _xfs_buf_initialize to allocate the buffer directly and rename it to
+xfs_buf_alloc now that is the only buffer allocation routine.  Also remove
+the xfs_buf_deallocate wrapper around the kmem_zone_free calls for buffers.
 
-XFS: Assertion failed: ((iflags & BMV_IF_DELALLOC) != 0) ||
-(map[i].br_startblock != DELAYSTARTBLOCK), file: fs/xfs/xfs_bmap.c,
-line: 5650
-
-where it is encountering a delayed allocation extent after writing
-all the dirty data to disk and then walking the extent map
-atomically by holding the XFS_IOLOCK_SHARED to prevent new delayed
-allocation extents from being created.
-
-Test 083 on a 512 byte block size filesystem was used to reproduce
-the problem, because it only had a 5s run timeand would usually fail
-every 3-4 runs. This test is exercising ENOSPC behaviour by running
-fsstress on a nearly full filesystem. The following trace extract
-shows the final few events on the inode that tripped the assert:
-
- xfs_ilock:             flags ILOCK_EXCL caller xfs_setfilesize
- xfs_setfilesize:       isize 0x180000 disize 0x12d400 offset 0x17e200 count 7680
-
-file size updated to 0x180000 by IO completion
-
- xfs_ilock:             flags ILOCK_EXCL caller xfs_iomap_write_delay
- xfs_iext_insert:       state  idx 3 offset 3072 block 4503599627239432 count 1 flag 0 caller xfs_bmap_add_extent_hole_delay
- xfs_get_blocks_alloc:  size 0x180000 offset 0x180000 count 512 type  startoff 0xc00 startblock -1 blockcount 0x1
- xfs_ilock:             flags ILOCK_EXCL caller __xfs_get_blocks
-
-delalloc write, adding a single block at offset 0x180000
-
- xfs_delalloc_enospc:   isize 0x180000 disize 0x180000 offset 0x180200 count 512
-
-ENOSPC trying to allocate a dellalloc block at offset 0x180200
-
- xfs_ilock:             flags ILOCK_EXCL caller xfs_iomap_write_delay
- xfs_get_blocks_alloc:  size 0x180000 offset 0x180200 count 512 type  startoff 0xc00 startblock -1 blockcount 0x2
-
-And succeeding on retry after flushing dirty inodes.
-
- xfs_ilock:             flags ILOCK_EXCL caller __xfs_get_blocks
- xfs_delalloc_enospc:   isize 0x180000 disize 0x180000 offset 0x180400 count 512
-
-ENOSPC trying to allocate a dellalloc block at offset 0x180400
-
- xfs_ilock:             flags ILOCK_EXCL caller xfs_iomap_write_delay
- xfs_delalloc_enospc:   isize 0x180000 disize 0x180000 offset 0x180400 count 512
-
-And failing the retry, giving a real ENOSPC error.
-
- xfs_ilock:             flags ILOCK_EXCL caller xfs_vm_write_failed
-                                                ^^^^^^^^^^^^^^^^^^^
-The smoking gun - the write being failed and cleaning up delalloc
-blocks beyond EOF allocated by the failed write.
-
- xfs_getattr:
- xfs_ilock:             flags IOLOCK_SHARED caller xfs_getbmap
- xfs_ilock:             flags ILOCK_SHARED caller xfs_ilock_map_shared
-
-And that's where we died almost immediately afterwards.
-xfs_bmapi_read() found delalloc extent beyond current file in memory
-file size. Some debug I added to xfs_getbmap() showed the state just
-before the assert failure:
-
- ino 0x80e48: off 0xc00, fsb 0xffffffffffffffff, len 0x1, size 0x180000
- start_fsb 0x106, end_fsb 0x638
- ino flags 0x2 nex 0xd bmvcnt 0x555, len 0x3c58a6f23c0bf1, start 0xc00
- ext 0: off 0x1fc, fsb 0x24782, len 0x254
- ext 1: off 0x450, fsb 0x40851, len 0x30
- ext 2: off 0x480, fsb 0xd99, len 0x1b8
- ext 3: off 0x92f, fsb 0x4099a, len 0x3b
- ext 4: off 0x96d, fsb 0x41844, len 0x98
- ext 5: off 0xbf1, fsb 0x408ab, len 0xf
-
-which shows that we found a single delalloc block beyond EOF (first
-line of output) when we were returning the map for a length
-somewhere around 10^16 bytes long (second line), and the on-disk
-extents showed they didn't go past EOF (last lines).
-
-Further debug added to xfs_vm_write_failed() showed this happened
-when punching out delalloc blocks beyond the end of the file after
-the failed write:
-
-[  132.606693] ino 0x80e48: vwf to 0x181000, sze 0x180000
-[  132.609573] start_fsb 0xc01, end_fsb 0xc08
-
-It punched the range 0xc01 -> 0xc08, but the range we really need to
-punch is 0xc00 -> 0xc07 (8 blocks from 0xc00) as this testing was
-run on a 512 byte block size filesystem (8 blocks per page).
-the punch from is 0xc00. So end_fsb is correct, but start_fsb is
-wrong as we punch from start_fsb for (end_fsb - start_fsb) blocks.
-Hence we are not punching the delalloc block beyond EOF in the case.
-
-The fix is simple - it's a silly off-by-one mistake in calculating
-the range. It's especially silly because the macro used to calculate
-the start_fsb already takes into account the case where the inode
-size is an exact multiple of the filesystem block size...
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-Signed-off-by: Ben Myers <bpm@sgi.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Alex Elder <aelder@sgi.com>
 ---
- fs/xfs/linux-2.6/xfs_aops.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/linux-2.6/xfs_buf.c |   50 ++++++++++++++++-----------------------------
+ fs/xfs/linux-2.6/xfs_buf.h |    3 +-
+ fs/xfs/xfs_log.c           |    2 -
+ 3 files changed, 21 insertions(+), 34 deletions(-)
 
-Index: b/fs/xfs/linux-2.6/xfs_aops.c
+Index: b/fs/xfs/linux-2.6/xfs_buf.c
 ===================================================================
---- a/fs/xfs/linux-2.6/xfs_aops.c
-+++ b/fs/xfs/linux-2.6/xfs_aops.c
-@@ -1421,7 +1421,7 @@ xfs_vm_write_failed(
- 		 * Check if there are any blocks that are outside of i_size
- 		 * that need to be trimmed back.
- 		 */
--		start_fsb = XFS_B_TO_FSB(ip->i_mount, inode->i_size) + 1;
-+		start_fsb = XFS_B_TO_FSB(ip->i_mount, inode->i_size);
- 		end_fsb = XFS_B_TO_FSB(ip->i_mount, to);
- 		if (end_fsb <= start_fsb)
- 			return;
+--- a/fs/xfs/linux-2.6/xfs_buf.c
++++ b/fs/xfs/linux-2.6/xfs_buf.c
+@@ -66,10 +66,6 @@ struct workqueue_struct *xfsconvertd_wor
+ #define xb_to_km(flags) \
+ 	 (((flags) & XBF_DONT_BLOCK) ? KM_NOFS : KM_SLEEP)
+ 
+-#define xfs_buf_allocate(flags) \
+-	kmem_zone_alloc(xfs_buf_zone, xb_to_km(flags))
+-#define xfs_buf_deallocate(bp) \
+-	kmem_zone_free(xfs_buf_zone, (bp));
+ 
+ static inline int
+ xfs_buf_is_vmapped(
+@@ -167,14 +163,19 @@ xfs_buf_stale(
+ 	ASSERT(atomic_read(&bp->b_hold) >= 1);
+ }
+ 
+-STATIC void
+-_xfs_buf_initialize(
+-	xfs_buf_t		*bp,
+-	xfs_buftarg_t		*target,
++struct xfs_buf *
++xfs_buf_alloc(
++	struct xfs_buftarg	*target,
+ 	xfs_off_t		range_base,
+ 	size_t			range_length,
+ 	xfs_buf_flags_t		flags)
+ {
++	struct xfs_buf		*bp;
++
++	bp = kmem_zone_alloc(xfs_buf_zone, xb_to_km(flags));
++	if (unlikely(!bp))
++		return NULL;
++
+ 	/*
+ 	 * We don't want certain flags to appear in b_flags.
+ 	 */
+@@ -203,8 +204,9 @@ _xfs_buf_initialize(
+ 	init_waitqueue_head(&bp->b_waiters);
+ 
+ 	XFS_STATS_INC(xb_create);
+-
+ 	trace_xfs_buf_init(bp, _RET_IP_);
++
++	return bp;
+ }
+ 
+ /*
+@@ -277,7 +279,7 @@ xfs_buf_free(
+ 	} else if (bp->b_flags & _XBF_KMEM)
+ 		kmem_free(bp->b_addr);
+ 	_xfs_buf_free_pages(bp);
+-	xfs_buf_deallocate(bp);
++	kmem_zone_free(xfs_buf_zone, bp);
+ }
+ 
+ /*
+@@ -544,16 +546,14 @@ xfs_buf_get(
+ 	if (likely(bp))
+ 		goto found;
+ 
+-	new_bp = xfs_buf_allocate(flags);
++	new_bp = xfs_buf_alloc(target, ioff << BBSHIFT, isize << BBSHIFT,
++			       flags);
+ 	if (unlikely(!new_bp))
+ 		return NULL;
+ 
+-	_xfs_buf_initialize(new_bp, target,
+-			    ioff << BBSHIFT, isize << BBSHIFT, flags);
+-
+ 	bp = _xfs_buf_find(target, ioff, isize, flags, new_bp);
+ 	if (!bp) {
+-		xfs_buf_deallocate(new_bp);
++		kmem_zone_free(xfs_buf_zone, new_bp);
+ 		return NULL;
+ 	}
+ 
+@@ -562,7 +562,7 @@ xfs_buf_get(
+ 		if (error)
+ 			goto no_buffer;
+ 	} else
+-		xfs_buf_deallocate(new_bp);
++		kmem_zone_free(xfs_buf_zone, new_bp);
+ 
+ 	/*
+ 	 * Now we have a workable buffer, fill in the block number so
+@@ -703,19 +703,6 @@ xfs_buf_read_uncached(
+ 	return bp;
+ }
+ 
+-xfs_buf_t *
+-xfs_buf_get_empty(
+-	size_t			len,
+-	xfs_buftarg_t		*target)
+-{
+-	xfs_buf_t		*bp;
+-
+-	bp = xfs_buf_allocate(0);
+-	if (bp)
+-		_xfs_buf_initialize(bp, target, 0, len, 0);
+-	return bp;
+-}
+-
+ /*
+  * Return a buffer allocated as an empty buffer and associated to external
+  * memory via xfs_buf_associate_memory() back to it's empty state.
+@@ -801,10 +788,9 @@ xfs_buf_get_uncached(
+ 	int			error, i;
+ 	xfs_buf_t		*bp;
+ 
+-	bp = xfs_buf_allocate(0);
++	bp = xfs_buf_alloc(target, 0, len, 0);
+ 	if (unlikely(bp == NULL))
+ 		goto fail;
+-	_xfs_buf_initialize(bp, target, 0, len, 0);
+ 
+ 	error = _xfs_buf_get_pages(bp, page_count, 0);
+ 	if (error)
+@@ -834,7 +820,7 @@ xfs_buf_get_uncached(
+ 		__free_page(bp->b_pages[i]);
+ 	_xfs_buf_free_pages(bp);
+  fail_free_buf:
+-	xfs_buf_deallocate(bp);
++	kmem_zone_free(xfs_buf_zone, bp);
+  fail:
+ 	return NULL;
+ }
+Index: b/fs/xfs/linux-2.6/xfs_buf.h
+===================================================================
+--- a/fs/xfs/linux-2.6/xfs_buf.h
++++ b/fs/xfs/linux-2.6/xfs_buf.h
+@@ -177,7 +177,8 @@ extern xfs_buf_t *xfs_buf_get(xfs_buftar
+ extern xfs_buf_t *xfs_buf_read(xfs_buftarg_t *, xfs_off_t, size_t,
+ 				xfs_buf_flags_t);
+ 
+-extern xfs_buf_t *xfs_buf_get_empty(size_t, xfs_buftarg_t *);
++struct xfs_buf *xfs_buf_alloc(struct xfs_buftarg *, xfs_off_t, size_t,
++			      xfs_buf_flags_t);
+ extern void xfs_buf_set_empty(struct xfs_buf *bp, size_t len);
+ extern xfs_buf_t *xfs_buf_get_uncached(struct xfs_buftarg *, size_t, int);
+ extern int xfs_buf_associate_memory(xfs_buf_t *, void *, size_t);
+Index: b/fs/xfs/xfs_log.c
+===================================================================
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -1054,7 +1054,7 @@ xlog_alloc_log(xfs_mount_t	*mp,
+ 	xlog_get_iclog_buffer_size(mp, log);
+ 
+ 	error = ENOMEM;
+-	bp = xfs_buf_get_empty(log->l_iclog_size, mp->m_logdev_targp);
++	bp = xfs_buf_alloc(mp->m_logdev_targp, 0, log->l_iclog_size, 0);
+ 	if (!bp)
+ 		goto out_free_log;
+ 	XFS_BUF_SET_IODONE_FUNC(bp, xlog_iodone);
 
 
 _______________________________________________
