@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qB3Nedh5067589 for <xfs@oss.sgi.com>; Mon, 3 Dec 2012 17:40:39 -0600
-Message-Id: <20121203144309.165103824@sgi.com>
-Date: Mon, 03 Dec 2012 17:42:12 -0600
+	qB3NeeJ5067594 for <xfs@oss.sgi.com>; Mon, 3 Dec 2012 17:40:40 -0600
+Message-Id: <20121203144309.451341355@sgi.com>
+Date: Mon, 03 Dec 2012 17:42:15 -0600
 From: Mark Tinguely <tinguely@sgi.com>
-Subject: [3.0-stable PATCH 04/36] xfs: xfs_trans_add_item() - dont assign in
-	ASSERT() when compare is intended
+Subject: [3.0-stable PATCH 07/36] xfs: fallback to vmalloc for large buffers
+	in xfs_getbmap
 References: <20121203144208.143464631@sgi.com>
-Content-Disposition: inline; filename=035
+Content-Disposition: inline; filename=058
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,36 +25,54 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: stable@vger.kernel.org
 Cc: xfs@oss.sgi.com
 
-From: Jesper Juhl <jj@chaosbits.net>
+From: Dave Chinner <dchinner@redhat.com>
 
-Upstream commit: f65020a83ad570c1788f7d8ece67f3487166576b
+Upstream commit: f074211f6041305b645669464343d504f4e6a290
 
-It looks to me like the two ASSERT()s in xfs_trans_add_item() really
-want to do a compare (==) rather than assignment (=).
-This patch changes it from the latter to the former.
+xfs_getbmap uses for a large buffer for extents, which is kmalloc'd.
+This can fail after the system has been running for some time as it
+is a high order allocation. Add a fallback to vmalloc so that it
+doesn't require contiguous memory and so won't randomly fail on
+files with large extent lists.
 
-Signed-off-by: Jesper Juhl <jj@chaosbits.net>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 Signed-off-by: Ben Myers <bpm@sgi.com>
-
-(cherry picked from commit 05293485a0b6b1f803e8a3c0ff188c38f6969985)
 ---
- fs/xfs/xfs_trans.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_bmap.c |   13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index efc147f..9b4437d 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -1151,8 +1151,8 @@ xfs_trans_add_item(
- {
- 	struct xfs_log_item_desc *lidp;
+Index: b/fs/xfs/xfs_bmap.c
+===================================================================
+--- a/fs/xfs/xfs_bmap.c
++++ b/fs/xfs/xfs_bmap.c
+@@ -5457,8 +5457,12 @@ xfs_getbmap(
+ 	if (bmv->bmv_count > ULONG_MAX / sizeof(struct getbmapx))
+ 		return XFS_ERROR(ENOMEM);
+ 	out = kmem_zalloc(bmv->bmv_count * sizeof(struct getbmapx), KM_MAYFAIL);
+-	if (!out)
+-		return XFS_ERROR(ENOMEM);
++	if (!out) {
++		out = kmem_zalloc_large(bmv->bmv_count *
++					sizeof(struct getbmapx));
++		if (!out)
++			return XFS_ERROR(ENOMEM);
++	}
  
--	ASSERT(lip->li_mountp = tp->t_mountp);
--	ASSERT(lip->li_ailp = tp->t_mountp->m_ail);
-+	ASSERT(lip->li_mountp == tp->t_mountp);
-+	ASSERT(lip->li_ailp == tp->t_mountp->m_ail);
+ 	xfs_ilock(ip, XFS_IOLOCK_SHARED);
+ 	if (whichfork == XFS_DATA_FORK && !(iflags & BMV_IF_DELALLOC)) {
+@@ -5583,7 +5587,10 @@ xfs_getbmap(
+ 			break;
+ 	}
  
- 	lidp = kmem_zone_zalloc(xfs_log_item_desc_zone, KM_SLEEP | KM_NOFS);
+-	kmem_free(out);
++	if (is_vmalloc_addr(out))
++		kmem_free_large(out);
++	else
++		kmem_free(out);
+ 	return error;
+ }
  
 
 
