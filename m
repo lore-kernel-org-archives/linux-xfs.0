@@ -1,14 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qB3NefHN067637 for <xfs@oss.sgi.com>; Mon, 3 Dec 2012 17:40:41 -0600
-Message-Id: <20121203144309.930913286@sgi.com>
-Date: Mon, 03 Dec 2012 17:42:20 -0600
+	qB3NefTA067661 for <xfs@oss.sgi.com>; Mon, 3 Dec 2012 17:40:42 -0600
+Message-Id: <20121203144310.552816763@sgi.com>
+Date: Mon, 03 Dec 2012 17:42:27 -0600
 From: Mark Tinguely <tinguely@sgi.com>
-Subject: [3.0-stable PATCH 12/36] xfs: dont fill statvfs with project quota
-	for a directory
+Subject: [3.0-stable PATCH 19/36] xfs: limit specualtive delalloc to maxioffset
 References: <20121203144208.143464631@sgi.com>
-Content-Disposition: inline; filename=066
+Content-Disposition: inline; filename=079
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,34 +24,47 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: stable@vger.kernel.org
 Cc: xfs@oss.sgi.com
 
-From: Jie Liu <jeff.liu@oracle.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-Upstream commit: da5bf95e3cdca348327c82568c2860229c0daaa2
- if it was not enabled.
+Upstream commit: 3ed9116e8a3e9c0870b2076340b3da9b8f900f3b
 
-Check if the project quota is running or not before performing
-xfs_qm_statvfs(), just return if not.  Otherwise the ASSERT
-XFS_IS_QUOTA_RUNNING in xfs_qm_dqget will be popped.
+Speculative delayed allocation beyond EOF near the maximum supported
+file offset can result in creating delalloc extents beyond
+mp->m_maxioffset (8EB). These can never be trimmed during
+xfs_free_eof_blocks() because they are beyond mp->m_maxioffset, and
+that results in assert failures in xfs_fs_destroy_inode() due to
+delalloc blocks still being present. xfstests 071 exposes this
+problem.
 
-Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+Limit speculative delalloc to mp->m_maxioffset to avoid this
+problem.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Ben Myers <bpm@sgi.com>
 ---
- fs/xfs/linux-2.6/xfs_super.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/xfs_iomap.c |    9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-Index: b/fs/xfs/linux-2.6/xfs_super.c
+Index: b/fs/xfs/xfs_iomap.c
 ===================================================================
---- a/fs/xfs/linux-2.6/xfs_super.c
-+++ b/fs/xfs/linux-2.6/xfs_super.c
-@@ -1091,7 +1091,7 @@ xfs_fs_statfs(
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -417,6 +417,15 @@ retry:
+ 			return error;
+ 	}
  
- 	spin_unlock(&mp->m_sb_lock);
- 
--	if ((ip->i_d.di_flags & XFS_DIFLAG_PROJINHERIT) ||
-+	if ((ip->i_d.di_flags & XFS_DIFLAG_PROJINHERIT) &&
- 	    ((mp->m_qflags & (XFS_PQUOTA_ACCT|XFS_OQUOTA_ENFD))) ==
- 			      (XFS_PQUOTA_ACCT|XFS_OQUOTA_ENFD))
- 		xfs_qm_statvfs(ip, statp);
++	/*
++	 * Make sure preallocation does not create extents beyond the range we
++	 * actually support in this filesystem.
++	 */
++	if (last_fsb > XFS_B_TO_FSB(mp, mp->m_maxioffset))
++		last_fsb = XFS_B_TO_FSB(mp, mp->m_maxioffset);
++
++	ASSERT(last_fsb > offset_fsb);
++
+ 	nimaps = XFS_WRITE_IMAPS;
+ 	firstblock = NULLFSBLOCK;
+ 	error = xfs_bmapi(NULL, ip, offset_fsb,
 
 
 _______________________________________________
