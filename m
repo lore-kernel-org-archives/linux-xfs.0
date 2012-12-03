@@ -1,14 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qB3NegN8067698 for <xfs@oss.sgi.com>; Mon, 3 Dec 2012 17:40:43 -0600
-Message-Id: <20121203144309.366183710@sgi.com>
-Date: Mon, 03 Dec 2012 17:42:14 -0600
+	qB3NehWf067723 for <xfs@oss.sgi.com>; Mon, 3 Dec 2012 17:40:43 -0600
+Message-Id: <20121203144311.013661714@sgi.com>
+Date: Mon, 03 Dec 2012 17:42:32 -0600
 From: Mark Tinguely <tinguely@sgi.com>
-Subject: [3.0-stable PATCH 06/36] xfs: fallback to vmalloc for large buffers
-	in xfs_attrmulti_attr_get
+Subject: [3.0-stable PATCH 24/36] xfs: use iolock on XFS_IOC_ALLOCSP calls
 References: <20121203144208.143464631@sgi.com>
-Content-Disposition: inline; filename=057
+Content-Disposition: inline; filename=085
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,55 +26,74 @@ Cc: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Upstream commit: ad650f5b27bc9858360b42aaa0d9204d16115316
+Upstream commit: bc4010ecb8f4d4316e1a63a879a2715e49d113ad
 
-xfsdump uses for a large buffer for extended attributes, which has a
-kmalloc'd shadow buffer in the kernel. This can fail after the
-system has been running for some time as it is a high order
-allocation. Add a fallback to vmalloc so that it doesn't require
-contiguous memory and so won't randomly fail while xfsdump is
-running.
+fsstress has a particular effective way of stopping debug XFS
+kernels. We keep seeing assert failures due finding delayed
+allocation extents where there should be none. This shows up when
+extracting extent maps and we are holding all the locks we should be
+to prevent races, so this really makes no sense to see these errors.
+
+After checking that fsstress does not use mmap, it occurred to me
+that fsstress uses something that no sane application uses - the
+XFS_IOC_ALLOCSP ioctl interfaces for preallocation. These interfaces
+do allocation of blocks beyond EOF without using preallocation, and
+then call setattr to extend and zero the allocated blocks.
+
+THe problem here is this is a buffered write, and hence the
+allocation is a delayed allocation. Unlike the buffered IO path, the
+allocation and zeroing are not serialised using the IOLOCK. Hence
+the ALLOCSP operation can race with operations holding the iolock to
+prevent buffered IO operations from occurring.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 Signed-off-by: Ben Myers <bpm@sgi.com>
 ---
- fs/xfs/linux-2.6/xfs_ioctl.c |   14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
+ fs/xfs/xfs_vnodeops.c |   21 ++++++++++++++++++---
+ 1 file changed, 18 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_ioctl.c b/fs/xfs/linux-2.6/xfs_ioctl.c
-index acca2c5..ada7da9 100644
---- a/fs/xfs/linux-2.6/xfs_ioctl.c
-+++ b/fs/xfs/linux-2.6/xfs_ioctl.c
-@@ -450,9 +450,12 @@ xfs_attrmulti_attr_get(
+Index: b/fs/xfs/xfs_vnodeops.c
+===================================================================
+--- a/fs/xfs/xfs_vnodeops.c
++++ b/fs/xfs/xfs_vnodeops.c
+@@ -2781,17 +2781,32 @@ xfs_change_file_space(
+ 	case XFS_IOC_ALLOCSP64:
+ 	case XFS_IOC_FREESP:
+ 	case XFS_IOC_FREESP64:
++		/*
++		 * These operations actually do IO when extending the file, but
++		 * the allocation is done seperately to the zeroing that is
++		 * done. This set of operations need to be serialised against
++		 * other IO operations, such as truncate and buffered IO. We
++		 * need to take the IOLOCK here to serialise the allocation and
++		 * zeroing IO to prevent other IOLOCK holders (e.g. getbmap,
++		 * truncate, direct IO) from racing against the transient
++		 * allocated but not written state we can have here.
++		 */
++		xfs_ilock(ip, XFS_IOLOCK_EXCL);
+ 		if (startoffset > fsize) {
+ 			error = xfs_alloc_file_space(ip, fsize,
+-					startoffset - fsize, 0, attr_flags);
+-			if (error)
++					startoffset - fsize, 0,
++					attr_flags | XFS_ATTR_NOLOCK);
++			if (error) {
++				xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+ 				break;
++			}
+ 		}
  
- 	if (*len > XATTR_SIZE_MAX)
- 		return EINVAL;
--	kbuf = kmalloc(*len, GFP_KERNEL);
--	if (!kbuf)
--		return ENOMEM;
-+	kbuf = kmem_zalloc(*len, KM_SLEEP | KM_MAYFAIL);
-+	if (!kbuf) {
-+		kbuf = kmem_zalloc_large(*len);
-+		if (!kbuf)
-+			return ENOMEM;
-+	}
+ 		iattr.ia_valid = ATTR_SIZE;
+ 		iattr.ia_size = startoffset;
  
- 	error = xfs_attr_get(XFS_I(inode), name, kbuf, (int *)len, flags);
- 	if (error)
-@@ -462,7 +465,10 @@ xfs_attrmulti_attr_get(
- 		error = EFAULT;
+-		error = xfs_setattr(ip, &iattr, attr_flags);
++		error = xfs_setattr(ip, &iattr, attr_flags | XFS_ATTR_NOLOCK);
++		xfs_iunlock(ip, XFS_IOLOCK_EXCL);
  
-  out_kfree:
--	kfree(kbuf);
-+	if (is_vmalloc_addr(kbuf))
-+		kmem_free_large(kbuf);
-+	else
-+		kmem_free(kbuf);
- 	return error;
- }
- 
+ 		if (error)
+ 			return error;
 
 
 _______________________________________________
