@@ -1,13 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qB3Neeqf067620 for <xfs@oss.sgi.com>; Mon, 3 Dec 2012 17:40:41 -0600
-Message-Id: <20121203144309.828704878@sgi.com>
-Date: Mon, 03 Dec 2012 17:42:19 -0600
+	qB3NegOr067673 for <xfs@oss.sgi.com>; Mon, 3 Dec 2012 17:40:42 -0600
+Message-Id: <20121203144310.380163216@sgi.com>
+Date: Mon, 03 Dec 2012 17:42:25 -0600
 From: Mark Tinguely <tinguely@sgi.com>
-Subject: [3.0-stable PATCH 11/36] xfs: fix fstrim offset calculations
+Subject: [3.0-stable PATCH 17/36] xfs: punch new delalloc blocks out of failed
+	writes inside EOF.
 References: <20121203144208.143464631@sgi.com>
-Content-Disposition: inline; filename=064
+Content-Disposition: inline; filename=076
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,213 +27,359 @@ Cc: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Upstream commit: a66d636385d621e98a915233250356c394a437de
+Upstream commit: d3bc815afb549eecb3679a4b2f0df216e34df998
 
-xfs_ioc_fstrim() doesn't treat the incoming offset and length
-correctly. It treats them as a filesystem block address, rather than
-a disk address. This is wrong because the range passed in is a
-linear representation, while the filesystem block address notation
-is a sparse representation. Hence we cannot convert the range direct
-to filesystem block units and then use that for calculating the
-range to trim.
+When a partial write inside EOF fails, it can leave delayed
+allocation blocks lying around because they don't get punched back
+out. This leads to assert failures like:
 
-While this sounds dangerous, the problem is limited to calculating
-what AGs need to be trimmed. The code that calcuates the actual
-ranges to trim gets the right result (i.e. only ever discards free
-space), even though it uses the wrong ranges to limit what is
-trimmed. Hence this is not a bug that endangers user data.
+XFS: Assertion failed: XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0, file: fs/xfs/linux-2.6/xfs_super.c, line: 847
 
-Fix this by treating the range as a disk address range and use the
-appropriate functions to convert the range into the desired formats
-for calculations.
+when evicting inodes from the cache. This can be trivially triggered
+by xfstests 083, which takes between 5 and 15 executions on a 512
+byte block size filesystem to trip over this. Debugging shows a
+failed write due to ENOSPC calling xfs_vm_write_failed such as:
 
-Further, fix the first free extent lookup (the longest) to actually
-find the largest free extent. Currently this lookup uses a <=
-lookup, which results in finding the extent to the left of the
-largest because we can never get an exact match on the largest
-extent. This is due to the fact that while we know it's size, we
-don't know it's location and so the exact match fails and we move
-one record to the left to get the next largest extent. Instead, use
-a >= search so that the lookup returns the largest extent regardless
-of the fact we don't get an exact match on it.
+[ 5012.329024] ino 0xa0026: vwf to 0x17000, sze 0x1c85ae
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+and no action is taken on it. This leaves behind a delayed
+allocation extent that has no page covering it and no data in it:
+
+[ 5015.867162] ino 0xa0026: blks: 0x83 delay blocks 0x1, size 0x2538c0
+[ 5015.868293] ext 0: off 0x4a, fsb 0x50306, len 0x1
+[ 5015.869095] ext 1: off 0x4b, fsb 0x7899, len 0x6b
+[ 5015.869900] ext 2: off 0xb6, fsb 0xffffffffe0008, len 0x1
+                                    ^^^^^^^^^^^^^^^
+[ 5015.871027] ext 3: off 0x36e, fsb 0x7a27, len 0xd
+[ 5015.872206] ext 4: off 0x4cf, fsb 0x7a1d, len 0xa
+
+So the delayed allocation extent is one block long at offset
+0x16c00. Tracing shows that a bigger write:
+
+xfs_file_buffered_write: size 0x1c85ae offset 0x959d count 0x1ca3f ioflags
+
+allocates the block, and then fails with ENOSPC trying to allocate
+the last block on the page, leading to a failed write with stale
+delalloc blocks on it.
+
+Because we've had an ENOSPC when trying to allocate 0x16e00, it
+means that we are never goinge to call ->write_end on the page and
+so the allocated new buffer will not get marked dirty or have the
+buffer_new state cleared. In other works, what the above write is
+supposed to end up with is this mapping for the page:
+
+    +------+------+------+------+------+------+------+------+
+      UMA    UMA    UMA    UMA    UMA    UMA    UND    FAIL
+
+where:  U = uptodate
+        M = mapped
+        N = new
+        A = allocated
+        D = delalloc
+        FAIL = block we ENOSPC'd on.
+
+and the key point being the buffer_new() state for the newly
+allocated delayed allocation block. Except it doesn't - we're not
+marking buffers new correctly.
+
+That buffer_new() problem goes back to the xfs_iomap removal days,
+where xfs_iomap() used to return a "new" status for any map with
+newly allocated blocks, so that __xfs_get_blocks() could call
+set_buffer_new() on it. We still have the "new" variable and the
+check for it in the set_buffer_new() logic - except we never set it
+now!
+
+Hence that newly allocated delalloc block doesn't have the new flag
+set on it, so when the write fails we cannot tell which blocks we
+are supposed to punch out. WHy do we need the buffer_new flag? Well,
+that's because we can have this case:
+
+    +------+------+------+------+------+------+------+------+
+      UMD    UMD    UMD    UMD    UMD    UMD    UND    FAIL
+
+where all the UMD buffers contain valid data from a previously
+successful write() system call. We only want to punch the UND buffer
+because that's the only one that we added in this write and it was
+only this write that failed.
+
+That implies that even the old buffer_new() logic was wrong -
+because it would result in all those UMD buffers on the page having
+set_buffer_new() called on them even though they aren't new. Hence
+we shoul donly be calling set_buffer_new() for delalloc buffers that
+were allocated (i.e. were a hole before xfs_iomap_write_delay() was
+called).
+
+So, fix this set_buffer_new logic according to how we need it to
+work for handling failed writes correctly. Also, restore the new
+buffer logic handling for blocks allocated via
+xfs_iomap_write_direct(), because it should still set the buffer_new
+flag appropriately for newly allocated blocks, too.
+
+SO, now we have the buffer_new() being set appropriately in
+__xfs_get_blocks(), we can detect the exact delalloc ranges that
+we allocated in a failed write, and hence can now do a walk of the
+buffers on a page to find them.
+
+Except, it's not that easy. When block_write_begin() fails, it
+unlocks and releases the page that we just had an error on, so we
+can't use that page to handle errors anymore. We have to get access
+to the page while it is still locked to walk the buffers. Hence we
+have to open code block_write_begin() in xfs_vm_write_begin() to be
+able to insert xfs_vm_write_failed() is the right place.
+
+With that, we can pass the page and write range to
+xfs_vm_write_failed() and walk the buffers on the page, looking for
+delalloc buffers that are either new or beyond EOF and punch them
+out. Handling buffers beyond EOF ensures we still handle the
+existing case that xfs_vm_write_failed() handles.
+
+Of special note is the truncate_pagecache() handling - that only
+should be done for pages outside EOF - pages within EOF can still
+contain valid, dirty data so we must not punch them out of the
+cache.
+
+That just leaves the xfs_vm_write_end() failure handling.
+The only failure case here is that we didn't copy the entire range,
+and generic_write_end() handles that by zeroing the region of the
+page that wasn't copied, we don't have to punch out blocks within
+the file because they are guaranteed to contain zeros. Hence we only
+have to handle the existing "beyond EOF" case and don't need access
+to the buffers on the page. Hence it remains largely unchanged.
+
+Note that xfs_getbmap() can still trip over delalloc blocks beyond
+EOF that are left there by speculative delayed allocation. Hence
+this bug fix does not solve all known issues with bmap vs delalloc,
+but it does fix all the the known accidental occurances of the
+problem.
+
+Signed-off-by: Dave Chinner <david@fromorbit.com>
 Signed-off-by: Ben Myers <bpm@sgi.com>
 ---
- fs/xfs/linux-2.6/xfs_discard.c |   61 +++++++++++++++++++++++++----------------
- fs/xfs/xfs_alloc.c             |    2 -
- fs/xfs/xfs_alloc.h             |    7 ++++
- 3 files changed, 46 insertions(+), 24 deletions(-)
+ fs/xfs/linux-2.6/xfs_aops.c |  173 ++++++++++++++++++++++++++++++++------------
+ 1 file changed, 126 insertions(+), 47 deletions(-)
 
-Index: b/fs/xfs/linux-2.6/xfs_discard.c
+Index: b/fs/xfs/linux-2.6/xfs_aops.c
 ===================================================================
---- a/fs/xfs/linux-2.6/xfs_discard.c
-+++ b/fs/xfs/linux-2.6/xfs_discard.c
-@@ -37,9 +37,9 @@ STATIC int
- xfs_trim_extents(
- 	struct xfs_mount	*mp,
- 	xfs_agnumber_t		agno,
--	xfs_fsblock_t		start,
--	xfs_fsblock_t		end,
--	xfs_fsblock_t		minlen,
-+	xfs_daddr_t		start,
-+	xfs_daddr_t		end,
-+	xfs_daddr_t		minlen,
- 	__uint64_t		*blocks_trimmed)
- {
- 	struct block_device	*bdev = mp->m_ddev_targp->bt_bdev;
-@@ -67,7 +67,7 @@ xfs_trim_extents(
- 	/*
- 	 * Look up the longest btree in the AGF and start with it.
- 	 */
--	error = xfs_alloc_lookup_le(cur, 0,
-+	error = xfs_alloc_lookup_ge(cur, 0,
- 			    be32_to_cpu(XFS_BUF_TO_AGF(agbp)->agf_longest), &i);
- 	if (error)
- 		goto out_del_cursor;
-@@ -77,8 +77,10 @@ xfs_trim_extents(
- 	 * enough to be worth discarding.
- 	 */
- 	while (i) {
--		xfs_agblock_t fbno;
--		xfs_extlen_t flen;
-+		xfs_agblock_t	fbno;
-+		xfs_extlen_t	flen;
-+		xfs_daddr_t	dbno;
-+		xfs_extlen_t	dlen;
- 
- 		error = xfs_alloc_get_rec(cur, &fbno, &flen, &i);
- 		if (error)
-@@ -87,9 +89,17 @@ xfs_trim_extents(
- 		ASSERT(flen <= be32_to_cpu(XFS_BUF_TO_AGF(agbp)->agf_longest));
- 
- 		/*
-+		 * use daddr format for all range/len calculations as that is
-+		 * the format the range/len variables are supplied in by
-+		 * userspace.
-+		 */
-+		dbno = XFS_AGB_TO_DADDR(mp, agno, fbno);
-+		dlen = XFS_FSB_TO_BB(mp, flen);
-+
-+		/*
- 		 * Too small?  Give up.
- 		 */
--		if (flen < minlen) {
-+		if (dlen < minlen) {
- 			trace_xfs_discard_toosmall(mp, agno, fbno, flen);
- 			goto out_del_cursor;
- 		}
-@@ -99,8 +109,7 @@ xfs_trim_extents(
- 		 * supposed to discard skip it.  Do not bother to trim
- 		 * down partially overlapping ranges for now.
- 		 */
--		if (XFS_AGB_TO_FSB(mp, agno, fbno) + flen < start ||
--		    XFS_AGB_TO_FSB(mp, agno, fbno) > end) {
-+		if (dbno + dlen < start || dbno > end) {
- 			trace_xfs_discard_exclude(mp, agno, fbno, flen);
- 			goto next_extent;
- 		}
-@@ -115,10 +124,7 @@ xfs_trim_extents(
- 		}
- 
- 		trace_xfs_discard_extent(mp, agno, fbno, flen);
--		error = -blkdev_issue_discard(bdev,
--				XFS_AGB_TO_DADDR(mp, agno, fbno),
--				XFS_FSB_TO_BB(mp, flen),
--				GFP_NOFS, 0);
-+		error = -blkdev_issue_discard(bdev, dbno, dlen, GFP_NOFS, 0);
- 		if (error)
- 			goto out_del_cursor;
- 		*blocks_trimmed += flen;
-@@ -137,6 +143,15 @@ out_put_perag:
- 	return error;
+--- a/fs/xfs/linux-2.6/xfs_aops.c
++++ b/fs/xfs/linux-2.6/xfs_aops.c
+@@ -1199,11 +1199,18 @@ __xfs_get_blocks(
+ 						       &imap, nimaps);
+ 			if (error)
+ 				return -error;
++			new = 1;
+ 		} else {
+ 			/*
+ 			 * Delalloc reservations do not require a transaction,
+-			 * we can go on without dropping the lock here.
++			 * we can go on without dropping the lock here. If we
++			 * are allocating a new delalloc block, make sure that
++			 * we set the new flag so that we mark the buffer new so
++			 * that we know that it is newly allocated if the write
++			 * fails.
+ 			 */
++			if (nimaps && imap.br_startblock == HOLESTARTBLOCK)
++				new = 1;
+ 			error = xfs_iomap_write_delay(ip, offset, size, &imap);
+ 			if (error)
+ 				goto out_unlock;
+@@ -1394,53 +1401,90 @@ xfs_vm_direct_IO(
+ 	return ret;
  }
  
 +/*
-+ * trim a range of the filesystem.
++ * Punch out the delalloc blocks we have already allocated.
 + *
-+ * Note: the parameters passed from userspace are byte ranges into the
-+ * filesystem which does not match to the format we use for filesystem block
-+ * addressing. FSB addressing is sparse (AGNO|AGBNO), while the incoming format
-+ * is a linear address range. Hence we need to use DADDR based conversions and
-+ * comparisons for determining the correct offset and regions to trim.
++ * Don't bother with xfs_setattr given that nothing can have made it to disk yet
++ * as the page is still locked at this point.
 + */
- int
- xfs_ioc_trim(
- 	struct xfs_mount		*mp,
-@@ -145,7 +160,7 @@ xfs_ioc_trim(
- 	struct request_queue	*q = mp->m_ddev_targp->bt_bdev->bd_disk->queue;
- 	unsigned int		granularity = q->limits.discard_granularity;
- 	struct fstrim_range	range;
--	xfs_fsblock_t		start, end, minlen;
-+	xfs_daddr_t		start, end, minlen;
- 	xfs_agnumber_t		start_agno, end_agno, agno;
- 	__uint64_t		blocks_trimmed = 0;
- 	int			error, last_error = 0;
-@@ -159,22 +174,22 @@ xfs_ioc_trim(
- 
- 	/*
- 	 * Truncating down the len isn't actually quite correct, but using
--	 * XFS_B_TO_FSB would mean we trivially get overflows for values
-+	 * BBTOB would mean we trivially get overflows for values
- 	 * of ULLONG_MAX or slightly lower.  And ULLONG_MAX is the default
- 	 * used by the fstrim application.  In the end it really doesn't
- 	 * matter as trimming blocks is an advisory interface.
- 	 */
--	start = XFS_B_TO_FSBT(mp, range.start);
--	end = start + XFS_B_TO_FSBT(mp, range.len) - 1;
--	minlen = XFS_B_TO_FSB(mp, max_t(u64, granularity, range.minlen));
-+	start = BTOBB(range.start);
-+	end = start + BTOBBT(range.len) - 1;
-+	minlen = BTOBB(max_t(u64, granularity, range.minlen));
- 
--	if (start >= mp->m_sb.sb_dblocks)
-+	if (XFS_BB_TO_FSB(mp, start) >= mp->m_sb.sb_dblocks)
- 		return -XFS_ERROR(EINVAL);
--	if (end > mp->m_sb.sb_dblocks - 1)
--		end = mp->m_sb.sb_dblocks - 1;
-+	if (end > XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks) - 1)
-+		end = XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks)- 1;
- 
--	start_agno = XFS_FSB_TO_AGNO(mp, start);
--	end_agno = XFS_FSB_TO_AGNO(mp, end);
-+	start_agno = xfs_daddr_to_agno(mp, start);
-+	end_agno = xfs_daddr_to_agno(mp, end);
- 
- 	for (agno = start_agno; agno <= end_agno; agno++) {
- 		error = -xfs_trim_extents(mp, agno, start, end, minlen,
-Index: b/fs/xfs/xfs_alloc.c
-===================================================================
---- a/fs/xfs/xfs_alloc.c
-+++ b/fs/xfs/xfs_alloc.c
-@@ -68,7 +68,7 @@ xfs_alloc_lookup_eq(
-  * Lookup the first record greater than or equal to [bno, len]
-  * in the btree given by cur.
-  */
--STATIC int				/* error */
-+int				/* error */
- xfs_alloc_lookup_ge(
- 	struct xfs_btree_cur	*cur,	/* btree cursor */
- 	xfs_agblock_t		bno,	/* starting block of extent */
-Index: b/fs/xfs/xfs_alloc.h
-===================================================================
---- a/fs/xfs/xfs_alloc.h
-+++ b/fs/xfs/xfs_alloc.h
-@@ -243,6 +243,13 @@ xfs_alloc_lookup_le(
- 	xfs_extlen_t		len,	/* length of extent */
- 	int			*stat);	/* success/failure */
- 
-+int				/* error */
-+xfs_alloc_lookup_ge(
-+	struct xfs_btree_cur	*cur,	/* btree cursor */
-+	xfs_agblock_t		bno,	/* starting block of extent */
-+	xfs_extlen_t		len,	/* length of extent */
-+	int			*stat);	/* success/failure */
++STATIC void
++xfs_vm_kill_delalloc_range(
++	struct inode		*inode,
++	loff_t			start,
++	loff_t			end)
++{
++	struct xfs_inode	*ip = XFS_I(inode);
++	xfs_fileoff_t		start_fsb;
++	xfs_fileoff_t		end_fsb;
++	int			error;
 +
- int					/* error */
- xfs_alloc_get_rec(
- 	struct xfs_btree_cur	*cur,	/* btree cursor */
++	start_fsb = XFS_B_TO_FSB(ip->i_mount, start);
++	end_fsb = XFS_B_TO_FSB(ip->i_mount, end);
++	if (end_fsb <= start_fsb)
++		return;
++
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
++	error = xfs_bmap_punch_delalloc_range(ip, start_fsb,
++						end_fsb - start_fsb);
++	if (error) {
++		/* something screwed, just bail */
++		if (!XFS_FORCED_SHUTDOWN(ip->i_mount)) {
++			xfs_alert(ip->i_mount,
++		"xfs_vm_write_failed: unable to clean up ino %lld",
++					ip->i_ino);
++		}
++	}
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++}
++
+ STATIC void
+ xfs_vm_write_failed(
+-	struct address_space	*mapping,
+-	loff_t			to)
++	struct inode		*inode,
++	struct page		*page,
++	loff_t			pos,
++	unsigned		len)
+ {
+-	struct inode		*inode = mapping->host;
++	loff_t			block_offset = pos & PAGE_MASK;
++	loff_t			block_start;
++	loff_t			block_end;
++	loff_t			from = pos & (PAGE_CACHE_SIZE - 1);
++	loff_t			to = from + len;
++	struct buffer_head	*bh, *head;
++
++	ASSERT(block_offset + from == pos);
++
++	head = page_buffers(page);
++	block_start = 0;
++	for (bh = head; bh != head || !block_start;
++	     bh = bh->b_this_page, block_start = block_end,
++				   block_offset += bh->b_size) {
++		block_end = block_start + bh->b_size;
++		/* skip buffers before the write */
++		if (block_end <= from)
++			continue;
++
++		/* if the buffer is after the write, we're done */
++		if (block_start >= to)
++			break;
+ 
+-	if (to > inode->i_size) {
+-		/*
+-		 * punch out the delalloc blocks we have already allocated. We
+-		 * don't call xfs_setattr() to do this as we may be in the
+-		 * middle of a multi-iovec write and so the vfs inode->i_size
+-		 * will not match the xfs ip->i_size and so it will zero too
+-		 * much. Hence we jus truncate the page cache to zero what is
+-		 * necessary and punch the delalloc blocks directly.
+-		 */
+-		struct xfs_inode	*ip = XFS_I(inode);
+-		xfs_fileoff_t		start_fsb;
+-		xfs_fileoff_t		end_fsb;
+-		int			error;
++		if (!buffer_delay(bh))
++			continue;
+ 
+-		truncate_pagecache(inode, to, inode->i_size);
++		if (!buffer_new(bh) && block_offset < i_size_read(inode))
++			continue;
+ 
+-		/*
+-		 * Check if there are any blocks that are outside of i_size
+-		 * that need to be trimmed back.
+-		 */
+-		start_fsb = XFS_B_TO_FSB(ip->i_mount, inode->i_size);
+-		end_fsb = XFS_B_TO_FSB(ip->i_mount, to);
+-		if (end_fsb <= start_fsb)
+-			return;
+-
+-		xfs_ilock(ip, XFS_ILOCK_EXCL);
+-		error = xfs_bmap_punch_delalloc_range(ip, start_fsb,
+-							end_fsb - start_fsb);
+-		if (error) {
+-			/* something screwed, just bail */
+-			if (!XFS_FORCED_SHUTDOWN(ip->i_mount)) {
+-				xfs_alert(ip->i_mount,
+-			"xfs_vm_write_failed: unable to clean up ino %lld",
+-						ip->i_ino);
+-			}
+-		}
+-		xfs_iunlock(ip, XFS_ILOCK_EXCL);
++		xfs_vm_kill_delalloc_range(inode, block_offset,
++					   block_offset + bh->b_size);
+ 	}
++
+ }
+ 
++/*
++ * This used to call block_write_begin(), but it unlocks and releases the page
++ * on error, and we need that page to be able to punch stale delalloc blocks out
++ * on failure. hence we copy-n-waste it here and call xfs_vm_write_failed() at
++ * the appropriate point.
++*/
+ STATIC int
+ xfs_vm_write_begin(
+ 	struct file		*file,
+@@ -1451,15 +1495,40 @@ xfs_vm_write_begin(
+ 	struct page		**pagep,
+ 	void			**fsdata)
+ {
+-	int			ret;
++	pgoff_t			index = pos >> PAGE_CACHE_SHIFT;
++	struct page		*page;
++	int			status;
+ 
+-	ret = block_write_begin(mapping, pos, len, flags | AOP_FLAG_NOFS,
+-				pagep, xfs_get_blocks);
+-	if (unlikely(ret))
+-		xfs_vm_write_failed(mapping, pos + len);
+-	return ret;
++	ASSERT(len <= PAGE_CACHE_SIZE);
++
++	page = grab_cache_page_write_begin(mapping, index,
++					   flags | AOP_FLAG_NOFS);
++	if (!page)
++		return -ENOMEM;
++
++	status = __block_write_begin(page, pos, len, xfs_get_blocks);
++	if (unlikely(status)) {
++		struct inode	*inode = mapping->host;
++
++		xfs_vm_write_failed(inode, page, pos, len);
++		unlock_page(page);
++
++		if (pos + len > i_size_read(inode))
++			truncate_pagecache(inode, pos + len, i_size_read(inode));
++
++		page_cache_release(page);
++		page = NULL;
++	}
++
++	*pagep = page;
++	return status;
+ }
+ 
++/*
++ * On failure, we only need to kill delalloc blocks beyond EOF because they
++ * will never be written. For blocks within EOF, generic_write_end() zeros them
++ * so they are safe to leave alone and be written with all the other valid data.
++ */
+ STATIC int
+ xfs_vm_write_end(
+ 	struct file		*file,
+@@ -1472,9 +1541,19 @@ xfs_vm_write_end(
+ {
+ 	int			ret;
+ 
++	ASSERT(len <= PAGE_CACHE_SIZE);
++
+ 	ret = generic_write_end(file, mapping, pos, len, copied, page, fsdata);
+-	if (unlikely(ret < len))
+-		xfs_vm_write_failed(mapping, pos + len);
++	if (unlikely(ret < len)) {
++		struct inode	*inode = mapping->host;
++		size_t		isize = i_size_read(inode);
++		loff_t		to = pos + len;
++
++		if (to > isize) {
++			truncate_pagecache(inode, to, isize);
++			xfs_vm_kill_delalloc_range(inode, isize, to);
++		}
++	}
+ 	return ret;
+ }
+ 
 
 
 _______________________________________________
