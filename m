@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qB4N61QG203873 for <xfs@oss.sgi.com>; Tue, 4 Dec 2012 17:06:01 -0600
+	qB4N61OI203872 for <xfs@oss.sgi.com>; Tue, 4 Dec 2012 17:06:01 -0600
 Received: from eagdhcp-232-125.americas.sgi.com
 	(eagdhcp-232-125.americas.sgi.com [128.162.232.125])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 84D7F8F804B
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 43AA58F8049
 	for <xfs@oss.sgi.com>; Tue,  4 Dec 2012 15:08:22 -0800 (PST)
 Received: from eagdhcp-232-125.americas.sgi.com (localhost [127.0.0.1])
 	by eagdhcp-232-125.americas.sgi.com (8.14.5/8.14.5) with ESMTP id
-	qB4N8LPD008575
+	qB4N8LFa008567
 	for <xfs@oss.sgi.com>; Tue, 4 Dec 2012 17:08:21 -0600 (CST)
 	(envelope-from tinguely@sgi.com)
-Message-Id: <20121204224938.820985192@sgi.com>
-Date: Tue, 04 Dec 2012 17:18:04 -0600
+Message-Id: <20121204224938.599314438@sgi.com>
+Date: Tue, 04 Dec 2012 17:18:02 -0600
 From: Mark Tinguely <tinguely@sgi.com>
-Subject: [PATCH v3 3/5] xfs: fix segment in xfs_buf_item_format_segment
+Subject: [PATCH v3 1/5] xfs: use b_maps[] for discontiguous buffers
 References: <20121204231801.982422341@sgi.com>
-Content-Disposition: inline; filename=v3-2b-handle-non-busy-segments.patch
+Content-Disposition: inline;
+	filename=v3-1-3-xfs-use-b_maps-for-discontiguous-buffers.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,67 +33,99 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Not every segment in a multi-segment buffer is dirty in a
-transaction and they will not be outputted. The assert in
-xfs_buf_item_format_segment() that checks for the at least
-one chunk of data in the segment to be used is not necessary
-true for multi-segmented buffers.
+Commits starting at 77c1a08 introduced a multiple segment support
+to xfs_buf. xfs_trans_buf_item_match() could not find a multi-segment
+buffer in the transaction because it was looking at the single segment
+block number rather than the multi-segment b_maps[0].bm.bn. This
+results on a recursive buffer lock that can never be satisfied.
+
+This patch:
+ 1) Changed the remaining b_map accesses to be b_maps[0] accesses.
+ 2) Renames the single segment b_map structure to __b_map to avoid
+    future confusion.
 
 Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_buf_item.c |   20 +++++++++++++++-----
- 1 file changed, 15 insertions(+), 5 deletions(-)
+fs/xfs/xfs_buf.c |   12 ++++++------
+ fs/xfs/xfs_buf.h |    6 +++---
+ 2 files changed, 9 insertions(+), 9 deletions(-)
 
-Index: b/fs/xfs/xfs_buf_item.c
+Index: b/fs/xfs/xfs_buf.c
 ===================================================================
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -287,6 +287,17 @@ xfs_buf_item_format_segment(
- 	 */
- 	base_size = offsetof(struct xfs_buf_log_format, blf_data_map) +
- 			(blfp->blf_map_size * sizeof(blfp->blf_data_map[0]));
-+
-+	nvecs = 0;
-+	first_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size, 0);
-+	if (!(bip->bli_flags & XFS_BLI_STALE) && first_bit == -1) {
-+		/*
-+		 * If the map is not be dirty in the transaction, mark
-+		 * the size as zero and do not advance the vector pointer.
-+		 */
-+		goto out;
-+	}
-+
- 	vecp->i_addr = blfp;
- 	vecp->i_len = base_size;
- 	vecp->i_type = XLOG_REG_TYPE_BFORMAT;
-@@ -301,15 +312,13 @@ xfs_buf_item_format_segment(
- 		 */
- 		trace_xfs_buf_item_format_stale(bip);
- 		ASSERT(blfp->blf_flags & XFS_BLF_CANCEL);
--		blfp->blf_size = nvecs;
--		return vecp;
-+		goto out;
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -175,7 +175,7 @@ xfs_buf_get_maps(
+ 	bp->b_map_count = map_count;
+ 
+ 	if (map_count == 1) {
+-		bp->b_maps = &bp->b_map;
++		bp->b_maps = &bp->__b_map;
+ 		return 0;
  	}
  
- 	/*
- 	 * Fill in an iovec for each set of contiguous chunks.
- 	 */
--	first_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size, 0);
--	ASSERT(first_bit != -1);
-+
- 	last_bit = first_bit;
- 	nbits = 1;
- 	for (;;) {
-@@ -371,7 +380,8 @@ xfs_buf_item_format_segment(
- 			nbits++;
- 		}
+@@ -193,7 +193,7 @@ static void
+ xfs_buf_free_maps(
+ 	struct xfs_buf	*bp)
+ {
+-	if (bp->b_maps != &bp->b_map) {
++	if (bp->b_maps != &bp->__b_map) {
+ 		kmem_free(bp->b_maps);
+ 		bp->b_maps = NULL;
  	}
--	bip->__bli_format.blf_size = nvecs;
-+out:
-+	blfp->blf_size = nvecs;
- 	return vecp;
- }
+@@ -377,8 +377,8 @@ xfs_buf_allocate_memory(
+ 	}
  
+ use_alloc_page:
+-	start = BBTOB(bp->b_map.bm_bn) >> PAGE_SHIFT;
+-	end = (BBTOB(bp->b_map.bm_bn + bp->b_length) + PAGE_SIZE - 1)
++	start = BBTOB(bp->b_maps[0].bm_bn) >> PAGE_SHIFT;
++	end = (BBTOB(bp->b_maps[0].bm_bn + bp->b_length) + PAGE_SIZE - 1)
+ 								>> PAGE_SHIFT;
+ 	page_count = end - start;
+ 	error = _xfs_buf_get_pages(bp, page_count, flags);
+@@ -640,7 +640,7 @@ _xfs_buf_read(
+ 	xfs_buf_flags_t		flags)
+ {
+ 	ASSERT(!(flags & XBF_WRITE));
+-	ASSERT(bp->b_map.bm_bn != XFS_BUF_DADDR_NULL);
++	ASSERT(bp->b_maps[0].bm_bn != XFS_BUF_DADDR_NULL);
+ 
+ 	bp->b_flags &= ~(XBF_WRITE | XBF_ASYNC | XBF_READ_AHEAD);
+ 	bp->b_flags |= flags & (XBF_READ | XBF_ASYNC | XBF_READ_AHEAD);
+@@ -1709,7 +1709,7 @@ xfs_buf_cmp(
+ 	struct xfs_buf	*bp = container_of(b, struct xfs_buf, b_list);
+ 	xfs_daddr_t		diff;
+ 
+-	diff = ap->b_map.bm_bn - bp->b_map.bm_bn;
++	diff = ap->b_maps[0].bm_bn - bp->b_maps[0].bm_bn;
+ 	if (diff < 0)
+ 		return -1;
+ 	if (diff > 0)
+Index: b/fs/xfs/xfs_buf.h
+===================================================================
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -151,7 +151,7 @@ typedef struct xfs_buf {
+ 	struct page		**b_pages;	/* array of page pointers */
+ 	struct page		*b_page_array[XB_PAGES]; /* inline pages */
+ 	struct xfs_buf_map	*b_maps;	/* compound buffer map */
+-	struct xfs_buf_map	b_map;		/* inline compound buffer map */
++	struct xfs_buf_map	__b_map;	/* inline compound buffer map */
+ 	int			b_map_count;
+ 	int			b_io_length;	/* IO size in BBs */
+ 	atomic_t		b_pin_count;	/* pin count */
+@@ -330,8 +330,8 @@ void xfs_buf_stale(struct xfs_buf *bp);
+  * In future, uncached buffers will pass the block number directly to the io
+  * request function and hence these macros will go away at that point.
+  */
+-#define XFS_BUF_ADDR(bp)		((bp)->b_map.bm_bn)
+-#define XFS_BUF_SET_ADDR(bp, bno)	((bp)->b_map.bm_bn = (xfs_daddr_t)(bno))
++#define XFS_BUF_ADDR(bp)		((bp)->b_maps[0].bm_bn)
++#define XFS_BUF_SET_ADDR(bp, bno)	((bp)->b_maps[0].bm_bn = (xfs_daddr_t)(bno))
+ 
+ static inline void xfs_buf_set_ref(struct xfs_buf *bp, int lru_ref)
+ {
 
 
 _______________________________________________
