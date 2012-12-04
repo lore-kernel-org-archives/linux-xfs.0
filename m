@@ -1,25 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qB4JL8Nq251972 for <xfs@oss.sgi.com>; Tue, 4 Dec 2012 13:21:09 -0600
-Received: from whiskey.americas.sgi.com (eagdhcp-232-197.americas.sgi.com
-	[128.162.232.197])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6144A304048
-	for <xfs@oss.sgi.com>; Tue,  4 Dec 2012 11:23:29 -0800 (PST)
-Date: Tue, 4 Dec 2012 12:44:59 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] xfs: Don't flush inodes when project quota exceeded
-Message-ID: <20121204184459.GN27055@sgi.com>
-References: <1352766973-14197-1-git-send-email-jack@suse.cz>
-	<20121119213913.GB29498@quack.suse.cz>
-	<20121120161511.GE27055@sgi.com>
-	<20121120170354.GF1408@quack.suse.cz>
-	<20121120202038.GF2591@dastard> <50ABF54E.6070508@redhat.com>
-	<20121120222215.GH2591@dastard> <50ACF289.2080901@redhat.com>
-	<20121121220950.GR2591@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20121121220950.GR2591@dastard>
+	qB4JiYfv254687 for <xfs@oss.sgi.com>; Tue, 4 Dec 2012 13:44:34 -0600
+Received: from relay02.pair.com (relay02.pair.com [209.68.5.16]) by
+	cuda.sgi.com with SMTP id 26xzTCfupW4C8wB4 for
+	<xfs@oss.sgi.com>; Tue, 04 Dec 2012 11:46:56 -0800 (PST)
+Date: Tue, 04 Dec 2012 14:46:53 -0500
+Subject: Re: xfsdump INTERRUPT issue
+From: "J. Ellis" <jellis@dhnet.us>
+Message-ID: <CCE3BD5D.B0540%jellis@dhnet.us>
+In-Reply-To: <CCE2425A.B0475%jellis@dhnet.us>
+Mime-version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,50 +23,56 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Brian Foster <bfoster@redhat.com>, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
+To: Jeffrey Ellis <jellis@dhnet.us>, stan@hardwarefreak.com, Dave Chinner <david@fromorbit.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Hey Dave,
+Hi, Dave & Stan, et al--
 
-On Thu, Nov 22, 2012 at 09:09:50AM +1100, Dave Chinner wrote:
-> On Wed, Nov 21, 2012 at 10:26:01AM -0500, Brian Foster wrote:
-> > On 11/20/2012 05:22 PM, Dave Chinner wrote:
-> > > On Tue, Nov 20, 2012 at 04:25:34PM -0500, Brian Foster wrote:
-> > >> Otherwise, unless I'm mistaken it sounds like we can use the existing
-> > >> eofblocks scan on user/group EDQUOT situations.
-> > > 
-> > > That we can. And for the project case, it's a simply and extra flag
-> > > and a call to filemap_flush() to do an async writeback before
-> > > trimming the specualtive preallocation.
-> > 
-> > This makes sense generally. I'll need to dig further into this code to
-> > wrap my head around it. If my current understanding is correct, it
-> > sounds like we could do the same thing in general, non-quota ENOSPC
-> > handling, right? E.g., an unfiltered eofblocks scan (plus the flush bit)
-> > followed by a retry, rather than a complete flush of all dirty inodes.
+Are you guys getting this post? I don't see it showing up on the list and
+have had no responses. I'm wondering if the size of the text of the
+requested xfs info I had added is causing an issue getting it posted.
+
+If not, here's a repost, using a link to the file instead.
+
+http://dhnet.us/xfs/xfs_data_file.odt
+
+Best,
+Jeffrey
+
+
+on 12/3/12 11:49 AM, Jeffrey Ellis at jellis@dhnet.us wrote:
+
+> Thank you to Stan and Dave for helping me through this.
 > 
-> Possibly, though we can also have dirty inodes that don't have
-> speculative prealloc (e.g. hole filling writes) and we really need to
-> flush them at ENOSPC, too. In general, I think the real ENOSPC case
-> needs the big hammer because we have to reclaim every last piece of
-> unnecessary reservation as possible to allow anything to proceed.
-> Porject quota ENOSPC isn't such a problem here, as there's still
-> other free space in the filesystem that allow normal operation to
-> take place...
+> Ok, here's the file, printed below.
+> 
+> Basically, I'm running the following commands under Ubuntu 12.10:
+> 
+> Type mkdir /mnt/fp
+> Type mkdir /mnt/hr20
+> Type mount -t xfs -o rtdev=/dev/sda3 /dev/sda2 /mnt/fp
+> Type mount -t xfs -o rtdev=/dev/sdb3 /dev/sdb2 /mnt/hr20
+> Type xfsdump -J - /mnt/hr20 | xfsrestore -J - /mnt/fp
+> 
+> When run, I get this as my output:
+> 
+> xfsdump: WARNING: write to stdio failed: 32 (Broken pipe)
+> xfsdump: ending media file
+> xfsdump: media file size 18874368 bytes
+> xfsdump: dump size (non-dir files) : 13698056 bytes
+> xfsdump: NOTE: dump interrupted: 16 seconds elapsed
+> xfsdump: Dump Status: INTERRUPT
+> 
+> This happens each time. In the forum where this copy procedure was
+> suggested, they've been reporting that the latest xfsprogs is creating these
+> errors, which didn't happen under at least somewhat earlier versions.
+> 
+> The version of xfsprogs should be in the file, but it was just downloaded a
+> few days ago using git.
+> 
+> Best,
+> Jeffrey
 
-Tossing away all of our remedial action in the project quota ENOSPC case to
-work around an nfs client issue strikes me as the wrong thing to do.  I doesn't
-look like this is what you're suggesting but I just want to see if we're on the
-same page.
-
-It seems to me that project quota ENOSPC has basically the same issues as with
-the real ENOSPC case, but it only needs to be targeted at inodes that affect
-the quota in question.  The flush and trimming should still be done, otherwise
-once project quota ENOSPC is hit there is no way for the nfs client to clear up
-the situation... we just need to target only inodes that affect the quota where we
-hit limits instead of all inodes.
-
--Ben
 
 _______________________________________________
 xfs mailing list
