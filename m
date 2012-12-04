@@ -1,25 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qB4KD6VN257113 for <xfs@oss.sgi.com>; Tue, 4 Dec 2012 14:13:06 -0600
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	EFckJF81rijPbkGy for <xfs@oss.sgi.com>;
-	Tue, 04 Dec 2012 12:15:28 -0800 (PST)
-Date: Wed, 5 Dec 2012 07:15:11 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: Don't flush inodes when project quota exceeded
-Message-ID: <20121204201511.GA9451@dastard>
-References: <1352766973-14197-1-git-send-email-jack@suse.cz>
-	<20121119213913.GB29498@quack.suse.cz>
-	<20121120161511.GE27055@sgi.com>
-	<20121120170354.GF1408@quack.suse.cz>
-	<20121120202038.GF2591@dastard> <50ABF54E.6070508@redhat.com>
-	<20121120222215.GH2591@dastard> <50ACF289.2080901@redhat.com>
-	<20121121220950.GR2591@dastard> <20121204184459.GN27055@sgi.com>
+	qB4L6ApU057760 for <xfs@oss.sgi.com>; Tue, 4 Dec 2012 15:06:10 -0600
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id OpHl4xT4lrlOvqPU (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 04 Dec 2012 03:56:29 -0800 (PST)
+Message-ID: <50BDE4DA.1080103@oracle.com>
+Date: Tue, 04 Dec 2012 19:56:10 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20121204184459.GN27055@sgi.com>
+Subject: Re: [PATCH 01/15] xfs: Add a new transaction for changing ag state
+References: <50A5E0E7.7010002@oracle.com> <20121203012453.GF29399@dastard>
+	<50BC1458.2000609@oracle.com> <20121203212809.GZ32450@dastard>
+In-Reply-To: <20121203212809.GZ32450@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,68 +26,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Brian Foster <bfoster@redhat.com>, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Dec 04, 2012 at 12:44:59PM -0600, Ben Myers wrote:
-> Hey Dave,
+On 12/04/2012 05:28 AM, Dave Chinner wrote:
+> On Mon, Dec 03, 2012 at 10:54:16AM +0800, Jeff Liu wrote:
+>> On 12/03/2012 09:24 AM, Dave Chinner wrote:
+>>> As such I'd like to see this sort of thing encoded in a macro or
+>>> inline function so the above code becomes something like:
+>>>
+>>> 	return mp->m_sb.sb_sectsize + xfs_buf_log_overhead(mp);
+>>>
+>>>
+>>> and
+>>>
+>>> /*
+>>>  * A buffer has a format structure overhead in the log in addition
+>>>  * to the data, so we need to take this into account when reserving
+>>>  * space in a transaction for a buffer. Round the space required up
+>>>  * to a multiple of 128 bytes so that we don't change the historical
+>>>  * reservation that has ben used for this overhead.
+>>>  */
+>>> static inline int
+>>> xfs_buf_log_overhead()
+>>> {
+>>> 	return round_up(sizeof(struct xlog_op_header) +
+>>> 			sizeof(struct xfs_buf_log_format), 128);
+>>> }
+>> Thanks for your teaching!
+>>
+>> We hard-coded '128' in almost all of those transaction reservations,
+>> is it time to get rid of it according to your comments above?
+>>
+>> I'd like to do it if you have no time to deal with such trivial things. 
 > 
-> On Thu, Nov 22, 2012 at 09:09:50AM +1100, Dave Chinner wrote:
-> > On Wed, Nov 21, 2012 at 10:26:01AM -0500, Brian Foster wrote:
-> > > On 11/20/2012 05:22 PM, Dave Chinner wrote:
-> > > > On Tue, Nov 20, 2012 at 04:25:34PM -0500, Brian Foster wrote:
-> > > >> Otherwise, unless I'm mistaken it sounds like we can use the existing
-> > > >> eofblocks scan on user/group EDQUOT situations.
-> > > > 
-> > > > That we can. And for the project case, it's a simply and extra flag
-> > > > and a call to filemap_flush() to do an async writeback before
-> > > > trimming the specualtive preallocation.
-> > > 
-> > > This makes sense generally. I'll need to dig further into this code to
-> > > wrap my head around it. If my current understanding is correct, it
-> > > sounds like we could do the same thing in general, non-quota ENOSPC
-> > > handling, right? E.g., an unfiltered eofblocks scan (plus the flush bit)
-> > > followed by a retry, rather than a complete flush of all dirty inodes.
-> > 
-> > Possibly, though we can also have dirty inodes that don't have
-> > speculative prealloc (e.g. hole filling writes) and we really need to
-> > flush them at ENOSPC, too. In general, I think the real ENOSPC case
-> > needs the big hammer because we have to reclaim every last piece of
-> > unnecessary reservation as possible to allow anything to proceed.
-> > Porject quota ENOSPC isn't such a problem here, as there's still
-> > other free space in the filesystem that allow normal operation to
-> > take place...
+> Yes please!
 > 
-> Tossing away all of our remedial action in the project quota ENOSPC case to
-> work around an nfs client issue strikes me as the wrong thing to do.  I doesn't
-> look like this is what you're suggesting but I just want to see if we're on the
-> same page.
+> It's been on my "clean-ups for a rainy day" list for a long time,
+> but I've never managed to get around to it. So if you want to do
+> this, it would make me very happy :)
+Just done the changes, I will continue to run a comprehensive testing
+tomorrow before posting those patches. :)
 
-It's not a NFS client issue - it's an NFS server issue. i.e. the
-server is the one telling the client that it has no space, so the
-server has to take appropriate action. i.e. the remedial action
-needs to stay.
-
-> It seems to me that project quota ENOSPC has basically the same issues as with
-> the real ENOSPC case, but it only needs to be targeted at inodes that affect
-> the quota in question.  The flush and trimming should still be done, otherwise
-> once project quota ENOSPC is hit there is no way for the nfs client to clear up
-> the situation... we just need to target only inodes that affect the quota where we
-> hit limits instead of all inodes.
-
-Effectively - the trimming of speculative delalloc is really the
-main thing as the metadata reservation for delalloc is generally not
-noticable for situations where project quotas are typically used.
-This targeted speculative prealloc trimming is exactly what we've
-been talking about....
-
-Cheers,
-
-Dave.
-
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+-Jeff
 
 _______________________________________________
 xfs mailing list
