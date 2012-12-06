@@ -1,20 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qB6LoITS159516 for <xfs@oss.sgi.com>; Thu, 6 Dec 2012 15:50:18 -0600
+	qB6LxeGa160042 for <xfs@oss.sgi.com>; Thu, 6 Dec 2012 15:59:40 -0600
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id mxVgxUrLUpSlDufR for <xfs@oss.sgi.com>;
-	Thu, 06 Dec 2012 13:52:43 -0800 (PST)
-Message-ID: <50C113B6.20105@sandeen.net>
-Date: Thu, 06 Dec 2012 15:52:54 -0600
+	ESMTP id clFpLs7MlmGr0LcW for <xfs@oss.sgi.com>;
+	Thu, 06 Dec 2012 14:02:05 -0800 (PST)
+Message-ID: <50C115E8.9090106@sandeen.net>
+Date: Thu, 06 Dec 2012 16:02:16 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH V3] mkfs.xfs: go into multidisk mode when geometry is on
-	cmdline
+Subject: [PATCH] xfstests: Ensure cmdline geometry puts mkfs.xfs into multidisk
+	mode
 References: <50ABB115.9070905@sandeen.net>
 	<20121121095636.GC23339@infradead.org>
-	<50C10FA5.9090909@sandeen.net>
-In-Reply-To: <50C10FA5.9090909@sandeen.net>
+In-Reply-To: <20121121095636.GC23339@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,92 +29,104 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: Ben England <bengland@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-In the course of some other investigations, I found that 
-calc_default_ag_geometry() doesn't go into "multidisk" mode
-unless stripe geometry is *detected* (i.e. by the blkid routines).
-
-Specifying a geometry on the cmdline is *not* sufficient, because
-we test (ft.dsunit | ft.dswidth) which are not set by the cmdline
-options.
-
-If we move the AG calculations to after we have set dsunit & dswdith,
-then we'll pick up either cmdline-specified or blkid-detected
-geometry, and go into "multidisk" mode for AG size/count
-calculations in both cases.
-
-So now for a ~5T fs, for example, we'd make several more
-AGs:
-
-# truncate --size=5t fsfile
-# mkfs.xfs -N -d su=128k,sw=8 fsfile | grep agcount
-meta-data=fsfile                 isize=256    agcount=5, agsize=268435424 blks
-# mkfs/mkfs.xfs -N -d su=128k,sw=8 fsfile | grep agcount
-meta-data=fsfile                 isize=256    agcount=32, agsize=41943008 blks
+Ensure that when mkfs.xfs is invoked with commandline geometry, it
+triggers multidisk mode and creates more AGs.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
 
-V2: Add braces to last else clause per hch's request
-V3: Add another brace so it compiles, ugh.
+Maybe this should also test device-specified geometry, but not sure
+how to do that easily within xfstests, any ideas?
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index be931e3..577880b 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -2090,25 +2090,6 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 		nbmblocks = 0;
- 	}
- 
--	if (dasize) {		/* User-specified AG size */
--		/*
--		 * Check specified agsize is a multiple of blocksize.
--		 */
--		if (agsize % blocksize) {
--			fprintf(stderr,
--		_("agsize (%lld) not a multiple of fs blk size (%d)\n"),
--				(long long)agsize, blocksize);
--			usage();
--		}
--		agsize /= blocksize;
--		agcount = dblocks / agsize + (dblocks % agsize != 0);
--
--	} else if (daflag)	/* User-specified AG count */
--		agsize = dblocks / agcount + (dblocks % agcount != 0);
--	else
--		calc_default_ag_geometry(blocklog, dblocks,
--				ft.dsunit | ft.dswidth, &agsize, &agcount);
--
- 	if (!nodsflag) {
- 		if (dsunit) {
- 			if (ft.dsunit && ft.dsunit != dsunit) {
-@@ -2132,6 +2113,26 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 		}
- 	} /* else dsunit & dswidth can't be set if nodsflag is set */
- 
-+	if (dasize) {		/* User-specified AG size */
-+		/*
-+		 * Check specified agsize is a multiple of blocksize.
-+		 */
-+		if (agsize % blocksize) {
-+			fprintf(stderr,
-+		_("agsize (%lld) not a multiple of fs blk size (%d)\n"),
-+				(long long)agsize, blocksize);
-+			usage();
-+		}
-+		agsize /= blocksize;
-+		agcount = dblocks / agsize + (dblocks % agsize != 0);
+diff --git a/291 b/291
+new file mode 100755
+index 0000000..045d2a0
+--- /dev/null
++++ b/291
+@@ -0,0 +1,63 @@
++#! /bin/bash
++# FS QA Test No. 291
++#
++# Ensure mkfs with stripe geometry goes into multidisk mode
++# which results in more AGs
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2012 Red Hat, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++# creator
++owner=sandeen@redhat.com
 +
-+	} else if (daflag) {	/* User-specified AG count */
-+		agsize = dblocks / agcount + (dblocks % agcount != 0);
-+	} else {
-+		calc_default_ag_geometry(blocklog, dblocks,
-+				dsunit | dswidth, &agsize, &agcount);
-+	}
++seq=`basename $0`
++echo "QA output created by $seq"
 +
- 	/*
- 	 * If dsunit is a multiple of fs blocksize, then check that is a
- 	 * multiple of the agsize too
-
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
++
++# real QA test starts here
++
++# Modify as appropriate.
++_supported_fs xfs
++_supported_os IRIX Linux
++
++fsfile=$TEST_DIR/fsfile.$seq
++
++rm -f $fsfile
++$XFS_IO_PROG -f -c "truncate 256g" $fsfile
++
++echo "mkfs.xfs without geometry"
++mkfs.xfs -f $fsfile 2>&1 | sed -e "s:$fsfile:FILENAME:g" | grep meta-data
++echo "mkfs.xfs with cmdline geometry"
++mkfs.xfs -f -d su=16k,sw=5 $fsfile 2>&1 | sed -e "s:$fsfile:FILENAME:g" | grep meta-data
++
++# success, all done
++status=0
++exit
+diff --git a/291.out b/291.out
+new file mode 100644
+index 0000000..fd702c0
+--- /dev/null
++++ b/291.out
+@@ -0,0 +1,5 @@
++QA output created by 291
++mkfs.xfs without geometry
++meta-data=FILENAME   isize=256    agcount=4, agsize=16777216 blks
++mkfs.xfs with cmdline geometry
++meta-data=FILENAME   isize=256    agcount=16, agsize=4194304 blks
+diff --git a/group b/group
+index dacdb56..2ddb047 100644
+--- a/group
++++ b/group
+@@ -409,3 +409,4 @@ deprecated
+ 288 auto quick ioctl trim
+ 289 auto quick
+ 290 auto rw prealloc quick ioctl
++291 auto mkfs quick
 
 _______________________________________________
 xfs mailing list
