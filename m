@@ -1,19 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qB6LWvSt158665 for <xfs@oss.sgi.com>; Thu, 6 Dec 2012 15:32:57 -0600
+	qB6LoITS159516 for <xfs@oss.sgi.com>; Thu, 6 Dec 2012 15:50:18 -0600
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id EHWzeEeRuQlt490t for <xfs@oss.sgi.com>;
-	Thu, 06 Dec 2012 13:35:22 -0800 (PST)
-Message-ID: <50C10FA5.9090909@sandeen.net>
-Date: Thu, 06 Dec 2012 15:35:33 -0600
+	ESMTP id mxVgxUrLUpSlDufR for <xfs@oss.sgi.com>;
+	Thu, 06 Dec 2012 13:52:43 -0800 (PST)
+Message-ID: <50C113B6.20105@sandeen.net>
+Date: Thu, 06 Dec 2012 15:52:54 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH V2] mkfs.xfs: go into multidisk mode when geometry is on
+Subject: [PATCH V3] mkfs.xfs: go into multidisk mode when geometry is on
 	cmdline
 References: <50ABB115.9070905@sandeen.net>
 	<20121121095636.GC23339@infradead.org>
-In-Reply-To: <20121121095636.GC23339@infradead.org>
+	<50C10FA5.9090909@sandeen.net>
+In-Reply-To: <50C10FA5.9090909@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -55,9 +56,10 @@ Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
 
 V2: Add braces to last else clause per hch's request
+V3: Add another brace so it compiles, ugh.
 
 diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index be931e3..f320022 100644
+index be931e3..577880b 100644
 --- a/mkfs/xfs_mkfs.c
 +++ b/mkfs/xfs_mkfs.c
 @@ -2090,25 +2090,6 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
@@ -105,7 +107,7 @@ index be931e3..f320022 100644
 +
 +	} else if (daflag) {	/* User-specified AG count */
 +		agsize = dblocks / agcount + (dblocks % agcount != 0);
-+	else {
++	} else {
 +		calc_default_ag_geometry(blocklog, dblocks,
 +				dsunit | dswidth, &agsize, &agcount);
 +	}
