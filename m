@@ -1,20 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qB656hun087121 for <xfs@oss.sgi.com>; Wed, 5 Dec 2012 23:06:43 -0600
-Received: from buxtehude.debian.org (buxtehude.debian.org [140.211.166.26]) by
-	cuda.sgi.com with ESMTP id eVprUXEtBEwWMJEr (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 05 Dec 2012 21:09:05 -0800 (PST)
-Subject: Bug#694624: freezes under lying (root) - patch
-Resent-To: debian-bugs-dist@lists.debian.org
-Resent-Message-ID: <handler.694624.B694624.13547703441505@bugs.debian.org>
-Message-ID: <50C0258F.6070409@talbragar.com.au>
-Date: Thu, 06 Dec 2012 15:56:47 +1100
-From: Pat Emblen <talcom@talbragar.com.au>
+	qB68mp5K104138 for <xfs@oss.sgi.com>; Thu, 6 Dec 2012 02:48:51 -0600
+Received: from mail-qa0-f53.google.com (mail-qa0-f53.google.com
+	[209.85.216.53]) by cuda.sgi.com with ESMTP id xIH2GpEWVfDXuAWv
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 06 Dec 2012 00:51:15 -0800 (PST)
+Received: by mail-qa0-f53.google.com with SMTP id a19so416493qad.5
+	for <xfs@oss.sgi.com>; Thu, 06 Dec 2012 00:51:15 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="------------080409060607080403090003"
-Reply-To: Pat Emblen <talcom@talbragar.com.au>, 694624@bugs.debian.org
+Date: Thu, 6 Dec 2012 09:51:15 +0100
+Message-ID: <CAA_rkDfFUmZzT_kMznsTSNVxdfqfmz=bmJ400wdBOzocgP32eA@mail.gmail.com>
+Subject: XFS write cache flush policy
+From: Lin Li <sdeber@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,119 +21,58 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: multipart/mixed; boundary="===============4168675985966872175=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: 694624@bugs.debian.org
+To: xfs@oss.sgi.com
 
-This is a multi-part message in MIME format.
---------------080409060607080403090003
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+--===============4168675985966872175==
+Content-Type: multipart/alternative; boundary=047d7b6757e09fe53a04d02b33ee
 
-A patch for the man page is (hopefully) attached. I'll warn you that 
-this is the first time I've edited a man page or generated a patch, so 
-it could be wrong / incomplete.
-By the way, I think you may have misinterpreted my tone in previous 
-comments, I was trying to make a strong case for the program working in 
-the way I expected it to from reading the man page, not trying to tell 
-you how it should work in general. Having said that I still personally 
-consider a 'safety catch' on the root filesystem would be a good idea.
-Thanks,
-Pat
+--047d7b6757e09fe53a04d02b33ee
+Content-Type: text/plain; charset=ISO-8859-1
+
+Hi, Guys. I recently suffered a huge data loss on power cut on an XFS
+partition. The problem was that I copied a lot of files (roughly 20Gb) to
+an XFS partition, then 10 hours later, I got an unexpected power cut. As a
+result, all these newly copied files disappeared as if they had never been
+copied. I tried to check and repair the partition, but xfs_check reports no
+error at all. So I guess the problem is that the meta data for these files
+were all kept in the cache (64Mb) and were never committed to the hard
+disk.
+
+What is the cache flush policy for XFS? Does it always reserve some fixed
+space in cache for metadata? I asked because I thought since I copied such
+a huge amount of data, at least some of these files must be fully committed
+to the hard disk, then cache is only 64Mb anyway. But the reality is all of
+them were lost. the only possibility I can think is some part of the cache
+was reserved for meta data, so even the cache is fully filled, this part
+will not be written to the disk. Am I right?
+
+--047d7b6757e09fe53a04d02b33ee
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+Hi, Guys. I recently suffered a huge data loss on power cut on an XFS parti=
+tion. The problem was that I copied a lot of files (roughly 20Gb) to an XFS=
+ partition, then 10 hours later, I got an unexpected power cut. As a result=
+, all these newly copied files disappeared as if they had never been copied=
+. I tried to check and repair the partition, but xfs_check reports no error=
+ at all. So I guess the problem is that the meta data for these files were =
+all kept in the cache (64Mb) and were never committed to the hard disk. <br=
+>
+<br>What is the cache flush policy for XFS? Does it always reserve some fix=
+ed space in cache for metadata? I asked because I thought since I copied su=
+ch a huge amount of data, at least some of these files must be fully commit=
+ted to the hard disk, then cache is only 64Mb anyway. But the reality is al=
+l of them were lost. the only possibility I can think is some part of the c=
+ache was reserved for meta data, so even the cache is fully filled, this pa=
+rt will not be written to the disk. Am I right? <br>
+
+--047d7b6757e09fe53a04d02b33ee--
 
 
---------------080409060607080403090003
-Content-Type: text/x-patch;
- name="update-man-xfs_freeze.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="update-man-xfs_freeze.patch"
-
-Description: Updates to the man page to more accurately describe the
- behaviour of the program.
-Forwarded: not-needed
-Bug-Debian: http://bugs.debian.org/694624
-Author: Patrick Emblen <support@talbragar.com.au>
---- a/man/man8/xfs_freeze.8
-+++ b/man/man8/xfs_freeze.8
-@@ -1,16 +1,17 @@
- .TH xfs_freeze 8
- .SH NAME
--xfs_freeze \- suspend access to an XFS filesystem
-+xfs_freeze \- suspend access to a freezable filesystem
- .SH SYNOPSIS
- .B xfs_freeze \-f
- |
- .B \-u
--.I mount-point
--.fi
--.SH DESCRIPTION
--.B xfs_freeze
--suspends and resumes access to an XFS filesystem (see
--.BR xfs (5)).
-+.I path.fi
-+.SH DESCRIPTION.B xfs_freezesuspends and resumes access to compatible filesystems.
-+The command was originaly specific to the XFS filesystem (see
-+.BR xfs (5))but since Linux kernel version 2.6.29, the interface which
-+XFS uses to freeze and unfreeze has been elevated to the VFS, so that
-+this tool can now be used on many other Linux filesystems.
-+The root filesystem is not treated in any special way and may also be frozen.
- .PP
- .B xfs_freeze
- halts new access to the filesystem and creates a stable image on disk.
-@@ -19,15 +20,14 @@
- that support the creation of snapshots.
- .PP
- The
--.I mount-point
--argument is the pathname of the directory where the filesystem
--is mounted.
--The filesystem must be mounted to be frozen (see
--.BR mount (8)).
-+.I path
-+argument is the path to any directory within the mounted filesystem up to and including
-+the
-+.I mount-point.
- .PP
- The
- .B \-f
--flag requests the specified XFS filesystem to be
-+flag requests the specified filesystem to be
- frozen from new modifications.
- When this is selected, all ongoing transactions in the filesystem
- are allowed to complete, new write system calls are halted, other
-@@ -55,16 +55,23 @@
- must be supplied to
- .BR xfs_freeze .
- .SH NOTES
--A copy of a frozen XFS filesystem will usually have the same universally
-+.BR xfs_freeze
-+treats the root filesystem the same as any other filesystem.
-+Take great care to verify that the path you specify contains the filesystem
-+you intend to freeze and is not for example, an empty mount-point.
-+If you inadvertently freeze the root filesystem you should immediately
-+unfreeze it with the
-+.B \-u
-+option. If you attempt any action that tries to write to the frozen filesystem
-+your shell can be blocked waiting for the write and in most cases you will
-+not be able to open another shell to run the unfreeze command.
-+.PP
-+A copy of a frozen filesystem will usually have the same universally
- unique identifier (UUID) as the original, and thus may be prevented from
- being mounted.
--The XFS
-+For XFS filesystems, the
- .B nouuid
- mount option can be used to circumvent this issue.
--.PP
--In Linux kernel version 2.6.29, the interface which XFS uses to freeze
--and unfreeze was elevated to the VFS, so that this tool can now be
--used on many other Linux filesystems.
- .SH SEE ALSO
- .BR xfs (5),
- .BR lvm (8),
-
---------------080409060607080403090003
+--===============4168675985966872175==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -146,4 +83,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---------------080409060607080403090003--
+--===============4168675985966872175==--
