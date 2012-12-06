@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qB62bgRX077715 for <xfs@oss.sgi.com>; Wed, 5 Dec 2012 20:37:42 -0600
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id 21GWxAQQUEAK8BgA
-	for <xfs@oss.sgi.com>; Wed, 05 Dec 2012 18:40:06 -0800 (PST)
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id C13006C11A
-	for <xfs@oss.sgi.com>; Wed,  5 Dec 2012 20:40:05 -0600 (CST)
-Message-ID: <50C00583.6000804@hardwarefreak.com>
-Date: Wed, 05 Dec 2012 20:40:03 -0600
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	qB656hun087121 for <xfs@oss.sgi.com>; Wed, 5 Dec 2012 23:06:43 -0600
+Received: from buxtehude.debian.org (buxtehude.debian.org [140.211.166.26]) by
+	cuda.sgi.com with ESMTP id eVprUXEtBEwWMJEr (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 05 Dec 2012 21:09:05 -0800 (PST)
+Subject: Bug#694624: freezes under lying (root) - patch
+Resent-To: debian-bugs-dist@lists.debian.org
+Resent-Message-ID: <handler.694624.B694624.13547703441505@bugs.debian.org>
+Message-ID: <50C0258F.6070409@talbragar.com.au>
+Date: Thu, 06 Dec 2012 15:56:47 +1100
+From: Pat Emblen <talcom@talbragar.com.au>
 MIME-Version: 1.0
-Subject: Re: xfsdump INTERRUPT issue
-References: <CCE505AA.B05B7%jellis@dhnet.us>
-	<50BFF726.6090006@hardwarefreak.com>
-	<68036B67-6AE6-4056-89F5-9549B4E476FD@dhnet.us>
-In-Reply-To: <68036B67-6AE6-4056-89F5-9549B4E476FD@dhnet.us>
-Reply-To: stan@hardwarefreak.com
+Content-Type: multipart/mixed; boundary="------------080409060607080403090003"
+Reply-To: Pat Emblen <talcom@talbragar.com.au>, 694624@bugs.debian.org
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,131 +23,127 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: 694624@bugs.debian.org
 
-On 12/5/2012 8:08 PM, Jeffrey Ellis wrote:
-> Hi, Stan--
-> 
-> You're right. I didn't want to look stupid. Sorry. I'll keep it all on the list from now on. 
-> 
-> Thank you for the example. I hope I have this right. So including the -t and -v would be 
-> 
-> ~$ xfsdump -J -f -t -v /xfsdump_file /dev/sda0
+This is a multi-part message in MIME format.
+--------------080409060607080403090003
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-No.  That's not right.  I gave you concise separate instructions for
-xfsdump and for xfsrestore, and you've commingled the two.
+A patch for the man page is (hopefully) attached. I'll warn you that 
+this is the first time I've edited a man page or generated a patch, so 
+it could be wrong / incomplete.
+By the way, I think you may have misinterpreted my tone in previous 
+comments, I was trying to make a strong case for the program working in 
+the way I expected it to from reading the man page, not trying to tell 
+you how it should work in general. Having said that I still personally 
+consider a 'safety catch' on the root filesystem would be a good idea.
+Thanks,
+Pat
 
-Please thoroughly and thoughtfully re-read my last email.
 
--- 
-Stan
+--------------080409060607080403090003
+Content-Type: text/x-patch;
+ name="update-man-xfs_freeze.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="update-man-xfs_freeze.patch"
 
+Description: Updates to the man page to more accurately describe the
+ behaviour of the program.
+Forwarded: not-needed
+Bug-Debian: http://bugs.debian.org/694624
+Author: Patrick Emblen <support@talbragar.com.au>
+--- a/man/man8/xfs_freeze.8
++++ b/man/man8/xfs_freeze.8
+@@ -1,16 +1,17 @@
+ .TH xfs_freeze 8
+ .SH NAME
+-xfs_freeze \- suspend access to an XFS filesystem
++xfs_freeze \- suspend access to a freezable filesystem
+ .SH SYNOPSIS
+ .B xfs_freeze \-f
+ |
+ .B \-u
+-.I mount-point
+-.fi
+-.SH DESCRIPTION
+-.B xfs_freeze
+-suspends and resumes access to an XFS filesystem (see
+-.BR xfs (5)).
++.I path.fi
++.SH DESCRIPTION.B xfs_freezesuspends and resumes access to compatible filesystems.
++The command was originaly specific to the XFS filesystem (see
++.BR xfs (5))but since Linux kernel version 2.6.29, the interface which
++XFS uses to freeze and unfreeze has been elevated to the VFS, so that
++this tool can now be used on many other Linux filesystems.
++The root filesystem is not treated in any special way and may also be frozen.
+ .PP
+ .B xfs_freeze
+ halts new access to the filesystem and creates a stable image on disk.
+@@ -19,15 +20,14 @@
+ that support the creation of snapshots.
+ .PP
+ The
+-.I mount-point
+-argument is the pathname of the directory where the filesystem
+-is mounted.
+-The filesystem must be mounted to be frozen (see
+-.BR mount (8)).
++.I path
++argument is the path to any directory within the mounted filesystem up to and including
++the
++.I mount-point.
+ .PP
+ The
+ .B \-f
+-flag requests the specified XFS filesystem to be
++flag requests the specified filesystem to be
+ frozen from new modifications.
+ When this is selected, all ongoing transactions in the filesystem
+ are allowed to complete, new write system calls are halted, other
+@@ -55,16 +55,23 @@
+ must be supplied to
+ .BR xfs_freeze .
+ .SH NOTES
+-A copy of a frozen XFS filesystem will usually have the same universally
++.BR xfs_freeze
++treats the root filesystem the same as any other filesystem.
++Take great care to verify that the path you specify contains the filesystem
++you intend to freeze and is not for example, an empty mount-point.
++If you inadvertently freeze the root filesystem you should immediately
++unfreeze it with the
++.B \-u
++option. If you attempt any action that tries to write to the frozen filesystem
++your shell can be blocked waiting for the write and in most cases you will
++not be able to open another shell to run the unfreeze command.
++.PP
++A copy of a frozen filesystem will usually have the same universally
+ unique identifier (UUID) as the original, and thus may be prevented from
+ being mounted.
+-The XFS
++For XFS filesystems, the
+ .B nouuid
+ mount option can be used to circumvent this issue.
+-.PP
+-In Linux kernel version 2.6.29, the interface which XFS uses to freeze
+-and unfreeze was elevated to the VFS, so that this tool can now be
+-used on many other Linux filesystems.
+ .SH SEE ALSO
+ .BR xfs (5),
+ .BR lvm (8),
 
-> Repeat for each mount point, and post the result here?
-> 
-> Thanks again. 
-> Jeffrey
-> 
->> ~$ xfsdump -J -f /some_filesystem_path/test_dump /dev/sda6
-> 
-> 
-> 
-> Best,
-> J. 
-> 
-> On Dec 5, 2012, at 8:38 PM, Stan Hoeppner <stan@hardwarefreak.com> wrote:
-> 
->> On 12/5/2012 1:07 PM, J. Ellis wrote:
->>
->> This should never have gone off list so I'm copying back.  If you'd have
->> kept this on list you'd have likely already had an answer to this.
->> Going off list for fear of looking ignorant is not a valid reason to do
->> so.  In fact there are very few reasons to ever go off list.  All it
->> does is take people out of the loop who are watching the thread and may
->> be willing to jump in at some point to help.  You've short circuited
->> that by going off list.
->>
->>> I just read the man page again. There doesn't seem to be any examples I can
->>> find to write the dump to a file. I couldn't find a -t option in the man at
->>> all, so maybe the ones I'm finding aren't up to date. Here's the only
->>> example I can find, and I don't know if this would actually work:
->>>
->>> xfsdump -f /usr/tmp/monday_backup -v silent -J -s \ people/fred/Makefile -s
->>> people/fred/Source /usr
->>
->> This is really simple.  Using my previous example, we want to dump to a
->> test file and not update the inventory.  So we have something like:
->>
->> ~$ xfsdump -J -f /some_filesystem_path/test_dump /dev/sda6
->>
->> This dumps the XFS filesystem on /dev/sda6 to a file.  Don't write the
->> dump file to the filesystem you're dumping.  Preferably the XFS you're
->> dumping is on one disk or array and the target file will be written to a
->> different disk or array.  Dumps are IO intensive.
->>
->> I clearly stated the "-t" option in the context of xfsrestore:
->>
->>       -t   Displays  the  contents of the dump, but does not create or
->>            modify any files or directories.  It may be desirable to
->>            set the verbosity level to silent when using this option.
->>
->> This allows you to do a test run without actually writing any files
->> during the restore.  The goal here is to test xfsdump and xfsrestore on
->> your system to see where errors are cropping up.  You don't actually
->> want to restore the dumped filesystem at this point.
->>
->> The "-v" option simply keeps the "-t" from spamming a million file names
->> to your console during the restore operation.
->>
->> -- 
->> Stan
->>
->>
->>> on 12/4/12 10:32 PM, Stan Hoeppner at stan@hardwarefreak.com wrote:
->>>
->>>> On 12/4/2012 7:18 PM, J. Ellis wrote:
->>>>> Hi, Stan--
->>>>>
->>>>> Ok, I truly apologize for my ignorance, but I don't know how to dump the
->>>>> contents to a file. Is it something like:
->>>>>
->>>>> xfsdump -J - somefile_xfsdump.txt
->>>>
->>>> ~$ man xfsdump
->>>>
->>>> Look at option "-f".
->>>>
->>>>> xfsrestore -J - somefile_xfsrestore.txt
->>>>
->>>> ~$ man xfsrestore
->>>>
->>>> See options "-f" "-t" and "-v".
->>>>
->>>> The point of this exercise I believe is to see what errors are thrown by
->>>> xfsdump or xfsrestore when they are executed independently, vs through a
->>>> pipe.  Do note that this may not be the final step in testing before you
->>>> have an answer.  Post any errors or informational output that results
->>>> from these commands.
->>>>
->>>> Note that the file written by xfsdump is going to be about the same size
->>>> as the filesystem being dumped.  I.e. if the filesystem being dumped is
->>>> 1TB then you need 1TB of free space on the device where the target
->>>> directory resides--you're dumping an entire XFS filesystem into a single
->>>> file.  Also, be sure to use "-t" so xfsrestore doesn't actually write
->>>> anything.  Did you read "-v"?
->>
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+--------------080409060607080403090003
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--------------080409060607080403090003--
