@@ -1,17 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qB7CAq0J215430 for <xfs@oss.sgi.com>; Fri, 7 Dec 2012 06:10:53 -0600
+	qB7CB4wx215541 for <xfs@oss.sgi.com>; Fri, 7 Dec 2012 06:11:05 -0600
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id dpAiK6ZlkGpTiMif (version=TLSv1
+	cuda.sgi.com with ESMTP id qckm5dxZJYLlsNgA (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 07 Dec 2012 04:13:17 -0800 (PST)
-Message-ID: <50C1DD4E.80909@oracle.com>
-Date: Fri, 07 Dec 2012 20:13:02 +0800
+	Fri, 07 Dec 2012 04:13:30 -0800 (PST)
+Message-ID: <50C1DD62.20209@oracle.com>
+Date: Fri, 07 Dec 2012 20:13:22 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: [PATCH 0/4] xfs: Kill the hardcode number 128 for transactions space
-	reservation
+Subject: [PATCH 4/4] Make disk quota related transactions aware of this change
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,44 +25,92 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hello,
+Make disk quota related transaction reservation works with this new wrapper.
 
-We have a hard code number of "128" for almost all sorts of transactions space reservations.
-This number is used to reserve the space for the struct xfs_buf_log_format that gets written
-into the log for every buffer as well as a little bit of extra space because there also needs
-a log opheader, i.e. struct xlog_op_header.
-
-This idea is totally inspired by Dave's comments at: 
-http://oss.sgi.com/archives/xfs/2012-12/msg00009.html
-I'll add Signed-off-by for Dave once the patches are qualified to be accept for his credit.
-
-The patches replace the magic number with a new function xfs_buf_log_overhead(), which is
-introduced to examine the extra buf log space more flexible than hard coding it.
-
-Maybe it's better to tweak it up in a macro to make the code style in xfs_trans.c looks a bit neat?
-#define XFS_BUF_LOG_OVERHEAD (xfs_buf_log_overhead())
-
-To make sure there is no regression with those changes, I have run dozens of xfs test cases, they
-are works to me.
-
-[PATCH 1/4] Add a new function xfs_buf_log_overhead() to replace the hard-code number of 128
-[PATCH 2/4] Make xfs_fs_log_dummy() aware of this change
-[PATCH 3/4] Make super block unit change related transactions aware of this change
-[PATCH 4/4] Make disk quota related transactions aware of this change
-
+Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+Cc: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_dquot.c       |    6 ++-
- fs/xfs/xfs_fsops.c       |    5 +-
- fs/xfs/xfs_mount.c       |   15 +++---
- fs/xfs/xfs_qm.c          |    6 +--
- fs/xfs/xfs_qm_syscalls.c |   20 ++++----
- fs/xfs/xfs_trans.c       |  113 ++++++++++++++++++++++++++++++----------------
- fs/xfs/xfs_trans.h       |    4 +-
- 7 files changed, 106 insertions(+), 63 deletions(-)
+ fs/xfs/xfs_dquot.c       |    6 ++++--
+ fs/xfs/xfs_qm.c          |    6 +++---
+ fs/xfs/xfs_qm_syscalls.c |   20 +++++++++++---------
+ 3 files changed, 18 insertions(+), 14 deletions(-)
 
-
-Thanks,
--Jeff
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index bf27fcc..ba08a1b 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -527,9 +527,11 @@ xfs_qm_dqread(
+ 				XFS_WRITE_LOG_RES(mp) +
+ 				/*
+ 				 * Round the chunklen up to the next multiple
+-				 * of 128 (buf log item chunk size)).
++				 * of xfs_buf_log_overhead(), that is buf log
++				 * item chunk size.
+ 				 */
+-				BBTOB(mp->m_quotainfo->qi_dqchunklen) - 1 + 128,
++				BBTOB(mp->m_quotainfo->qi_dqchunklen) - 1 +
++				xfs_buf_log_overhead(),
+ 				0,
+ 				XFS_TRANS_PERM_LOG_RES,
+ 				XFS_WRITE_LOG_COUNT);
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 2e86fa0..59492c1 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -1583,9 +1583,9 @@ xfs_qm_write_sb_changes(
+ 
+ 	tp = xfs_trans_alloc(mp, XFS_TRANS_QM_SBCHANGE);
+ 	if ((error = xfs_trans_reserve(tp, 0,
+-				      mp->m_sb.sb_sectsize + 128, 0,
+-				      0,
+-				      XFS_DEFAULT_LOG_COUNT))) {
++				       mp->m_sb.sb_sectsize +
++				       xfs_buf_log_overhead(), 0, 0,
++				       XFS_DEFAULT_LOG_COUNT))) {
+ 		xfs_trans_cancel(tp, 0);
+ 		return error;
+ 	}
+diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+index 858a3b1..16351c1 100644
+--- a/fs/xfs/xfs_qm_syscalls.c
++++ b/fs/xfs/xfs_qm_syscalls.c
+@@ -489,8 +489,11 @@ xfs_qm_scall_setqlim(
+ 		return 0;
+ 
+ 	tp = xfs_trans_alloc(mp, XFS_TRANS_QM_SETQLIM);
+-	if ((error = xfs_trans_reserve(tp, 0, sizeof(xfs_disk_dquot_t) + 128,
+-				      0, 0, XFS_DEFAULT_LOG_COUNT))) {
++	error = xfs_trans_reserve(tp, 0,
++				  sizeof(xfs_disk_dquot_t) +
++				  xfs_buf_log_overhead(), 0, 0,
++				  XFS_DEFAULT_LOG_COUNT);
++	if (error) {
+ 		xfs_trans_cancel(tp, 0);
+ 		return (error);
+ 	}
+@@ -670,14 +673,13 @@ xfs_qm_log_quotaoff(
+ 	uint			oldsbqflag=0;
+ 
+ 	tp = xfs_trans_alloc(mp, XFS_TRANS_QM_QUOTAOFF);
+-	if ((error = xfs_trans_reserve(tp, 0,
+-				      sizeof(xfs_qoff_logitem_t) * 2 +
+-				      mp->m_sb.sb_sectsize + 128,
+-				      0,
+-				      0,
+-				      XFS_DEFAULT_LOG_COUNT))) {
++	error = xfs_trans_reserve(tp, 0,
++				  sizeof(xfs_qoff_logitem_t) * 2 +
++				  mp->m_sb.sb_sectsize +
++				  xfs_buf_log_overhead(), 0, 0,
++				  XFS_DEFAULT_LOG_COUNT);
++	if (error)
+ 		goto error0;
+-	}
+ 
+ 	qoffi = xfs_trans_get_qoff_item(tp, NULL, flags & XFS_ALL_QUOTA_ACCT);
+ 	xfs_trans_log_quotaoff_item(tp, qoffi);
+-- 
+1.7.9.5
 
 _______________________________________________
 xfs mailing list
