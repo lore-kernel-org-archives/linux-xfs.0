@@ -1,16 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qB7CB4wx215541 for <xfs@oss.sgi.com>; Fri, 7 Dec 2012 06:11:05 -0600
+	qB7CAxVA215451 for <xfs@oss.sgi.com>; Fri, 7 Dec 2012 06:10:59 -0600
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id qckm5dxZJYLlsNgA (version=TLSv1
+	cuda.sgi.com with ESMTP id RmVRYhO3FQG81XMg (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 07 Dec 2012 04:13:30 -0800 (PST)
-Message-ID: <50C1DD62.20209@oracle.com>
-Date: Fri, 07 Dec 2012 20:13:22 +0800
+	Fri, 07 Dec 2012 04:13:24 -0800 (PST)
+Message-ID: <50C1DD5C.7070004@oracle.com>
+Date: Fri, 07 Dec 2012 20:13:16 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: [PATCH 4/4] Make disk quota related transactions aware of this change
+Subject: [PATCH 3/4] Make super block unit change related transactions aware
+	of this change
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,90 +26,54 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Make disk quota related transaction reservation works with this new wrapper.
+Make xfs_mount related transaction reservation works with this new wapper.
 
 Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 Cc: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_dquot.c       |    6 ++++--
- fs/xfs/xfs_qm.c          |    6 +++---
- fs/xfs/xfs_qm_syscalls.c |   20 +++++++++++---------
- 3 files changed, 18 insertions(+), 14 deletions(-)
+ fs/xfs/xfs_mount.c |   15 +++++++++------
+ 1 file changed, 9 insertions(+), 6 deletions(-)
 
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index bf27fcc..ba08a1b 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -527,9 +527,11 @@ xfs_qm_dqread(
- 				XFS_WRITE_LOG_RES(mp) +
- 				/*
- 				 * Round the chunklen up to the next multiple
--				 * of 128 (buf log item chunk size)).
-+				 * of xfs_buf_log_overhead(), that is buf log
-+				 * item chunk size.
- 				 */
--				BBTOB(mp->m_quotainfo->qi_dqchunklen) - 1 + 128,
-+				BBTOB(mp->m_quotainfo->qi_dqchunklen) - 1 +
-+				xfs_buf_log_overhead(),
- 				0,
- 				XFS_TRANS_PERM_LOG_RES,
- 				XFS_WRITE_LOG_COUNT);
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index 2e86fa0..59492c1 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -1583,9 +1583,9 @@ xfs_qm_write_sb_changes(
- 
- 	tp = xfs_trans_alloc(mp, XFS_TRANS_QM_SBCHANGE);
- 	if ((error = xfs_trans_reserve(tp, 0,
--				      mp->m_sb.sb_sectsize + 128, 0,
--				      0,
--				      XFS_DEFAULT_LOG_COUNT))) {
-+				       mp->m_sb.sb_sectsize +
-+				       xfs_buf_log_overhead(), 0, 0,
-+				       XFS_DEFAULT_LOG_COUNT))) {
- 		xfs_trans_cancel(tp, 0);
- 		return error;
- 	}
-diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-index 858a3b1..16351c1 100644
---- a/fs/xfs/xfs_qm_syscalls.c
-+++ b/fs/xfs/xfs_qm_syscalls.c
-@@ -489,8 +489,11 @@ xfs_qm_scall_setqlim(
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index b2bd3a0..81e67d9 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -1056,8 +1056,9 @@ xfs_mount_reset_sbqflags(
  		return 0;
  
- 	tp = xfs_trans_alloc(mp, XFS_TRANS_QM_SETQLIM);
--	if ((error = xfs_trans_reserve(tp, 0, sizeof(xfs_disk_dquot_t) + 128,
--				      0, 0, XFS_DEFAULT_LOG_COUNT))) {
+ 	tp = xfs_trans_alloc(mp, XFS_TRANS_QM_SBCHANGE);
+-	error = xfs_trans_reserve(tp, 0, mp->m_sb.sb_sectsize + 128, 0, 0,
+-				      XFS_DEFAULT_LOG_COUNT);
 +	error = xfs_trans_reserve(tp, 0,
-+				  sizeof(xfs_disk_dquot_t) +
-+				  xfs_buf_log_overhead(), 0, 0,
-+				  XFS_DEFAULT_LOG_COUNT);
-+	if (error) {
++				  mp->m_sb.sb_sectsize + xfs_buf_log_overhead(),
++				  0, 0, XFS_DEFAULT_LOG_COUNT);
+ 	if (error) {
  		xfs_trans_cancel(tp, 0);
- 		return (error);
- 	}
-@@ -670,14 +673,13 @@ xfs_qm_log_quotaoff(
- 	uint			oldsbqflag=0;
+ 		xfs_alert(mp, "%s: Superblock update failed!", __func__);
+@@ -1550,8 +1551,9 @@ xfs_log_sbcount(xfs_mount_t *mp)
+ 		return 0;
  
- 	tp = xfs_trans_alloc(mp, XFS_TRANS_QM_QUOTAOFF);
--	if ((error = xfs_trans_reserve(tp, 0,
--				      sizeof(xfs_qoff_logitem_t) * 2 +
--				      mp->m_sb.sb_sectsize + 128,
--				      0,
--				      0,
--				      XFS_DEFAULT_LOG_COUNT))) {
+ 	tp = _xfs_trans_alloc(mp, XFS_TRANS_SB_COUNT, KM_SLEEP);
+-	error = xfs_trans_reserve(tp, 0, mp->m_sb.sb_sectsize + 128, 0, 0,
+-					XFS_DEFAULT_LOG_COUNT);
 +	error = xfs_trans_reserve(tp, 0,
-+				  sizeof(xfs_qoff_logitem_t) * 2 +
-+				  mp->m_sb.sb_sectsize +
-+				  xfs_buf_log_overhead(), 0, 0,
-+				  XFS_DEFAULT_LOG_COUNT);
-+	if (error)
- 		goto error0;
--	}
++				  mp->m_sb.sb_sectsize + xfs_buf_log_overhead(),
++				  0, 0, XFS_DEFAULT_LOG_COUNT);
+ 	if (error) {
+ 		xfs_trans_cancel(tp, 0);
+ 		return error;
+@@ -1912,8 +1914,9 @@ xfs_mount_log_sb(
+ 			 XFS_SB_VERSIONNUM));
  
- 	qoffi = xfs_trans_get_qoff_item(tp, NULL, flags & XFS_ALL_QUOTA_ACCT);
- 	xfs_trans_log_quotaoff_item(tp, qoffi);
+ 	tp = xfs_trans_alloc(mp, XFS_TRANS_SB_UNIT);
+-	error = xfs_trans_reserve(tp, 0, mp->m_sb.sb_sectsize + 128, 0, 0,
+-				XFS_DEFAULT_LOG_COUNT);
++	error = xfs_trans_reserve(tp, 0,
++				  mp->m_sb.sb_sectsize + xfs_buf_log_overhead(),
++				  0, 0, XFS_DEFAULT_LOG_COUNT);
+ 	if (error) {
+ 		xfs_trans_cancel(tp, 0);
+ 		return error;
 -- 
 1.7.9.5
 
