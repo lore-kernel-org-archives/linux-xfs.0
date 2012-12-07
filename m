@@ -1,27 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qB7L2T9v252994 for <xfs@oss.sgi.com>; Fri, 7 Dec 2012 15:02:29 -0600
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id b4n8uwAzkq8Kr008
-	for <xfs@oss.sgi.com>; Fri, 07 Dec 2012 13:04:55 -0800 (PST)
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id 4354A6C0EA
-	for <xfs@oss.sgi.com>; Fri,  7 Dec 2012 15:04:55 -0600 (CST)
-Message-ID: <50C259F9.2050406@hardwarefreak.com>
-Date: Fri, 07 Dec 2012 15:04:57 -0600
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	qB7LDDuL253559 for <xfs@oss.sgi.com>; Fri, 7 Dec 2012 15:13:13 -0600
+Date: Fri, 7 Dec 2012 15:15:36 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [3.0-stable PATCH 00/36] Proposed 3.0-stable bug patches
+Message-ID: <20121207211536.GW27055@sgi.com>
+References: <20121203144208.143464631@sgi.com> <20121205214505.GG29399@dastard>
+	<50C0D57A.9000704@sgi.com> <20121207100646.GJ27172@dastard>
 MIME-Version: 1.0
-Subject: Re: xfsdump INTERRUPT issue
-References: <CCE505AA.B05B7%jellis@dhnet.us>
-	<50BFF726.6090006@hardwarefreak.com>
-	<68036B67-6AE6-4056-89F5-9549B4E476FD@dhnet.us>
-	<50C00583.6000804@hardwarefreak.com>
-	<6F909666-9DFE-43F1-973D-170B892F9C5B@gmail.com>
-	<50C0657D.5050903@hardwarefreak.com>
-	<20121207101620.GK27172@dastard>
-In-Reply-To: <20121207101620.GK27172@dastard>
-Reply-To: stan@hardwarefreak.com
+Content-Disposition: inline
+In-Reply-To: <20121207100646.GJ27172@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,31 +23,101 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Greg KH <gregkh@linuxfoundation.org>, Mark Tinguely <tinguely@sgi.com>, stable@vger.kernel.org, xfs@oss.sgi.com
 
-On 12/7/2012 4:16 AM, Dave Chinner wrote:
-> On Thu, Dec 06, 2012 at 03:29:33AM -0600, Stan Hoeppner wrote:
->> On 12/5/2012 9:01 PM, Jeffrey Ellis wrote:
->> BTW, if your goal in all of this is simply copying all the directories
->> and files from one disk to another disk, you could have used "cp -a" and
->> been done already.  It takes longer to execute than xfsdump/xfsrestore,
->> but given you've been at this for many days now, "cp -a" would have
->> already completed--long ago.
+Hey,
+
+On Fri, Dec 07, 2012 at 09:06:47PM +1100, Dave Chinner wrote:
+> On Thu, Dec 06, 2012 at 11:27:22AM -0600, Mark Tinguely wrote:
+> > On 12/05/12 15:45, Dave Chinner wrote:
+> > >On Mon, Dec 03, 2012 at 05:42:08PM -0600, Mark Tinguely wrote:
+> > >>Here a collection of bug fixes for 3.0-stable. Many of these patches
+> > >>were also selected by Dave Chinner as possible 3.0-stable patches:
+> > >>	http://oss.sgi.com/archives/xfs/2012-08/msg00255.html
+> > >>
+> > >>I chose only bug fixes and kept the changes to a minimum.
+> > >>
+> > >>Patch 21/22 are required for the bug fix in patch 23 but they are
+> > >>important changes in their own right.
+> > >
+> > >So I'll ask the same question that Christoph asked me: If nobody is
+> > >reporting problems on 3.0.x, why do this and risk regression and
+> > >fallout that requires fixing?
+> > >
+> > >FWIW, what testing have you done?
+> > 
+> > Do you mean?
+> > 
+> > 	http://oss.sgi.com/archives/xfs/2012-09/msg00002.html
+> > 
+> > I read that message as a concern that your original Linux 3.0-stable
+> > patch series contained some items that did not meet the -stable
+> > criteria.
 > 
-> Unfortunately, using cp or rsync is not possible because the
-> filesystem has a real-time device attached to it. It's basically a
-> ~10GB data device and a ~500GB real-time device. I'd say it's from a
-> DVR or something like that, and that Jeffrey is trying to put
-> a bigger disk in the DVR....
+> I read it as "why change something that no-one is reporting bugs
+> for?".
 
-Ah, yes.  I didn't catch the RT volume.
+I guess we could all stop putting words in his mouth and let him speak for
+himself.  Christoph (cc'd), would you please clarify your position?
 
-Incidentally, since the real-time feature has never been fully supported
-under Linux, why are DVR manufacturers even using it?  Without GRIO and
-the XBOW ASIC the real-time volume is pretty much useless isn't it?
+> I posted that series because I had to do the work for RHEL to
+> address customer reported problems, not because I felt like pushing
+> a bunch of fixes back to 3.0.
+> 
+> I've spent quite a bit of time over the past few weeks dealing with
+> various weird regressions as a result of that backport. If you're
+> going to backport a singificant amount of stuff to 3.0.x, then
+> that's what you are signing up for. i.e. doing all the bug triage
+> and fixing that will result from the backport...
+> 
+> > As for adding patches to 3.0-stable. I believed then and now that
+> > proactively suggesting bug fixes into 3.0-stable is a good thing
+> > because it is the long term stable branch.
+> 
+> Which is in direct contrast to what most of us think. That is, if
+> nobody is reporting problems, then it ain't broke and it doesn't
+> need fixing.
 
--- 
-Stan
+Who are you speaking for?
+
+In my opinion, proposing appropriate bug fixes for inclusion in -stable has
+merit regardless of whether the bug has been reported by -stable users.  If the
+fix fits the -stable criteria and there is a chance a stable user will hit the
+bug it can be proposed.
+
+> > A few days after Christoph's email, I put my "Reviewed-by:" on your
+> > series.
+> > 
+> > 	http://oss.sgi.com/archives/xfs/2012-09/msg00167.html
+> > 
+> > As for testing, the whole series is spun on xfstests loops for days on
+> > x86_32 and x86_64 boxes, just like we test a top of tree patch series.
+> 
+> Which we all know does not catch all possible regressions. What
+> about crash/shutdown testing? Or load/stress testing? 
+
+I have no objection to additional testing of proposed -stable patches.  However
+I believe it is impossible to catch 'all possible regressions'.  There will
+always be some risk here.
+
+> /me is playing Devil's Advocate because I'm not signing up to
+> triage a whole new set of 3.0.x stable kernel regressions when
+> nobody is currently reporting problems.....
+
+SGI XFS product is based directly upon -stable branches and I'd like to track
+these branches as closely as possible.  This aligns the interests of the SGI
+XFS team and -stable users.  If there are regressions, myself, Mark, Phil,
+Rich, and Andrew are signed up to fix them regardless of whether you wish to be
+involved.  Paying customers come first as always, but the bugs will be fixed
+either way.
+
+Stable folk (cc'd Greg), what is your disposition with regard to proposing
+patches for -stable proactively?  Do we really need to have a bug report from a
+3.0-stable user for every bug we propose for 3.0-stable?
+
+Thanks,
+Ben
 
 _______________________________________________
 xfs mailing list
