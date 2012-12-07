@@ -1,19 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qB79p47a208093 for <xfs@oss.sgi.com>; Fri, 7 Dec 2012 03:51:05 -0600
+	qB7A4NSL208672 for <xfs@oss.sgi.com>; Fri, 7 Dec 2012 04:04:24 -0600
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	p2GnPFIy8d4NyyZr for <xfs@oss.sgi.com>;
-	Fri, 07 Dec 2012 01:53:29 -0800 (PST)
-Date: Fri, 7 Dec 2012 20:53:26 +1100
+	bF1d4ttx4AiJ87Qg for <xfs@oss.sgi.com>;
+	Fri, 07 Dec 2012 02:06:48 -0800 (PST)
+Date: Fri, 7 Dec 2012 21:06:47 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: Fix re-use of EWOULDBLOCK during read on dm-mirror
-Message-ID: <20121207095326.GI27172@dastard>
-References: <50C11E95.4050502@suse.com>
+Subject: Re: [3.0-stable PATCH 00/36] Proposed 3.0-stable bug patches
+Message-ID: <20121207100646.GJ27172@dastard>
+References: <20121203144208.143464631@sgi.com> <20121205214505.GG29399@dastard>
+	<50C0D57A.9000704@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <50C11E95.4050502@suse.com>
+In-Reply-To: <50C0D57A.9000704@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,55 +27,68 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jeff Mahoney <jeffm@suse.com>
-Cc: xfs@oss.sgi.com
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: stable@vger.kernel.org, xfs@oss.sgi.com
 
-On Thu, Dec 06, 2012 at 05:39:17PM -0500, Jeff Mahoney wrote:
-> When using lvconvert to convert a linear mapping to a dm-raid1 mirror,
-> we encountered issues where the log would be flooded with messages like:
+On Thu, Dec 06, 2012 at 11:27:22AM -0600, Mark Tinguely wrote:
+> On 12/05/12 15:45, Dave Chinner wrote:
+> >On Mon, Dec 03, 2012 at 05:42:08PM -0600, Mark Tinguely wrote:
+> >>Here a collection of bug fixes for 3.0-stable. Many of these patches
+> >>were also selected by Dave Chinner as possible 3.0-stable patches:
+> >>	http://oss.sgi.com/archives/xfs/2012-08/msg00255.html
+> >>
+> >>I chose only bug fixes and kept the changes to a minimum.
+> >>
+> >>Patch 21/22 are required for the bug fix in patch 23 but they are
+> >>important changes in their own right.
+> >
+> >So I'll ask the same question that Christoph asked me: If nobody is
+> >reporting problems on 3.0.x, why do this and risk regression and
+> >fallout that requires fixing?
+> >
+> >FWIW, what testing have you done?
 > 
-> metadata I/O error: block 0xee7060 ("xfs_trans_read_buf") error 11 numblks 8
+> Do you mean?
 > 
-> The cause is that dm-mirror (and striping, and others) will return
-> -EWOULDBLOCK for readahead requests while the mirror is rebuilding.
-
-That's nasty - since when has DM been doing this? I doubt anything
-handles a EAGAIN error from the storage layer properly - it's not
-an error the filesystem expects from the lower layers at all.
-
-> XFS's
-> end_io routine caches the errno and then xfs_buf_iowait bails out early
-> when it encounters it after issuing the i/o request.
-
-That doesn't sound right. when XFS issues buffer readahead, it does
-not wait for it to complete. i.e. we never get to xfs_buf_iowait()
-on readahead buffers.
-
-If something then issues a read on the buffer that failed the
-readahead, then we enter xfs_buf_iowait() after reissuing the IO.
-If it's aborting because of a stale EWOULDBLOCK as a result of
-readahead, then the problem is either:
-
-	- failed readahead should not be leaving an error in
-	  b_error; or
-	- the read IO did not zero b_error before starting the IO
-
-> The I/O eventually
-> succeeds and the endio routine resets bp->b_error,
-
-AFAICT, it's a different IO that succeeds (i.e. the resubmitted one
-that is being waited for), not the same one.
-
-> but the original read
-> request has already returned -EWOULDBLOCK to the user and added the log
-> message above to the kernel log, freaking everyone out.
+> 	http://oss.sgi.com/archives/xfs/2012-09/msg00002.html
 > 
-> This patch ignores EWOULDBLOCK when deciding whether to wait for the I/O
-> to complete and tries again, allowing the read to succeed as expected.
+> I read that message as a concern that your original Linux 3.0-stable
+> patch series contained some items that did not meet the -stable
+> criteria.
 
-Which does not appear to be the correct fix - preventing failed
-readahead from leaving a stale error on the buffer seems like the
-right thing to do here...
+I read it as "why change something that no-one is reporting bugs
+for?". I posted that series because I had to do the work for RHEL to
+address customer reported problems, not because I felt like pushing
+a bunch of fixes back to 3.0.
+
+I've spent quite a bit of time over the past few weeks dealing with
+various weird regressions as a result of that backport. If you're
+going to backport a singificant amount of stuff to 3.0.x, then
+that's what you are signing up for. i.e. doing all the bug triage
+and fixing that will result from the backport...
+
+> As for adding patches to 3.0-stable. I believed then and now that
+> proactively suggesting bug fixes into 3.0-stable is a good thing
+> because it is the long term stable branch.
+
+Which is in direct contrast to what most of us think. That is, if
+nobody is reporting problems, then it ain't broke and it doesn't
+need fixing.
+
+> A few days after Christoph's email, I put my "Reviewed-by:" on your
+> series.
+> 
+> 	http://oss.sgi.com/archives/xfs/2012-09/msg00167.html
+> 
+> As for testing, the whole series is spun on xfstests loops for days on
+> x86_32 and x86_64 boxes, just like we test a top of tree patch series.
+
+Which we all know does not catch all possible regressions. What
+about crash/shutdown testing? Or load/stress testing? 
+
+/me is playing Devil's Advocate because I'm not signing up to
+triage a whole new set of 3.0.x stable kernel regressions when
+nobody is currently reporting problems.....
 
 Cheers,
 
