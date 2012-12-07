@@ -1,14 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qB7NFeRh258494 for <xfs@oss.sgi.com>; Fri, 7 Dec 2012 17:15:40 -0600
-Received: from mail-vc0-f181.google.com (mail-vc0-f181.google.com
-	[209.85.220.181]) by cuda.sgi.com with ESMTP id
-	ImOPCwlL31awxbxf (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 07 Dec 2012 15:18:06 -0800 (PST)
-Received: by mail-vc0-f181.google.com with SMTP id gb30so896848vcb.26
-	for <xfs@oss.sgi.com>; Fri, 07 Dec 2012 15:18:05 -0800 (PST)
+	qB7NNiga258774 for <xfs@oss.sgi.com>; Fri, 7 Dec 2012 17:23:44 -0600
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id 2csbvyzQLMhEMH81
+	for <xfs@oss.sgi.com>; Fri, 07 Dec 2012 15:26:10 -0800 (PST)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id EEE626C169
+	for <xfs@oss.sgi.com>; Fri,  7 Dec 2012 17:26:09 -0600 (CST)
+Message-ID: <50C27B14.6020505@hardwarefreak.com>
+Date: Fri, 07 Dec 2012 17:26:12 -0600
+From: Stan Hoeppner <stan@hardwarefreak.com>
+MIME-Version: 1.0
+Subject: Re: xfsdump INTERRUPT issue
 References: <CCE505AA.B05B7%jellis@dhnet.us>
 	<50BFF726.6090006@hardwarefreak.com>
 	<68036B67-6AE6-4056-89F5-9549B4E476FD@dhnet.us>
@@ -16,14 +20,10 @@ References: <CCE505AA.B05B7%jellis@dhnet.us>
 	<6F909666-9DFE-43F1-973D-170B892F9C5B@gmail.com>
 	<50C0657D.5050903@hardwarefreak.com>
 	<20121207101620.GK27172@dastard>
-	<AF36BD3F-712A-455E-AA2C-96F74B7F0440@dhnet.us>
-	<20121207225925.GN27172@dastard>
-Mime-Version: 1.0 (1.0)
-In-Reply-To: <20121207225925.GN27172@dastard>
-Message-Id: <CB337817-011C-4473-93E8-DA7C2215D1FD@gmail.com>
-From: Jeffrey Ellis <grndlvl@gmail.com>
-Subject: Re: xfsdump INTERRUPT issue
-Date: Fri, 7 Dec 2012 18:16:59 -0500
+	<50C259F9.2050406@hardwarefreak.com>
+	<20121207225855.GM27172@dastard>
+In-Reply-To: <20121207225855.GM27172@dastard>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,27 +36,63 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, Stan Hoeppner <stan@hardwarefreak.com>, Jeffrey Ellis <jellis@dhnet.us>
+To: xfs@oss.sgi.com
 
-Gulp. I thought you were suggesting I might still use it in my case. 
-
-Best,
-J. 
-
-On Dec 7, 2012, at 5:59 PM, Dave Chinner <david@fromorbit.com> wrote:
-
-> On Fri, Dec 07, 2012 at 11:15:30AM -0500, Jeffrey Ellis wrote:
->> That's it exactly. You mean I could use xfs_rtcp?
+On 12/7/2012 4:58 PM, Dave Chinner wrote:
+> On Fri, Dec 07, 2012 at 03:04:57PM -0600, Stan Hoeppner wrote:
+>> On 12/7/2012 4:16 AM, Dave Chinner wrote:
+>>> On Thu, Dec 06, 2012 at 03:29:33AM -0600, Stan Hoeppner wrote:
+>>>> On 12/5/2012 9:01 PM, Jeffrey Ellis wrote:
+>>>> BTW, if your goal in all of this is simply copying all the directories
+>>>> and files from one disk to another disk, you could have used "cp -a" and
+>>>> been done already.  It takes longer to execute than xfsdump/xfsrestore,
+>>>> but given you've been at this for many days now, "cp -a" would have
+>>>> already completed--long ago.
+>>>
+>>> Unfortunately, using cp or rsync is not possible because the
+>>> filesystem has a real-time device attached to it. It's basically a
+>>> ~10GB data device and a ~500GB real-time device. I'd say it's from a
+>>> DVR or something like that, and that Jeffrey is trying to put
+>>> a bigger disk in the DVR....
+>>
+>> Ah, yes.  I didn't catch the RT volume.
+>>
+>> Incidentally, since the real-time feature has never been fully supported
+>> under Linux, why are DVR manufacturers even using it?  Without GRIO and
+>> the XBOW ASIC the real-time volume is pretty much useless isn't it?
 > 
-> You could, but did you read the caveat and understand what it means?
+> The realtime volume actually has nothing to do with "real-time" at
+> all. What it has is a deterministic allocator (bitmap rather than
+> tree based) which is what you need for real-time applications (i.e.
+> bound worst case performance). It got called the "real-time device"
+> because of the applications it was used for, not because there is
+> anything "real-time" about it.  IOWs, you don't need special
+> hardware to take advantage of the properties of the allocator.
 > 
+> DVR manufacturers have decided to use it for 3 reasons:
+> 
+> 	1. Folklore says you need a RT device for
+> 	   concurrent streaming workloads
+> 	2. It's supported upstream
+
+Define "support" and "upstream".  The few RT related posts over the past
+years generated responses, some from you I think, that the RT code isn't
+maintained, hasn't been for a long time.  Maybe I've misunderstood.
+
+> 	3. It makes it hard for windows users to replace the
+> 	   harddisk in the DVR by themselves (true).
+> 
+> #3 is the case we are seeing here.
+
+Yes this seems to be the case.
+
 > Cheers,
 > 
 > Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> 
+
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
