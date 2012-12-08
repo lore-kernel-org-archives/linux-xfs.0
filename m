@@ -1,16 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qB8CbTsN032451 for <xfs@oss.sgi.com>; Sat, 8 Dec 2012 06:37:30 -0600
-Date: Sat, 8 Dec 2012 07:39:55 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v3 5/5] xfs remove the XFS_TRANS_DEBUG routines
-Message-ID: <20121208123955.GE29107@infradead.org>
-References: <20121204231801.982422341@sgi.com>
-	<20121204224938.990495241@sgi.com>
+	qB8GPKD2043168 for <xfs@oss.sgi.com>; Sat, 8 Dec 2012 10:25:20 -0600
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id 1tQGvDSKEWQGK2qb for <xfs@oss.sgi.com>;
+	Sat, 08 Dec 2012 08:27:45 -0800 (PST)
+Message-ID: <50C36A83.1040406@sandeen.net>
+Date: Sat, 08 Dec 2012 10:27:47 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20121204224938.990495241@sgi.com>
+Subject: Re: [PATCH] xfstests: Ensure cmdline geometry puts mkfs.xfs into
+	multidisk mode
+References: <50ABB115.9070905@sandeen.net>
+	<20121121095636.GC23339@infradead.org>
+	<50C115E8.9090106@sandeen.net>
+	<20121208120007.GB4430@infradead.org>
+In-Reply-To: <20121208120007.GB4430@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,18 +28,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Ben England <bengland@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Tue, Dec 04, 2012 at 05:18:06PM -0600, Mark Tinguely wrote:
-> Remove the XFS_TRANS_DEBUG routines. They are no longer appropriate
-> and have not been used in years
+On 12/8/12 6:00 AM, Christoph Hellwig wrote:
+> On Thu, Dec 06, 2012 at 04:02:16PM -0600, Eric Sandeen wrote:
+>> Ensure that when mkfs.xfs is invoked with commandline geometry, it
+>> triggers multidisk mode and creates more AGs.
+>>
+>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > 
-> Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+> Looks good,
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-Looks good,
+Thanks
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+>> Maybe this should also test device-specified geometry, but not sure
+>> how to do that easily within xfstests, any ideas?
+> 
+> That would involved scsi_debug so that we could set them up.  We had
+> several ideas how to use scsi debug for these sort of tests but never
+> really bothered to do it.  If you have some spare cycles I'd love to see
+> this sort of tests.
+
+scsi_debug won't report geometry on its own today; we'd need to assemble
+something out of scsi_debug luns I'm afraid, so it gets even more involved.
+
+We do have a little bit of scsi_debug framework in xfstests today, though,
+so if scsi_debug grew the capability it'd be easy to add.
+
+-Eric
+
 
 _______________________________________________
 xfs mailing list
