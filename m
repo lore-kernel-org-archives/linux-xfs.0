@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qB8JR7f7051294 for <xfs@oss.sgi.com>; Sat, 8 Dec 2012 13:27:07 -0600
-Received: from awesome.dsw2k3.info (awesome.dsw2k3.info [195.71.86.230]) by
-	cuda.sgi.com with ESMTP id felGvQBse7332aeG (version=TLSv1
+	qB8JbrMk051789 for <xfs@oss.sgi.com>; Sat, 8 Dec 2012 13:37:53 -0600
+Received: from mailsrv14.zmi.at (mailsrv14.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id 9KQBzNCFwq1yQ9CP (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 08 Dec 2012 11:29:33 -0800 (PST)
-Date: Sat, 8 Dec 2012 20:29:27 +0100
-From: Matthias Schniedermeyer <ms@citd.de>
+	Sat, 08 Dec 2012 11:40:18 -0800 (PST)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
 Subject: Re: XFS write cache flush policy
-Message-ID: <20121208192927.GA17875@citd.de>
+Date: Sat, 08 Dec 2012 20:40:07 +0100
+Message-ID: <5955806.tSHc7WOiJd@saturn>
+In-Reply-To: <20121208192927.GA17875@citd.de>
 References: <CAA_rkDfFUmZzT_kMznsTSNVxdfqfmz=bmJ400wdBOzocgP32eA@mail.gmail.com>
+	<20121208192927.GA17875@citd.de>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAA_rkDfFUmZzT_kMznsTSNVxdfqfmz=bmJ400wdBOzocgP32eA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,68 +22,77 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============4418179763122290949=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Lin Li <sdeber@gmail.com>
-Cc: xfs@oss.sgi.com
-
-On 06.12.2012 09:51, Lin Li wrote:
-> Hi, Guys. I recently suffered a huge data loss on power cut on an XFS
-> partition. The problem was that I copied a lot of files (roughly 20Gb) to
-> an XFS partition, then 10 hours later, I got an unexpected power cut. As a
-> result, all these newly copied files disappeared as if they had never been
-> copied. I tried to check and repair the partition, but xfs_check reports no
-> error at all. So I guess the problem is that the meta data for these files
-> were all kept in the cache (64Mb) and were never committed to the hard
-> disk.
-> 
-> What is the cache flush policy for XFS? Does it always reserve some fixed
-> space in cache for metadata? I asked because I thought since I copied such
-> a huge amount of data, at least some of these files must be fully committed
-> to the hard disk, then cache is only 64Mb anyway. But the reality is all of
-> them were lost. the only possibility I can think is some part of the cache
-> was reserved for meta data, so even the cache is fully filled, this part
-> will not be written to the disk. Am I right?
-
-I have the same problem, several times.
-
-The latest just an hour ago.
-I'm copying a HDD onto another. Plain rsync -a /src/ /tgt/ Both HDDs are 
-3TB SATA-drives in a USB3-enclosure with a dm-crypt layer in between.
-About 45 minutes into copying the target HDD disconnects for a moment.
-45minutes means someting over 200GB were copied, each file is about 
-900MB.
-After remounting the filesystems there were exactly 0 files.
-
-After that i started a "while true; do sync ; done"-loop in the 
-background.
-And just while i was writing this email the HDD disconnected a second 
-time. But this time the files up until the last 'sync' were retained.
-
-And something like this has happend to me at least a half dozen times in 
-the last few month. I think the first time was with kernel 3.5.X, when i 
-was actually booting into 3.6 with a plain "reboot" (filesystem might 
-not have been umounted cleanly.), after the reboot the changes of about 
-the last half hour were gone. e.g. i had renamed a directory about 15 
-minutes before i rebooted and after the reboot the directory had it's 
-old name back.
-
-Kernel in all but (maybe)one case is between 3.6 and 3.6.2 (currently), 
-the first time MIGHT have been something around 3.5.8 but i'm not sure. 
-HDDs were either connected by plain SATA(AHCI) or by USB3 enclosure. All 
-affected filesystems were/are with a dm-crypt layer inbetween.
+To: xfs@oss.sgi.com
+Cc: Lin Li <sdeber@gmail.com>
 
 
+--===============4418179763122290949==
+Content-Type: multipart/signed; boundary="nextPart48405543.jmpvORZaXi"; micalg="pgp-sha1"; protocol="application/pgp-signature"
+Content-Transfer-Encoding: quoted-printable
 
 
+--nextPart48405543.jmpvORZaXi
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
 
--- 
+Am Samstag, 8. Dezember 2012, 20:29:27 schrieb Matthias Schniedermeyer:=
 
-Matthias
+> I have the same problem, several times.
+
+I'd like to chime in here, with a similar issue: I have Linux on my=20
+desktop, xfs is the home partition, 16G RAM. One day my system froze, n=
+o=20
+chance to do a buffer flush via SYS-S/U/B, I had to press the reset=20
+button (no power off, just reset). Upon restart, *lots* of files were=20=
+
+gone, destroyed, etc, and my KDE desktop wouldn't work anymore. Luckily=
+=20
+I have backups, and could restore - but this just shouldn't happen, and=
+=20
+it was *much* better with older kernels. What is the problem that=20
+metadata isn't written to disk occasionally? I was on 3.6.6 when that=20=
+
+happened, now on 3.6.8, so very recent.
+
+--=20
+mit freundlichen Gr=C3=BCssen,
+Michael Monnerie, Ing. BSc
+
+it-management Internet Services: Prot=C3=A9ger
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: +43 660 / 415 6531
+XING: https://www.xing.com/profile/Michael_Monnerie
+Twitter: @MichaelMonnerie https://twitter.com/MichaelMonnerie
+FaceBook: https://www.facebook.com/michael.monnerie
+LinkedIn: http://lnkd.in/uGx6ug
+
+--nextPart48405543.jmpvORZaXi
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iEYEABECAAYFAlDDl54ACgkQzhSR9xwSCbRZdACgmXdFpQ2/0QUxdO8LWUE+g1kT
+T0wAoKa+1xkGSEkDAsOjqJbx+FAxKjXC
+=KWsB
+-----END PGP SIGNATURE-----
+
+--nextPart48405543.jmpvORZaXi--
+
+
+--===============4418179763122290949==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============4418179763122290949==--
