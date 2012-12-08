@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qB8J7Vo6050304 for <xfs@oss.sgi.com>; Sat, 8 Dec 2012 13:07:32 -0600
-Received: from mail-pa0-f53.google.com (mail-pa0-f53.google.com
-	[209.85.220.53]) by cuda.sgi.com with ESMTP id YMMfBVTzQ20KFTMt
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 08 Dec 2012 11:09:58 -0800 (PST)
-Received: by mail-pa0-f53.google.com with SMTP id hz1so1100680pad.26
-	for <xfs@oss.sgi.com>; Sat, 08 Dec 2012 11:09:58 -0800 (PST)
-Date: Sat, 8 Dec 2012 11:12:12 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [3.0-stable PATCH 00/36] Proposed 3.0-stable bug patches
-Message-ID: <20121208191212.GA3592@kroah.com>
-References: <20121203144208.143464631@sgi.com> <20121205214505.GG29399@dastard>
-	<50C0D57A.9000704@sgi.com> <20121207100646.GJ27172@dastard>
-	<20121207211536.GW27055@sgi.com>
+	qB8JA6Vk050503 for <xfs@oss.sgi.com>; Sat, 8 Dec 2012 13:10:06 -0600
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id lZYgRTJfexUZFFQ3 for <xfs@oss.sgi.com>;
+	Sat, 08 Dec 2012 11:12:32 -0800 (PST)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 6F6E163C3E3F
+	for <xfs@oss.sgi.com>; Sat,  8 Dec 2012 13:12:32 -0600 (CST)
+Message-ID: <50C39123.6050303@sandeen.net>
+Date: Sat, 08 Dec 2012 13:12:35 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20121207211536.GW27055@sgi.com>
+Subject: [PATCH] xfsprogs: document fpunch command in xfs_io
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,21 +27,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Mark Tinguely <tinguely@sgi.com>, stable@vger.kernel.org, xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-On Fri, Dec 07, 2012 at 03:15:36PM -0600, Ben Myers wrote:
-> Stable folk (cc'd Greg), what is your disposition with regard to proposing
-> patches for -stable proactively?  Do we really need to have a bug report from a
-> 3.0-stable user for every bug we propose for 3.0-stable?
+Add manpage documentation for the new fpunch command in xfs_io.
 
-My rules are if the subsystem maintainer(s) agree that the patches
-should be applied, and they meet the stable tree guidelines, then I
-accept them.  So it's up to you all, I'll do whatever you suggest here.
+Also fix references to the fallocate manpage, which is (now?)
+in section 2, not section 3 of the man pages.  (Since it's
+a syscall, not a library function).
 
-thanks,
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
 
-greg k-h
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index f7c6935..9b9ece8 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -355,17 +355,23 @@ manual page.
+ .BI "falloc [ \-k ]" " offset length"
+ Allocates reserved, unwritten space for part of a file using the
+ fallocate routine as described in the
+-.BR fallocate (3)
++.BR fallocate (2)
+ manual page.
+ .RS 1.0i
+ .PD 0
+ .TP 0.4i
+ .B \-k
+ will set the FALLOC_FL_KEEP_SIZE flag as described in
+-.BR fallocate (3).
++.BR fallocate (2).
+ .PD
+ .RE
+ .TP
++.BI fpunch " offset length"
++Punches (de-allocates) blocks in the file by calling fallocate with 
++the FALLOC_FL_PUNCH_HOLE flag as described in the
++.BR fallocate (2)
++manual page.
++.TP
+ .BI truncate " offset"
+ Truncates the current file at the given offset using
+ .BR ftruncate (2).
 
 _______________________________________________
 xfs mailing list
