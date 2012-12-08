@@ -1,17 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qB8CLMPG031234 for <xfs@oss.sgi.com>; Sat, 8 Dec 2012 06:21:22 -0600
-Date: Sat, 8 Dec 2012 07:23:48 -0500
+	qB8CQtaQ031724 for <xfs@oss.sgi.com>; Sat, 8 Dec 2012 06:26:55 -0600
+Date: Sat, 8 Dec 2012 07:29:21 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v3 2/5] xfs: rename bli_format to avoid confusion with
-	bli_formats
-Message-ID: <20121208122348.GB29107@infradead.org>
+Subject: Re: [PATCH v3 3/5] xfs: fix segment in xfs_buf_item_format_segment
+Message-ID: <20121208122921.GC29107@infradead.org>
 References: <20121204231801.982422341@sgi.com>
-	<20121204224938.703805260@sgi.com>
+	<20121204224938.820985192@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20121204224938.703805260@sgi.com>
+In-Reply-To: <20121204224938.820985192@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,15 +26,51 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Mark Tinguely <tinguely@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Dec 04, 2012 at 05:18:03PM -0600, Mark Tinguely wrote:
-> Rename the bli_format structure to __bli_format to avoid
-> accidently confusing them with the bli_formats pointer.
+On Tue, Dec 04, 2012 at 05:18:04PM -0600, Mark Tinguely wrote:
+> Not every segment in a multi-segment buffer is dirty in a
+> transaction and they will not be outputted. The assert in
+> xfs_buf_item_format_segment() that checks for the at least
+> one chunk of data in the segment to be used is not necessary
+> true for multi-segmented buffers.
 > 
 > Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+> ---
+>  fs/xfs/xfs_buf_item.c |   20 +++++++++++++++-----
+>  1 file changed, 15 insertions(+), 5 deletions(-)
+> 
+> Index: b/fs/xfs/xfs_buf_item.c
+> ===================================================================
+> --- a/fs/xfs/xfs_buf_item.c
+> +++ b/fs/xfs/xfs_buf_item.c
+> @@ -287,6 +287,17 @@ xfs_buf_item_format_segment(
+>  	 */
+>  	base_size = offsetof(struct xfs_buf_log_format, blf_data_map) +
+>  			(blfp->blf_map_size * sizeof(blfp->blf_data_map[0]));
+> +
+> +	nvecs = 0;
+> +	first_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size, 0);
+> +	if (!(bip->bli_flags & XFS_BLI_STALE) && first_bit == -1) {
+> +		/*
+> +		 * If the map is not be dirty in the transaction, mark
+> +		 * the size as zero and do not advance the vector pointer.
+> +		 */
+> +		goto out;
+> +	}
+> +
 
-Looks good,
+I don't really like the style of this check.  What's the problem of
+doing it this way:
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+  1) fill out the first vecp
+  2) do the stale check as-is
+  3) handle the the first_bit == -1 case  ala:
+
+	if (first_bit == -1) {
+		blfp->blf_size = 0;
+		return vecp;
+	}
+
+  4) only then increcement vecp
 
 _______________________________________________
 xfs mailing list
