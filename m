@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qB8KuP49055415 for <xfs@oss.sgi.com>; Sat, 8 Dec 2012 14:56:25 -0600
+	qB8L0l6c055729 for <xfs@oss.sgi.com>; Sat, 8 Dec 2012 15:00:47 -0600
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id kNC7NwzlSmT93D4f for <xfs@oss.sgi.com>;
-	Sat, 08 Dec 2012 12:58:52 -0800 (PST)
+	ESMTP id dP5Fl6UMOfMXeUyZ for <xfs@oss.sgi.com>;
+	Sat, 08 Dec 2012 13:03:07 -0800 (PST)
 Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
 	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
 	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 0C50063C3E3F
-	for <xfs@oss.sgi.com>; Sat,  8 Dec 2012 14:58:52 -0600 (CST)
-Message-ID: <50C3AA0F.4070505@sandeen.net>
-Date: Sat, 08 Dec 2012 14:58:55 -0600
+	by sandeen.net (Postfix) with ESMTPSA id 34D5163C3E3F
+	for <xfs@oss.sgi.com>; Sat,  8 Dec 2012 15:03:07 -0600 (CST)
+Message-ID: <50C3AB0E.3050006@sandeen.net>
+Date: Sat, 08 Dec 2012 15:03:10 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH] xfstests: ensure all xfs_io commands are documented in the
-	manpage
+Subject: [PATCH] xfsprogs: remove setfl from xfs_io
 References: <50C39123.6050303@sandeen.net>
 In-Reply-To: <50C39123.6050303@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -32,94 +31,108 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs-oss <xfs@oss.sgi.com>
 
-Ensure that all commands listed in "xfs_io -c help" are
-documented in the xfs_io(8) manpage.
+Doesn't seem to have worked for ages, and is (therefore)
+apparently not ever used:
+
+xfs_io> setfl
+xfs_io> help setfl
+setfl [-adx] -- set/clear append/direct flags on the open file
+xfs_io> setfl -a
+bad argument count 1 to setfl, expected 0 arguments
+xfs_io> setfl -d
+bad argument count 1 to setfl, expected 0 arguments
+xfs_io> setfl
+xfs_io> 
+
+At best, it seems intended to toggle the flag state, but
+gives no feedback about current state.  -x is in help but
+not implemented, etc.
+
+Just remove it.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
 
-diff --git a/293 b/293
-new file mode 100755
-index 0000000..e42344d
---- /dev/null
-+++ b/293
-@@ -0,0 +1,59 @@
-+#! /bin/bash
-+# FS QA Test No. 293
-+#
-+# Ensure all xfs_io commands are documented
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2012 Red Hat, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+# creator
-+owner=sandeen@redhat.com
-+
-+seq=`basename $0`
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common.rc
-+. ./common.filter
-+
-+# real QA test starts here
-+
-+# Modify as appropriate.
-+_supported_fs xfs
-+_supported_os IRIX Linux
-+
-+echo "Silence is golden"
-+
-+for COMMAND in `$XFS_IO_PROG -c help | awk '{print $1}' | grep -v "^Use "`; do
-+  man xfs_io | col -b | grep -wq $COMMAND || \
-+	echo "$COMMAND not documented in the xfs_io manpage"
-+done
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/293.out b/293.out
-new file mode 100644
-index 0000000..076fc05
---- /dev/null
-+++ b/293.out
-@@ -0,0 +1,2 @@
-+QA output created by 293
-+Silence is golden
-diff --git a/group b/group
-index 9562685..b04fb50 100644
---- a/group
-+++ b/group
-@@ -411,3 +411,4 @@ deprecated
- 290 auto rw prealloc quick ioctl
- 291 auto mkfs quick
- 292 auto quick
-+293 auto quick
+diff --git a/io/open.c b/io/open.c
+index 46538ba..cc677e6 100644
+--- a/io/open.c
++++ b/io/open.c
+@@ -25,7 +25,6 @@
+ static cmdinfo_t open_cmd;
+ static cmdinfo_t stat_cmd;
+ static cmdinfo_t close_cmd;
+-static cmdinfo_t setfl_cmd;
+ static cmdinfo_t statfs_cmd;
+ static cmdinfo_t chproj_cmd;
+ static cmdinfo_t lsproj_cmd;
+@@ -668,45 +667,6 @@ extsize_f(
+ }
+ 
+ static int
+-setfl_f(
+-	int			argc,
+-	char			**argv)
+-{
+-	int			c, flags;
+-
+-	flags = fcntl(file->fd, F_GETFL, 0);
+-	if (flags < 0) {
+-		perror("fcntl(F_GETFL)");
+-		return 0;
+-	}
+-
+-	while ((c = getopt(argc, argv, "ad")) != EOF) {
+-		switch (c) {
+-		case 'a':
+-			if (flags & O_APPEND)
+-				flags |= O_APPEND;
+-			else
+-				flags &= ~O_APPEND;
+-			break;
+-		case 'd':
+-			if (flags & O_DIRECT)
+-				flags |= O_DIRECT;
+-			else
+-				flags &= ~O_DIRECT;
+-			break;
+-		default:
+-			printf(_("invalid setfl argument -- '%c'\n"), c);
+-			return 0;
+-		}
+-	}
+-
+-	if (fcntl(file->fd, F_SETFL, flags)  < 0)
+-		perror("fcntl(F_SETFL)");
+-
+-	return 0;
+-}
+-
+-static int
+ statfs_f(
+ 	int			argc,
+ 	char			**argv)
+@@ -791,13 +751,6 @@ open_init(void)
+ 	close_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+ 	close_cmd.oneline = _("close the current open file");
+ 
+-	setfl_cmd.name = "setfl";
+-	setfl_cmd.cfunc = setfl_f;
+-	setfl_cmd.args = _("[-adx]");
+-	setfl_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+-	setfl_cmd.oneline =
+-		_("set/clear append/direct flags on the open file");
+-
+ 	statfs_cmd.name = "statfs";
+ 	statfs_cmd.cfunc = statfs_f;
+ 	statfs_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+@@ -837,7 +790,6 @@ open_init(void)
+ 	add_command(&open_cmd);
+ 	add_command(&stat_cmd);
+ 	add_command(&close_cmd);
+-	add_command(&setfl_cmd);
+ 	add_command(&statfs_cmd);
+ 	add_command(&chproj_cmd);
+ 	add_command(&lsproj_cmd);
 
 _______________________________________________
 xfs mailing list
