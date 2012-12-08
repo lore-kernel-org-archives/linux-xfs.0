@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qB8C7eWr029966 for <xfs@oss.sgi.com>; Sat, 8 Dec 2012 06:07:40 -0600
+	qB8C7eTG029976 for <xfs@oss.sgi.com>; Sat, 8 Dec 2012 06:07:40 -0600
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	JmK9f5qa5QVQgcxh (version=TLSv1 cipher=AES256-SHA bits=256
+	deuvIucnEOWnk1oe (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 08 Dec 2012 04:10:06 -0800 (PST)
+	Sat, 08 Dec 2012 04:10:07 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1ThJEM-0004hT-4m
+	Linux)) id 1ThJEM-0004ig-GQ
 	for xfs@oss.sgi.com; Sat, 08 Dec 2012 12:10:06 +0000
-Message-Id: <20121208121006.098660509@bombadil.infradead.org>
-Date: Sat, 08 Dec 2012 07:08:15 -0500
+Message-Id: <20121208121006.467482248@bombadil.infradead.org>
+Date: Sat, 08 Dec 2012 07:08:17 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 3/5] xfs: always hold the iolock when calling
-	xfs_change_file_space
+Subject: [PATCH 5/5] xfs: fold xfs_change_file_space into xfs_ioc_space
 References: <20121208120812.755863148@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-kill-XFS_ATTR_NOLOCK
+Content-Disposition: inline; filename=xfs-kill-xfs_change_file_space-2
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,268 +32,392 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Currently fallocate always holds the iolock when calling into
-xfs_change_file_space, while the ioctl path lets some of the lower level
-functions take it, but leave it out in others.
-
-This patch makes sure the ioctl path also always holds the iolock and
-thus introduces consistent locking for the preallocation operations while
-simplifying the code and allowing to kill the now unused XFS_ATTR_NOLOCK
-flag.
+Now that only one caller of xfs_change_file_space is left it can be merged
+into said caller.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 ---
- fs/xfs/xfs_file.c     |    2 -
- fs/xfs/xfs_ioctl.c    |    2 +
- fs/xfs/xfs_vnodeops.c |   71 ++++++++++++++++----------------------------------
- fs/xfs/xfs_vnodeops.h |    1 
- 4 files changed, 27 insertions(+), 49 deletions(-)
+ fs/xfs/xfs_ioctl.c    |  130 +++++++++++++++++++++++++++++++++---
+ fs/xfs/xfs_vnodeops.c |  180 --------------------------------------------------
+ fs/xfs/xfs_vnodeops.h |    7 -
+ 3 files changed, 125 insertions(+), 192 deletions(-)
 
-Index: xfs/fs/xfs/xfs_file.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_file.c	2012-11-30 18:38:47.404018984 -0800
-+++ xfs/fs/xfs/xfs_file.c	2012-11-30 18:39:27.892020019 -0800
-@@ -817,7 +817,7 @@ xfs_file_fallocate(
- 	xfs_flock64_t	bf;
- 	xfs_inode_t	*ip = XFS_I(inode);
- 	int		cmd = XFS_IOC_RESVSP;
--	int		attr_flags = XFS_ATTR_NOLOCK;
-+	int		attr_flags = 0;
- 
- 	if (mode & ~(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE))
- 		return -EOPNOTSUPP;
 Index: xfs/fs/xfs/xfs_ioctl.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_ioctl.c	2012-11-30 18:38:51.724019096 -0800
-+++ xfs/fs/xfs/xfs_ioctl.c	2012-11-30 18:39:27.892020019 -0800
-@@ -642,7 +642,9 @@ xfs_ioc_space(
+--- xfs.orig/fs/xfs/xfs_ioctl.c	2012-11-30 18:39:57.876020790 -0800
++++ xfs/fs/xfs/xfs_ioctl.c	2012-11-30 18:43:52.728026802 -0800
+@@ -613,7 +613,11 @@ xfs_ioc_space(
+ 	unsigned int		cmd,
+ 	xfs_flock64_t		*bf)
+ {
+-	int			attr_flags = 0;
++	struct xfs_mount	*mp = ip->i_mount;
++	struct xfs_trans	*tp;
++	struct iattr		iattr;
++	bool			setprealloc = false;
++	bool			clrprealloc = false;
+ 	int			error;
+ 
+ 	/*
+@@ -633,17 +637,127 @@ xfs_ioc_space(
+ 	if (!S_ISREG(inode->i_mode))
+ 		return -XFS_ERROR(EINVAL);
+ 
+-	if (filp->f_flags & O_DSYNC)
+-		attr_flags |= XFS_ATTR_SYNC;
+-
+-	if (ioflags & IO_INVIS)
+-		attr_flags |= XFS_ATTR_DMI;
+-
  	error = mnt_want_write_file(filp);
  	if (error)
  		return error;
-+	xfs_ilock(ip, XFS_IOLOCK_EXCL);
- 	error = xfs_change_file_space(ip, cmd, bf, filp->f_pos, attr_flags);
-+	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
++
+ 	xfs_ilock(ip, XFS_IOLOCK_EXCL);
+-	error = xfs_change_file_space(ip, cmd, bf, filp->f_pos, attr_flags);
++
++	switch (bf->l_whence) {
++	case 0: /*SEEK_SET*/
++		break;
++	case 1: /*SEEK_CUR*/
++		bf->l_start += filp->f_pos;
++		break;
++	case 2: /*SEEK_END*/
++		bf->l_start += XFS_ISIZE(ip);
++		break;
++	default:
++		error = XFS_ERROR(EINVAL);
++		goto out_unlock;
++	}
++
++	/*
++	 * length of <= 0 for resv/unresv/zero is invalid.  length for
++	 * alloc/free is ignored completely and we have no idea what userspace
++	 * might have set it to, so set it to zero to allow range
++	 * checks to pass.
++	 */
++	switch (cmd) {
++	case XFS_IOC_ZERO_RANGE:
++	case XFS_IOC_RESVSP:
++	case XFS_IOC_RESVSP64:
++	case XFS_IOC_UNRESVSP:
++	case XFS_IOC_UNRESVSP64:
++		if (bf->l_len <= 0) {
++			error = XFS_ERROR(EINVAL);
++			goto out_unlock;
++		}
++		break;
++	default:
++		bf->l_len = 0;
++		break;
++	}
++
++	if (bf->l_start < 0 ||
++	    bf->l_start > mp->m_super->s_maxbytes ||
++	    bf->l_start + bf->l_len < 0 ||
++	    bf->l_start + bf->l_len >= mp->m_super->s_maxbytes) {
++		error = XFS_ERROR(EINVAL);
++		goto out_unlock;
++	}
++
++	switch (cmd) {
++	case XFS_IOC_ZERO_RANGE:
++		error = xfs_zero_file_space(ip, bf->l_start, bf->l_len);
++		if (!error)
++			setprealloc = true;
++		break;
++	case XFS_IOC_RESVSP:
++	case XFS_IOC_RESVSP64:
++		error = xfs_alloc_file_space(ip, bf->l_start, bf->l_len,
++						XFS_BMAPI_PREALLOC);
++		if (!error)
++			setprealloc = true;
++		break;
++	case XFS_IOC_UNRESVSP:
++	case XFS_IOC_UNRESVSP64:
++		error = xfs_free_file_space(ip, bf->l_start, bf->l_len);
++		break;
++	case XFS_IOC_ALLOCSP:
++	case XFS_IOC_ALLOCSP64:
++	case XFS_IOC_FREESP:
++	case XFS_IOC_FREESP64:
++		if (bf->l_start > XFS_ISIZE(ip)) {
++			error = xfs_alloc_file_space(ip, XFS_ISIZE(ip),
++					bf->l_start - XFS_ISIZE(ip), 0);
++			if (error)
++				goto out_unlock;
++		}
++
++		iattr.ia_valid = ATTR_SIZE;
++		iattr.ia_size = bf->l_start;
++
++		error = xfs_setattr_size(ip, &iattr);
++		if (!error)
++			clrprealloc = true;
++		break;
++	default:
++		ASSERT(0);
++		error = XFS_ERROR(EINVAL);
++	}
++
++	if (error)
++		goto out_unlock;
++
++	tp = xfs_trans_alloc(mp, XFS_TRANS_WRITEID);
++	error = xfs_trans_reserve(tp, 0, XFS_WRITEID_LOG_RES(mp), 0, 0, 0);
++	if (error) {
++		xfs_trans_cancel(tp, 0);
++		goto out_unlock;
++	}
++
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
++	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
++
++	if (!(ioflags & IO_INVIS)) {
++		ip->i_d.di_mode &= ~S_ISUID;
++		if (ip->i_d.di_mode & S_IXGRP)
++			ip->i_d.di_mode &= ~S_ISGID;
++		xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
++	}
++
++	if (setprealloc)
++		ip->i_d.di_flags |= XFS_DIFLAG_PREALLOC;
++	else if (clrprealloc)
++		ip->i_d.di_flags &= ~XFS_DIFLAG_PREALLOC;
++
++	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
++	if (filp->f_flags & O_DSYNC)
++		xfs_trans_set_sync(tp);
++	error = xfs_trans_commit(tp, 0);
++
++out_unlock:
+ 	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
  	mnt_drop_write_file(filp);
  	return -error;
- }
 Index: xfs/fs/xfs/xfs_vnodeops.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_vnodeops.c	2012-11-30 18:38:47.408018982 -0800
-+++ xfs/fs/xfs/xfs_vnodeops.c	2012-11-30 18:39:27.896020019 -0800
-@@ -1651,8 +1651,7 @@ xfs_alloc_file_space(
- 	xfs_inode_t		*ip,
- 	xfs_off_t		offset,
- 	xfs_off_t		len,
--	int			alloc_type,
--	int			attr_flags)
-+	int			alloc_type)
- {
- 	xfs_mount_t		*mp = ip->i_mount;
- 	xfs_off_t		count;
-@@ -1912,8 +1911,7 @@ STATIC int
- xfs_free_file_space(
- 	xfs_inode_t		*ip,
- 	xfs_off_t		offset,
--	xfs_off_t		len,
--	int			attr_flags)
-+	xfs_off_t		len)
- {
- 	int			committed;
- 	int			done;
-@@ -1931,7 +1929,6 @@ xfs_free_file_space(
- 	int			rt;
- 	xfs_fileoff_t		startoffset_fsb;
- 	xfs_trans_t		*tp;
--	int			need_iolock = 1;
- 
- 	mp = ip->i_mount;
- 
-@@ -1948,20 +1945,15 @@ xfs_free_file_space(
- 	startoffset_fsb	= XFS_B_TO_FSB(mp, offset);
- 	endoffset_fsb = XFS_B_TO_FSBT(mp, offset + len);
- 
--	if (attr_flags & XFS_ATTR_NOLOCK)
--		need_iolock = 0;
--	if (need_iolock) {
--		xfs_ilock(ip, XFS_IOLOCK_EXCL);
--		/* wait for the completion of any pending DIOs */
--		inode_dio_wait(VFS_I(ip));
--	}
-+	/* wait for the completion of any pending DIOs */
-+	inode_dio_wait(VFS_I(ip));
- 
- 	rounding = max_t(uint, 1 << mp->m_sb.sb_blocklog, PAGE_CACHE_SIZE);
- 	ioffset = offset & ~(rounding - 1);
- 	error = -filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
- 					      ioffset, -1);
- 	if (error)
--		goto out_unlock_iolock;
-+		goto out;
- 	truncate_pagecache_range(VFS_I(ip), ioffset, -1);
- 
- 	/*
-@@ -1975,7 +1967,7 @@ xfs_free_file_space(
- 		error = xfs_bmapi_read(ip, startoffset_fsb, 1,
- 					&imap, &nimap, 0);
- 		if (error)
--			goto out_unlock_iolock;
-+			goto out;
- 		ASSERT(nimap == 0 || nimap == 1);
- 		if (nimap && imap.br_startblock != HOLESTARTBLOCK) {
- 			xfs_daddr_t	block;
-@@ -1990,7 +1982,7 @@ xfs_free_file_space(
- 		error = xfs_bmapi_read(ip, endoffset_fsb - 1, 1,
- 					&imap, &nimap, 0);
- 		if (error)
--			goto out_unlock_iolock;
-+			goto out;
- 		ASSERT(nimap == 0 || nimap == 1);
- 		if (nimap && imap.br_startblock != HOLESTARTBLOCK) {
- 			ASSERT(imap.br_startblock != DELAYSTARTBLOCK);
-@@ -2081,18 +2073,15 @@ xfs_free_file_space(
- 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 	}
- 
-- out_unlock_iolock:
--	if (need_iolock)
--		xfs_iunlock(ip, XFS_IOLOCK_EXCL);
-+ out:
- 	return error;
- 
-  error0:
- 	xfs_bmap_cancel(&free_list);
-  error1:
- 	xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES | XFS_TRANS_ABORT);
--	xfs_iunlock(ip, need_iolock ? (XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL) :
--		    XFS_ILOCK_EXCL);
--	return error;
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+	goto out;
+--- xfs.orig/fs/xfs/xfs_vnodeops.c	2012-11-30 18:42:17.796024371 -0800
++++ xfs/fs/xfs/xfs_vnodeops.c	2012-11-30 18:43:52.728026802 -0800
+@@ -2054,7 +2054,7 @@ xfs_free_file_space(
  }
  
  
-@@ -2100,8 +2089,7 @@ STATIC int
+-STATIC int
++int
  xfs_zero_file_space(
  	struct xfs_inode	*ip,
  	xfs_off_t		offset,
--	xfs_off_t		len,
--	int			attr_flags)
-+	xfs_off_t		len)
- {
- 	struct xfs_mount	*mp = ip->i_mount;
- 	uint			granularity;
-@@ -2122,9 +2110,6 @@ xfs_zero_file_space(
- 	ASSERT(start_boundary >= offset);
- 	ASSERT(end_boundary <= offset + len);
- 
--	if (!(attr_flags & XFS_ATTR_NOLOCK))
--		xfs_ilock(ip, XFS_IOLOCK_EXCL);
--
- 	if (start_boundary < end_boundary - 1) {
- 		/* punch out the page cache over the conversion range */
- 		truncate_pagecache_range(VFS_I(ip), start_boundary,
-@@ -2132,16 +2117,16 @@ xfs_zero_file_space(
- 		/* convert the blocks */
- 		error = xfs_alloc_file_space(ip, start_boundary,
- 					end_boundary - start_boundary - 1,
--					XFS_BMAPI_PREALLOC | XFS_BMAPI_CONVERT,
--					attr_flags);
-+					XFS_BMAPI_PREALLOC | XFS_BMAPI_CONVERT);
- 		if (error)
--			goto out_unlock;
-+			goto out;
- 
- 		/* We've handled the interior of the range, now for the edges */
--		if (start_boundary != offset)
-+		if (start_boundary != offset) {
- 			error = xfs_iozero(ip, offset, start_boundary - offset);
--		if (error)
--			goto out_unlock;
-+			if (error)
-+				goto out;
-+		}
- 
- 		if (end_boundary != offset + len)
- 			error = xfs_iozero(ip, end_boundary,
-@@ -2155,9 +2140,7 @@ xfs_zero_file_space(
- 		error = xfs_iozero(ip, offset, len);
- 	}
- 
--out_unlock:
--	if (!(attr_flags & XFS_ATTR_NOLOCK))
--		xfs_iunlock(ip, XFS_IOLOCK_EXCL);
-+out:
+@@ -2113,181 +2113,3 @@ out:
  	return error;
  
  }
-@@ -2240,8 +2223,7 @@ xfs_change_file_space(
- 	setprealloc = clrprealloc = 0;
- 	switch (cmd) {
- 	case XFS_IOC_ZERO_RANGE:
--		error = xfs_zero_file_space(ip, startoffset, bf->l_len,
--						attr_flags);
-+		error = xfs_zero_file_space(ip, startoffset, bf->l_len);
- 		if (error)
- 			return error;
- 		setprealloc = 1;
-@@ -2250,7 +2232,7 @@ xfs_change_file_space(
- 	case XFS_IOC_RESVSP:
- 	case XFS_IOC_RESVSP64:
- 		error = xfs_alloc_file_space(ip, startoffset, bf->l_len,
--						XFS_BMAPI_PREALLOC, attr_flags);
-+						XFS_BMAPI_PREALLOC);
- 		if (error)
- 			return error;
- 		setprealloc = 1;
-@@ -2258,8 +2240,8 @@ xfs_change_file_space(
- 
- 	case XFS_IOC_UNRESVSP:
- 	case XFS_IOC_UNRESVSP64:
--		if ((error = xfs_free_file_space(ip, startoffset, bf->l_len,
--								attr_flags)))
-+		error = xfs_free_file_space(ip, startoffset, bf->l_len);
-+		if (error)
- 			return error;
- 		break;
- 
-@@ -2277,22 +2259,17 @@ xfs_change_file_space(
- 		 * truncate, direct IO) from racing against the transient
- 		 * allocated but not written state we can have here.
- 		 */
--		xfs_ilock(ip, XFS_IOLOCK_EXCL);
- 		if (startoffset > fsize) {
- 			error = xfs_alloc_file_space(ip, fsize,
--					startoffset - fsize, 0,
--					attr_flags | XFS_ATTR_NOLOCK);
--			if (error) {
--				xfs_iunlock(ip, XFS_IOLOCK_EXCL);
-+					startoffset - fsize, 0);
-+			if (error)
- 				break;
--			}
- 		}
- 
- 		iattr.ia_valid = ATTR_SIZE;
- 		iattr.ia_size = startoffset;
- 
- 		error = xfs_setattr_size(ip, &iattr);
--		xfs_iunlock(ip, XFS_IOLOCK_EXCL);
- 
- 		if (error)
- 			return error;
+-
+-/*
+- * xfs_change_file_space()
+- *      This routine allocates or frees disk space for the given file.
+- *      The user specified parameters are checked for alignment and size
+- *      limitations.
+- *
+- * RETURNS:
+- *       0 on success
+- *      errno on error
+- *
+- */
+-int
+-xfs_change_file_space(
+-	xfs_inode_t	*ip,
+-	int		cmd,
+-	xfs_flock64_t	*bf,
+-	xfs_off_t	offset,
+-	int		attr_flags)
+-{
+-	xfs_mount_t	*mp = ip->i_mount;
+-	int		clrprealloc;
+-	int		error;
+-	xfs_fsize_t	fsize;
+-	int		setprealloc;
+-	xfs_off_t	startoffset;
+-	xfs_trans_t	*tp;
+-	struct iattr	iattr;
+-
+-	if (!S_ISREG(ip->i_d.di_mode))
+-		return XFS_ERROR(EINVAL);
+-
+-	switch (bf->l_whence) {
+-	case 0: /*SEEK_SET*/
+-		break;
+-	case 1: /*SEEK_CUR*/
+-		bf->l_start += offset;
+-		break;
+-	case 2: /*SEEK_END*/
+-		bf->l_start += XFS_ISIZE(ip);
+-		break;
+-	default:
+-		return XFS_ERROR(EINVAL);
+-	}
+-
+-	/*
+-	 * length of <= 0 for resv/unresv/zero is invalid.  length for
+-	 * alloc/free is ignored completely and we have no idea what userspace
+-	 * might have set it to, so set it to zero to allow range
+-	 * checks to pass.
+-	 */
+-	switch (cmd) {
+-	case XFS_IOC_ZERO_RANGE:
+-	case XFS_IOC_RESVSP:
+-	case XFS_IOC_RESVSP64:
+-	case XFS_IOC_UNRESVSP:
+-	case XFS_IOC_UNRESVSP64:
+-		if (bf->l_len <= 0)
+-			return XFS_ERROR(EINVAL);
+-		break;
+-	default:
+-		bf->l_len = 0;
+-		break;
+-	}
+-
+-	if (bf->l_start < 0 ||
+-	    bf->l_start > mp->m_super->s_maxbytes ||
+-	    bf->l_start + bf->l_len < 0 ||
+-	    bf->l_start + bf->l_len >= mp->m_super->s_maxbytes)
+-		return XFS_ERROR(EINVAL);
+-
+-	bf->l_whence = 0;
+-
+-	startoffset = bf->l_start;
+-	fsize = XFS_ISIZE(ip);
+-
+-	setprealloc = clrprealloc = 0;
+-	switch (cmd) {
+-	case XFS_IOC_ZERO_RANGE:
+-		error = xfs_zero_file_space(ip, startoffset, bf->l_len);
+-		if (error)
+-			return error;
+-		setprealloc = 1;
+-		break;
+-
+-	case XFS_IOC_RESVSP:
+-	case XFS_IOC_RESVSP64:
+-		error = xfs_alloc_file_space(ip, startoffset, bf->l_len,
+-						XFS_BMAPI_PREALLOC);
+-		if (error)
+-			return error;
+-		setprealloc = 1;
+-		break;
+-
+-	case XFS_IOC_UNRESVSP:
+-	case XFS_IOC_UNRESVSP64:
+-		error = xfs_free_file_space(ip, startoffset, bf->l_len);
+-		if (error)
+-			return error;
+-		break;
+-
+-	case XFS_IOC_ALLOCSP:
+-	case XFS_IOC_ALLOCSP64:
+-	case XFS_IOC_FREESP:
+-	case XFS_IOC_FREESP64:
+-		/*
+-		 * These operations actually do IO when extending the file, but
+-		 * the allocation is done seperately to the zeroing that is
+-		 * done. This set of operations need to be serialised against
+-		 * other IO operations, such as truncate and buffered IO. We
+-		 * need to take the IOLOCK here to serialise the allocation and
+-		 * zeroing IO to prevent other IOLOCK holders (e.g. getbmap,
+-		 * truncate, direct IO) from racing against the transient
+-		 * allocated but not written state we can have here.
+-		 */
+-		if (startoffset > fsize) {
+-			error = xfs_alloc_file_space(ip, fsize,
+-					startoffset - fsize, 0);
+-			if (error)
+-				break;
+-		}
+-
+-		iattr.ia_valid = ATTR_SIZE;
+-		iattr.ia_size = startoffset;
+-
+-		error = xfs_setattr_size(ip, &iattr);
+-
+-		if (error)
+-			return error;
+-
+-		clrprealloc = 1;
+-		break;
+-
+-	default:
+-		ASSERT(0);
+-		return XFS_ERROR(EINVAL);
+-	}
+-
+-	/*
+-	 * update the inode timestamp, mode, and prealloc flag bits
+-	 */
+-	tp = xfs_trans_alloc(mp, XFS_TRANS_WRITEID);
+-
+-	if ((error = xfs_trans_reserve(tp, 0, XFS_WRITEID_LOG_RES(mp),
+-				      0, 0, 0))) {
+-		/* ASSERT(0); */
+-		xfs_trans_cancel(tp, 0);
+-		return error;
+-	}
+-
+-	xfs_ilock(ip, XFS_ILOCK_EXCL);
+-	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+-
+-	if ((attr_flags & XFS_ATTR_DMI) == 0) {
+-		ip->i_d.di_mode &= ~S_ISUID;
+-
+-		/*
+-		 * Note that we don't have to worry about mandatory
+-		 * file locking being disabled here because we only
+-		 * clear the S_ISGID bit if the Group execute bit is
+-		 * on, but if it was on then mandatory locking wouldn't
+-		 * have been enabled.
+-		 */
+-		if (ip->i_d.di_mode & S_IXGRP)
+-			ip->i_d.di_mode &= ~S_ISGID;
+-
+-		xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+-	}
+-	if (setprealloc)
+-		ip->i_d.di_flags |= XFS_DIFLAG_PREALLOC;
+-	else if (clrprealloc)
+-		ip->i_d.di_flags &= ~XFS_DIFLAG_PREALLOC;
+-
+-	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+-	if (attr_flags & XFS_ATTR_SYNC)
+-		xfs_trans_set_sync(tp);
+-	return xfs_trans_commit(tp, 0);
+-}
 Index: xfs/fs/xfs/xfs_vnodeops.h
 ===================================================================
---- xfs.orig/fs/xfs/xfs_vnodeops.h	2012-11-30 18:38:51.724019096 -0800
-+++ xfs/fs/xfs/xfs_vnodeops.h	2012-11-30 18:39:27.896020019 -0800
-@@ -15,7 +15,6 @@ struct xfs_inode;
+--- xfs.orig/fs/xfs/xfs_vnodeops.h	2012-11-30 18:42:17.796024371 -0800
++++ xfs/fs/xfs/xfs_vnodeops.h	2012-11-30 18:43:52.732026802 -0800
+@@ -14,9 +14,7 @@ struct xfs_inode;
+ 
  int xfs_setattr_nonsize(struct xfs_inode *ip, struct iattr *vap, int flags);
  int xfs_setattr_size(struct xfs_inode *ip, struct iattr *iattr);
- #define	XFS_ATTR_DMI		0x01	/* invocation from a DMI function */
--#define XFS_ATTR_NOLOCK		0x04	/* Don't grab any conflicting locks */
- #define XFS_ATTR_NOACL		0x08	/* Don't call xfs_acl_chmod */
- #define XFS_ATTR_SYNC		0x10	/* synchronous operation required */
+-#define	XFS_ATTR_DMI		0x01	/* invocation from a DMI function */
+-#define XFS_ATTR_NOACL		0x08	/* Don't call xfs_acl_chmod */
+-#define XFS_ATTR_SYNC		0x10	/* synchronous operation required */
++#define XFS_ATTR_NOACL		0x01	/* Don't call xfs_acl_chmod */
  
+ int xfs_readlink(struct xfs_inode *ip, char *link);
+ int xfs_release(struct xfs_inode *ip);
+@@ -34,11 +32,10 @@ int xfs_readdir(struct xfs_inode	*dp, vo
+ int xfs_symlink(struct xfs_inode *dp, struct xfs_name *link_name,
+ 		const char *target_path, umode_t mode, struct xfs_inode **ipp);
+ int xfs_set_dmattrs(struct xfs_inode *ip, u_int evmask, u_int16_t state);
+-int xfs_change_file_space(struct xfs_inode *ip, int cmd,
+-		xfs_flock64_t *bf, xfs_off_t offset, int attr_flags);
+ int xfs_alloc_file_space(struct xfs_inode *ip, xfs_off_t offset, xfs_off_t len,
+ 			 int alloc_type);
+ int xfs_free_file_space(struct xfs_inode *ip, xfs_off_t offset, xfs_off_t len);
++int xfs_zero_file_space(struct xfs_inode *ip, xfs_off_t offset, xfs_off_t len);
+ int xfs_rename(struct xfs_inode *src_dp, struct xfs_name *src_name,
+ 		struct xfs_inode *src_ip, struct xfs_inode *target_dp,
+ 		struct xfs_name *target_name, struct xfs_inode *target_ip);
 
 _______________________________________________
 xfs mailing list
