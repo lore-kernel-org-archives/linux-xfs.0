@@ -1,22 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qB97HBgN082802 for <xfs@oss.sgi.com>; Sun, 9 Dec 2012 01:17:11 -0600
-Received: from mail-qa0-f46.google.com (mail-qa0-f46.google.com
-	[209.85.216.46]) by cuda.sgi.com with ESMTP id 9ZJVlz08A0Gl90We
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 08 Dec 2012 23:19:38 -0800 (PST)
-Received: by mail-qa0-f46.google.com with SMTP id r4so857446qaq.5
-	for <xfs@oss.sgi.com>; Sat, 08 Dec 2012 23:19:38 -0800 (PST)
+	qB9Nb8tW145586 for <xfs@oss.sgi.com>; Sun, 9 Dec 2012 17:37:08 -0600
+Received: from fgwmail6.fujitsu.co.jp (fgwmail6.fujitsu.co.jp [192.51.44.36])
+	by cuda.sgi.com with ESMTP id MGHGnOjM04NSGDkt (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 09 Dec 2012 15:39:35 -0800 (PST)
+Received: from m4.gw.fujitsu.co.jp (unknown [10.0.50.74])
+	by fgwmail6.fujitsu.co.jp (Postfix) with ESMTP id 630E13EE0AE
+	for <xfs@oss.sgi.com>; Mon, 10 Dec 2012 08:39:33 +0900 (JST)
+Received: from smail (m4 [127.0.0.1])
+	by outgoing.m4.gw.fujitsu.co.jp (Postfix) with ESMTP id 4AF5F45DE4F
+	for <xfs@oss.sgi.com>; Mon, 10 Dec 2012 08:39:33 +0900 (JST)
+Received: from s4.gw.fujitsu.co.jp (s4.gw.fujitsu.co.jp [10.0.50.94])
+	by m4.gw.fujitsu.co.jp (Postfix) with ESMTP id 1EC5045DE4D
+	for <xfs@oss.sgi.com>; Mon, 10 Dec 2012 08:39:33 +0900 (JST)
+Received: from s4.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s4.gw.fujitsu.co.jp (Postfix) with ESMTP id 029E41DB803B
+	for <xfs@oss.sgi.com>; Mon, 10 Dec 2012 08:39:33 +0900 (JST)
+Received: from g01jpexchkw07.g01.fujitsu.local
+	(g01jpexchkw07.g01.fujitsu.local [10.0.194.46])
+	by s4.gw.fujitsu.co.jp (Postfix) with ESMTP id B53051DB8037
+	for <xfs@oss.sgi.com>; Mon, 10 Dec 2012 08:39:32 +0900 (JST)
+Message-ID: <50C520C5.9030600@jp.fujitsu.com>
+Date: Mon, 10 Dec 2012 08:37:41 +0900
+From: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
 MIME-Version: 1.0
-In-Reply-To: <20121208195304.GA20044@citd.de>
-References: <CAA_rkDfFUmZzT_kMznsTSNVxdfqfmz=bmJ400wdBOzocgP32eA@mail.gmail.com>
-	<20121208192927.GA17875@citd.de> <5955806.tSHc7WOiJd@saturn>
-	<20121208195304.GA20044@citd.de>
-Date: Sun, 9 Dec 2012 08:19:37 +0100
-Message-ID: <CAA_rkDeU2ycYPhS0RKPMf_WP4CVWMvXTwQ-O8Wq-HTVWwiPGnw@mail.gmail.com>
-Subject: Re: XFS write cache flush policy
-From: Lin Li <sdeber@gmail.com>
+Subject: [PATCH] xfstests: Change the interpreter of ltp/runtest.sh to bash
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,127 +35,72 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============5906612618868922321=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Matthias Schniedermeyer <ms@citd.de>
-Cc: Michael Monnerie <michael.monnerie@is.it-management.at>, xfs@oss.sgi.com
+To: xfs ML <xfs@oss.sgi.com>
 
---===============5906612618868922321==
-Content-Type: multipart/alternative; boundary=047d7b6da40c7c784804d066450f
+From: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
 
---047d7b6da40c7c784804d066450f
-Content-Type: text/plain; charset=ISO-8859-1
+In some environment, Running 080 fails with the following log.
 
-I used to JFS. JFS used to (maybe still) have the problem of indefinite
-cache flush that is the write cache will not be flushed until the "flush
-trigger" is fired. But in case of JFS, if I copy a lot of reasonable large
-files, it seems that only the last one will have part of the content remain
-in the cache. But with XFS, it "seems" to me that the file system dedicates
-some cache space to the meta data, even new data is loading into the cache,
-the meta data part seems not to be flushed.
+==========
+080	 [failed, exit status 2] - output mismatch (see 080.out.bad)
+--- 080.out	2012-11-18 20:26:40.000000000 +0900
++++ 080.out.bad	2012-12-08 21:05:15.000000000 +0900
+@@ -1,3 +1,26 @@
+ QA output created by 080
 
-At least, in your case, xfs_repair can detect errors, but in my case, it
-does not find anything.
+-Completed rwtest pass 1 successfully.
++/home/sat/src/xfstests/ltp/rwtest.sh: 90: /home/sat/src/xfstests/ltp/rwtest.sh: 6: not found
++/home/sat/src/xfstests/ltp/rwtest.sh: 177: /home/sat/src/xfstests/ltp/rwtest.sh: [[: not found
++/home/sat/src/xfstests/ltp/rwtest.sh: 190: /home/sat/src/xfstests/ltp/rwtest.sh: [[: not found
++dirname: invalid option -- 'q'
++Try `dirname --help' for more information.
++/home/sat/src/xfstests/ltp/rwtest.sh: 270: /home/sat/src/xfstests/ltp/rwtest.sh: [[: not found
++/home/sat/src/xfstests/ltp/rwtest.sh: 317: /home/sat/src/xfstests/ltp/rwtest.sh: F[0+1]=-q: not found
++dirname: invalid option -- 'c'
++Try `dirname --help' for more information.
++/home/sat/src/xfstests/ltp/rwtest.sh: 270: /home/sat/src/xfstests/ltp/rwtest.sh: [[: not found
++/home/sat/src/xfstests/ltp/rwtest.sh: 317: /home/sat/src/xfstests/ltp/rwtest.sh: F[0+1]=-c: not found
++dirname: invalid option -- 'i'
++Try `dirname --help' for more information.
++/home/sat/src/xfstests/ltp/rwtest.sh: 270: /home/sat/src/xfstests/ltp/rwtest.sh: [[: not found
++/home/sat/src/xfstests/ltp/rwtest.sh: 317: /home/sat/src/xfstests/ltp/rwtest.sh: F[0+1]=-i: not found
++/home/sat/src/xfstests/ltp/rwtest.sh: 270: /home/sat/src/xfstests/ltp/rwtest.sh: [[: not found
++/home/sat/src/xfstests/ltp/rwtest.sh: 317: /home/sat/src/xfstests/ltp/rwtest.sh: F[0+1]=2000: not found
++dirname: invalid option -- 'f'
++Try `dirname --help' for more information.
++/home/sat/src/xfstests/ltp/rwtest.sh: 270: /home/sat/src/xfstests/ltp/rwtest.sh: [[: not found
++/home/sat/src/xfstests/ltp/rwtest.sh: 317: /home/sat/src/xfstests/ltp/rwtest.sh: F[0+1]=-f: not found
++/home/sat/src/xfstests/ltp/rwtest.sh: 270: /home/sat/src/xfstests/ltp/rwtest.sh: [[: not found
++/home/sat/src/xfstests/ltp/rwtest.sh: 317: /home/sat/src/xfstests/ltp/rwtest.sh: F[0+1]=direct,buffered,sync: not found
++/home/sat/src/xfstests/ltp/rwtest.sh: 320: /home/sat/src/xfstests/ltp/rwtest.sh: Bad substitution
+==========
 
-On Sat, Dec 8, 2012 at 8:53 PM, Matthias Schniedermeyer <ms@citd.de> wrote:
+It happens because ltp/rwtest.sh assumes /bin/sh is `bash' and it's not
+always true (ex. /bin/sh is `dash' in Debian.) This script should
+explicitly declare that its interpriter is `bash'.
 
-> On 08.12.2012 20:40, Michael Monnerie wrote:
-> > Am Samstag, 8. Dezember 2012, 20:29:27 schrieb Matthias Schniedermeyer:
-> > > I have the same problem, several times.
-> >
-> > I'd like to chime in here, with a similar issue: I have Linux on my
-> > desktop, xfs is the home partition, 16G RAM. One day my system froze, no
-> > chance to do a buffer flush via SYS-S/U/B, I had to press the reset
-> > button (no power off, just reset). Upon restart, *lots* of files were
-> > gone, destroyed, etc, and my KDE desktop wouldn't work anymore. Luckily
-> > I have backups, and could restore - but this just shouldn't happen, and
-> > it was *much* better with older kernels. What is the problem that
-> > metadata isn't written to disk occasionally? I was on 3.6.6 when that
-> > happened, now on 3.6.8, so very recent.
->
-> Now that you say it, this is what happend one of the other times,
-> luckily i had done a backup just before i rebooted, so after
-> xfs_repair'ing the partition (the only time i had to repair something
-> for as long as i'm using XFS) i had to restore my home-directory from
-> backup to get my desktop in a usable state again.
->
->
->
->
-> --
->
-> Matthias
->
+Signed-off-by: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
+---
+ ltp/rwtest.sh |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---047d7b6da40c7c784804d066450f
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-I used to JFS. JFS used to (maybe still) have the problem of indefinite cac=
-he flush that is the write cache will not be flushed until the &quot;flush =
-trigger&quot; is fired. But in case of JFS, if I copy a lot of reasonable l=
-arge files, it seems that only the last one will have part of the content r=
-emain in the cache. But with XFS, it &quot;seems&quot; to me that the file =
-system dedicates some cache space to the meta data, even new data is loadin=
-g into the cache, the meta data part seems not to be flushed. <br>
-<br>At least, in your case, xfs_repair can detect errors, but in my case, i=
-t does not find anything. <br>
-<br><div class=3D"gmail_quote">On Sat, Dec 8, 2012 at 8:53 PM, Matthias Sch=
-niedermeyer <span dir=3D"ltr">&lt;<a href=3D"mailto:ms@citd.de" target=3D"_=
-blank">ms@citd.de</a>&gt;</span> wrote:<br><blockquote class=3D"gmail_quote=
-" style=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex">
-
-<div>On 08.12.2012 20:40, Michael Monnerie wrote:<br>
-&gt; Am Samstag, 8. Dezember 2012, 20:29:27 schrieb Matthias Schniedermeyer=
-:<br>
-&gt; &gt; I have the same problem, several times.<br>
-&gt;<br>
-&gt; I&#39;d like to chime in here, with a similar issue: I have Linux on m=
-y<br>
-&gt; desktop, xfs is the home partition, 16G RAM. One day my system froze, =
-no<br>
-&gt; chance to do a buffer flush via SYS-S/U/B, I had to press the reset<br=
->
-&gt; button (no power off, just reset). Upon restart, *lots* of files were<=
-br>
-&gt; gone, destroyed, etc, and my KDE desktop wouldn&#39;t work anymore. Lu=
-ckily<br>
-&gt; I have backups, and could restore - but this just shouldn&#39;t happen=
-, and<br>
-&gt; it was *much* better with older kernels. What is the problem that<br>
-&gt; metadata isn&#39;t written to disk occasionally? I was on 3.6.6 when t=
-hat<br>
-&gt; happened, now on 3.6.8, so very recent.<br>
-<br>
-</div>Now that you say it, this is what happend one of the other times,<br>
-luckily i had done a backup just before i rebooted, so after<br>
-xfs_repair&#39;ing the partition (the only time i had to repair something<b=
-r>
-for as long as i&#39;m using XFS) i had to restore my home-directory from<b=
-r>
-backup to get my desktop in a usable state again.<br>
-<span><font color=3D"#888888"><br>
-<br>
-<br>
-<br>
---<br>
-<br>
-Matthias<br>
-</font></span></blockquote></div><br>
-
---047d7b6da40c7c784804d066450f--
-
-
---===============5906612618868922321==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+diff --git a/ltp/rwtest.sh b/ltp/rwtest.sh
+index 24ee598..da42caa 100755
+--- a/ltp/rwtest.sh
++++ b/ltp/rwtest.sh
+@@ -1,4 +1,4 @@
+-#!/bin/sh
++#!/bin/bash
+ #
+ # Copyright (c) 2000 Silicon Graphics, Inc.  All Rights Reserved.
+ #
+-- 1.7.10.4 
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============5906612618868922321==--
