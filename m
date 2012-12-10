@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qBA0xGLa149573 for <xfs@oss.sgi.com>; Sun, 9 Dec 2012 18:59:16 -0600
+	qBA19ZRG150037 for <xfs@oss.sgi.com>; Sun, 9 Dec 2012 19:09:35 -0600
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	NjH0NGlYAYbXLGdY for <xfs@oss.sgi.com>;
-	Sun, 09 Dec 2012 17:01:43 -0800 (PST)
-Date: Mon, 10 Dec 2012 12:01:41 +1100
+	QmGR4A2OwgOXwNod for <xfs@oss.sgi.com>;
+	Sun, 09 Dec 2012 17:12:02 -0800 (PST)
+Date: Mon, 10 Dec 2012 12:12:01 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS write cache flush policy
-Message-ID: <20121210010141.GH15784@dastard>
-References: <CAA_rkDfFUmZzT_kMznsTSNVxdfqfmz=bmJ400wdBOzocgP32eA@mail.gmail.com>
-	<20121208192927.GA17875@citd.de> <5955806.tSHc7WOiJd@saturn>
-	<20121208195304.GA20044@citd.de>
+Subject: Re: [PATCH] xfs: Fix re-use of EWOULDBLOCK during read on dm-mirror
+Message-ID: <20121210011201.GI15784@dastard>
+References: <50C11E95.4050502@suse.com>
+ <20121207095326.GI27172@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20121208195304.GA20044@citd.de>
+In-Reply-To: <20121207095326.GI27172@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,38 +27,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Matthias Schniedermeyer <ms@citd.de>
-Cc: Michael Monnerie <michael.monnerie@is.it-management.at>, Lin Li <sdeber@gmail.com>, xfs@oss.sgi.com
+To: Jeff Mahoney <jeffm@suse.com>
+Cc: xfs@oss.sgi.com
 
-On Sat, Dec 08, 2012 at 08:53:04PM +0100, Matthias Schniedermeyer wrote:
-> On 08.12.2012 20:40, Michael Monnerie wrote:
-> > Am Samstag, 8. Dezember 2012, 20:29:27 schrieb Matthias Schniedermeyer:
-> > > I have the same problem, several times.
+On Fri, Dec 07, 2012 at 08:53:26PM +1100, Dave Chinner wrote:
+> On Thu, Dec 06, 2012 at 05:39:17PM -0500, Jeff Mahoney wrote:
+> > When using lvconvert to convert a linear mapping to a dm-raid1 mirror,
+> > we encountered issues where the log would be flooded with messages like:
 > > 
-> > I'd like to chime in here, with a similar issue: I have Linux on my 
-> > desktop, xfs is the home partition, 16G RAM. One day my system froze, no 
-> > chance to do a buffer flush via SYS-S/U/B, I had to press the reset 
-> > button (no power off, just reset). Upon restart, *lots* of files were 
-> > gone, destroyed, etc, and my KDE desktop wouldn't work anymore. Luckily 
-> > I have backups, and could restore - but this just shouldn't happen, and 
-> > it was *much* better with older kernels. What is the problem that 
-> > metadata isn't written to disk occasionally? I was on 3.6.6 when that 
-> > happened, now on 3.6.8, so very recent.
+> > metadata I/O error: block 0xee7060 ("xfs_trans_read_buf") error 11 numblks 8
+> > 
+> > The cause is that dm-mirror (and striping, and others) will return
+> > -EWOULDBLOCK for readahead requests while the mirror is rebuilding.
 > 
-> Now that you say it, this is what happend one of the other times, 
-> luckily i had done a backup just before i rebooted, so after 
-> xfs_repair'ing the partition (the only time i had to repair something 
-> for as long as i'm using XFS) i had to restore my home-directory from 
-> backup to get my desktop in a usable state again.
+> That's nasty - since when has DM been doing this? I doubt anything
+> handles a EAGAIN error from the storage layer properly - it's not
+> an error the filesystem expects from the lower layers at all.
 
-So the hard lockup caused your filesystem to be corrupted, and after
-you ran repair lots of files were missing?
-
-http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
-
-People, please be precise about what happened when reporting
-problems. Random "me too" posts with ambiguous information in
-them does not help solve problems.
+Wow, it's been doing this since at least 2008 - it's taken the
+best part of 5 years for someone to trip over this.....
 
 Cheers,
 
