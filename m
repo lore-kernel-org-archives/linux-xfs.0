@@ -1,20 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qBA19ZRG150037 for <xfs@oss.sgi.com>; Sun, 9 Dec 2012 19:09:35 -0600
+	qBA1JFCm150693 for <xfs@oss.sgi.com>; Sun, 9 Dec 2012 19:19:15 -0600
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	QmGR4A2OwgOXwNod for <xfs@oss.sgi.com>;
-	Sun, 09 Dec 2012 17:12:02 -0800 (PST)
-Date: Mon, 10 Dec 2012 12:12:01 +1100
+	JDukT3rrljSTCufz for <xfs@oss.sgi.com>;
+	Sun, 09 Dec 2012 17:21:43 -0800 (PST)
+Date: Mon, 10 Dec 2012 12:21:41 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: Fix re-use of EWOULDBLOCK during read on dm-mirror
-Message-ID: <20121210011201.GI15784@dastard>
-References: <50C11E95.4050502@suse.com>
- <20121207095326.GI27172@dastard>
+Subject: Re: [PATCH 1/2] XFS: remove a unused sysctl related enum definition.
+Message-ID: <20121210012141.GJ15784@dastard>
+References: <50C521B2.1030001@jp.fujitsu.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20121207095326.GI27172@dastard>
+In-Reply-To: <50C521B2.1030001@jp.fujitsu.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,25 +26,18 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jeff Mahoney <jeffm@suse.com>
-Cc: xfs@oss.sgi.com
+To: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs ML <xfs@oss.sgi.com>
 
-On Fri, Dec 07, 2012 at 08:53:26PM +1100, Dave Chinner wrote:
-> On Thu, Dec 06, 2012 at 05:39:17PM -0500, Jeff Mahoney wrote:
-> > When using lvconvert to convert a linear mapping to a dm-raid1 mirror,
-> > we encountered issues where the log would be flooded with messages like:
-> > 
-> > metadata I/O error: block 0xee7060 ("xfs_trans_read_buf") error 11 numblks 8
-> > 
-> > The cause is that dm-mirror (and striping, and others) will return
-> > -EWOULDBLOCK for readahead requests while the mirror is rebuilding.
+On Mon, Dec 10, 2012 at 08:41:38AM +0900, Satoru Takeuchi wrote:
+> From: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
 > 
-> That's nasty - since when has DM been doing this? I doubt anything
-> handles a EAGAIN error from the storage layer properly - it's not
-> an error the filesystem expects from the lower layers at all.
+> There is a unused sysctl related enum definition
+> in fs/xfs/xfs_sysctl.h. This patch removes it.
 
-Wow, it's been doing this since at least 2008 - it's taken the
-best part of 5 years for someone to trip over this.....
+Is it?
+
+AFAICT, kernel/sysctl_binary.c uses it when CONFIG_SYSCTL_SYSCALL=y.
 
 Cheers,
 
