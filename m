@@ -1,35 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qBA1txjD167627 for <xfs@oss.sgi.com>; Sun, 9 Dec 2012 19:55:59 -0600
-Received: from fgwmail5.fujitsu.co.jp (fgwmail5.fujitsu.co.jp [192.51.44.35])
-	by cuda.sgi.com with ESMTP id 01qNhskTIixnP9vT (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 09 Dec 2012 17:58:27 -0800 (PST)
-Received: from m3.gw.fujitsu.co.jp (unknown [10.0.50.73])
-	by fgwmail5.fujitsu.co.jp (Postfix) with ESMTP id CD1083EE0C1
-	for <xfs@oss.sgi.com>; Mon, 10 Dec 2012 10:58:25 +0900 (JST)
-Received: from smail (m3 [127.0.0.1])
-	by outgoing.m3.gw.fujitsu.co.jp (Postfix) with ESMTP id 79B3C45DEBA
-	for <xfs@oss.sgi.com>; Mon, 10 Dec 2012 10:58:25 +0900 (JST)
-Received: from s3.gw.fujitsu.co.jp (s3.gw.fujitsu.co.jp [10.0.50.93])
-	by m3.gw.fujitsu.co.jp (Postfix) with ESMTP id 605B945DEB6
-	for <xfs@oss.sgi.com>; Mon, 10 Dec 2012 10:58:25 +0900 (JST)
-Received: from s3.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id 3658E1DB8041
-	for <xfs@oss.sgi.com>; Mon, 10 Dec 2012 10:58:25 +0900 (JST)
-Received: from g01jpexchkw07.g01.fujitsu.local
-	(g01jpexchkw07.g01.fujitsu.local [10.0.194.46])
-	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id E888D1DB803F
-	for <xfs@oss.sgi.com>; Mon, 10 Dec 2012 10:58:24 +0900 (JST)
-Message-ID: <50C541B0.9090504@jp.fujitsu.com>
-Date: Mon, 10 Dec 2012 10:58:08 +0900
-From: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
+	qBA1ulHj167879 for <xfs@oss.sgi.com>; Sun, 9 Dec 2012 19:56:47 -0600
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	VQQZEyL3O0vTuI6b for <xfs@oss.sgi.com>;
+	Sun, 09 Dec 2012 17:59:14 -0800 (PST)
+Date: Mon, 10 Dec 2012 12:59:11 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v3 4/5] xfs: fix the multi-segment log buffer format
+Message-ID: <20121210015911.GM15784@dastard>
+References: <20121204231801.982422341@sgi.com>
+	<20121204224938.906216248@sgi.com>
+	<20121208123821.GD29107@infradead.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH 2/2] XFS: Mark no-more-exist xfsbufd related sysctl
-	parameters as obsolete.
-References: <50C521D7.5060202@jp.fujitsu.com> <20121210013048.GK15784@dastard>
-In-Reply-To: <20121210013048.GK15784@dastard>
+Content-Disposition: inline
+In-Reply-To: <20121208123821.GD29107@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -42,40 +28,120 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs ML <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
 
-(2012/12/10 10:30), Dave Chinner wrote:
-> On Mon, Dec 10, 2012 at 08:42:15AM +0900, Satoru Takeuchi wrote:
->> From: Satoru Takeuchi <takeuchi_satoru@jp.fujitsu.com>
->>
->>
->> xfsbufd is removed since commit 43ff2122e6492bcc88b065c433453dce88223b30.
->> But there stille be two sysctl parameters about it
->> (fs.xfs.{xfsbufd_centisecs,age_buffer_centisecs}.)
->>
->> This patch marks these parameters as obsolete. In adition, prints
->> a warning message if someone tries to use these parameters.
+On Sat, Dec 08, 2012 at 07:38:21AM -0500, Christoph Hellwig wrote:
+> On Tue, Dec 04, 2012 at 05:18:05PM -0600, Mark Tinguely wrote:
+> > Per Dave Chinner suggestion, this patch:
+> >  1) Corrects the detection of whether a multi-segment buffer is
+> >     still tracking data.
+> >  2) Clears all the buffer log formats for a multi-segment buffer.
+> > 
+> > Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > ---
+> > fs/xfs/xfs_buf_item.c  |   13 ++++++++++---
+> >  fs/xfs/xfs_buf_item.c  |   13 ++++++++++---
+> >  fs/xfs/xfs_trans_buf.c |    7 +++++--
+> >  2 files changed, 15 insertions(+), 5 deletions(-)
+> > 
+> > Index: b/fs/xfs/xfs_buf_item.c
+> > ===================================================================
+> > --- a/fs/xfs/xfs_buf_item.c
+> > +++ b/fs/xfs/xfs_buf_item.c
+> > @@ -611,7 +611,7 @@ xfs_buf_item_unlock(
+> >  {
+> >  	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
+> >  	struct xfs_buf		*bp = bip->bli_buf;
+> > -	int			aborted;
+> > +	int			aborted, clean, i;
+> >  	uint			hold;
+> >  
+> >  	/* Clear the buffer's association with this transaction. */
+> > @@ -654,8 +654,15 @@ xfs_buf_item_unlock(
+> >  	 * If the buf item isn't tracking any data, free it, otherwise drop the
+> >  	 * reference we hold to it.
+> >  	 */
+> > -	if (xfs_bitmap_empty(bip->__bli_format.blf_data_map,
+> > -			     bip->__bli_format.blf_map_size))
+> > +	clean = 1;
+> > +	for (i = 0; i < bip->bli_format_count; i++) {
+> > +		if (!xfs_bitmap_empty(bip->bli_formats[i].blf_data_map,
+> > +			     bip->bli_formats[i].blf_map_size)) {
+> > +			clean = 0;
+> > +			break;
+> > +		}
+> > +	}
+> > +	if (clean)
+> >  		xfs_buf_item_relse(bp);
+> >  	else
+> >  		atomic_dec(&bip->bli_refcount);
 > 
-> While we currently don't use them, I'm not sure they are obsolete.
-> We need to integrate the AIL flushing with time-based log idling
-> (i.e.  flushing to an empty state), and part of that work is making
-> the AIL log items have a age-based flush component.
-> i.e. how often it will wake to try to flush/idle the log when there
-> is no pressure, and how long items should wait before being flushed
-> even when there is activity.
+> Looks ok, although avoiding the clean variable would be even better:
 > 
-> Those two parameters are exactly what the xfsbufd parameters have
-> historically controlled, so rather than introduce new sysctls for
-> the same purpose, I was planning on just re-using them. Hence I
-> suspect that marking them obsolete is probably the wrong thing to do
-> right now - adding the time-based component to the AIL flushing
-> would be a better solution.
+> 	for (i = 0; i < bip->bli_format_count; i++) {
+> 		if (!xfs_bitmap_empty(bip->bli_formats[i].blf_data_map,
+> 				      bip->bli_formats[i].blf_map_size)) {
+> 			atomic_dec(&bip->bli_refcount);
+> 			goto out;
+> 		}
+> 	}
+> 
+> 	xfs_buf_item_relse(bp);
+> out:
 
-OK, got it.
+Definitely better.
 
-Satoru
+> 
+> bu that might be getting a bit too much into bikeshedding.
+> 
+> What I'm worried more about is how we semi-duplicate this bli_refcount
+> decrement vs xfs_buf_item_relse in xfs_trans_brelse, but use the
+> xfs_buf_item_dirty (aka XFS_BLI_DIRTY) check there instead.
 
+Well, we only get to the case in xfs_trans_brelse() if the buffer
+was not modified in this transaction. Hence the check is for whether
+it was modified in a previous transaction (and hence is in the AIL)
+and not whether the buffer has any changes in the bitmap or not.
+
+So to me the checks seem to be for two different cases - one if so
+whether the buffer has physical changes, the other for whether it is
+currently in the AIL.
+
+A further complication is that the XFS_BLI_DIRTY flag is cleared
+when the buffer is marked stale, so any path that looks at this flag
+needs to specifically handle the XFS_BLI_STALE case before the dirty
+case.
+
+It seems to me that the one place that XFS_BLI_DIRTY is checked
+could actually be replaced with a:
+
+	if (!(bip->bli_item.li_flags & XFS_LI_IN_AIL)) {
+		....
+	}
+
+check and hence remove the reason for it's existence completely.
+At that point, the flag could be repurposed as you suggest here:
+
+> It seems like the proper fix might be to:
+> 
+>  - only set XFS_BLI_DIRTY in xfs_buf_item_log if we actually set
+>    any bits in a bitmap
+>  - use the XFS_BLI_DIRTY check in xfs_buf_item_unlock as well
+>  - kill the useless xfs_buf_item_dirty wrapper
+> 
+> Probably both of these aren't worth doing it for now as we'll need to
+> get fixes into Linus tree quickly, so:
+
+Agreed.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
