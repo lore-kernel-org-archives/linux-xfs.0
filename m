@@ -1,19 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qBA0h1iM148804 for <xfs@oss.sgi.com>; Sun, 9 Dec 2012 18:43:01 -0600
+	qBA0tt0m149372 for <xfs@oss.sgi.com>; Sun, 9 Dec 2012 18:55:55 -0600
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	Aamw7MhygCmec0v6 for <xfs@oss.sgi.com>;
-	Sun, 09 Dec 2012 16:45:28 -0800 (PST)
-Date: Mon, 10 Dec 2012 11:45:14 +1100
+	aLbDhBHgV7OIYRmq for <xfs@oss.sgi.com>;
+	Sun, 09 Dec 2012 16:58:22 -0800 (PST)
+Date: Mon, 10 Dec 2012 11:58:20 +1100
 From: Dave Chinner <david@fromorbit.com>
 Subject: Re: XFS write cache flush policy
-Message-ID: <20121210004514.GF15784@dastard>
+Message-ID: <20121210005820.GG15784@dastard>
 References: <CAA_rkDfFUmZzT_kMznsTSNVxdfqfmz=bmJ400wdBOzocgP32eA@mail.gmail.com>
+	<20121208192927.GA17875@citd.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAA_rkDfFUmZzT_kMznsTSNVxdfqfmz=bmJ400wdBOzocgP32eA@mail.gmail.com>
+In-Reply-To: <20121208192927.GA17875@citd.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,82 +27,72 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Lin Li <sdeber@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Matthias Schniedermeyer <ms@citd.de>
+Cc: Lin Li <sdeber@gmail.com>, xfs@oss.sgi.com
 
-On Thu, Dec 06, 2012 at 09:51:15AM +0100, Lin Li wrote:
-> Hi, Guys. I recently suffered a huge data loss on power cut on an XFS
-> partition. The problem was that I copied a lot of files (roughly 20Gb) to
-> an XFS partition, then 10 hours later, I got an unexpected power cut. As a
-> result, all these newly copied files disappeared as if they had never been
-> copied. I tried to check and repair the partition, but xfs_check reports no
-> error at all. So I guess the problem is that the meta data for these files
-> were all kept in the cache (64Mb) and were never committed to the hard
-> disk.
+On Sat, Dec 08, 2012 at 08:29:27PM +0100, Matthias Schniedermeyer wrote:
+> On 06.12.2012 09:51, Lin Li wrote:
+> > Hi, Guys. I recently suffered a huge data loss on power cut on an XFS
+> > partition. The problem was that I copied a lot of files (roughly 20Gb) to
+> > an XFS partition, then 10 hours later, I got an unexpected power cut. As a
+> > result, all these newly copied files disappeared as if they had never been
+> > copied. I tried to check and repair the partition, but xfs_check reports no
+> > error at all. So I guess the problem is that the meta data for these files
+> > were all kept in the cache (64Mb) and were never committed to the hard
+> > disk.
+> > 
+> > What is the cache flush policy for XFS? Does it always reserve some fixed
+> > space in cache for metadata? I asked because I thought since I copied such
+> > a huge amount of data, at least some of these files must be fully committed
+> > to the hard disk, then cache is only 64Mb anyway. But the reality is all of
+> > them were lost. the only possibility I can think is some part of the cache
+> > was reserved for meta data, so even the cache is fully filled, this part
+> > will not be written to the disk. Am I right?
+> 
+> I have the same problem, several times.
+> 
+> The latest just an hour ago.
+> I'm copying a HDD onto another. Plain rsync -a /src/ /tgt/ Both HDDs are 
+> 3TB SATA-drives in a USB3-enclosure with a dm-crypt layer in between.
+> About 45 minutes into copying the target HDD disconnects for a moment.
+> 45minutes means someting over 200GB were copied, each file is about 
+> 900MB.
+> After remounting the filesystems there were exactly 0 files.
 
-This will have absolutely nothing to do with disk cache flush
-policy.
+This sounds like an entirely different problem to what the OP
+reported.  Did the filesystem have an error returned? i.e. did it
+shut down (what's in dmesg)?  Did you run repair in between the
+shutdown and remount?  How many files in that 200GB of data?
 
-It sounds very much like a journal recovery issue where a set of
-changes is not recovered by to a problem with the transaction in the
-journal.  Indeed, I recently fixed a 19 year old bug in the journal
-write code that could cause exactly this sort of symptom:
+http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
 
-commit d35e88faa3b0fc2cea35c3b2dca358b5cd09b45f
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Mon Oct 8 21:56:12 2012 +1100
+Basically, you have an IO error situation, and you have dm-crypt
+in-between buffering an unknown about of changes. In my experience,
+data loss eventsi are rarely filesystem problems when USB drives or
+dm-crypt is involved...
 
-    xfs: only update the last_sync_lsn when a transaction completes
-    
-    The log write code stamps each iclog with the current tail LSN in
-    the iclog header so that recovery knows where to find the tail of
-    thelog once it has found the head. Normally this is taken from the
-    first item on the AIL - the log item that corresponds to the oldest
-    active item in the log.
-    
-    The problem is that when the AIL is empty, the tail lsn is dervied
-    from the the l_last_sync_lsn, which is the LSN of the last iclog to
-    be written to the log. In most cases this doesn't happen, because
-    the AIL is rarely empty on an active filesystem. However, when it
-    does, it opens up an interesting case when the transaction being
-    committed to the iclog spans multiple iclogs.
-    
-    That is, the first iclog is stamped with the l_last_sync_lsn, and IO
-    is issued. Then the next iclog is setup, the changes copied into the
-    iclog (takes some time), and then the l_last_sync_lsn is stamped
-    into the header and IO is issued. This is still the same
-    transaction, so the tail lsn of both iclogs must be the same for log
-    recovery to find the entire transaction to be able to replay it.
-    
-    The problem arises in that the iclog buffer IO completion updates
-    the l_last_sync_lsn with it's own LSN. Therefore, If the first iclog
-    completes it's IO before the second iclog is filled and has the tail
-    lsn stamped in it, it will stamp the LSN of the first iclog into
-    it's tail lsn field. If the system fails at this point, log recovery
-    will not see a complete transaction, so the transaction will no be
-    replayed.
-    
-    The fix is simple - the l_last_sync_lsn is updated when a iclog
-    buffer IO completes, and this is incorrect. The l_last_sync_lsn
-    shoul dbe updated when a transaction is completed by a iclog buffer
-    IO. That is, only iclog buffers that have transaction commit
-    callbacks attached to them should update the l_last_sync_lsn. This
-    means that the last_sync_lsn will only move forward when a commit
-    record it written, not in the middle of a large transaction that is
-    rolling through multiple iclog buffers.
-    
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Mark Tinguely <tinguely@sgi.com>
-    Reviewed-by: Christoph Hellwig <hch@lst.de>
-    Signed-off-by: Ben Myers <bpm@sgi.com>
+> After that i started a "while true; do sync ; done"-loop in the 
+> background.
+> And just while i was writing this email the HDD disconnected a second 
+> time. But this time the files up until the last 'sync' were retained.
 
-This commit only hit 3.7-rc5, but has not been sent to -stable
-kernels because I thought it was only exposed by the 3.7 changes.
-However, looking at it we've been changing the code that exposed it
-since about 3.4, so it's entirely possible that we did expose it
-earlier than 3.7-rc1.
+Exactly as I'd expect.
 
-Looks like a stable kernel candidate....
+> And something like this has happend to me at least a half dozen times in 
+> the last few month. I think the first time was with kernel 3.5.X, when i 
+> was actually booting into 3.6 with a plain "reboot" (filesystem might 
+> not have been umounted cleanly.), after the reboot the changes of about 
+> the last half hour were gone. e.g. i had renamed a directory about 15 
+> minutes before i rebooted and after the reboot the directory had it's 
+> old name back.
+> 
+> Kernel in all but (maybe)one case is between 3.6 and 3.6.2 (currently), 
+> the first time MIGHT have been something around 3.5.8 but i'm not sure. 
+> HDDs were either connected by plain SATA(AHCI) or by USB3 enclosure. All 
+> affected filesystems were/are with a dm-crypt layer inbetween.
+
+Given that dm-crypt is the common factor here, I'd start by ruling
+that out. i.e. reproduce the problem without dm-crypt being used.
 
 Cheers,
 
