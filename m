@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qBA0Ksfu147744 for <xfs@oss.sgi.com>; Sun, 9 Dec 2012 18:20:54 -0600
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id wMtI09nFhjTj00QQ for <xfs@oss.sgi.com>;
-	Sun, 09 Dec 2012 16:23:22 -0800 (PST)
-Message-ID: <50C52B79.6010707@sandeen.net>
-Date: Sun, 09 Dec 2012 18:23:21 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	qBA0MIGW147852 for <xfs@oss.sgi.com>; Sun, 9 Dec 2012 18:22:18 -0600
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	dMnzwF0EQZMvzGQe for <xfs@oss.sgi.com>;
+	Sun, 09 Dec 2012 16:24:45 -0800 (PST)
+Date: Mon, 10 Dec 2012 11:24:43 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [3.0-stable PATCH 00/36] Proposed 3.0-stable bug patches
+Message-ID: <20121210002443.GE15784@dastard>
+References: <20121203144208.143464631@sgi.com> <20121205214505.GG29399@dastard>
+	<50C0D57A.9000704@sgi.com> <20121207100646.GJ27172@dastard>
+	<20121207211536.GW27055@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: Ensure cmdline geometry puts mkfs.xfs into
-	multidisk mode
-References: <50ABB115.9070905@sandeen.net>
-	<20121121095636.GC23339@infradead.org>
-	<50C115E8.9090106@sandeen.net>
-	<20121208120007.GB4430@infradead.org>
-	<50C36A83.1040406@sandeen.net> <20121209235105.GD15784@dastard>
-In-Reply-To: <20121209235105.GD15784@dastard>
+Content-Disposition: inline
+In-Reply-To: <20121207211536.GW27055@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,51 +28,62 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Ben England <bengland@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Ben Myers <bpm@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Greg KH <gregkh@linuxfoundation.org>, Mark Tinguely <tinguely@sgi.com>, stable@vger.kernel.org, xfs@oss.sgi.com
 
-On 12/9/12 5:51 PM, Dave Chinner wrote:
-> On Sat, Dec 08, 2012 at 10:27:47AM -0600, Eric Sandeen wrote:
->> On 12/8/12 6:00 AM, Christoph Hellwig wrote:
->>> On Thu, Dec 06, 2012 at 04:02:16PM -0600, Eric Sandeen wrote:
->>>> Ensure that when mkfs.xfs is invoked with commandline geometry, it
->>>> triggers multidisk mode and creates more AGs.
->>>>
->>>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->>>
->>> Looks good,
->>>
->>> Reviewed-by: Christoph Hellwig <hch@lst.de>
->>
->> Thanks
->>
->>>> Maybe this should also test device-specified geometry, but not sure
->>>> how to do that easily within xfstests, any ideas?
->>>
->>> That would involved scsi_debug so that we could set them up.  We had
->>> several ideas how to use scsi debug for these sort of tests but never
->>> really bothered to do it.  If you have some spare cycles I'd love to see
->>> this sort of tests.
->>
->> scsi_debug won't report geometry on its own today; we'd need to assemble
->> something out of scsi_debug luns I'm afraid, so it gets even more involved.
->>
->> We do have a little bit of scsi_debug framework in xfstests today, though,
->> so if scsi_debug grew the capability it'd be easy to add.
+On Fri, Dec 07, 2012 at 03:15:36PM -0600, Ben Myers wrote:
+> > > As for adding patches to 3.0-stable. I believed then and now that
+> > > proactively suggesting bug fixes into 3.0-stable is a good thing
+> > > because it is the long term stable branch.
+> > 
+> > Which is in direct contrast to what most of us think. That is, if
+> > nobody is reporting problems, then it ain't broke and it doesn't
+> > need fixing.
 > 
-> Does it really need scsi for this? To mkfs.xfs, all devices look the
-> same, so if you want to make random geometries, wouldn't playing
-> games with llopback devices and DM be sufficient?
+> Who are you speaking for?
 
-Yeah that'd be fine too.  If scsi_debug could just generate geometries
-that'd be a bit easier.  But it doesn't.
+The people who have had to maintain the stable trees for the past
+few years. It doesn't take a rocket scientist to work out who those
+people are...
 
--Eric
-
-> Cheers,
+> > /me is playing Devil's Advocate because I'm not signing up to
+> > triage a whole new set of 3.0.x stable kernel regressions when
+> > nobody is currently reporting problems.....
 > 
-> Dave.
-> 
+> SGI XFS product is based directly upon -stable branches and I'd like to track
+> these branches as closely as possible.
+
+I'd say that's an important piece of information - i.e. stating the
+motivation for doing this work.  Especially as you might be
+including patches that fix bugs that have never been reported
+outside of SGI customers.
+
+FWIW, I had no idea that SGI is now basing their XFS-derived
+products off a current mainline tree.  Can you point us to the
+relevant XFS source code for these product releases? I, for one, am
+interested in the updated DMAPI support infrastructure and how SGI
+has implemented all the little tweaks mentioned in SGI's XFS
+documentation (e.g. ibound and agskip)...
+
+> This aligns the interests of the SGI
+> XFS team and -stable users.
+
+Enough with the marketing speak, already. Be up front with you
+motivations - it helps prevent a lot of misunderstandings.
+
+> If there are regressions, myself, Mark, Phil, Rich, and Andrew are
+> signed up to fix them regardless of whether you wish to be
+> involved.
+
+I'm looking forward to seeing you guys run front-line community
+bug triage, then.... :)
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
