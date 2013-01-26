@@ -1,17 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id AFCBA7F55
+	by oss.sgi.com (Postfix) with ESMTP id CFCC77F50
 	for <xfs@oss.sgi.com>; Sat, 26 Jan 2013 16:40:38 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 51CE3AC003
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 7240EAC004
 	for <xfs@oss.sgi.com>; Sat, 26 Jan 2013 14:40:35 -0800 (PST)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id x2zJN7chmaDENTiw for <xfs@oss.sgi.com>;
+	ESMTP id VRPRehyFJczNTSaO for <xfs@oss.sgi.com>;
 	Sat, 26 Jan 2013 14:40:34 -0800 (PST)
 From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 0/8] xfsprogs: misc small fixes
-Date: Sat, 26 Jan 2013 16:40:24 -0600
-Message-Id: <1359240032-11576-1-git-send-email-sandeen@redhat.com>
+Subject: [PATCH 4/8] xfs_repair: Fix free of uninit ptr in xfs_acl_valid()
+	error path
+Date: Sat, 26 Jan 2013 16:40:28 -0600
+Message-Id: <1359240032-11576-5-git-send-email-sandeen@redhat.com>
+In-Reply-To: <1359240032-11576-1-git-send-email-sandeen@redhat.com>
+References: <1359240032-11576-1-git-send-email-sandeen@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,29 +29,43 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: Eric Sandeen <sandeen@redhat.com>
 
-A handful of fixes from looking over a Coverity scan.
+This error path:
 
-The strncpy fixes (1/8, 5/8) might not be too critical,
-but I think they can't hurt.
+xfs_acl_valid(xfs_acl_disk_t *daclp)
+{
+	xfs_acl_t	*aclp;
+...
+	if (daclp == NULL)
+		goto acl_invalid;
+...
+acl_invalid:
+	free(aclp);
 
-The libxfs xfs_alloc_arg initialization (2/8) might clash with Dave's
-libxfs syncup, it can be dropped if it makes things difficult.
-Fixes a real bug though.
+attempts to free garbage; set it to NULL on init to make
+it safe.
 
-Tested by a quick run through xfstests -g auto
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+ repair/attr_repair.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Thanks,
--Eric
-
-[PATCH 1/8] libhandle: Guard against string overflow in path_to_fspath()
-[PATCH 2/8] libxfs: initialize xfs_alloc_arg structures
-[PATCH 3/8] libxfs: fix setup_cursor array allocation
-[PATCH 4/8] xfs_repair: Fix free of uninit ptr in xfs_acl_valid() error path
-[PATCH 5/8] xfs_fsr: guard against path string overflows
-[PATCH 6/8] xfs_fsr: check strdup results properly in initallfs()
-[PATCH 7/8] xfs_fsr: fix attribute no_change_count logic
-[PATCH 8/8] xfs_fsr: remove extraneous close() in fsrallfs()
+diff --git a/repair/attr_repair.c b/repair/attr_repair.c
+index bab65b1..ec7f4a3 100644
+--- a/repair/attr_repair.c
++++ b/repair/attr_repair.c
+@@ -1004,7 +1004,7 @@ process_attributes(
+ static int
+ xfs_acl_valid(xfs_acl_disk_t *daclp)
+ {
+-	xfs_acl_t	*aclp;
++	xfs_acl_t	*aclp = NULL;
+ 	xfs_acl_entry_t *entry, *e;
+ 	int user = 0, group = 0, other = 0, mask = 0, mask_required = 0;
+ 	int i, j;
+-- 
+1.7.1
 
 _______________________________________________
 xfs mailing list
