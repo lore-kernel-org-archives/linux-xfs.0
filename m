@@ -1,27 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3AA617F37
-	for <xfs@oss.sgi.com>; Fri, 25 Jan 2013 18:47:16 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B6B84AC008
-	for <xfs@oss.sgi.com>; Fri, 25 Jan 2013 16:47:12 -0800 (PST)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	mHwQZGTR7ictYBHW for <xfs@oss.sgi.com>;
-	Fri, 25 Jan 2013 16:47:11 -0800 (PST)
-Date: Sat, 26 Jan 2013 11:47:07 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RESEND][PATCH 2/2 v2] ext4: let us fully support punching hole
-	feature in fallocate
-Message-ID: <20130126004707.GG2667@dastard>
-References: <1358493381-20150-1-git-send-email-wenqing.lz@taobao.com>
-	<1358493381-20150-2-git-send-email-wenqing.lz@taobao.com>
-	<20130125033201.GD28908@thunk.org>
-	<20130125035912.GA15806@gmail.com>
-	<20130125042122.GG28908@thunk.org>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 330E97F37
+	for <xfs@oss.sgi.com>; Sat, 26 Jan 2013 03:36:45 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0F9CC8F8033
+	for <xfs@oss.sgi.com>; Sat, 26 Jan 2013 01:36:42 -0800 (PST)
+Message-ID: <5103A399.3040802@oracle.com>
+Date: Sat, 26 Jan 2013 17:36:25 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130125042122.GG28908@thunk.org>
+Subject: Re: [PATCH v3 02/13] xfs: make use of xfs_calc_buf_res() in
+	xfs_trans.c
+References: <5101168E.7080801@oracle.com> <5101AA17.7090706@sgi.com>
+	<51022401.2040703@oracle.com> <5102DB0B.6010906@sgi.com>
+In-Reply-To: <5102DB0B.6010906@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,45 +26,79 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Theodore Ts'o <tytso@mit.edu>
-Cc: xfs@oss.sgi.com, linux-ext4@vger.kernel.org, Zheng Liu <wenqing.lz@taobao.com>
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: xfs@oss.sgi.com
 
-[cc xfs@oss.sgi.com]
-
-On Thu, Jan 24, 2013 at 11:21:22PM -0500, Theodore Ts'o wrote:
-> On Fri, Jan 25, 2013 at 11:59:12AM +0800, Zheng Liu wrote:
-> > 
-> > I wonder that maybe we need to submit a patch to let xfstest understand
-> > that a filesystem supports extents or not because after applied this
-> > patch indirect-based file in ext4 has supported seek_data/hole and hole
-> > punching.  I usually run xfstest automatically, and every time I need
-> > to check the result of #255 and #285 manually.  That is annoying for me.
+On 01/26/2013 03:20 AM, Mark Tinguely wrote:
+> On 01/25/13 00:19, Jeff Liu wrote:
+>> On 01/25/2013 05:39 AM, Mark Tinguely wrote:
+>>>>  On 01/24/13 05:10, Jeff Liu wrote:
+>>>>>>  Refine the existing reservations routines with xfs_calc_buf_res() in xfs_trans.c.
+>>>>>>
+>>>>>>  Signed-off-by: Jie Liu<jeff.liu@oracle.com>
+>>>>>>  ---
+>>>>>>     fs/xfs/xfs_trans.c |  238 ++++++++++++++++++++++++----------------------------
+>>>>>>     1 file changed, 111 insertions(+), 127 deletions(-)
+>>>>>>
+>>>>>>     /*
+>>>>>>  @@ -148,18 +145,18 @@ xfs_calc_itruncate_reservation(
+>>>>>>     	struct xfs_mount	*mp)
+>>>>>>     {
+>>>>>>     	return XFS_DQUOT_LOGRES(mp) +
+>>>>>>  -		MAX((mp->m_sb.sb_inodesize +
+>>>>>>  -		     XFS_FSB_TO_B(mp, XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) + 1) +
+>>>>>>  -		     128 * (2 + XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK))),
+>>>>>>  -		    (4 * mp->m_sb.sb_sectsize +
+>>>>>>  -		     4 * mp->m_sb.sb_sectsize +
+>>>>>>  -		     mp->m_sb.sb_sectsize +
+>>>>>>  -		     XFS_ALLOCFREE_LOG_RES(mp, 4) +
+>>>>>>  -		     128 * (9 + XFS_ALLOCFREE_LOG_COUNT(mp, 4)) +
+>>>>>>  -		     128 * 5 +
+>>>>>>  -		     XFS_ALLOCFREE_LOG_RES(mp, 1) +
+>>>>>>  -		     128 * (2 + XFS_IALLOC_BLOCKS(mp) + mp->m_in_maxlevels +
+>>>>>>  -			    XFS_ALLOCFREE_LOG_COUNT(mp, 1))));
+>>>>>>  +		MAX((xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
+>>>>>>  +		     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) + 1,
+>>>>>>  +				      XFS_FSB_TO_B(mp, 1))),
+>>>>>>  +		    (xfs_calc_buf_res(9, mp->m_sb.sb_sectsize) +
+>>>>>>  +		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 4),
+>>>>>>  +				      XFS_FSB_TO_B(mp, 1)) +
+>>>>>>  +		    xfs_calc_buf_res(5, 0) +
+>>>>>>  +		    xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
+>>>>>>  +				     XFS_FSB_TO_B(mp, 1)) +
+>>>>>>  +		    xfs_calc_buf_res(2 + XFS_IALLOC_BLOCKS(mp) +
+>>>>>>  +				     mp->m_in_maxlevels,
+>>>>>>  +				     XFS_FSB_TO_B(mp, 0))));
+>>>>  					^^^^
+>>>>  	I see the (2 + XFS_IALLOC_BLOCKS(mp) + mp->m_in_maxlevel)
+>>>>            headers in the original code, but I still don't see data.
+>> XFS_FSB_TO_B(mp, 0) == 0, so it only calculates the headers out without the data part.
+>>
+>> But maybe it's better to replace XFS_FSB_TO_B(mp, 0) with 0 directly.
+>>
 > 
-> I would think the right thing to do is to have xfstests make sure it
-> understands that fallocate working with FALLOC_FL_PUNCH_HOLE does not
-> imply that fallocate without the FALLOC_FL_PUNCH_HOLE flag OR'ed in
-> will work.
+> 
+> I did verify all the routines in the patch are the same as before. They 
+> test the same too. I must have had a bad test file before - 
+> XFS_FSB_TO_B(mp, 0) is obviously 0. I would prefer 0 rather than 
+> XFS_FSB_TO_B(mp, 0).
+> 
+> Looks like the user space bits need to be refactored:
+> 	http://oss.sgi.com/archives/xfs/2012-12/msg00108.html
+> 	http://oss.sgi.com/archives/xfs/2012-12/msg00109.html
+Sure, I'll post the user part later.
 
-We already have this capabiity in xfstests via
-_require_xfs_io_falloc_punch and _require_xfs_io_falloc. That,
-however,  doesn't mean the tests that use these calls do the correct
-requirement checks. That's the problem with 255 - it doesn't call
-_require_xfs_io_falloc.
-
-As to 285, the seek_sanity_test does it's own check for seek
-hole/data support, and error out if it fails. This needs to be
-turned into an equivalent _require_seek_hole_data (e.g. by running
-"seek_sanity_test -t" to test for support) and 285 needs to the call
-the _require_seek_hole_data before running the test proper.
-
-Please send patches to xfs@oss.sgi.com....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+-Jeff
+> 
+> 
+> Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
