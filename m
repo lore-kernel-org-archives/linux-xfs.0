@@ -1,23 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7AF7D7F50
-	for <xfs@oss.sgi.com>; Mon, 28 Jan 2013 07:38:08 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 135C37F50
+	for <xfs@oss.sgi.com>; Mon, 28 Jan 2013 07:38:30 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1A9A0AC001
-	for <xfs@oss.sgi.com>; Mon, 28 Jan 2013 05:38:07 -0800 (PST)
-Received: from mho-02-ewr.mailhop.org (mho-04-ewr.mailhop.org [204.13.248.74])
-	by cuda.sgi.com with ESMTP id mjzBeDam8AubvZDQ (version=TLSv1
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 96E52AC006
+	for <xfs@oss.sgi.com>; Mon, 28 Jan 2013 05:38:29 -0800 (PST)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id 7GHTIQH7o3uDWeE4 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 28 Jan 2013 05:38:05 -0800 (PST)
-Date: Mon, 28 Jan 2013 14:37:59 +0100
-From: =?iso-8859-1?Q?Llu=EDs?= Batlle i Rossell <viric@viric.name>
-Subject: Re: Volume fine on x86_64, corruption on ARM
-Message-ID: <20130128133759.GH2287@vicerveza.homeunix.net>
-References: <20130127225258.GA2287@vicerveza.homeunix.net>
-	<51065721.40102@hardwarefreak.com>
+	Mon, 28 Jan 2013 05:38:28 -0800 (PST)
+Received: from ucsinet22.oracle.com (ucsinet22.oracle.com [156.151.31.94])
+	by userp1040.oracle.com (Sentrion-MTA-4.2.2/Sentrion-MTA-4.2.2) with
+	ESMTP id r0SDcR9b009740
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Mon, 28 Jan 2013 13:38:27 GMT
+Received: from acsmt357.oracle.com (acsmt357.oracle.com [141.146.40.157])
+	by ucsinet22.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	r0SDcQN4013714
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Mon, 28 Jan 2013 13:38:27 GMT
+Received: from abhmt117.oracle.com (abhmt117.oracle.com [141.146.116.69])
+	by acsmt357.oracle.com (8.12.11.20060308/8.12.11) with ESMTP id
+	r0SDcQXc028387 for <xfs@oss.sgi.com>; Mon, 28 Jan 2013 07:38:26 -0600
+Message-ID: <51067F4B.8000605@oracle.com>
+Date: Mon, 28 Jan 2013 21:38:19 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <51065721.40102@hardwarefreak.com>
+Subject: [PATCH v2 1/2] xfsprogs: sync xfs_calc_buf_res() to the user space
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,51 +35,61 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Jan 28, 2013 at 04:46:57AM -0600, Stan Hoeppner wrote:
-> On 1/27/2013 4:52 PM, Llu=EDs Batlle i Rossell wrote:
-> =
+Sync the new helper xfs_calc_buf_res() to the user space.
 
-> > ----------------------
-> > starting systemd...
-> > systemd 197 running in system mode. (+PAM -LIBWRAP -AUDIT -SELINUX +IMA=
- +SYSVINIT -LIBCRYPTSETUP +GCRYPT +ACL +XZ)
-> > =
+Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+---
+ libxfs/xfs_trans.c |   29 +++++++++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
 
-> > Welcome to NixOS 0.2pre-4eb2b09-af495e0!
-> > =
-
-> > Failed to insert module 'autofs4'
->   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> > dea96000: 58 46 53 42 00 00 10 00 00 00 00 00 01 bd 26 f0  XFSB........=
-..&.
-> > XFS (sda1): Internal error xfs_da_do_buf(2) at line 2192 of file fs/xfs=
-/xfs_da_btree.c.  Caller 0xbf057e68
-> ...
-> Your HDD is USB.  Might the failure of this module to load have
-> something to do with the XFS problems?
-
-I don't think it is related; the failure to load the module is because the
-module isn't there in my kernel. And that happens after the fs has been qui=
-te
-used in the boot, it's not mount time.
-
-> Forgive me if my lack of experience with this is causing me to ask a
-> stupid question.  I've never used, nor will I ever use, XFS with a USB
-> drive.
-
-Well, I didn't expect it to be any trouble :) I've XFS in other USB drives,=
- but
-before this, I only used them in x86_64. I might stop using XFS there.
-
-Thank you,
-Llu=EDs.
+diff --git a/libxfs/xfs_trans.c b/libxfs/xfs_trans.c
+index 635de8f..d7ff1a9 100644
+--- a/libxfs/xfs_trans.c
++++ b/libxfs/xfs_trans.c
+@@ -23,6 +23,35 @@ kmem_zone_t	*xfs_trans_zone;
+ kmem_zone_t	*xfs_log_item_desc_zone;
+ 
+ /*
++ * A buffer has a format structure overhead in the log in addition
++ * to the data, so we need to take this into account when reserving
++ * space in a transaction for a buffer.  Round the space required up
++ * to a multiple of 128 bytes so that we don't change the historical
++ * reservation that has been used for this overhead.
++ */
++STATIC uint
++xfs_buf_log_overhead(void)
++{
++	return round_up(sizeof(struct xlog_op_header) +
++			sizeof(struct xfs_buf_log_format), 128);
++}
++
++/*
++ * Calculate out transaction log reservation per item in bytes.
++ *
++ * The nbufs argument is used to indicate the number of items that
++ * will be changed in a transaction.  size is used to tell how many
++ * bytes should be reserved per item.
++ */
++STATIC uint
++xfs_calc_buf_res(
++	uint		nbufs,
++	uint		size)
++{
++	return nbufs * (size + xfs_buf_log_overhead());
++}
++
++/*
+  * Various log reservation values.
+  *
+  * These are based on the size of the file system block because that is what
+-- 
+1.7.9.5
 
 _______________________________________________
 xfs mailing list
