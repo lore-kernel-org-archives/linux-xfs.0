@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DC5AF7F5E
-	for <xfs@oss.sgi.com>; Mon, 28 Jan 2013 01:20:38 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CAC6B8F8054
-	for <xfs@oss.sgi.com>; Sun, 27 Jan 2013 23:20:38 -0800 (PST)
-Received: from mail-pa0-f52.google.com (mail-pa0-f52.google.com
-	[209.85.220.52]) by cuda.sgi.com with ESMTP id hDvbxaIy4HXcrxqt
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B89397F4C
+	for <xfs@oss.sgi.com>; Mon, 28 Jan 2013 01:20:47 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 7B7BD30405F
+	for <xfs@oss.sgi.com>; Sun, 27 Jan 2013 23:20:44 -0800 (PST)
+Received: from mail-pa0-f46.google.com (mail-pa0-f46.google.com
+	[209.85.220.46]) by cuda.sgi.com with ESMTP id 01x8cg10BEflFmAJ
 	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 27 Jan 2013 23:20:37 -0800 (PST)
-Received: by mail-pa0-f52.google.com with SMTP id fb1so1343263pad.11
-	for <xfs@oss.sgi.com>; Sun, 27 Jan 2013 23:20:37 -0800 (PST)
+	<xfs@oss.sgi.com>; Sun, 27 Jan 2013 23:20:43 -0800 (PST)
+Received: by mail-pa0-f46.google.com with SMTP id kp14so1341146pab.19
+	for <xfs@oss.sgi.com>; Sun, 27 Jan 2013 23:20:42 -0800 (PST)
 From: Zheng Liu <gnehzuil.liu@gmail.com>
-Subject: [PATCH 3/4] xfstests: check llseek(2) SEEK_DATA/HOLE and unwritten
-	extent preallocation in 285
-Date: Mon, 28 Jan 2013 15:32:50 +0800
-Message-Id: <1359358371-21411-4-git-send-email-wenqing.lz@taobao.com>
+Subject: [PATCH 4/4] xfstests: 296: add a seek data/hole test w/o unwritten
+	extent
+Date: Mon, 28 Jan 2013 15:32:51 +0800
+Message-Id: <1359358371-21411-5-git-send-email-wenqing.lz@taobao.com>
 In-Reply-To: <1359358371-21411-1-git-send-email-wenqing.lz@taobao.com>
 References: <1359358371-21411-1-git-send-email-wenqing.lz@taobao.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -36,111 +36,164 @@ Cc: Theodore Ts'o <tytso@mit.edu>, Zheng Liu <wenqing.lz@taobao.com>
 
 From: Zheng Liu <wenqing.lz@taobao.com>
 
-In 285 it has its own check for seek data/hole support.  This commit
-turns into an equivalent _require_seek_data_hole.
-
-Meanwhile in 285 it doesn't check unwritten extent preallocation.  Now
-ext4 file system has supported seek data/hole for a file w/o unwritten
-extent.  Thus, in 285, it needs to call the _require_xfs_io_falloc to
-check unwritten extent prealloction.
+Now ext4 has supported seek data/hole w/o unwritten extent.  This commit
+creates a new test case to do seek data/hole sanity test w/o unwritten
+extent.  All file systems that support seek_data/hole should survive
+after running this test.
 
 Signed-off-by: Zheng Liu <wenqing.lz@taobao.com>
 Cc: "Theodore Ts'o" <tytso@mit.edu>
 Cc: Dave Chinner <david@fromorbit.com>
 ---
- 285                    |  7 +++++--
- common.rc              | 12 ++++++++++++
- src/seek_sanity_test.c | 18 +++++++++++++-----
- 3 files changed, 30 insertions(+), 7 deletions(-)
- mode change 100644 => 100755 285
+ 296                    | 57 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 296.out                |  1 +
+ group                  |  1 +
+ src/seek_sanity_test.c | 30 +++++++++++++++++++++-----
+ 4 files changed, 84 insertions(+), 5 deletions(-)
+ create mode 100755 296
+ create mode 100644 296.out
 
-diff --git a/285 b/285
-old mode 100644
-new mode 100755
-index a18fc71..6224673
---- a/285
-+++ b/285
-@@ -1,7 +1,7 @@
- #! /bin/bash
- # FS QA Test No. 285
- #
--# SEEK_DATA/SEEK_HOLE sanity tests.
-+# SEEK_DATA/SEEK_HOLE sanity tests w/ unwritten extent.
- #
- # Improved by Jeff.liu@oracle.com
- # Creater: josef@redhat.com
-@@ -41,9 +41,12 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
- _supported_fs generic
- _supported_os Linux
- 
-+_require_seek_data_hole
-+_require_xfs_io_falloc
+diff --git a/296 b/296
+new file mode 100755
+index 0000000..8a49a0f
+--- /dev/null
++++ b/296
+@@ -0,0 +1,57 @@
++#! /bin/bash
++# FS QA Test No. 296
++#
++# SEEK_DATA/SEEK_HOLE sanity test w/o unwritten extent.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2013 Alibaba Group.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++# creator
++owner=wenqing.lz@taobao.com
 +
- BASE_TEST_FILE=$TEST_DIR/seek_sanity_testfile
- 
--[ -x $here/src/seek_sanity_test ] || _notrun "seek_sanitfy_tester not built"
-+[ -x $here/src/seek_sanity_test ] || _notrun "seek_sanity_tester not built"
- 
- _cleanup()
- {
-diff --git a/common.rc b/common.rc
-index 2e8581e..35a5f52 100644
---- a/common.rc
-+++ b/common.rc
-@@ -1049,6 +1049,18 @@ _require_sparse_files()
-     esac
- }
- 
-+#
-+# Check if the filesystem supports seek_data/hole.
-+#
-+_require_seek_data_hole()
++seq=`basename $0`
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
 +{
-+	testfile=$TEST_DIR/$$.seek
-+	testseek=`$here/src/seek_sanity_test -t $testfile 2>&1`
-+	rm -f $testfile 2>&1 > /dev/null
-+	echo $testseek | grep -q "Kernel does not support" && \
-+		_notrun "File system does not support llseek(2) SEEK_DATA/HOLE"
++	eval "rm -f $BASE_TEST_FILE.*"
 +}
 +
- # check that a FS on a device is mounted
- # if so, return mount point
- #
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
++
++_supported_fs generic
++_supported_os IRIX Linux
++
++_require_seek_data_hole
++
++BASE_TEST_FILE=$TEST_DIR/seek_sanity_testfile
++
++[ -x $here/src/seek_sanity_test ] || _notrun "seek_sanity_tester not built"
++
++$here/src/seek_sanity_test -u $BASE_TEST_FILE > $seq.full 2>&1 ||
++	_fail "seek sanity check failed!"
++
++# success, all done
++status=0
++exit
+diff --git a/296.out b/296.out
+new file mode 100644
+index 0000000..7921f57
+--- /dev/null
++++ b/296.out
+@@ -0,0 +1 @@
++QA output created by 296
+diff --git a/group b/group
+index a07d7f3..3019924 100644
+--- a/group
++++ b/group
+@@ -414,3 +414,4 @@ deprecated
+ 293 auto quick
+ 294 auto quick
+ 295 auto quick prealloc
++296 auto rw
 diff --git a/src/seek_sanity_test.c b/src/seek_sanity_test.c
-index 3897f02..b1ef006 100644
+index b1ef006..bfa5e52 100644
 --- a/src/seek_sanity_test.c
 +++ b/src/seek_sanity_test.c
-@@ -660,17 +660,25 @@ int main(int argc, char **argv)
- {
- 	int ret = -1;
+@@ -567,7 +567,16 @@ struct testrec {
+        char    *test_desc;
+ };
+ 
+-struct testrec seek_tests[] = {
++struct testrec no_unwritten_seek_tests[] = {
++       {  1, test01, "Test empty file" },
++       {  2, test02, "Test a tiny full file" },
++       {  3, test03, "Test a larger full file" },
++       {  4, test04, "Test file hole at beg, data at end" },
++       {  5, test05, "Test file data at beg, hole at end" },
++       {  6, test06, "Test file hole data hole data" },
++};
++
++struct testrec full_seek_tests[] = {
+        {  1, test01, "Test empty file" },
+        {  2, test02, "Test a tiny full file" },
+        {  3, test03, "Test a larger full file" },
+@@ -662,15 +671,20 @@ int main(int argc, char **argv)
  	int i = 0;
-+	int opt;
-+	int check_support = 0;
- 	int numtests = sizeof(seek_tests) / sizeof(struct testrec);
+ 	int opt;
+ 	int check_support = 0;
+-	int numtests = sizeof(seek_tests) / sizeof(struct testrec);
++	int dont_unwritten = 0;
++	int numtests = sizeof(full_seek_tests) / sizeof(struct testrec);
++	struct testrec *tests = full_seek_tests;
  
--	if (argc != 2) {
--		fprintf(stdout, "Usage: %s base_file_path\n", argv[0]);
--		return ret;
-+	while ((opt = getopt(argc, argv, "t")) != -1) {
-+		switch (opt) {
-+		case 't':
-+			check_support++;
+-	while ((opt = getopt(argc, argv, "t")) != -1) {
++	while ((opt = getopt(argc, argv, "tu")) != -1) {
+ 		switch (opt) {
+ 		case 't':
+ 			check_support++;
+ 			break;
++		case 'u':
++			dont_unwritten++;
 +			break;
-+		default:
-+			fprintf(stdout, "Usage: %s [-t] base_file_path\n", argv[0]);
-+			return ret;
-+		}
+ 		default:
+-			fprintf(stdout, "Usage: %s [-t] base_file_path\n", argv[0]);
++			fprintf(stdout, "Usage: %s [-tu] base_file_path\n", argv[0]);
+ 			return ret;
+ 		}
  	}
- 
--	base_file_path = (char *)strdup(argv[1]);
-+	base_file_path = (char *)strdup(argv[optind]);
- 
- 	ret = test_basic_support();
--	if (ret)
-+	if (ret || check_support)
+@@ -681,8 +695,14 @@ int main(int argc, char **argv)
+ 	if (ret || check_support)
  		goto out;
  
++	if (dont_unwritten) {
++		numtests = sizeof(no_unwritten_seek_tests) /
++				sizeof(struct testrec);
++		tests = no_unwritten_seek_tests;
++	}
++
  	for (i = 0; i < numtests; ++i) {
+-		ret = run_test(&seek_tests[i]);
++		ret = run_test(&tests[i]);
+ 		if (ret)
+ 			break;
+ 	}
 -- 
 1.7.12.rc2.18.g61b472e
 
