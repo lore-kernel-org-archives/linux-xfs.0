@@ -1,25 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id F258F7F7B
-	for <xfs@oss.sgi.com>; Mon, 28 Jan 2013 16:50:20 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 72BB1AC006
-	for <xfs@oss.sgi.com>; Mon, 28 Jan 2013 14:50:20 -0800 (PST)
-Received: from mho-02-ewr.mailhop.org (mho-04-ewr.mailhop.org [204.13.248.74])
-	by cuda.sgi.com with ESMTP id xifzJowFzDtE9xba (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 28 Jan 2013 14:50:18 -0800 (PST)
-Date: Mon, 28 Jan 2013 23:50:10 +0100
-From: =?iso-8859-1?Q?Llu=EDs?= Batlle i Rossell <viric@viric.name>
-Subject: Re: Volume fine on x86_64, corruption on ARM
-Message-ID: <20130128225010.GL2287@vicerveza.homeunix.net>
-References: <20130127225258.GA2287@vicerveza.homeunix.net>
-	<5106FDA5.80409@sandeen.net>
-	<20130128224013.GK2287@vicerveza.homeunix.net>
-	<5106FF76.6080102@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id 1AD647F76
+	for <xfs@oss.sgi.com>; Mon, 28 Jan 2013 17:28:28 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6AF5AAC006
+	for <xfs@oss.sgi.com>; Mon, 28 Jan 2013 15:28:24 -0800 (PST)
+Received: from thunder.skymagik.net (thunder.skymagik.net [76.75.207.68]) by
+	cuda.sgi.com with ESMTP id clDmZ9K8yVdjZBKK for
+	<xfs@oss.sgi.com>; Mon, 28 Jan 2013 15:28:22 -0800 (PST)
+Message-ID: <32271.192.104.24.222.1359415698.squirrel@secure.skymagik.net>
+Date: Mon, 28 Jan 2013 18:28:18 -0500 (EST)
+Subject: XFS appears to cause strange hang with md raid1 on reboot
+From: "Tom" <storm9c1@skymagik.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <5106FF76.6080102@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,71 +21,64 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Jan 28, 2013 at 04:45:10PM -0600, Eric Sandeen wrote:
-> On 1/28/13 4:40 PM, Llu=EDs Batlle i Rossell wrote:
-> > On Mon, Jan 28, 2013 at 04:37:25PM -0600, Eric Sandeen wrote:
-> >> So this was trying to read a dir2 directory metadata leaf block, and i=
-t didn't find the right magic.
-> >> XFSB is superblock magic . . . =
 
-> >>
-> >> I tested an image which (I think) contains every dir2 format, created =
-on x86_64
-> >> (under a RHEL6 3.2 kernel) and checked it on ARM (a raspberry pi 3.2.2=
-4 kernel)
-> >> so it's not really quite an apples to apples test.
-> >>
-> >> Does the filesystem check clean on x86_64 right after you create it?  =
-How did you
-> >> create it?
-> > I run:
-> > mkfs.xfs /dev/sdb1
-> > =
+Dear XFS folks,
 
-> > Then I copied files to it. =
+I have been using XFS for many years, starting on IRIX and then on RedHat
+7.2, and now on CentOS/RHEL and Ubuntu.  Last time I posted to this
+mailing list was 12 years ago.  :-)  I've been a happy customer!
 
-> =
+I understand that RedHat does not formally support XFS as a root filesystem
+on RHEL.  However, up until now, I've been using it very successfully for
+years on both CentOS and Ubuntu.  On CentOS, I've successfully patched
+Anaconda since CentOS 5.6 to allow XFS root file system support directly
+from Anaconda (on both bare metal and Xen VMs).  Prior to that, I had code
+in %post that would simply migrate an ext3 fs to XFS.  And I always run
+md raid1 (except with Xen, since I use mirroring on the dom0).  I never use
+hardware RAID since I want to keep my provisioning as generic as possible.
 
-> On the x86_64 machine, right.  Just to be sure, can you do an xfs_repair
-> on x86_64 to be sure it's clean at this point?
+I've deployed many servers using XFS this way and it has always been
+superior for my workloads....  and superior to ext3, and ext4.
 
-I don't have the fs anymore... I have that disk in use right now (with ext4
-finally).
+....until CentOS 5.9 came out.  Now any systems that are running the stock
+CentOS 5.9 kernel (including 5.X systems upgraded to this kernel) hang
+on reboot.  If I downgrade to the 5.8 kernel, the problem is resolved.
 
-But I didn't try to run an xfs_repair straight after writing the files with
-x86_64.
+I have taken an engineering approach to testing this problem in efforts
+to help resolve it.  I filed a bug with CentOS, but it's probably not
+going to go anywhere upstream since RedHat probably won't support XFS on
+the root filesystem (why I still don't understand, since I fixed the
+issues with Anaconda for myself and can Kickstart systems with XFS all
+day long).
 
-> > After the first crash in the arm, I used xfs_repair on the
-> > x86_64. It created many lost+found. =
+Therefore I hope anyone here can help.  In fact, I was specifically hoping
+to catch Eric Sandeen's attention since this seems like a pretty serious
+regression.  It's further aggravated by the fact that RedHat stays behind
+with kernel version and backports modern fixes.  I scanned over the
+2.6.18-348.el5 (stock 5.9 kernel) changelog, and I see a few suspicious
+things, but I'm not sure.
 
-> =
+Much more detail is available here (CentOS bug id 0006217) including steps
+to reproduce the problem.  Also testing with and without md raid.
+http://bugs.centos.org/view.php?id=6217
 
-> capturing the repair output here would be helpful.
+The one thing I haven't provided is a traceback.  I can provide that if it
+would be helpful.
 
-ouhm I can't find it now. Sorry.
+I am not in a big hurry for help, on the contrary I just want to open up
+a dialog since perhaps others might be suffering from this.  And I want to
+help resolve it if I can.
 
-> > Then I tried again in the ARM, and it
-> > crashed again the same way.
-> =
+Any insight is appreciated.
 
-> And by "tried again" do you mean you booted from that filesystem on
-> the arm box, I guess, and then encountered the corruption?
+-- Tom
 
-Yes, the same procedure I used in the first case.
-
-In the next days I'll try to get some quick test over a loop device or so, =
-and
-see if I can reproduce it.
-
-Thank you,
-Llu=EDs.
 
 _______________________________________________
 xfs mailing list
