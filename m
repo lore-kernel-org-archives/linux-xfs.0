@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B375E7F4C
-	for <xfs@oss.sgi.com>; Sun, 27 Jan 2013 19:52:53 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A28A38F8049
-	for <xfs@oss.sgi.com>; Sun, 27 Jan 2013 17:52:50 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id ndcp3yY0MCFhAejJ for <xfs@oss.sgi.com>;
-	Sun, 27 Jan 2013 17:52:49 -0800 (PST)
-References: <20130127225258.GA2287@vicerveza.homeunix.net>
-Mime-Version: 1.0 (1.0)
-In-Reply-To: <20130127225258.GA2287@vicerveza.homeunix.net>
-Message-Id: <97703AFC-91DF-4839-BE07-1BE8B8A4AF91@sandeen.net>
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: Volume fine on x86_64, corruption on ARM
-Date: Sun, 27 Jan 2013 19:52:45 -0600
+	by oss.sgi.com (Postfix) with ESMTP id 030027F4C
+	for <xfs@oss.sgi.com>; Sun, 27 Jan 2013 20:38:26 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E5A508F8039
+	for <xfs@oss.sgi.com>; Sun, 27 Jan 2013 18:38:22 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	ef4ASvDbrPKM5vFy for <xfs@oss.sgi.com>;
+	Sun, 27 Jan 2013 18:38:21 -0800 (PST)
+Date: Mon, 28 Jan 2013 11:35:42 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/8] libxfs: initialize xfs_alloc_arg structures
+Message-ID: <20130128003542.GB16727@disturbed.disaster>
+References: <1359240032-11576-1-git-send-email-sandeen@redhat.com>
+	<1359240032-11576-3-git-send-email-sandeen@redhat.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1359240032-11576-3-git-send-email-sandeen@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,86 +26,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: =?utf-8?Q?Llu=C3=ADs_Batlle_i_Rossell?= <viric@viric.name>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs@oss.sgi.com
 
-T24gSmFuIDI3LCAyMDEzLCBhdCA0OjUyIFBNLCBMbHXDrXMgQmF0bGxlIGkgUm9zc2VsbCA8dmly
-aWNAdmlyaWMubmFtZT4gd3JvdGU6Cgo+IEhlbGxvLAo+IAo+IEknbSB1c2luZyBsaW51eCAzLjcu
-MyBpbiBib3RoIG1hY2hpbmVzICh4ODZfNjQgYW5kIGFybXY1dGVsKSwgYW5kIEkgY3JlYXRlZAo+
-IGEgdm9sdW1lIGluIHg4Nl82NCB0byBiZSB0aGUgcm9vdGZzIGZvciB0aGUgQVJNLiBBbGwgZmlu
-ZSwgdW50aWwgSSBwbHVnZ2VkIGl0Cj4gaW50byB0aGUgQVJNIChMb2cgYmVsb3cpLgo+IAoKSXMg
-aXQgc3RvY2sgMy43LjMgb24gYXJtLCBvciBhcmUgdGhlcmUgYW55IHBhdGNoZXMgYWZmZWN0aW5n
-IHhmcz8gIFRoZXJlIHdlcmUgZG9kZ3kgYXJtL3hmcyBwYXRjaGVzIGZsb2F0aW5nIGFyb3VuZCBh
-IGZldyB5ZWFycyBhZ28sIGp1c3Qgd2FudCB0byBiZSBzdXJlIHRoZXkgYXJlIG5vdCBpbiB1c2Ug
-aW4geW91ciBjYXNlLi4uCgpUaGFua3MsCkVyaWMKCj4gR2l2ZW4gdGhlIGNvcnJ1cHRpb24sIEkg
-dXNlZCB4ZnNfcmVwYWlyIGluIHRoZSB4ODZfNjQsIG1vdmVkIGEgbG90IG9mIGZpbGVzIGludG8g
-bG9zdCtmb3VuZCwgcGx1Z2dlZCBpdCBiYWNrIHRvIHRoZSBBUk0sIGJvb3RlZCwgYW5kIGNvcnJ1
-cHRpb24gYWdhaW4uCj4gCj4gSW4gdGhlIHNhbWUgVVNCIEhELCBpbiB0aGUgc2FtZSBBUk0sIGFu
-ZCB0aGlzIHNhbWUgd2F5LCBJJ3ZlIHVzZWQgc3VjY2VzZnVsbHkKPiBleHQ0IGFuZCBidHJmcyBm
-b3IgYSBsb25nIHRpbWUuIElzIHRoZXJlIGFueSBrbm93biBpc3N1ZSB3aXRoIEFSTT8KPiAKPiBU
-aGFuayB5b3UsCj4gTGx1w61zLgo+IAo+IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KPiBzdGFydGlu
-ZyBzeXN0ZW1kLi4uCj4gc3lzdGVtZCAxOTcgcnVubmluZyBpbiBzeXN0ZW0gbW9kZS4gKCtQQU0g
-LUxJQldSQVAgLUFVRElUIC1TRUxJTlVYICtJTUEgK1NZU1ZJTklUIC1MSUJDUllQVFNFVFVQICtH
-Q1JZUFQgK0FDTCArWFopCj4gCj4gV2VsY29tZSB0byBOaXhPUyAwLjJwcmUtNGViMmIwOS1hZjQ5
-NWUwIQo+IAo+IEZhaWxlZCB0byBpbnNlcnQgbW9kdWxlICdhdXRvZnM0Jwo+IGRlYTk2MDAwOiA1
-OCA0NiA1MyA0MiAwMCAwMCAxMCAwMCAwMCAwMCAwMCAwMCAwMSBiZCAyNiBmMCAgWEZTQi4uLi4u
-Li4uLi4mLgo+IFhGUyAoc2RhMSk6IEludGVybmFsIGVycm9yIHhmc19kYV9kb19idWYoMikgYXQg
-bGluZSAyMTkyIG9mIGZpbGUgZnMveGZzL3hmc19kYV9idHJlZS5jLiAgQ2FsbGVyIDB4YmYwNTdl
-NjgKPiAKPiBbPGMwMDBlY2QwPl0gKHVud2luZF9iYWNrdHJhY2UrMHgwLzB4ZmMpIGZyb20gWzxj
-MDUyZDljOD5dIChkdW1wX3N0YWNrKzB4MjAvMHgyNCkKPiBbPGMwNTJkOWM4Pl0gKGR1bXBfc3Rh
-Y2srMHgyMC8weDI0KSBmcm9tIFs8YmYwMTY2OTA+XSAoeGZzX2Vycm9yX3JlcG9ydCsweDY0LzB4
-NzAgW3hmc10pCj4gWzxiZjAxNjY5MD5dICh4ZnNfZXJyb3JfcmVwb3J0KzB4NjQvMHg3MCBbeGZz
-XSkgZnJvbSBbPGJmMDE2NzAwPl0gKHhmc19jb3JydXB0aW9uX2Vycm9yKzB4NjQvMHg4MCBbeGZz
-XSkKPiBbPGJmMDE2NzAwPl0gKHhmc19jb3JydXB0aW9uX2Vycm9yKzB4NjQvMHg4MCBbeGZzXSkg
-ZnJvbSBbPGJmMDUxYTI4Pl0gKHhmc19kYV9yZWFkX2J1ZisweDFhYy8weDI3YyBbeGZzXSkKPiBb
-PGJmMDUxYTI4Pl0gKHhmc19kYV9yZWFkX2J1ZisweDFhYy8weDI3YyBbeGZzXSkgZnJvbSBbPGJm
-MDU3ZTY4Pl0gKHhmc19kaXIyX2xlYWZfcmVhZGJ1ZisweDIyMC8weDVmMCBbeGZzXSkKPiBbPGJm
-MDU3ZTY4Pl0gKHhmc19kaXIyX2xlYWZfcmVhZGJ1ZisweDIyMC8weDVmMCBbeGZzXSkgZnJvbSBb
-PGJmMDU4Nzg0Pl0gKHhmc19kaXIyX2xlYWZfZ2V0ZGVudHMrMHgxMmMvMHgzZWMgW3hmc10pCj4g
-WzxiZjA1ODc4ND5dICh4ZnNfZGlyMl9sZWFmX2dldGRlbnRzKzB4MTJjLzB4M2VjIFt4ZnNdKSBm
-cm9tIFs8YmYwNTQ1ZGM+XSAoeGZzX3JlYWRkaXIrMHhmMC8weDE3MCBbeGZzXSkKPiBbPGJmMDU0
-NWRjPl0gKHhmc19yZWFkZGlyKzB4ZjAvMHgxNzAgW3hmc10pIGZyb20gWzxiZjAxN2NjOD5dICh4
-ZnNfZmlsZV9yZWFkZGlyKzB4NTgvMHg2OCBbeGZzXSkKPiBbPGJmMDE3Y2M4Pl0gKHhmc19maWxl
-X3JlYWRkaXIrMHg1OC8weDY4IFt4ZnNdKSBmcm9tIFs8YzAwZmY0YTQ+XSAodmZzX3JlYWRkaXIr
-MHg4Yy8weGIwKQo+IFs8YzAwZmY0YTQ+XSAodmZzX3JlYWRkaXIrMHg4Yy8weGIwKSBmcm9tIFs8
-YzAwZmY2MTg+XSAoc3lzX2dldGRlbnRzNjQrMHg3OC8weGQ4KQo+IFs8YzAwZmY2MTg+XSAoc3lz
-X2dldGRlbnRzNjQrMHg3OC8weGQ4KSBmcm9tIFs8YzAwMDkzNDA+XSAocmV0X2Zhc3Rfc3lzY2Fs
-bCsweDAvMHgyYykKPiBYRlMgKHNkYTEpOiBDb3JydXB0aW9uIGRldGVjdGVkLiBVbm1vdW50IGFu
-ZCBydW4geGZzX3JlcGFpcgo+IGRlYTk2MDAwOiA1OCA0NiA1MyA0MiAwMCAwMCAxMCAwMCAwMCAw
-MCAwMCAwMCAwMSBiZCAyNiBmMCAgWEZTQi4uLi4uLi4uLi4mLgo+IFhGUyAoc2RhMSk6IEludGVy
-bmFsIGVycm9yIHhmc19kYV9kb19idWYoMikgYXQgbGluZSAyMTkyIG9mIGZpbGUgZnMveGZzL3hm
-c19kYV9idHJlZS5jLiAgQ2FsbGVyIDB4YmYwNTdlNjgKPiAKPiBbPGMwMDBlY2QwPl0gKHVud2lu
-ZF9iYWNrdHJhY2UrMHgwLzB4ZmMpIGZyb20gWzxjMDUyZDljOD5dIChkdW1wX3N0YWNrKzB4MjAv
-MHgyNCkKPiBbPGMwNTJkOWM4Pl0gKGR1bXBfc3RhY2srMHgyMC8weDI0KSBmcm9tIFs8YmYwMTY2
-OTA+XSAoeGZzX2Vycm9yX3JlcG9ydCsweDY0LzB4NzAgW3hmc10pCj4gWzxiZjAxNjY5MD5dICh4
-ZnNfZXJyb3JfcmVwb3J0KzB4NjQvMHg3MCBbeGZzXSkgZnJvbSBbPGJmMDE2NzAwPl0gKHhmc19j
-b3JydXB0aW9uX2Vycm9yKzB4NjQvMHg4MCBbeGZzXSkKPiBbPGJmMDE2NzAwPl0gKHhmc19jb3Jy
-dXB0aW9uX2Vycm9yKzB4NjQvMHg4MCBbeGZzXSkgZnJvbSBbPGJmMDUxYTI4Pl0gKHhmc19kYV9y
-ZWFkX2J1ZisweDFhYy8weDI3YyBbeGZzXSkKPiBbPGJmMDUxYTI4Pl0gKHhmc19kYV9yZWFkX2J1
-ZisweDFhYy8weDI3YyBbeGZzXSkgZnJvbSBbPGJmMDU3ZTY4Pl0gKHhmc19kaXIyX2xlYWZfcmVh
-ZGJ1ZisweDIyMC8weDVmMCBbeGZzXSkKPiBbPGJmMDU3ZTY4Pl0gKHhmc19kaXIyX2xlYWZfcmVh
-ZGJ1ZisweDIyMC8weDVmMCBbeGZzXSkgZnJvbSBbPGJmMDU4Nzg0Pl0gKHhmc19kaXIyX2xlYWZf
-Z2V0ZGVudHMrMHgxMmMvMHgzZWMgW3hmc10pCj4gWzxiZjA1ODc4ND5dICh4ZnNfZGlyMl9sZWFm
-X2dldGRlbnRzKzB4MTJjLzB4M2VjIFt4ZnNdKSBmcm9tIFs8YmYwNTQ1ZGM+XSAoeGZzX3JlYWRk
-aXIrMHhmMC8weDE3MCBbeGZzXSkKPiBbPGJmMDU0NWRjPl0gKHhmc19yZWFkZGlyKzB4ZjAvMHgx
-NzAgW3hmc10pIGZyb20gWzxiZjAxN2NjOD5dICh4ZnNfZmlsZV9yZWFkZGlyKzB4NTgvMHg2OCBb
-eGZzXSkKPiBbPGJmMDE3Y2M4Pl0gKHhmc19maWxlX3JlYWRkaXIrMHg1OC8weDY4IFt4ZnNdKSBm
-cm9tIFs8YzAwZmY0YTQ+XSAodmZzX3JlYWRkaXIrMHg4Yy8weGIwKQo+IFs8YzAwZmY0YTQ+XSAo
-dmZzX3JlYWRkaXIrMHg4Yy8weGIwKSBmcm9tIFs8YzAwZmY2MTg+XSAoc3lzX2dldGRlbnRzNjQr
-MHg3OC8weGQ4KQo+IFs8YzAwZmY2MTg+XSAoc3lzX2dldGRlbnRzNjQrMHg3OC8weGQ4KSBmcm9t
-IFs8YzAwMDkzNDA+XSAocmV0X2Zhc3Rfc3lzY2FsbCsweDAvMHgyYykKPiBYRlMgKHNkYTEpOiBD
-b3JydXB0aW9uIGRldGVjdGVkLiBVbm1vdW50IGFuZCBydW4geGZzX3JlcGFpcgo+IEZhaWxlZCB0
-byBsb2FkIGRlZmF1bHQgdGFyZ2V0OiBObyBzdWNoIGZpbGUgb3IgZGlyZWN0b3J5Cj4gVHJ5aW5n
-IHRvIGxvYWQgcmVzY3VlIHRhcmdldC4uLgo+IEZhaWxlZCB0byBsb2FkIHJlc2N1ZSB0YXJnZXQ6
-IE5vIHN1Y2ggZmlsZSBvciBkaXJlY3RvcnkKPiBzeXN0ZW1kLWNncm91cHMtYWdlbnRbMTMyNF06
-IEZhaWxlZCB0byBnZXQgRC1CdXMgY29ubmVjdGlvbjogRmFpbGVkIHRvIGNvbm5lY3QgdG8gc29j
-a2V0IC9vcmcvZnJlZWRlc2t0b3Avc3lzdGVtZDEvcHJpdmF0ZTogQ29ubmVjdGlvbiByZWZ1c2Vk
-Cj4gCj4gCj4gCj4gX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X18KPiB4ZnMgbWFpbGluZyBsaXN0Cj4geGZzQG9zcy5zZ2kuY29tCj4gaHR0cDovL29zcy5zZ2ku
-Y29tL21haWxtYW4vbGlzdGluZm8veGZzCj4gCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRw
-Oi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On Sat, Jan 26, 2013 at 04:40:26PM -0600, Eric Sandeen wrote:
+> This is a merge-to-userspace of kernel commit a0041684
+> xfs: zero allocation_args on the kernel stack
+> 
+> When calling xfs_alloc_vextent args.userdata was uninitialized,
+> and if we had args.type==XFS_ALLOCTYPE_START_BNO, this uninit
+> structure member got tested, leading to some random allocator
+> behavior.
+
+Got that as part of the kernel-user sync I sent out a couple of
+weeks back.
+
+BTW, perhaps we want to get that sync sorted out before shovelling
+a bunch of stuff into xfsprogs that will require fixing conflicts in
+that sync up?
+
+Chers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
