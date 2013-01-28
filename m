@@ -1,14 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id F1BAC7F47
-	for <xfs@oss.sgi.com>; Mon, 28 Jan 2013 08:14:12 -0600 (CST)
-Message-ID: <510687B4.7000902@sgi.com>
-Date: Mon, 28 Jan 2013 08:14:12 -0600
+	by oss.sgi.com (Postfix) with ESMTP id 14E817F47
+	for <xfs@oss.sgi.com>; Mon, 28 Jan 2013 08:21:06 -0600 (CST)
+Message-ID: <51068954.4000205@sgi.com>
+Date: Mon, 28 Jan 2013 08:21:08 -0600
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: remove unneeded ASSERT from xfs_itruncate_extents
-References: <1359381870-30908-1-git-send-email-cmaiolino@redhat.com>
-In-Reply-To: <1359381870-30908-1-git-send-email-cmaiolino@redhat.com>
+Subject: Re: [PATCH 2/8] libxfs: initialize xfs_alloc_arg structures
+References: <1359240032-11576-1-git-send-email-sandeen@redhat.com>
+	<1359240032-11576-3-git-send-email-sandeen@redhat.com>
+In-Reply-To: <1359240032-11576-3-git-send-email-sandeen@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,43 +22,28 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Carlos Maiolino <cmaiolino@redhat.com>
+To: Eric Sandeen <sandeen@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On 01/28/13 08:04, Carlos Maiolino wrote:
-> There is no reason to ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL)); twice, so,
-> remove one of these ASSERT calls
+On 01/26/13 16:40, Eric Sandeen wrote:
+> This is a merge-to-userspace of kernel commit a0041684
+> xfs: zero allocation_args on the kernel stack
 >
-> Signed-off-by: Carlos Maiolino<cmaiolino@redhat.com>
+> When calling xfs_alloc_vextent args.userdata was uninitialized,
+> and if we had args.type==XFS_ALLOCTYPE_START_BNO, this uninit
+> structure member got tested, leading to some random allocator
+> behavior.
+>
+> Signed-off-by: Eric Sandeen<sandeen@redhat.com>
 > ---
->   fs/xfs/xfs_inode.c | 3 +--
->   1 file changed, 1 insertion(+), 2 deletions(-)
->
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 66282dc..25226ea 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -1396,8 +1396,7 @@ xfs_itruncate_extents(
->   	int			done = 0;
->
->   	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-> -	ASSERT(!atomic_read(&VFS_I(ip)->i_count) ||
-> -	       xfs_isilocked(ip, XFS_IOLOCK_EXCL));
-> +	ASSERT(!atomic_read(&VFS_I(ip)->i_count));
->   	ASSERT(new_size<= XFS_ISIZE(ip));
->   	ASSERT(tp->t_flags&  XFS_TRANS_PERM_LOG_RES);
->   	ASSERT(ip->i_itemp != NULL);
 
-You removed an XFS_IOLOCK_EXCL assert not a duplicate
-XFS_ILOCK_EXCL assert. It maybe more obvious if the
-first assert read:
+I remember seeing this in Dave's:
 
-	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL) ||
-	       xfs_isilocked(ip, XFS_IOLOCK_EXCL));
-	ASSERT(!atomic_read(&VFS_I(ip)->i_count));
-...
+	[UBER-PATCH, RFC] xfsprogs: sync libxfs to 3.8-rc2 kernel code
 
---Mark Tinguely.
+http://patchwork.xfs.org/patch/4683/
+
+--Mark.
 
 _______________________________________________
 xfs mailing list
