@@ -1,20 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 534277F67
-	for <xfs@oss.sgi.com>; Tue, 29 Jan 2013 11:59:53 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E956BAC006
-	for <xfs@oss.sgi.com>; Tue, 29 Jan 2013 09:59:52 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id EnoLEGo8N9vK6lze for <xfs@oss.sgi.com>;
-	Tue, 29 Jan 2013 09:59:51 -0800 (PST)
-Message-ID: <51080E17.1070103@sandeen.net>
-Date: Tue, 29 Jan 2013 11:59:51 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id BC8E97F4E
+	for <xfs@oss.sgi.com>; Tue, 29 Jan 2013 12:49:22 -0600 (CST)
+Date: Tue, 29 Jan 2013 12:49:18 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 2/8] libxfs: initialize xfs_alloc_arg structures
+Message-ID: <20130129184918.GG27055@sgi.com>
+References: <1359240032-11576-1-git-send-email-sandeen@redhat.com>
+	<1359240032-11576-3-git-send-email-sandeen@redhat.com>
+	<20130128003542.GB16727@disturbed.disaster>
+	<FE50BC18-140F-43E6-848A-EE4C9B79C9FC@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 0/3] Add agskip=value mount option
-References: <20130129153914.801475275@sgi.com>
-In-Reply-To: <20130129153914.801475275@sgi.com>
+Content-Disposition: inline
+In-Reply-To: <FE50BC18-140F-43E6-848A-EE4C9B79C9FC@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,29 +25,39 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: rjohnston@sgi.com
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <esandeen@redhat.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 1/29/13 9:39 AM, rjohnston@sgi.com wrote:
-> This series will:
+Hey,
+
+On Sun, Jan 27, 2013 at 09:41:28PM -0500, Eric Sandeen wrote:
+> On Jan 27, 2013, at 8:38 PM, Dave Chinner <david@fromorbit.com> wrote:
 > 
->     1. Add agskip=value mount option to xfs
->     2. Add agkip mount option test to xfstests
->     3. Add agskip mount option to the mount.8 manpage (util-linux)
+> > On Sat, Jan 26, 2013 at 04:40:26PM -0600, Eric Sandeen wrote:
+> >> This is a merge-to-userspace of kernel commit a0041684
+> >> xfs: zero allocation_args on the kernel stack
+> >> 
+> >> When calling xfs_alloc_vextent args.userdata was uninitialized,
+> >> and if we had args.type==XFS_ALLOCTYPE_START_BNO, this uninit
+> >> structure member got tested, leading to some random allocator
+> >> behavior.
+> > 
+> > Got that as part of the kernel-user sync I sent out a couple of
+> > weeks back.
+> > 
+> > BTW, perhaps we want to get that sync sorted out before shovelling
+> > a bunch of stuff into xfsprogs that will require fixing conflicts in
+> > that sync up?
+> > 
+> I have no problem with this going 2nd, I can fix up as needed.
 
-You left out:
+We need to do another userspace release to resolve the backward compatability
+issue for Fugazzi and missing source file in xfsprogs for Arkadiusz before
+shovelling in that ueber patch.  If any of these patches are bug fixes
+appropriate for a release within the next week or so, give a heads up.
 
-Why?  :)
-
--Eric
-
-> --Rich
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+Thanks,
+	Ben
 
 _______________________________________________
 xfs mailing list
