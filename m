@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 944897F4C
-	for <xfs@oss.sgi.com>; Tue, 29 Jan 2013 15:55:21 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 20E4CAC006
-	for <xfs@oss.sgi.com>; Tue, 29 Jan 2013 13:55:17 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id nWuqZ2mA5Sb4lij0 for <xfs@oss.sgi.com>;
-	Tue, 29 Jan 2013 13:55:16 -0800 (PST)
-Message-ID: <51084544.6050907@sandeen.net>
-Date: Tue, 29 Jan 2013 15:55:16 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A07587F4E
+	for <xfs@oss.sgi.com>; Tue, 29 Jan 2013 16:25:31 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 805458F8035
+	for <xfs@oss.sgi.com>; Tue, 29 Jan 2013 14:25:28 -0800 (PST)
+Received: from thunder.skymagik.net (thunder.skymagik.net [76.75.207.68]) by
+	cuda.sgi.com with ESMTP id a6pVcojWWe4c80O5 for
+	<xfs@oss.sgi.com>; Tue, 29 Jan 2013 14:25:27 -0800 (PST)
+Message-ID: <22819.192.104.24.222.1359498326.squirrel@secure.skymagik.net>
+Date: Tue, 29 Jan 2013 17:25:26 -0500 (EST)
 Subject: Re: XFS appears to cause strange hang with md raid1 on reboot
+From: "Tom" <storm9c1@skymagik.com>
+In-Reply-To: <51084544.6050907@sandeen.net>
 References: <32271.192.104.24.222.1359415698.squirrel@secure.skymagik.net>
 	<5107124E.70607@sandeen.net>
 	<20821.192.104.24.222.1359496079.squirrel@secure.skymagik.net>
-In-Reply-To: <20821.192.104.24.222.1359496079.squirrel@secure.skymagik.net>
+	<51084544.6050907@sandeen.net>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,65 +30,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Tom <storm9c1@skymagik.com>
+To: sandeen@sandeen.net
 Cc: xfs@oss.sgi.com
 
-On 1/29/13 3:47 PM, Tom wrote:
-> In a previous message, Eric Sandeen wrote:
+In a previous message, Eric Sandeen wrote:
+>
+> Sorry for hassling you ;)
+>
 
-...
+Nah, no problem, I think we all know what it's like in corporate
+America........  Besides, when hassled, I hassle right on back -- just to
+ensure that I'm taking a full participating role in the love.  :-D
 
->> I don't see anything obvious between the two kernels you mention, and I
->> can't spend a ton of time digging into this, since most of my day is
->> taken up supporting the RHEL customers who pay my salary, nudge nudge.
->> ;)
-> 
-> Any help is appreciated.  Finding this bug may possibly help
-> ferret out another more possibly nefarious bug, which is why I don't
-> need instant gratification here.  I'm only looking to assist with the
-> solution, not cause more stress.
-> 
-> The "company" that I work for from 9-5 has an extensive RHEL 5.X and 6.X
-> deployment with Satellite, channels, full support, the whole nine yards.
-> They don't color outside the lines as I do -- they use ext3 for the root
-> filesystem instead.  Their loss.  :-)
-> 
-> So don't worry, said "company" "gives" plenty to the "cause".  ;-)
-> 
-> However, after 5pm, I do unrelated personal work and projects unrelated
-> to said "company", and one of those things is working with CentOS and
-> Ubuntu.  Using XFS quite extensively.
+Again, your help is appreciated and I'll be happy to give back as much
+as I can.  I've been committed to XFS for 15 years, and RedHat for even
+longer (way before CentOS existed).  And Linux longer yet!
+For the SGI engineers on this list, I do miss IRIX though...  it will
+always have a special place in my heart -- if only that OS and its tools
+could have been open sourced...
 
-Sorry for hassling you ;)
 
->>
->> I'd look at the kernel changelogs for xfs & md, and see if anything
->> seems plausible.  Maybe diff the sources & see what changed, etc.
->>
-> 
-> Yeah, I took a half-hearted look already.  But didn't diff any source
-> code yet.  I saw a freeze/thaw change and a few other md changes that
-> were suspect.  But haven't had a chance to dig deeper.
+-- Tom
 
-I'd suspect the md changes were the trigger, though maybe it reveals
-an xfs problem.  I don't see anything in xfs that changed which should
-be causing this.
-
-The backtrace will help, I think.
-
-Thanks,
--Eric
-
-> Thanks again.
-> 
-> -- Tom
-> 
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
 
 _______________________________________________
 xfs mailing list
