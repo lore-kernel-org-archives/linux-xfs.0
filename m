@@ -1,11 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 244B07F5A
-	for <xfs@oss.sgi.com>; Tue, 29 Jan 2013 09:42:54 -0600 (CST)
-Subject: [GIT PULL] XFS update for 3.8-rc6
-Message-Id: <20130129154250.1B3CC4266DC@whiskey.americas.sgi.com>
-Date: Tue, 29 Jan 2013 09:42:50 -0600 (CST)
-From: bpm@sgi.com (Ben Myers)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 222F57F4C
+	for <xfs@oss.sgi.com>; Tue, 29 Jan 2013 10:24:25 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 10BF18F804C
+	for <xfs@oss.sgi.com>; Tue, 29 Jan 2013 08:24:22 -0800 (PST)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id Uijy3TPYyLa2plmg (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 29 Jan 2013 08:24:21 -0800 (PST)
+From: Dave Kleikamp <dave.kleikamp@oracle.com>
+Subject: [PATCH V6 25/30] xfs: add support for read_iter and write_iter
+Date: Tue, 29 Jan 2013 10:23:38 -0600
+Message-Id: <1359476623-10544-26-git-send-email-dave.kleikamp@oracle.com>
+In-Reply-To: <1359476623-10544-1-git-send-email-dave.kleikamp@oracle.com>
+References: <1359476623-10544-1-git-send-email-dave.kleikamp@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,81 +28,176 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: Alex Elder <elder@kernel.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, Dave Kleikamp <dave.kleikamp@oracle.com>, linux-fsdevel@vger.kernel.org, Zach Brown <zab@zabbo.net>, "Maxim V. Patlasov" <mpatlasov@parallels.com>
 
-Hi Linus,
+Signed-off-by: Dave Kleikamp <dave.kleikamp@oracle.com>
+Cc: Ben Myers <bpm@sgi.com>
+Cc: Alex Elder <elder@kernel.org>
+Cc: xfs@oss.sgi.com
+---
+ fs/xfs/xfs_file.c | 51 ++++++++++++++++++++-------------------------------
+ 1 file changed, 20 insertions(+), 31 deletions(-)
 
-   Please pull these fixes for XFS.  Here are fixes for returning
-   EFSCORRUPTED on probe of a non-xfs filesystem, the stack switch in
-   xfs_bmapi_allocate, a crash in _xfs_buf_find, speculative
-   preallocation as the filesystem nears ENOSPC, an unmount hang, a race
-   with AIO, and a regression with xfs_fsr.
-
-Thanks,
-	Ben 
-
-The following changes since commit 37f13561de6039b3a916d1510086030d097dea0f:
-
-  xfs: recalculate leaf entry pointer after compacting a dir2 block (2013-01-16 16:08:55 -0600)
-
-are available in the git repository at:
-
-  git://oss.sgi.com/xfs/xfs tags/for-linus-v3.8-rc6
-
-for you to fetch changes up to 65e3aa77f1b0269720660a6879f6f28d158f54c8:
-
-  xfs: Fix xfs_swap_extents() after removal of xfs_flushinval_pages() (2013-01-28 16:05:10 -0600)
-
-----------------------------------------------------------------
-xfs: bugfixes for 3.8-rc6
-
-- fix return value when filesystem probe finds no XFS magic, a
-  regression introduced in 9802182.
-
-- fix stack switch in __xfs_bmapi_allocate by moving the check for stack
-  switch up into xfs_bmapi_write.
-
-- fix oops in _xfs_buf_find by validating that the requested block is
-  within the filesystem bounds.
-
-- limit speculative preallocation near ENOSPC.
-
-- fix an unmount hang in xfs_wait_buftarg by freeing the
-  xfs_buf_log_item in xfs_buf_item_unlock.
-
-- fix a possible use after free with AIO.
-
-- fix xfs_swap_extents after removal of xfs_flushinval_pages, a
-  regression introduced in fb59581404a.
-
-----------------------------------------------------------------
-Brian Foster (1):
-      xfs: pull up stack_switch check into xfs_bmapi_write
-
-Dave Chinner (3):
-      xfs: fix _xfs_buf_find oops on blocks beyond the filesystem end
-      xfs: limit speculative prealloc near ENOSPC thresholds
-      xfs: fix shutdown hang on invalid inode during create
-
-Eric Sandeen (1):
-      xfs: Do not return EFSCORRUPTED when filesystem probe finds no XFS magic
-
-Jan Kara (1):
-      xfs: Fix possible use-after-free with AIO
-
-Torsten Kaiser (1):
-      xfs: Fix xfs_swap_extents() after removal of xfs_flushinval_pages()
-
- fs/xfs/xfs_aops.c     |  2 +-
- fs/xfs/xfs_bmap.c     |  6 +++---
- fs/xfs/xfs_buf.c      | 20 ++++++++++++++++++++
- fs/xfs/xfs_buf_item.c | 12 ++++++++++--
- fs/xfs/xfs_dfrag.c    |  4 ++--
- fs/xfs/xfs_iomap.c    |  9 +++++++++
- fs/xfs/xfs_mount.c    |  2 +-
- fs/xfs/xfs_trace.h    |  1 +
- 8 files changed, 47 insertions(+), 9 deletions(-)
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 67284ed..c5d74e8 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -225,10 +225,9 @@ xfs_file_fsync(
+ }
+ 
+ STATIC ssize_t
+-xfs_file_aio_read(
++xfs_file_read_iter(
+ 	struct kiocb		*iocb,
+-	const struct iovec	*iovp,
+-	unsigned long		nr_segs,
++	struct iov_iter		*iter,
+ 	loff_t			pos)
+ {
+ 	struct file		*file = iocb->ki_filp;
+@@ -249,9 +248,7 @@ xfs_file_aio_read(
+ 	if (file->f_mode & FMODE_NOCMTIME)
+ 		ioflags |= IO_INVIS;
+ 
+-	ret = generic_segment_checks(iovp, &nr_segs, &size, VERIFY_WRITE);
+-	if (ret < 0)
+-		return ret;
++	size = iov_iter_count(iter);
+ 
+ 	if (unlikely(ioflags & IO_ISDIRECT)) {
+ 		xfs_buftarg_t	*target =
+@@ -304,7 +301,7 @@ xfs_file_aio_read(
+ 
+ 	trace_xfs_file_read(ip, size, pos, ioflags);
+ 
+-	ret = generic_file_aio_read(iocb, iovp, nr_segs, pos);
++	ret = generic_file_read_iter(iocb, iter, pos);
+ 	if (ret > 0)
+ 		XFS_STATS_ADD(xs_read_bytes, ret);
+ 
+@@ -620,10 +617,9 @@ restart:
+ STATIC ssize_t
+ xfs_file_dio_aio_write(
+ 	struct kiocb		*iocb,
+-	const struct iovec	*iovp,
+-	unsigned long		nr_segs,
++	struct iov_iter		*iter,
+ 	loff_t			pos,
+-	size_t			ocount)
++	size_t			count)
+ {
+ 	struct file		*file = iocb->ki_filp;
+ 	struct address_space	*mapping = file->f_mapping;
+@@ -631,7 +627,6 @@ xfs_file_dio_aio_write(
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	ssize_t			ret = 0;
+-	size_t			count = ocount;
+ 	int			unaligned_io = 0;
+ 	int			iolock;
+ 	struct xfs_buftarg	*target = XFS_IS_REALTIME_INODE(ip) ?
+@@ -691,8 +686,8 @@ xfs_file_dio_aio_write(
+ 	}
+ 
+ 	trace_xfs_file_direct_write(ip, count, iocb->ki_pos, 0);
+-	ret = generic_file_direct_write(iocb, iovp,
+-			&nr_segs, pos, &iocb->ki_pos, count, ocount);
++	ret = generic_file_direct_write_iter(iocb, iter,
++			pos, &iocb->ki_pos, count);
+ 
+ out:
+ 	xfs_rw_iunlock(ip, iolock);
+@@ -705,10 +700,9 @@ out:
+ STATIC ssize_t
+ xfs_file_buffered_aio_write(
+ 	struct kiocb		*iocb,
+-	const struct iovec	*iovp,
+-	unsigned long		nr_segs,
++	struct iov_iter		*iter,
+ 	loff_t			pos,
+-	size_t			ocount)
++	size_t			count)
+ {
+ 	struct file		*file = iocb->ki_filp;
+ 	struct address_space	*mapping = file->f_mapping;
+@@ -717,7 +711,6 @@ xfs_file_buffered_aio_write(
+ 	ssize_t			ret;
+ 	int			enospc = 0;
+ 	int			iolock = XFS_IOLOCK_EXCL;
+-	size_t			count = ocount;
+ 
+ 	xfs_rw_ilock(ip, iolock);
+ 
+@@ -730,7 +723,7 @@ xfs_file_buffered_aio_write(
+ 
+ write_retry:
+ 	trace_xfs_file_buffered_write(ip, count, iocb->ki_pos, 0);
+-	ret = generic_file_buffered_write(iocb, iovp, nr_segs,
++	ret = generic_file_buffered_write_iter(iocb, iter,
+ 			pos, &iocb->ki_pos, count, 0);
+ 
+ 	/*
+@@ -751,10 +744,9 @@ out:
+ }
+ 
+ STATIC ssize_t
+-xfs_file_aio_write(
++xfs_file_write_iter(
+ 	struct kiocb		*iocb,
+-	const struct iovec	*iovp,
+-	unsigned long		nr_segs,
++	struct iov_iter		*iter,
+ 	loff_t			pos)
+ {
+ 	struct file		*file = iocb->ki_filp;
+@@ -762,17 +754,15 @@ xfs_file_aio_write(
+ 	struct inode		*inode = mapping->host;
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	ssize_t			ret;
+-	size_t			ocount = 0;
++	size_t			count = 0;
+ 
+ 	XFS_STATS_INC(xs_write_calls);
+ 
+ 	BUG_ON(iocb->ki_pos != pos);
+ 
+-	ret = generic_segment_checks(iovp, &nr_segs, &ocount, VERIFY_READ);
+-	if (ret)
+-		return ret;
++	count = iov_iter_count(iter);
+ 
+-	if (ocount == 0)
++	if (count == 0)
+ 		return 0;
+ 
+ 	sb_start_write(inode->i_sb);
+@@ -783,10 +773,9 @@ xfs_file_aio_write(
+ 	}
+ 
+ 	if (unlikely(file->f_flags & O_DIRECT))
+-		ret = xfs_file_dio_aio_write(iocb, iovp, nr_segs, pos, ocount);
++		ret = xfs_file_dio_aio_write(iocb, iter, pos, count);
+ 	else
+-		ret = xfs_file_buffered_aio_write(iocb, iovp, nr_segs, pos,
+-						  ocount);
++		ret = xfs_file_buffered_aio_write(iocb, iter, pos, count);
+ 
+ 	if (ret > 0) {
+ 		ssize_t err;
+@@ -1416,8 +1405,8 @@ const struct file_operations xfs_file_operations = {
+ 	.llseek		= xfs_file_llseek,
+ 	.read		= do_sync_read,
+ 	.write		= do_sync_write,
+-	.aio_read	= xfs_file_aio_read,
+-	.aio_write	= xfs_file_aio_write,
++	.read_iter	= xfs_file_read_iter,
++	.write_iter	= xfs_file_write_iter,
+ 	.splice_read	= xfs_file_splice_read,
+ 	.splice_write	= xfs_file_splice_write,
+ 	.unlocked_ioctl	= xfs_file_ioctl,
+-- 
+1.8.1.1
 
 _______________________________________________
 xfs mailing list
