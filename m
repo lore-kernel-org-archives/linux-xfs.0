@@ -1,21 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A670E7F50
-	for <xfs@oss.sgi.com>; Tue, 29 Jan 2013 14:45:35 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 82FCF8F8033
-	for <xfs@oss.sgi.com>; Tue, 29 Jan 2013 12:45:35 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id aj0lJeo36EupsNZZ for <xfs@oss.sgi.com>;
-	Tue, 29 Jan 2013 12:45:34 -0800 (PST)
-Message-ID: <510834ED.2080404@sandeen.net>
-Date: Tue, 29 Jan 2013 14:45:33 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 6950F7F54
+	for <xfs@oss.sgi.com>; Tue, 29 Jan 2013 14:56:22 -0600 (CST)
+Date: Tue, 29 Jan 2013 14:56:18 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 0/4] xfs_logprint tests & fixes
+Message-ID: <20130129205618.GH27055@sgi.com>
+References: <50E4BBAC.9030604@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/3] xfs: add agskip=value mount option
-References: <20130129153914.801475275@sgi.com>
-	<20130129153914.976867239@sgi.com>
-In-Reply-To: <20130129153914.976867239@sgi.com>
+Content-Disposition: inline
+In-Reply-To: <50E4BBAC.9030604@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,23 +22,20 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: rjohnston@sgi.com
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On 1/29/13 9:39 AM, rjohnston@sgi.com wrote:
+Hi Eric,
 
-<an attachment>
+On Wed, Jan 02, 2013 at 04:58:52PM -0600, Eric Sandeen wrote:
+> Resending in a straightforward series
 
-Please do inline if possible?
+Reviewed-by: Ben Myers <bpm@sgi.com>
 
-But anyway, although I've not looked at the patch itself yet,
-please also add this to Documentation/filesystems/xfs.txt
-
-And not just the "what" but the "why" - why would a person
-use this?  And how would they select the value?
+Applied this series.
 
 Thanks,
--Eric
+	Ben
 
 _______________________________________________
 xfs mailing list
