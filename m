@@ -1,18 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9CDCA7F4E
-	for <xfs@oss.sgi.com>; Mon, 28 Jan 2013 21:47:51 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3E5F6AC001
-	for <xfs@oss.sgi.com>; Mon, 28 Jan 2013 19:47:48 -0800 (PST)
-Message-ID: <51074659.2090700@oracle.com>
-Date: Tue, 29 Jan 2013 11:47:37 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 1B0547F4E
+	for <xfs@oss.sgi.com>; Mon, 28 Jan 2013 22:01:01 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0B7C78F8050
+	for <xfs@oss.sgi.com>; Mon, 28 Jan 2013 20:00:57 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 5TizCmHg3TFwWEHF for
+	<xfs@oss.sgi.com>; Mon, 28 Jan 2013 20:00:57 -0800 (PST)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r0T40rA0016428
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Mon, 28 Jan 2013 23:00:56 -0500
+Received: from localhost ([10.66.13.231])
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id r0T40pna017149
+	for <xfs@oss.sgi.com>; Mon, 28 Jan 2013 23:00:53 -0500
+Date: Tue, 29 Jan 2013 12:00:51 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH v3] xfstests 295: test xfs direct IO nested transaction
+	deadlock
+Message-ID: <20130129040051.GE2768@eguan-t400.nay.redhat.com>
+References: <1358836828-32517-1-git-send-email-eguan@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH v2 2/2] xfsprogs: sync transaction log spaces changes
-	to the user space
-References: <51067F51.7040904@oracle.com> <51069FD6.7030203@sgi.com>
-In-Reply-To: <51069FD6.7030203@sgi.com>
+Content-Disposition: inline
+In-Reply-To: <1358836828-32517-1-git-send-email-eguan@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,104 +38,155 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Hi Mark,
+On Tue, Jan 22, 2013 at 02:40:28PM +0800, Eryu Guan wrote:
+> Regression test case for commit:
+> 
+> 437a255 xfs: fix direct IO nested transaction deadlock.
+> 
+> Signed-off-by: Eryu Guan <eguan@redhat.com>
 
-
-On 01/28/2013 11:57 PM, Mark Tinguely wrote:
-> On 01/28/13 07:38, Jeff Liu wrote:
->> Sync the kernel codes changes regarding transaction log space reservations
->> to the user space.
->>
->> As we have splitted the calculation of attrset log space reservations into mount
->> time and runtime in kernel code, here we need to fix max_attrset_trans_res_adjust()
->> to reflect this change.
->>
->> Signed-off-by: Jie Liu<jeff.liu@oracle.com>
->>
->> ---
->>   include/xfs_mount.h |    3 +-
->>   include/xfs_trans.h |    9 +-
->>   libxfs/xfs_attr.c   |    9 +-
->>   libxfs/xfs_trans.c  |  265 ++++++++++++++++++++++++++-------------------------
->>   mkfs/maxtrres.c     |    9 +-
->>   5 files changed, 147 insertions(+), 148 deletions(-)
->>
-> 
-> For anyone else looking at this. This is basically kernel log 
-> reservation patch 2 and 13 combined.
-> 
-> 
->> diff --git a/include/xfs_trans.h b/include/xfs_trans.h
->> index c2042b7..2870308 100644
->> --- a/include/xfs_trans.h
->> +++ b/include/xfs_trans.h
->> @@ -254,12 +254,9 @@ struct xfs_log_item_desc {
->>   #define	XFS_WRITEID_LOG_RES(mp)	((mp)->m_reservations.tr_swrite)
->>   #define	XFS_ADDAFORK_LOG_RES(mp)	((mp)->m_reservations.tr_addafork)
->>   #define	XFS_ATTRINVAL_LOG_RES(mp)	((mp)->m_reservations.tr_attrinval)
->> -#define	XFS_ATTRSET_LOG_RES(mp, ext)	\
->> -	((mp)->m_reservations.tr_attrset + \
->> -	 (ext * (mp)->m_sb.sb_sectsize) + \
->> -	 (ext * XFS_FSB_TO_B((mp), XFS_BM_MAXLEVELS(mp, XFS_ATTR_FORK))) + \
->> -	 (128 * (ext + (ext * XFS_BM_MAXLEVELS(mp, XFS_ATTR_FORK)))))
->> -#define	XFS_ATTRRM_LOG_RES(mp)	((mp)->m_reservations.tr_attrrm)
->> +#define	XFS_ATTRSETM_LOG_RES(mp)	((mp)->m_reservations.tr_attrsetm)
->> +#define	XFS_ATTRSETRT_LOG_RES(mp)	((mp)->m_reservations.tr_attrsetrt)
->> +#define	XFS_ATTRRM_LOG_RES(mp)		((mp)->m_reservations.tr_attrrm)
->>   #define	XFS_CLEAR_AGI_BUCKET_LOG_RES(mp)  ((mp)->m_reservations.tr_clearagi)
-> 
->   ...
-> 
->> index 33dee52..bf8a2c5 100644
->> --- a/mkfs/maxtrres.c
->> +++ b/mkfs/maxtrres.c
->> @@ -34,7 +34,6 @@ max_attrset_trans_res_adjust(
->>   	int				local;
->>   	int				size;
->>   	int				nblks;
->> -	int				res;
->>
->>   	/*
->>   	 * Determine space the maximal sized attribute will use,
->> @@ -46,13 +45,9 @@ max_attrset_trans_res_adjust(
->>   	nblks = XFS_DAENTER_SPACE_RES(mp, XFS_ATTR_FORK);
->>   	nblks += XFS_B_TO_FSB(mp, size);
->>   	nblks += XFS_NEXTENTADD_SPACE_RES(mp, size, XFS_ATTR_FORK);
->> -	res = XFS_ATTRSET_LOG_RES(mp, nblks);
->>
->> -#if 0
->> -	printf("size = %d nblks = %d res = %d\n", size, nblks, res);
->> -#endif
->> -
->> -	mp->m_reservations.tr_attrset = res;
-> 
->    This number used to be the mount portion of constant that was
->    multiplied times args.total.
-> 
->    Isn't this value (res) what we want to place into tr_attrsetm
->    like before?
-This is not because we have to figure out the max transaction space
-reservations for the attrset at first, and then it will be used for
-the max trans space reservations by mount...
-
-The old attrset includes both mount(attrsetm) and realtime(attrsetrt), that's
-why I splitted them as below.
-> 
->    and then tr_attrsetrt is from xfs_calc_attrsetrt_reservation()?
-> 
->> +	mp->m_reservations.tr_attrsetm = XFS_ATTRSETM_LOG_RES(mp);
->> +	mp->m_reservations.tr_attrsetrt = XFS_ATTRSETRT_LOG_RES(mp) * nblks;
->>   }
->>
-I have tested it by putting printf statement to max_attrset_trans_res_adjust(),
-and verified that the "res = XFS_ATTRSET_LOG_RES(mp, nblks)" is equal to the
-"XFS_ATTRSETM_LOG_RES(mp) + XFS_ATTRSETRT_LOG_RES(mp) * nblks".
+Hi, any comments on this version?
 
 Thanks,
--Jeff
+Eryu
+> ---
+> v3:
+> 	1. rename TESTDIR to STRESS_DIR
+> 	2. decrease variable by using "let"
+> 	3. call wait instead of sync after killing all fsstress processes
+> 	4. rebase on top of master
+> v2:
+> 	1. drop generic freeze vs fsstress test, 068 has done this
+> 	2. remove unnecessary _scratch_unmount
+> 	3. rm $seq.full before _scratch_mkfs_xfs
+> 	4. remove unnecessary sleep
+> 	5. remove unnecessary output
+> 	6. run fixed number(10) of iterations of freeze/thaw cycles
+> 	7. remove from dangerous group
+> 
+>  295     | 88 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  295.out |  3 +++
+>  group   |  1 +
+>  3 files changed, 92 insertions(+)
+>  create mode 100644 295
+>  create mode 100644 295.out
+> 
+> diff --git a/295 b/295
+> new file mode 100644
+> index 0000000..57aa63c
+> --- /dev/null
+> +++ b/295
+> @@ -0,0 +1,88 @@
+> +#! /bin/bash
+> +# FS QA Test No. 295
+> +#
+> +# Test freeze/unfreeze file system randomly under fsstress
+> +# Regression test for commit:
+> +# 437a255 xfs: fix direct IO nested transaction deadlock.
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2013 Red Hat, Inc.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +#
+> +# creator
+> +owner=eguan@redhat.com
+> +
+> +seq=`basename $0`
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +    cd /
+> +    rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common.rc
+> +. ./common.filter
+> +
+> +# real QA test starts here
+> +_supported_fs xfs
+> +_supported_os IRIX Linux
+> +
+> +_require_scratch
+> +_require_freeze
+> +
+> +rm -f $seq.full
+> +_scratch_mkfs_xfs -d agcount=16,su=256k,sw=12 -l su=256k,size=2560b >/dev/null 2>&1
+> +_scratch_mount >/dev/null 2>&1
+> +
+> +STRESS_DIR="$SCRATCH_MNT/testdir"
+> +mkdir -p $STRESS_DIR
+> +
+> +$FSSTRESS_PROG -d $STRESS_DIR -n 100 -p 1000 $FSSTRESS_AVOID >/dev/null 2>&1 &
+> +
+> +# Freeze/unfreeze file system randomly
+> +echo "Start freeze/unfreeze randomly" | tee -a $seq.full
+> +LOOP=10
+> +while [ $LOOP -gt 0 ];do
+> +	TIMEOUT=`expr $RANDOM % 5`
+> +	sleep $TIMEOUT
+> +	echo "* Freeze file system after sleeping $TIMEOUT seconds" >>$seq.full
+> +	xfs_freeze -f $SCRATCH_MNT
+> +	if [ $? -ne 0 ];then
+> +		echo " - Error: freeze filesystem failed" | tee -a $seq.full
+> +	fi
+> +	TIMEOUT=`expr $RANDOM % 3`
+> +	sleep $TIMEOUT
+> +	echo "* Unfreeze file system after sleeping $TIMEOUT seconds" >>$seq.full
+> +	xfs_freeze -u $SCRATCH_MNT
+> +	if [ $? -ne 0 ];then
+> +		echo " - Error: unfreeze filesystem failed" | tee -a $seq.full
+> +	fi
+> +	let LOOP=$LOOP-1
+> +done
+> +echo "Test done" | tee -a $seq.full
+> +killall -q $FSSTRESS_PROG
+> +wait
+> +
+> +_check_scratch_fs
+> +status=0
+> +exit
+> diff --git a/295.out b/295.out
+> new file mode 100644
+> index 0000000..ab4f99b
+> --- /dev/null
+> +++ b/295.out
+> @@ -0,0 +1,3 @@
+> +QA output created by 295
+> +Start freeze/unfreeze randomly
+> +Test done
+> diff --git a/group b/group
+> index 505bc7f..6578540 100644
+> --- a/group
+> +++ b/group
+> @@ -413,3 +413,4 @@ deprecated
+>  292 auto mkfs quick
+>  293 auto quick
+>  294 auto quick
+> +295 auto freeze
+> -- 
+> 1.7.11.7
 
 _______________________________________________
 xfs mailing list
