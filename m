@@ -1,31 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1B0547F4E
-	for <xfs@oss.sgi.com>; Mon, 28 Jan 2013 22:01:01 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 0B7C78F8050
-	for <xfs@oss.sgi.com>; Mon, 28 Jan 2013 20:00:57 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 5TizCmHg3TFwWEHF for
-	<xfs@oss.sgi.com>; Mon, 28 Jan 2013 20:00:57 -0800 (PST)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r0T40rA0016428
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Mon, 28 Jan 2013 23:00:56 -0500
-Received: from localhost ([10.66.13.231])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id r0T40pna017149
-	for <xfs@oss.sgi.com>; Mon, 28 Jan 2013 23:00:53 -0500
-Date: Tue, 29 Jan 2013 12:00:51 +0800
-From: Eryu Guan <eguan@redhat.com>
-Subject: Re: [PATCH v3] xfstests 295: test xfs direct IO nested transaction
-	deadlock
-Message-ID: <20130129040051.GE2768@eguan-t400.nay.redhat.com>
-References: <1358836828-32517-1-git-send-email-eguan@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 8038F7F4E
+	for <xfs@oss.sgi.com>; Mon, 28 Jan 2013 23:21:07 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 623688F8039
+	for <xfs@oss.sgi.com>; Mon, 28 Jan 2013 21:21:07 -0800 (PST)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id mTa49Fd3Mwr4diKX
+	for <xfs@oss.sgi.com>; Mon, 28 Jan 2013 21:21:03 -0800 (PST)
+Message-ID: <51075C42.4050404@hardwarefreak.com>
+Date: Mon, 28 Jan 2013 23:21:06 -0600
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1358836828-32517-1-git-send-email-eguan@redhat.com>
+Subject: Re: Volume fine on x86_64, corruption on ARM
+References: <20130127225258.GA2287@vicerveza.homeunix.net>
+	<5106FDA5.80409@sandeen.net>
+	<20130128224013.GK2287@vicerveza.homeunix.net>
+	<5106FF76.6080102@sandeen.net>
+In-Reply-To: <5106FF76.6080102@sandeen.net>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,159 +27,36 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: =?ISO-8859-1?Q?Llu=EDs_Batlle_i_Rossell?= <viric@viric.name>, xfs@oss.sgi.com
 
-On Tue, Jan 22, 2013 at 02:40:28PM +0800, Eryu Guan wrote:
-> Regression test case for commit:
-> 
-> 437a255 xfs: fix direct IO nested transaction deadlock.
-> 
-> Signed-off-by: Eryu Guan <eguan@redhat.com>
+On 1/28/2013 4:45 PM, Eric Sandeen wrote:
+> On 1/28/13 4:40 PM, Llu=EDs Batlle i Rossell wrote:
 
-Hi, any comments on this version?
+>> I run:
+>> mkfs.xfs /dev/sdb1
+>>
+>> Then I copied files to it. =
 
-Thanks,
-Eryu
-> ---
-> v3:
-> 	1. rename TESTDIR to STRESS_DIR
-> 	2. decrease variable by using "let"
-> 	3. call wait instead of sync after killing all fsstress processes
-> 	4. rebase on top of master
-> v2:
-> 	1. drop generic freeze vs fsstress test, 068 has done this
-> 	2. remove unnecessary _scratch_unmount
-> 	3. rm $seq.full before _scratch_mkfs_xfs
-> 	4. remove unnecessary sleep
-> 	5. remove unnecessary output
-> 	6. run fixed number(10) of iterations of freeze/thaw cycles
-> 	7. remove from dangerous group
-> 
->  295     | 88 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  295.out |  3 +++
->  group   |  1 +
->  3 files changed, 92 insertions(+)
->  create mode 100644 295
->  create mode 100644 295.out
-> 
-> diff --git a/295 b/295
-> new file mode 100644
-> index 0000000..57aa63c
-> --- /dev/null
-> +++ b/295
-> @@ -0,0 +1,88 @@
-> +#! /bin/bash
-> +# FS QA Test No. 295
-> +#
-> +# Test freeze/unfreeze file system randomly under fsstress
-> +# Regression test for commit:
-> +# 437a255 xfs: fix direct IO nested transaction deadlock.
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2013 Red Hat, Inc.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +#
-> +# creator
-> +owner=eguan@redhat.com
-> +
-> +seq=`basename $0`
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +    cd /
-> +    rm -f $tmp.*
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common.rc
-> +. ./common.filter
-> +
-> +# real QA test starts here
-> +_supported_fs xfs
-> +_supported_os IRIX Linux
-> +
-> +_require_scratch
-> +_require_freeze
-> +
-> +rm -f $seq.full
-> +_scratch_mkfs_xfs -d agcount=16,su=256k,sw=12 -l su=256k,size=2560b >/dev/null 2>&1
-> +_scratch_mount >/dev/null 2>&1
-> +
-> +STRESS_DIR="$SCRATCH_MNT/testdir"
-> +mkdir -p $STRESS_DIR
-> +
-> +$FSSTRESS_PROG -d $STRESS_DIR -n 100 -p 1000 $FSSTRESS_AVOID >/dev/null 2>&1 &
-> +
-> +# Freeze/unfreeze file system randomly
-> +echo "Start freeze/unfreeze randomly" | tee -a $seq.full
-> +LOOP=10
-> +while [ $LOOP -gt 0 ];do
-> +	TIMEOUT=`expr $RANDOM % 5`
-> +	sleep $TIMEOUT
-> +	echo "* Freeze file system after sleeping $TIMEOUT seconds" >>$seq.full
-> +	xfs_freeze -f $SCRATCH_MNT
-> +	if [ $? -ne 0 ];then
-> +		echo " - Error: freeze filesystem failed" | tee -a $seq.full
-> +	fi
-> +	TIMEOUT=`expr $RANDOM % 3`
-> +	sleep $TIMEOUT
-> +	echo "* Unfreeze file system after sleeping $TIMEOUT seconds" >>$seq.full
-> +	xfs_freeze -u $SCRATCH_MNT
-> +	if [ $? -ne 0 ];then
-> +		echo " - Error: unfreeze filesystem failed" | tee -a $seq.full
-> +	fi
-> +	let LOOP=$LOOP-1
-> +done
-> +echo "Test done" | tee -a $seq.full
-> +killall -q $FSSTRESS_PROG
-> +wait
-> +
-> +_check_scratch_fs
-> +status=0
-> +exit
-> diff --git a/295.out b/295.out
-> new file mode 100644
-> index 0000000..ab4f99b
-> --- /dev/null
-> +++ b/295.out
-> @@ -0,0 +1,3 @@
-> +QA output created by 295
-> +Start freeze/unfreeze randomly
-> +Test done
-> diff --git a/group b/group
-> index 505bc7f..6578540 100644
-> --- a/group
-> +++ b/group
-> @@ -413,3 +413,4 @@ deprecated
->  292 auto mkfs quick
->  293 auto quick
->  294 auto quick
-> +295 auto freeze
-> -- 
-> 1.7.11.7
+> =
+
+> On the x86_64 machine, right.  Just to be sure, can you do an xfs_repair
+> on x86_64 to be sure it's clean at this point?
+
+Worth considering, the move may not be the problem but simply a
+manifestation of it.  Creating the filesystem directly on the Shiva plug
+and testing it may be instructive at this point as well.
+
+-- =
+
+Stan
+
+
+
 
 _______________________________________________
 xfs mailing list
