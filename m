@@ -1,19 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8415C7F5A
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 68C647F58
 	for <xfs@oss.sgi.com>; Tue, 29 Jan 2013 09:39:15 -0600 (CST)
 Received: from gulag1.americas.sgi.com (gulag1.americas.sgi.com
 	[128.162.236.41])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6DA5E8F8039
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 42761304032
 	for <xfs@oss.sgi.com>; Tue, 29 Jan 2013 07:39:15 -0800 (PST)
-Message-Id: <20130129153915.237058478@sgi.com>
-Date: Tue, 29 Jan 2013 09:39:17 -0600
+Message-Id: <20130129153914.976867239@sgi.com>
+Date: Tue, 29 Jan 2013 09:39:15 -0600
 From: rjohnston@sgi.com
-Subject: [PATCH 3/3] --- sys-utils/mount.8 | 12 ++++++++++++ 1 file changed,
-	12 insertions(+)
+Subject: [PATCH 1/3] xfs: add agskip=value mount option
 References: <20130129153914.801475275@sgi.com>
-Content-Disposition: inline;
-	filename=util-linux-add-xfs-agskip-mount-option.patch
+Content-Disposition: inline; filename=xfs-add-agskip-mount-option.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,29 +27,178 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Index: b/sys-utils/mount.8
+The agskip mount option specifies  the allocation group, (AG) for a new
+file, relative to the start of the last created file. agskip has the
+opposite effect of the rotorstep  system tunable  parameter.   Each
+new  file  to  be placed in the location lastAG + agskipValue,
+where lastAG is the allocation group of the last created file.
+
+For example, agskip=3 means each new file will be  allocated  three  AGs  away
+from the starting AG of the most recently created file.
+
+The agskip mount option disables the rotorstep system tunable parameter.
+
+Signed-off-by: Rich Johnston <rjohnston@sgi.com> 
+---
+ fs/xfs/xfs_alloc.c      |   35 ++++++++++++++++++++++++++++-------
+ fs/xfs/xfs_filestream.c |    8 +++++++-
+ fs/xfs/xfs_mount.c      |    1 +
+ fs/xfs/xfs_mount.h      |    4 +++-
+ fs/xfs/xfs_super.c      |   13 ++++++++++++-
+ 5 files changed, 51 insertions(+), 10 deletions(-)
+
+Index: b/fs/xfs/xfs_alloc.c
 ===================================================================
---- a/sys-utils/mount.8
-+++ b/sys-utils/mount.8
-@@ -2587,6 +2587,18 @@ None.
+--- a/fs/xfs/xfs_alloc.c
++++ b/fs/xfs/xfs_alloc.c
+@@ -2365,12 +2365,20 @@ xfs_alloc_vextent(
+ 		 * Try near allocation first, then anywhere-in-ag after
+ 		 * the first a.g. fails.
+ 		 */
+-		if ((args->userdata  == XFS_ALLOC_INITIAL_USER_DATA) &&
+-		    (mp->m_flags & XFS_MOUNT_32BITINODES)) {
+-			args->fsbno = XFS_AGB_TO_FSB(mp,
+-					((mp->m_agfrotor / rotorstep) %
+-					mp->m_sb.sb_agcount), 0);
+-			bump_rotor = 1;
++		if (args->userdata == XFS_ALLOC_INITIAL_USER_DATA) {
++			if (mp->m_flags & XFS_MOUNT_AGSKIP) {
++				spin_lock(&mp->m_agfrotor_lock);
++				args->fsbno = XFS_AGB_TO_FSB(mp,
++					mp->m_agfrotor, 0);
++				mp->m_agfrotor = (mp->m_agfrotor + mp->m_agskip)
++					% mp->m_sb.sb_agcount;
++				spin_unlock(&mp->m_agfrotor_lock);
++			} else if (mp->m_flags & XFS_MOUNT_32BITINODES) {
++				args->fsbno = XFS_AGB_TO_FSB(mp,
++						((mp->m_agfrotor / rotorstep) %
++						mp->m_sb.sb_agcount), 0);
++				bump_rotor = 1;
++			}
+ 		}
+ 		args->agbno = XFS_FSB_TO_AGBNO(mp, args->fsbno);
+ 		args->type = XFS_ALLOCTYPE_NEAR_BNO;
+@@ -2385,8 +2393,21 @@ xfs_alloc_vextent(
+ 			/*
+ 			 * Start with the last place we left off.
+ 			 */
+-			args->agno = sagno = (mp->m_agfrotor / rotorstep) %
++                        if (mp->m_flags & XFS_MOUNT_AGSKIP) {
++				/*
++				 * The spinlock makes the combined assignment
++				 * of args->fsbno and mp->m_agfrotor atomic.
++				 * mp->m_agfrotor can not be advanced until
++				 * args->fsbno is assigned.
++				*/
++                                spin_lock(&mp->m_agfrotor_lock);
++                                sagno = mp->m_agfrotor;
++                                spin_unlock(&mp->m_agfrotor_lock);
++                        } else {
++				sagno = (mp->m_agfrotor / rotorstep) %
+ 					mp->m_sb.sb_agcount;
++			}
++			args->agno = sagno;
+ 			args->type = XFS_ALLOCTYPE_THIS_AG;
+ 			flags = XFS_ALLOC_FLAG_TRYLOCK;
+ 		} else if (type == XFS_ALLOCTYPE_FIRST_AG) {
+Index: b/fs/xfs/xfs_filestream.c
+===================================================================
+--- a/fs/xfs/xfs_filestream.c
++++ b/fs/xfs/xfs_filestream.c
+@@ -622,7 +622,13 @@ xfs_filestream_associate(
+ 	 * Set the starting AG using the rotor for inode32, otherwise
+ 	 * use the directory inode's AG.
+ 	 */
+-	if (mp->m_flags & XFS_MOUNT_32BITINODES) {
++	if (mp->m_flags & XFS_MOUNT_AGSKIP) {
++		spin_lock(&mp->m_agfrotor_lock);
++		startag = mp->m_agfrotor;
++		mp->m_agfrotor = (mp->m_agfrotor + mp->m_agskip)
++			% mp->m_sb.sb_agcount;
++		spin_unlock(&mp->m_agfrotor_lock);
++	} else if (mp->m_flags & XFS_MOUNT_32BITINODES) {
+ 		rotorstep = xfs_rotorstep;
+ 		startag = (mp->m_agfrotor / rotorstep) % mp->m_sb.sb_agcount;
+ 		mp->m_agfrotor = (mp->m_agfrotor + 1) %
+Index: b/fs/xfs/xfs_mount.c
+===================================================================
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -768,6 +768,7 @@ STATIC void
+ xfs_mount_common(xfs_mount_t *mp, xfs_sb_t *sbp)
+ {
+ 	mp->m_agfrotor = mp->m_agirotor = 0;
++	spin_lock_init(&mp->m_agfrotor_lock);
+ 	spin_lock_init(&mp->m_agirotor_lock);
+ 	mp->m_maxagi = mp->m_sb.sb_agcount;
+ 	mp->m_blkbit_log = sbp->sb_blocklog + XFS_NBBYLOG;
+Index: b/fs/xfs/xfs_mount.h
+===================================================================
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -119,6 +119,7 @@ typedef struct xfs_mount {
+ 	char			*m_logname;	/* external log device name */
+ 	int			m_bsize;	/* fs logical block size */
+ 	xfs_agnumber_t		m_agfrotor;	/* last ag where space found */
++	spinlock_t		m_agfrotor_lock;/* .. and lock protecting it */
+ 	xfs_agnumber_t		m_agirotor;	/* last ag dir inode alloced */
+ 	spinlock_t		m_agirotor_lock;/* .. and lock protecting it */
+ 	xfs_agnumber_t		m_maxagi;	/* highest inode alloc group */
+@@ -203,6 +204,7 @@ typedef struct xfs_mount {
+ 	struct shrinker		m_inode_shrink;	/* inode reclaim shrinker */
+ 	int64_t			m_low_space[XFS_LOWSP_MAX];
+ 						/* low free space thresholds */
++	int			m_agskip;	/* extent allocation stride */
  
- .SH "Mount options for xfs"
- .TP
-+.BI agskip= value
-+Specifies the allocation group, (AG) for a new file, relative to the
-+start of the last created file. agskip has the opposite effect of the
-+rotorstep system tunable parameter.  Each new file to be placed in the
-+location lastAG + agskipValue, where lastAG is the allocation group
-+of the last created file.
-+
-+For example, agskip=3 means each new file will be allocated three AGs
-+away from the starting AG of the most recently created file.
-+
-+The agskip mount option disables the rotorstep system tunable parameter.
-+.TP
- .BI allocsize= size
- Sets the buffered I/O end-of-file preallocation size when
- doing delayed allocation writeout (default size is 64KiB).
+ 	struct workqueue_struct	*m_data_workqueue;
+ 	struct workqueue_struct	*m_unwritten_workqueue;
+@@ -246,7 +248,7 @@ typedef struct xfs_mount {
+ #define XFS_MOUNT_FILESTREAMS	(1ULL << 24)	/* enable the filestreams
+ 						   allocator */
+ #define XFS_MOUNT_NOATTR2	(1ULL << 25)	/* disable use of attr2 format */
+-
++#define XFS_MOUNT_AGSKIP	(1ULL << 26)	/* extent allocation stride */
+ 
+ /*
+  * Default minimum read and write sizes.
+Index: b/fs/xfs/xfs_super.c
+===================================================================
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -114,7 +114,7 @@ mempool_t *xfs_ioend_pool;
+ #define MNTOPT_NODELAYLOG  "nodelaylog"	/* Delayed logging disabled */
+ #define MNTOPT_DISCARD	   "discard"	/* Discard unused blocks */
+ #define MNTOPT_NODISCARD   "nodiscard"	/* Do not discard unused blocks */
+-
++#define MNTOPT_AGSKIP      "agskip"	/* initial extent allocation stride */
+ /*
+  * Table driven mount option parser.
+  *
+@@ -383,6 +383,15 @@ xfs_parseargs(
+ 		} else if (!strcmp(this_char, "irixsgid")) {
+ 			xfs_warn(mp,
+ 	"irixsgid is now a sysctl(2) variable, option is deprecated.");
++		} else if (!strcmp(this_char, MNTOPT_AGSKIP)) {
++			if (!value || !*value) {
++				xfs_warn(mp,
++					"%s option requires an argument",
++					this_char);
++				return EINVAL;
++			}
++			mp->m_flags |= XFS_MOUNT_AGSKIP;
++			mp->m_agskip = simple_strtoul(value, &eov, 10);
+ 		} else {
+ 			xfs_warn(mp, "unknown mount option [%s].", this_char);
+ 			return EINVAL;
+@@ -567,6 +576,8 @@ xfs_showargs(
+ 
+ 	if (!(mp->m_qflags & XFS_ALL_QUOTA_ACCT))
+ 		seq_puts(m, "," MNTOPT_NOQUOTA);
++	if (mp->m_flags & XFS_MOUNT_AGSKIP)
++		seq_printf(m, "," MNTOPT_AGSKIP "=%d", mp->m_agskip);
+ 
+ 	return 0;
+ }
 
 _______________________________________________
 xfs mailing list
