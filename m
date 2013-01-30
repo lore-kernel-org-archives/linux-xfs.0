@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9DC807F4E
-	for <xfs@oss.sgi.com>; Wed, 30 Jan 2013 08:45:44 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4E4DEAC001
-	for <xfs@oss.sgi.com>; Wed, 30 Jan 2013 06:45:41 -0800 (PST)
-Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
-	cuda.sgi.com with ESMTP id qG3szGro0F77ZLqC (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 30 Jan 2013 06:45:39 -0800 (PST)
-Date: Wed, 30 Jan 2013 14:45:35 +0000
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: [PATCH 0/4 v2] Fix possible use after free with AIO
-Message-ID: <20130130144535.GK4503@ZenIV.linux.org.uk>
-References: <1359502081-20240-1-git-send-email-jack@suse.cz>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 92E827F4E
+	for <xfs@oss.sgi.com>; Wed, 30 Jan 2013 10:05:10 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 71BFD8F804B
+	for <xfs@oss.sgi.com>; Wed, 30 Jan 2013 08:05:07 -0800 (PST)
+Message-ID: <51094423.8000703@redhat.com>
+Date: Wed, 30 Jan 2013 11:02:43 -0500
+From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1359502081-20240-1-git-send-email-jack@suse.cz>
+Subject: Re: [PATCH RFC 0/2] fix spinlock recursion on xa_lock in
+	xfs_buf_item_push
+References: <1359492157-30521-1-git-send-email-bfoster@redhat.com>
+	<20130130060551.GG7255@disturbed.disaster>
+	<5109291E.6090303@sgi.com>
+In-Reply-To: <5109291E.6090303@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,20 +27,75 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, ocfs2-devel@oss.oracle.com, xfs@oss.sgi.com
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, Jan 30, 2013 at 12:27:57AM +0100, Jan Kara wrote:
-> 
->   Hi,
-> 
->   since nobody seem to have picked up any of the patches (at least
-> nobody told me so), I've added acks I received to the patches and I'm
-> sending them to Al for merging. Al, can you please merge these? Thanks.
+(added Dave and the list back on CC)
 
-VFS part (4/4) picked; IMO at least ext* and xfs should go through the
-filesystem trees.  If ocfs2 folks don't pick fs/ocfs2 part, I'll grab
-it as well - not sure how active their tree is these days...
+On 01/30/2013 09:07 AM, Mark Tinguely wrote:
+> On 01/30/13 00:05, Dave Chinner wrote:
+>> On Tue, Jan 29, 2013 at 03:42:35PM -0500, Brian Foster wrote:
+...
+> 
+>> So essentially what is happening here is that we are trying to lock
+>> a stale buffer in the AIL to flush it. Well, we can't flush it from
+>> the AIL, and indeed the next line of code is this:
+>>
+>>     if (!xfs_buf_trylock(bp))
+>>         return XFS_ITEM_LOCKED;
+>>
+>>>>>>>     ASSERT(!(bip->bli_flags&  XFS_BLI_STALE));
+>>
+>> The only reason this ASSERT is not firing is that we are failing to
+>> lock stale buffers. Hence we are relying on the failed lock to force
+>> the log, instead of detecting that we need to force the log after we
+>> drop the AIL lock and letting the caller handle it.
+>>
+>> So, wouldn't a better solution be to do something like simply like:
+>>
+>> +    if (bp->b_flags&  XBF_STALE)
+>> +        return XFS_ITEM_PINNED;
+>> +
+>>     if (!xfs_buf_trylock(bp))
+>>         return XFS_ITEM_LOCKED;
+...
+> 
+
+Thanks guys. This certainly looks nicer than messing with the lock
+wrapper, but is it susceptible to the same problem? In other words, does
+this fix the problem or just tighten the window?
+
+I'm going to go back to my original reproduction case and enable some
+select tracepoints to try and get a specific sequence of events, but
+given the code as it is, the problem seems to be that the buffer goes
+from !pinned to pinned between the time we actually check for pinned and
+try the buf lock.
+
+So if the buf lock covers the pinned state (e.g., buffer gets locked,
+added to a transaction, the transaction gets committed and pins and
+unlocks the buffer, IIUC) and the stale state (buf gets locked, added to
+a new transaction and inval'd before the original transaction was
+written ?), but we don't hold the buf lock in xfs_buf_item_push(), how
+can we guarantee the state of either doesn't change between the time we
+check the flags and the time the lock fails?
+
+> Makes sense. It would prevent the lock recursion. The more that I think
+> about, we do not want to release xa_lock during an AIL scan.
+> 
+
+FWIW, the other log item abstractions appear to use this model (e.g.,
+xfs_inode_item_push()), where it appears safe to drop xa_lock once the
+actual object lock/ref is acquired and reacquire xa_lock before
+returning. It looks like this behavior was introduced in:
+
+43ff2122 xfs: on-stack delayed write buffer lists
+
+Brian
+
+> We would still want to see if the buffer is re-pinned (and not STALE) to
+> the AIL.
+> 
+> --Mark.
 
 _______________________________________________
 xfs mailing list
