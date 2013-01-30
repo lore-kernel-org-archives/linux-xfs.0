@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 48A657F4E
-	for <xfs@oss.sgi.com>; Tue, 29 Jan 2013 19:04:43 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 833D0AC001
-	for <xfs@oss.sgi.com>; Tue, 29 Jan 2013 17:04:39 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	RDwZXrIEGvPQkd5F for <xfs@oss.sgi.com>;
-	Tue, 29 Jan 2013 17:04:37 -0800 (PST)
-Date: Wed, 30 Jan 2013 12:04:30 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/3] xfs: add agskip=value mount option
-Message-ID: <20130130010430.GE7255@disturbed.disaster>
-References: <20130129153914.801475275@sgi.com>
-	<20130129153914.976867239@sgi.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 1A1ED7F4E
+	for <xfs@oss.sgi.com>; Tue, 29 Jan 2013 21:16:29 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D019130404E
+	for <xfs@oss.sgi.com>; Tue, 29 Jan 2013 19:16:25 -0800 (PST)
+Received: from thunder.skymagik.net (thunder.skymagik.net [76.75.207.68]) by
+	cuda.sgi.com with ESMTP id ftBE4rW7tEIL44dE for
+	<xfs@oss.sgi.com>; Tue, 29 Jan 2013 19:16:20 -0800 (PST)
+Message-ID: <42720.75.149.17.233.1359515780.squirrel@secure.skymagik.net>
+Date: Tue, 29 Jan 2013 22:16:20 -0500 (EST)
+Subject: Re: XFS appears to cause strange hang with md raid1 on reboot
+From: "Tom" <storm9c1@skymagik.com>
+In-Reply-To: <20130129151833.GF27055@sgi.com>
+References: <32271.192.104.24.222.1359415698.squirrel@secure.skymagik.net>
+	<20130129151833.GF27055@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130129153914.976867239@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,202 +28,107 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: rjohnston@sgi.com
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Jan 29, 2013 at 09:39:15AM -0600, rjohnston@sgi.com wrote:
-> The agskip mount option specifies  the allocation group, (AG) for a new
-> file, relative to the start of the last created file. agskip has the
-> opposite effect of the rotorstep  system tunable  parameter.   Each
-> new  file  to  be placed in the location lastAG + agskipValue,
-> where lastAG is the allocation group of the last created file.
-> 
-> For example, agskip=3 means each new file will be  allocated  three  AGs  away
-> from the starting AG of the most recently created file.
 
-What problem is this intended to solve? What are the limits to useful
-values of the mount option for solving that problem?
+Hi all,
 
-> The agskip mount option disables the rotorstep system tunable parameter.
+I've update the CentOS bug (http://bugs.centos.org/view.php?id=6217) with
+the following information:
 
-I think that's wrong. The both can co-exist, and I can see use cases
-where you'd actually want both to be active on inode32 systems.
-Specifying the size of the skip between each "rotorstep" should not
-disable the number of files in each rotorstep....
 
-> Signed-off-by: Rich Johnston <rjohnston@sgi.com> 
-> ---
->  fs/xfs/xfs_alloc.c      |   35 ++++++++++++++++++++++++++++-------
->  fs/xfs/xfs_filestream.c |    8 +++++++-
->  fs/xfs/xfs_mount.c      |    1 +
->  fs/xfs/xfs_mount.h      |    4 +++-
->  fs/xfs/xfs_super.c      |   13 ++++++++++++-
->  5 files changed, 51 insertions(+), 10 deletions(-)
-> 
-> Index: b/fs/xfs/xfs_alloc.c
-> ===================================================================
-> --- a/fs/xfs/xfs_alloc.c
-> +++ b/fs/xfs/xfs_alloc.c
-> @@ -2365,12 +2365,20 @@ xfs_alloc_vextent(
->  		 * Try near allocation first, then anywhere-in-ag after
->  		 * the first a.g. fails.
->  		 */
-> -		if ((args->userdata  == XFS_ALLOC_INITIAL_USER_DATA) &&
-> -		    (mp->m_flags & XFS_MOUNT_32BITINODES)) {
-> -			args->fsbno = XFS_AGB_TO_FSB(mp,
-> -					((mp->m_agfrotor / rotorstep) %
-> -					mp->m_sb.sb_agcount), 0);
-> -			bump_rotor = 1;
-> +		if (args->userdata == XFS_ALLOC_INITIAL_USER_DATA) {
-> +			if (mp->m_flags & XFS_MOUNT_AGSKIP) {
-> +				spin_lock(&mp->m_agfrotor_lock);
-> +				args->fsbno = XFS_AGB_TO_FSB(mp,
-> +					mp->m_agfrotor, 0);
-> +				mp->m_agfrotor = (mp->m_agfrotor + mp->m_agskip)
-> +					% mp->m_sb.sb_agcount;
-> +				spin_unlock(&mp->m_agfrotor_lock);
+-- More detail about the hang including traceback --
 
-Why are you changing the inode64 allocator behaviour like this? The
-whole point of inode64 is that it allocates data close to the owner
-inode and this breaks that association. Perhaps this modification to
-the initial data allocation should still only be applied to the
-inode32 allocator.
+Using 5.9 kernel (348) without md raid:
+Please stand by while rebooting the system...
+md: stopping all md devices.
+Synchronizing SCSI cache for disk sda:
+Restarting system.
+..
+machine restart
+(reboots normally)
 
-Indeed, if we want the inode64 allocator to have this behaviour,
-then we should be applying the agskip parameter to the inode
-allocator, not the data extent allocator. i.e to the agirotor in
-xfs_ialloc_next_ag(). This will retain the data/metadata locality
-properties of the inode64 allocator, yet still give the benefits of
-an agskip allocation parameter to move the locality of entire
-directories.
 
-....
+With md raid1:
+Unmounting pipe file systems:
+Unmounting file systems:
+Please stand by while rebooting the system...
+md: stopping all md devices.
+md: md2 switched to read-only mode.
+md: md1 switched to read-only mode.
+(hang)
 
-> @@ -2385,8 +2393,21 @@ xfs_alloc_vextent(
->  			/*
->  			 * Start with the last place we left off.
->  			 */
-> -			args->agno = sagno = (mp->m_agfrotor / rotorstep) %
-> +                        if (mp->m_flags & XFS_MOUNT_AGSKIP) {
-> +				/*
-> +				 * The spinlock makes the combined assignment
-> +				 * of args->fsbno and mp->m_agfrotor atomic.
-> +				 * mp->m_agfrotor can not be advanced until
-> +				 * args->fsbno is assigned.
-> +				*/
-> +                                spin_lock(&mp->m_agfrotor_lock);
-> +                                sagno = mp->m_agfrotor;
-> +                                spin_unlock(&mp->m_agfrotor_lock);
+Traceback:
+INFO: task reboot:2063 blocked for more than 120 seconds.
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+reboot        D ffff810037df37e0     0  2063      1                  19
+(NOTLB)
+ ffff81005890ba08 0000000000000082 ffff81005890ba58 ffff81005beb1ea0
+ 0000000000000001 0000000000000007 ffff810058d67040 ffff810037df37e0
+ 000000596dd8a1e6 0000000000003df4 ffff810058d67228 000000008008d76f
+Call Trace:
+ [<ffffffff8002e4bc>] __wake_up+0x38/0x4f
+ [<ffffffff80223bce>] md_write_start+0xf2/0x108
+ [<ffffffff800a3bc2>] autoremove_wake_function+0x0/0x2e
+ [<ffffffff8000ab62>] get_page_from_freelist+0x380/0x442
+ [<ffffffff880b102c>] :raid1:make_request+0x38/0x5d8
+ [<ffffffff8001c839>] generic_make_request+0x211/0x228
+ [<ffffffff8002389f>] mempool_alloc+0x31/0xe7
+ [<ffffffff8001a98f>] vsnprintf+0x5d7/0xb54
+ [<ffffffff80033695>] submit_bio+0xe6/0xed
+ [<ffffffff8807f801>] :xfs:_xfs_buf_ioapply+0x1f2/0x254
+ [<ffffffff8807f89c>] :xfs:xfs_buf_iorequest+0x39/0x64
+ [<ffffffff8808386c>] :xfs:xfs_bdstrat_cb+0x36/0x3a
+ [<ffffffff8807c0a8>] :xfs:xfs_bwrite+0x5e/0xba
+ [<ffffffff88077669>] :xfs:xfs_syncsub+0x119/0x226
+ [<ffffffff88084ce2>] :xfs:xfs_fs_sync_super+0x33/0xdd
+ [<ffffffff8010aa44>] quota_sync_sb+0x2e/0xf0
+ [<ffffffff800e55bd>] __fsync_super+0x1b/0x9e
+ [<ffffffff800e578a>] fsync_super+0x9/0x16
+ [<ffffffff800e57c1>] fsync_bdev+0x2a/0x3b
+ [<ffffffff8014ea59>] invalidate_partition+0x28/0x40
+ [<ffffffff802225a8>] do_md_stop+0xa0/0x2ec
+ [<ffffffff80224d41>] md_notify_reboot+0x5f/0x120
+ [<ffffffff80067565>] notifier_call_chain+0x20/0x32
+ [<ffffffff8009de98>] blocking_notifier_call_chain+0x22/0x36
+ [<ffffffff8009e220>] kernel_restart_prepare+0x18/0x29
+ [<ffffffff8009e280>] kernel_restart+0x9/0x46
+ [<ffffffff8009e40a>] sys_reboot+0x146/0x1c7
+ [<ffffffff8003b291>] hrtimer_try_to_cancel+0x4a/0x53
+ [<ffffffff8005a753>] hrtimer_cancel+0xc/0x16
+ [<ffffffff80063cf9>] do_nanosleep+0x47/0x70
+ [<ffffffff8005a640>] hrtimer_nanosleep+0x58/0x118
+ [<ffffffff800a5b84>] hrtimer_wakeup+0x0/0x22
+ [<ffffffff8001e2f2>] sigprocmask+0xb7/0xdb
+ [<ffffffff80054fe6>] sys_nanosleep+0x4c/0x62
+ [<ffffffff8005d116>] system_call+0x7e/0x83
 
-There's whitespace damage there, and the comment doesn't make any
-sense. Reading mp->m_agfrotor will always be an atomic access.
 
-Also, there's nothing to stop you getting the "wrong" rotor value
-here. i.e.
+Filesystem            Size  Used Avail Use% Mounted on
+/dev/md3              4.9G  784M  4.2G  16% /
+/dev/md2              108M   11M   97M  11% /boot
+tmpfs                 689M     0  689M   0% /dev/shm
 
-	thread 1	thread 2
-	lock
-	calc agfrotor
-	unlock
-			lock
-			calc agfrotor
-			unlock
-	lock
-	sagno = agfrotor
-	unlock
-			lock
-			sagno = agfrotor
-			unlock
+[root@test9][/root]# swapon -s
+Filename                                Type            Size    Used   
+Priority
+/dev/md1                                partition       2947832 0       -1
 
-And hence both allocations end up with the same start AG at twice
-the distance of the skip value. I doubt this is what you intend.
 
-....
+[root@test9][/root]# cat /proc/mdstat
+Personalities : [raid1]
+md2 : active raid1 sdb1[1] sda1[0]
+      128384 blocks [2/2] [UU]
 
-> @@ -622,7 +622,13 @@ xfs_filestream_associate(
->  	 * Set the starting AG using the rotor for inode32, otherwise
->  	 * use the directory inode's AG.
->  	 */
-> -	if (mp->m_flags & XFS_MOUNT_32BITINODES) {
-> +	if (mp->m_flags & XFS_MOUNT_AGSKIP) {
-> +		spin_lock(&mp->m_agfrotor_lock);
-> +		startag = mp->m_agfrotor;
-> +		mp->m_agfrotor = (mp->m_agfrotor + mp->m_agskip)
-> +			% mp->m_sb.sb_agcount;
-> +		spin_unlock(&mp->m_agfrotor_lock);
-> +	} else if (mp->m_flags & XFS_MOUNT_32BITINODES) {
->  		rotorstep = xfs_rotorstep;
->  		startag = (mp->m_agfrotor / rotorstep) % mp->m_sb.sb_agcount;
->  		mp->m_agfrotor = (mp->m_agfrotor + 1) %
+md1 : active raid1 sdb2[1] sda2[0]
+      2947840 blocks [2/2] [UU]
 
-Please encapsulate all this agf rotor stuff in helper functions so
-we don't duplicate logic all over the place...
+md3 : active raid1 sdb3[1] sda3[0]
+      5116608 blocks [2/2] [UU]
 
-....
-> +		} else if (!strcmp(this_char, MNTOPT_AGSKIP)) {
-> +			if (!value || !*value) {
-> +				xfs_warn(mp,
-> +					"%s option requires an argument",
-> +					this_char);
-> +				return EINVAL;
-> +			}
-> +			mp->m_flags |= XFS_MOUNT_AGSKIP;
-> +			mp->m_agskip = simple_strtoul(value, &eov, 10);
->  		} else {
+unused devices: <none>
 
-Hmmm. You don't validate whether the agskip option is valid for the
-current filesystem configuration. What is a valid value for an
-arbitrary configuration, and how can the filesystem validate it is
-sensible?
 
->  			xfs_warn(mp, "unknown mount option [%s].", this_char);
->  			return EINVAL;
-> @@ -567,6 +576,8 @@ xfs_showargs(
->  
->  	if (!(mp->m_qflags & XFS_ALL_QUOTA_ACCT))
->  		seq_puts(m, "," MNTOPT_NOQUOTA);
-> +	if (mp->m_flags & XFS_MOUNT_AGSKIP)
-> +		seq_printf(m, "," MNTOPT_AGSKIP "=%d", mp->m_agskip);
->  
->  	return 0;
->  }
-
-Overall, I'm wondering if this is the right way to approach this
-problem. It only really works correctly (in terms of distribution of
-files/metadata) for fixed volume sizes (i.e. homogenous layouts) -
-the common case where a skip is useful is after growing a filesystem
-onto a new volume. It's rare that the new volume is the same as the
-existing volumes, so it's hard to set a skip value that reliably
-alternates between old and new volumes.
-
-We talked about this allocation distribution problem last march when
-we met at LSF, and I thought we agreed that pushing
-agskip/agrotorstep mount options upstream was not the way we were
-going to solve this problem after I outlined how I planned to solve
-this problem. Indeed, I already have prototype patches for the AG control ioctls
-that allow the xfs_spaceman program that associate an AG with an
-"allocation zone" (an "AZ") and partially written kernel
-patches that implement AZs, per-AZ agi/agf rotors and higher level AZ
-iteration in the allocator.
-
-(It also allows specification of per-AZ stripe unit/stripe width and
-other allocation control parameters but those details are little
-outside the scope of this particular discussion.)
-
-IOWs, I'm close to having a significantly more capable and flexible
-solution to this problem that doesn't require new mount options to
-be added or on-disk format changes to be made. As such, I'm not sure
-that we want to introduce a mount option that is only a partial
-solution to the problem. We basically can't remove mount options
-once they have been added, so introducing a new mount option just to
-mark it deprecated in 6 months time seems like a bad idea....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
