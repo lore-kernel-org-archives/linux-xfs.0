@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3A2927F53
-	for <xfs@oss.sgi.com>; Wed, 30 Jan 2013 22:08:09 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 284678F8039
-	for <xfs@oss.sgi.com>; Wed, 30 Jan 2013 20:08:06 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id EAB937F50
+	for <xfs@oss.sgi.com>; Thu, 31 Jan 2013 00:13:34 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id AB83E304059
+	for <xfs@oss.sgi.com>; Wed, 30 Jan 2013 22:13:31 -0800 (PST)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	ZpYfCEOdR7whwZ5u for <xfs@oss.sgi.com>;
-	Wed, 30 Jan 2013 20:08:04 -0800 (PST)
-Date: Thu, 31 Jan 2013 15:07:48 +1100
+	yjYl7lFWDtAqeKAa for <xfs@oss.sgi.com>;
+	Wed, 30 Jan 2013 22:13:29 -0800 (PST)
+Date: Thu, 31 Jan 2013 17:13:21 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: 3.8-rc5 xfs corruption
-Message-ID: <20130131040748.GH32297@disturbed.disaster>
-References: <614607656.11545086.1359601991846.JavaMail.root@redhat.com>
-	<473604401.11548931.1359602207833.JavaMail.root@redhat.com>
+Subject: Re: [PATCH 1/3] xfs: add agskip=value mount option
+Message-ID: <20130131061321.GI32297@disturbed.disaster>
+References: <20130129153914.801475275@sgi.com>
+	<20130129153914.976867239@sgi.com>
+	<20130130010430.GE7255@disturbed.disaster>
+	<20130130233203.GP27055@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <473604401.11548931.1359602207833.JavaMail.root@redhat.com>
+In-Reply-To: <20130130233203.GP27055@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,49 +32,90 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: CAI Qian <caiqian@redhat.com>
-Cc: linux-xfs@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: rjohnston@sgi.com, xfs@oss.sgi.com
 
-On Wed, Jan 30, 2013 at 10:16:47PM -0500, CAI Qian wrote:
-> Hello,
+On Wed, Jan 30, 2013 at 05:32:03PM -0600, Ben Myers wrote:
+> Hey Dave,
 > 
-> (Sorry to post to xfs mailing lists but unsure about which one is the
-> best for this.)
+> On Wed, Jan 30, 2013 at 12:04:30PM +1100, Dave Chinner wrote:
+> > On Tue, Jan 29, 2013 at 09:39:15AM -0600, rjohnston@sgi.com wrote:
+> > > The agskip mount option specifies  the allocation group, (AG) for a new
+> > > file, relative to the start of the last created file. agskip has the
+> > > opposite effect of the rotorstep  system tunable  parameter.   Each
+> > > new  file  to  be placed in the location lastAG + agskipValue,
+> > > where lastAG is the allocation group of the last created file.
+> > > 
+> > > For example, agskip=3 means each new file will be  allocated  three  AGs  away
+> > > from the starting AG of the most recently created file.
+> >
+> > Overall, I'm wondering if this is the right way to approach this
+> > problem.
+> 
+> We'll have to make sure we all understand the problem we're trying to solve
+> with this before going too far.
 
-Trimmed to just xfs@oss.sgi.com.
+I'm in no doubt about what it is for - I know the exact history of
+this patch and exactly what problems it was designed to solve
+because....
 
-> I have seen something like this once during testing on a system with a
-> EMC VNX FC/multipath back-end.
+> > It only really works correctly (in terms of distribution of
+> > files/metadata) for fixed volume sizes (i.e. homogenous layouts) -
+> > the common case where a skip is useful is after growing a filesystem
+> > onto a new volume. It's rare that the new volume is the same as the
+> > existing volumes, so it's hard to set a skip value that reliably
+> > alternates between old and new volumes.
+> 
+> Based upon what I've read so far on the internal bug when this was introduced,
+> this is more about being able to utilize all allocation groups in a filesystem
+> with many concats.
 
-This is a trace from the verifier code that was added in 3.8-rc1 so
-I doubt it has anything to do with any problem you've seen in the
-past....
+... I was still at SGI when that bug was raised and the ag_skip
+patch was written for the "Enhanced XFS" module in the NAS product
+SGI was selling at the time. It was written as a quick stopgap by
+the NAS product engineers to counter the problems being seen on that
+product due to the nature of the "concat of stripes" storage
+configuration that product used.
 
-Can you tell us what workload you were running and what hardware you
-are using as per:
+It was never was proposed as an upstream solution because I NACKed
+it internally.  Indeed, at the time I was already well down the path
+of fixing the problem in XFS in a much more capable way. i.e.  this
+stuff:
 
-http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+http://oss.sgi.com/archives/xfs/2009-02/msg00250.html
+http://oss.sgi.com/archives/xfs/2009-02/msg00253.html
 
-As it is, if you mounted the filesystem after this problem was
-detected, log recovery probably propagated it to disk. I'd suggest
-that you run xfs_repair -n on the device and post the output so we
-can see if any corruption has actaully made it to disk. If no
-corruption made it to disk, it's possible that we've got the
-incorrect verifier attached to the buffer.
+And that was planned to replace the agskip hack in the next NAS
+product release. Unfortunately, once I left SGI nobody picked up the
+work I was doing and "Enhanced XFS" turned into a zombie.  Indeed,
+agskip was posted back here in 2009 as part of the same code dump as
+the above patches when the XFS group in Melbourne was let go:
 
-> [ 3025.063024] ffff8801a0d50000: 2e 2e 2f 2e 2e 2f 75 73 72 2f 6c 69 62 2f 6d 6f  ../../usr/lib/mo 
+http://oss.sgi.com/archives/xfs/2009-02/msg00252.html
 
-The start of a block contains a path and the only
-type of block that can contain this format of metadata is remote
-symlink block. Remote symlink blocks don't have a verifier attached
-to them as there is nothing that can currently be used to verify
-them as correct.
+There's a bit of history to this patch ;)
 
-I can't see exactly how this can occur as stale buffers have the
-verifier ops cleared before being returned to the new user, and
-newly allocated xfs_bufs are zeroed before being initialised. I
-really need to know what you are doing to be able to get to the
-bottom of it....
+> It's not so much related to balance after growing a
+> filesystem (which is another interesting problem).  The info should be added to
+> this series and be reposted.
+
+Actually, that was one of the problems the patch solved on the NAS
+product. It was a secondary problem as growing wasn't a common
+operation, but it was definitely a concern....
+
+> > We talked about this allocation distribution problem last march when
+> > we met at LSF, and I thought we agreed that pushing
+> > agskip/agrotorstep mount options upstream was not the way we were
+> > going to solve this problem after I outlined how I planned to solve
+> > this problem.
+> 
+> If we can come up with something better, that's great.  But AFAICT the problem
+> still needs to be addressed.  This is just one way to do it.
+
+I'm not saynig that it doesn't need to be addressed. I'm just saying
+the sam ething I said 5 years ago: there's no point pushing it into
+mainline when far more comprehensive solution is just around the
+corner....
 
 Cheers,
 
