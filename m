@@ -1,18 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E19E67F4E
-	for <xfs@oss.sgi.com>; Thu, 31 Jan 2013 14:23:41 -0600 (CST)
-Message-ID: <510AD2E2.1020309@sgi.com>
-Date: Thu, 31 Jan 2013 14:24:02 -0600
-From: Rich Johnston <rjohnston@sgi.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH 1/3] xfs: add agskip=value mount option
-References: <20130129153914.801475275@sgi.com>
-	<20130129153914.976867239@sgi.com>
-	<20130130010430.GE7255@disturbed.disaster>
-	<20130130233203.GP27055@sgi.com>
-	<20130131061321.GI32297@disturbed.disaster>
-In-Reply-To: <20130131061321.GI32297@disturbed.disaster>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 28CF47F4E
+	for <linux-xfs@oss.sgi.com>; Thu, 31 Jan 2013 14:24:58 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 071D930406B
+	for <linux-xfs@oss.sgi.com>; Thu, 31 Jan 2013 12:24:54 -0800 (PST)
+Received: from plane.gmane.org (plane.gmane.org [80.91.229.3]) by cuda.sgi.com
+	with ESMTP id b8bk6TKeC1DXGjNi (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <linux-xfs@oss.sgi.com>;
+	Thu, 31 Jan 2013 12:24:52 -0800 (PST)
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1U10gz-0005TZ-Vv
+	for linux-xfs@oss.sgi.com; Thu, 31 Jan 2013 21:25:06 +0100
+Received: from lougher.demon.co.uk ([80.177.127.218])
+	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+	id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Thu, 31 Jan 2013 21:25:05 +0100
+Received: from plougher by lougher.demon.co.uk with local (Gmexim 0.1 (Debian))
+	id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Thu, 31 Jan 2013 21:25:05 +0100
+From: Phillip Lougher <plougher@redhat.com>
+Subject: Re: Volume fine on =?utf-8?b?eDg2XzY0LA==?= corruption on ARM
+Date: Thu, 31 Jan 2013 20:19:20 +0000 (UTC)
+Message-ID: <loom.20130131T205839-735@post.gmane.org>
+References: <20130127225258.GA2287@vicerveza.homeunix.net>
+	<5106FDA5.80409@sandeen.net>
+	<20130128224013.GK2287@vicerveza.homeunix.net>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,117 +35,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-Hey Dave,
-
-On 01/31/2013 12:13 AM, Dave Chinner wrote:
-> On Wed, Jan 30, 2013 at 05:32:03PM -0600, Ben Myers wrote:
->> Hey Dave,
->>
->> On Wed, Jan 30, 2013 at 12:04:30PM +1100, Dave Chinner wrote:
->>> On Tue, Jan 29, 2013 at 09:39:15AM -0600, rjohnston@sgi.com wrote:
->>>> The agskip mount option specifies  the allocation group, (AG) for a new
->>>> file, relative to the start of the last created file. agskip has the
->>>> opposite effect of the rotorstep  system tunable  parameter.   Each
->>>> new  file  to  be placed in the location lastAG + agskipValue,
->>>> where lastAG is the allocation group of the last created file.
->>>>
->>>> For example, agskip=3 means each new file will be  allocated  three  AGs  away
->>>> from the starting AG of the most recently created file.
->>>
->>> Overall, I'm wondering if this is the right way to approach this
->>> problem.
->>
->> We'll have to make sure we all understand the problem we're trying to solve
->> with this before going too far.
->
-> I'm in no doubt about what it is for - I know the exact history of
-> this patch and exactly what problems it was designed to solve
-> because....
->
->>> It only really works correctly (in terms of distribution of
->>> files/metadata) for fixed volume sizes (i.e. homogenous layouts) -
->>> the common case where a skip is useful is after growing a filesystem
->>> onto a new volume. It's rare that the new volume is the same as the
->>> existing volumes, so it's hard to set a skip value that reliably
->>> alternates between old and new volumes.
->>
->> Based upon what I've read so far on the internal bug when this was introduced,
->> this is more about being able to utilize all allocation groups in a filesystem
->> with many concats.
->
-> ... I was still at SGI when that bug was raised and the ag_skip
-> patch was written for the "Enhanced XFS" module in the NAS product
-> SGI was selling at the time. It was written as a quick stopgap by
-> the NAS product engineers to counter the problems being seen on that
-> product due to the nature of the "concat of stripes" storage
-> configuration that product used.
->
-> It was never was proposed as an upstream solution because I NACKed
-> it internally.  Indeed, at the time I was already well down the path
-> of fixing the problem in XFS in a much more capable way. i.e.  this
-> stuff:
->
-
-I did not see any references to the patchset you referenced below when I 
-was  working on submitting this patchset. Thanks for pointing it out.
-
-> http://oss.sgi.com/archives/xfs/2009-02/msg00250.html
-
-The patchset (pluggable allocation policies) above looks very promising 
-and I would like to port it to top of tree and use it instead of my 
-agskip proposal.  Are there any changes to this patchset we should 
-discuss before I start.
-
-Thanks
---Rich
-
-> http://oss.sgi.com/archives/xfs/2009-02/msg00253.html
->
-> And that was planned to replace the agskip hack in the next NAS
-> product release. Unfortunately, once I left SGI nobody picked up the
-> work I was doing and "Enhanced XFS" turned into a zombie.  Indeed,
-> agskip was posted back here in 2009 as part of the same code dump as
-> the above patches when the XFS group in Melbourne was let go:
->
-> http://oss.sgi.com/archives/xfs/2009-02/msg00252.html
->
-> There's a bit of history to this patch ;)
->
->> It's not so much related to balance after growing a
->> filesystem (which is another interesting problem).  The info should be added to
->> this series and be reposted.
->
-> Actually, that was one of the problems the patch solved on the NAS
-> product. It was a secondary problem as growing wasn't a common
-> operation, but it was definitely a concern....
->
->>> We talked about this allocation distribution problem last march when
->>> we met at LSF, and I thought we agreed that pushing
->>> agskip/agrotorstep mount options upstream was not the way we were
->>> going to solve this problem after I outlined how I planned to solve
->>> this problem.
->>
->> If we can come up with something better, that's great.  But AFAICT the problem
->> still needs to be addressed.  This is just one way to do it.
->
-> I'm not saynig that it doesn't need to be addressed. I'm just saying
-> the sam ething I said 5 years ago: there's no point pushing it into
-> mainline when far more comprehensive solution is just around the
-> corner....
->
-> Cheers,
->
-> Dave.
->
-
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+TGx1w61zIEJhdGxsZSBpIFJvc3NlbGwgPHZpcmljIDxhdD4gdmlyaWMubmFtZT4gd3JpdGVzOgoK
+PiAKPiBPbiBNb24sIEphbiAyOCwgMjAxMyBhdCAwNDozNzoyNVBNIC0wNjAwLCBFcmljIFNhbmRl
+ZW4gd3JvdGU6Cj4gPiBTbyB0aGlzIHdhcyB0cnlpbmcgdG8gcmVhZCBhIGRpcjIgZGlyZWN0b3J5
+IG1ldGFkYXRhIGxlYWYgYmxvY2ssIGFuZCBpdAo+ID4gZGlkbid0IGZpbmQgdGhlIHJpZ2h0IG1h
+Z2ljLgo+ID4gWEZTQiBpcyBzdXBlcmJsb2NrIG1hZ2ljIC4gLiAuIAo+ID4gCj4gPiBJIHRlc3Rl
+ZCBhbiBpbWFnZSB3aGljaCAoSSB0aGluaykgY29udGFpbnMgZXZlcnkgZGlyMiBmb3JtYXQsIGNy
+ZWF0ZWQgb24KPiA+IHg4Nl82NCAodW5kZXIgYSBSSEVMNiAzLjIga2VybmVsKSBhbmQgY2hlY2tl
+ZCBpdCBvbiBBUk0gKGEgcmFzcGJlcnJ5IHBpCj4gPiAzLjIuMjQga2VybmVsKSBzbyBpdCdzIG5v
+dCByZWFsbHkgcXVpdGUgYW4gYXBwbGVzIHRvIGFwcGxlcyB0ZXN0Lgo+ID4gCj4gPiBEb2VzIHRo
+ZSBmaWxlc3lzdGVtIGNoZWNrIGNsZWFuIG9uIHg4Nl82NCByaWdodCBhZnRlciB5b3UgY3JlYXRl
+IGl0Pwo+ID4gSG93IGRpZCB5b3UgY3JlYXRlIGl0Pwo+IAo+IFRoYW5rIHlvdSBmb3IgdGVzdGlu
+ZyEgWW91IG1lYW4gdGhhdCB5b3VyIHRlc3Qgd2VudCBmaW5lLCByaWdodD8KCj4gCj4gSSBydW46
+Cj4gbWtmcy54ZnMgL2Rldi9zZGIxCj4gCj4gVGhlbiBJIGNvcGllZCBmaWxlcyB0byBpdC4gQWZ0
+ZXIgdGhlIGZpcnN0IGNyYXNoIGluIHRoZSBhcm0sIEkgdXNlZAo+PiB4ZnNfcmVwYWlyIG9uIHRo
+ZQo+IHg4Nl82NC4gSXQgY3JlYXRlZCBtYW55IGxvc3QrZm91bmQuIFRoZW4gSSB0cmllZCBhZ2Fp
+biBpbiB0aGUgQVJNLCBhbmQgaXQKPiBjcmFzaGVkIGFnYWluIHRoZSBzYW1lIHdheS4KCkkgaGF2
+ZSB0cmllZCB0byByZXByb2R1Y2UgdGhpcyB1c2luZyBhbiBhcm12NXRlbCBhcmNoIChxZW11IGVt
+dWxhdGlvbiksCnJ1bm5pbmcgYSBzdG9jayAzLjcuMyBrZXJuZWwuICBUaGUgdGVzdCBpbWFnZSB3
+YXMgY3JlYXRlZCBvbiB4ODZfNjQgd2l0aAphIHN0b2NrIDMuNy4zIGtlcm5lbCwgYW5kIHRoZSB0
+ZXN0IGltYWdlIHRoZW4gYm9vdGVkIGFzIHRoZSByb290ZnMgb24gdGhlCkFSTSBzeXN0ZW0uCgpO
+byBjb3JydXB0aW9uIG9mIHRoZSBmaWxlc3lzdGVtIG9jY3VycmVkIG9uIHRoZSBBUk0sIGV2ZW4g
+d2l0aApwYXJhbGxlbCBmaWxlIHdyaXRlcy9tb3ZlcyB0byAnZW5jb3VyYWdlJyB0aGUgYnVnIHRv
+IGFwcGVhci4KVGhlIHVubW91bnRlZCBmaWxlc3lzdGVtIGNoZWNrZWQtb3V0IE9LIG9uIHRoZSB4
+ODZfNjQgdXNpbmcKeGZzX2NoZWNrLgoKSXMgdGhlcmUgc29tZSBtaXNzaW5nIGluZm9ybWF0aW9u
+IGhlcmUgb3IgYWRkaXRpb25hbCBhY3Rpb25zIG5lZWRlZCB0bwp0cmlnZ2VyIHRoaXMgYnVnPwoK
+VGhhbmtzCgpQaGlsbGlwCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5j
+b20vbWFpbG1hbi9saXN0aW5mby94ZnMK
