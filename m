@@ -1,25 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id EB1F27F4E
-	for <xfs@oss.sgi.com>; Thu, 31 Jan 2013 12:28:51 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C6F16304066
-	for <xfs@oss.sgi.com>; Thu, 31 Jan 2013 10:28:51 -0800 (PST)
-Received: from mail-ye0-f181.google.com (mail-ye0-f181.google.com
-	[209.85.213.181]) by cuda.sgi.com with ESMTP id
-	NqsTg1iF1Ckzf8ct (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 31 Jan 2013 10:28:50 -0800 (PST)
-Received: by mail-ye0-f181.google.com with SMTP id m11so680054yen.12
-	for <xfs@oss.sgi.com>; Thu, 31 Jan 2013 10:28:50 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 984E87F4E
+	for <xfs@oss.sgi.com>; Thu, 31 Jan 2013 13:08:29 -0600 (CST)
+Date: Thu, 31 Jan 2013 13:08:26 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: Xfs fails in xfstests 013
+Message-ID: <20130131190826.GQ27055@sgi.com>
+References: <alpine.LFD.2.00.1301310910080.14328@dhcp-1-104.brq.redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <510AB2D5.2080600@redhat.com>
-References: <CA+kHd+eRifnCVkri6TPKS9UcUpBSW9nPnCEz0a412vO_Aw8=Xw@mail.gmail.com>
-	<510AB2D5.2080600@redhat.com>
-Date: Thu, 31 Jan 2013 19:28:49 +0100
-Message-ID: <CAAxjCExedk+fWLpD1ypak9HK7b2domtc3aJuBRyEWsvXXsiSWA@mail.gmail.com>
-Subject: Re: 50% more blocks allocated than needed
-From: Stefan Ring <stefanrin@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <alpine.LFD.2.00.1301310910080.14328@dhcp-1-104.brq.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,19 +18,70 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Linux fs XFS <xfs@oss.sgi.com>
+To: =?utf-8?B?THVrw6HFoQ==?= Czerner <lczerner@redhat.com>
+Cc: xfs@oss.sgi.com
 
-> I don't think so at the moment
-
-Really? Even for closed files? I was almost sure that the space would
-be reclaimed before running out of it. I have only slightly less than
-1 year of XFS experience though...
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+SGV5IEx1a2FzLAoKT24gVGh1LCBKYW4gMzEsIDIwMTMgYXQgMDk6MTk6MjNBTSArMDEwMCwgTHVr
+w6HFoSBDemVybmVyIHdyb3RlOgo+IEkndmUganVzdCBydW4geGZzdGVzdCAwMTMgb24geGZzIGFu
+ZCBpdCBmYWlscyB3aXRoIHRoaXMgYmFja3RyYWNlCj4gCj4gCj4gSmFuIDMxIDAzOjA5OjA3IHJo
+ZWw2X3ZtMSBrZXJuZWw6IGZmZmY4ODAyMGI2ZDEwMDA6IDc4IDc4IDc4IDc4IDc4IDc4IDc4IDc4
+IDc4IDc4IDJmIDc4IDc4IDc4IDc4IDc4ICB4eHh4eHh4eHh4L3h4eHh4Cj4gSmFuIDMxIDAzOjA5
+OjA3IHJoZWw2X3ZtMSBrZXJuZWw6IFhGUyAoc2RhKTogSW50ZXJuYWwgZXJyb3IgeGZzX2JtYnRf
+dmVyaWZ5IGF0IGxpbmUgNzQ3IG9mIGZpbGUgZnMveGZzL3hmc19ibWFwX2J0cmVlLmMuICBDYWxs
+ZXIgMHhmZmZmZmZmZmEwMjU0ODZlCj4gSmFuIDMxIDAzOjA5OjA3IHJoZWw2X3ZtMSBrZXJuZWw6
+Cj4gSmFuIDMxIDAzOjA5OjA3IHJoZWw2X3ZtMSBrZXJuZWw6IFBpZDogODkwOSwgY29tbTogeGZz
+YWlsZC9zZGEgVGFpbnRlZDogR0YgICAgICAgICAgICAzLjguMC1yYzUtb3JpZysgIzgKPiBKYW4g
+MzEgMDM6MDk6MDcgcmhlbDZfdm0xIGtlcm5lbDogQ2FsbCBUcmFjZToKPiBKYW4gMzEgMDM6MDk6
+MDcgcmhlbDZfdm0xIGtlcm5lbDogWzxmZmZmZmZmZmEwMjI4NzdmPl0geGZzX2Vycm9yX3JlcG9y
+dCsweDNmLzB4NTAgW3hmc10KPiBKYW4gMzEgMDM6MDk6MDcgcmhlbDZfdm0xIGtlcm5lbDogWzxm
+ZmZmZmZmZmEwMjU0ODZlPl0gPyB4ZnNfYm1idF93cml0ZV92ZXJpZnkrMHhlLzB4MTAgW3hmc10K
+PiBKYW4gMzEgMDM6MDk6MDcgcmhlbDZfdm0xIGtlcm5lbDogWzxmZmZmZmZmZmEwMjI4N2VlPl0g
+eGZzX2NvcnJ1cHRpb25fZXJyb3IrMHg1ZS8weDkwIFt4ZnNdCj4gSmFuIDMxIDAzOjA5OjA3IHJo
+ZWw2X3ZtMSBrZXJuZWw6IFs8ZmZmZmZmZmZhMDI1NDcxMD5dIHhmc19ibWJ0X3ZlcmlmeSsweDgw
+LzB4MWQwIFt4ZnNdCj4gSmFuIDMxIDAzOjA5OjA3IHJoZWw2X3ZtMSBrZXJuZWw6IFs8ZmZmZmZm
+ZmZhMDI1NDg2ZT5dID8geGZzX2JtYnRfd3JpdGVfdmVyaWZ5KzB4ZS8weDEwIFt4ZnNdCj4gSmFu
+IDMxIDAzOjA5OjA3IHJoZWw2X3ZtMSBrZXJuZWw6IFs8ZmZmZmZmZmZhMDI1NDg2ZT5dIHhmc19i
+bWJ0X3dyaXRlX3ZlcmlmeSsweGUvMHgxMCBbeGZzXQo+IEphbiAzMSAwMzowOTowNyByaGVsNl92
+bTEga2VybmVsOiBbPGZmZmZmZmZmYTAyMjY5YTU+XSBfeGZzX2J1Zl9pb2FwcGx5KzB4NjUvMHgx
+NTAgW3hmc10KPiBKYW4gMzEgMDM6MDk6MDcgcmhlbDZfdm0xIGtlcm5lbDogWzxmZmZmZmZmZjgx
+MDhkMTcwPl0gPyB0cnlfdG9fd2FrZV91cCsweDJiMC8weDJiMAo+IEphbiAzMSAwMzowOTowNyBy
+aGVsNl92bTEga2VybmVsOiBbPGZmZmZmZmZmYTAyMjcwYTU+XSA/IHhmc19iZHN0cmF0X2NiKzB4
+NjUvMHhkMCBbeGZzXQo+IEphbiAzMSAwMzowOTowNyByaGVsNl92bTEga2VybmVsOiBbPGZmZmZm
+ZmZmYTAyMjZmZWY+XSB4ZnNfYnVmX2lvcmVxdWVzdCsweDRmLzB4YTAgW3hmc10KPiBKYW4gMzEg
+MDM6MDk6MDcgcmhlbDZfdm0xIGtlcm5lbDogWzxmZmZmZmZmZmEwMjI3MGE1Pl0geGZzX2Jkc3Ry
+YXRfY2IrMHg2NS8weGQwIFt4ZnNdCj4gSmFuIDMxIDAzOjA5OjA3IHJoZWw2X3ZtMSBrZXJuZWw6
+IFs8ZmZmZmZmZmZhMDIyNzIxOD5dIF9feGZzX2J1Zl9kZWx3cmlfc3VibWl0KzB4MTA4LzB4MjAw
+IFt4ZnNdCj4gSmFuIDMxIDAzOjA5OjA3IHJoZWw2X3ZtMSBrZXJuZWw6IFs8ZmZmZmZmZmZhMDIy
+NzNjMD5dID8geGZzX2J1Zl9kZWx3cmlfc3VibWl0X25vd2FpdCsweDIwLzB4MzAgW3hmc10KPiBK
+YW4gMzEgMDM6MDk6MDcgcmhlbDZfdm0xIGtlcm5lbDogWzxmZmZmZmZmZmEwMjI3M2MwPl0geGZz
+X2J1Zl9kZWx3cmlfc3VibWl0X25vd2FpdCsweDIwLzB4MzAgW3hmc10KPiBKYW4gMzEgMDM6MDk6
+MDcgcmhlbDZfdm0xIGtlcm5lbDogWzxmZmZmZmZmZmEwMjgyMzc2Pl0geGZzYWlsZF9wdXNoKzB4
+MWI2LzB4NTIwIFt4ZnNdCj4gSmFuIDMxIDAzOjA5OjA3IHJoZWw2X3ZtMSBrZXJuZWw6IFs8ZmZm
+ZmZmZmZhMDI4Mjc3OD5dIHhmc2FpbGQrMHg5OC8weDEzMCBbeGZzXQo+IEphbiAzMSAwMzowOTow
+NyByaGVsNl92bTEga2VybmVsOiBbPGZmZmZmZmZmYTAyODI2ZTA+XSA/IHhmc2FpbGRfcHVzaCsw
+eDUyMC8weDUyMCBbeGZzXQo+IEphbiAzMSAwMzowOTowNyByaGVsNl92bTEga2VybmVsOiBbPGZm
+ZmZmZmZmODEwNzk2OGU+XSBrdGhyZWFkKzB4Y2UvMHhlMAo+IEphbiAzMSAwMzowOTowNyByaGVs
+Nl92bTEga2VybmVsOiBbPGZmZmZmZmZmODEwNzk1YzA+XSA/IGt0aHJlYWRfZnJlZXphYmxlX3No
+b3VsZF9zdG9wKzB4NzAvMHg3MAo+IEphbiAzMSAwMzowOTowNyByaGVsNl92bTEga2VybmVsOiBb
+PGZmZmZmZmZmODE1NWNkZWM+XSByZXRfZnJvbV9mb3JrKzB4N2MvMHhiMAo+IEphbiAzMSAwMzow
+OTowNyByaGVsNl92bTEga2VybmVsOiBbPGZmZmZmZmZmODEwNzk1YzA+XSA/IGt0aHJlYWRfZnJl
+ZXphYmxlX3Nob3VsZF9zdG9wKzB4NzAvMHg3MAo+IEphbiAzMSAwMzowOTowNyByaGVsNl92bTEg
+a2VybmVsOiBYRlMgKHNkYSk6IENvcnJ1cHRpb24gZGV0ZWN0ZWQuIFVubW91bnQgYW5kIHJ1biB4
+ZnNfcmVwYWlyCj4gSmFuIDMxIDAzOjA5OjA3IHJoZWw2X3ZtMSBrZXJuZWw6IFhGUyAoc2RhKTog
+eGZzX2RvX2ZvcmNlX3NodXRkb3duKDB4OCkgY2FsbGVkIGZyb20gbGluZSAxMzU4IG9mIGZpbGUg
+ZnMveGZzL3hmc19idWYuYy4gIFJldHVybiBhZGRyZXNzID0gMHhmZmZmZmZmZmEwMjI2YTg1Cj4g
+SmFuIDMxIDAzOjA5OjA3IHJoZWw2X3ZtMSBrZXJuZWw6IFhGUyAoc2RhKTogQ29ycnVwdGlvbiBv
+ZiBpbi1tZW1vcnkgZGF0YSBkZXRlY3RlZC4gIFNodXR0aW5nIGRvd24gZmlsZXN5c3RlbQo+IEph
+biAzMSAwMzowOTowNyByaGVsNl92bTEga2VybmVsOiBYRlMgKHNkYSk6IFBsZWFzZSB1bW91bnQg
+dGhlIGZpbGVzeXN0ZW0gYW5kIHJlY3RpZnkgdGhlIHByb2JsZW0ocykKPiBKYW4gMzEgMDM6MDk6
+MDcgcmhlbDZfdm0xIGtlcm5lbDogWEZTIChzZGEpOiB4ZnNfbG9nX2ZvcmNlOiBlcnJvciA1IHJl
+dHVybmVkLgo+IAo+IAo+IEkgY2FuIHJlcHJvZHVjZSBpdCBldmVyeSB0aW1lIHdpdGggeGZzdGVz
+dCAwMTMgb24gMy44LjAtcmM1LgoKSSBoYXZlbid0IGJlZW4gYWJsZSB0byByZXByb2R1Y2UgdGhp
+cyB3aXRoIHRlc3QgMDEzLiAgQ291bGQgeW91IGdyYWIgYQptZXRhZHVtcD8KClRoYW5rcywKCUJl
+bgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1h
+aWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlz
+dGluZm8veGZzCg==
