@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D870A7F55
-	for <xfs@oss.sgi.com>; Thu, 31 Jan 2013 05:44:03 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8900BAC001
-	for <xfs@oss.sgi.com>; Thu, 31 Jan 2013 03:44:00 -0800 (PST)
-Received: from mail-qc0-f172.google.com (mail-qc0-f172.google.com
-	[209.85.216.172]) by cuda.sgi.com with ESMTP id
-	XKhHoea2vIuj2t6L (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 31 Jan 2013 03:43:58 -0800 (PST)
-Received: by mail-qc0-f172.google.com with SMTP id b25so1226174qca.3
-	for <xfs@oss.sgi.com>; Thu, 31 Jan 2013 03:43:57 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 7882F7F4E
+	for <xfs@oss.sgi.com>; Thu, 31 Jan 2013 11:42:52 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 660EC304048
+	for <xfs@oss.sgi.com>; Thu, 31 Jan 2013 09:42:47 -0800 (PST)
+Message-ID: <510AADC5.3000305@redhat.com>
+Date: Thu, 31 Jan 2013 12:45:41 -0500
+From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-From: Thomas Habets <thomas@habets.se>
-Date: Thu, 31 Jan 2013 11:43:37 +0000
-Message-ID: <CA+kHd+eRifnCVkri6TPKS9UcUpBSW9nPnCEz0a412vO_Aw8=Xw@mail.gmail.com>
-Subject: 50% more blocks allocated than needed
+Subject: Re: [PATCH RFC 0/2] fix spinlock recursion on xa_lock in
+	xfs_buf_item_push
+References: <1359492157-30521-1-git-send-email-bfoster@redhat.com>
+	<20130130060551.GG7255@disturbed.disaster>
+	<5109291E.6090303@sgi.com> <51094423.8000703@redhat.com>
+	<20130130215934.GB32297@disturbed.disaster>
+In-Reply-To: <20130130215934.GB32297@disturbed.disaster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,57 +28,120 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com, david@fromorbit.com
 
-Hi.
+On 01/30/2013 04:59 PM, Dave Chinner wrote:
+> On Wed, Jan 30, 2013 at 11:02:43AM -0500, Brian Foster wrote:
+>> (added Dave and the list back on CC)
+>>
+>> On 01/30/2013 09:07 AM, Mark Tinguely wrote:
+>>> On 01/30/13 00:05, Dave Chinner wrote:
+>>>> On Tue, Jan 29, 2013 at 03:42:35PM -0500, Brian Foster wrote:
+...
+>>
+>> Thanks guys. This certainly looks nicer than messing with the lock
+>> wrapper, but is it susceptible to the same problem? In other words, does
+>> this fix the problem or just tighten the window?
+> 
+> That's what I need to think about more - the only difference here is
+> that we are checking the flag before the down_trylock() instead of
+> after....
+> 
+>> So if the buf lock covers the pinned state (e.g., buffer gets locked,
+>> added to a transaction, the transaction gets committed and pins and
+>> unlocks the buffer, IIUC) and the stale state (buf gets locked, added to
+>> a new transaction and inval'd before the original transaction was
+>> written ?), but we don't hold the buf lock in xfs_buf_item_push(), how
+>> can we guarantee the state of either doesn't change between the time we
+>> check the flags and the time the lock fails?
+> 
+> ... but the order of them being set and checked may be significant
+> and hence checking the stale flag first might be sufficient to avoid
+> the pin count race and hence the log force. Hence this might just
+> need a pair of memory barriers - one here and one in xfs_buf_stale()
+> - to ensure that we always see the XBF_STALE flag without needing to
+> lock the buffer first.
+> 
 
-I've had some files on an XFS filesystem that use way
-more blocks than they need.
+I _think_ I follow your train of thought. If we're racing on the pin
+check, presumably the lock holder is committing the transaction and we
+should either already see the buffer being stale, being pinned or we
+should get the lock (assuming the order is: stale, pinned, unlocked).
 
-That is, st_size=50MB and st_blocks*512= about 68MB.
+That aside for a moment, here's some specific tracepoint (some of which
+I've hacked in) data for when the recursion occurs:
 
-The files were downloaded with wget on a somewhat unreliable 3G
-connection (50-500kBps) and sometimes defragging (xfs_fsr) fixes it,
-but
-sometimes not.
+      xfsalloc/5-3220  [005]  4304.223158: xfs_buf_item_stale: dev 253:3
+bno 0x847feb28 len 0x1000 hold 2 pincount 0 lock 0 flags
+|MAPPED|ASYNC|DONE|STALE|PAGES recur 0 refcount 1 bliflags |DIRTY|STALE
+lidesc 0xffff88067ada5610 liflags IN_AIL
+ smallfile_cli.p-3702  [007]  4304.223209: xfs_buf_item_format_stale:
+dev 253:3 bno 0x847feb28 len 0x1000 hold 2 pincount 0 lock 0 flags
+|MAPPED|ASYNC|DONE|STALE|PAGES recur 0 refcount 1 bliflags |STALE lidesc
+0xffff88067ada5610 liflags IN_AIL
+...
+xfsaild/dm-3-3695  [002]  4304.223217: xfs_buf_item_trylock: dev 253:3
+bno 0x847feb28 len 0x1000 hold 2 pincount 1 lock 0 flags
+|MAPPED|ASYNC|DONE|STALE|PAGES recur 0 refcount 1 bliflags |STALE lidesc
+0xffff88067ada5610 liflags IN_AIL
+ smallfile_cli.p-3702  [007]  4304.223217: xfs_buf_item_pin: dev 253:3
+bno 0x847feb28 len 0x1000 hold 2 pincount 0 lock 0 flags
+|MAPPED|ASYNC|DONE|STALE|PAGES recur 0 refcount 1 bliflags |STALE lidesc
+0xffff88067ada5610 liflags IN_AIL
+...
+    xfsaild/dm-3-3695  [002]  4304.223219: xfs_buf_cond_lock_log_force:
+dev 253:3 bno 0x847feb28 len 0x1000 hold 2 pincount 1 lock 0 flags
+MAPPED|ASYNC|DONE|STALE|PAGES caller xfs_buf_item_trylock
 
-If st_blocks*512<st_size then it could be sparse files, but this is
-the opposite. So... preallocation?
+[NOTES:
+ - I moved xfs_buf_item_trylock up to after the pinned check but before
+the trylock.
+ - xfs_buf_item_stale() is in xfs_trans_binval(). This was an oversight,
+as I was looking at bli_flags, but still illustrates the sequence.]
 
-"df" before and after deleting a bunch of these files shows that the
-st_blocks is what it cares about. Would the preallocation (if that's
-what it is) be reclaimed if the fs started to run out of space?
+... so as expected, the buffer is marked stale, we attempt the trylock,
+the buf is pinned, we run the log force and we're dead.
 
-If not preallocation, then what?
+>From the looks of the trace, I'd expect an additional stale check to
+eliminate the ability to reproduce this, but that doesn't necessarily
+make it correct of course. Regardless, I'm putting that to the test now
+and letting it run for a bit while we get this sorted out.
 
-Note st_blocks is 134656 and xfs_bmap shows 97663 blocks.
+I also need to stare at the code some more. My pending questions are:
 
-$ ls -l foo
--rw-r--r-- 1 root root 50000000 Jan 29 01:32 foo
-$ du -h foo
-66M foo
-$ stat foo
-  File: `foo'
-  Size: 50000000   Blocks: 134656     IO Block: 4096   regular file
-Device: fe04h/65028d Inode: 68688483    Links: 1
-Access: (0644/-rw-r--r--)  Uid: (    0/    root)   Gid: (    0/    root)
-Access: 2013-01-30 18:56:18.603278346 +0000
-Modify: 2013-01-29 01:32:51.000000000 +0000
-Change: 2013-01-31 11:38:10.892330145 +0000
- Birth: -
-$ xfs_bmap foo
-foo:
-0: [0..97663]: 44665840..44763503
+- Is it always reasonable to to assume/consider a stale buf as pinned in
+the context of xfsaild?
+- If we currently reproduce the following sequence:
 
---
-typedef struct me_s {
- char name[]      = { "Thomas Habets" };
- char email[]     = { "thomas@habets.pp.se" };
- char kernel[]    = { "Linux" };
- char *pgpKey[]   = { "http://www.habets.pp.se/pubkey.txt" };
- char pgp[] = { "A8A3 D1DD 4AE0 8467 7FDE  0945 286A E90A AD48 E854" };
- char coolcmd[]   = { "echo '. ./_&. ./_'>_;. ./_" };
-} me_t;
+A		xfsaild
+stale
+		(!pinned) ==> trylock()
+pinned
+		(!trylock && pinned && stale)
+			==> xfs_log_force() (boom)
+
+... what prevents the following sequence from occurring sometime in the
+future or with some alternate high-level sequence of events?
+
+A		xfsaild
+locked
+		(!pinned && !stale) ==> trylock()
+pinned
+stale
+		(!trylock && pinned && stale)
+			==> xfs_log_force()
+
+Granted the window is seriously tight, but is there some crazy sequence
+where we could race with the pin count and the stale state? E.g., I
+notice some error or forced shutdown sequences mark buffers as stale, etc.
+
+Brian
+
+...
+> Cheers,
+> 
+> Dave.
+> 
 
 _______________________________________________
 xfs mailing list
