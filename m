@@ -1,15 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 288627F52
-	for <xfs@oss.sgi.com>; Fri,  1 Feb 2013 16:54:51 -0600 (CST)
-Date: Fri, 1 Feb 2013 16:54:50 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: xfsprogs: update version numbers and changelog.
-Message-ID: <20130201225450.GZ27055@sgi.com>
-References: <20130201225103.GY27055@sgi.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130201225103.GY27055@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id C4EDE7F51
+	for <xfs@oss.sgi.com>; Fri,  1 Feb 2013 17:15:05 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 9DAAC8F8039
+	for <xfs@oss.sgi.com>; Fri,  1 Feb 2013 15:15:05 -0800 (PST)
+Received: from mail.linuxfoundation.org (mail.linuxfoundation.org
+	[140.211.169.12]) by cuda.sgi.com with ESMTP id
+	2QvbVdH3O67a2ik7 for <xfs@oss.sgi.com>;
+	Fri, 01 Feb 2013 15:15:04 -0800 (PST)
+Date: Fri, 1 Feb 2013 15:15:02 -0800
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH 10/18] mm: teach truncate_inode_pages_range() to handle
+	non page aligned ranges
+Message-Id: <20130201151502.59398b29.akpm@linux-foundation.org>
+In-Reply-To: <1359715424-32318-11-git-send-email-lczerner@redhat.com>
+References: <1359715424-32318-1-git-send-email-lczerner@redhat.com>
+	<1359715424-32318-11-git-send-email-lczerner@redhat.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,29 +26,183 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Arkadiusz Miskiewicz <arekm@maven.pl>
-Cc: xfs@oss.sgi.com
+To: Lukas Czerner <lczerner@redhat.com>
+Cc: Hugh Dickins <hughd@google.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
-QXJrYWRpdXN6LAoKT24gRnJpLCBGZWIgMDEsIDIwMTMgYXQgMDQ6NTE6MDNQTSAtMDYwMCwgQmVu
-IE15ZXJzIHdyb3RlOgo+IFVwZGF0ZSB2ZXJzaW9uIG51bWJlcnMgYW5kIGNoYW5nZWxvZy4KPiAK
-PiBTaWduZWQtb2ZmLWJ5OiBCZW4gTXllcnMgPGJwbUBzZ2kuY29tPgo+IAo+IC0tLQo+IAo+IEhp
-IEZvbGtzLAo+IAo+IFRoaXMgcmVsZWFzZSBpcyB0byBhZGRyZXNzIHRoZSBwcm9ibGVtcyBpbiBv
-dXIgbGFzdCByZWxlYXNlIHJlcG9ydGVkIGJ5Cj4gQXJrYWRpdXN6IE1pxZtraWV3aWN6LiAgSXQg
-d291bGRuJ3QgYnVpbGQgZHVlIHRvIGEgbWlzc2luZyBzb3VyY2UgZmlsZSBhbmQgYQo+IGJ1aWxk
-IGVycm9yIHdoZW4gdXNpbmcgLVdlcnJvcj1mb3JtYXQtc2VjdXJpdHkuCj4KPiBJIGhhdmUgcGxh
-Y2VkIGEgcHJlLXJlbGVhc2UgdGFyYmFsbCBoZXJlOgo+IAo+IGZ0cDovL29zcy5zZ2kuY29tL3By
-b2plY3RzL3hmcy9jbWRfdGFycy9wcmUtcmVsZWFzZS94ZnNwcm9ncy1wcmUtMy4xLjExLnRhci5n
-ego+IAo+IEl0IGlzIGZyZXNoIG9mZiB0aGUgcmVsZWFzZS5zaCBzY3JpcHQgd2l0aCBvbmx5IHRo
-ZSBuYW1lIGNoYW5nZWQgdG8gaW5kaWNhdGUKPiB0aGF0IGl0IGlzIHByZS1yZWxlYXNlLiAgUGxl
-YXNlIHRha2UgYSBsb29rIGFuZCByZXBvcnQgYW55IGlzc3VlcyBiZWZvcmUgbmV4dAo+IFdlZG5l
-c2RheS4gIElmIHRoZXJlIGFyZSBvdGhlciBwYXRjaGVzIHdoaWNoIHlvdSBmZWVsIGFyZSBlc3Nl
-bnRpYWwsIG5vdyBpcyB0aGUKPiB0aW1lIHRvIHNheSBzby4KCkkgbmVnbGVjdGVkIHRvIGNjIHlv
-dSBvbiB0aGlzIHRocmVhZCBpbml0aWFsbHkuICBDb3VsZCB5b3UgdGFrZSBhIGxvb2sgYXQgdGhl
-CnRhcmJhbGwgdG8gc2VlIGlmIGl0IHJlc29sdmVzIHRoZSBpc3N1ZT8KClJlZ2FyZHMsCglCZW4K
-Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWls
-aW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3Rp
-bmZvL3hmcwo=
+On Fri,  1 Feb 2013 11:43:36 +0100
+Lukas Czerner <lczerner@redhat.com> wrote:
+
+> This commit changes truncate_inode_pages_range() so it can handle non
+> page aligned regions of the truncate. Currently we can hit BUG_ON when
+> the end of the range is not page aligned, but we can handle unaligned
+> start of the range.
+> 
+> Being able to handle non page aligned regions of the page can help file
+> system punch_hole implementations and save some work, because once we're
+> holding the page we might as well deal with it right away.
+> 
+> In previous commits we've changed ->invalidatepage() prototype to accept
+> 'length' argument to be able to specify range to invalidate. No we can
+> use that new ability in truncate_inode_pages_range().
+
+The change seems sensible.
+
+> This was based on the code provided by Hugh Dickins
+
+Despite this ;)
+
+> changes to make use of do_invalidatepage_range().
+>
+> ...
+>
+>  void truncate_inode_pages_range(struct address_space *mapping,
+>  				loff_t lstart, loff_t lend)
+>  {
+> -	const pgoff_t start = (lstart + PAGE_CACHE_SIZE-1) >> PAGE_CACHE_SHIFT;
+> -	const unsigned partial = lstart & (PAGE_CACHE_SIZE - 1);
+> +	pgoff_t start = (lstart + PAGE_CACHE_SIZE - 1) >> PAGE_CACHE_SHIFT;
+> +	pgoff_t end = (lend + 1) >> PAGE_CACHE_SHIFT;
+> +	unsigned int partial_start = lstart & (PAGE_CACHE_SIZE - 1);
+> +	unsigned int partial_end = (lend + 1) & (PAGE_CACHE_SIZE - 1);
+>  	struct pagevec pvec;
+>  	pgoff_t index;
+> -	pgoff_t end;
+>  	int i;
+
+This is starting to get pretty hairy.  Some of these "end" variables
+are inclusive and some are exclusive.
+
+Can we improve things?  We can drop all this tiresome
+intialisation-at-declaration-site stuff and do:
+
+	pgoff_t start;			/* inclusive */
+	pgoff_t end;			/* exclusive */
+	unsigned int partial_start;	/* inclusive */
+	unsigned int partial_end;	/* exclusive */
+	struct pagevec pvec;
+	pgoff_t index;
+	int i;
+
+	start = (lstart + PAGE_CACHE_SIZE - 1) >> PAGE_CACHE_SHIFT;
+	end = (lend + 1) >> PAGE_CACHE_SHIFT;
+	partial_start = lstart & (PAGE_CACHE_SIZE - 1);
+	partial_end = (lend + 1) & (PAGE_CACHE_SIZE - 1);
+
+And lo, I see that the "inclusive" thing only applies to incoming arg
+`lend'.  I seem to recall that being my handiwork and somehow I seem to
+not have documented the reason: it was so that we can pass
+lend=0xffffffff into truncate_inode_pages_range) to indicate "end of
+file".
+
+Your code handles this in a rather nasty fashion.  It permits the above
+overflow to occur then later fixes it up with an explicit test for -1. 
+And it then sets `end' (which is a pgoff_t!) to -1.
+
+I guess this works, but let's make it clearer, with something like:
+
+	if (lend == -1) {
+		/*
+		 * Nice explanation goes here
+		 */
+		end = -1;
+	} else {
+		end = (lend + 1) >> PAGE_CACHE_SHIFT;
+	}
+
+
+>  	cleancache_invalidate_inode(mapping);
+>  	if (mapping->nrpages == 0)
+>  		return;
+>  
+> -	BUG_ON((lend & (PAGE_CACHE_SIZE - 1)) != (PAGE_CACHE_SIZE - 1));
+> -	end = (lend >> PAGE_CACHE_SHIFT);
+> +	if (lend == -1)
+> +		end = -1;	/* unsigned, so actually very big */
+>  
+>  	pagevec_init(&pvec, 0);
+>  	index = start;
+> -	while (index <= end && pagevec_lookup(&pvec, mapping, index,
+> -			min(end - index, (pgoff_t)PAGEVEC_SIZE - 1) + 1)) {
+> +	while (index < end && pagevec_lookup(&pvec, mapping, index,
+> +			min(end - index, (pgoff_t)PAGEVEC_SIZE))) {
+
+Here, my brain burst.  You've effectively added 1 to (end - index).  Is
+that correct?
+
+>  		mem_cgroup_uncharge_start();
+>  		for (i = 0; i < pagevec_count(&pvec); i++) {
+>  			struct page *page = pvec.pages[i];
+>  
+>  			/* We rely upon deletion not changing page->index */
+>  			index = page->index;
+> -			if (index > end)
+> +			if (index >= end)
+
+hm.  This change implies that the patch changed `end' from inclusive to
+exclusive.  But the patch didn't do that.
+
+>  				break;
+>  
+>  			if (!trylock_page(page))
+> @@ -250,27 +247,51 @@ void truncate_inode_pages_range(struct address_space *mapping,
+>  		index++;
+>  	}
+>  
+> -	if (partial) {
+> +	if (partial_start) {
+>  		struct page *page = find_lock_page(mapping, start - 1);
+>  		if (page) {
+> +			unsigned int top = PAGE_CACHE_SIZE;
+> +			if (start > end) {
+
+How can this be true?
+
+> +				top = partial_end;
+> +				partial_end = 0;
+> +			}
+> +			wait_on_page_writeback(page);
+> +			zero_user_segment(page, partial_start, top);
+> +			cleancache_invalidate_page(mapping, page);
+> +			if (page_has_private(page))
+> +				do_invalidatepage(page, partial_start,
+> +						  top - partial_start);
+> +			unlock_page(page);
+> +			page_cache_release(page);
+> +		}
+> +	}
+> +	if (partial_end) {
+> +		struct page *page = find_lock_page(mapping, end);
+> +		if (page) {
+>  			wait_on_page_writeback(page);
+> -			truncate_partial_page(page, partial);
+> +			zero_user_segment(page, 0, partial_end);
+> +			cleancache_invalidate_page(mapping, page);
+> +			if (page_has_private(page))
+> +				do_invalidatepage(page, 0,
+> +						  partial_end);
+>  			unlock_page(page);
+>  			page_cache_release(page);
+>  		}
+>  	}
+> +	if (start >= end)
+> +		return;
+
+Again, how can start be greater than end??
+
+I suspect a lot of the confustion and churn in here is due to `end'
+being kinda-exclusive.  If `lend' was 4094 then `end' is zero.  But if
+`lend' was 4095' then `end' is 1.  So even though `end' refers to the same
+page, it has a different value!
+
+Would the code be simpler and clearer if we were to make `end' "pgoff_t
+of the last-affected page", and document it as such?
+
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
