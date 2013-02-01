@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id AF9797F4E
-	for <xfs@oss.sgi.com>; Thu, 31 Jan 2013 20:10:52 -0600 (CST)
-Date: Thu, 31 Jan 2013 20:10:48 -0600
+	by oss.sgi.com (Postfix) with ESMTP id 730D57F4E
+	for <xfs@oss.sgi.com>; Thu, 31 Jan 2013 20:36:07 -0600 (CST)
+Date: Thu, 31 Jan 2013 20:36:06 -0600
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 1/4] xfsprogs: Refactor release scripts to conform to
+Subject: Re: [PATCH 2/4] xfsdump: Refactor release scripts to conform to
 	using git archive
-Message-ID: <20130201021048.GT27055@sgi.com>
+Message-ID: <20130201023606.GU27055@sgi.com>
 References: <50F44B2E.9050408@sgi.com>
- <50F44B62.7060504@sgi.com>
+ <50F44B87.3040102@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <50F44B62.7060504@sgi.com>
+In-Reply-To: <50F44B87.3040102@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,31 +29,31 @@ Cc: xfs@oss.sgi.com
 
 Andrew,
 
-On Mon, Jan 14, 2013 at 12:16:02PM -0600, Andrew Dahl wrote:
+On Mon, Jan 14, 2013 at 12:16:39PM -0600, Andrew Dahl wrote:
 > Refactored release scripts to conform to using git archive
 > 
-> When generating a release, there is a risk of missing necessary
-> source files. This is fixed by using git archive, which also
-> fixes the lack of conformity between the xfs utilities. As well,
-> some files may be stale during packaging. This is fixed with a
-> clean at the beginning of release generation.
+> When generating a release, there is a risk of some files being
+> stale, such as configure and the m4/autotools temp files. This
+> is fixed with a clean at the beginning of the release generation.
+> In addition, there is no uniformity in the current method of
+> source tar generation between xfs utilities. Using git archive
+> solves this issue accross all utilities.
 > 
 > Signed-off-by: Andrew Dahl <adahl@sgi.com>
 
-Compared the old 'make dist' with the new one:
+Here is the difference between the old 'make dist' and the new one:
+
 # diff old.list new.list
-129a130
-> xfsprogs-3.1.10/.gitignore
+99a100
+> xfsdump-3.1.2/.gitignore
+190d190
+< xfsdump-3.1.2/po/xfsdump.pot
 
-The only difference in the file list is the addition of .gitignore.
+Adding .gitignore is fine, and xfsdump.pot needn't be in the archive, it is an
+output file from gettext.
 
-> ---
->  Makefile   |   11 ++++++++---
->  release.sh |    3 +++
->  2 files changed, 11 insertions(+), 3 deletions(-)
-> 
 > diff --git a/Makefile b/Makefile
-> index 0bdc5e8..e73af88 100644
+> index 39881af..23b6a9e 100644
 > --- a/Makefile
 > +++ b/Makefile
 > @@ -29,6 +29,8 @@ SRCTAR = $(PKG_NAME)-$(PKG_VERSION).tar.gz
@@ -61,11 +61,11 @@ The only difference in the file list is the addition of .gitignore.
 >  CONFIGURE = aclocal.m4 configure config.guess config.sub install-sh ltmain.sh
 >  LSRCFILES = configure.ac release.sh README VERSION $(CONFIGURE)
 > +SRCTARINC = m4/libtool.m4 m4/lt~obsolete.m4 m4/ltoptions.m4 m4/ltsugar.m4 \
-> +           m4/ltversion.m4 po/xfsprogs.pot $(CONFIGURE)
+> +            m4/ltversion.m4 $(CONFIGURE)
 >  
 >  LDIRT = config.log .ltdep .dep config.status config.cache confdefs.h \
 >  	conftest* built .census install.* install-dev.* *.gz \
-> @@ -144,7 +146,10 @@ $(SRCDIR) : $(_FORCE)
+> @@ -124,7 +126,10 @@ $(SRCDIR) : $(_FORCE)
 >  	rm -fr $@
 >  	mkdir -p $@
 >  
@@ -74,19 +74,16 @@ The only difference in the file list is the addition of .gitignore.
 > -	unset TAPE; $(TAR) -cf - $(SRCDIR) | $(ZIP) --best > $@ && \
 > +$(SRCTAR) : default
 > +	$(Q)git archive --prefix=$(SRCDIR)/ --format=tar v$(PKG_VERSION) \
-> +	  -o $(SRCDIR).tar
+> +           -o $(SRCDIR).tar
 
-Older versions of git do not support the -o option.  I changed this to >
-$(SRCDIR).tar and it works fine.
+Changed this to 
 
-> +	$(Q)$(TAR) --transform "s,^,$(SRCDIR)/," -rf $(SRCARC).tar \
-						       SRCDIR
-
-With those changes this looks and works fine.
+ > $(SRCDIR).tar
 
 Reviewed-by: Ben Myers <bpm@sgi.com>
 
--Ben
+Regards,
+	Ben
 
 _______________________________________________
 xfs mailing list
