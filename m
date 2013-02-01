@@ -1,16 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 880527F4E
-	for <xfs@oss.sgi.com>; Thu, 31 Jan 2013 22:21:16 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4A8A630407A
-	for <xfs@oss.sgi.com>; Thu, 31 Jan 2013 20:21:13 -0800 (PST)
-Message-ID: <510B42A6.6040004@oracle.com>
-Date: Fri, 01 Feb 2013 12:20:54 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
-MIME-Version: 1.0
-Subject: [RESEND][PATCH v4 02/13] xfs: make use of xfs_calc_buf_res() in
-	xfs_trans.c
+	by oss.sgi.com (Postfix) with ESMTP id D665B7F3F
+	for <xfs@oss.sgi.com>; Fri,  1 Feb 2013 04:43:54 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C53EC30407A
+	for <xfs@oss.sgi.com>; Fri,  1 Feb 2013 02:43:51 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 4KIBgNn2UFuI8LZy for
+	<xfs@oss.sgi.com>; Fri, 01 Feb 2013 02:43:51 -0800 (PST)
+From: Lukas Czerner <lczerner@redhat.com>
+Subject: [RFC] mm: change invalidatepage prototype to accept length
+Date: Fri,  1 Feb 2013 11:43:26 +0100
+Message-Id: <1359715424-32318-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,442 +20,132 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
+To: linux-mm@kvack.org
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Hi Ben and All,
+Hi,
 
-This patch is resent to fix two compiling warnings by casting the
-return value of XFS_FSB_TO_B() to uint.  Per Ben's comments:
+This set of patches are aimed to allow truncate_inode_pages_range() handle
+ranges which are not aligned at the end of the page. Currently it will
+hit BUG_ON() when the end of the range is not aligned. Punch hole feature
+however can benefit from this ability saving file systems some work not
+forcing them to implement their own invalidate code to handle unaligned
+ranges.
 
-xfs/xfs_trans.c: In function =91xfs_calc_create_reservation=92:
-xfs/xfs_trans.c:289: warning: comparison of distinct pointer types lacks a =
-cast
-xfs/xfs_trans.c: In function =91xfs_calc_attrrm_reservation=92:
-xfs/xfs_trans.c:527: warning: comparison of distinct pointer types lacks a =
-cast
+In order for this to woke we need change ->invalidatepage() address space
+operation to to accept range to invalidate by adding 'length' argument in
+addition to 'offset'. This is different from my previous attempt to create
+new aop ->invalidatepage_range (http://lwn.net/Articles/514828/) which I
+reconsidered to ne unnecessary.
+
+For description purposes this patch set can be divided into following
+groups:
 
 
-Thanks,
--Jeff
+patch 0001:	Change ->invalidatepage() prototype adding 'length' argument
+		and changing all the instances. In very simple cases file
+		system methods are completely adapted, otherwise only
+		prototype is changed and the rest will follow. This patch
+		also implement the 'range' invalidation in
+		block_invalidatepage().
+
+patch 0002 - 0009:
+		Make the use of new 'length' argument in the file system
+		itself. Some file systems can take advantage of it trying
+		to invalidate only portion of the page if possible, some
+		can't, however none of the file systems currently attempt
+		to truncate non page aligned ranges.
 
 
-Refining the existing reservations with xfs_calc_buf_res() in xfs_trans.c
+patch 0010:	Teach truncate_inode_pages_range() to handle non page aligned
+		ranges.
 
-Signed-off-by: Jie Liu <jeff.liu@oracle.com>
-CC: Dave Chinner <david@fromorbit.com>
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
----
- fs/xfs/xfs_trans.c |  240 ++++++++++++++++++++++++------------------------=
-----
- 1 file changed, 112 insertions(+), 128 deletions(-)
+patch 0012 - 0018:
+		Ext4 changes build on top of previous changes, simplifying
+		punch hole code. Not all changes are realated specifically
+		to invalidatepage() change, but all are related to the punch
+		hole feature.
 
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 6c601ea..a81625c 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -116,18 +116,15 @@ xfs_calc_write_reservation(
- 	struct xfs_mount	*mp)
- {
- 	return XFS_DQUOT_LOGRES(mp) +
--		MAX((mp->m_sb.sb_inodesize +
--		     XFS_FSB_TO_B(mp, XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK)) +
--		     2 * mp->m_sb.sb_sectsize +
--		     mp->m_sb.sb_sectsize +
--		     XFS_ALLOCFREE_LOG_RES(mp, 2) +
--		     128 * (4 + XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) +
--			    XFS_ALLOCFREE_LOG_COUNT(mp, 2))),
--		    (2 * mp->m_sb.sb_sectsize +
--		     2 * mp->m_sb.sb_sectsize +
--		     mp->m_sb.sb_sectsize +
--		     XFS_ALLOCFREE_LOG_RES(mp, 2) +
--		     128 * (5 + XFS_ALLOCFREE_LOG_COUNT(mp, 2))));
-+		MAX((xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
-+		     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK),
-+				      XFS_FSB_TO_B(mp, 1)) +
-+		     xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
-+		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 2),
-+				      XFS_FSB_TO_B(mp, 1))),
-+		    (xfs_calc_buf_res(5, mp->m_sb.sb_sectsize) +
-+		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 2),
-+				      XFS_FSB_TO_B(mp, 1))));
- }
- =
+Even though this patch set would mainly affect functionality of the file
+file systems implementing punch hole I've tested all the following file
+system using xfstests without noticing any bugs related to this change.
 
- /*
-@@ -148,18 +145,17 @@ xfs_calc_itruncate_reservation(
- 	struct xfs_mount	*mp)
- {
- 	return XFS_DQUOT_LOGRES(mp) +
--		MAX((mp->m_sb.sb_inodesize +
--		     XFS_FSB_TO_B(mp, XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) + 1) +
--		     128 * (2 + XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK))),
--		    (4 * mp->m_sb.sb_sectsize +
--		     4 * mp->m_sb.sb_sectsize +
--		     mp->m_sb.sb_sectsize +
--		     XFS_ALLOCFREE_LOG_RES(mp, 4) +
--		     128 * (9 + XFS_ALLOCFREE_LOG_COUNT(mp, 4)) +
--		     128 * 5 +
--		     XFS_ALLOCFREE_LOG_RES(mp, 1) +
--		     128 * (2 + XFS_IALLOC_BLOCKS(mp) + mp->m_in_maxlevels +
--			    XFS_ALLOCFREE_LOG_COUNT(mp, 1))));
-+		MAX((xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
-+		     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) + 1,
-+				      XFS_FSB_TO_B(mp, 1))),
-+		    (xfs_calc_buf_res(9, mp->m_sb.sb_sectsize) +
-+		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 4),
-+				      XFS_FSB_TO_B(mp, 1)) +
-+		    xfs_calc_buf_res(5, 0) +
-+		    xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
-+				     XFS_FSB_TO_B(mp, 1)) +
-+		    xfs_calc_buf_res(2 + XFS_IALLOC_BLOCKS(mp) +
-+				     mp->m_in_maxlevels, 0)));
- }
- =
+ext3, ext4, xfs, btrfs, gfs2 and reiserfs
 
- /*
-@@ -179,14 +175,12 @@ xfs_calc_rename_reservation(
- 	struct xfs_mount	*mp)
- {
- 	return XFS_DQUOT_LOGRES(mp) +
--		MAX((4 * mp->m_sb.sb_inodesize +
--		     2 * XFS_DIROP_LOG_RES(mp) +
--		     128 * (4 + 2 * XFS_DIROP_LOG_COUNT(mp))),
--		    (3 * mp->m_sb.sb_sectsize +
--		     3 * mp->m_sb.sb_sectsize +
--		     mp->m_sb.sb_sectsize +
--		     XFS_ALLOCFREE_LOG_RES(mp, 3) +
--		     128 * (7 + XFS_ALLOCFREE_LOG_COUNT(mp, 3))));
-+		MAX((xfs_calc_buf_res(4, mp->m_sb.sb_inodesize) +
-+		     xfs_calc_buf_res(2 * XFS_DIROP_LOG_COUNT(mp),
-+				      XFS_FSB_TO_B(mp, 1))),
-+		    (xfs_calc_buf_res(7, mp->m_sb.sb_sectsize) +
-+		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 3),
-+				      XFS_FSB_TO_B(mp, 1))));
- }
- =
+the much smaller changes in other file systems has not been directly tested,
+so please review.
 
- /*
-@@ -206,15 +200,12 @@ xfs_calc_link_reservation(
- 	struct xfs_mount	*mp)
- {
- 	return XFS_DQUOT_LOGRES(mp) +
--		MAX((mp->m_sb.sb_inodesize +
--		     mp->m_sb.sb_inodesize +
--		     XFS_DIROP_LOG_RES(mp) +
--		     128 * (2 + XFS_DIROP_LOG_COUNT(mp))),
--		    (mp->m_sb.sb_sectsize +
--		     mp->m_sb.sb_sectsize +
--		     mp->m_sb.sb_sectsize +
--		     XFS_ALLOCFREE_LOG_RES(mp, 1) +
--		     128 * (3 + XFS_ALLOCFREE_LOG_COUNT(mp, 1))));
-+		MAX((xfs_calc_buf_res(2, mp->m_sb.sb_inodesize) +
-+		     xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp),
-+				      XFS_FSB_TO_B(mp, 1))),
-+		    (xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
-+		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
-+				      XFS_FSB_TO_B(mp, 1))));
- }
- =
+Thanks!
+-Lukas
 
- /*
-@@ -234,15 +225,12 @@ xfs_calc_remove_reservation(
- 	struct xfs_mount	*mp)
- {
- 	return XFS_DQUOT_LOGRES(mp) +
--		MAX((mp->m_sb.sb_inodesize +
--		     mp->m_sb.sb_inodesize +
--		     XFS_DIROP_LOG_RES(mp) +
--		     128 * (2 + XFS_DIROP_LOG_COUNT(mp))),
--		    (2 * mp->m_sb.sb_sectsize +
--		     2 * mp->m_sb.sb_sectsize +
--		     mp->m_sb.sb_sectsize +
--		     XFS_ALLOCFREE_LOG_RES(mp, 2) +
--		     128 * (5 + XFS_ALLOCFREE_LOG_COUNT(mp, 2))));
-+		MAX((xfs_calc_buf_res(2, mp->m_sb.sb_inodesize) +
-+		     xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp),
-+				      XFS_FSB_TO_B(mp, 1))),
-+		    (xfs_calc_buf_res(5, mp->m_sb.sb_sectsize) +
-+		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 2),
-+				      XFS_FSB_TO_B(mp, 1))));
- }
- =
+-- 
 
- /*
-@@ -264,18 +252,18 @@ xfs_calc_symlink_reservation(
- 	struct xfs_mount	*mp)
- {
- 	return XFS_DQUOT_LOGRES(mp) +
--		MAX((mp->m_sb.sb_inodesize +
--		     mp->m_sb.sb_inodesize +
--		     XFS_FSB_TO_B(mp, 1) +
--		     XFS_DIROP_LOG_RES(mp) +
--		     1024 +
--		     128 * (4 + XFS_DIROP_LOG_COUNT(mp))),
--		    (2 * mp->m_sb.sb_sectsize +
--		     XFS_FSB_TO_B(mp, XFS_IALLOC_BLOCKS(mp)) +
--		     XFS_FSB_TO_B(mp, mp->m_in_maxlevels) +
--		     XFS_ALLOCFREE_LOG_RES(mp, 1) +
--		     128 * (2 + XFS_IALLOC_BLOCKS(mp) + mp->m_in_maxlevels +
--			    XFS_ALLOCFREE_LOG_COUNT(mp, 1))));
-+		MAX((xfs_calc_buf_res(2, mp->m_sb.sb_inodesize) +
-+		     xfs_calc_buf_res(1, XFS_FSB_TO_B(mp, 1)) +
-+		     xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp),
-+				      XFS_FSB_TO_B(mp, 1)) +
-+		     xfs_calc_buf_res(1, 1024)),
-+		    (xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
-+		     xfs_calc_buf_res(XFS_IALLOC_BLOCKS(mp),
-+				      XFS_FSB_TO_B(mp, 1)) +
-+		     xfs_calc_buf_res(mp->m_in_maxlevels,
-+				      XFS_FSB_TO_B(mp, 1)) +
-+		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
-+				      XFS_FSB_TO_B(mp, 1))));
- }
- =
+ Documentation/filesystems/Locking |    6 +-
+ Documentation/filesystems/vfs.txt |   20 ++--
+ fs/9p/vfs_addr.c                  |    5 +-
+ fs/afs/file.c                     |   10 +-
+ fs/btrfs/disk-io.c                |    3 +-
+ fs/btrfs/extent_io.c              |    2 +-
+ fs/btrfs/inode.c                  |    3 +-
+ fs/buffer.c                       |   21 ++-
+ fs/ceph/addr.c                    |   15 +-
+ fs/cifs/file.c                    |    5 +-
+ fs/exofs/inode.c                  |    6 +-
+ fs/ext3/inode.c                   |    9 +-
+ fs/ext4/ext4.h                    |   14 +-
+ fs/ext4/extents.c                 |  188 ++++++++--------------
+ fs/ext4/indirect.c                |   13 +--
+ fs/ext4/inode.c                   |  320 ++++++++++++++++--------------------
+ fs/f2fs/data.c                    |    3 +-
+ fs/f2fs/node.c                    |    3 +-
+ fs/gfs2/aops.c                    |   17 ++-
+ fs/jbd/transaction.c              |   19 ++-
+ fs/jbd2/transaction.c             |   24 ++-
+ fs/jfs/jfs_metapage.c             |    5 +-
+ fs/logfs/file.c                   |    3 +-
+ fs/logfs/segment.c                |    3 +-
+ fs/nfs/file.c                     |    8 +-
+ fs/ntfs/aops.c                    |    2 +-
+ fs/ocfs2/aops.c                   |    5 +-
+ fs/reiserfs/inode.c               |   12 +-
+ fs/ubifs/file.c                   |    5 +-
+ fs/xfs/xfs_aops.c                 |   10 +-
+ fs/xfs/xfs_trace.h                |   41 +++++-
+ include/linux/buffer_head.h       |    3 +-
+ include/linux/fs.h                |    2 +-
+ include/linux/jbd.h               |    2 +-
+ include/linux/jbd2.h              |    2 +-
+ include/linux/mm.h                |    3 +-
+ include/trace/events/ext3.h       |   12 +-
+ include/trace/events/ext4.h       |   64 +++++---
+ mm/readahead.c                    |    2 +-
+ mm/truncate.c                     |   86 ++++++----
+ 40 files changed, 511 insertions(+), 465 deletions(-)
 
- /*
-@@ -298,18 +286,19 @@ xfs_calc_create_reservation(
- 	struct xfs_mount	*mp)
- {
- 	return XFS_DQUOT_LOGRES(mp) +
--		MAX((mp->m_sb.sb_inodesize +
--		     mp->m_sb.sb_inodesize +
-+		MAX((xfs_calc_buf_res(2, mp->m_sb.sb_inodesize) +
-+		     xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
-+		     (uint)XFS_FSB_TO_B(mp, 1) +
-+		     xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp),
-+				      XFS_FSB_TO_B(mp, 1))),
-+		    (xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
- 		     mp->m_sb.sb_sectsize +
--		     XFS_FSB_TO_B(mp, 1) +
--		     XFS_DIROP_LOG_RES(mp) +
--		     128 * (3 + XFS_DIROP_LOG_COUNT(mp))),
--		    (3 * mp->m_sb.sb_sectsize +
--		     XFS_FSB_TO_B(mp, XFS_IALLOC_BLOCKS(mp)) +
--		     XFS_FSB_TO_B(mp, mp->m_in_maxlevels) +
--		     XFS_ALLOCFREE_LOG_RES(mp, 1) +
--		     128 * (2 + XFS_IALLOC_BLOCKS(mp) + mp->m_in_maxlevels +
--			    XFS_ALLOCFREE_LOG_COUNT(mp, 1))));
-+		     xfs_calc_buf_res(XFS_IALLOC_BLOCKS(mp),
-+				      XFS_FSB_TO_B(mp, 1)) +
-+		     xfs_calc_buf_res(mp->m_in_maxlevels,
-+				      XFS_FSB_TO_B(mp, 1)) +
-+		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
-+				      XFS_FSB_TO_B(mp, 1))));
- }
- =
 
- /*
-@@ -337,16 +326,16 @@ xfs_calc_ifree_reservation(
- 	struct xfs_mount	*mp)
- {
- 	return XFS_DQUOT_LOGRES(mp) +
--		mp->m_sb.sb_inodesize +
--		mp->m_sb.sb_sectsize +
--		mp->m_sb.sb_sectsize +
--		XFS_FSB_TO_B(mp, 1) +
-+		xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
-+		xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
-+		xfs_calc_buf_res(1, XFS_FSB_TO_B(mp, 1)) +
- 		MAX((__uint16_t)XFS_FSB_TO_B(mp, 1),
- 		    XFS_INODE_CLUSTER_SIZE(mp)) +
--		128 * 5 +
--		XFS_ALLOCFREE_LOG_RES(mp, 1) +
--		128 * (2 + XFS_IALLOC_BLOCKS(mp) + mp->m_in_maxlevels +
--		       XFS_ALLOCFREE_LOG_COUNT(mp, 1));
-+		xfs_calc_buf_res(1, 0) +
-+		xfs_calc_buf_res(2 + XFS_IALLOC_BLOCKS(mp) +
-+				 mp->m_in_maxlevels, 0) +
-+		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
-+				 XFS_FSB_TO_B(mp, 1));
- }
- =
-
- /*
-@@ -374,9 +363,9 @@ STATIC uint
- xfs_calc_growdata_reservation(
- 	struct xfs_mount	*mp)
- {
--	return mp->m_sb.sb_sectsize * 3 +
--		XFS_ALLOCFREE_LOG_RES(mp, 1) +
--		128 * (3 + XFS_ALLOCFREE_LOG_COUNT(mp, 1));
-+	return xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
-+		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
-+				 XFS_FSB_TO_B(mp, 1));
- }
- =
-
- /*
-@@ -393,12 +382,12 @@ STATIC uint
- xfs_calc_growrtalloc_reservation(
- 	struct xfs_mount	*mp)
- {
--	return 2 * mp->m_sb.sb_sectsize +
--		XFS_FSB_TO_B(mp, XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK)) +
--		mp->m_sb.sb_inodesize +
--		XFS_ALLOCFREE_LOG_RES(mp, 1) +
--		128 * (3 + XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) +
--		       XFS_ALLOCFREE_LOG_COUNT(mp, 1));
-+	return xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
-+		xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK),
-+				 XFS_FSB_TO_B(mp, 1)) +
-+		xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
-+		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
-+				 XFS_FSB_TO_B(mp, 1));
- }
- =
-
- /*
-@@ -410,7 +399,7 @@ STATIC uint
- xfs_calc_growrtzero_reservation(
- 	struct xfs_mount	*mp)
- {
--	return mp->m_sb.sb_blocksize + 128;
-+	return xfs_calc_buf_res(1, mp->m_sb.sb_blocksize);
- }
- =
-
- /*
-@@ -427,11 +416,10 @@ STATIC uint
- xfs_calc_growrtfree_reservation(
- 	struct xfs_mount	*mp)
- {
--	return mp->m_sb.sb_sectsize +
--		2 * mp->m_sb.sb_inodesize +
--		mp->m_sb.sb_blocksize +
--		mp->m_rsumsize +
--		128 * 5;
-+	return xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
-+		xfs_calc_buf_res(2, mp->m_sb.sb_inodesize) +
-+		xfs_calc_buf_res(1, mp->m_sb.sb_blocksize) +
-+		xfs_calc_buf_res(1, mp->m_rsumsize);
- }
- =
-
- /*
-@@ -442,7 +430,7 @@ STATIC uint
- xfs_calc_swrite_reservation(
- 	struct xfs_mount	*mp)
- {
--	return mp->m_sb.sb_inodesize + 128;
-+	return xfs_calc_buf_res(1, mp->m_sb.sb_inodesize);
- }
- =
-
- /*
-@@ -452,7 +440,7 @@ xfs_calc_swrite_reservation(
- STATIC uint
- xfs_calc_writeid_reservation(xfs_mount_t *mp)
- {
--	return mp->m_sb.sb_inodesize + 128;
-+	return xfs_calc_buf_res(1, mp->m_sb.sb_inodesize);
- }
- =
-
- /*
-@@ -468,13 +456,13 @@ xfs_calc_addafork_reservation(
- 	struct xfs_mount	*mp)
- {
- 	return XFS_DQUOT_LOGRES(mp) +
--		mp->m_sb.sb_inodesize +
--		mp->m_sb.sb_sectsize * 2 +
--		mp->m_dirblksize +
--		XFS_FSB_TO_B(mp, XFS_DAENTER_BMAP1B(mp, XFS_DATA_FORK) + 1) +
--		XFS_ALLOCFREE_LOG_RES(mp, 1) +
--		128 * (4 + XFS_DAENTER_BMAP1B(mp, XFS_DATA_FORK) + 1 +
--		       XFS_ALLOCFREE_LOG_COUNT(mp, 1));
-+		xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
-+		xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
-+		xfs_calc_buf_res(1, mp->m_dirblksize) +
-+		xfs_calc_buf_res(XFS_DAENTER_BMAP1B(mp, XFS_DATA_FORK) + 1,
-+				 XFS_FSB_TO_B(mp, 1)) +
-+		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
-+				 XFS_FSB_TO_B(mp, 1));
- }
- =
-
- /*
-@@ -492,14 +480,12 @@ STATIC uint
- xfs_calc_attrinval_reservation(
- 	struct xfs_mount	*mp)
- {
--	return MAX((mp->m_sb.sb_inodesize +
--		    XFS_FSB_TO_B(mp, XFS_BM_MAXLEVELS(mp, XFS_ATTR_FORK)) +
--		    128 * (1 + XFS_BM_MAXLEVELS(mp, XFS_ATTR_FORK))),
--		   (4 * mp->m_sb.sb_sectsize +
--		    4 * mp->m_sb.sb_sectsize +
--		    mp->m_sb.sb_sectsize +
--		    XFS_ALLOCFREE_LOG_RES(mp, 4) +
--		    128 * (9 + XFS_ALLOCFREE_LOG_COUNT(mp, 4))));
-+	return MAX((xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
-+		    xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_ATTR_FORK),
-+				     XFS_FSB_TO_B(mp, 1))),
-+		   (xfs_calc_buf_res(9, mp->m_sb.sb_sectsize) +
-+		    xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 4),
-+				     XFS_FSB_TO_B(mp, 1))));
- }
- =
-
- /*
-@@ -517,10 +503,9 @@ xfs_calc_attrset_reservation(
- 	struct xfs_mount	*mp)
- {
- 	return XFS_DQUOT_LOGRES(mp) +
--		mp->m_sb.sb_inodesize +
--		mp->m_sb.sb_sectsize +
--		XFS_FSB_TO_B(mp, XFS_DA_NODE_MAXDEPTH) +
--		128 * (2 + XFS_DA_NODE_MAXDEPTH);
-+		xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
-+		xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
-+		xfs_calc_buf_res(XFS_DA_NODE_MAXDEPTH, XFS_FSB_TO_B(mp, 1));
- }
- =
-
- /*
-@@ -539,16 +524,15 @@ xfs_calc_attrrm_reservation(
- 	struct xfs_mount	*mp)
- {
- 	return XFS_DQUOT_LOGRES(mp) +
--		MAX((mp->m_sb.sb_inodesize +
--		     XFS_FSB_TO_B(mp, XFS_DA_NODE_MAXDEPTH) +
--		     XFS_FSB_TO_B(mp, XFS_BM_MAXLEVELS(mp, XFS_ATTR_FORK)) +
--		     128 * (1 + XFS_DA_NODE_MAXDEPTH +
--			    XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK))),
--		    (2 * mp->m_sb.sb_sectsize +
--		     2 * mp->m_sb.sb_sectsize +
--		     mp->m_sb.sb_sectsize +
--		     XFS_ALLOCFREE_LOG_RES(mp, 2) +
--		     128 * (5 + XFS_ALLOCFREE_LOG_COUNT(mp, 2))));
-+		MAX((xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
-+		     xfs_calc_buf_res(XFS_DA_NODE_MAXDEPTH,
-+				      XFS_FSB_TO_B(mp, 1)) +
-+		     (uint)XFS_FSB_TO_B(mp,
-+					XFS_BM_MAXLEVELS(mp, XFS_ATTR_FORK)) +
-+		     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK), 0)),
-+		    (xfs_calc_buf_res(5, mp->m_sb.sb_sectsize) +
-+		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 2),
-+				      XFS_FSB_TO_B(mp, 1))));
- }
- =
-
- /*
-@@ -558,7 +542,7 @@ STATIC uint
- xfs_calc_clear_agi_bucket_reservation(
- 	struct xfs_mount	*mp)
- {
--	return mp->m_sb.sb_sectsize + 128;
-+	return xfs_calc_buf_res(1, mp->m_sb.sb_sectsize);
- }
- =
-
- /*
--- =
-
-1.7.9.5
+[PATCH 01/18] mm: change invalidatepage prototype to accept length
+[PATCH 02/18] jbd2: change jbd2_journal_invalidatepage to accept
+[PATCH 03/18] ext4: use ->invalidatepage() length argument
+[PATCH 04/18] jbd: change journal_invalidatepage() to accept length
+[PATCH 05/18] xfs: use ->invalidatepage() length argument
+[PATCH 06/18] ocfs2: use ->invalidatepage() length argument
+[PATCH 07/18] ceph: use ->invalidatepage() length argument
+[PATCH 08/18] gfs2: use ->invalidatepage() length argument
+[PATCH 09/18] reiserfs: use ->invalidatepage() length argument
+[PATCH 10/18] mm: teach truncate_inode_pages_range() to handle non
+[PATCH 11/18] Revert "ext4: remove no longer used functions in
+[PATCH 12/18] Revert "ext4: fix fsx truncate failure"
+[PATCH 13/18] ext4: use ext4_zero_partial_blocks in punch_hole
+[PATCH 14/18] ext4: remove unused discard_partial_page_buffers
+[PATCH 15/18] ext4: remove unused code from ext4_remove_blocks()
+[PATCH 16/18] ext4: update ext4_ext_remove_space trace point
+[PATCH 17/18] ext4: make punch hole code path work with bigalloc
+[PATCH 18/18] ext4: Allow punch hole with bigalloc enabled
 
 _______________________________________________
 xfs mailing list
