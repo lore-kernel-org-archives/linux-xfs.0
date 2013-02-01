@@ -1,23 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C4EDE7F51
-	for <xfs@oss.sgi.com>; Fri,  1 Feb 2013 17:15:05 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 9DAAC8F8039
-	for <xfs@oss.sgi.com>; Fri,  1 Feb 2013 15:15:05 -0800 (PST)
-Received: from mail.linuxfoundation.org (mail.linuxfoundation.org
-	[140.211.169.12]) by cuda.sgi.com with ESMTP id
-	2QvbVdH3O67a2ik7 for <xfs@oss.sgi.com>;
-	Fri, 01 Feb 2013 15:15:04 -0800 (PST)
-Date: Fri, 1 Feb 2013 15:15:02 -0800
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH 10/18] mm: teach truncate_inode_pages_range() to handle
-	non page aligned ranges
-Message-Id: <20130201151502.59398b29.akpm@linux-foundation.org>
-In-Reply-To: <1359715424-32318-11-git-send-email-lczerner@redhat.com>
-References: <1359715424-32318-1-git-send-email-lczerner@redhat.com>
-	<1359715424-32318-11-git-send-email-lczerner@redhat.com>
-Mime-Version: 1.0
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D8CA77F51
+	for <xfs@oss.sgi.com>; Fri,  1 Feb 2013 17:30:24 -0600 (CST)
+Received: from whiskey.americas.sgi.com (eagdhcp-232-197.americas.sgi.com
+	[128.162.232.197])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 2045DAC001
+	for <xfs@oss.sgi.com>; Fri,  1 Feb 2013 15:30:21 -0800 (PST)
+Date: Fri, 1 Feb 2013 17:30:20 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: xfsdump: update version numbers and changelog
+Message-ID: <20130201233020.GO30652@sgi.com>
+MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,177 +24,70 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Lukas Czerner <lczerner@redhat.com>
-Cc: Hugh Dickins <hughd@google.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+To: xfs@oss.sgi.com
 
-On Fri,  1 Feb 2013 11:43:36 +0100
-Lukas Czerner <lczerner@redhat.com> wrote:
+Update version numbers and changelog.
 
-> This commit changes truncate_inode_pages_range() so it can handle non
-> page aligned regions of the truncate. Currently we can hit BUG_ON when
-> the end of the range is not page aligned, but we can handle unaligned
-> start of the range.
-> 
-> Being able to handle non page aligned regions of the page can help file
-> system punch_hole implementations and save some work, because once we're
-> holding the page we might as well deal with it right away.
-> 
-> In previous commits we've changed ->invalidatepage() prototype to accept
-> 'length' argument to be able to specify range to invalidate. No we can
-> use that new ability in truncate_inode_pages_range().
+Signed-off-by: Ben Myers <bpm@sgi.com>
 
-The change seems sensible.
+---
 
-> This was based on the code provided by Hugh Dickins
+Hi Folks,
 
-Despite this ;)
+This xfsdump release is to release the backward compatability problems
+reported by Fugazzi here: http://oss.sgi.com/archives/xfs/2013-01/msg00083.html
 
-> changes to make use of do_invalidatepage_range().
->
-> ...
->
->  void truncate_inode_pages_range(struct address_space *mapping,
->  				loff_t lstart, loff_t lend)
->  {
-> -	const pgoff_t start = (lstart + PAGE_CACHE_SIZE-1) >> PAGE_CACHE_SHIFT;
-> -	const unsigned partial = lstart & (PAGE_CACHE_SIZE - 1);
-> +	pgoff_t start = (lstart + PAGE_CACHE_SIZE - 1) >> PAGE_CACHE_SHIFT;
-> +	pgoff_t end = (lend + 1) >> PAGE_CACHE_SHIFT;
-> +	unsigned int partial_start = lstart & (PAGE_CACHE_SIZE - 1);
-> +	unsigned int partial_end = (lend + 1) & (PAGE_CACHE_SIZE - 1);
->  	struct pagevec pvec;
->  	pgoff_t index;
-> -	pgoff_t end;
->  	int i;
+I have placed a pre-release tarball here:
 
-This is starting to get pretty hairy.  Some of these "end" variables
-are inclusive and some are exclusive.
+ftp://oss.sgi.com/projects/xfs/cmd_tars/pre-release/xfsdump-pre-3.1.3.tar.gz
 
-Can we improve things?  We can drop all this tiresome
-intialisation-at-declaration-site stuff and do:
+Please take a look and report any issues before next Wednesday.
 
-	pgoff_t start;			/* inclusive */
-	pgoff_t end;			/* exclusive */
-	unsigned int partial_start;	/* inclusive */
-	unsigned int partial_end;	/* exclusive */
-	struct pagevec pvec;
-	pgoff_t index;
-	int i;
+Thanks,
+	Ben
 
-	start = (lstart + PAGE_CACHE_SIZE - 1) >> PAGE_CACHE_SHIFT;
-	end = (lend + 1) >> PAGE_CACHE_SHIFT;
-	partial_start = lstart & (PAGE_CACHE_SIZE - 1);
-	partial_end = (lend + 1) & (PAGE_CACHE_SIZE - 1);
+ VERSION      |    2 +-
+ configure.ac |    2 +-
+ doc/CHANGES  |    8 ++++++++
+ 3 files changed, 10 insertions(+), 2 deletions(-)
 
-And lo, I see that the "inclusive" thing only applies to incoming arg
-`lend'.  I seem to recall that being my handiwork and somehow I seem to
-not have documented the reason: it was so that we can pass
-lend=0xffffffff into truncate_inode_pages_range) to indicate "end of
-file".
-
-Your code handles this in a rather nasty fashion.  It permits the above
-overflow to occur then later fixes it up with an explicit test for -1. 
-And it then sets `end' (which is a pgoff_t!) to -1.
-
-I guess this works, but let's make it clearer, with something like:
-
-	if (lend == -1) {
-		/*
-		 * Nice explanation goes here
-		 */
-		end = -1;
-	} else {
-		end = (lend + 1) >> PAGE_CACHE_SHIFT;
-	}
-
-
->  	cleancache_invalidate_inode(mapping);
->  	if (mapping->nrpages == 0)
->  		return;
->  
-> -	BUG_ON((lend & (PAGE_CACHE_SIZE - 1)) != (PAGE_CACHE_SIZE - 1));
-> -	end = (lend >> PAGE_CACHE_SHIFT);
-> +	if (lend == -1)
-> +		end = -1;	/* unsigned, so actually very big */
->  
->  	pagevec_init(&pvec, 0);
->  	index = start;
-> -	while (index <= end && pagevec_lookup(&pvec, mapping, index,
-> -			min(end - index, (pgoff_t)PAGEVEC_SIZE - 1) + 1)) {
-> +	while (index < end && pagevec_lookup(&pvec, mapping, index,
-> +			min(end - index, (pgoff_t)PAGEVEC_SIZE))) {
-
-Here, my brain burst.  You've effectively added 1 to (end - index).  Is
-that correct?
-
->  		mem_cgroup_uncharge_start();
->  		for (i = 0; i < pagevec_count(&pvec); i++) {
->  			struct page *page = pvec.pages[i];
->  
->  			/* We rely upon deletion not changing page->index */
->  			index = page->index;
-> -			if (index > end)
-> +			if (index >= end)
-
-hm.  This change implies that the patch changed `end' from inclusive to
-exclusive.  But the patch didn't do that.
-
->  				break;
->  
->  			if (!trylock_page(page))
-> @@ -250,27 +247,51 @@ void truncate_inode_pages_range(struct address_space *mapping,
->  		index++;
->  	}
->  
-> -	if (partial) {
-> +	if (partial_start) {
->  		struct page *page = find_lock_page(mapping, start - 1);
->  		if (page) {
-> +			unsigned int top = PAGE_CACHE_SIZE;
-> +			if (start > end) {
-
-How can this be true?
-
-> +				top = partial_end;
-> +				partial_end = 0;
-> +			}
-> +			wait_on_page_writeback(page);
-> +			zero_user_segment(page, partial_start, top);
-> +			cleancache_invalidate_page(mapping, page);
-> +			if (page_has_private(page))
-> +				do_invalidatepage(page, partial_start,
-> +						  top - partial_start);
-> +			unlock_page(page);
-> +			page_cache_release(page);
-> +		}
-> +	}
-> +	if (partial_end) {
-> +		struct page *page = find_lock_page(mapping, end);
-> +		if (page) {
->  			wait_on_page_writeback(page);
-> -			truncate_partial_page(page, partial);
-> +			zero_user_segment(page, 0, partial_end);
-> +			cleancache_invalidate_page(mapping, page);
-> +			if (page_has_private(page))
-> +				do_invalidatepage(page, 0,
-> +						  partial_end);
->  			unlock_page(page);
->  			page_cache_release(page);
->  		}
->  	}
-> +	if (start >= end)
-> +		return;
-
-Again, how can start be greater than end??
-
-I suspect a lot of the confustion and churn in here is due to `end'
-being kinda-exclusive.  If `lend' was 4094 then `end' is zero.  But if
-`lend' was 4095' then `end' is 1.  So even though `end' refers to the same
-page, it has a different value!
-
-Would the code be simpler and clearer if we were to make `end' "pgoff_t
-of the last-affected page", and document it as such?
-
+Index: b/VERSION
+===================================================================
+--- a/VERSION	2013-02-01 17:01:57.151945732 -0600
++++ b/VERSION	2013-02-01 17:02:34.341985827 -0600
+@@ -3,5 +3,5 @@
+ #
+ PKG_MAJOR=3
+ PKG_MINOR=1
+-PKG_REVISION=2
++PKG_REVISION=3
+ PKG_BUILD=1
+Index: b/configure.ac
+===================================================================
+--- a/configure.ac	2013-02-01 17:02:07.701946330 -0600
++++ b/configure.ac	2013-02-01 17:02:40.341965107 -0600
+@@ -1,4 +1,4 @@
+-AC_INIT([xfsdump], [3.1.2])
++AC_INIT([xfsdump], [3.1.3])
+ AC_PREREQ(2.50)
+ AC_CONFIG_AUX_DIR([.])
+ AC_CONFIG_MACRO_DIR([m4])
+Index: b/doc/CHANGES
+===================================================================
+--- a/doc/CHANGES	2013-02-01 17:02:17.651945928 -0600
++++ b/doc/CHANGES	2013-02-01 17:25:13.971985822 -0600
+@@ -1,3 +1,11 @@
++xfsdump-3.1.3 (1 February 2013)
++	- Fix a segfault in xfsrestore when a path name is too long,
++	  thanks to Nigel Tamplin.
++	- Fix a backward compatability problem.  Dumps created with
++	  version 3.1.2 where extended attributes are in use failed
++	  to restore with v3.1.0 due to file header checksum errors.
++	  Thanks to Fugazzi for reporting.
++
+ xfsdump-3.1.2 (13 December 2012)
+ 	- Update release script to create a source tarball.
+ 
 
 _______________________________________________
 xfs mailing list
