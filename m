@@ -1,16 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5B94B7F51
-	for <xfs@oss.sgi.com>; Fri,  1 Feb 2013 13:09:33 -0600 (CST)
-Date: Fri, 1 Feb 2013 13:09:30 -0600
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 3A42E7F51
+	for <xfs@oss.sgi.com>; Fri,  1 Feb 2013 15:36:53 -0600 (CST)
+Date: Fri, 1 Feb 2013 15:36:49 -0600
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 0/4] Refactor release scripts to conform to using git
-	archive
-Message-ID: <20130201190930.GX27055@sgi.com>
-References: <50F44B2E.9050408@sgi.com>
+Subject: xfsprogs: fix warning in libxcmd/input.c
+Message-ID: <20130201213649.GM30652@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <50F44B2E.9050408@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,23 +16,24 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Andrew Dahl <adahl@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Jan 14, 2013 at 12:15:10PM -0600, Andrew Dahl wrote:
-> The following four patches fix an issue seen during the last user space
-> release where not all source files were included in xfsprogs.  They each
-> change xfsprogs, xfstests, xfsdump, and dmapi to all use git archive for
-> source tarball generation and add 'make realclean' in the release
-> scripts to ensure the configure and m4/autotools temp files are refreshed.
-
-Applied this series.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+Rml4IGFuIGVycm9yIHdoZW4gYnVpbGRpbmcgd2l0aCAtV2Vycm9yPWZvcm1hdC1zZWN1cml0eS4K
+CmlucHV0LmM6IEluIGZ1bmN0aW9uICdmZXRjaGxpbmUnOgppbnB1dC5jOjkxOjI6IGVycm9yOiBm
+b3JtYXQgbm90IGEgc3RyaW5nIGxpdGVyYWwgYW5kIG5vIGZvcm1hdCBhcmd1bWVudHMgWy1XZXJy
+b3I9Zm9ybWF0LXNlY3VyaXR5XQoKU2lnbmVkLW9mZi1ieTogQmVuIE15ZXJzIDxicG1Ac2dpLmNv
+bT4KUmVwb3J0ZWQgYnk6IEFya2FkaXVzeiBNacWba2lld2ljeiA8YXJla21AbWF2ZW4ucGw+Cklu
+ZGV4OiB4ZnNwcm9ncy9saWJ4Y21kL2lucHV0LmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0geGZzcHJvZ3Mub3Jp
+Zy9saWJ4Y21kL2lucHV0LmMJMjAxMy0wMi0wMSAxNToyOTo0Ny4wNjk4OTQ1MjIgLTA2MDAKKysr
+IHhmc3Byb2dzL2xpYnhjbWQvaW5wdXQuYwkyMDEzLTAyLTAxIDE1OjMwOjAwLjg0NTg5NTE4OCAt
+MDYwMApAQCAtODgsNyArODgsNyBAQAogCiAJaWYgKCFsaW5lKQogCQlyZXR1cm4gTlVMTDsKLQlw
+cmludGYoZ2V0X3Byb21wdCgpKTsKKwlwcmludGYoIiVzIiwgZ2V0X3Byb21wdCgpKTsKIAlmZmx1
+c2goc3Rkb3V0KTsKIAlpZiAoIWZnZXRzKGxpbmUsIE1BWFJFQURMSU5FU1osIHN0ZGluKSkgewog
+CQlmcmVlKGxpbmUpOwoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29t
+L21haWxtYW4vbGlzdGluZm8veGZzCg==
