@@ -1,15 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0EC917F4E
-	for <xfs@oss.sgi.com>; Thu, 31 Jan 2013 16:11:43 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id F20538F8035
-	for <xfs@oss.sgi.com>; Thu, 31 Jan 2013 14:11:39 -0800 (PST)
-From: Herton Ronaldo Krzesinski <herton.krzesinski@canonical.com>
-Subject: [ 3.5.y.z extended stable ] Patch "xfs: Fix possible use-after-free
-	with AIO" has been added to staging queue
-Date: Thu, 31 Jan 2013 20:11:34 -0200
-Message-Id: <1359670294-17925-1-git-send-email-herton.krzesinski@canonical.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 3CE807F4E
+	for <xfs@oss.sgi.com>; Thu, 31 Jan 2013 18:29:33 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 18DD2304075
+	for <xfs@oss.sgi.com>; Thu, 31 Jan 2013 16:29:33 -0800 (PST)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	jOpJ7OTEsJW6ThDx for <xfs@oss.sgi.com>;
+	Thu, 31 Jan 2013 16:29:31 -0800 (PST)
+Date: Fri, 1 Feb 2013 11:29:27 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Xfs fails in xfstests 013
+Message-ID: <20130201002927.GJ32297@disturbed.disaster>
+References: <alpine.LFD.2.00.1301310910080.14328@dhcp-1-104.brq.redhat.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <alpine.LFD.2.00.1301310910080.14328@dhcp-1-104.brq.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,77 +25,33 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: Ben Myers <bpm@sgi.com>, Herton Ronaldo Krzesinski <herton.krzesinski@canonical.com>, kernel-team@lists.ubuntu.com, xfs@oss.sgi.com
+To: =?utf-8?B?THVrw6HFoQ==?= Czerner <lczerner@redhat.com>
+Cc: xfs@oss.sgi.com
 
-This is a note to let you know that I have just added a patch titled
-
-    xfs: Fix possible use-after-free with AIO
-
-to the linux-3.5.y-queue branch of the 3.5.y.z extended stable tree 
-which can be found at:
-
- http://kernel.ubuntu.com/git?p=ubuntu/linux.git;a=shortlog;h=refs/heads/linux-3.5.y-queue
-
-If you, or anyone else, feels it should not be added to this tree, please 
-reply to this email.
-
-For more information about the 3.5.y.z tree, see
-https://wiki.ubuntu.com/Kernel/Dev/ExtendedStable
-
-Thanks.
--Herton
-
-------
-
->From 4bf193f525ba48ec92bd710b6f2298c24f6c83a6 Mon Sep 17 00:00:00 2001
-From: Jan Kara <jack@suse.cz>
-Date: Wed, 23 Jan 2013 13:56:18 +0100
-Subject: [PATCH] xfs: Fix possible use-after-free with AIO
-
-commit 4b05d09c18d9aa62d2e7fb4b057f54e5a38963f5 upstream.
-
-Running AIO is pinning inode in memory using file reference. Once AIO
-is completed using aio_complete(), file reference is put and inode can
-be freed from memory. So we have to be sure that calling aio_complete()
-is the last thing we do with the inode.
-
-CC: xfs@oss.sgi.com
-CC: Ben Myers <bpm@sgi.com>
-Signed-off-by: Jan Kara <jack@suse.cz>
-Reviewed-by: Ben Myers <bpm@sgi.com>
-Signed-off-by: Ben Myers <bpm@sgi.com>
-Signed-off-by: Herton Ronaldo Krzesinski <herton.krzesinski@canonical.com>
----
- fs/xfs/xfs_aops.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 8dad722..6868548 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -86,11 +86,11 @@ xfs_destroy_ioend(
- 	}
-
- 	if (ioend->io_iocb) {
-+		inode_dio_done(ioend->io_inode);
- 		if (ioend->io_isasync) {
- 			aio_complete(ioend->io_iocb, ioend->io_error ?
- 					ioend->io_error : ioend->io_result, 0);
- 		}
--		inode_dio_done(ioend->io_inode);
- 	}
-
- 	mempool_free(ioend, xfs_ioend_pool);
---
-1.7.9.5
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVGh1LCBKYW4gMzEsIDIwMTMgYXQgMDk6MTk6MjNBTSArMDEwMCwgTHVrw6HFoSBDemVybmVy
+IHdyb3RlOgo+IEhpLgo+IAo+IEkndmUganVzdCBydW4geGZzdGVzdCAwMTMgb24geGZzIGFuZCBp
+dCBmYWlscyB3aXRoIHRoaXMgYmFja3RyYWNlCj4gCj4gCj4gSmFuIDMxIDAzOjA5OjA3IHJoZWw2
+X3ZtMSBrZXJuZWw6IGZmZmY4ODAyMGI2ZDEwMDA6IDc4IDc4IDc4IDc4IDc4IDc4IDc4IDc4IDc4
+IDc4IDJmIDc4IDc4IDc4IDc4IDc4ICB4eHh4eHh4eHh4L3h4eHh4Cj4gSmFuIDMxIDAzOjA5OjA3
+IHJoZWw2X3ZtMSBrZXJuZWw6IFhGUyAoc2RhKTogSW50ZXJuYWwgZXJyb3IgeGZzX2JtYnRfdmVy
+aWZ5IGF0IGxpbmUgNzQ3IG9mIGZpbGUgZnMveGZzL3hmc19ibWFwX2J0cmVlLmMuICBDYWxsZXIg
+MHhmZmZmZmZmZmEwMjU0ODZlCgpTYW1lIHByb2JsZW0gQ2FpIFFpYW4ganVzdCByZXBvcnRlZCAt
+IGEgcmVtb3RlIHN5bWxpbmsgd2l0aCBhIGJtYnQKdmVyaWZpZXIgYXR0YWNoZWQgdG8gaXQuCgo+
+IEkgY2FuIHJlcHJvZHVjZSBpdCBldmVyeSB0aW1lIHdpdGggeGZzdGVzdCAwMTMgb24gMy44LjAt
+cmM1LgoKQW5kIHRoZSBjb25maWd1cmF0aW9uIHlvdSBhcmUgdGVzdGluZz8KCkknZCBzdWdnZXN0
+IHRoYXQgeW91IGFkZCBhbjoKCglBU1NFUlQoYnAtPmJfb3BzID09IE5VTEwpOwoKaW50byB4ZnNf
+c3ltbGluaygpIGFmdGVyIHRoZSB4ZnNfdHJhbnNfZ2V0X2J1ZigpIGNhbGwgaW4gdGhlIHJlbW90
+ZQpzeW1saW5rIGNyYXRlIGxvb3AsIGJlY2F1c2UgdGhlIHByb2JsZW0gb2NjdXJyaW5nIGltcGxp
+ZXMgdGhhdCB0aGUKY29kZSBpcyBnZXR0aW5nIGEgbmV3IGJ1ZmZlciB3aXRoIGEgc3RhbGUgb3Bz
+IHN0cnVjdHVyZSBvbiBpdAoodGhvdWdoIEkgY2FuJ3Qgc2VlIGhvdyB0aGF0IGlzIHBvc3NpYmxl
+IHJpZ2h0IG5vdykuCgpZb3Ugc2hvdWxkIHByb2JhYmx5IHB1dCB0aGUgc2FtZSBhc3NlcnQgaW50
+bwp4ZnNfaW5hY3RpdmVfc3ltbGlua19ybXQoKSBiZXR3ZWVuIHRoZSBnZXQgYnVmIGFuZCB0aGUK
+eGZzX3RyYW5zX2JpbnZhbCgpIGNhbGwsIGFuZCBpbnRvIHhmc19yZWFkbGlua19ibWFwKCkgYWZ0
+ZXIgdGhlCmNvbnRlbnRzIG9mIGEgc3ltbGluayBhcmUgcmVhZCBmcm9tIGRpc2suCgpDaGVlcnMs
+CgpEYXZlLgotLSAKRGF2ZSBDaGlubmVyCmRhdmlkQGZyb21vcmJpdC5jb20KCl9fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZz
+QG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
