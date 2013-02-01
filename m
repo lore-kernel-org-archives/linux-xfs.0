@@ -1,22 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 841C27F7C
-	for <xfs@oss.sgi.com>; Fri,  1 Feb 2013 04:58:14 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6010730407A
-	for <xfs@oss.sgi.com>; Fri,  1 Feb 2013 02:58:14 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id WrDWp4tmfnYrqi7Y for
-	<xfs@oss.sgi.com>; Fri, 01 Feb 2013 02:58:13 -0800 (PST)
-Date: Fri, 1 Feb 2013 11:58:04 +0100 (CET)
-From: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>
-Subject: Re: Xfs fails in xfstests 013
-In-Reply-To: <20130201002927.GJ32297@disturbed.disaster>
-Message-ID: <alpine.LFD.2.00.1302011149030.6969@dhcp-1-104.brq.redhat.com>
-References: <alpine.LFD.2.00.1301310910080.14328@dhcp-1-104.brq.redhat.com>
-	<20130201002927.GJ32297@disturbed.disaster>
-MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="8323328-146599345-1359716289=:6969"
+	by oss.sgi.com (Postfix) with ESMTP id DAE017F51
+	for <xfs@oss.sgi.com>; Fri,  1 Feb 2013 07:09:02 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C962E30408C
+	for <xfs@oss.sgi.com>; Fri,  1 Feb 2013 05:09:02 -0800 (PST)
+Received: from mail.kernel.org (mail.kernel.org [198.145.19.201]) by
+	cuda.sgi.com with ESMTP id w7cCBEDHkdcpirI3 for
+	<xfs@oss.sgi.com>; Fri, 01 Feb 2013 05:08:58 -0800 (PST)
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [ 21/89] xfs: Fix possible use-after-free with AIO
+Date: Fri,  1 Feb 2013 14:07:36 +0100
+Message-Id: <20130201130209.001078820@linuxfoundation.org>
+In-Reply-To: <20130201130207.444989281@linuxfoundation.org>
+References: <20130201130207.444989281@linuxfoundation.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,88 +22,56 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>, xfs@oss.sgi.com
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Ben Myers <bpm@sgi.com>, Jan Kara <jack@suse.cz>, stable@vger.kernel.org, xfs@oss.sgi.com
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+3.7-stable review patch.  If anyone has any objections, please let me know.
 
---8323328-146599345-1359716289=:6969
-Content-Type: TEXT/PLAIN; charset=utf-8
-Content-Transfer-Encoding: 8BIT
+------------------
 
-On Fri, 1 Feb 2013, Dave Chinner wrote:
+From: Jan Kara <jack@suse.cz>
 
-> Date: Fri, 1 Feb 2013 11:29:27 +1100
-> From: Dave Chinner <david@fromorbit.com>
-> To: Lukáš Czerner <lczerner@redhat.com>
-> Cc: xfs@oss.sgi.com
-> Subject: Re: Xfs fails in xfstests 013
-> 
-> On Thu, Jan 31, 2013 at 09:19:23AM +0100, Lukáš Czerner wrote:
-> > Hi.
-> > 
-> > I've just run xfstest 013 on xfs and it fails with this backtrace
-> > 
-> > 
-> > Jan 31 03:09:07 rhel6_vm1 kernel: ffff88020b6d1000: 78 78 78 78 78 78 78 78 78 78 2f 78 78 78 78 78  xxxxxxxxxx/xxxxx
-> > Jan 31 03:09:07 rhel6_vm1 kernel: XFS (sda): Internal error xfs_bmbt_verify at line 747 of file fs/xfs/xfs_bmap_btree.c.  Caller 0xffffffffa025486e
-> 
-> Same problem Cai Qian just reported - a remote symlink with a bmbt
-> verifier attached to it.
-> 
-> > I can reproduce it every time with xfstest 013 on 3.8.0-rc5.
-> 
-> And the configuration you are testing?
+commit 4b05d09c18d9aa62d2e7fb4b057f54e5a38963f5 upstream.
 
-The system is x86_64 KVM guest and I am using the following config
+Running AIO is pinning inode in memory using file reference. Once AIO
+is completed using aio_complete(), file reference is put and inode can
+be freed from memory. So we have to be sure that calling aio_complete()
+is the last thing we do with the inode.
 
-export TEST_DEV=/dev/sda
-export TEST_DIR=/mnt/test
-export SCRATCH_DEV=/dev/sdb
-export SCRATCH_MNT=/mnt/test1
-export MKFS_OPTIONS="-f "
-export FSTYP=xfs
+Signed-off-by: Jan Kara <jack@suse.cz>
+CC: xfs@oss.sgi.com
+CC: Ben Myers <bpm@sgi.com>
+Reviewed-by: Ben Myers <bpm@sgi.com>
+Signed-off-by: Ben Myers <bpm@sgi.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-Where /dev/sda and /dev/sdb are 50GB in size and those are exported
-from the host linear logical volumes.
+---
+ fs/xfs/xfs_aops.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> 
-> I'd suggest that you add an:
-> 
-> 	ASSERT(bp->b_ops == NULL);
-> 
-> into xfs_symlink() after the xfs_trans_get_buf() call in the remote
-> symlink crate loop, because the problem occurring implies that the
-> code is getting a new buffer with a stale ops structure on it
-> (though I can't see how that is possible right now).
-> 
-> You should probably put the same assert into
-> xfs_inactive_symlink_rmt() between the get buf and the
-> xfs_trans_binval() call, and into xfs_readlink_bmap() after the
-> contents of a symlink are read from disk.
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -86,11 +86,11 @@ xfs_destroy_ioend(
+ 	}
+ 
+ 	if (ioend->io_iocb) {
++		inode_dio_done(ioend->io_inode);
+ 		if (ioend->io_isasync) {
+ 			aio_complete(ioend->io_iocb, ioend->io_error ?
+ 					ioend->io_error : ioend->io_result, 0);
+ 		}
+-		inode_dio_done(ioend->io_inode);
+ 	}
+ 
+ 	mempool_free(ioend, xfs_ioend_pool);
 
-Ok, I'll try that and let you know.
-
-Thanks!
--Lukas
-
-> 
-> Cheers,
-> 
-> Dave.
-> 
---8323328-146599345-1359716289=:6969
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---8323328-146599345-1359716289=:6969--
