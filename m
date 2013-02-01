@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id EE4387F4C
-	for <xfs@oss.sgi.com>; Fri,  1 Feb 2013 04:44:32 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 0B7227F88
+	for <xfs@oss.sgi.com>; Fri,  1 Feb 2013 04:51:00 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8F9EDAC002
-	for <xfs@oss.sgi.com>; Fri,  1 Feb 2013 02:44:32 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id MVUGOleLLGjj8Hzs for
-	<xfs@oss.sgi.com>; Fri, 01 Feb 2013 02:44:31 -0800 (PST)
-From: Lukas Czerner <lczerner@redhat.com>
-Subject: [PATCH 18/18] ext4: Allow punch hole with bigalloc enabled
-Date: Fri,  1 Feb 2013 11:43:44 +0100
-Message-Id: <1359715424-32318-19-git-send-email-lczerner@redhat.com>
-In-Reply-To: <1359715424-32318-1-git-send-email-lczerner@redhat.com>
-References: <1359715424-32318-1-git-send-email-lczerner@redhat.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 91C15AC001
+	for <xfs@oss.sgi.com>; Fri,  1 Feb 2013 02:50:59 -0800 (PST)
+Received: from mail.kernel.org (mail.kernel.org [198.145.19.201]) by
+	cuda.sgi.com with ESMTP id cYnw6QOafTQKYlnY for
+	<xfs@oss.sgi.com>; Fri, 01 Feb 2013 02:50:58 -0800 (PST)
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [ 12/33] xfs: Fix possible use-after-free with AIO
+Date: Fri,  1 Feb 2013 11:49:17 +0100
+Message-Id: <20130201104725.531364005@linuxfoundation.org>
+In-Reply-To: <20130201104724.605715763@linuxfoundation.org>
+References: <20130201104724.605715763@linuxfoundation.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,39 +27,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-mm@kvack.org
-Cc: linux-fsdevel@vger.kernel.org, Lukas Czerner <lczerner@redhat.com>, linux-ext4@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Ben Myers <bpm@sgi.com>, Jan Kara <jack@suse.cz>, stable@vger.kernel.org, xfs@oss.sgi.com
 
-In commits 5f95d21fb6f2aaa52830e5b7fb405f6c71d3ab85 and
-30bc2ec9598a1b156ad75217f2e7d4560efdeeab we've reworked punch_hole
-implementation and there is noting holding us back from using punch hole
-on file system with bigalloc feature enabled.
+3.4-stable review patch.  If anyone has any objections, please let me know.
 
-This has been tested with fsx and xfstests.
+------------------
 
-Signed-off-by: Lukas Czerner <lczerner@redhat.com>
+From: Jan Kara <jack@suse.cz>
+
+commit 4b05d09c18d9aa62d2e7fb4b057f54e5a38963f5 upstream.
+
+Running AIO is pinning inode in memory using file reference. Once AIO
+is completed using aio_complete(), file reference is put and inode can
+be freed from memory. So we have to be sure that calling aio_complete()
+is the last thing we do with the inode.
+
+Signed-off-by: Jan Kara <jack@suse.cz>
+CC: xfs@oss.sgi.com
+CC: Ben Myers <bpm@sgi.com>
+Reviewed-by: Ben Myers <bpm@sgi.com>
+Signed-off-by: Ben Myers <bpm@sgi.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
 ---
- fs/ext4/inode.c |    5 -----
- 1 files changed, 0 insertions(+), 5 deletions(-)
+ fs/xfs/xfs_aops.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index e7bf594..01cf049 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -3530,11 +3530,6 @@ int ext4_punch_hole(struct file *file, loff_t offset, loff_t length)
- 		return -EOPNOTSUPP;
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -89,11 +89,11 @@ xfs_destroy_ioend(
  	}
  
--	if (EXT4_SB(inode->i_sb)->s_cluster_ratio > 1) {
--		/* TODO: Add support for bigalloc file systems */
--		return -EOPNOTSUPP;
--	}
--
- 	return ext4_ext_punch_hole(file, offset, length);
- }
+ 	if (ioend->io_iocb) {
++		inode_dio_done(ioend->io_inode);
+ 		if (ioend->io_isasync) {
+ 			aio_complete(ioend->io_iocb, ioend->io_error ?
+ 					ioend->io_error : ioend->io_result, 0);
+ 		}
+-		inode_dio_done(ioend->io_inode);
+ 	}
  
--- 
-1.7.7.6
+ 	mempool_free(ioend, xfs_ioend_pool);
+
 
 _______________________________________________
 xfs mailing list
