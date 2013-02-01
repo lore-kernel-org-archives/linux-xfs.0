@@ -1,17 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D665B7F3F
-	for <xfs@oss.sgi.com>; Fri,  1 Feb 2013 04:43:54 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C53EC30407A
-	for <xfs@oss.sgi.com>; Fri,  1 Feb 2013 02:43:51 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 978987F3F
+	for <xfs@oss.sgi.com>; Fri,  1 Feb 2013 04:43:56 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 866158F8039
+	for <xfs@oss.sgi.com>; Fri,  1 Feb 2013 02:43:56 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 4KIBgNn2UFuI8LZy for
-	<xfs@oss.sgi.com>; Fri, 01 Feb 2013 02:43:51 -0800 (PST)
+	cuda.sgi.com with ESMTP id DNqKpr06mxdgm5HH for
+	<xfs@oss.sgi.com>; Fri, 01 Feb 2013 02:43:55 -0800 (PST)
 From: Lukas Czerner <lczerner@redhat.com>
-Subject: [RFC] mm: change invalidatepage prototype to accept length
-Date: Fri,  1 Feb 2013 11:43:26 +0100
-Message-Id: <1359715424-32318-1-git-send-email-lczerner@redhat.com>
+Subject: [PATCH 02/18] jbd2: change jbd2_journal_invalidatepage to accept
+	length
+Date: Fri,  1 Feb 2013 11:43:28 +0100
+Message-Id: <1359715424-32318-3-git-send-email-lczerner@redhat.com>
+In-Reply-To: <1359715424-32318-1-git-send-email-lczerner@redhat.com>
+References: <1359715424-32318-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,126 +29,133 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: linux-mm@kvack.org
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+Cc: linux-fsdevel@vger.kernel.org, Lukas Czerner <lczerner@redhat.com>, linux-ext4@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Hi,
+invalidatepage now accepts range to invalidate and there are two file
+system using jbd2 also implementing punch hole feature which can benefit
+from this. We need to implement the same thing for jbd2 layer in order to
+allow those file system take benefit of this functionality.
 
-This set of patches are aimed to allow truncate_inode_pages_range() handle
-ranges which are not aligned at the end of the page. Currently it will
-hit BUG_ON() when the end of the range is not aligned. Punch hole feature
-however can benefit from this ability saving file systems some work not
-forcing them to implement their own invalidate code to handle unaligned
-ranges.
+This commit adds length argument to the jbd2_journal_invalidatepage()
+and updates all instances in ext4 and ocfs2.
 
-In order for this to woke we need change ->invalidatepage() address space
-operation to to accept range to invalidate by adding 'length' argument in
-addition to 'offset'. This is different from my previous attempt to create
-new aop ->invalidatepage_range (http://lwn.net/Articles/514828/) which I
-reconsidered to ne unnecessary.
+Signed-off-by: Lukas Czerner <lczerner@redhat.com>
+---
+ fs/ext4/inode.c       |    3 ++-
+ fs/jbd2/transaction.c |   24 +++++++++++++++++-------
+ fs/ocfs2/aops.c       |    3 ++-
+ include/linux/jbd2.h  |    2 +-
+ 4 files changed, 22 insertions(+), 10 deletions(-)
 
-For description purposes this patch set can be divided into following
-groups:
-
-
-patch 0001:	Change ->invalidatepage() prototype adding 'length' argument
-		and changing all the instances. In very simple cases file
-		system methods are completely adapted, otherwise only
-		prototype is changed and the rest will follow. This patch
-		also implement the 'range' invalidation in
-		block_invalidatepage().
-
-patch 0002 - 0009:
-		Make the use of new 'length' argument in the file system
-		itself. Some file systems can take advantage of it trying
-		to invalidate only portion of the page if possible, some
-		can't, however none of the file systems currently attempt
-		to truncate non page aligned ranges.
-
-
-patch 0010:	Teach truncate_inode_pages_range() to handle non page aligned
-		ranges.
-
-patch 0012 - 0018:
-		Ext4 changes build on top of previous changes, simplifying
-		punch hole code. Not all changes are realated specifically
-		to invalidatepage() change, but all are related to the punch
-		hole feature.
-
-Even though this patch set would mainly affect functionality of the file
-file systems implementing punch hole I've tested all the following file
-system using xfstests without noticing any bugs related to this change.
-
-ext3, ext4, xfs, btrfs, gfs2 and reiserfs
-
-the much smaller changes in other file systems has not been directly tested,
-so please review.
-
-Thanks!
--Lukas
-
+diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+index cbf6574..a3be92c 100644
+--- a/fs/ext4/inode.c
++++ b/fs/ext4/inode.c
+@@ -2910,7 +2910,8 @@ static int __ext4_journalled_invalidatepage(struct page *page,
+ 	if (offset == 0)
+ 		ClearPageChecked(page);
+ 
+-	return jbd2_journal_invalidatepage(journal, page, offset);
++	return jbd2_journal_invalidatepage(journal, page, offset,
++					   PAGE_CACHE_SIZE - offset);
+ }
+ 
+ /* Wrapper for aops... */
+diff --git a/fs/jbd2/transaction.c b/fs/jbd2/transaction.c
+index df9f297..05b6d59 100644
+--- a/fs/jbd2/transaction.c
++++ b/fs/jbd2/transaction.c
+@@ -1997,18 +1997,23 @@ zap_buffer_unlocked:
+  * void jbd2_journal_invalidatepage()
+  * @journal: journal to use for flush...
+  * @page:    page to flush
+- * @offset:  length of page to invalidate.
++ * @offset:  start of the range to invalidate
++ * @length:  length of the range to invalidate
+  *
+- * Reap page buffers containing data after offset in page. Can return -EBUSY
+- * if buffers are part of the committing transaction and the page is straddling
+- * i_size. Caller then has to wait for current commit and try again.
++ * Reap page buffers containing data after in the specified range in page.
++ * Can return -EBUSY if buffers are part of the committing transaction and
++ * the page is straddling i_size. Caller then has to wait for current commit
++ * and try again.
+  */
+ int jbd2_journal_invalidatepage(journal_t *journal,
+ 				struct page *page,
+-				unsigned long offset)
++				unsigned int offset,
++				unsigned int length)
+ {
+ 	struct buffer_head *head, *bh, *next;
++	unsigned int stop = offset + length;
+ 	unsigned int curr_off = 0;
++	int partial_page = (offset || length < PAGE_CACHE_SIZE);
+ 	int may_free = 1;
+ 	int ret = 0;
+ 
+@@ -2017,6 +2022,8 @@ int jbd2_journal_invalidatepage(journal_t *journal,
+ 	if (!page_has_buffers(page))
+ 		return 0;
+ 
++	BUG_ON(stop > PAGE_CACHE_SIZE || stop < length);
++
+ 	/* We will potentially be playing with lists other than just the
+ 	 * data lists (especially for journaled data mode), so be
+ 	 * cautious in our locking. */
+@@ -2026,10 +2033,13 @@ int jbd2_journal_invalidatepage(journal_t *journal,
+ 		unsigned int next_off = curr_off + bh->b_size;
+ 		next = bh->b_this_page;
+ 
++		if (next_off > stop)
++			return 0;
++
+ 		if (offset <= curr_off) {
+ 			/* This block is wholly outside the truncation point */
+ 			lock_buffer(bh);
+-			ret = journal_unmap_buffer(journal, bh, offset > 0);
++			ret = journal_unmap_buffer(journal, bh, partial_page);
+ 			unlock_buffer(bh);
+ 			if (ret < 0)
+ 				return ret;
+@@ -2040,7 +2050,7 @@ int jbd2_journal_invalidatepage(journal_t *journal,
+ 
+ 	} while (bh != head);
+ 
+-	if (!offset) {
++	if (!partial_page) {
+ 		if (may_free && try_to_free_buffers(page))
+ 			J_ASSERT(!page_has_buffers(page));
+ 	}
+diff --git a/fs/ocfs2/aops.c b/fs/ocfs2/aops.c
+index 5d77cf2..1393114 100644
+--- a/fs/ocfs2/aops.c
++++ b/fs/ocfs2/aops.c
+@@ -608,7 +608,8 @@ static void ocfs2_invalidatepage(struct page *page, unsigned int offset,
+ {
+ 	journal_t *journal = OCFS2_SB(page->mapping->host->i_sb)->journal->j_journal;
+ 
+-	jbd2_journal_invalidatepage(journal, page, offset);
++	jbd2_journal_invalidatepage(journal, page, offset,
++				    PAGE_CACHE_SIZE - offset);
+ }
+ 
+ static int ocfs2_releasepage(struct page *page, gfp_t wait)
+diff --git a/include/linux/jbd2.h b/include/linux/jbd2.h
+index e30b663..a501f33 100644
+--- a/include/linux/jbd2.h
++++ b/include/linux/jbd2.h
+@@ -1099,7 +1099,7 @@ extern int	 jbd2_journal_dirty_metadata (handle_t *, struct buffer_head *);
+ extern int	 jbd2_journal_forget (handle_t *, struct buffer_head *);
+ extern void	 journal_sync_buffer (struct buffer_head *);
+ extern int	 jbd2_journal_invalidatepage(journal_t *,
+-				struct page *, unsigned long);
++				struct page *, unsigned int, unsigned int);
+ extern int	 jbd2_journal_try_to_free_buffers(journal_t *, struct page *, gfp_t);
+ extern int	 jbd2_journal_stop(handle_t *);
+ extern int	 jbd2_journal_flush (journal_t *);
 -- 
-
- Documentation/filesystems/Locking |    6 +-
- Documentation/filesystems/vfs.txt |   20 ++--
- fs/9p/vfs_addr.c                  |    5 +-
- fs/afs/file.c                     |   10 +-
- fs/btrfs/disk-io.c                |    3 +-
- fs/btrfs/extent_io.c              |    2 +-
- fs/btrfs/inode.c                  |    3 +-
- fs/buffer.c                       |   21 ++-
- fs/ceph/addr.c                    |   15 +-
- fs/cifs/file.c                    |    5 +-
- fs/exofs/inode.c                  |    6 +-
- fs/ext3/inode.c                   |    9 +-
- fs/ext4/ext4.h                    |   14 +-
- fs/ext4/extents.c                 |  188 ++++++++--------------
- fs/ext4/indirect.c                |   13 +--
- fs/ext4/inode.c                   |  320 ++++++++++++++++--------------------
- fs/f2fs/data.c                    |    3 +-
- fs/f2fs/node.c                    |    3 +-
- fs/gfs2/aops.c                    |   17 ++-
- fs/jbd/transaction.c              |   19 ++-
- fs/jbd2/transaction.c             |   24 ++-
- fs/jfs/jfs_metapage.c             |    5 +-
- fs/logfs/file.c                   |    3 +-
- fs/logfs/segment.c                |    3 +-
- fs/nfs/file.c                     |    8 +-
- fs/ntfs/aops.c                    |    2 +-
- fs/ocfs2/aops.c                   |    5 +-
- fs/reiserfs/inode.c               |   12 +-
- fs/ubifs/file.c                   |    5 +-
- fs/xfs/xfs_aops.c                 |   10 +-
- fs/xfs/xfs_trace.h                |   41 +++++-
- include/linux/buffer_head.h       |    3 +-
- include/linux/fs.h                |    2 +-
- include/linux/jbd.h               |    2 +-
- include/linux/jbd2.h              |    2 +-
- include/linux/mm.h                |    3 +-
- include/trace/events/ext3.h       |   12 +-
- include/trace/events/ext4.h       |   64 +++++---
- mm/readahead.c                    |    2 +-
- mm/truncate.c                     |   86 ++++++----
- 40 files changed, 511 insertions(+), 465 deletions(-)
-
-
-[PATCH 01/18] mm: change invalidatepage prototype to accept length
-[PATCH 02/18] jbd2: change jbd2_journal_invalidatepage to accept
-[PATCH 03/18] ext4: use ->invalidatepage() length argument
-[PATCH 04/18] jbd: change journal_invalidatepage() to accept length
-[PATCH 05/18] xfs: use ->invalidatepage() length argument
-[PATCH 06/18] ocfs2: use ->invalidatepage() length argument
-[PATCH 07/18] ceph: use ->invalidatepage() length argument
-[PATCH 08/18] gfs2: use ->invalidatepage() length argument
-[PATCH 09/18] reiserfs: use ->invalidatepage() length argument
-[PATCH 10/18] mm: teach truncate_inode_pages_range() to handle non
-[PATCH 11/18] Revert "ext4: remove no longer used functions in
-[PATCH 12/18] Revert "ext4: fix fsx truncate failure"
-[PATCH 13/18] ext4: use ext4_zero_partial_blocks in punch_hole
-[PATCH 14/18] ext4: remove unused discard_partial_page_buffers
-[PATCH 15/18] ext4: remove unused code from ext4_remove_blocks()
-[PATCH 16/18] ext4: update ext4_ext_remove_space trace point
-[PATCH 17/18] ext4: make punch hole code path work with bigalloc
-[PATCH 18/18] ext4: Allow punch hole with bigalloc enabled
+1.7.7.6
 
 _______________________________________________
 xfs mailing list
