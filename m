@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id DD3D87F51
-	for <xfs@oss.sgi.com>; Fri,  1 Feb 2013 08:33:17 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 63878AC001
-	for <xfs@oss.sgi.com>; Fri,  1 Feb 2013 06:33:14 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id RrpHg8R94RO9ERD5 for
-	<xfs@oss.sgi.com>; Fri, 01 Feb 2013 06:33:13 -0800 (PST)
-Date: Fri, 1 Feb 2013 15:33:06 +0100 (CET)
-From: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>
-Subject: Re: Xfs fails in xfstests 013
-In-Reply-To: <alpine.LFD.2.00.1302011149030.6969@dhcp-1-104.brq.redhat.com>
-Message-ID: <alpine.LFD.2.00.1302011219300.6969@dhcp-1-104.brq.redhat.com>
-References: <alpine.LFD.2.00.1301310910080.14328@dhcp-1-104.brq.redhat.com>
-	<20130201002927.GJ32297@disturbed.disaster>
-	<alpine.LFD.2.00.1302011149030.6969@dhcp-1-104.brq.redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 26A987F52
+	for <xfs@oss.sgi.com>; Fri,  1 Feb 2013 10:03:23 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id AF940AC003
+	for <xfs@oss.sgi.com>; Fri,  1 Feb 2013 08:03:19 -0800 (PST)
+Message-ID: <510BE6C0.3030506@redhat.com>
+Date: Fri, 01 Feb 2013 11:01:04 -0500
+From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="8323328-344281500-1359729191=:6969"
+Subject: Re: [PATCH RFC 0/2] fix spinlock recursion on xa_lock in
+	xfs_buf_item_push
+References: <1359492157-30521-1-git-send-email-bfoster@redhat.com>
+	<20130130060551.GG7255@disturbed.disaster>
+	<5109291E.6090303@sgi.com> <51094423.8000703@redhat.com>
+	<20130130215934.GB32297@disturbed.disaster>
+	<510AADC5.3000305@redhat.com>
+	<20130201012610.GK32297@disturbed.disaster>
+In-Reply-To: <20130201012610.GK32297@disturbed.disaster>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,126 +26,133 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com, david@fromorbit.com
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-
---8323328-344281500-1359729191=:6969
-Content-Type: TEXT/PLAIN; charset=utf-8
-Content-Transfer-Encoding: 8BIT
-
-On Fri, 1 Feb 2013, Lukáš Czerner wrote:
-
-> Date: Fri, 1 Feb 2013 11:58:04 +0100 (CET)
-> From: Lukáš Czerner <lczerner@redhat.com>
-> To: Dave Chinner <david@fromorbit.com>
-> Cc: Lukáš Czerner <lczerner@redhat.com>, xfs@oss.sgi.com
-> Subject: Re: Xfs fails in xfstests 013
+On 01/31/2013 08:26 PM, Dave Chinner wrote:
+> On Thu, Jan 31, 2013 at 12:45:41PM -0500, Brian Foster wrote:
+>> On 01/30/2013 04:59 PM, Dave Chinner wrote:
+>>> On Wed, Jan 30, 2013 at 11:02:43AM -0500, Brian Foster wrote:
+>>>> (added Dave and the list back on CC)
+>>>>
+>>>> On 01/30/2013 09:07 AM, Mark Tinguely wrote:
+>>>>> On 01/30/13 00:05, Dave Chinner wrote:
+>>>>>> On Tue, Jan 29, 2013 at 03:42:35PM -0500, Brian Foster wrote:
+...
+>> ... what prevents the following sequence from occurring sometime in the
+>> future or with some alternate high-level sequence of events?
+>>
+>> A		xfsaild
+>> locked
+>> 		(!pinned && !stale) ==> trylock()
+>> pinned
+>> stale
+>> 		(!trylock && pinned && stale)
+>> 			==> xfs_log_force()
 > 
-> On Fri, 1 Feb 2013, Dave Chinner wrote:
+> You can't get that order and trigger the race. If the item is pinned
+> before it is marked stale, that means we will always see pin count
+> because it was pinned by a previous transaction commit.
 > 
-> > Date: Fri, 1 Feb 2013 11:29:27 +1100
-> > From: Dave Chinner <david@fromorbit.com>
-> > To: Lukáš Czerner <lczerner@redhat.com>
-> > Cc: xfs@oss.sgi.com
-> > Subject: Re: Xfs fails in xfstests 013
-> > 
-> > On Thu, Jan 31, 2013 at 09:19:23AM +0100, Lukáš Czerner wrote:
-> > > Hi.
-> > > 
-> > > I've just run xfstest 013 on xfs and it fails with this backtrace
-> > > 
-> > > 
-> > > Jan 31 03:09:07 rhel6_vm1 kernel: ffff88020b6d1000: 78 78 78 78 78 78 78 78 78 78 2f 78 78 78 78 78  xxxxxxxxxx/xxxxx
-> > > Jan 31 03:09:07 rhel6_vm1 kernel: XFS (sda): Internal error xfs_bmbt_verify at line 747 of file fs/xfs/xfs_bmap_btree.c.  Caller 0xffffffffa025486e
-> > 
-> > Same problem Cai Qian just reported - a remote symlink with a bmbt
-> > verifier attached to it.
-> > 
-> > > I can reproduce it every time with xfstest 013 on 3.8.0-rc5.
-> > 
-> > And the configuration you are testing?
-> 
-> The system is x86_64 KVM guest and I am using the following config
-> 
-> export TEST_DEV=/dev/sda
-> export TEST_DIR=/mnt/test
-> export SCRATCH_DEV=/dev/sdb
-> export SCRATCH_MNT=/mnt/test1
-> export MKFS_OPTIONS="-f "
-> export FSTYP=xfs
-> 
-> Where /dev/sda and /dev/sdb are 50GB in size and those are exported
-> from the host linear logical volumes.
-> 
-> > 
-> > I'd suggest that you add an:
-> > 
-> > 	ASSERT(bp->b_ops == NULL);
-> > 
-> > into xfs_symlink() after the xfs_trans_get_buf() call in the remote
-> > symlink crate loop, because the problem occurring implies that the
-> > code is getting a new buffer with a stale ops structure on it
-> > (though I can't see how that is possible right now).
-> > 
-> > You should probably put the same assert into
-> > xfs_inactive_symlink_rmt() between the get buf and the
-> > xfs_trans_binval() call, and into xfs_readlink_bmap() after the
-> > contents of a symlink are read from disk.
-> 
-> Ok, I'll try that and let you know.
 
-This is what I've done:
+Ok, so if we're seeing the pin count race, we have a buffer that is
+obviously in the ail and we're racing with another transaction commit on
+the buffer. This means the buf is either (!pinned && locked), (pinned &&
+locked) or (pinned && !locked). The first two cases imply that if the
+buf is stale, it is marked stale by this transaction, or as you point
+out, by a previous transaction (because it would have required the lock).
 
-diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-index d95f565..22590ef 100644
---- a/fs/xfs/xfs_vnodeops.c
-+++ b/fs/xfs/xfs_vnodeops.c
-@@ -89,6 +89,7 @@ xfs_readlink_bmap(
-                        xfs_buf_relse(bp);
-                        goto out;
-                }
-+               ASSERT(bp->b_ops == NULL);
-                if (pathlen < byte_cnt)
-                        byte_cnt = pathlen;
-                pathlen -= byte_cnt;
-@@ -313,6 +314,7 @@ xfs_inactive_symlink_rmt(
-                        error = ENOMEM;
-                        goto error1;
-                }
-+               ASSERT(bp->b_ops == NULL);
-                xfs_trans_binval(tp, bp);
-        }
-        /*
-@@ -1535,6 +1537,7 @@ xfs_symlink(
-                                error = ENOMEM;
-                                goto error2;
-                        }
-+                       ASSERT(bp->b_ops == NULL);
-                        if (pathlen < byte_cnt) {
-                                byte_cnt = pathlen;
-                        }
+If we suppose it is possible for the buf to go from (!pinned && locked)
+to (pinned && !locked) after the trylock fails but before the log force
+check, what I'm not quite following is what would prevent some third
+thread (I guess my diagram was wrong to only include xfsaild and thread
+A) to squeeze in there and set the buf stale? For example, I was looking
+at xfs_buf_iodone_callbacks() and the forced shutdown check (is the bp
+always locked here?).
 
-and I have not hit the assert. However I think that I know what's
-going on. The verifier is obviously not attached when the symlink is
-created, however it is attached when security attributes are created
-for the symlink by xfs_init_security().
+> Pinning occurs on the commit of the first transaction commit that
+> inserts the item into the CIL. It doesn't get unpinned until the CIL
+> is checkpointed and inserted into the AIL. Hence the order of
+> operations that marks an uncommitted buffer stale should always be
+> lock->stale->pinned->unlock.
+> 
+> However, if the buffer has been previously modified and is in the
+> CIL, you'll see:
+> 
+> 	lock->pinned->CIL insert->unlock.....->lock->stale->unlock
+> 
+> If the buffer was modified a while back and the CIL is committed, the
+> buffer will be in the AIL but not the CIL. If the buffer was
+> modified a while back, and then again recently, it will be in both
+> pinned in the CIL and the AIL. Neither of these cases can trigger
+> this problem because the pinned check will fire reliably.
+> 
+> Hence the specific case here is the buffer has been previously modified,
+> the CIL committed so it's in the AIL, and we are marking the buffer
+> stale as the first modification of the buffer after it was added to
+> the AIL. IOWs, the order that is of concern is this while the item
+> is in the AIL:
+> 
+> 	lock->stale->pin->CIL insert->unlock
+> 
+> So in terms of the xfsaild racing and causing problems, the only case
+> it will occur in is this:
+> 
+> 	Thread 1	xfsaild
+> 	lock		xfs_buf_item_push
+> 	....		not pinned
+> 	stale
+> 			trylock
+> 			<delay>
+> 	commit
+> 	pin
+> 			  if(pinned && stale)
+> 				<splat>
+> 	unlock
+> 
 
-Thanks!
--Lukas
---8323328-344281500-1359729191=:6969
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Ok, thanks for the context.
+
+> So what I was asking is whether we can do checks in the order of:
+> 
+> 	smb_mb();
+> 	if (stale)
+> 		return
+> 	if (pinned)
+> 		return
+> 
+
+Right...
+
+> What I've just realised is that we really don't care if we race in
+> xfs_buf_item_push(). The race that matters is in xfs_buf_trylock()
+> and at that point it is too late to avoid it.
+> 
+> So I think your original patch is on the right path but having the
+> xfsaild handle the log force gets rid of most of the nasty cruft it
+> had.... ie. we're going to have to tell xfs_buf_trylock() that we
+> should not do a log force if the lock fails, and return
+> XFS_ITEM_PINNED rather than XFS_ITEM_LOCKED in
+> xfs_buf_item_push()....
+> 
+
+... and that's the bit I wasn't so sure about. If it's Ok to pend up the
+log force as such, the xfs_buf_item_push() part can be made cleaner
+(xfs_buf_trylock() is still uglified with the new parameter). I'll start
+testing something like that and follow up with a new set if it addresses
+the problem and survives some sanity testing. Thanks.
+
+Brian
+
+> Cheers,
+> 
+> Dave.
+> 
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---8323328-344281500-1359729191=:6969--
