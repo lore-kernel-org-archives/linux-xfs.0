@@ -1,16 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 21E997F4E
-	for <xfs@oss.sgi.com>; Thu, 31 Jan 2013 19:39:38 -0600 (CST)
-Date: Thu, 31 Jan 2013 19:39:37 -0600
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id AF9797F4E
+	for <xfs@oss.sgi.com>; Thu, 31 Jan 2013 20:10:52 -0600 (CST)
+Date: Thu, 31 Jan 2013 20:10:48 -0600
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH v4 02/13] xfs: make use of xfs_calc_buf_res() in
-	xfs_trans.c
-Message-ID: <20130201013937.GS27055@sgi.com>
-References: <51067C69.2020509@oracle.com>
+Subject: Re: [PATCH 1/4] xfsprogs: Refactor release scripts to conform to
+	using git archive
+Message-ID: <20130201021048.GT27055@sgi.com>
+References: <50F44B2E.9050408@sgi.com>
+ <50F44B62.7060504@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <51067C69.2020509@oracle.com>
+In-Reply-To: <50F44B62.7060504@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,65 +20,75 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
+To: Andrew Dahl <adahl@sgi.com>
 Cc: xfs@oss.sgi.com
 
-SGV5IEplZmYsCgpPbiBNb24sIEphbiAyOCwgMjAxMyBhdCAwOToyNjowMVBNICswODAwLCBKZWZm
-IExpdSB3cm90ZToKPiBSZWZpbmluZyB0aGUgZXhpc3RpbmcgcmVzZXJ2YXRpb25zIHdpdGggeGZz
-X2NhbGNfYnVmX3JlcygpIGluIHhmc190cmFucy5jCj4gCj4gU2lnbmVkLW9mZi1ieTogSmllIExp
-dSA8amVmZi5saXVAb3JhY2xlLmNvbT4KPiBDQzogRGF2ZSBDaGlubmVyIDxkYXZpZEBmcm9tb3Ji
-aXQuY29tPgo+IFJldmlld2VkLWJ5OiBNYXJrIFRpbmd1ZWx5IDx0aW5ndWVseUBzZ2kuY29tPgoK
-Li4uCgo+IC0tLQo+ICBmcy94ZnMveGZzX3RyYW5zLmMgfCAgMjM3ICsrKysrKysrKysrKysrKysr
-KysrKysrKy0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KPiAgMSBmaWxlIGNoYW5nZWQsIDEx
-MCBpbnNlcnRpb25zKCspLCAxMjcgZGVsZXRpb25zKC0pCj4gCj4gZGlmZiAtLWdpdCBhL2ZzL3hm
-cy94ZnNfdHJhbnMuYyBiL2ZzL3hmcy94ZnNfdHJhbnMuYwoKLi4uCgo+IEBAIC0yOTgsMTggKzI4
-NiwxOSBAQCB4ZnNfY2FsY19jcmVhdGVfcmVzZXJ2YXRpb24oCj4gIAlzdHJ1Y3QgeGZzX21vdW50
-CSptcCkKPiAgewo+ICAJcmV0dXJuIFhGU19EUVVPVF9MT0dSRVMobXApICsKPiAtCQlNQVgoKG1w
-LT5tX3NiLnNiX2lub2Rlc2l6ZSArCj4gLQkJICAgICBtcC0+bV9zYi5zYl9pbm9kZXNpemUgKwo+
-IC0JCSAgICAgbXAtPm1fc2Iuc2Jfc2VjdHNpemUgKwo+ICsJCU1BWCgoeGZzX2NhbGNfYnVmX3Jl
-cygyLCBtcC0+bV9zYi5zYl9pbm9kZXNpemUpICsKPiArCQkgICAgIHhmc19jYWxjX2J1Zl9yZXMo
-MSwgbXAtPm1fc2Iuc2Jfc2VjdHNpemUpICsKPiAgCQkgICAgIFhGU19GU0JfVE9fQihtcCwgMSkg
-Kwo+IC0JCSAgICAgWEZTX0RJUk9QX0xPR19SRVMobXApICsKPiAtCQkgICAgIDEyOCAqICgzICsg
-WEZTX0RJUk9QX0xPR19DT1VOVChtcCkpKSwKPiAtCQkgICAgKDMgKiBtcC0+bV9zYi5zYl9zZWN0
-c2l6ZSArCj4gLQkJICAgICBYRlNfRlNCX1RPX0IobXAsIFhGU19JQUxMT0NfQkxPQ0tTKG1wKSkg
-Kwo+IC0JCSAgICAgWEZTX0ZTQl9UT19CKG1wLCBtcC0+bV9pbl9tYXhsZXZlbHMpICsKPiAtCQkg
-ICAgIFhGU19BTExPQ0ZSRUVfTE9HX1JFUyhtcCwgMSkgKwo+IC0JCSAgICAgMTI4ICogKDIgKyBY
-RlNfSUFMTE9DX0JMT0NLUyhtcCkgKyBtcC0+bV9pbl9tYXhsZXZlbHMgKwo+IC0JCQkgICAgWEZT
-X0FMTE9DRlJFRV9MT0dfQ09VTlQobXAsIDEpKSkpOwo+ICsJCSAgICAgeGZzX2NhbGNfYnVmX3Jl
-cyhYRlNfRElST1BfTE9HX0NPVU5UKG1wKSwKPiArCQkJCSAgICAgIFhGU19GU0JfVE9fQihtcCwg
-MSkpKSwKPiArCQkgICAgKHhmc19jYWxjX2J1Zl9yZXMoMiwgbXAtPm1fc2Iuc2Jfc2VjdHNpemUp
-ICsKPiArCQkgICAgIG1wLT5tX3NiLnNiX3NlY3RzaXplICsKPiArCQkgICAgIHhmc19jYWxjX2J1
-Zl9yZXMoWEZTX0lBTExPQ19CTE9DS1MobXApLAo+ICsJCQkJICAgICAgWEZTX0ZTQl9UT19CKG1w
-LCAxKSkgKwo+ICsJCSAgICAgeGZzX2NhbGNfYnVmX3JlcyhtcC0+bV9pbl9tYXhsZXZlbHMsCj4g
-KwkJCQkgICAgICBYRlNfRlNCX1RPX0IobXAsIDEpKSArCj4gKwkJICAgICB4ZnNfY2FsY19idWZf
-cmVzKFhGU19BTExPQ0ZSRUVfTE9HX0NPVU5UKG1wLCAxKSwKPiArCQkJCSAgICAgIFhGU19GU0Jf
-VE9fQihtcCwgMSkpKSk7Cj4gIH0KCnhmcy94ZnNfaW5vZGVfaXRlbS5jCnhmcy94ZnNfdHJhbnMu
-YzogSW4gZnVuY3Rpb24g4oCYeGZzX2NhbGNfY3JlYXRlX3Jlc2VydmF0aW9u4oCZOgp4ZnMveGZz
-X3RyYW5zLmM6Mjg5OiB3YXJuaW5nOiBjb21wYXJpc29uIG9mIGRpc3RpbmN0IHBvaW50ZXIgdHlw
-ZXMgbGFja3MgYSBjYXN0Cgo+ICAvKgo+IEBAIC01MzksMTYgKzUyNCwxNCBAQCB4ZnNfY2FsY19h
-dHRycm1fcmVzZXJ2YXRpb24oCj4gIAlzdHJ1Y3QgeGZzX21vdW50CSptcCkKPiAgewo+ICAJcmV0
-dXJuIFhGU19EUVVPVF9MT0dSRVMobXApICsKPiAtCQlNQVgoKG1wLT5tX3NiLnNiX2lub2Rlc2l6
-ZSArCj4gLQkJICAgICBYRlNfRlNCX1RPX0IobXAsIFhGU19EQV9OT0RFX01BWERFUFRIKSArCj4g
-KwkJTUFYKCh4ZnNfY2FsY19idWZfcmVzKDEsIG1wLT5tX3NiLnNiX2lub2Rlc2l6ZSkgKwo+ICsJ
-CSAgICAgeGZzX2NhbGNfYnVmX3JlcyhYRlNfREFfTk9ERV9NQVhERVBUSCwKPiArCQkJCSAgICAg
-IFhGU19GU0JfVE9fQihtcCwgMSkpICsKPiAgCQkgICAgIFhGU19GU0JfVE9fQihtcCwgWEZTX0JN
-X01BWExFVkVMUyhtcCwgWEZTX0FUVFJfRk9SSykpICsKPiAtCQkgICAgIDEyOCAqICgxICsgWEZT
-X0RBX05PREVfTUFYREVQVEggKwo+IC0JCQkgICAgWEZTX0JNX01BWExFVkVMUyhtcCwgWEZTX0RB
-VEFfRk9SSykpKSwKPiAtCQkgICAgKDIgKiBtcC0+bV9zYi5zYl9zZWN0c2l6ZSArCj4gLQkJICAg
-ICAyICogbXAtPm1fc2Iuc2Jfc2VjdHNpemUgKwo+IC0JCSAgICAgbXAtPm1fc2Iuc2Jfc2VjdHNp
-emUgKwo+IC0JCSAgICAgWEZTX0FMTE9DRlJFRV9MT0dfUkVTKG1wLCAyKSArCj4gLQkJICAgICAx
-MjggKiAoNSArIFhGU19BTExPQ0ZSRUVfTE9HX0NPVU5UKG1wLCAyKSkpKTsKPiArCQkgICAgIHhm
-c19jYWxjX2J1Zl9yZXMoWEZTX0JNX01BWExFVkVMUyhtcCwgWEZTX0RBVEFfRk9SSyksIDApKSwK
-PiArCQkgICAgKHhmc19jYWxjX2J1Zl9yZXMoNSwgbXAtPm1fc2Iuc2Jfc2VjdHNpemUpICsKPiAr
-CQkgICAgIHhmc19jYWxjX2J1Zl9yZXMoWEZTX0FMTE9DRlJFRV9MT0dfQ09VTlQobXAsIDIpLAo+
-ICsJCQkJICAgICAgWEZTX0ZTQl9UT19CKG1wLCAxKSkpKTsKPiAgfQoKeGZzL3hmc190cmFucy5j
-OiBJbiBmdW5jdGlvbiDigJh4ZnNfY2FsY19hdHRycm1fcmVzZXJ2YXRpb27igJk6Cnhmcy94ZnNf
-dHJhbnMuYzo1Mjc6IHdhcm5pbmc6IGNvbXBhcmlzb24gb2YgZGlzdGluY3QgcG9pbnRlciB0eXBl
-cyBsYWNrcyBhIGNhc3QKCkNhbiB5b3UgZml4IHVwIHRob3NlIHdhcm5pbmdzPyAgSSB0aGluayB5
-b3UgbmVlZCBvbmx5IHJlc2VuZCBwYXRjaCAyLgoKVGhhbmtzLApCZW4KCl9fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9z
-cy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+Andrew,
+
+On Mon, Jan 14, 2013 at 12:16:02PM -0600, Andrew Dahl wrote:
+> Refactored release scripts to conform to using git archive
+> 
+> When generating a release, there is a risk of missing necessary
+> source files. This is fixed by using git archive, which also
+> fixes the lack of conformity between the xfs utilities. As well,
+> some files may be stale during packaging. This is fixed with a
+> clean at the beginning of release generation.
+> 
+> Signed-off-by: Andrew Dahl <adahl@sgi.com>
+
+Compared the old 'make dist' with the new one:
+# diff old.list new.list
+129a130
+> xfsprogs-3.1.10/.gitignore
+
+The only difference in the file list is the addition of .gitignore.
+
+> ---
+>  Makefile   |   11 ++++++++---
+>  release.sh |    3 +++
+>  2 files changed, 11 insertions(+), 3 deletions(-)
+> 
+> diff --git a/Makefile b/Makefile
+> index 0bdc5e8..e73af88 100644
+> --- a/Makefile
+> +++ b/Makefile
+> @@ -29,6 +29,8 @@ SRCTAR = $(PKG_NAME)-$(PKG_VERSION).tar.gz
+>  
+>  CONFIGURE = aclocal.m4 configure config.guess config.sub install-sh ltmain.sh
+>  LSRCFILES = configure.ac release.sh README VERSION $(CONFIGURE)
+> +SRCTARINC = m4/libtool.m4 m4/lt~obsolete.m4 m4/ltoptions.m4 m4/ltsugar.m4 \
+> +           m4/ltversion.m4 po/xfsprogs.pot $(CONFIGURE)
+>  
+>  LDIRT = config.log .ltdep .dep config.status config.cache confdefs.h \
+>  	conftest* built .census install.* install-dev.* *.gz \
+> @@ -144,7 +146,10 @@ $(SRCDIR) : $(_FORCE)
+>  	rm -fr $@
+>  	mkdir -p $@
+>  
+> -$(SRCTAR) : default $(SRCDIR)
+> -	$(Q)$(MAKE) $(MAKEOPTS) source-link
+> -	unset TAPE; $(TAR) -cf - $(SRCDIR) | $(ZIP) --best > $@ && \
+> +$(SRCTAR) : default
+> +	$(Q)git archive --prefix=$(SRCDIR)/ --format=tar v$(PKG_VERSION) \
+> +	  -o $(SRCDIR).tar
+
+Older versions of git do not support the -o option.  I changed this to >
+$(SRCDIR).tar and it works fine.
+
+> +	$(Q)$(TAR) --transform "s,^,$(SRCDIR)/," -rf $(SRCARC).tar \
+						       SRCDIR
+
+With those changes this looks and works fine.
+
+Reviewed-by: Ben Myers <bpm@sgi.com>
+
+-Ben
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
