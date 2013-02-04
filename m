@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8E2C57F52
-	for <xfs@oss.sgi.com>; Mon,  4 Feb 2013 03:11:13 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 2839E7F52
+	for <xfs@oss.sgi.com>; Mon,  4 Feb 2013 06:52:43 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 79DE4304053
-	for <xfs@oss.sgi.com>; Mon,  4 Feb 2013 01:11:13 -0800 (PST)
-Received: from Ishtar.sc.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
-	cuda.sgi.com with ESMTP id YJyR0bZ39Bj3uvjQ (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 04 Feb 2013 01:11:12 -0800 (PST)
-Message-ID: <510F7B2D.908@tlinx.org>
-Date: Mon, 04 Feb 2013 01:11:09 -0800
-From: Linda Walsh <xfs@tlinx.org>
-MIME-Version: 1.0
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1549530404E
+	for <xfs@oss.sgi.com>; Mon,  4 Feb 2013 04:52:39 -0800 (PST)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	GAWIhvFVcHIcEH10 for <xfs@oss.sgi.com>;
+	Mon, 04 Feb 2013 04:52:38 -0800 (PST)
+Date: Mon, 4 Feb 2013 23:52:34 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: Looking for Linux XFS file system performance tuning tips for
-	LSI	9271-8i + 8 SSD's RAID0
+	LSI9271-8i + 8 SSD's RAID0
+Message-ID: <20130204125234.GK2667@dastard>
 References: <courier.510ECA60.00003A99@softhome.net>
+MIME-Version: 1.0
+Content-Disposition: inline
 In-Reply-To: <courier.510ECA60.00003A99@softhome.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -25,46 +26,68 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: rkj@softhome.net
-Cc: xfs-oss <xfs@oss.sgi.com>
+Cc: xfs@oss.sgi.com
 
-
-
-rkj@softhome.net wrote:
+On Sun, Feb 03, 2013 at 01:36:48PM -0700, rkj@softhome.net wrote:
 > 
-> I am working with hardware RAID0 using LSI 9271-8i + 8 SSD's...
->... With Direct IO, the sequential writes are around 
-> 3.5 GB/s but I noticed a drop-off in sequential reads for smaller record 
-> sizes.
-----
-1) Are you using the realtime partitions?
-2) are you using an empty file space with max log size
-3) what are you using to do write's with, "dd"?
-4) have you tried pre-allocating the space, running xfs_fsr on the
-file, to get it to 1 extent in size,
-then run dd with the conv=nocreat,notrunc option?
+> I am working with hardware RAID0 using LSI 9271-8i + 8 SSD's.  I am
+> using CentOS 6.3 on a Supermicro X9SAE-V motherboard with Intel Xeon
+> E3-1275V2 CPU and 32GB 1600 MHz ECC RAM.  My application is fast
+> sensor data store and forward with UDP based file transfer using
+> multiple 10GbE interfaces.  So I do not have any concurrent loading,
+> I am mainly interested in optimizing sequential read/write
+> performance.
+>
+> Raw performance as measured by Gnome Disk Utility is around 4GB/s
+> sustained read/write.
 
-Those are some things to try for maximums.
-I notice ~30% hit if I go through the linux buffer system as well.
-Have you tried different write sizes?
+I don't know what that does - probably lots of concurrent IO to drive
+deep queue depths to get the absolute maximum possible from the
+device....
 
-i.e. 32M, 64M, 128 256... i.e. I notice optimal sizes after
-which things fall off...
+> With XFS buffer IO, my sequential writes max
+> out at about  2.5 GB/s.
 
-do you run 'time' on "dd" as well and see how much cpu it is using?
+CPU bound on single threaded IO, I'd guess.
 
-If you use bash, I find setting TIMEFORMAT to:
+> With Direct IO, the sequential writes are
+> around 3.5 GB/s but I noticed a drop-off in sequential reads for
+> smaller record sizes.
 
-"%2Rsec %2Uusr %2Ssys (%P%% cpu)"
+Almost certainly IO latency bound on single threaded IO.
 
-to be a useful format (1 line, and shows cpu % usage)...
+> I am trying to get the XFS sequential
+> read/writes as close to 4 GB/s as possible.
 
-just some random thoughts...
+Time to go look up how to use async IO or multithreaded direct
+IO.
 
+FWIW, the best benchmark is your application - none of what you've
+talked about even come close to modelling the data flow a
+network-disk-network store-and-forward system needs, and a data
+rates of 4GB/s you are going to benchmark the network devices
+flowing data at the same time you do disk IO....
+
+> I have documented all of the various mkfs.xfs options I have tried,
+> fstab mount options, iozone results, etc. in this forum thread:
+
+Configuration changes won't make any difference to data IO latency
+or CPU usage. IOWs, SSDs don't magically solve the problem of having
+to optimise the way the applications/benchmarks do IO and so no
+amount of tweaking the filesystem will get you to your goal if the
+application is deficient...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
