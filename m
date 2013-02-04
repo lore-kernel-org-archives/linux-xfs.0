@@ -1,27 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id AC01A7F54
-	for <xfs@oss.sgi.com>; Mon,  4 Feb 2013 07:18:36 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3B610AC004
-	for <xfs@oss.sgi.com>; Mon,  4 Feb 2013 05:18:32 -0800 (PST)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	8pXmzfXXX6PLZ7Cj for <xfs@oss.sgi.com>;
-	Mon, 04 Feb 2013 05:18:23 -0800 (PST)
-Date: Tue, 5 Feb 2013 00:18:11 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/3] xfs: add agskip=value mount option
-Message-ID: <20130204131811.GM2667@dastard>
-References: <20130129153914.801475275@sgi.com>
-	<20130129153914.976867239@sgi.com>
-	<20130130010430.GE7255@disturbed.disaster>
-	<20130130233203.GP27055@sgi.com>
-	<20130131061321.GI32297@disturbed.disaster>
-	<510AD2E2.1020309@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id 4485E7F56
+	for <xfs@oss.sgi.com>; Mon,  4 Feb 2013 08:51:33 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E3E8FAC006
+	for <xfs@oss.sgi.com>; Mon,  4 Feb 2013 06:51:32 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id yCCRcw7BGykC7y0b for
+	<xfs@oss.sgi.com>; Mon, 04 Feb 2013 06:51:29 -0800 (PST)
+Date: Mon, 4 Feb 2013 15:51:19 +0100 (CET)
+From: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>
+Subject: Re: [PATCH 10/18] mm: teach truncate_inode_pages_range() to handle
+	non page aligned ranges
+In-Reply-To: <20130201151502.59398b29.akpm@linux-foundation.org>
+Message-ID: <alpine.LFD.2.00.1302041510090.3225@localhost>
+References: <1359715424-32318-1-git-send-email-lczerner@redhat.com>
+	<1359715424-32318-11-git-send-email-lczerner@redhat.com>
+	<20130201151502.59398b29.akpm@linux-foundation.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <510AD2E2.1020309@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,93 +30,239 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Rich Johnston <rjohnston@sgi.com>
-Cc: Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Hugh Dickins <hughd@google.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Lukas Czerner <lczerner@redhat.com>, linux-ext4@vger.kernel.org
 
-On Thu, Jan 31, 2013 at 02:24:02PM -0600, Rich Johnston wrote:
-> On 01/31/2013 12:13 AM, Dave Chinner wrote:
-> >On Wed, Jan 30, 2013 at 05:32:03PM -0600, Ben Myers wrote:
-> >>Hey Dave,
-> >>
-> >>On Wed, Jan 30, 2013 at 12:04:30PM +1100, Dave Chinner wrote:
-> >>>On Tue, Jan 29, 2013 at 09:39:15AM -0600, rjohnston@sgi.com wrote:
-> >>>>The agskip mount option specifies  the allocation group, (AG) for a new
-> >>>>file, relative to the start of the last created file. agskip has the
-> >>>>opposite effect of the rotorstep  system tunable  parameter.   Each
-> >>>>new  file  to  be placed in the location lastAG + agskipValue,
-> >>>>where lastAG is the allocation group of the last created file.
-> >>>>
-> >>>>For example, agskip=3 means each new file will be  allocated  three  AGs  away
-> >>>>from the starting AG of the most recently created file.
-> >>>
-> >>>Overall, I'm wondering if this is the right way to approach this
-> >>>problem.
+On Fri, 1 Feb 2013, Andrew Morton wrote:
+
+> Date: Fri, 1 Feb 2013 15:15:02 -0800
+> From: Andrew Morton <akpm@linux-foundation.org>
+> To: Lukas Czerner <lczerner@redhat.com>
+> Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org,
+>     linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+>     xfs@oss.sgi.com, Hugh Dickins <hughd@google.com>
+> Subject: Re: [PATCH 10/18] mm: teach truncate_inode_pages_range() to handle
+>     non page aligned ranges
 > 
-> I did not see any references to the patchset you referenced below
-> when I was  working on submitting this patchset. Thanks for pointing
-> it out.
+> On Fri,  1 Feb 2013 11:43:36 +0100
+> Lukas Czerner <lczerner@redhat.com> wrote:
 > 
-> >http://oss.sgi.com/archives/xfs/2009-02/msg00250.html
+> > This commit changes truncate_inode_pages_range() so it can handle non
+> > page aligned regions of the truncate. Currently we can hit BUG_ON when
+> > the end of the range is not page aligned, but we can handle unaligned
+> > start of the range.
+> > 
+> > Being able to handle non page aligned regions of the page can help file
+> > system punch_hole implementations and save some work, because once we're
+> > holding the page we might as well deal with it right away.
+> > 
+> > In previous commits we've changed ->invalidatepage() prototype to accept
+> > 'length' argument to be able to specify range to invalidate. No we can
+> > use that new ability in truncate_inode_pages_range().
 > 
-> The patchset (pluggable allocation policies) above looks very
-> promising and I would like to port it to top of tree and use it
-> instead of my agskip proposal.  Are there any changes to this
-> patchset we should discuss before I start.
+> The change seems sensible.
+> 
+> > This was based on the code provided by Hugh Dickins
+> 
+> Despite this ;)
+> 
+> > changes to make use of do_invalidatepage_range().
+> >
+> > ...
+> >
+> >  void truncate_inode_pages_range(struct address_space *mapping,
+> >  				loff_t lstart, loff_t lend)
+> >  {
+> > -	const pgoff_t start = (lstart + PAGE_CACHE_SIZE-1) >> PAGE_CACHE_SHIFT;
+> > -	const unsigned partial = lstart & (PAGE_CACHE_SIZE - 1);
+> > +	pgoff_t start = (lstart + PAGE_CACHE_SIZE - 1) >> PAGE_CACHE_SHIFT;
+> > +	pgoff_t end = (lend + 1) >> PAGE_CACHE_SHIFT;
+> > +	unsigned int partial_start = lstart & (PAGE_CACHE_SIZE - 1);
+> > +	unsigned int partial_end = (lend + 1) & (PAGE_CACHE_SIZE - 1);
+> >  	struct pagevec pvec;
+> >  	pgoff_t index;
+> > -	pgoff_t end;
+> >  	int i;
+> 
+> This is starting to get pretty hairy.  Some of these "end" variables
+> are inclusive and some are exclusive.
 
-Well, apart from the fact you'll probably have to rewrite parts of
-it from the ground up because the xfs_bmap.c code and inode
-allocation code has been significantly factored since those patches
-were written. Porting them, IMO, is mostly not an option because the
-chance of missing bug fixes and enhancements from the past 5 years
-is too great.
+Yes, I agree that it's little bit confusing.
 
-Also, the patchset was still at the proof of concept stage, and some
-of the stuff may not be supportable. e.g. the policy templates and
-multiple instantiation code. They were wild ideas I was trying to
-see if I could get to work, so they may well be something we don't
-really want to try to do.
+> 
+> Can we improve things?  We can drop all this tiresome
+> intialisation-at-declaration-site stuff and do:
 
-Also, the patch set is really an encoding of work in progress, not a
-finished and refined patch set. Several of the patches rework the
-same code over and over again and, for example, the on-disk
-representation of the allocation policy is changed at least once
-during the series. The on-disk format should be defined once during
-a mergable patch series and not changed at all, so this shows that
-the patch set is really a line of research rather than a
-ready-for-production piece of work.
+Yes, I agree that this will make things cleaner.
 
-Further, the userspace interfaces will need to be completely
-rethought. Looking at the per-parameter ioctl interface, it's pretty
-nasty and convoluted probably isn't eaily usable - i never wrote any
-userspace code for it, so it's just an encoding of an idea more than
-anything.
+> 
+> 	pgoff_t start;			/* inclusive */
+> 	pgoff_t end;			/* exclusive */
+> 	unsigned int partial_start;	/* inclusive */
+> 	unsigned int partial_end;	/* exclusive */
+> 	struct pagevec pvec;
+> 	pgoff_t index;
+> 	int i;
+> 
+> 	start = (lstart + PAGE_CACHE_SIZE - 1) >> PAGE_CACHE_SHIFT;
+> 	end = (lend + 1) >> PAGE_CACHE_SHIFT;
+> 	partial_start = lstart & (PAGE_CACHE_SIZE - 1);
+> 	partial_end = (lend + 1) & (PAGE_CACHE_SIZE - 1);
+> 
+> And lo, I see that the "inclusive" thing only applies to incoming arg
+> `lend'.  I seem to recall that being my handiwork and somehow I seem to
+> not have documented the reason: it was so that we can pass
+> lend=0xffffffff into truncate_inode_pages_range) to indicate "end of
+> file".
+> 
+> Your code handles this in a rather nasty fashion.  It permits the above
+> overflow to occur then later fixes it up with an explicit test for -1. 
+> And it then sets `end' (which is a pgoff_t!) to -1.
+> 
+> I guess this works, but let's make it clearer, with something like:
+> 
+> 	if (lend == -1) {
+> 		/*
+> 		 * Nice explanation goes here
+> 		 */
+> 		end = -1;
+> 	} else {
+> 		end = (lend + 1) >> PAGE_CACHE_SHIFT;
+> 	}
 
-Finally, it doesn't have any of the storage configuration
-information encoded into it (eg. for a generic ag_skip like
-solution) and no interface to add that information.  That was work
-that was going to build on this policy interface, but now I think it
-is completely orthogonal to the policy interface as it has
-completely separate uses (like defining failure domains).
+Good point, this is better.
 
-Right now I think that it is better to add the storage layout
-information to the filesystem, then worry about how generic
-allocation policies can use that information. However, doing an
-initial abstraction of the inode and data allocation code (patches
-3-7) configured via the existing mount options and making stuff like
-the "everything inherits from the parent inode" functionality and
-the inode64->inode32 transitions during growfs work correctly would
-be a good set of functionality that coul dbe pulled mostly unchanged
-from the patch set. That abstraction is relatively straight
-forward and lays the foundation for more complex allocation policies
-to be implemented, but doesn't go as far as some of the semi-insane
-ideas I was trying out later in the series...
+> 
+> 
+> >  	cleancache_invalidate_inode(mapping);
+> >  	if (mapping->nrpages == 0)
+> >  		return;
+> >  
+> > -	BUG_ON((lend & (PAGE_CACHE_SIZE - 1)) != (PAGE_CACHE_SIZE - 1));
+> > -	end = (lend >> PAGE_CACHE_SHIFT);
+> > +	if (lend == -1)
+> > +		end = -1;	/* unsigned, so actually very big */
+> >  
+> >  	pagevec_init(&pvec, 0);
+> >  	index = start;
+> > -	while (index <= end && pagevec_lookup(&pvec, mapping, index,
+> > -			min(end - index, (pgoff_t)PAGEVEC_SIZE - 1) + 1)) {
+> > +	while (index < end && pagevec_lookup(&pvec, mapping, index,
+> > +			min(end - index, (pgoff_t)PAGEVEC_SIZE))) {
+> 
+> Here, my brain burst.  You've effectively added 1 to (end - index).  Is
+> that correct?
 
-Cheers,
+Not sure what do you mean by that. I have to admit that I've changed
+the 'end' variable from previous inclusive to exclusive for two
+reasons. First of all it makes more sense to me and second of all it
+solves the pain where we're dealing with the partial truncation within
+the first page.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> 
+> >  		mem_cgroup_uncharge_start();
+> >  		for (i = 0; i < pagevec_count(&pvec); i++) {
+> >  			struct page *page = pvec.pages[i];
+> >  
+> >  			/* We rely upon deletion not changing page->index */
+> >  			index = page->index;
+> > -			if (index > end)
+> > +			if (index >= end)
+> 
+> hm.  This change implies that the patch changed `end' from inclusive to
+> exclusive.  But the patch didn't do that.
+
+Yes, the patch is doing exactly that, but I should have documented I
+guess, sorry about that...
+
+> 
+> >  				break;
+> >  
+> >  			if (!trylock_page(page))
+> > @@ -250,27 +247,51 @@ void truncate_inode_pages_range(struct address_space *mapping,
+> >  		index++;
+> >  	}
+> >  
+> > -	if (partial) {
+> > +	if (partial_start) {
+> >  		struct page *page = find_lock_page(mapping, start - 1);
+> >  		if (page) {
+> > +			unsigned int top = PAGE_CACHE_SIZE;
+> > +			if (start > end) {
+> 
+> How can this be true?
+
+It can in the case that we're dealing with partial truncation within the
+single page. Because 'start' and 'end' covers only the full pages.
+Partial pages are covered with 'partial_start' and 'partial_end' and
+it is obvious which page it is.. either the one before start or/and the
+one at the 'end'.
+
+
+> 
+> > +				top = partial_end;
+> > +				partial_end = 0;
+> > +			}
+> > +			wait_on_page_writeback(page);
+> > +			zero_user_segment(page, partial_start, top);
+> > +			cleancache_invalidate_page(mapping, page);
+> > +			if (page_has_private(page))
+> > +				do_invalidatepage(page, partial_start,
+> > +						  top - partial_start);
+> > +			unlock_page(page);
+> > +			page_cache_release(page);
+> > +		}
+> > +	}
+> > +	if (partial_end) {
+> > +		struct page *page = find_lock_page(mapping, end);
+> > +		if (page) {
+> >  			wait_on_page_writeback(page);
+> > -			truncate_partial_page(page, partial);
+> > +			zero_user_segment(page, 0, partial_end);
+> > +			cleancache_invalidate_page(mapping, page);
+> > +			if (page_has_private(page))
+> > +				do_invalidatepage(page, 0,
+> > +						  partial_end);
+> >  			unlock_page(page);
+> >  			page_cache_release(page);
+> >  		}
+> >  	}
+> > +	if (start >= end)
+> > +		return;
+> 
+> Again, how can start be greater than end??
+> 
+> I suspect a lot of the confustion and churn in here is due to `end'
+> being kinda-exclusive.  If `lend' was 4094 then `end' is zero.  But if
+> `lend' was 4095' then `end' is 1.  So even though `end' refers to the same
+> page, it has a different value!
+
+As I mentioned above 'start' and 'end' covers only full pages.
+Partial pages are outside the range and those are covered by the
+'partial_start' and 'partial_end' variables. Also as you mentioned
+'lend' is inclusive.
+
+That said, in your example 'end' does not refer to the same page,
+because if 'lend' is 4094 we have a partial truncate (and start-end
+does not cover that) and if 'lend' is 4096 we have a full page
+truncate (assuming that 'start' is zero) so we cover the whole range
+with 'end' being exclusive.
+
+> 
+> Would the code be simpler and clearer if we were to make `end' "pgoff_t
+> of the last-affected page", and document it as such?
+> 
+
+I am not sure about this. It make better sense to me with 'start'
+and 'end' covering the range of fully truncated pages with 'end'
+being of course exclusive.
+
+I hope I explained myself well enough :). Are you ok with this king
+of approach ? If so, I'll resend the patch set without the
+initialisation-at-declaration.
+
+Thanks!
+-Lukas
 
 _______________________________________________
 xfs mailing list
