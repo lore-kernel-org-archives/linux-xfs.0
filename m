@@ -1,15 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 25A5D7F52
-	for <xfs@oss.sgi.com>; Tue,  5 Feb 2013 09:39:47 -0600 (CST)
-Message-ID: <511127C2.2010409@sgi.com>
-Date: Tue, 05 Feb 2013 09:39:46 -0600
-From: Mark Tinguely <tinguely@sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 284A97F52
+	for <xfs@oss.sgi.com>; Tue,  5 Feb 2013 12:22:51 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A265CAC003
+	for <xfs@oss.sgi.com>; Tue,  5 Feb 2013 10:22:50 -0800 (PST)
+Received: from thunder.skymagik.net (thunder.skymagik.net [76.75.207.68]) by
+	cuda.sgi.com with ESMTP id RhURIfDJRVKUlUui for
+	<xfs@oss.sgi.com>; Tue, 05 Feb 2013 10:22:49 -0800 (PST)
+Message-ID: <11083.192.104.24.222.1360088562.squirrel@secure.skymagik.net>
+Date: Tue, 5 Feb 2013 13:22:42 -0500 (EST)
+Subject: Re: XFS appears to cause strange hang with md raid1 on reboot
+From: "Tom" <storm9c1@skymagik.com>
+In-Reply-To: <20130204125510.GL2667@dastard>
+References: <32271.192.104.24.222.1359415698.squirrel@secure.skymagik.net>
+	<20130129151833.GF27055@sgi.com>
+	<42720.75.149.17.233.1359515780.squirrel@secure.skymagik.net>
+	<20130130234650.GE32297@disturbed.disaster>
+	<45702.75.149.17.233.1359599410.squirrel@secure.skymagik.net>
+	<20130204125510.GL2667@dastard>
 MIME-Version: 1.0
-Subject: Re: [PATCH 0/4] xfstests: seek data/hole and hole punching
-	improvements
-References: <1359358371-21411-1-git-send-email-wenqing.lz@taobao.com>
-In-Reply-To: <1359358371-21411-1-git-send-email-wenqing.lz@taobao.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,56 +28,34 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Zheng Liu <gnehzuil.liu@gmail.com>
-Cc: Jie Liu <jeff.liu@oracle.com>, linux-ext4@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, Zheng Liu <wenqing.lz@taobao.com>, xfs@oss.sgi.com
+To: david@fromorbit.com
+Cc: storm9c1@skymagik.com, xfs@oss.sgi.com
 
-On 01/28/13 01:32, Zheng Liu wrote:
-> Hi all,
+In a previous message, Dave Chinner wrote:
 >
-> Here is my first try to improve seek data/hole and hole punching test
-> cases in xfstests.  The key issue in 255 and 285 is that they assume that
-> all file systems that are tested support unwritten extent preallocation.
-> Before 3.8 kernel it is correct.  But now ext4 file system has ability
-> to seek data/hole and punch a hole for a file w/o unwritten extent.  So
-> it is time to improve these test cases.
+> Which doesn't tell us why the filesystem was not unmounted. We need to
+> know why/how the unmount failed to solve the problem, so you'll need to
+> do some debugging of the unmount to try to work that out...
 >
-> In this patch series it calls _require_xfs_io_falloc in 255 and 285 to
-> make sure that unwritten extent is supprted by tested file system.  A
-> new argument '-t' is added into seek_sanity_test to check a file system
-> that supports seek data/hole or not.  In the mean time _require_seek_data_hole
-> is defined to be used by all tests.
->
-> Further two new test cases are created to test seek data/hole and hole
-> punching w/o unwritten extent, which do the same thing like 255 and 285
-> except that they don't do some test cases which are related to unwritten
-> extent.
->
-> Any comments or feedbacks are welcome.
->
-> Thanks,
-> 						- Zheng
 
-Hi Zheng,
+Thanks Dave.
 
-I wonder if reviving the idea of putting the SEEK_DATA/SEEK_HOLE
-feature into xfs_io would simplify the existing tests and future ones.
+I can work on that tonight.
 
-My last version of the SEEK_DATA/SEEK_HOLE xfs_io extension should be
-sightly changed to make the hole only test output to be consistent with
-the data test; namely, it should end with an EOF entry.
+Oddly, since the problem is kernel related (308 doesn't do it, 348 does),
+the system shuts down the same way no matter what kernel I'm using.  So
+what would be the difference?  The umounts and running processes shouldn't
+change.  Just seems to me that some resource isn't being released.  And
+only with kernel 348 and XFS.  Quite puzzling..........
 
-	http://oss.sgi.com/archives/xfs/2012-11/msg00106.html
+Any suggestions on how I would debug this?
 
-I know there will be some result filtering needed for holes which the C
-program based tests already provide.
+-- Tom
 
-Just a thought.
-
---Mark.
 
 _______________________________________________
 xfs mailing list
