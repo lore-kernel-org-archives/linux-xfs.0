@@ -1,28 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 33B9A7F52
-	for <xfs@oss.sgi.com>; Tue,  5 Feb 2013 15:32:14 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 117D58F8039
-	for <xfs@oss.sgi.com>; Tue,  5 Feb 2013 13:32:10 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	8THFjEgXvZzoEIEw for <xfs@oss.sgi.com>;
-	Tue, 05 Feb 2013 13:32:09 -0800 (PST)
-Date: Wed, 6 Feb 2013 08:32:06 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS appears to cause strange hang with md raid1 on reboot
-Message-ID: <20130205213206.GP2667@dastard>
-References: <32271.192.104.24.222.1359415698.squirrel@secure.skymagik.net>
-	<20130129151833.GF27055@sgi.com>
-	<42720.75.149.17.233.1359515780.squirrel@secure.skymagik.net>
-	<20130130234650.GE32297@disturbed.disaster>
-	<45702.75.149.17.233.1359599410.squirrel@secure.skymagik.net>
-	<20130204125510.GL2667@dastard>
-	<11083.192.104.24.222.1360088562.squirrel@secure.skymagik.net>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <11083.192.104.24.222.1360088562.squirrel@secure.skymagik.net>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 1E6857F52
+	for <xfs@oss.sgi.com>; Tue,  5 Feb 2013 16:11:46 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 0AE69304053
+	for <xfs@oss.sgi.com>; Tue,  5 Feb 2013 14:11:42 -0800 (PST)
+From: Herton Ronaldo Krzesinski <herton.krzesinski@canonical.com>
+Subject: [PATCH 65/93] xfs: Fix possible use-after-free with AIO
+Date: Tue,  5 Feb 2013 20:06:54 -0200
+Message-Id: <1360102042-10732-66-git-send-email-herton.krzesinski@canonical.com>
+In-Reply-To: <1360102042-10732-1-git-send-email-herton.krzesinski@canonical.com>
+References: <1360102042-10732-1-git-send-email-herton.krzesinski@canonical.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,50 +19,56 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Tom <storm9c1@skymagik.com>
-Cc: xfs@oss.sgi.com
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org, kernel-team@lists.ubuntu.com
+Cc: Ben Myers <bpm@sgi.com>, Herton Ronaldo Krzesinski <herton.krzesinski@canonical.com>, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
 
-On Tue, Feb 05, 2013 at 01:22:42PM -0500, Tom wrote:
-> In a previous message, Dave Chinner wrote:
-> >
-> > Which doesn't tell us why the filesystem was not unmounted. We need to
-> > know why/how the unmount failed to solve the problem, so you'll need to
-> > do some debugging of the unmount to try to work that out...
-> >
-> 
-> Thanks Dave.
-> 
-> I can work on that tonight.
-> 
-> Oddly, since the problem is kernel related (308 doesn't do it, 348 does),
-> the system shuts down the same way no matter what kernel I'm using.  So
-> what would be the difference?  The umounts and running processes shouldn't
-> change.  Just seems to me that some resource isn't being released.  And
-> only with kernel 348 and XFS.  Quite puzzling..........
-> 
-> Any suggestions on how I would debug this?
+3.5.7.5 -stable review patch.  If anyone has any objections, please let me know.
 
-Find out if the unmount is returning an error first. If there is no
-error, then you need to find what is doing bind mounts on your
-system and make sure they are unmounted properly before the final
-unmount is done. If lazy unmount is being done, make it a normal
-unmount an see where the unmount is getting stcuk or taking time to
-complete by using sysrq-w if it gets delayed for any length of time.
+------------------
 
-FWIW, because this is a old, old kernel, event tracing is not
-available, so the single most useful tool for tracking this down is
-not available...
+From: Jan Kara <jack@suse.cz>
 
-Cheers,
+commit 4b05d09c18d9aa62d2e7fb4b057f54e5a38963f5 upstream.
 
-Dave.
+Running AIO is pinning inode in memory using file reference. Once AIO
+is completed using aio_complete(), file reference is put and inode can
+be freed from memory. So we have to be sure that calling aio_complete()
+is the last thing we do with the inode.
+
+CC: xfs@oss.sgi.com
+CC: Ben Myers <bpm@sgi.com>
+Signed-off-by: Jan Kara <jack@suse.cz>
+Reviewed-by: Ben Myers <bpm@sgi.com>
+Signed-off-by: Ben Myers <bpm@sgi.com>
+Signed-off-by: Herton Ronaldo Krzesinski <herton.krzesinski@canonical.com>
+---
+ fs/xfs/xfs_aops.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 8dad722..6868548 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -86,11 +86,11 @@ xfs_destroy_ioend(
+ 	}
+ 
+ 	if (ioend->io_iocb) {
++		inode_dio_done(ioend->io_inode);
+ 		if (ioend->io_isasync) {
+ 			aio_complete(ioend->io_iocb, ioend->io_error ?
+ 					ioend->io_error : ioend->io_result, 0);
+ 		}
+-		inode_dio_done(ioend->io_inode);
+ 	}
+ 
+ 	mempool_free(ioend, xfs_ioend_pool);
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.9.5
 
 _______________________________________________
 xfs mailing list
