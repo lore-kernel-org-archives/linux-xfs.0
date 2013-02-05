@@ -1,16 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1E6857F52
-	for <xfs@oss.sgi.com>; Tue,  5 Feb 2013 16:11:46 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id CA1657F52
+	for <xfs@oss.sgi.com>; Tue,  5 Feb 2013 17:05:25 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0AE69304053
-	for <xfs@oss.sgi.com>; Tue,  5 Feb 2013 14:11:42 -0800 (PST)
-From: Herton Ronaldo Krzesinski <herton.krzesinski@canonical.com>
-Subject: [PATCH 65/93] xfs: Fix possible use-after-free with AIO
-Date: Tue,  5 Feb 2013 20:06:54 -0200
-Message-Id: <1360102042-10732-66-git-send-email-herton.krzesinski@canonical.com>
-In-Reply-To: <1360102042-10732-1-git-send-email-herton.krzesinski@canonical.com>
-References: <1360102042-10732-1-git-send-email-herton.krzesinski@canonical.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id ACC3130406A
+	for <xfs@oss.sgi.com>; Tue,  5 Feb 2013 15:05:25 -0800 (PST)
+Received: from thunder.skymagik.net (thunder.skymagik.net [76.75.207.68]) by
+	cuda.sgi.com with ESMTP id bzsqlA6Qw5IYa1l7 for
+	<xfs@oss.sgi.com>; Tue, 05 Feb 2013 15:05:21 -0800 (PST)
+Message-ID: <31611.192.104.24.222.1360105520.squirrel@secure.skymagik.net>
+Date: Tue, 5 Feb 2013 18:05:20 -0500 (EST)
+Subject: Re: XFS appears to cause strange hang with md raid1 on reboot
+From: "Tom" <storm9c1@skymagik.com>
+In-Reply-To: <20130205213206.GP2667@dastard>
+References: <32271.192.104.24.222.1359415698.squirrel@secure.skymagik.net>
+	<20130129151833.GF27055@sgi.com>
+	<42720.75.149.17.233.1359515780.squirrel@secure.skymagik.net>
+	<20130130234650.GE32297@disturbed.disaster>
+	<45702.75.149.17.233.1359599410.squirrel@secure.skymagik.net>
+	<20130204125510.GL2667@dastard>
+	<11083.192.104.24.222.1360088562.squirrel@secure.skymagik.net>
+	<20130205213206.GP2667@dastard>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,56 +30,57 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org, kernel-team@lists.ubuntu.com
-Cc: Ben Myers <bpm@sgi.com>, Herton Ronaldo Krzesinski <herton.krzesinski@canonical.com>, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
+To: david@fromorbit.com
+Cc: storm9c1@skymagik.com, xfs@oss.sgi.com
 
-3.5.7.5 -stable review patch.  If anyone has any objections, please let me know.
+In a previous message, Dave Chinner wrote:
+>>
+>> Any suggestions on how I would debug this?
+>
+> Find out if the unmount is returning an error first. If there is no
+> error, then you need to find what is doing bind mounts on your
+> system and make sure they are unmounted properly before the final
+> unmount is done. If lazy unmount is being done, make it a normal
+> unmount an see where the unmount is getting stcuk or taking time to
+> complete by using sysrq-w if it gets delayed for any length of time.
+>
 
-------------------
+I agree.  However, I may be at the mercy of the upstream vendor.
+This is a completely stock CentOS system with minimal packages
+installed (save using XFS as the root fs).  Oracle Enterprise Linux
+as well as Scientific Linux also suffers from the same problem.
+It's curious because the upstream vendor must be doing something
+at shutdown to trigger this.  I will get my hands dirty tonight and
+see how the system performs these umounts at shutdown.
 
-From: Jan Kara <jack@suse.cz>
+I am also prepared to blacklist the entire CentOS/RHEL 5.9 since
+I've been struggling with this for a few weeks now.  I am getting
+close to giving up and moving on.  I mean, I ran into this during
+regression testing before moving my "latest" pointer from 5.8 to 5.9.
+I can easily keep latest at 5.8 and not cause impact for now (which is
+why I use the version "pointer" mentality).  But I'm also worried about
+no upgrade path until this is resolved.  I am stubborn about using XFS
+exclusively.  Otherwise I could just deploy on ext3 and never see this.
 
-commit 4b05d09c18d9aa62d2e7fb4b057f54e5a38963f5 upstream.
 
-Running AIO is pinning inode in memory using file reference. Once AIO
-is completed using aio_complete(), file reference is put and inode can
-be freed from memory. So we have to be sure that calling aio_complete()
-is the last thing we do with the inode.
+> FWIW, because this is a old, old kernel, event tracing is not
+> available, so the single most useful tool for tracking this down is not
+> available...
 
-CC: xfs@oss.sgi.com
-CC: Ben Myers <bpm@sgi.com>
-Signed-off-by: Jan Kara <jack@suse.cz>
-Reviewed-by: Ben Myers <bpm@sgi.com>
-Signed-off-by: Ben Myers <bpm@sgi.com>
-Signed-off-by: Herton Ronaldo Krzesinski <herton.krzesinski@canonical.com>
----
- fs/xfs/xfs_aops.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Yeah, I know.  Welcome to the RHEL/CentOS/OEL/SL world.  That's why I use
+Ubuntu for the desktop (easy to play with, easy to break, easy to fix) and
+RHEL for servers (hard to break, but when it does break, watch out).
+It's been a long time since I saw RHEL break this bad...I'm usually pretty
+good at working around problems like this.  But this one has me stumped.
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 8dad722..6868548 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -86,11 +86,11 @@ xfs_destroy_ioend(
- 	}
- 
- 	if (ioend->io_iocb) {
-+		inode_dio_done(ioend->io_inode);
- 		if (ioend->io_isasync) {
- 			aio_complete(ioend->io_iocb, ioend->io_error ?
- 					ioend->io_error : ioend->io_result, 0);
- 		}
--		inode_dio_done(ioend->io_inode);
- 	}
- 
- 	mempool_free(ioend, xfs_ioend_pool);
--- 
-1.7.9.5
+Thanks again.  I'll keep you posted.
+
+-- Tom
+
 
 _______________________________________________
 xfs mailing list
