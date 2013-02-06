@@ -1,32 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2E5827F52
-	for <linux-xfs@oss.sgi.com>; Wed,  6 Feb 2013 00:29:55 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D0DB6AC001
-	for <linux-xfs@oss.sgi.com>; Tue,  5 Feb 2013 22:29:51 -0800 (PST)
-Received: from plane.gmane.org (plane.gmane.org [80.91.229.3]) by cuda.sgi.com
-	with ESMTP id zqDXvSWP2mhjDUSk (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <linux-xfs@oss.sgi.com>;
-	Tue, 05 Feb 2013 22:29:50 -0800 (PST)
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1U2yWD-00015M-4w
-	for linux-xfs@oss.sgi.com; Wed, 06 Feb 2013 07:30:06 +0100
-Received: from CPE-121-219-138-16.lnse2.lon.bigpond.net.au ([121.219.138.16])
-	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-	id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Wed, 06 Feb 2013 07:30:05 +0100
-Received: from nathans by CPE-121-219-138-16.lnse2.lon.bigpond.net.au with
-	local (Gmexim 0.1 (Debian)) id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Wed, 06 Feb 2013 07:30:05 +0100
-From: Nathan Scott <nathans@debian.org>
-Subject: Re: [PATCH 0/4] Refactor release scripts to conform to using
-	=?utf-8?b?Z2l0CWFyY2hpdmU=?=
-Date: Wed, 6 Feb 2013 06:28:10 +0000 (UTC)
-Message-ID: <loom.20130206T072310-821@post.gmane.org>
-References: <50F44B2E.9050408@sgi.com> <20130201190930.GX27055@sgi.com>
-	<20130206011547.GT2667@dastard>
-Mime-Version: 1.0
+	by oss.sgi.com (Postfix) with ESMTP id 7158E7F3F
+	for <xfs@oss.sgi.com>; Wed,  6 Feb 2013 06:41:48 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0386DAC002
+	for <xfs@oss.sgi.com>; Wed,  6 Feb 2013 04:41:47 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id AERWdoPGAdA0p6q2 for
+	<xfs@oss.sgi.com>; Wed, 06 Feb 2013 04:41:47 -0800 (PST)
+Received: from int-mx12.intmail.prod.int.phx2.redhat.com
+	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r16Cfjr9010104
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Wed, 6 Feb 2013 07:41:45 -0500
+Received: from bfoster.bfoster (dhcp-191-48.bos.redhat.com [10.16.191.48])
+	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id r16CfjtI024563
+	for <xfs@oss.sgi.com>; Wed, 6 Feb 2013 07:41:45 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v2 1/2] xfs: conditionally force log on trylock failure of
+	pinned/stale buf
+Date: Wed,  6 Feb 2013 07:44:40 -0500
+Message-Id: <1360154681-28246-2-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1360154681-28246-1-git-send-email-bfoster@redhat.com>
+References: <1360154681-28246-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,58 +32,64 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Dave Chinner <david <at> fromorbit.com> writes:
+xfs_force_log() is not safe from all contexts. Add a flag parameter
+to xfs_buf_trylock() to specify when the force is appropriate and
+create a macro to preserve current behavior.
 
-> 
-> It breaks the 'make deb' command for all the trees.
-> 
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_buf.c |    8 +++++---
+ fs/xfs/xfs_buf.h |    3 ++-
+ 2 files changed, 7 insertions(+), 4 deletions(-)
 
-(thanks for checking!)
-
-> The debian package build creates a link tree so that it builds
-> outside the main source tree (e.g. in ./xfsprogs-3.1.10) and as part
-> of the build it runs 'make dist' to build a tarball from that link
-> tree. That now fails with:
-> 
-> fatal: current working directory is untracked
-> 
-> coming from the git archive command that is now used to build the
-> tarball.
-> 
-> Nathan, can the debian package build use git-archive? I'm under the
-> impression that you have to be able to build debian packages from a
-> source tarball or a source package, and so the build can't rely on
-> being inside a VCS controlled tree. That rules out using git archive
-> for tarball creation...
-> 
-
-IIRC, the requirement is to be building in a tree that had a basename
-of for <package>-<version> - hence the link'd tree build previously.
-If that can be maintained somehow, the build should be fine.  Symlinks
-did not work very well (IIRC) - the build tools might've used basename
-or realpath or something like that, but I do remember trying that.
-
-> Also, given that the previous tarball creation used the same link
-> tree build as the debian package build (i.e. make source-link), that
-> implies the debian pacakges are going to be missing files using this
-> technique. Doesn't that mean we have to fix the file list being fed
-> into the source-link target regardless of whether we use git archive
-> to build the tarball?
-
-The source tarball definitely needs to have the package-version prefix
-for all the files it contains - has a mechanism to acheive that been
-found?
-
-cheers.
-
---
-Nathan
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index fbbb9eb..2e04a44 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -943,15 +943,17 @@ xfs_buf_rele(
+  *	to push on stale inode buffers.
+  */
+ int
+-xfs_buf_trylock(
+-	struct xfs_buf		*bp)
++__xfs_buf_trylock(
++	struct xfs_buf		*bp,
++	bool			force_log)
+ {
+ 	int			locked;
+ 
+ 	locked = down_trylock(&bp->b_sema) == 0;
+ 	if (locked)
+ 		XB_SET_OWNER(bp);
+-	else if (atomic_read(&bp->b_pin_count) && (bp->b_flags & XBF_STALE))
++	else if (force_log &&
++		 atomic_read(&bp->b_pin_count) && (bp->b_flags & XBF_STALE))
+ 		xfs_log_force(bp->b_target->bt_mount, 0);
+ 
+ 	trace_xfs_buf_trylock(bp, _RET_IP_);
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index 433a12e..667b723 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -258,7 +258,8 @@ extern void xfs_buf_free(xfs_buf_t *);
+ extern void xfs_buf_rele(xfs_buf_t *);
+ 
+ /* Locking and Unlocking Buffers */
+-extern int xfs_buf_trylock(xfs_buf_t *);
++#define xfs_buf_trylock(bp) __xfs_buf_trylock(bp, true)
++extern int __xfs_buf_trylock(xfs_buf_t *, bool);
+ extern void xfs_buf_lock(xfs_buf_t *);
+ extern void xfs_buf_unlock(xfs_buf_t *);
+ #define xfs_buf_islocked(bp) \
+-- 
+1.7.7.6
 
 _______________________________________________
 xfs mailing list
