@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 619197F3F
-	for <xfs@oss.sgi.com>; Wed,  6 Feb 2013 14:24:47 -0600 (CST)
-Message-ID: <5112BC0B.7070702@sgi.com>
-Date: Wed, 06 Feb 2013 14:24:43 -0600
+	by oss.sgi.com (Postfix) with ESMTP id 562AF7F3F
+	for <xfs@oss.sgi.com>; Wed,  6 Feb 2013 14:25:22 -0600 (CST)
+Message-ID: <5112BC31.8040001@sgi.com>
+Date: Wed, 06 Feb 2013 14:25:21 -0600
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH v2 1/2] xfs: conditionally force log on trylock failure
-	of pinned/stale buf
+Subject: Re: [PATCH v2 2/2] xfs: disable log force in xfs_buf_item_push()
+	to avoid xa_lock recursion
 References: <1360154681-28246-1-git-send-email-bfoster@redhat.com>
-	<1360154681-28246-2-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1360154681-28246-2-git-send-email-bfoster@redhat.com>
+	<1360154681-28246-3-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1360154681-28246-3-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,16 +27,17 @@ To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
 On 02/06/13 06:44, Brian Foster wrote:
-> xfs_force_log() is not safe from all contexts. Add a flag parameter
-> to xfs_buf_trylock() to specify when the force is appropriate and
-> create a macro to preserve current behavior.
+> If the trylock fails and the buffer is pinned and stale, the
+> resulting xfs_log_force() can lead to lock recursion on the ailp
+> xa_lock. Call __xfs_buf_trylock() to attempt the buf lock with
+> xa_lock held, but to avoid the log force. If the trylock had raced
+> with the buffer being pinned, return XFS_ITEM_PINNED such that
+> xfsaild will pend up a log force on the next scan.
 >
 > Signed-off-by: Brian Foster<bfoster@redhat.com>
 > ---
->   fs/xfs/xfs_buf.c |    8 +++++---
->   fs/xfs/xfs_buf.h |    3 ++-
->   2 files changed, 7 insertions(+), 4 deletions(-)
->
+>   fs/xfs/xfs_buf_item.c |   14 +++++++++++++-
+>   1 files changed, 13 insertions(+), 1 deletions(-)
 
 Looks good.
 
