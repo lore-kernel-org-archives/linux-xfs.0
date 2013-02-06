@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id BC6167F60
-	for <xfs@oss.sgi.com>; Tue,  5 Feb 2013 18:44:47 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id AD1E07F62
+	for <xfs@oss.sgi.com>; Tue,  5 Feb 2013 19:15:57 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 89632304032
-	for <xfs@oss.sgi.com>; Tue,  5 Feb 2013 16:44:47 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 990078F8035
+	for <xfs@oss.sgi.com>; Tue,  5 Feb 2013 17:15:54 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	w8gj7OHJ4b0bEK20 for <xfs@oss.sgi.com>;
-	Tue, 05 Feb 2013 16:44:45 -0800 (PST)
-Date: Wed, 6 Feb 2013 11:44:42 +1100
+	xabKOM9SVjhBKpTk for <xfs@oss.sgi.com>;
+	Tue, 05 Feb 2013 17:15:50 -0800 (PST)
+Date: Wed, 6 Feb 2013 12:15:47 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs deadlock on buffer semaphore while reading directory
-Message-ID: <20130206004442.GS2667@dastard>
-References: <20130202192007.GS30577@one.firstfloor.org>
-	<510D6EDE.1080409@sgi.com> <510E054B.2070500@tlinx.org>
+Subject: Re: [PATCH 0/4] Refactor release scripts to conform to using git
+	archive
+Message-ID: <20130206011547.GT2667@dastard>
+References: <50F44B2E.9050408@sgi.com>
+ <20130201190930.GX27055@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <510E054B.2070500@tlinx.org>
+In-Reply-To: <20130201190930.GX27055@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,42 +31,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Linda Walsh <xfs@tlinx.org>
-Cc: xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: nathans@debian.org, xfs@oss.sgi.com, Andrew Dahl <adahl@sgi.com>
 
-On Sat, Feb 02, 2013 at 10:35:55PM -0800, Linda Walsh wrote:
+On Fri, Feb 01, 2013 at 01:09:30PM -0600, Ben Myers wrote:
+> On Mon, Jan 14, 2013 at 12:15:10PM -0600, Andrew Dahl wrote:
+> > The following four patches fix an issue seen during the last user space
+> > release where not all source files were included in xfsprogs.  They each
+> > change xfsprogs, xfstests, xfsdump, and dmapi to all use git archive for
+> > source tarball generation and add 'make realclean' in the release
+> > scripts to ensure the configure and m4/autotools temp files are refreshed.
 > 
-> 
-> Mark Tinguely wrote:
-> >On 02/02/13 13:20, Andi Kleen wrote:
-> >>
-> >>On a older 3.6-rc9 opensuse kernel I had the following deadlock with
-> >
-> >That looks like a hang fixed by the series:
-> >
-> >    http://oss.sgi.com/archives/xfs/2012-12/msg00071.html
-> ----
-> 
-> That may be so -- I used to see things like that on some older
-> kernels with random progs but with traces down in xfs..
-> 
-> Seemed to be rare and not cause problems....but don't notice those any
-> more...
-> 
-> Odd thing about my current probs -- my current system has been
-> up 12 days...but before that it had been up 43 days...
-> 
-> 
-> I can't get the buffers to 'free' no matter what
-> echo 3> /proc/sys/vm/drop_caches does nothing.
+> Applied this series.
 
-What buffers are you talking about? The deadlock is in metadata
-buffer handling, which you can't directly see, and will never be
-able to entirely free via drop caches.
+It breaks the 'make deb' command for all the trees.
 
-if you are talking about what is reported by the "free" command,
-then that number can be ignored as it is mostly meaningless for XFS
-filesystems....
+The debian package build creates a link tree so that it builds
+outside the main source tree (e.g. in ./xfsprogs-3.1.10) and as part
+of the build it runs 'make dist' to build a tarball from that link
+tree. That now fails with:
+
+fatal: current working directory is untracked
+
+coming from the git archive command that is now used to build the
+tarball.
+
+Nathan, can the debian package build use git-archive? I'm under the
+impression that you have to be able to build debian packages from a
+source tarball or a source package, and so the build can't rely on
+being inside a VCS controlled tree. That rules out using git archive
+for tarball creation...
+
+Also, given that the previous tarball creation used the same link
+tree build as the debian package build (i.e. make source-link), that
+implies the debian pacakges are going to be missing files using this
+technique. Doesn't that mean we have to fix the file list being fed
+into the source-link target regardless of whether we use git archive
+to build the tarball?
 
 Cheers,
 
