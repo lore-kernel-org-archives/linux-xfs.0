@@ -1,29 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2915E7F52
-	for <xfs@oss.sgi.com>; Wed,  6 Feb 2013 06:41:50 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id DF5FF7F56
+	for <xfs@oss.sgi.com>; Wed,  6 Feb 2013 06:41:53 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id F1B3C8F8049
-	for <xfs@oss.sgi.com>; Wed,  6 Feb 2013 04:41:49 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CEC25304051
+	for <xfs@oss.sgi.com>; Wed,  6 Feb 2013 04:41:50 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id P4TcO7SZ7oftWq7G for
-	<xfs@oss.sgi.com>; Wed, 06 Feb 2013 04:41:46 -0800 (PST)
-Received: from int-mx12.intmail.prod.int.phx2.redhat.com
-	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r16Cfj1o017685
+	cuda.sgi.com with ESMTP id IlnMflE8LElRfZzC for
+	<xfs@oss.sgi.com>; Wed, 06 Feb 2013 04:41:47 -0800 (PST)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r16Cfjdx008048
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
 	for <xfs@oss.sgi.com>; Wed, 6 Feb 2013 07:41:45 -0500
 Received: from bfoster.bfoster (dhcp-191-48.bos.redhat.com [10.16.191.48])
-	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id r16CfjdW024564
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id r16CfjIw030477
 	for <xfs@oss.sgi.com>; Wed, 6 Feb 2013 07:41:45 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 2/2] xfs: disable log force in xfs_buf_item_push() to avoid
-	xa_lock recursion
-Date: Wed,  6 Feb 2013 07:44:41 -0500
-Message-Id: <1360154681-28246-3-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1360154681-28246-1-git-send-email-bfoster@redhat.com>
-References: <1360154681-28246-1-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v2 0/2] fix spinlock recursion on xa_lock in xfs_buf_item_push
+Date: Wed,  6 Feb 2013 07:44:39 -0500
+Message-Id: <1360154681-28246-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,44 +36,60 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-If the trylock fails and the buffer is pinned and stale, the
-resulting xfs_log_force() can lead to lock recursion on the ailp
-xa_lock. Call __xfs_buf_trylock() to attempt the buf lock with
-xa_lock held, but to avoid the log force. If the trylock had raced
-with the buffer being pinned, return XFS_ITEM_PINNED such that
-xfsaild will pend up a log force on the next scan.
+Hi all,
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
+Here is v2 of the xa_lock recursion fix[1]. This has survived several days of the
+reproduction workload and an xfstests run shows no regressions. Thoughts
+appreciated.
+
+Brian
+
+v2:
+- Patch 2 is reworked to detect the potential race and defer the log force to
+  xfsaild by returning XFS_ITEM_PINNED.
+
+[1] - recursion stack trace
+
+BUG: spinlock recursion on CPU#5, xfsaild/dm-3/2690
+Pid: 2690, comm: xfsaild/dm-3 Not tainted 3.8.0-rc1+ #46
+Call Trace:
+ [<ffffffff8163211c>] spin_dump+0x8a/0x8f
+ [<ffffffff81632142>] spin_bug+0x21/0x26
+ [<ffffffff812f66a1>] do_raw_spin_lock+0x101/0x150
+ [<ffffffff816378ce>] _raw_spin_lock+0xe/0x10
+ [<ffffffffa0522c85>] xlog_assign_tail_lsn+0x25/0x50 [xfs]
+ [<ffffffffa0523286>] xlog_state_release_iclog+0x86/0xd0 [xfs]
+ [<ffffffffa0523c89>] xlog_write+0x569/0x710 [xfs]
+ [<ffffffffa052555c>] xlog_cil_push+0x29c/0x3c0 [xfs]
+ [<ffffffffa04cbfe2>] ? xfs_buf_get_map+0xf2/0x1b0 [xfs]
+ [<ffffffffa0525d17>] xlog_cil_force_lsn+0x157/0x160 [xfs]
+ [<ffffffffa04cced1>] ? xfs_buf_read_map+0x31/0x130 [xfs]
+ [<ffffffffa0529e99>] ? xfs_trans_read_buf_map+0x279/0x4b0 [xfs]
+ [<ffffffff8117e45d>] ? __kmalloc+0x15d/0x1b0
+ [<ffffffffa0523f7d>] _xfs_log_force+0x6d/0x290 [xfs]
+ [<ffffffffa051450f>] ? xfs_iflush_cluster+0x25f/0x3d0 [xfs]
+ [<ffffffffa05241d9>] xfs_log_force+0x39/0xc0 [xfs]
+ [<ffffffffa04cbaa0>] xfs_buf_trylock+0xd0/0xe0 [xfs]
+ [<ffffffffa0526369>] xfs_buf_item_push+0x39/0xd0 [xfs]
+ [<ffffffffa0527bdf>] ? xfs_inode_item_push+0x8f/0x140 [xfs]
+ [<ffffffffa0528c01>] xfsaild+0x2e1/0x6e0 [xfs]
+ [<ffffffff8108aa08>] ? __wake_up_common+0x58/0x90
+ [<ffffffffa0528920>] ? xfs_trans_ail_cursor_first+0xc0/0xc0 [xfs]
+ [<ffffffff81081708>] kthread+0xd8/0xe0
+ [<ffffffff81081630>] ? flush_kthread_work+0x150/0x150
+ [<ffffffff816400ac>] ret_from_fork+0x7c/0xb0
+ [<ffffffff81081630>] ? flush_kthread_work+0x150/0x150
+
+Brian Foster (2):
+  xfs: conditionally force log on trylock failure of pinned/stale buf
+  xfs: disable log force in xfs_buf_item_push() to avoid xa_lock
+    recursion
+
+ fs/xfs/xfs_buf.c      |    8 +++++---
+ fs/xfs/xfs_buf.h      |    3 ++-
  fs/xfs/xfs_buf_item.c |   14 +++++++++++++-
- 1 files changed, 13 insertions(+), 1 deletions(-)
+ 3 files changed, 20 insertions(+), 5 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 9c4c050..23a328e 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -469,8 +469,20 @@ xfs_buf_item_push(
- 
- 	if (xfs_buf_ispinned(bp))
- 		return XFS_ITEM_PINNED;
--	if (!xfs_buf_trylock(bp))
-+
-+	if (!__xfs_buf_trylock(bp, false)) {
-+		/*
-+		 * We disable the log force via trylock because the buffer can
-+		 * become pinned and stale after the trylock fails and the log
-+		 * force is unsafe with xa_lock held.
-+		 *
-+		 * Check the buffer state once more and return pinned such that
-+		 * xfsaild pends up the log force when it drops xa_lock.
-+		 */
-+		if (xfs_buf_ispinned(bp))
-+			return XFS_ITEM_PINNED;
- 		return XFS_ITEM_LOCKED;
-+	}
- 
- 	ASSERT(!(bip->bli_flags & XFS_BLI_STALE));
- 
 -- 
 1.7.7.6
 
