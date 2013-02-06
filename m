@@ -1,27 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 55E237F3F
-	for <xfs@oss.sgi.com>; Tue,  5 Feb 2013 22:08:59 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 42EF7304039
-	for <xfs@oss.sgi.com>; Tue,  5 Feb 2013 20:08:56 -0800 (PST)
-Received: from thunder.skymagik.net (thunder.skymagik.net [76.75.207.68]) by
-	cuda.sgi.com with ESMTP id QR67t1bdwdgNIBlH for
-	<xfs@oss.sgi.com>; Tue, 05 Feb 2013 20:08:55 -0800 (PST)
-Message-ID: <55720.75.149.17.233.1360123732.squirrel@secure.skymagik.net>
-Date: Tue, 5 Feb 2013 23:08:52 -0500 (EST)
-Subject: Re: XFS appears to cause strange hang with md raid1 on reboot
-From: "Tom" <storm9c1@skymagik.com>
-In-Reply-To: <20130205213206.GP2667@dastard>
-References: <32271.192.104.24.222.1359415698.squirrel@secure.skymagik.net>
-	<20130129151833.GF27055@sgi.com>
-	<42720.75.149.17.233.1359515780.squirrel@secure.skymagik.net>
-	<20130130234650.GE32297@disturbed.disaster>
-	<45702.75.149.17.233.1359599410.squirrel@secure.skymagik.net>
-	<20130204125510.GL2667@dastard>
-	<11083.192.104.24.222.1360088562.squirrel@secure.skymagik.net>
-	<20130205213206.GP2667@dastard>
-MIME-Version: 1.0
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 2E5827F52
+	for <linux-xfs@oss.sgi.com>; Wed,  6 Feb 2013 00:29:55 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D0DB6AC001
+	for <linux-xfs@oss.sgi.com>; Tue,  5 Feb 2013 22:29:51 -0800 (PST)
+Received: from plane.gmane.org (plane.gmane.org [80.91.229.3]) by cuda.sgi.com
+	with ESMTP id zqDXvSWP2mhjDUSk (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <linux-xfs@oss.sgi.com>;
+	Tue, 05 Feb 2013 22:29:50 -0800 (PST)
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1U2yWD-00015M-4w
+	for linux-xfs@oss.sgi.com; Wed, 06 Feb 2013 07:30:06 +0100
+Received: from CPE-121-219-138-16.lnse2.lon.bigpond.net.au ([121.219.138.16])
+	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+	id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Wed, 06 Feb 2013 07:30:05 +0100
+Received: from nathans by CPE-121-219-138-16.lnse2.lon.bigpond.net.au with
+	local (Gmexim 0.1 (Debian)) id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Wed, 06 Feb 2013 07:30:05 +0100
+From: Nathan Scott <nathans@debian.org>
+Subject: Re: [PATCH 0/4] Refactor release scripts to conform to using
+	=?utf-8?b?Z2l0CWFyY2hpdmU=?=
+Date: Wed, 6 Feb 2013 06:28:10 +0000 (UTC)
+Message-ID: <loom.20130206T072310-821@post.gmane.org>
+References: <50F44B2E.9050408@sgi.com> <20130201190930.GX27055@sgi.com>
+	<20130206011547.GT2667@dastard>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,85 +39,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: david@fromorbit.com
-Cc: storm9c1@skymagik.com, xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-In a previous message, Dave Chinner wrote:
->
-> Find out if the unmount is returning an error first. If there is no
-> error, then you need to find what is doing bind mounts on your
-> system and make sure they are unmounted properly before the final
-> unmount is done. If lazy unmount is being done, make it a normal
-> unmount an see where the unmount is getting stcuk or taking time to
-> complete by using sysrq-w if it gets delayed for any length of time.
+Dave Chinner <david <at> fromorbit.com> writes:
 
-OK, here is what I did tonight.  I added debug toward the end of
-/etc/rc.d/rc6.d/S01reboot  ...where the umounts are normally handled.
+> 
+> It breaks the 'make deb' command for all the trees.
+> 
 
-Turns out that / and /proc cannot be unmounted (of course), so it gets
-remounted as read-only.  See output below.
+(thanks for checking!)
 
-I also noticed that md3 (root fs) isn't showing up in this list
-at the very end (I believe these messages are produced by the kernel
-md driver):
-md: md2 switched to read-only mode.
-md: md1 switched to read-only mode.
+> The debian package build creates a link tree so that it builds
+> outside the main source tree (e.g. in ./xfsprogs-3.1.10) and as part
+> of the build it runs 'make dist' to build a tarball from that link
+> tree. That now fails with:
+> 
+> fatal: current working directory is untracked
+> 
+> coming from the git archive command that is now used to build the
+> tarball.
+> 
+> Nathan, can the debian package build use git-archive? I'm under the
+> impression that you have to be able to build debian packages from a
+> source tarball or a source package, and so the build can't rely on
+> being inside a VCS controlled tree. That rules out using git archive
+> for tarball creation...
+> 
 
+IIRC, the requirement is to be building in a tree that had a basename
+of for <package>-<version> - hence the link'd tree build previously.
+If that can be maintained somehow, the build should be fine.  Symlinks
+did not work very well (IIRC) - the build tools might've used basename
+or realpath or something like that, but I do remember trying that.
 
-So just for kicks, I added "mdadm --readonly --force /dev/md3" as well
-after the umounts.  Of course /dev/md3 can't be forced into readonly
-mode because the root file system is still mounted (albeit also read-only).
-So no luck there.
+> Also, given that the previous tarball creation used the same link
+> tree build as the debian package build (i.e. make source-link), that
+> implies the debian pacakges are going to be missing files using this
+> technique. Doesn't that mean we have to fix the file list being fed
+> into the source-link target regardless of whether we use git archive
+> to build the tarball?
 
+The source tarball definitely needs to have the package-version prefix
+for all the files it contains - has a mechanism to acheive that been
+found?
 
-Shutting down interface eth0:  [  OK  ]
-Shutting down loopback interface:  [  OK  ]
-Starting killall:  [  OK  ]
-Sending all processes the TERM signal...
-Sending all processes the KILL signal...
-Saving random seed:
-Syncing hardware clock to system time
-Turning off swap:
-Unmounting pipe file systems:
-Unmounting file systems:
+cheers.
 
-DEBUG: remounting '/' as read-only using 'mount -n -o ro,remount'
-DEBUG: remounting '/proc' as read-only using 'mount -n -o ro,remount'
-mdadm: failed to set readonly for /dev/md3: Device or resource busy
-
-Please stand by while rebooting the system...
-md: stopping all md devices.
-md: md2 switched to read-only mode.
-md: md1 switched to read-only mode.
-(hang)
-
-Just for kicks, I get the same output with the 308 kernel, with the
-addition of this:
-
-md: md3 still in use.
-
-But the same system happily reboots just fine with the 308 kernel even
-after producing that "still in use" message that 348 does not produce.
-
-
-I did some more experiments with mdadm and I can't get any underlying
-md device to go into read-only mode even if the fs is mounted read-only.
-The only way I could get that to work is if the fs is completely unmounted.
-Whether it is XFS or ext3.  Yet a system on ext3 reboots fine.
-
-During reboot, I would expect /proc and / to be still mounted, albeit
-read-only, and I would expect that md should be able to handle this.
-But it can't.  What I didn't expect is the mdadm behavior to be consistent
-between the 308 and 348 kernels.  But it is.  So something special happens
-at the moment of reboot (that's different than what mdadm allows).
-
-Now why this only happens with XFS and not ext3 is beyond me.
-
-Is there more specific information that I can gather that may help?
-
--- Tom
-
-
+--
+Nathan
 
 _______________________________________________
 xfs mailing list
