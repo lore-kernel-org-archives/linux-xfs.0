@@ -1,30 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 69A437F3F
-	for <xfs@oss.sgi.com>; Wed,  6 Feb 2013 17:51:44 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 83A427F3F
+	for <xfs@oss.sgi.com>; Wed,  6 Feb 2013 18:58:22 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 581D7304043
-	for <xfs@oss.sgi.com>; Wed,  6 Feb 2013 15:51:41 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 70525304039
+	for <xfs@oss.sgi.com>; Wed,  6 Feb 2013 16:58:22 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	j4DaL8OdHMs97aah for <xfs@oss.sgi.com>;
-	Wed, 06 Feb 2013 15:51:39 -0800 (PST)
-Date: Thu, 7 Feb 2013 10:51:37 +1100
+	DnBZWXGBwjphI5Mv for <xfs@oss.sgi.com>;
+	Wed, 06 Feb 2013 16:58:13 -0800 (PST)
+Date: Thu, 7 Feb 2013 11:57:25 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS appears to cause strange hang with md raid1 on reboot
-Message-ID: <20130206235137.GV2667@dastard>
-References: <32271.192.104.24.222.1359415698.squirrel@secure.skymagik.net>
-	<20130129151833.GF27055@sgi.com>
-	<42720.75.149.17.233.1359515780.squirrel@secure.skymagik.net>
-	<20130130234650.GE32297@disturbed.disaster>
-	<45702.75.149.17.233.1359599410.squirrel@secure.skymagik.net>
-	<20130204125510.GL2667@dastard>
-	<11083.192.104.24.222.1360088562.squirrel@secure.skymagik.net>
-	<20130205213206.GP2667@dastard>
-	<55720.75.149.17.233.1360123732.squirrel@secure.skymagik.net>
+Subject: Re: [PATCH v2 1/2] xfs: conditionally force log on trylock failure
+	of pinned/stale buf
+Message-ID: <20130207005725.GW2667@dastard>
+References: <1360154681-28246-1-git-send-email-bfoster@redhat.com>
+	<1360154681-28246-2-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <55720.75.149.17.233.1360123732.squirrel@secure.skymagik.net>
+In-Reply-To: <1360154681-28246-2-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,93 +31,91 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Tom <storm9c1@skymagik.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Feb 05, 2013 at 11:08:52PM -0500, Tom wrote:
-> In a previous message, Dave Chinner wrote:
-> >
-> > Find out if the unmount is returning an error first. If there is no
-> > error, then you need to find what is doing bind mounts on your
-> > system and make sure they are unmounted properly before the final
-> > unmount is done. If lazy unmount is being done, make it a normal
-> > unmount an see where the unmount is getting stcuk or taking time to
-> > complete by using sysrq-w if it gets delayed for any length of time.
-> 
-> OK, here is what I did tonight.  I added debug toward the end of
-> /etc/rc.d/rc6.d/S01reboot  ...where the umounts are normally handled.
+On Wed, Feb 06, 2013 at 07:44:40AM -0500, Brian Foster wrote:
+> xfs_force_log() is not safe from all contexts. Add a flag parameter
+> to xfs_buf_trylock() to specify when the force is appropriate and
+> create a macro to preserve current behavior.
 
-> DEBUG: remounting '/' as read-only using 'mount -n -o ro,remount'
-> DEBUG: remounting '/proc' as read-only using 'mount -n -o ro,remount'
-> mdadm: failed to set readonly for /dev/md3: Device or resource busy
+Static inline functions are preferred over macros because they
+provide type checking.....
 
-EBUSY means one of two possibilities:
+However, here's what happens when I actually have time to think
+about the problem at hand - I suggest a completely different fix.
 
-	1. there's a file still open for write. => lsof
-	2. there's an unlinked but still open file => lsof
+Sorry, Brain, I'm not doing this intentionally to make your life
+harder than it needs to be... :/
 
-But I don't think that's the problem at all.
+My logic (goes back to the history of changes that lead to the log
+force being in xfs_buf_trylock()) is as follows:
 
-> Please stand by while rebooting the system...
-> md: stopping all md devices.
-> md: md2 switched to read-only mode.
-> md: md1 switched to read-only mode.
-> (hang)
-> 
-> Just for kicks, I get the same output with the 308 kernel, with the
-> addition of this:
-> 
-> md: md3 still in use.
+	1. xfs_buf_lock() had the log force added originally because
+	   _xfs_buf_find was getting stuck on locked, pinned stale
+	   buffers. This was a result of the rework of the busy
+	   extent handling to avoid synchronous transactions and/or
+	   log forces when reusing recently freed blocks. Somewhere
+	   a log force was needed to get the freeing transaction on
+	   disk before reuse occurred, and that was done on demand
+	   in xfs_buf_lock() when such a stale buffer was being
+	   used after a subsequent allocation.
 
-Which implies that the problem is a change in behaviour in the md
-layer or below. i.e. previously md just saw that it was busy and
-did not try to tear down the device. Now it is trying to tear down
-the device with a filesystem that is still active on it.
+	2a. xfs_inode_item_push() used to flush inodes to the
+	   the underlying buffer and would skip the flush if the
+	   underlying buffer was locked. Hence pinned inodes could
+	   not be flushed if the underlying buffer was locked (i.e.
+	   when pinned and stale).
 
-> But the same system happily reboots just fine with the 308 kernel even
-> after producing that "still in use" message that 348 does not produce.
+	2b. xfs_buf_item_push() would fail to lock the buffer if it
+	   raced with pinning and do nothing.
 
-Right, because it correctly detects the filesystem is still in use
-and doesn't try to tear down the device.
+	3. this resulted in neither xfs_inode_item_push() or
+	   xfs_buf_item_push() telling the xfsaild to issue a log
+	   force, the AIL would stop doing work as finished it's
+	   traverse, and hence tranaction reservations stalled until
+	   something else issued a log force and unpinned the tail
+	   of the log.
 
-> I did some more experiments with mdadm and I can't get any underlying
-> md device to go into read-only mode even if the fs is mounted read-only.
-> The only way I could get that to work is if the fs is completely unmounted.
-> Whether it is XFS or ext3.  Yet a system on ext3 reboots fine.
+	4. the simple and obvious fix at the time was to have
+	   xfs_buf_trylock() do the same as xfs_buf_lock() and force
+	   the log when a buffer in the state that caused the stall
+	   was detected.
 
-And that will be because ext3 won't be issuing any IO on the sync
-that is triggered when tearing down the MD device. XFS is writing
-the superblock, and that's where the MD device is hanging on itself.
+	<time passes>
 
-> Is there more specific information that I can gather that may help?
+	5a. delayed write buffers were reworked, completely changing
+	   how inode flushing and hence xfs_inode_item_push()
+	   worked.
 
-No need - I can tell you the exact commit in the RHEL 5.9 tree that
-caused this regression:
+	5b. delayed write buffers were reworked, changing how
+	   xfs_buf_item_push() worked.
 
-11ff4073: [md] Fix reboot stall with raid on megaraid_sas controller
+	6. several bugs in pinned/stale item handling were fixed,
+	   and now both xfs_inode_item_push() and
+	   xfs_buf_item_push() detect pinned inodes and buffers and
+	   tell the xfsaild to force the log appropriately.  This
+	   means xfs_buf_trylock() no longer needs to force the log
+	   to provide a get-out-of-xfsaild-stall-free mechanism.
 
-The result is that the final shutdown of md devices now uses a
-"force readonly" method, which means it ignores the fact that a
-filesystem may still be active on top of it and rips the device out
-from under the filesystem. This really only affects root devices,
-and given that XFs is not supported as a root device on RHEL, it
-isn't in the QE test matrix and so the problem was never noticed.
+	7. This log force while holding the ail lock bug is discovered.
 
-Feel free to report this all to the RH bugzilla - depending the
-implications of the regression for supported configurations, it may
-need to be fixed in RHEL anyway.
+So what I'm thinking is that as a result of 5+6, we have no need for
+the log force in the xfs_buf_trylock code any more. The only place
+we actually care about locking latency any more is in
+_xfs_buf_find(), and when the trylock fails there we immediately run
+xfs_buf_lock() (unless XBF_TRYLOCK was set) and it will do the log
+force for us.
 
-But now you know the problem, you can probably fix it yourself
-rather than have to wait for RHEL/CentOS product cycle updates...
+IOWs, I think the log force code in xfs_buf_trylock() is simply
+redundant and we should just remove it. With the second patch in
+this series, racing on the buffer being pinned will now do the right
+thing (i.e. trigger a log force via the xfsaild) and so we end up
+both simplifying the code and fixing the bug....
 
 Cheers,
 
 Dave.
-
-PS: has the fact I quoted a RHEL5.9 commit id triggered a lightbulb
-moment for you yet?  Hint: my other email address is
-dchinner@redhat.com - this XFS community support effort was brought
-to you by Red Hat.
 -- 
 Dave Chinner
 david@fromorbit.com
