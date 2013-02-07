@@ -1,24 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 83A427F3F
-	for <xfs@oss.sgi.com>; Wed,  6 Feb 2013 18:58:22 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id F2F597F4C
+	for <xfs@oss.sgi.com>; Wed,  6 Feb 2013 22:18:16 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 70525304039
-	for <xfs@oss.sgi.com>; Wed,  6 Feb 2013 16:58:22 -0800 (PST)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	DnBZWXGBwjphI5Mv for <xfs@oss.sgi.com>;
-	Wed, 06 Feb 2013 16:58:13 -0800 (PST)
-Date: Thu, 7 Feb 2013 11:57:25 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 1/2] xfs: conditionally force log on trylock failure
-	of pinned/stale buf
-Message-ID: <20130207005725.GW2667@dastard>
-References: <1360154681-28246-1-git-send-email-bfoster@redhat.com>
-	<1360154681-28246-2-git-send-email-bfoster@redhat.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5E0B5AC002
+	for <xfs@oss.sgi.com>; Wed,  6 Feb 2013 20:18:13 -0800 (PST)
+Received: from thunder.skymagik.net (thunder.skymagik.net [76.75.207.68]) by
+	cuda.sgi.com with ESMTP id 67v19pOquefgTcOg for
+	<xfs@oss.sgi.com>; Wed, 06 Feb 2013 20:18:10 -0800 (PST)
+Message-ID: <58846.75.149.17.233.1360210685.squirrel@secure.skymagik.net>
+Date: Wed, 6 Feb 2013 23:18:05 -0500 (EST)
+Subject: Re: XFS appears to cause strange hang with md raid1 on reboot
+From: "Tom" <storm9c1@skymagik.com>
+In-Reply-To: <20130206235137.GV2667@dastard>
+References: <32271.192.104.24.222.1359415698.squirrel@secure.skymagik.net>
+	<20130129151833.GF27055@sgi.com>
+	<42720.75.149.17.233.1359515780.squirrel@secure.skymagik.net>
+	<20130130234650.GE32297@disturbed.disaster>
+	<45702.75.149.17.233.1359599410.squirrel@secure.skymagik.net>
+	<20130204125510.GL2667@dastard>
+	<11083.192.104.24.222.1360088562.squirrel@secure.skymagik.net>
+	<20130205213206.GP2667@dastard>
+	<55720.75.149.17.233.1360123732.squirrel@secure.skymagik.net>
+	<20130206235137.GV2667@dastard>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1360154681-28246-2-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,94 +36,63 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: david@fromorbit.com
+Cc: storm9c1@skymagik.com, xfs@oss.sgi.com
 
-On Wed, Feb 06, 2013 at 07:44:40AM -0500, Brian Foster wrote:
-> xfs_force_log() is not safe from all contexts. Add a flag parameter
-> to xfs_buf_trylock() to specify when the force is appropriate and
-> create a macro to preserve current behavior.
+In a previous message, Dave Chinner wrote:
+>
+> No need - I can tell you the exact commit in the RHEL 5.9 tree that
+> caused this regression:
+>
+> 11ff4073: [md] Fix reboot stall with raid on megaraid_sas controller
+>
 
-Static inline functions are preferred over macros because they
-provide type checking.....
+Dave,
 
-However, here's what happens when I actually have time to think
-about the problem at hand - I suggest a completely different fix.
+This is excellent news!  At least we have some answers.
 
-Sorry, Brain, I'm not doing this intentionally to make your life
-harder than it needs to be... :/
 
-My logic (goes back to the history of changes that lead to the log
-force being in xfs_buf_trylock()) is as follows:
+> This really only affects root devices,
+> and given that XFs is not supported as a root device on RHEL, it
+> isn't in the QE test matrix and so the problem was never noticed.
 
-	1. xfs_buf_lock() had the log force added originally because
-	   _xfs_buf_find was getting stuck on locked, pinned stale
-	   buffers. This was a result of the rework of the busy
-	   extent handling to avoid synchronous transactions and/or
-	   log forces when reusing recently freed blocks. Somewhere
-	   a log force was needed to get the freeing transaction on
-	   disk before reuse occurred, and that was done on demand
-	   in xfs_buf_lock() when such a stale buffer was being
-	   used after a subsequent allocation.
+Well I noticed the problem for the sake of the community and reported
+it.  :-)
 
-	2a. xfs_inode_item_push() used to flush inodes to the
-	   the underlying buffer and would skip the flush if the
-	   underlying buffer was locked. Hence pinned inodes could
-	   not be flushed if the underlying buffer was locked (i.e.
-	   when pinned and stale).
+I am happy that we have some Red Hat folks helping out here.
 
-	2b. xfs_buf_item_push() would fail to lock the buffer if it
-	   raced with pinning and do nothing.
+Thank goodness I do my own regression testing before I roll out a
+new release.
 
-	3. this resulted in neither xfs_inode_item_push() or
-	   xfs_buf_item_push() telling the xfsaild to issue a log
-	   force, the AIL would stop doing work as finished it's
-	   traverse, and hence tranaction reservations stalled until
-	   something else issued a log force and unpinned the tail
-	   of the log.
 
-	4. the simple and obvious fix at the time was to have
-	   xfs_buf_trylock() do the same as xfs_buf_lock() and force
-	   the log when a buffer in the state that caused the stall
-	   was detected.
+>
+> Feel free to report this all to the RH bugzilla - depending the
+> implications of the regression for supported configurations, it may need
+> to be fixed in RHEL anyway.
 
-	<time passes>
+Yes, I could since I work full-time for a company that has an
+extensive (7-figure) RHEL deployment, including XFS use licenses.
+However, I'll have to go through an I.T. channel since they hold the
+accounts.  I'll investigate whether they will let me do this since
+they do not use XFS on root.  I would need them to back me up first.
 
-	5a. delayed write buffers were reworked, completely changing
-	   how inode flushing and hence xfs_inode_item_push()
-	   worked.
+>
+> But now you know the problem, you can probably fix it yourself
+> rather than have to wait for RHEL/CentOS product cycle updates...
+>
 
-	5b. delayed write buffers were reworked, changing how
-	   xfs_buf_item_push() worked.
+Yes, thank you.
 
-	6. several bugs in pinned/stale item handling were fixed,
-	   and now both xfs_inode_item_push() and
-	   xfs_buf_item_push() detect pinned inodes and buffers and
-	   tell the xfsaild to force the log appropriately.  This
-	   means xfs_buf_trylock() no longer needs to force the log
-	   to provide a get-out-of-xfsaild-stall-free mechanism.
 
-	7. This log force while holding the ail lock bug is discovered.
+> PS: has the fact I quoted a RHEL5.9 commit id triggered a lightbulb
+> moment for you yet?  Hint: my other email address is
+> dchinner@redhat.com - this XFS community support effort was brought to
+> you by Red Hat.
 
-So what I'm thinking is that as a result of 5+6, we have no need for
-the log force in the xfs_buf_trylock code any more. The only place
-we actually care about locking latency any more is in
-_xfs_buf_find(), and when the trylock fails there we immediately run
-xfs_buf_lock() (unless XBF_TRYLOCK was set) and it will do the log
-force for us.
+Indeed.  Again, I appreciate your help.  And from Red Hat, Inc. as well.
 
-IOWs, I think the log force code in xfs_buf_trylock() is simply
-redundant and we should just remove it. With the second patch in
-this series, racing on the buffer being pinned will now do the right
-thing (i.e. trigger a log force via the xfsaild) and so we end up
-both simplifying the code and fixing the bug....
+-- Tom
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
