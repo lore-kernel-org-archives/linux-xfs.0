@@ -1,16 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6BAA47F4C
-	for <xfs@oss.sgi.com>; Thu,  7 Feb 2013 09:44:38 -0600 (CST)
-Date: Thu, 7 Feb 2013 09:44:37 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 1/2] xfs: memory barrier before wake_up_bit()
-Message-ID: <20130207154436.GC22182@sgi.com>
-References: <510FDDE5.4050103@inktank.com> <510FDE17.9020207@inktank.com>
-	<20130204230634.GN2667@dastard> <511061CD.8070206@inktank.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <511061CD.8070206@inktank.com>
+	by oss.sgi.com (Postfix) with ESMTP id C4A0E7F3F
+	for <xfs@oss.sgi.com>; Fri,  8 Feb 2013 08:48:18 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 74B30AC004
+	for <xfs@oss.sgi.com>; Fri,  8 Feb 2013 06:48:15 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id lufzACCgcDcSz8qc for
+	<xfs@oss.sgi.com>; Fri, 08 Feb 2013 06:48:14 -0800 (PST)
+Received: from int-mx01.intmail.prod.int.phx2.redhat.com
+	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r18EmEBC021091
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Fri, 8 Feb 2013 09:48:14 -0500
+Received: from bfoster.bfoster (dhcp-191-48.bos.redhat.com [10.16.191.48])
+	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
+	id r18EmE38012654
+	for <xfs@oss.sgi.com>; Fri, 8 Feb 2013 09:48:14 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v3 2/2] xfs: remove log force from xfs_buf_trylock()
+Date: Fri,  8 Feb 2013 09:51:07 -0500
+Message-Id: <1360335067-59999-3-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1360335067-59999-1-git-send-email-bfoster@redhat.com>
+References: <1360335067-59999-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,60 +31,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Alex Elder <elder@inktank.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Feb 04, 2013 at 07:35:09PM -0600, Alex Elder wrote:
-> On 02/04/2013 05:06 PM, Dave Chinner wrote:
-> > On Mon, Feb 04, 2013 at 10:13:11AM -0600, Alex Elder wrote:
-> >> In xfs_ifunlock() there is a call to wake_up_bit() after clearing
-> >> the flush lock on the xfs inode.  This is not guaranteed to be safe,
-> >> as noted in the comments above wake_up_bit() beginning with:
-> >>
-> >>     In order for this to function properly, as it uses
-> >>     waitqueue_active() internally, some kind of memory
-> >>     barrier must be done prior to calling this.
-> >>
-> >> I claim no mastery of the details and subtlety of memory barrier
-> >> use, but I believe the issue is that the call to waitqueue_active()
-> >> in __wake_up_bit(), could be operating on a value of "wq" that is
-> >> out of date.  This patch fixes this by inserting a call to smp_mb()
-> >> in xfs_iunlock before calling wake_up_bit(), along the lines of
-> >> what's done in unlock_new_inode().  A litte more explanation
-> >> follows.
-> >>
-> >>
-> >> In __xfs_iflock(), prepare_to_wait_exclusive() adds a wait queue
-> >> entry to the end of a bit wait queue before setting the current task
-> >> state to UNINTERRUPTIBLE.  And although setting the task state
-> >> issues a full smp_mb() (which ensures changes made are visible to
-> >> the rest of the system at that point) that alone does not guarantee
-> >> that other CPUs will instantly avail themselves of the updated
-> >> value.  A separate CPU needs to issue at least a read barrier in
-> >> order to ensure the wq value it uses to determine whether there are
-> >> waiters is up-to-date, and waitqueue_active() does not do that.
-> > 
-> > You can probably trim most of this and simply point at the comment
-> > describing wake_up_bit()....
-> 
-> Yeah, I know.  I just wanted to sort of say what I was
-> thinking to get confirmation (or correction).  I now
-> have a much better understanding of barriers than I did
-> before, but there are still corners I haven't wrapped
-> my head around.
-> 
-> Ben, please feel free do trim off this stuff as you
-> see fit.
+The trylock log force invoked via xfs_buf_item_push() can attempt
+to acquire xa_lock, thus leading to a recursion bug when called
+with xa_lock held.
 
-Applied.
+This log force was originally added to xfs_buf_trylock() to address
+xfsaild stalls due to pinned and stale buffers. Since the addition
+of this behavior, the log item pushing code had been reworked to
+detect and track pinned items to inform xfsaild to issue a log
+force itself when necessary. As such, the log force on trylock
+failure is redundant and safe to remove.
 
-Thanks Alex!
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_buf.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
--Ben
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index fbbb9eb..4e8f0df 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -951,8 +951,6 @@ xfs_buf_trylock(
+ 	locked = down_trylock(&bp->b_sema) == 0;
+ 	if (locked)
+ 		XB_SET_OWNER(bp);
+-	else if (atomic_read(&bp->b_pin_count) && (bp->b_flags & XBF_STALE))
+-		xfs_log_force(bp->b_target->bt_mount, 0);
+ 
+ 	trace_xfs_buf_trylock(bp, _RET_IP_);
+ 	return locked;
+-- 
+1.7.7.6
 
 _______________________________________________
 xfs mailing list
