@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 660CD7F51
-	for <xfs@oss.sgi.com>; Sun, 10 Feb 2013 01:14:19 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id EBCDEAC005
-	for <xfs@oss.sgi.com>; Sat,  9 Feb 2013 23:14:18 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B0D157F54
+	for <xfs@oss.sgi.com>; Sun, 10 Feb 2013 01:18:54 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 91741304032
+	for <xfs@oss.sgi.com>; Sat,  9 Feb 2013 23:18:51 -0800 (PST)
 Received: from mail.six-q.net (mail.six-q.net [176.62.184.14]) by cuda.sgi.com
-	with ESMTP id G32ocVVX06dgFiws (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id mKMVeWN0qDzRNzt2 (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 09 Feb 2013 23:14:14 -0800 (PST)
+	Sat, 09 Feb 2013 23:18:50 -0800 (PST)
 Received: from [192.168.1.2] by mail.six-q.net with esmtp (Exim 4.80.1)
-	(envelope-from <nowhere@hakkenden.ath.cx>) id 1U4R73-00019W-UJ
-	for xfs@oss.sgi.com; Sun, 10 Feb 2013 11:14:11 +0400
-Message-ID: <1360480449.4034.8.camel@hakkenden.homenet>
-Subject: xfs_inode slab
+	(envelope-from <nowhere@hakkenden.ath.cx>) id 1U4RBW-0001Cz-Us
+	for xfs@oss.sgi.com; Sun, 10 Feb 2013 11:18:47 +0400
+Message-ID: <1360480726.4034.10.camel@hakkenden.homenet>
+Subject: [Fwd: xfs_inode slab]
 From: "Nikolay S." <nowhere@hakkenden.ath.cx>
-Date: Sun, 10 Feb 2013 11:14:09 +0400
+Date: Sun, 10 Feb 2013 11:18:46 +0400
 Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -31,26 +31,29 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hello there,
+Please, ignore the previous message, it was sent by an accident.
 
-I see some bad behavior of xfs, which I can reproduce:
-
-1. Create some directories and files on xfs volume (I use ~800000 files
-and 80000 directories on 4GB RAM system)
-2. Create workload, that produces light page cache pressure (say, 4-8
-MB/s) and while pagecache eats all of free ram. I use the code from [1])
-3. Stat all the objects on xfs volume
-
-The result depends on kernel version:
-	3.2) See kswapd struggling through D-state for several minutes.
-	3.7) See kswapd struggling through D-state forever
-
-Same steps on ext4 do not produce any bad results
-
---
-[1]	https://bugzilla.kernel.org/show_bug.cgi?id=53031
-
-[2]
+> Hello there,
+> 
+> I see some bad behavior of xfs, which I can reproduce:
+> 
+> 1. Create some directories and files on xfs volume (I use ~800000 files
+> and 80000 directories on 4GB RAM system)
+> 2. Create workload, that produces light page cache pressure (say, 4-8
+> MB/s) and while pagecache eats all of free ram. I use the code from [1])
+> 3. Stat all the objects on xfs volume
+> 
+> The result depends on kernel version:
+> 	3.2) See kswapd struggling through D-state for several minutes.
+> 	3.7) See kswapd struggling through D-state forever
+> 
+> Same steps on ext4 do not produce any bad results
+> 
+> --
+> [1]	https://bugzilla.kernel.org/show_bug.cgi?id=53031
+> 
+> [2]
+> 
 
 
 _______________________________________________
