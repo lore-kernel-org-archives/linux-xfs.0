@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5CB6E7F37
-	for <xfs@oss.sgi.com>; Sat,  9 Feb 2013 20:05:10 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3BE758F8033
-	for <xfs@oss.sgi.com>; Sat,  9 Feb 2013 18:05:07 -0800 (PST)
-Received: from Ishtar.sc.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
-	cuda.sgi.com with ESMTP id BQr2xbGhda1LlCos (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 09 Feb 2013 18:05:02 -0800 (PST)
-Message-ID: <51170044.1090707@tlinx.org>
-Date: Sat, 09 Feb 2013 18:04:52 -0800
-From: Linda Walsh <xfs@tlinx.org>
-MIME-Version: 1.0
-Subject: Re: xfs deadlock on buffer semaphore while reading directory
-References: <20130202192007.GS30577@one.firstfloor.org>
-	<510D6EDE.1080409@sgi.com> <510E054B.2070500@tlinx.org>
-	<20130206004442.GS2667@dastard>
-In-Reply-To: <20130206004442.GS2667@dastard>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 660CD7F51
+	for <xfs@oss.sgi.com>; Sun, 10 Feb 2013 01:14:19 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id EBCDEAC005
+	for <xfs@oss.sgi.com>; Sat,  9 Feb 2013 23:14:18 -0800 (PST)
+Received: from mail.six-q.net (mail.six-q.net [176.62.184.14]) by cuda.sgi.com
+	with ESMTP id G32ocVVX06dgFiws (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 09 Feb 2013 23:14:14 -0800 (PST)
+Received: from [192.168.1.2] by mail.six-q.net with esmtp (Exim 4.80.1)
+	(envelope-from <nowhere@hakkenden.ath.cx>) id 1U4R73-00019W-UJ
+	for xfs@oss.sgi.com; Sun, 10 Feb 2013 11:14:11 +0400
+Message-ID: <1360480449.4034.8.camel@hakkenden.homenet>
+Subject: xfs_inode slab
+From: "Nikolay S." <nowhere@hakkenden.ath.cx>
+Date: Sun, 10 Feb 2013 11:14:09 +0400
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,37 +25,33 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Dave Chinner wrote:
->> I can't get the buffers to 'free' no matter what
->> echo 3> /proc/sys/vm/drop_caches does nothing.
-> 
-> What buffers are you talking about? The deadlock is in metadata
-> buffer handling, which you can't directly see, and will never be
-> able to entirely free via drop caches.
-> 
-> if you are talking about what is reported by the "free" command,
-> then that number can be ignored as it is mostly meaningless for XFS
-> filesystems....
-----
-	Actually was talking 'cache', not buffers... sorry,
-which I thought was mostly fs-data that was "freeable" (mostly).
-whereas because of the error in xfs_dump, I was concerned about
-it taking up all free memory (whereas normally, it doesn't
-matter).
+Hello there,
 
-but I was trying to use echo 3>/proc/sys/vm/drop_caches, but that
-seemed to pretty much be ignored...
+I see some bad behavior of xfs, which I can reproduce:
 
-But after boot and new kernel w/new and different problems,
-xfs_dump (the new version) works fine... ;)
-Sorry for any confusion.
+1. Create some directories and files on xfs volume (I use ~800000 files
+and 80000 directories on 4GB RAM system)
+2. Create workload, that produces light page cache pressure (say, 4-8
+MB/s) and while pagecache eats all of free ram. I use the code from [1])
+3. Stat all the objects on xfs volume
+
+The result depends on kernel version:
+	3.2) See kswapd struggling through D-state for several minutes.
+	3.7) See kswapd struggling through D-state forever
+
+Same steps on ext4 do not produce any bad results
+
+--
+[1]	https://bugzilla.kernel.org/show_bug.cgi?id=53031
+
+[2]
+
 
 _______________________________________________
 xfs mailing list
