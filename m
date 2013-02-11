@@ -1,15 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A26DB7F56
-	for <xfs@oss.sgi.com>; Mon, 11 Feb 2013 16:00:43 -0600 (CST)
-Message-ID: <51196A0C.8080405@sgi.com>
-Date: Mon, 11 Feb 2013 16:00:44 -0600
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 21F307F4E
+	for <xfs@oss.sgi.com>; Mon, 11 Feb 2013 16:43:13 -0600 (CST)
+Message-ID: <511973FE.5000608@sgi.com>
+Date: Mon, 11 Feb 2013 16:43:10 -0600
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/2] xfs: limit speculative prealloc size on sparse files
+Subject: Re: [PATCH 2/2] xfs: rearrange some code in xfs_bmap for better
+	locality
 References: <1360559102-20432-1-git-send-email-david@fromorbit.com>
-	<1360559102-20432-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1360559102-20432-2-git-send-email-david@fromorbit.com>
+	<1360559102-20432-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1360559102-20432-3-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,51 +29,44 @@ Cc: xfs@oss.sgi.com
 On 02/10/13 23:05, Dave Chinner wrote:
 > From: Dave Chinner<dchinner@redhat.com>
 >
-> Speculative preallocation based on the current file size works well
-> for contiguous files, but is sub-optimal for sparse files where the
-> EOF preallocation can fill holes and result in large amounts of
-> zeros being written when it is not necessary.
+> xfs_bmap.c is a big file, and some of the related code is spread all
+> throughout the file requiring function prototypes for static
+> function and jumping all through the file to follow a single call
+> path. Rearrange the code so that:
 >
-> The algorithm is modified to prevent EOF speculative preallocation
-> from triggering larger allocations on IO patterns of
-> truncate--to-zero-seek-write-seek-write-....  which results in
-> non-sparse files for large files. This, unfortunately, is the way cp
-> now behaves when copying sparse files and so needs to be fixed.
+> 	a) related functionality is grouped together; and
+> 	b) functions are grouped in call dependency order
 >
-> What this code does is that it looks at the existing extent adjacent
-> to the current EOF and if it determines that it is a hole we disable
-> speculative preallocation altogether. To avoid the next write from
-> doing a large prealloc, it takes the size of subsequent
-> preallocations from the current size of the existing EOF extent.
-> IOWs, if you leave a hole in the file, it resets preallocation
-> behaviour to the same as if it was a zero size file.
+> While the diffstat is large, there are no code changes in the patch;
+> it is just moving the functionality around and removing the function
+> prototypes at the top of the file. The resulting layout of the code
+> is as follows (top of file to bottom):
 >
-> Example new behaviour:
+> 	- miscellaneous helper functions
+> 	- extent tree block counting routines
+> 	- debug/sanity checking code
+> 	- bmap free list manipulation functions
+> 	- inode fork format manipulation functions
+> 	- internal/external extent tree seach functions
+> 	- extent tree manipulation functions used during allocation
+> 	- functions used during extent read/allocate/removal
+> 	  operations (i.e. xfs_bmapi_write, xfs_bmapi_read,
+> 	  xfs_bunmapi and xfs_getbmap)
 >
-> $ xfs_io -f -c "pwrite 0 31m" \
->              -c "pwrite 33m 1m" \
->              -c "pwrite 128m 1m" \
->              -c "fiemap -v" /mnt/scratch/blah
-> wrote 32505856/32505856 bytes at offset 0
-> 31 MiB, 7936 ops; 0.0000 sec (1.608 GiB/sec and 421432.7439 ops/sec)
-> wrote 1048576/1048576 bytes at offset 34603008
-> 1 MiB, 256 ops; 0.0000 sec (1.462 GiB/sec and 383233.5329 ops/sec)
-> wrote 1048576/1048576 bytes at offset 134217728
-> 1 MiB, 256 ops; 0.0000 sec (1.719 GiB/sec and 450704.2254 ops/sec)
-> /mnt/scratch/blah:
->   EXT: FILE-OFFSET      BLOCK-RANGE      TOTAL FLAGS
->     0: [0..65535]:      96..65631        65536   0x0
->     1: [65536..67583]:  hole              2048
->     2: [67584..69631]:  67680..69727      2048   0x0
->     3: [69632..262143]: hole             192512
->     4: [262144..264191]: 262240..264287    2048   0x1
+> This means that following logic paths through the bmapi code is much
+> simpler - most of the code relevant to a specific operation is now
+> clustered together rather than spread all over the file....
 >
 > Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > ---
+>   fs/xfs/xfs_bmap.c |10659 ++++++++++++++++++++++++++---------------------------
+>   1 file changed, 5261 insertions(+), 5398 deletions(-)
 
-Works great. The above xfs_io example makes a good start of a test.
+The organization looks good to me. If the file is getting that many
+changes, isn't it time to fix all those spaces in the file? (looks like 
+there are over 2500 unnecessary spaces in place of tabs).
 
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+--Mark.
 
 _______________________________________________
 xfs mailing list
