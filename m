@@ -1,28 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 00BA87F73
-	for <xfs@oss.sgi.com>; Mon, 11 Feb 2013 09:05:37 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0E5F67F74
+	for <xfs@oss.sgi.com>; Mon, 11 Feb 2013 09:05:38 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B4FA8304043
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 966BEAC001
 	for <xfs@oss.sgi.com>; Mon, 11 Feb 2013 07:05:34 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id L0NuTI4Ssg6rGKG5 for
+	cuda.sgi.com with ESMTP id JOnmDWRxlW2o7r5p for
 	<xfs@oss.sgi.com>; Mon, 11 Feb 2013 07:05:34 -0800 (PST)
-Received: from int-mx02.intmail.prod.int.phx2.redhat.com
-	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r1BF5XSL016584
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r1BF5XNG010470
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
 	for <xfs@oss.sgi.com>; Mon, 11 Feb 2013 10:05:33 -0500
 Received: from bfoster.bfoster (dhcp-191-48.bos.redhat.com [10.16.191.48])
-	by int-mx02.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
-	id r1BF5XW9005710
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id r1BF5Xig018766
 	for <xfs@oss.sgi.com>; Mon, 11 Feb 2013 10:05:33 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v4 2/2] xfs: remove log force from xfs_buf_trylock()
-Date: Mon, 11 Feb 2013 10:08:22 -0500
-Message-Id: <1360595302-15865-3-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1360595302-15865-1-git-send-email-bfoster@redhat.com>
-References: <1360595302-15865-1-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v4 0/2] fix spinlock recursion on xa_lock in xfs_buf_item_push
+Date: Mon, 11 Feb 2013 10:08:20 -0500
+Message-Id: <1360595302-15865-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,35 +36,43 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The trylock log force invoked via xfs_buf_item_push() can attempt
-to acquire xa_lock, thus leading to a recursion bug when called
-with xa_lock held.
+Hi all,
 
-This log force was originally added to xfs_buf_trylock() to address
-xfsaild stalls due to pinned and stale buffers. Since the addition
-of this behavior, the log item pushing code had been reworked to
-detect and track pinned items to inform xfsaild to issue a log
-force itself when necessary. As such, the log force on trylock
-failure is redundant and safe to remove.
+Here is v4 of the spinlock recursion fix. The only update is to the comment in
+patch 1. These changes have been run through the reproducer over the weekend
+without a failure.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_buf.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+I've also run another xfstests run while including the following patch from Dave:
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index fbbb9eb..4e8f0df 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -951,8 +951,6 @@ xfs_buf_trylock(
- 	locked = down_trylock(&bp->b_sema) == 0;
- 	if (locked)
- 		XB_SET_OWNER(bp);
--	else if (atomic_read(&bp->b_pin_count) && (bp->b_flags & XBF_STALE))
--		xfs_log_force(bp->b_target->bt_mount, 0);
- 
- 	trace_xfs_buf_trylock(bp, _RET_IP_);
- 	return locked;
+xfs: xfs_bmap_add_attrfork_local is too generic
+
+... due to seeing the same issue Lukas reproduced in test 013 (I saw it in 070 as
+well). That problem no longer occurs with this patch included, but I have hit
+an error in test 178 that didn't fire in my baseline run. It persists if I revert
+back to TOT, so I'm posting this set as is and I'll see if I can trace where that
+one came from...
+
+Brian
+
+v4:
+- Fix comment in patch 1.
+v3:
+- Patches reordered and revised to:
+  1.) Add the race detection in xfs_buf_item_push().
+  2.) Remove the log force from xfs_buf_trylock() entirely to fix the recursion
+      and rely on xfsaild to issue the log force.
+v2:
+- Patch 2 is reworked to detect the potential race and defer the log force to
+  xfsaild by returning XFS_ITEM_PINNED.
+
+Brian Foster (2):
+  xfs: recheck buffer pinned status after push trylock failure
+  xfs: remove log force from xfs_buf_trylock()
+
+ fs/xfs/xfs_buf.c      |    2 --
+ fs/xfs/xfs_buf_item.c |   12 +++++++++++-
+ 2 files changed, 11 insertions(+), 3 deletions(-)
+
 -- 
 1.7.7.6
 
