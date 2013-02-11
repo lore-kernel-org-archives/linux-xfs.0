@@ -1,26 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D63D77F63
-	for <xfs@oss.sgi.com>; Mon, 11 Feb 2013 06:12:25 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 2B9567F6A
+	for <xfs@oss.sgi.com>; Mon, 11 Feb 2013 09:05:35 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A7A3E304032
-	for <xfs@oss.sgi.com>; Mon, 11 Feb 2013 04:12:22 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id F2423304043
+	for <xfs@oss.sgi.com>; Mon, 11 Feb 2013 07:05:34 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id DYx4xv4WrEAMxQwa for
-	<xfs@oss.sgi.com>; Mon, 11 Feb 2013 04:12:22 -0800 (PST)
-Date: Mon, 11 Feb 2013 13:08:12 +0100 (CET)
-From: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>
-Subject: Re: Xfs fails in xfstests 013
-In-Reply-To: <20130210221600.GC8257@dastard>
-Message-ID: <alpine.LFD.2.00.1302111307001.2315@(none)>
-References: <alpine.LFD.2.00.1301310910080.14328@dhcp-1-104.brq.redhat.com>
-	<20130201002927.GJ32297@disturbed.disaster>
-	<alpine.LFD.2.00.1302011149030.6969@dhcp-1-104.brq.redhat.com>
-	<alpine.LFD.2.00.1302011219300.6969@dhcp-1-104.brq.redhat.com>
-	<20130203230013.GI2667@dastard> <20130210221600.GC8257@dastard>
-MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED;
-	BOUNDARY="-1463785984-570699168-1360584732=:2315"
+	cuda.sgi.com with ESMTP id yeaeJ4rD1E22TI2s for
+	<xfs@oss.sgi.com>; Mon, 11 Feb 2013 07:05:34 -0800 (PST)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r1BF5XUG000704
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Mon, 11 Feb 2013 10:05:33 -0500
+Received: from bfoster.bfoster (dhcp-191-48.bos.redhat.com [10.16.191.48])
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id r1BF5XUO015817
+	for <xfs@oss.sgi.com>; Mon, 11 Feb 2013 10:05:33 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v4 1/2] xfs: recheck buffer pinned status after push trylock
+	failure
+Date: Mon, 11 Feb 2013 10:08:21 -0500
+Message-Id: <1360595302-15865-2-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1360595302-15865-1-git-send-email-bfoster@redhat.com>
+References: <1360595302-15865-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,67 +32,58 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+The buffer pinned check and trylock sequence in xfs_buf_item_push()
+can race with an active transaction on marking the buffer pinned.
+This can result in the buffer becoming pinned and stale after the
+initial check and the trylock failure, but before the check in
+xfs_buf_trylock() that issues a log force. If the log force is
+issued from this context, a spinlock recursion occurs on xa_lock.
 
----1463785984-570699168-1360584732=:2315
-Content-Type: TEXT/PLAIN; charset=utf-8
-Content-Transfer-Encoding: 8BIT
+Prepare xfs_buf_item_push() to handle the race by detecting a
+pinned buffer after the trylock failure so xfsaild issues a log
+force from a safe context. This, along with various previous fixes,
+renders the log force in xfs_buf_trylock() redundant.
 
-On Mon, 11 Feb 2013, Dave Chinner wrote:
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_buf_item.c |   12 +++++++++++-
+ 1 files changed, 11 insertions(+), 1 deletions(-)
 
-> Date: Mon, 11 Feb 2013 09:16:00 +1100
-> From: Dave Chinner <david@fromorbit.com>
-> To: Lukáš Czerner <lczerner@redhat.com>
-> Cc: xfs@oss.sgi.com
-> Subject: Re: Xfs fails in xfstests 013
-> 
-> On Mon, Feb 04, 2013 at 10:00:13AM +1100, Dave Chinner wrote:
-> > On Fri, Feb 01, 2013 at 03:33:06PM +0100, Lukáš Czerner wrote:
-> > > On Fri, 1 Feb 2013, Lukáš Czerner wrote:
-> > > and I have not hit the assert. However I think that I know what's
-> > > going on. The verifier is obviously not attached when the symlink is
-> > > created, however it is attached when security attributes are created
-> > > for the symlink by xfs_init_security().
-> > 
-> > Which means the bug is in xfs_bmap_add_attrfork_local() in calling
-> > xfs_bmap_local_to_extents(). i.e it assumes that the local data is
-> > either directory data or extent data, and is attaching extent tree
-> > verifiers to the buffer that contains a remote symlink. Thinking
-> > time now needed, as this affects the symlink CRC changes as well.
-> > 
-> > Thanks for the debug help, Lukas.
-> 
-> Lukas, can you check whether the patch below fixes the problem you
-> saw?
-
-Hi Dave,
-
-from my testing it seems that ti fixes the problem. Can not
-reproduce it anymore with the patch applied.
-
-Thanks!
--Lukas
-
-> 
-> Cheers,
-> 
-> Dave.
-> 
----1463785984-570699168-1360584732=:2315
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index 9c4c050..cf26347 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -469,8 +469,18 @@ xfs_buf_item_push(
+ 
+ 	if (xfs_buf_ispinned(bp))
+ 		return XFS_ITEM_PINNED;
+-	if (!xfs_buf_trylock(bp))
++	if (!xfs_buf_trylock(bp)) {
++		/*
++		 * If we have just raced with a buffer being pinned and it has
++		 * been marked stale, we could end up stalling until someone else
++		 * issues a log force to unpin the stale buffer. Check for the
++		 * race condition here so xfsaild recognizes the buffer is pinned
++		 * and queues a log force to move it along.
++		 */
++		if (xfs_buf_ispinned(bp))
++			return XFS_ITEM_PINNED;
+ 		return XFS_ITEM_LOCKED;
++	}
+ 
+ 	ASSERT(!(bip->bli_flags & XFS_BLI_STALE));
+ 
+-- 
+1.7.7.6
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
----1463785984-570699168-1360584732=:2315--
