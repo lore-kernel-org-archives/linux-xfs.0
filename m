@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 47DA47F56
-	for <linux-xfs@oss.sgi.com>; Tue, 12 Feb 2013 04:20:21 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3993C8F8040
-	for <linux-xfs@oss.sgi.com>; Tue, 12 Feb 2013 02:20:18 -0800 (PST)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	WyS0ACD34Y2NYKCq for <linux-xfs@oss.sgi.com>;
-	Tue, 12 Feb 2013 02:20:16 -0800 (PST)
-Date: Tue, 12 Feb 2013 21:20:14 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Hung in D state during fclose
-Message-ID: <20130212102014.GA26694@dastard>
-References: <loom.20130212T071115-446@post.gmane.org>
-	<20130212065545.GC10731@dastard>
-	<3542214BE3A3EF419F236DFE0F878BC90512DC@BL2PRD0310MB374.namprd03.prod.outlook.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <3542214BE3A3EF419F236DFE0F878BC90512DC@BL2PRD0310MB374.namprd03.prod.outlook.com>
+	by oss.sgi.com (Postfix) with ESMTP id 584E17F8D
+	for <xfs@oss.sgi.com>; Tue, 12 Feb 2013 05:07:04 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1E0638F8033
+	for <xfs@oss.sgi.com>; Tue, 12 Feb 2013 03:07:00 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id jbXa21DmOaxnweXZ for
+	<xfs@oss.sgi.com>; Tue, 12 Feb 2013 03:07:00 -0800 (PST)
+Received: from int-mx12.intmail.prod.int.phx2.redhat.com
+	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r1CB6xoL026373
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Tue, 12 Feb 2013 06:06:59 -0500
+From: Lukas Czerner <lczerner@redhat.com>
+Subject: [PATCH] xfs_mkfs: wipe old signatures from the device
+Date: Tue, 12 Feb 2013 12:06:55 +0100
+Message-Id: <1360667215-14701-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,46 +25,225 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Cheung, Norman" <Norman.Cheung@kla-tencor.com>
-Cc: "linux-xfs@oss.sgi.com" <linux-xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
+Cc: sandeen@redhat.com, kzak@redhat.com, Lukas Czerner <lczerner@redhat.com>
 
-On Tue, Feb 12, 2013 at 07:01:59AM +0000, Cheung, Norman wrote:
-> Sorry Dave.  Let me copy and paste the trace below, hope it works.
-> Thanks,
-> Norman
-> 
-> Below is the sysrq for the 2 offending threads.
-> 
-> 1. the disk writing thread hung in fclose
-> 
-> 
-> Tigris_IMC.exe  D 0000000000000000     0  4197   4100 0x00000000
-> ffff881f3db921c0 0000000000000086 0000000000000000 ffff881f42eb8b80
-> ffff880861419fd8 ffff880861419fd8 ffff880861419fd8 ffff881f3db921c0
-> 0000000000080000 0000000000000000 00000000000401e0 00000000061805c1 Call Trace:
-> [<ffffffff810d89ed>] ? zone_statistics+0x9d/0xa0 [<ffffffffa0402682>] ? xfs_iomap_write_delay+0x172/0x2b0 [xfs] [<ffffffff813c7e35>] ? rwsem_down_failed_common+0xc5/0x150
-> [<ffffffff811f32a3>] ? call_rwsem_down_write_failed+0x13/0x20
-> [<ffffffff813c74ec>] ? down_write+0x1c/0x1d [<ffffffffa03fba8e>] ? xfs_ilock+0x7e/0xa0 [xfs] [<ffffffffa041b64b>] ? __xfs_get_blocks+0x1db/0x3d0 [xfs] [<ffffffff81103340>] ? kmem_cache_alloc+0x100/0x130 [<ffffffff8113fa2e>] ? alloc_page_buffers+0x6e/0xe0 [<ffffffff81141cdf>] ? __block_write_begin+0x1cf/0x4d0 [<ffffffffa041b850>] ? xfs_get_blocks_direct+0x10/0x10 [xfs] [<ffffffffa041b850>] ? xfs_get_blocks_direct+0x10/0x10 [xfs] [<ffffffff8114226b>] ? block_write_begin+0x4b/0xa0 [<ffffffffa041b8fb>] ? xfs_vm_write_begin+0x3b/0x70 [xfs] [<ffffffff810c0258>] ? generic_file_buffered_write+0xf8/0x250
-> [<ffffffffa04207b5>] ? xfs_file_buffered_aio_write+0xc5/0x130 [xfs] [<ffffffffa042099c>] ? xfs_file_aio_write+0x17c/0x2a0 [xfs] [<ffffffff81115b28>] ? do_sync_write+0xb8/0xf0 [<ffffffff8119daa4>] ? security_file_permission+0x24/0xc0
-> [<ffffffff8111630a>] ? vfs_write+0xaa/0x190 [<ffffffff81116657>] ? sys_write+0x47/0x90 [<ffffffff813ce412>] ? system_call_fastpath+0x16/0x1b
+We should wipe off all the signatures from the device prior the file
+system creation. It is because because some file systems (btrfs) may
+still have their signatures on the device which can be confusing for
+userspace possibly resulting in the unmountable file system.
 
-It's just as mangled. Write them to a file, make sure it is
-formatted correctly, and attach it to the email.
+This patch adds a function which uses libblkid library to wipe all the
+signatures from the device.
 
-> kernel version 3.0.13-0.27
+If user disables libblkid library or does not have it installed this new
+feature will not be used. This case can be implemented separately.
 
-What distribution is that from?
+Signed-off-by: Lukas Czerner <lczerner@redhat.com>
+---
+ mkfs/xfs_mkfs.c |  134 +++++++++++++++++++++++++++++++++++++++---------------
+ 1 files changed, 97 insertions(+), 37 deletions(-)
 
-Cheers,
-
-Dave.
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index d636549..a889620 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -286,18 +286,73 @@ calc_stripe_factors(
+ }
+ 
+ #ifdef ENABLE_BLKID
++static int
++wipe_signatures(
++	char		*device,
++	int		dryrun)
++{
++	blkid_probe	pr = NULL;
++	int		ret = 0;
++	int		fd;
++
++	pr = blkid_new_probe_from_filename(device);
++	if (!pr)
++		goto out;
++
++	fd = open(device, O_RDWR|O_CLOEXEC);
++	if (fd < 0) {
++		ret = -1;
++		goto out;
++	}
++	ret = blkid_probe_set_device(pr, fd, 0, 0);
++	if (ret)
++		goto out;
++
++	/* No need to check return values we know that 'pr' is initialized */
++	blkid_probe_enable_partitions(pr, 1);
++	blkid_probe_enable_superblocks(pr, 1);
++	blkid_probe_set_partitions_flags(pr, BLKID_PARTS_MAGIC);
++	blkid_probe_set_superblocks_flags(pr,
++					BLKID_SUBLKS_MAGIC | BLKID_SUBLKS_TYPE);
++
++	while (1) {
++		ret = blkid_do_probe(pr);
++		if (ret != 0)
++			break;
++
++		/* Wipe off the signature */
++		ret = blkid_do_wipe(pr, dryrun);
++		if (ret)
++			break;
++	}
++	close(fd);
++
++out:
++	if (pr)
++		blkid_free_probe(pr);
++	if (ret < 0)
++		fprintf(stderr,
++			_("%s: Cannot wipe off existing signatures\n"), progname);
++	return (ret < 0 ? ret : 0);
++}
++
+ /*
+  * Check for existing filesystem or partition table on device.
+  * Returns:
+  *	 1 for existing fs or partition
+  *	 0 for nothing found
+  *	-1 for internal error
++ * If wipe is set, we'll attempt to wipe of all the signatures from
++ * the device. In this case we never return 1 (existing fs or partition).
+  */
+ static int
+ check_overwrite(
+-	char		*device)
++	char		*device,
++	int		wipe,
++	int		dryrun)
+ {
+ 	const char	*type;
++	const char	*name;
+ 	blkid_probe	pr = NULL;
+ 	int		ret;
+ 	int		fd;
+@@ -325,40 +380,43 @@ check_overwrite(
+ 	if (!pr)
+ 		goto out;
+ 
+-	ret = blkid_probe_enable_partitions(pr, 1);
+-	if (ret < 0)
+-		goto out;
++	/* No need to check return values we know that 'pr' is initialized */
++	blkid_probe_enable_partitions(pr, 1);
++	blkid_probe_enable_superblocks(pr, 1);
++	blkid_probe_set_partitions_flags(pr, BLKID_PARTS_MAGIC);
++	blkid_probe_set_superblocks_flags(pr,
++					BLKID_SUBLKS_MAGIC | BLKID_SUBLKS_TYPE);
+ 
+-	ret = blkid_do_fullprobe(pr);
+-	if (ret < 0)
+-		goto out;
++	ret = 0;
++	while (1) {
++		int retval = 0;
+ 
+-	/*
+-	 * Blkid returns 1 for nothing found and 0 when it finds a signature,
+-	 * but we want the exact opposite, so reverse the return value here.
+-	 *
+-	 * In addition print some useful diagnostics about what actually is
+-	 * on the device.
+-	 */
+-	if (ret) {
+-		ret = 0;
+-		goto out;
+-	}
++		retval = blkid_do_probe(pr);
++		if (retval != 0) {
++			ret = retval;
++			break;
++		}
+ 
+-	if (!blkid_probe_lookup_value(pr, "TYPE", &type, NULL)) {
+-		fprintf(stderr,
+-			_("%s: %s appears to contain an existing "
+-			"filesystem (%s).\n"), progname, device, type);
+-	} else if (!blkid_probe_lookup_value(pr, "PTTYPE", &type, NULL)) {
+-		fprintf(stderr,
+-			_("%s: %s appears to contain a partition "
+-			"table (%s).\n"), progname, device, type);
+-	} else {
+-		fprintf(stderr,
+-			_("%s: %s appears to contain something weird "
+-			"according to blkid\n"), progname, device);
++		if (blkid_probe_lookup_value(pr, "TYPE", &type, NULL) == 0)
++			name = "filesystem";
++
++		else if (blkid_probe_lookup_value(pr, "PTTYPE",
++						    &type, NULL) == 0)
++			name = "partition table";
++		else
++			continue;
++
++		if (wipe)
++			fprintf(stderr, _("%s: Wiping off %s signature.\n"),
++				progname, type);
++		else {
++			fprintf(stderr,
++				_("%s: %s appears to contain an existing "
++				"%s (%s).\n"), progname, device, name, type);
++			ret = 1;
++			continue;
++		}
+ 	}
+-	ret = 1;
+ 
+ out:
+ 	if (pr)
+@@ -367,6 +425,8 @@ out:
+ 		fprintf(stderr,
+ 			_("%s: probe of %s failed, cannot detect "
+ 			  "existing filesystem.\n"), progname, device);
++	if (ret == 1 && wipe)
++		ret = wipe_signatures(device, dryrun);
+ 	return ret;
+ }
+ 
+@@ -464,7 +524,8 @@ static void get_topology(
+ #else /* ENABLE_BLKID */
+ static int
+ check_overwrite(
+-	char		*device)
++	char		*device,
++	int		wipe)
+ {
+ 	char		*type;
+ 
+@@ -1939,16 +2000,15 @@ _("block size %d cannot be smaller than logical sector size %d\n"),
+ 	xi.rtsize &= sector_mask;
+ 	xi.logBBsize &= (__uint64_t)-1 << (MAX(lsectorlog, 10) - BBSHIFT);
+ 
+-	if (!force_overwrite) {
+-		if (check_overwrite(dfile) ||
+-		    check_overwrite(logfile) ||
+-		    check_overwrite(xi.rtname)) {
++	if (check_overwrite(dfile, force_overwrite, Nflag) ||
++	    check_overwrite(logfile, force_overwrite, Nflag) ||
++	    check_overwrite(xi.rtname, force_overwrite, Nflag))
++		if (force_overwrite) {
+ 			fprintf(stderr,
+ 			_("%s: Use the -f option to force overwrite.\n"),
+ 				progname);
+ 			exit(1);
+ 		}
+-	}
+ 
+ 	if (discard) {
+ 		discard_blocks(xi.ddev, xi.dsize);
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.7.6
 
 _______________________________________________
 xfs mailing list
