@@ -1,36 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 923D37FAE
-	for <linux-xfs@oss.sgi.com>; Tue, 12 Feb 2013 10:40:00 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 38FE6304066
-	for <linux-xfs@oss.sgi.com>; Tue, 12 Feb 2013 08:39:56 -0800 (PST)
-Received: from ca1mailout02.kla-tencor.com (mailout03.kla-tencor.com
-	[192.146.1.173]) by cuda.sgi.com with ESMTP id xZQ2h9jU0L9dgDtq
-	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
-	<linux-xfs@oss.sgi.com>; Tue, 12 Feb 2013 08:39:55 -0800 (PST)
-Received: from CA1EXBH02.adcorp.kla-tencor.com (exchange.kla-tencor.com
-	[10.60.33.12])
-	by ca1mailout02.kla-tencor.com (8.14.4/8.14.4) with ESMTP id
-	r1CGdskl014881
-	for <linux-xfs@oss.sgi.com>; Tue, 12 Feb 2013 08:39:54 -0800
-Received: from mail114-tx2 (localhost [127.0.0.1])	by
-	mail114-tx2-R.bigfish.com (Postfix) with ESMTP id 3D2FB801CB	for
-	<linux-xfs@oss.sgi.com.FOPE.CONNECTOR.OVERRIDE>;
-	Tue, 12 Feb 2013 16:39:53 +0000 (UTC)
-From: "Cheung, Norman" <Norman.Cheung@kla-tencor.com>
-Subject: RE: Hung in D state during fclose
-Date: Tue, 12 Feb 2013 16:39:48 +0000
-Message-ID: <3542214BE3A3EF419F236DFE0F878BC90517D2@BL2PRD0310MB374.namprd03.prod.outlook.com>
+	by oss.sgi.com (Postfix) with ESMTP id 6FA4E7F9B
+	for <linux-xfs@oss.sgi.com>; Tue, 12 Feb 2013 14:23:22 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 48C9E304053
+	for <linux-xfs@oss.sgi.com>; Tue, 12 Feb 2013 12:23:19 -0800 (PST)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	dtrt2KEAFfWyqU3N for <linux-xfs@oss.sgi.com>;
+	Tue, 12 Feb 2013 12:23:16 -0800 (PST)
+Date: Wed, 13 Feb 2013 07:22:46 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Hung in D state during fclose
+Message-ID: <20130212202246.GB26694@dastard>
 References: <loom.20130212T071115-446@post.gmane.org>
 	<20130212065545.GC10731@dastard>
 	<3542214BE3A3EF419F236DFE0F878BC90512DC@BL2PRD0310MB374.namprd03.prod.outlook.com>
 	<20130212102014.GA26694@dastard>
-In-Reply-To: <20130212102014.GA26694@dastard>
-Content-Language: en-US
-Content-Type: multipart/mixed;
-	boundary="_002_3542214BE3A3EF419F236DFE0F878BC90517D2BL2PRD0310MB374na_"
+	<3542214BE3A3EF419F236DFE0F878BC90517D2@BL2PRD0310MB374.namprd03.prod.outlook.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <3542214BE3A3EF419F236DFE0F878BC90517D2@BL2PRD0310MB374.namprd03.prod.outlook.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,393 +29,139 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: "Cheung, Norman" <Norman.Cheung@kla-tencor.com>
 Cc: "linux-xfs@oss.sgi.com" <linux-xfs@oss.sgi.com>
 
---_002_3542214BE3A3EF419F236DFE0F878BC90517D2BL2PRD0310MB374na_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+On Tue, Feb 12, 2013 at 04:39:48PM +0000, Cheung, Norman wrote:
+> It's just as mangled. Write them to a file, make sure it is formatted correctly, and attach it to the email.
+> [NLC] attached in a file, sorry for the trouble.  Also paste trace again below  hopefully it will  come thru better.
 
+The file and the paste came through OK.
 
+> > kernel version 3.0.13-0.27
+> 
+> What distribution is that from?
+> [NLC] SUSE 
 
------Original Message-----
-From: Dave Chinner [mailto:david@fromorbit.com]=20
-Sent: Tuesday, February 12, 2013 2:20 AM
-To: Cheung, Norman
-Cc: linux-xfs@oss.sgi.com
-Subject: Re: Hung in D state during fclose
+Yeah, looks to be a SLES kernel - have you talked to you SuSE
+support rep about this?
 
-On Tue, Feb 12, 2013 at 07:01:59AM +0000, Cheung, Norman wrote:
-> Sorry Dave.  Let me copy and paste the trace below, hope it works.
-> Thanks,
-> Norman
->=20
-> Below is the sysrq for the 2 offending threads.
->=20
 > 1. the disk writing thread hung in fclose
->=20
->=20
+> 
+> 
 > Tigris_IMC.exe  D 0000000000000000     0  4197   4100 0x00000000
 > ffff881f3db921c0 0000000000000086 0000000000000000 ffff881f42eb8b80
 > ffff880861419fd8 ffff880861419fd8 ffff880861419fd8 ffff881f3db921c0
-> 0000000000080000 0000000000000000 00000000000401e0 00000000061805c1 Call =
-Trace:
-> [<ffffffff810d89ed>] ? zone_statistics+0x9d/0xa0 [<ffffffffa0402682>]=20
-> ? xfs_iomap_write_delay+0x172/0x2b0 [xfs] [<ffffffff813c7e35>] ?=20
-> rwsem_down_failed_common+0xc5/0x150
+> 0000000000080000 0000000000000000 00000000000401e0 00000000061805c1 
+> Call Trace:
+> [<ffffffff810d89ed>] ? zone_statistics+0x9d/0xa0 
+> [<ffffffffa0402682>] ? xfs_iomap_write_delay+0x172/0x2b0 [xfs] 
+> [<ffffffff813c7e35>] ? rwsem_down_failed_common+0xc5/0x150
 > [<ffffffff811f32a3>] ? call_rwsem_down_write_failed+0x13/0x20
-> [<ffffffff813c74ec>] ? down_write+0x1c/0x1d [<ffffffffa03fba8e>] ?=20
-> xfs_ilock+0x7e/0xa0 [xfs] [<ffffffffa041b64b>] ?=20
-> __xfs_get_blocks+0x1db/0x3d0 [xfs] [<ffffffff81103340>] ?=20
-> kmem_cache_alloc+0x100/0x130 [<ffffffff8113fa2e>] ?=20
-> alloc_page_buffers+0x6e/0xe0 [<ffffffff81141cdf>] ?=20
-> __block_write_begin+0x1cf/0x4d0 [<ffffffffa041b850>] ?=20
-> xfs_get_blocks_direct+0x10/0x10 [xfs] [<ffffffffa041b850>] ?=20
-> xfs_get_blocks_direct+0x10/0x10 [xfs] [<ffffffff8114226b>] ?=20
-> block_write_begin+0x4b/0xa0 [<ffffffffa041b8fb>] ?=20
-> xfs_vm_write_begin+0x3b/0x70 [xfs] [<ffffffff810c0258>] ?=20
-> generic_file_buffered_write+0xf8/0x250
-> [<ffffffffa04207b5>] ? xfs_file_buffered_aio_write+0xc5/0x130 [xfs]=20
-> [<ffffffffa042099c>] ? xfs_file_aio_write+0x17c/0x2a0 [xfs]=20
-> [<ffffffff81115b28>] ? do_sync_write+0xb8/0xf0 [<ffffffff8119daa4>] ?=20
-> security_file_permission+0x24/0xc0
-> [<ffffffff8111630a>] ? vfs_write+0xaa/0x190 [<ffffffff81116657>] ?=20
-> sys_write+0x47/0x90 [<ffffffff813ce412>] ?=20
-> system_call_fastpath+0x16/0x1b
+> [<ffffffff813c74ec>] ? down_write+0x1c/0x1d 
+> [<ffffffffa03fba8e>] ? xfs_ilock+0x7e/0xa0 [xfs] 
+> [<ffffffffa041b64b>] ? __xfs_get_blocks+0x1db/0x3d0 [xfs] 
+> [<ffffffff81103340>] ? kmem_cache_alloc+0x100/0x130 
+> [<ffffffff8113fa2e>] ? alloc_page_buffers+0x6e/0xe0 
+> [<ffffffff81141cdf>] ? __block_write_begin+0x1cf/0x4d0 
+> [<ffffffffa041b850>] ? xfs_get_blocks_direct+0x10/0x10 [xfs] 
+> [<ffffffffa041b850>] ? xfs_get_blocks_direct+0x10/0x10 [xfs] 
+> [<ffffffff8114226b>] ? block_write_begin+0x4b/0xa0 
+> [<ffffffffa041b8fb>] ? xfs_vm_write_begin+0x3b/0x70 [xfs] 
+> [<ffffffff810c0258>] ? generic_file_buffered_write+0xf8/0x250
+> [<ffffffffa04207b5>] ? xfs_file_buffered_aio_write+0xc5/0x130 [xfs] 
+> [<ffffffffa042099c>] ? xfs_file_aio_write+0x17c/0x2a0 [xfs] 
+> [<ffffffff81115b28>] ? do_sync_write+0xb8/0xf0 
+> [<ffffffff8119daa4>] ? security_file_permission+0x24/0xc0
+> [<ffffffff8111630a>] ? vfs_write+0xaa/0x190 
+> [<ffffffff81116657>] ? sys_write+0x47/0x90 
+> [<ffffffff813ce412>] ? system_call_fastpath+0x16/0x1b
 
-It's just as mangled. Write them to a file, make sure it is formatted corre=
-ctly, and attach it to the email.
-[NLC] attached in a file, sorry for the trouble.  Also paste trace again be=
-low  hopefully it will  come thru better.
+So that is doing a write() from fclose, and it's waiting on the
+inode XFS_ILOCK_EXCL 
 
-> kernel version 3.0.13-0.27
+/me wishes that all distros compiled their kernels with frame
+pointers enabled so that analysing stack traces is better than "I'm
+guessing that the real stack trace is....
 
-What distribution is that from?
-[NLC] SUSE=20
+> 2. flush from another partition
+> 
+> flush-8:48      D 0000000000000000     0  4217      2 0x00000000
+> ffff883fc053f580 0000000000000046 ffff881f40f348f0 ffff881f40e2aa80
+> ffff883fabb83fd8 ffff883fabb83fd8 ffff883fabb83fd8 ffff883fc053f580
+> ffff883fc27654c0 ffff881f40dfc040 0000000000000001 ffffffff810656f9 
+> Call Trace:
+> [<ffffffff810656f9>] ? __queue_work+0xc9/0x390 
+> [<ffffffff811e3e3f>] ? cfq_insert_request+0xaf/0x4f0 
+> [<ffffffff81065a06>] ? queue_work_on+0x16/0x20 
+> [<ffffffff813c69cd>] ? schedule_timeout+0x1dd/0x240 
+> [<ffffffffa041a762>] ? kmem_zone_zalloc+0x32/0x50 [xfs] 
+> [<ffffffff813c7559>] ? __down+0x6c/0x99 
+> [<ffffffff81070377>] ? down+0x37/0x40 
+> [<ffffffffa041d59d>] ? xfs_buf_lock+0x1d/0x40 [xfs] 
+> [<ffffffffa041d6a3>] ? _xfs_buf_find+0xe3/0x210 [xfs] 
+> [<ffffffffa041dcb4>] ? xfs_buf_get+0x64/0x150 [xfs] 
+> [<ffffffffa041dfb2>] ? xfs_buf_read+0x12/0xa0 [xfs] 
+> [<ffffffffa04151af>] ? xfs_trans_read_buf+0x1bf/0x2f0 [xfs] 
+> [<ffffffffa03d06c0>] ? xfs_read_agf+0x60/0x1b0 [xfs] 
+> [<ffffffffa03cf3b7>] ? xfs_alloc_update+0x17/0x20 [xfs] 
+> [<ffffffffa03d0841>] ? xfs_alloc_read_agf+0x31/0xd0 [xfs] 
+> [<ffffffffa03d2083>] ? xfs_alloc_fix_freelist+0x433/0x4a0 [xfs] 
+> [<ffffffff810d89ed>] ? zone_statistics+0x9d/0xa0 
+> [<ffffffffa03d23a4>] ? xfs_alloc_vextent+0x184/0x4a0 [xfs] 
+> [<ffffffffa03dc348>] ? xfs_bmap_btalloc+0x2d8/0x6d0 [xfs] 
+> [<ffffffffa03e0efd>] ? xfs_bmapi+0x9bd/0x11a0 [xfs] 
+> [<ffffffffa03d9bbc>] ? xfs_bmap_search_multi_extents+0xac/0x120 [xfs] 
+> [<ffffffffa040293c>] ? xfs_iomap_write_allocate+0x17c/0x330 [xfs] 
+> [<ffffffffa041b20f>] ? xfs_map_blocks+0x19f/0x1b0 [xfs] 
+> [<ffffffffa041c20e>] ? xfs_vm_writepage+0x19e/0x470 [xfs] 
+> [<ffffffff810c97ba>] ? __writepage+0xa/0x30 
+> [<ffffffff810c9c4d>] ? write_cache_pages+0x1cd/0x3d0 
+> [<ffffffff810c97b0>] ? bdi_set_max_ratio+0x90/0x90 
+> [<ffffffff810c9e93>] ? generic_writepages+0x43/0x70 
+> [<ffffffff81139330>] ? writeback_single_inode+0x160/0x300
+> [<ffffffff811397d4>] ? writeback_sb_inodes+0x104/0x1a0 
+> [<ffffffff81139cfd>] ? writeback_inodes_wb+0x8d/0x140 
+> [<ffffffff8113a05b>] ? wb_writeback+0x2ab/0x310 
+> [<ffffffff813cedee>] ? apic_timer_interrupt+0xe/0x20 
+> [<ffffffff8113a10e>] ? wb_check_old_data_flush+0x4e/0xa0 
+> [<ffffffff8113a28b>] ? wb_do_writeback+0x12b/0x160 
+> [<ffffffff8113a332>] ? bdi_writeback_thread+0x72/0x150 
+> [<ffffffff8113a2c0>] ? wb_do_writeback+0x160/0x160 
+> [<ffffffff8106b06e>] ? kthread+0x7e/0x90 
+> [<ffffffff813cf544>] ? kernel_thread_helper+0x4/0x10 
+> [<ffffffff8106aff0>] ? kthread_worker_fn+0x1a0/0x1a0 
+> [<ffffffff813cf540>] ? gs_change+0x13/0x13
+
+Thats the writeback thread waiting on an AGF buffer to be unlocked.
+IOWs, there are probably multiple concurrent allocations to the same
+AG. But that will be holding the XFS_ILOCK_EXCL lock that the other
+thread is waiting.
+
+What thread is holding the AGF buffer is anyone's guess - it could
+be waiting on IO completion, which would indicate a problem in the
+storage layers below XFS. The output in dmesg from sysrq-w (echo w >
+/proc/sysrq-trigger) might help indicate other blocked threads that
+could be holding the AGF lock.
+
+.....
+>     RAID layout (hardware and/or software) Hardware RAID 0 , 2 disks per RAID.  
+
+What RAID controller? SAS or SATA drives? Stripe chunk/segment size?
+Any BBWC?
 
 Cheers,
 
 Dave.
---
+-- 
 Dave Chinner
 david@fromorbit.com
-
-[NLC]=20
-
-1. the disk writing thread hung in fclose
-
-
-Tigris_IMC.exe  D 0000000000000000     0  4197   4100 0x00000000
-ffff881f3db921c0 0000000000000086 0000000000000000 ffff881f42eb8b80
-ffff880861419fd8 ffff880861419fd8 ffff880861419fd8 ffff881f3db921c0
-0000000000080000 0000000000000000 00000000000401e0 00000000061805c1=20
-Call Trace:
-[<ffffffff810d89ed>] ? zone_statistics+0x9d/0xa0=20
-[<ffffffffa0402682>] ? xfs_iomap_write_delay+0x172/0x2b0 [xfs]=20
-[<ffffffff813c7e35>] ? rwsem_down_failed_common+0xc5/0x150
-[<ffffffff811f32a3>] ? call_rwsem_down_write_failed+0x13/0x20
-[<ffffffff813c74ec>] ? down_write+0x1c/0x1d=20
-[<ffffffffa03fba8e>] ? xfs_ilock+0x7e/0xa0 [xfs]=20
-[<ffffffffa041b64b>] ? __xfs_get_blocks+0x1db/0x3d0 [xfs]=20
-[<ffffffff81103340>] ? kmem_cache_alloc+0x100/0x130=20
-[<ffffffff8113fa2e>] ? alloc_page_buffers+0x6e/0xe0=20
-[<ffffffff81141cdf>] ? __block_write_begin+0x1cf/0x4d0=20
-[<ffffffffa041b850>] ? xfs_get_blocks_direct+0x10/0x10 [xfs]=20
-[<ffffffffa041b850>] ? xfs_get_blocks_direct+0x10/0x10 [xfs]=20
-[<ffffffff8114226b>] ? block_write_begin+0x4b/0xa0=20
-[<ffffffffa041b8fb>] ? xfs_vm_write_begin+0x3b/0x70 [xfs]=20
-[<ffffffff810c0258>] ? generic_file_buffered_write+0xf8/0x250
-[<ffffffffa04207b5>] ? xfs_file_buffered_aio_write+0xc5/0x130 [xfs]=20
-[<ffffffffa042099c>] ? xfs_file_aio_write+0x17c/0x2a0 [xfs]=20
-[<ffffffff81115b28>] ? do_sync_write+0xb8/0xf0=20
-[<ffffffff8119daa4>] ? security_file_permission+0x24/0xc0
-[<ffffffff8111630a>] ? vfs_write+0xaa/0x190=20
-[<ffffffff81116657>] ? sys_write+0x47/0x90=20
-[<ffffffff813ce412>] ? system_call_fastpath+0x16/0x1b
-
-2. flush from another partition
-
-flush-8:48      D 0000000000000000     0  4217      2 0x00000000
-ffff883fc053f580 0000000000000046 ffff881f40f348f0 ffff881f40e2aa80
-ffff883fabb83fd8 ffff883fabb83fd8 ffff883fabb83fd8 ffff883fc053f580
-ffff883fc27654c0 ffff881f40dfc040 0000000000000001 ffffffff810656f9=20
-Call Trace:
-[<ffffffff810656f9>] ? __queue_work+0xc9/0x390=20
-[<ffffffff811e3e3f>] ? cfq_insert_request+0xaf/0x4f0=20
-[<ffffffff81065a06>] ? queue_work_on+0x16/0x20=20
-[<ffffffff813c69cd>] ? schedule_timeout+0x1dd/0x240=20
-[<ffffffffa041a762>] ? kmem_zone_zalloc+0x32/0x50 [xfs]=20
-[<ffffffff813c7559>] ? __down+0x6c/0x99=20
-[<ffffffff81070377>] ? down+0x37/0x40=20
-[<ffffffffa041d59d>] ? xfs_buf_lock+0x1d/0x40 [xfs]=20
-[<ffffffffa041d6a3>] ? _xfs_buf_find+0xe3/0x210 [xfs]=20
-[<ffffffffa041dcb4>] ? xfs_buf_get+0x64/0x150 [xfs]=20
-[<ffffffffa041dfb2>] ? xfs_buf_read+0x12/0xa0 [xfs]=20
-[<ffffffffa04151af>] ? xfs_trans_read_buf+0x1bf/0x2f0 [xfs]=20
-[<ffffffffa03d06c0>] ? xfs_read_agf+0x60/0x1b0 [xfs]=20
-[<ffffffffa03cf3b7>] ? xfs_alloc_update+0x17/0x20 [xfs]=20
-[<ffffffffa03d0841>] ? xfs_alloc_read_agf+0x31/0xd0 [xfs]=20
-[<ffffffffa03d2083>] ? xfs_alloc_fix_freelist+0x433/0x4a0 [xfs]=20
-[<ffffffff810d89ed>] ? zone_statistics+0x9d/0xa0=20
-[<ffffffffa03d23a4>] ? xfs_alloc_vextent+0x184/0x4a0 [xfs]=20
-[<ffffffffa03dc348>] ? xfs_bmap_btalloc+0x2d8/0x6d0 [xfs]=20
-[<ffffffffa03e0efd>] ? xfs_bmapi+0x9bd/0x11a0 [xfs]=20
-[<ffffffffa03d9bbc>] ? xfs_bmap_search_multi_extents+0xac/0x120 [xfs]=20
-[<ffffffffa040293c>] ? xfs_iomap_write_allocate+0x17c/0x330 [xfs]=20
-[<ffffffffa041b20f>] ? xfs_map_blocks+0x19f/0x1b0 [xfs]=20
-[<ffffffffa041c20e>] ? xfs_vm_writepage+0x19e/0x470 [xfs]=20
-[<ffffffff810c97ba>] ? __writepage+0xa/0x30=20
-[<ffffffff810c9c4d>] ? write_cache_pages+0x1cd/0x3d0=20
-[<ffffffff810c97b0>] ? bdi_set_max_ratio+0x90/0x90=20
-[<ffffffff810c9e93>] ? generic_writepages+0x43/0x70=20
-[<ffffffff81139330>] ? writeback_single_inode+0x160/0x300
-[<ffffffff811397d4>] ? writeback_sb_inodes+0x104/0x1a0=20
-[<ffffffff81139cfd>] ? writeback_inodes_wb+0x8d/0x140=20
-[<ffffffff8113a05b>] ? wb_writeback+0x2ab/0x310=20
-[<ffffffff813cedee>] ? apic_timer_interrupt+0xe/0x20=20
-[<ffffffff8113a10e>] ? wb_check_old_data_flush+0x4e/0xa0=20
-[<ffffffff8113a28b>] ? wb_do_writeback+0x12b/0x160=20
-[<ffffffff8113a332>] ? bdi_writeback_thread+0x72/0x150=20
-[<ffffffff8113a2c0>] ? wb_do_writeback+0x160/0x160=20
-[<ffffffff8106b06e>] ? kthread+0x7e/0x90=20
-[<ffffffff813cf544>] ? kernel_thread_helper+0x4/0x10=20
-[<ffffffff8106aff0>] ? kthread_worker_fn+0x1a0/0x1a0=20
-[<ffffffff813cf540>] ? gs_change+0x13/0x13
-
-
---_002_3542214BE3A3EF419F236DFE0F878BC90517D2BL2PRD0310MB374na_
-Content-Type: text/plain; name="Trace_fclose_Hangs.txt"
-Content-Description: Trace_fclose_Hangs.txt
-Content-Disposition: attachment; filename="Trace_fclose_Hangs.txt";
-	size=12123; creation-date="Tue, 12 Feb 2013 16:36:31 GMT";
-	modification-date="Tue, 12 Feb 2013 16:36:31 GMT"
-Content-Transfer-Encoding: base64
-
-DQpCZWxvdyBpcyB0aGUgc3lzcnEgZm9yIHRoZSAyIG9mZmVuZGluZyB0aHJlYWRzLg0KDQoxLiB0
-aGUgZGlzayB3cml0aW5nIHRocmVhZCBodW5nIGluIGZjbG9zZQ0KDQoNClRpZ3Jpc19JTUMuZXhl
-ICBEIDAwMDAwMDAwMDAwMDAwMDAgICAgIDAgIDQxOTcgICA0MTAwIDB4MDAwMDAwMDANCmZmZmY4
-ODFmM2RiOTIxYzAgMDAwMDAwMDAwMDAwMDA4NiAwMDAwMDAwMDAwMDAwMDAwIGZmZmY4ODFmNDJl
-YjhiODANCmZmZmY4ODA4NjE0MTlmZDggZmZmZjg4MDg2MTQxOWZkOCBmZmZmODgwODYxNDE5ZmQ4
-IGZmZmY4ODFmM2RiOTIxYzANCjAwMDAwMDAwMDAwODAwMDAgMDAwMDAwMDAwMDAwMDAwMCAwMDAw
-MDAwMDAwMDQwMWUwIDAwMDAwMDAwMDYxODA1YzEgDQpDYWxsIFRyYWNlOg0KWzxmZmZmZmZmZjgx
-MGQ4OWVkPl0gPyB6b25lX3N0YXRpc3RpY3MrMHg5ZC8weGEwIA0KWzxmZmZmZmZmZmEwNDAyNjgy
-Pl0gPyB4ZnNfaW9tYXBfd3JpdGVfZGVsYXkrMHgxNzIvMHgyYjAgW3hmc10gDQpbPGZmZmZmZmZm
-ODEzYzdlMzU+XSA/IHJ3c2VtX2Rvd25fZmFpbGVkX2NvbW1vbisweGM1LzB4MTUwDQpbPGZmZmZm
-ZmZmODExZjMyYTM+XSA/IGNhbGxfcndzZW1fZG93bl93cml0ZV9mYWlsZWQrMHgxMy8weDIwDQpb
-PGZmZmZmZmZmODEzYzc0ZWM+XSA/IGRvd25fd3JpdGUrMHgxYy8weDFkIA0KWzxmZmZmZmZmZmEw
-M2ZiYThlPl0gPyB4ZnNfaWxvY2srMHg3ZS8weGEwIFt4ZnNdIA0KWzxmZmZmZmZmZmEwNDFiNjRi
-Pl0gPyBfX3hmc19nZXRfYmxvY2tzKzB4MWRiLzB4M2QwIFt4ZnNdIA0KWzxmZmZmZmZmZjgxMTAz
-MzQwPl0gPyBrbWVtX2NhY2hlX2FsbG9jKzB4MTAwLzB4MTMwIA0KWzxmZmZmZmZmZjgxMTNmYTJl
-Pl0gPyBhbGxvY19wYWdlX2J1ZmZlcnMrMHg2ZS8weGUwIA0KWzxmZmZmZmZmZjgxMTQxY2RmPl0g
-PyBfX2Jsb2NrX3dyaXRlX2JlZ2luKzB4MWNmLzB4NGQwIA0KWzxmZmZmZmZmZmEwNDFiODUwPl0g
-PyB4ZnNfZ2V0X2Jsb2Nrc19kaXJlY3QrMHgxMC8weDEwIFt4ZnNdIA0KWzxmZmZmZmZmZmEwNDFi
-ODUwPl0gPyB4ZnNfZ2V0X2Jsb2Nrc19kaXJlY3QrMHgxMC8weDEwIFt4ZnNdIA0KWzxmZmZmZmZm
-ZjgxMTQyMjZiPl0gPyBibG9ja193cml0ZV9iZWdpbisweDRiLzB4YTAgDQpbPGZmZmZmZmZmYTA0
-MWI4ZmI+XSA/IHhmc192bV93cml0ZV9iZWdpbisweDNiLzB4NzAgW3hmc10gDQpbPGZmZmZmZmZm
-ODEwYzAyNTg+XSA/IGdlbmVyaWNfZmlsZV9idWZmZXJlZF93cml0ZSsweGY4LzB4MjUwDQpbPGZm
-ZmZmZmZmYTA0MjA3YjU+XSA/IHhmc19maWxlX2J1ZmZlcmVkX2Fpb193cml0ZSsweGM1LzB4MTMw
-IFt4ZnNdIA0KWzxmZmZmZmZmZmEwNDIwOTljPl0gPyB4ZnNfZmlsZV9haW9fd3JpdGUrMHgxN2Mv
-MHgyYTAgW3hmc10gDQpbPGZmZmZmZmZmODExMTViMjg+XSA/IGRvX3N5bmNfd3JpdGUrMHhiOC8w
-eGYwIA0KWzxmZmZmZmZmZjgxMTlkYWE0Pl0gPyBzZWN1cml0eV9maWxlX3Blcm1pc3Npb24rMHgy
-NC8weGMwDQpbPGZmZmZmZmZmODExMTYzMGE+XSA/IHZmc193cml0ZSsweGFhLzB4MTkwIA0KWzxm
-ZmZmZmZmZjgxMTE2NjU3Pl0gPyBzeXNfd3JpdGUrMHg0Ny8weDkwIA0KWzxmZmZmZmZmZjgxM2Nl
-NDEyPl0gPyBzeXN0ZW1fY2FsbF9mYXN0cGF0aCsweDE2LzB4MWINCg0KMi4gZmx1c2ggZnJvbSBh
-bm90aGVyIHBhcnRpdGlvbg0KDQpmbHVzaC04OjQ4ICAgICAgRCAwMDAwMDAwMDAwMDAwMDAwICAg
-ICAwICA0MjE3ICAgICAgMiAweDAwMDAwMDAwDQpmZmZmODgzZmMwNTNmNTgwIDAwMDAwMDAwMDAw
-MDAwNDYgZmZmZjg4MWY0MGYzNDhmMCBmZmZmODgxZjQwZTJhYTgwDQpmZmZmODgzZmFiYjgzZmQ4
-IGZmZmY4ODNmYWJiODNmZDggZmZmZjg4M2ZhYmI4M2ZkOCBmZmZmODgzZmMwNTNmNTgwDQpmZmZm
-ODgzZmMyNzY1NGMwIGZmZmY4ODFmNDBkZmMwNDAgMDAwMDAwMDAwMDAwMDAwMSBmZmZmZmZmZjgx
-MDY1NmY5IA0KQ2FsbCBUcmFjZToNCls8ZmZmZmZmZmY4MTA2NTZmOT5dID8gX19xdWV1ZV93b3Jr
-KzB4YzkvMHgzOTAgDQpbPGZmZmZmZmZmODExZTNlM2Y+XSA/IGNmcV9pbnNlcnRfcmVxdWVzdCsw
-eGFmLzB4NGYwIA0KWzxmZmZmZmZmZjgxMDY1YTA2Pl0gPyBxdWV1ZV93b3JrX29uKzB4MTYvMHgy
-MCANCls8ZmZmZmZmZmY4MTNjNjljZD5dID8gc2NoZWR1bGVfdGltZW91dCsweDFkZC8weDI0MCAN
-Cls8ZmZmZmZmZmZhMDQxYTc2Mj5dID8ga21lbV96b25lX3phbGxvYysweDMyLzB4NTAgW3hmc10g
-DQpbPGZmZmZmZmZmODEzYzc1NTk+XSA/IF9fZG93bisweDZjLzB4OTkgDQpbPGZmZmZmZmZmODEw
-NzAzNzc+XSA/IGRvd24rMHgzNy8weDQwIA0KWzxmZmZmZmZmZmEwNDFkNTlkPl0gPyB4ZnNfYnVm
-X2xvY2srMHgxZC8weDQwIFt4ZnNdIA0KWzxmZmZmZmZmZmEwNDFkNmEzPl0gPyBfeGZzX2J1Zl9m
-aW5kKzB4ZTMvMHgyMTAgW3hmc10gDQpbPGZmZmZmZmZmYTA0MWRjYjQ+XSA/IHhmc19idWZfZ2V0
-KzB4NjQvMHgxNTAgW3hmc10gDQpbPGZmZmZmZmZmYTA0MWRmYjI+XSA/IHhmc19idWZfcmVhZCsw
-eDEyLzB4YTAgW3hmc10gDQpbPGZmZmZmZmZmYTA0MTUxYWY+XSA/IHhmc190cmFuc19yZWFkX2J1
-ZisweDFiZi8weDJmMCBbeGZzXSANCls8ZmZmZmZmZmZhMDNkMDZjMD5dID8geGZzX3JlYWRfYWdm
-KzB4NjAvMHgxYjAgW3hmc10gDQpbPGZmZmZmZmZmYTAzY2YzYjc+XSA/IHhmc19hbGxvY191cGRh
-dGUrMHgxNy8weDIwIFt4ZnNdIA0KWzxmZmZmZmZmZmEwM2QwODQxPl0gPyB4ZnNfYWxsb2NfcmVh
-ZF9hZ2YrMHgzMS8weGQwIFt4ZnNdIA0KWzxmZmZmZmZmZmEwM2QyMDgzPl0gPyB4ZnNfYWxsb2Nf
-Zml4X2ZyZWVsaXN0KzB4NDMzLzB4NGEwIFt4ZnNdIA0KWzxmZmZmZmZmZjgxMGQ4OWVkPl0gPyB6
-b25lX3N0YXRpc3RpY3MrMHg5ZC8weGEwIA0KWzxmZmZmZmZmZmEwM2QyM2E0Pl0gPyB4ZnNfYWxs
-b2NfdmV4dGVudCsweDE4NC8weDRhMCBbeGZzXSANCls8ZmZmZmZmZmZhMDNkYzM0OD5dID8geGZz
-X2JtYXBfYnRhbGxvYysweDJkOC8weDZkMCBbeGZzXSANCls8ZmZmZmZmZmZhMDNlMGVmZD5dID8g
-eGZzX2JtYXBpKzB4OWJkLzB4MTFhMCBbeGZzXSANCls8ZmZmZmZmZmZhMDNkOWJiYz5dID8geGZz
-X2JtYXBfc2VhcmNoX211bHRpX2V4dGVudHMrMHhhYy8weDEyMCBbeGZzXSANCls8ZmZmZmZmZmZh
-MDQwMjkzYz5dID8geGZzX2lvbWFwX3dyaXRlX2FsbG9jYXRlKzB4MTdjLzB4MzMwIFt4ZnNdIA0K
-WzxmZmZmZmZmZmEwNDFiMjBmPl0gPyB4ZnNfbWFwX2Jsb2NrcysweDE5Zi8weDFiMCBbeGZzXSAN
-Cls8ZmZmZmZmZmZhMDQxYzIwZT5dID8geGZzX3ZtX3dyaXRlcGFnZSsweDE5ZS8weDQ3MCBbeGZz
-XSANCls8ZmZmZmZmZmY4MTBjOTdiYT5dID8gX193cml0ZXBhZ2UrMHhhLzB4MzAgDQpbPGZmZmZm
-ZmZmODEwYzljNGQ+XSA/IHdyaXRlX2NhY2hlX3BhZ2VzKzB4MWNkLzB4M2QwIA0KWzxmZmZmZmZm
-ZjgxMGM5N2IwPl0gPyBiZGlfc2V0X21heF9yYXRpbysweDkwLzB4OTAgDQpbPGZmZmZmZmZmODEw
-YzllOTM+XSA/IGdlbmVyaWNfd3JpdGVwYWdlcysweDQzLzB4NzAgDQpbPGZmZmZmZmZmODExMzkz
-MzA+XSA/IHdyaXRlYmFja19zaW5nbGVfaW5vZGUrMHgxNjAvMHgzMDANCls8ZmZmZmZmZmY4MTEz
-OTdkND5dID8gd3JpdGViYWNrX3NiX2lub2RlcysweDEwNC8weDFhMCANCls8ZmZmZmZmZmY4MTEz
-OWNmZD5dID8gd3JpdGViYWNrX2lub2Rlc193YisweDhkLzB4MTQwIA0KWzxmZmZmZmZmZjgxMTNh
-MDViPl0gPyB3Yl93cml0ZWJhY2srMHgyYWIvMHgzMTAgDQpbPGZmZmZmZmZmODEzY2VkZWU+XSA/
-IGFwaWNfdGltZXJfaW50ZXJydXB0KzB4ZS8weDIwIA0KWzxmZmZmZmZmZjgxMTNhMTBlPl0gPyB3
-Yl9jaGVja19vbGRfZGF0YV9mbHVzaCsweDRlLzB4YTAgDQpbPGZmZmZmZmZmODExM2EyOGI+XSA/
-IHdiX2RvX3dyaXRlYmFjaysweDEyYi8weDE2MCANCls8ZmZmZmZmZmY4MTEzYTMzMj5dID8gYmRp
-X3dyaXRlYmFja190aHJlYWQrMHg3Mi8weDE1MCANCls8ZmZmZmZmZmY4MTEzYTJjMD5dID8gd2Jf
-ZG9fd3JpdGViYWNrKzB4MTYwLzB4MTYwIA0KWzxmZmZmZmZmZjgxMDZiMDZlPl0gPyBrdGhyZWFk
-KzB4N2UvMHg5MCANCls8ZmZmZmZmZmY4MTNjZjU0ND5dID8ga2VybmVsX3RocmVhZF9oZWxwZXIr
-MHg0LzB4MTAgDQpbPGZmZmZmZmZmODEwNmFmZjA+XSA/IGt0aHJlYWRfd29ya2VyX2ZuKzB4MWEw
-LzB4MWEwIA0KWzxmZmZmZmZmZjgxM2NmNTQwPl0gPyBnc19jaGFuZ2UrMHgxMy8weDEzDQoNCg0K
-a2VybmVsIHZlcnNpb24gMy4wLjEzLTAuMjcNCiAgICANCnhmc3Byb2dzIHZlcnNpb24geGZzX3Jl
-cGFpciB2ZXJzaW9uIDMuMS42DQoNCm51bWJlciBvZiBDUFVzICAzMg0KDQogeGZzX2luZm8gL2Zh
-c3RyYWlkMg0KbWV0YS1kYXRhPS9kZXYvc2RkMSAgICAgICAgICAgICAgaXNpemU9MjU2ICAgIGFn
-Y291bnQ9NCwgYWdzaXplPTE3ODIyMTQ0IGJsa3MNCiAgICAgICAgID0gICAgICAgICAgICAgICAg
-ICAgICAgIHNlY3Rzej01MTIgICBhdHRyPTINCmRhdGEgICAgID0gICAgICAgICAgICAgICAgICAg
-ICAgIGJzaXplPTQwOTYgICBibG9ja3M9NzEyODg1NzYsIGltYXhwY3Q9MjUNCiAgICAgICAgID0g
-ICAgICAgICAgICAgICAgICAgICAgIHN1bml0PTAgICAgICBzd2lkdGg9MCBibGtzDQpuYW1pbmcg
-ICA9dmVyc2lvbiAyICAgICAgICAgICAgICBic2l6ZT00MDk2ICAgYXNjaWktY2k9MA0KbG9nICAg
-ICAgPWludGVybmFsICAgICAgICAgICAgICAgYnNpemU9NDA5NiAgIGJsb2Nrcz0zNDgwOCwgdmVy
-c2lvbj0yDQogICAgICAgICA9ICAgICAgICAgICAgICAgICAgICAgICBzZWN0c3o9NTEyICAgc3Vu
-aXQ9MCBibGtzLCBsYXp5LWNvdW50PTENCnJlYWx0aW1lID1ub25lICAgICAgICAgICAgICAgICAg
-IGV4dHN6PTQwOTYgICBibG9ja3M9MCwgcnRleHRlbnRzPTANCg0KDQogICAgY29udGVudHMgb2Yg
-L3Byb2MvbWVtaW5mbw0KY2F0IC9wcm9jL21lbWluZm8NCk1lbVRvdGFsOiAgICAgICAyNjI0Mjk4
-NjAga0INCk1lbUZyZWU6ICAgICAgICAxNDY4OTMyMDAga0INCkJ1ZmZlcnM6ICAgICAgICAgICAz
-ODYwMCBrQg0KQ2FjaGVkOiAgICAgICAgICAgMzM2Mzg4IGtCDQpTd2FwQ2FjaGVkOiAgICAgICAg
-ICAgIDAga0INCkFjdGl2ZTogICAgICAgICAgNDYwMTM2NCBrQg0KSW5hY3RpdmU6ICAgICAgICAg
-Mjc3ODUyIGtCDQpBY3RpdmUoYW5vbik6ICAgIDQ1MDQyMzYga0INCkluYWN0aXZlKGFub24pOiAg
-ICAgOTUyNCBrQg0KQWN0aXZlKGZpbGUpOiAgICAgIDk3MTI4IGtCDQpJbmFjdGl2ZShmaWxlKTog
-ICAyNjgzMjgga0INClVuZXZpY3RhYmxlOiAgICAxMDc1MjAwMDQga0INCk1sb2NrZWQ6ICAgICAg
-ICAgIDIxMjA0OCBrQg0KU3dhcFRvdGFsOiAgICAgICAxMDUxNjQ0IGtCDQpTd2FwRnJlZTogICAg
-ICAgIDEwNTE2NDQga0INCkRpcnR5OiAgICAgICAgICAgICAgIDE0MCBrQg0KV3JpdGViYWNrOiAg
-ICAgICAgICAgICAwIGtCDQpBbm9uUGFnZXM6ICAgICAgMTEyMDI0MjcyIGtCDQpNYXBwZWQ6ICAg
-ICAgICAgIDIwMzE0MjAga0INClNobWVtOiAgICAgICAgICAgICAgOTUyOCBrQg0KU2xhYjogICAg
-ICAgICAgICAgMTIzNDQ0IGtCDQpTUmVjbGFpbWFibGU6ICAgICAgMjQwODgga0INClNVbnJlY2xh
-aW06ICAgICAgICA5OTM1NiBrQg0KS2VybmVsU3RhY2s6ICAgICAgICAzNzI4IGtCDQpQYWdlVGFi
-bGVzOiAgICAgICAyMjkyODQga0INCk5GU19VbnN0YWJsZTogICAgICAgICAgMCBrQg0KQm91bmNl
-OiAgICAgICAgICAgICAgICAwIGtCDQpXcml0ZWJhY2tUbXA6ICAgICAgICAgIDAga0INCkNvbW1p
-dExpbWl0OiAgICAyNjA4NTcyMDQga0INCkNvbW1pdHRlZF9BUzogICAxMTI3NTI5NjAga0INClZt
-YWxsb2NUb3RhbDogICAzNDM1OTczODM2NyBrQg0KVm1hbGxvY1VzZWQ6ICAgICAgNzEyNjEyIGtC
-DQpWbWFsbG9jQ2h1bms6ICAgMzQyMjQ4MDIwNDQga0INCkhhcmR3YXJlQ29ycnVwdGVkOiAgICAg
-MCBrQg0KQW5vbkh1Z2VQYWdlczogIDExMTg2MTc2MCBrQg0KSHVnZVBhZ2VzX1RvdGFsOiAgICAg
-ICAwDQpIdWdlUGFnZXNfRnJlZTogICAgICAgIDANCkh1Z2VQYWdlc19Sc3ZkOiAgICAgICAgMA0K
-SHVnZVBhZ2VzX1N1cnA6ICAgICAgICAwDQpIdWdlcGFnZXNpemU6ICAgICAgIDIwNDgga0INCkRp
-cmVjdE1hcDRrOiAgICAgIDEzMzc4OCBrQg0KRGlyZWN0TWFwMk06ICAgICA3MTc4MjQwIGtCDQpE
-aXJlY3RNYXAxRzogICAgMjYxMDk1NDI0IGtCDQoNCg0KICAgIGNvbnRlbnRzIG9mIC9wcm9jL21v
-dW50cw0KDQpjYXQgL3Byb2MvbW91bnRzDQpyb290ZnMgLyByb290ZnMgcncgMCAwDQp1ZGV2IC9k
-ZXYgdG1wZnMgcncscmVsYXRpbWUsbnJfaW5vZGVzPTAsbW9kZT03NTUgMCAwIHRtcGZzIC9kZXYv
-c2htIHRtcGZzIHJ3LHJlbGF0aW1lIDAgMA0KL2Rldi9zZGUzIC8gcmVpc2VyZnMgcncscmVsYXRp
-bWUsYWNsLHVzZXJfeGF0dHIgMCAwIHByb2MgL3Byb2MgcHJvYyBydyxyZWxhdGltZSAwIDAgc3lz
-ZnMgL3N5cyBzeXNmcyBydyxyZWxhdGltZSAwIDAgZGV2cHRzIC9kZXYvcHRzIGRldnB0cyBydyxy
-ZWxhdGltZSxnaWQ9NSxtb2RlPTYyMCxwdG14bW9kZT0wMDAgMCAwDQovZGV2L3NkZTEgL2Jvb3Qg
-cmVpc2VyZnMgcncscmVsYXRpbWUsYWNsLHVzZXJfeGF0dHIgMCAwIGZ1c2VjdGwgL3N5cy9mcy9m
-dXNlL2Nvbm5lY3Rpb25zIGZ1c2VjdGwgcncscmVsYXRpbWUgMCAwIGRlYnVnZnMgL3N5cy9rZXJu
-ZWwvZGVidWcgZGVidWdmcyBydyxyZWxhdGltZSAwIDAgbmZzZCAvcHJvYy9mcy9uZnNkIG5mc2Qg
-cncscmVsYXRpbWUgMCAwIHJwY19waXBlZnMgL3Zhci9saWIvbmZzL3JwY19waXBlZnMgcnBjX3Bp
-cGVmcyBydyxyZWxhdGltZSAwIDAgLy8xMC4zNC4zLjI0Ny9JTUNSb290Rm9sZGVyIC9ob21lL2ts
-YWMvbW91bnRfcGF0aF9Ub29sIGNpZnMgcncscmVsYXRpbWUsc2VjPW50bG0sdW5jPVxcMTAuMzQu
-My4yNDdcSU1DUm9vdEZvbGRlcix1c2VybmFtZT1LVE1mZyx1aWQ9MTAwMCxmb3JjZXVpZCxnaWQ9
-MTAwLGZvcmNlZ2lkLGFkZHI9MTAuMzQuMy4yNDcsZmlsZV9tb2RlPTA3NTUsZGlyX21vZGU9MDc1
-NSxub3VuaXgscnNpemU9MTYzODQsd3NpemU9MTMxMDA3LGFjdGltZW89MSAwIDANCi9kZXYvc2Rh
-MSAvZWRnZSB4ZnMgcncsbm9hdGltZSxub2RpcmF0aW1lLGF0dHIyLGRlbGF5bG9nLGxhcmdlaW8s
-bm9iYXJyaWVyLGxvZ2J1ZnM9OCxsb2dic2l6ZT0yNTZrLG5vcXVvdGEgMCAwDQovZGV2L3NkYjEg
-L2Zhc3RyYWlkMCB4ZnMgcncsbm9hdGltZSxub2RpcmF0aW1lLGF0dHIyLGRlbGF5bG9nLGxhcmdl
-aW8sbm9iYXJyaWVyLGxvZ2J1ZnM9OCxsb2dic2l6ZT0yNTZrLG5vcXVvdGEgMCAwDQovZGV2L3Nk
-YzEgL2Zhc3RyYWlkMSB4ZnMgcncsbm9hdGltZSxub2RpcmF0aW1lLGF0dHIyLGRlbGF5bG9nLGxh
-cmdlaW8sbm9iYXJyaWVyLGxvZ2J1ZnM9OCxsb2dic2l6ZT0yNTZrLG5vcXVvdGEgMCAwDQovZGV2
-L3NkZDEgL2Zhc3RyYWlkMiB4ZnMgcncsbm9hdGltZSxub2RpcmF0aW1lLGF0dHIyLGRlbGF5bG9n
-LGxhcmdlaW8sbm9iYXJyaWVyLGxvZ2J1ZnM9OCxsb2dic2l6ZT0yNTZrLG5vcXVvdGEgMCAwDQov
-ZGV2L3NkZjEgL2Zhc3RyYWlkMyB4ZnMgcncsbm9hdGltZSxub2RpcmF0aW1lLGF0dHIyLGRlbGF5
-bG9nLGxhcmdlaW8sbm9iYXJyaWVyLGxvZ2J1ZnM9OCxsb2dic2l6ZT0yNTZrLG5vcXVvdGEgMCAw
-DQovZGV2L3NkZzEgL2Zhc3RyYWlkNCB4ZnMgcncsbm9hdGltZSxub2RpcmF0aW1lLGF0dHIyLGRl
-bGF5bG9nLGxhcmdlaW8sbm9iYXJyaWVyLGxvZ2J1ZnM9OCxsb2dic2l6ZT0yNTZrLG5vcXVvdGEg
-MCAwDQovZGV2L3NkaDEgL2Zhc3RyYWlkNSB4ZnMgcncsbm9hdGltZSxub2RpcmF0aW1lLGF0dHIy
-LGRlbGF5bG9nLGxhcmdlaW8sbm9iYXJyaWVyLGxvZ2J1ZnM9OCxsb2dic2l6ZT0yNTZrLG5vcXVv
-dGEgMCAwDQoNCg0KICAgIGNvbnRlbnRzIG9mIC9wcm9jL3BhcnRpdGlvbnMNCiBjYXQgL3Byb2Mv
-cGFydGl0aW9ucw0KbWFqb3IgbWlub3IgICNibG9ja3MgIG5hbWUNCg0KICAgOCAgICAgICAxNiAg
-Mjg1MTU1MzI4IHNkYg0KICAgOCAgICAgICAxNyAgMjg1MTU0MzA0IHNkYjENCiAgIDggICAgICAg
-MzIgIDI4NTE1NTMyOCBzZGMNCiAgIDggICAgICAgMzMgIDI4NTE1NDMwNCBzZGMxDQogICA4ICAg
-ICAgIDQ4ICAyODUxNTUzMjggc2RkDQogICA4ICAgICAgIDQ5ICAyODUxNTQzMDQgc2RkMQ0KICAg
-OCAgICAgICA4MCAgMjg1NjcxNDI0IHNkZg0KICAgOCAgICAgICA4MSAgMjg1NjU5MTM2IHNkZjEN
-CiAgIDggICAgICAgNjQgIDEyNDQ4NTYzMiBzZGUNCiAgIDggICAgICAgNjUgICAgMTA1MTY0OCBz
-ZGUxDQogICA4ICAgICAgIDY2ICAgIDEwNTE2NDggc2RlMg0KICAgOCAgICAgICA2NyAgMTIyMzgx
-MzEyIHNkZTMNCiAgIDggICAgICAgOTYgIDI4NTY3MTQyNCBzZGcNCiAgIDggICAgICAgOTcgIDI4
-NTY1OTEzNiBzZGcxDQogICA4ICAgICAgMTEyICAyODU2NzE0MjQgc2RoDQogICA4ICAgICAgMTEz
-ICAyODU2NTkxMzYgc2RoMQ0KICAgOCAgICAgICAgMCAgMTQyNTc3NjY0IHNkYQ0KICAgOCAgICAg
-ICAgMSAgMTQyNTc2NjQwIHNkYTENCg0KDQogICAgUkFJRCBsYXlvdXQgKGhhcmR3YXJlIGFuZC9v
-ciBzb2Z0d2FyZSkgSGFyZHdhcmUgUkFJRCAwICwgMiBkaXNrcyBwZXIgUkFJRC4gIA0KICAgIExW
-TSBjb25maWd1cmF0aW9uDQoNCmZkaXNrIC1sDQoNCkRpc2sgL2Rldi9zZGI6IDI5Mi4wIEdCLCAy
-OTE5OTkwNTU4NzIgYnl0ZXMNCjI1NSBoZWFkcywgNjMgc2VjdG9ycy90cmFjaywgMzU1MDAgY3ls
-aW5kZXJzLCB0b3RhbCA1NzAzMTA2NTYgc2VjdG9ycyBVbml0cyA9IHNlY3RvcnMgb2YgMSAqIDUx
-MiA9IDUxMiBieXRlcyBTZWN0b3Igc2l6ZSAobG9naWNhbC9waHlzaWNhbCk6IDUxMiBieXRlcyAv
-IDUxMiBieXRlcyBJL08gc2l6ZSAobWluaW11bS9vcHRpbWFsKTogNTEyIGJ5dGVzIC8gNTEyIGJ5
-dGVzIERpc2sgaWRlbnRpZmllcjogMHgwMDA3M2IwYg0KDQogICBEZXZpY2UgQm9vdCAgICAgIFN0
-YXJ0ICAgICAgICAgRW5kICAgICAgQmxvY2tzICAgSWQgIFN5c3RlbQ0KL2Rldi9zZGIxICAgICAg
-ICAgICAgMjA0OCAgIDU3MDMxMDY1NSAgIDI4NTE1NDMwNCAgIDgzICBMaW51eA0KDQpEaXNrIC9k
-ZXYvc2RjOiAyOTIuMCBHQiwgMjkxOTk5MDU1ODcyIGJ5dGVzDQoyNTUgaGVhZHMsIDYzIHNlY3Rv
-cnMvdHJhY2ssIDM1NTAwIGN5bGluZGVycywgdG90YWwgNTcwMzEwNjU2IHNlY3RvcnMgVW5pdHMg
-PSBzZWN0b3JzIG9mIDEgKiA1MTIgPSA1MTIgYnl0ZXMgU2VjdG9yIHNpemUgKGxvZ2ljYWwvcGh5
-c2ljYWwpOiA1MTIgYnl0ZXMgLyA1MTIgYnl0ZXMgSS9PIHNpemUgKG1pbmltdW0vb3B0aW1hbCk6
-IDUxMiBieXRlcyAvIDUxMiBieXRlcyBEaXNrIGlkZW50aWZpZXI6IDB4MDAwZDNlYmENCg0KICAg
-RGV2aWNlIEJvb3QgICAgICBTdGFydCAgICAgICAgIEVuZCAgICAgIEJsb2NrcyAgIElkICBTeXN0
-ZW0NCi9kZXYvc2RjMSAgICAgICAgICAgIDIwNDggICA1NzAzMTA2NTUgICAyODUxNTQzMDQgICA4
-MyAgTGludXgNCg0KRGlzayAvZGV2L3NkZDogMjkyLjAgR0IsIDI5MTk5OTA1NTg3MiBieXRlcw0K
-MjU1IGhlYWRzLCA2MyBzZWN0b3JzL3RyYWNrLCAzNTUwMCBjeWxpbmRlcnMsIHRvdGFsIDU3MDMx
-MDY1NiBzZWN0b3JzIFVuaXRzID0gc2VjdG9ycyBvZiAxICogNTEyID0gNTEyIGJ5dGVzIFNlY3Rv
-ciBzaXplIChsb2dpY2FsL3BoeXNpY2FsKTogNTEyIGJ5dGVzIC8gNTEyIGJ5dGVzIEkvTyBzaXpl
-IChtaW5pbXVtL29wdGltYWwpOiA1MTIgYnl0ZXMgLyA1MTIgYnl0ZXMgRGlzayBpZGVudGlmaWVy
-OiAweDAwMDNlNTQ4DQoNCiAgIERldmljZSBCb290ICAgICAgU3RhcnQgICAgICAgICBFbmQgICAg
-ICBCbG9ja3MgICBJZCAgU3lzdGVtDQovZGV2L3NkZDEgICAgICAgICAgICAyMDQ4ICAgNTcwMzEw
-NjU1ICAgMjg1MTU0MzA0ICAgODMgIExpbnV4DQoNCkRpc2sgL2Rldi9zZGY6IDI5Mi41IEdCLCAy
-OTI1Mjc1MzgxNzYgYnl0ZXMNCjI1NSBoZWFkcywgNjMgc2VjdG9ycy90cmFjaywgMzU1NjQgY3ls
-aW5kZXJzLCB0b3RhbCA1NzEzNDI4NDggc2VjdG9ycyBVbml0cyA9IHNlY3RvcnMgb2YgMSAqIDUx
-MiA9IDUxMiBieXRlcyBTZWN0b3Igc2l6ZSAobG9naWNhbC9waHlzaWNhbCk6IDUxMiBieXRlcyAv
-IDUxMiBieXRlcyBJL08gc2l6ZSAobWluaW11bS9vcHRpbWFsKTogNTEyIGJ5dGVzIC8gNTEyIGJ5
-dGVzIERpc2sgaWRlbnRpZmllcjogMHgwMDA5Y2FmMA0KDQogICBEZXZpY2UgQm9vdCAgICAgIFN0
-YXJ0ICAgICAgICAgRW5kICAgICAgQmxvY2tzICAgSWQgIFN5c3RlbQ0KL2Rldi9zZGYxICAgICAg
-ICAgICAgMjA0OCAgIDU3MTMyMDMxOSAgIDI4NTY1OTEzNiAgIDgzICBMaW51eA0KDQpEaXNrIC9k
-ZXYvc2RlOiAxMjcuNSBHQiwgMTI3NDczMjg3MTY4IGJ5dGVzDQoyNTUgaGVhZHMsIDYzIHNlY3Rv
-cnMvdHJhY2ssIDE1NDk3IGN5bGluZGVycywgdG90YWwgMjQ4OTcxMjY0IHNlY3RvcnMgVW5pdHMg
-PSBzZWN0b3JzIG9mIDEgKiA1MTIgPSA1MTIgYnl0ZXMgU2VjdG9yIHNpemUgKGxvZ2ljYWwvcGh5
-c2ljYWwpOiA1MTIgYnl0ZXMgLyA1MTIgYnl0ZXMgSS9PIHNpemUgKG1pbmltdW0vb3B0aW1hbCk6
-IDUxMiBieXRlcyAvIDUxMiBieXRlcyBEaXNrIGlkZW50aWZpZXI6IDB4Njc0Y2ZhZWUNCg0KICAg
-RGV2aWNlIEJvb3QgICAgICBTdGFydCAgICAgICAgIEVuZCAgICAgIEJsb2NrcyAgIElkICBTeXN0
-ZW0NCi9kZXYvc2RlMSAgICogICAgICAgIDIwNDggICAgIDIxMDUzNDMgICAgIDEwNTE2NDggICA4
-MyAgTGludXgNCi9kZXYvc2RlMiAgICAgICAgIDIxMDUzNDQgICAgIDQyMDg2MzkgICAgIDEwNTE2
-NDggICA4MiAgTGludXggc3dhcCAvIFNvbGFyaXMNCi9kZXYvc2RlMyAgICAgICAgIDQyMDg2NDAg
-ICAyNDg5NzEyNjMgICAxMjIzODEzMTIgICA4MyAgTGludXgNCg0KRGlzayAvZGV2L3NkZzogMjky
-LjUgR0IsIDI5MjUyNzUzODE3NiBieXRlcw0KMjU1IGhlYWRzLCA2MyBzZWN0b3JzL3RyYWNrLCAz
-NTU2NCBjeWxpbmRlcnMsIHRvdGFsIDU3MTM0Mjg0OCBzZWN0b3JzIFVuaXRzID0gc2VjdG9ycyBv
-ZiAxICogNTEyID0gNTEyIGJ5dGVzIFNlY3RvciBzaXplIChsb2dpY2FsL3BoeXNpY2FsKTogNTEy
-IGJ5dGVzIC8gNTEyIGJ5dGVzIEkvTyBzaXplIChtaW5pbXVtL29wdGltYWwpOiA1MTIgYnl0ZXMg
-LyA1MTIgYnl0ZXMgRGlzayBpZGVudGlmaWVyOiAweDAwMDBhMWQ0DQoNCiAgIERldmljZSBCb290
-ICAgICAgU3RhcnQgICAgICAgICBFbmQgICAgICBCbG9ja3MgICBJZCAgU3lzdGVtDQovZGV2L3Nk
-ZzEgICAgICAgICAgICAyMDQ4ICAgNTcxMzIwMzE5ICAgMjg1NjU5MTM2ICAgODMgIExpbnV4DQoN
-CkRpc2sgL2Rldi9zZGg6IDI5Mi41IEdCLCAyOTI1Mjc1MzgxNzYgYnl0ZXMNCjI1NSBoZWFkcywg
-NjMgc2VjdG9ycy90cmFjaywgMzU1NjQgY3lsaW5kZXJzLCB0b3RhbCA1NzEzNDI4NDggc2VjdG9y
-cyBVbml0cyA9IHNlY3RvcnMgb2YgMSAqIDUxMiA9IDUxMiBieXRlcyBTZWN0b3Igc2l6ZSAobG9n
-aWNhbC9waHlzaWNhbCk6IDUxMiBieXRlcyAvIDUxMiBieXRlcyBJL08gc2l6ZSAobWluaW11bS9v
-cHRpbWFsKTogNTEyIGJ5dGVzIC8gNTEyIGJ5dGVzIERpc2sgaWRlbnRpZmllcjogMHgwMDA2Yjdm
-Zg0KDQogICBEZXZpY2UgQm9vdCAgICAgIFN0YXJ0ICAgICAgICAgRW5kICAgICAgQmxvY2tzICAg
-SWQgIFN5c3RlbQ0KL2Rldi9zZGgxICAgICAgICAgICAgMjA0OCAgIDU3MTMyMDMxOSAgIDI4NTY1
-OTEzNiAgIDgzICBMaW51eA0KDQpEaXNrIC9kZXYvc2RhOiAxNDYuMCBHQiwgMTQ1OTk5NTI3OTM2
-IGJ5dGVzDQoyNTUgaGVhZHMsIDYzIHNlY3RvcnMvdHJhY2ssIDE3NzUwIGN5bGluZGVycywgdG90
-YWwgMjg1MTU1MzI4IHNlY3RvcnMgVW5pdHMgPSBzZWN0b3JzIG9mIDEgKiA1MTIgPSA1MTIgYnl0
-ZXMgU2VjdG9yIHNpemUgKGxvZ2ljYWwvcGh5c2ljYWwpOiA1MTIgYnl0ZXMgLyA1MTIgYnl0ZXMg
-SS9PIHNpemUgKG1pbmltdW0vb3B0aW1hbCk6IDUxMiBieXRlcyAvIDUxMiBieXRlcyBEaXNrIGlk
-ZW50aWZpZXI6IDB4MDAwZjE1NjgNCg0KICAgRGV2aWNlIEJvb3QgICAgICBTdGFydCAgICAgICAg
-IEVuZCAgICAgIEJsb2NrcyAgIElkICBTeXN0ZW0NCi9kZXYvc2RhMSAgICAgICAgICAgIDIwNDgg
-ICAyODUxNTUzMjcgICAxNDI1NzY2NDAgICA4MyAgTGludXgNCg0K
-
---_002_3542214BE3A3EF419F236DFE0F878BC90517D2BL2PRD0310MB374na_
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---_002_3542214BE3A3EF419F236DFE0F878BC90517D2BL2PRD0310MB374na_--
