@@ -1,27 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 585AF7FCC
-	for <xfs@oss.sgi.com>; Wed, 13 Feb 2013 15:21:27 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 14112304032
-	for <xfs@oss.sgi.com>; Wed, 13 Feb 2013 13:21:24 -0800 (PST)
-Received: from srvmail.3sr-grenoble.fr (3sr-srvmail.ampere.inpg.fr
-	[147.171.64.82]) by cuda.sgi.com with ESMTP id FdTsTpAkajoXvXOB
-	for <xfs@oss.sgi.com>; Wed, 13 Feb 2013 13:21:19 -0800 (PST)
-Received: from localhost (localhost [127.0.0.1])
-	by srvmail.3sr-grenoble.fr (Postfix) with SMTP id BC75628A229
-	for <xfs@oss.sgi.com>; Wed, 13 Feb 2013 22:21:18 +0100 (CET)
-In-Reply-To: <511BF3B6.9040502@sandeen.net>
-References: <511BC78B.6070205@3sr-grenoble.fr> <511BCB41.4060804@sandeen.net>
-	<511BCD11.20907@3sr-grenoble.fr> <511BCFB6.8000309@sandeen.net>
-	<511BD0FB.2070401@3sr-grenoble.fr> <511BD2D1.9010906@sandeen.net>
-	<511BD6ED.6030006@3sr-grenoble.fr>
-	<511BEE8B.8000400@sandeen.net> <511BF3B6.9040502@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id D28C37FCC
+	for <xfs@oss.sgi.com>; Wed, 13 Feb 2013 15:32:57 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B65DC304053
+	for <xfs@oss.sgi.com>; Wed, 13 Feb 2013 13:32:57 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	9nBCUxu7vFXannir for <xfs@oss.sgi.com>;
+	Wed, 13 Feb 2013 13:32:55 -0800 (PST)
+Date: Thu, 14 Feb 2013 08:32:17 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfstests: add disk failure simulation test
+Message-ID: <20130213213217.GG26694@dastard>
+References: <1360770097-6351-1-git-send-email-dmonakhov@openvz.org>
 MIME-Version: 1.0
-Subject: Re: problem after growing
-From: =?ISO-8859-1?Q?R=E9mi_Cailletaud?= <remi.cailletaud@3sr-grenoble.fr>
-Date: Wed, 13 Feb 2013 22:18:59 +0100
-Message-ID: <69fd0a0f-1574-4013-8efb-a408f59ea28a@email.android.com>
+Content-Disposition: inline
+In-Reply-To: <1360770097-6351-1-git-send-email-dmonakhov@openvz.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,68 +25,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Dmitry Monakhov <dmonakhov@openvz.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, dchinner@redhat.com, xfs@oss.sgi.com
 
-CkVyaWMgU2FuZGVlbiA8c2FuZGVlbkBzYW5kZWVuLm5ldD4gYSDDqWNyaXTCoDoKCj5PbiAyLzEz
-LzEzIDE6NTAgUE0sIEVyaWMgU2FuZGVlbiB3cm90ZToKPj4gT24gMi8xMy8xMyAxMjowOSBQTSwg
-UsOpbWkgQ2FpbGxldGF1ZCB3cm90ZToKPj4+IExlIDEzLzAyLzIwMTMgMTg6NTIsIEVyaWMgU2Fu
-ZGVlbiBhIMOpY3JpdCA6Cj4+IAo+PiA8c25pcD4KPj4gCj4+Pj4gRGlkIHRoZSBmaWxlc3lzdGVt
-IGdyb3cgYWN0dWFsbHkgd29yaz8KPj4+Pgo+Pj4+ICMgeGZzX2RiIC1jICJzYiAwIiAtYyAicCIg
-L2Rldi92ZzAvdG9tby0yMDExMTEKPj4+PiBtYWdpY251bSA9IDB4NTg0NjUzNDIKPj4+PiBibG9j
-a3NpemUgPSA0MDk2Cj4+Pj4gZGJsb2NrcyA9IDEwNDY4OTgyNzQ1Cj4+Pj4KPj4+PiBUaGF0IGxv
-b2tzIGxpa2UgaXQncyAoc3RpbGw/KSBhIDM4VGlCLzQyVEIgZmlsZXN5c3RlbSwgd2l0aDoKPj4+
-Pgo+Pj4+IHNlY3RzaXplID0gNTEyCj4+Pj4KPj4+PiA1MTIgc2VjdG9ycy4KPj4+Pgo+Pj4+IEhv
-dyBiaWcgd2FzIGl0IGJlZm9yZSB5b3UgdHJpZWQgdG8gZ3JvdyBpdCwgYW5kIGhvdyBtdWNoIGRp
-ZCB5b3UKPnRyeSB0byBncm93IGl0IGJ5PyAgTWF5YmUgdGhlIHNpemUgbmV2ZXIgY2hhbmdlZC4K
-Pj4+Cj4+PiBXYXMgMzksIGdyb3dpbmcgdG8gNDQuIFRlc3RkaXNrIHNheXMgNDggVEIgLyA0NCBU
-aUIuLi4gVGhlcmUgaXMgc29tZQo+Y2hhbmNlIHRoYXQgaXQgd2FzIG5ldmVyIHJlYWxseSBncm93
-ZWQuCj4+Pj4gQXQgbW91bnQgdGltZSBpdCB0cmllcyB0byBzZXQgdGhlIHNlY3RvciBzaXplIG9m
-IHRoZSBkZXZpY2U7IGl0cycgYQo+aGFyZC00ayBkZXZpY2UsIHNvIHNldHRpbmcgaXQgdG8gNTEy
-IGZhaWxzLgo+Pj4+Cj4+Pj4gVGhpcyBtYXkgYmUgYXMgbXVjaCBvZiBhbiBMVk0gaXNzdWUgYXMg
-YW55dGhpbmc7IGhvdyBkbyB5b3UgZ2V0IHRoZQo+TFZNIGRldmljZSBiYWNrIHRvIHNvbWV0aGlu
-ZyB3aXRoIDUxMi1ieXRlIGxvZ2ljYWwgc2VjdG9ycz8gIEkgaGF2ZSBubwo+aWRlYS4uLgo+Pj4+
-Cj4+Pj4gKmlmKiB0aGUgZnMgZGlkbid0IGFjdHVhbGx5IGdyb3csIGFuZCBpZiB0aGUgbmV3IDRr
-LXNlY3RvciBzcGFjZSBpcwo+bm90IHVzZWQgYnkgdGhlIGZpbGVzeXN0ZW0sIGFuZCBpZiB5b3Ug
-Y2FuIHNvbWVob3cgcmVtb3ZlIHRoYXQgbmV3Cj5zcGFjZSBmcm9tIHRoZSBkZXZpY2UgYW5kIHNl
-dCB0aGUgTFYgYmFjayB0byA1MTIgc2VjdG9ycywgeW91IG1pZ2h0IGJlCj5pbiBnb29kIHNoYXBl
-Lgo+Pj4gSSBkb250IGVpdGhlciBrbm93IGhvdyB0byBzZWUgbm9yIHNldCBMViBzZWN0b3Igc2l6
-ZS4gIEl0J3MgMTAwJQo+c3VyZSB0aGF0IGFueXRoaW5nIHdhcyBjb3BpZWQgb24gNGsgc2VjdG9y
-IHNpemUsIGFuZCBwcmV0dHkgc3VyZSB0aGF0Cj50aGUgZnMgZGlkIG5vdCByZWFsbHkgZ3Jvdy4K
-Pj4gCj4+IEkgdGhpbmsgdGhlIHNhbWUgYmxvY2tkZXYgY29tbWFuZCB3aWxsIHRlbGwgeW91Lgo+
-PiAKPj4gIAo+Pj4+IFByb2NlZWQgd2l0aCBleHRyZW1lIGNhdXRpb24gaGVyZSwgSSB3b3VsZG4n
-dCBzdGFydCBqdXN0IHRyeWluZwo+cmFuZG9tIHRoaW5ncyB1bmxlc3MgeW91IGhhdmUgc29tZSBv
-dGhlciB3YXkgdG8gZ2V0IHlvdXIgZGF0YSBiYWNrCj4oYmFja3Vwcz8pLiAgSSdkIGNoZWNrIHdp
-dGggTFZNIGZvbGtzIGFzIHdlbGwsIGFuZCBtYXliZSBzZWUgaWYKPmRjaGlubmVyIG9yIHRoZSBz
-Z2kgZm9sa3MgaGF2ZSBvdGhlciBzdWdnZXN0aW9ucy4KPj4+IFNpZ2guLi4gTm8gYmFja3VwICg0
-NFRvIGlzIHRvbyBsYXJnZSBmb3IgdXMuLi4pICEgSSdtIHJ1bm5pbmcgYQo+dGVzdGRpc2sgcmVj
-b3ZlciwgYnV0IEknbSBub3QgdmVyeSBjb25maWRlbnQgYWJvdXQgc3VjY2Vzcy4uLgo+Pj4gVGhh
-bmtzIHRvIGRlZXBlciBpbnZlc3RpZ2F0ZSB0aGlzLi4uCj4+Pj4gRmlyc3QgbGV0J3MgZmluZCBv
-dXQgaWYgdGhlIGZpbGVzeXN0ZW0gYWN0dWFsbHkgdGhpbmtzIGl0J3MgbGl2aW5nCj5vbiB0aGUg
-bmV3IHNwYWNlLgo+Pj4gV2hhdCBpcyB0aGUgd2F5IHRvIG1ha2UgaXQgdGFsayBhYm91dCB0aGF0
-ID8KPj4gCj4+IHdlbGwsIHlvdSBoYXZlIDEwNDY4OTgyNzQ1IDRrIGJsb2NrcyBpbiB5b3VyIGZp
-bGVzeXN0ZW0sIHNvCj40Mjg4MDk1MzMyMzUyMCBieXRlcyBvZiB4ZnMgZmlsZXN5c3RlbS4KPj4g
-Cj4+IExvb2sgYXQgeW91ciBsdm0gbGF5b3V0LCBkb2VzIHRoYXQgZXh0ZW5kIGludG8gdGhlIG5l
-dyBkaXNrIHNwYWNlIG9yCj5pcyBpdCBjb25maW5lZCB0byB0aGUgb3JpZ2luYWwgZGlzayBzcGFj
-ZT8KPgo+bHZtIGZvbGtzIEkgdGFsayB0byBzYXkgdGhhdCBpZiB5b3UgcmVtb3ZlIHRoZSA0ayBk
-ZXZpY2UgZnJvbSB0aGUgbHZtCj52b2x1bWUgaXQgc2hvdWxkIHN3aXRjaCBiYWNrIHRvIDUxMiBz
-ZWN0b3JzLgo+Cj5zbyBpZiB5b3UgY2FuIGNhbiBjb252aW5jZSB5b3Vyc2VsZiB0aGF0IDQyODgw
-OTUzMzIzNTIwIGJ5dGVzIGRvZXMgbm90Cj5jcm9zcyBpbnRvIHRoZSBuZXdseSBhZGRlZCBkaXNr
-IHNwYWNlLCBqdXN0IHJlbW92ZSBpdCBhZ2FpbiwgYW5kCj5ldmVyeXRoaW5nIHNob3VsZCBiZSBo
-YXBweS4KPgoKT2ssIEknbGwgY2hlY2sgdGhhdCB0b21vcnJvdyBhbmQgdHJ5IHRvIHJlbW92ZSBh
-ZGRlZCBzcGFjZSBpZiBteSBmcyBkb2VzIG5vdCBsaXZlIG9uLi4uCgo+VW5sZXNzIHlvdXIgcmFz
-aCBkZWNpc2lvbiB0byBzdGFydCBydW5uaW5nICJ0ZXN0ZGlzayIgbWFkZSB0aGluZ3Mgd29yc2UK
-PjspCgpJdCdzIG9ubHkgYW5hbHlzZSwgaXQgZG9lcyBub3QgbW9kaWZ5IGFueXRoaW5nLi4uIGl0
-IHNob3VsZCBub3QgaGF2ZSBhbnkgZWZmZWN0Li4uCgpUaHggYWdhaW4sCgpyw6ltaQoKPi1Fcmlj
-Cj4KPj4gLUVyaWMKPj4gCj4+PiBUaGFua3MgYWdhaW4gZm9yIHlvdXIgaGVscCAhCj4+Pgo+Pj4g
-csOpbWkKPj4+Cj4+Pj4gLUVyaWMKPj4+Pgo+Pj4+PiByw6ltaQo+Cj5fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwo+eGZzIG1haWxpbmcgbGlzdAo+eGZzQG9z
-cy5zZ2kuY29tCj5odHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMKCgotLSAK
-RW52b3nDqSBkZSBtb24gdMOpbMOpcGhvbmUgQW5kcm9pZCBhdmVjIEstOSBNYWlsLiBFeGN1c2V6
-IGxhIGJyacOodmV0w6kuCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5j
-b20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On Wed, Feb 13, 2013 at 07:41:37PM +0400, Dmitry Monakhov wrote:
+> BE CAREFUL!! test known to cause memory corruption for XFS
+> see: https://gist.github.com/dmonakhov/4945005
+
+Commit 9f87832 (xfs: fix shutdown hang on invalid inode during
+create) might actually fix this. IIRC, it went into 3.8-rc7 so that
+wouldn't have been in the kernel you were testing. Can you retest
+with a more recent kernel and if it is still busted, send a bug
+report to the list?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
