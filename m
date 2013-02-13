@@ -1,20 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8A11A7FB3
-	for <xfs@oss.sgi.com>; Wed, 13 Feb 2013 02:50:24 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 41F627FB3
+	for <xfs@oss.sgi.com>; Wed, 13 Feb 2013 02:50:25 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 712C5304043
-	for <xfs@oss.sgi.com>; Wed, 13 Feb 2013 00:50:24 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2FDB78F8050
+	for <xfs@oss.sgi.com>; Wed, 13 Feb 2013 00:50:25 -0800 (PST)
 Received: from relay.sw.ru (mailhub.sw.ru [195.214.232.25]) by cuda.sgi.com
-	with ESMTP id S1XDUOrdAd2PX8ad (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id BdaWrKu3hmeFBKmC (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 13 Feb 2013 00:50:22 -0800 (PST)
+	Wed, 13 Feb 2013 00:50:23 -0800 (PST)
 From: Dmitry Monakhov <dmonakhov@openvz.org>
-Subject: [PATCH 1/8] xfstests: add fio requirement V2
-Date: Wed, 13 Feb 2013 12:49:56 +0400
-Message-Id: <1360745403-6373-2-git-send-email-dmonakhov@openvz.org>
-In-Reply-To: <1360745403-6373-1-git-send-email-dmonakhov@openvz.org>
-References: <1360745403-6373-1-git-send-email-dmonakhov@openvz.org>
+Subject: [PATCH 0/8] xfstests: Stress tests improments v3
+Date: Wed, 13 Feb 2013 12:49:55 +0400
+Message-Id: <1360745403-6373-1-git-send-email-dmonakhov@openvz.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,67 +29,25 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: linux-fsdevel@vger.kernel.org, Dmitry Monakhov <dmonakhov@openvz.org>, linux-ext4@vger.kernel.org, dchinner@redhat.com
 
-FIO is very flexible io generator, I would call it IO swiss knife.
-Currently we have tonns of hardcoded application which reproduces
-some predefined scenario. This approach has obvious dissadvantages
-1) Lack of flexability: one written it is hard to modify it in future
-2) Code base is large, many routines written again and again
+This is third version of the patch series, previous version
+can be found here: http://oss.sgi.com/archives/xfs/2012-09/msg00328.html
 
-At the same time add new fio based tast is just add simle INI file.
-This greatly simplify code review. I do beleve that some day we will
-replace most of hardcoded io binaries with fio.
+xfstests-add-fio-requirement-V2
+xfstests-get-rid-of-hardcoded-sbin-mkfs
+xfstest-add-configurable-load-factors
+xfstest-allow-fsstress-to-use-load-factor-where-appr
+run-check-to-common_rc
+add-fallocate-truncate-vs-AIO-DIO-stress-test
+add-fallocate-punch_hole-vs-AIO-DIO-stress-test
+add-defragmentation-stress-tests-for-ext4
 
-One who is planning to run $FIO_PROG should first check that system
-contains appropriate version which is able to handle jobfile
-for example:  _require_fio 286-job.fio
+Changes since V2
 
-Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
----
- common.config |    1 +
- common.rc     |   15 +++++++++++++++
- 2 files changed, 16 insertions(+), 0 deletions(-)
-
-diff --git a/common.config b/common.config
-index 7bed1c5..d5c8956 100644
---- a/common.config
-+++ b/common.config
-@@ -158,6 +158,7 @@ export XFS_QUOTA_PROG="`set_prog_path xfs_quota`"
- export KILLALL_PROG="`set_prog_path killall`"
- export INDENT_PROG="`set_prog_path indent`"
- export XFS_COPY_PROG="`set_prog_path xfs_copy`"
-+export FIO_PROG="`set_prog_path fio`"
- 
- # Generate a comparable xfsprogs version number in the form of
- # major * 10000 + minor * 100 + release
-diff --git a/common.rc b/common.rc
-index 602513a..f5027e7 100644
---- a/common.rc
-+++ b/common.rc
-@@ -1758,6 +1758,21 @@ _require_btrfs()
- 	[ $? -eq 0 ] || _notrun "$BTRFS_UTIL_PROG too old (must support $cmd)"
- }
- 
-+# Check that fio is present, and it is able to execute given jobfile
-+_require_fio()
-+{
-+	job=$1
-+
-+	_require_command $FIO_PROG
-+	if [ -z "$1" ]; then
-+		return 1;
-+	fi
-+	
-+	$FIO_PROG --warnings-fatal --showcmd $job >/dev/null 2>&1
-+	[ $? -eq 0 ] || _notrun "$FIO_PROG too old"
-+}
-+
-+
- # arg 1 is dev to remove and is output of the below eg.
- # ls -l /sys/class/block/sdd | rev | cut -d "/" -f 3 | rev
- _devmgt_remove()
--- 
-1.7.1
+Mostly code style cleanups accodring to Dave's comments
+- add _scale_fsstress_args function
+- move run_check function to common.rc
+- Add more comments
+- split combined e4defrag testcase in to disicated tescases.
 
 _______________________________________________
 xfs mailing list
