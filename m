@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 41F627FB3
-	for <xfs@oss.sgi.com>; Wed, 13 Feb 2013 02:50:25 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2FDB78F8050
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 41F5D7FBA
+	for <xfs@oss.sgi.com>; Wed, 13 Feb 2013 02:50:26 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C680DAC003
 	for <xfs@oss.sgi.com>; Wed, 13 Feb 2013 00:50:25 -0800 (PST)
 Received: from relay.sw.ru (mailhub.sw.ru [195.214.232.25]) by cuda.sgi.com
-	with ESMTP id BdaWrKu3hmeFBKmC (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id lk04WjQ5eivHuRuH (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 13 Feb 2013 00:50:23 -0800 (PST)
+	Wed, 13 Feb 2013 00:50:24 -0800 (PST)
 From: Dmitry Monakhov <dmonakhov@openvz.org>
-Subject: [PATCH 0/8] xfstests: Stress tests improments v3
-Date: Wed, 13 Feb 2013 12:49:55 +0400
-Message-Id: <1360745403-6373-1-git-send-email-dmonakhov@openvz.org>
+Subject: [PATCH 2/8] xfstests: get rid of hardcoded /sbin/mkfs
+Date: Wed, 13 Feb 2013 12:49:57 +0400
+Message-Id: <1360745403-6373-3-git-send-email-dmonakhov@openvz.org>
+In-Reply-To: <1360745403-6373-1-git-send-email-dmonakhov@openvz.org>
+References: <1360745403-6373-1-git-send-email-dmonakhov@openvz.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,25 +31,36 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: linux-fsdevel@vger.kernel.org, Dmitry Monakhov <dmonakhov@openvz.org>, linux-ext4@vger.kernel.org, dchinner@redhat.com
 
-This is third version of the patch series, previous version
-can be found here: http://oss.sgi.com/archives/xfs/2012-09/msg00328.html
 
-xfstests-add-fio-requirement-V2
-xfstests-get-rid-of-hardcoded-sbin-mkfs
-xfstest-add-configurable-load-factors
-xfstest-allow-fsstress-to-use-load-factor-where-appr
-run-check-to-common_rc
-add-fallocate-truncate-vs-AIO-DIO-stress-test
-add-fallocate-punch_hole-vs-AIO-DIO-stress-test
-add-defragmentation-stress-tests-for-ext4
+Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
+---
+ common.rc |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Changes since V2
-
-Mostly code style cleanups accodring to Dave's comments
-- add _scale_fsstress_args function
-- move run_check function to common.rc
-- Add more comments
-- split combined e4defrag testcase in to disicated tescases.
+diff --git a/common.rc b/common.rc
+index f5027e7..196619d 100644
+--- a/common.rc
++++ b/common.rc
+@@ -334,7 +334,7 @@ _scratch_mkfs()
+         $MKFS_BTRFS_PROG $MKFS_OPTIONS $* $SCRATCH_DEV > /dev/null
+ 	;;
+     *)
+-	/sbin/mkfs -t $FSTYP -- $MKFS_OPTIONS $* $SCRATCH_DEV
++	$MKFS_PROG -t $FSTYP -- $MKFS_OPTIONS $* $SCRATCH_DEV
+ 	;;
+     esac
+ }
+@@ -353,7 +353,7 @@ _scratch_mkfs_sized()
+ 	_scratch_mkfs_xfs -d size=$fssize -b size=$blocksize
+ 	;;
+     ext2|ext3|ext4|ext4dev)
+-	/sbin/mkfs.$FSTYP $MKFS_OPTIONS -b $blocksize $SCRATCH_DEV $blocks
++	$MKFS_PROG -t $FSTYP $MKFS_OPTIONS -b $blocksize $SCRATCH_DEV $blocks
+ 	;;
+     btrfs)
+ 	$MKFS_BTRFS_PROG $MKFS_OPTIONS -b $fssize $SCRATCH_DEV
+-- 
+1.7.1
 
 _______________________________________________
 xfs mailing list
