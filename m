@@ -1,20 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 673317FBA
-	for <xfs@oss.sgi.com>; Wed, 13 Feb 2013 10:28:51 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 381B48F8078
-	for <xfs@oss.sgi.com>; Wed, 13 Feb 2013 08:28:51 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id w1Wm4Hmm0EARyXHO for
-	<xfs@oss.sgi.com>; Wed, 13 Feb 2013 08:28:44 -0800 (PST)
-Message-ID: <511BBF33.20908@redhat.com>
-Date: Wed, 13 Feb 2013 10:28:35 -0600
-From: Eric Sandeen <sandeen@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id AD9FB7FB4
+	for <xfs@oss.sgi.com>; Wed, 13 Feb 2013 11:04:16 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 84004304043
+	for <xfs@oss.sgi.com>; Wed, 13 Feb 2013 09:04:13 -0800 (PST)
+Received: from srvmail.3sr-grenoble.fr (3sr-srvmail.ampere.inpg.fr
+	[147.171.64.82]) by cuda.sgi.com with ESMTP id d5cvXIGv2sFH8EC5
+	for <xfs@oss.sgi.com>; Wed, 13 Feb 2013 09:04:12 -0800 (PST)
+Received: from localhost (localhost [127.0.0.1])
+	by srvmail.3sr-grenoble.fr (Postfix) with SMTP id 0AB0828A0AC
+	for <xfs@oss.sgi.com>; Wed, 13 Feb 2013 18:04:12 +0100 (CET)
+Received: from [147.171.84.252] (hamaika.3sr.grenoble-inp.fr [147.171.84.252])
+	by srvmail.3sr-grenoble.fr (Postfix) with ESMTPSA id E3FF028A0AB
+	for <xfs@oss.sgi.com>; Wed, 13 Feb 2013 18:04:11 +0100 (CET)
+Message-ID: <511BC78B.6070205@3sr-grenoble.fr>
+Date: Wed, 13 Feb 2013 18:04:11 +0100
+From: =?ISO-8859-1?Q?R=E9mi_Cailletaud?= <remi.cailletaud@3sr-grenoble.fr>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: add disk failure simulation test
-References: <1360770097-6351-1-git-send-email-dmonakhov@openvz.org>
-In-Reply-To: <1360770097-6351-1-git-send-email-dmonakhov@openvz.org>
+Subject: problem after growing
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,317 +27,119 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dmitry Monakhov <dmonakhov@openvz.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, dchinner@redhat.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 2/13/13 9:41 AM, Dmitry Monakhov wrote:
-> There are many situations where disk may fail for example
-> 1) brutal usb dongle unplug
-> 2) iscsi (or any other netbdev) failure due to network issues
-> In this situation filesystem which use this blockdevice is
-> expected to fail(force RO remount, abort, etc) but whole system
-> should still be operational. In other words:
-> 1) Kernel should not panic
-> 2) Memory should not leak
-> 3) Data integrity operations (sync,fsync,fdatasync, directio) should fail
->    for affected filesystem
-> 4) It should be possible to umount broken filesystem
-> 
-> Later when disk becomes available again we expect(only for journaled filesystems):
-> 5) It will be possible to mount filesystem w/o explicit fsck (in order to caught
->    issues like https://patchwork.kernel.org/patch/1983981/)
-> 6) Filesystem should be operational
-> 7) After mount/umount has being done all errors should be fixed so fsck should
->    not spot any issues.
+Hi,
 
-Thanks, this should be very useful.  A couple questions & nitpicky
-things below.
+I face a strange and scary issue. I just grow a xfs filesystem (44To), =
 
-> This test use fault enjection (CONFIG_FAIL_MAKE_REQUEST=y config option )
-> which force all new IO requests to fail for a given device. Xfs already has
-> XFS_IOC_GOINGDOWN ioctl which provides similar behaviour, but it is fsspeciffic
-> and it does it in an easy way because it perform freeze_bdev() before actual
-> shotdown.
+and no way to mount it anymore :
+XFS: device supports only 4096 byte sectors (not 512)
 
-Well, just FWIW it depends on the flags it was given:
+# xfs_check /dev/vg0/tomo-201111
+ERROR: The filesystem has valuable metadata changes in a log which needs to
+be replayed.  Mount the filesystem to replay the log, and unmount it before
+re-running xfs_check.  If you are unable to mount the filesystem, then use
+the xfs_repair -L option to destroy the log and attempt a repair.
+Note that destroying the log may cause corruption -- please attempt a mount
+of the filesystem before doing this.
 
-/*
- * Flags for going down operation
- */
-#define XFS_FSOP_GOING_FLAGS_DEFAULT            0x0     /* going down */
-#define XFS_FSOP_GOING_FLAGS_LOGFLUSH           0x1     /* flush log but not data */
-#define XFS_FSOP_GOING_FLAGS_NOLOGFLUSH         0x2     /* don't flush log nor data */
+# xfs_repair -L /dev/vg0/tomo-201111
+xfs_repair: warning - cannot set blocksize 512 on block device =
 
-Only the default case does freeze_bdev.
+/dev/vg0/tomo-201111: Argument invalide
+Phase 1 - find and verify superblock...
+superblock read failed, offset 1099511623680, size 2048, ag 1, rval -1
 
-> Test run fsstress in background and then force disk failure.
-> Once disk failed it check that (1)-(4) is true.
-> Then makes disk available again and check that (5)-(7) is also true
-> 
-> BE CAREFUL!! test known to cause memory corruption for XFS
-> see: https://gist.github.com/dmonakhov/4945005
+fatal error -- Invalid argument
 
-For other reviewers, this patch depends on the series:
-[PATCH 0/8] xfstests: Stress tests improments v3
+Conf is as follow :
 
-> Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
-> ---
->  292           |  137 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  292.out       |    8 +++
->  common.config |    1 +
->  common.rc     |    6 +++
->  group         |    1 +
->  5 files changed, 153 insertions(+), 0 deletions(-)
->  create mode 100755 292
->  create mode 100644 292.out
-> 
-> diff --git a/292 b/292
-> new file mode 100755
-> index 0000000..3dd6608
-> --- /dev/null
-> +++ b/292
-> @@ -0,0 +1,136 @@
-> +#! /bin/bash
-> +# FSQA Test No. 292
-> +#
-> +# Run fsstress and simulate disk failure
-> +# check filesystem consystency at the end.
+LVM : 3pv - 1vg
 
-"consistency," just to be picky.
+the lv containing the xfs system is on several extents :
 
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2006 Silicon Graphics, Inc.  All Rights Reserved.
+   tomo-201111 vg0  -wi-ao    1 linear  15,34t /dev/sda:5276160-9298322
+   tomo-201111 vg0  -wi-ao    1 linear  18,66t /dev/sdb:0-4890732
+   tomo-201111 vg0  -wi-ao    1 linear   8,81t /dev/sdb:6987885-9298322
+   tomo-201111 vg0  -wi-ao    1 linear   1,19t /dev/sdc:2883584-3194585
 
-(c) 2013 Dmitry Monakhov
+before growing fs, I lvextend the vg, and a new extents on /dev/sdc was =
 
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#
-> +#-----------------------------------------------------------------------
-> +#
-> +# creator
-> +owner=dmonakhov@openvz.org
-> +
-> +seq=`basename $0`
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +
-> +# get standard environment, filters and checks
-> +. ./common.rc
-> +. ./common.filter
-> +
-> +# TODO move it to common.blkdev if necessery
+used. I cant think it caused this issue... I saw there can be problem =
 
-maybe a comment as to why you do this?  (presumably to find the right thing in /sys)
-I hope this always works with all udev schemes etc?
+with underlying device (an ARECA 1880). With xfs_db, I found this strange :
+  "logsectsize =3D 0"
 
-> +SCRATCH_REAL_DEV=`readlink -f $SCRATCH_DEV`
-> +SCRATCH_BDEV=`basename $SCRATCH_REAL_DEV`
-> +
-> +allow_fail_make_request()
-> +{
-> +    [ -f "$DEBUGFS_MNT/fail_make_request/probability" ] \
-> +	|| _notrun "$DEBUGFS_MNT/fail_make_request \
-> + not found. Seems that CONFIG_FAIL_MAKE_REQUEST kernel config option not enabled"
-> +
-> +    echo "Allow global fail_make_request feature"
-> +    echo 100 > $DEBUGFS_MNT/fail_make_request/probability
-> +    echo 9999999 > $DEBUGFS_MNT/fail_make_request/times
-> +    echo 0 >  /sys/kernel/debug/fail_make_request/verbose
-> +
-> +}
-> +
-> +disallow_fail_make_request()
-> +{
-> +    echo "Disallow global fail_make_request feature"
-> +    echo 0 > $DEBUGFS_MNT/fail_make_request/probability
-> +    echo 0 > $DEBUGFS_MNT/fail_make_request/times
-> +}
-> +
-> +poweroff_scratch_dev()
+# xfs_db -c "sb 0" -c "p" /dev/vg0/tomo-201111
+magicnum =3D 0x58465342
+blocksize =3D 4096
+dblocks =3D 10468982745
+rblocks =3D 0
+rextents =3D 0
+uuid =3D 09793bea-952b-44fa-be71-02f59e69b41b
+logstart =3D 1342177284
+rootino =3D 128
+rbmino =3D 129
+rsumino =3D 130
+rextsize =3D 1
+agblocks =3D 268435455
+agcount =3D 39
+rbmblocks =3D 0
+logblocks =3D 521728
+versionnum =3D 0xb4b4
+sectsize =3D 512
+inodesize =3D 256
+inopblock =3D 16
+fname =3D "\000\000\000\000\000\000\000\000\000\000\000\000"
+blocklog =3D 12
+sectlog =3D 9
+inodelog =3D 8
+inopblog =3D 4
+agblklog =3D 28
+rextslog =3D 0
+inprogress =3D 0
+imax_pct =3D 5
+icount =3D 6233280
+ifree =3D 26
+fdblocks =3D 1218766953
+frextents =3D 0
+uquotino =3D 0
+gquotino =3D 0
+qflags =3D 0
+flags =3D 0
+shared_vn =3D 0
+inoalignmt =3D 2
+unit =3D 0
+width =3D 0
+dirblklog =3D 0
+logsectlog =3D 0
+logsectsize =3D 0
+logsunit =3D 1
+features2 =3D 0xa
+bad_features2 =3D 0xa
 
-I guess I'd prefer just "fail_scratch_dev" since you aren't really
-powering off anything.  :)
 
-> +{
-> +    echo "Force SCRATCH_DEV device failure"
-> +    echo " echo 1 > /sys/block/$SCRATCH_BDEV/make-it-fail" >> $here/$seq.full
-> +    echo 1 > /sys/block/$SCRATCH_BDEV/make-it-fail
-> +
-> +}
-> +
-> +poweron_scratch_dev()
+Any idea ?
 
-Hm "unfail_scratch_dev?" :)
+Cheers,
+r=E9mi
 
-> +{
-> +    echo "Make SCRATCH_DEV device operatable again"
+-- =
 
-"operable"
+R=E9mi Cailletaud - IE CNRS
+3SR - Laboratoire Sols, Solides, Structures - Risques
+BP53, 38041 Grenoble CEDEX 0
+FRANCE
+remi.cailletaud@3sr-grenoble.fr
+T=E9l: +33 (0)4 76 82 52 78
+Fax: +33 (0)4 76 82 70 43
 
-> +    echo " echo 0 > /sys/block/$SCRATCH_BDEV/make-it-fail" >> $here/$seq.full
-> +    echo 0 > /sys/block/$SCRATCH_BDEV/make-it-fail
-> +
-> +}
-> +
-> +_cleanup()
-> +{
-> +    poweron_scratch_dev
-> +    disallow_fail_make_request
-> +}
-> +trap "_cleanup; exit \$status" 1 2 3 15
-> +
-> +# Disable all sync operations to get higher load
-> +FSSTRESS_AVOID="$FSSTRESS_AVOID -ffsync=0 -fsync=0 -ffdatasync=0 -f setattr=1"
-> +
-> +_workout()
-> +{
-> +	out=$SCRATCH_MNT/fsstress.$$
-> +	args=`_scale_fsstress_args -p 1 -n999999999 -f setattr=0 $FSSTRESS_AVOID -d $out`
-> +	echo ""
-> +	echo "Run fsstress"
-> +	echo ""
-> +	echo "fsstress $args" >> $here/$seq.full
-> +	$FSSTRESS_PROG $args > /dev/null 2>&1 &
-> +	pid=$!
-> +	# Let's it work for awhile
-> +	sleep $((20 + 10 * $TIME_FACTOR))
-> +	poweroff_scratch_dev
-> +	# After device turns in to failed state filesystem may not know about that
-> +	# so buffered write(2) may succeed, but any integrity operation such as
-> +	# (sync, fsync, fdatasync, direct-io) should fail.
-> +	dd if=/dev/zero of=$SCRATCH_MNT/touch_failed_filesystem count=1 bs=4k conv=fsync \
-> +	    >> $here/$seq.full 2>&1 && \
-> +	    _fail "failed: still able to perform integrity sync on $SCRATCH_MNT"
-> +
-> +	kill $pid
-> +	wait $pid
-> +
-> +	# We expect that broken fs is still can be umounted
-> +	run_check umount -f $SCRATCH_DEV
 
-why -f, out of curiosity?
-
-> +	poweron_scratch_dev
-> +
-> +	# In order to check that filesystem is able to recover journal on mount(2)
-> +	# perform mount/umount, after that all errors should be fixed
-> +	run_check _scratch_mount
-> +	run_check _scratch_unmount
-> +	_check_scratch_fs
-> +}
-> +
-> +# real QA test starts here
-> +_supported_fs ext3 ext4 xfs btrfs
-
-Could this be expanded to "generic" but only enforce a post-log-recovery clean
-fsck for filesystems we know have journaling?
-
-> +_supported_os Linux
-> +_need_to_be_root
-> +_require_scratch
-> +_require_debugfs
-
-should you have a:
-
-_require_fail_make_request
-
-here, instead of doing it in allow_fail_make_request ?
-Might just be a little more obvious, and possibly useful
-for other tests that build on this one.
-
-> +
-> +_scratch_mkfs >> $here/$seq.full 2>&1 || _fail "mkfs failed"
-> +_scratch_mount || _fail "mount failed"
-> +allow_fail_make_request
-> +_workout
-> +status=$?
-> +disallow_fail_make_request
-> +exit
-> diff --git a/292.out b/292.out
-> new file mode 100644
-> index 0000000..08d9820
-> --- /dev/null
-> +++ b/292.out
-> @@ -0,0 +1,8 @@
-> +QA output created by 292
-> +Allow global fail_make_request feature
-> +
-> +Run fsstress
-> +
-> +Force SCRATCH_DEV device failure
-> +Make SCRATCH_DEV device operatable again
-> +Disallow global fail_make_request feature
-> diff --git a/common.config b/common.config
-> index a956a46..f7a2422 100644
-> --- a/common.config
-> +++ b/common.config
-> @@ -75,6 +75,7 @@ export BENCH_PASSES=${BENCH_PASSES:=5}
->  export XFS_MKFS_OPTIONS=${XFS_MKFS_OPTIONS:=-bsize=4096}
->  export TIME_FACTOR=${TIME_FACTOR:=1}
->  export LOAD_FACTOR=${LOAD_FACTOR:=1}
-> +export DEBUGFS_MNT=${DEBUGFS_MNT:="/sys/kernel/debug"}
->  
->  export PWD=`pwd`
->  #export DEBUG=${DEBUG:=...} # arbitrary CFLAGS really.
-> diff --git a/common.rc b/common.rc
-> index 5c3dda1..d5d9c9f 100644
-> --- a/common.rc
-> +++ b/common.rc
-> @@ -1027,6 +1027,12 @@ _require_sparse_files()
->      esac
->  }
->  
-> +_require_debugfs()
-> +{
-> +    #boot_params always present in debugfs
-> +    [ -d "$DEBUGFS_MNT/boot_params" ] || _notrun "Debugfs not mounted"
-> +}
-
-Would it make more sense to look for debugfs in /proc/filesystems
-as a test for it being *available* (as opposed to mounted somewhere?)
-
-I wonder if a helper (maybe in _require_debugfs) should work out if
-it's mounted, if not, try to mount it, and in the end, export DEBUGFS_MNT
-for any test that wants to use it.
-
-Otherwise if it happens to be mounted elsewhere, this'll all fail.
-Just a thought.  Maybe that's unusual enough that there's no point.
-But getting it mounted if it's not would be helpful I think.
-
-> +
->  # check that a FS on a device is mounted
->  # if so, return mount point
->  #
-> diff --git a/group b/group
-> index b962a33..c409957 100644
-> --- a/group
-> +++ b/group
-> @@ -415,3 +415,4 @@ stress
->  289 auto aio dangerous ioctl rw stress
->  290 auto aio dangerous ioctl rw stress
->  291 auto aio dangerous ioctl rw stress
-> +292 dangerous rw stress
-> 
 
 _______________________________________________
 xfs mailing list
