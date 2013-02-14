@@ -1,24 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 426CF8067
-	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 16:51:14 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C2760AC005
-	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 14:51:13 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	RC0vwiUW2S4hmjEj for <xfs@oss.sgi.com>;
-	Thu, 14 Feb 2013 14:51:12 -0800 (PST)
-Date: Fri, 15 Feb 2013 09:51:11 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfsdump: update 'make deb' to use tarball archive
-Message-ID: <20130214225111.GQ26694@dastard>
-References: <20130214010853.GD22182@sgi.com>
-	<1295709208.2558271.1360808077935.JavaMail.root@redhat.com>
-	<20130214162454.GH30652@sgi.com> <20130214173120.GF22182@sgi.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 897A2806F
+	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 17:31:25 -0600 (CST)
+Date: Thu, 14 Feb 2013 17:31:24 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 1/2] xfs: limit speculative prealloc size on sparse files
+Message-ID: <20130214233124.GK22182@sgi.com>
+References: <1360559102-20432-1-git-send-email-david@fromorbit.com>
+	<1360559102-20432-2-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130214173120.GF22182@sgi.com>
+In-Reply-To: <1360559102-20432-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,34 +23,57 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Nathan Scott <nathans@debian.org>, xfs@oss.sgi.com, Andrew Dahl <adahl@sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, Feb 14, 2013 at 11:31:20AM -0600, Ben Myers wrote:
-> This patch changes the build process so that 'make deb' uses the same
-> process of creating a source tree as the release script.
+On Mon, Feb 11, 2013 at 04:05:01PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> * Add a list of files which go in the release tarball in .gitcensus
->   This is needed so that you can create a tarball in a bare release
->   tree, when .git is not available.
+> Speculative preallocation based on the current file size works well
+> for contiguous files, but is sub-optimal for sparse files where the
+> EOF preallocation can fill holes and result in large amounts of
+> zeros being written when it is not necessary.
 > 
-> * Modify the SRCTAR target to include files from .gitcensus and use tar
->   instead of git archive.
+> The algorithm is modified to prevent EOF speculative preallocation
+> from triggering larger allocations on IO patterns of
+> truncate--to-zero-seek-write-seek-write-....  which results in
+> non-sparse files for large files. This, unfortunately, is the way cp
+> now behaves when copying sparse files and so needs to be fixed.
 > 
-> * Modify the SRCTARINC files to include .gitcensus, and include
->   .gitcensus in the 'make realclean' target.
+> What this code does is that it looks at the existing extent adjacent
+> to the current EOF and if it determines that it is a hole we disable
+> speculative preallocation altogether. To avoid the next write from
+> doing a large prealloc, it takes the size of subsequent
+> preallocations from the current size of the existing EOF extent.
+> IOWs, if you leave a hole in the file, it resets preallocation
+> behaviour to the same as if it was a zero size file.
 > 
-> * remove the 'make source-link' target.
+> Example new behaviour:
 > 
-> Signed-off-by: Ben Myers <bpm@sgi.com>
+> $ xfs_io -f -c "pwrite 0 31m" \
+>             -c "pwrite 33m 1m" \
+>             -c "pwrite 128m 1m" \
+>             -c "fiemap -v" /mnt/scratch/blah
+> wrote 32505856/32505856 bytes at offset 0
+> 31 MiB, 7936 ops; 0.0000 sec (1.608 GiB/sec and 421432.7439 ops/sec)
+> wrote 1048576/1048576 bytes at offset 34603008
+> 1 MiB, 256 ops; 0.0000 sec (1.462 GiB/sec and 383233.5329 ops/sec)
+> wrote 1048576/1048576 bytes at offset 134217728
+> 1 MiB, 256 ops; 0.0000 sec (1.719 GiB/sec and 450704.2254 ops/sec)
+> /mnt/scratch/blah:
+>  EXT: FILE-OFFSET      BLOCK-RANGE      TOTAL FLAGS
+>    0: [0..65535]:      96..65631        65536   0x0
+>    1: [65536..67583]:  hole              2048
+>    2: [67584..69631]:  67680..69727      2048   0x0
+>    3: [69632..262143]: hole             192512
+>    4: [262144..264191]: 262240..264287    2048   0x1
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Works fine.
+Applied.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
--- 
-Dave Chinner
-david@fromorbit.com
+Regards,
+	Ben
 
 _______________________________________________
 xfs mailing list
