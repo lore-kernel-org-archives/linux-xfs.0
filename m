@@ -1,22 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0C1FA802B
-	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 13:17:17 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E62BE304051
-	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 11:17:13 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id yYLAHAUi9YwboKkn for <xfs@oss.sgi.com>;
-	Thu, 14 Feb 2013 11:17:12 -0800 (PST)
-Message-ID: <511D3838.5000903@sandeen.net>
-Date: Thu, 14 Feb 2013 13:17:12 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id EDF5A8030
+	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 13:19:54 -0600 (CST)
+Date: Thu, 14 Feb 2013 13:19:52 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH] xfs_mkfs: Do not discard if '-N' is provided
+Message-ID: <20130214191952.GG22182@sgi.com>
+References: <1360670381-19838-1-git-send-email-lczerner@redhat.com>
+	<511A5BAA.5000203@sandeen.net>
+	<alpine.LFD.2.00.1302121635070.2315@(none)>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs_mkfs: wipe old signatures from the device
-References: <1360667215-14701-1-git-send-email-lczerner@redhat.com>	<20130212202753.GC26694@dastard>	<20130213080154.GC18597@x2.net.home>	<alpine.LFD.2.00.1302131127070.2315@(none)>	<20130213121655.GA7799@x2.net.home>
-	<20130213221720.GH26694@dastard>
-	<511CCE67.5010402@mrc-lmb.cam.ac.uk>
-In-Reply-To: <511CCE67.5010402@mrc-lmb.cam.ac.uk>
+Content-Disposition: inline
+In-Reply-To: <alpine.LFD.2.00.1302121635070.2315@(none)>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,64 +20,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Howorth <dhoworth@mrc-lmb.cam.ac.uk>
-Cc: xfs@oss.sgi.com
+To: =?utf-8?B?THVrw6HFoQ==?= Czerner <lczerner@redhat.com>, Christoph Hellwig <hch@infradead.org>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-On 2/14/13 5:45 AM, Dave Howorth wrote:
-> Dave Chinner wrote:
->> IOWs, it is the responsibility of the filesystem tools to correctly
->> identify the filesystem being operated on, and not to
->> modify/trash/recover anything unless specifically directed by the
->> user.  When a filesystem tool gets it wrong, then that specific tool
->> needs to be fixed.  i.e. it is the responsibility of filesystem
->> tools to behave sanely, not for the rest of the world to have to
->> work around the dangerous behaviour of a specific filesystems'
->> toolset.
-> 
-> As an average Joe user, I started to agree with this, but then as a
-> developer I had second thoughts. It can't be right that every filesystem
-> tool has to have code to recognize every other type of filesystem; that
-> just doesn't scale. So each tool would need to call some API, which I
-
-Yep - it's called libblkid, it's very easy to use for this purpose.
-xfsprogs already does, and I just sent a patch for btrfs-progs as well.
-
-So libblkid contains all the smarts, really, and it's not a code duplication
-problem.
-
-> suppose would need to access some kernel code that iterated for every
-> filesystem type the kernel was configured to handle, or knew historically.
-
-Nah, it doesn't matter what the running kernel knows about, IMHO, just what
-is recognized on the disk at hand.
-
--Eric
-
-> And then we have identical code in every tool, and that code is not
-> serving the tool's primary purpose, so maybe it should be factored out
-> on the one-tool-one-job philosophy. So perhaps there should be a single
-> tool that tells what filesystem type is present on a device, which
-> everybody runs before mkfs. Oh wait, df -T or other utilities already do
-> that.
-> 
-> So I'm not sure the issue is black and white. As an average Joe, I
-> expect mkfs to trash whatever I give it, so I'm pretty careful to check
-> what is there first. And if I expected to be overwriting an existing
-> filesystem and I did it often enough to know about the mkfs.xfs
-> behaviour, I suppose I would always invoke it with the -f flag.
-> Consistency among the various flavours of mkfs would be nice, though.
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+SGV5IEx1a2FzLAoKT24gVHVlLCBGZWIgMTIsIDIwMTMgYXQgMDQ6Mzc6MzdQTSArMDEwMCwgTHVr
+w6HFoSBDemVybmVyIHdyb3RlOgo+IE9uIFR1ZSwgMTIgRmViIDIwMTMsIEVyaWMgU2FuZGVlbiB3
+cm90ZToKPiAKPiA+IERhdGU6IFR1ZSwgMTIgRmViIDIwMTMgMDk6MTE6MzggLTA2MDAKPiA+IEZy
+b206IEVyaWMgU2FuZGVlbiA8c2FuZGVlbkBzYW5kZWVuLm5ldD4KPiA+IFRvOiBMdWthcyBDemVy
+bmVyIDxsY3plcm5lckByZWRoYXQuY29tPgo+ID4gQ2M6IHhmc0Bvc3Muc2dpLmNvbQo+ID4gU3Vi
+amVjdDogUmU6IFtQQVRDSF0geGZzX21rZnM6IERvIG5vdCBkaXNjYXJkIGlmICctTicgaXMgcHJv
+dmlkZWQKPiA+IAo+ID4gT24gMi8xMi8xMyA1OjU5IEFNLCBMdWthcyBDemVybmVyIHdyb3RlOgo+
+ID4gPiBXaGVuICctTicgaXMgc3BlY2lmaWVkIHdlIHJlYWxseSBzaG91bGQgbm90IHdyaXRlIGFu
+eXRoaW5nIHRvIHRoZQo+ID4gPiBkZXZpY2UsIG5laXRoZXIgd2Ugc2hvdWxkIGF0dGVtcHQgdG8g
+ZGlzY2FyZCB0aGUgZGV2aWNlLgo+ID4gPiAKPiA+ID4gVGhpcyBjb21taXQgZml4ZXMgeGZzX21r
+ZnMgdG8gbm90IGF0dGVtcHQgdG8gZGlzY2FyZCB0aGUgZGV2aWNlIGluIHRoZQo+ID4gPiBjYXNl
+IHVzZXIgc3BlY2lmaWVkICctTicgZmxhZy4KPiA+IAo+ID4gVGhhbmtzLCBhbmQgeWVzIC0gb3Vj
+aCwgdGhpcyBzaG91bGRuJ3QgaGFwcGVuIHdpdGggLU4sIHRoYXQncyBiYWQhCj4gPiAKPiA+IEJ1
+dCBpdCBkb2Vzbid0IGxvb2sgbGlrZSB0aGlzIGlzIGFnYWluc3QgdGhlIGN1cnJlbnQgZ2l0IHRy
+ZWUsCj4gPiBpdCBhcHBsaWVzIG9ubHkgd2l0aCBhIGxvdCBvZiBmdXp6ICYgb2Zmc2V0cy4KPiAK
+PiBBaCwgSSd2ZSBiZWVuIHVzaW5nIAo+IAo+IGdpdDovL2dpdC5rZXJuZWwub3JnL3B1Yi9zY20v
+ZnMveGZzL3hmc3Byb2dzLWRldi5naXQKPiAKPiBhbmQgSSBjYW4gcmVtZW1iZXIgdGhhdCBpdCdz
+IG5vdCB0aGUgZmlyc3QgdGltZSBJJ3ZlIHJlYWxpemVkIHRoYXQgSQo+IGFtIHVzaW5nIHdyb25n
+IHJlcG8uIE9idmlvdXNseSBpIGFtIG5vdCBwYXlpbmcgYSBsb3Qgb2YgYXR0ZW50aW9uIHRvCj4g
+dGhlIHhmcyBjaGFubmVsLCBidXQgZG9lcyB0aGlzIGtlZXAgY2hhbmdpbmcsIG9yIGlzIGl0IGp1
+c3QgbWUgPyA6KQoKSXQgY2hhbmdlZCBqdXN0IHR3aWNlLCBBRkFJSy4KCkNocmlzdG9waCwgY291
+bGQgeW91IGNsZWFuIHVwIHRoZSBrZXJuZWwub3JnIHRyZWVzIHRvIGhlbHAgcmVzb2x2ZSB0aGUK
+Y29uZnVzaW9uPwoKPiBXaWxsIHJlc2VuZCB0aGUgcGF0Y2ggYmFzZWQgb24gdGhlCj4gCj4gZ2l0
+Oi8vb3NzLnNnaS5jb20veGZzL2NtZHMveGZzcHJvZ3MuZ2l0CgpUaGlzIGlzIHRoZSByaWdodCBw
+bGFjZSwgdGhhbmtzLgoKUmVnYXJkcywKCUJlbgoKX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0
+cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
