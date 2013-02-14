@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 01CE17FE5
-	for <xfs@oss.sgi.com>; Wed, 13 Feb 2013 16:17:29 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id DAE288F8059
-	for <xfs@oss.sgi.com>; Wed, 13 Feb 2013 14:17:25 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A1B027FDF
+	for <xfs@oss.sgi.com>; Wed, 13 Feb 2013 18:07:38 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 79775304039
+	for <xfs@oss.sgi.com>; Wed, 13 Feb 2013 16:07:35 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	a5OVbaKrlMyHNM22 for <xfs@oss.sgi.com>;
-	Wed, 13 Feb 2013 14:17:22 -0800 (PST)
-Date: Thu, 14 Feb 2013 09:17:20 +1100
+	uys1HBW7FueVvId7 for <xfs@oss.sgi.com>;
+	Wed, 13 Feb 2013 16:07:33 -0800 (PST)
+Date: Thu, 14 Feb 2013 11:07:30 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs_mkfs: wipe old signatures from the device
-Message-ID: <20130213221720.GH26694@dastard>
-References: <1360667215-14701-1-git-send-email-lczerner@redhat.com>
-	<20130212202753.GC26694@dastard>
-	<20130213080154.GC18597@x2.net.home>
-	<alpine.LFD.2.00.1302131127070.2315@(none)>
-	<20130213121655.GA7799@x2.net.home>
+Subject: Re: [ 68/89] xfs: fix _xfs_buf_find oops on blocks beyond the
+	filesystem end
+Message-ID: <20130214000730.GI26694@dastard>
+References: <20130201130207.444989281@linuxfoundation.org>
+	<20130201130212.381996681@linuxfoundation.org>
+	<511BB198.1080609@redhat.com> <20130213161845.GA20916@kroah.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130213121655.GA7799@x2.net.home>
+In-Reply-To: <20130213161845.GA20916@kroah.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,90 +28,124 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Karel Zak <kzak@redhat.com>
-Cc: Zach Brown <zabrown@redhat.com>, =?utf-8?B?THVrw6HFoQ==?= Czerner <lczerner@redhat.com>, sandeen@redhat.com, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: CAI Qian <caiqian@redhat.com>, Brian Foster <bfoster@redhat.com>, linux-kernel@vger.kernel.org, stable@vger.kernel.org, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, Dave Chinner <dchinner@redhat.com>, Paolo Bonzini <pbonzini@redhat.com>
 
-T24gV2VkLCBGZWIgMTMsIDIwMTMgYXQgMDE6MTY6NTVQTSArMDEwMCwgS2FyZWwgWmFrIHdyb3Rl
-Ogo+IE9uIFdlZCwgRmViIDEzLCAyMDEzIGF0IDExOjQxOjA4QU0gKzAxMDAsIEx1a8OhxaEgQ3pl
-cm5lciB3cm90ZToKPiA+IEhvd2V2ZXIKPiA+IAo+ID4gbWtmcy5idHJmcyAvZGV2L3NkYQo+ID4g
-bWtmcy5leHQ0IC1GIC9kZXYvc2RhCj4gPiAKPiA+IHdvcmtzIHdlbGwsIGhvd2V2ZXIgSSBhbSBu
-b3Qgc3VyZSB3aHkgdGhhdCBpcy4gSXMgdGhhdCBzb21lIGtpbmQgb2YKPiA+IG1vdW50KDgpIG1h
-Z2ljID8KPiAKPiAgVGhpcyBpcyBidWcgaW4gbGlibW91bnQuIEZpeGVkIGluIHVwc3RyZWFtIHRy
-ZWUuIFRoZSBsaWJtb3VudCBpbiBzb21lCj4gIGNhc2VzIGlnbm9yZXMgdGhlIGFtYml2YWxlbnQg
-cHJvYmluZyByZXN1bHQgZnJvbSBsaWJibGtpZCBhbmQgdHJpZXMgCj4gIHN0dWZmIGZyb20gL2V0
-Yy9maWxlc3lzdGVtcyAod2hlcmUgaXMgZm9yIGV4YW1wbGUgZXh0NCkuCj4gCj4gPiBTbyBJIHRo
-aW5rIHRoYXQgbGlibGtpZCBfYW5kXyBidHJmcyB0b29scyBoYXMgdG8gYmUgZml4ZWQgbm90IHRv
-IHRyZWF0Cj4gPiBiYWNrdXAgc3VwZXJibG9ja3MgYXMgcHJpbWFyeSEKPiAKPiAgVGhlIHByb2Js
-ZW0gd2l0aCBhZGRpdGlvbmFsIGJ0cmZzIHN1cGVyYmxvY2tzIGhhcyBiZWVuIGFscmVhZHkgcmVw
-b3J0ZWQKPiAgdG8gYnRyZnMgZ3V5czoKPiAKPiAgICBodHRwOi8vd3d3Lm1haWwtYXJjaGl2ZS5j
-b20vbGludXgtYnRyZnNAdmdlci5rZXJuZWwub3JnL21zZzIwOTU3Lmh0bWwKPiAKPiAgYW5kIEkg
-ZG9uJ3Qgc2VlIGEgcmVwbHkgInllcCwgdGhpcyBpcyBidHJmcy1wcm9ncyBidWciIDotKQoKT2gs
-IGl0J3MgbW9zdCBkZWZpbml0ZWx5IGEgYnRyZnMtcHJvZ3MgYnVnLiBVc2luZyBzdGFsZQptZXRh
-ZGF0YSBkYXRhIG9uIHRoZSBibG9jayBkZXZpY2UgaW4gcHJlZmVyZW5jZSB0byBjdXJyZW50LCBw
-cmltYXJ5Cm1ldGFkYXRhIGlkZW50aWZ5aW5nIHRoZSBkZXZpY2UgdG8gYmVsb25nIHRvIGEgZGlm
-ZmVyZW50IGZpbGVzeXN0ZW0KaXMsIHdlbGwsIHJhdGhlciB1bmZyaWVuZGx5LgoKSW4gdGhlIGFi
-b3ZlIGNhc2UsIG1rZnMuZXh0NCBvdmVyd3JpdGVzIHRoZSBidHJmcyBtYWdpYyBibG9jayBmaWVs
-ZApzbyB0aGF0IGl0IGlzIG5vdCB6ZXJvIChhcyBpdCBpcyBhZnRlciB3aXBlZnMgcnVucyksIGFu
-ZCBoZW5jZSB0aGUKYnRyZnMgdG9vbHMgc2VlIGl0IGFzIGEgYnJva2VuIHN1cGVyYmxvY2sgYW5k
-IGNvbnRpbnVlIHRvIHRoZSBuZXh0CmxvY2F0aW9uIGZvciByZWNvdmVyeSByYXRoZXIgdGhhbiBz
-ZWUgdGhlIGRldmljZSBhcyBjb250YWluaW5nIGEKdmFsaWQgYnV0IGZvcmVpZ24gZmlsZXN5c3Rl
-bS4KCk5vbmUgb2YgdGhlIGZpbGVzeXN0ZW0gdG9vbHMgZnJvbSBleHQ0LCBidHJmcyBhbmQgWEZT
-IGhhbmRsZSB0aGlzCnNvcnQgb2YgdGhpbmcgY29uc2lzdGVudGx5LCBldmVuIHRob3VnaCBpdCBp
-cyB0aGVpciByZXNwb25zaWJpbGl0eQp0byBkbyBzby4gWEZTIGlzIHByb2JhYmx5IHRoZSBiZXN0
-IG9mIHRoZW0sIGluIHRoYXQgKnNvbWUqIG9mIHRoZQp0b29scyB3aWxsIHJlZnVzZSB0byBydW4g
-dW5sZXNzIHlvdSBwcm92aWRlIGEgZm9yY2UgZmxhZyB3aGVuIHRoZQpkZXZpY2UgYXBwZWFycyB0
-byBjb250YWluIHByaW1hcnkgaWRlbnRpZmllcnMgZm9yIGEgZGlmZmVyZW50CmZpbGVzeXN0ZW0u
-IGUuZy4gbWtmcy54ZnMgd29uJ3Qgb3ZlcndyaXRlIGV4aXN0aW5nIGZpbGVzeXN0ZW1zCndpdGhv
-dXQgYSBmb3JjZSBmbGFnLCBidXQgbWtmcy5leHQ0IGFuZCBta2ZzLmJ0cmZzIHdpbGw6CgokIHN1
-ZG8gbWtmcy54ZnMgL2Rldi92ZGIKbWtmcy54ZnM6IC9kZXYvdmRiIGFwcGVhcnMgdG8gY29udGFp
-biBhbiBleGlzdGluZyBmaWxlc3lzdGVtIChidHJmcykuCm1rZnMueGZzOiBVc2UgdGhlIC1mIG9w
-dGlvbiB0byBmb3JjZSBvdmVyd3JpdGUuCiQgc3VkbyBta2ZzLnhmcyAtZiAvZGV2L3ZkYgptZXRh
-LWRhdGE9L2Rldi92ZGIgICAgICAgICAgICAgICBpc2l6ZT0yNTYgICAgYWdjb3VudD00LCBhZ3Np
-emU9NzIwODk2IGJsa3MKICAgICAgICAgPSAgICAgICAgICAgICAgICAgICAgICAgc2VjdHN6PTUx
-MiAgIGF0dHI9MiwgcHJvamlkMzJiaXQ9MAogICAgICAgICA9ICAgICAgICAgICAgICAgICAgICAg
-ICBjcmM9MCAgICAKZGF0YSAgICAgPSAgICAgICAgICAgICAgICAgICAgICAgYnNpemU9NDA5NiAg
-IGJsb2Nrcz0yODgzNTg0LCBpbWF4cGN0PTI1CiAgICAgICAgID0gICAgICAgICAgICAgICAgICAg
-ICAgIHN1bml0PTAgICAgICBzd2lkdGg9MCBibGtzCm5hbWluZyAgID12ZXJzaW9uIDIgICAgICAg
-ICAgICAgIGJzaXplPTQwOTYgICBhc2NpaS1jaT0wCmxvZyAgICAgID1pbnRlcm5hbCBsb2cgICAg
-ICAgICAgIGJzaXplPTQwOTYgICBibG9ja3M9MjU2MCwgdmVyc2lvbj0yCiAgICAgICAgID0gICAg
-ICAgICAgICAgICAgICAgICAgIHNlY3Rzej01MTIgICBzdW5pdD0wIGJsa3MsIGxhenktY291bnQ9
-MQpyZWFsdGltZSA9bm9uZSAgICAgICAgICAgICAgICAgICBleHRzej00MDk2ICAgYmxvY2tzPTAs
-IHJ0ZXh0ZW50cz0wCiQgc3VkbyBta2ZzLnhmcyAvZGV2L3ZkYgpta2ZzLnhmczogL2Rldi92ZGIg
-YXBwZWFycyB0byBjb250YWluIGFuIGV4aXN0aW5nIGZpbGVzeXN0ZW0gKHhmcykuCm1rZnMueGZz
-OiBVc2UgdGhlIC1mIG9wdGlvbiB0byBmb3JjZSBvdmVyd3JpdGUuCiQgc3VkbyBta2ZzLmJ0cmZz
-IC9kZXYvdmRiCgpXQVJOSU5HISAtIEJ0cmZzIEJ0cmZzIHYwLjE5IElTIEVYUEVSSU1FTlRBTApX
-QVJOSU5HISAtIHNlZSBodHRwOi8vYnRyZnMud2lraS5rZXJuZWwub3JnIGJlZm9yZSB1c2luZwoK
-ZnMgY3JlYXRlZCBsYWJlbCAobnVsbCkgb24gL2Rldi92ZGIKICAgICAgICBub2Rlc2l6ZSA0MDk2
-IGxlYWZzaXplIDQwOTYgc2VjdG9yc2l6ZSA0MDk2IHNpemUgMTEuMDBHQgpCdHJmcyBCdHJmcyB2
-MC4xOQokIHN1ZG8gbWtmcy5leHQ0IC9kZXYvdmRiCm1rZTJmcyAxLjQyLjUgKDI5LUp1bC0yMDEy
-KQpGaWxlc3lzdGVtIGxhYmVsPQpPUyB0eXBlOiBMaW51eApCbG9jayBzaXplPTQwOTYgKGxvZz0y
-KQpGcmFnbWVudCBzaXplPTQwOTYgKGxvZz0yKQpTdHJpZGU9MCBibG9ja3MsIFN0cmlwZSB3aWR0
-aD0wIGJsb2Nrcwo3MjA4OTYgaW5vZGVzLCAyODgzNTg0IGJsb2NrcwoxNDQxNzkgYmxvY2tzICg1
-LjAwJSkgcmVzZXJ2ZWQgZm9yIHRoZSBzdXBlciB1c2VyCkZpcnN0IGRhdGEgYmxvY2s9MApNYXhp
-bXVtIGZpbGVzeXN0ZW0gYmxvY2tzPTI5NTI3OTAwMTYKODggYmxvY2sgZ3JvdXBzCjMyNzY4IGJs
-b2NrcyBwZXIgZ3JvdXAsIDMyNzY4IGZyYWdtZW50cyBwZXIgZ3JvdXAKODE5MiBpbm9kZXMgcGVy
-IGdyb3VwClN1cGVyYmxvY2sgYmFja3VwcyBzdG9yZWQgb24gYmxvY2tzOiAKICAgICAgICAzMjc2
-OCwgOTgzMDQsIDE2Mzg0MCwgMjI5Mzc2LCAyOTQ5MTIsIDgxOTIwMCwgODg0NzM2LCAxNjA1NjMy
-LCAyNjU0MjA4CgpBbGxvY2F0aW5nIGdyb3VwIHRhYmxlczogZG9uZSAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAKV3JpdGluZyBpbm9kZSB0YWJsZXM6IGRvbmUgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgCkNyZWF0aW5nIGpvdXJuYWwgKDMyNzY4IGJsb2Nrcyk6IGRvbmUKV3JpdGluZyBz
-dXBlcmJsb2NrcyBhbmQgZmlsZXN5c3RlbSBhY2NvdW50aW5nIGluZm9ybWF0aW9uOiBkb25lIAoK
-JCBzdWRvIG1rZnMueGZzIC9kZXYvdmRiCm1rZnMueGZzOiAvZGV2L3ZkYiBhcHBlYXJzIHRvIGNv
-bnRhaW4gYW4gZXhpc3RpbmcgZmlsZXN5c3RlbSAoZXh0NCkuCm1rZnMueGZzOiBVc2UgdGhlIC1m
-IG9wdGlvbiB0byBmb3JjZSBvdmVyd3JpdGUuCiQKCklPV3MsIGl0IGlzIHRoZSByZXNwb25zaWJp
-bGl0eSBvZiB0aGUgZmlsZXN5c3RlbSB0b29scyB0byBjb3JyZWN0bHkKaWRlbnRpZnkgdGhlIGZp
-bGVzeXN0ZW0gYmVpbmcgb3BlcmF0ZWQgb24sIGFuZCBub3QgdG8KbW9kaWZ5L3RyYXNoL3JlY292
-ZXIgYW55dGhpbmcgdW5sZXNzIHNwZWNpZmljYWxseSBkaXJlY3RlZCBieSB0aGUKdXNlci4gIFdo
-ZW4gYSBmaWxlc3lzdGVtIHRvb2wgZ2V0cyBpdCB3cm9uZywgdGhlbiB0aGF0IHNwZWNpZmljIHRv
-b2wKbmVlZHMgdG8gYmUgZml4ZWQuICBpLmUuIGl0IGlzIHRoZSByZXNwb25zaWJpbGl0eSBvZiBm
-aWxlc3lzdGVtCnRvb2xzIHRvIGJlaGF2ZSBzYW5lbHksIG5vdCBmb3IgdGhlIHJlc3Qgb2YgdGhl
-IHdvcmxkIHRvIGhhdmUgdG8Kd29yayBhcm91bmQgdGhlIGRhbmdlcm91cyBiZWhhdmlvdXIgb2Yg
-YSBzcGVjaWZpYyBmaWxlc3lzdGVtcycKdG9vbHNldC4KCkFuZCB0aGF0IG1ha2VzIGl0IGEgYnRy
-ZnMtcHJvZ3MgYnVnIHRoYXQgbmVlZHMgdG8gYmUgZml4ZWQuCgpDaGVlcnMsCgpEYXZlLgotLSAK
-RGF2ZSBDaGlubmVyCmRhdmlkQGZyb21vcmJpdC5jb20KCl9fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29t
-Cmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+[cc xfs@oss.sgi.com]
+
+On Wed, Feb 13, 2013 at 08:18:45AM -0800, Greg Kroah-Hartman wrote:
+> On Wed, Feb 13, 2013 at 04:30:32PM +0100, Paolo Bonzini wrote:
+> > Il 01/02/2013 14:08, Greg Kroah-Hartman ha scritto:
+> > > 3.7-stable review patch.  If anyone has any objections, please let me know.
+> > > 
+> > > ------------------
+> > > 
+> > > From: Dave Chinner <dchinner@redhat.com>
+> > > 
+> > > commit eb178619f930fa2ba2348de332a1ff1c66a31424 upstream.
+> > > 
+> > > When _xfs_buf_find is passed an out of range address, it will fail
+> > > to find a relevant struct xfs_perag and oops with a null
+> > > dereference. This can happen when trying to walk a filesystem with a
+> > > metadata inode that has a partially corrupted extent map (i.e. the
+> > > block number returned is corrupt, but is otherwise intact) and we
+> > > try to read from the corrupted block address.
+> > > 
+> > > In this case, just fail the lookup. If it is readahead being issued,
+> > > it will simply not be done, but if it is real read that fails we
+> > > will get an error being reported.  Ideally this case should result
+> > > in an EFSCORRUPTED error being reported, but we cannot return an
+> > > error through xfs_buf_read() or xfs_buf_get() so this lookup failure
+> > > may result in ENOMEM or EIO errors being reported instead.
+> > 
+> > It looks like this breaks xfs_growfs.  See
+> > http://bugzilla.redhat.com/show_bug.cgi?id=909602.
+
+Entirely possible, as the filesystem size is not updated until after
+all the new metadata is written to disk. in 3.8, there's this commit:
+
+commit fd23683c3b1ab905cba61ea2981c156f4bf52845
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Mon Nov 12 22:53:59 2012 +1100
+
+    xfs: growfs: use uncached buffers for new headers
+    
+    When writing the new AG headers to disk, we can't attach write
+    verifiers because they have a dependency on the struct xfs-perag
+    being attached to the buffer to be fully initialised and growfs
+    can't fully initialise them until later in the process.
+    
+    The simplest way to avoid this problem is to use uncached buffers
+    for writing the new headers. These buffers don't have the xfs-perag
+    attached to them, so it's simple to detect in the write verifier and
+    be able to skip the checks that need the xfs-perag.
+    
+    This enables us to attach the appropriate buffer ops to the buffer
+    and henc calculate CRCs on the way to disk. IT also means that the
+    buffer is torn down immediately, and so the first access to the AG
+    headers will re-read the header from disk and perform full
+    verification of the buffer. This way we also can catch corruptions
+    due to problems that went undetected in growfs.
+    
+    Signed-off-by: Dave Chinner <dchinner@redhat.com>
+    Reviewed-by Rich Johnston <rjohnston@sgi.com>
+    Signed-off-by: Ben Myers <bpm@sgi.com>
+
+As part of the metadata verifier feature. It means that growfs no
+longer uses cached buffers, and hence does not pass through
+_xfs_buf_find() and hence will not trigger the beyond-EOFS that the
+above commit adds.
+
+> Ick, not good.
+> 
+> Dave, any thoughts here?  Should I drop this from the 3.7-stable queue?
+
+Yeah, drop it.
+
+But what I'm now wondering is how this patch got proposed for
+3.7-stable. I don't recall seeing anything about this being
+proposed.
+
+<trolls email archives>
+
+Oh, it happened while I was at LCA and didn't have any access to Red
+Hat email and there was a private thread about it. By the time I
+read it the stable kernel was already released and so it immediately
+dropped from my attention.
+
+XFS Maintainers: Major process fail. Patches that are being proposed
+for backports need to be posted to the XFS list, reviewed and tested
+before saying they are OK to go.  We have several growfs tests in
+xfstests would have failed if this was actually tested.
+
+Stable folk: This is the reason why I, quite frankly, don't want to
+support stable kernels *at all*. The overhead of backporting and
+testing a patch to a single kernel target to ensure there are no
+unintended regressions is significant, and there are so many stable
+kernels no it's just a waste of developer time to try to support
+them. And in this case, the process simply wasn't executed and an
+unintended regression that is >this close< to causing filesystem
+corruption slipped through to the stable series.....
+
+Red Hat/Fedora folk: please report upstream XFS
+bugs/regressions to xfs@oss.sgi.com or #xfs on freednode so we know
+about them immediately and can triage problems quickly via email.
+Sure, point us to the BZ you've raised, but tell us about the
+problem ASAP. That way when users ask us about a problem, we are not
+completely clueless...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
