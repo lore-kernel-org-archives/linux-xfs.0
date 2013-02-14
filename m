@@ -1,23 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 095208027
-	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 12:45:10 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 90773AC002
-	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 10:45:09 -0800 (PST)
-Received: from mta01.ornl.gov (mta01.ornl.gov [128.219.177.14]) by
-	cuda.sgi.com with ESMTP id EGvBO7RTVV6r6gF7 (version=TLSv1
-	cipher=RC4-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 14 Feb 2013 10:45:08 -0800 (PST)
-Received: from exchhub1.ornl.gov (exchhub1.ornl.gov [160.91.2.111])
-	by emgwy2.ornl.gov (Postfix) with ESMTPS id AEF7EE09D4
-	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 13:45:07 -0500 (EST)
-From: "Settlemyer, Bradley W." <settlemyerbw@ornl.gov>
-Date: Thu, 14 Feb 2013 13:45:04 -0500
-Subject: Weird performance on a FusionIO Octal (Random writes faster than Seq.)
-Message-ID: <CD429AE0.4B5E%settlemyerbw@ornl.gov>
-Content-Language: en-US
-MIME-Version: 1.0
+	by oss.sgi.com (Postfix) with ESMTP id 7D93B8028
+	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 13:08:48 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0185AAC002
+	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 11:08:47 -0800 (PST)
+Received: from slmp-550-94.slc.westdc.net (slmp-550-94.slc.westdc.net
+	[50.115.112.57]) by cuda.sgi.com with ESMTP id cjGqLGQxEDXEZEZQ
+	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 14 Feb 2013 11:08:43 -0800 (PST)
+Mime-Version: 1.0 (Mac OS X Mail 6.2 \(1499\))
+Subject: Re: [PATCH] xfs_mkfs: wipe old signatures from the device
+From: Chris Murphy <lists@colorremedies.com>
+In-Reply-To: <511D1DF5.2060802@redhat.com>
+Date: Thu, 14 Feb 2013 12:08:37 -0700
+Message-Id: <504D1E58-CFFB-459A-A215-A5BB9BEB8BBE@colorremedies.com>
+References: <1360667215-14701-1-git-send-email-lczerner@redhat.com>
+	<20130212202753.GC26694@dastard>
+	<20130213080154.GC18597@x2.net.home>
+	<alpine.LFD.2.00.1302131127070.2315@(none)>
+	<20130213121655.GA7799@x2.net.home>
+	<20130213221720.GH26694@dastard>
+	<982B8DBB-3FBA-4213-BC92-848A64C60110@colorremedies.com>
+	<alpine.LFD.2.00.1302140929570.2315@(none)>
+	<511D1DF5.2060802@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,69 +36,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
-
-Hello
-
-  So I'm getting weird performance using XFS on a 5TB FusionIO octal (a
-solid state device plugged into my pcie bus).  It seems to be a newish
-problem, but I can't go back to an old version of everything to prove
-that, because I've only got one working Octal right now (they are a little
-pricy).
-
-  At any rate, when doing random 16MB requests to a file with 16 threads,
-I get about 4.5GB/s.  When writing sequentially with 16 threads doing 16MB
-requests, I get about 3.5GB/s -- the first time.  Once the file is written
-the first time, a second pass results in 4.5GB/s.
-
-  The thing is, I'm using preallocate on both types of I/O (that is, I
-always preallocate the entire file whether its random or sequential).  I
-allocate the exact same size file in both cases, its just faster the first
-time with random writes rather than sequential writes.
-
-  So if you had xdd 7.0 and an octal plugged into slot 6 of an HP DL585 G7
-(running CentOS 6.3), you could replicate these test results with the
-following commands (note xdd's default block size is 1024, so you'll see
-everything is accounting for 1024 byte size blocks):
-
-# Generate a set of random seek offsets within a file
-data_size=$((256*8*1024*1024*1024))
-rand_range=$((data_size / 16384 / 1024 - 1))
-    shuf -i 0-$rand_range | awk "{i += 1}; {print i-1, \$0*16384,  \"16384
-w 0 0\" };" > wseek_file
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs@oss.sgi.com, Karel Zak <kzak@redhat.com>, Zach Brown <zabrown@redhat.com>, =?windows-1252?Q?Luk=E1=9A_Czerner?= <lczerner@redhat.com>, linux-btrfs@vger.kernel.org
 
 
-# Perform the random writes
-numactl --cpunodebind=4 xdd -op write -target
-/data/xfs-numa4/baseline-rand1 -reqsize 16384 -qd 16 -dio -verbose -bytes
-2199023255552 -preallocate 2199023255552 -seek load wseek file
-
-# Perform sequential writes
-numactl --cpunodebind=4 xdd -op write -target
-/data/xfs-numa4/baseline-seq1 -reqsize 16384 -qd 16 -dio -verbose -bytes
-2199023255552 -preallocate 2199023255552
-
-And so for the results I get the following (if you know xdd results):
-COMBINED             1       1      16    2199023255552      131072
-483.311   4549.910    271.196     0.230    67.644    write     16777216
- COMBINED             1       1      16    2199023255552      131072
-605.366   3632.550    216.517     0.289    53.971    write     16777216
+On Feb 14, 2013, at 10:25 AM, Eric Sandeen <sandeen@redhat.com> wrote:
+> 
+> I was thinking, as annoying as it might be, requiring the user to
+> use "-f $OLD_FS_TYPE" might require a bit more positive action
+> and cognition on the admin's part.
+> 
+> OTOH, that could get annoying, and break old scripts.  :)
 
 
-The bandwidths here are 4549.910 MB/s for the random, and 3632.550 MB/s
-for the sequential.  If I run it again to the already existing file, I get:
+Yes, it's possible to get carried away with this: An "are you sure" prompt that requires typing "yes"; or even more deliciously irritating, only accepts as positive:
 
-COMBINED 1 1 16 2199023255552 131072 482.851 4554.248 271.454 0.230 66.016
-write 16777216
+"primateconfirmspreviousfilesystemdestructionwontsubsequentlyaskaboutdatarecovery"
 
-Which is a write bandwidth of 4554.248MB/s.
+Way, way more people will copy/paste that from a list or man entry, than acquire muscle memory for -f.
 
 
-Weird, right?
-
-Cheers,
-Brad
-
+Chris Murphy
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
