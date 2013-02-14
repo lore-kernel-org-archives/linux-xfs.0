@@ -1,17 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 548948018
-	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 11:31:24 -0600 (CST)
-Date: Thu, 14 Feb 2013 11:31:20 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: xfsdump: update 'make deb' to use tarball archive
-Message-ID: <20130214173120.GF22182@sgi.com>
-References: <20130214010853.GD22182@sgi.com>
-	<1295709208.2558271.1360808077935.JavaMail.root@redhat.com>
-	<20130214162454.GH30652@sgi.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 5570C801B
+	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 12:35:05 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1E83130404E
+	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 10:35:01 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id 2kgXezRqRVwr67Oa for <xfs@oss.sgi.com>;
+	Thu, 14 Feb 2013 10:35:00 -0800 (PST)
+Message-ID: <511D2E53.3070403@sandeen.net>
+Date: Thu, 14 Feb 2013 12:34:59 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130214162454.GH30652@sgi.com>
+Subject: Re: problem after growing
+References: <511BC78B.6070205@3sr-grenoble.fr> <511BCB41.4060804@sandeen.net>
+	<511BCD11.20907@3sr-grenoble.fr> <511BCFB6.8000309@sandeen.net>
+	<511BD0FB.2070401@3sr-grenoble.fr> <511BD2D1.9010906@sandeen.net>
+	<511BD6ED.6030006@3sr-grenoble.fr>
+	<511BEE8B.8000400@sandeen.net> <511BF3B6.9040502@sandeen.net>
+	<511C07C6.9080003@sandeen.net> <511C9E9C.8080200@3sr-grenoble.fr>
+	<511CB0C3.9090507@3sr-grenoble.fr>
+	<511CFC06.2030103@3sr-grenoble.fr> <511CFCBD.504@sandeen.net>
+	<511D12D5.8020203@3sr-grenoble.fr>
+In-Reply-To: <511D12D5.8020203@3sr-grenoble.fr>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,121 +31,121 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Nathan Scott <nathans@debian.org>
-Cc: Andrew Dahl <adahl@sgi.com>, xfs@oss.sgi.com
+To: =?ISO-8859-1?Q?R=E9mi_Cailletaud?= <remi.cailletaud@3sr-grenoble.fr>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-This patch changes the build process so that 'make deb' uses the same
-process of creating a source tree as the release script.
+On 2/14/13 10:37 AM, R=E9mi Cailletaud wrote:
+> Le 14/02/2013 16:03, Eric Sandeen a =E9crit :
 
-* Add a list of files which go in the release tarball in .gitcensus
-  This is needed so that you can create a tarball in a bare release
-  tree, when .git is not available.
 
-* Modify the SRCTAR target to include files from .gitcensus and use tar
-  instead of git archive.
+<big snip>
 
-* Modify the SRCTARINC files to include .gitcensus, and include
-  .gitcensus in the 'make realclean' target.
+>>> after adding the 4K device, growfs fail, and partition wont remount. I =
+tried a vgcfgrestore and vgreduce, but it does not mount : same error...
+>>> XFS (dm-5): device supports 4096 byte sectors (not 512)
+>> In that case I think you must not have actually (completely?) removed th=
+e 4k device.
+> =
 
-* remove the 'make source-link' target.
+> That's it! After vgchange-ing un/available, lv mounts !
+> =
 
-Signed-off-by: Ben Myers <bpm@sgi.com>
+> Following steps reproduce the "bug", considering we already have one pv o=
+n /dev/sdc (512 sectors device) :
+> =
 
----
- .gitignore         |    1 +
- Makefile           |   23 ++++++++++++-----------
- include/buildrules |   11 -----------
- 3 files changed, 13 insertions(+), 22 deletions(-)
+> - create a virtual 4k scsi device and create a pv on it :
+> # modprobe scsi_debug sector_size=3D4096 dev_size_mb=3D256
+> # pvcreate /dev/sdd
+> =
 
-Index: b/.gitignore
-===================================================================
---- a/.gitignore	2013-02-14 10:55:13.061985803 -0600
-+++ b/.gitignore	2013-02-14 10:55:49.061340568 -0600
-@@ -4,6 +4,7 @@
- 
- # build system
- .census
-+.gitcensus
- /include/config.h
- /include/builddefs
- /install-sh
-Index: b/Makefile
-===================================================================
---- a/Makefile	2013-02-14 10:55:06.961977139 -0600
-+++ b/Makefile	2013-02-14 10:59:19.131340450 -0600
-@@ -30,7 +30,7 @@ SRCTAR = $(PKG_NAME)-$(PKG_VERSION).tar.
- CONFIGURE = aclocal.m4 configure config.guess config.sub install-sh ltmain.sh
- LSRCFILES = configure.ac release.sh README VERSION $(CONFIGURE)
- SRCTARINC = m4/libtool.m4 m4/lt~obsolete.m4 m4/ltoptions.m4 m4/ltsugar.m4 \
--            m4/ltversion.m4 $(CONFIGURE)
-+            m4/ltversion.m4 .gitcensus $(CONFIGURE)
- 
- LDIRT = config.log .ltdep .dep config.status config.cache confdefs.h \
- 	conftest* built .census install.* install-dev.* *.gz \
-@@ -100,7 +100,7 @@ distclean: clean
- 	rm -f $(LDIRT)
- 
- realclean: distclean
--	rm -f $(CONFIGURE)
-+	rm -f $(CONFIGURE) .gitcensus
- 
- #
- # All this gunk is to allow for a make dist on an unconfigured tree
-@@ -117,18 +117,19 @@ ifeq ($(HAVE_BUILDDEFS), no)
- 	$(MAKE) $(MAKEOPTS) -C . $@
- else
- 	$(Q)$(MAKE) $(MAKEOPTS) $(SRCDIR)
--	$(Q)$(MAKE) $(MAKEOPTS) -C po
--	$(Q)$(MAKE) $(MAKEOPTS) source-link
- 	$(Q)cd $(SRCDIR) && dpkg-buildpackage
- endif
- 
--$(SRCDIR) : $(_FORCE)
-+$(SRCDIR) : $(_FORCE) $(SRCTAR)
- 	rm -fr $@
--	mkdir -p $@
-+	$(Q)$(TAR) -zxvf $(SRCTAR)
- 
--$(SRCTAR) : default
--	$(Q)git archive --prefix=$(SRCDIR)/ --format=tar v$(PKG_VERSION) > $(SRCDIR).tar
--	$(Q)$(TAR) --transform "s,^,$(SRCDIR)/," -rf $(SRCDIR).tar \
--	  $(SRCTARINC)
--	$(Q)$(ZIP) $(SRCDIR).tar
-+$(SRCTAR) : default $(SRCTARINC) .gitcensus
-+	$(Q)$(TAR) --transform "s,^,$(SRCDIR)/," -zcf $(SRCDIR).tar.gz \
-+	  `cat .gitcensus` $(SRCTARINC)
- 	echo Wrote: $@
-+
-+.gitcensus: $(_FORCE)
-+	$(Q) if test -d .git; then \
-+	  git ls-files > .gitcensus && echo "new .gitcensus"; \
-+	fi
-Index: b/include/buildrules
-===================================================================
---- a/include/buildrules	2013-02-14 10:59:26.221945695 -0600
-+++ b/include/buildrules	2013-02-14 10:59:39.321985640 -0600
-@@ -23,17 +23,6 @@ $(SUBDIRS):
- 	$(Q)$(MAKE) $(MAKEOPTS) -q -C $@ || $(MAKE) $(MAKEOPTS) -C $@
- endif
- 
--source-link: 
--	@test -z "$$DIR" && DIR="."; \
--	for f in `echo $(SRCFILES) $(SUBDIRS) $(POTHEAD)`; do \
--	    if test -d $$f ; then \
--		mkdir $(TOPDIR)/$(PKG_NAME)-$(PKG_VERSION)/$$DIR/$$f || exit $$?; \
--		$(MAKEF) DIR=$$DIR/$$f -C $$f $@ || exit $$?; \
--	    else \
--		ln $$f $(TOPDIR)/$(PKG_NAME)-$(PKG_VERSION)/$$DIR/$$f || exit $$?; \
--	    fi; \
--	done
--
- #
- # Standard targets
- #
+> - create a vg with both pv, and create an lv on sdc (I specified exact ex=
+tents count of sdc) :
+> # vgcreate vgtest  /dev/sdc /dev/sdd
+> # lvcreate -n lvtest -l 3759 vgtest
+> =
+
+> - mkfs, mount :
+> # mkfs.xfs /dev/vgtest/lvtest
+> # mount /dev/vgtest/lvtest /mnt/tmp
+> =
+
+> - the bad thing : lvextend and growfs (should not lvm or xfs check this s=
+ector size stuff ?):
+
+xfs does check, to some degree:
+
+> # lvextend -l+40 /dev/vgtest/lvtest
+> # xfs_growfs /mnt/tmp
+> (fail with xfs_growfs: XFS_IOC_FSGROWFSDATA xfsctl failed)
+
+^^^ see?  ;)  It could maybe be more explicit, but xfs is already in troubl=
+e by this point (before growfs, it still won't be remountable).  There is n=
+o opportunity for xfs to catch this damage before it's done.
+
+Yes, I think lvm should check before allowing the change.
+
+> =
+
+> - the scary part :
+> # umount /mnt/tmp
+> # mount /dev/vgtest/lvtest /mnt/tmp
+> mount: function not implemented
+> # tail -1 /var/log/messages
+> Feb 14 16:41:52 hamaika kernel: [  481.055422] XFS (dm-5): device support=
+s 4096 byte sectors (not 512)
+> =
+
+> - the huge relief (restoring *before* lvextend) :
+> # vgcfgrestore -f /etc/lvm/archive/vgtest_00029-84595486.vg vgtest
+> # vgchange -a n vgtest
+> # vgchange -a y vgtest
+> # mount /dev/vgtest/lvtest /mnt/tmp
+> =
+
+> yippee, my datas are back !!
+
+cool.
+
+> =
+
+> Should I submit a bug report ? On LVM, XFS, both ?
+
+I don't know what xfs could have done here.  Even if you didn't growfs, by =
+the time you did lvextend xfs wouldn't have been able to remount.  I think =
+it's up to lvm to protect the user from this, personally, so a bug report t=
+here seems warranted.
+
+> However, a great thanks for your help... I learned some stuff about lvm a=
+nd xfs today ;)
+
+You're welcome, very glad you got it back.
+Thank my employer Red Hat for paying me to work on this stuff, too ;)
+
+-Eric
+
+> Cheers,
+> =
+
+> r=E9mi
+> =
+
+>>
+>> I think you'll need to seek help from LVM people in order to proceed... =
+ I'm sure it's possible to safely and completely remove the newly added spa=
+ce, but I don't know how.
+>>
+>> -Eric
+>>
+>>
+> =
+
+> =
+
 
 _______________________________________________
 xfs mailing list
