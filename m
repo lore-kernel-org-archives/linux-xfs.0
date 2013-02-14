@@ -1,29 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0ABE37FFA
-	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 05:04:32 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 93AD8AC002
-	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 03:04:28 -0800 (PST)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	SrB5EB1KkfTSWI5B for <xfs@oss.sgi.com>;
-	Thu, 14 Feb 2013 03:04:26 -0800 (PST)
-Date: Thu, 14 Feb 2013 22:04:23 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs_mkfs: wipe old signatures from the device
-Message-ID: <20130214110423.GN26694@dastard>
-References: <1360667215-14701-1-git-send-email-lczerner@redhat.com>
-	<20130212202753.GC26694@dastard>
-	<20130213080154.GC18597@x2.net.home>
-	<alpine.LFD.2.00.1302131127070.2315@(none)>
-	<20130213121655.GA7799@x2.net.home>
-	<20130213221720.GH26694@dastard>
-	<982B8DBB-3FBA-4213-BC92-848A64C60110@colorremedies.com>
-	<alpine.LFD.2.00.1302140929570.2315@(none)>
+	by oss.sgi.com (Postfix) with ESMTP id 13E6F7FF3
+	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 05:45:47 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 748ACAC002
+	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 03:45:46 -0800 (PST)
+Received: from ppsw-43.csi.cam.ac.uk (ppsw-43.csi.cam.ac.uk [131.111.8.143])
+	by cuda.sgi.com with ESMTP id qHPisleooeaGUkS5 for
+	<xfs@oss.sgi.com>; Thu, 14 Feb 2013 03:45:44 -0800 (PST)
+Received: from nat.mrc-lmb.cam.ac.uk ([131.111.85.79]:60986
+	helo=mail.lmb.internal)
+	by ppsw-43.csi.cam.ac.uk (ppsw.cam.ac.uk [131.111.8.139]:25)
+	with esmtp id 1U5xG4-0001ok-nl (Exim 4.72) for xfs@oss.sgi.com
+	(return-path <dhoworth@mrc-lmb.cam.ac.uk>);
+	Thu, 14 Feb 2013 11:45:44 +0000
+Received: from oldlmb.lmb.internal ([10.130.0.1] helo=[10.14.0.2])
+	by mail.lmb.internal with esmtp (Exim 4.63)
+	(envelope-from <dhoworth@mrc-lmb.cam.ac.uk>) id 1U5xG3-0004TY-OJ
+	for xfs@oss.sgi.com; Thu, 14 Feb 2013 11:45:44 +0000
+Message-ID: <511CCE67.5010402@mrc-lmb.cam.ac.uk>
+Date: Thu, 14 Feb 2013 11:45:43 +0000
+From: Dave Howorth <dhoworth@mrc-lmb.cam.ac.uk>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <alpine.LFD.2.00.1302140929570.2315@(none)>
+Subject: Re: [PATCH] xfs_mkfs: wipe old signatures from the device
+References: <1360667215-14701-1-git-send-email-lczerner@redhat.com>	<20130212202753.GC26694@dastard>	<20130213080154.GC18597@x2.net.home>	<alpine.LFD.2.00.1302131127070.2315@(none)>	<20130213121655.GA7799@x2.net.home>
+	<20130213221720.GH26694@dastard>
+In-Reply-To: <20130213221720.GH26694@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,73 +34,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: =?utf-8?B?THVrw6HFoQ==?= Czerner <lczerner@redhat.com>
-Cc: sandeen@redhat.com, xfs@oss.sgi.com, Karel Zak <kzak@redhat.com>, Zach Brown <zabrown@redhat.com>, Chris Murphy <lists@colorremedies.com>, linux-btrfs@vger.kernel.org
+To: xfs@oss.sgi.com
 
-T24gVGh1LCBGZWIgMTQsIDIwMTMgYXQgMDk6MzY6MzhBTSArMDEwMCwgTHVrw6HFoSBDemVybmVy
-IHdyb3RlOgo+IE9uIFRodSwgMTQgRmViIDIwMTMsIENocmlzIE11cnBoeSB3cm90ZToKPiAKPiA+
-IERhdGU6IFRodSwgMTQgRmViIDIwMTMgMDA6Mjk6NTkgLTA3MDAKPiA+IEZyb206IENocmlzIE11
-cnBoeSA8bGlzdHNAY29sb3JyZW1lZGllcy5jb20+Cj4gPiBUbzogRGF2ZSBDaGlubmVyIDxkYXZp
-ZEBmcm9tb3JiaXQuY29tPgo+ID4gQ2M6IEthcmVsIFphayA8a3pha0ByZWRoYXQuY29tPiwgTHVr
-w6HFoSBDemVybmVyIDxsY3plcm5lckByZWRoYXQuY29tPiwKPiA+ICAgICB4ZnNAb3NzLnNnaS5j
-b20sIHNhbmRlZW5AcmVkaGF0LmNvbSwgWmFjaCBCcm93biA8emFicm93bkByZWRoYXQuY29tPiwK
-PiA+ICAgICBsaW51eC1idHJmc0B2Z2VyLmtlcm5lbC5vcmcKPiA+IFN1YmplY3Q6IFJlOiBbUEFU
-Q0hdIHhmc19ta2ZzOiB3aXBlIG9sZCBzaWduYXR1cmVzIGZyb20gdGhlIGRldmljZQo+ID4gCj4g
-PiAKPiA+IE9uIEZlYiAxMywgMjAxMywgYXQgMzoxNyBQTSwgRGF2ZSBDaGlubmVyIDxkYXZpZEBm
-cm9tb3JiaXQuY29tPiB3cm90ZToKPiA+ID4gaXQgaXMgdGhlIHJlc3BvbnNpYmlsaXR5IG9mIGZp
-bGVzeXN0ZW0KPiA+ID4gdG9vbHMgdG8gYmVoYXZlIHNhbmVseSwgbm90IGZvciB0aGUgcmVzdCBv
-ZiB0aGUgd29ybGQgdG8gaGF2ZSB0bwo+ID4gPiB3b3JrIGFyb3VuZCB0aGUgZGFuZ2Vyb3VzIGJl
-aGF2aW91ciBvZiBhIHNwZWNpZmljIGZpbGVzeXN0ZW1zJwo+ID4gPiB0b29sc2V0Lgo+ID4gCj4g
-PiBJIGFwcHJlY2lhdGUgdGhpcywgYW5kIGluIHBhcnRpY3VsYXIgdGhhdCBta2ZzLnhmcyBkb2Vz
-bid0IG5lcmYgYSBmaWxlIHN5c3RlbSB3aXRob3V0IHRoZSB1c2Ugb2YgLWY7IGV2ZW4gYW4gZXhp
-c3RpbmcgWEZTIGZpbGUgc3lzdGVtLiBDb25zaWRlcmluZyBtb3N0IGRhdGEgbG9zcyBpcyB1c2Vy
-IGluZHVjZWQsIEknZCBhcHByZWNpYXRlIGl0IGlmIG90aGVyIGZpbGUgc3lzdGVtcydzIHRvb2xz
-IHdlcmVuJ3Qgc28gZWFzaWx5IG1hZGUgYmVsbGlnZXJlbnQgYnkgKGhvcGVmdWxseSB0ZW1wb3Jh
-cmlseSkgY29uZnVzZWQgYXBlcyB3ZWFyaW5nIHBhbnRzLgo+ID4gCj4gPiBDaHJpcyBNdXJwaHkK
-PiAKPiBJIHdvdWxkIG5vdCBiZSBzbyBvcHRpbWlzdGljIGFib3V0IGl0LiBUaGUgcmVhc29uIGJl
-aW5nIHRoYXQgdGhlcmUKPiBhcmUgYWxtb3N0IF9hbHdheXNfIG9sZCBmaWxlIHN5c3RlbSBzaWdu
-YXR1cmVzIG9uIHRoZSBkZXZpY2UuCgpUaGF0IGFzc3VtcHRpb24gaXMgd2F5IG9mZiB0aGUgbWFy
-ay4gIFdoYXQgeW91IGRvIGFzIGEgZmlsZXN5c3RlbQpkZXZlbG9wZXIgKHJlbWFrZSBmaWxlc3lz
-dGVtcyBvbiB0aGUgc2FtZSBibG9jayBkZXZpY2UgaHVuZHJlZHMgb2YKdGltZXMgYSBkYXkpIGlz
-IG5vdCBhdCBhbGwgdHlwaWNhbCwgc28geW91IGNhbm5vdCBleHRyYXBvbGF0ZSBmcm9tCnlvdXIg
-dXNhZ2UgaGFiaXRzIHRvIHdoYXQgdHlwaWNhbGx5IGhhcHBlbnMgaW4gcHJvZHVjdGlvbgplbnZp
-cm9ubWVudHMuCgpBZG1pbnMgZG9uJ3QgdGVuZCB0byB1c2UgImZvcmNlIiBvcHRpb25zIGJ5IGRl
-ZmF1bHQgKGVzcGVjaWFsbHkgZm9yCmRlc3RydWN0aXZlIGNvbWFuZHMgbGlrZSBta2ZzKSBhcyAx
-KSB0aGV5IGFyZSByYXJlbHkgbmVjZXNzYXJ5IGluIHRoZQpyZWFsIHdvcmxkIGFuZCAyKSB0aGUg
-Y29uc2VxdWVuY2VzIG9mIGVycm9ycyBhcmUgc2V2ZXJlLiAgVGhlIG1vc3QKY29tbW9uIGZpbGVz
-eXN0ZW0gY3JlYXRpb24gcGF0dGVybiBpbiBwcm9kdWN0aW9uIHN5c3RlbXMgKGJlIGl0CmRlc2t0
-b3AsIHdvcmtzdGF0aW9uIG9yIHNlcnZlcikgaXMgdGhhdCBzdG9yYWdlLCBkZXZpY2VzIGFuZApm
-aWxlc3lzdGVtcyBhcmUgc2V0IHVwIG9uY2UgYW5kIHRoZW4gdXNlZCBmb3IgdGhlIGVudGlyZSBs
-aWZldGltZQpvZnRoZSBzeXN0ZW0gd2l0aG91dCBldmVyIGhhdmluZyBta2ZzIHJ1biBvbiB0aGVt
-IGFnYWluLiBpLmUgb24KcHJpc3RpbmUsIGVtcHR5IGhhcmR3YXJlLiBIZW5jZSB1c2VycyByYXJl
-bHksIGlmIGV2ZXIsIG5lZWQgdG8gdXNlCnRoZSBmb3JjZSBvcHRpb24gZm9yIG1rZnMueGZzLgoK
-PiBTbyBJCj4gdGhpbmsgdGhhdCBpdCBnb3QgdG8gdGhlIHBvaW50IHdoZXJlIHVzZXJzIHdpbGwg
-dXN1YWxseSB1c2UgbWtmcy54ZnMKPiAtZiBhbGwgdGhlIHRpbWUuIEFuZCBldmVuIGlmIHRoZXkg
-ZGlkIG5vdCBhbmQgdGhleSB3b3VsZCB1c2UgYSB3cm9uZwo+IGRldmljZSB0aGV5IHdvdWxkIHBy
-b2JhYmx5IGdldCB0aGUgc2FtZSB3YXJuaW5nIGV2ZW4gZm9yIHRoZSBkZXZpY2UKPiB0aGV5IHdh
-bnRlZCB0byB1c2UgaW4gdGhlIGZpcnN0IHBsYWNlLgoKSSBnZXQgYSBjb3VwbGUgb2YgcXVlcmll
-cyBhIHllYXIgZnJvbSBwZW9wbGUgc2F5aW5nIHRoZXkKYWNjaWRlbnRhbGx5IHJhbiBta2ZzLmV4
-dDQgb24gdGhlIHdyb25nIGRldmljZSBhbmQgd2FudCB0byBrbm93IGlmCnRoZXkgY2FuIHJlY292
-ZXIgdGhlaXIgWEZTIGZpbGVzeXN0ZW0uIFRoZSBuZXh0IHF1ZXN0aW9uIGlzIHVzdWFsbHkKIndo
-eSBkaWRuJ3QgbWtmcy5leHQ0IHdhcm4gbWUgdGhlcmUgd2FzIGFuIGV4aXN0aW5nIGZpbGVzeXN0
-ZW0gb24KdGhlIGRldmljZSBsaWtlIG1rZnMueGZzIGRvZXM/Ii4KClRoYXQgaXMgd2h5IHRoZSAi
-ZG9uJ3Qgb3ZlcndyaXRlIGFuIGV4aXN0aW5nIGZpbGVzeXN0ZW0gYnkgZGVmYXVsdCIKYmVoYXZp
-b3VyIGlzIGltcG9ydGFudC4gVXNlcnMgbGlrZSB0byBiZSBwcm90ZWN0ZWQgZnJvbSBtaXN0YWtl
-cwp0aGV5IHdlcmVuJ3QgYXdhcmUgdGhleSBtYWRlLCBhbmQgZmFyIHRvbyBmZXcgb2Ygb3VyIGZp
-bGVzeXN0ZW0KdXRpbGl0aWVzIHByb3ZpZGUgdGhhdCBzYWZldHkgbmV0LgoKQSBjb3VwbGUgb2Yg
-dXNlcnMgYSB5ZWFyIGxvc2luZyBkYXRhIGxpa2UgdGhpcyBpcyBhIGNvdXBsZSBvZiB1c2Vycwp0
-b28gbWFueS4gRXNwZWNpYWxseSB3aGVuIGl0IHdvdWxkIG9ubHkgdGFrZSBhIGNvdXBsZSBvZiBo
-b3VycyBvZgp5b3VyIHRpbWUgdG8gaW1wbGVtZW50Li4uLgoKPiBTbyBldmVuIHRob3VnIGl0IG1p
-Z2h0IGhlbHAgaW4gc29tZSBjYXNlcyBJIGRvIG5vdCB0aGluayB0aGF0IHdlCj4gc2hvdWxkIGdv
-IGFuZCBjaGFuZ2UgYWxsIGZpbGUgc3lzdGVtcyB0byBkbyB0aGF0IGFzIHdlbGwsIGl0IHdvdWxk
-Cj4gbm90IGJlIHZlcnkgdXNlZnVsIGFueXdheS4KClRlbGwgdGhhdCB0byB0aGUgbmV4dCB1c2Vy
-IHRoYXQgdHJhc2hlcyB0aGVpciBkYXRhIGJlY2F1c2UgYQpmaWxlc3lzdGVtIHRvb2wgc2ltcGx5
-IGFzc3VtZWQgaW4gY29ycmVjdGx5IHRoYXQgaXQgb3duZWQgdGhlIGJsb2NrCmRldmljZS4KCkNo
-ZWVycywKCkRhdmUuCi0tIApEYXZlIENoaW5uZXIKZGF2aWRAZnJvbW9yYml0LmNvbQoKX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlz
-dAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZz
-Cg==
+Dave Chinner wrote:
+> IOWs, it is the responsibility of the filesystem tools to correctly
+> identify the filesystem being operated on, and not to
+> modify/trash/recover anything unless specifically directed by the
+> user.  When a filesystem tool gets it wrong, then that specific tool
+> needs to be fixed.  i.e. it is the responsibility of filesystem
+> tools to behave sanely, not for the rest of the world to have to
+> work around the dangerous behaviour of a specific filesystems'
+> toolset.
+
+As an average Joe user, I started to agree with this, but then as a
+developer I had second thoughts. It can't be right that every filesystem
+tool has to have code to recognize every other type of filesystem; that
+just doesn't scale. So each tool would need to call some API, which I
+suppose would need to access some kernel code that iterated for every
+filesystem type the kernel was configured to handle, or knew historically.
+
+And then we have identical code in every tool, and that code is not
+serving the tool's primary purpose, so maybe it should be factored out
+on the one-tool-one-job philosophy. So perhaps there should be a single
+tool that tells what filesystem type is present on a device, which
+everybody runs before mkfs. Oh wait, df -T or other utilities already do
+that.
+
+So I'm not sure the issue is black and white. As an average Joe, I
+expect mkfs to trash whatever I give it, so I'm pretty careful to check
+what is there first. And if I expected to be overwriting an existing
+filesystem and I did it often enough to know about the mkfs.xfs
+behaviour, I suppose I would always invoke it with the -f flag.
+Consistency among the various flavours of mkfs would be nice, though.
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
