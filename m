@@ -1,21 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 66E1F800D
-	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 09:15:59 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E30E3AC004
-	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 07:15:55 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id iFn3jphcf1oiKjRk for
-	<xfs@oss.sgi.com>; Thu, 14 Feb 2013 07:15:54 -0800 (PST)
-Message-ID: <511CFFA2.8030905@redhat.com>
-Date: Thu, 14 Feb 2013 09:15:46 -0600
-From: Eric Sandeen <sandeen@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id DFB83800E
+	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 10:24:57 -0600 (CST)
+Date: Thu, 14 Feb 2013 10:24:54 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 0/4] Refactor release scripts to conform to using git
+	archive
+Message-ID: <20130214162454.GH30652@sgi.com>
+References: <20130214010853.GD22182@sgi.com>
+	<1295709208.2558271.1360808077935.JavaMail.root@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: add disk failure simulation test
-References: <1360770097-6351-1-git-send-email-dmonakhov@openvz.org>
-	<511BBF33.20908@redhat.com> <87621vngtw.fsf@openvz.org>
-In-Reply-To: <87621vngtw.fsf@openvz.org>
+Content-Disposition: inline
+In-Reply-To: <1295709208.2558271.1360808077935.JavaMail.root@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,61 +24,77 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dmitry Monakhov <dmonakhov@openvz.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, dchinner@redhat.com, xfs@oss.sgi.com
+To: Nathan Scott <nathans@debian.org>
+Cc: xfs@oss.sgi.com, Andrew Dahl <adahl@sgi.com>
 
-On 2/14/13 7:52 AM, Dmitry Monakhov wrote:
-> On Wed, 13 Feb 2013 10:28:35 -0600, Eric Sandeen <sandeen@redhat.com> wrote:
->> On 2/13/13 9:41 AM, Dmitry Monakhov wrote:
+Hey Nathan,
 
-<snip>
+On Wed, Feb 13, 2013 at 09:14:37PM -0500, Nathan Scott wrote:
+> ----- Original Message -----
+> > On Wed, Feb 06, 2013 at 12:15:47PM +1100, Dave Chinner wrote:
+> > > ...
+> > > It breaks the 'make deb' command for all the trees.
+> > 
+> > xfsprogs: update 'make deb' to use tarball
+> > 
+> > This patch changes the build process so that 'make deb' uses the same
+> > process of creating a source tree as the release script.
+> > 
+> > * Add a list of files which go in the release tarball in .git_census
+> >   This is needed so that you can create a tarball in a bare release
+> >   tree, when .git is not available.
+> > 
+> 
+> I think you'll need .git_census in .gitignore (ala configure).
+> Possibly remove the underscore for naming consistency - *shrug*.
 
->>> +# get standard environment, filters and checks
->>> +. ./common.rc
->>> +. ./common.filter
->>> +
->>> +# TODO move it to common.blkdev if necessery
->>
->> maybe a comment as to why you do this?  (presumably to find the right thing in /sys)
->> I hope this always works with all udev schemes etc?
-> I just ment to say that functions below are good candidates to became
-> common wrappers.
+Will do.  Thanks.
 
-Sure, but what is the reason for the wrapper?
+> 
+> > 
+> > * 'make deb' now creates unsigned packages by default, 'make debsign'
+> >   creates signed packages.
+> > 
+> 
+> Ehrm - why?  Everything else in your patch worked, but this part broke
+> (which suggests a larger problem, in that this build path is no longer
+> checked on every build) ...
+> 
+> debsign: Can't find or can't read changes file !
+> 
+> > +debsign: deb
+> > +	debsign
+> > +
+> 
+> (That's not valid usage, FWIW).
+>
+> I would recommend just removing that change in behaviour, "make deb"
+> was fine as it was (for me anyway, and evidently for Dave too).  Best
+> to go secure-by-default and not change this.
 
-On inspection I think its' because you need the right sysfs name; it'd
-just be nice to say that it's the reason for the readlink/basename
-frobbing of the existing $SCRATCH_DEV.  Not a huge deal.
+'make deb' failed for me like this:
 
->>> +SCRATCH_REAL_DEV=`readlink -f $SCRATCH_DEV`
->>> +SCRATCH_BDEV=`basename $SCRATCH_REAL_DEV`
->>> +
+signfile xfsprogs_3.1.9.dsc
+gpg: skipped "Nathan Scott <nathans@debian.org>": secret key not available
+gpg: [stdin]: clearsign failed: secret key not available
 
-<snip>
+dpkg-genchanges  >../xfsprogs_3.1.9_amd64.changes
+dpkg-genchanges: including full source code in upload
+dpkg-buildpackage: full upload; Debian-native package (full source is included)
+dpkg-buildpackage: warning: Failed to sign .dsc and .changes file
+make: *** [deb] Error 1
 
->>> +_require_debugfs()
->>> +{
->>> +    #boot_params always present in debugfs
->>> +    [ -d "$DEBUGFS_MNT/boot_params" ] || _notrun "Debugfs not mounted"
->>> +}
->>
->> Would it make more sense to look for debugfs in /proc/filesystems
->> as a test for it being *available* (as opposed to mounted somewhere?)
->>
->> I wonder if a helper (maybe in _require_debugfs) should work out if
->> it's mounted, if not, try to mount it, and in the end, export DEBUGFS_MNT
->> for any test that wants to use it.
->>
->> Otherwise if it happens to be mounted elsewhere, this'll all fail.
->> Just a thought.  Maybe that's unusual enough that there's no point.
->> But getting it mounted if it's not would be helpful I think.
+Secure-by-default is a great idea but it seems that in this case it also
+requires that anyone who wants to do a build for debian has to do it on a
+machine with a keyring containing your secret key. ;)
 
-Any thoughts on this?  As it stands it requires debugfs to be
-at /sys/kernel/debug (by default) *and* mounted prior to the test run.
-So it's another (maybe unexpected) piece of pre-test setup which might
-result in this test not getting run.
+I think it is also reasonable for devs to be able to build test debs on
+machines that have empty keyrings.  An unsigned 'make deb' does return 0.  I'd
+like this to suit everyone's needs if it can.  I'll split this part out into a
+separate patch and try to figure something out later.
 
--Eric
+Thanks,
+	Ben
 
 _______________________________________________
 xfs mailing list
