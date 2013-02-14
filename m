@@ -1,25 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 33313805C
-	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 16:36:19 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D0A22304059
-	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 14:36:18 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	Ks4V3OqRfX4dS1CP for <xfs@oss.sgi.com>;
-	Thu, 14 Feb 2013 14:36:17 -0800 (PST)
-Date: Fri, 15 Feb 2013 09:36:13 +1100
-From: Dave Chinner <david@fromorbit.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 05E78805C
+	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 16:37:35 -0600 (CST)
+Date: Thu, 14 Feb 2013 16:37:31 -0600
+From: Ben Myers <bpm@sgi.com>
 Subject: Re: [PATCH 0/4] Refactor release scripts to conform to using git
 	archive
-Message-ID: <20130214223613.GO26694@dastard>
-References: <20130214010853.GD22182@sgi.com>
-	<1295709208.2558271.1360808077935.JavaMail.root@redhat.com>
-	<20130214162454.GH30652@sgi.com>
+Message-ID: <20130214223731.GJ22182@sgi.com>
+References: <20130214162454.GH30652@sgi.com>
+	<322172909.3042470.1360880747978.JavaMail.root@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130214162454.GH30652@sgi.com>
+In-Reply-To: <322172909.3042470.1360880747978.JavaMail.root@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,88 +24,61 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Nathan Scott <nathans@debian.org>, xfs@oss.sgi.com, Andrew Dahl <adahl@sgi.com>
+To: Nathan Scott <nathans@debian.org>
+Cc: Andrew Dahl <adahl@sgi.com>, xfs@oss.sgi.com
 
-On Thu, Feb 14, 2013 at 10:24:54AM -0600, Ben Myers wrote:
-> Hey Nathan,
-> 
-> On Wed, Feb 13, 2013 at 09:14:37PM -0500, Nathan Scott wrote:
-> > ----- Original Message -----
-> > > On Wed, Feb 06, 2013 at 12:15:47PM +1100, Dave Chinner wrote:
-> > > > ...
-> > > > It breaks the 'make deb' command for all the trees.
-> > > 
-> > > xfsprogs: update 'make deb' to use tarball
-> > > 
-> > > This patch changes the build process so that 'make deb' uses the same
-> > > process of creating a source tree as the release script.
-> > > 
-> > > * Add a list of files which go in the release tarball in .git_census
-> > >   This is needed so that you can create a tarball in a bare release
-> > >   tree, when .git is not available.
-> > > 
+On Thu, Feb 14, 2013 at 05:25:47PM -0500, Nathan Scott wrote:
+> ----- Original Message -----
+> > ...
+> > 'make deb' failed for me like this:
 > > 
-> > I think you'll need .git_census in .gitignore (ala configure).
-> > Possibly remove the underscore for naming consistency - *shrug*.
-> 
-> Will do.  Thanks.
-> 
+> > signfile xfsprogs_3.1.9.dsc
+> > gpg: skipped "Nathan Scott <nathans@debian.org>": secret key not
+> > available
+> > gpg: [stdin]: clearsign failed: secret key not available
 > > 
-> > > 
-> > > * 'make deb' now creates unsigned packages by default, 'make debsign'
-> > >   creates signed packages.
-> > > 
+> > dpkg-genchanges  >../xfsprogs_3.1.9_amd64.changes
+> > dpkg-genchanges: including full source code in upload
+> > dpkg-buildpackage: full upload; Debian-native package (full source is
+> > included)
+> > dpkg-buildpackage: warning: Failed to sign .dsc and .changes file
+> > make: *** [deb] Error 1
 > > 
-> > Ehrm - why?  Everything else in your patch worked, but this part broke
-> > (which suggests a larger problem, in that this build path is no longer
-> > checked on every build) ...
+> > Secure-by-default is a great idea but it seems that in this case it
+> > also
+> > requires that anyone who wants to do a build for debian has to do it
+> > on a
+> > machine with a keyring containing your secret key. ;)
 > > 
-> > debsign: Can't find or can't read changes file !
-> > 
-> > > +debsign: deb
-> > > +	debsign
-> > > +
-> > 
-> > (That's not valid usage, FWIW).
-> >
-> > I would recommend just removing that change in behaviour, "make deb"
-> > was fine as it was (for me anyway, and evidently for Dave too).  Best
-> > to go secure-by-default and not change this.
 > 
-> 'make deb' failed for me like this:
+> Awkward.  :)
+
+Really I don't mind.  What was your passphrase again? 
+
+> > I think it is also reasonable for devs to be able to build test debs
 > 
-> signfile xfsprogs_3.1.9.dsc
-> gpg: skipped "Nathan Scott <nathans@debian.org>": secret key not available
-> gpg: [stdin]: clearsign failed: secret key not available
+> *nod* ... not sure what trickery Dave had used.
+
+I tried setting DEB_BUILD_OPTIONS="-us -uc" but no luck.
+
+> But, perhaps a better
+> way to tackle this would be similar to the way the build allows extra
+> configure options to be passed in.
+
 > 
-> dpkg-genchanges  >../xfsprogs_3.1.9_amd64.changes
-> dpkg-genchanges: including full source code in upload
-> dpkg-buildpackage: full upload; Debian-native package (full source is included)
-> dpkg-buildpackage: warning: Failed to sign .dsc and .changes file
-> make: *** [deb] Error 1
+> include/builddefs: configure
+>         ./configure $$LOCAL_CONFIGURE_OPTIONS
+> 
+> so, perhaps something like this...
+> 
+> # LOCAL_BUILDPACKAGE_OPTIONS="-us -uc" for unsigned debs
+> deb: include/builddefs include/platform_defs.h
+> ...
+>         $(Q)cd $(SRCDIR) && dpkg-buildpackage $$LOCAL_BUILDPACKAGE_OPTIONS
 
-Don't know what you are doing differently to me, but make deb is not
-even trying to build signed packages on my build machine. It never
-has, and I don't ever recall seeing make deb fail because it was
-trying to build signed packages in the last 5 years on any of my
-machines...
+Gotcha.  I'll take a look.  Thanks for the reviews!
 
-I'm not passing -uc -us to dpkg-buildpackage, so somewhere aling the
-line it is working out that it shouldn't be signing the packages
-itself...
-
-> I think it is also reasonable for devs to be able to build test debs on
-> machines that have empty keyrings.
-
-That's exactly what I have been doing for a long time.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+-Ben
 
 _______________________________________________
 xfs mailing list
