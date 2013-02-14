@@ -1,28 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C274A7FF9
-	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 03:39:22 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3A4A8AC002
-	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 01:39:19 -0800 (PST)
-Received: from srvmail.3sr-grenoble.fr (3sr-srvmail.ampere.inpg.fr
-	[147.171.64.82]) by cuda.sgi.com with ESMTP id KeduAu99VF94iXIu
-	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 01:39:17 -0800 (PST)
-Received: from localhost (localhost [127.0.0.1])
-	by srvmail.3sr-grenoble.fr (Postfix) with SMTP id 359D328A0A2
-	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 10:39:16 +0100 (CET)
-Message-ID: <511CB0C3.9090507@3sr-grenoble.fr>
-Date: Thu, 14 Feb 2013 10:39:15 +0100
-From: =?ISO-8859-1?Q?R=E9mi_Cailletaud?= <remi.cailletaud@3sr-grenoble.fr>
+	by oss.sgi.com (Postfix) with ESMTP id 0ABE37FFA
+	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 05:04:32 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 93AD8AC002
+	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 03:04:28 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	SrB5EB1KkfTSWI5B for <xfs@oss.sgi.com>;
+	Thu, 14 Feb 2013 03:04:26 -0800 (PST)
+Date: Thu, 14 Feb 2013 22:04:23 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs_mkfs: wipe old signatures from the device
+Message-ID: <20130214110423.GN26694@dastard>
+References: <1360667215-14701-1-git-send-email-lczerner@redhat.com>
+	<20130212202753.GC26694@dastard>
+	<20130213080154.GC18597@x2.net.home>
+	<alpine.LFD.2.00.1302131127070.2315@(none)>
+	<20130213121655.GA7799@x2.net.home>
+	<20130213221720.GH26694@dastard>
+	<982B8DBB-3FBA-4213-BC92-848A64C60110@colorremedies.com>
+	<alpine.LFD.2.00.1302140929570.2315@(none)>
 MIME-Version: 1.0
-Subject: Re: problem after growing
-References: <511BC78B.6070205@3sr-grenoble.fr> <511BCB41.4060804@sandeen.net>
-	<511BCD11.20907@3sr-grenoble.fr> <511BCFB6.8000309@sandeen.net>
-	<511BD0FB.2070401@3sr-grenoble.fr> <511BD2D1.9010906@sandeen.net>
-	<511BD6ED.6030006@3sr-grenoble.fr>
-	<511BEE8B.8000400@sandeen.net> <511BF3B6.9040502@sandeen.net>
-	<511C07C6.9080003@sandeen.net> <511C9E9C.8080200@3sr-grenoble.fr>
-In-Reply-To: <511C9E9C.8080200@3sr-grenoble.fr>
+Content-Disposition: inline
+In-Reply-To: <alpine.LFD.2.00.1302140929570.2315@(none)>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,162 +32,73 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: =?utf-8?B?THVrw6HFoQ==?= Czerner <lczerner@redhat.com>
+Cc: sandeen@redhat.com, xfs@oss.sgi.com, Karel Zak <kzak@redhat.com>, Zach Brown <zabrown@redhat.com>, Chris Murphy <lists@colorremedies.com>, linux-btrfs@vger.kernel.org
 
-Le 14/02/2013 09:21, R=E9mi Cailletaud a =E9crit :
-> Le 13/02/2013 22:38, Eric Sandeen a =E9crit :
->> On 2/13/13 2:12 PM, Eric Sandeen wrote:
->>> On 2/13/13 1:50 PM, Eric Sandeen wrote:
->>>> On 2/13/13 12:09 PM, R=E9mi Cailletaud wrote:
->>>>> Le 13/02/2013 18:52, Eric Sandeen a =E9crit :
->>>> <snip>
->>>>
->>>>>> Did the filesystem grow actually work?
->>>>>>
->>>>>> # xfs_db -c "sb 0" -c "p" /dev/vg0/tomo-201111
->>>>>> magicnum =3D 0x58465342
->>>>>> blocksize =3D 4096
->>>>>> dblocks =3D 10468982745
->>>>>>
->>>>>> That looks like it's (still?) a 38TiB/42TB filesystem, with:
->>>>>>
->>>>>> sectsize =3D 512
->>>>>>
->>>>>> 512 sectors.
->>>>>>
->>>>>> How big was it before you tried to grow it, and how much did you =
-
->>>>>> try to grow it by?  Maybe the size never changed.
->>>>> Was 39, growing to 44. Testdisk says 48 TB / 44 TiB... There is =
-
->>>>> some chance that it was never really growed.
->>>>>> At mount time it tries to set the sector size of the device; its' =
-
->>>>>> a hard-4k device, so setting it to 512 fails.
->>>>>>
->>>>>> This may be as much of an LVM issue as anything; how do you get =
-
->>>>>> the LVM device back to something with 512-byte logical sectors?  =
-
->>>>>> I have no idea...
->>>>>>
->>>>>> *if* the fs didn't actually grow, and if the new 4k-sector space =
-
->>>>>> is not used by the filesystem, and if you can somehow remove that =
-
->>>>>> new space from the device and set the LV back to 512 sectors, you =
-
->>>>>> might be in good shape.
->>>>> I dont either know how to see nor set LV sector size.  It's 100% =
-
->>>>> sure that anything was copied on 4k sector size, and pretty sure =
-
->>>>> that the fs did not really grow.
->>>> I think the same blockdev command will tell you.
->>>>
->>>>
->>>>>> Proceed with extreme caution here, I wouldn't start just trying =
-
->>>>>> random things unless you have some other way to get your data =
-
->>>>>> back (backups?).  I'd check with LVM folks as well, and maybe see =
-
->>>>>> if dchinner or the sgi folks have other suggestions.
->>>>> Sigh... No backup (44To is too large for us...) ! I'm running a =
-
->>>>> testdisk recover, but I'm not very confident about success...
->>>>> Thanks to deeper investigate this...
->>>>>> First let's find out if the filesystem actually thinks it's =
-
->>>>>> living on the new space.
->>>>> What is the way to make it talk about that ?
->>>> well, you have 10468982745 4k blocks in your filesystem, so =
-
->>>> 42880953323520 bytes of xfs filesystem.
->>>>
->>>> Look at your lvm layout, does that extend into the new disk space =
-
->>>> or is it confined to the original disk space?
-> Seems it does not : lvm map shows 48378494844928 bytes, 1304432738304 =
-
-> on the 4K device.
->
->>> lvm folks I talk to say that if you remove the 4k device from the =
-
->>> lvm volume it should switch back to 512 sectors.
->>>
->>> so if you can can convince yourself that 42880953323520 bytes does =
-
->>> not cross into the newly added disk space, just remove it again, and =
-
->>> everything should be happy.
->>>
->>> Unless your rash decision to start running "testdisk" made things =
-
->>> worse ;)
->> I tested this.  I had a PV on a normal 512 device, then used =
-
->> scsi_debug to create a 4k device.
->>
->> I created an LV on the 512 device&  mounted it, then added the 4k =
-
->> device as you did.  growfs failed immediately, and the device won't =
-
->> remount due to the sector size change.
->>
->> I verified that removing the 4k device from the LV changes the LV =
-
->> back to a 512 sector size.
->>
->> However, I'm not 100% sure how to remove just the 4K PV; when I did =
-
->> it, I did something wrong and it reduced the size of my LV to the =
-
->> point where it corrupted the filesystem.  :)  Perhaps you are a =
-
->> better lvm admin than I am.
-> How did you remove the pv ? I would tend to use vgreduce, but I'm a =
-
-> bit (a lot, in fact) scary about fs corruption. That's why I was =
-
-> wondering about pvmove'ing extents on a 512K device
-Or may a vgcfgrestore be safer ? Should I ask lvm folks ?
-
-r=E9mi
-
->
-> r=E9mi
->
->> But in any case - if you know how to safely remove ONLY the 4k device =
-
->> from the LV, you should be in good shape again.
->>
->> -Eric
->>
->>
->>
->
->
-
-
--- =
-
-R=E9mi Cailletaud - IE CNRS
-3SR - Laboratoire Sols, Solides, Structures - Risques
-BP53, 38041 Grenoble CEDEX 0
-FRANCE
-remi.cailletaud@3sr-grenoble.fr
-T=E9l: +33 (0)4 76 82 52 78
-Fax: +33 (0)4 76 82 70 43
-
-
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVGh1LCBGZWIgMTQsIDIwMTMgYXQgMDk6MzY6MzhBTSArMDEwMCwgTHVrw6HFoSBDemVybmVy
+IHdyb3RlOgo+IE9uIFRodSwgMTQgRmViIDIwMTMsIENocmlzIE11cnBoeSB3cm90ZToKPiAKPiA+
+IERhdGU6IFRodSwgMTQgRmViIDIwMTMgMDA6Mjk6NTkgLTA3MDAKPiA+IEZyb206IENocmlzIE11
+cnBoeSA8bGlzdHNAY29sb3JyZW1lZGllcy5jb20+Cj4gPiBUbzogRGF2ZSBDaGlubmVyIDxkYXZp
+ZEBmcm9tb3JiaXQuY29tPgo+ID4gQ2M6IEthcmVsIFphayA8a3pha0ByZWRoYXQuY29tPiwgTHVr
+w6HFoSBDemVybmVyIDxsY3plcm5lckByZWRoYXQuY29tPiwKPiA+ICAgICB4ZnNAb3NzLnNnaS5j
+b20sIHNhbmRlZW5AcmVkaGF0LmNvbSwgWmFjaCBCcm93biA8emFicm93bkByZWRoYXQuY29tPiwK
+PiA+ICAgICBsaW51eC1idHJmc0B2Z2VyLmtlcm5lbC5vcmcKPiA+IFN1YmplY3Q6IFJlOiBbUEFU
+Q0hdIHhmc19ta2ZzOiB3aXBlIG9sZCBzaWduYXR1cmVzIGZyb20gdGhlIGRldmljZQo+ID4gCj4g
+PiAKPiA+IE9uIEZlYiAxMywgMjAxMywgYXQgMzoxNyBQTSwgRGF2ZSBDaGlubmVyIDxkYXZpZEBm
+cm9tb3JiaXQuY29tPiB3cm90ZToKPiA+ID4gaXQgaXMgdGhlIHJlc3BvbnNpYmlsaXR5IG9mIGZp
+bGVzeXN0ZW0KPiA+ID4gdG9vbHMgdG8gYmVoYXZlIHNhbmVseSwgbm90IGZvciB0aGUgcmVzdCBv
+ZiB0aGUgd29ybGQgdG8gaGF2ZSB0bwo+ID4gPiB3b3JrIGFyb3VuZCB0aGUgZGFuZ2Vyb3VzIGJl
+aGF2aW91ciBvZiBhIHNwZWNpZmljIGZpbGVzeXN0ZW1zJwo+ID4gPiB0b29sc2V0Lgo+ID4gCj4g
+PiBJIGFwcHJlY2lhdGUgdGhpcywgYW5kIGluIHBhcnRpY3VsYXIgdGhhdCBta2ZzLnhmcyBkb2Vz
+bid0IG5lcmYgYSBmaWxlIHN5c3RlbSB3aXRob3V0IHRoZSB1c2Ugb2YgLWY7IGV2ZW4gYW4gZXhp
+c3RpbmcgWEZTIGZpbGUgc3lzdGVtLiBDb25zaWRlcmluZyBtb3N0IGRhdGEgbG9zcyBpcyB1c2Vy
+IGluZHVjZWQsIEknZCBhcHByZWNpYXRlIGl0IGlmIG90aGVyIGZpbGUgc3lzdGVtcydzIHRvb2xz
+IHdlcmVuJ3Qgc28gZWFzaWx5IG1hZGUgYmVsbGlnZXJlbnQgYnkgKGhvcGVmdWxseSB0ZW1wb3Jh
+cmlseSkgY29uZnVzZWQgYXBlcyB3ZWFyaW5nIHBhbnRzLgo+ID4gCj4gPiBDaHJpcyBNdXJwaHkK
+PiAKPiBJIHdvdWxkIG5vdCBiZSBzbyBvcHRpbWlzdGljIGFib3V0IGl0LiBUaGUgcmVhc29uIGJl
+aW5nIHRoYXQgdGhlcmUKPiBhcmUgYWxtb3N0IF9hbHdheXNfIG9sZCBmaWxlIHN5c3RlbSBzaWdu
+YXR1cmVzIG9uIHRoZSBkZXZpY2UuCgpUaGF0IGFzc3VtcHRpb24gaXMgd2F5IG9mZiB0aGUgbWFy
+ay4gIFdoYXQgeW91IGRvIGFzIGEgZmlsZXN5c3RlbQpkZXZlbG9wZXIgKHJlbWFrZSBmaWxlc3lz
+dGVtcyBvbiB0aGUgc2FtZSBibG9jayBkZXZpY2UgaHVuZHJlZHMgb2YKdGltZXMgYSBkYXkpIGlz
+IG5vdCBhdCBhbGwgdHlwaWNhbCwgc28geW91IGNhbm5vdCBleHRyYXBvbGF0ZSBmcm9tCnlvdXIg
+dXNhZ2UgaGFiaXRzIHRvIHdoYXQgdHlwaWNhbGx5IGhhcHBlbnMgaW4gcHJvZHVjdGlvbgplbnZp
+cm9ubWVudHMuCgpBZG1pbnMgZG9uJ3QgdGVuZCB0byB1c2UgImZvcmNlIiBvcHRpb25zIGJ5IGRl
+ZmF1bHQgKGVzcGVjaWFsbHkgZm9yCmRlc3RydWN0aXZlIGNvbWFuZHMgbGlrZSBta2ZzKSBhcyAx
+KSB0aGV5IGFyZSByYXJlbHkgbmVjZXNzYXJ5IGluIHRoZQpyZWFsIHdvcmxkIGFuZCAyKSB0aGUg
+Y29uc2VxdWVuY2VzIG9mIGVycm9ycyBhcmUgc2V2ZXJlLiAgVGhlIG1vc3QKY29tbW9uIGZpbGVz
+eXN0ZW0gY3JlYXRpb24gcGF0dGVybiBpbiBwcm9kdWN0aW9uIHN5c3RlbXMgKGJlIGl0CmRlc2t0
+b3AsIHdvcmtzdGF0aW9uIG9yIHNlcnZlcikgaXMgdGhhdCBzdG9yYWdlLCBkZXZpY2VzIGFuZApm
+aWxlc3lzdGVtcyBhcmUgc2V0IHVwIG9uY2UgYW5kIHRoZW4gdXNlZCBmb3IgdGhlIGVudGlyZSBs
+aWZldGltZQpvZnRoZSBzeXN0ZW0gd2l0aG91dCBldmVyIGhhdmluZyBta2ZzIHJ1biBvbiB0aGVt
+IGFnYWluLiBpLmUgb24KcHJpc3RpbmUsIGVtcHR5IGhhcmR3YXJlLiBIZW5jZSB1c2VycyByYXJl
+bHksIGlmIGV2ZXIsIG5lZWQgdG8gdXNlCnRoZSBmb3JjZSBvcHRpb24gZm9yIG1rZnMueGZzLgoK
+PiBTbyBJCj4gdGhpbmsgdGhhdCBpdCBnb3QgdG8gdGhlIHBvaW50IHdoZXJlIHVzZXJzIHdpbGwg
+dXN1YWxseSB1c2UgbWtmcy54ZnMKPiAtZiBhbGwgdGhlIHRpbWUuIEFuZCBldmVuIGlmIHRoZXkg
+ZGlkIG5vdCBhbmQgdGhleSB3b3VsZCB1c2UgYSB3cm9uZwo+IGRldmljZSB0aGV5IHdvdWxkIHBy
+b2JhYmx5IGdldCB0aGUgc2FtZSB3YXJuaW5nIGV2ZW4gZm9yIHRoZSBkZXZpY2UKPiB0aGV5IHdh
+bnRlZCB0byB1c2UgaW4gdGhlIGZpcnN0IHBsYWNlLgoKSSBnZXQgYSBjb3VwbGUgb2YgcXVlcmll
+cyBhIHllYXIgZnJvbSBwZW9wbGUgc2F5aW5nIHRoZXkKYWNjaWRlbnRhbGx5IHJhbiBta2ZzLmV4
+dDQgb24gdGhlIHdyb25nIGRldmljZSBhbmQgd2FudCB0byBrbm93IGlmCnRoZXkgY2FuIHJlY292
+ZXIgdGhlaXIgWEZTIGZpbGVzeXN0ZW0uIFRoZSBuZXh0IHF1ZXN0aW9uIGlzIHVzdWFsbHkKIndo
+eSBkaWRuJ3QgbWtmcy5leHQ0IHdhcm4gbWUgdGhlcmUgd2FzIGFuIGV4aXN0aW5nIGZpbGVzeXN0
+ZW0gb24KdGhlIGRldmljZSBsaWtlIG1rZnMueGZzIGRvZXM/Ii4KClRoYXQgaXMgd2h5IHRoZSAi
+ZG9uJ3Qgb3ZlcndyaXRlIGFuIGV4aXN0aW5nIGZpbGVzeXN0ZW0gYnkgZGVmYXVsdCIKYmVoYXZp
+b3VyIGlzIGltcG9ydGFudC4gVXNlcnMgbGlrZSB0byBiZSBwcm90ZWN0ZWQgZnJvbSBtaXN0YWtl
+cwp0aGV5IHdlcmVuJ3QgYXdhcmUgdGhleSBtYWRlLCBhbmQgZmFyIHRvbyBmZXcgb2Ygb3VyIGZp
+bGVzeXN0ZW0KdXRpbGl0aWVzIHByb3ZpZGUgdGhhdCBzYWZldHkgbmV0LgoKQSBjb3VwbGUgb2Yg
+dXNlcnMgYSB5ZWFyIGxvc2luZyBkYXRhIGxpa2UgdGhpcyBpcyBhIGNvdXBsZSBvZiB1c2Vycwp0
+b28gbWFueS4gRXNwZWNpYWxseSB3aGVuIGl0IHdvdWxkIG9ubHkgdGFrZSBhIGNvdXBsZSBvZiBo
+b3VycyBvZgp5b3VyIHRpbWUgdG8gaW1wbGVtZW50Li4uLgoKPiBTbyBldmVuIHRob3VnIGl0IG1p
+Z2h0IGhlbHAgaW4gc29tZSBjYXNlcyBJIGRvIG5vdCB0aGluayB0aGF0IHdlCj4gc2hvdWxkIGdv
+IGFuZCBjaGFuZ2UgYWxsIGZpbGUgc3lzdGVtcyB0byBkbyB0aGF0IGFzIHdlbGwsIGl0IHdvdWxk
+Cj4gbm90IGJlIHZlcnkgdXNlZnVsIGFueXdheS4KClRlbGwgdGhhdCB0byB0aGUgbmV4dCB1c2Vy
+IHRoYXQgdHJhc2hlcyB0aGVpciBkYXRhIGJlY2F1c2UgYQpmaWxlc3lzdGVtIHRvb2wgc2ltcGx5
+IGFzc3VtZWQgaW4gY29ycmVjdGx5IHRoYXQgaXQgb3duZWQgdGhlIGJsb2NrCmRldmljZS4KCkNo
+ZWVycywKCkRhdmUuCi0tIApEYXZlIENoaW5uZXIKZGF2aWRAZnJvbW9yYml0LmNvbQoKX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlz
+dAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZz
+Cg==
