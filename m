@@ -1,15 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 852847F53
-	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 16:07:30 -0600 (CST)
-Date: Thu, 14 Feb 2013 16:07:26 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH v2] xfs_mkfs: Do not discard if '-N' is provided
-Message-ID: <20130214220726.GI22182@sgi.com>
-References: <1360683870-4874-1-git-send-email-lczerner@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 247747F93
+	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 16:25:57 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id ADE26AC007
+	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 14:25:56 -0800 (PST)
+Date: Thu, 14 Feb 2013 17:25:47 -0500 (EST)
+From: Nathan Scott <nathans@debian.org>
+Message-ID: <322172909.3042470.1360880747978.JavaMail.root@redhat.com>
+In-Reply-To: <20130214162454.GH30652@sgi.com>
+Subject: Re: [PATCH 0/4] Refactor release scripts to conform to using git
+	archive
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1360683870-4874-1-git-send-email-lczerner@redhat.com>
+Reply-To: Nathan Scott <nathans@debian.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,23 +25,57 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Lukas Czerner <lczerner@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: xfs@oss.sgi.com, Andrew Dahl <adahl@sgi.com>
 
-On Tue, Feb 12, 2013 at 04:44:30PM +0100, Lukas Czerner wrote:
-> When '-N' is specified we really should not write anything to the
-> device, neither we should attempt to discard the device.
+
+
+----- Original Message -----
+> ...
+> 'make deb' failed for me like this:
 > 
-> This commit fixes xfs_mkfs to not attempt to discard the device in the
-> case user specified '-N' flag.
+> signfile xfsprogs_3.1.9.dsc
+> gpg: skipped "Nathan Scott <nathans@debian.org>": secret key not
+> available
+> gpg: [stdin]: clearsign failed: secret key not available
 > 
-> Signed-off-by: Lukas Czerner <lczerner@redhat.com>
+> dpkg-genchanges  >../xfsprogs_3.1.9_amd64.changes
+> dpkg-genchanges: including full source code in upload
+> dpkg-buildpackage: full upload; Debian-native package (full source is
+> included)
+> dpkg-buildpackage: warning: Failed to sign .dsc and .changes file
+> make: *** [deb] Error 1
+> 
+> Secure-by-default is a great idea but it seems that in this case it
+> also
+> requires that anyone who wants to do a build for debian has to do it
+> on a
+> machine with a keyring containing your secret key. ;)
+> 
 
-Wow.  That's bad.
+Awkward.  :)
 
-Reviewed-by: Ben Myers <bpm@sgi.com>
+> I think it is also reasonable for devs to be able to build test debs
 
-Applied.  Thanks Lukas!
+*nod* ... not sure what trickery Dave had used.  But, perhaps a better
+way to tackle this would be similar to the way the build allows extra
+configure options to be passed in.
+
+include/builddefs: configure
+        ./configure $$LOCAL_CONFIGURE_OPTIONS
+
+so, perhaps something like this...
+
+# LOCAL_BUILDPACKAGE_OPTIONS="-us -uc" for unsigned debs
+deb: include/builddefs include/platform_defs.h
+...
+        $(Q)cd $(SRCDIR) && dpkg-buildpackage $$LOCAL_BUILDPACKAGE_OPTIONS
+
+
+cheers.
+
+--
+Nathan
 
 _______________________________________________
 xfs mailing list
