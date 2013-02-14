@@ -1,27 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0ED268017
-	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 11:25:26 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CA15930404E
-	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 09:25:22 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id lxxUEHEohlhG0X9o for
-	<xfs@oss.sgi.com>; Thu, 14 Feb 2013 09:25:22 -0800 (PST)
-Message-ID: <511D1DF5.2060802@redhat.com>
-Date: Thu, 14 Feb 2013 11:25:09 -0600
-From: Eric Sandeen <sandeen@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 548948018
+	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 11:31:24 -0600 (CST)
+Date: Thu, 14 Feb 2013 11:31:20 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: xfsdump: update 'make deb' to use tarball archive
+Message-ID: <20130214173120.GF22182@sgi.com>
+References: <20130214010853.GD22182@sgi.com>
+	<1295709208.2558271.1360808077935.JavaMail.root@redhat.com>
+	<20130214162454.GH30652@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs_mkfs: wipe old signatures from the device
-References: <1360667215-14701-1-git-send-email-lczerner@redhat.com>
-	<20130212202753.GC26694@dastard>
-	<20130213080154.GC18597@x2.net.home>
-	<alpine.LFD.2.00.1302131127070.2315@(none)>
-	<20130213121655.GA7799@x2.net.home>
-	<20130213221720.GH26694@dastard>
-	<982B8DBB-3FBA-4213-BC92-848A64C60110@colorremedies.com>
-	<alpine.LFD.2.00.1302140929570.2315@(none)>
-In-Reply-To: <alpine.LFD.2.00.1302140929570.2315@(none)>
+Content-Disposition: inline
+In-Reply-To: <20130214162454.GH30652@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,69 +20,121 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-15"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>
-Cc: xfs@oss.sgi.com, Karel Zak <kzak@redhat.com>, Zach Brown <zabrown@redhat.com>, Chris Murphy <lists@colorremedies.com>, linux-btrfs@vger.kernel.org
+To: Nathan Scott <nathans@debian.org>
+Cc: Andrew Dahl <adahl@sgi.com>, xfs@oss.sgi.com
 
-On 2/14/13 2:36 AM, Luk=E1=A8 Czerner wrote:
-> On Thu, 14 Feb 2013, Chris Murphy wrote:
-> =
+This patch changes the build process so that 'make deb' uses the same
+process of creating a source tree as the release script.
 
->> Date: Thu, 14 Feb 2013 00:29:59 -0700
->> From: Chris Murphy <lists@colorremedies.com>
->> To: Dave Chinner <david@fromorbit.com>
->> Cc: Karel Zak <kzak@redhat.com>, Luk=E1=A8 Czerner <lczerner@redhat.com>,
->>     xfs@oss.sgi.com, sandeen@redhat.com, Zach Brown <zabrown@redhat.com>,
->>     linux-btrfs@vger.kernel.org
->> Subject: Re: [PATCH] xfs_mkfs: wipe old signatures from the device
->>
->>
->> On Feb 13, 2013, at 3:17 PM, Dave Chinner <david@fromorbit.com> wrote:
->>> it is the responsibility of filesystem
->>> tools to behave sanely, not for the rest of the world to have to
->>> work around the dangerous behaviour of a specific filesystems'
->>> toolset.
->>
->> I appreciate this, and in particular that mkfs.xfs doesn't nerf a file s=
-ystem without the use of -f; even an existing XFS file system. Considering =
-most data loss is user induced, I'd appreciate it if other file systems's t=
-ools weren't so easily made belligerent by (hopefully temporarily) confused=
- apes wearing pants.
->>
->> Chris Murphy
-> =
+* Add a list of files which go in the release tarball in .gitcensus
+  This is needed so that you can create a tarball in a bare release
+  tree, when .git is not available.
 
-> I would not be so optimistic about it. The reason being that there
-> are almost _always_ old file system signatures on the device. So I
-> think that it got to the point where users will usually use mkfs.xfs
-> -f all the time. =
+* Modify the SRCTAR target to include files from .gitcensus and use tar
+  instead of git archive.
 
+* Modify the SRCTARINC files to include .gitcensus, and include
+  .gitcensus in the 'make realclean' target.
 
-I know I do ;)  But as Dave points out, fs developers are odd ducks.
+* remove the 'make source-link' target.
 
-> And even if they did not and they would use a wrong
-> device they would probably get the same warning even for the device
-> they wanted to use in the first place.
+Signed-off-by: Ben Myers <bpm@sgi.com>
 
-I was thinking, as annoying as it might be, requiring the user to
-use "-f $OLD_FS_TYPE" might require a bit more positive action
-and cognition on the admin's part.
+---
+ .gitignore         |    1 +
+ Makefile           |   23 ++++++++++++-----------
+ include/buildrules |   11 -----------
+ 3 files changed, 13 insertions(+), 22 deletions(-)
 
-OTOH, that could get annoying, and break old scripts.  :)
-
--Eric
-
-> So even thoug it might help in some cases I do not think that we
-> should go and change all file systems to do that as well, it would
-> not be very useful anyway.
-> =
-
-> -Lukas
-> =
-
+Index: b/.gitignore
+===================================================================
+--- a/.gitignore	2013-02-14 10:55:13.061985803 -0600
++++ b/.gitignore	2013-02-14 10:55:49.061340568 -0600
+@@ -4,6 +4,7 @@
+ 
+ # build system
+ .census
++.gitcensus
+ /include/config.h
+ /include/builddefs
+ /install-sh
+Index: b/Makefile
+===================================================================
+--- a/Makefile	2013-02-14 10:55:06.961977139 -0600
++++ b/Makefile	2013-02-14 10:59:19.131340450 -0600
+@@ -30,7 +30,7 @@ SRCTAR = $(PKG_NAME)-$(PKG_VERSION).tar.
+ CONFIGURE = aclocal.m4 configure config.guess config.sub install-sh ltmain.sh
+ LSRCFILES = configure.ac release.sh README VERSION $(CONFIGURE)
+ SRCTARINC = m4/libtool.m4 m4/lt~obsolete.m4 m4/ltoptions.m4 m4/ltsugar.m4 \
+-            m4/ltversion.m4 $(CONFIGURE)
++            m4/ltversion.m4 .gitcensus $(CONFIGURE)
+ 
+ LDIRT = config.log .ltdep .dep config.status config.cache confdefs.h \
+ 	conftest* built .census install.* install-dev.* *.gz \
+@@ -100,7 +100,7 @@ distclean: clean
+ 	rm -f $(LDIRT)
+ 
+ realclean: distclean
+-	rm -f $(CONFIGURE)
++	rm -f $(CONFIGURE) .gitcensus
+ 
+ #
+ # All this gunk is to allow for a make dist on an unconfigured tree
+@@ -117,18 +117,19 @@ ifeq ($(HAVE_BUILDDEFS), no)
+ 	$(MAKE) $(MAKEOPTS) -C . $@
+ else
+ 	$(Q)$(MAKE) $(MAKEOPTS) $(SRCDIR)
+-	$(Q)$(MAKE) $(MAKEOPTS) -C po
+-	$(Q)$(MAKE) $(MAKEOPTS) source-link
+ 	$(Q)cd $(SRCDIR) && dpkg-buildpackage
+ endif
+ 
+-$(SRCDIR) : $(_FORCE)
++$(SRCDIR) : $(_FORCE) $(SRCTAR)
+ 	rm -fr $@
+-	mkdir -p $@
++	$(Q)$(TAR) -zxvf $(SRCTAR)
+ 
+-$(SRCTAR) : default
+-	$(Q)git archive --prefix=$(SRCDIR)/ --format=tar v$(PKG_VERSION) > $(SRCDIR).tar
+-	$(Q)$(TAR) --transform "s,^,$(SRCDIR)/," -rf $(SRCDIR).tar \
+-	  $(SRCTARINC)
+-	$(Q)$(ZIP) $(SRCDIR).tar
++$(SRCTAR) : default $(SRCTARINC) .gitcensus
++	$(Q)$(TAR) --transform "s,^,$(SRCDIR)/," -zcf $(SRCDIR).tar.gz \
++	  `cat .gitcensus` $(SRCTARINC)
+ 	echo Wrote: $@
++
++.gitcensus: $(_FORCE)
++	$(Q) if test -d .git; then \
++	  git ls-files > .gitcensus && echo "new .gitcensus"; \
++	fi
+Index: b/include/buildrules
+===================================================================
+--- a/include/buildrules	2013-02-14 10:59:26.221945695 -0600
++++ b/include/buildrules	2013-02-14 10:59:39.321985640 -0600
+@@ -23,17 +23,6 @@ $(SUBDIRS):
+ 	$(Q)$(MAKE) $(MAKEOPTS) -q -C $@ || $(MAKE) $(MAKEOPTS) -C $@
+ endif
+ 
+-source-link: 
+-	@test -z "$$DIR" && DIR="."; \
+-	for f in `echo $(SRCFILES) $(SUBDIRS) $(POTHEAD)`; do \
+-	    if test -d $$f ; then \
+-		mkdir $(TOPDIR)/$(PKG_NAME)-$(PKG_VERSION)/$$DIR/$$f || exit $$?; \
+-		$(MAKEF) DIR=$$DIR/$$f -C $$f $@ || exit $$?; \
+-	    else \
+-		ln $$f $(TOPDIR)/$(PKG_NAME)-$(PKG_VERSION)/$$DIR/$$f || exit $$?; \
+-	    fi; \
+-	done
+-
+ #
+ # Standard targets
+ #
 
 _______________________________________________
 xfs mailing list
