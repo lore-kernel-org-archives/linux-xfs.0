@@ -1,25 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A1B027FDF
-	for <xfs@oss.sgi.com>; Wed, 13 Feb 2013 18:07:38 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 79775304039
-	for <xfs@oss.sgi.com>; Wed, 13 Feb 2013 16:07:35 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	uys1HBW7FueVvId7 for <xfs@oss.sgi.com>;
-	Wed, 13 Feb 2013 16:07:33 -0800 (PST)
-Date: Thu, 14 Feb 2013 11:07:30 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [ 68/89] xfs: fix _xfs_buf_find oops on blocks beyond the
-	filesystem end
-Message-ID: <20130214000730.GI26694@dastard>
-References: <20130201130207.444989281@linuxfoundation.org>
-	<20130201130212.381996681@linuxfoundation.org>
-	<511BB198.1080609@redhat.com> <20130213161845.GA20916@kroah.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 443517FE2
+	for <xfs@oss.sgi.com>; Wed, 13 Feb 2013 19:08:57 -0600 (CST)
+Date: Wed, 13 Feb 2013 19:08:53 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 0/4] Refactor release scripts to conform to using git
+	archive
+Message-ID: <20130214010853.GD22182@sgi.com>
+References: <50F44B2E.9050408@sgi.com> <20130201190930.GX27055@sgi.com>
+	<20130206011547.GT2667@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130213161845.GA20916@kroah.com>
+In-Reply-To: <20130206011547.GT2667@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,118 +24,127 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: CAI Qian <caiqian@redhat.com>, Brian Foster <bfoster@redhat.com>, linux-kernel@vger.kernel.org, stable@vger.kernel.org, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, Dave Chinner <dchinner@redhat.com>, Paolo Bonzini <pbonzini@redhat.com>
+To: Dave Chinner <david@fromorbit.com>, nathans@debian.org
+Cc: Andrew Dahl <adahl@sgi.com>, xfs@oss.sgi.com
 
-[cc xfs@oss.sgi.com]
-
-On Wed, Feb 13, 2013 at 08:18:45AM -0800, Greg Kroah-Hartman wrote:
-> On Wed, Feb 13, 2013 at 04:30:32PM +0100, Paolo Bonzini wrote:
-> > Il 01/02/2013 14:08, Greg Kroah-Hartman ha scritto:
-> > > 3.7-stable review patch.  If anyone has any objections, please let me know.
-> > > 
-> > > ------------------
-> > > 
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > commit eb178619f930fa2ba2348de332a1ff1c66a31424 upstream.
-> > > 
-> > > When _xfs_buf_find is passed an out of range address, it will fail
-> > > to find a relevant struct xfs_perag and oops with a null
-> > > dereference. This can happen when trying to walk a filesystem with a
-> > > metadata inode that has a partially corrupted extent map (i.e. the
-> > > block number returned is corrupt, but is otherwise intact) and we
-> > > try to read from the corrupted block address.
-> > > 
-> > > In this case, just fail the lookup. If it is readahead being issued,
-> > > it will simply not be done, but if it is real read that fails we
-> > > will get an error being reported.  Ideally this case should result
-> > > in an EFSCORRUPTED error being reported, but we cannot return an
-> > > error through xfs_buf_read() or xfs_buf_get() so this lookup failure
-> > > may result in ENOMEM or EIO errors being reported instead.
+On Wed, Feb 06, 2013 at 12:15:47PM +1100, Dave Chinner wrote:
+> On Fri, Feb 01, 2013 at 01:09:30PM -0600, Ben Myers wrote:
+> > On Mon, Jan 14, 2013 at 12:15:10PM -0600, Andrew Dahl wrote:
+> > > The following four patches fix an issue seen during the last user space
+> > > release where not all source files were included in xfsprogs.  They each
+> > > change xfsprogs, xfstests, xfsdump, and dmapi to all use git archive for
+> > > source tarball generation and add 'make realclean' in the release
+> > > scripts to ensure the configure and m4/autotools temp files are refreshed.
 > > 
-> > It looks like this breaks xfs_growfs.  See
-> > http://bugzilla.redhat.com/show_bug.cgi?id=909602.
-
-Entirely possible, as the filesystem size is not updated until after
-all the new metadata is written to disk. in 3.8, there's this commit:
-
-commit fd23683c3b1ab905cba61ea2981c156f4bf52845
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Mon Nov 12 22:53:59 2012 +1100
-
-    xfs: growfs: use uncached buffers for new headers
-    
-    When writing the new AG headers to disk, we can't attach write
-    verifiers because they have a dependency on the struct xfs-perag
-    being attached to the buffer to be fully initialised and growfs
-    can't fully initialise them until later in the process.
-    
-    The simplest way to avoid this problem is to use uncached buffers
-    for writing the new headers. These buffers don't have the xfs-perag
-    attached to them, so it's simple to detect in the write verifier and
-    be able to skip the checks that need the xfs-perag.
-    
-    This enables us to attach the appropriate buffer ops to the buffer
-    and henc calculate CRCs on the way to disk. IT also means that the
-    buffer is torn down immediately, and so the first access to the AG
-    headers will re-read the header from disk and perform full
-    verification of the buffer. This way we also can catch corruptions
-    due to problems that went undetected in growfs.
-    
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by Rich Johnston <rjohnston@sgi.com>
-    Signed-off-by: Ben Myers <bpm@sgi.com>
-
-As part of the metadata verifier feature. It means that growfs no
-longer uses cached buffers, and hence does not pass through
-_xfs_buf_find() and hence will not trigger the beyond-EOFS that the
-above commit adds.
-
-> Ick, not good.
+> > Applied this series.
 > 
-> Dave, any thoughts here?  Should I drop this from the 3.7-stable queue?
+> It breaks the 'make deb' command for all the trees.
 
-Yeah, drop it.
+xfsprogs: update 'make deb' to use tarball
 
-But what I'm now wondering is how this patch got proposed for
-3.7-stable. I don't recall seeing anything about this being
-proposed.
+This patch changes the build process so that 'make deb' uses the same
+process of creating a source tree as the release script.
 
-<trolls email archives>
+* Add a list of files which go in the release tarball in .git_census
+  This is needed so that you can create a tarball in a bare release
+  tree, when .git is not available.
 
-Oh, it happened while I was at LCA and didn't have any access to Red
-Hat email and there was a private thread about it. By the time I
-read it the stable kernel was already released and so it immediately
-dropped from my attention.
+* Modify the SRCTAR target to include files from .git_census and use tar
+  instead of git archive.
 
-XFS Maintainers: Major process fail. Patches that are being proposed
-for backports need to be posted to the XFS list, reviewed and tested
-before saying they are OK to go.  We have several growfs tests in
-xfstests would have failed if this was actually tested.
+* Modify the SRCTARINC files to include .git_census, and include 
+  .git_census in the 'make realclean' target.
 
-Stable folk: This is the reason why I, quite frankly, don't want to
-support stable kernels *at all*. The overhead of backporting and
-testing a patch to a single kernel target to ensure there are no
-unintended regressions is significant, and there are so many stable
-kernels no it's just a waste of developer time to try to support
-them. And in this case, the process simply wasn't executed and an
-unintended regression that is >this close< to causing filesystem
-corruption slipped through to the stable series.....
+* 'make deb' now creates unsigned packages by default, 'make debsign'
+  creates signed packages.
 
-Red Hat/Fedora folk: please report upstream XFS
-bugs/regressions to xfs@oss.sgi.com or #xfs on freednode so we know
-about them immediately and can triage problems quickly via email.
-Sure, point us to the BZ you've raised, but tell us about the
-problem ASAP. That way when users ask us about a problem, we are not
-completely clueless...
+* remove the 'make source-link' target.
 
-Cheers,
+Signed-off-by: Ben Myers <bpm@sgi.com>
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+---
+ Makefile           |   29 ++++++++++++++++-------------
+ include/buildrules |   11 -----------
+ 2 files changed, 16 insertions(+), 24 deletions(-)
+
+Index: b/Makefile
+===================================================================
+--- a/Makefile	2013-02-13 16:55:18.451946936 -0600
++++ b/Makefile	2013-02-13 18:39:16.121985626 -0600
+@@ -30,8 +30,7 @@ SRCTAR = $(PKG_NAME)-$(PKG_VERSION).tar.
+ CONFIGURE = aclocal.m4 configure config.guess config.sub install-sh ltmain.sh
+ LSRCFILES = configure.ac release.sh README VERSION $(CONFIGURE)
+ SRCTARINC = m4/libtool.m4 m4/lt~obsolete.m4 m4/ltoptions.m4 m4/ltsugar.m4 \
+-           m4/ltversion.m4 po/xfsprogs.pot $(CONFIGURE)
+-
++           m4/ltversion.m4 po/xfsprogs.pot .git_census $(CONFIGURE)
+ LDIRT = config.log .ltdep .dep config.status config.cache confdefs.h \
+ 	conftest* built .census install.* install-dev.* *.gz \
+ 	autom4te.cache/* libtool include/builddefs include/platform_defs.h
+@@ -120,7 +119,7 @@ distclean: clean
+ 	$(Q)rm -f $(LDIRT)
+ 
+ realclean: distclean
+-	$(Q)rm -f $(CONFIGURE)
++	$(Q)rm -f $(CONFIGURE) .git_census
+ 
+ #
+ # All this gunk is to allow for a make dist on an unconfigured tree
+@@ -137,18 +136,22 @@ ifeq ($(HAVE_BUILDDEFS), no)
+ 	$(Q)$(MAKE) $(MAKEOPTS) -C . $@
+ else
+ 	$(Q)$(MAKE) $(MAKEOPTS) $(SRCDIR)
+-	$(Q)$(MAKE) $(MAKEOPTS) -C po
+-	$(Q)$(MAKE) $(MAKEOPTS) source-link
+-	$(Q)cd $(SRCDIR) && dpkg-buildpackage
++	$(Q)cd $(SRCDIR) && dpkg-buildpackage -us -uc
+ endif
+ 
+-$(SRCDIR) : $(_FORCE)
++debsign: deb
++	debsign
++
++$(SRCDIR) : $(_FORCE) $(SRCTAR)
+ 	rm -fr $@
+-	mkdir -p $@
++	$(Q)$(TAR) -zxvf $(SRCTAR)
+ 
+-$(SRCTAR) : default
+-	$(Q)git archive --prefix=$(SRCDIR)/ --format=tar v$(PKG_VERSION) > $(SRCDIR).tar 
+-	$(Q)$(TAR) --transform "s,^,$(SRCDIR)/," -rf $(SRCDIR).tar \
+-	   $(SRCTARINC) 
+-	$(Q)$(ZIP) $(SRCDIR).tar
++$(SRCTAR) : default $(SRCTARINC) .git_census
++	$(Q)$(TAR) --transform "s,^,$(SRCDIR)/," -zcf $(SRCDIR).tar.gz  \
++	   `cat .git_census` $(SRCTARINC)
+ 	echo Wrote: $@
++
++.git_census: $(_FORCE)
++	$(Q)if test -d .git; then \
++	  git ls-files > .git_census && echo "new .git_census"; \
++	fi
+Index: b/include/buildrules
+===================================================================
+--- a/include/buildrules	2013-02-13 17:30:04.181945855 -0600
++++ b/include/buildrules	2013-02-13 17:30:24.161985853 -0600
+@@ -23,17 +23,6 @@ $(SUBDIRS):
+ 	$(Q)$(MAKE) $(MAKEOPTS) -q -C $@ || $(MAKE) $(MAKEOPTS) -C $@
+ endif
+ 
+-source-link: 
+-	@test -z "$$DIR" && DIR="."; \
+-	for f in `echo $(SRCFILES) $(SUBDIRS) $(POTHEAD)`; do \
+-	    if test -d $$f ; then \
+-		mkdir $(TOPDIR)/$(PKG_NAME)-$(PKG_VERSION)/$$DIR/$$f || exit $$?; \
+-		$(MAKEF) DIR=$$DIR/$$f -C $$f $@ || exit $$?; \
+-	    else \
+-		ln $$f $(TOPDIR)/$(PKG_NAME)-$(PKG_VERSION)/$$DIR/$$f || exit $$?; \
+-	    fi; \
+-	done
+-
+ #
+ # Standard targets
+ #
 
 _______________________________________________
 xfs mailing list
