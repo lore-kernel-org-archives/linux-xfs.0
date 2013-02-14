@@ -1,27 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 53F197FF3
-	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 02:36:58 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C274A7FF9
+	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 03:39:22 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 397B78F8050
-	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 00:36:58 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id sL3DGVkyIOKRwPrS for
-	<xfs@oss.sgi.com>; Thu, 14 Feb 2013 00:36:57 -0800 (PST)
-Date: Thu, 14 Feb 2013 09:36:38 +0100 (CET)
-From: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>
-Subject: Re: [PATCH] xfs_mkfs: wipe old signatures from the device
-In-Reply-To: <982B8DBB-3FBA-4213-BC92-848A64C60110@colorremedies.com>
-Message-ID: <alpine.LFD.2.00.1302140929570.2315@(none)>
-References: <1360667215-14701-1-git-send-email-lczerner@redhat.com>
-	<20130212202753.GC26694@dastard>
-	<20130213080154.GC18597@x2.net.home>
-	<alpine.LFD.2.00.1302131127070.2315@(none)>
-	<20130213121655.GA7799@x2.net.home>
-	<20130213221720.GH26694@dastard>
-	<982B8DBB-3FBA-4213-BC92-848A64C60110@colorremedies.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3A4A8AC002
+	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 01:39:19 -0800 (PST)
+Received: from srvmail.3sr-grenoble.fr (3sr-srvmail.ampere.inpg.fr
+	[147.171.64.82]) by cuda.sgi.com with ESMTP id KeduAu99VF94iXIu
+	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 01:39:17 -0800 (PST)
+Received: from localhost (localhost [127.0.0.1])
+	by srvmail.3sr-grenoble.fr (Postfix) with SMTP id 359D328A0A2
+	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 10:39:16 +0100 (CET)
+Message-ID: <511CB0C3.9090507@3sr-grenoble.fr>
+Date: Thu, 14 Feb 2013 10:39:15 +0100
+From: =?ISO-8859-1?Q?R=E9mi_Cailletaud?= <remi.cailletaud@3sr-grenoble.fr>
 MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="8323328-163697065-1360831004=:2315"
+Subject: Re: problem after growing
+References: <511BC78B.6070205@3sr-grenoble.fr> <511BCB41.4060804@sandeen.net>
+	<511BCD11.20907@3sr-grenoble.fr> <511BCFB6.8000309@sandeen.net>
+	<511BD0FB.2070401@3sr-grenoble.fr> <511BD2D1.9010906@sandeen.net>
+	<511BD6ED.6030006@3sr-grenoble.fr>
+	<511BEE8B.8000400@sandeen.net> <511BF3B6.9040502@sandeen.net>
+	<511C07C6.9080003@sandeen.net> <511C9E9C.8080200@3sr-grenoble.fr>
+In-Reply-To: <511C9E9C.8080200@3sr-grenoble.fr>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,60 +31,162 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Chris Murphy <lists@colorremedies.com>
-Cc: sandeen@redhat.com, xfs@oss.sgi.com, Karel Zak <kzak@redhat.com>, Zach Brown <zabrown@redhat.com>, =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>, linux-btrfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+Le 14/02/2013 09:21, R=E9mi Cailletaud a =E9crit :
+> Le 13/02/2013 22:38, Eric Sandeen a =E9crit :
+>> On 2/13/13 2:12 PM, Eric Sandeen wrote:
+>>> On 2/13/13 1:50 PM, Eric Sandeen wrote:
+>>>> On 2/13/13 12:09 PM, R=E9mi Cailletaud wrote:
+>>>>> Le 13/02/2013 18:52, Eric Sandeen a =E9crit :
+>>>> <snip>
+>>>>
+>>>>>> Did the filesystem grow actually work?
+>>>>>>
+>>>>>> # xfs_db -c "sb 0" -c "p" /dev/vg0/tomo-201111
+>>>>>> magicnum =3D 0x58465342
+>>>>>> blocksize =3D 4096
+>>>>>> dblocks =3D 10468982745
+>>>>>>
+>>>>>> That looks like it's (still?) a 38TiB/42TB filesystem, with:
+>>>>>>
+>>>>>> sectsize =3D 512
+>>>>>>
+>>>>>> 512 sectors.
+>>>>>>
+>>>>>> How big was it before you tried to grow it, and how much did you =
 
---8323328-163697065-1360831004=:2315
-Content-Type: TEXT/PLAIN; charset=ISO-8859-15
-Content-Transfer-Encoding: 8BIT
+>>>>>> try to grow it by?  Maybe the size never changed.
+>>>>> Was 39, growing to 44. Testdisk says 48 TB / 44 TiB... There is =
 
-On Thu, 14 Feb 2013, Chris Murphy wrote:
+>>>>> some chance that it was never really growed.
+>>>>>> At mount time it tries to set the sector size of the device; its' =
 
-> Date: Thu, 14 Feb 2013 00:29:59 -0700
-> From: Chris Murphy <lists@colorremedies.com>
-> To: Dave Chinner <david@fromorbit.com>
-> Cc: Karel Zak <kzak@redhat.com>, Luká¨ Czerner <lczerner@redhat.com>,
->     xfs@oss.sgi.com, sandeen@redhat.com, Zach Brown <zabrown@redhat.com>,
->     linux-btrfs@vger.kernel.org
-> Subject: Re: [PATCH] xfs_mkfs: wipe old signatures from the device
-> 
-> 
-> On Feb 13, 2013, at 3:17 PM, Dave Chinner <david@fromorbit.com> wrote:
-> > it is the responsibility of filesystem
-> > tools to behave sanely, not for the rest of the world to have to
-> > work around the dangerous behaviour of a specific filesystems'
-> > toolset.
-> 
-> I appreciate this, and in particular that mkfs.xfs doesn't nerf a file system without the use of -f; even an existing XFS file system. Considering most data loss is user induced, I'd appreciate it if other file systems's tools weren't so easily made belligerent by (hopefully temporarily) confused apes wearing pants.
-> 
-> Chris Murphy
+>>>>>> a hard-4k device, so setting it to 512 fails.
+>>>>>>
+>>>>>> This may be as much of an LVM issue as anything; how do you get =
 
-I would not be so optimistic about it. The reason being that there
-are almost _always_ old file system signatures on the device. So I
-think that it got to the point where users will usually use mkfs.xfs
--f all the time. And even if they did not and they would use a wrong
-device they would probably get the same warning even for the device
-they wanted to use in the first place.
+>>>>>> the LVM device back to something with 512-byte logical sectors?  =
 
-So even thoug it might help in some cases I do not think that we
-should go and change all file systems to do that as well, it would
-not be very useful anyway.
+>>>>>> I have no idea...
+>>>>>>
+>>>>>> *if* the fs didn't actually grow, and if the new 4k-sector space =
 
--Lukas
---8323328-163697065-1360831004=:2315
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+>>>>>> is not used by the filesystem, and if you can somehow remove that =
+
+>>>>>> new space from the device and set the LV back to 512 sectors, you =
+
+>>>>>> might be in good shape.
+>>>>> I dont either know how to see nor set LV sector size.  It's 100% =
+
+>>>>> sure that anything was copied on 4k sector size, and pretty sure =
+
+>>>>> that the fs did not really grow.
+>>>> I think the same blockdev command will tell you.
+>>>>
+>>>>
+>>>>>> Proceed with extreme caution here, I wouldn't start just trying =
+
+>>>>>> random things unless you have some other way to get your data =
+
+>>>>>> back (backups?).  I'd check with LVM folks as well, and maybe see =
+
+>>>>>> if dchinner or the sgi folks have other suggestions.
+>>>>> Sigh... No backup (44To is too large for us...) ! I'm running a =
+
+>>>>> testdisk recover, but I'm not very confident about success...
+>>>>> Thanks to deeper investigate this...
+>>>>>> First let's find out if the filesystem actually thinks it's =
+
+>>>>>> living on the new space.
+>>>>> What is the way to make it talk about that ?
+>>>> well, you have 10468982745 4k blocks in your filesystem, so =
+
+>>>> 42880953323520 bytes of xfs filesystem.
+>>>>
+>>>> Look at your lvm layout, does that extend into the new disk space =
+
+>>>> or is it confined to the original disk space?
+> Seems it does not : lvm map shows 48378494844928 bytes, 1304432738304 =
+
+> on the 4K device.
+>
+>>> lvm folks I talk to say that if you remove the 4k device from the =
+
+>>> lvm volume it should switch back to 512 sectors.
+>>>
+>>> so if you can can convince yourself that 42880953323520 bytes does =
+
+>>> not cross into the newly added disk space, just remove it again, and =
+
+>>> everything should be happy.
+>>>
+>>> Unless your rash decision to start running "testdisk" made things =
+
+>>> worse ;)
+>> I tested this.  I had a PV on a normal 512 device, then used =
+
+>> scsi_debug to create a 4k device.
+>>
+>> I created an LV on the 512 device&  mounted it, then added the 4k =
+
+>> device as you did.  growfs failed immediately, and the device won't =
+
+>> remount due to the sector size change.
+>>
+>> I verified that removing the 4k device from the LV changes the LV =
+
+>> back to a 512 sector size.
+>>
+>> However, I'm not 100% sure how to remove just the 4K PV; when I did =
+
+>> it, I did something wrong and it reduced the size of my LV to the =
+
+>> point where it corrupted the filesystem.  :)  Perhaps you are a =
+
+>> better lvm admin than I am.
+> How did you remove the pv ? I would tend to use vgreduce, but I'm a =
+
+> bit (a lot, in fact) scary about fs corruption. That's why I was =
+
+> wondering about pvmove'ing extents on a 512K device
+Or may a vgcfgrestore be safer ? Should I ask lvm folks ?
+
+r=E9mi
+
+>
+> r=E9mi
+>
+>> But in any case - if you know how to safely remove ONLY the 4k device =
+
+>> from the LV, you should be in good shape again.
+>>
+>> -Eric
+>>
+>>
+>>
+>
+>
+
+
+-- =
+
+R=E9mi Cailletaud - IE CNRS
+3SR - Laboratoire Sols, Solides, Structures - Risques
+BP53, 38041 Grenoble CEDEX 0
+FRANCE
+remi.cailletaud@3sr-grenoble.fr
+T=E9l: +33 (0)4 76 82 52 78
+Fax: +33 (0)4 76 82 70 43
+
+
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---8323328-163697065-1360831004=:2315--
