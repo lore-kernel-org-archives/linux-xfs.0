@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8E70D8090
-	for <xfs@oss.sgi.com>; Fri, 15 Feb 2013 00:39:46 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 595207F61
+	for <xfs@oss.sgi.com>; Fri, 15 Feb 2013 01:16:38 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6749B8F8035
-	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 22:39:46 -0800 (PST)
-Received: from mail-pa0-f43.google.com (mail-pa0-f43.google.com
-	[209.85.220.43]) by cuda.sgi.com with ESMTP id lSd2HNwl5NjX5Y5p
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 14 Feb 2013 22:39:45 -0800 (PST)
-Received: by mail-pa0-f43.google.com with SMTP id bh2so1657518pad.30
-	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 22:39:45 -0800 (PST)
-From: Hemanth Kumar <hemanthkumar51@gmail.com>
-Subject: [test] btrfs quotas testing
-Date: Fri, 15 Feb 2013 12:09:31 +0530
-Message-Id: <1360910371-3258-1-git-send-email-hemanthkumar51@gmail.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4294C304039
+	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 23:16:35 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	rIbCBgjnWRmoBsJs for <xfs@oss.sgi.com>;
+	Thu, 14 Feb 2013 23:16:33 -0800 (PST)
+Date: Fri, 15 Feb 2013 18:16:07 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: XFS slow when project quota exceeded (again)
+Message-ID: <20130215071607.GT26694@dastard>
+References: <20130214131452.GB605@quack.suse.cz>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20130214131452.GB605@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,52 +25,118 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
-Cc: chethan.casey@gmail.com, sandeen@redhat.com, sensille@gmx.net, ganeshkumar14@gmail.com, praneethu.u@gmail.com, bo.li.liu@oracle.com, skjmca51@gmail.com, Hemanth Kumar <hemanthkumar51@gmail.com>, kirantpatil@gmail.com
+To: Jan Kara <jack@suse.cz>
+Cc: dchinner@redhat.com, xfs@oss.sgi.com
 
+On Thu, Feb 14, 2013 at 02:14:52PM +0100, Jan Kara wrote:
+>   Hi,
+> 
+>   this is a follow up on a discussion started here:
+> http://www.spinics.net/lists/xfs/msg14999.html
+> 
+> To just quickly sum up the issue: 
+> When project quota gets exceeded XFS ends up flushing inodes using
+> sync_inodes_sb(). I've tested (in 3.8-rc4) that if one writes 200 MB to a
+> directory with 100 MB project quota like:
+> 	fd = open(argv[1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+> 	for (i = 0; i < 50000; i++)
+> 		pwrite(fd, buf, 4096, i*4096);
+> it takes about 3 s to finish, which is OK. But when there are lots of
+> inodes cached (I've tried with 10000 inodes cached on the fs), the same
+> test program runs ~140 s.
 
-Signed-off-by: Hemanth Kumar <hemanthkumar51@gmail.com>
----
- quota.sh | 23 +++++++++++++++++++++++
- 1 file changed, 23 insertions(+)
- create mode 100644 quota.sh
+So, you're testing the overhead of ~25,000 ENOSPC flushes. I could
+brush this off and say "stupid application" but I won't....
 
-diff --git a/quota.sh b/quota.sh
-new file mode 100644
-index 0000000..8b82bf9
---- /dev/null
-+++ b/quota.sh
-@@ -0,0 +1,23 @@
-+#! /bin/bash
-+# btrfs quotas test case
-+#tmp=/sample
-+status=1
-+
-+cleanup()
-+{
-+    btrfs subvolume delete $TEST_DIR/vol1
-+}
-+
-+#trap "_cleanup ; exit \$status" 0 1 2 3 15
-+
-+btrfs quota enable $TEST_DIR
-+echo "quota enabled on $TEST_DEV"
-+btrfs subvolume create $TEST_DIR/vol1
-+echo "vol1 created"
-+btrfs qgroup show $TEST_DIR
-+btrfs qgroup limit 2m $TEST_DIR/vol1
-+echo "qgroup limited to 2mb"
-+dd if=$TEST_DEV of=$TEST_DIR/vol1/file1 bs=3M count=1
-+echo "tried to write 3m worth data"
-+cleanup
-+exit
+> This is because sync_inodes_sb() iterates over
+> all inodes in superblock and waits for IO and this iteration eats CPU
+> cycles.
+
+Yup, exactly what I said here:
+
+http://www.spinics.net/lists/xfs/msg15198.html
+
+Iterating inodes takes a lot of CPU.
+
+I think the difference in the old method and the current one is that
+we only do one inode cache iteration per write(), not one per
+get_blocks() call. Hence we've removed the per-page overhead of
+flushing, and now we just have the inode cache iteration overhead.
+
+The fix to that problem is mentioned here:
+
+http://www.spinics.net/lists/xfs/msg15186.html
+
+Which is to:
+
+	a) throttle speculative allocation as EDQUOT approaches; and
+	b) efficiently track speculative preallocation
+	   for all the inodes in the given project, and write back
+	   and trim those inodes on ENOSPC.
+
+both of those are still a work in progress. I was hoping that we'd
+have a) in 3.9, but that doesn't seem likely now the merge window is
+just about upon us....
+
+Essnetially, the fix for your problem is b). it will turn a
+whole superblock inode iteration into a "inodes with specualtive
+preallocation iteration" that is project quota aware. it will have
+lower per-flush overhead than a superblock scan, but it will still
+have measurable overhead.
+
+> One can argue that sync_inodes_sb() should be optimized but it isn't that
+> easy because it is a data integrity operation and we have to be sure that
+> even IO which has been submitted before sync_inodes_sb() is called is
+> finished by the time it returns.
+
+Right, but the IO wait is exactly why I chose it....
+
+> So another POV is that it is an overkill to call data integrity operation
+> in a place which just needs to make sure IO is submitted so that delalloc
+> uncertainty is reduced.
+
+... and not because of anything to do with how we handle delalloc
+metadata reservations.
+
+> The comment before xfs_flush_inodes() says that
+> sync_inodes_sb() is used to throttle multiple callers to the rate at which
+> IO is completing. I wonder - why is that needed?
+
+It's trying to prevent the filesystem for falling into worst case IO
+patterns at ENOSPC when there are hundreds of threads banging on the
+filesystem and essentially locking up the system. i.e. we have to
+throttle the IO submission rate from ENOSPC flushing artificially -
+we really only need one thread doing the submission work, so we need
+to throttle all concurrent callers while we are doing that work.
+sync_inodes_sb() does that. And then we need to prevent individual
+callers from trying to allocate space too frequently, which we do by
+waiting for IO that was submitted in the flush. sync_inodes_sb()
+does that, too.
+
+> Delalloc blocks are
+> allocated already at IO submission time so it should be enough to wait for
+> IO submission to happen? And writeback_inodes_sb() does that. Changelog of
+> the commit changing xfs_flush_inodes() to use sync_inodes_sb() claims that
+> if writeback_inodes_sb() is used, premature ENOSPC can happen. But I wonder
+> why is that the case when writeback_inodes_sb() waits for IO submission to
+> happen and thus for extent conversion? Isn't sync_inodes_sb() just papering
+> over some other problem?
+
+It was never intended to create or solve EDQUOT issues related to
+project quota.  What you are seeing is an unfortunate side effect of
+fixing other, more serious architectural problems. We know it's a
+problem and we have a fix in the works. Just be patient....
+
+Cheers,
+
+Dave.
 -- 
-1.8.1.2
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
