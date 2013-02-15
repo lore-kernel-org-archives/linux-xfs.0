@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9FA927F59
-	for <xfs@oss.sgi.com>; Fri, 15 Feb 2013 06:45:38 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8892530404E
-	for <xfs@oss.sgi.com>; Fri, 15 Feb 2013 04:45:38 -0800 (PST)
-Received: from mail-pb0-f53.google.com (mail-pb0-f53.google.com
-	[209.85.160.53]) by cuda.sgi.com with ESMTP id LXSiB6Cjk5dn5zl8
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 2E06C7F86
+	for <xfs@oss.sgi.com>; Fri, 15 Feb 2013 07:06:38 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 9DB1CAC00A
+	for <xfs@oss.sgi.com>; Fri, 15 Feb 2013 05:06:34 -0800 (PST)
+Received: from mail-da0-f44.google.com (mail-da0-f44.google.com
+	[209.85.210.44]) by cuda.sgi.com with ESMTP id eKG4JsKqPfOodWgw
 	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 15 Feb 2013 04:45:37 -0800 (PST)
-Received: by mail-pb0-f53.google.com with SMTP id un1so601186pbc.40
-	for <xfs@oss.sgi.com>; Fri, 15 Feb 2013 04:45:36 -0800 (PST)
+	<xfs@oss.sgi.com>; Fri, 15 Feb 2013 05:06:33 -0800 (PST)
+Received: by mail-da0-f44.google.com with SMTP id z20so1459957dae.3
+	for <xfs@oss.sgi.com>; Fri, 15 Feb 2013 05:06:32 -0800 (PST)
 From: Hemanth Kumar <hemanthkumar51@gmail.com>
-Subject: [btrfs-progs] Btrfs quotas testing
-Date: Fri, 15 Feb 2013 18:15:24 +0530
-Message-Id: <1360932324-2722-1-git-send-email-hemanthkumar51@gmail.com>
+Subject: [btrfs-progs] testing btrfs hierarchical quotas
+Date: Fri, 15 Feb 2013 18:35:41 +0530
+Message-Id: <1360933541-2894-1-git-send-email-hemanthkumar51@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,29 +34,29 @@ Cc: chethan.casey@gmail.com, sandeen@redhat.com, sensille@gmx.net, ganeshkumar14
 
 Signed-off-by: Hemanth Kumar <hemanthkumar51@gmail.com>
 ---
- quotas.sh | 30 ++++++++++++++++++++++++++++++
- 1 file changed, 30 insertions(+)
- create mode 100644 quotas.sh
+ hq.sh | 33 +++++++++++++++++++++++++++++++++
+ 1 file changed, 33 insertions(+)
+ create mode 100644 hq.sh
 
-diff --git a/quotas.sh b/quotas.sh
+diff --git a/hq.sh b/hq.sh
 new file mode 100644
-index 0000000..7e64578
+index 0000000..6a0a820
 --- /dev/null
-+++ b/quotas.sh
-@@ -0,0 +1,30 @@
++++ b/hq.sh
+@@ -0,0 +1,33 @@
 +#! /bin/bash
 +# Btrfs quotas test case
 +# Hi all,
-+# This is shell script to test the quotas feature of Btrfs
++# This is shell script to test the hierarchical quotas feature of Btrfs
 +# I created Btrfs filesystem on a new
 +# partition, then activated quota management ('btrfs quota enable'), and
-+# created a few subvolumes.
-+# I have lmited the quota to 2mb and tried filling it
-+# its working as expected
++# created a few subvolumes of multiple levels.
 +
 +
 +cleanup()
 +{
++    btrfs subvolume delete $TEST_DIR/vol1/vol2/vol3
++    btrfs subvolume delete $TEST_DIR/vol1/vol2
 +    btrfs subvolume delete $TEST_DIR/vol1
 +    btrfs subvolume disable $TEST_DIR
 +}
@@ -66,12 +66,15 @@ index 0000000..7e64578
 +btrfs quota enable $TEST_DIR
 +echo "quota enabled on $TEST_DEV"
 +btrfs subvolume create $TEST_DIR/vol1
-+echo "vol1 created"
-+btrfs qgroup show $TEST_DIR
-+btrfs qgroup limit 2m $TEST_DIR/vol1
-+echo "qgroup limited to 2mb"
-+dd if=$TEST_DEV of=$TEST_DIR/vol1/file1 bs=3M count=1
-+echo "tried to write 3m worth data"
++btrfs subvolume create $TEST_DIR/vol1/vol2
++btrfs subvolume create $TEST_DIR/vol1/vol2/vol3
++btrfs qgroup limit 5m $TEST_DIR/vol1
++btrfs qgroup limit 3m $TEST_DIR/vol1/vol2
++btrfs qgroup limit 2m $TEST_DIR/vol1/vol2/vol3
++dd if=$TEST_DEV of=$TEST_DIR/vol1/vol2/vol3/file1 bs=3M count=1
++dd if=$TEST_DEV of=$TEST_DIR/vol1/vol2/file1 bs=2M count=1
++dd if=$TEST_DEV of=$TEST_DIR/vol1/file1 bs=5M count=1
++
 +cleanup
 +exit
 -- 
