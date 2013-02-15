@@ -1,27 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2940C808C
-	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 19:47:37 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id EC3DF30404E
-	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 17:47:33 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id A70907FEE
+	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 20:05:23 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 271C4AC001
+	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 18:05:20 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	NewiGyWoLShxBU9u for <xfs@oss.sgi.com>;
-	Thu, 14 Feb 2013 17:47:31 -0800 (PST)
-Date: Fri, 15 Feb 2013 12:47:29 +1100
+	LtEJzMAbK6SsUTS6 for <xfs@oss.sgi.com>;
+	Thu, 14 Feb 2013 18:05:15 -0800 (PST)
+Date: Fri, 15 Feb 2013 13:05:13 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [ 68/89] xfs: fix _xfs_buf_find oops on blocks beyond the
-	filesystem end
-Message-ID: <20130215014729.GR26694@dastard>
-References: <20130201130207.444989281@linuxfoundation.org>
-	<20130201130212.381996681@linuxfoundation.org>
-	<511BB198.1080609@redhat.com> <20130213161845.GA20916@kroah.com>
-	<20130214000730.GI26694@dastard> <20130214192614.GA6945@kroah.com>
-	<20130214195512.GQ30652@sgi.com> <20130214200501.GA23036@kroah.com>
+Subject: Re: Weird performance on a FusionIO Octal (Random writes faster than
+	Seq.)
+Message-ID: <20130215020513.GS26694@dastard>
+References: <CD429AE0.4B5E%settlemyerbw@ornl.gov>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130214200501.GA23036@kroah.com>
+In-Reply-To: <CD429AE0.4B5E%settlemyerbw@ornl.gov>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,108 +30,48 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: CAI Qian <caiqian@redhat.com>, Brian Foster <bfoster@redhat.com>, linux-kernel@vger.kernel.org, stable@vger.kernel.org, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, Dave Chinner <dchinner@redhat.com>, Paolo Bonzini <pbonzini@redhat.com>
+To: "Settlemyer, Bradley W." <settlemyerbw@ornl.gov>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Thu, Feb 14, 2013 at 12:05:01PM -0800, Greg Kroah-Hartman wrote:
-> On Thu, Feb 14, 2013 at 01:55:12PM -0600, Ben Myers wrote:
-> > > Ok, how about I never apply any xfs stable kernel patch, unless you send
-> > > it to stable@vger.kernel.org?
-> > 
-> > Dave has made it clear that he doesn't want to be involved in maintaining
-> > -stable kernels.
+On Thu, Feb 14, 2013 at 01:45:04PM -0500, Settlemyer, Bradley W. wrote:
+> Hello
+> 
+>   So I'm getting weird performance using XFS on a 5TB FusionIO octal (a
+> solid state device plugged into my pcie bus).  It seems to be a newish
+> problem, but I can't go back to an old version of everything to prove
+> that, because I've only got one working Octal right now (they are a little
+> pricy).
+> 
+>   At any rate, when doing random 16MB requests to a file with 16 threads,
+> I get about 4.5GB/s.  When writing sequentially with 16 threads doing 16MB
+> requests, I get about 3.5GB/s -- the first time.  Once the file is written
+> the first time, a second pass results in 4.5GB/s.
 
-I don't think you quite understand, Ben. It is obvious from the fact
-that this discussion is taking place that I'm extremely concerned
-about the quality of -stable kernels and what goes into them. What I
-think you are missing is that there is a difference between not
-having the time to do the grunt work of backporting and testing
--stable kernels versus wanting to ensure the quality of the
-maintenance work that does take place remains high.
+There is different locking for direct IO within the file versus
+extending the file - extending the file can serialise concurrent IO
+submission to check whether zeroing of blocks is necessary. For
+random IO, that will happen occassionally, but not for every IO that
+is submitted.
 
-Why do I say this? Because the responsiblity of maintaining XFS
-development is not SGI's. It is a community effort, and I am as much
-responsible as anyone else. Someone else doing a half-arsed job
-maintaining XFS in -stable kernels reflects badly on *me* as being a
-senior member of a community that allows it's members to do a
-half-arsed job on something.
+Once the file si written, extending writes are on longer occurring,
+so the sequential write locking is the same as the random write
+locking and there is no serialisation during submission....
 
-> > However, my team at SGI is interested in maintaining -stable
-> > kernels.
+>   The thing is, I'm using preallocate on both types of I/O (that is, I
+> always preallocate the entire file whether its random or sequential).  I
+> allocate the exact same size file in both cases, its just faster the first
+> time with random writes rather than sequential writes.
+> 
+>   So if you had xdd 7.0 and an octal plugged into slot 6 of an HP DL585 G7
+> (running CentOS 6.3), you could replicate these test results with the
 
-Then do the job properly. Being "interested" isn't enough - you need
-the *commitment* to ensure things are done properly.  If you
-*personally* don't have the the time to ensure that the -stable
-kernel maintenance is done properly, then don't do it at all.
+You might want to try a current upstream kernel - the direct io
+locking has been significantly optimised compared to that kernel,
+and so it might be faster for the extending write case.
 
-> > We're not going to use the fact that there is a risk of regression as
-> > an excuse to starve -stable of relevant fixes, just as we do not use it as an
-> > excuse to starve the upstream branch of feature content.
-
-I'm not complaining because there is a risk of regression in
--stable backports, I'm pointing out that our long-standing process
-used to minimise that risk was not followed.
-
-Besides, -stable backports are all about risk management.  The
-primary consideration for a backport is whether the risk of
-regressions is higher than the risk of leaving the bug unfixed.
-We've NACKed lots of proposed patches for -stable simply because the
-risk of regression outweighes the benefit to users of -stable
-inclusion.
-
-Yes, there is always a risk of unintended regressions, but you have
-to do *due diligence* on the backports to -stable trees to minimise
-the risk factor. Even the most basic "apply the patch, run xfstests"
-check would have found this regression. So, even if we ignore the
-risk factors here, a *preventable regression* occurred because due
-diligence was not performed correctly on the requested patch.
-
-BTW, Ben, I should point out that 6 months ago you said exactly the
-opposite to this statement - you tried to use "risk of regressions"
-as an excuse to starve the dev tree of new feature content. i.e. you
-wanted to apply -stable tree criteria to the -dev tree. Now you are
-saying that risk of regression is not a reason for rejection for the
--stable tree. (i.e. applying -dev tree criteria to the -stable
-tree).  IMO, you are as wrong about the -stable tree now as you were
-about the -dev tree 6 months ago....
-
-> > > I have that rule in place for some other subsystems that don't want me
-> > > applying stuff that they aren't aware of, and have no problem doing the same
-> > > thing here.
-> > > 
-> > > Just let me know.
-
-Sounds like a fine idea, Greg.
-
-> > Here are the usual suspects:
-> > 
-> > Ben Myers <bpm@sgi.com>
-> > Mark Tinguely <tinguely@sgi.com>
-> > Dave Chinner <dchinner@redhat.com>
-> > Eric Sandeen <sandeen@redhat.com>
-
-I don't think it should be restricted to individuals.  The private
-thread used to request this backport is exactly why I didn't see
-the request in a timely fashion, and also the reason why we didn't
-end up with notifications for review going to xfs@oss.sgi.com.
-
-Hence I'd suggest the only thing that matters is that there is a cc
-to xfs@oss.sgi.com, because that means all of the above people (and
-more) are on that list and hence have the best chance to see and
-review the backport request.
-
-> Ok, but for this specific patch, did I do something wrong in taking it?
-
-No, you didn't do anything wrong, Greg. Stuff went wrong on the XFS
-side of the fence.
-
-> I guess I'll just let you send me xfs patches, is that ok with everyone
-> else? 
-
-Sure, that would work, but only after the patches have been sent to
-xfs@oss.sgi.com for review and testing and been acked. And, of
-course, the stable submission woul dalso need to have a
-xfs@oss.sgi.com cc on it. ;)
+As it is, there's a simple way of avoiding the extending write
+locking serialiation - ftruncate the file to it's final size
+first....
 
 Cheers,
 
