@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8885F801C
-	for <xfs@oss.sgi.com>; Fri, 15 Feb 2013 04:38:43 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2FBADAC003
-	for <xfs@oss.sgi.com>; Fri, 15 Feb 2013 02:38:39 -0800 (PST)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id AITrCSCB1PDQirjF (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 15 Feb 2013 02:38:35 -0800 (PST)
-Date: Fri, 15 Feb 2013 11:38:31 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: XFS slow when project quota exceeded (again)
-Message-ID: <20130215103831.GA7458@quack.suse.cz>
-References: <20130214131452.GB605@quack.suse.cz>
-	<20130215071607.GT26694@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E8BE5803C
+	for <xfs@oss.sgi.com>; Fri, 15 Feb 2013 06:31:30 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D21D630404E
+	for <xfs@oss.sgi.com>; Fri, 15 Feb 2013 04:31:27 -0800 (PST)
+Received: from mail-ie0-f175.google.com (mail-ie0-f175.google.com
+	[209.85.223.175]) by cuda.sgi.com with ESMTP id
+	SJm9vGVnIk6DH8Eh (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 15 Feb 2013 04:31:26 -0800 (PST)
+Received: by mail-ie0-f175.google.com with SMTP id c12so4702395ieb.34
+	for <xfs@oss.sgi.com>; Fri, 15 Feb 2013 04:31:26 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130215071607.GT26694@dastard>
+In-Reply-To: <20130215084733.GH28997@carfax.org.uk>
+References: <1360909755-2966-1-git-send-email-hemanthkumar51@gmail.com>
+	<20130215084733.GH28997@carfax.org.uk>
+Date: Fri, 15 Feb 2013 18:01:26 +0530
+Message-ID: <CAG_LFoASuEYa4TqTcj-mosQ54Jt7DWqJBDNLHJ-va0qt7d7cfQ@mail.gmail.com>
+Subject: Re: [test] comments removed
+From: Hemanth Kumar <hemanthkumar51@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,86 +32,115 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: dchinner@redhat.com, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
+To: Hugo Mills <hugo@carfax.org.uk>, Hemanth Kumar <hemanthkumar51@gmail.com>, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com, skjmca51@gmail.com, ganeshkumar14@gmail.com, kirantpatil@gmail.com, praneethu.u@gmail.com, chetahan.casey@gmail.com, sensille@gmx.net, bo.li.liu@oracle.com, sandeen@redhat.com
 
-On Fri 15-02-13 18:16:07, Dave Chinner wrote:
-> On Thu, Feb 14, 2013 at 02:14:52PM +0100, Jan Kara wrote:
-> >   Hi,
-> > 
-> >   this is a follow up on a discussion started here:
-> > http://www.spinics.net/lists/xfs/msg14999.html
-> > 
-> > To just quickly sum up the issue: 
-> > When project quota gets exceeded XFS ends up flushing inodes using
-> > sync_inodes_sb(). I've tested (in 3.8-rc4) that if one writes 200 MB to a
-> > directory with 100 MB project quota like:
-> > 	fd = open(argv[1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
-> > 	for (i = 0; i < 50000; i++)
-> > 		pwrite(fd, buf, 4096, i*4096);
-> > it takes about 3 s to finish, which is OK. But when there are lots of
-> > inodes cached (I've tried with 10000 inodes cached on the fs), the same
-> > test program runs ~140 s.
-> 
-> So, you're testing the overhead of ~25,000 ENOSPC flushes. I could
-> brush this off and say "stupid application" but I won't....
-  Yes, stupid... NFS. This is what happens when NFS client writes to a
-directory over project quota. So as much as I agree the workload is
-braindamaged we don't have a choice to fix a client and we didn't find a
-reasonable fix on NFS server side either. So that's why we ended up with
-XFS changes.
+Thanks for the instructions will follow it without fail.
 
-> > This is because sync_inodes_sb() iterates over
-> > all inodes in superblock and waits for IO and this iteration eats CPU
-> > cycles.
-> 
-> Yup, exactly what I said here:
-> 
-> http://www.spinics.net/lists/xfs/msg15198.html
-> 
-> Iterating inodes takes a lot of CPU.
-> 
-> I think the difference in the old method and the current one is that
-> we only do one inode cache iteration per write(), not one per
-> get_blocks() call. Hence we've removed the per-page overhead of
-> flushing, and now we just have the inode cache iteration overhead.
-> 
-> The fix to that problem is mentioned here:
-> 
-> http://www.spinics.net/lists/xfs/msg15186.html
-> 
-> Which is to:
-> 
-> 	a) throttle speculative allocation as EDQUOT approaches; and
-> 	b) efficiently track speculative preallocation
-> 	   for all the inodes in the given project, and write back
-> 	   and trim those inodes on ENOSPC.
-> 
-> both of those are still a work in progress. I was hoping that we'd
-> have a) in 3.9, but that doesn't seem likely now the merge window is
-> just about upon us....
-  Yeah, I know someone is working on a better solution. I was mostly
-wondering why writeback_inodes_sb() isn't enough - i.e. why do you really
-need to wait for IO completion. And you explained that below. Thanks!
+On Fri, Feb 15, 2013 at 2:17 PM, Hugo Mills <hugo@carfax.org.uk> wrote:
+>
+> On Fri, Feb 15, 2013 at 11:59:15AM +0530, Hemanth Kumar wrote:
+>
+>    No description of what the patch does. You should probably also put
+> [btrfs-progs] in the subject line, if you're patching against
+> btrfs-progs (and in that case, you probably don't need to cc the xfs
+> people).
+>
+>    More comments below.
+>
+>    Hugo.
+>
+> > Signed-off-by: Hemanth Kumar <hemanthkumar51@gmail.com>
+> > ---
+> >  0001-heirarchical-quotas-test-case.patch | 44 ++++++++++++++++++++++++++++++++
+>         hierarchical
+>
+> >  hquotas.sh                               |  2 --
+> >  2 files changed, 44 insertions(+), 2 deletions(-)
+> >  create mode 100644 0001-heirarchical-quotas-test-case.patch
+> >
+> > diff --git a/0001-heirarchical-quotas-test-case.patch b/0001-heirarchical-quotas-test-case.patch
+>
+>     And here
+>
+> > new file mode 100644
+> > index 0000000..c6577e0
+> > --- /dev/null
+> > +++ b/0001-heirarchical-quotas-test-case.patch
+>
+>     And here
+>
+> > @@ -0,0 +1,44 @@
+> > +From 9f49a870eab70ae37028f937331f9ec1b67dadb1 Mon Sep 17 00:00:00 2001
+> > +From: Hemanth Kumar <hemanthkumar51@gmail.com>
+> > +Date: Fri, 15 Feb 2013 11:21:03 +0530
+> > +Subject: [test] heirarchical quotas test case
+> > +
+> > +
+> > +Signed-off-by: Hemanth Kumar <hemanthkumar51@gmail.com>
+>
+>    You're sending a patch file that creates a patch file? This is wrong.
+>
+> > +---
+> > + hquotas.sh | 8 ++++----
+> > + 1 file changed, 4 insertions(+), 4 deletions(-)
+> > +
+> > +diff --git a/hquotas.sh b/hquotas.sh
+> > +index 2eaae01..a870d4a 100644
+> > +--- a/hquotas.sh
+> > ++++ b/hquotas.sh
+> > +@@ -1,7 +1,5 @@
+> > + #! /bin/bash
+> > +-# btrfs quotas test case
+> > +-#owner=hemanthkumar51@gamil.com ganeshkumr14@gmail.com
+> > +-
+> > ++# btrfs hierarchical quotas test case
+> > + #here=`pwd`
+> > + #tmp=/sample
+> > + status=1
+> > +@@ -11,6 +9,8 @@ cleanup()
+> > +     btrfs subvolume delete $TEST_DIR/vol1/vol2/vol3
+> > +     btrfs subvolume delete $TEST_DIR/vol1/vol2
+> > +     btrfs subvolume delete $TEST_DIR/vol1
+> > ++    btrfs quota disable $TEST_DIR
+> > ++    echo"quota disabled"
+> > + }
+> > +
+> > + #trap "_cleanup ; exit \$status" 0 1 2 3 15
+> > +@@ -25,6 +25,6 @@ btrfs qgroup limit 3m $TEST_DIR/vol1/vol2
+> > + btrfs qgroup limit 1m $TEST_DIR/vol1/vol2/vol3
+> > + dd if=$TEST_DEV of=$TEST_DIR/vol1/vol2/vol3/file3 bs=2M count=1
+> > + dd if=$TEST_DEV of=$TEST_DIR/vol1/vol2/file2 bs=1M count=1
+> > +-dd if=$TEST_DEV of=$TEST_DIR/vol1/file1 bs=5M count=1
+> > ++dd if=$TEST_DEV of=$TEST_DIR/vol1/file1 bs=4M count=1
+> > + cleanup
+> > + exit
+> > +--
+> > +1.8.1.2
+> > +
+> > diff --git a/hquotas.sh b/hquotas.sh
+> > index a870d4a..672b6d1 100644
+> > --- a/hquotas.sh
+> > +++ b/hquotas.sh
+> > @@ -1,7 +1,5 @@
+> >  #! /bin/bash
+> >  # btrfs hierarchical quotas test case
+> > -#here=`pwd`
+> > -#tmp=/sample
+> >  status=1
+> >
+> >  cleanup()
+>
+> --
+> === Hugo Mills: hugo@... carfax.org.uk | darksatanic.net | lug.org.uk ===
+>   PGP key: 515C238D from wwwkeys.eu.pgp.net or http://www.carfax.org.uk
+>                     --- Beware geeks bearing GIFs ---
 
-> It's trying to prevent the filesystem for falling into worst case IO
-> patterns at ENOSPC when there are hundreds of threads banging on the
-> filesystem and essentially locking up the system. i.e. we have to
-> throttle the IO submission rate from ENOSPC flushing artificially -
-> we really only need one thread doing the submission work, so we need
-> to throttle all concurrent callers while we are doing that work.
-> sync_inodes_sb() does that. And then we need to prevent individual
-> callers from trying to allocate space too frequently, which we do by
-> waiting for IO that was submitted in the flush. sync_inodes_sb()
-> does that, too.
-  I see so the waiting for IO isn't really a correctness thing but just a
-way to slow down processes bringing fs out of space so that they don't lock
-up the system. Thanks for explanation!
 
-								Honza
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+
+
+--
+Thanks,
+Hemanth Kumar H C
 
 _______________________________________________
 xfs mailing list
