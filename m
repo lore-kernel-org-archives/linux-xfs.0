@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A70907FEE
-	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 20:05:23 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 271C4AC001
-	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 18:05:20 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	LtEJzMAbK6SsUTS6 for <xfs@oss.sgi.com>;
-	Thu, 14 Feb 2013 18:05:15 -0800 (PST)
-Date: Fri, 15 Feb 2013 13:05:13 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Weird performance on a FusionIO Octal (Random writes faster than
-	Seq.)
-Message-ID: <20130215020513.GS26694@dastard>
-References: <CD429AE0.4B5E%settlemyerbw@ornl.gov>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CD429AE0.4B5E%settlemyerbw@ornl.gov>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 45D9E7F90
+	for <xfs@oss.sgi.com>; Fri, 15 Feb 2013 00:29:44 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 057058F8052
+	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 22:29:44 -0800 (PST)
+Received: from mail-pa0-f53.google.com (mail-pa0-f53.google.com
+	[209.85.220.53]) by cuda.sgi.com with ESMTP id XDdSWyIevPD2jZPN
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 14 Feb 2013 22:29:42 -0800 (PST)
+Received: by mail-pa0-f53.google.com with SMTP id bg4so1609697pad.26
+	for <xfs@oss.sgi.com>; Thu, 14 Feb 2013 22:29:42 -0800 (PST)
+From: Hemanth Kumar <hemanthkumar51@gmail.com>
+Subject: [test] comments removed
+Date: Fri, 15 Feb 2013 11:59:15 +0530
+Message-Id: <1360909755-2966-1-git-send-email-hemanthkumar51@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,59 +23,86 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Settlemyer, Bradley W." <settlemyerbw@ornl.gov>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+Cc: sandeen@redhat.com, sensille@gmx.net, ganeshkumar14@gmail.com, praneethu.u@gmail.com, bo.li.liu@oracle.com, skjmca51@gmail.com, chetahan.casey@gmail.com, Hemanth Kumar <hemanthkumar51@gmail.com>, kirantpatil@gmail.com
 
-On Thu, Feb 14, 2013 at 01:45:04PM -0500, Settlemyer, Bradley W. wrote:
-> Hello
-> 
->   So I'm getting weird performance using XFS on a 5TB FusionIO octal (a
-> solid state device plugged into my pcie bus).  It seems to be a newish
-> problem, but I can't go back to an old version of everything to prove
-> that, because I've only got one working Octal right now (they are a little
-> pricy).
-> 
->   At any rate, when doing random 16MB requests to a file with 16 threads,
-> I get about 4.5GB/s.  When writing sequentially with 16 threads doing 16MB
-> requests, I get about 3.5GB/s -- the first time.  Once the file is written
-> the first time, a second pass results in 4.5GB/s.
 
-There is different locking for direct IO within the file versus
-extending the file - extending the file can serialise concurrent IO
-submission to check whether zeroing of blocks is necessary. For
-random IO, that will happen occassionally, but not for every IO that
-is submitted.
+Signed-off-by: Hemanth Kumar <hemanthkumar51@gmail.com>
+---
+ 0001-heirarchical-quotas-test-case.patch | 44 ++++++++++++++++++++++++++++++++
+ hquotas.sh                               |  2 --
+ 2 files changed, 44 insertions(+), 2 deletions(-)
+ create mode 100644 0001-heirarchical-quotas-test-case.patch
 
-Once the file si written, extending writes are on longer occurring,
-so the sequential write locking is the same as the random write
-locking and there is no serialisation during submission....
-
->   The thing is, I'm using preallocate on both types of I/O (that is, I
-> always preallocate the entire file whether its random or sequential).  I
-> allocate the exact same size file in both cases, its just faster the first
-> time with random writes rather than sequential writes.
-> 
->   So if you had xdd 7.0 and an octal plugged into slot 6 of an HP DL585 G7
-> (running CentOS 6.3), you could replicate these test results with the
-
-You might want to try a current upstream kernel - the direct io
-locking has been significantly optimised compared to that kernel,
-and so it might be faster for the extending write case.
-
-As it is, there's a simple way of avoiding the extending write
-locking serialiation - ftruncate the file to it's final size
-first....
-
-Cheers,
-
-Dave.
+diff --git a/0001-heirarchical-quotas-test-case.patch b/0001-heirarchical-quotas-test-case.patch
+new file mode 100644
+index 0000000..c6577e0
+--- /dev/null
++++ b/0001-heirarchical-quotas-test-case.patch
+@@ -0,0 +1,44 @@
++From 9f49a870eab70ae37028f937331f9ec1b67dadb1 Mon Sep 17 00:00:00 2001
++From: Hemanth Kumar <hemanthkumar51@gmail.com>
++Date: Fri, 15 Feb 2013 11:21:03 +0530
++Subject: [test] heirarchical quotas test case
++
++
++Signed-off-by: Hemanth Kumar <hemanthkumar51@gmail.com>
++---
++ hquotas.sh | 8 ++++----
++ 1 file changed, 4 insertions(+), 4 deletions(-)
++
++diff --git a/hquotas.sh b/hquotas.sh
++index 2eaae01..a870d4a 100644
++--- a/hquotas.sh
+++++ b/hquotas.sh
++@@ -1,7 +1,5 @@
++ #! /bin/bash
++-# btrfs quotas test case
++-#owner=hemanthkumar51@gamil.com ganeshkumr14@gmail.com
++-
+++# btrfs hierarchical quotas test case
++ #here=`pwd`
++ #tmp=/sample
++ status=1
++@@ -11,6 +9,8 @@ cleanup()
++ 	btrfs subvolume delete $TEST_DIR/vol1/vol2/vol3
++ 	btrfs subvolume delete $TEST_DIR/vol1/vol2
++ 	btrfs subvolume delete $TEST_DIR/vol1
+++	btrfs quota disable $TEST_DIR
+++	echo"quota disabled"
++ }
++ 
++ #trap "_cleanup ; exit \$status" 0 1 2 3 15
++@@ -25,6 +25,6 @@ btrfs qgroup limit 3m $TEST_DIR/vol1/vol2
++ btrfs qgroup limit 1m $TEST_DIR/vol1/vol2/vol3
++ dd if=$TEST_DEV of=$TEST_DIR/vol1/vol2/vol3/file3 bs=2M count=1
++ dd if=$TEST_DEV of=$TEST_DIR/vol1/vol2/file2 bs=1M count=1
++-dd if=$TEST_DEV of=$TEST_DIR/vol1/file1 bs=5M count=1
+++dd if=$TEST_DEV of=$TEST_DIR/vol1/file1 bs=4M count=1
++ cleanup
++ exit
++-- 
++1.8.1.2
++
+diff --git a/hquotas.sh b/hquotas.sh
+index a870d4a..672b6d1 100644
+--- a/hquotas.sh
++++ b/hquotas.sh
+@@ -1,7 +1,5 @@
+ #! /bin/bash
+ # btrfs hierarchical quotas test case
+-#here=`pwd`
+-#tmp=/sample
+ status=1
+ 
+ cleanup()
 -- 
-Dave Chinner
-david@fromorbit.com
+1.8.1.2
 
 _______________________________________________
 xfs mailing list
