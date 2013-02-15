@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E4AD98038
-	for <xfs@oss.sgi.com>; Fri, 15 Feb 2013 02:47:45 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CA8948F8049
-	for <xfs@oss.sgi.com>; Fri, 15 Feb 2013 00:47:42 -0800 (PST)
-Received: from frost.carfax.org.uk (frost.carfax.org.uk [85.119.82.111]) by
-	cuda.sgi.com with ESMTP id ThRIsEzQ3JAladIQ (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 15 Feb 2013 00:47:37 -0800 (PST)
-Date: Fri, 15 Feb 2013 08:47:33 +0000
-From: Hugo Mills <hugo@carfax.org.uk>
-Subject: Re: [test] comments removed
-Message-ID: <20130215084733.GH28997@carfax.org.uk>
-References: <1360909755-2966-1-git-send-email-hemanthkumar51@gmail.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 8885F801C
+	for <xfs@oss.sgi.com>; Fri, 15 Feb 2013 04:38:43 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 2FBADAC003
+	for <xfs@oss.sgi.com>; Fri, 15 Feb 2013 02:38:39 -0800 (PST)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id AITrCSCB1PDQirjF (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 15 Feb 2013 02:38:35 -0800 (PST)
+Date: Fri, 15 Feb 2013 11:38:31 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: XFS slow when project quota exceeded (again)
+Message-ID: <20130215103831.GA7458@quack.suse.cz>
+References: <20130214131452.GB605@quack.suse.cz>
+	<20130215071607.GT26694@dastard>
 MIME-Version: 1.0
-In-Reply-To: <1360909755-2966-1-git-send-email-hemanthkumar51@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20130215071607.GT26694@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,154 +26,92 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============7610997088147110730=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Hemanth Kumar <hemanthkumar51@gmail.com>
-Cc: sandeen@redhat.com, sensille@gmx.net, ganeshkumar14@gmail.com, praneethu.u@gmail.com, xfs@oss.sgi.com, bo.li.liu@oracle.com, skjmca51@gmail.com, chetahan.casey@gmail.com, kirantpatil@gmail.com, linux-btrfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: dchinner@redhat.com, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
 
-
---===============7610997088147110730==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="NzX0AQGjRQPusK/O"
-Content-Disposition: inline
-
-
---NzX0AQGjRQPusK/O
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-On Fri, Feb 15, 2013 at 11:59:15AM +0530, Hemanth Kumar wrote:
-
-   No description of what the patch does. You should probably also put
-[btrfs-progs] in the subject line, if you're patching against
-btrfs-progs (and in that case, you probably don't need to cc the xfs
-people).
-
-   More comments below.
-
-   Hugo.
-
-> Signed-off-by: Hemanth Kumar <hemanthkumar51@gmail.com>
-> ---
->  0001-heirarchical-quotas-test-case.patch | 44 ++++++++++++++++++++++++++++++++
-        hierarchical
-
->  hquotas.sh                               |  2 --
->  2 files changed, 44 insertions(+), 2 deletions(-)
->  create mode 100644 0001-heirarchical-quotas-test-case.patch
+On Fri 15-02-13 18:16:07, Dave Chinner wrote:
+> On Thu, Feb 14, 2013 at 02:14:52PM +0100, Jan Kara wrote:
+> >   Hi,
+> > 
+> >   this is a follow up on a discussion started here:
+> > http://www.spinics.net/lists/xfs/msg14999.html
+> > 
+> > To just quickly sum up the issue: 
+> > When project quota gets exceeded XFS ends up flushing inodes using
+> > sync_inodes_sb(). I've tested (in 3.8-rc4) that if one writes 200 MB to a
+> > directory with 100 MB project quota like:
+> > 	fd = open(argv[1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+> > 	for (i = 0; i < 50000; i++)
+> > 		pwrite(fd, buf, 4096, i*4096);
+> > it takes about 3 s to finish, which is OK. But when there are lots of
+> > inodes cached (I've tried with 10000 inodes cached on the fs), the same
+> > test program runs ~140 s.
 > 
-> diff --git a/0001-heirarchical-quotas-test-case.patch b/0001-heirarchical-quotas-test-case.patch
+> So, you're testing the overhead of ~25,000 ENOSPC flushes. I could
+> brush this off and say "stupid application" but I won't....
+  Yes, stupid... NFS. This is what happens when NFS client writes to a
+directory over project quota. So as much as I agree the workload is
+braindamaged we don't have a choice to fix a client and we didn't find a
+reasonable fix on NFS server side either. So that's why we ended up with
+XFS changes.
 
-    And here
+> > This is because sync_inodes_sb() iterates over
+> > all inodes in superblock and waits for IO and this iteration eats CPU
+> > cycles.
+> 
+> Yup, exactly what I said here:
+> 
+> http://www.spinics.net/lists/xfs/msg15198.html
+> 
+> Iterating inodes takes a lot of CPU.
+> 
+> I think the difference in the old method and the current one is that
+> we only do one inode cache iteration per write(), not one per
+> get_blocks() call. Hence we've removed the per-page overhead of
+> flushing, and now we just have the inode cache iteration overhead.
+> 
+> The fix to that problem is mentioned here:
+> 
+> http://www.spinics.net/lists/xfs/msg15186.html
+> 
+> Which is to:
+> 
+> 	a) throttle speculative allocation as EDQUOT approaches; and
+> 	b) efficiently track speculative preallocation
+> 	   for all the inodes in the given project, and write back
+> 	   and trim those inodes on ENOSPC.
+> 
+> both of those are still a work in progress. I was hoping that we'd
+> have a) in 3.9, but that doesn't seem likely now the merge window is
+> just about upon us....
+  Yeah, I know someone is working on a better solution. I was mostly
+wondering why writeback_inodes_sb() isn't enough - i.e. why do you really
+need to wait for IO completion. And you explained that below. Thanks!
 
-> new file mode 100644
-> index 0000000..c6577e0
-> --- /dev/null
-> +++ b/0001-heirarchical-quotas-test-case.patch
+> It's trying to prevent the filesystem for falling into worst case IO
+> patterns at ENOSPC when there are hundreds of threads banging on the
+> filesystem and essentially locking up the system. i.e. we have to
+> throttle the IO submission rate from ENOSPC flushing artificially -
+> we really only need one thread doing the submission work, so we need
+> to throttle all concurrent callers while we are doing that work.
+> sync_inodes_sb() does that. And then we need to prevent individual
+> callers from trying to allocate space too frequently, which we do by
+> waiting for IO that was submitted in the flush. sync_inodes_sb()
+> does that, too.
+  I see so the waiting for IO isn't really a correctness thing but just a
+way to slow down processes bringing fs out of space so that they don't lock
+up the system. Thanks for explanation!
 
-    And here
-
-> @@ -0,0 +1,44 @@
-> +From 9f49a870eab70ae37028f937331f9ec1b67dadb1 Mon Sep 17 00:00:00 2001
-> +From: Hemanth Kumar <hemanthkumar51@gmail.com>
-> +Date: Fri, 15 Feb 2013 11:21:03 +0530
-> +Subject: [test] heirarchical quotas test case
-> +
-> +
-> +Signed-off-by: Hemanth Kumar <hemanthkumar51@gmail.com>
-
-   You're sending a patch file that creates a patch file? This is wrong.
-
-> +---
-> + hquotas.sh | 8 ++++----
-> + 1 file changed, 4 insertions(+), 4 deletions(-)
-> +
-> +diff --git a/hquotas.sh b/hquotas.sh
-> +index 2eaae01..a870d4a 100644
-> +--- a/hquotas.sh
-> ++++ b/hquotas.sh
-> +@@ -1,7 +1,5 @@
-> + #! /bin/bash
-> +-# btrfs quotas test case
-> +-#owner=hemanthkumar51@gamil.com ganeshkumr14@gmail.com
-> +-
-> ++# btrfs hierarchical quotas test case
-> + #here=`pwd`
-> + #tmp=/sample
-> + status=1
-> +@@ -11,6 +9,8 @@ cleanup()
-> + 	btrfs subvolume delete $TEST_DIR/vol1/vol2/vol3
-> + 	btrfs subvolume delete $TEST_DIR/vol1/vol2
-> + 	btrfs subvolume delete $TEST_DIR/vol1
-> ++	btrfs quota disable $TEST_DIR
-> ++	echo"quota disabled"
-> + }
-> + 
-> + #trap "_cleanup ; exit \$status" 0 1 2 3 15
-> +@@ -25,6 +25,6 @@ btrfs qgroup limit 3m $TEST_DIR/vol1/vol2
-> + btrfs qgroup limit 1m $TEST_DIR/vol1/vol2/vol3
-> + dd if=$TEST_DEV of=$TEST_DIR/vol1/vol2/vol3/file3 bs=2M count=1
-> + dd if=$TEST_DEV of=$TEST_DIR/vol1/vol2/file2 bs=1M count=1
-> +-dd if=$TEST_DEV of=$TEST_DIR/vol1/file1 bs=5M count=1
-> ++dd if=$TEST_DEV of=$TEST_DIR/vol1/file1 bs=4M count=1
-> + cleanup
-> + exit
-> +-- 
-> +1.8.1.2
-> +
-> diff --git a/hquotas.sh b/hquotas.sh
-> index a870d4a..672b6d1 100644
-> --- a/hquotas.sh
-> +++ b/hquotas.sh
-> @@ -1,7 +1,5 @@
->  #! /bin/bash
->  # btrfs hierarchical quotas test case
-> -#here=`pwd`
-> -#tmp=/sample
->  status=1
->  
->  cleanup()
-
+								Honza
 -- 
-=== Hugo Mills: hugo@... carfax.org.uk | darksatanic.net | lug.org.uk ===
-  PGP key: 515C238D from wwwkeys.eu.pgp.net or http://www.carfax.org.uk
-                    --- Beware geeks bearing GIFs ---                    
-
---NzX0AQGjRQPusK/O
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIVAwUBUR32JL9z9OVl50rAAQKz7BAAnz0UgNyihu2fHsO7Zk7CxbdfRXFAxRha
-jJgNTrir08xDOvkvpbSRCVh1ubopywP+I5PoPAPvgPcOS2RCq8vsVofrr/aR/CtY
-T2KkXxcrZ4HOce3dIm6+mRFUdXt8S8RlANJs1erbvr/UYiNBSJP/IRCfUBzno3HH
-J/R9Wy5PHHklL+Ber8AmLyDHsxsuD1aXuoN/AUSRdP9h0AyJE9rO/U3cGa/ASFGQ
-jOw9uGiWSdozpwrV3njnU5GNxAQ+2JDsVkyurzJB0ve5s24MJ3C1H4p6tXOJGIeS
-6fixyW1ws2qhHIVOBc/mS7sFozP49YPjEKFsr0EhOQfA8Uw6eYyTkVfE6iiVl+GB
-viLv4yzcLvRYvbY0sIoH/NU03NPDQKVyAdKMlnP3jPbiMUFLOKahX3OpZetHLVqk
-964lJJ7+mXk79xlbkrRpE7uQr8eQA4imEnIIFZ7n3gqMNB2oJn2PTGI5vDTUM6HR
-w6hcsqiDcR/ae7u9dcvFiLhoAvTAGsaNUEvXsK0/YcUVOpiMzJI075/GQ4hMwyxC
-v1kN0w9HshjDaNMDl2dqGYfPzUFn0CyLcbjucgqEGP0iQPd1XrxOzC4xnPj/6Jgu
-T1WxMCYNbt7niLQvrJWwrpH9QBPPdscx8oY4ULdH806cK/dJpQmionBe6JdfYLiZ
-qcPySLkbfjE=
-=9DB4
------END PGP SIGNATURE-----
-
---NzX0AQGjRQPusK/O--
-
-
---===============7610997088147110730==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============7610997088147110730==--
