@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 859417FBB
-	for <xfs@oss.sgi.com>; Sun, 17 Feb 2013 09:50:48 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7168A8F8035
-	for <xfs@oss.sgi.com>; Sun, 17 Feb 2013 07:50:48 -0800 (PST)
-Received: from mail-wg0-f66.google.com (mail-wg0-f66.google.com
-	[74.125.82.66]) by cuda.sgi.com with ESMTP id FzJd4ysUzFtm9RND
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 17 Feb 2013 07:50:47 -0800 (PST)
-Received: by mail-wg0-f66.google.com with SMTP id 16so1047887wgi.1
-	for <xfs@oss.sgi.com>; Sun, 17 Feb 2013 07:50:46 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 371288001
+	for <xfs@oss.sgi.com>; Sun, 17 Feb 2013 15:04:15 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 085D3304043
+	for <xfs@oss.sgi.com>; Sun, 17 Feb 2013 13:04:11 -0800 (PST)
+Received: from mail-interne2.pasteur.fr (mail-interne2.pasteur.fr
+	[157.99.64.81]) by cuda.sgi.com with ESMTP id 1U6g3MJFaPYDb5Yp
+	for <xfs@oss.sgi.com>; Sun, 17 Feb 2013 13:04:09 -0800 (PST)
+Date: Sun, 17 Feb 2013 22:04:08 +0100
+From: Tru Huynh <tru@pasteur.fr>
+Subject: Re: High %user CPU in XFS
+Message-ID: <20130217210408.GH2513@sillage.bis.pasteur.fr>
+References: <CAEUQcehy1fy5-W-TA--2emBgL3y9JskqRPCZf1ED5JDbPHqKTQ@mail.gmail.com>
 MIME-Version: 1.0
-Date: Sun, 17 Feb 2013 21:20:46 +0530
-Message-ID: <CAEUQcehy1fy5-W-TA--2emBgL3y9JskqRPCZf1ED5JDbPHqKTQ@mail.gmail.com>
-Subject: High %user CPU in XFS
-From: Subranshu Patel <spatel.ml@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <CAEUQcehy1fy5-W-TA--2emBgL3y9JskqRPCZf1ED5JDbPHqKTQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,27 +28,20 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Subranshu Patel <spatel.ml@gmail.com>
+Cc: xfs@oss.sgi.com
 
- I created 2 filesystem on my system (RHEL 6.3, kernel 2.6.32) - XFS
-and EXT4 and mounted them.
+On Sun, Feb 17, 2013 at 09:20:46PM +0530, Subranshu Patel wrote:
+>  I created 2 filesystem on my system (RHEL 6.3, kernel 2.6.32) - XFS
+> and EXT4 and mounted them.
+probably:
+https://bugzilla.redhat.com/show_bug.cgi?id=883905
 
-On both the filesystem I executed a program which performed the following:
-- Create large number of directories
-- Removing all the directories
-
-During the execution of the program, I monitored the %user and %system
-CPU usage (using sar command)
-
-For EXT4 the %user was 1% and %system was 21%
-For XFS the %user was 20% and %system was 52%
-
-But I am not able to understand %user consumption, since %user reports
-the CPU usage of the user level (application), shouldn't it be the
-same for both EXT4 and XFS?
-
-What are the factors that decide the %user component keeping in mind
-that only the filesystem is different?
+Tru
+-- 
+Dr Tru Huynh          | http://www.pasteur.fr/recherche/unites/Binfs/
+mailto:tru@pasteur.fr | tel/fax +33 1 45 68 87 37/19
+Institut Pasteur, 25-28 rue du Docteur Roux, 75724 Paris CEDEX 15 France  
 
 _______________________________________________
 xfs mailing list
