@@ -1,17 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 371288001
-	for <xfs@oss.sgi.com>; Sun, 17 Feb 2013 15:04:15 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id F1F3D7FF2
+	for <xfs@oss.sgi.com>; Sun, 17 Feb 2013 15:25:56 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 085D3304043
-	for <xfs@oss.sgi.com>; Sun, 17 Feb 2013 13:04:11 -0800 (PST)
-Received: from mail-interne2.pasteur.fr (mail-interne2.pasteur.fr
-	[157.99.64.81]) by cuda.sgi.com with ESMTP id 1U6g3MJFaPYDb5Yp
-	for <xfs@oss.sgi.com>; Sun, 17 Feb 2013 13:04:09 -0800 (PST)
-Date: Sun, 17 Feb 2013 22:04:08 +0100
-From: Tru Huynh <tru@pasteur.fr>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 9ED61AC001
+	for <xfs@oss.sgi.com>; Sun, 17 Feb 2013 13:25:53 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	GbutpMXHHIBWPjfp for <xfs@oss.sgi.com>;
+	Sun, 17 Feb 2013 13:25:52 -0800 (PST)
+Date: Mon, 18 Feb 2013 08:25:36 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: High %user CPU in XFS
-Message-ID: <20130217210408.GH2513@sillage.bis.pasteur.fr>
+Message-ID: <20130217212536.GY26694@dastard>
 References: <CAEUQcehy1fy5-W-TA--2emBgL3y9JskqRPCZf1ED5JDbPHqKTQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
@@ -34,14 +35,35 @@ Cc: xfs@oss.sgi.com
 On Sun, Feb 17, 2013 at 09:20:46PM +0530, Subranshu Patel wrote:
 >  I created 2 filesystem on my system (RHEL 6.3, kernel 2.6.32) - XFS
 > and EXT4 and mounted them.
-probably:
-https://bugzilla.redhat.com/show_bug.cgi?id=883905
+> 
+> On both the filesystem I executed a program which performed the following:
+> - Create large number of directories
+> - Removing all the directories
+> 
+> During the execution of the program, I monitored the %user and %system
+> CPU usage (using sar command)
+> 
+> For EXT4 the %user was 1% and %system was 21%
+> For XFS the %user was 20% and %system was 52%
+> 
+> But I am not able to understand %user consumption, since %user reports
+> the CPU usage of the user level (application), shouldn't it be the
+> same for both EXT4 and XFS?
 
-Tru
+Perf is your friend.
+
+> What are the factors that decide the %user component keeping in mind
+> that only the filesystem is different?
+
+Page faults, CPU cache misses. XFS has a significantly large icache
+and dcache footprint than ext4, so those are the likely causes.
+
+Cheers,
+
+Dave.
 -- 
-Dr Tru Huynh          | http://www.pasteur.fr/recherche/unites/Binfs/
-mailto:tru@pasteur.fr | tel/fax +33 1 45 68 87 37/19
-Institut Pasteur, 25-28 rue du Docteur Roux, 75724 Paris CEDEX 15 France  
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
