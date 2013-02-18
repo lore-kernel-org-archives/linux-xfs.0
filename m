@@ -1,29 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D26F77F4C
-	for <xfs@oss.sgi.com>; Mon, 18 Feb 2013 02:12:10 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B08AA8F8037
-	for <xfs@oss.sgi.com>; Mon, 18 Feb 2013 00:12:10 -0800 (PST)
-Received: from mail-ph.de-nserver.de (mail-ph.de-nserver.de [85.158.179.214])
-	by cuda.sgi.com with ESMTP id S5K7abUN1cRuXcvJ (version=TLSv1
+	by oss.sgi.com (Postfix) with ESMTP id E2DAC7F4C
+	for <xfs@oss.sgi.com>; Mon, 18 Feb 2013 03:43:38 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D116F8F8035
+	for <xfs@oss.sgi.com>; Mon, 18 Feb 2013 01:43:35 -0800 (PST)
+Received: from awesome.dsw2k3.info (awesome.dsw2k3.info [195.71.86.230]) by
+	cuda.sgi.com with ESMTP id 2RKUwRf6r6L3wKmj (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 18 Feb 2013 00:12:06 -0800 (PST)
-Message-ID: <5121E253.8000400@profihost.ag>
-Date: Mon, 18 Feb 2013 09:12:03 +0100
-From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+	Mon, 18 Feb 2013 01:43:30 -0800 (PST)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by awesome.dsw2k3.info (Postfix) with ESMTP id E7FBEBFF41
+	for <xfs@oss.sgi.com>; Mon, 18 Feb 2013 10:43:28 +0100 (CET)
+Received: from awesome.dsw2k3.info ([127.0.0.1])
+	by localhost (awesome.dsw2k3.info [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id 3UzGqD5NNvmJ for <xfs@oss.sgi.com>;
+	Mon, 18 Feb 2013 10:43:22 +0100 (CET)
+Received: from citd.de (p4FC4A312.dip.t-dialin.net [79.196.163.18])
+	(using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	by awesome.dsw2k3.info (Postfix) with ESMTPSA
+	for <xfs@oss.sgi.com>; Mon, 18 Feb 2013 10:43:22 +0100 (CET)
+Date: Mon, 18 Feb 2013 10:43:20 +0100
+From: Matthias Schniedermeyer <ms@citd.de>
+Subject: inode64 and 64bit kernel with 32bit userspace
+Message-ID: <20130218094320.GA24644@citd.de>
 MIME-Version: 1.0
-Subject: Re: 32bit apps and inode64
-References: <4FA76E11.1070708@profihost.ag> <20120507071713.GZ5091@dastard>
-	<4FA77842.5010703@profihost.ag>
-	<4FA7FA14.6080700@hardwarefreak.com>
-	<4FA82B07.1020102@profihost.ag>
-	<4FAA153D.1030606@hardwarefreak.com>
-	<20120509070450.GP5091@dastard> <511E4F00.2010703@profihost.ag>
-	<20130215214653.GP22182@sgi.com>
-	<F4526E0F-2DDC-4FB4-927D-BFD8AD489D55@profihost.ag>
-	<20130217213359.GA26694@dastard>
-In-Reply-To: <20130217213359.GA26694@dastard>
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,26 +39,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Ben Myers <bpm@sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-Hi,
+Hi
 
-Am 17.02.2013 22:33, schrieb Dave Chinner:
 
->>> xfs_reno was ported to linux in '07 and was most recently reposted by Jeff Liu:
->>> http://oss.sgi.com/archives/xfs/2012-11/msg00425.html
->>>
->>> It isn't in xfsprogs today.
-> 
-> Simple answer: mount with inode32, run find to print out all the
-> filenames in the filesystem and their inode number, copy the files
-> with inodes numbers greater than 32 bit to a temporary file and then
-> rename them over the top of the original.
+The more or less simple question is:
+Is the requirement for 32bit programs to support 64bit inodes the same 
+as LFS(Large File Support)?
 
-Thanks, what about directories? Is renaming / moving using mv enough?
+IOW if a programs was compiled with FILE_OFFSET_BITS=64 (if i remember 
+that name correctly) should it work?
+So that all programs compiled in the last several years in a halfway 
+recent distribution should be able to cope with 64bit inodes?
 
-Stefan
+The program i care about most is rsync and it appears to work correctly 
+when i tested it with 2 hard-linked files (with an inode >2^32) and the 
+option to preserve hard links. And "find" and "stat" also worked, 
+otherwise i couldn't have found the file to test it with. ;-)
+
+
+
+-- 
+
+Matthias
 
 _______________________________________________
 xfs mailing list
