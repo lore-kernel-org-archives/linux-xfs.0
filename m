@@ -1,24 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 603057F4E
-	for <xfs@oss.sgi.com>; Mon, 18 Feb 2013 15:05:33 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4E93B30405F
-	for <xfs@oss.sgi.com>; Mon, 18 Feb 2013 13:05:30 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id nONag5t98qooVlO3 for
-	<xfs@oss.sgi.com>; Mon, 18 Feb 2013 13:05:29 -0800 (PST)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r1IL5SVZ003826
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Mon, 18 Feb 2013 16:05:28 -0500
-Message-ID: <51229835.5090707@redhat.com>
-Date: Mon, 18 Feb 2013 16:08:05 -0500
-From: Brian Foster <bfoster@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id AFE0D7F50
+	for <xfs@oss.sgi.com>; Mon, 18 Feb 2013 15:24:49 -0600 (CST)
+Message-ID: <51229C21.4040102@sgi.com>
+Date: Mon, 18 Feb 2013 15:24:49 -0600
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: xfs speculative preallocation -- fragmentation issue with sparse
+Subject: Re: xfs speculative preallocation -- fragmentation issue with sparse
 	file handling?
+References: <51229835.5090707@redhat.com>
+In-Reply-To: <51229835.5090707@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,240 +18,63 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Dave Chinner <dchinner@redhat.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
 
-Hi guys,
+On 02/18/13 15:08, Brian Foster wrote:
+> Hi guys,
+>
+> I was running a sanity check of my quota throttling stuff rebased
+> against the updated speculative prealloc algorithm:
+>
+> a1e16c26 xfs: limit speculative prealloc size on sparse files
+>
+> ... and ran into an interesting behavior on my baseline test (quota
+> disabled).
+>
+> The test I'm running is a concurrent write of 32 files (10GB each) via
+> iozone (I'm not testing performance, just using it as a concurrent writer):
+>
+> iozone -w -c -e -i 0 -+n -r 4k -s 10g -t 32 -F /mnt/data/file{0..31}
+>
+> ... what I noticed is that from monitoring du during the test,
+> speculative preallocation seemed to be ineffective. From further
+> tracing, I observed that imap[0].br_blockcount in
+> xfs_iomap_eof_prealloc_initial_size() was fairly consistently maxed out
+> at around 32768 blocks (128MB).
+>
+> Without the aforementioned commit, preallocation occurs as expected and
+> the files result in 7-9 extents after the test. With the commit, I'm in
+> the 70s to 80s range of number of extents with a max extent size of
+> 128MB. A couple examples of xfs_bmap output are appended to this
+> message. It seems like initial fragmentation might be throwing the
+> algorithm out of whack..?
+>
+> Brian
 
-I was running a sanity check of my quota throttling stuff rebased
-against the updated speculative prealloc algorithm:
+... the patched version increases in doubles
 
-a1e16c26 xfs: limit speculative prealloc size on sparse files
++	if (imap[0].br_startblock == HOLESTARTBLOCK)
++		return 0;
 
-... and ran into an interesting behavior on my baseline test (quota
-disabled).
+     vvvvvv
++	if (imap[0].br_blockcount <= (MAXEXTLEN >> 1))
++		return imap[0].br_blockcount;
+     ^^^^^^
 
-The test I'm running is a concurrent write of 32 files (10GB each) via
-iozone (I'm not testing performance, just using it as a concurrent writer):
++	return XFS_B_TO_FSB(mp, XFS_ISIZE(ip));
++}
 
-iozone -w -c -e -i 0 -+n -r 4k -s 10g -t 32 -F /mnt/data/file{0..31}
+have you experimented without the middle if statement.
+If I remember correctly when I reviewed the code, that should be moving
+code closer to the original code; namely use the file size as the
+preallocation value.
 
-... what I noticed is that from monitoring du during the test,
-speculative preallocation seemed to be ineffective. From further
-tracing, I observed that imap[0].br_blockcount in
-xfs_iomap_eof_prealloc_initial_size() was fairly consistently maxed out
-at around 32768 blocks (128MB).
-
-Without the aforementioned commit, preallocation occurs as expected and
-the files result in 7-9 extents after the test. With the commit, I'm in
-the 70s to 80s range of number of extents with a max extent size of
-128MB. A couple examples of xfs_bmap output are appended to this
-message. It seems like initial fragmentation might be throwing the
-algorithm out of whack..?
-
-Brian
-
---- Baseline
-
-/mnt/data/file0:
- EXT: FILE-OFFSET           BLOCK-RANGE            AG AG-OFFSET
-       TOTAL
-   0: [0..65535]:           327912..393447          0 (327912..393447)
-       65536
-   1: [65536..262143]:      4980968..5177575        0 (4980968..5177575)
-     196608
-   2: [262144..524287]:     11272424..11534567      0
-(11272424..11534567)    262144
-   3: [524288..1048575]:    25690344..26214631      0
-(25690344..26214631)    524288
-   4: [1048576..2097151]:   58720488..59769063      0
-(58720488..59769063)   1048576
-   5: [2097152..4194303]:   128975080..131072231    0
-(128975080..131072231) 2097152
-   6: [4194304..8388607]:   227541352..231735655    0
-(227541352..231735655) 4194304
-   7: [8388608..16777215]:  504365536..512754143    0
-(504365536..512754143) 8388608
-   8: [16777216..20870671]: 588251584..592345039    0
-(588251584..592345039) 4093456
-   9: [20870672..20971519]: 2684353896..2684454743  1
-(536870256..536971103)  100848
-
---- Sparse file prealloc algorithm
-
-/mnt/data/file0:
- EXT: FILE-OFFSET           BLOCK-RANGE          AG AG-OFFSET
-    TOTAL
-   0: [0..65535]:           491752..557287        0 (491752..557287)
-    65536
-   1: [65536..196607]:      5734632..5865703      0 (5734632..5865703)
-   131072
-   2: [196608..327679]:     10846440..10977511    0 (10846440..10977511)
-  131072
-   3: [327680..458751]:     15433960..15565031    0 (15433960..15565031)
-  131072
-   4: [458752..720895]:     21463272..21725415    0 (21463272..21725415)
-  262144
-   5: [720896..983039]:     25919720..26181863    0 (25919720..26181863)
-  262144
-   6: [983040..1245183]:    35225888..35488031    0 (35225888..35488031)
-  262144
-   7: [1245184..1507327]:   44401016..44663159    0 (44401016..44663159)
-  262144
-   8: [1507328..1769471]:   53314008..53576151    0 (53314008..53576151)
-  262144
-   9: [1769472..2031615]:   62489064..62751207    0 (62489064..62751207)
-  262144
-  10: [2031616..2293759]:   72450536..72712679    0 (72450536..72712679)
-  262144
-  11: [2293760..2555903]:   76120552..76382695    0 (76120552..76382695)
-  262144
-  12: [2555904..2818047]:   84771304..85033447    0 (84771304..85033447)
-  262144
-  13: [2818048..3080191]:   93422056..93684199    0 (93422056..93684199)
-  262144
-  14: [3080192..3342335]:   102597096..102859239  0
-(102597096..102859239) 262144
-  15: [3342336..3604479]:   110723560..110985703  0
-(110723560..110985703) 262144
-  16: [3604480..3866623]:   119374312..119636455  0
-(119374312..119636455) 262144
-  17: [3866624..4128767]:   128811496..129073639  0
-(128811496..129073639) 262144
-  18: [4128768..4390911]:   133530088..133792231  0
-(133530088..133792231) 262144
-  19: [4390912..4653055]:   142180840..142442983  0
-(142180840..142442983) 262144
-  20: [4653056..4915199]:   151355880..151618023  0
-(151355880..151618023) 262144
-  21: [4915200..5177343]:   159482344..159744487  0
-(159482344..159744487) 262144
-  22: [5177344..5439487]:   167608808..167870951  0
-(167608808..167870951) 262144
-  23: [5439488..5701631]:   176783848..177045991  0
-(176783848..177045991) 262144
-  24: [5701632..5963775]:   186483176..186745319  0
-(186483176..186745319) 262144
-  25: [5963776..6225919]:   195133928..195396071  0
-(195133928..195396071) 262144
-  26: [6225920..6488063]:   199066088..199328231  0
-(199066088..199328231) 262144
-  27: [6488064..6750207]:   207978984..208241127  0
-(207978984..208241127) 262144
-  28: [6750208..7012351]:   216367592..216629735  0
-(216367592..216629735) 262144
-  29: [7012352..7274495]:   224494056..224756199  0
-(224494056..224756199) 262144
-  30: [7274496..7536639]:   232882664..233144807  0
-(232882664..233144807) 262144
-  31: [7536640..7798783]:   241533416..241795559  0
-(241533416..241795559) 262144
-  32: [7798784..8060927]:   251494888..251757031  0
-(251494888..251757031) 262144
-  33: [8060928..8323071]:   255689192..255951335  0
-(255689192..255951335) 262144
-  34: [8323072..8585215]:   264077800..264339943  0
-(264077800..264339943) 262144
-  35: [8585216..8847359]:   272990696..273252839  0
-(272990696..273252839) 262144
-  36: [8847360..9109503]:   281379304..281641447  0
-(281379304..281641447) 262144
-  37: [9109504..9371647]:   290554344..290816487  0
-(290554344..290816487) 262144
-  38: [9371648..9633791]:   300253672..300515815  0
-(300253672..300515815) 262144
-  39: [9633792..9895935]:   304447976..304710119  0
-(304447976..304710119) 262144
-  40: [9895936..10158079]:  313098728..313360871  0
-(313098728..313360871) 262144
-  41: [10158080..10420223]: 322011624..322273767  0
-(322011624..322273767) 262144
-  42: [10420224..10682367]: 330138088..330400231  0
-(330138088..330400231) 262144
-  43: [10682368..10944511]: 339575272..339837415  0
-(339575272..339837415) 262144
-  44: [10944512..11206655]: 349536744..349798887  0
-(349536744..349798887) 262144
-  45: [11206656..11468799]: 353468904..353731047  0
-(353468904..353731047) 262144
-  46: [11468800..11730943]: 362381800..362643943  0
-(362381800..362643943) 262144
-  47: [11730944..11993087]: 370770408..371032551  0
-(370770408..371032551) 262144
-  48: [11993088..12255231]: 379159016..379421159  0
-(379159016..379421159) 262144
-  49: [12255232..12517375]: 388071912..388334055  0
-(388071912..388334055) 262144
-  50: [12517376..12779519]: 397771240..398033383  0
-(397771240..398033383) 262144
-  51: [12779520..13041663]: 401965544..402227687  0
-(401965544..402227687) 262144
-  52: [13041664..13303807]: 410878440..411140583  0
-(410878440..411140583) 262144
-  53: [13303808..13565951]: 419529192..419791335  0
-(419529192..419791335) 262144
-  54: [13565952..13828095]: 427655656..427917799  0
-(427655656..427917799) 262144
-  55: [13828096..14090239]: 436568552..436830695  0
-(436568552..436830695) 262144
-  56: [14090240..14352383]: 446792168..447054311  0
-(446792168..447054311) 262144
-  57: [14352384..14614527]: 450986472..451248615  0
-(450986472..451248615) 262144
-  58: [14614528..14876671]: 459637224..459899367  0
-(459637224..459899367) 262144
-  59: [14876672..15138815]: 468287976..468550119  0
-(468287976..468550119) 262144
-  60: [15138816..15400959]: 476414440..476676583  0
-(476414440..476676583) 262144
-  61: [15400960..15663103]: 485327336..485589479  0
-(485327336..485589479) 262144
-  62: [15663104..15925247]: 495288808..495550951  0
-(495288808..495550951) 262144
-  63: [15925248..16187391]: 499483112..499745255  0
-(499483112..499745255) 262144
-  64: [16187392..16449535]: 507871720..508133863  0
-(507871720..508133863) 262144
-  65: [16449536..16711679]: 517046760..517308903  0
-(517046760..517308903) 262144
-  66: [16711680..16973823]: 525173224..525435367  0
-(525173224..525435367) 262144
-  67: [16973824..17235967]: 533823976..534086119  0
-(533823976..534086119) 262144
-  68: [17235968..17498111]: 544309736..544571879  0
-(544309736..544571879) 262144
-  69: [17498112..17760255]: 548504040..548766183  0
-(548504040..548766183) 262144
-  70: [17760256..18022399]: 556892648..557154791  0
-(556892648..557154791) 262144
-  71: [18022400..18284543]: 565805544..566067687  0
-(565805544..566067687) 262144
-  72: [18284544..18546687]: 573932008..574194151  0
-(573932008..574194151) 262144
-  73: [18546688..18808831]: 582058472..582320615  0
-(582058472..582320615) 262144
-  74: [18808832..19070975]: 591495656..591757799  0
-(591495656..591757799) 262144
-  75: [19070976..19333119]: 596214248..596476391  0
-(596214248..596476391) 262144
-  76: [19333120..19595263]: 604865000..605127143  0
-(604865000..605127143) 262144
-  77: [19595264..19857407]: 613253608..613515751  0
-(613253608..613515751) 262144
-  78: [19857408..20119551]: 621380072..621642215  0
-(621380072..621642215) 262144
-  79: [20119552..20381695]: 630555112..630817255  0
-(630555112..630817255) 262144
-  80: [20381696..20643839]: 635273704..635535847  0
-(635273704..635535847) 262144
-  81: [20643840..20867199]: 643662312..643885671  0
-(643662312..643885671) 223360
-  82: [20867200..20971519]: 653360704..653465023  0
-(653360704..653465023) 104320
+--Mark.
 
 _______________________________________________
 xfs mailing list
