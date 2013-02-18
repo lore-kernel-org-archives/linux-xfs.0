@@ -1,24 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 51F367F4E
-	for <xfs@oss.sgi.com>; Mon, 18 Feb 2013 17:43:21 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D3D3CAC004
-	for <xfs@oss.sgi.com>; Mon, 18 Feb 2013 15:43:20 -0800 (PST)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	ZOfdrMJUoYhFHlfU for <xfs@oss.sgi.com>;
-	Mon, 18 Feb 2013 15:43:18 -0800 (PST)
-Date: Tue, 19 Feb 2013 10:43:16 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 6/8] xfstests: add fallocate/truncate vs AIO/DIO stress
-	test
-Message-ID: <20130218234316.GE26694@dastard>
-References: <1360745403-6373-1-git-send-email-dmonakhov@openvz.org>
-	<1360745403-6373-7-git-send-email-dmonakhov@openvz.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1360745403-6373-7-git-send-email-dmonakhov@openvz.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 3EAC97F4E
+	for <xfs@oss.sgi.com>; Mon, 18 Feb 2013 17:54:32 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1CAFD304067
+	for <xfs@oss.sgi.com>; Mon, 18 Feb 2013 15:54:31 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id eh3ZIQ3jGkD1RVyl for
+	<xfs@oss.sgi.com>; Mon, 18 Feb 2013 15:54:31 -0800 (PST)
+Received: from int-mx12.intmail.prod.int.phx2.redhat.com
+	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r1INsUq2002335
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Mon, 18 Feb 2013 18:54:30 -0500
+Received: from bfoster.bfoster (dhcp-189-135.bos.redhat.com [10.16.189.135])
+	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id r1INsUE6025980
+	for <xfs@oss.sgi.com>; Mon, 18 Feb 2013 18:54:30 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH] xfs: increase prealloc size to double that of the previous
+	extent
+Date: Mon, 18 Feb 2013 18:57:07 -0500
+Message-Id: <1361231827-58766-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,55 +30,69 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dmitry Monakhov <dmonakhov@openvz.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, dchinner@redhat.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, Feb 13, 2013 at 12:50:01PM +0400, Dmitry Monakhov wrote:
-> Run  DIO, fallocate and truncate threads on a common file in parallel.
-> If race exist old dio request may rewrite blocks after it was allocated
-> to another file, we will catch that by verifying blocks content.
-> 
-> this patch known to catch deadlock for ext4
-> http://lists.openwall.net/linux-ext4/2012/09/06/3
-> 
-> Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
-> ---
->  286     |  157 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  286.out |    5 ++
->  group   |    1 +
->  3 files changed, 163 insertions(+), 0 deletions(-)
->  create mode 100755 286
->  create mode 100644 286.out
-> 
-> diff --git a/286 b/286
-> new file mode 100755
-> index 0000000..588387c
-> --- /dev/null
-> +++ b/286
-> @@ -0,0 +1,157 @@
-> +#! /bin/bash
-> +# FSQA Test No. 286
-> +#
-> +# AIO/DIO stress test
-> +# Run random AIO/DIO activity and fallocate/truncate simultaneously
-> +# Test will operate on huge sparsed files so ENOSPC is expected.
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2006 Silicon Graphics, Inc.  All Rights Reserved.
+The updated speculative preallocation algorithm becomes less
+effective in situations with a high number of concurrent,
+sequential writers. In running 32 sequential writers on a system
+with 32GB RAM, preallocs become fixed at a value of around 128MB.
+Update the heuristic to base the size of the prealloc on double
+the size of the preceding extent. This preserves the original
+aggressive speculative preallocation behavior at a slight cost of
+increasing the size of preallocated data regions following holes of
+sparse files.
 
-I think you need to put the correct copyright statements in these
-new tests ;)
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+Hi all,
 
-Cheers,
+This is based on Dave's suggestion on IRC to address the high concurrent
+writer defeating speculative preallocation problem. This addresses the reported
+problem and generally preserves the prealloc limiting within sparse files:
 
-Dave.
+xfs_io -f -c "pwrite 0 31m" \
+	  -c "pwrite 33m 1m" \
+	  -c "pwrite 128m 1m" \
+	  -c "fiemap -v" /mnt/file
+wrote 32505856/32505856 bytes at offset 0
+31 MiB, 7936 ops; 0.0000 sec (1.082 GiB/sec and 283621.0286 ops/sec)
+wrote 1048576/1048576 bytes at offset 34603008
+1 MiB, 256 ops; 0.0000 sec (626.174 MiB/sec and 160300.5636 ops/sec)
+wrote 1048576/1048576 bytes at offset 134217728
+1 MiB, 256 ops; 0.0000 sec (624.220 MiB/sec and 159800.2497 ops/sec)
+/mnt/file:
+ EXT: FILE-OFFSET      BLOCK-RANGE      TOTAL FLAGS
+   0: [0..65407]:      232..65639       65408   0x0
+   1: [65408..67583]:  hole              2176
+   2: [67584..71551]:  67816..71783      3968   0x0
+   3: [71552..262143]: hole             190592
+   4: [262144..266111]: 71784..75751      3968   0x1
+
+Brian
+
+ fs/xfs/xfs_iomap.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 912d83d..45a382d 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -362,7 +362,7 @@ xfs_iomap_eof_prealloc_initial_size(
+ 	if (imap[0].br_startblock == HOLESTARTBLOCK)
+ 		return 0;
+ 	if (imap[0].br_blockcount <= (MAXEXTLEN >> 1))
+-		return imap[0].br_blockcount;
++		return imap[0].br_blockcount << 1;
+ 	return XFS_B_TO_FSB(mp, offset);
+ }
+ 
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.7.6
 
 _______________________________________________
 xfs mailing list
