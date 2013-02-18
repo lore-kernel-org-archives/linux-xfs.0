@@ -1,32 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E2DAC7F4C
-	for <xfs@oss.sgi.com>; Mon, 18 Feb 2013 03:43:38 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id B61BD7F4C
+	for <xfs@oss.sgi.com>; Mon, 18 Feb 2013 08:17:36 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D116F8F8035
-	for <xfs@oss.sgi.com>; Mon, 18 Feb 2013 01:43:35 -0800 (PST)
-Received: from awesome.dsw2k3.info (awesome.dsw2k3.info [195.71.86.230]) by
-	cuda.sgi.com with ESMTP id 2RKUwRf6r6L3wKmj (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 18 Feb 2013 01:43:30 -0800 (PST)
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by awesome.dsw2k3.info (Postfix) with ESMTP id E7FBEBFF41
-	for <xfs@oss.sgi.com>; Mon, 18 Feb 2013 10:43:28 +0100 (CET)
-Received: from awesome.dsw2k3.info ([127.0.0.1])
-	by localhost (awesome.dsw2k3.info [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id 3UzGqD5NNvmJ for <xfs@oss.sgi.com>;
-	Mon, 18 Feb 2013 10:43:22 +0100 (CET)
-Received: from citd.de (p4FC4A312.dip.t-dialin.net [79.196.163.18])
-	(using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	by awesome.dsw2k3.info (Postfix) with ESMTPSA
-	for <xfs@oss.sgi.com>; Mon, 18 Feb 2013 10:43:22 +0100 (CET)
-Date: Mon, 18 Feb 2013 10:43:20 +0100
-From: Matthias Schniedermeyer <ms@citd.de>
-Subject: inode64 and 64bit kernel with 32bit userspace
-Message-ID: <20130218094320.GA24644@citd.de>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 581B18F8035
+	for <xfs@oss.sgi.com>; Mon, 18 Feb 2013 06:17:36 -0800 (PST)
+Received: from mail-qc0-f176.google.com (mail-qc0-f176.google.com
+	[209.85.216.176]) by cuda.sgi.com with ESMTP id
+	ZvYQ9Kjzxz9MbqhO (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 18 Feb 2013 06:17:35 -0800 (PST)
+Received: by mail-qc0-f176.google.com with SMTP id n41so2081240qco.35
+	for <xfs@oss.sgi.com>; Mon, 18 Feb 2013 06:17:35 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
+In-Reply-To: <20130217212536.GY26694@dastard>
+References: <CAEUQcehy1fy5-W-TA--2emBgL3y9JskqRPCZf1ED5JDbPHqKTQ@mail.gmail.com>
+	<20130217212536.GY26694@dastard>
+Date: Mon, 18 Feb 2013 19:47:34 +0530
+Message-ID: <CAEUQceirWSCrLZmYx1keUSYFPm0zP5CQpQtXxgVvHoheDHjEvQ@mail.gmail.com>
+Subject: Re: High %user CPU in XFS
+From: Subranshu Patel <spatel.ml@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,30 +32,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Hi
+> Page faults, CPU cache misses. XFS has a significantly large icache
+> and dcache footprint than ext4, so those are the likely causes
 
+I have a query. Will page fault, cache misses etc will increase the
+%user CPU utilization or %system CPU utilization. I thought it will
+affect the %system and not %user CPU usage?
 
-The more or less simple question is:
-Is the requirement for 32bit programs to support 64bit inodes the same 
-as LFS(Large File Support)?
+%user - Percentage of CPU utilization that occurred while executing at
+the user level (application).
+%system - Percentage of CPU utilization that occurred while executing
+at the system level (kernel).
 
-IOW if a programs was compiled with FILE_OFFSET_BITS=64 (if i remember 
-that name correctly) should it work?
-So that all programs compiled in the last several years in a halfway 
-recent distribution should be able to cope with 64bit inodes?
-
-The program i care about most is rsync and it appears to work correctly 
-when i tested it with 2 hard-linked files (with an inode >2^32) and the 
-option to preserve hard links. And "find" and "stat" also worked, 
-otherwise i couldn't have found the file to test it with. ;-)
-
-
-
--- 
-
-Matthias
+On Mon, Feb 18, 2013 at 2:55 AM, Dave Chinner <david@fromorbit.com> wrote:
+> On Sun, Feb 17, 2013 at 09:20:46PM +0530, Subranshu Patel wrote:
+>>  I created 2 filesystem on my system (RHEL 6.3, kernel 2.6.32) - XFS
+>> and EXT4 and mounted them.
+>>
+>> On both the filesystem I executed a program which performed the following:
+>> - Create large number of directories
+>> - Removing all the directories
+>>
+>> During the execution of the program, I monitored the %user and %system
+>> CPU usage (using sar command)
+>>
+>> For EXT4 the %user was 1% and %system was 21%
+>> For XFS the %user was 20% and %system was 52%
+>>
+>> But I am not able to understand %user consumption, since %user reports
+>> the CPU usage of the user level (application), shouldn't it be the
+>> same for both EXT4 and XFS?
+>
+> Perf is your friend.
+>
+>> What are the factors that decide the %user component keeping in mind
+>> that only the filesystem is different?
+>
+> Page faults, CPU cache misses. XFS has a significantly large icache
+> and dcache footprint than ext4, so those are the likely causes.
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
