@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id CD6AF7F4E
-	for <xfs@oss.sgi.com>; Mon, 18 Feb 2013 09:12:21 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id E7A697F4C
+	for <xfs@oss.sgi.com>; Mon, 18 Feb 2013 10:20:46 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id BC6D0304032
-	for <xfs@oss.sgi.com>; Mon, 18 Feb 2013 07:12:18 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id HOf7EKDf2DDo7WQX for <xfs@oss.sgi.com>;
-	Mon, 18 Feb 2013 07:12:16 -0800 (PST)
-Message-ID: <512244CE.5030008@sandeen.net>
-Date: Mon, 18 Feb 2013 09:12:14 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D5F7B304043
+	for <xfs@oss.sgi.com>; Mon, 18 Feb 2013 08:20:43 -0800 (PST)
+Received: from awesome.dsw2k3.info (awesome.dsw2k3.info [195.71.86.230]) by
+	cuda.sgi.com with ESMTP id dBHk74xoY1NcKQt9 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 18 Feb 2013 08:20:42 -0800 (PST)
+Date: Mon, 18 Feb 2013 17:20:32 +0100
+From: Matthias Schniedermeyer <ms@citd.de>
 Subject: Re: inode64 and 64bit kernel with 32bit userspace
+Message-ID: <20130218162032.GA16259@citd.de>
 References: <20130218094320.GA24644@citd.de>
-In-Reply-To: <20130218094320.GA24644@citd.de>
+ <512244CE.5030008@sandeen.net>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <512244CE.5030008@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,59 +30,59 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Matthias Schniedermeyer <ms@citd.de>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs@oss.sgi.com
 
-On 2/18/13 3:43 AM, Matthias Schniedermeyer wrote:
-> Hi
+On 18.02.2013 09:12, Eric Sandeen wrote:
+> On 2/18/13 3:43 AM, Matthias Schniedermeyer wrote:
+> > Hi
+> > 
+> > 
+> > The more or less simple question is:
+> > Is the requirement for 32bit programs to support 64bit inodes the same 
+> > as LFS(Large File Support)?
+> > 
+> > IOW if a programs was compiled with FILE_OFFSET_BITS=64 (if i remember 
+> > that name correctly) should it work?
 > 
+> I think so (I don't know where the formal documentation is, 
+> http://users.suse.com/~aj/linux_lfs.html is an old but still good
+> over view I think).  From open(2):
 > 
-> The more or less simple question is:
-> Is the requirement for 32bit programs to support 64bit inodes the same 
-> as LFS(Large File Support)?
+>        EOVERFLOW
+>               (stat())  path refers to a file whose size cannot be represented
+>               in the type       off_t.  This can  occur  when  an  application
+>               compiled  on  a  32-bit  platform without -D_FILE_OFFSET_BITS=64
+>               calls stat() on a file whose size exceeds (2<<31)-1 bits.
 > 
-> IOW if a programs was compiled with FILE_OFFSET_BITS=64 (if i remember 
-> that name correctly) should it work?
+> EOVERFLOW can happen if the inode nubmer doesn't fit in a (32-bit)
+> stat struct as well.
 
-I think so (I don't know where the formal documentation is, 
-http://users.suse.com/~aj/linux_lfs.html is an old but still good
-over view I think).  From open(2):
+I've looked into /usr/include/sys/stat.h
 
-       EOVERFLOW
-              (stat())  path refers to a file whose size cannot be represented
-              in the type       off_t.  This can  occur  when  an  application
-              compiled  on  a  32-bit  platform without -D_FILE_OFFSET_BITS=64
-              calls stat() on a file whose size exceeds (2<<31)-1 bits.
+And i see this:
+# ifndef __ino_t_defined
+#  ifndef __USE_FILE_OFFSET64
+typedef __ino_t ino_t;
+#  else
+typedef __ino64_t ino_t;
+#  endif
+#  define __ino_t_defined
+# endif
 
-EOVERFLOW can happen if the inode nubmer doesn't fit in a (32-bit)
-stat struct as well.
+So ino_t really is __ino64_t when compiled with the LFS option, which 
+answers my original question. :-)
 
-> So that all programs compiled in the last several years in a halfway 
-> recent distribution should be able to cope with 64bit inodes?
+Besides i don't have that many programs that (should) care about inodes. 
+Of the top of my head i care about rsync/perl/find/ln/ls, which 
+apparently work correctly.
 
-The syscalls it makes should be able to, at least.  What it does after
-that is up to the program.
 
-(i.e. you might do a nice stat64 and then try to stuff the size or the
-inode number into a 32-bit variable; the -D_FILE_OFFSET_BITS won't help
-in that case.)
 
-I did a test long ago at :
 
-http://sandeen.net/wordpress/computers/the-world-wants-32-bit-inodes/
+-- 
 
-and the results weren't too encouraging; I should try it again on a
-more recent distro, and see how things look.
-
--Eric
-
-> The program i care about most is rsync and it appears to work correctly 
-> when i tested it with 2 hard-linked files (with an inode >2^32) and the 
-> option to preserve hard links. And "find" and "stat" also worked, 
-> otherwise i couldn't have found the file to test it with. ;-)
-> 
-> 
-> 
+Matthias
 
 _______________________________________________
 xfs mailing list
