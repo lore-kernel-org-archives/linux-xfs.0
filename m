@@ -1,22 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CA8B97F4C
-	for <xfs@oss.sgi.com>; Mon, 18 Feb 2013 01:52:05 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id D26F77F4C
+	for <xfs@oss.sgi.com>; Mon, 18 Feb 2013 02:12:10 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6927CAC001
-	for <xfs@oss.sgi.com>; Sun, 17 Feb 2013 23:52:02 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id GlpcDdnjNpxkGgmV for
-	<xfs@oss.sgi.com>; Sun, 17 Feb 2013 23:52:01 -0800 (PST)
-Received: from int-mx12.intmail.prod.int.phx2.redhat.com
-	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r1I7q1bh014008
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Mon, 18 Feb 2013 02:52:01 -0500
-From: Lukas Czerner <lczerner@redhat.com>
-Subject: [PATCH] xfstests 100: do not use scratch
-Date: Mon, 18 Feb 2013 08:51:51 +0100
-Message-Id: <1361173911-12422-1-git-send-email-lczerner@redhat.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B08AA8F8037
+	for <xfs@oss.sgi.com>; Mon, 18 Feb 2013 00:12:10 -0800 (PST)
+Received: from mail-ph.de-nserver.de (mail-ph.de-nserver.de [85.158.179.214])
+	by cuda.sgi.com with ESMTP id S5K7abUN1cRuXcvJ (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 18 Feb 2013 00:12:06 -0800 (PST)
+Message-ID: <5121E253.8000400@profihost.ag>
+Date: Mon, 18 Feb 2013 09:12:03 +0100
+From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+MIME-Version: 1.0
+Subject: Re: 32bit apps and inode64
+References: <4FA76E11.1070708@profihost.ag> <20120507071713.GZ5091@dastard>
+	<4FA77842.5010703@profihost.ag>
+	<4FA7FA14.6080700@hardwarefreak.com>
+	<4FA82B07.1020102@profihost.ag>
+	<4FAA153D.1030606@hardwarefreak.com>
+	<20120509070450.GP5091@dastard> <511E4F00.2010703@profihost.ag>
+	<20130215214653.GP22182@sgi.com>
+	<F4526E0F-2DDC-4FB4-927D-BFD8AD489D55@profihost.ag>
+	<20130217213359.GA26694@dastard>
+In-Reply-To: <20130217213359.GA26694@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,47 +32,30 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Lukas Czerner <lczerner@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Ben Myers <bpm@sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Test #100 does not use scratch device at all but it still
-_require_scratch and _check_scratch_fs. This might also be a problem if
-the test before this one failed and corrupted scratch partition.
+Hi,
 
-Remove the _require_scratch() and _check_scratch_fs() from the test.
+Am 17.02.2013 22:33, schrieb Dave Chinner:
 
-Signed-off-by: Lukas Czerner <lczerner@redhat.com>
----
- 100 |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+>>> xfs_reno was ported to linux in '07 and was most recently reposted by Jeff Liu:
+>>> http://oss.sgi.com/archives/xfs/2012-11/msg00425.html
+>>>
+>>> It isn't in xfsprogs today.
+> 
+> Simple answer: mount with inode32, run find to print out all the
+> filenames in the filesystem and their inode number, copy the files
+> with inodes numbers greater than 32 bit to a temporary file and then
+> rename them over the top of the original.
 
-diff --git a/100 b/100
-index f3504ce..ad61823 100755
---- a/100
-+++ b/100
-@@ -69,7 +69,6 @@ _populate_fs -n $NDIRS -f $NFILES -d $DEPTH -r $POPULATED_DIR -s $SIZE >>$here/$
- tar -cvf $TEMP_DIR/$TAR_FILE $POPULATED_DIR >>$here/$seq.full 2>&1
- 
- # create f/s
--_require_scratch
- _setup_testdir
- 
- # untar on f/s
-@@ -84,7 +83,6 @@ diff -qr $POPULATED_DIR ${testdir}${POPULATED_DIR}
- 
- cd /
- _cleanup_testdir
--_check_scratch_fs
- 
- status=0
- exit
--- 
-1.7.7.6
+Thanks, what about directories? Is renaming / moving using mv enough?
+
+Stefan
 
 _______________________________________________
 xfs mailing list
