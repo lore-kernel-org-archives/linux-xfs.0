@@ -1,11 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 92DEB7F4E
-	for <xfs@oss.sgi.com>; Tue, 19 Feb 2013 17:04:22 -0600 (CST)
-Subject: [GIT PULL] XFS update for 3.9-rc1
-Message-Id: <20130219230418.5CF82500B4A@whiskey.americas.sgi.com>
-Date: Tue, 19 Feb 2013 17:04:18 -0600 (CST)
-From: bpm@sgi.com (Ben Myers)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 902807F4E
+	for <xfs@oss.sgi.com>; Tue, 19 Feb 2013 17:09:05 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6EF6F8F8037
+	for <xfs@oss.sgi.com>; Tue, 19 Feb 2013 15:09:02 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	xq478GiO2dWCq1oD for <xfs@oss.sgi.com>;
+	Tue, 19 Feb 2013 15:09:00 -0800 (PST)
+Date: Wed, 20 Feb 2013 10:08:57 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v3 5/7] xfs: xfs_dquot prealloc throttling watermarks and
+	low free space
+Message-ID: <20130219230857.GH10731@dastard>
+References: <1361291851-24714-1-git-send-email-bfoster@redhat.com>
+	<1361291851-24714-6-git-send-email-bfoster@redhat.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1361291851-24714-6-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -14,169 +27,149 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-Hi Linus,
+On Tue, Feb 19, 2013 at 11:37:29AM -0500, Brian Foster wrote:
+> Enable tracking of high and low watermarks for preallocation
+> throttling of files under quota restrictions. These values are
+> calculated when the quota limit is read from disk or modified and
+> cached for later use by the throttling algorithm.
+> 
+> The high watermark specifies when preallocation is disabled, the
+> low watermark specifies when throttling is enabled and the low free
+> space data structure contains precalculated low free space limits
+> to serve as input to determine the level of throttling required.
+> 
+> Note that the low free space data structure is based on the
+> existing global low free space data structure with the exception of
+> using three stages (5%, 3% and 1%) rather than five to reduce the
+> impact of xfs_dquot memory overhead.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+>  fs/xfs/xfs_dquot.c       |   43 +++++++++++++++++++++++++++++++++++++++++--
+>  fs/xfs/xfs_dquot.h       |   13 +++++++++++++
+>  fs/xfs/xfs_qm_syscalls.c |    1 +
+>  3 files changed, 55 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+> index e1833b9..bd25be3 100644
+> --- a/fs/xfs/xfs_dquot.c
+> +++ b/fs/xfs/xfs_dquot.c
+> @@ -90,13 +90,18 @@ xfs_qm_adjust_dqlimits(
+>  {
+>  	xfs_quotainfo_t		*q = mp->m_quotainfo;
+>  	xfs_disk_dquot_t	*d = &dq->q_core;
+> +	int			prealloc = 0;
+>  
+>  	ASSERT(d->d_id);
+>  
+> -	if (q->qi_bsoftlimit && !d->d_blk_softlimit)
+> +	if (q->qi_bsoftlimit && !d->d_blk_softlimit) {
+>  		d->d_blk_softlimit = cpu_to_be64(q->qi_bsoftlimit);
+> -	if (q->qi_bhardlimit && !d->d_blk_hardlimit)
+> +		prealloc = 1;
+> +	}
+> +	if (q->qi_bhardlimit && !d->d_blk_hardlimit) {
+>  		d->d_blk_hardlimit = cpu_to_be64(q->qi_bhardlimit);
+> +		prealloc = 1;
+> +	}
+>  	if (q->qi_isoftlimit && !d->d_ino_softlimit)
+>  		d->d_ino_softlimit = cpu_to_be64(q->qi_isoftlimit);
+>  	if (q->qi_ihardlimit && !d->d_ino_hardlimit)
+> @@ -105,6 +110,9 @@ xfs_qm_adjust_dqlimits(
+>  		d->d_rtb_softlimit = cpu_to_be64(q->qi_rtbsoftlimit);
+>  	if (q->qi_rtbhardlimit && !d->d_rtb_hardlimit)
+>  		d->d_rtb_hardlimit = cpu_to_be64(q->qi_rtbhardlimit);
+> +
+> +	if (prealloc)
+> +		xfs_dquot_init_prealloc(dq);
 
-	Please pull these XFS updates for 3.9-rc1.  Here there are
-primarily fixes for regressions and bugs, but there are a few cleanups
-too.  There are fixes for compound buffers, quota asserts, dir v2 block
-compaction, mount behavior, use-after-free with AIO, swap extents, an
-unmount hang, speculative preallocation, write verifiers, the allocator
-stack switch, recursion on xa_lock, an xfs_buf_find oops, and a memory
-barrier in xfs_ifunlock.  Cleanups include the removal of unused
-XFS_TRANS_DEBUG routines, removal of obsolete simple_strto*, removal of
-boolean_t, removal of the rest of boolean_t, and replacement of a
-hardcoded 128 with the log header size when calculating log space
-reservations.
+		xfs_dquot_set_prealloc_limits(dq);
 
-Thanks,
-Ben
+Because it is used to overwrite existing limits here, not just
+initialise them...
 
-The following changes since commit a49f0d1ea3ec94fc7cf33a7c36a16343b74bd565:
+>  }
+>  
+>  /*
+> @@ -249,6 +257,34 @@ xfs_qm_init_dquot_blk(
+>  	xfs_trans_log_buf(tp, bp, 0, BBTOB(q->qi_dqchunklen) - 1);
+>  }
+>  
+> +/*
+> + * Initialize the preallocation throttling watermarks and low free space table.
 
-  Linux 3.8-rc1 (2012-12-21 17:19:00 -0800)
+"Initialise the dynamic speculative preallocation thresholds." 
 
-are available in the git repository at:
+> + * The lo/hi watermarks correspond to the soft and hard limits by default. If a
+> + * soft limit is not specified, we use 95% of the hard limit.
+> + */
+> +void
+> +xfs_dquot_init_prealloc(struct xfs_dquot *dqp)
+> +{
+> +	int i;
+> +	int pct = 1;
+> +
+> +	dqp->q_prealloc_hi_wmark = be64_to_cpu(dqp->q_core.d_blk_hardlimit);
+> +	dqp->q_prealloc_lo_wmark = be64_to_cpu(dqp->q_core.d_blk_softlimit);
+> +	if (!dqp->q_prealloc_lo_wmark) {
+> +		dqp->q_prealloc_lo_wmark = dqp->q_prealloc_hi_wmark;
+> +		do_div(dqp->q_prealloc_lo_wmark, 100);
+> +		dqp->q_prealloc_lo_wmark *= 95;
+> +	}
+> +
+> +	for (i = 0; i < XFS_QLOWSP_MAX; i++) {
+> +		__uint64_t space = dqp->q_prealloc_hi_wmark;
+> +
+> +		do_div(space, 100);
+> +		dqp->q_low_space[i] = space * pct;
+> +		pct += XFS_QLOWSP_PCNT_INCR;
+> +	}
 
-  git://oss.sgi.com/xfs/xfs tags/for-linus-v3.9-rc1
+This seems kind of obscure. It's just a simple assignment of 3
+values, so why not just unroll the loop like so:
 
-for you to fetch changes up to 1e82379b018ceed0f0912327c60d73107dacbcb3:
+	__uint64_t space = dqp->q_prealloc_hi_wmark;
 
-  xfs: xfs_bmap_add_attrfork_local is too generic (2013-02-14 17:35:51 -0600)
+	do_div(space, 100);
+	dqp->q_low_space[XFS_QLOWSP_1_PCNT] = space;
+	dqp->q_low_space[XFS_QLOWSP_3_PCNT] = space * 3
+	dqp->q_low_space[XFS_QLOWSP_5_PCNT] = space * 5;
 
-----------------------------------------------------------------
-xfs: update for 3.9-rc1
+And it effectively documents itself.
 
-For 3.9-rc1 there are primarily bugfixes and a few cleanups.
+I know the mount lowspace array is initialised in a loop, but it has
+a fairly obvious per-iteration increment of 1 percent....
 
-- fix(es) for compound buffers
-- remove unused XFS_TRANS_DEBUG routines
-- fix for dquot soft timer asserts due to overflow of d_blk_softlimit
-- don't zero allocation args structure members after they are memset(0)
-- fix for regression in dir v2 code introduced in commit 20f7e9f3
-- remove obsolete simple_strto<foo>
-- fix return value when filesystem probe finds no XFS magic, a
-  regression introduced in 9802182.
-- remove boolean_t typedef completely
-- fix stack switch in __xfs_bmapi_allocate by moving the check for stack
-  switch up into xfs_bmapi_write.
-- fix build error due to incomplete boolean_t removal
-- fix oops in _xfs_buf_find by validating that the requested block is
-  within the filesystem bounds.
-- limit speculative preallocation near ENOSPC.
-- fix an unmount hang in xfs_wait_buftarg by freeing the
-  xfs_buf_log_item in xfs_buf_item_unlock.
-- fix a possible use after free with AIO.
-- fix xfs_swap_extents after removal of xfs_flushinval_pages, a
-  regression introduced in fb59581404a.
-- replace hardcoded 128 with log header size
-- add memory barrier before wake_up_bit in xfs_ifunlock
-- limit speculative preallocation on sparse files
-- fix xa_lock recursion bug introduced in 90810b9e82a3
-- fix write verifier for symlinks
+> --- a/fs/xfs/xfs_dquot.h
+> +++ b/fs/xfs/xfs_dquot.h
+> @@ -32,6 +32,14 @@
+>  struct xfs_mount;
+>  struct xfs_trans;
+>  
+> +enum {
+> +	XFS_QLOWSP_1_PCNT = 0,
+> +	XFS_QLOWSP_3_PCNT,
+> +	XFS_QLOWSP_5_PCNT,
+> +	XFS_QLOWSP_MAX
+> +};
+> +#define XFS_QLOWSP_PCNT_INCR 2
 
-----------------------------------------------------------------
-Abhijit Pawar (1):
-      fs/xfs remove obsolete simple_strto<foo>
+And gets rid of this strange vowel-challenged XFS_QLOWSP_PCNT_INCR
+thingy....
 
-Alex Elder (1):
-      xfs: memory barrier before wake_up_bit()
+Cheers,
 
-Ben Myers (2):
-      Merge branch 'xfs-for-3.9'
-      xfs: fix fs/xfs/xfs_log.c:1740:39: error: 'B_TRUE' undeclared
-
-Brian Foster (4):
-      xfs: remove int casts from debug dquot soft limit timer asserts
-      xfs: pull up stack_switch check into xfs_bmapi_write
-      xfs: recheck buffer pinned status after push trylock failure
-      xfs: remove log force from xfs_buf_trylock()
-
-Dave Chinner (5):
-      xfs: fix _xfs_buf_find oops on blocks beyond the filesystem end
-      xfs: limit speculative prealloc near ENOSPC thresholds
-      xfs: fix shutdown hang on invalid inode during create
-      xfs: limit speculative prealloc size on sparse files
-      xfs: xfs_bmap_add_attrfork_local is too generic
-
-Eric Sandeen (3):
-      xfs: don't zero structure members after a memset(0)
-      xfs: recalculate leaf entry pointer after compacting a dir2 block
-      xfs: Do not return EFSCORRUPTED when filesystem probe finds no XFS magic
-
-Jan Kara (1):
-      xfs: Fix possible use-after-free with AIO
-
-Jeff Liu (13):
-      xfs: add a helper to figure out the space log reservation per item
-      xfs: make use of xfs_calc_buf_res() in xfs_trans.c
-      xfs: calculate XFS_TRANS_QM_SBCHANGE space log reservation at mount time
-      xfs: calculate xfs_qm_write_sb_changes() space log reservation at mount time
-      xfs: calcuate XFS_TRANS_QM_SETQLIM space log reservation at mount time
-      xfs: calculate XFS_TRANS_QM_DQALLOC space log reservation at mount time
-      xfs: calculate XFS_TRANS_QM_QUOTAOFF space log reservation at mount time
-      xfs: calculate XFS_TRANS_QM_QUOTAOFF_END space log reservation at mount time
-      xfs: introduce XFS_SB_LOG_RES() for transactions that modify sb on disk
-      xfs: make use of XFS_SB_LOG_RES() at xfs_log_sbcount()
-      xfs: make use of XFS_SB_LOG_RES() at xfs_mount_log_sb()
-      xfs: make use of XFS_SB_LOG_RES() at xfs_fs_log_dummy()
-      xfs: refactor space log reservation for XFS_TRANS_ATTR_SET
-
-Mark Tinguely (5):
-      xfs: use b_maps[] for discontiguous buffers
-      xfs: rename bli_format to avoid confusion with bli_formats
-      xfs: fix segment in xfs_buf_item_format_segment
-      xfs: fix the multi-segment log buffer format
-      xfs remove the XFS_TRANS_DEBUG routines
-
-Thiago Farina (1):
-      xfs: Remove boolean_t typedef completely.
-
-Torsten Kaiser (1):
-      xfs: Fix xfs_swap_extents() after removal of xfs_flushinval_pages()
-
- fs/xfs/xfs_alloc.c       |   2 -
- fs/xfs/xfs_aops.c        |   2 +-
- fs/xfs/xfs_attr.c        |   9 +-
- fs/xfs/xfs_bmap.c        | 124 ++++++++++++----
- fs/xfs/xfs_buf.c         |  34 ++++-
- fs/xfs/xfs_buf.h         |   6 +-
- fs/xfs/xfs_buf_item.c    | 177 +++++++---------------
- fs/xfs/xfs_buf_item.h    |  16 +-
- fs/xfs/xfs_dfrag.c       |   4 +-
- fs/xfs/xfs_dir2_block.c  |   6 +-
- fs/xfs/xfs_dquot.c       |  12 +-
- fs/xfs/xfs_fsops.c       |   4 +-
- fs/xfs/xfs_ialloc.c      |   4 -
- fs/xfs/xfs_inode.c       |   6 -
- fs/xfs/xfs_inode.h       |   1 +
- fs/xfs/xfs_inode_item.c  |  16 --
- fs/xfs/xfs_inode_item.h  |   4 -
- fs/xfs/xfs_iomap.c       |  86 +++++++++--
- fs/xfs/xfs_log.c         |  10 +-
- fs/xfs/xfs_mount.c       |  14 +-
- fs/xfs/xfs_mount.h       |   9 +-
- fs/xfs/xfs_qm.c          |   7 +-
- fs/xfs/xfs_qm_bhv.c      |   2 +-
- fs/xfs/xfs_qm_syscalls.c |  32 ++--
- fs/xfs/xfs_super.c       |  29 ++--
- fs/xfs/xfs_trace.h       |   1 +
- fs/xfs/xfs_trans.c       | 376 ++++++++++++++++++++++++++++++-----------------
- fs/xfs/xfs_trans.h       |  18 ++-
- fs/xfs/xfs_trans_ail.c   |  14 --
- fs/xfs/xfs_trans_buf.c   |  27 ++--
- fs/xfs/xfs_trans_dquot.c |  10 +-
- fs/xfs/xfs_trans_inode.c |  41 ------
- fs/xfs/xfs_types.h       |   1 -
- fs/xfs/xfs_vnodeops.c    |  12 +-
- 34 files changed, 613 insertions(+), 503 deletions(-)
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
