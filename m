@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5D31F7F62
-	for <xfs@oss.sgi.com>; Tue, 19 Feb 2013 05:37:46 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2E26630406B
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 71DEA7F63
+	for <xfs@oss.sgi.com>; Tue, 19 Feb 2013 05:37:47 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 00026AC002
 	for <xfs@oss.sgi.com>; Tue, 19 Feb 2013 03:37:46 -0800 (PST)
 Received: from relay.sw.ru (mailhub.sw.ru [195.214.232.25]) by cuda.sgi.com
-	with ESMTP id cuMacSxLJrrikkKF (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id JjrHEO0oB1RIrqql (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 19 Feb 2013 03:37:43 -0800 (PST)
+	Tue, 19 Feb 2013 03:37:45 -0800 (PST)
 From: Dmitry Monakhov <dmonakhov@openvz.org>
-Subject: [PATCH 08/11] xfstest: add fallocate/truncate vs AIO/DIO stress test
-Date: Tue, 19 Feb 2013 15:37:20 +0400
-Message-Id: <1361273843-16094-8-git-send-email-dmonakhov@openvz.org>
+Subject: [PATCH 09/11] xfstest: add fallocate/punch_hole vs AIO/DIO stress test
+Date: Tue, 19 Feb 2013 15:37:21 +0400
+Message-Id: <1361273843-16094-9-git-send-email-dmonakhov@openvz.org>
 In-Reply-To: <1361273843-16094-1-git-send-email-dmonakhov@openvz.org>
 References: <1361273843-16094-1-git-send-email-dmonakhov@openvz.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,34 +30,34 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 Cc: linux-fsdevel@vger.kernel.org, Dmitry Monakhov <dmonakhov@openvz.org>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
-Run  DIO, fallocate and truncate threads on a common file in parallel.
-If race exist old dio request may rewrite blocks after it was allocated
-to another file, we will catch that by verifying blocks content.
-
-this patch known to catch deadlock for ext4
-http://lists.openwall.net/linux-ext4/2012/09/06/3
+Run  random AIO/DIO activity (fio's job:direct_aio_raicer)
+random fallocate activity(fio's job:falloc_raicer)
+and random punch_hole activity(punch_hole_raicer) on a common
+file in parallel. If race exist old dio request may rewrite
+punched block after it was allocated to another file, we will
+catch that by verifier fio's job: "aio-dio-verifier".
 
 Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
 ---
- 286     |  157 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 286.out |    5 ++
+ 287     |  153 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 287.out |    4 ++
  group   |    1 +
- 3 files changed, 163 insertions(+), 0 deletions(-)
- create mode 100755 286
- create mode 100644 286.out
+ 3 files changed, 158 insertions(+), 0 deletions(-)
+ create mode 100755 287
+ create mode 100644 287.out
 
-diff --git a/286 b/286
+diff --git a/287 b/287
 new file mode 100755
-index 0000000..84dfd18
+index 0000000..4a22b6d
 --- /dev/null
-+++ b/286
-@@ -0,0 +1,157 @@
++++ b/287
+@@ -0,0 +1,153 @@
 +#! /bin/bash
-+# FSQA Test No. 286
++# FSQA Test No. 287
 +#
 +# AIO/DIO stress test
-+# Run random AIO/DIO activity and fallocate/truncate simultaneously
-+# Test will operate on huge sparsed files so ENOSPC is expected.
++# Run random AIO/DIO activity and fallocate/punch_hole simultaneously
++# Test will operate on huge sparsed file so ENOSPC is expected.
 +#
 +#-----------------------------------------------------------------------
 +# (c) 2013 Dmitry Monakhov
@@ -100,40 +100,71 @@ index 0000000..84dfd18
 +
 +NUM_JOBS=$((4*LOAD_FACTOR))
 +BLK_DEV_SIZE=`blockdev --getsz $SCRATCH_DEV`
-+FILE_SIZE=$((BLK_DEV_SIZE * 512))
++if [ $((BLK_DEV_SIZE)) -gt 1048576 ]
++then
++    BLK_DEV_SIZE=1048576
++fi 
++FS_SIZE=$((BLK_DEV_SIZE * 512))
 +
 +cat >$tmp-$seq.fio <<EOF
 +###########
 +# $seq test fio activity
-+# Filenames derived from jobsname and jobid like follows:
-+# ${JOB_NAME}.${JOB_ID}.${ITERATION_ID}
++# Run  DIO, fallocate and punch_hole threads on a single in parallel 
++#
++# If race exist old dio request may rewrite punched block after it was
++# allocated to another file, we will catch that by verifying blocks content
++#
 +[global]
-+ioengine=libaio
-+bs=128k
 +directory=${SCRATCH_MNT}
-+filesize=${FILE_SIZE}
++filesize=${FS_SIZE}
 +size=999G
-+iodepth=128*${LOAD_FACTOR}
 +continue_on_error=write
 +ignore_error=,ENOSPC
 +error_dump=0
++
 +create_on_open=1
 +fallocate=none
 +exitall=1
 +
 +## Perform direct aio, to files which may be truncated
 +## by external task
-+[direct_aio]
++[direct_aio_raicer]
++ioengine=libaio
++iodepth=128*${LOAD_FACTOR} 
++bs=128k 
 +direct=1
-+buffered=0
 +numjobs=${NUM_JOBS}
 +rw=randwrite
 +runtime=100*${TIME_FACTOR}
 +time_based
++filename=racer
 +
-+# Perform direct aio and verify data
-+# This test case should check use-after-free issues
++# Run falloc and punch_hole threads in parallel
++# After activity file will be highly fragmented
++[falloc_raicer]
++ioengine=falloc
++runtime=100*${TIME_FACTOR}
++iodepth=1
++bssplit=128k/80:512k/10:32k/10
++rw=randwrite
++numjobs=1
++filename=racer
++
++[punch_hole_raicer]
++ioengine=falloc
++runtime=100*${TIME_FACTOR}
++bs=4k
++time_based=10
++rw=randtrim
++numjobs=2
++filename=racer
++time_based
++
++# Verifier thread continiously write to newly allcated blocks
++# and veryfy written content
 +[aio-dio-verifier]
++ioengine=libaio 
++iodepth=128*${LOAD_FACTOR}
 +numjobs=1
 +verify=crc32c-intel
 +verify_fatal=1
@@ -143,27 +174,9 @@ index 0000000..84dfd18
 +verifysort=1
 +direct=1
 +bs=4k
-+rw=randrw
++rw=randwrite
 +filename=aio-dio-verifier
-+
-+# Perform buffered aio and verify data
-+# This test case should check use-after-free issues
-+[buffered-aio-verifier]
-+numjobs=1
-+verify=crc32c-intel
-+verify_fatal=1
-+verify_dump=1
-+verify_backlog=1024
-+verify_async=4
-+verifysort=1
-+direct=0
-+buffered=1
-+bs=4k
-+rw=randrw
-+filename=buffered-aio-verifier
 +EOF
-+
-+_require_fio $tmp-$seq.fio
 +
 +_workout()
 +{
@@ -171,29 +184,12 @@ index 0000000..84dfd18
 +	echo "Run fio with random aio-dio pattern"
 +	echo ""
 +	cat $tmp-$seq.fio >>  $seq.full
-+	run_check $FIO_PROG $tmp-$seq.fio &
-+	pid=$!
-+	echo "Start fallocate/truncate loop"
-+	
-+	for ((i=0; ; i++))
-+	do
-+	    for ((k=1; k <= NUM_JOBS; k++))
-+	    do
-+		fallocate -l $FILE_SIZE $SCRATCH_MNT/direct_aio.$k.0 \
-+		    	>> $seq.full 2>&1
-+	    done
-+	    for ((k=1; k <= NUM_JOBS; k++))
-+	    do
-+		truncate -s 0 $SCRATCH_MNT/direct_aio.$k.0
-+	    done
-+	    # Following like will check that pid is still run.
-+	    # Once fio exit we can stop fallocate/truncate loop
-+	    kill -0 $pid > /dev/null 2>&1 || break
-+	done
-+	wait $pid
++	run_check $FIO_PROG $tmp-$seq.fio
 +}
 +
-+_scratch_mkfs >> $seq.full 2>&1
++_require_fio $tmp-$seq.fio
++
++_scratch_mkfs_sized $FS_SIZE >> $seq.full 2>&1
 +_scratch_mount
 +
 +if ! _workout; then
@@ -209,26 +205,25 @@ index 0000000..84dfd18
 +_check_scratch_fs
 +status=$?
 +exit
-diff --git a/286.out b/286.out
+diff --git a/287.out b/287.out
 new file mode 100644
-index 0000000..d721996
+index 0000000..d22e097
 --- /dev/null
-+++ b/286.out
-@@ -0,0 +1,5 @@
-+QA output created by 286
++++ b/287.out
+@@ -0,0 +1,4 @@
++QA output created by 287
 +
 +Run fio with random aio-dio pattern
 +
-+Start fallocate/truncate loop
 diff --git a/group b/group
-index c6630c9..01fb35b 100644
+index 01fb35b..fcd9174 100644
 --- a/group
 +++ b/group
-@@ -409,3 +409,4 @@ stress
- 283 dump ioctl auto quick
+@@ -410,3 +410,4 @@ stress
  284 auto
  285 auto dump quota quick
-+286 auto rw enospc aio stress
+ 286 auto rw enospc aio stress
++287 auto rw enospc aio prealloc stress
 -- 
 1.7.1
 
