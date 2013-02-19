@@ -1,29 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 056597F4E
-	for <xfs@oss.sgi.com>; Tue, 19 Feb 2013 10:34:58 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6D715AC004
-	for <xfs@oss.sgi.com>; Tue, 19 Feb 2013 08:34:57 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 17F097F4E
+	for <xfs@oss.sgi.com>; Tue, 19 Feb 2013 10:35:00 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id DD6EC8F8033
+	for <xfs@oss.sgi.com>; Tue, 19 Feb 2013 08:34:56 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id MwkWIwMBGCsJaFBT for
+	cuda.sgi.com with ESMTP id Cd7NjiPnNOdnBBx9 for
 	<xfs@oss.sgi.com>; Tue, 19 Feb 2013 08:34:56 -0800 (PST)
-Received: from int-mx12.intmail.prod.int.phx2.redhat.com
-	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r1JGYtih005858
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r1JGYtI6010483
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Tue, 19 Feb 2013 11:34:56 -0500
+	for <xfs@oss.sgi.com>; Tue, 19 Feb 2013 11:34:55 -0500
 Received: from bfoster.bfoster (dhcp-189-135.bos.redhat.com [10.16.189.135])
-	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id r1JGYt3o003688
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id r1JGYtUE003473
 	for <xfs@oss.sgi.com>; Tue, 19 Feb 2013 11:34:55 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v3 1/7] xfs: reorganize xfs_iomap_prealloc_size to remove
-	indentation
-Date: Tue, 19 Feb 2013 11:37:25 -0500
-Message-Id: <1361291851-24714-2-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1361291851-24714-1-git-send-email-bfoster@redhat.com>
-References: <1361291851-24714-1-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v3 0/7] speculative preallocation quota throttling
+Date: Tue, 19 Feb 2013 11:37:24 -0500
+Message-Id: <1361291851-24714-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,96 +36,53 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The majority of xfs_iomap_prealloc_size() executes within the
-check for lack of default I/O size. Reverse the logic to remove the
-extra indentation.
+Hi all,
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Ben Myers <bpm@sgi.com>
----
- fs/xfs/xfs_iomap.c |   63 ++++++++++++++++++++++++++-------------------------
- 1 files changed, 32 insertions(+), 31 deletions(-)
+This v3 speculative prealloc quota throttling set is a simple rebase of v2 on
+top of the recent speculative prealloc algorithm update to support sparse files.
+I carried over the reviewed-by tags from patches 1-2, as I didn't fundamentally
+change that code. Those are the patches slightly affected by the rebase, however,
+so a second look at those might be prudent.
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 912d83d..d914419 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -381,42 +381,43 @@ xfs_iomap_prealloc_size(
- 	int			nimaps)
- {
- 	xfs_fsblock_t		alloc_blocks = 0;
-+	int			shift = 0;
-+	int64_t			freesp;
- 
- 	alloc_blocks = xfs_iomap_eof_prealloc_initial_size(mp, ip, offset,
- 							   imap, nimaps);
--	if (alloc_blocks > 0) {
--		int shift = 0;
--		int64_t freesp;
--
--		alloc_blocks = XFS_FILEOFF_MIN(MAXEXTLEN,
--					rounddown_pow_of_two(alloc_blocks));
--
--		xfs_icsb_sync_counters(mp, XFS_ICSB_LAZY_COUNT);
--		freesp = mp->m_sb.sb_fdblocks;
--		if (freesp < mp->m_low_space[XFS_LOWSP_5_PCNT]) {
--			shift = 2;
--			if (freesp < mp->m_low_space[XFS_LOWSP_4_PCNT])
--				shift++;
--			if (freesp < mp->m_low_space[XFS_LOWSP_3_PCNT])
--				shift++;
--			if (freesp < mp->m_low_space[XFS_LOWSP_2_PCNT])
--				shift++;
--			if (freesp < mp->m_low_space[XFS_LOWSP_1_PCNT])
--				shift++;
--		}
--		if (shift)
--			alloc_blocks >>= shift;
--
--		/*
--		 * If we are still trying to allocate more space than is
--		 * available, squash the prealloc hard. This can happen if we
--		 * have a large file on a small filesystem and the above
--		 * lowspace thresholds are smaller than MAXEXTLEN.
--		 */
--		while (alloc_blocks >= freesp)
--			alloc_blocks >>= 4;
-+	if (!alloc_blocks)
-+		goto check_writeio;
-+
-+	alloc_blocks = XFS_FILEOFF_MIN(MAXEXTLEN,
-+				rounddown_pow_of_two(alloc_blocks));
-+
-+	xfs_icsb_sync_counters(mp, XFS_ICSB_LAZY_COUNT);
-+	freesp = mp->m_sb.sb_fdblocks;
-+	if (freesp < mp->m_low_space[XFS_LOWSP_5_PCNT]) {
-+		shift = 2;
-+		if (freesp < mp->m_low_space[XFS_LOWSP_4_PCNT])
-+			shift++;
-+		if (freesp < mp->m_low_space[XFS_LOWSP_3_PCNT])
-+			shift++;
-+		if (freesp < mp->m_low_space[XFS_LOWSP_2_PCNT])
-+			shift++;
-+		if (freesp < mp->m_low_space[XFS_LOWSP_1_PCNT])
-+			shift++;
- 	}
-+	if (shift)
-+		alloc_blocks >>= shift;
-+
-+	/*
-+	 * If we are still trying to allocate more space than is
-+	 * available, squash the prealloc hard. This can happen if we
-+	 * have a large file on a small filesystem and the above
-+	 * lowspace thresholds are smaller than MAXEXTLEN.
-+	 */
-+	while (alloc_blocks >= freesp)
-+		alloc_blocks >>= 4;
- 
-+check_writeio:
- 	if (alloc_blocks < mp->m_writeio_blocks)
- 		alloc_blocks = mp->m_writeio_blocks;
- 
+I've run a 1TB limit uquota sanity check to verify behavior as described in v2.
+The numbers change slightly due to the slightly altered behavior of the new
+prealloc algorithm (e.g., switching from using the size of the previous extent to
+the size of the file causes maximum extent allocations to kick in a bit later),
+but otherwise the general behavior is the same. I'll run some tests with larger
+files in parallel with review as well.
+
+[Note that these tests also include the currently posted "xfs: increase prealloc
+size to double ..." change to restore effectiveness of the prealloc algorithm
+to my particular test case.]
+
+Brian
+
+v3:
+- Rebased on top of updated speculative preallocation algorithm.
+v2:
+- Fix up xfs_iomap_prealloc_size() rounding (patch 2).
+- Add pre-calculated fields to xfs_dquot to support throttling.
+- Move to logarithmic (shift) throttler and finer tuned trigger/throttle logic.
+
+Brian Foster (7):
+  xfs: reorganize xfs_iomap_prealloc_size to remove indentation
+  xfs: push rounddown_pow_of_two() to after prealloc throttle
+  xfs: cap prealloc size to free space before shift
+  xfs: pass xfs_dquot to xfs_qm_adjust_dqlimits() instead of
+    xfs_disk_dquot_t
+  xfs: xfs_dquot prealloc throttling watermarks and low free space
+  xfs: add quota-driven speculative preallocation throttling
+  xfs: xfs_iomap_prealloc_size() tracepoint
+
+ fs/xfs/xfs_dquot.c       |   46 ++++++++++++-
+ fs/xfs/xfs_dquot.h       |   15 ++++-
+ fs/xfs/xfs_iomap.c       |  163 +++++++++++++++++++++++++++++++++++++---------
+ fs/xfs/xfs_qm.c          |    2 +-
+ fs/xfs/xfs_qm_syscalls.c |    1 +
+ fs/xfs/xfs_trace.h       |   24 +++++++
+ fs/xfs/xfs_trans_dquot.c |    2 +-
+ 7 files changed, 217 insertions(+), 36 deletions(-)
+
 -- 
 1.7.7.6
 
