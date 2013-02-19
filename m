@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2D4617F4E
-	for <xfs@oss.sgi.com>; Tue, 19 Feb 2013 13:11:18 -0600 (CST)
-Date: Tue, 19 Feb 2013 13:11:14 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: 32bit apps and inode64
-Message-ID: <20130219191114.GZ30652@sgi.com>
-References: <4FA76E11.1070708@profihost.ag> <20120507071713.GZ5091@dastard>
-	<4FA77842.5010703@profihost.ag>
-	<4FA7FA14.6080700@hardwarefreak.com>
-	<4FA82B07.1020102@profihost.ag>
-	<4FAA153D.1030606@hardwarefreak.com>
-	<20120509070450.GP5091@dastard> <511E4F00.2010703@profihost.ag>
-	<20130215214653.GP22182@sgi.com> <51209128.6020901@oracle.com>
+	by oss.sgi.com (Postfix) with ESMTP id 805977F4E
+	for <xfs@oss.sgi.com>; Tue, 19 Feb 2013 15:48:47 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 44AC28F8033
+	for <xfs@oss.sgi.com>; Tue, 19 Feb 2013 13:48:47 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	gEuRhASHUuA9oPX8 for <xfs@oss.sgi.com>;
+	Tue, 19 Feb 2013 13:48:45 -0800 (PST)
+Date: Wed, 20 Feb 2013 08:48:42 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v3 3/7] xfs: cap prealloc size to free space before shift
+Message-ID: <20130219214842.GG10731@dastard>
+References: <1361291851-24714-1-git-send-email-bfoster@redhat.com>
+	<1361291851-24714-4-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <51209128.6020901@oracle.com>
+In-Reply-To: <1361291851-24714-4-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,47 +30,53 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-Hey Jeff,
-
-On Sun, Feb 17, 2013 at 04:13:28PM +0800, Jeff Liu wrote:
-> Hi Ben,
+On Tue, Feb 19, 2013 at 11:37:27AM -0500, Brian Foster wrote:
+> With the addition of quota preallocation throttling, we want to
+> support a general algorithm that considers the maximum allowable
+> prealloc size and recommended shift modifier from various sources
+> (i.e., global fs state and all applicable quotas for an inode).
 > 
-> On 02/16/2013 05:46 AM, Ben Myers wrote:
-> > Hi Stefan,
-> > 
-> > On Fri, Feb 15, 2013 at 04:06:40PM +0100, Stefan Priebe - Profihost AG wrote:
-> >> i've discovered some problems on a host with a disk > 1TB. We've some
-> >> binary 32bit applications which are not able to read some directory
-> >> anymore after we've formated and installed the system using vanilla
-> >> 3.7.7 kernel.
-> >>
-> >> Right now we're using 3.0.61 kernel on this host - so 64bit apps work
-> >> well and newly created files get 32bit inode numbers as inode64 is not
-> >> the default.
-> >>
-> >> Is there a way to find / get all 64bit inode files / dies and convert
-> >> them back to 32bit without a reinstall?
-> > 
-> > On IRIX you could use xfs_reno to renumber those inodes.
-> > http://techpubs.sgi.com/library/tpl/cgi-bin/getdoc.cgi?coll=0650&db=man&fname=/usr/share/catman/a_man/cat1/xfs_reno.z
-> > 
-> > xfs_reno was ported to linux in '07 and was most recently reposted by Jeff Liu:
-> > http://oss.sgi.com/archives/xfs/2012-11/msg00425.html
-> The old patch set was belong to the infrastructures of online shrinking
-> support.  Recently, I realized that I have made a few mistakes in swap
-> inodes ioctl(2) implementation when I revisit the old patch set at:
-> http://oss.sgi.com/archives/xfs/2012-11/msg00414.html
+> Update the current global free space throttle algorithm to cap the
+> preallocation size to the free space available in the filesystem.
 > 
-> Since we have user request and this function is independent to the
-> shrinking feature, I'd like to work on it at first if you like it.
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+>  fs/xfs/xfs_iomap.c |    3 +++
+>  1 files changed, 3 insertions(+), 0 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index daa08f6..3b41c18 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -412,6 +412,9 @@ xfs_iomap_prealloc_size(
+>  		if (freesp < mp->m_low_space[XFS_LOWSP_1_PCNT])
+>  			shift++;
+>  	}
+> +	if (alloc_blocks > freesp)
+> +		alloc_blocks = freesp;
+> +
+>  	if (shift)
+>  		alloc_blocks >>= shift;
 
-That sounds good to me.  xfs_reno is a worthwhile feature.
+This is redundant with the previous additions of the trailing
 
-Regards,
-	Ben
+	while (alloc_blocks >= freesp)
+		alloc_blocks >>= 4;
+
+code. Effectively adding the check will result in preventing the
+existing loop from working as alloc_blocks will be brought down to
+just under freespc by things like power of 2 rounding, rather than
+being thottled to a small fraction of the remaining free space...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
