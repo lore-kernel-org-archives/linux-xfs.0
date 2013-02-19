@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1E5567F51
+	by oss.sgi.com (Postfix) with ESMTP id AAFF37F51
 	for <xfs@oss.sgi.com>; Tue, 19 Feb 2013 05:37:43 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B124AAC002
-	for <xfs@oss.sgi.com>; Tue, 19 Feb 2013 03:37:42 -0800 (PST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3B73FAC002
+	for <xfs@oss.sgi.com>; Tue, 19 Feb 2013 03:37:43 -0800 (PST)
 Received: from relay.sw.ru (mailhub.sw.ru [195.214.232.25]) by cuda.sgi.com
-	with ESMTP id bjicL6eAI3BJk2bn (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id m447FEe0P3ukam7u (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 19 Feb 2013 03:37:40 -0800 (PST)
+	Tue, 19 Feb 2013 03:37:41 -0800 (PST)
 From: Dmitry Monakhov <dmonakhov@openvz.org>
-Subject: [PATCH 01/11] xfstests: add fio requirement V2
-Date: Tue, 19 Feb 2013 15:37:13 +0400
-Message-Id: <1361273843-16094-1-git-send-email-dmonakhov@openvz.org>
+Subject: [PATCH 07/11] xfstest: move run_check to common.rc
+Date: Tue, 19 Feb 2013 15:37:19 +0400
+Message-Id: <1361273843-16094-7-git-send-email-dmonakhov@openvz.org>
+In-Reply-To: <1361273843-16094-1-git-send-email-dmonakhov@openvz.org>
+References: <1361273843-16094-1-git-send-email-dmonakhov@openvz.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,64 +30,49 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 Cc: linux-fsdevel@vger.kernel.org, Dmitry Monakhov <dmonakhov@openvz.org>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
-FIO is very flexible io generator, I would call it IO swiss knife.
-Currently we have tonns of hardcoded application which reproduces
-some predefined scenario. This approach has obvious dissadvantages
-1) Lack of flexability: one written it is hard to modify it in future
-2) Code base is large, many routines written again and again
-
-At the same time add new fio based tast is just add simle INI file.
-This greatly simplify code review. I do beleve that some day we will
-replace most of hardcoded io binaries with fio.
-
-One who is planning to run $FIO_PROG should first check that system
-contains appropriate version which is able to handle jobfile
-for example:  _require_fio 286-job.fio
 
 Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
 ---
- common.config |    1 +
- common.rc     |   15 +++++++++++++++
- 2 files changed, 16 insertions(+), 0 deletions(-)
+ 276       |    6 ------
+ common.rc |    8 +++++++-
+ 2 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/common.config b/common.config
-index 7bed1c5..d5c8956 100644
---- a/common.config
-+++ b/common.config
-@@ -158,6 +158,7 @@ export XFS_QUOTA_PROG="`set_prog_path xfs_quota`"
- export KILLALL_PROG="`set_prog_path killall`"
- export INDENT_PROG="`set_prog_path indent`"
- export XFS_COPY_PROG="`set_prog_path xfs_copy`"
-+export FIO_PROG="`set_prog_path fio`"
- 
- # Generate a comparable xfsprogs version number in the form of
- # major * 10000 + minor * 100 + release
-diff --git a/common.rc b/common.rc
-index 602513a..f5027e7 100644
---- a/common.rc
-+++ b/common.rc
-@@ -1758,6 +1758,21 @@ _require_btrfs()
- 	[ $? -eq 0 ] || _notrun "$BTRFS_UTIL_PROG too old (must support $cmd)"
+diff --git a/276 b/276
+index 082f943..c1ce8ac 100755
+--- a/276
++++ b/276
+@@ -165,12 +165,6 @@ _btrfs_inspect_check()
+ 	return $ret
  }
  
-+# Check that fio is present, and it is able to execute given jobfile
-+_require_fio()
-+{
-+	job=$1
+-run_check()
+-{
+-	echo "# $@" >> $seq.full 2>&1
+-	"$@" >> $seq.full 2>&1 || _fail "failed: '$@'"
+-}
+-
+ workout()
+ {
+ 	fsz=$1
+diff --git a/common.rc b/common.rc
+index ea5c477..5c3dda1 100644
+--- a/common.rc
++++ b/common.rc
+@@ -1806,7 +1806,13 @@ _scale_fsstress_args()
+     done
+     echo $args                                                                                            
+ }
+-  
 +
-+	_require_command $FIO_PROG
-+	if [ -z "$1" ]; then
-+		return 1;
-+	fi
-+	
-+	$FIO_PROG --warnings-fatal --showcmd $job >/dev/null 2>&1
-+	[ $? -eq 0 ] || _notrun "$FIO_PROG too old"
++run_check()
++{
++	echo "# $@" >> $seq.full 2>&1
++	"$@" >> $seq.full 2>&1 || _fail "failed: '$@'"
 +}
 +
-+
- # arg 1 is dev to remove and is output of the below eg.
- # ls -l /sys/class/block/sdd | rev | cut -d "/" -f 3 | rev
- _devmgt_remove()
+ ################################################################################
+ 
+ if [ "$iam" != new -a "$iam" != bench ]
 -- 
 1.7.1
 
