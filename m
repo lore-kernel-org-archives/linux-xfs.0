@@ -1,29 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id F131A7F62
-	for <xfs@oss.sgi.com>; Wed, 20 Feb 2013 09:07:51 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 18AE17F51
+	for <xfs@oss.sgi.com>; Wed, 20 Feb 2013 11:11:29 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5FE08AC007
-	for <xfs@oss.sgi.com>; Wed, 20 Feb 2013 07:07:48 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 1WHFG3O6aO8fCbCB for
-	<xfs@oss.sgi.com>; Wed, 20 Feb 2013 07:07:46 -0800 (PST)
-Received: from int-mx01.intmail.prod.int.phx2.redhat.com
-	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r1KF7kQp024511
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 20 Feb 2013 10:07:46 -0500
-Received: from bfoster.bfoster (dhcp-189-135.bos.redhat.com [10.16.189.135])
-	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
-	id r1KF7je3023298
-	for <xfs@oss.sgi.com>; Wed, 20 Feb 2013 10:07:46 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v4 4/6] xfs: xfs_dquot prealloc throttling watermarks and low
-	free space
-Date: Wed, 20 Feb 2013 10:10:17 -0500
-Message-Id: <1361373019-30891-5-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1361373019-30891-1-git-send-email-bfoster@redhat.com>
-References: <1361373019-30891-1-git-send-email-bfoster@redhat.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id ECFFF8F8064
+	for <xfs@oss.sgi.com>; Wed, 20 Feb 2013 09:11:25 -0800 (PST)
+Received: from gws06.hcl.com (gws06.hcl.com [203.105.185.25]) by cuda.sgi.com
+	with ESMTP id iVNX04T3HDcEkD4R (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 20 Feb 2013 09:11:22 -0800 (PST)
+From: Anshul Kundra <anshul.kundra@hcl.com>
+Subject: XFS_DB
+Date: Wed, 20 Feb 2013 17:11:18 +0000
+Message-ID: <4DF92F995A2E4C48ABADDA7F8E05A63D09BE1935@NDA-HCLT-MBS02.hclt.corp.hcl.in>
+Content-Language: en-US
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,166 +23,272 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============2152681038814342476=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Enable tracking of high and low watermarks for preallocation
-throttling of files under quota restrictions. These values are
-calculated when the quota limit is read from disk or modified and
-cached for later use by the throttling algorithm.
+--===============2152681038814342476==
+Content-Language: en-US
+Content-Type: multipart/alternative;
+	boundary="_000_4DF92F995A2E4C48ABADDA7F8E05A63D09BE1935NDAHCLTMBS02hcl_"
 
-The high watermark specifies when preallocation is disabled, the
-low watermark specifies when throttling is enabled and the low free
-space data structure contains precalculated low free space limits
-to serve as input to determine the level of throttling required.
+--_000_4DF92F995A2E4C48ABADDA7F8E05A63D09BE1935NDAHCLTMBS02hcl_
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 
-Note that the low free space data structure is based on the
-existing global low free space data structure with the exception of
-using three stages (5%, 3% and 1%) rather than five to reduce the
-impact of xfs_dquot memory overhead.
+Developers,
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_dquot.c       |   41 +++++++++++++++++++++++++++++++++++++++--
- fs/xfs/xfs_dquot.h       |   12 ++++++++++++
- fs/xfs/xfs_qm_syscalls.c |    1 +
- 3 files changed, 52 insertions(+), 2 deletions(-)
+I have system with configuration as
+RAM : 4G
+SWAP: 2G
 
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index e1833b9..e3aa801 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -90,13 +90,18 @@ xfs_qm_adjust_dqlimits(
- {
- 	xfs_quotainfo_t		*q = mp->m_quotainfo;
- 	xfs_disk_dquot_t	*d = &dq->q_core;
-+	int			prealloc = 0;
- 
- 	ASSERT(d->d_id);
- 
--	if (q->qi_bsoftlimit && !d->d_blk_softlimit)
-+	if (q->qi_bsoftlimit && !d->d_blk_softlimit) {
- 		d->d_blk_softlimit = cpu_to_be64(q->qi_bsoftlimit);
--	if (q->qi_bhardlimit && !d->d_blk_hardlimit)
-+		prealloc = 1;
-+	}
-+	if (q->qi_bhardlimit && !d->d_blk_hardlimit) {
- 		d->d_blk_hardlimit = cpu_to_be64(q->qi_bhardlimit);
-+		prealloc = 1;
-+	}
- 	if (q->qi_isoftlimit && !d->d_ino_softlimit)
- 		d->d_ino_softlimit = cpu_to_be64(q->qi_isoftlimit);
- 	if (q->qi_ihardlimit && !d->d_ino_hardlimit)
-@@ -105,6 +110,9 @@ xfs_qm_adjust_dqlimits(
- 		d->d_rtb_softlimit = cpu_to_be64(q->qi_rtbsoftlimit);
- 	if (q->qi_rtbhardlimit && !d->d_rtb_hardlimit)
- 		d->d_rtb_hardlimit = cpu_to_be64(q->qi_rtbhardlimit);
-+
-+	if (prealloc)
-+		xfs_dquot_set_prealloc_limits(dq);
- }
- 
- /*
-@@ -249,6 +257,32 @@ xfs_qm_init_dquot_blk(
- 	xfs_trans_log_buf(tp, bp, 0, BBTOB(q->qi_dqchunklen) - 1);
- }
- 
-+/*
-+ * Initialize the dynamic speculative preallocation thresholds. The lo/hi
-+ * watermarks correspond to the soft and hard limits by default. If a soft limit
-+ * is not specified, we use 95% of the hard limit.
-+ */
-+void
-+xfs_dquot_set_prealloc_limits(struct xfs_dquot *dqp)
-+{
-+	__uint64_t space;
-+
-+	dqp->q_prealloc_hi_wmark = be64_to_cpu(dqp->q_core.d_blk_hardlimit);
-+	dqp->q_prealloc_lo_wmark = be64_to_cpu(dqp->q_core.d_blk_softlimit);
-+	if (!dqp->q_prealloc_lo_wmark) {
-+		dqp->q_prealloc_lo_wmark = dqp->q_prealloc_hi_wmark;
-+		do_div(dqp->q_prealloc_lo_wmark, 100);
-+		dqp->q_prealloc_lo_wmark *= 95;
-+	}
-+
-+	space = dqp->q_prealloc_hi_wmark;
-+
-+	do_div(space, 100);
-+	dqp->q_low_space[XFS_QLOWSP_1_PCNT] = space;
-+	dqp->q_low_space[XFS_QLOWSP_3_PCNT] = space * 3;
-+	dqp->q_low_space[XFS_QLOWSP_5_PCNT] = space * 5;
-+}
-+
- static void
- xfs_dquot_buf_verify(
- 	struct xfs_buf		*bp)
-@@ -649,6 +683,9 @@ xfs_qm_dqread(
- 	dqp->q_res_icount = be64_to_cpu(ddqp->d_icount);
- 	dqp->q_res_rtbcount = be64_to_cpu(ddqp->d_rtbcount);
- 
-+	/* initialize the dquot speculative prealloc thresholds */
-+	xfs_dquot_set_prealloc_limits(dqp);
-+
- 	/* Mark the buf so that this will stay incore a little longer */
- 	xfs_buf_set_ref(bp, XFS_DQUOT_REF);
- 
-diff --git a/fs/xfs/xfs_dquot.h b/fs/xfs/xfs_dquot.h
-index 69491b6..4263f33 100644
---- a/fs/xfs/xfs_dquot.h
-+++ b/fs/xfs/xfs_dquot.h
-@@ -32,6 +32,13 @@
- struct xfs_mount;
- struct xfs_trans;
- 
-+enum {
-+	XFS_QLOWSP_1_PCNT = 0,
-+	XFS_QLOWSP_3_PCNT,
-+	XFS_QLOWSP_5_PCNT,
-+	XFS_QLOWSP_MAX
-+};
-+
- /*
-  * The incore dquot structure
-  */
-@@ -51,6 +58,9 @@ typedef struct xfs_dquot {
- 	xfs_qcnt_t	 q_res_bcount;	/* total regular nblks used+reserved */
- 	xfs_qcnt_t	 q_res_icount;	/* total inos allocd+reserved */
- 	xfs_qcnt_t	 q_res_rtbcount;/* total realtime blks used+reserved */
-+	xfs_qcnt_t	 q_prealloc_lo_wmark;/* prealloc throttle wmark */
-+	xfs_qcnt_t	 q_prealloc_hi_wmark;/* prealloc disabled wmark */
-+	int64_t		 q_low_space[XFS_QLOWSP_MAX];
- 	struct mutex	 q_qlock;	/* quota lock */
- 	struct completion q_flush;	/* flush completion queue */
- 	atomic_t          q_pincount;	/* dquot pin count */
-@@ -153,6 +163,8 @@ extern void		xfs_qm_dqput(xfs_dquot_t *);
- 
- extern void		xfs_dqlock2(struct xfs_dquot *, struct xfs_dquot *);
- 
-+extern void		xfs_dquot_set_prealloc_limits(struct xfs_dquot *);
-+
- static inline struct xfs_dquot *xfs_qm_dqhold(struct xfs_dquot *dqp)
- {
- 	xfs_dqlock(dqp);
-diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-index cf9a340..6096eed 100644
---- a/fs/xfs/xfs_qm_syscalls.c
-+++ b/fs/xfs/xfs_qm_syscalls.c
-@@ -529,6 +529,7 @@ xfs_qm_scall_setqlim(
- 	if (hard == 0 || hard >= soft) {
- 		ddq->d_blk_hardlimit = cpu_to_be64(hard);
- 		ddq->d_blk_softlimit = cpu_to_be64(soft);
-+		xfs_dquot_set_prealloc_limits(dqp);
- 		if (id == 0) {
- 			q->qi_bhardlimit = hard;
- 			q->qi_bsoftlimit = soft;
--- 
-1.7.7.6
+On  this system I had created an XFS file system of size 250 GB, I am using=
+ xfs_db utility to  get file mapping( file name and inode number ) informat=
+ion using the daddr & corresponding  File system block number.
+
+/dev/sdd1 : 250G filesystem, 13% (29 G) full, aprox 3.5 million files
+
+Steps executed in getting this information is as below :
+
+test#  xfs_db -i -c "convert daddr 6612146 fsb" /dev/sdd1
+0xc9c96 (826518)
+test:~ #  xfs_db -i -c "blockget -n -b 826518" /dev/sdd1
+xfs_db: out of memory
+
+Utility (xfs_db ) is giving OOM in extracting  block information using "blo=
+ckget" and in some cases it gives OOM when subcommand "ncheck"of xfs_db.  I=
+t is mentioned in the manuals itself that ncheck is memory consuming comman=
+d. When we analysed the command memory map of ncheck using "pmap"  most of =
+the memory is consumed in heap. It's not utilized by cache memory.
+
+
+Whether xfs_db stores  information of all the blocks  upto the requested bl=
+ock or it maintains its internal structure. When checking the xfs_db codeth=
+en found function call like (push_cur()  etc ) whether it is maintaining it=
+s own command execution stack.
+
+Instead of accessing the device itself can we read the metadump file to get=
+ the required information of file mapping with file system block number. It=
+s binary file but is there any utility which reads the metadump file itself=
+ instead of file system image. As it is easier to read the metadump file in=
+stead of go towards  disk access itself. There is file obfuscation in the f=
+ile name for 4 characters
+
+Whether reading metadump file for getting file mapping with file system blo=
+ck number still consumes same amount of memory or this will not works.
+
+Please provide some reference to either eliminate the OOM (in blockget and =
+ncheck) or any other way either related to accessing metadump file in getti=
+ng the mapping (fsbno to file name or inode number ). As currently finding =
+out the cause of this memory consumption from the source itself whether opt=
+imization in finding this mapping information  is possible or not
+
+On finding out solution over the OOM I found reference of xfs_db 64  but th=
+ere is no 64 bit version of utility available in xfs website either there w=
+ill be some configuration option or it becomes obsolete.
+
+
+
+Thanks & Best Regards
+Anshul Kundra
+
+
+
+
+::DISCLAIMER::
+---------------------------------------------------------------------------=
+-------------------------------------------------------------------------
+
+The contents of this e-mail and any attachment(s) are confidential and inte=
+nded for the named recipient(s) only.
+E-mail transmission is not guaranteed to be secure or error-free as informa=
+tion could be intercepted, corrupted,
+lost, destroyed, arrive late or incomplete, or may contain viruses in trans=
+mission. The e mail and its contents
+(with or without referred errors) shall therefore not attach any liability =
+on the originator or HCL or its affiliates.
+Views or opinions, if any, presented in this email are solely those of the =
+author and may not necessarily reflect the
+views or opinions of HCL or its affiliates. Any form of reproduction, disse=
+mination, copying, disclosure, modification,
+distribution and / or publication of this message without the prior written=
+ consent of authorized representative of
+HCL is strictly prohibited. If you have received this email in error please=
+ delete it and notify the sender immediately.
+Before opening any email and/or attachments, please check them for viruses =
+and other defects.
+
+---------------------------------------------------------------------------=
+-------------------------------------------------------------------------
+
+--_000_4DF92F995A2E4C48ABADDA7F8E05A63D09BE1935NDAHCLTMBS02hcl_
+Content-Type: text/html; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+
+<html xmlns:v=3D"urn:schemas-microsoft-com:vml" xmlns:o=3D"urn:schemas-micr=
+osoft-com:office:office" xmlns:w=3D"urn:schemas-microsoft-com:office:word" =
+xmlns:m=3D"http://schemas.microsoft.com/office/2004/12/omml" xmlns=3D"http:=
+//www.w3.org/TR/REC-html40">
+<head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dus-ascii">
+<meta name=3D"Generator" content=3D"Microsoft Word 14 (filtered medium)">
+<style><!--
+/* Font Definitions */
+@font-face
+	{font-family:Calibri;
+	panose-1:2 15 5 2 2 2 4 3 2 4;}
+/* Style Definitions */
+p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{margin:0in;
+	margin-bottom:.0001pt;
+	font-size:11.0pt;
+	font-family:"Calibri","sans-serif";}
+a:link, span.MsoHyperlink
+	{mso-style-priority:99;
+	color:blue;
+	text-decoration:underline;}
+a:visited, span.MsoHyperlinkFollowed
+	{mso-style-priority:99;
+	color:purple;
+	text-decoration:underline;}
+span.EmailStyle17
+	{mso-style-type:personal-compose;
+	font-family:"Calibri","sans-serif";
+	color:windowtext;}
+.MsoChpDefault
+	{mso-style-type:export-only;
+	font-family:"Calibri","sans-serif";}
+@page WordSection1
+	{size:8.5in 11.0in;
+	margin:1.0in 1.0in 1.0in 1.0in;}
+div.WordSection1
+	{page:WordSection1;}
+--></style><!--[if gte mso 9]><xml>
+<o:shapedefaults v:ext=3D"edit" spidmax=3D"1026" />
+</xml><![endif]--><!--[if gte mso 9]><xml>
+<o:shapelayout v:ext=3D"edit">
+<o:idmap v:ext=3D"edit" data=3D"1" />
+</o:shapelayout></xml><![endif]-->
+</head>
+<body lang=3D"EN-US" link=3D"blue" vlink=3D"purple">
+<div class=3D"WordSection1">
+<p class=3D"MsoNormal">Developers,<o:p></o:p></p>
+<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
+<p class=3D"MsoNormal">I have system with configuration as <o:p></o:p></p>
+<p class=3D"MsoNormal">RAM : 4G<o:p></o:p></p>
+<p class=3D"MsoNormal">SWAP: 2G<o:p></o:p></p>
+<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
+<p class=3D"MsoNormal">On &nbsp;this system I had created an XFS file syste=
+m of size 250 GB, I am using xfs_db utility to &nbsp;get file mapping( file=
+ name and inode number ) information using the daddr &amp; corresponding &n=
+bsp;File system block number. &nbsp;<o:p></o:p></p>
+<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
+<p class=3D"MsoNormal">/dev/sdd1 : 250G filesystem, 13% (29 G) full, aprox =
+3.5 million files<o:p></o:p></p>
+<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
+<p class=3D"MsoNormal">Steps executed in getting this information is as bel=
+ow :<o:p></o:p></p>
+<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
+<p class=3D"MsoNormal">test# &nbsp;xfs_db -i -c &quot;convert daddr 6612146=
+ fsb&quot; /dev/sdd1<o:p></o:p></p>
+<p class=3D"MsoNormal">0xc9c96 (826518)<o:p></o:p></p>
+<p class=3D"MsoNormal">test:~ # &nbsp;xfs_db -i -c &quot;blockget -n -b 826=
+518&quot; /dev/sdd1<o:p></o:p></p>
+<p class=3D"MsoNormal">xfs_db: out of memory<o:p></o:p></p>
+<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
+<p class=3D"MsoNormal">Utility (xfs_db ) is giving OOM in extracting &nbsp;=
+block information using &#8220;blockget&#8221; and in some cases it gives O=
+OM when subcommand &#8220;ncheck&#8221;of xfs_db.&nbsp; It is mentioned in =
+the manuals itself that ncheck is memory consuming command. When we
+ analysed the command memory map of ncheck using &#8220;pmap&#8221; &nbsp;m=
+ost of the memory is consumed in heap. It&#8217;s not utilized by cache mem=
+ory.<o:p></o:p></p>
+<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
+<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
+<p class=3D"MsoNormal">Whether xfs_db stores &nbsp;information of all the b=
+locks &nbsp;upto the requested block or it maintains its internal structure=
+. When checking the xfs_db codethen found function call like (push_cur() &n=
+bsp;etc ) whether it is maintaining its own command
+ execution stack. <o:p></o:p></p>
+<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
+<p class=3D"MsoNormal">Instead of accessing the device itself can we read t=
+he metadump file to get the required information of file mapping with file =
+system block number. Its binary file but is there any utility which reads t=
+he metadump file itself instead of
+ file system image. As it is easier to read the metadump file instead of go=
+ towards&nbsp; disk access itself. There is file obfuscation in the file na=
+me for 4 characters
+<o:p></o:p></p>
+<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
+<p class=3D"MsoNormal">Whether reading metadump file for getting file mappi=
+ng with file system block number still consumes same amount of memory or th=
+is will not works.<o:p></o:p></p>
+<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
+<p class=3D"MsoNormal">Please provide some reference to either eliminate th=
+e OOM (in blockget and ncheck) or any other way either related to accessing=
+ metadump file in getting the mapping (fsbno to file name or inode number )=
+. As currently finding out the cause
+ of this memory consumption from the source itself whether optimization in =
+finding this mapping information &nbsp;is possible or not &nbsp;<o:p></o:p>=
+</p>
+<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
+<p class=3D"MsoNormal">On finding out solution over the OOM I found referen=
+ce of xfs_db 64 &nbsp;but there is no 64 bit version of utility available i=
+n xfs website either there will be some configuration option or it becomes =
+obsolete.<o:p></o:p></p>
+<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
+<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
+<p class=3D"MsoNormal"><o:p>&nbsp;</o:p></p>
+<p class=3D"MsoNormal">Thanks &amp; Best Regards <o:p></o:p></p>
+<p class=3D"MsoNormal">Anshul Kundra <o:p></o:p></p>
+<p class=3D"MsoNormal">&nbsp;<o:p></o:p></p>
+<p class=3D"MsoNormal">&nbsp;<o:p></o:p></p>
+</div>
+<span style=3D"FONT-FAMILY: 'Arial','sans-serif'; COLOR: gray; FONT-SIZE: 7=
+.5pt; mso-fareast-font-family: 'Times New Roman'">
+<P style=3D"MARGIN: 0in 0in 0pt" class=3DMsoNormal><br><br><font style=3D"F=
+ONT-FAMILY: 'Arial','sans-serif'; COLOR: gray; FONT-SIZE: 9px">::DISCLAIMER=
+::<br>---------------------------------------------------------------------=
+---------------------------------------------------------------------------=
+----</font></P>
+<P style=3D"MARGIN: 0in 0in 0pt" class=3DMsoNormal><font style=3D"FONT-FAMI=
+LY: 'Arial','sans-serif'; COLOR: gray; FONT-SIZE: 11px">The contents of thi=
+s e-mail and any attachment(s) are confidential and intended for the named =
+recipient(s) only.<br>E-mail transmission is not guaranteed to be secure or=
+ error-free as information could be intercepted, corrupted, <br>lost, destr=
+oyed, arrive late or incomplete, or may contain viruses in transmission. Th=
+e e mail and its contents <br>(with or without referred errors) shall there=
+fore not attach any liability on the originator or HCL or its affiliates. <=
+br>Views or opinions, if any, presented in this email are solely those of t=
+he author and may not necessarily reflect the <br>views or opinions of HCL =
+or its affiliates. Any form of reproduction, dissemination, copying, disclo=
+sure, modification, <br>distribution and / or publication of this message w=
+ithout the prior written consent of authorized representative of <br>HCL is=
+ strictly prohibited. If you have received this email in error please delet=
+e it and notify the sender immediately. <br>Before opening any email and/or=
+ attachments, please check them for viruses and other defects.</font></P>
+<P style=3D"MARGIN: 0in 0in 0pt" class=3DMsoNormal><font style=3D"FONT-FAMI=
+LY: 'Arial','sans-serif'; COLOR: gray; FONT-SIZE: 11px">-------------------=
+---------------------------------------------------------------------------=
+------------------------------------------------------</font></span></P></b=
+ody>
+</html>
+
+--_000_4DF92F995A2E4C48ABADDA7F8E05A63D09BE1935NDAHCLTMBS02hcl_--
+
+
+--===============2152681038814342476==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============2152681038814342476==--
