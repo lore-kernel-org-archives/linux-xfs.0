@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E1FF07F4E
-	for <xfs@oss.sgi.com>; Wed, 20 Feb 2013 04:42:28 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 616BAAC003
-	for <xfs@oss.sgi.com>; Wed, 20 Feb 2013 02:42:28 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A77777F54
+	for <xfs@oss.sgi.com>; Wed, 20 Feb 2013 04:42:30 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 92E25304043
+	for <xfs@oss.sgi.com>; Wed, 20 Feb 2013 02:42:30 -0800 (PST)
 Received: from relay.sw.ru (mailhub.sw.ru [195.214.232.25]) by cuda.sgi.com
-	with ESMTP id CDJQPS2x4jOPkjFt (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id 5yT84LPOwauJOYe4 (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 20 Feb 2013 02:42:26 -0800 (PST)
+	Wed, 20 Feb 2013 02:42:29 -0800 (PST)
 From: Dmitry Monakhov <dmonakhov@openvz.org>
-Subject: [PATCH 04/10] xfstets: fsstress add replace file operation
-Date: Wed, 20 Feb 2013 14:42:09 +0400
-Message-Id: <1361356935-29153-5-git-send-email-dmonakhov@openvz.org>
+Subject: [PATCH 06/10] xfstest: move run_check to common.rc
+Date: Wed, 20 Feb 2013 14:42:11 +0400
+Message-Id: <1361356935-29153-7-git-send-email-dmonakhov@openvz.org>
 In-Reply-To: <1361356935-29153-1-git-send-email-dmonakhov@openvz.org>
 References: <1361356935-29153-1-git-send-email-dmonakhov@openvz.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,103 +31,49 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: linux-fsdevel@vger.kernel.org, Dmitry Monakhov <dmonakhov@openvz.org>, linux-ext4@vger.kernel.org, dchinner@redhat.com
 
-The most common usecase for rename(2) syscall is an atomic replacement
-of existing file with newer version. But rename_f() rename some existing
-filename to newly generated (non existing) filename. As result the most
-important usecase is not covered.
-Since rename_f() is already exist in fsstress and it has known behavior,
-some tests already depends on that behaviour, let's add another operation
-(replace_f) which invoke rename(2) for two existing entries.
-
-OUT_OF_COMMIT_DISCUSSION:
-Off course replace_f() break naming convention where fun_name == syscall_f(),
-but this is the only way I see to introduce new feature and not break
-other tests. May be it is reasonable to call it rename2_f() ?
 
 Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
 ---
- ltp/fsstress.c |   47 +++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 47 insertions(+), 0 deletions(-)
+ 276       |    6 ------
+ common.rc |    8 +++++++-
+ 2 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/ltp/fsstress.c b/ltp/fsstress.c
-index b4cfb25..85ff72a 100644
---- a/ltp/fsstress.c
-+++ b/ltp/fsstress.c
-@@ -80,6 +80,7 @@ typedef enum {
- 	OP_READ,
- 	OP_READLINK,
- 	OP_RENAME,
-+	OP_REPLACE,
- 	OP_RESVSP,
- 	OP_RMDIR,
- 	OP_SETATTR,
-@@ -165,6 +166,7 @@ void	punch_f(int, long);
- void	read_f(int, long);
- void	readlink_f(int, long);
- void	rename_f(int, long);
-+void	replace_f(int, long);
- void	resvsp_f(int, long);
- void	rmdir_f(int, long);
- void	setattr_f(int, long);
-@@ -202,6 +204,7 @@ opdesc_t	ops[] = {
- 	{ OP_READ, "read", read_f, 1, 0 },
- 	{ OP_READLINK, "readlink", readlink_f, 1, 0 },
- 	{ OP_RENAME, "rename", rename_f, 2, 1 },
-+	{ OP_REPLACE, "replace", replace_f, 2, 1 },
- 	{ OP_RESVSP, "resvsp", resvsp_f, 1, 1 },
- 	{ OP_RMDIR, "rmdir", rmdir_f, 1, 1 },
- 	{ OP_SETATTR, "setattr", setattr_f, 0, 1 },
-@@ -2680,6 +2683,50 @@ rename_f(int opno, long r)
+diff --git a/276 b/276
+index 082f943..c1ce8ac 100755
+--- a/276
++++ b/276
+@@ -165,12 +165,6 @@ _btrfs_inspect_check()
+ 	return $ret
  }
  
- void
-+replace_f(int opno, long r)
-+{
-+	int		e;
-+	pathname_t	src_f, dst_f;
-+	fent_t		*src_fep, *dst_fep;
-+	flist_t		*src_flp, *dst_flp;
-+	int		v;
-+	int		v1;
+-run_check()
+-{
+-	echo "# $@" >> $seq.full 2>&1
+-	"$@" >> $seq.full 2>&1 || _fail "failed: '$@'"
+-}
+-
+ workout()
+ {
+ 	fsz=$1
+diff --git a/common.rc b/common.rc
+index 3635a45..e7ae9bf 100644
+--- a/common.rc
++++ b/common.rc
+@@ -1854,7 +1854,13 @@ _scale_fsstress_args()
+     done
+     echo $args                                                                                            
+ }
+-  
 +
-+	/* get an existing path for the source of the rename */
-+	init_pathname(&src_f);
-+	if (!get_fname(FT_ANYm, r, &src_f, &src_flp, &src_fep, &v)) {
-+		if (v)
-+			printf("%d/%d: replace - no filename\n", procid, opno);
-+		free_pathname(&src_f);
-+		return;
-+	}
-+	/* get an existing path for the destination of the rename */
-+	init_pathname(&dst_f);
-+	if (!get_fname(1 << (src_flp - flist), rand(), &dst_f, &dst_flp, &dst_fep, &v1)) {
-+		if (v1)
-+			printf("%d/%d: replace - no filename\n", procid, opno);
-+		free_pathname(&dst_f);
-+		return;
-+	}
-+	
-+	v |= v1;
-+	e = rename_path(&src_f, &dst_f) < 0 ? errno : 0;
-+	check_cwd();
-+	if (e == 0 && src_fep->id != dst_fep->id ) {
-+		del_from_flist(src_flp - flist, src_fep - src_flp->fents);
-+	}
-+	if (v) {
-+		printf("%d/%d: replace %s with %s %d\n", procid, opno, dst_f.path,
-+			src_f.path, e);
-+		if (e == 0 && src_fep->id != dst_fep->id)
-+			printf("%d/%d: replace del entry: id=%d,parent=%d\n",
-+				procid, opno, src_fep->id, src_fep->parent);
-+	}
-+	free_pathname(&src_f);
-+	free_pathname(&dst_f);
++run_check()
++{
++	echo "# $@" >> $seq.full 2>&1
++	"$@" >> $seq.full 2>&1 || _fail "failed: '$@'"
 +}
 +
-+void
- resvsp_f(int opno, long r)
- {
- 	int		e;
+ ################################################################################
+ 
+ if [ "$iam" != new -a "$iam" != bench ]
 -- 
 1.7.1
 
