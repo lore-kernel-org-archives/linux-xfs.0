@@ -1,27 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C8B877F61
+	by oss.sgi.com (Postfix) with ESMTP id F131A7F62
 	for <xfs@oss.sgi.com>; Wed, 20 Feb 2013 09:07:51 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 492D6AC006
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5FE08AC007
 	for <xfs@oss.sgi.com>; Wed, 20 Feb 2013 07:07:48 -0800 (PST)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id D5axVUy5TgYPPprR for
-	<xfs@oss.sgi.com>; Wed, 20 Feb 2013 07:07:47 -0800 (PST)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r1KF7k09014111
+	cuda.sgi.com with ESMTP id 1WHFG3O6aO8fCbCB for
+	<xfs@oss.sgi.com>; Wed, 20 Feb 2013 07:07:46 -0800 (PST)
+Received: from int-mx01.intmail.prod.int.phx2.redhat.com
+	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r1KF7kQp024511
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
 	for <xfs@oss.sgi.com>; Wed, 20 Feb 2013 10:07:46 -0500
 Received: from bfoster.bfoster (dhcp-189-135.bos.redhat.com [10.16.189.135])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id r1KF7krU007709
+	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
+	id r1KF7je3023298
 	for <xfs@oss.sgi.com>; Wed, 20 Feb 2013 10:07:46 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v4 5/6] xfs: add quota-driven speculative preallocation
-	throttling
-Date: Wed, 20 Feb 2013 10:10:18 -0500
-Message-Id: <1361373019-30891-6-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v4 4/6] xfs: xfs_dquot prealloc throttling watermarks and low
+	free space
+Date: Wed, 20 Feb 2013 10:10:17 -0500
+Message-Id: <1361373019-30891-5-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1361373019-30891-1-git-send-email-bfoster@redhat.com>
 References: <1361373019-30891-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,141 +39,155 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Introduce the need_throttle() and calc_throttle() functions to
-independently check whether throttling is required for a particular
-dquot and if so, calculate the associated throttling metrics based
-on the state of the quota. We use the same general algorithm to
-calculate the throttle shift as for global free space with the
-exception of using three stages rather than five.
+Enable tracking of high and low watermarks for preallocation
+throttling of files under quota restrictions. These values are
+calculated when the quota limit is read from disk or modified and
+cached for later use by the throttling algorithm.
 
-Update xfs_iomap_prealloc_size() to use the smallest available
-prealloc size based on each of the constraints and apply the
-maximum shift to obtain the throttled preallocation size.
+The high watermark specifies when preallocation is disabled, the
+low watermark specifies when throttling is enabled and the low free
+space data structure contains precalculated low free space limits
+to serve as input to determine the level of throttling required.
+
+Note that the low free space data structure is based on the
+existing global low free space data structure with the exception of
+using three stages (5%, 3% and 1%) rather than five to reduce the
+impact of xfs_dquot memory overhead.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_iomap.c |   82 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 82 insertions(+), 0 deletions(-)
+ fs/xfs/xfs_dquot.c       |   41 +++++++++++++++++++++++++++++++++++++++--
+ fs/xfs/xfs_dquot.h       |   12 ++++++++++++
+ fs/xfs/xfs_qm_syscalls.c |    1 +
+ 3 files changed, 52 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index daa08f6..34640a3f 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -42,6 +42,8 @@
- #include "xfs_iomap.h"
- #include "xfs_trace.h"
- #include "xfs_icache.h"
-+#include "xfs_dquot_item.h"
-+#include "xfs_dquot.h"
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index e1833b9..e3aa801 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -90,13 +90,18 @@ xfs_qm_adjust_dqlimits(
+ {
+ 	xfs_quotainfo_t		*q = mp->m_quotainfo;
+ 	xfs_disk_dquot_t	*d = &dq->q_core;
++	int			prealloc = 0;
  
+ 	ASSERT(d->d_id);
  
- #define XFS_WRITEIO_ALIGN(mp,off)	(((off) >> mp->m_writeio_log) \
-@@ -366,6 +368,61 @@ xfs_iomap_eof_prealloc_initial_size(
- 	return XFS_B_TO_FSB(mp, offset);
+-	if (q->qi_bsoftlimit && !d->d_blk_softlimit)
++	if (q->qi_bsoftlimit && !d->d_blk_softlimit) {
+ 		d->d_blk_softlimit = cpu_to_be64(q->qi_bsoftlimit);
+-	if (q->qi_bhardlimit && !d->d_blk_hardlimit)
++		prealloc = 1;
++	}
++	if (q->qi_bhardlimit && !d->d_blk_hardlimit) {
+ 		d->d_blk_hardlimit = cpu_to_be64(q->qi_bhardlimit);
++		prealloc = 1;
++	}
+ 	if (q->qi_isoftlimit && !d->d_ino_softlimit)
+ 		d->d_ino_softlimit = cpu_to_be64(q->qi_isoftlimit);
+ 	if (q->qi_ihardlimit && !d->d_ino_hardlimit)
+@@ -105,6 +110,9 @@ xfs_qm_adjust_dqlimits(
+ 		d->d_rtb_softlimit = cpu_to_be64(q->qi_rtbsoftlimit);
+ 	if (q->qi_rtbhardlimit && !d->d_rtb_hardlimit)
+ 		d->d_rtb_hardlimit = cpu_to_be64(q->qi_rtbhardlimit);
++
++	if (prealloc)
++		xfs_dquot_set_prealloc_limits(dq);
  }
  
-+STATIC bool
-+xfs_quota_need_throttle(
-+	struct xfs_inode *ip,
-+	int type,
-+	xfs_fsblock_t alloc_blocks)
+ /*
+@@ -249,6 +257,32 @@ xfs_qm_init_dquot_blk(
+ 	xfs_trans_log_buf(tp, bp, 0, BBTOB(q->qi_dqchunklen) - 1);
+ }
+ 
++/*
++ * Initialize the dynamic speculative preallocation thresholds. The lo/hi
++ * watermarks correspond to the soft and hard limits by default. If a soft limit
++ * is not specified, we use 95% of the hard limit.
++ */
++void
++xfs_dquot_set_prealloc_limits(struct xfs_dquot *dqp)
 +{
-+	struct xfs_dquot *dq = xfs_inode_dquot(ip, type);
++	__uint64_t space;
 +
-+	if (!dq || !xfs_this_quota_on(ip->i_mount, type))
-+		return false;
++	dqp->q_prealloc_hi_wmark = be64_to_cpu(dqp->q_core.d_blk_hardlimit);
++	dqp->q_prealloc_lo_wmark = be64_to_cpu(dqp->q_core.d_blk_softlimit);
++	if (!dqp->q_prealloc_lo_wmark) {
++		dqp->q_prealloc_lo_wmark = dqp->q_prealloc_hi_wmark;
++		do_div(dqp->q_prealloc_lo_wmark, 100);
++		dqp->q_prealloc_lo_wmark *= 95;
++	}
 +
-+	/* no hi watermark, no throttle */
-+	if (!dq->q_prealloc_hi_wmark)
-+		return false;
++	space = dqp->q_prealloc_hi_wmark;
 +
-+	/* under the lo watermark, no throttle */
-+	if (dq->q_res_bcount + alloc_blocks < dq->q_prealloc_lo_wmark)
-+		return false;
-+
-+	return true;
++	do_div(space, 100);
++	dqp->q_low_space[XFS_QLOWSP_1_PCNT] = space;
++	dqp->q_low_space[XFS_QLOWSP_3_PCNT] = space * 3;
++	dqp->q_low_space[XFS_QLOWSP_5_PCNT] = space * 5;
 +}
 +
-+STATIC void
-+xfs_quota_calc_throttle(
-+	struct xfs_inode *ip,
-+	int type,
-+	xfs_fsblock_t *qblocks,
-+	int *qshift)
-+{
-+	int64_t freesp;
-+	int shift = 0;
-+	struct xfs_dquot *dq = xfs_inode_dquot(ip, type);
+ static void
+ xfs_dquot_buf_verify(
+ 	struct xfs_buf		*bp)
+@@ -649,6 +683,9 @@ xfs_qm_dqread(
+ 	dqp->q_res_icount = be64_to_cpu(ddqp->d_icount);
+ 	dqp->q_res_rtbcount = be64_to_cpu(ddqp->d_rtbcount);
+ 
++	/* initialize the dquot speculative prealloc thresholds */
++	xfs_dquot_set_prealloc_limits(dqp);
 +
-+	/* over hi wmark, squash the prealloc completely */
-+	if (dq->q_res_bcount >= dq->q_prealloc_hi_wmark) {
-+		*qblocks = 0;
-+		return;
-+	}
-+
-+	freesp = dq->q_prealloc_hi_wmark - dq->q_res_bcount;
-+	if (freesp < dq->q_low_space[XFS_QLOWSP_5_PCNT]) {
-+		shift = 2;
-+		if (freesp < dq->q_low_space[XFS_QLOWSP_3_PCNT])
-+			shift += 2;
-+		if (freesp < dq->q_low_space[XFS_QLOWSP_1_PCNT])
-+			shift += 2;
-+	}
-+
-+	/* only overwrite the throttle values if we are more aggressive */
-+	if ((freesp >> shift) < (*qblocks >> *qshift)) {
-+		*qblocks = freesp;
-+		*qshift = shift;
-+	}
-+}
+ 	/* Mark the buf so that this will stay incore a little longer */
+ 	xfs_buf_set_ref(bp, XFS_DQUOT_REF);
+ 
+diff --git a/fs/xfs/xfs_dquot.h b/fs/xfs/xfs_dquot.h
+index 69491b6..4263f33 100644
+--- a/fs/xfs/xfs_dquot.h
++++ b/fs/xfs/xfs_dquot.h
+@@ -32,6 +32,13 @@
+ struct xfs_mount;
+ struct xfs_trans;
+ 
++enum {
++	XFS_QLOWSP_1_PCNT = 0,
++	XFS_QLOWSP_3_PCNT,
++	XFS_QLOWSP_5_PCNT,
++	XFS_QLOWSP_MAX
++};
 +
  /*
-  * If we don't have a user specified preallocation size, dynamically increase
-  * the preallocation size as the size of the file grows. Cap the maximum size
-@@ -383,11 +440,14 @@ xfs_iomap_prealloc_size(
- 	xfs_fsblock_t		alloc_blocks = 0;
- 	int			shift = 0;
- 	int64_t			freesp;
-+	xfs_fsblock_t		qblocks;
-+	int			qshift = 0;
+  * The incore dquot structure
+  */
+@@ -51,6 +58,9 @@ typedef struct xfs_dquot {
+ 	xfs_qcnt_t	 q_res_bcount;	/* total regular nblks used+reserved */
+ 	xfs_qcnt_t	 q_res_icount;	/* total inos allocd+reserved */
+ 	xfs_qcnt_t	 q_res_rtbcount;/* total realtime blks used+reserved */
++	xfs_qcnt_t	 q_prealloc_lo_wmark;/* prealloc throttle wmark */
++	xfs_qcnt_t	 q_prealloc_hi_wmark;/* prealloc disabled wmark */
++	int64_t		 q_low_space[XFS_QLOWSP_MAX];
+ 	struct mutex	 q_qlock;	/* quota lock */
+ 	struct completion q_flush;	/* flush completion queue */
+ 	atomic_t          q_pincount;	/* dquot pin count */
+@@ -153,6 +163,8 @@ extern void		xfs_qm_dqput(xfs_dquot_t *);
  
- 	alloc_blocks = xfs_iomap_eof_prealloc_initial_size(mp, ip, offset,
- 							   imap, nimaps);
- 	if (!alloc_blocks)
- 		goto check_writeio;
-+	qblocks = alloc_blocks;
+ extern void		xfs_dqlock2(struct xfs_dquot *, struct xfs_dquot *);
  
- 	/*
- 	 * MAXEXTLEN is not a power of two value but we round the prealloc down
-@@ -412,6 +472,28 @@ xfs_iomap_prealloc_size(
- 		if (freesp < mp->m_low_space[XFS_LOWSP_1_PCNT])
- 			shift++;
- 	}
++extern void		xfs_dquot_set_prealloc_limits(struct xfs_dquot *);
 +
-+	/*
-+	 * Check each quota to cap the prealloc size and provide a shift
-+	 * value to throttle with.
-+	 */
-+	if (xfs_quota_need_throttle(ip, XFS_DQ_USER, alloc_blocks))
-+		xfs_quota_calc_throttle(ip, XFS_DQ_USER, &qblocks, &qshift);
-+	if (xfs_quota_need_throttle(ip, XFS_DQ_GROUP, alloc_blocks))
-+		xfs_quota_calc_throttle(ip, XFS_DQ_GROUP, &qblocks, &qshift);
-+	if (xfs_quota_need_throttle(ip, XFS_DQ_PROJ, alloc_blocks))
-+		xfs_quota_calc_throttle(ip, XFS_DQ_PROJ, &qblocks, &qshift);
-+
-+	/*
-+	 * The final prealloc size is set to the minimum of free space available
-+	 * in each of the quotas and the overall filesystem.
-+	 *
-+	 * The shift throttle value is set to the maximum value as determined by
-+	 * the global low free space values and per-quota low free space values.
-+	 */
-+	alloc_blocks = MIN(alloc_blocks, qblocks);
-+	shift = MAX(shift, qshift);
-+
- 	if (shift)
- 		alloc_blocks >>= shift;
- 	/*
+ static inline struct xfs_dquot *xfs_qm_dqhold(struct xfs_dquot *dqp)
+ {
+ 	xfs_dqlock(dqp);
+diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+index cf9a340..6096eed 100644
+--- a/fs/xfs/xfs_qm_syscalls.c
++++ b/fs/xfs/xfs_qm_syscalls.c
+@@ -529,6 +529,7 @@ xfs_qm_scall_setqlim(
+ 	if (hard == 0 || hard >= soft) {
+ 		ddq->d_blk_hardlimit = cpu_to_be64(hard);
+ 		ddq->d_blk_softlimit = cpu_to_be64(soft);
++		xfs_dquot_set_prealloc_limits(dqp);
+ 		if (id == 0) {
+ 			q->qi_bhardlimit = hard;
+ 			q->qi_bsoftlimit = soft;
 -- 
 1.7.7.6
 
