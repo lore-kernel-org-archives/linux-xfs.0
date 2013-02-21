@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 459587F51
-	for <xfs@oss.sgi.com>; Thu, 21 Feb 2013 05:27:41 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E3E6BAC008
-	for <xfs@oss.sgi.com>; Thu, 21 Feb 2013 03:27:40 -0800 (PST)
-Received: from mail-wg0-f54.google.com (mail-wg0-f54.google.com
-	[74.125.82.54]) by cuda.sgi.com with ESMTP id fSFXut6aUbNJaFx2
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 21 Feb 2013 03:27:39 -0800 (PST)
-Received: by mail-wg0-f54.google.com with SMTP id fm10so7506215wgb.9
-	for <xfs@oss.sgi.com>; Thu, 21 Feb 2013 03:27:38 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id CA6497F51
+	for <xfs@oss.sgi.com>; Thu, 21 Feb 2013 05:40:35 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A6C138F8037
+	for <xfs@oss.sgi.com>; Thu, 21 Feb 2013 03:40:32 -0800 (PST)
+Received: from srv2.trombetti.net (srv2.trombetti.net [65.254.53.252]) by
+	cuda.sgi.com with ESMTP id pnTdyChTcE5G1BXJ for
+	<xfs@oss.sgi.com>; Thu, 21 Feb 2013 03:40:30 -0800 (PST)
+Message-ID: <512607C5.9060004@shiftmail.org>
+Date: Thu, 21 Feb 2013 12:40:53 +0100
+From: Spelic <spelic@shiftmail.org>
 MIME-Version: 1.0
-In-Reply-To: <4DF92F995A2E4C48ABADDA7F8E05A63D09BE1935@NDA-HCLT-MBS02.hclt.corp.hcl.in>
-References: <4DF92F995A2E4C48ABADDA7F8E05A63D09BE1935@NDA-HCLT-MBS02.hclt.corp.hcl.in>
-Date: Thu, 21 Feb 2013 12:27:38 +0100
-Message-ID: <CAAxjCEzbE=rjXPZkmCZ=JeSHr1VjRR+36-iBWNWL04+NaoSRjg@mail.gmail.com>
-Subject: Re: XFS_DB
-From: Stefan Ring <stefanrin@gmail.com>
+Subject: Re: Ideal RAID-1 Stripe Size for IMAP Server ?
+References: <D991F48F-6D86-4199-9762-698DD7A61895@fiton.is>
+In-Reply-To: <D991F48F-6D86-4199-9762-698DD7A61895@fiton.is>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,28 +23,28 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Anshul Kundra <anshul.kundra@hcl.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
+Cc: =?ISO-8859-1?Q?Svavar_=D6rn_Eysteinsson?= <svavar@fiton.is>
 
-> Instead of accessing the device itself can we read the metadump file to get
-> the required information of file mapping with file system block number. Its
-> binary file but is there any utility which reads the metadump file itself
-> instead of file system image. As it is easier to read the metadump file
-> instead of go towards  disk access itself. There is file obfuscation in the
-> file name for 4 characters
+On 02/21/13 12:11, Svavar =D6rn Eysteinsson wrote:
+> Hi there.
+>
+> I'm currently configuring a brand new email server(IMAP) which will run
+> CentOS 6.3 x64.
+>
+> So lots of files on the data volume.
+>
+> I'm confused about stripe size for my data volume.
+> I'm using 2x500GB for OS in RAID1 and 2x2TB SAS for DATA in RAID1 which is
+> hosted on a HP Smart Array P420 Controller with 1GB in Cache/Battery Back=
+ed Up.
+> Both these array's are on the P420 controller.
 
-IIRC, a metadump can be "restored" into a sparse file that does not
-require much more space than the metadump itself.
-
-> On finding out solution over the OOM I found reference of xfs_db 64  but
-> there is no 64 bit version of utility available in xfs website either there
-> will be some configuration option or it becomes obsolete.
-
-Are you using Linux? On every 64 bit Linux the XFS binaries are built in 64 bit.
+Raid1 cannot have "stripes" !?
 
 _______________________________________________
 xfs mailing list
