@@ -1,29 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 455447F50
-	for <xfs@oss.sgi.com>; Thu, 21 Feb 2013 07:34:47 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D90ABAC004
-	for <xfs@oss.sgi.com>; Thu, 21 Feb 2013 05:34:43 -0800 (PST)
-Received: from firestarter.dermichi.com (firestarter.dermichi.com
-	[194.177.153.153]) by cuda.sgi.com with ESMTP id
-	py8SDrEZyn9QrRok (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 21 Feb 2013 05:34:42 -0800 (PST)
-Received: from noclinksys.net4you.net ([194.177.153.180] helo=[192.168.34.189])
-	by firestarter.dermichi.com with esmtpsa
-	(TLSv1:DHE-RSA-CAMELLIA256-SHA:256) (Exim 4.80.1)
-	(envelope-from <mw@dermichi.com>) id 1U8WIK-0001QI-GB
-	for xfs@oss.sgi.com; Thu, 21 Feb 2013 14:34:40 +0100
-Message-ID: <5126226E.2070201@dermichi.com>
-Date: Thu, 21 Feb 2013 14:34:38 +0100
-From: Michael Weissenbacher <mw@dermichi.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A7FFC7F50
+	for <xfs@oss.sgi.com>; Thu, 21 Feb 2013 09:28:10 -0600 (CST)
+Message-ID: <51263D08.5060307@sgi.com>
+Date: Thu, 21 Feb 2013 09:28:08 -0600
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: Ideal RAID-1 Stripe Size for IMAP Server ?
-References: <D991F48F-6D86-4199-9762-698DD7A61895@fiton.is>
-	<512607C5.9060004@shiftmail.org>
-	<62DA4B79-7B29-4D9E-A756-FEC6838E5106@fiton.is>
-In-Reply-To: <62DA4B79-7B29-4D9E-A756-FEC6838E5106@fiton.is>
+Subject: Re: [PATCH V2] xfsprogs: Fix possible unallocated memory access in
+	fiemap
+References: <1355319059-12111-1-git-send-email-lczerner@redhat.com>
+	<20121212231245.GY16353@dastard>
+	<alpine.LFD.2.00.1212131024460.17970@localhost>
+	<20121213230608.GI16353@dastard> <5102F4BE.6060009@sandeen.net>
+In-Reply-To: <5102F4BE.6060009@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,30 +21,34 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: hch@infradead.org, xfs@oss.sgi.com
 
-schrieb Svavar =D6rn Eysteinsson:
-> I thought so just after sending this email to the group.
-> But the ACU(Array Configuration Utility) gives me the option of changing =
-the stripe size
-> and gives me 256 as default.
-> =
+On 01/25/13 15:10, Eric Sandeen wrote:
+> (Based on original patch by Lukas Czerner&  comments by Dave Chinner)
+>
+> Currently we could access unallocated memory in fiemap because we're
+> using uninitialized variable 'fiemap' in fiemap_f(). In fact this has
+> been spotted on x390s machine where xfs_io would segfault.
+>
+> The problem happens in the for cycle which seems to be intended to
+> compute the header item spacing. However at that point the fiemap
+> structure has just been allocated and does not contain any extents
+> yet, so it is entirely useless and it never actually worked.
+>
+> This patch delays the format calculation until the first batch
+> of extents has come in for analysis.
+>
+> Signed-off-by: Eric Sandeen<sandeen@redhat.com>
+> ---
 
-> So that is irrelevant on RAID1 completely ?
-> =
+A working calculated format is a great improvement.
 
-It should be, yes. I would guess it becomes relavant if you later decide
-that you want to expand to a RAID-10 or (shrug) RAID-5.
-
-Generally, a small stripe size (like 64k) should be beneficial for
-random access patterns like on a mail server.
-
-hth,
-Michael
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
