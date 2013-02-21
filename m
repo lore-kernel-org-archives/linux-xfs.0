@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id DE9747F50
-	for <xfs@oss.sgi.com>; Thu, 21 Feb 2013 05:11:45 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 459587F51
+	for <xfs@oss.sgi.com>; Thu, 21 Feb 2013 05:27:41 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 7CBDCAC004
-	for <xfs@oss.sgi.com>; Thu, 21 Feb 2013 03:11:42 -0800 (PST)
-Received: from atlas.fiton.is (atlas.fiton.is [62.145.135.105]) by
-	cuda.sgi.com with ESMTP id 8FINkEdFeM6oswkI (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 21 Feb 2013 03:11:40 -0800 (PST)
-Received: from localhost ([127.0.0.1]) by atlas.fiton.is for xfs@oss.sgi.com;
-	Thu, 21 Feb 2013 11:13:54 +0000
-From: =?iso-8859-1?Q?Svavar_=D6rn_Eysteinsson?= <svavar@fiton.is>
-Subject: Ideal RAID-1 Stripe Size for IMAP Server ?
-Date: Thu, 21 Feb 2013 11:11:35 +0000
-Message-Id: <D991F48F-6D86-4199-9762-698DD7A61895@fiton.is>
-Mime-Version: 1.0 (Apple Message framework v1283)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E3E6BAC008
+	for <xfs@oss.sgi.com>; Thu, 21 Feb 2013 03:27:40 -0800 (PST)
+Received: from mail-wg0-f54.google.com (mail-wg0-f54.google.com
+	[74.125.82.54]) by cuda.sgi.com with ESMTP id fSFXut6aUbNJaFx2
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 21 Feb 2013 03:27:39 -0800 (PST)
+Received: by mail-wg0-f54.google.com with SMTP id fm10so7506215wgb.9
+	for <xfs@oss.sgi.com>; Thu, 21 Feb 2013 03:27:38 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <4DF92F995A2E4C48ABADDA7F8E05A63D09BE1935@NDA-HCLT-MBS02.hclt.corp.hcl.in>
+References: <4DF92F995A2E4C48ABADDA7F8E05A63D09BE1935@NDA-HCLT-MBS02.hclt.corp.hcl.in>
+Date: Thu, 21 Feb 2013 12:27:38 +0100
+Message-ID: <CAAxjCEzbE=rjXPZkmCZ=JeSHr1VjRR+36-iBWNWL04+NaoSRjg@mail.gmail.com>
+Subject: Re: XFS_DB
+From: Stefan Ring <stefanrin@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,47 +30,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Anshul Kundra <anshul.kundra@hcl.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Hi there.
+> Instead of accessing the device itself can we read the metadump file to get
+> the required information of file mapping with file system block number. Its
+> binary file but is there any utility which reads the metadump file itself
+> instead of file system image. As it is easier to read the metadump file
+> instead of go towards  disk access itself. There is file obfuscation in the
+> file name for 4 characters
 
-I'm currently configuring a brand new email server(IMAP) which will run
-CentOS 6.3 x64. 
+IIRC, a metadump can be "restored" into a sparse file that does not
+require much more space than the metadump itself.
 
-So lots of files on the data volume.
+> On finding out solution over the OOM I found reference of xfs_db 64  but
+> there is no 64 bit version of utility available in xfs website either there
+> will be some configuration option or it becomes obsolete.
 
-I'm confused about stripe size for my data volume.
-I'm using 2x500GB for OS in RAID1 and 2x2TB SAS for DATA in RAID1 which is
-hosted on a HP Smart Array P420 Controller with 1GB in Cache/Battery Backed Up.
-Both these array's are on the P420 controller.
-
-The initial configuring from Array Configuration Tools gives me 256K in Strip Size.
-On both array's. 
-
-What would be ideal for the data volume, and or the OS array ?
-
-I'm going to run XFS for the DATA volume.
-
-Any help and or suggestions would be much appreciated.
-
-p.s. I have never configured mkfs.xfs manually, just wandering if some could help
-a brother about correct commands about ideal fs creation.
-
-THANKS.
-
-Thanks allot folks.
-
-Best regards,
-
-Svavar
-Reykjavik - Iceland
-
-
-
-
-
-
-
+Are you using Linux? On every 64 bit Linux the XFS binaries are built in 64 bit.
 
 _______________________________________________
 xfs mailing list
