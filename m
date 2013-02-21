@@ -1,22 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 638AF7F51
-	for <xfs@oss.sgi.com>; Thu, 21 Feb 2013 05:47:10 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id EEA7BAC003
-	for <xfs@oss.sgi.com>; Thu, 21 Feb 2013 03:47:09 -0800 (PST)
-Received: from atlas.fiton.is (atlas.fiton.is [62.145.135.105]) by
-	cuda.sgi.com with ESMTP id BaFW9PGeThSbc4CD (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 21 Feb 2013 03:47:08 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 455447F50
+	for <xfs@oss.sgi.com>; Thu, 21 Feb 2013 07:34:47 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D90ABAC004
+	for <xfs@oss.sgi.com>; Thu, 21 Feb 2013 05:34:43 -0800 (PST)
+Received: from firestarter.dermichi.com (firestarter.dermichi.com
+	[194.177.153.153]) by cuda.sgi.com with ESMTP id
+	py8SDrEZyn9QrRok (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 21 Feb 2013 05:34:42 -0800 (PST)
+Received: from noclinksys.net4you.net ([194.177.153.180] helo=[192.168.34.189])
+	by firestarter.dermichi.com with esmtpsa
+	(TLSv1:DHE-RSA-CAMELLIA256-SHA:256) (Exim 4.80.1)
+	(envelope-from <mw@dermichi.com>) id 1U8WIK-0001QI-GB
+	for xfs@oss.sgi.com; Thu, 21 Feb 2013 14:34:40 +0100
+Message-ID: <5126226E.2070201@dermichi.com>
+Date: Thu, 21 Feb 2013 14:34:38 +0100
+From: Michael Weissenbacher <mw@dermichi.com>
+MIME-Version: 1.0
 Subject: Re: Ideal RAID-1 Stripe Size for IMAP Server ?
-Mime-Version: 1.0 (Apple Message framework v1283)
-From: =?iso-8859-1?Q?Svavar_=D6rn_Eysteinsson?= <svavar@fiton.is>
-In-Reply-To: <512607C5.9060004@shiftmail.org>
-Date: Thu, 21 Feb 2013 11:46:59 +0000
-Message-Id: <62DA4B79-7B29-4D9E-A756-FEC6838E5106@fiton.is>
 References: <D991F48F-6D86-4199-9762-698DD7A61895@fiton.is>
 	<512607C5.9060004@shiftmail.org>
+	<62DA4B79-7B29-4D9E-A756-FEC6838E5106@fiton.is>
+In-Reply-To: <62DA4B79-7B29-4D9E-A756-FEC6838E5106@fiton.is>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,51 +36,26 @@ Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Spelic <spelic@shiftmail.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-I thought so just after sending this email to the group.
-But the ACU(Array Configuration Utility) gives me the option of changing th=
-e stripe size
-and gives me 256 as default.
-
-So that is irrelevant on RAID1 completely ?
-
-Thanks.
-
-
-
-
-
-On 21.2.2013, at 11:40, Spelic wrote:
-
-> On 02/21/13 12:11, Svavar =D6rn Eysteinsson wrote:
->> Hi there.
->> =
-
->> I'm currently configuring a brand new email server(IMAP) which will run
->> CentOS 6.3 x64.
->> =
-
->> So lots of files on the data volume.
->> =
-
->> I'm confused about stripe size for my data volume.
->> I'm using 2x500GB for OS in RAID1 and 2x2TB SAS for DATA in RAID1 which =
-is
->> hosted on a HP Smart Array P420 Controller with 1GB in Cache/Battery Bac=
-ked Up.
->> Both these array's are on the P420 controller.
+schrieb Svavar =D6rn Eysteinsson:
+> I thought so just after sending this email to the group.
+> But the ACU(Array Configuration Utility) gives me the option of changing =
+the stripe size
+> and gives me 256 as default.
 > =
 
-> Raid1 cannot have "stripes" !?
+> So that is irrelevant on RAID1 completely ?
 > =
 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+It should be, yes. I would guess it becomes relavant if you later decide
+that you want to expand to a RAID-10 or (shrug) RAID-5.
 
+Generally, a small stripe size (like 64k) should be beneficial for
+random access patterns like on a mail server.
+
+hth,
+Michael
 
 _______________________________________________
 xfs mailing list
