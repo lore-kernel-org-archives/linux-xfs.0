@@ -1,14 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id AF6997F50
-	for <xfs@oss.sgi.com>; Thu, 21 Feb 2013 11:02:21 -0600 (CST)
-Message-ID: <5126531B.9080603@sgi.com>
-Date: Thu, 21 Feb 2013 11:02:19 -0600
-From: Mark Tinguely <tinguely@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id 179E17F50
+	for <xfs@oss.sgi.com>; Thu, 21 Feb 2013 16:53:06 -0600 (CST)
+Date: Thu, 21 Feb 2013 16:53:05 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 3/9] xfs: add CRC checks to the AGF
+Message-ID: <20130221225305.GT22182@sgi.com>
+References: <1358774760-21841-1-git-send-email-david@fromorbit.com>
+	<1358774760-21841-4-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 0/8] xfsprogs: misc small fixes
-References: <1359240032-11576-1-git-send-email-sandeen@redhat.com>
-In-Reply-To: <1359240032-11576-1-git-send-email-sandeen@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <1358774760-21841-4-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -17,83 +19,99 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On 01/26/13 16:40, Eric Sandeen wrote:
-> A handful of fixes from looking over a Coverity scan.
->
-> The strncpy fixes (1/8, 5/8) might not be too critical,
-> but I think they can't hurt.
->
-> The libxfs xfs_alloc_arg initialization (2/8) might clash with Dave's
-> libxfs syncup, it can be dropped if it makes things difficult.
-> Fixes a real bug though.
->
-> Tested by a quick run through xfstests -g auto
+Dave,
 
-I committed the following patches of yours to OSS xfsprogs:
+Just some minor nits.
 
-commit b3a5164e6e474f03cd2d5e6d5168d4ced3d3282b
-Author: Eric Sandeen <sandeen@sandeen.net>
-Date:   Fri Jan 25 21:10:22 2013 +0000
+On Tue, Jan 22, 2013 at 12:25:54AM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> THe AGF already has some self identifying fields (e.g. the sequence
+  The
 
-     xfsprogs: Fix possible unallocated memory access in fiemap
+> number) so we only need to add the uuid to it to identify the
+> filesystem it belongs to. The location is fixed based on the
+> sequence number, so there's no need to add a block number, either.
+> 
+> Hence the only additional fields are the CRC and LSN fields. These
+> are unlogged, so place some space between the end of the logged
+> fields and them so that future expansion of the AGF for legged
+							  logged
 
-Coverity flagged series patches 1, 3-8:
+> fields can be placed adjacent to the existing logged fields and
+> hence not complicate the field-derived range based logging we
+> currently have.
+> 
+> Based originally on a patch from myself, modified further by
+> Christoph Hellwig and then modified again to fit into the
+> verifier structure with additional fields by myself. The multiple
+> signed-off-by tags indicate the age and history of this patch.
+> 
+> Signed-off-by: Dave Chinner <dgc@sgi.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_ag.h          |   21 +++++++++++-
+>  fs/xfs/xfs_alloc.c       |   80 ++++++++++++++++++++++++++++++++--------------
+>  fs/xfs/xfs_buf_item.h    |    4 ++-
+>  fs/xfs/xfs_fsops.c       |    3 ++
+>  fs/xfs/xfs_log_recover.c |    7 ++++
+>  5 files changed, 89 insertions(+), 26 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_ag.h b/fs/xfs/xfs_ag.h
+> index f2aeedb..b382703 100644
+> --- a/fs/xfs/xfs_ag.h
+> +++ b/fs/xfs/xfs_ag.h
+> @@ -63,12 +63,29 @@ typedef struct xfs_agf {
+>  	__be32		agf_spare0;	/* spare field */
+>  	__be32		agf_levels[XFS_BTNUM_AGF];	/* btree levels */
+>  	__be32		agf_spare1;	/* spare field */
+> +
+>  	__be32		agf_flfirst;	/* first freelist block's index */
+>  	__be32		agf_fllast;	/* last freelist block's index */
+>  	__be32		agf_flcount;	/* count of blocks in freelist */
+>  	__be32		agf_freeblks;	/* total free blocks */
+> +
+>  	__be32		agf_longest;	/* longest free space */
+>  	__be32		agf_btreeblks;	/* # of blocks held in AGF btrees */
+> +	uuid_t		agf_uuid;	/* uuid of filesystem */
+> +
+> +	/*
+> +	 * reserve some contiguous space for future logged fields before we add
+> +	 * the unlogged fields. This makes the range logging via flags and
+> +	 * structure offsets much simpler.
+> +	 */
+> +	__be64		agf_spare64[16];
+> +
+> +	/* unlogged fields, written during buffer writeback. */
+> +	__be64		agf_lsn;	/* last write sequence */
+> +	__be32		agf_crc;	/* crc of agf sector */
+> +	__be32		agf_spare2;
+> +
+> +	/* structure must be padded to 64 bit alignment */
+>  } xfs_agf_t;
+>  
+>  #define	XFS_AGF_MAGICNUM	0x00000001
+> @@ -83,6 +100,7 @@ typedef struct xfs_agf {
+>  #define	XFS_AGF_FREEBLKS	0x00000200
+>  #define	XFS_AGF_LONGEST		0x00000400
+>  #define	XFS_AGF_BTREEBLKS	0x00000800
+> +#define	XFS_AGF_UUID		0x00001000
+>  #define	XFS_AGF_NUM_BITS	12
+					13 ?
+You added a 13th bit.
 
-commit 55d1fd480b7328f0c51a7de5ed64ea371927c933
-Author: Eric Sandeen <sandeen@redhat.com>
-Date:   Sat Jan 26 22:40:25 2013 +0000
+How do you envision having the uuid in these structures will be helpful?
 
-     libhandle: Guard against string overflow in path_to_fspath()
-
-commit 2c2e994d0a1b972d020d7633202bf2f4cfc9f91b
-Author: Eric Sandeen <sandeen@redhat.com>
-Date:   Sat Jan 26 22:40:27 2013 +0000
-
-     libxfs: fix setup_cursor array allocation
-
-commit 50c79b8df93c45495e81c15aca65abde469f1565
-Author: Eric Sandeen <sandeen@redhat.com>
-Date:   Sat Jan 26 22:40:28 2013 +0000
-
-     xfs_repair: Fix free of uninit ptr in xfs_acl_valid() error path
-
-commit 6063fecad207d13981dea3e20f89f7ac4c3fb26f
-Author: Eric Sandeen <sandeen@redhat.com>
-Date:   Sat Jan 26 22:40:29 2013 +0000
-
-     xfs_fsr: guard against path string overflows
-
-commit 758bcc928858b85743d2f466f41c80cb40b93214
-Author: Eric Sandeen <sandeen@redhat.com>
-Date:   Sat Jan 26 22:40:30 2013 +0000
-
-     xfs_fsr: check strdup results properly in initallfs()
-
-commit ff85ea3f1456f20ba21a67c652f245da6360db15
-Author: Eric Sandeen <sandeen@redhat.com>
-Date:   Sat Jan 26 22:40:31 2013 +0000
-
-     xfs_fsr: fix attribute no_change_count logic
-
-commit a0a28a6ac3005ec320ef73066e57d9ae1fd41754
-Author: Eric Sandeen <sandeen@redhat.com>
-Date:   Sat Jan 26 22:40:32 2013 +0000
-
-     xfs_fsr: remove extraneous close() in fsrallfs()
-
-All these patches look and test okay. None of them interferes with 
-Dave's xfsprogs "UBER" kernel/user space sync patch.
-
-Thank-you,
-
---Mark.
+Regards,
+	Ben
 
 _______________________________________________
 xfs mailing list
