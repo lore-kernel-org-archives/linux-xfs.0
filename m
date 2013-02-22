@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 116547F51
-	for <xfs@oss.sgi.com>; Fri, 22 Feb 2013 00:44:45 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9917BAC007
-	for <xfs@oss.sgi.com>; Thu, 21 Feb 2013 22:44:44 -0800 (PST)
-Received: from mout.gmx.net (mout.gmx.net [212.227.15.18]) by cuda.sgi.com
-	with ESMTP id SJZWDOQRyddMbr16 for <xfs@oss.sgi.com>;
-	Thu, 21 Feb 2013 22:44:42 -0800 (PST)
-Received: from mailout-de.gmx.net ([10.1.76.16]) by mrigmx.server.lan
-	(mrigmx002) with ESMTP (Nemesis) id 0LfDpm-1UfwJ949Zw-00okBl for
-	<xfs@oss.sgi.com>; Fri, 22 Feb 2013 07:44:11 +0100
-Message-ID: <51271402.5010500@gmx.net>
-Date: Fri, 22 Feb 2013 07:45:22 +0100
-From: Arne Jansen <sensille@gmx.net>
-MIME-Version: 1.0
-Subject: Re: [Tests] xfs test[299]:Btrfs hierarchical Quotas
-References: <1361513539-3954-1-git-send-email-hemanthkumar51@gmail.com>
-In-Reply-To: <1361513539-3954-1-git-send-email-hemanthkumar51@gmail.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 07AA87F59
+	for <xfs@oss.sgi.com>; Fri, 22 Feb 2013 01:17:46 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id EA238304066
+	for <xfs@oss.sgi.com>; Thu, 21 Feb 2013 23:17:42 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id KbskBhXGJL1IhA7f for
+	<xfs@oss.sgi.com>; Thu, 21 Feb 2013 23:17:15 -0800 (PST)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r1M7HFw4027613
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Fri, 22 Feb 2013 02:17:15 -0500
+From: Eryu Guan <eguan@redhat.com>
+Subject: [PATCH 2/2] xfstests 299: test write to the last block of a sparse
+	file
+Date: Fri, 22 Feb 2013 14:59:29 +0800
+Message-Id: <1361516369-7480-2-git-send-email-eguan@redhat.com>
+In-Reply-To: <1361516369-7480-1-git-send-email-eguan@redhat.com>
+References: <1361516369-7480-1-git-send-email-eguan@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,60 +28,124 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Hemanth Kumar <hemanthkumar51@gmail.com>
-Cc: chethan.casey@gmail.com, sandeen@redhat.com, ganeshkumar14@gmail.com, praneethu.u@gmail.com, xfs@oss.sgi.com, hugo@carfax.org.uk, bo.li.liu@oracle.com, skjmca51@gmail.com, kirantpatil@gmail.com, linux-btrfs@vger.kernel.org
+To: xfs@oss.sgi.com
+Cc: Eryu Guan <eguan@redhat.com>
 
-T24gMDIvMjIvMTMgMDc6MTIsIEhlbWFudGggS3VtYXIgd3JvdGU6Cj4gCj4gU2lnbmVkLW9mZi1i
-eTogSGVtYW50aCBLdW1hciA8aGVtYW50aGt1bWFyNTFAZ21haWwuY29tPgo+IC0tLQo+ICAyOTkg
-ICAgIHwgMzggKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysKPiAgMjk5Lm91
-dCB8IDIwICsrKysrKysrKysrKysrKysrKysrCj4gIDIgZmlsZXMgY2hhbmdlZCwgNTggaW5zZXJ0
-aW9ucygrKQo+ICBjcmVhdGUgbW9kZSAxMDA2NDQgMjk5Cj4gIGNyZWF0ZSBtb2RlIDEwMDY0NCAy
-OTkub3V0Cj4gCj4gZGlmZiAtLWdpdCBhLzI5OSBiLzI5OQo+IG5ldyBmaWxlIG1vZGUgMTAwNjQ0
-Cj4gaW5kZXggMDAwMDAwMC4uNmIwMzQzOAo+IC0tLSAvZGV2L251bGwKPiArKysgYi8yOTkKPiBA
-QCAtMCwwICsxLDM4IEBACj4gKyMhIC9iaW4vYmFzaAo+ICsjIEZTIFFBIFRlc3QgTm8uIDI5OQo+
-ICsjCj4gKyMgVGVzdCBidHJmcydzIGhpZXJhcmNoaWNhbCBxdW90YXMKPiArIwo+ICsjLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tCj4gKyMKPiArIyBjcmVhdG9yCj4gK293bmVyPWhlbWFudGhrdW1hcjUxQGdtYWlsLmNvbQo+
-ICsKPiArc2VxPWBiYXNlbmFtZSAkMGAKPiArZWNobyAiUUEgb3V0cHV0IGNyZWF0ZWQgYnkgJHNl
-cSIKPiArCj4gK2hlcmU9YHB3ZGAKPiArdG1wPS90bXAvJCQKPiArc3RhdHVzPTEgICAgICAgICMg
-ZmFpbHVyZSBpcyB0aGUgZGVmYXVsdCEKPiArCj4gK19jbGVhbnVwKCkKPiArewo+ICsgICAgcm0g
-LXJmICR0bXAuKgo+ICt9Cj4gKwo+ICt0cmFwICJfY2xlYW51cCA7IGV4aXQgXCRzdGF0dXMiIDAg
-MSAyIDMgMTUKPiArCj4gKyNFbmFiZWxpbmcgYnRyZnMgcXV0YXMKPiArYnRyZnMgcXVvdGEgZW5h
-YmxlICRURVNUX0RJUgo+ICtlY2hvICJxdW90YSBlbmFibGVkIG9uICRURVNUX0RFViIKPiArYnRy
-ZnMgc3Vidm9sdW1lIGNyZWF0ZSAkVEVTVF9ESVIvdm9sMQo+ICtidHJmcyBzdWJ2b2x1bWUgY3Jl
-YXRlICRURVNUX0RJUi92b2wxL3ZvbDIKPiArYnRyZnMgc3Vidm9sdW1lIGNyZWF0ZSAkVEVTVF9E
-SVIvdm9sMS92b2wyL3ZvbDMKPiArYnRyZnMgcWdyb3VwIGxpbWl0IDVtICRURVNUX0RJUi92b2wx
-Cj4gK2J0cmZzIHFncm91cCBsaW1pdCAzbSAkVEVTVF9ESVIvdm9sMS92b2wyCj4gK2J0cmZzIHFn
-cm91cCBsaW1pdCAybSAkVEVTVF9ESVIvdm9sMS92b2wyL3ZvbDMKPiArZGQgaWY9JFRFU1RfREVW
-IG9mPSRURVNUX0RJUi92b2wxL3ZvbDIvdm9sMy9maWxlMSBicz0zTSBjb3VudD0xCj4gK2RkIGlm
-PSRURVNUX0RFViBvZj0kVEVTVF9ESVIvdm9sMS92b2wyL2ZpbGUxIGJzPTJNIGNvdW50PTEKPiAr
-ZGQgaWY9JFRFU1RfREVWIG9mPSRURVNUX0RJUi92b2wxL2ZpbGUxIGJzPTVNIGNvdW50PTEKCkl0
-IGlzIG5vdCByZWFsbHkgY2xlYXIgdG8gbWUgd2hhdCB5b3UgYXJlIHRyeWluZyB0byB0ZXN0LgpU
-aGlzIGRvZXMgbm90IHJlYWxseSB0ZXN0IGhpZXJhcmNoaWNhbCBxdW90YSwgYnV0IGp1c3QgMwpp
-bmRlcGVuZGVudCBxdW90YXMuIFRvIG1ha2UgdGhlbSBoaWVyYXJjaGljYWwsIHlvdSBoYXZlCnRv
-IGNyZWF0ZSBoaWdoZXIgbGV2ZWwgcWdyb3Vwcy4KCj4gK2J0cmZzIHFncm91cCBzaG93ICRURVNU
-X0RJUgo+ICtleGl0Cj4gZGlmZiAtLWdpdCBhLzI5OS5vdXQgYi8yOTkub3V0Cj4gbmV3IGZpbGUg
-bW9kZSAxMDA2NDQKPiBpbmRleCAwMDAwMDAwLi5mOWE2Yjk2Cj4gLS0tIC9kZXYvbnVsbAo+ICsr
-KyBiLzI5OS5vdXQKPiBAQCAtMCwwICsxLDIwIEBACj4gK1FBIG91dHB1dCBjcmVhdGVkIGJ5IDI5
-OQo+ICtxdW90YSBlbmFibGVkIG9uIC9kZXYvc2RjNQo+ICtDcmVhdGUgc3Vidm9sdW1lICcvdGVz
-dC92b2wxJwo+ICtDcmVhdGUgc3Vidm9sdW1lICcvdGVzdC92b2wxL3ZvbDInCj4gK0NyZWF0ZSBz
-dWJ2b2x1bWUgJy90ZXN0L3ZvbDEvdm9sMi92b2wzJwo+ICtkZDogd3JpdGluZyDigJgvdGVzdC92
-b2wxL3ZvbDIvdm9sMy9maWxlMeKAmTogRGlzayBxdW90YSBleGNlZWRlZAo+ICsxKzAgcmVjb3Jk
-cyBpbgo+ICswKzAgcmVjb3JkcyBvdXQKPiArMjAzMTYxNiBieXRlcyAoMi4wIE1CKSBjb3BpZWQs
-IDAuMTI4ODQzIHMsIDE1LjggTUIvcwo+ICsxKzAgcmVjb3JkcyBpbgo+ICsxKzAgcmVjb3JkcyBv
-dXQKPiArMjA5NzE1MiBieXRlcyAoMi4xIE1CKSBjb3BpZWQsIDAuMDA4ODQ0NTcgcywgMjM3IE1C
-L3MKPiArZGQ6IHdyaXRpbmcg4oCYL3Rlc3Qvdm9sMS9maWxlMeKAmTogRGlzayBxdW90YSBleGNl
-ZWRlZAo+ICsxKzAgcmVjb3JkcyBpbgo+ICswKzAgcmVjb3JkcyBvdXQKPiArNTE3NzM0NCBieXRl
-cyAoNS4yIE1CKSBjb3BpZWQsIDAuMDczMjUzMSBzLCA3MC43IE1CL3MKPiArMC8yNTcgNDA5NiA0
-MDk2Cj4gKzAvMjU4IDQwOTYgNDA5Ngo+ICswLzI1OSA0MDk2IDQwOTYKClRoaXMgaXMgcHJvYmFi
-bHkgbm90IHRoZSBleHBlY3RlZCBvdXRwdXQsIGFzIHRoZSB3cml0dGVuIGRhdGEKZGlkIG5vdCBz
-aG93IHVwIHlldC4gWW91IHNob3VsZCBhZGQgYSBidHJmcyBmaSBzeW5jIGJlZm9yZSB0aGUgcWdy
-b3VwCnNob3cgY29tbWFuZCB0byBmb3JjZSB0aGUgZGVsYXllZCB3cml0ZXMgdG8gZGlzay4gT3Ro
-ZXJ3aXNlIHRoZXkncmUKbm90IGFjY291bnRlZCBmb3IgeWV0LgoKLUFybmUKCj4gKwo+IAoKX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcg
-bGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8v
-eGZzCg==
+Write to the last block of a sparse file in extent format on ext4 would
+hit BUG_ON() on unpatched kernel.
+
+Regression test for commit:
+f17722f ext4: Fix max file size and logical block counting of extent format file
+
+Signed-off-by: Eryu Guan <eguan@redhat.com>
+---
+
+Note that the second dd could triger a BUG_ON() on ext4/3.8 kernel in
+ext4_es_remove_extent().
+
+I sent a patch for this issue, please see
+http://www.spinics.net/lists/linux-ext4/msg36784.html
+
+ 299     | 62 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 299.out |  1 +
+ group   |  1 +
+ 3 files changed, 64 insertions(+)
+ create mode 100644 299
+ create mode 100644 299.out
+
+diff --git a/299 b/299
+new file mode 100644
+index 0000000..9b52243
+--- /dev/null
++++ b/299
+@@ -0,0 +1,62 @@
++#! /bin/bash
++# FS QA Test No. 299
++#
++# Write to the last block of a sparse file in extent format on ext4 would
++# hit BUG_ON() on unpatched kernel.
++#
++# Regression test for commit:
++# f17722f ext4: Fix max file size and logical block counting of extent format file
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2013 Red Hat, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++# creator
++owner=eguan@redhat.com
++
++seq=`basename $0`
++echo "QA output created by $seq"
++
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $testfile
++}
++
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
++
++testfile=$TEST_DIR/testfile.$seq
++
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux
++
++block_size=`stat -f $TEST_DEV | grep "Block size" | cut -d " " -f3`
++
++# Create sparse file
++dd if=/dev/zero of=$testfile bs=$block_size count=1 seek=$((2**32 - 2)) >/dev/null 2>&1
++sync
++# Write to the last block
++dd if=/dev/zero of=$testfile bs=$block_size count=1 seek=$((2**32 - 1)) >/dev/null 2>&1
++
++# Got here without hitting BUG_ON(), test passed
++status=0
++exit
+diff --git a/299.out b/299.out
+new file mode 100644
+index 0000000..0b41c6f
+--- /dev/null
++++ b/299.out
+@@ -0,0 +1 @@
++QA output created by 299
+diff --git a/group b/group
+index 3039af4..a993729 100644
+--- a/group
++++ b/group
+@@ -417,3 +417,4 @@ deprecated
+ 296 dump auto quick
+ 297 auto freeze
+ 298 auto quick metadata
++299 auto quick
+-- 
+1.8.0.2
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
