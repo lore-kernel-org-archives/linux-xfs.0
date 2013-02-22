@@ -1,15 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 980207F50
-	for <xfs@oss.sgi.com>; Fri, 22 Feb 2013 10:17:14 -0600 (CST)
-Date: Fri, 22 Feb 2013 10:17:13 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: inode64 superblock flag is still worth
-Message-ID: <20130222161713.GV22182@sgi.com>
-References: <20130222132721.GA10079@andromeda.usersys.redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B7E6F7F50
+	for <xfs@oss.sgi.com>; Fri, 22 Feb 2013 11:07:48 -0600 (CST)
+Message-ID: <5127A5E2.2070407@sgi.com>
+Date: Fri, 22 Feb 2013 11:07:46 -0600
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130222132721.GA10079@andromeda.usersys.redhat.com>
+Subject: Re: [PATCH v4 1/6] xfs: reorganize xfs_iomap_prealloc_size to remove
+	indentation
+References: <1361373019-30891-1-git-send-email-bfoster@redhat.com>
+	<1361373019-30891-2-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1361373019-30891-2-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,39 +19,59 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Carlos Maiolino <cmaiolino@redhat.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-Hi Carlos,
+On 02/20/13 09:10, Brian Foster wrote:
+> The majority of xfs_iomap_prealloc_size() executes within the
+> check for lack of default I/O size. Reverse the logic to remove the
+> extra indentation.
+>
+> Signed-off-by: Brian Foster<bfoster@redhat.com>
+> Reviewed-by: Dave Chinner<dchinner@redhat.com>
+> Reviewed-by: Ben Myers<bpm@sgi.com>
+> ---
+>   fs/xfs/xfs_iomap.c |   63 ++++++++++++++++++++++++++-------------------------
+>   1 files changed, 32 insertions(+), 31 deletions(-)
+>
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index 912d83d..d914419 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -381,42 +381,43 @@ xfs_iomap_prealloc_size(
+>   	int			nimaps)
+>   {
+>   	xfs_fsblock_t		alloc_blocks = 0;
+> +	int			shift = 0;
+> +	int64_t			freesp;
 
-On Fri, Feb 22, 2013 at 10:27:21AM -0300, Carlos Maiolino wrote:
-> I was looking the "Ideas for XFS" wiki page, and noticed a topic about the
-> implementation of a flag in superblock to identify the filesystem is using
-> 64-bit inodes. Once we use it by default now, is this idea still worth? I can
-> work on it, but I don't think this is still worth to be implemented.
-> If still looks worth, I'd suggest a flag set when 32-bit inodes only is used not
-> 64, but I really dunno how this might be useful for kernel. From a user
-> perspective, it might help, but `mount` command or mtab already shows inode32
-> option when it's used.
+...
 
-So the inode32 allocation policy becomes persistent and no longer need to be
-set at mount time.  This is definately worth working on, IMO.
+> +	freesp = mp->m_sb.sb_fdblocks;
 
-Setting a bit in the superblock would work fine for inode32.  We should think
-about something more general before making on-disk changes for this.  For
-example, Rich recently posted the agskip data allocation policy which (like
-inode32) was implemented as a mount option.  If agskip=5 were to be made
-persistent we'd need space in the superblock to keep track of the 5.
+...
 
-I think an xattr on the root inode could be a good solution as long as it is
-invisible to the user.  The interface for changing alloc policies should
-probably be in xfs_io or xfs_mkfs.
+> +	/*
+> +	 * If we are still trying to allocate more space than is
+> +	 * available, squash the prealloc hard. This can happen if we
+> +	 * have a large file on a small filesystem and the above
+> +	 * lowspace thresholds are smaller than MAXEXTLEN.
+> +	 */
+> +	while (alloc_blocks>= freesp)
+> +		alloc_blocks>>= 4;
 
--Ben
+
+Hi Brian, I am looking at your speculative preallocation quota 
+throttling series.
+
+I know this code is from commit 4d559a3b. would this not be bad of 
+freesp == 0?
+
+--Mark.
 
 _______________________________________________
 xfs mailing list
