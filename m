@@ -1,17 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0EDC37F50
-	for <xfs@oss.sgi.com>; Fri, 22 Feb 2013 12:22:55 -0600 (CST)
-Message-ID: <5127B77C.9030709@sgi.com>
-Date: Fri, 22 Feb 2013 12:22:52 -0600
-From: Mark Tinguely <tinguely@sgi.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH v4 1/6] xfs: reorganize xfs_iomap_prealloc_size to remove
-	indentation
-References: <1361373019-30891-1-git-send-email-bfoster@redhat.com>
-	<1361373019-30891-2-git-send-email-bfoster@redhat.com>
-	<5127A5E2.2070407@sgi.com> <5127B438.8080707@redhat.com>
-In-Reply-To: <5127B438.8080707@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id ECE427F50
+	for <xfs@oss.sgi.com>; Fri, 22 Feb 2013 12:30:39 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C92F88F8068
+	for <xfs@oss.sgi.com>; Fri, 22 Feb 2013 10:30:39 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id xG8jicOtRypQX7VK for
+	<xfs@oss.sgi.com>; Fri, 22 Feb 2013 10:30:38 -0800 (PST)
+Received: from int-mx01.intmail.prod.int.phx2.redhat.com
+	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r1MIUYUq025294
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Fri, 22 Feb 2013 13:30:35 -0500
+Received: from bfoster.bfoster (dhcp-189-135.bos.redhat.com [10.16.189.135])
+	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
+	id r1MIUP4Y008377
+	for <xfs@oss.sgi.com>; Fri, 22 Feb 2013 13:30:33 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH] xfs: fix potential infinite loop in xfs_iomap_prealloc_size()
+Date: Fri, 22 Feb 2013 13:32:56 -0500
+Message-Id: <1361557976-54981-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,82 +29,45 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 02/22/13 12:08, Brian Foster wrote:
-> On 02/22/2013 12:07 PM, Mark Tinguely wrote:
->> On 02/20/13 09:10, Brian Foster wrote:
->>> The majority of xfs_iomap_prealloc_size() executes within the
->>> check for lack of default I/O size. Reverse the logic to remove the
->>> extra indentation.
->>>
->>> Signed-off-by: Brian Foster<bfoster@redhat.com>
->>> Reviewed-by: Dave Chinner<dchinner@redhat.com>
->>> Reviewed-by: Ben Myers<bpm@sgi.com>
->>> ---
->>>    fs/xfs/xfs_iomap.c |   63
->>> ++++++++++++++++++++++++++-------------------------
->>>    1 files changed, 32 insertions(+), 31 deletions(-)
->>>
->>> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
->>> index 912d83d..d914419 100644
->>> --- a/fs/xfs/xfs_iomap.c
->>> +++ b/fs/xfs/xfs_iomap.c
->>> @@ -381,42 +381,43 @@ xfs_iomap_prealloc_size(
->>>        int            nimaps)
->>>    {
->>>        xfs_fsblock_t        alloc_blocks = 0;
->>> +    int            shift = 0;
->>> +    int64_t            freesp;
->>
->> ...
->>
->>> +    freesp = mp->m_sb.sb_fdblocks;
->>
->> ...
->>
->>> +    /*
->>> +     * If we are still trying to allocate more space than is
->>> +     * available, squash the prealloc hard. This can happen if we
->>> +     * have a large file on a small filesystem and the above
->>> +     * lowspace thresholds are smaller than MAXEXTLEN.
->>> +     */
->>> +    while (alloc_blocks>= freesp)
->>> +        alloc_blocks>>= 4;
->>
->>
->> Hi Brian, I am looking at your speculative preallocation quota
->> throttling series.
->>
->> I know this code is from commit 4d559a3b. would this not be bad of
->> freesp == 0?
->>
->
-> Thanks. Hmm, I guess if freesp is 0 we'd hit an infinite loop
-> (irrespective of this patchset). We could change the comparison to>,
-> but I think the following would be more clear:
->
-> 	while (alloc_blocks&&  alloc_blocks>= freesp)
-> 		alloc_blocks>>= 4;
->
-> Thoughts? I'll send out a one-liner to bat around if that looks
-> reasonable. Good catch.
->
-> Brian
->
->> --Mark.
+If freesp == 0, we could end up in an infinite loop while squashing
+the preallocation. Break the loop when we've killed the prealloc
+entirely.
 
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+Hi all,
 
-That looks reasonable to me.
+Mark caught this while reviewing the quota throttling patchset. I figured
+it better that my set depend on this rather than vice versa, so I'll plan on a
+v5 for at least a rebase, but I'll wait a bit for further comments on v4.
 
-Thanks,
+Brian
 
---Mark.
+ fs/xfs/xfs_iomap.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 912d83d..b0b0f44 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -413,7 +413,7 @@ xfs_iomap_prealloc_size(
+ 		 * have a large file on a small filesystem and the above
+ 		 * lowspace thresholds are smaller than MAXEXTLEN.
+ 		 */
+-		while (alloc_blocks >= freesp)
++		while (alloc_blocks && alloc_blocks >= freesp)
+ 			alloc_blocks >>= 4;
+ 	}
+ 
+-- 
+1.7.7.6
 
 _______________________________________________
 xfs mailing list
