@@ -1,25 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 07AA87F59
-	for <xfs@oss.sgi.com>; Fri, 22 Feb 2013 01:17:46 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id EA238304066
-	for <xfs@oss.sgi.com>; Thu, 21 Feb 2013 23:17:42 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id KbskBhXGJL1IhA7f for
-	<xfs@oss.sgi.com>; Thu, 21 Feb 2013 23:17:15 -0800 (PST)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r1M7HFw4027613
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Fri, 22 Feb 2013 02:17:15 -0500
-From: Eryu Guan <eguan@redhat.com>
-Subject: [PATCH 2/2] xfstests 299: test write to the last block of a sparse
-	file
-Date: Fri, 22 Feb 2013 14:59:29 +0800
-Message-Id: <1361516369-7480-2-git-send-email-eguan@redhat.com>
-In-Reply-To: <1361516369-7480-1-git-send-email-eguan@redhat.com>
-References: <1361516369-7480-1-git-send-email-eguan@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 1CB077F58
+	for <xfs@oss.sgi.com>; Fri, 22 Feb 2013 02:13:10 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D47BF8F8037
+	for <xfs@oss.sgi.com>; Fri, 22 Feb 2013 00:13:06 -0800 (PST)
+Received: from USMAMAIL.TILERA.COM (usmamail.tilera.com [12.216.194.151]) by
+	cuda.sgi.com with ESMTP id 5RiQxHFr2UmcQnfB (version=TLSv1
+	cipher=AES128-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 22 Feb 2013 00:13:05 -0800 (PST)
+From: Tony Lu <zlu@tilera.com>
+Subject: [PATCH] xfs: Fix possible truncation of log data in
+	xlog_bread_noalign()
+Date: Fri, 22 Feb 2013 08:12:52 +0000
+Message-ID: <BAB94DBB0E89D8409949BC28AC95914C47C485E5@USMAExch1.tad.internal.tilera.com>
+Content-Language: zh-CN
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,122 +24,77 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Eryu Guan <eguan@redhat.com>
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, Ben Myers <bpm@sgi.com>, Alex Elder <elder@kernel.org>, Dave Chinner <dchinner@redhat.com>
+Cc: "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>, Tony Lu <zlu@tilera.com>
 
-Write to the last block of a sparse file in extent format on ext4 would
-hit BUG_ON() on unpatched kernel.
+I encountered the following panic when using xfs partitions as rootfs, which
+is due to the truncated log data read by xlog_bread_noalign(). We should
+extend the buffer by one extra log sector to ensure there's enough space to
+accommodate requested log data, which we indeed did in xlog_get_bp(), but we
+forgot to do in xlog_bread_noalign().
 
-Regression test for commit:
-f17722f ext4: Fix max file size and logical block counting of extent format file
+XFS mounting filesystem sda2
+Starting XFS recovery on filesystem: sda2 (logdev: internal)
+XFS: xlog_recover_process_data: bad clientid
+XFS: log mount/recovery failed: error 5
+XFS: log mount failedVFS: Cannot open root device "sda2" or unknown-block(8,)
+Please append a correct "root=" boot option; here are the available partitio:
+0800       156290904 sda  driver: sd
+  0801        31463271 sda1 00000000-0000-0000-0000-000000000000
+  0802        31463302 sda2 00000000-0000-0000-0000-000000000000
+  0803        31463302 sda3 00000000-0000-0000-0000-000000000000
+  0804               1 sda4 00000000-0000-0000-0000-000000000000
+  0805        10490413 sda5 00000000-0000-0000-0000-000000000000
+  0806        51407968 sda6 00000000-0000-0000-0000-000000000000
+Kernel panic - not syncing: VFS: Unable to mount root fs on unknown-block(8,)
 
-Signed-off-by: Eryu Guan <eguan@redhat.com>
+Starting stack dump of tid 1, pid 1 (swapper) on cpu 35 at cycle 42273138234
+  frame 0: 0xfffffff70016e5a0 dump_stack+0x0/0x20 (sp 0xfffffe03fbedfe88)
+  frame 1: 0xfffffff7004af470 panic+0x150/0x3a0 (sp 0xfffffe03fbedfe88)
+  frame 2: 0xfffffff700881e88 mount_block_root+0x2c0/0x4c8 (sp 0xfffffe03fbe)
+  frame 3: 0xfffffff700882390 prepare_namespace+0x250/0x358 (sp 0xfffffe03fb)
+  frame 4: 0xfffffff700880778 kernel_init+0x4c8/0x520 (sp 0xfffffe03fbedffb0)
+  frame 5: 0xfffffff70011ecb8 start_kernel_thread+0x18/0x20 (sp 0xfffffe03fb)
+Stack dump complete
+
+Signed-off-by: Zhigang Lu <zlu@tilera.com>
+Reviewed-by: Chris Metcalf <cmetcalf@tilera.com>
 ---
+ fs/xfs/xfs_log_recover.c |   15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-Note that the second dd could triger a BUG_ON() on ext4/3.8 kernel in
-ext4_es_remove_extent().
-
-I sent a patch for this issue, please see
-http://www.spinics.net/lists/linux-ext4/msg36784.html
-
- 299     | 62 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 299.out |  1 +
- group   |  1 +
- 3 files changed, 64 insertions(+)
- create mode 100644 299
- create mode 100644 299.out
-
-diff --git a/299 b/299
-new file mode 100644
-index 0000000..9b52243
---- /dev/null
-+++ b/299
-@@ -0,0 +1,62 @@
-+#! /bin/bash
-+# FS QA Test No. 299
-+#
-+# Write to the last block of a sparse file in extent format on ext4 would
-+# hit BUG_ON() on unpatched kernel.
-+#
-+# Regression test for commit:
-+# f17722f ext4: Fix max file size and logical block counting of extent format file
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2013 Red Hat, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+# creator
-+owner=eguan@redhat.com
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 96fcbb8..64264a5 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -179,6 +179,21 @@ xlog_bread_noalign(
+                return EFSCORRUPTED;
+        }
+ 
++       /*
++        * The blk_no may be a non-sector-aligned block offset, in
++        * which case we round down the blk_no to be aligned with
++        * the sector size, and if the nbblks is sector-aligned,
++        * an I/O of the size nbblks could truncate the requested
++        * log data.  If the requested size is only 1 basic block it
++        * will never straddle a sector boundary, so this won't be
++        * an issue.  Nor will this be a problem if the log I/O is
++        * done in basic blocks (sector size 1).  But otherwise we
++        * extend the buffer by one extra log sector to ensure
++        * there's space to accommodate this possibility.
++        */
++       if (nbblks > 1 && log->l_sectBBsize > 1)
++               nbblks += log->l_sectBBsize;
 +
-+seq=`basename $0`
-+echo "QA output created by $seq"
-+
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $testfile
-+}
-+
-+# get standard environment, filters and checks
-+. ./common.rc
-+. ./common.filter
-+
-+testfile=$TEST_DIR/testfile.$seq
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+
-+block_size=`stat -f $TEST_DEV | grep "Block size" | cut -d " " -f3`
-+
-+# Create sparse file
-+dd if=/dev/zero of=$testfile bs=$block_size count=1 seek=$((2**32 - 2)) >/dev/null 2>&1
-+sync
-+# Write to the last block
-+dd if=/dev/zero of=$testfile bs=$block_size count=1 seek=$((2**32 - 1)) >/dev/null 2>&1
-+
-+# Got here without hitting BUG_ON(), test passed
-+status=0
-+exit
-diff --git a/299.out b/299.out
-new file mode 100644
-index 0000000..0b41c6f
---- /dev/null
-+++ b/299.out
-@@ -0,0 +1 @@
-+QA output created by 299
-diff --git a/group b/group
-index 3039af4..a993729 100644
---- a/group
-+++ b/group
-@@ -417,3 +417,4 @@ deprecated
- 296 dump auto quick
- 297 auto freeze
- 298 auto quick metadata
-+299 auto quick
+        blk_no = round_down(blk_no, log->l_sectBBsize);
+        nbblks = round_up(nbblks, log->l_sectBBsize);
+ 
 -- 
-1.8.0.2
+1.7.10.3
 
 _______________________________________________
 xfs mailing list
