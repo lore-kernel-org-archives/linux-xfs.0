@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id BFBFE7F50
-	for <xfs@oss.sgi.com>; Fri, 22 Feb 2013 18:56:48 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4142DAC004
-	for <xfs@oss.sgi.com>; Fri, 22 Feb 2013 16:56:48 -0800 (PST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A13677F50
+	for <xfs@oss.sgi.com>; Fri, 22 Feb 2013 19:08:24 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 75AE7304053
+	for <xfs@oss.sgi.com>; Fri, 22 Feb 2013 17:08:21 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	bJ7Hs2T9B3N5ivdO for <xfs@oss.sgi.com>;
-	Fri, 22 Feb 2013 16:56:47 -0800 (PST)
-Date: Sat, 23 Feb 2013 11:56:45 +1100
+	iJHxg3bVLFwTV8Ce for <xfs@oss.sgi.com>;
+	Fri, 22 Feb 2013 17:08:19 -0800 (PST)
+Date: Sat, 23 Feb 2013 12:08:17 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: fix potential infinite loop in
-	xfs_iomap_prealloc_size()
-Message-ID: <20130223005645.GD26081@dastard>
-References: <1361557976-54981-1-git-send-email-bfoster@redhat.com>
+Subject: Re: [Tests] xfs test[298]: Btrfs Quota testing
+Message-ID: <20130223010817.GE26081@dastard>
+References: <1361512444-3451-1-git-send-email-hemanthkumar51@gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1361557976-54981-1-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1361512444-3451-1-git-send-email-hemanthkumar51@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,29 +25,60 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Hemanth Kumar <hemanthkumar51@gmail.com>
+Cc: chethan.casey@gmail.com, sandeen@redhat.com, sensille@gmx.net, ganeshkumar14@gmail.com, praneethu.u@gmail.com, xfs@oss.sgi.com, hugo@carfax.org.uk, bo.li.liu@oracle.com, skjmca51@gmail.com, kirantpatil@gmail.com, linux-btrfs@vger.kernel.org
 
-On Fri, Feb 22, 2013 at 01:32:56PM -0500, Brian Foster wrote:
-> If freesp == 0, we could end up in an infinite loop while squashing
-> the preallocation. Break the loop when we've killed the prealloc
-> entirely.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-
-Looks good.
-
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gRnJpLCBGZWIgMjIsIDIwMTMgYXQgMTE6MjQ6MDRBTSArMDUzMCwgSGVtYW50aCBLdW1hciB3
+cm90ZToKPiAKPiBTaWduZWQtb2ZmLWJ5OiBIZW1hbnRoIEt1bWFyIDxoZW1hbnRoa3VtYXI1MUBn
+bWFpbC5jb20+CgpEZXNjcmlwdGlvbj8KCj4gLS0tCj4gIDI5OCAgICAgfCAzNyArKysrKysrKysr
+KysrKysrKysrKysrKysrKysrKysrKysrKysrCj4gIDI5OC5vdXQgfCAxMiArKysrKysrKysrKysK
+PiAgMiBmaWxlcyBjaGFuZ2VkLCA0OSBpbnNlcnRpb25zKCspCj4gIGNyZWF0ZSBtb2RlIDEwMDY0
+NCAyOTgKPiAgY3JlYXRlIG1vZGUgMTAwNjQ0IDI5OC5vdXQKCllvdSBkaWRuJ3QgYWN0YXVsbHkg
+cnVuIHRoaXMgaW4gdGhlIHhmc3Rlc3RzLCBoYXJuZXNzLCBkaWQgeW91PyBpLmUuCgokIC4vY2hl
+Y2sgMjk4CgpiZWNhdXNlIGl0IHdvbid0IHJ1biBhcyB0aGVyZSBpcyBubyBlbnRyeSBpbiB0aGUg
+Z3JvdXAgZmlsZSBmb3IgdGhpcwp0ZXN0Li4uLgoKPiAKPiBkaWZmIC0tZ2l0IGEvMjk4IGIvMjk4
+Cj4gbmV3IGZpbGUgbW9kZSAxMDA2NDQKPiBpbmRleCAwMDAwMDAwLi5kNjk5ZmI3Cj4gLS0tIC9k
+ZXYvbnVsbAo+ICsrKyBiLzI5OAo+IEBAIC0wLDAgKzEsMzcgQEAKPiArCj4gKyMhIC9iaW4vYmFz
+aAo+ICsjIEZTIFFBIFRlc3QgTm8uIDI5OAoKTmV3bGluZSBhdCB0b3Agb2YgcGF0Y2guCgo+ICsj
+Cj4gKyMgVGVzdCBidHJmcydzIHF1b3Rhcwo+ICsjCj4gKyMtLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KPiArIwo+ICsjIGNy
+ZWF0b3IKPiArI293bmVyPWhlbWFudGhrdW1hcjUxQGdtYWlsLmNvbQoKQ29weXJpZ2h0IHN0YXRl
+bWVudD8KCj4gKwo+ICsKPiArc2VxPWBiYXNlbmFtZSAkMGAKPiArZWNobyAiUUEgb3V0cHV0IGNy
+ZWF0ZWQgYnkgJHNlcSIKPiArCj4gK2hlcmU9YHB3ZGAKPiArdG1wPS90bXAvJCQKPiArc3RhdHVz
+PTEgICAgICAgICMgZmFpbHVyZSBpcyB0aGUgZGVmYXVsdCEKPiArCj4gK19jbGVhbnVwKCkKPiAr
+ewo+ICsgICAgcm0gLXJmICR0bXAuKgo+ICt9Cj4gKwo+ICt0cmFwICJfY2xlYW51cCA7IGV4aXQg
+XCRzdGF0dXMiIDAgMSAyIDMgMTUKPiArCj4gKyNFbmFiZWxpbmcgYnRyZnMgcXV0YXMKCldoZXJl
+IGFyZSBhbGwgdGhlIHVzdWFsIF9yZXF1aXJlLi4uLigpIHN0YXRlbWVudHM/Cgo+ICtidHJmcyBx
+dW90YSBlbmFibGUgJFRFU1RfRElSCj4gK2VjaG8gInF1b3RhIGVuYWJsZWQgb24gJFRFU1RfREVW
+IgoKVGhhdCB3b24ndCB3b3JrIC0geW91J3JlIG5vdCBhbGxvd2VkIHRvIG91dHB1dCBhY3R1YWwg
+ZGV2aWNlIG5hbWVzCmludG8gdGhlIGdvbGRlbiBvdXRwdXQuIFdlIGFsd2F5cyBmaWx0ZXIgdGhl
+biB0aGUgdG8KVEVTVF9ERVYvVEVTVF9ESVIgb3IgU0NSQVRDSF9ERVYvU0NSQVRDSF9NTlQKCj4g
+K2J0cmZzIHN1YnZvbHVtZSBjcmVhdGUgJFRFU1RfRElSL3ZvbDEKPiArZWNobyAidm9sMSBjcmVh
+dGVkIgo+ICtidHJmcyBxZ3JvdXAgc2hvdyAkVEVTVF9ESVIKClRoYXQgb3V0cHV0IHdpbGwgY2hh
+bmdlIGZvciBkaWZmZXJlbnQgZmlsZXN5c3RlbSBjb25maWd1cmF0aW9ucy4KbmVlZHMgZmlsdGVy
+aW5nLCBvciBkcm9wcGluZy4KCj4gK2J0cmZzIHFncm91cCBsaW1pdCAybSAkVEVTVF9ESVIvdm9s
+MQo+ICtlY2hvICJxZ3JvdXAgbGltaXRlZCB0byAybWIiCj4gK2RkIGlmPSRURVNUX0RFViBvZj0k
+VEVTVF9ESVIvdm9sMS9maWxlMSBicz0zTSBjb3VudD0xCgpZb3UgbmVlZCB0byBmaWx0ZXIgdGhl
+IG91dHB1dCBvZiBkZCB0byByZW1vdmUgYWxsIHZhcmlhYmxlIGRhdGEuCkhvd2V2ZXIsIGl0IGlz
+IHByZWZlcmFibGUgdG8gdXNlIHhmc19pbyBmb3IgZG9pbmcgSU8uIGkuZToKCiRYRlNfSU9fUFJP
+RyAtZiAtYyAicHdyaXRlIDAgM20iICRURVNUX0RJUi92b2wxL2ZpbGUxIHwgZmlsdGVyX2lvCgo+
+ICtlY2hvICJ0cmllZCB0byB3cml0ZSAzbSB3b3J0aCBkYXRhIgo+ICtleGl0CgpZb3UgbmV2ZXIg
+c2V0IHN0YXR1cz0wLCBzbyB0aGUgdGVzdCB3aWxsIGFsd2F5cyBmYWlsLgoKQWxzbywgeW91IGRv
+bid0IHVuZG8gYW55IG9mIHRoZSBtb2RpZmljYXRpb25zIHlvdSBtYWRlIHRvIHRoZQpURVNUX0RF
+Viwgd2hpY2ggbWVhbnMgdGhhdCBpdCB3aWxsIGFmZmVjdCBhbGwgc3Vic2VxdWVudCB0ZXN0cy4g
+SWYKeW91IGFyZSBkb2luZyBzcGVjaWZpYyBjb25maWd1cmF0aW9uIHRlc3RzLCB5b3VyIHNob3Vs
+ZCBiZSB1c2luZyB0aGUKU0NSQVRDSF9ERVYvU0NSQVRDSF9NTlQuLi4uCgo+IGRpZmYgLS1naXQg
+YS8yOTgub3V0IGIvMjk4Lm91dAo+IG5ldyBmaWxlIG1vZGUgMTAwNjQ0Cj4gaW5kZXggMDAwMDAw
+MC4uMzQ0YWI3Zgo+IC0tLSAvZGV2L251bGwKPiArKysgYi8yOTgub3V0Cj4gQEAgLTAsMCArMSwx
+MiBAQAo+ICtRQSBvdXRwdXQgY3JlYXRlZCBieSAyOTgKPiArcXVvdGEgZW5hYmxlZCBvbiAvZGV2
+L3NkYjUKPiArQ3JlYXRlIHN1YnZvbHVtZSAnL3Rlc3Qvdm9sMScKPiArdm9sMSBjcmVhdGVkCj4g
+KzAvMjU3IDQwOTYgNDA5Ngo+ICtxZ3JvdXAgbGltaXRlZCB0byAybWIKPiArZGQ6IHdyaXRpbmcg
+4oCYL3Rlc3Qvdm9sMS9maWxlMeKAmTogRGlzayBxdW90YSBleGNlZWRlZAoKWW91J3ZlIGdvdCBl
+bnZpcm9ubWVudCBzcGVjaWZpYyBjaGFyYWN0ZXJzIGluIHlvdXIgb3V0cHV0LgoKQ2hlZXJzLAoK
+RGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bv
+c3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
