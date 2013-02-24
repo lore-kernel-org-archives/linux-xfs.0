@@ -1,27 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3E7C67F50
-	for <xfs@oss.sgi.com>; Sun, 24 Feb 2013 08:10:30 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2C783304039
-	for <xfs@oss.sgi.com>; Sun, 24 Feb 2013 06:10:27 -0800 (PST)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	EhzTp9JYH0LIausV for <xfs@oss.sgi.com>;
-	Sun, 24 Feb 2013 06:10:25 -0800 (PST)
-Date: Mon, 25 Feb 2013 01:10:17 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: Fix possible truncation of log data in
-	xlog_bread_noalign()
-Message-ID: <20130224141017.GC5551@dastard>
-References: <BAB94DBB0E89D8409949BC28AC95914C47C485E5@USMAExch1.tad.internal.tilera.com>
-	<20130223000802.GB26081@dastard>
-	<BAB94DBB0E89D8409949BC28AC95914C47C48702@USMAExch1.tad.internal.tilera.com>
-	<20130223235546.GA5551@dastard>
-	<BAB94DBB0E89D8409949BC28AC95914C47C488D8@USMAExch1.tad.internal.tilera.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <BAB94DBB0E89D8409949BC28AC95914C47C488D8@USMAExch1.tad.internal.tilera.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5FCAC7F50
+	for <xfs@oss.sgi.com>; Sun, 24 Feb 2013 13:07:28 -0600 (CST)
+Received: from eagdhcp-232-136.americas.sgi.com
+	(eagdhcp-232-136.americas.sgi.com [128.162.232.136])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 38C5A8F8037
+	for <xfs@oss.sgi.com>; Sun, 24 Feb 2013 11:07:25 -0800 (PST)
+Received: from eagdhcp-232-136.americas.sgi.com (localhost [127.0.0.1])
+	by eagdhcp-232-136.americas.sgi.com (8.14.5/8.14.5) with ESMTP id
+	r1OJ7Qvm002145
+	for <xfs@oss.sgi.com>; Sun, 24 Feb 2013 13:07:26 -0600 (CST)
+	(envelope-from tinguely@sgi.com)
+Message-Id: <20130224190441.937509860@sgi.com>
+Date: Sun, 24 Feb 2013 13:04:37 -0600
+From: Mark Tinguely <tinguely@sgi.com>
+Subject: [PATCH] xfs: fix xfs_iomap_eof_prealloc_initial_size type
+References: <20130224190436.906161932@sgi.com>
+Content-Disposition: inline;
+	filename=xfs-fix-xfs_iomap_eof_prealloc_initial_size-type.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,57 +26,36 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Tony Lu <zlu@tilera.com>
-Cc: Alex Elder <elder@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, Ben Myers <bpm@sgi.com>, Dave Chinner <dchinner@redhat.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
+To: xfs@oss.sgi.com
 
-On Sun, Feb 24, 2013 at 04:46:30AM +0000, Tony Lu wrote:
-> >> For example, if xlog_bread_noalign() wants to read blocks from #1
-> >> to # 9, in which case the passed parameter blk_no is 1, and nbblks
-> >> is 8, sectBBsize is 8, after the round down and round up
-> >> operations, we get blk_no as 0, and nbblks as still 8. We
-> >> definitely lose the last block of the log data.
-> >
-> >Yes, I fully understand that. But I also understand how the log
-> >works and that this behaviour *should not happen*. That's why
-> >I'm asking questions about what the problem you are trying to fix.
-> 
-> I am not sure about this, since I saw many reads on
-> non-sector-align blocks even when successfully mounting good XFS
-> partitions.
+Fix the return type of xfs_iomap_eof_prealloc_initial_size() to
+xfs_fsblock_t to reflect the fact that the return value may be an
+unsigned 64 bits if XFS_BIG_BLKNOS is defined.
 
-I didn't say that non-sector align reads should not be attempted by
-log recovery - it's obvious from the on disk format of the log that
-we have to parse it in chunks of 512 bytes to make sense of it's
-contents, and that leads to the 512 byte reads and other subsequent
-unaligned reads.
+Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+---
+ fs/xfs/xfs_iomap.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-*However*
+Index: b/fs/xfs/xfs_iomap.c
+===================================================================
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -325,7 +325,7 @@ xfs_iomap_eof_want_preallocate(
+  * rather than falling short due to things like stripe unit/width alignment of
+  * real extents.
+  */
+-STATIC int
++STATIC xfs_fsblock_t
+ xfs_iomap_eof_prealloc_initial_size(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_inode	*ip,
 
-Seeing that there are unaligned reads occurring does not mean that
-the structures in the log should be unaligned. Your test output
-indicated a log record header at an unaligned block address, and
-that's incorrect. It doesn't matter what the rest of the log
-recovery code does with non-aligned IO - the fact is that your debug
-implies that the contents of the log is corrupt and that implies a
-deeper problem....
-
-> And also there is code in xlog_write_log_records() which handles
-> non-sector-align reads and writes.
-
-Yes, it does handle it, but that doesn't mean that it is correct to
-pass unaligned block ranges to it.
-
-Cheers,
-
-Dave.
-
--- 
-Dave Chinner
-david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
