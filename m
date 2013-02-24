@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DEE3A7F37
-	for <xfs@oss.sgi.com>; Sun, 24 Feb 2013 17:37:55 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 008337F37
+	for <xfs@oss.sgi.com>; Sun, 24 Feb 2013 17:39:24 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CE1258F8037
-	for <xfs@oss.sgi.com>; Sun, 24 Feb 2013 15:37:52 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E3A3D8F8037
+	for <xfs@oss.sgi.com>; Sun, 24 Feb 2013 15:39:23 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	LYea1SKEC10W9ugj for <xfs@oss.sgi.com>;
-	Sun, 24 Feb 2013 15:37:51 -0800 (PST)
-Date: Mon, 25 Feb 2013 10:37:48 +1100
+	ZD9YqaNHmE1r5XkA for <xfs@oss.sgi.com>;
+	Sun, 24 Feb 2013 15:39:22 -0800 (PST)
+Date: Mon, 25 Feb 2013 10:39:20 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: fix xfs_iomap_eof_prealloc_initial_size type
-Message-ID: <20130224233748.GD5551@dastard>
-References: <20130224190436.906161932@sgi.com>
-	<20130224190441.937509860@sgi.com>
+Subject: Re: xfs_growfs: Cannot allocate memory on an online resize
+	60GB->120GB, 30+GB free RAM.
+Message-ID: <20130224233920.GE5551@dastard>
+References: <CAG+9BZWD9mg+NAy+QdobPRkQJS4b6TTkiAvKWD4Q-gLH0AYU3g@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130224190441.937509860@sgi.com>
+In-Reply-To: <CAG+9BZWD9mg+NAy+QdobPRkQJS4b6TTkiAvKWD4Q-gLH0AYU3g@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,19 +30,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
+To: wolfwings@wolfwings.us
 Cc: xfs@oss.sgi.com
 
-On Sun, Feb 24, 2013 at 01:04:37PM -0600, Mark Tinguely wrote:
-> Fix the return type of xfs_iomap_eof_prealloc_initial_size() to
-> xfs_fsblock_t to reflect the fact that the return value may be an
-> unsigned 64 bits if XFS_BIG_BLKNOS is defined.
+On Sun, Feb 24, 2013 at 03:37:39PM -0600, wolfwings@wolfwings.us wrote:
+> Complete error message:
 > 
-> Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+> > xfs_growfs /
+> meta-data=/dev/sdc4              isize=256    agcount=4, agsize=5999616 blks
+>          =                       sectsz=512   attr=2
+> data     =                       bsize=4096   blocks=23998464, imaxpct=25
+>          =                       sunit=512    swidth=512 blks
+> naming   =version 2              bsize=4096   ascii-ci=0
+> log      =internal               bsize=4096   blocks=11720, version=2
+>          =                       sectsz=512   sunit=8 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> xfs_growfs: XFS_IOC_FSGROWFSDATA xfsctl failed: Cannot allocate memory
 
-Good Find.
+You are running what kernel? 3.7.6, .7 or .8? if so, upgrade to to
+3.7.9, and the problem should be fixed.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
