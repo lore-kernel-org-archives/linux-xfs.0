@@ -1,16 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 77F957F5E
-	for <xfs@oss.sgi.com>; Mon, 25 Feb 2013 15:28:15 -0600 (CST)
-Date: Mon, 25 Feb 2013 15:28:11 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 00/10] xfstests: Stress tests improments v5
-Message-ID: <20130225212811.GY22182@sgi.com>
-References: <1361356935-29153-1-git-send-email-dmonakhov@openvz.org>
-	<20130225154512.GA32171@thunk.org>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 40F367F60
+	for <xfs@oss.sgi.com>; Mon, 25 Feb 2013 15:40:04 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2F1268F8035
+	for <xfs@oss.sgi.com>; Mon, 25 Feb 2013 13:40:00 -0800 (PST)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id 88Zm712PnmWFO1sp
+	for <xfs@oss.sgi.com>; Mon, 25 Feb 2013 13:40:00 -0800 (PST)
+Message-ID: <512BDA2A.5050600@hardwarefreak.com>
+Date: Mon, 25 Feb 2013 15:39:54 -0600
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130225154512.GA32171@thunk.org>
+Subject: Re: Consistent throughput challenge -- fragmentation?
+References: <CAEWpfG_DKJt1MmWS1tARH4OmYwpSt=A-DzwKkGcD67LuR6k=Bg@mail.gmail.com>
+In-Reply-To: <CAEWpfG_DKJt1MmWS1tARH4OmYwpSt=A-DzwKkGcD67LuR6k=Bg@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,23 +28,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Theodore Ts'o <tytso@mit.edu>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, Dmitry Monakhov <dmonakhov@openvz.org>, dchinner@redhat.com
+To: Brian Cain <brian.cain@gmail.com>
+Cc: xfs@oss.sgi.com
 
-Hey Ted,
-
-On Mon, Feb 25, 2013 at 10:45:12AM -0500, Theodore Ts'o wrote:
-> Hi, what's the status of this patch series?  It looks like Dmitry has
-> responded to all of Dave's concerns --- is that correct?
+On 2/25/2013 10:01 AM, Brian Cain wrote:
+> All,
 > 
-> Is there anything else we need to do before these patches get merged
-> into the xfstests git tree?
+> I have been observing some odd behavior regarding write throughput to an
+> XFS partition (the baseline kernel version is 2.6.32.27).  I see
+> consistently high write throughput (close to the performance of the raw
+> block device) to the filesystem immediately after a mkfs, but after a few
+> test cycles, there is sporadic poor performance.
+> 
+> The test mechanism is like so:
+> 
+> [mkfs.xfs <blockdev>] (no flags/options, xfsprogs ver 3.1.1-0.1.36)
+> ...
+> 1. remove a previous test cycle's directory
+> 2. create a new directory
+> 3. open/write/close a small file (4kb) in this directory
+> 4. open/read/close this same small file (by the local NFS server)
+> 5. open[O_DIRECT]/write/write/write/.../close a large file (anywhere from
+> ~100MB to 200GB)
+> 
+> Step #5 contains the high-throughput metrics which becomes an order of
+> magnitude worse several test cycles after a mkfs.  Omitting steps 1-3 does
+> not show the poor performance behavior.
+> 
+> Can anyone provide any suggestions as to an explanation for the behavior or
+> a way to mitigate it?  Running xfs_fsr didn't seem to improve the results.
 
-I think we just need a review to see if Dave's concerns have been addressed and
-then we're ready to go.
+The usual cause of such aged filesystem low performance is free space
+fragmentation.  xfs_fsr will defragment files, but in doing so it
+*increases* free space fragmentation, thus won't help the situation.
 
-Regards,
-	Ben
+> I'm happy to share benchmarks, specific results data, or describe the
+> hardware being used for the measurements if it's helpful.
+
+Paste the output of 'xfs_db -r -c freesp /dev/[device]' just before you
+do the large file write.  This will show us the free space distribution
+histogram.
+
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
