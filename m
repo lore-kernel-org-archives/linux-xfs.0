@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B960C7F60
-	for <xfs@oss.sgi.com>; Sun, 24 Feb 2013 19:32:29 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 364D77F56
+	for <xfs@oss.sgi.com>; Sun, 24 Feb 2013 19:32:30 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A81468F8033
-	for <xfs@oss.sgi.com>; Sun, 24 Feb 2013 17:32:29 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 14D558F8040
+	for <xfs@oss.sgi.com>; Sun, 24 Feb 2013 17:32:26 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	k3HvdUGhVbxyw9cF for <xfs@oss.sgi.com>;
-	Sun, 24 Feb 2013 17:32:26 -0800 (PST)
+	XtkFZQexFYANPhH9 for <xfs@oss.sgi.com>;
+	Sun, 24 Feb 2013 17:32:24 -0800 (PST)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1U9mv3-0002tb-KA
+	(envelope-from <dave@fromorbit.com>) id 1U9mv3-0002tC-7A
 	for xfs@oss.sgi.com; Mon, 25 Feb 2013 12:31:53 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1U9mv3-0003Iv-EZ
-	for xfs@oss.sgi.com; Mon, 25 Feb 2013 12:31:53 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1U9mut-0003IB-4R
+	for xfs@oss.sgi.com; Mon, 25 Feb 2013 12:31:43 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 16/16] xfs: add CRC checks to the superblock
-Date: Mon, 25 Feb 2013 12:31:41 +1100
-Message-Id: <1361755901-12453-17-git-send-email-david@fromorbit.com>
+Subject: [PATCH 07/16] xfs: add CRC checks for quota blocks
+Date: Mon, 25 Feb 2013 12:31:32 +1100
+Message-Id: <1361755901-12453-8-git-send-email-david@fromorbit.com>
 In-Reply-To: <1361755901-12453-1-git-send-email-david@fromorbit.com>
 References: <1361755901-12453-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -36,540 +36,312 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Christoph Hellwig <hch@lst.de>
 
-With the addition of CRCs, there is such a wide and varied change to
-the on disk format that it makes sense to bump the superblock
-version number rather than try to use feature bits for all the new
-functionality.
+Use the reserved space in struct xfs_dqblk to store a UUID and a crc
+for the quota blocks.
 
-This commit introduces all the new superblock fields needed for all
-the new functionality: feature masks similar to ext4, separate
-project quota inodes, a LSN field for recovery and the CRC field.
+[dchinner@redhat.com] Add a LSN field and update for current verifier
+infrastructure.
 
-This commit does not bump the superblock version number, however.
-That will be done as a separate commit at the end of the series
-after all the new functionality is present so we switch it all on in
-one commit. This means that we can slowly introduce the changes
-without them being active and hence maintain bisectability of the
-tree.
-
-This patch is based on a patch originally written by myself back
-from SGI days, which was subsequently modified by Christoph Hellwig.
-There is relatively little of that patch remaining, but the history
-of the patch still should be acknowledged here.
-
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_buf_item.h    |    4 +-
- fs/xfs/xfs_log_recover.c |    8 ++++
- fs/xfs/xfs_mount.c       |   97 ++++++++++++++++++++++++++++++++++++--------
- fs/xfs/xfs_mount.h       |    1 +
- fs/xfs/xfs_sb.h          |  100 ++++++++++++++++++++++++++++++++--------------
- 5 files changed, 164 insertions(+), 46 deletions(-)
+ fs/xfs/xfs_dquot.c       |  112 ++++++++++++++++++++++++++++++++++++++++------
+ fs/xfs/xfs_log_recover.c |   10 +++++
+ fs/xfs/xfs_qm.c          |   23 ++++++++--
+ fs/xfs/xfs_qm.h          |    2 +
+ fs/xfs/xfs_quota.h       |   11 ++++-
+ 5 files changed, 141 insertions(+), 17 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
-index 09cab4e..11c4055 100644
---- a/fs/xfs/xfs_buf_item.h
-+++ b/fs/xfs/xfs_buf_item.h
-@@ -50,6 +50,7 @@ extern kmem_zone_t	*xfs_buf_item_zone;
- #define XFS_BLF_AGI_BUF		(1<<8)
- #define XFS_BLF_DINO_BUF	(1<<9)
- #define XFS_BLF_SYMLINK_BUF	(1<<10)
-+#define XFS_BLF_SB_BUF		(1<<11)
- 
- #define XFS_BLF_TYPE_MASK	\
- 		(XFS_BLF_UDQUOT_BUF | \
-@@ -60,7 +61,8 @@ extern kmem_zone_t	*xfs_buf_item_zone;
- 		 XFS_BLF_AGFL_BUF | \
- 		 XFS_BLF_AGI_BUF | \
- 		 XFS_BLF_DINO_BUF | \
--		 XFS_BLF_SYMLINK_BUF)
-+		 XFS_BLF_SYMLINK_BUF | \
-+		 XFS_BLF_SB_BUF)
- 
- #define	XFS_BLF_CHUNK		128
- #define	XFS_BLF_SHIFT		7
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 3216ea5..bc30c55 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -2017,6 +2017,14 @@ xlog_recover_do_reg_buffer(
- 		}
- 		bp->b_ops = &xfs_symlink_buf_ops;
- 		break;
-+	case XFS_BLF_SB_BUF:
-+		if (*(__be32 *)bp->b_addr != cpu_to_be32(XFS_SB_MAGIC)) {
-+			xfs_warn(mp, "Bad SB block magic!");
-+			ASSERT(0);
-+			break;
-+		}
-+		bp->b_ops = &xfs_sb_buf_ops;
-+		break;
- 	default:
- 		break;
- 	}
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 3806088..97443c9 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -43,6 +43,8 @@
- #include "xfs_utils.h"
- #include "xfs_trace.h"
- #include "xfs_icache.h"
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index 8025eb2..aedf29c 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -36,6 +36,7 @@
+ #include "xfs_trans_space.h"
+ #include "xfs_trans_priv.h"
+ #include "xfs_qm.h"
 +#include "xfs_cksum.h"
-+#include "xfs_buf_item.h"
- 
- 
- #ifdef HAVE_PERCPU_SB
-@@ -109,6 +111,12 @@ static const struct {
-     { offsetof(xfs_sb_t, sb_logsunit),	 0 },
-     { offsetof(xfs_sb_t, sb_features2),	 0 },
-     { offsetof(xfs_sb_t, sb_bad_features2), 0 },
-+    { offsetof(xfs_sb_t, sb_features_compat), 0 },
-+    { offsetof(xfs_sb_t, sb_features_ro_compat), 0 },
-+    { offsetof(xfs_sb_t, sb_features_incompat), 0 },
-+    { offsetof(xfs_sb_t, sb_crc),	 0 },
-+    { offsetof(xfs_sb_t, sb_pquotino),	 0 },
-+    { offsetof(xfs_sb_t, sb_lsn),	 0 },
-     { sizeof(xfs_sb_t),			 0 }
- };
- 
-@@ -557,6 +565,12 @@ xfs_sb_from_disk(
- 	to->sb_logsunit = be32_to_cpu(from->sb_logsunit);
- 	to->sb_features2 = be32_to_cpu(from->sb_features2);
- 	to->sb_bad_features2 = be32_to_cpu(from->sb_bad_features2);
-+	to->sb_features_compat = be32_to_cpu(from->sb_features_compat);
-+	to->sb_features_ro_compat = be32_to_cpu(from->sb_features_ro_compat);
-+	to->sb_features_incompat = be32_to_cpu(from->sb_features_incompat);
-+	to->sb_crc = be32_to_cpu(from->sb_crc);
-+	to->sb_pquotino = be64_to_cpu(from->sb_pquotino);
-+	to->sb_lsn = be64_to_cpu(from->sb_lsn);
- }
+ #include "xfs_trace.h"
  
  /*
-@@ -612,13 +626,12 @@ xfs_sb_to_disk(
+@@ -239,6 +240,8 @@ xfs_qm_init_dquot_blk(
+ 		d->dd_diskdq.d_version = XFS_DQUOT_VERSION;
+ 		d->dd_diskdq.d_id = cpu_to_be32(curid);
+ 		d->dd_diskdq.d_flags = type;
++		if (xfs_sb_version_hascrc(&mp->m_sb))
++			uuid_copy(&d->dd_uuid, &mp->m_sb.sb_uuid);
  	}
+ 
+ 	xfs_trans_dquot_buf(tp, bp,
+@@ -248,25 +251,87 @@ xfs_qm_init_dquot_blk(
+ 	xfs_trans_log_buf(tp, bp, 0, BBTOB(q->qi_dqchunklen) - 1);
  }
  
 -static void
-+static int
- xfs_sb_verify(
- 	struct xfs_buf	*bp)
- {
- 	struct xfs_mount *mp = bp->b_target->bt_mount;
- 	struct xfs_sb	sb;
--	int		error;
- 
- 	xfs_sb_from_disk(&sb, XFS_BUF_TO_SBP(bp));
- 
-@@ -626,16 +639,46 @@ xfs_sb_verify(
- 	 * Only check the in progress field for the primary superblock as
- 	 * mkfs.xfs doesn't clear it from secondary superblocks.
- 	 */
--	error = xfs_mount_validate_sb(mp, &sb, bp->b_bn == XFS_SB_DADDR);
--	if (error)
--		xfs_buf_ioerror(bp, error);
-+	return xfs_mount_validate_sb(mp, &sb, bp->b_bn == XFS_SB_DADDR);
- }
- 
-+/*
-+ * If the superblock has the CRC feature bit set or the CRC field is non-null,
-+ * check that the CRC is valid.  We check the CRC field is non-null because a
-+ * single bit error could clear the feature bit and unused parts of the
-+ * superblock are supposed to be zero. Hence a non-null crc field indicates that
-+ * we've potentially lost a feature bit and we should check it anyway.
-+ */
- static void
- xfs_sb_read_verify(
- 	struct xfs_buf	*bp)
- {
--	xfs_sb_verify(bp);
-+	struct xfs_mount *mp = bp->b_target->bt_mount;
-+	struct xfs_dsb	*dsb = XFS_BUF_TO_SBP(bp);
-+	int		error;
-+
-+	/*
-+	 * open code the version check to avoid needing to convert the entire
-+	 * superblock from disk order just to check the version number
-+	 */
-+	if (dsb->sb_magicnum == cpu_to_be32(XFS_SB_MAGIC) &&
-+	    (((be16_to_cpu(dsb->sb_versionnum) & XFS_SB_VERSION_NUMBITS) ==
-+						XFS_SB_VERSION_5) ||
-+	     dsb->sb_crc != 0)) {
-+
-+		if (!xfs_verify_cksum(bp->b_addr, be16_to_cpu(dsb->sb_sectsize),
-+				      offsetof(struct xfs_sb, sb_crc))) {
-+			error = EFSCORRUPTED;
-+			goto out_error;
-+		}
-+	}
-+	error = xfs_sb_verify(bp);
-+
-+out_error:
-+	if (error) {
-+		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
-+		xfs_buf_ioerror(bp, error);
-+	}
- }
- 
- /*
-@@ -648,11 +691,10 @@ static void
- xfs_sb_quiet_read_verify(
- 	struct xfs_buf	*bp)
- {
--	struct xfs_sb	sb;
-+	struct xfs_dsb	*dsb = XFS_BUF_TO_SBP(bp);
- 
--	xfs_sb_from_disk(&sb, XFS_BUF_TO_SBP(bp));
- 
--	if (sb.sb_magicnum == XFS_SB_MAGIC) {
-+	if (dsb->sb_magicnum == cpu_to_be32(XFS_SB_MAGIC)) {
- 		/* XFS filesystem, verify noisily! */
- 		xfs_sb_read_verify(bp);
- 		return;
-@@ -663,9 +705,27 @@ xfs_sb_quiet_read_verify(
- 
- static void
- xfs_sb_write_verify(
--	struct xfs_buf	*bp)
++STATIC void
++xfs_dquot_buf_calc_crc(
++	struct xfs_mount	*mp,
 +	struct xfs_buf		*bp)
- {
--	xfs_sb_verify(bp);
-+	struct xfs_mount	*mp = bp->b_target->bt_mount;
-+	struct xfs_buf_log_item	*bip = bp->b_fspriv;
-+	int			error;
-+
-+	error = xfs_sb_verify(bp);
-+	if (error) {
-+		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
-+		xfs_buf_ioerror(bp, error);
-+		return;
-+	}
++{
++	struct xfs_dqblk	*d = (struct xfs_dqblk *)bp->b_addr;
++	int			i;
 +
 +	if (!xfs_sb_version_hascrc(&mp->m_sb))
 +		return;
 +
-+	if (bip)
-+		XFS_BUF_TO_SBP(bp)->sb_lsn = cpu_to_be64(bip->bli_item.li_lsn);
++	for (i = 0; i < mp->m_quotainfo->qi_dqperchunk; i++, d++) {
++		xfs_update_cksum((char *)d, sizeof(struct xfs_dqblk),
++				 offsetof(struct xfs_dqblk, dd_crc));
++	}
++}
 +
-+	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length),
-+			 offsetof(struct xfs_sb, sb_crc));
- }
- 
- const struct xfs_buf_ops xfs_sb_buf_ops = {
-@@ -687,7 +747,8 @@ int
- xfs_readsb(xfs_mount_t *mp, int flags)
++STATIC bool
++xfs_dquot_buf_verify_crc(
++	struct xfs_mount	*mp,
++	struct xfs_buf		*bp)
++{
++	struct xfs_dqblk	*d = (struct xfs_dqblk *)bp->b_addr;
++	int			ndquots;
++	int			i;
++
++	if (!xfs_sb_version_hascrc(&mp->m_sb))
++		return true;
++
++	/*
++	 * if we are in log recovery, the quota subsystem has not been
++	 * initialised so we have no quotainfo structure. In that case, we need
++	 * to manually calculate the number of dquots in the buffer.
++	 */
++	if (mp->m_quotainfo)
++		ndquots = mp->m_quotainfo->qi_dqperchunk;
++	else
++		ndquots = xfs_qm_calc_dquots_per_chunk(mp,
++					XFS_BB_TO_FSB(mp, bp->b_length));
++
++	for (i = 0; i < ndquots; i++, d++) {
++		if (!xfs_verify_cksum((char *)d, sizeof(struct xfs_dqblk),
++				 offsetof(struct xfs_dqblk, dd_crc)))
++			return false;
++		if (!uuid_equal(&d->dd_uuid, &mp->m_sb.sb_uuid))
++			return false;
++	}
++
++	return true;
++}
++
++STATIC bool
+ xfs_dquot_buf_verify(
++	struct xfs_mount	*mp,
+ 	struct xfs_buf		*bp)
  {
- 	unsigned int	sector_size;
--	xfs_buf_t	*bp;
-+	struct xfs_buf	*bp;
-+	struct xfs_sb	*sbp = &mp->m_sb;
- 	int		error;
- 	int		loud = !(flags & XFS_MFSI_QUIET);
+-	struct xfs_mount	*mp = bp->b_target->bt_mount;
+ 	struct xfs_dqblk	*d = (struct xfs_dqblk *)bp->b_addr;
+-	struct xfs_disk_dquot	*ddq;
+ 	xfs_dqid_t		id = 0;
++	int			ndquots;
+ 	int			i;
  
-@@ -726,10 +787,10 @@ reread:
  	/*
- 	 * We must be able to do sector-sized and sector-aligned IO.
++	 * if we are in log recovery, the quota subsystem has not been
++	 * initialised so we have no quotainfo structure. In that case, we need
++	 * to manually calculate the number of dquots in the buffer.
++	 */
++	if (mp->m_quotainfo)
++		ndquots = mp->m_quotainfo->qi_dqperchunk;
++	else
++		ndquots = xfs_qm_calc_dquots_per_chunk(mp, bp->b_length);
++
++	/*
+ 	 * On the first read of the buffer, verify that each dquot is valid.
+ 	 * We don't know what the id of the dquot is supposed to be, just that
+ 	 * they should be increasing monotonically within the buffer. If the
+ 	 * first id is corrupt, then it will fail on the second dquot in the
+ 	 * buffer so corruptions could point to the wrong dquot in this case.
  	 */
--	if (sector_size > mp->m_sb.sb_sectsize) {
-+	if (sector_size > sbp->sb_sectsize) {
- 		if (loud)
- 			xfs_warn(mp, "device supports %u byte sectors (not %u)",
--				sector_size, mp->m_sb.sb_sectsize);
-+				sector_size, sbp->sb_sectsize);
- 		error = ENOSYS;
- 		goto release_buf;
+-	for (i = 0; i < mp->m_quotainfo->qi_dqperchunk; i++) {
+-		int	error;
++	for (i = 0; i < ndquots; i++) {
++		struct xfs_disk_dquot	*ddq;
++		int			error;
+ 
+ 		ddq = &d[i].dd_diskdq;
+ 
+@@ -274,27 +339,37 @@ xfs_dquot_buf_verify(
+ 			id = be32_to_cpu(ddq->d_id);
+ 
+ 		error = xfs_qm_dqcheck(mp, ddq, id + i, 0, XFS_QMOPT_DOWARN,
+-					"xfs_dquot_read_verify");
+-		if (error) {
+-			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, d);
+-			xfs_buf_ioerror(bp, EFSCORRUPTED);
+-			break;
+-		}
++				       "xfs_dquot_buf_verify");
++		if (error)
++			return false;
  	}
-@@ -738,15 +799,18 @@ reread:
- 	 * If device sector size is smaller than the superblock size,
- 	 * re-read the superblock so the buffer is correctly sized.
++	return true;
+ }
+ 
+ static void
+ xfs_dquot_buf_read_verify(
+ 	struct xfs_buf	*bp)
+ {
+-	xfs_dquot_buf_verify(bp);
++	struct xfs_mount	*mp = bp->b_target->bt_mount;
++
++	if (!xfs_dquot_buf_verify_crc(mp, bp) || !xfs_dquot_buf_verify(mp, bp)) {
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
++		xfs_buf_ioerror(bp, EFSCORRUPTED);
++	}
+ }
+ 
+ void
+ xfs_dquot_buf_write_verify(
+ 	struct xfs_buf	*bp)
+ {
+-	xfs_dquot_buf_verify(bp);
++	struct xfs_mount	*mp = bp->b_target->bt_mount;
++
++	if (!xfs_dquot_buf_verify(mp, bp)) {
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
++		xfs_buf_ioerror(bp, EFSCORRUPTED);
++		return;
++	}
++	xfs_dquot_buf_calc_crc(mp, bp);
+ }
+ 
+ const struct xfs_buf_ops xfs_dquot_buf_ops = {
+@@ -1035,6 +1110,17 @@ xfs_qm_dqflush(
+ 					&dqp->q_logitem.qli_item.li_lsn);
+ 
+ 	/*
++	 * copy the lsn into the on-disk dquot now while we have the in memory
++	 * dquot here. This can't be done later in the write verifier as we
++	 * can't get access to the log item at that point in time.
++	 */
++	if (xfs_sb_version_hascrc(&mp->m_sb)) {
++		struct xfs_dqblk *dqb = (struct xfs_dqblk *)ddqp;
++
++		dqb->dd_lsn = cpu_to_be64(dqp->q_logitem.qli_item.li_lsn);
++	}
++
++	/*
+ 	 * Attach an iodone routine so that we can remove this dquot from the
+ 	 * AIL and release the flush lock once the dquot is synced to disk.
  	 */
--	if (sector_size < mp->m_sb.sb_sectsize) {
-+	if (sector_size < sbp->sb_sectsize) {
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 8b6864a..e77c770 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -1980,6 +1980,16 @@ xlog_recover_do_reg_buffer(
+ 		}
+ 		bp->b_ops = &xfs_agi_buf_ops;
+ 		break;
++	case XFS_BLF_UDQUOT_BUF:
++	case XFS_BLF_PDQUOT_BUF:
++	case XFS_BLF_GDQUOT_BUF:
++		if (*(__be16 *)bp->b_addr != cpu_to_be16(XFS_DQUOT_MAGIC)) {
++			xfs_warn(mp, "Bad DQUOT block magic!");
++			ASSERT(0);
++			break;
++		}
++		bp->b_ops = &xfs_dquot_buf_ops;
++		break;
+ 	default:
+ 		break;
+ 	}
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index e5b5cf9..9d00500 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -617,6 +617,20 @@ xfs_qm_dqdetach(
+ 	}
+ }
+ 
++int
++xfs_qm_calc_dquots_per_chunk(
++	struct xfs_mount	*mp,
++	unsigned int		nbblks)	/* basic block units */
++{
++	unsigned int	ndquots;
++
++	ASSERT(nbblks > 0);
++	ndquots = BBTOB(nbblks);
++	do_div(ndquots, sizeof(xfs_dqblk_t));
++
++	return ndquots;
++}
++
+ /*
+  * This initializes all the quota information that's kept in the
+  * mount structure
+@@ -656,9 +670,8 @@ xfs_qm_init_quotainfo(
+ 
+ 	/* Precalc some constants */
+ 	qinf->qi_dqchunklen = XFS_FSB_TO_BB(mp, XFS_DQUOT_CLUSTER_SIZE_FSB);
+-	ASSERT(qinf->qi_dqchunklen);
+-	qinf->qi_dqperchunk = BBTOB(qinf->qi_dqchunklen);
+-	do_div(qinf->qi_dqperchunk, sizeof(xfs_dqblk_t));
++	qinf->qi_dqperchunk = xfs_qm_calc_dquots_per_chunk(mp,
++							qinf->qi_dqchunklen);
+ 
+ 	mp->m_qflags |= (mp->m_sb.sb_qflags & XFS_ALL_QUOTA_CHKD);
+ 
+@@ -897,6 +910,10 @@ xfs_qm_dqiter_bufs(
+ 		if (error)
+ 			break;
+ 
++		/*
++		 * XXX(hch): need to figure out if it makes sense to validate
++		 *	     the CRC here.
++		 */
+ 		xfs_qm_reset_dqcounts(mp, bp, firstid, type);
+ 		xfs_buf_delwri_queue(bp, buffer_list);
  		xfs_buf_relse(bp);
--		sector_size = mp->m_sb.sb_sectsize;
-+		sector_size = sbp->sb_sectsize;
- 		goto reread;
- 	}
+diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
+index 44b858b..45d1656 100644
+--- a/fs/xfs/xfs_qm.h
++++ b/fs/xfs/xfs_qm.h
+@@ -75,6 +75,8 @@ typedef struct xfs_quotainfo {
+ 	 &((qi)->qi_gquota_tree))
  
- 	/* Initialize per-cpu counters */
- 	xfs_icsb_reinit_counters(mp);
  
-+	/* no need to be quiet anymore, so reset the buf ops */
-+	bp->b_ops = &xfs_sb_buf_ops;
++extern int	xfs_qm_calc_dquots_per_chunk(struct xfs_mount *mp,
++					     unsigned int nbblks);
+ extern void	xfs_trans_mod_dquot(xfs_trans_t *, xfs_dquot_t *, uint, long);
+ extern int	xfs_trans_reserve_quota_bydquots(xfs_trans_t *, xfs_mount_t *,
+ 			xfs_dquot_t *, xfs_dquot_t *, long, long, uint);
+diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
+index b50ec5b..c61e31c 100644
+--- a/fs/xfs/xfs_quota.h
++++ b/fs/xfs/xfs_quota.h
+@@ -77,7 +77,14 @@ typedef struct	xfs_disk_dquot {
+  */
+ typedef struct xfs_dqblk {
+ 	xfs_disk_dquot_t  dd_diskdq;	/* portion that lives incore as well */
+-	char		  dd_fill[32];	/* filling for posterity */
++	char		  dd_fill[4];	/* filling for posterity */
 +
- 	mp->m_sb_bp = bp;
- 	xfs_buf_unlock(bp);
- 	return 0;
-@@ -1633,6 +1697,7 @@ xfs_mod_sb(xfs_trans_t *tp, __int64_t fields)
- 	ASSERT((1LL << f) & XFS_SB_MOD_BITS);
- 	first = xfs_sb_info[f].offset;
++	/*
++	 * These two are only present on filesystems with the CRC bits set.
++	 */
++	__be32		  dd_crc;	/* checksum */
++	__be64		  dd_lsn;	/* last modification in log */
++	uuid_t		  dd_uuid;	/* location information */
+ } xfs_dqblk_t;
  
-+	xfs_trans_buf_set_type(tp, bp, XFS_BLF_SB_BUF);
- 	xfs_trans_log_buf(tp, bp, first, last);
- }
+ /*
+@@ -380,5 +387,7 @@ extern int xfs_qm_dqcheck(struct xfs_mount *, xfs_disk_dquot_t *,
+ 				xfs_dqid_t, uint, uint, char *);
+ extern int xfs_mount_reset_sbqflags(struct xfs_mount *);
  
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index bc90706..157a7d3 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -392,6 +392,7 @@ extern void	xfs_set_low_space_thresholds(struct xfs_mount *);
- 
++extern const struct xfs_buf_ops xfs_dquot_buf_ops;
++
  #endif	/* __KERNEL__ */
- 
-+extern void	xfs_sb_calc_crc(struct xfs_buf	*);
- extern void	xfs_mod_sb(struct xfs_trans *, __int64_t);
- extern int	xfs_initialize_perag(struct xfs_mount *, xfs_agnumber_t,
- 					xfs_agnumber_t *);
-diff --git a/fs/xfs/xfs_sb.h b/fs/xfs/xfs_sb.h
-index a05b451..457fefa 100644
---- a/fs/xfs/xfs_sb.h
-+++ b/fs/xfs/xfs_sb.h
-@@ -32,6 +32,7 @@ struct xfs_mount;
- #define	XFS_SB_VERSION_2	2		/* 6.2 - attributes */
- #define	XFS_SB_VERSION_3	3		/* 6.2 - new inode version */
- #define	XFS_SB_VERSION_4	4		/* 6.2+ - bitmask version */
-+#define	XFS_SB_VERSION_5	5		/* CRC enabled filesystem */
- #define	XFS_SB_VERSION_NUMBITS		0x000f
- #define	XFS_SB_VERSION_ALLFBITS		0xfff0
- #define	XFS_SB_VERSION_SASHFBITS	0xf000
-@@ -161,6 +162,18 @@ typedef struct xfs_sb {
- 	 */
- 	__uint32_t	sb_bad_features2;
- 
-+	/* version 5 superblock fields start here */
-+
-+	/* feature masks */
-+	__uint32_t	sb_features_compat;
-+	__uint32_t	sb_features_ro_compat;
-+	__uint32_t	sb_features_incompat;
-+
-+	__uint32_t	sb_crc;		/* superblock crc */
-+
-+	xfs_ino_t	sb_pquotino;	/* project quota inode */
-+	xfs_lsn_t	sb_lsn;		/* last write sequence */
-+
- 	/* must be padded to 64 bit alignment */
- } xfs_sb_t;
- 
-@@ -229,7 +242,19 @@ typedef struct xfs_dsb {
- 	 * for features2 bits. Easiest just to mark it bad and not use
- 	 * it for anything else.
- 	 */
--	__be32	sb_bad_features2;
-+	__be32		sb_bad_features2;
-+
-+	/* version 5 superblock fields start here */
-+
-+	/* feature masks */
-+	__be32		sb_features_compat;
-+	__be32		sb_features_ro_compat;
-+	__be32		sb_features_incompat;
-+
-+	__le32		sb_crc;		/* superblock crc */
-+
-+	__be64		sb_pquotino;	/* project quota inode */
-+	__be64		sb_lsn;		/* last write sequence */
- 
- 	/* must be padded to 64 bit alignment */
- } xfs_dsb_t;
-@@ -250,7 +275,9 @@ typedef enum {
- 	XFS_SBS_GQUOTINO, XFS_SBS_QFLAGS, XFS_SBS_FLAGS, XFS_SBS_SHARED_VN,
- 	XFS_SBS_INOALIGNMT, XFS_SBS_UNIT, XFS_SBS_WIDTH, XFS_SBS_DIRBLKLOG,
- 	XFS_SBS_LOGSECTLOG, XFS_SBS_LOGSECTSIZE, XFS_SBS_LOGSUNIT,
--	XFS_SBS_FEATURES2, XFS_SBS_BAD_FEATURES2,
-+	XFS_SBS_FEATURES2, XFS_SBS_BAD_FEATURES2, XFS_SBS_FEATURES_COMPAT,
-+	XFS_SBS_FEATURES_RO_COMPAT, XFS_SBS_FEATURES_INCOMPAT, XFS_SBS_CRC,
-+	XFS_SBS_PQUOTINO, XFS_SBS_LSN,
- 	XFS_SBS_FIELDCOUNT
- } xfs_sb_field_t;
- 
-@@ -276,6 +303,11 @@ typedef enum {
- #define XFS_SB_FDBLOCKS		XFS_SB_MVAL(FDBLOCKS)
- #define XFS_SB_FEATURES2	XFS_SB_MVAL(FEATURES2)
- #define XFS_SB_BAD_FEATURES2	XFS_SB_MVAL(BAD_FEATURES2)
-+#define XFS_SB_FEATURES_COMPAT	XFS_SB_MVAL(FEATURES_COMPAT)
-+#define XFS_SB_FEATURES_RO_COMPAT XFS_SB_MVAL(FEATURES_RO_COMPAT)
-+#define XFS_SB_FEATURES_INCOMPAT XFS_SB_MVAL(FEATURES_INCOMPAT)
-+#define XFS_SB_CRC		XFS_SB_MVAL(CRC)
-+#define XFS_SB_PQUOTINO		XFS_SB_MVAL(PQUOTINO)
- #define	XFS_SB_NUM_BITS		((int)XFS_SBS_FIELDCOUNT)
- #define	XFS_SB_ALL_BITS		((1LL << XFS_SB_NUM_BITS) - 1)
- #define	XFS_SB_MOD_BITS		\
-@@ -283,7 +315,8 @@ typedef enum {
- 	 XFS_SB_VERSIONNUM | XFS_SB_UQUOTINO | XFS_SB_GQUOTINO | \
- 	 XFS_SB_QFLAGS | XFS_SB_SHARED_VN | XFS_SB_UNIT | XFS_SB_WIDTH | \
- 	 XFS_SB_ICOUNT | XFS_SB_IFREE | XFS_SB_FDBLOCKS | XFS_SB_FEATURES2 | \
--	 XFS_SB_BAD_FEATURES2)
-+	 XFS_SB_BAD_FEATURES2 | XFS_SB_FEATURES_COMPAT | \
-+	 XFS_SB_FEATURES_RO_COMPAT | XFS_SB_FEATURES_INCOMPAT | XFS_SB_PQUOTINO)
- 
- 
- /*
-@@ -325,6 +358,8 @@ static inline int xfs_sb_good_version(xfs_sb_t *sbp)
- 
- 		return 1;
- 	}
-+	if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5)
-+		return 1;
- 
- 	return 0;
- }
-@@ -365,7 +400,7 @@ static inline int xfs_sb_version_hasattr(xfs_sb_t *sbp)
- {
- 	return sbp->sb_versionnum == XFS_SB_VERSION_2 ||
- 		sbp->sb_versionnum == XFS_SB_VERSION_3 ||
--		(XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
-+		(XFS_SB_VERSION_NUM(sbp) >= XFS_SB_VERSION_4 &&
- 		 (sbp->sb_versionnum & XFS_SB_VERSION_ATTRBIT));
- }
- 
-@@ -373,7 +408,7 @@ static inline void xfs_sb_version_addattr(xfs_sb_t *sbp)
- {
- 	if (sbp->sb_versionnum == XFS_SB_VERSION_1)
- 		sbp->sb_versionnum = XFS_SB_VERSION_2;
--	else if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4)
-+	else if (XFS_SB_VERSION_NUM(sbp) >= XFS_SB_VERSION_4)
- 		sbp->sb_versionnum |= XFS_SB_VERSION_ATTRBIT;
- 	else
- 		sbp->sb_versionnum = XFS_SB_VERSION_4 | XFS_SB_VERSION_ATTRBIT;
-@@ -382,7 +417,7 @@ static inline void xfs_sb_version_addattr(xfs_sb_t *sbp)
- static inline int xfs_sb_version_hasnlink(xfs_sb_t *sbp)
- {
- 	return sbp->sb_versionnum == XFS_SB_VERSION_3 ||
--		 (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
-+		 (XFS_SB_VERSION_NUM(sbp) >= XFS_SB_VERSION_4 &&
- 		  (sbp->sb_versionnum & XFS_SB_VERSION_NLINKBIT));
- }
- 
-@@ -396,13 +431,13 @@ static inline void xfs_sb_version_addnlink(xfs_sb_t *sbp)
- 
- static inline int xfs_sb_version_hasquota(xfs_sb_t *sbp)
- {
--	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
-+	return XFS_SB_VERSION_NUM(sbp) >= XFS_SB_VERSION_4 &&
- 		(sbp->sb_versionnum & XFS_SB_VERSION_QUOTABIT);
- }
- 
- static inline void xfs_sb_version_addquota(xfs_sb_t *sbp)
- {
--	if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4)
-+	if (XFS_SB_VERSION_NUM(sbp) >= XFS_SB_VERSION_4)
- 		sbp->sb_versionnum |= XFS_SB_VERSION_QUOTABIT;
- 	else
- 		sbp->sb_versionnum = xfs_sb_version_tonew(sbp->sb_versionnum) |
-@@ -411,13 +446,14 @@ static inline void xfs_sb_version_addquota(xfs_sb_t *sbp)
- 
- static inline int xfs_sb_version_hasalign(xfs_sb_t *sbp)
- {
--	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
--		(sbp->sb_versionnum & XFS_SB_VERSION_ALIGNBIT);
-+	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) ||
-+	       (XFS_SB_VERSION_NUM(sbp) >= XFS_SB_VERSION_4 &&
-+		(sbp->sb_versionnum & XFS_SB_VERSION_ALIGNBIT));
- }
- 
- static inline int xfs_sb_version_hasdalign(xfs_sb_t *sbp)
- {
--	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
-+	return XFS_SB_VERSION_NUM(sbp) >= XFS_SB_VERSION_4 &&
- 		(sbp->sb_versionnum & XFS_SB_VERSION_DALIGNBIT);
- }
- 
-@@ -429,38 +465,42 @@ static inline int xfs_sb_version_hasshared(xfs_sb_t *sbp)
- 
- static inline int xfs_sb_version_hasdirv2(xfs_sb_t *sbp)
- {
--	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
--		(sbp->sb_versionnum & XFS_SB_VERSION_DIRV2BIT);
-+	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) ||
-+	       (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
-+		(sbp->sb_versionnum & XFS_SB_VERSION_DIRV2BIT));
- }
- 
- static inline int xfs_sb_version_haslogv2(xfs_sb_t *sbp)
- {
--	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
--		(sbp->sb_versionnum & XFS_SB_VERSION_LOGV2BIT);
-+	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) ||
-+	       (XFS_SB_VERSION_NUM(sbp) >= XFS_SB_VERSION_4 &&
-+		(sbp->sb_versionnum & XFS_SB_VERSION_LOGV2BIT));
- }
- 
- static inline int xfs_sb_version_hasextflgbit(xfs_sb_t *sbp)
- {
--	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
--		(sbp->sb_versionnum & XFS_SB_VERSION_EXTFLGBIT);
-+	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) ||
-+	       (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
-+		(sbp->sb_versionnum & XFS_SB_VERSION_EXTFLGBIT));
- }
- 
- static inline int xfs_sb_version_hassector(xfs_sb_t *sbp)
- {
--	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
-+	return XFS_SB_VERSION_NUM(sbp) >= XFS_SB_VERSION_4 &&
- 		(sbp->sb_versionnum & XFS_SB_VERSION_SECTORBIT);
- }
- 
- static inline int xfs_sb_version_hasasciici(xfs_sb_t *sbp)
- {
--	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
-+	return XFS_SB_VERSION_NUM(sbp) >= XFS_SB_VERSION_4 &&
- 		(sbp->sb_versionnum & XFS_SB_VERSION_BORGBIT);
- }
- 
- static inline int xfs_sb_version_hasmorebits(xfs_sb_t *sbp)
- {
--	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
--		(sbp->sb_versionnum & XFS_SB_VERSION_MOREBITSBIT);
-+	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) ||
-+	       (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
-+		(sbp->sb_versionnum & XFS_SB_VERSION_MOREBITSBIT));
- }
- 
- /*
-@@ -475,14 +515,16 @@ static inline int xfs_sb_version_hasmorebits(xfs_sb_t *sbp)
- 
- static inline int xfs_sb_version_haslazysbcount(xfs_sb_t *sbp)
- {
--	return xfs_sb_version_hasmorebits(sbp) &&
--		(sbp->sb_features2 & XFS_SB_VERSION2_LAZYSBCOUNTBIT);
-+	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) ||
-+	       (xfs_sb_version_hasmorebits(sbp) &&
-+		(sbp->sb_features2 & XFS_SB_VERSION2_LAZYSBCOUNTBIT));
- }
- 
- static inline int xfs_sb_version_hasattr2(xfs_sb_t *sbp)
- {
--	return xfs_sb_version_hasmorebits(sbp) &&
--		(sbp->sb_features2 & XFS_SB_VERSION2_ATTR2BIT);
-+	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) ||
-+	       (xfs_sb_version_hasmorebits(sbp) &&
-+		(sbp->sb_features2 & XFS_SB_VERSION2_ATTR2BIT));
- }
- 
- static inline void xfs_sb_version_addattr2(xfs_sb_t *sbp)
-@@ -500,14 +542,14 @@ static inline void xfs_sb_version_removeattr2(xfs_sb_t *sbp)
- 
- static inline int xfs_sb_version_hasprojid32bit(xfs_sb_t *sbp)
- {
--	return xfs_sb_version_hasmorebits(sbp) &&
--		(sbp->sb_features2 & XFS_SB_VERSION2_PROJID32BIT);
-+	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) ||
-+	       (xfs_sb_version_hasmorebits(sbp) &&
-+		(sbp->sb_features2 & XFS_SB_VERSION2_PROJID32BIT));
- }
- 
- static inline int xfs_sb_version_hascrc(xfs_sb_t *sbp)
- {
--	return (xfs_sb_version_hasmorebits(sbp) &&
--		(sbp->sb_features2 & XFS_SB_VERSION2_CRCBIT));
-+	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5;
- }
- 
- /*
+ #endif	/* __XFS_QUOTA_H__ */
 -- 
 1.7.10
 
