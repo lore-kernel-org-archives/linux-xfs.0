@@ -1,21 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8FF1C7F94
-	for <xfs@oss.sgi.com>; Mon, 25 Feb 2013 10:01:59 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E13467F5A
+	for <xfs@oss.sgi.com>; Mon, 25 Feb 2013 14:45:10 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2C513AC005
-	for <xfs@oss.sgi.com>; Mon, 25 Feb 2013 08:01:56 -0800 (PST)
-Received: from mail-la0-f54.google.com (mail-la0-f54.google.com
-	[209.85.215.54]) by cuda.sgi.com with ESMTP id rfMv8f5fGy0wt12t
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 25 Feb 2013 08:01:54 -0800 (PST)
-Received: by mail-la0-f54.google.com with SMTP id gw10so2865264lab.27
-	for <xfs@oss.sgi.com>; Mon, 25 Feb 2013 08:01:53 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C0B44304048
+	for <xfs@oss.sgi.com>; Mon, 25 Feb 2013 12:45:07 -0800 (PST)
+Message-ID: <512BCDE3.5060907@redhat.com>
+Date: Mon, 25 Feb 2013 15:47:31 -0500
+From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Date: Mon, 25 Feb 2013 10:01:53 -0600
-Message-ID: <CAEWpfG_DKJt1MmWS1tARH4OmYwpSt=A-DzwKkGcD67LuR6k=Bg@mail.gmail.com>
-Subject: Consistent throughput challenge -- fragmentation?
-From: Brian Cain <brian.cain@gmail.com>
+Subject: Re: [PATCH v4 0/6] speculative preallocation quota throttling
+References: <1361373019-30891-1-git-send-email-bfoster@redhat.com>
+	<512BC90A.4090206@sgi.com>
+In-Reply-To: <512BC90A.4090206@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,92 +21,60 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============7863467593097178970=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: xfs@oss.sgi.com
 
---===============7863467593097178970==
-Content-Type: multipart/alternative; boundary=f46d0401f899d5d89904d68ea826
+[CC list]
 
---f46d0401f899d5d89904d68ea826
-Content-Type: text/plain; charset=ISO-8859-1
-
-All,
-
-I have been observing some odd behavior regarding write throughput to an
-XFS partition (the baseline kernel version is 2.6.32.27).  I see
-consistently high write throughput (close to the performance of the raw
-block device) to the filesystem immediately after a mkfs, but after a few
-test cycles, there is sporadic poor performance.
-
-The test mechanism is like so:
-
-[mkfs.xfs <blockdev>] (no flags/options, xfsprogs ver 3.1.1-0.1.36)
+On 02/25/2013 03:26 PM, Mark Tinguely wrote:
+> On 02/20/13 09:10, Brian Foster wrote:
+>> Hi all,
+>>
+>> Here is v4 of the speculative preallocation quota throttling set.
+>> Patch 3 of v3
+>> is dropped due to a redundancy and a few changes are made to the
+>> threshold
+>> management code (patch 4/6). The remaining patches are unchanged from v3.
+>>
+>> Brian
+>>
 ...
-1. remove a previous test cycle's directory
-2. create a new directory
-3. open/write/close a small file (4kb) in this directory
-4. open/read/close this same small file (by the local NFS server)
-5. open[O_DIRECT]/write/write/write/.../close a large file (anywhere from
-~100MB to 200GB)
+>>
+> 
+> Since you are doing a v5 repost, you can clean up the typedefs in the
+> routines that you touch:
+> 
 
-Step #5 contains the high-throughput metrics which becomes an order of
-magnitude worse several test cycles after a mkfs.  Omitting steps 1-3 does
-not show the poor performance behavior.
+Sure, I'll make a pass through the set for such clean ups.
 
-Can anyone provide any suggestions as to an explanation for the behavior or
-a way to mitigate it?  Running xfs_fsr didn't seem to improve the results.
+Brian
 
-I'm happy to share benchmarks, specific results data, or describe the
-hardware being used for the measurements if it's helpful.
-
--- 
--Brian
-
---f46d0401f899d5d89904d68ea826
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr"><div>All,<br></div><div style><br></div><div style>I have =
-been observing some odd behavior regarding write throughput to an XFS parti=
-tion (the baseline kernel version is 2.6.32.27). =A0I see consistently high=
- write throughput (close to the performance of the raw block device) to the=
- filesystem immediately after a mkfs, but after a few test cycles, there is=
- sporadic poor performance.</div>
-<div style><br></div><div style>The test mechanism is like so:</div><div st=
-yle><br></div><div style>[mkfs.xfs &lt;blockdev&gt;] (no flags/options, xfs=
-progs ver=A03.1.1-0.1.36)</div><div style>...</div><div style>1. remove a p=
-revious test cycle&#39;s directory=A0</div>
-<div style>2. create a new directory</div><div style>3. open/write/close a =
-small file (4kb) in this directory</div><div style>4. open/read/close this =
-same small file (by the local NFS server)</div><div style>5. open[O_DIRECT]=
-/write/write/write/.../close a large file (anywhere from ~100MB to 200GB)</=
-div>
-<div style><br></div><div style>Step #5 contains the high-throughput metric=
-s which becomes an order of magnitude worse several test cycles after a mkf=
-s. =A0Omitting steps 1-3 does not show the poor performance behavior.</div>
-<div style><br></div><div style>Can anyone provide any suggestions as to an=
- explanation for the behavior or a way to mitigate it? =A0Running xfs_fsr d=
-idn&#39;t seem to improve the results.</div><div style><br></div><div style=
->
-I&#39;m happy to share benchmarks, specific results data, or describe the h=
-ardware being used for the measurements if it&#39;s helpful.</div><div><div=
-><br></div>-- <br>-Brian
-</div></div>
-
---f46d0401f899d5d89904d68ea826--
-
-
---===============7863467593097178970==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+> For example in patch 3:
+> 
+> 
+>         xfs_quotainfo_t         *q = mp->m_quotainfo;
+> +       xfs_disk_dquot_t        *d = &dq->q_core;
+>         ^^^^^^^^^
+>     struct xfs_disk_dquot    d = &dq->q_core;
+> ---
+> patch 4:
+> 
+> xfs_disk_dquot_t
+> 
+>         xfs_quotainfo_t         *q = mp->m_quotainfo;
+>         xfs_disk_dquot_t        *d = &dq->q_core;
+> +       int                     prealloc = 0;
+> 
+> clean up the xfs_quotainfo_t and xfs_disk_dquot_t
+> 
+> --Mark.
+> 
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============7863467593097178970==--
