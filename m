@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id EA8E77F89
-	for <xfs@oss.sgi.com>; Mon, 25 Feb 2013 16:38:35 -0600 (CST)
-Message-ID: <512BE7EA.20101@sgi.com>
-Date: Mon, 25 Feb 2013 16:38:34 -0600
-From: Mark Tinguely <tinguely@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id D4F197F88
+	for <xfs@oss.sgi.com>; Mon, 25 Feb 2013 17:00:08 -0600 (CST)
+Date: Mon, 25 Feb 2013 17:00:07 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 00/10] xfstests: Stress tests improments v5
+Message-ID: <20130225230007.GJ30652@sgi.com>
+References: <1361356935-29153-1-git-send-email-dmonakhov@openvz.org>
+	<20130225154512.GA32171@thunk.org> <20130225212811.GY22182@sgi.com>
+	<20130225220941.GH5551@dastard>
 MIME-Version: 1.0
-Subject: Re: [PATCH v4 5/6] xfs: add quota-driven speculative preallocation
-	throttling
-References: <1361373019-30891-1-git-send-email-bfoster@redhat.com>
-	<1361373019-30891-6-git-send-email-bfoster@redhat.com>
-	<512BDB2A.8080103@sgi.com> <20130225221412.GI5551@dastard>
-In-Reply-To: <20130225221412.GI5551@dastard>
+Content-Disposition: inline
+In-Reply-To: <20130225220941.GH5551@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,98 +20,32 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
+Cc: Theodore Ts'o <tytso@mit.edu>, xfs@oss.sgi.com, Dmitry Monakhov <dmonakhov@openvz.org>, dchinner@redhat.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
-On 02/25/13 16:14, Dave Chinner wrote:
-> On Mon, Feb 25, 2013 at 03:44:10PM -0600, Mark Tinguely wrote:
->> On 02/20/13 09:10, Brian Foster wrote:
->>> Introduce the need_throttle() and calc_throttle() functions to
->>> independently check whether throttling is required for a particular
->>> dquot and if so, calculate the associated throttling metrics based
->>> on the state of the quota. We use the same general algorithm to
->>> calculate the throttle shift as for global free space with the
->>> exception of using three stages rather than five.
->>>
->>> Update xfs_iomap_prealloc_size() to use the smallest available
->>> prealloc size based on each of the constraints and apply the
->>> maximum shift to obtain the throttled preallocation size.
->>>
->>> Signed-off-by: Brian Foster<bfoster@redhat.com>
->>> ---
->>
->>>   	/*
->>>   	 * MAXEXTLEN is not a power of two value but we round the prealloc down
->>> @@ -412,6 +472,28 @@ xfs_iomap_prealloc_size(
->>>   		if (freesp<   mp->m_low_space[XFS_LOWSP_1_PCNT])
->>>   			shift++;
->>>   	}
->>> +
->>> +	/*
->>> +	 * Check each quota to cap the prealloc size and provide a shift
->>> +	 * value to throttle with.
->>> +	 */
->>> +	if (xfs_quota_need_throttle(ip, XFS_DQ_USER, alloc_blocks))
->>> +		xfs_quota_calc_throttle(ip, XFS_DQ_USER,&qblocks,&qshift);
->>> +	if (xfs_quota_need_throttle(ip, XFS_DQ_GROUP, alloc_blocks))
->>> +		xfs_quota_calc_throttle(ip, XFS_DQ_GROUP,&qblocks,&qshift);
->>> +	if (xfs_quota_need_throttle(ip, XFS_DQ_PROJ, alloc_blocks))
->>> +		xfs_quota_calc_throttle(ip, XFS_DQ_PROJ,&qblocks,&qshift);
->>> +
->>> +	/*
->>> +	 * The final prealloc size is set to the minimum of free space available
->>> +	 * in each of the quotas and the overall filesystem.
->>> +	 *
->>> +	 * The shift throttle value is set to the maximum value as determined by
->>> +	 * the global low free space values and per-quota low free space values.
->>> +	 */
->>> +	alloc_blocks = MIN(alloc_blocks, qblocks);
->>> +	shift = MAX(shift, qshift);
->>> +
->>>   	if (shift)
->>>   		alloc_blocks>>= shift;
->>>   	/*
->>
->> All the limits are applied from previous extents, quota and then the
->> code from commit 055388a3 is applied:
->> 	if (alloc_blocks<  mp->m_writeio_blocks)
->> 		alloc_blocks = mp->m_writeio_blocks;
->>
->>                         ^^^^
->> we may not have mp->m_writeio_blocks left in the filesytem.
->> Doesn't the following make more sense?:
->>
->> 	if (alloc_blocks<  mp->m_writeio_blocks)
->> 		alloc_blocks = 0;
->
-> No. This is for prealloc, and we alwys try to prealloc the minimum
-> configured. If we can't prealloc that amount, then preallocation
-> fails and we'll try a single block.
->
-> Remember, the freesp calculation is done unlocked and hence freesp
-> is only an estimate. It may change between the reading of it and the
-> actual allocation attempt, and so the only real determination of
-> ENOSPC is the failure ot the allocation attempt.....
->
-> Cheers,
->
-> Dave.
+Hi,
 
-Thank-you for the information.
+On Tue, Feb 26, 2013 at 09:09:41AM +1100, Dave Chinner wrote:
+> On Mon, Feb 25, 2013 at 03:28:11PM -0600, Ben Myers wrote:
+> > On Mon, Feb 25, 2013 at 10:45:12AM -0500, Theodore Ts'o wrote:
+> > > Hi, what's the status of this patch series?  It looks like Dmitry has
+> > > responded to all of Dave's concerns --- is that correct?
+> > > 
+> > > Is there anything else we need to do before these patches get merged
+> > > into the xfstests git tree?
+> > 
+> > I think we just need a review to see if Dave's concerns have been addressed and
+> > then we're ready to go.
+> 
+> That doesn't stop anyone else from reviewing it.
 
-And without the minimum, it will immediately trip the assert:
+Yes.  Anyone is welcome to extend a Reviewed-by.  ;)
 
-Assertion failed: last_fsb > offset_fsb, file: 
-/root/xfs/fs/xfs/xfs_iomap.c, line: 590
-
-Sorry for the noise.
-
---Mark.
-
+-Ben
 
 _______________________________________________
 xfs mailing list
