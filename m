@@ -1,26 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5F07D7F69
-	for <xfs@oss.sgi.com>; Mon, 25 Feb 2013 15:52:30 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 59FFA7F6B
+	for <xfs@oss.sgi.com>; Mon, 25 Feb 2013 16:06:59 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C5DCAAC001
-	for <xfs@oss.sgi.com>; Mon, 25 Feb 2013 13:52:29 -0800 (PST)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	qF8jlgSflqeMMsrc for <xfs@oss.sgi.com>;
-	Mon, 25 Feb 2013 13:52:28 -0800 (PST)
-Date: Tue, 26 Feb 2013 08:52:20 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC] [PATCH 0/18] xfstests: move tests out of top level
-Message-ID: <20130225215220.GG5551@dastard>
-References: <1343294892-20991-1-git-send-email-david@fromorbit.com>
-	<5032ABBD.80504@sgi.com> <20120820224306.GF19235@dastard>
-	<20120821163337.GC29979@sgi.com> <20120821220926.GP19235@dastard>
-	<20120822191642.GF29979@sgi.com> <20120822234219.GR19235@dastard>
-	<20120823170025.GG29979@sgi.com> <512B8834.30805@sandeen.net>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 223308F8033
+	for <xfs@oss.sgi.com>; Mon, 25 Feb 2013 14:06:59 -0800 (PST)
+Received: from mail-la0-f42.google.com (mail-la0-f42.google.com
+	[209.85.215.42]) by cuda.sgi.com with ESMTP id bFNypepemtpAA1A1
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 25 Feb 2013 14:06:57 -0800 (PST)
+Received: by mail-la0-f42.google.com with SMTP id fe20so3227955lab.1
+	for <xfs@oss.sgi.com>; Mon, 25 Feb 2013 14:06:55 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <512B8834.30805@sandeen.net>
+In-Reply-To: <512BDA2A.5050600@hardwarefreak.com>
+References: <CAEWpfG_DKJt1MmWS1tARH4OmYwpSt=A-DzwKkGcD67LuR6k=Bg@mail.gmail.com>
+	<512BDA2A.5050600@hardwarefreak.com>
+Date: Mon, 25 Feb 2013 16:06:55 -0600
+Message-ID: <CAEWpfG8zoRriC_UHn-eGZk+y5KwsSgEuKM92QKFyS7Yb9Gde_w@mail.gmail.com>
+Subject: Re: Consistent throughput challenge -- fragmentation?
+From: Brian Cain <brian.cain@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,76 +27,106 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============3315010088955084166=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Ben Myers <bpm@sgi.com>, Theodore Tso <tytso@mit.edu>, Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
+To: stan@hardwarefreak.com
+Cc: xfs@oss.sgi.com
 
-On Mon, Feb 25, 2013 at 09:50:12AM -0600, Eric Sandeen wrote:
-> On 8/23/12 12:00 PM, Ben Myers wrote:
-> > On Thu, Aug 23, 2012 at 09:42:19AM +1000, Dave Chinner wrote:
-> >> Sure, but you need to justify your arguments for keeping something
-> >> with evidence and logic - handwaving about wanting something is, and
-> >> always has been, insufficient justification. That's the part of the
-> >> process I'm talking about - that statements of need require
-> >> evidence, especially when you agreed to the removal at LSF in San
-> >> Fransisco a few months ago. My arguments at the time were:
-> >>
-> >> 	a) nobody is actually using it,
-> >> 	b) it has effectively been unmaintained since 2003
-> >> 	c) it has no regression analysis or detection capability
-> >> 	d) it shares *very little* of xfstests
-> >> 	e) it gets in the way of cleaning up xfstests
-> >> 	f) there are far better workload generators that are being
-> >> 	actively maintained.
-> >>
-> >> And AFAIA, nothing has changed in the past few months.
-> > 
-> > "In this case, SGI would like to keep the benchmark capability in xfstests in
-> > order have a better chance of catching performance regressions."  There has
-> > been a been performance regression in the past few months (and there will be
-> > more in the future), we have had performance regressions internally too, and
-> > this has brought the value of having benchmarks in xfstests into sharp focus.
-> 
-> "xfs has had performance regressions; xfstests contains bitrotted perf code"
-> 
-> But that's not a justification for keeping bitrotted code.
-> 
-> I think you finally answered the basic question Dave asked, and we learned
-> that SGI is not using the code which he proposes removing.
-> 
-> <snip>
-> 
-> > I understand that bench is bitrotted, but it still has some value even today.
-> 
-> Not if nobody uses it.  If it really had value it would be in use.
-> 
-> > Phil has agreed to take this on as a project so the bitrot will be addressed.
-> 
-> How's that been going in the 6 months since this patchset stalled?
-> 
-> Can we get it moving again?  Ext4 folks would like to see these changes
-> proceed as well.  What issues remain, if any?
+--===============3315010088955084166==
+Content-Type: multipart/alternative; boundary=f46d0421a95b54bddb04d693c23a
 
-AFAIC, none. But it will take me some time to rebase the patchsets
-on a current TOT as there are a bunch more tests and infrastructure
-changes since then, and I currently have my plate full.
+--f46d0421a95b54bddb04d693c23a
+Content-Type: text/plain; charset=ISO-8859-1
 
-Eric (or anyone else), seeing as I'm not going to get back to this
-for a while yet, I'm happy for you to take over this patchset (and
-the --largefs patch set it is based on and rebase them on a current
-tree...
+On Mon, Feb 25, 2013 at 3:39 PM, Stan Hoeppner <stan@hardwarefreak.com>
+wrote:
+>
+>
+> > Can anyone provide any suggestions as to an explanation for the
+behavior or
+> > a way to mitigate it?  Running xfs_fsr didn't seem to improve the
+results.
+>
+> The usual cause of such aged filesystem low performance is free space
+> fragmentation.  xfs_fsr will defragment files, but in doing so it
+> *increases* free space fragmentation, thus won't help the situation.
+>
+> > I'm happy to share benchmarks, specific results data, or describe the
+> > hardware being used for the measurements if it's helpful.
+>
+> Paste the output of 'xfs_db -r -c freesp /dev/[device]' just before you
+> do the large file write.  This will show us the free space distribution
+> histogram.
+>
 
-Cheers,
+Running now...
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Here's a single sample:
+
+   from      to extents  blocks    pct
+      1       1     128     128   0.00
+      2       3       6      18   0.00
+      4       7       1       7   0.00
+      8      15      30     275   0.00
+    512    1023       1     528   0.01
+   2048    4095       1    2656   0.03
+4194304 8388608       1 8388588  99.96
+
+Not sure whether the cycle following this output experienced "only good"
+results or if it included poor performing samples too.  Is it only useful
+to see the "freesp" output in cases where the poor performance occurred?
+
+--
+-Brian
+
+--f46d0421a95b54bddb04d693c23a
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><br><br><br>On Mon, Feb 25, 2013 at 3:39 PM, Stan Hoeppner=
+ &lt;<a href=3D"mailto:stan@hardwarefreak.com">stan@hardwarefreak.com</a>&g=
+t; wrote:<br>&gt;<br>&gt;<br>&gt; &gt; Can anyone provide any suggestions a=
+s to an explanation for the behavior or<br>
+&gt; &gt; a way to mitigate it? =A0Running xfs_fsr didn&#39;t seem to impro=
+ve the results.<br>&gt;<br>&gt; The usual cause of such aged filesystem low=
+ performance is free space<br>&gt; fragmentation. =A0xfs_fsr will defragmen=
+t files, but in doing so it<br>
+&gt; *increases* free space fragmentation, thus won&#39;t help the situatio=
+n.<br>&gt;<br>&gt; &gt; I&#39;m happy to share benchmarks, specific results=
+ data, or describe the<br>&gt; &gt; hardware being used for the measurement=
+s if it&#39;s helpful.<br>
+&gt;<br>&gt; Paste the output of &#39;xfs_db -r -c freesp /dev/[device]&#39=
+; just before you<br>&gt; do the large file write. =A0This will show us the=
+ free space distribution<br>&gt; histogram.<br>&gt;<br><br>Running now...<b=
+r>
+<br>Here&#39;s a single sample:<br><br><div>=A0 =A0from =A0 =A0 =A0to exten=
+ts =A0blocks =A0 =A0pct</div><div>=A0 =A0 =A0 1 =A0 =A0 =A0 1 =A0 =A0 128 =
+=A0 =A0 128 =A0 0.00</div><div>=A0 =A0 =A0 2 =A0 =A0 =A0 3 =A0 =A0 =A0 6 =
+=A0 =A0 =A018 =A0 0.00</div><div>=A0 =A0 =A0 4 =A0 =A0 =A0 7 =A0 =A0 =A0 1 =
+=A0 =A0 =A0 7 =A0 0.00</div>
+<div>=A0 =A0 =A0 8 =A0 =A0 =A015 =A0 =A0 =A030 =A0 =A0 275 =A0 0.00</div><d=
+iv>=A0 =A0 512 =A0 =A01023 =A0 =A0 =A0 1 =A0 =A0 528 =A0 0.01</div><div>=A0=
+ =A02048 =A0 =A04095 =A0 =A0 =A0 1 =A0 =A02656 =A0 0.03</div><div>4194304 8=
+388608 =A0 =A0 =A0 1 8388588 =A099.96</div><div><br></div>Not sure whether =
+the cycle following this output experienced &quot;only good&quot; results o=
+r if it included poor performing samples too. =A0Is it only useful to see t=
+he &quot;freesp&quot; output in cases where the poor performance occurred?<=
+br>
+<br>--<br>-Brian<br></div>
+
+--f46d0421a95b54bddb04d693c23a--
+
+
+--===============3315010088955084166==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============3315010088955084166==--
