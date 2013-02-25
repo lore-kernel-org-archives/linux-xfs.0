@@ -1,18 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E13467F5A
-	for <xfs@oss.sgi.com>; Mon, 25 Feb 2013 14:45:10 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C0B44304048
-	for <xfs@oss.sgi.com>; Mon, 25 Feb 2013 12:45:07 -0800 (PST)
-Message-ID: <512BCDE3.5060907@redhat.com>
-Date: Mon, 25 Feb 2013 15:47:31 -0500
-From: Brian Foster <bfoster@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 77F957F5E
+	for <xfs@oss.sgi.com>; Mon, 25 Feb 2013 15:28:15 -0600 (CST)
+Date: Mon, 25 Feb 2013 15:28:11 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 00/10] xfstests: Stress tests improments v5
+Message-ID: <20130225212811.GY22182@sgi.com>
+References: <1361356935-29153-1-git-send-email-dmonakhov@openvz.org>
+	<20130225154512.GA32171@thunk.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH v4 0/6] speculative preallocation quota throttling
-References: <1361373019-30891-1-git-send-email-bfoster@redhat.com>
-	<512BC90A.4090206@sgi.com>
-In-Reply-To: <512BC90A.4090206@sgi.com>
+Content-Disposition: inline
+In-Reply-To: <20130225154512.GA32171@thunk.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,54 +23,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, Dmitry Monakhov <dmonakhov@openvz.org>, dchinner@redhat.com
 
-[CC list]
+Hey Ted,
 
-On 02/25/2013 03:26 PM, Mark Tinguely wrote:
-> On 02/20/13 09:10, Brian Foster wrote:
->> Hi all,
->>
->> Here is v4 of the speculative preallocation quota throttling set.
->> Patch 3 of v3
->> is dropped due to a redundancy and a few changes are made to the
->> threshold
->> management code (patch 4/6). The remaining patches are unchanged from v3.
->>
->> Brian
->>
-...
->>
+On Mon, Feb 25, 2013 at 10:45:12AM -0500, Theodore Ts'o wrote:
+> Hi, what's the status of this patch series?  It looks like Dmitry has
+> responded to all of Dave's concerns --- is that correct?
 > 
-> Since you are doing a v5 repost, you can clean up the typedefs in the
-> routines that you touch:
-> 
+> Is there anything else we need to do before these patches get merged
+> into the xfstests git tree?
 
-Sure, I'll make a pass through the set for such clean ups.
+I think we just need a review to see if Dave's concerns have been addressed and
+then we're ready to go.
 
-Brian
-
-> For example in patch 3:
-> 
-> 
->         xfs_quotainfo_t         *q = mp->m_quotainfo;
-> +       xfs_disk_dquot_t        *d = &dq->q_core;
->         ^^^^^^^^^
->     struct xfs_disk_dquot    d = &dq->q_core;
-> ---
-> patch 4:
-> 
-> xfs_disk_dquot_t
-> 
->         xfs_quotainfo_t         *q = mp->m_quotainfo;
->         xfs_disk_dquot_t        *d = &dq->q_core;
-> +       int                     prealloc = 0;
-> 
-> clean up the xfs_quotainfo_t and xfs_disk_dquot_t
-> 
-> --Mark.
-> 
+Regards,
+	Ben
 
 _______________________________________________
 xfs mailing list
