@@ -1,27 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CB7737F7B
-	for <xfs@oss.sgi.com>; Mon, 25 Feb 2013 16:23:31 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 400247F83
+	for <xfs@oss.sgi.com>; Mon, 25 Feb 2013 16:38:24 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 302EFAC001
-	for <xfs@oss.sgi.com>; Mon, 25 Feb 2013 14:23:31 -0800 (PST)
-Received: from mail-lb0-f170.google.com (mail-lb0-f170.google.com
-	[209.85.217.170]) by cuda.sgi.com with ESMTP id
-	FWrl3UMK6IYl8OYc (version=TLSv1 cipher=RC4-SHA bits=128
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 196B38F8033
+	for <xfs@oss.sgi.com>; Mon, 25 Feb 2013 14:38:24 -0800 (PST)
+Received: from mail-lb0-f176.google.com (mail-lb0-f176.google.com
+	[209.85.217.176]) by cuda.sgi.com with ESMTP id
+	1MeHGtDOaPWRf5pA (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 25 Feb 2013 14:23:29 -0800 (PST)
-Received: by mail-lb0-f170.google.com with SMTP id ge1so2644608lbb.1
-	for <xfs@oss.sgi.com>; Mon, 25 Feb 2013 14:23:28 -0800 (PST)
+	Mon, 25 Feb 2013 14:38:22 -0800 (PST)
+Received: by mail-lb0-f176.google.com with SMTP id s4so2600574lbc.21
+	for <xfs@oss.sgi.com>; Mon, 25 Feb 2013 14:38:21 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CAEWpfG_imbrJiCYMXntQt3fxkj=F89QkTO4Y-ztAo_5c83-qvA@mail.gmail.com>
+In-Reply-To: <512BDA2A.5050600@hardwarefreak.com>
 References: <CAEWpfG_DKJt1MmWS1tARH4OmYwpSt=A-DzwKkGcD67LuR6k=Bg@mail.gmail.com>
-	<20130225221639.GJ5551@dastard>
-	<CAEWpfG_imbrJiCYMXntQt3fxkj=F89QkTO4Y-ztAo_5c83-qvA@mail.gmail.com>
-Date: Mon, 25 Feb 2013 16:23:28 -0600
-Message-ID: <CAEWpfG8dw81qoRotmCLrutNBsXarF-63dHVWEGtsjtbd+HTsmw@mail.gmail.com>
+	<512BDA2A.5050600@hardwarefreak.com>
+Date: Mon, 25 Feb 2013 16:38:21 -0600
+Message-ID: <CAEWpfG_dn8ERCwntztHNh9B-WuS331DZ76=ejC-u4zjYv-Phnw@mail.gmail.com>
 Subject: Re: Consistent throughput challenge -- fragmentation?
 From: Brian Cain <brian.cain@gmail.com>
-Content-Type: multipart/mixed; boundary=f46d042f96428059fc04d693fd91
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,108 +28,99 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: multipart/mixed; boundary="===============0165178977939229111=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: stan@hardwarefreak.com
 Cc: xfs@oss.sgi.com
 
---f46d042f96428059fc04d693fd91
-Content-Type: multipart/alternative; boundary=f46d042f96428059ef04d693fd8f
+--===============0165178977939229111==
+Content-Type: multipart/alternative; boundary=bcaec554dbbeba8fc104d6943229
 
---f46d042f96428059ef04d693fd8f
+--bcaec554dbbeba8fc104d6943229
 Content-Type: text/plain; charset=ISO-8859-1
 
-On Mon, Feb 25, 2013 at 4:18 PM, Brian Cain <brian.cain@gmail.com> wrote:
+On Mon, Feb 25, 2013 at 3:39 PM, Stan Hoeppner <stan@hardwarefreak.com>wrote:
 
-> Here's the info from the FAQ, I'll bundle up the benchmarks.
+> On 2/25/2013 10:01 AM, Brian Cain wrote:
+> > All,
+> >
+> > I have been observing some odd behavior regarding write throughput to an
+> > XFS partition (the baseline kernel version is 2.6.32.27).  I see
+> > consistently high write throughput (close to the performance of the raw
+> > block device) to the filesystem immediately after a mkfs, but after a few
+> > test cycles, there is sporadic poor performance.
+> >
+> > The test mechanism is like so:
+> >
+> > [mkfs.xfs <blockdev>] (no flags/options, xfsprogs ver 3.1.1-0.1.36)
+> > ...
+> > 1. remove a previous test cycle's directory
+> > 2. create a new directory
+> > 3. open/write/close a small file (4kb) in this directory
+> > 4. open/read/close this same small file (by the local NFS server)
+> > 5. open[O_DIRECT]/write/write/write/.../close a large file (anywhere from
+> > ~100MB to 200GB)
+> >
 >
 >
-> On Mon, Feb 25, 2013 at 4:16 PM, Dave Chinner <david@fromorbit.com> wrote:
->
->> Post your benchmark script, along with the results you see, and all
->> the other information listed here:
->>
->>
->> http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
->>
->
-Attached is the script which runs the benchmark.  It refers to a
-"/usr/bin/write-bench" which I will work on seeing how I can share.  But it
-does little more than allocate a buffer, read into it from /dev/urandom,
-then "open(O_DIRECT)/write(16MB)/write(16MB)/.../write(16MB)/close()" and
-measure the duration of the write() calls using gettimeofday() or
-clock_gettime(CLOCK_MONOTONIC).
+It looks like omitting step #2 and putting all files in the root directory
+(and modifying step #1 to remove only the files that were associated with
+that previous test cycle) avoids the poor-performance problem as well.  At
+least, that's the case in testing so far.
 
 -- 
 -Brian
 
---f46d042f96428059ef04d693fd8f
+--bcaec554dbbeba8fc104d6943229
 Content-Type: text/html; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
 
-<div dir=3D"ltr"><div class=3D"gmail_extra"><br><div class=3D"gmail_quote">=
-On Mon, Feb 25, 2013 at 4:18 PM, Brian Cain <span dir=3D"ltr">&lt;<a href=
-=3D"mailto:brian.cain@gmail.com" target=3D"_blank">brian.cain@gmail.com</a>=
-&gt;</span> wrote:<br>
-<blockquote class=3D"gmail_quote" style=3D"margin-top:0px;margin-right:0px;=
-margin-bottom:0px;margin-left:0.8ex;border-left-width:1px;border-left-color=
-:rgb(204,204,204);border-left-style:solid;padding-left:1ex"><div dir=3D"ltr=
-">
-Here&#39;s the info from the FAQ, I&#39;ll bundle up the benchmarks.</div><=
-div class=3D"gmail_extra"><div><div class=3D"h5"><br><br><div class=3D"gmai=
-l_quote">On Mon, Feb 25, 2013 at 4:16 PM, Dave Chinner <span dir=3D"ltr">&l=
-t;<a href=3D"mailto:david@fromorbit.com" target=3D"_blank">david@fromorbit.=
-com</a>&gt;</span> wrote:<br>
+<div dir=3D"ltr"><br><div class=3D"gmail_extra"><br><br><div class=3D"gmail=
+_quote">On Mon, Feb 25, 2013 at 3:39 PM, Stan Hoeppner <span dir=3D"ltr">&l=
+t;<a href=3D"mailto:stan@hardwarefreak.com" target=3D"_blank">stan@hardware=
+freak.com</a>&gt;</span> wrote:<br>
 
-<blockquote class=3D"gmail_quote" style=3D"margin-top:0px;margin-right:0px;=
-margin-bottom:0px;margin-left:0.8ex;border-left-width:1px;border-left-color=
-:rgb(204,204,204);border-left-style:solid;padding-left:1ex"><div><div>Post =
-your benchmark script, along with the results you see, and all<br>
+<blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
+x #ccc solid;padding-left:1ex"><div>On 2/25/2013 10:01 AM, Brian Cain wrote=
+:<br>
+&gt; All,<br>
+&gt;<br>
+&gt; I have been observing some odd behavior regarding write throughput to =
+an<br>
+&gt; XFS partition (the baseline kernel version is 2.6.32.27). =A0I see<br>
+&gt; consistently high write throughput (close to the performance of the ra=
+w<br>
+&gt; block device) to the filesystem immediately after a mkfs, but after a =
+few<br>
+&gt; test cycles, there is sporadic poor performance.<br>
+&gt;<br>
+&gt; The test mechanism is like so:<br>
+&gt;<br>
+&gt; [mkfs.xfs &lt;blockdev&gt;] (no flags/options, xfsprogs ver 3.1.1-0.1.=
+36)<br>
+&gt; ...<br>
+&gt; 1. remove a previous test cycle&#39;s directory<br>
+&gt; 2. create a new directory<br>
+&gt; 3. open/write/close a small file (4kb) in this directory<br>
+&gt; 4. open/read/close this same small file (by the local NFS server)<br>
+&gt; 5. open[O_DIRECT]/write/write/write/.../close a large file (anywhere f=
+rom<br>
+&gt; ~100MB to 200GB)<br>
+&gt;<br>
+</div><div><br></div></blockquote><div>=A0</div></div>It looks like omittin=
+g step #2 and putting all files in the root directory (and modifying step #=
+1 to remove only the files that were associated with that previous test cyc=
+le) avoids the poor-performance problem as well. =A0At least, that&#39;s th=
+e case in testing so far.<br>
+
+<br></div><div class=3D"gmail_extra">-- <br>-Brian
 </div></div>
-the other information listed here:<br>
-<br>
-<a href=3D"http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_in=
-clude_when_reporting_a_problem.3F" target=3D"_blank">http://xfs.org/index.p=
-hp/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F=
-</a><br>
+
+--bcaec554dbbeba8fc104d6943229--
 
 
-</blockquote></div></div></div><span class=3D""><font color=3D"#888888"></f=
-ont></span></div></blockquote><div><br></div><div>Attached is the script wh=
-ich runs the benchmark. =A0It refers to a &quot;/usr/bin/write-bench&quot; =
-which I will work on seeing how I can share. =A0But it does little more tha=
-n allocate a buffer, read into it from /dev/urandom, then &quot;open(O_DIRE=
-CT)/write(16MB)/write(16MB)/.../write(16MB)/close()&quot; and measure the d=
-uration of the write() calls using gettimeofday() or clock_gettime(CLOCK_MO=
-NOTONIC).</div>
-</div><div><br></div>-- <br>-Brian
-</div></div>
-
---f46d042f96428059ef04d693fd8f--
-
---f46d042f96428059fc04d693fd91
-Content-Type: application/octet-stream; name=wb-model
-Content-Disposition: attachment; filename=wb-model
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hdm6w9vh1
-
-IyEvYmluL3NoCgpuYnl0ZXM9MTg2Mjk0MjEwNTYwCgpmcmVlYnl0ZXMoKSB7CgllY2hvICQoKCA0
-MDk2ICogJCggc3RhdCAtZiAtYyAiJWYiIC9yYXdfZGF0YSApICkpCn0KCmZyZWVibG9ja3MoKSB7
-CgllY2hvICQoc3RhdCAtZiAtYyAiJWEiIC9yYXdfZGF0YSkKfQoKdG90YWxibG9ja3MoKSB7Cgll
-Y2hvICQoc3RhdCAtZiAtYyAiJWIiIC9yYXdfZGF0YSkKfQoKdXNlZGJsb2NrcygpIHsKCWVjaG8g
-JCgoICQodG90YWxibG9ja3MpIC0gJChmcmVlYmxvY2tzKSApKQp9Cgp1c2VkcGN0KCkgewoJZWNo
-byAkKCggMTAwICogJCh1c2VkYmxvY2tzKSAvICQodG90YWxibG9ja3MpICkpCn0KCnJtb25lKCkg
-ewoJZm9yIGQgaW4gJCgvYmluL2xzIC10cmQgL3Jhd19kYXRhL2V4KikgOyBkbwoJCWlmIFsgLWQg
-JGQgXTsgdGhlbgoJCQllY2hvIHJlbW92ZSAkZAoJCQkvYmluL3JtIC1yZiAkZAoJCQlicmVhawoJ
-CWZpIAoJZG9uZQp9CgptYWtlb25lKCkgewoJZXhuYW1lPSJleC4kKGRhdGUgKyVZJW0lZFQlSCVN
-JVMpIgoJZGlybmFtZT0iL3Jhd19kYXRhLyRleG5hbWUiCglta2RpciAkZGlybmFtZQoJZGQgaWY9
-L2Rldi96ZXJvIG9mPSRkaXJuYW1lL292LnMxYTEgYnM9NGsgY291bnQ9MQoJcmVwZWF0PSQoKCRu
-Ynl0ZXMgLyAxMDI0IC8gMTAyNCAvIDE2KSkKICAgICAgICB4ZnNfZGIgLXIgLWMgZnJlZXNwIC9k
-ZXYvbWQwID4gJHtleG5hbWV9X2ZyZWUudHh0CgkvdXNyL2Jpbi93cml0ZS1iZW5jaCAtdzEgLW4k
-KCgxNioweDEwMDAwMCkpIC1yICRyZXBlYXQgLWQgLXAgLWMgJGRpcm5hbWUvb3YuczFhMS53YiA+
-ICR7ZXhuYW1lfS5jc3YKfQoKZm9yIGkgaW4gJChzZXEgNDApOyBkbwoJaWYgWyAkKHVzZWRwY3Qp
-IC1nZSA4MCBdOyB0aGVuCgkJcm1vbmUKCWZpCgltYWtlb25lCmRvbmUK
---f46d042f96428059fc04d693fd91
+--===============0165178977939229111==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -142,4 +131,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---f46d042f96428059fc04d693fd91--
+--===============0165178977939229111==--
