@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C2BA17F58
-	for <xfs@oss.sgi.com>; Sun, 24 Feb 2013 19:32:28 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4FB9FAC005
-	for <xfs@oss.sgi.com>; Sun, 24 Feb 2013 17:32:28 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 89B717F5F
+	for <xfs@oss.sgi.com>; Sun, 24 Feb 2013 19:32:29 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3EF558F8033
+	for <xfs@oss.sgi.com>; Sun, 24 Feb 2013 17:32:29 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	CNAhMbBKcgjImdYK for <xfs@oss.sgi.com>;
-	Sun, 24 Feb 2013 17:32:25 -0800 (PST)
+	0cleRG6hw7Jxa5YF for <xfs@oss.sgi.com>;
+	Sun, 24 Feb 2013 17:32:26 -0800 (PST)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1U9mv3-0002tB-68
+	(envelope-from <dave@fromorbit.com>) id 1U9mv3-0002ss-89
 	for xfs@oss.sgi.com; Mon, 25 Feb 2013 12:31:53 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1U9mut-0003I2-2T
+	(envelope-from <dave@disappointment.disaster>) id 1U9mut-0003IF-5R
 	for xfs@oss.sgi.com; Mon, 25 Feb 2013 12:31:43 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 05/16] xfs: add CRC checks to the AGFL
-Date: Mon, 25 Feb 2013 12:31:30 +1100
-Message-Id: <1361755901-12453-6-git-send-email-david@fromorbit.com>
+Subject: [PATCH 08/16] xfs: add version 3 inode format with CRCs
+Date: Mon, 25 Feb 2013 12:31:33 +1100
+Message-Id: <1361755901-12453-9-git-send-email-david@fromorbit.com>
 In-Reply-To: <1361755901-12453-1-git-send-email-david@fromorbit.com>
 References: <1361755901-12453-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,337 +38,666 @@ To: xfs@oss.sgi.com
 
 From: Christoph Hellwig <hch@lst.de>
 
-Add CRC checks, location information and a magic number to the AGFL.
-Previously the AGFL was just a block containing nothing but the
-free block pointers.  The new AGFL has a real header with the usual
-boilerplate instead, so that we can verify it's not corrupted and
-written into the right place.
+Add a new inode version with a larger core.  The primary objective is
+to allow for a crc of the inode, and location information (uuid and ino)
+to verify it was written in the right place.  We also extend it by:
 
-[dchinner@redhat.com] Added LSN field, reworked significantly to fit
-into new verifier structure and growfs structure, enabled full
-verifier functionality now there is a header to verify and we can
-guarantee an initialised AGFL.
+	a creation time (for Samba);
+	a changecount (for NFSv4);
+	a flush sequence (in LSN format for recovery);
+	an additional inode flags field; and
+	some additional padding.
+
+These additional fields are not implemented yet, but already laid
+out in the structure.
+
+[dchinner@redhat.com] Added LSN and flags field, some factoring and rework to
+capture all the necessary information in the crc calculation.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_ag.h          |   25 +++++++++-
- fs/xfs/xfs_alloc.c       |  119 ++++++++++++++++++++++++++++++----------------
  fs/xfs/xfs_buf_item.h    |    4 +-
- fs/xfs/xfs_fsops.c       |    5 ++
- fs/xfs/xfs_log_recover.c |   10 ++++
- 5 files changed, 119 insertions(+), 44 deletions(-)
+ fs/xfs/xfs_dinode.h      |   33 +++++++--
+ fs/xfs/xfs_ialloc.c      |   23 +++++-
+ fs/xfs/xfs_inode.c       |  179 ++++++++++++++++++++++++++++++++--------------
+ fs/xfs/xfs_inode.h       |   26 +++++++
+ fs/xfs/xfs_inode_item.c  |    2 +-
+ fs/xfs/xfs_log_recover.c |   35 +++++++--
+ fs/xfs/xfs_trans_buf.c   |    5 +-
+ 8 files changed, 237 insertions(+), 70 deletions(-)
 
-diff --git a/fs/xfs/xfs_ag.h b/fs/xfs/xfs_ag.h
-index 9f4815e..272ef09 100644
---- a/fs/xfs/xfs_ag.h
-+++ b/fs/xfs/xfs_ag.h
-@@ -30,6 +30,7 @@ struct xfs_trans;
- 
- #define	XFS_AGF_MAGIC	0x58414746	/* 'XAGF' */
- #define	XFS_AGI_MAGIC	0x58414749	/* 'XAGI' */
-+#define	XFS_AGFL_MAGIC	0x5841464c	/* 'XAFL' */
- #define	XFS_AGF_VERSION	1
- #define	XFS_AGI_VERSION	1
- 
-@@ -190,11 +191,31 @@ extern const struct xfs_buf_ops xfs_agi_buf_ops;
-  */
- #define XFS_AGFL_DADDR(mp)	((xfs_daddr_t)(3 << (mp)->m_sectbb_log))
- #define	XFS_AGFL_BLOCK(mp)	XFS_HDR_BLOCK(mp, XFS_AGFL_DADDR(mp))
--#define XFS_AGFL_SIZE(mp)	((mp)->m_sb.sb_sectsize / sizeof(xfs_agblock_t))
- #define	XFS_BUF_TO_AGFL(bp)	((xfs_agfl_t *)((bp)->b_addr))
- 
-+#define XFS_BUF_TO_AGFL_BNO(mp, bp) \
-+	(xfs_sb_version_hascrc(&((mp)->m_sb)) ? \
-+		&(XFS_BUF_TO_AGFL(bp)->agfl_bno[0]) : \
-+		(__be32 *)(bp)->b_addr)
-+
-+/*
-+ * Size of the AGFL.  For CRC-enabled filesystes we steal a couple of
-+ * slots in the beginning of the block for a proper header with the
-+ * location information and CRC.
-+ */
-+#define XFS_AGFL_SIZE(mp) \
-+	(((mp)->m_sb.sb_sectsize - \
-+	 (xfs_sb_version_hascrc(&((mp)->m_sb)) ? \
-+		sizeof(struct xfs_agfl) : 0)) / \
-+	  sizeof(xfs_agblock_t))
-+
- typedef struct xfs_agfl {
--	__be32		agfl_bno[1];	/* actually XFS_AGFL_SIZE(mp) */
-+	__be32		agfl_magicnum;
-+	__be32		agfl_seqno;
-+	uuid_t		agfl_uuid;
-+	__be64		agfl_lsn;
-+	__be32		agfl_crc;
-+	__be32		agfl_bno[];	/* actually XFS_AGFL_SIZE(mp) */
- } xfs_agfl_t;
- 
- /*
-diff --git a/fs/xfs/xfs_alloc.c b/fs/xfs/xfs_alloc.c
-index 1d2e9c3..53e699e 100644
---- a/fs/xfs/xfs_alloc.c
-+++ b/fs/xfs/xfs_alloc.c
-@@ -432,53 +432,84 @@ xfs_alloc_fixup_trees(
- 	return 0;
- }
- 
--static void
-+static bool
- xfs_agfl_verify(
- 	struct xfs_buf	*bp)
- {
--#ifdef WHEN_CRCS_COME_ALONG
--	/*
--	 * we cannot actually do any verification of the AGFL because mkfs does
--	 * not initialise the AGFL to zero or NULL. Hence the only valid part of
--	 * the AGFL is what the AGF says is active. We can't get to the AGF, so
--	 * we can't verify just those entries are valid.
--	 *
--	 * This problem goes away when the CRC format change comes along as that
--	 * requires the AGFL to be initialised by mkfs. At that point, we can
--	 * verify the blocks in the agfl -active or not- lie within the bounds
--	 * of the AG. Until then, just leave this check ifdef'd out.
--	 */
- 	struct xfs_mount *mp = bp->b_target->bt_mount;
- 	struct xfs_agfl	*agfl = XFS_BUF_TO_AGFL(bp);
--	int		agfl_ok = 1;
--
- 	int		i;
- 
-+	if (!uuid_equal(&agfl->agfl_uuid, &mp->m_sb.sb_uuid))
-+		return false;
-+	if (be32_to_cpu(agfl->agfl_magicnum) != XFS_AGFL_MAGIC)
-+		return false;
-+	/*
-+	 * during growfs operations, the perag is not fully initialised,
-+	 * so we can't use it for any useful checking. growfs ensures we can't
-+	 * use it by using uncached buffers that don't have the perag attached
-+	 * so we can detect and avoid this problem.
-+	 */
-+	if (bp->b_pag && be32_to_cpu(agfl->agfl_seqno) != bp->b_pag->pag_agno)
-+		return false;
-+
- 	for (i = 0; i < XFS_AGFL_SIZE(mp); i++) {
--		if (be32_to_cpu(agfl->agfl_bno[i]) == NULLAGBLOCK ||
-+		if (be32_to_cpu(agfl->agfl_bno[i]) != NULLAGBLOCK &&
- 		    be32_to_cpu(agfl->agfl_bno[i]) >= mp->m_sb.sb_agblocks)
--			agfl_ok = 0;
-+			return false;
- 	}
-+	return true;
-+}
-+
-+static void
-+xfs_agfl_read_verify(
-+	struct xfs_buf	*bp)
-+{
-+	struct xfs_mount *mp = bp->b_target->bt_mount;
-+	int		agfl_ok = 1;
-+
-+	/*
-+	 * There is no verification of non-crc AGFLs because mkfs does not
-+	 * initialise the AGFL to zero or NULL. Hence the only valid part of the
-+	 * AGFL is what the AGF says is active. We can't get to the AGF, so we
-+	 * can't verify just those entries are valid.
-+	 */
-+	if (!xfs_sb_version_hascrc(&mp->m_sb))
-+		return;
-+
-+	agfl_ok = xfs_verify_cksum(bp->b_addr, BBTOB(bp->b_length),
-+				   offsetof(struct xfs_agfl, agfl_crc));
-+
-+	agfl_ok = agfl_ok && xfs_agfl_verify(bp);
- 
- 	if (!agfl_ok) {
--		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, agfl);
-+		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
- 		xfs_buf_ioerror(bp, EFSCORRUPTED);
- 	}
--#endif
- }
- 
- static void
- xfs_agfl_write_verify(
- 	struct xfs_buf	*bp)
- {
--	xfs_agfl_verify(bp);
--}
-+	struct xfs_mount *mp = bp->b_target->bt_mount;
-+	struct xfs_buf_log_item	*bip = bp->b_fspriv;
- 
--static void
--xfs_agfl_read_verify(
--	struct xfs_buf	*bp)
--{
--	xfs_agfl_verify(bp);
-+	/* no verification of non-crc AGFLs */
-+	if (!xfs_sb_version_hascrc(&mp->m_sb))
-+		return;
-+
-+	if (!xfs_agfl_verify(bp)) {
-+		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
-+		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+		return;
-+	}
-+
-+	if (bip)
-+		XFS_BUF_TO_AGFL(bp)->agfl_lsn = cpu_to_be64(bip->bli_item.li_lsn);
-+
-+	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length),
-+			 offsetof(struct xfs_agfl, agfl_crc));
- }
- 
- const struct xfs_buf_ops xfs_agfl_buf_ops = {
-@@ -1984,18 +2015,18 @@ xfs_alloc_get_freelist(
- 	int		btreeblk) /* destination is a AGF btree */
- {
- 	xfs_agf_t	*agf;	/* a.g. freespace structure */
--	xfs_agfl_t	*agfl;	/* a.g. freelist structure */
- 	xfs_buf_t	*agflbp;/* buffer for a.g. freelist structure */
- 	xfs_agblock_t	bno;	/* block number returned */
-+	__be32		*agfl_bno;
- 	int		error;
- 	int		logflags;
--	xfs_mount_t	*mp;	/* mount structure */
-+	xfs_mount_t	*mp = tp->t_mountp;
- 	xfs_perag_t	*pag;	/* per allocation group data */
- 
--	agf = XFS_BUF_TO_AGF(agbp);
- 	/*
- 	 * Freelist is empty, give up.
- 	 */
-+	agf = XFS_BUF_TO_AGF(agbp);
- 	if (!agf->agf_flcount) {
- 		*bnop = NULLAGBLOCK;
- 		return 0;
-@@ -2003,15 +2034,17 @@ xfs_alloc_get_freelist(
- 	/*
- 	 * Read the array of free blocks.
- 	 */
--	mp = tp->t_mountp;
--	if ((error = xfs_alloc_read_agfl(mp, tp,
--			be32_to_cpu(agf->agf_seqno), &agflbp)))
-+	error = xfs_alloc_read_agfl(mp, tp, be32_to_cpu(agf->agf_seqno),
-+				    &agflbp);
-+	if (error)
- 		return error;
--	agfl = XFS_BUF_TO_AGFL(agflbp);
-+
-+
- 	/*
- 	 * Get the block number and update the data structures.
- 	 */
--	bno = be32_to_cpu(agfl->agfl_bno[be32_to_cpu(agf->agf_flfirst)]);
-+	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, agflbp);
-+	bno = be32_to_cpu(agfl_bno[be32_to_cpu(agf->agf_flfirst)]);
- 	be32_add_cpu(&agf->agf_flfirst, 1);
- 	xfs_trans_brelse(tp, agflbp);
- 	if (be32_to_cpu(agf->agf_flfirst) == XFS_AGFL_SIZE(mp))
-@@ -2104,12 +2137,13 @@ xfs_alloc_put_freelist(
- 	int			btreeblk) /* block came from a AGF btree */
- {
- 	xfs_agf_t		*agf;	/* a.g. freespace structure */
--	xfs_agfl_t		*agfl;	/* a.g. free block array */
- 	__be32			*blockp;/* pointer to array entry */
- 	int			error;
- 	int			logflags;
- 	xfs_mount_t		*mp;	/* mount structure */
- 	xfs_perag_t		*pag;	/* per allocation group data */
-+	__be32			*agfl_bno;
-+	int			startoff;
- 
- 	agf = XFS_BUF_TO_AGF(agbp);
- 	mp = tp->t_mountp;
-@@ -2117,7 +2151,6 @@ xfs_alloc_put_freelist(
- 	if (!agflbp && (error = xfs_alloc_read_agfl(mp, tp,
- 			be32_to_cpu(agf->agf_seqno), &agflbp)))
- 		return error;
--	agfl = XFS_BUF_TO_AGFL(agflbp);
- 	be32_add_cpu(&agf->agf_fllast, 1);
- 	if (be32_to_cpu(agf->agf_fllast) == XFS_AGFL_SIZE(mp))
- 		agf->agf_fllast = 0;
-@@ -2138,13 +2171,17 @@ xfs_alloc_put_freelist(
- 	xfs_alloc_log_agf(tp, agbp, logflags);
- 
- 	ASSERT(be32_to_cpu(agf->agf_flcount) <= XFS_AGFL_SIZE(mp));
--	blockp = &agfl->agfl_bno[be32_to_cpu(agf->agf_fllast)];
-+
-+	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, agflbp);
-+	blockp = &agfl_bno[be32_to_cpu(agf->agf_fllast)];
- 	*blockp = cpu_to_be32(bno);
-+	startoff = (char *)blockp - (char *)agflbp->b_addr;
-+
- 	xfs_alloc_log_agf(tp, agbp, logflags);
--	xfs_trans_log_buf(tp, agflbp,
--		(int)((xfs_caddr_t)blockp - (xfs_caddr_t)agfl),
--		(int)((xfs_caddr_t)blockp - (xfs_caddr_t)agfl +
--			sizeof(xfs_agblock_t) - 1));
-+
-+	xfs_trans_buf_set_type(tp, agflbp, XFS_BLF_AGFL_BUF);
-+	xfs_trans_log_buf(tp, agflbp, startoff,
-+			  startoff + sizeof(xfs_agblock_t) - 1);
- 	return 0;
- }
- 
 diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
-index 76bd7a1..067d5f0 100644
+index c256606..abae8c8 100644
 --- a/fs/xfs/xfs_buf_item.h
 +++ b/fs/xfs/xfs_buf_item.h
-@@ -46,13 +46,15 @@ extern kmem_zone_t	*xfs_buf_item_zone;
-  */
- #define XFS_BLF_BTREE_BUF	(1<<5)
+@@ -48,6 +48,7 @@ extern kmem_zone_t	*xfs_buf_item_zone;
  #define XFS_BLF_AGF_BUF		(1<<6)
-+#define XFS_BLF_AGFL_BUF	(1<<7)
+ #define XFS_BLF_AGFL_BUF	(1<<7)
+ #define XFS_BLF_AGI_BUF		(1<<8)
++#define XFS_BLF_DINO_BUF	(1<<9)
  
  #define XFS_BLF_TYPE_MASK	\
  		(XFS_BLF_UDQUOT_BUF | \
- 		 XFS_BLF_PDQUOT_BUF | \
- 		 XFS_BLF_GDQUOT_BUF | \
+@@ -56,7 +57,8 @@ extern kmem_zone_t	*xfs_buf_item_zone;
  		 XFS_BLF_BTREE_BUF | \
--		 XFS_BLF_AGF_BUF)
-+		 XFS_BLF_AGF_BUF | \
-+		 XFS_BLF_AGFL_BUF)
+ 		 XFS_BLF_AGF_BUF | \
+ 		 XFS_BLF_AGFL_BUF | \
+-		 XFS_BLF_AGI_BUF)
++		 XFS_BLF_AGI_BUF | \
++		 XFS_BLF_DINO_BUF)
  
  #define	XFS_BLF_CHUNK		128
  #define	XFS_BLF_SHIFT		7
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index b6cca27..a693a54 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -268,6 +268,11 @@ xfs_growfs_data_private(
+diff --git a/fs/xfs/xfs_dinode.h b/fs/xfs/xfs_dinode.h
+index 6b5bd17..bdc946a 100644
+--- a/fs/xfs/xfs_dinode.h
++++ b/fs/xfs/xfs_dinode.h
+@@ -19,7 +19,7 @@
+ #define	__XFS_DINODE_H__
+ 
+ #define	XFS_DINODE_MAGIC		0x494e	/* 'IN' */
+-#define XFS_DINODE_GOOD_VERSION(v)	(((v) == 1 || (v) == 2))
++#define XFS_DINODE_GOOD_VERSION(v)	((v) >= 1 && (v) <= 3)
+ 
+ typedef struct xfs_timestamp {
+ 	__be32		t_sec;		/* timestamp seconds */
+@@ -70,11 +70,36 @@ typedef struct xfs_dinode {
+ 
+ 	/* di_next_unlinked is the only non-core field in the old dinode */
+ 	__be32		di_next_unlinked;/* agi unlinked list ptr */
+-} __attribute__((packed)) xfs_dinode_t;
++
++	/* start of the extended dinode, writable fields */
++	__be32		di_crc;		/* CRC of the inode */
++	__be64		di_changecount;	/* number of attribute changes */
++	__be64		di_lsn;		/* flush sequence */
++	__be64		di_flags2;	/* more random flags */
++	__u8		di_pad2[16];	/* more padding for future expansion */
++
++	/* fields only written to during inode creation */
++	xfs_timestamp_t	di_crtime;	/* time created */
++	__be64		di_ino;		/* inode number */
++	uuid_t		di_uuid;	/* UUID of the filesystem */
++
++	/* structure must be padded to 64 bit alignment */
++} xfs_dinode_t;
+ 
+ #define DI_MAX_FLUSH 0xffff
+ 
+ /*
++ * Size of the core inode on disk.  Version 1 and 2 inodes have
++ * the same size, but version 3 has grown a few additional fields.
++ */
++static inline uint xfs_dinode_size(int version)
++{
++	if (version == 3)
++		return sizeof(struct xfs_dinode);
++	return offsetof(struct xfs_dinode, di_crc);
++}
++
++/*
+  * The 32 bit link count in the inode theoretically maxes out at UINT_MAX.
+  * Since the pathconf interface is signed, we use 2^31 - 1 instead.
+  * The old inode format had a 16 bit link count, so its maximum is USHRT_MAX.
+@@ -105,7 +130,7 @@ typedef enum xfs_dinode_fmt {
+  * Inode size for given fs.
+  */
+ #define XFS_LITINO(mp, version) \
+-	((int)(((mp)->m_sb.sb_inodesize) - sizeof(struct xfs_dinode)))
++	((int)(((mp)->m_sb.sb_inodesize) - xfs_dinode_size(version)))
+ 
+ #define XFS_BROOT_SIZE_ADJ(ip) \
+ 	(XFS_BMBT_BLOCK_LEN((ip)->i_mount) - sizeof(xfs_bmdr_block_t))
+@@ -133,7 +158,7 @@ typedef enum xfs_dinode_fmt {
+  * Return pointers to the data or attribute forks.
+  */
+ #define XFS_DFORK_DPTR(dip) \
+-	((char *)(dip) + sizeof(struct xfs_dinode))
++	((char *)dip + xfs_dinode_size(dip->di_version))
+ #define XFS_DFORK_APTR(dip)	\
+ 	(XFS_DFORK_DPTR(dip) + XFS_DFORK_BOFF(dip))
+ #define XFS_DFORK_PTR(dip,w)	\
+diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
+index 41c76d6..25e4c17 100644
+--- a/fs/xfs/xfs_ialloc.c
++++ b/fs/xfs/xfs_ialloc.c
+@@ -167,6 +167,7 @@ xfs_ialloc_inode_init(
+ 	int			version;
+ 	int			i, j;
+ 	xfs_daddr_t		d;
++	xfs_ino_t		ino = 0;
+ 
+ 	/*
+ 	 * Loop over the new block(s), filling in the inodes.
+@@ -190,8 +191,18 @@ xfs_ialloc_inode_init(
+ 	 * the new inode format, then use the new inode version.  Otherwise
+ 	 * use the old version so that old kernels will continue to be
+ 	 * able to use the file system.
++	 *
++	 * For v3 inodes, we also need to write the inode number into the inode,
++	 * so calculate the first inode number of the chunk here as
++	 * XFS_OFFBNO_TO_AGINO() only works on filesystem block boundaries, not
++	 * cluster boundaries and so cannot be used in the cluster buffer loop
++	 * below.
+ 	 */
+-	if (xfs_sb_version_hasnlink(&mp->m_sb))
++	if (xfs_sb_version_hascrc(&mp->m_sb)) {
++		version = 3;
++		ino = XFS_AGINO_TO_INO(mp, agno,
++				       XFS_OFFBNO_TO_AGINO(mp, agbno, 0));
++	} else if (xfs_sb_version_hasnlink(&mp->m_sb))
+ 		version = 2;
+ 	else
+ 		version = 1;
+@@ -217,13 +228,21 @@ xfs_ialloc_inode_init(
+ 		xfs_buf_zero(fbuf, 0, ninodes << mp->m_sb.sb_inodelog);
+ 		for (i = 0; i < ninodes; i++) {
+ 			int	ioffset = i << mp->m_sb.sb_inodelog;
+-			uint	isize = sizeof(struct xfs_dinode);
++			uint	isize = xfs_dinode_size(version);
+ 
+ 			free = xfs_make_iptr(mp, fbuf, i);
+ 			free->di_magic = cpu_to_be16(XFS_DINODE_MAGIC);
+ 			free->di_version = version;
+ 			free->di_gen = cpu_to_be32(gen);
+ 			free->di_next_unlinked = cpu_to_be32(NULLAGINO);
++
++			if (version == 3) {
++				free->di_ino = cpu_to_be64(ino);
++				ino++;
++				uuid_copy(&free->di_uuid, &mp->m_sb.sb_uuid);
++				xfs_dinode_calc_crc(mp, free);
++			}
++
+ 			xfs_trans_log_buf(tp, fbuf, ioffset, ioffset + isize - 1);
  		}
+ 		xfs_trans_inode_alloc_buf(tp, fbuf);
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 202ce37..558ef49 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -44,6 +44,7 @@
+ #include "xfs_quota.h"
+ #include "xfs_filestream.h"
+ #include "xfs_vnodeops.h"
++#include "xfs_cksum.h"
+ #include "xfs_trace.h"
+ #include "xfs_icache.h"
  
- 		agfl = XFS_BUF_TO_AGFL(bp);
-+		if (xfs_sb_version_hascrc(&mp->m_sb)) {
-+			agfl->agfl_magicnum = cpu_to_be32(XFS_AGFL_MAGIC);
-+			agfl->agfl_seqno = cpu_to_be32(agno);
-+			uuid_copy(&agfl->agfl_uuid, &mp->m_sb.sb_uuid);
+@@ -866,6 +867,17 @@ xfs_dinode_from_disk(
+ 	to->di_dmstate	= be16_to_cpu(from->di_dmstate);
+ 	to->di_flags	= be16_to_cpu(from->di_flags);
+ 	to->di_gen	= be32_to_cpu(from->di_gen);
++
++	if (to->di_version == 3) {
++		to->di_changecount = be64_to_cpu(from->di_changecount);
++		to->di_crtime.t_sec = be32_to_cpu(from->di_crtime.t_sec);
++		to->di_crtime.t_nsec = be32_to_cpu(from->di_crtime.t_nsec);
++		to->di_flags2 = be64_to_cpu(from->di_flags2);
++		to->di_ino = be64_to_cpu(from->di_ino);
++		to->di_lsn = be64_to_cpu(from->di_lsn);
++		memcpy(to->di_pad2, from->di_pad2, sizeof(to->di_pad2));
++		uuid_copy(&to->di_uuid, &from->di_uuid);
++	}
+ }
+ 
+ void
+@@ -902,6 +914,17 @@ xfs_dinode_to_disk(
+ 	to->di_dmstate = cpu_to_be16(from->di_dmstate);
+ 	to->di_flags = cpu_to_be16(from->di_flags);
+ 	to->di_gen = cpu_to_be32(from->di_gen);
++
++	if (from->di_version == 3) {
++		to->di_changecount = cpu_to_be64(from->di_changecount);
++		to->di_crtime.t_sec = cpu_to_be32(from->di_crtime.t_sec);
++		to->di_crtime.t_nsec = cpu_to_be32(from->di_crtime.t_nsec);
++		to->di_flags2 = cpu_to_be64(from->di_flags2);
++		to->di_ino = cpu_to_be64(from->di_ino);
++		to->di_lsn = cpu_to_be64(from->di_lsn);
++		memcpy(to->di_pad2, from->di_pad2, sizeof(to->di_pad2));
++		uuid_copy(&to->di_uuid, &from->di_uuid);
++	}
+ }
+ 
+ STATIC uint
+@@ -962,6 +985,47 @@ xfs_dic2xflags(
+ 				(XFS_DFORK_Q(dip) ? XFS_XFLAG_HASATTR : 0);
+ }
+ 
++static bool
++xfs_dinode_verify(
++	struct xfs_mount	*mp,
++	struct xfs_inode	*ip,
++	struct xfs_dinode	*dip)
++{
++	if (dip->di_magic != cpu_to_be16(XFS_DINODE_MAGIC))
++		return false;
++
++	/* only version 3 or greater inodes are extensively verified here */
++	if (dip->di_version < 3)
++		return true;
++
++	if (!xfs_sb_version_hascrc(&mp->m_sb))
++		return false;
++	if (!xfs_verify_cksum((char *)dip, mp->m_sb.sb_inodesize,
++			      offsetof(struct xfs_dinode, di_crc)))
++		return false;
++	if (be64_to_cpu(dip->di_ino) != ip->i_ino)
++		return false;
++	if (!uuid_equal(&dip->di_uuid, &mp->m_sb.sb_uuid))
++		return false;
++	return true;
++}
++
++void
++xfs_dinode_calc_crc(
++	struct xfs_mount	*mp,
++	struct xfs_dinode	*dip)
++{
++	__uint32_t		crc;
++
++	if (dip->di_version < 3)
++		return;
++
++	ASSERT(xfs_sb_version_hascrc(&mp->m_sb));
++	crc = xfs_start_cksum((char *)dip, mp->m_sb.sb_inodesize,
++			      offsetof(struct xfs_dinode, di_crc));
++	dip->di_crc = xfs_end_cksum(crc);
++}
++
+ /*
+  * Read the disk inode attributes into the in-core inode structure.
+  */
+@@ -990,17 +1054,13 @@ xfs_iread(
+ 	if (error)
+ 		return error;
+ 
+-	/*
+-	 * If we got something that isn't an inode it means someone
+-	 * (nfs or dmi) has a stale handle.
+-	 */
+-	if (dip->di_magic != cpu_to_be16(XFS_DINODE_MAGIC)) {
+-#ifdef DEBUG
+-		xfs_alert(mp,
+-			"%s: dip->di_magic (0x%x) != XFS_DINODE_MAGIC (0x%x)",
+-			__func__, be16_to_cpu(dip->di_magic), XFS_DINODE_MAGIC);
+-#endif /* DEBUG */
+-		error = XFS_ERROR(EINVAL);
++	/* even unallocated inodes are verified */
++	if (!xfs_dinode_verify(mp, ip, dip)) {
++		xfs_alert(mp, "%s: validation failed for inode %lld failed",
++				__func__, ip->i_ino);
++
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, dip);
++		error = XFS_ERROR(EFSCORRUPTED);
+ 		goto out_brelse;
+ 	}
+ 
+@@ -1022,10 +1082,20 @@ xfs_iread(
+ 			goto out_brelse;
+ 		}
+ 	} else {
++		/*
++		 * Partial initialisation of the in-core inode. Just the bits
++		 * that xfs_ialloc won't overwrite or relies on being correct.
++		 */
+ 		ip->i_d.di_magic = be16_to_cpu(dip->di_magic);
+ 		ip->i_d.di_version = dip->di_version;
+ 		ip->i_d.di_gen = be32_to_cpu(dip->di_gen);
+ 		ip->i_d.di_flushiter = be16_to_cpu(dip->di_flushiter);
++
++		if (dip->di_version == 3) {
++			ip->i_d.di_ino = be64_to_cpu(dip->di_ino);
++			uuid_copy(&ip->i_d.di_uuid, &dip->di_uuid);
 +		}
- 		for (bucket = 0; bucket < XFS_AGFL_SIZE(mp); bucket++)
- 			agfl->agfl_bno[bucket] = cpu_to_be32(NULLAGBLOCK);
++
+ 		/*
+ 		 * Make sure to pull in the mode here as well in
+ 		 * case the inode is released without being used.
+@@ -1161,6 +1231,7 @@ xfs_ialloc(
+ 	xfs_buf_t	**ialloc_context,
+ 	xfs_inode_t	**ipp)
+ {
++	struct xfs_mount *mp = tp->t_mountp;
+ 	xfs_ino_t	ino;
+ 	xfs_inode_t	*ip;
+ 	uint		flags;
+@@ -1187,7 +1258,7 @@ xfs_ialloc(
+ 	 * This is because we're setting fields here we need
+ 	 * to prevent others from looking at until we're done.
+ 	 */
+-	error = xfs_iget(tp->t_mountp, tp, ino, XFS_IGET_CREATE,
++	error = xfs_iget(mp, tp, ino, XFS_IGET_CREATE,
+ 			 XFS_ILOCK_EXCL, &ip);
+ 	if (error)
+ 		return error;
+@@ -1208,7 +1279,7 @@ xfs_ialloc(
+ 	 * the inode version number now.  This way we only do the conversion
+ 	 * here rather than here and in the flush/logging code.
+ 	 */
+-	if (xfs_sb_version_hasnlink(&tp->t_mountp->m_sb) &&
++	if (xfs_sb_version_hasnlink(&mp->m_sb) &&
+ 	    ip->i_d.di_version == 1) {
+ 		ip->i_d.di_version = 2;
+ 		/*
+@@ -1258,6 +1329,19 @@ xfs_ialloc(
+ 	ip->i_d.di_dmevmask = 0;
+ 	ip->i_d.di_dmstate = 0;
+ 	ip->i_d.di_flags = 0;
++
++	if (ip->i_d.di_version == 3) {
++		ASSERT(ip->i_d.di_ino == ino);
++		ASSERT(uuid_equal(&ip->i_d.di_uuid, &mp->m_sb.sb_uuid));
++		ip->i_d.di_crc = 0;
++		ip->i_d.di_changecount = 1;
++		ip->i_d.di_lsn = 0;
++		ip->i_d.di_flags2 = 0;
++		memset(&(ip->i_d.di_pad2[0]), 0, sizeof(ip->i_d.di_pad2));
++		ip->i_d.di_crtime = ip->i_d.di_mtime;
++	}
++
++
+ 	flags = XFS_ILOG_CORE;
+ 	switch (mode & S_IFMT) {
+ 	case S_IFIFO:
+@@ -2716,20 +2800,18 @@ abort_out:
  
+ STATIC int
+ xfs_iflush_int(
+-	xfs_inode_t		*ip,
+-	xfs_buf_t		*bp)
++	struct xfs_inode	*ip,
++	struct xfs_buf		*bp)
+ {
+-	xfs_inode_log_item_t	*iip;
+-	xfs_dinode_t		*dip;
+-	xfs_mount_t		*mp;
++	struct xfs_inode_log_item *iip = ip->i_itemp;
++	struct xfs_dinode	*dip;
++	struct xfs_mount	*mp = ip->i_mount;
+ 
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
+ 	ASSERT(xfs_isiflocked(ip));
+ 	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
+ 	       ip->i_d.di_nextents > XFS_IFORK_MAXEXT(ip, XFS_DATA_FORK));
+-
+-	iip = ip->i_itemp;
+-	mp = ip->i_mount;
++	ASSERT(iip != NULL && iip->ili_fields != 0);
+ 
+ 	/* set *dip = inode's place in the buffer */
+ 	dip = (xfs_dinode_t *)xfs_buf_offset(bp, ip->i_imap.im_boffset);
+@@ -2790,9 +2872,9 @@ xfs_iflush_int(
+ 	}
+ 	/*
+ 	 * bump the flush iteration count, used to detect flushes which
+-	 * postdate a log record during recovery.
++	 * postdate a log record during recovery. This is redundant as we now
++	 * log every change and hence this can't happen. Still, it doesn't hurt.
+ 	 */
+-
+ 	ip->i_d.di_flushiter++;
+ 
+ 	/*
+@@ -2868,41 +2950,30 @@ xfs_iflush_int(
+ 	 * need the AIL lock, because it is a 64 bit value that cannot be read
+ 	 * atomically.
+ 	 */
+-	if (iip != NULL && iip->ili_fields != 0) {
+-		iip->ili_last_fields = iip->ili_fields;
+-		iip->ili_fields = 0;
+-		iip->ili_logged = 1;
++	iip->ili_last_fields = iip->ili_fields;
++	iip->ili_fields = 0;
++	iip->ili_logged = 1;
+ 
+-		xfs_trans_ail_copy_lsn(mp->m_ail, &iip->ili_flush_lsn,
+-					&iip->ili_item.li_lsn);
++	xfs_trans_ail_copy_lsn(mp->m_ail, &iip->ili_flush_lsn,
++				&iip->ili_item.li_lsn);
+ 
+-		/*
+-		 * Attach the function xfs_iflush_done to the inode's
+-		 * buffer.  This will remove the inode from the AIL
+-		 * and unlock the inode's flush lock when the inode is
+-		 * completely written to disk.
+-		 */
+-		xfs_buf_attach_iodone(bp, xfs_iflush_done, &iip->ili_item);
++	/*
++	 * Attach the function xfs_iflush_done to the inode's
++	 * buffer.  This will remove the inode from the AIL
++	 * and unlock the inode's flush lock when the inode is
++	 * completely written to disk.
++	 */
++	xfs_buf_attach_iodone(bp, xfs_iflush_done, &iip->ili_item);
+ 
+-		ASSERT(bp->b_fspriv != NULL);
+-		ASSERT(bp->b_iodone != NULL);
+-	} else {
+-		/*
+-		 * We're flushing an inode which is not in the AIL and has
+-		 * not been logged.  For this case we can immediately drop
+-		 * the inode flush lock because we can avoid the whole
+-		 * AIL state thing.  It's OK to drop the flush lock now,
+-		 * because we've already locked the buffer and to do anything
+-		 * you really need both.
+-		 */
+-		if (iip != NULL) {
+-			ASSERT(iip->ili_logged == 0);
+-			ASSERT(iip->ili_last_fields == 0);
+-			ASSERT((iip->ili_item.li_flags & XFS_LI_IN_AIL) == 0);
+-		}
+-		xfs_ifunlock(ip);
+-	}
++	/* update the lsn in the on disk inode if required */
++	if (ip->i_d.di_version == 3)
++		dip->di_lsn = cpu_to_be64(iip->ili_item.li_lsn);
++
++	/* generate the checksum. */
++	xfs_dinode_calc_crc(mp, dip);
+ 
++	ASSERT(bp->b_fspriv != NULL);
++	ASSERT(bp->b_iodone != NULL);
+ 	return 0;
+ 
+ corrupt_out:
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index b8520b5..9112979 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -150,13 +150,38 @@ typedef struct xfs_icdinode {
+ 	__uint16_t	di_dmstate;	/* DMIG state info */
+ 	__uint16_t	di_flags;	/* random flags, XFS_DIFLAG_... */
+ 	__uint32_t	di_gen;		/* generation number */
++
++	/* di_next_unlinked is the only non-core field in the old dinode */
++	xfs_agino_t	di_next_unlinked;/* agi unlinked list ptr */
++
++	/* start of the extended dinode, writable fields */
++	__uint32_t	di_crc;		/* CRC of the inode */
++	__uint64_t	di_changecount;	/* number of attribute changes */
++	xfs_lsn_t	di_lsn;		/* flush sequence */
++	__uint64_t	di_flags2;	/* more random flags */
++	__uint8_t	di_pad2[16];	/* more padding for future expansion */
++
++	/* fields only written to during inode creation */
++	xfs_ictimestamp_t di_crtime;	/* time created */
++	xfs_ino_t	di_ino;		/* inode number */
++	uuid_t		di_uuid;	/* UUID of the filesystem */
++
++	/* structure must be padded to 64 bit alignment */
+ } xfs_icdinode_t;
+ 
++static inline uint xfs_icdinode_size(int version)
++{
++	if (version == 3)
++		return sizeof(struct xfs_icdinode);
++	return offsetof(struct xfs_icdinode, di_next_unlinked);
++}
++
+ /*
+  * Flags for xfs_ichgtime().
+  */
+ #define	XFS_ICHGTIME_MOD	0x1	/* data fork modification timestamp */
+ #define	XFS_ICHGTIME_CHG	0x2	/* inode field change timestamp */
++#define	XFS_ICHGTIME_CREATE	0x4	/* inode create timestamp */
+ 
+ /*
+  * Per-fork incore inode flags.
+@@ -556,6 +581,7 @@ int		xfs_imap_to_bp(struct xfs_mount *, struct xfs_trans *,
+ 			       struct xfs_buf **, uint, uint);
+ int		xfs_iread(struct xfs_mount *, struct xfs_trans *,
+ 			  struct xfs_inode *, uint);
++void		xfs_dinode_calc_crc(struct xfs_mount *, struct xfs_dinode *);
+ void		xfs_dinode_to_disk(struct xfs_dinode *,
+ 				   struct xfs_icdinode *);
+ void		xfs_idestroy_fork(struct xfs_inode *, int);
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index f034bd1..f76ff52 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -179,7 +179,7 @@ xfs_inode_item_format(
+ 	nvecs	     = 1;
+ 
+ 	vecp->i_addr = &ip->i_d;
+-	vecp->i_len  = sizeof(struct xfs_icdinode);
++	vecp->i_len  = xfs_icdinode_size(ip->i_d.di_version);
+ 	vecp->i_type = XLOG_REG_TYPE_ICORE;
+ 	vecp++;
+ 	nvecs++;
 diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index c9f1c6d..b256cc7 100644
+index e77c770..4096998 100644
 --- a/fs/xfs/xfs_log_recover.c
 +++ b/fs/xfs/xfs_log_recover.c
-@@ -1962,6 +1962,16 @@ xlog_recover_do_reg_buffer(
+@@ -1787,6 +1787,7 @@ xlog_recover_do_inode_buffer(
+ 	xfs_agino_t		*buffer_nextp;
+ 
+ 	trace_xfs_log_recover_buf_inode_buf(mp->m_log, buf_f);
++	bp->b_ops = &xfs_inode_buf_ops;
+ 
+ 	inodes_per_buf = BBTOB(bp->b_io_length) >> mp->m_sb.sb_inodelog;
+ 	for (i = 0; i < inodes_per_buf; i++) {
+@@ -1931,6 +1932,9 @@ xlog_recover_do_reg_buffer(
+ 	/* Shouldn't be any more regions */
+ 	ASSERT(i == item->ri_total);
+ 
++	/* Shouldn't be any more regions */
++	ASSERT(i == item->ri_total);
++
+ 	switch (buf_f->blf_flags & XFS_BLF_TYPE_MASK) {
+ 	case XFS_BLF_BTREE_BUF:
+ 		switch (be32_to_cpu(*(__be32 *)bp->b_addr)) {
+@@ -1990,6 +1994,18 @@ xlog_recover_do_reg_buffer(
  		}
- 		bp->b_ops = &xfs_agf_buf_ops;
+ 		bp->b_ops = &xfs_dquot_buf_ops;
  		break;
-+	case XFS_BLF_AGFL_BUF:
-+		if (!xfs_sb_version_hascrc(&mp->m_sb))
-+			break;
-+		if (*(__be32 *)bp->b_addr != cpu_to_be32(XFS_AGFL_MAGIC)) {
-+			xfs_warn(mp, "Bad AGFL block magic!");
++	case XFS_BLF_DINO_BUF:
++		/*
++		 * we get here with inode allocation buffers, not buffers that
++		 * track unlinked list changes.
++		 */
++		if (*(__be16 *)bp->b_addr != cpu_to_be16(XFS_DINODE_MAGIC)) {
++			xfs_warn(mp, "Bad INODE block magic!");
 +			ASSERT(0);
 +			break;
 +		}
-+		bp->b_ops = &xfs_agfl_buf_ops;
++		bp->b_ops = &xfs_inode_buf_ops;
 +		break;
  	default:
  		break;
  	}
+@@ -2278,6 +2294,7 @@ xlog_recover_inode_pass2(
+ 	int			attr_index;
+ 	uint			fields;
+ 	xfs_icdinode_t		*dicp;
++	uint			isize;
+ 	int			need_free = 0;
+ 
+ 	if (item->ri_buf[0].i_len == sizeof(xfs_inode_log_format_t)) {
+@@ -2303,7 +2320,7 @@ xlog_recover_inode_pass2(
+ 	trace_xfs_log_recover_inode_recover(log, in_f);
+ 
+ 	bp = xfs_buf_read(mp->m_ddev_targp, in_f->ilf_blkno, in_f->ilf_len, 0,
+-			  NULL);
++			  &xfs_inode_buf_ops);
+ 	if (!bp) {
+ 		error = ENOMEM;
+ 		goto error;
+@@ -2414,7 +2431,8 @@ xlog_recover_inode_pass2(
+ 		error = EFSCORRUPTED;
+ 		goto error;
+ 	}
+-	if (unlikely(item->ri_buf[1].i_len > sizeof(struct xfs_icdinode))) {
++	isize = xfs_icdinode_size(dicp->di_version);
++	if (unlikely(item->ri_buf[1].i_len > isize)) {
+ 		XFS_CORRUPTION_ERROR("xlog_recover_inode_pass2(7)",
+ 				     XFS_ERRLEVEL_LOW, mp, dicp);
+ 		xfs_buf_relse(bp);
+@@ -2426,13 +2444,13 @@ xlog_recover_inode_pass2(
+ 	}
+ 
+ 	/* The core is in in-core format */
+-	xfs_dinode_to_disk(dip, item->ri_buf[1].i_addr);
++	xfs_dinode_to_disk(dip, dicp);
+ 
+ 	/* the rest is in on-disk format */
+-	if (item->ri_buf[1].i_len > sizeof(struct xfs_icdinode)) {
+-		memcpy((xfs_caddr_t) dip + sizeof(struct xfs_icdinode),
+-			item->ri_buf[1].i_addr + sizeof(struct xfs_icdinode),
+-			item->ri_buf[1].i_len  - sizeof(struct xfs_icdinode));
++	if (item->ri_buf[1].i_len > isize) {
++		memcpy((char *)dip + isize,
++			item->ri_buf[1].i_addr + isize,
++			item->ri_buf[1].i_len - isize);
+ 	}
+ 
+ 	fields = in_f->ilf_fields;
+@@ -2516,6 +2534,9 @@ xlog_recover_inode_pass2(
+ 	}
+ 
+ write_inode_buffer:
++	/* re-generate the checksum. */
++	xfs_dinode_calc_crc(log->l_mp, dip);
++
+ 	ASSERT(bp->b_target->bt_mount == mp);
+ 	bp->b_iodone = xlog_recover_iodone;
+ 	xfs_buf_delwri_queue(bp, buffer_list);
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index f950edd..8a0f6af 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -704,12 +704,13 @@ xfs_trans_inode_buf(
+ 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
+ 
+ 	bip->bli_flags |= XFS_BLI_INODE_BUF;
++	xfs_trans_buf_set_type(tp, bp, XFS_BLF_DINO_BUF);
+ }
+ 
+ /*
+  * This call is used to indicate that the buffer is going to
+  * be staled and was an inode buffer. This means it gets
+- * special processing during unpin - where any inodes 
++ * special processing during unpin - where any inodes
+  * associated with the buffer should be removed from ail.
+  * There is also special processing during recovery,
+  * any replay of the inodes in the buffer needs to be
+@@ -728,6 +729,7 @@ xfs_trans_stale_inode_buf(
+ 
+ 	bip->bli_flags |= XFS_BLI_STALE_INODE;
+ 	bip->bli_item.li_cb = xfs_buf_iodone;
++	xfs_trans_buf_set_type(tp, bp, XFS_BLF_DINO_BUF);
+ }
+ 
+ /*
+@@ -751,6 +753,7 @@ xfs_trans_inode_alloc_buf(
+ 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
+ 
+ 	bip->bli_flags |= XFS_BLI_INODE_ALLOC_BUF;
++	xfs_trans_buf_set_type(tp, bp, XFS_BLF_DINO_BUF);
+ }
+ 
+ /*
 -- 
 1.7.10
 
