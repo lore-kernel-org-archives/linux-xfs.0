@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 795377CBF
-	for <linux-xfs@oss.sgi.com>; Tue, 26 Feb 2013 15:01:21 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 93439AC009
-	for <linux-xfs@oss.sgi.com>; Tue, 26 Feb 2013 13:01:17 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	O7Z9EVs22nQTFbhS for <linux-xfs@oss.sgi.com>;
-	Tue, 26 Feb 2013 13:01:15 -0800 (PST)
-Date: Wed, 27 Feb 2013 08:01:14 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: test case no.256 in xfs test suite, makes gnome 3 to fall back
-	to emergency mode
-Message-ID: <20130226210114.GV5551@dastard>
-References: <1361899850527-34994.post@n7.nabble.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 1A6647CBF
+	for <xfs@oss.sgi.com>; Tue, 26 Feb 2013 15:03:34 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 09668304059
+	for <xfs@oss.sgi.com>; Tue, 26 Feb 2013 13:03:31 -0800 (PST)
+Received: from mail-qa0-f49.google.com (mail-qa0-f49.google.com
+	[209.85.216.49]) by cuda.sgi.com with ESMTP id jknR63oO0g8MXhTW
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 26 Feb 2013 13:03:27 -0800 (PST)
+Received: by mail-qa0-f49.google.com with SMTP id o13so2806913qaj.15
+	for <xfs@oss.sgi.com>; Tue, 26 Feb 2013 13:03:26 -0800 (PST)
+Date: Tue, 26 Feb 2013 16:03:22 -0500
+From: Eric Whitney <enwlinux@gmail.com>
+Subject: [PATCH] xfstests: use native definition of O_DIRECT flag
+Message-ID: <20130226210322.GB5275@wallace>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1361899850527-34994.post@n7.nabble.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,35 +29,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "praneethu.u" <praneethu.u@gmail.com>
-Cc: linux-xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: linux-ext4@vger.kernel.org
 
-On Tue, Feb 26, 2013 at 09:30:50AM -0800, praneethu.u wrote:
-> I have installed opensuse 12.2 and made 5 different partitions to test xfs
-> tests. I have followed instruction as provided in 
-> http://en.opensuse.org/SDB:XFStests <http://en.opensuse.org/SDB:XFStests>  .
-> After executing test case no.254 i.e.,btrfs snapshot. in the next reboot,
-> GNOME 3 will not load, instead it falls back to emergency mode. When i tried
-> to see what is happening, in verbose mode of loading os, i saw scratch
-> device did not mount and then emergency mode started.
-> Is this a bug or i am doing any mistake ? please help.
+The definition of O_DIRECT in src/trunc.c causes xfstest 125 to fail
+when run on a Pandaboard.  On ARM, the value used (0x040000) is
+O_DIRECTORY rather than O_DIRECT as it is on x86.  Prefer the platform's
+native definition of O_DIRECT supplied by fcntl.h if available.  Also,
+fix a couple of error messages to properly reflect their context.
 
-xfstests regularly corrupts filesystems and leaves their corpses
-hanging out to dry - if xfstests causes your machine to crash (and it
-will) then trying to automatically mount the filesystems it uses on
-reboot is just plain silly. Corrupt filesystems will fail to mount,
-and you'll see problems like this.
+Signed-off-by: Eric Whitney <enwlinux@gmail.com>
+---
+ src/trunc.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-Indeed, xfstests should only be run on a machine that you don't care
-about losing everything on. If you must test on your desktop/laptop,
-create a VM and run xfstests inside the VM...
-
-Cheers,
-
-Dave.
+diff --git a/src/trunc.c b/src/trunc.c
+index 7539532..38fb21f 100644
+--- a/src/trunc.c
++++ b/src/trunc.c
+@@ -26,7 +26,9 @@
+ #include <stdlib.h>
+ #include <string.h>
+ 
++#ifndef O_DIRECT
+ #define O_DIRECT	040000
++#endif
+ 
+ #define WAITTIME	60
+ #define BUFSIZE		4096
+@@ -82,7 +84,7 @@ while((c=getopt(argc,argv,"f:"))!=EOF) {
+ 
+ 	printf("direct write of 1's into file\n");	
+ 	err = write(fd, buf, BUFSIZE);
+-	if (err < 0) perror("buffered write failed");
++	if (err < 0) perror("direct write failed");
+ 
+ 	close(fd);
+ 	
+@@ -96,7 +98,7 @@ while((c=getopt(argc,argv,"f:"))!=EOF) {
+ 
+ 	printf("buffered write of 2's into file\n");	
+ 	err = write(fd, buf, BUFSIZE);
+-	if (err < 0) perror("direct write failed");
++	if (err < 0) perror("buffered write failed");
+ 
+ 	/* 1 now on disk, but 2 data is buffered */
+ 
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.10.4
 
 _______________________________________________
 xfs mailing list
