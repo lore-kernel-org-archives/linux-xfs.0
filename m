@@ -1,18 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1000F7CBF
-	for <xfs@oss.sgi.com>; Tue, 26 Feb 2013 14:42:46 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 9531E7CBF
+	for <xfs@oss.sgi.com>; Tue, 26 Feb 2013 14:52:48 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E5CDB8F8033
-	for <xfs@oss.sgi.com>; Tue, 26 Feb 2013 12:42:42 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id cMqkK85g5Sz2akgM for
-	<xfs@oss.sgi.com>; Tue, 26 Feb 2013 12:42:42 -0800 (PST)
-Message-ID: <512D1E3E.9050907@redhat.com>
-Date: Tue, 26 Feb 2013 14:42:38 -0600
-From: Eric Sandeen <sandeen@redhat.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0D581AC00C
+	for <xfs@oss.sgi.com>; Tue, 26 Feb 2013 12:52:47 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	Vqxs0eMbnJrHXzzi for <xfs@oss.sgi.com>;
+	Tue, 26 Feb 2013 12:52:46 -0800 (PST)
+Date: Wed, 27 Feb 2013 07:52:41 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: Fix possible truncation of log data in
+	xlog_bread_noalign()
+Message-ID: <20130226205241.GT5551@dastard>
+References: <BAB94DBB0E89D8409949BC28AC95914C47C485E5@USMAExch1.tad.internal.tilera.com>
+	<20130223000802.GB26081@dastard>
+	<BAB94DBB0E89D8409949BC28AC95914C47C48702@USMAExch1.tad.internal.tilera.com>
+	<20130223235546.GA5551@dastard>
+	<BAB94DBB0E89D8409949BC28AC95914C47C488D8@USMAExch1.tad.internal.tilera.com>
+	<20130224141017.GC5551@dastard>
+	<BAB94DBB0E89D8409949BC28AC95914C47C49005@USMAExch1.tad.internal.tilera.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfstests: handle new mkfs.btrfs -f option cleanly
+Content-Disposition: inline
+In-Reply-To: <BAB94DBB0E89D8409949BC28AC95914C47C49005@USMAExch1.tad.internal.tilera.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,51 +36,48 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>, linux-btrfs <linux-btrfs@vger.kernel.org>, Stefan Behrens <sbehrens@giantdisaster.de>
+To: Tony Lu <zlu@tilera.com>
+Cc: Alex Elder <elder@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, Ben Myers <bpm@sgi.com>, Dave Chinner <dchinner@redhat.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
 
-I added an "-f" option to mkfs.btrfs to force overwrite
-of an existing filesystem.  Now on an xfstests run, new
-mkfs.btrfs requires it, and old mkfs.btrfs cannot accept
-it.
+On Tue, Feb 26, 2013 at 07:28:19AM +0000, Tony Lu wrote:
+> I get a reliable way to reproduce this bug. The logprint and metadump are attached.
+> 
+> Kernel version: 2.6.38.8
 
-So, add a helper which works out whether -f is needed,
-and add it to the MKFS_BTRFS_PROG env. var as necessary,
-so that it is an always-included option during the tests.
+This is important....
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+....
 
-diff --git a/common.config b/common.config
-index 57f505d..9f1d309 100644
---- a/common.config
-+++ b/common.config
-@@ -101,6 +101,17 @@ set_prog_path()
-     return 1
- }
- 
-+# Handle mkfs.btrfs which does (or does not) require -f to overwrite
-+set_btrfs_mkfs_prog_path_with_opts()
-+{
-+	p=`set_prog_path mkfs.btrfs`
-+	if grep -q 'force overwrite' $p; then
-+		echo "$p -f"
-+	else
-+		echo $p
-+	fi
-+}
-+
- _fatal()
- {
-     echo "$*"
-@@ -185,7 +196,7 @@ case "$HOSTOS" in
-     Linux)
-         export MKFS_XFS_PROG="`set_prog_path mkfs.xfs`"
-         export MKFS_UDF_PROG="`set_prog_path mkudffs`"
--        export MKFS_BTRFS_PROG="`set_prog_path mkfs.btrfs`"
-+        export MKFS_BTRFS_PROG="`set_btrfs_mkfs_prog_path_with_opts`"
-         export BTRFS_UTIL_PROG="`set_prog_path btrfs`"
-         export XFS_FSR_PROG="`set_prog_path xfs_fsr`"
-         export MKFS_NFS_PROG="false"
+.... because this:
+
+> 4 umount /dev/sda1 /mnt
+> 5 mount /dev/sda1 /mnt
+> XFS mounting filesystem sda1
+> Starting XFS recovery on filesystem: sda1 (logdev: internal)
+> Ending XFS recovery on filesystem: sda1 (logdev: internal)
+
+Indicates that the unmount record is either not being written, it is
+being written when there log has not been fully flushed or log
+recovery is not finding it. You need to copy out the log
+first to determine what the state of the log is before you mount the
+filesystem - that way if log recovery is run you can see whether it
+was supposed to run. (i.e. a clean log should never run recovery,
+and unmount should always leave a clean log).
+
+Either way, I'm more than 10,000 iterations into a run of 100k
+iterations of this script on 3.8.0, and I have not seen a single log
+recovery attempt occur. That implies you are seeing a bug in 2.6.38
+that has since been fixed. It would be a good idea for you to
+upgrade the system to a 3.8 kernel and determine if you can still
+reproduce the problem on your system - that way we'll know if the
+bug really has been fixed or not....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
