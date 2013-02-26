@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D0D117CBF
-	for <xfs@oss.sgi.com>; Tue, 26 Feb 2013 14:54:53 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 795377CBF
+	for <linux-xfs@oss.sgi.com>; Tue, 26 Feb 2013 15:01:21 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id AF8488F8065
-	for <xfs@oss.sgi.com>; Tue, 26 Feb 2013 12:54:53 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 93439AC009
+	for <linux-xfs@oss.sgi.com>; Tue, 26 Feb 2013 13:01:17 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	oaduSMzhd3DYyAm7 for <xfs@oss.sgi.com>;
-	Tue, 26 Feb 2013 12:54:52 -0800 (PST)
-Date: Wed, 27 Feb 2013 07:54:50 +1100
+	O7Z9EVs22nQTFbhS for <linux-xfs@oss.sgi.com>;
+	Tue, 26 Feb 2013 13:01:15 -0800 (PST)
+Date: Wed, 27 Feb 2013 08:01:14 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: FYI: better workaround for updating 'df' info after 'rm' on
-	xfs-vols
-Message-ID: <20130226205450.GU5551@dastard>
-References: <512C12B5.3070908@tlinx.org> <20130226045038.GN5551@dastard>
-	<512C4C7A.60002@tlinx.org>
+Subject: Re: test case no.256 in xfs test suite, makes gnome 3 to fall back
+	to emergency mode
+Message-ID: <20130226210114.GV5551@dastard>
+References: <1361899850527-34994.post@n7.nabble.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <512C4C7A.60002@tlinx.org>
+In-Reply-To: <1361899850527-34994.post@n7.nabble.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,23 +30,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Linda Walsh <xfs@tlinx.org>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: "praneethu.u" <praneethu.u@gmail.com>
+Cc: linux-xfs@oss.sgi.com
 
-On Mon, Feb 25, 2013 at 09:47:38PM -0800, Linda Walsh wrote:
-> 
-> >> Someone suggested cat [1|3] >/proc/sys/vm/drop_caches.
-> > 
-> > echo, not cat. It does work every time, whether you see anything
-> > obvious or not. And if you want to reclaim inodes, then you want
-> > "echo 2 > ..."
-> ----
-> 	Erk...meant echo... too much draino on the braino
-> (doesn't 3 include '2'? I thought it was a bit mask?)
+On Tue, Feb 26, 2013 at 09:30:50AM -0800, praneethu.u wrote:
+> I have installed opensuse 12.2 and made 5 different partitions to test xfs
+> tests. I have followed instruction as provided in 
+> http://en.opensuse.org/SDB:XFStests <http://en.opensuse.org/SDB:XFStests>  .
+> After executing test case no.254 i.e.,btrfs snapshot. in the next reboot,
+> GNOME 3 will not load, instead it falls back to emergency mode. When i tried
+> to see what is happening, in verbose mode of loading os, i saw scratch
+> device did not mount and then emergency mode started.
+> Is this a bug or i am doing any mistake ? please help.
 
-Yes, it is a bit mask. 1 = page cache, 2 = slab cache, 3 = both.
-Inode reclaim is part of the slab cache reclaim, so page cache
-reclaim won't make any difference to the behaviour at all.
+xfstests regularly corrupts filesystems and leaves their corpses
+hanging out to dry - if xfstests causes your machine to crash (and it
+will) then trying to automatically mount the filesystems it uses on
+reboot is just plain silly. Corrupt filesystems will fail to mount,
+and you'll see problems like this.
+
+Indeed, xfstests should only be run on a machine that you don't care
+about losing everything on. If you must test on your desktop/laptop,
+create a VM and run xfstests inside the VM...
 
 Cheers,
 
