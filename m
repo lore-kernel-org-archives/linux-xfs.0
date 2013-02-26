@@ -1,15 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0FA617F50
-	for <xfs@oss.sgi.com>; Tue, 26 Feb 2013 09:43:23 -0600 (CST)
-Message-ID: <512CD85E.3070405@sgi.com>
-Date: Tue, 26 Feb 2013 09:44:30 -0600
-From: Rich Johnston <rjohnston@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id 6BD877CBF
+	for <linux-xfs@oss.sgi.com>; Tue, 26 Feb 2013 11:30:56 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 11619AC009
+	for <linux-xfs@oss.sgi.com>; Tue, 26 Feb 2013 09:30:53 -0800 (PST)
+Received: from joe.nabble.com (216-139-250-139.aus.us.siteprotect.com
+	[216.139.250.139]) by cuda.sgi.com with ESMTP id
+	B9k7ShHUUrqmni4k (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <linux-xfs@oss.sgi.com>;
+	Tue, 26 Feb 2013 09:30:51 -0800 (PST)
+Received: from tom.nabble.com ([192.168.236.105])
+	by joe.nabble.com with esmtp (Exim 4.72)
+	(envelope-from <praneethu.u@gmail.com>) id 1UAOMc-0003c2-Hq
+	for linux-xfs@oss.sgi.com; Tue, 26 Feb 2013 09:30:50 -0800
+Date: Tue, 26 Feb 2013 09:30:50 -0800 (PST)
+From: "praneethu.u" <praneethu.u@gmail.com>
+Message-ID: <1361899850527-34994.post@n7.nabble.com>
+Subject: test case no.256 in xfs test suite, makes gnome 3 to fall back to
+	emergency mode
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/3] xfstests: Provide dumpe2fs via standard common.config
-	interface
-References: <1359886798-8818-1-git-send-email-tracek@redhat.com>
-In-Reply-To: <1359886798-8818-1-git-send-email-tracek@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,36 +28,26 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Tomas Racek <tracek@redhat.com>
-Cc: lczerner@redhat.com, xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-Applied this series to xfstests.
+I have installed opensuse 12.2 and made 5 different partitions to test xfs
+tests. I have followed instruction as provided in 
+http://en.opensuse.org/SDB:XFStests <http://en.opensuse.org/SDB:XFStests>  .
+After executing test case no.254 i.e.,btrfs snapshot. in the next reboot,
+GNOME 3 will not load, instead it falls back to emergency mode. When i tried
+to see what is happening, in verbose mode of loading os, i saw scratch
+device did not mount and then emergency mode started.
+Is this a bug or i am doing any mistake ? please help.
 
-Thanks
---Rich
 
-commit 29fe8007e75bf8983fa1267ae2850787262f17c1
-Author: Tomas Racek <tracek@redhat.com>
-Date:   Tue Feb 12 09:21:59 2013 +0000
 
-     xfstests: Add new standard loop handling functions
-
-  commit 03b0089e9b18ee6b4e5e990db98a1f545cc2521b
-Author: Tomas Racek <tracek@redhat.com>
-Date:   Sun Feb 3 10:19:56 2013 +0000
-
-     xfstests: Provide dumpe2fs via standard common.config interface
-
-commit 76765b7e4e425dee394e12789264d6db1fea2876
-Author: Tomas Racek <tracek@redhat.com>
-Date:   Sun Feb 3 10:19:58 2013 +0000
-
-     xfstests: 298: Test that FS sends discard requests only on free blocks
-
+--
+View this message in context: http://xfs.9218.n7.nabble.com/test-case-no-256-in-xfs-test-suite-makes-gnome-3-to-fall-back-to-emergency-mode-tp34994.html
+Sent from the linux-xfs mailing list archive at Nabble.com.
 
 _______________________________________________
 xfs mailing list
