@@ -1,31 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 360D27CBF
-	for <linux-xfs@oss.sgi.com>; Tue, 26 Feb 2013 14:31:46 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D3FD5AC001
-	for <linux-xfs@oss.sgi.com>; Tue, 26 Feb 2013 12:31:42 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	27ToZyHFWnTtN1Tt for <linux-xfs@oss.sgi.com>;
-	Tue, 26 Feb 2013 12:31:37 -0800 (PST)
-Date: Wed, 27 Feb 2013 07:31:35 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Hung in D state during fclose
-Message-ID: <20130226203135.GS5551@dastard>
-References: <20130212065545.GC10731@dastard>
-	<3542214BE3A3EF419F236DFE0F878BC90512DC@BL2PRD0310MB374.namprd03.prod.outlook.com>
-	<20130212102014.GA26694@dastard>
-	<3542214BE3A3EF419F236DFE0F878BC90517D2@BL2PRD0310MB374.namprd03.prod.outlook.com>
-	<20130212202246.GB26694@dastard>
-	<3542214BE3A3EF419F236DFE0F878BC905190D@BL2PRD0310MB374.namprd03.prod.outlook.com>
-	<3542214BE3A3EF419F236DFE0F878BC9051A09@BL2PRD0310MB374.namprd03.prod.outlook.com>
-	<20130213051552.GF26694@dastard>
-	<3542214BE3A3EF419F236DFE0F878BC9052F35@BL2PRD0310MB374.namprd03.prod.outlook.com>
-	<3542214BE3A3EF419F236DFE0F878BC9055A4A@BL2PRD0310MB374.namprd03.prod.outlook.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 1000F7CBF
+	for <xfs@oss.sgi.com>; Tue, 26 Feb 2013 14:42:46 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E5CDB8F8033
+	for <xfs@oss.sgi.com>; Tue, 26 Feb 2013 12:42:42 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id cMqkK85g5Sz2akgM for
+	<xfs@oss.sgi.com>; Tue, 26 Feb 2013 12:42:42 -0800 (PST)
+Message-ID: <512D1E3E.9050907@redhat.com>
+Date: Tue, 26 Feb 2013 14:42:38 -0600
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <3542214BE3A3EF419F236DFE0F878BC9055A4A@BL2PRD0310MB374.namprd03.prod.outlook.com>
+Subject: [PATCH] xfstests: handle new mkfs.btrfs -f option cleanly
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,47 +25,51 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Cheung, Norman" <Norman.Cheung@kla-tencor.com>
-Cc: "'linux-xfs@oss.sgi.com'" <linux-xfs@oss.sgi.com>
+To: xfs-oss <xfs@oss.sgi.com>, linux-btrfs <linux-btrfs@vger.kernel.org>, Stefan Behrens <sbehrens@giantdisaster.de>
 
-On Tue, Feb 26, 2013 at 07:41:42PM +0000, Cheung, Norman wrote:
-> I'd been checking all the XFS patches if any might relate to my situation and came across this 
-> http://article.gmane.org/gmane.comp.file-systems.xfs.general/40349/
-> 
-> From: Christoph Hellwig <hch <at> infradead.org>
-> Subject: [PATCH, RFC] writeback: avoid redirtying when ->write_inode failed to clear I_DIRTY
-> Newsgroups: gmane.comp.file-systems.xfs.general
-> Date: 2011-08-27 06:14:09 GMT (1 year, 26 weeks, 1 day, 13 hours and 17 minutes ago)
-> Right now ->write_inode has no way to safely return a EAGAIN without explicitly
-> redirtying the inode, as we would lose the dirty state otherwise.  Most
-> filesystems get this wrong, but XFS makes heavy use of it to avoid blocking
-> the flusher thread when ->write_inode hits contentended inode locks.  A
-> contended ilock is something XFS can hit very easibly when extending files, as
-> the data I/O completion handler takes the lock to update the size, and the
-> ->write_inode call can race with it fairly easily if writing enough data
-> in one go so that the completion for the first write come in just before
-> we call ->write_inode.
-> 
-> Change the handling of this case to use requeue_io for a quick retry instead
-> of redirty_tail, which keeps moving out the dirtied_when data and thus keeps
-> delaying the writeout more and more with every failed attempt to get the lock.
-> 
-> I wonder if this would have caused my application waiting for xfs_ilock.  I checked 
-> that  this patch is not in my kernel source (SUSE 11 SP2, Rel 3.0.13-0.27)
+I added an "-f" option to mkfs.btrfs to force overwrite
+of an existing filesystem.  Now on an xfstests run, new
+mkfs.btrfs requires it, and old mkfs.btrfs cannot accept
+it.
 
-I have no idea whether it will help or not, because SuSE (like Red
-Hat) ship a heavily patched kernel and so it's rather hard for
-anyone here to triage and diagnose problems like this. Further, even
-if we can find a potential cause, we still can't fix it for you.
-Hence perhaps you are best advised to talk to your SuSE support
-contact at this point?
+So, add a helper which works out whether -f is needed,
+and add it to the MKFS_BTRFS_PROG env. var as necessary,
+so that it is an always-included option during the tests.
 
-Cheers,
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/common.config b/common.config
+index 57f505d..9f1d309 100644
+--- a/common.config
++++ b/common.config
+@@ -101,6 +101,17 @@ set_prog_path()
+     return 1
+ }
+ 
++# Handle mkfs.btrfs which does (or does not) require -f to overwrite
++set_btrfs_mkfs_prog_path_with_opts()
++{
++	p=`set_prog_path mkfs.btrfs`
++	if grep -q 'force overwrite' $p; then
++		echo "$p -f"
++	else
++		echo $p
++	fi
++}
++
+ _fatal()
+ {
+     echo "$*"
+@@ -185,7 +196,7 @@ case "$HOSTOS" in
+     Linux)
+         export MKFS_XFS_PROG="`set_prog_path mkfs.xfs`"
+         export MKFS_UDF_PROG="`set_prog_path mkudffs`"
+-        export MKFS_BTRFS_PROG="`set_prog_path mkfs.btrfs`"
++        export MKFS_BTRFS_PROG="`set_btrfs_mkfs_prog_path_with_opts`"
+         export BTRFS_UTIL_PROG="`set_prog_path btrfs`"
+         export XFS_FSR_PROG="`set_prog_path xfs_fsr`"
+         export MKFS_NFS_PROG="false"
 
 _______________________________________________
 xfs mailing list
