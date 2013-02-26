@@ -1,14 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 587FA7F52
-	for <xfs@oss.sgi.com>; Tue, 26 Feb 2013 09:31:20 -0600 (CST)
-Message-ID: <512CD581.6000302@sgi.com>
-Date: Tue, 26 Feb 2013 09:32:17 -0600
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0FA617F50
+	for <xfs@oss.sgi.com>; Tue, 26 Feb 2013 09:43:23 -0600 (CST)
+Message-ID: <512CD85E.3070405@sgi.com>
+Date: Tue, 26 Feb 2013 09:44:30 -0600
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 2/3] xfstests: Add new standard loop handling functions
-References: <2102910196.6066385.1360050965047.JavaMail.root@redhat.com>
-In-Reply-To: <2102910196.6066385.1360050965047.JavaMail.root@redhat.com>
+Subject: Re: [PATCH 1/3] xfstests: Provide dumpe2fs via standard common.config
+	interface
+References: <1359886798-8818-1-git-send-email-tracek@redhat.com>
+In-Reply-To: <1359886798-8818-1-git-send-email-tracek@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,24 +23,30 @@ Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Tomas Racek <tracek@redhat.com>
-Cc: lczerner@redhat.com, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+Cc: lczerner@redhat.com, xfs@oss.sgi.com
 
-Add _create_loop_device and _destroy_loop_device to uniformly handle
-loopback devices.
+Applied this series to xfstests.
 
-Signed-off-by: Tomas Racek <tracek@redhat.com>
+Thanks
+--Rich
 
->>
->> _create_loop_device()
->> {
->> 	dev=`losetup -f --show $file` || _fail "Cannot associate $file with
->> 	$dev"
->> 	echo $dev
->> }
->>
+commit 29fe8007e75bf8983fa1267ae2850787262f17c1
+Author: Tomas Racek <tracek@redhat.com>
+Date:   Tue Feb 12 09:21:59 2013 +0000
 
-Looks good.
-Reviewed-by: Rich Johnston <rjohnston@sgi.com>
+     xfstests: Add new standard loop handling functions
+
+  commit 03b0089e9b18ee6b4e5e990db98a1f545cc2521b
+Author: Tomas Racek <tracek@redhat.com>
+Date:   Sun Feb 3 10:19:56 2013 +0000
+
+     xfstests: Provide dumpe2fs via standard common.config interface
+
+commit 76765b7e4e425dee394e12789264d6db1fea2876
+Author: Tomas Racek <tracek@redhat.com>
+Date:   Sun Feb 3 10:19:58 2013 +0000
+
+     xfstests: 298: Test that FS sends discard requests only on free blocks
 
 
 _______________________________________________
