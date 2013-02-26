@@ -1,24 +1,39 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6BD877CBF
-	for <linux-xfs@oss.sgi.com>; Tue, 26 Feb 2013 11:30:56 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 11619AC009
-	for <linux-xfs@oss.sgi.com>; Tue, 26 Feb 2013 09:30:53 -0800 (PST)
-Received: from joe.nabble.com (216-139-250-139.aus.us.siteprotect.com
-	[216.139.250.139]) by cuda.sgi.com with ESMTP id
-	B9k7ShHUUrqmni4k (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <linux-xfs@oss.sgi.com>;
-	Tue, 26 Feb 2013 09:30:51 -0800 (PST)
-Received: from tom.nabble.com ([192.168.236.105])
-	by joe.nabble.com with esmtp (Exim 4.72)
-	(envelope-from <praneethu.u@gmail.com>) id 1UAOMc-0003c2-Hq
-	for linux-xfs@oss.sgi.com; Tue, 26 Feb 2013 09:30:50 -0800
-Date: Tue, 26 Feb 2013 09:30:50 -0800 (PST)
-From: "praneethu.u" <praneethu.u@gmail.com>
-Message-ID: <1361899850527-34994.post@n7.nabble.com>
-Subject: test case no.256 in xfs test suite, makes gnome 3 to fall back to
-	emergency mode
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id CB1557CBF
+	for <linux-xfs@oss.sgi.com>; Tue, 26 Feb 2013 13:41:53 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A6950304059
+	for <linux-xfs@oss.sgi.com>; Tue, 26 Feb 2013 11:41:53 -0800 (PST)
+Received: from ca1mailout01.kla-tencor.com (mailout04.kla-tencor.com
+	[192.146.1.174]) by cuda.sgi.com with ESMTP id oVzkSeZZ0URphYoN
+	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
+	<linux-xfs@oss.sgi.com>; Tue, 26 Feb 2013 11:41:51 -0800 (PST)
+Received: from CA1EXBH01.adcorp.kla-tencor.com (ca1exbh01.kla-tencor.com
+	[10.60.33.3])
+	by ca1mailout01.kla-tencor.com (8.14.4/8.14.4) with ESMTP id
+	r1QJfnNi014558
+	for <linux-xfs@oss.sgi.com>; Tue, 26 Feb 2013 11:41:50 -0800
+Received: from mail172-co9 (localhost [127.0.0.1])	by
+	mail172-co9-R.bigfish.com (Postfix) with ESMTP id 5610F1402C4	for
+	<linux-xfs@oss.sgi.com.FOPE.CONNECTOR.OVERRIDE>;
+	Tue, 26 Feb 2013 19:41:48 +0000 (UTC)
+From: "Cheung, Norman" <Norman.Cheung@kla-tencor.com>
+Subject: RE: Hung in D state during fclose
+Date: Tue, 26 Feb 2013 19:41:42 +0000
+Message-ID: <3542214BE3A3EF419F236DFE0F878BC9055A4A@BL2PRD0310MB374.namprd03.prod.outlook.com>
+References: <loom.20130212T071115-446@post.gmane.org>
+	<20130212065545.GC10731@dastard>
+	<3542214BE3A3EF419F236DFE0F878BC90512DC@BL2PRD0310MB374.namprd03.prod.outlook.com>
+	<20130212102014.GA26694@dastard>
+	<3542214BE3A3EF419F236DFE0F878BC90517D2@BL2PRD0310MB374.namprd03.prod.outlook.com>
+	<20130212202246.GB26694@dastard>
+	<3542214BE3A3EF419F236DFE0F878BC905190D@BL2PRD0310MB374.namprd03.prod.outlook.com>
+	<3542214BE3A3EF419F236DFE0F878BC9051A09@BL2PRD0310MB374.namprd03.prod.outlook.com>
+	<20130213051552.GF26694@dastard>
+	<3542214BE3A3EF419F236DFE0F878BC9052F35@BL2PRD0310MB374.namprd03.prod.outlook.com>
+In-Reply-To: <3542214BE3A3EF419F236DFE0F878BC9052F35@BL2PRD0310MB374.namprd03.prod.outlook.com>
+Content-Language: en-US
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -32,22 +47,195 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: "'linux-xfs@oss.sgi.com'" <linux-xfs@oss.sgi.com>
 
-I have installed opensuse 12.2 and made 5 different partitions to test xfs
-tests. I have followed instruction as provided in 
-http://en.opensuse.org/SDB:XFStests <http://en.opensuse.org/SDB:XFStests>  .
-After executing test case no.254 i.e.,btrfs snapshot. in the next reboot,
-GNOME 3 will not load, instead it falls back to emergency mode. When i tried
-to see what is happening, in verbose mode of loading os, i saw scratch
-device did not mount and then emergency mode started.
-Is this a bug or i am doing any mistake ? please help.
+I'd been checking all the XFS patches if any might relate to my situation and came across this 
+http://article.gmane.org/gmane.comp.file-systems.xfs.general/40349/
 
+From: Christoph Hellwig <hch <at> infradead.org>
+Subject: [PATCH, RFC] writeback: avoid redirtying when ->write_inode failed to clear I_DIRTY
+Newsgroups: gmane.comp.file-systems.xfs.general
+Date: 2011-08-27 06:14:09 GMT (1 year, 26 weeks, 1 day, 13 hours and 17 minutes ago)
+Right now ->write_inode has no way to safely return a EAGAIN without explicitly
+redirtying the inode, as we would lose the dirty state otherwise.  Most
+filesystems get this wrong, but XFS makes heavy use of it to avoid blocking
+the flusher thread when ->write_inode hits contentended inode locks.  A
+contended ilock is something XFS can hit very easibly when extending files, as
+the data I/O completion handler takes the lock to update the size, and the
+->write_inode call can race with it fairly easily if writing enough data
+in one go so that the completion for the first write come in just before
+we call ->write_inode.
 
+Change the handling of this case to use requeue_io for a quick retry instead
+of redirty_tail, which keeps moving out the dirtied_when data and thus keeps
+delaying the writeout more and more with every failed attempt to get the lock.
 
---
-View this message in context: http://xfs.9218.n7.nabble.com/test-case-no-256-in-xfs-test-suite-makes-gnome-3-to-fall-back-to-emergency-mode-tp34994.html
-Sent from the linux-xfs mailing list archive at Nabble.com.
+I wonder if this would have caused my application waiting for xfs_ilock.  I checked 
+that  this patch is not in my kernel source (SUSE 11 SP2, Rel 3.0.13-0.27)
+
+Re attached the  traces again, below.
+
+Many Thanks,
+Norman
+
+> > 1. the disk writing thread hung in fclose
+> >
+> >
+> > Tigris_IMC.exe  D 0000000000000000     0  4197   4100 0x00000000
+> > ffff881f3db921c0 0000000000000086 0000000000000000 ffff881f42eb8b80
+> > ffff880861419fd8 ffff880861419fd8 ffff880861419fd8 ffff881f3db921c0
+> > 0000000000080000 0000000000000000 00000000000401e0 00000000061805c1
+> > Call Trace:
+> > [<ffffffff810d89ed>] ? zone_statistics+0x9d/0xa0 [<ffffffffa0402682>]
+> > ? xfs_iomap_write_delay+0x172/0x2b0 [xfs] [<ffffffff813c7e35>] ?
+> > rwsem_down_failed_common+0xc5/0x150
+> > [<ffffffff811f32a3>] ? call_rwsem_down_write_failed+0x13/0x20
+> > [<ffffffff813c74ec>] ? down_write+0x1c/0x1d [<ffffffffa03fba8e>] ?
+> > xfs_ilock+0x7e/0xa0 [xfs] [<ffffffffa041b64b>] ?
+> > __xfs_get_blocks+0x1db/0x3d0 [xfs] [<ffffffff81103340>] ?
+> > kmem_cache_alloc+0x100/0x130 [<ffffffff8113fa2e>] ?
+> > alloc_page_buffers+0x6e/0xe0 [<ffffffff81141cdf>] ?
+> > __block_write_begin+0x1cf/0x4d0 [<ffffffffa041b850>] ?
+> > xfs_get_blocks_direct+0x10/0x10 [xfs] [<ffffffffa041b850>] ?
+> > xfs_get_blocks_direct+0x10/0x10 [xfs] [<ffffffff8114226b>] ?
+> > block_write_begin+0x4b/0xa0 [<ffffffffa041b8fb>] ?
+> > xfs_vm_write_begin+0x3b/0x70 [xfs] [<ffffffff810c0258>] ?
+> > generic_file_buffered_write+0xf8/0x250
+> > [<ffffffffa04207b5>] ? xfs_file_buffered_aio_write+0xc5/0x130 [xfs]
+> > [<ffffffffa042099c>] ? xfs_file_aio_write+0x17c/0x2a0 [xfs]
+> > [<ffffffff81115b28>] ? do_sync_write+0xb8/0xf0 [<ffffffff8119daa4>] ?
+> > security_file_permission+0x24/0xc0
+> > [<ffffffff8111630a>] ? vfs_write+0xaa/0x190 [<ffffffff81116657>] ?
+> > sys_write+0x47/0x90 [<ffffffff813ce412>] ?
+> > system_call_fastpath+0x16/0x1b
+> 
+> So that is doing a write() from fclose, and it's waiting on the inode
+> XFS_ILOCK_EXCL
+> 
+> /me wishes that all distros compiled their kernels with frame pointers
+> enabled so that analysing stack traces is better than "I'm guessing that the
+> real stack trace is....
+> 
+> [NLC] the last entry zone_statistics is called only with NUMA enabled, I
+> wonder if I can work around it by turning off NUMA.
+> 
+> > 2. flush from another partition
+> >
+> > flush-8:48      D 0000000000000000     0  4217      2 0x00000000
+> > ffff883fc053f580 0000000000000046 ffff881f40f348f0 ffff881f40e2aa80
+> > ffff883fabb83fd8 ffff883fabb83fd8 ffff883fabb83fd8 ffff883fc053f580
+> > ffff883fc27654c0 ffff881f40dfc040 0000000000000001 ffffffff810656f9
+> > Call Trace:
+> > [<ffffffff810656f9>] ? __queue_work+0xc9/0x390 [<ffffffff811e3e3f>] ?
+> > cfq_insert_request+0xaf/0x4f0 [<ffffffff81065a06>] ?
+> > queue_work_on+0x16/0x20 [<ffffffff813c69cd>] ?
+> > schedule_timeout+0x1dd/0x240 [<ffffffffa041a762>] ?
+> > kmem_zone_zalloc+0x32/0x50 [xfs] [<ffffffff813c7559>] ?
+> > __down+0x6c/0x99 [<ffffffff81070377>] ? down+0x37/0x40
+> > [<ffffffffa041d59d>] ? xfs_buf_lock+0x1d/0x40 [xfs]
+> > [<ffffffffa041d6a3>] ? _xfs_buf_find+0xe3/0x210 [xfs]
+> > [<ffffffffa041dcb4>] ? xfs_buf_get+0x64/0x150 [xfs]
+> > [<ffffffffa041dfb2>] ? xfs_buf_read+0x12/0xa0 [xfs]
+> > [<ffffffffa04151af>] ? xfs_trans_read_buf+0x1bf/0x2f0 [xfs]
+> > [<ffffffffa03d06c0>] ? xfs_read_agf+0x60/0x1b0 [xfs]
+> > [<ffffffffa03cf3b7>] ? xfs_alloc_update+0x17/0x20 [xfs]
+> > [<ffffffffa03d0841>] ? xfs_alloc_read_agf+0x31/0xd0 [xfs]
+> > [<ffffffffa03d2083>] ? xfs_alloc_fix_freelist+0x433/0x4a0 [xfs]
+> > [<ffffffff810d89ed>] ? zone_statistics+0x9d/0xa0 [<ffffffffa03d23a4>]
+> > ? xfs_alloc_vextent+0x184/0x4a0 [xfs] [<ffffffffa03dc348>] ?
+> > xfs_bmap_btalloc+0x2d8/0x6d0 [xfs] [<ffffffffa03e0efd>] ?
+> > xfs_bmapi+0x9bd/0x11a0 [xfs] [<ffffffffa03d9bbc>] ?
+> > xfs_bmap_search_multi_extents+0xac/0x120 [xfs] [<ffffffffa040293c>] ?
+> > xfs_iomap_write_allocate+0x17c/0x330 [xfs] [<ffffffffa041b20f>] ?
+> > xfs_map_blocks+0x19f/0x1b0 [xfs] [<ffffffffa041c20e>] ?
+> > xfs_vm_writepage+0x19e/0x470 [xfs] [<ffffffff810c97ba>] ?
+> > __writepage+0xa/0x30 [<ffffffff810c9c4d>] ?
+> > write_cache_pages+0x1cd/0x3d0 [<ffffffff810c97b0>] ?
+> > bdi_set_max_ratio+0x90/0x90 [<ffffffff810c9e93>] ?
+> > generic_writepages+0x43/0x70 [<ffffffff81139330>] ?
+> > writeback_single_inode+0x160/0x300
+> > [<ffffffff811397d4>] ? writeback_sb_inodes+0x104/0x1a0
+> > [<ffffffff81139cfd>] ? writeback_inodes_wb+0x8d/0x140
+> > [<ffffffff8113a05b>] ? wb_writeback+0x2ab/0x310 [<ffffffff813cedee>] ?
+> > apic_timer_interrupt+0xe/0x20 [<ffffffff8113a10e>] ?
+> > wb_check_old_data_flush+0x4e/0xa0 [<ffffffff8113a28b>] ?
+> > wb_do_writeback+0x12b/0x160 [<ffffffff8113a332>] ?
+> > bdi_writeback_thread+0x72/0x150 [<ffffffff8113a2c0>] ?
+> > wb_do_writeback+0x160/0x160 [<ffffffff8106b06e>] ? kthread+0x7e/0x90
+> > [<ffffffff813cf544>] ? kernel_thread_helper+0x4/0x10
+> > [<ffffffff8106aff0>] ? kthread_worker_fn+0x1a0/0x1a0
+> > [<ffffffff813cf540>] ? gs_change+0x13/0x13
+> 
+> Thats the writeback thread waiting on an AGF buffer to be unlocked.
+> IOWs, there are probably multiple concurrent allocations to the same AG. But
+> that will be holding the XFS_ILOCK_EXCL lock that the other thread is waiting.
+> 
+> What thread is holding the AGF buffer is anyone's guess - it could be waiting
+> on IO completion, which would indicate a problem in the storage layers
+> below XFS. The output in dmesg from sysrq-w (echo w >
+> /proc/sysrq-trigger) might help indicate other blocked threads that could be
+> holding the AGF lock.
+>
+
+> 
+> On Wed, Feb 13, 2013 at 12:12:47AM +0000, Cheung, Norman wrote:
+> > Dave,
+> >
+> > One other point I have forgotten to mention is that the parent thread
+> > will wait for 5 minutes and then lower the thread priority (from -2
+> > back to 20) and set a global variable to signal the threads to exit.
+> > The blocked thread responded well and exit from D state and fclose
+> > completed with no error.
+> 
+> So it's not hung - it's just very slow?
+> 
+> [NLC] It will pause forever.  I tried replaced the timeout with a sleep loop,
+> and it will pause forever.    That is how I got the stack trace.
+> 
+> You have 256GB of memory. It's entirely possible that you've dirtied a large
+> amount of memory and everything is simply stuck waiting for writeback to
+> occur. Perhaps you should have a look at the utilisation of your disks when
+> this still occurs. 'iostat -x -d -m 5' will give you some insight into utilsation
+> when a hang occurs...
+> 
+> [NLC] I  have set the dirty_background_bytes to 40M and
+> dirty_writeback_centisecs to 400; and watched the Meminfo.  I don't get a
+> lot of dirtied memory accumulation -- 7 to 10 M average.  The disk usage from
+> the sar log was steady at 150M/sec for each of the disk; but a few seconds
+> after the fclose all disk activities stopped. Also the CPU % was quiet as well.
+> 
+> > This cause me to wonder if it  is possible that  some XFS threads and
+> > my application thread might be in a deadlock.
+> 
+> Deadlocks are permanent, so what you are seeing is not a deadlock....
+> 
+> [NLC] Would it be possible that there is priority inversion between my  disk
+> writing threads and the XFS threads & flush threads?  My application thread
+> runs at -2 priority.
+> 
+> Many thanks,
+> Norman
+> 
+> 
+> Cheers,
+> 
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+
 
 _______________________________________________
 xfs mailing list
