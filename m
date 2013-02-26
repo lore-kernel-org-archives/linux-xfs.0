@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 78BF47CBF
-	for <xfs@oss.sgi.com>; Tue, 26 Feb 2013 16:37:06 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A348E7CBF
+	for <xfs@oss.sgi.com>; Tue, 26 Feb 2013 16:51:31 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 57DEB8F8035
-	for <xfs@oss.sgi.com>; Tue, 26 Feb 2013 14:37:03 -0800 (PST)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8B65D304059
+	for <xfs@oss.sgi.com>; Tue, 26 Feb 2013 14:51:31 -0800 (PST)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 7c2OH5qEh8FOK61U for <xfs@oss.sgi.com>;
-	Tue, 26 Feb 2013 14:37:02 -0800 (PST)
-Message-ID: <512D390D.7060302@sandeen.net>
-Date: Tue, 26 Feb 2013 16:37:01 -0600
+	ESMTP id KNfZTxc01eHapi8j for <xfs@oss.sgi.com>;
+	Tue, 26 Feb 2013 14:51:30 -0800 (PST)
+Message-ID: <512D3C71.1030100@sandeen.net>
+Date: Tue, 26 Feb 2013 16:51:29 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
 Subject: Re: Read corruption on ARM
 References: <CA+AKrqBQ=VG0oVsai+agywDKRgO9cG9AvT6mCTSZxKO3Si5Aiw@mail.gmail.com>
-In-Reply-To: <CA+AKrqBQ=VG0oVsai+agywDKRgO9cG9AvT6mCTSZxKO3Si5Aiw@mail.gmail.com>
+	<512D390D.7060302@sandeen.net>
+In-Reply-To: <512D390D.7060302@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,25 +31,40 @@ Sender: xfs-bounces@oss.sgi.com
 To: Jason Detring <detringj@gmail.com>
 Cc: xfs@oss.sgi.com
 
-On 2/26/13 3:58 PM, Jason Detring wrote:
-> Hello list,
+On 2/26/13 4:37 PM, Eric Sandeen wrote:
+> On 2/26/13 3:58 PM, Jason Detring wrote:
+>> Hello list,
+> 
+> <snip>
+> 
+>> This also seems to impact the Raspberry Pi.  Below shows a 256 MB test
+>> case filesystem.
+>> The filesystem was created on an x86-64 box by mkfs.xfs 3.1.8 and
+>> populated by kernel 3.6.9.
+>> This failure report is Linux 3.6.11-g89caf39 built by GCC 4.7.2 from
+>>    <https://github.com/raspberrypi/linux/commits/rpi-3.6.y>
+>> The problem appears to be tied to the filesystem, not the media,
+>> since both an external USB reader and a loopback-mounted image on the
+>> unit's main SD media show the same backtrace.  The loopback image was
+>> captured on other hardware, then copied onto the RPi via network.
+> 
+> Missed this; let me fire up my pi and see if I can replicate it.
 
-<snip>
+Realized that I'll need to cross-compile xfs.ko I guess...
 
-> This also seems to impact the Raspberry Pi.  Below shows a 256 MB test
-> case filesystem.
-> The filesystem was created on an x86-64 box by mkfs.xfs 3.1.8 and
-> populated by kernel 3.6.9.
-> This failure report is Linux 3.6.11-g89caf39 built by GCC 4.7.2 from
->    <https://github.com/raspberrypi/linux/commits/rpi-3.6.y>
-> The problem appears to be tied to the filesystem, not the media,
-> since both an external USB reader and a loopback-mounted image on the
-> unit's main SD media show the same backtrace.  The loopback image was
-> captured on other hardware, then copied onto the RPi via network.
-
-Missed this; let me fire up my pi and see if I can replicate it.
+But - do you see this when the *whole* kernel is cross-compiled?
+Building the kernel one way and xfs another way, with another gcc,
+is probably nothing but trouble.  :)
 
 -Eric
+
+> -Eric
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
