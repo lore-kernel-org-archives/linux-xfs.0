@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9486E7CBF
-	for <xfs@oss.sgi.com>; Tue, 26 Feb 2013 19:49:05 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 40BB47CBF
+	for <xfs@oss.sgi.com>; Tue, 26 Feb 2013 20:16:21 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7B6D630405F
-	for <xfs@oss.sgi.com>; Tue, 26 Feb 2013 17:49:05 -0800 (PST)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2B58E8F8033
+	for <xfs@oss.sgi.com>; Tue, 26 Feb 2013 18:16:18 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	9KbVDZI1ZBCyT74G for <xfs@oss.sgi.com>;
-	Tue, 26 Feb 2013 17:49:03 -0800 (PST)
-Date: Wed, 27 Feb 2013 12:49:00 +1100
+	6tL8u4uNLwlAahdL for <xfs@oss.sgi.com>;
+	Tue, 26 Feb 2013 18:16:16 -0800 (PST)
+Date: Wed, 27 Feb 2013 13:16:14 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [dm-devel] [BUG] pvmove corrupting XFS filesystems (was Re:
-	[BUG] Internal error xfs_dir2_data_reada_verify)
-Message-ID: <20130227014900.GY5551@dastard>
-References: <87d2vnc34r.fsf@fftw.org> <20130226044039.GM5551@dastard>
-	<20130227010414.GD1514@agk.fab.redhat.com>
+Subject: Re: Read corruption on ARM
+Message-ID: <20130227021614.GZ5551@dastard>
+References: <CA+AKrqBQ=VG0oVsai+agywDKRgO9cG9AvT6mCTSZxKO3Si5Aiw@mail.gmail.com>
+	<512D390D.7060302@sandeen.net> <512D3C71.1030100@sandeen.net>
+	<CA+AKrqACW65gAOHCOFsVZp790nGd=bjSZnSE18rHkAFPVy_y9Q@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130227010414.GD1514@agk.fab.redhat.com>
+In-Reply-To: <CA+AKrqACW65gAOHCOFsVZp790nGd=bjSZnSE18rHkAFPVy_y9Q@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,34 +31,55 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Matteo Frigo <athena@fftw.org>, dm-devel@redhat.com, xfs@oss.sgi.com
+To: Jason Detring <detringj@gmail.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-On Wed, Feb 27, 2013 at 01:04:14AM +0000, Alasdair G Kergon wrote:
-> (Quick pointers that might be relevant)
+On Tue, Feb 26, 2013 at 05:21:15PM -0600, Jason Detring wrote:
+> On 2/26/13, Eric Sandeen <sandeen@sandeen.net> wrote:
+> > On 2/26/13 4:37 PM, Eric Sandeen wrote:
+> >> On 2/26/13 3:58 PM, Jason Detring wrote:
+> >>> Hello list,
+> >>
+> >> <snip>
+> >>
+> >>> This also seems to impact the Raspberry Pi.  Below shows a 256 MB test
+> >>> case filesystem.
+> >>> The filesystem was created on an x86-64 box by mkfs.xfs 3.1.8 and
+> >>> populated by kernel 3.6.9.
+> >>> This failure report is Linux 3.6.11-g89caf39 built by GCC 4.7.2 from
+> >>>    <https://github.com/raspberrypi/linux/commits/rpi-3.6.y>
+> >>> The problem appears to be tied to the filesystem, not the media,
+> >>> since both an external USB reader and a loopback-mounted image on the
+> >>> unit's main SD media show the same backtrace.  The loopback image was
+> >>> captured on other hardware, then copied onto the RPi via network.
+> >>
+> >> Missed this; let me fire up my pi and see if I can replicate it.
+> >
+> > Realized that I'll need to cross-compile xfs.ko I guess...
+> >
+> > But - do you see this when the *whole* kernel is cross-compiled?
+> > Building the kernel one way and xfs another way, with another gcc,
+> > is probably nothing but trouble.  :)
 > 
-> EAGAIN, I'm not aware of dm itself returning that on the i/o path.
+> Yes, I did.  I remember seeing it in months past when those compilers
+> were freshly released.  I only mixed-and-matched here as a spot check
+> to be sure the errors were still present.  For any Real Serious
+> Business, I'll build end-to-end with the same compiler.
+> 
+> I've uploaded my demonstration problem file system here:
+>   <http://www.splack.org/~jason/projects/xfs-arm-corruption/problemimage.xfs>
+> This throws a backtrace when "find ." is run on the mountpoint.  The
+> junk in the file system is just that--filler.  Don't take the kernel
+> archives as debugging builds.
 
-Neither am I, but it's coming from somewhere in the IO path...
+The filesystem image appears to be just fine. xfs_repair on x86_64 does
+not complain about it, nor does xfs_check. Mounting and running find
+on it on my current 3.8-dev kernel does not cause any problems,
+either. And looking directly at the structures on disk I can't see
+any obvious problems.
 
-> For 3.8 issues, read dm-devel around https://www.redhat.com/archives/dm-devel/2013-February/msg00086.html
-> (I queued the dm-side fixes for linux-next earlier today)
-
-It's reproducable on lots of different kernels, apparently - 3.8,
-3.4.33, CentOS 6.3, debian sid/wheezy and Fedora 18 were mentioned
-specifically by the OP - so it doesn't look like a recent
-regression or constrained to a specific kernel.
-
-> For pvmove, check exactly which version and whether discards are enabled: there
-> was a userspace bug for a short period some time ago when discards were enabled.
-
-The version I used to reproduce on a 3.8.0 kernel was:
-
-$ pvmove --version
-  LVM version:     2.02.95(2) (2012-03-06)
-  Library version: 1.02.74 (2012-03-06)
-  Driver version:  4.23.1
-
->From Debian unstable.
+Hence whatever issue is being seen must be to do with the way the
+compiled ARM code is interpreting the on-disk structures....
 
 Cheers,
 
