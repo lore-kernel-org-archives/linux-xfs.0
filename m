@@ -1,25 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 33E677CBF
-	for <xfs@oss.sgi.com>; Tue, 26 Feb 2013 20:29:31 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1CEC8304053
-	for <xfs@oss.sgi.com>; Tue, 26 Feb 2013 18:29:31 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	hEhlpaxL7Cer9BvK for <xfs@oss.sgi.com>;
-	Tue, 26 Feb 2013 18:29:29 -0800 (PST)
-Date: Wed, 27 Feb 2013 13:29:28 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [dm-devel] [BUG] pvmove corrupting XFS filesystems (was Re:
-	[BUG] Internal error xfs_dir2_data_reada_verify)
-Message-ID: <20130227022927.GA5551@dastard>
-References: <87d2vnc34r.fsf@fftw.org> <20130226044039.GM5551@dastard>
-	<20130227010414.GD1514@agk.fab.redhat.com>
-	<20130227014900.GY5551@dastard> <87y5eah4xz.fsf@fftw.org>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 748017CBF
+	for <xfs@oss.sgi.com>; Wed, 27 Feb 2013 00:48:15 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4519B8F8033
+	for <xfs@oss.sgi.com>; Tue, 26 Feb 2013 22:48:12 -0800 (PST)
+Received: from mail-pa0-f54.google.com (mail-pa0-f54.google.com
+	[209.85.220.54]) by cuda.sgi.com with ESMTP id VeTV1A0nABTLtHH5
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 26 Feb 2013 22:48:11 -0800 (PST)
+Received: by mail-pa0-f54.google.com with SMTP id fa10so235176pad.41
+	for <xfs@oss.sgi.com>; Tue, 26 Feb 2013 22:48:11 -0800 (PST)
+Message-ID: <512DAC1A.2040601@gmail.com>
+Date: Wed, 27 Feb 2013 14:47:54 +0800
+From: Wang Sheng-Hui <shhuiw@gmail.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <87y5eah4xz.fsf@fftw.org>
+Subject: [PATCH] xfstests 273: fix a typo
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,50 +24,35 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Matteo Frigo <athena@fftw.org>
-Cc: dm-devel@redhat.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Feb 26, 2013 at 09:21:44PM -0500, Matteo Frigo wrote:
-> Dave Chinner <david@fromorbit.com> writes:
-> 
-> > On Wed, Feb 27, 2013 at 01:04:14AM +0000, Alasdair G Kergon wrote:
-> >> (Quick pointers that might be relevant)
-> >> 
-> >> EAGAIN, I'm not aware of dm itself returning that on the i/o path.
-> >
-> > Neither am I, but it's coming from somewhere in the IO path...
-> 
-> Well, I don't really know anything about this topic, so I may be
-> completely off the mark, but dm-raid1.c:mirror_map() does indeed return
-> EWOULDBLOCK, and EWOULDBLOCK is #define'd to be EAGAIN, so it seems to
-> me that dm-raid1 does indeed return EAGAIN for "rw == READA" (which I
-> assume is read-ahead) if the "region is not in-sync":
-> 
-> 	/*
-> 	 * If region is not in-sync queue the bio.
-> 	 */
-> 	if (!r || (r == -EWOULDBLOCK)) {
-> 		if (rw == READA)
-> 			return -EWOULDBLOCK;
-> 
-> 		queue_bio(ms, bio, rw);
-> 		return DM_MAPIO_SUBMITTED;
-> 	}
+Make the porter log cp failure into $seq.full by appending, not overwriting,
+which can help debug.
 
-Trees, forest....
+Signed-off-by: Wang Sheng-Hui <shhuiw@gmail.com>
+---
+  273 |    2 +-
+  1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks for pointing out the obvious, Matteo. :)
+diff --git a/273 b/273
+index 67f3d6b..639e280 100755
+--- a/273
++++ b/273
+@@ -92,7 +92,7 @@ _porter()
+  		exit
+  	fi
 
-Cheers,
-
-Dave.
+-	cp -r $SCRATCH_MNT/origin $SCRATCH_MNT/sub_$_suffix >$seq.full 2>&1
++	cp -r $SCRATCH_MNT/origin $SCRATCH_MNT/sub_$_suffix >>$seq.full 2>&1
+  	if [ $? -ne 0 ]
+  	then
+  		echo "_porter $_suffix not complete"
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.10.4
 
 _______________________________________________
 xfs mailing list
