@@ -1,26 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id BC1BA7F37
-	for <xfs@oss.sgi.com>; Wed, 27 Feb 2013 15:10:22 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A9A6D8F8040
-	for <xfs@oss.sgi.com>; Wed, 27 Feb 2013 13:10:19 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 9hKBPa2da0IBBTBD for <xfs@oss.sgi.com>;
-	Wed, 27 Feb 2013 13:10:18 -0800 (PST)
-Message-ID: <512E7639.20205@sandeen.net>
-Date: Wed, 27 Feb 2013 15:10:17 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id 994DB7F3F
+	for <xfs@oss.sgi.com>; Wed, 27 Feb 2013 16:37:53 -0600 (CST)
+Date: Wed, 27 Feb 2013 16:37:50 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 4/9] xfs: add CRC checks to the AGFL
+Message-ID: <20130227223750.GZ22182@sgi.com>
+References: <1358774760-21841-1-git-send-email-david@fromorbit.com>
+	<1358774760-21841-5-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Subject: Re: Read corruption on ARM
-References: <CA+AKrqBQ=VG0oVsai+agywDKRgO9cG9AvT6mCTSZxKO3Si5Aiw@mail.gmail.com>
-	<512D3856.5050305@sandeen.net>
-	<CA+AKrqC+6nXuCxdY08MBLsjv1fOPJ6=1ruTHsfGqxosQmCi_jQ@mail.gmail.com>
-	<512D49E2.40003@sandeen.net>
-	<CA+AKrqCrphO-eKy0n=70O9hmB3mXttOsKmTdfRnPxgJM3_PAkQ@mail.gmail.com>
-	<512E3BB2.6060407@sandeen.net>
-	<CA+AKrqDq5xCNQo1X=MeRBq54ka0FGJEV5Rn6OzwY7eBfJ+8Wkw@mail.gmail.com>
-In-Reply-To: <CA+AKrqDq5xCNQo1X=MeRBq54ka0FGJEV5Rn6OzwY7eBfJ+8Wkw@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <1358774760-21841-5-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,117 +23,361 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jason Detring <detringj@gmail.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On 2/27/13 12:15 PM, Jason Detring wrote:
-> On 2/27/13, Eric Sandeen <sandeen@sandeen.net> wrote:
->> On 2/27/13 10:28 AM, Jason Detring wrote:
->>>             find-502   [000]   207.983594: xfs_da_btree_corrupt: dev 7:0
->>> bno 0x5a4f8 nblks 0x8 hold 1 pincount 0 lock 0 flags DONE|PAGES caller
->>> xfs_dir2_leaf_readbuf
->>
->> Was this on the same image as you sent earlier?
+Hi Dave,
+
+On Tue, Jan 22, 2013 at 12:25:55AM +1100, Dave Chinner wrote:
+> From: Christoph Hellwig <hch@lst.de>
 > 
-> Yes, sorry, I should have said that.  I'm now using the demo image
-> with the RasPi exclusively for testing.
+> Add CRC checks, location information and a magic number to the AGFL.
+> Previously the AGFL was just a block containing nothing but the
+> free block pointers.  The new AGFL has a real header with the usual
+> boilerplate instead, so that we can verify it's not corrupted and
+> written into the right place.
 > 
+> [dchinner@redhat.com] Added LSN field, reworked significantly to fit
+> into new verifier structure and growfs structure, enabled full
+> verifier functionality now there is a header to verify and we can
+> guarantee an initialised AGFL.
 > 
->> Ok, so this tells us that it was trying to read sector nr. 0x5a4f8 (369912),
->> or fsblock 46239
->>
->> What's really on disk there?
->>
->> $ xfs_db problemimage.xfs
->> xfs_db> blockget -n
->> xfs_db> daddr 369912
->> xfs_db> blockuse
->> block 49152 (3/0) type sb
->> xfs_db> type text
->> xfs_db> p
->> 000:  58 46 53 42 00 00 10 00 00 00 00 00 00 00 f0 d3  XFSB............
->> ...
->>
->> So it really did have a superblock location that it was reading
->> at that point - the backup SB in the 3rd allocation group, to be exact.
->> But it shouldn't have been trying to read a superblock at this point
->> in the code...
->>
->> Hm, maybe I should have had you enable all xfs tracepoints to get
->> more info about where we thought we were on disk when we were doing this.
->> If you used trace-cmd you can do "trace-cmd record -e xfs*" IIRC.
->> You can do similar echo 1 > /<blah>/xfs*/enable I think for the sysfs
->> route.
->>
->> Can you identify which directory it was that tripped the above error?
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+
+I have a couple comments below.
+
+-Ben
+
+> ---
+>  fs/xfs/xfs_ag.h          |   25 +++++++++-
+>  fs/xfs/xfs_alloc.c       |  119 ++++++++++++++++++++++++++++++----------------
+>  fs/xfs/xfs_buf_item.h    |    4 +-
+>  fs/xfs/xfs_fsops.c       |    5 ++
+>  fs/xfs/xfs_log_recover.c |    7 +++
+>  5 files changed, 116 insertions(+), 44 deletions(-)
 > 
-> # modprobe xfs-O1-g
-> # mount -o loop,ro /xfsdebug/problemimage.xfs /loop
-> # find /loop -type d -print0 > list.txt
-> # umount /loop
-> # rmmod xfs
-> # modprobe xfs-O2-g
-> # mount -o loop,ro /xfsdebug/problemimage.xfs /loop
-> # cat list.txt | xargs -0 -P1 -n1 -I{} sh -c '(dir="{}" ; ls "${dir}"
->> /dev/null ; sleep 0.1 ; dmesg | tail -n1 | grep Corruption && echo
-> "${dir} is causing problems")'
-> ls: reading directory /loop/ruby/1.9.1: Structure needs cleaning
-> [35689.975822] XFS (loop0): Corruption detected. Unmount and run xfs_repair
-> /loop/ruby/1.9.1 is causing problems
-> ...
+> diff --git a/fs/xfs/xfs_ag.h b/fs/xfs/xfs_ag.h
+> index b382703..813caea 100644
+> --- a/fs/xfs/xfs_ag.h
+> +++ b/fs/xfs/xfs_ag.h
+> @@ -30,6 +30,7 @@ struct xfs_trans;
+>  
+>  #define	XFS_AGF_MAGIC	0x58414746	/* 'XAGF' */
+>  #define	XFS_AGI_MAGIC	0x58414749	/* 'XAGI' */
+> +#define	XFS_AGFL_MAGIC	0x5841464c	/* 'XAFL' */
+>  #define	XFS_AGF_VERSION	1
+>  #define	XFS_AGI_VERSION	1
+>  
+> @@ -190,11 +191,31 @@ extern const struct xfs_buf_ops xfs_agi_buf_ops;
+>   */
+>  #define XFS_AGFL_DADDR(mp)	((xfs_daddr_t)(3 << (mp)->m_sectbb_log))
+>  #define	XFS_AGFL_BLOCK(mp)	XFS_HDR_BLOCK(mp, XFS_AGFL_DADDR(mp))
+> -#define XFS_AGFL_SIZE(mp)	((mp)->m_sb.sb_sectsize / sizeof(xfs_agblock_t))
+>  #define	XFS_BUF_TO_AGFL(bp)	((xfs_agfl_t *)((bp)->b_addr))
+>  
+> +#define XFS_BUF_TO_AGFL_BNO(mp, bp) \
+> +	(xfs_sb_version_hascrc(&((mp)->m_sb)) ? \
+> +		&(XFS_BUF_TO_AGFL(bp)->agfl_bno[0]) : \
+> +		(__be32 *)(bp)->b_addr)
+> +
+> +/*
+> + * Size of the AGFL.  For CRC-enabled filesystes we steal a couple of
+> + * slots in the beginning of the block for a proper header with the
+> + * location information and CRC.
+> + */
+> +#define XFS_AGFL_SIZE(mp) \
+> +	(((mp)->m_sb.sb_sectsize - \
+> +	 (xfs_sb_version_hascrc(&((mp)->m_sb)) ? \
+> +		sizeof(struct xfs_agfl) : 0)) / \
+> +	  sizeof(xfs_agblock_t))
+> +
+>  typedef struct xfs_agfl {
+> -	__be32		agfl_bno[1];	/* actually XFS_AGFL_SIZE(mp) */
+> +	__be32		agfl_magicnum;
+> +	__be32		agfl_seqno;
+> +	uuid_t		agfl_uuid;
+> +	__be64		agfl_lsn;
+> +	__be32		agfl_crc;
+> +	__be32		agfl_bno[];	/* actually XFS_AGFL_SIZE(mp) */
+>  } xfs_agfl_t;
+>  
+>  /*
+> diff --git a/fs/xfs/xfs_alloc.c b/fs/xfs/xfs_alloc.c
+> index 1d2e9c3..53e699e 100644
+> --- a/fs/xfs/xfs_alloc.c
+> +++ b/fs/xfs/xfs_alloc.c
+> @@ -432,53 +432,84 @@ xfs_alloc_fixup_trees(
+>  	return 0;
+>  }
+>  
+> -static void
+> +static bool
+>  xfs_agfl_verify(
+>  	struct xfs_buf	*bp)
+>  {
+> -#ifdef WHEN_CRCS_COME_ALONG
+> -	/*
+> -	 * we cannot actually do any verification of the AGFL because mkfs does
+> -	 * not initialise the AGFL to zero or NULL. Hence the only valid part of
+> -	 * the AGFL is what the AGF says is active. We can't get to the AGF, so
+> -	 * we can't verify just those entries are valid.
+> -	 *
+> -	 * This problem goes away when the CRC format change comes along as that
+> -	 * requires the AGFL to be initialised by mkfs. At that point, we can
+> -	 * verify the blocks in the agfl -active or not- lie within the bounds
+> -	 * of the AG. Until then, just leave this check ifdef'd out.
+> -	 */
+>  	struct xfs_mount *mp = bp->b_target->bt_mount;
+>  	struct xfs_agfl	*agfl = XFS_BUF_TO_AGFL(bp);
+> -	int		agfl_ok = 1;
+> -
+>  	int		i;
+>  
+> +	if (!uuid_equal(&agfl->agfl_uuid, &mp->m_sb.sb_uuid))
+> +		return false;
+> +	if (be32_to_cpu(agfl->agfl_magicnum) != XFS_AGFL_MAGIC)
+> +		return false;
+> +	/*
+> +	 * during growfs operations, the perag is not fully initialised,
+> +	 * so we can't use it for any useful checking. growfs ensures we can't
+> +	 * use it by using uncached buffers that don't have the perag attached
+> +	 * so we can detect and avoid this problem.
+> +	 */
+> +	if (bp->b_pag && be32_to_cpu(agfl->agfl_seqno) != bp->b_pag->pag_agno)
+> +		return false;
+> +
+>  	for (i = 0; i < XFS_AGFL_SIZE(mp); i++) {
+> -		if (be32_to_cpu(agfl->agfl_bno[i]) == NULLAGBLOCK ||
+> +		if (be32_to_cpu(agfl->agfl_bno[i]) != NULLAGBLOCK &&
+>  		    be32_to_cpu(agfl->agfl_bno[i]) >= mp->m_sb.sb_agblocks)
+						   <
+
+Any non NULLAGBLOCK should be less than m_sb.sb_agblocks, correct?
+
+> -			agfl_ok = 0;
+> +			return false;
+>  	}
+> +	return true;
+> +}
+> +
+> +static void
+> +xfs_agfl_read_verify(
+> +	struct xfs_buf	*bp)
+> +{
+> +	struct xfs_mount *mp = bp->b_target->bt_mount;
+> +	int		agfl_ok = 1;
+> +
+> +	/*
+> +	 * There is no verification of non-crc AGFLs because mkfs does not
+> +	 * initialise the AGFL to zero or NULL. Hence the only valid part of the
+> +	 * AGFL is what the AGF says is active. We can't get to the AGF, so we
+> +	 * can't verify just those entries are valid.
+> +	 */
+> +	if (!xfs_sb_version_hascrc(&mp->m_sb))
+> +		return;
+> +
+> +	agfl_ok = xfs_verify_cksum(bp->b_addr, BBTOB(bp->b_length),
+> +				   offsetof(struct xfs_agfl, agfl_crc));
+> +
+> +	agfl_ok = agfl_ok && xfs_agfl_verify(bp);
+>  
+>  	if (!agfl_ok) {
+> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, agfl);
+> +		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+>  		xfs_buf_ioerror(bp, EFSCORRUPTED);
+>  	}
+> -#endif
+>  }
+>  
+>  static void
+>  xfs_agfl_write_verify(
+>  	struct xfs_buf	*bp)
+>  {
+> -	xfs_agfl_verify(bp);
+> -}
+> +	struct xfs_mount *mp = bp->b_target->bt_mount;
+> +	struct xfs_buf_log_item	*bip = bp->b_fspriv;
+>  
+> -static void
+> -xfs_agfl_read_verify(
+> -	struct xfs_buf	*bp)
+> -{
+> -	xfs_agfl_verify(bp);
+> +	/* no verification of non-crc AGFLs */
+> +	if (!xfs_sb_version_hascrc(&mp->m_sb))
+> +		return;
+> +
+> +	if (!xfs_agfl_verify(bp)) {
+> +		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+> +		xfs_buf_ioerror(bp, EFSCORRUPTED);
+> +		return;
+> +	}
+> +
+> +	if (bip)
+> +		XFS_BUF_TO_AGFL(bp)->agfl_lsn = cpu_to_be64(bip->bli_item.li_lsn);
+> +
+> +	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length),
+> +			 offsetof(struct xfs_agfl, agfl_crc));
+>  }
+>  
+>  const struct xfs_buf_ops xfs_agfl_buf_ops = {
+> @@ -1984,18 +2015,18 @@ xfs_alloc_get_freelist(
+>  	int		btreeblk) /* destination is a AGF btree */
+>  {
+>  	xfs_agf_t	*agf;	/* a.g. freespace structure */
+> -	xfs_agfl_t	*agfl;	/* a.g. freelist structure */
+>  	xfs_buf_t	*agflbp;/* buffer for a.g. freelist structure */
+>  	xfs_agblock_t	bno;	/* block number returned */
+> +	__be32		*agfl_bno;
+>  	int		error;
+>  	int		logflags;
+> -	xfs_mount_t	*mp;	/* mount structure */
+> +	xfs_mount_t	*mp = tp->t_mountp;
+>  	xfs_perag_t	*pag;	/* per allocation group data */
+>  
+> -	agf = XFS_BUF_TO_AGF(agbp);
+>  	/*
+>  	 * Freelist is empty, give up.
+>  	 */
+> +	agf = XFS_BUF_TO_AGF(agbp);
+>  	if (!agf->agf_flcount) {
+>  		*bnop = NULLAGBLOCK;
+>  		return 0;
+> @@ -2003,15 +2034,17 @@ xfs_alloc_get_freelist(
+>  	/*
+>  	 * Read the array of free blocks.
+>  	 */
+> -	mp = tp->t_mountp;
+> -	if ((error = xfs_alloc_read_agfl(mp, tp,
+> -			be32_to_cpu(agf->agf_seqno), &agflbp)))
+> +	error = xfs_alloc_read_agfl(mp, tp, be32_to_cpu(agf->agf_seqno),
+> +				    &agflbp);
+> +	if (error)
+>  		return error;
+> -	agfl = XFS_BUF_TO_AGFL(agflbp);
+> +
+> +
+>  	/*
+>  	 * Get the block number and update the data structures.
+>  	 */
+> -	bno = be32_to_cpu(agfl->agfl_bno[be32_to_cpu(agf->agf_flfirst)]);
+> +	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, agflbp);
+> +	bno = be32_to_cpu(agfl_bno[be32_to_cpu(agf->agf_flfirst)]);
+>  	be32_add_cpu(&agf->agf_flfirst, 1);
+>  	xfs_trans_brelse(tp, agflbp);
+>  	if (be32_to_cpu(agf->agf_flfirst) == XFS_AGFL_SIZE(mp))
+> @@ -2104,12 +2137,13 @@ xfs_alloc_put_freelist(
+>  	int			btreeblk) /* block came from a AGF btree */
+>  {
+>  	xfs_agf_t		*agf;	/* a.g. freespace structure */
+> -	xfs_agfl_t		*agfl;	/* a.g. free block array */
+>  	__be32			*blockp;/* pointer to array entry */
+>  	int			error;
+>  	int			logflags;
+>  	xfs_mount_t		*mp;	/* mount structure */
+>  	xfs_perag_t		*pag;	/* per allocation group data */
+> +	__be32			*agfl_bno;
+> +	int			startoff;
+>  
+>  	agf = XFS_BUF_TO_AGF(agbp);
+>  	mp = tp->t_mountp;
+> @@ -2117,7 +2151,6 @@ xfs_alloc_put_freelist(
+>  	if (!agflbp && (error = xfs_alloc_read_agfl(mp, tp,
+>  			be32_to_cpu(agf->agf_seqno), &agflbp)))
+>  		return error;
+> -	agfl = XFS_BUF_TO_AGFL(agflbp);
+>  	be32_add_cpu(&agf->agf_fllast, 1);
+>  	if (be32_to_cpu(agf->agf_fllast) == XFS_AGFL_SIZE(mp))
+>  		agf->agf_fllast = 0;
+> @@ -2138,13 +2171,17 @@ xfs_alloc_put_freelist(
+>  	xfs_alloc_log_agf(tp, agbp, logflags);
+>  
+>  	ASSERT(be32_to_cpu(agf->agf_flcount) <= XFS_AGFL_SIZE(mp));
+> -	blockp = &agfl->agfl_bno[be32_to_cpu(agf->agf_fllast)];
+> +
+> +	agfl_bno = XFS_BUF_TO_AGFL_BNO(mp, agflbp);
+> +	blockp = &agfl_bno[be32_to_cpu(agf->agf_fllast)];
+>  	*blockp = cpu_to_be32(bno);
+> +	startoff = (char *)blockp - (char *)agflbp->b_addr;
+> +
+>  	xfs_alloc_log_agf(tp, agbp, logflags);
+> -	xfs_trans_log_buf(tp, agflbp,
+> -		(int)((xfs_caddr_t)blockp - (xfs_caddr_t)agfl),
+> -		(int)((xfs_caddr_t)blockp - (xfs_caddr_t)agfl +
+> -			sizeof(xfs_agblock_t) - 1));
+> +
+> +	xfs_trans_buf_set_type(tp, agflbp, XFS_BLF_AGFL_BUF);
+> +	xfs_trans_log_buf(tp, agflbp, startoff,
+> +			  startoff + sizeof(xfs_agblock_t) - 1);
+>  	return 0;
+>  }
+>  
+> diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
+> index 76bd7a1..067d5f0 100644
+> --- a/fs/xfs/xfs_buf_item.h
+> +++ b/fs/xfs/xfs_buf_item.h
+> @@ -46,13 +46,15 @@ extern kmem_zone_t	*xfs_buf_item_zone;
+>   */
+>  #define XFS_BLF_BTREE_BUF	(1<<5)
+>  #define XFS_BLF_AGF_BUF		(1<<6)
+> +#define XFS_BLF_AGFL_BUF	(1<<7)
+>  
+>  #define XFS_BLF_TYPE_MASK	\
+>  		(XFS_BLF_UDQUOT_BUF | \
+>  		 XFS_BLF_PDQUOT_BUF | \
+>  		 XFS_BLF_GDQUOT_BUF | \
+>  		 XFS_BLF_BTREE_BUF | \
+> -		 XFS_BLF_AGF_BUF)
+> +		 XFS_BLF_AGF_BUF | \
+> +		 XFS_BLF_AGFL_BUF)
+>  
+>  #define	XFS_BLF_CHUNK		128
+>  #define	XFS_BLF_SHIFT		7
+> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> index 10ee0b8..1edfdf0 100644
+> --- a/fs/xfs/xfs_fsops.c
+> +++ b/fs/xfs/xfs_fsops.c
+> @@ -268,6 +268,11 @@ xfs_growfs_data_private(
+>  		}
+>  
+>  		agfl = XFS_BUF_TO_AGFL(bp);
+> +		if (xfs_sb_version_hascrc(&mp->m_sb)) {
+> +			agfl->agfl_magicnum = cpu_to_be32(XFS_AGFL_MAGIC);
+> +			agfl->agfl_seqno = cpu_to_be32(agno);
+> +			uuid_copy(&agfl->agfl_uuid, &mp->m_sb.sb_uuid);
+> +		}
+>  		for (bucket = 0; bucket < XFS_AGFL_SIZE(mp); bucket++)
+>  			agfl->agfl_bno[bucket] = cpu_to_be32(NULLAGBLOCK);
+>  
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index 65c35d5..81d3cc5a 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -1961,6 +1961,13 @@ xlog_recover_do_reg_buffer(
+>  		}
+>  		bp->b_ops = &xfs_agf_buf_ops;
+>  		break;
+> +	case XFS_BLF_AGFL_BUF:
+> +		if (*(__be32 *)bp->b_addr != cpu_to_be32(XFS_AGFL_MAGIC)) {
+> +			xfs_warn(mp, "Bad AGFL block magic!");
+> +			ASSERT(0);
+> +		}
+> +		bp->b_ops = &xfs_agfl_buf_ops;
+> +		break;
+
+Your changes for v2 in this section look good.
+
+>  	default:
+>  		break;
+>  	}
+> -- 
+> 1.7.10
 > 
-> OK, I now have a name.  Rebooting to get a clean slate.
-
-Ok, and an inode number:
-
-134 test/ruby/1.9.1
-
-xfs_db> inode 134
-xfs_db> p
-core.format = 2 (extents)
-...
-core.aformat = 2 (extents)
-...
-u.bmx[0-1] = [startoff,startblock,blockcount,extentflag] 0:[0,53675,1,0] 1:[8388608,60304,1,0]
-
-so those are the blocks it should live in.
-
-Or, if you prefer:
-
-# xfs_bmap -vv test/ruby/1.9.1
-test/ruby/1.9.1:
- EXT: FILE-OFFSET      BLOCK-RANGE      AG AG-OFFSET        TOTAL
-   0: [0..7]:          406096..406103    3 (36184..36191)       8
-
-Here's the relevant part of the trace, from the readdir of that inode:
-
-   ls-520   xfs_readdir:          ino 0x86
-   ls-520   xfs_perag_get:        agno 3 refcount 2 caller _xfs_buf_find
-   ls-520   xfs_perag_put:        agno 3 refcount 1 caller _xfs_buf_find
-   ls-520   xfs_buf_init:         bno 0x5a4f8 nblks 0x8 hold 1 pincount 0 lock 0 flags READ caller xfs_buf_get_map
-
-by here we're already looking for the block which isn't related to the dir.
-
-   ls-520   xfs_perag_get:        agno 3 refcount 2 caller _xfs_buf_find
-   ls-520   xfs_buf_get:          bno 0x5a4f8 len 0x1000 hold 1 pincount 0 lock 0 flags READ caller xfs_buf_read_map
-   ls-520   xfs_buf_read:         bno 0x5a4f8 len 0x1000 hold 1 pincount 0 lock 0 flags READ caller xfs_trans_read_buf_map
-   ls-520   xfs_buf_iorequest:    bno 0x5a4f8 nblks 0x8 hold 1 pincount 0 lock 0 flags READ|PAGES caller _xfs_buf_read
-   ls-520   xfs_buf_hold:         bno 0x5a4f8 nblks 0x8 hold 1 pincount 0 lock 0 flags READ|PAGES caller xfs_buf_iorequest
-   ls-520   xfs_buf_rele:         bno 0x5a4f8 nblks 0x8 hold 2 pincount 0 lock 0 flags READ|PAGES caller xfs_buf_iorequest
-   ls-520   xfs_buf_iowait:       bno 0x5a4f8 nblks 0x8 hold 1 pincount 0 lock 0 flags READ|PAGES caller _xfs_buf_read
-loop0-514   xfs_buf_ioerror:      bno 0x5a4f8 len 0x1000 hold 1 pincount 0 lock 0 error 0 flags READ|PAGES caller xfs_buf_bio_end_io
-loop0-514   xfs_buf_iodone:       bno 0x5a4f8 nblks 0x8 hold 1 pincount 0 lock 0 flags READ|PAGES caller _xfs_buf_ioend
-   ls-520   xfs_buf_iowait_done:  bno 0x5a4f8 nblks 0x8 hold 1 pincount 0 lock 0 flags DONE|PAGES caller _xfs_buf_read
-   ls-520   xfs_da_btree_corrupt: bno 0x5a4f8 nblks 0x8 hold 1 pincount 0 lock 0 flags DONE|PAGES caller xfs_dir2_leaf_readbuf
-
-and here's where we notice that fact I think.
-
-   ls-520   xfs_buf_unlock:       bno 0x5a4f8 nblks 0x8 hold 1 pincount 0 lock 1 flags DONE|PAGES caller xfs_trans_brelse
-   ls-520   xfs_buf_rele:         bno 0x5a4f8 nblks 0x8 hold 1 pincount 0 lock 1 flags DONE|PAGES caller xfs_trans_brelse
-
-Not yet sure what's up here.  I'd probably need to get a cross-compiled xfs.ko going on my rpi to do more debugging...
-
--Eric
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
