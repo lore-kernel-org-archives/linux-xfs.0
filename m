@@ -1,18 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id BD4797F63
-	for <xfs@oss.sgi.com>; Wed, 27 Feb 2013 17:31:58 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6F92AAC002
-	for <xfs@oss.sgi.com>; Wed, 27 Feb 2013 15:31:58 -0800 (PST)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	53sMPPhv1pDRVqjF for <xfs@oss.sgi.com>;
-	Wed, 27 Feb 2013 15:31:56 -0800 (PST)
-Date: Thu, 28 Feb 2013 10:31:55 +1100
-From: Dave Chinner <david@fromorbit.com>
+	by oss.sgi.com (Postfix) with ESMTP id DA6087F6D
+	for <xfs@oss.sgi.com>; Wed, 27 Feb 2013 17:32:00 -0600 (CST)
+Date: Wed, 27 Feb 2013 17:32:00 -0600
+From: Ben Myers <bpm@sgi.com>
 Subject: Re: [PATCH 4/9] xfs: add CRC checks to the AGFL
-Message-ID: <20130227233155.GF5551@dastard>
+Message-ID: <20130227233200.GA22182@sgi.com>
 References: <1358774760-21841-1-git-send-email-david@fromorbit.com>
 	<1358774760-21841-5-git-send-email-david@fromorbit.com>
 	<20130227223750.GZ22182@sgi.com> <20130227232045.GE5551@dastard>
@@ -31,13 +24,67 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
 On Thu, Feb 28, 2013 at 10:20:45AM +1100, Dave Chinner wrote:
 > On Wed, Feb 27, 2013 at 04:37:50PM -0600, Ben Myers wrote:
 > > Hi Dave,
-....
+> > 
+> > On Tue, Jan 22, 2013 at 12:25:55AM +1100, Dave Chinner wrote:
+> > > From: Christoph Hellwig <hch@lst.de>
+> > > 
+> > > Add CRC checks, location information and a magic number to the AGFL.
+> > > Previously the AGFL was just a block containing nothing but the
+> > > free block pointers.  The new AGFL has a real header with the usual
+> > > boilerplate instead, so that we can verify it's not corrupted and
+> > > written into the right place.
+> > > 
+> > > [dchinner@redhat.com] Added LSN field, reworked significantly to fit
+> > > into new verifier structure and growfs structure, enabled full
+> > > verifier functionality now there is a header to verify and we can
+> > > guarantee an initialised AGFL.
+> > > 
+> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > 
+> > I have a couple comments below.
+> .....
+> > >  	for (i = 0; i < XFS_AGFL_SIZE(mp); i++) {
+> > > -		if (be32_to_cpu(agfl->agfl_bno[i]) == NULLAGBLOCK ||
+> > > +		if (be32_to_cpu(agfl->agfl_bno[i]) != NULLAGBLOCK &&
+> > >  		    be32_to_cpu(agfl->agfl_bno[i]) >= mp->m_sb.sb_agblocks)
+> > 						   <
+> 
+> No, we are checking for the agbno being out of range here, not in
+> range.
+
+Ah.  Good.
+
+> The previous code (which was ifdef'd out) reflected the fact that
+> NULLAGBLOCK could not appear in a AGFL (initialised to zero, not
+> NULLAGBLOCK), For CRC enabled filesystems - where this check is run,
+> we guarantee that unused entries are initialised to NULLAGBLOCK by
+> mkfs and growfs, and this change reflects that.
+> 
+> > Any non NULLAGBLOCK should be less than m_sb.sb_agblocks, correct?
+> 
+> xfs_agblock_t is an unsigned value, therefore it has a value of
+> 0xffffffff. be32-to_cpu() also returns an unsigned value.
+> So, no, is it never less than mp->m_sb.sb_agblocks.
+> 
+> But we don't want to rely on an implicit comparison against
+> mp->m_sb.sb_agblocks to detect this, and hence we *always* check
+> explicitly for it being a NULLAGBLOCK.
+> 
+> > > diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> > > index 65c35d5..81d3cc5a 100644
+> > > --- a/fs/xfs/xfs_log_recover.c
+> > > +++ b/fs/xfs/xfs_log_recover.c
+> > > @@ -1961,6 +1961,13 @@ xlog_recover_do_reg_buffer(
+> > >  		}
+> > >  		bp->b_ops = &xfs_agf_buf_ops;
+> > >  		break;
 > > > +	case XFS_BLF_AGFL_BUF:
 > > > +		if (*(__be32 *)bp->b_addr != cpu_to_be32(XFS_AGFL_MAGIC)) {
 > > > +			xfs_warn(mp, "Bad AGFL block magic!");
@@ -52,19 +99,8 @@ On Thu, Feb 28, 2013 at 10:20:45AM +1100, Dave Chinner wrote:
 > checked for CRC enabled filesystems. My current code has this check,
 > though I thought I fixed that long before I reposted this series...
 
-I just realised you're commenting on the original version of the
-patch series, no the new version I posted a couple of days ago. It
-is fixed in that version of the patch, so I'm not going totally
-crazy (yet!)....
-
-Can you switch over to the newer version of the patch set?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I was pointing out that the changes included in v2 of this patch in this
+section of code look good.
 
 _______________________________________________
 xfs mailing list
