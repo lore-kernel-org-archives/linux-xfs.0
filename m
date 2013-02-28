@@ -1,24 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D26C87F63
-	for <xfs@oss.sgi.com>; Wed, 27 Feb 2013 20:06:17 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id AF2728F8054
-	for <xfs@oss.sgi.com>; Wed, 27 Feb 2013 18:06:14 -0800 (PST)
-Received: from mail-oa0-f44.google.com (mail-oa0-f44.google.com
-	[209.85.219.44]) by cuda.sgi.com with ESMTP id dspKEb1sp9qyvS2R
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 27 Feb 2013 18:06:13 -0800 (PST)
-Received: by mail-oa0-f44.google.com with SMTP id h1so2704452oag.31
-	for <xfs@oss.sgi.com>; Wed, 27 Feb 2013 18:06:13 -0800 (PST)
-Message-ID: <512EBB84.3020301@gmail.com>
-Date: Thu, 28 Feb 2013 10:05:56 +0800
-From: Wang Sheng-Hui <shhuiw@gmail.com>
+	by oss.sgi.com (Postfix) with ESMTP id 67FB57F83
+	for <xfs@oss.sgi.com>; Wed, 27 Feb 2013 22:38:20 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 540428F8040
+	for <xfs@oss.sgi.com>; Wed, 27 Feb 2013 20:38:17 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id YygpCoAUgCY9TTCs for <xfs@oss.sgi.com>;
+	Wed, 27 Feb 2013 20:38:15 -0800 (PST)
+Message-ID: <512EDF37.4050802@sandeen.net>
+Date: Wed, 27 Feb 2013 22:38:15 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests 276: fix error 'FIBMAP: Invalid argument'
-References: <512DB284.1090806@gmail.com> <20130227230443.GB5551@dastard>
-	<512E9EAC.9050700@gmail.com> <20130228002532.GJ5551@dastard>
-In-Reply-To: <20130228002532.GJ5551@dastard>
+Subject: Re: Read corruption on ARM
+References: <CA+AKrqBQ=VG0oVsai+agywDKRgO9cG9AvT6mCTSZxKO3Si5Aiw@mail.gmail.com>
+	<512D3856.5050305@sandeen.net>
+	<CA+AKrqC+6nXuCxdY08MBLsjv1fOPJ6=1ruTHsfGqxosQmCi_jQ@mail.gmail.com>
+	<512D49E2.40003@sandeen.net>
+	<CA+AKrqCrphO-eKy0n=70O9hmB3mXttOsKmTdfRnPxgJM3_PAkQ@mail.gmail.com>
+	<512E3BB2.6060407@sandeen.net>
+	<CA+AKrqDq5xCNQo1X=MeRBq54ka0FGJEV5Rn6OzwY7eBfJ+8Wkw@mail.gmail.com>
+	<512E7639.20205@sandeen.net> <512E89C2.9000302@sandeen.net>
+	<CA+AKrqDaY4cgP+EPLepzUOU2jAOygTuj-0xDtOaGf+O0aRZV_g@mail.gmail.com>
+	<512E903A.2020405@sandeen.net>
+	<CA+AKrqAv7-5gGj_cNBNj=-nChKPzi+_HZmH=z2UABG9pDOmpBg@mail.gmail.com>
+In-Reply-To: <CA+AKrqAv7-5gGj_cNBNj=-nChKPzi+_HZmH=z2UABG9pDOmpBg@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,77 +33,84 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: sandeen@redhat.com, list.btrfs@jan-o-sch.net, linux-btrfs@vger.kernel.org, xfstests <xfs@oss.sgi.com>
+To: Jason Detring <detringj@gmail.com>, xfs-oss <xfs@oss.sgi.com>
 
-T24gMjAxM+W5tDAy5pyIMjjml6UgMDg6MjUsIERhdmUgQ2hpbm5lciB3cm90ZToKPiBPbiBUaHUs
-IEZlYiAyOCwgMjAxMyBhdCAwODowMjo1MkFNICswODAwLCBXYW5nIFNoZW5nLUh1aSB3cm90ZToK
-Pj4gT24gMjAxM+W5tDAy5pyIMjjml6UgMDc6MDQsIERhdmUgQ2hpbm5lciB3cm90ZToKPj4+IE9u
-IFdlZCwgRmViIDI3LCAyMDEzIGF0IDAzOjE1OjE2UE0gKzA4MDAsIFdhbmcgU2hlbmctSHVpIHdy
-b3RlOgo+Pj4+IEJ0cmZzIGRvZXNuJ3Qgc3VwcG9ydCBGSUVNQVBfRkxBR19YQVRUUiwgd2hpY2gg
-aXMgZW5hYmxlZCBieQo+Pj4+IC14IG9wdGlvbiBvZiBmaWxlZnJhZywgYW5kIHdpbGwgZmFpbCB3
-aXRoCj4+Pj4gCSdGSUJNQVA6IEludmFsaWQgYXJndW1lbnQnCj4+Pj4gZm9yICdmaWxlZnJhZyAt
-dngnLiAnZmlsZWZyYWcgLXZ4JyBmYWlscyBvbiBidHJmcyB3aXRoCj4+Pj4gICAgICAnRklFTUFQ
-IGZhaWxlZCB3aXRoIHVuc3VwcG9ydGVkIGZsYWdzIDInCj4+Pj4gUmVtb3ZlIHRoZSAnLXgnIG9w
-dGlvbi4KPj4+Pgo+Pj4+IFNpZ25lZC1vZmYtYnk6IFdhbmcgU2hlbmctSHVpIDxzaGh1aXdAZ21h
-aWwuY29tPgo+Pj4KPj4+IEkgY2FuIHNlZSB0aGF0IHRoaXMgY2hhbmdlcyB3aGF0IGdldHMgZHVt
-cGVkIGludG8gdGhlICRzZXEuZnVsbAo+Pj4gZmlsZSwgYnV0IGl0IHNlZW1zIHRvIG1lIHRoYXQg
-YWxzbyBjaGFuZ2VzIHRoZSBleHRlbnQgbGlzdCByZXR1cm5lZAo+Pj4gdG8gdGhlIGNoZWNraW5n
-IGZ1bmN0aW9ucy4gU28gZWl0aGVyIHRoZSB0ZXN0IHByZXZpb3VzbHkgd29ya2VkIGFuZAo+Pj4g
-bm93IGl0IGZhaWxzIHdpdGggdGhpcyBjaGFuZ2UsIG9yIHRoZSB0ZXN0IG5ldmVyIHdvcmtlZCBh
-bmQgbm93IGl0Cj4+PiBkb2VzLCBvciBwZXJoYXBzIHNvbWV0aGluZyBlbHNlPwo+Pj4KPj4+IElP
-V3MsIEkgY2FuJ3QgdGVsbCB3aHkgeW91IHdhbnQgdG8gY2hhbmdlIHRoaXMgZnJvbSB0aGUgcGF0
-Y2gKPj4+IGRlc2NyaXB0aW9uLCBoZW5jZSBJIGRvbid0IGtub3cgaWYgdGhlIG9yaWdpbmFsIGJl
-aGF2aW91ciB3YXMKPj4+IGludGVudGlvbmFsIG9yIG5vdC4gIENhbiB5b3Ugc2F5IGRlc2NyaWJl
-IHdoYXQgdGhlIG92ZXJhbGwgZWZmZWN0IG9mCj4+PiB0aGUgY2hhbmdlIGlzIGluIHRoZSBjb21t
-aXQgZGVzY3JpcHRpb24/Cj4+Cj4+IEhpIERhdmUsCj4+Cj4+IEkgcnVuIHhmc3Rlc3RzIGZvciBi
-dHJmcyBhZ2FpbnN0IFNMRVMxMVNQMiwgbm90IHVwc3RyZWFtIGtlcm5lbC4KPj4gSW4gdGhlIHNl
-cS5mdWxsLCBJIGNhbiBnZXQgdGhlIG1lc3NhZ2VzCj4+IAknRklFTUFQIGZhaWxlZCB3aXRoIHVu
-c3VwcG9ydGVkIGZsYWdzIDInCj4+Cj4+IFRoZW4gSSBmb3VuZCB0aGF0IHRoZSB0ZXN0IHdpbGwg
-cnVuICdmaWxlZnJhZyAtdngnIG9uIGJ0cmZzLCBhbmQKPj4gJy12JyB3aWxsIHJ1biBGSUVNQVBf
-RkxBR19YQVRUUiwgd2hpY2ggaXMgbm90IHN1cHBvcnRlZCBieSBidHJmcwo+PiB5ZXQsIGF0IGxl
-YXN0IGluIDMuOCBrZXJuZWwuCj4KPiBTdXJlLCBJIHVuZGVyc3RhbmQgdGhhdC4gSSdtIG5vdCBh
-c2tpbmcgYWJvdXQgaG93IGl0IGZhaWxzIC0gdGhhdAo+IG11Y2ggaXMgb2J2aW91cy4gV2hhdCBJ
-IGFtIGFza2luZyBpczoKPgo+IAktIGRpZCBpdCBldmVyIHdvcms/Cj4gCS0gaWYgaXQgZGlkLCB3
-aHkgZGlkIGl0IHN0YXJ0IGZhaWxpbmc/Cj4gCS0gaG93IGxvbmcgaGFzIGl0IGJlZW4gYnJva2Vu
-IGZvcj8KPgo+PiBXaXRoIHRoZSBwYXRjaCwgSSBjYW4gcGFzcyB0aGUgdGVzdGNhc2U6Cj4+ID09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQo+PiAyNzYgOHMgLi4u
-IDdzCj4+IFJhbjogMjc2Cj4+IFBhc3NlZCBhbGwgMSB0ZXN0cwo+Cj4gR3JlYXQsIGJ1dCB3aHkg
-ZGlkIGl0IGJyZWFrIGluIHRoZSBmaXJzdCBwbGFjZT8gVGhhdCdzIHRoZQo+IGluZm9ybWF0aW9u
-IHRoYXQgbmVlZHMgdG8gYmUgaW4gdGhlIGNvbW1pdCBtZXNzYWdlLiBJbmRlZWQsIEVyaWMgaGFz
-Cj4gcG9pbnRlZCBvdXQgdG8gdXMgKmV4YWN0bHkqIHRoZSBpbmZvcm1hdGlvbiB0aGF0IHNob3Vs
-IGRiZSBpbiB0aGUKPiBjb21taXQgbWVzc2FnZS4gaS5lLiBhIGRlc2NyaXB0aW9uIGFsb25nIHRo
-ZSBsaW5lcyBvZjoKPgo+ICJDb21taXQgMDVkYWRjMCAoIkJ0cmZzOiBhZGQgZmllbWFwJ3MgZmxh
-ZyBjaGVjayIpIGFkZGVkIHZhbGlkaXR5Cj4gY2hlY2tzIHRvIHRoZSBmaWVtYXAgZmxhZ3MgYW5k
-IGhlbmNlIGludmFsaWQgZmxhZ3MgYXJlIG5vdyBiZWluZwo+IHJlamVjdGVkLiBUZXN0IDI3NiBw
-YXNzZXMgYW4gaW52YWxpZCBmaWVtYXAgZmxhZyB0byBidHJmcywgYW5kIHNvCj4gdGhhdCB0ZXN0
-IGZhaWxzIHNpbmNlIHRoaXMgY29tbWl0IHdhcyBhZGRlZC4iCj4KPiBUaGF0IHRlbGxzIHVzIGV4
-YWN0bHkgd2h5IHRoZSB0ZXN0IGZhaWxlZCwgd2h5IHRoZSBjaGFuZ2UgaXMKPiBuZWNlc3Nhcnks
-IGFuZCBob3cgbG9uZyB0aGUgdGVzdCBoYXMgYmVlbiBicm9rZW4gZm9yLiBTZWVuIGFub3RoZXIK
-PiB3YXksIGl0IG1ha2VzIG1lIHdvbmRlciBob3cgb2Z0ZW4gYW55b25lIHJ1bnMgeGZzdGVzdHMg
-b24gYSBidHJmcwo+IGRldiB0cmVlIG9yIHJlZ3Jlc3Npb24gdGVzdHMgdGhlaXIgb3duIGNoYW5n
-ZXMuCj4KPiBDaGVlcnMsCj4KPiBEYXZlLgo+CgpNb2RpZnkgdGhlIGNvbW1pdCBtZXNzYWdlLgot
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tCgpQZXIgRXJpYywgQ29tbWl0IDA1ZGFkYzAgKCJCdHJmczogYWRkIGZpZW1hcCdzIGZs
-YWcgY2hlY2siKSBhZGRlZAp2YWxpZGl0eSBjaGVja3MgdG8gdGhlIGZpZW1hcCBmbGFncyBhbmQg
-aGVuY2UgaW52YWxpZCBmbGFncyBhcmUgbm93CmJlaW5nIHJlamVjdGVkLiBUZXN0IDI3NiBwYXNz
-ZXMgYW4gaW52YWxpZCBmaWVtYXAgZmxhZyB0byBidHJmcywgYW5kCnNvIHRoYXQgdGVzdCBmYWls
-cyBzaW5jZSB0aGlzIGNvbW1pdCB3YXMgYWRkZWQuCgpCdHJmcyBkb2Vzbid0IHN1cHBvcnQgRklF
-TUFQX0ZMQUdfWEFUVFIsIHdoaWNoIGlzIGVuYWJsZWQgYnkgLXggb3B0aW9uCm9mIGZpbGVmcmFn
-LCBhbmQgd2lsbCBmYWlsIHdpdGgKCSdGSUJNQVA6IEludmFsaWQgYXJndW1lbnQnCmZvciAnZmls
-ZWZyYWcgLXZ4Jy4gJ2ZpbGVmcmFnIC12eCcgZmFpbHMgb24gYnRyZnMgd2l0aAogICAgICdGSUVN
-QVAgZmFpbGVkIHdpdGggdW5zdXBwb3J0ZWQgZmxhZ3MgMicKUmVtb3ZlIHRoZSAnLXgnIG9wdGlv
-bi4KClNpZ25lZC1vZmYtYnk6IFdhbmcgU2hlbmctSHVpIDxzaGh1aXdAZ21haWwuY29tPgotLS0K
-ICAyNzYgfCAgICAyICstCiAgMSBmaWxlIGNoYW5nZWQsIDEgaW5zZXJ0aW9uKCspLCAxIGRlbGV0
-aW9uKC0pCgpkaWZmIC0tZ2l0IGEvMjc2IGIvMjc2CmluZGV4IDA4MmY5NDMuLmYyYjE3YzkgMTAw
-NzU1Ci0tLSBhLzI3NgorKysgYi8yNzYKQEAgLTc1LDcgKzc1LDcgQEAgX2ZpbHRlcl9leHRlbnRz
-KCkKCiAgX2NoZWNrX2ZpbGVfZXh0ZW50cygpCiAgewotCWNtZD0iZmlsZWZyYWcgLXZ4ICQxIgor
-CWNtZD0iZmlsZWZyYWcgLXYgJDEiCiAgCWVjaG8gIiMgJGNtZCIgPj4gJHNlcS5mdWxsCiAgCW91
-dD1gJGNtZCB8IF9maWx0ZXJfZXh0ZW50c2AKICAJaWYgWyAteiAiJG91dCIgXTsgdGhlbgotLSAK
-MS43LjEwLjQKCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-Xwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFp
-bG1hbi9saXN0aW5mby94ZnMK
+On 2/27/13 8:57 PM, Jason Detring wrote:
+> On 2/27/13, Eric Sandeen <sandeen@sandeen.net> wrote:
+>> On 2/27/13 4:56 PM, Jason Detring wrote:
+>>> On 2/27/13, Eric Sandeen <sandeen@sandeen.net> wrote:
+>>>> Can you send xfs.ko's from both native & cross-compiles?  Need debugging
+>>>> info in the binaries (nonstripped)
+>>>
+>>> I don't have a native build, sorry :-(   I can put one together if
+>>> necessary, but it will be quite a while on the Pi.
+>>
+>> Yah I found that out ;)  You could just make M=fs/xfs though?
+> 
+> Done.  These are also on the site at
+>   <http://www.splack.org/~jason/projects/xfs-arm-corruption/tracetest/3.6.11-g89caf39/>
+> The directory containing cross-compiled modules has been renamed
+> xfs-modules-cross/ and the new natively built modules are beneath the
+> xfs-modules-native/ directory.
+
+re-cc'ing xfs list
+
+So I used pahole to look at all structs, objdump -d to disassemble,
+and md5sum'd the results to see what's different.
+
+pi@raspberrypi ~ $ md5sum cross/*.dis cross/*.pahole native/*.dis native/*.pahole
+
+<manual sort>
+
+c0abd80c3bf049db5e1909fd851261cc  cross/xfs-O1-g.ko.pahole
+c0abd80c3bf049db5e1909fd851261cc  cross/xfs-O2-g.ko.pahole
+c0abd80c3bf049db5e1909fd851261cc  cross/xfs-Os-g.ko.pahole
+c0abd80c3bf049db5e1909fd851261cc  native/xfs-O1-g.ko.pahole
+c0abd80c3bf049db5e1909fd851261cc  native/xfs-O2-g.ko.pahole
+c0abd80c3bf049db5e1909fd851261cc  native/xfs-Os-g.ko.pahole
+
+so all structures look identical, good - but:
+
+while disassembly of these two modules match:
+
+d76f6ebf4d8a1b9f786facefbcf16f69  cross/xfs-O1-g.ko.dis
+d76f6ebf4d8a1b9f786facefbcf16f69  native/xfs-O1-g.ko.dis
+
+do you see the problem w/ the cross-compiled xfs-O1-g.ko as well?
+
+the others differ:
+
+349f3490a49f2ce539c2b058914f64f0  native/xfs-Os-g.ko.dis
+91c8e8230774808b538c21a83106a5d7  cross/xfs-Os-g.ko.dis
+
+649338e1b8eeed6a294504fc76a39cb0  native/xfs-O2-g.ko.dis
+e52c2a48277326c313bba76aa0b33ab7  cross/xfs-O2-g.ko.dis
+
+The diff of the disassembly of the others is huge, hard to
+know where to start just yet.  Need an objdump mode that only
+shows function-relative addresses or something to cut down
+on the noise.
+
+-Eric
+
+> Slackware ARM (-current) also uses GCC 4.7.2 as its native compiler.
+> The test modules built with it at -O2 are failing to read the
+> ruby/1.9.1/ directory as well.  I don't know if that's fortunate (my
+> homebrew compilers are just as good or bad as the distro's?) or
+> unfortunate (I still have the problem and now I am diverging from your
+> native RPi results that worked).
+> 
+> Is there maybe a memory or I/O tunable in the kernel .config that I've
+> clobbered?
+> 
+> Jason
+> 
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
