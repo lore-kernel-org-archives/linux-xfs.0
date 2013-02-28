@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9FACE7F94
-	for <xfs@oss.sgi.com>; Thu, 28 Feb 2013 12:48:34 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 8BC3F8F804C
-	for <xfs@oss.sgi.com>; Thu, 28 Feb 2013 10:48:34 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id CyoRDQ3xoV5hfXDa for <xfs@oss.sgi.com>;
-	Thu, 28 Feb 2013 10:48:29 -0800 (PST)
-Message-ID: <512FA67D.2090708@sandeen.net>
-Date: Thu, 28 Feb 2013 12:48:29 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0A2067F96
+	for <xfs@oss.sgi.com>; Thu, 28 Feb 2013 13:34:32 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id DB7EE304043
+	for <xfs@oss.sgi.com>; Thu, 28 Feb 2013 11:34:28 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	zVs9NFB861sTEbtU for <xfs@oss.sgi.com>;
+	Thu, 28 Feb 2013 11:34:27 -0800 (PST)
+Date: Fri, 1 Mar 2013 06:34:12 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: don't verify buffers after IO errors
+Message-ID: <20130228193412.GP5551@dastard>
+References: <1361931954-11105-1-git-send-email-david@fromorbit.com>
+	<512F79CE.4030502@sgi.com>
 MIME-Version: 1.0
-Subject: Re: xfs_repair segfaults
-References: <CANU9nTnvJS50vdQv2K0gKHZPvzzH5EY1qpizJNsqUobrr2juDA@mail.gmail.com>
-In-Reply-To: <CANU9nTnvJS50vdQv2K0gKHZPvzzH5EY1qpizJNsqUobrr2juDA@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <512F79CE.4030502@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,103 +30,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ole Tange <tange@binf.ku.dk>
+To: Mark Tinguely <tinguely@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On 2/28/13 9:22 AM, Ole Tange wrote:
-> I forced a RAID online. I have done that before and xfs_repair
-> normally removes the last hour of data or so, but saves everything
-> else.
+On Thu, Feb 28, 2013 at 09:37:50AM -0600, Mark Tinguely wrote:
+> On 02/26/13 20:25, Dave Chinner wrote:
+> >From: Dave Chinner<dchinner@redhat.com>
+> >
+> >When we read a buffer, we might get an error from the underlying
+> >block device and not the real data. Hence if we get an IO error, we
+> >shouldn't run the verifier but instead just pass the IO error
+> >straight through.
+> >
+> >Signed-off-by: Dave Chinner<dchinner@redhat.com>
+> >---
 > 
-> Today that did not work:
-> 
-> /usr/local/src/xfsprogs-3.1.10/repair# ./xfs_repair -n /dev/md5p1
-> Phase 1 - find and verify superblock...
-> Phase 2 - using internal log
->         - scan filesystem freespace and inode maps...
-> flfirst 232 in agf 91 too large (max = 128)
-> Segmentation fault (core dumped)
-> 
-> Core put in: http://dna.ku.dk/~tange/tmp/xfs_repair.core.bz2
+> Looks good. needs to go into Linux 3.7/8 stable?
 
-We'd need a binary w/ debug symbols to go along with it.
+It's not a critical fix - it just makes logs noisy and changes the
+error from, say, EIO to EFSCORRUPTED. The end result will be the
+same, though....
 
-an xfs_metadump might recreate the problem too.
+Cheers,
 
-> I tried using the git-version, too, but could not get that to compile.
-
-How'd it fail, can you report that in a different thread?
-
-thanks,
--eric
-
-> # uname -a
-> Linux franklin 3.2.0-0.bpo.4-amd64 #1 SMP Debian 3.2.35-2~bpo60+1
-> x86_64 GNU/Linux
-> 
-> # ./xfs_repair -V
-> xfs_repair version 3.1.10
-> 
-> # cat /proc/cpuinfo |grep MH | wc
->      64     256    1280
-> 
-> # cat /proc/partitions |grep md5
->    9        5 125024550912 md5
->  259        0 107521114112 md5p1
->  259        1 17503434752 md5p2
-> 
-> # cat /proc/mdstat
-> Personalities : [raid0] [raid6] [raid5] [raid4]
-> md5 : active raid0 md1[0] md4[3] md3[2] md2[1]
->       125024550912 blocks super 1.2 512k chunks
-> 
-> md1 : active raid6 sdd[1] sdi[9] sdq[13] sdau[7] sdt[10] sdg[5] sdf[4] sde[2]
->       31256138752 blocks super 1.2 level 6, 128k chunk, algorithm 2
-> [10/8] [_UU_UUUUUU]
->       bitmap: 2/2 pages [8KB], 1048576KB chunk
-> 
-> md4 : active raid6 sdo[13] sdu[9] sdad[8] sdh[7] sdc[6] sds[11]
-> sdap[3] sdao[2] sdk[1]
->       31256138752 blocks super 1.2 level 6, 128k chunk, algorithm 2
-> [10/8] [_UUUU_UUUU]
->       [>....................]  recovery =  2.1% (84781876/3907017344)
-> finish=2196.4min speed=29003K/sec
->       bitmap: 2/2 pages [8KB], 1048576KB chunk
-> 
-> md2 : active raid6 sdac[0] sdal[9] sdak[8] sdaj[7] sdai[6] sdah[5]
-> sdag[4] sdaf[3] sdae[2] sdr[10]
->       31256138752 blocks super 1.2 level 6, 128k chunk, algorithm 2
-> [10/10] [UUUUUUUUUU]
->       bitmap: 0/2 pages [0KB], 1048576KB chunk
-> 
-> md3 : active raid6 sdaq[0] sdab[9] sdaa[8] sdb[7] sdy[6] sdx[5] sdw[4]
-> sdv[3] sdz[10] sdj[1]
->       31256138752 blocks super 1.2 level 6, 128k chunk, algorithm 2
-> [10/10] [UUUUUUUUUU]
->       bitmap: 0/2 pages [0KB], 1048576KB chunk
-> 
-> unused devices: <none>
-> 
-> # smartctl -a /dev/sdau|grep Model
-> Device Model:     Hitachi HDS724040ALE640
-> 
-> # hdparm -W /dev/sdau
-> /dev/sdau:
->  write-caching =  0 (off)
-> 
-> # dmesg
-> [ 3745.914280] xfs_repair[25300]: segfault at 7f5d9282b000 ip
-> 000000000042d068 sp 00007f5da3183dd0 error 4 in
-> xfs_repair[400000+7f000]
-> 
-> 
-> /Ole
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
