@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C16097F6B
-	for <xfs@oss.sgi.com>; Wed, 27 Feb 2013 18:03:06 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 755A1AC004
-	for <xfs@oss.sgi.com>; Wed, 27 Feb 2013 16:03:03 -0800 (PST)
-Received: from mail-da0-f50.google.com (mail-da0-f50.google.com
-	[209.85.210.50]) by cuda.sgi.com with ESMTP id ePX7s7DzfkAoN3jc
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 27 Feb 2013 16:03:02 -0800 (PST)
-Received: by mail-da0-f50.google.com with SMTP id h15so548571dan.9
-	for <xfs@oss.sgi.com>; Wed, 27 Feb 2013 16:03:02 -0800 (PST)
-Message-ID: <512E9EAC.9050700@gmail.com>
-Date: Thu, 28 Feb 2013 08:02:52 +0800
-From: Wang Sheng-Hui <shhuiw@gmail.com>
+	by oss.sgi.com (Postfix) with ESMTP id C28337F74
+	for <xfs@oss.sgi.com>; Wed, 27 Feb 2013 18:10:40 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 56427AC002
+	for <xfs@oss.sgi.com>; Wed, 27 Feb 2013 16:10:40 -0800 (PST)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	1etvMfYpDIn5fiH7 for <xfs@oss.sgi.com>;
+	Wed, 27 Feb 2013 16:10:38 -0800 (PST)
+Date: Thu, 28 Feb 2013 11:10:34 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: xfs_bmap_add_attrfork_local is too generic
+Message-ID: <20130228001034.GI5551@dastard>
+References: <1360558693-20354-1-git-send-email-david@fromorbit.com>
+	<20130214234244.GM22182@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests 276: fix error 'FIBMAP: Invalid argument'
-References: <512DB284.1090806@gmail.com> <20130227230443.GB5551@dastard>
-In-Reply-To: <20130227230443.GB5551@dastard>
+Content-Disposition: inline
+In-Reply-To: <20130214234244.GM22182@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,54 +26,70 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: list.btrfs@jan-o-sch.net, linux-btrfs@vger.kernel.org, xfstests <xfs@oss.sgi.com>
+To: Ben Myers <bpm@sgi.com>
+Cc: xfs@oss.sgi.com
 
-T24gMjAxM+W5tDAy5pyIMjjml6UgMDc6MDQsIERhdmUgQ2hpbm5lciB3cm90ZToKPiBPbiBXZWQs
-IEZlYiAyNywgMjAxMyBhdCAwMzoxNToxNlBNICswODAwLCBXYW5nIFNoZW5nLUh1aSB3cm90ZToK
-Pj4gQnRyZnMgZG9lc24ndCBzdXBwb3J0IEZJRU1BUF9GTEFHX1hBVFRSLCB3aGljaCBpcyBlbmFi
-bGVkIGJ5Cj4+IC14IG9wdGlvbiBvZiBmaWxlZnJhZywgYW5kIHdpbGwgZmFpbCB3aXRoCj4+IAkn
-RklCTUFQOiBJbnZhbGlkIGFyZ3VtZW50Jwo+PiBmb3IgJ2ZpbGVmcmFnIC12eCcuICdmaWxlZnJh
-ZyAtdngnIGZhaWxzIG9uIGJ0cmZzIHdpdGgKPj4gICAgICAnRklFTUFQIGZhaWxlZCB3aXRoIHVu
-c3VwcG9ydGVkIGZsYWdzIDInCj4+IFJlbW92ZSB0aGUgJy14JyBvcHRpb24uCj4+Cj4+IFNpZ25l
-ZC1vZmYtYnk6IFdhbmcgU2hlbmctSHVpIDxzaGh1aXdAZ21haWwuY29tPgo+Cj4gSSBjYW4gc2Vl
-IHRoYXQgdGhpcyBjaGFuZ2VzIHdoYXQgZ2V0cyBkdW1wZWQgaW50byB0aGUgJHNlcS5mdWxsCj4g
-ZmlsZSwgYnV0IGl0IHNlZW1zIHRvIG1lIHRoYXQgYWxzbyBjaGFuZ2VzIHRoZSBleHRlbnQgbGlz
-dCByZXR1cm5lZAo+IHRvIHRoZSBjaGVja2luZyBmdW5jdGlvbnMuIFNvIGVpdGhlciB0aGUgdGVz
-dCBwcmV2aW91c2x5IHdvcmtlZCBhbmQKPiBub3cgaXQgZmFpbHMgd2l0aCB0aGlzIGNoYW5nZSwg
-b3IgdGhlIHRlc3QgbmV2ZXIgd29ya2VkIGFuZCBub3cgaXQKPiBkb2VzLCBvciBwZXJoYXBzIHNv
-bWV0aGluZyBlbHNlPwo+Cj4gSU9XcywgSSBjYW4ndCB0ZWxsIHdoeSB5b3Ugd2FudCB0byBjaGFu
-Z2UgdGhpcyBmcm9tIHRoZSBwYXRjaAo+IGRlc2NyaXB0aW9uLCBoZW5jZSBJIGRvbid0IGtub3cg
-aWYgdGhlIG9yaWdpbmFsIGJlaGF2aW91ciB3YXMKPiBpbnRlbnRpb25hbCBvciBub3QuICBDYW4g
-eW91IHNheSBkZXNjcmliZSB3aGF0IHRoZSBvdmVyYWxsIGVmZmVjdCBvZgo+IHRoZSBjaGFuZ2Ug
-aXMgaW4gdGhlIGNvbW1pdCBkZXNjcmlwdGlvbj8KCkhpIERhdmUsCgpJIHJ1biB4ZnN0ZXN0cyBm
-b3IgYnRyZnMgYWdhaW5zdCBTTEVTMTFTUDIsIG5vdCB1cHN0cmVhbSBrZXJuZWwuCkluIHRoZSBz
-ZXEuZnVsbCwgSSBjYW4gZ2V0IHRoZSBtZXNzYWdlcwoJJ0ZJRU1BUCBmYWlsZWQgd2l0aCB1bnN1
-cHBvcnRlZCBmbGFncyAyJwoKVGhlbiBJIGZvdW5kIHRoYXQgdGhlIHRlc3Qgd2lsbCBydW4gJ2Zp
-bGVmcmFnIC12eCcgb24gYnRyZnMsIGFuZAonLXYnIHdpbGwgcnVuIEZJRU1BUF9GTEFHX1hBVFRS
-LCB3aGljaCBpcyBub3Qgc3VwcG9ydGVkIGJ5IGJ0cmZzCnlldCwgYXQgbGVhc3QgaW4gMy44IGtl
-cm5lbC4KCldpdGhvdXQgdGhlIHBhdGNoLCBJIGZhaWxlZCB0aGUgdGVzdGNhc2UgYW5kIGdvdDoK
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09CjI3NiA4cyAuLi4g
-LSBvdXRwdXQgbWlzbWF0Y2ggKHNlZSAyNzYub3V0LmJhZCkKICAgICAtLS0gMjc2Lm91dAkyMDEz
-LTAyLTI1IDE5OjA4OjU4LjAwMDAwMDAwMCAtMDYwMAogICAgICsrKyAyNzYub3V0LmJhZAkyMDEz
-LTAyLTI3IDE3OjU5OjQ4LjAwMDAwMDAwMCAtMDYwMAogICAgIEBAIC0xLDQgKzEsODY3IEBACiAg
-ICAgIFFBIG91dHB1dCBjcmVhdGVkIGJ5IDI3NgogICAgICAqKiogdGVzdCBiYWNrcmVmIHdhbGtp
-bmcKICAgICArRklCTUFQOiBJbnZhbGlkIGFyZ3VtZW50CiAgICAgK0ZJQk1BUDogSW52YWxpZCBh
-cmd1bWVudAogICAgICtGSUJNQVA6IEludmFsaWQgYXJndW1lbnQKICAgICArRklCTUFQOiBJbnZh
-bGlkIGFyZ3VtZW50CiAgICAgK0ZJQk1BUDogSW52YWxpZCBhcmd1bWVudAogICAgICAuLi4KICAg
-ICAgKFJ1biAnZGlmZiAtdSAyNzYub3V0IDI3Ni5vdXQuYmFkJyB0byBzZWUgdGhlIGVudGlyZSBk
-aWZmKQpSYW46IDI3NgpGYWlsdXJlczogMjc2CkZhaWxlZCAxIG9mIDEgdGVzdHMKCkluIHRoZSAy
-NzYuZnVsbCwgSSBnb3Qgc29tZXRoaW5nIGxpa2U6Cj09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PQojIGZpbGVmcmFnIC12eCAvbW50L3NjcmF0Y2gvc25hcDEvcDAv
-ZDQvZDIxL2Q0YS9mNTgKRmlsZXN5c3RlbSB0eXBlIGlzOiA5MTIzNjgzZQpGaWxlIHNpemUgb2Yg
-L21udC9zY3JhdGNoL3NuYXAxL3AwL2Q0L2QyMS9kNGEvZjU4IGlzIDIxMjU2MTUgKDMzIGJsb2Nr
-cywgYmxvY2tzaXplIDY1NTM2KQpGSUVNQVAgZmFpbGVkIHdpdGggdW5zdXBwb3J0ZWQgZmxhZ3Mg
-MgoKCldpdGggdGhlIHBhdGNoLCBJIGNhbiBwYXNzIHRoZSB0ZXN0Y2FzZToKPT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09CjI3NiA4cyAuLi4gN3MKUmFuOiAyNzYK
-UGFzc2VkIGFsbCAxIHRlc3RzCgoKPgo+IENoZWVycywKPgo+IERhdmUuCj4KCl9fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZz
-QG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On Thu, Feb 14, 2013 at 05:42:44PM -0600, Ben Myers wrote:
+> On Mon, Feb 11, 2013 at 03:58:13PM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > When we are converting local data to an extent format as a result of
+> > adding an attribute, the type of data contained in the local fork
+> > determines the behaviour that needs to occur.
+> > 
+> > xfs_bmap_add_attrfork_local() already handles the directory data
+> > case specially by using S_ISDIR() and calling out to
+> > xfs_dir2_sf_to_block(), but with verifiers we now need to handle
+> > each different type of metadata specially and different metadata
+> > formats require different verifiers (and eventually block header
+> > initialisation).
+> > 
+> > There is only a single place that we add and attribute fork to
+> > the inode, but that is in the attribute code and it knows nothing
+> > about the specific contents of the data fork. It is only the case of
+> > local data that is the issue here, so adding code to hadnle this
+> > case in the attribute specific code is wrong. Hence we are really
+> > stuck trying to detect the data fork contents in
+> > xfs_bmap_add_attrfork_local() and performing the correct callout
+> > there.
+> > 
+> > Luckily the current cases can be determined by S_IS* macros, and we
+> > can push the work off to data specific callouts, but each of those
+> > callouts does a lot of work in common with
+> > xfs_bmap_local_to_extents(). The only reason that this fails for
+> > symlinks right now is is that xfs_bmap_local_to_extents() assumes
+> > the data fork contains extent data, and so attaches a a bmap extent
+> > data verifier to the buffer and simply copies the data fork
+> > information straight into it.
+> > 
+> > To fix this, allow us to pass a "formatting" callback into
+> > xfs_bmap_local_to_extents() which is responsible for setting the
+> > buffer type, initialising it and copying the data fork contents over
+> > to the new buffer. This allows callers to specify how they want to
+> > format the new buffer (which is necessary for the upcoming CRC
+> > enabled metadata blocks) and hence make xfs_bmap_local_to_extents()
+> > useful for any type of data fork content.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> 
+> Applied.  We'd like this one in 3.8, one way or the other.
+
+Ben, seeing as this missed the 3.8 release, can you push it back to
+the 3.8.y stable series? It's already been hit out in the wild, so
+it needs fixing....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
