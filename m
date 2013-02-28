@@ -1,31 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2E3287F8B
-	for <xfs@oss.sgi.com>; Wed, 27 Feb 2013 23:27:25 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0D92D304051
-	for <xfs@oss.sgi.com>; Wed, 27 Feb 2013 21:27:21 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id BR7uXj9bj5WPGMm7 for <xfs@oss.sgi.com>;
-	Wed, 27 Feb 2013 21:27:21 -0800 (PST)
-Message-ID: <512EEAB8.4070306@sandeen.net>
-Date: Wed, 27 Feb 2013 23:27:20 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 604D37F6D
+	for <xfs@oss.sgi.com>; Thu, 28 Feb 2013 03:28:38 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 39EC48F8037
+	for <xfs@oss.sgi.com>; Thu, 28 Feb 2013 01:28:38 -0800 (PST)
+Received: from mx3-phx2.redhat.com (mx3-phx2.redhat.com [209.132.183.24]) by
+	cuda.sgi.com with ESMTP id 1ar0mRpDcyLBM9ri for
+	<xfs@oss.sgi.com>; Thu, 28 Feb 2013 01:28:36 -0800 (PST)
+Date: Thu, 28 Feb 2013 04:28:35 -0500 (EST)
+From: CAI Qian <caiqian@redhat.com>
+Message-ID: <2103242337.7001373.1362043715738.JavaMail.root@redhat.com>
+In-Reply-To: <130819766.6999797.1362043338279.JavaMail.root@redhat.com>
+Subject: possible fsync02() xfs slowness regression on power7
 MIME-Version: 1.0
-Subject: Re: Read corruption on ARM
-References: <CA+AKrqBQ=VG0oVsai+agywDKRgO9cG9AvT6mCTSZxKO3Si5Aiw@mail.gmail.com>
-	<512D3856.5050305@sandeen.net>
-	<CA+AKrqC+6nXuCxdY08MBLsjv1fOPJ6=1ruTHsfGqxosQmCi_jQ@mail.gmail.com>
-	<512D49E2.40003@sandeen.net>
-	<CA+AKrqCrphO-eKy0n=70O9hmB3mXttOsKmTdfRnPxgJM3_PAkQ@mail.gmail.com>
-	<512E3BB2.6060407@sandeen.net>
-	<CA+AKrqDq5xCNQo1X=MeRBq54ka0FGJEV5Rn6OzwY7eBfJ+8Wkw@mail.gmail.com>
-	<512E7639.20205@sandeen.net> <512E89C2.9000302@sandeen.net>
-	<CA+AKrqDaY4cgP+EPLepzUOU2jAOygTuj-0xDtOaGf+O0aRZV_g@mail.gmail.com>
-	<512E903A.2020405@sandeen.net>
-	<CA+AKrqAv7-5gGj_cNBNj=-nChKPzi+_HZmH=z2UABG9pDOmpBg@mail.gmail.com>
-	<512EDF37.4050802@sandeen.net> <512EE20A.7010103@sandeen.net>
-In-Reply-To: <512EE20A.7010103@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,68 +26,41 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jason Detring <detringj@gmail.com>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
+Cc: Steve Best <sbest@redhat.com>
 
-On 2/27/13 10:50 PM, Eric Sandeen wrote:
-> On 2/27/13 10:38 PM, Eric Sandeen wrote:
-> 
-> ...
-> 
->> re-cc'ing xfs list
->>
->> So I used pahole to look at all structs, objdump -d to disassemble,
->> and md5sum'd the results to see what's different.
->>
->> pi@raspberrypi ~ $ md5sum cross/*.dis cross/*.pahole native/*.dis native/*.pahole
->>
->> <manual sort>
->>
->> c0abd80c3bf049db5e1909fd851261cc  cross/xfs-O1-g.ko.pahole
->> c0abd80c3bf049db5e1909fd851261cc  cross/xfs-O2-g.ko.pahole
->> c0abd80c3bf049db5e1909fd851261cc  cross/xfs-Os-g.ko.pahole
->> c0abd80c3bf049db5e1909fd851261cc  native/xfs-O1-g.ko.pahole
->> c0abd80c3bf049db5e1909fd851261cc  native/xfs-O2-g.ko.pahole
->> c0abd80c3bf049db5e1909fd851261cc  native/xfs-Os-g.ko.pahole
->>
->> so all structures look identical, good - but:
->>
->> while disassembly of these two modules match:
->>
->> d76f6ebf4d8a1b9f786facefbcf16f69  cross/xfs-O1-g.ko.dis
->> d76f6ebf4d8a1b9f786facefbcf16f69  native/xfs-O1-g.ko.dis
->>
->> do you see the problem w/ the cross-compiled xfs-O1-g.ko as well?
->>
->> the others differ:
->>
->> 349f3490a49f2ce539c2b058914f64f0  native/xfs-Os-g.ko.dis
->> 91c8e8230774808b538c21a83106a5d7  cross/xfs-Os-g.ko.dis
->>
->> 649338e1b8eeed6a294504fc76a39cb0  native/xfs-O2-g.ko.dis
->> e52c2a48277326c313bba76aa0b33ab7  cross/xfs-O2-g.ko.dis
->>
->> The diff of the disassembly of the others is huge, hard to
->> know where to start just yet.  Need an objdump mode that only
->> shows function-relative addresses or something to cut down
->> on the noise.
-> 
-> Could you try the same, to isolate the differences: objdump -d
-> all of the *.o files for, say, the -O2 build, md5sum & compare,
-> and see which ones differ?
+This LTP test starting to fail using the latest upstream kernel on one of the power7
+systems here, http://tinyurl.com/bngwouj
 
-And one more test.  Every time you hit the error, it causes
-a log replay on the next mount since the fs has shut down.
+# ./fsync02
+fsync02     1  TFAIL  :  fsync took too long: 252.000000 seconds; max_block: 214
 
-Can you try
+When it is working, the test is almost returned immediately. The bisecting so far
+indicated that one or a few of the following could be culprits.
 
-# mount; umount; mount; test
+# git log --pretty=oneline 498f7f505dc79934c878c7667840c50c64f232fc..b199c8a4ba11879df87daad496ceee41fdc6aa82
+b199c8a4ba11879df87daad496ceee41fdc6aa82 xfs: Pull EFI/EFD handling out from under the AIL lock
+9c5f8414efd5eeed9f498d4170337a3eb126341f xfs: fix EFI transaction cancellation.
+821eb21d97a8b686649c08b7284d0b9f34d0e138 xfs: connect up buffer reclaim priority hooks
+430cbeb86fdcbbdabea7d4aa65307de8de425350 xfs: add a lru to the XFS buffer cache
+ff57ab21995a8636cfc72efeebb09cc6034d756f xfs: convert xfsbud shrinker to a per-buftarg shrinker.
+1a427ab0c1b205d1bda8da0b77ea9d295ac23c57 xfs: convert pag_ici_lock to a spin lock
+1a3e8f3da09c7082d25b512a0ffe569391e4c09a xfs: convert inode cache lookups to use RCU locking
+d95b7aaf9ab6738bef1ebcc52ab66563085e44ac xfs: rcu free inodes
+6e857567dbbfe14dd6cc3f7414671b047b1ff5c7 xfs: don't truncate prealloc from frequently accessed inodes
+055388a3188f56676c21e92962fc366ac8b5cb72 xfs: dynamic speculative EOF preallocation
+622d81494fa32343a4b97b607619656c7a4a6d1a xfs: use KM_NOFS for allocations during attribute list operations
+dcfcf20512cb517ac18b9433b676183fa1257911 xfs: provide a inode iolock lockdep class
+489a150f6454e2cd93d9e0ee6d7c5a361844f62a xfs: factor duplicate code in xfs_alloc_ag_vextent_near into a helper
+9f9baab38dacd11fe6095a1e59f3783a305f7020 xfs: clean up xfs_alloc_ag_vextent_exact
+ecff71e677c6d469f525dcf31ada709d5858307c xfs: simplify xfs_map_at_offset
+aeea1b1f81800e362a3aca86d769d02e137a8fa7 xfs: refactor xfs_vm_writepage
+2fa24f92530edaf86c3b5f662464e0d2e3b3e517 xfs: remove the all_bh flag from xfs_convert_page
+ed1e7b7e484dfb64168755613d499f32a97409bd xfs: remove xfs_probe_cluster
+8ff2957d581582890693affc09920108a67cb05d xfs: simplify xfs_map_blocks
+a206c817c864583c44e2f418db8e6c7a000fbc38 xfs: kill xfs_iomap
 
-so that you start the test from a clean mount, and see if you still hit it?
-
-Maybe save that image off before you do that test just in case it changes
-the state.
-
--Eric
+CAI Qian
 
 _______________________________________________
 xfs mailing list
