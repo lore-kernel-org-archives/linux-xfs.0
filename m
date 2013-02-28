@@ -1,21 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0BBCE7F7D
-	for <xfs@oss.sgi.com>; Thu, 28 Feb 2013 09:22:34 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9600FAC002
-	for <xfs@oss.sgi.com>; Thu, 28 Feb 2013 07:22:30 -0800 (PST)
-Received: from mail-pb0-f43.google.com (mail-pb0-f43.google.com
-	[209.85.160.43]) by cuda.sgi.com with ESMTP id ks99ggTTTlCqknPu
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 28 Feb 2013 07:22:28 -0800 (PST)
-Received: by mail-pb0-f43.google.com with SMTP id md12so1136590pbc.30
-	for <xfs@oss.sgi.com>; Thu, 28 Feb 2013 07:22:28 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 749327F83
+	for <xfs@oss.sgi.com>; Thu, 28 Feb 2013 09:27:00 -0600 (CST)
+Date: Thu, 28 Feb 2013 09:26:59 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH] xfs: xfs_bmap_add_attrfork_local is too generic
+Message-ID: <20130228152659.GB30652@sgi.com>
+References: <1360558693-20354-1-git-send-email-david@fromorbit.com>
+	<20130214234244.GM22182@sgi.com> <20130228001034.GI5551@dastard>
 MIME-Version: 1.0
-From: Ole Tange <tange@binf.ku.dk>
-Date: Thu, 28 Feb 2013 16:22:08 +0100
-Message-ID: <CANU9nTnvJS50vdQv2K0gKHZPvzzH5EY1qpizJNsqUobrr2juDA@mail.gmail.com>
-Subject: xfs_repair segfaults
+Content-Disposition: inline
+In-Reply-To: <20130228001034.GI5551@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,86 +23,62 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-I forced a RAID online. I have done that before and xfs_repair
-normally removes the last hour of data or so, but saves everything
-else.
+On Thu, Feb 28, 2013 at 11:10:34AM +1100, Dave Chinner wrote:
+> On Thu, Feb 14, 2013 at 05:42:44PM -0600, Ben Myers wrote:
+> > On Mon, Feb 11, 2013 at 03:58:13PM +1100, Dave Chinner wrote:
+> > > From: Dave Chinner <dchinner@redhat.com>
+> > > 
+> > > When we are converting local data to an extent format as a result of
+> > > adding an attribute, the type of data contained in the local fork
+> > > determines the behaviour that needs to occur.
+> > > 
+> > > xfs_bmap_add_attrfork_local() already handles the directory data
+> > > case specially by using S_ISDIR() and calling out to
+> > > xfs_dir2_sf_to_block(), but with verifiers we now need to handle
+> > > each different type of metadata specially and different metadata
+> > > formats require different verifiers (and eventually block header
+> > > initialisation).
+> > > 
+> > > There is only a single place that we add and attribute fork to
+> > > the inode, but that is in the attribute code and it knows nothing
+> > > about the specific contents of the data fork. It is only the case of
+> > > local data that is the issue here, so adding code to hadnle this
+> > > case in the attribute specific code is wrong. Hence we are really
+> > > stuck trying to detect the data fork contents in
+> > > xfs_bmap_add_attrfork_local() and performing the correct callout
+> > > there.
+> > > 
+> > > Luckily the current cases can be determined by S_IS* macros, and we
+> > > can push the work off to data specific callouts, but each of those
+> > > callouts does a lot of work in common with
+> > > xfs_bmap_local_to_extents(). The only reason that this fails for
+> > > symlinks right now is is that xfs_bmap_local_to_extents() assumes
+> > > the data fork contains extent data, and so attaches a a bmap extent
+> > > data verifier to the buffer and simply copies the data fork
+> > > information straight into it.
+> > > 
+> > > To fix this, allow us to pass a "formatting" callback into
+> > > xfs_bmap_local_to_extents() which is responsible for setting the
+> > > buffer type, initialising it and copying the data fork contents over
+> > > to the new buffer. This allows callers to specify how they want to
+> > > format the new buffer (which is necessary for the upcoming CRC
+> > > enabled metadata blocks) and hence make xfs_bmap_local_to_extents()
+> > > useful for any type of data fork content.
+> > > 
+> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Applied.  We'd like this one in 3.8, one way or the other.
+> 
+> Ben, seeing as this missed the 3.8 release, can you push it back to
+> the 3.8.y stable series? It's already been hit out in the wild, so
+> it needs fixing....
 
-Today that did not work:
+Sure.  Thanks for the reminder.
 
-/usr/local/src/xfsprogs-3.1.10/repair# ./xfs_repair -n /dev/md5p1
-Phase 1 - find and verify superblock...
-Phase 2 - using internal log
-        - scan filesystem freespace and inode maps...
-flfirst 232 in agf 91 too large (max = 128)
-Segmentation fault (core dumped)
-
-Core put in: http://dna.ku.dk/~tange/tmp/xfs_repair.core.bz2
-
-I tried using the git-version, too, but could not get that to compile.
-
-# uname -a
-Linux franklin 3.2.0-0.bpo.4-amd64 #1 SMP Debian 3.2.35-2~bpo60+1
-x86_64 GNU/Linux
-
-# ./xfs_repair -V
-xfs_repair version 3.1.10
-
-# cat /proc/cpuinfo |grep MH | wc
-     64     256    1280
-
-# cat /proc/partitions |grep md5
-   9        5 125024550912 md5
- 259        0 107521114112 md5p1
- 259        1 17503434752 md5p2
-
-# cat /proc/mdstat
-Personalities : [raid0] [raid6] [raid5] [raid4]
-md5 : active raid0 md1[0] md4[3] md3[2] md2[1]
-      125024550912 blocks super 1.2 512k chunks
-
-md1 : active raid6 sdd[1] sdi[9] sdq[13] sdau[7] sdt[10] sdg[5] sdf[4] sde[2]
-      31256138752 blocks super 1.2 level 6, 128k chunk, algorithm 2
-[10/8] [_UU_UUUUUU]
-      bitmap: 2/2 pages [8KB], 1048576KB chunk
-
-md4 : active raid6 sdo[13] sdu[9] sdad[8] sdh[7] sdc[6] sds[11]
-sdap[3] sdao[2] sdk[1]
-      31256138752 blocks super 1.2 level 6, 128k chunk, algorithm 2
-[10/8] [_UUUU_UUUU]
-      [>....................]  recovery =  2.1% (84781876/3907017344)
-finish=2196.4min speed=29003K/sec
-      bitmap: 2/2 pages [8KB], 1048576KB chunk
-
-md2 : active raid6 sdac[0] sdal[9] sdak[8] sdaj[7] sdai[6] sdah[5]
-sdag[4] sdaf[3] sdae[2] sdr[10]
-      31256138752 blocks super 1.2 level 6, 128k chunk, algorithm 2
-[10/10] [UUUUUUUUUU]
-      bitmap: 0/2 pages [0KB], 1048576KB chunk
-
-md3 : active raid6 sdaq[0] sdab[9] sdaa[8] sdb[7] sdy[6] sdx[5] sdw[4]
-sdv[3] sdz[10] sdj[1]
-      31256138752 blocks super 1.2 level 6, 128k chunk, algorithm 2
-[10/10] [UUUUUUUUUU]
-      bitmap: 0/2 pages [0KB], 1048576KB chunk
-
-unused devices: <none>
-
-# smartctl -a /dev/sdau|grep Model
-Device Model:     Hitachi HDS724040ALE640
-
-# hdparm -W /dev/sdau
-/dev/sdau:
- write-caching =  0 (off)
-
-# dmesg
-[ 3745.914280] xfs_repair[25300]: segfault at 7f5d9282b000 ip
-000000000042d068 sp 00007f5da3183dd0 error 4 in
-xfs_repair[400000+7f000]
-
-
-/Ole
+-Ben
 
 _______________________________________________
 xfs mailing list
