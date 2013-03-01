@@ -1,18 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 701027FF6
-	for <xfs@oss.sgi.com>; Fri,  1 Mar 2013 17:46:51 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id EFF6EAC002
-	for <xfs@oss.sgi.com>; Fri,  1 Mar 2013 15:46:50 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id MB4SHYJnA1LcCmh8 for <xfs@oss.sgi.com>;
-	Fri, 01 Mar 2013 15:46:49 -0800 (PST)
-Message-ID: <51313DE8.5080104@sandeen.net>
-Date: Fri, 01 Mar 2013 17:46:48 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 67CED7F60
+	for <xfs@oss.sgi.com>; Fri,  1 Mar 2013 17:51:11 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 51D278F8052
+	for <xfs@oss.sgi.com>; Fri,  1 Mar 2013 15:51:11 -0800 (PST)
+Received: from out1-smtp.messagingengine.com (out1-smtp.messagingengine.com
+	[66.111.4.25]) by cuda.sgi.com with ESMTP id XKvgDujgx4RmTJDd
+	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 01 Mar 2013 15:51:10 -0800 (PST)
+Date: Fri, 1 Mar 2013 15:51:08 -0800
+From: Greg KH <greg@kroah.com>
+Subject: Re: [STABLE] [PATCH] xfs: xfs_bmap_add_attrfork_local is too generic
+Message-ID: <20130301235108.GB11455@kroah.com>
+References: <20130301232941.GJ30652@sgi.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfs_repair: skip freelist scan of dodgy agf in no-modify mode
+Content-Disposition: inline
+In-Reply-To: <20130301232941.GJ30652@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,65 +29,18 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
-Cc: Ole Tange <tange@binf.ku.dk>
+To: Ben Myers <bpm@sgi.com>
+Cc: dchinner@redhat.com, stable@vger.kernel.org, xfs@oss.sgi.com
 
-In no-modify mode (-n), verify_set_agf doesn't fix up bad
-freelist blocks that it finds.  When we get to scan_freelist,
-this can wreak havoc if, for example, first > last and the loop
-never exits; we index agfl->agfl_bno[i] off into the weeds.
+On Fri, Mar 01, 2013 at 05:29:41PM -0600, Ben Myers wrote:
+> Hi,
+> 
+> Please take this fix for 3.8-stable.  It resolves a problem with write
+> verifiers and symlinks which results in a forced unmount.
 
-To fix this, re-check the values in no-modify mode, and if
-they're off, warn about it and skip the scan.
+Now applied, I've snuck it into 3.8.2.
 
-In addition, add a check to verify_set_agf() to ensure that
-first <= last.
-
-Reported-by: Ole Tange <tange@binf.ku.dk>
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-diff --git a/repair/agheader.c b/repair/agheader.c
-index 769022d..68789fe 100644
---- a/repair/agheader.c
-+++ b/repair/agheader.c
-@@ -86,6 +86,14 @@ verify_set_agf(xfs_mount_t *mp, xfs_agf_t *agf, xfs_agnumber_t i)
- 	 * check first/last AGF fields.  if need be, lose the free
- 	 * space in the AGFL, we'll reclaim it later.
- 	 */
-+	if (be32_to_cpu(agf->agf_flfirst) > be32_to_cpu(agf->agf_fllast)) {
-+		do_warn(_("flfirst %d in agf %d > fllast %d\n"),
-+			be32_to_cpu(agf->agf_flfirst),
-+			i, be32_to_cpu(agf->agf_fllast));
-+		if (!no_modify)
-+			agf->agf_fllast = agf->agf_flfirst = cpu_to_be32(0);
-+	}
-+
- 	if (be32_to_cpu(agf->agf_flfirst) >= XFS_AGFL_SIZE(mp))  {
- 		do_warn(_("flfirst %d in agf %d too large (max = %zu)\n"),
- 			be32_to_cpu(agf->agf_flfirst),
-diff --git a/repair/scan.c b/repair/scan.c
-index 5345094..0f83fb4 100644
---- a/repair/scan.c
-+++ b/repair/scan.c
-@@ -1067,6 +1067,17 @@ scan_freelist(
- 	}
- 	agfl = XFS_BUF_TO_AGFL(agflbuf);
- 	i = be32_to_cpu(agf->agf_flfirst);
-+	if (no_modify) {
-+		/* agf values not sanitized, so double check */
-+		if (i >= XFS_AGFL_SIZE(mp) ||
-+		    be32_to_cpu(agf->agf_fllast) >= XFS_AGFL_SIZE(mp) ||
-+		    i > be32_to_cpu(agf->agf_fllast))
-+			do_warn(_("agf %d freelist blocks bad, skipping scan\n"),
-+				i);
-+			return;
-+	} else /* should have been fixed in verify_set_agf() */
-+		ASSERT(0);
-+
- 	count = 0;
- 	for (;;) {
- 		bno = be32_to_cpu(agfl->agfl_bno[i]);
+greg k-h
 
 _______________________________________________
 xfs mailing list
