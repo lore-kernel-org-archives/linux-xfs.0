@@ -1,19 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 761D37FAB
-	for <xfs@oss.sgi.com>; Fri,  1 Mar 2013 03:20:33 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 08B8CAC002
-	for <xfs@oss.sgi.com>; Fri,  1 Mar 2013 01:20:29 -0800 (PST)
-Received: from mx3-phx2.redhat.com (mx3-phx2.redhat.com [209.132.183.24]) by
-	cuda.sgi.com with ESMTP id ipolb2r5VtKvGM0z for
-	<xfs@oss.sgi.com>; Fri, 01 Mar 2013 01:20:27 -0800 (PST)
-Date: Fri, 1 Mar 2013 04:20:18 -0500 (EST)
-From: CAI Qian <caiqian@redhat.com>
-Message-ID: <220575861.7590457.1362129618880.JavaMail.root@redhat.com>
-In-Reply-To: <20130228115410.GN5551@dastard>
-Subject: Re: possible fsync02() xfs slowness regression on power7
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0FA1B7FAF
+	for <xfs@oss.sgi.com>; Fri,  1 Mar 2013 03:21:24 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E3448304039
+	for <xfs@oss.sgi.com>; Fri,  1 Mar 2013 01:21:23 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	br7wrChJRftS8q9F for <xfs@oss.sgi.com>;
+	Fri, 01 Mar 2013 01:21:22 -0800 (PST)
+Date: Fri, 1 Mar 2013 20:21:18 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfstests: use right path in _require_defrag()
+Message-ID: <20130301092118.GA23616@dastard>
+References: <1362129959-4504-1-git-send-email-wenqing.lz@taobao.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1362129959-4504-1-git-send-email-wenqing.lz@taobao.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,46 +25,58 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Steve Best <sbest@redhat.com>, xfs@oss.sgi.com
+To: Zheng Liu <gnehzuil.liu@gmail.com>
+Cc: Zheng Liu <wenqing.lz@taobao.com>, xfs@oss.sgi.com
 
-CgotLS0tLSDljp/lp4vpgq7ku7YgLS0tLS0KPiDlj5Hku7bkuro6ICJEYXZlIENoaW5uZXIiIDxk
-YXZpZEBmcm9tb3JiaXQuY29tPgo+IOaUtuS7tuS6ujogIkNBSSBRaWFuIiA8Y2FpcWlhbkByZWRo
-YXQuY29tPgo+IOaKhOmAgTogeGZzQG9zcy5zZ2kuY29tLCAiU3RldmUgQmVzdCIgPHNiZXN0QHJl
-ZGhhdC5jb20+Cj4g5Y+R6YCB5pe26Ze0OiDmmJ/mnJ/lm5ssIDIwMTPlubQgMiDmnIggMjjml6Ug
-5LiL5Y2IIDc6NTQ6MTAKPiDkuLvpopg6IFJlOiBwb3NzaWJsZSBmc3luYzAyKCkgeGZzIHNsb3du
-ZXNzIHJlZ3Jlc3Npb24gb24gcG93ZXI3Cj4gCj4gT24gVGh1LCBGZWIgMjgsIDIwMTMgYXQgMDQ6
-Mjg6MzVBTSAtMDUwMCwgQ0FJIFFpYW4gd3JvdGU6Cj4gPiBUaGlzIExUUCB0ZXN0IHN0YXJ0aW5n
-IHRvIGZhaWwgdXNpbmcgdGhlIGxhdGVzdCB1cHN0cmVhbSBrZXJuZWwgb24KPiA+IG9uZSBvZiB0
-aGUgcG93ZXI3Cj4gPiBzeXN0ZW1zIGhlcmUsIGh0dHA6Ly90aW55dXJsLmNvbS9ibmd3b3VqCj4g
-PiAKPiA+ICMgLi9mc3luYzAyCj4gPiBmc3luYzAyICAgICAxICBURkFJTCAgOiAgZnN5bmMgdG9v
-ayB0b28gbG9uZzogMjUyLjAwMDAwMCBzZWNvbmRzOwo+ID4gbWF4X2Jsb2NrOiAyMTQKPiA+IAo+
-ID4gV2hlbiBpdCBpcyB3b3JraW5nLCB0aGUgdGVzdCBpcyBhbG1vc3QgcmV0dXJuZWQgaW1tZWRp
-YXRlbHkuIFRoZQo+ID4gYmlzZWN0aW5nIHNvIGZhcgo+ID4gaW5kaWNhdGVkIHRoYXQgb25lIG9y
-IGEgZmV3IG9mIHRoZSBmb2xsb3dpbmcgY291bGQgYmUgY3VscHJpdHMuCj4gPiAKPiA+ICMgZ2l0
-IGxvZyAtLXByZXR0eT1vbmVsaW5lCj4gPiA0OThmN2Y1MDVkYzc5OTM0Yzg3OGM3NjY3ODQwYzUw
-YzY0ZjIzMmZjLi5iMTk5YzhhNGJhMTE4NzlkZjg3ZGFhZDQ5NmNlZWU0MWZkYzZhYTgyCj4gCj4g
-VGhleSBhcmUgYWxsIHBhdGNoZXMgY29tbWl0dGVkIG1vcmUgdGhhbiAyIHllYXJzIGFnbywgYW5k
-IG5vbmUgb2YKPiB0aGVtIGFyZSBwbGF0Zm9ybSBzcGVjaWZpYy4gVGhpcyBzb3VuZHMgbW9yZSBs
-aWtlIGEgbWFjaGluZSBzcGVjaWZpYwo+IGlzc3VlIHRoYW4gYSBwbGF0Zm9ybSBzcGVjaWZpYyBw
-cm9ibGVtIChpLmUuIGxvdHMgb2YgUkFNLCBzbG93LAo+IHNsb3cgZGlzaykuCj4gCj4gSW4gZnV0
-dXJlIHdoZW4gcmVwb3J0aW5nIGEgYnVnLCBwbGVhc2UgdGVsbCB1c2UgaGFyZHdhcmUgeW91IGFy
-ZQo+IHVzaW5nIGFzIHBlcjoKPiAKPiBodHRwOi8veGZzLm9yZy9pbmRleC5waHAvWEZTX0ZBUSNR
-Ol9XaGF0X2luZm9ybWF0aW9uX3Nob3VsZF9JX2luY2x1ZGVfd2hlbl9yZXBvcnRpbmdfYV9wcm9i
-bGVtLjNGCj4gCj4gR2l2ZW4gdGhhdCB0aGlzIGlzIGEgc3BhcnNlIGZpbGUgdGVzdCB0aGF0IHJl
-cGVhdGVkbHkgZXh0ZW5kcyB0aGUKPiBmaWxlLCB0aGlzIGlzIHRoZSBsaWtlbHkgY3VscHJpdDoK
-PiAKPiA+IDA1NTM4OGEzMTg4ZjU2Njc2YzIxZTkyOTYyZmMzNjZhYzhiNWNiNzIgeGZzOiBkeW5h
-bWljIHNwZWN1bGF0aXZlCj4gPiBFT0YgcHJlYWxsb2NhdGlvbgpZZXMsIHlvdSBhcmUgcmlnaHQs
-IGp1c3QgY29uZmlybWVkIGl0LiBOaWNlIGNhdGNoIQo+IAo+IEFuZCB0aGlzIGNvbW1pdCBpbiAz
-LjktcmMxOgo+IAo+IGExZTE2YzIgeGZzOiBsaW1pdCBzcGVjdWxhdGl2ZSBwcmVhbGxvYyBzaXpl
-IG9uIHNwYXJzZSBmaWxlcwpKdXN0IGJhY2stcG9ydGVkIGl0IGFuZCBydW5uaW5nIGF0IHRoZSBt
-b21lbnQgYW5kIHdpbGwgbGV0IHlvdSBrbm93LiBUaGFua3MgRGF2ZS4KPiAKPiBzaG91bGQgZml4
-IHRoZSBwcm9ibGVtLiBQbGVhc2UgY29uZmlybSB0aGVzZSBjb21taXRzIGFyZSB0aGUgY2F1c2UK
-PiBhbmQgdGhlIGZpeCByZXNwZWN0aXZlbHkuLi4uCj4gCj4gQ2hlZXJzLAo+IAo+IERhdmUuCj4g
-LS0KPiBEYXZlIENoaW5uZXIKPiBkYXZpZEBmcm9tb3JiaXQuY29tCj4gCgpfX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bv
-c3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On Fri, Mar 01, 2013 at 05:25:59PM +0800, Zheng Liu wrote:
+> In _require_defrag defragmentation command path is fixed.  That will
+> cause that this test case is skipped in some distributions.
+> 
+> Signed-off-by: Zheng Liu <wenqing.lz@taobao.com>
+> ---
+>  common.defrag | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/common.defrag b/common.defrag
+> index ea6c14c..7be8ad9 100644
+> --- a/common.defrag
+> +++ b/common.defrag
+> @@ -24,10 +24,10 @@ _require_defrag()
+>  {
+>      case "$FSTYP" in
+>      xfs)
+> -        DEFRAG_PROG=/usr/sbin/xfs_fsr
+> +        DEFRAG_PROG=`which xfs_fsr`
+>  	;;
+>      ext4|ext4dev)
+> -        DEFRAG_PROG=/usr/bin/e4defrag
+> +        DEFRAG_PROG=`which e4defrag`
+>  	;;
+>      btrfs)
+>  	DEFRAG_PROG="$BTRFS_UTIL_PROG filesystem defragment"
+> @@ -38,7 +38,7 @@ _require_defrag()
+>      esac
+>  
+>      _require_command $DEFRAG_PROG
+> -    _require_command /usr/sbin/filefrag
+> +    _require_command `which filefrag`
+>  }
+
+$DEFRAG_PROG and $FILEFRAG_PROG should be set up in common.config
+with set_prog_path, not in _require_defrag.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
