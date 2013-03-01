@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id F01767FCD
-	for <xfs@oss.sgi.com>; Fri,  1 Mar 2013 09:48:32 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CE0D5304059
-	for <xfs@oss.sgi.com>; Fri,  1 Mar 2013 07:48:32 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Pol2U1G2boWAe3wh for
-	<xfs@oss.sgi.com>; Fri, 01 Mar 2013 07:48:30 -0800 (PST)
-Message-ID: <5130CDC1.8060704@redhat.com>
-Date: Fri, 01 Mar 2013 09:48:17 -0600
-From: Eric Sandeen <sandeen@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 36F8D7FDF
+	for <xfs@oss.sgi.com>; Fri,  1 Mar 2013 09:51:58 -0600 (CST)
+Message-ID: <5130CE9E.9080501@sgi.com>
+Date: Fri, 01 Mar 2013 09:51:58 -0600
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH v2] xfstests: use right defrag program path
-References: <1362147433-5788-1-git-send-email-wenqing.lz@taobao.com>
-In-Reply-To: <1362147433-5788-1-git-send-email-wenqing.lz@taobao.com>
+Subject: Re: [PATCH] xfs: Fix possible truncation of log data in
+	xlog_bread_noalign()
+References: <BAB94DBB0E89D8409949BC28AC95914C47C485E5@USMAExch1.tad.internal.tilera.com>
+	<20130223000802.GB26081@dastard>
+	<BAB94DBB0E89D8409949BC28AC95914C47C48702@USMAExch1.tad.internal.tilera.com>
+	<20130223235546.GA5551@dastard>
+	<BAB94DBB0E89D8409949BC28AC95914C47C488D8@USMAExch1.tad.internal.tilera.com>
+	<20130224141017.GC5551@dastard>
+	<BAB94DBB0E89D8409949BC28AC95914C47C49005@USMAExch1.tad.internal.tilera.com>
+In-Reply-To: <BAB94DBB0E89D8409949BC28AC95914C47C49005@USMAExch1.tad.internal.tilera.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,85 +24,98 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Zheng Liu <gnehzuil.liu@gmail.com>
-Cc: linux-ext4@vger.kernel.org, Zheng Liu <wenqing.lz@taobao.com>, xfs@oss.sgi.com
+To: Tony Lu <zlu@tilera.com>
+Cc: Alex Elder <elder@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, Ben Myers <bpm@sgi.com>, Dave Chinner <dchinner@redhat.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
 
-On 3/1/13 8:17 AM, Zheng Liu wrote:
-> From: Zheng Liu <wenqing.lz@taobao.com>
-> 
-> In _require_defrag defragmentation command path is fixed.  That will
-> cause that this test case is skipped in some distributions.
-> 
-> Signed-off-by: Zheng Liu <wenqing.lz@taobao.com>
-> Cc: Dave Chinner <david@fromorbit.com>
-> ---
-> [*NOTE*: this patch is Cc'ed to linux-ext4 mailing list because after
-> applied it xfstests #218 will fail against 3.8 and dev branch.]
-> 
-> v2 <- v1:
->  * Define 'E4DEFRAG_PROG' and 'FILEFRAG_PROG' in common.config with
->    set_prog_path
+On 02/26/13 01:28, Tony Lu wrote:
+> I get a reliable way to reproduce this bug. The logprint and metadump are attached.
+>
+> Kernel version: 2.6.38.8
+> Mkfs.xfs version: xfsprogs-3.1.1
+> mkfs.xfs -s size=4096 /dev/sda1
+>
+> Run the following mount-cp-umount script to reproduce:
+> #!/bin/sh
+> device=/dev/sda1
+> mount_point=/mnt
+> times=10
+>
+> for ((num=1;num<=$times;num++))
+> do
+>          echo "$num mount $device $mount_point"
+>          mount $device $mount_point
+>
+>          echo "cp -rf /bin $mount_point/$num"
+>          cp -rf /bin $mount_point/$num
+>
+>          echo "$num umount $device $mount_point"
+>          umount $mount_point
+>
+> #num=$(($num + 1))
+> done
+>
+> After several times of mount/cp/umount, this xfs crashes, and the xfs partition can not be mounted any more. Here is the output of console.
+> -sh-4.1# ./umount-test
+> 1 mount /dev/sda1 /mnt
+> XFS mounting filesystem sda1
+> cp -rf /bin /mnt/1
+> 1 umount /dev/sda1 /mnt
+> 2 mount /dev/sda1 /mnt
+> XFS mounting filesystem sda1
+> cp -rf /bin /mnt/2
+> 2 umount /dev/sda1 /mnt
+> 3 mount /dev/sda1 /mnt
+> XFS mounting filesystem sda1
+> cp -rf /bin /mnt/3
+> 3 umount /dev/sda1 /mnt
+> 4 mount /dev/sda1 /mnt
+> XFS mounting filesystem sda1
+> cp -rf /bin /mnt/4
+> 4 umount /dev/sda1 /mnt
+> 5 mount /dev/sda1 /mnt
+> XFS mounting filesystem sda1
+> Starting XFS recovery on filesystem: sda1 (logdev: internal)
+> Ending XFS recovery on filesystem: sda1 (logdev: internal)cp -rf /bin /mnt/5
+> 5 umount /dev/sda1 /mnt
+> 6 mount /dev/sda1 /mnt
+>
+> XFS mounting filesystem sda1
+> Starting XFS recovery on filesystem: sda1 (logdev: internal)
+> Ending XFS recovery on filesystem: sda1 (logdev: internal)Interrupt
+> cp -rf /bin /mnt/6
+> 6 umount /dev/sda1 /mnt
+> 7 mount /dev/sda1 /mnt
+>
+> XFS mounting filesystem sda1
+> cp -rf /bin /mnt/7
+> 7 umount /dev/sda1 /mnt
+> Interrupt
+> 8 mount /dev/sda1 /mnt
+> XFS mounting filesystem sda1
+> Starting XFS recovery on filesystem: sda1 (logdev: internal)
+> XFS: xlog_recover_process_data: bad clientid
+> XFS: log mount/recovery failed: error 5
+> XFS: log mount failed
+>
+> Thanks
+> -Tony
 
-Looks good to me, thanks.
+It works fine on a 2.6.32 machine I had sitting around - and I never 
+required log recovery.
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+I think you need to answer Dave's question as to why is your unmounts 
+are requiring recovery?
 
->  common.config |  2 ++
->  common.defrag | 10 +++++-----
->  2 files changed, 7 insertions(+), 5 deletions(-)
-> 
-> diff --git a/common.config b/common.config
-> index 7174127..9c99bfe 100644
-> --- a/common.config
-> +++ b/common.config
-> @@ -160,6 +160,8 @@ export INDENT_PROG="`set_prog_path indent`"
->  export XFS_COPY_PROG="`set_prog_path xfs_copy`"
->  export FSTRIM_PROG="`set_prog_path fstrim`"
->  export DUMPE2FS_PROG="`set_prog_path dumpe2fs`"
-> +export FILEFRAG_PROG="`set_prog_path filefrag`"
-> +export E4DEFRAG_PROG="`set_prog_path e4defrag`"
->  
->  # Generate a comparable xfsprogs version number in the form of
->  # major * 10000 + minor * 100 + release
-> diff --git a/common.defrag b/common.defrag
-> index ea6c14c..9c9eb9b 100644
-> --- a/common.defrag
-> +++ b/common.defrag
-> @@ -24,10 +24,10 @@ _require_defrag()
->  {
->      case "$FSTYP" in
->      xfs)
-> -        DEFRAG_PROG=/usr/sbin/xfs_fsr
-> +        DEFRAG_PROG="$XFS_FSR_PROG"
->  	;;
->      ext4|ext4dev)
-> -        DEFRAG_PROG=/usr/bin/e4defrag
-> +        DEFRAG_PROG="$E4DEFRAG_PROG"
->  	;;
->      btrfs)
->  	DEFRAG_PROG="$BTRFS_UTIL_PROG filesystem defragment"
-> @@ -38,13 +38,13 @@ _require_defrag()
->      esac
->  
->      _require_command $DEFRAG_PROG
-> -    _require_command /usr/sbin/filefrag
-> +    _require_command $FILEFRAG_PROG
->  }
->  
->  _extent_count()
->  {
-> -	filefrag $1 | awk '{print $2}'
-> -	filefrag -v $1  >> $seq.full 2>&1
-> +	$FILEFRAG_PROG $1 | awk '{print $2}'
-> +	$FILEFRAG_PROG -v $1  >> $seq.full 2>&1
->  }
->  
->  # Defrag file, check it, and remove it.
-> 
+Are there errors in the /var/log/messages?
+
+I downloaded the Linux 2.6.38.8 source and take a look if I can recreate 
+the problem.
+
+--Mark.
 
 _______________________________________________
 xfs mailing list
