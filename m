@@ -1,24 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id CC9BB7FBC
-	for <xfs@oss.sgi.com>; Fri,  1 Mar 2013 06:25:02 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 66AD57FB2
+	for <xfs@oss.sgi.com>; Fri,  1 Mar 2013 08:02:22 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B7D6D304043
-	for <xfs@oss.sgi.com>; Fri,  1 Mar 2013 04:24:59 -0800 (PST)
-Received: from mail-we0-f172.google.com (mail-we0-f172.google.com
-	[74.125.82.172]) by cuda.sgi.com with ESMTP id aMFDHrRLC2Coz69y
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 551E88F8033
+	for <xfs@oss.sgi.com>; Fri,  1 Mar 2013 06:02:19 -0800 (PST)
+Received: from mail-pa0-f42.google.com (mail-pa0-f42.google.com
+	[209.85.220.42]) by cuda.sgi.com with ESMTP id NEVmiWX9W1r6v8Rp
 	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 01 Mar 2013 04:24:57 -0800 (PST)
-Received: by mail-we0-f172.google.com with SMTP id x10so2499951wey.17
-	for <xfs@oss.sgi.com>; Fri, 01 Mar 2013 04:24:56 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20130301111701.GB23616@dastard>
-References: <CANU9nTnvJS50vdQv2K0gKHZPvzzH5EY1qpizJNsqUobrr2juDA@mail.gmail.com>
-	<20130301111701.GB23616@dastard>
-From: Ole Tange <tange@binf.ku.dk>
-Date: Fri, 1 Mar 2013 13:24:36 +0100
-Message-ID: <CANU9nTkkEd61UsM+KngGzMzXVXdOa2oXOPtmqN4xGaPuEBN_nQ@mail.gmail.com>
-Subject: Re: xfs_repair segfaults
+	<xfs@oss.sgi.com>; Fri, 01 Mar 2013 06:02:15 -0800 (PST)
+Received: by mail-pa0-f42.google.com with SMTP id kq12so1830402pab.29
+	for <xfs@oss.sgi.com>; Fri, 01 Mar 2013 06:02:14 -0800 (PST)
+From: Zheng Liu <gnehzuil.liu@gmail.com>
+Subject: [PATCH v2] xfstests: use right defrag program path
+Date: Fri,  1 Mar 2013 22:17:13 +0800
+Message-Id: <1362147433-5788-1-git-send-email-wenqing.lz@taobao.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,65 +23,82 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: linux-ext4@vger.kernel.org, Zheng Liu <wenqing.lz@taobao.com>
 
-On Fri, Mar 1, 2013 at 12:17 PM, Dave Chinner <david@fromorbit.com> wrote:
-> On Thu, Feb 28, 2013 at 04:22:08PM +0100, Ole Tange wrote:
-:
->> I forced a RAID online. I have done that before and xfs_repair
->> normally removes the last hour of data or so, but saves everything
->> else.
->
-> Why did you need to force it online?
+From: Zheng Liu <wenqing.lz@taobao.com>
 
-More than 2 harddisks went offline. We have seen that before and it is
-not due to bad harddisks. It may be due to driver/timings/controller.
+In _require_defrag defragmentation command path is fixed.  That will
+cause that this test case is skipped in some distributions.
 
-The alternative to forcing it online would be to read back a backup.
-Since we are talking 100 TB of data reading back the backup can take a
-week and will set us back to the last backup (which is more than a day
-old). So it is preferable to force the last failing harddisk online
-even though that causes us to loose a few hours of work.
+Signed-off-by: Zheng Liu <wenqing.lz@taobao.com>
+Cc: Dave Chinner <david@fromorbit.com>
+---
+[*NOTE*: this patch is Cc'ed to linux-ext4 mailing list because after
+applied it xfstests #218 will fail against 3.8 and dev branch.]
 
->> Today that did not work:
->>
->> /usr/local/src/xfsprogs-3.1.10/repair# ./xfs_repair -n /dev/md5p1
->> Phase 1 - find and verify superblock...
->> Phase 2 - using internal log
->>         - scan filesystem freespace and inode maps...
->> flfirst 232 in agf 91 too large (max = 128)
->
-> Can you run:
->
-> # xfs_db -c "agf 91" -c p /dev/md5p1
->
-> And post the output?
+v2 <- v1:
+ * Define 'E4DEFRAG_PROG' and 'FILEFRAG_PROG' in common.config with
+   set_prog_path
 
-# xfs_db -c "agf 91" -c p /dev/md5p1
-xfs_db: cannot init perag data (117)
-magicnum = 0x58414746
-versionnum = 1
-seqno = 91
-length = 268435200
-bnoroot = 295199
-cntroot = 13451007
-bnolevel = 2
-cntlevel = 2
-flfirst = 232
-fllast = 32
-flcount = 191
-freeblks = 184285136
-longest = 84709383
-btreeblks = 24
+ common.config |  2 ++
+ common.defrag | 10 +++++-----
+ 2 files changed, 7 insertions(+), 5 deletions(-)
 
-The partition has earlier been mounted with -o inode64.
-
-/Ole
+diff --git a/common.config b/common.config
+index 7174127..9c99bfe 100644
+--- a/common.config
++++ b/common.config
+@@ -160,6 +160,8 @@ export INDENT_PROG="`set_prog_path indent`"
+ export XFS_COPY_PROG="`set_prog_path xfs_copy`"
+ export FSTRIM_PROG="`set_prog_path fstrim`"
+ export DUMPE2FS_PROG="`set_prog_path dumpe2fs`"
++export FILEFRAG_PROG="`set_prog_path filefrag`"
++export E4DEFRAG_PROG="`set_prog_path e4defrag`"
+ 
+ # Generate a comparable xfsprogs version number in the form of
+ # major * 10000 + minor * 100 + release
+diff --git a/common.defrag b/common.defrag
+index ea6c14c..9c9eb9b 100644
+--- a/common.defrag
++++ b/common.defrag
+@@ -24,10 +24,10 @@ _require_defrag()
+ {
+     case "$FSTYP" in
+     xfs)
+-        DEFRAG_PROG=/usr/sbin/xfs_fsr
++        DEFRAG_PROG="$XFS_FSR_PROG"
+ 	;;
+     ext4|ext4dev)
+-        DEFRAG_PROG=/usr/bin/e4defrag
++        DEFRAG_PROG="$E4DEFRAG_PROG"
+ 	;;
+     btrfs)
+ 	DEFRAG_PROG="$BTRFS_UTIL_PROG filesystem defragment"
+@@ -38,13 +38,13 @@ _require_defrag()
+     esac
+ 
+     _require_command $DEFRAG_PROG
+-    _require_command /usr/sbin/filefrag
++    _require_command $FILEFRAG_PROG
+ }
+ 
+ _extent_count()
+ {
+-	filefrag $1 | awk '{print $2}'
+-	filefrag -v $1  >> $seq.full 2>&1
++	$FILEFRAG_PROG $1 | awk '{print $2}'
++	$FILEFRAG_PROG -v $1  >> $seq.full 2>&1
+ }
+ 
+ # Defrag file, check it, and remove it.
+-- 
+1.7.12.rc2.18.g61b472e
 
 _______________________________________________
 xfs mailing list
