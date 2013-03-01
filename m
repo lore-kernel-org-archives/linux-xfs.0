@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0FA1B7FAF
-	for <xfs@oss.sgi.com>; Fri,  1 Mar 2013 03:21:24 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E3448304039
-	for <xfs@oss.sgi.com>; Fri,  1 Mar 2013 01:21:23 -0800 (PST)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	br7wrChJRftS8q9F for <xfs@oss.sgi.com>;
-	Fri, 01 Mar 2013 01:21:22 -0800 (PST)
-Date: Fri, 1 Mar 2013 20:21:18 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfstests: use right path in _require_defrag()
-Message-ID: <20130301092118.GA23616@dastard>
-References: <1362129959-4504-1-git-send-email-wenqing.lz@taobao.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id BA3257FAF
+	for <xfs@oss.sgi.com>; Fri,  1 Mar 2013 03:37:40 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 4604BAC004
+	for <xfs@oss.sgi.com>; Fri,  1 Mar 2013 01:37:40 -0800 (PST)
+Received: from mail-wi0-f174.google.com (mail-wi0-f174.google.com
+	[209.85.212.174]) by cuda.sgi.com with ESMTP id
+	QUDqseexcAxgFqPT (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 01 Mar 2013 01:37:38 -0800 (PST)
+Received: by mail-wi0-f174.google.com with SMTP id hi8so8824102wib.1
+	for <xfs@oss.sgi.com>; Fri, 01 Mar 2013 01:37:37 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1362129959-4504-1-git-send-email-wenqing.lz@taobao.com>
+In-Reply-To: <512FA67D.2090708@sandeen.net>
+References: <CANU9nTnvJS50vdQv2K0gKHZPvzzH5EY1qpizJNsqUobrr2juDA@mail.gmail.com>
+	<512FA67D.2090708@sandeen.net>
+From: Ole Tange <tange@binf.ku.dk>
+Date: Fri, 1 Mar 2013 10:37:17 +0100
+Message-ID: <CANU9nTm3vR3Z5JwRwou4vnNejstAkAsnBb2ivwx-KhnHHbWpoQ@mail.gmail.com>
+Subject: Re: xfs_repair segfaults
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,52 +32,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Zheng Liu <gnehzuil.liu@gmail.com>
-Cc: Zheng Liu <wenqing.lz@taobao.com>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-On Fri, Mar 01, 2013 at 05:25:59PM +0800, Zheng Liu wrote:
-> In _require_defrag defragmentation command path is fixed.  That will
-> cause that this test case is skipped in some distributions.
-> 
-> Signed-off-by: Zheng Liu <wenqing.lz@taobao.com>
-> ---
->  common.defrag | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/common.defrag b/common.defrag
-> index ea6c14c..7be8ad9 100644
-> --- a/common.defrag
-> +++ b/common.defrag
-> @@ -24,10 +24,10 @@ _require_defrag()
->  {
->      case "$FSTYP" in
->      xfs)
-> -        DEFRAG_PROG=/usr/sbin/xfs_fsr
-> +        DEFRAG_PROG=`which xfs_fsr`
->  	;;
->      ext4|ext4dev)
-> -        DEFRAG_PROG=/usr/bin/e4defrag
-> +        DEFRAG_PROG=`which e4defrag`
->  	;;
->      btrfs)
->  	DEFRAG_PROG="$BTRFS_UTIL_PROG filesystem defragment"
-> @@ -38,7 +38,7 @@ _require_defrag()
->      esac
->  
->      _require_command $DEFRAG_PROG
-> -    _require_command /usr/sbin/filefrag
-> +    _require_command `which filefrag`
->  }
+On Thu, Feb 28, 2013 at 7:48 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+> On 2/28/13 9:22 AM, Ole Tange wrote:
 
-$DEFRAG_PROG and $FILEFRAG_PROG should be set up in common.config
-with set_prog_path, not in _require_defrag.
+>> /usr/local/src/xfsprogs-3.1.10/repair# ./xfs_repair -n /dev/md5p1
+[...]
+>> Segmentation fault (core dumped)
+>>
+>> Core put in: http://dna.ku.dk/~tange/tmp/xfs_repair.core.bz2
+>
+> We'd need a binary w/ debug symbols to go along with it.
 
-Cheers,
+http://dna.ku.dk/~tange/tmp/xfs_repair
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> an xfs_metadump might recreate the problem too.
+
+# sudo ./xfs_metadump.sh -g /dev/md5p1 - | pbzip2 >
+/home/tange/public_html/tmp/metadump.bz2
+xfs_metadump: cannot init perag data (117)
+Copying log
+
+http://dna.ku.dk/~tange/tmp/metadump.bz2
+
+Please consider providing an example in the man page for xfs_metadump e.g:
+
+  xfs_metadump.sh -g /dev/sda2 meta.dump
+
+
+/Ole
 
 _______________________________________________
 xfs mailing list
