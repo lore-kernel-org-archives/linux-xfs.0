@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 405AF7FEE
-	for <xfs@oss.sgi.com>; Fri,  1 Mar 2013 14:30:40 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id CD732AC002
-	for <xfs@oss.sgi.com>; Fri,  1 Mar 2013 12:30:39 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id CD2BE7FD5
+	for <xfs@oss.sgi.com>; Fri,  1 Mar 2013 14:53:08 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 9A1B68F8035
+	for <xfs@oss.sgi.com>; Fri,  1 Mar 2013 12:53:08 -0800 (PST)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	hhPzHqfALtVIbkGQ for <xfs@oss.sgi.com>;
-	Fri, 01 Mar 2013 12:30:37 -0800 (PST)
-Date: Sat, 2 Mar 2013 07:30:26 +1100
+	CTvy1TkoLLWT3RBc for <xfs@oss.sgi.com>;
+	Fri, 01 Mar 2013 12:53:07 -0800 (PST)
+Date: Sat, 2 Mar 2013 07:53:05 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH V2] xfstests: don't remove trailing zeros from integers
-Message-ID: <20130301203026.GC23616@dastard>
-References: <20130301180158.GC6449@wallace>
+Subject: Re: xfs_repair segfaults
+Message-ID: <20130301205305.GD23616@dastard>
+References: <CANU9nTnvJS50vdQv2K0gKHZPvzzH5EY1qpizJNsqUobrr2juDA@mail.gmail.com>
+	<20130301111701.GB23616@dastard>
+	<CANU9nTkkEd61UsM+KngGzMzXVXdOa2oXOPtmqN4xGaPuEBN_nQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130301180158.GC6449@wallace>
+In-Reply-To: <CANU9nTkkEd61UsM+KngGzMzXVXdOa2oXOPtmqN4xGaPuEBN_nQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,50 +31,72 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Whitney <enwlinux@gmail.com>
-Cc: sandeen@redhat.com, xfs@oss.sgi.com
+To: Ole Tange <tange@binf.ku.dk>
+Cc: xfs@oss.sgi.com
 
-On Fri, Mar 01, 2013 at 01:01:58PM -0500, Eric Whitney wrote:
-> _within_tolerance strips trailing zeros from the min and max range
-> values it outputs.  This leads to damage if the min or max value is
-> an integer containing trailing zeros rather than a real number with
-> a fractional part containing trailing zeros. Xfstest 289 can exhibit
-> this problem when its input is out of range.  Modify the code so it
-> will only remove trailing zeros found after a decimal point, and
-> remove decimal points not followed by digits.
+On Fri, Mar 01, 2013 at 01:24:36PM +0100, Ole Tange wrote:
+> On Fri, Mar 1, 2013 at 12:17 PM, Dave Chinner <david@fromorbit.com> wrote:
+> > On Thu, Feb 28, 2013 at 04:22:08PM +0100, Ole Tange wrote:
+> :
+> >> I forced a RAID online. I have done that before and xfs_repair
+> >> normally removes the last hour of data or so, but saves everything
+> >> else.
+> >
+> > Why did you need to force it online?
 > 
-> Signed-off-by: Eric Whitney <enwlinux@gmail.com>
-> ---
->  common.filter |    7 +++++--
->  1 file changed, 5 insertions(+), 2 deletions(-)
+> More than 2 harddisks went offline. We have seen that before and it is
+> not due to bad harddisks. It may be due to driver/timings/controller.
+
+I thought that might be the case. What filesystem errors occurred
+when the srives went offline?
+
+> >> /usr/local/src/xfsprogs-3.1.10/repair# ./xfs_repair -n /dev/md5p1
+> >> Phase 1 - find and verify superblock...
+> >> Phase 2 - using internal log
+> >>         - scan filesystem freespace and inode maps...
+> >> flfirst 232 in agf 91 too large (max = 128)
+> >
+> > Can you run:
+> >
+> > # xfs_db -c "agf 91" -c p /dev/md5p1
+> >
+> > And post the output?
 > 
-> diff --git a/common.filter b/common.filter
-> index 9e4c90c..bfc800b 100644
-> --- a/common.filter
-> +++ b/common.filter
-> @@ -106,8 +106,11 @@ EOF
->  
->    # fix up min, max precision for output
->    # can vary for 5.3, 6.2
-> -  _min=`echo $_min | sed -e 's/0*$//'` # get rid of trailling zeroes
-> -  _max=`echo $_max | sed -e 's/0*$//'` # get rid of trailling zeroes
-> +
-> +  # remove any trailing zeroes from min, max if they have fractional parts
-> +  # and then remove any decimal points not followed by digits
-> +  _min=`echo $_min | sed -e '/\./s/0*$//' | sed -e 's/\.$//'`
-> +  _max=`echo $_max | sed -e '/\./s/0*$//' | sed -e 's/\.$//'`
+> # xfs_db -c "agf 91" -c p /dev/md5p1
+> xfs_db: cannot init perag data (117)
 
-You can do this with a single sed invocation via multiple
-expressions:
+Interesting. It's detecting corrupt AG headers.
 
-$ echo 200.00 | sed -e '/\./s/0*$//' -e 's/\.$//'
-200
-$
+> magicnum = 0x58414746
+> versionnum = 1
+> seqno = 91
+> length = 268435200
+> bnoroot = 295199
+> cntroot = 13451007
+> bnolevel = 2
+> cntlevel = 2
+> flfirst = 232
+> fllast = 32
+> flcount = 191
+
+That implies that the free list is actually 232+191-32 = 391
+entries long. That doesn't add up any way I look at it. both the
+flfirst and flcount fields look wrong here, which rules out a simple
+bit error as the problem. I can't see how these values would have
+been written by XFS as they are out of range for 512 byte sector
+AGFL:
+
+        be32_add_cpu(&agf->agf_flfirst, 1);
+        xfs_trans_brelse(tp, agflbp);
+        if (be32_to_cpu(agf->agf_flfirst) == XFS_AGFL_SIZE(mp))
+                agf->agf_flfirst = 0;
+
+So I suspect that something more than just disks going off line here
+went wrong here, as I've never seen this sort of corruption before...
 
 Cheers,
 
 Dave.
-
 -- 
 Dave Chinner
 david@fromorbit.com
