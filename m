@@ -1,14 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6FE807FD3
-	for <xfs@oss.sgi.com>; Fri,  1 Mar 2013 14:23:29 -0600 (CST)
-Message-ID: <51310E40.7070008@sgi.com>
-Date: Fri, 1 Mar 2013 14:23:28 -0600
-From: Rich Johnston <rjohnston@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id EC2147FE7
+	for <xfs@oss.sgi.com>; Fri,  1 Mar 2013 14:24:26 -0600 (CST)
+Message-ID: <51310E7A.1000905@sgi.com>
+Date: Fri, 01 Mar 2013 14:24:26 -0600
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 00/10] xfstests: Stress tests improments v5
-References: <1361356935-29153-1-git-send-email-dmonakhov@openvz.org>
-In-Reply-To: <1361356935-29153-1-git-send-email-dmonakhov@openvz.org>
+Subject: Re: [PATCH] xfs: Fix possible truncation of log data in
+	xlog_bread_noalign()
+References: <BAB94DBB0E89D8409949BC28AC95914C47C485E5@USMAExch1.tad.internal.tilera.com>
+	<20130223000802.GB26081@dastard>
+	<BAB94DBB0E89D8409949BC28AC95914C47C48702@USMAExch1.tad.internal.tilera.com>
+	<20130223235546.GA5551@dastard>
+	<BAB94DBB0E89D8409949BC28AC95914C47C488D8@USMAExch1.tad.internal.tilera.com>
+	<20130224141017.GC5551@dastard>
+	<BAB94DBB0E89D8409949BC28AC95914C47C49005@USMAExch1.tad.internal.tilera.com>
+	<5130CE9E.9080501@sgi.com>
+In-Reply-To: <5130CE9E.9080501@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,150 +29,113 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dmitry Monakhov <dmonakhov@openvz.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, dchinner@redhat.com, xfs@oss.sgi.com
+To: Tony Lu <zlu@tilera.com>
+Cc: Alex Elder <elder@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, Ben Myers <bpm@sgi.com>, Dave Chinner <dchinner@redhat.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
 
-Committed patches 1-3 and 5-8.
-
-Waiting for responses back on patches 4, 9, and 10.
-
-Thanks
---Rich
-
-On 02/20/2013 04:42 AM, Dmitry Monakhov wrote:
-> 1   add fio requirement V2
-> 2   add configurable load factors
-> 3   hardcode fops for determinable fsstests runs
-> 4   fsstress add replace file operation
-> 5   allow fsstress to use load factor where appropriate
-> 6   move run_check to common.rc
-> 7   add  fallocate/truncate vs AIO/DIO stress test
-> 8   add  fallocate/punch_hole vs AIO/DIO stress test
-> 9   add defragmentation stress tests for ext4
-> 10  add disk failure simulation test
+On 03/01/13 09:51, Mark Tinguely wrote:
+> On 02/26/13 01:28, Tony Lu wrote:
+>> I get a reliable way to reproduce this bug. The logprint and metadump
+>> are attached.
+>>
+>> Kernel version: 2.6.38.8
+>> Mkfs.xfs version: xfsprogs-3.1.1
+>> mkfs.xfs -s size=4096 /dev/sda1
+>>
+>> Run the following mount-cp-umount script to reproduce:
+>> #!/bin/sh
+>> device=/dev/sda1
+>> mount_point=/mnt
+>> times=10
+>>
+>> for ((num=1;num<=$times;num++))
+>> do
+>> echo "$num mount $device $mount_point"
+>> mount $device $mount_point
+>>
+>> echo "cp -rf /bin $mount_point/$num"
+>> cp -rf /bin $mount_point/$num
+>>
+>> echo "$num umount $device $mount_point"
+>> umount $mount_point
+>>
+>> #num=$(($num + 1))
+>> done
+>>
+>> After several times of mount/cp/umount, this xfs crashes, and the xfs
+>> partition can not be mounted any more. Here is the output of console.
+>> -sh-4.1# ./umount-test
+>> 1 mount /dev/sda1 /mnt
+>> XFS mounting filesystem sda1
+>> cp -rf /bin /mnt/1
+>> 1 umount /dev/sda1 /mnt
+>> 2 mount /dev/sda1 /mnt
+>> XFS mounting filesystem sda1
+>> cp -rf /bin /mnt/2
+>> 2 umount /dev/sda1 /mnt
+>> 3 mount /dev/sda1 /mnt
+>> XFS mounting filesystem sda1
+>> cp -rf /bin /mnt/3
+>> 3 umount /dev/sda1 /mnt
+>> 4 mount /dev/sda1 /mnt
+>> XFS mounting filesystem sda1
+>> cp -rf /bin /mnt/4
+>> 4 umount /dev/sda1 /mnt
+>> 5 mount /dev/sda1 /mnt
+>> XFS mounting filesystem sda1
+>> Starting XFS recovery on filesystem: sda1 (logdev: internal)
+>> Ending XFS recovery on filesystem: sda1 (logdev: internal)cp -rf /bin
+>> /mnt/5
+>> 5 umount /dev/sda1 /mnt
+>> 6 mount /dev/sda1 /mnt
+>>
+>> XFS mounting filesystem sda1
+>> Starting XFS recovery on filesystem: sda1 (logdev: internal)
+>> Ending XFS recovery on filesystem: sda1 (logdev: internal)Interrupt
+>> cp -rf /bin /mnt/6
+>> 6 umount /dev/sda1 /mnt
+>> 7 mount /dev/sda1 /mnt
+>>
+>> XFS mounting filesystem sda1
+>> cp -rf /bin /mnt/7
+>> 7 umount /dev/sda1 /mnt
+>> Interrupt
+>> 8 mount /dev/sda1 /mnt
+>> XFS mounting filesystem sda1
+>> Starting XFS recovery on filesystem: sda1 (logdev: internal)
+>> XFS: xlog_recover_process_data: bad clientid
+>> XFS: log mount/recovery failed: error 5
+>> XFS: log mount failed
+>>
+>> Thanks
+>> -Tony
 >
+> It works fine on a 2.6.32 machine I had sitting around - and I never
+> required log recovery.
+>
+> I think you need to answer Dave's question as to why is your unmounts
+> are requiring recovery?
+>
+> Are there errors in the /var/log/messages?
+>
+> I downloaded the Linux 2.6.38.8 source and take a look if I can recreate
+> the problem.
+>
+> --Mark.
 
+I could not reproduce the problem on a vanilla install. XFS shutdown and 
+remounted cleanly running your script (several iterations looping set to 
+100).
 
-commit 892125a53aac8e82dec99fe4e824c39513d4a17a
-Author: Dmitry Monakhov <dmonakhov@openvz.org>
-Date:   Wed Feb 20 10:42:13 2013 +0000
+I started fsstress on another XFS partition on the same disk to see if I 
+could force a shutdown race. With CONFIG_XFS_DEBUG=y, I could trigger 
+other ASSERTs on the fsstress partition so I never stayed up long enough 
+to cause a shutdown race.
 
-     xfstest: add fallocate/punch_hole vs AIO/DIO stress test
+Not wanting to patch that version of Linux/XFS, I am bailing here. If 
+you want to turn on the XFS debug it may point out why your filesystem 
+is not shutting down cleanly.
 
-     Run random AIO/DIO activity (fio's job:direct_aio_raicer)
-     random fallocate activity(fio's job:falloc_raicer)
-     and random punch_hole activity(punch_hole_raicer) on a common
-     file in parallel. If a race exists, old dio request may rewrite
-     punched block after it was allocated to another file, we will
-     catch that by verifier fio's job: "aio-dio-verifier".
-
-     Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
-     Reviewed-by: Rich Johnston <rjohnston@sgi.com>
-     Signed-off-by: Rich Johnston <rjohnston@sgi.com>
-
-commit 0f88dc26abf55cee39ede490da08ed0d2960cdb2
-Author: Dmitry Monakhov <dmonakhov@openvz.org>
-Date:   Wed Feb 20 10:42:12 2013 +0000
-
-     xfstest: add fallocate/truncate vs AIO/DIO stress test
-
-     Run DIO, fallocate and truncate threads on a common file in parallel.
-     If a race exists, the old dio request may rewrite blocks after it was
-     allocated to another file, we will catch that by verifying blocks 
-content.
-
-     this patch known to catch deadlock for ext4
-     http://lists.openwall.net/linux-ext4/2012/09/06/3
-
-     Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
-     Reviewed-by: Rich Johnston <rjohnston@sgi.com>
-     Signed-off-by: Rich Johnston <rjohnston@sgi.com>
-
-commit bb949015a8d3fcf4a5c105b1edd74f27b848a806
-Author: Dmitry Monakhov <dmonakhov@openvz.org>
-Date:   Wed Feb 20 10:42:11 2013 +0000
-
-     xfstest: move run_check to common.rc
-
-     Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
-     Reviewed-by: Rich Johnston <rjohnston@sgi.com>
-     Signed-off-by: Rich Johnston <rjohnston@sgi.com>
-
-     Move run_check to common.rc.
-commit b84aade2f49f309c44e6c0b029586c9dcb7b1c22
-Author: Dmitry Monakhov <dmonakhov@openvz.org>
-Date:   Wed Feb 20 10:42:10 2013 +0000
-
-     xfstest: allow fsstress to use load factor where appropriate
-
-     1) Add _scale_fsstress_args function which transform arguments 
-according
-        to load factors
-     2) Let all non deterministic fsstress tests to use scaled arguments
-
-     Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
-     Reviewed-by: Rich Johnston <rjohnston@sgi.com>
-     Signed-off-by: Rich Johnston <rjohnston@sgi.com>
-
-commit d14981fa536ac0106dbe9b3d5088a5a50be49f55
-Author: Dmitry Monakhov <dmonakhov@openvz.org>
-Date:   Wed Feb 20 10:42:08 2013 +0000
-
-     xfstests: hardcode fops for determinable fsstests runs
-
-     106,107 and 117 are frozen tests which use known seed, it is
-     reasonable to explicitly hardcode file operations in order to avoid
-     implicit changes caused by future changes in fsstress.
-
-     NOTE: options generated like follows: fsstress -S c $ORIG_ARGS
-
-     Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
-     Reviewed-by: Rich Johnston <rjohnston@sgi.com>
-     Signed-off-by: Rich Johnston <rjohnston@sgi.com>
-
-commit 66a98478e3cffecfbd62d3a124b626ddda447c57
-Author: Dmitry Monakhov <dmonakhov@openvz.org>
-Date:   Wed Feb 20 10:42:07 2013 +0000
-
-     xfstest: add configurable load factors
-
-     Most stress test has probable behavior, the longer test run the
-     larger corner cases will be cover. It is reasonable to allow
-     user to provide some sort of system load factor.
-     This patch introduce two global variables
-     LOAD_FACTOR: Usually means factor number of running tasks
-     TIME_FACTOR: Usually means factor of run time, or number of operations
-     If not specified both variables defined to 1, so original behavior
-     preserved.
-     TODO: Change all stress tests to use this variables
-
-     Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
-     Reviewed-by: Rich Johnston <rjohnston@sgi.com>
-     Signed-off-by: Rich Johnston <rjohnston@sgi.com>
-
-commit b3db6021fc2df4e99c9e098612446f4c86e70766
-Author: Dmitry Monakhov <dmonakhov@openvz.org>
-Date:   Wed Feb 20 10:42:06 2013 +0000
-
-     xfstests: add fio requirement V2
-
-     FIO is very flexible io generator, I would call it IO swiss knife.
-     Currently we have tons of hardcoded application which reproduces
-     some predefined scenario. This approach has obvious disadvantages
-     1) Lack of flexibility: one written it is hard to modify it in future
-     2) Code base is large, many routines written again and again
-
-     At the same time add new fio based test, just add simple INI file.
-     This greatly simplifies code review. I do believe that some day we will
-     replace most of hardcoded io binaries with fio.
-
-     One who is planning to run $FIO_PROG should first check that system
-     contains appropriate version which is able to handle jobfile
-     for example:  _require_fio 286-job.fio
-
-     Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
-     Reviewed-by: Rich Johnston <rjohnston@sgi.com>
-     Signed-off-by: Rich Johnston <rjohnston@sgi.com>
+--Mark.
 
 _______________________________________________
 xfs mailing list
