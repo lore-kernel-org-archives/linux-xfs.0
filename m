@@ -1,13 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8959B7FF4
-	for <xfs@oss.sgi.com>; Fri,  1 Mar 2013 17:29:42 -0600 (CST)
-Date: Fri, 1 Mar 2013 17:29:41 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: [STABLE] [PATCH] xfs: xfs_bmap_add_attrfork_local is too generic
-Message-ID: <20130301232941.GJ30652@sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 701027FF6
+	for <xfs@oss.sgi.com>; Fri,  1 Mar 2013 17:46:51 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id EFF6EAC002
+	for <xfs@oss.sgi.com>; Fri,  1 Mar 2013 15:46:50 -0800 (PST)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id MB4SHYJnA1LcCmh8 for <xfs@oss.sgi.com>;
+	Fri, 01 Mar 2013 15:46:49 -0800 (PST)
+Message-ID: <51313DE8.5080104@sandeen.net>
+Date: Fri, 01 Mar 2013 17:46:48 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
+Subject: [PATCH] xfs_repair: skip freelist scan of dodgy agf in no-modify mode
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,256 +25,65 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: stable@vger.kernel.org
-Cc: dchinner@redhat.com, xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
+Cc: Ole Tange <tange@binf.ku.dk>
 
-Hi,
+In no-modify mode (-n), verify_set_agf doesn't fix up bad
+freelist blocks that it finds.  When we get to scan_freelist,
+this can wreak havoc if, for example, first > last and the loop
+never exits; we index agfl->agfl_bno[i] off into the weeds.
 
-Please take this fix for 3.8-stable.  It resolves a problem with write
-verifiers and symlinks which results in a forced unmount.
+To fix this, re-check the values in no-modify mode, and if
+they're off, warn about it and skip the scan.
 
-Thanks,
-	Ben
+In addition, add a check to verify_set_agf() to ensure that
+first <= last.
 
-From: Dave Chinner <dchinner@redhat.com>
-Date: Mon, 11 Feb 2013 15:58:13 +1100
-Subject: [PATCH] xfs: xfs_bmap_add_attrfork_local is too generic
-
-Commit 1e82379b018ceed0f0912327c60d73107dacbcb3 upstream.
-
-When we are converting local data to an extent format as a result of
-adding an attribute, the type of data contained in the local fork
-determines the behaviour that needs to occur.
-
-xfs_bmap_add_attrfork_local() already handles the directory data
-case specially by using S_ISDIR() and calling out to
-xfs_dir2_sf_to_block(), but with verifiers we now need to handle
-each different type of metadata specially and different metadata
-formats require different verifiers (and eventually block header
-initialisation).
-
-There is only a single place that we add and attribute fork to
-the inode, but that is in the attribute code and it knows nothing
-about the specific contents of the data fork. It is only the case of
-local data that is the issue here, so adding code to hadnle this
-case in the attribute specific code is wrong. Hence we are really
-stuck trying to detect the data fork contents in
-xfs_bmap_add_attrfork_local() and performing the correct callout
-there.
-
-Luckily the current cases can be determined by S_IS* macros, and we
-can push the work off to data specific callouts, but each of those
-callouts does a lot of work in common with
-xfs_bmap_local_to_extents(). The only reason that this fails for
-symlinks right now is is that xfs_bmap_local_to_extents() assumes
-the data fork contains extent data, and so attaches a a bmap extent
-data verifier to the buffer and simply copies the data fork
-information straight into it.
-
-To fix this, allow us to pass a "formatting" callback into
-xfs_bmap_local_to_extents() which is responsible for setting the
-buffer type, initialising it and copying the data fork contents over
-to the new buffer. This allows callers to specify how they want to
-format the new buffer (which is necessary for the upcoming CRC
-enabled metadata blocks) and hence make xfs_bmap_local_to_extents()
-useful for any type of data fork content.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
-Signed-off-by: Ben Myers <bpm@sgi.com>
+Reported-by: Ole Tange <tange@binf.ku.dk>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- fs/xfs/xfs_bmap.c | 114 ++++++++++++++++++++++++++++++++++++++++++++----------
- 1 file changed, 93 insertions(+), 21 deletions(-)
 
-diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-index cdb2d33..572a858 100644
---- a/fs/xfs/xfs_bmap.c
-+++ b/fs/xfs/xfs_bmap.c
-@@ -147,7 +147,10 @@ xfs_bmap_local_to_extents(
- 	xfs_fsblock_t	*firstblock,	/* first block allocated in xaction */
- 	xfs_extlen_t	total,		/* total blocks needed by transaction */
- 	int		*logflagsp,	/* inode logging flags */
--	int		whichfork);	/* data or attr fork */
-+	int		whichfork,	/* data or attr fork */
-+	void		(*init_fn)(struct xfs_buf *bp,
-+				   struct xfs_inode *ip,
-+				   struct xfs_ifork *ifp));
- 
- /*
-  * Search the extents list for the inode, for the extent containing bno.
-@@ -357,7 +360,42 @@ xfs_bmap_add_attrfork_extents(
- }
- 
- /*
-- * Called from xfs_bmap_add_attrfork to handle local format files.
-+ * Block initialisation functions for local to extent format conversion.
-+ * As these get more complex, they will be moved to the relevant files,
-+ * but for now they are too simple to worry about.
-+ */
-+STATIC void
-+xfs_bmap_local_to_extents_init_fn(
-+	struct xfs_buf		*bp,
-+	struct xfs_inode	*ip,
-+	struct xfs_ifork	*ifp)
-+{
-+	bp->b_ops = &xfs_bmbt_buf_ops;
-+	memcpy(bp->b_addr, ifp->if_u1.if_data, ifp->if_bytes);
-+}
-+
-+STATIC void
-+xfs_symlink_local_to_remote(
-+	struct xfs_buf		*bp,
-+	struct xfs_inode	*ip,
-+	struct xfs_ifork	*ifp)
-+{
-+	/* remote symlink blocks are not verifiable until CRCs come along */
-+	bp->b_ops = NULL;
-+	memcpy(bp->b_addr, ifp->if_u1.if_data, ifp->if_bytes);
-+}
-+
-+/*
-+ * Called from xfs_bmap_add_attrfork to handle local format files. Each
-+ * different data fork content type needs a different callout to do the
-+ * conversion. Some are basic and only require special block initialisation
-+ * callouts for the data formating, others (directories) are so specialised they
-+ * handle everything themselves.
-+ *
-+ * XXX (dgc): investigate whether directory conversion can use the generic
-+ * formatting callout. It should be possible - it's just a very complex
-+ * formatter. it would also require passing the transaction through to the init
-+ * function.
-  */
- STATIC int					/* error */
- xfs_bmap_add_attrfork_local(
-@@ -368,25 +406,29 @@ xfs_bmap_add_attrfork_local(
- 	int			*flags)		/* inode logging flags */
- {
- 	xfs_da_args_t		dargs;		/* args for dir/attr code */
--	int			error;		/* error return value */
--	xfs_mount_t		*mp;		/* mount structure pointer */
- 
- 	if (ip->i_df.if_bytes <= XFS_IFORK_DSIZE(ip))
- 		return 0;
-+
- 	if (S_ISDIR(ip->i_d.di_mode)) {
--		mp = ip->i_mount;
- 		memset(&dargs, 0, sizeof(dargs));
- 		dargs.dp = ip;
- 		dargs.firstblock = firstblock;
- 		dargs.flist = flist;
--		dargs.total = mp->m_dirblkfsbs;
-+		dargs.total = ip->i_mount->m_dirblkfsbs;
- 		dargs.whichfork = XFS_DATA_FORK;
- 		dargs.trans = tp;
--		error = xfs_dir2_sf_to_block(&dargs);
--	} else
--		error = xfs_bmap_local_to_extents(tp, ip, firstblock, 1, flags,
--			XFS_DATA_FORK);
--	return error;
-+		return xfs_dir2_sf_to_block(&dargs);
+diff --git a/repair/agheader.c b/repair/agheader.c
+index 769022d..68789fe 100644
+--- a/repair/agheader.c
++++ b/repair/agheader.c
+@@ -86,6 +86,14 @@ verify_set_agf(xfs_mount_t *mp, xfs_agf_t *agf, xfs_agnumber_t i)
+ 	 * check first/last AGF fields.  if need be, lose the free
+ 	 * space in the AGFL, we'll reclaim it later.
+ 	 */
++	if (be32_to_cpu(agf->agf_flfirst) > be32_to_cpu(agf->agf_fllast)) {
++		do_warn(_("flfirst %d in agf %d > fllast %d\n"),
++			be32_to_cpu(agf->agf_flfirst),
++			i, be32_to_cpu(agf->agf_fllast));
++		if (!no_modify)
++			agf->agf_fllast = agf->agf_flfirst = cpu_to_be32(0);
 +	}
 +
-+	if (S_ISLNK(ip->i_d.di_mode))
-+		return xfs_bmap_local_to_extents(tp, ip, firstblock, 1,
-+						 flags, XFS_DATA_FORK,
-+						 xfs_symlink_local_to_remote);
-+
-+	return xfs_bmap_local_to_extents(tp, ip, firstblock, 1, flags,
-+					 XFS_DATA_FORK,
-+					 xfs_bmap_local_to_extents_init_fn);
- }
- 
- /*
-@@ -3221,7 +3263,10 @@ xfs_bmap_local_to_extents(
- 	xfs_fsblock_t	*firstblock,	/* first block allocated in xaction */
- 	xfs_extlen_t	total,		/* total blocks needed by transaction */
- 	int		*logflagsp,	/* inode logging flags */
--	int		whichfork)	/* data or attr fork */
-+	int		whichfork,
-+	void		(*init_fn)(struct xfs_buf *bp,
-+				   struct xfs_inode *ip,
-+				   struct xfs_ifork *ifp))
- {
- 	int		error;		/* error return value */
- 	int		flags;		/* logging flags returned */
-@@ -3241,12 +3286,12 @@ xfs_bmap_local_to_extents(
- 		xfs_buf_t	*bp;	/* buffer for extent block */
- 		xfs_bmbt_rec_host_t *ep;/* extent record pointer */
- 
-+		ASSERT((ifp->if_flags &
-+			(XFS_IFINLINE|XFS_IFEXTENTS|XFS_IFEXTIREC)) == XFS_IFINLINE);
- 		memset(&args, 0, sizeof(args));
- 		args.tp = tp;
- 		args.mp = ip->i_mount;
- 		args.firstblock = *firstblock;
--		ASSERT((ifp->if_flags &
--			(XFS_IFINLINE|XFS_IFEXTENTS|XFS_IFEXTIREC)) == XFS_IFINLINE);
- 		/*
- 		 * Allocate a block.  We know we need only one, since the
- 		 * file currently fits in an inode.
-@@ -3262,17 +3307,20 @@ xfs_bmap_local_to_extents(
- 		args.mod = args.minleft = args.alignment = args.wasdel =
- 			args.isfl = args.minalignslop = 0;
- 		args.minlen = args.maxlen = args.prod = 1;
--		if ((error = xfs_alloc_vextent(&args)))
-+		error = xfs_alloc_vextent(&args);
-+		if (error)
- 			goto done;
--		/*
--		 * Can't fail, the space was reserved.
--		 */
-+
-+		/* Can't fail, the space was reserved. */
- 		ASSERT(args.fsbno != NULLFSBLOCK);
- 		ASSERT(args.len == 1);
- 		*firstblock = args.fsbno;
- 		bp = xfs_btree_get_bufl(args.mp, tp, args.fsbno, 0);
--		bp->b_ops = &xfs_bmbt_buf_ops;
--		memcpy(bp->b_addr, ifp->if_u1.if_data, ifp->if_bytes);
-+
-+		/* initialise the block and copy the data */
-+		init_fn(bp, ip, ifp);
-+
-+		/* account for the change in fork size and log everything */
- 		xfs_trans_log_buf(tp, bp, 0, ifp->if_bytes - 1);
- 		xfs_bmap_forkoff_reset(args.mp, ip, whichfork);
- 		xfs_idata_realloc(ip, -ifp->if_bytes, whichfork);
-@@ -4919,8 +4967,32 @@ xfs_bmapi_write(
- 	XFS_STATS_INC(xs_blk_mapw);
- 
- 	if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_LOCAL) {
-+		/*
-+		 * XXX (dgc): This assumes we are only called for inodes that
-+		 * contain content neutral data in local format. Anything that
-+		 * contains caller-specific data in local format that needs
-+		 * transformation to move to a block format needs to do the
-+		 * conversion to extent format itself.
-+		 *
-+		 * Directory data forks and attribute forks handle this
-+		 * themselves, but with the addition of metadata verifiers every
-+		 * data fork in local format now contains caller specific data
-+		 * and as such conversion through this function is likely to be
-+		 * broken.
-+		 *
-+		 * The only likely user of this branch is for remote symlinks,
-+		 * but we cannot overwrite the data fork contents of the symlink
-+		 * (EEXIST occurs higher up the stack) and so it will never go
-+		 * from local format to extent format here. Hence I don't think
-+		 * this branch is ever executed intentionally and we should
-+		 * consider removing it and asserting that xfs_bmapi_write()
-+		 * cannot be called directly on local format forks. i.e. callers
-+		 * are completely responsible for local to extent format
-+		 * conversion, not xfs_bmapi_write().
-+		 */
- 		error = xfs_bmap_local_to_extents(tp, ip, firstblock, total,
--						  &bma.logflags, whichfork);
-+					&bma.logflags, whichfork,
-+					xfs_bmap_local_to_extents_init_fn);
- 		if (error)
- 			goto error0;
+ 	if (be32_to_cpu(agf->agf_flfirst) >= XFS_AGFL_SIZE(mp))  {
+ 		do_warn(_("flfirst %d in agf %d too large (max = %zu)\n"),
+ 			be32_to_cpu(agf->agf_flfirst),
+diff --git a/repair/scan.c b/repair/scan.c
+index 5345094..0f83fb4 100644
+--- a/repair/scan.c
++++ b/repair/scan.c
+@@ -1067,6 +1067,17 @@ scan_freelist(
  	}
--- 
-1.7.12.4
+ 	agfl = XFS_BUF_TO_AGFL(agflbuf);
+ 	i = be32_to_cpu(agf->agf_flfirst);
++	if (no_modify) {
++		/* agf values not sanitized, so double check */
++		if (i >= XFS_AGFL_SIZE(mp) ||
++		    be32_to_cpu(agf->agf_fllast) >= XFS_AGFL_SIZE(mp) ||
++		    i > be32_to_cpu(agf->agf_fllast))
++			do_warn(_("agf %d freelist blocks bad, skipping scan\n"),
++				i);
++			return;
++	} else /* should have been fixed in verify_set_agf() */
++		ASSERT(0);
++
+ 	count = 0;
+ 	for (;;) {
+ 		bno = be32_to_cpu(agfl->agfl_bno[i]);
 
 _______________________________________________
 xfs mailing list
