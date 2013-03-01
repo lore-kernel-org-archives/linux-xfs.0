@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A85637FD5
-	for <xfs@oss.sgi.com>; Fri,  1 Mar 2013 13:23:51 -0600 (CST)
-Message-ID: <51310046.5090306@sgi.com>
-Date: Fri, 1 Mar 2013 13:23:50 -0600
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0EEB97F9A
+	for <xfs@oss.sgi.com>; Fri,  1 Mar 2013 14:11:20 -0600 (CST)
+Message-ID: <51310B63.4070105@sgi.com>
+Date: Fri, 1 Mar 2013 14:11:15 -0600
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 09/10] xfstest: add defragmentation stress tests for ext4
+Subject: Re: [PATCH 10/10] xfstests: add disk failure simulation test
 References: <1361356935-29153-1-git-send-email-dmonakhov@openvz.org>
-	<1361356935-29153-10-git-send-email-dmonakhov@openvz.org>
-In-Reply-To: <1361356935-29153-10-git-send-email-dmonakhov@openvz.org>
+	<1361356935-29153-11-git-send-email-dmonakhov@openvz.org>
+In-Reply-To: <1361356935-29153-11-git-send-email-dmonakhov@openvz.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,206 +26,58 @@ To: Dmitry Monakhov <dmonakhov@openvz.org>
 Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, dchinner@redhat.com, xfs@oss.sgi.com
 
 On 02/20/2013 04:42 AM, Dmitry Monakhov wrote:
-> Perform various regression tests for ext4defrag  subsystem
+> There are many situations where disk may fail for example
+> 1) brutal usb dongle unplug
+> 2) iscsi (or any other netbdev) failure due to network issues
+> In this situation filesystem which use this blockdevice is
+> expected to fail(force RO remount, abort, etc) but whole system
+> should still be operational. In other words:
+> 1) Kernel should not panic
+> 2) Memory should not leak
+> 3) Data integrity operations (sync,fsync,fdatasync, directio) should fail
+>     for affected filesystem
+> 4) It should be possible to umount broken filesystem
 >
->   299'th Test1: Defragment file while other task does direct AIO
->   300'th Test2: Perform defragmentation on file under buffered AIO
->   	while third task does direct AIO to donor file
->   301'th Test3: Two defrag tasks use common donor file.
->   302'th Test4: Stress defragmentation. Several threads pefrorm
-typo 	                                                  perform
+> Later when disk becomes available again we expect(only for journaled filesystems):
+> 5) It will be possible to mount filesystem w/o explicit fsck (in order to caught
 
->   	fragmentation at random position use inplace=1 will
-> 	allocate and free blocks inside defrag event improve
-> 	load pressure.
+typo                                     s/caught/catch/g
+
+>     issues like https://patchwork.kernel.org/patch/1983981/)
+> 6) Filesystem should be operational
+> 7) After mount/umount has being done all errors should be fixed so fsck should
+>     not spot any issues.
 >
-> This tests are considered dengerous because 300'th and 301'th are known
-typo                        dangerous
+> This test use fault enjection (CONFIG_FAIL_MAKE_REQUEST=y config option )
+   May want to mention all the kernel config options required.
+i.e. CONFIG_FAULT_INJECTION=y ... are there others?
+CONFIG_FAULT_INJECTION_DEBUG_FS=y ???
 
-> to trigger OOPS on recent kernels see:https://gist.github.com/dmonakhov/4770294
+> which force all new IO requests to fail for a given device. Xfs already has
+   to force
+
+> XFS_IOC_GOINGDOWN ioctl which provides similar behaviour, but it is fs speciffic
+
+typos s/behaviour/behavior/g  s/speciffic/specific
+                                         > and it does it in an easy way 
+because it perform freeze_bdev() before actual
+> shotdown.
+typo s/shotdown/shutdown/g
+
 >
-> Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
-> ---
->   299           |  126 +++++++++++++++++++++++++++++++++++++++++++++++
->   299.out       |    4 ++
->   300           |  143 +++++++++++++++++++++++++++++++++++++++++++++++++++++
->   300.out       |    4 ++
->   301           |  153 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
->   301.out       |    4 ++
->   302           |  130 ++++++++++++++++++++++++++++++++++++++++++++++++
->   302.out       |    4 ++
->   common.defrag |    4 +-
->   group         |    6 ++-
->   10 files changed, 575 insertions(+), 3 deletions(-)
->   create mode 100755 299
->   create mode 100644 299.out
->   create mode 100755 300
->   create mode 100644 300.out
->   create mode 100755 301
->   create mode 100644 301.out
->   create mode 100755 302
->   create mode 100644 302.out
+> Test run fsstress in background and then force disk failure.
+> Once disk failed it check that (1)-(4) is true.
+   Once the disk fails, check that (1)-(4) are true.
+
+> Then makes disk available again and check that (5)-(7) is also true
+        make the disk ...                                 are
 >
-> diff --git a/299 b/299
-> new file mode 100755
-> index 0000000..4a7a98c
-> --- /dev/null
-> +++ b/299
-> @@ -0,0 +1,126 @@
-> +#! /bin/bash
-> +# FSQA Test No. 299
-> +#
-> +# Ext4 defragmentation stress test
-> +# Defragment file while other task does direct io
-> +#-----------------------------------------------------------------------
-> +# (c) 2013 Dmitry Monakhov
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#
-> +#-----------------------------------------------------------------------
-> +#
-> +# creator
-> +owner=dmonakhov@openvz.org
-> +
-> +seq=`basename $0`
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
-> +
-> +# get standard environment, filters and checks
-> +. ./common.rc
-> +. ./common.filter
-> +. ./common.defrag
-> +
-> +# real QA test starts here
-> +_supported_os Linux
-> +_supported_fs ext4
-> +_need_to_be_root
-> +_require_scratch
-> +_require_defrag
-> +
-I think you meant to set NUM_JOBS here like you did in [Patch 08/10], 
-something like:
+> BE CAREFUL!! test known to cause memory corruption for XFS
+> see: https://gist.github.com/dmonakhov/4953045
+>
 
-+NUM_JOBS=$((4*LOAD_FACTOR))
 
-otherwise you get
 
-###	 [not run] /usr/local/bin/fio too old
-
-> +BLK_DEV_SIZE=`blockdev --getsz $SCRATCH_DEV`
-> +# We need space for 2 files (test file, and donor one)
-> +# reserve 30% in order to avoid ENOSPC
-> +FILE_SIZE=$((BLK_DEV_SIZE * (512 / (2 + 1))))
-> +
-> +cat >$tmp-$seq.fio <<EOF
-> +# Common e4defrag regression tests
-> +[global]
-> +ioengine=ioe_e4defrag
-> +iodepth=1
-> +directory=${SCRATCH_MNT}
-> +filesize=${FILE_SIZE}
-> +size=999G
-> +buffered=0
-> +fadvise_hint=0
-> +group_reporting
-> +
-> +#################################
-> +# Test1
-> +# Defragment file while other task does direct io
-> +
-> +# Continious sequential defrag activity
-> +[defrag-4k]
-> +ioengine=e4defrag
-> +iodepth=1
-> +bs=128k
-> +donorname=test1.def
-> +filename=test1
-> +inplace=0
-> +rw=write
-> +numjobs=${NUM_JOBS}
-> +runtime=30*${TIME_FACTOR}
-> +time_based
-> +
-> +# Verifier
-> +[aio-dio-verifier]
-> +ioengine=libaio
-> +iodepth=128*${LOAD_FACTOR}
-> +numjobs=1
-> +verify=crc32c-intel
-> +verify_fatal=1
-> +verify_dump=1
-> +verify_backlog=1024
-> +verify_async=1
-> +verifysort=1
-> +direct=1
-> +bs=64k
-> +rw=randwrite
-> +filename=test1
-> +runtime=30*${TIME_FACTOR}
-> +time_based
-> +EOF
-> +
-> +_workout()
-> +{
-> +	echo ""
-> +	echo " Start defragment activity "
-git does not like trailing whitespace   ^
-(same for the other 3 tests)
-> +	echo ""
-> +	cat $tmp-$seq.fio >>  $seq.full
-> +	run_check $FIO_PROG $tmp-$seq.fio
-> +}
-> +
-> +_require_fio $tmp-$seq.fio
-> +
-> +_scratch_mkfs  >> $seq.full 2>&1
-> +_scratch_mount
-> +
-> +if ! _workout; then
-> +	umount $SCRATCH_DEV 2>/dev/null
-> +	exit
-> +fi
-> +
-> +if ! _scratch_unmount; then
-> +	echo "failed to umount"
-> +	status=1
-> +	exit
-> +fi
-> +_check_scratch_fs
-> +status=$?
-> +exit diff --git a/299.out b/299.out new file mode 100644 index 0000000..b215a3f
-> diff --git a/299.out b/299.out
-> new file mode 100644
-> index 0000000..c2b0b4c
-> --- /dev/null
-> +++ b/299.out
-> @@ -0,0 +1,4 @@
-> +QA output created by 299
-> +
-> + Start defragment activity
-remove trailing whitespace   ^
-(same for the other 3 tests)
-
-Let me know if you agree with these changes and I will make them at 
-commit time.
-
-Thanks
---Rich
 
 _______________________________________________
 xfs mailing list
