@@ -1,16 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6DE747FFE
-	for <xfs@oss.sgi.com>; Fri,  1 Mar 2013 17:56:42 -0600 (CST)
-Date: Fri, 1 Mar 2013 17:56:41 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 05/16] xfs: add CRC checks to the AGFL
-Message-ID: <20130301235641.GE22182@sgi.com>
-References: <1361755901-12453-1-git-send-email-david@fromorbit.com>
-	<1361755901-12453-6-git-send-email-david@fromorbit.com>
+	by oss.sgi.com (Postfix) with ESMTP id A19D57FF6
+	for <xfs@oss.sgi.com>; Fri,  1 Mar 2013 19:18:18 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 14C9AAC001
+	for <xfs@oss.sgi.com>; Fri,  1 Mar 2013 17:18:14 -0800 (PST)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	VuTzgb2jElTefWl2 for <xfs@oss.sgi.com>;
+	Fri, 01 Mar 2013 17:18:10 -0800 (PST)
+Date: Sat, 2 Mar 2013 12:18:06 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs_repair: skip freelist scan of dodgy agf in no-modify
+	mode
+Message-ID: <20130302011806.GF23616@dastard>
+References: <51313DE8.5080104@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1361755901-12453-6-git-send-email-david@fromorbit.com>
+In-Reply-To: <51313DE8.5080104@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,88 +30,79 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Ole Tange <tange@binf.ku.dk>, xfs-oss <xfs@oss.sgi.com>
 
-Hi Dave,
-
-On Mon, Feb 25, 2013 at 12:31:30PM +1100, Dave Chinner wrote:
-> From: Christoph Hellwig <hch@lst.de>
+On Fri, Mar 01, 2013 at 05:46:48PM -0600, Eric Sandeen wrote:
+> In no-modify mode (-n), verify_set_agf doesn't fix up bad
+> freelist blocks that it finds.  When we get to scan_freelist,
+> this can wreak havoc if, for example, first > last and the loop
+> never exits; we index agfl->agfl_bno[i] off into the weeds.
 > 
-> Add CRC checks, location information and a magic number to the AGFL.
-> Previously the AGFL was just a block containing nothing but the
-> free block pointers.  The new AGFL has a real header with the usual
-> boilerplate instead, so that we can verify it's not corrupted and
-> written into the right place.
+> To fix this, re-check the values in no-modify mode, and if
+> they're off, warn about it and skip the scan.
 > 
-> [dchinner@redhat.com] Added LSN field, reworked significantly to fit
-> into new verifier structure and growfs structure, enabled full
-> verifier functionality now there is a header to verify and we can
-> guarantee an initialised AGFL.
+> In addition, add a check to verify_set_agf() to ensure that
+> first <= last.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Reported-by: Ole Tange <tange@binf.ku.dk>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > ---
->  fs/xfs/xfs_ag.h          |   25 +++++++++-
->  fs/xfs/xfs_alloc.c       |  119 ++++++++++++++++++++++++++++++----------------
->  fs/xfs/xfs_buf_item.h    |    4 +-
->  fs/xfs/xfs_fsops.c       |    5 ++
->  fs/xfs/xfs_log_recover.c |   10 ++++
->  5 files changed, 119 insertions(+), 44 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_ag.h b/fs/xfs/xfs_ag.h
-> index 9f4815e..272ef09 100644
-> --- a/fs/xfs/xfs_ag.h
-> +++ b/fs/xfs/xfs_ag.h
-> @@ -30,6 +30,7 @@ struct xfs_trans;
->  
->  #define	XFS_AGF_MAGIC	0x58414746	/* 'XAGF' */
->  #define	XFS_AGI_MAGIC	0x58414749	/* 'XAGI' */
-> +#define	XFS_AGFL_MAGIC	0x5841464c	/* 'XAFL' */
->  #define	XFS_AGF_VERSION	1
->  #define	XFS_AGI_VERSION	1
->  
-> @@ -190,11 +191,31 @@ extern const struct xfs_buf_ops xfs_agi_buf_ops;
->   */
->  #define XFS_AGFL_DADDR(mp)	((xfs_daddr_t)(3 << (mp)->m_sectbb_log))
->  #define	XFS_AGFL_BLOCK(mp)	XFS_HDR_BLOCK(mp, XFS_AGFL_DADDR(mp))
-> -#define XFS_AGFL_SIZE(mp)	((mp)->m_sb.sb_sectsize / sizeof(xfs_agblock_t))
->  #define	XFS_BUF_TO_AGFL(bp)	((xfs_agfl_t *)((bp)->b_addr))
->  
-> +#define XFS_BUF_TO_AGFL_BNO(mp, bp) \
-> +	(xfs_sb_version_hascrc(&((mp)->m_sb)) ? \
-> +		&(XFS_BUF_TO_AGFL(bp)->agfl_bno[0]) : \
-> +		(__be32 *)(bp)->b_addr)
+> diff --git a/repair/agheader.c b/repair/agheader.c
+> index 769022d..68789fe 100644
+> --- a/repair/agheader.c
+> +++ b/repair/agheader.c
+> @@ -86,6 +86,14 @@ verify_set_agf(xfs_mount_t *mp, xfs_agf_t *agf, xfs_agnumber_t i)
+>  	 * check first/last AGF fields.  if need be, lose the free
+>  	 * space in the AGFL, we'll reclaim it later.
+>  	 */
+> +	if (be32_to_cpu(agf->agf_flfirst) > be32_to_cpu(agf->agf_fllast)) {
+> +		do_warn(_("flfirst %d in agf %d > fllast %d\n"),
+> +			be32_to_cpu(agf->agf_flfirst),
+> +			i, be32_to_cpu(agf->agf_fllast));
+> +		if (!no_modify)
+> +			agf->agf_fllast = agf->agf_flfirst = cpu_to_be32(0);
+> +	}
+
+I don't think that test is correct. The free list is circular and is
+indexed as a pair of head/tail pointers. Hence flfirst > fllast can
+be actually valid. e.g. flcount = 4, flfirst=126, fllast = 2 is a
+valid free list.
+
 > +
-> +/*
-> + * Size of the AGFL.  For CRC-enabled filesystes we steal a couple of
-> + * slots in the beginning of the block for a proper header with the
-> + * location information and CRC.
-> + */
-> +#define XFS_AGFL_SIZE(mp) \
-> +	(((mp)->m_sb.sb_sectsize - \
-> +	 (xfs_sb_version_hascrc(&((mp)->m_sb)) ? \
-> +		sizeof(struct xfs_agfl) : 0)) / \
-> +	  sizeof(xfs_agblock_t))
-> +
->  typedef struct xfs_agfl {
-> -	__be32		agfl_bno[1];	/* actually XFS_AGFL_SIZE(mp) */
-> +	__be32		agfl_magicnum;
+>  	if (be32_to_cpu(agf->agf_flfirst) >= XFS_AGFL_SIZE(mp))  {
+>  		do_warn(_("flfirst %d in agf %d too large (max = %zu)\n"),
+>  			be32_to_cpu(agf->agf_flfirst),
+> diff --git a/repair/scan.c b/repair/scan.c
+> index 5345094..0f83fb4 100644
+> --- a/repair/scan.c
+> +++ b/repair/scan.c
+> @@ -1067,6 +1067,17 @@ scan_freelist(
+>  	}
+>  	agfl = XFS_BUF_TO_AGFL(agflbuf);
+>  	i = be32_to_cpu(agf->agf_flfirst);
+> +	if (no_modify) {
+> +		/* agf values not sanitized, so double check */
+> +		if (i >= XFS_AGFL_SIZE(mp) ||
+> +		    be32_to_cpu(agf->agf_fllast) >= XFS_AGFL_SIZE(mp) ||
+> +		    i > be32_to_cpu(agf->agf_fllast))
+> +			do_warn(_("agf %d freelist blocks bad, skipping scan\n"),
 
-  +     __be32		agfl_versionnum;
+"skipping freelist scan"
 
-Now would be a good time to add this, and it would be consistent with the AGF
-and AGI structures.  There is no shortage of agfl slots according to my
-calculation, and this might be helpful for xfsrepair later.
+> +				i);
+> +			return;
 
--Ben
+Also, you might be missing a set of {} there - that will always
+return immediately if no_modify is set....
 
-> +	__be32		agfl_seqno;
-> +	uuid_t		agfl_uuid;
-> +	__be64		agfl_lsn;
-> +	__be32		agfl_crc;
-> +	__be32		agfl_bno[];	/* actually XFS_AGFL_SIZE(mp) */
->  } xfs_agfl_t;
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
