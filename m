@@ -1,21 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3310E7FF6
-	for <xfs@oss.sgi.com>; Fri,  1 Mar 2013 19:30:37 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id AD0237F63
+	for <xfs@oss.sgi.com>; Fri,  1 Mar 2013 19:30:51 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 93E6CAC001
-	for <xfs@oss.sgi.com>; Fri,  1 Mar 2013 17:30:36 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id qSR5uQwHS1RGvqMH for <xfs@oss.sgi.com>;
-	Fri, 01 Mar 2013 17:30:35 -0800 (PST)
-Subject: Re: [PATCH] xfs_repair: skip freelist scan of dodgy agf in no-modify
-	mode
-References: <51313DE8.5080104@sandeen.net> <20130302011806.GF23616@dastard>
-From: Eric Sandeen <sandeen@sandeen.net>
-Mime-Version: 1.0 (1.0)
-In-Reply-To: <20130302011806.GF23616@dastard>
-Message-Id: <734EB96C-D92F-4F17-BF1A-056FAE063874@sandeen.net>
-Date: Fri, 1 Mar 2013 19:22:28 -0600
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1F1D4AC001
+	for <xfs@oss.sgi.com>; Fri,  1 Mar 2013 17:30:51 -0800 (PST)
+Received: from mail-la0-f47.google.com (mail-la0-f47.google.com
+	[209.85.215.47]) by cuda.sgi.com with ESMTP id tCSH82PqUktUOjpT
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 01 Mar 2013 17:30:49 -0800 (PST)
+Received: by mail-la0-f47.google.com with SMTP id fj20so3470606lab.20
+	for <xfs@oss.sgi.com>; Fri, 01 Mar 2013 17:30:47 -0800 (PST)
+From: Dmitry Monakhov <dmonakhov@openvz.org>
+Subject: Re: [PATCH 09/10] xfstest: add defragmentation stress tests for ext4
+In-Reply-To: <51310046.5090306@sgi.com>
+References: <1361356935-29153-1-git-send-email-dmonakhov@openvz.org>
+	<1361356935-29153-10-git-send-email-dmonakhov@openvz.org>
+	<51310046.5090306@sgi.com>
+Date: Sat, 02 Mar 2013 05:30:43 +0400
+Message-ID: <878v66h9ks.fsf@openvz.org>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,89 +32,218 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Ole Tange <tange@binf.ku.dk>, xfs-oss <xfs@oss.sgi.com>
+To: Rich Johnston <rjohnston@sgi.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, dchinner@redhat.com, xfs@oss.sgi.com
 
-On Mar 1, 2013, at 7:18 PM, Dave Chinner <david@fromorbit.com> wrote:
-
-> On Fri, Mar 01, 2013 at 05:46:48PM -0600, Eric Sandeen wrote:
->> In no-modify mode (-n), verify_set_agf doesn't fix up bad
->> freelist blocks that it finds.  When we get to scan_freelist,
->> this can wreak havoc if, for example, first > last and the loop
->> never exits; we index agfl->agfl_bno[i] off into the weeds.
->> 
->> To fix this, re-check the values in no-modify mode, and if
->> they're off, warn about it and skip the scan.
->> 
->> In addition, add a check to verify_set_agf() to ensure that
->> first <= last.
->> 
->> Reported-by: Ole Tange <tange@binf.ku.dk>
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->> ---
->> 
->> diff --git a/repair/agheader.c b/repair/agheader.c
->> index 769022d..68789fe 100644
->> --- a/repair/agheader.c
->> +++ b/repair/agheader.c
->> @@ -86,6 +86,14 @@ verify_set_agf(xfs_mount_t *mp, xfs_agf_t *agf, xfs_agnumber_t i)
->>     * check first/last AGF fields.  if need be, lose the free
->>     * space in the AGFL, we'll reclaim it later.
->>     */
->> +    if (be32_to_cpu(agf->agf_flfirst) > be32_to_cpu(agf->agf_fllast)) {
->> +        do_warn(_("flfirst %d in agf %d > fllast %d\n"),
->> +            be32_to_cpu(agf->agf_flfirst),
->> +            i, be32_to_cpu(agf->agf_fllast));
->> +        if (!no_modify)
->> +            agf->agf_fllast = agf->agf_flfirst = cpu_to_be32(0);
->> +    }
+On Fri, 1 Mar 2013 13:23:50 -0600, Rich Johnston <rjohnston@sgi.com> wrote:
+> On 02/20/2013 04:42 AM, Dmitry Monakhov wrote:
+> > Perform various regression tests for ext4defrag  subsystem
+> >
+> >   299'th Test1: Defragment file while other task does direct AIO
+> >   300'th Test2: Perform defragmentation on file under buffered AIO
+> >   	while third task does direct AIO to donor file
+> >   301'th Test3: Two defrag tasks use common donor file.
+> >   302'th Test4: Stress defragmentation. Several threads pefrorm
+> typo 	                                                  perform
 > 
-> I don't think that test is correct. The free list is circular and is
-> indexed as a pair of head/tail pointers. Hence flfirst > fllast can
-> be actually valid. e.g. flcount = 4, flfirst=126, fllast = 2 is a
-> valid free list.
+> >   	fragmentation at random position use inplace=1 will
+> > 	allocate and free blocks inside defrag event improve
+> > 	load pressure.
+> >
+> > This tests are considered dengerous because 300'th and 301'th are known
+> typo                        dangerous
 > 
-Doh, ok.  Will fix.
->> +
->>    if (be32_to_cpu(agf->agf_flfirst) >= XFS_AGFL_SIZE(mp))  {
->>        do_warn(_("flfirst %d in agf %d too large (max = %zu)\n"),
->>            be32_to_cpu(agf->agf_flfirst),
->> diff --git a/repair/scan.c b/repair/scan.c
->> index 5345094..0f83fb4 100644
->> --- a/repair/scan.c
->> +++ b/repair/scan.c
->> @@ -1067,6 +1067,17 @@ scan_freelist(
->>    }
->>    agfl = XFS_BUF_TO_AGFL(agflbuf);
->>    i = be32_to_cpu(agf->agf_flfirst);
->> +    if (no_modify) {
->> +        /* agf values not sanitized, so double check */
->> +        if (i >= XFS_AGFL_SIZE(mp) ||
->> +            be32_to_cpu(agf->agf_fllast) >= XFS_AGFL_SIZE(mp) ||
->> +            i > be32_to_cpu(agf->agf_fllast))
->> +            do_warn(_("agf %d freelist blocks bad, skipping scan\n"),
+> > to trigger OOPS on recent kernels see:https://gist.github.com/dmonakhov/4770294
+> >
+> > Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
+> > ---
+> >   299           |  126 +++++++++++++++++++++++++++++++++++++++++++++++
+> >   299.out       |    4 ++
+> >   300           |  143 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+> >   300.out       |    4 ++
+> >   301           |  153 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+> >   301.out       |    4 ++
+> >   302           |  130 ++++++++++++++++++++++++++++++++++++++++++++++++
+> >   302.out       |    4 ++
+> >   common.defrag |    4 +-
+> >   group         |    6 ++-
+> >   10 files changed, 575 insertions(+), 3 deletions(-)
+> >   create mode 100755 299
+> >   create mode 100644 299.out
+> >   create mode 100755 300
+> >   create mode 100644 300.out
+> >   create mode 100755 301
+> >   create mode 100644 301.out
+> >   create mode 100755 302
+> >   create mode 100644 302.out
+> >
+> > diff --git a/299 b/299
+> > new file mode 100755
+> > index 0000000..4a7a98c
+> > --- /dev/null
+> > +++ b/299
+> > @@ -0,0 +1,126 @@
+> > +#! /bin/bash
+> > +# FSQA Test No. 299
+> > +#
+> > +# Ext4 defragmentation stress test
+> > +# Defragment file while other task does direct io
+> > +#-----------------------------------------------------------------------
+> > +# (c) 2013 Dmitry Monakhov
+> > +#
+> > +# This program is free software; you can redistribute it and/or
+> > +# modify it under the terms of the GNU General Public License as
+> > +# published by the Free Software Foundation.
+> > +#
+> > +# This program is distributed in the hope that it would be useful,
+> > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > +# GNU General Public License for more details.
+> > +#
+> > +# You should have received a copy of the GNU General Public License
+> > +# along with this program; if not, write the Free Software Foundation,
+> > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> > +#
+> > +#-----------------------------------------------------------------------
+> > +#
+> > +# creator
+> > +owner=dmonakhov@openvz.org
+> > +
+> > +seq=`basename $0`
+> > +echo "QA output created by $seq"
+> > +
+> > +here=`pwd`
+> > +tmp=/tmp/$$
+> > +status=1	# failure is the default!
+> > +trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
+> > +
+> > +# get standard environment, filters and checks
+> > +. ./common.rc
+> > +. ./common.filter
+> > +. ./common.defrag
+> > +
+> > +# real QA test starts here
+> > +_supported_os Linux
+> > +_supported_fs ext4
+> > +_need_to_be_root
+> > +_require_scratch
+> > +_require_defrag
+> > +
+> I think you meant to set NUM_JOBS here like you did in [Patch 08/10], 
+> something like:
 > 
-> "skipping freelist scan"
+> +NUM_JOBS=$((4*LOAD_FACTOR))
+Indeed. I've forget to update patch.
 > 
->> +                i);
->> +            return;
+> otherwise you get
 > 
-> Also, you might be missing a set of {} there - that will always
-> return immediately if no_modify is set....
+> ###	 [not run] /usr/local/bin/fio too old
 > 
-Cripes.  1 demerit for me, sorry.  Will fix and resend.
-
-Thanks for the embarrassing review.  :)
-
--Eric
-
-> Cheers,
+> > +BLK_DEV_SIZE=`blockdev --getsz $SCRATCH_DEV`
+> > +# We need space for 2 files (test file, and donor one)
+> > +# reserve 30% in order to avoid ENOSPC
+> > +FILE_SIZE=$((BLK_DEV_SIZE * (512 / (2 + 1))))
+> > +
+> > +cat >$tmp-$seq.fio <<EOF
+> > +# Common e4defrag regression tests
+> > +[global]
+> > +ioengine=ioe_e4defrag
+> > +iodepth=1
+> > +directory=${SCRATCH_MNT}
+> > +filesize=${FILE_SIZE}
+> > +size=999G
+> > +buffered=0
+> > +fadvise_hint=0
+> > +group_reporting
+> > +
+> > +#################################
+> > +# Test1
+> > +# Defragment file while other task does direct io
+> > +
+> > +# Continious sequential defrag activity
+> > +[defrag-4k]
+> > +ioengine=e4defrag
+> > +iodepth=1
+> > +bs=128k
+> > +donorname=test1.def
+> > +filename=test1
+> > +inplace=0
+> > +rw=write
+> > +numjobs=${NUM_JOBS}
+> > +runtime=30*${TIME_FACTOR}
+> > +time_based
+> > +
+> > +# Verifier
+> > +[aio-dio-verifier]
+> > +ioengine=libaio
+> > +iodepth=128*${LOAD_FACTOR}
+> > +numjobs=1
+> > +verify=crc32c-intel
+> > +verify_fatal=1
+> > +verify_dump=1
+> > +verify_backlog=1024
+> > +verify_async=1
+> > +verifysort=1
+> > +direct=1
+> > +bs=64k
+> > +rw=randwrite
+> > +filename=test1
+> > +runtime=30*${TIME_FACTOR}
+> > +time_based
+> > +EOF
+> > +
+> > +_workout()
+> > +{
+> > +	echo ""
+> > +	echo " Start defragment activity "
+> git does not like trailing whitespace   ^
+> (same for the other 3 tests)
+> > +	echo ""
+> > +	cat $tmp-$seq.fio >>  $seq.full
+> > +	run_check $FIO_PROG $tmp-$seq.fio
+> > +}
+> > +
+> > +_require_fio $tmp-$seq.fio
+> > +
+> > +_scratch_mkfs  >> $seq.full 2>&1
+> > +_scratch_mount
+> > +
+> > +if ! _workout; then
+> > +	umount $SCRATCH_DEV 2>/dev/null
+> > +	exit
+> > +fi
+> > +
+> > +if ! _scratch_unmount; then
+> > +	echo "failed to umount"
+> > +	status=1
+> > +	exit
+> > +fi
+> > +_check_scratch_fs
+> > +status=$?
+> > +exit diff --git a/299.out b/299.out new file mode 100644 index 0000000..b215a3f
+> > diff --git a/299.out b/299.out
+> > new file mode 100644
+> > index 0000000..c2b0b4c
+> > --- /dev/null
+> > +++ b/299.out
+> > @@ -0,0 +1,4 @@
+> > +QA output created by 299
+> > +
+> > + Start defragment activity
+> remove trailing whitespace   ^
+> (same for the other 3 tests)
 > 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> Let me know if you agree with these changes and I will make them at 
+> commit time.
+Yes, please do.
 > 
+> Thanks
+> --Rich
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 _______________________________________________
 xfs mailing list
