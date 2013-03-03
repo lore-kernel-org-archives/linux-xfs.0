@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1953C8013
-	for <xfs@oss.sgi.com>; Sun,  3 Mar 2013 03:03:08 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0701D304032
-	for <xfs@oss.sgi.com>; Sun,  3 Mar 2013 01:03:04 -0800 (PST)
-Received: from radon.swed.at (a.ns.miles-group.at [95.130.255.143]) by
-	cuda.sgi.com with ESMTP id C0wd8Xz2bPudHa1U (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 03 Mar 2013 01:02:58 -0800 (PST)
-Date: Sun, 3 Mar 2013 10:02:54 +0100
-From: Richard Weinberger <richard@nod.at>
-Subject: Re: [PATCH] Do not check ocfs2
-Message-ID: <20130303100254.500b076f@spider.haslach.nod.at>
-In-Reply-To: <20130303011917.GI23616@dastard>
-References: <1362269150-21478-1-git-send-email-richard@nod.at>
-	<20130303011917.GI23616@dastard>
-Mime-Version: 1.0
+	by oss.sgi.com (Postfix) with ESMTP id 11DF57F93
+	for <xfs@oss.sgi.com>; Sun,  3 Mar 2013 10:28:41 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D7DD3304043
+	for <xfs@oss.sgi.com>; Sun,  3 Mar 2013 08:28:37 -0800 (PST)
+Received: from mail-da0-f49.google.com (mail-da0-f49.google.com
+	[209.85.210.49]) by cuda.sgi.com with ESMTP id DncaROxvNRSpBDcz
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sun, 03 Mar 2013 08:28:36 -0800 (PST)
+Received: by mail-da0-f49.google.com with SMTP id t11so2112200daj.8
+	for <xfs@oss.sgi.com>; Sun, 03 Mar 2013 08:28:36 -0800 (PST)
+Date: Mon, 4 Mar 2013 00:43:42 +0800
+From: Zheng Liu <gnehzuil.liu@gmail.com>
+Subject: Re: [PATCH 09/10] xfstest: add defragmentation stress tests for ext4
+Message-ID: <20130303164342.GB30459@gmail.com>
+References: <1361356935-29153-1-git-send-email-dmonakhov@openvz.org>
+	<1361356935-29153-10-git-send-email-dmonakhov@openvz.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1361356935-29153-10-git-send-email-dmonakhov@openvz.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,43 +32,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+To: Dmitry Monakhov <dmonakhov@openvz.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, dchinner@redhat.com, xfs@oss.sgi.com
 
-Am Sun, 3 Mar 2013 12:19:17 +1100
-schrieb Dave Chinner <david@fromorbit.com>:
-
-> On Sun, Mar 03, 2013 at 01:05:50AM +0100, Richard Weinberger wrote:
-> > We cannot run fsck.ocfs2 because the file system
-> > is most likely mounted on another node.
+On Wed, Feb 20, 2013 at 02:42:14PM +0400, Dmitry Monakhov wrote:
+> Perform various regression tests for ext4defrag  subsystem
 > 
-> This patch means that ocfs2 filesystems are *never* checked for
-> consistency, even when you are testing them with exclusive local
-> access. That defeats a primary function of xfstests - ensuring that
-> the tests run do no corrupt the filesystem.
-> 
-> Besides, why would you be running xfstests on a filesystem that is
-> mounted on multiple nodes? Yes, ocfs2 is a cluster filesystem, but
-> xfstests is designed to test local filesystem behaviour and is
-> completely cluster naive. Hence having multiple nodes mount the
-> filesystem that is being tested by xfstests does not serve any
-> purpose at all. Further, turning off consistency checking for those
-> that are running ocfs2 testing on single nodes means that testing is
-> now mostly wasted as the majority of problems that can occur are no
-> longer detectable....
+>  299'th Test1: Defragment file while other task does direct AIO
 
-Using xfstests I was able to trigger dlm issues in ocfs2.
-I ran xfstests on one node and other nodes had it mounted too.
-To ensure that fsck.ocfs2 will not corrupt the filesystem I've applied
-this patch.
+Hi Dmitry,
 
-If you don't like the patch I'm perfectly fine with that.
-Maybe it makes more sense to add a feature to xfstests which unmounts
-the ocfs2 filesystem on all nodes (using SSH), then it is allowed to
-run fsck.ocfs2.
+I couldn't run this testcase in my sandbox.  I got the following error
+message.
 
-Thanks,
-//richard
+FSTYP         -- ext4
+PLATFORM      -- Linux/x86_64 lz-desktop 3.8.0
+MKFS_OPTIONS  -- /dev/sda2
+MOUNT_OPTIONS -- -o acl,user_xattr /dev/sda2 /mnt/sda2
+
+299      [not run] /usr/local/bin/fio too old
+Not run: 299
+Passed all 0 tests
+
+My fio version is fio-2.0.14-23-g9c63.  It seems that there are some
+errors in fio config file.
+
+Regards,
+                                                - Zheng
 
 _______________________________________________
 xfs mailing list
