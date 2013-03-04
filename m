@@ -1,26 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 41A1A7F52
-	for <xfs@oss.sgi.com>; Mon,  4 Mar 2013 17:23:24 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 12B9D304048
-	for <xfs@oss.sgi.com>; Mon,  4 Mar 2013 15:23:23 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	ebYTFHxAyMA3nzAG for <xfs@oss.sgi.com>;
-	Mon, 04 Mar 2013 15:23:21 -0800 (PST)
-Date: Tue, 5 Mar 2013 10:23:19 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs_repair segfaults
-Message-ID: <20130304232319.GR23616@dastard>
-References: <CANU9nTnvJS50vdQv2K0gKHZPvzzH5EY1qpizJNsqUobrr2juDA@mail.gmail.com>
-	<20130301111701.GB23616@dastard>
-	<CANU9nTkkEd61UsM+KngGzMzXVXdOa2oXOPtmqN4xGaPuEBN_nQ@mail.gmail.com>
-	<20130301205305.GD23616@dastard>
-	<CANU9nTmmw3FcHRBNvu_S6Uj8M-B2JFf5poQfHbZuCbJ6_=_RgA@mail.gmail.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 2CD19805E
+	for <xfs@oss.sgi.com>; Mon,  4 Mar 2013 17:44:19 -0600 (CST)
+Message-ID: <513531D0.9080409@sgi.com>
+Date: Mon, 4 Mar 2013 17:44:16 -0600
+From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CANU9nTmmw3FcHRBNvu_S6Uj8M-B2JFf5poQfHbZuCbJ6_=_RgA@mail.gmail.com>
+Subject: Re: [PATCH 10/10] xfstests: add disk failure simulation test
+References: <1361356935-29153-1-git-send-email-dmonakhov@openvz.org>
+	<1361356935-29153-11-git-send-email-dmonakhov@openvz.org>
+	<51310B63.4070105@sgi.com> <87621ah8q4.fsf@openvz.org>
+In-Reply-To: <87621ah8q4.fsf@openvz.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,77 +19,108 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ole Tange <tange@binf.ku.dk>
-Cc: xfs@oss.sgi.com
+To: Dmitry Monakhov <dmonakhov@openvz.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, dchinner@redhat.com, xfs@oss.sgi.com
 
-On Mon, Mar 04, 2013 at 10:03:29AM +0100, Ole Tange wrote:
-> On Fri, Mar 1, 2013 at 9:53 PM, Dave Chinner <david@fromorbit.com> wrote:
-> :
-> > What filesystem errors occurred
-> > when the srives went offline?
-> 
-> See http://dna.ku.dk/~tange/tmp/syslog.3
+On 03/01/2013 07:49 PM, Dmitry Monakhov wrote:
+> On Fri, 1 Mar 2013 14:11:15 -0600, Rich Johnston <rjohnston@sgi.com> wrote:
+>> On 02/20/2013 04:42 AM, Dmitry Monakhov wrote:
+>>> There are many situations where disk may fail for example
+>>> 1) brutal usb dongle unplug
+>>> 2) iscsi (or any other netbdev) failure due to network issues
+>>> In this situation filesystem which use this blockdevice is
+>>> expected to fail(force RO remount, abort, etc) but whole system
+>>> should still be operational. In other words:
+>>> 1) Kernel should not panic
+>>> 2) Memory should not leak
+>>> 3) Data integrity operations (sync,fsync,fdatasync, directio) should fail
+>>>      for affected filesystem
+>>> 4) It should be possible to umount broken filesystem
+>>>
+>>> Later when disk becomes available again we expect(only for journaled filesystems):
+>>> 5) It will be possible to mount filesystem w/o explicit fsck (in order to caught
+>>
+>> typo                                     s/caught/catch/g
+>>
+>>>      issues like https://patchwork.kernel.org/patch/1983981/)
+>>> 6) Filesystem should be operational
+>>> 7) After mount/umount has being done all errors should be fixed so fsck should
+>>>      not spot any issues.
+>>>
+>>> This test use fault enjection (CONFIG_FAIL_MAKE_REQUEST=y config option )
+>>     May want to mention all the kernel config options required.
+>> i.e. CONFIG_FAULT_INJECTION=y ... are there others?
+>> CONFIG_FAULT_INJECTION_DEBUG_FS=y ???
+> Yes, all three options are required.
+>>
+>>> which force all new IO requests to fail for a given device. Xfs already has
+>>     to force
+>>
+>>> XFS_IOC_GOINGDOWN ioctl which provides similar behaviour, but it is fs speciffic
+>>
+>> typos s/behaviour/behavior/g  s/speciffic/specific
+>>                                           > and it does it in an easy way
+>> because it perform freeze_bdev() before actual
+>>> shotdown.
+>> typo s/shotdown/shutdown/g
+> Agree with your diagnosis. My gramma is bad and I've forget to call spell check
+> before submission. Should I resend this one or you fix it manually
+> on commit time?
 
-You log is full of this:
+No worries, I'm sure your English is much better than any of my attempts 
+to write in your native tongue. ;)
+No need to resend, glad to take care of these minor changes at commit time.
 
-mpt2sas1: log_info(0x31120303): originator(PL), code(0x12), sub_code(0x0303)
+commit 02e57e1e3a42856dca9061ff943ba72fa7be8469
+Author: Dmitry Monakhov <dmonakhov@openvz.org>
+Date:   Wed Feb 20 10:42:15 2013 +0000
 
-What's that mean?
+     xfstests: add disk failure simulation test
 
-> 
-> Feb 26 00:46:52 franklin kernel: [556238.429259] XFS (md5p1): metadata
-> I/O error: block 0x459b8 ("xfs_buf_iodone_callbacks") error 5 buf
-> count 4096
+     There are many situations where disk may fail for example
+     1) brutal usb dongle unplug
+     2) iscsi (or any other netbdev) failure due to network issues
+     In this situation filesystem which use this blockdevice is
+     expected to fail(force RO remount, abort, etc) but whole system
+     should still be operational. In other words:
+     1) Kernel should not panic
+     2) Memory should not leak
+     3) Data integrity operations (sync,fsync,fdatasync, directio) 
+should fail
+        for affected filesystem
+     4) It should be possible to umount broken filesystem
 
-So, the first IO errors appear at 23:00 on /dev/sdb, and the
-controller does a full reset and reprobe. Look slike a port failure
-of some kind. Notable:
+     Later when disk becomes available again we expect(only for 
+journaled filesystems):
+     5) It will be possible to mount filesystem w/o explicit fsck (in 
+order to catch
+        issues like https://patchwork.kernel.org/patch/1983981/)
+     6) Filesystem should be operational
+     7) After mount/umount has being done all errors should be fixed so 
+fsck should
+        not spot any issues.
 
-mpt2sas1: LSISAS2008: FWVersion(07.00.00.00), ChipRevision(0x03), BiosVersion(07.11.10.00)
+     This test use fault injection (CONFIG_FAULT_INJECTION=y,
+     CONFIG_FAIL_MAKE_REQUEST=y and CONFIG_FAULT_INJECTION_DEBUG_FS=y config
+     options) to force all new IO requests to fail for a given device. Xfs
+     already has XFS_IOC_GOINGDOWN ioctl which provides similar 
+behavior, but it
+     is fs specific and it does it in an easy way because it performs 
+freeze_bdev()
+     before actual shutdown.
 
->From a quick google, that firmware looks out of date (current
-LSISAS2008 firmwares are numbered 10 or 11, and bios versions are at
-7.21).
+     Test run fsstress in background and then force disk failure.
+     Once disk failed it check that (1)-(4) is true.
+     Then makes disk available again and check that (5)-(7) is also true
 
-So, /dev/md1 reported a failure (/dev/sdb) around 23:01:16, started a
-rebuild. Looks like it swapped in /dev/sdd and started a rebuild.
+     BE CAREFUL!! test known to cause memory corruption for XFS
+     see: https://gist.github.com/dmonakhov/4953045
 
-/dev/md4 had a failure (/dev/sds) around 00:19, no rebuild started.
-Down to 8 disks in /dev/md4, no rebuild in progress, no redundancy
-available.
 
-/dev/md1 had another failure (/dev/sdj) around 00:46, this time on a
-SYNCHRONISE CACHE command (i.e. log write). This IO failure caused
-the shutdown to occur. And this is the result:
-
-[556219.292225] end_request: I/O error, dev sdj, sector 10
-[556219.292275] md: super_written gets error=-5, uptodate=0
-[556219.292283] md/raid:md1: Disk failure on sdj, disabling device.
-[556219.292286] md/raid:md1: Operation continuing on 7 devices.
-
-At this point, /dev/md1 is reporting 7 working disks and has had an
-EIO on it's superblock write, which means it's probably in an
-inconsistent state. Further, it's only got 8 disks associated with
-it and as a rebuild is in progress it means that data loss has
-occurred with this failure. There's your problem.
-
-Essentially, you need to fix your hardware before you do anything
-else. Get it all back fully online and fix whatever the problems are
-that are causing IO errors, then you can worry about recovering the
-filesystem and your data. Until the hardware is stable and not
-throwing errors, recovery is going to be unreliable (if not
-impossible).
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
