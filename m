@@ -1,28 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2F6097F4C
-	for <xfs@oss.sgi.com>; Mon,  4 Mar 2013 16:55:51 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id BC3E4805C
+	for <xfs@oss.sgi.com>; Mon,  4 Mar 2013 16:57:38 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1B3C9304032
-	for <xfs@oss.sgi.com>; Mon,  4 Mar 2013 14:55:51 -0800 (PST)
-Received: from moutng.kundenserver.de (moutng.kundenserver.de [212.227.17.10])
-	by cuda.sgi.com with ESMTP id q9i6Eil4FAZukOEr (version=TLSv1
-	cipher=RC4-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 04 Mar 2013 14:55:49 -0800 (PST)
-Received: from localhost (localhost [127.0.0.1])
-	by tyrex.lisa.loc (Postfix) with ESMTP id 20B651B971B00
-	for <xfs@oss.sgi.com>; Mon,  4 Mar 2013 23:55:48 +0100 (CET)
-Received: from tyrex.lisa.loc ([127.0.0.1])
-	by localhost (tyrex.lisa.loc [127.0.0.1]) (amavisd-new, port 10024)
-	with LMTP id r1M05fXDHgWk for <xfs@oss.sgi.com>;
-	Mon,  4 Mar 2013 23:55:41 +0100 (CET)
-From: Hans-Peter Jansen <hpj@urpla.net>
-Subject: Re: strange behavior of a larger xfs directory
-Date: Mon, 04 Mar 2013 23:55:40 +0100
-Message-ID: <5347920.zaxHybjLeK@xrated>
-In-Reply-To: <4300208.uZ6HVTycB6@xrated>
-References: <4300208.uZ6HVTycB6@xrated>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D5B6CAC003
+	for <xfs@oss.sgi.com>; Mon,  4 Mar 2013 14:57:34 -0800 (PST)
+Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
+	cuda.sgi.com with ESMTP id lB1hIsls47RV3QH4 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 04 Mar 2013 14:57:33 -0800 (PST)
+Date: Mon, 4 Mar 2013 14:57:24 -0800
+From: Joel Becker <jlbec@evilplan.org>
+Subject: Re: [PATCH] Do not check ocfs2
+Message-ID: <20130304225724.GB7783@localhost>
+References: <20130303011917.GI23616@dastard>
+	<20130303100254.500b076f@spider.haslach.nod.at>
+	<5133C900.9050300@sandeen.net>
+	<20130303231905.0efd6d08@spider.haslach.nod.at>
+	<5133D15A.9010600@sandeen.net>
+	<20130303235341.7470085e@spider.haslach.nod.at>
+	<5133D573.3050106@sandeen.net> <20130304004229.GK23616@dastard>
+	<20130304210522.GA7783@localhost>
+	<20130304230922.20f6c05a@spider.haslach.nod.at>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20130304230922.20f6c05a@spider.haslach.nod.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,67 +33,53 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Richard Weinberger <richard@nod.at>
+Cc: linux-fsdevel@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-Am Montag, 4. M=E4rz 2013, 17:40:13 schrieb Hans-Peter Jansen:
-> Hi,
-> =
+On Mon, Mar 04, 2013 at 11:09:22PM +0100, Richard Weinberger wrote:
+> Am Mon, 4 Mar 2013 13:05:23 -0800
+> schrieb Joel Becker <jlbec@evilplan.org>:
+> > > Really, xfstests is not designed for testing cluster filesystems in
+> > > clustered environments. If we really want to support clustered
+> > > filesystems and cluster wide operations, then we need to think
+> > > about how to architect multi-host support into xfstests sanely.
+> > > Clustered filesystems are not the only people that could make use of
+> > > such functionality (NFS and CIFS come to mind).... ;)
+> > 
+> > I'm much happier with the "check for other cluster mounts" approach
+> > rather than avoiding fsck entirely.  We like xfstests in the local or
+> > single-node cases to behave exactly as one would expect.
+> > 
+> > We do run xfstests on multiple nodes in a cluster, but by hand and
+> > with our own cleanup.  Obviously support for automating that would be
+> > awesome :-)
+> 
+> Can you share your cleanup code?
 
-> after upgrading the kernel on a server from 2.6.34 to 3.8.1 (x86-32), I =
+It's not code, unless you count DNA and neuron connections...
 
-> suffer from a strange behavior of a larger directory, that a downgrade =
+Joel
 
-> of the kernel cannot repair.
-> =
+> 
+> Thanks,
+> //richard
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-> The best way to reproduce the problem is cd into that directory and =
+-- 
 
-> running "vi .". It should display a full directory listing, but it only =
+Life's Little Instruction Book #139
 
-> displays a about dozen entries. Another way is just using bash tab =
+	"Never deprive someone of hope; it might be all they have."
 
-> completion (e.g. ls <tab><tab> should display a screenful of items, but =
-
-> only shows the very same dozen of entries. Userspace is quite old =
-
-> (openSUSE 11.1/i586, but I cannot upgrade to a newer userspace for a =
-
-> couple of reasons. OTOH, a simple ls displays the full list again, =
-
-
-[...]
-
-> > # then it preceeds with getdents64 and fetches already fetched entries
-> =
-
-> 27177 getdents64(3, {
->              {d_ino=3D4303329151, d_off=3D78, d_type=3DDT_UNKNOWN, d_recl=
-en=3D32, d_name=3D"Black_Swan"} =
-
-
-Okay, this is the culprit: 0x1007F977F overflows 32 bit, although I =
-
-*never* mounted anything with inode64 option. =
-
-
-For some reason, the intermediate kernel 3.8.0 has used the inode64 version
-by *default*. This breaks bash tab completion and vdr. After forcing the =
-
-inode32 option and copying some offenders away and back in place, the issue
-vanishes. =
-
-
-Unlike stated in the XFS FAQs, openSUSE 11.1 *has* issues with inode64, and
-even more so, if enabled by default.
-
-I will hack up a script now, that copes with this mess.
-
-Cheers,
-Pete
+			http://www.jlbec.org/
+			jlbec@evilplan.org
 
 _______________________________________________
 xfs mailing list
