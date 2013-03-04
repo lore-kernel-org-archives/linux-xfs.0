@@ -1,18 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 93D468034
-	for <xfs@oss.sgi.com>; Mon,  4 Mar 2013 00:14:08 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 812B3304032
-	for <xfs@oss.sgi.com>; Sun,  3 Mar 2013 22:14:05 -0800 (PST)
-Received: from mx4-phx2.redhat.com (mx4-phx2.redhat.com [209.132.183.25]) by
-	cuda.sgi.com with ESMTP id LWXlFGhJYx2Gfhf2 for
-	<xfs@oss.sgi.com>; Sun, 03 Mar 2013 22:14:04 -0800 (PST)
-Date: Mon, 4 Mar 2013 01:14:02 -0500 (EST)
-From: CAI Qian <caiqian@redhat.com>
-Message-ID: <1735762055.8552410.1362377642444.JavaMail.root@redhat.com>
-In-Reply-To: <20130304055502.GP23616@dastard>
-Subject: Re: possible fsync02() xfs slowness regression on power7
+	by oss.sgi.com (Postfix) with ESMTP id 518948032
+	for <xfs@oss.sgi.com>; Mon,  4 Mar 2013 02:33:01 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1AE1D304051
+	for <xfs@oss.sgi.com>; Mon,  4 Mar 2013 00:33:00 -0800 (PST)
+Received: from USMAMAIL.TILERA.COM (usmamail.tilera.com [12.216.194.151]) by
+	cuda.sgi.com with ESMTP id JaNn6LU08jdDc1Nv (version=TLSv1
+	cipher=AES128-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 04 Mar 2013 00:32:59 -0800 (PST)
+From: Tony Lu <zlu@tilera.com>
+Subject: RE: [PATCH] xfs: Fix possible truncation of log data in
+	xlog_bread_noalign()
+Date: Mon, 4 Mar 2013 08:32:45 +0000
+Message-ID: <BAB94DBB0E89D8409949BC28AC95914C47C4C19C@USMAExch1.tad.internal.tilera.com>
+References: <BAB94DBB0E89D8409949BC28AC95914C47C485E5@USMAExch1.tad.internal.tilera.com>
+	<20130223000802.GB26081@dastard>
+	<BAB94DBB0E89D8409949BC28AC95914C47C48702@USMAExch1.tad.internal.tilera.com>
+	<20130223235546.GA5551@dastard>
+	<BAB94DBB0E89D8409949BC28AC95914C47C488D8@USMAExch1.tad.internal.tilera.com>
+	<20130224141017.GC5551@dastard>
+	<BAB94DBB0E89D8409949BC28AC95914C47C49005@USMAExch1.tad.internal.tilera.com>
+	<5130CE9E.9080501@sgi.com> <51310E7A.1000905@sgi.com>
+In-Reply-To: <51310E7A.1000905@sgi.com>
+Content-Language: zh-CN
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -22,51 +33,150 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: Alex Elder <elder@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, Ben Myers <bpm@sgi.com>, Dave Chinner <dchinner@redhat.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
 
-CgotLS0tLSDljp/lp4vpgq7ku7YgLS0tLS0KPiDlj5Hku7bkuro6ICJEYXZlIENoaW5uZXIiIDxk
-YXZpZEBmcm9tb3JiaXQuY29tPgo+IOaUtuS7tuS6ujogIkNBSSBRaWFuIiA8Y2FpcWlhbkByZWRo
-YXQuY29tPgo+IOaKhOmAgTogeGZzQG9zcy5zZ2kuY29tCj4g5Y+R6YCB5pe26Ze0OiDmmJ/mnJ/k
-uIAsIDIwMTPlubQgMyDmnIggMDTml6Ug5LiL5Y2IIDE6NTU6MDIKPiDkuLvpopg6IFJlOiBwb3Nz
-aWJsZSBmc3luYzAyKCkgeGZzIHNsb3duZXNzIHJlZ3Jlc3Npb24gb24gcG93ZXI3Cj4gCj4gT24g
-U3VuLCBNYXIgMDMsIDIwMTMgYXQgMTE6MjM6MjZQTSAtMDUwMCwgQ0FJIFFpYW4gd3JvdGU6Cj4g
-PiAKPiA+ID4gPiBBbmQgdGhpcyBjb21taXQgaW4gMy45LXJjMToKPiA+ID4gPiAKPiA+ID4gPiBh
-MWUxNmMyIHhmczogbGltaXQgc3BlY3VsYXRpdmUgcHJlYWxsb2Mgc2l6ZSBvbiBzcGFyc2UgZmls
-ZXMKPiA+ID4gPiBzaG91bGQgZml4IHRoZSBwcm9ibGVtLiBQbGVhc2UgY29uZmlybSB0aGVzZSBj
-b21taXRzIGFyZSB0aGUKPiA+ID4gPiBjYXVzZQo+ID4gPiA+IGFuZCB0aGUgZml4IHJlc3BlY3Rp
-dmVseS4uLi4KPiA+IENvbmZpcm1lZCB0aGlzIGZpeGVkIHRoZSBwcm9ibGVtLiBJJ2QgbGlrZSB0
-byByZXF1ZXN0IHRoaXMgdG8gYmUKPiA+IGJhY2stcG9ydGVkCj4gPiB0byBzdGFibGUtMy4wLCBz
-dGFibGUtMy40IGFuZCBzdGFibGUtMy44LiBXaGF0IGRvIHlvdSB0aGluaz8KPiAKPiBJTU8sIG5v
-LCBpdCBpcyBub3QgYSBiYWNrcG9ydCBjYW5kaWRhdGUuICBUaGUgcGF0Y2ggaGFzIHF1aXRlIGEg
-ZmV3Cj4gZGVwZW5kZW5jaWVzLCBhbmQgYXQgbGVhc3QgZm9yIDMuMCB4ZnNfYm1hcGlfcmVhZCgp
-IGRvZXNuJ3QgZXhpc3QKPiBhbmQgaGVuY2UgaXMgbm90IGEgdHJpdmlhbCBiYWNrcG9ydC4KSXQg
-aXMgZmluZSB0byBza2lwIHRoZSAzLjAgdGhlbiwgYnV0IHRoZSBvdGhlciBzdGFibGUgYnJhbmNo
-ZXMgY2FuIGJlIGFwcGxpZWQKYXMgaXQgaWlzIGFuZCBidWlsZCBmaW5lLgo+IAo+IEZ1cnRoZXIs
-IGl0J3MgdGFrZSAyIHllYXJzIGZvciB0aGlzIHRvIGJlIG5vdGljZWQsIGFuZCB5b3UgaGF2ZW4n
-dAo+IGV4cGxhaW5lZCB3aHkgdGhlIHByb2JsZW0gZXhpc3RzIG9uIHlvdXIgcG93ZXIgbWFjaGlu
-ZSBhbmQgbm90IGFueQo+IG90aGVycyB0aGF0IGl0IGhhcyBiZWVuIHRlc3RlZCBvbi4gQW5kIHRo
-ZXJlJ3MgYmVlbiB2ZXJ5IGZldwo+IGNvbXBsYWludHMgYWJvdXQgcGVyZm9ybWFuY2Ugb2Ygc3Vj
-aCB3b3JrbG9hZHMgb3ZlciB0aGUgcGFzdCAyCj4geWVhcnMsIHNvIGVpdGhlciB0aGUgd29ya2xv
-YWQgaXMgbm90IGltcG9ydGFudCBvciBvbmx5IHlvdXIgcG93ZXI3Cj4gbWFjaGluZSBpcyBoYXZp
-bmcgcHJvYmxlbXMuCkhtbSwgaXQgY291bGQgYWxzbyBiZSBwb3NzaWJsZSB0aGF0IGl0IHdhcyBl
-YXN5IHRvIHJlcHJvZHVjZSBub3cgd2l0aCB0aGUKbmV3IGtlcm5lbCBwbHVzIG5ldyB1c2VyLXNw
-YWNlcyBhcyB3ZWxsIHRoZSBuZXcgY29tcGlsZXIuIEFsc28sIHRob3NlIHN5c3RlbXMKc3RhcnRl
-ZCB0byBzd2l0Y2ggdG8gdXNlIFhGUyBhcyByb290IHBhcnRpdGlvbnMgZnJvbSBleHQ0IG9ubHkg
-cmVjZW50bHksCnNvIHdlIGhhdmUgbmV2ZXIgbm90aWNlZCB0aGlzIGluIHRoZSBwYXN0IHdoZW4g
-cnVubmluZyB0aG9zZSBMVFAgdGVzdHMuClhGUyBjb3VsZCBhbHNvIGJlY29tZSBtb3JlIHBvcHVs
-YXIgdGhhbiAyLXllYXIgYWdvLiA6KQo+IAo+IEhlbmNlIEkgZG9uJ3Qgc2VlIGFueSBuZWVkIHRv
-IGJhY2sgcG9ydCBpdCAtIGl0J3Mgbm90IGEgY3JpdGljYWwgZml4Cj4gYW5kIHZlcnkgZmV3IHBl
-b3BsZSBzZWUgdGhlIHByb2JsZW0gc28gdGhlcmUncyBubyByZWFsIG5lZWQgdG8gZG8KPiB0aGUg
-YmFja3BvcnQuICBNYXliZSBzb21lb25lIGVsc2UgaGFzIHRoZSB0aW1lIGFuZCByZXNvdXJjZXMg
-dG8KPiB3YXN0ZSBvbiBiYWNrcG9ydGluZyBub24tY3JpdGljYWwgZml4ZXMgdG8gc3RhYmxlIGtl
-cm5lbHMsIGJ1dCBJCj4gZG9uJ3QuLi4uCkkgaGF2ZSB0aW1lIHNvIEkgY2FuIGRvIHRoZSBiYWNr
-LXBvcnQgZm9yIHlvdSBndXlzIHRvIHJldmlldyBpZiB5b3UKZG9uJ3QgbWluZC4gVGhhbmtzIGZv
-ciB5b3VyIHRpbWUuCj4gCj4gQ2hlZXJzLAo+IAo+IERhdmUuCj4gLS0KPiBEYXZlIENoaW5uZXIK
-PiBkYXZpZEBmcm9tb3JiaXQuY29tCj4gCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8v
-b3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+Thanks for you following up.
+
+My apologize that I just found that it is one change I made before that causes this problem. This change forces mkfs.xfs to format xfs partitions whose sectorsize were not smaller than 4096 bytes, which was due to a bug that earlier versions of xfs used (struct *page)->private(long) as a bitmap to represent each block's state within a page (the size of a page could be 64K or larger, then it needs 128 bit or more to represent each block's state within a page).
+
+This is reproducible on 2.6.38.6 kernel on X86. But I do not get why this change makes the xfs log inconsistent during mount/cp/umount operations.
+
+diff -dur xfsprogs-3.1.4.ori/include/xfs_alloc_btree.h xfsprogs-3.1.4/include/xfs_alloc_btree.h
+--- xfsprogs-3.1.4.ori/include/xfs_alloc_btree.h        2010-01-30 03:46:13.000000000 +0800
++++ xfsprogs-3.1.4/include/xfs_alloc_btree.h    2013-03-04 16:11:41.000000000 +0800
+@@ -59,7 +59,7 @@
+ #define XFS_MAX_BLOCKSIZE_LOG  16      /* i.e. 65536 bytes */
+ #define XFS_MIN_BLOCKSIZE      (1 << XFS_MIN_BLOCKSIZE_LOG)
+ #define XFS_MAX_BLOCKSIZE      (1 << XFS_MAX_BLOCKSIZE_LOG)
+-#define XFS_MIN_SECTORSIZE_LOG 9       /* i.e. 512 bytes */
++#define XFS_MIN_SECTORSIZE_LOG 12      /* i.e. 512 bytes */
+ #define XFS_MAX_SECTORSIZE_LOG 15      /* i.e. 32768 bytes */
+ #define XFS_MIN_SECTORSIZE     (1 << XFS_MIN_SECTORSIZE_LOG)
+ #define XFS_MAX_SECTORSIZE     (1 << XFS_MAX_SECTORSIZE_LOG)
+
+Thanks
+-Tony
+
+>-----Original Message-----
+>From: Mark Tinguely [mailto:tinguely@sgi.com]
+>Sent: Saturday, March 02, 2013 4:24 AM
+>To: Tony Lu
+>Cc: Alex Elder; linux-kernel@vger.kernel.org; Chris Metcalf; xfs@oss.sgi.com;
+>Ben Myers; Dave Chinner; linux-fsdevel@vger.kernel.org
+>Subject: Re: [PATCH] xfs: Fix possible truncation of log data in
+>xlog_bread_noalign()
+>
+>On 03/01/13 09:51, Mark Tinguely wrote:
+>> On 02/26/13 01:28, Tony Lu wrote:
+>>> I get a reliable way to reproduce this bug. The logprint and metadump
+>>> are attached.
+>>>
+>>> Kernel version: 2.6.38.8
+>>> Mkfs.xfs version: xfsprogs-3.1.1
+>>> mkfs.xfs -s size=4096 /dev/sda1
+>>>
+>>> Run the following mount-cp-umount script to reproduce:
+>>> #!/bin/sh
+>>> device=/dev/sda1
+>>> mount_point=/mnt
+>>> times=10
+>>>
+>>> for ((num=1;num<=$times;num++))
+>>> do
+>>> echo "$num mount $device $mount_point"
+>>> mount $device $mount_point
+>>>
+>>> echo "cp -rf /bin $mount_point/$num"
+>>> cp -rf /bin $mount_point/$num
+>>>
+>>> echo "$num umount $device $mount_point"
+>>> umount $mount_point
+>>>
+>>> #num=$(($num + 1))
+>>> done
+>>>
+>>> After several times of mount/cp/umount, this xfs crashes, and the xfs
+>>> partition can not be mounted any more. Here is the output of console.
+>>> -sh-4.1# ./umount-test
+>>> 1 mount /dev/sda1 /mnt
+>>> XFS mounting filesystem sda1
+>>> cp -rf /bin /mnt/1
+>>> 1 umount /dev/sda1 /mnt
+>>> 2 mount /dev/sda1 /mnt
+>>> XFS mounting filesystem sda1
+>>> cp -rf /bin /mnt/2
+>>> 2 umount /dev/sda1 /mnt
+>>> 3 mount /dev/sda1 /mnt
+>>> XFS mounting filesystem sda1
+>>> cp -rf /bin /mnt/3
+>>> 3 umount /dev/sda1 /mnt
+>>> 4 mount /dev/sda1 /mnt
+>>> XFS mounting filesystem sda1
+>>> cp -rf /bin /mnt/4
+>>> 4 umount /dev/sda1 /mnt
+>>> 5 mount /dev/sda1 /mnt
+>>> XFS mounting filesystem sda1
+>>> Starting XFS recovery on filesystem: sda1 (logdev: internal)
+>>> Ending XFS recovery on filesystem: sda1 (logdev: internal)cp -rf /bin
+>>> /mnt/5
+>>> 5 umount /dev/sda1 /mnt
+>>> 6 mount /dev/sda1 /mnt
+>>>
+>>> XFS mounting filesystem sda1
+>>> Starting XFS recovery on filesystem: sda1 (logdev: internal)
+>>> Ending XFS recovery on filesystem: sda1 (logdev: internal)Interrupt
+>>> cp -rf /bin /mnt/6
+>>> 6 umount /dev/sda1 /mnt
+>>> 7 mount /dev/sda1 /mnt
+>>>
+>>> XFS mounting filesystem sda1
+>>> cp -rf /bin /mnt/7
+>>> 7 umount /dev/sda1 /mnt
+>>> Interrupt
+>>> 8 mount /dev/sda1 /mnt
+>>> XFS mounting filesystem sda1
+>>> Starting XFS recovery on filesystem: sda1 (logdev: internal)
+>>> XFS: xlog_recover_process_data: bad clientid
+>>> XFS: log mount/recovery failed: error 5
+>>> XFS: log mount failed
+>>>
+>>> Thanks
+>>> -Tony
+>>
+>> It works fine on a 2.6.32 machine I had sitting around - and I never
+>> required log recovery.
+>>
+>> I think you need to answer Dave's question as to why is your unmounts
+>> are requiring recovery?
+>>
+>> Are there errors in the /var/log/messages?
+>>
+>> I downloaded the Linux 2.6.38.8 source and take a look if I can recreate
+>> the problem.
+>>
+>> --Mark.
+>
+>I could not reproduce the problem on a vanilla install. XFS shutdown and
+>remounted cleanly running your script (several iterations looping set to
+>100).
+>
+>I started fsstress on another XFS partition on the same disk to see if I
+>could force a shutdown race. With CONFIG_XFS_DEBUG=y, I could trigger
+>other ASSERTs on the fsstress partition so I never stayed up long enough
+>to cause a shutdown race.
+>
+>Not wanting to patch that version of Linux/XFS, I am bailing here. If
+>you want to turn on the XFS debug it may point out why your filesystem
+>is not shutting down cleanly.
+>
+>--Mark.
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
