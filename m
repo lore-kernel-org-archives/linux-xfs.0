@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 28BA48038
-	for <xfs@oss.sgi.com>; Mon,  4 Mar 2013 03:00:30 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 2F5C3803D
+	for <xfs@oss.sgi.com>; Mon,  4 Mar 2013 03:03:54 -0600 (CST)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E88308F8040
-	for <xfs@oss.sgi.com>; Mon,  4 Mar 2013 01:00:29 -0800 (PST)
-Received: from mail-pa0-f49.google.com (mail-pa0-f49.google.com
-	[209.85.220.49]) by cuda.sgi.com with ESMTP id ZswViz9OTyilUFVh
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 0F01A304043
+	for <xfs@oss.sgi.com>; Mon,  4 Mar 2013 01:03:51 -0800 (PST)
+Received: from mail-pb0-f48.google.com (mail-pb0-f48.google.com
+	[209.85.160.48]) by cuda.sgi.com with ESMTP id Zq9bibIHXe1OeHqx
 	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 04 Mar 2013 01:00:28 -0800 (PST)
-Received: by mail-pa0-f49.google.com with SMTP id kp6so3054779pab.36
-	for <xfs@oss.sgi.com>; Mon, 04 Mar 2013 01:00:28 -0800 (PST)
+	<xfs@oss.sgi.com>; Mon, 04 Mar 2013 01:03:49 -0800 (PST)
+Received: by mail-pb0-f48.google.com with SMTP id wy12so2946456pbc.21
+	for <xfs@oss.sgi.com>; Mon, 04 Mar 2013 01:03:49 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <5130DB54.9030503@sandeen.net>
+In-Reply-To: <20130301205305.GD23616@dastard>
 References: <CANU9nTnvJS50vdQv2K0gKHZPvzzH5EY1qpizJNsqUobrr2juDA@mail.gmail.com>
-	<512FA67D.2090708@sandeen.net>
-	<CANU9nTm3vR3Z5JwRwou4vnNejstAkAsnBb2ivwx-KhnHHbWpoQ@mail.gmail.com>
-	<5130DB54.9030503@sandeen.net>
+	<20130301111701.GB23616@dastard>
+	<CANU9nTkkEd61UsM+KngGzMzXVXdOa2oXOPtmqN4xGaPuEBN_nQ@mail.gmail.com>
+	<20130301205305.GD23616@dastard>
 From: Ole Tange <tange@binf.ku.dk>
-Date: Mon, 4 Mar 2013 10:00:08 +0100
-Message-ID: <CANU9nTkekrw2mdptFdK2RVUFXD=evt0sTZhB9VL+PKY8DTj11A@mail.gmail.com>
+Date: Mon, 4 Mar 2013 10:03:29 +0100
+Message-ID: <CANU9nTmmw3FcHRBNvu_S6Uj8M-B2JFf5poQfHbZuCbJ6_=_RgA@mail.gmail.com>
 Subject: Re: xfs_repair segfaults
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -33,41 +33,19 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, Mar 1, 2013 at 5:46 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
-> On 3/1/13 3:37 AM, Ole Tange wrote:
+On Fri, Mar 1, 2013 at 9:53 PM, Dave Chinner <david@fromorbit.com> wrote:
+:
+> What filesystem errors occurred
+> when the srives went offline?
 
->> Please consider providing an example in the man page for xfs_metadump e.g:
->>
->>   xfs_metadump.sh -g /dev/sda2 meta.dump
->
-> From the manpage,
->
-> SYNOPSIS
->        xfs_metadump [ -efgow ] [ -l logdev ] source target
->
-> The source argument must be the pathname of
-> the device or file containing the XFS filesystem
->
-> and
->
-> the target argument specifies the destination file name.
->
-> is not enough?
+See http://dna.ku.dk/~tange/tmp/syslog.3
 
-I have never run xfs_metadump before and I am in a state of worry that
-my filesystem is toast. I would therefore like to be re-assured that
-what I am doing is correct. I did that by reading and re-reading the
-manual to make sure I had understood it correctly. By providing me
-with an example of the right way to do it in the man page, I will feel
-more confident that what I am about to do it correct and I could
-probably save time by not having to re-read the manual.
-
-So I am not saying the information is not there, what I am saying is
-that you in a simple way could make it easier to grasp the
-information.
+Feb 26 00:46:52 franklin kernel: [556238.429259] XFS (md5p1): metadata
+I/O error: block 0x459b8 ("xfs_buf_iodone_callbacks") error 5 buf
+count 4096
 
 
 /Ole
