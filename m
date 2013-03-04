@@ -1,23 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2D55F8057
-	for <xfs@oss.sgi.com>; Mon,  4 Mar 2013 17:18:56 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5CA9DAC003
-	for <xfs@oss.sgi.com>; Mon,  4 Mar 2013 15:18:55 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	3Nmln9PdB9vT06qi for <xfs@oss.sgi.com>;
-	Mon, 04 Mar 2013 15:18:54 -0800 (PST)
-Date: Tue, 5 Mar 2013 10:18:52 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: strange behavior of a larger xfs directory
-Message-ID: <20130304231852.GO26081@dastard>
-References: <4300208.uZ6HVTycB6@xrated>
- <5347920.zaxHybjLeK@xrated>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id CD98A8064
+	for <xfs@oss.sgi.com>; Mon,  4 Mar 2013 17:20:00 -0600 (CST)
+Message-ID: <51352C1C.40409@sgi.com>
+Date: Mon, 4 Mar 2013 17:19:56 -0600
+From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <5347920.zaxHybjLeK@xrated>
+Subject: Re: [PATCH 09/10] xfstest: add defragmentation stress tests for ext4
+References: <1361356935-29153-1-git-send-email-dmonakhov@openvz.org>
+	<1361356935-29153-10-git-send-email-dmonakhov@openvz.org>
+	<51310046.5090306@sgi.com> <878v66h9ks.fsf@openvz.org>
+In-Reply-To: <878v66h9ks.fsf@openvz.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,84 +19,46 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Hans-Peter Jansen <hpj@urpla.net>
-Cc: xfs@oss.sgi.com
+To: Dmitry Monakhov <dmonakhov@openvz.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, dchinner@redhat.com, xfs@oss.sgi.com
 
-On Mon, Mar 04, 2013 at 11:55:40PM +0100, Hans-Peter Jansen wrote:
-> Am Montag, 4. M=E4rz 2013, 17:40:13 schrieb Hans-Peter Jansen:
-> > Hi,
-> > =
+On 03/01/2013 07:30 PM, Dmitry Monakhov wrote:
+> On Fri, 1 Mar 2013 13:23:50 -0600, Rich Johnston <rjohnston@sgi.com> wrote:
+>> On 02/20/2013 04:42 AM, Dmitry Monakhov wrote:
 
-> > after upgrading the kernel on a server from 2.6.34 to 3.8.1 (x86-32), I =
+>>
+>> Let me know if you agree with these changes and I will make them at
+>> commit time.
+> Yes, please do.
+>>
+>> Thanks
+>> --Rich
 
-> > suffer from a strange behavior of a larger directory, that a downgrade =
+commit a3d92a6cbdf9e98d8e256974b50b025d1d4575ec
+Author: Dmitry Monakhov <dmonakhov@openvz.org>
+Date:   Wed Feb 20 10:42:14 2013 +0000
 
-> > of the kernel cannot repair.
-> > =
+     xfstest: add defragmentation stress tests for ext4
 
-> > The best way to reproduce the problem is cd into that directory and =
+     Perform various regression tests for ext4defrag subsystem
 
-> > running "vi .". It should display a full directory listing, but it only =
+      301'th Test1: Defragment file while other task does direct AIO
+      302'th Test2: Perform defragmentation on file under buffered AIO
+         while third task does direct AIO to donor file
+      303'th Test3: Two defrag tasks use common donor file.
+      304'th Test4: Stress defragmentation. Several threads perform
+         fragmentation at random position use inplace=1 will
+         allocate and free blocks inside defrag event improve
+         load pressure.
 
-> > displays a about dozen entries. Another way is just using bash tab =
-
-> > completion (e.g. ls <tab><tab> should display a screenful of items, but =
-
-> > only shows the very same dozen of entries. Userspace is quite old =
-
-> > (openSUSE 11.1/i586, but I cannot upgrade to a newer userspace for a =
-
-> > couple of reasons. OTOH, a simple ls displays the full list again, =
-
-> =
-
-> [...]
-> =
-
-> > > # then it preceeds with getdents64 and fetches already fetched entries
-> > =
-
-> > 27177 getdents64(3, {
-> >              {d_ino=3D4303329151, d_off=3D78, d_type=3DDT_UNKNOWN, d_re=
-clen=3D32, d_name=3D"Black_Swan"} =
-
-> =
-
-> Okay, this is the culprit: 0x1007F977F overflows 32 bit, although I =
-
-> *never* mounted anything with inode64 option. =
-
-> =
-
-> For some reason, the intermediate kernel 3.8.0 has used the inode64 versi=
-on
-> by *default*. This breaks bash tab completion and vdr. After forcing the =
-
-> inode32 option and copying some offenders away and back in place, the iss=
-ue
-> vanishes. =
-
-> =
-
-> Unlike stated in the XFS FAQs, openSUSE 11.1 *has* issues with inode64, a=
-nd
-> even more so, if enabled by default.
-
-Wonderful. Report a bug to OpenSuSE and get userspace fixed. It's
-only a matter of time before btrfs and ext4 users start reporting
-the same problem, as they also use 64 bit inode numbers....
-
-Cheers,
-
-Dave.
--- =
-
-Dave Chinner
-david@fromorbit.com
+     This tests are considered dangerous because 302'th and 303'th are known
+     to trigger OOPS on recent kernels 
+see:https://gist.github.com/dmonakhov/4770
+294
 
 _______________________________________________
 xfs mailing list
