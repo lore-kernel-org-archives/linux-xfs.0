@@ -1,18 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 809EF803D
-	for <xfs@oss.sgi.com>; Mon,  4 Mar 2013 10:31:52 -0600 (CST)
-Date: Mon, 4 Mar 2013 10:31:48 -0600
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 9D21C803D
+	for <xfs@oss.sgi.com>; Mon,  4 Mar 2013 10:33:43 -0600 (CST)
+Date: Mon, 4 Mar 2013 10:33:40 -0600
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 2/9] xfs: add support for large btree blocks
-Message-ID: <20130304163148.GF22182@sgi.com>
+Subject: Re: [PATCH 0/9] xfs: metadata CRCs, kernel, first batch
+Message-ID: <20130304163340.GG22182@sgi.com>
 References: <1358774760-21841-1-git-send-email-david@fromorbit.com>
-	<1358774760-21841-3-git-send-email-david@fromorbit.com>
-	<20130215212015.GO22182@sgi.com> <20130222013456.GN26694@dastard>
-	<20130223022722.GI26081@dastard>
+	<20130222151931.GU22182@sgi.com> <20130222231217.GA26081@dastard>
+	<20130222235029.GA30652@sgi.com> <20130223023818.GJ26081@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130223022722.GI26081@dastard>
+In-Reply-To: <20130223023818.GJ26081@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,72 +29,44 @@ Cc: xfs@oss.sgi.com
 
 Hi Dave,
 
-On Sat, Feb 23, 2013 at 01:27:22PM +1100, Dave Chinner wrote:
-> On Fri, Feb 22, 2013 at 12:34:56PM +1100, Dave Chinner wrote:
-> > On Fri, Feb 15, 2013 at 03:20:15PM -0600, Ben Myers wrote:
-> > > On Tue, Jan 22, 2013 at 12:25:53AM +1100, Dave Chinner wrote:
-> > > > From: Christoph Hellwig <hch@lst.de>
-> > > > 
-> > > > Add support for larger btree blocks that contains a CRC32C checksum,
-> > > > a filesystem uuid and block number for detecting filesystem
-> > > > consistency and out of place writes.
-> > > > 
-> > > > [dchinner@redhat.com] Also include an owner field to allow reverse
-> > > > mappings to be implemented for improved repairability and a LSN
-> > > > field to so that log recovery can easily determine the last
-> > > > modification that made it to disk for each buffer.
-> > > > 
-> > > > [dchinner@redhat.com] Add buffer log format flags to indicate the
-> > > > type of buffer to recovery so that we don't have to do blind magic
-> > > > number tests to determine what the buffer is.
-> > > > 
-> > > > [dchinner@redhat.com] Modified to fit into the verifier structure.
+On Sat, Feb 23, 2013 at 01:38:18PM +1100, Dave Chinner wrote:
+> On Fri, Feb 22, 2013 at 05:50:29PM -0600, Ben Myers wrote:
+> > On Sat, Feb 23, 2013 at 10:12:17AM +1100, Dave Chinner wrote:
+> > > On Fri, Feb 22, 2013 at 09:19:31AM -0600, Ben Myers wrote:
+> > > This is mentioned in the patch zero description:
 > > > 
-> > > This patch is far too large for a good review.  It needs to be split up into
-> > > it's various ideas which you outlined in patch 0.  If you need to add dead code
-> > > in each piece and then enable it at the end, that's fine with me.
+> > > "This series makes is through to 001-092 in xfstests - there is a
+> > > problem in the dquot verifier that causes log recovery of dquot
+> > > buffers to follow a NULL pointer."
+> > >
+> > > Basically, mp->m_quotainfo is not initialised until after log
+> > > recovery occurs, so this has to be detected in the verify/crc
+> > > routines otherwise it goes splat like above. My current patch series
+> > > has this fixed.
 > > 
-> > You want it broken up into 7 or 8 separate patches - what does it
-> > gain us? It'll take a week for me to do the patch monkeying and to
-> > retest and validate the resulting stack (i.e. it is bisectable, each
-> > patch passes xfstests, etc), and in the end the code will be
-> > identical.
-> > 
-> > As I've said before, there's a point where the tradeoff for
-> > splitting patches up doesn't make sense. Asking a developer to do
-> > days of work to end up with exactly the same code to save the
-> > reviewer an hour or two is *not* a good tradeoff. Especially for the
-> > first patch of a much larger 15-20 patch series which contains
-> > several larger and more complex patches....
+> > Cool.  Sorry for the extra noise.
 > 
-> Ben, reading this back it comes across as unnecessarily negative and
-> narky. I was just about at the end of the attribute leaf changes and
-> it's been a mind-numbing slog making mechanical changes to lots of
-> code.
+> No, that's fine. It tells me that you're actaully looking at the
+> code and seeing what it does ;)
 > 
-> This is after having to do the same slog through all the directory
-> code. The block, leaf, node, freespace and da_btree code all had to
-> get the same treatment, and it's worn me down.  My wrists are
-> starting to hurt from the last three months of slogging through this
-> stuff (roughly +20,000/-10,000 lines modified according to a quick
-> diffstat) and that doesn't make me a happy camper.
+> I'm close to having a new version of the kernel patchset out. I've
+> just got to finish debugging the attribute changes I've made and
+> move the superblock support patch to the end of the series and I'll
+> post it out.
 > 
-> So I'm not meaning to be narky or nasty - I just want to get this
-> stuff done ASAP before it burns me out. Hence the prospect of having
-> to go back and redo significant chunks to split out trivial pieces
-> of code (i.e. a mind-numbing slog making mechanical changes) hit a
-> bit of a raw nerve.
+> All I'm aiming for with the next version of the patch set is that
+> existing filesystems (i.e. no CRCs) are regression free. I've
+> actaully done very little CRC enabled testing while doing all the
+> directory and attribute code changes, mainly because I can't test
+> them properly until the userspace support is there. However, the
+> patch set up to the final patch (i.e. everything but the attribute
+> changes) seems to work just fine with the existing toolchain and
+> xfstests.
 > 
-> All I'm asking is that you take into account the extra load that the
-> rework you ask me to do adds and whether it is absolutely necessary
-> to be able to review the code. The last thing I want is be burnt out
-> by this stuff....
+> Put simply, my focus for testing the patch set is currently "no
+> regressions for existing users", not "CRCs work perfectly".
 
-Once I get back to it I'll consider whether to pull it apart myself.  I had a
-hard time keeping track of everything that was going on in that patch.  And it
-seems like whenever that happens I miss something important in my review.
-Working through the rest of the series may also help to get more comfortable
-with this patch.
+Sounds good.  I'll keep that in mind.
 
 -Ben
 
