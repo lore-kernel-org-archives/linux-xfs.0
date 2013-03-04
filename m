@@ -1,31 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0D969804E
-	for <xfs@oss.sgi.com>; Mon,  4 Mar 2013 15:03:19 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id EEB308F8064
-	for <xfs@oss.sgi.com>; Mon,  4 Mar 2013 13:03:15 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	COEKvkUENUqFpBgK for <xfs@oss.sgi.com>;
-	Mon, 04 Mar 2013 13:03:14 -0800 (PST)
-Date: Tue, 5 Mar 2013 08:03:11 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: Fix possible truncation of log data in
-	xlog_bread_noalign()
-Message-ID: <20130304210311.GQ23616@dastard>
-References: <BAB94DBB0E89D8409949BC28AC95914C47C485E5@USMAExch1.tad.internal.tilera.com>
-	<20130223000802.GB26081@dastard>
-	<BAB94DBB0E89D8409949BC28AC95914C47C48702@USMAExch1.tad.internal.tilera.com>
-	<20130223235546.GA5551@dastard>
-	<BAB94DBB0E89D8409949BC28AC95914C47C488D8@USMAExch1.tad.internal.tilera.com>
-	<20130224141017.GC5551@dastard>
-	<BAB94DBB0E89D8409949BC28AC95914C47C49005@USMAExch1.tad.internal.tilera.com>
-	<5130CE9E.9080501@sgi.com> <51310E7A.1000905@sgi.com>
-	<BAB94DBB0E89D8409949BC28AC95914C47C4C19C@USMAExch1.tad.internal.tilera.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A965D804E
+	for <xfs@oss.sgi.com>; Mon,  4 Mar 2013 15:05:43 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 68D25304059
+	for <xfs@oss.sgi.com>; Mon,  4 Mar 2013 13:05:40 -0800 (PST)
+Received: from ZenIV.linux.org.uk (zeniv.linux.org.uk [195.92.253.2]) by
+	cuda.sgi.com with ESMTP id wcXrzqhxV7GRrDkG (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 04 Mar 2013 13:05:38 -0800 (PST)
+Date: Mon, 4 Mar 2013 13:05:23 -0800
+From: Joel Becker <jlbec@evilplan.org>
+Subject: Re: [PATCH] Do not check ocfs2
+Message-ID: <20130304210522.GA7783@localhost>
+References: <1362269150-21478-1-git-send-email-richard@nod.at>
+	<20130303011917.GI23616@dastard>
+	<20130303100254.500b076f@spider.haslach.nod.at>
+	<5133C900.9050300@sandeen.net>
+	<20130303231905.0efd6d08@spider.haslach.nod.at>
+	<5133D15A.9010600@sandeen.net>
+	<20130303235341.7470085e@spider.haslach.nod.at>
+	<5133D573.3050106@sandeen.net> <20130304004229.GK23616@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <BAB94DBB0E89D8409949BC28AC95914C47C4C19C@USMAExch1.tad.internal.tilera.com>
+In-Reply-To: <20130304004229.GK23616@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,39 +36,82 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Tony Lu <zlu@tilera.com>
-Cc: Alex Elder <elder@kernel.org>, Mark Tinguely <tinguely@sgi.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Chris Metcalf <cmetcalf@tilera.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, Ben Myers <bpm@sgi.com>, Dave Chinner <dchinner@redhat.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, Richard Weinberger <richard@nod.at>, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-On Mon, Mar 04, 2013 at 08:32:45AM +0000, Tony Lu wrote:
-> Thanks for you following up.
+On Mon, Mar 04, 2013 at 11:42:29AM +1100, Dave Chinner wrote:
+> On Sun, Mar 03, 2013 at 04:57:55PM -0600, Eric Sandeen wrote:
+> > On 3/3/13 4:53 PM, Richard Weinberger wrote:
+> > 
+> > >> Anyway, what if you did something more along the lines of [pseudocode]
+> > >>
+> > >> ocfs2)
+> > >> 	if mounted.ocfs2 -f $TEST-DEV | frob_as_necessary[1]
+> > >> 		;
+> > >> 	else
+> > >> 		fsck.ocfs2 $TEST-DEV
+> > >> 	fi
+> > >> 	;;
+> > >>
+> > >> so that *if* it's mounted on some other node, the fsck won't run.
+> > >> That has downsides as Dave mentioned, but for the case where the
+> > >> xfstests node is the only one with it in use, it'll still do the
+> > >> beneficial consistency check.
+> > >>
+> > >> Just tweaking the fsck action bsed on *if* it's mounted (or,
+> > >> maybe, if the node is in a cluster?) might be a more generic solution
+> > >> that is widely applicable to all ocfs2 test environments.
+> > > 
+> > > Good point. mounted.ocfs2 really makes sense. I'll implement this on my
+> > > test suite and submit a new patch.
+> > 
+> > Sounds good to me.
+> > 
+> > It'd be most preferable to do a cluster-wide unmount and fsck,
 > 
-> My apologize that I just found that it is one change I made before
-> that causes this problem. This change forces mkfs.xfs to format
-> xfs partitions whose sectorsize were not smaller than 4096 bytes,
-> which was due to a bug that earlier versions of xfs used (struct
-> *page)->private(long) as a bitmap to represent each block's state
-> within a page (the size of a page could be 64K or larger, then it
-> needs 128 bit or more to represent each block's state within a
-> page).
+> Which makes no sense to me, because ./check will then do a cluster
+> wide unmount as it runs the test harness initialisation. Hence all
+> the subsequent tests will run with the filesystem only mounted on
+> the local node....
+> 
+> Really, xfstests is not designed for testing cluster filesystems in
+> clustered environments. If we really want to support clustered
+> filesystems and cluster wide operations, then we need to think
+> about how to architect multi-host support into xfstests sanely.
+> Clustered filesystems are not the only people that could make use of
+> such functionality (NFS and CIFS come to mind).... ;)
 
-You do realise that bug doesn't affect x86-64 platforms as they
-don't support 64k pages?
+I'm much happier with the "check for other cluster mounts" approach
+rather than avoiding fsck entirely.  We like xfstests in the local or
+single-node cases to behave exactly as one would expect.
 
-> This is reproducible on 2.6.38.6 kernel on X86. But I do not get
-> why this change makes the xfs log inconsistent during
-> mount/cp/umount operations.
+We do run xfstests on multiple nodes in a cluster, but by hand and with
+our own cleanup.  Obviously support for automating that would be awesome
+:-)
 
-Neither do I, and I don't care to look any further because the
-problem is of your own making. In future, please check first that
-the bug you are reporting is reproducable on a current upstream
-kernel and userspace.
+Joel
 
-Cheers,
+> 
+> Cheers,
+> 
+> Dave/
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+
+"Born under a bad sign.
+ I been down since I began to crawl.
+ If it wasn't for bad luck,
+ I wouldn't have no luck at all."
+
+			http://www.jlbec.org/
+			jlbec@evilplan.org
 
 _______________________________________________
 xfs mailing list
