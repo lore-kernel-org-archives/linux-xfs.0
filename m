@@ -1,23 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D44CD8032
-	for <xfs@oss.sgi.com>; Sun,  3 Mar 2013 23:55:09 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 673DBAC002
-	for <xfs@oss.sgi.com>; Sun,  3 Mar 2013 21:55:06 -0800 (PST)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	ni68BcFW89ogfGED for <xfs@oss.sgi.com>;
-	Sun, 03 Mar 2013 21:55:04 -0800 (PST)
-Date: Mon, 4 Mar 2013 16:55:02 +1100
-From: Dave Chinner <david@fromorbit.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 93D468034
+	for <xfs@oss.sgi.com>; Mon,  4 Mar 2013 00:14:08 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 812B3304032
+	for <xfs@oss.sgi.com>; Sun,  3 Mar 2013 22:14:05 -0800 (PST)
+Received: from mx4-phx2.redhat.com (mx4-phx2.redhat.com [209.132.183.25]) by
+	cuda.sgi.com with ESMTP id LWXlFGhJYx2Gfhf2 for
+	<xfs@oss.sgi.com>; Sun, 03 Mar 2013 22:14:04 -0800 (PST)
+Date: Mon, 4 Mar 2013 01:14:02 -0500 (EST)
+From: CAI Qian <caiqian@redhat.com>
+Message-ID: <1735762055.8552410.1362377642444.JavaMail.root@redhat.com>
+In-Reply-To: <20130304055502.GP23616@dastard>
 Subject: Re: possible fsync02() xfs slowness regression on power7
-Message-ID: <20130304055502.GP23616@dastard>
-References: <220575861.7590457.1362129618880.JavaMail.root@redhat.com>
-	<1601552351.8516567.1362371006444.JavaMail.root@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1601552351.8516567.1362371006444.JavaMail.root@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,48 +22,51 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: CAI Qian <caiqian@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Sun, Mar 03, 2013 at 11:23:26PM -0500, CAI Qian wrote:
-> 
-> > > And this commit in 3.9-rc1:
-> > > 
-> > > a1e16c2 xfs: limit speculative prealloc size on sparse files
-> > > should fix the problem. Please confirm these commits are the cause
-> > > and the fix respectively....
-> Confirmed this fixed the problem. I'd like to request this to be back-ported
-> to stable-3.0, stable-3.4 and stable-3.8. What do you think?
-
-IMO, no, it is not a backport candidate.  The patch has quite a few
-dependencies, and at least for 3.0 xfs_bmapi_read() doesn't exist
-and hence is not a trivial backport.
-
-Further, it's take 2 years for this to be noticed, and you haven't
-explained why the problem exists on your power machine and not any
-others that it has been tested on. And there's been very few
-complaints about performance of such workloads over the past 2
-years, so either the workload is not important or only your power7
-machine is having problems.
-
-Hence I don't see any need to back port it - it's not a critical fix
-and very few people see the problem so there's no real need to do
-the backport.  Maybe someone else has the time and resources to
-waste on backporting non-critical fixes to stable kernels, but I
-don't....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+CgotLS0tLSDljp/lp4vpgq7ku7YgLS0tLS0KPiDlj5Hku7bkuro6ICJEYXZlIENoaW5uZXIiIDxk
+YXZpZEBmcm9tb3JiaXQuY29tPgo+IOaUtuS7tuS6ujogIkNBSSBRaWFuIiA8Y2FpcWlhbkByZWRo
+YXQuY29tPgo+IOaKhOmAgTogeGZzQG9zcy5zZ2kuY29tCj4g5Y+R6YCB5pe26Ze0OiDmmJ/mnJ/k
+uIAsIDIwMTPlubQgMyDmnIggMDTml6Ug5LiL5Y2IIDE6NTU6MDIKPiDkuLvpopg6IFJlOiBwb3Nz
+aWJsZSBmc3luYzAyKCkgeGZzIHNsb3duZXNzIHJlZ3Jlc3Npb24gb24gcG93ZXI3Cj4gCj4gT24g
+U3VuLCBNYXIgMDMsIDIwMTMgYXQgMTE6MjM6MjZQTSAtMDUwMCwgQ0FJIFFpYW4gd3JvdGU6Cj4g
+PiAKPiA+ID4gPiBBbmQgdGhpcyBjb21taXQgaW4gMy45LXJjMToKPiA+ID4gPiAKPiA+ID4gPiBh
+MWUxNmMyIHhmczogbGltaXQgc3BlY3VsYXRpdmUgcHJlYWxsb2Mgc2l6ZSBvbiBzcGFyc2UgZmls
+ZXMKPiA+ID4gPiBzaG91bGQgZml4IHRoZSBwcm9ibGVtLiBQbGVhc2UgY29uZmlybSB0aGVzZSBj
+b21taXRzIGFyZSB0aGUKPiA+ID4gPiBjYXVzZQo+ID4gPiA+IGFuZCB0aGUgZml4IHJlc3BlY3Rp
+dmVseS4uLi4KPiA+IENvbmZpcm1lZCB0aGlzIGZpeGVkIHRoZSBwcm9ibGVtLiBJJ2QgbGlrZSB0
+byByZXF1ZXN0IHRoaXMgdG8gYmUKPiA+IGJhY2stcG9ydGVkCj4gPiB0byBzdGFibGUtMy4wLCBz
+dGFibGUtMy40IGFuZCBzdGFibGUtMy44LiBXaGF0IGRvIHlvdSB0aGluaz8KPiAKPiBJTU8sIG5v
+LCBpdCBpcyBub3QgYSBiYWNrcG9ydCBjYW5kaWRhdGUuICBUaGUgcGF0Y2ggaGFzIHF1aXRlIGEg
+ZmV3Cj4gZGVwZW5kZW5jaWVzLCBhbmQgYXQgbGVhc3QgZm9yIDMuMCB4ZnNfYm1hcGlfcmVhZCgp
+IGRvZXNuJ3QgZXhpc3QKPiBhbmQgaGVuY2UgaXMgbm90IGEgdHJpdmlhbCBiYWNrcG9ydC4KSXQg
+aXMgZmluZSB0byBza2lwIHRoZSAzLjAgdGhlbiwgYnV0IHRoZSBvdGhlciBzdGFibGUgYnJhbmNo
+ZXMgY2FuIGJlIGFwcGxpZWQKYXMgaXQgaWlzIGFuZCBidWlsZCBmaW5lLgo+IAo+IEZ1cnRoZXIs
+IGl0J3MgdGFrZSAyIHllYXJzIGZvciB0aGlzIHRvIGJlIG5vdGljZWQsIGFuZCB5b3UgaGF2ZW4n
+dAo+IGV4cGxhaW5lZCB3aHkgdGhlIHByb2JsZW0gZXhpc3RzIG9uIHlvdXIgcG93ZXIgbWFjaGlu
+ZSBhbmQgbm90IGFueQo+IG90aGVycyB0aGF0IGl0IGhhcyBiZWVuIHRlc3RlZCBvbi4gQW5kIHRo
+ZXJlJ3MgYmVlbiB2ZXJ5IGZldwo+IGNvbXBsYWludHMgYWJvdXQgcGVyZm9ybWFuY2Ugb2Ygc3Vj
+aCB3b3JrbG9hZHMgb3ZlciB0aGUgcGFzdCAyCj4geWVhcnMsIHNvIGVpdGhlciB0aGUgd29ya2xv
+YWQgaXMgbm90IGltcG9ydGFudCBvciBvbmx5IHlvdXIgcG93ZXI3Cj4gbWFjaGluZSBpcyBoYXZp
+bmcgcHJvYmxlbXMuCkhtbSwgaXQgY291bGQgYWxzbyBiZSBwb3NzaWJsZSB0aGF0IGl0IHdhcyBl
+YXN5IHRvIHJlcHJvZHVjZSBub3cgd2l0aCB0aGUKbmV3IGtlcm5lbCBwbHVzIG5ldyB1c2VyLXNw
+YWNlcyBhcyB3ZWxsIHRoZSBuZXcgY29tcGlsZXIuIEFsc28sIHRob3NlIHN5c3RlbXMKc3RhcnRl
+ZCB0byBzd2l0Y2ggdG8gdXNlIFhGUyBhcyByb290IHBhcnRpdGlvbnMgZnJvbSBleHQ0IG9ubHkg
+cmVjZW50bHksCnNvIHdlIGhhdmUgbmV2ZXIgbm90aWNlZCB0aGlzIGluIHRoZSBwYXN0IHdoZW4g
+cnVubmluZyB0aG9zZSBMVFAgdGVzdHMuClhGUyBjb3VsZCBhbHNvIGJlY29tZSBtb3JlIHBvcHVs
+YXIgdGhhbiAyLXllYXIgYWdvLiA6KQo+IAo+IEhlbmNlIEkgZG9uJ3Qgc2VlIGFueSBuZWVkIHRv
+IGJhY2sgcG9ydCBpdCAtIGl0J3Mgbm90IGEgY3JpdGljYWwgZml4Cj4gYW5kIHZlcnkgZmV3IHBl
+b3BsZSBzZWUgdGhlIHByb2JsZW0gc28gdGhlcmUncyBubyByZWFsIG5lZWQgdG8gZG8KPiB0aGUg
+YmFja3BvcnQuICBNYXliZSBzb21lb25lIGVsc2UgaGFzIHRoZSB0aW1lIGFuZCByZXNvdXJjZXMg
+dG8KPiB3YXN0ZSBvbiBiYWNrcG9ydGluZyBub24tY3JpdGljYWwgZml4ZXMgdG8gc3RhYmxlIGtl
+cm5lbHMsIGJ1dCBJCj4gZG9uJ3QuLi4uCkkgaGF2ZSB0aW1lIHNvIEkgY2FuIGRvIHRoZSBiYWNr
+LXBvcnQgZm9yIHlvdSBndXlzIHRvIHJldmlldyBpZiB5b3UKZG9uJ3QgbWluZC4gVGhhbmtzIGZv
+ciB5b3VyIHRpbWUuCj4gCj4gQ2hlZXJzLAo+IAo+IERhdmUuCj4gLS0KPiBEYXZlIENoaW5uZXIK
+PiBkYXZpZEBmcm9tb3JiaXQuY29tCj4gCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8v
+b3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
