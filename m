@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 096E88063
-	for <xfs@oss.sgi.com>; Tue,  5 Mar 2013 16:50:33 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id C6F7F8064
+	for <xfs@oss.sgi.com>; Tue,  5 Mar 2013 17:48:53 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 89D7CAC005
-	for <xfs@oss.sgi.com>; Tue,  5 Mar 2013 14:50:32 -0800 (PST)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	6SMfYdFZ670LF6ZG for <xfs@oss.sgi.com>;
-	Tue, 05 Mar 2013 14:50:30 -0800 (PST)
-Date: Wed, 6 Mar 2013 09:49:36 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 07/16] xfs: add CRC checks for quota blocks
-Message-ID: <20130305224936.GQ26081@dastard>
-References: <1361755901-12453-1-git-send-email-david@fromorbit.com>
-	<1361755901-12453-8-git-send-email-david@fromorbit.com>
-	<20130305203615.GK22182@sgi.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B04708F8074
+	for <xfs@oss.sgi.com>; Tue,  5 Mar 2013 15:48:50 -0800 (PST)
+Received: from moutng.kundenserver.de (moutng.kundenserver.de [212.227.17.9])
+	by cuda.sgi.com with ESMTP id Ecqqer5gwAKh9yMB (version=TLSv1
+	cipher=RC4-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 05 Mar 2013 15:48:46 -0800 (PST)
+From: Hans-Peter Jansen <hpj@urpla.net>
+Subject: Re: strange behavior of a larger xfs directory
+Date: Wed, 06 Mar 2013 00:48:25 +0100
+Message-ID: <1517139.CltWl8VXzZ@xrated>
+In-Reply-To: <20130305222941.GP26081@dastard>
+References: <4300208.uZ6HVTycB6@xrated> <8026381.3dEJ1E4pzL@xrated>
+	<20130305222941.GP26081@dastard>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130305203615.GK22182@sgi.com>
+Content-Type: multipart/mixed; boundary="nextPart2973599.LGyd7z4d3N"
+Content-Transfer-Encoding: 7Bit
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,68 +27,251 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Mar 05, 2013 at 02:36:15PM -0600, Ben Myers wrote:
-> Hi Dave,
-> 
-> On Mon, Feb 25, 2013 at 12:31:32PM +1100, Dave Chinner wrote:
-> > From: Christoph Hellwig <hch@lst.de>
-> > 
-> > Use the reserved space in struct xfs_dqblk to store a UUID and a crc
-> > for the quota blocks.
-> > 
-> > [dchinner@redhat.com] Add a LSN field and update for current verifier
-> > infrastructure.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> 
-> Been over this and it looks fine.
-> 
-> > @@ -897,6 +910,10 @@ xfs_qm_dqiter_bufs(
-> >  		if (error)
-> >  			break;
-> >  
-> > +		/*
-> > +		 * XXX(hch): need to figure out if it makes sense to validate
-> > +		 *	     the CRC here.
-> > +		 */
-> 
-> What's you're opinion on this?
+This is a multi-part message in MIME format.
 
-I did actually change the code to validate the CRC here via
-the call to xfs_trans_read_buf(.... &xfs_dquot_buf_ops) above. i.e.
-the read verifier will do CRC validation of the buffer.
+--nextPart2973599.LGyd7z4d3N
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="iso-8859-1"
 
-The comment is still relevant, however, because it's not exactly
-clear what the best approach to do here if we get a CRC failure.
-That would indicate some kind of corruption that we weren't
-expecting, and quite possibly a corruption that rewriting the dquot
-can't fix. So without knowing what kind of corruption is typical
-here, I don't know what the best approach to take here is.
+Am Mittwoch, 6. M=E4rz 2013, 09:29:41 schrieb Dave Chinner:
+> On Tue, Mar 05, 2013 at 09:32:02PM +0100, Hans-Peter Jansen wrote:
+> > Am Dienstag, 5. M=E4rz 2013, 10:05:27 schrieb Dave Chinner:
+> > > On Mon, Mar 04, 2013 at 05:40:13PM +0100, Hans-Peter Jansen wrote=
+:
+> > > Second solution: Run 3.8.1, make sure you mount with inode32, and=
 
-So effectively what I've done is add CRC validation so that we'll
-get people telling us about problems (because the quotacheck will
-abort and there will be a stack trace in the log). If it turns out
-that corrupted quota files is a common problem that quotacheck
-encounters we can gather the corpses, do post-mortem analysis of the
-failures and then revisit the code appropriately with that knowledge
-in hand.
+> > > then run the xfs_reno tool mentioned on this page:
+> > >=20
+> > > http://xfs.org/index.php/Unfinished_work
+> > >=20
+> > > to find all the inodes with inode numbers larger than 32
+> > > bits and move them to locations with smaller inode numbers.
+> >=20
+> > Okay, I would like to take that route.
+> >=20
+> > I've updated the xfsprogs, xfsdump and xfstests packages in my open=
+SUSE
+> > build service repo home:frispete:tools to current versions today, a=
+nd
+> > plan to submit them to Factory. openSUSE is always lagging in this =
+area.
+> >=20
+> > I've tried to include a build of the xfs_reno tool in xfsprogs, sin=
+ce, as
+> > you mentioned, others might have a similar need soon. Unfortunately=
+ I
+> > failed so far, because it is using some attr_multi and attr_list
+> > interfaces, that aren't part of the xfsprogs visible API anymore. O=
+nly
+> > the handle(3) man page refers to them.
+> >=20
+> > Attached is my current state: I've relocated the patch to xfsprogs =
+3.1.9,
+> > because it already carries all the necessary headers (apart from
+> > attr_multi
+> > and attr_list). The attr interfaces seem to be collected in libhand=
+le now,
+> > hence I've added it to the build.
+>=20
+> attr_list and attr_multi are supplied by libattr, you should not
+> need the *by_handle variants at all - they are special sauce used by
+> xfsdump, not xfs_reno....
+
+Ahh, I see. These interfaces cannot be exercised much, given that googl=
+e=20
+didn't relate them to libattr prominently..
+
+> .....
+>=20
+> > +TOPDIR =3D ..
+> > +include $(TOPDIR)/include/builddefs
+> > +
+> > +LTCOMMAND =3D xfs_reno
+> > +CFILES =3D xfs_reno.c
+> > +LLDLIBS =3D $(LIBATTR)
+>=20
+> The patch assumes that libattr has been found by autoconf and set up
+> in $(LIBATTR), but xfsprogs does not currently use libattr and hence
+> that variable isn't set up. Therefore this line is a no-op:
+>=20
+> +LLDLIBS =3D $(LIBATTR)
+>=20
+> Change it to:
+>=20
+> LLDLIBS =3D -lattr
+>=20
+> And the xfs_reno should then link.
+>=20
+> BTW, if you want extra points and add the autoconf magic to the
+> patch, copy it from the xfsdump tree. The places you need to copy
+> from are:
+>=20
+> $ git grep -l LIBATTR |grep -v Makefile
+> configure.ac
+> include/builddefs.in
+> m4/package_attrdev.m4
+> $
+
+Done that up to this point ;-) Nice and easy.=20
+Committed, attached, and public build is on the way.
+
+Dave, you made my day, ahem, night. Thank you very much.
+
+To a casual consumer of this thread: go, grab the xfs_reno.patch in the=
+=20
+preceding mail, and the attached patch, apply both to a current version=
+ of=20
+xfsprogs, build, and read man xfs_reno. Seriously.
+
+> And for even more bonus points, you could write a basic xfstest that
+> creates a bunch of 64 bit inodes and then runs xfs_reno on it and
+> checks that they get moved to 32 bit inodes. At that point, we could
+> probably pull the xfs_reno patch into xfsprogs and ship it....
+
+Hmm, any idea on how xfs can be tricked into generating 64 bit inodes w=
+ithout=20
+the need to create an excessive big test fs, or is this an accepted pra=
+ctice?
+
+Note to myself: xfs_reno could use some mount option check. Forgot to r=
+emount=20
+one partition with inode32 and, consequently, moved the offending inode=
+s to=20
+another 64 bit value..
 
 Cheers,
+Pete
+--nextPart2973599.LGyd7z4d3N
+Content-Disposition: attachment; filename="xfs_reno_fix.diff"
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/x-patch; charset="UTF-8"; name="xfs_reno_fix.diff"
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Index: b/configure.ac
+===================================================================
+--- a/configure.ac
++++ b/configure.ac
+@@ -101,6 +101,10 @@ AC_PACKAGE_NEED_UUIDCOMPARE
+ AC_PACKAGE_NEED_PTHREAD_H
+ AC_PACKAGE_NEED_PTHREADMUTEXINIT
+ 
++AC_PACKAGE_NEED_ATTRIBUTES_H
++AC_PACKAGE_NEED_ATTRIBUTES_MACROS
++AC_PACKAGE_NEED_ATTRGET_LIBATTR
++
+ AC_HAVE_FADVISE
+ AC_HAVE_MADVISE
+ AC_HAVE_MINCORE
+Index: b/include/builddefs.in
+===================================================================
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -34,6 +34,7 @@ LIBTERMCAP = @libtermcap@
+ LIBEDITLINE = @libeditline@
+ LIBREADLINE = @libreadline@
+ LIBBLKID = @libblkid@
++LIBATTR = @libattr@
+ LIBXFS = $(TOPDIR)/libxfs/libxfs.la
+ LIBXCMD = $(TOPDIR)/libxcmd/libxcmd.la
+ LIBXLOG = $(TOPDIR)/libxlog/libxlog.la
+Index: b/m4/package_attrdev.m4
+===================================================================
+--- /dev/null
++++ b/m4/package_attrdev.m4
+@@ -0,0 +1,79 @@
++AC_DEFUN([AC_PACKAGE_NEED_ATTR_XATTR_H],
++  [ AC_CHECK_HEADERS([attr/xattr.h])
++    if test "$ac_cv_header_attr_xattr_h" != "yes"; then
++        echo
++        echo 'FATAL ERROR: attr/xattr.h does not exist.'
++        echo 'Install the extended attributes (attr) development package.'
++        echo 'Alternatively, run "make install-dev" from the attr source.'
++        exit 1
++    fi
++  ])
++
++AC_DEFUN([AC_PACKAGE_NEED_ATTR_ERROR_H],
++  [ AC_CHECK_HEADERS([attr/error_context.h])
++    if test "$ac_cv_header_attr_error_context_h" != "yes"; then
++        echo
++        echo 'FATAL ERROR: attr/error_context.h does not exist.'
++        echo 'Install the extended attributes (attr) development package.'
++        echo 'Alternatively, run "make install-dev" from the attr source.'
++        exit 1
++    fi
++  ])
++
++AC_DEFUN([AC_PACKAGE_NEED_ATTRIBUTES_H],
++  [ have_attributes_h=false
++    AC_CHECK_HEADERS([attr/attributes.h sys/attributes.h], [have_attributes_h=true], )
++    if test "$have_attributes_h" = "false"; then
++        echo
++        echo 'FATAL ERROR: attributes.h does not exist.'
++        echo 'Install the extended attributes (attr) development package.'
++        echo 'Alternatively, run "make install-dev" from the attr source.'
++        exit 1
++    fi
++  ])
++
++AC_DEFUN([AC_PACKAGE_WANT_ATTRLIST_LIBATTR],
++  [ AC_CHECK_LIB(attr, attr_list, [have_attr_list=true], [have_attr_list=false])
++    AC_SUBST(have_attr_list)
++  ])
++
++AC_DEFUN([AC_PACKAGE_NEED_GETXATTR_LIBATTR],
++  [ AC_CHECK_LIB(attr, getxattr,, [
++        echo
++        echo 'FATAL ERROR: could not find a valid Extended Attributes library.'
++        echo 'Install the extended attributes (attr) development package.'
++        echo 'Alternatively, run "make install-lib" from the attr source.'
++        exit 1
++    ])
++    libattr="-lattr"
++    test -f ${libexecdir}${libdirsuffix}/libattr.la && \
++	libattr="${libexecdir}${libdirsuffix}/libattr.la"
++    AC_SUBST(libattr)
++  ])
++
++AC_DEFUN([AC_PACKAGE_NEED_ATTRGET_LIBATTR],
++  [ AC_CHECK_LIB(attr, attr_get,, [
++        echo
++        echo 'FATAL ERROR: could not find a valid Extended Attributes library.'
++        echo 'Install the extended attributes (attr) development package.'
++        echo 'Alternatively, run "make install-lib" from the attr source.'
++        exit 1
++    ])
++    libattr="-lattr"
++    test -f ${libexecdir}${libdirsuffix}/libattr.la && \
++	libattr="${libexecdir}${libdirsuffix}/libattr.la"
++    AC_SUBST(libattr)
++  ])
++
++AC_DEFUN([AC_PACKAGE_NEED_ATTRIBUTES_MACROS],
++  [ AC_MSG_CHECKING([macros in attr/attributes.h])
++    AC_TRY_LINK([
++#include <sys/types.h>
++#include <attr/attributes.h>],
++    [ int x = ATTR_SECURE; ], [ echo ok ], [
++        echo
++	echo 'FATAL ERROR: could not find a current attributes header.'
++        echo 'Upgrade the extended attributes (attr) development package.'
++        echo 'Alternatively, run "make install-dev" from the attr source.'
++	exit 1 ])
++  ])
+
+--nextPart2973599.LGyd7z4d3N
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--nextPart2973599.LGyd7z4d3N--
