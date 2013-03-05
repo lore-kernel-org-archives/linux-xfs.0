@@ -1,16 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2CD19805E
-	for <xfs@oss.sgi.com>; Mon,  4 Mar 2013 17:44:19 -0600 (CST)
-Message-ID: <513531D0.9080409@sgi.com>
-Date: Mon, 4 Mar 2013 17:44:16 -0600
-From: Rich Johnston <rjohnston@sgi.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 822017F88
+	for <xfs@oss.sgi.com>; Mon,  4 Mar 2013 23:48:28 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6BBB58F8040
+	for <xfs@oss.sgi.com>; Mon,  4 Mar 2013 21:48:25 -0800 (PST)
+Received: from sv14.webhost.pl (sv14.webhost.pl [176.119.33.81]) by
+	cuda.sgi.com with ESMTP id FOfTTfjJSAivXDnB (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 04 Mar 2013 21:48:24 -0800 (PST)
+Received: from esinvest by sv14.webhost.pl with local (Exim 4.80)
+	(envelope-from <esinvest@sv14.webhost.pl>) id 1UCkjV-00067o-IO
+	for xfs@oss.sgi.com; Tue, 05 Mar 2013 06:48:13 +0100
+Subject: Purchase Order
+From: Em@oss.sgi.com, &@oss.sgi.com, Supply@oss.sgi.com,
+	Group@oss.sgi.com, Pty. <accenturegroup@hotmail.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 10/10] xfstests: add disk failure simulation test
-References: <1361356935-29153-1-git-send-email-dmonakhov@openvz.org>
-	<1361356935-29153-11-git-send-email-dmonakhov@openvz.org>
-	<51310B63.4070105@sgi.com> <87621ah8q4.fsf@openvz.org>
-In-Reply-To: <87621ah8q4.fsf@openvz.org>
+Message-Id: <E1UCkjV-00067o-IO@sv14.webhost.pl>
+Date: Tue, 05 Mar 2013 06:48:13 +0100
+Reply-To: sales5em@gmail.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,107 +27,35 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dmitry Monakhov <dmonakhov@openvz.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, dchinner@redhat.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 03/01/2013 07:49 PM, Dmitry Monakhov wrote:
-> On Fri, 1 Mar 2013 14:11:15 -0600, Rich Johnston <rjohnston@sgi.com> wrote:
->> On 02/20/2013 04:42 AM, Dmitry Monakhov wrote:
->>> There are many situations where disk may fail for example
->>> 1) brutal usb dongle unplug
->>> 2) iscsi (or any other netbdev) failure due to network issues
->>> In this situation filesystem which use this blockdevice is
->>> expected to fail(force RO remount, abort, etc) but whole system
->>> should still be operational. In other words:
->>> 1) Kernel should not panic
->>> 2) Memory should not leak
->>> 3) Data integrity operations (sync,fsync,fdatasync, directio) should fail
->>>      for affected filesystem
->>> 4) It should be possible to umount broken filesystem
->>>
->>> Later when disk becomes available again we expect(only for journaled filesystems):
->>> 5) It will be possible to mount filesystem w/o explicit fsck (in order to caught
->>
->> typo                                     s/caught/catch/g
->>
->>>      issues like https://patchwork.kernel.org/patch/1983981/)
->>> 6) Filesystem should be operational
->>> 7) After mount/umount has being done all errors should be fixed so fsck should
->>>      not spot any issues.
->>>
->>> This test use fault enjection (CONFIG_FAIL_MAKE_REQUEST=y config option )
->>     May want to mention all the kernel config options required.
->> i.e. CONFIG_FAULT_INJECTION=y ... are there others?
->> CONFIG_FAULT_INJECTION_DEBUG_FS=y ???
-> Yes, all three options are required.
->>
->>> which force all new IO requests to fail for a given device. Xfs already has
->>     to force
->>
->>> XFS_IOC_GOINGDOWN ioctl which provides similar behaviour, but it is fs speciffic
->>
->> typos s/behaviour/behavior/g  s/speciffic/specific
->>                                           > and it does it in an easy way
->> because it perform freeze_bdev() before actual
->>> shotdown.
->> typo s/shotdown/shutdown/g
-> Agree with your diagnosis. My gramma is bad and I've forget to call spell check
-> before submission. Should I resend this one or you fix it manually
-> on commit time?
+Good day .
 
-No worries, I'm sure your English is much better than any of my attempts 
-to write in your native tongue. ;)
-No need to resend, glad to take care of these minor changes at commit time.
+Thank you for your swift response to my mail in regards to one of your
+product i saw on a trade website which my company will like to
+purchase from you.
 
-commit 02e57e1e3a42856dca9061ff943ba72fa7be8469
-Author: Dmitry Monakhov <dmonakhov@openvz.org>
-Date:   Wed Feb 20 10:42:15 2013 +0000
+However i saw a similar and latest product design on a trade
+production design website which i have chosen to be the product design
+i want,i will need this particular design in large quantities if the
+price and the quality meets up to our requirements, as we go for the
+best quality and the best price.
 
-     xfstests: add disk failure simulation test
+To view the picture of the particular product i need you need to click
+the link below, Log in your email username and password for you to
+view the picture of the exact product and design that my company has
+decided to purchase, do get back to me and let me know if you have the
+design as we are ready to make immediate order in large quantities.
 
-     There are many situations where disk may fail for example
-     1) brutal usb dongle unplug
-     2) iscsi (or any other netbdev) failure due to network issues
-     In this situation filesystem which use this blockdevice is
-     expected to fail(force RO remount, abort, etc) but whole system
-     should still be operational. In other words:
-     1) Kernel should not panic
-     2) Memory should not leak
-     3) Data integrity operations (sync,fsync,fdatasync, directio) 
-should fail
-        for affected filesystem
-     4) It should be possible to umount broken filesystem
+Click the Link: http://www.sep.org.pt/modules/mod/sample/Samples.htm
 
-     Later when disk becomes available again we expect(only for 
-journaled filesystems):
-     5) It will be possible to mount filesystem w/o explicit fsck (in 
-order to catch
-        issues like https://patchwork.kernel.org/patch/1983981/)
-     6) Filesystem should be operational
-     7) After mount/umount has being done all errors should be fixed so 
-fsck should
-        not spot any issues.
 
-     This test use fault injection (CONFIG_FAULT_INJECTION=y,
-     CONFIG_FAIL_MAKE_REQUEST=y and CONFIG_FAULT_INJECTION_DEBUG_FS=y config
-     options) to force all new IO requests to fail for a given device. Xfs
-     already has XFS_IOC_GOINGDOWN ioctl which provides similar 
-behavior, but it
-     is fs specific and it does it in an easy way because it performs 
-freeze_bdev()
-     before actual shutdown.
 
-     Test run fsstress in background and then force disk failure.
-     Once disk failed it check that (1)-(4) is true.
-     Then makes disk available again and check that (5)-(7) is also true
-
-     BE CAREFUL!! test known to cause memory corruption for XFS
-     see: https://gist.github.com/dmonakhov/4953045
-
+Mitchel
 
 
 _______________________________________________
