@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B8AE58034
-	for <xfs@oss.sgi.com>; Tue,  5 Mar 2013 13:49:13 -0600 (CST)
-Message-ID: <51364C42.6030307@sgi.com>
-Date: Tue, 5 Mar 2013 13:49:22 -0600
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 257E88067
+	for <xfs@oss.sgi.com>; Tue,  5 Mar 2013 14:09:34 -0600 (CST)
+Message-ID: <513650F2.8060406@sgi.com>
+Date: Tue, 5 Mar 2013 14:09:22 -0600
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH V3] xfstests: don't remove trailing zeros from integers
-References: <20130305191748.GB3930@wallace>
-In-Reply-To: <20130305191748.GB3930@wallace>
+Subject: Re: [PATCH] xfstests: use native definition of O_DIRECT flag
+References: <20130226210322.GB5275@wallace>
+In-Reply-To: <20130226210322.GB5275@wallace>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,32 +22,28 @@ Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Eric Whitney <enwlinux@gmail.com>
-Cc: sandeen@redhat.com, xfs@oss.sgi.com
+Cc: linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
 This patch has been committed.
 
 Thanks
 --Rich
 
-
-commit edce9e677fda49ca20d6059248937ab4af65d053
+commit 5825ecd3b99ed8c177895d5e6a830133fed384ea
 Author: Eric Whitney <enwlinux@gmail.com>
-Date:   Tue Mar 5 19:17:48 2013 +0000
+Date:   Tue Feb 26 21:03:22 2013 +0000
 
-     xfstests: don't remove trailing zeros from integers
+     xfstests: use native definition of O_DIRECT flag
 
-     _within_tolerance strips trailing zeros from the min and max range
-     values it outputs.  This leads to damage if the min or max value is
-     an integer containing trailing zeros rather than a real number with
-     a fractional part containing trailing zeros. Xfstest 289 can exhibit
-     this problem when its input is out of range.  Modify the code so it
-     will only remove trailing zeros found after a decimal point.
-
-     V1->V2: Remove decimal points not followed by digits
-     V2->V3: Per Dave Chinner, simplify by using multiple sed expressions
+     The definition of O_DIRECT in src/trunc.c causes xfstest 125 to fail
+     when run on a Pandaboard.  On ARM, the value used (0x040000) is
+     O_DIRECTORY rather than O_DIRECT as it is on x86.  Prefer the 
+platform's
+     native definition of O_DIRECT supplied by fcntl.h if available.  Also,
+     fix a couple of error messages to properly reflect their context.
 
      Signed-off-by: Eric Whitney <enwlinux@gmail.com>
-     Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+     Reviewed-by: Dave Chinner <dchinner@redhat.com>
      Signed-off-by: Rich Johnston <rjohnston@sgi.com>
 
 _______________________________________________
