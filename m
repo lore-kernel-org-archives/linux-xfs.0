@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C84DA7F69
-	for <xfs@oss.sgi.com>; Wed,  6 Mar 2013 17:12:15 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 98FA28F8078
-	for <xfs@oss.sgi.com>; Wed,  6 Mar 2013 15:12:12 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id xLczGGbMLEotYbZW for
-	<xfs@oss.sgi.com>; Wed, 06 Mar 2013 15:12:11 -0800 (PST)
-Message-ID: <5137CD46.6070909@redhat.com>
-Date: Wed, 06 Mar 2013 18:12:06 -0500
-From: Ric Wheeler <rwheeler@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 95E7A7FB1
+	for <xfs@oss.sgi.com>; Wed,  6 Mar 2013 17:22:28 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 79570304067
+	for <xfs@oss.sgi.com>; Wed,  6 Mar 2013 15:22:25 -0800 (PST)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id BGE2wAd4VcSlYHxQ for <xfs@oss.sgi.com>;
+	Wed, 06 Mar 2013 15:22:24 -0800 (PST)
+Date: Thu, 7 Mar 2013 00:22:22 +0100
+From: David Sterba <dsterba@suse.cz>
+Subject: Re: [PATCH] xfstests 273: fix a typo
+Message-ID: <20130306232222.GF21081@twin.jikos.cz>
+References: <512DAC1A.2040601@gmail.com>
 MIME-Version: 1.0
-Subject: Re: XFS filesystem corruption
-References: <CAPcwv6wZJSBtgF-L6KNSn6N6Y+wUZJFXdbcg+zYRwoaB2sDdjw@mail.gmail.com>
-	<20130306161519.2c28d911@galadriel.home>
-	<CAPcwv6wqv0b_CPqDpBfOwVDg23uBi=tpGQSy9XuH2uWS5oVMWQ@mail.gmail.com>
-	<20130306232100.6286f640@galadriel.home>
-In-Reply-To: <20130306232100.6286f640@galadriel.home>
+Content-Disposition: inline
+In-Reply-To: <512DAC1A.2040601@gmail.com>
+Reply-To: dsterba@suse.cz
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,32 +25,56 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Emmanuel Florac <eflorac@intellique.com>
-Cc: Julien FERRERO <jferrero06@gmail.com>, xfs@oss.sgi.com
+To: Wang Sheng-Hui <shhuiw@gmail.com>
+Cc: xfs@oss.sgi.com
 
-T24gMDMvMDYvMjAxMyAwNToyMSBQTSwgRW1tYW51ZWwgRmxvcmFjIHdyb3RlOgo+IExlIFdlZCwg
-NiBNYXIgMjAxMyAxNzoxNjozMSArMDEwMCB2b3VzIMOpY3JpdmllejoKPgo+PiAgIEkgZG9uJ3Qg
-dGhpbmsgdGhlIEgvVyBSQUlEIGlzCj4+IHRoZSBpc3N1ZSBzaW5jZSB3ZSBoYXZlIHRoZSBzYW1l
-IGNvcnJ1cHRpb24gd2l0aCBvdGhlciBzZXR1cCB3aXRob3V0Cj4+IEgvVyBSQUlELgo+IEhXIFJB
-SUQgbWF5IGV4YWNlcmJhdGUgdGhlIHByb2JsZW0uIFhGUyBpcyBhYnNvbHV0ZWx5LCBkZWZpbml0
-ZWx5IG5vdAo+ICJicnV0YWwgcG93ZXIgb2ZmIiBzYWZlLiBBbGwgbGludXggc3lzdGVtcyBmcm9t
-IHRoaXMgY2VudHVyeSBhcmUKPiBwZXJmZWN0bHkgYWJsZSB0byB0dXJuIHRoZW1zZWx2ZXMgb2Zm
-IHByb3Blcmx5IGF0IGEgc2luZ2xlIHByZXNzIG9mIHRoZQo+IHBvd2VyIGJ1dHRvbjsgdGhlIG9u
-bHkgc2FmZSBvcHRpb25zIGFyZSBlZHVjYXRpbmcgdGhlIHVzZXJzIG9yIG1vdW50aW5nCj4gdGhl
-IGZpbGVzeXN0ZW0gcmVhZC1vbmx5Lgo+Cj4gQW5kIHllcywgdGhlIGxzIGdhcmJsZWQgb3V0cHV0
-IGlzIGNhcmFjdGVyaXN0aWMgb2YgYSBmaWxlc3lzdGVtCj4gY29ycnVwdGlvbi4KPgoKV2UgYWN0
-dWFsbHkgdGVzdCBicnV0YWwgIlBvd2VyIG9mZiIgZm9yIHhmcywgZXh0NCBhbmQgb3RoZXIgZmls
-ZSBzeXN0ZW1zLiBJZiAKeW91ciBzdG9yYWdlIGlzIGNvbmZpZ3VyZWQgcHJvcGVybHkgYW5kIHlv
-dSBoYXZlIGJhcnJpZXJzIGVuYWJsZWQsIHRoZXkgYWxsIHBhc3MgCndpdGhvdXQgY29ycnVwdGlv
-bi4KCldoYXQgaGFyZHdhcmUgcmFpZCBjYXJkcyBjYW4gZG8gaXMgdG8gaGlkZSBhIHZvbGF0aWxl
-IHdyaXRlIGNhY2hlLiBFaXRoZXIgb24gdGhlIApyYWlkIEhCQSBpdHNlbGYgb3IsIGV2ZW4gd29y
-c2UsIG9uIHRoZSBiYWNrZW5kIGRpc2tzIGJlaGluZCB0aGUgY2FyZC4gUy1hdGEgCmRpc2tzIHRl
-bmQgdG8gZGVmYXVsdCB0byB3cml0ZSBjYWNoZSBlbmFibGVkIGFuZCBuZWVkIHRvIGJlIGNoZWNr
-ZWQgZXNwZWNpYWxseSAKY2FyZWZ1bCAoc2FzIGRyaXZlcyB0ZW5kIHRvIGJlIHdyaXRlIGNhY2hl
-IGRpc2FibGVkIGJ5IGRlZmF1bHQpLgoKcmljCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRw
-Oi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On Wed, Feb 27, 2013 at 02:47:54PM +0800, Wang Sheng-Hui wrote:
+> Make the porter log cp failure into $seq.full by appending, not overwriting,
+> which can help debug.
+> 
+> Signed-off-by: Wang Sheng-Hui <shhuiw@gmail.com>
+> ---
+>  273 |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/273 b/273
+> index 67f3d6b..639e280 100755
+> --- a/273
+> +++ b/273
+> @@ -92,7 +92,7 @@ _porter()
+>  		exit
+>  	fi
+> 
+> -	cp -r $SCRATCH_MNT/origin $SCRATCH_MNT/sub_$_suffix >$seq.full 2>&1
+> +	cp -r $SCRATCH_MNT/origin $SCRATCH_MNT/sub_$_suffix >>$seq.full 2>&1
+
+This gives me
+
+273 154s ...    [20:05:00] [20:05:01] - output mismatch (see 273.out.bad)
+    --- 273.out 2011-11-11 15:13:46.000000000 +0100
+    +++ 273.out.bad     2013-03-06 20:05:01.000000000 +0100
+    @@ -1,4 +1,4 @@
+     QA output created by 273
+    -------------------------------
+    -start the workload
+    -------------------------------
+    +./273: line 95: syntax error near unexpected token `&'
+    +./273: line 95: `  cp -r $SCRATCH_MNT/origin $SCRATCH_MNT/sub_$_suffix >$seq.full 2>>&1'
+    +umount: /dev/sda9: not mounted
+     ...
+     (Run 'diff -u 273.out 273.out.bad' to see the entire diff)
+---
+
+The script calls /bin/bash, my version says
+GNU bash, version 4.1.10(1)-release
+
+david
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
