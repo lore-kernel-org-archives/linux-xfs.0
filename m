@@ -1,20 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id AA6648004
-	for <xfs@oss.sgi.com>; Wed,  6 Mar 2013 06:59:40 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 915EF304048
-	for <xfs@oss.sgi.com>; Wed,  6 Mar 2013 04:59:40 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id MwEtDyaiu7zR6ZPW for
-	<xfs@oss.sgi.com>; Wed, 06 Mar 2013 04:59:39 -0800 (PST)
-Message-ID: <51373DB8.2020707@redhat.com>
-Date: Wed, 06 Mar 2013 07:59:36 -0500
-From: Ric Wheeler <rwheeler@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 5340F8004
+	for <xfs@oss.sgi.com>; Wed,  6 Mar 2013 07:02:55 -0600 (CST)
+Message-ID: <51373E85.9050408@sgi.com>
+Date: Wed, 6 Mar 2013 07:03:01 -0600
+From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: XFS filesystem on EC2 instance corrupts and shuts down
-References: <CAOdS1h=7X4O1O7X8YOwxtLm7G=fc+J+6hJxJ1RKbDmfTZXTpeg@mail.gmail.com>
-In-Reply-To: <CAOdS1h=7X4O1O7X8YOwxtLm7G=fc+J+6hJxJ1RKbDmfTZXTpeg@mail.gmail.com>
+Subject: Re: [PATCH] xfstests: Fix hang when mkfs.btrfs isn't present
+References: <512D1E3E.9050907@redhat.com> <513674B2.9030900@sandeen.net>
+In-Reply-To: <513674B2.9030900@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,38 +21,31 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Shrinath M <shrinath.m@webyog.com>
-Cc: Sabyasachi Ruj <sabyasachi.ruj@webyog.com>, Vivek Goel <vivek.goel@webyog.com>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-btrfs <linux-btrfs@vger.kernel.org>, Stefan Behrens <sbehrens@giantdisaster.de>, xfs-oss <xfs@oss.sgi.com>
 
-On 03/06/2013 03:07 AM, Shrinath M wrote:
-> We are experiencing a strange XFS corruption issue. If we look in 
-> /var/log/messages, it simply says -
->
->     Mar  5 01:14:33 ip-100-0-100-1 kernel: [14139930.248619] XFS (md0): 
-> Corruption detected. Unmount and run xfs_repair
->
-> It shuts down the filesystem after this. On rebooting, it calls xfs_repair 
-> automatically and everything comes back to normal.
-> We have had 2 such occurrences till now, I am attaching the relevant parts of 
-> /var/log/messages here, assuming someone can enlighten me on whats going wrong.
->
-> Machine details are as follows -
->
-> We are using Amazon AMI version: Amazon Linux AMI release 2012.09 We are 
-> running 8 EBS volumes of 512 MB each, in RAID 0 Array. $~: uname -a Linux 
-> ip-100-0-100-1 3.2.34-55.46.amzn1.x86_64 #1 SMP Tue Nov 20 10:06:15 UTC 2012 
-> x86_64 x86_64 x86_64 GNU/Linux
->
->
-> Ask me if anyone wants any more details
->
+This patch has been committed.
 
-I think that you would need to verify that the Amazon storage is not throwing 
-errors - do your logs show IO errors or issues before XFS hits an issue?
+Thanks
+--Rich
 
-Thanks!
+commit 52f4953ac4a377f9f7fc870d2a81f30c3e5d3c7f
+Author: Eric Sandeen <sandeen@sandeen.net>
+Date:   Tue Mar 5 22:41:54 2013 +0000
 
-Ric
+     xfstests: Fix hang when mkfs.btrfs isn't present
+
+     My earlier patch (xfstests: handle new mkfs.btrfs -f option cleanly)
+     had a flaw in that if set_prog_path mkfs.btrfs returns nothing,
+     the grep will hang.
+
+     Test for that case to avoid it, and just return the empty string
+     in that case.
+
+     Reported-by: Rich Johnston <rjohnston@sgi.com>
+     Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+     Reviewed-by: Rich Johnston <rjohnston@sgi.com>
+     Signed-off-by: Rich Johnston <rjohnston@sgi.com>
 
 _______________________________________________
 xfs mailing list
