@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 184B67FAF
-	for <xfs@oss.sgi.com>; Wed,  6 Mar 2013 16:21:25 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 990A6AC004
-	for <xfs@oss.sgi.com>; Wed,  6 Mar 2013 14:21:21 -0800 (PST)
-Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
-	cuda.sgi.com with ESMTP id lTDL5E91WeuMjuXQ for
-	<xfs@oss.sgi.com>; Wed, 06 Mar 2013 14:21:18 -0800 (PST)
-Date: Wed, 6 Mar 2013 23:21:00 +0100
-From: Emmanuel Florac <eflorac@intellique.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id C84DA7F69
+	for <xfs@oss.sgi.com>; Wed,  6 Mar 2013 17:12:15 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 98FA28F8078
+	for <xfs@oss.sgi.com>; Wed,  6 Mar 2013 15:12:12 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id xLczGGbMLEotYbZW for
+	<xfs@oss.sgi.com>; Wed, 06 Mar 2013 15:12:11 -0800 (PST)
+Message-ID: <5137CD46.6070909@redhat.com>
+Date: Wed, 06 Mar 2013 18:12:06 -0500
+From: Ric Wheeler <rwheeler@redhat.com>
+MIME-Version: 1.0
 Subject: Re: XFS filesystem corruption
-Message-ID: <20130306232100.6286f640@galadriel.home>
-In-Reply-To: <CAPcwv6wqv0b_CPqDpBfOwVDg23uBi=tpGQSy9XuH2uWS5oVMWQ@mail.gmail.com>
 References: <CAPcwv6wZJSBtgF-L6KNSn6N6Y+wUZJFXdbcg+zYRwoaB2sDdjw@mail.gmail.com>
 	<20130306161519.2c28d911@galadriel.home>
 	<CAPcwv6wqv0b_CPqDpBfOwVDg23uBi=tpGQSy9XuH2uWS5oVMWQ@mail.gmail.com>
-Mime-Version: 1.0
+	<20130306232100.6286f640@galadriel.home>
+In-Reply-To: <20130306232100.6286f640@galadriel.home>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,28 +26,32 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Julien FERRERO <jferrero06@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: Julien FERRERO <jferrero06@gmail.com>, xfs@oss.sgi.com
 
-TGUgV2VkLCA2IE1hciAyMDEzIDE3OjE2OjMxICswMTAwIHZvdXMgw6ljcml2aWV6OgoKPiAgSSBk
-b24ndCB0aGluayB0aGUgSC9XIFJBSUQgaXMKPiB0aGUgaXNzdWUgc2luY2Ugd2UgaGF2ZSB0aGUg
-c2FtZSBjb3JydXB0aW9uIHdpdGggb3RoZXIgc2V0dXAgd2l0aG91dAo+IEgvVyBSQUlELgoKSFcg
-UkFJRCBtYXkgZXhhY2VyYmF0ZSB0aGUgcHJvYmxlbS4gWEZTIGlzIGFic29sdXRlbHksIGRlZmlu
-aXRlbHkgbm90CiJicnV0YWwgcG93ZXIgb2ZmIiBzYWZlLiBBbGwgbGludXggc3lzdGVtcyBmcm9t
-IHRoaXMgY2VudHVyeSBhcmUKcGVyZmVjdGx5IGFibGUgdG8gdHVybiB0aGVtc2VsdmVzIG9mZiBw
-cm9wZXJseSBhdCBhIHNpbmdsZSBwcmVzcyBvZiB0aGUKcG93ZXIgYnV0dG9uOyB0aGUgb25seSBz
-YWZlIG9wdGlvbnMgYXJlIGVkdWNhdGluZyB0aGUgdXNlcnMgb3IgbW91bnRpbmcKdGhlIGZpbGVz
-eXN0ZW0gcmVhZC1vbmx5LgoKQW5kIHllcywgdGhlIGxzIGdhcmJsZWQgb3V0cHV0IGlzIGNhcmFj
-dGVyaXN0aWMgb2YgYSBmaWxlc3lzdGVtCmNvcnJ1cHRpb24uCgotLSAKLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-CkVtbWFudWVsIEZsb3JhYyAgICAgfCAgIERpcmVjdGlvbiB0ZWNobmlxdWUKICAgICAgICAgICAg
-ICAgICAgICB8ICAgSW50ZWxsaXF1ZQogICAgICAgICAgICAgICAgICAgIHwJPGVmbG9yYWNAaW50
-ZWxsaXF1ZS5jb20+CiAgICAgICAgICAgICAgICAgICAgfCAgICszMyAxIDc4IDk0IDg0IDAyCi0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29t
-L21haWxtYW4vbGlzdGluZm8veGZzCg==
+T24gMDMvMDYvMjAxMyAwNToyMSBQTSwgRW1tYW51ZWwgRmxvcmFjIHdyb3RlOgo+IExlIFdlZCwg
+NiBNYXIgMjAxMyAxNzoxNjozMSArMDEwMCB2b3VzIMOpY3JpdmllejoKPgo+PiAgIEkgZG9uJ3Qg
+dGhpbmsgdGhlIEgvVyBSQUlEIGlzCj4+IHRoZSBpc3N1ZSBzaW5jZSB3ZSBoYXZlIHRoZSBzYW1l
+IGNvcnJ1cHRpb24gd2l0aCBvdGhlciBzZXR1cCB3aXRob3V0Cj4+IEgvVyBSQUlELgo+IEhXIFJB
+SUQgbWF5IGV4YWNlcmJhdGUgdGhlIHByb2JsZW0uIFhGUyBpcyBhYnNvbHV0ZWx5LCBkZWZpbml0
+ZWx5IG5vdAo+ICJicnV0YWwgcG93ZXIgb2ZmIiBzYWZlLiBBbGwgbGludXggc3lzdGVtcyBmcm9t
+IHRoaXMgY2VudHVyeSBhcmUKPiBwZXJmZWN0bHkgYWJsZSB0byB0dXJuIHRoZW1zZWx2ZXMgb2Zm
+IHByb3Blcmx5IGF0IGEgc2luZ2xlIHByZXNzIG9mIHRoZQo+IHBvd2VyIGJ1dHRvbjsgdGhlIG9u
+bHkgc2FmZSBvcHRpb25zIGFyZSBlZHVjYXRpbmcgdGhlIHVzZXJzIG9yIG1vdW50aW5nCj4gdGhl
+IGZpbGVzeXN0ZW0gcmVhZC1vbmx5Lgo+Cj4gQW5kIHllcywgdGhlIGxzIGdhcmJsZWQgb3V0cHV0
+IGlzIGNhcmFjdGVyaXN0aWMgb2YgYSBmaWxlc3lzdGVtCj4gY29ycnVwdGlvbi4KPgoKV2UgYWN0
+dWFsbHkgdGVzdCBicnV0YWwgIlBvd2VyIG9mZiIgZm9yIHhmcywgZXh0NCBhbmQgb3RoZXIgZmls
+ZSBzeXN0ZW1zLiBJZiAKeW91ciBzdG9yYWdlIGlzIGNvbmZpZ3VyZWQgcHJvcGVybHkgYW5kIHlv
+dSBoYXZlIGJhcnJpZXJzIGVuYWJsZWQsIHRoZXkgYWxsIHBhc3MgCndpdGhvdXQgY29ycnVwdGlv
+bi4KCldoYXQgaGFyZHdhcmUgcmFpZCBjYXJkcyBjYW4gZG8gaXMgdG8gaGlkZSBhIHZvbGF0aWxl
+IHdyaXRlIGNhY2hlLiBFaXRoZXIgb24gdGhlIApyYWlkIEhCQSBpdHNlbGYgb3IsIGV2ZW4gd29y
+c2UsIG9uIHRoZSBiYWNrZW5kIGRpc2tzIGJlaGluZCB0aGUgY2FyZC4gUy1hdGEgCmRpc2tzIHRl
+bmQgdG8gZGVmYXVsdCB0byB3cml0ZSBjYWNoZSBlbmFibGVkIGFuZCBuZWVkIHRvIGJlIGNoZWNr
+ZWQgZXNwZWNpYWxseSAKY2FyZWZ1bCAoc2FzIGRyaXZlcyB0ZW5kIHRvIGJlIHdyaXRlIGNhY2hl
+IGRpc2FibGVkIGJ5IGRlZmF1bHQpLgoKcmljCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRw
+Oi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
