@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id CCDA67F72
-	for <xfs@oss.sgi.com>; Wed,  6 Mar 2013 10:37:18 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 213CB7F7E
+	for <xfs@oss.sgi.com>; Wed,  6 Mar 2013 10:47:46 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B386D304070
-	for <xfs@oss.sgi.com>; Wed,  6 Mar 2013 08:37:18 -0800 (PST)
-Received: from mail-pb0-f44.google.com (mail-pb0-f44.google.com
-	[209.85.160.44]) by cuda.sgi.com with ESMTP id gRGZ1Q4GSCrWBhDd
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 06 Mar 2013 08:37:17 -0800 (PST)
-Received: by mail-pb0-f44.google.com with SMTP id wz12so6252035pbc.3
-	for <xfs@oss.sgi.com>; Wed, 06 Mar 2013 08:37:16 -0800 (PST)
-Date: Thu, 7 Mar 2013 00:52:26 +0800
-From: Zheng Liu <gnehzuil.liu@gmail.com>
-Subject: Re: [PATCH] xfstests: don't assume that falloc_punch implies falloc
-	in test 255
-Message-ID: <20130306165226.GA3454@gmail.com>
-References: <1362506382-26974-1-git-send-email-tytso@mit.edu>
-	<51376A61.6060807@redhat.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 596CB8F80A1
+	for <xfs@oss.sgi.com>; Wed,  6 Mar 2013 08:47:45 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id jUKCI1aLVbmGqNvi for
+	<xfs@oss.sgi.com>; Wed, 06 Mar 2013 08:47:44 -0800 (PST)
+Message-ID: <5137732B.3010703@redhat.com>
+Date: Wed, 06 Mar 2013 11:47:39 -0500
+From: Ric Wheeler <rwheeler@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <51376A61.6060807@redhat.com>
+Subject: Re: XFS filesystem corruption
+References: <CAPcwv6wZJSBtgF-L6KNSn6N6Y+wUZJFXdbcg+zYRwoaB2sDdjw@mail.gmail.com>
+	<20130306161519.2c28d911@galadriel.home>
+	<CAPcwv6wqv0b_CPqDpBfOwVDg23uBi=tpGQSy9XuH2uWS5oVMWQ@mail.gmail.com>
+In-Reply-To: <CAPcwv6wqv0b_CPqDpBfOwVDg23uBi=tpGQSy9XuH2uWS5oVMWQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,39 +25,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: Ext4 Developers List <linux-ext4@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, xfs@oss.sgi.com
+To: Julien FERRERO <jferrero06@gmail.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, Mar 06, 2013 at 10:10:09AM -0600, Eric Sandeen wrote:
-> On 3/5/13 11:59 AM, Theodore Ts'o wrote:
-> > As of Linux 3.9-rc1, ext4 will support the punch operation on file
-> > systems using indirect blocks, but it can not support the fallocate
-> > operation (since there is no way to mark a block as uninitialized
-> > using indirect block scheme).  This caused test 255 to fail, since it
-> > only used _require_xfS_io_falloc_punch assuming that all file systems
-> > which supported punch can also support fallocate.  Fix this.
-> 
-> Seems fine to avoid the incorrect failure, so as far as that goes:
-> 
-> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-> 
-> But we probably can & should still test punch in this situation,
-> so we need a new test to exercise that I guess.
+On 03/06/2013 11:16 AM, Julien FERRERO wrote:
+> Hi Emmanuel
+>
+> 2013/3/6 Emmanuel Florac <eflorac@intellique.com>:
+>> Le Wed, 6 Mar 2013 16:08:59 +0100 vous =E9criviez:
+>>
+>>> I am totally stuck and I really don't know how to duplicate the
+>>> corruption. I only know that units are used to be power cycle by
+>>> operator while the fs is still mounted (no proper shutdown / reboot).
+>>> My guess is the fs journal shall handle this case and avoid such
+>>> corruption.
+>> Wrong guess. It may work or not, depending upon a long list of
+>> parameters, but basically not turning it off properly is asking for
+>> problems and corruptions. The problem will be tragically aggravated if
+>> your hardware RAID doesn't have a battery backed-up cache.
+>>
+> OK but our server is 95% of the time reading data and 5% of the time
+> writing data. We have a case of a server that did not write anything
+> at the time of failure (and during all the uptime session). Moreover,
+> failure occurs to files that were opened in read-only or weren't
+> accessed at all at the time of failure. I don't think the H/W RAID is
+> the issue since we have the same corruption with other setup without
+> H/W RAID.
+>
+> Does the "ls" output with "???" looks like a fs corruption ?
+>
 
-Hi Eric,
+Caching can hold dirty data in volatile cache for a very long time. Even if=
+ you =
 
-I have sent a patch set to add a test case for punching hole.  You can
-find it in this link [1].  Sorry I don't finish the second version
-according to Mark's comment.
+open a file in "read-only" mode, you still do a fair amount of writes to =
 
-1. http://www.spinics.net/lists/xfs/msg16234.html
+storage. You can use blktrace or similar tool to see just how much data is =
+written.
 
-Regards,
-                                                - Zheng
+As mentioned earlier, you always must unmount cleanly as a best practice. A=
+n =
+
+operator that powers off with mounted file systems need educated or let go =
+:)
+
+Ric
 
 _______________________________________________
 xfs mailing list
