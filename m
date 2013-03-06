@@ -1,16 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id EB01E7F9B
-	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 14:16:21 -0600 (CST)
-Date: Thu, 7 Mar 2013 14:16:17 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: Fwd: xfs_reno
-Message-ID: <20130307201617.GT22182@sgi.com>
-References: <20351675.Zy117sIl8Z@xrated>
- <20130307041348.GD6369@dastard>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 334197F78
+	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 15:04:45 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 103268F804B
+	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 13:04:41 -0800 (PST)
+Received: from honeysuckle.london.02.net (honeysuckle.london.02.net
+	[87.194.255.144]) by cuda.sgi.com with ESMTP id
+	pI8ajD6IDvjX8nHx for <xfs@oss.sgi.com>;
+	Thu, 07 Mar 2013 13:04:40 -0800 (PST)
+Received: from ty.sabi.co.UK (78.86.80.54) by honeysuckle.london.02.net
+	(8.5.140)
+	id 50D1042B04BC0EAA for xfs@oss.sgi.com; Thu, 7 Mar 2013 21:04:39 +0000
+Received: from from [127.0.0.1] (helo=tree.ty.sabi.co.uk)
+	by ty.sabi.co.UK with esmtp(Exim 4.76 #1) id 1UDhzK-0007NZ-Gq
+	for <xfs@oss.sgi.com>; Thu, 07 Mar 2013 21:04:30 +0000
+Resent-Message-ID: <20793.222.376461.229641@tree.ty.sabi.co.uk>
+Resent-To: xfs@oss.sgi.com
+Subject: Re: Pathological allocation pattern with direct IO
+Date: Wed, 6 Mar 2013 22:31:42 +0000
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130307041348.GD6369@dastard>
+From: pg_xf2@xf2.for.sabi.co.uk (Peter Grandi)
+Message-ID: <20791.50126.796065.137158@tree.ty.sabi.co.uk>
+References: <20130306202210.GA1318@quack.suse.cz>
+In-Reply-To: <20130306202210.GA1318@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,53 +36,21 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Hans-Peter Jansen <hpj@urpla.net>
-Cc: xfs@oss.sgi.com
+To: Linux fs XFS <xfs@OSS.SGI.com>
 
-Hi Pete,
+> [ ... ] application that write large (tens of GB) files using
+> direct IO done in 16 MB chunks. They keep the fs around 80%
+> full deleting oldest files when they need to store new ones.
+> Usually the file can be stored in under 10 extents but from
+> time to time a pathological case is triggered and the file has
+> few thousands extents (which naturally has impact on
+> performance). [ ... ]
 
-On Thu, Mar 07, 2013 at 03:13:48PM +1100, Dave Chinner wrote:
-> On Wed, Mar 06, 2013 at 03:55:19PM +0100, Hans-Peter Jansen wrote:
-> > Hi Dave,
-> > 
-> > I tried to gather Barrys SOB, but failed so far. His trace ends in 2009 google 
-> > wise.
-> > 
-> > How is this case usually handled?
-> > 
-> > Here's the current state of things.
-> 
-> He was working for SGI at the time, so you should be able to get
-> anyone from SGI provide a valid S-O-B if needed.
-> 
-> As it is, I can probably verify the patch origins sufficiently
-> to add a SOB to it as:
-> 
-> http://oss.sgi.com/archives/xfs/2007-11/msg00769.html
-> 
-> It's pretty clear that the code was released under the GPL and free
-> from any tainted code by SGI. The post I'm pointing to above is one
-> I made while an SGI employee, and it effectively verifies the origin
-> of the code in the same way a S-O-B does.
-> 
-> So, you probably don't even need to chase a S-O-B from SGI if you
-> just point at that email and attribute the code correctly. i.e.
-> retaining al the SGI copyright notices in the code and saying inteh
-> patch description that the code was originally authored by SGI and
-> released under the same license as the rest of the xfs userspace
-> code.
+They just want *guaranteed* (not just nearly-always) contiguity,
+without preallocating, with incremental writes with direct IO,
+while keeping the filesystem full at 80%.
 
-Looks good to me as is.  Links and attribution are in the header, copyright
-notices, etc.  We'll clean up that copyright header in the Makefile with a
-separate commit authored by a current SGI employee.
-
-You can add a Signed-off-by: Ben Myers <bpm@sgi.com> if you want.  No need to
-repost just for that.
-
-Thanks for spending the time!
-
-Regards,
-	Ben
+And a pony! :-)
 
 _______________________________________________
 xfs mailing list
