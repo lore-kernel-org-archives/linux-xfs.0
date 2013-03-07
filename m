@@ -1,27 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 502DC7FC6
-	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 07:52:34 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3583F304048
-	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 05:52:33 -0800 (PST)
-Received: from mail-out1.booking.com (mail-out1.booking.com [62.190.24.20]) by
-	cuda.sgi.com with ESMTP id IUwhqqOlMtJqEnI3 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 07 Mar 2013 05:52:32 -0800 (PST)
-Message-ID: <1362664376.16657.26.camel@seahawk>
-Subject: Re: XFS IO multiplication problem on centos/rhel 6 using hp p420i
-	raid controllers
-From: Dennis Kaarsemaker <dennis.kaarsemaker@booking.com>
-Date: Thu, 07 Mar 2013 14:52:56 +0100
-In-Reply-To: <513899D3.80907@hardwarefreak.com>
-References: <1362060736.1247.30.camel@seahawk>
-	<20130228194023.GQ5551@dastard> <1362577992.1247.84.camel@seahawk>
-	<20130307035737.GC6369@dastard> <1362651128.16657.13.camel@seahawk>
-	<513891D7.4060801@hardwarefreak.com>
-	<1362663188.16657.20.camel@seahawk>
-	<513899D3.80907@hardwarefreak.com>
-Mime-Version: 1.0
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 95B727FC6
+	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 07:58:35 -0600 (CST)
+Message-ID: <51389D0B.4020000@sgi.com>
+Date: Thu, 07 Mar 2013 07:58:35 -0600
+From: Mark Tinguely <tinguely@sgi.com>
+MIME-Version: 1.0
+Subject: Re: Pathological allocation pattern with direct IO
+References: <20130306202210.GA1318@quack.suse.cz>
+	<20130307050325.GS23616@dastard>
+	<20130307102406.GA6723@quack.suse.cz>
+In-Reply-To: <20130307102406.GA6723@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,37 +19,98 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: stan@hardwarefreak.com
+To: Jan Kara <jack@suse.cz>
 Cc: xfs@oss.sgi.com
 
-On Thu, 2013-03-07 at 07:44 -0600, Stan Hoeppner wrote:
-> On 3/7/2013 7:33 AM, Dennis Kaarsemaker wrote:
-> 
-> > The "ten times as many bytes" is constant, so it is constantly writing
-> > ten times as much data.
-> 
-> Where in the IO stack are you counting the bytes?  Are 10x as many bytes
-> actually hitting the AGs?  I.e. are you consuming 10x more (real--not
-> counting preallocation) space in the filesystem?  Or are you simply
-> seeing larger IOs in flight per unit time, but the same total amount of
-> IO bytes?
+On 03/07/13 04:24, Jan Kara wrote:
+> On Thu 07-03-13 16:03:25, Dave Chinner wrote:
+>> On Wed, Mar 06, 2013 at 09:22:10PM +0100, Jan Kara wrote:
+>>>    Hello,
+>>>
+>>>    one of our customers has application that write large (tens of GB) files
+>>> using direct IO done in 16 MB chunks. They keep the fs around 80% full
+>>> deleting oldest files when they need to store new ones. Usually the file
+>>> can be stored in under 10 extents but from time to time a pathological case
+>>> is triggered and the file has few thousands extents (which naturally has
+>>> impact on performance). The customer actually uses 2.6.32-based kernel but
+>>> I reproduced the issue with 3.8.2 kernel as well.
+>>>
+>>> I was analyzing why this happens and the filefrag for the file looks like:
+>>> Filesystem type is: 58465342
+>>> File size of /raw_data/ex.20130302T121135/ov.s1a1.wb is 186294206464
+>>> (45481984 blocks, blocksize 4096)
+>>>   ext logical physical expected length flags
+>>>     0       0       13          4550656
+>>>     1 4550656 188136807  4550668 12562432
+>>>     2 17113088 200699240 200699238 622592
+>>>     3 17735680 182046055 201321831   4096
+>>>     4 17739776 182041959 182050150   4096
+>>>     5 17743872 182037863 182046054   4096
+>>>     6 17747968 182033767 182041958   4096
+>>>     7 17752064 182029671 182037862   4096
+>>> ...
+>>> 6757 45400064 154381644 154389835   4096
+>>> 6758 45404160 154377548 154385739   4096
+>>> 6759 45408256 252951571 154381643  73728 eof
+>>> /raw_data/ex.20130302T121135/ov.s1a1.wb: 6760 extents found
+>>>
+>>> So we see that at one moment, the allocator starts giving us 16 MB chunks
+>>> backwards. This seems to be caused by XFS_ALLOCTYPE_NEAR_BNO allocation. For
+>>> two cases I was able to track down the logic:
+>>>
+>>> 1) We start allocating blocks for file. We want to allocate in the same AG
+>>> as the inode is. First we try exact allocation which fails so we try
+>>> XFS_ALLOCTYPE_NEAR_BNO allocation which finds large enough free extent
+>>> before the inode. So we start allocating 16 MB chunks from the end of that
+>>> free extent. From this moment on we are basically bound to continue
+>>> allocating backwards using XFS_ALLOCTYPE_NEAR_BNO allocation until we
+>>> exhaust the whole free extent.
+>>>
+>>> 2) Similar situation happens when we cannot further grow current extent but
+>>> there is large free space somewhere before this extent in the AG.
+>>>
+>>> So I was wondering is this known? Is XFS_ALLOCTYPE_NEAR_BNO so beneficial
+>>> it outweights pathological cases like the above? Or shouldn't it maybe be
+>>> disabled for larger files or for direct IO?
+>>
+>> Well known issue, first diagnosed about 15 years ago, IIRC. Simple
+>> solution: use extent size hints.
+>    I thought someone must have hit it before. But I wasn't successful in
+> googling... I suggested using fallocate to the customer since they have a
+> good idea of the final file size in advance and in testing it gave better
+> results than extent size hints (plus it works for other filesystems as
+> well).
+>
+> But really I was wondering about usefulness of XFS_ALLOCTYPE_NEAR_BNO
+> heuristic. Sure the seek time depends on the distance so if we are speaking
+> about allocating single extent then XFS_ALLOCTYPE_NEAR_BNO is useful but
+> once that strategy would allocate two or three consecutive extents you've
+> lost all the benefit and you would be better off if you started allocating
+> from the start of the free space. Obviously we don't know the future in
+> advance but this resembles a classical problem from approximations
+> algorithms theory (rent-or-buy problem where renting corresponds to
+> allocating from the end of free space and taking the smaller cost while
+> buying corresponds to allocation from the beginning, taking the higher
+> cost, but expecting you won't have to pay anything in future). And the
+> theory of approximation algorithms tells us that once we pay for renting as
+> much as buying will cost us, then at that moment it is advantageous to buy
+> and that gives you 2-approximation algorithm (you can do even better -
+> factor 1.58 approximation - if you use randomization but I don't think we
+> want to go that way). So from this I'd say that switching off
+> XFS_ALLOCTYPE_NEAR_BNO allocation once you've allocated 2-3 extents
+> backwards would work of better on average.
+>
+> 								Honza
 
-I'm counting them with vmstat, iostat and collectl as can be seen in the
-various outputs I've sent. I hope that answers your question as I have
-no idea how to see what's hitting the AG's.
+Sounds like a candidate for a dynamic allocation policy,
 
-I am not using ten times as much space, as that wouldn't fit on the
-volume.
--- 
-Dennis Kaarsemaker, Systems Architect
-Booking.com
-Herengracht 597, 1017 CE Amsterdam
-Tel external +31 (0) 20 715 3409
-Tel internal (7207) 3409
+  http://oss.sgi.com/archives/xfs/2013-01/msg00611.html
+
+--Mark.
 
 _______________________________________________
 xfs mailing list
