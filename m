@@ -1,27 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id EED6A7FBA
-	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 07:15:33 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C774C30405F
-	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 05:15:33 -0800 (PST)
-Received: from mail-bk0-f54.google.com (mail-bk0-f54.google.com
-	[209.85.214.54]) by cuda.sgi.com with ESMTP id ctrWvHOMsjDaGEU4
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 07 Mar 2013 05:15:32 -0800 (PST)
-Received: by mail-bk0-f54.google.com with SMTP id w5so214206bku.13
-	for <xfs@oss.sgi.com>; Thu, 07 Mar 2013 05:15:31 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id EFD257FBE
+	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 07:32:05 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D5F3D304039
+	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 05:32:05 -0800 (PST)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id CfqGOgHPTcdzn3KO
+	for <xfs@oss.sgi.com>; Thu, 07 Mar 2013 05:32:05 -0800 (PST)
+Message-ID: <513896DF.7010609@hardwarefreak.com>
+Date: Thu, 07 Mar 2013 07:32:15 -0600
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-In-Reply-To: <5137CD46.6070909@redhat.com>
-References: <CAPcwv6wZJSBtgF-L6KNSn6N6Y+wUZJFXdbcg+zYRwoaB2sDdjw@mail.gmail.com>
-	<20130306161519.2c28d911@galadriel.home>
-	<CAPcwv6wqv0b_CPqDpBfOwVDg23uBi=tpGQSy9XuH2uWS5oVMWQ@mail.gmail.com>
-	<20130306232100.6286f640@galadriel.home>
-	<5137CD46.6070909@redhat.com>
-Date: Thu, 7 Mar 2013 14:15:31 +0100
-Message-ID: <CAPcwv6wK7m5UbJZass5690N5UpXEMV+HVzJa5mn9KWtT9UPQ9w@mail.gmail.com>
 Subject: Re: XFS filesystem corruption
-From: Julien FERRERO <jferrero06@gmail.com>
+References: <CAPcwv6wZJSBtgF-L6KNSn6N6Y+wUZJFXdbcg+zYRwoaB2sDdjw@mail.gmail.com>
+	<51380FD3.5010302@hardwarefreak.com>
+	<CAPcwv6yAHAsmwgROs12gRtCbqTXBvTPrx8F-e4kYab2YApsobg@mail.gmail.com>
+In-Reply-To: <CAPcwv6yAHAsmwgROs12gRtCbqTXBvTPrx8F-e4kYab2YApsobg@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,29 +30,52 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ric Wheeler <rwheeler@redhat.com>
+To: Julien FERRERO <jferrero06@gmail.com>
 Cc: xfs@oss.sgi.com
 
-> We actually test brutal "Power off" for xfs, ext4 and other file systems. If
-> your storage is configured properly and you have barriers enabled, they all
-> pass without corruption.
->
-> What hardware raid cards can do is to hide a volatile write cache. Either on
-> the raid HBA itself or, even worse, on the backend disks behind the card.
-> S-ata disks tend to default to write cache enabled and need to be checked
-> especially careful (sas drives tend to be write cache disabled by default).
+On 3/7/2013 7:04 AM, Julien FERRERO wrote:
+>> It may be unrelated to your corruption, problem but I'm curious why you
+>> are specifying a 32MB log section instead of letting mkfs.xfs make the
+>> log size decision.
+> 
+> I honestly don' know, the rebuild script was written 8 years ago by an
+> engineer that since left the company.
+> 
+> Is 32MB a short log space for a 1.5 TB of data ?
 
-Write cache is supposed to be disabled on the H/W RAID (according to
-hdparm) and barrier are correctly enabled since xfs does not report
-any warning at mount.
+The log is for journal metadata.  So if you're capturing a frame of
+video per file, or 24 or 60 frames per file, and thus are writing lots
+of files, 32MB may be too small.  I'm not an expert here.  Dave C. would
+be better able to answer this.  But this is a very minor problem
+compared to...
 
-The odd thing is we never see this with kernel 2.6.18 where barriers
-weren't yet available. An other difference is the "unwritten extend"
-that was used to set to 0 by default. Now we cannot change this
-setting according to an old thread I've found: "unwritten extents on
-linux are generally a bad idea, this option should not be used.".
-Unfortunately, the engineer that chose this setting is no longer
-working with us...
+> Moreover, the common usage is to power off all the equipment (included
+> ours) from a general power switch.
+
+this.  Have the crews been hard cutting power to these XFS boxen for the
+8 years you mention above?  And this filesystem corruption problem
+and/or corrupted files, is just now cropping up?  That's hard to
+believe.  There may be a bug in 2.6.35 that exacerbates this that's been
+fixed in later versions--2.6.35 is not a long term stable kernel--odd
+that a vendor would choose it for long term use.
+
+If you never had this problem before, I can only guess that previously
+you were using hardware RAID controllers with BBWC having sufficient
+battery hours of cache power to survive until the next power on, at
+which point the BBWC RAID dumped the data to the disks.  If you switched
+from that solution to non BBWC RAID, or to Linux software RAID, that
+might explain why you're seeing corruption now and did not previously.
+And even with BBWC RAID, hard cutting power to the system is still not a
+smart thing to do.
+
+For this kind of environment, if field techs are going to hard cut power
+no matter what you tell them, then you simply MUST get LSI (or possibly
+other) RAID cards with the flash backed write cache.  This doesn't rely
+on batteries so the cache is never volatile, and can sit overnight, or
+for days or weeks, without losing the data in the write cache.
+
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
