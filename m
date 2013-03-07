@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E22337FB1
-	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 04:24:10 -0600 (CST)
+	by oss.sgi.com (Postfix) with ESMTP id 258657FAF
+	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 05:06:10 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6D1A6AC003
-	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 02:24:10 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A9170AC004
+	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 03:06:06 -0800 (PST)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id keRwvNkXs6vUxyVa for <xfs@oss.sgi.com>;
-	Thu, 07 Mar 2013 02:24:08 -0800 (PST)
-Date: Thu, 7 Mar 2013 11:24:06 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: Pathological allocation pattern with direct IO
-Message-ID: <20130307102406.GA6723@quack.suse.cz>
-References: <20130306202210.GA1318@quack.suse.cz>
-	<20130307050325.GS23616@dastard>
+	with ESMTP id V5YC0VKTIjxalmAj for <xfs@oss.sgi.com>;
+	Thu, 07 Mar 2013 03:06:02 -0800 (PST)
+Date: Thu, 7 Mar 2013 12:06:01 +0100
+From: David Sterba <dsterba@suse.cz>
+Subject: Re: [PATCH] xfstests 273: fix a typo
+Message-ID: <20130307110600.GJ21081@twin.jikos.cz>
+References: <512DAC1A.2040601@gmail.com> <20130306232222.GF21081@twin.jikos.cz>
+	<20130307033849.GB6369@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130307050325.GS23616@dastard>
+In-Reply-To: <20130307033849.GB6369@dastard>
+Reply-To: dsterba@suse.cz
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,89 +31,71 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com, dsterba@suse.cz, Wang Sheng-Hui <shhuiw@gmail.com>
 
-On Thu 07-03-13 16:03:25, Dave Chinner wrote:
-> On Wed, Mar 06, 2013 at 09:22:10PM +0100, Jan Kara wrote:
-> >   Hello,
-> > 
-> >   one of our customers has application that write large (tens of GB) files
-> > using direct IO done in 16 MB chunks. They keep the fs around 80% full
-> > deleting oldest files when they need to store new ones. Usually the file
-> > can be stored in under 10 extents but from time to time a pathological case
-> > is triggered and the file has few thousands extents (which naturally has
-> > impact on performance). The customer actually uses 2.6.32-based kernel but
-> > I reproduced the issue with 3.8.2 kernel as well.
-> > 
-> > I was analyzing why this happens and the filefrag for the file looks like:
-> > Filesystem type is: 58465342
-> > File size of /raw_data/ex.20130302T121135/ov.s1a1.wb is 186294206464
-> > (45481984 blocks, blocksize 4096)
-> >  ext logical physical expected length flags
-> >    0       0       13          4550656
-> >    1 4550656 188136807  4550668 12562432
-> >    2 17113088 200699240 200699238 622592
-> >    3 17735680 182046055 201321831   4096
-> >    4 17739776 182041959 182050150   4096
-> >    5 17743872 182037863 182046054   4096
-> >    6 17747968 182033767 182041958   4096
-> >    7 17752064 182029671 182037862   4096
-> > ...
-> > 6757 45400064 154381644 154389835   4096
-> > 6758 45404160 154377548 154385739   4096
-> > 6759 45408256 252951571 154381643  73728 eof
-> > /raw_data/ex.20130302T121135/ov.s1a1.wb: 6760 extents found
-> > 
-> > So we see that at one moment, the allocator starts giving us 16 MB chunks
-> > backwards. This seems to be caused by XFS_ALLOCTYPE_NEAR_BNO allocation. For
-> > two cases I was able to track down the logic:
-> > 
-> > 1) We start allocating blocks for file. We want to allocate in the same AG
-> > as the inode is. First we try exact allocation which fails so we try
-> > XFS_ALLOCTYPE_NEAR_BNO allocation which finds large enough free extent
-> > before the inode. So we start allocating 16 MB chunks from the end of that
-> > free extent. From this moment on we are basically bound to continue
-> > allocating backwards using XFS_ALLOCTYPE_NEAR_BNO allocation until we
-> > exhaust the whole free extent.
-> > 
-> > 2) Similar situation happens when we cannot further grow current extent but
-> > there is large free space somewhere before this extent in the AG.
-> > 
-> > So I was wondering is this known? Is XFS_ALLOCTYPE_NEAR_BNO so beneficial
-> > it outweights pathological cases like the above? Or shouldn't it maybe be
-> > disabled for larger files or for direct IO?
+On Thu, Mar 07, 2013 at 02:38:49PM +1100, Dave Chinner wrote:
+> On Thu, Mar 07, 2013 at 12:22:22AM +0100, David Sterba wrote:
+> > On Wed, Feb 27, 2013 at 02:47:54PM +0800, Wang Sheng-Hui wrote:
+> > > -	cp -r $SCRATCH_MNT/origin $SCRATCH_MNT/sub_$_suffix >$seq.full 2>&1
+> > > +	cp -r $SCRATCH_MNT/origin $SCRATCH_MNT/sub_$_suffix >>$seq.full 2>&1
+
+This is quote from the mail, but the merged patch does something else.
+
+> >     +./273: line 95: syntax error near unexpected token `&'
+> >     +./273: line 95: `  cp -r $SCRATCH_MNT/origin $SCRATCH_MNT/sub_$_suffix >$seq.full 2>>&1'
+> >     +umount: /dev/sda9: not mounted
+
+> that seems rather strange. The patch does this:
 > 
-> Well known issue, first diagnosed about 15 years ago, IIRC. Simple
-> solution: use extent size hints.
-  I thought someone must have hit it before. But I wasn't successful in
-googling... I suggested using fallocate to the customer since they have a
-good idea of the final file size in advance and in testing it gave better
-results than extent size hints (plus it works for other filesystems as
-well).
+> 	....sub_$_suffix >>$seq.full 2>&1
 
-But really I was wondering about usefulness of XFS_ALLOCTYPE_NEAR_BNO
-heuristic. Sure the seek time depends on the distance so if we are speaking
-about allocating single extent then XFS_ALLOCTYPE_NEAR_BNO is useful but
-once that strategy would allocate two or three consecutive extents you've
-lost all the benefit and you would be better off if you started allocating
-from the start of the free space. Obviously we don't know the future in
-advance but this resembles a classical problem from approximations
-algorithms theory (rent-or-buy problem where renting corresponds to
-allocating from the end of free space and taking the smaller cost while
-buying corresponds to allocation from the beginning, taking the higher
-cost, but expecting you won't have to pay anything in future). And the
-theory of approximation algorithms tells us that once we pay for renting as
-much as buying will cost us, then at that moment it is advantageous to buy
-and that gives you 2-approximation algorithm (you can do even better -
-factor 1.58 approximation - if you use randomization but I don't think we
-want to go that way). So from this I'd say that switching off
-XFS_ALLOCTYPE_NEAR_BNO allocation once you've allocated 2-3 extents
-backwards would work of better on average.
+http://oss.sgi.com/cgi-bin/gitweb.cgi?p=xfs/cmds/xfstests.git;a=commitdiff;h=0c5e67e46e476b70290033efc7feb784f7ecbab1;hp=08557e219c12e573be459407033495899f46967a
 
-								Honza
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+--- a/273
++++ b/273
+@@ -92,7 +92,7 @@ _porter()
+                exit
+        fi
+ 
+-       cp -r $SCRATCH_MNT/origin $SCRATCH_MNT/sub_$_suffix >$seq.full 2>&1
++       cp -r $SCRATCH_MNT/origin $SCRATCH_MNT/sub_$_suffix >$seq.full 2>>&1
+        if [ $? -ne 0 ]
+        then
+                echo "_porter $_suffix not complete"
+---
+
+> and the error output you see is
+> 
+> 	....sub_$_suffix >$seq.full 2>>&1
+> 
+> So it doesn't look lie you are running with the change that is
+> actually in the patch...
+
+There's a difference between the patch in mail and what has been merged, that
+can happen, but I wonder why it works on your side.
+
+Minimal reproducer that I used on machines with never bash:
+---
+touch origin
+cp -r origin target >seq.full 2>>&1
+---
+bash --version: GNU bash, version 4.2.24(1)-release
+and fails the same way.
+
+> GNU bash, version 4.2.37(1)-release
+
+I've checked bash sources (no git, just tar + context diff patches), there's no
+apparent fix between 24-37 for that.
+
+(Also tried to build a git tree, but filterdiff did not produce 1:1 unified
+format of the separate patches and there are lots of conflicts).
+
+If possible, I'd like avoid forcing a minimal version of bash, as the
+enterprise distros do not always ship the latest ones, and this break the tests
+unnecessarily.
+
+
+david
 
 _______________________________________________
 xfs mailing list
