@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id DBFEF7FC4
-	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 16:48:36 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 70C11AC009
-	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 14:48:36 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id EF2627FD0
+	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 16:50:04 -0600 (CST)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 86289AC004
+	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 14:50:04 -0800 (PST)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	YpIrJk0DBFTCmuEE for <xfs@oss.sgi.com>;
-	Thu, 07 Mar 2013 14:48:34 -0800 (PST)
-Date: Fri, 8 Mar 2013 09:48:32 +1100
+	ZuaN1JFygOZJPmCW for <xfs@oss.sgi.com>;
+	Thu, 07 Mar 2013 14:50:02 -0800 (PST)
+Date: Fri, 8 Mar 2013 09:50:01 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfstests 273: fix a typo
-Message-ID: <20130307224832.GV23616@dastard>
-References: <512DAC1A.2040601@gmail.com> <20130306232222.GF21081@twin.jikos.cz>
-	<20130307033849.GB6369@dastard>
-	<20130307110600.GJ21081@twin.jikos.cz>
+Subject: Re: [dm-devel] [BUG] pvmove corrupting XFS filesystems (was Re:
+	[BUG] Internal error xfs_dir2_data_reada_verify)
+Message-ID: <20130307225001.GW23616@dastard>
+References: <87d2vnc34r.fsf@fftw.org> <20130226044039.GM5551@dastard>
+	<20130227010414.GD1514@agk.fab.redhat.com>
+	<20130227014900.GY5551@dastard> <87y5eah4xz.fsf@fftw.org>
+	<87k3pjs908.fsf@fftw.org> <20130307223140.GU23616@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130307110600.GJ21081@twin.jikos.cz>
+In-Reply-To: <20130307223140.GU23616@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,50 +33,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: dsterba@suse.cz, Wang Sheng-Hui <shhuiw@gmail.com>, xfs@oss.sgi.com
+To: Matteo Frigo <athena@fftw.org>
+Cc: dm-devel@redhat.com, xfs@oss.sgi.com
 
-On Thu, Mar 07, 2013 at 12:06:01PM +0100, David Sterba wrote:
-> On Thu, Mar 07, 2013 at 02:38:49PM +1100, Dave Chinner wrote:
-> > On Thu, Mar 07, 2013 at 12:22:22AM +0100, David Sterba wrote:
-> > > On Wed, Feb 27, 2013 at 02:47:54PM +0800, Wang Sheng-Hui wrote:
-> > > > -	cp -r $SCRATCH_MNT/origin $SCRATCH_MNT/sub_$_suffix >$seq.full 2>&1
-> > > > +	cp -r $SCRATCH_MNT/origin $SCRATCH_MNT/sub_$_suffix >>$seq.full 2>&1
-> 
-> This is quote from the mail, but the merged patch does something else.
-> 
-> > >     +./273: line 95: syntax error near unexpected token `&'
-> > >     +./273: line 95: `  cp -r $SCRATCH_MNT/origin $SCRATCH_MNT/sub_$_suffix >$seq.full 2>>&1'
-> > >     +umount: /dev/sda9: not mounted
-> 
-> > that seems rather strange. The patch does this:
+On Fri, Mar 08, 2013 at 09:31:40AM +1100, Dave Chinner wrote:
+> On Thu, Mar 07, 2013 at 07:13:27AM -0500, Matteo Frigo wrote:
+> > Matteo Frigo <athena@fftw.org> writes:
 > > 
-> > 	....sub_$_suffix >>$seq.full 2>&1
-> 
-> http://oss.sgi.com/cgi-bin/gitweb.cgi?p=xfs/cmds/xfstests.git;a=commitdiff;h=0c5e67e46e476b70290033efc7feb784f7ecbab1;hp=08557e219c12e573be459407033495899f46967a
-
-Oh....
-
-> ---
-> 
-> > and the error output you see is
+> > > Well, I don't really know anything about this topic, so I may be
+> > > completely off the mark, but dm-raid1.c:mirror_map() does indeed return
+> > > EWOULDBLOCK, and EWOULDBLOCK is #define'd to be EAGAIN, so it seems to
+> > > me that dm-raid1 does indeed return EAGAIN for "rw == READA" (which I
+> > > assume is read-ahead) if the "region is not in-sync":
+> > >
+> > > 	/*
+> > > 	 * If region is not in-sync queue the bio.
+> > > 	 */
+> > > 	if (!r || (r == -EWOULDBLOCK)) {
+> > > 		if (rw == READA)
+> > > 			return -EWOULDBLOCK;
+> > >
+> > > 		queue_bio(ms, bio, rw);
+> > > 		return DM_MAPIO_SUBMITTED;
+> > > 	}
 > > 
-> > 	....sub_$_suffix >$seq.full 2>>&1
+> > Dave (and others),
 > > 
-> > So it doesn't look lie you are running with the change that is
-> > actually in the patch...
+> > do you have any suggestion on what should be done to fix this bug?
+> > 
+> > I have tried returning -EIO instead of -EWOULDBLOCK, but xfs does not
+> > like that.  dm-zero.c:zero_map() appears to return -EIO too, so this is
+> > another potential issue.
 > 
-> There's a difference between the patch in mail and what has been merged, that
-> can happen, but I wonder why it works on your side.
+> You need the XFS patch I posted so that readahead buffer
+> verification is avoided in the case of an error being returned from
+> the readahead.
 
-.... because I haven't updated to the latest xfstests master branch
-yet - I'm running with the patch from the list applied. I didn't
-realise you were running from the main repo, and that the commit was
-busted...
+I don't recall if that patch was sent to this thread, so here it is:
+
+http://oss.sgi.com/archives/xfs/2013-02/msg00516.html
 
 Cheers,
 
 Dave.
-
 -- 
 Dave Chinner
 david@fromorbit.com
