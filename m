@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id AB2B47FBE
-	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 07:32:46 -0600 (CST)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 9271E8F8068
-	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 05:32:46 -0800 (PST)
-Received: from mail-out1.booking.com (mail-out1.booking.com [62.190.24.20]) by
-	cuda.sgi.com with ESMTP id fiCXwnRGcaFHUx8j (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 07 Mar 2013 05:32:45 -0800 (PST)
-Message-ID: <1362663188.16657.20.camel@seahawk>
-Subject: Re: XFS IO multiplication problem on centos/rhel 6 using hp p420i
-	raid controllers
-From: Dennis Kaarsemaker <dennis.kaarsemaker@booking.com>
-Date: Thu, 07 Mar 2013 14:33:08 +0100
-In-Reply-To: <513891D7.4060801@hardwarefreak.com>
-References: <1362060736.1247.30.camel@seahawk>
-	<20130228194023.GQ5551@dastard> <1362577992.1247.84.camel@seahawk>
-	<20130307035737.GC6369@dastard> <1362651128.16657.13.camel@seahawk>
-	<513891D7.4060801@hardwarefreak.com>
-Mime-Version: 1.0
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 4E0577F5D
+	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 07:40:44 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 26EB830405F
+	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 05:40:43 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id Els2XKrerIClCMfm for
+	<xfs@oss.sgi.com>; Thu, 07 Mar 2013 05:40:43 -0800 (PST)
+Message-ID: <513898D4.6030502@redhat.com>
+Date: Thu, 07 Mar 2013 08:40:36 -0500
+From: Ric Wheeler <rwheeler@redhat.com>
+MIME-Version: 1.0
+Subject: Re: XFS filesystem corruption
+References: <CAPcwv6wZJSBtgF-L6KNSn6N6Y+wUZJFXdbcg+zYRwoaB2sDdjw@mail.gmail.com>
+	<20130306161519.2c28d911@galadriel.home>
+	<CAPcwv6wqv0b_CPqDpBfOwVDg23uBi=tpGQSy9XuH2uWS5oVMWQ@mail.gmail.com>
+	<20130306232100.6286f640@galadriel.home>
+	<5137CD46.6070909@redhat.com>
+	<CAPcwv6wK7m5UbJZass5690N5UpXEMV+HVzJa5mn9KWtT9UPQ9w@mail.gmail.com>
+In-Reply-To: <CAPcwv6wK7m5UbJZass5690N5UpXEMV+HVzJa5mn9KWtT9UPQ9w@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,51 +28,46 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: stan@hardwarefreak.com
+To: Julien FERRERO <jferrero06@gmail.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, 2013-03-07 at 07:10 -0600, Stan Hoeppner wrote:
-> On 3/7/2013 4:12 AM, Dennis Kaarsemaker wrote:
-> 
-> > I see, so now I need to find out what's causing the larger average
-> > request size. Would you happen to know a list of common causes?
-> 
-> Given that mysql is doing the writes, that's the first place to look.
+On 03/07/2013 08:15 AM, Julien FERRERO wrote:
+>> We actually test brutal "Power off" for xfs, ext4 and other file systems. If
+>> your storage is configured properly and you have barriers enabled, they all
+>> pass without corruption.
+>>
+>> What hardware raid cards can do is to hide a volatile write cache. Either on
+>> the raid HBA itself or, even worse, on the backend disks behind the card.
+>> S-ata disks tend to default to write cache enabled and need to be checked
+>> especially careful (sas drives tend to be write cache disabled by default).
+> Write cache is supposed to be disabled on the H/W RAID (according to
+> hdparm) and barrier are correctly enabled since xfs does not report
+> any warning at mount.
 
-That is indeed where we started, but MySQL is configured exactly the
-same on both thanks to puppet.
+hdparm shows you the devices that the card shows, not the state of the write 
+cache on the drives behind them.
 
-> Is the mysql version the same on all machines?  
+You need special vendor tools to do....
 
-Yes.
+The LSI controllers for example have megaraid tools.
 
-> How about the config?
+Until your IO stack is properly configured, you really don't need to worry about 
+the file system options :)
 
-All that's different is server_id and prompt.
+ric
 
-> How about the sql code driving the IO, is it the same?
-
-They're replicating the same set of data.
-
-> Is this host using a different mysql log or db file format?  Is the logging method the same?  
-
-All the same
-
-> Is it writing the same
-> total amount of data to the filesystem, but just in larger chunks?  Etc,
-
-The "ten times as many bytes" is constant, so it is constantly writing
-ten times as much data.
--- 
-Dennis Kaarsemaker, Systems Architect
-Booking.com
-Herengracht 597, 1017 CE Amsterdam
-Tel external +31 (0) 20 715 3409
-Tel internal (7207) 3409
+>
+> The odd thing is we never see this with kernel 2.6.18 where barriers
+> weren't yet available. An other difference is the "unwritten extend"
+> that was used to set to 0 by default. Now we cannot change this
+> setting according to an old thread I've found: "unwritten extents on
+> linux are generally a bad idea, this option should not be used.".
+> Unfortunately, the engineer that chose this setting is no longer
+> working with us...
 
 _______________________________________________
 xfs mailing list
