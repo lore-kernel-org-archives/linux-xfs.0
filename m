@@ -1,17 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 769AB7FEF
-	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 12:48:49 -0600 (CST)
-Date: Thu, 7 Mar 2013 12:48:48 -0600
+	by oss.sgi.com (Postfix) with ESMTP id EB01E7F9B
+	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 14:16:21 -0600 (CST)
+Date: Thu, 7 Mar 2013 14:16:17 -0600
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 01/16] xfs: rearrange some code in xfs_bmap for better
-	locality
-Message-ID: <20130307184848.GS22182@sgi.com>
-References: <1361755901-12453-1-git-send-email-david@fromorbit.com>
-	<1361755901-12453-2-git-send-email-david@fromorbit.com>
+Subject: Re: Fwd: xfs_reno
+Message-ID: <20130307201617.GT22182@sgi.com>
+References: <20351675.Zy117sIl8Z@xrated>
+ <20130307041348.GD6369@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1361755901-12453-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <20130307041348.GD6369@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,45 +23,53 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Hans-Peter Jansen <hpj@urpla.net>
 Cc: xfs@oss.sgi.com
 
-On Mon, Feb 25, 2013 at 12:31:26PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> xfs_bmap.c is a big file, and some of the related code is spread all
-> throughout the file requiring function prototypes for static
-> function and jumping all through the file to follow a single call
-> path. Rearrange the code so that:
-> 
-> 	a) related functionality is grouped together; and
-> 	b) functions are grouped in call dependency order
-> 
-> While the diffstat is large, there are no code changes in the patch;
-> it is just moving the functionality around and removing the function
-> prototypes at the top of the file. The resulting layout of the code
-> is as follows (top of file to bottom):
-> 
-> 	- miscellaneous helper functions
-> 	- extent tree block counting routines
-> 	- debug/sanity checking code
-> 	- bmap free list manipulation functions
-> 	- inode fork format manipulation functions
-> 	- internal/external extent tree seach functions
-> 	- extent tree manipulation functions used during allocation
-> 	- functions used during extent read/allocate/removal
-> 	  operations (i.e. xfs_bmapi_write, xfs_bmapi_read,
-> 	  xfs_bunmapi and xfs_getbmap)
-> 
-> This means that following logic paths through the bmapi code is much
-> simpler - most of the code relevant to a specific operation is now
-> clustered together rather than spread all over the file....
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Hi Pete,
 
-Applied.
+On Thu, Mar 07, 2013 at 03:13:48PM +1100, Dave Chinner wrote:
+> On Wed, Mar 06, 2013 at 03:55:19PM +0100, Hans-Peter Jansen wrote:
+> > Hi Dave,
+> > 
+> > I tried to gather Barrys SOB, but failed so far. His trace ends in 2009 google 
+> > wise.
+> > 
+> > How is this case usually handled?
+> > 
+> > Here's the current state of things.
+> 
+> He was working for SGI at the time, so you should be able to get
+> anyone from SGI provide a valid S-O-B if needed.
+> 
+> As it is, I can probably verify the patch origins sufficiently
+> to add a SOB to it as:
+> 
+> http://oss.sgi.com/archives/xfs/2007-11/msg00769.html
+> 
+> It's pretty clear that the code was released under the GPL and free
+> from any tainted code by SGI. The post I'm pointing to above is one
+> I made while an SGI employee, and it effectively verifies the origin
+> of the code in the same way a S-O-B does.
+> 
+> So, you probably don't even need to chase a S-O-B from SGI if you
+> just point at that email and attribute the code correctly. i.e.
+> retaining al the SGI copyright notices in the code and saying inteh
+> patch description that the code was originally authored by SGI and
+> released under the same license as the rest of the xfs userspace
+> code.
 
--Ben
+Looks good to me as is.  Links and attribution are in the header, copyright
+notices, etc.  We'll clean up that copyright header in the Makefile with a
+separate commit authored by a current SGI employee.
+
+You can add a Signed-off-by: Ben Myers <bpm@sgi.com> if you want.  No need to
+repost just for that.
+
+Thanks for spending the time!
+
+Regards,
+	Ben
 
 _______________________________________________
 xfs mailing list
