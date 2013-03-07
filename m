@@ -1,15 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9D27D7FA1
-	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 12:46:24 -0600 (CST)
-Date: Thu, 7 Mar 2013 12:46:24 -0600
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id BDF1D7FE9
+	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 12:48:00 -0600 (CST)
+Date: Thu, 7 Mar 2013 12:48:00 -0600
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] xfs: don't verify buffers after IO errors
-Message-ID: <20130307184624.GR22182@sgi.com>
-References: <1361931954-11105-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH -v3 12/23] xfs: rename random32() to prandom_u32()
+Message-ID: <20130307184800.GW30652@sgi.com>
+References: <1362401911-14074-1-git-send-email-akinobu.mita@gmail.com>
+	<1362401911-14074-13-git-send-email-akinobu.mita@gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1361931954-11105-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1362401911-14074-13-git-send-email-akinobu.mita@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,21 +23,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: akpm@linux-foundation.org, Alex Elder <elder@kernel.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Wed, Feb 27, 2013 at 01:25:54PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+Akinobu,
+
+On Mon, Mar 04, 2013 at 09:58:20PM +0900, Akinobu Mita wrote:
+> Use more preferable function name which implies using a pseudo-random
+> number generator.
 > 
-> When we read a buffer, we might get an error from the underlying
-> block device and not the real data. Hence if we get an IO error, we
-> shouldn't run the verifier but instead just pass the IO error
-> straight through.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+> Acked-by: <bpm@sgi.com>
+> Cc: Ben Myers <bpm@sgi.com>
+> Cc: Alex Elder <elder@kernel.org>
+> Cc: xfs@oss.sgi.com
 
-Applied.
+Applied this to git://oss.sgi.com/xfs/xfs.git, master branch.
 
+Thanks!
 -Ben
 
 _______________________________________________
