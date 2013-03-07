@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id F09D27CBF
-	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 17:00:49 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 83ACCAC001
-	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 15:00:49 -0800 (PST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 2B4707F98
+	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 17:22:21 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0A2CB8F8035
+	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 15:22:17 -0800 (PST)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	AsFGfnga7AdoSDVE for <xfs@oss.sgi.com>;
-	Thu, 07 Mar 2013 15:00:48 -0800 (PST)
-Date: Fri, 8 Mar 2013 10:00:20 +1100
+	ZmtqfIgI2CqLJNby for <xfs@oss.sgi.com>;
+	Thu, 07 Mar 2013 15:22:16 -0800 (PST)
+Date: Fri, 8 Mar 2013 10:22:14 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS IO multiplication problem on centos/rhel 6 using hp p420i
-	raid controllers
-Message-ID: <20130307230020.GX23616@dastard>
-References: <1362060736.1247.30.camel@seahawk> <20130228194023.GQ5551@dastard>
-	<1362577992.1247.84.camel@seahawk> <20130307035737.GC6369@dastard>
-	<1362651128.16657.13.camel@seahawk>
+Subject: Re: XFS filesystem corruption
+Message-ID: <20130307232214.GY23616@dastard>
+References: <CAPcwv6wZJSBtgF-L6KNSn6N6Y+wUZJFXdbcg+zYRwoaB2sDdjw@mail.gmail.com>
+	<20130306161519.2c28d911@galadriel.home>
+	<CAPcwv6wqv0b_CPqDpBfOwVDg23uBi=tpGQSy9XuH2uWS5oVMWQ@mail.gmail.com>
+	<20130306232100.6286f640@galadriel.home>
+	<5137CD46.6070909@redhat.com>
+	<CAPcwv6wK7m5UbJZass5690N5UpXEMV+HVzJa5mn9KWtT9UPQ9w@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1362651128.16657.13.camel@seahawk>
+In-Reply-To: <CAPcwv6wK7m5UbJZass5690N5UpXEMV+HVzJa5mn9KWtT9UPQ9w@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,69 +34,62 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dennis Kaarsemaker <dennis.kaarsemaker@booking.com>
-Cc: xfs@oss.sgi.com
+To: Julien FERRERO <jferrero06@gmail.com>
+Cc: Ric Wheeler <rwheeler@redhat.com>, xfs@oss.sgi.com
 
-On Thu, Mar 07, 2013 at 11:12:08AM +0100, Dennis Kaarsemaker wrote:
-> On Thu, 2013-03-07 at 14:57 +1100, Dave Chinner wrote:
-> > On Wed, Mar 06, 2013 at 02:53:12PM +0100, Dennis Kaarsemaker wrote:
-....
-> > > #<----CPU[HYPER]-----><----------Disks-----------><----------Network---------->
-> > > #cpu sys inter  ctxsw KBRead  Reads KBWrit Writes   KBIn  PktIn  KBOut  PktOut 
-> > >    1   0  1636   4219     16      1   2336    313    184    195     12     133 
-> > >    1   0  1654   2804     64      3   2919    432    391    352     20     208 
-> > > 
-> > > [root@bc291bprdb-01 ~]# collectl
-> > > #<----CPU[HYPER]-----><----------Disks-----------><----------Network---------->
-> > > #cpu sys inter  ctxsw KBRead  Reads KBWrit Writes   KBIn  PktIn  KBOut  PktOut 
-> > >    1   0  2220   3691    332     13  39992    331    112    122      6      92 
-> > >    0   0  1354   2708      0      0  39836    335    103    125      9      99 
-> > >    0   0  1563   3023    120      6  44036    369    399    317     13     188 
-> > > 
-> > > Notice the KBWrit difference. These are two identical hp gen 8 machines,
-> > > doing the same thing (replicating the same mysql schema). The one
-> > > writing ten times as many bytes in the same amount of transactions is
-> > > running centos 6 (and was running rhel 6).
-> > 
-> > So what is the problem? it is writing too much on the on the centos
-> > 6 machine? Either way, this doesn't sound like a filesystem problem
-> > - the size and amount of data writes is entirely determined by the
-> > application.
+On Thu, Mar 07, 2013 at 02:15:31PM +0100, Julien FERRERO wrote:
+> > We actually test brutal "Power off" for xfs, ext4 and other file systems. If
+> > your storage is configured properly and you have barriers enabled, they all
+> > pass without corruption.
+> >
+> > What hardware raid cards can do is to hide a volatile write cache. Either on
+> > the raid HBA itself or, even worse, on the backend disks behind the card.
+> > S-ata disks tend to default to write cache enabled and need to be checked
+> > especially careful (sas drives tend to be write cache disabled by default).
 > 
-> For performing the same amount of work (processing the same mysql
-> transactions, the same amount of IO transactions resulting from them),
-> the 'broken' case writes ten-ish times as many bytes.
-
-Thanks for clarifying.
-
-> > > /dev/mapper/sysvm-mysqlVol /mysql/bp xfs rw,relatime,attr2,delaylog,allocsize=1024k,logbsize=256k,sunit=512,swidth=1536,noquota 0 0
-> > 
-> > What is the reason for using allocsize, sunit/swidth? Are you using
-> > them on other machines?
+> Write cache is supposed to be disabled on the H/W RAID (according to
+> hdparm) and barrier are correctly enabled since xfs does not report
+> any warning at mount.
 > 
-> xfs autodetects them from the hpsa driver. They seem to be correct for
-> the raid layout (256 strips, 3 drives per mirror pool) and I don't seem
-> to be able to override them.
+> The odd thing is we never see this with kernel 2.6.18 where barriers
+> weren't yet available.
 
-That's fine, they're set correctly. I'd forgotten that the number
-are emitted in /proc/mounts even when they are not specified as
-mount options.
+Yes they were. XFS had barrier support added in 2.6.15.
 
-> > And if you remove the allocsize mount option, does the behaviour on
-> > centos6.3 change? What happens if you set allocsize=4k?
-> 
-> The allocsize parameter has no effect. It was put in place to correct a
-> monitoring issue: due to mysql's access patterns, using the default
-> large allocsize on rhel 6 makes our monitoring report the filesystem as
-> much fuller than it actually is.
+> An other difference is the "unwritten extend"
+> that was used to set to 0 by default. Now we cannot change this
+> setting according to an old thread I've found: "unwritten extents on
+> linux are generally a bad idea, this option should not be used.".
 
-Which is due to speculative EOF preallocation, and so it is only set
-on the CentOS box that is showing the larger write behaviour? Have
-you tried setting it to 4k? If not, please do - EOF preallocation for
-sparse extending writes can result in extra zeroing occurring, and
-so if it is anything related to the filesystem, this is the likely
-culprit. Setting it to 4k sets it back to the default value used
-on older versions of Linux....
+Yes, that would have been me that said that. I started seeing lots
+of boy-racer "tweak your filesystem to go faster" blogs recommending
+that unwritten extents should be turned off high up in google
+results, with numbers to prove that it improved performance.
+
+There were two common things wrong with these blogs:
+
+	1. None of them mentioned that turning off unwritten extents
+	exposes stale data to users. i.e. a whopping great big
+	security hole.
+
+	2. they reported significant performance improvements for
+	workloads that *didn't use unwritten extents* when they set
+	this flag. i.e. they mistook run-to-run variablity of the
+	benchmark for a performance improvement. i.e. Benchmarking
+	101 Fail.
+
+When you get people who do not understand what they are doing and
+giving bad advice as the first 10 hits for a google search about
+optimising/tuning XFS filesystems, it's a major concern, and so I
+took steps to ensure you can't turn off unwritten extents with
+mkfs...
+
+> Unfortunately, the engineer that chose this setting is no longer
+> working with us...
+
+It sounds like he read one too many of these blogs, because if mysql
+is triggering speculative preallocation, it is not using unwritten
+extents....
 
 Cheers,
 
