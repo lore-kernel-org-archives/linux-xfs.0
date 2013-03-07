@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1E1C07FA1
-	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 12:43:09 -0600 (CST)
-Date: Thu, 7 Mar 2013 12:43:08 -0600
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B4DB07FA1
+	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 12:43:54 -0600 (CST)
+Date: Thu, 7 Mar 2013 12:43:54 -0600
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] xfs: fix potential infinite loop in
-	xfs_iomap_prealloc_size()
-Message-ID: <20130307184308.GN22182@sgi.com>
-References: <1361557976-54981-1-git-send-email-bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: increase prealloc size to double that of the
+	previous extent
+Message-ID: <20130307184354.GO22182@sgi.com>
+References: <1361231827-58766-1-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1361557976-54981-1-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1361231827-58766-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,10 +26,16 @@ Sender: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, Feb 22, 2013 at 01:32:56PM -0500, Brian Foster wrote:
-> If freesp == 0, we could end up in an infinite loop while squashing
-> the preallocation. Break the loop when we've killed the prealloc
-> entirely.
+On Mon, Feb 18, 2013 at 06:57:07PM -0500, Brian Foster wrote:
+> The updated speculative preallocation algorithm becomes less
+> effective in situations with a high number of concurrent,
+> sequential writers. In running 32 sequential writers on a system
+> with 32GB RAM, preallocs become fixed at a value of around 128MB.
+> Update the heuristic to base the size of the prealloc on double
+> the size of the preceding extent. This preserves the original
+> aggressive speculative preallocation behavior at a slight cost of
+> increasing the size of preallocated data regions following holes of
+> sparse files.
 > 
 > Signed-off-by: Brian Foster <bfoster@redhat.com>
 
