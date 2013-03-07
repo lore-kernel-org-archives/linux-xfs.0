@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id EFD257FBE
-	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 07:32:05 -0600 (CST)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id AB2B47FBE
+	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 07:32:46 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D5F3D304039
-	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 05:32:05 -0800 (PST)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id CfqGOgHPTcdzn3KO
-	for <xfs@oss.sgi.com>; Thu, 07 Mar 2013 05:32:05 -0800 (PST)
-Message-ID: <513896DF.7010609@hardwarefreak.com>
-Date: Thu, 07 Mar 2013 07:32:15 -0600
-From: Stan Hoeppner <stan@hardwarefreak.com>
-MIME-Version: 1.0
-Subject: Re: XFS filesystem corruption
-References: <CAPcwv6wZJSBtgF-L6KNSn6N6Y+wUZJFXdbcg+zYRwoaB2sDdjw@mail.gmail.com>
-	<51380FD3.5010302@hardwarefreak.com>
-	<CAPcwv6yAHAsmwgROs12gRtCbqTXBvTPrx8F-e4kYab2YApsobg@mail.gmail.com>
-In-Reply-To: <CAPcwv6yAHAsmwgROs12gRtCbqTXBvTPrx8F-e4kYab2YApsobg@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 9271E8F8068
+	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 05:32:46 -0800 (PST)
+Received: from mail-out1.booking.com (mail-out1.booking.com [62.190.24.20]) by
+	cuda.sgi.com with ESMTP id fiCXwnRGcaFHUx8j (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 07 Mar 2013 05:32:45 -0800 (PST)
+Message-ID: <1362663188.16657.20.camel@seahawk>
+Subject: Re: XFS IO multiplication problem on centos/rhel 6 using hp p420i
+	raid controllers
+From: Dennis Kaarsemaker <dennis.kaarsemaker@booking.com>
+Date: Thu, 07 Mar 2013 14:33:08 +0100
+In-Reply-To: <513891D7.4060801@hardwarefreak.com>
+References: <1362060736.1247.30.camel@seahawk>
+	<20130228194023.GQ5551@dastard> <1362577992.1247.84.camel@seahawk>
+	<20130307035737.GC6369@dastard> <1362651128.16657.13.camel@seahawk>
+	<513891D7.4060801@hardwarefreak.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,52 +32,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Julien FERRERO <jferrero06@gmail.com>
+To: stan@hardwarefreak.com
 Cc: xfs@oss.sgi.com
 
-On 3/7/2013 7:04 AM, Julien FERRERO wrote:
->> It may be unrelated to your corruption, problem but I'm curious why you
->> are specifying a 32MB log section instead of letting mkfs.xfs make the
->> log size decision.
+On Thu, 2013-03-07 at 07:10 -0600, Stan Hoeppner wrote:
+> On 3/7/2013 4:12 AM, Dennis Kaarsemaker wrote:
 > 
-> I honestly don' know, the rebuild script was written 8 years ago by an
-> engineer that since left the company.
+> > I see, so now I need to find out what's causing the larger average
+> > request size. Would you happen to know a list of common causes?
 > 
-> Is 32MB a short log space for a 1.5 TB of data ?
+> Given that mysql is doing the writes, that's the first place to look.
 
-The log is for journal metadata.  So if you're capturing a frame of
-video per file, or 24 or 60 frames per file, and thus are writing lots
-of files, 32MB may be too small.  I'm not an expert here.  Dave C. would
-be better able to answer this.  But this is a very minor problem
-compared to...
+That is indeed where we started, but MySQL is configured exactly the
+same on both thanks to puppet.
 
-> Moreover, the common usage is to power off all the equipment (included
-> ours) from a general power switch.
+> Is the mysql version the same on all machines?  
 
-this.  Have the crews been hard cutting power to these XFS boxen for the
-8 years you mention above?  And this filesystem corruption problem
-and/or corrupted files, is just now cropping up?  That's hard to
-believe.  There may be a bug in 2.6.35 that exacerbates this that's been
-fixed in later versions--2.6.35 is not a long term stable kernel--odd
-that a vendor would choose it for long term use.
+Yes.
 
-If you never had this problem before, I can only guess that previously
-you were using hardware RAID controllers with BBWC having sufficient
-battery hours of cache power to survive until the next power on, at
-which point the BBWC RAID dumped the data to the disks.  If you switched
-from that solution to non BBWC RAID, or to Linux software RAID, that
-might explain why you're seeing corruption now and did not previously.
-And even with BBWC RAID, hard cutting power to the system is still not a
-smart thing to do.
+> How about the config?
 
-For this kind of environment, if field techs are going to hard cut power
-no matter what you tell them, then you simply MUST get LSI (or possibly
-other) RAID cards with the flash backed write cache.  This doesn't rely
-on batteries so the cache is never volatile, and can sit overnight, or
-for days or weeks, without losing the data in the write cache.
+All that's different is server_id and prompt.
 
+> How about the sql code driving the IO, is it the same?
+
+They're replicating the same set of data.
+
+> Is this host using a different mysql log or db file format?  Is the logging method the same?  
+
+All the same
+
+> Is it writing the same
+> total amount of data to the filesystem, but just in larger chunks?  Etc,
+
+The "ten times as many bytes" is constant, so it is constantly writing
+ten times as much data.
 -- 
-Stan
+Dennis Kaarsemaker, Systems Architect
+Booking.com
+Herengracht 597, 1017 CE Amsterdam
+Tel external +31 (0) 20 715 3409
+Tel internal (7207) 3409
 
 _______________________________________________
 xfs mailing list
