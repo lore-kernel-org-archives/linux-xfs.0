@@ -1,26 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 98E257FB6
-	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 06:13:42 -0600 (CST)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id BF7F27FB8
+	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 07:04:37 -0600 (CST)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 27A83AC004
-	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 04:13:39 -0800 (PST)
-Received: from fftw.org (216.119.142.145.static.a2webhosting.com
-	[216.119.142.145]) by cuda.sgi.com with ESMTP id
-	v4ig3bM99sEpOMnP (version=TLSv1 cipher=AES128-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 07 Mar 2013 04:13:37 -0800 (PST)
-From: Matteo Frigo <athena@fftw.org>
-Subject: Re: [dm-devel] [BUG] pvmove corrupting XFS filesystems (was Re: [BUG]
-	Internal error xfs_dir2_data_reada_verify)
-References: <87d2vnc34r.fsf@fftw.org> <20130226044039.GM5551@dastard>
-	<20130227010414.GD1514@agk.fab.redhat.com>
-	<20130227014900.GY5551@dastard> <87y5eah4xz.fsf@fftw.org>
-Date: Thu, 07 Mar 2013 07:13:27 -0500
-In-Reply-To: <87y5eah4xz.fsf@fftw.org> (Matteo Frigo's message of "Tue, 26 Feb
-	2013 21:21:44 -0500")
-Message-ID: <87k3pjs908.fsf@fftw.org>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9D77C304059
+	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 05:04:34 -0800 (PST)
+Received: from mail-bk0-f44.google.com (mail-bk0-f44.google.com
+	[209.85.214.44]) by cuda.sgi.com with ESMTP id zWDOkTZp57Lp37Iv
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 07 Mar 2013 05:04:33 -0800 (PST)
+Received: by mail-bk0-f44.google.com with SMTP id j4so206286bkw.3
+	for <xfs@oss.sgi.com>; Thu, 07 Mar 2013 05:04:32 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <51380FD3.5010302@hardwarefreak.com>
+References: <CAPcwv6wZJSBtgF-L6KNSn6N6Y+wUZJFXdbcg+zYRwoaB2sDdjw@mail.gmail.com>
+	<51380FD3.5010302@hardwarefreak.com>
+Date: Thu, 7 Mar 2013 14:04:32 +0100
+Message-ID: <CAPcwv6yAHAsmwgROs12gRtCbqTXBvTPrx8F-e4kYab2YApsobg@mail.gmail.com>
+Subject: Re: XFS filesystem corruption
+From: Julien FERRERO <jferrero06@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,50 +31,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: dm-devel@redhat.com, xfs@oss.sgi.com
+To: stan@hardwarefreak.com
+Cc: xfs@oss.sgi.com
 
-Matteo Frigo <athena@fftw.org> writes:
+> It may be unrelated to your corruption, problem but I'm curious why you
+> are specifying a 32MB log section instead of letting mkfs.xfs make the
+> log size decision.
 
-> Well, I don't really know anything about this topic, so I may be
-> completely off the mark, but dm-raid1.c:mirror_map() does indeed return
-> EWOULDBLOCK, and EWOULDBLOCK is #define'd to be EAGAIN, so it seems to
-> me that dm-raid1 does indeed return EAGAIN for "rw == READA" (which I
-> assume is read-ahead) if the "region is not in-sync":
+I honestly don' know, the rebuild script was written 8 years ago by an
+engineer that since left the company.
+
+Is 32MB a short log space for a 1.5 TB of data ?
+
 >
-> 	/*
-> 	 * If region is not in-sync queue the bio.
-> 	 */
-> 	if (!r || (r == -EWOULDBLOCK)) {
-> 		if (rw == READA)
-> 			return -EWOULDBLOCK;
+> I would assume based on your description that this is a mobile storage
+> system, often moved from one location to another, probably in a van, and
+> this is why the operator simply hits the power switch?  Live news crew
+> type application or similar?
 >
-> 		queue_bio(ms, bio, rw);
-> 		return DM_MAPIO_SUBMITTED;
-> 	}
 
-Dave (and others),
+Correct.
 
-do you have any suggestion on what should be done to fix this bug?
-
-I have tried returning -EIO instead of -EWOULDBLOCK, but xfs does not
-like that.  dm-zero.c:zero_map() appears to return -EIO too, so this is
-another potential issue.
-
-I have verified that removing the READA special case, treating READA
-like READ, fixes the problem:
-
- 		if(0) if (rw == READA)
- 			return -EWOULDBLOCK;
-
-Of course this "fix" throws away the baby with the bath water.
-
-I am willing to write and submit a patch, but I would appreciate
-directions as to what the correct protocol between xfs and dm is
-supposed to be.
-
-Regards,
-MF
+Moreover, the common usage is to power off all the equipment (included
+ours) from a general power switch.
 
 _______________________________________________
 xfs mailing list
