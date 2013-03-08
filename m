@@ -1,26 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 090AC7F4C
-	for <xfs@oss.sgi.com>; Fri,  8 Mar 2013 14:32:49 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A8BC8AC004
-	for <xfs@oss.sgi.com>; Fri,  8 Mar 2013 12:32:45 -0800 (PST)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id IrKewRoHg3CZQc8K for <xfs@oss.sgi.com>;
-	Fri, 08 Mar 2013 12:32:44 -0800 (PST)
-Message-ID: <513A4AEC.4010202@sandeen.net>
-Date: Fri, 08 Mar 2013 14:32:44 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: xfs_repair segfaults
-References: <CANU9nTnvJS50vdQv2K0gKHZPvzzH5EY1qpizJNsqUobrr2juDA@mail.gmail.com>
-	<512FA67D.2090708@sandeen.net>
-	<CANU9nTm3vR3Z5JwRwou4vnNejstAkAsnBb2ivwx-KhnHHbWpoQ@mail.gmail.com>
-	<5130DB54.9030503@sandeen.net>
-	<CANU9nTkekrw2mdptFdK2RVUFXD=evt0sTZhB9VL+PKY8DTj11A@mail.gmail.com>
-	<5134BBA4.3060305@sandeen.net>
-	<CANU9nTntXh5spRYc80OhsBqgLnZcJGA2qBeVVQaywthD1RMu4w@mail.gmail.com>
-In-Reply-To: <CANU9nTntXh5spRYc80OhsBqgLnZcJGA2qBeVVQaywthD1RMu4w@mail.gmail.com>
+	by oss.sgi.com (Postfix) with ESMTP id E60817F92
+	for <xfs@oss.sgi.com>; Fri,  8 Mar 2013 16:53:04 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 72D2DAC002
+	for <xfs@oss.sgi.com>; Fri,  8 Mar 2013 14:53:01 -0800 (PST)
+From: Dave Kleikamp <dave.kleikamp@oracle.com>
+Subject: [PATCH V7 -next 27/33] xfs: add support for read_iter and write_iter
+Date: Fri,  8 Mar 2013 16:52:22 -0600
+Message-Id: <1362783148-22736-28-git-send-email-dave.kleikamp@oracle.com>
+In-Reply-To: <1362783148-22736-1-git-send-email-dave.kleikamp@oracle.com>
+References: <1362783148-22736-1-git-send-email-dave.kleikamp@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,49 +19,181 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ole Tange <tange@binf.ku.dk>
+To: Zach Brown <zab@zabbo.net>
+Cc: Alex Elder <elder@kernel.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, Dave Kleikamp <dave.kleikamp@oracle.com>, linux-fsdevel@vger.kernel.org
+
+Signed-off-by: Dave Kleikamp <dave.kleikamp@oracle.com>
+Cc: Ben Myers <bpm@sgi.com>
+Cc: Alex Elder <elder@kernel.org>
 Cc: xfs@oss.sgi.com
+---
+ fs/xfs/xfs_file.c | 51 ++++++++++++++++++++-------------------------------
+ 1 file changed, 20 insertions(+), 31 deletions(-)
 
-On 3/8/13 4:21 AM, Ole Tange wrote:
-> On Mon, Mar 4, 2013 at 4:20 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
-> 
->> 2) so you could run a "real" non-"n" xfs_repair on a metadata image as a more realistic dry run
-> 
-> I have now done a 'xfs_repair' using the code in GIT. It failed, and I
-> then did 'xfs_repair -L' which succeeded.
-> 
-> Am I correct that I should now be able to mount the sparse disk-image
-> file and see all the filenames? In that case I am quite worried. I get
-> filenames like:
-> 
-> /mnt/disk/??5?z+hEOgl/?7?Psr1?aIH<?ip:??/>S??+??z=ozK/8_0/???d)
-> 5JCG?eiBd?EVsNF'A?v?m?f;Fi6v)d>/?M%?A??J?)B<soGlc??QuY!e-<,6G?
-> X[Df?Wm^[?f 4|
-
-By default, xfs_metadump scrambles filenames, so nothing to worry
-about (it's for privacy reasons).  If you use the "-o" option it'll keep
-it in the clear.
-
--Eric
-
-> My guess is some superblock is corrupt and that it should instead try
-> a backup superblock. It might be useful if xfs_repair could do this
-> automatically based on the rule of thumb that more than 90% of
-> filenames/dirnames match:
-> 
-> [- _.,=A-Za-z0-9':]* [([{]* [- _.,=A-Za-z0-9':]* []})]* [- _.,=A-Za-z0-9':]*
-> 
-> If it finds a superblock resulting in more then 10% not matching the
-> above it should probably ignore that superblock (unless the file names
-> are using non-latin characters - such as Japanese).
-> 
-> 
-> /Ole
-> 
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index a81aa74..7bd3609 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -226,10 +226,9 @@ xfs_file_fsync(
+ }
+ 
+ STATIC ssize_t
+-xfs_file_aio_read(
++xfs_file_read_iter(
+ 	struct kiocb		*iocb,
+-	const struct iovec	*iovp,
+-	unsigned long		nr_segs,
++	struct iov_iter		*iter,
+ 	loff_t			pos)
+ {
+ 	struct file		*file = iocb->ki_filp;
+@@ -250,9 +249,7 @@ xfs_file_aio_read(
+ 	if (file->f_mode & FMODE_NOCMTIME)
+ 		ioflags |= IO_INVIS;
+ 
+-	ret = generic_segment_checks(iovp, &nr_segs, &size, VERIFY_WRITE);
+-	if (ret < 0)
+-		return ret;
++	size = iov_iter_count(iter);
+ 
+ 	if (unlikely(ioflags & IO_ISDIRECT)) {
+ 		xfs_buftarg_t	*target =
+@@ -305,7 +302,7 @@ xfs_file_aio_read(
+ 
+ 	trace_xfs_file_read(ip, size, pos, ioflags);
+ 
+-	ret = generic_file_aio_read(iocb, iovp, nr_segs, pos);
++	ret = generic_file_read_iter(iocb, iter, pos);
+ 	if (ret > 0)
+ 		XFS_STATS_ADD(xs_read_bytes, ret);
+ 
+@@ -621,10 +618,9 @@ restart:
+ STATIC ssize_t
+ xfs_file_dio_aio_write(
+ 	struct kiocb		*iocb,
+-	const struct iovec	*iovp,
+-	unsigned long		nr_segs,
++	struct iov_iter		*iter,
+ 	loff_t			pos,
+-	size_t			ocount)
++	size_t			count)
+ {
+ 	struct file		*file = iocb->ki_filp;
+ 	struct address_space	*mapping = file->f_mapping;
+@@ -632,7 +628,6 @@ xfs_file_dio_aio_write(
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	ssize_t			ret = 0;
+-	size_t			count = ocount;
+ 	int			unaligned_io = 0;
+ 	int			iolock;
+ 	struct xfs_buftarg	*target = XFS_IS_REALTIME_INODE(ip) ?
+@@ -692,8 +687,8 @@ xfs_file_dio_aio_write(
+ 	}
+ 
+ 	trace_xfs_file_direct_write(ip, count, iocb->ki_pos, 0);
+-	ret = generic_file_direct_write(iocb, iovp,
+-			&nr_segs, pos, &iocb->ki_pos, count, ocount);
++	ret = generic_file_direct_write_iter(iocb, iter,
++			pos, &iocb->ki_pos, count);
+ 
+ out:
+ 	xfs_rw_iunlock(ip, iolock);
+@@ -706,10 +701,9 @@ out:
+ STATIC ssize_t
+ xfs_file_buffered_aio_write(
+ 	struct kiocb		*iocb,
+-	const struct iovec	*iovp,
+-	unsigned long		nr_segs,
++	struct iov_iter		*iter,
+ 	loff_t			pos,
+-	size_t			ocount)
++	size_t			count)
+ {
+ 	struct file		*file = iocb->ki_filp;
+ 	struct address_space	*mapping = file->f_mapping;
+@@ -718,7 +712,6 @@ xfs_file_buffered_aio_write(
+ 	ssize_t			ret;
+ 	int			enospc = 0;
+ 	int			iolock = XFS_IOLOCK_EXCL;
+-	size_t			count = ocount;
+ 
+ 	xfs_rw_ilock(ip, iolock);
+ 
+@@ -731,7 +724,7 @@ xfs_file_buffered_aio_write(
+ 
+ write_retry:
+ 	trace_xfs_file_buffered_write(ip, count, iocb->ki_pos, 0);
+-	ret = generic_file_buffered_write(iocb, iovp, nr_segs,
++	ret = generic_file_buffered_write_iter(iocb, iter,
+ 			pos, &iocb->ki_pos, count, 0);
+ 
+ 	/*
+@@ -752,10 +745,9 @@ out:
+ }
+ 
+ STATIC ssize_t
+-xfs_file_aio_write(
++xfs_file_write_iter(
+ 	struct kiocb		*iocb,
+-	const struct iovec	*iovp,
+-	unsigned long		nr_segs,
++	struct iov_iter		*iter,
+ 	loff_t			pos)
+ {
+ 	struct file		*file = iocb->ki_filp;
+@@ -763,17 +755,15 @@ xfs_file_aio_write(
+ 	struct inode		*inode = mapping->host;
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	ssize_t			ret;
+-	size_t			ocount = 0;
++	size_t			count = 0;
+ 
+ 	XFS_STATS_INC(xs_write_calls);
+ 
+ 	BUG_ON(iocb->ki_pos != pos);
+ 
+-	ret = generic_segment_checks(iovp, &nr_segs, &ocount, VERIFY_READ);
+-	if (ret)
+-		return ret;
++	count = iov_iter_count(iter);
+ 
+-	if (ocount == 0)
++	if (count == 0)
+ 		return 0;
+ 
+ 	if (!sb_start_file_write(file))
+@@ -785,10 +775,9 @@ xfs_file_aio_write(
+ 	}
+ 
+ 	if (unlikely(file->f_flags & O_DIRECT))
+-		ret = xfs_file_dio_aio_write(iocb, iovp, nr_segs, pos, ocount);
++		ret = xfs_file_dio_aio_write(iocb, iter, pos, count);
+ 	else
+-		ret = xfs_file_buffered_aio_write(iocb, iovp, nr_segs, pos,
+-						  ocount);
++		ret = xfs_file_buffered_aio_write(iocb, iter, pos, count);
+ 
+ 	if (ret > 0) {
+ 		ssize_t err;
+@@ -1418,8 +1407,8 @@ const struct file_operations xfs_file_operations = {
+ 	.llseek		= xfs_file_llseek,
+ 	.read		= do_sync_read,
+ 	.write		= do_sync_write,
+-	.aio_read	= xfs_file_aio_read,
+-	.aio_write	= xfs_file_aio_write,
++	.read_iter	= xfs_file_read_iter,
++	.write_iter	= xfs_file_write_iter,
+ 	.splice_read	= xfs_file_splice_read,
+ 	.splice_write	= xfs_file_splice_write,
+ 	.unlocked_ioctl	= xfs_file_ioctl,
+-- 
+1.8.1.5
 
 _______________________________________________
 xfs mailing list
