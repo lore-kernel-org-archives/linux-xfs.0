@@ -1,27 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2B4707F98
-	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 17:22:21 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 0A2CB8F8035
-	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 15:22:17 -0800 (PST)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	ZmtqfIgI2CqLJNby for <xfs@oss.sgi.com>;
-	Thu, 07 Mar 2013 15:22:16 -0800 (PST)
-Date: Fri, 8 Mar 2013 10:22:14 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS filesystem corruption
-Message-ID: <20130307232214.GY23616@dastard>
-References: <CAPcwv6wZJSBtgF-L6KNSn6N6Y+wUZJFXdbcg+zYRwoaB2sDdjw@mail.gmail.com>
-	<20130306161519.2c28d911@galadriel.home>
-	<CAPcwv6wqv0b_CPqDpBfOwVDg23uBi=tpGQSy9XuH2uWS5oVMWQ@mail.gmail.com>
-	<20130306232100.6286f640@galadriel.home>
-	<5137CD46.6070909@redhat.com>
-	<CAPcwv6wK7m5UbJZass5690N5UpXEMV+HVzJa5mn9KWtT9UPQ9w@mail.gmail.com>
+	by oss.sgi.com (Postfix) with ESMTP id C52697FC4
+	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 18:09:44 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A39F28F8059
+	for <xfs@oss.sgi.com>; Thu,  7 Mar 2013 16:09:44 -0800 (PST)
+Received: from fftw.org (216.119.142.145.static.a2webhosting.com
+	[216.119.142.145]) by cuda.sgi.com with ESMTP id
+	RVIFBpknJePV1VDq (version=TLSv1 cipher=AES128-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 07 Mar 2013 16:09:40 -0800 (PST)
+From: Matteo Frigo <athena@fftw.org>
+Subject: Re: [dm-devel] [BUG] pvmove corrupting XFS filesystems (was Re: [BUG]
+	Internal error xfs_dir2_data_reada_verify)
+References: <87d2vnc34r.fsf@fftw.org> <20130226044039.GM5551@dastard>
+	<20130227010414.GD1514@agk.fab.redhat.com>
+	<20130227014900.GY5551@dastard> <87y5eah4xz.fsf@fftw.org>
+	<87k3pjs908.fsf@fftw.org> <20130307223140.GU23616@dastard>
+Date: Thu, 07 Mar 2013 19:09:31 -0500
+In-Reply-To: <20130307223140.GU23616@dastard> (Dave Chinner's message of "Fri,
+	8 Mar 2013 09:31:40 +1100")
+Message-ID: <87hakmpxac.fsf@fftw.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAPcwv6wK7m5UbJZass5690N5UpXEMV+HVzJa5mn9KWtT9UPQ9w@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,69 +34,90 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Julien FERRERO <jferrero06@gmail.com>
-Cc: Ric Wheeler <rwheeler@redhat.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: dm-devel@redhat.com, xfs@oss.sgi.com
 
-On Thu, Mar 07, 2013 at 02:15:31PM +0100, Julien FERRERO wrote:
-> > We actually test brutal "Power off" for xfs, ext4 and other file systems. If
-> > your storage is configured properly and you have barriers enabled, they all
-> > pass without corruption.
-> >
-> > What hardware raid cards can do is to hide a volatile write cache. Either on
-> > the raid HBA itself or, even worse, on the backend disks behind the card.
-> > S-ata disks tend to default to write cache enabled and need to be checked
-> > especially careful (sas drives tend to be write cache disabled by default).
-> 
-> Write cache is supposed to be disabled on the H/W RAID (according to
-> hdparm) and barrier are correctly enabled since xfs does not report
-> any warning at mount.
-> 
-> The odd thing is we never see this with kernel 2.6.18 where barriers
-> weren't yet available.
+Dave Chinner <david@fromorbit.com> writes:
 
-Yes they were. XFS had barrier support added in 2.6.15.
+> You need the XFS patch I posted so that readahead buffer
+> verification is avoided in the case of an error being returned from
+> the readahead.
 
-> An other difference is the "unwritten extend"
-> that was used to set to 0 by default. Now we cannot change this
-> setting according to an old thread I've found: "unwritten extents on
-> linux are generally a bad idea, this option should not be used.".
+I apologize if I was not clear in my previous post.  I mean to say that
+returning -EIO from dm, even in conjunction with your patch, is not
+sufficient to fix the problem.
 
-Yes, that would have been me that said that. I started seeing lots
-of boy-racer "tweak your filesystem to go faster" blogs recommending
-that unwritten extents should be turned off high up in google
-results, with numbers to prove that it improved performance.
+Specifically, I repeated the experiment with v3.8.2 patched as discussed
+below, running my original script (repeated here for completeness):
 
-There were two common things wrong with these blogs:
+   pvcreate /dev/vd[bc]
+   vgcreate test /dev/vd[bc]
+   lvcreate -L 8G -n vol test /dev/vdb
+   mkfs.xfs -f /dev/mapper/test-vol
+   mount -o noatime /dev/mapper/test-vol /mnt
+   cd /mnt
+   git clone ~/linux-stable
+   cd /
+   umount /mnt
 
-	1. None of them mentioned that turning off unwritten extents
-	exposes stale data to users. i.e. a whopping great big
-	security hole.
+   mount -o noatime /dev/mapper/test-vol /mnt
+   pvmove -b /dev/vdb /dev/vdc
+   sleep 2
+   rm -rf /mnt/linux-stable
 
-	2. they reported significant performance improvements for
-	workloads that *didn't use unwritten extents* when they set
-	this flag. i.e. they mistook run-to-run variablity of the
-	benchmark for a performance improvement. i.e. Benchmarking
-	101 Fail.
+I obtained a string of errors that starts with this:
 
-When you get people who do not understand what they are doing and
-giving bad advice as the first 10 hits for a google search about
-optimising/tuning XFS filesystems, it's a major concern, and so I
-took steps to ensure you can't turn off unwritten extents with
-mkfs...
+  [  166.596574] XFS (dm-1): metadata I/O error: block 0x805060 ("xfs_trans_read_buf_map") error 5 numblks 8
+  [  166.599556] XFS (dm-1): metadata I/O error: block 0x805060 ("xfs_trans_read_buf_map") error 5 numblks 8
+  [  166.604845] XFS (dm-1): metadata I/O error: block 0x5285b8 ("xfs_trans_read_buf_map") error 5 numblks 8
+  [  166.607894] XFS (dm-1): metadata I/O error: block 0x5285b8 ("xfs_trans_read_buf_map") error 5 numblks 8
+  [  166.614242] XFS (dm-1): metadata I/O error: block 0x54f2b0 ("xfs_trans_read_buf_map") error 5 numblks 8
+  [  166.617307] XFS (dm-1): metadata I/O error: block 0x54f2b0 ("xfs_trans_read_buf_map") error 5 numblks 8
+  [  166.651373] XFS (dm-1): Corruption detected. Unmount and run xfs_repair
+  [  166.653517] XFS (dm-1): Corruption detected. Unmount and run xfs_repair
+  [  166.655545] XFS (dm-1): Corruption detected. Unmount and run xfs_repair
+  [  166.657614] XFS (dm-1): Corruption detected. Unmount and run xfs_repair
+  [  166.659685] XFS (dm-1): Corruption detected. Unmount and run xfs_repair
+  [  166.661731] XFS (dm-1): Corruption detected. Unmount and run xfs_repair
+  [  166.663761] XFS (dm-1): Corruption detected. Unmount and run xfs_repair
 
-> Unfortunately, the engineer that chose this setting is no longer
-> working with us...
+I used v3.8.2 with the following diff, including both your xfs patch
+and my attempt to patch dm-raid1 to return EIO:
 
-It sounds like he read one too many of these blogs, because if mysql
-is triggering speculative preallocation, it is not using unwritten
-extents....
+diff --git a/drivers/md/dm-raid1.c b/drivers/md/dm-raid1.c
+index fa51918..88903e3 100644
+--- a/drivers/md/dm-raid1.c
++++ b/drivers/md/dm-raid1.c
+@@ -1169,7 +1169,7 @@ static int mirror_map(struct dm_target *ti, struct bio *bio)
+ 	 */
+ 	if (!r || (r == -EWOULDBLOCK)) {
+                 if (rw == READA)
+-			return -EWOULDBLOCK;
++			return -EIO;
+ 
+ 		queue_bio(ms, bio, rw);
+ 		return DM_MAPIO_SUBMITTED;
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index fbbb9eb..c961dd4 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1024,7 +1024,9 @@ xfs_buf_iodone_work(
+ 	bool			read = !!(bp->b_flags & XBF_READ);
+ 
+ 	bp->b_flags &= ~(XBF_READ | XBF_WRITE | XBF_READ_AHEAD);
+-	if (read && bp->b_ops)
++
++        /* only validate buffers that were read without errors */
++        if (read && bp->b_ops && !bp->b_error && (bp->b_flags & XBF_DONE))
+                 bp->b_ops->verify_read(bp);
+ 
+ 	if (bp->b_iodone)
 
-Cheers,
+So your patch is not sufficient to fix the problem, even if dm returns
+-EIO instead of -EAGAIN.  My question is, what is dm supposed to return?
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Regards,
+MF
 
 _______________________________________________
 xfs mailing list
