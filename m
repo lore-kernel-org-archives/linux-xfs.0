@@ -1,28 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A4F7D7FEC
-	for <xfs@oss.sgi.com>; Fri,  8 Mar 2013 04:21:21 -0600 (CST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 010227FDA
+	for <xfs@oss.sgi.com>; Fri,  8 Mar 2013 05:39:16 -0600 (CST)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 859888F8033
-	for <xfs@oss.sgi.com>; Fri,  8 Mar 2013 02:21:21 -0800 (PST)
-Received: from mail-pa0-f44.google.com (mail-pa0-f44.google.com
-	[209.85.220.44]) by cuda.sgi.com with ESMTP id IeZ55i2wZQYVhTlU
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 08 Mar 2013 02:21:20 -0800 (PST)
-Received: by mail-pa0-f44.google.com with SMTP id kp1so1218753pab.3
-	for <xfs@oss.sgi.com>; Fri, 08 Mar 2013 02:21:20 -0800 (PST)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 80911AC003
+	for <xfs@oss.sgi.com>; Fri,  8 Mar 2013 03:39:12 -0800 (PST)
+Received: from fftw.org (216.119.142.145.static.a2webhosting.com
+	[216.119.142.145]) by cuda.sgi.com with ESMTP id
+	yFg3EeuKU3C8siQZ (version=TLSv1 cipher=AES128-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 08 Mar 2013 03:39:11 -0800 (PST)
+From: Matteo Frigo <athena@fftw.org>
+Subject: Re: [dm-devel] [BUG] pvmove corrupting XFS filesystems (was Re: [BUG]
+	Internal error xfs_dir2_data_reada_verify)
+References: <87d2vnc34r.fsf@fftw.org> <20130226044039.GM5551@dastard>
+	<20130227010414.GD1514@agk.fab.redhat.com>
+	<20130227014900.GY5551@dastard> <87y5eah4xz.fsf@fftw.org>
+	<87k3pjs908.fsf@fftw.org> <20130307223140.GU23616@dastard>
+	<87hakmpxac.fsf@fftw.org> <20130308015723.GA23616@dastard>
+Date: Fri, 08 Mar 2013 06:38:56 -0500
+In-Reply-To: <20130308015723.GA23616@dastard> (Dave Chinner's message of "Fri,
+	8 Mar 2013 12:57:23 +1100")
+Message-ID: <87ppza5df3.fsf@fftw.org>
 MIME-Version: 1.0
-In-Reply-To: <5134BBA4.3060305@sandeen.net>
-References: <CANU9nTnvJS50vdQv2K0gKHZPvzzH5EY1qpizJNsqUobrr2juDA@mail.gmail.com>
-	<512FA67D.2090708@sandeen.net>
-	<CANU9nTm3vR3Z5JwRwou4vnNejstAkAsnBb2ivwx-KhnHHbWpoQ@mail.gmail.com>
-	<5130DB54.9030503@sandeen.net>
-	<CANU9nTkekrw2mdptFdK2RVUFXD=evt0sTZhB9VL+PKY8DTj11A@mail.gmail.com>
-	<5134BBA4.3060305@sandeen.net>
-From: Ole Tange <tange@binf.ku.dk>
-Date: Fri, 8 Mar 2013 11:21:00 +0100
-Message-ID: <CANU9nTntXh5spRYc80OhsBqgLnZcJGA2qBeVVQaywthD1RMu4w@mail.gmail.com>
-Subject: Re: xfs_repair segfaults
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,37 +35,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: dm-devel@redhat.com, xfs@oss.sgi.com
 
-On Mon, Mar 4, 2013 at 4:20 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+Dave Chinner <david@fromorbit.com> writes:
 
-> 2) so you could run a "real" non-"n" xfs_repair on a metadata image as a more realistic dry run
+> Add the the patch below. If you still see errors, then they are real
+> IO errors from the block device.
 
-I have now done a 'xfs_repair' using the code in GIT. It failed, and I
-then did 'xfs_repair -L' which succeeded.
+This patch fixes the problem for me.
 
-Am I correct that I should now be able to mount the sparse disk-image
-file and see all the filenames? In that case I am quite worried. I get
-filenames like:
+The patch works both when dm-raid1 returns -EIO and when it returns
+-EWOULDBLOCK.
 
-/mnt/disk/??5?z+hEOgl/?7?Psr1?aIH<?ip:??/>S??+??z=ozK/8_0/???d)
-5JCG?eiBd?EVsNF'A?v?m?f;Fi6v)d>/?M%?A??J?)B<soGlc??QuY!e-<,6G?
-X[Df?Wm^[?f 4|
+Thanks for your help.
 
-My guess is some superblock is corrupt and that it should instead try
-a backup superblock. It might be useful if xfs_repair could do this
-automatically based on the rule of thumb that more than 90% of
-filenames/dirnames match:
-
-[- _.,=A-Za-z0-9':]* [([{]* [- _.,=A-Za-z0-9':]* []})]* [- _.,=A-Za-z0-9':]*
-
-If it finds a superblock resulting in more then 10% not matching the
-above it should probably ignore that superblock (unless the file names
-are using non-latin characters - such as Japanese).
-
-
-/Ole
+Cheers,
+Matteo
 
 _______________________________________________
 xfs mailing list
