@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id EFE647F6A
-	for <xfs@oss.sgi.com>; Sat,  9 Mar 2013 11:22:27 -0600 (CST)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B210630405F
-	for <xfs@oss.sgi.com>; Sat,  9 Mar 2013 09:22:24 -0800 (PST)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C48A47F6A
+	for <xfs@oss.sgi.com>; Sat,  9 Mar 2013 11:46:44 -0600 (CST)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 458CBAC001
+	for <xfs@oss.sgi.com>; Sat,  9 Mar 2013 09:46:41 -0800 (PST)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id ZgNAaVkmJQshnPFB for <xfs@oss.sgi.com>;
-	Sat, 09 Mar 2013 09:22:23 -0800 (PST)
-Message-ID: <513B6FCD.5080103@sandeen.net>
-Date: Sat, 09 Mar 2013 11:22:21 -0600
+	ESMTP id KkaOnjT3TtnovNHS for <xfs@oss.sgi.com>;
+	Sat, 09 Mar 2013 09:46:39 -0800 (PST)
+Message-ID: <513B757E.9070803@sandeen.net>
+Date: Sat, 09 Mar 2013 11:46:38 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: xfstests: 297: simple sparse copy testcase for btrfs
-References: <50F9C313.1000903@oracle.com>
-In-Reply-To: <50F9C313.1000903@oracle.com>
+Subject: Re: xfstests: 298: sparse copy of a directory tree on btrfs
+References: <50F9C31B.20203@oracle.com>
+In-Reply-To: <50F9C31B.20203@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,33 +33,45 @@ Cc: linux-btrfs <linux-btrfs@vger.kernel.org>, xfs@oss.sgi.com
 On 1/18/13 3:48 PM, Koen De Wit wrote:
 > Signed-off-by: Koen De Wit <koen.de.wit@oracle.com>
 
-Sorry for the late review.  Better late than never?
+same basic comments as for the previous test:
 
-cc'ing linux-btrfs - in general a good idea so btrfs experts
-can evaluate the test as well.
+need definition of _require_cp_reflink somewhere
+need to add test to groups file
+remove & recreate testdir to avoid collisions (or mktemp maybe?)
+use _filter_test_dir in md5sum output to get more context
+add test context to output file
+
+also, the patch wrapped when sending, FWIW.
+
+Oh, and thanks for writing these!
+
+-Eric
 
 > ---
-> 297     |   75 
+> 298     |   82 
 > +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
->   297.out |   10 ++++++++
->   2 files changed, 85 insertions(+), 0 deletions(-)
->   create mode 100644 297
->   create mode 100644 297.out
+>   298.out |   19 ++++++++++++++
+>   2 files changed, 101 insertions(+), 0 deletions(-)
+>   create mode 100644 298
+>   create mode 100644 298.out
 > 
-> diff --git a/297 b/297
+> diff --git a/298 b/298
 > new file mode 100644
-> index 0000000..0851b57
+> index 0000000..47ac55d
 > --- /dev/null
-> +++ b/297
-> @@ -0,0 +1,75 @@
+> +++ b/298
+> @@ -0,0 +1,82 @@
 > +#! /bin/bash
-> +# FS QA Test No. 297
+> +# FS QA Test No. 298
 > +#
-> +# Tests file clone functionality of btrfs ("reflinks"):
-> +#   - Reflink a file
-> +#   - Reflink the reflinked file
-> +#   - Modify the original file
-> +#   - Modify the reflinked file
+> +# Tests file clone functionality of btrfs ("reflinks") on directory trees.
+> +#   - Create directory and subdirectory, each having one file
+> +#   - Create 2 reflinked copies of the tree
+> +#   - Modify the original files
+> +#   - Modify one of the copies
+
+adding these as echos at the appropriate places adds context to the output file.
+
 > +#
 > +#-----------------------------------------------------------------------
 > +# Copyright (c) 2013, Oracle and/or its affiliates.  All Rights Reserved.
@@ -101,120 +113,65 @@ can evaluate the test as well.
 > +
 > +# real QA test starts here
 > +_supported_fs btrfs
-
-I wonder if it'd be nice to make the test generic, but test whether
-the filesystem supports reflinks, and bail if not.
-
 > +_supported_os Linux
 > +
 > +_require_cp_reflink
-
-where does _require_cp_reflink come from?
-
-Also, as for missing bits, need to add new tests to the group
-with each patch (I see you added them all in the last patch you sent).
-
 > +
 > +TESTDIR1=$TEST_DIR/test-$seq.$$
 > +mkdir $TESTDIR1
-
-This has some remote possibility of failure, right, if we happen
-to run across the same pid.
-
-How about:
-
-+TESTDIR1=$TEST_DIR/test-$seq
-+rm -rf TESTDIR1=$TEST_DIR/test-$seq
-+mkdir $TESTDIR1
-
 > +
 > +_catfiles() {
-> +    for F in original copy1 copy2
-> +    do
+> +    for F in original/file1 original/subdir/file2 \
+> +                 copy1/file1 copy1/subdir/file2 \
+> +                 copy2/file1 copy2/subdir/file2
+> +        do
 > +        md5sum $TESTDIR1/$F | $AWK_PROG 'END {print $1}'
-> +    done
+> +        done
 > +}
-
-Just a nitpick I guess but maybe _checksum_files would be more accurate.
-It'd also be nicer to provide more context in the output - what file
-is the checksum for?  What are we testing?
-
-So maybe:
-
-+_checksum_files() {
-+    for F in original copy1 copy2
-+    do
-+        md5sum $TESTDIR1/$F | _filter_test_dir
-+    done
-+}
-
-so then we'll have the filenames in the output.
-
-And then, putting echos in make both the test and the output more self-documenting:
-
-+echo "Create the original file filled with 0x61"
-> +$XFS_IO_PROG -f -c 'pwrite -S 0x61 0 9000' $TESTDIR1/original > /dev/null
-+echo "And make 2 reflink copies to it"
-> +cp --reflink $TESTDIR1/original $TESTDIR1/copy1
-> +cp --reflink $TESTDIR1/copy1 $TESTDIR1/copy2
-+# Ensure that they all have the same md5sums at this point
-+echo "Original md5sums:"
+> +
+> +mkdir $TESTDIR1/original
+> +mkdir $TESTDIR1/original/subdir
+> +$XFS_IO_PROG -f -c 'pwrite -S 0x61 0 9000' $TESTDIR1/original/file1 > /dev/null
+> +$XFS_IO_PROG -f -c 'pwrite -S 0x62 0 11000' $TESTDIR1/original/subdir/file2 > /dev/null
+> +cp --recursive --reflink $TESTDIR1/original $TESTDIR1/copy1
+> +cp --recursive --reflink $TESTDIR1/copy1 $TESTDIR1/copy2
 > +_catfiles
-+echo "Overwrite original file with 0x62"
-> +$XFS_IO_PROG -c 'pwrite -S 0x62 0 9000' $TESTDIR1/original > /dev/null
-+echo "md5sums after overwriting original"
+> +$XFS_IO_PROG -c 'pwrite -S 0x63 0 13000' $TESTDIR1/original/file1 > /dev/null
+> +$XFS_IO_PROG -c 'pwrite -S 0x64 5000 1000' 
+> $TESTDIR1/original/subdir/file2 > /dev/null
 > +_catfiles
-+echo "Overwrite copy1 with 0x63"
-> +$XFS_IO_PROG -c 'pwrite -S 0x63 0 9000' $TESTDIR1/copy1 > /dev/null
-+echo "md5sums after overwriting copy1:"
+> +$XFS_IO_PROG -c 'pwrite -S 0x65 0 9000' $TESTDIR1/copy1/file1 > /dev/null
+> +$XFS_IO_PROG -c 'pwrite -S 0x66 5000 25000' $TESTDIR1/copy1/subdir/file2 > /dev/null
 > +_catfiles
 > +
 > +# success, all done
 > +status=0
 > +exit
-
-Then the test output looks like:
-
-Create the original file filled with 0x61
-And make 2 reflink copies to it
-Original md5sums:
-42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-307/original
-42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-307/copy1
-42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-307/copy2
-Overwrite original file with 0x62
-md5sums after overwriting original:
-4a847a25439532bf48b68c9e9536ed5b  TEST_DIR/test-307/original
-42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-307/copy1
-42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-307/copy2
-Overwrite copy1 with 0x63
-md5sums after overwriting copy1:
-4a847a25439532bf48b68c9e9536ed5b  TEST_DIR/test-307/original
-e271cd47d9f62ebc96cb4e67ae4d16db  TEST_DIR/test-307/copy1
-42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-307/copy2
-
-so if anything goes wrong, we'll have more context in the output.
-
-What do you think?
-
-Thanks,
--Eric
-
-> diff --git a/297.out b/297.out
+> diff --git a/298.out b/298.out
 > new file mode 100644
-> index 0000000..39c498b
+> index 0000000..f8b6b70
 > --- /dev/null
-> +++ b/297.out
-> @@ -0,0 +1,10 @@
-> +QA output created by 297
+> +++ b/298.out
+> @@ -0,0 +1,19 @@
+> +QA output created by 298
 > +42d69d1a6d333a7ebdf64792a555e392
+> +ca390545f0aedb54b808d6128c56a7dd
 > +42d69d1a6d333a7ebdf64792a555e392
+> +ca390545f0aedb54b808d6128c56a7dd
 > +42d69d1a6d333a7ebdf64792a555e392
-> +4a847a25439532bf48b68c9e9536ed5b
+> +ca390545f0aedb54b808d6128c56a7dd
+> +260f6785c0537fd12582dcae28a3c1a9
+> +b8d91fb600f6f2191f2ba66665374860
 > +42d69d1a6d333a7ebdf64792a555e392
+> +ca390545f0aedb54b808d6128c56a7dd
 > +42d69d1a6d333a7ebdf64792a555e392
-> +4a847a25439532bf48b68c9e9536ed5b
-> +e271cd47d9f62ebc96cb4e67ae4d16db
+> +ca390545f0aedb54b808d6128c56a7dd
+> +260f6785c0537fd12582dcae28a3c1a9
+> +b8d91fb600f6f2191f2ba66665374860
+> +b20229a003e3985c4b0e6806abcd6642
+> +b815b24069db14e0a3a07169fd563e93
 > +42d69d1a6d333a7ebdf64792a555e392
+> +ca390545f0aedb54b808d6128c56a7dd
 > 
 
 _______________________________________________
