@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5C1BF7F37
-	for <xfs@oss.sgi.com>; Sat,  9 Mar 2013 09:00:58 -0600 (CST)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3C7AB8F8049
-	for <xfs@oss.sgi.com>; Sat,  9 Mar 2013 07:00:58 -0800 (PST)
+	by oss.sgi.com (Postfix) with ESMTP id 656217F6B
+	for <xfs@oss.sgi.com>; Sat,  9 Mar 2013 09:22:02 -0600 (CST)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 44E778F8035
+	for <xfs@oss.sgi.com>; Sat,  9 Mar 2013 07:21:59 -0800 (PST)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 93p7rk4ftzmxP0Hg for <xfs@oss.sgi.com>;
-	Sat, 09 Mar 2013 07:00:57 -0800 (PST)
-Message-ID: <513B4EA7.4060908@sandeen.net>
-Date: Sat, 09 Mar 2013 09:00:55 -0600
+	ESMTP id 2RpkbLhkUe90etLV for <xfs@oss.sgi.com>;
+	Sat, 09 Mar 2013 07:21:58 -0800 (PST)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 288A363C3D47
+	for <xfs@oss.sgi.com>; Sat,  9 Mar 2013 09:21:58 -0600 (CST)
+Message-ID: <513B5393.4000203@sandeen.net>
+Date: Sat, 09 Mar 2013 09:21:55 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH V2] xfs_repair: skip freelist scan of corrupt agf in
-	no-modify mode
-References: <51313DE8.5080104@sandeen.net> <51326DC0.8030403@sandeen.net>
-	<513A4A9B.3050802@sgi.com>
-In-Reply-To: <513A4A9B.3050802@sgi.com>
+Subject: [PATCH] xfsprogs: skip freelist scans of corrupt agf
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,64 +26,89 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Rich Johnston <rjohnston@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>, Ole Tange <tange@binf.ku.dk>
+To: xfs-oss <xfs@oss.sgi.com>
 
-On 3/8/13 2:31 PM, Rich Johnston wrote:
-> This version looks good. ;)
+If an agf has bad values in the freelist, this can wreak
+havoc if, for example, first > last and the loop
+never exits; we index agfl->agfl_bno[i] off into the weeds.
 
-Actually it's not quite:
+If they're off, warn about it and skip the scan.
 
-scan.c: In function =91scan_freelist=92:
-scan.c:1074: warning: =91i=92 may be used uninitialized in this function
+Thisis done both in xfs_check and xfs_db's freespace cmd.
 
-I don't know what's wrong with my brain these days.  :/
+Also fix uninit'd variable "i" from previous, similar fix
+for xfs_repair.
 
-I will send a patch to fix that along w/ the other scan_freelists shortly.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-Sorry :/
 
--Eric
-
-> Reviewed-by: Rich Johnston <rjohnston@sgi.com>
-> =
-
-> This has been committed.
-> =
-
-> commit 7e8e3cce00f38ee1533df0e7bda6bcb584b03e96
-> Author: Eric Sandeen <sandeen@sandeen.net>
-> Date:   Sat Mar 2 21:23:12 2013 +0000
-> =
-
->     xfsprogs: xfs_repair skip freelist scan of corrupt agf in no-modify m=
-ode
-> =
-
->     In xfs_repair's no-modify mode (-n), verify_set_agf doesn't fix up
->     bad freelist blocks that it finds.  When we get to scan_freelist,
->     this can wreak havoc if, for example, first > last and the loop
->     never exits; we index agfl->agfl_bno[i] off into the weeds.
-> =
-
->     To fix this, re-check the values in no-modify mode, and if
->     they're off, warn about it and skip the scan.
-> =
-
-> =
-
-> =
-
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> =
-
+diff --git a/db/check.c b/db/check.c
+index e601e0a..35325b7 100644
+--- a/db/check.c
++++ b/db/check.c
+@@ -4112,6 +4112,16 @@ scan_freelist(
+ 		return;
+ 	}
+ 	i = be32_to_cpu(agf->agf_flfirst);
++
++	/* verify agf values before proceeding */
++	if (be32_to_cpu(agf->agf_flfirst) >= XFS_AGFL_SIZE(mp) ||
++	    be32_to_cpu(agf->agf_fllast) >= XFS_AGFL_SIZE(mp)) {
++		dbprintf(_("agf %d freelist blocks bad, skipping "
++			  "freelist scan\n"), i);
++		pop_cur();
++		return;
++	}
++
+ 	count = 0;
+ 	for (;;) {
+ 		bno = be32_to_cpu(agfl->agfl_bno[i]);
+diff --git a/db/freesp.c b/db/freesp.c
+index c4dabad..472b1f7 100644
+--- a/db/freesp.c
++++ b/db/freesp.c
+@@ -239,6 +239,16 @@ scan_freelist(
+ 				XFS_FSS_TO_BB(mp, 1), DB_RING_IGN, NULL);
+ 	agfl = iocur_top->data;
+ 	i = be32_to_cpu(agf->agf_flfirst);
++
++	/* verify agf values before proceeding */
++	if (be32_to_cpu(agf->agf_flfirst) >= XFS_AGFL_SIZE(mp) ||
++	    be32_to_cpu(agf->agf_fllast) >= XFS_AGFL_SIZE(mp)) {
++		dbprintf(_("agf %d freelist blocks bad, skipping "
++			  "freelist scan\n"), i);
++		pop_cur();
++		return;
++	}
++
+ 	for (;;) {
+ 		bno = be32_to_cpu(agfl->agfl_bno[i]);
+ 		addtohist(seqno, bno, 1);
+diff --git a/repair/scan.c b/repair/scan.c
+index 1d39bdc..6a62dff 100644
+--- a/repair/scan.c
++++ b/repair/scan.c
+@@ -1066,6 +1066,7 @@ scan_freelist(
+ 		return;
+ 	}
+ 	agfl = XFS_BUF_TO_AGFL(agflbuf);
++	i = be32_to_cpu(agf->agf_flfirst);
+ 
+ 	if (no_modify) {
+ 		/* agf values not fixed in verify_set_agf, so recheck */
+@@ -1078,7 +1079,6 @@ scan_freelist(
+ 	} else /* should have been fixed in verify_set_agf() */
+ 		ASSERT(0);
+ 
+-	i = be32_to_cpu(agf->agf_flfirst);
+ 	count = 0;
+ 	for (;;) {
+ 		bno = be32_to_cpu(agfl->agfl_bno[i]);
 
 _______________________________________________
 xfs mailing list
