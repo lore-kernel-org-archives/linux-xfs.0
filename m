@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 40A3F7F4C
-	for <xfs@oss.sgi.com>; Sun, 10 Mar 2013 20:55:49 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id DB8267F4C
+	for <xfs@oss.sgi.com>; Sun, 10 Mar 2013 21:00:33 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2F56A304039
-	for <xfs@oss.sgi.com>; Sun, 10 Mar 2013 18:55:46 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C21958F8050
+	for <xfs@oss.sgi.com>; Sun, 10 Mar 2013 19:00:33 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	ZXiB1JeqiaoqbjKS for <xfs@oss.sgi.com>;
-	Sun, 10 Mar 2013 18:55:44 -0700 (PDT)
-Date: Mon, 11 Mar 2013 12:55:42 +1100
+	ibuGVsZXNarVfx7g for <xfs@oss.sgi.com>;
+	Sun, 10 Mar 2013 19:00:32 -0700 (PDT)
+Date: Mon, 11 Mar 2013 13:00:30 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Maximum file system size of XFS?
-Message-ID: <20130311015542.GA21651@dastard>
-References: <20130309215121.0e614ef8@thinky> <513BB7C3.4050009@redhat.com>
-	<20130309233940.3b7c0910@thinky>
+Subject: Re: [PATCH] xfs: ensure we capture IO errors correctly
+Message-ID: <20130311020030.GB21651@dastard>
+References: <1362708074-14987-1-git-send-email-david@fromorbit.com>
+	<1407262.RNsTtTSyZy@xrated>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130309233940.3b7c0910@thinky>
+In-Reply-To: <1407262.RNsTtTSyZy@xrated>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,16 +30,15 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Pascal <pa5ca1@gmx.de>
+To: Hans-Peter Jansen <hpj@urpla.net>
 Cc: xfs@oss.sgi.com
 
-On Sat, Mar 09, 2013 at 11:39:40PM +0100, Pascal wrote:
-> thank you for your answer. I am aware that there is a difference
-> between the maximum size under practical conditions and the theoretical
-> maximum. But I am looking for this theoretical number to use in within
-> in my thesis comparing file systems.
+On Fri, Mar 08, 2013 at 02:06:52PM +0100, Hans-Peter Jansen wrote:
+> Hi, 
+> 
+> this sounds like stable material after a little simmering..
 
-Out of curiousity, what apsect of file systems are you comparing?
+Yes, it probably is a candidate for 3.8.x
 
 Cheers,
 
