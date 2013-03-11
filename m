@@ -1,21 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 60D027F37
-	for <xfs@oss.sgi.com>; Mon, 11 Mar 2013 16:45:47 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4E88C8F8040
-	for <xfs@oss.sgi.com>; Mon, 11 Mar 2013 14:45:44 -0700 (PDT)
-Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by
-	cuda.sgi.com with ESMTP id 5QanBbY79Sxs1vOW for
-	<xfs@oss.sgi.com>; Mon, 11 Mar 2013 14:45:42 -0700 (PDT)
-From: Martin Steigerwald <Martin@lichtvoll.de>
-Subject: Re: Maximum file system size of XFS?
-Date: Mon, 11 Mar 2013 22:45:40 +0100
-References: <20130309215121.0e614ef8@thinky>
-	(sfid-20130310_104346_965248_A63DAA41)
-In-Reply-To: <20130309215121.0e614ef8@thinky>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C88C07F3F
+	for <xfs@oss.sgi.com>; Mon, 11 Mar 2013 16:48:05 -0500 (CDT)
+Message-ID: <513E5113.60508@sgi.com>
+Date: Mon, 11 Mar 2013 16:48:03 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Message-Id: <201303112245.40522.Martin@lichtvoll.de>
+Subject: Re: Fwd: xfs_reno
+References: <20351675.Zy117sIl8Z@xrated>
+In-Reply-To: <20351675.Zy117sIl8Z@xrated>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,129 +17,67 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Pascal <pa5ca1@gmx.de>
+To: Hans-Peter Jansen <hpj@urpla.net>
+Cc: xfs@oss.sgi.com
 
-Am Samstag, 9. M=E4rz 2013 schrieb Pascal:
-> Hello,
-
-Hi Pascal,
-
-> I am asking you because I am insecure about the correct answer and
-> different sources give me different numbers.
-> =
-
-> =
-
-> My question is: What is the maximum file system size of XFS?
-> =
-
-> The official page says: 2^63 =3D 9 x 10^18 =3D 9 exabytes
-> Source: http://oss.sgi.com/projects/xfs/
-> =
-
-> Wikipedia says 16 exabytes.
-> Source: https://en.wikipedia.org/wiki/XFS
-> =
-
-> Another reference books says 8 exabytes (2^63).
-> =
-
-> =
-
-> Can anyone tell me and explain what is the maximum file system size for
-> XFS?
-
-You can test it. The theoretical limit. Whether such a filesystem will work =
-
-nicely with a real workload is, as pointed out, a different question.
-
-1) Use a big enough XFS filesystem (yes, it has to be XFS for anything else =
-
-that can carry a exabyte big sparse file)
-
-merkaba:~> LANG=3DC mkfs.xfs -L justcrazy /dev/merkaba/zeit
-meta-data=3D/dev/merkaba/zeit      isize=3D256    agcount=3D4, agsize=3D131=
-0720 blks
-         =3D                       sectsz=3D512   attr=3D2, projid32bit=3D0
-data     =3D                       bsize=3D4096   blocks=3D5242880, imaxpct=
-=3D25
-         =3D                       sunit=3D0      swidth=3D0 blks
-naming   =3Dversion 2              bsize=3D4096   ascii-ci=3D0
-log      =3Dinternal log           bsize=3D4096   blocks=3D2560, version=3D2
-         =3D                       sectsz=3D512   sunit=3D0 blks, lazy-coun=
-t=3D1
-realtime =3Dnone                   extsz=3D4096   blocks=3D0, rtextents=3D0
-
-
-2) Create a insanely big sparse file
-
-merkaba:~> truncate -s1E /mnt/zeit/evenmorecrazy.img
-merkaba:~> ls -lh /mnt/zeit/evenmorecrazy.img
--rw-r--r-- 1 root root 1,0E M=E4r 11 22:37 /mnt/zeit/evenmorecrazy.img
-
-(No, this won=B4t work with Ext4.)
-
-
-3) Make a XFS file system into it:
-
-merkaba:~> mkfs.xfs -L /mnt/zeit/evenmorecrazy.img
-
-I won=B4t today. I tried that for gag during a linux performance and analys=
-is =
-
-training I held on a ThinkPad T520 with Sandybridge i5 2,50 GhZ, Intel SSD =
-
-320 on an about 20 GiB XFS filesystem.
-
-The mkfs command run for something like one or two hours. It was using quit=
-e =
-
-some CPU and quite some SSD, but did not max out one of it.
-
-The host XFS filesystem was almost full, so the image took just about those =
-
-20 GiB.
-
-
-4) Mount it and enjoy the output of df -hT.
-
-
-5) Write to if it you dare. I did it, until the Linux kernel told something =
-
-about "lost buffer writes". What I found strange is, that the dd writing to =
-
-the 1E filesystem did not quit then with input/output error. It just ran on.
-
-
-I didn=B4t test this with any larger size, but if size and time usage scale=
-s =
-
-linearily it might be possible to create a 10EiB filesystem within 200 GiB =
-
-host XFS and hum about a day of waiting :).
-
-No, I do not suggest to use anything even just remotely like this in =
-
-production.
-
-And no, my test didn=B4t show that an 1EiB filesystem will work nicely with =
-
-any real life workload.
-
-Am I crazy for trying this? I might be :)
-
-Thanks,
--- =
-
-Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
-GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gMDMvMDYvMTMgMDg6NTUsIEhhbnMtUGV0ZXIgSmFuc2VuIHdyb3RlOgo+IEhpIERhdmUsCj4K
+PiBJIHRyaWVkIHRvIGdhdGhlciBCYXJyeXMgU09CLCBidXQgZmFpbGVkIHNvIGZhci4gSGlzIHRy
+YWNlIGVuZHMgaW4gMjAwOSBnb29nbGUKPiB3aXNlLgo+Cj4gSG93IGlzIHRoaXMgY2FzZSB1c3Vh
+bGx5IGhhbmRsZWQ/Cj4KPiBIZXJlJ3MgdGhlIGN1cnJlbnQgc3RhdGUgb2YgdGhpbmdzLgo+Cj4g
+Q2hlZXJzLAo+IFBldGUKPgo+Cj4gLS0tLS0tLS0tLSAgV2VpdGVyZ2VsZWl0ZXRlIE5hY2hyaWNo
+dCAgLS0tLS0tLS0tLQo+Cj4gQmV0cmVmZjogeGZzX3Jlbm8KPiBEYXR1bTogTWl0dHdvY2gsIDYu
+IE3DpHJ6IDIwMTMsIDEyOjUyOjE5Cj4gVm9uOiBIYW5zLVBldGVyIEphbnNlbjxocGpAdXJwbGEu
+bmV0Pgo+IEFuOiBibmF1am9rQHNnaS5jb20KPgo+IEhpIEJhcnJ5LAo+Cj4gYXR0YWNoZWQgaXMg
+YSBzbGlnaHRseSBtYW5nbGVkIHZlcnNpb24gb2YgeW91ciB4ZnNfcmVubyB0b29sLCB0aGF0IEkg
+YmFkbHkKPiBuZWVkZWQgcmVjZW50bHkuIFdoaWxlIGF0IGl0LCBJIHBsYW4gdG8gc3VibWl0IGl0
+LCBhcyBpdCBzYXZlZCBteSAqc3MuIFRoYW5rcy4KPgo+IEFwYXJ0IGZyb20gcmVsb2NhdGlvbiB0
+byB4ZnNwcm9ncywgSSBqdXN0IGNoYW5nZWQgdGhpcwo+Cj4gKyAgICAgICBsb2dfbWVzc2FnZShM
+T0dfREVCVUcsICIlczogJWxsdSAlbHUgJXMiLCBtc2csIG5vZGUtPmlubywKPiArICAgICAgICAg
+ICAgICAgICAgICAgICBub2RlLT5udW1wYXRocywgbm9kZS0+cGF0aHNbMF0pOwo+Cj4gZnJvbSAl
+bGx1IHRvICVsdSBmb3IgdGhlIG5vZGUtPm51bXBhdGhzIGFyZ3VtZW50LiBJdCBtaWdodCBzdGls
+bCBiZSB3cm9uZywgYXMKPiBudW1wYXRoIGlzIGRlZmluZWQgYXMgbmxpbmtfdCB3aGljaCBpcyBh
+IF9fdTMyIHR5cGUsIGJ1dCB0aGUgJXMgcHJpbnRlZAo+IGdhcmJhZ2UgbGlrZSB0aGlzOgo+Cj4g
+U2Nhbm5pbmcgZGlyZWN0b3J5IHRyZWUuLi4KPiB4ZnNfcmVubzogYWRkX25vZGVfcGF0aDogaW5v
+IDg2MTExNjMyMzUsIHBhdGgKPiAvd29yay9kbGJhc2UvaG9zdHMvMTEuMi9waWNvL3Zhci9ydW4v
+c2NyZWVucwo+IHhmc19yZW5vOiBhZGRfbm9kZV9wYXRoOiBpbm8gODYxMTE2MzIzMywgcGF0aAo+
+IC93b3JrL2RsYmFzZS9ob3N0cy8xMS4yL3BpY28vdmFyL3J1bi9wY3NjZC9wY3NjZC5ldmVudHMK
+PiB4ZnNfcmVubzogYWRkX25vZGVfcGF0aDogaW5vIDg2MTExNjMyMzQsIHBhdGgKPiAvd29yay9k
+bGJhc2UvaG9zdHMvMTEuMi9waWNvL3Zhci9ydW4vdXNjcmVlbnMKPiB4ZnNfcmVubzogbm9kZWhh
+c2g6IDg2MTExNjMyMzMgNjkyNDg4MTU5OTMzNDk3MzQ1IO+/ve+/vV3vv73vv71m77+9Ze+/vQo+
+IHhmc19yZW5vOiBub2RlaGFzaDogODYxMTE2MzIzNCA2OTIzNjY4MDEzMzc1ODE1Njkg77+977+9
+Xe+/ve+/vWbvv71l77+9Cj4geGZzX3Jlbm86IG5vZGVoYXNoOiA4NjExMTYzMjM1IDY5MjIyMzgz
+MDQ2NjIzMjMyMSDvv73vv71d77+977+9Zu+/vWXvv70KPgo+IEkgZ3Vlc3MsIGdjYyBpcyBzbWFy
+dCBlbm91Z2ggdG8gc2VlLCB0aGF0IHRoZSBzdHJ1Y3QgbWVtYmVycyBvdmVybGFwIGhlcmUsIGFu
+ZAo+IHByaW50cyB0aGUgcGF0aHNbMF0gYXJndW1lbnQgYXMgYSAlbGx1IHZhbHVlLiBXaGF0IGRv
+IHlvdSB0aGluaz8KPgo+IEFueXdheSwgSSB3aWxsIHJldmlzZSB0aGlzIGR1cmluZyB0aGUgY291
+cnNlIG9mIGNyZWF0aW5nIGEgeGxzdGVzdHMgdGVzdCBmb3IKPiB4ZnNfcmVuby4uLgo+Cj4gRG8g
+eW91IGFsbG93IG1lIHRvIGFkZCB5b3VyIFNpZ25lZC1vZmYtYnkgdG8gdGhpcyBwYXRjaD8KPgo+
+IElmIHlvdSB3YW50IHRvIGJ1aWxkIHRoaXMsIGFwcGx5IGJvdGggcGF0Y2hlcyB0byB4ZnNwcm9n
+cy4KPgo+IFRJQSwKPiBQZXRlCj4KCgpIYXZlIHlvdSBiZWVuIGdldHRpbmcgIk91dCBvZiBtZW1v
+cnkiIHdhcm5pbmdzIG9uIHlvdXIgcnVucz8gSSBhbS4KCkNvbXBpbGluZywgSSBnZXQgdGhlIHdh
+cm5pbmdzIGFib3V0IGhhdmluZyAiXHIiIGluIHRoZSBzdHJpbmdzLiBGb3IgZXhhbXBsZToKCnJl
+bm8veGZzX3Jlbm8uYzoxNDE1OiBpbnRlcm5hdGlvbmFsaXplZCBtZXNzYWdlcyBzaG91bGQgbm90
+IGNvbnRhaW4gdGhlIApgXHInIGVzY2FwZSBzZXF1ZW5jZQogICAgICAgICAgICAgICAgICAgICAt
+LS0tLS0tLS0tCkkgd29uZGVyIGlmIHdlIHNob3VsZCBhZGQgYSB0ZW1wIGRpcmVjdG9yeSBvcHRp
+b24uIEl0IHNlZW1zIHRvIHdhbnQgdG8gCnVzZSB0aGUgcGFyZW50IGRpcmVjdG9yeSBvZiB0aGUg
+ZGlyZWN0b3J5IGFzIGEgdGVtcG9yYXJ5LiBCZWxvdyBpcyB0aGUgCnJlc3VsdCBvZiBydW5uaW5n
+IHhmc19yZW5vIG9uIHRoZSB0YXJnZXQgZGlyZWN0b3J5IGlzICIvbW50L3h4eCAKKGNoYW5naW5n
+IHRoZSBcciB0byA8Xk0+XG4gZm9yIHRoZSBlbWFpbCk6Cgp4ZnNfcmVubzogZGlyZWN0b3J5OiAx
+MjggMSAvbW48Xk0+Cnhmc19yZW5vOiAvbW50L3hmc19yZW5vX2VwZGFKYzogQ2FubmV0IHNldCB0
+YXJnZXQgZXh0ZW5kZWQgYXR0cmlidXRlczxeTT4KeGZzX3Jlbm86IGZhaWxlZCB0byByZW5hbWU6
+ICcvbW50L3h4eC9vcmlnaW4nIHRvIAonL21udC94ZnNfcmVub19OWFFMV0kvb3JpZ2luJwo8Xk0+
+Cnhmc19yZW5vOiB1bmFibGUgdG8gbW92ZSBkaXJlY3RvcnkgY29udGVudHM6IC9tbnQveHh4IHRv
+IAovbW50L3hmc19yZW5vX05YUUxXSQo8Xk0+Cnhmc19yZW5vOiBDYW5ub3Qgc3RhdCAvbW50L3hm
+c19yZW5vX2VwZGFKYzogSW5hcHByb3ByaWF0ZSBpb2N0bCBmb3IgZGV2aWNlCgo8Xk0+Cnhmc19y
+ZW5vOiB1bmFibGUgdG8gZHVwbGljYXRlIGRpcmVjdG9yeSBhdHRyaWJ1dGVzOiAvbW50L3hmc19y
+ZW5vX2VwZGFKYwp0L3h4eAogICAgICAgICAgICAgICAgICAgICAtLS0tLS0KL21udCBpcyBub3Qg
+YW4gWEZTIGZpbGVzeXN0ZW0uIFdoZW4gbW91bnRpbmcgb24gdGhlIHJvb3QsIHNheSAvbW50LCB0
+aGUgCm1lc3NhZ2UgbG9vayBsaWtlOgoKeGZzX3Jlbm86IENhbm5vdCBzdGF0IC8veGZzX3Jlbm9f
+ZXBkYUpjOiBJbmFwcHJvcHJpYXRlIGlvY3RsIGZvciBkZXZpY2UKClRoYW5rLXlvdSwKCi0tTWFy
+ayBUaW5ndWVseS4KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9t
+YWlsbWFuL2xpc3RpbmZvL3hmcwo=
