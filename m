@@ -1,14 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 085917F3F
-	for <xfs@oss.sgi.com>; Mon, 11 Mar 2013 07:16:41 -0500 (CDT)
-Message-ID: <513DCB25.6000701@sgi.com>
-Date: Mon, 11 Mar 2013 07:16:37 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 196397F3F
+	for <xfs@oss.sgi.com>; Mon, 11 Mar 2013 07:20:19 -0500 (CDT)
+Message-ID: <513DCC13.6050800@sgi.com>
+Date: Mon, 11 Mar 2013 07:20:35 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfsprogs: skip freelist scans of corrupt agf
-References: <513B5393.4000203@sandeen.net>
-In-Reply-To: <513B5393.4000203@sandeen.net>
+Subject: Re: [PATCH V2] xfs_repair: skip freelist scan of corrupt agf in
+	no-modify mode
+References: <51313DE8.5080104@sandeen.net> <51326DC0.8030403@sandeen.net>
+	<513A4A9B.3050802@sgi.com> <20130309090041.GG23616@dastard>
+In-Reply-To: <20130309090041.GG23616@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,34 +23,33 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs-oss <xfs@oss.sgi.com>, Eric Sandeen <sandeen@sandeen.net>, Ole Tange <tange@binf.ku.dk>
 
-This has been commited.
+On 03/09/2013 03:00 AM, Dave Chinner wrote:
+> On Fri, Mar 08, 2013 at 02:31:23PM -0600, Rich Johnston wrote:
+>> This version looks good. ;)
+>>
+>> Reviewed-by: Rich Johnston <rjohnston@sgi.com>
+>>
+>> This has been committed.
+>
+> Except that all review comments have not been addressed. i.e there
+> are two places that have the same bug and they haven't been fixed.
+>
+> It's great that you want to commit quickly, but commits should not
+> happen while there are unaddressed issues still outstanding....
 
-Thanks
---Rich
+Sorry Dave I misunderstood your comments.  I took them to mean you were 
+going to make those changes with your CRC patch. I will make sure to 
+clarify before committing.
 
-commit a529cc7f0e5bd1632e5169d015c54e3a6122ee0f
-Author: Eric Sandeen <sandeen@sandeen.net>
-Date:   Sat Mar 9 15:21:55 2013 +0000
+>
+> Cheers,
+>
+> Dave.
+>
 
-     xfsprogs: skip freelist scans of corrupt agf
-
-     If an agf has bad values in the freelist, this can wreak
-     havoc if, for example, first > last and the loop
-     never exits; we index agfl->agfl_bno[i] off into the weeds.
-
-     If they're off, warn about it and skip the scan.
-
-     This is done both in xfs_check and xfs_db's freespace cmd.
-
-     Also fix uninit'd variable "i" from previous, similar fix
-     for xfs_repair.
-
-     Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-     Reviewed-by: Dave Chinner <dchinner@redhat.com>
-     Signed-off-by: Rich Johnston <rjohnston@sgi.com>
 
 _______________________________________________
 xfs mailing list
