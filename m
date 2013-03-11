@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5A1357F37
-	for <xfs@oss.sgi.com>; Mon, 11 Mar 2013 16:57:03 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 42761304067
-	for <xfs@oss.sgi.com>; Mon, 11 Mar 2013 14:57:03 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 3F3C77F3F
+	for <xfs@oss.sgi.com>; Mon, 11 Mar 2013 17:01:57 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1DD19304059
+	for <xfs@oss.sgi.com>; Mon, 11 Mar 2013 15:01:53 -0700 (PDT)
 Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by
-	cuda.sgi.com with ESMTP id 1JDoX88LZJsGtXKM for
-	<xfs@oss.sgi.com>; Mon, 11 Mar 2013 14:57:02 -0700 (PDT)
+	cuda.sgi.com with ESMTP id uQpRxHOyyH2BtdVv for
+	<xfs@oss.sgi.com>; Mon, 11 Mar 2013 15:01:52 -0700 (PDT)
 From: Martin Steigerwald <Martin@lichtvoll.de>
 Subject: Re: Maximum file system size of XFS?
-Date: Mon, 11 Mar 2013 22:57:00 +0100
+Date: Mon, 11 Mar 2013 23:01:51 +0100
 References: <20130309215121.0e614ef8@thinky>
 	<201303112245.40522.Martin@lichtvoll.de>
-	(sfid-20130311_224628_172977_9582C9EE)
-In-Reply-To: <201303112245.40522.Martin@lichtvoll.de>
+	<201303112257.00798.Martin@lichtvoll.de>
+	(sfid-20130311_225800_849624_DAB614D4)
+In-Reply-To: <201303112257.00798.Martin@lichtvoll.de>
 MIME-Version: 1.0
-Message-Id: <201303112257.00798.Martin@lichtvoll.de>
+Message-Id: <201303112301.51715.Martin@lichtvoll.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,144 +26,76 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Pascal <pa5ca1@gmx.de>
 
-Am Montag, 11. M=E4rz 2013 schrieb Martin Steigerwald:
-> 2) Create a insanely big sparse file
-> =
-
-> merkaba:~> truncate -s1E /mnt/zeit/evenmorecrazy.img
-> merkaba:~> ls -lh /mnt/zeit/evenmorecrazy.img
-> -rw-r--r-- 1 root root 1,0E M=E4r 11 22:37 /mnt/zeit/evenmorecrazy.img
-> =
-
-> (No, this won=B4t work with Ext4.)
-
-Okay, you can=B4t go beyond 8 EiB for a single file which is about what I h=
-ave =
-
-read somewhere:
-
-merkaba:/mnt/zeit> ls -lh
-insgesamt 0
--rw-r--r-- 1 root root 1,0E M=E4r 11 22:37 evenmorecrazy.img
-merkaba:/mnt/zeit> truncate -s2E /mnt/zeit/evenmorecrazy.img
-merkaba:/mnt/zeit> truncate -s3E /mnt/zeit/evenmorecrazy.img
-merkaba:/mnt/zeit> truncate -s4E /mnt/zeit/evenmorecrazy.img
-merkaba:/mnt/zeit> truncate -s5E /mnt/zeit/evenmorecrazy.img
-merkaba:/mnt/zeit> truncate -s6E /mnt/zeit/evenmorecrazy.img
-merkaba:/mnt/zeit> truncate -s7E /mnt/zeit/evenmorecrazy.img
-merkaba:/mnt/zeit> LANG=3DC truncate -s8E /mnt/zeit/evenmorecrazy.img
-truncate: invalid number '8E': Value too large for defined data type
-merkaba:/mnt/zeit#1> ls -lh  =
-
-insgesamt 0
--rw-r--r-- 1 root root 7,0E M=E4r 11 22:49 evenmorecrazy.img
-
-So so tests stops there, until you concatenate two of those files with LVM =
-
-or SoftRAID 0 (if that works). Like this (I just had to try it):
-
-
-merkaba:/mnt/zeit> ls -lh                                           =
-
-insgesamt 0
--rw-r--r-- 1 root root 7,0E M=E4r 11 22:49 evenmorecrazy.img
--rw-r--r-- 1 root root 7,0E M=E4r 11 22:52 evenmorecrazy.img2
-merkaba:/mnt/zeit> losetup /dev/loop0 evenmorecrazy.img
-merkaba:/mnt/zeit> losetup /dev/loop1 evenmorecrazy.img2
-
-merkaba:/mnt/zeit#5> pvcreate /dev/loop0       =
-
-  Physical volume "/dev/loop0" successfully created
-merkaba:/mnt/zeit> pvcreate /dev/loop1
-  Physical volume "/dev/loop1" successfully created
-merkaba:/mnt/zeit> vgcreate justinsane /dev/loop0 /dev/loop1
-  PV /dev/loop0 too large for extent size 4,00 MiB.
-  Format-specific setup of physical volume '/dev/loop0' failed.
-  Unable to add physical volume '/dev/loop0' to volume group 'justinsane'.
-
-
-merkaba:/mnt/zeit#5> vgcreate --physicalextentsize 16M  justinsane =
-
-/dev/loop0 /dev/loop1
-  PV /dev/loop0 too large for extent size 16,00 MiB.
-  Format-specific setup of physical volume '/dev/loop0' failed.
-  Unable to add physical volume '/dev/loop0' to volume group 'justinsane'.
-
-merkaba:/mnt/zeit#5> vgcreate --physicalextentsize 128M  justinsane =
-
-/dev/loop0 /dev/loop1
-  PV /dev/loop0 too large for extent size 128,00 MiB.
-  Format-specific setup of physical volume '/dev/loop0' failed.
-  Unable to add physical volume '/dev/loop0' to volume group 'justinsane'.
-
-merkaba:/mnt/zeit#5> vgcreate --physicalextentsize 1G  justinsane /dev/loop=
-0 =
-
-/dev/loop1
-  PV /dev/loop0 too large for extent size 1,00 GiB.
-  Format-specific setup of physical volume '/dev/loop0' failed.
-  Unable to add physical volume '/dev/loop0' to volume group 'justinsane'.
-
-merkaba:/mnt/zeit#5> vgcreate --physicalextentsize 4G  justinsane /dev/loop=
-0 =
-
-/dev/loop1
-  Volume group "justinsane" successfully created
-
-merkaba:/mnt/zeit> vgs                                                     =
-          =
-
-  VG         #PV #LV #SN Attr   VSize   VFree =
-
-  justinsane   2   0   0 wz--n-  14,00e 14,00e
-  merkaba      1   4   0 wz--n- 278,99g  4,85g
-merkaba:/mnt/zeit>
-
-merkaba:/mnt/zeit> vgdisplay justinsane
-  --- Volume group ---
-  VG Name               justinsane
-  System ID             =
-
-  Format                lvm2
-  Metadata Areas        2
-  Metadata Sequence No  1
-  VG Access             read/write
-  VG Status             resizable
-  MAX LV                0
-  Cur LV                0
-  Open LV               0
-  Max PV                0
-  Cur PV                2
-  Act PV                2
-  VG Size               14,00 EiB
-  PE Size               4,00 GiB
-  Total PE              3758096382
-  Alloc PE / Size       0 / 0   =
-
-  Free  PE / Size       3758096382 / 14,00 EiB
-  VG UUID               z8JP5s-lfRw-uKo8-DXAP-XWGe-aKra-xug9Nn
-
-
-Enough insanity for today :)
-
-I won=B4t mkfs.xfs on it, the 20 GiB of the just filesystem wouldn=B4t be =
-
-enough.
-
-Thanks,
--- =
-
-Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
-GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+QW0gTW9udGFnLCAxMS4gTcOkcnogMjAxMyBzY2hyaWViIE1hcnRpbiBTdGVpZ2Vyd2FsZDoKPiBB
+bSBNb250YWcsIDExLiBNw6RyeiAyMDEzIHNjaHJpZWIgTWFydGluIFN0ZWlnZXJ3YWxkOgo+ID4g
+MikgQ3JlYXRlIGEgaW5zYW5lbHkgYmlnIHNwYXJzZSBmaWxlCj4gPiAKPiA+IG1lcmthYmE6fj4g
+dHJ1bmNhdGUgLXMxRSAvbW50L3plaXQvZXZlbm1vcmVjcmF6eS5pbWcKPiA+IG1lcmthYmE6fj4g
+bHMgLWxoIC9tbnQvemVpdC9ldmVubW9yZWNyYXp5LmltZwo+ID4gLXJ3LXItLXItLSAxIHJvb3Qg
+cm9vdCAxLDBFIE3DpHIgMTEgMjI6MzcgL21udC96ZWl0L2V2ZW5tb3JlY3JhenkuaW1nCj4gPiAK
+PiA+IChObywgdGhpcyB3b27CtHQgd29yayB3aXRoIEV4dDQuKQo+IAo+IE9rYXksIHlvdSBjYW7C
+tHQgZ28gYmV5b25kIDggRWlCIGZvciBhIHNpbmdsZSBmaWxlIHdoaWNoIGlzIGFib3V0IHdoYXQg
+SQo+IGhhdmUgcmVhZCBzb21ld2hlcmU6ClvigKZdCj4gbWVya2FiYTovbW50L3plaXQ+IHRydW5j
+YXRlIC1zN0UgL21udC96ZWl0L2V2ZW5tb3JlY3JhenkuaW1nCj4gbWVya2FiYTovbW50L3plaXQ+
+IExBTkc9QyB0cnVuY2F0ZSAtczhFIC9tbnQvemVpdC9ldmVubW9yZWNyYXp5LmltZwo+IHRydW5j
+YXRlOiBpbnZhbGlkIG51bWJlciAnOEUnOiBWYWx1ZSB0b28gbGFyZ2UgZm9yIGRlZmluZWQgZGF0
+YSB0eXBlCj4gbWVya2FiYTovbW50L3plaXQjMT4gbHMgLWxoCj4gaW5zZ2VzYW10IDAKPiAtcnct
+ci0tci0tIDEgcm9vdCByb290IDcsMEUgTcOkciAxMSAyMjo0OSBldmVubW9yZWNyYXp5LmltZwo+
+IAo+IFNvIHNvIHRlc3RzIHN0b3BzIHRoZXJlLCB1bnRpbCB5b3UgY29uY2F0ZW5hdGUgdHdvIG9m
+IHRob3NlIGZpbGVzIHdpdGgKPiBMVk0gb3IgU29mdFJBSUQgMCAoaWYgdGhhdCB3b3JrcykuIExp
+a2UgdGhpcyAoSSBqdXN0IGhhZCB0byB0cnkgaXQpOgo+IAo+IAo+IG1lcmthYmE6L21udC96ZWl0
+PiBscyAtbGgKPiBpbnNnZXNhbXQgMAo+IC1ydy1yLS1yLS0gMSByb290IHJvb3QgNywwRSBNw6Ry
+IDExIDIyOjQ5IGV2ZW5tb3JlY3JhenkuaW1nCj4gLXJ3LXItLXItLSAxIHJvb3Qgcm9vdCA3LDBF
+IE3DpHIgMTEgMjI6NTIgZXZlbm1vcmVjcmF6eS5pbWcyCj4gbWVya2FiYTovbW50L3plaXQ+IGxv
+c2V0dXAgL2Rldi9sb29wMCBldmVubW9yZWNyYXp5LmltZwo+IG1lcmthYmE6L21udC96ZWl0PiBs
+b3NldHVwIC9kZXYvbG9vcDEgZXZlbm1vcmVjcmF6eS5pbWcyCj4gCj4gbWVya2FiYTovbW50L3pl
+aXQjNT4gcHZjcmVhdGUgL2Rldi9sb29wMAo+ICAgUGh5c2ljYWwgdm9sdW1lICIvZGV2L2xvb3Aw
+IiBzdWNjZXNzZnVsbHkgY3JlYXRlZAo+IG1lcmthYmE6L21udC96ZWl0PiBwdmNyZWF0ZSAvZGV2
+L2xvb3AxCj4gICBQaHlzaWNhbCB2b2x1bWUgIi9kZXYvbG9vcDEiIHN1Y2Nlc3NmdWxseSBjcmVh
+dGVkCj4gbWVya2FiYTovbW50L3plaXQ+IHZnY3JlYXRlIGp1c3RpbnNhbmUgL2Rldi9sb29wMCAv
+ZGV2L2xvb3AxCj4gICBQViAvZGV2L2xvb3AwIHRvbyBsYXJnZSBmb3IgZXh0ZW50IHNpemUgNCww
+MCBNaUIuCj4gICBGb3JtYXQtc3BlY2lmaWMgc2V0dXAgb2YgcGh5c2ljYWwgdm9sdW1lICcvZGV2
+L2xvb3AwJyBmYWlsZWQuCj4gICBVbmFibGUgdG8gYWRkIHBoeXNpY2FsIHZvbHVtZSAnL2Rldi9s
+b29wMCcgdG8gdm9sdW1lIGdyb3VwCj4gJ2p1c3RpbnNhbmUnLgpb4oCmXQo+IG1lcmthYmE6L21u
+dC96ZWl0IzU+IHZnY3JlYXRlIC0tcGh5c2ljYWxleHRlbnRzaXplIDRHICBqdXN0aW5zYW5lCj4g
+L2Rldi9sb29wMCAvZGV2L2xvb3AxCj4gICBWb2x1bWUgZ3JvdXAgImp1c3RpbnNhbmUiIHN1Y2Nl
+c3NmdWxseSBjcmVhdGVkCj4gCj4gbWVya2FiYTovbW50L3plaXQ+IHZncwo+ICAgVkcgICAgICAg
+ICAjUFYgI0xWICNTTiBBdHRyICAgVlNpemUgICBWRnJlZQo+ICAganVzdGluc2FuZSAgIDIgICAw
+ICAgMCB3ei0tbi0gIDE0LDAwZSAxNCwwMGUKPiAgIG1lcmthYmEgICAgICAxICAgNCAgIDAgd3ot
+LW4tIDI3OCw5OWcgIDQsODVnCj4gbWVya2FiYTovbW50L3plaXQ+Cj4gCj4gbWVya2FiYTovbW50
+L3plaXQ+IHZnZGlzcGxheSBqdXN0aW5zYW5lClvigKZdCj4gRW5vdWdoIGluc2FuaXR5IGZvciB0
+b2RheSA6KQoKTm90IHF1aXRlOgoKPiBJIHdvbsK0dCBta2ZzLnhmcyBvbiBpdCwgdGhlIDIwIEdp
+QiBvZiB0aGUganVzdCBmaWxlc3lzdGVtIHdvdWxkbsK0dCBiZQo+IGVub3VnaC4KCk9rLCB0aGVy
+ZSBzZWVtcyB0byBiZSBhbm90aGVyIGxpbWl0IGludm9sdmVkOgoKbWVya2FiYTovbW50L3plaXQ+
+IGx2Y3JlYXRlIC1uIHlvdXJiaWdnaWV4ZnMgLUwxNEUganVzdGluc2FuZQogIFZvbHVtZSBncm91
+cCAianVzdGluc2FuZSIgaGFzIGluc3VmZmljaWVudCBmcmVlIHNwYWNlICgzNzU4MDk2MzgyIApl
+eHRlbnRzKTogMzc1ODA5NjM4NCByZXF1aXJlZC4KbWVya2FiYTovbW50L3plaXQjNT4gTEFORz1D
+IGx2Y3JlYXRlIC1uIHlvdXJiaWdnaWV4ZnMgLUwxNEUganVzdGluc2FuZQogIFZvbHVtZSBncm91
+cCAianVzdGluc2FuZSIgaGFzIGluc3VmZmljaWVudCBmcmVlIHNwYWNlICgzNzU4MDk2MzgyIApl
+eHRlbnRzKTogMzc1ODA5NjM4NCByZXF1aXJlZC4KbWVya2FiYTovbW50L3plaXQjNT4gTEFORz1D
+IGx2Y3JlYXRlIC1uIHlvdXJiaWdnaWV4ZnMgLUwxM0UganVzdGluc2FuZQogIC9kZXYvanVzdGlu
+c2FuZS95b3VyYmlnZ2lleGZzOiBsc2VlayAwIGZhaWxlZDogSW52YWxpZCBhcmd1bWVudAogIC9k
+ZXYvanVzdGluc2FuZS95b3VyYmlnZ2lleGZzOiBsc2VlayAwIGZhaWxlZDogSW52YWxpZCBhcmd1
+bWVudAogIExvZ2ljYWwgdm9sdW1lICJ5b3VyYmlnZ2lleGZzIiBjcmVhdGVkCm1lcmthYmE6L21u
+dC96ZWl0PiBMQU5HPUMgbHZzICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+CiAgL2Rldi9qdXN0aW5zYW5lL3lvdXJiaWdnaWV4ZnM6IGxzZWVrIDE0OTg3OTc5NTU5ODg4OTQ1
+MTUyIGZhaWxlZDogSW52YWxpZCAKYXJndW1lbnQKICAvZGV2L2p1c3RpbnNhbmUveW91cmJpZ2dp
+ZXhmczogbHNlZWsgMTQ5ODc5Nzk1NTk4ODkwMDI0OTYgZmFpbGVkOiBJbnZhbGlkIAphcmd1bWVu
+dAogIC9kZXYvanVzdGluc2FuZS95b3VyYmlnZ2lleGZzOiBsc2VlayAwIGZhaWxlZDogSW52YWxp
+ZCBhcmd1bWVudAogIC9kZXYvanVzdGluc2FuZS95b3VyYmlnZ2lleGZzOiBsc2VlayA0MDk2IGZh
+aWxlZDogSW52YWxpZCBhcmd1bWVudAogIC9kZXYvanVzdGluc2FuZS95b3VyYmlnZ2lleGZzOiBs
+c2VlayAwIGZhaWxlZDogSW52YWxpZCBhcmd1bWVudAogIExWICAgICAgICAgICAgVkcgICAgICAg
+ICBBdHRyICAgICAgTFNpemUgICBQb29sIE9yaWdpbiBEYXRhJSAgTW92ZSBMb2cgCkNvcHklICBD
+b252ZXJ0CiAgeW91cmJpZ2dpZXhmcyBqdXN0aW5zYW5lIC13aS1hLS0tLSAgMTMuMDBlIAoKU28g
+dGVzdGluZyB3aXRoIDkgRWlCIG1pZ2h0IGJlY29tZSBzb21lIGlzc3VlIDopCgpUaGFua3MsCi0t
+IApNYXJ0aW4gJ0hlbGlvcycgU3RlaWdlcndhbGQgLSBodHRwOi8vd3d3LkxpY2h0dm9sbC5kZQpH
+UEc6IDAzQjAgMEQ2QyAwMDQwIDA3MTAgNEFGQSAgQjgyRiA5OTFCIEVBQUMgQTU5OSA4NEM3Cgpf
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGlu
+ZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5m
+by94ZnMK
