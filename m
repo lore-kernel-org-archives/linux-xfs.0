@@ -1,22 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DFAF27F37
-	for <xfs@oss.sgi.com>; Mon, 11 Mar 2013 11:22:24 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B8A40304064
-	for <xfs@oss.sgi.com>; Mon, 11 Mar 2013 09:22:24 -0700 (PDT)
-Received: from smtp4-g21.free.fr (smtp4-g21.free.fr [212.27.42.4]) by
-	cuda.sgi.com with ESMTP id sn2GFGBzRLEBKyeF for
-	<xfs@oss.sgi.com>; Mon, 11 Mar 2013 09:22:22 -0700 (PDT)
-Date: Mon, 11 Mar 2013 17:22:18 +0100
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: Maximum file system size of XFS?
-Message-ID: <20130311172218.3a3b600b@harpe.intellique.com>
-In-Reply-To: <4238234.1XBMaocpAb@xrated>
-References: <20130309215121.0e614ef8@thinky>
-	<513C3C43.7080104@hardwarefreak.com>
-	<513DB9C2.3050408@hardwarefreak.com> <4238234.1XBMaocpAb@xrated>
-Mime-Version: 1.0
+	by oss.sgi.com (Postfix) with ESMTP id A0F187F37
+	for <xfs@oss.sgi.com>; Mon, 11 Mar 2013 12:59:17 -0500 (CDT)
+Message-ID: <513E1B76.2090808@sgi.com>
+Date: Mon, 11 Mar 2013 12:59:18 -0500
+From: Mark Tinguely <tinguely@sgi.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH] xfs: Remove obsoleted m_inode_shrink from xfs_mount
+	structure
+References: <513D7A26.3030401@oracle.com>
+In-Reply-To: <513D7A26.3030401@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,31 +18,47 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Hans-Peter Jansen <hpj@urpla.net>
-Cc: Pascal <pa5ca1@gmx.de>, Eric Sandeen <sandeen@sandeen.net>, stan@hardwarefreak.com, xfs@oss.sgi.com
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: dchinner@redhat.com, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Le Mon, 11 Mar 2013 17:15:08 +0100
-Hans-Peter Jansen <hpj@urpla.net> =E9crivait:
+On 03/11/13 01:31, Jeff Liu wrote:
+> Looks the old m_inode_shrink is obsoleted as we perform inodes reclaim per AG via
+> m_reclaim_workqueue, this patch remove it from the xfs_mount structure if so.
+>
+> Signed-off-by: Jie Liu<jeff.liu@oracle.com>
+> Cc: Dave Chinner<dchinner@redhat.com>
+> ---
+>   fs/xfs/xfs_mount.h |    1 -
+>   1 file changed, 1 deletion(-)
+>
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index bc90706..687c171 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -207,7 +207,6 @@ typedef struct xfs_mount {
+>   						     trimming */
+>   	__int64_t		m_update_flags;	/* sb flags we need to update
+>   						   on the next remount,rw */
+> -	struct shrinker		m_inode_shrink;	/* inode reclaim shrinker */
+>   	int64_t			m_low_space[XFS_LOWSP_MAX];
+>   						/* low free space thresholds */
+>
 
-> And I just acknowledged the building plans for our new datacenter,
-> based on your former calculations.
+Obsoleted in commit:
 
-Don't be afraid, there are 80 drives 4U chassis available, and 5TB
-drives are around the corner. That's 800 drives and a raw capacity of
-4 PB per 42U rack.
+commit 8daaa83145ef1f0a146680618328dbbd0fa76939
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Fri Jul 8 14:14:46 2011 +1000
 
--- =
+     xfs: make use of new shrinker callout for the inode cache
 
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
+Looks good.
+
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
