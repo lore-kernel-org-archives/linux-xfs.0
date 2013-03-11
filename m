@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 15F0C7F37
-	for <xfs@oss.sgi.com>; Mon, 11 Mar 2013 17:10:57 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 7F933AC002
-	for <xfs@oss.sgi.com>; Mon, 11 Mar 2013 15:10:53 -0700 (PDT)
-Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by
-	cuda.sgi.com with ESMTP id 6bo8VYFLKyNZGZZC for
-	<xfs@oss.sgi.com>; Mon, 11 Mar 2013 15:10:51 -0700 (PDT)
-From: Martin Steigerwald <Martin@lichtvoll.de>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 36EC77F37
+	for <xfs@oss.sgi.com>; Mon, 11 Mar 2013 17:19:41 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 10DE1304059
+	for <xfs@oss.sgi.com>; Mon, 11 Mar 2013 15:19:40 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	29XdECiWGi6qccM2 for <xfs@oss.sgi.com>;
+	Mon, 11 Mar 2013 15:19:38 -0700 (PDT)
+Date: Tue, 12 Mar 2013 09:19:36 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: Maximum file system size of XFS?
-Date: Mon, 11 Mar 2013 23:10:50 +0100
+Message-ID: <20130311221936.GD21651@dastard>
 References: <20130309215121.0e614ef8@thinky>
 	<201303112245.40522.Martin@lichtvoll.de>
-	(sfid-20130311_224628_172977_9582C9EE)
-In-Reply-To: <201303112245.40522.Martin@lichtvoll.de>
+	<201303112257.00798.Martin@lichtvoll.de>
 MIME-Version: 1.0
-Message-Id: <201303112310.50523.Martin@lichtvoll.de>
+Content-Disposition: inline
+In-Reply-To: <201303112257.00798.Martin@lichtvoll.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,56 +27,77 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Pascal <pa5ca1@gmx.de>
+To: Martin Steigerwald <Martin@lichtvoll.de>
+Cc: Pascal <pa5ca1@gmx.de>, xfs@oss.sgi.com
 
-QW0gTW9udGFnLCAxMS4gTcOkcnogMjAxMyBzY2hyaWViIE1hcnRpbiBTdGVpZ2Vyd2FsZDoKPiBB
-bSBTYW1zdGFnLCA5LiBNw6RyeiAyMDEzIHNjaHJpZWIgUGFzY2FsOgo+ID4gSGVsbG8sCj4gCj4g
-SGkgUGFzY2FsLAo+IAo+ID4gSSBhbSBhc2tpbmcgeW91IGJlY2F1c2UgSSBhbSBpbnNlY3VyZSBh
-Ym91dCB0aGUgY29ycmVjdCBhbnN3ZXIgYW5kCj4gPiBkaWZmZXJlbnQgc291cmNlcyBnaXZlIG1l
-IGRpZmZlcmVudCBudW1iZXJzLgo+ID4KPiA+IAo+ID4gCj4gPgo+ID4gTXkgcXVlc3Rpb24gaXM6
-IFdoYXQgaXMgdGhlIG1heGltdW0gZmlsZSBzeXN0ZW0gc2l6ZSBvZiBYRlM/Cj4gPgo+ID4gCj4g
-Pgo+ID4gVGhlIG9mZmljaWFsIHBhZ2Ugc2F5czogMl42MyA9IDkgeCAxMF4xOCA9IDkgZXhhYnl0
-ZXMKPiA+IFNvdXJjZTogaHR0cDovL29zcy5zZ2kuY29tL3Byb2plY3RzL3hmcy8KPiA+Cj4gPiAK
-PiA+Cj4gPiBXaWtpcGVkaWEgc2F5cyAxNiBleGFieXRlcy4KPiA+IFNvdXJjZTogaHR0cHM6Ly9l
-bi53aWtpcGVkaWEub3JnL3dpa2kvWEZTCj4gPgo+ID4gCj4gPgo+ID4gQW5vdGhlciByZWZlcmVu
-Y2UgYm9va3Mgc2F5cyA4IGV4YWJ5dGVzICgyXjYzKS4KPiA+Cj4gPiAKPiA+IAo+ID4KPiA+IENh
-biBhbnlvbmUgdGVsbCBtZSBhbmQgZXhwbGFpbiB3aGF0IGlzIHRoZSBtYXhpbXVtIGZpbGUgc3lz
-dGVtIHNpemUgZm9yCj4gPiBYRlM/Cj4gCj4gWW91IGNhbiB0ZXN0IGl0LiBUaGUgdGhlb3JldGlj
-YWwgbGltaXQuIFdoZXRoZXIgc3VjaCBhIGZpbGVzeXN0ZW0gd2lsbAo+IHdvcmsgIG5pY2VseSB3
-aXRoIGEgcmVhbCB3b3JrbG9hZCBpcywgYXMgcG9pbnRlZCBvdXQsIGEgZGlmZmVyZW50Cj4gcXVl
-c3Rpb24uCgpXZWxsLCBhcyBJIGp1c3QgZGVtb25zdHJhdGVkLCB5b3UgY2FuwrR0LiBBdCBsZWFz
-dCBub3Qgd2l0aCBYRlMgd2l0aGluIFhGUy4gCllvdSBjYW4gb25seSB0ZXN0IGZvciBtYXhpbXVt
-IGZpbGVzaXplLiBJZiBYRlMgY2FuIGJlIGxhcmdlciB0aGFuIHRoYXQsIHlvdSAKbmVlZCBhIGZp
-bGVzeXN0ZW0gd2hpY2ggY2FuIGNhcnJ5IGFuIGV2ZW4gbGFyZ2VyIGZpbGUuIE1heWJlIFpGUyBv
-biBMaW51eCBvciAKc28/CgpCVFJGUyBkb2VzbsK0dCBnbyBiZXlvbmQgOCBFaUIgcGVyIGZpbGUg
-YXMgd2VsbDoKCm1lcmthYmE6L21udCMxPiBta2ZzLmJ0cmZzIC1uIDE2Mzg0IC1sIDE2Mzg0IC9k
-ZXYvbWVya2FiYS96ZWl0CgpXQVJOSU5HISAtIEJ0cmZzIEJ0cmZzIHYwLjE5IElTIEVYUEVSSU1F
-TlRBTApXQVJOSU5HISAtIHNlZSBodHRwOi8vYnRyZnMud2lraS5rZXJuZWwub3JnIGJlZm9yZSB1
-c2luZwoKZnMgY3JlYXRlZCBsYWJlbCAobnVsbCkgb24gL2Rldi9tZXJrYWJhL3plaXQKICAgICAg
-ICBub2Rlc2l6ZSAxNjM4NCBsZWFmc2l6ZSAxNjM4NCBzZWN0b3JzaXplIDQwOTYgc2l6ZSAyMC4w
-MEdCCkJ0cmZzIEJ0cmZzIHYwLjE5Cm1lcmthYmE6L21udD4gbW91bnQgL2Rldi9tZXJrYWJhL3pl
-aXQgemVpdAptZXJrYWJhOi9tbnQ+IGNkIHplaXQKbWVya2FiYTovbW50L3plaXQ+IHRydW5jYXRl
-IC1zMUUgY2FuaXRnZXRjcmF6aWVydGhhbnRoYXQuaW1nCm1lcmthYmE6L21udC96ZWl0PiB0cnVu
-Y2F0ZSAtczJFIGNhbml0Z2V0Y3JhemllcnRoYW50aGF0LmltZwptZXJrYWJhOi9tbnQvemVpdD4g
-dHJ1bmNhdGUgLXMzRSBjYW5pdGdldGNyYXppZXJ0aGFudGhhdC5pbWcKbWVya2FiYTovbW50L3pl
-aXQ+IHRydW5jYXRlIC1zNEUgY2FuaXRnZXRjcmF6aWVydGhhbnRoYXQuaW1nCm1lcmthYmE6L21u
-dC96ZWl0PiB0cnVuY2F0ZSAtczVFIGNhbml0Z2V0Y3JhemllcnRoYW50aGF0LmltZwptZXJrYWJh
-Oi9tbnQvemVpdD4gdHJ1bmNhdGUgLXM2RSBjYW5pdGdldGNyYXppZXJ0aGFudGhhdC5pbWcKbWVy
-a2FiYTovbW50L3plaXQ+IHRydW5jYXRlIC1zN0UgY2FuaXRnZXRjcmF6aWVydGhhbnRoYXQuaW1n
-Cm1lcmthYmE6L21udC96ZWl0PiB0cnVuY2F0ZSAtczhFIGNhbml0Z2V0Y3JhemllcnRoYW50aGF0
-LmltZwp0cnVuY2F0ZTogdW5nw7xsdGlnZSBaYWhsIOKAnjhF4oCcOiBEZXIgV2VydCBpc3QgenUg
-Z3Jvw58gZsO8ciBkZW4gZGVmaW5pZXJ0ZW4gCkRhdGVudHlwCm1lcmthYmE6L21udC96ZWl0IzE+
-IExBTkc9QyB0cnVuY2F0ZSAtczhFIGNhbml0Z2V0Y3JhemllcnRoYW50aGF0LmltCnRydW5jYXRl
-OiBpbnZhbGlkIG51bWJlciAnOEUnOiBWYWx1ZSB0b28gbGFyZ2UgZm9yIGRlZmluZWQgZGF0YSB0
-eXBlCgptZXJrYWJhOi9tbnQvemVpdCMxPiBscyAtbGgKaW5zZ2VzYW10IDAKLXJ3LXItLXItLSAx
-IHJvb3Qgcm9vdCA3LDBFIE3DpHIgMTEgMjM6MDkgY2FuaXRnZXRjcmF6aWVydGhhbnRoYXQuaW1n
-CgpUaGFua3MsCi0tIApNYXJ0aW4gJ0hlbGlvcycgU3RlaWdlcndhbGQgLSBodHRwOi8vd3d3Lkxp
-Y2h0dm9sbC5kZQpHUEc6IDAzQjAgMEQ2QyAwMDQwIDA3MTAgNEFGQSAgQjgyRiA5OTFCIEVBQUMg
-QTU5OSA4NEM3CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-Xwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFp
-bG1hbi9saXN0aW5mby94ZnMK
+On Mon, Mar 11, 2013 at 10:57:00PM +0100, Martin Steigerwald wrote:
+> Am Montag, 11. M=E4rz 2013 schrieb Martin Steigerwald:
+> > 2) Create a insanely big sparse file
+> > =
+
+> > merkaba:~> truncate -s1E /mnt/zeit/evenmorecrazy.img
+> > merkaba:~> ls -lh /mnt/zeit/evenmorecrazy.img
+> > -rw-r--r-- 1 root root 1,0E M=E4r 11 22:37 /mnt/zeit/evenmorecrazy.img
+> > =
+
+> > (No, this won=B4t work with Ext4.)
+> =
+
+> Okay, you can=B4t go beyond 8 EiB for a single file which is about what I=
+ have =
+
+> read somewhere:
+
+Right - file size offsets max out at 2^63 bytes.
+
+....
+
+> merkaba:/mnt/zeit#5> vgcreate --physicalextentsize 4G  justinsane /dev/lo=
+op0 =
+
+> /dev/loop1
+>   Volume group "justinsane" successfully created
+> =
+
+> merkaba:/mnt/zeit> vgs                                                   =
+            =
+
+>   VG         #PV #LV #SN Attr   VSize   VFree =
+
+>   justinsane   2   0   0 wz--n-  14,00e 14,00e
+>   merkaba      1   4   0 wz--n- 278,99g  4,85g
+> merkaba:/mnt/zeit>
+....
+> Enough insanity for today :)
+> =
+
+> I won=B4t mkfs.xfs on it, the 20 GiB of the just filesystem wouldn=B4t be =
+
+> enough.
+
+Right - I did a mkfs.xfs on a (8EB - 1GB) file a couple of days ago
+just to check it worked. I killed it after a short while, because I
+didn't feel like needlessly subjecting the SSDs the file was
+physically located on to the 25 million sparse sector sized writes
+needed for mkfs to complete.
+
+And you can double that number of writes needed for a 16EB
+filesystem to be initialised by mkfs. So, theory be damned, even
+mkfs.xfs doesn't scale to supporting exabyte filesystems...
+
+Cheers,
+
+Dave.
+-- =
+
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
