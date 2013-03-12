@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3699D7F83
-	for <xfs@oss.sgi.com>; Tue, 12 Mar 2013 07:31:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1F863304048
-	for <xfs@oss.sgi.com>; Tue, 12 Mar 2013 05:31:06 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B43DE7F88
+	for <xfs@oss.sgi.com>; Tue, 12 Mar 2013 07:31:10 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 915998F8035
+	for <xfs@oss.sgi.com>; Tue, 12 Mar 2013 05:31:10 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	57vIReQsPJyQXRAe for <xfs@oss.sgi.com>;
-	Tue, 12 Mar 2013 05:31:04 -0700 (PDT)
+	Jpdxvt4Zd5FVbYqZ for <xfs@oss.sgi.com>;
+	Tue, 12 Mar 2013 05:31:09 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UFOMB-0001Ra-2p
-	for xfs@oss.sgi.com; Tue, 12 Mar 2013 23:31:03 +1100
+	(envelope-from <dave@fromorbit.com>) id 1UFOM6-0001RZ-0m
+	for xfs@oss.sgi.com; Tue, 12 Mar 2013 23:30:58 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UFOM5-0002Lk-Ut
+	(envelope-from <dave@disappointment.disaster>) id 1UFOM5-0002Lg-T6
 	for xfs@oss.sgi.com; Tue, 12 Mar 2013 23:30:57 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 02/21] xfs: increase hexdump output in xfs_corruption_error
-Date: Tue, 12 Mar 2013 23:30:35 +1100
-Message-Id: <1363091454-8852-3-git-send-email-david@fromorbit.com>
+Subject: [PATCH 01/21] xfs: ensure we capture IO errors correctly
+Date: Tue, 12 Mar 2013 23:30:34 +1100
+Message-Id: <1363091454-8852-2-git-send-email-david@fromorbit.com>
 In-Reply-To: <1363091454-8852-1-git-send-email-david@fromorbit.com>
 References: <1363091454-8852-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,30 +38,38 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Currently xfs_corruption_error() dumps the first 16 bytes of the
-buffer that is passed to it when a corruption occurs. This is not
-large enough to see the entire state of the header of the block that
-was determined to be corrupt.  increase the output to 64 bytes to
-capture the majority of all headers in all types of metadata blocks.
+Failed buffer readahead can leave the buffer in the cache marked
+with an error. Most callers that then issue a subsequent read on the
+buffer do not zero the b_error field out, and so we may incorectly
+detect an error during IO completion due to the stale error value
+left on the buffer.
+
+Avoid this problem by zeroing the error before IO submission. This
+ensures that the only IO errors that are detected those captured
+from are those captured from bio submission or completion.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_error.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/xfs_buf.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-index 07bf3b9..35d3f5b 100644
---- a/fs/xfs/xfs_error.c
-+++ b/fs/xfs/xfs_error.c
-@@ -178,7 +178,7 @@ xfs_corruption_error(
- 	inst_t			*ra)
- {
- 	if (level <= xfs_error_level)
--		xfs_hex_dump(p, 16);
-+		xfs_hex_dump(p, 64);
- 	xfs_error_report(tag, level, mp, filename, linenum, ra);
- 	xfs_alert(mp, "Corruption detected. Unmount and run xfs_repair");
- }
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 50eb603..82b70bd 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1336,6 +1336,12 @@ _xfs_buf_ioapply(
+ 	int		size;
+ 	int		i;
+ 
++	/*
++	 * Make sure we capture only current IO errors rather than stale errors
++	 * left over from previous use of the buffer (e.g. failed readahead).
++	 */
++	bp->b_error = 0;
++
+ 	if (bp->b_flags & XBF_WRITE) {
+ 		if (bp->b_flags & XBF_SYNCIO)
+ 			rw = WRITE_SYNC;
 -- 
 1.7.10.4
 
