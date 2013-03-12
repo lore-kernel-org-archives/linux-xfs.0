@@ -1,27 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5B1587F5D
-	for <xfs@oss.sgi.com>; Tue, 12 Mar 2013 09:47:55 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 479C3304070
-	for <xfs@oss.sgi.com>; Tue, 12 Mar 2013 07:47:52 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 036407F63
+	for <xfs@oss.sgi.com>; Tue, 12 Mar 2013 09:50:23 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C1A008F804C
+	for <xfs@oss.sgi.com>; Tue, 12 Mar 2013 07:50:22 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id Zslq8y2o6CN6oXEN for <xfs@oss.sgi.com>;
-	Tue, 12 Mar 2013 07:47:51 -0700 (PDT)
-Message-ID: <513F4017.6050702@sandeen.net>
-Date: Tue, 12 Mar 2013 09:47:51 -0500
+	ESMTP id zdveyW0cXkXqIibm for <xfs@oss.sgi.com>;
+	Tue, 12 Mar 2013 07:50:21 -0700 (PDT)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(No client certificate requested)
+	by sandeen.net (Postfix) with ESMTPSA id 5818163C59BB
+	for <xfs@oss.sgi.com>; Tue, 12 Mar 2013 09:50:21 -0500 (CDT)
+Message-ID: <513F40AD.10303@sandeen.net>
+Date: Tue, 12 Mar 2013 09:50:21 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: xfs_repair segfaults
-References: <CANU9nTnvJS50vdQv2K0gKHZPvzzH5EY1qpizJNsqUobrr2juDA@mail.gmail.com>
-	<512FA67D.2090708@sandeen.net>
-	<CANU9nTm3vR3Z5JwRwou4vnNejstAkAsnBb2ivwx-KhnHHbWpoQ@mail.gmail.com>
-	<5130DB54.9030503@sandeen.net>
-	<CANU9nTkekrw2mdptFdK2RVUFXD=evt0sTZhB9VL+PKY8DTj11A@mail.gmail.com>
-	<5134BBA4.3060305@sandeen.net>
-	<CANU9nTntXh5spRYc80OhsBqgLnZcJGA2qBeVVQaywthD1RMu4w@mail.gmail.com>
-	<CANU9nTkG_XrNhDjGfRBofJkz=KryDmLGGJnYsBXyH5Ng=uiRWg@mail.gmail.com>
-In-Reply-To: <CANU9nTkG_XrNhDjGfRBofJkz=KryDmLGGJnYsBXyH5Ng=uiRWg@mail.gmail.com>
+Subject: [PATCH] xfs_repair: remove unconditional ASSERT(0)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,32 +30,18 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ole Tange <tange@binf.ku.dk>
-Cc: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-On 3/12/13 6:37 AM, Ole Tange wrote:
+I don't know what I was thinking in 7e8e3cc, but I added an
+ASSERT(0) in the main path.  Obviously this isn't right.
 
-> $ ~/work/xfsprogs/repair/xfs_repair -L franklin.img
-> Phase 1 - find and verify superblock...
-> Phase 2 - using internal log
->         - zero log...
-> ALERT: The filesystem has valuable metadata changes in a log which is being
-> destroyed because the -L option was used.
->         - scan filesystem freespace and inode maps...
-> xfs_repair: scan.c:1080: scan_freelist: Assertion `0' failed.
-> Aborted (core dumped)
+Just remove it.
 
-Oh, man.  I need to have my hacker card revoked.  Or maybe focus
-on one filesystem at a time so I don't keep doing dumb things, like
-adding an unconditional ASSERT in non-"-n"-mode.  Holy cow, I don't
-know what's up with me lately.  :/
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-Anyway, just modify these 2 lines in repair/scan.c to remove the ASSERT
-around line 1080.
-
-I'll send a proper patch as well.
-
-
+Really sorry, no idea what is up w/ my brain lately.
+Trying to do too many things at once, too quickly.
 
 diff --git a/repair/scan.c b/repair/scan.c
 index 6a62dff..76bb7f1 100644
@@ -75,9 +57,6 @@ index 6a62dff..76bb7f1 100644
  
  	count = 0;
  	for (;;) {
-
-
-
 
 _______________________________________________
 xfs mailing list
