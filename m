@@ -1,23 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 036407F63
-	for <xfs@oss.sgi.com>; Tue, 12 Mar 2013 09:50:23 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C1A008F804C
-	for <xfs@oss.sgi.com>; Tue, 12 Mar 2013 07:50:22 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id zdveyW0cXkXqIibm for <xfs@oss.sgi.com>;
-	Tue, 12 Mar 2013 07:50:21 -0700 (PDT)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 5818163C59BB
-	for <xfs@oss.sgi.com>; Tue, 12 Mar 2013 09:50:21 -0500 (CDT)
-Message-ID: <513F40AD.10303@sandeen.net>
-Date: Tue, 12 Mar 2013 09:50:21 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B5A827F66
+	for <xfs@oss.sgi.com>; Tue, 12 Mar 2013 10:44:36 -0500 (CDT)
+Message-ID: <513F4D76.5000600@sgi.com>
+Date: Tue, 12 Mar 2013 10:44:54 -0500
+From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfs_repair: remove unconditional ASSERT(0)
+Subject: Re: [PATCH] xfs_repair: remove unconditional ASSERT(0)
+References: <513F40AD.10303@sandeen.net>
+In-Reply-To: <513F40AD.10303@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,37 +17,51 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-I don't know what I was thinking in 7e8e3cc, but I added an
-ASSERT(0) in the main path.  Obviously this isn't right.
 
-Just remove it.
+On 03/12/2013 09:50 AM, Eric Sandeen wrote:
+> I don't know what I was thinking in 7e8e3cc, but I added an
+> ASSERT(0) in the main path.  Obviously this isn't right.
+>
+> Just remove it.
+>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+>
+> Really sorry, no idea what is up w/ my brain lately.
+> Trying to do too many things at once, too quickly.
+>
+I can relate.  Thanks for the quick fix.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+Looks good:
 
-Really sorry, no idea what is up w/ my brain lately.
-Trying to do too many things at once, too quickly.
+Reviewed-by: Rich Johnston <rjohnston@sgi.com>
 
-diff --git a/repair/scan.c b/repair/scan.c
-index 6a62dff..76bb7f1 100644
---- a/repair/scan.c
-+++ b/repair/scan.c
-@@ -1076,8 +1076,7 @@ scan_freelist(
- 				  "freelist scan\n"), i);
- 			return;
- 		}
--	} else /* should have been fixed in verify_set_agf() */
--		ASSERT(0);
-+	}
- 
- 	count = 0;
- 	for (;;) {
+This has been committed.
+
+Thanks
+--Rich
+
+commit b326e067f1005d584bd8ad21bb9f3e2700230e29
+Author: Eric Sandeen <sandeen@sandeen.net>
+Date:   Tue Mar 12 14:50:21 2013 +0000
+
+     xfsprogs xfs_repair: remove unconditional ASSERT(0)
+
+     I don't know what I was thinking in 7e8e3cc, but I added an
+     ASSERT(0) in the main path.  Obviously this isn't right.
+
+     Just remove it.
+
+     Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+     Reviewed-by: Rich Johnston <rjohnston@sgi.com>
+     Signed-off-by: Rich Johnston <rjohnston@sgi.com>
 
 _______________________________________________
 xfs mailing list
