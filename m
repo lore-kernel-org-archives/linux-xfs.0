@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8B6587F54
-	for <xfs@oss.sgi.com>; Tue, 12 Mar 2013 04:02:34 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7AAB5304043
-	for <xfs@oss.sgi.com>; Tue, 12 Mar 2013 02:02:31 -0700 (PDT)
-Received: from moutng.kundenserver.de (moutng.kundenserver.de [212.227.17.9])
-	by cuda.sgi.com with ESMTP id UoBu2Pv2ej3TBEJt (version=TLSv1
-	cipher=RC4-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 12 Mar 2013 02:02:29 -0700 (PDT)
-From: Hans-Peter Jansen <hpj@urpla.net>
-Subject: Re: Fwd: xfs_reno
-Date: Tue, 12 Mar 2013 10:02:09 +0100
-Message-ID: <5202910.jIRzyplXT6@xrated>
-In-Reply-To: <513E5113.60508@sgi.com>
-References: <20351675.Zy117sIl8Z@xrated> <513E5113.60508@sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 13A4D7F55
+	for <xfs@oss.sgi.com>; Tue, 12 Mar 2013 04:58:04 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 96DE6AC006
+	for <xfs@oss.sgi.com>; Tue, 12 Mar 2013 02:58:03 -0700 (PDT)
+Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by
+	cuda.sgi.com with ESMTP id iGJYUJJDJBuM62BC for
+	<xfs@oss.sgi.com>; Tue, 12 Mar 2013 02:57:58 -0700 (PDT)
+From: Martin Steigerwald <Martin@lichtvoll.de>
+Subject: Re: XFS filesystem corruption
+Date: Tue, 12 Mar 2013 10:57:51 +0100
+References: <CAPcwv6wZJSBtgF-L6KNSn6N6Y+wUZJFXdbcg+zYRwoaB2sDdjw@mail.gmail.com>
+	<CAPcwv6wK7m5UbJZass5690N5UpXEMV+HVzJa5mn9KWtT9UPQ9w@mail.gmail.com>
+	<20130307232214.GY23616@dastard>
+	(sfid-20130308_003651_720717_B9D6B992)
+In-Reply-To: <20130307232214.GY23616@dastard>
 MIME-Version: 1.0
+Message-Id: <201303121057.52092.Martin@lichtvoll.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,85 +26,68 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Ric Wheeler <rwheeler@redhat.com>, Julien FERRERO <jferrero06@gmail.com>
 
-QW0gTW9udGFnLCAxMS4gTcOkcnogMjAxMywgMTY6NDg6MDMgc2NocmllYiBNYXJrIFRpbmd1ZWx5
-Ogo+IE9uIDAzLzA2LzEzIDA4OjU1LCBIYW5zLVBldGVyIEphbnNlbiB3cm90ZToKPiA+IEhpIERh
-dmUsCj4gPiAKPiA+IEkgdHJpZWQgdG8gZ2F0aGVyIEJhcnJ5cyBTT0IsIGJ1dCBmYWlsZWQgc28g
-ZmFyLiBIaXMgdHJhY2UgZW5kcyBpbiAyMDA5Cj4gPiBnb29nbGUgd2lzZS4KPiA+IAo+ID4gSG93
-IGlzIHRoaXMgY2FzZSB1c3VhbGx5IGhhbmRsZWQ/Cj4gPiAKPiA+IEhlcmUncyB0aGUgY3VycmVu
-dCBzdGF0ZSBvZiB0aGluZ3MuCj4gPiAKPiA+IENoZWVycywKPiA+IFBldGUKPiA+IAo+ID4gCj4g
-PiAtLS0tLS0tLS0tICBXZWl0ZXJnZWxlaXRldGUgTmFjaHJpY2h0ICAtLS0tLS0tLS0tCj4gPiAK
-PiA+IEJldHJlZmY6IHhmc19yZW5vCj4gPiBEYXR1bTogTWl0dHdvY2gsIDYuIE3DpHJ6IDIwMTMs
-IDEyOjUyOjE5Cj4gPiBWb246IEhhbnMtUGV0ZXIgSmFuc2VuPGhwakB1cnBsYS5uZXQ+Cj4gPiBB
-bjogYm5hdWpva0BzZ2kuY29tCj4gPiAKPiA+IEhpIEJhcnJ5LAo+ID4gCj4gPiBhdHRhY2hlZCBp
-cyBhIHNsaWdodGx5IG1hbmdsZWQgdmVyc2lvbiBvZiB5b3VyIHhmc19yZW5vIHRvb2wsIHRoYXQg
-SSBiYWRseQo+ID4gbmVlZGVkIHJlY2VudGx5LiBXaGlsZSBhdCBpdCwgSSBwbGFuIHRvIHN1Ym1p
-dCBpdCwgYXMgaXQgc2F2ZWQgbXkgKnNzLgo+ID4gVGhhbmtzLgo+ID4gCj4gPiBBcGFydCBmcm9t
-IHJlbG9jYXRpb24gdG8geGZzcHJvZ3MsIEkganVzdCBjaGFuZ2VkIHRoaXMKPiA+IAo+ID4gKyAg
-ICAgICBsb2dfbWVzc2FnZShMT0dfREVCVUcsICIlczogJWxsdSAlbHUgJXMiLCBtc2csIG5vZGUt
-PmlubywKPiA+ICsgICAgICAgICAgICAgICAgICAgICAgIG5vZGUtPm51bXBhdGhzLCBub2RlLT5w
-YXRoc1swXSk7Cj4gPiAKPiA+IGZyb20gJWxsdSB0byAlbHUgZm9yIHRoZSBub2RlLT5udW1wYXRo
-cyBhcmd1bWVudC4gSXQgbWlnaHQgc3RpbGwgYmUgd3JvbmcsCj4gPiBhcyBudW1wYXRoIGlzIGRl
-ZmluZWQgYXMgbmxpbmtfdCB3aGljaCBpcyBhIF9fdTMyIHR5cGUsIGJ1dCB0aGUgJXMKPiA+IHBy
-aW50ZWQgZ2FyYmFnZSBsaWtlIHRoaXM6Cj4gPiAKPiA+IFNjYW5uaW5nIGRpcmVjdG9yeSB0cmVl
-Li4uCj4gPiB4ZnNfcmVubzogYWRkX25vZGVfcGF0aDogaW5vIDg2MTExNjMyMzUsIHBhdGgKPiA+
-IC93b3JrL2RsYmFzZS9ob3N0cy8xMS4yL3BpY28vdmFyL3J1bi9zY3JlZW5zCj4gPiB4ZnNfcmVu
-bzogYWRkX25vZGVfcGF0aDogaW5vIDg2MTExNjMyMzMsIHBhdGgKPiA+IC93b3JrL2RsYmFzZS9o
-b3N0cy8xMS4yL3BpY28vdmFyL3J1bi9wY3NjZC9wY3NjZC5ldmVudHMKPiA+IHhmc19yZW5vOiBh
-ZGRfbm9kZV9wYXRoOiBpbm8gODYxMTE2MzIzNCwgcGF0aAo+ID4gL3dvcmsvZGxiYXNlL2hvc3Rz
-LzExLjIvcGljby92YXIvcnVuL3VzY3JlZW5zCj4gPiB4ZnNfcmVubzogbm9kZWhhc2g6IDg2MTEx
-NjMyMzMgNjkyNDg4MTU5OTMzNDk3MzQ1IO+/ve+/vV3vv73vv71m77+9Ze+/vQo+ID4geGZzX3Jl
-bm86IG5vZGVoYXNoOiA4NjExMTYzMjM0IDY5MjM2NjgwMTMzNzU4MTU2OSDvv73vv71d77+977+9
-Zu+/vWXvv70KPiA+IHhmc19yZW5vOiBub2RlaGFzaDogODYxMTE2MzIzNSA2OTIyMjM4MzA0NjYy
-MzIzMjEg77+977+9Xe+/ve+/vWbvv71l77+9Cj4gPiAKPiA+IEkgZ3Vlc3MsIGdjYyBpcyBzbWFy
-dCBlbm91Z2ggdG8gc2VlLCB0aGF0IHRoZSBzdHJ1Y3QgbWVtYmVycyBvdmVybGFwIGhlcmUsCj4g
-PiBhbmQgcHJpbnRzIHRoZSBwYXRoc1swXSBhcmd1bWVudCBhcyBhICVsbHUgdmFsdWUuIFdoYXQg
-ZG8geW91IHRoaW5rPwo+ID4gCj4gPiBBbnl3YXksIEkgd2lsbCByZXZpc2UgdGhpcyBkdXJpbmcg
-dGhlIGNvdXJzZSBvZiBjcmVhdGluZyBhIHhsc3Rlc3RzIHRlc3QKPiA+IGZvciB4ZnNfcmVuby4u
-Lgo+ID4gCj4gPiBEbyB5b3UgYWxsb3cgbWUgdG8gYWRkIHlvdXIgU2lnbmVkLW9mZi1ieSB0byB0
-aGlzIHBhdGNoPwo+ID4gCj4gPiBJZiB5b3Ugd2FudCB0byBidWlsZCB0aGlzLCBhcHBseSBib3Ro
-IHBhdGNoZXMgdG8geGZzcHJvZ3MuCj4gPiAKPiA+IFRJQSwKPiA+IFBldGUKPiAKPiBIYXZlIHlv
-dSBiZWVuIGdldHRpbmcgIk91dCBvZiBtZW1vcnkiIHdhcm5pbmdzIG9uIHlvdXIgcnVucz8gSSBh
-bS4KCk5vLCBJIHdvdWxkIGhhdmUgbWVudGlvbmVkIHRoZW0uIEJ1dCBJIGd1ZXNzLCBteSBmaWxl
-IHN5c3RlbXMgYXJlIHRpbnkgCmNvbXBhcmVkIHRvIHlvdXJzLiBUaGUgYWZmZWN0ZWQgRlMgaGF2
-ZSAyLjhUIGFuZCA0LjFULCB3aXRoIGZvcm1lciB3aXRoIG1hbnkgCnNtYWxsIGZpbGVzIGFuZCBk
-aXJlY3RvcmllcywgdGhlIGxhdHRlciB3aXRoIG1hbnkgMkcgZmlsZXMuCiAKPiBDb21waWxpbmcs
-IEkgZ2V0IHRoZSB3YXJuaW5ncyBhYm91dCBoYXZpbmcgIlxyIiBpbiB0aGUgc3RyaW5ncy4gRm9y
-IGV4YW1wbGU6Cj4gCj4gcmVuby94ZnNfcmVuby5jOjE0MTU6IGludGVybmF0aW9uYWxpemVkIG1l
-c3NhZ2VzIHNob3VsZCBub3QgY29udGFpbiB0aGUKPiBgXHInIGVzY2FwZSBzZXF1ZW5jZQoKV2Vs
-bCwgdGhhdCdzIGZvciB0aGUgc3BpbiB3aGVlbCwgdGhhdCBtaWdodCBoYXZlIGludGVyZXN0aW5n
-IGVmZmVjdHMsIHdoZW4gCmxvY2FsaXplZCB0byByaWdodC10by1sZWZ0IGxhbmd1YWdlcy4uLgoK
-PiAgICAgICAgICAgICAgICAgICAgICAtLS0tLS0tLS0tCj4gSSB3b25kZXIgaWYgd2Ugc2hvdWxk
-IGFkZCBhIHRlbXAgZGlyZWN0b3J5IG9wdGlvbi4gSXQgc2VlbXMgdG8gd2FudCB0bwo+IHVzZSB0
-aGUgcGFyZW50IGRpcmVjdG9yeSBvZiB0aGUgZGlyZWN0b3J5IGFzIGEgdGVtcG9yYXJ5LiAKCldp
-dGhvdXQgZGlnZ2luZyBpbnRvIHRoaXMsIEkgY2FuIG9ubHkgZ3Vlc3MsIGJ1dCB0aGUgd2hvbGUg
-cG9pbnQgb2YgeGZzX3Jlbm8gCmlzIHJlbG9jYXRpbmcgdGhlIGlub2RlcyBvbiB0aGUgRlMgaW4g
-cXVlc3Rpb24gKndpdGhvdXQqIGNvcHlpbmcgZmlsZXMgYXJvdW5kLiAKVXNpbmcgYSBzZXBhcmF0
-ZSBURU1QIGRlZmVhdHMgdGhpcyBwdXJwb3NlLCBkb24ndCBpdD8KCkl0IG1pZ2h0IGJlIGluIG9y
-ZGVyIHRvIGFkZCBhIG5vdGUgdG8gdGhlIG1hbiBwYWdlIHRvIG5vdCB0cnkgdG8gdXNlIGl0IGlu
-CiJjcm9zcyBtb3VudCBvcGVyYXRpb24iIHNjZW5hcmlvcy4KCj4gQmVsb3cgaXMgdGhlCj4gcmVz
-dWx0IG9mIHJ1bm5pbmcgeGZzX3Jlbm8gb24gdGhlIHRhcmdldCBkaXJlY3RvcnkgaXMgIi9tbnQv
-eHh4Cj4gKGNoYW5naW5nIHRoZSBcciB0byA8Xk0+XG4gZm9yIHRoZSBlbWFpbCk6Cj4gCj4geGZz
-X3Jlbm86IGRpcmVjdG9yeTogMTI4IDEgL21uPF5NPgo+IHhmc19yZW5vOiAvbW50L3hmc19yZW5v
-X2VwZGFKYzogQ2FubmV0IHNldCB0YXJnZXQgZXh0ZW5kZWQgYXR0cmlidXRlczxeTT4KPiB4ZnNf
-cmVubzogZmFpbGVkIHRvIHJlbmFtZTogJy9tbnQveHh4L29yaWdpbicgdG8KPiAnL21udC94ZnNf
-cmVub19OWFFMV0kvb3JpZ2luJwo+IDxeTT4KPiB4ZnNfcmVubzogdW5hYmxlIHRvIG1vdmUgZGly
-ZWN0b3J5IGNvbnRlbnRzOiAvbW50L3h4eCB0bwo+IC9tbnQveGZzX3Jlbm9fTlhRTFdJCj4gPF5N
-Pgo+IHhmc19yZW5vOiBDYW5ub3Qgc3RhdCAvbW50L3hmc19yZW5vX2VwZGFKYzogSW5hcHByb3By
-aWF0ZSBpb2N0bCBmb3IgZGV2aWNlCj4gCj4gPF5NPgo+IHhmc19yZW5vOiB1bmFibGUgdG8gZHVw
-bGljYXRlIGRpcmVjdG9yeSBhdHRyaWJ1dGVzOiAvbW50L3hmc19yZW5vX2VwZGFKYwo+IHQveHh4
-Cj4gICAgICAgICAgICAgICAgICAgICAgLS0tLS0tCj4gL21udCBpcyBub3QgYW4gWEZTIGZpbGVz
-eXN0ZW0uIFdoZW4gbW91bnRpbmcgb24gdGhlIHJvb3QsIHNheSAvbW50LCB0aGUKPiBtZXNzYWdl
-IGxvb2sgbGlrZToKPiAKPiB4ZnNfcmVubzogQ2Fubm90IHN0YXQgLy94ZnNfcmVub19lcGRhSmM6
-IEluYXBwcm9wcmlhdGUgaW9jdGwgZm9yIGRldmljZQoKWW91IGxvc3QgbWUgaGVyZS4gV2hhdCBJ
-IGNhbiBzYXksIGlzIHRoYXQgdXNpbmcgZWcuICJ4ZnNfcmVubyAtdnBuIC93b3JrIiwgCmhlbmNl
-IG9uIHRoZSBtb3VudCBwb2ludCBkaXJlY3RseSwgZGlkIGFzIGFkdmVydGlzZWQuCgpDaGVlcnMs
-ClBldGUKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhm
-cyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFu
-L2xpc3RpbmZvL3hmcwo=
+Am Freitag, 8. M=E4rz 2013 schrieb Dave Chinner:
+> On Thu, Mar 07, 2013 at 02:15:31PM +0100, Julien FERRERO wrote:
+> > > We actually test brutal "Power off" for xfs, ext4 and other file
+> > > systems. If your storage is configured properly and you have
+> > > barriers enabled, they all pass without corruption.
+> > > =
+
+> > > What hardware raid cards can do is to hide a volatile write cache.
+> > > Either on the raid HBA itself or, even worse, on the backend disks
+> > > behind the card. S-ata disks tend to default to write cache enabled
+> > > and need to be checked especially careful (sas drives tend to be
+> > > write cache disabled by default).
+> >
+> > =
+
+> >
+> > Write cache is supposed to be disabled on the H/W RAID (according to
+> > hdparm) and barrier are correctly enabled since xfs does not report
+> > any warning at mount.
+> >
+> > =
+
+> >
+> > The odd thing is we never see this with kernel 2.6.18 where barriers
+> > weren't yet available.
+> =
+
+> Yes they were. XFS had barrier support added in 2.6.15.
+
+I thought this was 2.6.16? Or was that the kernel where it became usable du=
+e =
+
+to the generic write barrier part being merged while the XFS one was ready =
+
+earlier?
+
+I still remember the XFS filesystem crashes I had back then that went away =
+
+with disabling the write cache of the drive in my ThinkPad T42 back then an=
+d =
+
+where solved with 2.6.17, whereas 2.6.17.7 solved a directory corruption =
+
+issue introduced with 2.6.17. Thus I always recommended at least 2.6.17.7 i=
+n =
+
+case of write barrier usage with XFS.
+
+Thanks,
+-- =
+
+Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
+GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
