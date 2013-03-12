@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0B9D07F54
-	for <xfs@oss.sgi.com>; Tue, 12 Mar 2013 03:08:40 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id AC0FCAC004
-	for <xfs@oss.sgi.com>; Tue, 12 Mar 2013 01:08:36 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id szTpKpCOTGgv6F3L (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 12 Mar 2013 01:08:35 -0700 (PDT)
-Message-ID: <513EE274.6090808@oracle.com>
-Date: Tue, 12 Mar 2013 16:08:20 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8B6587F54
+	for <xfs@oss.sgi.com>; Tue, 12 Mar 2013 04:02:34 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 7AAB5304043
+	for <xfs@oss.sgi.com>; Tue, 12 Mar 2013 02:02:31 -0700 (PDT)
+Received: from moutng.kundenserver.de (moutng.kundenserver.de [212.227.17.9])
+	by cuda.sgi.com with ESMTP id UoBu2Pv2ej3TBEJt (version=TLSv1
+	cipher=RC4-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 12 Mar 2013 02:02:29 -0700 (PDT)
+From: Hans-Peter Jansen <hpj@urpla.net>
+Subject: Re: Fwd: xfs_reno
+Date: Tue, 12 Mar 2013 10:02:09 +0100
+Message-ID: <5202910.jIRzyplXT6@xrated>
+In-Reply-To: <513E5113.60508@sgi.com>
+References: <20351675.Zy117sIl8Z@xrated> <513E5113.60508@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [ASSERT failure] transaction reservations changes bad?
-References: <20130312062001.GJ21651@dastard> <20130312062531.GK21651@dastard>
-In-Reply-To: <20130312062531.GK21651@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,121 +24,85 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Mark Tinguely <tinguely@sgi.com>
 Cc: xfs@oss.sgi.com
 
-Hi Dave,
-
-On 03/12/2013 02:25 PM, Dave Chinner wrote:
-> On Tue, Mar 12, 2013 at 05:20:02PM +1100, Dave Chinner wrote:
->> Folks,
->>
->> I just got this ASSERT failure running xfstests on a 3.1.8 xfsprogs
->> and a 3.9-rc1 kernel running test 297:
-> 
-> FYI, it's 100% reproducable here with:
-> 
-> # sudo MKFS_OPTIONS="-b size=512" ./check 297
-> 
-> (reproduced on multiple VMs now with the same command line)
-> 
-> Cheers,
-> 
-> Dave.
-> 
->>
->> [ 2593.733005] XFS: Assertion failed: BTOBB(need_bytes) < log->l_logBBsize, file: fs/xfs/xfs_log.c, line: 1451
->> [ 2593.736988] ------------[ cut here ]------------
->> [ 2593.738177] kernel BUG at fs/xfs/xfs_message.c:100!
->> [ 2593.739192] invalid opcode: 0000 [#1] SMP
->> [ 2593.740081] Modules linked in:
->> [ 2593.740786] CPU 0
->> [ 2593.741221] Pid: 1385, comm: mkdir Not tainted 3.8.0-dgc+ #472 Bochs Bochs
->> [ 2593.742630] RIP: 0010:[<ffffffff8146a1f2>]  [<ffffffff8146a1f2>] assfail+0x22/0x30
->> [ 2593.744173] RSP: 0018:ffff880038c23c98  EFLAGS: 00010292
->> [ 2593.745234] RAX: 000000000000005f RBX: ffff88003cfec800 RCX: 0000000000005251
->> [ 2593.746635] RDX: 0000000000005151 RSI: 0000000000000096 RDI: 0000000000000246
->> [ 2593.748048] RBP: ffff880038c23c98 R08: 000000000000000a R09: 0000000000000889
->> [ 2593.749471] R10: 0000000000000000 R11: 0000000000000888 R12: 0000000000000dcb
->> [ 2593.750862] R13: ffff88003cfec800 R14: 0000000000000003 R15: 0000000000000001
->> [ 2593.752276] FS:  00007f0e64cb97a0(0000) GS:ffff88003fc00000(0000) knlGS:0000000000000000
->> [ 2593.753895] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
->> [ 2593.755039] CR2: 000000000066c004 CR3: 000000003cf26000 CR4: 00000000000006f0
->> [ 2593.756472] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
->> [ 2593.757877] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
->> [ 2593.759285] Process mkdir (pid: 1385, threadinfo ffff880038c22000, task ffff88003cb483c0)
->> [ 2593.760914] Stack:
->> [ 2593.761345]  ffff880038c23cb8 ffffffff814c9a11 ffff88002fa170a8 ffff880007ac7420
->> [ 2593.762881]  ffff880038c23d18 ffffffff814cb608 0000000000000000 000111b838c23fd8
->> [ 2593.764429]  ffff880038c23fd8 ffff8800055733d0 ffff880005573000 0000000000000000
->> [ 2593.765964] Call Trace:
->> [ 2593.766449]  [<ffffffff814c9a11>] xlog_grant_push_ail+0x41/0xf0
->> [ 2593.767577]  [<ffffffff814cb608>] xfs_log_reserve+0xe8/0x270
->> [ 2593.768676]  [<ffffffff814c740e>] xfs_trans_reserve+0x2ee/0x300
->> [ 2593.769832]  [<ffffffff814c6ec7>] ? _xfs_trans_alloc+0x37/0xa0
->> [ 2593.770950]  [<ffffffff8146ed05>] xfs_create+0x185/0x660
->> [ 2593.771975]  [<ffffffff8118cadd>] ? lookup_real+0x1d/0x60
->> [ 2593.773028]  [<ffffffff814678c6>] xfs_vn_mknod+0xa6/0x1b0
->> [ 2593.774093]  [<ffffffff814679e6>] xfs_vn_mkdir+0x16/0x20
->> [ 2593.775112]  [<ffffffff81190ece>] vfs_mkdir+0x9e/0xf0
->> [ 2593.776092]  [<ffffffff81192862>] sys_mkdirat+0x62/0xe0
->> [ 2593.777111]  [<ffffffff811928f9>] sys_mkdir+0x19/0x20
->> [ 2593.778084]  [<ffffffff81be0f99>] system_call_fastpath+0x16/0x1b
->> [ 2593.779233] Code: e8 f4 fb ff ff 0f 0b 66 90 0f 1f 44 00 00 55 48 89 f1 41 89 d0 48 89 e5 48 89 fa 48 c7 c6 40 f9 f2 81 31 ff 31 c0 e8 1e fc ff ff <0f> 0b 66 66 66
->> [ 2593.784186] RIP  [<ffffffff8146a1f2>] assfail+0x22/0x30
->> [ 2593.785224]  RSP <ffff880038c23c98>
->> [ 2593.786366] ---[ end trace bf0cb9ec29b256a6 ]---
->>
->> This implies that the permanent transaction reservation ended up
->> larger than the log itself:
->>
->> $ sudo xfs_info /mnt/scratch/
->> [sudo] password for dave: 
->> meta-data=/dev/vdb               isize=256    agcount=16, agsize=1441792 blks
->>          =                       sectsz=512   attr=2
->> data     =                       bsize=512    blocks=23068672, imaxpct=25
->>          =                       sunit=512    swidth=6144 blks
->> naming   =version 2              bsize=4096   ascii-ci=0
->> log      =internal               bsize=512    blocks=2560, version=2
->>          =                       sectsz=512   sunit=512 blks, lazy-count=1
->> realtime =none                   extsz=4096   blocks=0, rtextents=0
->>
->> Can someone please check that the before/after mkdir transaction
->> reservation sizes are unchanged for such a configuration?
-I just did a quick verification. 
-
-# mkfs.xfs -V
-mkfs.xfs version 3.1.8
-
-# uname -a
-Linux koala 3.9.0-rc1 #80 SMP Tue Mar 12 15:06:39 CST 2013 x86_64 x86_64 x86_64 GNU/Linux
-
-# mkfs.xfs -f -b size=512 /dev/sda6
-meta-data=/dev/sda6              isize=256    agcount=4, agsize=5242880 blks
-         =                       sectsz=512   attr=2, projid32bit=0
-data     =                       bsize=512    blocks=20971520, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0
-log      =internal log           bsize=512    blocks=20480, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-
-
-The reservation size does not changed, both are 70072 bytes:
-
-[  230.905092] xfs_calc_mkdir_reservation: res=70072 bytes.
-
-However, I can always reproducing this issue with '"MKFS_OPTIONS=-b size=512" ./check 297' as well.
-
-
-Thanks,
--Jeff
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+QW0gTW9udGFnLCAxMS4gTcOkcnogMjAxMywgMTY6NDg6MDMgc2NocmllYiBNYXJrIFRpbmd1ZWx5
+Ogo+IE9uIDAzLzA2LzEzIDA4OjU1LCBIYW5zLVBldGVyIEphbnNlbiB3cm90ZToKPiA+IEhpIERh
+dmUsCj4gPiAKPiA+IEkgdHJpZWQgdG8gZ2F0aGVyIEJhcnJ5cyBTT0IsIGJ1dCBmYWlsZWQgc28g
+ZmFyLiBIaXMgdHJhY2UgZW5kcyBpbiAyMDA5Cj4gPiBnb29nbGUgd2lzZS4KPiA+IAo+ID4gSG93
+IGlzIHRoaXMgY2FzZSB1c3VhbGx5IGhhbmRsZWQ/Cj4gPiAKPiA+IEhlcmUncyB0aGUgY3VycmVu
+dCBzdGF0ZSBvZiB0aGluZ3MuCj4gPiAKPiA+IENoZWVycywKPiA+IFBldGUKPiA+IAo+ID4gCj4g
+PiAtLS0tLS0tLS0tICBXZWl0ZXJnZWxlaXRldGUgTmFjaHJpY2h0ICAtLS0tLS0tLS0tCj4gPiAK
+PiA+IEJldHJlZmY6IHhmc19yZW5vCj4gPiBEYXR1bTogTWl0dHdvY2gsIDYuIE3DpHJ6IDIwMTMs
+IDEyOjUyOjE5Cj4gPiBWb246IEhhbnMtUGV0ZXIgSmFuc2VuPGhwakB1cnBsYS5uZXQ+Cj4gPiBB
+bjogYm5hdWpva0BzZ2kuY29tCj4gPiAKPiA+IEhpIEJhcnJ5LAo+ID4gCj4gPiBhdHRhY2hlZCBp
+cyBhIHNsaWdodGx5IG1hbmdsZWQgdmVyc2lvbiBvZiB5b3VyIHhmc19yZW5vIHRvb2wsIHRoYXQg
+SSBiYWRseQo+ID4gbmVlZGVkIHJlY2VudGx5LiBXaGlsZSBhdCBpdCwgSSBwbGFuIHRvIHN1Ym1p
+dCBpdCwgYXMgaXQgc2F2ZWQgbXkgKnNzLgo+ID4gVGhhbmtzLgo+ID4gCj4gPiBBcGFydCBmcm9t
+IHJlbG9jYXRpb24gdG8geGZzcHJvZ3MsIEkganVzdCBjaGFuZ2VkIHRoaXMKPiA+IAo+ID4gKyAg
+ICAgICBsb2dfbWVzc2FnZShMT0dfREVCVUcsICIlczogJWxsdSAlbHUgJXMiLCBtc2csIG5vZGUt
+PmlubywKPiA+ICsgICAgICAgICAgICAgICAgICAgICAgIG5vZGUtPm51bXBhdGhzLCBub2RlLT5w
+YXRoc1swXSk7Cj4gPiAKPiA+IGZyb20gJWxsdSB0byAlbHUgZm9yIHRoZSBub2RlLT5udW1wYXRo
+cyBhcmd1bWVudC4gSXQgbWlnaHQgc3RpbGwgYmUgd3JvbmcsCj4gPiBhcyBudW1wYXRoIGlzIGRl
+ZmluZWQgYXMgbmxpbmtfdCB3aGljaCBpcyBhIF9fdTMyIHR5cGUsIGJ1dCB0aGUgJXMKPiA+IHBy
+aW50ZWQgZ2FyYmFnZSBsaWtlIHRoaXM6Cj4gPiAKPiA+IFNjYW5uaW5nIGRpcmVjdG9yeSB0cmVl
+Li4uCj4gPiB4ZnNfcmVubzogYWRkX25vZGVfcGF0aDogaW5vIDg2MTExNjMyMzUsIHBhdGgKPiA+
+IC93b3JrL2RsYmFzZS9ob3N0cy8xMS4yL3BpY28vdmFyL3J1bi9zY3JlZW5zCj4gPiB4ZnNfcmVu
+bzogYWRkX25vZGVfcGF0aDogaW5vIDg2MTExNjMyMzMsIHBhdGgKPiA+IC93b3JrL2RsYmFzZS9o
+b3N0cy8xMS4yL3BpY28vdmFyL3J1bi9wY3NjZC9wY3NjZC5ldmVudHMKPiA+IHhmc19yZW5vOiBh
+ZGRfbm9kZV9wYXRoOiBpbm8gODYxMTE2MzIzNCwgcGF0aAo+ID4gL3dvcmsvZGxiYXNlL2hvc3Rz
+LzExLjIvcGljby92YXIvcnVuL3VzY3JlZW5zCj4gPiB4ZnNfcmVubzogbm9kZWhhc2g6IDg2MTEx
+NjMyMzMgNjkyNDg4MTU5OTMzNDk3MzQ1IO+/ve+/vV3vv73vv71m77+9Ze+/vQo+ID4geGZzX3Jl
+bm86IG5vZGVoYXNoOiA4NjExMTYzMjM0IDY5MjM2NjgwMTMzNzU4MTU2OSDvv73vv71d77+977+9
+Zu+/vWXvv70KPiA+IHhmc19yZW5vOiBub2RlaGFzaDogODYxMTE2MzIzNSA2OTIyMjM4MzA0NjYy
+MzIzMjEg77+977+9Xe+/ve+/vWbvv71l77+9Cj4gPiAKPiA+IEkgZ3Vlc3MsIGdjYyBpcyBzbWFy
+dCBlbm91Z2ggdG8gc2VlLCB0aGF0IHRoZSBzdHJ1Y3QgbWVtYmVycyBvdmVybGFwIGhlcmUsCj4g
+PiBhbmQgcHJpbnRzIHRoZSBwYXRoc1swXSBhcmd1bWVudCBhcyBhICVsbHUgdmFsdWUuIFdoYXQg
+ZG8geW91IHRoaW5rPwo+ID4gCj4gPiBBbnl3YXksIEkgd2lsbCByZXZpc2UgdGhpcyBkdXJpbmcg
+dGhlIGNvdXJzZSBvZiBjcmVhdGluZyBhIHhsc3Rlc3RzIHRlc3QKPiA+IGZvciB4ZnNfcmVuby4u
+Lgo+ID4gCj4gPiBEbyB5b3UgYWxsb3cgbWUgdG8gYWRkIHlvdXIgU2lnbmVkLW9mZi1ieSB0byB0
+aGlzIHBhdGNoPwo+ID4gCj4gPiBJZiB5b3Ugd2FudCB0byBidWlsZCB0aGlzLCBhcHBseSBib3Ro
+IHBhdGNoZXMgdG8geGZzcHJvZ3MuCj4gPiAKPiA+IFRJQSwKPiA+IFBldGUKPiAKPiBIYXZlIHlv
+dSBiZWVuIGdldHRpbmcgIk91dCBvZiBtZW1vcnkiIHdhcm5pbmdzIG9uIHlvdXIgcnVucz8gSSBh
+bS4KCk5vLCBJIHdvdWxkIGhhdmUgbWVudGlvbmVkIHRoZW0uIEJ1dCBJIGd1ZXNzLCBteSBmaWxl
+IHN5c3RlbXMgYXJlIHRpbnkgCmNvbXBhcmVkIHRvIHlvdXJzLiBUaGUgYWZmZWN0ZWQgRlMgaGF2
+ZSAyLjhUIGFuZCA0LjFULCB3aXRoIGZvcm1lciB3aXRoIG1hbnkgCnNtYWxsIGZpbGVzIGFuZCBk
+aXJlY3RvcmllcywgdGhlIGxhdHRlciB3aXRoIG1hbnkgMkcgZmlsZXMuCiAKPiBDb21waWxpbmcs
+IEkgZ2V0IHRoZSB3YXJuaW5ncyBhYm91dCBoYXZpbmcgIlxyIiBpbiB0aGUgc3RyaW5ncy4gRm9y
+IGV4YW1wbGU6Cj4gCj4gcmVuby94ZnNfcmVuby5jOjE0MTU6IGludGVybmF0aW9uYWxpemVkIG1l
+c3NhZ2VzIHNob3VsZCBub3QgY29udGFpbiB0aGUKPiBgXHInIGVzY2FwZSBzZXF1ZW5jZQoKV2Vs
+bCwgdGhhdCdzIGZvciB0aGUgc3BpbiB3aGVlbCwgdGhhdCBtaWdodCBoYXZlIGludGVyZXN0aW5n
+IGVmZmVjdHMsIHdoZW4gCmxvY2FsaXplZCB0byByaWdodC10by1sZWZ0IGxhbmd1YWdlcy4uLgoK
+PiAgICAgICAgICAgICAgICAgICAgICAtLS0tLS0tLS0tCj4gSSB3b25kZXIgaWYgd2Ugc2hvdWxk
+IGFkZCBhIHRlbXAgZGlyZWN0b3J5IG9wdGlvbi4gSXQgc2VlbXMgdG8gd2FudCB0bwo+IHVzZSB0
+aGUgcGFyZW50IGRpcmVjdG9yeSBvZiB0aGUgZGlyZWN0b3J5IGFzIGEgdGVtcG9yYXJ5LiAKCldp
+dGhvdXQgZGlnZ2luZyBpbnRvIHRoaXMsIEkgY2FuIG9ubHkgZ3Vlc3MsIGJ1dCB0aGUgd2hvbGUg
+cG9pbnQgb2YgeGZzX3Jlbm8gCmlzIHJlbG9jYXRpbmcgdGhlIGlub2RlcyBvbiB0aGUgRlMgaW4g
+cXVlc3Rpb24gKndpdGhvdXQqIGNvcHlpbmcgZmlsZXMgYXJvdW5kLiAKVXNpbmcgYSBzZXBhcmF0
+ZSBURU1QIGRlZmVhdHMgdGhpcyBwdXJwb3NlLCBkb24ndCBpdD8KCkl0IG1pZ2h0IGJlIGluIG9y
+ZGVyIHRvIGFkZCBhIG5vdGUgdG8gdGhlIG1hbiBwYWdlIHRvIG5vdCB0cnkgdG8gdXNlIGl0IGlu
+CiJjcm9zcyBtb3VudCBvcGVyYXRpb24iIHNjZW5hcmlvcy4KCj4gQmVsb3cgaXMgdGhlCj4gcmVz
+dWx0IG9mIHJ1bm5pbmcgeGZzX3Jlbm8gb24gdGhlIHRhcmdldCBkaXJlY3RvcnkgaXMgIi9tbnQv
+eHh4Cj4gKGNoYW5naW5nIHRoZSBcciB0byA8Xk0+XG4gZm9yIHRoZSBlbWFpbCk6Cj4gCj4geGZz
+X3Jlbm86IGRpcmVjdG9yeTogMTI4IDEgL21uPF5NPgo+IHhmc19yZW5vOiAvbW50L3hmc19yZW5v
+X2VwZGFKYzogQ2FubmV0IHNldCB0YXJnZXQgZXh0ZW5kZWQgYXR0cmlidXRlczxeTT4KPiB4ZnNf
+cmVubzogZmFpbGVkIHRvIHJlbmFtZTogJy9tbnQveHh4L29yaWdpbicgdG8KPiAnL21udC94ZnNf
+cmVub19OWFFMV0kvb3JpZ2luJwo+IDxeTT4KPiB4ZnNfcmVubzogdW5hYmxlIHRvIG1vdmUgZGly
+ZWN0b3J5IGNvbnRlbnRzOiAvbW50L3h4eCB0bwo+IC9tbnQveGZzX3Jlbm9fTlhRTFdJCj4gPF5N
+Pgo+IHhmc19yZW5vOiBDYW5ub3Qgc3RhdCAvbW50L3hmc19yZW5vX2VwZGFKYzogSW5hcHByb3By
+aWF0ZSBpb2N0bCBmb3IgZGV2aWNlCj4gCj4gPF5NPgo+IHhmc19yZW5vOiB1bmFibGUgdG8gZHVw
+bGljYXRlIGRpcmVjdG9yeSBhdHRyaWJ1dGVzOiAvbW50L3hmc19yZW5vX2VwZGFKYwo+IHQveHh4
+Cj4gICAgICAgICAgICAgICAgICAgICAgLS0tLS0tCj4gL21udCBpcyBub3QgYW4gWEZTIGZpbGVz
+eXN0ZW0uIFdoZW4gbW91bnRpbmcgb24gdGhlIHJvb3QsIHNheSAvbW50LCB0aGUKPiBtZXNzYWdl
+IGxvb2sgbGlrZToKPiAKPiB4ZnNfcmVubzogQ2Fubm90IHN0YXQgLy94ZnNfcmVub19lcGRhSmM6
+IEluYXBwcm9wcmlhdGUgaW9jdGwgZm9yIGRldmljZQoKWW91IGxvc3QgbWUgaGVyZS4gV2hhdCBJ
+IGNhbiBzYXksIGlzIHRoYXQgdXNpbmcgZWcuICJ4ZnNfcmVubyAtdnBuIC93b3JrIiwgCmhlbmNl
+IG9uIHRoZSBtb3VudCBwb2ludCBkaXJlY3RseSwgZGlkIGFzIGFkdmVydGlzZWQuCgpDaGVlcnMs
+ClBldGUKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhm
+cyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFu
+L2xpc3RpbmZvL3hmcwo=
