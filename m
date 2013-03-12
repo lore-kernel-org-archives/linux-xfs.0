@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B5A827F66
-	for <xfs@oss.sgi.com>; Tue, 12 Mar 2013 10:44:36 -0500 (CDT)
-Message-ID: <513F4D76.5000600@sgi.com>
-Date: Tue, 12 Mar 2013 10:44:54 -0500
+	by oss.sgi.com (Postfix) with ESMTP id B6F3D7F52
+	for <xfs@oss.sgi.com>; Tue, 12 Mar 2013 11:33:51 -0500 (CDT)
+Message-ID: <513F58FE.1010200@sgi.com>
+Date: Tue, 12 Mar 2013 11:34:06 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs_repair: remove unconditional ASSERT(0)
-References: <513F40AD.10303@sandeen.net>
-In-Reply-To: <513F40AD.10303@sandeen.net>
+Subject: Re: [PATCH] xfsdump: properly set Parent's PID
+References: <1359663197-30473-1-git-send-email-cmaiolino@redhat.com>
+In-Reply-To: <1359663197-30473-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,47 +21,36 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: xfs@oss.sgi.com
 
-
-On 03/12/2013 09:50 AM, Eric Sandeen wrote:
-> I don't know what I was thinking in 7e8e3cc, but I added an
-> ASSERT(0) in the main path.  Obviously this isn't right.
+On 01/31/2013 02:13 PM, Carlos Maiolino wrote:
+> Set parentpid variable to the correct Parent's ID using getppid() instead of
+> getpid()
 >
-> Just remove it.
->
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 > ---
+>   common/main.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
 >
-> Really sorry, no idea what is up w/ my brain lately.
-> Trying to do too many things at once, too quickly.
+> diff --git a/common/main.c b/common/main.c
+> index 980d2d4..848a887 100644
+> --- a/common/main.c
+> +++ b/common/main.c
+> @@ -198,7 +198,7 @@ main( int argc, char *argv[] )
+>   	/* Get the parent's pid. will be used in signal handling
+>   	 * to differentiate parent from children.
+>   	 */
+> -	parentpid = getpid( );
+> +	parentpid = getppid( );
+>   	rval = atexit(mlog_exit_flush);
+>   	assert(rval == 0);
 >
-I can relate.  Thanks for the quick fix.
+>
+Sorry for the late review, this does not apply to current xfsdump tree.
 
-Looks good:
-
-Reviewed-by: Rich Johnston <rjohnston@sgi.com>
-
-This has been committed.
-
-Thanks
+Regards
 --Rich
-
-commit b326e067f1005d584bd8ad21bb9f3e2700230e29
-Author: Eric Sandeen <sandeen@sandeen.net>
-Date:   Tue Mar 12 14:50:21 2013 +0000
-
-     xfsprogs xfs_repair: remove unconditional ASSERT(0)
-
-     I don't know what I was thinking in 7e8e3cc, but I added an
-     ASSERT(0) in the main path.  Obviously this isn't right.
-
-     Just remove it.
-
-     Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-     Reviewed-by: Rich Johnston <rjohnston@sgi.com>
-     Signed-off-by: Rich Johnston <rjohnston@sgi.com>
 
 _______________________________________________
 xfs mailing list
