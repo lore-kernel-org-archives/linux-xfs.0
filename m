@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 89E1F7F9E
-	for <xfs@oss.sgi.com>; Tue, 12 Mar 2013 07:31:18 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id DF4E17FA2
+	for <xfs@oss.sgi.com>; Tue, 12 Mar 2013 07:31:24 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 76E768F8035
-	for <xfs@oss.sgi.com>; Tue, 12 Mar 2013 05:31:18 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id BDBD48F8035
+	for <xfs@oss.sgi.com>; Tue, 12 Mar 2013 05:31:24 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	2ovDyMjUyeWE2OJu for <xfs@oss.sgi.com>;
-	Tue, 12 Mar 2013 05:31:15 -0700 (PDT)
+	rVkaiXc98KbgKdvc for <xfs@oss.sgi.com>;
+	Tue, 12 Mar 2013 05:31:20 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UFOML-0001SC-Ex
-	for xfs@oss.sgi.com; Tue, 12 Mar 2013 23:31:13 +1100
+	(envelope-from <dave@fromorbit.com>) id 1UFOMQ-0001S7-D0
+	for xfs@oss.sgi.com; Tue, 12 Mar 2013 23:31:18 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UFOMG-0002MW-BL
-	for xfs@oss.sgi.com; Tue, 12 Mar 2013 23:31:08 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1UFOM6-0002MK-8k
+	for xfs@oss.sgi.com; Tue, 12 Mar 2013 23:30:58 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 12/21] xfs: add CRC checking to dir2 free blocks
-Date: Tue, 12 Mar 2013 23:30:45 +1100
-Message-Id: <1363091454-8852-13-git-send-email-david@fromorbit.com>
+Subject: [PATCH 10/21] xfs: add CRC checks to remote symlinks
+Date: Tue, 12 Mar 2013 23:30:43 +1100
+Message-Id: <1363091454-8852-11-git-send-email-david@fromorbit.com>
 In-Reply-To: <1363091454-8852-1-git-send-email-david@fromorbit.com>
 References: <1363091454-8852-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,957 +38,1449 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-This addition follows the same pattern as the dir2 block CRCs, but
-with a few differences. The main difference is that the free block
-header is different between the v2 and v3 formats, so an "in-core"
-free block header has been added and _todisk/_from_disk functions
-used to abstract the differences in structure format from the code.
-This is similar to the on-disk superblock versus the in-core
-superblock setup. The in-core strucutre is populated when the buffer
-is read from disk, all the in memory checks and modifications are
-done on the in-core version of the structure which is written back
-to the buffer before the buffer is logged.
+Add a header to the remote symlink block, containing location and
+owner information, as well as CRCs and LSN fields. This requires
+verifiers to be added to the remote symlink buffers for CRC enabled
+filesystems.
+
+This also fixes a bug reading multiple block symlinks, where the second block
+overwrites the first block when copying out the link name.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_dir2_format.h |   55 +++++-
- fs/xfs/xfs_dir2_leaf.c   |   15 +-
- fs/xfs/xfs_dir2_node.c   |  476 +++++++++++++++++++++++++++++++---------------
- 3 files changed, 384 insertions(+), 162 deletions(-)
+ fs/xfs/Makefile          |    5 +-
+ fs/xfs/xfs_bmap.c        |   21 +-
+ fs/xfs/xfs_buf_item.h    |    4 +-
+ fs/xfs/xfs_log_recover.c |    9 +
+ fs/xfs/xfs_symlink.c     |  719 ++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_symlink.h     |   53 ++++
+ fs/xfs/xfs_vnodeops.c    |  480 +------------------------------
+ 7 files changed, 797 insertions(+), 494 deletions(-)
+ create mode 100644 fs/xfs/xfs_symlink.c
+ create mode 100644 fs/xfs/xfs_symlink.h
 
-diff --git a/fs/xfs/xfs_dir2_format.h b/fs/xfs/xfs_dir2_format.h
-index 7dc26b0..bec058f 100644
---- a/fs/xfs/xfs_dir2_format.h
-+++ b/fs/xfs/xfs_dir2_format.h
-@@ -66,6 +66,7 @@
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index d02201d..062f25c 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -45,11 +45,11 @@ xfs-y				+= xfs_aops.o \
+ 				   xfs_itable.o \
+ 				   xfs_message.o \
+ 				   xfs_mru_cache.o \
+-				   xfs_super.o \
+-				   xfs_xattr.o \
+ 				   xfs_rename.o \
++				   xfs_super.o \
+ 				   xfs_utils.o \
+ 				   xfs_vnodeops.o \
++				   xfs_xattr.o \
+ 				   kmem.o \
+ 				   uuid.o
  
- #define	XFS_DIR3_BLOCK_MAGIC	0x58444233	/* XDB3: single block dirs */
- #define	XFS_DIR3_DATA_MAGIC	0x58444433	/* XDD3: multiblock dirs */
-+#define	XFS_DIR3_FREE_MAGIC	0x58444633	/* XDF3: free index blocks */
+@@ -73,6 +73,7 @@ xfs-y				+= xfs_alloc.o \
+ 				   xfs_inode.o \
+ 				   xfs_log_recover.o \
+ 				   xfs_mount.o \
++				   xfs_symlink.o \
+ 				   xfs_trans.o
+ 
+ # low-level transaction/log code
+diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
+index 0531cd3..0fcb7f4 100644
+--- a/fs/xfs/xfs_bmap.c
++++ b/fs/xfs/xfs_bmap.c
+@@ -47,6 +47,7 @@
+ #include "xfs_filestream.h"
+ #include "xfs_vnodeops.h"
+ #include "xfs_trace.h"
++#include "xfs_symlink.h"
+ 
+ 
+ kmem_zone_t		*xfs_bmap_free_item_zone;
+@@ -1321,9 +1322,10 @@ xfs_bmap_add_attrfork_extents(
+ }
  
  /*
-  * Byte offset in data block and shortform entry.
-@@ -663,19 +664,65 @@ typedef struct xfs_dir2_free {
- 						/* unused entries are -1 */
- } xfs_dir2_free_t;
+- * Block initialisation functions for local to extent format conversion.
+- * As these get more complex, they will be moved to the relevant files,
+- * but for now they are too simple to worry about.
++ * Block initialisation function for local to extent format conversion.
++ *
++ * This shouldn't actually be called by anyone, so make sure debug kernels cause
++ * a noticable failure.
+  */
+ STATIC void
+ xfs_bmap_local_to_extents_init_fn(
+@@ -1332,23 +1334,12 @@ xfs_bmap_local_to_extents_init_fn(
+ 	struct xfs_inode	*ip,
+ 	struct xfs_ifork	*ifp)
+ {
++	ASSERT(0);
+ 	bp->b_ops = &xfs_bmbt_buf_ops;
+ 	memcpy(bp->b_addr, ifp->if_u1.if_data, ifp->if_bytes);
+ 	xfs_trans_buf_set_type(tp, bp, XFS_BLF_BTREE_BUF);
+ }
  
--static inline int xfs_dir2_free_max_bests(struct xfs_mount *mp)
-+struct xfs_dir3_free_hdr {
-+	struct xfs_dir3_blk_hdr	hdr;
-+	__be32			firstdb;	/* db of first entry */
-+	__be32			nvalid;		/* count of valid entries */
-+	__be32			nused;		/* count of used entries */
-+};
+-STATIC void
+-xfs_symlink_local_to_remote(
+-	struct xfs_trans	*tp,
+-	struct xfs_buf		*bp,
+-	struct xfs_inode	*ip,
+-	struct xfs_ifork	*ifp)
+-{
+-	/* remote symlink blocks are not verifiable until CRCs come along */
+-	bp->b_ops = NULL;
+-	memcpy(bp->b_addr, ifp->if_u1.if_data, ifp->if_bytes);
+-}
+-
+ /*
+  * Called from xfs_bmap_add_attrfork to handle local format files. Each
+  * different data fork content type needs a different callout to do the
+diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
+index abae8c8..09cab4e 100644
+--- a/fs/xfs/xfs_buf_item.h
++++ b/fs/xfs/xfs_buf_item.h
+@@ -49,6 +49,7 @@ extern kmem_zone_t	*xfs_buf_item_zone;
+ #define XFS_BLF_AGFL_BUF	(1<<7)
+ #define XFS_BLF_AGI_BUF		(1<<8)
+ #define XFS_BLF_DINO_BUF	(1<<9)
++#define XFS_BLF_SYMLINK_BUF	(1<<10)
+ 
+ #define XFS_BLF_TYPE_MASK	\
+ 		(XFS_BLF_UDQUOT_BUF | \
+@@ -58,7 +59,8 @@ extern kmem_zone_t	*xfs_buf_item_zone;
+ 		 XFS_BLF_AGF_BUF | \
+ 		 XFS_BLF_AGFL_BUF | \
+ 		 XFS_BLF_AGI_BUF | \
+-		 XFS_BLF_DINO_BUF)
++		 XFS_BLF_DINO_BUF | \
++		 XFS_BLF_SYMLINK_BUF)
+ 
+ #define	XFS_BLF_CHUNK		128
+ #define	XFS_BLF_SHIFT		7
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 6d08eaa..352d794 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -45,6 +45,7 @@
+ #include "xfs_cksum.h"
+ #include "xfs_trace.h"
+ #include "xfs_icache.h"
++#include "xfs_symlink.h"
+ 
+ STATIC int
+ xlog_find_zeroed(
+@@ -2005,6 +2006,14 @@ xlog_recover_do_reg_buffer(
+ 		}
+ 		bp->b_ops = &xfs_inode_buf_ops;
+ 		break;
++	case XFS_BLF_SYMLINK_BUF:
++		if (*(__be32 *)bp->b_addr != cpu_to_be32(XFS_SYMLINK_MAGIC)) {
++			xfs_warn(mp, "Bad symlink block magic!");
++			ASSERT(0);
++			break;
++		}
++		bp->b_ops = &xfs_symlink_buf_ops;
++		break;
+ 	default:
+ 		break;
+ 	}
+diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+new file mode 100644
+index 0000000..33e8f13
+--- /dev/null
++++ b/fs/xfs/xfs_symlink.c
+@@ -0,0 +1,719 @@
++/*
++ * Copyright (c) 2000-2006 Silicon Graphics, Inc.
++ * Copyright (c) 2012-2013 Red Hat, Inc.
++ * All rights reserved.
++ */
 +
-+struct xfs_dir3_free {
-+	struct xfs_dir3_free_hdr hdr;
-+	__be16			bests[];	/* best free counts */
-+						/* unused entries are -1 */
-+};
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_types.h"
++#include "xfs_bit.h"
++#include "xfs_log.h"
++#include "xfs_trans.h"
++#include "xfs_sb.h"
++#include "xfs_ag.h"
++#include "xfs_dir2.h"
++#include "xfs_mount.h"
++#include "xfs_da_btree.h"
++#include "xfs_bmap_btree.h"
++#include "xfs_ialloc_btree.h"
++#include "xfs_dinode.h"
++#include "xfs_inode.h"
++#include "xfs_inode_item.h"
++#include "xfs_itable.h"
++#include "xfs_ialloc.h"
++#include "xfs_alloc.h"
++#include "xfs_bmap.h"
++#include "xfs_error.h"
++#include "xfs_quota.h"
++#include "xfs_utils.h"
++#include "xfs_trans_space.h"
++#include "xfs_log_priv.h"
++#include "xfs_trace.h"
++#include "xfs_symlink.h"
++#include "xfs_cksum.h"
++#include "xfs_buf_item.h"
 +
-+#define XFS_DIR3_FREE_CRC_OFF  offsetof(struct xfs_dir3_free, hdr.hdr.crc)
 +
 +/*
-+ * In core version of the free block header, abstracted away from on-disk format
-+ * differences. Use this in the code, and convert to/from the disk version using
-+ * xfs_dir3_free_hdr_from_disk/xfs_dir3_free_hdr_to_disk.
++ * Each contiguous block has a header, so it is not just a simple pathlen
++ * to FSB conversion.
 + */
-+struct xfs_dir3_icfree_hdr {
-+	__uint32_t	magic;
-+	__uint32_t	firstdb;
-+	__uint32_t	nvalid;
-+	__uint32_t	nused;
-+
-+};
-+
-+void xfs_dir3_free_hdr_from_disk(struct xfs_dir3_icfree_hdr *to,
-+				 struct xfs_dir2_free *from);
-+
-+static inline int
-+xfs_dir3_free_hdr_size(struct xfs_mount *mp)
- {
--	return (mp->m_dirblksize - sizeof(struct xfs_dir2_free_hdr)) /
-+	if (xfs_sb_version_hascrc(&mp->m_sb))
-+		return sizeof(struct xfs_dir3_free_hdr);
-+	return sizeof(struct xfs_dir2_free_hdr);
-+}
-+
-+static inline int
-+xfs_dir3_free_max_bests(struct xfs_mount *mp)
++int
++xfs_symlink_blocks(
++	struct xfs_mount *mp,
++	int		pathlen)
 +{
-+	return (mp->m_dirblksize - xfs_dir3_free_hdr_size(mp)) /
- 		sizeof(xfs_dir2_data_off_t);
- }
- 
-+static inline __be16 *
-+xfs_dir3_free_bests_p(struct xfs_mount *mp, struct xfs_dir2_free *free)
-+{
-+	return (__be16 *)((char *)free + xfs_dir3_free_hdr_size(mp));
-+}
++	int		fsblocks = 0;
++	int		len = pathlen;
 +
- /*
-  * Convert data space db to the corresponding free db.
-  */
- static inline xfs_dir2_db_t
- xfs_dir2_db_to_fdb(struct xfs_mount *mp, xfs_dir2_db_t db)
- {
--	return XFS_DIR2_FREE_FIRSTDB(mp) + db / xfs_dir2_free_max_bests(mp);
-+	return XFS_DIR2_FREE_FIRSTDB(mp) + db / xfs_dir3_free_max_bests(mp);
- }
- 
- /*
-@@ -684,7 +731,7 @@ xfs_dir2_db_to_fdb(struct xfs_mount *mp, xfs_dir2_db_t db)
- static inline int
- xfs_dir2_db_to_fdindex(struct xfs_mount *mp, xfs_dir2_db_t db)
- {
--	return db % xfs_dir2_free_max_bests(mp);
-+	return db % xfs_dir3_free_max_bests(mp);
- }
- 
- /*
-diff --git a/fs/xfs/xfs_dir2_leaf.c b/fs/xfs/xfs_dir2_leaf.c
-index ef163f0..979735b 100644
---- a/fs/xfs/xfs_dir2_leaf.c
-+++ b/fs/xfs/xfs_dir2_leaf.c
-@@ -1881,6 +1881,7 @@ xfs_dir2_node_to_leaf(
- 	xfs_mount_t		*mp;		/* filesystem mount point */
- 	int			rval;		/* successful free trim? */
- 	xfs_trans_t		*tp;		/* transaction pointer */
-+	struct xfs_dir3_icfree_hdr freehdr;
- 
- 	/*
- 	 * There's more than a leaf level in the btree, so there must
-@@ -1938,15 +1939,15 @@ xfs_dir2_node_to_leaf(
- 	if (error)
- 		return error;
- 	free = fbp->b_addr;
--	ASSERT(free->hdr.magic == cpu_to_be32(XFS_DIR2_FREE_MAGIC));
--	ASSERT(!free->hdr.firstdb);
-+	xfs_dir3_free_hdr_from_disk(&freehdr, free);
++	do {
++		fsblocks++;
++		len -= XFS_SYMLINK_BUF_SPACE(mp, mp->m_sb.sb_blocksize);
++	} while (len > 0);
 +
-+	ASSERT(!freehdr.firstdb);
- 
- 	/*
- 	 * Now see if the leafn and free data will fit in a leaf1.
- 	 * If not, release the buffer and give up.
- 	 */
--	if (xfs_dir2_leaf_size(&leaf->hdr, be32_to_cpu(free->hdr.nvalid)) >
--			mp->m_dirblksize) {
-+	if (xfs_dir2_leaf_size(&leaf->hdr, freehdr.nvalid) > mp->m_dirblksize) {
- 		xfs_trans_brelse(tp, fbp);
- 		return 0;
- 	}
-@@ -1967,12 +1968,12 @@ xfs_dir2_node_to_leaf(
- 	 * Set up the leaf tail from the freespace block.
- 	 */
- 	ltp = xfs_dir2_leaf_tail_p(mp, leaf);
--	ltp->bestcount = free->hdr.nvalid;
-+	ltp->bestcount = cpu_to_be32(freehdr.nvalid);
- 	/*
- 	 * Set up the leaf bests table.
- 	 */
--	memcpy(xfs_dir2_leaf_bests_p(ltp), free->bests,
--		be32_to_cpu(ltp->bestcount) * sizeof(xfs_dir2_data_off_t));
-+	memcpy(xfs_dir2_leaf_bests_p(ltp), xfs_dir3_free_bests_p(mp, free),
-+		freehdr.nvalid * sizeof(xfs_dir2_data_off_t));
- 	xfs_dir2_leaf_log_bests(tp, lbp, 0, be32_to_cpu(ltp->bestcount) - 1);
- 	xfs_dir2_leaf_log_tail(tp, lbp);
- 	xfs_dir2_leaf_check(dp, lbp);
-diff --git a/fs/xfs/xfs_dir2_node.c b/fs/xfs/xfs_dir2_node.c
-index 985d70b..074fa68 100644
---- a/fs/xfs/xfs_dir2_node.c
-+++ b/fs/xfs/xfs_dir2_node.c
-@@ -1,5 +1,6 @@
- /*
-  * Copyright (c) 2000-2005 Silicon Graphics, Inc.
-+ * Copyright (c) 2013 Red Hat, Inc.
-  * All Rights Reserved.
-  *
-  * This program is free software; you can redistribute it and/or
-@@ -32,6 +33,8 @@
- #include "xfs_dir2_priv.h"
- #include "xfs_error.h"
- #include "xfs_trace.h"
-+#include "xfs_buf_item.h"
-+#include "xfs_cksum.h"
- 
- /*
-  * Function declarations.
-@@ -55,44 +58,78 @@ static int xfs_dir2_leafn_remove(xfs_da_args_t *args, struct xfs_buf *bp,
- static int xfs_dir2_node_addname_int(xfs_da_args_t *args,
- 				     xfs_da_state_blk_t *fblk);
- 
--static void
--xfs_dir2_free_verify(
-+static bool
-+xfs_dir3_free_verify(
- 	struct xfs_buf		*bp)
- {
- 	struct xfs_mount	*mp = bp->b_target->bt_mount;
- 	struct xfs_dir2_free_hdr *hdr = bp->b_addr;
--	int			block_ok = 0;
- 
--	block_ok = hdr->magic == cpu_to_be32(XFS_DIR2_FREE_MAGIC);
--	if (!block_ok) {
--		XFS_CORRUPTION_ERROR("xfs_dir2_free_verify magic",
--				     XFS_ERRLEVEL_LOW, mp, hdr);
--		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+	if (xfs_sb_version_hascrc(&mp->m_sb)) {
-+		struct xfs_dir3_blk_hdr *hdr3 = bp->b_addr;
-+
-+		if (hdr3->magic != be32_to_cpu(XFS_DIR3_FREE_MAGIC))
-+			return false;
-+		if (!uuid_equal(&hdr3->uuid, &mp->m_sb.sb_uuid))
-+			return false;
-+		if (be64_to_cpu(hdr3->blkno) != bp->b_bn)
-+			return false;
-+	} else {
-+		if (hdr->magic != be32_to_cpu(XFS_DIR2_FREE_MAGIC))
-+			return false;
- 	}
-+
-+	/* XXX: should bounds check the xfs_dir3_icfree_hdr here */
-+
-+	return true;
- }
- 
- static void
--xfs_dir2_free_read_verify(
-+xfs_dir3_free_read_verify(
- 	struct xfs_buf	*bp)
- {
--	xfs_dir2_free_verify(bp);
-+	struct xfs_mount	*mp = bp->b_target->bt_mount;
-+
-+	if ((xfs_sb_version_hascrc(&mp->m_sb) &&
-+	     !xfs_verify_cksum(bp->b_addr, BBTOB(bp->b_length),
-+					  XFS_DIR3_FREE_CRC_OFF)) ||
-+	    !xfs_dir3_free_verify(bp)) {
-+		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
-+		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+	}
- }
- 
- static void
--xfs_dir2_free_write_verify(
-+xfs_dir3_free_write_verify(
- 	struct xfs_buf	*bp)
- {
--	xfs_dir2_free_verify(bp);
-+	struct xfs_mount	*mp = bp->b_target->bt_mount;
-+	struct xfs_buf_log_item	*bip = bp->b_fspriv;
-+	struct xfs_dir3_blk_hdr	*hdr3 = bp->b_addr;
-+
-+	if (!xfs_dir3_free_verify(bp)) {
-+		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
-+		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+		return;
-+	}
-+
-+	if (!xfs_sb_version_hascrc(&mp->m_sb))
-+		return;
-+
-+	if (bip)
-+		hdr3->lsn = cpu_to_be64(bip->bli_item.li_lsn);
-+
-+	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length), XFS_DIR3_FREE_CRC_OFF);
- }
- 
--static const struct xfs_buf_ops xfs_dir2_free_buf_ops = {
--	.verify_read = xfs_dir2_free_read_verify,
--	.verify_write = xfs_dir2_free_write_verify,
-+static const struct xfs_buf_ops xfs_dir3_free_buf_ops = {
-+	.verify_read = xfs_dir3_free_read_verify,
-+	.verify_write = xfs_dir3_free_write_verify,
- };
- 
- 
- static int
--__xfs_dir2_free_read(
-+__xfs_dir3_free_read(
- 	struct xfs_trans	*tp,
- 	struct xfs_inode	*dp,
- 	xfs_dablk_t		fbno,
-@@ -100,7 +137,7 @@ __xfs_dir2_free_read(
- 	struct xfs_buf		**bpp)
- {
- 	return xfs_da_read_buf(tp, dp, fbno, mappedbno, bpp,
--				XFS_DATA_FORK, &xfs_dir2_free_buf_ops);
-+				XFS_DATA_FORK, &xfs_dir3_free_buf_ops);
- }
- 
- int
-@@ -110,7 +147,7 @@ xfs_dir2_free_read(
- 	xfs_dablk_t		fbno,
- 	struct xfs_buf		**bpp)
- {
--	return __xfs_dir2_free_read(tp, dp, fbno, -1, bpp);
-+	return __xfs_dir3_free_read(tp, dp, fbno, -1, bpp);
- }
- 
- static int
-@@ -120,7 +157,95 @@ xfs_dir2_free_try_read(
- 	xfs_dablk_t		fbno,
- 	struct xfs_buf		**bpp)
- {
--	return __xfs_dir2_free_read(tp, dp, fbno, -2, bpp);
-+	return __xfs_dir3_free_read(tp, dp, fbno, -2, bpp);
-+}
-+
-+
-+void
-+xfs_dir3_free_hdr_from_disk(
-+	struct xfs_dir3_icfree_hdr	*to,
-+	struct xfs_dir2_free		*from)
-+{
-+	if (from->hdr.magic == cpu_to_be32(XFS_DIR2_FREE_MAGIC)) {
-+		to->magic = be32_to_cpu(from->hdr.magic);
-+		to->firstdb = be32_to_cpu(from->hdr.firstdb);
-+		to->nvalid = be32_to_cpu(from->hdr.nvalid);
-+		to->nused = be32_to_cpu(from->hdr.nused);
-+	} else {
-+		struct xfs_dir3_free_hdr *hdr3 = (struct xfs_dir3_free_hdr *)from;
-+
-+		to->magic = be32_to_cpu(hdr3->hdr.magic);
-+		to->firstdb = be32_to_cpu(hdr3->firstdb);
-+		to->nvalid = be32_to_cpu(hdr3->nvalid);
-+		to->nused = be32_to_cpu(hdr3->nused);
-+	}
-+
-+	ASSERT(to->magic == XFS_DIR2_FREE_MAGIC ||
-+	       to->magic == XFS_DIR3_FREE_MAGIC);
-+}
-+
-+static void
-+xfs_dir3_free_hdr_to_disk(
-+	struct xfs_dir2_free		*to,
-+	struct xfs_dir3_icfree_hdr	*from)
-+{
-+	ASSERT(from->magic == XFS_DIR2_FREE_MAGIC ||
-+	       from->magic == XFS_DIR3_FREE_MAGIC);
-+
-+	if (from->magic == XFS_DIR2_FREE_MAGIC) {
-+		to->hdr.magic = cpu_to_be32(from->magic);
-+		to->hdr.firstdb = cpu_to_be32(from->firstdb);
-+		to->hdr.nvalid = cpu_to_be32(from->nvalid);
-+		to->hdr.nused = cpu_to_be32(from->nused);
-+	} else {
-+		struct xfs_dir3_free_hdr *hdr3 = (struct xfs_dir3_free_hdr *)to;
-+
-+		hdr3->hdr.magic = cpu_to_be32(from->magic);
-+		hdr3->firstdb = cpu_to_be32(from->firstdb);
-+		hdr3->nvalid = cpu_to_be32(from->nvalid);
-+		hdr3->nused = cpu_to_be32(from->nused);
-+	}
++	ASSERT(fsblocks <= XFS_SYMLINK_MAPS);
++	return fsblocks;
 +}
 +
 +static int
-+xfs_dir3_free_get_buf(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*dp,
-+	xfs_dir2_db_t		fbno,
-+	struct xfs_buf		**bpp)
++xfs_symlink_hdr_set(
++	struct xfs_mount	*mp,
++	xfs_ino_t		ino,
++	uint32_t		offset,
++	uint32_t		size,
++	struct xfs_buf		*bp)
 +{
-+	struct xfs_mount	*mp = dp->i_mount;
-+	struct xfs_buf		*bp;
-+	int			error;
-+	struct xfs_dir3_icfree_hdr hdr;
++	struct xfs_dsymlink_hdr	*dsl = bp->b_addr;
 +
-+	error = xfs_da_get_buf(tp, dp, xfs_dir2_db_to_da(mp, fbno),
-+				   -1, &bp, XFS_DATA_FORK);
-+	if (error)
-+		return error;
++	if (!xfs_sb_version_hascrc(&mp->m_sb))
++		return 0;
 +
-+	bp->b_ops = &xfs_dir3_free_buf_ops;;
++	dsl->sl_magic = cpu_to_be32(XFS_SYMLINK_MAGIC);
++	dsl->sl_offset = cpu_to_be32(offset);
++	dsl->sl_bytes = cpu_to_be32(size);
++	uuid_copy(&dsl->sl_uuid, &mp->m_sb.sb_uuid);
++	dsl->sl_owner = cpu_to_be64(ino);
++	dsl->sl_blkno = cpu_to_be64(bp->b_bn);
++	bp->b_ops = &xfs_symlink_buf_ops;
 +
-+	/*
-+	 * Initialize the new block to be empty, and remember
-+	 * its first slot as our empty slot.
-+	 */
-+	hdr.magic = XFS_DIR2_FREE_MAGIC;
-+	hdr.firstdb = 0;
-+	hdr.nused = 0;
-+	hdr.nvalid = 0;
-+	if (xfs_sb_version_hascrc(&mp->m_sb)) {
-+		struct xfs_dir3_free_hdr *hdr3 = bp->b_addr;
++	return sizeof(struct xfs_dsymlink_hdr);
++}
 +
-+		hdr.magic = XFS_DIR3_FREE_MAGIC;
-+		hdr3->hdr.blkno = cpu_to_be64(bp->b_bn);
-+		hdr3->hdr.owner = cpu_to_be64(dp->i_ino);
-+		uuid_copy(&hdr3->hdr.uuid, &mp->m_sb.sb_uuid);
++/*
++ * Checking of the symlink header is split into two parts. the verifier does
++ * CRC, location and bounds checking, the unpacking function checks the path
++ * parameters and owner.
++ */
++bool
++xfs_symlink_hdr_ok(
++	struct xfs_mount	*mp,
++	xfs_ino_t		ino,
++	uint32_t		offset,
++	uint32_t		size,
++	struct xfs_buf		*bp)
++{
++	struct xfs_dsymlink_hdr *dsl = bp->b_addr;
 +
-+	}
-+	xfs_dir3_free_hdr_to_disk(bp->b_addr, &hdr);
-+	*bpp = bp;
-+	return 0;
- }
- 
- /*
-@@ -134,13 +259,16 @@ xfs_dir2_free_log_bests(
- 	int			last)		/* last entry to log */
- {
- 	xfs_dir2_free_t		*free;		/* freespace structure */
-+	__be16			*bests;
- 
- 	free = bp->b_addr;
--	ASSERT(free->hdr.magic == cpu_to_be32(XFS_DIR2_FREE_MAGIC));
-+	bests = xfs_dir3_free_bests_p(tp->t_mountp, free);
-+	ASSERT(free->hdr.magic == cpu_to_be32(XFS_DIR2_FREE_MAGIC) ||
-+	       free->hdr.magic == cpu_to_be32(XFS_DIR3_FREE_MAGIC));
- 	xfs_trans_log_buf(tp, bp,
--		(uint)((char *)&free->bests[first] - (char *)free),
--		(uint)((char *)&free->bests[last] - (char *)free +
--		       sizeof(free->bests[0]) - 1));
-+		(uint)((char *)&bests[first] - (char *)free),
-+		(uint)((char *)&bests[last] - (char *)free +
-+		       sizeof(bests[0]) - 1));
- }
- 
- /*
-@@ -154,9 +282,9 @@ xfs_dir2_free_log_header(
- 	xfs_dir2_free_t		*free;		/* freespace structure */
- 
- 	free = bp->b_addr;
--	ASSERT(free->hdr.magic == cpu_to_be32(XFS_DIR2_FREE_MAGIC));
--	xfs_trans_log_buf(tp, bp, (uint)((char *)&free->hdr - (char *)free),
--		(uint)(sizeof(xfs_dir2_free_hdr_t) - 1));
-+	ASSERT(free->hdr.magic == cpu_to_be32(XFS_DIR2_FREE_MAGIC) ||
-+	       free->hdr.magic == cpu_to_be32(XFS_DIR3_FREE_MAGIC));
-+	xfs_trans_log_buf(tp, bp, 0, xfs_dir3_free_hdr_size(tp->t_mountp) - 1);
- }
- 
- /*
-@@ -183,6 +311,7 @@ xfs_dir2_leaf_to_node(
- 	xfs_dir2_data_off_t	off;		/* freespace entry value */
- 	__be16			*to;		/* pointer to freespace entry */
- 	xfs_trans_t		*tp;		/* transaction pointer */
-+	struct xfs_dir3_icfree_hdr freehdr;
- 
- 	trace_xfs_dir2_leaf_to_node(args);
- 
-@@ -199,43 +328,43 @@ xfs_dir2_leaf_to_node(
- 	/*
- 	 * Get the buffer for the new freespace block.
- 	 */
--	error = xfs_da_get_buf(tp, dp, xfs_dir2_db_to_da(mp, fdb), -1, &fbp,
--				XFS_DATA_FORK);
-+	error = xfs_dir3_free_get_buf(tp, dp, fdb, &fbp);
- 	if (error)
- 		return error;
--	fbp->b_ops = &xfs_dir2_free_buf_ops;
- 
- 	free = fbp->b_addr;
-+	xfs_dir3_free_hdr_from_disk(&freehdr, free);
- 	leaf = lbp->b_addr;
- 	ltp = xfs_dir2_leaf_tail_p(mp, leaf);
--	/*
--	 * Initialize the freespace block header.
--	 */
--	free->hdr.magic = cpu_to_be32(XFS_DIR2_FREE_MAGIC);
--	free->hdr.firstdb = 0;
--	ASSERT(be32_to_cpu(ltp->bestcount) <= (uint)dp->i_d.di_size / mp->m_dirblksize);
--	free->hdr.nvalid = ltp->bestcount;
-+	ASSERT(be32_to_cpu(ltp->bestcount) <=
-+				(uint)dp->i_d.di_size / mp->m_dirblksize);
++	if (offset != be32_to_cpu(dsl->sl_offset))
++		return false;
++	if (size != be32_to_cpu(dsl->sl_bytes))
++		return false;
++	if (ino != be64_to_cpu(dsl->sl_owner))
++		return false;
 +
- 	/*
- 	 * Copy freespace entries from the leaf block to the new block.
- 	 * Count active entries.
- 	 */
--	for (i = n = 0, from = xfs_dir2_leaf_bests_p(ltp), to = free->bests;
--	     i < be32_to_cpu(ltp->bestcount); i++, from++, to++) {
-+	from = xfs_dir2_leaf_bests_p(ltp);
-+	to = xfs_dir3_free_bests_p(mp, free);
-+	for (i = n = 0; i < be32_to_cpu(ltp->bestcount); i++, from++, to++) {
- 		if ((off = be16_to_cpu(*from)) != NULLDATAOFF)
- 			n++;
- 		*to = cpu_to_be16(off);
- 	}
--	free->hdr.nused = cpu_to_be32(n);
--
--	lbp->b_ops = &xfs_dir2_leafn_buf_ops;
--	leaf->hdr.info.magic = cpu_to_be16(XFS_DIR2_LEAFN_MAGIC);
- 
- 	/*
--	 * Log everything.
-+	 * Now initialize the freespace block header.
- 	 */
--	xfs_dir2_leaf_log_header(tp, lbp);
-+	freehdr.nused = n;
-+	freehdr.nvalid = be32_to_cpu(ltp->bestcount);
++	/* ok */
++	return true;
 +
-+	xfs_dir3_free_hdr_to_disk(fbp->b_addr, &freehdr);
-+	xfs_dir2_free_log_bests(tp, fbp, 0, freehdr.nvalid - 1);
- 	xfs_dir2_free_log_header(tp, fbp);
--	xfs_dir2_free_log_bests(tp, fbp, 0, be32_to_cpu(free->hdr.nvalid) - 1);
++}
 +
-+	/* convert the leaf to a leafnode */
-+	leaf->hdr.info.magic = cpu_to_be16(XFS_DIR2_LEAFN_MAGIC);
-+	lbp->b_ops = &xfs_dir2_leafn_buf_ops;
-+	xfs_dir2_leaf_log_header(tp, lbp);
- 	xfs_dir2_leafn_check(dp, lbp);
- 	return 0;
- }
-@@ -354,6 +483,23 @@ xfs_dir2_leafn_check(
- 	}
- 	ASSERT(be16_to_cpu(leaf->hdr.stale) == stale);
- }
++static bool
++xfs_symlink_verify(
++	struct xfs_buf		*bp)
++{
++	struct xfs_mount	*mp = bp->b_target->bt_mount;
++	struct xfs_dsymlink_hdr	*dsl = bp->b_addr;
++
++	if (!xfs_sb_version_hascrc(&mp->m_sb))
++		return false;
++	if (dsl->sl_magic != cpu_to_be32(XFS_SYMLINK_MAGIC))
++		return false;
++	if (!uuid_equal(&dsl->sl_uuid, &mp->m_sb.sb_uuid))
++		return false;
++	if (bp->b_bn != be64_to_cpu(dsl->sl_blkno))
++		return false;
++	if (be32_to_cpu(dsl->sl_offset) +
++				be32_to_cpu(dsl->sl_bytes) >= MAXPATHLEN)
++		return false;
++	if (dsl->sl_owner == 0)
++		return false;
++
++	return true;
++}
 +
 +static void
-+xfs_dir2_free_hdr_check(
-+	struct xfs_mount *mp,
-+	struct xfs_buf	*bp,
-+	xfs_dir2_db_t	db)
++xfs_symlink_read_verify(
++	struct xfs_buf	*bp)
 +{
-+	struct xfs_dir3_icfree_hdr hdr;
++	struct xfs_mount *mp = bp->b_target->bt_mount;
 +
-+	xfs_dir3_free_hdr_from_disk(&hdr, bp->b_addr);
++	/* no verification of non-crc buffers */
++	if (!xfs_sb_version_hascrc(&mp->m_sb))
++		return;
 +
-+	ASSERT((hdr.firstdb % xfs_dir3_free_max_bests(mp)) == 0);
-+	ASSERT(hdr.firstdb <= db);
-+	ASSERT(db < hdr.firstdb + hdr.nvalid);
++	if (!xfs_verify_cksum(bp->b_addr, BBTOB(bp->b_length),
++				  offsetof(struct xfs_dsymlink_hdr, sl_crc)) ||
++	    !xfs_symlink_verify(bp)) {
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
++		xfs_buf_ioerror(bp, EFSCORRUPTED);
++	}
 +}
-+#else
-+#define xfs_dir2_free_hdr_check(mp, dp, db)
- #endif	/* DEBUG */
++
++static void
++xfs_symlink_write_verify(
++	struct xfs_buf	*bp)
++{
++	struct xfs_mount *mp = bp->b_target->bt_mount;
++	struct xfs_buf_log_item	*bip = bp->b_fspriv;
++
++	/* no verification of non-crc buffers */
++	if (!xfs_sb_version_hascrc(&mp->m_sb))
++		return;
++
++	if (!xfs_symlink_verify(bp)) {
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
++		xfs_buf_ioerror(bp, EFSCORRUPTED);
++		return;
++	}
++
++	if (bip) {
++		struct xfs_dsymlink_hdr *dsl = bp->b_addr;
++		dsl->sl_lsn = cpu_to_be64(bip->bli_item.li_lsn);
++	}
++	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length),
++			 offsetof(struct xfs_dsymlink_hdr, sl_crc));
++}
++
++const struct xfs_buf_ops xfs_symlink_buf_ops = {
++	.verify_read = xfs_symlink_read_verify,
++	.verify_write = xfs_symlink_write_verify,
++};
++
++void
++xfs_symlink_local_to_remote(
++	struct xfs_trans	*tp,
++	struct xfs_buf		*bp,
++	struct xfs_inode	*ip,
++	struct xfs_ifork	*ifp)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++	char			*buf;
++
++	if (!xfs_sb_version_hascrc(&mp->m_sb)) {
++		bp->b_ops = NULL;
++		memcpy(bp->b_addr, ifp->if_u1.if_data, ifp->if_bytes);
++		return;
++	}
++
++	/*
++	 * As this symlink fits in an inode literal area, it must also fit in
++	 * the smallest buffer the filesystem supports.
++	 */
++	ASSERT(BBTOB(bp->b_length) >=
++			ifp->if_bytes + sizeof(struct xfs_dsymlink_hdr));
++
++	bp->b_ops = &xfs_symlink_buf_ops;
++
++	buf = bp->b_addr;
++	buf += xfs_symlink_hdr_set(mp, ip->i_ino, 0, ifp->if_bytes, bp);
++	memcpy(buf, ifp->if_u1.if_data, ifp->if_bytes);
++}
++
++/* ----- Kernel only functions below ----- */
++STATIC int
++xfs_readlink_bmap(
++	struct xfs_inode	*ip,
++	char			*link)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++	struct xfs_bmbt_irec	mval[XFS_SYMLINK_MAPS];
++	struct xfs_buf		*bp;
++	xfs_daddr_t		d;
++	char			*cur_chunk;
++	int			pathlen = ip->i_d.di_size;
++	int			nmaps = XFS_SYMLINK_MAPS;
++	int			byte_cnt;
++	int			n;
++	int			error = 0;
++	int			fsblocks = 0;
++	int			offset;
++
++	fsblocks = xfs_symlink_blocks(mp, pathlen);
++	error = xfs_bmapi_read(ip, 0, fsblocks, mval, &nmaps, 0);
++	if (error)
++		goto out;
++
++	offset = 0;
++	for (n = 0; n < nmaps; n++) {
++		d = XFS_FSB_TO_DADDR(mp, mval[n].br_startblock);
++		byte_cnt = XFS_FSB_TO_B(mp, mval[n].br_blockcount);
++
++		bp = xfs_buf_read(mp->m_ddev_targp, d, BTOBB(byte_cnt), 0,
++				  &xfs_symlink_buf_ops);
++		if (!bp)
++			return XFS_ERROR(ENOMEM);
++		error = bp->b_error;
++		if (error) {
++			xfs_buf_ioerror_alert(bp, __func__);
++			xfs_buf_relse(bp);
++			goto out;
++		}
++		byte_cnt = XFS_SYMLINK_BUF_SPACE(mp, byte_cnt);
++		if (pathlen < byte_cnt)
++			byte_cnt = pathlen;
++
++		cur_chunk = bp->b_addr;
++		if (xfs_sb_version_hascrc(&mp->m_sb)) {
++			if (!xfs_symlink_hdr_ok(mp, ip->i_ino, offset,
++							byte_cnt, bp)) {
++				error = EFSCORRUPTED;
++				xfs_alert(mp,
++"symlink header does not match required off/len/owner (0x%x/Ox%x,0x%llx)",
++					offset, byte_cnt, ip->i_ino);
++				xfs_buf_relse(bp);
++				goto out;
++
++			}
++
++			cur_chunk += sizeof(struct xfs_dsymlink_hdr);
++		}
++
++		memcpy(link + offset, bp->b_addr, byte_cnt);
++
++		pathlen -= byte_cnt;
++		offset += byte_cnt;
++
++		xfs_buf_relse(bp);
++	}
++	ASSERT(pathlen == 0);
++
++	link[ip->i_d.di_size] = '\0';
++	error = 0;
++
++ out:
++	return error;
++}
++
++int
++xfs_readlink(
++	struct xfs_inode *ip,
++	char		*link)
++{
++	struct xfs_mount *mp = ip->i_mount;
++	xfs_fsize_t	pathlen;
++	int		error = 0;
++
++	trace_xfs_readlink(ip);
++
++	if (XFS_FORCED_SHUTDOWN(mp))
++		return XFS_ERROR(EIO);
++
++	xfs_ilock(ip, XFS_ILOCK_SHARED);
++
++	pathlen = ip->i_d.di_size;
++	if (!pathlen)
++		goto out;
++
++	if (pathlen < 0 || pathlen > MAXPATHLEN) {
++		xfs_alert(mp, "%s: inode (%llu) bad symlink length (%lld)",
++			 __func__, (unsigned long long) ip->i_ino,
++			 (long long) pathlen);
++		ASSERT(0);
++		error = XFS_ERROR(EFSCORRUPTED);
++		goto out;
++	}
++
++
++	if (ip->i_df.if_flags & XFS_IFINLINE) {
++		memcpy(link, ip->i_df.if_u1.if_data, pathlen);
++		link[pathlen] = '\0';
++	} else {
++		error = xfs_readlink_bmap(ip, link);
++	}
++
++ out:
++	xfs_iunlock(ip, XFS_ILOCK_SHARED);
++	return error;
++}
++
++int
++xfs_symlink(
++	struct xfs_inode	*dp,
++	struct xfs_name		*link_name,
++	const char		*target_path,
++	umode_t			mode,
++	struct xfs_inode	**ipp)
++{
++	struct xfs_mount	*mp = dp->i_mount;
++	struct xfs_trans	*tp = NULL;
++	struct xfs_inode	*ip = NULL;
++	int			error = 0;
++	int			pathlen;
++	struct xfs_bmap_free	free_list;
++	xfs_fsblock_t		first_block;
++	bool			unlock_dp_on_error = false;
++	uint			cancel_flags;
++	int			committed;
++	xfs_fileoff_t		first_fsb;
++	xfs_filblks_t		fs_blocks;
++	int			nmaps;
++	struct xfs_bmbt_irec	mval[XFS_SYMLINK_MAPS];
++	xfs_daddr_t		d;
++	const char		*cur_chunk;
++	int			byte_cnt;
++	int			n;
++	xfs_buf_t		*bp;
++	prid_t			prid;
++	struct xfs_dquot	*udqp, *gdqp;
++	uint			resblks;
++
++	*ipp = NULL;
++
++	trace_xfs_symlink(dp, link_name);
++
++	if (XFS_FORCED_SHUTDOWN(mp))
++		return XFS_ERROR(EIO);
++
++	/*
++	 * Check component lengths of the target path name.
++	 */
++	pathlen = strlen(target_path);
++	if (pathlen >= MAXPATHLEN)      /* total string too long */
++		return XFS_ERROR(ENAMETOOLONG);
++
++	udqp = gdqp = NULL;
++	if (dp->i_d.di_flags & XFS_DIFLAG_PROJINHERIT)
++		prid = xfs_get_projid(dp);
++	else
++		prid = XFS_PROJID_DEFAULT;
++
++	/*
++	 * Make sure that we have allocated dquot(s) on disk.
++	 */
++	error = xfs_qm_vop_dqalloc(dp, current_fsuid(), current_fsgid(), prid,
++			XFS_QMOPT_QUOTALL | XFS_QMOPT_INHERIT, &udqp, &gdqp);
++	if (error)
++		goto std_return;
++
++	tp = xfs_trans_alloc(mp, XFS_TRANS_SYMLINK);
++	cancel_flags = XFS_TRANS_RELEASE_LOG_RES;
++	/*
++	 * The symlink will fit into the inode data fork?
++	 * There can't be any attributes so we get the whole variable part.
++	 */
++	if (pathlen <= XFS_LITINO(mp, dp->i_d.di_version))
++		fs_blocks = 0;
++	else
++		fs_blocks = XFS_B_TO_FSB(mp, pathlen);
++	resblks = XFS_SYMLINK_SPACE_RES(mp, link_name->len, fs_blocks);
++	error = xfs_trans_reserve(tp, resblks, XFS_SYMLINK_LOG_RES(mp), 0,
++			XFS_TRANS_PERM_LOG_RES, XFS_SYMLINK_LOG_COUNT);
++	if (error == ENOSPC && fs_blocks == 0) {
++		resblks = 0;
++		error = xfs_trans_reserve(tp, 0, XFS_SYMLINK_LOG_RES(mp), 0,
++				XFS_TRANS_PERM_LOG_RES, XFS_SYMLINK_LOG_COUNT);
++	}
++	if (error) {
++		cancel_flags = 0;
++		goto error_return;
++	}
++
++	xfs_ilock(dp, XFS_ILOCK_EXCL | XFS_ILOCK_PARENT);
++	unlock_dp_on_error = true;
++
++	/*
++	 * Check whether the directory allows new symlinks or not.
++	 */
++	if (dp->i_d.di_flags & XFS_DIFLAG_NOSYMLINKS) {
++		error = XFS_ERROR(EPERM);
++		goto error_return;
++	}
++
++	/*
++	 * Reserve disk quota : blocks and inode.
++	 */
++	error = xfs_trans_reserve_quota(tp, mp, udqp, gdqp, resblks, 1, 0);
++	if (error)
++		goto error_return;
++
++	/*
++	 * Check for ability to enter directory entry, if no space reserved.
++	 */
++	error = xfs_dir_canenter(tp, dp, link_name, resblks);
++	if (error)
++		goto error_return;
++	/*
++	 * Initialize the bmap freelist prior to calling either
++	 * bmapi or the directory create code.
++	 */
++	xfs_bmap_init(&free_list, &first_block);
++
++	/*
++	 * Allocate an inode for the symlink.
++	 */
++	error = xfs_dir_ialloc(&tp, dp, S_IFLNK | (mode & ~S_IFMT), 1, 0,
++			       prid, resblks > 0, &ip, NULL);
++	if (error) {
++		if (error == ENOSPC)
++			goto error_return;
++		goto error1;
++	}
++
++	/*
++	 * An error after we've joined dp to the transaction will result in the
++	 * transaction cancel unlocking dp so don't do it explicitly in the
++	 * error path.
++	 */
++	xfs_trans_ijoin(tp, dp, XFS_ILOCK_EXCL);
++	unlock_dp_on_error = false;
++
++	/*
++	 * Also attach the dquot(s) to it, if applicable.
++	 */
++	xfs_qm_vop_create_dqattach(tp, ip, udqp, gdqp);
++
++	if (resblks)
++		resblks -= XFS_IALLOC_SPACE_RES(mp);
++	/*
++	 * If the symlink will fit into the inode, write it inline.
++	 */
++	if (pathlen <= XFS_IFORK_DSIZE(ip)) {
++		xfs_idata_realloc(ip, pathlen, XFS_DATA_FORK);
++		memcpy(ip->i_df.if_u1.if_data, target_path, pathlen);
++		ip->i_d.di_size = pathlen;
++
++		/*
++		 * The inode was initially created in extent format.
++		 */
++		ip->i_df.if_flags &= ~(XFS_IFEXTENTS | XFS_IFBROOT);
++		ip->i_df.if_flags |= XFS_IFINLINE;
++
++		ip->i_d.di_format = XFS_DINODE_FMT_LOCAL;
++		xfs_trans_log_inode(tp, ip, XFS_ILOG_DDATA | XFS_ILOG_CORE);
++
++	} else {
++		int	offset;
++
++		first_fsb = 0;
++		nmaps = XFS_SYMLINK_MAPS;
++
++		error = xfs_bmapi_write(tp, ip, first_fsb, fs_blocks,
++				  XFS_BMAPI_METADATA, &first_block, resblks,
++				  mval, &nmaps, &free_list);
++		if (error)
++			goto error2;
++
++		if (resblks)
++			resblks -= fs_blocks;
++		ip->i_d.di_size = pathlen;
++		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
++
++		cur_chunk = target_path;
++		offset = 0;
++		for (n = 0; n < nmaps; n++) {
++			char *buf;
++
++			d = XFS_FSB_TO_DADDR(mp, mval[n].br_startblock);
++			byte_cnt = XFS_FSB_TO_B(mp, mval[n].br_blockcount);
++			bp = xfs_trans_get_buf(tp, mp->m_ddev_targp, d,
++					       BTOBB(byte_cnt), 0);
++			if (!bp) {
++				error = ENOMEM;
++				goto error2;
++			}
++			bp->b_ops = &xfs_symlink_buf_ops;
++
++			byte_cnt = XFS_SYMLINK_BUF_SPACE(mp, byte_cnt);
++			if (pathlen < byte_cnt) {
++				byte_cnt = pathlen;
++			}
++
++			buf = bp->b_addr;
++			buf += xfs_symlink_hdr_set(mp, ip->i_ino, offset,
++						   byte_cnt, bp);
++
++			memcpy(buf, cur_chunk, byte_cnt);
++
++			cur_chunk += byte_cnt;
++			pathlen -= byte_cnt;
++			offset += byte_cnt;
++
++			xfs_trans_log_buf(tp, bp, 0, (buf + byte_cnt - 1) -
++							(char *)bp->b_addr);
++		}
++	}
++
++	/*
++	 * Create the directory entry for the symlink.
++	 */
++	error = xfs_dir_createname(tp, dp, link_name, ip->i_ino,
++					&first_block, &free_list, resblks);
++	if (error)
++		goto error2;
++	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
++	xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
++
++	/*
++	 * If this is a synchronous mount, make sure that the
++	 * symlink transaction goes to disk before returning to
++	 * the user.
++	 */
++	if (mp->m_flags & (XFS_MOUNT_WSYNC|XFS_MOUNT_DIRSYNC)) {
++		xfs_trans_set_sync(tp);
++	}
++
++	error = xfs_bmap_finish(&tp, &free_list, &committed);
++	if (error) {
++		goto error2;
++	}
++	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
++	xfs_qm_dqrele(udqp);
++	xfs_qm_dqrele(gdqp);
++
++	*ipp = ip;
++	return 0;
++
++ error2:
++	IRELE(ip);
++ error1:
++	xfs_bmap_cancel(&free_list);
++	cancel_flags |= XFS_TRANS_ABORT;
++ error_return:
++	xfs_trans_cancel(tp, cancel_flags);
++	xfs_qm_dqrele(udqp);
++	xfs_qm_dqrele(gdqp);
++
++	if (unlock_dp_on_error)
++		xfs_iunlock(dp, XFS_ILOCK_EXCL);
++ std_return:
++	return error;
++}
++
++/*
++ * Free a symlink that has blocks associated with it.
++ */
++int
++xfs_inactive_symlink_rmt(
++	xfs_inode_t	*ip,
++	xfs_trans_t	**tpp)
++{
++	xfs_buf_t	*bp;
++	int		committed;
++	int		done;
++	int		error;
++	xfs_fsblock_t	first_block;
++	xfs_bmap_free_t	free_list;
++	int		i;
++	xfs_mount_t	*mp;
++	xfs_bmbt_irec_t	mval[XFS_SYMLINK_MAPS];
++	int		nmaps;
++	xfs_trans_t	*ntp;
++	int		size;
++	xfs_trans_t	*tp;
++
++	tp = *tpp;
++	mp = ip->i_mount;
++	ASSERT(ip->i_d.di_size > XFS_IFORK_DSIZE(ip));
++	/*
++	 * We're freeing a symlink that has some
++	 * blocks allocated to it.  Free the
++	 * blocks here.  We know that we've got
++	 * either 1 or 2 extents and that we can
++	 * free them all in one bunmapi call.
++	 */
++	ASSERT(ip->i_d.di_nextents > 0 && ip->i_d.di_nextents <= 2);
++
++	/*
++	 * Lock the inode, fix the size, and join it to the transaction.
++	 * Hold it so in the normal path, we still have it locked for
++	 * the second transaction.  In the error paths we need it
++	 * held so the cancel won't rele it, see below.
++	 */
++	size = (int)ip->i_d.di_size;
++	ip->i_d.di_size = 0;
++	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
++	/*
++	 * Find the block(s) so we can inval and unmap them.
++	 */
++	done = 0;
++	xfs_bmap_init(&free_list, &first_block);
++	nmaps = ARRAY_SIZE(mval);
++	error = xfs_bmapi_read(ip, 0, xfs_symlink_blocks(mp, size),
++				mval, &nmaps, 0);
++	if (error)
++		goto error0;
++	/*
++	 * Invalidate the block(s). No validation is done.
++	 */
++	for (i = 0; i < nmaps; i++) {
++		bp = xfs_trans_get_buf(tp, mp->m_ddev_targp,
++			XFS_FSB_TO_DADDR(mp, mval[i].br_startblock),
++			XFS_FSB_TO_BB(mp, mval[i].br_blockcount), 0);
++		if (!bp) {
++			error = ENOMEM;
++			goto error1;
++		}
++		xfs_trans_binval(tp, bp);
++	}
++	/*
++	 * Unmap the dead block(s) to the free_list.
++	 */
++	if ((error = xfs_bunmapi(tp, ip, 0, size, XFS_BMAPI_METADATA, nmaps,
++			&first_block, &free_list, &done)))
++		goto error1;
++	ASSERT(done);
++	/*
++	 * Commit the first transaction.  This logs the EFI and the inode.
++	 */
++	if ((error = xfs_bmap_finish(&tp, &free_list, &committed)))
++		goto error1;
++	/*
++	 * The transaction must have been committed, since there were
++	 * actually extents freed by xfs_bunmapi.  See xfs_bmap_finish.
++	 * The new tp has the extent freeing and EFDs.
++	 */
++	ASSERT(committed);
++	/*
++	 * The first xact was committed, so add the inode to the new one.
++	 * Mark it dirty so it will be logged and moved forward in the log as
++	 * part of every commit.
++	 */
++	xfs_trans_ijoin(tp, ip, 0);
++	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
++	/*
++	 * Get a new, empty transaction to return to our caller.
++	 */
++	ntp = xfs_trans_dup(tp);
++	/*
++	 * Commit the transaction containing extent freeing and EFDs.
++	 * If we get an error on the commit here or on the reserve below,
++	 * we need to unlock the inode since the new transaction doesn't
++	 * have the inode attached.
++	 */
++	error = xfs_trans_commit(tp, 0);
++	tp = ntp;
++	if (error) {
++		ASSERT(XFS_FORCED_SHUTDOWN(mp));
++		goto error0;
++	}
++	/*
++	 * transaction commit worked ok so we can drop the extra ticket
++	 * reference that we gained in xfs_trans_dup()
++	 */
++	xfs_log_ticket_put(tp->t_ticket);
++
++	/*
++	 * Remove the memory for extent descriptions (just bookkeeping).
++	 */
++	if (ip->i_df.if_bytes)
++		xfs_idata_realloc(ip, -ip->i_df.if_bytes, XFS_DATA_FORK);
++	ASSERT(ip->i_df.if_bytes == 0);
++	/*
++	 * Put an itruncate log reservation in the new transaction
++	 * for our caller.
++	 */
++	if ((error = xfs_trans_reserve(tp, 0, XFS_ITRUNCATE_LOG_RES(mp), 0,
++			XFS_TRANS_PERM_LOG_RES, XFS_ITRUNCATE_LOG_COUNT))) {
++		ASSERT(XFS_FORCED_SHUTDOWN(mp));
++		goto error0;
++	}
++
++	xfs_trans_ijoin(tp, ip, 0);
++	*tpp = tp;
++	return 0;
++
++ error1:
++	xfs_bmap_cancel(&free_list);
++ error0:
++	return error;
++}
+diff --git a/fs/xfs/xfs_symlink.h b/fs/xfs/xfs_symlink.h
+new file mode 100644
+index 0000000..be20ae1
+--- /dev/null
++++ b/fs/xfs/xfs_symlink.h
+@@ -0,0 +1,53 @@
++/*
++ * Copyright (c) 2012 Red Hat, Inc. All rights reserved.
++ */
++#ifndef __XFS_SYMLINK_H
++#define __XFS_SYMLINK_H 1
++
++struct xfs_mount;
++struct xfs_trans;
++struct xfs_inode;
++struct xfs_buf;
++struct xfs_ifork;
++struct xfs_name;
++
++#define XFS_SYMLINK_MAGIC	0x58534c4d	/* XSLM */
++
++struct xfs_dsymlink_hdr {
++	__be32	sl_magic;
++	__be32	sl_offset;
++	__be32	sl_bytes;
++	__be32	sl_crc;
++	uuid_t	sl_uuid;
++	__be64	sl_owner;
++	__be64	sl_blkno;
++	__be64	sl_lsn;
++};
++
++/*
++ * The maximum pathlen is 1024 bytes. Since the minimum file system
++ * blocksize is 512 bytes, we can get a max of 3 extents back from
++ * bmapi when crc headers are taken into account.
++ */
++#define XFS_SYMLINK_MAPS 3
++
++#define XFS_SYMLINK_BUF_SPACE(mp, bufsize)	\
++	((bufsize) - (xfs_sb_version_hascrc(&(mp)->m_sb) ? \
++			sizeof(struct xfs_dsymlink_hdr) : 0))
++
++int xfs_symlink_blocks(struct xfs_mount *mp, int pathlen);
++
++void xfs_symlink_local_to_remote(struct xfs_trans *tp, struct xfs_buf *bp,
++				 struct xfs_inode *ip, struct xfs_ifork *ifp);
++
++extern const struct xfs_buf_ops xfs_symlink_buf_ops;
++
++#ifdef __KERNEL__
++
++int xfs_symlink(struct xfs_inode *dp, struct xfs_name *link_name,
++		const char *target_path, umode_t mode, struct xfs_inode **ipp);
++int xfs_readlink(struct xfs_inode *ip, char *link);
++int xfs_inactive_symlink_rmt(struct xfs_inode *ip, struct xfs_trans **tpp);
++
++#endif /* __KERNEL__ */
++#endif /* __XFS_SYMLINK_H */
+diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+index aa0c066..1034440 100644
+--- a/fs/xfs/xfs_vnodeops.c
++++ b/fs/xfs/xfs_vnodeops.c
+@@ -1,5 +1,6 @@
+ /*
+  * Copyright (c) 2000-2006 Silicon Graphics, Inc.
++ * Copyright (c) 2012 Red Hat, Inc.
+  * All Rights Reserved.
+  *
+  * This program is free software; you can redistribute it and/or
+@@ -48,103 +49,10 @@
+ #include "xfs_vnodeops.h"
+ #include "xfs_trace.h"
+ #include "xfs_icache.h"
++#include "xfs_symlink.h"
++#include "xfs_cksum.h"
++#include "xfs_buf_item.h"
+ 
+-/*
+- * The maximum pathlen is 1024 bytes. Since the minimum file system
+- * blocksize is 512 bytes, we can get a max of 2 extents back from
+- * bmapi.
+- */
+-#define SYMLINK_MAPS 2
+-
+-STATIC int
+-xfs_readlink_bmap(
+-	xfs_inode_t	*ip,
+-	char		*link)
+-{
+-	xfs_mount_t	*mp = ip->i_mount;
+-	int		pathlen = ip->i_d.di_size;
+-	int             nmaps = SYMLINK_MAPS;
+-	xfs_bmbt_irec_t mval[SYMLINK_MAPS];
+-	xfs_daddr_t	d;
+-	int		byte_cnt;
+-	int		n;
+-	xfs_buf_t	*bp;
+-	int		error = 0;
+-
+-	error = xfs_bmapi_read(ip, 0, XFS_B_TO_FSB(mp, pathlen), mval, &nmaps,
+-			       0);
+-	if (error)
+-		goto out;
+-
+-	for (n = 0; n < nmaps; n++) {
+-		d = XFS_FSB_TO_DADDR(mp, mval[n].br_startblock);
+-		byte_cnt = XFS_FSB_TO_B(mp, mval[n].br_blockcount);
+-
+-		bp = xfs_buf_read(mp->m_ddev_targp, d, BTOBB(byte_cnt), 0, NULL);
+-		if (!bp)
+-			return XFS_ERROR(ENOMEM);
+-		error = bp->b_error;
+-		if (error) {
+-			xfs_buf_ioerror_alert(bp, __func__);
+-			xfs_buf_relse(bp);
+-			goto out;
+-		}
+-		if (pathlen < byte_cnt)
+-			byte_cnt = pathlen;
+-		pathlen -= byte_cnt;
+-
+-		memcpy(link, bp->b_addr, byte_cnt);
+-		xfs_buf_relse(bp);
+-	}
+-
+-	link[ip->i_d.di_size] = '\0';
+-	error = 0;
+-
+- out:
+-	return error;
+-}
+-
+-int
+-xfs_readlink(
+-	xfs_inode_t     *ip,
+-	char		*link)
+-{
+-	xfs_mount_t	*mp = ip->i_mount;
+-	xfs_fsize_t	pathlen;
+-	int		error = 0;
+-
+-	trace_xfs_readlink(ip);
+-
+-	if (XFS_FORCED_SHUTDOWN(mp))
+-		return XFS_ERROR(EIO);
+-
+-	xfs_ilock(ip, XFS_ILOCK_SHARED);
+-
+-	pathlen = ip->i_d.di_size;
+-	if (!pathlen)
+-		goto out;
+-
+-	if (pathlen < 0 || pathlen > MAXPATHLEN) {
+-		xfs_alert(mp, "%s: inode (%llu) bad symlink length (%lld)",
+-			 __func__, (unsigned long long) ip->i_ino,
+-			 (long long) pathlen);
+-		ASSERT(0);
+-		error = XFS_ERROR(EFSCORRUPTED);
+-		goto out;
+-	}
+-
+-
+-	if (ip->i_df.if_flags & XFS_IFINLINE) {
+-		memcpy(link, ip->i_df.if_u1.if_data, pathlen);
+-		link[pathlen] = '\0';
+-	} else {
+-		error = xfs_readlink_bmap(ip, link);
+-	}
+-
+- out:
+-	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+-	return error;
+-}
  
  /*
-@@ -424,7 +570,8 @@ xfs_dir2_leafn_lookup_for_addname(
- 		curbp = state->extrablk.bp;
- 		curfdb = state->extrablk.blkno;
- 		free = curbp->b_addr;
--		ASSERT(free->hdr.magic == cpu_to_be32(XFS_DIR2_FREE_MAGIC));
-+		ASSERT(free->hdr.magic == cpu_to_be32(XFS_DIR2_FREE_MAGIC) ||
-+		       free->hdr.magic == cpu_to_be32(XFS_DIR3_FREE_MAGIC));
- 	}
- 	length = xfs_dir2_data_entsize(args->namelen);
- 	/*
-@@ -451,6 +598,8 @@ xfs_dir2_leafn_lookup_for_addname(
- 		 * in hand, take a look at it.
- 		 */
- 		if (newdb != curdb) {
-+			__be16 *bests;
-+
- 			curdb = newdb;
- 			/*
- 			 * Convert the data block to the free block
-@@ -473,13 +622,8 @@ xfs_dir2_leafn_lookup_for_addname(
- 				if (error)
- 					return error;
- 				free = curbp->b_addr;
--				ASSERT(be32_to_cpu(free->hdr.magic) ==
--					XFS_DIR2_FREE_MAGIC);
--				ASSERT((be32_to_cpu(free->hdr.firstdb) %
--					xfs_dir2_free_max_bests(mp)) == 0);
--				ASSERT(be32_to_cpu(free->hdr.firstdb) <= curdb);
--				ASSERT(curdb < be32_to_cpu(free->hdr.firstdb) +
--					be32_to_cpu(free->hdr.nvalid));
-+
-+				xfs_dir2_free_hdr_check(mp, curbp, curdb);
- 			}
- 			/*
- 			 * Get the index for our entry.
-@@ -488,8 +632,8 @@ xfs_dir2_leafn_lookup_for_addname(
- 			/*
- 			 * If it has room, return it.
- 			 */
--			if (unlikely(free->bests[fi] ==
--			    cpu_to_be16(NULLDATAOFF))) {
-+			bests = xfs_dir3_free_bests_p(mp, free);
-+			if (unlikely(bests[fi] == cpu_to_be16(NULLDATAOFF))) {
- 				XFS_ERROR_REPORT("xfs_dir2_leafn_lookup_int",
- 							XFS_ERRLEVEL_LOW, mp);
- 				if (curfdb != newfdb)
-@@ -497,7 +641,7 @@ xfs_dir2_leafn_lookup_for_addname(
- 				return XFS_ERROR(EFSCORRUPTED);
- 			}
- 			curfdb = newfdb;
--			if (be16_to_cpu(free->bests[fi]) >= length)
-+			if (be16_to_cpu(bests[fi]) >= length)
- 				goto out;
- 		}
- 	}
-@@ -511,6 +655,12 @@ out:
- 		state->extrablk.bp = curbp;
- 		state->extrablk.index = fi;
- 		state->extrablk.blkno = curfdb;
-+
-+		/*
-+		 * Important: this magic number is not in the buffer - it's for
-+		 * buffer type information and therefore only the free/data type
-+		 * matters here, not whether CRCs are enabled or not.
-+		 */
- 		state->extrablk.magic = XFS_DIR2_FREE_MAGIC;
- 	} else {
- 		state->extravalid = 0;
-@@ -898,7 +1048,7 @@ xfs_dir2_leafn_rebalance(
+  * This is called by xfs_inactive to free any blocks beyond eof
+@@ -249,145 +157,6 @@ xfs_free_eofblocks(
+ 	return error;
  }
  
- static int
--xfs_dir2_data_block_free(
-+xfs_dir3_data_block_free(
- 	xfs_da_args_t		*args,
- 	struct xfs_dir2_data_hdr *hdr,
- 	struct xfs_dir2_free	*free,
-@@ -909,59 +1059,68 @@ xfs_dir2_data_block_free(
- {
- 	struct xfs_trans	*tp = args->trans;
- 	int			logfree = 0;
-+	__be16			*bests;
-+	struct xfs_dir3_icfree_hdr freehdr;
- 
--	if (!hdr) {
--		/* One less used entry in the free table.  */
--		be32_add_cpu(&free->hdr.nused, -1);
--		xfs_dir2_free_log_header(tp, fbp);
- 
--		/*
--		 * If this was the last entry in the table, we can trim the
--		 * table size back.  There might be other entries at the end
--		 * referring to non-existent data blocks, get those too.
--		 */
--		if (findex == be32_to_cpu(free->hdr.nvalid) - 1) {
--			int	i;		/* free entry index */
-+	xfs_dir3_free_hdr_from_disk(&freehdr, free);
- 
--			for (i = findex - 1; i >= 0; i--) {
--				if (free->bests[i] != cpu_to_be16(NULLDATAOFF))
--					break;
--			}
--			free->hdr.nvalid = cpu_to_be32(i + 1);
--			logfree = 0;
--		} else {
--			/* Not the last entry, just punch it out.  */
--			free->bests[findex] = cpu_to_be16(NULLDATAOFF);
--			logfree = 1;
+-/*
+- * Free a symlink that has blocks associated with it.
+- */
+-STATIC int
+-xfs_inactive_symlink_rmt(
+-	xfs_inode_t	*ip,
+-	xfs_trans_t	**tpp)
+-{
+-	xfs_buf_t	*bp;
+-	int		committed;
+-	int		done;
+-	int		error;
+-	xfs_fsblock_t	first_block;
+-	xfs_bmap_free_t	free_list;
+-	int		i;
+-	xfs_mount_t	*mp;
+-	xfs_bmbt_irec_t	mval[SYMLINK_MAPS];
+-	int		nmaps;
+-	xfs_trans_t	*ntp;
+-	int		size;
+-	xfs_trans_t	*tp;
+-
+-	tp = *tpp;
+-	mp = ip->i_mount;
+-	ASSERT(ip->i_d.di_size > XFS_IFORK_DSIZE(ip));
+-	/*
+-	 * We're freeing a symlink that has some
+-	 * blocks allocated to it.  Free the
+-	 * blocks here.  We know that we've got
+-	 * either 1 or 2 extents and that we can
+-	 * free them all in one bunmapi call.
+-	 */
+-	ASSERT(ip->i_d.di_nextents > 0 && ip->i_d.di_nextents <= 2);
+-
+-	/*
+-	 * Lock the inode, fix the size, and join it to the transaction.
+-	 * Hold it so in the normal path, we still have it locked for
+-	 * the second transaction.  In the error paths we need it
+-	 * held so the cancel won't rele it, see below.
+-	 */
+-	size = (int)ip->i_d.di_size;
+-	ip->i_d.di_size = 0;
+-	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+-	/*
+-	 * Find the block(s) so we can inval and unmap them.
+-	 */
+-	done = 0;
+-	xfs_bmap_init(&free_list, &first_block);
+-	nmaps = ARRAY_SIZE(mval);
+-	error = xfs_bmapi_read(ip, 0, XFS_B_TO_FSB(mp, size),
+-				mval, &nmaps, 0);
+-	if (error)
+-		goto error0;
+-	/*
+-	 * Invalidate the block(s).
+-	 */
+-	for (i = 0; i < nmaps; i++) {
+-		bp = xfs_trans_get_buf(tp, mp->m_ddev_targp,
+-			XFS_FSB_TO_DADDR(mp, mval[i].br_startblock),
+-			XFS_FSB_TO_BB(mp, mval[i].br_blockcount), 0);
+-		if (!bp) {
+-			error = ENOMEM;
+-			goto error1;
 -		}
-+	bests = xfs_dir3_free_bests_p(tp->t_mountp, free);
-+	if (hdr) {
- 		/*
--		 * If there are no useful entries left in the block,
--		 * get rid of the block if we can.
-+		 * Data block is not empty, just set the free entry to the new
-+		 * value.
- 		 */
--		if (!free->hdr.nused) {
--			int error;
-+		bests[findex] = cpu_to_be16(longest);
-+		xfs_dir2_free_log_bests(tp, fbp, findex, findex);
-+		return 0;
-+	}
- 
--			error = xfs_dir2_shrink_inode(args, fdb, fbp);
--			if (error == 0) {
--				fbp = NULL;
--				logfree = 0;
--			} else if (error != ENOSPC || args->total != 0)
--				return error;
--			/*
--			 * It's possible to get ENOSPC if there is no
--			 * space reservation.  In this case some one
--			 * else will eventually get rid of this block.
--			 */
-+	/*
-+	 * One less used entry in the free table. Unused is not converted
-+	 * because we only need to know if it zero
-+	 */
-+	freehdr.nused--;
-+
-+	if (findex == freehdr.nvalid - 1) {
-+		int	i;		/* free entry index */
-+
-+		for (i = findex - 1; i >= 0; i--) {
-+			if (bests[i] != cpu_to_be16(NULLDATAOFF))
-+				break;
- 		}
-+		freehdr.nvalid = i + 1;
-+		logfree = 0;
- 	} else {
-+		/* Not the last entry, just punch it out.  */
-+		bests[findex] = cpu_to_be16(NULLDATAOFF);
-+		logfree = 1;
-+	}
-+
-+	xfs_dir3_free_hdr_to_disk(free, &freehdr);
-+	xfs_dir2_free_log_header(tp, fbp);
-+
-+	/*
-+	 * If there are no useful entries left in the block, get rid of the
-+	 * block if we can.
-+	 */
-+	if (!freehdr.nused) {
-+		int error;
-+
-+		error = xfs_dir2_shrink_inode(args, fdb, fbp);
-+		if (error == 0) {
-+			fbp = NULL;
-+			logfree = 0;
-+		} else if (error != ENOSPC || args->total != 0)
-+			return error;
- 		/*
--		 * Data block is not empty, just set the free entry to the new
--		 * value.
-+		 * It's possible to get ENOSPC if there is no
-+		 * space reservation.  In this case some one
-+		 * else will eventually get rid of this block.
- 		 */
--		free->bests[findex] = cpu_to_be16(longest);
--		logfree = 1;
- 	}
- 
-+
- 	/* Log the free entry that changed, unless we got rid of it.  */
- 	if (logfree)
- 		xfs_dir2_free_log_bests(tp, fbp, findex, findex);
-@@ -1062,10 +1221,15 @@ xfs_dir2_leafn_remove(
- 		if (error)
- 			return error;
- 		free = fbp->b_addr;
--		ASSERT(free->hdr.magic == cpu_to_be32(XFS_DIR2_FREE_MAGIC));
--		ASSERT(be32_to_cpu(free->hdr.firstdb) ==
--		       xfs_dir2_free_max_bests(mp) *
--		       (fdb - XFS_DIR2_FREE_FIRSTDB(mp)));
-+#ifdef DEBUG
-+	{
-+		struct xfs_dir3_icfree_hdr freehdr;
-+		xfs_dir3_free_hdr_from_disk(&freehdr, free);
-+		ASSERT(be32_to_cpu(freehdr.firstdb) ==
-+				       xfs_dir3_free_max_bests(mp) *
-+				       (fdb - XFS_DIR2_FREE_FIRSTDB(mp)));
-+	}
-+#endif
- 		/*
- 		 * Calculate which entry we need to fix.
- 		 */
-@@ -1096,7 +1260,7 @@ xfs_dir2_leafn_remove(
- 		 * If we got rid of the data block, we can eliminate that entry
- 		 * in the free block.
- 		 */
--		error = xfs_dir2_data_block_free(args, hdr, free,
-+		error = xfs_dir3_data_block_free(args, hdr, free,
- 						 fdb, findex, fbp, longest);
- 		if (error)
- 			return error;
-@@ -1447,6 +1611,8 @@ xfs_dir2_node_addname_int(
- 	int			needscan;	/* need to rescan data frees */
- 	__be16			*tagp;		/* data entry tag pointer */
- 	xfs_trans_t		*tp;		/* transaction pointer */
-+	__be16			*bests;
-+	struct xfs_dir3_icfree_hdr freehdr;
- 
- 	dp = args->dp;
- 	mp = dp->i_mount;
-@@ -1464,36 +1630,37 @@ xfs_dir2_node_addname_int(
- 		 */
- 		ifbno = fblk->blkno;
- 		free = fbp->b_addr;
--		ASSERT(free->hdr.magic == cpu_to_be32(XFS_DIR2_FREE_MAGIC));
- 		findex = fblk->index;
-+		bests = xfs_dir3_free_bests_p(mp, free);
-+		xfs_dir3_free_hdr_from_disk(&freehdr, free);
-+
- 		/*
- 		 * This means the free entry showed that the data block had
- 		 * space for our entry, so we remembered it.
- 		 * Use that data block.
- 		 */
- 		if (findex >= 0) {
--			ASSERT(findex < be32_to_cpu(free->hdr.nvalid));
--			ASSERT(be16_to_cpu(free->bests[findex]) != NULLDATAOFF);
--			ASSERT(be16_to_cpu(free->bests[findex]) >= length);
--			dbno = be32_to_cpu(free->hdr.firstdb) + findex;
--		}
--		/*
--		 * The data block looked at didn't have enough room.
--		 * We'll start at the beginning of the freespace entries.
--		 */
--		else {
-+			ASSERT(findex < freehdr.nvalid);
-+			ASSERT(be16_to_cpu(bests[findex]) != NULLDATAOFF);
-+			ASSERT(be16_to_cpu(bests[findex]) >= length);
-+			dbno = freehdr.firstdb + findex;
-+		} else {
-+			/*
-+			 * The data block looked at didn't have enough room.
-+			 * We'll start at the beginning of the freespace entries.
-+			 */
- 			dbno = -1;
- 			findex = 0;
- 		}
+-		xfs_trans_binval(tp, bp);
 -	}
 -	/*
--	 * Didn't come in with a freespace block, so don't have a data block.
+-	 * Unmap the dead block(s) to the free_list.
 -	 */
--	else {
-+	} else {
-+		/*
-+		 * Didn't come in with a freespace block, so no data block.
-+		 */
- 		ifbno = dbno = -1;
- 		fbp = NULL;
- 		findex = 0;
- 	}
-+
- 	/*
- 	 * If we don't have a data block yet, we're going to scan the
- 	 * freespace blocks looking for one.  Figure out what the
-@@ -1547,20 +1714,26 @@ xfs_dir2_node_addname_int(
- 			if (!fbp)
- 				continue;
- 			free = fbp->b_addr;
--			ASSERT(free->hdr.magic == cpu_to_be32(XFS_DIR2_FREE_MAGIC));
- 			findex = 0;
- 		}
- 		/*
- 		 * Look at the current free entry.  Is it good enough?
-+		 *
-+		 * The bests initialisation should be wher eteh bufer is read in
-+		 * the above branch. But gcc is too stupid to realise that bests
-+		 * iand the freehdr are actually initialised if they are placed
-+		 * there, so we have to do it here to avoid warnings. Blech.
- 		 */
--		if (be16_to_cpu(free->bests[findex]) != NULLDATAOFF &&
--		    be16_to_cpu(free->bests[findex]) >= length)
--			dbno = be32_to_cpu(free->hdr.firstdb) + findex;
-+		bests = xfs_dir3_free_bests_p(mp, free);
-+		xfs_dir3_free_hdr_from_disk(&freehdr, free);
-+		if (be16_to_cpu(bests[findex]) != NULLDATAOFF &&
-+		    be16_to_cpu(bests[findex]) >= length)
-+			dbno = freehdr.firstdb + findex;
- 		else {
- 			/*
- 			 * Are we done with the freeblock?
- 			 */
--			if (++findex == be32_to_cpu(free->hdr.nvalid)) {
-+			if (++findex == freehdr.nvalid) {
- 				/*
- 				 * Drop the block.
- 				 */
-@@ -1614,11 +1787,11 @@ xfs_dir2_node_addname_int(
- 		 * If there wasn't a freespace block, the read will
- 		 * return a NULL fbp.  Allocate and initialize a new one.
- 		 */
--		if( fbp == NULL ) {
--			if ((error = xfs_dir2_grow_inode(args, XFS_DIR2_FREE_SPACE,
--							&fbno))) {
-+		if(!fbp) {
-+			error = xfs_dir2_grow_inode(args, XFS_DIR2_FREE_SPACE,
-+						    &fbno);
-+			if (error)
- 				return error;
+-	if ((error = xfs_bunmapi(tp, ip, 0, size, XFS_BMAPI_METADATA, nmaps,
+-			&first_block, &free_list, &done)))
+-		goto error1;
+-	ASSERT(done);
+-	/*
+-	 * Commit the first transaction.  This logs the EFI and the inode.
+-	 */
+-	if ((error = xfs_bmap_finish(&tp, &free_list, &committed)))
+-		goto error1;
+-	/*
+-	 * The transaction must have been committed, since there were
+-	 * actually extents freed by xfs_bunmapi.  See xfs_bmap_finish.
+-	 * The new tp has the extent freeing and EFDs.
+-	 */
+-	ASSERT(committed);
+-	/*
+-	 * The first xact was committed, so add the inode to the new one.
+-	 * Mark it dirty so it will be logged and moved forward in the log as
+-	 * part of every commit.
+-	 */
+-	xfs_trans_ijoin(tp, ip, 0);
+-	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+-	/*
+-	 * Get a new, empty transaction to return to our caller.
+-	 */
+-	ntp = xfs_trans_dup(tp);
+-	/*
+-	 * Commit the transaction containing extent freeing and EFDs.
+-	 * If we get an error on the commit here or on the reserve below,
+-	 * we need to unlock the inode since the new transaction doesn't
+-	 * have the inode attached.
+-	 */
+-	error = xfs_trans_commit(tp, 0);
+-	tp = ntp;
+-	if (error) {
+-		ASSERT(XFS_FORCED_SHUTDOWN(mp));
+-		goto error0;
+-	}
+-	/*
+-	 * transaction commit worked ok so we can drop the extra ticket
+-	 * reference that we gained in xfs_trans_dup()
+-	 */
+-	xfs_log_ticket_put(tp->t_ticket);
+-
+-	/*
+-	 * Remove the memory for extent descriptions (just bookkeeping).
+-	 */
+-	if (ip->i_df.if_bytes)
+-		xfs_idata_realloc(ip, -ip->i_df.if_bytes, XFS_DATA_FORK);
+-	ASSERT(ip->i_df.if_bytes == 0);
+-	/*
+-	 * Put an itruncate log reservation in the new transaction
+-	 * for our caller.
+-	 */
+-	if ((error = xfs_trans_reserve(tp, 0, XFS_ITRUNCATE_LOG_RES(mp), 0,
+-			XFS_TRANS_PERM_LOG_RES, XFS_ITRUNCATE_LOG_COUNT))) {
+-		ASSERT(XFS_FORCED_SHUTDOWN(mp));
+-		goto error0;
+-	}
+-
+-	xfs_trans_ijoin(tp, ip, 0);
+-	*tpp = tp;
+-	return 0;
+-
+- error1:
+-	xfs_bmap_cancel(&free_list);
+- error0:
+-	return error;
+-}
+-
+ int
+ xfs_release(
+ 	xfs_inode_t	*ip)
+@@ -1353,247 +1122,6 @@ xfs_link(
+ }
+ 
+ int
+-xfs_symlink(
+-	xfs_inode_t		*dp,
+-	struct xfs_name		*link_name,
+-	const char		*target_path,
+-	umode_t			mode,
+-	xfs_inode_t		**ipp)
+-{
+-	xfs_mount_t		*mp = dp->i_mount;
+-	xfs_trans_t		*tp;
+-	xfs_inode_t		*ip;
+-	int			error;
+-	int			pathlen;
+-	xfs_bmap_free_t		free_list;
+-	xfs_fsblock_t		first_block;
+-	bool                    unlock_dp_on_error = false;
+-	uint			cancel_flags;
+-	int			committed;
+-	xfs_fileoff_t		first_fsb;
+-	xfs_filblks_t		fs_blocks;
+-	int			nmaps;
+-	xfs_bmbt_irec_t		mval[SYMLINK_MAPS];
+-	xfs_daddr_t		d;
+-	const char		*cur_chunk;
+-	int			byte_cnt;
+-	int			n;
+-	xfs_buf_t		*bp;
+-	prid_t			prid;
+-	struct xfs_dquot	*udqp, *gdqp;
+-	uint			resblks;
+-
+-	*ipp = NULL;
+-	error = 0;
+-	ip = NULL;
+-	tp = NULL;
+-
+-	trace_xfs_symlink(dp, link_name);
+-
+-	if (XFS_FORCED_SHUTDOWN(mp))
+-		return XFS_ERROR(EIO);
+-
+-	/*
+-	 * Check component lengths of the target path name.
+-	 */
+-	pathlen = strlen(target_path);
+-	if (pathlen >= MAXPATHLEN)      /* total string too long */
+-		return XFS_ERROR(ENAMETOOLONG);
+-
+-	udqp = gdqp = NULL;
+-	if (dp->i_d.di_flags & XFS_DIFLAG_PROJINHERIT)
+-		prid = xfs_get_projid(dp);
+-	else
+-		prid = XFS_PROJID_DEFAULT;
+-
+-	/*
+-	 * Make sure that we have allocated dquot(s) on disk.
+-	 */
+-	error = xfs_qm_vop_dqalloc(dp, current_fsuid(), current_fsgid(), prid,
+-			XFS_QMOPT_QUOTALL | XFS_QMOPT_INHERIT, &udqp, &gdqp);
+-	if (error)
+-		goto std_return;
+-
+-	tp = xfs_trans_alloc(mp, XFS_TRANS_SYMLINK);
+-	cancel_flags = XFS_TRANS_RELEASE_LOG_RES;
+-	/*
+-	 * The symlink will fit into the inode data fork?
+-	 * There can't be any attributes so we get the whole variable part.
+-	 */
+-	if (pathlen <= XFS_LITINO(mp, dp->i_d.di_version))
+-		fs_blocks = 0;
+-	else
+-		fs_blocks = XFS_B_TO_FSB(mp, pathlen);
+-	resblks = XFS_SYMLINK_SPACE_RES(mp, link_name->len, fs_blocks);
+-	error = xfs_trans_reserve(tp, resblks, XFS_SYMLINK_LOG_RES(mp), 0,
+-			XFS_TRANS_PERM_LOG_RES, XFS_SYMLINK_LOG_COUNT);
+-	if (error == ENOSPC && fs_blocks == 0) {
+-		resblks = 0;
+-		error = xfs_trans_reserve(tp, 0, XFS_SYMLINK_LOG_RES(mp), 0,
+-				XFS_TRANS_PERM_LOG_RES, XFS_SYMLINK_LOG_COUNT);
+-	}
+-	if (error) {
+-		cancel_flags = 0;
+-		goto error_return;
+-	}
+-
+-	xfs_ilock(dp, XFS_ILOCK_EXCL | XFS_ILOCK_PARENT);
+-	unlock_dp_on_error = true;
+-
+-	/*
+-	 * Check whether the directory allows new symlinks or not.
+-	 */
+-	if (dp->i_d.di_flags & XFS_DIFLAG_NOSYMLINKS) {
+-		error = XFS_ERROR(EPERM);
+-		goto error_return;
+-	}
+-
+-	/*
+-	 * Reserve disk quota : blocks and inode.
+-	 */
+-	error = xfs_trans_reserve_quota(tp, mp, udqp, gdqp, resblks, 1, 0);
+-	if (error)
+-		goto error_return;
+-
+-	/*
+-	 * Check for ability to enter directory entry, if no space reserved.
+-	 */
+-	error = xfs_dir_canenter(tp, dp, link_name, resblks);
+-	if (error)
+-		goto error_return;
+-	/*
+-	 * Initialize the bmap freelist prior to calling either
+-	 * bmapi or the directory create code.
+-	 */
+-	xfs_bmap_init(&free_list, &first_block);
+-
+-	/*
+-	 * Allocate an inode for the symlink.
+-	 */
+-	error = xfs_dir_ialloc(&tp, dp, S_IFLNK | (mode & ~S_IFMT), 1, 0,
+-			       prid, resblks > 0, &ip, NULL);
+-	if (error) {
+-		if (error == ENOSPC)
+-			goto error_return;
+-		goto error1;
+-	}
+-
+-	/*
+-	 * An error after we've joined dp to the transaction will result in the
+-	 * transaction cancel unlocking dp so don't do it explicitly in the
+-	 * error path.
+-	 */
+-	xfs_trans_ijoin(tp, dp, XFS_ILOCK_EXCL);
+-	unlock_dp_on_error = false;
+-
+-	/*
+-	 * Also attach the dquot(s) to it, if applicable.
+-	 */
+-	xfs_qm_vop_create_dqattach(tp, ip, udqp, gdqp);
+-
+-	if (resblks)
+-		resblks -= XFS_IALLOC_SPACE_RES(mp);
+-	/*
+-	 * If the symlink will fit into the inode, write it inline.
+-	 */
+-	if (pathlen <= XFS_IFORK_DSIZE(ip)) {
+-		xfs_idata_realloc(ip, pathlen, XFS_DATA_FORK);
+-		memcpy(ip->i_df.if_u1.if_data, target_path, pathlen);
+-		ip->i_d.di_size = pathlen;
+-
+-		/*
+-		 * The inode was initially created in extent format.
+-		 */
+-		ip->i_df.if_flags &= ~(XFS_IFEXTENTS | XFS_IFBROOT);
+-		ip->i_df.if_flags |= XFS_IFINLINE;
+-
+-		ip->i_d.di_format = XFS_DINODE_FMT_LOCAL;
+-		xfs_trans_log_inode(tp, ip, XFS_ILOG_DDATA | XFS_ILOG_CORE);
+-
+-	} else {
+-		first_fsb = 0;
+-		nmaps = SYMLINK_MAPS;
+-
+-		error = xfs_bmapi_write(tp, ip, first_fsb, fs_blocks,
+-				  XFS_BMAPI_METADATA, &first_block, resblks,
+-				  mval, &nmaps, &free_list);
+-		if (error)
+-			goto error2;
+-
+-		if (resblks)
+-			resblks -= fs_blocks;
+-		ip->i_d.di_size = pathlen;
+-		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+-
+-		cur_chunk = target_path;
+-		for (n = 0; n < nmaps; n++) {
+-			d = XFS_FSB_TO_DADDR(mp, mval[n].br_startblock);
+-			byte_cnt = XFS_FSB_TO_B(mp, mval[n].br_blockcount);
+-			bp = xfs_trans_get_buf(tp, mp->m_ddev_targp, d,
+-					       BTOBB(byte_cnt), 0);
+-			if (!bp) {
+-				error = ENOMEM;
+-				goto error2;
 -			}
- 
- 			if (unlikely(xfs_dir2_db_to_fdb(mp, dbno) != fbno)) {
- 				xfs_alert(mp,
-@@ -1646,27 +1819,24 @@ xfs_dir2_node_addname_int(
- 			/*
- 			 * Get a buffer for the new block.
- 			 */
--			error = xfs_da_get_buf(tp, dp,
--					       xfs_dir2_db_to_da(mp, fbno),
--					       -1, &fbp, XFS_DATA_FORK);
-+			error = xfs_dir3_free_get_buf(tp, dp, fbno, &fbp);
- 			if (error)
- 				return error;
--			fbp->b_ops = &xfs_dir2_free_buf_ops;
-+			free = fbp->b_addr;
-+			bests = xfs_dir3_free_bests_p(mp, free);
-+			xfs_dir3_free_hdr_from_disk(&freehdr, free);
- 
- 			/*
--			 * Initialize the new block to be empty, and remember
--			 * its first slot as our empty slot.
-+			 * Remember the first slot as our empty slot.
- 			 */
--			free = fbp->b_addr;
--			free->hdr.magic = cpu_to_be32(XFS_DIR2_FREE_MAGIC);
--			free->hdr.firstdb = cpu_to_be32(
--				(fbno - XFS_DIR2_FREE_FIRSTDB(mp)) *
--				xfs_dir2_free_max_bests(mp));
-+			freehdr.firstdb = (fbno - XFS_DIR2_FREE_FIRSTDB(mp)) *
-+					xfs_dir3_free_max_bests(mp);
- 			free->hdr.nvalid = 0;
- 			free->hdr.nused = 0;
- 		} else {
- 			free = fbp->b_addr;
--			ASSERT(free->hdr.magic == cpu_to_be32(XFS_DIR2_FREE_MAGIC));
-+			bests = xfs_dir3_free_bests_p(mp, free);
-+			xfs_dir3_free_hdr_from_disk(&freehdr, free);
- 		}
- 
- 		/*
-@@ -1677,20 +1847,21 @@ xfs_dir2_node_addname_int(
- 		 * If it's after the end of the current entries in the
- 		 * freespace block, extend that table.
- 		 */
--		if (findex >= be32_to_cpu(free->hdr.nvalid)) {
--			ASSERT(findex < xfs_dir2_free_max_bests(mp));
--			free->hdr.nvalid = cpu_to_be32(findex + 1);
-+		if (findex >= freehdr.nvalid) {
-+			ASSERT(findex < xfs_dir3_free_max_bests(mp));
-+			freehdr.nvalid = findex + 1;
- 			/*
- 			 * Tag new entry so nused will go up.
- 			 */
--			free->bests[findex] = cpu_to_be16(NULLDATAOFF);
-+			bests[findex] = cpu_to_be16(NULLDATAOFF);
- 		}
- 		/*
- 		 * If this entry was for an empty data block
- 		 * (this should always be true) then update the header.
- 		 */
--		if (free->bests[findex] == cpu_to_be16(NULLDATAOFF)) {
--			be32_add_cpu(&free->hdr.nused, 1);
-+		if (bests[findex] == cpu_to_be16(NULLDATAOFF)) {
-+			freehdr.nused++;
-+			xfs_dir3_free_hdr_to_disk(fbp->b_addr, &freehdr);
- 			xfs_dir2_free_log_header(tp, fbp);
- 		}
- 		/*
-@@ -1699,7 +1870,7 @@ xfs_dir2_node_addname_int(
- 		 * change again.
- 		 */
- 		hdr = dbp->b_addr;
--		free->bests[findex] = hdr->bestfree[0].length;
-+		bests[findex] = hdr->bestfree[0].length;
- 		logfree = 1;
- 	}
- 	/*
-@@ -1758,8 +1929,9 @@ xfs_dir2_node_addname_int(
- 	/*
- 	 * If the freespace entry is now wrong, update it.
- 	 */
--	if (be16_to_cpu(free->bests[findex]) != be16_to_cpu(hdr->bestfree[0].length)) {
--		free->bests[findex] = hdr->bestfree[0].length;
-+	bests = xfs_dir3_free_bests_p(mp, free); /* gcc is so stupid */
-+	if (be16_to_cpu(bests[findex]) != be16_to_cpu(hdr->bestfree[0].length)) {
-+		bests[findex] = hdr->bestfree[0].length;
- 		logfree = 1;
- 	}
- 	/*
-@@ -1995,6 +2167,7 @@ xfs_dir2_node_trim_free(
- 	xfs_dir2_free_t		*free;		/* freespace structure */
- 	xfs_mount_t		*mp;		/* filesystem mount point */
- 	xfs_trans_t		*tp;		/* transaction pointer */
-+	struct xfs_dir3_icfree_hdr freehdr;
- 
- 	dp = args->dp;
- 	mp = dp->i_mount;
-@@ -2012,11 +2185,12 @@ xfs_dir2_node_trim_free(
- 	if (!bp)
- 		return 0;
- 	free = bp->b_addr;
--	ASSERT(free->hdr.magic == cpu_to_be32(XFS_DIR2_FREE_MAGIC));
-+	xfs_dir3_free_hdr_from_disk(&freehdr, free);
-+
- 	/*
- 	 * If there are used entries, there's nothing to do.
- 	 */
--	if (be32_to_cpu(free->hdr.nused) > 0) {
-+	if (freehdr.nused > 0) {
- 		xfs_trans_brelse(tp, bp);
- 		*rvalp = 0;
- 		return 0;
+-			if (pathlen < byte_cnt) {
+-				byte_cnt = pathlen;
+-			}
+-			pathlen -= byte_cnt;
+-
+-			memcpy(bp->b_addr, cur_chunk, byte_cnt);
+-			cur_chunk += byte_cnt;
+-
+-			xfs_trans_log_buf(tp, bp, 0, byte_cnt - 1);
+-		}
+-	}
+-
+-	/*
+-	 * Create the directory entry for the symlink.
+-	 */
+-	error = xfs_dir_createname(tp, dp, link_name, ip->i_ino,
+-					&first_block, &free_list, resblks);
+-	if (error)
+-		goto error2;
+-	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+-	xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
+-
+-	/*
+-	 * If this is a synchronous mount, make sure that the
+-	 * symlink transaction goes to disk before returning to
+-	 * the user.
+-	 */
+-	if (mp->m_flags & (XFS_MOUNT_WSYNC|XFS_MOUNT_DIRSYNC)) {
+-		xfs_trans_set_sync(tp);
+-	}
+-
+-	error = xfs_bmap_finish(&tp, &free_list, &committed);
+-	if (error) {
+-		goto error2;
+-	}
+-	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
+-	xfs_qm_dqrele(udqp);
+-	xfs_qm_dqrele(gdqp);
+-
+-	*ipp = ip;
+-	return 0;
+-
+- error2:
+-	IRELE(ip);
+- error1:
+-	xfs_bmap_cancel(&free_list);
+-	cancel_flags |= XFS_TRANS_ABORT;
+- error_return:
+-	xfs_trans_cancel(tp, cancel_flags);
+-	xfs_qm_dqrele(udqp);
+-	xfs_qm_dqrele(gdqp);
+-
+-	if (unlock_dp_on_error)
+-		xfs_iunlock(dp, XFS_ILOCK_EXCL);
+- std_return:
+-	return error;
+-}
+-
+-int
+ xfs_set_dmattrs(
+ 	xfs_inode_t     *ip,
+ 	u_int		evmask,
 -- 
 1.7.10.4
 
