@@ -1,25 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 641CC7FCD
-	for <xfs@oss.sgi.com>; Tue, 12 Mar 2013 07:43:34 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 509AC304059
-	for <xfs@oss.sgi.com>; Tue, 12 Mar 2013 05:43:34 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	VkFQ183LAkWUj0zf for <xfs@oss.sgi.com>;
-	Tue, 12 Mar 2013 05:43:32 -0700 (PDT)
-Received: from dave by dastard with local (Exim 4.76)
-	(envelope-from <david@fromorbit.com>) id 1UFOYF-0001Vm-9b
-	for xfs@oss.sgi.com; Tue, 12 Mar 2013 23:43:31 +1100
-Date: Tue, 12 Mar 2013 23:43:31 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 22/21] xfs: Fix magic number assert in xfs_dir3_leaf_log_bests
-Message-ID: <20130312124331.GP21651@dastard>
-References: <1363091454-8852-1-git-send-email-david@fromorbit.com>
+	by oss.sgi.com (Postfix) with ESMTP id 22CDD7FB6
+	for <xfs@oss.sgi.com>; Tue, 12 Mar 2013 07:52:19 -0500 (CDT)
+Message-ID: <513F2501.4010505@sgi.com>
+Date: Tue, 12 Mar 2013 07:52:17 -0500
+From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1363091454-8852-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH] xfstests: determine path of logger
+References: <1363045012-21119-1-git-send-email-dsterba@suse.cz>
+In-Reply-To: <1363045012-21119-1-git-send-email-dsterba@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,41 +17,30 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: David Sterba <dsterba@suse.cz>
+Cc: dchinner@redhat.com, xfs@oss.sgi.com
 
+This patch has been committed.
 
-From: Dave Chinner <dchinner@redhat.com>
+Regards
+--Rich
 
-Make sure we set the magic number correctly when converting
-from node to leaf form.
+commit 9958693bdb282adc422bcf85f5360e3a5785e8e9
+Author: David Sterba <dsterba@suse.cz>
+Date:   Mon Mar 11 23:36:52 2013 +0000
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
+     xfstests: determine path of logger
 
-This should probably be folded into patch 14/21. I missed this hunk
-when bringing it forward to 3.9-rc2 and folding all the bugs fixes
-I had in debug patches back into their original patches.
+     The path of the syslog writer utility 'logger' is hardcoded and not
+     always correct, use set_prog_path.
 
- fs/xfs/xfs_dir2_leaf.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_dir2_leaf.c b/fs/xfs/xfs_dir2_leaf.c
-index 015c078..43a5c8543c4 100644
---- a/fs/xfs/xfs_dir2_leaf.c
-+++ b/fs/xfs/xfs_dir2_leaf.c
-@@ -2199,7 +2199,7 @@ xfs_dir2_node_to_leaf(
- 	xfs_trans_buf_set_type(tp, lbp, XFS_BLF_DIR_LEAF1_BUF);
- 	leafhdr.magic = (leafhdr.magic == XFS_DIR2_LEAFN_MAGIC)
- 					? XFS_DIR2_LEAF1_MAGIC
--					: XFS_DIR3_LEAFN_MAGIC;
-+					: XFS_DIR3_LEAF1_MAGIC;
- 
- 	/*
- 	 * Set up the leaf tail from the freespace block.
+     Signed-off-by: David Sterba <dsterba@suse.cz>
+     Reviewed-by: Dave Chinner <dchinner@redhat.com>
+     Signed-off-by: Rich Johnston <rjohnston@sgi.com>
 
 _______________________________________________
 xfs mailing list
