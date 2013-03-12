@@ -1,19 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5193C7F3F
-	for <xfs@oss.sgi.com>; Tue, 12 Mar 2013 03:04:23 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 416FE304059
-	for <xfs@oss.sgi.com>; Tue, 12 Mar 2013 01:04:23 -0700 (PDT)
-Received: from mx4-phx2.redhat.com (mx4-phx2.redhat.com [209.132.183.25]) by
-	cuda.sgi.com with ESMTP id qhNylVaajHq9EH2Y for
-	<xfs@oss.sgi.com>; Tue, 12 Mar 2013 01:04:19 -0700 (PDT)
-Date: Tue, 12 Mar 2013 04:04:11 -0400 (EDT)
-From: CAI Qian <caiqian@redhat.com>
-Message-ID: <924669527.12643828.1363075451534.JavaMail.root@redhat.com>
-In-Reply-To: <20130312074608.GL21651@dastard>
-Subject: Re: 3.9-rc2 xfs panic
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0B9D07F54
+	for <xfs@oss.sgi.com>; Tue, 12 Mar 2013 03:08:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id AC0FCAC004
+	for <xfs@oss.sgi.com>; Tue, 12 Mar 2013 01:08:36 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id szTpKpCOTGgv6F3L (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 12 Mar 2013 01:08:35 -0700 (PDT)
+Message-ID: <513EE274.6090808@oracle.com>
+Date: Tue, 12 Mar 2013 16:08:20 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
+Subject: Re: [ASSERT failure] transaction reservations changes bad?
+References: <20130312062001.GJ21651@dastard> <20130312062531.GK21651@dastard>
+In-Reply-To: <20130312062531.GK21651@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,82 +31,112 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
+Hi Dave,
 
-
------ Original Message -----
-> From: "Dave Chinner" <david@fromorbit.com>
-> To: "CAI Qian" <caiqian@redhat.com>
-> Cc: xfs@oss.sgi.com
-> Sent: Tuesday, March 12, 2013 3:46:08 PM
-> Subject: Re: 3.9-rc2 xfs panic
+On 03/12/2013 02:25 PM, Dave Chinner wrote:
+> On Tue, Mar 12, 2013 at 05:20:02PM +1100, Dave Chinner wrote:
+>> Folks,
+>>
+>> I just got this ASSERT failure running xfstests on a 3.1.8 xfsprogs
+>> and a 3.9-rc1 kernel running test 297:
 > 
-> On Tue, Mar 12, 2013 at 02:34:07AM -0400, CAI Qian wrote:
-> > 
-> > 
-> > ----- Original Message -----
-> > > From: "Dave Chinner" <david@fromorbit.com>
-> > > To: "CAI Qian" <caiqian@redhat.com>
-> > > Cc: xfs@oss.sgi.com
-> > > Sent: Tuesday, March 12, 2013 2:07:01 PM
-> > > Subject: Re: 3.9-rc2 xfs panic
-> > > 
-> > > On Tue, Mar 12, 2013 at 12:32:28AM -0400, CAI Qian wrote:
-> > > > Just came across when running xfstests using 3.9-rc2 kernel on
-> > > > a
-> > > > power7
-> > > > box with addition of this patch which fixed a known issue,
-> > > > http://people.redhat.com/qcai/stable/01-fix-double-fetch-hlist.patch
-> > > > 
-> > > > The log shows it was happened around test case 370 with
-> > > > TEST_PARAM_BLKSIZE = 2048
-> > > 
-> > > That doesn't sound like xfstests. it only has 305 tests, and no
-> > > parameters like TEST_PARAM_BLKSIZE....
-> > Sorry, it is a typo, test case 270 not 370. TEST_PARAM_BLKSIZE was
-> > from an internal wrapper to be used to create new filessytem not
-> > from the
-> > original xfstests.
+> FYI, it's 100% reproducable here with:
 > 
-> OK, so that means you're testing 2k filesystem block size on a 64k
-> page size machine?
-Looks like so. Would that be a problem?
-
-TEST_PARAM_TEST_DEV not specified; using loopback file
-TEST_PARAM_SCRATCH_DEV not specified; using loopback file
-meta-data=/dev/loop0             isize=256    agcount=4, agsize=655360 blks
-         =                       sectsz=512   attr=2, projid32bit=0
-data     =                       bsize=2048   blocks=2621440, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0
-log      =internal log           bsize=2048   blocks=5120, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-TEST_DEV=/dev/loop0				# device containing TEST PARTITION
-TEST_DIR=/mnt/testarea/test				# mount point of TEST PARTITION
-SCRATCH_DEV=/dev/loop1			# device containing SCRATCH PARTITION
-SCRATCH_MNT=/mnt/testarea/scratch			# mount point for SCRATCH PARTITION
-SCRATCH_LOGDEV=			# optional external log for SCRATCH PARTITION
-SCRATCH_RTDEV=			# optional realtime device for SCRATCH PARTITION
-TMPFS_MOUNT_OPTIONS=""	# scratch mount options for tmpfs
-TEST_FS_MOUNT_OPTS=""	# test mount options for tmpfs
-> Are you running with CONFIG_XFS_DEBUG=y?
-# CONFIG_XFS_DEBUG is not set
-I can enable this if I can reproduce it.
+> # sudo MKFS_OPTIONS="-b size=512" ./check 297
 > 
-> > > So, looks like memory corruption - a corrupted slab, perhaps? Can
-> > > you turn on memory poisoning, debugging, etc?
-> 
-> Does this turn anything up?
-It is still running. Unsure if it is reproducible at this point.
-CAI Qian
+> (reproduced on multiple VMs now with the same command line)
 > 
 > Cheers,
 > 
 > Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
 > 
+>>
+>> [ 2593.733005] XFS: Assertion failed: BTOBB(need_bytes) < log->l_logBBsize, file: fs/xfs/xfs_log.c, line: 1451
+>> [ 2593.736988] ------------[ cut here ]------------
+>> [ 2593.738177] kernel BUG at fs/xfs/xfs_message.c:100!
+>> [ 2593.739192] invalid opcode: 0000 [#1] SMP
+>> [ 2593.740081] Modules linked in:
+>> [ 2593.740786] CPU 0
+>> [ 2593.741221] Pid: 1385, comm: mkdir Not tainted 3.8.0-dgc+ #472 Bochs Bochs
+>> [ 2593.742630] RIP: 0010:[<ffffffff8146a1f2>]  [<ffffffff8146a1f2>] assfail+0x22/0x30
+>> [ 2593.744173] RSP: 0018:ffff880038c23c98  EFLAGS: 00010292
+>> [ 2593.745234] RAX: 000000000000005f RBX: ffff88003cfec800 RCX: 0000000000005251
+>> [ 2593.746635] RDX: 0000000000005151 RSI: 0000000000000096 RDI: 0000000000000246
+>> [ 2593.748048] RBP: ffff880038c23c98 R08: 000000000000000a R09: 0000000000000889
+>> [ 2593.749471] R10: 0000000000000000 R11: 0000000000000888 R12: 0000000000000dcb
+>> [ 2593.750862] R13: ffff88003cfec800 R14: 0000000000000003 R15: 0000000000000001
+>> [ 2593.752276] FS:  00007f0e64cb97a0(0000) GS:ffff88003fc00000(0000) knlGS:0000000000000000
+>> [ 2593.753895] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+>> [ 2593.755039] CR2: 000000000066c004 CR3: 000000003cf26000 CR4: 00000000000006f0
+>> [ 2593.756472] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+>> [ 2593.757877] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+>> [ 2593.759285] Process mkdir (pid: 1385, threadinfo ffff880038c22000, task ffff88003cb483c0)
+>> [ 2593.760914] Stack:
+>> [ 2593.761345]  ffff880038c23cb8 ffffffff814c9a11 ffff88002fa170a8 ffff880007ac7420
+>> [ 2593.762881]  ffff880038c23d18 ffffffff814cb608 0000000000000000 000111b838c23fd8
+>> [ 2593.764429]  ffff880038c23fd8 ffff8800055733d0 ffff880005573000 0000000000000000
+>> [ 2593.765964] Call Trace:
+>> [ 2593.766449]  [<ffffffff814c9a11>] xlog_grant_push_ail+0x41/0xf0
+>> [ 2593.767577]  [<ffffffff814cb608>] xfs_log_reserve+0xe8/0x270
+>> [ 2593.768676]  [<ffffffff814c740e>] xfs_trans_reserve+0x2ee/0x300
+>> [ 2593.769832]  [<ffffffff814c6ec7>] ? _xfs_trans_alloc+0x37/0xa0
+>> [ 2593.770950]  [<ffffffff8146ed05>] xfs_create+0x185/0x660
+>> [ 2593.771975]  [<ffffffff8118cadd>] ? lookup_real+0x1d/0x60
+>> [ 2593.773028]  [<ffffffff814678c6>] xfs_vn_mknod+0xa6/0x1b0
+>> [ 2593.774093]  [<ffffffff814679e6>] xfs_vn_mkdir+0x16/0x20
+>> [ 2593.775112]  [<ffffffff81190ece>] vfs_mkdir+0x9e/0xf0
+>> [ 2593.776092]  [<ffffffff81192862>] sys_mkdirat+0x62/0xe0
+>> [ 2593.777111]  [<ffffffff811928f9>] sys_mkdir+0x19/0x20
+>> [ 2593.778084]  [<ffffffff81be0f99>] system_call_fastpath+0x16/0x1b
+>> [ 2593.779233] Code: e8 f4 fb ff ff 0f 0b 66 90 0f 1f 44 00 00 55 48 89 f1 41 89 d0 48 89 e5 48 89 fa 48 c7 c6 40 f9 f2 81 31 ff 31 c0 e8 1e fc ff ff <0f> 0b 66 66 66
+>> [ 2593.784186] RIP  [<ffffffff8146a1f2>] assfail+0x22/0x30
+>> [ 2593.785224]  RSP <ffff880038c23c98>
+>> [ 2593.786366] ---[ end trace bf0cb9ec29b256a6 ]---
+>>
+>> This implies that the permanent transaction reservation ended up
+>> larger than the log itself:
+>>
+>> $ sudo xfs_info /mnt/scratch/
+>> [sudo] password for dave: 
+>> meta-data=/dev/vdb               isize=256    agcount=16, agsize=1441792 blks
+>>          =                       sectsz=512   attr=2
+>> data     =                       bsize=512    blocks=23068672, imaxpct=25
+>>          =                       sunit=512    swidth=6144 blks
+>> naming   =version 2              bsize=4096   ascii-ci=0
+>> log      =internal               bsize=512    blocks=2560, version=2
+>>          =                       sectsz=512   sunit=512 blks, lazy-count=1
+>> realtime =none                   extsz=4096   blocks=0, rtextents=0
+>>
+>> Can someone please check that the before/after mkdir transaction
+>> reservation sizes are unchanged for such a configuration?
+I just did a quick verification. 
+
+# mkfs.xfs -V
+mkfs.xfs version 3.1.8
+
+# uname -a
+Linux koala 3.9.0-rc1 #80 SMP Tue Mar 12 15:06:39 CST 2013 x86_64 x86_64 x86_64 GNU/Linux
+
+# mkfs.xfs -f -b size=512 /dev/sda6
+meta-data=/dev/sda6              isize=256    agcount=4, agsize=5242880 blks
+         =                       sectsz=512   attr=2, projid32bit=0
+data     =                       bsize=512    blocks=20971520, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0
+log      =internal log           bsize=512    blocks=20480, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+
+The reservation size does not changed, both are 70072 bytes:
+
+[  230.905092] xfs_calc_mkdir_reservation: res=70072 bytes.
+
+However, I can always reproducing this issue with '"MKFS_OPTIONS=-b size=512" ./check 297' as well.
+
+
+Thanks,
+-Jeff
 
 _______________________________________________
 xfs mailing list
