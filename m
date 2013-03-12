@@ -1,23 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 70F297F3F
-	for <xfs@oss.sgi.com>; Tue, 12 Mar 2013 05:31:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4E448304039
-	for <xfs@oss.sgi.com>; Tue, 12 Mar 2013 03:31:42 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	eliRcM5opp2kpRQL for <xfs@oss.sgi.com>;
-	Tue, 12 Mar 2013 03:31:40 -0700 (PDT)
-Date: Tue, 12 Mar 2013 21:31:38 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [ASSERT failure] transaction reservations changes bad?
-Message-ID: <20130312103138.GN21651@dastard>
-References: <20130312062001.GJ21651@dastard> <20130312062531.GK21651@dastard>
-	<513EE274.6090808@oracle.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 673A07F61
+	for <xfs@oss.sgi.com>; Tue, 12 Mar 2013 05:41:50 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 55C2F8F8033
+	for <xfs@oss.sgi.com>; Tue, 12 Mar 2013 03:41:47 -0700 (PDT)
+Received: from mail-da0-f51.google.com (mail-da0-f51.google.com
+	[209.85.210.51]) by cuda.sgi.com with ESMTP id IeBYlqC2YdCZWE37
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 12 Mar 2013 03:41:46 -0700 (PDT)
+Received: by mail-da0-f51.google.com with SMTP id z17so1210348dal.24
+	for <xfs@oss.sgi.com>; Tue, 12 Mar 2013 03:41:45 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <513EE274.6090808@oracle.com>
+In-Reply-To: <513A4AEC.4010202@sandeen.net>
+References: <CANU9nTnvJS50vdQv2K0gKHZPvzzH5EY1qpizJNsqUobrr2juDA@mail.gmail.com>
+	<512FA67D.2090708@sandeen.net>
+	<CANU9nTm3vR3Z5JwRwou4vnNejstAkAsnBb2ivwx-KhnHHbWpoQ@mail.gmail.com>
+	<5130DB54.9030503@sandeen.net>
+	<CANU9nTkekrw2mdptFdK2RVUFXD=evt0sTZhB9VL+PKY8DTj11A@mail.gmail.com>
+	<5134BBA4.3060305@sandeen.net>
+	<CANU9nTntXh5spRYc80OhsBqgLnZcJGA2qBeVVQaywthD1RMu4w@mail.gmail.com>
+	<513A4AEC.4010202@sandeen.net>
+From: Ole Tange <tange@binf.ku.dk>
+Date: Tue, 12 Mar 2013 11:41:25 +0100
+Message-ID: <CANU9nTnLe76Jm9nYPhoLUZoESfshGyE-RBJ-gkdZZ2Nx3wiC0w@mail.gmail.com>
+Subject: Re: xfs_repair segfaults
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,92 +37,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs@oss.sgi.com
 
-On Tue, Mar 12, 2013 at 04:08:20PM +0800, Jeff Liu wrote:
-> Hi Dave,
-> 
-> On 03/12/2013 02:25 PM, Dave Chinner wrote:
-> > On Tue, Mar 12, 2013 at 05:20:02PM +1100, Dave Chinner wrote:
-> >> Folks,
-> >>
-> >> I just got this ASSERT failure running xfstests on a 3.1.8 xfsprogs
-> >> and a 3.9-rc1 kernel running test 297:
-> > 
-> > FYI, it's 100% reproducable here with:
-> > 
-> > # sudo MKFS_OPTIONS="-b size=512" ./check 297
-> > 
-> > (reproduced on multiple VMs now with the same command line)
-....
-> >> This implies that the permanent transaction reservation ended up
-> >> larger than the log itself:
-> >>
-> >> $ sudo xfs_info /mnt/scratch/
-> >> [sudo] password for dave: 
-> >> meta-data=/dev/vdb               isize=256    agcount=16, agsize=1441792 blks
-> >>          =                       sectsz=512   attr=2
-> >> data     =                       bsize=512    blocks=23068672, imaxpct=25
-> >>          =                       sunit=512    swidth=6144 blks
-> >> naming   =version 2              bsize=4096   ascii-ci=0
-> >> log      =internal               bsize=512    blocks=2560, version=2
-> >>          =                       sectsz=512   sunit=512 blks, lazy-count=1
-> >> realtime =none                   extsz=4096   blocks=0, rtextents=0
-> >>
-> >> Can someone please check that the before/after mkdir transaction
-> >> reservation sizes are unchanged for such a configuration?
-> I just did a quick verification. 
-> 
-> # mkfs.xfs -V
-> mkfs.xfs version 3.1.8
-> 
-> # uname -a
-> Linux koala 3.9.0-rc1 #80 SMP Tue Mar 12 15:06:39 CST 2013 x86_64 x86_64 x86_64 GNU/Linux
-> 
-> # mkfs.xfs -f -b size=512 /dev/sda6
-> meta-data=/dev/sda6              isize=256    agcount=4, agsize=5242880 blks
->          =                       sectsz=512   attr=2, projid32bit=0
-> data     =                       bsize=512    blocks=20971520, imaxpct=25
->          =                       sunit=0      swidth=0 blks
-> naming   =version 2              bsize=4096   ascii-ci=0
-> log      =internal log           bsize=512    blocks=20480, version=2
->          =                       sectsz=512   sunit=0 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
+On Fri, Mar 8, 2013 at 9:32 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+> On 3/8/13 4:21 AM, Ole Tange wrote:
+>> On Mon, Mar 4, 2013 at 4:20 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+>>
+>>> 2) so you could run a "real" non-"n" xfs_repair on a metadata image as a more realistic dry run
+:
+>> I get
+>> filenames like:
+>>
+>> /mnt/disk/??5?z+hEOgl/?7?Psr1?aIH<?ip:??/>S??+??z=ozK/8_0/???d)
+>> 5JCG?eiBd?EVsNF'A?v?m?f;Fi6v)d>/?M%?A??J?)B<soGlc??QuY!e-<,6G?
+>> X[Df?Wm^[?f 4|
+>
+> By default, xfs_metadump scrambles filenames, so nothing to worry
+> about (it's for privacy reasons).  If you use the "-o" option it'll keep
+> it in the clear.
 
-That's a different mkfs.xfs config to what test 297 is using.
-Different log size, different AG count, no log stripe unit, etc.
-297 is using:
+Ahh. To me that does not conform to Principle of Least Astonishment -
+especially since some of the filenames were not obfuscated.
 
-scratch_mkfs_xfs -d agcount=16,su=256k,sw=12 -l su=256k,size=2560b <dev>
+I would have been less surprised if the files were named:
 
-And when I add the extra MKFS_OPTIONS in it actually is:
+    Use_-o_for_real_file_names_XXXXXXXX
+    Use_-o_for_real_dir_names_XXXXXXXX
 
-# mkfs.xfs -b size=512 -d agcount=16,su=256k,sw=12 -l su=256k,size=2560b <dev>
+where XXXXXXXX is just a unique number.
 
-> The reservation size does not changed, both are 70072 bytes:
-> 
-> [  230.905092] xfs_calc_mkdir_reservation: res=70072 bytes.
 
-And it's not just the calculation that I'm worried about here - it's
-the actual reservation that ends up in the ticket that matters as
-that is fed into the code that has triggered the assert. The value
-in the ticket takes into account log stripe units and other
-roundings, so it's typically much larger than just the reservation
-calculation itself...
-
-> However, I can always reproducing this issue with
-> '"MKFS_OPTIONS=-b size=512" ./check 297' as well.
-
-Can you check that it also fails on kernels prior to the reservation
-changes? That will rule out it being a recent regression...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+/Ole
 
 _______________________________________________
 xfs mailing list
