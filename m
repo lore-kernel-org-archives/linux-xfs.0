@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4E45E7F3F
-	for <xfs@oss.sgi.com>; Wed, 13 Mar 2013 13:24:36 -0500 (CDT)
-Date: Wed, 13 Mar 2013 13:24:35 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: XFS filesystem on EC2 instance corrupts and shuts down
-Message-ID: <20130313182435.GU22182@sgi.com>
-References: <CAOdS1h=7X4O1O7X8YOwxtLm7G=fc+J+6hJxJ1RKbDmfTZXTpeg@mail.gmail.com>
-	<51373DB8.2020707@redhat.com>
-	<CAOdS1hnXGj9puaHxeToqmpK40A-3WvJnM7=5HckpyyZYqZTvEQ@mail.gmail.com>
-	<51373FC1.6010101@redhat.com>
-	<CAOurMUeasru6ekDYcvVR1QnaWVJFV+-coZsUG5SgG6LnENBvXg@mail.gmail.com>
-	<513751F2.2060109@redhat.com>
-	<CAOdS1hngSuHn_HiremLyUS7Qd9eZ68=8arfBuHnEpwXQaBw9Wg@mail.gmail.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 74F7B7F3F
+	for <xfs@oss.sgi.com>; Wed, 13 Mar 2013 13:53:54 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 298548F806F
+	for <xfs@oss.sgi.com>; Wed, 13 Mar 2013 11:53:54 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id gCvBVTx2Flmb65Qg for
+	<xfs@oss.sgi.com>; Wed, 13 Mar 2013 11:53:53 -0700 (PDT)
+Message-ID: <5140CB3F.5010704@redhat.com>
+Date: Wed, 13 Mar 2013 13:53:51 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAOdS1hngSuHn_HiremLyUS7Qd9eZ68=8arfBuHnEpwXQaBw9Wg@mail.gmail.com>
+Subject: [PATCH 3/3 V3] xfstests: btrfs tests for basic informational commands
+References: <1363186623-1378-1-git-send-email-sandeen@redhat.com>
+	<1363186623-1378-4-git-send-email-sandeen@redhat.com>
+	<5140AB9D.2070001@redhat.com>
+In-Reply-To: <5140AB9D.2070001@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,118 +29,295 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Shrinath M <shrinath.m@webyog.com>
-Cc: Sabyasachi Ruj <sabyasachi.ruj@webyog.com>, Vivek Goel <vivek.goel@webyog.com>, Supratik Goswami <supratik.goswami@webyog.com>, Ric Wheeler <rwheeler@redhat.com>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-Hey Shrinath,
+Run basic btrfs information commands in various ways, performing
+sanity tests of: filesystem show, label, sync, and device stats
+(sync is included just because it's simple).  These are mostly
+just smoke tests, although for example show by label & UUID
+should verify that the correct fs was shown.
 
-On Wed, Mar 13, 2013 at 11:37:52PM +0530, Shrinath M wrote:
-> Sorry to be asking in dev thread, but Amazon seems to be clueless in this
-> case :(
-> Can someone tell me where can we find the logs/output of xfs repair after
-> this runs?
+This also adds quite a few new filters to accommodate the output
+of the new commands.
 
-xfs_repair doesn't keep a separate log file.  All the output is on the command
-line.  You'll need to either redirect the output of stdout and stderr to a
-file, or keep a screen or console log.
+Cc: linux-btrfs@vger.kernel.org
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
->	We just reboot the machine when we see this and the
-> /var/log/messages or dmesg seems to know nothing about what it repaired.
+V2: sort & uniq device stats output to account for variable
+nrs. of devices.  Optionally check that the proper nr. of
+devices was returned, as well.
 
-The contents of /var/log/messages could help you to understand why xfs might
-have forced shutdown, but won't help you with xfs_repair.
+V3: _filter_uuid needs to pay attention to $1, not hope
+that the caller has set $UUID.  Oops.
 
-Since you're getting IO errors, it sounds like you have a problem lower in the
-stack than the filesystem.  At the filesystem level there isn't much we can do
-with a block device that is giving IO errors so we just shut down.  Consider
-copying the remote block device to a local one ('dd' might be a good choice for
-this) and see if you can get a clean copy.  Then it's time to see about the
-filesystem.
-
-Regards,
-Ben
-
-> On Wed, Mar 6, 2013 at 7:55 PM, Ric Wheeler <rwheeler@redhat.com> wrote:
-> 
-> > I would suggest contacting Amazon's customer support channel (or the
-> > vendor you paid for the Linux instance you are running).
-> >
-> > XFS developer list is probably not the correct forum to help you debug
-> > this :)
-> >
-> > Good luck!
-> >
-> > Ric
-> >
-> >
-> >
-> > On 03/06/2013 08:12 AM, Supratik Goswami wrote:
-> >
-> >> Have we created a ticket with AWS ?
-> >>
-> >> It could be an EBS issue who knows, we need to confirm that first.
-> >>
-> >> --
-> >> Warm Regards
-> >>
-> >> Supratik
-> >>
-> >>
-> >> On Wed, Mar 6, 2013 at 6:38 PM, Ric Wheeler <rwheeler@redhat.com <mailto:
-> >> rwheeler@redhat.com>> wrote:
-> >>
-> >>     On 03/06/2013 08:03 AM, Shrinath M wrote:
-> >>
-> >>
-> >>         On Wed, Mar 6, 2013 at 6:29 PM, Ric Wheeler <rwheeler@redhat.com
-> >>         <mailto:rwheeler@redhat.com> <mailto:rwheeler@redhat.com
-> >>
-> >>         <mailto:rwheeler@redhat.com>>> wrote:
-> >>
-> >>             I think that you would need to verify that the Amazon storage
-> >> is not
-> >>             throwing errors - do your logs show IO errors or issues
-> >> before XFS
-> >>         hits an
-> >>             issue?
-> >>
-> >>
-> >>         No IO errors in /var/log/messages.
-> >>         Where else should I be looking?
-> >>
-> >>
-> >>
-> >>     Feb 12 19:47:18 ip-100-0-100-1 kernel: [2541168.023638] XFS (md0): I/O
-> >>     Error Detected. Shutting down filesystem
-> >>
-> >>     Is an IO error from MD.
-> >>
-> >>     I would suggest trying to reproduce without MD in the picture first -
-> >>     always best to try to reproduce with the simplest setup first and work
-> >>     your way up the complexity ladder,
-> >>
-> >>     Ric
-> >>
-> >>
-> >>
-> >>
-> >> ______________________________**_________________
-> >> xfs mailing list
-> >> xfs@oss.sgi.com
-> >> http://oss.sgi.com/mailman/**listinfo/xfs<http://oss.sgi.com/mailman/listinfo/xfs>
-> >>
-> >
-> >
-> 
-> 
-> -- 
-> Regards
-> *Shrinath.M*
-
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+diff --git a/313 b/313
+new file mode 100755
+index 0000000..579b0d3
+--- /dev/null
++++ b/313
+@@ -0,0 +1,96 @@
++#! /bin/bash
++# FS QA Test No. 313
++#
++# run basic btrfs information commands in various ways
++# sanity tests: filesystem show, label, sync, and device stats
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2013 Red Hat, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++# creator
++owner=sandeen@redhat.com
++
++seq=`basename $0`
++echo "== QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common.rc
++. ./btrfs.filter
++
++# real QA test starts here
++
++# Modify as appropriate.
++_supported_fs btrfs
++_supported_os Linux
++_require_scratch
++_require_scratch_dev_pool
++
++rm -f $seq.full
++
++FIRST_POOL_DEV=`echo $SCRATCH_DEV_POOL | awk '{print $1}'`
++LAST_POOL_DEV=`echo $SCRATCH_DEV_POOL | awk '{print $NF}'`
++TOTAL_DEVS=`echo $SCRATCH_DEV $SCRATCH_DEV_POOL | wc -w`
++LABEL=TestLabel.$seq
++
++echo "Scratch $SCRATCH_DEV First $FIRST_POOL_DEV last $LAST_POOL_DEV Total $TOTAL_DEVS" > $seq.full
++
++_scratch_mkfs $SCRATCH_DEV_POOL >> $seq.full 2>&1 || _fail "mkfs failed"
++
++# These have to be done unmounted...?
++echo "== Set filesystem label to $LABEL"
++$BTRFS_UTIL_PROG filesystem label $SCRATCH_DEV $LABEL
++echo "== Get filesystem label"
++$BTRFS_UTIL_PROG filesystem label $SCRATCH_DEV
++
++echo "== Mount."
++_scratch_mount
++
++echo "== Show filesystem by label"
++$BTRFS_UTIL_PROG filesystem show $LABEL | _filter_btrfs_filesystem_show $TOTAL_DEVS
++UUID=`$BTRFS_UTIL_PROG filesystem show $LABEL | grep uuid: | awk '{print $NF}'`
++
++echo "UUID $UUID" >> $seq.full
++
++echo "== Show filesystem by UUID"
++$BTRFS_UTIL_PROG filesystem show $UUID | _filter_btrfs_filesystem_show $TOTAL_DEVS $UUID
++
++echo "== Sync filesystem"
++$BTRFS_UTIL_PROG filesystem sync $SCRATCH_MNT | _filter_scratch
++
++echo "== Show device stats by mountpoint"
++$BTRFS_UTIL_PROG device stats $SCRATCH_MNT | _filter_btrfs_device_stats $TOTAL_DEVS
++echo "== Show device stats by first/scratch dev"
++$BTRFS_UTIL_PROG device stats $SCRATCH_DEV | _filter_btrfs_device_stats
++echo "== Show device stats by second dev"
++$BTRFS_UTIL_PROG device stats $FIRST_POOL_DEV | sed -e "s,$FIRST_POOL_DEV,FIRST_POOL_DEV,g"
++echo "== Show device stats by last dev"
++$BTRFS_UTIL_PROG device stats $LAST_POOL_DEV | sed -e "s,$LAST_POOL_DEV,LAST_POOL_DEV,g"
++
++# success, all done
++status=0
++exit
+diff --git a/313.out b/313.out
+new file mode 100644
+index 0000000..f513bdd
+--- /dev/null
++++ b/313.out
+@@ -0,0 +1,41 @@
++== QA output created by 313
++== Set filesystem label to TestLabel.313
++== Get filesystem label
++TestLabel.313
++== Mount.
++== Show filesystem by label
++Label: 'TestLabel.313'  uuid: <UUID>
++	Total devices <EXACTNUM> FS bytes used <SIZE>
++	devid     <DEVID> size <SIZE> used <SIZE> path SCRATCH_DEV
++
++== Show filesystem by UUID
++Label: 'TestLabel.313'  uuid: <EXACTUUID>
++	Total devices <EXACTNUM> FS bytes used <SIZE>
++	devid     <DEVID> size <SIZE> used <SIZE> path SCRATCH_DEV
++
++== Sync filesystem
++FSSync 'SCRATCH_MNT'
++== Show device stats by mountpoint
++      <NUMDEVS> [SCRATCH_DEV].corruption_errs <NUM>
++      <NUMDEVS> [SCRATCH_DEV].flush_io_errs   <NUM>
++      <NUMDEVS> [SCRATCH_DEV].generation_errs <NUM>
++      <NUMDEVS> [SCRATCH_DEV].read_io_errs    <NUM>
++      <NUMDEVS> [SCRATCH_DEV].write_io_errs   <NUM>
++== Show device stats by first/scratch dev
++[SCRATCH_DEV].corruption_errs <NUM>
++[SCRATCH_DEV].flush_io_errs   <NUM>
++[SCRATCH_DEV].generation_errs <NUM>
++[SCRATCH_DEV].read_io_errs    <NUM>
++[SCRATCH_DEV].write_io_errs   <NUM>
++== Show device stats by second dev
++[FIRST_POOL_DEV].write_io_errs   0
++[FIRST_POOL_DEV].read_io_errs    0
++[FIRST_POOL_DEV].flush_io_errs   0
++[FIRST_POOL_DEV].corruption_errs 0
++[FIRST_POOL_DEV].generation_errs 0
++== Show device stats by last dev
++[LAST_POOL_DEV].write_io_errs   0
++[LAST_POOL_DEV].read_io_errs    0
++[LAST_POOL_DEV].flush_io_errs   0
++[LAST_POOL_DEV].corruption_errs 0
++[LAST_POOL_DEV].generation_errs 0
+diff --git a/btrfs.filter b/btrfs.filter
+new file mode 100644
+index 0000000..8a749bf
+--- /dev/null
++++ b/btrfs.filter
+@@ -0,0 +1,60 @@
++# Filters for btrfs command output
++
++. ./common.filter
++
++# Some, but not all, commands emit "Btrfs <version>"
++_filter_btrfs_version()
++{
++	sed -e "s/^Btrfs.*//g"
++}
++
++_filter_devid()
++{
++	sed -e "s/\(devid\s\+\)[0-9]\+/\1 <DEVID>/g"
++}
++
++# If passed a number as first arg, filter that number of devices
++# If passed a UUID as second arg, filter that exact UUID
++_filter_btrfs_filesystem_show()
++{
++	if [ ! -z $1 ]; then
++		NUMDEVS=$1
++		NUM_SUBST="<EXACTNUM>"
++	else
++		NUMDEVS="[0-9]\+"
++		NUM_SUBST="<NUM>"
++	fi
++
++	UUID=""
++	if [ ! -z $2 ]; then
++		UUID=$2
++	fi
++
++	# the uniq collapses all device lines into 1
++	_filter_uuid $UUID | _filter_scratch | _filter_scratch_pool | \
++	_filter_size | _filter_btrfs_version | _filter_devid | \
++	sed -e "s/\(Total devices\) $NUMDEVS/\1 $NUM_SUBST/g" | \
++	uniq
++}
++
++# This eliminates all numbers, and shows only unique lines,
++# to accomodate a varying nr. of devices.
++# If given an argument, make sure we saw that many devices
++# in total.
++_filter_btrfs_device_stats()
++{
++	if [ ! -z $1 ]; then
++		NUMDEVS=$1
++		UNIQ_OPT="-c"
++	else
++		NUMDEVS="thiswillnotmatch"
++		UNIQ=""
++	fi
++
++	_filter_scratch | _filter_scratch_pool | \
++	sed -e "s/[0-9]\+$/<NUM>/g" | sort | uniq $UNIQ_OPT | \
++	sed -e "s/$NUMDEVS /<NUMDEVS> /g"
++}
++
++# make sure this script returns success
++/bin/true
+diff --git a/common.filter b/common.filter
+index c854a98..c34809f 100644
+--- a/common.filter
++++ b/common.filter
+@@ -226,6 +226,13 @@ _filter_scratch()
+ 	sed -e "s,$SCRATCH_DEV,SCRATCH_DEV,g" -e "s,$SCRATCH_MNT,SCRATCH_MNT,g"
+ }
+ 
++# Turn any device in the scratch pool into SCRATCH_DEV
++_filter_scratch_pool()
++{
++	FILTER_STRINGS=`echo $SCRATCH_DEV_POOL | sed -e 's/\s\+/\\\|/g'`
++	sed -e "s,$FILTER_STRINGS,SCRATCH_DEV,g"
++}
++
+ _filter_spaces()
+ {
+        sed -e 's/ [ ]*/ /g'
+@@ -238,5 +245,23 @@ _filter_ln()
+ 	    -e "s,failed to create,creating,"
+ }
+ 
++# If given an arg, filter *that* UUID string
++# Otherwise look for something that looks like a generic UUID
++_filter_uuid()
++{
++	if [ ! -z $1 ]; then
++		UUID=$1
++		sed -e "s/\(uuid:\) $UUID/\1 <EXACTUUID>/i"
++	else
++		sed -e "s/\(uuid:\) *[0-9a-f-][0-9a-f-]*/\1 <UUID>/i"
++	fi
++}
++
++# Filter out sizes like 6.14MB etc
++_filter_size()
++{
++	sed -e "s/[0-9\.]\+\s\?[b|k|m|g|t][b]\?/<SIZE>/ig"
++}
++
+ # make sure this script returns success
+ /bin/true
+diff --git a/group b/group
+index 8096968..fcbdfb6 100644
+--- a/group
++++ b/group
+@@ -429,3 +429,4 @@ stress
+ 303 aio dangerous ioctl rw stress
+ 304 aio dangerous ioctl rw stress
+ 305 aio dangerous enospc rw stress
++313 auto quick
 
 _______________________________________________
 xfs mailing list
