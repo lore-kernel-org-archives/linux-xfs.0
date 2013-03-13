@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 47BF57F50
-	for <xfs@oss.sgi.com>; Wed, 13 Mar 2013 08:57:44 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2BB098F8049
-	for <xfs@oss.sgi.com>; Wed, 13 Mar 2013 06:57:44 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 809357F54
+	for <xfs@oss.sgi.com>; Wed, 13 Mar 2013 08:57:49 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 55AA28F804B
+	for <xfs@oss.sgi.com>; Wed, 13 Mar 2013 06:57:49 -0700 (PDT)
 Received: from bp-05.lab.msp.redhat.com (nat-pool-rdu.redhat.com
 	[66.187.233.202]) by cuda.sgi.com with ESMTP id
-	fAKo8CMtLzDJtBp5 for <xfs@oss.sgi.com>;
-	Wed, 13 Mar 2013 06:57:43 -0700 (PDT)
+	xmwXHBRMTbgunhQp for <xfs@oss.sgi.com>;
+	Wed, 13 Mar 2013 06:57:48 -0700 (PDT)
 From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 1/3] xfstests: add 274 to the prealloc group
-Date: Wed, 13 Mar 2013 09:57:01 -0500
-Message-Id: <1363186623-1378-2-git-send-email-sandeen@redhat.com>
+Subject: [PATCH 2/3] xfstests: keep newlines out of SCRATCH_DEV_POOL
+Date: Wed, 13 Mar 2013 09:57:02 -0500
+Message-Id: <1363186623-1378-3-git-send-email-sandeen@redhat.com>
 In-Reply-To: <1363186623-1378-1-git-send-email-sandeen@redhat.com>
 References: <1363186623-1378-1-git-send-email-sandeen@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -29,28 +29,34 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: Eric Sandeen <sandeen@redhat.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-btrfs@vger.kernel.org
 
-test 274 does preallocation tests but is not in the prealloc group.
+SCRATCH_DEV_POOL processing actually takes the first
+device out for SCRATCH_DEV and leaves the rest in
+SCRATCH_DEV_POOL.
 
+I'm not totally sold on that behavior, but for now,
+at least don't populate SCRATCH_DEV_POOL with newlines.
+
+Cc: linux-btrfs@vger.kernel.org
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- group |    2 +-
+ common.config |    2 +-
  1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/group b/group
-index c3c4161..8096968 100644
---- a/group
-+++ b/group
-@@ -397,7 +397,7 @@ stress
- 271 auto rw quick
- 272 auto enospc rw
- 273 auto rw
--274 auto rw
-+274 auto rw prealloc
- 275 auto rw
- 276 auto rw metadata
- 277 auto ioctl quick metadata
+diff --git a/common.config b/common.config
+index ed0f44c..5ac58bf 100644
+--- a/common.config
++++ b/common.config
+@@ -258,7 +258,7 @@ if [ ! -z "$SCRATCH_DEV_POOL" ]; then
+         exit 1
+     fi
+     SCRATCH_DEV=`echo $SCRATCH_DEV_POOL | awk '{print $1}'`
+-    SCRATCH_DEV_POOL=`echo $SCRATCH_DEV_POOL | awk '{ for (i = 2; i <= NF; i++) print $i}'`
++    SCRATCH_DEV_POOL=`echo $SCRATCH_DEV_POOL | awk '{ ORS=" "; for (i = 2; i <= NF; i++) print $i}'`
+ fi
+ 
+ echo $SCRATCH_DEV | grep -q ":" > /dev/null 2>&1
 -- 
 1.7.1
 
