@@ -1,21 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id ED6E57F37
-	for <xfs@oss.sgi.com>; Wed, 13 Mar 2013 10:33:00 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A52A78F8059
-	for <xfs@oss.sgi.com>; Wed, 13 Mar 2013 08:33:00 -0700 (PDT)
-Received: from mo-p00-ob.rzone.de (mo-p00-ob.rzone.de [81.169.146.161]) by
-	cuda.sgi.com with ESMTP id G2uhCHmVFCgiWzFQ for
-	<xfs@oss.sgi.com>; Wed, 13 Mar 2013 08:32:58 -0700 (PDT)
-Message-ID: <51409C25.70403@giantdisaster.de>
-Date: Wed, 13 Mar 2013 16:32:53 +0100
-From: Stefan Behrens <sbehrens@giantdisaster.de>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C1EE87F37
+	for <xfs@oss.sgi.com>; Wed, 13 Mar 2013 11:01:10 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9C97130406B
+	for <xfs@oss.sgi.com>; Wed, 13 Mar 2013 09:01:07 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id tM7YllC9w3l86jfO for
+	<xfs@oss.sgi.com>; Wed, 13 Mar 2013 09:01:03 -0700 (PDT)
+Message-ID: <5140A2BC.7010800@redhat.com>
+Date: Wed, 13 Mar 2013 11:01:00 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 3/3] xfstests: btrfs tests for basic informational commands
-References: <1363186623-1378-1-git-send-email-sandeen@redhat.com>
-	<1363186623-1378-4-git-send-email-sandeen@redhat.com>
-In-Reply-To: <1363186623-1378-4-git-send-email-sandeen@redhat.com>
+Subject: [PATCH] xfstests: enable test 032 (mkfs overwrite) for btrfs
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,94 +25,60 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>, linux-btrfs <linux-btrfs@vger.kernel.org>
 
-On Wed, 13 Mar 2013 09:57:03 -0500, Eric Sandeen wrote:
-[...]
-> +echo "== Show device stats by mountpoint"
-> +$BTRFS_UTIL_PROG device stats $SCRATCH_MNT | _filter_btrfs_device_stats
+Now that btrfs has an "-f" arg, we can test that it doesn't
+improperly overwrite other filesystems in 032 like we do 
+for xfs.
 
-Is the number of devices in SCRATCH_DEV_POOL fixed to 3? Otherwise you
-should pipe the device-stats-by-mountpoint through "head -10" to avoid
-failures if the number of devices is != 3.
-Possible additional checks (but I am not sure that we really need this
-additional level of detail in this check) would be:
-1. The number of lines is 5 * number of devices.
-2. The 5-line block that is printed for each device always looks the
-same (after applying _filter_btrfs_device_stats).
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-> +echo "== Show device stats by first/scratch dev"
-> +$BTRFS_UTIL_PROG device stats $SCRATCH_DEV | _filter_btrfs_device_stats
-> +echo "== Show device stats by second dev"
-> +$BTRFS_UTIL_PROG device stats $FIRST_POOL_DEV | sed -e "s,$FIRST_POOL_DEV,FIRST_POOL_DEV,g"
-> +echo "== Show device stats by last dev"
-> +$BTRFS_UTIL_PROG device stats $LAST_POOL_DEV | sed -e "s,$LAST_POOL_DEV,LAST_POOL_DEV,g"
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/313.out b/313.out
-> new file mode 100644
-> index 0000000..1aa59a1
-> --- /dev/null
-> +++ b/313.out
-> @@ -0,0 +1,51 @@
-> +== QA output created by 313
-> +== Set filesystem label to TestLabel.313
-> +== Get filesystem label
-> +TestLabel.313
-> +== Mount.
-> +== Show filesystem by label
-> +Label: 'TestLabel.313'  uuid: <UUID>
-> +	Total devices <EXACTNUM> FS bytes used <SIZE>
-> +	devid     <DEVID> size <SIZE> used <SIZE> path SCRATCH_DEV
-> +
-> +== Show filesystem by UUID
-> +Label: 'TestLabel.313'  uuid: <EXACTUUID>
-> +	Total devices <EXACTNUM> FS bytes used <SIZE>
-> +	devid     <DEVID> size <SIZE> used <SIZE> path SCRATCH_DEV
-> +
-> +== Sync filesystem
-> +FSSync 'SCRATCH_MNT'
-> +== Show device stats by mountpoint
-> +[SCRATCH_DEV].write_io_errs   <NUM>
-> +[SCRATCH_DEV].read_io_errs    <NUM>
-> +[SCRATCH_DEV].flush_io_errs   <NUM>
-> +[SCRATCH_DEV].corruption_errs <NUM>
-> +[SCRATCH_DEV].generation_errs <NUM>
-> +[SCRATCH_DEV].write_io_errs   <NUM>
-> +[SCRATCH_DEV].read_io_errs    <NUM>
-> +[SCRATCH_DEV].flush_io_errs   <NUM>
-> +[SCRATCH_DEV].corruption_errs <NUM>
-> +[SCRATCH_DEV].generation_errs <NUM>
-> +[SCRATCH_DEV].write_io_errs   <NUM>
-> +[SCRATCH_DEV].read_io_errs    <NUM>
-> +[SCRATCH_DEV].flush_io_errs   <NUM>
-> +[SCRATCH_DEV].corruption_errs <NUM>
-> +[SCRATCH_DEV].generation_errs <NUM>
+diff --git a/032 b/032
+index bf88492..89fb225 100755
+--- a/032
++++ b/032
+@@ -38,12 +38,18 @@ rm -f $seq.full
+ . ./common.filter
+ 
+ # real QA test starts here
+-_supported_fs xfs
++_supported_fs xfs btrfs
+ _supported_os Linux
+ 
+ _require_nobigloopfs
+ _require_scratch
+ 
++# mkfs.btrfs did not have overwrite detection at first
++if [ "$FSTYP" == "btrfs" ]; then
++	grep -q 'force overwrite' `echo $MKFS_BTRFS_PROG | awk '{print $1}'` || \
++		_notrun "Installed mkfs.btrfs does not support -f option"
++fi
++
+ echo "Silence is golden."
+ for fs in `echo ${MKFS_PROG}.* | sed -e 's/.sbin.mkfs.//g'`
+ do
+@@ -61,7 +67,7 @@ do
+ 	[ $fs = gfs2 ] && preop="echo y |" && preargs="-p lock_nolock -j 1"
+ 	[ $fs = reiserfs ] && preop="echo y |" && preargs="-f"
+ 	# cramfs mkfs requires a directory argument
+-	[ $fs = cramfs ] && preargs=/proc/fs/xfs
++	[ $fs = cramfs ] && preargs=/proc/fs
+ 	[ $fs = ext2 ] && preargs="-F"
+ 	[ $fs = ext3 ] && preargs="-F"
+ 	[ $fs = ext4 ] && preargs="-F"
+@@ -77,8 +83,8 @@ do
+ 
+ 	if [ $? -eq 0 ] ; then
+ 		# next, ensure we don't overwrite it
+-		echo "=== Attempting XFS overwrite of $fs..." >>$seq.full
+-		${MKFS_PROG}.xfs $SCRATCH_DEV >>$seq.full 2>&1
++		echo "=== Attempting $FSTYP overwrite of $fs..." >>$seq.full
++		${MKFS_PROG}.$FSTYP $SCRATCH_DEV >>$seq.full 2>&1
+ 
+ 		[ $? -eq 0 ] && echo "Failed - overwrote fs type ${fs}!"
+ 	else
 
-3 devices in this case.
-
-> +== Show device stats by first/scratch dev
-> +[SCRATCH_DEV].write_io_errs   <NUM>
-> +[SCRATCH_DEV].read_io_errs    <NUM>
-> +[SCRATCH_DEV].flush_io_errs   <NUM>
-> +[SCRATCH_DEV].corruption_errs <NUM>
-> +[SCRATCH_DEV].generation_errs <NUM>
-> +== Show device stats by second dev
-> +[FIRST_POOL_DEV].write_io_errs   0
-> +[FIRST_POOL_DEV].read_io_errs    0
-> +[FIRST_POOL_DEV].flush_io_errs   0
-> +[FIRST_POOL_DEV].corruption_errs 0
-> +[FIRST_POOL_DEV].generation_errs 0
-> +== Show device stats by last dev
-> +[LAST_POOL_DEV].write_io_errs   0
-> +[LAST_POOL_DEV].read_io_errs    0
-> +[LAST_POOL_DEV].flush_io_errs   0
-> +[LAST_POOL_DEV].corruption_errs 0
-> +[LAST_POOL_DEV].generation_errs 0
-[...]
 
 _______________________________________________
 xfs mailing list
