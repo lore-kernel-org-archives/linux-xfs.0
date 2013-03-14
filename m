@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id F16C07F88
-	for <xfs@oss.sgi.com>; Thu, 14 Mar 2013 08:35:04 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0AABD7F81
+	for <xfs@oss.sgi.com>; Thu, 14 Mar 2013 09:19:24 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CB7EC8F8035
-	for <xfs@oss.sgi.com>; Thu, 14 Mar 2013 06:35:04 -0700 (PDT)
-Received: from mo-p00-ob.rzone.de (mo-p00-ob.rzone.de [81.169.146.160]) by
-	cuda.sgi.com with ESMTP id R6gOpSqexxh6j6B3 for
-	<xfs@oss.sgi.com>; Thu, 14 Mar 2013 06:35:03 -0700 (PDT)
-Message-ID: <5141D205.5080609@giantdisaster.de>
-Date: Thu, 14 Mar 2013 14:35:01 +0100
-From: Stefan Behrens <sbehrens@giantdisaster.de>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 88D4CAC005
+	for <xfs@oss.sgi.com>; Thu, 14 Mar 2013 07:19:20 -0700 (PDT)
+Received: from mail-lb0-f182.google.com (mail-lb0-f182.google.com
+	[209.85.217.182]) by cuda.sgi.com with ESMTP id
+	1wXOfJammpyt6sJs (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 14 Mar 2013 07:19:19 -0700 (PDT)
+Received: by mail-lb0-f182.google.com with SMTP id gg6so1935106lbb.27
+	for <xfs@oss.sgi.com>; Thu, 14 Mar 2013 07:19:17 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: [PATCH 3/3 V4] xfstests: btrfs tests for basic informational
-	commands
-References: <1363186623-1378-1-git-send-email-sandeen@redhat.com>
-	<1363186623-1378-4-git-send-email-sandeen@redhat.com>
-	<5140AB9D.2070001@redhat.com> <5140CB3F.5010704@redhat.com>
-	<5140CD26.7050201@sandeen.net> <5141CA42.4070106@sgi.com>
-In-Reply-To: <5141CA42.4070106@sgi.com>
+Date: Thu, 14 Mar 2013 19:49:17 +0530
+Message-ID: <CANBXnM=EVwsUb+oFMe9qHDGsCF+HwviFDKrz3qHVArWCGeEd6Q@mail.gmail.com>
+Subject: xfstest newbie
+From: Adil Mujeeb <mujeeb.adil@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,16 +29,21 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Rich Johnston <rjohnston@sgi.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, 14 Mar 2013 08:01:54 -0500, Rich Johnston wrote:
-> Thanks for reviewing this patch, may I put your Reviewed-by: on this
-> version?
+Hi list,
 
-Yes. Thanks.
+I would like to check xfstest.
 
-Reviewed-by: Stefan Behrens <sbehrens@giantdisaster.de>
+Please help me in getting following:
+
+1. Sources (archive format)
+2. Radme / user guide (e.g. how to conigure, build and run the tests etc.)
+3. Open bug lists
+4. Tutorials (if any)
+
+Regards,
+Adil
 
 _______________________________________________
 xfs mailing list
