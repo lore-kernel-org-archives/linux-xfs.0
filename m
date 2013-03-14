@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cthulhu.engr.sgi.com (cthulhu.engr.sgi.com [150.166.39.100])
-	by oss.sgi.com (Postfix) with ESMTP id 32A0F7F56
+	by oss.sgi.com (Postfix) with ESMTP id 6D8ED7F5E
 	for <xfs@oss.sgi.com>; Thu, 14 Mar 2013 08:06:12 -0500 (CDT)
 Received: from polaris-admin.engr.sgi.com (polaris-admin.engr.sgi.com
 	[150.166.41.54])
 	by cthulhu.engr.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id
-	r2ED6Bx7007455 for <xfs@oss.sgi.com>; Thu, 14 Mar 2013 06:06:11 -0700
+	r2ED6Bx9007460 for <xfs@oss.sgi.com>; Thu, 14 Mar 2013 06:06:11 -0700
 Date: Thu, 14 Mar 2013 06:06:11 -0700
-Subject: [PATCH 04/18] xfstests: Remove obsolete configs
+Subject: [PATCH 12/18] xfstests: adjusts group files for other fs tests
 MIME-Version: 1.0
-Message-Id: <20130314130611.5F3D453DEAF3@polaris-admin.engr.sgi.com>
+Message-Id: <20130314130611.995A753DEAF9@polaris-admin.engr.sgi.com>
 From: pwhite@sgi.com (Philip White)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -30,924 +30,206 @@ From: Phil White <pwhite@sgi.com>
 
 This is a rebasing & resubmit of a dchinner patch.  His comments on the
 original:
----------------------
-Left over from the days of ASG, all stale. Remove them, leaving just
-an simple example that defines all the variables that can be
-configured. Also, add a localhost defined config set up for simple
-KVM based guest test configs using virtio for their block devices to
-simplify test setup in such scenarios..
----------------------
+-----------------
+These are tests that are shared between multiple filesystems (moved
+to shared), and udf/btrfs/ext4 specific tests, moved to appropriate
+directories.
+
+I created the "shared" directory to indicate tests that are not
+truly generic, but also not filesystem specific. They might rely on
+a feature that is only implmented in a few filesystems and so can't
+be truly generic.
+-----------------
+
+Again, the actual test movements are in a later patch.
 
 Signed-off-by: Phil White <pwhite@sgi.com>
 ---
- configs/134.14.54.101.config |    8 --------
- configs/134.14.54.86.config  |    8 --------
- configs/bongo.config         |    8 --------
- configs/break.config         |   10 ----------
- configs/bruce.config         |   16 ----------------
- configs/burst.config         |    6 ------
- configs/carrot.config        |   12 ------------
- configs/chapter11.config     |   11 -----------
- configs/chook.config         |   10 ----------
- configs/cocky.config         |   15 ---------------
- configs/crackle.config       |    7 -------
- configs/cxfsirix1.config     |    7 -------
- configs/dassi.config         |    8 --------
- configs/dibbler.config       |   10 ----------
- configs/dmfnt2.config        |   10 ----------
- configs/dribble.config       |   12 ------------
- configs/emu.config           |    8 --------
- configs/example.config       |   15 +++++++++++++++
- configs/flame.config         |    9 ---------
- configs/frodo.config         |    9 ---------
- configs/galah.config         |   10 ----------
- configs/gaspode.config       |   13 -------------
- configs/giro.config          |   11 -----------
- configs/goldfish.config      |    8 --------
- configs/gonzo1.config        |   10 ----------
- configs/growler.config       |   10 ----------
- configs/hammer.config        |    7 -------
- configs/hellfire.config      |   15 ---------------
- configs/howler.config        |    8 --------
- configs/indra.config         |    6 ------
- configs/kermit1.config       |   10 ----------
- configs/lab343.config        |   10 ----------
- configs/linux-chatz.config   |   12 ------------
- configs/lite.config          |    8 --------
- configs/localhost.config     |   15 +++++++++++++++
- configs/lumpy.config         |    6 ------
- configs/mallet.config        |    7 -------
- configs/melt.config          |    7 -------
- configs/molten.config        |    8 --------
- configs/nobbs.config         |   13 -------------
- configs/permit.config        |    6 ------
- configs/puffy.config         |    9 ---------
- configs/rizzo1.config        |    7 -------
- configs/rooster.config       |   12 ------------
- configs/rosella.config       |   12 ------------
- configs/scaly.config         |    9 ---------
- configs/screamer.config      |   12 ------------
- configs/surly.config         |   11 -----------
- configs/tinkle.config        |    7 -------
- configs/usermode.config      |    8 --------
- configs/vimes.config         |   12 ------------
- 51 files changed, 30 insertions(+), 468 deletions(-)
- delete mode 100644 configs/134.14.54.101.config
- delete mode 100644 configs/134.14.54.86.config
- delete mode 100644 configs/bongo.config
- delete mode 100644 configs/break.config
- delete mode 100644 configs/bruce.config
- delete mode 100644 configs/burst.config
- delete mode 100644 configs/carrot.config
- delete mode 100644 configs/chapter11.config
- delete mode 100644 configs/chook.config
- delete mode 100644 configs/cocky.config
- delete mode 100644 configs/crackle.config
- delete mode 100644 configs/cxfsirix1.config
- delete mode 100644 configs/dassi.config
- delete mode 100644 configs/dibbler.config
- delete mode 100644 configs/dmfnt2.config
- delete mode 100644 configs/dribble.config
- delete mode 100644 configs/emu.config
- create mode 100644 configs/example.config
- delete mode 100644 configs/flame.config
- delete mode 100644 configs/frodo.config
- delete mode 100644 configs/galah.config
- delete mode 100644 configs/gaspode.config
- delete mode 100644 configs/giro.config
- delete mode 100644 configs/goldfish.config
- delete mode 100644 configs/gonzo1.config
- delete mode 100644 configs/growler.config
- delete mode 100644 configs/hammer.config
- delete mode 100644 configs/hellfire.config
- delete mode 100644 configs/howler.config
- delete mode 100644 configs/indra.config
- delete mode 100644 configs/kermit1.config
- delete mode 100644 configs/lab343.config
- delete mode 100644 configs/linux-chatz.config
- delete mode 100644 configs/lite.config
- create mode 100644 configs/localhost.config
- delete mode 100644 configs/lumpy.config
- delete mode 100644 configs/mallet.config
- delete mode 100644 configs/melt.config
- delete mode 100644 configs/molten.config
- delete mode 100644 configs/nobbs.config
- delete mode 100644 configs/permit.config
- delete mode 100644 configs/puffy.config
- delete mode 100644 configs/rizzo1.config
- delete mode 100644 configs/rooster.config
- delete mode 100644 configs/rosella.config
- delete mode 100644 configs/scaly.config
- delete mode 100644 configs/screamer.config
- delete mode 100644 configs/surly.config
- delete mode 100644 configs/tinkle.config
- delete mode 100644 configs/usermode.config
- delete mode 100644 configs/vimes.config
+ check              |    4 ++--
+ common             |   12 +++++-------
+ group              |   19 -------------------
+ tests/btrfs/group  |   10 ++++++++++
+ tests/ext4/group   |    6 ++++++
+ tests/shared/group |   10 ++++++++++
+ tests/udf/group    |    8 ++++++++
+ tests/xfs/group    |    3 +++
+ 8 files changed, 44 insertions(+), 28 deletions(-)
+ create mode 100644 tests/btrfs/group
+ create mode 100644 tests/ext4/group
+ create mode 100644 tests/shared/group
+ create mode 100644 tests/udf/group
 
-diff --git a/configs/134.14.54.101.config b/configs/134.14.54.101.config
-deleted file mode 100644
-index 6f6b610..0000000
---- a/configs/134.14.54.101.config
-+++ /dev/null
-@@ -1,8 +0,0 @@
--# Autogenerated config for host 134.14.54.101, by xaiki's hack.pl
--#The IP for file system resource on HA cluster.
--EMAIL="leenap@sgi.com"
--[ -z "$TEST_DIR" ] && TEST_DIR=/mnt/test
--[ -z "$TEST_DEV" ] && TEST_DEV=/dev/lxvm/test
--[ -z "$SCRATCH_MNT" ] && SCRATCH_MNT=/mnt/scratch
--[ -z "$SCRATCH_DEV" ] && SCRATCH_DEV=/dev/lxvm/scratch
--
-diff --git a/configs/134.14.54.86.config b/configs/134.14.54.86.config
-deleted file mode 100644
-index c2fec06..0000000
---- a/configs/134.14.54.86.config
-+++ /dev/null
-@@ -1,8 +0,0 @@
--# Autogenerated config for host 134.14.54.86, by xaiki's hack.pl
--#The IP for file system resource on HA cluster.
--EMAIL="leenap@sgi.com"
--[ -z "$TEST_DIR" ] && TEST_DIR=/mnt/test
--[ -z "$TEST_DEV" ] && TEST_DEV=/dev/lxvm/test
--[ -z "$SCRATCH_MNT" ] && SCRATCH_MNT=/mnt/scratch
--[ -z "$SCRATCH_DEV" ] && SCRATCH_DEV=/dev/lxvm/scratch
--
-diff --git a/configs/bongo.config b/configs/bongo.config
-deleted file mode 100644
-index d972181..0000000
---- a/configs/bongo.config
-+++ /dev/null
-@@ -1,8 +0,0 @@
--# Autogenerated config for host bongo, by xaiki's hack.pl
--TEST_DEV=/dev/hda8
--TEST_DIR=/xfs1
--SCRATCH_DEV=/dev/hda9
--SCRATCH_MNT=/xfs2
--SCRATCH_LOGDEV=/dev/hda10
--SCRATCH_RTDEV=/dev/hda11
--
-diff --git a/configs/break.config b/configs/break.config
-deleted file mode 100644
-index 64f6d59..0000000
---- a/configs/break.config
-+++ /dev/null
-@@ -1,10 +0,0 @@
--# Autogenerated config for host break, by xaiki's hack.pl
--MODULAR=1
--EMAIL="nathans@larry"
--SCRATCH_MNT=/mnt/scratch
--#SCRATCH_DEV=/dev/sda6
--SCRATCH_DEV=budgie:/mnt/scratch
--TEST_DIR=/mnt/test
--#TEST_DEV=/dev/sda5
--TEST_DEV=budgie:/mnt/test
--
-diff --git a/configs/bruce.config b/configs/bruce.config
-deleted file mode 100644
-index f4f37c4..0000000
---- a/configs/bruce.config
-+++ /dev/null
-@@ -1,16 +0,0 @@
--# Autogenerated config for host bruce, by xaiki's hack.pl
--MODULAR=0
--EMAIL="nathans@larry"
--SCRATCH_MNT=/mnt/scratch
--SCRATCH_DEV=/dev/sdb5
--SCRATCH_RTDEV=/dev/sdc1
--SCRATCH_LOGDEV=/dev/ram0
--TEST_DIR=/mnt/test
--TEST_DEV=/dev/sdc3
--TEST_RTDEV=/dev/sdb6
--TEST_LOGDEV=/dev/ram1
--#TAPE_DEV=/dev/st0
--#RMT_TAPE_DEV=bruce:/dev/st0
--#RMT_IRIXTAPE_DEV=snort:/dev/tape
--#RMT_TAPE_USER=guest
--
-diff --git a/configs/burst.config b/configs/burst.config
-deleted file mode 100644
-index 95bb09d..0000000
---- a/configs/burst.config
-+++ /dev/null
-@@ -1,6 +0,0 @@
--# Autogenerated config for host burst, by xaiki's hack.pl
--TEST_DIR=/xfs
--TEST_DEV=/dev/hda3
--SCRATCH_DEV=/dev/hda7
--SCRATCH_MNT=/scratch
--
-diff --git a/configs/carrot.config b/configs/carrot.config
-deleted file mode 100644
-index 26f8e49..0000000
---- a/configs/carrot.config
-+++ /dev/null
-@@ -1,12 +0,0 @@
--# Autogenerated config for host carrot, by xaiki's hack.pl
--#dedicated qa machine, used to be dribble
--MODULAR=0
--EMAIL="ddiss@sgi.com"
--TEST_DIR=/mnt/test
--TEST_DEV=/dev/dsk/dks0d2s0
--SCRATCH_MNT=/mnt/scratch
--SCRATCH_DEV=/dev/dsk/dks0d2s6
--#TAPE_DEV=/dev/tape
--#RMT_TAPE_DEV=icy:/dev/st0
--#RMT_TAPE_USER=guest
--
-diff --git a/configs/chapter11.config b/configs/chapter11.config
-deleted file mode 100644
-index 70039e4..0000000
---- a/configs/chapter11.config
-+++ /dev/null
-@@ -1,11 +0,0 @@
--# Autogenerated config for host chapter11, by xaiki's hack.pl
--[ -z "$MODULAR" ] && MODULAR=1
--EMAIL="ddiss@sgi.com"
--[ -z "$TEST_DIR" ] && TEST_DIR=/mnt/test
--[ -z "$TEST_DEV" ] && TEST_DEV=/dev/sdb5
--[ -z "$TEST_LOGDEV" ] && TEST_LOGDEV=/dev/sdb7
--[ -z "$SCRATCH_MNT" ] && SCRATCH_MNT=/mnt/scratch
--[ -z "$SCRATCH_DEV" ] && SCRATCH_DEV=/dev/sdb6
--[ -z "$SCRATCH_LOGDEV" ] && SCRATCH_LOGDEV=/dev/sdb8
--[ -z "$SCRATCH_RTDEV" ] && SCRATCH_RTDEV=/dev/sdb9
--
-diff --git a/configs/chook.config b/configs/chook.config
-deleted file mode 100644
-index 64f6d59..0000000
---- a/configs/chook.config
-+++ /dev/null
-@@ -1,10 +0,0 @@
--# Autogenerated config for host break, by xaiki's hack.pl
--MODULAR=1
--EMAIL="nathans@larry"
--SCRATCH_MNT=/mnt/scratch
--#SCRATCH_DEV=/dev/sda6
--SCRATCH_DEV=budgie:/mnt/scratch
--TEST_DIR=/mnt/test
--#TEST_DEV=/dev/sda5
--TEST_DEV=budgie:/mnt/test
--
-diff --git a/configs/cocky.config b/configs/cocky.config
-deleted file mode 100644
-index 0d2e432..0000000
---- a/configs/cocky.config
-+++ /dev/null
-@@ -1,15 +0,0 @@
--# Autogenerated config for host cocky, by xaiki's hack.pl
--MODULAR=1
--EMAIL="ajones@sgi.com"
--TEST_DIR=/mnt/test
--TEST_DEV=/dev/sdb1
--TEST_LOGDEV=/dev/sdb3
--SCRATCH_MNT=/mnt/scratch
--SCRATCH_DEV=/dev/sdb2
--SCRATCH_LOGDEV=/dev/sdb4
--#SCRATCH_RTDEV=/dev/sdb5
--TAPE_DEV=/dev/st0
--#RMT_IRIXTAPE_DEV=snort:/dev/tape
--#RMT_TAPE_DEV=icy:/dev/st0
--#RMT_TAPE_USER=guest
--
-diff --git a/configs/crackle.config b/configs/crackle.config
-deleted file mode 100644
-index ee3c0da..0000000
---- a/configs/crackle.config
-+++ /dev/null
-@@ -1,7 +0,0 @@
--# Autogenerated config for host crackle, by xaiki's hack.pl
--#irix-crackle
--TEST_DIR=/mnt/xfs
--SCRATCH_MNT=/mnt/xfs2
--TEST_DEV=/dev/dsk/dks0d1s3
--SCRATCH_DEV=/dev/dsk/dks0d1s4
--
-diff --git a/configs/cxfsirix1.config b/configs/cxfsirix1.config
-deleted file mode 100644
-index c36568a..0000000
---- a/configs/cxfsirix1.config
-+++ /dev/null
-@@ -1,7 +0,0 @@
--# Autogenerated config for host cxfsirix1, by xaiki's hack.pl
--EMAIL="ajones@sgi.com"
--TEST_DIR=/mnt/xfs_test0
--TEST_DEV=/dev/cxvm/xfs_test0
--SCRATCH_MNT=/mnt/xfs_test1
--SCRATCH_DEV=/dev/cxvm/xfs_test1
--
-diff --git a/configs/dassi.config b/configs/dassi.config
-deleted file mode 100644
-index 638c06a..0000000
---- a/configs/dassi.config
-+++ /dev/null
-@@ -1,8 +0,0 @@
--# Autogenerated config for host dassi, by xaiki's hack.pl
--MODULAR=0
--EMAIL="ddiss@sgi.com"
--TEST_DIR=/mnt/test
--TEST_DEV=/dev/dsk/dks0d2s0
--SCRATCH_MNT=/mnt/scratch
--SCRATCH_DEV=/dev/dsk/dks0d2s1
--
-diff --git a/configs/dibbler.config b/configs/dibbler.config
-deleted file mode 100644
-index 2068c19..0000000
---- a/configs/dibbler.config
-+++ /dev/null
-@@ -1,10 +0,0 @@
--# configuration file for dibbler
--[ -z "$MODULAR" ] && MODULAR=1
--EMAIL="mohamedb@sgi.com"
--[ -z "$TEST_DIR" ] && TEST_DIR=/mnt/test
--[ -z "$TEST_DEV" ] && TEST_DEV=/dev/sdb1
--[ -z "$TEST_LOGDEV" ] && TEST_LOGDEV=/dev/sdb3
--[ -z "$SCRATCH_MNT" ] && SCRATCH_MNT=/mnt/scratch
--[ -z "$SCRATCH_DEV" ] && SCRATCH_DEV=/dev/sdb2
--[ -z "$SCRATCH_LOGDEV" ] && SCRATCH_LOGDEV=/dev/sdb4
--
-diff --git a/configs/dmfnt2.config b/configs/dmfnt2.config
-deleted file mode 100644
-index de6af2e..0000000
---- a/configs/dmfnt2.config
-+++ /dev/null
-@@ -1,10 +0,0 @@
--# Autogenerated config for host dmfnt2, by xaiki's hack.pl
--TEST_DEV=/dev/sda6
--TEST_DIR=/mnt/test
--SCRATCH_DEV=/dev/sdc6
--SCRATCH_MNT=/mnt/scratch
--TAPE_DEV=/dev/st0
--RMT_TAPE_DEV=longhorn:/dev/tape
--# RMT_IRIXTAPE_DEV=longhorn:/dev/tape
--RMT_TAPE_USER=guest
--
-diff --git a/configs/dribble.config b/configs/dribble.config
-deleted file mode 100644
-index b548b8e..0000000
---- a/configs/dribble.config
-+++ /dev/null
-@@ -1,12 +0,0 @@
--# Autogenerated config for host dribble, by xaiki's hack.pl
--#dedicated qa machine
--MODULAR=0
--EMAIL="ddiss@sgi.com"
--TEST_DIR=/mnt/test
--TEST_DEV=/dev/dsk/dks0d2s0
--SCRATCH_MNT=/mnt/scratch
--SCRATCH_DEV=/dev/dsk/dks0d2s6
--#TAPE_DEV=/dev/tape
--#RMT_TAPE_DEV=icy:/dev/st0
--#RMT_TAPE_USER=guest
--
-diff --git a/configs/emu.config b/configs/emu.config
-deleted file mode 100644
-index 6b21ff3..0000000
---- a/configs/emu.config
-+++ /dev/null
-@@ -1,8 +0,0 @@
--# Autogenerated config for host emu, by xaiki's hack.pl
--MODULAR=0
--EMAIL="tes@sgi.com"
--TEST_DIR=/mnt/test
--TEST_DEV=/dev/sdb1
--SCRATCH_MNT=/mnt/scratch1
--SCRATCH_DEV=/dev/sdb2
--
-diff --git a/configs/example.config b/configs/example.config
+diff --git a/check b/check
+index dea63d7..9819a84 100755
+--- a/check
++++ b/check
+@@ -97,7 +97,7 @@ END	{ if (NR > 0) {
+ 
+ 	echo "" >>check.log
+ 	date >>check.log
+-	echo $list | fmt | sed -e 's/^/    /' -e 's;tests/;;g' >>check.log
++	echo $list | fmt | sed -e 's/^/    /' -e 's;$SRC_DIR/;;g' >>check.log
+ 	$interrupt && echo "Interrupted!" >>check.log
+         
+         if [ ! -z "$n_try" -a $n_try != 0 ]
+@@ -178,7 +178,7 @@ do
+ 
+     # the filename for the test and the name output are different.
+     # we don't include the tests/ directory in the name output.
+-    seqnum=`echo $seq | sed -e 's;tests/;;'`
++    seqnum=`echo $seq | sed -e 's;$SRC_DIR/;;'`
+ 
+     echo -n "$seqnum"
+ 
+diff --git a/common b/common
+index 57c3ac5..d7207d6 100644
+--- a/common
++++ b/common
+@@ -33,9 +33,8 @@ have_test_arg=false
+ randomize=false
+ timestamp=${TIMESTAMP:=false}
+ SUPPORTED_TESTS="[0-9][0-9][0-9] [0-9][0-9][0-9][0-9]"
+-TEST_GROUP_DIR="tests"
+-GENERIC_GROUP_DIR="$TEST_GROUP_DIR/generic"
+-XFS_GROUP_DIR="$TEST_GROUP_DIR/xfs"
++SRC_DIR="tests"
++SRC_GROUPS="generic shared"
+ 
+ _setenvironment()
+ {
+@@ -46,13 +45,12 @@ _setenvironment()
+ get_group_list()
+ {
+ 	grp=$1
+-	dirs=". $GENERIC_GROUP_DIR $XFS_GROUP_DIR"
+ 
+-	for d in $dirs; do
+-		l=$(sed -n < $d/group \
++	for d in $SRC_GROUPS $FSTYP; do
++		l=$(sed -n < $SRC_DIR/$d/group \
+ 			-e 's/#.*//' \
+ 			-e 's/$/ /' \
+-			-e "s;\(^[0-9][0-9][0-9]\).* $grp .*;$d/\1;p")
++			-e "s;\(^[0-9][0-9][0-9]\).* $grp .*;$SRC_DIR/$d/\1;p")
+ 		grpl="$grpl $l"
+ 	done
+ 	echo $grpl
+diff --git a/group b/group
+index 9e8ee53..0f8d1fc 100644
+--- a/group
++++ b/group
+@@ -114,25 +114,6 @@ deprecated
+ # TIME_FACTOR: Usually means factor of run time, or number of operations
+ stress
+ 
+-# test-group association ... one line per test
+-#
+-040 other auto
+-051 acl udf auto quick
+-068 other auto freeze dangerous stress
+-098 udf auto
+-101 udf
+-102 udf
+-177 rw other auto
+-218 auto fsr quick
+-243 auto quick prealloc
+-252 auto quick prealloc
+-254 auto quick
+-264 auto
+-265 auto
+-271 auto rw quick
+-272 auto enospc rw
+-276 auto rw metadata
+-284 auto
+ 285 auto rw
+ 286 other
+ 287 auto dump quota quick
+diff --git a/tests/btrfs/group b/tests/btrfs/group
 new file mode 100644
-index 0000000..7b6e142
+index 0000000..8926c40
 --- /dev/null
-+++ b/configs/example.config
-@@ -0,0 +1,15 @@
-+# Example config file with all typical device options set for full
-+# XFS kernel, progs and dump testing.
-+MODULAR=0
-+SCRATCH_MNT=/mnt/scratch
-+SCRATCH_DEV=/dev/sdb5
-+SCRATCH_RTDEV=/dev/sdc1
-+SCRATCH_LOGDEV=/dev/ram0
-+TEST_DIR=/mnt/test
-+TEST_DEV=/dev/sdc3
-+TEST_RTDEV=/dev/sdb6
-+TEST_LOGDEV=/dev/ram1
-+TAPE_DEV=/dev/st0
-+RMT_TAPE_DEV=bruce:/dev/st0
-+RMT_IRIXTAPE_DEV=snort:/dev/tape
-+RMT_TAPE_USER=guest
-diff --git a/configs/flame.config b/configs/flame.config
-deleted file mode 100644
-index ad44006..0000000
---- a/configs/flame.config
-+++ /dev/null
-@@ -1,9 +0,0 @@
--# Autogenerated config for host flame, by xaiki's hack.pl
--#dedicated qa machine (has some values already set)
--[ -z "$MODULAR" ] && MODULAR=1
--EMAIL="ddiss@sgi.com"
--[ -z "$TEST_DIR" ] && TEST_DIR=/mnt/xfs_test
--[ -z "$TEST_DEV" ] && TEST_DEV=/dev/lxvm/xfs_test
--[ -z "$SCRATCH_MNT" ] && SCRATCH_MNT=/mnt/xfs_scratch
--[ -z "$SCRATCH_DEV" ] && SCRATCH_DEV=/dev/lxvm/xfs_scratch
--
-diff --git a/configs/frodo.config b/configs/frodo.config
-deleted file mode 100644
-index a8c262c..0000000
---- a/configs/frodo.config
-+++ /dev/null
-@@ -1,9 +0,0 @@
--# Autogenerated config for host frodo, by xaiki's hack.pl
--MODULAR=0
--EMAIL="nathans@larry"
--TEST_DEV=/dev/hda6
--TEST_DIR=/mnt/test
--SCRATCH_DEV=/dev/hda7
--SCRATCH_MNT=/mnt/scratch
--SCRATCH_LOGDEV=/dev/hda9
--
-diff --git a/configs/galah.config b/configs/galah.config
-deleted file mode 100644
-index dc4c835..0000000
---- a/configs/galah.config
-+++ /dev/null
-@@ -1,10 +0,0 @@
--# Autogenerated config for host galah, by xaiki's hack.pl
--MODULAR=1
--EMAIL="ddiss@sgi.com"
--[ -z "$TEST_DIR" ] && TEST_DIR=/mnt/test
--[ -z "$TEST_DEV" ] && TEST_DEV=/dev/sdb1
--[ -z "$TEST_LOGDEV" ] && TEST_LOGDEV=/dev/sdb3
--[ -z "$SCRATCH_MNT" ] && SCRATCH_MNT=/mnt/scratch
--[ -z "$SCRATCH_DEV" ] && SCRATCH_DEV=/dev/sdb2
--[ -z "$SCRATCH_LOGDEV" ] && SCRATCH_LOGDEV=/dev/sdb4
--
-diff --git a/configs/gaspode.config b/configs/gaspode.config
-deleted file mode 100644
-index 8d7f939..0000000
---- a/configs/gaspode.config
-+++ /dev/null
-@@ -1,13 +0,0 @@
--# Autogenerated config for host gaspode, by xaiki's hack.pl
--#dedicated qa machine (has some values already set)
--[ -z "$MODULAR" ] && MODULAR=1
--EMAIL="ddiss@sgi.com"
--[ -z "$TEST_DIR" ] && TEST_DIR=/mnt/test
--[ -z "$TEST_DEV" ] && TEST_DEV=/dev/sdb1
--[ -z "$TEST_LOGDEV" ] && TEST_LOGDEV=/dev/sdb3
--[ -z "$SCRATCH_MNT" ] && SCRATCH_MNT=/mnt/scratch
--[ -z "$SCRATCH_DEV" ] && SCRATCH_DEV=/dev/sdb2
--[ -z "$SCRATCH_LOGDEV" ] && SCRATCH_LOGDEV=/dev/sdb4
--[ -z "$SCRATCH_RTDEV" ] && SCRATCH_RTDEV=/dev/sdb5
--[ -z "$TAPE_DEV" ] && TAPE_DEV=/dev/st0
--
-diff --git a/configs/giro.config b/configs/giro.config
-deleted file mode 100644
-index cab8b56..0000000
---- a/configs/giro.config
-+++ /dev/null
-@@ -1,11 +0,0 @@
--# Autogenerated config for host giro, by xaiki's hack.pl
--MODULAR=0
--EMAIL="ddiss@sgi.com"
--TEST_DIR=/mnt/test
--TEST_DEV=/dev/dsk/dks0d2s0
--SCRATCH_MNT=/mnt/scratch
--SCRATCH_DEV=/dev/dsk/dks0d2s6
--#TAPE_DEV=/dev/tape
--#RMT_TAPE_DEV=icy:/dev/st0
--#RMT_TAPE_USER=guest
--
-diff --git a/configs/goldfish.config b/configs/goldfish.config
-deleted file mode 100644
-index 94f5fc8..0000000
---- a/configs/goldfish.config
-+++ /dev/null
-@@ -1,8 +0,0 @@
--# Autogenerated config for host goldfish, by xaiki's hack.pl
--MODULAR=0
--TEST_DEV=/dev/hdc1
--TEST_DIR=/mnt/xfs0
--SCRATCH_DEV=/dev/hdc2
--SCRATCH_MNT=/mnt/xfs1
--SCRATCH_LOGDEV=/dev/hdc3
--
-diff --git a/configs/gonzo1.config b/configs/gonzo1.config
-deleted file mode 100644
-index e6d807b..0000000
---- a/configs/gonzo1.config
-+++ /dev/null
-@@ -1,10 +0,0 @@
--# Autogenerated config for host gonzo1, by xaiki's hack.pl
--EMAIL="leenap@sgi.com"
--[ -z "$TEST_DIR" ] && TEST_DIR=/mnt/xfs_test
--[ -z "$TEST_DEV" ] && TEST_DEV=/dev/lxvm/xfs_test
--[ -z "$TEST_LOGDEV" ] && TEST_LOGDEV=/dev/sdb1
--[ -z "$SCRATCH_MNT" ] && SCRATCH_MNT=/mnt/xfs_scratch
--[ -z "$SCRATCH_DEV" ] && SCRATCH_DEV=/dev/lxvm/xfs_scratch
--[ -z "$SCRATCH_LOGDEV" ] && SCRATCH_LOGDEV=/dev/sdb2
--[ -z "$SCRATCH_RTDEV" ] && SCRATCH_RTDEV=/dev/sdb3
--
-diff --git a/configs/growler.config b/configs/growler.config
-deleted file mode 100644
-index bf99b05..0000000
---- a/configs/growler.config
-+++ /dev/null
-@@ -1,10 +0,0 @@
--# Autogenerated config for host growler, by xaiki's hack.pl
--[ -z "$MODULAR" ] && MODULAR=1
--EMAIL="ddiss@sgi.com"
--[ -z "$TEST_DIR" ] && TEST_DIR=/mnt/test
--[ -z "$TEST_DEV" ] && TEST_DEV=/dev/sdb1
--[ -z "$TEST_LOGDEV" ] && TEST_LOGDEV=/dev/sdb3
--[ -z "$SCRATCH_MNT" ] && SCRATCH_MNT=/mnt/scratch
--[ -z "$SCRATCH_DEV" ] && SCRATCH_DEV=/dev/sdb2
--[ -z "$SCRATCH_LOGDEV" ] && SCRATCH_LOGDEV=/dev/sdb4
--
-diff --git a/configs/hammer.config b/configs/hammer.config
-deleted file mode 100644
-index a070f93..0000000
---- a/configs/hammer.config
-+++ /dev/null
-@@ -1,7 +0,0 @@
--# Autogenerated config for host hammer, by xaiki's hack.pl
--EMAIL="bnaujok@sgi.com"
--TEST_DIR=/mnt/test
--TEST_DEV=/dev/sda5
--SCRATCH_MNT=/mnt/scratch
--SCRATCH_DEV=/dev/sda6
--
-diff --git a/configs/hellfire.config b/configs/hellfire.config
-deleted file mode 100644
-index 7664829..0000000
---- a/configs/hellfire.config
-+++ /dev/null
-@@ -1,15 +0,0 @@
--# Autogenerated config for host hellfire, by xaiki's hack.pl
--MODULAR=1
--EMAIL="ajones@sgi.com"
--TEST_DIR=/mnt/test
--TEST_DEV=/dev/sda3
--TEST_LOGDEV=/dev/sda5
--SCRATCH_MNT=/mnt/scratch
--SCRATCH_DEV=/dev/sda4
--SCRATCH_LOGDEV=/dev/sda6
--#SCRATCH_RTDEV=/dev/sda7
--TAPE_DEV=/dev/st0
--#RMT_IRIXTAPE_DEV=snort:/dev/tape
--#RMT_TAPE_DEV=icy:/dev/st0
--#RMT_TAPE_USER=guest
--
-diff --git a/configs/howler.config b/configs/howler.config
-deleted file mode 100644
-index 47d98c1..0000000
---- a/configs/howler.config
-+++ /dev/null
-@@ -1,8 +0,0 @@
--# Autogenerated config for host howler, by xaiki's hack.pl
--[ -z "$MODULAR" ] && MODULAR=1
--EMAIL="allanr@sgi.com"
--[ -z "$TEST_DIR" ] && TEST_DIR=/mnt/test
--[ -z "$TEST_DEV" ] && TEST_DEV=/dev/sdb1
--[ -z "$SCRATCH_MNT" ] && SCRATCH_MNT=/mnt/scratch
--[ -z "$SCRATCH_DEV" ] && SCRATCH_DEV=/dev/sdb2
--
-diff --git a/configs/indra.config b/configs/indra.config
-deleted file mode 100644
-index dce005e..0000000
---- a/configs/indra.config
-+++ /dev/null
-@@ -1,6 +0,0 @@
--# Autogenerated config for host indra, by xaiki's hack.pl
--TEST_DEV=/dev/sdb1
--TEST_DIR=/mnt/xfs0
--SCRATCH_DEV=/dev/sdb2
--SCRATCH_MNT=/mnt/xfs1
--
-diff --git a/configs/kermit1.config b/configs/kermit1.config
-deleted file mode 100644
-index 7d09819..0000000
---- a/configs/kermit1.config
-+++ /dev/null
-@@ -1,10 +0,0 @@
--# Autogenerated config for host kermit1, by xaiki's hack.pl
--EMAIL="mohamedb@sgi.com"
--[ -z "$TEST_DIR" ] && TEST_DIR=/mnt/xfs_test
--[ -z "$TEST_DEV" ] && TEST_DEV=/dev/lxvm/xfs_test
--[ -z "$TEST_LOGDEV" ] && TEST_LOGDEV=/dev/sdb1
--[ -z "$SCRATCH_MNT" ] && SCRATCH_MNT=/mnt/xfs_scratch
--[ -z "$SCRATCH_DEV" ] && SCRATCH_DEV=/dev/lxvm/xfs_scratch
--[ -z "$SCRATCH_LOGDEV" ] && SCRATCH_LOGDEV=/dev/sdb2
--[ -z "$SCRATCH_RTDEV" ] && SCRATCH_RTDEV=/dev/sdb3
--
-diff --git a/configs/lab343.config b/configs/lab343.config
-deleted file mode 100644
-index 4b38d3d..0000000
---- a/configs/lab343.config
-+++ /dev/null
-@@ -1,10 +0,0 @@
--# Autogenerated config for host lab343, by xaiki's hack.pl
--MODULAR=0
--EMAIL="hch@sgi.com"
--TEST_DEV=/dev/sdb1
--SCRATCH_DEV=/dev/sdb2
--SCRATCH_LOGDEV=/dev/sdb5
--SCRATCH_RTDEV=/dev/sdb6
--TEST_DIR=/qa/test
--SCRATCH_MNT=/qa/scratch
--
-diff --git a/configs/linux-chatz.config b/configs/linux-chatz.config
-deleted file mode 100644
-index ba762c9..0000000
---- a/configs/linux-chatz.config
-+++ /dev/null
-@@ -1,12 +0,0 @@
--# Autogenerated config for host linux-chatz, by xaiki's hack.pl
--#vmware on pc-chatz
--MODULAR=1
--EMAIL="chatz@sgi.com"
--USE_EXTERNAL=yes
--TEST_DIR="/mnt/data"
--TEST_DEV=/dev/sdd
--TEST_LOGDEV=/dev/sdb
--SCRATCH_MNT=/mnt/scratch
--SCRATCH_DEV=/dev/sdg
--SCRATCH_LOGDEV=/mnt/sde
--
-diff --git a/configs/lite.config b/configs/lite.config
-deleted file mode 100644
-index 783cd3c..0000000
---- a/configs/lite.config
-+++ /dev/null
-@@ -1,8 +0,0 @@
--# Autogenerated config for host lite, by xaiki's hack.pl
--TEST_DEV=/dev/sda1
--TEST_DIR=/mnt/sda1
--SCRATCH_DEV=/dev/sda2
--SCRATCH_MNT=/mnt/sda2
--SCRATCH_LOGDEV=/dev/sda3
--SCRATCH_RTDEV=/dev/sda4
--
-diff --git a/configs/localhost.config b/configs/localhost.config
-new file mode 100644
-index 0000000..f47e694
---- /dev/null
-+++ b/configs/localhost.config
-@@ -0,0 +1,15 @@
-+# default localhost file, set up for virtual machines using KVM and
-+# virtio for it's block devices
++++ b/tests/btrfs/group
+@@ -0,0 +1,10 @@
++# QA groups control file
++# Defines test groups and nominal group owners
++# - do not start group names with a digit
++# - comment line before each group is "new" description
 +#
-+MODULAR=0
-+TEST_DIR=/mnt/test
-+SCRATCH_MNT=/mnt/scratch
-+
-+TEST_DEV=/dev/vda
-+SCRATCH_DEV=/dev/vdb
-+
-+TEST_LOGDEV=/dev/vdc
-+SCRATCH_LOGDEV=/dev/vdd
-+
-+TEST_RTDEV=/dev/vde
-+SCRATCH_RTDEV=/dev/vdf
-diff --git a/configs/lumpy.config b/configs/lumpy.config
-deleted file mode 100644
-index 321d852..0000000
---- a/configs/lumpy.config
-+++ /dev/null
-@@ -1,6 +0,0 @@
--# Autogenerated config for host lumpy, by xaiki's hack.pl
--TEST_DEV=/dev/sdc5
--TEST_DIR=/mnt/scratch_0
--SCRATCH_DEV=/dev/sdc7
--SCRATCH_MNT=/mnt/scratch_2
--
-diff --git a/configs/mallet.config b/configs/mallet.config
-deleted file mode 100644
-index 197fef5..0000000
---- a/configs/mallet.config
-+++ /dev/null
-@@ -1,7 +0,0 @@
--# Autogenerated config for host mallet, by xaiki's hack.pl
--MODULAR=1
--TEST_DIR=/mnt/test
--TEST_DEV=/dev/sda3
--SCRATCH_MNT=/mnt/scratch
--SCRATCH_DEV=/dev/sda4
--
-diff --git a/configs/melt.config b/configs/melt.config
-deleted file mode 100644
-index 59bf9fc..0000000
---- a/configs/melt.config
-+++ /dev/null
-@@ -1,7 +0,0 @@
--# Autogenerated config for host melt, by xaiki's hack.pl
--MODULAR=1
--TEST_DIR=/mnt/test
--TEST_DEV=/dev/sdb1
--SCRATCH_MNT=/mnt/scratch
--SCRATCH_DEV=/dev/sdb2
--
-diff --git a/configs/molten.config b/configs/molten.config
-deleted file mode 100644
-index dc8bfea..0000000
---- a/configs/molten.config
-+++ /dev/null
-@@ -1,8 +0,0 @@
--# Autogenerated config for host molten, by xaiki's hack.pl
--[ -z "$MODULAR" ] && MODULAR=1
--EMAIL="ddiss@sgi.com"
--[ -z "$TEST_DIR" ] && TEST_DIR=/mnt/test
--[ -z "$TEST_DEV" ] && TEST_DEV=/dev/sdb5
--[ -z "$SCRATCH_MNT" ] && SCRATCH_MNT=/mnt/scratch
--[ -z "$SCRATCH_DEV" ] && SCRATCH_DEV=/dev/sdb6
--
-diff --git a/configs/nobbs.config b/configs/nobbs.config
-deleted file mode 100644
-index 7a3cf2d..0000000
---- a/configs/nobbs.config
-+++ /dev/null
-@@ -1,13 +0,0 @@
--# Autogenerated config for host nobbs, by xaiki's hack.pl
--#dedicated qa machine, used to be porky
--[ -z "$MODULAR" ] && MODULAR=1
--EMAIL="ddiss@sgi.com"
--[ -z "$TEST_DIR" ] && TEST_DIR=/mnt/test
--[ -z "$TEST_DEV" ] && TEST_DEV=/dev/sdb1
--[ -z "$TEST_LOGDEV" ] && TEST_LOGDEV=/dev/sdb3
--[ -z "$SCRATCH_MNT" ] && SCRATCH_MNT=/mnt/scratch
--[ -z "$SCRATCH_DEV" ] && SCRATCH_DEV=/dev/sdb2
--[ -z "$SCRATCH_LOGDEV" ] && SCRATCH_LOGDEV=/dev/sdb4
--#[ -z "$SCRATCH_RTDEV" ] && SCRATCH_RTDEV=/dev/sdb7
--#[ -z "$TAPE_DEV" ] && TAPE_DEV=/dev/st0
--
-diff --git a/configs/permit.config b/configs/permit.config
-deleted file mode 100644
-index 93b5326..0000000
---- a/configs/permit.config
-+++ /dev/null
-@@ -1,6 +0,0 @@
--# Autogenerated config for host permit, by xaiki's hack.pl
--TEST_DEV=/dev/sdc1
--TEST_DIR=/mnt/xfs0
--SCRATCH_DEV=/dev/sdd1
--SCRATCH_MNT=/mnt/xfs1
--
-diff --git a/configs/puffy.config b/configs/puffy.config
-deleted file mode 100644
-index e1f77ae..0000000
---- a/configs/puffy.config
-+++ /dev/null
-@@ -1,9 +0,0 @@
--# Autogenerated config for host puffy, by xaiki's hack.pl
--MODULAR=1
--EMAIL="tes@sgi.com"
--TEST_DIR=/mnt/test
--TEST_DEV=/dev/sda7
--SCRATCH_MNT=/mnt/scratch
--SCRATCH_DEV=/dev/sda8
--TAPE_DEV=/dev/st0
--
-diff --git a/configs/rizzo1.config b/configs/rizzo1.config
-deleted file mode 100644
-index d1a55b1..0000000
---- a/configs/rizzo1.config
-+++ /dev/null
-@@ -1,7 +0,0 @@
--# Autogenerated config for host rizzo1, by xaiki's hack.pl
--EMAIL="mohamedb@sgi.com"
--TEST_DIR=/mnt/xfs_test
--TEST_DEV=/dev/lxvm/xfs_test
--SCRATCH_MNT=/mnt/xfs_scratch
--SCRATCH_DEV=/dev/lxvm/xfs_scratch
--
-diff --git a/configs/rooster.config b/configs/rooster.config
-deleted file mode 100644
-index e5a3163..0000000
---- a/configs/rooster.config
-+++ /dev/null
-@@ -1,12 +0,0 @@
--# Autogenerated config for host rooster, by xaiki's hack.pl
--MODULAR=1
--EMAIL="ajones@sgi.com"
--TEST_DIR=/mnt/test
--TEST_DEV=/dev/sdb1
--SCRATCH_MNT=/mnt/scratch
--SCRATCH_DEV=/dev/sdb2
--TAPE_DEV=/dev/st0
--#RMT_IRIXTAPE_DEV=snort:/dev/tape
--#RMT_TAPE_DEV=icy:/dev/st0
--#RMT_TAPE_USER=guest
--
-diff --git a/configs/rosella.config b/configs/rosella.config
-deleted file mode 100644
-index 3b441bf..0000000
---- a/configs/rosella.config
-+++ /dev/null
-@@ -1,12 +0,0 @@
--# Autogenerated config for host rosella, by xaiki's hack.pl
--MODULAR=1
--EMAIL="ajones@sgi.com"
--TEST_DIR=/mnt/test
--TEST_DEV=/dev/sdb1
--SCRATCH_MNT=/mnt/scratch
--SCRATCH_DEV=/dev/sdb3
--TAPE_DEV=/dev/st0
--#RMT_IRIXTAPE_DEV=snort:/dev/tape
--#RMT_TAPE_DEV=icy:/dev/st0
--#RMT_TAPE_USER=guest
--
-diff --git a/configs/scaly.config b/configs/scaly.config
-deleted file mode 100644
-index a6d5510..0000000
---- a/configs/scaly.config
-+++ /dev/null
-@@ -1,9 +0,0 @@
--# Autogenerated config for host scaly, by xaiki's hack.pl
--EMAIL="bnaujok@sgi.com"
--TEST_DIR=/mnt/test
--TEST_DEV=/dev/sdd3
--#TEST_LOGDEV=/dev/sdd1
--SCRATCH_MNT=/mnt/scratch
--SCRATCH_DEV=/dev/sdd4
--#SCRATCH_LOGDEV=/dev/sdd2
--
-diff --git a/configs/screamer.config b/configs/screamer.config
-deleted file mode 100644
-index 047d64b..0000000
---- a/configs/screamer.config
-+++ /dev/null
-@@ -1,12 +0,0 @@
--# Autogenerated config for host screamer, by xaiki's hack.pl
--#dedicated qa machine (has some values already set)
--[ -z "$MODULAR" ] && MODULAR=1
--EMAIL="ddiss@sgi.com"
--[ -z "$TEST_DIR" ] && TEST_DIR=/mnt/test
--[ -z "$TEST_DEV" ] && TEST_DEV=/dev/sdb1
--#[ -z "$TEST_LOGDEV" ] && TEST_LOGDEV=/dev/sdb3
--[ -z "$SCRATCH_MNT" ] && SCRATCH_MNT=/mnt/scratch
--[ -z "$SCRATCH_DEV" ] && SCRATCH_DEV=/dev/sdb2
--#[ -z "$SCRATCH_LOGDEV" ] && SCRATCH_LOGDEV=/dev/sdb4
--#[ -z "$SCRATCH_RTDEV" ] && SCRATCH_RTDEV=/dev/sdb5
--
-diff --git a/configs/surly.config b/configs/surly.config
-deleted file mode 100644
-index 67c69a3..0000000
---- a/configs/surly.config
-+++ /dev/null
-@@ -1,11 +0,0 @@
--# Autogenerated config for host surly, by xaiki's hack.pl
--TEST_DEV=/dev/hda9
--TEST_DIR=/mnt/xfs1
--SCRATCH_DEV=/dev/hda8
--SCRATCH_MNT=/mnt/xfs0
--SCRATCH_LOGDEV=/dev/hda10
--TAPE_DEV=/dev/st0
--RMT_TAPE_DEV=fuzzy:/dev/st0
--RMT_IRIXTAPE_DEV=blub:/dev/tape
--RMT_TAPE_USER=guest
--
-diff --git a/configs/tinkle.config b/configs/tinkle.config
-deleted file mode 100644
-index 5b534e8..0000000
---- a/configs/tinkle.config
-+++ /dev/null
-@@ -1,7 +0,0 @@
--# Autogenerated config for host tinkle, by xaiki's hack.pl
--#irix-patchbox-tinkle
--TEST_DEV=/dev/dsk/dks0d2s0
--TEST_DIR=/mnt/xfs_test
--SCRATCH_DEV=/dev/dsk/dks0d2s1
--SCRATCH_MNT=/mnt/xfs_scratch
--
-diff --git a/configs/usermode.config b/configs/usermode.config
-deleted file mode 100644
-index 12734a3..0000000
---- a/configs/usermode.config
-+++ /dev/null
-@@ -1,8 +0,0 @@
--# Autogenerated config for host usermode, by xaiki's hack.pl
--TEST_DEV=/dev/ubd/1
--TEST_DIR=/mnt/test
--SCRATCH_DEV=/dev/ubd/2
--SCRATCH_MNT=/mnt/scratch
--SCRATCH_RTDEV=/dev/ubd/3
--SCRATCH_LOGDEV=/dev/ubd/4
--
-diff --git a/configs/vimes.config b/configs/vimes.config
-deleted file mode 100644
-index afc129b..0000000
---- a/configs/vimes.config
-+++ /dev/null
-@@ -1,12 +0,0 @@
--# Autogenerated config for host vimes, by xaiki's hack.pl       
--# dedicated qa machine, used to be sheila
--[ -z "$MODULAR" ] && MODULAR=1
--EMAIL="ddiss@sgi.com"
--[ -z "$TEST_DIR" ] && TEST_DIR=/mnt/test
--[ -z "$TEST_DEV" ] && TEST_DEV=/dev/hdb1
--[ -z "$TEST_LOGDEV" ] && TEST_LOGDEV=/dev/hdb3
--[ -z "$SCRATCH_MNT" ] && SCRATCH_MNT=/mnt/scratch
--[ -z "$SCRATCH_DEV" ] && SCRATCH_DEV=/dev/hdb2
--[ -z "$SCRATCH_LOGDEV" ] && SCRATCH_LOGDEV=/dev/hdb4
--[ -z "$SCRATCH_RTDEV" ] && SCRATCH_RTDEV=/dev/sdb5
--
++254 auto quick
++264 auto
++265 auto
++276 auto rw metadata
++284 auto
+diff --git a/tests/ext4/group b/tests/ext4/group
+new file mode 100644
+index 0000000..1d6c041
+--- /dev/null
++++ b/tests/ext4/group
+@@ -0,0 +1,6 @@
++# QA groups control file
++# Defines test groups and nominal group owners
++# - do not start group names with a digit
++# - comment line before each group is "new" description
++#
++271 auto rw quick
+diff --git a/tests/shared/group b/tests/shared/group
+new file mode 100644
+index 0000000..b2ff729
+--- /dev/null
++++ b/tests/shared/group
+@@ -0,0 +1,10 @@
++# QA groups control file
++# Defines test groups and nominal group owners
++# - do not start group names with a digit
++# - comment line before each group is "new" description
++#
++051 acl udf auto quick
++068 other auto freeze dangerous
++218 auto fsr quick
++243 auto quick prealloc
++272 auto enospc rw
+diff --git a/tests/udf/group b/tests/udf/group
+new file mode 100644
+index 0000000..24f682c
+--- /dev/null
++++ b/tests/udf/group
+@@ -0,0 +1,8 @@
++# QA groups control file
++# Defines test groups and nominal group owners
++# - do not start group names with a digit
++# - comment line before each group is "new" description
++#
++098 udf auto
++101 udf
++102 udf
+diff --git a/tests/xfs/group b/tests/xfs/group
+index 0affcba..c165752 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -26,6 +26,7 @@
+ 037 dump ioctl remote tape
+ 038 dump ioctl remote tape
+ 039 dump ioctl remote tape
++040 other auto
+ 041 growfs ioctl auto
+ 042 fsr ioctl auto
+ 043 dump ioctl tape
+@@ -124,6 +125,7 @@
+ 174 rw filestreams auto
+ 175 dmapi auto
+ 176 dmapi auto
++177 rw other auto
+ 178 mkfs other auto
+ 179 metadata rw auto
+ 180 metadata rw auto
+@@ -158,6 +160,7 @@
+ 242 auto quick prealloc
+ 244 auto quota quick
+ 250 auto quick rw prealloc metadata
++252 auto quick prealloc
+ 253 auto quick
+ 259 auto quick
+ 261 auto quick quota
 -- 
 1.5.3.8
 
