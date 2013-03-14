@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cthulhu.engr.sgi.com (cthulhu.engr.sgi.com [150.166.39.100])
-	by oss.sgi.com (Postfix) with ESMTP id 5D21C7F5D
-	for <xfs@oss.sgi.com>; Thu, 14 Mar 2013 08:06:12 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 039797F52
+	for <xfs@oss.sgi.com>; Thu, 14 Mar 2013 08:06:11 -0500 (CDT)
 Received: from polaris-admin.engr.sgi.com (polaris-admin.engr.sgi.com
 	[150.166.41.54])
 	by cthulhu.engr.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id
-	r2ED6Bx7007464 for <xfs@oss.sgi.com>; Thu, 14 Mar 2013 06:06:11 -0700
+	r2ED6Bx7007451 for <xfs@oss.sgi.com>; Thu, 14 Mar 2013 06:06:11 -0700
 Date: Thu, 14 Mar 2013 06:06:11 -0700
-Subject: [PATCH 09/18] xfstests: create tests subdirectory
+Subject: [PATCH 02/18] xfstests: Clear out old benchmarking materials
 MIME-Version: 1.0
-Message-Id: <20130314130611.8429C53DEAF6@polaris-admin.engr.sgi.com>
+Message-Id: <20130314130611.4A3C153DEAF1@polaris-admin.engr.sgi.com>
 From: pwhite@sgi.com (Philip White)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -31,208 +31,1040 @@ From: Phil White <pwhite@sgi.com>
 This is a rebasing & resubmit of a dchinner patch.  His comments on the
 original:
 -----------------
-Create a specific tests/ subdirectory to hold all the tests so they
-are no longer need to be in the top level directory. This patch does
-not move any tests there, however, and that will be done in
-subsequent commits.
-
-The tests/ subdir will have it's own subdirectories for different
-classes of tests. Initially, there will be a per-FSTYP subdirectory
-for filesytsem specific tests, and a generic directory for tests
-that span multiple filesystems.
-
-Each class will have it's own group file to indicate what groups the
-tests belong to, and these will be parsed appropriately by the high
-level check script to build the test list.
-
-The change in parsing results in the test output also emitting the
-path to the test as well as the name of the test, instead of just a
-raw number. This allows duplicate test names in the sudirecotries to
-be unambiguous when the summary is written out.
+The benchmark framework inside xfstests is basically unused,
+bitrotted and not very useful. If we need benchmarks, lets use a
+real benchmark framework, not xfstests. Kill it to remove
+dependencies on common and common.rc.
 -----------------
+
+The current benchmark framework has bitrotted, but it is not without value
+in my view.  It should be removed and updated.  In the interest of future
+useability, I have kept the dependencies on common and common.rc.
 
 Signed-off-by: Phil White <pwhite@sgi.com>
 ---
- check               |   26 +++++++++++++++++---------
- common              |   40 ++++++++++++++++++++++------------------
- group               |    5 -----
- tests/generic/group |    5 +++++
- 4 files changed, 44 insertions(+), 32 deletions(-)
- create mode 100644 tests/generic/group
+ common.bonnie          |   41 -----------------------
+ common.config          |    3 +-
+ common.dbench          |   73 -----------------------------------------
+ common.metaperf        |   34 -------------------
+ common.rc              |    2 +-
+ run.bonnie_io          |   66 -------------------------------------
+ run.bonnie_ops         |   84 ------------------------------------------------
+ run.dbench             |   29 ----------------
+ run.dbench10           |   29 ----------------
+ run.dbench100          |   29 ----------------
+ run.dbench2            |   29 ----------------
+ run.dbench20           |   29 ----------------
+ run.dbench50           |   29 ----------------
+ run.dbenchmulti        |   37 ---------------------
+ run.io                 |   61 ----------------------------------
+ run.metaperf_10i_1000n |   31 -----------------
+ run.metaperf_10i_1n    |   31 -----------------
+ run.metaperf_1i_1n     |   30 -----------------
+ run.pio                |   69 ---------------------------------------
+ run.rtio               |   61 ----------------------------------
+ run.tar                |   40 -----------------------
+ 21 files changed, 2 insertions(+), 835 deletions(-)
+ delete mode 100644 common.bonnie
+ delete mode 100755 common.dbench
+ delete mode 100755 common.metaperf
+ delete mode 100755 run.bonnie_io
+ delete mode 100755 run.bonnie_ops
+ delete mode 100755 run.dbench
+ delete mode 100755 run.dbench10
+ delete mode 100755 run.dbench100
+ delete mode 100755 run.dbench2
+ delete mode 100755 run.dbench20
+ delete mode 100755 run.dbench50
+ delete mode 100755 run.dbenchmulti
+ delete mode 100755 run.io
+ delete mode 100755 run.metaperf_10i_1000n
+ delete mode 100755 run.metaperf_10i_1n
+ delete mode 100755 run.metaperf_1i_1n
+ delete mode 100755 run.pio
+ delete mode 100755 run.rtio
+ delete mode 100755 run.tar
 
-diff --git a/check b/check
-index 37d1d2f..dea63d7 100755
---- a/check
-+++ b/check
-@@ -97,7 +97,7 @@ END	{ if (NR > 0) {
- 
- 	echo "" >>check.log
- 	date >>check.log
--	echo $list | fmt | sed -e 's/^/    /' >>check.log
-+	echo $list | fmt | sed -e 's/^/    /' -e 's;tests/;;g' >>check.log
- 	$interrupt && echo "Interrupted!" >>check.log
-         
-         if [ ! -z "$n_try" -a $n_try != 0 ]
-@@ -175,7 +175,12 @@ _check_test_fs
- for seq in $list
- do
-     err=false
--    echo -n "$seq"
-+
-+    # the filename for the test and the name output are different.
-+    # we don't include the tests/ directory in the name output.
-+    seqnum=`echo $seq | sed -e 's;tests/;;'`
-+
-+    echo -n "$seqnum"
- 
-     if $showme
-     then
-@@ -188,7 +193,10 @@ do
- 	# really going to try and run this one
- 	#
- 	rm -f $seq.out.bad
--	lasttime=`sed -n -e "/^$seq /s/.* //p" <check.time`
-+
-+	# slashes now in names, sed barfs on them so use grep
-+	lasttime=`grep -w ^$seq check.time | awk '// {print $2}'`
-+
- 	if [ "X$lasttime" != X ]; then
- 		echo -n " ${lasttime}s ..."
- 	else
-@@ -218,9 +226,9 @@ do
- 	if [ -f $seq.notrun ]
- 	then
- 	    $timestamp || echo -n " [not run] "
--	    $timestamp && echo " [not run]" && echo -n "	$seq -- "
-+	    $timestamp && echo " [not run]" && echo -n "	$seqnum -- "
- 	    cat $seq.notrun
--	    notrun="$notrun $seq"
-+	    notrun="$notrun $seqnum"
- 	else
- 	    if [ $sts -ne 0 ]
- 	    then
-@@ -238,7 +246,7 @@ do
- 		    then
- 			:
- 		    else
--			echo "$seq `expr $stop - $start`" >>$tmp.time
-+			echo "$seqnum `expr $stop - $start`" >>$tmp.time
- 			echo -n " `expr $stop - $start`s"
- 		    fi
- 		    echo ""
-@@ -266,18 +274,18 @@ do
-     #
-     if $err
-     then
--	bad="$bad $seq"
-+	bad="$bad $seqnum"
- 	n_bad=`expr $n_bad + 1`
- 	quick=false
-     fi
-     if [ ! -f $seq.notrun ]
-     then
--	try="$try $seq"
-+	try="$try $seqnum"
- 	n_try=`expr $n_try + 1`
-         _check_test_fs
-     fi
-     
--    seq="after_$seq"
-+    seq="after_$seqnum"
- done
- 
- interrupt=false
-diff --git a/common b/common
-index 821ea59..b41d4d0 100644
---- a/common
-+++ b/common
-@@ -21,6 +21,21 @@
- # $Header: /disk7/depot/linux/pcp/dev/qa/RCS/common,v 2.52 2000/04/05 18:24:51 kenmcd Exp $
- #
- 
-+here=`pwd`
-+check=${check-true}
-+diff="`which diff`"
-+verbose=false
-+group=false
-+xgroup=false
-+showme=false
-+sortme=false
-+have_test_arg=false
-+randomize=false
-+timestamp=${TIMESTAMP:=false}
-+SUPPORTED_TESTS="[0-9][0-9][0-9] [0-9][0-9][0-9][0-9]"
-+TEST_GROUP_DIR="tests"
-+GENERIC_GROUP_DIR="$TEST_GROUP_DIR/generic"
-+
- _setenvironment()
- {
-     MSGVERB="text:action"
-@@ -30,10 +45,15 @@ _setenvironment()
- get_group_list()
- {
- 	grp=$1
--	grpl=$(sed -n < group \
-+	dirs=". $GENERIC_GROUP_DIR"
-+
-+	for d in $dirs; do
-+		l=$(sed -n < $d/group \
- 			-e 's/#.*//' \
- 			-e 's/$/ /' \
--			-e "/^[0-9][0-9][0-9].* $grp /"'{ s/ .*//p }')
-+			-e "s;\(^[0-9][0-9][0-9]\).* $grp .*;$d/\1;p")
-+		grpl="$grpl $l"
-+	done
- 	echo $grpl
- }
- 
-@@ -67,22 +87,6 @@ _timestamp()
- 	echo -n " [$now]"
- }
- 
--here=`pwd`
--
--check=${check-true}
--
--diff="`which diff`"
--verbose=false
--group=false
--xgroup=false
--showme=false
--sortme=false
--have_test_arg=false
--randomize=false
--timestamp=${TIMESTAMP:=false}
--
--SUPPORTED_TESTS="[0-9][0-9][0-9] [0-9][0-9][0-9][0-9]"
--
- # start the initialisation work now
- _setenvironment
- rm -f $tmp.list $tmp.tmp $tmp.sed $here/$iam.out
-diff --git a/group b/group
-index c9b733f..484bed5 100644
---- a/group
-+++ b/group
-@@ -1,8 +1,3 @@
--# QA groups control file
--# Defines test groups and nominal group owners
--# - do not start group names with a digit
--# - comment line before each group is "new" description
+diff --git a/common.bonnie b/common.bonnie
+deleted file mode 100644
+index 96ca700..0000000
+--- a/common.bonnie
++++ /dev/null
+@@ -1,41 +0,0 @@
+-##/bin/bash
 -#
+-# Copyright (c) 2002-2004 Silicon Graphics, Inc.  All Rights Reserved.
+-#
+-# This program is free software; you can redistribute it and/or
+-# modify it under the terms of the GNU General Public License as
+-# published by the Free Software Foundation.
+-#
+-# This program is distributed in the hope that it would be useful,
+-# but WITHOUT ANY WARRANTY; without even the implied warranty of
+-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-# GNU General Public License for more details.
+-#
+-# You should have received a copy of the GNU General Public License
+-# along with this program; if not, write the Free Software Foundation,
+-# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+-#
+-
+-#check bonnie is installed
+-if [ "`whereis bonnie++`" == "bonnie++:"]; then
+-        echo $0 error bonnie not installed.
+-        exit
+-fi
+-
+-run_bonnie()
+-{
+-	# dir, no hostname, quiet, fast (no per-char), ram (no sz checks)
+-	tmp=/var/tmp
+-
+-	mkdir ./bonnie || exit 1
+-	defaults="-d ./bonnie -q -f -r 0"
+-	defaults="$defaults -u "`id -u`" -g "`id -g`
+-	bonnie++ -m '' $defaults $@ >$tmp/$$.bonnie.stdout 2>$tmp/$$.bonnie.stderr
+-	status=$?
+-	rm -fr ./bonnie
+-	[ $status -ne 0 ] && exit 1
+-	filter_stdout < $tmp/$$.bonnie.stdout
+-	filter_stderr < $tmp/$$.bonnie.stderr 1>&2
+-	rm -f $tmp/$$.bonnie.stdout $tmp/$$.bonnie.stderr
+-	exit 0
+-}
+diff --git a/common.config b/common.config
+index ed0f44c..e0041a5 100644
+--- a/common.config
++++ b/common.config
+@@ -40,7 +40,7 @@
+ #   below or a separate local configuration file can be used (using
+ #   the HOST_OPTIONS variable).
+ # - This script is shared by the stress test system and the auto-qa
+-#   system (includes both regression test and benchmark components).
++#   system
+ # - TEST_DEV & TEST_DIR must be assigned.
+ # - this script shouldn't make any assertions about filesystem
+ #   validity or mountedness.
+@@ -163,7 +163,6 @@ export XFS_PARALLEL_REPAIR64_PROG="`set_prog_path xfs_prepair64`"
+ export XFSDUMP_PROG="`set_prog_path xfsdump`"
+ export XFSRESTORE_PROG="`set_prog_path xfsrestore`"
+ export XFSINVUTIL_PROG="`set_prog_path xfsinvutil`"
+-export DBENCH_PROG="`set_prog_path dbench`"
+ export GETFATTR_PROG="`set_prog_path getfattr`"
+ export SETFATTR_PROG="`set_prog_path setfattr`"
+ export ATTR_PROG="`set_prog_path attr`"
+diff --git a/common.dbench b/common.dbench
+deleted file mode 100755
+index b59be71..0000000
+--- a/common.dbench
++++ /dev/null
+@@ -1,73 +0,0 @@
+-##/bin/bash
+-#
+-# Copyright (c) 2002-2005 Silicon Graphics, Inc.  All Rights Reserved.
+-#
+-# This program is free software; you can redistribute it and/or
+-# modify it under the terms of the GNU General Public License as
+-# published by the Free Software Foundation.
+-#
+-# This program is distributed in the hope that it would be useful,
+-# but WITHOUT ANY WARRANTY; without even the implied warranty of
+-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-# GNU General Public License for more details.
+-#
+-# You should have received a copy of the GNU General Public License
+-# along with this program; if not, write the Free Software Foundation,
+-# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+-#
+-
+-#check dbench is installed
+-if [ "`whereis dbench`" == "dbench:" ]; then
+-        echo $0 error dbench not installed.
+-        exit
+-fi
+-
+-_run_dbench()
+-{
+-	mkdir ./dbench || exit 1
+-	cd dbench
+-	dbench -x $1
+-	status=$?
+-	cd ..
+-	rm -fr ./dbench
+-	[ $status -ne 0 ] && exit 1
+-}
+-
+-#
+-# Sample dbench output:
+-# "Throughput 40.6701 MB/sec (NB=50.8376 MB/sec  406.701 MBit/sec)"
+-# 
+-
+-# Output for a single-shot dbench run.
+-_format_header()
+-{
+-	printf "%8s, %s\n" clients MB/sec
+-}
+-_filter_dbench()
+-{
+-	clients=$1
+-	perl -ne 'm/Throughput (\S+) MB\/sec/ &&
+-			{ printf "%8u, %s\n", '$clients', $1 }'
+-}
+-
+-# Output for a "multipass" dbench run.
+-_format_header_multipass()
+-{
+-	while [ $# -gt 1 ]; do
+-		printf "%4s::MB/sec," $1
+-		shift
+-	done
+-	printf "%4s::MB/sec\n" $1
+-}
+-_filter_dbench_multipass()
+-{
+-	perl -ne '
+-	if (m/Throughput (\S+) MB\/sec/) {
+-		$results[$count++] = $1;
+-	}
+-	END {	for ($i = 0; $i < $count - 1; $i++) {
+-			printf "%12.3f,", $results[$i];
+-		}
+-		printf "%12.3f\n", $results[$count-1];
+-	}'
+-}
+diff --git a/common.metaperf b/common.metaperf
+deleted file mode 100755
+index 9def379..0000000
+--- a/common.metaperf
++++ /dev/null
+@@ -1,34 +0,0 @@
+-##/bin/bash
+-#
+-# Copyright (c) 2003-2005 Silicon Graphics, Inc.  All Rights Reserved.
+-#
+-# This program is free software; you can redistribute it and/or
+-# modify it under the terms of the GNU General Public License as
+-# published by the Free Software Foundation.
+-#
+-# This program is distributed in the hope that it would be useful,
+-# but WITHOUT ANY WARRANTY; without even the implied warranty of
+-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-# GNU General Public License for more details.
+-#
+-# You should have received a copy of the GNU General Public License
+-# along with this program; if not, write the Free Software Foundation,
+-# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+-#
+-
+-_format_metaperf()
+-{
+-    perl -ne 'm/(\S+): (\d+) times, (\d+) file\(s\) namelen (\d+), time = (\S+) sec, ops\/sec=(\S+), usec\/op = (\S+)/ && { $op{$1} = $7 };
+-	END { printf "%8.2f,%8.2f,%8.2f,%8.2f,%8.2f,%8.2f,%8.2f,%8.2f\n",
+-		$op{"chown"}, $op{"create"}, $op{"crunlink"}, $op{"linkun"},
+-		$op{"open"}, $op{"rename"}, $op{"stat"}, $op{"readdir"} }'
+-}
+-
+-_format_header()
+-{
+-    # note: we're reporting only the usec/op field
+-    printf "%8s,%8s,%8s,%8s,%8s,%8s,%8s,%8s\n" \
+-	chown create crulink linkun open rename stat readdir
+-}
+-
+-allops="chown create crunlink linkun open rename stat readdir"
+diff --git a/common.rc b/common.rc
+index ef41cbf..4214b3c 100644
+--- a/common.rc
++++ b/common.rc
+@@ -1895,7 +1895,7 @@ run_check()
  
- # catch-all
- other
-diff --git a/tests/generic/group b/tests/generic/group
-new file mode 100644
-index 0000000..4e01f0c
---- /dev/null
-+++ b/tests/generic/group
-@@ -0,0 +1,5 @@
-+# QA groups control file
-+# Defines test groups and nominal group owners
-+# - do not start group names with a digit
-+# - comment line before each group is "new" description
-+#
+ ################################################################################
+ 
+-if [ "$iam" != new -a "$iam" != bench ]
++if [ "$iam" != new ]
+ then
+     # make some further configuration checks here
+ 
+diff --git a/run.bonnie_io b/run.bonnie_io
+deleted file mode 100755
+index e108650..0000000
+--- a/run.bonnie_io
++++ /dev/null
+@@ -1,66 +0,0 @@
+-#!/bin/bash
+-#
+-# Copyright (c) 2002-2003 Silicon Graphics, Inc.  All Rights Reserved.
+-#
+-# This program is free software; you can redistribute it and/or
+-# modify it under the terms of the GNU General Public License as
+-# published by the Free Software Foundation.
+-#
+-# This program is distributed in the hope that it would be useful,
+-# but WITHOUT ANY WARRANTY; without even the implied warranty of
+-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-# GNU General Public License for more details.
+-#
+-# You should have received a copy of the GNU General Public License
+-# along with this program; if not, write the Free Software Foundation,
+-# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+-#
+-# 
+-# Does a bonnie throughput run (80M file and 1K chunksize if the
+-# BONNIE_FILESIZE and/or BONNIE_CHUNKSIZE variables are not set),
+-# then massages the output into CSV format with the human-readable
+-# output preceding it as a "comment" (ie. #-prefixed).
+-# 
+-BONNIE_FILESIZE=${BONNIE_FILESIZE:=500M}
+-BONNIE_CHUNKSIZE=${BONNIE_CHUNKSIZE:=1K}
+-
+-[ -z "$here" ] && here=`pwd`
+-. $here/common.bonnie
+-
+-# 
+-# Sample bonnie throughput output (stderr):
+-#Version 1.02c       ------Sequential Output------ --Sequential Input- --Random-
+-#                    -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- --Seeks--
+-#Machine   Size:chnk K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP  /sec %CP
+-#          150M:64k           52024  99 88969  99           245492 100  3746 264
+-# 
+-filter_stderr()
+-{
+-	sed -e 's/^..................../# /g' | awk '{print} END {print "#"}'
+-}
+-
+-# 
+-# Sample bonnie throughput output (stdout):
+-# ",150M:64k,,,52024,99,88969,99,,,245492,100,3746.0,264,,,,,,,,,,,,,"
+-# 
+-filter_stdout()
+-{
+-	perl -ne '
+-		chomp;
+-		s/,+/,/g; s/^,//; s/,$//;
+-		@values = split /,/;
+-		printf "%9s", shift @values;
+-		for ($i = 0; $i <= $#values; $i++) {
+-			if ($i % 2) { printf ",%4s%%", $values[$i] }
+-			else        { printf ",%10s", $values[$i] }
+-		}
+-		printf "\n";
+-	'
+-}
+-
+-if [ $# -gt 0 ]; then
+-	printf "%9s,%10s,%5s,%10s,%5s,%10s,%5s,%10s,%5s\n" size:chnk \
+-		writeK/s wCPU rewriteK/s rwCPU readK/s rCPU seek/s sCPU
+-	exit 0
+-fi
+-run_bonnie -n 0 -s $BONNIE_FILESIZE:$BONNIE_CHUNKSIZE
+diff --git a/run.bonnie_ops b/run.bonnie_ops
+deleted file mode 100755
+index 609b93c..0000000
+--- a/run.bonnie_ops
++++ /dev/null
+@@ -1,84 +0,0 @@
+-#!/bin/bash
+-#
+-# Copyright (c) 2002-2003 Silicon Graphics, Inc.  All Rights Reserved.
+-#
+-# This program is free software; you can redistribute it and/or
+-# modify it under the terms of the GNU General Public License as
+-# published by the Free Software Foundation.
+-#
+-# This program is distributed in the hope that it would be useful,
+-# but WITHOUT ANY WARRANTY; without even the implied warranty of
+-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-# GNU General Public License for more details.
+-#
+-# You should have received a copy of the GNU General Public License
+-# along with this program; if not, write the Free Software Foundation,
+-# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+-#
+-# 
+-# Do a bonnie++ create/read/delete run using 8192 files (unless
+-# BONNIE_KFILES environment variable is set -- note this number
+-# is multiplied by 1024 by bonnie++).  By default the files are
+-# created in the same directory, BONNIE_NDIRS specifies a count
+-# of subdirs to evenly spread files through.  Regular files are
+-# created by default (BONNIE_FILETYPE=regular), alternatively
+-# the values "symlinks" and "hardlinks" can be used.
+-# 
+-# The script then massages the output into CSV format with the
+-# human-readable output preceding it as a "comment" (#-prefixed).
+-# 
+-BONNIE_NDIRS=${BONNIE_NDIRS:=1}
+-BONNIE_KFILES=${BONNIE_KFILES:=8}
+-BONNIE_FILETYPE=${BONNIE_FILETYPE:=regular}
+-
+-[ -z "$here" ] && here=`pwd`
+-. $here/common.bonnie
+-
+-# 
+-# Sample bonnie throughput output (stderr):
+-#Version 1.02c       ------Sequential Create------ --------Random Create--------
+-#                    -Create-- --Read--- -Delete-- -Create-- --Read--- -Delete--
+-#              files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP
+-#                  4   525  27 +++++ +++   517  26   526  25 +++++ +++   230  12
+-# [ Note: the "files" can also be "^files:max" and possibly other things ]
+-filter_stderr()
+-{
+-	sed -e 's/^..................../# /g' | awk '{print} END {print "#"}'
+-}
+-
+-# 
+-# Sample bonnie IOPs output (stdout):
+-# ",,,,,,,,,,,,,,4,525,27,+++++,+++,517,26,526,25,+++++,+++,230,12"
+-# [ nathans note: always get +++ due to 0:0 for min:max file sizes. ]
+-# [ I will need to fix the filter if I ever start using file sizes. ]
+-# 
+-filter_stdout()
+-{
+-	perl -ne '
+-		chomp;
+-		s/\+*//g; s/,+/,/g; s/^,//; s/,$//;
+-		@values = split /,/;
+-		printf "%9s", 1024 * shift @values;
+-		for ($i = 0; $i <= $#values; $i++) {
+-			if ($i % 2) { printf ",%4s%%", $values[$i] }
+-			else        { printf ",%10s", $values[$i] }
+-		}
+-		printf "\n";
+-	'
+-}
+-
+-if [ $# -gt 0 ]; then
+-	printf "%9s,%10s,%5s,%10s,%5s,%10s,%5s,%10s,%5s\n" files \
+-		seqCR/s scCPU seqRM/s srCPU randCR/s rcCPU randRM/s rrCPU
+-	exit 0
+-fi
+-
+-case "$BONNIE_FILETYPE"
+-in
+-	regular)  BONNIE_FILETYPE=0 ;;
+-	symlink)  BONNIE_FILETYPE=-2 ;;
+-	hardlink) BONNIE_FILETYPE=-1 ;;
+-	*)  echo "BONNIE_FILETYPE has an unrecognised value" && exit 1 ;;
+-esac
+-
+-run_bonnie -s 0 -n $BONNIE_KFILES:$BONNIE_FILETYPE:0:$BONNIE_NDIRS
+diff --git a/run.dbench b/run.dbench
+deleted file mode 100755
+index 8e86807..0000000
+--- a/run.dbench
++++ /dev/null
+@@ -1,29 +0,0 @@
+-#!/bin/bash
+-#
+-# Copyright (c) 2002-2003 Silicon Graphics, Inc.  All Rights Reserved.
+-#
+-# This program is free software; you can redistribute it and/or
+-# modify it under the terms of the GNU General Public License as
+-# published by the Free Software Foundation.
+-#
+-# This program is distributed in the hope that it would be useful,
+-# but WITHOUT ANY WARRANTY; without even the implied warranty of
+-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-# GNU General Public License for more details.
+-#
+-# You should have received a copy of the GNU General Public License
+-# along with this program; if not, write the Free Software Foundation,
+-# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+-#
+-# 
+-# Does a single-client dbench run
+-# 
+-
+-[ -z "$here" ] && here=`pwd`
+-. $here/common.dbench
+-
+-if [ $# -gt 0 ]; then
+-	_format_header
+-	exit 0
+-fi
+-_run_dbench 1 | _filter_dbench 1
+diff --git a/run.dbench10 b/run.dbench10
+deleted file mode 100755
+index e3a08c4..0000000
+--- a/run.dbench10
++++ /dev/null
+@@ -1,29 +0,0 @@
+-#!/bin/bash
+-#
+-# Copyright (c) 2002-2003 Silicon Graphics, Inc.  All Rights Reserved.
+-#
+-# This program is free software; you can redistribute it and/or
+-# modify it under the terms of the GNU General Public License as
+-# published by the Free Software Foundation.
+-#
+-# This program is distributed in the hope that it would be useful,
+-# but WITHOUT ANY WARRANTY; without even the implied warranty of
+-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-# GNU General Public License for more details.
+-#
+-# You should have received a copy of the GNU General Public License
+-# along with this program; if not, write the Free Software Foundation,
+-# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+-#
+-# 
+-# Does a dbench run with 10 clients
+-# 
+-
+-[ -z "$here" ] && here=`pwd`
+-. $here/common.dbench
+-
+-if [ $# -gt 0 ]; then
+-	_format_header
+-	exit 0
+-fi
+-_run_dbench 10 | _filter_dbench 10
+diff --git a/run.dbench100 b/run.dbench100
+deleted file mode 100755
+index 51708d1..0000000
+--- a/run.dbench100
++++ /dev/null
+@@ -1,29 +0,0 @@
+-#!/bin/bash
+-#
+-# Copyright (c) 2002-2003 Silicon Graphics, Inc.  All Rights Reserved.
+-#
+-# This program is free software; you can redistribute it and/or
+-# modify it under the terms of the GNU General Public License as
+-# published by the Free Software Foundation.
+-#
+-# This program is distributed in the hope that it would be useful,
+-# but WITHOUT ANY WARRANTY; without even the implied warranty of
+-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-# GNU General Public License for more details.
+-#
+-# You should have received a copy of the GNU General Public License
+-# along with this program; if not, write the Free Software Foundation,
+-# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+-#
+-# 
+-# Does a dbench run with 100 clients
+-# 
+-
+-[ -z "$here" ] && here=`pwd`
+-. $here/common.dbench
+-
+-if [ $# -gt 0 ]; then
+-	_format_header
+-	exit 0
+-fi
+-_run_dbench 100 | _filter_dbench 100
+diff --git a/run.dbench2 b/run.dbench2
+deleted file mode 100755
+index c56c208..0000000
+--- a/run.dbench2
++++ /dev/null
+@@ -1,29 +0,0 @@
+-#!/bin/bash
+-#
+-# Copyright (c) 2002-2003 Silicon Graphics, Inc.  All Rights Reserved.
+-#
+-# This program is free software; you can redistribute it and/or
+-# modify it under the terms of the GNU General Public License as
+-# published by the Free Software Foundation.
+-#
+-# This program is distributed in the hope that it would be useful,
+-# but WITHOUT ANY WARRANTY; without even the implied warranty of
+-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-# GNU General Public License for more details.
+-#
+-# You should have received a copy of the GNU General Public License
+-# along with this program; if not, write the Free Software Foundation,
+-# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+-#
+-# 
+-# Does a dbench run with 2 clients
+-# 
+-
+-[ -z "$here" ] && here=`pwd`
+-. $here/common.dbench
+-
+-if [ $# -gt 0 ]; then
+-	_format_header
+-	exit 0
+-fi
+-_run_dbench 2 | _filter_dbench 2
+diff --git a/run.dbench20 b/run.dbench20
+deleted file mode 100755
+index 81f713c..0000000
+--- a/run.dbench20
++++ /dev/null
+@@ -1,29 +0,0 @@
+-#!/bin/bash
+-#
+-# Copyright (c) 2003 Silicon Graphics, Inc.  All Rights Reserved.
+-#
+-# This program is free software; you can redistribute it and/or
+-# modify it under the terms of the GNU General Public License as
+-# published by the Free Software Foundation.
+-#
+-# This program is distributed in the hope that it would be useful,
+-# but WITHOUT ANY WARRANTY; without even the implied warranty of
+-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-# GNU General Public License for more details.
+-#
+-# You should have received a copy of the GNU General Public License
+-# along with this program; if not, write the Free Software Foundation,
+-# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+-#
+-# 
+-# Does a dbench run with 20 clients
+-# 
+-
+-[ -z "$here" ] && here=`pwd`
+-. $here/common.dbench
+-
+-if [ $# -gt 0 ]; then
+-	_format_header
+-	exit 0
+-fi
+-_run_dbench 20 | _filter_dbench 20
+diff --git a/run.dbench50 b/run.dbench50
+deleted file mode 100755
+index 4c54e0b..0000000
+--- a/run.dbench50
++++ /dev/null
+@@ -1,29 +0,0 @@
+-#!/bin/bash
+-#
+-# Copyright (c) 2002-2003 Silicon Graphics, Inc.  All Rights Reserved.
+-#
+-# This program is free software; you can redistribute it and/or
+-# modify it under the terms of the GNU General Public License as
+-# published by the Free Software Foundation.
+-#
+-# This program is distributed in the hope that it would be useful,
+-# but WITHOUT ANY WARRANTY; without even the implied warranty of
+-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-# GNU General Public License for more details.
+-#
+-# You should have received a copy of the GNU General Public License
+-# along with this program; if not, write the Free Software Foundation,
+-# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+-#
+-# 
+-# Does a dbench run with 50 clients
+-# 
+-
+-[ -z "$here" ] && here=`pwd`
+-. $here/common.dbench
+-
+-if [ $# -gt 0 ]; then
+-	_format_header
+-	exit 0
+-fi
+-_run_dbench 50 | _filter_dbench 50
+diff --git a/run.dbenchmulti b/run.dbenchmulti
+deleted file mode 100755
+index 317a100..0000000
+--- a/run.dbenchmulti
++++ /dev/null
+@@ -1,37 +0,0 @@
+-#!/bin/bash
+-#
+-# Copyright (c) 2003 Silicon Graphics, Inc.  All Rights Reserved.
+-#
+-# This program is free software; you can redistribute it and/or
+-# modify it under the terms of the GNU General Public License as
+-# published by the Free Software Foundation.
+-#
+-# This program is distributed in the hope that it would be useful,
+-# but WITHOUT ANY WARRANTY; without even the implied warranty of
+-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-# GNU General Public License for more details.
+-#
+-# You should have received a copy of the GNU General Public License
+-# along with this program; if not, write the Free Software Foundation,
+-# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+-#
+-# 
+-# Does several dbench runs with increasing numbers of client
+-# 
+-
+-[ -z "$here" ] && here=`pwd`
+-. $here/common.dbench
+-
+-if [ $# -gt 0 ]; then
+-	_format_header_multipass 1 2 10 20 #50
+-	exit 0
+-fi
+-tmpfile=/var/tmp/dbench.$$
+-rm -f $tmpfile
+-_run_dbench 1	>> $tmpfile
+-_run_dbench 2	>> $tmpfile
+-_run_dbench 10	>> $tmpfile
+-_run_dbench 20	>> $tmpfile
+-#_run_dbench 50	>> $tmpfile
+-_filter_dbench_multipass < $tmpfile
+-rm -f $tmpfile
+diff --git a/run.io b/run.io
+deleted file mode 100755
+index 91e3b93..0000000
+--- a/run.io
++++ /dev/null
+@@ -1,61 +0,0 @@
+-#!/bin/bash
+-#
+-# Copyright (c) 2005 Silicon Graphics, Inc.  All Rights Reserved.
+-#
+-# This program is free software; you can redistribute it and/or
+-# modify it under the terms of the GNU General Public License as
+-# published by the Free Software Foundation.
+-#
+-# This program is distributed in the hope that it would be useful,
+-# but WITHOUT ANY WARRANTY; without even the implied warranty of
+-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-# GNU General Public License for more details.
+-#
+-# You should have received a copy of the GNU General Public License
+-# along with this program; if not, write the Free Software Foundation,
+-# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+-#
+-#
+-# (very) simple file IO tests.
+-# TODO: make file size multiple of physmem.
+-
+-filesize=1g
+-iosize=64k
+-
+-if [ $# -gt 0 ]; then
+-	printf "%s,%s,%s,%s,%s\n" type bytes ops time bytes/sec ops/sec
+-	exit 0
+-fi
+-
+-# buffered write
+-echo -n bwrite,
+-xfs_io iofile	-Fft	-c "pwrite -C -b $iosize 0 $filesize"
+-
+-# direct write
+-echo -n dwrite,
+-xfs_io iofile	-Fftd	-c "pwrite -C -b $iosize 0 $filesize"
+-
+-# buffered re-write
+-echo -n brwrite,
+-xfs_io iofile	-F	-c "pwrite -C -b $iosize 0 $filesize"
+-
+-# direct re-write
+-echo -n drwrite,
+-xfs_io iofile	-Fd	-c "pwrite -C -b $iosize 0 $filesize"
+-
+-# buffered read
+-echo -n bread,
+-xfs_io iofile	-F	-c "pread -C -b $iosize 0 $filesize"
+-
+-# buffered re-read
+-echo -n brread,
+-xfs_io iofile	-F	-c "pread -C -b $iosize 0 $filesize"
+-
+-# direct read
+-echo -n dread,
+-xfs_io iofile	-Fd	-c "pread -C -b $iosize 0 $filesize"
+-
+-# direct re-read
+-echo -n drread,
+-xfs_io iofile	-Fd	-c "pread -C -b $iosize 0 $filesize"
+-
+diff --git a/run.metaperf_10i_1000n b/run.metaperf_10i_1000n
+deleted file mode 100755
+index a420696..0000000
+--- a/run.metaperf_10i_1000n
++++ /dev/null
+@@ -1,31 +0,0 @@
+-#!/bin/bash
+-#
+-# Copyright (c) 2003 Silicon Graphics, Inc.  All Rights Reserved.
+-#
+-# This program is free software; you can redistribute it and/or
+-# modify it under the terms of the GNU General Public License as
+-# published by the Free Software Foundation.
+-#
+-# This program is distributed in the hope that it would be useful,
+-# but WITHOUT ANY WARRANTY; without even the implied warranty of
+-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-# GNU General Public License for more details.
+-#
+-# You should have received a copy of the GNU General Public License
+-# along with this program; if not, write the Free Software Foundation,
+-# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+-#
+-# 
+-# Runs the metaperf metadata micro-benchmark.
+-# Use 1000 files, 10 iterations.
+-# 
+-
+-[ -z "$here" ] && here=`pwd`
+-. $here/common.metaperf
+-
+-if [ $# -gt 0 ]; then
+-    _format_header
+-    exit 0
+-fi
+-
+-$here/src/metaperf -d . -i 10 -n 1000 -l15 $allops | _format_metaperf
+diff --git a/run.metaperf_10i_1n b/run.metaperf_10i_1n
+deleted file mode 100755
+index 296fd58..0000000
+--- a/run.metaperf_10i_1n
++++ /dev/null
+@@ -1,31 +0,0 @@
+-#!/bin/bash
+-#
+-# Copyright (c) 2003 Silicon Graphics, Inc.  All Rights Reserved.
+-#
+-# This program is free software; you can redistribute it and/or
+-# modify it under the terms of the GNU General Public License as
+-# published by the Free Software Foundation.
+-#
+-# This program is distributed in the hope that it would be useful,
+-# but WITHOUT ANY WARRANTY; without even the implied warranty of
+-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-# GNU General Public License for more details.
+-#
+-# You should have received a copy of the GNU General Public License
+-# along with this program; if not, write the Free Software Foundation,
+-# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+-#
+-# 
+-# Runs the metaperf metadata micro-benchmark.
+-# Use 1 file, 10 iterations.
+-# 
+-
+-[ -z "$here" ] && here=`pwd`
+-. $here/common.metaperf
+-
+-if [ $# -gt 0 ]; then
+-    _format_header
+-    exit 0
+-fi
+-
+-$here/src/metaperf -d . -i 10 -n 1 -l15 $allops | _format_metaperf
+diff --git a/run.metaperf_1i_1n b/run.metaperf_1i_1n
+deleted file mode 100755
+index ef02852..0000000
+--- a/run.metaperf_1i_1n
++++ /dev/null
+@@ -1,30 +0,0 @@
+-#!/bin/bash
+-#
+-# Copyright (c) 2003 Silicon Graphics, Inc.  All Rights Reserved.
+-#
+-# This program is free software; you can redistribute it and/or
+-# modify it under the terms of the GNU General Public License as
+-# published by the Free Software Foundation.
+-#
+-# This program is distributed in the hope that it would be useful,
+-# but WITHOUT ANY WARRANTY; without even the implied warranty of
+-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-# GNU General Public License for more details.
+-#
+-# You should have received a copy of the GNU General Public License
+-# along with this program; if not, write the Free Software Foundation,
+-# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+-#
+-# 
+-# Runs the metaperf metadata micro-benchmark.
+-# Use 1 file, 1 iteration. (worst case)
+-# 
+-
+-. $here/common.metaperf
+-
+-if [ $# -gt 0 ]; then
+-    _format_header
+-    exit 0
+-fi
+-
+-$here/src/metaperf -d . -i 1 -n 1 -l15 $allops | _format_metaperf
+diff --git a/run.pio b/run.pio
+deleted file mode 100755
+index 1b67fbf..0000000
+--- a/run.pio
++++ /dev/null
+@@ -1,69 +0,0 @@
+-#!/bin/bash
+-#
+-# Copyright (c) 2005 Silicon Graphics, Inc.  All Rights Reserved.
+-#
+-# This program is free software; you can redistribute it and/or
+-# modify it under the terms of the GNU General Public License as
+-# published by the Free Software Foundation.
+-#
+-# This program is distributed in the hope that it would be useful,
+-# but WITHOUT ANY WARRANTY; without even the implied warranty of
+-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-# GNU General Public License for more details.
+-#
+-# You should have received a copy of the GNU General Public License
+-# along with this program; if not, write the Free Software Foundation,
+-# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+-#
+-#
+-# (very) simple parallel IO tests.
+-# TODO: make file size multiple of physmem.
+-
+-filesize=1g
+-iosize=64k
+-
+-if [ $# -gt 0 ]; then
+-	printf "%s,%s,%s,%s,%s\n" type bytes ops time bytes/sec ops/sec
+-	exit 0
+-fi
+-
+-# buffered write
+-echo -n bwrite,
+-xfs_io iofile1	-Fft	-c "pwrite -C -b $iosize 0 $filesize" &
+-xfs_io iofile2	-Fft	-c "pwrite -C -b $iosize 0 $filesize"
+-
+-# direct write
+-echo -n dwrite,
+-xfs_io iofile1	-Fftd	-c "pwrite -C -b $iosize 0 $filesize" &
+-xfs_io iofile2	-Fftd	-c "pwrite -C -b $iosize 0 $filesize"
+-
+-# buffered re-write
+-echo -n brwrite,
+-xfs_io iofile1	-F	-c "pwrite -C -b $iosize 0 $filesize" &
+-xfs_io iofile2	-F	-c "pwrite -C -b $iosize 0 $filesize"
+-
+-# direct re-write
+-echo -n drwrite,
+-xfs_io iofile1	-Fd	-c "pwrite -C -b $iosize 0 $filesize" &
+-xfs_io iofile2	-Fd	-c "pwrite -C -b $iosize 0 $filesize"
+-
+-# buffered read
+-echo -n bread,
+-xfs_io iofile1	-F	-c "pread -C -b $iosize 0 $filesize" &
+-xfs_io iofile2	-F	-c "pread -C -b $iosize 0 $filesize"
+-
+-# buffered re-read
+-echo -n brread,
+-xfs_io iofile1	-F	-c "pread -C -b $iosize 0 $filesize" &
+-xfs_io iofile2	-F	-c "pread -C -b $iosize 0 $filesize"
+-
+-# direct read
+-echo -n dread,
+-xfs_io iofile1	-Fd	-c "pread -C -b $iosize 0 $filesize" &
+-xfs_io iofile2	-Fd	-c "pread -C -b $iosize 0 $filesize"
+-
+-# direct re-read
+-echo -n drread,
+-xfs_io iofile1	-Fd	-c "pread -C -b $iosize 0 $filesize" &
+-xfs_io iofile2	-Fd	-c "pread -C -b $iosize 0 $filesize"
+-
+diff --git a/run.rtio b/run.rtio
+deleted file mode 100755
+index 14aded6..0000000
+--- a/run.rtio
++++ /dev/null
+@@ -1,61 +0,0 @@
+-#!/bin/bash
+-#
+-# Copyright (c) 2005 Silicon Graphics, Inc.  All Rights Reserved.
+-#
+-# This program is free software; you can redistribute it and/or
+-# modify it under the terms of the GNU General Public License as
+-# published by the Free Software Foundation.
+-#
+-# This program is distributed in the hope that it would be useful,
+-# but WITHOUT ANY WARRANTY; without even the implied warranty of
+-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-# GNU General Public License for more details.
+-#
+-# You should have received a copy of the GNU General Public License
+-# along with this program; if not, write the Free Software Foundation,
+-# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+-#
+-#
+-# (very) simple file realtime IO tests.
+-# TODO: make file size multiple of physmem.
+-
+-filesize=1g
+-iosize=64k
+-
+-if [ $# -gt 0 ]; then
+-	printf "%s,%s,%s,%s,%s\n" type bytes ops time bytes/sec ops/sec
+-	exit 0
+-fi
+-
+-# buffered write
+-echo -n bwrite,
+-xfs_io iofile	-Rft	-c "pwrite -C -b $iosize 0 $filesize"
+-
+-# direct write
+-echo -n dwrite,
+-xfs_io iofile	-Rftd	-c "pwrite -C -b $iosize 0 $filesize"
+-
+-# buffered re-write
+-echo -n brwrite,
+-xfs_io iofile	-R	-c "pwrite -C -b $iosize 0 $filesize"
+-
+-# direct re-write
+-echo -n drwrite,
+-xfs_io iofile	-Rd	-c "pwrite -C -b $iosize 0 $filesize"
+-
+-# buffered read
+-echo -n bread,
+-xfs_io iofile	-R	-c "pread -C -b $iosize 0 $filesize"
+-
+-# buffered re-read
+-echo -n brread,
+-xfs_io iofile	-R	-c "pread -C -b $iosize 0 $filesize"
+-
+-# direct read
+-echo -n dread,
+-xfs_io iofile	-Rd	-c "pread -C -b $iosize 0 $filesize"
+-
+-# direct re-read
+-echo -n drread,
+-xfs_io iofile	-Rd	-c "pread -C -b $iosize 0 $filesize"
+-
+diff --git a/run.tar b/run.tar
+deleted file mode 100755
+index 6e8afd3..0000000
+--- a/run.tar
++++ /dev/null
+@@ -1,40 +0,0 @@
+-#!/bin/bash
+-# 
+-# Produces a .tar file (if one doesn't exist as $TARFILE), then
+-# times how long it takes to untar it onto the current directory.
+-# 
+-TARFILE=${TARFILE:=/var/tmp/bench.tar.gz}
+-
+-barf()
+-{
+-	echo $@ >2
+-	exit 1
+-}
+-
+-new_tar()
+-{
+-	source="bin sbin lib"
+-	if [ ! -f $TARFILE ]; then
+-		( cd / && tar czf $TARFILE $source ) || barf "tar cz failed"
+-	fi
+-}
+-
+-run_tar()
+-{
+-	# %U=user %S=system %E=elapsed
+-	mkdir ./tar || exit 1
+-	size=`ls -Llh $TARFILE | awk '{print $5}'`
+-	time=`/usr/bin/time -f '%U, %S, %E' tar xzf $TARFILE 2>&1`
+-	status=$?
+-	cd ..
+-	rm -fr ./tar
+-	[ $status -eq 0 ] || exit 1
+-	printf "%6s, %s\n" "$size" "$time"
+-}
+-
+-if [ $# -gt 0 ]; then
+-	printf "%6s,%5s,%5s,%8s\n" sz usr sys real
+-	exit 0
+-fi
+-new_tar
+-run_tar
 -- 
 1.5.3.8
 
