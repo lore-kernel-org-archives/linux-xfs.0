@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7670E7FAA
-	for <xfs@oss.sgi.com>; Thu, 14 Mar 2013 18:26:38 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5FE96304048
-	for <xfs@oss.sgi.com>; Thu, 14 Mar 2013 16:26:35 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id mBw8dwwKQeoyC7L8 for
-	<xfs@oss.sgi.com>; Thu, 14 Mar 2013 16:26:34 -0700 (PDT)
-Message-ID: <51425CA6.3010100@redhat.com>
-Date: Thu, 14 Mar 2013 18:26:30 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B41FD7FAA
+	for <xfs@oss.sgi.com>; Thu, 14 Mar 2013 18:36:36 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7D3248F8050
+	for <xfs@oss.sgi.com>; Thu, 14 Mar 2013 16:36:36 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	ZrdZ24F9PtQWRSMK for <xfs@oss.sgi.com>;
+	Thu, 14 Mar 2013 16:36:34 -0700 (PDT)
+Date: Fri, 15 Mar 2013 10:36:31 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Pathological allocation pattern with direct IO
+Message-ID: <20130314233631.GB21651@dastard>
+References: <20130306202210.GA1318@quack.suse.cz>
+	<20130307050325.GS23616@dastard>
+	<20130307102406.GA6723@quack.suse.cz>
+	<20130308013525.GZ23616@dastard>
+	<20130312110100.GC13152@quack.suse.cz>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: test writing to device node on an RO filesystem
-References: <514243C0.1000309@redhat.com>
-	(sfid-20130315_001049_792066_0DB10787)
-	<201303150020.57326.Martin@lichtvoll.de>
-In-Reply-To: <201303150020.57326.Martin@lichtvoll.de>
+Content-Disposition: inline
+In-Reply-To: <20130312110100.GC13152@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,152 +29,135 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Martin Steigerwald <Martin@lichtvoll.de>
+To: Jan Kara <jack@suse.cz>
 Cc: xfs@oss.sgi.com
 
-On 3/14/13 6:20 PM, Martin Steigerwald wrote:
-> Am Donnerstag, 14. M=E4rz 2013 schrieb Eric Sandeen:
->> we should be able to open device nodes for writing even
->> if they live on a readonly filesytem.
-> =
+On Tue, Mar 12, 2013 at 12:01:00PM +0100, Jan Kara wrote:
+> On Fri 08-03-13 12:35:25, Dave Chinner wrote:
+> > On Thu, Mar 07, 2013 at 11:24:06AM +0100, Jan Kara wrote:
+> > > But really I was wondering about usefulness of XFS_ALLOCTYPE_NEAR_BNO
+> > > heuristic. Sure the seek time depends on the distance so if we are speaking
+> > > about allocating single extent then XFS_ALLOCTYPE_NEAR_BNO is useful but
+> > > once that strategy would allocate two or three consecutive extents you've
+> > > lost all the benefit and you would be better off if you started allocating
+> > > from the start of the free space.
+>   <snip>
+> > Hence repeated backwards allocation is, in many cases, desirable
+> > behaviour, and in others it doesn't make any difference. And with it
+> > being easy to work around for the few cases where it is tripped over
+> > on aging filesystems, there hasn't been a great deal of need to
+> > change the behaviour.
+>   Thanks for explanation!
 
-> Just saw a typo. See below.
+No problems - there's a lot of stuff in my head that simply isn't
+documented anywhere, and it would take months of work to document
+it so I've never written it down...
 
-Just informational ;)  Ok, I can fix it up unless SGI just does it on merge.
+> > I suspect we don't even need to detect the backwards allocation
+> > pattern at all - if we are falling back from an
+> > XFS_ALLOCTYPE_THIS_BNO allocation, we know that the target cannot be
+> > allocated and so we *might* end up doing a backwards allocation.
+> > Hence I don't think it will not hurt at all to simply say "select
+> > the start of the next candidate free extent" for a file data
+> > allocations in this case. That would completely avoid needing to
+> > detect repeated backwards allocations and ensure that subsequent
+> > allocations after the backwards jump to the start of the large free
+> > extent then go forwards as intended...
+>   Yes, I was wondering about whether this strategy won't be good enough as
+> well. But there's one case I'm afraid of: Suppose you have a small file so
+> that it gets written out in one request and fits in a single extent of
+> blocks. Then it is somewhat advantageous to allocate from the end of the
+> free extent because that is closer to the inode and thus reduces
+> inode-to-data seek time. That's why I was suggesting maybe we could use
+> this logic only for larger files or something like that. Hum, maybe if we
+> didn't use this strategy for initial file extent, it would be enough.
+> That's already handled specially in the allocator so it shouldn't be a
+> problem to detect. What do you think?
 
-Thanks,
--Eric
+It took me a couple of readings to work out what you meant here.
+You are wondering if selecting the start of a free extent for the
+initial data for small files is the right thing to do as it may not
+be "closest", right?
 
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->> ---
->>
->> (I may have *cough* broken this on a backport once, hence the test)
->>
->> diff --git a/315 b/315
->> new file mode 100755
->> index 0000000..8b8ecc6
->> --- /dev/null
->> +++ b/315
->> @@ -0,0 +1,79 @@
->> +#! /bin/bash
->> +# FS QA Test No. 315
->> +#
->> +# Test that we can write to a device node residing on a RO filesystem
->> +#
->> +#-----------------------------------------------------------------------
->> +# Copyright (c) 2013 Red Hat, Inc.  All Rights Reserved.
->> +#
->> +# This program is free software; you can redistribute it and/or
->> +# modify it under the terms of the GNU General Public License as
->> +# published by the Free Software Foundation.
->> +#
->> +# This program is distributed in the hope that it would be useful,
->> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
->> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
->> +# GNU General Public License for more details.
->> +#
->> +# You should have received a copy of the GNU General Public License
->> +# along with this program; if not, write the Free Software Foundation,
->> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
->> +#-----------------------------------------------------------------------
->> +#
->> +# creator
->> +owner=3Dsandeen@redhat.com
->> +
->> +seq=3D`basename $0`
->> +echo "QA output created by $seq"
->> +
->> +here=3D`pwd`
->> +tmp=3D/tmp/$$
->> +status=3D1	# failure is the default!
->> +trap "_cleanup; exit \$status" 0 1 2 3 15
->> +
->> +_cleanup()
->> +{
->> +    cd /
->> +    rm -f $tmp.*
->> +}
->> +
->> +# get standard environment, filters and checks
->> +. ./common.rc
->> +. ./common.filter
->> +
->> +# real QA test starts here
->> +
->> +# Modify as appropriate.
->> +_supported_fs generic
->> +_supported_os Linux
->> +_require_scratch
->> +
->> +DEVNULL=3D$SCRATCH_MNT/devnull
->> +DEVZERO=3D$SCRATCH_MNT/devzero
->> +
->> +_scratch_mount
->> +
->> +rm -f $DEVNULL $DEVZERO
->> +
->> +mknod $DEVNULL c 1 3 || _fail "Could not create devnull device"
->> +mknod $DEVZERO c 1 5 || _fail "Could not create devzero device"
->> +
->> +_scratch_unmount || _fail "Could not unmount scratch device"
->> +_scratch_mount -o ro || _fail "Could not remount scratch readonly"
->> +
->> +# We should be able to read & write to/from these devices even on an RO
->> fs +echo "=3D=3D try to create new file"
->> +touch $SCRATCH_MNT/this_should_fail 2>&1 | _filter_scratch
->> +echo "=3D=3D prite to null device"
-> =
+The thing is, we don't know if the inode is going to be written to
+again, and so there is no context to be able to determine if we need
+to be able to do a subsequent THIS_BNO exact allocation in
+subsequent allocations. Because XFS is designed for large files and
+high bandwidth IO, it is assumed that contiguous allocation is the
+most important factor in determining where to allocate a block.
+Hence even for a small allocation, the assumption is that there will
+be another contiguous allocation request and another and another....
 
-> prite =3D> pwrite
-> =
+Hence XFS always tries to place new files at the start of a large
+freespace extent, not at the end, because it is assumed that files
+will always grow in the short term.  The thing is, this is all
+*very* complicated, and there's a lot of context that needs to be
+understood that, as I said above, isn't really documented anywhere.
+So, more context:
 
->> +xfs_io -c "pwrite 0 512" /dev/null | _filter_xfs_io
->> +echo "=3D=3D pread from zero device"
->> +xfs_io -c "pread 0 512" /dev/zero | _filter_xfs_io
->> +
->> +echo "=3D=3D truncating write to null device"
->> +echo foo >> $DEVNULL 2>&1 | _filter_scratch
->> +echo "=3D=3D appending write to null device"
->> +echo foo >> $DEVNULL 2>&1 | _filter_scratch
->> +
->> +# success, all done
->> +status=3D0
->> +exit
->> diff --git a/315.out b/315.out
->> new file mode 100644
->> index 0000000..d07c567
->> --- /dev/null
->> +++ b/315.out
->> @@ -0,0 +1,11 @@
->> +QA output created by 315
->> +=3D=3D try to create new file
->> +touch: cannot touch `SCRATCH_MNT/this_should_fail': Read-only file
->> system +=3D=3D prite to null device
->> +wrote 512/512 bytes at offset 0
->> +XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
->> +=3D=3D pread from zero device
->> +read 512/512 bytes at offset 0
->> +XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
->> +=3D=3D truncating write to null device
->> +=3D=3D appending write to null device
->> diff --git a/group b/group
->> index fcbdfb6..fd838ef 100644
->> --- a/group
->> +++ b/group
->> @@ -430,3 +430,4 @@ stress
->>  305 aio dangerous enospc rw stress
->>  313 auto quick
->>  314 auto
->> +315 auto rw
-> =
+We are searching left/right because the extent size we want to
+allocate resulted in a by-size btree lookup returning a btree block
+that is not at the end of the tree. i.e. we've hit a btree block
+that contains free space extents of roughly the same size as the
+extent we want to allocate rather than free space extents mcuh
+larger than the size we need.
 
-> Thanks,
-> =
+If we hit the last block - we have large contiguous free space
+extents and so we do a linear search to select the freespace extent
+that is *closest* to the target block, and allocate from the front
+of it. Hence subsequent THIS_BNO allocations will work just fine as
+there's plenty of contiguous free space at the end of the
+allocation.
 
+However, if we don't hit the last block it means there is some
+amount of free space fragmentation present in the filesystem. This
+means we can't use a by-size lookup to determine the closest free
+extent that would fit the allocation. If freespace fragementation is
+bad, there might be tens of thousands of free extents of that size
+in the tree, and selecting the closest would require a linear search
+through all the blocks. It's prohibitively expensive from both a CPU
+and Io point of view, so that isn't done.
+
+[ Freespace fragmentation of this style will occur from having an
+application that does concurrent, identically sized allocations that
+are small compared to the eventual file size.  e.g. using direct IO
+in 16MB chunks to write files that are tens of GB in length. Over
+time, extents will get interleaved and then when you remove some
+files you end up with smaller freespace extents, which then get
+interleaved into more files, and when some of them get removed you
+get even smaller freespace extents. ]
+
+It is when we see this sort of freespace fragmentation that the
+NEAR_BNO allocation falls back to the second algorithm and search
+left and right from the target block in the by-block freespace tree.
+This *may* find a large extent that is in the last block of by-size
+tree and this is the trigger for backwards allocation to occur. If
+we were to have found the last by-size btree block in the initial
+by-size lookup, this is the extent that would have been selected by
+that algorithm, and we would have selected the front of the
+freespace extent, not the end of it.
+
+So for data allocation, it is quite clear that there is a
+significant difference between the way the free space extent is
+treated when we carve a chunk out of it when we compare the two
+algorithms.  Hence if we simply change the way we select the best
+part of the extent to use for data allocation to match the method
+used when we select a large free space from the by-size tree, we'll
+stop this repeated backwards allocation problem from occurring and
+have similar extent selection behaviour for data allocation not
+matter which algorithm finds a the closest large freespace
+extent....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
