@@ -1,30 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 51DA67FAA
-	for <xfs@oss.sgi.com>; Thu, 14 Mar 2013 17:02:53 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E7F207FAA
+	for <xfs@oss.sgi.com>; Thu, 14 Mar 2013 18:21:01 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D2320AC008
-	for <xfs@oss.sgi.com>; Thu, 14 Mar 2013 15:02:49 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	mzQN87XEzXdFBP3b for <xfs@oss.sgi.com>;
-	Thu, 14 Mar 2013 15:02:48 -0700 (PDT)
-Date: Fri, 15 Mar 2013 09:02:44 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS filesystem on EC2 instance corrupts and shuts down
-Message-ID: <20130314220244.GA21651@dastard>
-References: <CAOdS1h=7X4O1O7X8YOwxtLm7G=fc+J+6hJxJ1RKbDmfTZXTpeg@mail.gmail.com>
-	<51373DB8.2020707@redhat.com>
-	<CAOdS1hnXGj9puaHxeToqmpK40A-3WvJnM7=5HckpyyZYqZTvEQ@mail.gmail.com>
-	<51373FC1.6010101@redhat.com>
-	<CAOurMUeasru6ekDYcvVR1QnaWVJFV+-coZsUG5SgG6LnENBvXg@mail.gmail.com>
-	<513751F2.2060109@redhat.com>
-	<CAOdS1hngSuHn_HiremLyUS7Qd9eZ68=8arfBuHnEpwXQaBw9Wg@mail.gmail.com>
-	<5140CBE3.80705@sandeen.net> <20130313234213.GW21651@dastard>
-	<CAOdS1hnVoMtXnOrECrU8xUyRn82UUJ=jMzX0_odnAs0GH8V-yA@mail.gmail.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A77178F8059
+	for <xfs@oss.sgi.com>; Thu, 14 Mar 2013 16:21:01 -0700 (PDT)
+Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by
+	cuda.sgi.com with ESMTP id 5G5672ykUlPTU7Zm for
+	<xfs@oss.sgi.com>; Thu, 14 Mar 2013 16:20:59 -0700 (PDT)
+From: Martin Steigerwald <Martin@lichtvoll.de>
+Subject: Re: [PATCH] xfstests: test writing to device node on an RO filesystem
+Date: Fri, 15 Mar 2013 00:20:56 +0100
+References: <514243C0.1000309@redhat.com>
+	(sfid-20130315_001049_792066_0DB10787)
+In-Reply-To: <514243C0.1000309@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAOdS1hnVoMtXnOrECrU8xUyRn82UUJ=jMzX0_odnAs0GH8V-yA@mail.gmail.com>
+Message-Id: <201303150020.57326.Martin@lichtvoll.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,66 +24,147 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Shrinath M <shrinath.m@webyog.com>
-Cc: Sabyasachi Ruj <sabyasachi.ruj@webyog.com>, Vivek Goel <vivek.goel@webyog.com>, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com, Supratik Goswami <supratik.goswami@webyog.com>, Ric Wheeler <rwheeler@redhat.com>
+To: xfs@oss.sgi.com
+Cc: Eric Sandeen <sandeen@redhat.com>
 
-On Thu, Mar 14, 2013 at 06:58:19AM +0530, Shrinath M wrote:
-> Thanks Ben, Dave and Eric.
-> 
-> Eric,
-> >>but I am wondering if there might be more information before this which
-> is not in your trimmed logs.
-> No, this was the first entry every time we have it in /var/log/messages.
-> dmesg also holds the same. After reboot, it simply fixes without anyone
-> doing anything.
-> 
-> The Linux we are running is definitely amazon baked one, looks like this -
-> $~: uname -a Linux ip-100-0-100-1 3.2.34-55.46.amzn1.x86_64 #1 SMP Tue Nov
-> 20 10:06:15 UTC 2012 x86_64 x86_64 x86_64 GNU/Linux
+Am Donnerstag, 14. M=E4rz 2013 schrieb Eric Sandeen:
+> we should be able to open device nodes for writing even
+> if they live on a readonly filesytem.
 
-So, this is an amazon special kernel by the looks of it. I think
-that only amazon can really help you track down the problem...
+Just saw a typo. See below.
+ =
 
->  - dmesg shows something like this after repairing/rebooting -
-> 
-> [    8.414176] SGI XFS with ACLs, security attributes, realtime, large
-> block/inode numbers, no debug enabled
-> [    8.415342] SGI XFS Quota Management subsystem
-> [    8.417664] XFS (md0): Mounting Filesystem
-> [    8.771553] XFS (md0): Starting recovery (logdev: internal)
-> [    9.977325] XFS (md0): Ending recovery (logdev: internal)
-> 
-> Check the first line there, it says no debug enabled. How good/bad is this
-> debug mode in production environments? We are not getting any corruption in
-> our local/test environments, in production, we are getting it once on every
-> third day.
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> =
 
-debug shoul dnot be used in production environments. It'll cause
-panics in situations where production kernels continue just
-fine, and it changes the allocation algorithms to give better code
-coverage for testing rather than optimal layout.
+> (I may have *cough* broken this on a backport once, hence the test)
+> =
 
-> Dave,
-> You say unlinked inode list, but if that, it should have an entry in
-> /var/log/messages, right?
+> diff --git a/315 b/315
+> new file mode 100755
+> index 0000000..8b8ecc6
+> --- /dev/null
+> +++ b/315
+> @@ -0,0 +1,79 @@
+> +#! /bin/bash
+> +# FS QA Test No. 315
+> +#
+> +# Test that we can write to a device node residing on a RO filesystem
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2013 Red Hat, Inc.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +#
+> +# creator
+> +owner=3Dsandeen@redhat.com
+> +
+> +seq=3D`basename $0`
+> +echo "QA output created by $seq"
+> +
+> +here=3D`pwd`
+> +tmp=3D/tmp/$$
+> +status=3D1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +    cd /
+> +    rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common.rc
+> +. ./common.filter
+> +
+> +# real QA test starts here
+> +
+> +# Modify as appropriate.
+> +_supported_fs generic
+> +_supported_os Linux
+> +_require_scratch
+> +
+> +DEVNULL=3D$SCRATCH_MNT/devnull
+> +DEVZERO=3D$SCRATCH_MNT/devzero
+> +
+> +_scratch_mount
+> +
+> +rm -f $DEVNULL $DEVZERO
+> +
+> +mknod $DEVNULL c 1 3 || _fail "Could not create devnull device"
+> +mknod $DEVZERO c 1 5 || _fail "Could not create devzero device"
+> +
+> +_scratch_unmount || _fail "Could not unmount scratch device"
+> +_scratch_mount -o ro || _fail "Could not remount scratch readonly"
+> +
+> +# We should be able to read & write to/from these devices even on an RO
+> fs +echo "=3D=3D try to create new file"
+> +touch $SCRATCH_MNT/this_should_fail 2>&1 | _filter_scratch
+> +echo "=3D=3D prite to null device"
 
-It did - the error that Eric pointed out.
+prite =3D> pwrite
 
-> Anyway, how can we create this situation?
+> +xfs_io -c "pwrite 0 512" /dev/null | _filter_xfs_io
+> +echo "=3D=3D pread from zero device"
+> +xfs_io -c "pread 0 512" /dev/zero | _filter_xfs_io
+> +
+> +echo "=3D=3D truncating write to null device"
+> +echo foo >> $DEVNULL 2>&1 | _filter_scratch
+> +echo "=3D=3D appending write to null device"
+> +echo foo >> $DEVNULL 2>&1 | _filter_scratch
+> +
+> +# success, all done
+> +status=3D0
+> +exit
+> diff --git a/315.out b/315.out
+> new file mode 100644
+> index 0000000..d07c567
+> --- /dev/null
+> +++ b/315.out
+> @@ -0,0 +1,11 @@
+> +QA output created by 315
+> +=3D=3D try to create new file
+> +touch: cannot touch `SCRATCH_MNT/this_should_fail': Read-only file
+> system +=3D=3D prite to null device
+> +wrote 512/512 bytes at offset 0
+> +XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+> +=3D=3D pread from zero device
+> +read 512/512 bytes at offset 0
+> +XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
+> +=3D=3D truncating write to null device
+> +=3D=3D appending write to null device
+> diff --git a/group b/group
+> index fcbdfb6..fd838ef 100644
+> --- a/group
+> +++ b/group
+> @@ -430,3 +430,4 @@ stress
+>  305 aio dangerous enospc rw stress
+>  313 auto quick
+>  314 auto
+> +315 auto rw
 
-If I knew, I would have fixed the bug already. You need to work out
-what in your production environment is triggering it...
+Thanks,
+-- =
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
+GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
 
 _______________________________________________
 xfs mailing list
