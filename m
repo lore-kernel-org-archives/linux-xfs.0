@@ -1,23 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1D8CD7F37
-	for <xfs@oss.sgi.com>; Thu, 14 Mar 2013 01:18:54 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id EBF3E304067
-	for <xfs@oss.sgi.com>; Wed, 13 Mar 2013 23:18:53 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	gTyXtgsYKA0W4AkD for <xfs@oss.sgi.com>;
-	Wed, 13 Mar 2013 23:18:43 -0700 (PDT)
-Date: Thu, 14 Mar 2013 17:18:39 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 00/14] xfs: Support for interacting with multiple user
-	namespaces
-Message-ID: <20130314061839.GY21651@dastard>
-References: <87boan3prc.fsf@xmission.com>
+	by oss.sgi.com (Postfix) with ESMTP id 42E807F37
+	for <xfs@oss.sgi.com>; Thu, 14 Mar 2013 02:39:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 27D4C304039
+	for <xfs@oss.sgi.com>; Thu, 14 Mar 2013 00:39:45 -0700 (PDT)
+Received: from mx3-phx2.redhat.com (mx3-phx2.redhat.com [209.132.183.24]) by
+	cuda.sgi.com with ESMTP id FUJepDEYO1pnerQy for
+	<xfs@oss.sgi.com>; Thu, 14 Mar 2013 00:39:43 -0700 (PDT)
+Date: Thu, 14 Mar 2013 03:39:33 -0400 (EDT)
+From: CAI Qian <caiqian@redhat.com>
+Message-ID: <740792090.842745.1363246773807.JavaMail.root@redhat.com>
+In-Reply-To: <20130313044307.GV21651@dastard>
+Subject: Re: 3.9-rc2 xfs panic
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <87boan3prc.fsf@xmission.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,153 +26,152 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Eric W. Biederman" <ebiederm@xmission.com>
-Cc: Alex Elder <elder@kernel.org>, Linux Containers <containers@lists.linux-foundation.org>, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, linux-fsdevel@vger.kernel.org, "Serge E. Hallyn" <serge@hallyn.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, Mar 13, 2013 at 03:21:11PM -0700, Eric W. Biederman wrote:
-> 
-> Or replace uids, gids, and projids with kuids, kgids, and kprojids
-> 
-> In support of user namespaces I have introduced into the kernel kuids,
-> kgids, and kprojids.  The most important characteristic of these ids is
-> that they are not assignment compatible with uids, gids, and projids
-> coming from userspace nor are they assignment compatible with uids, gids
-> or projids stored on disk.  This assignment incompatibility makes it
-> easy to ensure that conversions are introduced at the edge of userspace
-> and at the interface between on-disk and in-memory data structures.
+OK, this time I reproduced this panic on both x64 and ppc64
+systems with LVM partitions using the default block size as
+well as enabling debugging and memory poisoning options.
 
-TL;DR:
+- ppc64 trace:
+(nothing looks like really interesting prior to this)
+[ 2221.546337] XFS (dm-0): Corruption detected. Unmount and run xfs_repair
+[ 2221.546345] XFS (dm-0): bad inode magic/vsn daddr 64 #8 (magic=5858)
+[ 2221.546350] XFS: Assertion failed: 0, file: fs/xfs/xfs_inode.c, line: 416
+[ 2221.546383] ------------[ cut here ]------------
+[ 2221.546386] kernel BUG at fs/xfs/xfs_message.c:100!
+[ 2221.546391] Oops: Exception in kernel mode, sig: 5 [#1]
+[ 2221.546394] SMP NR_CPUS=1024 NUMA pSeries
+[ 2221.546398] Modules linked in: btrfs raid6_pq xor lockd sunrpc nf_conntrack_netbios_ns nf_conntrack_broadcast ipt_MASQUERADE ip6table_mangle ip6t_REJECT nf_conntrack_ipv6 nf_defrag_ipv6 iptable_nat nf_nat_ipv4 nf_nat iptable_mangle ipt_REJECT nf_conntrack_ipv4 nf_defrag_ipv4 xt_conntrack nf_conntrack ebtable_filter ebtables ip6table_filter ip6_tables iptable_filter ip_tables sg ibmveth xfs libcrc32c sd_mod crc_t10dif ibmvscsi scsi_transport_srp scsi_tgt dm_mirror dm_region_hash dm_log dm_mod
+[ 2221.546445] NIP: d000000002758bbc LR: d000000002758bbc CTR: 0000000001766760
+[ 2221.546449] REGS: c00000000a393780 TRAP: 0700   Not tainted  (3.9.0-rc2+)
+[ 2221.546452] MSR: 8000000000029032 <SF,EE,ME,IR,DR,RI>  CR: 286b4b24  XER: 0000000e
+[ 2221.546463] SOFTE: 1
+[ 2221.546465] CFAR: d00000000275881c
+[ 2221.546468] TASK = c00000000a423dc0[415] 'kworker/16:1H' THREAD: c00000000a390000 CPU: 16
+GPR00: d000000002758bbc c00000000a393a00 d00000000282f770 000000000000003d 
+GPR04: 0000000000000000 0000000000000000 0000000000010000 0000000000000000 
+GPR08: 0000000000000007 0000000000000000 0000000000000000 0000000000003fef 
+GPR12: 00000000286b4b22 c00000000f244000 c0000000000b57e0 c0000000fb6dba90 
+GPR16: 0000000000000000 0000000000000000 c0000000e76614b0 d00000000282f770 
+GPR20: d00000000282f770 d00000000282f770 d00000000282f770 d00000000282f770 
+GPR24: d00000000282f770 d000000002743554 0000000000000020 d000000002802988 
+GPR28: c00000005758e700 c0000000e7661290 0000000000000008 c0000000e7423dc8 
+[ 2221.546545] NIP [d000000002758bbc] .assfail+0x2c/0x30 [xfs]
+[ 2221.546564] LR [d000000002758bbc] .assfail+0x2c/0x30 [xfs]
+[ 2221.546568] Call Trace:
+[ 2221.546586] [c00000000a393a00] [d000000002758bbc] .assfail+0x2c/0x30 [xfs] (unreliable)
+[ 2221.546612] [c00000000a393a70] [d0000000027a8704] .xfs_inode_buf_verify+0x134/0x220 [xfs]
+[ 2221.546632] [c00000000a393b50] [d000000002743554] .xfs_buf_iodone_work+0x64/0x150 [xfs]
+[ 2221.546639] [c00000000a393bd0] [c0000000000ad830] .process_one_work+0x1b0/0x4c0
+[ 2221.546644] [c00000000a393c70] [c0000000000ae078] .worker_thread+0x178/0x470
+[ 2221.546649] [c00000000a393d30] [c0000000000b58c8] .kthread+0xe8/0xf0
+[ 2221.546654] [c00000000a393e30] [c000000000009f64] .ret_from_kernel_thread+0x64/0x80
+[ 2221.546658] Instruction dump:
+[ 2221.546662] 60000000 7c0802a6 3d420000 7c691b78 7c862378 e88a90f0 7ca72b78 38600000 
+[ 2221.546672] 7d254b78 f8010010 f821ff91 4bfffc09 <0fe00000> 7c0802a6 3ce20000 3d420000 
+[ 2221.546685] ---[ end trace fd5756e02a75ba6a ]---
+[ 2221.548469] 
+[ 2221.548542] Unable to handle kernel paging request for data at address 0xffffffffffffffd8
+[ 2221.548552] Faulting instruction address: 0xc0000000000b5cc4
+[ 2221.548561] Oops: Kernel access of bad area, sig: 11 [#2]
+[ 2221.548577] SMP NR_CPUS=1024 NUMA pSeries
+[ 2221.548592] Modules linked in: btrfs raid6_pq xor lockd sunrpc nf_conntrack_netbios_ns nf_conntrack_broadcast ipt_MASQUERADE ip6table_mangle ip6t_REJECT nf_conntrack_ipv6 nf_defrag_ipv6 iptable_nat nf_nat_ipv4 nf_nat iptable_mangle ipt_REJECT nf_conntrack_ipv4 nf_defrag_ipv4 xt_conntrack nf_conntrack ebtable_filter ebtables ip6table_filter ip6_tables iptable_filter ip_tables sg ibmveth xfs libcrc32c sd_mod crc_t10dif ibmvscsi scsi_transport_srp scsi_tgt dm_mirror dm_region_hash dm_log dm_mod
+[ 2221.548677] NIP: c0000000000b5cc4 LR: c0000000000aede8 CTR: c0000000000d3d80
+[ 2221.548685] REGS: c00000000a392e40 TRAP: 0300   Tainted: G      D       (3.9.0-rc2+)
+[ 2221.548692] MSR: 8000000002009032 <SF,VEC,EE,ME,IR,DR,RI>  CR: 426b4b48  XER: 00000001
+[ 2221.548714] SOFTE: 0
+[ 2221.548718] CFAR: c000000000005f1c
+[ 2221.548724] DAR: ffffffffffffffd8, DSISR: 40000000
+[ 2221.548732] TASK = c00000000a423dc0[415] 'kworker/16:1H' THREAD: c00000000a390000 CPU: 16
+GPR00: c000000000738fac c00000000a3930c0 c000000001114018 c00000000a423dc0 
+GPR04: 0000000000000010 c00000000a423e30 0000000000000000 0000000000000001 
+GPR08: 0000000000000001 0000000000000000 c000000001352f08 00000000161aad9e 
+GPR12: 00000000846b4b44 c00000000f244000 c000000001044018 c00000000008d470 
+GPR16: c000000000b04880 c0000000011b4018 c000000001074018 c000000000b04880 
+GPR20: c000000000b04880 0000000000c10000 0000000000000010 c000000000b04880 
+GPR24: c000000000b04880 0000000000000010 c00000000a424200 c00000000a390000 
+GPR28: c00000000117c9d8 c000000000b04880 c000000001714880 0000000000000010 
+[ 2221.548853] NIP [c0000000000b5cc4] .kthread_data+0x4/0x10
+[ 2221.548862] LR [c0000000000aede8] .wq_worker_sleeping+0x18/0xd0
+[ 2221.548868] Call Trace:
+[ 2221.548874] [c00000000a3930c0] [c0000000007495a4] .__slab_free+0x84/0x310 (unreliable)
+[ 2221.548883] [c00000000a393140] [c000000000738fac] .__schedule+0x6fc/0x940
+[ 2221.548891] [c00000000a3933c0] [c00000000008d470] .do_exit+0x730/0xb40
+[ 2221.548899] [c00000000a3934c0] [c00000000001e0d4] .die+0x2e4/0x440
+[ 2221.548906] [c00000000a393570] [c00000000001e444] ._exception+0x1a4/0x1d0
+[ 2221.548913] [c00000000a393710] [c0000000000063c8] program_check_common+0x148/0x180
+[ 2221.548994] --- Exception: 700 at .assfail+0x2c/0x30 [xfs]
+[ 2221.548994]     LR = .assfail+0x2c/0x30 [xfs]
+[ 2221.549043] [c00000000a393a70] [d0000000027a8704] .xfs_inode_buf_verify+0x134/0x220 [xfs]
+[ 2221.549086] [c00000000a393b50] [d000000002743554] .xfs_buf_iodone_work+0x64/0x150 [xfs]
+[ 2221.549094] [c00000000a393bd0] [c0000000000ad830] .process_one_work+0x1b0/0x4c0
+[ 2221.549102] [c00000000a393c70] [c0000000000ae078] .worker_thread+0x178/0x470
+[ 2221.549108] [c00000000a393d30] [c0000000000b58c8] .kthread+0xe8/0xf0
+[ 2221.549115] [c00000000a393e30] [c000000000009f64] .ret_from_kernel_thread+0x64/0x80
+[ 2221.549121] Instruction dump:
+[ 2221.549125] ebe1fff8 7c0803a6 4bfffdf4 e92d0258 e92903f8 e869ffc8 7863f7e2 4e800020 
+[ 2221.549138] 60000000 60000000 60000000 e92303f8 <e869ffd8> 4e800020 60000000 e92d0258 
+[ 2221.549151] ---[ end trace fd5756e02a75ba6b ]---
+[ 2221.552003] 
+[ 2221.552008] Fixing recursive fault but reboot is needed!
+[ 2281.608342] INFO: rcu_sched detected stalls on CPUs/tasks: { 16} (detected by 17, t=6002 jiffies, g=23049, c=23048, q=135)
+[ 2281.608362] Task dump for CPU 16:
+[ 2281.608367] kworker/16:1H   D 0000000000000000     0   415      2 0x00000800
+[ 2281.608374] Call Trace:
+[ 2281.608412] [c00000000a393770] [d000000002758bbc] .assfail+0x2c/0x30 [xfs] (unreliable)
+[ 2353.528157] sd 0:0:1:0: aborting command. lun 0x8100000000000000, tag 0xc0000000fc142650
+[ 2406.758570] sd 0:0:1:0: aborted task tag 0xc0000000fc142650 completed
+[ 2461.657815] INFO: rcu_sched detected stalls on CPUs/tasks: { 16} (detected by 18, t=24007 jiffies, g=23049, c=23048, q=511)
+[ 2461.657838] Task dump for CPU 16:
+[ 2461.657843] kworker/16:1H   D 0000000000000000     0   415      2 0x00000800
+[ 2461.657851] Call Trace:
+[ 2461.657900] [c00000000a393770] [d000000002758bbc] .assfail+0x2c/0x30 [xfs] (unreliable)
 
-Compared to the last version of this patchset I NACKed, this version
-increases the per-inode memory footprint by over 100 bytes (i.e. by
-more than 10%), introduces a double copy of the inode core data into
-the *hottest path in XFS*, breaks log recovery and fails to address
-a single NACK I gave for the previous round of the patch set.
+- x64 trace:
+[18922.742140] XFS: Assertion failed: XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0, file: fs/xfs/xfs_super.c, line: 964
+[18922.744338] ------------[ cut here ]------------
+[18922.745267] kernel BUG at fs/xfs/xfs_message.c:100!
+[18922.746294] invalid opcode: 0000 [#1] SMP
+[18922.747261] Modules linked in: btrfs(F) zlib_deflate(F) raid6_pq(F) xor(F) lockd(F) sunrpc(F) nf_conntrack_netbios_ns(F) nf_conntrack_broadcast(F) ipt_MASQUERADE(F) ip6table_mangle(F) ip6t_REJECT(F) nf_conntrack_ipv6(F) nf_defrag_ipv6(F) iptable_nat(F) nf_nat_ipv4(F) nf_nat(F) iptable_mangle(F) ipt_REJECT(F) nf_conntrack_ipv4(F) nf_defrag_ipv4(F) xt_conntrack(F) nf_conntrack(F) ebtable_filter(F) ebtables(F) ip6table_filter(F) ip6_tables(F) iptable_filter(F) ip_tables(F) sg(F) kvm_amd(F) kvm(F) bnx2(F) pcspkr(F) microcode(F) shpchp(F) amd64_edac_mod(F) serio_raw(F) ipmi_si(F) edac_mce_amd(F) hpwdt(F) ipmi_msghandler(F) edac_core(F) k10temp(F) hpilo(F) xfs(F) libcrc32c(F) sr_mod(F) cdrom(F) hpsa(F) radeon(F) ata_generic(F) qla2xxx(F) i2c_algo_bit(F) pata_acpi(F) drm_kms_helper(F) scsi_transport_fc(F) ttm(F) scsi_tgt(F) drm(F) pata_amd(F) cciss(F) libata(F) i2c_core(F) dm_mirror(F) dm_region_hash(F) dm_log(F) dm_mod(F)
+[18922.764413] CPU 4
+[18922.764815] Pid: 23999, comm: umount Tainted: GF            3.9.0-rc2+ #1 HP ProLiant DL585 G5
+[18922.766619] RIP: 0010:[<ffffffffa03807b2>]  [<ffffffffa03807b2>] assfail+0x22/0x30 [xfs]
+[18922.768316] RSP: 0018:ffff8801c9575d38  EFLAGS: 00010292
+[18922.769482] RAX: 0000000000000077 RBX: ffff88010da1bf08 RCX: ffff88007da8ffe8
+[18922.770812] RDX: 0000000000000000 RSI: ffff88007da8e3b8 RDI: 0000000000000246
+[18922.772117] RBP: ffff8801c9575d38 R08: ffffffff81a0f320 R09: 00000000000014ce
+[18922.773429] R10: 0000000000000000 R11: 00000000000014cd R12: ffff88010da1bf08
+[18922.774715] R13: ffff88010da1bdc0 R14: ffff880073e53ab8 R15: ffff880072bfef60
+[18922.775998] FS:  00007fde048ed880(0000) GS:ffff88007da80000(0000) knlGS:0000000000000000
+[18922.777433] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+[18922.778446] CR2: 00007fde044c264f CR3: 00000000737c5000 CR4: 00000000000007e0
+[18922.779730] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[18922.781019] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+[18922.782305] Process umount (pid: 23999, threadinfo ffff8801c9574000, task ffff88019a24d040)
+[18922.783836] Stack:
+[18922.784236]  ffff8801c9575d68 ffffffffa0381664 ffff8801c9575d68 ffff88010da1bf08
+[18922.785773]  ffff88010da1c008 ffffffffa03f3ca0 ffff8801c9575d88 ffffffff811bb37c
+[18922.787466]  ffff88010da1bf08 ffff88010da1bf08 ffff8801c9575db8 ffffffff811bb4bf
+[18922.788982] Call Trace:
+[18922.789541]  [<ffffffffa0381664>] xfs_fs_destroy_inode+0x84/0x140 [xfs]
+[18922.790878]  [<ffffffff811bb37c>] destroy_inode+0x3c/0x70
+[18922.792087]  [<ffffffff811bb4bf>] evict+0x10f/0x1a0
+[18922.792991]  [<ffffffff811bb58e>] dispose_list+0x3e/0x60
+[18922.793967]  [<ffffffff811bc058>] evict_inodes+0xb8/0x100
+[18922.794937]  [<ffffffff811a3f53>] generic_shutdown_super+0x53/0xf0
+[18922.796064]  [<ffffffff811a4020>] kill_block_super+0x30/0x80
+[18922.797091]  [<ffffffff811a4407>] deactivate_locked_super+0x57/0x80
+[18922.798198]  [<ffffffff811a4f8e>] deactivate_super+0x4e/0x70
+[18922.799235]  [<ffffffff811bfb17>] mntput_no_expire+0xd7/0x130
+[18922.800310]  [<ffffffff811c09fc>] sys_umount+0x9c/0x3c0
+[18922.801273]  [<ffffffff81630399>] system_call_fastpath+0x16/0x1b
+[18922.802393] Code: e8 f4 fb ff ff 0f 0b 66 90 66 66 66 66 90 55 48 89 f1 41 89 d0 48 c7 c6 b0 e0 3f a0 48 89 fa 31 c0 48 89 e5 31 ff e8 1e fc ff ff <0f> 0b 66 66 66 2e 0f 1f 84 00 00 00 00 00 66 66 66 66 90 55 48
+[18922.806375] RIP  [<ffffffffa03807b2>] assfail+0x22/0x30 [xfs]
+[18922.807459]  RSP <ffff8801c9575d38>
+[18922.824045] ---[ end trace 133202f8e58b0c3c ]---
 
-So, NACK.
-
-> Converting xfs is an interesting challenge because of the way xfs
-> handles it's inode data is very atypical. 
-
-That you have to tell people that find it strange an unusual
-immediately indicates that you do not really understand the design
-and structure of the XFS code. This makes your refusal to listen to
-feedback from someone who is a subject matter expert all the more
-difficult to understand.
-
-I'll accept that you might forget something mentioned in a review
-when you post an update, but to ignore a second NACK for the same
-patch and posting it a third time unchanged is not the best way to
-make friends and influence people....
-
-And given that you didn't respond to a single review comment I made
-on the previous version of the patch, well, I have my doubts you are
-going to respond this time, either.  In previous reviews comments I
-have:
-	- outlined exactly how to provide a minimally invasive patch
-	  set that provides full namespace support as a first step
-	  in getting XFS to support namespaces.
-	- told you where the ondisk/in-memory boundaries are.
-	- told you that certain IDs are filesystem internal and not
-	  subject to namespaces.
-	- asked questions about how filesystems utilities are
-	  supposed to deal with namespaces (i.e. userspace impacts
-	  of ioctl interface changes). 
-
-And you haven't responded to any of them.  You can't selectively
-ignore review comments you don't like and then magically expect the
-reviewers to accept an almost-identical-but-even-more-broken patch
-set the next time around.
-
-> Given the number of ioctls that xfs supports it would be irresponsible to
-> do anything except insist that kuids, kgids, and kprojids are used in all of
-> in memory data structures of xfs, as otherwise it becomes trivially easy to
-> miss a needed conversion with the advent of a new ioctl.
-
-Eric, your rhetoric looks so fine and shiny on the wall, but it is
-utterly worthless.  You're telling us that userspace interface are
-absolutely necessary, but haven't provided any analysis, description
-or justification so we can judge the impact of the changes or review
-why you think the only way such changes can be made is your way.
-
-Nor have you provided any regression tests to verify that this shiny
-new namespace support is working as the maker has intended. IOWs,
-I've got no idea what the impact of changing all the ioctls will be,
-no way to verify it is correct and you sure as hell aren't going out
-of your way to make it easy for us to understand the impact, either.
-
-Further, I'm pretty sure that you are not even aware of the scope of
-the issues that namespace awareness raise for some of these XFS
-ioctls. I've previously asked some questions about behaviours of
-them, but like most of my other review comments you have ignored
-those questions.
-
-So, before we go changing anything ioctl related, here's some
-questions you need to answer:
-
-	- if you run bulkstat, what do we do with inodes that
-	  contain a ID owned by a namespace outside the current
-	  namespace?
-
-	- Can we even check the on-disk inode IDs are valid within a
-	  specific namespace within the kernel?
-
-	- open_by_handle() would appear to allow root in any
-	  namespace to open any file in the filesystem it has a
-	  valid handle for regardless of the namespace. Is this
-	  allowable? The output of bulkstat can be fed directly to
-	  open_by_handle(), so if bulkstat can return inodes outside
-	  the namespace, open-by-handle can open them and we can do
-	  invisible IO on them.
-
-	- Further, we can extract and set attributes directly by
-	  handle and, IIRC, that includes security/trusted namespace
-	  attributes....
-
-	- On the same measure, the handles used by XFS handle
-	  interfaces are identical to NFS handles and use the same
-	  code for decoding and dentry lookup. So, what do handle
-	  restrictions mean for NFS servers?
-
-	- have you considered that fs/fhandle.c raises many of these
-	  same issues?
-
-	- and seeing xfsdump and xfs_fsr use bulkstat and handles,
-	  what do new limitations on these interfaces mean for these
-	  utilities?
-
-	- How does xfs_dump/xfs_restore work if we convert all ids
-	  based on the current namespace? e.g. dump in one
-	  namespace, restore in another.
-
-	- How does xfs_dump/xfs_restore work if we *don't* convert
-	  all ids (i.e. export the on-disk values)?
-
-	- How do we document/communicate all these constraints/
-	  behaviours to users who might be completely unaware of
-	  them?
-
-IOWs, simply converting IDs the ioctls take in or emit is only a
-small part of the larger question of how they are supposed to behave
-in namespace containers. These questions need to be answered *in
-detail* and with *regression tests* before we accept any changes to
-the ioctl interfaces.
-
-Eric, I'm not trying to be difficult here - I'm holding the bar at
-the same height as it gets held for any significant XFS change that
-impacts userspace interfaces and behaviour. You don't maintain the
-XFS code, so you can just walk away once namespaces are "done" and
-not care that you've left a mess behind.
-
-And if you leave a mess, I'm the person who will have to clean it
-up. I don't want to have to clean up your mess, so I'm going to keep
-saying no until you can introduce namespace support without making a
-mess....
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+CAI Qian
 
 _______________________________________________
 xfs mailing list
