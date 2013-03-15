@@ -1,14 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B7EFD8039
-	for <xfs@oss.sgi.com>; Fri, 15 Mar 2013 13:15:18 -0500 (CDT)
-Message-ID: <5143654D.1000103@sgi.com>
-Date: Fri, 15 Mar 2013 13:15:41 -0500
-From: Rich Johnston <rjohnston@sgi.com>
+Received: from cthulhu.engr.sgi.com (cthulhu.engr.sgi.com [150.166.39.100])
+	by oss.sgi.com (Postfix) with ESMTP id 8D5198044
+	for <xfs@oss.sgi.com>; Fri, 15 Mar 2013 14:36:39 -0500 (CDT)
+Date: Fri, 15 Mar 2013 12:36:38 -0700
+From: Phil White <pwhite@sgi.com>
+Subject: Re: [PATCH 02/25] xfstests: remove bench infrastructure
+Message-ID: <20130315193635.GA2025@caliban.engr.sgi.com>
+References: <1363350489-22257-1-git-send-email-david@fromorbit.com>
+	<1363350489-22257-3-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Subject: Re: xfstests: 297: simple sparse copy testcase for btrfs
-References: <50F9C313.1000903@oracle.com> <513B6FCD.5080103@sandeen.net>
-In-Reply-To: <513B6FCD.5080103@sandeen.net>
+Content-Disposition: inline
+In-Reply-To: <1363350489-22257-3-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -17,22 +19,33 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Koen De Wit <koen.de.wit@oracle.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, linux-btrfs <linux-btrfs@vger.kernel.org>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Koen,
+On Fri, Mar 15, 2013 at 11:27:46PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> The benchmark framework inside xfstests is basically unused,
+> bitrotted and not very useful. If we need benchmarks, lets use a
+> real benchmark framework, not xfstests. Kill it to remove
+> dependencies on common and common.rc.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Thanks for submitting several new tests. Are you still interested in 
-these tests and willing to address the comments?
+I've been straightforward and clear in why I reposted the patch set and why
+I'm personally interested in the benchmark framework staying around.  I don't
+see value in explaining it again.
 
-Thanks
---Rich
+I don't see how it serves anyone.  I don't see how it serves the community
+to repost this rather than excluding this change, pushing this through, and
+improving xfstests.  The resultant exchange of mail does nothing but to
+litter everyone else's inbox.
 
-Thanks for the reviews Eric and Dave.
+-Phil
 
 _______________________________________________
 xfs mailing list
