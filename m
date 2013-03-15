@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 966228019
+	by oss.sgi.com (Postfix) with ESMTP id 07E858017
 	for <xfs@oss.sgi.com>; Fri, 15 Mar 2013 07:28:39 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 69306304039
-	for <xfs@oss.sgi.com>; Fri, 15 Mar 2013 05:28:39 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E8F14304039
+	for <xfs@oss.sgi.com>; Fri, 15 Mar 2013 05:28:38 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	cEFligcisMHGPDOq for <xfs@oss.sgi.com>;
+	p2CjxVGtX9iVLtR1 for <xfs@oss.sgi.com>;
 	Fri, 15 Mar 2013 05:28:37 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UGTkS-0001Zh-5O
-	for xfs@oss.sgi.com; Fri, 15 Mar 2013 23:28:36 +1100
+	(envelope-from <dave@fromorbit.com>) id 1UGTkI-0001Zg-4H
+	for xfs@oss.sgi.com; Fri, 15 Mar 2013 23:28:26 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UGTkI-0005qs-28
+	(envelope-from <dave@disappointment.disaster>) id 1UGTkI-0005qm-0s
 	for xfs@oss.sgi.com; Fri, 15 Mar 2013 23:28:26 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 08/25] xfstests: remove test expunge file support
-Date: Fri, 15 Mar 2013 23:27:52 +1100
-Message-Id: <1363350489-22257-9-git-send-email-david@fromorbit.com>
+Subject: [PATCH 07/25] xfstests: kill hangcheck stuff from check
+Date: Fri, 15 Mar 2013 23:27:51 +1100
+Message-Id: <1363350489-22257-8-git-send-email-david@fromorbit.com>
 In-Reply-To: <1363350489-22257-1-git-send-email-david@fromorbit.com>
 References: <1363350489-22257-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,90 +38,71 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Check supports an expunge file for tests - a way of marking tests
-not to run even if you specify it to run. Use is like this:
-
-$ echo 002 > expunged
-test-2:~/src/xfstests-dev$ sudo ./check 001-003
-FSTYP         -- xfs (debug)
-PLATFORM      -- Linux/x86_64 test-2 3.5.0-rc1-dgc+
-MKFS_OPTIONS  -- -f -bsize=4096 /dev/vdb
-MOUNT_OPTIONS -- /dev/vdb /mnt/scratch
-
-001 4s ... 4s
-002 - expunged
-003 0s ... 0s
-Ran: 001 002 003
-Not run:1
-Passed all 2 tests
-
-This is arguably useful(*), but gets in the way of splitting up the
-tests into multiple directories. Remove it for now, but such
-functionality should be considered for re-implementation at a later
-date.
-
-(*) e.g. having a different "expunged" file for each distro release
-you have to test to avoid the tests known to fail due to fixes or
-features that will never be back ported to older releases....
+This is an old script from the auto-qa days back at SGI. It no
+longer is in use or, AFAIK, ever been used for xfstests. If anyone
+needs it, they can pull it back out of git, so lets remove it to
+simplify check.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- check |   18 ------------------
- 1 file changed, 18 deletions(-)
+ check |   25 -------------------------
+ 1 file changed, 25 deletions(-)
 
 diff --git a/check b/check
-index d69f948..8a998c4 100755
+index 7d563e9..d69f948 100755
 --- a/check
 +++ b/check
-@@ -30,7 +30,6 @@ notrun=""
- interrupt=true
- diff="diff -u"
- showme=false
--expunge=true
- have_test_arg=false
- randomize=false
- here=`pwd`
-@@ -106,10 +105,6 @@ BEGIN	{ for (t='$start'; t<='$end'; t++) printf "%03d\n",t }' \
- 		if grep -s "^$id " group >/dev/null ; then
- 			# in group file ... OK
- 			echo $id >>$tmp.list
--		elif [ -f expunged ] && $expunge && \
--				egrep "^$id([ 	]|\$)" expunged >/dev/null ; then
--			# expunged ... will be reported, but not run, later
--			echo $id >>$tmp.list
- 		else
- 			# oops
- 			echo "$id - unknown test, ignored"
-@@ -293,13 +288,6 @@ END	{ if (NR > 0) {
- 	    mv $tmp.out check.time
- 	fi
+@@ -275,12 +275,6 @@ fi
  
--	if [ -f $tmp.expunged ]
--	then
--	    notrun=`wc -l <$tmp.expunged | sed -e 's/  *//g'`
--	    n_try=`expr $n_try - $notrun`
--	    list=`echo "$list" | sed -f $tmp.expunged`
--	fi
+ _wrapup()
+ {
+-    # for hangcheck ...
+-    # remove files that were used by hangcheck
+-    #
+-    [ -f /tmp/check.pid ] && rm -rf /tmp/check.pid
+-    [ -f /tmp/check.sts ] && rm -rf /tmp/check.sts
 -
- 	echo "" >>check.log
- 	date >>check.log
- 	echo $list | fmt | sed -e 's/^/    /' >>check.log
-@@ -393,15 +381,9 @@ do
+     if $showme
      then
- 	echo
- 	continue
--    elif [ -f expunged ] && $expunge && egrep "^$seq([ 	]|\$)" expunged >/dev/null
--    then
--	echo " - expunged"
--	rm -f $seq.out.bad
--	echo "/^$seq\$/d" >>$tmp.expunged
-     elif [ ! -f $seq ]
-     then
- 	echo " - no such test?"
--	echo "/^$seq\$/d" >>$tmp.expunged
-     else
- 	# really going to try and run this one
- 	#
+ 	:
+@@ -336,27 +330,11 @@ END	{ if (NR > 0) {
+     fi
+ 
+     rm -f /tmp/*.rawout /tmp/*.out /tmp/*.err /tmp/*.time
+-    rm -f /tmp/check.pid /tmp/check.sts
+     rm -f $tmp.*
+ }
+ 
+ trap "_wrapup; exit \$status" 0 1 2 3 15
+ 
+-# for hangcheck ...
+-# Save pid of check in a well known place, so that hangcheck can be sure it
+-# has the right pid (getting the pid from ps output is not reliable enough).
+-#
+-rm -rf /tmp/check.pid
+-echo $$ >/tmp/check.pid
+-
+-# for hangcheck ...
+-# Save the status of check in a well known place, so that hangcheck can be
+-# sure to know where check is up to (getting test number from ps output is
+-# not reliable enough since the trace stuff has been introduced).
+-#
+-rm -rf /tmp/check.sts
+-echo "preamble" >/tmp/check.sts
+-
+ # don't leave old full output behind on a clean run
+ rm -f check.full
+ 
+@@ -436,9 +414,6 @@ do
+ 	fi
+ 	rm -f core $seq.notrun
+ 
+-	# for hangcheck ...
+-	echo "$seq" >/tmp/check.sts
+-
+ 	start=`_wallclock`
+ 	$timestamp && echo -n "	["`date "+%T"`"]"
+ 	[ ! -x $seq ] && chmod u+x $seq # ensure we can run it
 -- 
 1.7.10.4
 
