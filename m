@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9C22F7FD1
-	for <xfs@oss.sgi.com>; Fri, 15 Mar 2013 03:32:02 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 32EE4AC005
-	for <xfs@oss.sgi.com>; Fri, 15 Mar 2013 01:32:02 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A59CA7FD4
+	for <xfs@oss.sgi.com>; Fri, 15 Mar 2013 03:47:41 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8FCEC304043
+	for <xfs@oss.sgi.com>; Fri, 15 Mar 2013 01:47:38 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	tZYwtQ7cHYaOg1FJ for <xfs@oss.sgi.com>;
-	Fri, 15 Mar 2013 01:32:00 -0700 (PDT)
-Date: Fri, 15 Mar 2013 19:31:57 +1100
+	XyGz3LqSpC8WQxf7 for <xfs@oss.sgi.com>;
+	Fri, 15 Mar 2013 01:47:34 -0700 (PDT)
+Date: Fri, 15 Mar 2013 19:47:32 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 11/18] xfstests: add tests into tests/xfs/group
-Message-ID: <20130315083157.GD2559@dastard>
-References: <20130314130611.935D953DEAF8@polaris-admin.engr.sgi.com>
+Subject: Re: [PATCH 14/18] xfstests: remove -x functionality
+Message-ID: <20130315084732.GE2559@dastard>
+References: <20130314130611.A163253DEAFB@polaris-admin.engr.sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130314130611.935D953DEAF8@polaris-admin.engr.sgi.com>
+In-Reply-To: <20130314130611.A163253DEAFB@polaris-admin.engr.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,61 +39,24 @@ On Thu, Mar 14, 2013 at 06:06:11AM -0700, Philip White wrote:
 > This is a rebasing & resubmit of a dchinner patch.  His comments on the
 > original:
 > -----------------
-> And into tests/xfs. Tests found and moved via:
+> Now that there are no tests in the top level directory, the exlude
+> group functionality no longer works (-x group) as it cannot find
+> tests to build an initial list of tests. Rework the the exclude
+> group implementation to operate correctly on the new test locations.
 > 
-> $ grep "supported_fs xfs$" [0-2]* | cut -d : -f 1 > xfs.tests
-> $ for i in `cat xfs.tests`; do
-> > git mv $i* tests/xfs/
-> > grep ^$i group >> tests/xfs/group
-> > sed -i -e "/^$i/d" group
-> > done
-> 
-> Output now looks like:
-> 
->  sudo ./check -g quick -r
-> FSTYP         -- xfs (debug)
-> PLATFORM      -- Linux/x86_64 test-1 3.5.0-rc5-dgc+
-> MKFS_OPTIONS  -- -f -bsize=4096 /dev/vdb
-> MOUNT_OPTIONS -- /dev/vdb /mnt/scratch
-> 
-> xfs/170  4s
-> generic/120      16s
-> generic/248      0s
-> generic/213      0s
-> generic/256      39s
-> xfs/121  6s
-> xfs/026  11s
-> generic/131      1s
-> xfs/187  1s
-> generic/135      0s
-> ....
+> Also, swtich from sed to grep for exclusion because sed has problems
+> distnguishing the '/' in path names from regex control...
 > -----------------
-> For ease of reviewing, I put all the actual test movements into a separate
-> patch.
+> This one is mildly different from the original as it modifies infrastructure
+> which remains in common.  In Dave's original patch, that had all been moved
+> into check.
 
-Where is that patch - I don't see it in the series.
+Why change the patch title? It still does what the original patch
+did, so the new patch title is incorrect....
 
-As it is, moving the files in a different patch to the group file
-changes breaks xfstests. One of the things I made sure of was that
-after each patch, the entire set of tests still ran properly with
-something like "./check -g auto", and this separation looks lik eit
-breaks that.
+Cheers,
 
-As it is, nobody is going to review a patch that has a diffstat of
-+/-80,000 lines, which means it's irrelevant if it is in another
-patch or not. As such, you don't need to send such patches as traditional diffs -
-the git aware diff format is far better for this and easy to review
-even whenteh file movement in is the same patch. See
-
-http://oss.sgi.com/archives/xfs/2012-07/msg00389.html
-
-To see how i sent this previously.
-
-You are using git (though a very old version), so you should be bale
-to get patches output in the correct manner...
-
--Dave.
-
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
