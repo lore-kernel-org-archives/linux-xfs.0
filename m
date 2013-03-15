@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E1DBB8023
-	for <xfs@oss.sgi.com>; Fri, 15 Mar 2013 07:28:56 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D41AC304048
-	for <xfs@oss.sgi.com>; Fri, 15 Mar 2013 05:28:56 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C7A8E804B
+	for <xfs@oss.sgi.com>; Fri, 15 Mar 2013 07:29:05 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 52C19AC001
+	for <xfs@oss.sgi.com>; Fri, 15 Mar 2013 05:29:05 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	945IGkaOeXGGpTmC for <xfs@oss.sgi.com>;
-	Fri, 15 Mar 2013 05:28:55 -0700 (PDT)
-Received: from [192.168.1.1] (helo=disappointment)
-	by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UGTkd-0001aS-1b
-	for xfs@oss.sgi.com; Fri, 15 Mar 2013 23:28:47 +1100
+	vD2V5zt7JVHR92Bp for <xfs@oss.sgi.com>;
+	Fri, 15 Mar 2013 05:29:03 -0700 (PDT)
+Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1UGTkT-0001aT-4N
+	for xfs@oss.sgi.com; Fri, 15 Mar 2013 23:28:37 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UGTkS-0005sD-ON
+	(envelope-from <dave@disappointment.disaster>) id 1UGTkS-0005sI-SL
 	for xfs@oss.sgi.com; Fri, 15 Mar 2013 23:28:36 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 24/25] xfstests: clean up test 262 output file use.
-Date: Fri, 15 Mar 2013 23:28:08 +1100
-Message-Id: <1363350489-22257-25-git-send-email-david@fromorbit.com>
+Subject: [PATCH 25/25] xfstests: use _notrun for tape checks
+Date: Fri, 15 Mar 2013 23:28:09 +1100
+Message-Id: <1363350489-22257-26-git-send-email-david@fromorbit.com>
 In-Reply-To: <1363350489-22257-1-git-send-email-david@fromorbit.com>
 References: <1363350489-22257-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,109 +38,53 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Test 262 uses ${} notation for some variables, and so is resistant
-to grep and sed matches. Change it to use the same notation as the
-rest of xfstests and fix up the output file redirections made in
-previous patches.
+_require_tape is failing tests when no TAPE_DEV is specified. It
+should be using _notrun for these cases rather than trying to open
+code the $seqres.notrun magic file manipulations.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- tests/xfs/262 |   36 ++++++++++++++++++------------------
- 1 file changed, 18 insertions(+), 18 deletions(-)
+ common/dump |   13 +++----------
+ 1 file changed, 3 insertions(+), 10 deletions(-)
 
-diff --git a/tests/xfs/262 b/tests/xfs/262
-index 01f7f8b..0c15787 100755
---- a/tests/xfs/262
-+++ b/tests/xfs/262
-@@ -28,15 +28,15 @@
+diff --git a/common/dump b/common/dump
+index 3df6191..5d4d2ae 100644
+--- a/common/dump
++++ b/common/dump
+@@ -139,9 +139,7 @@ _check_onl()
+ 	echo "ERROR: mt -f $dumptape failed"
+ 	cat $tmp.status
  
- seq=$(basename $0)
- seqres=$RESULT_DIR/$seq
--echo "QA output created by ${seq}"
-+echo "QA output created by $seq"
+-	echo "mt -f $dumptape failed" >$seq.notrun
+-	status=$NOTRUNSTS
+-	exit
++	_notrun "mt -f $dumptape failed"
+     fi
  
- here=$(pwd)
  
--cp /dev/null "${seq}.full"
-+rm -f $seqres.full
+@@ -151,9 +149,7 @@ _check_onl()
+ 	echo "ERROR: $dumptape is not online"
+ 	cat $tmp.status
  
- tmp=/tmp/$$
--my_projects=${tmp}.projects
--my_projid=${tmp}.projid
-+my_projects=$tmp.projects
-+my_projid=$tmp.projid
- proj_name=test_project
- proj_num=1
- 
-@@ -48,7 +48,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
- _cleanup()
- {
-     cd /
--    rm -f ${tmp}.*
-+    rm -f $tmp.*
+-	echo "dumptape, $dumptape, is not online" >$seq.notrun
+-	status=$NOTRUNSTS
+-	exit
++	_notrun "dumptape, $dumptape, is not online"
+     fi
  }
  
- # get standard environment, filters and checks
-@@ -60,7 +60,7 @@ echo "Silence is golden."
+@@ -229,10 +225,7 @@ _require_tape()
+     dumptape=$1
  
- # real QA test starts here
+     if [ -z "$dumptape" -o "@" == "$dumptape" ]; then
+-        echo "This test requires a dump tape - none was specified"
+-	echo "No dump tape specified" >$seqres.notrun
+-	status=$NOTRUNSTS
+-	exit
++	_notrun "No dump tape specified"
+     fi
  
--proj_dir="${SCRATCH_MNT}/test"
-+proj_dir="$SCRATCH_MNT/test"
- 
- # Modify as appropriate.
- _supported_fs xfs
-@@ -108,38 +108,38 @@ _filter_quota_rpt() {
- }
- 
- _quota_cmd() {
--	xfs_quota -P "${my_projid}" -D "${my_projects}" -x \
--		-c "$@" "${SCRATCH_MNT}"
-+	xfs_quota -P "$my_projid" -D "$my_projects" -x \
-+		-c "$@" "$SCRATCH_MNT"
- }
- 
- # Set up--mount scratch and create the project directory
- 
--echo ${proj_name}:${proj_num} > "${my_projid}"
--echo ${proj_num}:${proj_dir} > "${my_projects}"
-+echo $proj_name:$proj_num > "$my_projid"
-+echo $proj_num:$proj_dir > "$my_projects"
- 
--_scratch_mkfs						>> "${seq}.full" 2>&1
-+_scratch_mkfs						>> "$seqres.full" 2>&1
- 
- export MOUNT_OPTIONS="-opquota"
- _qmount
- mkdir -p "${proj_dir}"
- 
- # Setup the project quota directory
--_quota_cmd "project -s ${proj_name}"			>> "${seq}.full" 2>&1
-+_quota_cmd "project -s ${proj_name}"			>> "$seqres.full" 2>&1
- 
- # Assign block quota limits
- _quota_cmd "limit -p bhard=${qlimit_meg}m bsoft=${qlimit_meg}m ${proj_name}" \
--							2>> "${seq}.full" 1>&2
-+							2>> "$seqres.full" 1>&2
- 
- # See what gets reported
--_quota_cmd "report"		| _filter_quota_rpt	2>> "${seq}.full"
--_quota_cmd "df"			| _filter_quota_rpt	2>> "${seq}.full"
-+_quota_cmd "report"		| _filter_quota_rpt	2>> "$seqres.full"
-+_quota_cmd "df"			| _filter_quota_rpt	2>> "$seqres.full"
- 
- # This time using "human readable" output
--_quota_cmd "report -h"		| _filter_quota_rpt	2>> "${seq}.full"
--_quota_cmd "df -h"		| _filter_quota_rpt	2>> "${seq}.full"
-+_quota_cmd "report -h"		| _filter_quota_rpt	2>> "$seqres.full"
-+_quota_cmd "df -h"		| _filter_quota_rpt	2>> "$seqres.full"
- 
- # Clean up
--rm -rf "${proj_dir}"
-+rm -rf "$proj_dir"
- _scratch_unmount
- 
- status=0	# success, all done
+     _check_onl
 -- 
 1.7.10.4
 
