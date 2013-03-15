@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6E8DF8030
-	for <xfs@oss.sgi.com>; Fri, 15 Mar 2013 07:28:50 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id EB546AC001
-	for <xfs@oss.sgi.com>; Fri, 15 Mar 2013 05:28:49 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 50EB9801F
+	for <xfs@oss.sgi.com>; Fri, 15 Mar 2013 07:28:51 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 42B1B304048
+	for <xfs@oss.sgi.com>; Fri, 15 Mar 2013 05:28:51 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	hvj9TkGnteE5ju6H for <xfs@oss.sgi.com>;
-	Fri, 15 Mar 2013 05:28:48 -0700 (PDT)
-Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UGTkS-0001a7-Er
-	for xfs@oss.sgi.com; Fri, 15 Mar 2013 23:28:36 +1100
+	W0ifWxjrUFrpUtSk for <xfs@oss.sgi.com>;
+	Fri, 15 Mar 2013 05:28:49 -0700 (PDT)
+Received: from [192.168.1.1] (helo=disappointment)
+	by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1UGTkc-0001aO-Md
+	for xfs@oss.sgi.com; Fri, 15 Mar 2013 23:28:46 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UGTkI-0005rT-Bm
-	for xfs@oss.sgi.com; Fri, 15 Mar 2013 23:28:26 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1UGTkS-0005ry-IL
+	for xfs@oss.sgi.com; Fri, 15 Mar 2013 23:28:36 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 16/25] xfstests: make exclude groups aware of multiple
-	subdirectories
-Date: Fri, 15 Mar 2013 23:28:00 +1100
-Message-Id: <1363350489-22257-17-git-send-email-david@fromorbit.com>
+Subject: [PATCH 21/25] xfstests: Reintroduce configurable test expunging.
+Date: Fri, 15 Mar 2013 23:28:05 +1100
+Message-Id: <1363350489-22257-22-git-send-email-david@fromorbit.com>
 In-Reply-To: <1363350489-22257-1-git-send-email-david@fromorbit.com>
 References: <1363350489-22257-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,101 +39,146 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Now that there are no tests in the top level directory, the exlude
-group functionality no longer works (-x group) as it cannot find
-tests to build an initial list of tests. Rework the the exclude
-group implementation to operate correctly on the new test locations.
+It is definitely handy to be able to disabdle certain tests (e.g. tests that are
+known to hang or crash the test machine on certain kernels), so re-introducing
+the capability of avoiding certain tests just by placing them in a file is
+useful.
 
-Also, switch from sed to grep for exclusion because sed has problems
-distnguishing the '/' in path names from regex control...
+Introduce a command line option to specify the expunged file name. The file will
+exist in each tests/* sub-directory so that only the testname is required, and
+can be managed independently. The use of a command line parameter allows
+multiple expunge files to exist simultaneously in the one xfstests tree which
+simplifies management of a source repository used for multiple versions of a
+distro.
+
+Typical usage:
+
+$ cat tests/generic/3.0-stable-avoid
+280
+$ sudo ./check -X 3.0-stable-avoid generic/280
+FSTYP         -- xfs (debug)
+PLATFORM      -- Linux/x86_64 test-1 3.0.39-dgc+
+MKFS_OPTIONS  -- -f -bsize=4096 /dev/vdb
+MOUNT_OPTIONS -- /dev/vdb /mnt/scratch
+
+generic/280     [expunged]
+Passed all 0 tests
+$
+
+Eventually we should be able to automate setting up expunged files based on
+distro release or kernel version through this infrastructure.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- check |   35 +++++++++++++++++++++++++++--------
- 1 file changed, 27 insertions(+), 8 deletions(-)
+ check |   59 ++++++++++++++++++++++++++++++++++++++++++++---------------
+ 1 file changed, 44 insertions(+), 15 deletions(-)
 
 diff --git a/check b/check
-index 620de0f..d7426e5 100755
+index cc426db..17bc004 100755
 --- a/check
 +++ b/check
-@@ -96,6 +96,19 @@ get_group_list()
- 	echo $grpl
+@@ -34,6 +34,7 @@ have_test_arg=false
+ randomize=false
+ here=`pwd`
+ FSTYP=xfs
++xfile=""
+ 
+ SUPPORTED_TESTS="[0-9][0-9][0-9] [0-9][0-9][0-9][0-9]"
+ SRC_GROUPS="generic shared"
+@@ -72,6 +73,7 @@ check options
+ testlist options
+     -g group[,group...]	include tests from these groups
+     -x group[,group...]	exclude tests from these groups
++    -X file		exclude individual tests
+     [testlist]		include tests matching names in testlist
+ '
+ 	    exit 0
+@@ -110,6 +112,30 @@ get_all_tests()
+ 	done
  }
  
-+# find all tests, excluding files that are test metadata such as group files.
-+# This assumes that tests are defined purely by alphanumeric filenames with no
-+# ".xyz" extensions in the name.
-+get_all_tests()
++# takes the list of tests to run in $tmp.list, and removes the tests passed to
++# the function from that list.
++trim_test_list()
 +{
-+	touch $tmp.list
-+	for d in $SRC_GROUPS $FSTYP; do
-+		ls $SRC_DIR/$d/* | \
-+			grep -v "\..*" | \
-+			grep -v group >> $tmp.list 2>/dev/null
++	test_list="$*"
++
++	rm -f $tmp.grep
++	numsed=0
++	for t in $test_list
++	do
++	    if [ $numsed -gt 100 ]; then
++		grep -v -f $tmp.grep <$tmp.list >$tmp.tmp
++		mv $tmp.tmp $tmp.list
++		numsed=0
++		rm -f $tmp.grep
++	    fi
++	    echo "^$t\$" >>$tmp.grep
++	    numsed=`expr $numsed + 1`
 +	done
++	grep -v -f $tmp.grep <$tmp.list >$tmp.tmp
++	mv $tmp.tmp $tmp.list
 +}
++
 +
  _wallclock()
  {
      date "+%H %M %S" | $AWK_PROG '{ print $1*3600 + $2*60 + $3 }'
-@@ -110,7 +123,7 @@ _timestamp()
+@@ -124,7 +150,7 @@ _timestamp()
  # start the initialisation work now
  _setenvironment
  
--rm -f $tmp.list $tmp.tmp $tmp.sed $here/$iam.out
-+rm -f $tmp.list $tmp.tmp $tmp.grep $here/$iam.out
+-rm -f $tmp.list $tmp.tmp $tmp.grep $here/$iam.out
++rm -f $tmp.list $tmp.tmp $tmp.grep $here/$iam.out $tmp.xlist
  
  # Autodetect fs type based on what's on $TEST_DEV
  if [ "$HOSTOS" == "Linux" ]; then
-@@ -150,27 +163,33 @@ while [ $# -gt 0 ]; do
- 		;;
- 
- 	-x)	xgroup=$2 ; shift ;
--		[ ! -s $tmp.list ] &&  ls $SUPPORTED_TESTS >$tmp.list 2>/dev/null
-+
-+		# Note: behaviour is dependent on command line ordering of
-+		# -g and -x parameters. If there are no preceding -g commands,
-+		# this works on all tests, otherwise just the tests specified by
-+		# the early -g inclusions.
-+		[ ! -s $tmp.list ] && get_all_tests
-+
- 		group_list=$(get_group_list $xgroup)
- 		if [ -z "$group_list" ]; then
- 		    echo "Group \"$xgroup\" is empty or not defined?"
+@@ -177,21 +203,16 @@ while [ $# -gt 0 ]; do
  		    exit 1
  		fi
  
--		rm -f $tmp.sed
-+		rm -f $tmp.grep
- 		numsed=0
- 		for t in $group_list
- 		do
- 		    if [ $numsed -gt 100 ]; then
--			sed -f $tmp.sed <$tmp.list >$tmp.tmp
-+			grep -v -f $tmp.grep <$tmp.list >$tmp.tmp
- 			mv $tmp.tmp $tmp.list
- 			numsed=0
--			rm -f $tmp.sed
-+			rm -f $tmp.grep
- 		    fi
--		    echo "/^$t\$/d" >>$tmp.sed
-+		    echo "^$t\$" >>$tmp.grep
- 		    numsed=`expr $numsed + 1`
+-		rm -f $tmp.grep
+-		numsed=0
+-		for t in $group_list
+-		do
+-		    if [ $numsed -gt 100 ]; then
+-			grep -v -f $tmp.grep <$tmp.list >$tmp.tmp
+-			mv $tmp.tmp $tmp.list
+-			numsed=0
+-			rm -f $tmp.grep
+-		    fi
+-		    echo "^$t\$" >>$tmp.grep
+-		    numsed=`expr $numsed + 1`
++		trim_test_list $group_list
++		;;
++
++	-X)	xfile=$2; shift ;
++		for d in $SRC_GROUPS $FSTYP; do
++			[ -f $SRC_DIR/$d/$xfile ] || continue
++			for f in `cat $SRC_DIR/$d/$xfile`; do
++				echo $d/$f >> $tmp.xlist
++			done
  		done
--		sed -f $tmp.sed <$tmp.list >$tmp.tmp
-+		grep -v -f $tmp.grep <$tmp.list >$tmp.tmp
- 		mv $tmp.tmp $tmp.list
+-		grep -v -f $tmp.grep <$tmp.list >$tmp.tmp
+-		mv $tmp.tmp $tmp.list
  		;;
  
-@@ -239,7 +258,7 @@ fi
+ 	-l)	diff="diff" ;;
+@@ -413,6 +434,14 @@ do
+ 	#
+ 	rm -f $seqres.out.bad
  
- # sort the list of tests into numeric order
- list=`sort -n $tmp.list`
--rm -f $tmp.list $tmp.tmp $tmp.sed
-+rm -f $tmp.list $tmp.tmp $tmp.grep
- 
- if $randomize
- then
++	# check if we really should run it
++	if [ -s $tmp.xlist ]; then
++		if grep $seqnum $tmp.xlist > /dev/null 2>&1 ; then
++			echo "       [expunged]"
++			continue
++		fi
++	fi
++
+ 	# slashes now in names, sed barfs on them so use grep
+ 	lasttime=`grep -w ^$seq check.time | awk '// {print $2}'`
+ 	if [ "X$lasttime" != X ]; then
 -- 
 1.7.10.4
 
