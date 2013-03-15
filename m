@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 77AC17FB8
-	for <xfs@oss.sgi.com>; Thu, 14 Mar 2013 21:12:52 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6047A304064
-	for <xfs@oss.sgi.com>; Thu, 14 Mar 2013 19:12:49 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 346E07FB9
+	for <xfs@oss.sgi.com>; Thu, 14 Mar 2013 21:19:58 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1FBAE8F804B
+	for <xfs@oss.sgi.com>; Thu, 14 Mar 2013 19:19:55 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	ZQ44OZzLZrD79DnQ for <xfs@oss.sgi.com>;
-	Thu, 14 Mar 2013 19:12:47 -0700 (PDT)
-Date: Fri, 15 Mar 2013 13:12:34 +1100
+	7C4PpZCsiYz88CGr for <xfs@oss.sgi.com>;
+	Thu, 14 Mar 2013 19:19:53 -0700 (PDT)
+Date: Fri, 15 Mar 2013 13:19:51 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 01/18] xfstests: Remove obsolete remake script
-Message-ID: <20130315021234.GF21651@dastard>
-References: <20130314130611.405A853DEAEF@polaris-admin.engr.sgi.com>
+Subject: Re: [PATCH] xfstests: test writing to device node on an RO filesystem
+Message-ID: <20130315021951.GG21651@dastard>
+References: <514243C0.1000309@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130314130611.405A853DEAEF@polaris-admin.engr.sgi.com>
+In-Reply-To: <514243C0.1000309@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,109 +29,109 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Philip White <pwhite@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Mar 14, 2013 at 06:06:11AM -0700, Philip White wrote:
-> From: Phil White <pwhite@sgi.com>
+On Thu, Mar 14, 2013 at 04:40:16PM -0500, Eric Sandeen wrote:
+> we should be able to open device nodes for writing even
+> if they live on a readonly filesytem.
 > 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
 > 
-> This is a rebasing & resubmit of a dchinner patch.  His comments on the
-> original:
-> -----------------
-> We don't ever do wholesale rebuilds of the output files anymore, so
-> kill the script that does it to reduce the dependency on common and
-> common.rc.
-> -----------------
+> (I may have *cough* broken this on a backport once, hence the test)
 > 
-> Signed-off-by: Phil White <pwhite@sgi.com>
+> diff --git a/315 b/315
+> new file mode 100755
+> index 0000000..8b8ecc6
+> --- /dev/null
+> +++ b/315
+> @@ -0,0 +1,79 @@
+> +#! /bin/bash
+> +# FS QA Test No. 315
+> +#
+> +# Test that we can write to a device node residing on a RO filesystem
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2013 Red Hat, Inc.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +#
+> +# creator
+> +owner=sandeen@redhat.com	
+> +
+> +seq=`basename $0`
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +    cd /
+> +    rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common.rc
+> +. ./common.filter
+> +
+> +# real QA test starts here
+> +
+> +# Modify as appropriate.
+> +_supported_fs generic
+> +_supported_os Linux
+> +_require_scratch
+> +
+> +DEVNULL=$SCRATCH_MNT/devnull
+> +DEVZERO=$SCRATCH_MNT/devzero
+> +
+> +_scratch_mount
 
-Hi Phil - it's great that you've picked this up, but it would have
-been really nice to know that you were doing this. Just a short
-email on the list with me CC'd or even just a private message on
-IRC. Last I heard from anyone at SGI was that SGI still didn't want
-to remove the old bench scripts. Now I find out that you've picked
-up the patchset that removes it and forward ported it....
+You need to _scratch_mkfs first.
 
-If you let me know you were doing this, I could have let you know
-that my local version has several more patches in it and bug fixes
-that I haven't posted out. Indeed, I coul dhave taken an hour to
-apply all the changes to the most recent additions to xfstests and
-posted an up-to-date version, because I've been maintaining the
-patchset locally.
+> +rm -f $DEVNULL $DEVZERO
+> +
+> +mknod $DEVNULL c 1 3 || _fail "Could not create devnull device"
+> +mknod $DEVZERO c 1 5 || _fail "Could not create devzero device"
+> +
+> +_scratch_unmount || _fail "Could not unmount scratch device"
+> +_scratch_mount -o ro || _fail "Could not remount scratch readonly"
+> +
+> +# We should be able to read & write to/from these devices even on an RO fs
+> +echo "== try to create new file"
+> +touch $SCRATCH_MNT/this_should_fail 2>&1 | _filter_scratch
+> +echo "== prite to null device"
+> +xfs_io -c "pwrite 0 512" /dev/null | _filter_xfs_io
+> +echo "== pread from zero device"
+> +xfs_io -c "pread 0 512" /dev/zero | _filter_xfs_io
 
-Indeed, one of my test VMs runs this version of xfstests all the
-time:
+$XFS_IO_PROG
 
-$ sudo MKFS_OPTIONS="-b size=512" ./check -g auto
-FSTYP         -- xfs (debug)
-PLATFORM      -- Linux/x86_64 test-1 3.9.0-rc2-dgc+
-MKFS_OPTIONS  -- -f -b size=512 /dev/vdb
-MOUNT_OPTIONS -- /dev/vdb /mnt/scratch
+Yeah, I know, we don't do that in lots of places, but we should
+change them all to the Proper Way....
 
-generic/001      2s
-generic/002      0s
-generic/005      0s
-....
+> +
+> +echo "== truncating write to null device"
+> +echo foo >> $DEVNULL 2>&1 | _filter_scratch
 
-So I could have saved you a lot of work if you'd simply told us that
-SGI had decided that "dropping bench is OK". If you make a decision
-like this, then please tell us when you make it - sometimes it will
-save you a lot of unnecessary time and effort....
+That doesn't truncate.
 
-/me knows what his afternoon is going to be spent doing: updating
-all the recent tests added to xfstests and posting a current patch
-set....
-
-----
-
-For future reference for everyone, a few technical guidelines for
-reposting patch sets written by other people.  This is important to
-get right, as we all know that the correct attribution of the
-original of the code has legal significance.
-
-- when you are reposting a mostly unmodified patch written by
-  someone else, you should not claim it as your own, nor strip off
-  the original s-o-b lines. i.e. reposted patches should have a
-  description that looks like:
-
-From: Dave Chinner <dchinner@redhat.com>
-
-<unmodified original patch description>
-
-<[pwhite] modifications added (if any) during rebasing>
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Phil White <pwhite@sgi.com>
-
-  See the way I have done this in the CRC patchset attributing
-  various patches in the series to Christoph and how I've modified
-  them from Christoph's original versions. e.g:
-
-  http://oss.sgi.com/pipermail/xfs/2013-March/024766.html
-
-  This is especially important if the patches contain copyright
-  title updates - they can only be made by the author of the code in
-  question. Hence if the patch is listed as "from X" and the
-  copyright statement says "(c) Y." then that is a big problem...
-
-- comments like "this is a rebasing and resubmit" don't belong in
-  commit messages, they belong in the patch 0 description.  Patch 0
-  should also contain a high level description of the patch set and
-  outline the changes you've made to the original code.
-
-- large patch series need to be correctly threaded with a patch 0
-  describing the series. git-send-email should be able to do this
-  for you automatically.
-
-- rebasing a patch set to a current tree means you need to apply all
-  the changes to new files that have been added since this patch set
-  was originally written. Part of rebasing is "making new stuff
-  work"... ;)
-
-Cheers,
-
-Dave.
+-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
