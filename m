@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 52ED1800C
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id EC9168000
 	for <xfs@oss.sgi.com>; Fri, 15 Mar 2013 07:28:40 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 19C88304039
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 86CAEAC001
 	for <xfs@oss.sgi.com>; Fri, 15 Mar 2013 05:28:40 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	4YPWmqRL6VDdfWXh for <xfs@oss.sgi.com>;
+	0evR6nGeCJepaUDB for <xfs@oss.sgi.com>;
 	Fri, 15 Mar 2013 05:28:38 -0700 (PDT)
-Received: from [192.168.1.1] (helo=disappointment)
-	by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UGTkS-0001Zk-6M
+Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1UGTkS-0001a5-Dm
 	for xfs@oss.sgi.com; Fri, 15 Mar 2013 23:28:36 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UGTkI-0005r1-4I
+	(envelope-from <dave@disappointment.disaster>) id 1UGTkI-0005rP-Aq
 	for xfs@oss.sgi.com; Fri, 15 Mar 2013 23:28:26 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 10/25] xfstests: include test subdirectory support
-Date: Fri, 15 Mar 2013 23:27:54 +1100
-Message-Id: <1363350489-22257-11-git-send-email-david@fromorbit.com>
+Subject: [PATCH 15/25] xfstests: rework CLI individual test specification
+Date: Fri, 15 Mar 2013 23:27:59 +1100
+Message-Id: <1363350489-22257-16-git-send-email-david@fromorbit.com>
 In-Reply-To: <1363350489-22257-1-git-send-email-david@fromorbit.com>
 References: <1363350489-22257-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,163 +38,150 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Create a specific tests/ subdirectory to hold all the tests so they
-are no longer need to be in the top level directory. This patch does
-not move any tests there, however, and that will be done in
-subsequent commits.
+Now that tests are in separate subdirectories, they cannot be selected purely by
+test number on the command line. We need to specify the test by subdir and test
+name, so effectively we move to specifying them by regexes on the command line
+rather than by expanding a range internally. This is needed to support
+non-numeric test names as well, so the change may as well be made here.
 
-The tests/ subdir will have it's own subdirectories for different
-classes of tests. Initially, there will be a per-FSTYP subdirectory
-for filesytsem specific tests, and a generic directory for tests
-that span multiple filesystems.
-
-Each class will have it's own group file to indicate what groups the
-tests belong to, and these will be parsed appropriately by the high
-level check script to build the test list.
-
-The change in parsing results in the test output also emitting the
-path to the test as well as the name of the test, instead of just a
-raw number. This allows duplicate test names in the sudirecotries to
-be unambiguous when the summary is written out.
+This means the command line parsing needs to change from trying to detect tests
+by a regex match to a processing loop that simply parses the tests and checks
+for there existence. Hence the moment we find an argument that is not a switch
+(i.e no preceeding "-"), we move from the arg processing loop to the test name
+processing loop. IOWs, tests must be specified last on the command line.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- check               |   43 ++++++++++++++++++++++++++++---------------
- tests/generic/group |    5 +++++
- 2 files changed, 33 insertions(+), 15 deletions(-)
- create mode 100644 tests/generic/group
+ check |   86 ++++++++++++++++++++++++++++-------------------------------------
+ 1 file changed, 37 insertions(+), 49 deletions(-)
 
 diff --git a/check b/check
-index b93316a..da2611a 100755
+index 195c25d..620de0f 100755
 --- a/check
 +++ b/check
-@@ -36,6 +36,8 @@ here=`pwd`
- FSTYP=xfs
- 
- SUPPORTED_TESTS="[0-9][0-9][0-9] [0-9][0-9][0-9][0-9]"
-+TEST_GROUP_DIR="tests"
-+GENERIC_GROUP_DIR="$TEST_GROUP_DIR/generic"
- 
- # generic initialization
- iam=check
-@@ -84,11 +86,15 @@ _setenvironment()
- get_group_list()
- {
- 	grp=$1
--
--	grpl=$(sed -n < group \
--		       -e 's/#.*//' \
--		       -e 's/$/ /' \
--		       -e "/^[0-9][0-9][0-9].* $grp /"'{ s/ .*//p }')
-+	dirs=". $GENERIC_GROUP_DIR"
-+
-+	for d in $dirs; do
-+		l=$(sed -n < $d/group \
-+			-e 's/#.*//' \
-+			-e 's/$/ /' \
-+			-e "s;\(^[0-9][0-9][0-9]\).* $grp .*;$d/\1;p")
-+		grpl="$grpl $l"
-+	done
+@@ -71,8 +71,7 @@ check options
+ testlist options
+     -g group[,group...]	include tests from these groups
+     -x group[,group...]	exclude tests from these groups
+-    NNN			include test NNN
+-    NNN-NNN		include test range (eg. 012-021)
++    [testlist]		include tests matching names in testlist
+ '
+ 	    exit 0
+ }
+@@ -97,26 +96,6 @@ get_group_list()
  	echo $grpl
  }
  
-@@ -290,7 +296,7 @@ END	{ if (NR > 0) {
+-expand_test_numbers()
+-{
+-	# strip leading zeros, could be considered octal.
+-	start=`echo $1 | sed 's/^0*//'`
+-	end=`echo $2 | sed 's/^0*//'`
+-
+-	$AWK_PROG </dev/null '
+-BEGIN	{ for (t='$start'; t<='$end'; t++) printf "%03d\n",t }' \
+-	| while read id
+-	do
+-		if grep -s "^$id " group >/dev/null ; then
+-			# in group file ... OK
+-			echo $id >>$tmp.list
+-		else
+-			# oops
+-			echo "$id - unknown test, ignored"
+-		fi
+-	done
+-}
+-
+ _wallclock()
+ {
+     date "+%H %M %S" | $AWK_PROG '{ print $1*3600 + $2*60 + $3 }'
+@@ -146,6 +125,7 @@ then
+     exit 1
+ fi
  
- 	echo "" >>check.log
- 	date >>check.log
--	echo $list | fmt | sed -e 's/^/    /' >>check.log
-+	echo $list | fmt | sed -e 's/^/    /' -e 's;tests/;;g' >>check.log
- 	$interrupt && echo "Interrupted!" >>check.log
-         
-         if [ ! -z "$n_try" -a $n_try != 0 ]
-@@ -368,7 +374,12 @@ _check_test_fs
- for seq in $list
- do
-     err=false
--    echo -n "$seq"
-+
-+    # the filename for the test and the name output are different.
-+    # we don't include the tests/ directory in the name output.
-+    seqnum=`echo $seq | sed -e 's;tests/;;'`
-+
-+    echo -n "$seqnum"
++# Process command arguments first.
+ while [ $# -gt 0 ]; do
+ 	case "$1" in
+ 	-\? | -h | --help) usage ;;
+@@ -202,42 +182,50 @@ while [ $# -gt 0 ]; do
  
-     if $showme
-     then
-@@ -381,7 +392,9 @@ do
- 	# really going to try and run this one
- 	#
- 	rm -f $seq.out.bad
--	lasttime=`sed -n -e "/^$seq /s/.* //p" <check.time`
+ 	-T)	timestamp=true ;;
+ 
+-	"$SUPPORTED_TESTS")
+-		echo "No tests?"
+-		status=1
+-		exit $status
+-		;;
+-
+-	[0-9]*-[0-9]*)
+-		eval `echo $1 | sed -e 's/^/start=/' -e 's/-/ end=/'`
+-		expand_test_numbers $start $end
+-		have_test_arg=true
+-		;;
+-
+-	[0-9]*-)
+-		eval `echo $1 | sed -e 's/^/start=/' -e 's/-//'`
+-		end=`echo $SUPPORTED_TESTS | sed -e 's/\[0-9]//g' -e 's/  *$//' -e 's/.* //'`
+-		if [ -z "$end" ]; then
+-			echo "No tests in range \"$1\"?"
+-			status=1
+-			exit $status
+-		fi
+-		expand_test_numbers $start $end
+-		have_test_arg=true
+-		;;
+-
+ 	--large-fs) export LARGE_SCRATCH_DEV=yes ;;
+ 	--extra-space=*) export SCRATCH_DEV_EMPTY_SPACE=${r#*=} ;;
+ 
+ 	-*)	usage ;;
+-	*)	expand_test_numbers $1 $1 ;
+-		have_test_arg=true
+-		;;
++	*)	# not an argument, we've got tests now.
++		have_test_arg=true ;;
+ 	esac
+ 
++	# if we've found a test specification, the break out of the processing
++	# loop before we shift the arguments so that this is the first argument
++	# that we process in the test arg loop below.
++	if $have_test_arg; then
++		break;
++	fi
 +
-+	# slashes now in names, sed barfs on them so use grep
-+	lasttime=`grep -w ^$seq check.time | awk '// {print $2}'`
- 	if [ "X$lasttime" != X ]; then
- 		echo -n " ${lasttime}s ..."
- 	else
-@@ -392,7 +405,7 @@ do
- 	start=`_wallclock`
- 	$timestamp && echo -n "	["`date "+%T"`"]"
- 	[ ! -x $seq ] && chmod u+x $seq # ensure we can run it
--	$LOGGER_PROG "run xfstest $seq"
-+	$LOGGER_PROG "run xfstest $seqnum"
- 	./$seq >$tmp.rawout 2>&1
- 	sts=$?
- 	$timestamp && _timestamp
-@@ -411,9 +424,9 @@ do
- 	if [ -f $seq.notrun ]
- 	then
- 	    $timestamp || echo -n " [not run] "
--	    $timestamp && echo " [not run]" && echo -n "	$seq -- "
-+	    $timestamp && echo " [not run]" && echo -n "	$seqnum -- "
- 	    cat $seq.notrun
--	    notrun="$notrun $seq"
-+	    notrun="$notrun $seqnum"
- 	else
- 	    if [ $sts -ne 0 ]
- 	    then
-@@ -431,7 +444,7 @@ do
- 		    then
- 			:
- 		    else
--			echo "$seq `expr $stop - $start`" >>$tmp.time
-+			echo "$seqnum `expr $stop - $start`" >>$tmp.time
- 			echo -n " `expr $stop - $start`s"
- 		    fi
- 		    echo ""
-@@ -459,18 +472,18 @@ do
-     #
-     if $err
-     then
--	bad="$bad $seq"
-+	bad="$bad $seqnum"
- 	n_bad=`expr $n_bad + 1`
- 	quick=false
-     fi
-     if [ ! -f $seq.notrun ]
-     then
--	try="$try $seq"
-+	try="$try $seqnum"
- 	n_try=`expr $n_try + 1`
-         _check_test_fs
-     fi
-     
--    seq="after_$seq"
-+    seq="after_$seqnum"
+ 	shift
  done
  
- interrupt=false
-diff --git a/tests/generic/group b/tests/generic/group
-new file mode 100644
-index 0000000..4e01f0c
---- /dev/null
-+++ b/tests/generic/group
-@@ -0,0 +1,5 @@
-+# QA groups control file
-+# Defines test groups and nominal group owners
-+# - do not start group names with a digit
-+# - comment line before each group is "new" description
-+#
++# Process tests from command line now.
++if $have_test_arg; then
++	while [ $# -gt 0 ]; do
++		case "$1" in
++		-*)	echo "Argments before tests, please!"
++			status=1
++			exit $status
++			;;
++		*)	test_dir=`dirname $1`
++			test_name=`basename $1`
++			group_file=$SRC_DIR/$test_dir/group
++
++			if grep "^$testname" $group_file >/dev/null ; then
++				# in group file ... OK
++				echo $SRC_DIR/$1 >>$tmp.list
++			else
++				# oops
++				echo "$1 - unknown test, ignored"
++			fi
++			;;
++		esac
++
++		shift
++	done
++fi
++
+ if [ -s $tmp.list ]; then
+     # found some valid test numbers ... this is good
+     :
 -- 
 1.7.10.4
 
