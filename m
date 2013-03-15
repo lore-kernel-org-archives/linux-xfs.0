@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 07E858017
-	for <xfs@oss.sgi.com>; Fri, 15 Mar 2013 07:28:39 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E8F14304039
-	for <xfs@oss.sgi.com>; Fri, 15 Mar 2013 05:28:38 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 52ED1800C
+	for <xfs@oss.sgi.com>; Fri, 15 Mar 2013 07:28:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 19C88304039
+	for <xfs@oss.sgi.com>; Fri, 15 Mar 2013 05:28:40 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	p2CjxVGtX9iVLtR1 for <xfs@oss.sgi.com>;
-	Fri, 15 Mar 2013 05:28:37 -0700 (PDT)
-Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UGTkI-0001Zg-4H
-	for xfs@oss.sgi.com; Fri, 15 Mar 2013 23:28:26 +1100
+	4YPWmqRL6VDdfWXh for <xfs@oss.sgi.com>;
+	Fri, 15 Mar 2013 05:28:38 -0700 (PDT)
+Received: from [192.168.1.1] (helo=disappointment)
+	by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1UGTkS-0001Zk-6M
+	for xfs@oss.sgi.com; Fri, 15 Mar 2013 23:28:36 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UGTkI-0005qm-0s
+	(envelope-from <dave@disappointment.disaster>) id 1UGTkI-0005r1-4I
 	for xfs@oss.sgi.com; Fri, 15 Mar 2013 23:28:26 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 07/25] xfstests: kill hangcheck stuff from check
-Date: Fri, 15 Mar 2013 23:27:51 +1100
-Message-Id: <1363350489-22257-8-git-send-email-david@fromorbit.com>
+Subject: [PATCH 10/25] xfstests: include test subdirectory support
+Date: Fri, 15 Mar 2013 23:27:54 +1100
+Message-Id: <1363350489-22257-11-git-send-email-david@fromorbit.com>
 In-Reply-To: <1363350489-22257-1-git-send-email-david@fromorbit.com>
 References: <1363350489-22257-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,71 +39,163 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-This is an old script from the auto-qa days back at SGI. It no
-longer is in use or, AFAIK, ever been used for xfstests. If anyone
-needs it, they can pull it back out of git, so lets remove it to
-simplify check.
+Create a specific tests/ subdirectory to hold all the tests so they
+are no longer need to be in the top level directory. This patch does
+not move any tests there, however, and that will be done in
+subsequent commits.
+
+The tests/ subdir will have it's own subdirectories for different
+classes of tests. Initially, there will be a per-FSTYP subdirectory
+for filesytsem specific tests, and a generic directory for tests
+that span multiple filesystems.
+
+Each class will have it's own group file to indicate what groups the
+tests belong to, and these will be parsed appropriately by the high
+level check script to build the test list.
+
+The change in parsing results in the test output also emitting the
+path to the test as well as the name of the test, instead of just a
+raw number. This allows duplicate test names in the sudirecotries to
+be unambiguous when the summary is written out.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- check |   25 -------------------------
- 1 file changed, 25 deletions(-)
+ check               |   43 ++++++++++++++++++++++++++++---------------
+ tests/generic/group |    5 +++++
+ 2 files changed, 33 insertions(+), 15 deletions(-)
+ create mode 100644 tests/generic/group
 
 diff --git a/check b/check
-index 7d563e9..d69f948 100755
+index b93316a..da2611a 100755
 --- a/check
 +++ b/check
-@@ -275,12 +275,6 @@ fi
+@@ -36,6 +36,8 @@ here=`pwd`
+ FSTYP=xfs
  
- _wrapup()
+ SUPPORTED_TESTS="[0-9][0-9][0-9] [0-9][0-9][0-9][0-9]"
++TEST_GROUP_DIR="tests"
++GENERIC_GROUP_DIR="$TEST_GROUP_DIR/generic"
+ 
+ # generic initialization
+ iam=check
+@@ -84,11 +86,15 @@ _setenvironment()
+ get_group_list()
  {
--    # for hangcheck ...
--    # remove files that were used by hangcheck
--    #
--    [ -f /tmp/check.pid ] && rm -rf /tmp/check.pid
--    [ -f /tmp/check.sts ] && rm -rf /tmp/check.sts
+ 	grp=$1
 -
-     if $showme
-     then
- 	:
-@@ -336,27 +330,11 @@ END	{ if (NR > 0) {
-     fi
- 
-     rm -f /tmp/*.rawout /tmp/*.out /tmp/*.err /tmp/*.time
--    rm -f /tmp/check.pid /tmp/check.sts
-     rm -f $tmp.*
+-	grpl=$(sed -n < group \
+-		       -e 's/#.*//' \
+-		       -e 's/$/ /' \
+-		       -e "/^[0-9][0-9][0-9].* $grp /"'{ s/ .*//p }')
++	dirs=". $GENERIC_GROUP_DIR"
++
++	for d in $dirs; do
++		l=$(sed -n < $d/group \
++			-e 's/#.*//' \
++			-e 's/$/ /' \
++			-e "s;\(^[0-9][0-9][0-9]\).* $grp .*;$d/\1;p")
++		grpl="$grpl $l"
++	done
+ 	echo $grpl
  }
  
- trap "_wrapup; exit \$status" 0 1 2 3 15
+@@ -290,7 +296,7 @@ END	{ if (NR > 0) {
  
--# for hangcheck ...
--# Save pid of check in a well known place, so that hangcheck can be sure it
--# has the right pid (getting the pid from ps output is not reliable enough).
--#
--rm -rf /tmp/check.pid
--echo $$ >/tmp/check.pid
--
--# for hangcheck ...
--# Save the status of check in a well known place, so that hangcheck can be
--# sure to know where check is up to (getting test number from ps output is
--# not reliable enough since the trace stuff has been introduced).
--#
--rm -rf /tmp/check.sts
--echo "preamble" >/tmp/check.sts
--
- # don't leave old full output behind on a clean run
- rm -f check.full
+ 	echo "" >>check.log
+ 	date >>check.log
+-	echo $list | fmt | sed -e 's/^/    /' >>check.log
++	echo $list | fmt | sed -e 's/^/    /' -e 's;tests/;;g' >>check.log
+ 	$interrupt && echo "Interrupted!" >>check.log
+         
+         if [ ! -z "$n_try" -a $n_try != 0 ]
+@@ -368,7 +374,12 @@ _check_test_fs
+ for seq in $list
+ do
+     err=false
+-    echo -n "$seq"
++
++    # the filename for the test and the name output are different.
++    # we don't include the tests/ directory in the name output.
++    seqnum=`echo $seq | sed -e 's;tests/;;'`
++
++    echo -n "$seqnum"
  
-@@ -436,9 +414,6 @@ do
- 	fi
- 	rm -f core $seq.notrun
- 
--	# for hangcheck ...
--	echo "$seq" >/tmp/check.sts
--
+     if $showme
+     then
+@@ -381,7 +392,9 @@ do
+ 	# really going to try and run this one
+ 	#
+ 	rm -f $seq.out.bad
+-	lasttime=`sed -n -e "/^$seq /s/.* //p" <check.time`
++
++	# slashes now in names, sed barfs on them so use grep
++	lasttime=`grep -w ^$seq check.time | awk '// {print $2}'`
+ 	if [ "X$lasttime" != X ]; then
+ 		echo -n " ${lasttime}s ..."
+ 	else
+@@ -392,7 +405,7 @@ do
  	start=`_wallclock`
  	$timestamp && echo -n "	["`date "+%T"`"]"
  	[ ! -x $seq ] && chmod u+x $seq # ensure we can run it
+-	$LOGGER_PROG "run xfstest $seq"
++	$LOGGER_PROG "run xfstest $seqnum"
+ 	./$seq >$tmp.rawout 2>&1
+ 	sts=$?
+ 	$timestamp && _timestamp
+@@ -411,9 +424,9 @@ do
+ 	if [ -f $seq.notrun ]
+ 	then
+ 	    $timestamp || echo -n " [not run] "
+-	    $timestamp && echo " [not run]" && echo -n "	$seq -- "
++	    $timestamp && echo " [not run]" && echo -n "	$seqnum -- "
+ 	    cat $seq.notrun
+-	    notrun="$notrun $seq"
++	    notrun="$notrun $seqnum"
+ 	else
+ 	    if [ $sts -ne 0 ]
+ 	    then
+@@ -431,7 +444,7 @@ do
+ 		    then
+ 			:
+ 		    else
+-			echo "$seq `expr $stop - $start`" >>$tmp.time
++			echo "$seqnum `expr $stop - $start`" >>$tmp.time
+ 			echo -n " `expr $stop - $start`s"
+ 		    fi
+ 		    echo ""
+@@ -459,18 +472,18 @@ do
+     #
+     if $err
+     then
+-	bad="$bad $seq"
++	bad="$bad $seqnum"
+ 	n_bad=`expr $n_bad + 1`
+ 	quick=false
+     fi
+     if [ ! -f $seq.notrun ]
+     then
+-	try="$try $seq"
++	try="$try $seqnum"
+ 	n_try=`expr $n_try + 1`
+         _check_test_fs
+     fi
+     
+-    seq="after_$seq"
++    seq="after_$seqnum"
+ done
+ 
+ interrupt=false
+diff --git a/tests/generic/group b/tests/generic/group
+new file mode 100644
+index 0000000..4e01f0c
+--- /dev/null
++++ b/tests/generic/group
+@@ -0,0 +1,5 @@
++# QA groups control file
++# Defines test groups and nominal group owners
++# - do not start group names with a digit
++# - comment line before each group is "new" description
++#
 -- 
 1.7.10.4
 
