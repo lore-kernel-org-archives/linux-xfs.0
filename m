@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A59CA7FD4
-	for <xfs@oss.sgi.com>; Fri, 15 Mar 2013 03:47:41 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B3D3A7FD4
+	for <xfs@oss.sgi.com>; Fri, 15 Mar 2013 05:16:32 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8FCEC304043
-	for <xfs@oss.sgi.com>; Fri, 15 Mar 2013 01:47:38 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 94FEB8F8049
+	for <xfs@oss.sgi.com>; Fri, 15 Mar 2013 03:16:29 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	XyGz3LqSpC8WQxf7 for <xfs@oss.sgi.com>;
-	Fri, 15 Mar 2013 01:47:34 -0700 (PDT)
-Date: Fri, 15 Mar 2013 19:47:32 +1100
+	jkmC9DUXUFrMi21F for <xfs@oss.sgi.com>;
+	Fri, 15 Mar 2013 03:16:27 -0700 (PDT)
+Date: Fri, 15 Mar 2013 21:16:25 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 14/18] xfstests: remove -x functionality
-Message-ID: <20130315084732.GE2559@dastard>
-References: <20130314130611.A163253DEAFB@polaris-admin.engr.sgi.com>
+Subject: Re: [PATCH 3/3 V4] xfstests: btrfs tests for basic informational
+	commands
+Message-ID: <20130315101625.GE6369@dastard>
+References: <1363186623-1378-1-git-send-email-sandeen@redhat.com>
+	<1363186623-1378-4-git-send-email-sandeen@redhat.com>
+	<5140AB9D.2070001@redhat.com> <5140CB3F.5010704@redhat.com>
+	<5140CD26.7050201@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130314130611.A163253DEAFB@polaris-admin.engr.sgi.com>
+In-Reply-To: <5140CD26.7050201@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,30 +33,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Philip White <pwhite@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Thu, Mar 14, 2013 at 06:06:11AM -0700, Philip White wrote:
-> From: Phil White <pwhite@sgi.com>
+On Wed, Mar 13, 2013 at 02:01:58PM -0500, Eric Sandeen wrote:
+> Run basic btrfs information commands in various ways, performing
+> sanity tests of: filesystem show, label, sync, and device stats
+> (sync is included just because it's simple).  These are mostly
+> just smoke tests, although for example show by label & UUID
+> should verify that the correct fs was shown.
 > 
+> This also adds quite a few new filters to accommodate the output
+> of the new commands.
 > 
-> This is a rebasing & resubmit of a dchinner patch.  His comments on the
-> original:
-> -----------------
-> Now that there are no tests in the top level directory, the exlude
-> group functionality no longer works (-x group) as it cannot find
-> tests to build an initial list of tests. Rework the the exclude
-> group implementation to operate correctly on the new test locations.
+> Cc: linux-btrfs@vger.kernel.org
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
 > 
-> Also, swtich from sed to grep for exclusion because sed has problems
-> distnguishing the '/' in path names from regex control...
-> -----------------
-> This one is mildly different from the original as it modifies infrastructure
-> which remains in common.  In Dave's original patch, that had all been moved
-> into check.
+> V2: sort & uniq device stats output to account for variable
+> nrs. of devices.  Optionally check that the proper nr. of
+> devices was returned, as well.
+> 
+> V3: _filter_uuid needs to pay attention to $1, not hope
+> that the caller has set $UUID.  Oops.
+> 
+> V4: fix stats filter to set UNIQ_OPT in both cases, ugh.
 
-Why change the patch title? It still does what the original patch
-did, so the new patch title is incorrect....
+Something I just noticed in this commit:
+
+> +# get standard environment, filters and checks
+> +. ./common.rc
+> +. ./btrfs.filter
+
+That should probably have been named "common.filter.btrfs".
+I found this updating my patchset that moves all the common.* files
+into a common/ directory....
+
+I'll rename it to common/filter.btrfs....
 
 Cheers,
 
