@@ -1,22 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B73718034
-	for <xfs@oss.sgi.com>; Fri, 15 Mar 2013 11:01:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 881D58F804C
-	for <xfs@oss.sgi.com>; Fri, 15 Mar 2013 09:01:27 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id DR9pVW3E9kWPcGut for <xfs@oss.sgi.com>;
-	Fri, 15 Mar 2013 09:01:26 -0700 (PDT)
-Message-ID: <514345D5.8090005@sandeen.net>
-Date: Fri, 15 Mar 2013 11:01:25 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 9929F8035
+	for <xfs@oss.sgi.com>; Fri, 15 Mar 2013 11:03:08 -0500 (CDT)
+Message-ID: <51434653.40808@sgi.com>
+Date: Fri, 15 Mar 2013 11:03:31 -0500
+From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH V2] xfstests: test writing to device node on an RO
-	filesystem
-References: <514243C0.1000309@redhat.com> <5142896E.9060609@sandeen.net>
-	<5143457A.6060303@sgi.com>
-In-Reply-To: <5143457A.6060303@sgi.com>
+Subject: Re: [PATCH] xfstests: make defrag test 222 generic
+References: <513F5B0A.4030405@redhat.com> <20130315145540.GG7229@twin.jikos.cz>
+In-Reply-To: <20130315145540.GG7229@twin.jikos.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,37 +17,40 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Rich Johnston <rjohnston@sgi.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: dsterba@suse.cz, Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>, ext4 development <linux-ext4@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>
 
-On 3/15/13 10:59 AM, Rich Johnston wrote:
-> Eric,
-> 
-> Thanks again for the new test. A few minor issues that can be corrected at commit time.
-> 
-> Reviewed-by: Rich Johnston <rjohnston@sgi.com>
-> 
-> I can correct this a commit time.
-> 
-> quilt refresh
-> Warning: trailing whitespace in line 24 of 306
-> Refreshed patch patches/V2-xfstests-test-writing-to-device-node-on-an-RO-filesystem.patch
-> 
-> Do you also want me to add this top the quick group as Dave suggested when I commit this?
+On 03/15/2013 09:55 AM, David Sterba wrote:
+> On Tue, Mar 12, 2013 at 11:42:50AM -0500, Eric Sandeen wrote:
+>> Define a new _defrag_dir() helper which just runs noisy/debug
+>> dir defrag for ext4 and/or btrfs as well, and use that in 222
+>> instead of hardcoded xfs_fsr.
+>
+> Dir defrag on btrfs does not recurse in the given directory to defrag
+> all files, but defragments the tree of the containing subvolume and the
+> whole extent tree (thus needs CAP_SYS_ADMIN).
+>
+> This is known (and not very intuitive) behaviour, it would be better to
+> add a special parameter to defrag the root and/or the extent root and
+> pass it down to the ioctl via flags.
+>
+> Until this is implemented I suggest to use a workaround via 'find':
+>
+>   find $dir -print -execdir $DEFRAG_PROG '{}' +
+>
+> Otherwise the test looks ok.
+>
+> david
 
-Sure, thanks for that, and sorry my patches always seem so sloppy.  I mean well, and I try.  I'll try harder. ;)
+Eric, I will make this change at commit time if you agree?
 
--Eric
+David, can I put your name as the reviewer when I do?
 
-> Thanks
-> --Rich
-> 
-> 
-> 
+Thanks
+--Rich
 
 _______________________________________________
 xfs mailing list
