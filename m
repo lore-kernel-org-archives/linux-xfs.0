@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5A71D7FE6
-	for <xfs@oss.sgi.com>; Fri, 15 Mar 2013 06:53:42 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0251D7FD8
+	for <xfs@oss.sgi.com>; Fri, 15 Mar 2013 06:53:44 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id DF79EAC005
-	for <xfs@oss.sgi.com>; Fri, 15 Mar 2013 04:53:41 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CB729304043
+	for <xfs@oss.sgi.com>; Fri, 15 Mar 2013 04:53:40 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	5EqGdxFZb1NM5xbL for <xfs@oss.sgi.com>;
-	Fri, 15 Mar 2013 04:53:40 -0700 (PDT)
+	Fv13FwhxnjjCF355 for <xfs@oss.sgi.com>;
+	Fri, 15 Mar 2013 04:53:39 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UGTCZ-0001TX-Bg
+	(envelope-from <dave@fromorbit.com>) id 1UGTCZ-0001Tb-DD
 	for xfs@oss.sgi.com; Fri, 15 Mar 2013 22:53:35 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UGTCZ-0005hi-58
+	(envelope-from <dave@disappointment.disaster>) id 1UGTCZ-0005i2-AX
 	for xfs@oss.sgi.com; Fri, 15 Mar 2013 22:53:35 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 03/13] xfstests: rename USE_BIG_LOOPFS to be more generic
-Date: Fri, 15 Mar 2013 22:53:21 +1100
-Message-Id: <1363348411-21867-4-git-send-email-david@fromorbit.com>
+Subject: [PATCH 07/13] xfstest: enable xfs_repair for large filesystem testing
+Date: Fri, 15 Mar 2013 22:53:25 +1100
+Message-Id: <1363348411-21867-8-git-send-email-david@fromorbit.com>
 In-Reply-To: <1363348411-21867-1-git-send-email-david@fromorbit.com>
 References: <1363348411-21867-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,282 +38,70 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-USE_BIG_LOOPFS is really misnamed - it can be used on real devices just as
-easily as loop devices. It really means we are testing a large scratch device
-and that we should enable the special filesystem filling and checking options
-that enable xfstests to be run sanely on large XFS filesystems.
+Now that large filesystem testing does not play free space games to
+fill the space without IO, we can enable xfs_repair when running in
+this mode. xfs_repair has had it's scalability problems solved, too,
+so this is a safe thing to do.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Rich Johnston <rjohnston@sgi.com>
 ---
- 004       |    2 +-
- 015       |    2 +-
- 030       |    2 +-
- 031       |    2 +-
- 032       |    2 +-
- 033       |    4 ++--
- 041       |    2 +-
- 049       |    2 +-
- 083       |    2 +-
- 092       |    2 +-
- 148       |    2 +-
- 149       |    2 +-
- common    |    2 +-
- common.rc |   12 ++++++------
- setup     |    5 +++--
- 15 files changed, 23 insertions(+), 22 deletions(-)
+ common.rc |   18 ++++++++++--------
+ 1 file changed, 10 insertions(+), 8 deletions(-)
 
-diff --git a/004 b/004
-index 9f28e17..23729da 100755
---- a/004
-+++ b/004
-@@ -64,7 +64,7 @@ _supported_os IRIX Linux
- 
- _need_to_be_root
- _require_scratch
--_require_nobigloopfs
-+_require_no_large_scratch_dev
- 
- rm -f $seq.full
- 
-diff --git a/015 b/015
-index 4206b93..a99f1ed 100755
---- a/015
-+++ b/015
-@@ -52,7 +52,7 @@ _supported_fs generic
- _supported_os IRIX Linux
- 
- _require_scratch
--_require_nobigloopfs
-+_require_no_large_scratch_dev
- 
- _scratch_mkfs_sized `expr 50 \* 1024 \* 1024` >/dev/null 2>&1 \
-     || _fail "mkfs failed"
-diff --git a/030 b/030
-index fe57372..a8fb92c 100755
---- a/030
-+++ b/030
-@@ -64,8 +64,8 @@ _check_ag()
- _supported_fs xfs
- _supported_os IRIX Linux
- 
--_require_nobigloopfs
- _require_scratch
-+_require_no_large_scratch_dev
- 
- DSIZE="-dsize=100m,agcount=6"
- 
-diff --git a/031 b/031
-index b062277..fb6f15b 100755
---- a/031
-+++ b/031
-@@ -97,8 +97,8 @@ EOF
- _supported_fs xfs
- _supported_os IRIX Linux
- 
--_require_nobigloopfs
- _require_scratch
-+_require_no_large_scratch_dev
- 
- # sanity test - default + one root directory entry
- # Note: must do this proto/mkfs now for later inode size calcs
-diff --git a/032 b/032
-index bf88492..09f08c3 100755
---- a/032
-+++ b/032
-@@ -41,8 +41,8 @@ rm -f $seq.full
- _supported_fs xfs
- _supported_os Linux
- 
--_require_nobigloopfs
- _require_scratch
-+_require_no_large_scratch_dev
- 
- echo "Silence is golden."
- for fs in `echo ${MKFS_PROG}.* | sed -e 's/.sbin.mkfs.//g'`
-diff --git a/033 b/033
-index 9651f26..68a688e 100755
---- a/033
-+++ b/033
-@@ -76,9 +76,9 @@ _filter_bad_ids()
- # real QA test starts here
- _supported_fs xfs
- _supported_os IRIX Linux
-- 
--_require_nobigloopfs
-+
- _require_scratch
-+_require_no_large_scratch_dev
- 
- # devzero blows away 512byte blocks, so make 512byte inodes (at least)
- _scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs
-diff --git a/041 b/041
-index 2800811..28dcb33 100755
---- a/041
-+++ b/041
-@@ -50,7 +50,7 @@ _supported_fs xfs
- _supported_os IRIX Linux
- 
- _require_scratch
--_require_nobigloopfs
-+_require_no_large_scratch_dev
- umount $SCRATCH_DEV 2>/dev/null
- 
- _fill()
-diff --git a/049 b/049
-index b68821a..8593814 100755
---- a/049
-+++ b/049
-@@ -60,9 +60,9 @@ _log()
-     echo "--- $*" >> $seq.full
- }
- 
--_require_nobigloopfs
- _require_nonexternal
- _require_scratch
-+_require_no_large_scratch_dev
- _require_loop
- _require_ext2
- 
-diff --git a/083 b/083
-index f5349a9..a977ffd 100755
---- a/083
-+++ b/083
-@@ -58,7 +58,7 @@ _supported_fs generic
- _supported_os IRIX Linux
- 
- _require_scratch
--_require_nobigloopfs
-+_require_no_large_scratch_dev
- 
- rm -f $seq.full
- 
-diff --git a/092 b/092
-index 429fa80..02ccc71 100755
---- a/092
-+++ b/092
-@@ -48,7 +48,7 @@ _cleanup()
- _supported_fs xfs
- _supported_os IRIX Linux
- _require_scratch
--_require_nobigloopfs
-+_require_no_large_scratch_dev
- 
- MOUNT_OPTIONS="$MOUNT_OPTIONS -o inode64"
- _scratch_mkfs_xfs | _filter_mkfs 2>/dev/null
-diff --git a/148 b/148
-index 76cbf37..7bb1722 100755
---- a/148
-+++ b/148
-@@ -66,8 +66,8 @@ _check_ag()
- _supported_fs xfs
- _supported_os IRIX Linux
- 
--_require_nobigloopfs
- _require_scratch
-+_require_no_large_scratch_dev
- 
- DSIZE="-dsize=100m"
- 
-diff --git a/149 b/149
-index 5131a45..193e6d7 100755
---- a/149
-+++ b/149
-@@ -100,8 +100,8 @@ EOF
- _supported_fs xfs
- _supported_os IRIX Linux
- 
--_require_nobigloopfs
- _require_scratch
-+_require_no_large_scratch_dev
- 
- # sanity test - default + one root directory entry
- # Note: must do this proto/mkfs now for later inode size calcs
-diff --git a/common b/common
-index 7d13078..da86cd9 100644
---- a/common
-+++ b/common
-@@ -239,7 +239,7 @@ s/ .*//p
- 	    ;;
- 
- 	--large-fs)
--	    export USE_BIG_LOOPFS=yes
-+	    export LARGE_SCRATCH_DEV=yes
- 	    xpand=false
- 	    ;;
- 
 diff --git a/common.rc b/common.rc
-index ef41cbf..edf0318 100644
+index d221be1..ee4f522 100644
 --- a/common.rc
 +++ b/common.rc
-@@ -310,7 +310,7 @@ _scratch_mkfs_xfs()
-     cat $tmp_dir.mkfsstd
-     rm -f $tmp_dir.mkfserr $tmp_dir.mkfsstd
- 
--    if [ "$USE_BIG_LOOPFS" = yes ]; then
-+    if [ "$LARGE_SCRATCH_DEV" = yes ]; then
-         [ -z "$RETAIN_AG_BYTES" ] && RETAIN_AG_BYTES=0
-         ./tools/ag-wipe -q -r $RETAIN_AG_BYTES $SCRATCH_DEV
+@@ -1273,19 +1273,17 @@ _check_xfs_filesystem()
+     extra_mount_options=""
+     device=$1
+     if [ "$2" != "none" ]; then
+-       	extra_log_options="-l$2"
++	extra_log_options="-l$2"
+         extra_mount_options="-ologdev=$2"
      fi
-@@ -437,7 +437,7 @@ _scratch_xfs_repair()
-         SCRATCH_OPTIONS="-l$SCRATCH_LOGDEV"
-     [ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_RTDEV" ] && \
-         SCRATCH_OPTIONS=$SCRATCH_OPTIONS" -r$SCRATCH_RTDEV"
--    [ "$USE_BIG_LOOPFS" = yes ] && SCRATCH_OPTIONS=$SCRATCH_OPTIONS" -t"
-+    [ "$LARGE_SCRATCH_DEV" = yes ] && SCRATCH_OPTIONS=$SCRATCH_OPTIONS" -t"
-     $XFS_REPAIR_PROG $SCRATCH_OPTIONS $* $SCRATCH_DEV
- }
  
-@@ -826,9 +826,9 @@ _require_ext2()
- 
- # this test requires that (large) loopback device files are not in use
- #
--_require_nobigloopfs()
-+_require_no_large_scratch_dev()
- {
--    [ "$USE_BIG_LOOPFS" = yes ] && \
-+    [ "$LARGE_SCRATCH_DEV" = yes ] && \
- 	_notrun "Large filesystem testing in progress, skipped this test"
- }
- 
-@@ -1237,7 +1237,7 @@ _check_xfs_filesystem()
+     if [ "$3" != "none" ]; then
+-       	extra_rt_options="-r$3"
++	extra_rt_options="-r$3"
+         extra_mount_options=$extra_mount_options" -ortdev=$3"
+     fi
+     extra_mount_options=$extra_mount_options" $MOUNT_OPTIONS"
  
      [ "$FSTYP" != xfs ] && return 0
-     testoption=""
--    [ "$USE_BIG_LOOPFS" = yes ] && testoption=-t
-+    [ "$LARGE_SCRATCH_DEV" = yes ] && testoption=-t
+-    testoption=""
+-    [ "$LARGE_SCRATCH_DEV" = yes ] && testoption=-t
  
      type=`_fs_type $device`
      ok=1
-@@ -1276,7 +1276,7 @@ _check_xfs_filesystem()
+@@ -1310,8 +1308,13 @@ _check_xfs_filesystem()
          ok=0
      fi
-     # repair doesn't scale massively at this stage, optionally skip it for now
--    [ "$USE_BIG_LOOPFS" = yes ] || \
-+    [ "$LARGE_SCRATCH_DEV" = yes ] || \
+ 
+-    $XFS_CHECK_PROG $testoption $extra_log_options $device 2>&1 |\
+-	 _fix_malloc >$tmp.fs_check
++    # xfs_check runs out of memory on large files, so even providing the test
++    # option (-t) to avoid indexing the free space trees doesn't make it pass on
++    # large filesystems. Avoid it.
++    if [ "$LARGE_SCRATCH_DEV" != yes ]; then
++	    $XFS_CHECK_PROG $extra_log_options $device 2>&1 |\
++		 _fix_malloc >$tmp.fs_check
++    fi
+     if [ -s $tmp.fs_check ]
+     then
+         echo "_check_xfs_filesystem: filesystem on $device is inconsistent (c) (see $seq.full)"
+@@ -1323,8 +1326,7 @@ _check_xfs_filesystem()
+ 
+         ok=0
+     fi
+-    # repair doesn't scale massively at this stage, optionally skip it for now
+-    [ "$LARGE_SCRATCH_DEV" = yes ] || \
++
      $XFS_REPAIR_PROG -n $extra_log_options $extra_rt_options $device >$tmp.repair 2>&1
      if [ $? -ne 0 ]
      then
-diff --git a/setup b/setup
-index 62798cc..5225951 100755
---- a/setup
-+++ b/setup
-@@ -23,7 +23,7 @@ fi
- 
- [ "$USE_EXTERNAL"    = yes ] || USE_EXTERNAL=no
- [ "$USE_LBD_PATCH"   = yes ] || USE_LBD_PATCH=no
--[ "$USE_BIG_LOOPFS"  = yes ] || USE_BIG_LOOPFS=no
-+[ "$LARGE_SCRATCH_DEV"  = yes ] || LARGE_SCRATCH_DEV=no
- [ "$USE_ATTR_SECURE" = yes ] || USE_ATTR_SECURE=no
- [ -z "$FSTYP" ] && FSTYP="xfs"
- 
-@@ -31,5 +31,6 @@ cat <<EOF
- TEST: DIR=$TEST_DIR DEV=$TEST_DEV rt=[$TEST_RTDEV] log=[$TEST_LOGDEV]
- TAPE: dev=[$TAPE_DEV] rmt=[$RMT_TAPE_DEV] rmtirix=[$RMT_TAPE_USER@$RMT_IRIXTAPE_DEV]
- SCRATCH: MNT=$SCRATCH_MNT DEV=$SCRATCH_DEV rt=[$SCRATCH_RTDEV] log=[$SCRATCH_LOGDEV]
--VARIABLES: external=$USE_EXTERNAL largeblk=$USE_LBD_PATCH fstyp=$FSTYP bigloopfs=$USE_BIG_LOOPFS attrsecure=$USE_ATTR_SECURE
-+VARIABLES: external=$USE_EXTERNAL largeblk=$USE_LBD_PATCH fstyp=$FSTYP
-+	   large_scratch_dev=$LARGE_SCRATCH_DEV attrsecure=$USE_ATTR_SECURE
- EOF
 -- 
 1.7.10.4
 
