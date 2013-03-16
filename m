@@ -1,21 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 888D7804F
-	for <xfs@oss.sgi.com>; Fri, 15 Mar 2013 22:43:33 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 14713AC003
-	for <xfs@oss.sgi.com>; Fri, 15 Mar 2013 20:43:33 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id liBvQxfnbzbOGv2j (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 15 Mar 2013 20:43:28 -0700 (PDT)
-Message-ID: <5143EA55.9040209@oracle.com>
-Date: Sat, 16 Mar 2013 11:43:17 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E87CF8051
+	for <xfs@oss.sgi.com>; Fri, 15 Mar 2013 23:47:10 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D7558304043
+	for <xfs@oss.sgi.com>; Fri, 15 Mar 2013 21:47:07 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id jmz2CEQfQv6XFdFq
+	for <xfs@oss.sgi.com>; Fri, 15 Mar 2013 21:47:03 -0700 (PDT)
+Message-ID: <5143F94C.1020708@hardwarefreak.com>
+Date: Fri, 15 Mar 2013 23:47:08 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Subject: Re: xfstests #078: Mild oops/kernel issue for small partitions
-References: <CAJzLF9mvztWUQq7X2o0BcYLvUDH2bjAjpZosgzVUERgPTNYLVg@mail.gmail.com>
-In-Reply-To: <CAJzLF9mvztWUQq7X2o0BcYLvUDH2bjAjpZosgzVUERgPTNYLVg@mail.gmail.com>
+Subject: Re: xfs_fsr, sunit, and swidth
+References: <5140C147.7070205@binghamton.edu>
+	<514113C6.9090602@hardwarefreak.com>
+	<514153ED.3000405@binghamton.edu>
+	<5141C1FC.4060209@hardwarefreak.com>
+	<5141C8C1.2080903@hardwarefreak.com>
+	<5141E5CF.10101@binghamton.edu>
+	<5142AE40.6040408@hardwarefreak.com>
+	<20130315114538.GF6369@dastard>
+In-Reply-To: <20130315114538.GF6369@dastard>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,129 +35,133 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Michael L. Semon" <mlsemon35@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Dave Hall <kdhall@binghamton.edu>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Hi Michael,
+On 3/15/2013 6:45 AM, Dave Chinner wrote:
+> On Fri, Mar 15, 2013 at 12:14:40AM -0500, Stan Hoeppner wrote:
+>> On 3/14/2013 9:59 AM, Dave Hall wrote:
+>> Looks good.  75% is close to tickling the free space fragmentation
+>> dragon but you're not there yet.
+> 
+> Don't be so sure ;)
 
-Thanks for the report.
-On 03/16/2013 10:00 AM, Michael L. Semon wrote:
-> Hi!  I was making another run with xfstests, using smaller partitions
-> so I could use the larger ones for other tests, and I got a mild
-> oops/crash of some sort.  This applies only to small partitions, first
-> hit using 480MB partitions.  Also, CONFIG_XFS_DEBUG is set here, but I
-> haven't tested the non-debug case lately.  This has been repeatable
-> across various 3.8/3.9 kernels used recently.
-> 
-> PC in this test is my Pentium III boat anchor, 512 MB RAM, 768 MB
-> swap, no VGA/console, using serial and ssh to communicate.  Output was
-> taken from the remote syslog facility and trimmed down.
-So I just tried it against both 480MB and 512MB partitions, but I can not
-reproduce it on 3.8/3.9-rc1 with xfsprogs 3.1.8.
+The only thing I'm sure of is that I'll always be learning something new
+about XFS and how to troubleshoot it. ;)
 
-# gdisk -l /dev/sda
-Number  Start (sector)    End (sector)  Size       Code  Name
-   7       405682176       406730751   512.0 MiB   8300  Linux filesystem 
-   8       406732800       407781375   512.0 MiB   8300  Linux filesystem
-   9       407783424       408766463   480.0 MiB   8300  Linux filesystem
-  10       408768512       409751551   480.0 MiB   8300  Linux filesystem
+>>
+>>> Filesystem            Inodes   IUsed   IFree IUse% Mounted on
+>>> /dev/sdb1            5469091840 1367746380 4101345460   26% /infortrend
+>>
+>> Plenty of free inodes.
+>>
+>>> # xfs_db -r -c freesp /dev/sdb1
+>>>    from      to extents  blocks    pct
+>>>       1       1  832735  832735   0.05
+>>>       2       3  432183 1037663   0.06
+>>>       4       7  365573 1903965   0.11
+>>>       8      15  352402 3891608   0.23
+>>>      16      31  332762 7460486   0.43
+>>>      32      63  300571 13597941   0.79
+>>>      64     127  233778 20900655   1.21
+>>>     128     255  152003 27448751   1.59
+>>>     256     511  112673 40941665   2.37
+>>>     512    1023   82262 59331126   3.43
+>>>    1024    2047   53238 76543454   4.43
+>>>    2048    4095   34092 97842752   5.66
+>>>    4096    8191   22743 129915842   7.52
+>>>    8192   16383   14453 162422155   9.40
+>>>   16384   32767    8501 190601554  11.03
+>>>   32768   65535    4695 210822119  12.20
+>>>   65536  131071    2615 234787546  13.59
+>>>  131072  262143    1354 237684818  13.76
+>>>  262144  524287     470 160228724   9.27
+>>>  524288 1048575      74 47384798   2.74
+>>> 1048576 2097151       1 2097122   0.12
+>>
+>> Your free space map isn't completely horrible given you're at 75%
+>> capacity.  Looks like most of it is in chunks 32MB and larger.  Those
+>> 14.8m files have a mean size of ~1.22MB which suggests most of the files
+>> are small, so you shouldn't be having high seek load (thus latency)
+>> during allocation.
+> 
+> FWIW, you can't really tell how bad the freespace fragmentation is
+> from the global output like this. 
 
-# ./check 078
-FSTYP         -- xfs (debug)
-PLATFORM      -- Linux/x86_64 koala 3.9.0-rc1
-MKFS_OPTIONS  -- -f -bsize=4096 /dev/sda10
-MOUNT_OPTIONS -- /dev/sda10 /xfstest4
+True.
 
-078 46s ... - output mismatch (see 078.out.bad)
-    --- 078.out	2012-10-16 11:59:14.757395850 +0800
-    +++ 078.out.bad	2013-03-16 11:39:10.945051414 +0800
-    @@ -76,6 +76,7 @@
-     === GROWFS (from 1t to 2500g, 4096 blocksize)
-     
-     *** mkfs loop file (size=1t)
-    +mkfs.xfs: libxfs_device_zero write failed: No space left on device
-     meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
-     data     = bsize=XXX blocks=XXX, imaxpct=PCT
-              = sunit=XXX swidth=XXX, unwritten=X
-     ...
-     (Run 'diff -u 078.out 078.out.bad' to see the entire diff)
-Ran: 078
-Failures: 078
-Failed 1 of 1 tests
+> All of the large contiguous free
+> space might be in one or two AGs, and the others might be badly
+> fragmented. Hence you need to at least sample a few AGs to determine
+> if this is representative of the freespace in each AG....
 
-What's your xfsprogs version and Am I missed anything?
+What would be representative of 26AGs?  First, middle, last?  So Mr.
+Hall would execute:
 
-Thanks,
--Jeff
-> 
-> This is a crash report.  No fix is requested.  Let me know if this
-> needs to go somewhere else in the Linux development world as well.
-> 
-> Though labelled as _RTDEV partitions, /dev/sdb2 was my $TEST_DEV, and
-> /test/sdb5 was my $SCRATCH_DEV, and none of the external options were
-> in play:
-> 
-> [From `gdisk -l /dev/sdb`]
-> Number  Start (sector)    End (sector)  Size       Code  Name
->    2        17639424        18687999   512.0 MiB   8300  gSTestRTDev
->    5        18950144        19999694   512.5 MiB   8300  gSScrRTDev
-> 
-> Below is my oops, which was soft in nature, and my accidental typing
-> of `telinit 0` instead of `telinit 1` stopped things gently.  All is
-> well.  Don't try too hard...no bisecting unless you really want to do
-> so...this has never happened in my production environment...and thanks
-> again!
-> 
-> MIchael
-> 
-> root: run xfstest 078
-> XFS (loop0): Mounting Filesystem
-> XFS (loop0): Mounting Filesystem
-> XFS (loop0): Mounting Filesystem
-> XFS (loop0): Mounting Filesystem
-> XFS: Assertion failed: block_offset + from == pos, file:
-> fs/xfs/xfs_aops.c, line: 1504
-> ------------[ cut here ]------------
-> kernel BUG at fs/xfs/xfs_message.c:100!
-> invalid opcode: 0000 [#1]
-> Pid: 1203, comm: mkfs.xfs Not tainted 3.9.0-rc1+ #1
-> EIP: 0060:[<c10fa4f7>] EFLAGS: 00010286 CPU: 0
-> EIP is at assfail+0x27/0x30
-> EAX: 00000056 EBX: dfd7bd60 ECX: c141db1c EDX: 00000000
-> ESI: 1bb72000 EDI: 00000000 EBP: dd037d70 ESP: dd037d5c
->  DS: 007b ES: 007b FS: 0000 GS: 00e0 SS: 0068
-> CR0: 8005003b CR2: b757d000 CR3: 1286c000 CR4: 000007d0
-> DR0: 00000000 DR1: 00000000 DR2: 00000000 DR3: 00000000
-> DR6: ffff0ff0 DR7: 00000400
-> Process mkfs.xfs (pid: 1203, ti=dd036000 task=d620b320 task.ti=dd036000)
-> Stack:
->  00000000 c13d0274 c13c970c c13c9607 000005e0 dd037db8 c10e9af4 c7f5a398
->  00000000 cf0a5888 00001000 dfd7bd60 c7f5a398 00001000 00000000 00000000
->  00000000 cf0a5888 0801bb72 0102005a dfd7bd60 ffffffe4 c7f5a398 dd037de0
-> Call Trace:
->  [<c10e9af4>] xfs_vm_write_failed+0x64/0x150
->  [<c10e9c8e>] xfs_vm_write_begin+0xae/0x100
->  [<c1063a29>] ? iov_iter_copy_from_user_atomic+0x59/0x90
->  [<c106421a>] generic_file_buffered_write+0xca/0x210
->  [<c10ef3b1>] xfs_file_buffered_aio_write+0xc1/0x110
->  [<c10ef4db>] xfs_file_aio_write+0xdb/0x140
->  [<c108f447>] do_sync_write+0xb7/0xf0
->  [<c108f390>] ? vfs_read+0x150/0x150
->  [<c108f509>] vfs_write+0x89/0x150
->  [<c108f390>] ? vfs_read+0x150/0x150
->  [<c108f692>] sys_write+0x42/0x80
->  [<c1331964>] syscall_call+0x7/0xb
-> Code: 00 00 00 00 55 89 e5 83 ec 14 89 54 24 0c ba 74 02 3d c1 89 4c
-> 24 10 89 44 24 08 89 54 24 04 c7 04 24 00 00 00 00 e8 d9 fd ff ff <0f>
-> 0b 8d b4 26 00 00 00 00 55 b9 01 00 00 00 89 e5 83 ec 14 89
-> EIP: [<c10fa4f7>] assfail+0x27/0x30 SS:ESP 0068:dd037d5c
-> ---[ end trace a734100af2d0a0d7 ]---
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+~$ xfs_db -r /dev/sdb1
+xfs_db> freesp -a0
+...
+xfs_db> freesp -a13
+...
+xfs_db> freesp -a26
+...
+xfs_db> quit
+
+> As it is, the above output raises alarms for me. What I see is that
+> the number of small extents massively outnumbers the large extents.
+> The fact that there are roughly 2.5 million extents smaller than 63
+> blocks and that there is only one freespace extent larger than 4GB
+> indicates to me that free space is substantially fragmented. At 25%
+> free space, that's 250GB per AG, and if the largest freespace in
+> most AGs is less than 4GB in length, then free space is not
+> contiguous. i.e.  Free space appears to be heavily weighted towards
+> small extents...`
+
+It didn't raise alarms for me.  This is an rsnapshot workload with
+millions of small files.  For me it was a foregone conclusion he'd have
+serious fragmentation.  What I was looking at is whether it's severe
+enough to be a factor in his stated problem.  I don't think it is.  In
+fact I think it's completely unrelated, which is why I didn't go into
+deeper analysis of this.  Though I could be incorrect. ;)
+
+> So, the above output would lead me to investigate the freespace
+> layout more deeply to determine if this is going to affect the
+> workload that is being run...
+
+May be time to hold class again Dave as I'm probably missing something.
+ His slowdown is serial hardlink creation with "cp -al" of many millions
+of files.  Hardlinks are metadata structures, which means this workload
+modifies btrees and inodes, not extents, right?
+
+XFS directory metadata is stored closely together in each AG, correct?
+'cp -al' is going to walk directories in order, which means we're going
+have good read caching of the directory information thus little to no
+random read IO.  The cp is then going to create a hardlink per file.
+Now, even with the default 4KB write alignment, we should be getting a
+large bundle of hardlinks per write.  And I would think the 512MB BBWC
+on the array controller, if firmware is decent, should do a good job of
+merging these to mitigate RMW cycles.
+
+The OP is seeing 100% CPU for the cp operation, almost no IO, and no
+iowait.  If XFS or RMW were introducing any latency I'd think we'd see
+some iowait.
+
+Thus I believe at this point, the problem is those millions of serial
+user space calls in a single Perl thread causing the high CPU burn,
+little IO, and long run time, not XFS nor the storage.  And I think the
+OP came to this conclusion as well, without waiting on our analysis of
+his filesystem.
+
+Regardless of the OP's course of action, I of course welcome critique of
+my analysis, so I learn new things and improve for future cases.
+Specifically WRT high metadata modification workloads on parity SRD
+storage.  Which is what this OP could actually have if he runs many
+rsnaphots in parallel.  With 32 cores/64 threads and 128GB RAM he can
+certainly generate much higher rsnapshot load on his filesystem and
+storage, if he chooses to.
+
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
