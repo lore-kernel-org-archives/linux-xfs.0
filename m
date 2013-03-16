@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 552348069
-	for <xfs@oss.sgi.com>; Sat, 16 Mar 2013 07:14:12 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 003FD7FD1
+	for <xfs@oss.sgi.com>; Sat, 16 Mar 2013 10:56:56 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 378028F8033
-	for <xfs@oss.sgi.com>; Sat, 16 Mar 2013 05:14:09 -0700 (PDT)
-Received: from Ishtar.hc.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
-	cuda.sgi.com with ESMTP id bxy1I1E7zKU6ohWU (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 16 Mar 2013 05:14:07 -0700 (PDT)
-Message-ID: <5144620C.4040203@tlinx.org>
-Date: Sat, 16 Mar 2013 05:14:04 -0700
-From: Linda Walsh <xfs@tlinx.org>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E2B27304053
+	for <xfs@oss.sgi.com>; Sat, 16 Mar 2013 08:56:52 -0700 (PDT)
+Received: from mail-qa0-f47.google.com (mail-qa0-f47.google.com
+	[209.85.216.47]) by cuda.sgi.com with ESMTP id Rqz0O6DSWrtKnnhe
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sat, 16 Mar 2013 08:56:48 -0700 (PDT)
+Received: by mail-qa0-f47.google.com with SMTP id j8so890195qah.6
+	for <xfs@oss.sgi.com>; Sat, 16 Mar 2013 08:56:48 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: enable test 032 (mkfs overwrite) for btrfs
-References: <5140A2BC.7010800@redhat.com> <51435555.2020706@sgi.com>
-	<5143568F.5060900@redhat.com>
-In-Reply-To: <5143568F.5060900@redhat.com>
+Date: Sat, 16 Mar 2013 21:26:47 +0530
+Message-ID: <CAEUQceh-Xcabr0KErxF6EAdafDDP1PY_AeHwgYB82QeUdyGp-g@mail.gmail.com>
+Subject: Xfs_repair and journalling
+From: Subranshu Patel <spatel.ml@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,37 +24,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-Cc: linux-btrfs <linux-btrfs@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-
-
-Eric Sandeen wrote:
-
->>
->> It did not put mkfs.btrfs in /sbin.  This did however, validate all the error paths ;).
-> Heh ;)
-> Well, mixing & matching upstream installs from source w/ rpm-packaged binaries is usually asking for trouble. 
-> I don't think it's a bug, just bad administrative practice ;)
-----
-	SuSE is moving most if not all of their boot-related binaries off of "/" and
-putting
-them in /usr, requiring that you either have 1 partition for / and /usr or you run
-their initrd that will pre-mount /usr on "/".  Supposedly this is a requirement
-of moving the the MS-compat boot architecture, "systemd" and is being done by all
-the distros... (supposedly)...  At least RedHat and SuSE are going that way...
-
-	It's great to boot up in single-user from your hard disk and be told mount
-needs libs on a yet-to-be mounted partition...
-
-;-/
-
-	
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+VGhpcyBxdWVzdGlvbiBpcyByZWxhdGVkIHRvIHhmc19yZXBhaXIgKHJlY292ZXJ5KSBhbmQgam91
+cm5hbGxpbmcuCgpJIHBvd2VyZWQgb2ZmIChpbXByb3BlciBzaHV0IGRvd24pIHRoZSBzeXN0ZW0g
+d2hlbiB0aGUgSU8gd2FzCnVuZGVyZ29pbmcgb24gbW91bnRlZCBYRlMgZmlsZXN5c3RlbS4KClRo
+ZW4gSSB0cmllZCB0byByZWNvdmVyIHRoZSBpbmNvbnNpc3RlbnQgZmlsZXN5c3RlbSB1c2luZyB4
+ZnNfcmVwYWlyLAphZnRlciBwb3dlcmluZyBvbiB0aGUgc2FtZSBtYWNoaW5lLgoKVGhlIFhGUyBm
+aWxlc3lzdGVtIGRpZG7igJl0IGdldCByZWNvdmVyZWQgd2hpY2ggd2FzIG5vdCBleHBlY3RlZC4g
+VGhlCm91dHB1dCBkaXNwbGF5ZWQgYnkgeGZzX3JlcGFpciBpcyBhcyBmb2xsb3dzOgoKUGhhc2Ug
+MSAtIGZpbmQgYW5kIHZlcmlmeSBzdXBlcmJsb2NrLi4uClBoYXNlIDIgLSB1c2luZyBpbnRlcm5h
+bCBsb2cKICAgICAgICAtIHplcm8gbG9nLi4uCkVSUk9SOiBUaGUgZmlsZXN5c3RlbSBoYXMgdmFs
+dWFibGUgbWV0YWRhdGEgY2hhbmdlcyBpbiBhIGxvZyB3aGljaCBuZWVkcyB0bwpiZSByZXBsYXll
+ZC4gIE1vdW50IHRoZSBmaWxlc3lzdGVtIHRvIHJlcGxheSB0aGUgbG9nLCBhbmQgdW5tb3VudCBp
+dCBiZWZvcmUKcmUtcnVubmluZyB4ZnNfcmVwYWlyLiAgSWYgeW91IGFyZSB1bmFibGUgdG8gbW91
+bnQgdGhlIGZpbGVzeXN0ZW0sIHRoZW4gdXNlCnRoZSAtTCBvcHRpb24gdG8gZGVzdHJveSB0aGUg
+bG9nIGFuZCBhdHRlbXB0IGEgcmVwYWlyLgpOb3RlIHRoYXQgZGVzdHJveWluZyB0aGUgbG9nIG1h
+eSBjYXVzZSBjb3JydXB0aW9uIC0tIHBsZWFzZSBhdHRlbXB0IGEgbW91bnQKb2YgdGhlIGZpbGVz
+eXN0ZW0gYmVmb3JlIGRvaW5nIHRoaXMuCgpUaGUgcXVlc3Rpb24gdGhhdCBhcmlzZXMgaGVyZSBp
+cyB0aGF0IHdoeSB4ZnNfcmVwYWlyIHNob3VsZCBiZSByZS1ydW4KYWZ0ZXIgbW91bnRpbmcgYW5k
+IHVubW91bnRpbmcgdGhlIFhGUyBmaWxlc3lzdGVtLiBBY2NvcmRpbmcgdG8gbXkKdW5kZXJzdGFu
+ZGluZywgd2hlbiB3ZSBwZXJmb3JtIG1vdW50IG9wZXJhdGlvbiwgcmVjb3ZlcnkgaXMKYXV0b21h
+dGljYWxseSBkb25lIGlmIHRoZSBmaWxlc3lzdGVtIGlzIGluIGluY29uc2lzdGVudCBzdGF0ZS4g
+VGhlbgp3aGF0IGlzIHRoZSBuZWVkIG9mIHJlLXJ1bm5pbmcgeGZzX3JlcGFpciBhZnRlciBtb3Vu
+dCBpcyBiZWluZwpwZXJmb3JtZWQ/IERvZXMgeGZzX3JlcGFpciByZWNvdmVycyBzb21ldGhpbmcg
+aW5kaWZmZXJlbnQgZnJvbSB0aGUgb25lCnJlY292ZXJlZCBvbiBtb3VudD8gV2hhdCBleGFjdGx5
+IGhhcHBlbnMgd2hlbiB3ZSBtb3VudCBhbmQgdW5tb3VudCBYRlMKZmlsZXN5c3RlbT8KClRoaXMg
+aXMgbm90IG9ic2VydmVkIGluIEVYVDQsIGZzY2sgc3VjY2Vzc2Z1bGx5IHJlY292ZXJzIHdpdGhv
+dXQKbW91bnRpbmcgdGhlIGZpbGVzeXN0ZW0uCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRw
+Oi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
