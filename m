@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 003FD7FD1
-	for <xfs@oss.sgi.com>; Sat, 16 Mar 2013 10:56:56 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 8B19D7F6D
+	for <xfs@oss.sgi.com>; Sat, 16 Mar 2013 21:22:39 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E2B27304053
-	for <xfs@oss.sgi.com>; Sat, 16 Mar 2013 08:56:52 -0700 (PDT)
-Received: from mail-qa0-f47.google.com (mail-qa0-f47.google.com
-	[209.85.216.47]) by cuda.sgi.com with ESMTP id Rqz0O6DSWrtKnnhe
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 16 Mar 2013 08:56:48 -0700 (PDT)
-Received: by mail-qa0-f47.google.com with SMTP id j8so890195qah.6
-	for <xfs@oss.sgi.com>; Sat, 16 Mar 2013 08:56:48 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 736D98F8052
+	for <xfs@oss.sgi.com>; Sat, 16 Mar 2013 19:22:36 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id KJrtUMzqmtGKmOC6
+	for <xfs@oss.sgi.com>; Sat, 16 Mar 2013 19:22:35 -0700 (PDT)
+Message-ID: <514528EB.9010905@hardwarefreak.com>
+Date: Sat, 16 Mar 2013 21:22:35 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Date: Sat, 16 Mar 2013 21:26:47 +0530
-Message-ID: <CAEUQceh-Xcabr0KErxF6EAdafDDP1PY_AeHwgYB82QeUdyGp-g@mail.gmail.com>
-Subject: Xfs_repair and journalling
-From: Subranshu Patel <spatel.ml@gmail.com>
+Subject: Re: Xfs_repair and journalling
+References: <CAEUQceh-Xcabr0KErxF6EAdafDDP1PY_AeHwgYB82QeUdyGp-g@mail.gmail.com>
+In-Reply-To: <CAEUQceh-Xcabr0KErxF6EAdafDDP1PY_AeHwgYB82QeUdyGp-g@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,37 +24,80 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Subranshu Patel <spatel.ml@gmail.com>
+Cc: xfs@oss.sgi.com
 
-VGhpcyBxdWVzdGlvbiBpcyByZWxhdGVkIHRvIHhmc19yZXBhaXIgKHJlY292ZXJ5KSBhbmQgam91
-cm5hbGxpbmcuCgpJIHBvd2VyZWQgb2ZmIChpbXByb3BlciBzaHV0IGRvd24pIHRoZSBzeXN0ZW0g
-d2hlbiB0aGUgSU8gd2FzCnVuZGVyZ29pbmcgb24gbW91bnRlZCBYRlMgZmlsZXN5c3RlbS4KClRo
-ZW4gSSB0cmllZCB0byByZWNvdmVyIHRoZSBpbmNvbnNpc3RlbnQgZmlsZXN5c3RlbSB1c2luZyB4
-ZnNfcmVwYWlyLAphZnRlciBwb3dlcmluZyBvbiB0aGUgc2FtZSBtYWNoaW5lLgoKVGhlIFhGUyBm
-aWxlc3lzdGVtIGRpZG7igJl0IGdldCByZWNvdmVyZWQgd2hpY2ggd2FzIG5vdCBleHBlY3RlZC4g
-VGhlCm91dHB1dCBkaXNwbGF5ZWQgYnkgeGZzX3JlcGFpciBpcyBhcyBmb2xsb3dzOgoKUGhhc2Ug
-MSAtIGZpbmQgYW5kIHZlcmlmeSBzdXBlcmJsb2NrLi4uClBoYXNlIDIgLSB1c2luZyBpbnRlcm5h
-bCBsb2cKICAgICAgICAtIHplcm8gbG9nLi4uCkVSUk9SOiBUaGUgZmlsZXN5c3RlbSBoYXMgdmFs
-dWFibGUgbWV0YWRhdGEgY2hhbmdlcyBpbiBhIGxvZyB3aGljaCBuZWVkcyB0bwpiZSByZXBsYXll
-ZC4gIE1vdW50IHRoZSBmaWxlc3lzdGVtIHRvIHJlcGxheSB0aGUgbG9nLCBhbmQgdW5tb3VudCBp
-dCBiZWZvcmUKcmUtcnVubmluZyB4ZnNfcmVwYWlyLiAgSWYgeW91IGFyZSB1bmFibGUgdG8gbW91
-bnQgdGhlIGZpbGVzeXN0ZW0sIHRoZW4gdXNlCnRoZSAtTCBvcHRpb24gdG8gZGVzdHJveSB0aGUg
-bG9nIGFuZCBhdHRlbXB0IGEgcmVwYWlyLgpOb3RlIHRoYXQgZGVzdHJveWluZyB0aGUgbG9nIG1h
-eSBjYXVzZSBjb3JydXB0aW9uIC0tIHBsZWFzZSBhdHRlbXB0IGEgbW91bnQKb2YgdGhlIGZpbGVz
-eXN0ZW0gYmVmb3JlIGRvaW5nIHRoaXMuCgpUaGUgcXVlc3Rpb24gdGhhdCBhcmlzZXMgaGVyZSBp
-cyB0aGF0IHdoeSB4ZnNfcmVwYWlyIHNob3VsZCBiZSByZS1ydW4KYWZ0ZXIgbW91bnRpbmcgYW5k
-IHVubW91bnRpbmcgdGhlIFhGUyBmaWxlc3lzdGVtLiBBY2NvcmRpbmcgdG8gbXkKdW5kZXJzdGFu
-ZGluZywgd2hlbiB3ZSBwZXJmb3JtIG1vdW50IG9wZXJhdGlvbiwgcmVjb3ZlcnkgaXMKYXV0b21h
-dGljYWxseSBkb25lIGlmIHRoZSBmaWxlc3lzdGVtIGlzIGluIGluY29uc2lzdGVudCBzdGF0ZS4g
-VGhlbgp3aGF0IGlzIHRoZSBuZWVkIG9mIHJlLXJ1bm5pbmcgeGZzX3JlcGFpciBhZnRlciBtb3Vu
-dCBpcyBiZWluZwpwZXJmb3JtZWQ/IERvZXMgeGZzX3JlcGFpciByZWNvdmVycyBzb21ldGhpbmcg
-aW5kaWZmZXJlbnQgZnJvbSB0aGUgb25lCnJlY292ZXJlZCBvbiBtb3VudD8gV2hhdCBleGFjdGx5
-IGhhcHBlbnMgd2hlbiB3ZSBtb3VudCBhbmQgdW5tb3VudCBYRlMKZmlsZXN5c3RlbT8KClRoaXMg
-aXMgbm90IG9ic2VydmVkIGluIEVYVDQsIGZzY2sgc3VjY2Vzc2Z1bGx5IHJlY292ZXJzIHdpdGhv
-dXQKbW91bnRpbmcgdGhlIGZpbGVzeXN0ZW0uCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRw
-Oi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On 3/16/2013 10:56 AM, Subranshu Patel wrote:
+> This question is related to xfs_repair (recovery) and journalling.
+> =
+
+> I powered off (improper shut down) the system when the IO was
+> undergoing on mounted XFS filesystem.
+> =
+
+> Then I tried to recover the inconsistent filesystem using xfs_repair,
+> after powering on the same machine.
+
+The whole point of a journaling filesystem is to recover automatically
+after an unclean shutdown and put the filesystem in a consistent state.
+
+> The XFS filesystem didn=92t get recovered which was not expected. =
+
+
+This is because you short circuited the automatic recovery process.  The
+journal is replayed and the filesystem made consistent at the next mount
+after unclean shutdown.  You prevented this next mount.
+
+> The output displayed by xfs_repair is as follows:
+> =
+
+> Phase 1 - find and verify superblock...
+> Phase 2 - using internal log
+>         - zero log...
+> ERROR: The filesystem has valuable metadata changes in a log which needs =
+to
+> be replayed.  Mount the filesystem to replay the log, and unmount it befo=
+re
+> re-running xfs_repair.  If you are unable to mount the filesystem, then u=
+se
+> the -L option to destroy the log and attempt a repair.
+> Note that destroying the log may cause corruption -- please attempt a mou=
+nt
+> of the filesystem before doing this.
+
+XFS is telling you to do what you should have done in the first place:
+mount the filesystem so it can perform log recovery and make the XFS
+consistent once again.
+
+> The question that arises here is that why xfs_repair should be re-run
+> after mounting and unmounting the XFS filesystem. According to my
+> understanding, when we perform mount operation, recovery is
+> automatically done if the filesystem is in inconsistent state. Then
+> what is the need of re-running xfs_repair after mount is being
+> performed? Does xfs_repair recovers something indifferent from the one
+> recovered on mount? What exactly happens when we mount and unmount XFS
+> filesystem?
+
+No, the question that arises here is why you are intentionally short
+circuiting the recovery process and immediately trying to run
+xfs_repair.  When a system is configured properly, write barriers or
+BBWC are working properly, etc, one should never need to run xfs_repair
+after an unclean shutdown, as recovery is automatic.
+
+In fact, in general use, one should rarely, if ever, need to run
+xfs_repair.  I've been using XFS on production servers for a little over
+3 years and I've never needed to run xfs_repair, and yes, I've had at
+least two unclean shutdowns in that time.
+
+-- =
+
+Stan
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
