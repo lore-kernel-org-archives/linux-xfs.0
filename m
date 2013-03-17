@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8B19D7F6D
-	for <xfs@oss.sgi.com>; Sat, 16 Mar 2013 21:22:39 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 736D98F8052
-	for <xfs@oss.sgi.com>; Sat, 16 Mar 2013 19:22:36 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id KJrtUMzqmtGKmOC6
-	for <xfs@oss.sgi.com>; Sat, 16 Mar 2013 19:22:35 -0700 (PDT)
-Message-ID: <514528EB.9010905@hardwarefreak.com>
-Date: Sat, 16 Mar 2013 21:22:35 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 9AF817FAA
+	for <xfs@oss.sgi.com>; Sat, 16 Mar 2013 22:01:21 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 344D7AC003
+	for <xfs@oss.sgi.com>; Sat, 16 Mar 2013 20:01:18 -0700 (PDT)
+Received: from mail-vb0-f41.google.com (mail-vb0-f41.google.com
+	[209.85.212.41]) by cuda.sgi.com with ESMTP id 2ZL7gYxS8r8NNdJ3
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sat, 16 Mar 2013 20:01:17 -0700 (PDT)
+Received: by mail-vb0-f41.google.com with SMTP id l22so2758900vbn.0
+	for <xfs@oss.sgi.com>; Sat, 16 Mar 2013 20:01:16 -0700 (PDT)
+Message-ID: <514531F4.1010601@gmail.com>
+Date: Sat, 16 Mar 2013 23:01:08 -0400
+From: "Michael L. Semon" <mlsemon35@gmail.com>
 MIME-Version: 1.0
 Subject: Re: Xfs_repair and journalling
 References: <CAEUQceh-Xcabr0KErxF6EAdafDDP1PY_AeHwgYB82QeUdyGp-g@mail.gmail.com>
 In-Reply-To: <CAEUQceh-Xcabr0KErxF6EAdafDDP1PY_AeHwgYB82QeUdyGp-g@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,80 +26,71 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Subranshu Patel <spatel.ml@gmail.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 3/16/2013 10:56 AM, Subranshu Patel wrote:
-> This question is related to xfs_repair (recovery) and journalling.
-> =
-
-> I powered off (improper shut down) the system when the IO was
-> undergoing on mounted XFS filesystem.
-> =
-
-> Then I tried to recover the inconsistent filesystem using xfs_repair,
-> after powering on the same machine.
-
-The whole point of a journaling filesystem is to recover automatically
-after an unclean shutdown and put the filesystem in a consistent state.
-
-> The XFS filesystem didn=92t get recovered which was not expected. =
-
-
-This is because you short circuited the automatic recovery process.  The
-journal is replayed and the filesystem made consistent at the next mount
-after unclean shutdown.  You prevented this next mount.
-
-> The output displayed by xfs_repair is as follows:
-> =
-
-> Phase 1 - find and verify superblock...
-> Phase 2 - using internal log
->         - zero log...
-> ERROR: The filesystem has valuable metadata changes in a log which needs =
-to
-> be replayed.  Mount the filesystem to replay the log, and unmount it befo=
-re
-> re-running xfs_repair.  If you are unable to mount the filesystem, then u=
-se
-> the -L option to destroy the log and attempt a repair.
-> Note that destroying the log may cause corruption -- please attempt a mou=
-nt
-> of the filesystem before doing this.
-
-XFS is telling you to do what you should have done in the first place:
-mount the filesystem so it can perform log recovery and make the XFS
-consistent once again.
-
-> The question that arises here is that why xfs_repair should be re-run
-> after mounting and unmounting the XFS filesystem. According to my
-> understanding, when we perform mount operation, recovery is
-> automatically done if the filesystem is in inconsistent state. Then
-> what is the need of re-running xfs_repair after mount is being
-> performed? Does xfs_repair recovers something indifferent from the one
-> recovered on mount? What exactly happens when we mount and unmount XFS
-> filesystem?
-
-No, the question that arises here is why you are intentionally short
-circuiting the recovery process and immediately trying to run
-xfs_repair.  When a system is configured properly, write barriers or
-BBWC are working properly, etc, one should never need to run xfs_repair
-after an unclean shutdown, as recovery is automatic.
-
-In fact, in general use, one should rarely, if ever, need to run
-xfs_repair.  I've been using XFS on production servers for a little over
-3 years and I've never needed to run xfs_repair, and yes, I've had at
-least two unclean shutdowns in that time.
-
--- =
-
-Stan
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+RGlzY2xhaW1lcjogIEknbSBhbiBYRlMgdXNlciwgbm90IGEgZGV2ZWxvcGVyLi4uCgpPbiAwMy8x
+Ni8yMDEzIDExOjU2IEFNLCBTdWJyYW5zaHUgUGF0ZWwgd3JvdGU6Cj4gVGhpcyBxdWVzdGlvbiBp
+cyByZWxhdGVkIHRvIHhmc19yZXBhaXIgKHJlY292ZXJ5KSBhbmQgam91cm5hbGxpbmcuCj4KPiBJ
+IHBvd2VyZWQgb2ZmIChpbXByb3BlciBzaHV0IGRvd24pIHRoZSBzeXN0ZW0gd2hlbiB0aGUgSU8g
+d2FzCj4gdW5kZXJnb2luZyBvbiBtb3VudGVkIFhGUyBmaWxlc3lzdGVtLgo+Cj4gVGhlbiBJIHRy
+aWVkIHRvIHJlY292ZXIgdGhlIGluY29uc2lzdGVudCBmaWxlc3lzdGVtIHVzaW5nIHhmc19yZXBh
+aXIsCj4gYWZ0ZXIgcG93ZXJpbmcgb24gdGhlIHNhbWUgbWFjaGluZS4KPgo+IFRoZSBYRlMgZmls
+ZXN5c3RlbSBkaWRu4oCZdCBnZXQgcmVjb3ZlcmVkIHdoaWNoIHdhcyBub3QgZXhwZWN0ZWQuIFRo
+ZQo+IG91dHB1dCBkaXNwbGF5ZWQgYnkgeGZzX3JlcGFpciBpcyBhcyBmb2xsb3dzOgo+Cj4gUGhh
+c2UgMSAtIGZpbmQgYW5kIHZlcmlmeSBzdXBlcmJsb2NrLi4uCj4gUGhhc2UgMiAtIHVzaW5nIGlu
+dGVybmFsIGxvZwo+ICAgICAgICAgIC0gemVybyBsb2cuLi4KPiBFUlJPUjogVGhlIGZpbGVzeXN0
+ZW0gaGFzIHZhbHVhYmxlIG1ldGFkYXRhIGNoYW5nZXMgaW4gYSBsb2cgd2hpY2ggbmVlZHMgdG8K
+PiBiZSByZXBsYXllZC4gIE1vdW50IHRoZSBmaWxlc3lzdGVtIHRvIHJlcGxheSB0aGUgbG9nLCBh
+bmQgdW5tb3VudCBpdCBiZWZvcmUKPiByZS1ydW5uaW5nIHhmc19yZXBhaXIuICBJZiB5b3UgYXJl
+IHVuYWJsZSB0byBtb3VudCB0aGUgZmlsZXN5c3RlbSwgdGhlbiB1c2UKPiB0aGUgLUwgb3B0aW9u
+IHRvIGRlc3Ryb3kgdGhlIGxvZyBhbmQgYXR0ZW1wdCBhIHJlcGFpci4KPiBOb3RlIHRoYXQgZGVz
+dHJveWluZyB0aGUgbG9nIG1heSBjYXVzZSBjb3JydXB0aW9uIC0tIHBsZWFzZSBhdHRlbXB0IGEg
+bW91bnQKPiBvZiB0aGUgZmlsZXN5c3RlbSBiZWZvcmUgZG9pbmcgdGhpcy4KClNvIGRvIGp1c3Qg
+dGhhdCwgaXQncyB3b3J0aCBpdC4KClRoaXMgaGFwcGVucyB0byBtZSB3aGVuIEkgaGF2ZSBhIHBh
+cnRpdGlvbiBtYXJrZWQgcmVhZC1vbmx5IGluIAovZXRjL2ZzdGFiLCByZW1vdW50IGl0IHJlYWQt
+d3JpdGUgdG8gbWFrZSBjaGFuZ2VzIHRvIGl0LCB0aGVuIHNvbWV0aGluZyAKYmFkIGhhcHBlbnMs
+IGFuZCBJIGZvcmdldCBhYm91dCB0aGUgcmVhZC1vbmx5IG1hcmsgYW5kIHJ1biB4ZnNfcmVwYWly
+IG9uIAp0aGUgcGFydGl0aW9uLgoKPiBUaGUgcXVlc3Rpb24gdGhhdCBhcmlzZXMgaGVyZSBpcyB0
+aGF0IHdoeSB4ZnNfcmVwYWlyIHNob3VsZCBiZSByZS1ydW4KPiBhZnRlciBtb3VudGluZyBhbmQg
+dW5tb3VudGluZyB0aGUgWEZTIGZpbGVzeXN0ZW0uIEFjY29yZGluZyB0byBteQo+IHVuZGVyc3Rh
+bmRpbmcsIHdoZW4gd2UgcGVyZm9ybSBtb3VudCBvcGVyYXRpb24sIHJlY292ZXJ5IGlzCj4gYXV0
+b21hdGljYWxseSBkb25lIGlmIHRoZSBmaWxlc3lzdGVtIGlzIGluIGluY29uc2lzdGVudCBzdGF0
+ZS4gVGhlbgo+IHdoYXQgaXMgdGhlIG5lZWQgb2YgcmUtcnVubmluZyB4ZnNfcmVwYWlyIGFmdGVy
+IG1vdW50IGlzIGJlaW5nCj4gcGVyZm9ybWVkPyBEb2VzIHhmc19yZXBhaXIgcmVjb3ZlcnMgc29t
+ZXRoaW5nIGluZGlmZmVyZW50IGZyb20gdGhlIG9uZQo+IHJlY292ZXJlZCBvbiBtb3VudD8gV2hh
+dCBleGFjdGx5IGhhcHBlbnMgd2hlbiB3ZSBtb3VudCBhbmQgdW5tb3VudCBYRlMKPiBmaWxlc3lz
+dGVtPwoKVGhlIGxvZyByZXBsYXkgaXMgZG9uZSBpbiB0aGUga2VybmVsLCBhbmQgeGZzX3JlcGFp
+ciBpcyBhIHVzZXJzcGFjZSAKdG9vbC4gIFRoZXkgY291bGQgZWFzaWx5IGdpdmUgZGl2ZXJnZW50
+IHJlc3VsdHMuICBCdXQgZnJvbSB0aGUgCnhmc19yZXBhaXIgbWFuIHBhZ2U6CgoiUmVnYXJkbGVz
+cywgdGhlIGZpbGVzeXN0ZW0gdG8gYmUgcmVwYWlyZWQgbXVzdCBiZSB1bm1vdW50ZWQsIG90aGVy
+d2lzZSwgCnRoZSByZXN1bHRpbmcgZmlsZXN5c3RlbSBtYXkgYmUgaW5jb25zaXN0ZW50IG9yIGNv
+cnJ1cHQuIgoKVGhpcyBtZWFucyB0aGF0IGl0IGlzIGZyb3duZWQgdXBvbiB0byBmc2NrIGFuIFhG
+UyBwYXJ0aXRpb24gdGhhdCBoYXMgCmJlZW4gbW91bnRlZCBpbiBhbnkgd2F5LiAgVGhpcyBpcyB0
+aGUgcGFydCB0aGF0IGlzIGRpZmZlcmVudC4KCj4gVGhpcyBpcyBub3Qgb2JzZXJ2ZWQgaW4gRVhU
+NCwgZnNjayBzdWNjZXNzZnVsbHkgcmVjb3ZlcnMgd2l0aG91dAo+IG1vdW50aW5nIHRoZSBmaWxl
+c3lzdGVtLgoKTm8sIGZzY2sgZ290IHlvdXIgZmlsZXN5c3RlbSB0byBhIHBvaW50IHdoZXJlIGl0
+IHRoaW5rcyBpdCBpcyB1c2FibGUsIAphbmQgdGhhdCBtYXkgb3IgbWF5IG5vdCBiZSB0cnVlLCBk
+ZXBlbmRpbmcgb24gaG93IG11Y2ggb2YgeW91ciBkYXRhIGFuZCAKam91cm5hbCB3YXMgd3JpdHRl
+biB0byBkaXNrIGJlZm9yZSB0aGUgcG93ZXJvZmYuICBXcml0ZSBjYWNoaW5nIG9uIApkcml2ZXMg
+bWFrZXMgdGhpcyBtYXR0ZXIgd29yc2UuCgpUaGVyZSBpcyBhIGRpZmZlcmVuY2UgYmV0d2VlbiB0
+aGUgYXV0b21hdGljIGJvb3QtdGltZSBmc2NrIHNldHRpbmdzIGFuZCAKdXNpbmcgdGhlIGZzY2sg
+dG9vbCBtYW51YWxseSBmb3IgYWxtb3N0IGFsbCBmaWxlc3lzdGVtcyB0aGF0IGhhdmUgYW4gCmZz
+Y2stbGlrZSB0b29sLiAgVGhlcmUgaXMgYWxzbyBhIGRpZmZlcmVuY2UgYmV0d2VlbiBmc2NrIG9u
+IGEgCmZpbGUtc3lzdGVtIG1vdW50ZWQgcmVhZC1vbmx5IGFuZCBvbmUgdGhhdCBpcyBub3QgbW91
+bnRlZCBhdCBhbGwuICBFdmVuIAp3aXRoIE5URlMgb24gV2luZG93cyBYUCwgY2hrZHNrIHdpbGwg
+ZmluZCBhIGNvdXBsZSBtb3JlIGJhZCBmaWxlcyBpZiBpdCAKaXMgcnVuIGZyb20gZGlmZmVyZW50
+IGJvb3QgbWVkaWEuCgpJZiB0aGUgZmlsZSBzeXN0ZW0gc3RhdGVzIHRoYXQgYWxsIGlzIE9LLCBz
+dGlsbCB1bW91bnQgdGhlIEZTIGF0IHRoZSAKbmV4dCBvcHBvcnR1bml0eSBhbmQgZG8gYSByZWFs
+IGZzY2sgb24gaXQuICBJdCB3aWxsIGtlZXAgeW91IGZyb20gYXNraW5nIAoiaG93IGRpZCB0aGlz
+IGZpbGUgZ28gYmFkIiBzaXggbW9udGhzIGxhdGVyLgoKSWYgeW91IG1vdW50IHlvdXIgcGFydGl0
+aW9ucyByZWFkLXdyaXRlLCB0aGVuIFhGUyBsb2cgcmVwbGF5IHRha2VzIGNhcmUgCm9mIG1vc3Qg
+KGJ1dCBub3QgYWxsKSBzaXR1YXRpb25zLiAgVGhhdCdzIHdoeSB5b3UgbWlnaHQgdGFrZSBhIGxp
+dHRsZSAKZXh0cmEgY2FyZSBvZiB5b3VyIHJlYWQtb25seSBwYXJ0aXRpb25zLCB0byBiZSBzdXJl
+IHRoYXQgeW91IHJlbW91bnQgCnRoZW0gcmVhZC1vbmx5IGFmdGVyIHlvdSBtb2RpZnkgdGhlbS4K
+Ckdvb2QgbHVjayEKCk1pY2hhZWwKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Mu
+c2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
