@@ -1,17 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 362727F3F
-	for <xfs@oss.sgi.com>; Mon, 18 Mar 2013 15:41:35 -0500 (CDT)
-Date: Mon, 18 Mar 2013 15:41:33 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: possible dev branch regression - xfstest 285/1k
-Message-ID: <20130318204133.GE22182@sgi.com>
-References: <20130315222818.GA16100@wallace> <20130316150923.GA18589@gmail.com>
-	<20130317030648.GA14225@thunk.org> <51473C8B.5070509@redhat.com>
-	<20130318170927.GA5639@thunk.org> <51475043.4010505@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id DBA2F7F3F
+	for <xfs@oss.sgi.com>; Mon, 18 Mar 2013 15:50:37 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A79E2304066
+	for <xfs@oss.sgi.com>; Mon, 18 Mar 2013 13:50:37 -0700 (PDT)
+Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by
+	cuda.sgi.com with ESMTP id RLsxrCDxYHyoxgmX for
+	<xfs@oss.sgi.com>; Mon, 18 Mar 2013 13:50:36 -0700 (PDT)
+Received: from merkaba.localnet (ppp-93-104-149-127.dynamic.mnet-online.de
+	[93.104.149.127])
+	by mail.lichtvoll.de (Postfix) with ESMTPSA id AC556C5
+	for <xfs@oss.sgi.com>; Mon, 18 Mar 2013 21:50:05 +0100 (CET)
+From: Martin Steigerwald <Martin@lichtvoll.de>
+Subject: Re: Xfs_repair and journalling
+Date: Mon, 18 Mar 2013 21:50:34 +0100
+References: <CAEUQceh-Xcabr0KErxF6EAdafDDP1PY_AeHwgYB82QeUdyGp-g@mail.gmail.com>
+	<51455408.4070801@hardwarefreak.com>
+	<CAEUQceie41dh7h6uZSMu4-JB_BDu82X5CrKxHb=9wVQVAPzKgQ@mail.gmail.com>
+	(sfid-20130317_135417_509279_45FA64F6)
+In-Reply-To: <CAEUQceie41dh7h6uZSMu4-JB_BDu82X5CrKxHb=9wVQVAPzKgQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <51475043.4010505@redhat.com>
+Message-Id: <201303182150.34665.Martin@lichtvoll.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,91 +30,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: Eric Whitney <enwlinux@gmail.com>, linux-ext4@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-Hi Eric,
-
-On Mon, Mar 18, 2013 at 12:34:59PM -0500, Eric Sandeen wrote:
-> On 3/18/13 12:09 PM, Theodore Ts'o wrote:
-> > On Mon, Mar 18, 2013 at 11:10:51AM -0500, Eric Sandeen wrote:
-> 
-> <previous discussion thread about test 285 SEEK_HOLE test
-> breaking on ext4 due to change in opportunistic hole-filling
-> behavior and how to make it work again on ext4, and mention
-> of sysctl which makes it pass>
-> 
-> >> The test could do this too, right?
-> >>
-> >> _need_to_be_root
-> >>
-> >> and:
-> >>
-> >> if [ "$FSTYP" == "ext4" ]; then
-> >> 	ORIG_ZEROOUT_KB=`cat /sys/fs/ext4/$TEST_DEV/extent_max_zeroout_kb`
-> >> 	echo 0 > /sys/fs/ext4/$TEST_DEV/extent_max_zeroout_kb
-> >> fi
-> >>
-> >> and put it back to default in _cleanup:
-> >>
-> >> 	echo $ORIG_ZEROOUT_KB > /sys/fs/ext4/$TEST_DEV/extent_max_zeroout_kb
-> >>
-> >> That way we'd be testing seek hole correctness w/o being subject to
-> >> the vagaries in allocator behavior.
-> > 
-> > Yeah, the question is whether it would be more acceptable to put
-> > ext4-specific hacks like this into the test, or to modify
-> > src/seek_sanity_test.c so that it writes the test block-size block
-> > using pwrite at offset blocksize*42 instead of offset blocksize*10.
-> 
-> That seems like more of an obtuse hack, since it depends on current
-> default behavior, right?
-> 
-> Explicitly setting the zeroout to 0, with a comment as to why, should
-> make it clear to the reader of the test I think.
-> 
-> I'll have to look, xfs speculative preallocation fills in holes in
-> some cases as well, I'm not certain how it behaves on this test.
-
-My impression was that we are not zeroing holes, but I'd also have to look to
-be sure.  ;)
- 
-> But we could put in a specific tuning for xfs as well if needed.
-> 
-> If it becomes clear that every fs requires tuning to not opportunistically
-> fill in holes, then maybe we should make it non-generic, and only support
-> filesystems we've tested or tuned to work with the testcase.
-> 
-> > I had assumed putting hacks which tweaked sysfs tunables into the xfstest
-> > script itself would be frowned upon, but if that's considered OK, that
-> > would be great.
-> 
-> I don't see any real problem with it, myself.
-> 
-> cc: xfs list to see if there are any objections...
-
-Seems like the options being discussed so far are:
-
-1) make the test fs specific
-2) filesystem specific hacks to disable opportunistic zeroing of holes
-3) modify the test output to work with current ext4 default behavior
-
-It might be hard to find a tuning to produce identical output for xfs and ext4
-(option 3), and option 1 and 2 are a also bit clunky.
-
-How about option 4) fs-specific test output?
-
-We wouldn't have multiple copies of the same test laying around, and ext4 could
-still run with default settings.
-
-Regards,
-	Ben
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+QW0gU29ubnRhZywgMTcuIE3DpHJ6IDIwMTMgc2NocmllYiBTdWJyYW5zaHUgUGF0ZWw6Cj4gSW4g
+Y2FzZSBvZiBFWFQ0LCBqb3VybmFsIHdpbGwgbm90IGJlIHJlcGxheWVkIG9uIHBlcmZvcm1pbmcg
+bW91bnQuIE9uZQo+IG5lZWQgdG8gaW52b2tlIGZzY2sgd2hpY2ggcGVyZm9ybXMgam91cm5hbCBw
+bGF5YmFjayBhbmQgdGhlbiBvdGhlcgo+IGNvcnJ1cHRpb24gY2hlY2tzL3JlY292ZXJ5Lgo+IENv
+cnJlY3QgbWUgaWYgSSBhbSB3cm9uZy4KClVTQiBzdGljayB3aXRoIEV4dDQgd2l0aG91dCBhbnkg
+bWtmcyBvcHRpb25zOgoKbWVya2FiYTp+PiBtb3VudCAvZGV2L3NkYiAvbW50L3plaXQgICAKbWVy
+a2FiYTp+PiByc3luYyAtYSAvZXRjIC9tbnQvemVpdCAgICAKCih3YXMgdG8gc2hvcnQpCgptZXJr
+YWJhOn4+IHJzeW5jIC1hIC91c3IvYmluIC9tbnQvemVpdAoKVW5wbHVnIGR1cmluZyB3cml0ZSBh
+Y3Rpdml0eToKCgoKbWVya2FiYTp+PiBncmVwICJqb3VybmFsIiAvdmFyL2xvZy9zeXNsb2cgfCB0
+YWlsIC01IApNYXIgMTggMjE6NDM6MjIgbWVya2FiYSBrZXJuZWw6IFsyOTkzOC4wMzgyOThdIGpv
+dXJuYWwgY29tbWl0IEkvTyBlcnJvcgpNYXIgMTggMjE6NDM6MjIgbWVya2FiYSBrZXJuZWw6IFsy
+OTkzOC4wMzgzMDBdIGpvdXJuYWwgY29tbWl0IEkvTyBlcnJvcgpNYXIgMTggMjE6NDM6MjIgbWVy
+a2FiYSBrZXJuZWw6IFsyOTkzOC4wMzgzMDJdIGpvdXJuYWwgY29tbWl0IEkvTyBlcnJvcgpNYXIg
+MTggMjE6NDM6MjIgbWVya2FiYSBrZXJuZWw6IFsyOTkzOC4wMzgzMDVdIGpvdXJuYWwgY29tbWl0
+IEkvTyBlcnJvcgpNYXIgMTggMjE6NDM6MjIgbWVya2FiYSBrZXJuZWw6IFsyOTkzOC4wMzgzMDhd
+IGpvdXJuYWwgY29tbWl0IEkvTyBlcnJvcgptZXJrYWJhOn4+IGdyZXAgLWMgImpvdXJuYWwgY29t
+bWl0IiAvdmFyL2xvZy9zeXNsb2cKMTkxNQoKCldhaXQgdGlsbCBLREUgU0Mgc3RvcHMgcmVwbGF5
+aW5nIHRoZXNlIG5vdGlmaWNhdGlvbnMgYW5kIHRoZW4gcmVzdGFydCAKcGxhc21hLWRlc2t0b3Ag
+dG8gZ2V0IHJpZCBvZiBpdCBjYXVzZSB0aGF0IHRha2VzIHRvIGxvbmcuCgoKUGx1ZyBVU0Igc3Rp
+Y2sgYmFjayBpbi4gQW5kIG1vdW50IGl0OgoKbWVya2FiYTp+PiBtb3VudCAvZGV2L3NkYyAvbW50
+L3plaXQgCm1lcmthYmE6fj4gbHMgLWwgL21udC96ZWl0Cmluc2dlc2FtdCA0MApkcnd4ci14ci14
+ICAgMiByb290IHJvb3QgMTIyODggTcOkciAxOCAyMTo0MyBiaW4KZHJ3eHIteHIteCAxODggcm9v
+dCByb290IDEyMjg4IE3DpHIgMTggMTM6MzEgZXRjCmRyd3gtLS0tLS0gICAyIHJvb3Qgcm9vdCAx
+NjM4NCBNw6RyIDE4IDIxOjQyIGxvc3QrZm91bmQKCgpNb3VudCB0b29rIGFib3V0IDUgc2Vjb25k
+cy4KCgptZXJrYWJhOn4+IGRtZXNnIHwgdGFpbCAtMgpbMzAyMTcuNjAxODk2XSBFWFQ0LWZzIChz
+ZGMpOiByZWNvdmVyeSBjb21wbGV0ZQpbMzAyMTcuNjAzMjg3XSBFWFQ0LWZzIChzZGMpOiBtb3Vu
+dGVkIGZpbGVzeXN0ZW0gd2l0aCBvcmRlcmVkIGRhdGEgbW9kZS4gCk9wdHM6IChudWxsKQoKClNv
+IGNhbiB3ZSBnZXQgb3ZlciBhbnkgZ3Vlc3Mgd29yayB0aGF0IEV4dDQgbWlnaHQgbm90IGJlIGFi
+bGUgdG8gcmVwbGF5Cml0cyBqb3VybmFsIGFmdGVyIGFuIHVuY2xlYW4gc2h1dGRvd24/CgpJdCBj
+YW4gYW5kIGl0IGRvZXMuIEFuZCBub3QganVzdCBzaW5jZSB0aGlzIDMuOS1yYzMga2VybmVsLgoK
+VGhhbmtzLAotLSAKTWFydGluICdIZWxpb3MnIFN0ZWlnZXJ3YWxkIC0gaHR0cDovL3d3dy5MaWNo
+dHZvbGwuZGUKR1BHOiAwM0IwIDBENkMgMDA0MCAwNzEwIDRBRkEgIEI4MkYgOTkxQiBFQUFDIEE1
+OTkgODRDNwoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18K
+eGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxt
+YW4vbGlzdGluZm8veGZzCg==
