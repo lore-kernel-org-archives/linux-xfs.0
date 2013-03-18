@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 32AA77F3F
-	for <xfs@oss.sgi.com>; Mon, 18 Mar 2013 15:03:25 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 57A897F3F
+	for <xfs@oss.sgi.com>; Mon, 18 Mar 2013 15:39:39 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A1F9BAC002
-	for <xfs@oss.sgi.com>; Mon, 18 Mar 2013 13:03:21 -0700 (PDT)
-Received: from mail-la0-f45.google.com (mail-la0-f45.google.com
-	[209.85.215.45]) by cuda.sgi.com with ESMTP id JCu5mGZiLbt0JoSR
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 18 Mar 2013 13:03:13 -0700 (PDT)
-Received: by mail-la0-f45.google.com with SMTP id er20so6680854lab.18
-	for <xfs@oss.sgi.com>; Mon, 18 Mar 2013 13:03:11 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 34BB1304048
+	for <xfs@oss.sgi.com>; Mon, 18 Mar 2013 13:39:35 -0700 (PDT)
+Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by
+	cuda.sgi.com with ESMTP id Ko5DM13U0WPXzKkj for
+	<xfs@oss.sgi.com>; Mon, 18 Mar 2013 13:39:34 -0700 (PDT)
+From: Martin Steigerwald <Martin@lichtvoll.de>
+Subject: Re: Xfs_repair and journalling
+Date: Mon, 18 Mar 2013 21:37:40 +0100
+References: <CAEUQceh-Xcabr0KErxF6EAdafDDP1PY_AeHwgYB82QeUdyGp-g@mail.gmail.com>
+	<51455408.4070801@hardwarefreak.com>
+	(sfid-20130317_104906_951045_BA368DB9)
+In-Reply-To: <51455408.4070801@hardwarefreak.com>
 MIME-Version: 1.0
-In-Reply-To: <51469C90.1000001@oracle.com>
-References: <51469C90.1000001@oracle.com>
-Date: Mon, 18 Mar 2013 16:03:11 -0400
-Message-ID: <CAJzLF9nCHckm-2W3cVW9E=HK1JtC67rxMCeJqVnRit23yLCK6w@mail.gmail.com>
-Subject: Re: [PATCH v2] xfs: fix assertion failure in xfs_vm_write_failed()
-From: "Michael L. Semon" <mlsemon35@gmail.com>
+Message-Id: <201303182137.41344.Martin@lichtvoll.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,85 +25,101 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com, stan@hardwarefreak.com
+Cc: Subranshu Patel <spatel.ml@gmail.com>
 
-Looks good in limited testing.  I set some extra debug code somewhere,
-causing every failed mount in xfstests #078 to show up, so the
-original test cases were double-checked, both on the main partition
-(mid-upgrade) and on a backup boot partition:
+Am Sonntag, 17. M=E4rz 2013 schrieb Stan Hoeppner:
+> On 3/16/2013 10:56 AM, Subranshu Patel wrote:
+> > This is not observed in EXT4, fsck successfully recovers without
+> > mounting the filesystem.
+> =
 
-Before Liu Patch v2:
+> And this is the real problem.  You're *assuming* XFS should behave in
+> the same manner as EXT4.  Why would you assume a Ferrari should behave
+> like a Tata Nano?
+> =
 
-#078, 32-bit Linux, larger partitions: PASS
-#078, 32-bit Linux, smaller partitions: soft oops before test could fail
+> XFS is far more sophisticated than EXT4 in many, many ways, including
+> recovery after unclean shutdown.  XFS kernel code performs journal
+> playback/recovery automatically when the filesystem is mounted.
+> xfs_repair is a tool for fixing filesystems that are broken, not simply
+> in need of journal playback.  Thus xfs_repair has no code to perform
+> journal recovery.
+> =
 
-After Liu Patch v2:
+> EXT4 (and EXT3) lacks this sophistication and must call a user space
+> tool, e2fsck, to perform journal playback/recovery.
 
-#078, 32-bit Linux, larger partitions: PASS
-#078, 32-bit Linux, smaller partitions: FAIL, no space left on device (CORRECT)
+Stan, to all what I know this is just not true.
 
-64-bit cases were not tested.  Additionally, tests 001-005 were run
-(for my sake), and test 112 was run (pass).
+Ext4 and Ext3 are perfectly capable to replay their journals as well. I =
 
-The main partition on this PC for / is XFS, and I still have a file
-system, so that's a good sign.  A gcc compile was left running because
-I had to go to work, and I'll let you know if I don't have a file
-system when I get back home.
+would have notices with various Ext4 installations on laptops and =
 
-Conclusion: Success on 32-bit, and failure is not seen for the near
-future.  Testing in the next 24 hours may change this conclusion.
+workstations that had a unclean shutdown way more often than the two unclea=
+n =
 
-Thanks!
+shutdowns you mentioned. My previous main laptop a ThinkPad T42 would have =
 
-Michael
+been broken by every month or so, considering me playing around and managin=
+g =
 
-On Mon, Mar 18, 2013 at 12:48 AM, Jeff Liu <jeff.liu@oracle.com> wrote:
-> Hello,
->
-> Here is the v2 patch for fixing ASSERTION failed at xfs_vm_write_failed() according
-> to Dave's comments, so I added Dave as SOB for credit.
->
-> Hi Michael,
-> Please kindly try at your at your convenience.
->
-> Thanks,
-> -Jeff
+to crash it every once in a while.
 
-> This patch fix the block_offset evaluation to clear the lower 12 bits as:
-> block_offset = pos >> PAGE_CACHE_SHIFT) << PAGE_CACHE_SHIFT
-> Hence, the ASSERTION should be correct because the from offset in a page
-> is evaluated to have the lower 12 bits only.
->
-> Thanks Dave Chinner for pointing this out.
->
-> Reported-by: Michael L. Semon <mlsemon35@gmail.com>
-> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
-> Signed-off-by: Dave Chinner <david@fromorbit.com>
-> ---
->  fs/xfs/xfs_aops.c |    3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
->
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 5f707e5..a418e17 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -1494,7 +1494,8 @@ xfs_vm_write_failed(
->         loff_t                  pos,
->         unsigned                len)
->  {
-> -       loff_t                  block_offset = pos & PAGE_MASK;
-> +       loff_t                  block_offset = (pos >> PAGE_CACHE_SHIFT) <<
-> +                                               PAGE_CACHE_SHIFT;
->         loff_t                  block_start;
->         loff_t                  block_end;
->         loff_t                  from = pos & (PAGE_CACHE_SIZE - 1);
-> --
-> 1.7.9.5
+Thats the whole point of being a journaling filesystem.
+
+> XFS is the Ferrari of Linux filesystems and EXT is the Tata.  Keep that
+> in mind as you discover many of the other differences in the future.
+
+XFS may be more advanced in many areas - for example the capacity it can =
+
+hold and the scalability to really huge setups -, but the basic ability to =
+
+replay a journal is not one of this areas.
+
+Maybe both filesystem differ under what circumstances they are still able t=
+o =
+
+replay their journal, but from what I gathered the fully block based journa=
+l =
+
+of Ext filesystem is quite robust.
+
+Additionally also BTRFS meanwhile recovers just fine from an unclean =
+
+shutdown. At least it did on the last dozen hard crashes due to BTRFS not =
+
+being able to deal nicely with out of memory situations in combination with =
+
+some form of a memleak with Planeshift and/or Intel gfx driver unless I =
+
+tweak the VM subsystem settings a bit.
+
+Also ReiserFS 3 is able to replay a journal. It was the first Linux =
+
+filesystem that had journaling. Not that I would use it but thats for other =
+
+reasons. (Yes, I did not look it up, but I think XFS did journaling by that =
+
+time or even earlier on IRIX already.)
+
+And with all the mentioned filesystem, I would always first mount after a =
+
+unclean shutdown and expect that all is fine. Just if it isn=B4t I would =
+
+consider other options like repair tools. The XFS tools may the tools suite =
+
+that guides to this behaviour more than tools for other filesystems however.
+
+Thanks,
+-- =
+
+Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
+GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
 
 _______________________________________________
 xfs mailing list
