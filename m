@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A32917F37
-	for <xfs@oss.sgi.com>; Mon, 18 Mar 2013 08:21:26 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7FCC030406B
-	for <xfs@oss.sgi.com>; Mon, 18 Mar 2013 06:21:26 -0700 (PDT)
-Date: Mon, 18 Mar 2013 09:21:17 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfsdump: properly set Parent's PID
-Message-ID: <20130318132117.GA4840@infradead.org>
-References: <1359663197-30473-1-git-send-email-cmaiolino@redhat.com>
-	<513F58FE.1010200@sgi.com> <513FFC0D.3030705@sandeen.net>
-	<20130313124651.GA2816@andromeda.usersys.redhat.com>
-	<20130313125856.GB2816@andromeda.usersys.redhat.com>
-	<514081A2.9080106@sandeen.net>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 61B1F7F66
+	for <xfs@oss.sgi.com>; Mon, 18 Mar 2013 08:30:00 -0500 (CDT)
+Message-ID: <514716F4.3080202@sgi.com>
+Date: Mon, 18 Mar 2013 08:30:28 -0500
+From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <514081A2.9080106@sandeen.net>
+Subject: Re: [PATCH 3/3 V4] xfstests: btrfs tests for basic informational
+	commands
+References: <1363186623-1378-1-git-send-email-sandeen@redhat.com>
+	<1363186623-1378-4-git-send-email-sandeen@redhat.com>
+	<5140AB9D.2070001@redhat.com> <5140CB3F.5010704@redhat.com>
+	<5140CD26.7050201@sandeen.net> <20130315101625.GE6369@dastard>
+	<737235E6-72C8-45F5-A6F4-EEEFD094706E@redhat.com>
+	<51432EC5.5090208@sgi.com>
+	<5F46F0D0-1C1D-4F53-A2DE-9D39A85D078F@sandeen.net>
+In-Reply-To: <5F46F0D0-1C1D-4F53-A2DE-9D39A85D078F@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,24 +24,23 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Christoph Hellwig <hch@infradead.org>, Rich Johnston <rjohnston@sgi.com>, Carlos Maiolino <cmaiolino@redhat.com>, xfs@oss.sgi.com
+Cc: Eric Sandeen <sandeen@redhat.com>, Eric Sandeen <esandeen@redhat.com>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Wed, Mar 13, 2013 at 08:39:46AM -0500, Eric Sandeen wrote:
-> On 3/13/13 7:58 AM, Carlos Maiolino wrote:
-> > Ah, my origin was pointing to the git.kernel.org xfsdump repository =[
-> 
-> hch, can we please do something to those repos to make them more obviously
-> deprecated?
+Dave,
 
-Sorry, I totally forgot about that.  I'll take care of it as soon as I
-get close to the kernel.org PGP key again which I usually keep in a
-physically safe place.    Alternatively any other member of the xfs
-group on kernel.org could take care of it.
+Sorry for skipping test numbers,  I was going to revert, correct the 
+test number and resubmit this patch.
+Do you want me to rename btrfs.filter to common.filter.btrfs when I
+resubmit this patch?
+
+Regards
+--Rich
+
 
 _______________________________________________
 xfs mailing list
