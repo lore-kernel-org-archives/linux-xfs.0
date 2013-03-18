@@ -1,31 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id BE5C47F3F
-	for <xfs@oss.sgi.com>; Mon, 18 Mar 2013 17:31:40 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 8126D8F8040
-	for <xfs@oss.sgi.com>; Mon, 18 Mar 2013 15:31:37 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 43b4qEWJSvPXsB2H for
-	<xfs@oss.sgi.com>; Mon, 18 Mar 2013 15:31:36 -0700 (PDT)
-Received: from int-mx12.intmail.prod.int.phx2.redhat.com
-	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r2IMVaw1001168
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Mon, 18 Mar 2013 18:31:36 -0400
-Received: from laptop.bfoster (vpn-52-184.rdu2.redhat.com [10.10.52.184])
-	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id r2IMVZNJ024370
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Mon, 18 Mar 2013 18:31:35 -0400
-Message-ID: <51479537.7010905@redhat.com>
-Date: Mon, 18 Mar 2013 18:29:11 -0400
-From: Brian Foster <bfoster@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 167657F3F
+	for <xfs@oss.sgi.com>; Mon, 18 Mar 2013 17:51:08 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id F2A6A8F8040
+	for <xfs@oss.sgi.com>; Mon, 18 Mar 2013 15:51:07 -0700 (PDT)
+Received: from buxtehude.debian.org (buxtehude.debian.org [140.211.166.26]) by
+	cuda.sgi.com with ESMTP id NLt93IAw63AIQiP2 (version=TLSv1
+	cipher=AES128-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 18 Mar 2013 15:51:06 -0700 (PDT)
+Subject: Bug#695640: xfs_quota: cannot find mount point for path: Success
+Resent-To: debian-bugs-dist@lists.debian.org
+Resent-Message-ID: <handler.695640.B695640.136364690024530@bugs.debian.org>
+Date: Tue, 19 Mar 2013 09:48:14 +1100
+From: Dave Chinner <david@fromorbit.com>
+Message-ID: <20130318224814.GP6369@dastard>
+References: <CAA0ZO6CtLRkgrpXqapg3B5oMwGdLq8tS3y4dYG47aYX5BZkA=g@mail.gmail.com>
+	<20121211221419.GZ27055@sgi.com>
+	<CAA0ZO6APzwQCX=yf=qq8NkmjwDHVsgRBNCgN3KNW3RLgAWB=8A@mail.gmail.com>
+	<20121211223700.GA27055@sgi.com>
+	<CAA0ZO6BOUXTMpdrR-r=__-ZaAM6X39h2SisYXLfTTraTcttr+g@mail.gmail.com>
+	<20121211231533.GG16353@dastard>
+	<CAA0ZO6BvLQGt_9G-FSi+ZMCzJh_kmb1z2bdoPPwaVMVVK1UXJw@mail.gmail.com>
+	<CAA0ZO6BGqvBdXRr9U4BagQYGa=_kC2VUgtOj+qPB5HEX2U8O7w@mail.gmail.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfsprogs: reduce bb_numrecs in bno/cnt btrees when log
-	consumes all agf space
-References: <1363642689-17718-1-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1363642689-17718-1-git-send-email-bfoster@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <CAA0ZO6BGqvBdXRr9U4BagQYGa=_kC2VUgtOj+qPB5HEX2U8O7w@mail.gmail.com>
+Reply-To: Dave Chinner <david@fromorbit.com>, 695640@bugs.debian.org
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,75 +39,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Brian May <brian@microcomaustralia.com.au>
+Cc: 695640@bugs.debian.org, Ben Myers <bpm@sgi.com>
 
-On 03/18/2013 05:38 PM, Brian Foster wrote:
-> The mkfs code currently creates a single free space extent record
-> for each of the bno and cnt btrees in each AG. The start block of
-> the record is pushed forward on the AG that hosts an internal log.
-> If the log happens to consume all available space in the AG, the
-> start block becomes equal to sb->sb_agblocks and thus invalid.
-> This causes xfs_repair to complain.
+On Mon, Mar 18, 2013 at 11:30:35AM +1100, Brian May wrote:
+> On 12 December 2012 10:20, Brian May <brian@microcomaustralia.com.au> wrote:
 > 
-> For example, the following sequence:
+> > On 12 December 2012 10:15, Dave Chinner <david@fromorbit.com> wrote:
+> >
+> >> Full strace output, please.
+> >
+> >
+> > Attached.
+> >
 > 
-> 	mkfs.xfs -d file,name=./fs.img,size=50g,agsize=16m
-> 	xfs_repair ./fs.img
-> 
-> ... produces the following xfs_repair output:
-> 
-> 	Phase 1 - find and verify superblock...
-> 	Phase 2 - using internal log
->         	- scan filesystem freespace and inode maps...
-> 	invalid start block 4096 in record 0 of bno btree block 1600/1
-> 	invalid start block 4096 in record 0 of cnt btree block 1600/2
->         	- found root inode chunk
-> 	...
-> 
-> xfs_repair appears to correct the numrecs value such that subsequent
-> checks are successful. The sequence above is pulled from xfstests
-> 
+> Did my strace output help diagnose this bug?
 
-For some reason my commit log got munged here. :/ This should say this
-was "pulled from xfstests #250, which fails due to this behavior." I'll
-send out a v2 with at least a new commit log when this gets some review...
+No, but it's most likely the same problem as fixed in commit
+19473a2ac. Can you add this to quota/quot.c:quot_init():
 
-Brian
++	quot_cmd.flags = CMD_FLAG_GLOBAL;
 
-> Modify mkfs.xfs such that we check the block count value of the
-> free space record for the log AG after the log is accounted for. If
-> no space is left for the record, reset the record count to 0.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
->  mkfs/xfs_mkfs.c |    6 ++++++
->  1 files changed, 6 insertions(+), 0 deletions(-)
-> 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index c84448e..c4ae15b 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -2594,6 +2594,9 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
->  		}
->  		arec->ar_blockcount = cpu_to_be32(agsize - 
->  					be32_to_cpu(arec->ar_startblock));
-> +		if (!arec->ar_blockcount)
-> +			block->bb_numrecs = cpu_to_be16(0);
-> +
->  		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
->  
->  		/*
-> @@ -2627,6 +2630,9 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
->  		}
->  		arec->ar_blockcount = cpu_to_be32(agsize - 
->  					be32_to_cpu(arec->ar_startblock));
-> +		if (!arec->ar_blockcount)
-> +			block->bb_numrecs = cpu_to_be16(0);
-> +
->  		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
->  
->  		/*
-> 
+And see if the problem goes away?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
