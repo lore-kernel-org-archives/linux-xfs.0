@@ -1,22 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E57E07F8D
-	for <xfs@oss.sgi.com>; Mon, 18 Mar 2013 12:35:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CAB9F8F8035
-	for <xfs@oss.sgi.com>; Mon, 18 Mar 2013 10:35:06 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id aG7ilyQixTvxjylR for
-	<xfs@oss.sgi.com>; Mon, 18 Mar 2013 10:35:06 -0700 (PDT)
-Message-ID: <51475043.4010505@redhat.com>
-Date: Mon, 18 Mar 2013 12:34:59 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 38E197F37
+	for <xfs@oss.sgi.com>; Mon, 18 Mar 2013 13:22:06 -0500 (CDT)
+Date: Mon, 18 Mar 2013 13:22:02 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: Xfs_repair and journalling
+Message-ID: <20130318182202.GD22182@sgi.com>
+References: <CAEUQceh-Xcabr0KErxF6EAdafDDP1PY_AeHwgYB82QeUdyGp-g@mail.gmail.com>
+	<51455408.4070801@hardwarefreak.com>
+	<CAEUQceie41dh7h6uZSMu4-JB_BDu82X5CrKxHb=9wVQVAPzKgQ@mail.gmail.com>
 MIME-Version: 1.0
-Subject: Re: possible dev branch regression - xfstest 285/1k
-References: <20130315222818.GA16100@wallace> <20130316150923.GA18589@gmail.com>
-	<20130317030648.GA14225@thunk.org>
-	<51473C8B.5070509@redhat.com> <20130318170927.GA5639@thunk.org>
-In-Reply-To: <20130318170927.GA5639@thunk.org>
+Content-Disposition: inline
+In-Reply-To: <CAEUQceie41dh7h6uZSMu4-JB_BDu82X5CrKxHb=9wVQVAPzKgQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,68 +24,48 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Theodore Ts'o <tytso@mit.edu>
-Cc: xfs-oss <xfs@oss.sgi.com>, linux-ext4@vger.kernel.org, Eric Whitney <enwlinux@gmail.com>
+To: Subranshu Patel <spatel.ml@gmail.com>
+Cc: stan@hardwarefreak.com, xfs@oss.sgi.com
 
-On 3/18/13 12:09 PM, Theodore Ts'o wrote:
-> On Mon, Mar 18, 2013 at 11:10:51AM -0500, Eric Sandeen wrote:
+Hi Subranshu,
 
-<previous discussion thread about test 285 SEEK_HOLE test
-breaking on ext4 due to change in opportunistic hole-filling
-behavior and how to make it work again on ext4, and mention
-of sysctl which makes it pass>
+On Sun, Mar 17, 2013 at 05:12:36PM +0530, Subranshu Patel wrote:
+> What I understand is that, XFS being a journalling filesystem makes running
+> xfs_repair after a unclean unmount unnecessary.
 
->> The test could do this too, right?
->>
->> _need_to_be_root
->>
->> and:
->>
->> if [ "$FSTYP" == "ext4" ]; then
->> 	ORIG_ZEROOUT_KB=`cat /sys/fs/ext4/$TEST_DEV/extent_max_zeroout_kb`
->> 	echo 0 > /sys/fs/ext4/$TEST_DEV/extent_max_zeroout_kb
->> fi
->>
->> and put it back to default in _cleanup:
->>
->> 	echo $ORIG_ZEROOUT_KB > /sys/fs/ext4/$TEST_DEV/extent_max_zeroout_kb
->>
->> That way we'd be testing seek hole correctness w/o being subject to
->> the vagaries in allocator behavior.
-> 
-> Yeah, the question is whether it would be more acceptable to put
-> ext4-specific hacks like this into the test, or to modify
-> src/seek_sanity_test.c so that it writes the test block-size block
-> using pwrite at offset blocksize*42 instead of offset blocksize*10.
+You are correct.
 
-That seems like more of an obtuse hack, since it depends on current
-default behavior, right?
+> After a system crash or force power down, one can mount the filesystem
+> which causes the journal to be replayed and handles the half finished
+> writes. This is one part. But there can be other file corruption as well
+> and these can be handled by xfs_repair.
 
-Explicitly setting the zeroout to 0, with a comment as to why, should
-make it clear to the reader of the test I think.
+As Dave mentioned, XFS only journals metadata.  Unwritten cached file contents
+will not be recovered in this situation.
 
-I'll have to look, xfs speculative preallocation fills in holes in
-some cases as well, I'm not certain how it behaves on this test.
+> So the crux is to mount the filesystem so that journal will be replayed,
+> and then unmount the filesystem and run xfs_repair. (Assuming xfs_repair
+> may not be a mandatory step always)
 
-But we could put in a specific tuning for xfs as well if needed.
+If you are set up correctly, (e.g. write caches are turned off on your disk)
+you shouldn't even need to unmount the filesystem an run xfs_repair.
 
-If it becomes clear that every fs requires tuning to not opportunistically
-fill in holes, then maybe we should make it non-generic, and only support
-filesystems we've tested or tuned to work with the testcase.
+See this section of the xfs faq for more about write caches:
+http://www.xfs.org/index.php/XFS_FAQ#Q:_What_is_the_problem_with_the_write_cache_on_journaled_filesystems.3F
 
-> I had assumed putting hacks which tweaked sysfs tunables into the
-> xfstest script itself would be frowned upon, but if that's considered
-> OK, that would be great.
+> In case of EXT4, journal will not be replayed on performing mount. One need
+> to invoke fsck which performs journal playback and then other corruption
+> checks/recovery.
 
-I don't see any real problem with it, myself.
+I can't speak for ext4.  I do think that your expectation that fsck/repair be
+able to replay a journal is pretty reasonable.  That's just not how it is
+implemented here.  In xfs, log recovery is in the kernel and xfs_repair knows
+just enough about the log to avoid clobbering your precious metadata when it
+needs to be recovered.  There was some discussion in the past about making
+xfs_repair able to recover the log but I wouldn't expect that any time soon.
 
-cc: xfs list to see if there are any objections...
-
--Eric
-
-> 
-> 	      	 		       - Ted
-> 
+Regards,
+	Ben
 
 _______________________________________________
 xfs mailing list
