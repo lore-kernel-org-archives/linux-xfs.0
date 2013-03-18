@@ -1,17 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id ADA7C7F3F
-	for <linux-xfs@oss.sgi.com>; Mon, 18 Mar 2013 16:36:07 -0500 (CDT)
-Date: Mon, 18 Mar 2013 16:36:04 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: mount XFS partition fail after repair when uquota and gquota
-	are used
-Message-ID: <20130318213604.GF22182@sgi.com>
-References: <1363600796196-34996.post@n7.nabble.com>
-	<20130318164743.GC22182@sgi.com> <51477035.7070200@epfl.ch>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <51477035.7070200@epfl.ch>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 84DD47F3F
+	for <xfs@oss.sgi.com>; Mon, 18 Mar 2013 16:36:19 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 64ECE304051
+	for <xfs@oss.sgi.com>; Mon, 18 Mar 2013 14:36:19 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 7dvGbovOr8WAt4Jm for
+	<xfs@oss.sgi.com>; Mon, 18 Mar 2013 14:36:18 -0700 (PDT)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r2ILaI93018147
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Mon, 18 Mar 2013 17:36:18 -0400
+Received: from bfoster.bfoster (dhcp-189-135.bos.redhat.com [10.16.189.135])
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id r2ILaHO8025572
+	for <xfs@oss.sgi.com>; Mon, 18 Mar 2013 17:36:18 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH] xfsprogs: reduce bb_numrecs in bno/cnt btrees when log
+	consumes all agf space
+Date: Mon, 18 Mar 2013 17:38:09 -0400
+Message-Id: <1363642689-17718-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,78 +30,73 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Guillaume Anciaux <guillaume.anciaux@epfl.ch>
-Cc: linux-xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Hi Guillaume,
+The mkfs code currently creates a single free space extent record
+for each of the bno and cnt btrees in each AG. The start block of
+the record is pushed forward on the AG that hosts an internal log.
+If the log happens to consume all available space in the AG, the
+start block becomes equal to sb->sb_agblocks and thus invalid.
+This causes xfs_repair to complain.
 
-On Mon, Mar 18, 2013 at 08:51:17PM +0100, Guillaume Anciaux wrote:
-> On 18/03/2013 17:47, Ben Myers wrote:
-> >On Mon, Mar 18, 2013 at 02:59:56AM -0700, anciaux wrote:
-> >>I have been struggling to repair a partition after a RAID disk set failure.
-> >>
-> >>Apparently the data is accessible with no problem since I can mount the
-> >>partition.
-> >>
-> >>The problem is ONLY when I use the uquota and gquota mount option (which I
-> >>was using freely before the disk failure).
+For example, the following sequence:
 
-...
+	mkfs.xfs -d file,name=./fs.img,size=50g,agsize=16m
+	xfs_repair ./fs.img
 
-> >>I fear for the filesystem to be corrupted and xfs_repair not able to
-> >>notice.  At least for the quota information.  Someone has any hint on
-> >>what could be the problem ?
-> >
-> >Have you tried xfs_repair?  I'm not clear on that.
->
-> Sorry I was not clear enough in my message: Yes I did hit xfs_repair
-> -L. And it permitted me to mount the partition but ONLYwhen quota
-> options are not set. If quota is activated then a corruption message
-> (see below for the complete message) is printed in syslog.
+... produces the following xfs_repair output:
 
-Running xfs_repair with the -L option will have zeroed the log so you have
-likely lost some recent metadata transactions.  -L is dangerous.
+	Phase 1 - find and verify superblock...
+	Phase 2 - using internal log
+        	- scan filesystem freespace and inode maps...
+	invalid start block 4096 in record 0 of bno btree block 1600/1
+	invalid start block 4096 in record 0 of cnt btree block 1600/2
+        	- found root inode chunk
+	...
 
-> >>On how I could fix/regenerate the quota
-> >>information ?
-> >
-> >It looks like you're hitting the corruption during quotacheck, which is in the
-> >process of regenerating the quota information.  Your paste seems to be missing
-> >the output that would be printed by xfs_warn at line 513 which would include
-> >ino, total nextents, and the number of blocks used.  Is that info available?
->
-> Sorry I did a " | grep -i xfs" for the previous log. The complete
-> log is hereafter:
-> 
-> Mar 18 09:35:50 storage kernel: [  417.883817] XFS (sdb1): corrupt
-> dinode 3224608213, extent total = 1, nblocks = 0.
-         ^^^^^^^^^^
+xfs_repair appears to correct the numrecs value such that subsequent
+checks are successful. The sequence above is pulled from xfstests
 
-You know the inode number now.  It has one extent.  It is using 0 blocks which
-is why you're having trouble.  You could use 'find' to find that file.
+Modify mkfs.xfs such that we check the block count value of the
+free space record for the log AG after the log is accounted for. If
+no space is left for the record, reset the record count to 0.
 
-> Corruption detected. Unmount and run xfs_repair
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ mkfs/xfs_mkfs.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-Does a subsequent xfs_repair (without -L) find the inode and fix it?  If not we
-have a bug in xfs_repair.  I recommend you try with the latest and greatest
-version which you can find here:  git://oss.sgi.com/xfs/cmds/xfsprogs.git
-
-> >Could you provide a metadump?  This bug report isn't ringing any bells for me
-> >yet, but maybe it will for someone else.
->
-> I wish I could do this but the result of "meta_dump /dev/sdb1" for
-> the partition containing 6.9T of data is promising to be quite
-> large. Are there special options I should use to extract only the
-> information that you would need to investigate my problem ?
-
-A metadump is the best option.  How big?
-
-Thanks,
-	Ben
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index c84448e..c4ae15b 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -2594,6 +2594,9 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
+ 		}
+ 		arec->ar_blockcount = cpu_to_be32(agsize - 
+ 					be32_to_cpu(arec->ar_startblock));
++		if (!arec->ar_blockcount)
++			block->bb_numrecs = cpu_to_be16(0);
++
+ 		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
+ 
+ 		/*
+@@ -2627,6 +2630,9 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
+ 		}
+ 		arec->ar_blockcount = cpu_to_be32(agsize - 
+ 					be32_to_cpu(arec->ar_startblock));
++		if (!arec->ar_blockcount)
++			block->bb_numrecs = cpu_to_be16(0);
++
+ 		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
+ 
+ 		/*
+-- 
+1.7.7.6
 
 _______________________________________________
 xfs mailing list
