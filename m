@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 145A27F3F
-	for <xfs@oss.sgi.com>; Mon, 18 Mar 2013 18:17:01 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A1A71AC002
-	for <xfs@oss.sgi.com>; Mon, 18 Mar 2013 16:17:00 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 84E7E7F37
+	for <xfs@oss.sgi.com>; Mon, 18 Mar 2013 18:30:34 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 107D1AC002
+	for <xfs@oss.sgi.com>; Mon, 18 Mar 2013 16:30:34 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	ovrQzbPSzY2ALDgO for <xfs@oss.sgi.com>;
-	Mon, 18 Mar 2013 16:16:58 -0700 (PDT)
-Date: Tue, 19 Mar 2013 10:16:57 +1100
+	5yCRay7X9pbXaPgq for <xfs@oss.sgi.com>;
+	Mon, 18 Mar 2013 16:30:32 -0700 (PDT)
+Date: Tue, 19 Mar 2013 10:30:26 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfsprogs: reduce bb_numrecs in bno/cnt btrees when log
-	consumes all agf space
-Message-ID: <20130318231657.GR6369@dastard>
-References: <1363642689-17718-1-git-send-email-bfoster@redhat.com>
+Subject: Re: [PATCH v2] xfs: fix assertion failure in xfs_vm_write_failed()
+Message-ID: <20130318233026.GS6369@dastard>
+References: <51469C90.1000001@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1363642689-17718-1-git-send-email-bfoster@redhat.com>
+In-Reply-To: <51469C90.1000001@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,57 +29,65 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: "Michael L. Semon" <mlsemon35@gmail.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Mon, Mar 18, 2013 at 05:38:09PM -0400, Brian Foster wrote:
-> The mkfs code currently creates a single free space extent record
-> for each of the bno and cnt btrees in each AG. The start block of
-> the record is pushed forward on the AG that hosts an internal log.
-> If the log happens to consume all available space in the AG, the
-> start block becomes equal to sb->sb_agblocks and thus invalid.
-> This causes xfs_repair to complain.
+On Mon, Mar 18, 2013 at 12:48:16PM +0800, Jeff Liu wrote:
+> Hello,
 > 
-> For example, the following sequence:
-> 
-> 	mkfs.xfs -d file,name=./fs.img,size=50g,agsize=16m
-> 	xfs_repair ./fs.img
-> 
-> ... produces the following xfs_repair output:
-> 
-> 	Phase 1 - find and verify superblock...
-> 	Phase 2 - using internal log
->         	- scan filesystem freespace and inode maps...
-> 	invalid start block 4096 in record 0 of bno btree block 1600/1
-> 	invalid start block 4096 in record 0 of cnt btree block 1600/2
->         	- found root inode chunk
-> 	...
-> 
-> xfs_repair appears to correct the numrecs value such that subsequent
-> checks are successful. The sequence above is pulled from xfstests
-> 
-> Modify mkfs.xfs such that we check the block count value of the
-> free space record for the log AG after the log is accounted for. If
-> no space is left for the record, reset the record count to 0.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> Here is the v2 patch for fixing ASSERTION failed at xfs_vm_write_failed() according
+> to Dave's comments, so I added Dave as SOB for credit.
+
+No, please don't add my SOB to a patch you wrote, even if I came up
+with the idea of how to do something. A SOB indicates that someone
+has verified the origin of the patch (e.g. for copyright reasons),
+not who contributed to finding the problem.  IOWs, adding someone
+else's SOB to a patch you wrote is almost always the wrong thing to
+do.
+
+The correct way to acknowledge someone's contribution to the
+fix if they didn't write the patch is by a line in the commit
+message saying something like "Thanks to .... for helping find and
+fix the problem." [Edit: I just noticed you did this bit. ;) ]
+
+If .... agrees with your fix, then they can add a reviewed-by line
+to the patch, which has significantly different meaning to a SOB...
+
+....
+
+> Reported-by: Michael L. Semon <mlsemon35@gmail.com>
+> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+> Signed-off-by: Dave Chinner <david@fromorbit.com>
 > ---
->  mkfs/xfs_mkfs.c |    6 ++++++
->  1 files changed, 6 insertions(+), 0 deletions(-)
+>  fs/xfs/xfs_aops.c |    3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
 > 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index c84448e..c4ae15b 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -2594,6 +2594,9 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
->  		}
->  		arec->ar_blockcount = cpu_to_be32(agsize - 
->  					be32_to_cpu(arec->ar_startblock));
-> +		if (!arec->ar_blockcount)
-> +			block->bb_numrecs = cpu_to_be16(0);
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 5f707e5..a418e17 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -1494,7 +1494,8 @@ xfs_vm_write_failed(
+>  	loff_t			pos,
+>  	unsigned		len)
+>  {
+> -	loff_t			block_offset = pos & PAGE_MASK;
+> +	loff_t			block_offset = (pos >> PAGE_CACHE_SHIFT) <<
+> +						PAGE_CACHE_SHIFT;
+>  	loff_t			block_start;
+>  	loff_t			block_end;
+>  	loff_t			from = pos & (PAGE_CACHE_SIZE - 1);
 
-You don't need to endian swap zero. block->bb_numrecs = 0; is just
-fine.  I'd also add a comment to explain why this is being done....
+This needs a comment explaining why we aren't just masking the value
+off with PAGE_MASK. And given that it wraps, something like:
+
+-	loff_t			block_offset = pos & PAGE_MASK;
++	loff_t			block_offset;
+.....
+
++	/*
++	 * comment about 32 bit systems, 64 bit variables and masks
++	 */
++	block_offset = (pos >> PAGE_CACHE_SHIFT) << PAGE_CACHE_SHIFT;
 
 Cheers,
 
