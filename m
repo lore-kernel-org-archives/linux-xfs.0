@@ -1,27 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D348F7F63
-	for <xfs@oss.sgi.com>; Mon, 18 Mar 2013 09:50:14 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id CE0CB7F9D
+	for <xfs@oss.sgi.com>; Mon, 18 Mar 2013 09:50:17 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9B6D930406B
+	by relay1.corp.sgi.com (Postfix) with ESMTP id AD4B98F8068
 	for <xfs@oss.sgi.com>; Mon, 18 Mar 2013 07:50:14 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id mbVbKu13tyYpixE4 for
+	cuda.sgi.com with ESMTP id 1oCJy9NIy3WdbGBn for
 	<xfs@oss.sgi.com>; Mon, 18 Mar 2013 07:49:59 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r2IEnwRh015153
+Received: from int-mx02.intmail.prod.int.phx2.redhat.com
+	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r2IEnx3P011174
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
 	for <xfs@oss.sgi.com>; Mon, 18 Mar 2013 10:49:59 -0400
 Received: from bfoster.bfoster (dhcp-189-135.bos.redhat.com [10.16.189.135])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id r2IEnwSf021459
-	for <xfs@oss.sgi.com>; Mon, 18 Mar 2013 10:49:58 -0400
+	by int-mx02.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
+	id r2IEnwOY014464
+	for <xfs@oss.sgi.com>; Mon, 18 Mar 2013 10:49:59 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v5 1/6] xfs: reorganize xfs_iomap_prealloc_size to remove
-	indentation
-Date: Mon, 18 Mar 2013 10:51:43 -0400
-Message-Id: <1363618308-53594-2-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v5 6/6] xfs: xfs_iomap_prealloc_size() tracepoint
+Date: Mon, 18 Mar 2013 10:51:48 -0400
+Message-Id: <1363618308-53594-7-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1363618308-53594-1-git-send-email-bfoster@redhat.com>
 References: <1363618308-53594-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,97 +38,65 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The majority of xfs_iomap_prealloc_size() executes within the
-check for lack of default I/O size. Reverse the logic to remove the
-extra indentation.
+Add a tracepoint to provide some feedback on preallocation size
+calculation.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Ben Myers <bpm@sgi.com>
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 ---
- fs/xfs/xfs_iomap.c |   63 ++++++++++++++++++++++++++-------------------------
- 1 files changed, 32 insertions(+), 31 deletions(-)
+ fs/xfs/xfs_iomap.c |    3 +++
+ fs/xfs/xfs_trace.h |   24 ++++++++++++++++++++++++
+ 2 files changed, 27 insertions(+), 0 deletions(-)
 
 diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index c8cb337..344557e 100644
+index 0a53085..8f8aaee 100644
 --- a/fs/xfs/xfs_iomap.c
 +++ b/fs/xfs/xfs_iomap.c
-@@ -381,42 +381,43 @@ xfs_iomap_prealloc_size(
- 	int			nimaps)
- {
- 	xfs_fsblock_t		alloc_blocks = 0;
-+	int			shift = 0;
-+	int64_t			freesp;
- 
- 	alloc_blocks = xfs_iomap_eof_prealloc_initial_size(mp, ip, offset,
- 							   imap, nimaps);
--	if (alloc_blocks > 0) {
--		int shift = 0;
--		int64_t freesp;
--
--		alloc_blocks = XFS_FILEOFF_MIN(MAXEXTLEN,
--					rounddown_pow_of_two(alloc_blocks));
--
--		xfs_icsb_sync_counters(mp, XFS_ICSB_LAZY_COUNT);
--		freesp = mp->m_sb.sb_fdblocks;
--		if (freesp < mp->m_low_space[XFS_LOWSP_5_PCNT]) {
--			shift = 2;
--			if (freesp < mp->m_low_space[XFS_LOWSP_4_PCNT])
--				shift++;
--			if (freesp < mp->m_low_space[XFS_LOWSP_3_PCNT])
--				shift++;
--			if (freesp < mp->m_low_space[XFS_LOWSP_2_PCNT])
--				shift++;
--			if (freesp < mp->m_low_space[XFS_LOWSP_1_PCNT])
--				shift++;
--		}
--		if (shift)
--			alloc_blocks >>= shift;
--
--		/*
--		 * If we are still trying to allocate more space than is
--		 * available, squash the prealloc hard. This can happen if we
--		 * have a large file on a small filesystem and the above
--		 * lowspace thresholds are smaller than MAXEXTLEN.
--		 */
--		while (alloc_blocks && alloc_blocks >= freesp)
--			alloc_blocks >>= 4;
-+	if (!alloc_blocks)
-+		goto check_writeio;
-+
-+	alloc_blocks = XFS_FILEOFF_MIN(MAXEXTLEN,
-+				rounddown_pow_of_two(alloc_blocks));
-+
-+	xfs_icsb_sync_counters(mp, XFS_ICSB_LAZY_COUNT);
-+	freesp = mp->m_sb.sb_fdblocks;
-+	if (freesp < mp->m_low_space[XFS_LOWSP_5_PCNT]) {
-+		shift = 2;
-+		if (freesp < mp->m_low_space[XFS_LOWSP_4_PCNT])
-+			shift++;
-+		if (freesp < mp->m_low_space[XFS_LOWSP_3_PCNT])
-+			shift++;
-+		if (freesp < mp->m_low_space[XFS_LOWSP_2_PCNT])
-+			shift++;
-+		if (freesp < mp->m_low_space[XFS_LOWSP_1_PCNT])
-+			shift++;
- 	}
-+	if (shift)
-+		alloc_blocks >>= shift;
-+
-+	/*
-+	 * If we are still trying to allocate more space than is
-+	 * available, squash the prealloc hard. This can happen if we
-+	 * have a large file on a small filesystem and the above
-+	 * lowspace thresholds are smaller than MAXEXTLEN.
-+	 */
-+	while (alloc_blocks && alloc_blocks >= freesp)
-+		alloc_blocks >>= 4;
- 
-+check_writeio:
+@@ -518,6 +518,9 @@ check_writeio:
  	if (alloc_blocks < mp->m_writeio_blocks)
  		alloc_blocks = mp->m_writeio_blocks;
  
++	trace_xfs_iomap_prealloc_size(ip, alloc_blocks, shift,
++				      mp->m_writeio_blocks);
++
+ 	return alloc_blocks;
+ }
+ 
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 16a8129..aa4db33 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -619,6 +619,30 @@ DECLARE_EVENT_CLASS(xfs_iref_class,
+ 		  (char *)__entry->caller_ip)
+ )
+ 
++TRACE_EVENT(xfs_iomap_prealloc_size,
++	TP_PROTO(struct xfs_inode *ip, xfs_fsblock_t blocks, int shift,
++		 unsigned int writeio_blocks),
++	TP_ARGS(ip, blocks, shift, writeio_blocks),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_ino_t, ino)
++		__field(xfs_fsblock_t, blocks)
++		__field(int, shift)
++		__field(unsigned int, writeio_blocks)
++	),
++	TP_fast_assign(
++		__entry->dev = VFS_I(ip)->i_sb->s_dev;
++		__entry->ino = ip->i_ino;
++		__entry->blocks = blocks;
++		__entry->shift = shift;
++		__entry->writeio_blocks = writeio_blocks;
++	),
++	TP_printk("dev %d:%d ino 0x%llx prealloc blocks %llu shift %d "
++		  "m_writeio_blocks %u",
++		  MAJOR(__entry->dev), MINOR(__entry->dev), __entry->ino,
++		  __entry->blocks, __entry->shift, __entry->writeio_blocks)
++)
++
+ #define DEFINE_IREF_EVENT(name) \
+ DEFINE_EVENT(xfs_iref_class, name, \
+ 	TP_PROTO(struct xfs_inode *ip, unsigned long caller_ip), \
 -- 
 1.7.7.6
 
