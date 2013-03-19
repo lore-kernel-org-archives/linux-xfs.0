@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8DDB97F5E
-	for <xfs@oss.sgi.com>; Tue, 19 Mar 2013 14:44:36 -0500 (CDT)
-Message-ID: <5148C01B.1000606@sgi.com>
-Date: Tue, 19 Mar 2013 14:44:27 -0500
+	by oss.sgi.com (Postfix) with ESMTP id A9A3E7F53
+	for <xfs@oss.sgi.com>; Tue, 19 Mar 2013 14:46:03 -0500 (CDT)
+Message-ID: <5148C09B.3050306@sgi.com>
+Date: Tue, 19 Mar 2013 14:46:35 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 01/13] xfstests: filter new repair/mkfs output for CRCs
+Subject: Re: [PATCH 03/13] xfstests: rename USE_BIG_LOOPFS to be more generic
 References: <1363348411-21867-1-git-send-email-david@fromorbit.com>
-	<1363348411-21867-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1363348411-21867-2-git-send-email-david@fromorbit.com>
+	<1363348411-21867-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1363348411-21867-4-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,8 +27,8 @@ Cc: xfs@oss.sgi.com
 
 
 Looks good.
-Reviewed-by: Rich Johnston <rjohnston@sgi.com>
 
+Reviewed-by: Rich Johnston <rjohnston@sgi.com>
 
 _______________________________________________
 xfs mailing list
