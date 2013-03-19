@@ -1,15 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 44A6A7F76
-	for <xfs@oss.sgi.com>; Tue, 19 Mar 2013 16:19:18 -0500 (CDT)
-Date: Tue, 19 Mar 2013 16:19:14 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: [PATCH v2] xfsdump: update version numbers and changelog
-Message-ID: <20130319211914.GK22182@sgi.com>
-References: <20130319210619.GH22182@sgi.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130319210619.GH22182@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id 3CF117F53
+	for <xfs@oss.sgi.com>; Tue, 19 Mar 2013 17:13:34 -0500 (CDT)
+Subject: [GIT PULL] XFS fixes for 3.9-rc4
+Message-Id: <20130319221330.6C8BB500B4B@whiskey.americas.sgi.com>
+Date: Tue, 19 Mar 2013 17:13:30 -0500 (CDT)
+From: bpm@sgi.com (Ben Myers)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,77 +14,58 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, Nathan Scott <nathans@debian.org>
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Update version numbers and changelog.
+Hi Linus,
 
-Signed-off-by: Ben Myers <bpm@sgi.com>
+Please pull these fixes for XFS.  There is a fix for a potential
+infinite loop which was introduced in 4d559a3bcb73, a fix for the return
+type of xfs_iomap_eof_prealloc_initial_size from a1e16c26660b, and a fix
+for a failed buffer readahead causing subsequent callers to fail
+incorrectly.
 
----
+Thanks,
+Ben
 
-v2: fix spelling errors reported by Nathan.  my goodness!
 
- VERSION          |    2 +-
- configure.ac     |    2 +-
- debian/changelog |    6 ++++++
- doc/CHANGES      |    8 ++++++++
- 4 files changed, 16 insertions(+), 2 deletions(-)
+The following changes since commit 6dbe51c251a327e012439c4772097a13df43c5b8:
 
-Index: b/VERSION
-===================================================================
---- a/VERSION	2013-03-19 16:13:27.111340607 -0500
-+++ b/VERSION	2013-03-19 16:13:29.601946961 -0500
-@@ -3,5 +3,5 @@
- #
- PKG_MAJOR=3
- PKG_MINOR=1
--PKG_REVISION=2
-+PKG_REVISION=3
- PKG_BUILD=1
-Index: b/configure.ac
-===================================================================
---- a/configure.ac	2013-03-19 16:13:27.111340607 -0500
-+++ b/configure.ac	2013-03-19 16:13:29.621985659 -0500
-@@ -1,4 +1,4 @@
--AC_INIT([xfsdump], [3.1.2])
-+AC_INIT([xfsdump], [3.1.3])
- AC_PREREQ(2.50)
- AC_CONFIG_AUX_DIR([.])
- AC_CONFIG_MACRO_DIR([m4])
-Index: b/debian/changelog
-===================================================================
---- a/debian/changelog	2013-03-19 16:13:27.111340607 -0500
-+++ b/debian/changelog	2013-03-19 16:13:48.731360668 -0500
-@@ -1,3 +1,9 @@
-+xfsdump (3.1.3) unstable; urgency=low
-+
-+  * New upstream release
-+
-+ -- Nathan Scott <nathans@debian.org>  Tue, 19 Mar 2013 14:20:01 +1100
-+
- xfsdump (3.1.1) unstable; urgency=low
- 
-   * New upstream release
-Index: b/doc/CHANGES
-===================================================================
---- a/doc/CHANGES	2013-03-19 16:13:27.111340607 -0500
-+++ b/doc/CHANGES	2013-03-19 16:15:04.501497321 -0500
-@@ -1,3 +1,11 @@
-+xfsdump-3.1.3 (1 February 2013)
-+	- Fix a segfault in xfsrestore when a path name is too long,
-+	  thanks to Nigel Tamplin.
-+	- Fix a backward compatibility problem.  Dumps created with
-+	  version 3.1.2 where extended attributes are in use failed
-+	  to restore with v3.1.0 due to file header checksum errors.
-+	  Thanks to Fugazzi for reporting.
-+
- xfsdump-3.1.2 (13 December 2012)
- 	- Update release script to create a source tarball.
- 
+  Linux 3.9-rc1 (2013-03-03 15:11:05 -0800)
+
+are available in the git repository at:
+
+  git://oss.sgi.com/xfs/xfs tags/for-linus-v3.9-rc4
+
+for you to fetch changes up to e001873853d87674dd5b3cfa2851885023616695:
+
+  xfs: ensure we capture IO errors correctly (2013-03-18 13:39:10 -0500)
+
+----------------------------------------------------------------
+- Fix for a potential infinite loop which was introduced in 4d559a3bcb73
+- Fix for the return type of xfs_iomap_eof_prealloc_initial_size
+  from a1e16c26660b
+- Fix for a failed buffer readahead causing subsequent callers to
+  fail incorrectly
+
+----------------------------------------------------------------
+Brian Foster (1):
+      xfs: fix potential infinite loop in xfs_iomap_prealloc_size()
+
+Dave Chinner (1):
+      xfs: ensure we capture IO errors correctly
+
+Mark Tinguely (1):
+      xfs: fix xfs_iomap_eof_prealloc_initial_size type
+
+ fs/xfs/xfs_buf.c   |    6 ++++++
+ fs/xfs/xfs_iomap.c |    4 ++--
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
 _______________________________________________
 xfs mailing list
