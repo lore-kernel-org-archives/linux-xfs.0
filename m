@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 380587F4E
-	for <xfs@oss.sgi.com>; Mon, 18 Mar 2013 21:28:28 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 662227F53
+	for <xfs@oss.sgi.com>; Mon, 18 Mar 2013 22:46:21 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 166568F8035
-	for <xfs@oss.sgi.com>; Mon, 18 Mar 2013 19:28:24 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id I1ufR1z7V4RYDnCd for <xfs@oss.sgi.com>;
-	Mon, 18 Mar 2013 19:28:24 -0700 (PDT)
-Message-ID: <5147CD46.1090205@sandeen.net>
-Date: Mon, 18 Mar 2013 21:28:22 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 34B8D30405F
+	for <xfs@oss.sgi.com>; Mon, 18 Mar 2013 20:46:18 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	LdKbnkP3y2OqaVej for <xfs@oss.sgi.com>;
+	Mon, 18 Mar 2013 20:46:16 -0700 (PDT)
+Date: Tue, 19 Mar 2013 14:45:42 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 05/18] xfstests: Redo option parsing
+Message-ID: <20130319034542.GY6369@dastard>
+References: <20130314130611.6A23953C7F62@polaris-admin.engr.sgi.com>
+	<20130315051338.GB2559@dastard>
+	<20130315075224.GC9378@caliban.engr.sgi.com>
 MIME-Version: 1.0
-Subject: Re: possible dev branch regression - xfstest 285/1k
-References: <20130315222818.GA16100@wallace> <20130316150923.GA18589@gmail.com>
-	<20130317030648.GA14225@thunk.org>
-	<51473C8B.5070509@redhat.com> <20130318170927.GA5639@thunk.org>
-	<51475043.4010505@redhat.com> <20130318204133.GE22182@sgi.com>
-	<20130318231233.GQ6369@dastard> <20130319014718.GV6369@dastard>
-	<20130319020056.GC4660@thunk.org>
-In-Reply-To: <20130319020056.GC4660@thunk.org>
+Content-Disposition: inline
+In-Reply-To: <20130315075224.GC9378@caliban.engr.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,49 +31,118 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Theodore Ts'o <tytso@mit.edu>
-Cc: Eric Sandeen <sandeen@redhat.com>, Eric Whitney <enwlinux@gmail.com>, xfs-oss <xfs@oss.sgi.com>, Ben Myers <bpm@sgi.com>, linux-ext4@vger.kernel.org
+To: Phil White <pwhite@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On 3/18/13 9:00 PM, Theodore Ts'o wrote:
-> On Tue, Mar 19, 2013 at 12:47:18PM +1100, Dave Chinner wrote:
->> Sorry about this - I've mixed up my threads about ext4 having
->> problems with zero-out being re-enabled. I thought this was a
->> cross-post of the 218 issue....
->>
->> However, the same reasoning can be applied to 285 - the file sizes,
->> the size of the holes and the size of the data is all completely
->> arbitrary. If we make the holes in the files larger, then the
->> zero-out problem simply goes away.
+On Fri, Mar 15, 2013 at 12:52:24AM -0700, Phil White wrote:
+> On Fri, Mar 15, 2013 at 04:13:38PM +1100, Dave Chinner wrote:
+> > If all the check specific option parsing is moved to check (like my
+> > series did), then there isn't any code left in the common file.
+> > 
+> > All i see here is a reflection of SGI's obstinate refusal to remove
+> > bitrotted code. If we are removing all the users of this code except
+> > one, it is no longer shared code and, as such, abstractions for
+> > sharing shoul dbe removed.
+> > 
+> > If some new script comes along that uses the *same option parsing*
+> > as check, then we can consider it shared code again. However, i
+> > can't see this ever happening, so the code should be moved the check
+> > script where it can be more fully integrated and simplified.
+> > 
+> > So, really, all is see from trying to retain the common file like
+> > this is an obstinate refusal to let go of bitrotted code and to
+> > re-abstract and re-implement it properly....
 > 
-> Right.  That was my observation.  We can either make the holes larger,
-> by changing:
+> Dave:
 > 
->    pwrite(fd, buf, bufsize, bufsize*10);
-> 
-> to
-> 
->    pwrite(fd, buf, bufsize, bufsize*42);
->    
-> ... and then changing the expected values returned by
-> SEEK_HOLE/SEEK_DATA.  (By the way; this only matters when we are
-> testing 1k blocks; if we are using a 4k block size in ext4, the test
-> currently passes.)
-> 
-> Or we could set some ext4-specific tuning parameters into the #218
+> I'm not sure why my preface didn't get mailed along with my patch series, but
+> I'll resend it presently.  I noticed that one of my patches required moderator
+> approval.  Perhaps that was held up as well?
 
-285! :)
+There are size restrictions, and so a patch that has a diffstat of
++/-80,000 lines will not get through to the list.
 
-> shell script, if the file system in question was ext4.
-> 
-> I had assumed that folks would prefer making the holes larger, but
-> Eric seemed to prefer the second choice as a better one.
+> As I mentioned in the preface, I have other work in the pipeline which I
+> believe might make use of it.  That work has been blocked on the cleanup work
+> here which is why I chose to pick it up, rework it without the contentious
+> parts, and resubmit it.
 
-Ok, after the discussion I'm convinced too.  Stretching out the allocation
-to avoid fill-in probably makes sense.  But maybe not "42" -
-how about something much larger, so that any "reasonable" filesystem
-wouldn't even consider zeroing the range in between?
+There's no point in doing this if the discussion of the "contentious
+parts" has not had a clear outcome. And your rework does not avoid
+the "contentious parts" - it is a direct implementation of the
+opposing side of the discussion.
 
--Eric
+I understand you want to break the stand-off, but the right way to
+do that is to participate in the discussion and drive it to a
+conclusion. We had a discussion in progress - it basically stopped
+when SGI people stopped responding.  Instead, it appears that SGI
+simply started working behind the scenes on what they wanted and
+have now presented it as fait accompli.  This is not the way to win
+friends and influence people.
+
+Lucky for you, I'm taking your re-work as an attempt to further the
+discussion, rather than choosing to see it as a hostile take-over of
+my patchset to dictate the outcome of the discussion.
+
+> This patch series has value in cleaning up the top level directory.  It
+> has value in moving xfstests towards something that can be used more
+> reasonably on other filesystems.
+
+You don't need to convince me of that - I wrote the damn patchset
+because we'd been talking about it for years and nobody had stepped
+up to do it.
+
+You need to convince me of why the check/common breakup you've done
+is necessary. It doesn't add any value to the patch set as it
+stands, and makes certain things the patch set does more complex.
+And in the end, there's no obvious reason in the patch set for
+keeping it because nothing uses the abstraction it maintains.
+
+I've explained the technical reasons against keeping the arbitrary
+abstraction of check/common in other replies in this thread, so the
+ball is in your court now to demonstrate what advantage your rework
+with the check/common abstraction brings to the code.
+
+> P.S. With respect to etiquette, do my commit messages make more sense to you?
+
+Not really.
+
+> It struck me as intensely dishonest to pass this off as your work which is
+> why I elected to not include your SOB.
+
+SOB doesn't indicate how much work you did - it records the origin
+of the code. The majority of your manipulations to the original
+patchset are simply moving hunks of patches around from one file to
+another. IOWs, what you've done is a relatively minor transformation
+of the orignal patchset - it is still largely recognisable as the
+same code as the original patchset I authored.
+
+IOWs, it doesn't matter how much time you spent reworking the patch
+set when it comes to a SOB. It is the fact that there is very little
+*original work* in your version that makes the stripping the
+original authoring and SOB information from the original patch set
+inappropriate.
+
+If you are *ever* in doubt about what is appropriate, you need to
+communicate with the original author(s) of the patch set to find out
+what they think is appropriate....
+
+> It struck me as equally dishonest to
+> say it's not at all your work which is why I credited you the way I did.  Is
+> that fair or would you have preferred it to be done differently?
+
+I indicated exactly how accreditation of other people's work should
+be done in another reply. I even pointed you to examples of exactly
+how I've done this myself. If you follow those guidelines and err on
+the side of giving more credit to the previous author's work than
+your own, there is little that anyone can complain about.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
