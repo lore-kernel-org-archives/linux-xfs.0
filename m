@@ -1,16 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C687A7F5E
-	for <xfs@oss.sgi.com>; Tue, 19 Mar 2013 15:58:04 -0500 (CDT)
-Date: Tue, 19 Mar 2013 15:58:01 -0500
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 2D5A97F4C
+	for <xfs@oss.sgi.com>; Tue, 19 Mar 2013 16:06:23 -0500 (CDT)
+Received: from whiskey.americas.sgi.com (eagdhcp-232-197.americas.sgi.com
+	[128.162.232.197])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 16E1E8F8066
+	for <xfs@oss.sgi.com>; Tue, 19 Mar 2013 14:06:20 -0700 (PDT)
+Date: Tue, 19 Mar 2013 16:06:19 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 01/13] xfstests: filter new repair/mkfs output for CRCs
-Message-ID: <20130319205801.GG22182@sgi.com>
-References: <1363348411-21867-1-git-send-email-david@fromorbit.com>
-	<1363348411-21867-2-git-send-email-david@fromorbit.com>
+Subject: xfsdump: update version numbers and changelog
+Message-ID: <20130319210619.GH22182@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1363348411-21867-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,93 +24,83 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Rich Johnston <rjohnston@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Hey Rich,
-   
-On Fri, Mar 15, 2013 at 10:53:19PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> This patch it to ensure that xfstests passes on non-crc filesystems
-> with a CRC enabled userspace.
-> 
-> Filter out the mkfs/xfs_info CRC line from tests that capture the
-> output of these commands.
-> 
-> Filter out new error noise from xfs_repair that occurs for
-> xfs_repair as a result of the CRC changes.
+Update version numbers and changelog.
 
-IIRC this change was a temporary one so that xfstests could be run with crc
-enabled filesystems.
+Signed-off-by: Ben Myers <bpm@sgi.com>
 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  096           |    1 +
->  206           |    9 ++++++---
->  common.repair |    3 +++
->  3 files changed, 10 insertions(+), 3 deletions(-)
-> 
-> diff --git a/096 b/096
-> index 237edad..5a2273d 100755
-> --- a/096
-> +++ b/096
-> @@ -85,6 +85,7 @@ _mkfs_filter()
->  	-e '/inode-paths/d' \
->  	-e 's/\(log[ 	]*=\).*bsize/\1LOG                    bsize/' \
->  	-e 's/\(realtime[ 	]*=\).*extsz/\1REALTIME               extsz/' \
-> +	-e '/.*crc=/d' \
->  	-e 's/ *$//' \
->     | grep -v parent
->  }
-> diff --git a/206 b/206
-> index e8bc922..e46e6a3 100755
-> --- a/206
-> +++ b/206
-> @@ -77,7 +77,8 @@ echo "=== mkfs.xfs ==="
->  mkfs.xfs -f -bsize=4096 -dagsize=76288719b,size=3905982455b -llazy-count=0 $tmpfile \
->  	| sed -e "s,^meta-data=.*isize,meta-data=FILE                   isize,g" \
->  		-e "s/\(^log.*blocks=\)\([0-9]*,\)/\1XXXXX,/" \
-> -		-e "s/, projid32bit=[0-9]//"
-> +		-e "s/, projid32bit=[0-9]//" \
-> +		-e "/.*crc=/d"
->  
->  mount -o loop $tmpfile $tmpdir || _fail "!!! failed to loopback mount"
->  
-> @@ -85,13 +86,15 @@ mount -o loop $tmpfile $tmpdir || _fail "!!! failed to loopback mount"
->  echo "=== xfs_growfs ==="
->  xfs_growfs $tmpdir \
->  	| sed -e "s,^meta-data=.*isize,meta-data=FILE                   isize,g" \
-> -		-e "s/\(^log.*blocks=\)\([0-9]*,\)/\1XXXXX,/"
-> +		-e "s/\(^log.*blocks=\)\([0-9]*,\)/\1XXXXX,/" \
-> +		-e "/.*crc=/d"
->  
->  # and double-check the new geometry
->  echo "=== xfs_info ==="
->  xfs_info $tmpdir \
->  	| sed -e "s,^meta-data=.*isize,meta-data=FILE                   isize,g" \
-> -		-e "s/\(^log.*blocks=\)\([0-9]*,\)/\1XXXXX,/"
-> +		-e "s/\(^log.*blocks=\)\([0-9]*,\)/\1XXXXX,/" \
-> +		-e "/.*crc=/d"
->  
->  # _cleanup cleans up for us
->  
-> diff --git a/common.repair b/common.repair
-> index 23a1ed6..db160bb 100644
-> --- a/common.repair
-> +++ b/common.repair
-> @@ -77,6 +77,9 @@ s/\s+- \d+:\d\d:\d\d:.*\n//g;
->  /^agi_/ && next; # remove agi counts
->  /^sb_/ && next; # remove sb counts
->  /^agi unlinked/ && next; # remove agi unlinked bucket warning
-> +# crc enabled filesystem output
-> +/XFS_CORRUPTION_ERROR/ && next;
-> +/^bad uuid/ && next;
+---
 
-Doesn't this filter out xfs repair failures which should be reported?
+Hi Folks,
+
+I have placed a pre-release tarball here:
+
+ftp://oss.sgi.com/projects/xfs/cmd_tars/pre-release/xfsdump-pre-3.1.3-2.tar.gz
+
+Please take a peek and pipe up if you have issues.  Hopefully we can make it
+official later this week.
 
 Thanks,
 	Ben
+
+ VERSION          |    2 +-
+ configure.ac     |    2 +-
+ debian/changelog |    6 ++++++
+ doc/CHANGES      |    8 ++++++++
+ 4 files changed, 16 insertions(+), 2 deletions(-)
+
+Index: b/VERSION
+===================================================================
+--- a/VERSION	2013-02-14 10:54:46.231976798 -0600
++++ b/VERSION	2013-03-19 14:19:12.252027318 -0500
+@@ -3,5 +3,5 @@
+ #
+ PKG_MAJOR=3
+ PKG_MINOR=1
+-PKG_REVISION=2
++PKG_REVISION=3
+ PKG_BUILD=1
+Index: b/configure.ac
+===================================================================
+--- a/configure.ac	2013-02-14 10:54:46.241946565 -0600
++++ b/configure.ac	2013-03-19 14:19:12.282005653 -0500
+@@ -1,4 +1,4 @@
+-AC_INIT([xfsdump], [3.1.2])
++AC_INIT([xfsdump], [3.1.3])
+ AC_PREREQ(2.50)
+ AC_CONFIG_AUX_DIR([.])
+ AC_CONFIG_MACRO_DIR([m4])
+Index: b/debian/changelog
+===================================================================
+--- a/debian/changelog	2013-03-19 14:19:25.481380914 -0500
++++ b/debian/changelog	2013-03-19 14:21:23.251380965 -0500
+@@ -1,3 +1,9 @@
++xfsdump (3.1.3) unstable; urgency=low
++
++  * New updatream release
++
++ -- Nathan Scott <nathans@debian.org>  Tue, 19 Mar 2013 14:20:01 +1100
++
+ xfsdump (3.1.1) unstable; urgency=low
+ 
+   * New upstream release
+Index: b/doc/CHANGES
+===================================================================
+--- a/doc/CHANGES	2013-02-14 10:54:46.251945754 -0600
++++ b/doc/CHANGES	2013-03-19 14:19:12.341381012 -0500
+@@ -1,3 +1,11 @@
++xfsdump-3.1.3 (1 February 2013)
++	- Fix a segfault in xfsrestore when a path name is too long,
++	  thanks to Nigel Tamplin.
++	- Fix a backward compatability problem.  Dumps created with
++	  version 3.1.2 where extended attributes are in use failed
++	  to restore with v3.1.0 due to file header checksum errors.
++	  Thanks to Fugazzi for reporting.
++
+ xfsdump-3.1.2 (13 December 2012)
+ 	- Update release script to create a source tarball.
+ 
 
 _______________________________________________
 xfs mailing list
