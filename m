@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5079D7F53
-	for <xfs@oss.sgi.com>; Tue, 19 Mar 2013 10:42:33 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 9F9BB7F53
+	for <xfs@oss.sgi.com>; Tue, 19 Mar 2013 11:19:53 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id CDFD2AC00A
-	for <xfs@oss.sgi.com>; Tue, 19 Mar 2013 08:42:32 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id 4FRMPPjDfqatt0s9 for <xfs@oss.sgi.com>;
-	Tue, 19 Mar 2013 08:42:31 -0700 (PDT)
-Date: Tue, 19 Mar 2013 16:42:29 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH] xfs: Fix WARN_ON(delalloc) in xfs_vm_releasepage()
-Message-ID: <20130319154229.GB5222@quack.suse.cz>
-References: <1363267854-25602-1-git-send-email-jack@suse.cz>
-	<20130315205214.GB22182@sgi.com>
-	<20130318160552.GC28508@quack.suse.cz>
-	<20130319034759.GZ6369@dastard>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8CBB3304067
+	for <xfs@oss.sgi.com>; Tue, 19 Mar 2013 09:19:50 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id W5DtxMsL0EKeGuaP for <xfs@oss.sgi.com>;
+	Tue, 19 Mar 2013 09:19:49 -0700 (PDT)
+Message-ID: <51489024.20301@sandeen.net>
+Date: Tue, 19 Mar 2013 11:19:48 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130319034759.GZ6369@dastard>
+Subject: Re: [PATCH] xfstests 299-305: remove fio config files after finished
+	test
+References: <1363685450-27452-1-git-send-email-wenqing.lz@taobao.com>
+In-Reply-To: <1363685450-27452-1-git-send-email-wenqing.lz@taobao.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,46 +28,124 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Ben Myers <bpm@sgi.com>, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
+To: Zheng Liu <gnehzuil.liu@gmail.com>
+Cc: linux-ext4@vger.kernel.org, Zheng Liu <wenqing.lz@taobao.com>, xfs@oss.sgi.com
 
-On Tue 19-03-13 14:47:59, Dave Chinner wrote:
-> On Mon, Mar 18, 2013 at 05:05:52PM +0100, Jan Kara wrote:
-> > On Fri 15-03-13 15:52:14, Ben Myers wrote:
-> > > Hi Jan,
-> > > 
-> > > On Thu, Mar 14, 2013 at 02:30:54PM +0100, Jan Kara wrote:
-> > > > When a dirty page is truncated from a file but reclaim gets to it before
-> > > > truncate_inode_pages(), we hit WARN_ON(delalloc) in
-> > > > xfs_vm_releasepage(). This is because reclaim tries to write the page,
-> > > > xfs_vm_writepage() just bails out (leaving page clean) and thus reclaim
-> > > > thinks it can continue and calls xfs_vm_releasepage() on page with dirty
-> > > > buffers.
-> > > > 
-> > > > Fix the issue by redirtying the page in xfs_vm_writepage(). This makes
-> > > > reclaim stop reclaiming the page and also logically it keeps page in a
-> > > > more consistent state where page with dirty buffers has PageDirty set.
-> > > 
-> > > Was there an easy way to reproduce this?  I'm testing and reviewing this now
-> > > and it might help.
-> >   I used scripts/run-bash-shared-mapping.sh from the attached tarball - it
-> > fires up several processes beating a file with mmap accesses while
-> > truncating the file and memory stressing the machine. I presume fsx with
-> > some memhog could trigger the issue as well.
+On 3/19/13 4:30 AM, Zheng Liu wrote:
+> From: Zheng Liu <wenqing.lz@taobao.com>
 > 
-> I have seen fsx trip this occasionally. The problem is that it was
-> never reliable because of the fact that other memory pressure had to
-> be generated at the same time....
-> 
-> Is the above script something you could turn into an xfstest (I
-> haven't looked at the script yet)?
-  Yes, that should be doable. I'll try combining fsx and usemem whether
-that will be enough to trigger the race.
+> After finished test, temporarily fio config file should be removed.
 
-								Honza
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+Looks fine, except that in test 300 you don't do rm -f; in every
+other test -f is used.  Was that intentional?
+
+Also, while looking at this, in 305 cleanup uses "poweron_scratch_dev"
+- is that defined anywhere?  I can't find it.
+
+-Eric
+
+> Signed-off-by: Zheng Liu <wenqing.lz@taobao.com>
+> ---
+>  299 | 2 +-
+>  300 | 2 +-
+>  301 | 2 +-
+>  302 | 2 +-
+>  303 | 2 +-
+>  304 | 2 +-
+>  305 | 1 +
+>  7 files changed, 7 insertions(+), 6 deletions(-)
+> 
+> diff --git a/299 b/299
+> index 4305ead..9d0c32f 100644
+> --- a/299
+> +++ b/299
+> @@ -32,7 +32,7 @@ echo "QA output created by $seq"
+>  here=`pwd`
+>  tmp=/tmp/$$
+>  status=1	# failure is the default!
+> -trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
+> +trap "rm -f $tmp.*; rm -f $tmp-$seq.fio; exit \$status" 0 1 2 3 15
+>  
+>  # get standard environment, filters and checks
+>  . ./common.rc
+> diff --git a/300 b/300
+> index 73c9ea7..413f9eb 100644
+> --- a/300
+> +++ b/300
+> @@ -32,7 +32,7 @@ echo "QA output created by $seq"
+>  here=`pwd`
+>  tmp=/tmp/$$
+>  status=1	# failure is the default!
+> -trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
+> +trap "rm -f $tmp.*; rm $tmp-$seq.fio; exit \$status" 0 1 2 3 15
+>  
+>  # get standard environment, filters and checks
+>  . ./common.rc
+> diff --git a/301 b/301
+> index fe2e59f..6ac8ecf 100644
+> --- a/301
+> +++ b/301
+> @@ -30,7 +30,7 @@ echo "QA output created by $seq"
+>  here=`pwd`
+>  tmp=/tmp/$$
+>  status=1	# failure is the default!
+> -trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
+> +trap "rm -f $tmp.*; rm -f $tmp-$seq.fio; exit \$status" 0 1 2 3 15
+>  
+>  # get standard environment, filters and checks
+>  . ./common.rc
+> diff --git a/302 b/302
+> index e3dceb8..62398c9 100644
+> --- a/302
+> +++ b/302
+> @@ -31,7 +31,7 @@ echo "QA output created by $seq"
+>  here=`pwd`
+>  tmp=/tmp/$$
+>  status=1	# failure is the default!
+> -trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
+> +trap "rm -f $tmp.*; rm -f $tmp-$seq.fio; exit \$status" 0 1 2 3 15
+>  
+>  # get standard environment, filters and checks
+>  . ./common.rc
+> diff --git a/303 b/303
+> index 4141442..d198ebb 100644
+> --- a/303
+> +++ b/303
+> @@ -31,7 +31,7 @@ echo "QA output created by $seq"
+>  here=`pwd`
+>  tmp=/tmp/$$
+>  status=1	# failure is the default!
+> -trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
+> +trap "rm -f $tmp.*; rm -f $tmp-$seq.fio; exit \$status" 0 1 2 3 15
+>  
+>  # get standard environment, filters and checks
+>  . ./common.rc
+> diff --git a/304 b/304
+> index 5c414bd..fb94fe6 100644
+> --- a/304
+> +++ b/304
+> @@ -32,7 +32,7 @@ echo "QA output created by $seq"
+>  here=`pwd`
+>  tmp=/tmp/$$
+>  status=1	# failure is the default!
+> -trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
+> +trap "rm -f $tmp.*; rm -f $tmp-$seq.fio; exit \$status" 0 1 2 3 15
+>  
+>  # get standard environment, filters and checks
+>  . ./common.rc
+> diff --git a/305 b/305
+> index 6393461..9d89321 100644
+> --- a/305
+> +++ b/305
+> @@ -80,6 +80,7 @@ _cleanup()
+>  {
+>      poweron_scratch_dev
+>      disallow_fail_make_request
+> +    rm -f $tmp-$seq.fio
+>  }
+>  trap "_cleanup; exit \$status" 1 2 3 15
+>  
+> 
 
 _______________________________________________
 xfs mailing list
