@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id AA77D7F67
-	for <xfs@oss.sgi.com>; Tue, 19 Mar 2013 03:24:58 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 318E97F6D
+	for <xfs@oss.sgi.com>; Tue, 19 Mar 2013 03:37:51 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 84EEC304043
-	for <xfs@oss.sgi.com>; Tue, 19 Mar 2013 01:24:55 -0700 (PDT)
-Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by
-	cuda.sgi.com with ESMTP id xFRv89nQdsSUqNle for
-	<xfs@oss.sgi.com>; Tue, 19 Mar 2013 01:24:53 -0700 (PDT)
-From: Martin Steigerwald <Martin@lichtvoll.de>
-Subject: Re: Xfs_repair and journalling
-Date: Tue, 19 Mar 2013 09:24:28 +0100
-References: <CAEUQceh-Xcabr0KErxF6EAdafDDP1PY_AeHwgYB82QeUdyGp-g@mail.gmail.com>
-	<5147E360.10605@sandeen.net> <5148037B.5010706@hardwarefreak.com>
-	(sfid-20130319_091205_759083_BA6F1AD2)
-In-Reply-To: <5148037B.5010706@hardwarefreak.com>
-MIME-Version: 1.0
-Message-Id: <201303190924.29362.Martin@lichtvoll.de>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A5809AC004
+	for <xfs@oss.sgi.com>; Tue, 19 Mar 2013 01:37:47 -0700 (PDT)
+Received: from mail-pb0-f45.google.com (mail-pb0-f45.google.com
+	[209.85.160.45]) by cuda.sgi.com with ESMTP id UHoQA2XWYUod6lrX
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 19 Mar 2013 01:37:45 -0700 (PDT)
+Received: by mail-pb0-f45.google.com with SMTP id ro8so240081pbb.18
+	for <xfs@oss.sgi.com>; Tue, 19 Mar 2013 01:37:45 -0700 (PDT)
+From: Zheng Liu <gnehzuil.liu@gmail.com>
+Subject: [PATCH v2] xfstests: add a new test case for ext4 indirect-based file
+Date: Tue, 19 Mar 2013 16:53:03 +0800
+Message-Id: <1363683183-7392-1-git-send-email-wenqing.lz@taobao.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,66 +23,438 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: stan@hardwarefreak.com
-Cc: Eric Sandeen <sandeen@sandeen.net>, Subranshu Patel <spatel.ml@gmail.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: linux-ext4@vger.kernel.org, Zheng Liu <wenqing.lz@taobao.com>
 
-Am Dienstag, 19. M=E4rz 2013 schrieb Stan Hoeppner:
-> Martin, I didn't state that ext4 cannot perform journal recovery, which
-> you previously misunderstood.  As mentioned above I stated it made a
-> call to e2fsck to perform the task.  And, again, apparently this is not
-> the case.  If you want to excoriate me for getting this wrong, that's
-> fine.  But don't do it in a way that suggests it was intentional, or
-> that I made no effort to verify the information before I stated it.  I
-> spent at least 30 minutes Googling trying to track down documents
-> explaining the ext4 journal recovery code in the kernel.  I simply
-> didn't find any.  The only thing I found were descriptions of e2fsck
-> based journal recovery.
+From: Zheng Liu <wenqing.lz@taobao.com>
 
-Stan, you are still a XFS expert, you are still a hardware expert, and I =
+After applied this commit (864688d3), xfstests #255 will not test a
+file system that cannot support fallocate(2), such as a indirect-based
+file in ext4.  So we need to add a new generic test case to test it.
 
-love reading your posts at debian-user, I sometimes even search for those, =
+The difference between #255 and this test case is only to use pwrite to
+allocate blocks.  Other filesystems should survive in this test case.
 
-you still know a lot and heck you are still Stan and as such without any =
+Signed-off-by: Zheng Liu <wenqing.lz@taobao.com>
+---
+v2 <- v1:
+ * rebase against the latest master branch of xfstests
 
-achievement or knowledge at all a precious being.
+Here [1] is the original patch set.  It has been splitted into two parts.
+In ohter parts, it will tries to improve seek data/hole test case.
 
-Just like anyone else on this list (and elsewhere) is a precious being just =
+1. http://www.spinics.net/lists/xfs/msg16234.html
 
-as they are.
+ 314     |  68 ++++++++++++++
+ 314.out | 307 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ group   |   1 +
+ 3 files changed, 376 insertions(+)
+ create mode 100755 314
+ create mode 100644 314.out
 
-So whats so difficult with admitting that what you wrote about Ext4 and =
-
-journal replay as at least misleading?
-
-Heck, even I was confused at first. Cause the manpage of fsck.ext4 IMHO is =
-
-not really clear about that topic to say the least. I tested it out for a =
-
-reason.
-
-I am concerned about the tendency I perceive in open source, heck general =
-
-computer communities to bind own value to being right on a topic. There is =
-
-no, absolutely no connection at all. You and everyone else is valuable and =
-
-precious without any prerequisite at all.
-
-I also take some to learn out of this myself: Cause I was obsessed with =
-
-being right myself and bound my value to it as well. I have overdone my =
-
-previous mails. Sorry for that.
-
-Thanks,
--- =
-
-Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
-GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
+diff --git a/314 b/314
+new file mode 100755
+index 0000000..9a75857
+--- /dev/null
++++ b/314
+@@ -0,0 +1,68 @@
++#! /bin/bash
++# FS QA Test No. 314
++#
++# Test Generic fallocate hole punching w/o unwritten extent
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2013 Alibaba Group.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++# creator
++owner=wenqing.lz@taobao.com
++
++seq=`basename $0`
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
++. ./common.punch
++
++# real QA test starts here
++_supported_fs generic
++_supported_os IRIX Linux
++
++_require_xfs_io_falloc_punch
++_require_xfs_io_fiemap
++
++testfile=$TEST_DIR/314.$$
++
++# Standard punch hole tests
++_test_generic_punch pwrite fpunch fpunch fiemap _filter_hole_fiemap $testfile -F
++
++# Delayed allocation punch hole tests
++_test_generic_punch -d pwrite fpunch fpunch fiemap _filter_hole_fiemap $testfile -F
++
++# Multi hole punch tests
++_test_generic_punch -k pwrite fpunch fpunch fiemap _filter_hole_fiemap $testfile -F
++
++# Delayed allocation multi punch hole tests
++_test_generic_punch -d -k pwrite fpunch fpunch fiemap _filter_hole_fiemap $testfile -F
++
++# success, all done
++status=0
++exit
+diff --git a/314.out b/314.out
+new file mode 100644
+index 0000000..2eb1f27
+--- /dev/null
++++ b/314.out
+@@ -0,0 +1,307 @@
++QA output created by 314
++	1. into a hole
++daa100df6e6711906b61c9ab5aa16032
++	2. into allocated space
++0: [0..7]: extent
++1: [8..23]: hole
++2: [24..39]: extent
++cc58a7417c2d7763adc45b6fcd3fa024
++	3. into unwritten space
++0: [0..7]: extent
++1: [8..23]: hole
++2: [24..39]: extent
++cc58a7417c2d7763adc45b6fcd3fa024
++	4. hole -> data
++0: [0..23]: hole
++1: [24..31]: extent
++2: [32..39]: hole
++cc63069677939f69a6e8f68cae6a6dac
++	5. hole -> unwritten
++0: [0..23]: hole
++1: [24..31]: extent
++2: [32..39]: hole
++cc63069677939f69a6e8f68cae6a6dac
++	6. data -> hole
++0: [0..7]: extent
++1: [8..39]: hole
++1b3779878366498b28c702ef88c4a773
++	7. data -> unwritten
++0: [0..7]: extent
++1: [8..23]: hole
++2: [24..31]: extent
++3: [32..39]: hole
++5309cc2f1fc5a7f94cf52915caef35bd
++	8. unwritten -> hole
++0: [0..7]: extent
++1: [8..39]: hole
++1b3779878366498b28c702ef88c4a773
++	9. unwritten -> data
++0: [0..7]: extent
++1: [8..23]: hole
++2: [24..31]: extent
++3: [32..39]: hole
++5309cc2f1fc5a7f94cf52915caef35bd
++	10. hole -> data -> hole
++daa100df6e6711906b61c9ab5aa16032
++	11. data -> hole -> data
++0: [0..7]: extent
++1: [8..31]: hole
++2: [32..39]: extent
++f6aeca13ec49e5b266cd1c913cd726e3
++	12. unwritten -> data -> unwritten
++0: [0..7]: extent
++1: [8..31]: hole
++2: [32..39]: extent
++f6aeca13ec49e5b266cd1c913cd726e3
++	13. data -> unwritten -> data
++0: [0..7]: extent
++1: [8..31]: hole
++2: [32..39]: extent
++f6aeca13ec49e5b266cd1c913cd726e3
++	14. data -> hole @ EOF
++0: [0..23]: extent
++1: [24..39]: hole
++e1f024eedd27ea6b1c3e9b841c850404
++	15. data -> hole @ 0
++0: [0..15]: hole
++1: [16..39]: extent
++eecb7aa303d121835de05028751d301c
++	16. data -> cache cold ->hole
++0: [0..15]: hole
++1: [16..39]: extent
++eecb7aa303d121835de05028751d301c
++	17. data -> hole in single block file
++0: [0..7]: extent
++13535fd4d496bf0b74bb2335aa4d1b31
++	1. into a hole
++daa100df6e6711906b61c9ab5aa16032
++	2. into allocated space
++0: [0..7]: extent
++1: [8..23]: hole
++2: [24..39]: extent
++cc58a7417c2d7763adc45b6fcd3fa024
++	3. into unwritten space
++0: [0..7]: extent
++1: [8..23]: hole
++2: [24..39]: extent
++cc58a7417c2d7763adc45b6fcd3fa024
++	4. hole -> data
++0: [0..23]: hole
++1: [24..31]: extent
++2: [32..39]: hole
++cc63069677939f69a6e8f68cae6a6dac
++	5. hole -> unwritten
++0: [0..23]: hole
++1: [24..31]: extent
++2: [32..39]: hole
++cc63069677939f69a6e8f68cae6a6dac
++	6. data -> hole
++0: [0..7]: extent
++1: [8..39]: hole
++1b3779878366498b28c702ef88c4a773
++	7. data -> unwritten
++0: [0..7]: extent
++1: [8..23]: hole
++2: [24..31]: extent
++3: [32..39]: hole
++5309cc2f1fc5a7f94cf52915caef35bd
++	8. unwritten -> hole
++0: [0..7]: extent
++1: [8..39]: hole
++1b3779878366498b28c702ef88c4a773
++	9. unwritten -> data
++0: [0..7]: extent
++1: [8..23]: hole
++2: [24..31]: extent
++3: [32..39]: hole
++5309cc2f1fc5a7f94cf52915caef35bd
++	10. hole -> data -> hole
++daa100df6e6711906b61c9ab5aa16032
++	11. data -> hole -> data
++0: [0..7]: extent
++1: [8..31]: hole
++2: [32..39]: extent
++f6aeca13ec49e5b266cd1c913cd726e3
++	12. unwritten -> data -> unwritten
++0: [0..7]: extent
++1: [8..31]: hole
++2: [32..39]: extent
++f6aeca13ec49e5b266cd1c913cd726e3
++	13. data -> unwritten -> data
++0: [0..7]: extent
++1: [8..31]: hole
++2: [32..39]: extent
++f6aeca13ec49e5b266cd1c913cd726e3
++	14. data -> hole @ EOF
++0: [0..23]: extent
++1: [24..39]: hole
++e1f024eedd27ea6b1c3e9b841c850404
++	15. data -> hole @ 0
++0: [0..15]: hole
++1: [16..39]: extent
++eecb7aa303d121835de05028751d301c
++	16. data -> cache cold ->hole
++0: [0..15]: hole
++1: [16..39]: extent
++eecb7aa303d121835de05028751d301c
++	17. data -> hole in single block file
++0: [0..7]: extent
++13535fd4d496bf0b74bb2335aa4d1b31
++	1. into a hole
++0: [0..7]: extent
++1: [8..39]: hole
++5a58e46082be047d0f13bee7974015b9
++	2. into allocated space
++0: [0..7]: extent
++1: [8..23]: hole
++2: [24..39]: extent
++cc58a7417c2d7763adc45b6fcd3fa024
++	3. into unwritten space
++0: [0..7]: extent
++1: [8..23]: hole
++2: [24..39]: extent
++cc58a7417c2d7763adc45b6fcd3fa024
++	4. hole -> data
++0: [0..7]: extent
++1: [8..23]: hole
++2: [24..39]: extent
++cc58a7417c2d7763adc45b6fcd3fa024
++	5. hole -> unwritten
++0: [0..7]: extent
++1: [8..23]: hole
++2: [24..39]: extent
++cc58a7417c2d7763adc45b6fcd3fa024
++	6. data -> hole
++0: [0..7]: extent
++1: [8..23]: hole
++2: [24..39]: extent
++cc58a7417c2d7763adc45b6fcd3fa024
++	7. data -> unwritten
++0: [0..7]: extent
++1: [8..23]: hole
++2: [24..39]: extent
++cc58a7417c2d7763adc45b6fcd3fa024
++	8. unwritten -> hole
++0: [0..7]: extent
++1: [8..23]: hole
++2: [24..39]: extent
++cc58a7417c2d7763adc45b6fcd3fa024
++	9. unwritten -> data
++0: [0..7]: extent
++1: [8..23]: hole
++2: [24..39]: extent
++cc58a7417c2d7763adc45b6fcd3fa024
++	10. hole -> data -> hole
++0: [0..7]: extent
++1: [8..31]: hole
++2: [32..39]: extent
++f6aeca13ec49e5b266cd1c913cd726e3
++	11. data -> hole -> data
++0: [0..7]: extent
++1: [8..31]: hole
++2: [32..39]: extent
++f6aeca13ec49e5b266cd1c913cd726e3
++	12. unwritten -> data -> unwritten
++0: [0..7]: extent
++1: [8..31]: hole
++2: [32..39]: extent
++f6aeca13ec49e5b266cd1c913cd726e3
++	13. data -> unwritten -> data
++0: [0..7]: extent
++1: [8..31]: hole
++2: [32..39]: extent
++f6aeca13ec49e5b266cd1c913cd726e3
++	14. data -> hole @ EOF
++0: [0..23]: extent
++1: [24..39]: hole
++e1f024eedd27ea6b1c3e9b841c850404
++	15. data -> hole @ 0
++0: [0..15]: hole
++1: [16..39]: extent
++eecb7aa303d121835de05028751d301c
++	16. data -> cache cold ->hole
++0: [0..15]: hole
++1: [16..39]: extent
++eecb7aa303d121835de05028751d301c
++	17. data -> hole in single block file
++0: [0..7]: extent
++13535fd4d496bf0b74bb2335aa4d1b31
++	1. into a hole
++0: [0..7]: extent
++1: [8..39]: hole
++5a58e46082be047d0f13bee7974015b9
++	2. into allocated space
++0: [0..7]: extent
++1: [8..23]: hole
++2: [24..39]: extent
++cc58a7417c2d7763adc45b6fcd3fa024
++	3. into unwritten space
++0: [0..7]: extent
++1: [8..23]: hole
++2: [24..39]: extent
++cc58a7417c2d7763adc45b6fcd3fa024
++	4. hole -> data
++0: [0..7]: extent
++1: [8..23]: hole
++2: [24..39]: extent
++cc58a7417c2d7763adc45b6fcd3fa024
++	5. hole -> unwritten
++0: [0..7]: extent
++1: [8..23]: hole
++2: [24..39]: extent
++cc58a7417c2d7763adc45b6fcd3fa024
++	6. data -> hole
++0: [0..7]: extent
++1: [8..23]: hole
++2: [24..39]: extent
++cc58a7417c2d7763adc45b6fcd3fa024
++	7. data -> unwritten
++0: [0..7]: extent
++1: [8..23]: hole
++2: [24..39]: extent
++cc58a7417c2d7763adc45b6fcd3fa024
++	8. unwritten -> hole
++0: [0..7]: extent
++1: [8..23]: hole
++2: [24..39]: extent
++cc58a7417c2d7763adc45b6fcd3fa024
++	9. unwritten -> data
++0: [0..7]: extent
++1: [8..23]: hole
++2: [24..39]: extent
++cc58a7417c2d7763adc45b6fcd3fa024
++	10. hole -> data -> hole
++0: [0..7]: extent
++1: [8..31]: hole
++2: [32..39]: extent
++f6aeca13ec49e5b266cd1c913cd726e3
++	11. data -> hole -> data
++0: [0..7]: extent
++1: [8..31]: hole
++2: [32..39]: extent
++f6aeca13ec49e5b266cd1c913cd726e3
++	12. unwritten -> data -> unwritten
++0: [0..7]: extent
++1: [8..31]: hole
++2: [32..39]: extent
++f6aeca13ec49e5b266cd1c913cd726e3
++	13. data -> unwritten -> data
++0: [0..7]: extent
++1: [8..31]: hole
++2: [32..39]: extent
++f6aeca13ec49e5b266cd1c913cd726e3
++	14. data -> hole @ EOF
++0: [0..23]: extent
++1: [24..39]: hole
++e1f024eedd27ea6b1c3e9b841c850404
++	15. data -> hole @ 0
++0: [0..15]: hole
++1: [16..39]: extent
++eecb7aa303d121835de05028751d301c
++	16. data -> cache cold ->hole
++0: [0..15]: hole
++1: [16..39]: extent
++eecb7aa303d121835de05028751d301c
++	17. data -> hole in single block file
++0: [0..7]: extent
++13535fd4d496bf0b74bb2335aa4d1b31
+diff --git a/group b/group
+index a11e832..36f63ab 100644
+--- a/group
++++ b/group
+@@ -431,3 +431,4 @@ stress
+ 305 aio dangerous enospc rw stress
+ 306 auto quick rw
+ 313 auto quick
++314 auto quick prealloc
+-- 
+1.7.12.rc2.18.g61b472e
 
 _______________________________________________
 xfs mailing list
