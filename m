@@ -1,25 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7D9427F6B
-	for <xfs@oss.sgi.com>; Tue, 19 Mar 2013 03:50:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 18B30AC006
-	for <xfs@oss.sgi.com>; Tue, 19 Mar 2013 01:50:42 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 4TuC4l1n1oZBbl4x for
-	<xfs@oss.sgi.com>; Tue, 19 Mar 2013 01:50:39 -0700 (PDT)
-Date: Tue, 19 Mar 2013 09:50:21 +0100 (CET)
-From: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>
-Subject: Re: possible dev branch regression - xfstest 285/1k
-In-Reply-To: <5147CD46.1090205@sandeen.net>
-Message-ID: <alpine.LFD.2.00.1303190949280.2455@(none)>
-References: <20130315222818.GA16100@wallace> <20130316150923.GA18589@gmail.com>
-	<20130317030648.GA14225@thunk.org>
-	<51473C8B.5070509@redhat.com> <20130318170927.GA5639@thunk.org>
-	<51475043.4010505@redhat.com> <20130318204133.GE22182@sgi.com>
-	<20130318231233.GQ6369@dastard> <20130319014718.GV6369@dastard>
-	<20130319020056.GC4660@thunk.org> <5147CD46.1090205@sandeen.net>
-MIME-Version: 1.0
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 8CED17F7D
+	for <xfs@oss.sgi.com>; Tue, 19 Mar 2013 04:15:31 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 767D88F8035
+	for <xfs@oss.sgi.com>; Tue, 19 Mar 2013 02:15:28 -0700 (PDT)
+Received: from mail-pd0-f177.google.com (mail-pd0-f177.google.com
+	[209.85.192.177]) by cuda.sgi.com with ESMTP id
+	FgnYRpLOOsoeKJ9O (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 19 Mar 2013 02:15:27 -0700 (PDT)
+Received: by mail-pd0-f177.google.com with SMTP id y14so107256pdi.36
+	for <xfs@oss.sgi.com>; Tue, 19 Mar 2013 02:15:26 -0700 (PDT)
+From: Zheng Liu <gnehzuil.liu@gmail.com>
+Subject: [PATCH] xfstests 299-305: remove fio config files after finished test
+Date: Tue, 19 Mar 2013 17:30:50 +0800
+Message-Id: <1363685450-27452-1-git-send-email-wenqing.lz@taobao.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,74 +24,121 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>, Theodore Ts'o <tytso@mit.edu>, Eric Whitney <enwlinux@gmail.com>, Ben Myers <bpm@sgi.com>, linux-ext4@vger.kernel.org
+To: xfs@oss.sgi.com
+Cc: linux-ext4@vger.kernel.org, Zheng Liu <wenqing.lz@taobao.com>
 
-On Mon, 18 Mar 2013, Eric Sandeen wrote:
+From: Zheng Liu <wenqing.lz@taobao.com>
 
-> Date: Mon, 18 Mar 2013 21:28:22 -0500
-> From: Eric Sandeen <sandeen@sandeen.net>
-> To: Theodore Ts'o <tytso@mit.edu>
-> Cc: Dave Chinner <david@fromorbit.com>, Eric Whitney <enwlinux@gmail.com>,
->     Eric Sandeen <sandeen@redhat.com>, Ben Myers <bpm@sgi.com>,
->     linux-ext4@vger.kernel.org, xfs-oss <xfs@oss.sgi.com>
-> Subject: Re: possible dev branch regression - xfstest 285/1k
-> 
-> On 3/18/13 9:00 PM, Theodore Ts'o wrote:
-> > On Tue, Mar 19, 2013 at 12:47:18PM +1100, Dave Chinner wrote:
-> >> Sorry about this - I've mixed up my threads about ext4 having
-> >> problems with zero-out being re-enabled. I thought this was a
-> >> cross-post of the 218 issue....
-> >>
-> >> However, the same reasoning can be applied to 285 - the file sizes,
-> >> the size of the holes and the size of the data is all completely
-> >> arbitrary. If we make the holes in the files larger, then the
-> >> zero-out problem simply goes away.
-> > 
-> > Right.  That was my observation.  We can either make the holes larger,
-> > by changing:
-> > 
-> >    pwrite(fd, buf, bufsize, bufsize*10);
-> > 
-> > to
-> > 
-> >    pwrite(fd, buf, bufsize, bufsize*42);
-> >    
-> > ... and then changing the expected values returned by
-> > SEEK_HOLE/SEEK_DATA.  (By the way; this only matters when we are
-> > testing 1k blocks; if we are using a 4k block size in ext4, the test
-> > currently passes.)
-> > 
-> > Or we could set some ext4-specific tuning parameters into the #218
-> 
-> 285! :)
-> 
-> > shell script, if the file system in question was ext4.
-> > 
-> > I had assumed that folks would prefer making the holes larger, but
-> > Eric seemed to prefer the second choice as a better one.
-> 
-> Ok, after the discussion I'm convinced too.  Stretching out the allocation
-> to avoid fill-in probably makes sense.  But maybe not "42" -
-> how about something much larger, so that any "reasonable" filesystem
-> wouldn't even consider zeroing the range in between?
+After finished test, temporarily fio config file should be removed.
 
-I am actually in favour of 42. 42 is "The answer" here :)
+Signed-off-by: Zheng Liu <wenqing.lz@taobao.com>
+---
+ 299 | 2 +-
+ 300 | 2 +-
+ 301 | 2 +-
+ 302 | 2 +-
+ 303 | 2 +-
+ 304 | 2 +-
+ 305 | 1 +
+ 7 files changed, 7 insertions(+), 6 deletions(-)
 
--Lukas
-
-> 
-> -Eric
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ext4" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+diff --git a/299 b/299
+index 4305ead..9d0c32f 100644
+--- a/299
++++ b/299
+@@ -32,7 +32,7 @@ echo "QA output created by $seq"
+ here=`pwd`
+ tmp=/tmp/$$
+ status=1	# failure is the default!
+-trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
++trap "rm -f $tmp.*; rm -f $tmp-$seq.fio; exit \$status" 0 1 2 3 15
+ 
+ # get standard environment, filters and checks
+ . ./common.rc
+diff --git a/300 b/300
+index 73c9ea7..413f9eb 100644
+--- a/300
++++ b/300
+@@ -32,7 +32,7 @@ echo "QA output created by $seq"
+ here=`pwd`
+ tmp=/tmp/$$
+ status=1	# failure is the default!
+-trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
++trap "rm -f $tmp.*; rm $tmp-$seq.fio; exit \$status" 0 1 2 3 15
+ 
+ # get standard environment, filters and checks
+ . ./common.rc
+diff --git a/301 b/301
+index fe2e59f..6ac8ecf 100644
+--- a/301
++++ b/301
+@@ -30,7 +30,7 @@ echo "QA output created by $seq"
+ here=`pwd`
+ tmp=/tmp/$$
+ status=1	# failure is the default!
+-trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
++trap "rm -f $tmp.*; rm -f $tmp-$seq.fio; exit \$status" 0 1 2 3 15
+ 
+ # get standard environment, filters and checks
+ . ./common.rc
+diff --git a/302 b/302
+index e3dceb8..62398c9 100644
+--- a/302
++++ b/302
+@@ -31,7 +31,7 @@ echo "QA output created by $seq"
+ here=`pwd`
+ tmp=/tmp/$$
+ status=1	# failure is the default!
+-trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
++trap "rm -f $tmp.*; rm -f $tmp-$seq.fio; exit \$status" 0 1 2 3 15
+ 
+ # get standard environment, filters and checks
+ . ./common.rc
+diff --git a/303 b/303
+index 4141442..d198ebb 100644
+--- a/303
++++ b/303
+@@ -31,7 +31,7 @@ echo "QA output created by $seq"
+ here=`pwd`
+ tmp=/tmp/$$
+ status=1	# failure is the default!
+-trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
++trap "rm -f $tmp.*; rm -f $tmp-$seq.fio; exit \$status" 0 1 2 3 15
+ 
+ # get standard environment, filters and checks
+ . ./common.rc
+diff --git a/304 b/304
+index 5c414bd..fb94fe6 100644
+--- a/304
++++ b/304
+@@ -32,7 +32,7 @@ echo "QA output created by $seq"
+ here=`pwd`
+ tmp=/tmp/$$
+ status=1	# failure is the default!
+-trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
++trap "rm -f $tmp.*; rm -f $tmp-$seq.fio; exit \$status" 0 1 2 3 15
+ 
+ # get standard environment, filters and checks
+ . ./common.rc
+diff --git a/305 b/305
+index 6393461..9d89321 100644
+--- a/305
++++ b/305
+@@ -80,6 +80,7 @@ _cleanup()
+ {
+     poweron_scratch_dev
+     disallow_fail_make_request
++    rm -f $tmp-$seq.fio
+ }
+ trap "_cleanup; exit \$status" 1 2 3 15
+ 
+-- 
+1.7.12.rc2.18.g61b472e
 
 _______________________________________________
 xfs mailing list
