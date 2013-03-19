@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2B58B7F3F
-	for <xfs@oss.sgi.com>; Tue, 19 Mar 2013 14:26:42 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 92F5B7F3F
+	for <xfs@oss.sgi.com>; Tue, 19 Mar 2013 14:31:55 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B95D1AC006
-	for <xfs@oss.sgi.com>; Tue, 19 Mar 2013 12:26:41 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6C47A304059
+	for <xfs@oss.sgi.com>; Tue, 19 Mar 2013 12:31:55 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	arMyCfsQiHo1ruwG for <xfs@oss.sgi.com>;
-	Tue, 19 Mar 2013 12:26:40 -0700 (PDT)
-Date: Wed, 20 Mar 2013 06:26:38 +1100
+	YaxLNd9f1GKZI6RS for <xfs@oss.sgi.com>;
+	Tue, 19 Mar 2013 12:31:53 -0700 (PDT)
+Date: Wed, 20 Mar 2013 06:31:52 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2] xfsprogs: reduce bb_numrecs in bno/cnt btrees when
-	log consumes all agf space
-Message-ID: <20130319192638.GC6369@dastard>
-References: <1363699415-28022-1-git-send-email-bfoster@redhat.com>
+Subject: Re: [PATCH] xfstests: add background noise to test 276 (btrfs
+	backref resolving)
+Message-ID: <20130319193152.GD6369@dastard>
+References: <1363710260-10225-1-git-send-email-list.btrfs@jan-o-sch.net>
+	<51489BD6.6030504@sandeen.net> <5148B9E5.5000702@jan-o-sch.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1363699415-28022-1-git-send-email-bfoster@redhat.com>
+In-Reply-To: <5148B9E5.5000702@jan-o-sch.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,52 +31,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Jan Schmidt <list.btrfs@jan-o-sch.net>
+Cc: Eric Sandeen <sandeen@sandeen.net>, linux-btrfs@vger.kernel.org, alex.btrfs@zadarastorage.com, xfs@oss.sgi.com
 
-On Tue, Mar 19, 2013 at 09:23:35AM -0400, Brian Foster wrote:
-> The mkfs code currently creates a single free space extent record
-> for each of the bno and cnt btrees in each AG. The start block of
-> the record is pushed forward on the AG that hosts an internal log.
-> If the log happens to consume all available space in the AG, the
-> start block becomes equal to sb->sb_agblocks and thus invalid.
-> This causes xfs_repair to complain.
+On Tue, Mar 19, 2013 at 08:17:57PM +0100, Jan Schmidt wrote:
+> On 19.03.2013 18:09, Eric Sandeen wrote:
+> >> Furthermore, this increases two constants which make the test simply cycle a
+> >> few seconds longer, increasing the chance to hit on something suspicious in
+> >> case we broke something.
+> > 
+> > Normally we don't change existing tests lest new failures look like regressions
+> > when they aren't, but hey, "btrfs is an experimental filesystem" so maybe it's
+> > ok in this case.  ;)  At some point when things are settled down, we wouldn't
+> > want to make a change like this.  But for now it doesn't bother me.
 > 
-> For example, the following sequence:
-> 
-> 	mkfs.xfs -d file,name=./fs.img,size=50g,agsize=16m
-> 	xfs_repair ./fs.img
-> 
-> ... produces the following xfs_repair output:
-> 
-> 	Phase 1 - find and verify superblock...
-> 	Phase 2 - using internal log
->         	- scan filesystem freespace and inode maps...
-> 	invalid start block 4096 in record 0 of bno btree block 1600/1
-> 	invalid start block 4096 in record 0 of cnt btree block 1600/2
->         	- found root inode chunk
-> 	...
-> 
-> xfs_repair appears to correct the numrecs value such that subsequent
-> checks are successful. The sequence above is pulled from xfstests
-> test #250, which fails due to this behavior.
-> 
-> Modify mkfs.xfs such that we check the block count value of the
-> free space record for the log AG after the log is accounted for. If
-> no space is left for the record, reset the record count to 0.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
-> 
-> v2:
-> - Drop the byte swap.
-> - Add a comment.
-> - Fix up the commit log description.
+> (justification) I thought about adding this modification as a separate
+> test - and I have no strict objections against doing so. It's just that
+> I hate duplicating code and I couldn't think of a good way to share all
+> that code between two individual tests.
 
-Looks good.
+The current way is to use a common.<blah> file to do it.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+However, using test templates is the way I want to do it in future -
+it will be perfect for these sorts of test variations:
 
+http://oss.sgi.com/archives/xfs/2013-03/msg00578.html
+
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
