@@ -1,15 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 285867F62
-	for <xfs@oss.sgi.com>; Tue, 19 Mar 2013 14:51:46 -0500 (CDT)
-Message-ID: <5148C1F4.9020605@sgi.com>
-Date: Tue, 19 Mar 2013 14:52:20 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 19C697F60
+	for <xfs@oss.sgi.com>; Tue, 19 Mar 2013 15:20:06 -0500 (CDT)
+Message-ID: <5148C894.3060206@sgi.com>
+Date: Tue, 19 Mar 2013 15:20:36 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 12/13] xfstests: filter files in 019 for --large-fs
+Subject: Re: [PATCH 00/13] xfstests: generic --large-fs support
 References: <1363348411-21867-1-git-send-email-david@fromorbit.com>
-	<1363348411-21867-13-git-send-email-david@fromorbit.com>
-In-Reply-To: <1363348411-21867-13-git-send-email-david@fromorbit.com>
+In-Reply-To: <1363348411-21867-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,9 +24,35 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-Looks good.
+This patchset has been committed, thanks for submitting it Dave.
 
-Reviewed-by: Rich Johnston <rjohnston@sgi.com>
+Thanks
+--Rich
+
+On 03/15/2013 06:53 AM, Dave Chinner wrote:
+> Hi folks,
+>
+> This is a repost of my current version of the large filesystem
+> testing support for xfstests. I've been using it for more than a
+> year, and I think the ext4 guys would like to have it available to
+> them.
+>
+> Last posted here:
+>
+> http://oss.sgi.com/archives/xfs/2012-07/msg00361.html
+>
+> There are changes from last time, but it's months since i've made
+> them, so there's no fine grained changelog. :/
+>
+> Cheers,
+>
+> Dave.
+>
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+>
 
 
 _______________________________________________
