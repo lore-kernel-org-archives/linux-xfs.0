@@ -1,15 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2D5A97F4C
-	for <xfs@oss.sgi.com>; Tue, 19 Mar 2013 16:06:23 -0500 (CDT)
-Received: from whiskey.americas.sgi.com (eagdhcp-232-197.americas.sgi.com
-	[128.162.232.197])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 16E1E8F8066
-	for <xfs@oss.sgi.com>; Tue, 19 Mar 2013 14:06:20 -0700 (PDT)
-Date: Tue, 19 Mar 2013 16:06:19 -0500
+	by oss.sgi.com (Postfix) with ESMTP id 7F5617F73
+	for <xfs@oss.sgi.com>; Tue, 19 Mar 2013 16:08:22 -0500 (CDT)
+Date: Tue, 19 Mar 2013 16:08:22 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: xfsdump: update version numbers and changelog
-Message-ID: <20130319210619.GH22182@sgi.com>
+Subject: xfsprogs: update version numbers and changelog
+Message-ID: <20130319210822.GI22182@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -20,89 +16,68 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: Nathan Scott <nathans@debian.org>
 
-Update version numbers and changelog.
-
-Signed-off-by: Ben Myers <bpm@sgi.com>
-
----
-
-Hi Folks,
-
-I have placed a pre-release tarball here:
-
-ftp://oss.sgi.com/projects/xfs/cmd_tars/pre-release/xfsdump-pre-3.1.3-2.tar.gz
-
-Please take a peek and pipe up if you have issues.  Hopefully we can make it
-official later this week.
-
-Thanks,
-	Ben
-
- VERSION          |    2 +-
- configure.ac     |    2 +-
- debian/changelog |    6 ++++++
- doc/CHANGES      |    8 ++++++++
- 4 files changed, 16 insertions(+), 2 deletions(-)
-
-Index: b/VERSION
-===================================================================
---- a/VERSION	2013-02-14 10:54:46.231976798 -0600
-+++ b/VERSION	2013-03-19 14:19:12.252027318 -0500
-@@ -3,5 +3,5 @@
- #
- PKG_MAJOR=3
- PKG_MINOR=1
--PKG_REVISION=2
-+PKG_REVISION=3
- PKG_BUILD=1
-Index: b/configure.ac
-===================================================================
---- a/configure.ac	2013-02-14 10:54:46.241946565 -0600
-+++ b/configure.ac	2013-03-19 14:19:12.282005653 -0500
-@@ -1,4 +1,4 @@
--AC_INIT([xfsdump], [3.1.2])
-+AC_INIT([xfsdump], [3.1.3])
- AC_PREREQ(2.50)
- AC_CONFIG_AUX_DIR([.])
- AC_CONFIG_MACRO_DIR([m4])
-Index: b/debian/changelog
-===================================================================
---- a/debian/changelog	2013-03-19 14:19:25.481380914 -0500
-+++ b/debian/changelog	2013-03-19 14:21:23.251380965 -0500
-@@ -1,3 +1,9 @@
-+xfsdump (3.1.3) unstable; urgency=low
-+
-+  * New updatream release
-+
-+ -- Nathan Scott <nathans@debian.org>  Tue, 19 Mar 2013 14:20:01 +1100
-+
- xfsdump (3.1.1) unstable; urgency=low
- 
-   * New upstream release
-Index: b/doc/CHANGES
-===================================================================
---- a/doc/CHANGES	2013-02-14 10:54:46.251945754 -0600
-+++ b/doc/CHANGES	2013-03-19 14:19:12.341381012 -0500
-@@ -1,3 +1,11 @@
-+xfsdump-3.1.3 (1 February 2013)
-+	- Fix a segfault in xfsrestore when a path name is too long,
-+	  thanks to Nigel Tamplin.
-+	- Fix a backward compatability problem.  Dumps created with
-+	  version 3.1.2 where extended attributes are in use failed
-+	  to restore with v3.1.0 due to file header checksum errors.
-+	  Thanks to Fugazzi for reporting.
-+
- xfsdump-3.1.2 (13 December 2012)
- 	- Update release script to create a source tarball.
- 
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+VXBkYXRlIHZlcnNpb24gbnVtYmVycyBhbmQgY2hhbmdlbG9nLgoKU2lnbmVkLW9mZi1ieTogQmVu
+IE15ZXJzIDxicG1Ac2dpLmNvbT4KCi0tLQoKSGkgRm9sa3MsCgpJIGhhdmUgcGxhY2VkIGEgcHJl
+LXJlbGVhc2UgdGFyYmFsbCBoZXJlOgoKZnRwOi8vb3NzLnNnaS5jb20vcHJvamVjdHMveGZzL2Nt
+ZF90YXJzL3ByZS1yZWxlYXNlL3hmc3Byb2dzLXByZS0zLjEuMTEtMi50YXIuZ3oKClBsZWFzZSB0
+YWtlIGEgcGVlayBhbmQgcGlwZSB1cCBpZiB5b3UgaGF2ZSBpc3N1ZXMuICBIb3BlZnVsbHkgd2Ug
+Y2FuIG1ha2UgaXQKb2ZmaWNpYWwgbGF0ZXIgdGhpcyB3ZWVrLgoKVGhhbmtzLAoJQmVuCgogVkVS
+U0lPTiAgICAgICAgICB8ICAgIDIgKy0KIGNvbmZpZ3VyZS5hYyAgICAgfCAgICAyICstCiBkZWJp
+YW4vY2hhbmdlbG9nIHwgICAgNiArKysrKysKIGRvYy9DSEFOR0VTICAgICAgfCAgIDI2ICsrKysr
+KysrKysrKysrKysrKysrKysrKysrCiA0IGZpbGVzIGNoYW5nZWQsIDM0IGluc2VydGlvbnMoKyks
+IDIgZGVsZXRpb25zKC0pCgpJbmRleDogYi9WRVJTSU9OCj09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGEvVkVSU0lP
+TgkyMDEzLTAzLTE5IDE0OjI1OjI1LjI1MTM2MDU3OCAtMDUwMAorKysgYi9WRVJTSU9OCTIwMTMt
+MDMtMTkgMTQ6MjU6MjguMTUxOTQ3MjA2IC0wNTAwCkBAIC0zLDUgKzMsNSBAQAogIwogUEtHX01B
+Sk9SPTMKIFBLR19NSU5PUj0xCi1QS0dfUkVWSVNJT049MTAKK1BLR19SRVZJU0lPTj0xMQogUEtH
+X0JVSUxEPTEKSW5kZXg6IGIvY29uZmlndXJlLmFjCj09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGEvY29uZmlndXJl
+LmFjCTIwMTMtMDMtMTkgMTQ6MjU6MjUuMjUxMzYwNTc4IC0wNTAwCisrKyBiL2NvbmZpZ3VyZS5h
+YwkyMDEzLTAzLTE5IDE0OjI1OjI4LjE1MTk0NzIwNiAtMDUwMApAQCAtMSw0ICsxLDQgQEAKLUFD
+X0lOSVQoW3hmc3Byb2dzXSwgWzMuMS4xMF0pCitBQ19JTklUKFt4ZnNwcm9nc10sIFszLjEuMTFd
+KQogQUNfUFJFUkVRKDIuNTApCiBBQ19DT05GSUdfQVVYX0RJUihbLl0pCiBBQ19DT05GSUdfTUFD
+Uk9fRElSKFttNF0pCkluZGV4OiBiL2RlYmlhbi9jaGFuZ2Vsb2cKPT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gYS9k
+ZWJpYW4vY2hhbmdlbG9nCTIwMTMtMDMtMTkgMTQ6MjU6MzAuNTcxOTQ1OTEyIC0wNTAwCisrKyBi
+L2RlYmlhbi9jaGFuZ2Vsb2cJMjAxMy0wMy0xOSAxNDoyNTo1OS4zNDIwMDU3MTkgLTA1MDAKQEAg
+LTEsMyArMSw5IEBACit4ZnNwcm9ncyAoMy4xLjExKSB1bnN0YWJsZTsgdXJnZW5jeT1sb3cKKwor
+ICAqIE5ldyB1cHN0cmVhbSByZWxlYXNlCisKKyAtLSBOYXRoYW4gU2NvdHQgPG5hdGhhbnNAZGVi
+aWFuLm9yZz4gIFR1ZSwgMTkgTWFyIDIwMTMgMTQ6MjU6MDAgKzExMDAKKwogeGZzcHJvZ3MgKDMu
+MS45KSB1bnN0YWJsZTsgdXJnZW5jeT1sb3cKIAogICAqIE5ldyB1cHN0cmVhbSByZWxlYXNlCklu
+ZGV4OiBiL2RvYy9DSEFOR0VTCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGEvZG9jL0NIQU5HRVMJMjAxMy0wMy0x
+OSAxNDoyNToyNS4yNTEzNjA1NzggLTA1MDAKKysrIGIvZG9jL0NIQU5HRVMJMjAxMy0wMy0xOSAx
+NDoyNToyOC4xODIwMDU3NDQgLTA1MDAKQEAgLTEsMyArMSwyOSBAQAoreGZzcHJvZ3MtMy4xLjEx
+ICgxOSBNYXJjaCAyMDEzKQorCS0gU3VwcG9ydCBmb3IgcmVsYXRpdmUgcGF0aHMgaW4geGZzX3F1
+b3RhIHRoYW5rcyB0byBTYXRvcnUgVGFrZXVjaGkuCisJLSBta2ZzLnhmcyB3aWxsIGFsd2F5cyBn
+byBpbnRvIG11bHRpZGlzayBtb2RlIHdoZW4gZmlsZXN5c3RlbQorCSAgZ2VvbWV0cnkgaXMgc3Bl
+Y2lmaWVkIG9uIHRoZSBjb21tYW5kIGxpbmUuCisJLSBEb2N1bWVudCBhbGwgY29tbWFuZHMgaW4g
+eGZzX2lvLgorCS0gUmVtb3ZlIHNldGZsIGNvbW1hbmQgZnJvbSB4ZnNfaW8uCisJLSB4ZnNfbWV0
+YWR1bXAgd2lsbCBvYmZ1c2NhdGUgc3ltbGlua3MgYnkgcGF0aCBjb21wb25lbnQuCisJLSBta2Zz
+LnhmcyBubyBsb25nZXIgYWNjZXB0cyBnZW9tZXRyeSBzZXR0aW5ncyBzbWFsbGVyIHRoYW4gdGhl
+CisJICBwaHlzaWNhbCBzZWN0b3Igc2l6ZS4KKwktIHhmc19sb2dwcmludCBub3cgc3VwcG9ydHMg
+bXVsdGlwbHktbG9nZ2VkIGlub2RlIGZpZWxkcyBhbmQKKwkgIGhhbmRsZXMgY29udGludWVkIGlu
+b2RlIHRyYW5zYWN0aW9ucyBjb3JyZWN0bHkuCisJLSBVcGRhdGUgcmVsZWFzZSBzY3JpcHRzIHRv
+IHVzZSBnaXQgYXJjaGl2ZSB0byBhZGRyZXNzIGEKKwkgIG1pc3Npbmcgc291cmNlIGZpbGUgcmVw
+b3J0ZWQgYnkgQXJrYWRpdXN6IE1pxZtraWV3aWN6CisJLSBGaXggYSBidWlsZCBlcnJvciB3aXRo
+IC1XZXJyb3I9Zm9ybWF0LXNlY3VyaXR5LCByZXBvcnRlZAorCSAgYnkgQXJrYWRpdXN6IE1pxZtr
+aWV3aWN6CisJLSBta2ZzLnhmcyBubyBsb25nZXIgYXR0ZW1wdHMgdG8gZGlzY2FyZCB3aGVuIC1O
+IG9wdGlvbiBpcyB1c2VkLgorCS0gU3luYyB1cCB3aXRoIGxvZyByZXNlcnZhdGlvbiBjaGFuZ2Vz
+IGluIHRoZSBrZXJuZWwuCisJLSBGaXggcG9zc2libGUgdW5hbGxvY2F0ZWQgbWVtb3J5IGFjY2Vz
+cyBpbiBmaWVtYXAuCisJLSBHdWFyZCBhZ2FpbnN0IHN0cmluZyBvdmVyZmxvdyBpbiBwYXRoX3Rv
+X2ZzcGF0aC4KKwktIEZpeCBzZXR1cF9jdXJzb3IgYXJyYXkgYWxsb2NhdGlvbi4KKwktIEZpeCBm
+cmVlIG9mIHVuaW50aWFsaXplZCBwb2ludGVyIGluIHhmc19hY2xfdmFsaWQgZXJyb3IgcGF0aC4K
+KwktIEd1YXJkIGFnYWluc3QgcGF0aCBzdHJpbmcgb3ZlcmZsb3dzLgorCS0gRml4IGF0dHJpYnV0
+ZSBub19jaGFuZ2VfY291bnQgbG9naWMuCisJLSB4ZnNfcmVwYWlyIG5vdyBza2lwcyB0aGUgZnJl
+ZWxpc3Qgc2NhbiBvZiBhIGNvcnJ1cHQgYWdmCisJICB3aGVuIGluIG5vLW1vZGlmeSBtb2RlLgor
+CiB4ZnNwcm9ncy0zLjEuMTAgKDEzIERlY2VtYmVyIDIwMTIpCiAJLSBVcGRhdGUgcmVsZWFzZSBz
+Y3JpcHQgdG8gbWFrZSBhIHNvdXJjZSB0YXJiYWxsLgogCgpfX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNv
+bQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
