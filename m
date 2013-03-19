@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1DD127F37
-	for <xfs@oss.sgi.com>; Tue, 19 Mar 2013 14:51:39 -0500 (CDT)
-Message-ID: <5148C1ED.8080501@sgi.com>
-Date: Tue, 19 Mar 2013 14:52:13 -0500
+	by oss.sgi.com (Postfix) with ESMTP id 285867F62
+	for <xfs@oss.sgi.com>; Tue, 19 Mar 2013 14:51:46 -0500 (CDT)
+Message-ID: <5148C1F4.9020605@sgi.com>
+Date: Tue, 19 Mar 2013 14:52:20 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 13/13] xfstests: correct quota file count for --large-fs
+Subject: Re: [PATCH 12/13] xfstests: filter files in 019 for --large-fs
 References: <1363348411-21867-1-git-send-email-david@fromorbit.com>
-	<1363348411-21867-14-git-send-email-david@fromorbit.com>
-In-Reply-To: <1363348411-21867-14-git-send-email-david@fromorbit.com>
+	<1363348411-21867-13-git-send-email-david@fromorbit.com>
+In-Reply-To: <1363348411-21867-13-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,7 +24,6 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
-
 
 Looks good.
 
