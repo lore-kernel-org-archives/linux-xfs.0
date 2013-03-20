@@ -1,17 +1,34 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8244F7F4E
-	for <xfs@oss.sgi.com>; Wed, 20 Mar 2013 05:51:02 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C7CBA7F4E
+	for <xfs@oss.sgi.com>; Wed, 20 Mar 2013 06:15:15 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6F5078F8049
-	for <xfs@oss.sgi.com>; Wed, 20 Mar 2013 03:50:59 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id FRAo2Y2cwhYa5HjD for <xfs@oss.sgi.com>;
-	Wed, 20 Mar 2013 03:50:58 -0700 (PDT)
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH v2] Count journal size in test 289
-Date: Wed, 20 Mar 2013 11:50:48 +0100
-Message-Id: <1363776648-14061-1-git-send-email-jack@suse.cz>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A5E69304048
+	for <xfs@oss.sgi.com>; Wed, 20 Mar 2013 04:15:12 -0700 (PDT)
+Received: from buxtehude.debian.org (buxtehude.debian.org [140.211.166.26]) by
+	cuda.sgi.com with ESMTP id MMU6uvoPlVUZLzQG (version=TLSv1
+	cipher=AES128-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 20 Mar 2013 04:15:08 -0700 (PDT)
+Subject: Bug#695640: xfs_quota: cannot find mount point for path: Success
+Resent-To: debian-bugs-dist@lists.debian.org
+Resent-Message-ID: <handler.695640.B695640.13637778069436@bugs.debian.org>
+Date: Wed, 20 Mar 2013 22:09:35 +1100
+From: Dave Chinner <david@fromorbit.com>
+Message-ID: <20130320110935.GE17758@dastard>
+References: <CAA0ZO6APzwQCX=yf=qq8NkmjwDHVsgRBNCgN3KNW3RLgAWB=8A@mail.gmail.com>
+	<20121211223700.GA27055@sgi.com>
+	<CAA0ZO6BOUXTMpdrR-r=__-ZaAM6X39h2SisYXLfTTraTcttr+g@mail.gmail.com>
+	<20121211231533.GG16353@dastard>
+	<CAA0ZO6BvLQGt_9G-FSi+ZMCzJh_kmb1z2bdoPPwaVMVVK1UXJw@mail.gmail.com>
+	<CAA0ZO6BGqvBdXRr9U4BagQYGa=_kC2VUgtOj+qPB5HEX2U8O7w@mail.gmail.com>
+	<20130318224814.GP6369@dastard>
+	<CAA0ZO6BVwPP9McKA=vn1+21gHpRCQP9P963nsSjY_zXHWeszrg@mail.gmail.com>
+	<20130319063104.GA6369@dastard>
+	<CAA0ZO6AxFzinTv_COhK6GqnRpSiYW95otznKvYKiWZB5+=CyBg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <CAA0ZO6AxFzinTv_COhK6GqnRpSiYW95otznKvYKiWZB5+=CyBg@mail.gmail.com>
+Reply-To: Dave Chinner <david@fromorbit.com>, 695640@bugs.debian.org
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,80 +37,75 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Eric Sandeen <sandeen@sandeen.net>, Jan Kara <jack@suse.cz>
+To: Brian May <brian@microcomaustralia.com.au>
+Cc: 695640@bugs.debian.org, Ben Myers <bpm@sgi.com>
 
-Test 289 ignored the fact that historically journal is not accounted as
-fs overhead in ext3. For larger filesystems it is hidden in 1% tolerance
-but for filesystems smaller than 12G the test fails. So make the
-counting precise to work everywhere.
+On Wed, Mar 20, 2013 at 04:19:16PM +1100, Brian May wrote:
+> On 19 March 2013 17:31, Dave Chinner <david@fromorbit.com> wrote:
+> 
+> > Which tells me exactly what is happening.
+> >
+> > The project quotas are not on the filesystem you directed the the
+> > quota command at, and xfs_quota is telling you that it can't find
+> > the mount point for the configured project quotas on /home. Either:
+> >
+> 
+> Hello,
+> 
+> Thanks for your response.
+> 
+> I am kind of confused still. I asked for user quotas, with the -u flag. Why
+> should it be trying to lookup project quotas?
 
-CC: Eric Sandeen <sandeen@sandeen.net>
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- 289           |   16 ++++++++++++----
- common.filter |   15 +++++++++++++++
- 2 files changed, 27 insertions(+), 4 deletions(-)
+Because the quota command does mount point and project quota
+initialisation (i.e. global state) before it parses any specific
+command.
 
-diff --git a/289 b/289
-index b057c20..eb5c63b 100755
---- a/289
-+++ b/289
-@@ -59,10 +59,18 @@ TOTAL_BLOCKS=`dumpe2fs -h $SCRATCH_DEV 2>/dev/null \
- FREE_BLOCKS=`dumpe2fs -h $SCRATCH_DEV 2>/dev/null \
- 		| awk '/Free blocks:/{print $3}'`
- 
--# nb: kernels today don't count journal blocks  as overhead, but should.
--# For most filesystems this will still be within tolerance.
--# Overhead is all the blocks (already) used by the fs itself:
--OVERHEAD=$(($TOTAL_BLOCKS-$FREE_BLOCKS))
-+# ext3 doesn't count journal blocks as overhead, ext4 does.
-+if [ $FSTYP = "ext3" ]; then
-+	JOURNAL_SIZE=`dumpe2fs -h $SCRATCH_DEV 2>/dev/null \
-+		| awk '/Journal size:/{print $3}' | _filter_size_to_bytes`
-+	BLOCK_SIZE=`dumpe2fs -h $SCRATCH_DEV 2>/dev/null \
-+		| awk '/Block size:/{print $3}'`
-+	JOURNAL_BLOCKS=$(($JOURNAL_SIZE/$BLOCK_SIZE))
-+else
-+	JOURNAL_BLOCKS=0
-+fi
-+
-+OVERHEAD=$(($TOTAL_BLOCKS-$FREE_BLOCKS-$JOURNAL_BLOCKS))
- 
- #  bsddf|minixdf
- #         Set the behaviour  for  the  statfs  system  call.  The  minixdf
-diff --git a/common.filter b/common.filter
-index f0f6076..fcd7589 100644
---- a/common.filter
-+++ b/common.filter
-@@ -229,5 +229,20 @@ _filter_spaces()
-        sed -e 's/ [ ]*/ /g'
- }
- 
-+# Convert string read from stdin like 128K to bytes and print it to stdout
-+_filter_size_to_bytes()
-+{
-+	read size
-+	suffix=${size:${#size}-1}
-+	mul=1
-+	case $suffix in
-+		K) mul=1024 ;;
-+		M) mul=$((1024*1024)) ;;
-+		G) mul=$((1024*1024*1024)) ;;
-+		T) mul=$((1024*1024*1024*1024)) ;;
-+	esac
-+	echo $((${size:0:${#size}-1}*$mul))
-+}
-+
- # make sure this script returns success
- /bin/true
+> I only want to get the report of user quotas. I only want to get the report
+> for one filesystem. A filesystem that
+> doesn't support project quotas, which should be fine because I am not
+> asking for project quotas.
+
+The issues project quota configuration is global information, and
+the initialisation code is not aware of the fact that:
+
+	a) you are not asking for project quota information; and
+	b) you are not asking for information about a mount point
+	   that doesn't have any project quotas on it.
+
+> > # xfs_quota  -x -c "quota -N -u brian"
+> 
+> This prints the quota information 20 times. Huh?
+
+How many mount points do you have? 20?
+
+> > or
+> >
+> > # xfs_quota  -x -c "quota -N -u brian" /home /share
+> >
+> 
+> This prints the quota information 2 times. Huh?
+
+The command has once for each of the mount points, and the command
+itself iterates mount points because you haven't given it a mount
+point to look at. So, double iteration.  This same problem was fixed
+for the report command by setting it to be a global command i.e. the
+fix I mentioned previously that you tested should prevent this
+second case, and maybe even the first.
+
+There are several layers of interactions here, and that's why I need
+to have a think about it to understand it fully and fix it....
+
+Cheers,
+
+Dave.
 -- 
-1.7.1
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
