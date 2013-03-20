@@ -1,33 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2C9427CBF
-	for <linux-xfs@oss.sgi.com>; Wed, 20 Mar 2013 13:26:40 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1A966304048
-	for <linux-xfs@oss.sgi.com>; Wed, 20 Mar 2013 11:26:36 -0700 (PDT)
-Received: from plane.gmane.org (plane.gmane.org [80.91.229.3]) by cuda.sgi.com
-	with ESMTP id vMAx7QSZ2RjFW2Oh (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <linux-xfs@oss.sgi.com>;
-	Wed, 20 Mar 2013 11:26:35 -0700 (PDT)
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1UINiw-0000RN-Ls
-	for linux-xfs@oss.sgi.com; Wed, 20 Mar 2013 19:26:54 +0100
-Received: from g224242248.adsl.alicedsl.de ([92.224.242.248])
-	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-	id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Wed, 20 Mar 2013 19:26:54 +0100
-Received: from pa5ca1 by g224242248.adsl.alicedsl.de with local (Gmexim 0.1
-	(Debian)) id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Wed, 20 Mar 2013 19:26:54 +0100
-From: Pascal <pa5ca1@gmx.de>
-Subject: Re: Maximum file system size of XFS?
-Date: Wed, 20 Mar 2013 19:26:19 +0100
-Message-ID: <20130320192619.7d76c998@thinky>
-References: <20130309215121.0e614ef8@thinky>
-	<201303112257.00798.Martin@lichtvoll.de>
-	<201303112301.51715.Martin@lichtvoll.de>
-	<201303112304.14945.Martin@lichtvoll.de>
-Mime-Version: 1.0
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 790C57CBF
+	for <xfs@oss.sgi.com>; Wed, 20 Mar 2013 16:15:00 -0500 (CDT)
+Date: Wed, 20 Mar 2013 16:14:57 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 10/21] xfs: add CRC checks to remote symlinks
+Message-ID: <20130320211457.GM22182@sgi.com>
+References: <1363091454-8852-1-git-send-email-david@fromorbit.com>
+	<1363091454-8852-11-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1363091454-8852-11-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,21 +23,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Am Mon, 11 Mar 2013 23:04:14 +0100
-schrieb Martin Steigerwald <Martin@lichtvoll.de>:
+Hi Dave,
 
-> > > Enough insanity for today :)
+On Tue, Mar 12, 2013 at 11:30:43PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Add a header to the remote symlink block, containing location and
+> owner information, as well as CRCs and LSN fields. This requires
+> verifiers to be added to the remote symlink buffers for CRC enabled
+> filesystems.
+> 
+> This also fixes a bug reading multiple block symlinks, where the second block
+> overwrites the first block when copying out the link name.
 
-Hey Martin,
+Huh.  This commit message doesn't say anything about moving symlink related
+code from xfs_vnodeops.c to a new file xfs_symlink.c.  If you're going to cut
+and paste code en masse from one file to the next, that's perfectly fine with
+me.  But please do that in a separate patch than the code you're adding for a
+feature so that I can focus on the new code in the review.
 
-I am very impressed by the time and effort you spent into it! Thank you!
+Looks like you need to add a GPL notice.
 
-
-And thanks to everyone for answering my question!
-
-
+Thanks,
+Ben
 
 _______________________________________________
 xfs mailing list
