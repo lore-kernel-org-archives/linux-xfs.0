@@ -1,22 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2C9807F3F
-	for <xfs@oss.sgi.com>; Thu, 21 Mar 2013 06:00:09 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9E3B3AC004
-	for <xfs@oss.sgi.com>; Thu, 21 Mar 2013 04:00:05 -0700 (PDT)
-Received: from xp-ob.rzone.de (xp-ob.rzone.de [81.169.146.137]) by
-	cuda.sgi.com with ESMTP id m98A1FmyRsAOanyh for
-	<xfs@oss.sgi.com>; Thu, 21 Mar 2013 04:00:03 -0700 (PDT)
-Received: from pizpot.store ([192.168.43.236])
-	by jorabe.store (jorabe xp3) (RZmta 31.22 OK)
-	with ESMTP id p02003p2L9FjB5 for <xfs@oss.sgi.com>;
-	Thu, 21 Mar 2013 12:00:02 +0100 (CET)
-From: Jan Schmidt <list.xfs@jan-o-sch.net>
-Subject: [PATCH] xfstests: add execution of a custom command to fsstress (-x
-	and -X options)
-Date: Thu, 21 Mar 2013 11:59:45 +0100
-Message-Id: <1363863585-25598-1-git-send-email-list.xfs@jan-o-sch.net>
+	by oss.sgi.com (Postfix) with ESMTP id 74F8C7F37
+	for <xfs@oss.sgi.com>; Thu, 21 Mar 2013 09:59:55 -0500 (CDT)
+Date: Thu, 21 Mar 2013 09:59:51 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 10/21] xfs: add CRC checks to remote symlinks
+Message-ID: <20130321145951.GV30652@sgi.com>
+References: <1363091454-8852-1-git-send-email-david@fromorbit.com>
+	<1363091454-8852-11-git-send-email-david@fromorbit.com>
+	<20130320211457.GM22182@sgi.com> <20130321012237.GI17758@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20130321012237.GI17758@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,121 +20,66 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-From: Jan Schmidt <list.btrfs@jan-o-sch.net>
+Hi Dave,
 
-This patch adds execution of a custom command in the middle of all fsstress
-operations. Its intended use is the creation of snapshots in the middle of a
-test run.
+On Thu, Mar 21, 2013 at 12:22:37PM +1100, Dave Chinner wrote:
+> On Wed, Mar 20, 2013 at 04:14:57PM -0500, Ben Myers wrote:
+> > Hi Dave,
+> > 
+> > On Tue, Mar 12, 2013 at 11:30:43PM +1100, Dave Chinner wrote:
+> > > From: Dave Chinner <dchinner@redhat.com>
+> > > 
+> > > Add a header to the remote symlink block, containing location and
+> > > owner information, as well as CRCs and LSN fields. This requires
+> > > verifiers to be added to the remote symlink buffers for CRC enabled
+> > > filesystems.
+> > > 
+> > > This also fixes a bug reading multiple block symlinks, where the second block
+> > > overwrites the first block when copying out the link name.
+> > 
+> > Huh.  This commit message doesn't say anything about moving symlink related
+> > code from xfs_vnodeops.c to a new file xfs_symlink.c.
+> 
+> I'm sure I added it at one point. Maybe I lost it when folding and
+> splitting various patches as I originally wrote this code in the
+> userspace libxfs tree...
+> 
+> I'll split it back out.
 
-Signed-off-by: Jan Schmidt <list.btrfs@jan-o-sch.net>
----
- ltp/fsstress.c |   26 ++++++++++++++++++++++++--
- 1 files changed, 24 insertions(+), 2 deletions(-)
+Much appreciated.
 
-diff --git a/ltp/fsstress.c b/ltp/fsstress.c
-index b4cfb25..5d5611f 100644
---- a/ltp/fsstress.c
-+++ b/ltp/fsstress.c
-@@ -247,6 +247,8 @@ unsigned long	seed = 0;
- ino_t		top_ino;
- int		verbose = 0;
- sig_atomic_t	should_stop = 0;
-+char		*execute_cmd = NULL;
-+int		execute_freq = 1;
+> > If you're going to cut
+> > and paste code en masse from one file to the next, that's perfectly fine with
+> > me.  But please do that in a separate patch than the code you're adding for a
+> > feature so that I can focus on the new code in the review.
+> > 
+> > Looks like you need to add a GPL notice.
+> 
+> It isn't actually necessary. All code in the kernel is covered by
+> the GPLv2, and so notices on individual files are not technically
+> necessary. Just because it isn't explicitly stated in the file, it
+> doesn't mean the GPL does not apply to the code - the kernel is
+> licensed according to what is in the COPYING file (i.e. the full
+> GPLv2 license w/ clarifications noted by Linus), and so that is the
+> license that applies to the new file. All that actually matters in
+> individual files is the copyright statements themselves...
+
+IANAL.  ;)
  
- void	add_to_flist(int, int, int);
- void	append_pathname(pathname_t *, char *);
-@@ -313,13 +315,14 @@ int main(int argc, char **argv)
- 	int             nousage = 0;
- 	xfs_error_injection_t	        err_inj;
- 	struct sigaction action;
-+	const char	*allopts = "d:e:f:i:m:M:n:o:p:rs:S:vwx:X:zH";
- 
- 	errrange = errtag = 0;
- 	umask(0);
- 	nops = sizeof(ops) / sizeof(ops[0]);
- 	ops_end = &ops[nops];
- 	myprog = argv[0];
--	while ((c = getopt(argc, argv, "d:e:f:i:m:M:n:o:p:rs:S:vwzH")) != -1) {
-+	while ((c = getopt(argc, argv, allopts)) != -1) {
- 		switch (c) {
- 		case 'd':
- 			dirname = optarg;
-@@ -376,6 +379,9 @@ int main(int argc, char **argv)
- 		case 'w':
- 			write_freq();
- 			break;
-+		case 'x':
-+			execute_cmd = optarg;
-+			break;
- 		case 'z':
- 			zero_freq();
- 			break;
-@@ -390,6 +396,9 @@ int main(int argc, char **argv)
- 			printf("\n");
-                         nousage=1;
- 			break;
-+		case 'X':
-+			execute_freq = strtoul(optarg, NULL, 0);
-+			break;
- 		case '?':
- 			fprintf(stderr, "%s - invalid parameters\n",
- 				myprog);
-@@ -765,7 +774,9 @@ doproc(void)
- 	int		opno;
- 	int		rval;
- 	opdesc_t	*p;
-+	int		dividend;
- 
-+	dividend = (operations + execute_freq) / (execute_freq + 1);
- 	sprintf(buf, "p%x", procid);
- 	(void)mkdir(buf, 0777);
- 	if (chdir(buf) < 0 || stat64(".", &statbuf) < 0) {
-@@ -779,6 +790,15 @@ doproc(void)
- 	if (namerand)
- 		namerand = random();
- 	for (opno = 0; opno < operations; opno++) {
-+		if (execute_cmd && opno && opno % dividend == 0) {
-+			if (verbose)
-+				printf("%d: execute command %s\n", opno,
-+					execute_cmd);
-+			rval = system(execute_cmd);
-+			if (rval)
-+				fprintf(stderr, "execute command failed with "
-+					"%d\n", rval);
-+		}
- 		p = &ops[freq_table[random() % freq_table_size]];
- 		p->func(opno, random());
- 		/*
-@@ -1468,7 +1488,7 @@ usage(void)
- 	printf("Usage: %s -H   or\n", myprog);
- 	printf("       %s [-d dir][-e errtg][-f op_name=freq][-n nops]\n",
- 		myprog);
--	printf("          [-p nproc][-r len][-s seed][-v][-w][-z][-S]\n");
-+	printf("          [-p nproc][-r len][-s seed][-v][-w][-x cmd][-z][-S][-X ncmd]\n");
- 	printf("where\n");
- 	printf("   -d dir           specifies the base directory for operations\n");
- 	printf("   -e errtg         specifies error injection stuff\n");
-@@ -1483,8 +1503,10 @@ usage(void)
- 	printf("   -s seed          specifies the seed for the random generator (default random)\n");
- 	printf("   -v               specifies verbose mode\n");
- 	printf("   -w               zeros frequencies of non-write operations\n");
-+	printf("   -x cmd           execute command in the middle of operations\n");
- 	printf("   -z               zeros frequencies of all operations\n");
- 	printf("   -S [c,t]         prints the list of operations (omitting zero frequency) in command line or table style\n");
-+	printf("   -X ncmd          number of calls to the -x command (default 1)\n");
- 	printf("   -H               prints usage and exits\n");
- }
- 
--- 
-1.7.2.2
+> But, seeing as you are concerned, I'll add the boiler plates.
+
+Thanks.  It appears this will sync into libxfs eventually and we've been trying
+to make sure the boilerplate is in place in xfsprogs.
+
+Regards,
+	Ben
 
 _______________________________________________
 xfs mailing list
