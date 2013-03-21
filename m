@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7F9EB7F37
-	for <xfs@oss.sgi.com>; Wed, 20 Mar 2013 20:09:13 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B90217CBF
+	for <xfs@oss.sgi.com>; Wed, 20 Mar 2013 20:22:40 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4BA8C304039
-	for <xfs@oss.sgi.com>; Wed, 20 Mar 2013 18:09:13 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 944078F8065
+	for <xfs@oss.sgi.com>; Wed, 20 Mar 2013 18:22:40 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	LZl1qzCAt3GCWcQN for <xfs@oss.sgi.com>;
-	Wed, 20 Mar 2013 18:09:11 -0700 (PDT)
-Date: Thu, 21 Mar 2013 12:09:02 +1100
+	d54CFofyfHXBvBZG for <xfs@oss.sgi.com>;
+	Wed, 20 Mar 2013 18:22:38 -0700 (PDT)
+Date: Thu, 21 Mar 2013 12:22:37 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfstests 299-305: remove fio config files after finished
-	test
-Message-ID: <20130321010902.GH17758@dastard>
-References: <1363685450-27452-1-git-send-email-wenqing.lz@taobao.com>
+Subject: Re: [PATCH 10/21] xfs: add CRC checks to remote symlinks
+Message-ID: <20130321012237.GI17758@dastard>
+References: <1363091454-8852-1-git-send-email-david@fromorbit.com>
+	<1363091454-8852-11-git-send-email-david@fromorbit.com>
+	<20130320211457.GM22182@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1363685450-27452-1-git-send-email-wenqing.lz@taobao.com>
+In-Reply-To: <20130320211457.GM22182@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,44 +31,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Zheng Liu <gnehzuil.liu@gmail.com>
-Cc: linux-ext4@vger.kernel.org, Zheng Liu <wenqing.lz@taobao.com>, xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Mar 19, 2013 at 05:30:50PM +0800, Zheng Liu wrote:
-> From: Zheng Liu <wenqing.lz@taobao.com>
+On Wed, Mar 20, 2013 at 04:14:57PM -0500, Ben Myers wrote:
+> Hi Dave,
 > 
-> After finished test, temporarily fio config file should be removed.
+> On Tue, Mar 12, 2013 at 11:30:43PM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Add a header to the remote symlink block, containing location and
+> > owner information, as well as CRCs and LSN fields. This requires
+> > verifiers to be added to the remote symlink buffers for CRC enabled
+> > filesystems.
+> > 
+> > This also fixes a bug reading multiple block symlinks, where the second block
+> > overwrites the first block when copying out the link name.
 > 
-> Signed-off-by: Zheng Liu <wenqing.lz@taobao.com>
-> ---
->  299 | 2 +-
->  300 | 2 +-
->  301 | 2 +-
->  302 | 2 +-
->  303 | 2 +-
->  304 | 2 +-
->  305 | 1 +
->  7 files changed, 7 insertions(+), 6 deletions(-)
+> Huh.  This commit message doesn't say anything about moving symlink related
+> code from xfs_vnodeops.c to a new file xfs_symlink.c.
+
+I'm sure I added it at one point. Maybe I lost it when folding and
+splitting various patches as I originally wrote this code in the
+userspace libxfs tree...
+
+I'll split it back out.
+
+> If you're going to cut
+> and paste code en masse from one file to the next, that's perfectly fine with
+> me.  But please do that in a separate patch than the code you're adding for a
+> feature so that I can focus on the new code in the review.
 > 
-> diff --git a/299 b/299
-> index 4305ead..9d0c32f 100644
-> --- a/299
-> +++ b/299
-> @@ -32,7 +32,7 @@ echo "QA output created by $seq"
->  here=`pwd`
->  tmp=/tmp/$$
->  status=1	# failure is the default!
-> +trap "rm -f $tmp.*; rm -f $tmp-$seq.fio; exit \$status" 0 1 2 3 15
+> Looks like you need to add a GPL notice.
 
-Umm, wouldn't this be better:
+It isn't actually necessary. All code in the kernel is covered by
+the GPLv2, and so notices on individual files are not technically
+necessary. Just because it isn't explicitly stated in the file, it
+doesn't mean the GPL does not apply to the code - the kernel is
+licensed according to what is in the COPYING file (i.e. the full
+GPLv2 license w/ clarifications noted by Linus), and so that is the
+license that applies to the new file. All that actually matters in
+individual files is the copyright statements themselves...
 
--trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
-+trap "rm -f $tmp*; exit \$status" 0 1 2 3 15
-
+But, seeing as you are concerned, I'll add the boiler plates.
 
 Cheers,
 
 Dave.
+
 -- 
 Dave Chinner
 david@fromorbit.com
