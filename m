@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B096F7CBF
-	for <xfs@oss.sgi.com>; Wed, 20 Mar 2013 20:01:58 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9CE76304048
-	for <xfs@oss.sgi.com>; Wed, 20 Mar 2013 18:01:55 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 692F17CBF
+	for <xfs@oss.sgi.com>; Wed, 20 Mar 2013 20:06:38 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 490FB8F8064
+	for <xfs@oss.sgi.com>; Wed, 20 Mar 2013 18:06:35 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	9worl2nN0xctq3LB for <xfs@oss.sgi.com>;
-	Wed, 20 Mar 2013 18:01:53 -0700 (PDT)
-Date: Thu, 21 Mar 2013 12:01:50 +1100
+	q87Ll7VMP2LSOsyH for <xfs@oss.sgi.com>;
+	Wed, 20 Mar 2013 18:06:33 -0700 (PDT)
+Date: Thu, 21 Mar 2013 12:06:30 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Crash with 3.8.3 and TuxOnIce
-Message-ID: <20130321010149.GF17758@dastard>
-References: <CAEDdjHeo3Giv3Y8pLfYHSbJi07_dv7ywzinCSSkxUwBQe-1fsw@mail.gmail.com>
-	<20130320004405.GC17758@dastard>
-	<CAEDdjHc139n-FFrW34FLyfKsqFHBy0_LVcVT24aLyCpb4DC9dA@mail.gmail.com>
+Subject: Re: [PATCH v2] xfstests: add a new test case for ext4 indirect-based
+	file
+Message-ID: <20130321010630.GG17758@dastard>
+References: <1363683183-7392-1-git-send-email-wenqing.lz@taobao.com>
+	<51489267.7080202@sandeen.net> <20130320054555.GB4017@gmail.com>
+	<51494B26.6020204@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAEDdjHc139n-FFrW34FLyfKsqFHBy0_LVcVT24aLyCpb4DC9dA@mail.gmail.com>
+In-Reply-To: <51494B26.6020204@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,39 +32,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Pedro Ribeiro <pedrib@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-ext4@vger.kernel.org, Zheng Liu <wenqing.lz@taobao.com>, xfs@oss.sgi.com
 
-On Wed, Mar 20, 2013 at 06:01:35PM +0000, Pedro Ribeiro wrote:
-> Thanks for the answer Dave.
+On Wed, Mar 20, 2013 at 12:37:42AM -0500, Eric Sandeen wrote:
+> On 3/20/13 12:45 AM, Zheng Liu wrote:
+> >>> +f6aeca13ec49e5b266cd1c913cd726e3
+> >>> > > +	12. unwritten -> data -> unwritten
+> >> > 
+> >> > It's a little odd that the output contains "unwritten" when this test
+> >> > is explicitly for testing *without* unwritten extents.  Should this be
+> >> > cleaned up a little in common.punch, maybe?
+> > I will try to define a new function called _test_indirect_punch() to
+> > test punching hole without unwritten extent.
 > 
-> Yes I would definitely say it's a ToI bug that perhaps has been dormant so
-> far. Unfortunately the ToI developer is very busy at the moment, so I will
-> have to debug and fix it myself.
-> This problem did not occur with 3.7 and the ToI code did not change.
+> It's just the helper which prints "unwritten" regardless of what
+> is passed as "$alloc_cmd" to _test_generic_punch, right... so there's
+> nothing wrong with the test, really - it's just odd output.
 > 
-> Do you have any idea where I can start looking for the XFS change in 3.8
-> that triggered this behaviour in ToI? Or maybe it was a VFS change?
+> I'm not sure it's worth a big copy & paste just to change
+> the output text, but if you can think of something simple to clean
+> it up, it might be worth it.
 
-It's almost certainly an XFS change that triggered it, but it
-indicates (once again) that the hibernate code is simply not
-quiescing filesystems properly (i.e. by freezing them). The work
-that caused this problem is stopped by the filesystem when it
-is frozen, and started again when it is thawed...
+No, definitely not worth duplicating code. In fact, seeing as it's
+just informational output, I'd be inclined to ignore it as it's
+never going to cause the test to fail.
 
-> PS: the email definitely bounced back, most likely because imageshack is
-> blocked on the sgi server:
-> 
-> Technical details of permanent failure:
-> Google tried to deliver your message, but it was rejected by the server for
-> the recipient domain oss.sgi.com by cuda-allmx.sgi.com. [192.48.176.16].
-> 
-> The error that the other server returned was:
-> 554 rejecting banned content
-
-IOWs, a stupid spam filter.
-
-I'll see if I can get this fixed.
+This is one of the reasons I tend not to like these "pretty output"
+lines in the actual test output. If you need more verbose
+information for debugging, that's what $seq.full is for....
 
 Cheers,
 
