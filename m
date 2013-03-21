@@ -1,24 +1,38 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 82C877F37
-	for <xfs@oss.sgi.com>; Thu, 21 Mar 2013 16:12:40 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0D21AAC006
-	for <xfs@oss.sgi.com>; Thu, 21 Mar 2013 14:12:36 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	rrOfKZFwPNqQR1k4 for <xfs@oss.sgi.com>;
-	Thu, 21 Mar 2013 14:12:35 -0700 (PDT)
-Date: Fri, 22 Mar 2013 08:12:18 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfstests: add execution of a custom command to fsstress
-	(-x and -X options)
-Message-ID: <20130321211218.GP17758@dastard>
-References: <1363863585-25598-1-git-send-email-list.xfs@jan-o-sch.net>
-	<20130321195054.GO17758@dastard> <514B72B9.1010005@jan-o-sch.net>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <514B72B9.1010005@jan-o-sch.net>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id CE5CA7F37
+	for <xfs@oss.sgi.com>; Thu, 21 Mar 2013 16:53:03 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id BC5508F8052
+	for <xfs@oss.sgi.com>; Thu, 21 Mar 2013 14:53:00 -0700 (PDT)
+Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150]) by
+	cuda.sgi.com with ESMTP id JJqcttPi1KhR9FhA (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 21 Mar 2013 14:52:59 -0700 (PDT)
+Received: from /spool/local
+	by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	Violators will be prosecuted
+	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
+	Thu, 21 Mar 2013 15:52:59 -0600
+Received: from d03relay01.boulder.ibm.com (d03relay01.boulder.ibm.com
+	[9.17.195.226])
+	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id 8182419D8045
+	for <xfs@oss.sgi.com>; Thu, 21 Mar 2013 15:52:52 -0600 (MDT)
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay01.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	r2LLqt2F100960 for <xfs@oss.sgi.com>; Thu, 21 Mar 2013 15:52:55 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id r2LLqtOn023079
+	for <xfs@oss.sgi.com>; Thu, 21 Mar 2013 15:52:55 -0600
+Received: from chandra-dt.ibm.com.austin.ibm.com
+	(chandra-dt.ibm.com.austin.ibm.com [9.41.106.170])
+	by d03av02.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVin) with ESMTP id
+	r2LLqte4023035 for <xfs@oss.sgi.com>; Thu, 21 Mar 2013 15:52:55 -0600
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: [PATCH v7 0/5] xfs: Allow pquota and gquota to be used together
+Date: Thu, 21 Mar 2013 16:52:49 -0500
+Message-Id: <1363902774-19292-1-git-send-email-sekharan@us.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,60 +41,117 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Schmidt <list.xfs@jan-o-sch.net>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, Mar 21, 2013 at 09:51:05PM +0100, Jan Schmidt wrote:
-> 
-> 
-> On 21.03.2013 20:50, Dave Chinner wrote:
-> > On Thu, Mar 21, 2013 at 11:59:45AM +0100, Jan Schmidt wrote:
-> >> From: Jan Schmidt <list.btrfs@jan-o-sch.net>
-> >>
-> >> This patch adds execution of a custom command in the middle of all fsstress
-> >> operations. Its intended use is the creation of snapshots in the middle of a
-> >> test run.
-> > 
-> > Why do you need fsstress to do this? Why can't you just run fsstress
-> > in the background and run a loop creating periodic snapshots in the
-> > control script?
-> 
-> Because I want reproducible results. Same random seed should result in
-> the very same snapshots being created.
+Hello All,
 
-Why can't you run fsstress for N operations, run a snapshot,
-then run it again for M operations? That will give you exactly the
-same results, wouldn't it?
+This is the version 7 of the changes to allow pquota and gquota to be used
+together.
 
-> > Also, did you intend that every process creates a snapshot? i.e. it
-> > looks lik eif you run a 1000 processes, they'll all run a snapshot
-> > operation at X operations? i.e. this will generate nproc * X
-> > snapshots in a single run. This doesn't seem very wise to me....
-> 
-> Agreed, I haven't thought of running more than one process. For the sake
-> of reproducibility, I wouldn't want multiple processes for my test case
-> either.
-> 
-> I'm not sure if there are other applications than snapshot creation for
-> such a feature, so I cannot argue whether to have each process execute
-> such a command or not.
+Patchset applies cleanly on top of 56cea2d088811b8cf7d2893e29bcf369a912de69
+in xfs git tree.
 
-If such a feature is necessary, I'd suggest that implementing the
-snapshot ioctl as just another operation directly into fsstress is
-probably a better way to implement this functionality. That way you
-can control the frequency via the command line in exactly the same
-way as every other operation....
+Ran latest xfstests against it.
 
-Cheers,
+Changes from version 6 to version 7:
+ - Made all the changes suggested by Dave Chinner
+ - Added padding to fs_quota_stat, which made the new
+   data structure field ordering different from the old data
+   structure field ordering. So, copied the old version
+   to be _v1 version and used that if old version of data
+   structure was provided from user space.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Version 6 can be found at:
+http://oss.sgi.com/archives/xfs/2012-07/msg00286.html
+
+Changes from version 5 to version 6:
+- Use radix tree instead of hash table
+
+Version 5 can be found at:
+http://oss.sgi.com/archives/xfs/2012-03/msg00310.html
+
+Changes fron version 4 to version 5:
+rebase with the current tree one simple change.
+
+Version 4 can be found at
+http://oss.sgi.com/archives/xfs/2012-02/msg00528.html
+
+Changes from version 3 to version 4:
+- Remove save_flags with storing the value (in to superblock) 
+  based on field type info
+- fix checkpatch.pl warnings and errors
+
+Version 3 of the posting can be found at
+http://oss.sgi.com/archives/xfs/2012-01/msg00309.html
+
+Changes from version 2 to version 3:
+ - hash table for pquota is added.
+ - changes to apply cleanly with the latest tree
+
+version 2 of the posting can be found at
+http://oss.sgi.com/archives/xfs/2011-10/msg00470.html
+
+Changes from version 1 to version 2:
+
+ - Created a new prep patch to accomodate some generic changes that ease
+   the later patches.
+ - Created a new patch to add a new field qs_pquota to fs_quota_stat
+   with appropriate versioning changes
+ - Changed the logic to allow XFS_OQUOTA.* flags to be allowed only in
+   the older versions.
+ - Changed couple of places where PQUOTA checking was on the else if
+   construct so as to allow both GQUOTA and PQUOTA in those places.
+ - Fixed comments in xfs_quota.h to reflect the current changes.
+ - Changed the name of the macro XFS_SB_VERSION2_SEPER_PQUOTA to 
+   XFS_SB_VERSION2_NO_OQUOTA
+ - got rid of the macros XFS_MOUNT_QUOTA_SET1 and XFS_MOUNT_QUOTA_SET2
+ - added a new inline function xfs_inode_dquot(ip, type) to simplify
+   the error path in xfs_qm_dqget()
+ - got rid of the macro XFS_IS_THIS_QUOTA_OFF
+ - added comment to explain why sb_qflags is saved and restored in 
+   xfs_sb_to_disk()
+
+version 1 of the posting can be found at
+http://oss.sgi.com/archives/xfs/2011-10/msg00341.html
+
+Thanks & Regards,
+
+chandra
+---
+Chandra Seetharaman (5):
+  xfs: Remove incore use of XFS_OQUOTA_ENFD and XFS_OQUOTA_CHKD
+  xfs: Add pquota fields and use them at appropriate places
+  xfs: Add pquotaino to on-disk super block
+  xfs: Add proper versioning support to fs_quota_stat
+  xfs: Use the new qs_pquota field in fs_quota_stat for Q_XGETQSTAT
+
+ fs/gfs2/quota.c                |    3 -
+ fs/quota/quota.c               |   40 ++++-
+ fs/xfs/xfs_dquot.c             |   33 +++-
+ fs/xfs/xfs_dquot.h             |   13 +-
+ fs/xfs/xfs_icache.c            |    4 +-
+ fs/xfs/xfs_inode.h             |    1 +
+ fs/xfs/xfs_ioctl.c             |   14 +-
+ fs/xfs/xfs_iops.c              |    4 +-
+ fs/xfs/xfs_itable.c            |    3 +-
+ fs/xfs/xfs_mount.c             |  103 +++++++++++
+ fs/xfs/xfs_qm.c                |  379 ++++++++++++++++++++++++++--------------
+ fs/xfs/xfs_qm.h                |   54 ++++--
+ fs/xfs/xfs_qm_bhv.c            |    2 +-
+ fs/xfs/xfs_qm_syscalls.c       |  125 +++++++++-----
+ fs/xfs/xfs_quota.h             |   78 +++++----
+ fs/xfs/xfs_quotaops.c          |    6 +-
+ fs/xfs/xfs_sb.h                |   19 ++-
+ fs/xfs/xfs_super.c             |   35 ++--
+ fs/xfs/xfs_trans_dquot.c       |  102 ++++++-----
+ fs/xfs/xfs_vnodeops.c          |   25 ++-
+ include/uapi/linux/dqblk_xfs.h |   37 ++++-
+ 21 files changed, 744 insertions(+), 336 deletions(-)
 
 _______________________________________________
 xfs mailing list
