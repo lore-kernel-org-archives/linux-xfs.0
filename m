@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B90217CBF
-	for <xfs@oss.sgi.com>; Wed, 20 Mar 2013 20:22:40 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8B9377CBF
+	for <xfs@oss.sgi.com>; Wed, 20 Mar 2013 20:32:47 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 944078F8065
-	for <xfs@oss.sgi.com>; Wed, 20 Mar 2013 18:22:40 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 78A8E304039
+	for <xfs@oss.sgi.com>; Wed, 20 Mar 2013 18:32:47 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	d54CFofyfHXBvBZG for <xfs@oss.sgi.com>;
-	Wed, 20 Mar 2013 18:22:38 -0700 (PDT)
-Date: Thu, 21 Mar 2013 12:22:37 +1100
+	l6Np02FMsFPhA6Ee for <xfs@oss.sgi.com>;
+	Wed, 20 Mar 2013 18:32:46 -0700 (PDT)
+Date: Thu, 21 Mar 2013 12:32:43 +1100
 From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH 10/21] xfs: add CRC checks to remote symlinks
-Message-ID: <20130321012237.GI17758@dastard>
+Message-ID: <20130321013243.GJ17758@dastard>
 References: <1363091454-8852-1-git-send-email-david@fromorbit.com>
 	<1363091454-8852-11-git-send-email-david@fromorbit.com>
-	<20130320211457.GM22182@sgi.com>
+	<20130320220334.GN22182@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130320211457.GM22182@sgi.com>
+In-Reply-To: <20130320220334.GN22182@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,9 +34,7 @@ Sender: xfs-bounces@oss.sgi.com
 To: Ben Myers <bpm@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, Mar 20, 2013 at 04:14:57PM -0500, Ben Myers wrote:
-> Hi Dave,
-> 
+On Wed, Mar 20, 2013 at 05:03:34PM -0500, Ben Myers wrote:
 > On Tue, Mar 12, 2013 at 11:30:43PM +1100, Dave Chinner wrote:
 > > From: Dave Chinner <dchinner@redhat.com>
 > > 
@@ -48,37 +46,41 @@ On Wed, Mar 20, 2013 at 04:14:57PM -0500, Ben Myers wrote:
 > > This also fixes a bug reading multiple block symlinks, where the second block
 > > overwrites the first block when copying out the link name.
 > 
-> Huh.  This commit message doesn't say anything about moving symlink related
-> code from xfs_vnodeops.c to a new file xfs_symlink.c.
-
-I'm sure I added it at one point. Maybe I lost it when folding and
-splitting various patches as I originally wrote this code in the
-userspace libxfs tree...
-
-I'll split it back out.
-
-> If you're going to cut
-> and paste code en masse from one file to the next, that's perfectly fine with
-> me.  But please do that in a separate patch than the code you're adding for a
-> feature so that I can focus on the new code in the review.
+> More comments below.
+....
 > 
-> Looks like you need to add a GPL notice.
+> >   */
+> >  STATIC void
+> >  xfs_bmap_local_to_extents_init_fn(
+> > @@ -1332,23 +1334,12 @@ xfs_bmap_local_to_extents_init_fn(
+> >  	struct xfs_inode	*ip,
+> >  	struct xfs_ifork	*ifp)
+> >  {
+> > +	ASSERT(0);
+> 
+> That has nothing to do with crcs.
 
-It isn't actually necessary. All code in the kernel is covered by
-the GPLv2, and so notices on individual files are not technically
-necessary. Just because it isn't explicitly stated in the file, it
-doesn't mean the GPL does not apply to the code - the kernel is
-licensed according to what is in the COPYING file (i.e. the full
-GPLv2 license w/ clarifications noted by Linus), and so that is the
-license that applies to the new file. All that actually matters in
-individual files is the copyright statements themselves...
+It most definitely does. This path is completely invalid to take now
+that CRCs are enabled for remote symlink blocks.
 
-But, seeing as you are concerned, I'll add the boiler plates.
+Every caller through this function requires a transformation of
+opaque data to block format. For CRC enable blocks, that means a
+type specific handler *must* be used for header initialisation and
+copying the data. Hence for debug kernels we want to know
+immediately if this path is *ever* taken, because it is indicative
+of an unhandled local-to-extent format transition out of
+xfs_bmapi_write().
+
+This is *exactly* the path that caused the bmbt verifier failures on
+remote symlink buffers in 3.8.0. Once I've had time to study the
+code more thoroughly, I'll probably remove the entire
+local-to-extents path from xfs_bmapi_write() because there should be
+no existing users of the path and callers should do the format
+transformation themselves as is done right now....
 
 Cheers,
 
 Dave.
-
 -- 
 Dave Chinner
 david@fromorbit.com
