@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C97587F63
-	for <xfs@oss.sgi.com>; Fri, 22 Mar 2013 12:27:47 -0500 (CDT)
-Date: Fri, 22 Mar 2013 12:27:47 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: Error 117 - help please
-Message-ID: <20130322172747.GO22182@sgi.com>
-References: <1D4217FF-BCB8-42A2-B30A-C362E0941FCD@cam.ac.uk>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C3F187F66
+	for <xfs@oss.sgi.com>; Fri, 22 Mar 2013 15:59:28 -0500 (CDT)
+Message-ID: <514CC62C.7000006@sgi.com>
+Date: Fri, 22 Mar 2013 15:59:24 -0500
+From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1D4217FF-BCB8-42A2-B30A-C362E0941FCD@cam.ac.uk>
+Subject: Re: [PATCH v2] xfsprogs: reduce bb_numrecs in bno/cnt btrees when
+	log consumes all agf space
+References: <1363699415-28022-1-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1363699415-28022-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,83 +18,59 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Graham Eliff <ge217@cam.ac.uk>
+To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-Hey Graham,
+Thanks for submitting this patch Brian, it has been committed.
 
-On Fri, Mar 22, 2013 at 09:52:44AM +0000, Graham Eliff wrote:
-> Dear XFS Support
-> I have this error and seem unable to resolve it.
-> Do you have any advice please?
-> Many Thanks
-> Graham
-> 
-> 
-> Machine running Linux version 2.6.18-194.32.1.el5.centos.plus
-> CentOS release 5.5 (Final)
-> 
-> This is from fdisk -l
-> 
-> Disk /dev/sda: 3999.9 GB, 3999999721472 bytes
-> 255 heads, 63 sectors/track, 486305 cylinders
-> Units = cylinders of 16065 * 512 = 8225280 bytes
-> 
-> Device Boot Start End Blocks Id System
-> /dev/sda1 1 267350 2147483647+ ee EFI GPT
-> 
-> 
-> After running xfs_repair -L /dev/sda1 this is the tail end.
-> 
-> disconnected inode 2691081530, moving to lost+found
-> disconnected inode 2691081531, moving to lost+found
-> disconnected inode 2691081532, moving to lost+found
-> disconnected inode 2691081533, moving to lost+found
-> corrupt dinode 2691081533, extent total = 1, nblocks = 0.  This is a bug.
-> Please capture the filesystem metadata with xfs_metadump and
-> report it to xfs@oss.sgi.com.
-> cache_node_purge: refcount was 1, not zero (node=0x2aaac5862840)
-> 
-> fatal error -- 117 - couldn't iget disconnected inode
+Thanks
+--Rich
 
-I suspect this is fixed in 
-commit e1f43b4c701b24d9b5bc85df858a8c36f0f0723b
-Author: Christoph Hellwig <hch@infradead.org>
-Date:   Thu Feb 2 07:39:10 2012 -0500
 
-    repair: update extent count after zapping duplicate blocks
+commit 64ae7fcf6d1284e6905879697b55c4146fa881cf
+Author: Brian Foster <bfoster@redhat.com>
+Date:   Tue Mar 19 13:23:35 2013 +0000
 
-    When we find a duplicate extent in an extern format inode we do not zap
-    the whole inode, but just truncate it to the point where the duplicate
-    extent was found.  But the current code only updates di_nblocks for the
-    new size, but no di_nextents/di_anextents.  In most cases this isn't noticed,
-    but when moving such an inode to the lost+found directoy the consistency
-    check in xfs_iformat trips over it.  Fix this by updating the on-disk
-    extent count as part of the inode repair.
+     xfsprogs: reduce bb_numrecs in bno/cnt btrees when log consumes all 
+agf space
 
-    Note that we zap btree format inodes with duplicate block completely
-    at this point, so this fix doesn't apply to them.
+     The mkfs code currently creates a single free space extent record
+     for each of the bno and cnt btrees in each AG. The start block of
+     the record is pushed forward on the AG that hosts an internal log.
+     If the log happens to consume all available space in the AG, the
+     start block becomes equal to sb->sb_agblocks and thus invalid.
+     This causes xfs_repair to complain.
 
-    Reviewed-by: Mark Tinguely <tinguely@sgi.com>
-    Reported-by: Arkadiusz Mi??kiewicz <arekm@maven.pl>
-    Tested-by: Arkadiusz Mi??kiewicz <arekm@maven.pl>
-    Signed-off-by: Christoph Hellwig <hch@lst.de>
+     For example, the following sequence:
 
-Could you try with a more recent version of xfsprogs?  Preferably the latest
-but v3.1.8 at a minimum?
+         mkfs.xfs -d file,name=./fs.img,size=50g,agsize=16m
+         xfs_repair ./fs.img
 
-Get the sources here:
-git://oss.sgi.com/xfs/cmds/xfsprogs.git
+     ... produces the following xfs_repair output:
 
-or here:
-ftp://oss.sgi.com/projects/xfs/cmd_tars/
+         Phase 1 - find and verify superblock...
+         Phase 2 - using internal log
+                 - scan filesystem freespace and inode maps...
+         invalid start block 4096 in record 0 of bno btree block 1600/1
+         invalid start block 4096 in record 0 of cnt btree block 1600/2
+                 - found root inode chunk
+         ...
 
-Thanks,
-Ben
+     xfs_repair appears to correct the numrecs value such that subsequent
+     checks are successful. The sequence above is pulled from xfstests
+     test #250, which fails due to this behavior.
+
+     Modify mkfs.xfs such that we check the block count value of the
+     free space record for the log AG after the log is accounted for. If
+     no space is left for the record, reset the record count to 0.
+
+     Signed-off-by: Brian Foster <bfoster@redhat.com>
+     Reviewed-by: Dave Chinner <dchinner@redhat.com>
+     Signed-off-by: Rich Johnston <rjohnston@sgi.com>
 
 _______________________________________________
 xfs mailing list
