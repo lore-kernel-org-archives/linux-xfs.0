@@ -1,24 +1,38 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 779D47F54
-	for <xfs@oss.sgi.com>; Fri, 22 Mar 2013 04:52:47 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0F667AC006
-	for <xfs@oss.sgi.com>; Fri, 22 Mar 2013 02:52:46 -0700 (PDT)
-Received: from ppsw-50.csi.cam.ac.uk (ppsw-50.csi.cam.ac.uk [131.111.8.150])
-	by cuda.sgi.com with ESMTP id xMfpDn4K75mvXj1I for
-	<xfs@oss.sgi.com>; Fri, 22 Mar 2013 02:52:45 -0700 (PDT)
-Received: from daffy.bioc.cam.ac.uk ([131.111.36.70]:49477
-	helo=[192.168.1.134])
-	by ppsw-50.csi.cam.ac.uk (smtp.hermes.cam.ac.uk [131.111.8.157]:25)
-	with esmtpsa (PLAIN:ge217) (TLSv1:AES128-SHA:128)
-	id 1UIyeS-0001ko-sQ (Exim 4.72) for xfs@oss.sgi.com
-	(return-path <ge217@cam.ac.uk>); Fri, 22 Mar 2013 09:52:44 +0000
-From: Graham Eliff <ge217@cam.ac.uk>
-Subject: Error 117 - help please
-Message-Id: <1D4217FF-BCB8-42A2-B30A-C362E0941FCD@cam.ac.uk>
-Date: Fri, 22 Mar 2013 09:52:44 +0000
-Mime-Version: 1.0 (Mac OS X Mail 6.3 \(1503\))
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 8FC877F53
+	for <xfs@oss.sgi.com>; Fri, 22 Mar 2013 10:01:27 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7F51A8F8049
+	for <xfs@oss.sgi.com>; Fri, 22 Mar 2013 08:01:24 -0700 (PDT)
+Received: from e8.ny.us.ibm.com (e8.ny.us.ibm.com [32.97.182.138]) by
+	cuda.sgi.com with ESMTP id qGuHy6Ne1jylasBm (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 22 Mar 2013 08:01:23 -0700 (PDT)
+Received: from /spool/local
+	by e8.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	Violators will be prosecuted
+	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
+	Fri, 22 Mar 2013 11:01:22 -0400
+Received: from d01relay03.pok.ibm.com (d01relay03.pok.ibm.com [9.56.227.235])
+	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id 8C48DC9007F
+	for <xfs@oss.sgi.com>; Fri, 22 Mar 2013 11:01:14 -0400 (EDT)
+Received: from d03av06.boulder.ibm.com (d03av06.boulder.ibm.com [9.17.195.245])
+	by d01relay03.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	r2MF1DoT273094 for <xfs@oss.sgi.com>; Fri, 22 Mar 2013 11:01:14 -0400
+Received: from d03av06.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av06.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id r2MF3SgJ006746
+	for <xfs@oss.sgi.com>; Fri, 22 Mar 2013 09:03:28 -0600
+Subject: Re: [PATCH v7 0/5] xfs: Allow pquota and gquota to be used together
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+In-Reply-To: <20130322020243.GR17758@dastard>
+References: <1363902774-19292-1-git-send-email-sekharan@us.ibm.com>
+	<20130322020243.GR17758@dastard>
+Date: Fri, 22 Mar 2013 10:00:46 -0500
+Message-ID: <1363964446.27672.14.camel@chandra-dt.ibm.com>
+Mime-Version: 1.0
+Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,40 +45,72 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Dear XFS Support
-I have this error and seem unable to resolve it.
-Do you have any advice please?
-Many Thanks
-Graham
+Sure. I will look at your CRC patchset and see what changes are needed
+to mine.
 
+Meantime, you can answer my dilemma with the change in fs_quota_stat
+(see patch 4).
 
-Machine running Linux version 2.6.18-194.32.1.el5.centos.plus
-CentOS release 5.5 (Final)
+As per your suggestion, I changed the data structure, to include pads at
+relevant places in the data structure, which also means that the new
+modified structure is not compatible with older user space code. 
 
-This is from fdisk -l
+So, I created a copy of the older structure (fs_quota_stat_v1) and used
+that if the user space request has older structure. So, now the new
+kernel code is backward compatible with the old (already running) user
+space code. All is well till now....
 
-Disk /dev/sda: 3999.9 GB, 3999999721472 bytes
-255 heads, 63 sectors/track, 486305 cylinders
-Units = cylinders of 16065 * 512 = 8225280 bytes
+Now, I make the changes to the user space code so as to use the new
+fs_quota_stat. Since the data structure has changed, the new user space
+code will not work with the old kernel code.
 
-Device Boot Start End Blocks Id System
-/dev/sda1 1 267350 2147483647+ ee EFI GPT
+This is where I have the dilemma. 
 
+1. Leave the user space code to work only with the newer version,
+breaking the compatibility with the older kernel (with an error
+message).
+   or
+2. Read the superblock, and if pquotino is _not_ present conclude older
+version of fs_quota_stat would suffice for getting quota information
+from kernel (note that this will work properly with newer kernel code
+too), and use the older version of fs_quota_stat_v1 for quotactl.
+   or
+3. Any other clever way ? :)
 
-After running xfs_repair -L /dev/sda1 this is the tail end.
+Regards,
 
-disconnected inode 2691081530, moving to lost+found
-disconnected inode 2691081531, moving to lost+found
-disconnected inode 2691081532, moving to lost+found
-disconnected inode 2691081533, moving to lost+found
-corrupt dinode 2691081533, extent total = 1, nblocks = 0.  This is a bug.
-Please capture the filesystem metadata with xfs_metadump and
-report it to xfs@oss.sgi.com.
-cache_node_purge: refcount was 1, not zero (node=0x2aaac5862840)
+Chandra
 
-fatal error -- 117 - couldn't iget disconnected inode
+On Fri, 2013-03-22 at 13:02 +1100, Dave Chinner wrote:
+> On Thu, Mar 21, 2013 at 04:52:49PM -0500, Chandra Seetharaman wrote:
+> > Hello All,
+> > 
+> > This is the version 7 of the changes to allow pquota and gquota to be used
+> > together.
+> > 
+> > Patchset applies cleanly on top of 56cea2d088811b8cf7d2893e29bcf369a912de69
+> > in xfs git tree.
+> > 
+> > Ran latest xfstests against it.
+> 
+> As an information point - I've got a separate pquota inode in the
+> version 5 superblock format used in the CRC patchset. Given that
+> this functionailty requires mkfs/db/repair support, woul dit be
+> better to wait until the CRC code goes in and we can then add this
+> feature without having to rework the superblock CRC patches around
+> it?
+> 
+> i.e. it will always be available on v5 superblocks, or v4
+> superblocks when the feature bit is set to indicate the pquota inode
+> part of the superblock is valid?
+> 
+> Cheers,
+> 
+> Dave.
+
 
 _______________________________________________
 xfs mailing list
