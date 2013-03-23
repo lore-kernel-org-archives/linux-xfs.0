@@ -1,16 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cthulhu.engr.sgi.com (cthulhu.engr.sgi.com [150.166.39.100])
-	by oss.sgi.com (Postfix) with ESMTP id 005997F51
-	for <xfs@oss.sgi.com>; Sat, 23 Mar 2013 05:22:13 -0500 (CDT)
-Date: Sat, 23 Mar 2013 03:22:12 -0700
+	by oss.sgi.com (Postfix) with ESMTP id B358A7F51
+	for <xfs@oss.sgi.com>; Sat, 23 Mar 2013 05:22:56 -0500 (CDT)
+Date: Sat, 23 Mar 2013 03:22:55 -0700
 From: Phil White <pwhite@sgi.com>
-Subject: Re: [PATCH 12/25] xfstests: move generic tests out of top level dir
-Message-ID: <20130323102211.GP25253@caliban.engr.sgi.com>
+Subject: Re: [PATCH 13/25] xfstests: move xfs specific tests out of top
+	directory
+Message-ID: <20130323102255.GQ25253@caliban.engr.sgi.com>
 References: <1363350489-22257-1-git-send-email-david@fromorbit.com>
-	<1363350489-22257-13-git-send-email-david@fromorbit.com>
+	<1363350489-22257-14-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1363350489-22257-13-git-send-email-david@fromorbit.com>
+In-Reply-To: <1363350489-22257-14-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,1667 +27,2775 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-Looks OK, though this one made me guess at the last commit for this rebase.
+Looks OK.
 
 Reviewed-by: Phil White <pwhite@sgi.com>
 
-On Fri, Mar 15, 2013 at 11:27:56PM +1100, Dave Chinner wrote:
+On Fri, Mar 15, 2013 at 11:27:57PM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> And into tests/generic.  Tests were found simply by grepping for the
-> __supported_fs field in the tests.
+> And into tests/xfs. Tests found and moved via:
 > 
-> Output starts to look like:
+> $ grep "supported_fs xfs$" [0-2]* | cut -d : -f 1 > xfs.tests
+> $ for i in `cat xfs.tests`; do
+> > git mv $i* tests/xfs/
+> > grep ^$i group >> tests/xfs/group
+> > sed -i -e "/^$i/d" group
+> > done
 > 
-> $ sudo ./check -g quick -r
+> Output now looks like:
+> 
+>  sudo ./check -g quick -r
 > FSTYP         -- xfs (debug)
 > PLATFORM      -- Linux/x86_64 test-1 3.5.0-rc5-dgc+
 > MKFS_OPTIONS  -- -f -bsize=4096 /dev/vdb
 > MOUNT_OPTIONS -- /dev/vdb /mnt/scratch
 > 
-> ./242    1s
-> ./183    2s
-> generic/236      1s
-> generic/014      1s
-> generic/258      0s
-> ./096    1s
-> generic/245      0s
-> ^C
-> Ran: ./242 ./183 generic/236 generic/014 generic/258 ./096 generic/245
-> Passed all 7 tests
+> xfs/170  4s
+> generic/120      16s
+> generic/248      0s
+> generic/213      0s
+> generic/256      39s
+> xfs/121  6s
+> xfs/026  11s
+> generic/131      1s
+> xfs/187  1s
+> generic/135      0s
+> ....
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  group                                        |  102 -------------------------
->  001 => tests/generic/001                     |    0
->  001.out => tests/generic/001.out             |    0
->  002 => tests/generic/002                     |    0
->  002.out => tests/generic/002.out             |    0
->  005 => tests/generic/005                     |    0
->  005.out => tests/generic/005.out             |    0
->  006 => tests/generic/006                     |    0
->  006.out => tests/generic/006.out             |    0
->  007 => tests/generic/007                     |    0
->  007.out => tests/generic/007.out             |    0
->  010 => tests/generic/010                     |    0
->  010.out => tests/generic/010.out             |    0
->  011 => tests/generic/011                     |    0
->  011.out => tests/generic/011.out             |    0
->  013 => tests/generic/013                     |    0
->  013.out => tests/generic/013.out             |    0
->  014 => tests/generic/014                     |    0
->  014.out => tests/generic/014.out             |    0
->  015 => tests/generic/015                     |    0
->  015.out => tests/generic/015.out             |    0
->  020 => tests/generic/020                     |    0
->  020.out => tests/generic/020.out             |    0
->  053 => tests/generic/053                     |    0
->  053.out => tests/generic/053.out             |    0
->  062 => tests/generic/062                     |    0
->  062.out => tests/generic/062.out             |    0
->  068 => tests/generic/068                     |    0
->  068.out => tests/generic/068.out             |    0
->  069 => tests/generic/069                     |    0
->  069.out => tests/generic/069.out             |    0
->  070 => tests/generic/070                     |    0
->  070.out => tests/generic/070.out             |    0
->  074 => tests/generic/074                     |    0
->  074.out => tests/generic/074.out             |    0
->  075 => tests/generic/075                     |    0
->  075.out => tests/generic/075.out             |    0
->  076 => tests/generic/076                     |    0
->  076.out => tests/generic/076.out             |    0
->  077 => tests/generic/077                     |    0
->  077.out => tests/generic/077.out             |    0
->  079 => tests/generic/079                     |    0
->  079.out => tests/generic/079.out             |    0
->  083 => tests/generic/083                     |    0
->  083.out => tests/generic/083.out             |    0
->  088 => tests/generic/088                     |    0
->  088.out.irix => tests/generic/088.out.irix   |    0
->  088.out.linux => tests/generic/088.out.linux |    0
->  089 => tests/generic/089                     |    0
->  089.out => tests/generic/089.out             |    0
->  091 => tests/generic/091                     |    0
->  091.out => tests/generic/091.out             |    0
->  093 => tests/generic/093                     |    0
->  093.out => tests/generic/093.out             |  Bin 917 -> 917 bytes
->  097 => tests/generic/097                     |    0
->  097.out.udf => tests/generic/097.out.udf     |    0
->  097.out.xfs => tests/generic/097.out.xfs     |    0
->  099 => tests/generic/099                     |    0
->  099.out => tests/generic/099.out             |    0
->  100 => tests/generic/100                     |    0
->  100.out => tests/generic/100.out             |    0
->  105 => tests/generic/105                     |    0
->  105.out => tests/generic/105.out             |    0
->  112 => tests/generic/112                     |    0
->  112.out => tests/generic/112.out             |    0
->  113 => tests/generic/113                     |    0
->  113.out => tests/generic/113.out             |    0
->  117 => tests/generic/117                     |    0
->  117.out => tests/generic/117.out             |    0
->  120 => tests/generic/120                     |    0
->  120.out => tests/generic/120.out             |    0
->  123 => tests/generic/123                     |    0
->  123.out => tests/generic/123.out             |    0
->  124 => tests/generic/124                     |    0
->  124.out => tests/generic/124.out             |    0
->  125 => tests/generic/125                     |    0
->  125.out => tests/generic/125.out             |    0
->  126 => tests/generic/126                     |    0
->  126.out => tests/generic/126.out             |    0
->  127 => tests/generic/127                     |    0
->  127.out => tests/generic/127.out             |    0
->  128 => tests/generic/128                     |    0
->  128.out => tests/generic/128.out             |    0
->  129 => tests/generic/129                     |    0
->  129.out => tests/generic/129.out             |    0
->  130 => tests/generic/130                     |    0
->  130.out => tests/generic/130.out             |    0
->  131 => tests/generic/131                     |    0
->  131.out => tests/generic/131.out             |    0
->  132 => tests/generic/132                     |    0
->  132.out => tests/generic/132.out             |    0
->  133 => tests/generic/133                     |    0
->  133.out => tests/generic/133.out             |    0
->  135 => tests/generic/135                     |    0
->  135.out => tests/generic/135.out             |    0
->  141 => tests/generic/141                     |    0
->  141.out => tests/generic/141.out             |    0
->  169 => tests/generic/169                     |    0
->  169.out => tests/generic/169.out             |    0
->  184 => tests/generic/184                     |    0
->  184.out => tests/generic/184.out             |    0
->  192 => tests/generic/192                     |    0
->  192.out => tests/generic/192.out             |    0
->  193 => tests/generic/193                     |    0
->  193.out => tests/generic/193.out             |    0
->  198 => tests/generic/198                     |    0
->  198.out => tests/generic/198.out             |    0
->  204 => tests/generic/204                     |    0
->  204.out => tests/generic/204.out             |    0
->  207 => tests/generic/207                     |    0
->  207.out => tests/generic/207.out             |    0
->  208 => tests/generic/208                     |    0
->  208.out => tests/generic/208.out             |    0
->  209 => tests/generic/209                     |    0
->  209.out => tests/generic/209.out             |    0
->  210 => tests/generic/210                     |    0
->  210.out => tests/generic/210.out             |    0
->  211 => tests/generic/211                     |    0
->  211.out => tests/generic/211.out             |    0
->  212 => tests/generic/212                     |    0
->  212.out => tests/generic/212.out             |    0
->  213 => tests/generic/213                     |    0
->  213.out => tests/generic/213.out             |    0
->  214 => tests/generic/214                     |    0
->  214.out => tests/generic/214.out             |    0
->  215 => tests/generic/215                     |    0
->  215.out => tests/generic/215.out             |    0
->  219 => tests/generic/219                     |    0
->  219.out => tests/generic/219.out             |    0
->  221 => tests/generic/221                     |    0
->  221.out => tests/generic/221.out             |    0
->  223 => tests/generic/223                     |    0
->  223.out => tests/generic/223.out             |    0
->  224 => tests/generic/224                     |    0
->  224.out => tests/generic/224.out             |    0
->  225 => tests/generic/225                     |    0
->  225.out => tests/generic/225.out             |    0
->  226 => tests/generic/226                     |    0
->  226.out => tests/generic/226.out             |    0
->  228 => tests/generic/228                     |    0
->  228.out => tests/generic/228.out             |    0
->  230 => tests/generic/230                     |    0
->  230.out => tests/generic/230.out             |    0
->  231 => tests/generic/231                     |    0
->  231.out => tests/generic/231.out             |    0
->  232 => tests/generic/232                     |    0
->  232.out => tests/generic/232.out             |    0
->  233 => tests/generic/233                     |    0
->  233.out => tests/generic/233.out             |    0
->  234 => tests/generic/234                     |    0
->  234.out => tests/generic/234.out             |    0
->  235 => tests/generic/235                     |    0
->  235.out => tests/generic/235.out             |    0
->  236 => tests/generic/236                     |    0
->  236.out => tests/generic/236.out             |    0
->  237 => tests/generic/237                     |    0
->  237.out => tests/generic/237.out             |    0
->  239 => tests/generic/239                     |    0
->  239.out => tests/generic/239.out             |    0
->  240 => tests/generic/240                     |    0
->  240.out => tests/generic/240.out             |    0
->  241 => tests/generic/241                     |    0
->  241.out => tests/generic/241.out             |    0
->  245 => tests/generic/245                     |    0
->  245.out => tests/generic/245.out             |    0
->  246 => tests/generic/246                     |    0
->  246.out => tests/generic/246.out             |    0
->  247 => tests/generic/247                     |    0
->  247.out => tests/generic/247.out             |    0
->  248 => tests/generic/248                     |    0
->  248.out => tests/generic/248.out             |    0
->  249 => tests/generic/249                     |    0
->  249.out => tests/generic/249.out             |    0
->  251 => tests/generic/251                     |    0
->  251.out => tests/generic/251.out             |    0
->  255 => tests/generic/255                     |    0
->  255.out => tests/generic/255.out             |    0
->  256 => tests/generic/256                     |    0
->  256.out => tests/generic/256.out             |    0
->  257 => tests/generic/257                     |    0
->  257.out => tests/generic/257.out             |    0
->  258 => tests/generic/258                     |    0
->  258.out => tests/generic/258.out             |    0
->  260 => tests/generic/260                     |    0
->  260.out => tests/generic/260.out             |    0
->  263 => tests/generic/263                     |    0
->  263.out => tests/generic/263.out             |    0
->  269 => tests/generic/269                     |    0
->  269.out => tests/generic/269.out             |    0
->  270 => tests/generic/270                     |    0
->  270.out => tests/generic/270.out             |    0
->  273 => tests/generic/273                     |    0
->  273.out => tests/generic/273.out             |    0
->  274 => tests/generic/274                     |    0
->  274.out => tests/generic/274.out             |    0
->  275 => tests/generic/275                     |    0
->  275.out => tests/generic/275.out             |    0
->  277 => tests/generic/277                     |    0
->  277.out => tests/generic/277.out             |    0
->  280 => tests/generic/280                     |    0
->  280.out => tests/generic/280.out             |    0
->  285 => tests/generic/285                     |    0
->  285.out => tests/generic/285.out             |    0
->  286 => tests/generic/286                     |    0
->  286.out => tests/generic/286.out             |    0
->  288 => tests/generic/288                     |    0
->  288.out => tests/generic/288.out             |    0
->  294 => tests/generic/294                     |    0
->  294.out => tests/generic/294.out             |    0
->  299 => tests/generic/299                     |    0
->  299.out => tests/generic/299.out             |    0
->  300 => tests/generic/300                     |    0
->  300.out => tests/generic/300.out             |    0
->  tests/generic/group                          |  105 ++++++++++++++++++++++++++
->  214 files changed, 105 insertions(+), 102 deletions(-)
->  rename 001 => tests/generic/001 (100%)
->  rename 001.out => tests/generic/001.out (100%)
->  rename 002 => tests/generic/002 (100%)
->  rename 002.out => tests/generic/002.out (100%)
->  rename 005 => tests/generic/005 (100%)
->  rename 005.out => tests/generic/005.out (100%)
->  rename 006 => tests/generic/006 (100%)
->  rename 006.out => tests/generic/006.out (100%)
->  rename 007 => tests/generic/007 (100%)
->  rename 007.out => tests/generic/007.out (100%)
->  rename 010 => tests/generic/010 (100%)
->  rename 010.out => tests/generic/010.out (100%)
->  rename 011 => tests/generic/011 (100%)
->  rename 011.out => tests/generic/011.out (100%)
->  rename 013 => tests/generic/013 (100%)
->  rename 013.out => tests/generic/013.out (100%)
->  rename 014 => tests/generic/014 (100%)
->  rename 014.out => tests/generic/014.out (100%)
->  rename 015 => tests/generic/015 (100%)
->  rename 015.out => tests/generic/015.out (100%)
->  rename 020 => tests/generic/020 (100%)
->  rename 020.out => tests/generic/020.out (100%)
->  rename 053 => tests/generic/053 (100%)
->  rename 053.out => tests/generic/053.out (100%)
->  rename 062 => tests/generic/062 (100%)
->  rename 062.out => tests/generic/062.out (100%)
->  rename 068 => tests/generic/068 (100%)
->  rename 068.out => tests/generic/068.out (100%)
->  rename 069 => tests/generic/069 (100%)
->  rename 069.out => tests/generic/069.out (100%)
->  rename 070 => tests/generic/070 (100%)
->  rename 070.out => tests/generic/070.out (100%)
->  rename 074 => tests/generic/074 (100%)
->  rename 074.out => tests/generic/074.out (100%)
->  rename 075 => tests/generic/075 (100%)
->  rename 075.out => tests/generic/075.out (100%)
->  rename 076 => tests/generic/076 (100%)
->  rename 076.out => tests/generic/076.out (100%)
->  rename 077 => tests/generic/077 (100%)
->  rename 077.out => tests/generic/077.out (100%)
->  rename 079 => tests/generic/079 (100%)
->  rename 079.out => tests/generic/079.out (100%)
->  rename 083 => tests/generic/083 (100%)
->  rename 083.out => tests/generic/083.out (100%)
->  rename 088 => tests/generic/088 (100%)
->  rename 088.out.irix => tests/generic/088.out.irix (100%)
->  rename 088.out.linux => tests/generic/088.out.linux (100%)
->  rename 089 => tests/generic/089 (100%)
->  rename 089.out => tests/generic/089.out (100%)
->  rename 091 => tests/generic/091 (100%)
->  rename 091.out => tests/generic/091.out (100%)
->  rename 093 => tests/generic/093 (100%)
->  rename 093.out => tests/generic/093.out (100%)
->  rename 097 => tests/generic/097 (100%)
->  rename 097.out.udf => tests/generic/097.out.udf (100%)
->  rename 097.out.xfs => tests/generic/097.out.xfs (100%)
->  rename 099 => tests/generic/099 (100%)
->  rename 099.out => tests/generic/099.out (100%)
->  rename 100 => tests/generic/100 (100%)
->  rename 100.out => tests/generic/100.out (100%)
->  rename 105 => tests/generic/105 (100%)
->  rename 105.out => tests/generic/105.out (100%)
->  rename 112 => tests/generic/112 (100%)
->  rename 112.out => tests/generic/112.out (100%)
->  rename 113 => tests/generic/113 (100%)
->  rename 113.out => tests/generic/113.out (100%)
->  rename 117 => tests/generic/117 (100%)
->  rename 117.out => tests/generic/117.out (100%)
->  rename 120 => tests/generic/120 (100%)
->  rename 120.out => tests/generic/120.out (100%)
->  rename 123 => tests/generic/123 (100%)
->  rename 123.out => tests/generic/123.out (100%)
->  rename 124 => tests/generic/124 (100%)
->  rename 124.out => tests/generic/124.out (100%)
->  rename 125 => tests/generic/125 (100%)
->  rename 125.out => tests/generic/125.out (100%)
->  rename 126 => tests/generic/126 (100%)
->  rename 126.out => tests/generic/126.out (100%)
->  rename 127 => tests/generic/127 (100%)
->  rename 127.out => tests/generic/127.out (100%)
->  rename 128 => tests/generic/128 (100%)
->  rename 128.out => tests/generic/128.out (100%)
->  rename 129 => tests/generic/129 (100%)
->  rename 129.out => tests/generic/129.out (100%)
->  rename 130 => tests/generic/130 (100%)
->  rename 130.out => tests/generic/130.out (100%)
->  rename 131 => tests/generic/131 (100%)
->  rename 131.out => tests/generic/131.out (100%)
->  rename 132 => tests/generic/132 (100%)
->  rename 132.out => tests/generic/132.out (100%)
->  rename 133 => tests/generic/133 (100%)
->  rename 133.out => tests/generic/133.out (100%)
->  rename 135 => tests/generic/135 (100%)
->  rename 135.out => tests/generic/135.out (100%)
->  rename 141 => tests/generic/141 (100%)
->  rename 141.out => tests/generic/141.out (100%)
->  rename 169 => tests/generic/169 (100%)
->  rename 169.out => tests/generic/169.out (100%)
->  rename 184 => tests/generic/184 (100%)
->  rename 184.out => tests/generic/184.out (100%)
->  rename 192 => tests/generic/192 (100%)
->  rename 192.out => tests/generic/192.out (100%)
->  rename 193 => tests/generic/193 (100%)
->  rename 193.out => tests/generic/193.out (100%)
->  rename 198 => tests/generic/198 (100%)
->  rename 198.out => tests/generic/198.out (100%)
->  rename 204 => tests/generic/204 (100%)
->  rename 204.out => tests/generic/204.out (100%)
->  rename 207 => tests/generic/207 (100%)
->  rename 207.out => tests/generic/207.out (100%)
->  rename 208 => tests/generic/208 (100%)
->  rename 208.out => tests/generic/208.out (100%)
->  rename 209 => tests/generic/209 (100%)
->  rename 209.out => tests/generic/209.out (100%)
->  rename 210 => tests/generic/210 (100%)
->  rename 210.out => tests/generic/210.out (100%)
->  rename 211 => tests/generic/211 (100%)
->  rename 211.out => tests/generic/211.out (100%)
->  rename 212 => tests/generic/212 (100%)
->  rename 212.out => tests/generic/212.out (100%)
->  rename 213 => tests/generic/213 (100%)
->  rename 213.out => tests/generic/213.out (100%)
->  rename 214 => tests/generic/214 (100%)
->  rename 214.out => tests/generic/214.out (100%)
->  rename 215 => tests/generic/215 (100%)
->  rename 215.out => tests/generic/215.out (100%)
->  rename 219 => tests/generic/219 (100%)
->  rename 219.out => tests/generic/219.out (100%)
->  rename 221 => tests/generic/221 (100%)
->  rename 221.out => tests/generic/221.out (100%)
->  rename 223 => tests/generic/223 (100%)
->  rename 223.out => tests/generic/223.out (100%)
->  rename 224 => tests/generic/224 (100%)
->  rename 224.out => tests/generic/224.out (100%)
->  rename 225 => tests/generic/225 (100%)
->  rename 225.out => tests/generic/225.out (100%)
->  rename 226 => tests/generic/226 (100%)
->  rename 226.out => tests/generic/226.out (100%)
->  rename 228 => tests/generic/228 (100%)
->  rename 228.out => tests/generic/228.out (100%)
->  rename 230 => tests/generic/230 (100%)
->  rename 230.out => tests/generic/230.out (100%)
->  rename 231 => tests/generic/231 (100%)
->  rename 231.out => tests/generic/231.out (100%)
->  rename 232 => tests/generic/232 (100%)
->  rename 232.out => tests/generic/232.out (100%)
->  rename 233 => tests/generic/233 (100%)
->  rename 233.out => tests/generic/233.out (100%)
->  rename 234 => tests/generic/234 (100%)
->  rename 234.out => tests/generic/234.out (100%)
->  rename 235 => tests/generic/235 (100%)
->  rename 235.out => tests/generic/235.out (100%)
->  rename 236 => tests/generic/236 (100%)
->  rename 236.out => tests/generic/236.out (100%)
->  rename 237 => tests/generic/237 (100%)
->  rename 237.out => tests/generic/237.out (100%)
->  rename 239 => tests/generic/239 (100%)
->  rename 239.out => tests/generic/239.out (100%)
->  rename 240 => tests/generic/240 (100%)
->  rename 240.out => tests/generic/240.out (100%)
->  rename 241 => tests/generic/241 (100%)
->  rename 241.out => tests/generic/241.out (100%)
->  rename 245 => tests/generic/245 (100%)
->  rename 245.out => tests/generic/245.out (100%)
->  rename 246 => tests/generic/246 (100%)
->  rename 246.out => tests/generic/246.out (100%)
->  rename 247 => tests/generic/247 (100%)
->  rename 247.out => tests/generic/247.out (100%)
->  rename 248 => tests/generic/248 (100%)
->  rename 248.out => tests/generic/248.out (100%)
->  rename 249 => tests/generic/249 (100%)
->  rename 249.out => tests/generic/249.out (100%)
->  rename 251 => tests/generic/251 (100%)
->  rename 251.out => tests/generic/251.out (100%)
->  rename 255 => tests/generic/255 (100%)
->  rename 255.out => tests/generic/255.out (100%)
->  rename 256 => tests/generic/256 (100%)
->  rename 256.out => tests/generic/256.out (100%)
->  rename 257 => tests/generic/257 (100%)
->  rename 257.out => tests/generic/257.out (100%)
->  rename 258 => tests/generic/258 (100%)
->  rename 258.out => tests/generic/258.out (100%)
->  rename 260 => tests/generic/260 (100%)
->  rename 260.out => tests/generic/260.out (100%)
->  rename 263 => tests/generic/263 (100%)
->  rename 263.out => tests/generic/263.out (100%)
->  rename 269 => tests/generic/269 (100%)
->  rename 269.out => tests/generic/269.out (100%)
->  rename 270 => tests/generic/270 (100%)
->  rename 270.out => tests/generic/270.out (100%)
->  rename 273 => tests/generic/273 (100%)
->  rename 273.out => tests/generic/273.out (100%)
->  rename 274 => tests/generic/274 (100%)
->  rename 274.out => tests/generic/274.out (100%)
->  rename 275 => tests/generic/275 (100%)
->  rename 275.out => tests/generic/275.out (100%)
->  rename 277 => tests/generic/277 (100%)
->  rename 277.out => tests/generic/277.out (100%)
->  rename 280 => tests/generic/280 (100%)
->  rename 280.out => tests/generic/280.out (100%)
->  rename 285 => tests/generic/285 (100%)
->  rename 285.out => tests/generic/285.out (100%)
->  rename 286 => tests/generic/286 (100%)
->  rename 286.out => tests/generic/286.out (100%)
->  rename 288 => tests/generic/288 (100%)
->  rename 288.out => tests/generic/288.out (100%)
->  rename 294 => tests/generic/294 (100%)
->  rename 294.out => tests/generic/294.out (100%)
->  rename 299 => tests/generic/299 (100%)
->  rename 299.out => tests/generic/299.out (100%)
->  rename 300 => tests/generic/300 (100%)
->  rename 300.out => tests/generic/300.out (100%)
+>  check                                              |    3 +-
+>  group                                              |  185 +-------------------
+>  003 => tests/xfs/003                               |    0
+>  003.out => tests/xfs/003.out                       |    0
+>  004 => tests/xfs/004                               |    0
+>  004.out => tests/xfs/004.out                       |    0
+>  008 => tests/xfs/008                               |    0
+>  008.out => tests/xfs/008.out                       |    0
+>  009 => tests/xfs/009                               |    0
+>  009.out => tests/xfs/009.out                       |    0
+>  012 => tests/xfs/012                               |    0
+>  012.out => tests/xfs/012.out                       |    0
+>  016 => tests/xfs/016                               |    0
+>  016.out => tests/xfs/016.out                       |    0
+>  017 => tests/xfs/017                               |    0
+>  017.out => tests/xfs/017.out                       |    0
+>  018 => tests/xfs/018                               |    0
+>  018.op.irix => tests/xfs/018.op.irix               |    0
+>  018.op.linux => tests/xfs/018.op.linux             |    0
+>  018.out => tests/xfs/018.out                       |    0
+>  018.trans_buf => tests/xfs/018.trans_buf           |    0
+>  018.trans_inode => tests/xfs/018.trans_inode       |    0
+>  019 => tests/xfs/019                               |    0
+>  019.out => tests/xfs/019.out                       |    0
+>  021 => tests/xfs/021                               |    0
+>  021.out => tests/xfs/021.out                       |    0
+>  022 => tests/xfs/022                               |    0
+>  022.out.irix => tests/xfs/022.out.irix             |    0
+>  022.out.linux => tests/xfs/022.out.linux           |    0
+>  023 => tests/xfs/023                               |    0
+>  023.out.irix => tests/xfs/023.out.irix             |    0
+>  023.out.linux => tests/xfs/023.out.linux           |    0
+>  024 => tests/xfs/024                               |    0
+>  024.out => tests/xfs/024.out                       |    0
+>  025 => tests/xfs/025                               |    0
+>  025.out => tests/xfs/025.out                       |    0
+>  026 => tests/xfs/026                               |    0
+>  026.out => tests/xfs/026.out                       |    0
+>  027 => tests/xfs/027                               |    0
+>  027.out => tests/xfs/027.out                       |    0
+>  028 => tests/xfs/028                               |    0
+>  028.out => tests/xfs/028.out                       |    0
+>  029 => tests/xfs/029                               |    0
+>  029.out => tests/xfs/029.out                       |    0
+>  030 => tests/xfs/030                               |    0
+>  030.out.irix => tests/xfs/030.out.irix             |    0
+>  030.out.linux => tests/xfs/030.out.linux           |    0
+>  031 => tests/xfs/031                               |    0
+>  031.out.irix => tests/xfs/031.out.irix             |    0
+>  031.out.linux => tests/xfs/031.out.linux           |    0
+>  032 => tests/xfs/032                               |    0
+>  032.out => tests/xfs/032.out                       |    0
+>  033 => tests/xfs/033                               |    0
+>  033.out.irix => tests/xfs/033.out.irix             |    0
+>  033.out.linux => tests/xfs/033.out.linux           |    0
+>  034 => tests/xfs/034                               |    0
+>  034.out => tests/xfs/034.out                       |    0
+>  035 => tests/xfs/035                               |    0
+>  035.out.irix => tests/xfs/035.out.irix             |    0
+>  035.out.linux => tests/xfs/035.out.linux           |    0
+>  036 => tests/xfs/036                               |    0
+>  036.out.irix => tests/xfs/036.out.irix             |    0
+>  036.out.linux => tests/xfs/036.out.linux           |    0
+>  037 => tests/xfs/037                               |    0
+>  037.out => tests/xfs/037.out                       |    0
+>  038 => tests/xfs/038                               |    0
+>  038.out => tests/xfs/038.out                       |    0
+>  039 => tests/xfs/039                               |    0
+>  039.out.irix => tests/xfs/039.out.irix             |    0
+>  039.out.linux => tests/xfs/039.out.linux           |    0
+>  041 => tests/xfs/041                               |    0
+>  041.out => tests/xfs/041.out                       |    0
+>  042 => tests/xfs/042                               |    0
+>  042.out => tests/xfs/042.out                       |    0
+>  043 => tests/xfs/043                               |    0
+>  043.out.irix => tests/xfs/043.out.irix             |    0
+>  043.out.linux => tests/xfs/043.out.linux           |    0
+>  044 => tests/xfs/044                               |    0
+>  044.out => tests/xfs/044.out                       |    0
+>  045 => tests/xfs/045                               |    0
+>  045.out => tests/xfs/045.out                       |    0
+>  046 => tests/xfs/046                               |    0
+>  046.out => tests/xfs/046.out                       |    0
+>  047 => tests/xfs/047                               |    0
+>  047.out => tests/xfs/047.out                       |    0
+>  048 => tests/xfs/048                               |    0
+>  048.out => tests/xfs/048.out                       |    0
+>  049 => tests/xfs/049                               |    0
+>  049.out => tests/xfs/049.out                       |    0
+>  050 => tests/xfs/050                               |    0
+>  050.out => tests/xfs/050.out                       |    0
+>  052 => tests/xfs/052                               |    0
+>  052.out => tests/xfs/052.out                       |    0
+>  054 => tests/xfs/054                               |    0
+>  054.out => tests/xfs/054.out                       |    0
+>  055 => tests/xfs/055                               |    0
+>  055.out.irix => tests/xfs/055.out.irix             |    0
+>  055.out.linux => tests/xfs/055.out.linux           |    0
+>  056 => tests/xfs/056                               |    0
+>  056.out => tests/xfs/056.out                       |    0
+>  057 => tests/xfs/057                               |    0
+>  057.out => tests/xfs/057.out                       |    0
+>  058 => tests/xfs/058                               |    0
+>  058.out => tests/xfs/058.out                       |    0
+>  059 => tests/xfs/059                               |    0
+>  059.out => tests/xfs/059.out                       |    0
+>  060 => tests/xfs/060                               |    0
+>  060.out => tests/xfs/060.out                       |    0
+>  061 => tests/xfs/061                               |    0
+>  061.out => tests/xfs/061.out                       |    0
+>  063 => tests/xfs/063                               |    0
+>  063.out => tests/xfs/063.out                       |    0
+>  064 => tests/xfs/064                               |    0
+>  064.out => tests/xfs/064.out                       |    0
+>  065 => tests/xfs/065                               |    0
+>  065.out => tests/xfs/065.out                       |    0
+>  066 => tests/xfs/066                               |    0
+>  066.out => tests/xfs/066.out                       |    0
+>  067 => tests/xfs/067                               |    0
+>  067.out => tests/xfs/067.out                       |    0
+>  071 => tests/xfs/071                               |    0
+>  071.out => tests/xfs/071.out                       |    0
+>  071.out.32 => tests/xfs/071.out.32                 |    0
+>  071.out.64 => tests/xfs/071.out.64                 |    0
+>  072 => tests/xfs/072                               |    0
+>  072.out => tests/xfs/072.out                       |    0
+>  073 => tests/xfs/073                               |    0
+>  073.out => tests/xfs/073.out                       |    0
+>  078 => tests/xfs/078                               |    0
+>  078.out => tests/xfs/078.out                       |    0
+>  080 => tests/xfs/080                               |    0
+>  080.out => tests/xfs/080.out                       |    0
+>  081 => tests/xfs/081                               |    0
+>  081.out => tests/xfs/081.out                       |    0
+>  .../xfs/081.ugquota.trans_inode                    |    0
+>  082 => tests/xfs/082                               |    0
+>  082.op.irix => tests/xfs/082.op.irix               |    0
+>  082.op.linux => tests/xfs/082.op.linux             |    0
+>  082.out => tests/xfs/082.out                       |    0
+>  082.trans_buf => tests/xfs/082.trans_buf           |    0
+>  082.trans_inode => tests/xfs/082.trans_inode       |    0
+>  084 => tests/xfs/084                               |    0
+>  084.out => tests/xfs/084.out                       |    0
+>  085 => tests/xfs/085                               |    0
+>  085.out => tests/xfs/085.out                       |    0
+>  086 => tests/xfs/086                               |    0
+>  086.out => tests/xfs/086.out                       |    0
+>  087 => tests/xfs/087                               |    0
+>  087.out => tests/xfs/087.out                       |    0
+>  090 => tests/xfs/090                               |    0
+>  090.out => tests/xfs/090.out                       |    0
+>  092 => tests/xfs/092                               |    0
+>  092.out => tests/xfs/092.out                       |    0
+>  094 => tests/xfs/094                               |    0
+>  094.out => tests/xfs/094.out                       |    0
+>  095 => tests/xfs/095                               |    0
+>  095.out => tests/xfs/095.out                       |    0
+>  096 => tests/xfs/096                               |    0
+>  096.external => tests/xfs/096.external             |    0
+>  096.internal => tests/xfs/096.internal             |    0
+>  103 => tests/xfs/103                               |    0
+>  103.out => tests/xfs/103.out                       |    0
+>  104 => tests/xfs/104                               |    0
+>  104.out => tests/xfs/104.out                       |    0
+>  106 => tests/xfs/106                               |    0
+>  106.out => tests/xfs/106.out                       |    0
+>  107 => tests/xfs/107                               |    0
+>  107.out => tests/xfs/107.out                       |    0
+>  108 => tests/xfs/108                               |    0
+>  108.out => tests/xfs/108.out                       |    0
+>  109 => tests/xfs/109                               |    0
+>  109.out => tests/xfs/109.out                       |    0
+>  110 => tests/xfs/110                               |    0
+>  110.out => tests/xfs/110.out                       |    0
+>  111 => tests/xfs/111                               |    0
+>  111.out => tests/xfs/111.out                       |    0
+>  114 => tests/xfs/114                               |    0
+>  114.out => tests/xfs/114.out                       |    0
+>  115 => tests/xfs/115                               |    0
+>  115.out => tests/xfs/115.out                       |    0
+>  116 => tests/xfs/116                               |    0
+>  116.out => tests/xfs/116.out                       |    0
+>  118 => tests/xfs/118                               |    0
+>  118.out => tests/xfs/118.out                       |    0
+>  119 => tests/xfs/119                               |    0
+>  119.out => tests/xfs/119.out                       |    0
+>  121 => tests/xfs/121                               |    0
+>  121.out => tests/xfs/121.out                       |    0
+>  122 => tests/xfs/122                               |    0
+>  122.out => tests/xfs/122.out                       |    0
+>  134 => tests/xfs/134                               |    0
+>  134.out => tests/xfs/134.out                       |    0
+>  136 => tests/xfs/136                               |    0
+>  136.out => tests/xfs/136.out                       |    0
+>  137 => tests/xfs/137                               |    0
+>  137.out => tests/xfs/137.out                       |    0
+>  138 => tests/xfs/138                               |    0
+>  138.out => tests/xfs/138.out                       |    0
+>  139 => tests/xfs/139                               |    0
+>  139.out => tests/xfs/139.out                       |    0
+>  140 => tests/xfs/140                               |    0
+>  140.out => tests/xfs/140.out                       |    0
+>  142 => tests/xfs/142                               |    0
+>  142.out => tests/xfs/142.out                       |    0
+>  143 => tests/xfs/143                               |    0
+>  143.out => tests/xfs/143.out                       |    0
+>  144 => tests/xfs/144                               |    0
+>  144.out => tests/xfs/144.out                       |    0
+>  145 => tests/xfs/145                               |    0
+>  145.out => tests/xfs/145.out                       |    0
+>  146 => tests/xfs/146                               |    0
+>  146.out.irix => tests/xfs/146.out.irix             |    0
+>  146.out.linux => tests/xfs/146.out.linux           |    0
+>  147 => tests/xfs/147                               |    0
+>  147.out => tests/xfs/147.out                       |    0
+>  148 => tests/xfs/148                               |    0
+>  148.out => tests/xfs/148.out                       |    0
+>  149 => tests/xfs/149                               |    0
+>  149.out => tests/xfs/149.out                       |    0
+>  150 => tests/xfs/150                               |    0
+>  150.out => tests/xfs/150.out                       |    0
+>  151 => tests/xfs/151                               |    0
+>  151.out => tests/xfs/151.out                       |    0
+>  152 => tests/xfs/152                               |    0
+>  152.out => tests/xfs/152.out                       |    0
+>  153 => tests/xfs/153                               |    0
+>  153.out => tests/xfs/153.out                       |    0
+>  154 => tests/xfs/154                               |    0
+>  154.out => tests/xfs/154.out                       |    0
+>  155 => tests/xfs/155                               |    0
+>  155.out => tests/xfs/155.out                       |    0
+>  156 => tests/xfs/156                               |    0
+>  156.out => tests/xfs/156.out                       |    0
+>  157 => tests/xfs/157                               |    0
+>  157.out => tests/xfs/157.out                       |    0
+>  158 => tests/xfs/158                               |    0
+>  158.out => tests/xfs/158.out                       |    0
+>  159 => tests/xfs/159                               |    0
+>  159.out => tests/xfs/159.out                       |    0
+>  160 => tests/xfs/160                               |    0
+>  160.out => tests/xfs/160.out                       |    0
+>  161 => tests/xfs/161                               |    0
+>  161.out => tests/xfs/161.out                       |    0
+>  162 => tests/xfs/162                               |    0
+>  162.out => tests/xfs/162.out                       |    0
+>  163 => tests/xfs/163                               |    0
+>  163.out => tests/xfs/163.out                       |    0
+>  164 => tests/xfs/164                               |    0
+>  164.out => tests/xfs/164.out                       |    0
+>  165 => tests/xfs/165                               |    0
+>  165.out => tests/xfs/165.out                       |    0
+>  166 => tests/xfs/166                               |    0
+>  166.out => tests/xfs/166.out                       |    0
+>  167 => tests/xfs/167                               |    0
+>  167.out => tests/xfs/167.out                       |    0
+>  168 => tests/xfs/168                               |    0
+>  168.out => tests/xfs/168.out                       |    0
+>  170 => tests/xfs/170                               |    0
+>  170.out => tests/xfs/170.out                       |    0
+>  171 => tests/xfs/171                               |    0
+>  171.out => tests/xfs/171.out                       |    0
+>  172 => tests/xfs/172                               |    0
+>  172.out => tests/xfs/172.out                       |    0
+>  173 => tests/xfs/173                               |    0
+>  173.out => tests/xfs/173.out                       |    0
+>  174 => tests/xfs/174                               |    0
+>  174.out => tests/xfs/174.out                       |    0
+>  175 => tests/xfs/175                               |    0
+>  175.out => tests/xfs/175.out                       |    0
+>  176 => tests/xfs/176                               |    0
+>  176.out => tests/xfs/176.out                       |    0
+>  178 => tests/xfs/178                               |    0
+>  178.out => tests/xfs/178.out                       |    0
+>  179 => tests/xfs/179                               |    0
+>  179.out => tests/xfs/179.out                       |    0
+>  180 => tests/xfs/180                               |    0
+>  180.out => tests/xfs/180.out                       |    0
+>  181 => tests/xfs/181                               |    0
+>  181.out => tests/xfs/181.out                       |    0
+>  182 => tests/xfs/182                               |    0
+>  182.out => tests/xfs/182.out                       |    0
+>  183 => tests/xfs/183                               |    0
+>  183.out => tests/xfs/183.out                       |    0
+>  185 => tests/xfs/185                               |    0
+>  185.out => tests/xfs/185.out                       |    0
+>  186 => tests/xfs/186                               |    0
+>  186.out => tests/xfs/186.out                       |    0
+>  187 => tests/xfs/187                               |    0
+>  187.out => tests/xfs/187.out                       |    0
+>  188 => tests/xfs/188                               |    0
+>  188.out => tests/xfs/188.out                       |    0
+>  189 => tests/xfs/189                               |    0
+>  189.out => tests/xfs/189.out                       |    0
+>  190 => tests/xfs/190                               |    0
+>  190.out => tests/xfs/190.out                       |    0
+>  191 => tests/xfs/191                               |    0
+>  191.out => tests/xfs/191.out                       |    0
+>  194 => tests/xfs/194                               |    0
+>  194.out => tests/xfs/194.out                       |    0
+>  195 => tests/xfs/195                               |    0
+>  195.out => tests/xfs/195.out                       |    0
+>  196 => tests/xfs/196                               |    0
+>  196.out => tests/xfs/196.out                       |    0
+>  197 => tests/xfs/197                               |    0
+>  197.out => tests/xfs/197.out                       |    0
+>  199 => tests/xfs/199                               |    0
+>  199.out => tests/xfs/199.out                       |    0
+>  200 => tests/xfs/200                               |    0
+>  200.out => tests/xfs/200.out                       |    0
+>  201 => tests/xfs/201                               |    0
+>  201.out => tests/xfs/201.out                       |    0
+>  202 => tests/xfs/202                               |    0
+>  202.out => tests/xfs/202.out                       |    0
+>  203 => tests/xfs/203                               |    0
+>  203.out => tests/xfs/203.out                       |    0
+>  205 => tests/xfs/205                               |    0
+>  205.out => tests/xfs/205.out                       |    0
+>  206 => tests/xfs/206                               |    0
+>  206.out => tests/xfs/206.out                       |    0
+>  216 => tests/xfs/216                               |    0
+>  216.out => tests/xfs/216.out                       |    0
+>  217 => tests/xfs/217                               |    0
+>  217.out => tests/xfs/217.out                       |    0
+>  220 => tests/xfs/220                               |    0
+>  220.out => tests/xfs/220.out                       |    0
+>  222 => tests/xfs/222                               |    0
+>  222.out => tests/xfs/222.out                       |    0
+>  227 => tests/xfs/227                               |    0
+>  227.out => tests/xfs/227.out                       |    0
+>  229 => tests/xfs/229                               |    0
+>  229.out => tests/xfs/229.out                       |    0
+>  238 => tests/xfs/238                               |    0
+>  238.out => tests/xfs/238.out                       |    0
+>  242 => tests/xfs/242                               |    0
+>  242.out => tests/xfs/242.out                       |    0
+>  244 => tests/xfs/244                               |    0
+>  244.out => tests/xfs/244.out                       |    0
+>  250 => tests/xfs/250                               |    0
+>  250.out => tests/xfs/250.out                       |    0
+>  252 => tests/xfs/252                               |    0
+>  252.out => tests/xfs/252.out                       |    0
+>  253 => tests/xfs/253                               |    0
+>  253.out => tests/xfs/253.out                       |    0
+>  259 => tests/xfs/259                               |    0
+>  259.out => tests/xfs/259.out                       |    0
+>  261 => tests/xfs/261                               |    0
+>  261.out => tests/xfs/261.out                       |    0
+>  262 => tests/xfs/262                               |    0
+>  262.out => tests/xfs/262.out                       |    0
+>  266 => tests/xfs/266                               |    0
+>  266.out => tests/xfs/266.out                       |    0
+>  267 => tests/xfs/267                               |    0
+>  267.out => tests/xfs/267.out                       |    0
+>  268 => tests/xfs/268                               |    0
+>  268.out => tests/xfs/268.out                       |    0
+>  278 => tests/xfs/278                               |    0
+>  278.out => tests/xfs/278.out                       |    0
+>  279 => tests/xfs/279                               |    0
+>  279.out => tests/xfs/279.out                       |    0
+>  281 => tests/xfs/281                               |    0
+>  281.out => tests/xfs/281.out                       |    0
+>  282 => tests/xfs/282                               |    0
+>  282.out => tests/xfs/282.out                       |    0
+>  283 => tests/xfs/283                               |    0
+>  283.out => tests/xfs/283.out                       |    0
+>  287 => tests/xfs/287                               |    0
+>  287.out => tests/xfs/287.out                       |    0
+>  290 => tests/xfs/290                               |    0
+>  290.out => tests/xfs/290.out                       |    0
+>  291 => tests/xfs/291                               |    0
+>  291.out => tests/xfs/291.out                       |    0
+>  292 => tests/xfs/292                               |    0
+>  292.out => tests/xfs/292.out                       |    0
+>  293 => tests/xfs/293                               |    0
+>  293.out => tests/xfs/293.out                       |    0
+>  295 => tests/xfs/295                               |    0
+>  295.out => tests/xfs/295.out                       |    0
+>  296 => tests/xfs/296                               |    0
+>  296.out => tests/xfs/296.out                       |    0
+>  297 => tests/xfs/297                               |    0
+>  297.out => tests/xfs/297.out                       |    0
+>  group => tests/xfs/group                           |  139 ---------------
+>  382 files changed, 3 insertions(+), 324 deletions(-)
+>  rename 003 => tests/xfs/003 (100%)
+>  rename 003.out => tests/xfs/003.out (100%)
+>  rename 004 => tests/xfs/004 (100%)
+>  rename 004.out => tests/xfs/004.out (100%)
+>  rename 008 => tests/xfs/008 (100%)
+>  rename 008.out => tests/xfs/008.out (100%)
+>  rename 009 => tests/xfs/009 (100%)
+>  rename 009.out => tests/xfs/009.out (100%)
+>  rename 012 => tests/xfs/012 (100%)
+>  rename 012.out => tests/xfs/012.out (100%)
+>  rename 016 => tests/xfs/016 (100%)
+>  rename 016.out => tests/xfs/016.out (100%)
+>  rename 017 => tests/xfs/017 (100%)
+>  rename 017.out => tests/xfs/017.out (100%)
+>  rename 018 => tests/xfs/018 (100%)
+>  rename 018.op.irix => tests/xfs/018.op.irix (100%)
+>  rename 018.op.linux => tests/xfs/018.op.linux (100%)
+>  rename 018.out => tests/xfs/018.out (100%)
+>  rename 018.trans_buf => tests/xfs/018.trans_buf (100%)
+>  rename 018.trans_inode => tests/xfs/018.trans_inode (100%)
+>  rename 019 => tests/xfs/019 (100%)
+>  rename 019.out => tests/xfs/019.out (100%)
+>  rename 021 => tests/xfs/021 (100%)
+>  rename 021.out => tests/xfs/021.out (100%)
+>  rename 022 => tests/xfs/022 (100%)
+>  rename 022.out.irix => tests/xfs/022.out.irix (100%)
+>  rename 022.out.linux => tests/xfs/022.out.linux (100%)
+>  rename 023 => tests/xfs/023 (100%)
+>  rename 023.out.irix => tests/xfs/023.out.irix (100%)
+>  rename 023.out.linux => tests/xfs/023.out.linux (100%)
+>  rename 024 => tests/xfs/024 (100%)
+>  rename 024.out => tests/xfs/024.out (100%)
+>  rename 025 => tests/xfs/025 (100%)
+>  rename 025.out => tests/xfs/025.out (100%)
+>  rename 026 => tests/xfs/026 (100%)
+>  rename 026.out => tests/xfs/026.out (100%)
+>  rename 027 => tests/xfs/027 (100%)
+>  rename 027.out => tests/xfs/027.out (100%)
+>  rename 028 => tests/xfs/028 (100%)
+>  rename 028.out => tests/xfs/028.out (100%)
+>  rename 029 => tests/xfs/029 (100%)
+>  rename 029.out => tests/xfs/029.out (100%)
+>  rename 030 => tests/xfs/030 (100%)
+>  rename 030.out.irix => tests/xfs/030.out.irix (100%)
+>  rename 030.out.linux => tests/xfs/030.out.linux (100%)
+>  rename 031 => tests/xfs/031 (100%)
+>  rename 031.out.irix => tests/xfs/031.out.irix (100%)
+>  rename 031.out.linux => tests/xfs/031.out.linux (100%)
+>  rename 032 => tests/xfs/032 (100%)
+>  rename 032.out => tests/xfs/032.out (100%)
+>  rename 033 => tests/xfs/033 (100%)
+>  rename 033.out.irix => tests/xfs/033.out.irix (100%)
+>  rename 033.out.linux => tests/xfs/033.out.linux (100%)
+>  rename 034 => tests/xfs/034 (100%)
+>  rename 034.out => tests/xfs/034.out (100%)
+>  rename 035 => tests/xfs/035 (100%)
+>  rename 035.out.irix => tests/xfs/035.out.irix (100%)
+>  rename 035.out.linux => tests/xfs/035.out.linux (100%)
+>  rename 036 => tests/xfs/036 (100%)
+>  rename 036.out.irix => tests/xfs/036.out.irix (100%)
+>  rename 036.out.linux => tests/xfs/036.out.linux (100%)
+>  rename 037 => tests/xfs/037 (100%)
+>  rename 037.out => tests/xfs/037.out (100%)
+>  rename 038 => tests/xfs/038 (100%)
+>  rename 038.out => tests/xfs/038.out (100%)
+>  rename 039 => tests/xfs/039 (100%)
+>  rename 039.out.irix => tests/xfs/039.out.irix (100%)
+>  rename 039.out.linux => tests/xfs/039.out.linux (100%)
+>  rename 041 => tests/xfs/041 (100%)
+>  rename 041.out => tests/xfs/041.out (100%)
+>  rename 042 => tests/xfs/042 (100%)
+>  rename 042.out => tests/xfs/042.out (100%)
+>  rename 043 => tests/xfs/043 (100%)
+>  rename 043.out.irix => tests/xfs/043.out.irix (100%)
+>  rename 043.out.linux => tests/xfs/043.out.linux (100%)
+>  rename 044 => tests/xfs/044 (100%)
+>  rename 044.out => tests/xfs/044.out (100%)
+>  rename 045 => tests/xfs/045 (100%)
+>  rename 045.out => tests/xfs/045.out (100%)
+>  rename 046 => tests/xfs/046 (100%)
+>  rename 046.out => tests/xfs/046.out (100%)
+>  rename 047 => tests/xfs/047 (100%)
+>  rename 047.out => tests/xfs/047.out (100%)
+>  rename 048 => tests/xfs/048 (100%)
+>  rename 048.out => tests/xfs/048.out (100%)
+>  rename 049 => tests/xfs/049 (100%)
+>  rename 049.out => tests/xfs/049.out (100%)
+>  rename 050 => tests/xfs/050 (100%)
+>  rename 050.out => tests/xfs/050.out (100%)
+>  rename 052 => tests/xfs/052 (100%)
+>  rename 052.out => tests/xfs/052.out (100%)
+>  rename 054 => tests/xfs/054 (100%)
+>  rename 054.out => tests/xfs/054.out (100%)
+>  rename 055 => tests/xfs/055 (100%)
+>  rename 055.out.irix => tests/xfs/055.out.irix (100%)
+>  rename 055.out.linux => tests/xfs/055.out.linux (100%)
+>  rename 056 => tests/xfs/056 (100%)
+>  rename 056.out => tests/xfs/056.out (100%)
+>  rename 057 => tests/xfs/057 (100%)
+>  rename 057.out => tests/xfs/057.out (100%)
+>  rename 058 => tests/xfs/058 (100%)
+>  rename 058.out => tests/xfs/058.out (100%)
+>  rename 059 => tests/xfs/059 (100%)
+>  rename 059.out => tests/xfs/059.out (100%)
+>  rename 060 => tests/xfs/060 (100%)
+>  rename 060.out => tests/xfs/060.out (100%)
+>  rename 061 => tests/xfs/061 (100%)
+>  rename 061.out => tests/xfs/061.out (100%)
+>  rename 063 => tests/xfs/063 (100%)
+>  rename 063.out => tests/xfs/063.out (100%)
+>  rename 064 => tests/xfs/064 (100%)
+>  rename 064.out => tests/xfs/064.out (100%)
+>  rename 065 => tests/xfs/065 (100%)
+>  rename 065.out => tests/xfs/065.out (100%)
+>  rename 066 => tests/xfs/066 (100%)
+>  rename 066.out => tests/xfs/066.out (100%)
+>  rename 067 => tests/xfs/067 (100%)
+>  rename 067.out => tests/xfs/067.out (100%)
+>  rename 071 => tests/xfs/071 (100%)
+>  rename 071.out => tests/xfs/071.out (100%)
+>  rename 071.out.32 => tests/xfs/071.out.32 (100%)
+>  rename 071.out.64 => tests/xfs/071.out.64 (100%)
+>  rename 072 => tests/xfs/072 (100%)
+>  rename 072.out => tests/xfs/072.out (100%)
+>  rename 073 => tests/xfs/073 (100%)
+>  rename 073.out => tests/xfs/073.out (100%)
+>  rename 078 => tests/xfs/078 (100%)
+>  rename 078.out => tests/xfs/078.out (100%)
+>  rename 080 => tests/xfs/080 (100%)
+>  rename 080.out => tests/xfs/080.out (100%)
+>  rename 081 => tests/xfs/081 (100%)
+>  rename 081.out => tests/xfs/081.out (100%)
+>  rename 081.ugquota.trans_inode => tests/xfs/081.ugquota.trans_inode (100%)
+>  rename 082 => tests/xfs/082 (100%)
+>  rename 082.op.irix => tests/xfs/082.op.irix (100%)
+>  rename 082.op.linux => tests/xfs/082.op.linux (100%)
+>  rename 082.out => tests/xfs/082.out (100%)
+>  rename 082.trans_buf => tests/xfs/082.trans_buf (100%)
+>  rename 082.trans_inode => tests/xfs/082.trans_inode (100%)
+>  rename 084 => tests/xfs/084 (100%)
+>  rename 084.out => tests/xfs/084.out (100%)
+>  rename 085 => tests/xfs/085 (100%)
+>  rename 085.out => tests/xfs/085.out (100%)
+>  rename 086 => tests/xfs/086 (100%)
+>  rename 086.out => tests/xfs/086.out (100%)
+>  rename 087 => tests/xfs/087 (100%)
+>  rename 087.out => tests/xfs/087.out (100%)
+>  rename 090 => tests/xfs/090 (100%)
+>  rename 090.out => tests/xfs/090.out (100%)
+>  rename 092 => tests/xfs/092 (100%)
+>  rename 092.out => tests/xfs/092.out (100%)
+>  rename 094 => tests/xfs/094 (100%)
+>  rename 094.out => tests/xfs/094.out (100%)
+>  rename 095 => tests/xfs/095 (100%)
+>  rename 095.out => tests/xfs/095.out (100%)
+>  rename 096 => tests/xfs/096 (100%)
+>  rename 096.external => tests/xfs/096.external (100%)
+>  rename 096.internal => tests/xfs/096.internal (100%)
+>  rename 103 => tests/xfs/103 (100%)
+>  rename 103.out => tests/xfs/103.out (100%)
+>  rename 104 => tests/xfs/104 (100%)
+>  rename 104.out => tests/xfs/104.out (100%)
+>  rename 106 => tests/xfs/106 (100%)
+>  rename 106.out => tests/xfs/106.out (100%)
+>  rename 107 => tests/xfs/107 (100%)
+>  rename 107.out => tests/xfs/107.out (100%)
+>  rename 108 => tests/xfs/108 (100%)
+>  rename 108.out => tests/xfs/108.out (100%)
+>  rename 109 => tests/xfs/109 (100%)
+>  rename 109.out => tests/xfs/109.out (100%)
+>  rename 110 => tests/xfs/110 (100%)
+>  rename 110.out => tests/xfs/110.out (100%)
+>  rename 111 => tests/xfs/111 (100%)
+>  rename 111.out => tests/xfs/111.out (100%)
+>  rename 114 => tests/xfs/114 (100%)
+>  rename 114.out => tests/xfs/114.out (100%)
+>  rename 115 => tests/xfs/115 (100%)
+>  rename 115.out => tests/xfs/115.out (100%)
+>  rename 116 => tests/xfs/116 (100%)
+>  rename 116.out => tests/xfs/116.out (100%)
+>  rename 118 => tests/xfs/118 (100%)
+>  rename 118.out => tests/xfs/118.out (100%)
+>  rename 119 => tests/xfs/119 (100%)
+>  rename 119.out => tests/xfs/119.out (100%)
+>  rename 121 => tests/xfs/121 (100%)
+>  rename 121.out => tests/xfs/121.out (100%)
+>  rename 122 => tests/xfs/122 (100%)
+>  rename 122.out => tests/xfs/122.out (100%)
+>  rename 134 => tests/xfs/134 (100%)
+>  rename 134.out => tests/xfs/134.out (100%)
+>  rename 136 => tests/xfs/136 (100%)
+>  rename 136.out => tests/xfs/136.out (100%)
+>  rename 137 => tests/xfs/137 (100%)
+>  rename 137.out => tests/xfs/137.out (100%)
+>  rename 138 => tests/xfs/138 (100%)
+>  rename 138.out => tests/xfs/138.out (100%)
+>  rename 139 => tests/xfs/139 (100%)
+>  rename 139.out => tests/xfs/139.out (100%)
+>  rename 140 => tests/xfs/140 (100%)
+>  rename 140.out => tests/xfs/140.out (100%)
+>  rename 142 => tests/xfs/142 (100%)
+>  rename 142.out => tests/xfs/142.out (100%)
+>  rename 143 => tests/xfs/143 (100%)
+>  rename 143.out => tests/xfs/143.out (100%)
+>  rename 144 => tests/xfs/144 (100%)
+>  rename 144.out => tests/xfs/144.out (100%)
+>  rename 145 => tests/xfs/145 (100%)
+>  rename 145.out => tests/xfs/145.out (100%)
+>  rename 146 => tests/xfs/146 (100%)
+>  rename 146.out.irix => tests/xfs/146.out.irix (100%)
+>  rename 146.out.linux => tests/xfs/146.out.linux (100%)
+>  rename 147 => tests/xfs/147 (100%)
+>  rename 147.out => tests/xfs/147.out (100%)
+>  rename 148 => tests/xfs/148 (100%)
+>  rename 148.out => tests/xfs/148.out (100%)
+>  rename 149 => tests/xfs/149 (100%)
+>  rename 149.out => tests/xfs/149.out (100%)
+>  rename 150 => tests/xfs/150 (100%)
+>  rename 150.out => tests/xfs/150.out (100%)
+>  rename 151 => tests/xfs/151 (100%)
+>  rename 151.out => tests/xfs/151.out (100%)
+>  rename 152 => tests/xfs/152 (100%)
+>  rename 152.out => tests/xfs/152.out (100%)
+>  rename 153 => tests/xfs/153 (100%)
+>  rename 153.out => tests/xfs/153.out (100%)
+>  rename 154 => tests/xfs/154 (100%)
+>  rename 154.out => tests/xfs/154.out (100%)
+>  rename 155 => tests/xfs/155 (100%)
+>  rename 155.out => tests/xfs/155.out (100%)
+>  rename 156 => tests/xfs/156 (100%)
+>  rename 156.out => tests/xfs/156.out (100%)
+>  rename 157 => tests/xfs/157 (100%)
+>  rename 157.out => tests/xfs/157.out (100%)
+>  rename 158 => tests/xfs/158 (100%)
+>  rename 158.out => tests/xfs/158.out (100%)
+>  rename 159 => tests/xfs/159 (100%)
+>  rename 159.out => tests/xfs/159.out (100%)
+>  rename 160 => tests/xfs/160 (100%)
+>  rename 160.out => tests/xfs/160.out (100%)
+>  rename 161 => tests/xfs/161 (100%)
+>  rename 161.out => tests/xfs/161.out (100%)
+>  rename 162 => tests/xfs/162 (100%)
+>  rename 162.out => tests/xfs/162.out (100%)
+>  rename 163 => tests/xfs/163 (100%)
+>  rename 163.out => tests/xfs/163.out (100%)
+>  rename 164 => tests/xfs/164 (100%)
+>  rename 164.out => tests/xfs/164.out (100%)
+>  rename 165 => tests/xfs/165 (100%)
+>  rename 165.out => tests/xfs/165.out (100%)
+>  rename 166 => tests/xfs/166 (100%)
+>  rename 166.out => tests/xfs/166.out (100%)
+>  rename 167 => tests/xfs/167 (100%)
+>  rename 167.out => tests/xfs/167.out (100%)
+>  rename 168 => tests/xfs/168 (100%)
+>  rename 168.out => tests/xfs/168.out (100%)
+>  rename 170 => tests/xfs/170 (100%)
+>  rename 170.out => tests/xfs/170.out (100%)
+>  rename 171 => tests/xfs/171 (100%)
+>  rename 171.out => tests/xfs/171.out (100%)
+>  rename 172 => tests/xfs/172 (100%)
+>  rename 172.out => tests/xfs/172.out (100%)
+>  rename 173 => tests/xfs/173 (100%)
+>  rename 173.out => tests/xfs/173.out (100%)
+>  rename 174 => tests/xfs/174 (100%)
+>  rename 174.out => tests/xfs/174.out (100%)
+>  rename 175 => tests/xfs/175 (100%)
+>  rename 175.out => tests/xfs/175.out (100%)
+>  rename 176 => tests/xfs/176 (100%)
+>  rename 176.out => tests/xfs/176.out (100%)
+>  rename 178 => tests/xfs/178 (100%)
+>  rename 178.out => tests/xfs/178.out (100%)
+>  rename 179 => tests/xfs/179 (100%)
+>  rename 179.out => tests/xfs/179.out (100%)
+>  rename 180 => tests/xfs/180 (100%)
+>  rename 180.out => tests/xfs/180.out (100%)
+>  rename 181 => tests/xfs/181 (100%)
+>  rename 181.out => tests/xfs/181.out (100%)
+>  rename 182 => tests/xfs/182 (100%)
+>  rename 182.out => tests/xfs/182.out (100%)
+>  rename 183 => tests/xfs/183 (100%)
+>  rename 183.out => tests/xfs/183.out (100%)
+>  rename 185 => tests/xfs/185 (100%)
+>  rename 185.out => tests/xfs/185.out (100%)
+>  rename 186 => tests/xfs/186 (100%)
+>  rename 186.out => tests/xfs/186.out (100%)
+>  rename 187 => tests/xfs/187 (100%)
+>  rename 187.out => tests/xfs/187.out (100%)
+>  rename 188 => tests/xfs/188 (100%)
+>  rename 188.out => tests/xfs/188.out (100%)
+>  rename 189 => tests/xfs/189 (100%)
+>  rename 189.out => tests/xfs/189.out (100%)
+>  rename 190 => tests/xfs/190 (100%)
+>  rename 190.out => tests/xfs/190.out (100%)
+>  rename 191 => tests/xfs/191 (100%)
+>  rename 191.out => tests/xfs/191.out (100%)
+>  rename 194 => tests/xfs/194 (100%)
+>  rename 194.out => tests/xfs/194.out (100%)
+>  rename 195 => tests/xfs/195 (100%)
+>  rename 195.out => tests/xfs/195.out (100%)
+>  rename 196 => tests/xfs/196 (100%)
+>  rename 196.out => tests/xfs/196.out (100%)
+>  rename 197 => tests/xfs/197 (100%)
+>  rename 197.out => tests/xfs/197.out (100%)
+>  rename 199 => tests/xfs/199 (100%)
+>  rename 199.out => tests/xfs/199.out (100%)
+>  rename 200 => tests/xfs/200 (100%)
+>  rename 200.out => tests/xfs/200.out (100%)
+>  rename 201 => tests/xfs/201 (100%)
+>  rename 201.out => tests/xfs/201.out (100%)
+>  rename 202 => tests/xfs/202 (100%)
+>  rename 202.out => tests/xfs/202.out (100%)
+>  rename 203 => tests/xfs/203 (100%)
+>  rename 203.out => tests/xfs/203.out (100%)
+>  rename 205 => tests/xfs/205 (100%)
+>  rename 205.out => tests/xfs/205.out (100%)
+>  rename 206 => tests/xfs/206 (100%)
+>  rename 206.out => tests/xfs/206.out (100%)
+>  rename 216 => tests/xfs/216 (100%)
+>  rename 216.out => tests/xfs/216.out (100%)
+>  rename 217 => tests/xfs/217 (100%)
+>  rename 217.out => tests/xfs/217.out (100%)
+>  rename 220 => tests/xfs/220 (100%)
+>  rename 220.out => tests/xfs/220.out (100%)
+>  rename 222 => tests/xfs/222 (100%)
+>  rename 222.out => tests/xfs/222.out (100%)
+>  rename 227 => tests/xfs/227 (100%)
+>  rename 227.out => tests/xfs/227.out (100%)
+>  rename 229 => tests/xfs/229 (100%)
+>  rename 229.out => tests/xfs/229.out (100%)
+>  rename 238 => tests/xfs/238 (100%)
+>  rename 238.out => tests/xfs/238.out (100%)
+>  rename 242 => tests/xfs/242 (100%)
+>  rename 242.out => tests/xfs/242.out (100%)
+>  rename 244 => tests/xfs/244 (100%)
+>  rename 244.out => tests/xfs/244.out (100%)
+>  rename 250 => tests/xfs/250 (100%)
+>  rename 250.out => tests/xfs/250.out (100%)
+>  rename 252 => tests/xfs/252 (100%)
+>  rename 252.out => tests/xfs/252.out (100%)
+>  rename 253 => tests/xfs/253 (100%)
+>  rename 253.out => tests/xfs/253.out (100%)
+>  rename 259 => tests/xfs/259 (100%)
+>  rename 259.out => tests/xfs/259.out (100%)
+>  rename 261 => tests/xfs/261 (100%)
+>  rename 261.out => tests/xfs/261.out (100%)
+>  rename 262 => tests/xfs/262 (100%)
+>  rename 262.out => tests/xfs/262.out (100%)
+>  rename 266 => tests/xfs/266 (100%)
+>  rename 266.out => tests/xfs/266.out (100%)
+>  rename 267 => tests/xfs/267 (100%)
+>  rename 267.out => tests/xfs/267.out (100%)
+>  rename 268 => tests/xfs/268 (100%)
+>  rename 268.out => tests/xfs/268.out (100%)
+>  rename 278 => tests/xfs/278 (100%)
+>  rename 278.out => tests/xfs/278.out (100%)
+>  rename 279 => tests/xfs/279 (100%)
+>  rename 279.out => tests/xfs/279.out (100%)
+>  rename 281 => tests/xfs/281 (100%)
+>  rename 281.out => tests/xfs/281.out (100%)
+>  rename 282 => tests/xfs/282 (100%)
+>  rename 282.out => tests/xfs/282.out (100%)
+>  rename 283 => tests/xfs/283 (100%)
+>  rename 283.out => tests/xfs/283.out (100%)
+>  rename 287 => tests/xfs/287 (100%)
+>  rename 287.out => tests/xfs/287.out (100%)
+>  rename 290 => tests/xfs/290 (100%)
+>  rename 290.out => tests/xfs/290.out (100%)
+>  rename 291 => tests/xfs/291 (100%)
+>  rename 291.out => tests/xfs/291.out (100%)
+>  rename 292 => tests/xfs/292 (100%)
+>  rename 292.out => tests/xfs/292.out (100%)
+>  rename 293 => tests/xfs/293 (100%)
+>  rename 293.out => tests/xfs/293.out (100%)
+>  rename 295 => tests/xfs/295 (100%)
+>  rename 295.out => tests/xfs/295.out (100%)
+>  rename 296 => tests/xfs/296 (100%)
+>  rename 296.out => tests/xfs/296.out (100%)
+>  rename 297 => tests/xfs/297 (100%)
+>  rename 297.out => tests/xfs/297.out (100%)
+>  copy group => tests/xfs/group (68%)
 > 
+> diff --git a/check b/check
+> index da2611a..42b25b5 100755
+> --- a/check
+> +++ b/check
+> @@ -38,6 +38,7 @@ FSTYP=xfs
+>  SUPPORTED_TESTS="[0-9][0-9][0-9] [0-9][0-9][0-9][0-9]"
+>  TEST_GROUP_DIR="tests"
+>  GENERIC_GROUP_DIR="$TEST_GROUP_DIR/generic"
+> +XFS_GROUP_DIR="$TEST_GROUP_DIR/xfs"
+>  
+>  # generic initialization
+>  iam=check
+> @@ -86,7 +87,7 @@ _setenvironment()
+>  get_group_list()
+>  {
+>  	grp=$1
+> -	dirs=". $GENERIC_GROUP_DIR"
+> +	dirs=". $GENERIC_GROUP_DIR $XFS_GROUP_DIR"
+>  
+>  	for d in $dirs; do
+>  		l=$(sed -n < $d/group \
 > diff --git a/group b/group
-> index 81c4111..9657be1 100644
+> index 9657be1..af02cce 100644
 > --- a/group
 > +++ b/group
-> @@ -121,26 +121,15 @@ stress
+> @@ -121,206 +121,22 @@ stress
 >  
 >  # test-group association ... one line per test
 >  #
-> -001 rw dir udf auto quick
-> -002 metadata udf auto quick
->  003 db auto quick
->  004 db auto quick
-> -005 dir udf auto quick
-> -006 dir udf auto quick
-> -007 dir udf auto quick
->  008 rw ioctl auto quick
->  009 rw ioctl auto prealloc quick
-> -010 other udf auto
-> -011 dir udf auto quick
->  012 rw auto quick
-> -013 other ioctl udf auto quick
-> -014 rw udf auto quick
-> -015 other auto quick
->  016 rw auto quick
->  017 mount auto quick stress
->  018 deprecated # log logprint v2log
->  019 mkfs auto quick
-> -020 metadata attr udf auto quick
->  021 db attr auto quick
->  022 dump ioctl tape
->  023 dump ioctl tape
-> @@ -173,7 +162,6 @@ stress
->  050 quota auto quick
+> -003 db auto quick
+> -004 db auto quick
+> -008 rw ioctl auto quick
+> -009 rw ioctl auto prealloc quick
+> -012 rw auto quick
+> -016 rw auto quick
+> -017 mount auto quick stress
+> -018 deprecated # log logprint v2log
+> -019 mkfs auto quick
+> -021 db attr auto quick
+> -022 dump ioctl tape
+> -023 dump ioctl tape
+> -024 dump ioctl tape
+> -025 dump ioctl tape
+> -026 dump ioctl auto quick
+> -027 dump ioctl auto quick
+> -028 dump ioctl auto quick
+> -029 mkfs logprint log auto quick
+> -030 repair auto quick
+> -031 repair mkfs auto quick
+> -032 mkfs auto quick
+> -033 repair auto quick
+> -034 other auto quick
+> -035 dump ioctl tape auto
+> -036 dump ioctl remote tape
+> -037 dump ioctl remote tape
+> -038 dump ioctl remote tape
+> -039 dump ioctl remote tape
+>  040 other auto
+> -041 growfs ioctl auto
+> -042 fsr ioctl auto
+> -043 dump ioctl tape
+> -044 other auto
+> -045 other auto quick
+> -046 dump ioctl auto quick
+> -047 dump ioctl auto
+> -048 other auto quick
+> -049 rw auto quick
+> -050 quota auto quick
 >  051 acl udf auto quick
->  052 quota db auto quick
-> -053 acl repair auto quick
->  054 quota auto quick
->  055 dump ioctl remote tape
->  056 dump ioctl auto quick
-> @@ -182,24 +170,15 @@ stress
->  059 dump ioctl auto quick
->  060 dump ioctl auto quick
->  061 dump ioctl auto quick
-> -062 attr udf auto quick
->  063 dump attr auto quick
->  064 dump auto
->  065 dump auto
->  066 dump ioctl auto quick
->  067 acl attr auto quick
-> -068 other auto freeze dangerous stress
-> -069 rw udf auto quick
-> -070 attr udf auto quick stress
->  071 rw auto
->  072 rw auto prealloc quick
->  073 copy auto
-> -074 rw udf auto
-> -075 rw udf auto quick
-> -076 metadata rw udf auto quick stress
-> -077 acl attr auto enospc
->  078 growfs auto quick
-> -079 acl attr ioctl metadata auto quick
->  080 rw ioctl
->  081 deprecated # log logprint quota
->  082 deprecated # log logprint v2log
-> @@ -208,60 +187,35 @@ stress
->  085 log auto quick
->  086 log v2log auto
->  087 log v2log auto quota stress
-> -088 perms auto quick
-> -089 metadata auto
->  090 rw auto
-> -091 rw auto quick
->  092 other auto quick
-> -093 attr cap udf auto
->  094 metadata dir ioctl auto
->  095 log v2log auto
->  096 mkfs v2log auto quick
-> -097 udf auto
+> -052 quota db auto quick
+> -054 quota auto quick
+> -055 dump ioctl remote tape
+> -056 dump ioctl auto quick
+> -057 acl auto
+> -058 acl auto
+> -059 dump ioctl auto quick
+> -060 dump ioctl auto quick
+> -061 dump ioctl auto quick
+> -063 dump attr auto quick
+> -064 dump auto
+> -065 dump auto
+> -066 dump ioctl auto quick
+> -067 acl attr auto quick
+> -071 rw auto
+> -072 rw auto prealloc quick
+> -073 copy auto
+> -078 growfs auto quick
+> -080 rw ioctl
+> -081 deprecated # log logprint quota
+> -082 deprecated # log logprint v2log
+> -083 rw auto enospc stress
+> -084 ioctl rw auto
+> -085 log auto quick
+> -086 log v2log auto
+> -087 log v2log auto quota stress
+> -090 rw auto
+> -092 other auto quick
+> -094 metadata dir ioctl auto
+> -095 log v2log auto
+> -096 mkfs v2log auto quick
 >  098 udf auto
-> -099 udf auto
-> -100 udf auto
 >  101 udf
 >  102 udf
->  103 metadata dir ioctl auto quick
->  104 growfs ioctl prealloc auto stress
-> -105 acl auto quick
->  106 quota
->  107 quota
->  108 quota auto quick
->  109 metadata auto
->  110 repair auto
->  111 ioctl
-> -112 rw aio auto quick
-> -113 rw aio auto quick
->  114 parent attr stress
->  115 parent attr
->  116 quota auto quick
-> -117 attr auto quick
->  118 quota auto quick
->  119 log v2log auto freeze dangerous
-> -120 other auto quick
->  121 log auto quick
->  122 other auto quick
-> -123 perms auto quick
-> -124 pattern auto quick
-> -125 other auto
-> -126 perms auto quick
-> -127 rw auto
-> -128 perms auto quick
-> -129 rw auto quick
-> -130 pattern auto quick
-> -131 perms auto quick
-> -132 pattern auto
-> -133 rw auto
->  134 quota auto quick
-> -135 metadata auto quick
->  136 attr2
->  137 metadata log auto
->  138 metadata log auto
->  139 metadata log auto
->  140 metadata log auto
-> -141 rw auto quick
->  142 dmapi auto
->  143 dmapi auto
->  144 dmapi auto
-> @@ -315,115 +269,59 @@ stress
->  189 mount auto quick
->  190 rw auto quick
->  191 nfs4acl auto
-> -192 atime auto
-> -193 metadata auto quick
->  194 rw auto
->  195 ioctl dump auto quick
->  196 quota auto quick
->  197 dir auto quick
-> -198 auto aio quick
->  199 mount auto quick
->  200 mount auto quick
->  201 metadata auto quick
->  202 repair auto quick
->  203 ioctl auto
-> -204 metadata rw auto
->  205 metadata rw auto
->  206 growfs auto quick
-> -207 auto aio quick
-> -208 auto aio
-> -209 auto aio
-> -210 auto aio quick
-> -211 auto aio quick
-> -212 auto aio quick
-> -213 rw auto prealloc quick enospc
-> -214 rw auto prealloc quick
-> -215 auto metadata quick
->  216 log metadata auto quick
->  217 log metadata auto
+> -103 metadata dir ioctl auto quick
+> -104 growfs ioctl prealloc auto stress
+> -106 quota
+> -107 quota
+> -108 quota auto quick
+> -109 metadata auto
+> -110 repair auto
+> -111 ioctl
+> -114 parent attr stress
+> -115 parent attr
+> -116 quota auto quick
+> -118 quota auto quick
+> -119 log v2log auto freeze dangerous
+> -121 log auto quick
+> -122 other auto quick
+> -134 quota auto quick
+> -136 attr2
+> -137 metadata log auto
+> -138 metadata log auto
+> -139 metadata log auto
+> -140 metadata log auto
+> -142 dmapi auto
+> -143 dmapi auto
+> -144 dmapi auto
+> -145 dmapi auto
+> -146 dmapi auto
+> -147 dmapi auto
+> -148 repair auto
+> -149 repair auto
+> -150 dmapi auto
+> -151 dmapi auto
+> -152 dmapi auto
+> -153 dmapi auto
+> -154 dmapi auto
+> -155 dmapi auto
+> -156 dmapi auto
+> -157 dmapi auto
+> -158 dmapi auto
+> -159 dmapi auto
+> -160 dmapi auto
+> -161 dmapi auto
+> -162 dmapi auto
+> -163 dmapi auto
+> -164 rw pattern auto prealloc quick
+> -165 rw pattern auto prealloc quick
+> -166 rw metadata auto quick
+> -167 rw metadata auto stress
+> -168 dmapi auto
+> -169 rw metadata auto quick
+> -170 rw filestreams auto quick
+> -# the next three tests are not deterministic enough to get the
+> -# "right" result on all platforms/configuration, so don't run
+> -# them by default.
+> -171 rw filestreams
+> -172 rw filestreams
+> -173 rw filestreams
+> -174 rw filestreams auto
+> -175 dmapi auto
+> -176 dmapi auto
+>  177 rw other auto
+> -178 mkfs other auto
+> -179 metadata rw auto
+> -180 metadata rw auto
+> -181 log auto quick
+> -182 metadata rw auto
+> -183 rw other auto quick
+> -184 metadata auto quick
+> -185 dmapi auto
+> -186 attr auto quick
+> -187 attr auto quick
+> -188 ci dir auto
+> -189 mount auto quick
+> -190 rw auto quick
+> -191 nfs4acl auto
+> -194 rw auto
+> -195 ioctl dump auto quick
+> -196 quota auto quick
+> -197 dir auto quick
+> -199 mount auto quick
+> -200 mount auto quick
+> -201 metadata auto quick
+> -202 repair auto quick
+> -203 ioctl auto
+> -205 metadata rw auto
+> -206 growfs auto quick
+> -216 log metadata auto quick
+> -217 log metadata auto
 >  218 auto fsr quick
-> -219 auto quota quick
->  220 auto quota quick
-> -221 auto metadata quick
->  222 auto fsr ioctl quick
-> -223 auto quick
-> -224 auto
-> -225 auto quick
-> -226 auto enospc
->  227 auto fsr
-> -228 rw auto prealloc quick
->  229 auto rw
-> -230 auto quota quick
-> -231 auto quota
-> -232 auto quota stress
-> -233 auto quota stress
-> -234 auto quota
-> -235 auto quota quick
-> -236 auto quick metadata
-> -237 auto quick acl
->  238 auto quick metadata ioctl
-> -239 auto aio rw
-> -240 auto aio quick rw
-> -241 auto
->  242 auto quick prealloc
+> -220 auto quota quick
+> -222 auto fsr ioctl quick
+> -227 auto fsr
+> -229 auto rw
+> -238 auto quick metadata ioctl
+> -242 auto quick prealloc
 >  243 auto quick prealloc
->  244 auto quota quick
-> -245 auto quick dir
-> -246 auto quick rw
-> -247 auto quick rw
-> -248 auto quick rw
-> -249 auto quick rw 
->  250 auto quick rw prealloc metadata
-> -251 ioctl trim
->  252 auto quick prealloc
->  253 auto quick
+> -244 auto quota quick
+> -250 auto quick rw prealloc metadata
+> -252 auto quick prealloc
+> -253 auto quick
 >  254 auto quick
-> -255 auto quick prealloc
-> -256 auto quick
-> -257 dir auto quick
-> -258 auto quick
->  259 auto quick
-> -260 auto quick trim
->  261 auto quick quota
->  262 auto quick quota
-> -263 rw auto quick
+> -259 auto quick
+> -261 auto quick quota
+> -262 auto quick quota
 >  264 auto
 >  265 auto
->  266 dump ioctl auto quick
->  267 dump ioctl tape
->  268 dump ioctl tape
-> -269 auto rw prealloc ioctl enospc stress
-> -270 auto quota rw prealloc ioctl enospc stress
+> -266 dump ioctl auto quick
+> -267 dump ioctl tape
+> -268 dump ioctl tape
 >  271 auto rw quick
 >  272 auto enospc rw
-> -273 auto rw
-> -274 auto rw prealloc
-> -275 auto rw
 >  276 auto rw metadata
-> -277 auto ioctl quick metadata
->  278 repair auto
->  279 auto mkfs
-> -280 auto quota freeze dangerous
->  281 dump ioctl auto quick
->  282 dump ioctl auto quick
->  283 dump ioctl auto quick
+> -278 repair auto
+> -279 auto mkfs
+> -281 dump ioctl auto quick
+> -282 dump ioctl auto quick
+> -283 dump ioctl auto quick
 >  284 auto
-> -285 auto rw
-> -286 other
->  287 auto dump quota quick
-> -288 auto quick ioctl trim
+> -287 auto dump quota quick
 >  289 auto quick
->  290 auto rw prealloc quick ioctl
->  291 repair
->  292 auto mkfs quick
->  293 auto quick
-> -294 auto quick
->  295 auto logprint quick
->  296 dump auto quick
->  297 auto freeze
+> -290 auto rw prealloc quick ioctl
+> -291 repair
+> -292 auto mkfs quick
+> -293 auto quick
+> -295 auto logprint quick
+> -296 dump auto quick
+> -297 auto freeze
 >  298 auto trim
-> -299 auto aio enospc rw stress
-> -300 auto aio enospc preallocrw stress
 >  301 aio dangerous ioctl rw stress
 >  302 aio dangerous ioctl rw stress
->  303 aio dangerous ioctl rw stress
-> diff --git a/001 b/tests/generic/001
-> similarity index 100%
-> rename from 001
-> rename to tests/generic/001
-> diff --git a/001.out b/tests/generic/001.out
-> similarity index 100%
-> rename from 001.out
-> rename to tests/generic/001.out
-> diff --git a/002 b/tests/generic/002
-> similarity index 100%
-> rename from 002
-> rename to tests/generic/002
-> diff --git a/002.out b/tests/generic/002.out
-> similarity index 100%
-> rename from 002.out
-> rename to tests/generic/002.out
-> diff --git a/005 b/tests/generic/005
-> similarity index 100%
-> rename from 005
-> rename to tests/generic/005
-> diff --git a/005.out b/tests/generic/005.out
-> similarity index 100%
-> rename from 005.out
-> rename to tests/generic/005.out
-> diff --git a/006 b/tests/generic/006
-> similarity index 100%
-> rename from 006
-> rename to tests/generic/006
-> diff --git a/006.out b/tests/generic/006.out
-> similarity index 100%
-> rename from 006.out
-> rename to tests/generic/006.out
-> diff --git a/007 b/tests/generic/007
-> similarity index 100%
-> rename from 007
-> rename to tests/generic/007
-> diff --git a/007.out b/tests/generic/007.out
-> similarity index 100%
-> rename from 007.out
-> rename to tests/generic/007.out
-> diff --git a/010 b/tests/generic/010
-> similarity index 100%
-> rename from 010
-> rename to tests/generic/010
-> diff --git a/010.out b/tests/generic/010.out
-> similarity index 100%
-> rename from 010.out
-> rename to tests/generic/010.out
-> diff --git a/011 b/tests/generic/011
-> similarity index 100%
-> rename from 011
-> rename to tests/generic/011
-> diff --git a/011.out b/tests/generic/011.out
-> similarity index 100%
-> rename from 011.out
-> rename to tests/generic/011.out
-> diff --git a/013 b/tests/generic/013
-> similarity index 100%
-> rename from 013
-> rename to tests/generic/013
-> diff --git a/013.out b/tests/generic/013.out
-> similarity index 100%
-> rename from 013.out
-> rename to tests/generic/013.out
-> diff --git a/014 b/tests/generic/014
-> similarity index 100%
-> rename from 014
-> rename to tests/generic/014
-> diff --git a/014.out b/tests/generic/014.out
-> similarity index 100%
-> rename from 014.out
-> rename to tests/generic/014.out
-> diff --git a/015 b/tests/generic/015
-> similarity index 100%
-> rename from 015
-> rename to tests/generic/015
-> diff --git a/015.out b/tests/generic/015.out
-> similarity index 100%
-> rename from 015.out
-> rename to tests/generic/015.out
-> diff --git a/020 b/tests/generic/020
-> similarity index 100%
-> rename from 020
-> rename to tests/generic/020
-> diff --git a/020.out b/tests/generic/020.out
-> similarity index 100%
-> rename from 020.out
-> rename to tests/generic/020.out
-> diff --git a/053 b/tests/generic/053
-> similarity index 100%
-> rename from 053
-> rename to tests/generic/053
-> diff --git a/053.out b/tests/generic/053.out
-> similarity index 100%
-> rename from 053.out
-> rename to tests/generic/053.out
-> diff --git a/062 b/tests/generic/062
-> similarity index 100%
-> rename from 062
-> rename to tests/generic/062
-> diff --git a/062.out b/tests/generic/062.out
-> similarity index 100%
-> rename from 062.out
-> rename to tests/generic/062.out
-> diff --git a/068 b/tests/generic/068
-> similarity index 100%
-> rename from 068
-> rename to tests/generic/068
-> diff --git a/068.out b/tests/generic/068.out
-> similarity index 100%
-> rename from 068.out
-> rename to tests/generic/068.out
-> diff --git a/069 b/tests/generic/069
-> similarity index 100%
-> rename from 069
-> rename to tests/generic/069
-> diff --git a/069.out b/tests/generic/069.out
-> similarity index 100%
-> rename from 069.out
-> rename to tests/generic/069.out
-> diff --git a/070 b/tests/generic/070
-> similarity index 100%
-> rename from 070
-> rename to tests/generic/070
-> diff --git a/070.out b/tests/generic/070.out
-> similarity index 100%
-> rename from 070.out
-> rename to tests/generic/070.out
-> diff --git a/074 b/tests/generic/074
-> similarity index 100%
-> rename from 074
-> rename to tests/generic/074
-> diff --git a/074.out b/tests/generic/074.out
-> similarity index 100%
-> rename from 074.out
-> rename to tests/generic/074.out
-> diff --git a/075 b/tests/generic/075
-> similarity index 100%
-> rename from 075
-> rename to tests/generic/075
-> diff --git a/075.out b/tests/generic/075.out
-> similarity index 100%
-> rename from 075.out
-> rename to tests/generic/075.out
-> diff --git a/076 b/tests/generic/076
-> similarity index 100%
-> rename from 076
-> rename to tests/generic/076
-> diff --git a/076.out b/tests/generic/076.out
-> similarity index 100%
-> rename from 076.out
-> rename to tests/generic/076.out
-> diff --git a/077 b/tests/generic/077
-> similarity index 100%
-> rename from 077
-> rename to tests/generic/077
-> diff --git a/077.out b/tests/generic/077.out
-> similarity index 100%
-> rename from 077.out
-> rename to tests/generic/077.out
-> diff --git a/079 b/tests/generic/079
-> similarity index 100%
-> rename from 079
-> rename to tests/generic/079
-> diff --git a/079.out b/tests/generic/079.out
-> similarity index 100%
-> rename from 079.out
-> rename to tests/generic/079.out
-> diff --git a/083 b/tests/generic/083
-> similarity index 100%
-> rename from 083
-> rename to tests/generic/083
-> diff --git a/083.out b/tests/generic/083.out
-> similarity index 100%
-> rename from 083.out
-> rename to tests/generic/083.out
-> diff --git a/088 b/tests/generic/088
-> similarity index 100%
-> rename from 088
-> rename to tests/generic/088
-> diff --git a/088.out.irix b/tests/generic/088.out.irix
-> similarity index 100%
-> rename from 088.out.irix
-> rename to tests/generic/088.out.irix
-> diff --git a/088.out.linux b/tests/generic/088.out.linux
-> similarity index 100%
-> rename from 088.out.linux
-> rename to tests/generic/088.out.linux
-> diff --git a/089 b/tests/generic/089
-> similarity index 100%
-> rename from 089
-> rename to tests/generic/089
-> diff --git a/089.out b/tests/generic/089.out
-> similarity index 100%
-> rename from 089.out
-> rename to tests/generic/089.out
-> diff --git a/091 b/tests/generic/091
-> similarity index 100%
-> rename from 091
-> rename to tests/generic/091
-> diff --git a/091.out b/tests/generic/091.out
-> similarity index 100%
-> rename from 091.out
-> rename to tests/generic/091.out
-> diff --git a/093 b/tests/generic/093
-> similarity index 100%
-> rename from 093
-> rename to tests/generic/093
-> diff --git a/093.out b/tests/generic/093.out
-> similarity index 100%
-> rename from 093.out
-> rename to tests/generic/093.out
-> diff --git a/097 b/tests/generic/097
-> similarity index 100%
-> rename from 097
-> rename to tests/generic/097
-> diff --git a/097.out.udf b/tests/generic/097.out.udf
-> similarity index 100%
-> rename from 097.out.udf
-> rename to tests/generic/097.out.udf
-> diff --git a/097.out.xfs b/tests/generic/097.out.xfs
-> similarity index 100%
-> rename from 097.out.xfs
-> rename to tests/generic/097.out.xfs
-> diff --git a/099 b/tests/generic/099
-> similarity index 100%
-> rename from 099
-> rename to tests/generic/099
-> diff --git a/099.out b/tests/generic/099.out
-> similarity index 100%
-> rename from 099.out
-> rename to tests/generic/099.out
-> diff --git a/100 b/tests/generic/100
-> similarity index 100%
-> rename from 100
-> rename to tests/generic/100
-> diff --git a/100.out b/tests/generic/100.out
-> similarity index 100%
-> rename from 100.out
-> rename to tests/generic/100.out
-> diff --git a/105 b/tests/generic/105
-> similarity index 100%
-> rename from 105
-> rename to tests/generic/105
-> diff --git a/105.out b/tests/generic/105.out
-> similarity index 100%
-> rename from 105.out
-> rename to tests/generic/105.out
-> diff --git a/112 b/tests/generic/112
-> similarity index 100%
-> rename from 112
-> rename to tests/generic/112
-> diff --git a/112.out b/tests/generic/112.out
-> similarity index 100%
-> rename from 112.out
-> rename to tests/generic/112.out
-> diff --git a/113 b/tests/generic/113
-> similarity index 100%
-> rename from 113
-> rename to tests/generic/113
-> diff --git a/113.out b/tests/generic/113.out
-> similarity index 100%
-> rename from 113.out
-> rename to tests/generic/113.out
-> diff --git a/117 b/tests/generic/117
-> similarity index 100%
-> rename from 117
-> rename to tests/generic/117
-> diff --git a/117.out b/tests/generic/117.out
-> similarity index 100%
-> rename from 117.out
-> rename to tests/generic/117.out
-> diff --git a/120 b/tests/generic/120
-> similarity index 100%
-> rename from 120
-> rename to tests/generic/120
-> diff --git a/120.out b/tests/generic/120.out
-> similarity index 100%
-> rename from 120.out
-> rename to tests/generic/120.out
-> diff --git a/123 b/tests/generic/123
-> similarity index 100%
-> rename from 123
-> rename to tests/generic/123
-> diff --git a/123.out b/tests/generic/123.out
-> similarity index 100%
-> rename from 123.out
-> rename to tests/generic/123.out
-> diff --git a/124 b/tests/generic/124
-> similarity index 100%
-> rename from 124
-> rename to tests/generic/124
-> diff --git a/124.out b/tests/generic/124.out
-> similarity index 100%
-> rename from 124.out
-> rename to tests/generic/124.out
-> diff --git a/125 b/tests/generic/125
-> similarity index 100%
-> rename from 125
-> rename to tests/generic/125
-> diff --git a/125.out b/tests/generic/125.out
-> similarity index 100%
-> rename from 125.out
-> rename to tests/generic/125.out
-> diff --git a/126 b/tests/generic/126
-> similarity index 100%
-> rename from 126
-> rename to tests/generic/126
-> diff --git a/126.out b/tests/generic/126.out
-> similarity index 100%
-> rename from 126.out
-> rename to tests/generic/126.out
-> diff --git a/127 b/tests/generic/127
-> similarity index 100%
-> rename from 127
-> rename to tests/generic/127
-> diff --git a/127.out b/tests/generic/127.out
-> similarity index 100%
-> rename from 127.out
-> rename to tests/generic/127.out
-> diff --git a/128 b/tests/generic/128
-> similarity index 100%
-> rename from 128
-> rename to tests/generic/128
-> diff --git a/128.out b/tests/generic/128.out
-> similarity index 100%
-> rename from 128.out
-> rename to tests/generic/128.out
-> diff --git a/129 b/tests/generic/129
-> similarity index 100%
-> rename from 129
-> rename to tests/generic/129
-> diff --git a/129.out b/tests/generic/129.out
-> similarity index 100%
-> rename from 129.out
-> rename to tests/generic/129.out
-> diff --git a/130 b/tests/generic/130
-> similarity index 100%
-> rename from 130
-> rename to tests/generic/130
-> diff --git a/130.out b/tests/generic/130.out
-> similarity index 100%
-> rename from 130.out
-> rename to tests/generic/130.out
-> diff --git a/131 b/tests/generic/131
-> similarity index 100%
-> rename from 131
-> rename to tests/generic/131
-> diff --git a/131.out b/tests/generic/131.out
-> similarity index 100%
-> rename from 131.out
-> rename to tests/generic/131.out
-> diff --git a/132 b/tests/generic/132
-> similarity index 100%
-> rename from 132
-> rename to tests/generic/132
-> diff --git a/132.out b/tests/generic/132.out
-> similarity index 100%
-> rename from 132.out
-> rename to tests/generic/132.out
-> diff --git a/133 b/tests/generic/133
-> similarity index 100%
-> rename from 133
-> rename to tests/generic/133
-> diff --git a/133.out b/tests/generic/133.out
-> similarity index 100%
-> rename from 133.out
-> rename to tests/generic/133.out
-> diff --git a/135 b/tests/generic/135
-> similarity index 100%
-> rename from 135
-> rename to tests/generic/135
-> diff --git a/135.out b/tests/generic/135.out
-> similarity index 100%
-> rename from 135.out
-> rename to tests/generic/135.out
-> diff --git a/141 b/tests/generic/141
-> similarity index 100%
-> rename from 141
-> rename to tests/generic/141
-> diff --git a/141.out b/tests/generic/141.out
-> similarity index 100%
-> rename from 141.out
-> rename to tests/generic/141.out
-> diff --git a/169 b/tests/generic/169
-> similarity index 100%
-> rename from 169
-> rename to tests/generic/169
-> diff --git a/169.out b/tests/generic/169.out
-> similarity index 100%
-> rename from 169.out
-> rename to tests/generic/169.out
-> diff --git a/184 b/tests/generic/184
-> similarity index 100%
-> rename from 184
-> rename to tests/generic/184
-> diff --git a/184.out b/tests/generic/184.out
-> similarity index 100%
-> rename from 184.out
-> rename to tests/generic/184.out
-> diff --git a/192 b/tests/generic/192
-> similarity index 100%
-> rename from 192
-> rename to tests/generic/192
-> diff --git a/192.out b/tests/generic/192.out
-> similarity index 100%
-> rename from 192.out
-> rename to tests/generic/192.out
-> diff --git a/193 b/tests/generic/193
-> similarity index 100%
-> rename from 193
-> rename to tests/generic/193
-> diff --git a/193.out b/tests/generic/193.out
-> similarity index 100%
-> rename from 193.out
-> rename to tests/generic/193.out
-> diff --git a/198 b/tests/generic/198
-> similarity index 100%
-> rename from 198
-> rename to tests/generic/198
-> diff --git a/198.out b/tests/generic/198.out
-> similarity index 100%
-> rename from 198.out
-> rename to tests/generic/198.out
-> diff --git a/204 b/tests/generic/204
-> similarity index 100%
-> rename from 204
-> rename to tests/generic/204
-> diff --git a/204.out b/tests/generic/204.out
-> similarity index 100%
-> rename from 204.out
-> rename to tests/generic/204.out
-> diff --git a/207 b/tests/generic/207
-> similarity index 100%
-> rename from 207
-> rename to tests/generic/207
-> diff --git a/207.out b/tests/generic/207.out
-> similarity index 100%
-> rename from 207.out
-> rename to tests/generic/207.out
-> diff --git a/208 b/tests/generic/208
-> similarity index 100%
-> rename from 208
-> rename to tests/generic/208
-> diff --git a/208.out b/tests/generic/208.out
-> similarity index 100%
-> rename from 208.out
-> rename to tests/generic/208.out
-> diff --git a/209 b/tests/generic/209
-> similarity index 100%
-> rename from 209
-> rename to tests/generic/209
-> diff --git a/209.out b/tests/generic/209.out
-> similarity index 100%
-> rename from 209.out
-> rename to tests/generic/209.out
-> diff --git a/210 b/tests/generic/210
-> similarity index 100%
-> rename from 210
-> rename to tests/generic/210
-> diff --git a/210.out b/tests/generic/210.out
-> similarity index 100%
-> rename from 210.out
-> rename to tests/generic/210.out
-> diff --git a/211 b/tests/generic/211
-> similarity index 100%
-> rename from 211
-> rename to tests/generic/211
-> diff --git a/211.out b/tests/generic/211.out
-> similarity index 100%
-> rename from 211.out
-> rename to tests/generic/211.out
-> diff --git a/212 b/tests/generic/212
-> similarity index 100%
-> rename from 212
-> rename to tests/generic/212
-> diff --git a/212.out b/tests/generic/212.out
-> similarity index 100%
-> rename from 212.out
-> rename to tests/generic/212.out
-> diff --git a/213 b/tests/generic/213
-> similarity index 100%
-> rename from 213
-> rename to tests/generic/213
-> diff --git a/213.out b/tests/generic/213.out
-> similarity index 100%
-> rename from 213.out
-> rename to tests/generic/213.out
-> diff --git a/214 b/tests/generic/214
-> similarity index 100%
-> rename from 214
-> rename to tests/generic/214
-> diff --git a/214.out b/tests/generic/214.out
-> similarity index 100%
-> rename from 214.out
-> rename to tests/generic/214.out
-> diff --git a/215 b/tests/generic/215
-> similarity index 100%
-> rename from 215
-> rename to tests/generic/215
-> diff --git a/215.out b/tests/generic/215.out
-> similarity index 100%
-> rename from 215.out
-> rename to tests/generic/215.out
-> diff --git a/219 b/tests/generic/219
-> similarity index 100%
-> rename from 219
-> rename to tests/generic/219
-> diff --git a/219.out b/tests/generic/219.out
-> similarity index 100%
-> rename from 219.out
-> rename to tests/generic/219.out
-> diff --git a/221 b/tests/generic/221
-> similarity index 100%
-> rename from 221
-> rename to tests/generic/221
-> diff --git a/221.out b/tests/generic/221.out
-> similarity index 100%
-> rename from 221.out
-> rename to tests/generic/221.out
-> diff --git a/223 b/tests/generic/223
-> similarity index 100%
-> rename from 223
-> rename to tests/generic/223
-> diff --git a/223.out b/tests/generic/223.out
-> similarity index 100%
-> rename from 223.out
-> rename to tests/generic/223.out
-> diff --git a/224 b/tests/generic/224
-> similarity index 100%
-> rename from 224
-> rename to tests/generic/224
-> diff --git a/224.out b/tests/generic/224.out
-> similarity index 100%
-> rename from 224.out
-> rename to tests/generic/224.out
-> diff --git a/225 b/tests/generic/225
-> similarity index 100%
-> rename from 225
-> rename to tests/generic/225
-> diff --git a/225.out b/tests/generic/225.out
-> similarity index 100%
-> rename from 225.out
-> rename to tests/generic/225.out
-> diff --git a/226 b/tests/generic/226
-> similarity index 100%
-> rename from 226
-> rename to tests/generic/226
-> diff --git a/226.out b/tests/generic/226.out
-> similarity index 100%
-> rename from 226.out
-> rename to tests/generic/226.out
-> diff --git a/228 b/tests/generic/228
-> similarity index 100%
-> rename from 228
-> rename to tests/generic/228
-> diff --git a/228.out b/tests/generic/228.out
-> similarity index 100%
-> rename from 228.out
-> rename to tests/generic/228.out
-> diff --git a/230 b/tests/generic/230
-> similarity index 100%
-> rename from 230
-> rename to tests/generic/230
-> diff --git a/230.out b/tests/generic/230.out
-> similarity index 100%
-> rename from 230.out
-> rename to tests/generic/230.out
-> diff --git a/231 b/tests/generic/231
-> similarity index 100%
-> rename from 231
-> rename to tests/generic/231
-> diff --git a/231.out b/tests/generic/231.out
-> similarity index 100%
-> rename from 231.out
-> rename to tests/generic/231.out
-> diff --git a/232 b/tests/generic/232
-> similarity index 100%
-> rename from 232
-> rename to tests/generic/232
-> diff --git a/232.out b/tests/generic/232.out
-> similarity index 100%
-> rename from 232.out
-> rename to tests/generic/232.out
-> diff --git a/233 b/tests/generic/233
-> similarity index 100%
-> rename from 233
-> rename to tests/generic/233
-> diff --git a/233.out b/tests/generic/233.out
-> similarity index 100%
-> rename from 233.out
-> rename to tests/generic/233.out
-> diff --git a/234 b/tests/generic/234
-> similarity index 100%
-> rename from 234
-> rename to tests/generic/234
-> diff --git a/234.out b/tests/generic/234.out
-> similarity index 100%
-> rename from 234.out
-> rename to tests/generic/234.out
-> diff --git a/235 b/tests/generic/235
-> similarity index 100%
-> rename from 235
-> rename to tests/generic/235
-> diff --git a/235.out b/tests/generic/235.out
-> similarity index 100%
-> rename from 235.out
-> rename to tests/generic/235.out
-> diff --git a/236 b/tests/generic/236
-> similarity index 100%
-> rename from 236
-> rename to tests/generic/236
-> diff --git a/236.out b/tests/generic/236.out
-> similarity index 100%
-> rename from 236.out
-> rename to tests/generic/236.out
-> diff --git a/237 b/tests/generic/237
-> similarity index 100%
-> rename from 237
-> rename to tests/generic/237
-> diff --git a/237.out b/tests/generic/237.out
-> similarity index 100%
-> rename from 237.out
-> rename to tests/generic/237.out
-> diff --git a/239 b/tests/generic/239
-> similarity index 100%
-> rename from 239
-> rename to tests/generic/239
-> diff --git a/239.out b/tests/generic/239.out
-> similarity index 100%
-> rename from 239.out
-> rename to tests/generic/239.out
-> diff --git a/240 b/tests/generic/240
-> similarity index 100%
-> rename from 240
-> rename to tests/generic/240
-> diff --git a/240.out b/tests/generic/240.out
-> similarity index 100%
-> rename from 240.out
-> rename to tests/generic/240.out
-> diff --git a/241 b/tests/generic/241
-> similarity index 100%
-> rename from 241
-> rename to tests/generic/241
-> diff --git a/241.out b/tests/generic/241.out
-> similarity index 100%
-> rename from 241.out
-> rename to tests/generic/241.out
-> diff --git a/245 b/tests/generic/245
-> similarity index 100%
-> rename from 245
-> rename to tests/generic/245
-> diff --git a/245.out b/tests/generic/245.out
-> similarity index 100%
-> rename from 245.out
-> rename to tests/generic/245.out
-> diff --git a/246 b/tests/generic/246
-> similarity index 100%
-> rename from 246
-> rename to tests/generic/246
-> diff --git a/246.out b/tests/generic/246.out
-> similarity index 100%
-> rename from 246.out
-> rename to tests/generic/246.out
-> diff --git a/247 b/tests/generic/247
-> similarity index 100%
-> rename from 247
-> rename to tests/generic/247
-> diff --git a/247.out b/tests/generic/247.out
-> similarity index 100%
-> rename from 247.out
-> rename to tests/generic/247.out
-> diff --git a/248 b/tests/generic/248
-> similarity index 100%
-> rename from 248
-> rename to tests/generic/248
-> diff --git a/248.out b/tests/generic/248.out
-> similarity index 100%
-> rename from 248.out
-> rename to tests/generic/248.out
-> diff --git a/249 b/tests/generic/249
-> similarity index 100%
-> rename from 249
-> rename to tests/generic/249
-> diff --git a/249.out b/tests/generic/249.out
-> similarity index 100%
-> rename from 249.out
-> rename to tests/generic/249.out
-> diff --git a/251 b/tests/generic/251
-> similarity index 100%
-> rename from 251
-> rename to tests/generic/251
-> diff --git a/251.out b/tests/generic/251.out
-> similarity index 100%
-> rename from 251.out
-> rename to tests/generic/251.out
-> diff --git a/255 b/tests/generic/255
-> similarity index 100%
-> rename from 255
-> rename to tests/generic/255
-> diff --git a/255.out b/tests/generic/255.out
-> similarity index 100%
-> rename from 255.out
-> rename to tests/generic/255.out
-> diff --git a/256 b/tests/generic/256
-> similarity index 100%
-> rename from 256
-> rename to tests/generic/256
-> diff --git a/256.out b/tests/generic/256.out
-> similarity index 100%
-> rename from 256.out
-> rename to tests/generic/256.out
-> diff --git a/257 b/tests/generic/257
-> similarity index 100%
-> rename from 257
-> rename to tests/generic/257
-> diff --git a/257.out b/tests/generic/257.out
-> similarity index 100%
-> rename from 257.out
-> rename to tests/generic/257.out
-> diff --git a/258 b/tests/generic/258
-> similarity index 100%
-> rename from 258
-> rename to tests/generic/258
-> diff --git a/258.out b/tests/generic/258.out
-> similarity index 100%
-> rename from 258.out
-> rename to tests/generic/258.out
-> diff --git a/260 b/tests/generic/260
-> similarity index 100%
-> rename from 260
-> rename to tests/generic/260
-> diff --git a/260.out b/tests/generic/260.out
-> similarity index 100%
-> rename from 260.out
-> rename to tests/generic/260.out
-> diff --git a/263 b/tests/generic/263
-> similarity index 100%
-> rename from 263
-> rename to tests/generic/263
-> diff --git a/263.out b/tests/generic/263.out
-> similarity index 100%
-> rename from 263.out
-> rename to tests/generic/263.out
-> diff --git a/269 b/tests/generic/269
-> similarity index 100%
-> rename from 269
-> rename to tests/generic/269
-> diff --git a/269.out b/tests/generic/269.out
-> similarity index 100%
-> rename from 269.out
-> rename to tests/generic/269.out
-> diff --git a/270 b/tests/generic/270
-> similarity index 100%
-> rename from 270
-> rename to tests/generic/270
-> diff --git a/270.out b/tests/generic/270.out
-> similarity index 100%
-> rename from 270.out
-> rename to tests/generic/270.out
-> diff --git a/273 b/tests/generic/273
-> similarity index 100%
-> rename from 273
-> rename to tests/generic/273
-> diff --git a/273.out b/tests/generic/273.out
-> similarity index 100%
-> rename from 273.out
-> rename to tests/generic/273.out
-> diff --git a/274 b/tests/generic/274
-> similarity index 100%
-> rename from 274
-> rename to tests/generic/274
-> diff --git a/274.out b/tests/generic/274.out
-> similarity index 100%
-> rename from 274.out
-> rename to tests/generic/274.out
-> diff --git a/275 b/tests/generic/275
-> similarity index 100%
-> rename from 275
-> rename to tests/generic/275
-> diff --git a/275.out b/tests/generic/275.out
-> similarity index 100%
-> rename from 275.out
-> rename to tests/generic/275.out
-> diff --git a/277 b/tests/generic/277
-> similarity index 100%
-> rename from 277
-> rename to tests/generic/277
-> diff --git a/277.out b/tests/generic/277.out
-> similarity index 100%
-> rename from 277.out
-> rename to tests/generic/277.out
-> diff --git a/280 b/tests/generic/280
-> similarity index 100%
-> rename from 280
-> rename to tests/generic/280
-> diff --git a/280.out b/tests/generic/280.out
-> similarity index 100%
-> rename from 280.out
-> rename to tests/generic/280.out
-> diff --git a/285 b/tests/generic/285
-> similarity index 100%
-> rename from 285
-> rename to tests/generic/285
-> diff --git a/285.out b/tests/generic/285.out
-> similarity index 100%
-> rename from 285.out
-> rename to tests/generic/285.out
-> diff --git a/286 b/tests/generic/286
-> similarity index 100%
-> rename from 286
-> rename to tests/generic/286
-> diff --git a/286.out b/tests/generic/286.out
-> similarity index 100%
-> rename from 286.out
-> rename to tests/generic/286.out
-> diff --git a/288 b/tests/generic/288
-> similarity index 100%
-> rename from 288
-> rename to tests/generic/288
-> diff --git a/288.out b/tests/generic/288.out
-> similarity index 100%
-> rename from 288.out
-> rename to tests/generic/288.out
-> diff --git a/294 b/tests/generic/294
-> similarity index 100%
-> rename from 294
-> rename to tests/generic/294
-> diff --git a/294.out b/tests/generic/294.out
-> similarity index 100%
-> rename from 294.out
-> rename to tests/generic/294.out
-> diff --git a/299 b/tests/generic/299
-> similarity index 100%
-> rename from 299
-> rename to tests/generic/299
-> diff --git a/299.out b/tests/generic/299.out
-> similarity index 100%
-> rename from 299.out
-> rename to tests/generic/299.out
-> diff --git a/300 b/tests/generic/300
-> similarity index 100%
-> rename from 300
-> rename to tests/generic/300
-> diff --git a/300.out b/tests/generic/300.out
-> similarity index 100%
-> rename from 300.out
-> rename to tests/generic/300.out
-> diff --git a/tests/generic/group b/tests/generic/group
-> index 4e01f0c..7aac14e 100644
-> --- a/tests/generic/group
-> +++ b/tests/generic/group
-> @@ -3,3 +3,108 @@
+> @@ -328,3 +144,4 @@ stress
+>  304 aio dangerous ioctl rw stress
+>  305 aio dangerous enospc rw stress
+>  313 auto quick
+> +
+> diff --git a/003 b/tests/xfs/003
+> similarity index 100%
+> rename from 003
+> rename to tests/xfs/003
+> diff --git a/003.out b/tests/xfs/003.out
+> similarity index 100%
+> rename from 003.out
+> rename to tests/xfs/003.out
+> diff --git a/004 b/tests/xfs/004
+> similarity index 100%
+> rename from 004
+> rename to tests/xfs/004
+> diff --git a/004.out b/tests/xfs/004.out
+> similarity index 100%
+> rename from 004.out
+> rename to tests/xfs/004.out
+> diff --git a/008 b/tests/xfs/008
+> similarity index 100%
+> rename from 008
+> rename to tests/xfs/008
+> diff --git a/008.out b/tests/xfs/008.out
+> similarity index 100%
+> rename from 008.out
+> rename to tests/xfs/008.out
+> diff --git a/009 b/tests/xfs/009
+> similarity index 100%
+> rename from 009
+> rename to tests/xfs/009
+> diff --git a/009.out b/tests/xfs/009.out
+> similarity index 100%
+> rename from 009.out
+> rename to tests/xfs/009.out
+> diff --git a/012 b/tests/xfs/012
+> similarity index 100%
+> rename from 012
+> rename to tests/xfs/012
+> diff --git a/012.out b/tests/xfs/012.out
+> similarity index 100%
+> rename from 012.out
+> rename to tests/xfs/012.out
+> diff --git a/016 b/tests/xfs/016
+> similarity index 100%
+> rename from 016
+> rename to tests/xfs/016
+> diff --git a/016.out b/tests/xfs/016.out
+> similarity index 100%
+> rename from 016.out
+> rename to tests/xfs/016.out
+> diff --git a/017 b/tests/xfs/017
+> similarity index 100%
+> rename from 017
+> rename to tests/xfs/017
+> diff --git a/017.out b/tests/xfs/017.out
+> similarity index 100%
+> rename from 017.out
+> rename to tests/xfs/017.out
+> diff --git a/018 b/tests/xfs/018
+> similarity index 100%
+> rename from 018
+> rename to tests/xfs/018
+> diff --git a/018.op.irix b/tests/xfs/018.op.irix
+> similarity index 100%
+> rename from 018.op.irix
+> rename to tests/xfs/018.op.irix
+> diff --git a/018.op.linux b/tests/xfs/018.op.linux
+> similarity index 100%
+> rename from 018.op.linux
+> rename to tests/xfs/018.op.linux
+> diff --git a/018.out b/tests/xfs/018.out
+> similarity index 100%
+> rename from 018.out
+> rename to tests/xfs/018.out
+> diff --git a/018.trans_buf b/tests/xfs/018.trans_buf
+> similarity index 100%
+> rename from 018.trans_buf
+> rename to tests/xfs/018.trans_buf
+> diff --git a/018.trans_inode b/tests/xfs/018.trans_inode
+> similarity index 100%
+> rename from 018.trans_inode
+> rename to tests/xfs/018.trans_inode
+> diff --git a/019 b/tests/xfs/019
+> similarity index 100%
+> rename from 019
+> rename to tests/xfs/019
+> diff --git a/019.out b/tests/xfs/019.out
+> similarity index 100%
+> rename from 019.out
+> rename to tests/xfs/019.out
+> diff --git a/021 b/tests/xfs/021
+> similarity index 100%
+> rename from 021
+> rename to tests/xfs/021
+> diff --git a/021.out b/tests/xfs/021.out
+> similarity index 100%
+> rename from 021.out
+> rename to tests/xfs/021.out
+> diff --git a/022 b/tests/xfs/022
+> similarity index 100%
+> rename from 022
+> rename to tests/xfs/022
+> diff --git a/022.out.irix b/tests/xfs/022.out.irix
+> similarity index 100%
+> rename from 022.out.irix
+> rename to tests/xfs/022.out.irix
+> diff --git a/022.out.linux b/tests/xfs/022.out.linux
+> similarity index 100%
+> rename from 022.out.linux
+> rename to tests/xfs/022.out.linux
+> diff --git a/023 b/tests/xfs/023
+> similarity index 100%
+> rename from 023
+> rename to tests/xfs/023
+> diff --git a/023.out.irix b/tests/xfs/023.out.irix
+> similarity index 100%
+> rename from 023.out.irix
+> rename to tests/xfs/023.out.irix
+> diff --git a/023.out.linux b/tests/xfs/023.out.linux
+> similarity index 100%
+> rename from 023.out.linux
+> rename to tests/xfs/023.out.linux
+> diff --git a/024 b/tests/xfs/024
+> similarity index 100%
+> rename from 024
+> rename to tests/xfs/024
+> diff --git a/024.out b/tests/xfs/024.out
+> similarity index 100%
+> rename from 024.out
+> rename to tests/xfs/024.out
+> diff --git a/025 b/tests/xfs/025
+> similarity index 100%
+> rename from 025
+> rename to tests/xfs/025
+> diff --git a/025.out b/tests/xfs/025.out
+> similarity index 100%
+> rename from 025.out
+> rename to tests/xfs/025.out
+> diff --git a/026 b/tests/xfs/026
+> similarity index 100%
+> rename from 026
+> rename to tests/xfs/026
+> diff --git a/026.out b/tests/xfs/026.out
+> similarity index 100%
+> rename from 026.out
+> rename to tests/xfs/026.out
+> diff --git a/027 b/tests/xfs/027
+> similarity index 100%
+> rename from 027
+> rename to tests/xfs/027
+> diff --git a/027.out b/tests/xfs/027.out
+> similarity index 100%
+> rename from 027.out
+> rename to tests/xfs/027.out
+> diff --git a/028 b/tests/xfs/028
+> similarity index 100%
+> rename from 028
+> rename to tests/xfs/028
+> diff --git a/028.out b/tests/xfs/028.out
+> similarity index 100%
+> rename from 028.out
+> rename to tests/xfs/028.out
+> diff --git a/029 b/tests/xfs/029
+> similarity index 100%
+> rename from 029
+> rename to tests/xfs/029
+> diff --git a/029.out b/tests/xfs/029.out
+> similarity index 100%
+> rename from 029.out
+> rename to tests/xfs/029.out
+> diff --git a/030 b/tests/xfs/030
+> similarity index 100%
+> rename from 030
+> rename to tests/xfs/030
+> diff --git a/030.out.irix b/tests/xfs/030.out.irix
+> similarity index 100%
+> rename from 030.out.irix
+> rename to tests/xfs/030.out.irix
+> diff --git a/030.out.linux b/tests/xfs/030.out.linux
+> similarity index 100%
+> rename from 030.out.linux
+> rename to tests/xfs/030.out.linux
+> diff --git a/031 b/tests/xfs/031
+> similarity index 100%
+> rename from 031
+> rename to tests/xfs/031
+> diff --git a/031.out.irix b/tests/xfs/031.out.irix
+> similarity index 100%
+> rename from 031.out.irix
+> rename to tests/xfs/031.out.irix
+> diff --git a/031.out.linux b/tests/xfs/031.out.linux
+> similarity index 100%
+> rename from 031.out.linux
+> rename to tests/xfs/031.out.linux
+> diff --git a/032 b/tests/xfs/032
+> similarity index 100%
+> rename from 032
+> rename to tests/xfs/032
+> diff --git a/032.out b/tests/xfs/032.out
+> similarity index 100%
+> rename from 032.out
+> rename to tests/xfs/032.out
+> diff --git a/033 b/tests/xfs/033
+> similarity index 100%
+> rename from 033
+> rename to tests/xfs/033
+> diff --git a/033.out.irix b/tests/xfs/033.out.irix
+> similarity index 100%
+> rename from 033.out.irix
+> rename to tests/xfs/033.out.irix
+> diff --git a/033.out.linux b/tests/xfs/033.out.linux
+> similarity index 100%
+> rename from 033.out.linux
+> rename to tests/xfs/033.out.linux
+> diff --git a/034 b/tests/xfs/034
+> similarity index 100%
+> rename from 034
+> rename to tests/xfs/034
+> diff --git a/034.out b/tests/xfs/034.out
+> similarity index 100%
+> rename from 034.out
+> rename to tests/xfs/034.out
+> diff --git a/035 b/tests/xfs/035
+> similarity index 100%
+> rename from 035
+> rename to tests/xfs/035
+> diff --git a/035.out.irix b/tests/xfs/035.out.irix
+> similarity index 100%
+> rename from 035.out.irix
+> rename to tests/xfs/035.out.irix
+> diff --git a/035.out.linux b/tests/xfs/035.out.linux
+> similarity index 100%
+> rename from 035.out.linux
+> rename to tests/xfs/035.out.linux
+> diff --git a/036 b/tests/xfs/036
+> similarity index 100%
+> rename from 036
+> rename to tests/xfs/036
+> diff --git a/036.out.irix b/tests/xfs/036.out.irix
+> similarity index 100%
+> rename from 036.out.irix
+> rename to tests/xfs/036.out.irix
+> diff --git a/036.out.linux b/tests/xfs/036.out.linux
+> similarity index 100%
+> rename from 036.out.linux
+> rename to tests/xfs/036.out.linux
+> diff --git a/037 b/tests/xfs/037
+> similarity index 100%
+> rename from 037
+> rename to tests/xfs/037
+> diff --git a/037.out b/tests/xfs/037.out
+> similarity index 100%
+> rename from 037.out
+> rename to tests/xfs/037.out
+> diff --git a/038 b/tests/xfs/038
+> similarity index 100%
+> rename from 038
+> rename to tests/xfs/038
+> diff --git a/038.out b/tests/xfs/038.out
+> similarity index 100%
+> rename from 038.out
+> rename to tests/xfs/038.out
+> diff --git a/039 b/tests/xfs/039
+> similarity index 100%
+> rename from 039
+> rename to tests/xfs/039
+> diff --git a/039.out.irix b/tests/xfs/039.out.irix
+> similarity index 100%
+> rename from 039.out.irix
+> rename to tests/xfs/039.out.irix
+> diff --git a/039.out.linux b/tests/xfs/039.out.linux
+> similarity index 100%
+> rename from 039.out.linux
+> rename to tests/xfs/039.out.linux
+> diff --git a/041 b/tests/xfs/041
+> similarity index 100%
+> rename from 041
+> rename to tests/xfs/041
+> diff --git a/041.out b/tests/xfs/041.out
+> similarity index 100%
+> rename from 041.out
+> rename to tests/xfs/041.out
+> diff --git a/042 b/tests/xfs/042
+> similarity index 100%
+> rename from 042
+> rename to tests/xfs/042
+> diff --git a/042.out b/tests/xfs/042.out
+> similarity index 100%
+> rename from 042.out
+> rename to tests/xfs/042.out
+> diff --git a/043 b/tests/xfs/043
+> similarity index 100%
+> rename from 043
+> rename to tests/xfs/043
+> diff --git a/043.out.irix b/tests/xfs/043.out.irix
+> similarity index 100%
+> rename from 043.out.irix
+> rename to tests/xfs/043.out.irix
+> diff --git a/043.out.linux b/tests/xfs/043.out.linux
+> similarity index 100%
+> rename from 043.out.linux
+> rename to tests/xfs/043.out.linux
+> diff --git a/044 b/tests/xfs/044
+> similarity index 100%
+> rename from 044
+> rename to tests/xfs/044
+> diff --git a/044.out b/tests/xfs/044.out
+> similarity index 100%
+> rename from 044.out
+> rename to tests/xfs/044.out
+> diff --git a/045 b/tests/xfs/045
+> similarity index 100%
+> rename from 045
+> rename to tests/xfs/045
+> diff --git a/045.out b/tests/xfs/045.out
+> similarity index 100%
+> rename from 045.out
+> rename to tests/xfs/045.out
+> diff --git a/046 b/tests/xfs/046
+> similarity index 100%
+> rename from 046
+> rename to tests/xfs/046
+> diff --git a/046.out b/tests/xfs/046.out
+> similarity index 100%
+> rename from 046.out
+> rename to tests/xfs/046.out
+> diff --git a/047 b/tests/xfs/047
+> similarity index 100%
+> rename from 047
+> rename to tests/xfs/047
+> diff --git a/047.out b/tests/xfs/047.out
+> similarity index 100%
+> rename from 047.out
+> rename to tests/xfs/047.out
+> diff --git a/048 b/tests/xfs/048
+> similarity index 100%
+> rename from 048
+> rename to tests/xfs/048
+> diff --git a/048.out b/tests/xfs/048.out
+> similarity index 100%
+> rename from 048.out
+> rename to tests/xfs/048.out
+> diff --git a/049 b/tests/xfs/049
+> similarity index 100%
+> rename from 049
+> rename to tests/xfs/049
+> diff --git a/049.out b/tests/xfs/049.out
+> similarity index 100%
+> rename from 049.out
+> rename to tests/xfs/049.out
+> diff --git a/050 b/tests/xfs/050
+> similarity index 100%
+> rename from 050
+> rename to tests/xfs/050
+> diff --git a/050.out b/tests/xfs/050.out
+> similarity index 100%
+> rename from 050.out
+> rename to tests/xfs/050.out
+> diff --git a/052 b/tests/xfs/052
+> similarity index 100%
+> rename from 052
+> rename to tests/xfs/052
+> diff --git a/052.out b/tests/xfs/052.out
+> similarity index 100%
+> rename from 052.out
+> rename to tests/xfs/052.out
+> diff --git a/054 b/tests/xfs/054
+> similarity index 100%
+> rename from 054
+> rename to tests/xfs/054
+> diff --git a/054.out b/tests/xfs/054.out
+> similarity index 100%
+> rename from 054.out
+> rename to tests/xfs/054.out
+> diff --git a/055 b/tests/xfs/055
+> similarity index 100%
+> rename from 055
+> rename to tests/xfs/055
+> diff --git a/055.out.irix b/tests/xfs/055.out.irix
+> similarity index 100%
+> rename from 055.out.irix
+> rename to tests/xfs/055.out.irix
+> diff --git a/055.out.linux b/tests/xfs/055.out.linux
+> similarity index 100%
+> rename from 055.out.linux
+> rename to tests/xfs/055.out.linux
+> diff --git a/056 b/tests/xfs/056
+> similarity index 100%
+> rename from 056
+> rename to tests/xfs/056
+> diff --git a/056.out b/tests/xfs/056.out
+> similarity index 100%
+> rename from 056.out
+> rename to tests/xfs/056.out
+> diff --git a/057 b/tests/xfs/057
+> similarity index 100%
+> rename from 057
+> rename to tests/xfs/057
+> diff --git a/057.out b/tests/xfs/057.out
+> similarity index 100%
+> rename from 057.out
+> rename to tests/xfs/057.out
+> diff --git a/058 b/tests/xfs/058
+> similarity index 100%
+> rename from 058
+> rename to tests/xfs/058
+> diff --git a/058.out b/tests/xfs/058.out
+> similarity index 100%
+> rename from 058.out
+> rename to tests/xfs/058.out
+> diff --git a/059 b/tests/xfs/059
+> similarity index 100%
+> rename from 059
+> rename to tests/xfs/059
+> diff --git a/059.out b/tests/xfs/059.out
+> similarity index 100%
+> rename from 059.out
+> rename to tests/xfs/059.out
+> diff --git a/060 b/tests/xfs/060
+> similarity index 100%
+> rename from 060
+> rename to tests/xfs/060
+> diff --git a/060.out b/tests/xfs/060.out
+> similarity index 100%
+> rename from 060.out
+> rename to tests/xfs/060.out
+> diff --git a/061 b/tests/xfs/061
+> similarity index 100%
+> rename from 061
+> rename to tests/xfs/061
+> diff --git a/061.out b/tests/xfs/061.out
+> similarity index 100%
+> rename from 061.out
+> rename to tests/xfs/061.out
+> diff --git a/063 b/tests/xfs/063
+> similarity index 100%
+> rename from 063
+> rename to tests/xfs/063
+> diff --git a/063.out b/tests/xfs/063.out
+> similarity index 100%
+> rename from 063.out
+> rename to tests/xfs/063.out
+> diff --git a/064 b/tests/xfs/064
+> similarity index 100%
+> rename from 064
+> rename to tests/xfs/064
+> diff --git a/064.out b/tests/xfs/064.out
+> similarity index 100%
+> rename from 064.out
+> rename to tests/xfs/064.out
+> diff --git a/065 b/tests/xfs/065
+> similarity index 100%
+> rename from 065
+> rename to tests/xfs/065
+> diff --git a/065.out b/tests/xfs/065.out
+> similarity index 100%
+> rename from 065.out
+> rename to tests/xfs/065.out
+> diff --git a/066 b/tests/xfs/066
+> similarity index 100%
+> rename from 066
+> rename to tests/xfs/066
+> diff --git a/066.out b/tests/xfs/066.out
+> similarity index 100%
+> rename from 066.out
+> rename to tests/xfs/066.out
+> diff --git a/067 b/tests/xfs/067
+> similarity index 100%
+> rename from 067
+> rename to tests/xfs/067
+> diff --git a/067.out b/tests/xfs/067.out
+> similarity index 100%
+> rename from 067.out
+> rename to tests/xfs/067.out
+> diff --git a/071 b/tests/xfs/071
+> similarity index 100%
+> rename from 071
+> rename to tests/xfs/071
+> diff --git a/071.out b/tests/xfs/071.out
+> similarity index 100%
+> rename from 071.out
+> rename to tests/xfs/071.out
+> diff --git a/071.out.32 b/tests/xfs/071.out.32
+> similarity index 100%
+> rename from 071.out.32
+> rename to tests/xfs/071.out.32
+> diff --git a/071.out.64 b/tests/xfs/071.out.64
+> similarity index 100%
+> rename from 071.out.64
+> rename to tests/xfs/071.out.64
+> diff --git a/072 b/tests/xfs/072
+> similarity index 100%
+> rename from 072
+> rename to tests/xfs/072
+> diff --git a/072.out b/tests/xfs/072.out
+> similarity index 100%
+> rename from 072.out
+> rename to tests/xfs/072.out
+> diff --git a/073 b/tests/xfs/073
+> similarity index 100%
+> rename from 073
+> rename to tests/xfs/073
+> diff --git a/073.out b/tests/xfs/073.out
+> similarity index 100%
+> rename from 073.out
+> rename to tests/xfs/073.out
+> diff --git a/078 b/tests/xfs/078
+> similarity index 100%
+> rename from 078
+> rename to tests/xfs/078
+> diff --git a/078.out b/tests/xfs/078.out
+> similarity index 100%
+> rename from 078.out
+> rename to tests/xfs/078.out
+> diff --git a/080 b/tests/xfs/080
+> similarity index 100%
+> rename from 080
+> rename to tests/xfs/080
+> diff --git a/080.out b/tests/xfs/080.out
+> similarity index 100%
+> rename from 080.out
+> rename to tests/xfs/080.out
+> diff --git a/081 b/tests/xfs/081
+> similarity index 100%
+> rename from 081
+> rename to tests/xfs/081
+> diff --git a/081.out b/tests/xfs/081.out
+> similarity index 100%
+> rename from 081.out
+> rename to tests/xfs/081.out
+> diff --git a/081.ugquota.trans_inode b/tests/xfs/081.ugquota.trans_inode
+> similarity index 100%
+> rename from 081.ugquota.trans_inode
+> rename to tests/xfs/081.ugquota.trans_inode
+> diff --git a/082 b/tests/xfs/082
+> similarity index 100%
+> rename from 082
+> rename to tests/xfs/082
+> diff --git a/082.op.irix b/tests/xfs/082.op.irix
+> similarity index 100%
+> rename from 082.op.irix
+> rename to tests/xfs/082.op.irix
+> diff --git a/082.op.linux b/tests/xfs/082.op.linux
+> similarity index 100%
+> rename from 082.op.linux
+> rename to tests/xfs/082.op.linux
+> diff --git a/082.out b/tests/xfs/082.out
+> similarity index 100%
+> rename from 082.out
+> rename to tests/xfs/082.out
+> diff --git a/082.trans_buf b/tests/xfs/082.trans_buf
+> similarity index 100%
+> rename from 082.trans_buf
+> rename to tests/xfs/082.trans_buf
+> diff --git a/082.trans_inode b/tests/xfs/082.trans_inode
+> similarity index 100%
+> rename from 082.trans_inode
+> rename to tests/xfs/082.trans_inode
+> diff --git a/084 b/tests/xfs/084
+> similarity index 100%
+> rename from 084
+> rename to tests/xfs/084
+> diff --git a/084.out b/tests/xfs/084.out
+> similarity index 100%
+> rename from 084.out
+> rename to tests/xfs/084.out
+> diff --git a/085 b/tests/xfs/085
+> similarity index 100%
+> rename from 085
+> rename to tests/xfs/085
+> diff --git a/085.out b/tests/xfs/085.out
+> similarity index 100%
+> rename from 085.out
+> rename to tests/xfs/085.out
+> diff --git a/086 b/tests/xfs/086
+> similarity index 100%
+> rename from 086
+> rename to tests/xfs/086
+> diff --git a/086.out b/tests/xfs/086.out
+> similarity index 100%
+> rename from 086.out
+> rename to tests/xfs/086.out
+> diff --git a/087 b/tests/xfs/087
+> similarity index 100%
+> rename from 087
+> rename to tests/xfs/087
+> diff --git a/087.out b/tests/xfs/087.out
+> similarity index 100%
+> rename from 087.out
+> rename to tests/xfs/087.out
+> diff --git a/090 b/tests/xfs/090
+> similarity index 100%
+> rename from 090
+> rename to tests/xfs/090
+> diff --git a/090.out b/tests/xfs/090.out
+> similarity index 100%
+> rename from 090.out
+> rename to tests/xfs/090.out
+> diff --git a/092 b/tests/xfs/092
+> similarity index 100%
+> rename from 092
+> rename to tests/xfs/092
+> diff --git a/092.out b/tests/xfs/092.out
+> similarity index 100%
+> rename from 092.out
+> rename to tests/xfs/092.out
+> diff --git a/094 b/tests/xfs/094
+> similarity index 100%
+> rename from 094
+> rename to tests/xfs/094
+> diff --git a/094.out b/tests/xfs/094.out
+> similarity index 100%
+> rename from 094.out
+> rename to tests/xfs/094.out
+> diff --git a/095 b/tests/xfs/095
+> similarity index 100%
+> rename from 095
+> rename to tests/xfs/095
+> diff --git a/095.out b/tests/xfs/095.out
+> similarity index 100%
+> rename from 095.out
+> rename to tests/xfs/095.out
+> diff --git a/096 b/tests/xfs/096
+> similarity index 100%
+> rename from 096
+> rename to tests/xfs/096
+> diff --git a/096.external b/tests/xfs/096.external
+> similarity index 100%
+> rename from 096.external
+> rename to tests/xfs/096.external
+> diff --git a/096.internal b/tests/xfs/096.internal
+> similarity index 100%
+> rename from 096.internal
+> rename to tests/xfs/096.internal
+> diff --git a/103 b/tests/xfs/103
+> similarity index 100%
+> rename from 103
+> rename to tests/xfs/103
+> diff --git a/103.out b/tests/xfs/103.out
+> similarity index 100%
+> rename from 103.out
+> rename to tests/xfs/103.out
+> diff --git a/104 b/tests/xfs/104
+> similarity index 100%
+> rename from 104
+> rename to tests/xfs/104
+> diff --git a/104.out b/tests/xfs/104.out
+> similarity index 100%
+> rename from 104.out
+> rename to tests/xfs/104.out
+> diff --git a/106 b/tests/xfs/106
+> similarity index 100%
+> rename from 106
+> rename to tests/xfs/106
+> diff --git a/106.out b/tests/xfs/106.out
+> similarity index 100%
+> rename from 106.out
+> rename to tests/xfs/106.out
+> diff --git a/107 b/tests/xfs/107
+> similarity index 100%
+> rename from 107
+> rename to tests/xfs/107
+> diff --git a/107.out b/tests/xfs/107.out
+> similarity index 100%
+> rename from 107.out
+> rename to tests/xfs/107.out
+> diff --git a/108 b/tests/xfs/108
+> similarity index 100%
+> rename from 108
+> rename to tests/xfs/108
+> diff --git a/108.out b/tests/xfs/108.out
+> similarity index 100%
+> rename from 108.out
+> rename to tests/xfs/108.out
+> diff --git a/109 b/tests/xfs/109
+> similarity index 100%
+> rename from 109
+> rename to tests/xfs/109
+> diff --git a/109.out b/tests/xfs/109.out
+> similarity index 100%
+> rename from 109.out
+> rename to tests/xfs/109.out
+> diff --git a/110 b/tests/xfs/110
+> similarity index 100%
+> rename from 110
+> rename to tests/xfs/110
+> diff --git a/110.out b/tests/xfs/110.out
+> similarity index 100%
+> rename from 110.out
+> rename to tests/xfs/110.out
+> diff --git a/111 b/tests/xfs/111
+> similarity index 100%
+> rename from 111
+> rename to tests/xfs/111
+> diff --git a/111.out b/tests/xfs/111.out
+> similarity index 100%
+> rename from 111.out
+> rename to tests/xfs/111.out
+> diff --git a/114 b/tests/xfs/114
+> similarity index 100%
+> rename from 114
+> rename to tests/xfs/114
+> diff --git a/114.out b/tests/xfs/114.out
+> similarity index 100%
+> rename from 114.out
+> rename to tests/xfs/114.out
+> diff --git a/115 b/tests/xfs/115
+> similarity index 100%
+> rename from 115
+> rename to tests/xfs/115
+> diff --git a/115.out b/tests/xfs/115.out
+> similarity index 100%
+> rename from 115.out
+> rename to tests/xfs/115.out
+> diff --git a/116 b/tests/xfs/116
+> similarity index 100%
+> rename from 116
+> rename to tests/xfs/116
+> diff --git a/116.out b/tests/xfs/116.out
+> similarity index 100%
+> rename from 116.out
+> rename to tests/xfs/116.out
+> diff --git a/118 b/tests/xfs/118
+> similarity index 100%
+> rename from 118
+> rename to tests/xfs/118
+> diff --git a/118.out b/tests/xfs/118.out
+> similarity index 100%
+> rename from 118.out
+> rename to tests/xfs/118.out
+> diff --git a/119 b/tests/xfs/119
+> similarity index 100%
+> rename from 119
+> rename to tests/xfs/119
+> diff --git a/119.out b/tests/xfs/119.out
+> similarity index 100%
+> rename from 119.out
+> rename to tests/xfs/119.out
+> diff --git a/121 b/tests/xfs/121
+> similarity index 100%
+> rename from 121
+> rename to tests/xfs/121
+> diff --git a/121.out b/tests/xfs/121.out
+> similarity index 100%
+> rename from 121.out
+> rename to tests/xfs/121.out
+> diff --git a/122 b/tests/xfs/122
+> similarity index 100%
+> rename from 122
+> rename to tests/xfs/122
+> diff --git a/122.out b/tests/xfs/122.out
+> similarity index 100%
+> rename from 122.out
+> rename to tests/xfs/122.out
+> diff --git a/134 b/tests/xfs/134
+> similarity index 100%
+> rename from 134
+> rename to tests/xfs/134
+> diff --git a/134.out b/tests/xfs/134.out
+> similarity index 100%
+> rename from 134.out
+> rename to tests/xfs/134.out
+> diff --git a/136 b/tests/xfs/136
+> similarity index 100%
+> rename from 136
+> rename to tests/xfs/136
+> diff --git a/136.out b/tests/xfs/136.out
+> similarity index 100%
+> rename from 136.out
+> rename to tests/xfs/136.out
+> diff --git a/137 b/tests/xfs/137
+> similarity index 100%
+> rename from 137
+> rename to tests/xfs/137
+> diff --git a/137.out b/tests/xfs/137.out
+> similarity index 100%
+> rename from 137.out
+> rename to tests/xfs/137.out
+> diff --git a/138 b/tests/xfs/138
+> similarity index 100%
+> rename from 138
+> rename to tests/xfs/138
+> diff --git a/138.out b/tests/xfs/138.out
+> similarity index 100%
+> rename from 138.out
+> rename to tests/xfs/138.out
+> diff --git a/139 b/tests/xfs/139
+> similarity index 100%
+> rename from 139
+> rename to tests/xfs/139
+> diff --git a/139.out b/tests/xfs/139.out
+> similarity index 100%
+> rename from 139.out
+> rename to tests/xfs/139.out
+> diff --git a/140 b/tests/xfs/140
+> similarity index 100%
+> rename from 140
+> rename to tests/xfs/140
+> diff --git a/140.out b/tests/xfs/140.out
+> similarity index 100%
+> rename from 140.out
+> rename to tests/xfs/140.out
+> diff --git a/142 b/tests/xfs/142
+> similarity index 100%
+> rename from 142
+> rename to tests/xfs/142
+> diff --git a/142.out b/tests/xfs/142.out
+> similarity index 100%
+> rename from 142.out
+> rename to tests/xfs/142.out
+> diff --git a/143 b/tests/xfs/143
+> similarity index 100%
+> rename from 143
+> rename to tests/xfs/143
+> diff --git a/143.out b/tests/xfs/143.out
+> similarity index 100%
+> rename from 143.out
+> rename to tests/xfs/143.out
+> diff --git a/144 b/tests/xfs/144
+> similarity index 100%
+> rename from 144
+> rename to tests/xfs/144
+> diff --git a/144.out b/tests/xfs/144.out
+> similarity index 100%
+> rename from 144.out
+> rename to tests/xfs/144.out
+> diff --git a/145 b/tests/xfs/145
+> similarity index 100%
+> rename from 145
+> rename to tests/xfs/145
+> diff --git a/145.out b/tests/xfs/145.out
+> similarity index 100%
+> rename from 145.out
+> rename to tests/xfs/145.out
+> diff --git a/146 b/tests/xfs/146
+> similarity index 100%
+> rename from 146
+> rename to tests/xfs/146
+> diff --git a/146.out.irix b/tests/xfs/146.out.irix
+> similarity index 100%
+> rename from 146.out.irix
+> rename to tests/xfs/146.out.irix
+> diff --git a/146.out.linux b/tests/xfs/146.out.linux
+> similarity index 100%
+> rename from 146.out.linux
+> rename to tests/xfs/146.out.linux
+> diff --git a/147 b/tests/xfs/147
+> similarity index 100%
+> rename from 147
+> rename to tests/xfs/147
+> diff --git a/147.out b/tests/xfs/147.out
+> similarity index 100%
+> rename from 147.out
+> rename to tests/xfs/147.out
+> diff --git a/148 b/tests/xfs/148
+> similarity index 100%
+> rename from 148
+> rename to tests/xfs/148
+> diff --git a/148.out b/tests/xfs/148.out
+> similarity index 100%
+> rename from 148.out
+> rename to tests/xfs/148.out
+> diff --git a/149 b/tests/xfs/149
+> similarity index 100%
+> rename from 149
+> rename to tests/xfs/149
+> diff --git a/149.out b/tests/xfs/149.out
+> similarity index 100%
+> rename from 149.out
+> rename to tests/xfs/149.out
+> diff --git a/150 b/tests/xfs/150
+> similarity index 100%
+> rename from 150
+> rename to tests/xfs/150
+> diff --git a/150.out b/tests/xfs/150.out
+> similarity index 100%
+> rename from 150.out
+> rename to tests/xfs/150.out
+> diff --git a/151 b/tests/xfs/151
+> similarity index 100%
+> rename from 151
+> rename to tests/xfs/151
+> diff --git a/151.out b/tests/xfs/151.out
+> similarity index 100%
+> rename from 151.out
+> rename to tests/xfs/151.out
+> diff --git a/152 b/tests/xfs/152
+> similarity index 100%
+> rename from 152
+> rename to tests/xfs/152
+> diff --git a/152.out b/tests/xfs/152.out
+> similarity index 100%
+> rename from 152.out
+> rename to tests/xfs/152.out
+> diff --git a/153 b/tests/xfs/153
+> similarity index 100%
+> rename from 153
+> rename to tests/xfs/153
+> diff --git a/153.out b/tests/xfs/153.out
+> similarity index 100%
+> rename from 153.out
+> rename to tests/xfs/153.out
+> diff --git a/154 b/tests/xfs/154
+> similarity index 100%
+> rename from 154
+> rename to tests/xfs/154
+> diff --git a/154.out b/tests/xfs/154.out
+> similarity index 100%
+> rename from 154.out
+> rename to tests/xfs/154.out
+> diff --git a/155 b/tests/xfs/155
+> similarity index 100%
+> rename from 155
+> rename to tests/xfs/155
+> diff --git a/155.out b/tests/xfs/155.out
+> similarity index 100%
+> rename from 155.out
+> rename to tests/xfs/155.out
+> diff --git a/156 b/tests/xfs/156
+> similarity index 100%
+> rename from 156
+> rename to tests/xfs/156
+> diff --git a/156.out b/tests/xfs/156.out
+> similarity index 100%
+> rename from 156.out
+> rename to tests/xfs/156.out
+> diff --git a/157 b/tests/xfs/157
+> similarity index 100%
+> rename from 157
+> rename to tests/xfs/157
+> diff --git a/157.out b/tests/xfs/157.out
+> similarity index 100%
+> rename from 157.out
+> rename to tests/xfs/157.out
+> diff --git a/158 b/tests/xfs/158
+> similarity index 100%
+> rename from 158
+> rename to tests/xfs/158
+> diff --git a/158.out b/tests/xfs/158.out
+> similarity index 100%
+> rename from 158.out
+> rename to tests/xfs/158.out
+> diff --git a/159 b/tests/xfs/159
+> similarity index 100%
+> rename from 159
+> rename to tests/xfs/159
+> diff --git a/159.out b/tests/xfs/159.out
+> similarity index 100%
+> rename from 159.out
+> rename to tests/xfs/159.out
+> diff --git a/160 b/tests/xfs/160
+> similarity index 100%
+> rename from 160
+> rename to tests/xfs/160
+> diff --git a/160.out b/tests/xfs/160.out
+> similarity index 100%
+> rename from 160.out
+> rename to tests/xfs/160.out
+> diff --git a/161 b/tests/xfs/161
+> similarity index 100%
+> rename from 161
+> rename to tests/xfs/161
+> diff --git a/161.out b/tests/xfs/161.out
+> similarity index 100%
+> rename from 161.out
+> rename to tests/xfs/161.out
+> diff --git a/162 b/tests/xfs/162
+> similarity index 100%
+> rename from 162
+> rename to tests/xfs/162
+> diff --git a/162.out b/tests/xfs/162.out
+> similarity index 100%
+> rename from 162.out
+> rename to tests/xfs/162.out
+> diff --git a/163 b/tests/xfs/163
+> similarity index 100%
+> rename from 163
+> rename to tests/xfs/163
+> diff --git a/163.out b/tests/xfs/163.out
+> similarity index 100%
+> rename from 163.out
+> rename to tests/xfs/163.out
+> diff --git a/164 b/tests/xfs/164
+> similarity index 100%
+> rename from 164
+> rename to tests/xfs/164
+> diff --git a/164.out b/tests/xfs/164.out
+> similarity index 100%
+> rename from 164.out
+> rename to tests/xfs/164.out
+> diff --git a/165 b/tests/xfs/165
+> similarity index 100%
+> rename from 165
+> rename to tests/xfs/165
+> diff --git a/165.out b/tests/xfs/165.out
+> similarity index 100%
+> rename from 165.out
+> rename to tests/xfs/165.out
+> diff --git a/166 b/tests/xfs/166
+> similarity index 100%
+> rename from 166
+> rename to tests/xfs/166
+> diff --git a/166.out b/tests/xfs/166.out
+> similarity index 100%
+> rename from 166.out
+> rename to tests/xfs/166.out
+> diff --git a/167 b/tests/xfs/167
+> similarity index 100%
+> rename from 167
+> rename to tests/xfs/167
+> diff --git a/167.out b/tests/xfs/167.out
+> similarity index 100%
+> rename from 167.out
+> rename to tests/xfs/167.out
+> diff --git a/168 b/tests/xfs/168
+> similarity index 100%
+> rename from 168
+> rename to tests/xfs/168
+> diff --git a/168.out b/tests/xfs/168.out
+> similarity index 100%
+> rename from 168.out
+> rename to tests/xfs/168.out
+> diff --git a/170 b/tests/xfs/170
+> similarity index 100%
+> rename from 170
+> rename to tests/xfs/170
+> diff --git a/170.out b/tests/xfs/170.out
+> similarity index 100%
+> rename from 170.out
+> rename to tests/xfs/170.out
+> diff --git a/171 b/tests/xfs/171
+> similarity index 100%
+> rename from 171
+> rename to tests/xfs/171
+> diff --git a/171.out b/tests/xfs/171.out
+> similarity index 100%
+> rename from 171.out
+> rename to tests/xfs/171.out
+> diff --git a/172 b/tests/xfs/172
+> similarity index 100%
+> rename from 172
+> rename to tests/xfs/172
+> diff --git a/172.out b/tests/xfs/172.out
+> similarity index 100%
+> rename from 172.out
+> rename to tests/xfs/172.out
+> diff --git a/173 b/tests/xfs/173
+> similarity index 100%
+> rename from 173
+> rename to tests/xfs/173
+> diff --git a/173.out b/tests/xfs/173.out
+> similarity index 100%
+> rename from 173.out
+> rename to tests/xfs/173.out
+> diff --git a/174 b/tests/xfs/174
+> similarity index 100%
+> rename from 174
+> rename to tests/xfs/174
+> diff --git a/174.out b/tests/xfs/174.out
+> similarity index 100%
+> rename from 174.out
+> rename to tests/xfs/174.out
+> diff --git a/175 b/tests/xfs/175
+> similarity index 100%
+> rename from 175
+> rename to tests/xfs/175
+> diff --git a/175.out b/tests/xfs/175.out
+> similarity index 100%
+> rename from 175.out
+> rename to tests/xfs/175.out
+> diff --git a/176 b/tests/xfs/176
+> similarity index 100%
+> rename from 176
+> rename to tests/xfs/176
+> diff --git a/176.out b/tests/xfs/176.out
+> similarity index 100%
+> rename from 176.out
+> rename to tests/xfs/176.out
+> diff --git a/178 b/tests/xfs/178
+> similarity index 100%
+> rename from 178
+> rename to tests/xfs/178
+> diff --git a/178.out b/tests/xfs/178.out
+> similarity index 100%
+> rename from 178.out
+> rename to tests/xfs/178.out
+> diff --git a/179 b/tests/xfs/179
+> similarity index 100%
+> rename from 179
+> rename to tests/xfs/179
+> diff --git a/179.out b/tests/xfs/179.out
+> similarity index 100%
+> rename from 179.out
+> rename to tests/xfs/179.out
+> diff --git a/180 b/tests/xfs/180
+> similarity index 100%
+> rename from 180
+> rename to tests/xfs/180
+> diff --git a/180.out b/tests/xfs/180.out
+> similarity index 100%
+> rename from 180.out
+> rename to tests/xfs/180.out
+> diff --git a/181 b/tests/xfs/181
+> similarity index 100%
+> rename from 181
+> rename to tests/xfs/181
+> diff --git a/181.out b/tests/xfs/181.out
+> similarity index 100%
+> rename from 181.out
+> rename to tests/xfs/181.out
+> diff --git a/182 b/tests/xfs/182
+> similarity index 100%
+> rename from 182
+> rename to tests/xfs/182
+> diff --git a/182.out b/tests/xfs/182.out
+> similarity index 100%
+> rename from 182.out
+> rename to tests/xfs/182.out
+> diff --git a/183 b/tests/xfs/183
+> similarity index 100%
+> rename from 183
+> rename to tests/xfs/183
+> diff --git a/183.out b/tests/xfs/183.out
+> similarity index 100%
+> rename from 183.out
+> rename to tests/xfs/183.out
+> diff --git a/185 b/tests/xfs/185
+> similarity index 100%
+> rename from 185
+> rename to tests/xfs/185
+> diff --git a/185.out b/tests/xfs/185.out
+> similarity index 100%
+> rename from 185.out
+> rename to tests/xfs/185.out
+> diff --git a/186 b/tests/xfs/186
+> similarity index 100%
+> rename from 186
+> rename to tests/xfs/186
+> diff --git a/186.out b/tests/xfs/186.out
+> similarity index 100%
+> rename from 186.out
+> rename to tests/xfs/186.out
+> diff --git a/187 b/tests/xfs/187
+> similarity index 100%
+> rename from 187
+> rename to tests/xfs/187
+> diff --git a/187.out b/tests/xfs/187.out
+> similarity index 100%
+> rename from 187.out
+> rename to tests/xfs/187.out
+> diff --git a/188 b/tests/xfs/188
+> similarity index 100%
+> rename from 188
+> rename to tests/xfs/188
+> diff --git a/188.out b/tests/xfs/188.out
+> similarity index 100%
+> rename from 188.out
+> rename to tests/xfs/188.out
+> diff --git a/189 b/tests/xfs/189
+> similarity index 100%
+> rename from 189
+> rename to tests/xfs/189
+> diff --git a/189.out b/tests/xfs/189.out
+> similarity index 100%
+> rename from 189.out
+> rename to tests/xfs/189.out
+> diff --git a/190 b/tests/xfs/190
+> similarity index 100%
+> rename from 190
+> rename to tests/xfs/190
+> diff --git a/190.out b/tests/xfs/190.out
+> similarity index 100%
+> rename from 190.out
+> rename to tests/xfs/190.out
+> diff --git a/191 b/tests/xfs/191
+> similarity index 100%
+> rename from 191
+> rename to tests/xfs/191
+> diff --git a/191.out b/tests/xfs/191.out
+> similarity index 100%
+> rename from 191.out
+> rename to tests/xfs/191.out
+> diff --git a/194 b/tests/xfs/194
+> similarity index 100%
+> rename from 194
+> rename to tests/xfs/194
+> diff --git a/194.out b/tests/xfs/194.out
+> similarity index 100%
+> rename from 194.out
+> rename to tests/xfs/194.out
+> diff --git a/195 b/tests/xfs/195
+> similarity index 100%
+> rename from 195
+> rename to tests/xfs/195
+> diff --git a/195.out b/tests/xfs/195.out
+> similarity index 100%
+> rename from 195.out
+> rename to tests/xfs/195.out
+> diff --git a/196 b/tests/xfs/196
+> similarity index 100%
+> rename from 196
+> rename to tests/xfs/196
+> diff --git a/196.out b/tests/xfs/196.out
+> similarity index 100%
+> rename from 196.out
+> rename to tests/xfs/196.out
+> diff --git a/197 b/tests/xfs/197
+> similarity index 100%
+> rename from 197
+> rename to tests/xfs/197
+> diff --git a/197.out b/tests/xfs/197.out
+> similarity index 100%
+> rename from 197.out
+> rename to tests/xfs/197.out
+> diff --git a/199 b/tests/xfs/199
+> similarity index 100%
+> rename from 199
+> rename to tests/xfs/199
+> diff --git a/199.out b/tests/xfs/199.out
+> similarity index 100%
+> rename from 199.out
+> rename to tests/xfs/199.out
+> diff --git a/200 b/tests/xfs/200
+> similarity index 100%
+> rename from 200
+> rename to tests/xfs/200
+> diff --git a/200.out b/tests/xfs/200.out
+> similarity index 100%
+> rename from 200.out
+> rename to tests/xfs/200.out
+> diff --git a/201 b/tests/xfs/201
+> similarity index 100%
+> rename from 201
+> rename to tests/xfs/201
+> diff --git a/201.out b/tests/xfs/201.out
+> similarity index 100%
+> rename from 201.out
+> rename to tests/xfs/201.out
+> diff --git a/202 b/tests/xfs/202
+> similarity index 100%
+> rename from 202
+> rename to tests/xfs/202
+> diff --git a/202.out b/tests/xfs/202.out
+> similarity index 100%
+> rename from 202.out
+> rename to tests/xfs/202.out
+> diff --git a/203 b/tests/xfs/203
+> similarity index 100%
+> rename from 203
+> rename to tests/xfs/203
+> diff --git a/203.out b/tests/xfs/203.out
+> similarity index 100%
+> rename from 203.out
+> rename to tests/xfs/203.out
+> diff --git a/205 b/tests/xfs/205
+> similarity index 100%
+> rename from 205
+> rename to tests/xfs/205
+> diff --git a/205.out b/tests/xfs/205.out
+> similarity index 100%
+> rename from 205.out
+> rename to tests/xfs/205.out
+> diff --git a/206 b/tests/xfs/206
+> similarity index 100%
+> rename from 206
+> rename to tests/xfs/206
+> diff --git a/206.out b/tests/xfs/206.out
+> similarity index 100%
+> rename from 206.out
+> rename to tests/xfs/206.out
+> diff --git a/216 b/tests/xfs/216
+> similarity index 100%
+> rename from 216
+> rename to tests/xfs/216
+> diff --git a/216.out b/tests/xfs/216.out
+> similarity index 100%
+> rename from 216.out
+> rename to tests/xfs/216.out
+> diff --git a/217 b/tests/xfs/217
+> similarity index 100%
+> rename from 217
+> rename to tests/xfs/217
+> diff --git a/217.out b/tests/xfs/217.out
+> similarity index 100%
+> rename from 217.out
+> rename to tests/xfs/217.out
+> diff --git a/220 b/tests/xfs/220
+> similarity index 100%
+> rename from 220
+> rename to tests/xfs/220
+> diff --git a/220.out b/tests/xfs/220.out
+> similarity index 100%
+> rename from 220.out
+> rename to tests/xfs/220.out
+> diff --git a/222 b/tests/xfs/222
+> similarity index 100%
+> rename from 222
+> rename to tests/xfs/222
+> diff --git a/222.out b/tests/xfs/222.out
+> similarity index 100%
+> rename from 222.out
+> rename to tests/xfs/222.out
+> diff --git a/227 b/tests/xfs/227
+> similarity index 100%
+> rename from 227
+> rename to tests/xfs/227
+> diff --git a/227.out b/tests/xfs/227.out
+> similarity index 100%
+> rename from 227.out
+> rename to tests/xfs/227.out
+> diff --git a/229 b/tests/xfs/229
+> similarity index 100%
+> rename from 229
+> rename to tests/xfs/229
+> diff --git a/229.out b/tests/xfs/229.out
+> similarity index 100%
+> rename from 229.out
+> rename to tests/xfs/229.out
+> diff --git a/238 b/tests/xfs/238
+> similarity index 100%
+> rename from 238
+> rename to tests/xfs/238
+> diff --git a/238.out b/tests/xfs/238.out
+> similarity index 100%
+> rename from 238.out
+> rename to tests/xfs/238.out
+> diff --git a/242 b/tests/xfs/242
+> similarity index 100%
+> rename from 242
+> rename to tests/xfs/242
+> diff --git a/242.out b/tests/xfs/242.out
+> similarity index 100%
+> rename from 242.out
+> rename to tests/xfs/242.out
+> diff --git a/244 b/tests/xfs/244
+> similarity index 100%
+> rename from 244
+> rename to tests/xfs/244
+> diff --git a/244.out b/tests/xfs/244.out
+> similarity index 100%
+> rename from 244.out
+> rename to tests/xfs/244.out
+> diff --git a/250 b/tests/xfs/250
+> similarity index 100%
+> rename from 250
+> rename to tests/xfs/250
+> diff --git a/250.out b/tests/xfs/250.out
+> similarity index 100%
+> rename from 250.out
+> rename to tests/xfs/250.out
+> diff --git a/252 b/tests/xfs/252
+> similarity index 100%
+> rename from 252
+> rename to tests/xfs/252
+> diff --git a/252.out b/tests/xfs/252.out
+> similarity index 100%
+> rename from 252.out
+> rename to tests/xfs/252.out
+> diff --git a/253 b/tests/xfs/253
+> similarity index 100%
+> rename from 253
+> rename to tests/xfs/253
+> diff --git a/253.out b/tests/xfs/253.out
+> similarity index 100%
+> rename from 253.out
+> rename to tests/xfs/253.out
+> diff --git a/259 b/tests/xfs/259
+> similarity index 100%
+> rename from 259
+> rename to tests/xfs/259
+> diff --git a/259.out b/tests/xfs/259.out
+> similarity index 100%
+> rename from 259.out
+> rename to tests/xfs/259.out
+> diff --git a/261 b/tests/xfs/261
+> similarity index 100%
+> rename from 261
+> rename to tests/xfs/261
+> diff --git a/261.out b/tests/xfs/261.out
+> similarity index 100%
+> rename from 261.out
+> rename to tests/xfs/261.out
+> diff --git a/262 b/tests/xfs/262
+> similarity index 100%
+> rename from 262
+> rename to tests/xfs/262
+> diff --git a/262.out b/tests/xfs/262.out
+> similarity index 100%
+> rename from 262.out
+> rename to tests/xfs/262.out
+> diff --git a/266 b/tests/xfs/266
+> similarity index 100%
+> rename from 266
+> rename to tests/xfs/266
+> diff --git a/266.out b/tests/xfs/266.out
+> similarity index 100%
+> rename from 266.out
+> rename to tests/xfs/266.out
+> diff --git a/267 b/tests/xfs/267
+> similarity index 100%
+> rename from 267
+> rename to tests/xfs/267
+> diff --git a/267.out b/tests/xfs/267.out
+> similarity index 100%
+> rename from 267.out
+> rename to tests/xfs/267.out
+> diff --git a/268 b/tests/xfs/268
+> similarity index 100%
+> rename from 268
+> rename to tests/xfs/268
+> diff --git a/268.out b/tests/xfs/268.out
+> similarity index 100%
+> rename from 268.out
+> rename to tests/xfs/268.out
+> diff --git a/278 b/tests/xfs/278
+> similarity index 100%
+> rename from 278
+> rename to tests/xfs/278
+> diff --git a/278.out b/tests/xfs/278.out
+> similarity index 100%
+> rename from 278.out
+> rename to tests/xfs/278.out
+> diff --git a/279 b/tests/xfs/279
+> similarity index 100%
+> rename from 279
+> rename to tests/xfs/279
+> diff --git a/279.out b/tests/xfs/279.out
+> similarity index 100%
+> rename from 279.out
+> rename to tests/xfs/279.out
+> diff --git a/281 b/tests/xfs/281
+> similarity index 100%
+> rename from 281
+> rename to tests/xfs/281
+> diff --git a/281.out b/tests/xfs/281.out
+> similarity index 100%
+> rename from 281.out
+> rename to tests/xfs/281.out
+> diff --git a/282 b/tests/xfs/282
+> similarity index 100%
+> rename from 282
+> rename to tests/xfs/282
+> diff --git a/282.out b/tests/xfs/282.out
+> similarity index 100%
+> rename from 282.out
+> rename to tests/xfs/282.out
+> diff --git a/283 b/tests/xfs/283
+> similarity index 100%
+> rename from 283
+> rename to tests/xfs/283
+> diff --git a/283.out b/tests/xfs/283.out
+> similarity index 100%
+> rename from 283.out
+> rename to tests/xfs/283.out
+> diff --git a/287 b/tests/xfs/287
+> similarity index 100%
+> rename from 287
+> rename to tests/xfs/287
+> diff --git a/287.out b/tests/xfs/287.out
+> similarity index 100%
+> rename from 287.out
+> rename to tests/xfs/287.out
+> diff --git a/290 b/tests/xfs/290
+> similarity index 100%
+> rename from 290
+> rename to tests/xfs/290
+> diff --git a/290.out b/tests/xfs/290.out
+> similarity index 100%
+> rename from 290.out
+> rename to tests/xfs/290.out
+> diff --git a/291 b/tests/xfs/291
+> similarity index 100%
+> rename from 291
+> rename to tests/xfs/291
+> diff --git a/291.out b/tests/xfs/291.out
+> similarity index 100%
+> rename from 291.out
+> rename to tests/xfs/291.out
+> diff --git a/292 b/tests/xfs/292
+> similarity index 100%
+> rename from 292
+> rename to tests/xfs/292
+> diff --git a/292.out b/tests/xfs/292.out
+> similarity index 100%
+> rename from 292.out
+> rename to tests/xfs/292.out
+> diff --git a/293 b/tests/xfs/293
+> similarity index 100%
+> rename from 293
+> rename to tests/xfs/293
+> diff --git a/293.out b/tests/xfs/293.out
+> similarity index 100%
+> rename from 293.out
+> rename to tests/xfs/293.out
+> diff --git a/295 b/tests/xfs/295
+> similarity index 100%
+> rename from 295
+> rename to tests/xfs/295
+> diff --git a/295.out b/tests/xfs/295.out
+> similarity index 100%
+> rename from 295.out
+> rename to tests/xfs/295.out
+> diff --git a/296 b/tests/xfs/296
+> similarity index 100%
+> rename from 296
+> rename to tests/xfs/296
+> diff --git a/296.out b/tests/xfs/296.out
+> similarity index 100%
+> rename from 296.out
+> rename to tests/xfs/296.out
+> diff --git a/297 b/tests/xfs/297
+> similarity index 100%
+> rename from 297
+> rename to tests/xfs/297
+> diff --git a/297.out b/tests/xfs/297.out
+> similarity index 100%
+> rename from 297.out
+> rename to tests/xfs/297.out
+> diff --git a/group b/tests/xfs/group
+> similarity index 68%
+> copy from group
+> copy to tests/xfs/group
+> index 9657be1..e70bd3b 100644
+> --- a/group
+> +++ b/tests/xfs/group
+> @@ -3,122 +3,6 @@
 >  # - do not start group names with a digit
 >  # - comment line before each group is "new" description
 >  #
-> +001 rw dir udf auto quick
-> +002 metadata udf auto quick
-> +005 dir udf auto quick
-> +006 dir udf auto quick
-> +007 dir udf auto quick
-> +010 other udf auto
-> +011 dir udf auto quick
-> +013 other ioctl udf auto quick
-> +014 rw udf auto quick
-> +015 other auto quick
-> +020 metadata attr udf auto quick
-> +053 acl repair auto quick
-> +062 attr udf auto quick
-> +068 other auto freeze dangerous stress
-> +069 rw udf auto quick
-> +070 attr udf auto quick stress
-> +074 rw udf auto
-> +075 rw udf auto quick
-> +076 metadata rw udf auto quick stress
-> +077 acl attr auto enospc
-> +079 acl attr ioctl metadata auto quick
-> +083 rw auto enospc stress
-> +088 perms auto quick
-> +089 metadata auto
-> +091 rw auto quick
-> +093 attr cap udf auto
-> +097 udf auto
-> +099 udf auto
-> +100 udf auto
-> +105 acl auto quick
-> +112 rw aio auto quick
-> +113 rw aio auto quick
-> +117 attr auto quick
-> +120 other auto quick
-> +123 perms auto quick
-> +124 pattern auto quick
-> +125 other auto
-> +126 perms auto quick
-> +127 rw auto
-> +128 perms auto quick
-> +129 rw auto quick
-> +130 pattern auto quick
-> +131 perms auto quick
-> +132 pattern auto
-> +133 rw auto
-> +135 metadata auto quick
-> +141 rw auto quick
-> +169 rw metadata auto quick
-> +184 metadata auto quick
-> +192 atime auto
-> +193 metadata auto quick
-> +198 auto aio quick
-> +204 metadata rw auto
-> +207 auto aio quick
-> +208 auto aio
-> +209 auto aio
-> +210 auto aio quick
-> +211 auto aio quick
-> +212 auto aio quick
-> +213 rw auto prealloc quick enospc
-> +214 rw auto prealloc quick
-> +215 auto metadata quick
-> +219 auto quota quick
-> +221 auto metadata quick
-> +223 auto quick
-> +224 auto
-> +225 auto quick
-> +226 auto enospc
-> +228 rw auto prealloc quick
-> +230 auto quota quick
-> +231 auto quota
-> +232 auto quota stress
-> +233 auto quota stress
-> +234 auto quota
-> +235 auto quota quick
-> +236 auto quick metadata
-> +237 auto quick acl
-> +239 auto aio rw
-> +240 auto aio quick rw
-> +241 auto
-> +245 auto quick dir
-> +246 auto quick rw
-> +247 auto quick rw
-> +248 auto quick rw
-> +249 auto quick rw 
-> +251 ioctl trim
-> +255 auto quick prealloc
-> +256 auto quick
-> +257 dir auto quick
-> +258 auto quick
-> +260 auto quick trim
-> +263 rw auto quick
-> +269 auto rw prealloc ioctl enospc stress
-> +270 auto quota rw prealloc ioctl enospc stress
-> +273 auto rw
-> +274 auto rw prealloc
-> +275 auto rw
-> +277 auto ioctl quick metadata
-> +280 auto quota freeze dangerous
-> +285 auto rw
-> +286 other
-> +288 auto quick ioctl trim
-> +294 auto quick
-> +299 auto aio enospc rw stress
-> +300 auto aio enospc preallocrw stress
+> -
+> -# catch-all
+> -other
+> -
+> -# read/write integrity
+> -rw
+> -
+> -# directory operations, e.g. create/unlink
+> -dir
+> -
+> -# metadata and inodes in particular
+> -metadata
+> -
+> -# xfs_db
+> -db
+> -
+> -# extended attributes
+> -attr
+> -
+> -# xfs_logprint
+> -logprint
+> -
+> -# XFS log related testing
+> -log
+> -
+> -# XFS log related testing
+> -v2log
+> -
+> -# xfsdump, xfsrestore, xfsinvutil
+> -dump
+> -
+> -# xfsdump, xfsrestore to tapes
+> -tape
+> -
+> -# xfsdump, xfsrestore to remote tapes
+> -remote
+> -
+> -# xfs_copy
+> -copy
+> -
+> -# chacl, libacl
+> -acl
+> -
+> -# capabilities
+> -cap
+> -
+> -# permissions
+> -perms
+> -
+> -# xfs_growfs
+> -growfs
+> -
+> -# fsr.xfs
+> -fsr
+> -
+> -# mkfs.xfs
+> -mkfs
+> -
+> -# xfs_repair
+> -repair
+> -
+> -# quota tools and XFS quota kernel code (XQM)
+> -quota
+> -
+> -# auto - tests to be run as part of nightly qa
+> -auto
+> -
+> -# ioctl - tests which use ioctl commands (directly/indirectly)
+> -ioctl
+> -
+> -# udf filesystem
+> -udf
+> -
+> -# AIO operations
+> -aio
+> -
+> -# Pattern writing and checking
+> -pattern
+> -
+> -# dmapi based tests
+> -dmapi
+> -
+> -# filestreams based tests
+> -filestreams
+> -
+> -# case-insensitive based tests
+> -ci
+> -
+> -# test the mount/remount path
+> -mount
+> -
+> -# test the NFS v4 ACL code if it exists
+> -nfs4acl
+> -
+> -# test access time
+> -atime
+> -
+> -# Test preallocation calls
+> -prealloc
+> -
+> -# Test filesystem freeze
+> -freeze
+> -
+> -# Tests which may oops or hang
+> -dangerous
+> -
+> -# Old tests that we won't spend any effort trying to run and make work
+> -# on current systems
+> -deprecated
+> -
+> -# Stress test with probable behaviour, the longer test run the
+> -# larger corner cases will be covered. Configurable variables:
+> -# LOAD_FACTOR: Usually means factor number of running tasks
+> -# TIME_FACTOR: Usually means factor of run time, or number of operations
+> -stress
+> -
+>  # test-group association ... one line per test
+>  #
+>  003 db auto quick
+> @@ -149,7 +33,6 @@ stress
+>  037 dump ioctl remote tape
+>  038 dump ioctl remote tape
+>  039 dump ioctl remote tape
+> -040 other auto
+>  041 growfs ioctl auto
+>  042 fsr ioctl auto
+>  043 dump ioctl tape
+> @@ -160,7 +43,6 @@ stress
+>  048 other auto quick
+>  049 rw auto quick
+>  050 quota auto quick
+> -051 acl udf auto quick
+>  052 quota db auto quick
+>  054 quota auto quick
+>  055 dump ioctl remote tape
+> @@ -192,9 +74,6 @@ stress
+>  094 metadata dir ioctl auto
+>  095 log v2log auto
+>  096 mkfs v2log auto quick
+> -098 udf auto
+> -101 udf
+> -102 udf
+>  103 metadata dir ioctl auto quick
+>  104 growfs ioctl prealloc auto stress
+>  106 quota
+> @@ -254,7 +133,6 @@ stress
+>  174 rw filestreams auto
+>  175 dmapi auto
+>  176 dmapi auto
+> -177 rw other auto
+>  178 mkfs other auto
+>  179 metadata rw auto
+>  180 metadata rw auto
+> @@ -282,38 +160,28 @@ stress
+>  206 growfs auto quick
+>  216 log metadata auto quick
+>  217 log metadata auto
+> -218 auto fsr quick
+>  220 auto quota quick
+>  222 auto fsr ioctl quick
+>  227 auto fsr
+>  229 auto rw
+>  238 auto quick metadata ioctl
+>  242 auto quick prealloc
+> -243 auto quick prealloc
+>  244 auto quota quick
+>  250 auto quick rw prealloc metadata
+>  252 auto quick prealloc
+>  253 auto quick
+> -254 auto quick
+>  259 auto quick
+>  261 auto quick quota
+>  262 auto quick quota
+> -264 auto
+> -265 auto
+>  266 dump ioctl auto quick
+>  267 dump ioctl tape
+>  268 dump ioctl tape
+> -271 auto rw quick
+> -272 auto enospc rw
+> -276 auto rw metadata
+>  278 repair auto
+>  279 auto mkfs
+>  281 dump ioctl auto quick
+>  282 dump ioctl auto quick
+>  283 dump ioctl auto quick
+> -284 auto
+>  287 auto dump quota quick
+> -289 auto quick
+>  290 auto rw prealloc quick ioctl
+>  291 repair
+>  292 auto mkfs quick
+> @@ -321,10 +189,3 @@ stress
+>  295 auto logprint quick
+>  296 dump auto quick
+>  297 auto freeze
+> -298 auto trim
+> -301 aio dangerous ioctl rw stress
+> -302 aio dangerous ioctl rw stress
+> -303 aio dangerous ioctl rw stress
+> -304 aio dangerous ioctl rw stress
+> -305 aio dangerous enospc rw stress
+> -313 auto quick
 > -- 
 > 1.7.10.4
 > 
