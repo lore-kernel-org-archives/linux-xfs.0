@@ -1,16 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cthulhu.engr.sgi.com (cthulhu.engr.sgi.com [150.166.39.100])
-	by oss.sgi.com (Postfix) with ESMTP id F195A7F74
-	for <xfs@oss.sgi.com>; Sat, 23 Mar 2013 05:23:40 -0500 (CDT)
-Date: Sat, 23 Mar 2013 03:23:39 -0700
+	by oss.sgi.com (Postfix) with ESMTP id F31AF7F6A
+	for <xfs@oss.sgi.com>; Sat, 23 Mar 2013 05:23:47 -0500 (CDT)
+Date: Sat, 23 Mar 2013 03:23:46 -0700
 From: Phil White <pwhite@sgi.com>
-Subject: Re: [PATCH 15/25] xfstests: rework CLI individual test specification
-Message-ID: <20130323102339.GS25253@caliban.engr.sgi.com>
+Subject: Re: [PATCH 16/25] xfstests: make exclude groups aware of multiple
+	subdirectories
+Message-ID: <20130323102346.GT25253@caliban.engr.sgi.com>
 References: <1363350489-22257-1-git-send-email-david@fromorbit.com>
-	<1363350489-22257-16-git-send-email-david@fromorbit.com>
+	<1363350489-22257-17-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1363350489-22257-16-git-send-email-david@fromorbit.com>
+In-Reply-To: <1363350489-22257-17-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,153 +31,104 @@ Looks OK.
 
 Reviewed-by: Phil White <pwhite@sgi.com>
 
-On Fri, Mar 15, 2013 at 11:27:59PM +1100, Dave Chinner wrote:
+On Fri, Mar 15, 2013 at 11:28:00PM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> Now that tests are in separate subdirectories, they cannot be selected purely by
-> test number on the command line. We need to specify the test by subdir and test
-> name, so effectively we move to specifying them by regexes on the command line
-> rather than by expanding a range internally. This is needed to support
-> non-numeric test names as well, so the change may as well be made here.
+> Now that there are no tests in the top level directory, the exlude
+> group functionality no longer works (-x group) as it cannot find
+> tests to build an initial list of tests. Rework the the exclude
+> group implementation to operate correctly on the new test locations.
 > 
-> This means the command line parsing needs to change from trying to detect tests
-> by a regex match to a processing loop that simply parses the tests and checks
-> for there existence. Hence the moment we find an argument that is not a switch
-> (i.e no preceeding "-"), we move from the arg processing loop to the test name
-> processing loop. IOWs, tests must be specified last on the command line.
+> Also, switch from sed to grep for exclusion because sed has problems
+> distnguishing the '/' in path names from regex control...
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  check |   86 ++++++++++++++++++++++++++++-------------------------------------
->  1 file changed, 37 insertions(+), 49 deletions(-)
+>  check |   35 +++++++++++++++++++++++++++--------
+>  1 file changed, 27 insertions(+), 8 deletions(-)
 > 
 > diff --git a/check b/check
-> index 195c25d..620de0f 100755
+> index 620de0f..d7426e5 100755
 > --- a/check
 > +++ b/check
-> @@ -71,8 +71,7 @@ check options
->  testlist options
->      -g group[,group...]	include tests from these groups
->      -x group[,group...]	exclude tests from these groups
-> -    NNN			include test NNN
-> -    NNN-NNN		include test range (eg. 012-021)
-> +    [testlist]		include tests matching names in testlist
->  '
->  	    exit 0
->  }
-> @@ -97,26 +96,6 @@ get_group_list()
+> @@ -96,6 +96,19 @@ get_group_list()
 >  	echo $grpl
 >  }
 >  
-> -expand_test_numbers()
-> -{
-> -	# strip leading zeros, could be considered octal.
-> -	start=`echo $1 | sed 's/^0*//'`
-> -	end=`echo $2 | sed 's/^0*//'`
-> -
-> -	$AWK_PROG </dev/null '
-> -BEGIN	{ for (t='$start'; t<='$end'; t++) printf "%03d\n",t }' \
-> -	| while read id
-> -	do
-> -		if grep -s "^$id " group >/dev/null ; then
-> -			# in group file ... OK
-> -			echo $id >>$tmp.list
-> -		else
-> -			# oops
-> -			echo "$id - unknown test, ignored"
-> -		fi
-> -	done
-> -}
-> -
+> +# find all tests, excluding files that are test metadata such as group files.
+> +# This assumes that tests are defined purely by alphanumeric filenames with no
+> +# ".xyz" extensions in the name.
+> +get_all_tests()
+> +{
+> +	touch $tmp.list
+> +	for d in $SRC_GROUPS $FSTYP; do
+> +		ls $SRC_DIR/$d/* | \
+> +			grep -v "\..*" | \
+> +			grep -v group >> $tmp.list 2>/dev/null
+> +	done
+> +}
+> +
 >  _wallclock()
 >  {
 >      date "+%H %M %S" | $AWK_PROG '{ print $1*3600 + $2*60 + $3 }'
-> @@ -146,6 +125,7 @@ then
->      exit 1
->  fi
+> @@ -110,7 +123,7 @@ _timestamp()
+>  # start the initialisation work now
+>  _setenvironment
 >  
-> +# Process command arguments first.
->  while [ $# -gt 0 ]; do
->  	case "$1" in
->  	-\? | -h | --help) usage ;;
-> @@ -202,42 +182,50 @@ while [ $# -gt 0 ]; do
+> -rm -f $tmp.list $tmp.tmp $tmp.sed $here/$iam.out
+> +rm -f $tmp.list $tmp.tmp $tmp.grep $here/$iam.out
 >  
->  	-T)	timestamp=true ;;
+>  # Autodetect fs type based on what's on $TEST_DEV
+>  if [ "$HOSTOS" == "Linux" ]; then
+> @@ -150,27 +163,33 @@ while [ $# -gt 0 ]; do
+>  		;;
 >  
-> -	"$SUPPORTED_TESTS")
-> -		echo "No tests?"
-> -		status=1
-> -		exit $status
-> -		;;
-> -
-> -	[0-9]*-[0-9]*)
-> -		eval `echo $1 | sed -e 's/^/start=/' -e 's/-/ end=/'`
-> -		expand_test_numbers $start $end
-> -		have_test_arg=true
-> -		;;
-> -
-> -	[0-9]*-)
-> -		eval `echo $1 | sed -e 's/^/start=/' -e 's/-//'`
-> -		end=`echo $SUPPORTED_TESTS | sed -e 's/\[0-9]//g' -e 's/  *$//' -e 's/.* //'`
-> -		if [ -z "$end" ]; then
-> -			echo "No tests in range \"$1\"?"
-> -			status=1
-> -			exit $status
-> -		fi
-> -		expand_test_numbers $start $end
-> -		have_test_arg=true
-> -		;;
-> -
->  	--large-fs) export LARGE_SCRATCH_DEV=yes ;;
->  	--extra-space=*) export SCRATCH_DEV_EMPTY_SPACE=${r#*=} ;;
->  
->  	-*)	usage ;;
-> -	*)	expand_test_numbers $1 $1 ;
-> -		have_test_arg=true
-> -		;;
-> +	*)	# not an argument, we've got tests now.
-> +		have_test_arg=true ;;
->  	esac
->  
-> +	# if we've found a test specification, the break out of the processing
-> +	# loop before we shift the arguments so that this is the first argument
-> +	# that we process in the test arg loop below.
-> +	if $have_test_arg; then
-> +		break;
-> +	fi
+>  	-x)	xgroup=$2 ; shift ;
+> -		[ ! -s $tmp.list ] &&  ls $SUPPORTED_TESTS >$tmp.list 2>/dev/null
 > +
->  	shift
->  done
+> +		# Note: behaviour is dependent on command line ordering of
+> +		# -g and -x parameters. If there are no preceding -g commands,
+> +		# this works on all tests, otherwise just the tests specified by
+> +		# the early -g inclusions.
+> +		[ ! -s $tmp.list ] && get_all_tests
+> +
+>  		group_list=$(get_group_list $xgroup)
+>  		if [ -z "$group_list" ]; then
+>  		    echo "Group \"$xgroup\" is empty or not defined?"
+>  		    exit 1
+>  		fi
 >  
-> +# Process tests from command line now.
-> +if $have_test_arg; then
-> +	while [ $# -gt 0 ]; do
-> +		case "$1" in
-> +		-*)	echo "Argments before tests, please!"
-> +			status=1
-> +			exit $status
-> +			;;
-> +		*)	test_dir=`dirname $1`
-> +			test_name=`basename $1`
-> +			group_file=$SRC_DIR/$test_dir/group
-> +
-> +			if grep "^$testname" $group_file >/dev/null ; then
-> +				# in group file ... OK
-> +				echo $SRC_DIR/$1 >>$tmp.list
-> +			else
-> +				# oops
-> +				echo "$1 - unknown test, ignored"
-> +			fi
-> +			;;
-> +		esac
-> +
-> +		shift
-> +	done
-> +fi
-> +
->  if [ -s $tmp.list ]; then
->      # found some valid test numbers ... this is good
->      :
+> -		rm -f $tmp.sed
+> +		rm -f $tmp.grep
+>  		numsed=0
+>  		for t in $group_list
+>  		do
+>  		    if [ $numsed -gt 100 ]; then
+> -			sed -f $tmp.sed <$tmp.list >$tmp.tmp
+> +			grep -v -f $tmp.grep <$tmp.list >$tmp.tmp
+>  			mv $tmp.tmp $tmp.list
+>  			numsed=0
+> -			rm -f $tmp.sed
+> +			rm -f $tmp.grep
+>  		    fi
+> -		    echo "/^$t\$/d" >>$tmp.sed
+> +		    echo "^$t\$" >>$tmp.grep
+>  		    numsed=`expr $numsed + 1`
+>  		done
+> -		sed -f $tmp.sed <$tmp.list >$tmp.tmp
+> +		grep -v -f $tmp.grep <$tmp.list >$tmp.tmp
+>  		mv $tmp.tmp $tmp.list
+>  		;;
+>  
+> @@ -239,7 +258,7 @@ fi
+>  
+>  # sort the list of tests into numeric order
+>  list=`sort -n $tmp.list`
+> -rm -f $tmp.list $tmp.tmp $tmp.sed
+> +rm -f $tmp.list $tmp.tmp $tmp.grep
+>  
+>  if $randomize
+>  then
 > -- 
 > 1.7.10.4
 > 
