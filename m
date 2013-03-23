@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cthulhu.engr.sgi.com (cthulhu.engr.sgi.com [150.166.39.100])
-	by oss.sgi.com (Postfix) with ESMTP id 22DEF7F3F
-	for <xfs@oss.sgi.com>; Sat, 23 Mar 2013 05:19:30 -0500 (CDT)
-Date: Sat, 23 Mar 2013 03:19:28 -0700
+	by oss.sgi.com (Postfix) with ESMTP id E48DB7F3F
+	for <xfs@oss.sgi.com>; Sat, 23 Mar 2013 05:19:48 -0500 (CDT)
+Date: Sat, 23 Mar 2013 03:19:47 -0700
 From: Phil White <pwhite@sgi.com>
-Subject: Re: [PATCH 07/25] xfstests: kill hangcheck stuff from check
-Message-ID: <20130323101928.GK25253@caliban.engr.sgi.com>
+Subject: Re: [PATCH 08/25] xfstests: remove test expunge file support
+Message-ID: <20130323101947.GL25253@caliban.engr.sgi.com>
 References: <1363350489-22257-1-git-send-email-david@fromorbit.com>
-	<1363350489-22257-8-git-send-email-david@fromorbit.com>
+	<1363350489-22257-9-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1363350489-22257-8-git-send-email-david@fromorbit.com>
+In-Reply-To: <1363350489-22257-9-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,74 +30,93 @@ Looks OK.
 
 Reviewed-by: Phil White <pwhite@sgi.com>
 
-On Fri, Mar 15, 2013 at 11:27:51PM +1100, Dave Chinner wrote:
+On Fri, Mar 15, 2013 at 11:27:52PM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> This is an old script from the auto-qa days back at SGI. It no
-> longer is in use or, AFAIK, ever been used for xfstests. If anyone
-> needs it, they can pull it back out of git, so lets remove it to
-> simplify check.
+> Check supports an expunge file for tests - a way of marking tests
+> not to run even if you specify it to run. Use is like this:
+> 
+> $ echo 002 > expunged
+> test-2:~/src/xfstests-dev$ sudo ./check 001-003
+> FSTYP         -- xfs (debug)
+> PLATFORM      -- Linux/x86_64 test-2 3.5.0-rc1-dgc+
+> MKFS_OPTIONS  -- -f -bsize=4096 /dev/vdb
+> MOUNT_OPTIONS -- /dev/vdb /mnt/scratch
+> 
+> 001 4s ... 4s
+> 002 - expunged
+> 003 0s ... 0s
+> Ran: 001 002 003
+> Not run:1
+> Passed all 2 tests
+> 
+> This is arguably useful(*), but gets in the way of splitting up the
+> tests into multiple directories. Remove it for now, but such
+> functionality should be considered for re-implementation at a later
+> date.
+> 
+> (*) e.g. having a different "expunged" file for each distro release
+> you have to test to avoid the tests known to fail due to fixes or
+> features that will never be back ported to older releases....
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  check |   25 -------------------------
->  1 file changed, 25 deletions(-)
+>  check |   18 ------------------
+>  1 file changed, 18 deletions(-)
 > 
 > diff --git a/check b/check
-> index 7d563e9..d69f948 100755
+> index d69f948..8a998c4 100755
 > --- a/check
 > +++ b/check
-> @@ -275,12 +275,6 @@ fi
->  
->  _wrapup()
->  {
-> -    # for hangcheck ...
-> -    # remove files that were used by hangcheck
-> -    #
-> -    [ -f /tmp/check.pid ] && rm -rf /tmp/check.pid
-> -    [ -f /tmp/check.sts ] && rm -rf /tmp/check.sts
-> -
->      if $showme
->      then
->  	:
-> @@ -336,27 +330,11 @@ END	{ if (NR > 0) {
->      fi
->  
->      rm -f /tmp/*.rawout /tmp/*.out /tmp/*.err /tmp/*.time
-> -    rm -f /tmp/check.pid /tmp/check.sts
->      rm -f $tmp.*
->  }
->  
->  trap "_wrapup; exit \$status" 0 1 2 3 15
->  
-> -# for hangcheck ...
-> -# Save pid of check in a well known place, so that hangcheck can be sure it
-> -# has the right pid (getting the pid from ps output is not reliable enough).
-> -#
-> -rm -rf /tmp/check.pid
-> -echo $$ >/tmp/check.pid
-> -
-> -# for hangcheck ...
-> -# Save the status of check in a well known place, so that hangcheck can be
-> -# sure to know where check is up to (getting test number from ps output is
-> -# not reliable enough since the trace stuff has been introduced).
-> -#
-> -rm -rf /tmp/check.sts
-> -echo "preamble" >/tmp/check.sts
-> -
->  # don't leave old full output behind on a clean run
->  rm -f check.full
->  
-> @@ -436,9 +414,6 @@ do
+> @@ -30,7 +30,6 @@ notrun=""
+>  interrupt=true
+>  diff="diff -u"
+>  showme=false
+> -expunge=true
+>  have_test_arg=false
+>  randomize=false
+>  here=`pwd`
+> @@ -106,10 +105,6 @@ BEGIN	{ for (t='$start'; t<='$end'; t++) printf "%03d\n",t }' \
+>  		if grep -s "^$id " group >/dev/null ; then
+>  			# in group file ... OK
+>  			echo $id >>$tmp.list
+> -		elif [ -f expunged ] && $expunge && \
+> -				egrep "^$id([ 	]|\$)" expunged >/dev/null ; then
+> -			# expunged ... will be reported, but not run, later
+> -			echo $id >>$tmp.list
+>  		else
+>  			# oops
+>  			echo "$id - unknown test, ignored"
+> @@ -293,13 +288,6 @@ END	{ if (NR > 0) {
+>  	    mv $tmp.out check.time
 >  	fi
->  	rm -f core $seq.notrun
 >  
-> -	# for hangcheck ...
-> -	echo "$seq" >/tmp/check.sts
+> -	if [ -f $tmp.expunged ]
+> -	then
+> -	    notrun=`wc -l <$tmp.expunged | sed -e 's/  *//g'`
+> -	    n_try=`expr $n_try - $notrun`
+> -	    list=`echo "$list" | sed -f $tmp.expunged`
+> -	fi
 > -
->  	start=`_wallclock`
->  	$timestamp && echo -n "	["`date "+%T"`"]"
->  	[ ! -x $seq ] && chmod u+x $seq # ensure we can run it
+>  	echo "" >>check.log
+>  	date >>check.log
+>  	echo $list | fmt | sed -e 's/^/    /' >>check.log
+> @@ -393,15 +381,9 @@ do
+>      then
+>  	echo
+>  	continue
+> -    elif [ -f expunged ] && $expunge && egrep "^$seq([ 	]|\$)" expunged >/dev/null
+> -    then
+> -	echo " - expunged"
+> -	rm -f $seq.out.bad
+> -	echo "/^$seq\$/d" >>$tmp.expunged
+>      elif [ ! -f $seq ]
+>      then
+>  	echo " - no such test?"
+> -	echo "/^$seq\$/d" >>$tmp.expunged
+>      else
+>  	# really going to try and run this one
+>  	#
 > -- 
 > 1.7.10.4
 > 
