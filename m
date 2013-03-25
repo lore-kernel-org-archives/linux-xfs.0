@@ -1,33 +1,40 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8EBD97F52
-	for <xfs@oss.sgi.com>; Mon, 25 Mar 2013 12:01:04 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5AC7330406A
-	for <xfs@oss.sgi.com>; Mon, 25 Mar 2013 10:00:57 -0700 (PDT)
-Received: from mail-ve0-f180.google.com (mail-ve0-f180.google.com
-	[209.85.128.180]) by cuda.sgi.com with ESMTP id
-	c9poYi2mQ5RdwnkM (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 25 Mar 2013 10:00:56 -0700 (PDT)
-Received: by mail-ve0-f180.google.com with SMTP id c13so3088172vea.39
-	for <xfs@oss.sgi.com>; Mon, 25 Mar 2013 10:00:55 -0700 (PDT)
-Message-ID: <515082C3.2000006@binghamton.edu>
-Date: Mon, 25 Mar 2013 13:00:51 -0400
-From: Dave Hall <kdhall@binghamton.edu>
-MIME-Version: 1.0
-Subject: Re: xfs_fsr, sunit, and swidth
-References: <5140C147.7070205@binghamton.edu>
-	<514113C6.9090602@hardwarefreak.com>
-	<514153ED.3000405@binghamton.edu>
-	<5141C1FC.4060209@hardwarefreak.com>
-	<5141C8C1.2080903@hardwarefreak.com>
-	<5141E5CF.10101@binghamton.edu>
-	<5142AE40.6040408@hardwarefreak.com>
-	<20130315114538.GF6369@dastard>
-	<5143F94C.1020708@hardwarefreak.com>
-	<20130316072126.GG6369@dastard>
-In-Reply-To: <20130316072126.GG6369@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id C1FFD7F54
+	for <xfs@oss.sgi.com>; Mon, 25 Mar 2013 15:08:45 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9E66430405F
+	for <xfs@oss.sgi.com>; Mon, 25 Mar 2013 13:08:42 -0700 (PDT)
+Received: from e7.ny.us.ibm.com (e7.ny.us.ibm.com [32.97.182.137]) by
+	cuda.sgi.com with ESMTP id mGvlVBAe3zCcg44M (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 25 Mar 2013 13:08:38 -0700 (PDT)
+Received: from /spool/local
+	by e7.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	Violators will be prosecuted
+	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
+	Mon, 25 Mar 2013 16:08:38 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id 83ED5C90058
+	for <xfs@oss.sgi.com>; Mon, 25 Mar 2013 16:08:34 -0400 (EDT)
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	r2PK8Vb8201014 for <xfs@oss.sgi.com>; Mon, 25 Mar 2013 16:08:32 -0400
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id r2PK82Of019870
+	for <xfs@oss.sgi.com>; Mon, 25 Mar 2013 14:08:03 -0600
+Subject: Re: [PATCH v7 0/5] xfs: Allow pquota and gquota to be used together
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+In-Reply-To: <20130324231435.GG6369@dastard>
+References: <1363902774-19292-1-git-send-email-sekharan@us.ibm.com>
+	<20130322020243.GR17758@dastard>
+	<1363964446.27672.14.camel@chandra-dt.ibm.com>
+	<20130324231435.GG6369@dastard>
+Date: Mon, 25 Mar 2013 15:08:01 -0500
+Message-ID: <1364242081.27672.15.camel@chandra-dt.ibm.com>
+Mime-Version: 1.0
+Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,34 +43,89 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
+On Mon, 2013-03-25 at 10:14 +1100, Dave Chinner wrote:
+> On Fri, Mar 22, 2013 at 10:00:46AM -0500, Chandra Seetharaman wrote:
+> > Sure. I will look at your CRC patchset and see what changes are needed
+> > to mine.
+> > 
+> > Meantime, you can answer my dilemma with the change in fs_quota_stat
+> > (see patch 4).
+> > 
+> > As per your suggestion, I changed the data structure, to include pads at
+> > relevant places in the data structure, which also means that the new
+> > modified structure is not compatible with older user space code. 
+> > 
+> > So, I created a copy of the older structure (fs_quota_stat_v1) and used
+> > that if the user space request has older structure. So, now the new
+> > kernel code is backward compatible with the old (already running) user
+> > space code. All is well till now....
+> > 
+> > Now, I make the changes to the user space code so as to use the new
+> > fs_quota_stat. Since the data structure has changed, the new user space
+> > code will not work with the old kernel code.
+> 
+> The issue that the userspace code has to handle is that old kernels
+> decide the version of the structure, not userspace. i.e. the
+> version number is an output parameter, not an input parameter. Hence
+> on old kernels we have to detect the version after the call rather
+> than assume the kernel treated the version as an input...
+> 
+> > This is where I have the dilemma. 
+> > 
+> > 1. Leave the user space code to work only with the newer version,
+> > breaking the compatibility with the older kernel (with an error
+> > message).
+> >    or
+> > 2. Read the superblock, and if pquotino is _not_ present conclude older
+> > version of fs_quota_stat would suffice for getting quota information
+> > from kernel (note that this will work properly with newer kernel code
+> > too), and use the older version of fs_quota_stat_v1 for quotactl.
+> >    or
+> > 3. Any other clever way ? :)
+> 
+> Because the version is only an output field for old kernels, the
+> userspace code should be able to handle it like this:
+> 
+> 	struct fs_quota_stat fqs;
+> 
+> 	ASSERT(sizeof(struct fs_quota_stat) >= sizeof(struct fs_quota_stat_v1));
+> 
+> 	memset(&fqs, 0, sizeof(fqs));
+> 	fqs.version = FS_QSTAT_VERSION_2;
+> 	error = quotactl(...., &fqs);
+> 
+> 	if (fqs.version == FS_QSTAT_VERSION) {
+> 		struct fs_quota_stat_v1 *fqsv1 = &fqs;
+> 
+> 		/* process as version 1 */
+> 		.....
+> 		return error;
+> 	}
+> 
+> 	/* process as version 2 */
+> 	.....
+> 	return error;
+> 
+> However, with the version field in the same place for both
+> structures, userspace can read the version number after the call and
+> determine the correct structure type for the information returned by
+> the kernel...
 
-Dave Hall
-Binghamton University
-kdhall@binghamton.edu
-607-760-2328 (Cell)
-607-777-4641 (Office)
+Oh yeah. I didn't think about it.
 
+Thanks.
+> 
+> Cheers,
+> 
+> Dave.
 
-On 03/16/2013 03:21 AM, Dave Chinner wrote:
-> Using perf to profile the kernel while the cp -al workload is
-> running will tell use exactly where the CPU is being burnt. That
-> will confirm the analysis, or point us at some other issue that is
-> causing excessive CPU burn...
->
-Dave,  which perf command(s) would you like me to run.  (I'm familiar 
-with the concept behind this kind of tool, but I haven't worked with 
-this one before).
-
-Also, what would you like me to do with the xfs_db freesp output for 26 
-agroups?
-
--Dave
 
 _______________________________________________
 xfs mailing list
