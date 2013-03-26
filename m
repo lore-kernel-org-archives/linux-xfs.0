@@ -1,29 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0917E7F7E
-	for <xfs@oss.sgi.com>; Tue, 26 Mar 2013 13:45:36 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E2B8930406A
-	for <xfs@oss.sgi.com>; Tue, 26 Mar 2013 11:45:35 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Ha9E5Hxg1QuQgntG for
-	<xfs@oss.sgi.com>; Tue, 26 Mar 2013 11:45:34 -0700 (PDT)
-Received: from int-mx02.intmail.prod.int.phx2.redhat.com
-	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r2QIjY7u027765
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Tue, 26 Mar 2013 14:45:34 -0400
-Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx02.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
-	id r2QIjXAr019002
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Tue, 26 Mar 2013 14:45:34 -0400
-Message-ID: <5151ECCD.2080704@redhat.com>
-Date: Tue, 26 Mar 2013 13:45:33 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 8EFEF7F81
+	for <xfs@oss.sgi.com>; Tue, 26 Mar 2013 15:26:06 -0500 (CDT)
+Message-ID: <5152045D.2080607@sgi.com>
+Date: Tue, 26 Mar 2013 15:26:05 -0500
+From: Troy McCorkell <tdm@sgi.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfs: remove newlines from 3 xfs_alert_tag error strings
+Subject: Re: [PATCH 02/25] xfstests: remove bench infrastructure
+References: <1363350489-22257-1-git-send-email-david@fromorbit.com>	<1363350489-22257-3-git-send-email-david@fromorbit.com>	<20130315193635.GA2025@caliban.engr.sgi.com>	<20130319223149.GA17758@dastard>	<20130321235207.GK2025@caliban.engr.sgi.com>	<20130322073743.GS17758@dastard>
+	<514C853A.20803@sgi.com>
+In-Reply-To: <514C853A.20803@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,69 +18,141 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-xfs_alert_tag passes the format string to __xfs_printk,
-which adds its own "\n".  Having it in the original string
-leads to unintentional blank lines from these messages.
+On 03/22/2013 11:22 AM, Troy McCorkell wrote:
+> On 03/22/2013 02:37 AM, Dave Chinner wrote:
+>> On Thu, Mar 21, 2013 at 04:52:07PM -0700, Phil White wrote:
+>>> On Wed, Mar 20, 2013 at 09:31:49AM +1100, Dave Chinner wrote:
+>>>> I understand why you see value in a benchmark infrastructure, but
+>>>> that's not the issue here. The issue at hand is whether we should be
+>>>> trying to maintain arbitrary abstractions that are made redundant by
+>>>> the cleanup patch in the hope they are useful in the future.
+>>>>
+>>>> There are solid technical reasons for what I've done, but you
+>>>> haven't provided any to advocate why we should accept your version
+>>>> as a better solution. "personal interest" is a good thing to have,
+>>>> but it's not a convincing technical argument....
+>>> Let me be clear:
+>>>
+>>> Personal interest is why I took it upon myself to move this along,
+>>> rather than letting it moulder away even further than it has while
+>>> we wait for you to respond to our feedback.
+>> /me does a double take
+>>
+>> Please don't try to rewrite history.  This patchset has been held up
+>> by SGI steadfastly refusing to remove the bench infrastructure
+>> regardless of the technical merits of doing so, not by me failing to
+>> respond to SGI's feedback.
+>>
+>>> It makes me wonder what your motives are.  Did you swear some sort of
+>>> vendetta against bench and remake?  Is there a blood oath between the
+>>> houses of Chinner and common?
+>> [...]
+>>
+>>> It's unnecessary code churn.
+>> You're calling this code churn and implying it's driven by zealotry.
+>> I'd guess this is the first major cleanup you would have seen in the
+>> XFS code base. We've done many and as a matter of principle they do
+>> not leave unnecessary cruft behind.  This is the way we improve the
+>> quality of the code base.
+>>
+>> It's not possible to clean up code properly if you don't remove all
+>> the problematic code and interfces when the opportunity arises.  If
+>> it turns out we need it in future, then we pull it back out of the
+>> revision history and use just the bits we need.  We've been through
+>> this cycle several times before as needs have changed. e.g.  have a
+>> look at the history of the XFS_ISIZE macro in the kernel code.
+>>
+>>> As for my work, there's an advertising slogan which I'm adapting for 
+>>> you
+>>> here: "One oughtn't post a whine before its time".  I have not posted
+>>> that work yet.
+>> OSS development motto:
+>>
+>> "Release early. Release often."
+>>
+>>> What I do know is that you're making extra work for us.
+>> Other people do development, and they are not going to stop making
+>> changes just because it "makes extra work for you".  I have to keep
+>> tens of thousands of lines of patches current at the moment with all
+>> the CRC changes, but I'm not using that as an excuse to stop other
+>> people making changes...
+>>
+>>> So my choices are simple here:
+>>> 1) I could give up -- as everyone else has -- and let this linger 
+>>> forever,
+>> It won't linger forever - I'm really not that far away from sticking
+>> a fork in xfstests...
+>>
+>>> 2) You could accept that this is a change which you have no real 
+>>> reason to
+>>>     make, or
+>>> 3) I can do what I set out to do:  Get this patch series into 
+>>> xfstests and
+>>>     write extra code to bring my stuff in.
+>>>
+>>> The timeframe in which xfstests can move forward in cases 1 or 2 are
+>>> unacceptable to me.  So I'm going to do 3, review your March 15th 
+>>> series,
+>>> and move this forward.
+>> OK, well lets see how that goes :)
+>>
+>> Cheers,
+>>
+>> Dave.
+>
+> As I understood the history, this reorganization has been talked about 
+> for a long time, and agreed upon at the Linux Filesystem meeting.
+>
+> Dave did the work to reorganized the tests and posted as a RFC. A 
+> couple people sent
+> back rough feedback like "the output from this test ends up in the 
+> main directory".
+>
+> SGI wanted to make sure benchmarks are available and easy to use.
+> Dave said many or all of the benchmarks in xfstests are out of date, 
+> he even provided examples of better benchmarks.
+>
+> We all got sucked into other projects until recently Eric pinged  on 
+> this series because it
+> will benefit the whole Linux filesystem community.
+>
+> Phil took over reporting the series, and reposted it to the list. Dave 
+> reposted the series that
+> he had with updates.
+>
+> I thought we all reached a common agreement on the reorganization. We 
+> all want it. SGI
+> would like to add benchmarking as a follow-up patch.  Dave wanted to 
+> make sure that if
+> done, benchmarking is done correctly. Dave's latest series is more up 
+> to date. I thought
+> we were going to do a quick re-review, and get it committed ASAP.
+>
+> We will complete the review of Dave's second patch set and get it 
+> committed ASAP.
+> I expect it will be committed the beginning of next week.
+>
+> Thank you,
+> Troy McCorkell
+> SGI XFS Manager
+>
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
-Most format strings have no newline, but these 3 do, leading to
-i.e.:
+Rich is updating the patch set to TOT.   He'll complete it today and do 
+a test run.
+The patch series should be committed tomorrow. (Wed March 27)
 
-[ 7347.119911] XFS (sdb2): Access to block zero in inode 132 start_block: 0 start_off: 0 blkcnt: 0 extent-state: 0 lastx: 1a05
-[ 7347.119911] 
-[ 7347.119919] XFS (sdb2): Access to block zero in inode 132 start_block: 0 start_off: 0 blkcnt: 0 extent-state: 0 lastx: 1a05
-[ 7347.119919] 
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-p.s. - next up, why am I getting those messages . . . ?
-
-
-diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-index b44af92..53db41f 100644
---- a/fs/xfs/xfs_bmap.c
-+++ b/fs/xfs/xfs_bmap.c
-@@ -3425,7 +3425,7 @@ xfs_bmap_search_extents(
- 		xfs_alert_tag(ip->i_mount, XFS_PTAG_FSBLOCK_ZERO,
- 				"Access to block zero in inode %llu "
- 				"start_block: %llx start_off: %llx "
--				"blkcnt: %llx extent-state: %x lastx: %x\n",
-+				"blkcnt: %llx extent-state: %x lastx: %x",
- 			(unsigned long long)ip->i_ino,
- 			(unsigned long long)gotp->br_startblock,
- 			(unsigned long long)gotp->br_startoff,
-diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-index 6104560..ac5faf5 100644
---- a/fs/xfs/xfs_error.c
-+++ b/fs/xfs/xfs_error.c
-@@ -160,7 +160,7 @@ xfs_error_report(
- {
- 	if (level <= xfs_error_level) {
- 		xfs_alert_tag(mp, XFS_PTAG_ERROR_REPORT,
--		"Internal error %s at line %d of file %s.  Caller 0x%p\n",
-+		"Internal error %s at line %d of file %s.  Caller 0x%p",
- 			    tag, linenum, filename, ra);
- 
- 		xfs_stack_trace();
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 5a30dd8..65412c2 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -107,7 +107,7 @@ xfs_alert_fsblock_zero(
- 	xfs_alert_tag(ip->i_mount, XFS_PTAG_FSBLOCK_ZERO,
- 			"Access to block zero in inode %llu "
- 			"start_block: %llx start_off: %llx "
--			"blkcnt: %llx extent-state: %x\n",
-+			"blkcnt: %llx extent-state: %x",
- 		(unsigned long long)ip->i_ino,
- 		(unsigned long long)imap->br_startblock,
- 		(unsigned long long)imap->br_startoff,
+Thanks,
+Troy
 
 _______________________________________________
 xfs mailing list
