@@ -1,25 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3B8797F67
-	for <xfs@oss.sgi.com>; Tue, 26 Mar 2013 07:53:44 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 19C80304053
-	for <xfs@oss.sgi.com>; Tue, 26 Mar 2013 05:53:43 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id CNDqQsbDQFZz8wtY for
-	<xfs@oss.sgi.com>; Tue, 26 Mar 2013 05:53:40 -0700 (PDT)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r2QCrdKV032526
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Tue, 26 Mar 2013 08:53:39 -0400
-From: Eryu Guan <eguan@redhat.com>
-Subject: [PATCH v2 2/2] xfstests 309: test write to the last block of max file
-	size on ext4
-Date: Tue, 26 Mar 2013 20:52:22 +0800
-Message-Id: <1364302342-3841-2-git-send-email-eguan@redhat.com>
-In-Reply-To: <1364302342-3841-1-git-send-email-eguan@redhat.com>
-References: <1364302342-3841-1-git-send-email-eguan@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 086917F74
+	for <xfs@oss.sgi.com>; Tue, 26 Mar 2013 11:44:13 -0500 (CDT)
+Message-ID: <5151D057.1040604@sgi.com>
+Date: Tue, 26 Mar 2013 11:44:07 -0500
+From: Mark Tinguely <tinguely@sgi.com>
+MIME-Version: 1.0
+Subject: Re: [ASSERT failure] transaction reservations changes bad?
+References: <20130312062001.GJ21651@dastard> <20130312062531.GK21651@dastard>
+	<513EE274.6090808@oracle.com> <20130312103138.GN21651@dastard>
+	<513F0C07.1060000@oracle.com> <513F17F3.1010204@oracle.com>
+	<20130312120545.GO21651@dastard> <51517506.1020906@oracle.com>
+In-Reply-To: <51517506.1020906@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,127 +20,188 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Eryu Guan <eguan@redhat.com>
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: xfs@oss.sgi.com
 
-Regression test for commit:
-f17722f ext4: Fix max file size and logical block counting of extent format file
+On 03/26/13 05:14, Jeff Liu wrote:
+> On 03/12/2013 08:05 PM, Dave Chinner wrote:
+>> On Tue, Mar 12, 2013 at 07:56:35PM +0800, Jeff Liu wrote:
+>>> More info, 3.7.0 is the oldest kernel on my environment, I ran into the
+>>> same problem.
+>>
+>> Thanks for following up so quickly, Jeff. So the problem is that a
+>> new test is tripping over a bug that has been around for a while,
+>> not that it is a new regression.
+>>
+>> OK, so I'll expunge that from my testing for the moment as I don't
+>> ahve time to dig in and find out what the cause is right now. If
+>> anyone else wants to.... :)
+>
+> I did some further tests to nail down this issue, just posting the analysis result here,
+> it might be of some use when we revising it again.
+>
+> The disk is formated with Dave's previous comments, i.e.
+> mkfs.xfs -f -b size=512 -d agcount=16,su=256k,sw=12 -l su=256k,size=2560b /dev/xxx
+>
+> First of all, looks this bug stayed in hiding for years since I can reproduce it between upstream
+> 3.0 to 3.9.0-rc3, the oldest kernel I have tried is 2.6.39 which has the same problem.
+>
+> The following tests are running against kernel with CONFIG_XFS_DEBUG is enabled.
+>
+> 1) Create directory will cause kernel panic, observed same info to Dave's previous posts.
+>
+> [ 3846.705416] XFS: Assertion failed: BTOBB(need_bytes)<  log->l_logBBsize, file: fs/xfs/xfs_log.c, line:
 
-Signed-off-by: Eryu Guan <eguan@redhat.com>
----
-v2: revised after Dave Chinner's review
-  1. add more comments to explain what the test does, I hope it does the job...
-  2. use xfs_io instead of dd
-  3. use stat -f -c %s $TEST_DIR to get block size
-  4. rebase on top of master
+Thanks Jeff for looking at this. I did not look beyond printing the 
+BTOBB(need_bytes) and log->l_logBBsize.
 
- 309     | 70 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 309.out |  2 ++
- group   |  1 +
- 3 files changed, 73 insertions(+)
- create mode 100644 309
- create mode 100644 309.out
+okay the reservation is larger than the logspace defined.
 
-diff --git a/309 b/309
-new file mode 100644
-index 0000000..c2791c0
---- /dev/null
-+++ b/309
-@@ -0,0 +1,70 @@
-+#! /bin/bash
-+# FS QA Test No. 309
-+#
-+# Regression test for commit:
-+# f17722f ext4: Fix max file size and logical block counting of extent format file
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2013 Red Hat, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+# creator
-+owner=eguan@redhat.com
-+
-+seq=`basename $0`
-+echo "QA output created by $seq"
-+
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $testfile
-+}
-+
-+# get standard environment, filters and checks
-+. ./common.rc
-+. ./common.filter
-+
-+testfile=$TEST_DIR/testfile.$seq
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+
-+rm -f $seq.full
-+echo "Silence is golden"
-+
-+block_size=`stat -f -c %s $TEST_DIR`
-+
-+# On unpatched ext4, if an extent exists which includes the block right
-+# before the maximum file offset, and the block for the maximum file offset
-+# is written, the kernel panics
-+# On patched ext4, the write would get EFBIG since we lower s_maxbytes by
-+# one fs block
-+
-+# Create a sparse file with an extent lays at one block before old s_maxbytes
-+offset=$(((2**32 - 2) * $block_size))
-+$XFS_IO_PROG -f -c "pwrite $offset $block_size" -c fsync $testfile >$seq.full 2>&1
-+
-+# Write to the block after the extent just created
-+offset=$(((2**32 - 1) * $block_size))
-+$XFS_IO_PROG -f -c "pwrite $offset $block_size" -c fsync $testfile >>$seq.full 2>&1
-+
-+# Got here without hitting BUG_ON(), test passed
-+status=0
-+exit
-diff --git a/309.out b/309.out
-new file mode 100644
-index 0000000..56330d6
---- /dev/null
-+++ b/309.out
-@@ -0,0 +1,2 @@
-+QA output created by 309
-+Silence is golden
-diff --git a/group b/group
-index 88f6800..d950628 100644
---- a/group
-+++ b/group
-@@ -432,3 +432,4 @@ stress
- 306 auto quick rw
- 307 auto quick
- 308 auto quick
-+309 auto quick
--- 
-1.8.1.4
+  Is the create directory reserving too much?
+  Is the minimum log size too small?
+
+I did not dig too deep into all the possible directory conversion that 
+could happen when one more entry was put in the directory.
+
+>
+> 2) For a refreshed formated XFS partition, create a regular file via `touch /xfs/test_file`, the process
+> will hang and the following syslog were observed:
+>
+> Mar 26 14:15:35 linux64bit kernel: [  841.804353] INFO: task kworker/0:2:2118 blocked for more than 120 seconds.
+> Mar 26 14:15:35 linux64bit kernel: [  841.804361] "echo 0>  /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> Mar 26 14:15:35 linux64bit kernel: [  841.804364] kworker/0:2     D ffffffff8180cfa0     0  2118      2 0x00000000
+> Mar 26 14:15:35 linux64bit kernel: [  841.804372]  ffff880079bfdc18 0000000000000046 ffff880076bdc5c0 0000000000014e40
+> Mar 26 14:15:35 linux64bit kernel: [  841.804378]  ffff880062b31720 ffff880079bfdfd8 ffff880079bfdfd8 ffff880079bfdfd8
+> Mar 26 14:15:35 linux64bit kernel: [  841.804382]  ffffffff81c13440 ffff880062b31720 ffff880079bfdc38 ffff880079165cf0
+> Mar 26 14:15:35 linux64bit kernel: [  841.804387] Call Trace:
+> Mar 26 14:15:35 linux64bit kernel: [  841.804400]  [<ffffffff8169c399>] schedule+0x29/0x70
+> Mar 26 14:15:35 linux64bit kernel: [  841.804444]  [<ffffffffa037e15a>] xlog_grant_head_wait+0x15a/0x2b0 [xfs]
+> Mar 26 14:15:35 linux64bit kernel: [  841.804466]  [<ffffffff81692bf3>] ? printk+0x61/0x63
+> Mar 26 14:15:35 linux64bit kernel: [  841.804500]  [<ffffffffa037e414>] xlog_grant_head_check+0x164/0x1d0 [xfs]
+> Mar 26 14:15:35 linux64bit kernel: [  841.804530]  [<ffffffffa037ff8e>] xfs_log_reserve+0x24e/0x3e0 [xfs]
+> Mar 26 14:15:35 linux64bit kernel: [  841.804561]  [<ffffffffa037b747>] xfs_trans_reserve+0x327/0x360 [xfs]
+> Mar 26 14:15:35 linux64bit kernel: [  841.804589]  [<ffffffffa032dd84>] ? kmem_zone_zalloc+0x34/0x50 [xfs]
+> Mar 26 14:15:35 linux64bit kernel: [  841.804613]  [<ffffffffa031bbb0>] xfs_fs_log_dummy+0x80/0x130 [xfs]
+> Mar 26 14:15:35 linux64bit kernel: [  841.804643]  [<ffffffffa0381524>] xfs_log_worker+0x54/0x120 [xfs]
+> Mar 26 14:15:35 linux64bit kernel: [  841.804650]  [<ffffffff8107805b>] process_one_work+0x16b/0x400
+> Mar 26 14:15:35 linux64bit kernel: [  841.804655]  [<ffffffff81078ce9>] worker_thread+0x119/0x360
+> Mar 26 14:15:35 linux64bit kernel: [  841.804660]  [<ffffffff81078bd0>] ? manage_workers+0x350/0x350
+> Mar 26 14:15:35 linux64bit kernel: [  841.804665]  [<ffffffff8107e200>] kthread+0xc0/0xd0
+> Mar 26 14:15:35 linux64bit kernel: [  841.804669]  [<ffffffff8107e140>] ? flush_kthread_worker+0xb0/0xb0
+> Mar 26 14:15:35 linux64bit kernel: [  841.804675]  [<ffffffff816a5d2c>] ret_from_fork+0x7c/0xb0
+> Mar 26 14:15:35 linux64bit kernel: [  841.804679]  [<ffffffff8107e140>] ? flush_kthread_worker+0xb0/0xb0
+> Mar 26 14:15:35 linux64bit kernel: [  841.804685] INFO: task touch:2323 blocked for more than 120 seconds.
+> Mar 26 14:15:35 linux64bit kernel: [  841.804687] "echo 0>  /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> Mar 26 14:15:35 linux64bit kernel: [  841.804689] touch           D ffffffff8180cfa0     0  2323   2128 0x00000000
+> Mar 26 14:15:35 linux64bit kernel: [  841.804694]  ffff8800791419b8 0000000000000086 ffff880076bdc5c0 0000000000014e40
+> Mar 26 14:15:35 linux64bit kernel: [  841.804699]  ffff88003032ae40 ffff880079141fd8 ffff880079141fd8 ffff880079141fd8
+> Mar 26 14:15:35 linux64bit kernel: [  841.804703]  ffffffff81c13440 ffff88003032ae40 ffff8800791419d8 ffff880079993000
+> Mar 26 14:15:35 linux64bit kernel: [  841.804707] Call Trace:
+> Mar 26 14:15:35 linux64bit kernel: [  841.804713]  [<ffffffff8169c399>] schedule+0x29/0x70
+> Mar 26 14:15:35 linux64bit kernel: [  841.804740]  [<ffffffffa037e15a>] xlog_grant_head_wait+0x15a/0x2b0 [xfs]
+> Mar 26 14:15:35 linux64bit kernel: [  841.804745]  [<ffffffff81692bf3>] ? printk+0x61/0x63
+> Mar 26 14:15:35 linux64bit kernel: [  841.804772]  [<ffffffffa037e461>] xlog_grant_head_check+0x1b1/0x1d0 [xfs]
+> Mar 26 14:15:35 linux64bit kernel: [  841.804798]  [<ffffffffa037ff8e>] xfs_log_reserve+0x24e/0x3e0 [xfs]
+> Mar 26 14:15:35 linux64bit kernel: [  841.804826]  [<ffffffffa037b747>] xfs_trans_reserve+0x327/0x360 [xfs]
+> Mar 26 14:15:35 linux64bit kernel: [  841.804854]  [<ffffffffa032ac34>] xfs_create+0x184/0x6f0 [xfs]
+> Mar 26 14:15:35 linux64bit kernel: [  841.804880]  [<ffffffffa0322e4b>] xfs_vn_mknod+0xcb/0x1e0 [xfs]
+> Mar 26 14:15:35 linux64bit kernel: [  841.804904]  [<ffffffffa0322f93>] xfs_vn_create+0x13/0x20 [xfs]
+> Mar 26 14:15:35 linux64bit kernel: [  841.804913]  [<ffffffff811a29c5>] vfs_create+0xb5/0x130
+> Mar 26 14:15:35 linux64bit kernel: [  841.804918]  [<ffffffff811a37ca>] do_last+0xd8a/0xec0
+> Mar 26 14:15:35 linux64bit kernel: [  841.804926]  [<ffffffff812fe01c>] ? apparmor_file_alloc_security+0x2c/0x60
+> Mar 26 14:15:35 linux64bit kernel: [  841.804932]  [<ffffffff811a39b8>] path_openat+0xb8/0x4c0
+> Mar 26 14:15:35 linux64bit kernel: [  841.804937]  [<ffffffff81158741>] ? handle_mm_fault+0x271/0x390
+> Mar 26 14:15:35 linux64bit kernel: [  841.804943]  [<ffffffff811a4552>] do_filp_open+0x42/0xa0
+> Mar 26 14:15:35 linux64bit kernel: [  841.804949]  [<ffffffff811b1675>] ? __alloc_fd+0xe5/0x170
+> Mar 26 14:15:35 linux64bit kernel: [  841.804955]  [<ffffffff811941de>] do_sys_open+0xfe/0x1e0
+> Mar 26 14:15:35 linux64bit kernel: [  841.804960]  [<ffffffff811942e1>] sys_open+0x21/0x30
+> Mar 26 14:15:35 linux64bit kernel: [  841.804966]  [<ffffffff816a5dd9>] system_call_fastpath+0x16/0x1b
+>
+> It most likely a deadlock or dead loop was occurred according to above tracing info.
+> Then I did some investigation to check what had happened in transaction log space reservations
+> between mount a refreshed formated XFS partition and create a new file by adding some debugging code.
+>
+> As per the current disk formating, the totally log space is 2560 * 1024 = 2621440 bytes.
+> By default, there are 1310720 bytes free space on both l_reserve_head.grant and l_write_head.grant separately.
+
+The reserve and write grant use the whole space. Look at the xlog and 
+CIL CTX values when hung.
+
+>
+> Firstly, I observed a non-permanent CIL ticket allocation at xlog_cil_init_post_recovery() for xfs_log_mount(),
+> and it has no affect to our situation.
+>
+> Secondly, xfs_vn_update_time() is invoked per mount the partition, and hence the XFS_TRANS_FSYNC_TS transaction
+> was happened, it need 532916 bytes for the space reservation, then give back 208 bytes at xlog_ungrant_log_space()
+> after xfs_trans_commit().  Therefore, it only reserved (532916 - 208) bytes in this transaction, now there has
+> 1310720 - (532916 - 208) = 778012 bytes left at l_reserve_head.grant.
+>
+> Finally, creating a file will make XFS_TRANS_CREATE happened, and it need to reserve 1205208 bytes, however, there
+> only has 778012 bytes can be reserved, so that the process hang at the loop of xlog_grant_head_wait() and then call
+> schedule() to let other processes wake up and running.
+>
+> In this situation, xfs_log_worker() will up and running, as this is the 1st time it was issued, the call chains was
+> shown as following:
+> ........
+> ......
+> xlog_log_force()
+>    __xfs_log_force() ->  xfs_sync()
+>      xlog_cil_force_lsn()
+>        xlog_cil_push()
+>          xlog_log_done()
+>            xlog_ungrant_log_space()
+> 	    xlog_log_space_wake()
+> 	      xlog_grant_head_wake()...
+>
+> Up to now, there should left 1306396 bytes in l_reserve_head.grant since I observed this CHECKPOINT transaction
+> gave back 528384 bytes at xlog_ungrant_log_space(), so that 528384 + 778012 = 1306396 bytes, but that's is not
+> exactly, because it reserved 257820 bytes at xfs_sync(), so the left space is 1306396 - 257820 = 1048576 bytes.
+>
+> Once xfs_log_worker() run completed, the previous XFS_TRANS_CREATE is revived at the point after schedule(),
+> but the free space(1048576) is less than the required(1205208), as a result, it got blocked again.
+>
+> Periodicity, xfs_log_worker() comes up, but this time it gone through XFS_TRANS_DUMMY instead.  In this case, the
+> current free space is enough for this reservations because it requires 533172 bytes only, however, it also hang at
+> the point of xlog_grant_head_wait() before schedule() because there only has one log transaction related process
+> belong to the file creation would be scheduled, but this process will be blocked again due to the lack of log space.
+
+Yes, it will get blocked behind the previous allocations.
+
+>
+> The question is that even if XFS_TRANS_DUMMY was not got involved, XFS_TRANS_CREATE would still be blocked as the log
+> space reservation can not be satisfied.  IMHO, looks the major cause is related to the 'sunit' parameter, since it would
+> affect the log space unit calculations by '2*log->l_mp->m_sb.sb_logsunit' at xlog_ticket_alloc().  However, we don't include
+> this factor into consideration at mkfs or mount stage, should we take it into account?
+>
+
+There is at least one other (controversial) log (over-) allocation, but 
+this is not involved here.
+
+It is easy to hang small logs. I classify them as soft and hard hands.
+
+Soft hangs can be restarted with a new transactions (touch/mkdir) that 
+request grant space and forces a push the AIL up to the last_sync value.
+
+This looks like a hard hang. Most of the time, the CIL, CTX ticket and 
+any permanent tickets can enough hold space that a simple AIL push 
+cannot get it going again. Tickets have to allocate for the worse case. 
+Most time they give back this worse case space when the CIL is pushed.
+
+2 log blocksize or log stripe unit for rounding is added to every 
+allocation, so that is already counted in the "bytes_needed".
+
+>
+> Thanks,
+> -Jeff
+
+Like I said before, I had not looked at this beyond what blocks needed 
+versus blocks in the log. I am willing to help.
+
+--Mark.
 
 _______________________________________________
 xfs mailing list
