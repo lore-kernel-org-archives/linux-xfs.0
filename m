@@ -1,12 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 792C07F50
-	for <xfs@oss.sgi.com>; Wed, 27 Mar 2013 13:17:19 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id C2A4F7F50
+	for <xfs@oss.sgi.com>; Wed, 27 Mar 2013 13:39:08 -0500 (CDT)
 MIME-Version: 1.0
 Subject: [v3 Repost] xfs: Add ratelimited printk for different alert levels
-Date: Wed, 26 Sep 2012 06:56:47 -0000
-From: Raghavendra D Prabhu <raghu.prabhu13@gmail.com>
-Message-Id: <5515301A9.9010206@sgi.com>
+Date: Wed, 27 Mar 2013 09:26:49 -0500
+From: Rich Johnston <rjohnston@sgi.com>
+Message-Id: <515339F7.8000505@sgi.com>
+In-Reply-To: <ca71153845539b0c76ba3e3aab9611ad6c5cf72b.1348641483.git.rprabhu@wnohang.net>
 References: <ca71153845539b0c76ba3e3aab9611ad6c5cf72b.1348641483.git.rprabhu@wnohang.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -22,8 +23,6 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: bpm@sgi.com, elder@kernel.org, Raghavendra D Prabhu <rprabhu@wnohang.net>
-
-From: Raghavendra D Prabhu <rprabhu@wnohang.net>
 
 Ratelimited printk will be useful in printing xfs messages which are otherwise
 not required to be printed always due to their high rate (to prevent kernel ring
