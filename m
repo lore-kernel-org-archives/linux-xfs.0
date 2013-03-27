@@ -1,27 +1,40 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 60C707F51
-	for <xfs@oss.sgi.com>; Wed, 27 Mar 2013 16:58:47 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 15F3230408F
-	for <xfs@oss.sgi.com>; Wed, 27 Mar 2013 14:58:47 -0700 (PDT)
-Received: from mail-la0-f44.google.com (mail-la0-f44.google.com
-	[209.85.215.44]) by cuda.sgi.com with ESMTP id ZQrLggFUWVlfSJZp
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 27 Mar 2013 14:58:44 -0700 (PDT)
-Received: by mail-la0-f44.google.com with SMTP id eb20so16638400lab.31
-	for <xfs@oss.sgi.com>; Wed, 27 Mar 2013 14:58:43 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAEDdjHcP_An=CXSo3sL0w373wFfb=Zr-T7C2fUMuDbmrm6DDHQ@mail.gmail.com>
-References: <CAEDdjHeo3Giv3Y8pLfYHSbJi07_dv7ywzinCSSkxUwBQe-1fsw@mail.gmail.com>
-	<20130320004405.GC17758@dastard>
-	<CAEDdjHc139n-FFrW34FLyfKsqFHBy0_LVcVT24aLyCpb4DC9dA@mail.gmail.com>
-	<20130321010149.GF17758@dastard>
-	<CAEDdjHcP_An=CXSo3sL0w373wFfb=Zr-T7C2fUMuDbmrm6DDHQ@mail.gmail.com>
-Date: Wed, 27 Mar 2013 21:58:43 +0000
-Message-ID: <CAEDdjHdj9QD3OybyJwahpBDA=i8nxeLufaHDT0c9EEfdotp1Pw@mail.gmail.com>
-Subject: Re: Crash with 3.8.3 and TuxOnIce
-From: Pedro Ribeiro <pedrib@gmail.com>
+	by oss.sgi.com (Postfix) with ESMTP id 36D287F52
+	for <xfs@oss.sgi.com>; Wed, 27 Mar 2013 18:07:10 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 255DD30408C
+	for <xfs@oss.sgi.com>; Wed, 27 Mar 2013 16:07:07 -0700 (PDT)
+Received: from e9.ny.us.ibm.com (e9.ny.us.ibm.com [32.97.182.139]) by
+	cuda.sgi.com with ESMTP id cpUGheoo4Gba8FiQ (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 27 Mar 2013 16:07:06 -0700 (PDT)
+Received: from /spool/local
+	by e9.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	Violators will be prosecuted
+	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
+	Wed, 27 Mar 2013 19:07:05 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id CFBF9C9001A
+	for <xfs@oss.sgi.com>; Wed, 27 Mar 2013 19:07:03 -0400 (EDT)
+Received: from d03av05.boulder.ibm.com (d03av05.boulder.ibm.com [9.17.195.85])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	r2RN73AE339968 for <xfs@oss.sgi.com>; Wed, 27 Mar 2013 19:07:03 -0400
+Received: from d03av05.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av05.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id r2RN72fb000767
+	for <xfs@oss.sgi.com>; Wed, 27 Mar 2013 17:07:03 -0600
+Subject: Re: [PATCH 21/21] xfs: add CRC checks to the superblock
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+In-Reply-To: <20130327010625.GM6369@dastard>
+References: <1363091454-8852-1-git-send-email-david@fromorbit.com>
+	<1363091454-8852-22-git-send-email-david@fromorbit.com>
+	<1364331527.32345.135.camel@chandra-dt.ibm.com>
+	<20130327010625.GM6369@dastard>
+Date: Wed, 27 Mar 2013 18:07:01 -0500
+Message-ID: <1364425621.32345.177.camel@chandra-dt.ibm.com>
+Mime-Version: 1.0
+Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,229 +43,336 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============5248515637945093893=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
---===============5248515637945093893==
-Content-Type: multipart/alternative; boundary=f46d04016be1373c8f04d8ef24cd
+Hi Dave,
 
---f46d04016be1373c8f04d8ef24cd
-Content-Type: text/plain; charset=ISO-8859-1
+Thanks for patiently explaining the details.
 
-Hi Dave (and others),
+Please see my comments below.
 
-I've pretty much established the responsible: commit
-437a255aa23766666aec78af63be4c253faa8d57
-(
-http://git.kernel.org/cgit/linux/kernel/git/stable/stable-queue.git/tree/releases/3.7.2/xfs-fix-direct-io-nested-transaction-deadlock.patch?id=HEAD
-).
+On Wed, 2013-03-27 at 12:06 +1100, Dave Chinner wrote:
+> On Tue, Mar 26, 2013 at 03:58:47PM -0500, Chandra Seetharaman wrote:
+> > On Tue, 2013-03-12 at 23:30 +1100, Dave Chinner wrote:
+> > > From: Dave Chinner <dchinner@redhat.com>
+> > > 
+> > > With the addition of CRCs, there is such a wide and varied change to
+> > > the on disk format that it makes sense to bump the superblock
+> > > version number rather than try to use feature bits for all the new
+> > > functionality.
+> > > 
+> > > This commit introduces all the new superblock fields needed for all
+> > > the new functionality: feature masks similar to ext4, separate
+> > > project quota inodes, a LSN field for recovery and the CRC field.
+> > > 
+> > > This commit does not bump the superblock version number, however.
+> > > That will be done as a separate commit at the end of the series
+> > > after all the new functionality is present so we switch it all on in
+> > > one commit. This means that we can slowly introduce the changes
+> > > without them being active and hence maintain bisectability of the
+> > > tree.
+> > > 
+> > > This patch is based on a patch originally written by myself back
+> > > from SGI days, which was subsequently modified by Christoph Hellwig.
+> > > There is relatively little of that patch remaining, but the history
+> > > of the patch still should be acknowledged here.
+> > > 
+> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > > ---
+> > >  fs/xfs/xfs_buf_item.h    |    4 +-
+> > >  fs/xfs/xfs_log_recover.c |    8 ++++
+> > >  fs/xfs/xfs_mount.c       |   97 ++++++++++++++++++++++++++++++++++++--------
+> > >  fs/xfs/xfs_mount.h       |    1 +
+> > >  fs/xfs/xfs_sb.h          |  100 ++++++++++++++++++++++++++++++++--------------
+> > >  5 files changed, 164 insertions(+), 46 deletions(-)
+> > 
+> > <snip>
+> .....
+> > > @@ -276,6 +303,11 @@ typedef enum {
+> > >  #define XFS_SB_FDBLOCKS		XFS_SB_MVAL(FDBLOCKS)
+> > >  #define XFS_SB_FEATURES2	XFS_SB_MVAL(FEATURES2)
+> > >  #define XFS_SB_BAD_FEATURES2	XFS_SB_MVAL(BAD_FEATURES2)
+> > > +#define XFS_SB_FEATURES_COMPAT	XFS_SB_MVAL(FEATURES_COMPAT)
+> > > +#define XFS_SB_FEATURES_RO_COMPAT XFS_SB_MVAL(FEATURES_RO_COMPAT)
+> > > +#define XFS_SB_FEATURES_INCOMPAT XFS_SB_MVAL(FEATURES_INCOMPAT)
+> > > +#define XFS_SB_CRC		XFS_SB_MVAL(CRC)
+> > > +#define XFS_SB_PQUOTINO		XFS_SB_MVAL(PQUOTINO)
+> > 
+> > missing define for XFS_SB_LSN ?!
+> 
+> No, not at all. We only have bits for variables that get logged. The
+> LSn of the object is never logged as it is stamped into the object
+> when it is being written back. i.e. it is an indication of when the
+> object was last modified, not a field that is recorded during
+> modifications.
 
-Without this patch, the computer does not lock up in hibernate. So I
-understand that this is most likely a bug in ToI, not in xfs. Does this
-give you a better idea of how to solve the problem? The only xfs-specific
-patch in ToI is below:
+Hmm. may be I misunderstood. Aren't these bits to inform the low level
+function (that selects which fields in superblocks are updated) which
+fields we want to update on the disk ? 
 
-diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index 0eda725..55de808 100644
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -511,6 +511,7 @@ xfsaild(
-  struct xfs_ail *ailp = data;
-  long tout = 0; /* milliseconds */
+> 
+> > > @@ -325,6 +358,8 @@ static inline int xfs_sb_good_version(xfs_sb_t *sbp)
+> > > 
+> > >  		return 1;
+> > >  	}
+> > > +	if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5)
+> > > +		return 1;
+> > > 
+> > >  	return 0;
+> > >  }
+> > > @@ -365,7 +400,7 @@ static inline int xfs_sb_version_hasattr(xfs_sb_t *sbp)
+> > >  {
+> > >  	return sbp->sb_versionnum == XFS_SB_VERSION_2 ||
+> > >  		sbp->sb_versionnum == XFS_SB_VERSION_3 ||
+> > > -		(XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
+> > > +		(XFS_SB_VERSION_NUM(sbp) >= XFS_SB_VERSION_4 &&
+> > >  		 (sbp->sb_versionnum & XFS_SB_VERSION_ATTRBIT));
+> > >  }
+> > 
+> > Do you expect version 5 and later have this bit to be exclusively set to
+> > use attribues ? (i.e can't we just assume version 5 and later would have
+> > attributes ?)
+> 
+> This just indicates that there are inodes with attributes in the
+> filesystem. It's not an "enabling" feature at all. If it's not
+> present when the first attribute is created, then the kernel code
+> will set it. Hence all this does it maintain the existing
+> behaviour....
+> 
+> > Since we are changing the version, can't we get rid of some on these
+> > bits (i.e slowly deprecate them) ? 
+> 
+> No, because we still support version 4 superblocks and hence all
+> these bit for the indefinite future (i.e. forever).
 
-+ set_freezable();
-  current->flags |= PF_MEMALLOC;
+Sorry. I used a wrong word "deprecate". That is not what I meant.
 
-  while (!kthread_should_stop()) {
+I wanted to see if by deliberately making few of the bits in
+versionnum/features2 implicit in version 5 can we start using the _same_
+bits in version 5 for new features. Mainly to avoid added features3,
+feature4... fields in the future. (my questions came from that point of
+view).
 
-Looking at the code blindly, it appears to be similar to what goes on in
-other filesystems...
+Basically, assume if version 4 has features bit A B C D E F, and version
+5 implicitly means A D E F are set (i.e we do not have to use those bits
+in version 5 for those specific features), and B and C are optional
+which could still be used in version 5.
 
-Regards,
-Pedro
+>From your explanation, it is clear that some features are implicit in
+version 5 (and hence setting the bit is not needed). ATTRBIT, NLINKBIT,
+and QUOTABIT seems to be optional (and still could be used in version
+5), and all others are implicit.
 
+Even though some of the features are now implicit, and the corresponding
+bits are not used, i see that the plan is to keep the bits as is
+(without reusing). Is that correct ?
 
-On 21 March 2013 17:45, Pedro Ribeiro <pedrib@gmail.com> wrote:
+Do you see any value in reusing the bits ?
 
->
->
->
-> On 21 March 2013 01:01, Dave Chinner <david@fromorbit.com> wrote:
->
->> On Wed, Mar 20, 2013 at 06:01:35PM +0000, Pedro Ribeiro wrote:
->> > Thanks for the answer Dave.
->> >
->> > Yes I would definitely say it's a ToI bug that perhaps has been dormant
->> so
->> > far. Unfortunately the ToI developer is very busy at the moment, so I
->> will
->> > have to debug and fix it myself.
->> > This problem did not occur with 3.7 and the ToI code did not change.
->> >
->> > Do you have any idea where I can start looking for the XFS change in 3.8
->> > that triggered this behaviour in ToI? Or maybe it was a VFS change?
->>
->> It's almost certainly an XFS change that triggered it, but it
->> indicates (once again) that the hibernate code is simply not
->> quiescing filesystems properly (i.e. by freezing them). The work
->> that caused this problem is stopped by the filesystem when it
->> is frozen, and started again when it is thawed...
->>
->> > PS: the email definitely bounced back, most likely because imageshack is
->> > blocked on the sgi server:
->> >
->> > Technical details of permanent failure:
->> > Google tried to deliver your message, but it was rejected by the server
->> for
->> > the recipient domain oss.sgi.com by cuda-allmx.sgi.com.
->> [192.48.176.16].
->> >
->> > The error that the other server returned was:
->> > 554 rejecting banned content
->>
->> IOWs, a stupid spam filter.
->>
->> I'll see if I can get this fixed.
->>
->> Cheers,
->>
->> Dave.
->> --
->> Dave Chinner
->> david@fromorbit.com
->>
->
-> Actually I've nailed it down to a commit between 3.7.1 and 3.7.10. I'll do
-> some git bisection and come back with the results.
->
-> Regarding ToI and filesystem freezing, I guess I need to start delving
-> into the code to see if I can fix it - long but fun journey ahead I guess.
->
-> Regards,
-> Pedro
->
->
+> 
+> > > @@ -373,7 +408,7 @@ static inline void xfs_sb_version_addattr(xfs_sb_t *sbp)
+> > >  {
+> > >  	if (sbp->sb_versionnum == XFS_SB_VERSION_1)
+> > >  		sbp->sb_versionnum = XFS_SB_VERSION_2;
+> > > -	else if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4)
+> > > +	else if (XFS_SB_VERSION_NUM(sbp) >= XFS_SB_VERSION_4)
+> > >  		sbp->sb_versionnum |= XFS_SB_VERSION_ATTRBIT;
+> > >  	else
+> > >  		sbp->sb_versionnum = XFS_SB_VERSION_4 | XFS_SB_VERSION_ATTRBIT;
+> > > @@ -382,7 +417,7 @@ static inline void xfs_sb_version_addattr(xfs_sb_t *sbp)
+> > >  static inline int xfs_sb_version_hasnlink(xfs_sb_t *sbp)
+> > >  {
+> > >  	return sbp->sb_versionnum == XFS_SB_VERSION_3 ||
+> > > -		 (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
+> > > +		 (XFS_SB_VERSION_NUM(sbp) >= XFS_SB_VERSION_4 &&
+> > >  		  (sbp->sb_versionnum & XFS_SB_VERSION_NLINKBIT));
+> > 
+> > Same here
+> 
+> This is for version 1/2 inodes and which formats are present in the
+> filesystem. It has been set by default in mkfs for a long time.
+> Version 5 superblocks don't change this. This bit can also be set on
+> demand by the kernel if it is not present and an inode requires a
+> link count of > 2^16.
+> 
+> Further, CRCs require v3 inodes, so this is only relevant for
+> non-crc enabled filesystems.
+> 
+> > > @@ -396,13 +431,13 @@ static inline void xfs_sb_version_addnlink(xfs_sb_t *sbp)
+> > > 
+> > >  static inline int xfs_sb_version_hasquota(xfs_sb_t *sbp)
+> > >  {
+> > > -	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
+> > > +	return XFS_SB_VERSION_NUM(sbp) >= XFS_SB_VERSION_4 &&
+> > >  		(sbp->sb_versionnum & XFS_SB_VERSION_QUOTABIT);
+> > 
+> > same here
+> 
+> Set when quotas are turned on by the kernel. Behaves the same for
+> v4/v5 superblocks.
+> 
+> > >  }
+> > > 
+> > >  static inline void xfs_sb_version_addquota(xfs_sb_t *sbp)
+> > >  {
+> > > -	if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4)
+> > > +	if (XFS_SB_VERSION_NUM(sbp) >= XFS_SB_VERSION_4)
+> > >  		sbp->sb_versionnum |= XFS_SB_VERSION_QUOTABIT;
+> > >  	else
+> > >  		sbp->sb_versionnum = xfs_sb_version_tonew(sbp->sb_versionnum) |
+> > > @@ -411,13 +446,14 @@ static inline void xfs_sb_version_addquota(xfs_sb_t *sbp)
+> > > 
+> > >  static inline int xfs_sb_version_hasalign(xfs_sb_t *sbp)
+> > >  {
+> > > -	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
+> > > -		(sbp->sb_versionnum & XFS_SB_VERSION_ALIGNBIT);
+> > > +	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) ||
+> > > +	       (XFS_SB_VERSION_NUM(sbp) >= XFS_SB_VERSION_4 &&
+> > > +		(sbp->sb_versionnum & XFS_SB_VERSION_ALIGNBIT));
+> > >  }
+> > 
+> > same here
+> 
+> mkfs already sets this bit unconditionally for v4 superblocks, so V5
+> makes it mandatory.
+> 
+> > >  static inline int xfs_sb_version_hasdalign(xfs_sb_t *sbp)
+> > >  {
+> > > -	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
+> > > +	return XFS_SB_VERSION_NUM(sbp) >= XFS_SB_VERSION_4 &&
+> > >  		(sbp->sb_versionnum & XFS_SB_VERSION_DALIGNBIT);
+> > >  }
+> > 
+> > same here
+> 
+> Necessary to indicate sunit/swidth are set at mkfs time, indicating
+> alignment restrictions are present on filesystem layout. Behaves the
+> same for v4/v5 superblocks.
+> 
+> > > @@ -429,38 +465,42 @@ static inline int xfs_sb_version_hasshared(xfs_sb_t *sbp)
+> > > 
+> > >  static inline int xfs_sb_version_hasdirv2(xfs_sb_t *sbp)
+> > >  {
+> > > -	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
+> > > -		(sbp->sb_versionnum & XFS_SB_VERSION_DIRV2BIT);
+> > > +	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) ||
+> > 
+> > Why some places we have version == 5 and others (version == 5 && (XXX))
+> 
+> Because some things are simply set as supported on v5 superblocks,
+> while other are still optional or indicative of on-disk formats in
+> use.
 
---f46d04016be1373c8f04d8ef24cd
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+Clear now.
+> 
+> > >  static inline int xfs_sb_version_hasmorebits(xfs_sb_t *sbp)
+> > >  {
+> > > -	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
+> > > -		(sbp->sb_versionnum & XFS_SB_VERSION_MOREBITSBIT);
+> > > +	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) ||
+> > > +	       (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4 &&
+> > > +		(sbp->sb_versionnum & XFS_SB_VERSION_MOREBITSBIT));
+> > 
+> > Gets more confusing here. version 5 means it has more bits ? (even if
+> > the MOREBITSBIT is not set ?
+> > 
+> > May be we shouldn't add version 5 check here ?!
+> 
+> The MOREBITSBIT bit means that the sb_features2 field exists in the
+> on disk structure. That is clearly true for all v5 superblocks, and
+> so we don't need to care if the MOREBITSBIT is set or not.
 
-<div dir=3D"ltr">Hi Dave (and others),<div><br></div><div style>I&#39;ve pr=
-etty much established the responsible: commit=A0<span style=3D"color:rgb(0,=
-0,0);font-size:13px">437a255aa23766666aec78af63be4c253faa8d57 (</span><a hr=
-ef=3D"http://git.kernel.org/cgit/linux/kernel/git/stable/stable-queue.git/t=
-ree/releases/3.7.2/xfs-fix-direct-io-nested-transaction-deadlock.patch?id=
-=3DHEAD">http://git.kernel.org/cgit/linux/kernel/git/stable/stable-queue.gi=
-t/tree/releases/3.7.2/xfs-fix-direct-io-nested-transaction-deadlock.patch?i=
-d=3DHEAD</a>).</div>
-<div style><br></div><div style>Without this patch, the computer does not l=
-ock up in hibernate. So I understand that this is most likely a bug in ToI,=
- not in xfs. Does this give you a better idea of how to solve the problem? =
-The only xfs-specific patch in ToI is below:</div>
-<div style><br></div><div style><div>diff --git a/fs/xfs/xfs_trans_ail.c b/=
-fs/xfs/xfs_trans_ail.c</div><div>index 0eda725..55de808 100644</div><div>--=
-- a/fs/xfs/xfs_trans_ail.c</div><div>+++ b/fs/xfs/xfs_trans_ail.c</div>
-<div>@@ -511,6 +511,7 @@ xfsaild(</div><div>=A0<span class=3D"" style=3D"wh=
-ite-space:pre">	</span>struct xfs_ail<span class=3D"" style=3D"white-space:=
-pre">	</span>*ailp =3D data;</div><div>=A0<span class=3D"" style=3D"white-s=
-pace:pre">	</span>long<span class=3D"" style=3D"white-space:pre">		</span>t=
-out =3D 0;<span class=3D"" style=3D"white-space:pre">	</span>/* millisecond=
-s */</div>
-<div>=A0</div><div>+<span class=3D"" style=3D"white-space:pre">	</span>set_=
-freezable();</div><div>=A0<span class=3D"" style=3D"white-space:pre">	</spa=
-n>current-&gt;flags |=3D PF_MEMALLOC;</div><div>=A0</div><div>=A0<span clas=
-s=3D"" style=3D"white-space:pre">	</span>while (!kthread_should_stop()) {</=
-div>
-<div><br></div><div style>Looking at the code blindly, it appears to be sim=
-ilar to what goes on in other filesystems...</div><div style><br></div><div=
- style>Regards,</div><div style>Pedro</div></div></div><div class=3D"gmail_=
-extra">
-<br><br><div class=3D"gmail_quote">On 21 March 2013 17:45, Pedro Ribeiro <s=
-pan dir=3D"ltr">&lt;<a href=3D"mailto:pedrib@gmail.com" target=3D"_blank">p=
-edrib@gmail.com</a>&gt;</span> wrote:<br><blockquote class=3D"gmail_quote" =
-style=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex">
-<div dir=3D"ltr"><br><div class=3D"gmail_extra"><br><br><div class=3D"gmail=
-_quote"><div><div class=3D"h5">On 21 March 2013 01:01, Dave Chinner <span d=
-ir=3D"ltr">&lt;<a href=3D"mailto:david@fromorbit.com" target=3D"_blank">dav=
-id@fromorbit.com</a>&gt;</span> wrote:<br>
+Understood.
+> 
+> > > @@ -475,14 +515,16 @@ static inline int xfs_sb_version_hasmorebits(xfs_sb_t *sbp)
+> > > 
+> > >  static inline int xfs_sb_version_haslazysbcount(xfs_sb_t *sbp)
+> > >  {
+> > > -	return xfs_sb_version_hasmorebits(sbp) &&
+> > > -		(sbp->sb_features2 & XFS_SB_VERSION2_LAZYSBCOUNTBIT);
+> > > +	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) ||
+> > > +	       (xfs_sb_version_hasmorebits(sbp) &&
+> > > +		(sbp->sb_features2 & XFS_SB_VERSION2_LAZYSBCOUNTBIT));
+> > >  }
+> > 
+> > If we remove the version 5 check in xfs_sb_hasmorebits(), then this
+> > change is correct. Otherwise, this change is not needed.
+> 
+> No, this change means lazy superblock counters are a fixed feature
+> of v5 superblocks - it is not optional like it currently is. The
+> check inside xfs_sb_version_hasmorebits() is to determine if the
+> features2 field is present, not that the lazycount feature is
+> supported....
+> 
+> > >  static inline int xfs_sb_version_hasattr2(xfs_sb_t *sbp)
+> > >  {
+> > > -	return xfs_sb_version_hasmorebits(sbp) &&
+> > > -		(sbp->sb_features2 & XFS_SB_VERSION2_ATTR2BIT);
+> > > +	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) ||
+> > > +	       (xfs_sb_version_hasmorebits(sbp) &&
+> > > +		(sbp->sb_features2 & XFS_SB_VERSION2_ATTR2BIT));
+> > >  }
+> > 
+> > If we remove the version 5 check in xfs_sb_hasmorebits(), then this
+> > change is correct. Otherwise, this change is not needed.
+> 
+> Same again - v5 implies attr2 behaviour is the only attr fork
+> behaviour supported.
+> 
+> > >  static inline void xfs_sb_version_addattr2(xfs_sb_t *sbp)
+> > > @@ -500,14 +542,14 @@ static inline void xfs_sb_version_removeattr2(xfs_sb_t *sbp)
+> > > 
+> > >  static inline int xfs_sb_version_hasprojid32bit(xfs_sb_t *sbp)
+> > >  {
+> > > -	return xfs_sb_version_hasmorebits(sbp) &&
+> > > -		(sbp->sb_features2 & XFS_SB_VERSION2_PROJID32BIT);
+> > > +	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) ||
+> > > +	       (xfs_sb_version_hasmorebits(sbp) &&
+> > > +		(sbp->sb_features2 & XFS_SB_VERSION2_PROJID32BIT));
+> > >  }
+> > If we remove the version 5 check in xfs_sb_hasmorebits(), then this
+> > change is correct. Otherwise, this change is not needed.
+> 
+> Same again - v5 superblocks *always* support 32 bit project ids.
+> 
+> > >  static inline int xfs_sb_version_hascrc(xfs_sb_t *sbp)
+> > >  {
+> > > -	return (xfs_sb_version_hasmorebits(sbp) &&
+> > > -		(sbp->sb_features2 & XFS_SB_VERSION2_CRCBIT));
+> > > +	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5;
+> > 
+> > what happens to the superblocks that already have version 4 and this bit
+> > set ?
+> 
+> It makes the XFS_SB_VERSION2_CRCBIT an invalid feature bit - it has
+> never, ever been used by anything - so any filesystem with that bit
+> set will fail to mount.
+> 
+> > Also don't xfs_sb_version_toold() and xfs_sb_version_tonew() need
+> > changes ?
+> 
+> No. the code that calls xfs_sb_version_tonew() only does so for
+> superblocks whose version is <= 3. i.e. filesystems that came from
+> Irix 6.2 or earlier....
+> 
+> > I see that xfs_sb_version_toold() is not used anywhere, can we remove
+> > it ?
+> 
+> Used by userspace, and seeing as this file is common between kernel
+> and userspace, it hasn't been removed as that simply imposes higher
+> maintenance cost on us.
+> 
+> Cheers,
+> 
+> Dave.
 
-<blockquote class=3D"gmail_quote" style=3D"margin:0px 0px 0px 0.8ex;border-=
-left-width:1px;border-left-color:rgb(204,204,204);border-left-style:solid;p=
-adding-left:1ex"><div>On Wed, Mar 20, 2013 at 06:01:35PM +0000, Pedro Ribei=
-ro wrote:<br>
-
-
-&gt; Thanks for the answer Dave.<br>
-&gt;<br>
-&gt; Yes I would definitely say it&#39;s a ToI bug that perhaps has been do=
-rmant so<br>
-&gt; far. Unfortunately the ToI developer is very busy at the moment, so I =
-will<br>
-&gt; have to debug and fix it myself.<br>
-&gt; This problem did not occur with 3.7 and the ToI code did not change.<b=
-r>
-&gt;<br>
-&gt; Do you have any idea where I can start looking for the XFS change in 3=
-.8<br>
-&gt; that triggered this behaviour in ToI? Or maybe it was a VFS change?<br=
->
-<br>
-</div>It&#39;s almost certainly an XFS change that triggered it, but it<br>
-indicates (once again) that the hibernate code is simply not<br>
-quiescing filesystems properly (i.e. by freezing them). The work<br>
-that caused this problem is stopped by the filesystem when it<br>
-is frozen, and started again when it is thawed...<br>
-<div><br>
-&gt; PS: the email definitely bounced back, most likely because imageshack =
-is<br>
-&gt; blocked on the sgi server:<br>
-&gt;<br>
-&gt; Technical details of permanent failure:<br>
-&gt; Google tried to deliver your message, but it was rejected by the serve=
-r for<br>
-&gt; the recipient domain <a href=3D"http://oss.sgi.com" target=3D"_blank">=
-oss.sgi.com</a> by <a href=3D"http://cuda-allmx.sgi.com" target=3D"_blank">=
-cuda-allmx.sgi.com</a>. [192.48.176.16].<br>
-&gt;<br>
-&gt; The error that the other server returned was:<br>
-&gt; 554 rejecting banned content<br>
-<br>
-</div>IOWs, a stupid spam filter.<br>
-<br>
-I&#39;ll see if I can get this fixed.<br>
-<div><div><br>
-Cheers,<br>
-<br>
-Dave.<br>
---<br>
-Dave Chinner<br>
-<a href=3D"mailto:david@fromorbit.com" target=3D"_blank">david@fromorbit.co=
-m</a></div></div></blockquote><div><br></div></div></div><div>Actually I&#3=
-9;ve nailed it down to a commit between 3.7.1 and 3.7.10. I&#39;ll do some =
-git bisection and come back with the results.</div>
-
-<div><br></div><div>Regarding ToI and filesystem freezing, I guess I need t=
-o start delving into the code to see if I can fix it - long but fun journey=
- ahead I guess.</div><div><br></div><div>Regards,</div><div>Pedro=A0</div>
-
-</div><br></div></div>
-</blockquote></div><br></div>
-
---f46d04016be1373c8f04d8ef24cd--
-
-
---===============5248515637945093893==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============5248515637945093893==--
