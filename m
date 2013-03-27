@@ -1,23 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8DA847F54
-	for <xfs@oss.sgi.com>; Wed, 27 Mar 2013 16:11:09 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1CF0DAC012
-	for <xfs@oss.sgi.com>; Wed, 27 Mar 2013 14:11:06 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	ckH2H1sKLPbYZm8W for <xfs@oss.sgi.com>;
-	Wed, 27 Mar 2013 14:11:04 -0700 (PDT)
-Date: Thu, 28 Mar 2013 08:02:36 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Announce re-factor all current xfstests patches request
-Message-ID: <20130327210236.GV6369@dastard>
-References: <5152F2BB.4000709@sgi.com> <20130327134606.GJ5861@thunk.org>
-	<5153217B.5070909@sgi.com> <20130327190512.GA22889@thunk.org>
+	by oss.sgi.com (Postfix) with ESMTP id DED447F50
+	for <xfs@oss.sgi.com>; Wed, 27 Mar 2013 16:16:35 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 796DEAC010
+	for <xfs@oss.sgi.com>; Wed, 27 Mar 2013 14:16:35 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id chBgODHcOOpBgUhu
+	for <xfs@oss.sgi.com>; Wed, 27 Mar 2013 14:16:34 -0700 (PDT)
+Message-ID: <515361B5.8050603@hardwarefreak.com>
+Date: Wed, 27 Mar 2013 16:16:37 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130327190512.GA22889@thunk.org>
+Subject: Re: xfs_fsr, sunit, and swidth
+References: <5140C147.7070205@binghamton.edu>
+	<514113C6.9090602@hardwarefreak.com>
+	<514153ED.3000405@binghamton.edu>
+	<5141C1FC.4060209@hardwarefreak.com>
+	<5141C8C1.2080903@hardwarefreak.com>
+	<5141E5CF.10101@binghamton.edu>
+	<5142AE40.6040408@hardwarefreak.com>
+	<20130315114538.GF6369@dastard>
+	<5143F94C.1020708@hardwarefreak.com>
+	<20130316072126.GG6369@dastard> <515082C3.2000006@binghamton.edu>
+In-Reply-To: <515082C3.2000006@binghamton.edu>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,40 +37,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Theodore Ts'o <tytso@mit.edu>
-Cc: linux-ext4@vger.kernel.org, Rich Johnston <rjohnston@sgi.com>, linux-btrfs <linux-btrfs@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+To: Dave Hall <kdhall@binghamton.edu>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Wed, Mar 27, 2013 at 03:05:12PM -0400, Theodore Ts'o wrote:
-> What do you think about renaming the existing tests from NNN to
-> NNN-descriptive-name?  That way it will be easier for people who are
-> trying to track regressions, since they can easily map from the new
-> more descriptive name to the old test number for comparison purposes
-> (i.e., to see whether a failure is a regression or not, etc.)
+On 3/25/2013 12:00 PM, Dave Hall wrote:
+> On 03/16/2013 03:21 AM, Dave Chinner wrote:
+>> Using perf to profile the kernel while the cp -al workload is
+>> running will tell use exactly where the CPU is being burnt. That
+>> will confirm the analysis, or point us at some other issue that is
+>> causing excessive CPU burn...
+>>
+> Dave,  which perf command(s) would you like me to run.  (I'm familiar
+> with the concept behind this kind of tool, but I haven't worked with
+> this one before).
 
-When named test support is done, then we could do this.
+I'll let Dave answer this one.
 
-> Would you be open to changes which did this?  I'd suggest sending the
-> changes as a shell script to minimize the chances of patch conflicts.
-> It will cause people to need to regenerate their patches, but that
-> means now would be the time to do this, when everyone will need to be
-> fixing up their outstanding changes anyway.  :-)
+> Also, what would you like me to do with the xfs_db freesp output for 26
+> agroups?
 
-There's more than just the rename of the file. group files have to
-change, there's the possibility that the group list and test list
-handling will need to be completely rewritten, the way test names
-are output will need work, the result summaries will need to be
-reformatted to be legible, etc.
+A pastebin link should be fine.  Only a couple of people will be looking
+at it.  I don't see value in free space maps of 26 AGs being archived.
 
-So it's not just a case of renaming a file - there's still quite a
-lot of infrastructure work needed before we can start using names
-rather then sequence numbers for tests.
+FWIW, it's probably best to reply-all instead of just to the list.
+Sometimes posts get lost in the noise.  Not sure if that's the case
+here, but it's been a couple of days with no response from Dave C, and
+the answers to these questions are very short.  Thus I'm guessing he
+missed your post, so I'm CC'ing him here.
 
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Stan
+
+
 
 _______________________________________________
 xfs mailing list
