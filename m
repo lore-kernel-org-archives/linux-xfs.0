@@ -1,14 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C2A4F7F50
-	for <xfs@oss.sgi.com>; Wed, 27 Mar 2013 13:39:08 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 839547F50
+	for <xfs@oss.sgi.com>; Wed, 27 Mar 2013 14:05:19 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 604B5304087
+	for <xfs@oss.sgi.com>; Wed, 27 Mar 2013 12:05:16 -0700 (PDT)
+Date: Wed, 27 Mar 2013 15:05:12 -0400
+From: Theodore Ts'o <tytso@mit.edu>
+Subject: Re: Announce re-factor all current xfstests patches request
+Message-ID: <20130327190512.GA22889@thunk.org>
+References: <5152F2BB.4000709@sgi.com> <20130327134606.GJ5861@thunk.org>
+	<5153217B.5070909@sgi.com>
 MIME-Version: 1.0
-Subject: [v3 Repost] xfs: Add ratelimited printk for different alert levels
-Date: Wed, 27 Mar 2013 09:26:49 -0500
-From: Rich Johnston <rjohnston@sgi.com>
-Message-Id: <515339F7.8000505@sgi.com>
-In-Reply-To: <ca71153845539b0c76ba3e3aab9611ad6c5cf72b.1348641483.git.rprabhu@wnohang.net>
-References: <ca71153845539b0c76ba3e3aab9611ad6c5cf72b.1348641483.git.rprabhu@wnohang.net>
+Content-Disposition: inline
+In-Reply-To: <5153217B.5070909@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,77 +26,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: bpm@sgi.com, elder@kernel.org, Raghavendra D Prabhu <rprabhu@wnohang.net>
+To: Rich Johnston <rjohnston@sgi.com>
+Cc: linux-ext4@vger.kernel.org, linux-btrfs <linux-btrfs@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
 
-Ratelimited printk will be useful in printing xfs messages which are otherwise
-not required to be printed always due to their high rate (to prevent kernel ring
-buffer from overflowing), while at the same time required to be printed.
+What do you think about renaming the existing tests from NNN to
+NNN-descriptive-name?  That way it will be easier for people who are
+trying to track regressions, since they can easily map from the new
+more descriptive name to the old test number for comparison purposes
+(i.e., to see whether a failure is a regression or not, etc.)
 
-Signed-off-by: Raghavendra D Prabhu <rprabhu@wnohang.net>
-Reviewed-by: Rich Johnston <rjohnston@sgi.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Would you be open to changes which did this?  I'd suggest sending the
+changes as a shell script to minimize the chances of patch conflicts.
+It will cause people to need to regenerate their patches, but that
+means now would be the time to do this, when everyone will need to be
+fixing up their outstanding changes anyway.  :-)
 
----
-
-Sorry this has not been committed and it's been a few months so I am
-reposting this patch.  If I don't hear any objections by 10 am CST on
-29 March 2013 I will commit this patch.
- 
-
-fs/xfs/xfs_linux.h   |  1 +
- fs/xfs/xfs_message.h | 26 ++++++++++++++++++++++++++
- 2 files changed, 27 insertions(+)
-
-Index: linux/fs/xfs/xfs_linux.h
-===================================================================
---- linux.orig/fs/xfs/xfs_linux.h	2013-03-22 09:19:54.000000000 -0500
-+++ linux/fs/xfs/xfs_linux.h	2013-03-27 12:55:33.000000000 -0500
-@@ -72,6 +72,7 @@
- #include <linux/kthread.h>
- #include <linux/freezer.h>
- #include <linux/list_sort.h>
-+#include <linux/ratelimit.h>
- 
- #include <asm/page.h>
- #include <asm/div64.h>
-Index: linux/fs/xfs/xfs_message.h
-===================================================================
---- linux.orig/fs/xfs/xfs_message.h	2013-03-22 09:19:54.000000000 -0500
-+++ linux/fs/xfs/xfs_message.h	2013-03-27 12:55:33.000000000 -0500
-@@ -30,6 +30,32 @@
- }
- #endif
- 
-+#define xfs_printk_ratelimited(func, dev, fmt, ...)		\
-+do {									\
-+	static DEFINE_RATELIMIT_STATE(_rs,				\
-+				      DEFAULT_RATELIMIT_INTERVAL,	\
-+				      DEFAULT_RATELIMIT_BURST);		\
-+	if (__ratelimit(&_rs))						\
-+		func(dev, fmt, ##__VA_ARGS__);			\
-+} while (0)
-+
-+#define xfs_emerg_ratelimited(dev, fmt, ...)				\
-+	xfs_printk_ratelimited(xfs_emerg, dev, fmt, ##__VA_ARGS__)
-+#define xfs_alert_ratelimited(dev, fmt, ...)				\
-+	xfs_printk_ratelimited(xfs_alert, dev, fmt, ##__VA_ARGS__)
-+#define xfs_crit_ratelimited(dev, fmt, ...)				\
-+	xfs_printk_ratelimited(xfs_crit, dev, fmt, ##__VA_ARGS__)
-+#define xfs_err_ratelimited(dev, fmt, ...)				\
-+	xfs_printk_ratelimited(xfs_err, dev, fmt, ##__VA_ARGS__)
-+#define xfs_warn_ratelimited(dev, fmt, ...)				\
-+	xfs_printk_ratelimited(xfs_warn, dev, fmt, ##__VA_ARGS__)
-+#define xfs_notice_ratelimited(dev, fmt, ...)				\
-+	xfs_printk_ratelimited(xfs_notice, dev, fmt, ##__VA_ARGS__)
-+#define xfs_info_ratelimited(dev, fmt, ...)				\
-+	xfs_printk_ratelimited(xfs_info, dev, fmt, ##__VA_ARGS__)
-+#define xfs_debug_ratelimited(dev, fmt, ...)				\
-+	xfs_printk_ratelimited(xfs_debug, dev, fmt, ##__VA_ARGS__)
-+
- extern void assfail(char *expr, char *f, int l);
- 
- extern void xfs_hex_dump(void *p, int length);
+       	      	      		- Ted
 
 _______________________________________________
 xfs mailing list
