@@ -1,15 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D96467F37
-	for <xfs@oss.sgi.com>; Thu, 28 Mar 2013 10:44:23 -0500 (CDT)
-Date: Thu, 28 Mar 2013 10:44:23 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: oops from deliberate block trashing (of course!)
-Message-ID: <20130328154423.GV22182@sgi.com>
-References: <CAJzLF9nPt9aOrH+Dj12b5os74XT8ke9g4G=DA9xgR0AyehvaBA@mail.gmail.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id AB1E07CBF
+	for <xfs@oss.sgi.com>; Thu, 28 Mar 2013 11:09:18 -0500 (CDT)
+Message-ID: <51546B33.6090608@sgi.com>
+Date: Thu, 28 Mar 2013 11:09:23 -0500
+From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAJzLF9nPt9aOrH+Dj12b5os74XT8ke9g4G=DA9xgR0AyehvaBA@mail.gmail.com>
+Subject: Re: [PATCH] xfstests: fix common rc file path in new
+References: <1364478683-6752-1-git-send-email-eguan@redhat.com>
+In-Reply-To: <1364478683-6752-1-git-send-email-eguan@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,35 +17,67 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Michael L. Semon" <mlsemon35@gmail.com>
+To: Eryu Guan <eguan@redhat.com>
 Cc: xfs@oss.sgi.com
 
-Hey Michael,
+On 03/28/2013 08:51 AM, Eryu Guan wrote:
+> After the re-factor common.rc has been renamed to common/rc, fix the
+> path in script new, otherwise ./new reports
+>
+> ./new: line 26: ./common.rc: No such file or directory
+> Building include
+> Building lib
+> Building ltp
+> Building src
+> Building m4
+> ./new: line 70: BEGIN{printf "%03d\n",+1}: command not found
+> Next test is
+> Error: test  already exists!
+>
+> Signed-off-by: Eryu Guan <eguan@redhat.com>
+> ---
+> After applying this patch, ./new generates new test starting from 001,
+> so we have to maintain the seq number manually? Do we need an updated
+> version of new? eg. takes an argument to specify the test type like
+>
+> 	./new generic
+That's a good idea, and numbers based on the next number for that test type.
+>
+> and generates new test based on existing seq number in generic dir.
+>
+>   new | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/new b/new
+> index 94638f6..b21e75b 100755
+> --- a/new
+> +++ b/new
+> @@ -23,7 +23,7 @@
+>
+>   # generic initialization
+>   iam=new
+> -. ./common.rc
+> +. ./common/rc
+>
+>   trap "rm -f /tmp/$$.; exit" 0 1 2 3 15
+>
+>
 
-On Thu, Mar 28, 2013 at 01:18:24AM -0400, Michael L. Semon wrote:
-> Hi!  This report was requested by Dave because I was praising
-> xfs_repair and didn't fully describe the problem that xfs_repair was
-> repairing.  Blame me if this is a bad bug report or a matter of XFS
-> just doing its job.
-> 
-> I'm trying to come up with a fair FS-agnostic test to corrupt bytes
-> and see how file systems and recovery tools respond after that.
+You caught the first one but I think you should also change the template 
+entries too:
 
-Great bug report!  It's really neat that you're doing this.  ;)
+123 # get standard environment, filters and checks
+124 . ./common/rc
+125 . ./common/filter
 
-You might be able to find a FS-agnostic fuzzer by doing a search for
-'filesystem fuzzer'.  It's not an area that I've explored much myself, so I'm
-just throwing that out there.  e.g.
-https://ext4.wiki.kernel.org/index.php/Filesystem_Testing_Tools/mangle.c
+Other than that looks good.
 
-Nice work!
+--Rich
 
-Regards,
-	Ben
 
 _______________________________________________
 xfs mailing list
