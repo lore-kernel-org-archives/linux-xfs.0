@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 34B787F50
-	for <xfs@oss.sgi.com>; Thu, 28 Mar 2013 16:33:52 -0500 (CDT)
-Message-ID: <5154B748.8050104@sgi.com>
-Date: Thu, 28 Mar 2013 16:34:00 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 50E507F53
+	for <xfs@oss.sgi.com>; Thu, 28 Mar 2013 16:39:09 -0500 (CDT)
+Message-ID: <5154B883.9050902@sgi.com>
+Date: Thu, 28 Mar 2013 16:39:15 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
 Subject: Re: [PATCH] xfstests: use BTRFS_UTIL_PROG instead of btrfs
@@ -24,13 +24,19 @@ Sender: xfs-bounces@oss.sgi.com
 To: David Sterba <dsterba@suse.cz>
 Cc: xfs@oss.sgi.com
 
-Looks like the correct thing to do instead of relying on btrfs to be in 
-your path, Tested fine for me.
+David,
 
-Regards
+Thanks for submitting this patch, it has been committed.
+
 --Rich
 
-Reviewed-by: Rich Johnston <rjohnston@sgi.com>
+
+commit 0edeaaab2a30a889c9b8f938ab219ea3f241e3fc
+Author: David Sterba <dsterba@suse.cz>
+Date:   Thu Mar 28 16:13:43 2013 +0000
+
+     xfstests: use BTRFS_UTIL_PROG instead of btrfs
+
 
 _______________________________________________
 xfs mailing list
