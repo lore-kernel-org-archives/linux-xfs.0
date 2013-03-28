@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9F43C7CBF
-	for <xfs@oss.sgi.com>; Thu, 28 Mar 2013 15:57:39 -0500 (CDT)
-Message-ID: <5154AECC.4030508@sgi.com>
-Date: Thu, 28 Mar 2013 15:57:48 -0500
+	by oss.sgi.com (Postfix) with ESMTP id 064E57CBF
+	for <xfs@oss.sgi.com>; Thu, 28 Mar 2013 16:07:39 -0500 (CDT)
+Message-ID: <5154B11F.1080101@sgi.com>
+Date: Thu, 28 Mar 2013 16:07:43 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
 Subject: Re: [PATCH] xfstests: check: set up config variables before using them
@@ -24,11 +24,24 @@ Sender: xfs-bounces@oss.sgi.com
 To: David Sterba <dsterba@suse.cz>
 Cc: xfs@oss.sgi.com
 
-Nice find, looks good.
+David,
+
+Thanks again for the patch it has been committed.
+
 --Rich
 
-Reviewed-by: Rich Johnston <rjohnston@sgi.com>
+commit 2c13db28be33d71f6acff080f93893c739ee91e3
+Author: David Sterba <dsterba@suse.cz>
+Date:   Thu Mar 28 17:00:18 2013 +0000
 
+     xfstests: check: set up config variables before using them
+
+     HOSTOS was used in a test before being initialized and this led to
+     failed filesystem type detection.
+
+     Signed-off-by: David Sterba <dsterba@suse.cz>
+     Reviewed-by: Rich Johnston <rjohnston@sgi.com>
+     Signed-off-by-by: Rich Johnston <rjohnston@sgi.com>
 
 _______________________________________________
 xfs mailing list
