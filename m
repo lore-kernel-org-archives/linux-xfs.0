@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3B49F7CBF
-	for <xfs@oss.sgi.com>; Thu, 28 Mar 2013 12:00:24 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 2163D7CBF
+	for <xfs@oss.sgi.com>; Thu, 28 Mar 2013 14:50:31 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2B25C304032
-	for <xfs@oss.sgi.com>; Thu, 28 Mar 2013 10:00:21 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id EDF7xQC42aIkSUrH for <xfs@oss.sgi.com>;
-	Thu, 28 Mar 2013 10:00:20 -0700 (PDT)
-Received: from relay1.suse.de (unknown [195.135.220.254])
-	by mx2.suse.de (Postfix) with ESMTP id A2D30A51F6
-	for <xfs@oss.sgi.com>; Thu, 28 Mar 2013 18:00:19 +0100 (CET)
-From: David Sterba <dsterba@suse.cz>
-Subject: [PATCH] xfstests: check: set up config variables before using them
-Date: Thu, 28 Mar 2013 18:00:18 +0100
-Message-Id: <1364490018-30520-1-git-send-email-dsterba@suse.cz>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id AE9F8AC003
+	for <xfs@oss.sgi.com>; Thu, 28 Mar 2013 12:50:30 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id krLBKSVOpkQl86mo
+	for <xfs@oss.sgi.com>; Thu, 28 Mar 2013 12:50:29 -0700 (PDT)
+Message-ID: <51549F09.1090109@hardwarefreak.com>
+Date: Thu, 28 Mar 2013 14:50:33 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
+MIME-Version: 1.0
+Subject: Re: Help with XFS in VMs on VMFS
+References: <CAJoqCq9WhFi8yZnTjh_dJmOte4TWpKg3qsQLpVsZ45M8XoWiaA@mail.gmail.com>
+In-Reply-To: <CAJoqCq9WhFi8yZnTjh_dJmOte4TWpKg3qsQLpVsZ45M8XoWiaA@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,59 +24,39 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: David Sterba <dsterba@suse.cz>
+To: Jan Perci <jperci@gmail.com>
+Cc: xfs@oss.sgi.com
 
-HOSTOS was used in a test before being initialized and this led to
-failed filesystem type detection.
+On 3/28/2013 8:21 AM, Jan Perci wrote:
 
-Signed-off-by: David Sterba <dsterba@suse.cz>
----
+> Normally I would use raw mappings and XFS directly on the volumes.  But
+> there is a hard requirement to support VM snapshots, so all the data must
+> reside within VMDK files on the VMFS datastores.
 
-Sidenote, FSTYP has been exported properly, I've accidentally deleted it during
-debugging. The patch "xfstests: remove unconditional setting of FSTYP" is now
-obsolete.
+Since when?  ESX has had LUN snapshot capability back to 3.0, 6 years or
+so.  It may have required the VCB add on back then.
 
- check | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+Is this simply a limitation of the freebie version?  If so, pony up and
+pay for what you need, or switch to a FOSS solution which has no such
+limitations.
 
-diff --git a/check b/check
-index 18cae75..3b48402 100755
---- a/check
-+++ b/check
-@@ -50,12 +50,6 @@ timestamp=${TIMESTAMP:=false}
- 
- rm -f $tmp.list $tmp.tmp $tmp.grep $here/$iam.out $tmp.xlist
- 
--# Autodetect fs type based on what's on $TEST_DEV
--if [ "$HOSTOS" == "Linux" ]; then
--    FSTYP=`blkid -c /dev/null -s TYPE -o value $TEST_DEV`
--fi
--export FSTYP
--
- # we need common.config
- if ! . ./common/config
- then
-@@ -63,6 +57,12 @@ then
-     exit 1
- fi
- 
-+# Autodetect fs type based on what's on $TEST_DEV
-+if [ "$HOSTOS" == "Linux" ]; then
-+    FSTYP=`blkid -c /dev/null -s TYPE -o value $TEST_DEV`
-+fi
-+export FSTYP
-+
- SUPPORTED_TESTS="[0-9][0-9][0-9] [0-9][0-9][0-9][0-9]"
- SRC_GROUPS="generic shared"
- export SRC_DIR="tests"
+VMFS volumes are not intended for high performance IO.  Unless things
+have changed recently, VMware has always recommended housing only OS
+images and the like in VMDKs, not user data.  They've always recommended
+using RDMs for everything else.  IIRC VMDKs have a huge block (sector)
+size, something like 1MB.  That's going to make XFS alignment difficult,
+if not impossible.
+
+I cannot stress emphatically enough that you should not stitch 2TB VMDKs
+together and use them in the manner you described.  This is a recipe for
+disaster.  Find another solution.
+
 -- 
-1.8.2
+Stan
 
 _______________________________________________
 xfs mailing list
