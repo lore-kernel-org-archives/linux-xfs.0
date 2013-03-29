@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id ECC3E7F7D
-	for <xfs@oss.sgi.com>; Fri, 29 Mar 2013 10:06:04 -0500 (CDT)
-Message-ID: <5155ADE3.4020201@sgi.com>
-Date: Fri, 29 Mar 2013 10:06:11 -0500
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id DAB3F7F85
+	for <xfs@oss.sgi.com>; Fri, 29 Mar 2013 10:13:40 -0500 (CDT)
+Message-ID: <5155AFAC.5000709@sgi.com>
+Date: Fri, 29 Mar 2013 10:13:48 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
 Subject: Re: [PATCH v2] xfstests: fix common source file path
@@ -24,9 +24,22 @@ Sender: xfs-bounces@oss.sgi.com
 To: Eryu Guan <eguan@redhat.com>
 Cc: xfs@oss.sgi.com
 
-V2 looks good.
+Eryu,
 
-Reviewed-by: Rich Johnston <rjohnston@sgi.com>
+Thanks for submitting this patch, it has been submitted.
+
+--Rich
+
+commit 8575764a791b83471f4588e12d5245651007bfc5
+Author: Eryu Guan <eguan@redhat.com>
+Date:   Fri Mar 29 04:49:55 2013 +0000
+
+     xfstests: fix common source file path
+
+     After the re-factor, common.* have been renamed to common/* but there
+     are several files still look for the old path, fix it.
+
+
 
 _______________________________________________
 xfs mailing list
