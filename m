@@ -1,26 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 09FDE7F7E
-	for <xfs@oss.sgi.com>; Thu, 28 Mar 2013 22:00:48 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 22B357F83
+	for <xfs@oss.sgi.com>; Thu, 28 Mar 2013 22:13:39 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8E196AC003
-	for <xfs@oss.sgi.com>; Thu, 28 Mar 2013 20:00:44 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 119CE304066
+	for <xfs@oss.sgi.com>; Thu, 28 Mar 2013 20:13:35 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	QT9DLEjNpldBqam1 for <xfs@oss.sgi.com>;
-	Thu, 28 Mar 2013 20:00:42 -0700 (PDT)
-Date: Fri, 29 Mar 2013 14:00:34 +1100
+	WfgiZVQkQWuqTsjh for <xfs@oss.sgi.com>;
+	Thu, 28 Mar 2013 20:13:33 -0700 (PDT)
+Date: Fri, 29 Mar 2013 14:13:31 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [ASSERT failure] transaction reservations changes bad?
-Message-ID: <20130329030034.GH6369@dastard>
-References: <20130312062001.GJ21651@dastard> <20130312062531.GK21651@dastard>
-	<513EE274.6090808@oracle.com> <20130312103138.GN21651@dastard>
-	<513F0C07.1060000@oracle.com> <513F17F3.1010204@oracle.com>
-	<20130312120545.GO21651@dastard> <51517506.1020906@oracle.com>
-	<20130327020331.GO6369@dastard> <51545EC1.5000707@oracle.com>
+Subject: Re: [PATCH 12/21] xfs: add CRC checking to dir2 free blocks
+Message-ID: <20130329031331.GI6369@dastard>
+References: <1363091454-8852-1-git-send-email-david@fromorbit.com>
+	<1363091454-8852-13-git-send-email-david@fromorbit.com>
+	<20130328234023.GW22182@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <51545EC1.5000707@oracle.com>
+In-Reply-To: <20130328234023.GW22182@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,68 +31,104 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
+To: Ben Myers <bpm@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Mar 28, 2013 at 11:16:17PM +0800, Jeff Liu wrote:
-> On 03/27/2013 10:03 AM, Dave Chinner wrote:
-> > On Tue, Mar 26, 2013 at 06:14:30PM +0800, Jeff Liu wrote:
-> >> On 03/12/2013 08:05 PM, Dave Chinner wrote:
-> >>> On Tue, Mar 12, 2013 at 07:56:35PM +0800, Jeff Liu wrote:
-> >>>> More info, 3.7.0 is the oldest kernel on my environment, I ran into the
-> >>>> same problem.
-> >>>
-> >>> Thanks for following up so quickly, Jeff. So the problem is that a
-> >>> new test is tripping over a bug that has been around for a while,
-> >>> not that it is a new regression.
-> >>>
-> >>> OK, so I'll expunge that from my testing for the moment as I don't
-> >>> ahve time to dig in and find out what the cause is right now. If
-> >>> anyone else wants to.... :)
-> >>
-> >> I did some further tests to nail down this issue, just posting the analysis result here,
-> >> it might be of some use when we revising it again.
-> >>
-> >> The disk is formated with Dave's previous comments, i.e.
-> >> mkfs.xfs -f -b size=512 -d agcount=16,su=256k,sw=12 -l su=256k,size=2560b /dev/xxx
-> >>
-> >> First of all, looks this bug stayed in hiding for years since I can reproduce it between upstream
-> >> 3.0 to 3.9.0-rc3, the oldest kernel I have tried is 2.6.39 which has the same problem.
+On Thu, Mar 28, 2013 at 06:40:23PM -0500, Ben Myers wrote:
+> Hey Dave,
+> 
+> On Tue, Mar 12, 2013 at 11:30:45PM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > If you mount 2.6.39 with "-o nodelaylog", does the problem go away?
-> touch file is ok, but create directory still cause the assertion failure.
+> > This addition follows the same pattern as the dir2 block CRCs, but
+> > with a few differences. The main difference is that the free block
+> > header is different between the v2 and v3 formats, so an "in-core"
+> > free block header has been added and _todisk/_from_disk functions
+> > used to abstract the differences in structure format from the code.
+> > This is similar to the on-disk superblock versus the in-core
+> > superblock setup. The in-core strucutre is populated when the buffer
+> > is read from disk, all the in memory checks and modifications are
+> > done on the in-core version of the structure which is written back
+> > to the buffer before the buffer is logged.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> 
+> Just a few nits below.
+> 
+> > -static void
+> > -xfs_dir2_free_verify(
+> > +static bool
+> > +xfs_dir3_free_verify(
+> >  	struct xfs_buf		*bp)
+> >  {
+> >  	struct xfs_mount	*mp = bp->b_target->bt_mount;
+> >  	struct xfs_dir2_free_hdr *hdr = bp->b_addr;
+> > -	int			block_ok = 0;
+> >  
+> > -	block_ok = hdr->magic == cpu_to_be32(XFS_DIR2_FREE_MAGIC);
+> > -	if (!block_ok) {
+> > -		XFS_CORRUPTION_ERROR("xfs_dir2_free_verify magic",
+> > -				     XFS_ERRLEVEL_LOW, mp, hdr);
+> > -		xfs_buf_ioerror(bp, EFSCORRUPTED);
+> > +	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+> > +		struct xfs_dir3_blk_hdr *hdr3 = bp->b_addr;
+> > +
+> > +		if (hdr3->magic != be32_to_cpu(XFS_DIR3_FREE_MAGIC))
+> > +			return false;
+> > +		if (!uuid_equal(&hdr3->uuid, &mp->m_sb.sb_uuid))
+> > +			return false;
+> > +		if (be64_to_cpu(hdr3->blkno) != bp->b_bn)
+> > +			return false;
+> > +	} else {
+> > +		if (hdr->magic != be32_to_cpu(XFS_DIR2_FREE_MAGIC))
+> > +			return false;
+> >  	}
+> > +
+> > +	/* XXX: should bounds check the xfs_dir3_icfree_hdr here */
+> 
+> What did you have in mind?
 
-So it is not related to the way that delayed logging steals
-reservations for the CIL context checkpoint as the problem still
-occurs when delayed logging is disabled. That means it is likely to
-be related only to the log stripe unit being set....
+Checking that the header fields:
+	a) are within valid bounds; and
+	b) match what is in the bests array.
 
-> >> IMHO, looks the major cause is related to the 'sunit' parameter,
-> >> since it would affect the log space unit calculations by
-> >> '2*log->l_mp->m_sb.sb_logsunit' at xlog_ticket_alloc().  However,
-> >> we don't include this factor into consideration at mkfs or mount
-> >> stage, should we take it into account?
-> > 
-> > That's what I suspected was the problem. i.e. that the log was too
-> > small for the given configuration.
-> > 
-> > The question is this: how much space do we need to reserve. I'm
-> > thinking a minimum of 4*lsu - 2*lsu for the existing CIL context, and
-> > another 2*lsu for any queued ticket waiting for space to come
-> > available.
-> > 
-> > I haven't thought a lot about it, though, and I have a little demon
-> > sitting on my shoulder nagging me about specific thresholds whether
-> > they need to play a part in this. e.g. no single transaction can be
-> > larger than half the log; AIL push thresholds of 25% of log space;
-> > background CIL commit threshold of 12.5% of the log...
-> > 
-> > So it's not immediately clear to me how much bigger the log needs to
-> > be...
-> I still need some time to understand the space reservation strategy to
-> figure them out. :(
+> > -	if (!hdr) {
+> > -		/* One less used entry in the free table.  */
+> > -		be32_add_cpu(&free->hdr.nused, -1);
+> > -		xfs_dir2_free_log_header(tp, fbp);
+> >  
+> > -		/*
+> > -		 * If this was the last entry in the table, we can trim the
+> > -		 * table size back.  There might be other entries at the end
+> > -		 * referring to non-existent data blocks, get those too.
+> > -		 */
+> 
+> You dropped this comment.  Was there something wrong with it?
 
-OK. Thanks for digging into this, Jeff.
+No, just an oversight when rearranging the code.
+
+> >  	/* Log the free entry that changed, unless we got rid of it.  */
+> >  	if (logfree)
+> >  		xfs_dir2_free_log_bests(tp, fbp, findex, findex);
+> > @@ -1062,10 +1221,15 @@ xfs_dir2_leafn_remove(
+> >  		if (error)
+> >  			return error;
+> >  		free = fbp->b_addr;
+> > -		ASSERT(free->hdr.magic == cpu_to_be32(XFS_DIR2_FREE_MAGIC));
+> > -		ASSERT(be32_to_cpu(free->hdr.firstdb) ==
+> > -		       xfs_dir2_free_max_bests(mp) *
+> > -		       (fdb - XFS_DIR2_FREE_FIRSTDB(mp)));
+> > +#ifdef DEBUG
+> > +	{
+> > +		struct xfs_dir3_icfree_hdr freehdr;
+> > +		xfs_dir3_free_hdr_from_disk(&freehdr, free);
+> > +		ASSERT(be32_to_cpu(freehdr.firstdb) ==
+> 
+> I think freehdr.firstdb is already in cpu endianness.
+
+Right. Well spotted. I've already posted a fix for it - sparse
+endian checking picked this up. My current series folds those fixes
+back into the original patches....
 
 Cheers,
 
