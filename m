@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id ADC947F76
-	for <xfs@oss.sgi.com>; Thu, 28 Mar 2013 19:56:09 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7B828304059
-	for <xfs@oss.sgi.com>; Thu, 28 Mar 2013 17:56:09 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id qWfibZO8V14uc7E6
-	for <xfs@oss.sgi.com>; Thu, 28 Mar 2013 17:56:08 -0700 (PDT)
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id E19916C162
-	for <xfs@oss.sgi.com>; Thu, 28 Mar 2013 19:56:07 -0500 (CDT)
-Message-ID: <5154E6AC.9020402@hardwarefreak.com>
-Date: Thu, 28 Mar 2013 19:56:12 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 09FDE7F7E
+	for <xfs@oss.sgi.com>; Thu, 28 Mar 2013 22:00:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8E196AC003
+	for <xfs@oss.sgi.com>; Thu, 28 Mar 2013 20:00:44 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	QT9DLEjNpldBqam1 for <xfs@oss.sgi.com>;
+	Thu, 28 Mar 2013 20:00:42 -0700 (PDT)
+Date: Fri, 29 Mar 2013 14:00:34 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [ASSERT failure] transaction reservations changes bad?
+Message-ID: <20130329030034.GH6369@dastard>
+References: <20130312062001.GJ21651@dastard> <20130312062531.GK21651@dastard>
+	<513EE274.6090808@oracle.com> <20130312103138.GN21651@dastard>
+	<513F0C07.1060000@oracle.com> <513F17F3.1010204@oracle.com>
+	<20130312120545.GO21651@dastard> <51517506.1020906@oracle.com>
+	<20130327020331.GO6369@dastard> <51545EC1.5000707@oracle.com>
 MIME-Version: 1.0
-Subject: Re: Help with XFS in VMs on VMFS
-References: <CAJoqCq9WhFi8yZnTjh_dJmOte4TWpKg3qsQLpVsZ45M8XoWiaA@mail.gmail.com>
-	<51549F09.1090109@hardwarefreak.com>
-	<20130328214550.GA3771@pirx.askja.de>
-In-Reply-To: <20130328214550.GA3771@pirx.askja.de>
-Reply-To: stan@hardwarefreak.com
+Content-Disposition: inline
+In-Reply-To: <51545EC1.5000707@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,62 +33,75 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: xfs@oss.sgi.com
 
-On 3/28/2013 4:45 PM, Ralf Gross wrote:
-> Stan Hoeppner schrieb:
+On Thu, Mar 28, 2013 at 11:16:17PM +0800, Jeff Liu wrote:
+> On 03/27/2013 10:03 AM, Dave Chinner wrote:
+> > On Tue, Mar 26, 2013 at 06:14:30PM +0800, Jeff Liu wrote:
+> >> On 03/12/2013 08:05 PM, Dave Chinner wrote:
+> >>> On Tue, Mar 12, 2013 at 07:56:35PM +0800, Jeff Liu wrote:
+> >>>> More info, 3.7.0 is the oldest kernel on my environment, I ran into the
+> >>>> same problem.
+> >>>
+> >>> Thanks for following up so quickly, Jeff. So the problem is that a
+> >>> new test is tripping over a bug that has been around for a while,
+> >>> not that it is a new regression.
+> >>>
+> >>> OK, so I'll expunge that from my testing for the moment as I don't
+> >>> ahve time to dig in and find out what the cause is right now. If
+> >>> anyone else wants to.... :)
+> >>
+> >> I did some further tests to nail down this issue, just posting the analysis result here,
+> >> it might be of some use when we revising it again.
+> >>
+> >> The disk is formated with Dave's previous comments, i.e.
+> >> mkfs.xfs -f -b size=512 -d agcount=16,su=256k,sw=12 -l su=256k,size=2560b /dev/xxx
+> >>
+> >> First of all, looks this bug stayed in hiding for years since I can reproduce it between upstream
+> >> 3.0 to 3.9.0-rc3, the oldest kernel I have tried is 2.6.39 which has the same problem.
+> > 
+> > If you mount 2.6.39 with "-o nodelaylog", does the problem go away?
+> touch file is ok, but create directory still cause the assertion failure.
 
-> Snapshots are possible with RDM in virtual compatibily mode, not
-> physical mode (> 2 TB).
+So it is not related to the way that delayed logging steals
+reservations for the CIL context checkpoint as the problem still
+occurs when delayed logging is disabled. That means it is likely to
+be related only to the log stripe unit being set....
 
-So 2TB is the kicker here.  I haven't used ESX since 3.x, and none of
-our RDMs back then were close to 2TB.  IIRC our largest was 500GB.
+> >> IMHO, looks the major cause is related to the 'sunit' parameter,
+> >> since it would affect the log space unit calculations by
+> >> '2*log->l_mp->m_sb.sb_logsunit' at xlog_ticket_alloc().  However,
+> >> we don't include this factor into consideration at mkfs or mount
+> >> stage, should we take it into account?
+> > 
+> > That's what I suspected was the problem. i.e. that the log was too
+> > small for the given configuration.
+> > 
+> > The question is this: how much space do we need to reserve. I'm
+> > thinking a minimum of 4*lsu - 2*lsu for the existing CIL context, and
+> > another 2*lsu for any queued ticket waiting for space to come
+> > available.
+> > 
+> > I haven't thought a lot about it, though, and I have a little demon
+> > sitting on my shoulder nagging me about specific thresholds whether
+> > they need to play a part in this. e.g. no single transaction can be
+> > larger than half the log; AIL push thresholds of 25% of log space;
+> > background CIL commit threshold of 12.5% of the log...
+> > 
+> > So it's not immediately clear to me how much bigger the log needs to
+> > be...
+> I still need some time to understand the space reservation strategy to
+> figure them out. :(
 
->> VMFS volumes are not intended for high performance IO.  Unless things
->> have changed recently, VMware has always recommended housing only OS
->> images and the like in VMDKs, not user data.  They've always recommended
->> using RDMs for everything else.  IIRC VMDKs have a huge block (sector)
->> size, something like 1MB.  That's going to make XFS alignment difficult,
->> if not impossible.
-> 
-> I can't remember that I've every found this recommendation on a vmware
-> page.
-> 
-> http://blogs.vmware.com/vsphere/2013/01/vsphere-5-1-vmdk-versus-rdm.html
+OK. Thanks for digging into this, Jeff.
 
-If you drill down through that you find this:
-http://www.vmware.com/files/pdf/performance_char_vmfs_rdm.pdf
+Cheers,
 
-RDMs have better large sequential performance, and lower CPU burn than
-VMDKs.  The OP mentioned "compute node" in his post, which suggests an
-HPC application workload, which suggests large sequential IO.
-
-Also note that VMware is Microsoft centric so they always run their
-tests using an MS Server guest.  Also note they always test with tiny
-volumes, in this case 20GB.  NTFS isn't going to have any trouble at
-this size, but at say 20TB it probably will and these published results
-would likely be quite different at that scale.  XFS performance
-characteristics on a 2TB or 20TB or ?? TB volume will likely be
-substantially different than NTFS.  Their tests show 5-8% lower CPU burn
-for RDM vs VMDK.  Not a huge difference, but again they're testing only
-20GB.
-
->> I cannot stress emphatically enough that you should not stitch 2TB VMDKs
->> together and use them in the manner you described.  This is a recipe for
->> disaster.  Find another solution.
-> 
-> I'm seeing more and more requests for VMs with large disks lately in my
-> env. Right now the max. is ~2 TB. I'm also thinking about where to go,
->  > 2 TB ist only possible with pRDMs which can't be snapshotted. You
-> have to use the snapshot features of your storage array.
-
-And more and more folks are using midrange FC/iSCSI arrays that don't
-have snapshot features, others are using DAS with RAID HBAs, in both
-cases forcing them to rely on ESX snapshots.  Sounds like VMware needs
-to bump this artificial 2TB limit quite a bit higher.
-
+Dave.
 -- 
-Stan
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
