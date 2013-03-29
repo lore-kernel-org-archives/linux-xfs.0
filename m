@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 59CFC7F6D
-	for <xfs@oss.sgi.com>; Thu, 28 Mar 2013 19:38:55 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id ADC947F76
+	for <xfs@oss.sgi.com>; Thu, 28 Mar 2013 19:56:09 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 38747304048
-	for <xfs@oss.sgi.com>; Thu, 28 Mar 2013 17:38:52 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	IsFfRPAit5aejgbo for <xfs@oss.sgi.com>;
-	Thu, 28 Mar 2013 17:38:50 -0700 (PDT)
-Date: Fri, 29 Mar 2013 11:38:47 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfstests: fix common rc file path in new
-Message-ID: <20130329003847.GG6369@dastard>
-References: <1364478683-6752-1-git-send-email-eguan@redhat.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 7B828304059
+	for <xfs@oss.sgi.com>; Thu, 28 Mar 2013 17:56:09 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id qWfibZO8V14uc7E6
+	for <xfs@oss.sgi.com>; Thu, 28 Mar 2013 17:56:08 -0700 (PDT)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id E19916C162
+	for <xfs@oss.sgi.com>; Thu, 28 Mar 2013 19:56:07 -0500 (CDT)
+Message-ID: <5154E6AC.9020402@hardwarefreak.com>
+Date: Thu, 28 Mar 2013 19:56:12 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1364478683-6752-1-git-send-email-eguan@redhat.com>
+Subject: Re: Help with XFS in VMs on VMFS
+References: <CAJoqCq9WhFi8yZnTjh_dJmOte4TWpKg3qsQLpVsZ45M8XoWiaA@mail.gmail.com>
+	<51549F09.1090109@hardwarefreak.com>
+	<20130328214550.GA3771@pirx.askja.de>
+In-Reply-To: <20130328214550.GA3771@pirx.askja.de>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,45 +33,62 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eryu Guan <eguan@redhat.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, Mar 28, 2013 at 09:51:23PM +0800, Eryu Guan wrote:
-> After the re-factor common.rc has been renamed to common/rc, fix the
-> path in script new, otherwise ./new reports
-> 
-> ./new: line 26: ./common.rc: No such file or directory
-> Building include
-> Building lib
-> Building ltp
-> Building src
-> Building m4
-> ./new: line 70: BEGIN{printf "%03d\n",+1}: command not found
-> Next test is
-> Error: test  already exists!
-> 
-> Signed-off-by: Eryu Guan <eguan@redhat.com>
-> ---
-> After applying this patch, ./new generates new test starting from 001,
-> so we have to maintain the seq number manually? Do we need an updated
-> version of new? eg. takes an argument to specify the test type like
-> 
-> 	./new generic
-> 
-> and generates new test based on existing seq number in generic dir.
+On 3/28/2013 4:45 PM, Ralf Gross wrote:
+> Stan Hoeppner schrieb:
 
-We could, but this all has to change when we allow non-numeric test
-names.  i.e. the 'new' script is just creating a test template and
-you can simply copy it to where ever you need with the appropriate
-name. So just fixing the includes are appropriate right now, I
-think...
+> Snapshots are possible with RDM in virtual compatibily mode, not
+> physical mode (> 2 TB).
 
-Cheers,
+So 2TB is the kicker here.  I haven't used ESX since 3.x, and none of
+our RDMs back then were close to 2TB.  IIRC our largest was 500GB.
 
-Dave.
+>> VMFS volumes are not intended for high performance IO.  Unless things
+>> have changed recently, VMware has always recommended housing only OS
+>> images and the like in VMDKs, not user data.  They've always recommended
+>> using RDMs for everything else.  IIRC VMDKs have a huge block (sector)
+>> size, something like 1MB.  That's going to make XFS alignment difficult,
+>> if not impossible.
+> 
+> I can't remember that I've every found this recommendation on a vmware
+> page.
+> 
+> http://blogs.vmware.com/vsphere/2013/01/vsphere-5-1-vmdk-versus-rdm.html
+
+If you drill down through that you find this:
+http://www.vmware.com/files/pdf/performance_char_vmfs_rdm.pdf
+
+RDMs have better large sequential performance, and lower CPU burn than
+VMDKs.  The OP mentioned "compute node" in his post, which suggests an
+HPC application workload, which suggests large sequential IO.
+
+Also note that VMware is Microsoft centric so they always run their
+tests using an MS Server guest.  Also note they always test with tiny
+volumes, in this case 20GB.  NTFS isn't going to have any trouble at
+this size, but at say 20TB it probably will and these published results
+would likely be quite different at that scale.  XFS performance
+characteristics on a 2TB or 20TB or ?? TB volume will likely be
+substantially different than NTFS.  Their tests show 5-8% lower CPU burn
+for RDM vs VMDK.  Not a huge difference, but again they're testing only
+20GB.
+
+>> I cannot stress emphatically enough that you should not stitch 2TB VMDKs
+>> together and use them in the manner you described.  This is a recipe for
+>> disaster.  Find another solution.
+> 
+> I'm seeing more and more requests for VMs with large disks lately in my
+> env. Right now the max. is ~2 TB. I'm also thinking about where to go,
+>  > 2 TB ist only possible with pRDMs which can't be snapshotted. You
+> have to use the snapshot features of your storage array.
+
+And more and more folks are using midrange FC/iSCSI arrays that don't
+have snapshot features, others are using DAS with RAID HBAs, in both
+cases forcing them to rely on ESX snapshots.  Sounds like VMware needs
+to bump this artificial 2TB limit quite a bit higher.
+
 -- 
-Dave Chinner
-david@fromorbit.com
+Stan
 
 _______________________________________________
 xfs mailing list
