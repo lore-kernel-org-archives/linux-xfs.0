@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B748F7F6F
-	for <xfs@oss.sgi.com>; Sat, 30 Mar 2013 13:52:22 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0FB067F7D
+	for <xfs@oss.sgi.com>; Sat, 30 Mar 2013 14:12:41 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 54540AC003
-	for <xfs@oss.sgi.com>; Sat, 30 Mar 2013 11:52:19 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D659C30404E
+	for <xfs@oss.sgi.com>; Sat, 30 Mar 2013 12:12:37 -0700 (PDT)
 Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id IV4zMO4pfCN3O1rl
-	for <xfs@oss.sgi.com>; Sat, 30 Mar 2013 11:52:18 -0700 (PDT)
-Message-ID: <51573461.8070006@hardwarefreak.com>
-Date: Sat, 30 Mar 2013 13:52:17 -0500
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id fvcLD4MfwnnwcNUh
+	for <xfs@oss.sgi.com>; Sat, 30 Mar 2013 12:12:37 -0700 (PDT)
+Message-ID: <51573924.2020304@hardwarefreak.com>
+Date: Sat, 30 Mar 2013 14:12:36 -0500
 From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Subject: Re: Xfs_repair and journalling  --  EXT4 journal replay discussion
-References: <CAEUQceh-Xcabr0KErxF6EAdafDDP1PY_AeHwgYB82QeUdyGp-g@mail.gmail.com>
-	<5147E360.10605@sandeen.net> <5148037B.5010706@hardwarefreak.com>
-	(sfid-20130319_091205_759083_BA6F1AD2)
-	<201303190924.29362.Martin@lichtvoll.de>
-	<51483A7D.9050202@hardwarefreak.com>
-	<5156DF72.1090703@hardwarefreak.com> <5157237A.40006@sandeen.net>
-In-Reply-To: <5157237A.40006@sandeen.net>
+Subject: Re: Help with XFS in VMs on VMFS
+References: <CAJoqCq9WhFi8yZnTjh_dJmOte4TWpKg3qsQLpVsZ45M8XoWiaA@mail.gmail.com>
+	<51549F09.1090109@hardwarefreak.com>
+	<20130328214550.GA3771@pirx.askja.de>
+	<5154E6AC.9020402@hardwarefreak.com>
+	<CAJoqCq_afu4d++fgkGGMDC55pcz62V3qyai906ihQ2d=eiyhhQ@mail.gmail.com>
+	<20130329202735.GX22182@sgi.com>
+In-Reply-To: <20130329202735.GX22182@sgi.com>
 Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -33,24 +33,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Subranshu Patel <spatel.ml@gmail.com>, xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: Jan Perci <jperci@gmail.com>, xfs@oss.sgi.com
 
-On 3/30/2013 12:40 PM, Eric Sandeen wrote:
-> On 3/30/13 7:49 AM, Stan Hoeppner wrote:
-
->> Ok, so here's the skinny on the source of our confusion WRT how/when
->> EXT4 replays journals, and it's rather interesting.  Ted Ts'o explained
->> the following.
+On 3/29/2013 3:27 PM, Ben Myers wrote:
+> Hi Jan,
 > 
-> Where was this, out of curiosity?
+> On Thu, Mar 28, 2013 at 11:30:01PM -0400, Jan Perci wrote:
+>> Back to XFS, in this context, is there any benefit in tuning some
+>> parameters to get better performance, or will it all just be overshadowed
+>> by poor performance of the VMDKs that tuning isn't worthwhile?
+> 
+> At least get your stripe unit and width correct.
+> http://xfs.org/index.php/XFS_FAQ#Q:_How_to_calculate_the_correct_sunit.2Cswidth_values_for_optimal_performance
 
-Private email exchange with Ted.  I thought it was best from an
-etiquette standpoint not to wholesale paste his two private emails to
-the XFS list, but to summarize.  Maybe it would be ok if I put it on my
-web server for a couple of days then remove it.
+Is this really a good idea given that XFS sits atop a virtual disk which
+consists of multiple concatenated 2TB sparse files sitting on the VMFS
+filesystem, which, IIRC, has a 1MB sector size?  Thus can one rely on
+XFS being able to properly align to the physical RAID stripe, even if
+the math is done 'properly' (if that's even possible here)?
 
-http://www.hardwarefreak.com/ext4-journaling.txt
+In a complex stack like this I'd recommend defaults across the board.
+Misalignment hurts performance far more than proper alignment increases
+it.  No alignment is agnostic, 4KB IOs only, so you neither gain nor lose.
+
+> Beyond that I suggest you stick with the defaults unless you have a specific
+> need.  e.g. heavy usage of extended attributes might prompt you to use a larger
+> inode size to keep them inline.
 
 -- 
 Stan
