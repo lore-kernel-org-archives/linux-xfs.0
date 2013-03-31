@@ -1,26 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3BB127F9C
-	for <xfs@oss.sgi.com>; Sat, 30 Mar 2013 15:21:17 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 5BD2D7F55
+	for <xfs@oss.sgi.com>; Sat, 30 Mar 2013 20:22:43 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2BC7F8F8040
-	for <xfs@oss.sgi.com>; Sat, 30 Mar 2013 13:21:14 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id mhCO0ZLAmJgiTap9 for <xfs@oss.sgi.com>;
-	Sat, 30 Mar 2013 13:21:12 -0700 (PDT)
-Message-ID: <5157493A.1040406@sandeen.net>
-Date: Sat, 30 Mar 2013 15:21:14 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3AFD08F8049
+	for <xfs@oss.sgi.com>; Sat, 30 Mar 2013 18:22:40 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	mKGAahNV1PghoNjy for <xfs@oss.sgi.com>;
+	Sat, 30 Mar 2013 18:22:35 -0700 (PDT)
+Date: Sun, 31 Mar 2013 12:22:31 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs_fsr, sunit, and swidth
+Message-ID: <20130331012231.GJ6369@dastard>
+References: <5141C1FC.4060209@hardwarefreak.com>
+	<5141C8C1.2080903@hardwarefreak.com>
+	<5141E5CF.10101@binghamton.edu>
+	<5142AE40.6040408@hardwarefreak.com>
+	<20130315114538.GF6369@dastard>
+	<5143F94C.1020708@hardwarefreak.com>
+	<20130316072126.GG6369@dastard> <515082C3.2000006@binghamton.edu>
+	<515361B5.8050603@hardwarefreak.com>
+	<5155F2B2.1010308@binghamton.edu>
 MIME-Version: 1.0
-Subject: Re: Xfs_repair and journalling  --  EXT4 journal replay discussion
-References: <CAEUQceh-Xcabr0KErxF6EAdafDDP1PY_AeHwgYB82QeUdyGp-g@mail.gmail.com>
-	<5147E360.10605@sandeen.net> <5148037B.5010706@hardwarefreak.com>
-	(sfid-20130319_091205_759083_BA6F1AD2)
-	<201303190924.29362.Martin@lichtvoll.de>
-	<51483A7D.9050202@hardwarefreak.com>
-	<5156DF72.1090703@hardwarefreak.com> <5157237A.40006@sandeen.net>
-	<51573461.8070006@hardwarefreak.com>
-In-Reply-To: <51573461.8070006@hardwarefreak.com>
+Content-Disposition: inline
+In-Reply-To: <5155F2B2.1010308@binghamton.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,32 +37,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: stan@hardwarefreak.com
-Cc: Subranshu Patel <spatel.ml@gmail.com>, xfs@oss.sgi.com
+To: Dave Hall <kdhall@binghamton.edu>
+Cc: stan@hardwarefreak.com, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 3/30/13 1:52 PM, Stan Hoeppner wrote:
-> On 3/30/2013 12:40 PM, Eric Sandeen wrote:
->> On 3/30/13 7:49 AM, Stan Hoeppner wrote:
+On Fri, Mar 29, 2013 at 03:59:46PM -0400, Dave Hall wrote:
+> Dave, Stan,
 > 
->>> Ok, so here's the skinny on the source of our confusion WRT how/when
->>> EXT4 replays journals, and it's rather interesting.  Ted Ts'o explained
->>> the following.
->>
->> Where was this, out of curiosity?
-> 
-> Private email exchange with Ted.  I thought it was best from an
-> etiquette standpoint not to wholesale paste his two private emails to
-> the XFS list, but to summarize.  Maybe it would be ok if I put it on my
-> web server for a couple of days then remove it.
+> Here is the link for perf top -U:  http://pastebin.com/JYLXYWki.
+> The ag report is at http://pastebin.com/VzziSa4L.  Interestingly,
+> the backups ran fast a couple times this week.  Once under 9 hours.
+> Today it looks like it's running long again.
 
-I didn't need it verbatim, just wondered.  I agree, private emails
-probably should stay that way, w/o permission otherwise.
+    12.38%  [xfs]     [k] xfs_btree_get_rec
+    11.65%  [xfs]     [k] _xfs_buf_find
+    11.29%  [xfs]     [k] xfs_btree_increment
+     7.88%  [xfs]     [k] xfs_inobt_get_rec
+     5.40%  [kernel]  [k] intel_idle
+     4.13%  [xfs]     [k] xfs_btree_get_block
+     4.09%  [xfs]     [k] xfs_dialloc
+     3.21%  [xfs]     [k] xfs_btree_readahead
+     2.00%  [xfs]     [k] xfs_btree_rec_offset
+     1.50%  [xfs]     [k] xfs_btree_rec_addr
 
-Thanks,
--Eric
+Inode allocation searches, looking for an inode near to the parent
+directory.
 
-> http://www.hardwarefreak.com/ext4-journaling.txt
-> 
+Whatthis indicates is that you have lots of sparsely allocated inode
+chunks on disk. i.e. each 64 indoe chunk has some free inodes in it,
+and some used inodes. This is Likely due to random removal of inodes
+as you delete old backups and link counts drop to zero. Because we
+only index inodes on "allocated chunks", finding a chunk that has a
+free inode can be like finding a needle in a haystack. There are
+heuristics used to stop searches from consuming too much CPU, but it
+still can be quite slow when you repeatedly hit those paths....
+
+I don't have an answer that will magically speed things up for
+you right now...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
