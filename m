@@ -1,30 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5BD2D7F55
-	for <xfs@oss.sgi.com>; Sat, 30 Mar 2013 20:22:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3AFD08F8049
-	for <xfs@oss.sgi.com>; Sat, 30 Mar 2013 18:22:40 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 86ACA7F74
+	for <xfs@oss.sgi.com>; Sat, 30 Mar 2013 20:35:49 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 72E53304043
+	for <xfs@oss.sgi.com>; Sat, 30 Mar 2013 18:35:46 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	mKGAahNV1PghoNjy for <xfs@oss.sgi.com>;
-	Sat, 30 Mar 2013 18:22:35 -0700 (PDT)
-Date: Sun, 31 Mar 2013 12:22:31 +1100
+	HLbwbtXfqsIr6so0 for <xfs@oss.sgi.com>;
+	Sat, 30 Mar 2013 18:35:44 -0700 (PDT)
+Date: Sun, 31 Mar 2013 12:35:43 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs_fsr, sunit, and swidth
-Message-ID: <20130331012231.GJ6369@dastard>
-References: <5141C1FC.4060209@hardwarefreak.com>
-	<5141C8C1.2080903@hardwarefreak.com>
-	<5141E5CF.10101@binghamton.edu>
-	<5142AE40.6040408@hardwarefreak.com>
-	<20130315114538.GF6369@dastard>
-	<5143F94C.1020708@hardwarefreak.com>
-	<20130316072126.GG6369@dastard> <515082C3.2000006@binghamton.edu>
-	<515361B5.8050603@hardwarefreak.com>
-	<5155F2B2.1010308@binghamton.edu>
+Subject: Re: Xfs_repair and journalling  --  EXT4 journal replay discussion
+Message-ID: <20130331013543.GK6369@dastard>
+References: <CAEUQceh-Xcabr0KErxF6EAdafDDP1PY_AeHwgYB82QeUdyGp-g@mail.gmail.com>
+	<5147E360.10605@sandeen.net> <5148037B.5010706@hardwarefreak.com>
+	<201303190924.29362.Martin@lichtvoll.de>
+	<51483A7D.9050202@hardwarefreak.com>
+	<5156DF72.1090703@hardwarefreak.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <5155F2B2.1010308@binghamton.edu>
+In-Reply-To: <5156DF72.1090703@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,42 +33,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Hall <kdhall@binghamton.edu>
-Cc: stan@hardwarefreak.com, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Subranshu Patel <spatel.ml@gmail.com>, xfs@oss.sgi.com
 
-On Fri, Mar 29, 2013 at 03:59:46PM -0400, Dave Hall wrote:
-> Dave, Stan,
+On Sat, Mar 30, 2013 at 07:49:54AM -0500, Stan Hoeppner wrote:
+> On 3/19/2013 5:14 AM, Stan Hoeppner wrote:
+> > On 3/19/2013 3:24 AM, Martin Steigerwald wrote:
+> ...
+> >> Heck, even I was confused at first. Cause the manpage of fsck.ext4 IMHO is 
+> >> not really clear about that topic to say the least. I tested it out for a 
+> >> reason.
+> > 
+> > I already contacted Ted off list hoping he can point me to the relevant
+> > kernel documentation, so I don't make such a mistake again with EXT.
 > 
-> Here is the link for perf top -U:  http://pastebin.com/JYLXYWki.
-> The ag report is at http://pastebin.com/VzziSa4L.  Interestingly,
-> the backups ran fast a couple times this week.  Once under 9 hours.
-> Today it looks like it's running long again.
+> Ok, so here's the skinny on the source of our confusion WRT how/when
+> EXT4 replays journals, and it's rather interesting.  Ted Ts'o explained
+> the following.
+> 
+> The EXT4 kernel module does have code to perform journal replay, but it
+> is rarely executed.  The reasons for this are:
+> 
+> 1.  EXT4 journal replay can take a lot of time (whereas XFS is instant)
 
-    12.38%  [xfs]     [k] xfs_btree_get_rec
-    11.65%  [xfs]     [k] _xfs_buf_find
-    11.29%  [xfs]     [k] xfs_btree_increment
-     7.88%  [xfs]     [k] xfs_inobt_get_rec
-     5.40%  [kernel]  [k] intel_idle
-     4.13%  [xfs]     [k] xfs_btree_get_block
-     4.09%  [xfs]     [k] xfs_dialloc
-     3.21%  [xfs]     [k] xfs_btree_readahead
-     2.00%  [xfs]     [k] xfs_btree_rec_offset
-     1.50%  [xfs]     [k] xfs_btree_rec_addr
+19 minutes is my current record for XFS journal replay. 2GB log,
+filled full of inode creates, required about 300,000 IOs to complete
+recovery.....
 
-Inode allocation searches, looking for an inode near to the parent
-directory.
+> 2.  EXT4 systems tend to have multiple filesystems, often one per drive
+>     (whereas XFS systems tend to have few filesystems)
 
-Whatthis indicates is that you have lots of sparsely allocated inode
-chunks on disk. i.e. each 64 indoe chunk has some free inodes in it,
-and some used inodes. This is Likely due to random removal of inodes
-as you delete old backups and link counts drop to zero. Because we
-only index inodes on "allocated chunks", finding a chunk that has a
-free inode can be like finding a needle in a haystack. There are
-heuristics used to stop searches from consuming too much CPU, but it
-still can be quite slow when you repeatedly hit those paths....
-
-I don't have an answer that will magically speed things up for
-you right now...
+[Citation needed]
 
 Cheers,
 
