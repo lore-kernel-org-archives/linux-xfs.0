@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2DD4029E08
-	for <xfs@oss.sgi.com>; Mon,  1 Apr 2013 08:19:47 -0500 (CDT)
-Message-ID: <5159896A.4050706@sgi.com>
-Date: Mon, 1 Apr 2013 08:19:38 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 03B7C29E14
+	for <xfs@oss.sgi.com>; Mon,  1 Apr 2013 08:21:53 -0500 (CDT)
+Message-ID: <515989FD.30607@sgi.com>
+Date: Mon, 1 Apr 2013 08:22:05 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
 Subject: Re: [PATCH] xfstests: set correct seqres variable in new when creating
@@ -25,11 +25,21 @@ Sender: xfs-bounces@oss.sgi.com
 To: Eryu Guan <eguan@redhat.com>
 Cc: xfs@oss.sgi.com
 
-Looks good.
+Eryu,
+
+Thanks for submitting this patch, it has been committed.
 
 --Rich
 
-Reviewed-by: Rich Johnston <rjohnston@sgi.com>
+commit d1ec02af9e0516652ce92584dc4f92704579af18
+Author: Eryu Guan <eguan@redhat.com>
+Date:   Mon Apr 1 10:58:15 2013 +0000
+
+     xfstests: set correct seqres variable in new when creating test 
+template
+
+     When setting seqres in the new script, '$' should be escaped,
+     otherwise seqres will be set to '/' not '$RESULT_DIR/$seq'
 
 _______________________________________________
 xfs mailing list
