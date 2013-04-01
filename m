@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0FFDA29E0A
-	for <xfs@oss.sgi.com>; Mon,  1 Apr 2013 05:58:05 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 695D429E0D
+	for <xfs@oss.sgi.com>; Mon,  1 Apr 2013 05:58:07 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8052DAC007
-	for <xfs@oss.sgi.com>; Mon,  1 Apr 2013 03:58:04 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E9F8BAC007
+	for <xfs@oss.sgi.com>; Mon,  1 Apr 2013 03:58:06 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id oCCNZAkxn0HKoYqh for
-	<xfs@oss.sgi.com>; Mon, 01 Apr 2013 03:58:03 -0700 (PDT)
-Received: from int-mx02.intmail.prod.int.phx2.redhat.com
-	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r31Aw3e6027191
+	cuda.sgi.com with ESMTP id VLiXyIqMfvx4FRhb for
+	<xfs@oss.sgi.com>; Mon, 01 Apr 2013 03:58:05 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r31Aw5ZO011203
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Mon, 1 Apr 2013 06:58:03 -0400
+	for <xfs@oss.sgi.com>; Mon, 1 Apr 2013 06:58:05 -0400
 From: Eryu Guan <eguan@redhat.com>
-Subject: [PATCH 3/4] xfstests ext4 310: test read
-	/proc/fs/ext4/<dev>/mb_groups while the fs is being unmounted
-Date: Mon,  1 Apr 2013 18:57:43 +0800
-Message-Id: <1364813864-10820-4-git-send-email-eguan@redhat.com>
+Subject: [PATCH 4/4] xfstests generic 311: test dir mtime and ctime are
+	updated on rename
+Date: Mon,  1 Apr 2013 18:57:44 +0800
+Message-Id: <1364813864-10820-5-git-send-email-eguan@redhat.com>
 In-Reply-To: <1364813864-10820-1-git-send-email-eguan@redhat.com>
 References: <1364813864-10820-1-git-send-email-eguan@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -36,29 +36,35 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Eryu Guan <eguan@redhat.com>
 
+Test directory mtime and ctime are updated when moving a file onto an
+existing file in the directory
+
 Regression test for commit:
-9559996 ext4: remove mb_groups before tearing down the buddy_cache
+0b23076 ext3: fix update of mtime and ctime on rename
 
 Signed-off-by: Eryu Guan <eguan@redhat.com>
 ---
- tests/ext4/310     | 74 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/ext4/310.out |  2 ++
- tests/ext4/group   |  2 +-
- 3 files changed, 77 insertions(+), 1 deletion(-)
- create mode 100644 tests/ext4/310
- create mode 100644 tests/ext4/310.out
+ tests/generic/311     | 74 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/311.out |  2 ++
+ tests/generic/group   |  1 +
+ 3 files changed, 77 insertions(+)
+ create mode 100644 tests/generic/311
+ create mode 100644 tests/generic/311.out
 
-diff --git a/tests/ext4/310 b/tests/ext4/310
+diff --git a/tests/generic/311 b/tests/generic/311
 new file mode 100644
-index 0000000..eb9320f
+index 0000000..46cc791
 --- /dev/null
-+++ b/tests/ext4/310
++++ b/tests/generic/311
 @@ -0,0 +1,74 @@
 +#! /bin/bash
-+# FS QA Test No. 310
++# FS QA Test No. 311
++#
++# Test directory mtime and ctime are updated when moving a file onto an
++# existing file in the directory
 +#
 +# Regression test for commit:
-+# 9559996 ext4: remove mb_groups before tearing down the buddy_cache
++# 0b23076 ext3: fix update of mtime and ctime on rename
 +#
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2013 Red Hat, Inc.  All Rights Reserved.
@@ -82,14 +88,14 @@ index 0000000..eb9320f
 +seqres=$RESULT_DIR/$seq
 +echo "QA output created by $seq"
 +
-+PIDS=""
-+status=1	# failure is the default!
++status=0	# success is the default!
 +trap "_cleanup; exit \$status" 0 1 2 3 15
 +
 +_cleanup()
 +{
 +    cd /
-+    kill $PIDS >/dev/null 2>&1
++    rm -rf $TEST_DIR/testdir_$seq
++    rm -f $TEST_DIR/testfile.$seq
 +}
 +
 +# get standard environment, filters and checks
@@ -97,55 +103,51 @@ index 0000000..eb9320f
 +. ./common/filter
 +
 +# real QA test starts here
-+_supported_fs ext4
-+_supported_os Linux
++_supported_fs generic
++_supported_os IRIX Linux
 +
-+_require_scratch
-+
-+rm -f $seq.full
 +echo "Silence is golden"
 +
-+DEV_BASENAME=$(basename $(readlink -f $SCRATCH_DEV))
-+echo "Start test on device $SCRATCH_DEV, basename $DEV_BASENAME" >$seq.full
-+_scratch_mkfs >>$seq.full 2>&1
++mkdir -p $TEST_DIR/testdir_$seq
++touch $TEST_DIR/testdir_$seq/testfile
++touch $TEST_DIR/testfile.$seq
 +
-+while true;do
-+	mount $SCRATCH_DEV $SCRATCH_MNT
-+	umount $SCRATCH_DEV
-+done &
-+PIDS=$!
++mtime1=`stat -c %Y $TEST_DIR/testdir_$seq`
++ctime1=`stat -c %Z $TEST_DIR/testdir_$seq`
 +
-+while true;do
-+	cat /proc/fs/ext4/$DEV_BASENAME/mb_groups > /dev/null 2>&1
-+done &
-+PIDS="$PIDS $!"
++sleep 1
++mv $TEST_DIR/testfile.$seq $TEST_DIR/testdir_$seq/testfile
 +
-+# sleep for 180s, in most cases a buggy kernel could hit BUG_ON within 3 minutes
-+sleep 180
++mtime2=`stat -c %Y $TEST_DIR/testdir_$seq`
++ctime2=`stat -c %Z $TEST_DIR/testdir_$seq`
 +
-+# no BUG_ON, all done
-+kill $PIDS >/dev/null 2>&1
-+wait
-+status=0
++if [ "$mtime1" == "$mtime2" ]; then
++	echo "mtime not updated"
++	let status=$status+1
++fi
++if [ "$ctime1" == "$ctime2" ]; then
++	echo "ctime not updated"
++	let status=$status+1
++fi
++
 +exit
-diff --git a/tests/ext4/310.out b/tests/ext4/310.out
+diff --git a/tests/generic/311.out b/tests/generic/311.out
 new file mode 100644
-index 0000000..7b9eaf7
+index 0000000..62f2530
 --- /dev/null
-+++ b/tests/ext4/310.out
++++ b/tests/generic/311.out
 @@ -0,0 +1,2 @@
-+QA output created by 310
++QA output created by 311
 +Silence is golden
-diff --git a/tests/ext4/group b/tests/ext4/group
-index 6a44db3..a53cd87 100644
---- a/tests/ext4/group
-+++ b/tests/ext4/group
-@@ -8,4 +8,4 @@
- 302 aio dangerous ioctl rw stress
- 303 aio dangerous ioctl rw stress
- 304 aio dangerous ioctl rw stress
--
-+310 auto
+diff --git a/tests/generic/group b/tests/generic/group
+index 9ff2ab1..1f4b62e 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -111,3 +111,4 @@
+ 306 auto quick rw
+ 308 auto quick
+ 309 auto quick
++311 auto quick
 -- 
 1.8.1.4
 
