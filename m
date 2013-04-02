@@ -1,24 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0A4EB7F6A
-	for <xfs@oss.sgi.com>; Tue,  2 Apr 2013 03:39:21 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 934C5AC002
-	for <xfs@oss.sgi.com>; Tue,  2 Apr 2013 01:39:17 -0700 (PDT)
-Received: from mx3-phx2.redhat.com (mx3-phx2.redhat.com [209.132.183.24]) by
-	cuda.sgi.com with ESMTP id 2uXj137Luvso64Dh for
-	<xfs@oss.sgi.com>; Tue, 02 Apr 2013 01:39:16 -0700 (PDT)
-Date: Tue, 2 Apr 2013 04:39:07 -0400 (EDT)
-From: CAI Qian <caiqian@redhat.com>
-Message-ID: <14055702.547701.1364891947331.JavaMail.root@redhat.com>
-In-Reply-To: <20130402073035.GD3670@kernel.dk>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 02F837F6B
+	for <xfs@oss.sgi.com>; Tue,  2 Apr 2013 04:00:55 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D9ADE8F804B
+	for <xfs@oss.sgi.com>; Tue,  2 Apr 2013 02:00:51 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	F5p0R1RXLMiZ84oI (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 02 Apr 2013 02:00:50 -0700 (PDT)
+Date: Tue, 2 Apr 2013 11:00:47 +0200
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: Loopback device hung [was Re: xfs deadlock on 3.9-rc5 running
+	xfstests case #78]
+Message-ID: <20130402090047.GF3670@kernel.dk>
 References: <1462091996.435156.1364882416199.JavaMail.root@redhat.com>
 	<247719576.438259.1364882929749.JavaMail.root@redhat.com>
 	<20130402070537.GP6369@dastard> <20130402071937.GC3670@kernel.dk>
 	<20130402073035.GD3670@kernel.dk>
-Subject: Re: Loopback device hung [was Re: xfs deadlock on 3.9-rc5 running
-	xfstests case #78]
+	<14055702.547701.1364891947331.JavaMail.root@redhat.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <14055702.547701.1364891947331.JavaMail.root@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,79 +32,78 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jens Axboe <axboe@kernel.dk>
+To: CAI Qian <caiqian@redhat.com>
 Cc: LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-CgotLS0tLSBPcmlnaW5hbCBNZXNzYWdlIC0tLS0tCj4gRnJvbTogIkplbnMgQXhib2UiIDxheGJv
-ZUBrZXJuZWwuZGs+Cj4gVG86ICJEYXZlIENoaW5uZXIiIDxkYXZpZEBmcm9tb3JiaXQuY29tPgo+
-IENjOiAiQ0FJIFFpYW4iIDxjYWlxaWFuQHJlZGhhdC5jb20+LCB4ZnNAb3NzLnNnaS5jb20sICJM
-S01MIiA8bGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZz4KPiBTZW50OiBUdWVzZGF5LCBBcHJp
-bCAyLCAyMDEzIDM6MzA6MzUgUE0KPiBTdWJqZWN0OiBSZTogTG9vcGJhY2sgZGV2aWNlIGh1bmcg
-W3dhcyBSZTogeGZzIGRlYWRsb2NrIG9uIDMuOS1yYzUgcnVubmluZyB4ZnN0ZXN0cyBjYXNlICM3
-OF0KPiAKPiBPbiBUdWUsIEFwciAwMiAyMDEzLCBKZW5zIEF4Ym9lIHdyb3RlOgo+ID4gT24gVHVl
-LCBBcHIgMDIgMjAxMywgRGF2ZSBDaGlubmVyIHdyb3RlOgo+ID4gPiBbQWRkZWQgamVucyBBeGJv
-ZSB0byBDQ10KPiA+ID4gCj4gPiA+IE9uIFR1ZSwgQXByIDAyLCAyMDEzIGF0IDAyOjA4OjQ5QU0g
-LTA0MDAsIENBSSBRaWFuIHdyb3RlOgo+ID4gPiA+IFNhdyBvbiBhbG1vc3QgYWxsIHRoZSBzZXJ2
-ZXJzIHJhbmdlIGZyb20geDY0LCBwcGM2NCBhbmQgczM5MHggd2l0aAo+ID4gPiA+IGtlcm5lbAo+
-ID4gPiA+IDMuOS1yYzUgYW5kIHhmc3Byb2dzLTMuMS4xMC4gTmV2ZXIgY2F1Z2h0IHRoaXMgaW4g
-My45LXJjNCwgc28gbG9va3MKPiA+ID4gPiBsaWtlCj4gPiA+ID4gc29tZXRoaW5nIG5ldyBicm9r
-ZSB0aGlzLiBMb2cgaXMgaGVyZSB3aXRoIHN5c3JxIGRlYnVnIGluZm8uCj4gPiA+ID4gaHR0cDov
-L3Blb3BsZS5yZWRoYXQuY29tL3FjYWkvc3RhYmxlL2xvZwo+ID4gCj4gPiBDQUkgUWlhbiwgY2Fu
-IHlvdSB0cnkgYW5kIGJhY2sgdGhlIGJlbG93IG91dCBhbmQgdGVzdCBhZ2Fpbj8KPiAKPiBOZXZl
-cm1pbmQsIGl0J3MgY2xlYXJseSB0aGF0IG9uZS4gVGhlIGJlbG93IHNob3VsZCBpbXByb3ZlIHRo
-ZQo+IHNpdHVhdGlvbiwgYnV0IGl0J3Mgbm90IHByZXR0eS4gQSBiZXR0ZXIgZml4IHdvdWxkIGJl
-IHRvIGFsbG93Cj4gYXV0by1kZWxldGlvbiBldmVuIGlmIFBBUlRfTk9fU0NBTiBpcyBzZXQuCkpl
-bnMsIHdoZW4gY29tcGlsZWQgdGhlIG1haW5saW5lICh1cCB0byBmZWZjZGJlKSB3aXRoIHRoaXMg
-cGF0Y2gsCml0IGVycm9yLWVkIG91dCwKCmRyaXZlcnMvYmxvY2svbG9vcC5jOiBJbiBmdW5jdGlv
-biDigJhsb29wX2Nscl9mZOKAmToKZHJpdmVycy9ibG9jay9sb29wLmM6MTA2NzozOiBlcnJvcjog
-dG9vIG1hbnkgYXJndW1lbnRzIHRvIGZ1bmN0aW9uIOKAmG11dGV4X3RyeWxvY2vigJkKSW4gZmls
-ZSBpbmNsdWRlZCBmcm9tIGluY2x1ZGUvbGludXgvbm90aWZpZXIuaDoxMzowLAogICAgICAgICAg
-ICAgICAgIGZyb20gaW5jbHVkZS9saW51eC9tZW1vcnlfaG90cGx1Zy5oOjYsCiAgICAgICAgICAg
-ICAgICAgZnJvbSBpbmNsdWRlL2xpbnV4L21tem9uZS5oOjc3MSwKICAgICAgICAgICAgICAgICBm
-cm9tIGluY2x1ZGUvbGludXgvZ2ZwLmg6NCwKICAgICAgICAgICAgICAgICBmcm9tIGluY2x1ZGUv
-bGludXgva21vZC5oOjIyLAogICAgICAgICAgICAgICAgIGZyb20gaW5jbHVkZS9saW51eC9tb2R1
-bGUuaDoxMywKICAgICAgICAgICAgICAgICBmcm9tIGRyaXZlcnMvYmxvY2svbG9vcC5jOjUyOgpp
-bmNsdWRlL2xpbnV4L211dGV4Lmg6MTY4OjEyOiBub3RlOiBkZWNsYXJlZCBoZXJlCmRyaXZlcnMv
-YmxvY2svbG9vcC5jOiBBdCB0b3AgbGV2ZWw6CmRyaXZlcnMvYmxvY2svbG9vcC5jOjEwODQ6Mjog
-d2FybmluZzogZGF0YSBkZWZpbml0aW9uIGhhcyBubyB0eXBlIG9yIHN0b3JhZ2UgY2xhc3MgW2Vu
-YWJsZWQgYnkgZGVmYXVsdF0KZHJpdmVycy9ibG9jay9sb29wLmM6MTA4NDoyOiB3YXJuaW5nOiB0
-eXBlIGRlZmF1bHRzIHRvIOKAmGludOKAmSBpbiBkZWNsYXJhdGlvbiBvZiDigJhmcHV04oCZIFst
-V2ltcGxpY2l0LWludF0KZHJpdmVycy9ibG9jay9sb29wLmM6MTA4NDoyOiB3YXJuaW5nOiBwYXJh
-bWV0ZXIgbmFtZXMgKHdpdGhvdXQgdHlwZXMpIGluIGZ1bmN0aW9uIGRlY2xhcmF0aW9uIFtlbmFi
-bGVkIGJ5IGRlZmF1bHRdCmRyaXZlcnMvYmxvY2svbG9vcC5jOjEwODQ6MjogZXJyb3I6IGNvbmZs
-aWN0aW5nIHR5cGVzIGZvciDigJhmcHV04oCZCkluIGZpbGUgaW5jbHVkZWQgZnJvbSBkcml2ZXJz
-L2Jsb2NrL2xvb3AuYzo1NjowOgppbmNsdWRlL2xpbnV4L2ZpbGUuaDoxNDoxMzogbm90ZTogcHJl
-dmlvdXMgZGVjbGFyYXRpb24gb2Yg4oCYZnB1dOKAmSB3YXMgaGVyZQpkcml2ZXJzL2Jsb2NrL2xv
-b3AuYzoxMDg1OjI6IGVycm9yOiBleHBlY3RlZCBpZGVudGlmaWVyIG9yIOKAmCjigJkgYmVmb3Jl
-IOKAmHJldHVybuKAmQpkcml2ZXJzL2Jsb2NrL2xvb3AuYzoxMDg2OjE6IGVycm9yOiBleHBlY3Rl
-ZCBpZGVudGlmaWVyIG9yIOKAmCjigJkgYmVmb3JlIOKAmH3igJkgdG9rZW4KICBDQyAgICAgIGNy
-eXB0by9nZjEyOG11bC5vCiAgQ0MgICAgICBsaWIvc29ydC5vCmRyaXZlcnMvYmxvY2svbG9vcC5j
-OiBJbiBmdW5jdGlvbiDigJhsb29wX2Nscl9mZOKAmToKZHJpdmVycy9ibG9jay9sb29wLmM6MTA3
-NjoyOiB3YXJuaW5nOiBjb250cm9sIHJlYWNoZXMgZW5kIG9mIG5vbi12b2lkIGZ1bmN0aW9uIFst
-V3JldHVybi10eXBlXQogIENDICAgICAgbGliL3BhcnNlci5vCiAgQ0MgW01dICBzb3VuZC9wY2kv
-YXRpaXhwLm8KbWFrZVsyXTogKioqIFtkcml2ZXJzL2Jsb2NrL2xvb3Aub10gRXJyb3IgMQoKQ0FJ
-IFFpYW4KPiAKPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9ibG9jay9sb29wLmMgYi9kcml2ZXJzL2Js
-b2NrL2xvb3AuYwo+IGluZGV4IGZlNWY2NDAuLmQ2YzU3NjQgMTAwNjQ0Cj4gLS0tIGEvZHJpdmVy
-cy9ibG9jay9sb29wLmMKPiArKysgYi9kcml2ZXJzL2Jsb2NrL2xvb3AuYwo+IEBAIC0xMDU3LDE0
-ICsxMDU3LDE1IEBAIHN0YXRpYyBpbnQgbG9vcF9jbHJfZmQoc3RydWN0IGxvb3BfZGV2aWNlICps
-bykKPiAgCQlzdHJ1Y3QgZGlza19wYXJ0X2l0ZXIgcGl0ZXI7Cj4gIAkJc3RydWN0IGhkX3N0cnVj
-dCAqcGFydDsKPiAgCj4gLQkJbXV0ZXhfbG9ja19uZXN0ZWQoJmJkZXYtPmJkX211dGV4LCAxKTsK
-PiAtCQlpbnZhbGlkYXRlX3BhcnRpdGlvbihiZGV2LT5iZF9kaXNrLCAwKTsKPiAtCQlkaXNrX3Bh
-cnRfaXRlcl9pbml0KCZwaXRlciwgYmRldi0+YmRfZGlzaywKPiAtCQkJCQlESVNLX1BJVEVSX0lO
-Q0xfRU1QVFkpOwo+IC0JCXdoaWxlICgocGFydCA9IGRpc2tfcGFydF9pdGVyX25leHQoJnBpdGVy
-KSkpCj4gLQkJCWRlbGV0ZV9wYXJ0aXRpb24oYmRldi0+YmRfZGlzaywgcGFydC0+cGFydG5vKTsK
-PiAtCQlkaXNrX3BhcnRfaXRlcl9leGl0KCZwaXRlcik7Cj4gLQkJbXV0ZXhfdW5sb2NrKCZiZGV2
-LT5iZF9tdXRleCk7Cj4gKwkJaWYgKG11dGV4X3RyeWxvY2soJmJkZXYtPmJkX211dGV4LCAxKSkK
-PiArCQkJaW52YWxpZGF0ZV9wYXJ0aXRpb24oYmRldi0+YmRfZGlzaywgMCk7Cj4gKwkJCWRpc2tf
-cGFydF9pdGVyX2luaXQoJnBpdGVyLCBiZGV2LT5iZF9kaXNrLAo+ICsJCQkJCQlESVNLX1BJVEVS
-X0lOQ0xfRU1QVFkpOwo+ICsJCQl3aGlsZSAoKHBhcnQgPSBkaXNrX3BhcnRfaXRlcl9uZXh0KCZw
-aXRlcikpKQo+ICsJCQkJZGVsZXRlX3BhcnRpdGlvbihiZGV2LT5iZF9kaXNrLCBwYXJ0LT5wYXJ0
-bm8pOwo+ICsJCQlkaXNrX3BhcnRfaXRlcl9leGl0KCZwaXRlcik7Cj4gKwkJCW11dGV4X3VubG9j
-aygmYmRldi0+YmRfbXV0ZXgpOwo+ICsJCX0KPiAgCX0KPiAgCj4gIAkvKgo+IAo+IC0tCj4gSmVu
-cyBBeGJvZQo+IAo+IAoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29t
-L21haWxtYW4vbGlzdGluZm8veGZzCg==
+On Tue, Apr 02 2013, CAI Qian wrote:
+> 
+> 
+> ----- Original Message -----
+> > From: "Jens Axboe" <axboe@kernel.dk>
+> > To: "Dave Chinner" <david@fromorbit.com>
+> > Cc: "CAI Qian" <caiqian@redhat.com>, xfs@oss.sgi.com, "LKML" <linux-kernel@vger.kernel.org>
+> > Sent: Tuesday, April 2, 2013 3:30:35 PM
+> > Subject: Re: Loopback device hung [was Re: xfs deadlock on 3.9-rc5 running xfstests case #78]
+> > 
+> > On Tue, Apr 02 2013, Jens Axboe wrote:
+> > > On Tue, Apr 02 2013, Dave Chinner wrote:
+> > > > [Added jens Axboe to CC]
+> > > > 
+> > > > On Tue, Apr 02, 2013 at 02:08:49AM -0400, CAI Qian wrote:
+> > > > > Saw on almost all the servers range from x64, ppc64 and s390x with
+> > > > > kernel
+> > > > > 3.9-rc5 and xfsprogs-3.1.10. Never caught this in 3.9-rc4, so looks
+> > > > > like
+> > > > > something new broke this. Log is here with sysrq debug info.
+> > > > > http://people.redhat.com/qcai/stable/log
+> > > 
+> > > CAI Qian, can you try and back the below out and test again?
+> > 
+> > Nevermind, it's clearly that one. The below should improve the
+> > situation, but it's not pretty. A better fix would be to allow
+> > auto-deletion even if PART_NO_SCAN is set.
+> Jens, when compiled the mainline (up to fefcdbe) with this patch,
+> it error-ed out,
+
+Looks like I sent the wrong one, updated below.
+
+diff --git a/drivers/block/loop.c b/drivers/block/loop.c
+index fe5f640..faa3afa 100644
+--- a/drivers/block/loop.c
++++ b/drivers/block/loop.c
+@@ -1057,14 +1057,15 @@ static int loop_clr_fd(struct loop_device *lo)
+ 		struct disk_part_iter piter;
+ 		struct hd_struct *part;
+ 
+-		mutex_lock_nested(&bdev->bd_mutex, 1);
+-		invalidate_partition(bdev->bd_disk, 0);
+-		disk_part_iter_init(&piter, bdev->bd_disk,
+-					DISK_PITER_INCL_EMPTY);
+-		while ((part = disk_part_iter_next(&piter)))
+-			delete_partition(bdev->bd_disk, part->partno);
+-		disk_part_iter_exit(&piter);
+-		mutex_unlock(&bdev->bd_mutex);
++		if (mutex_trylock(&bdev->bd_mutex)) {
++			invalidate_partition(bdev->bd_disk, 0);
++			disk_part_iter_init(&piter, bdev->bd_disk,
++						DISK_PITER_INCL_EMPTY);
++			while ((part = disk_part_iter_next(&piter)))
++				delete_partition(bdev->bd_disk, part->partno);
++			disk_part_iter_exit(&piter);
++			mutex_unlock(&bdev->bd_mutex);
++		}
+ 	}
+ 
+ 	/*
+
+-- 
+Jens Axboe
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
