@@ -1,19 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7FECD7F8E
-	for <xfs@oss.sgi.com>; Tue,  2 Apr 2013 17:44:37 -0500 (CDT)
-Date: Tue, 2 Apr 2013 17:44:33 -0500
+	by oss.sgi.com (Postfix) with ESMTP id EBEF17F95
+	for <xfs@oss.sgi.com>; Tue,  2 Apr 2013 17:49:22 -0500 (CDT)
+Date: Tue, 2 Apr 2013 17:49:22 -0500
 From: Ben Myers <bpm@sgi.com>
 Subject: Re: [PATCH 09/21] xfs: add version 3 inode format with CRCs
-Message-ID: <20130402224433.GZ22182@sgi.com>
+Message-ID: <20130402224922.GA22182@sgi.com>
 References: <1363091454-8852-1-git-send-email-david@fromorbit.com>
 	<1363091454-8852-10-git-send-email-david@fromorbit.com>
-	<20130314160321.GV22182@sgi.com> <20130315011104.GD21651@dastard>
-	<20130326225600.GL6369@dastard> <20130327005307.GK30652@sgi.com>
-	<20130327014828.GN6369@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130327014828.GN6369@dastard>
+In-Reply-To: <1363091454-8852-10-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,127 +26,88 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-Hey Dave,
+Hi Dave,
 
-On Wed, Mar 27, 2013 at 12:48:28PM +1100, Dave Chinner wrote:
-> On Tue, Mar 26, 2013 at 07:53:07PM -0500, Ben Myers wrote:
-> > On Wed, Mar 27, 2013 at 09:56:00AM +1100, Dave Chinner wrote:
-> > > On Fri, Mar 15, 2013 at 12:11:04PM +1100, Dave Chinner wrote:
-> > > > On Thu, Mar 14, 2013 at 11:03:21AM -0500, Ben Myers wrote:
-> > > > > On Tue, Mar 12, 2013 at 11:30:42PM +1100, Dave Chinner wrote:
-> > > > > >  		xfs_buf_zero(fbuf, 0, ninodes << mp->m_sb.sb_inodelog);
-> > > > > >  		for (i = 0; i < ninodes; i++) {
-> > > > > >  			int	ioffset = i << mp->m_sb.sb_inodelog;
-> > > > > > -			uint	isize = sizeof(struct xfs_dinode);
-> > > > > > +			uint	isize = xfs_dinode_size(version);
-> > > > > >  
-> > > > > >  			free = xfs_make_iptr(mp, fbuf, i);
-> > > > > >  			free->di_magic = cpu_to_be16(XFS_DINODE_MAGIC);
-> > > > > >  			free->di_version = version;
-> > > > > >  			free->di_gen = cpu_to_be32(gen);
-> > > > > >  			free->di_next_unlinked = cpu_to_be32(NULLAGINO);
-> > > > > > +
-> > > > > > +			if (version == 3) {
-> > > > > > +				free->di_ino = cpu_to_be64(ino);
-> > > > > > +				ino++;
-> > > > > > +				uuid_copy(&free->di_uuid, &mp->m_sb.sb_uuid);
-> > > > > > +				xfs_dinode_calc_crc(mp, free);
-> > > > > > +			}
-> > > > > > +
-> > > > > >  			xfs_trans_log_buf(tp, fbuf, ioffset, ioffset + isize - 1);
-> > > > > 
-> > > > > If I have it right, it's ok not to log the literal are here (even though the
-> > > > > crc was calculated including the literal area) because the log is protected by
-> > > > > its own crcs and recovery will recalculate the crc.
-> > > > 
-> > > > Prior to CRCs it's OK not to log the literal areas because the
-> > > > contents really don't matter. The entire buffer is zeroed because
-> > > > it's faster than zeroing individual inode cores one by one and it
-> > > > ensures that we can always tell a freshly allocated inode block with
-> > > > xfs_db because the literal areas are all zero (i.e. good for
-> > > > debugging). But these are conveniences, not a necessity, and hence
-> > > > the advantage of not logging the literal areas reduces the overhead
-> > > > of logging inode allocations *significantly*.
-> > > > 
-> > > > > What do we have in the
-> > > > > literal area after log replay in that case?
-> > > > 
-> > > > For non-CRC inode buffers, it doesn't matter.
-> > > > 
-> > > > But you are right that it does matter for CRC enabled inode buffers
-> > > > as it will result in the CRC in the inode core being incorrect. I'l
-> > > > havea think about this - there are a couple of potential ways of
-> > > > solving the problem, and I need to think about them a bit first.
-> > > 
-> > > Ben, FYI: I've taken the easy way out for this - log the entire
-> > > inode buffer rather than just the inode core. The CRC means we are
-> > > dependent on having all the inode logged so that seems to be the
-> > > simplest way to deal with this problem overall, even though it
-> > > increases the amount of metadata logged for inode creates
-> > > substantially.
-> > > 
-> > > I'll address this potential performance issue in future with new
-> > > inode create and unlink transactions that allow us to avoid logging
-> > > buffers for all inode modifications. There are other good reasons
-> > > for doing this as well (e.g. avoid the subtly broken special
-> > > handling of physical inode buffer logging vs logical inode logging
-> > > in log recovery), so I think this is best to just take the simple
-> > > option here....
-> > 
-> > It seems like this is a more general problem with fresh on-disk
-> > structures.  When we calculate crc and log only part of a buffer we are
-> > prone to the crc being incorrect after log replay because the unlogged
-> > portions of the buffer are still undefined.  They aren't the 0s we
-> > calculated crcs with.
+On Tue, Mar 12, 2013 at 11:30:42PM +1100, Dave Chinner wrote:
+> From: Christoph Hellwig <hch@lst.de>
 > 
-> But it doesn't matter for all other metadata as we don't log CRC
-> fields except in the inode/dquot at allocation. It is the exception
-> rather than the rule.
+> Add a new inode version with a larger core.  The primary objective is
+> to allow for a crc of the inode, and location information (uuid and ino)
+> to verify it was written in the right place.  We also extend it by:
 > 
-> > I have a couple suggestions:
-> > 
-> > 1) We could read the undefined garbage from disk before we initialize
-> > the structure and then calculate the crc.  That way if we log only parts
-> > of the result the crc would still match after a crash.
+> 	a creation time (for Samba);
+> 	a changecount (for NFSv4);
+> 	a flush sequence (in LSN format for recovery);
+> 	an additional inode flags field; and
+> 	some additional padding.
 > 
-> The overhead of reading every inode cluster from disk during
-> allocation will drop create performance by orders of magnitude. i.e.
-> far worse in terms of performance than logging the entire buffer.
-
-I didn't say it was a *good* suggestion.  ;)
-
-> > 2) Create a new transaction to write a known pattern over the
-> > entire buffer, then initialize the buffer with that pattern,
-> > calculate the crc, and still log only the parts of the buffer
-> > which were modified.  In the non-crash case we still need to
-> > arrange for the buffer to be patterned after the log wraps, but it
-> > has the advantage of not having to log large structures just to
-> > zero them.
+> These additional fields are not implemented yet, but already laid
+> out in the structure.
 > 
-> We need to ensure we log the entire object if we are logging the CRC
-> of the object.
+> [dchinner@redhat.com] Added LSN and flags field, some factoring and rework to
+> capture all the necessary information in the crc calculation.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_buf_item.h    |    4 +-
+>  fs/xfs/xfs_dinode.h      |   33 +++++++--
+>  fs/xfs/xfs_ialloc.c      |   23 +++++-
+>  fs/xfs/xfs_inode.c       |  179 ++++++++++++++++++++++++++++++++--------------
+>  fs/xfs/xfs_inode.h       |   26 +++++++
+>  fs/xfs/xfs_inode_item.c  |    2 +-
+>  fs/xfs/xfs_log_recover.c |   35 +++++++--
+>  fs/xfs/xfs_trans_buf.c   |    5 +-
+>  8 files changed, 237 insertions(+), 70 deletions(-)
 
-We don't need to log the entire object if we can arrange for the contents of
-the buffer to be a known pattern after recovery and then calculate the CRC
-against that.  It's just the initialization that is problematic.  The rest of
-the time the contents are already cached anyway.  
+...
 
-> In this case, the initialisation and calculation of
-> the CRC needs to be atomic, so it needs to be a single transactions.
+> diff --git a/fs/xfs/xfs_dinode.h b/fs/xfs/xfs_dinode.h
+> index 6b5bd17..bdc946a 100644
+> --- a/fs/xfs/xfs_dinode.h
+> +++ b/fs/xfs/xfs_dinode.h
+> @@ -19,7 +19,7 @@
+>  #define	__XFS_DINODE_H__
+>  
+>  #define	XFS_DINODE_MAGIC		0x494e	/* 'IN' */
+> -#define XFS_DINODE_GOOD_VERSION(v)	(((v) == 1 || (v) == 2))
+> +#define XFS_DINODE_GOOD_VERSION(v)	((v) >= 1 && (v) <= 3)
+>  
+>  typedef struct xfs_timestamp {
+>  	__be32		t_sec;		/* timestamp seconds */
+> @@ -70,11 +70,36 @@ typedef struct xfs_dinode {
+>  
+>  	/* di_next_unlinked is the only non-core field in the old dinode */
+>  	__be32		di_next_unlinked;/* agi unlinked list ptr */
+> -} __attribute__((packed)) xfs_dinode_t;
+> +
+> +	/* start of the extended dinode, writable fields */
+> +	__be32		di_crc;		/* CRC of the inode */
+> +	__be64		di_changecount;	/* number of attribute changes */
+> +	__be64		di_lsn;		/* flush sequence */
+> +	__be64		di_flags2;	/* more random flags */
+> +	__u8		di_pad2[16];	/* more padding for future expansion */
 
-I agree that the initialisation of the block and the calculation of the crc
-must be in the same transaction.  It would need to be a new log item type that
-specifies a pattern (normally zero) and a length to be written to the buffer.
-I used the wrong terminology, as usual.
+Please add to the pad:
 
-> That's what logging the entire buffer does.
+(as an optimisation for the most common case, a single link)
+8 bytes for a parent inode pointer
+4 bytes for a name offset in the parent's data fork
 
-Yep.  I'm just pointing out that if logging the entire structure becomes an
-issue we have some other options.  This could be useful for other reasons too,
-e.g. to prevent stale data exposure after a crash.
+and
+4 bytes for an allocation policy
 
-Regards,
-Ben
+Thanks,
+	Ben
+
+> +
+> +	/* fields only written to during inode creation */
+> +	xfs_timestamp_t	di_crtime;	/* time created */
+> +	__be64		di_ino;		/* inode number */
+> +	uuid_t		di_uuid;	/* UUID of the filesystem */
+> +
+> +	/* structure must be padded to 64 bit alignment */
+> +} xfs_dinode_t;
 
 _______________________________________________
 xfs mailing list
