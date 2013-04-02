@@ -1,29 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0CCD57F72
-	for <xfs@oss.sgi.com>; Tue,  2 Apr 2013 04:48:55 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id F0F6A8F8050
-	for <xfs@oss.sgi.com>; Tue,  2 Apr 2013 02:48:51 -0700 (PDT)
-Received: from merlin.infradead.org (merlin.infradead.org [205.233.59.134]) by
-	cuda.sgi.com with ESMTP id euDKnocIpwFDRZJ8 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 02 Apr 2013 02:48:37 -0700 (PDT)
-Date: Tue, 2 Apr 2013 11:48:34 +0200
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: Loopback device hung [was Re: xfs deadlock on 3.9-rc5 running
-	xfstests case #78]
-Message-ID: <20130402094834.GA4667@kernel.dk>
-References: <1462091996.435156.1364882416199.JavaMail.root@redhat.com>
-	<247719576.438259.1364882929749.JavaMail.root@redhat.com>
-	<20130402070537.GP6369@dastard> <20130402071937.GC3670@kernel.dk>
-	<20130402073035.GD3670@kernel.dk>
-	<14055702.547701.1364891947331.JavaMail.root@redhat.com>
-	<20130402090047.GF3670@kernel.dk>
-	<985125161.581860.1364895066584.JavaMail.root@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B76FC7F72
+	for <xfs@oss.sgi.com>; Tue,  2 Apr 2013 05:35:21 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 50B5AAC002
+	for <xfs@oss.sgi.com>; Tue,  2 Apr 2013 03:35:18 -0700 (PDT)
+Received: from moutng.kundenserver.de (moutng.kundenserver.de [212.227.17.10])
+	by cuda.sgi.com with ESMTP id yV67MgsYiTEPilVy (version=TLSv1
+	cipher=RC4-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 02 Apr 2013 03:35:16 -0700 (PDT)
+From: Hans-Peter Jansen <hpj@urpla.net>
+Subject: Re: xfs_fsr, sunit, and swidth
+Date: Tue, 02 Apr 2013 12:34:53 +0200
+Message-ID: <1938112.G9K3FbV7Ck@xrated>
+In-Reply-To: <20130331012231.GJ6369@dastard>
+References: <5141C1FC.4060209@hardwarefreak.com>
+	<5155F2B2.1010308@binghamton.edu> <20130331012231.GJ6369@dastard>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <985125161.581860.1364895066584.JavaMail.root@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,132 +25,102 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: CAI Qian <caiqian@redhat.com>
-Cc: psusi@ubuntu.com, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Dave Hall <kdhall@binghamton.edu>, stan@hardwarefreak.com
 
-On Tue, Apr 02 2013, CAI Qian wrote:
-> 
-> 
-> ----- Original Message -----
-> > From: "Jens Axboe" <axboe@kernel.dk>
-> > To: "CAI Qian" <caiqian@redhat.com>
-> > Cc: "Dave Chinner" <david@fromorbit.com>, xfs@oss.sgi.com, "LKML" <linux-kernel@vger.kernel.org>
-> > Sent: Tuesday, April 2, 2013 5:00:47 PM
-> > Subject: Re: Loopback device hung [was Re: xfs deadlock on 3.9-rc5 running xfstests case #78]
-> > 
-> > On Tue, Apr 02 2013, CAI Qian wrote:
-> > > 
-> > > 
-> > > ----- Original Message -----
-> > > > From: "Jens Axboe" <axboe@kernel.dk>
-> > > > To: "Dave Chinner" <david@fromorbit.com>
-> > > > Cc: "CAI Qian" <caiqian@redhat.com>, xfs@oss.sgi.com, "LKML"
-> > > > <linux-kernel@vger.kernel.org>
-> > > > Sent: Tuesday, April 2, 2013 3:30:35 PM
-> > > > Subject: Re: Loopback device hung [was Re: xfs deadlock on 3.9-rc5
-> > > > running xfstests case #78]
-> > > > 
-> > > > On Tue, Apr 02 2013, Jens Axboe wrote:
-> > > > > On Tue, Apr 02 2013, Dave Chinner wrote:
-> > > > > > [Added jens Axboe to CC]
-> > > > > > 
-> > > > > > On Tue, Apr 02, 2013 at 02:08:49AM -0400, CAI Qian wrote:
-> > > > > > > Saw on almost all the servers range from x64, ppc64 and s390x with
-> > > > > > > kernel
-> > > > > > > 3.9-rc5 and xfsprogs-3.1.10. Never caught this in 3.9-rc4, so looks
-> > > > > > > like
-> > > > > > > something new broke this. Log is here with sysrq debug info.
-> > > > > > > http://people.redhat.com/qcai/stable/log
-> > > > > 
-> > > > > CAI Qian, can you try and back the below out and test again?
-> > > > 
-> > > > Nevermind, it's clearly that one. The below should improve the
-> > > > situation, but it's not pretty. A better fix would be to allow
-> > > > auto-deletion even if PART_NO_SCAN is set.
-> > > Jens, when compiled the mainline (up to fefcdbe) with this patch,
-> > > it error-ed out,
-> > 
-> > Looks like I sent the wrong one, updated below.
-> The patch works well. Thanks!
+On Sonntag, 31. M=E4rz 2013 12:22:31 Dave Chinner wrote:
+> On Fri, Mar 29, 2013 at 03:59:46PM -0400, Dave Hall wrote:
+> > Dave, Stan,
+> > =
 
-Thanks for testing! I don't particularly like this stuff in loop,
-though. It's quite nasty and depends on other behaviour. It would be
-prettier if we just had rescan_partitions() do the right thing, and only
-drop partitions and not rescan if NO_PART_SCAN is set.
+> > Here is the link for perf top -U:  http://pastebin.com/JYLXYWki.
+> > The ag report is at http://pastebin.com/VzziSa4L.  Interestingly,
+> > the backups ran fast a couple times this week.  Once under 9 hours.
+> > Today it looks like it's running long again.
+> =
 
-Ala the below, dropping the loop change and implementing that change in
-the core code. Phillip, can you check whether this does the right thing
-for your bug too?
+>     12.38%  [xfs]     [k] xfs_btree_get_rec
+>     11.65%  [xfs]     [k] _xfs_buf_find
+>     11.29%  [xfs]     [k] xfs_btree_increment
+>      7.88%  [xfs]     [k] xfs_inobt_get_rec
+>      5.40%  [kernel]  [k] intel_idle
+>      4.13%  [xfs]     [k] xfs_btree_get_block
+>      4.09%  [xfs]     [k] xfs_dialloc
+>      3.21%  [xfs]     [k] xfs_btree_readahead
+>      2.00%  [xfs]     [k] xfs_btree_rec_offset
+>      1.50%  [xfs]     [k] xfs_btree_rec_addr
+> =
 
-diff --git a/block/ioctl.c b/block/ioctl.c
-index a31d91d..8b78b5a 100644
---- a/block/ioctl.c
-+++ b/block/ioctl.c
-@@ -155,7 +155,7 @@ static int blkdev_reread_part(struct block_device *bdev)
- 	struct gendisk *disk = bdev->bd_disk;
- 	int res;
- 
--	if (!disk_part_scan_enabled(disk) || bdev != bdev->bd_contains)
-+	if (bdev != bdev->bd_contains)
- 		return -EINVAL;
- 	if (!capable(CAP_SYS_ADMIN))
- 		return -EACCES;
-diff --git a/block/partition-generic.c b/block/partition-generic.c
-index ae95ee6..bf4bb60 100644
---- a/block/partition-generic.c
-+++ b/block/partition-generic.c
-@@ -431,6 +431,15 @@ rescan:
- 		disk->fops->revalidate_disk(disk);
- 	check_disk_size_change(disk, bdev);
- 	bdev->bd_invalidated = 0;
-+
-+	/*
-+	 * If partition scanning is disabled, we are done.
-+	 */
-+	if (!disk_part_scan_enabled(disk)) {
-+		kobject_uevent(&disk_to_dev(disk)->kobj, KOBJ_CHANGE);
-+		return 0;
-+	}
-+
- 	if (!get_capacity(disk) || !(state = check_partition(disk, bdev)))
- 		return 0;
- 	if (IS_ERR(state)) {
-diff --git a/drivers/block/loop.c b/drivers/block/loop.c
-index 2c127f9..8b6df76 100644
---- a/drivers/block/loop.c
-+++ b/drivers/block/loop.c
-@@ -1057,24 +1057,6 @@ static int loop_clr_fd(struct loop_device *lo)
- 	mutex_unlock(&lo->lo_ctl_mutex);
- 
- 	/*
--	 * Remove all partitions, since BLKRRPART won't remove user
--	 * added partitions when max_part=0
--	 */
--	if (bdev) {
--		struct disk_part_iter piter;
--		struct hd_struct *part;
--
--		mutex_lock_nested(&bdev->bd_mutex, 1);
--		invalidate_partition(bdev->bd_disk, 0);
--		disk_part_iter_init(&piter, bdev->bd_disk,
--					DISK_PITER_INCL_EMPTY);
--		while ((part = disk_part_iter_next(&piter)))
--			delete_partition(bdev->bd_disk, part->partno);
--		disk_part_iter_exit(&piter);
--		mutex_unlock(&bdev->bd_mutex);
--	}
--
--	/*
- 	 * Need not hold lo_ctl_mutex to fput backing file.
- 	 * Calling fput holding lo_ctl_mutex triggers a circular
- 	 * lock dependency possibility warning as fput can take
+> Inode allocation searches, looking for an inode near to the parent
+> directory.
+> =
 
--- 
-Jens Axboe
+> Whatthis indicates is that you have lots of sparsely allocated inode
+> chunks on disk. i.e. each 64 indoe chunk has some free inodes in it,
+> and some used inodes. This is Likely due to random removal of inodes
+> as you delete old backups and link counts drop to zero. Because we
+> only index inodes on "allocated chunks", finding a chunk that has a
+> free inode can be like finding a needle in a haystack. There are
+> heuristics used to stop searches from consuming too much CPU, but it
+> still can be quite slow when you repeatedly hit those paths....
+> =
+
+> I don't have an answer that will magically speed things up for
+> you right now...
+
+Hmm, unfortunately, this access pattern is pretty common, at least all "cp =
+-al =
+
+& rsync" based backup solutions will suffer from it after a while. I notice=
+d, =
+
+that the "removing old backups" part is also taking *ages* in this scenario=
+. =
+
+
+I had to manually remove parts of a backup (subtrees with a few million =
+
+ordinary files, massively hardlinked as usual), that took 4-5 hours for eac=
+h =
+
+run on a Hitachi Ultrastar 7K4000 drive. For the 8 subtrees, that finally t=
+ook =
+
+one and a half day, freeing about 500 GB space. Oh well.
+
+The question is: is it (logically) possible to reorganize the fragmented in=
+ode =
+
+allocation space with a specialized tool (to be implemented), that lays out =
+
+the allocation space in such a way, that matches XFS earliest "expectations=
+", =
+
+or does that violate some deeper FS logic, I'm not aware of? =
+
+
+I have to mention, that I haven't made any tests with other file systems, a=
+s =
+
+playing games with backups ranges very low on my scale of sensible tests, b=
+ut =
+
+experience has shown, that XFS usually sucks less than its alternatives, ev=
+en =
+
+if the access pattern don't match its primary optimization domain.
+
+Hence, implementing such a tool makes sense, where "least sucking" should b=
+e =
+
+aimed for.
+
+Cheers,
+Pete
 
 _______________________________________________
 xfs mailing list
