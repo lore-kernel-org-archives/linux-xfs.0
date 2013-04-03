@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8A9FB7F9D
-	for <xfs@oss.sgi.com>; Tue,  2 Apr 2013 23:08:50 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 04707AC003
-	for <xfs@oss.sgi.com>; Tue,  2 Apr 2013 21:08:49 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 99C2D7F9E
+	for <xfs@oss.sgi.com>; Wed,  3 Apr 2013 00:11:43 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6C6D530407E
+	for <xfs@oss.sgi.com>; Tue,  2 Apr 2013 22:11:40 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	2C8bJmBemaT0XrK1 for <xfs@oss.sgi.com>;
-	Tue, 02 Apr 2013 21:08:47 -0700 (PDT)
-Date: Wed, 3 Apr 2013 15:08:45 +1100
+	qBstnHfNkE1rsDHT for <xfs@oss.sgi.com>;
+	Tue, 02 Apr 2013 22:11:37 -0700 (PDT)
+Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1UNFyx-0000L4-6S
+	for xfs@oss.sgi.com; Wed, 03 Apr 2013 16:11:35 +1100
+Received: from dave by disappointment with local (Exim 4.80)
+	(envelope-from <dave@disappointment.disaster>) id 1UNFyx-0005B5-3S
+	for xfs@oss.sgi.com; Wed, 03 Apr 2013 16:11:35 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 09/21] xfs: add version 3 inode format with CRCs
-Message-ID: <20130403040845.GU17758@dastard>
-References: <1363091454-8852-1-git-send-email-david@fromorbit.com>
-	<1363091454-8852-10-git-send-email-david@fromorbit.com>
-	<20130314160321.GV22182@sgi.com> <20130315011104.GD21651@dastard>
-	<20130326225600.GL6369@dastard> <20130327005307.GK30652@sgi.com>
-	<20130327014828.GN6369@dastard> <20130402224433.GZ22182@sgi.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130402224433.GZ22182@sgi.com>
+Subject: [PATCH 05/22] xfs: add CRC checks to the AGI
+Date: Wed,  3 Apr 2013 16:11:15 +1100
+Message-Id: <1364965892-19623-6-git-send-email-david@fromorbit.com>
+In-Reply-To: <1364965892-19623-1-git-send-email-david@fromorbit.com>
+References: <1364965892-19623-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,120 +29,227 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Apr 02, 2013 at 05:44:33PM -0500, Ben Myers wrote:
-> On Wed, Mar 27, 2013 at 12:48:28PM +1100, Dave Chinner wrote:
-> > On Tue, Mar 26, 2013 at 07:53:07PM -0500, Ben Myers wrote:
-> > > On Wed, Mar 27, 2013 at 09:56:00AM +1100, Dave Chinner wrote:
-> > > > On Fri, Mar 15, 2013 at 12:11:04PM +1100, Dave Chinner wrote:
-> > > > Ben, FYI: I've taken the easy way out for this - log the entire
-> > > > inode buffer rather than just the inode core. The CRC means we are
-> > > > dependent on having all the inode logged so that seems to be the
-> > > > simplest way to deal with this problem overall, even though it
-> > > > increases the amount of metadata logged for inode creates
-> > > > substantially.
-> > > > 
-> > > > I'll address this potential performance issue in future with new
-> > > > inode create and unlink transactions that allow us to avoid logging
-> > > > buffers for all inode modifications. There are other good reasons
-> > > > for doing this as well (e.g. avoid the subtly broken special
-> > > > handling of physical inode buffer logging vs logical inode logging
-> > > > in log recovery), so I think this is best to just take the simple
-> > > > option here....
-> > > 
-> > > It seems like this is a more general problem with fresh on-disk
-> > > structures.  When we calculate crc and log only part of a buffer we are
-> > > prone to the crc being incorrect after log replay because the unlogged
-> > > portions of the buffer are still undefined.  They aren't the 0s we
-> > > calculated crcs with.
-> > 
-> > But it doesn't matter for all other metadata as we don't log CRC
-> > fields except in the inode/dquot at allocation. It is the exception
-> > rather than the rule.
-.....
-> > > 2) Create a new transaction to write a known pattern over the
-> > > entire buffer, then initialize the buffer with that pattern,
-> > > calculate the crc, and still log only the parts of the buffer
-> > > which were modified.  In the non-crash case we still need to
-> > > arrange for the buffer to be patterned after the log wraps, but it
-> > > has the advantage of not having to log large structures just to
-> > > zero them.
-> > 
-> > We need to ensure we log the entire object if we are logging the CRC
-> > of the object.
-> 
-> We don't need to log the entire object if we can arrange for the contents of
-> the buffer to be a known pattern after recovery and then calculate the CRC
-> against that.  It's just the initialization that is problematic.  The rest of
-> the time the contents are already cached anyway.  
+From: Dave Chinner <dgc@sgi.com>
 
-Right, but...
+Same set of changes made to the AGF need to be made to the AGI.
+This patch has a similar history to the AGF, hence a similar
+sign-off chain.
 
-> > In this case, the initialisation and calculation of
-> > the CRC needs to be atomic, so it needs to be a single transactions.
-> 
-> I agree that the initialisation of the block and the calculation of the crc
-> must be in the same transaction.  It would need to be a new log item type that
-> specifies a pattern (normally zero) and a length to be written to the buffer.
-> I used the wrong terminology, as usual.
-> 
-> > That's what logging the entire buffer does.
-> 
-> Yep.  I'm just pointing out that if logging the entire structure becomes an
-> issue we have some other options.
+Signed-off-by: Dave Chinner <dgc@sgi.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Dave Chinner <dgc@redhat.com>
+---
+ fs/xfs/xfs_ag.h          |    8 +++++++
+ fs/xfs/xfs_buf_item.h    |    4 +++-
+ fs/xfs/xfs_fsops.c       |    3 +++
+ fs/xfs/xfs_ialloc.c      |   57 ++++++++++++++++++++++++++++++++++------------
+ fs/xfs/xfs_log_recover.c |    8 +++++++
+ 5 files changed, 65 insertions(+), 15 deletions(-)
 
-.... to do that we need a new transaction type, new flags/fields in
-the xfs_buf_log_item, new handling of unlogged buffer contents that
-still are tracked in the AIL, new reservations, new transaction
-nesting as there's now 3 transactions needed for inode allocation,
-etc. It's pretty messy, and it doesn't replace the fact we then
-immediately have to relog the buffer with the initialised inode
-cores. It doesn't simplify log recovery, either, and that already
-has issues with buffer based inode allocation vs logical inode
-logging....
-
-But, as I mentioned, I already have a patchset that basically does
-all this for inode allocation. It doesn't initialised buffers to a
-byte pattern - it initialises a contiguous extent to contain inodes,
-and introduces a "ordered buffer" that is not logged but is still
-tracked in the AIL to ensure that the correct behaviour occurs. That
-patchset has been around for a while - the original series I wrote:
-
-$ ls -l src/kern/patches/icreate
-total 64
--rw------- 1 dave dave 10423 Dec  3  2009 xfs-icreate-factor-inode-stamping
--rw------- 1 dave dave 12304 Dec  3  2009 xfs-icreate-item
--rw------- 1 dave dave  6347 Dec  3  2009 xfs-icreate-ordered-buf-item
--rw------- 1 dave dave  2679 Dec  3  2009 xfs-icreate-remove-log-di
--rw------- 1 dave dave  4713 Dec  3  2009 xfs-icreate-use-xact
--rw------- 1 dave dave  7924 Dec  3  2009 xfs-icreate-xact-recovery
--rw------- 1 dave dave  6159 Dec  3  2009 xfs-icreate-xact-resv
-
-That will solve the perf problem of inode initialisation and CRCs,
-as well as a bunch of other problems limiting inode create
-performance. It will also avoid having to log buffers for inode
-creation and hence remove all the recovery coherency problems that
-causes...
-
-> This could be useful for other reasons too,
-> e.g. to prevent stale data exposure after a crash.
-
-That can't actually happen as they are metadata buffers and hence
-the unreferenced contents of the buffers cannot escape to
-userspace....
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_ag.h b/fs/xfs/xfs_ag.h
+index 272ef09..317aa86 100644
+--- a/fs/xfs/xfs_ag.h
++++ b/fs/xfs/xfs_ag.h
+@@ -152,6 +152,7 @@ typedef struct xfs_agi {
+ 	__be32		agi_root;	/* root of inode btree */
+ 	__be32		agi_level;	/* levels in inode btree */
+ 	__be32		agi_freecount;	/* number of free inodes */
++
+ 	__be32		agi_newino;	/* new inode just allocated */
+ 	__be32		agi_dirino;	/* last directory inode chunk */
+ 	/*
+@@ -159,6 +160,13 @@ typedef struct xfs_agi {
+ 	 * still being referenced.
+ 	 */
+ 	__be32		agi_unlinked[XFS_AGI_UNLINKED_BUCKETS];
++
++	uuid_t		agi_uuid;	/* uuid of filesystem */
++	__be32		agi_crc;	/* crc of agi sector */
++	__be32		agi_pad32;
++	__be64		agi_lsn;	/* last write sequence */
++
++	/* structure must be padded to 64 bit alignment */
+ } xfs_agi_t;
+ 
+ #define	XFS_AGI_MAGICNUM	0x00000001
+diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
+index 067d5f0..c256606 100644
+--- a/fs/xfs/xfs_buf_item.h
++++ b/fs/xfs/xfs_buf_item.h
+@@ -47,6 +47,7 @@ extern kmem_zone_t	*xfs_buf_item_zone;
+ #define XFS_BLF_BTREE_BUF	(1<<5)
+ #define XFS_BLF_AGF_BUF		(1<<6)
+ #define XFS_BLF_AGFL_BUF	(1<<7)
++#define XFS_BLF_AGI_BUF		(1<<8)
+ 
+ #define XFS_BLF_TYPE_MASK	\
+ 		(XFS_BLF_UDQUOT_BUF | \
+@@ -54,7 +55,8 @@ extern kmem_zone_t	*xfs_buf_item_zone;
+ 		 XFS_BLF_GDQUOT_BUF | \
+ 		 XFS_BLF_BTREE_BUF | \
+ 		 XFS_BLF_AGF_BUF | \
+-		 XFS_BLF_AGFL_BUF)
++		 XFS_BLF_AGFL_BUF | \
++		 XFS_BLF_AGI_BUF)
+ 
+ #define	XFS_BLF_CHUNK		128
+ #define	XFS_BLF_SHIFT		7
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index a693a54..87595b2 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -304,8 +304,11 @@ xfs_growfs_data_private(
+ 		agi->agi_freecount = 0;
+ 		agi->agi_newino = cpu_to_be32(NULLAGINO);
+ 		agi->agi_dirino = cpu_to_be32(NULLAGINO);
++		if (xfs_sb_version_hascrc(&mp->m_sb))
++			uuid_copy(&agi->agi_uuid, &mp->m_sb.sb_uuid);
+ 		for (bucket = 0; bucket < XFS_AGI_UNLINKED_BUCKETS; bucket++)
+ 			agi->agi_unlinked[bucket] = cpu_to_be32(NULLAGINO);
++
+ 		error = xfs_bwrite(bp);
+ 		xfs_buf_relse(bp);
+ 		if (error)
+diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
+index ba62661..6d0a495 100644
+--- a/fs/xfs/xfs_ialloc.c
++++ b/fs/xfs/xfs_ialloc.c
+@@ -36,6 +36,8 @@
+ #include "xfs_rtalloc.h"
+ #include "xfs_error.h"
+ #include "xfs_bmap.h"
++#include "xfs_cksum.h"
++#include "xfs_buf_item.h"
+ 
+ 
+ /*
+@@ -1453,6 +1455,7 @@ xfs_ialloc_log_agi(
+ 	/*
+ 	 * Log the allocation group inode header buffer.
+ 	 */
++	xfs_trans_buf_set_type(tp, bp, XFS_BLF_AGI_BUF);
+ 	xfs_trans_log_buf(tp, bp, first, last);
+ }
+ 
+@@ -1470,19 +1473,23 @@ xfs_check_agi_unlinked(
+ #define xfs_check_agi_unlinked(agi)
+ #endif
+ 
+-static void
++static bool
+ xfs_agi_verify(
+ 	struct xfs_buf	*bp)
+ {
+ 	struct xfs_mount *mp = bp->b_target->bt_mount;
+ 	struct xfs_agi	*agi = XFS_BUF_TO_AGI(bp);
+-	int		agi_ok;
+ 
++	if (xfs_sb_version_hascrc(&mp->m_sb) &&
++	    !uuid_equal(&agi->agi_uuid, &mp->m_sb.sb_uuid))
++			return false;
+ 	/*
+ 	 * Validate the magic number of the agi block.
+ 	 */
+-	agi_ok = agi->agi_magicnum == cpu_to_be32(XFS_AGI_MAGIC) &&
+-		XFS_AGI_GOOD_VERSION(be32_to_cpu(agi->agi_versionnum));
++	if (agi->agi_magicnum != cpu_to_be32(XFS_AGI_MAGIC))
++		return false;
++	if (!XFS_AGI_GOOD_VERSION(be32_to_cpu(agi->agi_versionnum)))
++		return false;
+ 
+ 	/*
+ 	 * during growfs operations, the perag is not fully initialised,
+@@ -1490,30 +1497,52 @@ xfs_agi_verify(
+ 	 * use it by using uncached buffers that don't have the perag attached
+ 	 * so we can detect and avoid this problem.
+ 	 */
+-	if (bp->b_pag)
+-		agi_ok = agi_ok && be32_to_cpu(agi->agi_seqno) ==
+-						bp->b_pag->pag_agno;
++	if (bp->b_pag && be32_to_cpu(agi->agi_seqno) != bp->b_pag->pag_agno)
++		return false;
+ 
+-	if (unlikely(XFS_TEST_ERROR(!agi_ok, mp, XFS_ERRTAG_IALLOC_READ_AGI,
+-			XFS_RANDOM_IALLOC_READ_AGI))) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, agi);
+-		xfs_buf_ioerror(bp, EFSCORRUPTED);
+-	}
+ 	xfs_check_agi_unlinked(agi);
++	return true;
+ }
+ 
+ static void
+ xfs_agi_read_verify(
+ 	struct xfs_buf	*bp)
+ {
+-	xfs_agi_verify(bp);
++	struct xfs_mount *mp = bp->b_target->bt_mount;
++	int		agi_ok = 1;
++
++	if (xfs_sb_version_hascrc(&mp->m_sb))
++		agi_ok = xfs_verify_cksum(bp->b_addr, BBTOB(bp->b_length),
++					  offsetof(struct xfs_agi, agi_crc));
++	agi_ok = agi_ok && xfs_agi_verify(bp);
++
++	if (unlikely(XFS_TEST_ERROR(!agi_ok, mp, XFS_ERRTAG_IALLOC_READ_AGI,
++			XFS_RANDOM_IALLOC_READ_AGI))) {
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
++		xfs_buf_ioerror(bp, EFSCORRUPTED);
++	}
+ }
+ 
+ static void
+ xfs_agi_write_verify(
+ 	struct xfs_buf	*bp)
+ {
+-	xfs_agi_verify(bp);
++	struct xfs_mount *mp = bp->b_target->bt_mount;
++	struct xfs_buf_log_item	*bip = bp->b_fspriv;
++
++	if (!xfs_agi_verify(bp)) {
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
++		xfs_buf_ioerror(bp, EFSCORRUPTED);
++		return;
++	}
++
++	if (!xfs_sb_version_hascrc(&mp->m_sb))
++		return;
++
++	if (bip)
++		XFS_BUF_TO_AGI(bp)->agi_lsn = cpu_to_be64(bip->bli_item.li_lsn);
++	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length),
++			 offsetof(struct xfs_agi, agi_crc));
+ }
+ 
+ const struct xfs_buf_ops xfs_agi_buf_ops = {
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index da2a19e..6778a79 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -1971,6 +1971,14 @@ xlog_recover_do_reg_buffer(
+ 		}
+ 		bp->b_ops = &xfs_agfl_buf_ops;
+ 		break;
++	case XFS_BLF_AGI_BUF:
++		if (*(__be32 *)bp->b_addr != cpu_to_be32(XFS_AGI_MAGIC)) {
++			xfs_warn(mp, "Bad AGI block magic!");
++			ASSERT(0);
++			break;
++		}
++		bp->b_ops = &xfs_agi_buf_ops;
++		break;
+ 	default:
+ 		break;
+ 	}
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.10.4
 
 _______________________________________________
 xfs mailing list
