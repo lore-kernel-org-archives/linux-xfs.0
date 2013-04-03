@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6013429E19
-	for <xfs@oss.sgi.com>; Wed,  3 Apr 2013 00:12:03 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4CCE48F8054
-	for <xfs@oss.sgi.com>; Tue,  2 Apr 2013 22:12:03 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 2898129E1E
+	for <xfs@oss.sgi.com>; Wed,  3 Apr 2013 00:12:05 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id CFE918F804C
+	for <xfs@oss.sgi.com>; Tue,  2 Apr 2013 22:12:04 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	0PBS2twg5l4BwCug for <xfs@oss.sgi.com>;
-	Tue, 02 Apr 2013 22:12:00 -0700 (PDT)
+	9nXHkzXI29YNQxPD for <xfs@oss.sgi.com>;
+	Tue, 02 Apr 2013 22:12:02 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UNFzH-0000Lm-D6
-	for xfs@oss.sgi.com; Wed, 03 Apr 2013 16:11:55 +1100
+	(envelope-from <dave@fromorbit.com>) id 1UNFzM-0000M5-OT
+	for xfs@oss.sgi.com; Wed, 03 Apr 2013 16:12:00 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UNFz7-0005BX-8c
-	for xfs@oss.sgi.com; Wed, 03 Apr 2013 16:11:45 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1UNFzH-0005CA-KH
+	for xfs@oss.sgi.com; Wed, 03 Apr 2013 16:11:55 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 10/22] xfs: add CRC checks to block format directory blocks
-Date: Wed,  3 Apr 2013 16:11:20 +1100
-Message-Id: <1364965892-19623-11-git-send-email-david@fromorbit.com>
+Subject: [PATCH 18/22] xfs: add CRC protection to remote attributes
+Date: Wed,  3 Apr 2013 16:11:28 +1100
+Message-Id: <1364965892-19623-19-git-send-email-david@fromorbit.com>
 In-Reply-To: <1364965892-19623-1-git-send-email-david@fromorbit.com>
 References: <1364965892-19623-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,1010 +38,524 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Now that directory buffers are made from a single struct xfs_buf, we
-can add CRC calculation and checking callbacks. While there, add all
-the fields to the on disk structures for future functionality such
-as d_type support, uuids, block numbers, owner inode, etc.
+There are two ways of doing this - the first is to add a CRC to the
+remote attribute entry in the attribute block. The second is to
+treat them similar to the remote symlink, where each fragment has
+it's own header and identifies fragment location in the attribute.
 
-To distinguish between the different on disk formats, change the
-magic numbers for the new format directory blocks.
+The problem with the CRC in the remote attr entry is that we cannot
+identify the owner of the metadata from the metadata blocks
+themselves, or where the blocks fit into the remote attribute. The
+down side to this approach is that we never know when the attribute
+has been read from disk or not and so we have to verify it every
+time it is read, and we must calculate it during the create
+transaction and log it. We do not log CRCs for any other metadata,
+and so this creates a unique set of coherency problems that, in
+general, are best avoided.
+
+Adding an identifying header to each allocated block allows us to
+identify each fragment and where in the attribute it is located. It
+enables us to rebuild the remote attribute from just the raw blocks
+containing the attribute. It also provides us to do per-block CRCs
+verification at IO time rather than during the transaction context
+that creates it or every time it is read into a user buffer. Hence
+it avoids all the problems that an external, logged CRC has, and
+provides all the benefits of self identifying metadata.
+
+The only complexity is that we have to add a header per fragment,
+and we don't know how many fragments will be needed prior to
+allocations. If we take the symlink example, the header is 56 bytes
+and hence for a 4k block size filesystem, in the worst case 16
+headers requires 1 extra block for the 64k attribute data. For 512
+byte filesystems the worst case is an extra block for every 9
+fragments (i.e. 16 extra blocks in the worse case). This will be
+very rare and so it's not really a major concern.
+
+Because allocation is done in two steps - the first finds a hole
+large enough in the attribute file, the second does the allocation -
+we only need to find a hole big enough for a worst case allocation.
+We only need to allocate enough extra blocks for number of headers
+required by the fragments, and we can calculate that as we go....
+
+Hence it really only makes sense to use the same model as for
+symlinks - it doesn't add that much complexity, does not require an
+attribute tree format change, and does not require logging
+calculated CRC values.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_dir2_block.c  |  132 +++++++++++++++++++++++++++-----------
- fs/xfs/xfs_dir2_data.c   |  160 ++++++++++++++++++++++++++++------------------
- fs/xfs/xfs_dir2_format.h |  143 +++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_dir2_leaf.c   |    6 +-
- fs/xfs/xfs_dir2_node.c   |    2 +-
- fs/xfs/xfs_dir2_priv.h   |    4 +-
- fs/xfs/xfs_dir2_sf.c     |    2 +-
- 7 files changed, 344 insertions(+), 105 deletions(-)
+ fs/xfs/xfs_attr_remote.c |  324 ++++++++++++++++++++++++++++++++++++++--------
+ fs/xfs/xfs_attr_remote.h |   19 +++
+ 2 files changed, 292 insertions(+), 51 deletions(-)
 
-diff --git a/fs/xfs/xfs_dir2_block.c b/fs/xfs/xfs_dir2_block.c
-index 12afe07..79a3f1b 100644
---- a/fs/xfs/xfs_dir2_block.c
-+++ b/fs/xfs/xfs_dir2_block.c
+diff --git a/fs/xfs/xfs_attr_remote.c b/fs/xfs/xfs_attr_remote.c
+index d0d67e9..53da46b 100644
+--- a/fs/xfs/xfs_attr_remote.c
++++ b/fs/xfs/xfs_attr_remote.c
 @@ -1,5 +1,6 @@
  /*
-  * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
+  * Copyright (c) 2000-2005 Silicon Graphics, Inc.
 + * Copyright (c) 2013 Red Hat, Inc.
   * All Rights Reserved.
   *
   * This program is free software; you can redistribute it and/or
-@@ -28,11 +29,13 @@
- #include "xfs_dinode.h"
- #include "xfs_inode.h"
- #include "xfs_inode_item.h"
-+#include "xfs_buf_item.h"
- #include "xfs_dir2.h"
- #include "xfs_dir2_format.h"
- #include "xfs_dir2_priv.h"
- #include "xfs_error.h"
+@@ -37,63 +38,232 @@
+ #include "xfs_attr_remote.h"
+ #include "xfs_trans_space.h"
  #include "xfs_trace.h"
+-
 +#include "xfs_cksum.h"
++#include "xfs_buf_item.h"
+ 
+ #define ATTR_RMTVALUE_MAPSIZE	1	/* # of map entries at once */
  
  /*
-  * Local function prototypes.
-@@ -56,44 +59,74 @@ xfs_dir_startup(void)
- 	xfs_dir_hash_dotdot = xfs_da_hashname((unsigned char *)"..", 2);
- }
- 
--static void
--xfs_dir2_block_verify(
++ * Each contiguous block has a header, so it is not just a simple attribute
++ * length to FSB conversion.
++ */
++static int
++xfs_attr3_rmt_blocks(
++	struct xfs_mount *mp,
++	int		attrlen)
++{
++	int		fsblocks = 0;
++	int		len = attrlen;
++
++	do {
++		fsblocks++;
++		len -= XFS_ATTR3_RMT_BUF_SPACE(mp, mp->m_sb.sb_blocksize);
++	} while (len > 0);
++
++	return fsblocks;
++}
++
 +static bool
-+xfs_dir3_block_verify(
- 	struct xfs_buf		*bp)
- {
- 	struct xfs_mount	*mp = bp->b_target->bt_mount;
--	struct xfs_dir2_data_hdr *hdr = bp->b_addr;
--	int			block_ok = 0;
--
--	block_ok = hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC);
--	block_ok = block_ok && __xfs_dir2_data_check(NULL, bp) == 0;
--
--	if (!block_ok) {
--		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, hdr);
--		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+	struct xfs_dir3_blk_hdr	*hdr3 = bp->b_addr;
-+
-+	if (xfs_sb_version_hascrc(&mp->m_sb)) {
-+		if (hdr3->magic != cpu_to_be32(XFS_DIR3_BLOCK_MAGIC))
-+			return false;
-+		if (!uuid_equal(&hdr3->uuid, &mp->m_sb.sb_uuid))
-+			return false;
-+		if (be64_to_cpu(hdr3->blkno) != bp->b_bn)
-+			return false;
-+	} else {
-+		if (hdr3->magic != cpu_to_be32(XFS_DIR2_BLOCK_MAGIC))
-+			return false;
- 	}
-+	if (__xfs_dir2_data_check(NULL, bp))
-+		return false;
-+	return true;
- }
- 
- static void
--xfs_dir2_block_read_verify(
-+xfs_dir3_block_read_verify(
- 	struct xfs_buf	*bp)
- {
--	xfs_dir2_block_verify(bp);
++xfs_attr3_rmt_verify(
++	struct xfs_buf		*bp)
++{
 +	struct xfs_mount	*mp = bp->b_target->bt_mount;
-+
-+	if ((xfs_sb_version_hascrc(&mp->m_sb) &&
-+	     !xfs_verify_cksum(bp->b_addr, BBTOB(bp->b_length),
-+					  XFS_DIR3_DATA_CRC_OFF)) ||
-+	    !xfs_dir3_block_verify(bp)) {
-+		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
-+		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+	}
- }
- 
- static void
--xfs_dir2_block_write_verify(
-+xfs_dir3_block_write_verify(
- 	struct xfs_buf	*bp)
- {
--	xfs_dir2_block_verify(bp);
-+	struct xfs_mount	*mp = bp->b_target->bt_mount;
-+	struct xfs_buf_log_item	*bip = bp->b_fspriv;
-+	struct xfs_dir3_blk_hdr	*hdr3 = bp->b_addr;
-+
-+	if (!xfs_dir3_block_verify(bp)) {
-+		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
-+		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+		return;
-+	}
++	struct xfs_attr3_rmt_hdr *rmt = bp->b_addr;
 +
 +	if (!xfs_sb_version_hascrc(&mp->m_sb))
-+		return;
++		return false;
++	if (rmt->rm_magic != cpu_to_be32(XFS_ATTR3_RMT_MAGIC))
++		return false;
++	if (!uuid_equal(&rmt->rm_uuid, &mp->m_sb.sb_uuid))
++		return false;
++	if (bp->b_bn != be64_to_cpu(rmt->rm_blkno))
++		return false;
++	if (be32_to_cpu(rmt->rm_offset) +
++				be32_to_cpu(rmt->rm_bytes) >= MAXPATHLEN)
++		return false;
++	if (rmt->rm_owner == 0)
++		return false;
 +
-+	if (bip)
-+		hdr3->lsn = cpu_to_be64(bip->bli_item.li_lsn);
-+
-+	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length), XFS_DIR3_DATA_CRC_OFF);
- }
- 
--const struct xfs_buf_ops xfs_dir2_block_buf_ops = {
--	.verify_read = xfs_dir2_block_read_verify,
--	.verify_write = xfs_dir2_block_write_verify,
-+const struct xfs_buf_ops xfs_dir3_block_buf_ops = {
-+	.verify_read = xfs_dir3_block_read_verify,
-+	.verify_write = xfs_dir3_block_write_verify,
- };
- 
- static int
--xfs_dir2_block_read(
-+xfs_dir3_block_read(
- 	struct xfs_trans	*tp,
- 	struct xfs_inode	*dp,
- 	struct xfs_buf		**bpp)
-@@ -101,7 +134,29 @@ xfs_dir2_block_read(
- 	struct xfs_mount	*mp = dp->i_mount;
- 
- 	return xfs_da_read_buf(tp, dp, mp->m_dirdatablk, -1, bpp,
--				XFS_DATA_FORK, &xfs_dir2_block_buf_ops);
-+				XFS_DATA_FORK, &xfs_dir3_block_buf_ops);
++	return true;
 +}
 +
 +static void
-+xfs_dir3_block_init(
-+	struct xfs_mount	*mp,
-+	struct xfs_buf		*bp,
-+	struct xfs_inode	*dp)
++xfs_attr3_rmt_read_verify(
++	struct xfs_buf	*bp)
 +{
-+	struct xfs_dir3_blk_hdr *hdr3 = bp->b_addr;
++	struct xfs_mount *mp = bp->b_target->bt_mount;
 +
-+	bp->b_ops = &xfs_dir3_block_buf_ops;
-+
-+	if (xfs_sb_version_hascrc(&mp->m_sb)) {
-+		memset(hdr3, 0, sizeof(*hdr3));
-+		hdr3->magic = cpu_to_be32(XFS_DIR3_BLOCK_MAGIC);
-+		hdr3->blkno = cpu_to_be64(bp->b_bn);
-+		hdr3->owner = cpu_to_be64(dp->i_ino);
-+		uuid_copy(&hdr3->uuid, &mp->m_sb.sb_uuid);
++	/* no verification of non-crc buffers */
++	if (!xfs_sb_version_hascrc(&mp->m_sb))
 +		return;
 +
++	if (!xfs_verify_cksum(bp->b_addr, BBTOB(bp->b_length),
++			      XFS_ATTR3_RMT_CRC_OFF) ||
++	    !xfs_attr3_rmt_verify(bp)) {
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
++		xfs_buf_ioerror(bp, EFSCORRUPTED);
 +	}
-+	hdr3->magic = cpu_to_be32(XFS_DIR2_BLOCK_MAGIC);
- }
- 
- static void
-@@ -121,7 +176,7 @@ xfs_dir2_block_need_space(
- 	struct xfs_dir2_data_unused	*enddup = NULL;
- 
- 	*compact = 0;
--	bf = hdr->bestfree;
-+	bf = xfs_dir3_data_bestfree_p(hdr);
- 
- 	/*
- 	 * If there are stale entries we'll use one for the leaf.
-@@ -303,7 +358,7 @@ xfs_dir2_block_addname(
- 	mp = dp->i_mount;
- 
- 	/* Read the (one and only) directory block into bp. */
--	error = xfs_dir2_block_read(tp, dp, &bp);
-+	error = xfs_dir3_block_read(tp, dp, &bp);
- 	if (error)
- 		return error;
- 
-@@ -531,7 +586,7 @@ xfs_dir2_block_getdents(
- 	if (xfs_dir2_dataptr_to_db(mp, *offset) > mp->m_dirdatablk)
- 		return 0;
- 
--	error = xfs_dir2_block_read(NULL, dp, &bp);
-+	error = xfs_dir3_block_read(NULL, dp, &bp);
- 	if (error)
- 		return error;
- 
-@@ -546,7 +601,7 @@ xfs_dir2_block_getdents(
- 	 * Set up values for the loop.
- 	 */
- 	btp = xfs_dir2_block_tail_p(mp, hdr);
--	ptr = (char *)(hdr + 1);
-+	ptr = (char *)xfs_dir3_data_entry_p(hdr);
- 	endptr = (char *)xfs_dir2_block_leaf_p(btp);
- 
- 	/*
-@@ -711,7 +766,7 @@ xfs_dir2_block_lookup_int(
- 	tp = args->trans;
- 	mp = dp->i_mount;
- 
--	error = xfs_dir2_block_read(tp, dp, &bp);
-+	error = xfs_dir3_block_read(tp, dp, &bp);
- 	if (error)
- 		return error;
- 
-@@ -974,9 +1029,12 @@ xfs_dir2_leaf_to_block(
- 	 * These will show up in the leaf bests table.
- 	 */
- 	while (dp->i_d.di_size > mp->m_dirblksize) {
-+		int hdrsz;
++}
 +
-+		hdrsz = xfs_dir3_data_hdr_size(xfs_sb_version_hascrc(&mp->m_sb));
- 		bestsp = xfs_dir2_leaf_bests_p(ltp);
- 		if (be16_to_cpu(bestsp[be32_to_cpu(ltp->bestcount) - 1]) ==
--		    mp->m_dirblksize - (uint)sizeof(*hdr)) {
-+					    mp->m_dirblksize - hdrsz) {
- 			if ((error =
- 			    xfs_dir2_leaf_trim_data(args, lbp,
- 				    (xfs_dir2_db_t)(be32_to_cpu(ltp->bestcount) - 1))))
-@@ -1014,8 +1072,8 @@ xfs_dir2_leaf_to_block(
- 	/*
- 	 * Start converting it to block form.
- 	 */
--	dbp->b_ops = &xfs_dir2_block_buf_ops;
--	hdr->magic = cpu_to_be32(XFS_DIR2_BLOCK_MAGIC);
-+	xfs_dir3_block_init(mp, dbp, dp);
++static void
++xfs_attr3_rmt_write_verify(
++	struct xfs_buf	*bp)
++{
++	struct xfs_mount *mp = bp->b_target->bt_mount;
++	struct xfs_buf_log_item	*bip = bp->b_fspriv;
 +
- 	needlog = 1;
- 	needscan = 0;
- 	/*
-@@ -1137,16 +1195,16 @@ xfs_dir2_sf_to_block(
- 		return error;
- 	}
- 	/*
--	 * Initialize the data block.
-+	 * Initialize the data block, then convert it to block format.
- 	 */
--	error = xfs_dir2_data_init(args, blkno, &bp);
-+	error = xfs_dir3_data_init(args, blkno, &bp);
- 	if (error) {
- 		kmem_free(sfp);
- 		return error;
- 	}
--	bp->b_ops = &xfs_dir2_block_buf_ops;
-+	xfs_dir3_block_init(mp, bp, dp);
- 	hdr = bp->b_addr;
--	hdr->magic = cpu_to_be32(XFS_DIR2_BLOCK_MAGIC);
++	/* no verification of non-crc buffers */
++	if (!xfs_sb_version_hascrc(&mp->m_sb))
++		return;
 +
- 	/*
- 	 * Compute size of block "tail" area.
- 	 */
-@@ -1156,7 +1214,7 @@ xfs_dir2_sf_to_block(
- 	 * The whole thing is initialized to free by the init routine.
- 	 * Say we're using the leaf and tail area.
- 	 */
--	dup = (xfs_dir2_data_unused_t *)(hdr + 1);
-+	dup = xfs_dir3_data_unused_p(hdr);
- 	needlog = needscan = 0;
- 	xfs_dir2_data_use_free(tp, bp, dup, mp->m_dirblksize - i, i, &needlog,
- 		&needscan);
-@@ -1178,8 +1236,7 @@ xfs_dir2_sf_to_block(
- 	/*
- 	 * Create entry for .
- 	 */
--	dep = (xfs_dir2_data_entry_t *)
--	      ((char *)hdr + XFS_DIR2_DATA_DOT_OFFSET);
-+	dep = xfs_dir3_data_dot_entry_p(hdr);
- 	dep->inumber = cpu_to_be64(dp->i_ino);
- 	dep->namelen = 1;
- 	dep->name[0] = '.';
-@@ -1192,8 +1249,7 @@ xfs_dir2_sf_to_block(
- 	/*
- 	 * Create entry for ..
- 	 */
--	dep = (xfs_dir2_data_entry_t *)
--		((char *)hdr + XFS_DIR2_DATA_DOTDOT_OFFSET);
-+	dep = xfs_dir3_data_dotdot_entry_p(hdr);
- 	dep->inumber = cpu_to_be64(xfs_dir2_sf_get_parent_ino(sfp));
- 	dep->namelen = 2;
- 	dep->name[0] = dep->name[1] = '.';
-@@ -1203,7 +1259,7 @@ xfs_dir2_sf_to_block(
- 	blp[1].hashval = cpu_to_be32(xfs_dir_hash_dotdot);
- 	blp[1].address = cpu_to_be32(xfs_dir2_byte_to_dataptr(mp,
- 				(char *)dep - (char *)hdr));
--	offset = XFS_DIR2_DATA_FIRST_OFFSET;
-+	offset = xfs_dir3_data_first_offset(hdr);
- 	/*
- 	 * Loop over existing entries, stuff them in.
- 	 */
-diff --git a/fs/xfs/xfs_dir2_data.c b/fs/xfs/xfs_dir2_data.c
-index ffcf177..8484ec4 100644
---- a/fs/xfs/xfs_dir2_data.c
-+++ b/fs/xfs/xfs_dir2_data.c
-@@ -1,5 +1,6 @@
- /*
-  * Copyright (c) 2000-2002,2005 Silicon Graphics, Inc.
-+ * Copyright (c) 2013 Red Hat, Inc.
-  * All Rights Reserved.
-  *
-  * This program is free software; you can redistribute it and/or
-@@ -65,10 +66,11 @@ __xfs_dir2_data_check(
- 
- 	mp = bp->b_target->bt_mount;
- 	hdr = bp->b_addr;
--	bf = hdr->bestfree;
--	p = (char *)(hdr + 1);
-+	bf = xfs_dir3_data_bestfree_p(hdr);
-+	p = (char *)xfs_dir3_data_entry_p(hdr);
- 
- 	switch (hdr->magic) {
-+	case cpu_to_be32(XFS_DIR3_BLOCK_MAGIC):
- 	case cpu_to_be32(XFS_DIR2_BLOCK_MAGIC):
- 		btp = xfs_dir2_block_tail_p(mp, hdr);
- 		lep = xfs_dir2_block_leaf_p(btp);
-@@ -148,7 +150,8 @@ __xfs_dir2_data_check(
- 					       (char *)dep - (char *)hdr);
- 		count++;
- 		lastfree = 0;
--		if (hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC)) {
-+		if (hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC) ||
-+		    hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC)) {
- 			addr = xfs_dir2_db_off_to_dataptr(mp, mp->m_dirdatablk,
- 				(xfs_dir2_data_aoff_t)
- 				((char *)dep - (char *)hdr));
-@@ -168,7 +171,8 @@ __xfs_dir2_data_check(
- 	 * Need to have seen all the entries and all the bestfree slots.
- 	 */
- 	XFS_WANT_CORRUPTED_RETURN(freeseen == 7);
--	if (hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC)) {
-+	if (hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC) ||
-+	    hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC)) {
- 		for (i = stale = 0; i < be32_to_cpu(btp->count); i++) {
- 			if (lep[i].address ==
- 			    cpu_to_be32(XFS_DIR2_NULL_DATAPTR))
-@@ -216,7 +220,8 @@ xfs_dir2_data_reada_verify(
- 
- 	switch (hdr->magic) {
- 	case cpu_to_be32(XFS_DIR2_BLOCK_MAGIC):
--		bp->b_ops = &xfs_dir2_block_buf_ops;
-+	case cpu_to_be32(XFS_DIR3_BLOCK_MAGIC):
-+		bp->b_ops = &xfs_dir3_block_buf_ops;
- 		bp->b_ops->verify_read(bp);
- 		return;
- 	case cpu_to_be32(XFS_DIR2_DATA_MAGIC):
-@@ -288,12 +293,15 @@ xfs_dir2_data_freefind(
- {
- 	xfs_dir2_data_free_t	*dfp;		/* bestfree entry */
- 	xfs_dir2_data_aoff_t	off;		/* offset value needed */
-+	struct xfs_dir2_data_free *bf;
- #if defined(DEBUG) && defined(__KERNEL__)
- 	int			matched;	/* matched the value */
- 	int			seenzero;	/* saw a 0 bestfree entry */
- #endif
- 
- 	off = (xfs_dir2_data_aoff_t)((char *)dup - (char *)hdr);
-+	bf = xfs_dir3_data_bestfree_p(hdr);
++	if (!xfs_attr3_rmt_verify(bp)) {
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
++		xfs_buf_ioerror(bp, EFSCORRUPTED);
++		return;
++	}
 +
- #if defined(DEBUG) && defined(__KERNEL__)
- 	/*
- 	 * Validate some consistency in the bestfree table.
-@@ -301,9 +309,10 @@ xfs_dir2_data_freefind(
- 	 * one we're looking for it has to be exact.
- 	 */
- 	ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
--	       hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC));
--	for (dfp = &hdr->bestfree[0], seenzero = matched = 0;
--	     dfp < &hdr->bestfree[XFS_DIR2_DATA_FD_COUNT];
-+	       hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC) ||
-+	       hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC));
-+	for (dfp = &bf[0], seenzero = matched = 0;
-+	     dfp < &bf[XFS_DIR2_DATA_FD_COUNT];
- 	     dfp++) {
- 		if (!dfp->offset) {
- 			ASSERT(!dfp->length);
-@@ -319,7 +328,7 @@ xfs_dir2_data_freefind(
- 		else
- 			ASSERT(be16_to_cpu(dfp->offset) + be16_to_cpu(dfp->length) <= off);
- 		ASSERT(matched || be16_to_cpu(dfp->length) >= be16_to_cpu(dup->length));
--		if (dfp > &hdr->bestfree[0])
-+		if (dfp > &bf[0])
- 			ASSERT(be16_to_cpu(dfp[-1].length) >= be16_to_cpu(dfp[0].length));
- 	}
- #endif
-@@ -328,14 +337,12 @@ xfs_dir2_data_freefind(
- 	 * it can't be there since they're sorted.
- 	 */
- 	if (be16_to_cpu(dup->length) <
--	    be16_to_cpu(hdr->bestfree[XFS_DIR2_DATA_FD_COUNT - 1].length))
-+	    be16_to_cpu(bf[XFS_DIR2_DATA_FD_COUNT - 1].length))
- 		return NULL;
- 	/*
- 	 * Look at the three bestfree entries for our guy.
- 	 */
--	for (dfp = &hdr->bestfree[0];
--	     dfp < &hdr->bestfree[XFS_DIR2_DATA_FD_COUNT];
--	     dfp++) {
-+	for (dfp = &bf[0]; dfp < &bf[XFS_DIR2_DATA_FD_COUNT]; dfp++) {
- 		if (!dfp->offset)
- 			return NULL;
- 		if (be16_to_cpu(dfp->offset) == off)
-@@ -359,11 +366,12 @@ xfs_dir2_data_freeinsert(
- 	xfs_dir2_data_free_t	*dfp;		/* bestfree table pointer */
- 	xfs_dir2_data_free_t	new;		/* new bestfree entry */
- 
--#ifdef __KERNEL__
- 	ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
--	       hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC));
--#endif
--	dfp = hdr->bestfree;
-+	       hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC) ||
-+	       hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC) ||
-+	       hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC));
++	if (bip) {
++		struct xfs_attr3_rmt_hdr *rmt = bp->b_addr;
++		rmt->rm_lsn = cpu_to_be64(bip->bli_item.li_lsn);
++	}
++	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length),
++			 XFS_ATTR3_RMT_CRC_OFF);
++}
 +
-+	dfp = xfs_dir3_data_bestfree_p(hdr);
- 	new.length = dup->length;
- 	new.offset = cpu_to_be16((char *)dup - (char *)hdr);
- 
-@@ -400,32 +408,36 @@ xfs_dir2_data_freeremove(
- 	xfs_dir2_data_free_t	*dfp,		/* bestfree entry pointer */
- 	int			*loghead)	/* out: log data header */
- {
--#ifdef __KERNEL__
-+	struct xfs_dir2_data_free *bf;
-+
- 	ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
--	       hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC));
--#endif
-+	       hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC) ||
-+	       hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC) ||
-+	       hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC));
-+
- 	/*
- 	 * It's the first entry, slide the next 2 up.
- 	 */
--	if (dfp == &hdr->bestfree[0]) {
--		hdr->bestfree[0] = hdr->bestfree[1];
--		hdr->bestfree[1] = hdr->bestfree[2];
-+	bf = xfs_dir3_data_bestfree_p(hdr);
-+	if (dfp == &bf[0]) {
-+		bf[0] = bf[1];
-+		bf[1] = bf[2];
- 	}
- 	/*
- 	 * It's the second entry, slide the 3rd entry up.
- 	 */
--	else if (dfp == &hdr->bestfree[1])
--		hdr->bestfree[1] = hdr->bestfree[2];
-+	else if (dfp == &bf[1])
-+		bf[1] = bf[2];
- 	/*
- 	 * Must be the last entry.
- 	 */
- 	else
--		ASSERT(dfp == &hdr->bestfree[2]);
-+		ASSERT(dfp == &bf[2]);
- 	/*
- 	 * Clear the 3rd entry, must be zero now.
- 	 */
--	hdr->bestfree[2].length = 0;
--	hdr->bestfree[2].offset = 0;
-+	bf[2].length = 0;
-+	bf[2].offset = 0;
- 	*loghead = 1;
- }
- 
-@@ -441,23 +453,26 @@ xfs_dir2_data_freescan(
- 	xfs_dir2_block_tail_t	*btp;		/* block tail */
- 	xfs_dir2_data_entry_t	*dep;		/* active data entry */
- 	xfs_dir2_data_unused_t	*dup;		/* unused data entry */
-+	struct xfs_dir2_data_free *bf;
- 	char			*endp;		/* end of block's data */
- 	char			*p;		/* current entry pointer */
- 
--#ifdef __KERNEL__
- 	ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
--	       hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC));
--#endif
-+	       hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC) ||
-+	       hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC));
-+
- 	/*
- 	 * Start by clearing the table.
- 	 */
--	memset(hdr->bestfree, 0, sizeof(hdr->bestfree));
-+	bf = xfs_dir3_data_bestfree_p(hdr);
-+	memset(bf, 0, sizeof(*bf) * XFS_DIR2_DATA_FD_COUNT);
- 	*loghead = 1;
- 	/*
- 	 * Set up pointers.
- 	 */
--	p = (char *)(hdr + 1);
--	if (hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC)) {
-+	p = (char *)xfs_dir3_data_entry_p(hdr);
-+	if (hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC) ||
-+	    hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC)) {
- 		btp = xfs_dir2_block_tail_p(mp, hdr);
- 		endp = (char *)xfs_dir2_block_leaf_p(btp);
- 	} else
-@@ -493,7 +508,7 @@ xfs_dir2_data_freescan(
-  * Give back the buffer for the created block.
-  */
- int						/* error */
--xfs_dir2_data_init(
-+xfs_dir3_data_init(
- 	xfs_da_args_t		*args,		/* directory operation args */
- 	xfs_dir2_db_t		blkno,		/* logical dir block number */
- 	struct xfs_buf		**bpp)		/* output block buffer */
-@@ -502,6 +517,7 @@ xfs_dir2_data_init(
- 	xfs_dir2_data_hdr_t	*hdr;		/* data block header */
- 	xfs_inode_t		*dp;		/* incore directory inode */
- 	xfs_dir2_data_unused_t	*dup;		/* unused entry pointer */
-+	struct xfs_dir2_data_free *bf;
- 	int			error;		/* error return value */
- 	int			i;		/* bestfree index */
- 	xfs_mount_t		*mp;		/* filesystem mount point */
-@@ -524,21 +540,34 @@ xfs_dir2_data_init(
- 	 * Initialize the header.
- 	 */
- 	hdr = bp->b_addr;
--	hdr->magic = cpu_to_be32(XFS_DIR2_DATA_MAGIC);
--	hdr->bestfree[0].offset = cpu_to_be16(sizeof(*hdr));
-+
-+	if (xfs_sb_version_hascrc(&mp->m_sb)) {
-+		struct xfs_dir3_blk_hdr *hdr3 = bp->b_addr;
-+
-+		memset(hdr3, 0, sizeof(*hdr3));
-+		hdr3->magic = cpu_to_be32(XFS_DIR3_DATA_MAGIC);
-+		hdr3->blkno = cpu_to_be64(bp->b_bn);
-+		hdr3->owner = cpu_to_be64(dp->i_ino);
-+		uuid_copy(&hdr3->uuid, &mp->m_sb.sb_uuid);
-+
-+	} else
-+		hdr->magic = cpu_to_be32(XFS_DIR2_DATA_MAGIC);
-+
-+	bf = xfs_dir3_data_bestfree_p(hdr);
-+	bf[0].offset = cpu_to_be16(xfs_dir3_data_entry_offset(hdr));
- 	for (i = 1; i < XFS_DIR2_DATA_FD_COUNT; i++) {
--		hdr->bestfree[i].length = 0;
--		hdr->bestfree[i].offset = 0;
-+		bf[i].length = 0;
-+		bf[i].offset = 0;
- 	}
- 
- 	/*
- 	 * Set up an unused entry for the block's body.
- 	 */
--	dup = (xfs_dir2_data_unused_t *)(hdr + 1);
-+	dup = xfs_dir3_data_unused_p(hdr);
- 	dup->freetag = cpu_to_be16(XFS_DIR2_DATA_FREE_TAG);
- 
--	t = mp->m_dirblksize - (uint)sizeof(*hdr);
--	hdr->bestfree[0].length = cpu_to_be16(t);
-+	t = mp->m_dirblksize - (uint)xfs_dir3_data_entry_offset(hdr);
-+	bf[0].length = cpu_to_be16(t);
- 	dup->length = cpu_to_be16(t);
- 	*xfs_dir2_data_unused_tag_p(dup) = cpu_to_be16((char *)dup - (char *)hdr);
- 	/*
-@@ -562,7 +591,8 @@ xfs_dir2_data_log_entry(
- 	xfs_dir2_data_hdr_t	*hdr = bp->b_addr;
- 
- 	ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
--	       hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC));
-+	       hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC) ||
-+	       hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC));
- 
- 	xfs_trans_log_buf(tp, bp, (uint)((char *)dep - (char *)hdr),
- 		(uint)((char *)(xfs_dir2_data_entry_tag_p(dep) + 1) -
-@@ -580,9 +610,10 @@ xfs_dir2_data_log_header(
- 	xfs_dir2_data_hdr_t	*hdr = bp->b_addr;
- 
- 	ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
--	       hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC));
-+	       hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC) ||
-+	       hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC));
- 
--	xfs_trans_log_buf(tp, bp, 0, sizeof(*hdr) - 1);
-+	xfs_trans_log_buf(tp, bp, 0, xfs_dir3_data_entry_offset(hdr) - 1);
- }
- 
- /*
-@@ -597,7 +628,8 @@ xfs_dir2_data_log_unused(
- 	xfs_dir2_data_hdr_t	*hdr = bp->b_addr;
- 
- 	ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
--	       hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC));
-+	       hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC) ||
-+	       hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC));
- 
- 	/*
- 	 * Log the first part of the unused entry.
-@@ -635,6 +667,7 @@ xfs_dir2_data_make_free(
- 	xfs_dir2_data_unused_t	*newdup;	/* new unused entry */
- 	xfs_dir2_data_unused_t	*postdup;	/* unused entry after us */
- 	xfs_dir2_data_unused_t	*prevdup;	/* unused entry before us */
-+	struct xfs_dir2_data_free *bf;
- 
- 	mp = tp->t_mountp;
- 	hdr = bp->b_addr;
-@@ -647,7 +680,8 @@ xfs_dir2_data_make_free(
- 	else {
- 		xfs_dir2_block_tail_t	*btp;	/* block tail */
- 
--		ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC));
-+		ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC) ||
-+			hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC));
- 		btp = xfs_dir2_block_tail_p(mp, hdr);
- 		endptr = (char *)xfs_dir2_block_leaf_p(btp);
- 	}
-@@ -655,7 +689,7 @@ xfs_dir2_data_make_free(
- 	 * If this isn't the start of the block, then back up to
- 	 * the previous entry and see if it's free.
- 	 */
--	if (offset > sizeof(*hdr)) {
-+	if (offset > xfs_dir3_data_entry_offset(hdr)) {
- 		__be16			*tagp;	/* tag just before us */
- 
- 		tagp = (__be16 *)((char *)hdr + offset) - 1;
-@@ -681,6 +715,7 @@ xfs_dir2_data_make_free(
- 	 * Previous and following entries are both free,
- 	 * merge everything into a single free entry.
- 	 */
-+	bf = xfs_dir3_data_bestfree_p(hdr);
- 	if (prevdup && postdup) {
- 		xfs_dir2_data_free_t	*dfp2;	/* another bestfree pointer */
- 
-@@ -695,7 +730,7 @@ xfs_dir2_data_make_free(
- 		 * since the third bestfree is there, there might be more
- 		 * entries.
- 		 */
--		needscan = (hdr->bestfree[2].length != 0);
-+		needscan = (bf[2].length != 0);
- 		/*
- 		 * Fix up the new big freespace.
- 		 */
-@@ -711,10 +746,10 @@ xfs_dir2_data_make_free(
- 			 * Remove entry 1 first then entry 0.
- 			 */
- 			ASSERT(dfp && dfp2);
--			if (dfp == &hdr->bestfree[1]) {
--				dfp = &hdr->bestfree[0];
-+			if (dfp == &bf[1]) {
-+				dfp = &bf[0];
- 				ASSERT(dfp2 == dfp);
--				dfp2 = &hdr->bestfree[1];
-+				dfp2 = &bf[1];
- 			}
- 			xfs_dir2_data_freeremove(hdr, dfp2, needlogp);
- 			xfs_dir2_data_freeremove(hdr, dfp, needlogp);
-@@ -722,7 +757,7 @@ xfs_dir2_data_make_free(
- 			 * Now insert the new entry.
- 			 */
- 			dfp = xfs_dir2_data_freeinsert(hdr, prevdup, needlogp);
--			ASSERT(dfp == &hdr->bestfree[0]);
-+			ASSERT(dfp == &bf[0]);
- 			ASSERT(dfp->length == prevdup->length);
- 			ASSERT(!dfp[1].length);
- 			ASSERT(!dfp[2].length);
-@@ -751,7 +786,7 @@ xfs_dir2_data_make_free(
- 		 */
- 		else {
- 			needscan = be16_to_cpu(prevdup->length) >
--				   be16_to_cpu(hdr->bestfree[2].length);
-+				   be16_to_cpu(bf[2].length);
- 		}
- 	}
- 	/*
-@@ -779,7 +814,7 @@ xfs_dir2_data_make_free(
- 		 */
- 		else {
- 			needscan = be16_to_cpu(newdup->length) >
--				   be16_to_cpu(hdr->bestfree[2].length);
-+				   be16_to_cpu(bf[2].length);
- 		}
- 	}
- 	/*
-@@ -818,10 +853,12 @@ xfs_dir2_data_use_free(
- 	xfs_dir2_data_unused_t	*newdup;	/* new unused entry */
- 	xfs_dir2_data_unused_t	*newdup2;	/* another new unused entry */
- 	int			oldlen;		/* old unused entry's length */
-+	struct xfs_dir2_data_free *bf;
- 
- 	hdr = bp->b_addr;
- 	ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
--	       hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC));
-+	       hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC) ||
-+	       hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC));
- 	ASSERT(be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG);
- 	ASSERT(offset >= (char *)dup - (char *)hdr);
- 	ASSERT(offset + len <= (char *)dup + be16_to_cpu(dup->length) - (char *)hdr);
-@@ -831,7 +868,8 @@ xfs_dir2_data_use_free(
- 	 */
- 	dfp = xfs_dir2_data_freefind(hdr, dup);
- 	oldlen = be16_to_cpu(dup->length);
--	ASSERT(dfp || oldlen <= be16_to_cpu(hdr->bestfree[2].length));
-+	bf = xfs_dir3_data_bestfree_p(hdr);
-+	ASSERT(dfp || oldlen <= be16_to_cpu(bf[2].length));
- 	/*
- 	 * Check for alignment with front and back of the entry.
- 	 */
-@@ -845,7 +883,7 @@ xfs_dir2_data_use_free(
- 	 */
- 	if (matchfront && matchback) {
- 		if (dfp) {
--			needscan = (hdr->bestfree[2].offset != 0);
-+			needscan = (bf[2].offset != 0);
- 			if (!needscan)
- 				xfs_dir2_data_freeremove(hdr, dfp, needlogp);
- 		}
-@@ -875,7 +913,7 @@ xfs_dir2_data_use_free(
- 			 * that means we don't know if there was a better
- 			 * choice for the last slot, or not.  Rescan.
- 			 */
--			needscan = dfp == &hdr->bestfree[2];
-+			needscan = dfp == &bf[2];
- 		}
- 	}
- 	/*
-@@ -902,7 +940,7 @@ xfs_dir2_data_use_free(
- 			 * that means we don't know if there was a better
- 			 * choice for the last slot, or not.  Rescan.
- 			 */
--			needscan = dfp == &hdr->bestfree[2];
-+			needscan = dfp == &bf[2];
- 		}
- 	}
- 	/*
-@@ -930,7 +968,7 @@ xfs_dir2_data_use_free(
- 		 * the 2 new will work.
- 		 */
- 		if (dfp) {
--			needscan = (hdr->bestfree[2].length != 0);
-+			needscan = (bf[2].length != 0);
- 			if (!needscan) {
- 				xfs_dir2_data_freeremove(hdr, dfp, needlogp);
- 				xfs_dir2_data_freeinsert(hdr, newdup, needlogp);
-diff --git a/fs/xfs/xfs_dir2_format.h b/fs/xfs/xfs_dir2_format.h
-index 0727098..845979a 100644
---- a/fs/xfs/xfs_dir2_format.h
-+++ b/fs/xfs/xfs_dir2_format.h
-@@ -1,5 +1,6 @@
- /*
-  * Copyright (c) 2000-2001,2005 Silicon Graphics, Inc.
-+ * Copyright (c) 2013 Red Hat, Inc.
-  * All Rights Reserved.
-  *
-  * This program is free software; you can redistribute it and/or
-@@ -36,6 +37,37 @@
- #define	XFS_DIR2_FREE_MAGIC	0x58443246	/* XD2F: free index blocks */
- 
- /*
-+ * Directory Version 3 With CRCs.
-+ *
-+ * The tree formats are the same as for version 2 directories.  The difference
-+ * is in the block header and dirent formats. In many cases the v3 structures
-+ * use v2 definitions as they are no different and this makes code sharing much
-+ * easier.
-+ *
-+ * Also, the xfs_dir3_*() functions handle both v2 and v3 formats - if the
-+ * format is v2 then they switch to the existing v2 code, or the format is v3
-+ * they implement the v3 functionality. This means the existing dir2 is a mix of
-+ * xfs_dir2/xfs_dir3 calls and functions. The xfs_dir3 functions are called
-+ * where there is a difference in the formats, otherwise the code is unchanged.
-+ *
-+ * Where it is possible, the code decides what to do based on the magic numbers
-+ * in the blocks rather than feature bits in the superblock. This means the code
-+ * is as independent of the external XFS code as possible as doesn't require
-+ * passing struct xfs_mount pointers into places where it isn't really
-+ * necessary.
-+ *
-+ * Version 3 includes:
-+ *
-+ *	- a larger block header for CRC and identification purposes and so the
-+ *	offsets of all the structures inside the blocks are different.
-+ *
-+ *	- new magic numbers to be able to detect the v2/v3 types on the fly.
-+ */
-+
-+#define	XFS_DIR3_BLOCK_MAGIC	0x58444233	/* XDB3: single block dirs */
-+#define	XFS_DIR3_DATA_MAGIC	0x58444433	/* XDD3: multiblock dirs */
-+
-+/*
-  * Byte offset in data block and shortform entry.
-  */
- typedef	__uint16_t	xfs_dir2_data_off_t;
-@@ -226,6 +258,38 @@ typedef struct xfs_dir2_data_hdr {
- } xfs_dir2_data_hdr_t;
- 
- /*
-+ * define a structure for all the verification fields we are adding to the
-+ * directory block structures. This will be used in several structures.
-+ * The magic number must be the first entry to align with all the dir2
-+ * structures so we determine how to decode them just by the magic number.
-+ */
-+struct xfs_dir3_blk_hdr {
-+	__be32			magic;	/* magic number */
-+	__be32			crc;	/* CRC of block */
-+	__be64			blkno;	/* first block of the buffer */
-+	__be64			lsn;	/* sequence number of last write */
-+	uuid_t			uuid;	/* filesystem we belong to */
-+	__be64			owner;	/* inode that owns the block */
++const struct xfs_buf_ops xfs_attr3_rmt_buf_ops = {
++	.verify_read = xfs_attr3_rmt_read_verify,
++	.verify_write = xfs_attr3_rmt_write_verify,
 +};
 +
-+struct xfs_dir3_data_hdr {
-+	struct xfs_dir3_blk_hdr	hdr;
-+	xfs_dir2_data_free_t	best_free[XFS_DIR2_DATA_FD_COUNT];
-+};
-+
-+#define XFS_DIR3_DATA_CRC_OFF  offsetof(struct xfs_dir3_data_hdr, hdr.crc)
-+
-+static inline struct xfs_dir2_data_free *
-+xfs_dir3_data_bestfree_p(struct xfs_dir2_data_hdr *hdr)
++static int
++xfs_attr3_rmt_hdr_set(
++	struct xfs_mount	*mp,
++	xfs_ino_t		ino,
++	uint32_t		offset,
++	uint32_t		size,
++	struct xfs_buf		*bp)
 +{
-+	if (hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC)) {
-+		struct xfs_dir3_data_hdr *hdr3 = (struct xfs_dir3_data_hdr *)hdr;
-+		return hdr3->best_free;
-+	}
-+	return hdr->bestfree;
++	struct xfs_attr3_rmt_hdr *rmt = bp->b_addr;
++
++	if (!xfs_sb_version_hascrc(&mp->m_sb))
++		return 0;
++
++	rmt->rm_magic = cpu_to_be32(XFS_ATTR3_RMT_MAGIC);
++	rmt->rm_offset = cpu_to_be32(offset);
++	rmt->rm_bytes = cpu_to_be32(size);
++	uuid_copy(&rmt->rm_uuid, &mp->m_sb.sb_uuid);
++	rmt->rm_owner = cpu_to_be64(ino);
++	rmt->rm_blkno = cpu_to_be64(bp->b_bn);
++	bp->b_ops = &xfs_attr3_rmt_buf_ops;
++
++	return sizeof(struct xfs_attr3_rmt_hdr);
 +}
 +
 +/*
-  * Active entry in a data block.
-  *
-  * Aligned to 8 bytes.  After the variable length name field there is a
-@@ -280,6 +344,85 @@ xfs_dir2_data_unused_tag_p(struct xfs_dir2_data_unused *dup)
- 			be16_to_cpu(dup->length) - sizeof(__be16));
++ * Checking of the remote attribute header is split into two parts. the verifier
++ * does CRC, location and bounds checking, the unpacking function checks the
++ * attribute parameters and owner.
++ */
++static bool
++xfs_attr3_rmt_hdr_ok(
++	struct xfs_mount	*mp,
++	xfs_ino_t		ino,
++	uint32_t		offset,
++	uint32_t		size,
++	struct xfs_buf		*bp)
++{
++	struct xfs_attr3_rmt_hdr *rmt = bp->b_addr;
++
++	if (offset != be32_to_cpu(rmt->rm_offset))
++		return false;
++	if (size != be32_to_cpu(rmt->rm_bytes))
++		return false;
++	if (ino != be64_to_cpu(rmt->rm_owner))
++		return false;
++
++	/* ok */
++	return true;
++
++}
++
++/*
+  * Read the value associated with an attribute from the out-of-line buffer
+  * that we stored it in.
+  */
+ int
+-xfs_attr_rmtval_get(xfs_da_args_t *args)
++xfs_attr_rmtval_get(
++	struct xfs_da_args	*args)
+ {
+-	xfs_bmbt_irec_t map[ATTR_RMTVALUE_MAPSIZE];
+-	xfs_mount_t *mp;
+-	xfs_daddr_t dblkno;
+-	void *dst;
+-	xfs_buf_t *bp;
+-	int nmap, error, tmp, valuelen, blkcnt, i;
+-	xfs_dablk_t lblkno;
++	struct xfs_bmbt_irec	map[ATTR_RMTVALUE_MAPSIZE];
++	struct xfs_mount	*mp = args->dp->i_mount;
++	struct xfs_buf		*bp;
++	xfs_daddr_t		dblkno;
++	xfs_dablk_t		lblkno = args->rmtblkno;
++	void			*dst = args->value;
++	int			valuelen = args->valuelen;
++	int			nmap;
++	int			error;
++	int			blkcnt;
++	int			i;
++	int			offset = 0;
+ 
+ 	trace_xfs_attr_rmtval_get(args);
+ 
+ 	ASSERT(!(args->flags & ATTR_KERNOVAL));
+ 
+-	mp = args->dp->i_mount;
+-	dst = args->value;
+-	valuelen = args->valuelen;
+-	lblkno = args->rmtblkno;
+ 	while (valuelen > 0) {
+ 		nmap = ATTR_RMTVALUE_MAPSIZE;
+ 		error = xfs_bmapi_read(args->dp, (xfs_fileoff_t)lblkno,
+ 				       args->rmtblkcnt, map, &nmap,
+ 				       XFS_BMAPI_ATTRFORK);
+ 		if (error)
+-			return(error);
++			return error;
+ 		ASSERT(nmap >= 1);
+ 
+ 		for (i = 0; (i < nmap) && (valuelen > 0); i++) {
++			int	byte_cnt;
++			char	*src;
++
+ 			ASSERT((map[i].br_startblock != DELAYSTARTBLOCK) &&
+ 			       (map[i].br_startblock != HOLESTARTBLOCK));
+ 			dblkno = XFS_FSB_TO_DADDR(mp, map[i].br_startblock);
+ 			blkcnt = XFS_FSB_TO_BB(mp, map[i].br_blockcount);
+ 			error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp,
+-						   dblkno, blkcnt, 0, &bp, NULL);
++						   dblkno, blkcnt, 0, &bp,
++						   &xfs_attr3_rmt_buf_ops);
+ 			if (error)
+-				return(error);
++				return error;
++
++			byte_cnt = min_t(int, valuelen, BBTOB(bp->b_length));
++			byte_cnt = XFS_ATTR3_RMT_BUF_SPACE(mp, byte_cnt);
+ 
+-			tmp = min_t(int, valuelen, BBTOB(bp->b_length));
+-			xfs_buf_iomove(bp, 0, tmp, dst, XBRW_READ);
++			src = bp->b_addr;
++			if (xfs_sb_version_hascrc(&mp->m_sb)) {
++				if (!xfs_attr3_rmt_hdr_ok(mp, args->dp->i_ino,
++							offset, byte_cnt, bp)) {
++					xfs_alert(mp,
++"remote attribute header does not match required off/len/owner (0x%x/Ox%x,0x%llx)",
++						offset, byte_cnt, args->dp->i_ino);
++					xfs_buf_relse(bp);
++					return EFSCORRUPTED;
++
++				}
++
++				src += sizeof(struct xfs_attr3_rmt_hdr);
++			}
++
++			memcpy(dst, src, byte_cnt);
+ 			xfs_buf_relse(bp);
+-			dst += tmp;
+-			valuelen -= tmp;
++
++			offset += byte_cnt;
++			dst += byte_cnt;
++			valuelen -= byte_cnt;
+ 
+ 			lblkno += map[i].br_blockcount;
+ 		}
+ 	}
+ 	ASSERT(valuelen == 0);
+-	return(0);
++	return 0;
  }
  
-+static inline struct xfs_dir2_data_unused *
-+xfs_dir3_data_unused_p(struct xfs_dir2_data_hdr *hdr)
-+{
-+	if (hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC)) {
-+		return (struct xfs_dir2_data_unused *)
-+			((char *)hdr + sizeof(struct xfs_dir3_data_hdr));
-+	}
-+	return (struct xfs_dir2_data_unused *)
-+		((char *)hdr + sizeof(struct xfs_dir2_data_hdr));
-+}
-+
-+static inline size_t
-+xfs_dir3_data_hdr_size(bool dir3)
-+{
-+	if (dir3)
-+		return sizeof(struct xfs_dir3_data_hdr);
-+	return sizeof(struct xfs_dir2_data_hdr);
-+}
-+
-+static inline size_t
-+xfs_dir3_data_entry_offset(struct xfs_dir2_data_hdr *hdr)
-+{
-+	bool dir3 = hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC) ||
-+		    hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC);
-+	return xfs_dir3_data_hdr_size(dir3);
-+}
-+
-+static inline struct xfs_dir2_data_entry *
-+xfs_dir3_data_entry_p(struct xfs_dir2_data_hdr *hdr)
-+{
-+	return (struct xfs_dir2_data_entry *)
-+		((char *)hdr + xfs_dir3_data_entry_offset(hdr));
-+}
-+
-+/*
-+ * Offsets of . and .. in data space (always block 0)
-+ */
-+static inline xfs_dir2_data_aoff_t
-+xfs_dir3_data_dot_offset(struct xfs_dir2_data_hdr *hdr)
-+{
-+	return xfs_dir3_data_entry_offset(hdr);
-+}
-+
-+static inline xfs_dir2_data_aoff_t
-+xfs_dir3_data_dotdot_offset(struct xfs_dir2_data_hdr *hdr)
-+{
-+	return xfs_dir3_data_dot_offset(hdr) + xfs_dir2_data_entsize(1);
-+}
-+
-+static inline xfs_dir2_data_aoff_t
-+xfs_dir3_data_first_offset(struct xfs_dir2_data_hdr *hdr)
-+{
-+	return xfs_dir3_data_dotdot_offset(hdr) + xfs_dir2_data_entsize(2);
-+}
-+
-+/*
-+ * location of . and .. in data space (always block 0)
-+ */
-+static inline struct xfs_dir2_data_entry *
-+xfs_dir3_data_dot_entry_p(struct xfs_dir2_data_hdr *hdr)
-+{
-+	return (struct xfs_dir2_data_entry *)
-+		((char *)hdr + xfs_dir3_data_dot_offset(hdr));
-+}
-+
-+static inline struct xfs_dir2_data_entry *
-+xfs_dir3_data_dotdot_entry_p(struct xfs_dir2_data_hdr *hdr)
-+{
-+	return (struct xfs_dir2_data_entry *)
-+		((char *)hdr + xfs_dir3_data_dotdot_offset(hdr));
-+}
-+
-+static inline struct xfs_dir2_data_entry *
-+xfs_dir3_data_first_entry_p(struct xfs_dir2_data_hdr *hdr)
-+{
-+	return (struct xfs_dir2_data_entry *)
-+		((char *)hdr + xfs_dir3_data_first_offset(hdr));
-+}
-+
  /*
-  * Leaf block structures.
-  *
-diff --git a/fs/xfs/xfs_dir2_leaf.c b/fs/xfs/xfs_dir2_leaf.c
-index 60cd2fa..ef163f0 100644
---- a/fs/xfs/xfs_dir2_leaf.c
-+++ b/fs/xfs/xfs_dir2_leaf.c
-@@ -149,6 +149,7 @@ xfs_dir2_block_to_leaf(
- 	int			needlog;	/* need to log block header */
- 	int			needscan;	/* need to rescan bestfree */
- 	xfs_trans_t		*tp;		/* transaction pointer */
-+	struct xfs_dir2_data_free	*bf;
+@@ -101,35 +271,49 @@ xfs_attr_rmtval_get(xfs_da_args_t *args)
+  * that we have defined for it.
+  */
+ int
+-xfs_attr_rmtval_set(xfs_da_args_t *args)
++xfs_attr_rmtval_set(
++	struct xfs_da_args	*args)
+ {
+-	xfs_mount_t *mp;
+-	xfs_fileoff_t lfileoff;
+-	xfs_inode_t *dp;
+-	xfs_bmbt_irec_t map;
+-	xfs_daddr_t dblkno;
+-	void *src;
+-	xfs_buf_t *bp;
+-	xfs_dablk_t lblkno;
+-	int blkcnt, valuelen, nmap, error, tmp, committed;
++	struct xfs_inode	*dp = args->dp;
++	struct xfs_mount	*mp = dp->i_mount;
++	struct xfs_bmbt_irec	map;
++	struct xfs_buf		*bp;
++	xfs_daddr_t		dblkno;
++	xfs_dablk_t		lblkno;
++	xfs_fileoff_t		lfileoff = 0;
++	void			*src = args->value;
++	int			blkcnt;
++	int			valuelen;
++	int			nmap;
++	int			error;
++	int			hdrcnt = 0;
++	bool			crcs = xfs_sb_version_hascrc(&mp->m_sb);
++	int			offset = 0;
  
- 	trace_xfs_dir2_block_to_leaf(args);
+ 	trace_xfs_attr_rmtval_set(args);
  
-@@ -177,6 +178,7 @@ xfs_dir2_block_to_leaf(
- 	xfs_dir2_data_check(dp, dbp);
- 	btp = xfs_dir2_block_tail_p(mp, hdr);
- 	blp = xfs_dir2_block_leaf_p(btp);
-+	bf = xfs_dir3_data_bestfree_p(hdr);
+-	dp = args->dp;
+-	mp = dp->i_mount;
+-	src = args->value;
+-
  	/*
- 	 * Set the counts in the leaf header.
+ 	 * Find a "hole" in the attribute address space large enough for
+-	 * us to drop the new attribute's value into.
++	 * us to drop the new attribute's value into. Because CRC enable
++	 * attributes have headers, we can't just do a straight byte to FSB
++	 * conversion. We calculate the worst case block count in this case
++	 * and we may not need that many, so we have to handle this when
++	 * allocating the blocks below. 
  	 */
-@@ -212,7 +214,7 @@ xfs_dir2_block_to_leaf(
- 	ltp = xfs_dir2_leaf_tail_p(mp, leaf);
- 	ltp->bestcount = cpu_to_be32(1);
- 	bestsp = xfs_dir2_leaf_bests_p(ltp);
--	bestsp[0] =  hdr->bestfree[0].length;
-+	bestsp[0] =  bf[0].length;
- 	/*
- 	 * Log the data header and leaf bests table.
+-	blkcnt = XFS_B_TO_FSB(mp, args->valuelen);
+-	lfileoff = 0;
++	if (!crcs)
++		blkcnt = XFS_B_TO_FSB(mp, args->valuelen);
++	else
++		blkcnt = xfs_attr3_rmt_blocks(mp, args->valuelen);
++
+ 	error = xfs_bmap_first_unused(args->trans, args->dp, blkcnt, &lfileoff,
+ 						   XFS_ATTR_FORK);
+-	if (error) {
+-		return(error);
+-	}
++	if (error)
++		return error;
++
++	/* Start with the attribute data. We'll allocate the rest afterwards. */
++	if (crcs)
++		blkcnt = XFS_B_TO_FSB(mp, args->valuelen);
++
+ 	args->rmtblkno = lblkno = (xfs_dablk_t)lfileoff;
+ 	args->rmtblkcnt = blkcnt;
+ 
+@@ -137,6 +321,8 @@ xfs_attr_rmtval_set(xfs_da_args_t *args)
+ 	 * Roll through the "value", allocating blocks on disk as required.
  	 */
-@@ -544,7 +546,7 @@ xfs_dir2_leaf_addname(
+ 	while (blkcnt > 0) {
++		int	committed;
++
  		/*
- 		 * Initialize the block.
+ 		 * Allocate a single extent, up to the size of the value.
  		 */
--		if ((error = xfs_dir2_data_init(args, use_block, &dbp))) {
-+		if ((error = xfs_dir3_data_init(args, use_block, &dbp))) {
- 			xfs_trans_brelse(tp, lbp);
- 			return error;
- 		}
-diff --git a/fs/xfs/xfs_dir2_node.c b/fs/xfs/xfs_dir2_node.c
-index 5980f9b..985d70b 100644
---- a/fs/xfs/xfs_dir2_node.c
-+++ b/fs/xfs/xfs_dir2_node.c
-@@ -1588,7 +1588,7 @@ xfs_dir2_node_addname_int(
- 		if (unlikely((error = xfs_dir2_grow_inode(args,
- 							 XFS_DIR2_DATA_SPACE,
- 							 &dbno)) ||
--		    (error = xfs_dir2_data_init(args, dbno, &dbp))))
-+		    (error = xfs_dir3_data_init(args, dbno, &dbp))))
- 			return error;
+@@ -170,6 +356,27 @@ xfs_attr_rmtval_set(xfs_da_args_t *args)
+ 		       (map.br_startblock != HOLESTARTBLOCK));
+ 		lblkno += map.br_blockcount;
+ 		blkcnt -= map.br_blockcount;
++		hdrcnt++;
++
++		/*
++		 * If we have enough blocks for the attribute data, calculate
++		 * how many extra blocks we need for headers. We might run
++		 * through this multiple times in the case that the additional
++		 * headers in the blocks needed for the data fragments spills
++		 * into requiring more blocks. e.g. for 512 byte blocks, we'll
++		 * spill for another block every 9 headers we require in this
++		 * loop.
++		 */
++
++		if (crcs && blkcnt == 0) {
++			int total_len;
++
++			total_len = args->valuelen +
++				    hdrcnt * sizeof(struct xfs_attr3_rmt_hdr);
++			blkcnt = XFS_B_TO_FSB(mp, total_len);
++			blkcnt -= args->rmtblkcnt;
++			args->rmtblkcnt += blkcnt;
++		}
  
  		/*
-diff --git a/fs/xfs/xfs_dir2_priv.h b/fs/xfs/xfs_dir2_priv.h
-index 7da79f6..e6f2e0a 100644
---- a/fs/xfs/xfs_dir2_priv.h
-+++ b/fs/xfs/xfs_dir2_priv.h
-@@ -30,7 +30,7 @@ extern int xfs_dir_cilookup_result(struct xfs_da_args *args,
- 				const unsigned char *name, int len);
+ 		 * Start the next trans in the chain.
+@@ -188,7 +395,8 @@ xfs_attr_rmtval_set(xfs_da_args_t *args)
+ 	lblkno = args->rmtblkno;
+ 	valuelen = args->valuelen;
+ 	while (valuelen > 0) {
+-		int buflen;
++		int	byte_cnt;
++		char	*buf;
  
- /* xfs_dir2_block.c */
--extern const struct xfs_buf_ops xfs_dir2_block_buf_ops;
-+extern const struct xfs_buf_ops xfs_dir3_block_buf_ops;
+ 		/*
+ 		 * Try to remember where we decided to put the value.
+@@ -210,24 +418,38 @@ xfs_attr_rmtval_set(xfs_da_args_t *args)
+ 		bp = xfs_buf_get(mp->m_ddev_targp, dblkno, blkcnt, 0);
+ 		if (!bp)
+ 			return ENOMEM;
++		bp->b_ops = &xfs_attr3_rmt_buf_ops;
++
++		byte_cnt = BBTOB(bp->b_length);
++		byte_cnt = XFS_ATTR3_RMT_BUF_SPACE(mp, byte_cnt);
++		if (valuelen < byte_cnt) {
++			byte_cnt = valuelen;
++		}
++
++		buf = bp->b_addr;
++		buf += xfs_attr3_rmt_hdr_set(mp, dp->i_ino, offset,
++					     byte_cnt, bp);
++		memcpy(buf, src, byte_cnt);
  
- extern int xfs_dir2_block_addname(struct xfs_da_args *args);
- extern int xfs_dir2_block_getdents(struct xfs_inode *dp, void *dirent,
-@@ -61,7 +61,7 @@ xfs_dir2_data_freeinsert(struct xfs_dir2_data_hdr *hdr,
- 		struct xfs_dir2_data_unused *dup, int *loghead);
- extern void xfs_dir2_data_freescan(struct xfs_mount *mp,
- 		struct xfs_dir2_data_hdr *hdr, int *loghead);
--extern int xfs_dir2_data_init(struct xfs_da_args *args, xfs_dir2_db_t blkno,
-+extern int xfs_dir3_data_init(struct xfs_da_args *args, xfs_dir2_db_t blkno,
- 		struct xfs_buf **bpp);
- extern void xfs_dir2_data_log_entry(struct xfs_trans *tp, struct xfs_buf *bp,
- 		struct xfs_dir2_data_entry *dep);
-diff --git a/fs/xfs/xfs_dir2_sf.c b/fs/xfs/xfs_dir2_sf.c
-index 1b9fc3e..b975622 100644
---- a/fs/xfs/xfs_dir2_sf.c
-+++ b/fs/xfs/xfs_dir2_sf.c
-@@ -278,7 +278,7 @@ xfs_dir2_block_to_sf(
- 	 * Set up to loop over the block's entries.
- 	 */
- 	btp = xfs_dir2_block_tail_p(mp, hdr);
--	ptr = (char *)(hdr + 1);
-+	ptr = (char *)xfs_dir3_data_entry_p(hdr);
- 	endptr = (char *)xfs_dir2_block_leaf_p(btp);
- 	sfep = xfs_dir2_sf_firstentry(sfp);
- 	/*
+-		buflen = BBTOB(bp->b_length);
+-		tmp = min_t(int, valuelen, buflen);
+-		xfs_buf_iomove(bp, 0, tmp, src, XBRW_WRITE);
+-		if (tmp < buflen)
+-			xfs_buf_zero(bp, tmp, buflen - tmp);
++		if (byte_cnt < BBTOB(bp->b_length))
++			xfs_buf_zero(bp, byte_cnt,
++				     BBTOB(bp->b_length) - byte_cnt);
+ 
+ 		error = xfs_bwrite(bp);	/* GROT: NOTE: synchronous write */
+ 		xfs_buf_relse(bp);
+ 		if (error)
+ 			return error;
+-		src += tmp;
+-		valuelen -= tmp;
++
++		src += byte_cnt;
++		valuelen -= byte_cnt;
++		offset += byte_cnt;
++		hdrcnt--;
+ 
+ 		lblkno += map.br_blockcount;
+ 	}
+ 	ASSERT(valuelen == 0);
+-	return(0);
++	ASSERT(hdrcnt == 0);
++	return 0;
+ }
+ 
+ /*
+@@ -306,7 +528,7 @@ xfs_attr_rmtval_remove(xfs_da_args_t *args)
+ 			ASSERT(committed);
+ 			args->trans = NULL;
+ 			xfs_bmap_cancel(args->flist);
+-			return(error);
++			return error;
+ 		}
+ 
+ 		/*
+diff --git a/fs/xfs/xfs_attr_remote.h b/fs/xfs/xfs_attr_remote.h
+index 2a34b9a..0ca8d9a 100644
+--- a/fs/xfs/xfs_attr_remote.h
++++ b/fs/xfs/xfs_attr_remote.h
+@@ -18,6 +18,25 @@
+ #ifndef __XFS_ATTR_REMOTE_H__
+ #define	__XFS_ATTR_REMOTE_H__
+ 
++#define XFS_ATTR3_RMT_MAGIC	0x5841524d	/* XARM */
++
++struct xfs_attr3_rmt_hdr {
++	__be32	rm_magic;
++	__be32	rm_offset;
++	__be32	rm_bytes;
++	__be32	rm_crc;
++	uuid_t	rm_uuid;
++	__be64	rm_owner;
++	__be64	rm_blkno;
++	__be64	rm_lsn;
++};
++
++#define XFS_ATTR3_RMT_CRC_OFF	offsetof(struct xfs_attr3_rmt_hdr, rm_crc)
++
++#define XFS_ATTR3_RMT_BUF_SPACE(mp, bufsize)	\
++	((bufsize) - (xfs_sb_version_hascrc(&(mp)->m_sb) ? \
++			sizeof(struct xfs_attr3_rmt_hdr) : 0))
++
+ int xfs_attr_rmtval_get(struct xfs_da_args *args);
+ int xfs_attr_rmtval_set(struct xfs_da_args *args);
+ int xfs_attr_rmtval_remove(struct xfs_da_args *args);
 -- 
 1.7.10.4
 
