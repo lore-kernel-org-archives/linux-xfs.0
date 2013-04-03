@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2B67F7FA4
-	for <xfs@oss.sgi.com>; Wed,  3 Apr 2013 00:11:53 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 77CF57FB6
+	for <xfs@oss.sgi.com>; Wed,  3 Apr 2013 00:11:54 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0C916304081
-	for <xfs@oss.sgi.com>; Tue,  2 Apr 2013 22:11:52 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6740E304081
+	for <xfs@oss.sgi.com>; Tue,  2 Apr 2013 22:11:54 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	F2bvteIzK44qDhgJ for <xfs@oss.sgi.com>;
-	Tue, 02 Apr 2013 22:11:49 -0700 (PDT)
+	smkFklHxa50DH29z for <xfs@oss.sgi.com>;
+	Tue, 02 Apr 2013 22:11:52 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UNFz7-0000LX-FN
-	for xfs@oss.sgi.com; Wed, 03 Apr 2013 16:11:45 +1100
+	(envelope-from <dave@fromorbit.com>) id 1UNFzC-0000LS-Bw
+	for xfs@oss.sgi.com; Wed, 03 Apr 2013 16:11:50 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UNFz7-0005Bh-BZ
+	(envelope-from <dave@disappointment.disaster>) id 1UNFz7-0005BO-7N
 	for xfs@oss.sgi.com; Wed, 03 Apr 2013 16:11:45 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 12/22] xfs: add CRC checking to dir2 data blocks
-Date: Wed,  3 Apr 2013 16:11:22 +1100
-Message-Id: <1364965892-19623-13-git-send-email-david@fromorbit.com>
+Subject: [PATCH 09/22] xfs: add CRC checks to remote symlinks
+Date: Wed,  3 Apr 2013 16:11:19 +1100
+Message-Id: <1364965892-19623-10-git-send-email-david@fromorbit.com>
 In-Reply-To: <1364965892-19623-1-git-send-email-david@fromorbit.com>
 References: <1364965892-19623-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,846 +38,527 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-This addition follows the same pattern as the dir2 block CRCs.
+Add a header to the remote symlink block, containing location and
+owner information, as well as CRCs and LSN fields. This requires
+verifiers to be added to the remote symlink buffers for CRC enabled
+filesystems.
+
+This also fixes a bug reading multiple block symlinks, where the second block
+overwrites the first block when copying out the link name.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_dir2_block.c  |   22 +++++-----
- fs/xfs/xfs_dir2_data.c   |  100 ++++++++++++++++++++++++++++++++--------------
- fs/xfs/xfs_dir2_format.h |   21 +++++-----
- fs/xfs/xfs_dir2_leaf.c   |   71 ++++++++++++++++++--------------
- fs/xfs/xfs_dir2_node.c   |   39 ++++++++++--------
- fs/xfs/xfs_dir2_priv.h   |   12 +++---
- fs/xfs/xfs_file.c        |    2 +-
- 7 files changed, 162 insertions(+), 105 deletions(-)
+ fs/xfs/xfs_buf_item.h    |    4 +-
+ fs/xfs/xfs_log_recover.c |    9 ++
+ fs/xfs/xfs_symlink.c     |  279 +++++++++++++++++++++++++++++++++++++++-------
+ fs/xfs/xfs_symlink.h     |   34 +++++-
+ 4 files changed, 283 insertions(+), 43 deletions(-)
 
-diff --git a/fs/xfs/xfs_dir2_block.c b/fs/xfs/xfs_dir2_block.c
-index 79a3f1b..7ec87c2 100644
---- a/fs/xfs/xfs_dir2_block.c
-+++ b/fs/xfs/xfs_dir2_block.c
-@@ -77,7 +77,7 @@ xfs_dir3_block_verify(
- 		if (hdr3->magic != cpu_to_be32(XFS_DIR2_BLOCK_MAGIC))
- 			return false;
- 	}
--	if (__xfs_dir2_data_check(NULL, bp))
-+	if (__xfs_dir3_data_check(NULL, bp))
- 		return false;
- 	return true;
- }
-@@ -553,7 +553,7 @@ xfs_dir2_block_addname(
- 		xfs_dir2_data_log_header(tp, bp);
- 	xfs_dir2_block_log_tail(tp, bp);
- 	xfs_dir2_data_log_entry(tp, bp, dep);
--	xfs_dir2_data_check(dp, bp);
-+	xfs_dir3_data_check(dp, bp);
- 	return 0;
- }
+diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
+index abae8c8..09cab4e 100644
+--- a/fs/xfs/xfs_buf_item.h
++++ b/fs/xfs/xfs_buf_item.h
+@@ -49,6 +49,7 @@ extern kmem_zone_t	*xfs_buf_item_zone;
+ #define XFS_BLF_AGFL_BUF	(1<<7)
+ #define XFS_BLF_AGI_BUF		(1<<8)
+ #define XFS_BLF_DINO_BUF	(1<<9)
++#define XFS_BLF_SYMLINK_BUF	(1<<10)
  
-@@ -596,7 +596,7 @@ xfs_dir2_block_getdents(
- 	 */
- 	wantoff = xfs_dir2_dataptr_to_off(mp, *offset);
- 	hdr = bp->b_addr;
--	xfs_dir2_data_check(dp, bp);
-+	xfs_dir3_data_check(dp, bp);
- 	/*
- 	 * Set up values for the loop.
- 	 */
-@@ -720,7 +720,7 @@ xfs_dir2_block_lookup(
- 	dp = args->dp;
- 	mp = dp->i_mount;
- 	hdr = bp->b_addr;
--	xfs_dir2_data_check(dp, bp);
-+	xfs_dir3_data_check(dp, bp);
- 	btp = xfs_dir2_block_tail_p(mp, hdr);
- 	blp = xfs_dir2_block_leaf_p(btp);
- 	/*
-@@ -771,7 +771,7 @@ xfs_dir2_block_lookup_int(
- 		return error;
+ #define XFS_BLF_TYPE_MASK	\
+ 		(XFS_BLF_UDQUOT_BUF | \
+@@ -58,7 +59,8 @@ extern kmem_zone_t	*xfs_buf_item_zone;
+ 		 XFS_BLF_AGF_BUF | \
+ 		 XFS_BLF_AGFL_BUF | \
+ 		 XFS_BLF_AGI_BUF | \
+-		 XFS_BLF_DINO_BUF)
++		 XFS_BLF_DINO_BUF | \
++		 XFS_BLF_SYMLINK_BUF)
  
- 	hdr = bp->b_addr;
--	xfs_dir2_data_check(dp, bp);
-+	xfs_dir3_data_check(dp, bp);
- 	btp = xfs_dir2_block_tail_p(mp, hdr);
- 	blp = xfs_dir2_block_leaf_p(btp);
- 	/*
-@@ -908,7 +908,7 @@ xfs_dir2_block_removename(
- 		xfs_dir2_data_freescan(mp, hdr, &needlog);
- 	if (needlog)
- 		xfs_dir2_data_log_header(tp, bp);
--	xfs_dir2_data_check(dp, bp);
-+	xfs_dir3_data_check(dp, bp);
- 	/*
- 	 * See if the size as a shortform is good enough.
- 	 */
-@@ -965,7 +965,7 @@ xfs_dir2_block_replace(
- 	 */
- 	dep->inumber = cpu_to_be64(args->inumber);
- 	xfs_dir2_data_log_entry(args->trans, bp, dep);
--	xfs_dir2_data_check(dp, bp);
-+	xfs_dir3_data_check(dp, bp);
- 	return 0;
- }
+ #define	XFS_BLF_CHUNK		128
+ #define	XFS_BLF_SHIFT		7
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 2878782..d1292fd 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -45,6 +45,7 @@
+ #include "xfs_cksum.h"
+ #include "xfs_trace.h"
+ #include "xfs_icache.h"
++#include "xfs_symlink.h"
  
-@@ -1046,12 +1046,14 @@ xfs_dir2_leaf_to_block(
- 	 * Read the data block if we don't already have it, give up if it fails.
- 	 */
- 	if (!dbp) {
--		error = xfs_dir2_data_read(tp, dp, mp->m_dirdatablk, -1, &dbp);
-+		error = xfs_dir3_data_read(tp, dp, mp->m_dirdatablk, -1, &dbp);
- 		if (error)
- 			return error;
- 	}
- 	hdr = dbp->b_addr;
--	ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC));
-+	ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
-+	       hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC));
-+
- 	/*
- 	 * Size of the "leaf" area in the block.
- 	 */
-@@ -1329,6 +1331,6 @@ xfs_dir2_sf_to_block(
- 	ASSERT(needscan == 0);
- 	xfs_dir2_block_log_leaf(tp, bp, 0, be32_to_cpu(btp->count) - 1);
- 	xfs_dir2_block_log_tail(tp, bp);
--	xfs_dir2_data_check(dp, bp);
-+	xfs_dir3_data_check(dp, bp);
- 	return 0;
- }
-diff --git a/fs/xfs/xfs_dir2_data.c b/fs/xfs/xfs_dir2_data.c
-index 8484ec4..78320df 100644
---- a/fs/xfs/xfs_dir2_data.c
-+++ b/fs/xfs/xfs_dir2_data.c
-@@ -31,6 +31,8 @@
- #include "xfs_dir2_format.h"
- #include "xfs_dir2_priv.h"
- #include "xfs_error.h"
-+#include "xfs_buf_item.h"
-+#include "xfs_cksum.h"
- 
- STATIC xfs_dir2_data_free_t *
- xfs_dir2_data_freefind(xfs_dir2_data_hdr_t *hdr, xfs_dir2_data_unused_t *dup);
-@@ -41,7 +43,7 @@ xfs_dir2_data_freefind(xfs_dir2_data_hdr_t *hdr, xfs_dir2_data_unused_t *dup);
-  * Return 0 is the buffer is good, otherwise an error.
-  */
- int
--__xfs_dir2_data_check(
-+__xfs_dir3_data_check(
- 	struct xfs_inode	*dp,		/* incore inode pointer */
- 	struct xfs_buf		*bp)		/* data block's buffer */
- {
-@@ -76,6 +78,7 @@ __xfs_dir2_data_check(
- 		lep = xfs_dir2_block_leaf_p(btp);
- 		endp = (char *)lep;
+ STATIC int
+ xlog_find_zeroed(
+@@ -2002,6 +2003,14 @@ xlog_recover_do_reg_buffer(
+ 		}
+ 		bp->b_ops = &xfs_inode_buf_ops;
  		break;
-+	case cpu_to_be32(XFS_DIR3_DATA_MAGIC):
- 	case cpu_to_be32(XFS_DIR2_DATA_MAGIC):
- 		endp = (char *)hdr + mp->m_dirblksize;
- 		break;
-@@ -189,21 +192,27 @@ __xfs_dir2_data_check(
- 	return 0;
- }
- 
--static void
--xfs_dir2_data_verify(
-+static bool
-+xfs_dir3_data_verify(
- 	struct xfs_buf		*bp)
- {
- 	struct xfs_mount	*mp = bp->b_target->bt_mount;
--	struct xfs_dir2_data_hdr *hdr = bp->b_addr;
--	int			block_ok = 0;
-+	struct xfs_dir3_blk_hdr	*hdr3 = bp->b_addr;
- 
--	block_ok = hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC);
--	block_ok = block_ok && __xfs_dir2_data_check(NULL, bp) == 0;
--
--	if (!block_ok) {
--		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, hdr);
--		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+	if (xfs_sb_version_hascrc(&mp->m_sb)) {
-+		if (hdr3->magic != cpu_to_be32(XFS_DIR3_DATA_MAGIC))
-+			return false;
-+		if (!uuid_equal(&hdr3->uuid, &mp->m_sb.sb_uuid))
-+			return false;
-+		if (be64_to_cpu(hdr3->blkno) != bp->b_bn)
-+			return false;
-+	} else {
-+		if (hdr3->magic != cpu_to_be32(XFS_DIR2_DATA_MAGIC))
-+			return false;
- 	}
-+	if (__xfs_dir3_data_check(NULL, bp))
-+		return false;
-+	return true;
- }
- 
- /*
-@@ -212,7 +221,7 @@ xfs_dir2_data_verify(
-  * format buffer or a data format buffer on readahead.
-  */
- static void
--xfs_dir2_data_reada_verify(
-+xfs_dir3_data_reada_verify(
- 	struct xfs_buf		*bp)
- {
- 	struct xfs_mount	*mp = bp->b_target->bt_mount;
-@@ -225,7 +234,8 @@ xfs_dir2_data_reada_verify(
- 		bp->b_ops->verify_read(bp);
- 		return;
- 	case cpu_to_be32(XFS_DIR2_DATA_MAGIC):
--		xfs_dir2_data_verify(bp);
-+	case cpu_to_be32(XFS_DIR3_DATA_MAGIC):
-+		xfs_dir3_data_verify(bp);
- 		return;
++	case XFS_BLF_SYMLINK_BUF:
++		if (*(__be32 *)bp->b_addr != cpu_to_be32(XFS_SYMLINK_MAGIC)) {
++			xfs_warn(mp, "Bad symlink block magic!");
++			ASSERT(0);
++			break;
++		}
++		bp->b_ops = &xfs_symlink_buf_ops;
++		break;
  	default:
- 		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, hdr);
-@@ -235,32 +245,56 @@ xfs_dir2_data_reada_verify(
- }
- 
- static void
--xfs_dir2_data_read_verify(
-+xfs_dir3_data_read_verify(
- 	struct xfs_buf	*bp)
- {
--	xfs_dir2_data_verify(bp);
+ 		break;
+ 	}
+diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+index 7512c96..5f234389 100644
+--- a/fs/xfs/xfs_symlink.c
++++ b/fs/xfs/xfs_symlink.c
+@@ -43,6 +43,152 @@
+ #include "xfs_log_priv.h"
+ #include "xfs_trace.h"
+ #include "xfs_symlink.h"
++#include "xfs_cksum.h"
++#include "xfs_buf_item.h"
++
++
++/*
++ * Each contiguous block has a header, so it is not just a simple pathlen
++ * to FSB conversion.
++ */
++int
++xfs_symlink_blocks(
++	struct xfs_mount *mp,
++	int		pathlen)
++{
++	int		fsblocks = 0;
++	int		len = pathlen;
++
++	do {
++		fsblocks++;
++		len -= XFS_SYMLINK_BUF_SPACE(mp, mp->m_sb.sb_blocksize);
++	} while (len > 0);
++
++	ASSERT(fsblocks <= XFS_SYMLINK_MAPS);
++	return fsblocks;
++}
++
++static int
++xfs_symlink_hdr_set(
++	struct xfs_mount	*mp,
++	xfs_ino_t		ino,
++	uint32_t		offset,
++	uint32_t		size,
++	struct xfs_buf		*bp)
++{
++	struct xfs_dsymlink_hdr	*dsl = bp->b_addr;
++
++	if (!xfs_sb_version_hascrc(&mp->m_sb))
++		return 0;
++
++	dsl->sl_magic = cpu_to_be32(XFS_SYMLINK_MAGIC);
++	dsl->sl_offset = cpu_to_be32(offset);
++	dsl->sl_bytes = cpu_to_be32(size);
++	uuid_copy(&dsl->sl_uuid, &mp->m_sb.sb_uuid);
++	dsl->sl_owner = cpu_to_be64(ino);
++	dsl->sl_blkno = cpu_to_be64(bp->b_bn);
++	bp->b_ops = &xfs_symlink_buf_ops;
++
++	return sizeof(struct xfs_dsymlink_hdr);
++}
++
++/*
++ * Checking of the symlink header is split into two parts. the verifier does
++ * CRC, location and bounds checking, the unpacking function checks the path
++ * parameters and owner.
++ */
++bool
++xfs_symlink_hdr_ok(
++	struct xfs_mount	*mp,
++	xfs_ino_t		ino,
++	uint32_t		offset,
++	uint32_t		size,
++	struct xfs_buf		*bp)
++{
++	struct xfs_dsymlink_hdr *dsl = bp->b_addr;
++
++	if (offset != be32_to_cpu(dsl->sl_offset))
++		return false;
++	if (size != be32_to_cpu(dsl->sl_bytes))
++		return false;
++	if (ino != be64_to_cpu(dsl->sl_owner))
++		return false;
++
++	/* ok */
++	return true;
++}
++
++static bool
++xfs_symlink_verify(
++	struct xfs_buf		*bp)
++{
 +	struct xfs_mount	*mp = bp->b_target->bt_mount;
++	struct xfs_dsymlink_hdr	*dsl = bp->b_addr;
 +
-+	if ((xfs_sb_version_hascrc(&mp->m_sb) &&
-+	     !xfs_verify_cksum(bp->b_addr, BBTOB(bp->b_length),
-+					  XFS_DIR3_DATA_CRC_OFF)) ||
-+	    !xfs_dir3_data_verify(bp)) {
-+		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
-+		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+	}
- }
- 
- static void
--xfs_dir2_data_write_verify(
-+xfs_dir3_data_write_verify(
- 	struct xfs_buf	*bp)
- {
--	xfs_dir2_data_verify(bp);
-+	struct xfs_mount	*mp = bp->b_target->bt_mount;
-+	struct xfs_buf_log_item	*bip = bp->b_fspriv;
-+	struct xfs_dir3_blk_hdr	*hdr3 = bp->b_addr;
++	if (!xfs_sb_version_hascrc(&mp->m_sb))
++		return false;
++	if (dsl->sl_magic != cpu_to_be32(XFS_SYMLINK_MAGIC))
++		return false;
++	if (!uuid_equal(&dsl->sl_uuid, &mp->m_sb.sb_uuid))
++		return false;
++	if (bp->b_bn != be64_to_cpu(dsl->sl_blkno))
++		return false;
++	if (be32_to_cpu(dsl->sl_offset) +
++				be32_to_cpu(dsl->sl_bytes) >= MAXPATHLEN)
++		return false;
++	if (dsl->sl_owner == 0)
++		return false;
 +
-+	if (!xfs_dir3_data_verify(bp)) {
-+		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
-+		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+		return;
-+	}
++	return true;
++}
 +
++static void
++xfs_symlink_read_verify(
++	struct xfs_buf	*bp)
++{
++	struct xfs_mount *mp = bp->b_target->bt_mount;
++
++	/* no verification of non-crc buffers */
 +	if (!xfs_sb_version_hascrc(&mp->m_sb))
 +		return;
 +
-+	if (bip)
-+		hdr3->lsn = cpu_to_be64(bip->bli_item.li_lsn);
-+
-+	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length), XFS_DIR3_DATA_CRC_OFF);
- }
- 
--const struct xfs_buf_ops xfs_dir2_data_buf_ops = {
--	.verify_read = xfs_dir2_data_read_verify,
--	.verify_write = xfs_dir2_data_write_verify,
-+const struct xfs_buf_ops xfs_dir3_data_buf_ops = {
-+	.verify_read = xfs_dir3_data_read_verify,
-+	.verify_write = xfs_dir3_data_write_verify,
- };
- 
--static const struct xfs_buf_ops xfs_dir2_data_reada_buf_ops = {
--	.verify_read = xfs_dir2_data_reada_verify,
--	.verify_write = xfs_dir2_data_write_verify,
-+static const struct xfs_buf_ops xfs_dir3_data_reada_buf_ops = {
-+	.verify_read = xfs_dir3_data_reada_verify,
-+	.verify_write = xfs_dir3_data_write_verify,
- };
- 
- 
- int
--xfs_dir2_data_read(
-+xfs_dir3_data_read(
- 	struct xfs_trans	*tp,
- 	struct xfs_inode	*dp,
- 	xfs_dablk_t		bno,
-@@ -268,18 +302,18 @@ xfs_dir2_data_read(
- 	struct xfs_buf		**bpp)
- {
- 	return xfs_da_read_buf(tp, dp, bno, mapped_bno, bpp,
--				XFS_DATA_FORK, &xfs_dir2_data_buf_ops);
-+				XFS_DATA_FORK, &xfs_dir3_data_buf_ops);
- }
- 
- int
--xfs_dir2_data_readahead(
-+xfs_dir3_data_readahead(
- 	struct xfs_trans	*tp,
- 	struct xfs_inode	*dp,
- 	xfs_dablk_t		bno,
- 	xfs_daddr_t		mapped_bno)
- {
- 	return xfs_da_reada_buf(tp, dp, bno, mapped_bno,
--				XFS_DATA_FORK, &xfs_dir2_data_reada_buf_ops);
-+				XFS_DATA_FORK, &xfs_dir3_data_reada_buf_ops);
- }
- 
- /*
-@@ -309,6 +343,7 @@ xfs_dir2_data_freefind(
- 	 * one we're looking for it has to be exact.
- 	 */
- 	ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
-+	       hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC) ||
- 	       hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC) ||
- 	       hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC));
- 	for (dfp = &bf[0], seenzero = matched = 0;
-@@ -458,6 +493,7 @@ xfs_dir2_data_freescan(
- 	char			*p;		/* current entry pointer */
- 
- 	ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
-+	       hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC) ||
- 	       hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC) ||
- 	       hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC));
- 
-@@ -534,13 +570,12 @@ xfs_dir3_data_init(
- 		XFS_DATA_FORK);
- 	if (error)
- 		return error;
--	bp->b_ops = &xfs_dir2_data_buf_ops;
-+	bp->b_ops = &xfs_dir3_data_buf_ops;
- 
- 	/*
- 	 * Initialize the header.
- 	 */
- 	hdr = bp->b_addr;
--
- 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
- 		struct xfs_dir3_blk_hdr *hdr3 = bp->b_addr;
- 
-@@ -591,6 +626,7 @@ xfs_dir2_data_log_entry(
- 	xfs_dir2_data_hdr_t	*hdr = bp->b_addr;
- 
- 	ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
-+	       hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC) ||
- 	       hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC) ||
- 	       hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC));
- 
-@@ -610,6 +646,7 @@ xfs_dir2_data_log_header(
- 	xfs_dir2_data_hdr_t	*hdr = bp->b_addr;
- 
- 	ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
-+	       hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC) ||
- 	       hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC) ||
- 	       hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC));
- 
-@@ -628,6 +665,7 @@ xfs_dir2_data_log_unused(
- 	xfs_dir2_data_hdr_t	*hdr = bp->b_addr;
- 
- 	ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
-+	       hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC) ||
- 	       hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC) ||
- 	       hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC));
- 
-@@ -675,7 +713,8 @@ xfs_dir2_data_make_free(
- 	/*
- 	 * Figure out where the end of the data area is.
- 	 */
--	if (hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC))
-+	if (hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
-+	    hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC))
- 		endptr = (char *)hdr + mp->m_dirblksize;
- 	else {
- 		xfs_dir2_block_tail_t	*btp;	/* block tail */
-@@ -857,6 +896,7 @@ xfs_dir2_data_use_free(
- 
- 	hdr = bp->b_addr;
- 	ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
-+	       hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC) ||
- 	       hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC) ||
- 	       hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC));
- 	ASSERT(be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG);
-diff --git a/fs/xfs/xfs_dir2_format.h b/fs/xfs/xfs_dir2_format.h
-index ec5044a..0ac0950 100644
---- a/fs/xfs/xfs_dir2_format.h
-+++ b/fs/xfs/xfs_dir2_format.h
-@@ -283,7 +283,8 @@ struct xfs_dir3_data_hdr {
- static inline struct xfs_dir2_data_free *
- xfs_dir3_data_bestfree_p(struct xfs_dir2_data_hdr *hdr)
- {
--	if (hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC)) {
-+	if (hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC) ||
-+	    hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC)) {
- 		struct xfs_dir3_data_hdr *hdr3 = (struct xfs_dir3_data_hdr *)hdr;
- 		return hdr3->best_free;
- 	}
-@@ -345,17 +346,6 @@ xfs_dir2_data_unused_tag_p(struct xfs_dir2_data_unused *dup)
- 			be16_to_cpu(dup->length) - sizeof(__be16));
- }
- 
--static inline struct xfs_dir2_data_unused *
--xfs_dir3_data_unused_p(struct xfs_dir2_data_hdr *hdr)
--{
--	if (hdr->magic == cpu_to_be32(XFS_DIR3_BLOCK_MAGIC)) {
--		return (struct xfs_dir2_data_unused *)
--			((char *)hdr + sizeof(struct xfs_dir3_data_hdr));
--	}
--	return (struct xfs_dir2_data_unused *)
--		((char *)hdr + sizeof(struct xfs_dir2_data_hdr));
--}
--
- static inline size_t
- xfs_dir3_data_hdr_size(bool dir3)
- {
-@@ -379,6 +369,13 @@ xfs_dir3_data_entry_p(struct xfs_dir2_data_hdr *hdr)
- 		((char *)hdr + xfs_dir3_data_entry_offset(hdr));
- }
- 
-+static inline struct xfs_dir2_data_unused *
-+xfs_dir3_data_unused_p(struct xfs_dir2_data_hdr *hdr)
-+{
-+	return (struct xfs_dir2_data_unused *)
-+		((char *)hdr + xfs_dir3_data_entry_offset(hdr));
++	if (!xfs_verify_cksum(bp->b_addr, BBTOB(bp->b_length),
++				  offsetof(struct xfs_dsymlink_hdr, sl_crc)) ||
++	    !xfs_symlink_verify(bp)) {
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
++		xfs_buf_ioerror(bp, EFSCORRUPTED);
++	}
 +}
 +
- /*
-  * Offsets of . and .. in data space (always block 0)
-  */
-diff --git a/fs/xfs/xfs_dir2_leaf.c b/fs/xfs/xfs_dir2_leaf.c
-index 979735b..c7dca95 100644
---- a/fs/xfs/xfs_dir2_leaf.c
-+++ b/fs/xfs/xfs_dir2_leaf.c
-@@ -149,7 +149,7 @@ xfs_dir2_block_to_leaf(
- 	int			needlog;	/* need to log block header */
- 	int			needscan;	/* need to rescan bestfree */
- 	xfs_trans_t		*tp;		/* transaction pointer */
--	struct xfs_dir2_data_free	*bf;
-+	struct xfs_dir2_data_free *bf;
- 
- 	trace_xfs_dir2_block_to_leaf(args);
- 
-@@ -175,7 +175,7 @@ xfs_dir2_block_to_leaf(
- 	ASSERT(lbp != NULL);
- 	leaf = lbp->b_addr;
- 	hdr = dbp->b_addr;
--	xfs_dir2_data_check(dp, dbp);
-+	xfs_dir3_data_check(dp, dbp);
- 	btp = xfs_dir2_block_tail_p(mp, hdr);
- 	blp = xfs_dir2_block_leaf_p(btp);
- 	bf = xfs_dir3_data_bestfree_p(hdr);
-@@ -204,8 +204,12 @@ xfs_dir2_block_to_leaf(
- 	/*
- 	 * Fix up the block header, make it a data block.
- 	 */
--	dbp->b_ops = &xfs_dir2_data_buf_ops;
--	hdr->magic = cpu_to_be32(XFS_DIR2_DATA_MAGIC);
-+	dbp->b_ops = &xfs_dir3_data_buf_ops;
-+	if (hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC))
-+		hdr->magic = cpu_to_be32(XFS_DIR2_DATA_MAGIC);
-+	else
-+		hdr->magic = cpu_to_be32(XFS_DIR3_DATA_MAGIC);
++static void
++xfs_symlink_write_verify(
++	struct xfs_buf	*bp)
++{
++	struct xfs_mount *mp = bp->b_target->bt_mount;
++	struct xfs_buf_log_item	*bip = bp->b_fspriv;
 +
- 	if (needscan)
- 		xfs_dir2_data_freescan(mp, hdr, &needlog);
- 	/*
-@@ -221,7 +225,7 @@ xfs_dir2_block_to_leaf(
- 	if (needlog)
- 		xfs_dir2_data_log_header(tp, dbp);
- 	xfs_dir2_leaf_check(dp, lbp);
--	xfs_dir2_data_check(dp, dbp);
-+	xfs_dir3_data_check(dp, dbp);
- 	xfs_dir2_leaf_log_bests(tp, lbp, 0, 0);
- 	return 0;
- }
-@@ -385,6 +389,7 @@ xfs_dir2_leaf_addname(
- 	__be16			*tagp;		/* end of data entry */
- 	xfs_trans_t		*tp;		/* transaction pointer */
- 	xfs_dir2_db_t		use_block;	/* data block number */
-+	struct xfs_dir2_data_free *bf;		/* bestfree table */
++	/* no verification of non-crc buffers */
++	if (!xfs_sb_version_hascrc(&mp->m_sb))
++		return;
++
++	if (!xfs_symlink_verify(bp)) {
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
++		xfs_buf_ioerror(bp, EFSCORRUPTED);
++		return;
++	}
++
++	if (bip) {
++		struct xfs_dsymlink_hdr *dsl = bp->b_addr;
++		dsl->sl_lsn = cpu_to_be64(bip->bli_item.li_lsn);
++	}
++	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length),
++			 offsetof(struct xfs_dsymlink_hdr, sl_crc));
++}
++
++const struct xfs_buf_ops xfs_symlink_buf_ops = {
++	.verify_read = xfs_symlink_read_verify,
++	.verify_write = xfs_symlink_write_verify,
++};
  
- 	trace_xfs_dir2_leaf_addname(args);
- 
-@@ -568,14 +573,15 @@ xfs_dir2_leaf_addname(
- 		else
- 			xfs_dir2_leaf_log_bests(tp, lbp, use_block, use_block);
- 		hdr = dbp->b_addr;
--		bestsp[use_block] = hdr->bestfree[0].length;
-+		bf = xfs_dir3_data_bestfree_p(hdr);
-+		bestsp[use_block] = bf[0].length;
- 		grown = 1;
- 	} else {
- 		/*
- 		 * Already had space in some data block.
- 		 * Just read that one in.
- 		 */
--		error = xfs_dir2_data_read(tp, dp,
-+		error = xfs_dir3_data_read(tp, dp,
- 					   xfs_dir2_db_to_da(mp, use_block),
- 					   -1, &dbp);
- 		if (error) {
-@@ -583,13 +589,14 @@ xfs_dir2_leaf_addname(
- 			return error;
- 		}
- 		hdr = dbp->b_addr;
-+		bf = xfs_dir3_data_bestfree_p(hdr);
- 		grown = 0;
- 	}
- 	/*
- 	 * Point to the biggest freespace in our data block.
- 	 */
- 	dup = (xfs_dir2_data_unused_t *)
--	      ((char *)hdr + be16_to_cpu(hdr->bestfree[0].offset));
-+	      ((char *)hdr + be16_to_cpu(bf[0].offset));
- 	ASSERT(be16_to_cpu(dup->length) >= length);
- 	needscan = needlog = 0;
- 	/*
-@@ -622,8 +629,8 @@ xfs_dir2_leaf_addname(
- 	 * If the bests table needs to be changed, do it.
- 	 * Log the change unless we've already done that.
- 	 */
--	if (be16_to_cpu(bestsp[use_block]) != be16_to_cpu(hdr->bestfree[0].length)) {
--		bestsp[use_block] = hdr->bestfree[0].length;
-+	if (be16_to_cpu(bestsp[use_block]) != be16_to_cpu(bf[0].length)) {
-+		bestsp[use_block] = bf[0].length;
- 		if (!grown)
- 			xfs_dir2_leaf_log_bests(tp, lbp, use_block, use_block);
- 	}
-@@ -643,7 +650,7 @@ xfs_dir2_leaf_addname(
- 	xfs_dir2_leaf_log_header(tp, lbp);
- 	xfs_dir2_leaf_log_ents(tp, lbp, lfloglow, lfloghigh);
- 	xfs_dir2_leaf_check(dp, lbp);
--	xfs_dir2_data_check(dp, dbp);
-+	xfs_dir3_data_check(dp, dbp);
- 	return 0;
- }
- 
-@@ -967,7 +974,7 @@ xfs_dir2_leaf_readbuf(
- 	 * Read the directory block starting at the first mapping.
- 	 */
- 	mip->curdb = xfs_dir2_da_to_db(mp, map->br_startoff);
--	error = xfs_dir2_data_read(NULL, dp, map->br_startoff,
-+	error = xfs_dir3_data_read(NULL, dp, map->br_startoff,
- 			map->br_blockcount >= mp->m_dirblkfsbs ?
- 			    XFS_FSB_TO_DADDR(mp, map->br_startblock) : -1, &bp);
- 
-@@ -996,7 +1003,7 @@ xfs_dir2_leaf_readbuf(
- 		 */
- 		if (i > mip->ra_current &&
- 		    map[mip->ra_index].br_blockcount >= mp->m_dirblkfsbs) {
--			xfs_dir2_data_readahead(NULL, dp,
-+			xfs_dir3_data_readahead(NULL, dp,
- 				map[mip->ra_index].br_startoff + mip->ra_offset,
- 				XFS_FSB_TO_DADDR(mp,
- 					map[mip->ra_index].br_startblock +
-@@ -1009,7 +1016,7 @@ xfs_dir2_leaf_readbuf(
- 		 * use our mapping, but this is a very rare case.
- 		 */
- 		else if (i > mip->ra_current) {
--			xfs_dir2_data_readahead(NULL, dp,
-+			xfs_dir3_data_readahead(NULL, dp,
- 					map[mip->ra_index].br_startoff +
- 							mip->ra_offset, -1);
- 			mip->ra_current = i;
-@@ -1135,17 +1142,17 @@ xfs_dir2_leaf_getdents(
- 				ASSERT(xfs_dir2_byte_to_db(mp, curoff) ==
- 				       map_info->curdb);
- 			hdr = bp->b_addr;
--			xfs_dir2_data_check(dp, bp);
-+			xfs_dir3_data_check(dp, bp);
- 			/*
- 			 * Find our position in the block.
- 			 */
--			ptr = (char *)(hdr + 1);
-+			ptr = (char *)xfs_dir3_data_entry_p(hdr);
- 			byteoff = xfs_dir2_byte_to_off(mp, curoff);
- 			/*
- 			 * Skip past the header.
- 			 */
- 			if (byteoff == 0)
--				curoff += (uint)sizeof(*hdr);
-+				curoff += xfs_dir3_data_entry_offset(hdr);
- 			/*
- 			 * Skip past entries until we reach our offset.
- 			 */
-@@ -1481,7 +1488,7 @@ xfs_dir2_leaf_lookup_int(
- 		if (newdb != curdb) {
- 			if (dbp)
- 				xfs_trans_brelse(tp, dbp);
--			error = xfs_dir2_data_read(tp, dp,
-+			error = xfs_dir3_data_read(tp, dp,
- 						   xfs_dir2_db_to_da(mp, newdb),
- 						   -1, &dbp);
- 			if (error) {
-@@ -1522,7 +1529,7 @@ xfs_dir2_leaf_lookup_int(
- 		ASSERT(cidb != -1);
- 		if (cidb != curdb) {
- 			xfs_trans_brelse(tp, dbp);
--			error = xfs_dir2_data_read(tp, dp,
-+			error = xfs_dir3_data_read(tp, dp,
- 						   xfs_dir2_db_to_da(mp, cidb),
- 						   -1, &dbp);
- 			if (error) {
-@@ -1568,6 +1575,7 @@ xfs_dir2_leaf_removename(
- 	int			needscan;	/* need to rescan data frees */
- 	xfs_dir2_data_off_t	oldbest;	/* old value of best free */
- 	xfs_trans_t		*tp;		/* transaction pointer */
-+	struct xfs_dir2_data_free *bf;		/* bestfree table */
- 
- 	trace_xfs_dir2_leaf_removename(args);
- 
-@@ -1582,7 +1590,8 @@ xfs_dir2_leaf_removename(
- 	mp = dp->i_mount;
- 	leaf = lbp->b_addr;
- 	hdr = dbp->b_addr;
--	xfs_dir2_data_check(dp, dbp);
-+	bf = xfs_dir3_data_bestfree_p(hdr);
-+	xfs_dir3_data_check(dp, dbp);
- 	/*
- 	 * Point to the leaf entry, use that to point to the data entry.
- 	 */
-@@ -1591,7 +1600,7 @@ xfs_dir2_leaf_removename(
- 	dep = (xfs_dir2_data_entry_t *)
- 	      ((char *)hdr + xfs_dir2_dataptr_to_off(mp, be32_to_cpu(lep->address)));
- 	needscan = needlog = 0;
--	oldbest = be16_to_cpu(hdr->bestfree[0].length);
-+	oldbest = be16_to_cpu(bf[0].length);
- 	ltp = xfs_dir2_leaf_tail_p(mp, leaf);
- 	bestsp = xfs_dir2_leaf_bests_p(ltp);
- 	ASSERT(be16_to_cpu(bestsp[db]) == oldbest);
-@@ -1620,16 +1629,16 @@ xfs_dir2_leaf_removename(
- 	 * If the longest freespace in the data block has changed,
- 	 * put the new value in the bests table and log that.
- 	 */
--	if (be16_to_cpu(hdr->bestfree[0].length) != oldbest) {
--		bestsp[db] = hdr->bestfree[0].length;
-+	if (be16_to_cpu(bf[0].length) != oldbest) {
-+		bestsp[db] = bf[0].length;
- 		xfs_dir2_leaf_log_bests(tp, lbp, db, db);
- 	}
--	xfs_dir2_data_check(dp, dbp);
-+	xfs_dir3_data_check(dp, dbp);
- 	/*
- 	 * If the data block is now empty then get rid of the data block.
- 	 */
--	if (be16_to_cpu(hdr->bestfree[0].length) ==
--	    mp->m_dirblksize - (uint)sizeof(*hdr)) {
-+	if (be16_to_cpu(bf[0].length) ==
-+			mp->m_dirblksize - xfs_dir3_data_entry_offset(hdr)) {
- 		ASSERT(db != mp->m_dirdatablk);
- 		if ((error = xfs_dir2_shrink_inode(args, db, dbp))) {
- 			/*
-@@ -1809,7 +1818,7 @@ xfs_dir2_leaf_trim_data(
- 	/*
- 	 * Read the offending data block.  We need its buffer.
- 	 */
--	error = xfs_dir2_data_read(tp, dp, xfs_dir2_db_to_da(mp, db), -1, &dbp);
-+	error = xfs_dir3_data_read(tp, dp, xfs_dir2_db_to_da(mp, db), -1, &dbp);
- 	if (error)
- 		return error;
- 
-@@ -1819,10 +1828,12 @@ xfs_dir2_leaf_trim_data(
- #ifdef DEBUG
+ void
+ xfs_symlink_local_to_remote(
+@@ -51,38 +197,60 @@ xfs_symlink_local_to_remote(
+ 	struct xfs_inode	*ip,
+ 	struct xfs_ifork	*ifp)
  {
- 	struct xfs_dir2_data_hdr *hdr = dbp->b_addr;
-+	struct xfs_dir2_data_free *bf = xfs_dir3_data_bestfree_p(hdr);
- 
--	ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC));
--	ASSERT(be16_to_cpu(hdr->bestfree[0].length) ==
--	       mp->m_dirblksize - (uint)sizeof(*hdr));
-+	ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
-+	       hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC));
-+	ASSERT(be16_to_cpu(bf[0].length) ==
-+	       mp->m_dirblksize - xfs_dir3_data_entry_offset(hdr));
- 	ASSERT(db == be32_to_cpu(ltp->bestcount) - 1);
+-	/* remote symlink blocks are not verifiable until CRCs come along */
+-	bp->b_ops = NULL;
+-	memcpy(bp->b_addr, ifp->if_u1.if_data, ifp->if_bytes);
++	struct xfs_mount	*mp = ip->i_mount;
++	char			*buf;
++
++	if (!xfs_sb_version_hascrc(&mp->m_sb)) {
++		bp->b_ops = NULL;
++		memcpy(bp->b_addr, ifp->if_u1.if_data, ifp->if_bytes);
++		return;
++	}
++
++	/*
++	 * As this symlink fits in an inode literal area, it must also fit in
++	 * the smallest buffer the filesystem supports.
++	 */
++	ASSERT(BBTOB(bp->b_length) >=
++			ifp->if_bytes + sizeof(struct xfs_dsymlink_hdr));
++
++	bp->b_ops = &xfs_symlink_buf_ops;
++
++	buf = bp->b_addr;
++	buf += xfs_symlink_hdr_set(mp, ip->i_ino, 0, ifp->if_bytes, bp);
++	memcpy(buf, ifp->if_u1.if_data, ifp->if_bytes);
  }
- #endif
-diff --git a/fs/xfs/xfs_dir2_node.c b/fs/xfs/xfs_dir2_node.c
-index 0fe39b9..abf617d 100644
---- a/fs/xfs/xfs_dir2_node.c
-+++ b/fs/xfs/xfs_dir2_node.c
-@@ -753,13 +753,13 @@ xfs_dir2_leafn_lookup_for_entry(
- 				ASSERT(state->extravalid);
- 				curbp = state->extrablk.bp;
- 			} else {
--				error = xfs_dir2_data_read(tp, dp,
-+				error = xfs_dir3_data_read(tp, dp,
- 						xfs_dir2_db_to_da(mp, newdb),
- 						-1, &curbp);
- 				if (error)
- 					return error;
+ 
+ /* ----- Kernel only functions below ----- */
+-
+ STATIC int
+ xfs_readlink_bmap(
+-	xfs_inode_t	*ip,
+-	char		*link)
++	struct xfs_inode	*ip,
++	char			*link)
+ {
+-	xfs_mount_t	*mp = ip->i_mount;
+-	int		pathlen = ip->i_d.di_size;
+-	int             nmaps = XFS_SYMLINK_MAPS;
+-	xfs_bmbt_irec_t mval[XFS_SYMLINK_MAPS];
+-	xfs_daddr_t	d;
+-	int		byte_cnt;
+-	int		n;
+-	xfs_buf_t	*bp;
+-	int		error = 0;
++	struct xfs_mount	*mp = ip->i_mount;
++	struct xfs_bmbt_irec	mval[XFS_SYMLINK_MAPS];
++	struct xfs_buf		*bp;
++	xfs_daddr_t		d;
++	char			*cur_chunk;
++	int			pathlen = ip->i_d.di_size;
++	int			nmaps = XFS_SYMLINK_MAPS;
++	int			byte_cnt;
++	int			n;
++	int			error = 0;
++	int			fsblocks = 0;
++	int			offset;
+ 
+-	error = xfs_bmapi_read(ip, 0, XFS_B_TO_FSB(mp, pathlen), mval, &nmaps,
+-			       0);
++	fsblocks = xfs_symlink_blocks(mp, pathlen);
++	error = xfs_bmapi_read(ip, 0, fsblocks, mval, &nmaps, 0);
+ 	if (error)
+ 		goto out;
+ 
++	offset = 0;
+ 	for (n = 0; n < nmaps; n++) {
+ 		d = XFS_FSB_TO_DADDR(mp, mval[n].br_startblock);
+ 		byte_cnt = XFS_FSB_TO_B(mp, mval[n].br_blockcount);
+ 
+-		bp = xfs_buf_read(mp->m_ddev_targp, d, BTOBB(byte_cnt), 0, NULL);
++		bp = xfs_buf_read(mp->m_ddev_targp, d, BTOBB(byte_cnt), 0,
++				  &xfs_symlink_buf_ops);
+ 		if (!bp)
+ 			return XFS_ERROR(ENOMEM);
+ 		error = bp->b_error;
+@@ -91,13 +259,34 @@ xfs_readlink_bmap(
+ 			xfs_buf_relse(bp);
+ 			goto out;
+ 		}
++		byte_cnt = XFS_SYMLINK_BUF_SPACE(mp, byte_cnt);
+ 		if (pathlen < byte_cnt)
+ 			byte_cnt = pathlen;
++
++		cur_chunk = bp->b_addr;
++		if (xfs_sb_version_hascrc(&mp->m_sb)) {
++			if (!xfs_symlink_hdr_ok(mp, ip->i_ino, offset,
++							byte_cnt, bp)) {
++				error = EFSCORRUPTED;
++				xfs_alert(mp,
++"symlink header does not match required off/len/owner (0x%x/Ox%x,0x%llx)",
++					offset, byte_cnt, ip->i_ino);
++				xfs_buf_relse(bp);
++				goto out;
++
++			}
++
++			cur_chunk += sizeof(struct xfs_dsymlink_hdr);
++		}
++
++		memcpy(link + offset, bp->b_addr, byte_cnt);
++
+ 		pathlen -= byte_cnt;
++		offset += byte_cnt;
+ 
+-		memcpy(link, bp->b_addr, byte_cnt);
+ 		xfs_buf_relse(bp);
+ 	}
++	ASSERT(pathlen == 0);
+ 
+ 	link[ip->i_d.di_size] = '\0';
+ 	error = 0;
+@@ -108,10 +297,10 @@ xfs_readlink_bmap(
+ 
+ int
+ xfs_readlink(
+-	xfs_inode_t     *ip,
++	struct xfs_inode *ip,
+ 	char		*link)
+ {
+-	xfs_mount_t	*mp = ip->i_mount;
++	struct xfs_mount *mp = ip->i_mount;
+ 	xfs_fsize_t	pathlen;
+ 	int		error = 0;
+ 
+@@ -150,26 +339,26 @@ xfs_readlink(
+ 
+ int
+ xfs_symlink(
+-	xfs_inode_t		*dp,
++	struct xfs_inode	*dp,
+ 	struct xfs_name		*link_name,
+ 	const char		*target_path,
+ 	umode_t			mode,
+-	xfs_inode_t		**ipp)
++	struct xfs_inode	**ipp)
+ {
+-	xfs_mount_t		*mp = dp->i_mount;
+-	xfs_trans_t		*tp;
+-	xfs_inode_t		*ip;
+-	int			error;
++	struct xfs_mount	*mp = dp->i_mount;
++	struct xfs_trans	*tp = NULL;
++	struct xfs_inode	*ip = NULL;
++	int			error = 0;
+ 	int			pathlen;
+-	xfs_bmap_free_t		free_list;
++	struct xfs_bmap_free	free_list;
+ 	xfs_fsblock_t		first_block;
+-	bool                    unlock_dp_on_error = false;
++	bool			unlock_dp_on_error = false;
+ 	uint			cancel_flags;
+ 	int			committed;
+ 	xfs_fileoff_t		first_fsb;
+ 	xfs_filblks_t		fs_blocks;
+ 	int			nmaps;
+-	xfs_bmbt_irec_t		mval[XFS_SYMLINK_MAPS];
++	struct xfs_bmbt_irec	mval[XFS_SYMLINK_MAPS];
+ 	xfs_daddr_t		d;
+ 	const char		*cur_chunk;
+ 	int			byte_cnt;
+@@ -180,9 +369,6 @@ xfs_symlink(
+ 	uint			resblks;
+ 
+ 	*ipp = NULL;
+-	error = 0;
+-	ip = NULL;
+-	tp = NULL;
+ 
+ 	trace_xfs_symlink(dp, link_name);
+ 
+@@ -307,6 +493,8 @@ xfs_symlink(
+ 		xfs_trans_log_inode(tp, ip, XFS_ILOG_DDATA | XFS_ILOG_CORE);
+ 
+ 	} else {
++		int	offset;
++
+ 		first_fsb = 0;
+ 		nmaps = XFS_SYMLINK_MAPS;
+ 
+@@ -322,7 +510,10 @@ xfs_symlink(
+ 		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ 
+ 		cur_chunk = target_path;
++		offset = 0;
+ 		for (n = 0; n < nmaps; n++) {
++			char *buf;
++
+ 			d = XFS_FSB_TO_DADDR(mp, mval[n].br_startblock);
+ 			byte_cnt = XFS_FSB_TO_B(mp, mval[n].br_blockcount);
+ 			bp = xfs_trans_get_buf(tp, mp->m_ddev_targp, d,
+@@ -331,15 +522,25 @@ xfs_symlink(
+ 				error = ENOMEM;
+ 				goto error2;
  			}
--			xfs_dir2_data_check(dp, curbp);
-+			xfs_dir3_data_check(dp, curbp);
- 			curdb = newdb;
++			bp->b_ops = &xfs_symlink_buf_ops;
++
++			byte_cnt = XFS_SYMLINK_BUF_SPACE(mp, byte_cnt);
+ 			if (pathlen < byte_cnt) {
+ 				byte_cnt = pathlen;
+ 			}
+-			pathlen -= byte_cnt;
+ 
+-			memcpy(bp->b_addr, cur_chunk, byte_cnt);
++			buf = bp->b_addr;
++			buf += xfs_symlink_hdr_set(mp, ip->i_ino, offset,
++						   byte_cnt, bp);
++
++			memcpy(buf, cur_chunk, byte_cnt);
++
+ 			cur_chunk += byte_cnt;
++			pathlen -= byte_cnt;
++			offset += byte_cnt;
+ 
+-			xfs_trans_log_buf(tp, bp, 0, byte_cnt - 1);
++			xfs_trans_log_buf(tp, bp, 0, (buf + byte_cnt - 1) -
++							(char *)bp->b_addr);
  		}
- 		/*
-@@ -787,7 +787,7 @@ xfs_dir2_leafn_lookup_for_entry(
- 			state->extrablk.index = (int)((char *)dep -
- 							(char *)curbp->b_addr);
- 			state->extrablk.magic = XFS_DIR2_DATA_MAGIC;
--			curbp->b_ops = &xfs_dir2_data_buf_ops;
-+			curbp->b_ops = &xfs_dir3_data_buf_ops;
- 			if (cmp == XFS_CMP_EXACT)
- 				return XFS_ERROR(EEXIST);
- 		}
-@@ -802,7 +802,7 @@ xfs_dir2_leafn_lookup_for_entry(
- 			state->extrablk.index = -1;
- 			state->extrablk.blkno = curdb;
- 			state->extrablk.magic = XFS_DIR2_DATA_MAGIC;
--			curbp->b_ops = &xfs_dir2_data_buf_ops;
-+			curbp->b_ops = &xfs_dir3_data_buf_ops;
- 		} else {
- 			/* If the curbp is not the CI match block, drop it */
- 			if (state->extrablk.bp != curbp)
-@@ -1152,6 +1152,7 @@ xfs_dir2_leafn_remove(
- 	int			needlog;	/* need to log data header */
- 	int			needscan;	/* need to rescan data frees */
- 	xfs_trans_t		*tp;		/* transaction pointer */
-+	struct xfs_dir2_data_free *bf;		/* bestfree table */
- 
- 	trace_xfs_dir2_leafn_remove(args, index);
- 
-@@ -1186,7 +1187,8 @@ xfs_dir2_leafn_remove(
- 	dbp = dblk->bp;
- 	hdr = dbp->b_addr;
- 	dep = (xfs_dir2_data_entry_t *)((char *)hdr + off);
--	longest = be16_to_cpu(hdr->bestfree[0].length);
-+	bf = xfs_dir3_data_bestfree_p(hdr);
-+	longest = be16_to_cpu(bf[0].length);
- 	needlog = needscan = 0;
- 	xfs_dir2_data_make_free(tp, dbp, off,
- 		xfs_dir2_data_entsize(dep->namelen), &needlog, &needscan);
-@@ -1198,12 +1200,12 @@ xfs_dir2_leafn_remove(
- 		xfs_dir2_data_freescan(mp, hdr, &needlog);
- 	if (needlog)
- 		xfs_dir2_data_log_header(tp, dbp);
--	xfs_dir2_data_check(dp, dbp);
-+	xfs_dir3_data_check(dp, dbp);
- 	/*
- 	 * If the longest data block freespace changes, need to update
- 	 * the corresponding freeblock entry.
- 	 */
--	if (longest < be16_to_cpu(hdr->bestfree[0].length)) {
-+	if (longest < be16_to_cpu(bf[0].length)) {
- 		int		error;		/* error return value */
- 		struct xfs_buf	*fbp;		/* freeblock buffer */
- 		xfs_dir2_db_t	fdb;		/* freeblock block number */
-@@ -1232,12 +1234,13 @@ xfs_dir2_leafn_remove(
- 		 * Calculate which entry we need to fix.
- 		 */
- 		findex = xfs_dir2_db_to_fdindex(mp, db);
--		longest = be16_to_cpu(hdr->bestfree[0].length);
-+		longest = be16_to_cpu(bf[0].length);
- 		/*
- 		 * If the data block is now empty we can get rid of it
- 		 * (usually).
- 		 */
--		if (longest == mp->m_dirblksize - (uint)sizeof(*hdr)) {
-+		if (longest == mp->m_dirblksize -
-+			       xfs_dir3_data_entry_offset(hdr)) {
- 			/*
- 			 * Try to punch out the data block.
- 			 */
-@@ -1611,6 +1614,7 @@ xfs_dir2_node_addname_int(
- 	xfs_trans_t		*tp;		/* transaction pointer */
- 	__be16			*bests;
- 	struct xfs_dir3_icfree_hdr freehdr;
-+	struct xfs_dir2_data_free *bf;
- 
- 	dp = args->dp;
- 	mp = dp->i_mount;
-@@ -1868,7 +1872,8 @@ xfs_dir2_node_addname_int(
- 		 * change again.
- 		 */
- 		hdr = dbp->b_addr;
--		bests[findex] = hdr->bestfree[0].length;
-+		bf = xfs_dir3_data_bestfree_p(hdr);
-+		bests[findex] = bf[0].length;
- 		logfree = 1;
  	}
+ 
+@@ -392,7 +593,7 @@ xfs_symlink(
+ /*
+  * Free a symlink that has blocks associated with it.
+  */
+-STATIC int
++int
+ xfs_inactive_symlink_rmt(
+ 	xfs_inode_t	*ip,
+ 	xfs_trans_t	**tpp)
+@@ -438,12 +639,12 @@ xfs_inactive_symlink_rmt(
+ 	done = 0;
+ 	xfs_bmap_init(&free_list, &first_block);
+ 	nmaps = ARRAY_SIZE(mval);
+-	error = xfs_bmapi_read(ip, 0, XFS_B_TO_FSB(mp, size),
++	error = xfs_bmapi_read(ip, 0, xfs_symlink_blocks(mp, size),
+ 				mval, &nmaps, 0);
+ 	if (error)
+ 		goto error0;
  	/*
-@@ -1884,19 +1889,20 @@ xfs_dir2_node_addname_int(
- 		/*
- 		 * Read the data block in.
- 		 */
--		error = xfs_dir2_data_read(tp, dp, xfs_dir2_db_to_da(mp, dbno),
-+		error = xfs_dir3_data_read(tp, dp, xfs_dir2_db_to_da(mp, dbno),
- 					   -1, &dbp);
- 		if (error)
- 			return error;
- 		hdr = dbp->b_addr;
-+		bf = xfs_dir3_data_bestfree_p(hdr);
- 		logfree = 0;
- 	}
--	ASSERT(be16_to_cpu(hdr->bestfree[0].length) >= length);
-+	ASSERT(be16_to_cpu(bf[0].length) >= length);
- 	/*
- 	 * Point to the existing unused space.
+-	 * Invalidate the block(s).
++	 * Invalidate the block(s). No validation is done.
  	 */
- 	dup = (xfs_dir2_data_unused_t *)
--	      ((char *)hdr + be16_to_cpu(hdr->bestfree[0].offset));
-+	      ((char *)hdr + be16_to_cpu(bf[0].offset));
- 	needscan = needlog = 0;
- 	/*
- 	 * Mark the first part of the unused space, inuse for us.
-@@ -1928,8 +1934,8 @@ xfs_dir2_node_addname_int(
- 	 * If the freespace entry is now wrong, update it.
- 	 */
- 	bests = xfs_dir3_free_bests_p(mp, free); /* gcc is so stupid */
--	if (be16_to_cpu(bests[findex]) != be16_to_cpu(hdr->bestfree[0].length)) {
--		bests[findex] = hdr->bestfree[0].length;
-+	if (be16_to_cpu(bests[findex]) != be16_to_cpu(bf[0].length)) {
-+		bests[findex] = bf[0].length;
- 		logfree = 1;
- 	}
- 	/*
-@@ -2119,7 +2125,8 @@ xfs_dir2_node_replace(
- 		 * Point to the data entry.
- 		 */
- 		hdr = state->extrablk.bp->b_addr;
--		ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC));
-+		ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC) ||
-+		       hdr->magic == cpu_to_be32(XFS_DIR3_DATA_MAGIC));
- 		dep = (xfs_dir2_data_entry_t *)
- 		      ((char *)hdr +
- 		       xfs_dir2_dataptr_to_off(state->mp, be32_to_cpu(lep->address)));
-diff --git a/fs/xfs/xfs_dir2_priv.h b/fs/xfs/xfs_dir2_priv.h
-index e6f2e0a..910e644 100644
---- a/fs/xfs/xfs_dir2_priv.h
-+++ b/fs/xfs/xfs_dir2_priv.h
-@@ -43,17 +43,17 @@ extern int xfs_dir2_leaf_to_block(struct xfs_da_args *args,
+ 	for (i = 0; i < nmaps; i++) {
+ 		bp = xfs_trans_get_buf(tp, mp->m_ddev_targp,
+diff --git a/fs/xfs/xfs_symlink.h b/fs/xfs/xfs_symlink.h
+index 07bdabc..b39398d 100644
+--- a/fs/xfs/xfs_symlink.h
++++ b/fs/xfs/xfs_symlink.h
+@@ -17,16 +17,44 @@
+ #ifndef __XFS_SYMLINK_H
+ #define __XFS_SYMLINK_H 1
  
- /* xfs_dir2_data.c */
- #ifdef DEBUG
--#define	xfs_dir2_data_check(dp,bp) __xfs_dir2_data_check(dp, bp);
-+#define	xfs_dir3_data_check(dp,bp) __xfs_dir3_data_check(dp, bp);
- #else
--#define	xfs_dir2_data_check(dp,bp)
-+#define	xfs_dir3_data_check(dp,bp)
- #endif
++struct xfs_mount;
++struct xfs_trans;
++struct xfs_inode;
++struct xfs_buf;
++struct xfs_ifork;
++struct xfs_name;
++
++#define XFS_SYMLINK_MAGIC	0x58534c4d	/* XSLM */
++
++struct xfs_dsymlink_hdr {
++	__be32	sl_magic;
++	__be32	sl_offset;
++	__be32	sl_bytes;
++	__be32	sl_crc;
++	uuid_t	sl_uuid;
++	__be64	sl_owner;
++	__be64	sl_blkno;
++	__be64	sl_lsn;
++};
++
+ /*
+  * The maximum pathlen is 1024 bytes. Since the minimum file system
+- * blocksize is 512 bytes, we can get a max of 2 extents back from
+- * bmapi.
++ * blocksize is 512 bytes, we can get a max of 3 extents back from
++ * bmapi when crc headers are taken into account.
+  */
+-#define XFS_SYMLINK_MAPS 2
++#define XFS_SYMLINK_MAPS 3
++
++#define XFS_SYMLINK_BUF_SPACE(mp, bufsize)	\
++	((bufsize) - (xfs_sb_version_hascrc(&(mp)->m_sb) ? \
++			sizeof(struct xfs_dsymlink_hdr) : 0))
++
++int xfs_symlink_blocks(struct xfs_mount *mp, int pathlen);
  
--extern const struct xfs_buf_ops xfs_dir2_data_buf_ops;
-+extern const struct xfs_buf_ops xfs_dir3_data_buf_ops;
+ void xfs_symlink_local_to_remote(struct xfs_trans *tp, struct xfs_buf *bp,
+ 				 struct xfs_inode *ip, struct xfs_ifork *ifp);
  
--extern int __xfs_dir2_data_check(struct xfs_inode *dp, struct xfs_buf *bp);
--extern int xfs_dir2_data_read(struct xfs_trans *tp, struct xfs_inode *dp,
-+extern int __xfs_dir3_data_check(struct xfs_inode *dp, struct xfs_buf *bp);
-+extern int xfs_dir3_data_read(struct xfs_trans *tp, struct xfs_inode *dp,
- 		xfs_dablk_t bno, xfs_daddr_t mapped_bno, struct xfs_buf **bpp);
--extern int xfs_dir2_data_readahead(struct xfs_trans *tp, struct xfs_inode *dp,
-+extern int xfs_dir3_data_readahead(struct xfs_trans *tp, struct xfs_inode *dp,
- 		xfs_dablk_t bno, xfs_daddr_t mapped_bno);
++extern const struct xfs_buf_ops xfs_symlink_buf_ops;
++
+ #ifdef __KERNEL__
  
- extern struct xfs_dir2_data_free *
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index f03bf1a..cf6eacd 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -893,7 +893,7 @@ xfs_dir_open(
- 	 */
- 	mode = xfs_ilock_map_shared(ip);
- 	if (ip->i_d.di_nextents > 0)
--		xfs_dir2_data_readahead(NULL, ip, 0, -1);
-+		xfs_dir3_data_readahead(NULL, ip, 0, -1);
- 	xfs_iunlock(ip, mode);
- 	return 0;
- }
+ int xfs_symlink(struct xfs_inode *dp, struct xfs_name *link_name,
 -- 
 1.7.10.4
 
