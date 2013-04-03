@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5E10529E13
-	for <xfs@oss.sgi.com>; Wed,  3 Apr 2013 00:12:46 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 5B68929E21
+	for <xfs@oss.sgi.com>; Wed,  3 Apr 2013 00:12:49 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4CD788F804C
-	for <xfs@oss.sgi.com>; Tue,  2 Apr 2013 22:12:46 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id BF524AC002
+	for <xfs@oss.sgi.com>; Tue,  2 Apr 2013 22:12:48 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	MJ8F3W2FR2ioWyii for <xfs@oss.sgi.com>;
-	Tue, 02 Apr 2013 22:12:44 -0700 (PDT)
+	XKcFKfgjqtZqbdtg for <xfs@oss.sgi.com>;
+	Tue, 02 Apr 2013 22:12:45 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UNFzW-0000MJ-Ru
+	(envelope-from <dave@fromorbit.com>) id 1UNFzW-0000MI-PT
 	for xfs@oss.sgi.com; Wed, 03 Apr 2013 16:12:10 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UNFzH-0005CR-On
+	(envelope-from <dave@disappointment.disaster>) id 1UNFzH-0005CF-LN
 	for xfs@oss.sgi.com; Wed, 03 Apr 2013 16:11:55 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 22/22] xfs: implement extended feature masks
-Date: Wed,  3 Apr 2013 16:11:32 +1100
-Message-Id: <1364965892-19623-23-git-send-email-david@fromorbit.com>
+Subject: [PATCH 19/22] xfs: add buffer types to directory and attribute buffers
+Date: Wed,  3 Apr 2013 16:11:29 +1100
+Message-Id: <1364965892-19623-20-git-send-email-david@fromorbit.com>
 In-Reply-To: <1364965892-19623-1-git-send-email-david@fromorbit.com>
 References: <1364965892-19623-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,251 +38,854 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The version 5 superblock has extended feature masks for compatible,
-incompatible and read-only compatible feature sets. Implement the
-masking and mount-time checking for these feature masks.
+Add buffer types to the buffer log items so that log recovery can
+validate the buffers and calculate CRCs correctly after the buffers
+are recovered.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_log_recover.c |   19 +++++++++++++
- fs/xfs/xfs_mount.c       |   48 +++++++++++++++++++++++++++----
- fs/xfs/xfs_sb.h          |   70 ++++++++++++++++++++++++++++++++++++++++++++--
- 3 files changed, 129 insertions(+), 8 deletions(-)
+ fs/xfs/xfs_attr_leaf.c   |    9 +-
+ fs/xfs/xfs_attr_remote.h |    2 +
+ fs/xfs/xfs_buf_item.h    |   18 +++-
+ fs/xfs/xfs_da_btree.c    |   46 ++++++++-
+ fs/xfs/xfs_da_btree.h    |    2 +
+ fs/xfs/xfs_dir2_block.c  |   12 ++-
+ fs/xfs/xfs_dir2_data.c   |    8 +-
+ fs/xfs/xfs_dir2_leaf.c   |   26 ++++-
+ fs/xfs/xfs_dir2_node.c   |   15 ++-
+ fs/xfs/xfs_dir2_priv.h   |    2 +
+ fs/xfs/xfs_log_recover.c |  254 ++++++++++++++++++++++++++++++++--------------
+ fs/xfs/xfs_trans.h       |    2 +
+ fs/xfs/xfs_trans_buf.c   |   17 ++++
+ 13 files changed, 323 insertions(+), 90 deletions(-)
 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 5303b3d..35ac504 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -3959,6 +3959,25 @@ xlog_recover(
- 			return error;
- 		}
- 
-+		/*
-+		 * Version 5 superblock log feature mask validation. We know the
-+		 * log is dirty so check if there are any unknown log features
-+		 * in what we need to recover. If there are unknown features
-+		 * (e.g. unsupported transactions, then simply reject the
-+		 * attempt at recovery before touching anything.
-+		 */
-+		if (XFS_SB_VERSION_NUM(&log->l_mp->m_sb) == XFS_SB_VERSION_5 &&
-+		    xfs_sb_has_incompat_log_feature(&log->l_mp->m_sb,
-+					XFS_SB_FEAT_INCOMPAT_LOG_UNKNOWN)) {
-+			xfs_warn(log->l_mp,
-+"Superblock has unknown incompatible log features (0x%x) enabled.\n"
-+"The log can not be fully and/or safely recovered by this kernel.\n"
-+"Please recover the log on a kernel that supports the unknown features.",
-+				(log->l_mp->m_sb.sb_features_log_incompat &
-+					XFS_SB_FEAT_INCOMPAT_LOG_UNKNOWN));
-+			return EINVAL;
-+		}
+diff --git a/fs/xfs/xfs_attr_leaf.c b/fs/xfs/xfs_attr_leaf.c
+index a1cb746..7feaf3c 100644
+--- a/fs/xfs/xfs_attr_leaf.c
++++ b/fs/xfs/xfs_attr_leaf.c
+@@ -271,8 +271,13 @@ xfs_attr3_leaf_read(
+ 	xfs_daddr_t		mappedbno,
+ 	struct xfs_buf		**bpp)
+ {
+-	return xfs_da_read_buf(tp, dp, bno, mappedbno, bpp,
++	int			err;
 +
- 		xfs_notice(log->l_mp, "Starting recovery (logdev: %s)",
- 				log->l_mp->m_logname ? log->l_mp->m_logname
- 						     : "internal");
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 140136c..f6bfbd7 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -114,7 +114,9 @@ static const struct {
-     { offsetof(xfs_sb_t, sb_features_compat), 0 },
-     { offsetof(xfs_sb_t, sb_features_ro_compat), 0 },
-     { offsetof(xfs_sb_t, sb_features_incompat), 0 },
-+    { offsetof(xfs_sb_t, sb_features_log_incompat), 0 },
-     { offsetof(xfs_sb_t, sb_crc),	 0 },
-+    { offsetof(xfs_sb_t, sb_pad),	 0 },
-     { offsetof(xfs_sb_t, sb_pquotino),	 0 },
-     { offsetof(xfs_sb_t, sb_lsn),	 0 },
-     { sizeof(xfs_sb_t),			 0 }
-@@ -334,14 +336,45 @@ xfs_mount_validate_sb(
++	err = xfs_da_read_buf(tp, dp, bno, mappedbno, bpp,
+ 				XFS_ATTR_FORK, &xfs_attr3_leaf_buf_ops);
++	if (!err && tp)
++		xfs_trans_buf_set_type(tp, *bpp, XFS_BLF_ATTR_LEAF_BUF);
++	return err;
+ }
+ 
+ /*========================================================================
+@@ -1078,6 +1083,7 @@ xfs_attr3_leaf_to_node(
+ 		goto out;
+ 
+ 	/* copy leaf to new buffer, update identifiers */
++	xfs_trans_buf_set_type(args->trans, bp2, XFS_BLF_ATTR_LEAF_BUF);
+ 	bp2->b_ops = bp1->b_ops;
+ 	memcpy(bp2->b_addr, bp1->b_addr, XFS_LBSIZE(mp));
+ 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+@@ -1140,6 +1146,7 @@ xfs_attr3_leaf_create(
+ 	if (error)
+ 		return error;
+ 	bp->b_ops = &xfs_attr3_leaf_buf_ops;
++	xfs_trans_buf_set_type(args->trans, bp, XFS_BLF_ATTR_LEAF_BUF);
+ 	leaf = bp->b_addr;
+ 	memset(leaf, 0, XFS_LBSIZE(mp));
+ 
+diff --git a/fs/xfs/xfs_attr_remote.h b/fs/xfs/xfs_attr_remote.h
+index 0ca8d9a..c7cca60 100644
+--- a/fs/xfs/xfs_attr_remote.h
++++ b/fs/xfs/xfs_attr_remote.h
+@@ -37,6 +37,8 @@ struct xfs_attr3_rmt_hdr {
+ 	((bufsize) - (xfs_sb_version_hascrc(&(mp)->m_sb) ? \
+ 			sizeof(struct xfs_attr3_rmt_hdr) : 0))
+ 
++extern const struct xfs_buf_ops xfs_attr3_rmt_buf_ops;
++
+ int xfs_attr_rmtval_get(struct xfs_da_args *args);
+ int xfs_attr_rmtval_set(struct xfs_da_args *args);
+ int xfs_attr_rmtval_remove(struct xfs_da_args *args);
+diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
+index 09cab4e..640adcf 100644
+--- a/fs/xfs/xfs_buf_item.h
++++ b/fs/xfs/xfs_buf_item.h
+@@ -50,6 +50,14 @@ extern kmem_zone_t	*xfs_buf_item_zone;
+ #define XFS_BLF_AGI_BUF		(1<<8)
+ #define XFS_BLF_DINO_BUF	(1<<9)
+ #define XFS_BLF_SYMLINK_BUF	(1<<10)
++#define XFS_BLF_DIR_BLOCK_BUF	(1<<11)
++#define XFS_BLF_DIR_DATA_BUF	(1<<12)
++#define XFS_BLF_DIR_FREE_BUF	(1<<13)
++#define XFS_BLF_DIR_LEAF1_BUF	(1<<14)
++#define XFS_BLF_DIR_LEAFN_BUF	(1<<15)
++#define XFS_BLF_DA_NODE_BUF	(1<<16)
++#define XFS_BLF_ATTR_LEAF_BUF	(1<<17)
++#define XFS_BLF_ATTR_RMT_BUF	(1<<18)
+ 
+ #define XFS_BLF_TYPE_MASK	\
+ 		(XFS_BLF_UDQUOT_BUF | \
+@@ -60,7 +68,15 @@ extern kmem_zone_t	*xfs_buf_item_zone;
+ 		 XFS_BLF_AGFL_BUF | \
+ 		 XFS_BLF_AGI_BUF | \
+ 		 XFS_BLF_DINO_BUF | \
+-		 XFS_BLF_SYMLINK_BUF)
++		 XFS_BLF_SYMLINK_BUF | \
++		 XFS_BLF_DIR_BLOCK_BUF | \
++		 XFS_BLF_DIR_DATA_BUF | \
++		 XFS_BLF_DIR_FREE_BUF | \
++		 XFS_BLF_DIR_LEAF1_BUF | \
++		 XFS_BLF_DIR_LEAFN_BUF | \
++		 XFS_BLF_DA_NODE_BUF | \
++		 XFS_BLF_ATTR_LEAF_BUF | \
++		 XFS_BLF_ATTR_RMT_BUF)
+ 
+ #define	XFS_BLF_CHUNK		128
+ #define	XFS_BLF_SHIFT		7
+diff --git a/fs/xfs/xfs_da_btree.c b/fs/xfs/xfs_da_btree.c
+index 2b7c9f6..a78865e 100644
+--- a/fs/xfs/xfs_da_btree.c
++++ b/fs/xfs/xfs_da_btree.c
+@@ -292,7 +292,6 @@ const struct xfs_buf_ops xfs_da3_node_buf_ops = {
+ 	.verify_write = xfs_da3_node_write_verify,
+ };
+ 
+-
+ int
+ xfs_da3_node_read(
+ 	struct xfs_trans	*tp,
+@@ -302,8 +301,35 @@ xfs_da3_node_read(
+ 	struct xfs_buf		**bpp,
+ 	int			which_fork)
+ {
+-	return xfs_da_read_buf(tp, dp, bno, mappedbno, bpp,
++	int			err;
++
++	err = xfs_da_read_buf(tp, dp, bno, mappedbno, bpp,
+ 					which_fork, &xfs_da3_node_buf_ops);
++	if (!err && tp) {
++		struct xfs_da_blkinfo	*info = (*bpp)->b_addr;
++		int			type;
++
++		switch (be16_to_cpu(info->magic)) {
++		case XFS_DA3_NODE_MAGIC:
++		case XFS_DA_NODE_MAGIC:
++			type = XFS_BLF_DA_NODE_BUF;
++			break;
++		case XFS_ATTR_LEAF_MAGIC:
++		case XFS_ATTR3_LEAF_MAGIC:
++			type = XFS_BLF_ATTR_LEAF_BUF;
++			break;
++		case XFS_DIR2_LEAFN_MAGIC:
++		case XFS_DIR3_LEAFN_MAGIC:
++			type = XFS_BLF_DIR_LEAFN_BUF;
++			break;
++		default:
++			type = 0;
++			ASSERT(0);
++			break;
++		}
++		xfs_trans_buf_set_type(tp, *bpp, type);
++	}
++	return err;
+ }
+ 
+ /*========================================================================
+@@ -334,6 +360,8 @@ xfs_da3_node_create(
+ 	error = xfs_da_get_buf(tp, args->dp, blkno, -1, &bp, whichfork);
+ 	if (error)
+ 		return(error);
++	bp->b_ops = &xfs_da3_node_buf_ops;
++	xfs_trans_buf_set_type(tp, bp, XFS_BLF_DA_NODE_BUF);
+ 	node = bp->b_addr;
+ 
+ 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+@@ -352,7 +380,6 @@ xfs_da3_node_create(
+ 	xfs_trans_log_buf(tp, bp,
+ 		XFS_DA_LOGRANGE(node, &node->hdr, xfs_da3_node_hdr_size(node)));
+ 
+-	bp->b_ops = &xfs_da3_node_buf_ops;
+ 	*bpp = bp;
+ 	return(0);
+ }
+@@ -563,6 +590,12 @@ xfs_da3_root_split(
+ 		btree = xfs_da3_node_tree_p(oldroot);
+ 		size = (int)((char *)&btree[nodehdr.count] - (char *)oldroot);
+ 		level = nodehdr.level;
++
++		/*
++		 * we are about to copy oldroot to bp, so set up the type
++		 * of bp while we know exactly what it will be.
++		 */
++		xfs_trans_buf_set_type(tp, bp, XFS_BLF_DA_NODE_BUF);
+ 	} else {
+ 		struct xfs_dir3_icleaf_hdr leafhdr;
+ 		struct xfs_dir2_leaf_entry *ents;
+@@ -575,6 +608,12 @@ xfs_da3_root_split(
+ 		       leafhdr.magic == XFS_DIR3_LEAFN_MAGIC);
+ 		size = (int)((char *)&ents[leafhdr.count] - (char *)leaf);
+ 		level = 0;
++
++		/*
++		 * we are about to copy oldroot to bp, so set up the type
++		 * of bp while we know exactly what it will be.
++		 */
++		xfs_trans_buf_set_type(tp, bp, XFS_BLF_DIR_LEAFN_BUF);
  	}
  
  	/*
--	 * Do not allow Version 5 superblocks to mount right now, even though
--	 * support is in place. We need to implement the proper feature masks
--	 * first.
-+	 * Version 5 superblock feature mask validation. Reject combinations the
-+	 * kernel cannot support up front before checking anything else.
+@@ -1090,6 +1129,7 @@ xfs_da3_root_join(
  	 */
- 	if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) {
- 		xfs_alert(mp,
--	"Version 5 superblock detected. Experimental support not yet enabled!");
--		return XFS_ERROR(EINVAL);
-+"Version 5 superblock detected. This kernel has EXPERIMENTAL support enabled!\n"
-+"Use of these features in this kernel is at your own risk!");
-+
-+		if (xfs_sb_has_compat_feature(sbp,
-+					XFS_SB_FEAT_COMPAT_UNKNOWN)) {
-+			xfs_warn(mp,
-+"Superblock has unknown compatible features (0x%x) enabled.\n"
-+"Using a more recent kernel is recommended.",
-+				(sbp->sb_features_compat &
-+						XFS_SB_FEAT_COMPAT_UNKNOWN));
-+		}
-+
-+		if (xfs_sb_has_ro_compat_feature(sbp,
-+					XFS_SB_FEAT_RO_COMPAT_UNKNOWN)) {
-+			xfs_alert(mp,
-+"Superblock has unknown read-only compatible features (0x%x) enabled.",
-+				(sbp->sb_features_ro_compat &
-+						XFS_SB_FEAT_RO_COMPAT_UNKNOWN));
-+			if (!(mp->m_flags & XFS_MOUNT_RDONLY)) {
-+				xfs_warn(mp,
-+"Attempted to mount read-only compatible filesystem read-write.\n"
-+"Filesystem can only be safely mounted read only.");
-+				return XFS_ERROR(EINVAL);
-+			}
-+		}
-+		if (xfs_sb_has_incompat_feature(sbp,
-+					XFS_SB_FEAT_INCOMPAT_UNKNOWN)) {
-+			xfs_warn(mp,
-+"Superblock has unknown incompatible features (0x%x) enabled.\n"
-+"Filesystem can not be safely mounted by this kernel.",
-+				(sbp->sb_features_incompat &
-+						XFS_SB_FEAT_INCOMPAT_UNKNOWN));
-+			return XFS_ERROR(EINVAL);
-+		}
- 	}
+ 	memcpy(root_blk->bp->b_addr, bp->b_addr, state->blocksize);
+ 	root_blk->bp->b_ops = bp->b_ops;
++	xfs_trans_buf_copy_type(root_blk->bp, bp);
+ 	if (oldroothdr.magic == XFS_DA3_NODE_MAGIC) {
+ 		struct xfs_da3_blkinfo *da3 = root_blk->bp->b_addr;
+ 		da3->blkno = cpu_to_be64(root_blk->bp->b_bn);
+diff --git a/fs/xfs/xfs_da_btree.h b/fs/xfs/xfs_da_btree.h
+index 0e8182c..6fb3371 100644
+--- a/fs/xfs/xfs_da_btree.h
++++ b/fs/xfs/xfs_da_btree.h
+@@ -301,6 +301,8 @@ int	xfs_da3_node_read(struct xfs_trans *tp, struct xfs_inode *dp,
+ 			 xfs_dablk_t bno, xfs_daddr_t mappedbno,
+ 			 struct xfs_buf **bpp, int which_fork);
  
- 	if (unlikely(
-@@ -580,6 +613,9 @@ xfs_sb_from_disk(
- 	to->sb_features_compat = be32_to_cpu(from->sb_features_compat);
- 	to->sb_features_ro_compat = be32_to_cpu(from->sb_features_ro_compat);
- 	to->sb_features_incompat = be32_to_cpu(from->sb_features_incompat);
-+	to->sb_features_log_incompat =
-+				be32_to_cpu(from->sb_features_log_incompat);
-+	to->sb_pad = 0;
- 	to->sb_pquotino = be64_to_cpu(from->sb_pquotino);
- 	to->sb_lsn = be64_to_cpu(from->sb_lsn);
++extern const struct xfs_buf_ops xfs_da3_node_buf_ops;
++
+ /*
+  * Utility routines.
+  */
+diff --git a/fs/xfs/xfs_dir2_block.c b/fs/xfs/xfs_dir2_block.c
+index d2e445f..58816ec 100644
+--- a/fs/xfs/xfs_dir2_block.c
++++ b/fs/xfs/xfs_dir2_block.c
+@@ -132,20 +132,26 @@ xfs_dir3_block_read(
+ 	struct xfs_buf		**bpp)
+ {
+ 	struct xfs_mount	*mp = dp->i_mount;
++	int			err;
+ 
+-	return xfs_da_read_buf(tp, dp, mp->m_dirdatablk, -1, bpp,
++	err = xfs_da_read_buf(tp, dp, mp->m_dirdatablk, -1, bpp,
+ 				XFS_DATA_FORK, &xfs_dir3_block_buf_ops);
++	if (!err && tp)
++		xfs_trans_buf_set_type(tp, *bpp, XFS_BLF_DIR_BLOCK_BUF);
++	return err;
  }
-@@ -786,7 +822,7 @@ reread:
- 	if (bp->b_error) {
- 		error = bp->b_error;
- 		if (loud)
--			xfs_warn(mp, "SB validate failed");
-+			xfs_warn(mp, "SB validate failed with error %d.", error);
- 		goto release_buf;
+ 
+ static void
+ xfs_dir3_block_init(
+ 	struct xfs_mount	*mp,
++	struct xfs_trans	*tp,
+ 	struct xfs_buf		*bp,
+ 	struct xfs_inode	*dp)
+ {
+ 	struct xfs_dir3_blk_hdr *hdr3 = bp->b_addr;
+ 
+ 	bp->b_ops = &xfs_dir3_block_buf_ops;
++	xfs_trans_buf_set_type(tp, bp, XFS_BLF_DIR_BLOCK_BUF);
+ 
+ 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+ 		memset(hdr3, 0, sizeof(*hdr3));
+@@ -1080,7 +1086,7 @@ xfs_dir2_leaf_to_block(
+ 	/*
+ 	 * Start converting it to block form.
+ 	 */
+-	xfs_dir3_block_init(mp, dbp, dp);
++	xfs_dir3_block_init(mp, tp, dbp, dp);
+ 
+ 	needlog = 1;
+ 	needscan = 0;
+@@ -1209,7 +1215,7 @@ xfs_dir2_sf_to_block(
+ 		kmem_free(sfp);
+ 		return error;
  	}
+-	xfs_dir3_block_init(mp, bp, dp);
++	xfs_dir3_block_init(mp, tp, bp, dp);
+ 	hdr = bp->b_addr;
  
-diff --git a/fs/xfs/xfs_sb.h b/fs/xfs/xfs_sb.h
-index 457fefa..2de58a8 100644
---- a/fs/xfs/xfs_sb.h
-+++ b/fs/xfs/xfs_sb.h
-@@ -168,8 +168,10 @@ typedef struct xfs_sb {
- 	__uint32_t	sb_features_compat;
- 	__uint32_t	sb_features_ro_compat;
- 	__uint32_t	sb_features_incompat;
-+	__uint32_t	sb_features_log_incompat;
+ 	/*
+diff --git a/fs/xfs/xfs_dir2_data.c b/fs/xfs/xfs_dir2_data.c
+index 78320df..5e0c711 100644
+--- a/fs/xfs/xfs_dir2_data.c
++++ b/fs/xfs/xfs_dir2_data.c
+@@ -301,8 +301,13 @@ xfs_dir3_data_read(
+ 	xfs_daddr_t		mapped_bno,
+ 	struct xfs_buf		**bpp)
+ {
+-	return xfs_da_read_buf(tp, dp, bno, mapped_bno, bpp,
++	int			err;
++
++	err = xfs_da_read_buf(tp, dp, bno, mapped_bno, bpp,
+ 				XFS_DATA_FORK, &xfs_dir3_data_buf_ops);
++	if (!err && tp)
++		xfs_trans_buf_set_type(tp, *bpp, XFS_BLF_DIR_DATA_BUF);
++	return err;
+ }
  
- 	__uint32_t	sb_crc;		/* superblock crc */
-+	__uint32_t	sb_pad;
+ int
+@@ -571,6 +576,7 @@ xfs_dir3_data_init(
+ 	if (error)
+ 		return error;
+ 	bp->b_ops = &xfs_dir3_data_buf_ops;
++	xfs_trans_buf_set_type(tp, bp, XFS_BLF_DIR_DATA_BUF);
  
- 	xfs_ino_t	sb_pquotino;	/* project quota inode */
- 	xfs_lsn_t	sb_lsn;		/* last write sequence */
-@@ -250,8 +252,10 @@ typedef struct xfs_dsb {
- 	__be32		sb_features_compat;
- 	__be32		sb_features_ro_compat;
- 	__be32		sb_features_incompat;
-+	__be32		sb_features_log_incompat;
+ 	/*
+ 	 * Initialize the header.
+diff --git a/fs/xfs/xfs_dir2_leaf.c b/fs/xfs/xfs_dir2_leaf.c
+index acdc50e..209962e 100644
+--- a/fs/xfs/xfs_dir2_leaf.c
++++ b/fs/xfs/xfs_dir2_leaf.c
+@@ -279,7 +279,7 @@ xfs_dir3_leafn_write_verify(
+ 	__write_verify(bp, XFS_DIR2_LEAFN_MAGIC);
+ }
  
- 	__le32		sb_crc;		/* superblock crc */
-+	__be32		sb_pad;
+-static const struct xfs_buf_ops xfs_dir3_leaf1_buf_ops = {
++const struct xfs_buf_ops xfs_dir3_leaf1_buf_ops = {
+ 	.verify_read = xfs_dir3_leaf1_read_verify,
+ 	.verify_write = xfs_dir3_leaf1_write_verify,
+ };
+@@ -297,8 +297,13 @@ xfs_dir3_leaf_read(
+ 	xfs_daddr_t		mappedbno,
+ 	struct xfs_buf		**bpp)
+ {
+-	return xfs_da_read_buf(tp, dp, fbno, mappedbno, bpp,
++	int			err;
++
++	err = xfs_da_read_buf(tp, dp, fbno, mappedbno, bpp,
+ 				XFS_DATA_FORK, &xfs_dir3_leaf1_buf_ops);
++	if (!err && tp)
++		xfs_trans_buf_set_type(tp, *bpp, XFS_BLF_DIR_LEAF1_BUF);
++	return err;
+ }
  
- 	__be64		sb_pquotino;	/* project quota inode */
- 	__be64		sb_lsn;		/* last write sequence */
-@@ -276,7 +280,8 @@ typedef enum {
- 	XFS_SBS_INOALIGNMT, XFS_SBS_UNIT, XFS_SBS_WIDTH, XFS_SBS_DIRBLKLOG,
- 	XFS_SBS_LOGSECTLOG, XFS_SBS_LOGSECTSIZE, XFS_SBS_LOGSUNIT,
- 	XFS_SBS_FEATURES2, XFS_SBS_BAD_FEATURES2, XFS_SBS_FEATURES_COMPAT,
--	XFS_SBS_FEATURES_RO_COMPAT, XFS_SBS_FEATURES_INCOMPAT, XFS_SBS_CRC,
-+	XFS_SBS_FEATURES_RO_COMPAT, XFS_SBS_FEATURES_INCOMPAT,
-+	XFS_SBS_FEATURES_LOG_INCOMPAT, XFS_SBS_CRC, XFS_SBS_PAD,
- 	XFS_SBS_PQUOTINO, XFS_SBS_LSN,
- 	XFS_SBS_FIELDCOUNT
- } xfs_sb_field_t;
-@@ -306,6 +311,7 @@ typedef enum {
- #define XFS_SB_FEATURES_COMPAT	XFS_SB_MVAL(FEATURES_COMPAT)
- #define XFS_SB_FEATURES_RO_COMPAT XFS_SB_MVAL(FEATURES_RO_COMPAT)
- #define XFS_SB_FEATURES_INCOMPAT XFS_SB_MVAL(FEATURES_INCOMPAT)
-+#define XFS_SB_FEATURES_LOG_INCOMPAT XFS_SB_MVAL(FEATURES_LOG_INCOMPAT)
- #define XFS_SB_CRC		XFS_SB_MVAL(CRC)
- #define XFS_SB_PQUOTINO		XFS_SB_MVAL(PQUOTINO)
- #define	XFS_SB_NUM_BITS		((int)XFS_SBS_FIELDCOUNT)
-@@ -316,7 +322,8 @@ typedef enum {
- 	 XFS_SB_QFLAGS | XFS_SB_SHARED_VN | XFS_SB_UNIT | XFS_SB_WIDTH | \
- 	 XFS_SB_ICOUNT | XFS_SB_IFREE | XFS_SB_FDBLOCKS | XFS_SB_FEATURES2 | \
- 	 XFS_SB_BAD_FEATURES2 | XFS_SB_FEATURES_COMPAT | \
--	 XFS_SB_FEATURES_RO_COMPAT | XFS_SB_FEATURES_INCOMPAT | XFS_SB_PQUOTINO)
-+	 XFS_SB_FEATURES_RO_COMPAT | XFS_SB_FEATURES_INCOMPAT | \
-+	 XFS_SB_FEATURES_LOG_INCOMPAT | XFS_SB_PQUOTINO)
- 
+ int
+@@ -309,8 +314,13 @@ xfs_dir3_leafn_read(
+ 	xfs_daddr_t		mappedbno,
+ 	struct xfs_buf		**bpp)
+ {
+-	return xfs_da_read_buf(tp, dp, fbno, mappedbno, bpp,
++	int			err;
++
++	err = xfs_da_read_buf(tp, dp, fbno, mappedbno, bpp,
+ 				XFS_DATA_FORK, &xfs_dir3_leafn_buf_ops);
++	if (!err && tp)
++		xfs_trans_buf_set_type(tp, *bpp, XFS_BLF_DIR_LEAFN_BUF);
++	return err;
+ }
  
  /*
-@@ -552,6 +559,65 @@ static inline int xfs_sb_version_hascrc(xfs_sb_t *sbp)
- 	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5;
+@@ -319,6 +329,7 @@ xfs_dir3_leafn_read(
+ static void
+ xfs_dir3_leaf_init(
+ 	struct xfs_mount	*mp,
++	struct xfs_trans	*tp,
+ 	struct xfs_buf		*bp,
+ 	xfs_ino_t		owner,
+ 	__uint16_t		type)
+@@ -353,8 +364,11 @@ xfs_dir3_leaf_init(
+ 		ltp = xfs_dir2_leaf_tail_p(mp, leaf);
+ 		ltp->bestcount = 0;
+ 		bp->b_ops = &xfs_dir3_leaf1_buf_ops;
+-	} else
++		xfs_trans_buf_set_type(tp, bp, XFS_BLF_DIR_LEAF1_BUF);
++	} else {
+ 		bp->b_ops = &xfs_dir3_leafn_buf_ops;
++		xfs_trans_buf_set_type(tp, bp, XFS_BLF_DIR_LEAFN_BUF);
++	}
  }
  
+ int
+@@ -379,7 +393,7 @@ xfs_dir3_leaf_get_buf(
+ 	if (error)
+ 		return error;
+ 
+-	xfs_dir3_leaf_init(mp, bp, dp->i_ino, magic);
++	xfs_dir3_leaf_init(mp, tp, bp, dp->i_ino, magic);
+ 	xfs_dir3_leaf_log_header(tp, bp);
+ 	if (magic == XFS_DIR2_LEAF1_MAGIC)
+ 		xfs_dir3_leaf_log_tail(tp, bp);
+@@ -475,6 +489,7 @@ xfs_dir2_block_to_leaf(
+ 	 * Fix up the block header, make it a data block.
+ 	 */
+ 	dbp->b_ops = &xfs_dir3_data_buf_ops;
++	xfs_trans_buf_set_type(tp, dbp, XFS_BLF_DIR_DATA_BUF);
+ 	if (hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC))
+ 		hdr->magic = cpu_to_be32(XFS_DIR2_DATA_MAGIC);
+ 	else
+@@ -2183,6 +2198,7 @@ xfs_dir2_node_to_leaf(
+ 		xfs_dir3_leaf_compact(args, &leafhdr, lbp);
+ 
+ 	lbp->b_ops = &xfs_dir3_leaf1_buf_ops;
++	xfs_trans_buf_set_type(tp, lbp, XFS_BLF_DIR_LEAF1_BUF);
+ 	leafhdr.magic = (leafhdr.magic == XFS_DIR2_LEAFN_MAGIC)
+ 					? XFS_DIR2_LEAF1_MAGIC
+ 					: XFS_DIR3_LEAF1_MAGIC;
+diff --git a/fs/xfs/xfs_dir2_node.c b/fs/xfs/xfs_dir2_node.c
+index 876991f..d2e19fb 100644
+--- a/fs/xfs/xfs_dir2_node.c
++++ b/fs/xfs/xfs_dir2_node.c
+@@ -147,7 +147,7 @@ xfs_dir3_free_write_verify(
+ 	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length), XFS_DIR3_FREE_CRC_OFF);
+ }
+ 
+-static const struct xfs_buf_ops xfs_dir3_free_buf_ops = {
++const struct xfs_buf_ops xfs_dir3_free_buf_ops = {
+ 	.verify_read = xfs_dir3_free_read_verify,
+ 	.verify_write = xfs_dir3_free_write_verify,
+ };
+@@ -161,8 +161,15 @@ __xfs_dir3_free_read(
+ 	xfs_daddr_t		mappedbno,
+ 	struct xfs_buf		**bpp)
+ {
+-	return xfs_da_read_buf(tp, dp, fbno, mappedbno, bpp,
++	int			err;
++
++	err = xfs_da_read_buf(tp, dp, fbno, mappedbno, bpp,
+ 				XFS_DATA_FORK, &xfs_dir3_free_buf_ops);
++
++	/* try read returns without an error or *bpp if it lands in a hole */
++	if (!err && tp && *bpp)
++		xfs_trans_buf_set_type(tp, *bpp, XFS_BLF_DIR_FREE_BUF);
++	return err;
+ }
+ 
+ int
+@@ -249,6 +256,7 @@ xfs_dir3_free_get_buf(
+ 	if (error)
+ 		return error;
+ 
++	xfs_trans_buf_set_type(tp, bp, XFS_BLF_DIR_FREE_BUF);
+ 	bp->b_ops = &xfs_dir3_free_buf_ops;
+ 
+ 	/*
+@@ -396,6 +404,7 @@ xfs_dir2_leaf_to_node(
+ 	else
+ 		leaf->hdr.info.magic = cpu_to_be16(XFS_DIR3_LEAFN_MAGIC);
+ 	lbp->b_ops = &xfs_dir3_leafn_buf_ops;
++	xfs_trans_buf_set_type(tp, lbp, XFS_BLF_DIR_LEAFN_BUF);
+ 	xfs_dir3_leaf_log_header(tp, lbp);
+ 	xfs_dir3_leaf_check(mp, lbp);
+ 	return 0;
+@@ -807,6 +816,7 @@ xfs_dir2_leafn_lookup_for_entry(
+ 							(char *)curbp->b_addr);
+ 			state->extrablk.magic = XFS_DIR2_DATA_MAGIC;
+ 			curbp->b_ops = &xfs_dir3_data_buf_ops;
++			xfs_trans_buf_set_type(tp, curbp, XFS_BLF_DIR_DATA_BUF);
+ 			if (cmp == XFS_CMP_EXACT)
+ 				return XFS_ERROR(EEXIST);
+ 		}
+@@ -821,6 +831,7 @@ xfs_dir2_leafn_lookup_for_entry(
+ 			state->extrablk.blkno = curdb;
+ 			state->extrablk.magic = XFS_DIR2_DATA_MAGIC;
+ 			curbp->b_ops = &xfs_dir3_data_buf_ops;
++			xfs_trans_buf_set_type(tp, curbp, XFS_BLF_DIR_DATA_BUF);
+ 		} else {
+ 			/* If the curbp is not the CI match block, drop it */
+ 			if (state->extrablk.bp != curbp)
+diff --git a/fs/xfs/xfs_dir2_priv.h b/fs/xfs/xfs_dir2_priv.h
+index 932565d..7cf573c 100644
+--- a/fs/xfs/xfs_dir2_priv.h
++++ b/fs/xfs/xfs_dir2_priv.h
+@@ -49,6 +49,7 @@ extern int xfs_dir2_leaf_to_block(struct xfs_da_args *args,
+ #endif
+ 
+ extern const struct xfs_buf_ops xfs_dir3_data_buf_ops;
++extern const struct xfs_buf_ops xfs_dir3_free_buf_ops;
+ 
+ extern int __xfs_dir3_data_check(struct xfs_inode *dp, struct xfs_buf *bp);
+ extern int xfs_dir3_data_read(struct xfs_trans *tp, struct xfs_inode *dp,
+@@ -77,6 +78,7 @@ extern void xfs_dir2_data_use_free(struct xfs_trans *tp, struct xfs_buf *bp,
+ 		xfs_dir2_data_aoff_t len, int *needlogp, int *needscanp);
+ 
+ /* xfs_dir2_leaf.c */
++extern const struct xfs_buf_ops xfs_dir3_leaf1_buf_ops;
+ extern const struct xfs_buf_ops xfs_dir3_leafn_buf_ops;
+ 
+ extern int xfs_dir3_leafn_read(struct xfs_trans *tp, struct xfs_inode *dp,
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index d1292fd..00727bc 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -45,7 +45,14 @@
+ #include "xfs_cksum.h"
+ #include "xfs_trace.h"
+ #include "xfs_icache.h"
++
++/* Need all the magic numbers and buffer ops structures from these headers */
+ #include "xfs_symlink.h"
++#include "xfs_da_btree.h"
++#include "xfs_dir2_format.h"
++#include "xfs_dir2_priv.h"
++#include "xfs_attr_leaf.h"
++#include "xfs_attr_remote.h"
+ 
+ STATIC int
+ xlog_find_zeroed(
+@@ -1860,81 +1867,30 @@ xlog_recover_do_inode_buffer(
+ }
+ 
+ /*
+- * Perform a 'normal' buffer recovery.  Each logged region of the
+- * buffer should be copied over the corresponding region in the
+- * given buffer.  The bitmap in the buf log format structure indicates
+- * where to place the logged data.
++ * Validate the recovered buffer is of the correct type and attach the
++ * appropriate buffer operations to them for writeback. Magic numbers are in a
++ * few places:
++ *	the first 16 bits of the buffer (inode buffer, dquot buffer),
++ *	the first 32 bits of the buffer (most blocks),
++ *	inside a struct xfs_da_blkinfo at the start of the buffer.
+  */
+-STATIC void
+-xlog_recover_do_reg_buffer(
++static void
++xlog_recovery_validate_buf_type(
+ 	struct xfs_mount	*mp,
+-	xlog_recover_item_t	*item,
+ 	struct xfs_buf		*bp,
+ 	xfs_buf_log_format_t	*buf_f)
+ {
+-	int			i;
+-	int			bit;
+-	int			nbits;
+-	int                     error;
+-
+-	trace_xfs_log_recover_buf_reg_buf(mp->m_log, buf_f);
+-
+-	bit = 0;
+-	i = 1;  /* 0 is the buf format structure */
+-	while (1) {
+-		bit = xfs_next_bit(buf_f->blf_data_map,
+-				   buf_f->blf_map_size, bit);
+-		if (bit == -1)
+-			break;
+-		nbits = xfs_contig_bits(buf_f->blf_data_map,
+-					buf_f->blf_map_size, bit);
+-		ASSERT(nbits > 0);
+-		ASSERT(item->ri_buf[i].i_addr != NULL);
+-		ASSERT(item->ri_buf[i].i_len % XFS_BLF_CHUNK == 0);
+-		ASSERT(BBTOB(bp->b_io_length) >=
+-		       ((uint)bit << XFS_BLF_SHIFT) + (nbits << XFS_BLF_SHIFT));
+-
+-		/*
+-		 * Do a sanity check if this is a dquot buffer. Just checking
+-		 * the first dquot in the buffer should do. XXXThis is
+-		 * probably a good thing to do for other buf types also.
+-		 */
+-		error = 0;
+-		if (buf_f->blf_flags &
+-		   (XFS_BLF_UDQUOT_BUF|XFS_BLF_PDQUOT_BUF|XFS_BLF_GDQUOT_BUF)) {
+-			if (item->ri_buf[i].i_addr == NULL) {
+-				xfs_alert(mp,
+-					"XFS: NULL dquot in %s.", __func__);
+-				goto next;
+-			}
+-			if (item->ri_buf[i].i_len < sizeof(xfs_disk_dquot_t)) {
+-				xfs_alert(mp,
+-					"XFS: dquot too small (%d) in %s.",
+-					item->ri_buf[i].i_len, __func__);
+-				goto next;
+-			}
+-			error = xfs_qm_dqcheck(mp, item->ri_buf[i].i_addr,
+-					       -1, 0, XFS_QMOPT_DOWARN,
+-					       "dquot_buf_recover");
+-			if (error)
+-				goto next;
+-		}
+-
+-		memcpy(xfs_buf_offset(bp,
+-			(uint)bit << XFS_BLF_SHIFT),	/* dest */
+-			item->ri_buf[i].i_addr,		/* source */
+-			nbits<<XFS_BLF_SHIFT);		/* length */
+- next:
+-		i++;
+-		bit += nbits;
+-	}
+-
+-	/* Shouldn't be any more regions */
+-	ASSERT(i == item->ri_total);
+-
++	struct xfs_da_blkinfo	*info = bp->b_addr;
++	__uint32_t		magic32;
++	__uint16_t		magic16;
++	__uint16_t		magicda;
++
++	magic32 = be32_to_cpu(*(__be32 *)bp->b_addr);
++	magic16 = be16_to_cpu(*(__be16*)bp->b_addr);
++	magicda = be16_to_cpu(info->magic);
+ 	switch (buf_f->blf_flags & XFS_BLF_TYPE_MASK) {
+ 	case XFS_BLF_BTREE_BUF:
+-		switch (be32_to_cpu(*(__be32 *)bp->b_addr)) {
++		switch (magic32) {
+ 		case XFS_ABTB_CRC_MAGIC:
+ 		case XFS_ABTC_CRC_MAGIC:
+ 		case XFS_ABTB_MAGIC:
+@@ -1956,7 +1912,7 @@ xlog_recover_do_reg_buffer(
+ 		}
+ 		break;
+ 	case XFS_BLF_AGF_BUF:
+-		if (*(__be32 *)bp->b_addr != cpu_to_be32(XFS_AGF_MAGIC)) {
++		if (magic32 != XFS_AGF_MAGIC) {
+ 			xfs_warn(mp, "Bad AGF block magic!");
+ 			ASSERT(0);
+ 			break;
+@@ -1966,7 +1922,7 @@ xlog_recover_do_reg_buffer(
+ 	case XFS_BLF_AGFL_BUF:
+ 		if (!xfs_sb_version_hascrc(&mp->m_sb))
+ 			break;
+-		if (*(__be32 *)bp->b_addr != cpu_to_be32(XFS_AGFL_MAGIC)) {
++		if (magic32 != XFS_AGFL_MAGIC) {
+ 			xfs_warn(mp, "Bad AGFL block magic!");
+ 			ASSERT(0);
+ 			break;
+@@ -1974,7 +1930,7 @@ xlog_recover_do_reg_buffer(
+ 		bp->b_ops = &xfs_agfl_buf_ops;
+ 		break;
+ 	case XFS_BLF_AGI_BUF:
+-		if (*(__be32 *)bp->b_addr != cpu_to_be32(XFS_AGI_MAGIC)) {
++		if (magic32 != XFS_AGI_MAGIC) {
+ 			xfs_warn(mp, "Bad AGI block magic!");
+ 			ASSERT(0);
+ 			break;
+@@ -1984,7 +1940,7 @@ xlog_recover_do_reg_buffer(
+ 	case XFS_BLF_UDQUOT_BUF:
+ 	case XFS_BLF_PDQUOT_BUF:
+ 	case XFS_BLF_GDQUOT_BUF:
+-		if (*(__be16 *)bp->b_addr != cpu_to_be16(XFS_DQUOT_MAGIC)) {
++		if (magic16 != XFS_DQUOT_MAGIC) {
+ 			xfs_warn(mp, "Bad DQUOT block magic!");
+ 			ASSERT(0);
+ 			break;
+@@ -1996,7 +1952,7 @@ xlog_recover_do_reg_buffer(
+ 		 * we get here with inode allocation buffers, not buffers that
+ 		 * track unlinked list changes.
+ 		 */
+-		if (*(__be16 *)bp->b_addr != cpu_to_be16(XFS_DINODE_MAGIC)) {
++		if (magic16 != XFS_DINODE_MAGIC) {
+ 			xfs_warn(mp, "Bad INODE block magic!");
+ 			ASSERT(0);
+ 			break;
+@@ -2004,19 +1960,169 @@ xlog_recover_do_reg_buffer(
+ 		bp->b_ops = &xfs_inode_buf_ops;
+ 		break;
+ 	case XFS_BLF_SYMLINK_BUF:
+-		if (*(__be32 *)bp->b_addr != cpu_to_be32(XFS_SYMLINK_MAGIC)) {
++		if (magic32 != XFS_SYMLINK_MAGIC) {
+ 			xfs_warn(mp, "Bad symlink block magic!");
+ 			ASSERT(0);
+ 			break;
+ 		}
+ 		bp->b_ops = &xfs_symlink_buf_ops;
+ 		break;
++	case XFS_BLF_DIR_BLOCK_BUF:
++		if (magic32 != XFS_DIR2_BLOCK_MAGIC &&
++		    magic32 != XFS_DIR3_BLOCK_MAGIC) {
++			xfs_warn(mp, "Bad dir block magic!");
++			ASSERT(0);
++			break;
++		}
++		bp->b_ops = &xfs_dir3_block_buf_ops;
++		break;
++	case XFS_BLF_DIR_DATA_BUF:
++		if (magic32 != XFS_DIR2_DATA_MAGIC &&
++		    magic32 != XFS_DIR3_DATA_MAGIC) {
++			xfs_warn(mp, "Bad dir data magic!");
++			ASSERT(0);
++			break;
++		}
++		bp->b_ops = &xfs_dir3_data_buf_ops;
++		break;
++	case XFS_BLF_DIR_FREE_BUF:
++		if (magic32 != XFS_DIR2_FREE_MAGIC &&
++		    magic32 != XFS_DIR3_FREE_MAGIC) {
++			xfs_warn(mp, "Bad dir3 free magic!");
++			ASSERT(0);
++			break;
++		}
++		bp->b_ops = &xfs_dir3_free_buf_ops;
++		break;
++	case XFS_BLF_DIR_LEAF1_BUF:
++		if (magicda != XFS_DIR2_LEAF1_MAGIC &&
++		    magicda != XFS_DIR3_LEAF1_MAGIC) {
++			xfs_warn(mp, "Bad dir leaf1 magic!");
++			ASSERT(0);
++			break;
++		}
++		bp->b_ops = &xfs_dir3_leaf1_buf_ops;
++		break;
++	case XFS_BLF_DIR_LEAFN_BUF:
++		if (magicda != XFS_DIR2_LEAFN_MAGIC &&
++		    magicda != XFS_DIR3_LEAFN_MAGIC) {
++			xfs_warn(mp, "Bad dir leafn magic!");
++			ASSERT(0);
++			break;
++		}
++		bp->b_ops = &xfs_dir3_leafn_buf_ops;
++		break;
++	case XFS_BLF_DA_NODE_BUF:
++		if (magicda != XFS_DA_NODE_MAGIC &&
++		    magicda != XFS_DA3_NODE_MAGIC) {
++			xfs_warn(mp, "Bad da node magic!");
++			ASSERT(0);
++			break;
++		}
++		bp->b_ops = &xfs_da3_node_buf_ops;
++		break;
++	case XFS_BLF_ATTR_LEAF_BUF:
++		if (magicda != XFS_ATTR_LEAF_MAGIC &&
++		    magicda != XFS_ATTR3_LEAF_MAGIC) {
++			xfs_warn(mp, "Bad attr leaf magic!");
++			ASSERT(0);
++			break;
++		}
++		bp->b_ops = &xfs_attr3_leaf_buf_ops;
++		break;
++	case XFS_BLF_ATTR_RMT_BUF:
++		if (!xfs_sb_version_hascrc(&mp->m_sb))
++			break;
++		if (magicda != XFS_ATTR3_RMT_MAGIC) {
++			xfs_warn(mp, "Bad attr remote magic!");
++			ASSERT(0);
++			break;
++		}
++		bp->b_ops = &xfs_attr3_rmt_buf_ops;
++		break;
+ 	default:
+ 		break;
+ 	}
+ }
+ 
+ /*
++ * Perform a 'normal' buffer recovery.  Each logged region of the
++ * buffer should be copied over the corresponding region in the
++ * given buffer.  The bitmap in the buf log format structure indicates
++ * where to place the logged data.
++ */
++STATIC void
++xlog_recover_do_reg_buffer(
++	struct xfs_mount	*mp,
++	xlog_recover_item_t	*item,
++	struct xfs_buf		*bp,
++	xfs_buf_log_format_t	*buf_f)
++{
++	int			i;
++	int			bit;
++	int			nbits;
++	int                     error;
++
++	trace_xfs_log_recover_buf_reg_buf(mp->m_log, buf_f);
++
++	bit = 0;
++	i = 1;  /* 0 is the buf format structure */
++	while (1) {
++		bit = xfs_next_bit(buf_f->blf_data_map,
++				   buf_f->blf_map_size, bit);
++		if (bit == -1)
++			break;
++		nbits = xfs_contig_bits(buf_f->blf_data_map,
++					buf_f->blf_map_size, bit);
++		ASSERT(nbits > 0);
++		ASSERT(item->ri_buf[i].i_addr != NULL);
++		ASSERT(item->ri_buf[i].i_len % XFS_BLF_CHUNK == 0);
++		ASSERT(BBTOB(bp->b_io_length) >=
++		       ((uint)bit << XFS_BLF_SHIFT) + (nbits << XFS_BLF_SHIFT));
++
++		/*
++		 * Do a sanity check if this is a dquot buffer. Just checking
++		 * the first dquot in the buffer should do. XXXThis is
++		 * probably a good thing to do for other buf types also.
++		 */
++		error = 0;
++		if (buf_f->blf_flags &
++		   (XFS_BLF_UDQUOT_BUF|XFS_BLF_PDQUOT_BUF|XFS_BLF_GDQUOT_BUF)) {
++			if (item->ri_buf[i].i_addr == NULL) {
++				xfs_alert(mp,
++					"XFS: NULL dquot in %s.", __func__);
++				goto next;
++			}
++			if (item->ri_buf[i].i_len < sizeof(xfs_disk_dquot_t)) {
++				xfs_alert(mp,
++					"XFS: dquot too small (%d) in %s.",
++					item->ri_buf[i].i_len, __func__);
++				goto next;
++			}
++			error = xfs_qm_dqcheck(mp, item->ri_buf[i].i_addr,
++					       -1, 0, XFS_QMOPT_DOWARN,
++					       "dquot_buf_recover");
++			if (error)
++				goto next;
++		}
++
++		memcpy(xfs_buf_offset(bp,
++			(uint)bit << XFS_BLF_SHIFT),	/* dest */
++			item->ri_buf[i].i_addr,		/* source */
++			nbits<<XFS_BLF_SHIFT);		/* length */
++ next:
++		i++;
++		bit += nbits;
++	}
++
++	/* Shouldn't be any more regions */
++	ASSERT(i == item->ri_total);
++
++	xlog_recovery_validate_buf_type(mp, bp, buf_f);
++
++}
 +
 +/*
-+ * Extended v5 superblock feature masks. These are to be used for new v5
-+ * superblock features only.
-+ *
-+ * Compat features are new features that old kernels will not notice or affect
-+ * and so can mount read-write without issues.
-+ *
-+ * RO-Compat (read only) are features that old kernels can read but will break
-+ * if they write. Hence only read-only mounts of such filesystems are allowed on
-+ * kernels that don't support the feature bit.
-+ *
-+ * InCompat features are features which old kernels will not understand and so
-+ * must not mount.
-+ *
-+ * Log-InCompat features are for changes to log formats or new transactions that
-+ * can't be replayed on older kernels. The fields are set when the filesystem is
-+ * mounted, and a clean unmount clears the fields.
-+ */
-+#define XFS_SB_FEAT_COMPAT_ALL 0
-+#define XFS_SB_FEAT_COMPAT_UNKNOWN	~XFS_SB_FEAT_COMPAT_ALL
-+static inline bool
-+xfs_sb_has_compat_feature(
-+	struct xfs_sb	*sbp,
-+	__uint32_t	feature)
-+{
-+	return (sbp->sb_features_compat & feature) != 0;
-+}
+  * Do some primitive error checking on ondisk dquot data structures.
+  */
+ int
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index 1b04fe5..fa78a3f 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -507,6 +507,8 @@ void		xfs_trans_dquot_buf(xfs_trans_t *, struct xfs_buf *, uint);
+ void		xfs_trans_inode_alloc_buf(xfs_trans_t *, struct xfs_buf *);
+ void		xfs_trans_buf_set_type(struct xfs_trans *, struct xfs_buf *,
+ 				       uint);
++void		xfs_trans_buf_copy_type(struct xfs_buf *dst_bp,
++					struct xfs_buf *src_bp);
+ void		xfs_trans_ichgtime(struct xfs_trans *, struct xfs_inode *, int);
+ void		xfs_trans_ijoin(struct xfs_trans *, struct xfs_inode *, uint);
+ void		xfs_trans_log_buf(xfs_trans_t *, struct xfs_buf *, uint, uint);
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index 8a0f6af..40871bf 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -768,6 +768,9 @@ xfs_trans_buf_set_type(
+ {
+ 	struct xfs_buf_log_item	*bip = bp->b_fspriv;
+ 
++	if (!tp)
++		return;
 +
-+#define XFS_SB_FEAT_RO_COMPAT_ALL 0
-+#define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
-+static inline bool
-+xfs_sb_has_ro_compat_feature(
-+	struct xfs_sb	*sbp,
-+	__uint32_t	feature)
+ 	ASSERT(bp->b_transp == tp);
+ 	ASSERT(bip != NULL);
+ 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
+@@ -777,6 +780,20 @@ xfs_trans_buf_set_type(
+ 	bip->__bli_format.blf_flags |= type;
+ }
+ 
++void
++xfs_trans_buf_copy_type(
++	struct xfs_buf		*dst_bp,
++	struct xfs_buf		*src_bp)
 +{
-+	return (sbp->sb_features_ro_compat & feature) != 0;
-+}
++	struct xfs_buf_log_item	*sbip = src_bp->b_fspriv;
++	struct xfs_buf_log_item	*dbip = dst_bp->b_fspriv;
++	uint			type;
 +
-+#define XFS_SB_FEAT_INCOMPAT_ALL 0
-+#define XFS_SB_FEAT_INCOMPAT_UNKNOWN	~XFS_SB_FEAT_INCOMPAT_ALL
-+static inline bool
-+xfs_sb_has_incompat_feature(
-+	struct xfs_sb	*sbp,
-+	__uint32_t	feature)
-+{
-+	return (sbp->sb_features_incompat & feature) != 0;
-+}
-+
-+#define XFS_SB_FEAT_INCOMPAT_LOG_ALL 0
-+#define XFS_SB_FEAT_INCOMPAT_LOG_UNKNOWN	~XFS_SB_FEAT_INCOMPAT_LOG_ALL
-+static inline bool
-+xfs_sb_has_incompat_log_feature(
-+	struct xfs_sb	*sbp,
-+	__uint32_t	feature)
-+{
-+	return (sbp->sb_features_log_incompat & feature) != 0;
++	type = sbip->__bli_format.blf_flags & XFS_BLF_TYPE_MASK;
++	dbip->__bli_format.blf_flags &= ~XFS_BLF_TYPE_MASK;
++	dbip->__bli_format.blf_flags |= type;
 +}
 +
  /*
-  * end of superblock version macros
-  */
+  * Similar to xfs_trans_inode_buf(), this marks the buffer as a cluster of
+  * dquots. However, unlike in inode buffer recovery, dquot buffers get
 -- 
 1.7.10.4
 
