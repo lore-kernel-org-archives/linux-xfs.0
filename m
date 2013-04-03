@@ -1,32 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 95C7E7FAB
-	for <xfs@oss.sgi.com>; Wed,  3 Apr 2013 09:26:11 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 581258F8049
-	for <xfs@oss.sgi.com>; Wed,  3 Apr 2013 07:26:08 -0700 (PDT)
-Received: from mail-ve0-f175.google.com (mail-ve0-f175.google.com
-	[209.85.128.175]) by cuda.sgi.com with ESMTP id
-	dbcFjULMN5eSYCU9 (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 03 Apr 2013 07:26:06 -0700 (PDT)
-Received: by mail-ve0-f175.google.com with SMTP id pb11so1699958veb.6
-	for <xfs@oss.sgi.com>; Wed, 03 Apr 2013 07:26:05 -0700 (PDT)
-Message-ID: <515C3BF3.60601@binghamton.edu>
-Date: Wed, 03 Apr 2013 10:25:55 -0400
-From: Dave Hall <kdhall@binghamton.edu>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 700E67FAB
+	for <xfs@oss.sgi.com>; Wed,  3 Apr 2013 10:41:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id DB96AAC001
+	for <xfs@oss.sgi.com>; Wed,  3 Apr 2013 08:41:25 -0700 (PDT)
+Received: from cdptpa-omtalb.mail.rr.com (cdptpa-omtalb.mail.rr.com
+	[75.180.132.120]) by cuda.sgi.com with ESMTP id
+	iGVZ85ljtGyGWlsY for <xfs@oss.sgi.com>;
+	Wed, 03 Apr 2013 08:41:20 -0700 (PDT)
+Message-ID: <515C4D9D.10103@ubuntu.com>
+Date: Wed, 03 Apr 2013 11:41:17 -0400
+From: Phillip Susi <psusi@ubuntu.com>
 MIME-Version: 1.0
-Subject: Re: xfs_fsr, sunit, and swidth
-References: <5141C1FC.4060209@hardwarefreak.com>
-	<5141C8C1.2080903@hardwarefreak.com>
-	<5141E5CF.10101@binghamton.edu>
-	<5142AE40.6040408@hardwarefreak.com>
-	<20130315114538.GF6369@dastard>
-	<5143F94C.1020708@hardwarefreak.com>
-	<20130316072126.GG6369@dastard> <515082C3.2000006@binghamton.edu>
-	<515361B5.8050603@hardwarefreak.com>
-	<5155F2B2.1010308@binghamton.edu> <20130331012231.GJ6369@dastard>
-In-Reply-To: <20130331012231.GJ6369@dastard>
+Subject: Re: Loopback device hung [was Re: xfs deadlock on 3.9-rc5 running
+	xfstests case #78]
+References: <1462091996.435156.1364882416199.JavaMail.root@redhat.com>
+	<247719576.438259.1364882929749.JavaMail.root@redhat.com>
+	<20130402070537.GP6369@dastard> <20130402071937.GC3670@kernel.dk>
+	<20130402073035.GD3670@kernel.dk>
+	<14055702.547701.1364891947331.JavaMail.root@redhat.com>
+	<20130402090047.GF3670@kernel.dk>
+	<985125161.581860.1364895066584.JavaMail.root@redhat.com>
+	<20130402094834.GA4667@kernel.dk> <20130403114142.GP4667@kernel.dk>
+In-Reply-To: <20130403114142.GP4667@kernel.dk>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,75 +32,51 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: stan@hardwarefreak.com, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: LKML <linux-kernel@vger.kernel.org>, CAI Qian <caiqian@redhat.com>, xfs@oss.sgi.com
 
-So, assuming entropy has reached critical mass and that there is no easy 
-fix for this physical file system, what would happen if I replicated 
-this data to a new disk array?  When I say 'replicate', I'm not talking 
-about xfs_dump.  I'm talking about running a series of cp -al/rsync 
-operations (or maybe rsync with --link-dest) that will precisely 
-reproduce the linked data on my current array.  All of the inodes would 
-be re-allocated.  There wouldn't be any (or at least not many) deletes.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-I am hoping that if I do this the inode fragmentation will be 
-significantly reduced on the target as compared to the source.  Of 
-course over time it may re-fragment, but with two arrays I can always 
-wipe one and reload it.
+On 4/3/2013 7:41 AM, Jens Axboe wrote:
+>> Thanks for testing! I don't particularly like this stuff in
+>> loop, though. It's quite nasty and depends on other behaviour. It
+>> would be prettier if we just had rescan_partitions() do the right
+>> thing, and only drop partitions and not rescan if NO_PART_SCAN is
+>> set.
+>> 
+>> Ala the below, dropping the loop change and implementing that
+>> change in the core code. Phillip, can you check whether this does
+>> the right thing for your bug too?
+> 
+> Phillip? I'm going to revert the loop change asap, so if you want
+> this fixed for 3.10, it's about that time to test it out.
 
--Dave
+I have not tested it yet, but I am pretty sure it won't work.  It
+looks like the patch changes the BLKRRPART path to go ahead and remove
+existing partitions when GENHD_FL_NO_PARTSCAN is set.  loop doesn't
+issue the BLKRRPART ioctl when !LO_FLAGS_PARTSCAN so this won't help.
+ I think loop needs to set GENHD_FL_NO_PARTSCAN and then issue the
+ioctl regardless of the LO_FLAGS_PARTSCAN flag to get the partitions
+to be removed.  I will try to test tonight.
 
-Dave Hall
-Binghamton University
-kdhall@binghamton.edu
-607-760-2328 (Cell)
-607-777-4641 (Office)
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (MingW32)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
 
-On 03/30/2013 09:22 PM, Dave Chinner wrote:
-> On Fri, Mar 29, 2013 at 03:59:46PM -0400, Dave Hall wrote:
->    
->> Dave, Stan,
->>
->> Here is the link for perf top -U:  http://pastebin.com/JYLXYWki.
->> The ag report is at http://pastebin.com/VzziSa4L.  Interestingly,
->> the backups ran fast a couple times this week.  Once under 9 hours.
->> Today it looks like it's running long again.
->>      
->      12.38%  [xfs]     [k] xfs_btree_get_rec
->      11.65%  [xfs]     [k] _xfs_buf_find
->      11.29%  [xfs]     [k] xfs_btree_increment
->       7.88%  [xfs]     [k] xfs_inobt_get_rec
->       5.40%  [kernel]  [k] intel_idle
->       4.13%  [xfs]     [k] xfs_btree_get_block
->       4.09%  [xfs]     [k] xfs_dialloc
->       3.21%  [xfs]     [k] xfs_btree_readahead
->       2.00%  [xfs]     [k] xfs_btree_rec_offset
->       1.50%  [xfs]     [k] xfs_btree_rec_addr
->
-> Inode allocation searches, looking for an inode near to the parent
-> directory.
->
-> Whatthis indicates is that you have lots of sparsely allocated inode
-> chunks on disk. i.e. each 64 indoe chunk has some free inodes in it,
-> and some used inodes. This is Likely due to random removal of inodes
-> as you delete old backups and link counts drop to zero. Because we
-> only index inodes on "allocated chunks", finding a chunk that has a
-> free inode can be like finding a needle in a haystack. There are
-> heuristics used to stop searches from consuming too much CPU, but it
-> still can be quite slow when you repeatedly hit those paths....
->
-> I don't have an answer that will magically speed things up for
-> you right now...
->
-> Cheers,
->
-> Dave.
->    
+iQEcBAEBAgAGBQJRXE2dAAoJEJrBOlT6nu75PM0IAIxVmuHdxLPtdtUNPqkU2a1r
+QanHb6F43qSbd7l37XlwYgzUlybVlntf1yvKGzh29g3QM0603sFqV1o+mbXd5LI3
+b+I5QrQJh90Vou9oVSAxz1Ps/AlZvxVIDv8bRwNhpXcMmaj0EN5R+6pU5L7KU2BU
+GFsvajssedFh3XnNskgkR3XlqevI7U7A8VqLRsswl7FJVu7R1s45xP/sQgBWgiUS
+P5viykwhje4OTKmu0D7bFKrOVx6O3gK7IHzdOwwT9aWRxuxL+Y9yfBF9nx/xZXkc
+I2G09w852KgYDVYUHgW3IfuRo4F+4Y7Mw0Klu4XX5OmEXhselIqhwwTmEKMvEns=
+=OLri
+-----END PGP SIGNATURE-----
 
 _______________________________________________
 xfs mailing list
