@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A3AEF29DFE
-	for <xfs@oss.sgi.com>; Fri,  5 Apr 2013 02:00:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 11A31AC00B
-	for <xfs@oss.sgi.com>; Fri,  5 Apr 2013 00:00:11 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	Rn2GrJmxV4PrhvAT for <xfs@oss.sgi.com>;
-	Fri, 05 Apr 2013 00:00:08 -0700 (PDT)
-Received: from dave by dastard with local (Exim 4.76)
-	(envelope-from <david@fromorbit.com>) id 1UO0d4-0006D1-4d
-	for xfs@oss.sgi.com; Fri, 05 Apr 2013 18:00:06 +1100
-Date: Fri, 5 Apr 2013 18:00:06 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 23/22] xfs: add metadata CRC documentation
-Message-ID: <20130405070006.GJ12011@dastard>
-References: <1364965892-19623-1-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E5C3929DFE
+	for <xfs@oss.sgi.com>; Fri,  5 Apr 2013 04:20:55 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id CDE1A8F804B
+	for <xfs@oss.sgi.com>; Fri,  5 Apr 2013 02:20:52 -0700 (PDT)
+Received: from mail.imspositioning.com (irker.arinity.org [199.193.255.250])
+	by cuda.sgi.com with ESMTP id zTDS9yqXD43w5Y6d for
+	<xfs@oss.sgi.com>; Fri, 05 Apr 2013 02:20:51 -0700 (PDT)
+Received: from imspositioning.com ([122.118.12.32]:2735)
+	by imspositioning.com with [XMail 1.27 ESMTP Server]
+	id <SEAED5D> for <xfs@oss.sgi.com> from <Sebastian@imspositioning.com>;
+	Fri, 5 Apr 2013 13:12:45 +0400
+Date: Fri, 5 Apr 2013 06:15:31 +0800
+From: "SD Machinery Taiwan" <Sebastian@imspositioning.com>
+Subject: SD Machinery Taiwan; Your only choice for the fully automation for
+	Double Sides Turning machining lathe , Save time and Man
+	=?utf-8?B?UG93ZXLigJRDb29wZXJhdGlvbg==?= wanted
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1364965892-19623-1-git-send-email-david@fromorbit.com>
+Message-Id: <20130405092052.87863106CF10@cuda.sgi.com>
+Reply-To: machine@imstargeting.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,384 +28,215 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============5230280019165049908=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: xfs <xfs@oss.sgi.com>
 
-xfs: add metadata CRC documentation
 
-From: Dave Chinner <dchinner@redhat.com>
+This is a multi-part message in MIME format
 
-Add some documentation about the self describing metadata and the
-code templates used to implement it.
+--===============5230280019165049908==
+Content-Type: multipart/alternative; boundary="=====y6Z_BKUvr69I7qbPeRxPAm5IHVxT5w_XId_====="
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- .../filesystems/xfs-self-describing-metadata.txt   |  352 ++++++++++++++++++++
- 1 file changed, 352 insertions(+)
 
-diff --git a/Documentation/filesystems/xfs-self-describing-metadata.txt b/Documentation/filesystems/xfs-self-describing-metadata.txt
-new file mode 100644
-index 0000000..da7edc9
---- /dev/null
-+++ b/Documentation/filesystems/xfs-self-describing-metadata.txt
-@@ -0,0 +1,352 @@
-+XFS Self Describing Metadata
-+----------------------------
-+
-+Introduction
-+------------
-+
-+The largest scalability problem facing XFS is not one of algorithmic
-+scalability, but of verification of the filesystem structure. Scalabilty of the
-+structures and indexes on disk and the algorithms for iterating them are
-+adequate for supporting PB scale filesystems with billions of inodes, however it
-+is this very scalability that causes the verification problem.
-+
-+Almost all metadata on XFS is dynamically allocated. The only fixed location
-+metadata is the allocation group headers (SB, AGF, AGFL and AGI), while all
-+other metadata structures need to be discovered by walking the filesystem
-+structure in different ways. While this is already done by userspace tools for
-+validating and repairing the structure, there are limits to what they can
-+verify, and this in turn limits the supportable size of an XFS filesystem.
-+
-+For example, it is entirely possible to manually use xfs_db and a bit of
-+scripting to analyse the structure of a 100TB filesystem when trying to
-+determine the root cause of a corruption problem, but it is still mainly a
-+manual task of verifying that things like single bit errors or misplaced writes
-+weren't the ultimate cause of a corruption event. It may take a few hours to a
-+few days to perform such forensic analysis, so for at this scale root cause
-+analysis is entirely possible.
-+
-+However, if we scale the filesystem up to 1PB, we now have 10x as much metadata
-+to analyse and so that analysis blows out towards weeks/months of forensic work.
-+Most of the analysis work is slow and tedious, so as the amount of analysis goes
-+up, the more likely that the cause will be lost in the noise.  Hence the primary
-+concern for supporting PB scale filesystems is minimising the time and effort
-+required for basic forensic analysis of the filesystem structure.
-+
-+
-+Self Describing Metadata
-+------------------------
-+
-+One of the problems with the current metadata format is that apart from the
-+magic number in the metadata block, we have no other way of identifying what it
-+is supposed to be. We can't even identify if it is the right place. Put simply,
-+you can't look at a single metadata block in isolation and say "yes, it is
-+supposed to be there and the contents are valid".
-+
-+Hence most of the time spent on forensic analysis is spent doing basic
-+verification of metadata values, looking for values that are in range (and hence
-+not detected by automated verification checks) but are not correct. Finding and
-+understanding how things like cross linked block lists (e.g. sibling
-+pointers in a btree end up with loops in them) are the key to understanding what
-+went wrong, but it is impossible to tell what order the blocks were linked into
-+each other or written to disk after the fact.
-+
-+Hence we need to record more information into the metadata to allow us to
-+quickly determine if the metadata is intact and can be ignored for the purpose
-+of analysis. We can't protect against every possible type of error, but we can
-+ensure that common types of errors are easily detectable.  Hence the concept of
-+self describing metadata.
-+
-+The first, fundamental requirement of self describing metadata is that the
-+metadata object contains some form of unique identifier in a well known
-+location. This allows us to identify the expected contents of the block and
-+hence parse and verify the metadata object. IF we can't independently identify
-+the type of metadata in the object, then the metadata doesn't describe itself
-+very well at all!
-+
-+Luckily, almost all XFS metadata has magic numbers embedded already - only the
-+AGFL, remote symlinks and remote attribute blocks do not contain identifying
-+magic numbers. Hence we can change the on-disk format of all these objects to
-+add more identifying information and detect this simply by changing the magic
-+numbers in the metadata objects. That is, if it has the current magic number,
-+the metadata isn't self identifying. If it contains a new magic number, it is
-+self identifying and we can do much more expansive automated verification of the
-+metadata object at runtime, during forensic analysis or repair.
-+
-+As a primary concern, self describing metadata needs to some form of overall
-+integrity checking. We cannot trust the metadata if we cannot verify that it has
-+not been changed as a result of external influences. Hence we need some form of
-+integrity check, and this is done by adding CRC32c validation to the metadata
-+block. If we can verify the block contains the metadata it was intended to
-+contain, a large amount of the manual verification work can be skipped.
-+
-+CRC32c was selected as metadata cannot be more than 64k in length in XFS and
-+hence a 32 bit CRC is more than sufficient to detect multi-bit errors in
-+metadata blocks. CRC32c is also now hardware accelerated on common CPUs so it is
-+fast. So while CRC32c is not the strongest of integrity checks that could be
-+used, it is more than sufficient for our needs and has relatively little
-+overhead. Adding support for larger integrity fields and/or algorithms does
-+really provide any extra value over CRC32c, but it does add a lot of complexity
-+and so there is no provision for changing the integrity checking mechanism.
-+
-+Self describing metadata needs to contain enough information so that the
-+metadata block can be verified as being in the correct place without needing to
-+look at any other metadata. This means it needs to contain location information.
-+Just adding a block number to the metadata is not sufficient to protect against
-+mis-directed writes - a write might be misdirected to the wrong LUN and so be
-+written to the "correct block" of the wrong filesystem. Hence location
-+information must contain a filesystem identifier as well as a block number.
-+
-+Another key information point in forensic analysis is knowing who the metadata
-+block belongs to. We already know it's type, it's location, that it's valid
-+and/or corrupted, and how long ago that it was last modified. Knowing the owner
-+of the block is important as it allows us to find other related metadata to
-+determine the scope of the corruption. For example, if we have a extent btree
-+object, we don't know what inode it belongs to and hence have to walk the entire
-+filesystem to find the owner of the block. Worse, the corruption could mean that
-+no owner can be found (i.e. it's an orphan block), and so without an owner field
-+in the metadata we have no idea of the scope of the corruption. If we have an
-+owner field in the metadata object, we can immediately do top down validation to
-+determine the scope of the problem.
-+
-+Different types of metadata have different owner identifiers. For example,
-+directory, attribute and extent tree blocks are all owned by an inode, whilst
-+freespace btree blocks are owned by an allocation group. Hence the size and
-+contents of the owner field are determined by the type of metadata object we are
-+looking at. For example, directories, extent maps and attributes are owned by
-+inodes, while freespace btree blocks are owned by a specific allocation group.
-+THe owner information can also identify misplaced writes (e.g. freespace btree
-+block written to the wrong AG).
-+
-+Self describing metadata also needs to contain some indication of when it was
-+written to the filesystem. One of the key information points when doing forensic
-+analysis is how recently the block was modified. Correlation of set of corrupted
-+metadata blocks based on modification times is important as it can indicate
-+whether the corruptions are related, whether there's been multiple corruption
-+events that lead to the eventual failure, and even whether there are corruptions
-+present that the run-time verification is not detecting.
-+
-+For example, we can determine whether a metadata object is supposed to be free
-+space or still allocated when it is still referenced by it's owner can be
-+determined by looking at when the free space btree block that contains the block
-+was last written compared to when the metadata object itself was last written.
-+If the free space block is more recent than the object and the objects owner,
-+then there is a very good chance that the block should have been removed from
-+it's owner.
-+
-+To provide this "written timestamp", each metadata block gets the Log Sequence
-+Number (LSN) of the most recent transaction it was modified on written into it.
-+This number will always increase over the life of the filesystem, and the only
-+thing that resets it is running xfs_repair on the filesystem. Further, by use of
-+the LSN we can tell if the corrupted metadata all belonged to the same log
-+checkpoint and hence have some idea of how much modification occurred between
-+the first and last instance of corrupt metadata on disk and, further, how much
-+modification occurred between the corruption being written and  when it was
-+detected.
-+
-+Runtime Validation
-+------------------
-+
-+Validation of self-describing metadata takes place at runtime in two places:
-+
-+	- immediately after a successful read from disk
-+	- immediately prior to write IO submission
-+
-+The verification is completely stateless - it is done independently of the
-+modification process, and seeks only to check that the metadata is what it says
-+it is and that the metadata fields are within bounds and internally consistent.
-+As such, we cannot catch all types of corruption that can occur within a block
-+as there may be certain limitations that operational state enforces of the
-+metadata, or there may be corruption of interblock relationships (e.g. corrupted
-+sibling pointer lists). Hence we still need stateful checking in the main code
-+body, but in general most of the per-field validation is handled by the
-+verifiers.
-+
-+For read verification, the caller needs to specify the expected type of metadata
-+that it should see, and the IO completion process verifies that the metadata
-+object matches what was expected. If the verification process fails, then it
-+marks the object being read as EFSCORRUPTED. The caller needs to catch this
-+error (same as for IO errors), and if it needs to take special action due to a
-+verification error it can do so by catching the EFSCORRUPTED error value. If we
-+need more discrimination of error type at higher levels, we can define new
-+error numbers for different errors as necessary.
-+
-+The first step in read verification is checking the magic number and determining
-+whether CRC validating is necessary. If it is, the CRC32c is caluclated and
-+compared against the value stored in the object itself. Once this is validated,
-+further checks are made against the location information, followed by extensive
-+object specific metadata validation. If any of these checks fail, then the
-+buffer is considered corrupt and the EFSCORRUPTED error is set appropriately.
-+
-+Write verification is the opposite of the read verification - first the object
-+is extensively verified and if it is OK we then update the LSN from the last
-+modification made to the object, After this, we calculate the CRC and insert it
-+into the object. Once this is done the write IO is allowed to continue. If any
-+error occurs during this process, the buffer is again marked with a EFSCORRUPTED
-+error for the higher layers to catch.
-+
-+Structures
-+----------
-+
-+A typical on-disk structure needs to contain the following information:
-+
-+struct xfs_ondisk_hdr {
-+        __be32  magic;		/* magic number */
-+        __be32  crc;		/* CRC, not logged */
-+        uuid_t  uuid;		/* filesystem identifier */
-+        __be64  owner;		/* parent object */
-+        __be64  blkno;		/* location on disk */
-+        __be64  lsn;		/* last modification in log, not logged */
-+};
-+
-+Depending on the metadata, this information may be part of a header stucture
-+separate to the metadata contents, or may be distributed through an existing
-+structure. The latter occurs with metadata that already contains some of this
-+information, such as the superblock and AG headers.
-+
-+Other metadata may have different formats for the information, but the same
-+level of information is generally provided. For example:
-+
-+	- short btree blocks have a 32 bit owner (ag number) and a 32 bit block
-+	  number for location. The two of these combined provide the same
-+	  information as @owner and @blkno in eh above structure, but using 8
-+	  bytes less space on disk.
-+
-+	- directory/attribute node blocks have a 16 bit magic number, and the
-+	  header that contains the magic number has other information in it as
-+	  well. hence the additional metadata headers change the overall format
-+	  of the metadata.
-+
-+A typical buffer read verifier is structured as follows:
-+
-+#define XFS_FOO_CRC_OFF		offsetof(struct xfs_ondisk_hdr, crc)
-+
-+static void
-+xfs_foo_read_verify(
-+	struct xfs_buf	*bp)
-+{
-+       struct xfs_mount *mp = bp->b_target->bt_mount;
-+
-+        if ((xfs_sb_version_hascrc(&mp->m_sb) &&
-+             !xfs_verify_cksum(bp->b_addr, BBTOB(bp->b_length),
-+					XFS_FOO_CRC_OFF)) ||
-+            !xfs_foo_verify(bp)) {
-+                XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
-+                xfs_buf_ioerror(bp, EFSCORRUPTED);
-+        }
-+}
-+
-+The code ensures that the CRC is only checked if the filesystem has CRCs enabled
-+by checking the superblock of the feature bit, and then if the CRC verifies OK
-+(or is not needed) it then verifies the actual contents of the block.
-+
-+The verifier function will take a couple of different forms, depending on
-+whether the magic number can be used to determine the format of the block. In
-+the case it can't, the code will is structured as follows:
-+
-+static bool
-+xfs_foo_verify(
-+	struct xfs_buf		*bp)
-+{
-+        struct xfs_mount	*mp = bp->b_target->bt_mount;
-+        struct xfs_ondisk_hdr	*hdr = bp->b_addr;
-+
-+        if (hdr->magic != cpu_to_be32(XFS_FOO_MAGIC))
-+                return false;
-+
-+        if (!xfs_sb_version_hascrc(&mp->m_sb)) {
-+		if (!uuid_equal(&hdr->uuid, &mp->m_sb.sb_uuid))
-+			return false;
-+		if (bp->b_bn != be64_to_cpu(hdr->blkno))
-+			return false;
-+		if (hdr->owner == 0)
-+			return false;
-+	}
-+
-+	/* object specific verification checks here */
-+
-+        return true;
-+}
-+
-+If there are different magic numbers for the different formats, the verifier
-+will look like:
-+
-+static bool
-+xfs_foo_verify(
-+	struct xfs_buf		*bp)
-+{
-+        struct xfs_mount	*mp = bp->b_target->bt_mount;
-+        struct xfs_ondisk_hdr	*hdr = bp->b_addr;
-+
-+        if (hdr->magic == cpu_to_be32(XFS_FOO_CRC_MAGIC)) {
-+		if (!uuid_equal(&hdr->uuid, &mp->m_sb.sb_uuid))
-+			return false;
-+		if (bp->b_bn != be64_to_cpu(hdr->blkno))
-+			return false;
-+		if (hdr->owner == 0)
-+			return false;
-+	} else if (hdr->magic != cpu_to_be32(XFS_FOO_MAGIC))
-+		return false;
-+
-+	/* object specific verification checks here */
-+
-+        return true;
-+}
-+
-+Write verifiers are very similar to the read verifiers, they just do things in
-+the opposite order to the read verifiers. A typical write verifier:
-+
-+static void
-+xfs_foo_write_verify(
-+	struct xfs_buf	*bp)
-+{
-+	struct xfs_mount	*mp = bp->b_target->bt_mount;
-+	struct xfs_buf_log_item	*bip = bp->b_fspriv;
-+
-+	if (!xfs_foo_verify(bp)) {
-+		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
-+		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+		return;
-+	}
-+
-+	if (!xfs_sb_version_hascrc(&mp->m_sb))
-+		return;
-+
-+
-+	if (bip) {
-+		struct xfs_ondisk_hdr	*hdr = bp->b_addr;
-+		hdr->lsn = cpu_to_be64(bip->bli_item.li_lsn);
-+	}
-+	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length), XFS_FOO_CRC_OFF);
-+}
-+
-+This will verify the internal structure of the metadata before we go any
-+further, detecting corruptions that have occurred as the metadata has been
-+modified in memory. If the metadata verifies OK, and CRCs are enabled, we then
-+update the LSN field (when it was last modified) and calculate the CRC on the
-+metadata. Once this is done, we can issue the IO.
-+
-+Inodes and Dquots
-+-----------------
-+
-+Inodes and dquots are special snowflakes. They have per-object CRC and
-+self-identifiers, but they are packed so that there are multiple objects per
-+buffer. Hence we do not use per-buffer verifiers to do the work of per-object
-+verification and CRC calculations. The per-buffer verifiers simply perform basic
-+identification of the buffer - that they contain inodes or dquots, and that
-+there are magic numbers in all the expected spots. All further CRC and
-+verification checks are done when each inode is read from or written back to the
-+buffer.
-+
-+The structure of the verifiers and the identifiers checks is very similar to the
-+buffer code described above. The only difference is where they are called. For
-+example, inode read verification is done in xfs_iread() when the inode is first
-+read out of the buffer and the struct xfs_inode is instantiated. The inode is
-+already extensively verified during writeback in xfs_iflush_int, so the only
-+addition here add the LSN and CRC to the inode as it is copied back into the
-+buffer.
-+
-+XXX: inode unlinked list modification doesn't recalculate the inode CRC! None of
-+the unlinked list modifications check or update CRCs, neither during unlink nor
-+log recovery. So, it's gone unnoticed until now. This won't matter immediately -
-+repair will probably complain about it - but it needs to be fixed.
-+
+This is a multi-part message in MIME format
+
+--=====y6Z_BKUvr69I7qbPeRxPAm5IHVxT5w_XId_=====
+Content-Type: text/plain
+Content-Transfer-Encoding: base64
+
+RGVhciBTaXI6DQogDQpHb29kIGRheXMNCiANClNEIG1hY2hpbmVyeSBwcm91ZGx5IHByZXNlbnRz
+IG91ciBUd2luIFR1cnJldHMsIFR3aW4gU3BpbmRsZXMgLFR3aW4gQ29udHJvbGxlcnMgTGF0aGUg
+U0RDLTQ1SCB3aXRoIEdhbnRyeSBSb2JvdCBBdXRvIExvYWRpbmcgU3lzdGVtIGZvciB5b3VyIERv
+dWJsZSBTaWRlcyBhdXRvbWF0aWNhbGx5IG1hY2hpbmluZyBwcm9jZXNzIA0KIA0KV2l0aCB0aGUg
+R2FudHJ5IFJvYm90IGFuZCBmZWVkaW5nIHRyYXkgTG9hZGluZyBzeXN0ZW0sIHlvdSBjYW4gc2F2
+ZSBsb3RzIG1hbiBwb3dlciB3aXRoIGhpZ2hseSBwcmVjaXNpb24gdHVybmluZy4NCiANCkFsbCB5
+b3UgaGF2ZSB0byBkbyBpcyB0byBwdXQgdGhlIHdvcmstcGllY2VzIG9uIHRoZSBmZWVkaW5nIHRy
+YXksIHRoZW4gcHVzaCB0aGUgc3RhcnQgYm90dG9tLCBhbmQgeW91IGFyZSBmcmVlIHRvIGhhbmRs
+ZSBvdmVyIHRoZSBvdGhlciB0aGluZ3MNClNhdmUgdGltZSBhbmQgbW9uZXkNCk9mIGNvdXJzZSwg
+c2F2ZSBsb3RzIG1hbiBwb3dlciBhbmQgb3RoZXIgY29zdCBmb3IgaGlyaW5nIHBlb3BsZQ0KIA0K
+UGxlYXNlIGNoZWNrIHRoZSBmb2xsb3dpbmcgaHlwZXJsaW5rIGZvciBtb3JlIGluZm9ybWF0aW9u
+DQogDQpNYWNoaW5lIGFjdGlvbiBNb3ZpZQ0KaHR0cDovL3lvdXR1LmJlL3dVNUVWWHFlZzFnDQog
+DQogDQpPbi1MaW5lIFBERiBicm9jaHVyZQ0KaHR0cDovL3lvdXR1LmJlLzhEWTNvN1hoTVE0DQog
+DQogDQogDQpUaGUgZm9sbG93aW5nIGlzIHRoZSBzcGVjaWZpY2F0aW9uIGZvciBvdXIgVHdpbiBU
+dXJyZXQgTGF0aGUgDQoxLiAgICAgIE1heGltdW0gdHVybmluZyBkaWFtZXRlcjogMjIwIG1tDQoy
+LiAgICAgIFN3aW5nIG92ZXIgY3Jvc3Mgc2xpZGU6IDMzMCBtbQ0KMy4gICAgICBYIGF4aXMgdHJh
+dmVsOiAxMTUrNSBtbQ0KNC4gICAgICBaIGF4aXMgdHJhdmVsOiAxMzUgeCAyIG1tDQo1LiAgICAg
+IFNwaW5kbGUgbm9zZTogQTItNQ0KNi4gICAgICBTcGluZGxlIGJvcmU6IPggNDUgbW0NCjcuICAg
+ICAgVHVycmV0OiA4IFBvc2l0aW9ucyBoeWRyYXVsaWMgdHVycmV0DQo4LiAgICAgIENvbnRyb2xs
+ZXI6IFNZTlRFQ0ggOTAwDQo5LiAgICAgIE90aGVycw0KIA0KUmVnYXJkaW5nIHRoZSBhZnRlciBz
+ZXJ2aWNlLCBTRCBvZmZlciB5b3UgdGhlIGJlc3QgYW5kIG1vc3QgZHVyYWJsZSBtYWNoaW5lDQpZ
+b3UgYXJlIGZyZWUgZnJvbSB0aGUgYWZ0ZXIgc2VydmljZSANCiANCiANClNob3VsZCB5b3UgbmVl
+ZCBtb3JlIGluZm9ybWF0aW9uPw0KUGxlYXNlIGZlZWwgZnJlZSB0byBjb250YWN0IHVzDQogDQpT
+RCBNYWNoaW5lcnkgTWFya2V0aW5nIFRlYW0NCg==
+
+--=====y6Z_BKUvr69I7qbPeRxPAm5IHVxT5w_XId_=====
+Content-Type: text/html;
+	charset="utf-8"
+Content-Transfer-Encoding: base64
+
+PEhUTUwgeG1sbnM6byA9ICJ1cm46c2NoZW1hcy1taWNyb3NvZnQtY29tOm9mZmljZTpvZmZpY2Ui
+PjxIRUFEPg0KPE1FVEEgY29udGVudD0idGV4dC9odG1sOyBjaGFyc2V0PXV0Zi04IiBodHRwLWVx
+dWl2PUNvbnRlbnQtVHlwZT4NCjxNRVRBIG5hbWU9R0VORVJBVE9SIGNvbnRlbnQ9Ik1TSFRNTCA4
+LjAwLjYwMDEuMTkxMjAiPjwvSEVBRD4NCjxCT0RZIHNjcm9sbD15ZXM+PFNQQU4gbGFuZz1FTi1V
+Uz48Rk9OVCBmYWNlPUNhbGlicmk+DQo8UCBzdHlsZT0iTUFSR0lOOiAwY20gMGNtIDBwdCIgY2xh
+c3M9TXNvTm9ybWFsPjxTUEFOIGxhbmc9RU4tVVM+RGVhciBTaXI6PC9TUEFOPjwvUD4NCjxQIHN0
+eWxlPSJNQVJHSU46IDBjbSAwY20gMHB0IiBjbGFzcz1Nc29Ob3JtYWw+PFNQQU4gbGFuZz1FTi1V
+Uz48bzpwPiZuYnNwOzwvbzpwPjwvU1BBTj48L1A+DQo8UCBzdHlsZT0iTUFSR0lOOiAwY20gMGNt
+IDBwdCIgY2xhc3M9TXNvTm9ybWFsPjxTUEFOIGxhbmc9RU4tVVM+R29vZCBkYXlzPC9TUEFOPjwv
+UD4NCjxQIHN0eWxlPSJNQVJHSU46IDBjbSAwY20gMHB0IiBjbGFzcz1Nc29Ob3JtYWw+PFNQQU4g
+bGFuZz1FTi1VUz48L1NQQU4+Jm5ic3A7PC9QPg0KPFAgc3R5bGU9Ik1BUkdJTjogMGNtIDBjbSAw
+cHQiIGNsYXNzPU1zb05vcm1hbD48Qj48U1BBTiBzdHlsZT0iQkFDS0dST1VORDogeWVsbG93OyBD
+T0xPUjogI2MwMDAwMDsgRk9OVC1TSVpFOiAxNHB0OyBtc28tYmlkaS1mb250LXNpemU6IDE2LjBw
+dDsgbXNvLWhpZ2hsaWdodDogeWVsbG93IiBsYW5nPUVOLVVTPlNEIG1hY2hpbmVyeSBwcm91ZGx5
+IHByZXNlbnRzIG91ciBUd2luIFR1cnJldHMsIFR3aW4gU3BpbmRsZXMgLFR3aW4gQ29udHJvbGxl
+cnMgTGF0aGUgU0RDLTQ1SCB3aXRoIEdhbnRyeSBSb2JvdCBBdXRvIExvYWRpbmcgU3lzdGVtIGZv
+ciB5b3VyIERvdWJsZSBTaWRlcyBhdXRvbWF0aWNhbGx5IG1hY2hpbmluZyBwcm9jZXNzPC9TUEFO
+PjwvQj48Qj48U1BBTiBzdHlsZT0iQ09MT1I6ICNjMDAwMDA7IEZPTlQtU0laRTogMTRwdDsgbXNv
+LWJpZGktZm9udC1zaXplOiAxNi4wcHQiIGxhbmc9RU4tVVM+IDxvOnA+PC9vOnA+PC9TUEFOPjwv
+Qj48L1A+DQo8UCBzdHlsZT0iTUFSR0lOOiAwY20gMGNtIDBwdCIgY2xhc3M9TXNvTm9ybWFsPjxC
+PjxTUEFOIHN0eWxlPSJDT0xPUjogI2MwMDAwMDsgRk9OVC1TSVpFOiAxNHB0OyBtc28tYmlkaS1m
+b250LXNpemU6IDE2LjBwdCIgbGFuZz1FTi1VUz48bzpwPiZuYnNwOzwvbzpwPjwvU1BBTj48L0I+
+PC9QPg0KPFAgc3R5bGU9Ik1BUkdJTjogMGNtIDBjbSAwcHQiIGNsYXNzPU1zb05vcm1hbD48Qj48
+U1BBTiBzdHlsZT0iQkFDS0dST1VORDogeWVsbG93OyBDT0xPUjogYmxhY2s7IEZPTlQtU0laRTog
+MTRwdDsgbXNvLWJpZGktZm9udC1zaXplOiAxNi4wcHQ7IG1zby1oaWdobGlnaHQ6IHllbGxvdyIg
+bGFuZz1FTi1VUz5XaXRoIHRoZSBHYW50cnkgUm9ib3QgYW5kIGZlZWRpbmcgdHJheSBMb2FkaW5n
+IHN5c3RlbSwgeW91IGNhbiBzYXZlIGxvdHMgbWFuIHBvd2VyIHdpdGggaGlnaGx5IHByZWNpc2lv
+biB0dXJuaW5nPC9TUEFOPjwvQj48Qj48U1BBTiBzdHlsZT0iQ09MT1I6IGJsYWNrOyBGT05ULVNJ
+WkU6IDE0cHQ7IG1zby1iaWRpLWZvbnQtc2l6ZTogMTYuMHB0IiBsYW5nPUVOLVVTPi48bzpwPjwv
+bzpwPjwvU1BBTj48L0I+PC9QPg0KPFAgc3R5bGU9Ik1BUkdJTjogMGNtIDBjbSAwcHQiIGNsYXNz
+PU1zb05vcm1hbD48Qj48U1BBTiBzdHlsZT0iQ09MT1I6IGJsYWNrOyBGT05ULVNJWkU6IDE0cHQ7
+IG1zby1iaWRpLWZvbnQtc2l6ZTogMTYuMHB0IiBsYW5nPUVOLVVTPjxvOnA+Jm5ic3A7PC9vOnA+
+PC9TUEFOPjwvQj48L1A+DQo8UCBzdHlsZT0iTUFSR0lOOiAwY20gMGNtIDBwdCIgY2xhc3M9TXNv
+Tm9ybWFsPjxTUEFOIGxhbmc9RU4tVVM+QWxsIHlvdSBoYXZlIHRvIGRvIGlzIHRvIHB1dCB0aGUg
+d29yay1waWVjZXMgb24gdGhlIGZlZWRpbmcgdHJheSwgdGhlbiBwdXNoIHRoZSBzdGFydCBib3R0
+b20sIGFuZCB5b3UgYXJlIGZyZWUgdG8gaGFuZGxlIG92ZXIgdGhlIG90aGVyIHRoaW5nczwvU1BB
+Tj48L1A+DQo8UCBzdHlsZT0iTUFSR0lOOiAwY20gMGNtIDBwdCIgY2xhc3M9TXNvTm9ybWFsPjxT
+UEFOIGxhbmc9RU4tVVM+U2F2ZSB0aW1lIGFuZCBtb25leTwvU1BBTj48L1A+DQo8UCBzdHlsZT0i
+TUFSR0lOOiAwY20gMGNtIDBwdCIgY2xhc3M9TXNvTm9ybWFsPjxTUEFOIGxhbmc9RU4tVVM+T2Yg
+Y291cnNlLCBzYXZlIGxvdHMgbWFuIHBvd2VyIGFuZCBvdGhlciBjb3N0IGZvciBoaXJpbmcgcGVv
+cGxlPC9TUEFOPjwvUD4NCjxQIHN0eWxlPSJNQVJHSU46IDBjbSAwY20gMHB0IiBjbGFzcz1Nc29O
+b3JtYWw+PFNQQU4gbGFuZz1FTi1VUz48L1NQQU4+Jm5ic3A7PC9QPg0KPFAgc3R5bGU9Ik1BUkdJ
+TjogMGNtIDBjbSAwcHQiIGNsYXNzPU1zb05vcm1hbD48U1BBTiBsYW5nPUVOLVVTPlBsZWFzZSBj
+aGVjayB0aGUgZm9sbG93aW5nIGh5cGVybGluayBmb3IgbW9yZSBpbmZvcm1hdGlvbjwvU1BBTj48
+L1A+DQo8UCBzdHlsZT0iTUFSR0lOOiAwY20gMGNtIDBwdCIgY2xhc3M9TXNvTm9ybWFsPjxTUEFO
+IGxhbmc9RU4tVVM+PC9TUEFOPiZuYnNwOzwvUD48U1BBTiBsYW5nPUVOLVVTPg0KPFAgc3R5bGU9
+Ik1BUkdJTjogMGNtIDBjbSAwcHQiIGNsYXNzPU1zb05vcm1hbD48U1BBTiBsYW5nPUVOLVVTPk1h
+Y2hpbmUgYWN0aW9uIE1vdmllPC9TUEFOPjwvUD4NCjxQIHN0eWxlPSJNQVJHSU46IDBjbSAwY20g
+MHB0IiBjbGFzcz1Nc29Ob3JtYWw+PFNQQU4gbGFuZz1FTi1VUz48QSBocmVmPSJodHRwOi8veW91
+dHUuYmUvd1U1RVZYcWVnMWciPmh0dHA6Ly95b3V0dS5iZS93VTVFVlhxZWcxZzwvQT48L1NQQU4+
+PC9QPjwvU1BBTj4NCjxQIHN0eWxlPSJNQVJHSU46IDBjbSAwY20gMHB0IiBjbGFzcz1Nc29Ob3Jt
+YWw+PFNQQU4gbGFuZz1FTi1VUz48L1NQQU4+Jm5ic3A7PC9QPg0KPFAgc3R5bGU9Ik1BUkdJTjog
+MGNtIDBjbSAwcHQiIGNsYXNzPU1zb05vcm1hbD48U1BBTiBsYW5nPUVOLVVTPjwvU1BBTj4mbmJz
+cDs8L1A+DQo8UCBzdHlsZT0iTUFSR0lOOiAwY20gMGNtIDBwdCIgY2xhc3M9TXNvTm9ybWFsPjxT
+UEFOIGxhbmc9RU4tVVM+T24tTGluZSBQREYgYnJvY2h1cmU8L1NQQU4+PC9QPg0KPFAgc3R5bGU9
+Ik1BUkdJTjogMGNtIDBjbSAwcHQiIGNsYXNzPU1zb05vcm1hbD48U1BBTiBsYW5nPUVOLVVTPjxB
+IGhyZWY9Imh0dHA6Ly95b3V0dS5iZS84RFkzbzdYaE1RNCI+aHR0cDovL3lvdXR1LmJlLzhEWTNv
+N1hoTVE0PC9BPjwvU1BBTj48L1A+DQo8UCBzdHlsZT0iTUFSR0lOOiAwY20gMGNtIDBwdCIgY2xh
+c3M9TXNvTm9ybWFsPjxTUEFOIGxhbmc9RU4tVVM+PG86cD4mbmJzcDs8L286cD48L1NQQU4+PC9Q
+Pg0KPFAgc3R5bGU9Ik1BUkdJTjogMGNtIDBjbSAwcHQiIGNsYXNzPU1zb05vcm1hbD48U1BBTiBs
+YW5nPUVOLVVTPjwvU1BBTj4mbmJzcDs8L1A+DQo8UCBzdHlsZT0iTUFSR0lOOiAwY20gMGNtIDBw
+dCIgY2xhc3M9TXNvTm9ybWFsPjxTUEFOIGxhbmc9RU4tVVM+PG86cD4mbmJzcDs8L286cD48L1NQ
+QU4+PC9QPg0KPFAgc3R5bGU9Ik1BUkdJTjogMGNtIDBjbSAwcHQiIGNsYXNzPU1zb05vcm1hbD48
+U1BBTiBsYW5nPUVOLVVTPlRoZSBmb2xsb3dpbmcgaXMgdGhlIHNwZWNpZmljYXRpb24gZm9yIG91
+ciBUd2luIFR1cnJldCBMYXRoZSA8L1NQQU4+PC9QPg0KPFAgc3R5bGU9IlRFWFQtSU5ERU5UOiAt
+MThwdDsgTUFSR0lOOiAwY20gMGNtIDBwdCAxOHB0OyBtc28tcGFyYS1tYXJnaW4tbGVmdDogMGdk
+OyBtc28tbGlzdDogbDAgbGV2ZWwxIGxmbzEiIGNsYXNzPU1zb0xpc3RQYXJhZ3JhcGg+PFNQQU4g
+c3R5bGU9Im1zby1mYXJlYXN0LWZvbnQtZmFtaWx5OiBDYWxpYnJpOyBtc28tYmlkaS1mb250LWZh
+bWlseTogQ2FsaWJyaSIgbGFuZz1FTi1VUz48U1BBTiBzdHlsZT0ibXNvLWxpc3Q6IElnbm9yZSI+
+MS48U1BBTiBzdHlsZT0iRk9OVDogN3B0ICdUaW1lcyBOZXcgUm9tYW4nIj4mbmJzcDsmbmJzcDsm
+bmJzcDsmbmJzcDsmbmJzcDsgPC9TUEFOPjwvU1BBTj48L1NQQU4+PFNQQU4gbGFuZz1FTi1VUz5N
+YXhpbXVtIHR1cm5pbmcgZGlhbWV0ZXI6IDIyMCBtbTwvU1BBTj48L1A+DQo8UCBzdHlsZT0iVEVY
+VC1JTkRFTlQ6IC0xOHB0OyBNQVJHSU46IDBjbSAwY20gMHB0IDE4cHQ7IG1zby1wYXJhLW1hcmdp
+bi1sZWZ0OiAwZ2Q7IG1zby1saXN0OiBsMCBsZXZlbDEgbGZvMSIgY2xhc3M9TXNvTGlzdFBhcmFn
+cmFwaD48U1BBTiBzdHlsZT0ibXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6IENhbGlicmk7IG1zby1i
+aWRpLWZvbnQtZmFtaWx5OiBDYWxpYnJpIiBsYW5nPUVOLVVTPjxTUEFOIHN0eWxlPSJtc28tbGlz
+dDogSWdub3JlIj4yLjxTUEFOIHN0eWxlPSJGT05UOiA3cHQgJ1RpbWVzIE5ldyBSb21hbiciPiZu
+YnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyA8L1NQQU4+PC9TUEFOPjwvU1BBTj48U1BBTiBs
+YW5nPUVOLVVTPlN3aW5nIG92ZXIgY3Jvc3Mgc2xpZGU6IDMzMCBtbTwvU1BBTj48L1A+DQo8UCBz
+dHlsZT0iVEVYVC1JTkRFTlQ6IC0xOHB0OyBNQVJHSU46IDBjbSAwY20gMHB0IDE4cHQ7IG1zby1w
+YXJhLW1hcmdpbi1sZWZ0OiAwZ2Q7IG1zby1saXN0OiBsMCBsZXZlbDEgbGZvMSIgY2xhc3M9TXNv
+TGlzdFBhcmFncmFwaD48U1BBTiBzdHlsZT0ibXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6IENhbGli
+cmk7IG1zby1iaWRpLWZvbnQtZmFtaWx5OiBDYWxpYnJpIiBsYW5nPUVOLVVTPjxTUEFOIHN0eWxl
+PSJtc28tbGlzdDogSWdub3JlIj4zLjxTUEFOIHN0eWxlPSJGT05UOiA3cHQgJ1RpbWVzIE5ldyBS
+b21hbiciPiZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyA8L1NQQU4+PC9TUEFOPjwvU1BB
+Tj48U1BBTiBsYW5nPUVOLVVTPlggYXhpcyB0cmF2ZWw6IDExNSs1IG1tPC9TUEFOPjwvUD4NCjxQ
+IHN0eWxlPSJURVhULUlOREVOVDogLTE4cHQ7IE1BUkdJTjogMGNtIDBjbSAwcHQgMThwdDsgbXNv
+LXBhcmEtbWFyZ2luLWxlZnQ6IDBnZDsgbXNvLWxpc3Q6IGwwIGxldmVsMSBsZm8xIiBjbGFzcz1N
+c29MaXN0UGFyYWdyYXBoPjxTUEFOIHN0eWxlPSJtc28tZmFyZWFzdC1mb250LWZhbWlseTogQ2Fs
+aWJyaTsgbXNvLWJpZGktZm9udC1mYW1pbHk6IENhbGlicmkiIGxhbmc9RU4tVVM+PFNQQU4gc3R5
+bGU9Im1zby1saXN0OiBJZ25vcmUiPjQuPFNQQU4gc3R5bGU9IkZPTlQ6IDdwdCAnVGltZXMgTmV3
+IFJvbWFuJyI+Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7Jm5ic3A7IDwvU1BBTj48L1NQQU4+PC9T
+UEFOPjxTUEFOIGxhbmc9RU4tVVM+WiBheGlzIHRyYXZlbDogMTM1IHggMiBtbTwvU1BBTj48L1A+
+DQo8UCBzdHlsZT0iVEVYVC1JTkRFTlQ6IC0xOHB0OyBNQVJHSU46IDBjbSAwY20gMHB0IDE4cHQ7
+IG1zby1wYXJhLW1hcmdpbi1sZWZ0OiAwZ2Q7IG1zby1saXN0OiBsMCBsZXZlbDEgbGZvMSIgY2xh
+c3M9TXNvTGlzdFBhcmFncmFwaD48U1BBTiBzdHlsZT0ibXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6
+IENhbGlicmk7IG1zby1iaWRpLWZvbnQtZmFtaWx5OiBDYWxpYnJpIiBsYW5nPUVOLVVTPjxTUEFO
+IHN0eWxlPSJtc28tbGlzdDogSWdub3JlIj41LjxTUEFOIHN0eWxlPSJGT05UOiA3cHQgJ1RpbWVz
+IE5ldyBSb21hbiciPiZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyA8L1NQQU4+PC9TUEFO
+PjwvU1BBTj48U1BBTiBsYW5nPUVOLVVTPlNwaW5kbGUgbm9zZTogQTItNTwvU1BBTj48L1A+DQo8
+UCBzdHlsZT0iVEVYVC1JTkRFTlQ6IC0xOHB0OyBNQVJHSU46IDBjbSAwY20gMHB0IDE4cHQ7IG1z
+by1wYXJhLW1hcmdpbi1sZWZ0OiAwZ2Q7IG1zby1saXN0OiBsMCBsZXZlbDEgbGZvMSIgY2xhc3M9
+TXNvTGlzdFBhcmFncmFwaD48U1BBTiBzdHlsZT0ibXNvLWZhcmVhc3QtZm9udC1mYW1pbHk6IENh
+bGlicmk7IG1zby1iaWRpLWZvbnQtZmFtaWx5OiBDYWxpYnJpIiBsYW5nPUVOLVVTPjxTUEFOIHN0
+eWxlPSJtc28tbGlzdDogSWdub3JlIj42LjxTUEFOIHN0eWxlPSJGT05UOiA3cHQgJ1RpbWVzIE5l
+dyBSb21hbiciPiZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyA8L1NQQU4+PC9TUEFOPjwv
+U1BBTj48U1BBTiBsYW5nPUVOLVVTPlNwaW5kbGUgYm9yZTogw7ggNDUgbW08L1NQQU4+PC9QPg0K
+PFAgc3R5bGU9IlRFWFQtSU5ERU5UOiAtMThwdDsgTUFSR0lOOiAwY20gMGNtIDBwdCAxOHB0OyBt
+c28tcGFyYS1tYXJnaW4tbGVmdDogMGdkOyBtc28tbGlzdDogbDAgbGV2ZWwxIGxmbzEiIGNsYXNz
+PU1zb0xpc3RQYXJhZ3JhcGg+PFNQQU4gc3R5bGU9Im1zby1mYXJlYXN0LWZvbnQtZmFtaWx5OiBD
+YWxpYnJpOyBtc28tYmlkaS1mb250LWZhbWlseTogQ2FsaWJyaSIgbGFuZz1FTi1VUz48U1BBTiBz
+dHlsZT0ibXNvLWxpc3Q6IElnbm9yZSI+Ny48U1BBTiBzdHlsZT0iRk9OVDogN3B0ICdUaW1lcyBO
+ZXcgUm9tYW4nIj4mbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsgPC9TUEFOPjwvU1BBTj48
+L1NQQU4+PFNQQU4gbGFuZz1FTi1VUz5UdXJyZXQ6IDggUG9zaXRpb25zIGh5ZHJhdWxpYyB0dXJy
+ZXQ8L1NQQU4+PC9QPg0KPFAgc3R5bGU9IlRFWFQtSU5ERU5UOiAtMThwdDsgTUFSR0lOOiAwY20g
+MGNtIDBwdCAxOHB0OyBtc28tcGFyYS1tYXJnaW4tbGVmdDogMGdkOyBtc28tbGlzdDogbDAgbGV2
+ZWwxIGxmbzEiIGNsYXNzPU1zb0xpc3RQYXJhZ3JhcGg+PFNQQU4gc3R5bGU9Im1zby1mYXJlYXN0
+LWZvbnQtZmFtaWx5OiBDYWxpYnJpOyBtc28tYmlkaS1mb250LWZhbWlseTogQ2FsaWJyaSIgbGFu
+Zz1FTi1VUz48U1BBTiBzdHlsZT0ibXNvLWxpc3Q6IElnbm9yZSI+OC48U1BBTiBzdHlsZT0iRk9O
+VDogN3B0ICdUaW1lcyBOZXcgUm9tYW4nIj4mbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsmbmJzcDsg
+PC9TUEFOPjwvU1BBTj48L1NQQU4+PFNQQU4gbGFuZz1FTi1VUz5Db250cm9sbGVyOiBTWU5URUNI
+IDkwMDwvU1BBTj48L1A+DQo8UCBzdHlsZT0iVEVYVC1JTkRFTlQ6IC0xOHB0OyBNQVJHSU46IDBj
+bSAwY20gMHB0IDE4cHQ7IG1zby1wYXJhLW1hcmdpbi1sZWZ0OiAwZ2Q7IG1zby1saXN0OiBsMCBs
+ZXZlbDEgbGZvMSIgY2xhc3M9TXNvTGlzdFBhcmFncmFwaD48U1BBTiBzdHlsZT0ibXNvLWZhcmVh
+c3QtZm9udC1mYW1pbHk6IENhbGlicmk7IG1zby1iaWRpLWZvbnQtZmFtaWx5OiBDYWxpYnJpIiBs
+YW5nPUVOLVVTPjxTUEFOIHN0eWxlPSJtc28tbGlzdDogSWdub3JlIj45LjxTUEFOIHN0eWxlPSJG
+T05UOiA3cHQgJ1RpbWVzIE5ldyBSb21hbiciPiZuYnNwOyZuYnNwOyZuYnNwOyZuYnNwOyZuYnNw
+OyA8L1NQQU4+PC9TUEFOPjwvU1BBTj48U1BBTiBsYW5nPUVOLVVTPk90aGVyczwvU1BBTj48L1A+
+DQo8UCBzdHlsZT0iTUFSR0lOOiAwY20gMGNtIDBwdCAxOHB0OyBtc28tcGFyYS1tYXJnaW4tbGVm
+dDogMGdkIiBjbGFzcz1Nc29MaXN0UGFyYWdyYXBoPjxTUEFOIGxhbmc9RU4tVVM+PG86cD4mbmJz
+cDs8L286cD48L1NQQU4+PC9QPg0KPFAgc3R5bGU9Ik1BUkdJTjogMGNtIDBjbSAwcHQiIGNsYXNz
+PU1zb05vcm1hbD48U1BBTiBsYW5nPUVOLVVTPlJlZ2FyZGluZyB0aGUgYWZ0ZXIgc2VydmljZSwg
+U0Qgb2ZmZXIgeW91IHRoZSBiZXN0IGFuZCBtb3N0IGR1cmFibGUgbWFjaGluZTwvU1BBTj48L1A+
+DQo8UCBzdHlsZT0iTUFSR0lOOiAwY20gMGNtIDBwdCIgY2xhc3M9TXNvTm9ybWFsPjxTUEFOIGxh
+bmc9RU4tVVM+WW91IGFyZSBmcmVlIGZyb20gdGhlIGFmdGVyIHNlcnZpY2UgPC9TUEFOPjwvUD4N
+CjxQIHN0eWxlPSJNQVJHSU46IDBjbSAwY20gMHB0IiBjbGFzcz1Nc29Ob3JtYWw+PFNQQU4gbGFu
+Zz1FTi1VUz48bzpwPiZuYnNwOzwvbzpwPjwvU1BBTj48L1A+DQo8UCBzdHlsZT0iTUFSR0lOOiAw
+Y20gMGNtIDBwdCIgY2xhc3M9TXNvTm9ybWFsPjxTUEFOIGxhbmc9RU4tVVM+PG86cD4mbmJzcDs8
+L286cD48L1NQQU4+PC9QPg0KPFAgc3R5bGU9Ik1BUkdJTjogMGNtIDBjbSAwcHQiIGNsYXNzPU1z
+b05vcm1hbD48U1BBTiBsYW5nPUVOLVVTPlNob3VsZCB5b3UgbmVlZCBtb3JlIGluZm9ybWF0aW9u
+PzwvU1BBTj48L1A+DQo8UCBzdHlsZT0iTUFSR0lOOiAwY20gMGNtIDBwdCIgY2xhc3M9TXNvTm9y
+bWFsPjxTUEFOIGxhbmc9RU4tVVM+UGxlYXNlIGZlZWwgZnJlZSB0byBjb250YWN0IHVzPC9TUEFO
+PjwvUD4NCjxQIHN0eWxlPSJNQVJHSU46IDBjbSAwY20gMHB0IiBjbGFzcz1Nc29Ob3JtYWw+PFNQ
+QU4gbGFuZz1FTi1VUz48bzpwPiZuYnNwOzwvbzpwPjwvU1BBTj48L1A+DQo8UCBzdHlsZT0iTUFS
+R0lOOiAwY20gMGNtIDBwdCIgY2xhc3M9TXNvTm9ybWFsPjxTUEFOIGxhbmc9RU4tVVM+U0QgTWFj
+aGluZXJ5IE1hcmtldGluZyBUZWFtPC9TUEFOPjwvUD4NCjxQIHN0eWxlPSJNQVJHSU46IDBjbSAw
+Y20gMHB0IiBjbGFzcz1Nc29Ob3JtYWw+PC9GT05UPjwvU1BBTj48L1A+PC9CT0RZPjwvSFRNTD4N
+Cg==
+
+--=====y6Z_BKUvr69I7qbPeRxPAm5IHVxT5w_XId_=====--
+
+
+--===============5230280019165049908==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============5230280019165049908==--
