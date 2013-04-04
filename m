@@ -1,32 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7DC957CBF
-	for <xfs@oss.sgi.com>; Wed,  3 Apr 2013 23:10:56 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id A8DA67CBF
+	for <xfs@oss.sgi.com>; Wed,  3 Apr 2013 23:35:24 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 14936AC006
-	for <xfs@oss.sgi.com>; Wed,  3 Apr 2013 21:10:53 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id UaYx6W2ZHN5igrDk (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 03 Apr 2013 21:10:51 -0700 (PDT)
-Received: from ucsinet21.oracle.com (ucsinet21.oracle.com [156.151.31.93])
-	by aserp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
-	ESMTP id r344AnoF010282
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 4 Apr 2013 04:10:50 GMT
-Received: from acsmt358.oracle.com (acsmt358.oracle.com [141.146.40.158])
-	by ucsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r344AmT0028780
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Thu, 4 Apr 2013 04:10:49 GMT
-Received: from abhmt107.oracle.com (abhmt107.oracle.com [141.146.116.59])
-	by acsmt358.oracle.com (8.12.11.20060308/8.12.11) with ESMTP id
-	r344Am3u010987 for <xfs@oss.sgi.com>; Wed, 3 Apr 2013 23:10:48 -0500
-Message-ID: <515CFD42.70109@oracle.com>
-Date: Thu, 04 Apr 2013 12:10:42 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3E7E2AC005
+	for <xfs@oss.sgi.com>; Wed,  3 Apr 2013 21:35:24 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	l2gWQ8AowlkP9EAs for <xfs@oss.sgi.com>;
+	Wed, 03 Apr 2013 21:35:22 -0700 (PDT)
+Date: Thu, 4 Apr 2013 15:35:15 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: 88TB filesystem going off-line without warning
+Message-ID: <20130404043515.GC12011@dastard>
+References: <CA+dre-c0K=AWRNRPgNVWANNkMW++FXEJvQzSe=68_JXyJMeNxQ@mail.gmail.com>
 MIME-Version: 1.0
-Subject: [PATCH]xfs: Remove the obsolete XLOG_CIL_HARD_SPACE_LIMIT() macros
+Content-Disposition: inline
+In-Reply-To: <CA+dre-c0K=AWRNRPgNVWANNkMW++FXEJvQzSe=68_JXyJMeNxQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,29 +29,71 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: L Ox <lox8096@gmail.com>
+Cc: xfs@oss.sgi.com
 
-There is no more users of this Macro, so it's time to kill it dead.
+On Tue, Apr 02, 2013 at 11:44:15AM -0700, L Ox wrote:
+> Hi,
+> 
+> We have a new Linux/XFS deployment (about a month old) and randomly without
+> warning the XFS filesystem will go off-line. We are running Scientific
+> Linux release 5.9 with the latest updates.
+> 
+> # uname -a
+> Linux node24 2.6.18-348.3.1.el5 #1 SMP Mon Mar 11 15:43:13 EDT 2013 x86_64
+> x86_64 x86_64 GNU/Linux
+> 
+> # cat /etc/redhat-release
+> Scientific Linux release 5.9 (Boron)
+> 
+> Here are the errors we see in /var/log/messages after the initial off-line
+> event:
+> 
+> -- snip --
+> 
+> Apr  2 07:50:28 node24 kernel: xfs_iunlink_remove: xfs_inotobp()  returned
+> an error 22 on dm-6.  Returning error.
+> Apr  2 07:50:28 node24 kernel: xfs_inactive:  xfs_ifree() returned an error
+> = 22 on dm-6
 
-Signed-off-by: Jie Liu <jeff.liu@oracle.com>
----
- fs/xfs/xfs_log_priv.h |    1 -
- 1 file changed, 1 deletion(-)
+#define EINVAL          22      /* Invalid argument */
 
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index 16d8d12..b9ea262 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -468,7 +468,6 @@ struct xfs_cil {
-  * threshold, yet give us plenty of space for aggregation on large logs.
-  */
- #define XLOG_CIL_SPACE_LIMIT(log)	(log->l_logsize >> 3)
--#define XLOG_CIL_HARD_SPACE_LIMIT(log)	(3 * (log->l_logsize >> 4))
+That tends to imply a corrupt inode number in the unlinked list
+chain.
 
- /*
-  * ticket grant locks, queues and accounting have their own cachlines
+> Here are the messages after I umount/xfs_repair/mount the filesystem:
+
+What did xfs_repair detect/fix?
+
+> # xfs_repair /dev/mapper/vol_d24-root
+> Phase 1 - find and verify superblock...
+.....
+> Phase 6 - check inode connectivity...
+>         - resetting contents of realtime bitmap and summary inodes
+>         - traversing filesystem ...
+>         - traversal finished ...
+>         - moving disconnected inodes to lost+found ...
+> disconnected inode 202102936036, moving to lost+found
+> disconnected inode 215350040250, moving to lost+found
+> disconnected inode 215350208634, moving to lost+found
+> disconnected inode 271016406074, moving to lost+found
+
+Some inodes that had been unlinked from the directory structure
+but not freed. They were probably on an unlinked inode list that
+couldn't be walked.
+
+> Any ideas?
+
+If the problem is a one off, there isn't anything that can be done.
+If you can reproduce it, try to narrow it down to the simplest case
+you can...
+
+Cheers,
+
+Dave.
 -- 
-1.7.9.5
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
