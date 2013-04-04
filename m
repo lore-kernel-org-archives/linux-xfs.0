@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5AD557CBF
-	for <xfs@oss.sgi.com>; Wed,  3 Apr 2013 20:31:18 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 537697CBF
+	for <xfs@oss.sgi.com>; Wed,  3 Apr 2013 22:39:51 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D935EAC005
-	for <xfs@oss.sgi.com>; Wed,  3 Apr 2013 18:31:14 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	7Es8zgEqEJ02gSyu for <xfs@oss.sgi.com>;
-	Wed, 03 Apr 2013 18:31:12 -0700 (PDT)
-Date: Thu, 4 Apr 2013 12:31:10 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: don't free EFIs before the EFDs are committed
-Message-ID: <20130404013110.GW17758@dastard>
-References: <1364958561-12440-1-git-send-email-david@fromorbit.com>
-	<515C7F09.2080201@sgi.com> <515C8732.3000902@sandeen.net>
-	<515C98E1.2010700@sandeen.net> <515CA2EE.605@sgi.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id AC9E0AC006
+	for <xfs@oss.sgi.com>; Wed,  3 Apr 2013 20:39:50 -0700 (PDT)
+Received: from Ishtar.hs.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
+	cuda.sgi.com with ESMTP id yjDtUKEgQesunBGF (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 03 Apr 2013 20:39:44 -0700 (PDT)
+Received: from [192.168.4.12] (Athenae [192.168.4.12])
+	by Ishtar.hs.tlinx.org (8.14.5/8.14.4/SuSE Linux 0.8) with ESMTP id
+	r343dfR8024772 for <xfs@oss.sgi.com>; Wed, 3 Apr 2013 20:39:43 -0700
+Message-ID: <515CF5FB.30506@tlinx.org>
+Date: Wed, 03 Apr 2013 20:39:39 -0700
+From: Linda Walsh <xfs@tlinx.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <515CA2EE.605@sgi.com>
+Subject: Re: xfsdump having problems dumping attributes again (cannot
+	allocate	memory)
+References: <515CB2C1.1050109@tlinx.org>
+In-Reply-To: <515CB2C1.1050109@tlinx.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,150 +32,430 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-On Wed, Apr 03, 2013 at 04:45:18PM -0500, Mark Tinguely wrote:
-> On 04/03/13 16:02, Eric Sandeen wrote:
-> >On 4/3/13 2:46 PM, Eric Sandeen wrote:
-> >>On 4/3/13 2:12 PM, Mark Tinguely wrote:
-> >>>On 04/02/13 22:09, Dave Chinner wrote:
-> >>>>From: Dave Chinner<dchinner@redhat.com>
-> >>>>
-> >>>>Filesystems are occasionally being shut down with this error:
-> >>>>
-> >>>>xfs_trans_ail_delete_bulk: attempting to delete a log item that is
-> >>>>not in the AIL.
-> >>>>
-> >>>>It was diagnosed to be related to the EFI/EFD commit order when the
-> >>>>EFI and EFD are in different checkpoints and the EFD is committed
-> >>>>before the EFI here:
-> >>>>
-> >>>>http://oss.sgi.com/archives/xfs/2013-01/msg00082.html
-> >>>>
-> >>>>The real problem is that a single bit cannot fully describe the
-> >>>>states that the EFI/EFD processing can be in. These completion
-> >>>>states are:
-> >>>>
-> >>>>EFI            EFI in AIL    EFD        Result
-> >>>>committed/unpinned    Yes        committed    OK
-> >>>>committed/pinned    No        committed    Shutdown
-> >>>>uncommitted        No        committed    Shutdown
-> >>>>
-> >>>>
-> >>>>Note that the "result" field is what should happen, not what does
-> >>>>happen. The current logic is broken and handles the first two cases
-> >>>>correctly by luck.  That is, the code will free the EFI if the
-> >>>>XFS_EFI_COMMITTED bit is*not*  set, rather than if it is set. The
-> >>>>inverted logic "works" because if both EFI and EFD are committed,
-> >>>>then the first __xfs_efi_release() call clears the XFS_EFI_COMMITTED
-> >>>>bit, and the second frees the EFI item. Hence as long as
-> >>>>xfs_efi_item_committed() has been called, everything appears to be
-> >>>>fine.
-> >>>>
-> >>>>It is the third case where the logic fails - where
-> >>>>xfs_efd_item_committed() is called before xfs_efi_item_committed(),
-> >>>>and that results in the EFI being freed before it has been
-> >>>>committed. That is the bug that triggered the shutdown, d hence
-> >>>>keeping track of whether the EFI has been committed or not is
-> >>>>insufficient to correctly order the EFI/EFD operations w.r.t. the
-> >>>>AIL.
-> >>>>
-> >>>
-> >>>I think the exist xfs_efi routines are working correctly.
-> >>>
-> >>>the xfs_trans_committed_bulk() for the efi does the IOP_COMMITTED
-> >>>(sets the XFS_EFI_COMMITTED bit), add the entry to the AIL and then
-> >>>an IOP_UNPIN() which clears the XFS_EFI_COMMITTED since it is set, it
-> >>>should not release the efi and remove the entry from the AIL. It also
-> >>>correctly detects if the EFD is committed before the EFI by shutting
-> >>>down the filesystem.
-> >>
-> >>Well hang on, not everything can be cool in EFI-land here, if nothing
-> >>else this:
-> >>
-> >>__xfs_efi_release(
-> >>         struct xfs_efi_log_item *efip)
-> >>{
-> >>         struct xfs_ail          *ailp = efip->efi_item.li_ailp;
-> >>
-> >>         if (!test_and_clear_bit(XFS_EFI_COMMITTED,&efip->efi_flags)) {
-> >>                 spin_lock(&ailp->xa_lock);
-> >>                 /* xfs_trans_ail_delete() drops the AIL lock. */
-> >>                 xfs_trans_ail_delete(ailp,&efip->efi_item,
-> >>                                      SHUTDOWN_LOG_IO_ERROR);
-> >>                 xfs_efi_item_free(efip);
-> >>         }
-> >>}
-> >>
-> >>seems obviously broken.
-> >>
-> >>  * test_and_clear_bit - Clear a bit and return its old value
-> >>
-> >>so it is saying if XFS_EFI_COMMITED was *not* set, free the efi.
-> >>Which I think we must admit is broken.
-> >>
-> >>I have to get up to speed on this code, but it seems like at least
-> >>this much above is quite obviously broken, and the previously
-> >>proposed patch doesn't address it.  Am I missing something?
-> >
-> >Or are you saying that it's working as designed, so that the first
-> >caller finds it set, clears it and does nothing, and the 2nd caller
-> >finds it unset, and frees it?  help me out here ;)
-> >
-> >-Eric
-> >
-> 
-> Yes. The order is IOP_COMMITTED and then IOP_UNPIN:
 
-Batching means you can get:
 
-	IOP_COMMITTED(a)
-	IOP_COMMITTED(b)
-	IOP_COMMITTED(c)
-	.....
-	IOP_COMMITTED(6)
+here's the complete output of a run -- it didn't have problems till
+it hit 978GB out of 1370GB (~70%)...
 
-	AIL_INSERT(a)
-	AIL_INSERT(b)
-	AIL_INSERT(c)
-	.....
-	AIL_INSERT(6)
 
-	IOP_UNPIN(a)
-	IOP_UNPIN(b)
-	IOP_UNPIN(c)
-	.....
-	IOP_UNPIN(6)
-
-So that means at minimum we have to handle the EFI committed/pinned
-case when the EFD is committed as well. This is what the commit
-b199c8a (xfs: Pull EFI/EFD handling out from under the AIL lock)
-did - it moved the COMMITTED bit from the EFI IOP_UNPIN() callback
-to the IOP_COMMITTED() callback.
-
-But then the IOP_UNPIN() callback has to handle the same case by
-freeing the EFI as well, and hence the XFS_EFI_COMMITTED() bit
-became a proxy reference count.
-
-Which doesn't handle the third case, which is the EFD being
-processed before the EFI, and hence we get a shutdown because the
-EFD is trying to remove the EFI from the AIL before it is inserted.
-
-> The code makes sure the sequence EFI and then EFD are done in order.
-
-No, it doesn't ensure they are done in order - it *works* when they
-are done in order. If it ensured they were done in order, then the
-EFD commit would not be allowed to proceed until the EFI wsa
-committed. The code does not do that, not does it need to. But it
-needs to handle the EFD being processed before the EFI...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+xfsdump -b 1073741824 -l 0 -L Share - /Share | ( su -f -m backup -c " umask
+007;nice -19 ionice -c3 mbuffer -s 512k -m 10M -q >
+Share/Share-130403-0-1222.dump  " )
+xfsdump: using file dump (drive_simple) strategy
+xfsdump: version 3.1.2 (dump format 3.0)
+xfsdump: WARNING: most recent level 0 dump was interrupted, but not resuming
+that dump since resume (-R) option not specified
+xfsdump: level 0 dump of Ishtar:/Share
+xfsdump: dump date: Wed Apr  3 12:22:32 2013
+xfsdump: session id: f18b6ef2-097a-4f42-a08e-98e6a76bfb51
+xfsdump: session label: "Share"
+xfsdump: ino map phase 1: constructing initial dump list
+xfsdump: ino map phase 2: skipping (no pruning necessary)
+xfsdump: ino map phase 3: skipping (only one dump stream)
+xfsdump: ino map construction complete
+xfsdump: estimated dump size: 1473013737344 bytes
+xfsdump: creating dump session media file 0 (media 0, file 0)
+xfsdump: dumping ino map
+xfsdump: dumping directories
+xfsdump: dumping non-directory files
+in @  0.0 KiB/s, out @  0.0 KiB/s,  975 GiB total, buffer   0% full
+xfsdump: WARNING: could not get list of non-root attributes for nondir ino
+3309973288: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412843308: Cannot allocate memory (12)
+root attributes for nondir ino 3412843308: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412843504: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412844330: Cannot allocate memory (12)
+root attributes for nondir ino 3412844330: Cannot allocate memory (12)
+root attributes for nondir ino 3412885294: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412893285: Cannot allocate memory (12)
+root attributes for nondir ino 3412893285: Cannot allocate memory (12)
+secure attributes for nondir ino 3412893285: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412893290: Cannot allocate memory (12)
+root attributes for nondir ino 3412893290: Cannot allocate memory (12)
+secure attributes for nondir ino 3412893290: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412894183: Cannot allocate memory (12)
+root attributes for nondir ino 3412894183: Cannot allocate memory (12)
+secure attributes for nondir ino 3412894183: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412894518: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412894983: Cannot allocate memory (12)
+root attributes for nondir ino 3412894983: Cannot allocate memory (12)
+secure attributes for nondir ino 3412894983: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412896516: Cannot allocate memory (12)
+root attributes for nondir ino 3412896516: Cannot allocate memory (12)
+secure attributes for nondir ino 3412896516: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412896518: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412896522: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412896541: Cannot allocate memory (12)
+root attributes for nondir ino 3412896541: Cannot allocate memory (12)
+secure attributes for nondir ino 3412896541: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412896553: Cannot allocate memory (12)
+root attributes for nondir ino 3412896553: Cannot allocate memory (12)
+secure attributes for nondir ino 3412896553: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412902179: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412902208: Cannot allocate memory (12)
+root attributes for nondir ino 3412902208: Cannot allocate memory (12)
+secure attributes for nondir ino 3412902208: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412902837: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412903713: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412904756: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412905059: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412905243: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412905245: Cannot allocate memory (12)
+root attributes for nondir ino 3412905245: Cannot allocate memory (12)
+secure attributes for nondir ino 3412905245: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412905256: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412906017: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412906032: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412906292: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412906345: Cannot allocate memory (12)
+root attributes for nondir ino 3412906345: Cannot allocate memory (12)
+secure attributes for nondir ino 3412906345: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412906346: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412906348: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412906355: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412906359: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412906526: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412906581: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412906760: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412907059: Cannot allocate memory (12)
+root attributes for nondir ino 3412907059: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412909572: Cannot allocate memory (12)
+root attributes for nondir ino 3412910106: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412910107: Cannot allocate memory (12)
+root attributes for nondir ino 3412910107: Cannot allocate memory (12)
+secure attributes for nondir ino 3412910107: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412910108: Cannot allocate memory (12)
+root attributes for nondir ino 3412910108: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412910113: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412910123: Cannot allocate memory (12)
+root attributes for nondir ino 3412910123: Cannot allocate memory (12)
+secure attributes for nondir ino 3412910123: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412910124: Cannot allocate memory (12)
+root attributes for nondir ino 3412910124: Cannot allocate memory (12)
+secure attributes for nondir ino 3412910124: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412910126: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412910608: Cannot allocate memory (12)
+root attributes for nondir ino 3412910608: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412910609: Cannot allocate memory (12)
+root attributes for nondir ino 3412910609: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412911190: Cannot allocate memory (12)
+root attributes for nondir ino 3412911190: Cannot allocate memory (12)
+secure attributes for nondir ino 3412911190: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412911191: Cannot allocate memory (12)
+root attributes for nondir ino 3412911191: Cannot allocate memory (12)
+secure attributes for nondir ino 3412911191: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412911196: Cannot allocate memory (12)
+root attributes for nondir ino 3412911196: Cannot allocate memory (12)
+secure attributes for nondir ino 3412911196: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412911198: Cannot allocate memory (12)
+root attributes for nondir ino 3412911198: Cannot allocate memory (12)
+secure attributes for nondir ino 3412911198: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412911199: Cannot allocate memory (12)
+root attributes for nondir ino 3412911199: Cannot allocate memory (12)
+secure attributes for nondir ino 3412911199: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412911200: Cannot allocate memory (12)
+root attributes for nondir ino 3412911200: Cannot allocate memory (12)
+secure attributes for nondir ino 3412911200: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412911201: Cannot allocate memory (12)
+root attributes for nondir ino 3412911201: Cannot allocate memory (12)
+secure attributes for nondir ino 3412911201: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412911202: Cannot allocate memory (12)
+root attributes for nondir ino 3412911202: Cannot allocate memory (12)
+secure attributes for nondir ino 3412911202: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412911203: Cannot allocate memory (12)
+root attributes for nondir ino 3412911203: Cannot allocate memory (12)
+secure attributes for nondir ino 3412911203: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412911213: Cannot allocate memory (12)
+root attributes for nondir ino 3412912238: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412912254: Cannot allocate memory (12)
+root attributes for nondir ino 3412912254: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412912686: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412912688: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412912692: Cannot allocate memory (12)
+root attributes for nondir ino 3412912692: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412912910: Cannot allocate memory (12)
+root attributes for nondir ino 3412912910: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412912921: Cannot allocate memory (12)
+root attributes for nondir ino 3412912921: Cannot allocate memory (12)
+secure attributes for nondir ino 3412912921: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412915235: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412916411: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412918109: Cannot allocate memory (12)
+root attributes for nondir ino 3412918109: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412918117: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412918118: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412918125: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412918126: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412920099: Cannot allocate memory (12)
+root attributes for nondir ino 3412920099: Cannot allocate memory (12)
+secure attributes for nondir ino 3412920099: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412920100: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412920335: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412920923: Cannot allocate memory (12)
+root attributes for nondir ino 3412921382: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412921654: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412923690: Cannot allocate memory (12)
+root attributes for nondir ino 3412923690: Cannot allocate memory (12)
+secure attributes for nondir ino 3412923690: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412923691: Cannot allocate memory (12)
+root attributes for nondir ino 3412923691: Cannot allocate memory (12)
+secure attributes for nondir ino 3412923691: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412923692: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412924421: Cannot allocate memory (12)
+root attributes for nondir ino 3412924421: Cannot allocate memory (12)
+secure attributes for nondir ino 3412924421: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412924423: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412925450: Cannot allocate memory (12)
+root attributes for nondir ino 3412925451: Cannot allocate memory (12)
+secure attributes for nondir ino 3412925451: Cannot allocate memory (12)
+root attributes for nondir ino 3412925454: Cannot allocate memory (12)
+secure attributes for nondir ino 3412925454: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412925456: Cannot allocate memory (12)
+root attributes for nondir ino 3412925456: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412925712: Cannot allocate memory (12)
+root attributes for nondir ino 3412925712: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412928355: Cannot allocate memory (12)
+root attributes for nondir ino 3412928355: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412932138: Cannot allocate memory (12)
+root attributes for nondir ino 3412932138: Cannot allocate memory (12)
+secure attributes for nondir ino 3412932138: Cannot allocate memory (12)
+root attributes for nondir ino 3412932142: Cannot allocate memory (12)
+secure attributes for nondir ino 3412932142: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412932146: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412932147: Cannot allocate memory (12)
+root attributes for nondir ino 3412932147: Cannot allocate memory (12)
+secure attributes for nondir ino 3412932147: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412932148: Cannot allocate memory (12)
+root attributes for nondir ino 3412932148: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412933717: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412934419: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412934422: Cannot allocate memory (12)
+root attributes for nondir ino 3412934422: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412934423: Cannot allocate memory (12)
+root attributes for nondir ino 3412934423: Cannot allocate memory (12)
+secure attributes for nondir ino 3412934423: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412934424: Cannot allocate memory (12)
+root attributes for nondir ino 3412934424: Cannot allocate memory (12)
+secure attributes for nondir ino 3412934424: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412934433: Cannot allocate memory (12)
+root attributes for nondir ino 3412934433: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412935967: Cannot allocate memory (12)
+root attributes for nondir ino 3412935967: Cannot allocate memory (12)
+secure attributes for nondir ino 3412935984: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412935985: Cannot allocate memory (12)
+root attributes for nondir ino 3412935985: Cannot allocate memory (12)
+secure attributes for nondir ino 3412935985: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412935986: Cannot allocate memory (12)
+root attributes for nondir ino 3412935986: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412935987: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412936513: Cannot allocate memory (12)
+root attributes for nondir ino 3412938510: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412938511: Cannot allocate memory (12)
+root attributes for nondir ino 3412941368: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412946985: Cannot allocate memory (12)
+root attributes for nondir ino 3412946985: Cannot allocate memory (12)
+secure attributes for nondir ino 3412946985: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412946995: Cannot allocate memory (12)
+root attributes for nondir ino 3412948260: Cannot allocate memory (12)
+secure attributes for nondir ino 3412948260: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412948261: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412949045: Cannot allocate memory (12)
+root attributes for nondir ino 3412949045: Cannot allocate memory (12)
+root attributes for nondir ino 3412950535: Cannot allocate memory (12)
+secure attributes for nondir ino 3412950535: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412950536: Cannot allocate memory (12)
+root attributes for nondir ino 3412950536: Cannot allocate memory (12)
+secure attributes for nondir ino 3412950536: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412951869: Cannot allocate memory (12)
+root attributes for nondir ino 3412951869: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412952117: Cannot allocate memory (12)
+root attributes for nondir ino 3412952117: Cannot allocate memory (12)
+secure attributes for nondir ino 3412952117: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412953112: Cannot allocate memory (12)
+root attributes for nondir ino 3412953112: Cannot allocate memory (12)
+secure attributes for nondir ino 3412953112: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412953113: Cannot allocate memory (12)
+root attributes for nondir ino 3412953113: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412953146: Cannot allocate memory (12)
+root attributes for nondir ino 3412953146: Cannot allocate memory (12)
+secure attributes for nondir ino 3412953146: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412953147: Cannot allocate memory (12)
+root attributes for nondir ino 3412953147: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412953149: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412953197: Cannot allocate memory (12)
+root attributes for nondir ino 3412953197: Cannot allocate memory (12)
+secure attributes for nondir ino 3412953197: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412953198: Cannot allocate memory (12)
+root attributes for nondir ino 3412953198: Cannot allocate memory (12)
+secure attributes for nondir ino 3412953198: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412953207: Cannot allocate memory (12)
+root attributes for nondir ino 3412953207: Cannot allocate memory (12)
+secure attributes for nondir ino 3412953207: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412953208: Cannot allocate memory (12)
+root attributes for nondir ino 3412953208: Cannot allocate memory (12)
+secure attributes for nondir ino 3412953208: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412953210: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412953211: Cannot allocate memory (12)
+root attributes for nondir ino 3412953211: Cannot allocate memory (12)
+secure attributes for nondir ino 3412953211: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412953212: Cannot allocate memory (12)
+root attributes for nondir ino 3412953212: Cannot allocate memory (12)
+secure attributes for nondir ino 3412953212: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412953213: Cannot allocate memory (12)
+root attributes for nondir ino 3412953213: Cannot allocate memory (12)
+secure attributes for nondir ino 3412953213: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412953214: Cannot allocate memory (12)
+root attributes for nondir ino 3412953214: Cannot allocate memory (12)
+root attributes for nondir ino 3412953388: Cannot allocate memory (12)
+secure attributes for nondir ino 3412953388: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412953389: Cannot allocate memory (12)
+root attributes for nondir ino 3412953389: Cannot allocate memory (12)
+secure attributes for nondir ino 3412953389: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412953390: Cannot allocate memory (12)
+root attributes for nondir ino 3412953390: Cannot allocate memory (12)
+secure attributes for nondir ino 3412953390: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412953391: Cannot allocate memory (12)
+root attributes for nondir ino 3412953391: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412953707: Cannot allocate memory (12)
+root attributes for nondir ino 3412953707: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412953724: Cannot allocate memory (12)
+root attributes for nondir ino 3412953724: Cannot allocate memory (12)
+secure attributes for nondir ino 3412953724: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412953726: Cannot allocate memory (12)
+root attributes for nondir ino 3412953726: Cannot allocate memory (12)
+secure attributes for nondir ino 3412953726: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412953727: Cannot allocate memory (12)
+root attributes for nondir ino 3412953727: Cannot allocate memory (12)
+secure attributes for nondir ino 3412953727: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412953856: Cannot allocate memory (12)
+root attributes for nondir ino 3412953856: Cannot allocate memory (12)
+secure attributes for nondir ino 3412953856: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412953857: Cannot allocate memory (12)
+root attributes for nondir ino 3412953857: Cannot allocate memory (12)
+secure attributes for nondir ino 3412953857: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412959056: Cannot allocate memory (12)
+root attributes for nondir ino 3412959056: Cannot allocate memory (12)
+secure attributes for nondir ino 3412959056: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412959058: Cannot allocate memory (12)
+root attributes for nondir ino 3412959058: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412959586: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412959599: Cannot allocate memory (12)
+root attributes for nondir ino 3412959599: Cannot allocate memory (12)
+secure attributes for nondir ino 3412959599: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412959600: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412960286: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412960314: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412962569: Cannot allocate memory (12)
+root attributes for nondir ino 3412962569: Cannot allocate memory (12)
+secure attributes for nondir ino 3412962569: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412962570: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412962571: Cannot allocate memory (12)
+root attributes for nondir ino 3412962571: Cannot allocate memory (12)
+secure attributes for nondir ino 3412962571: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412962587: Cannot allocate memory (12)
+root attributes for nondir ino 3412962587: Cannot allocate memory (12)
+secure attributes for nondir ino 3412962587: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412962588: Cannot allocate memory (12)
+root attributes for nondir ino 3412962588: Cannot allocate memory (12)
+secure attributes for nondir ino 3412962588: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412962589: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412962632: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412984323: Cannot allocate memory (12)
+root attributes for nondir ino 3412984323: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412984580: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412984582: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412984583: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412984611: Cannot allocate memory (12)
+root attributes for nondir ino 3412984611: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412984619: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412984625: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412984636: Cannot allocate memory (12)
+root attributes for nondir ino 3412984832: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412984860: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412984862: Cannot allocate memory (12)
+root attributes for nondir ino 3412984862: Cannot allocate memory (12)
+non-root attributes for nondir ino 3412984873: Cannot allocate memory (12)
+non-root attributes for nondir ino 4302043464: Cannot allocate memory (12)
+root attributes for nondir ino 4302043464: Cannot allocate memory (12)
+root attributes for nondir ino 4312168721: Cannot allocate memory (12)
+root attributes for nondir ino 4343158051: Cannot allocate memory (12)
+secure attributes for nondir ino 4343158051: Cannot allocate memory (12)
+non-root attributes for nondir ino 4343158052: Cannot allocate memory (12)
+non-root attributes for nondir ino 4343166271: Cannot allocate memory (12)
+root attributes for nondir ino 4343166271: Cannot allocate memory (12)
+root attributes for nondir ino 4343208759: Cannot allocate memory (12)
+non-root attributes for nondir ino 4343932954: Cannot allocate memory (12)
+non-root attributes for nondir ino 4343932971: Cannot allocate memory (12)
+non-root attributes for nondir ino 4343932976: Cannot allocate memory (12)
+root attributes for nondir ino 4343932976: Cannot allocate memory (12)
+non-root attributes for nondir ino 4343932984: Cannot allocate memory (12)
+non-root attributes for nondir ino 4343932985: Cannot allocate memory (12)
+root attributes for nondir ino 4343932985: Cannot allocate memory (12)
+secure attributes for nondir ino 4343932985: Cannot allocate memory (12)
+non-root attributes for nondir ino 4343932986: Cannot allocate memory (12)
+non-root attributes for nondir ino 4343932987: Cannot allocate memory (12)
+root attributes for nondir ino 4343932987: Cannot allocate memory (12)
+non-root attributes for nondir ino 4343934465: Cannot allocate memory (12)
+root attributes for nondir ino 4343934465: Cannot allocate memory (12)
+non-root attributes for nondir ino 4343934483: Cannot allocate memory (12)
+root attributes for nondir ino 4343934514: Cannot allocate memory (12)
+non-root attributes for nondir ino 4343934526: Cannot allocate memory (12)
+root attributes for nondir ino 4343934526: Cannot allocate memory (12)
+root attributes for nondir ino 4344182554: Cannot allocate memory (12)
+non-root attributes for nondir ino 4344182555: Cannot allocate memory (12)
+root attributes for nondir ino 4344182555: Cannot allocate memory (12)
+secure attributes for nondir ino 4344182555: Cannot allocate memory (12)
+non-root attributes for nondir ino 4344182556: Cannot allocate memory (12)
+root attributes for nondir ino 4344182556: Cannot allocate memory (12)
+non-root attributes for nondir ino 4344182570: Cannot allocate memory (12)
+root attributes for nondir ino 4344182570: Cannot allocate memory (12)
+secure attributes for nondir ino 4344182570: Cannot allocate memory (12)
+non-root attributes for nondir ino 4344182588: Cannot allocate memory (12)
+root attributes for nondir ino 4344182588: Cannot allocate memory (12)
+secure attributes for nondir ino 4344182588: Cannot allocate memory (12)
+non-root attributes for nondir ino 4344182589: Cannot allocate memory (12)
+root attributes for nondir ino 4344182589: Cannot allocate memory (12)
+non-root attributes for nondir ino 4347574294: Cannot allocate memory (12)
+root attributes for nondir ino 4347574294: Cannot allocate memory (12)
+secure attributes for nondir ino 4347574294: Cannot allocate memory (12)
+non-root attributes for nondir ino 4347574297: Cannot allocate memory (12)
+root attributes for nondir ino 4347574297: Cannot allocate memory (12)
+non-root attributes for nondir ino 4353226027: Cannot allocate memory (12)
+root attributes for nondir ino 4353226027: Cannot allocate memory (12)
+secure attributes for nondir ino 4353226027: Cannot allocate memory (12)
+non-root attributes for nondir ino 4353232663: Cannot allocate memory (12)
+root attributes for nondir ino 4353232663: Cannot allocate memory (12)
+secure attributes for nondir ino 4353232663: Cannot allocate memory (12)
+root attributes for nondir ino 4353232664: Cannot allocate memory (12)
+non-root attributes for nondir ino 4353232666: Cannot allocate memory (12)
+non-root attributes for nondir ino 4355146291: Cannot allocate memory (12)
+root attributes for nondir ino 4355146291: Cannot allocate memory (12)
+secure attributes for nondir ino 4355146291: Cannot allocate memory (12)
+non-root attributes for nondir ino 4367519239: Cannot allocate memory (12)
+non-root attributes for nondir ino 4378111507: Cannot allocate memory (12)
+root attributes for nondir ino 4378111507: Cannot allocate memory (12)
+secure attributes for nondir ino 4378111507: Cannot allocate memory (12)
+non-root attributes for nondir ino 4378111517: Cannot allocate memory (12)
+root attributes for nondir ino 4378111517: Cannot allocate memory (12)
+non-root attributes for nondir ino 4390462721: Cannot allocate memory (12)
+non-root attributes for nondir ino 4390462733: Cannot allocate memory (12)
+root attributes for nondir ino 4390462733: Cannot allocate memory (12)
+secure attributes for nondir ino 4390462733: Cannot allocate memory (12)
+root attributes for nondir ino 4390462735: Cannot allocate memory (12)
+non-root attributes for nondir ino 4393612032: Cannot allocate memory (12)
+root attributes for nondir ino 4393612032: Cannot allocate memory (12)
+secure attributes for nondir ino 4393612032: Cannot allocate memory (12)
+xfsdump: WARNING: could not get list of non-root attributes for nondir ino
+4393612033: Cannot allocate memory (12)
+in @  0.0 KiB/s, out @  0.0 KiB/s, 1370 GiB total, buffer   0% full
+xfsdump: ending media file
+xfsdump: media file size 1472039936288 bytes
+xfsdump: dump size (non-dir files) : 1471490476960 bytes
+xfsdump: dump complete: 19641 seconds elapsed
+xfsdump: Dump Status: SUCCESS
+summary: 1371 GiByte in 5 h 27 min 71.5 MiB/s
 
 _______________________________________________
 xfs mailing list
