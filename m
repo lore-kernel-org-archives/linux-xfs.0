@@ -1,14 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 97B4429E16
-	for <xfs@oss.sgi.com>; Fri,  5 Apr 2013 09:57:48 -0500 (CDT)
-Message-ID: <515EE683.9020308@sgi.com>
-Date: Fri, 5 Apr 2013 09:58:11 -0500
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id D884C29E16
+	for <xfs@oss.sgi.com>; Fri,  5 Apr 2013 10:06:05 -0500 (CDT)
+Message-ID: <515EE871.1060106@sgi.com>
+Date: Fri, 5 Apr 2013 10:06:25 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: check falloc in 285
-References: <1364286957-29140-1-git-send-email-wenqing.lz@taobao.com>
-In-Reply-To: <1364286957-29140-1-git-send-email-wenqing.lz@taobao.com>
+Subject: Re: [PATCH v3] xfstests: add a new test case for ext4 indirect-based
+	file
+References: <1364119002-17350-1-git-send-email-wenqing.lz@taobao.com>
+In-Reply-To: <1364119002-17350-1-git-send-email-wenqing.lz@taobao.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,15 +23,17 @@ Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Zheng Liu <gnehzuil.liu@gmail.com>
-Cc: Zheng Liu <wenqing.lz@taobao.com>, xfs@oss.sgi.com
+Cc: linux-ext4@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>, Zheng Liu <wenqing.lz@taobao.com>, xfs@oss.sgi.com
 
 Zheng,
 
-Thanks again for submitting patches for xfstests.  Will also rework this 
-one for TOT changes, it loks good as well.
+Another nice patch that needs to be reworked so that the test resides 
+in the tests/generic directory.  Don't worry about the test number, it 
+will be adjusted to be the next in test group when committed.
 
 Thanks
 --Rich
+
 
 _______________________________________________
 xfs mailing list
