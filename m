@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 61E7C29DFE
-	for <xfs@oss.sgi.com>; Fri,  5 Apr 2013 06:37:46 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id CF686AC002
-	for <xfs@oss.sgi.com>; Fri,  5 Apr 2013 04:37:42 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id aQvLkOyOcePgAXng for
-	<xfs@oss.sgi.com>; Fri, 05 Apr 2013 04:37:41 -0700 (PDT)
-Message-ID: <515EB6E4.7060508@redhat.com>
-Date: Fri, 05 Apr 2013 07:35:00 -0400
-From: Brian Foster <bfoster@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 3B12929DFE
+	for <xfs@oss.sgi.com>; Fri,  5 Apr 2013 07:08:05 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 067A58F8065
+	for <xfs@oss.sgi.com>; Fri,  5 Apr 2013 05:08:01 -0700 (PDT)
+Received: from mail.in8.de (brockman.in8.de [85.214.220.56]) by cuda.sgi.com
+	with ESMTP id SVAGbWr8YVoVuYfw for <xfs@oss.sgi.com>;
+	Fri, 05 Apr 2013 05:08:00 -0700 (PDT)
+Message-ID: <515EBE9E.3000905@jan-o-sch.net>
+Date: Fri, 05 Apr 2013 14:07:58 +0200
+From: Jan Schmidt <list.xfs@jan-o-sch.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH 23/22] xfs: add metadata CRC documentation
-References: <1364965892-19623-1-git-send-email-david@fromorbit.com>
-	<20130405070006.GJ12011@dastard>
-In-Reply-To: <20130405070006.GJ12011@dastard>
+Subject: Re: [PATCH] xfstests: add execution of a custom command to fsstress
+	(-x and -X options)
+References: <1363863585-25598-1-git-send-email-list.xfs@jan-o-sch.net>
+	<20130321195054.GO17758@dastard> <514B72B9.1010005@jan-o-sch.net>
+	<20130321211218.GP17758@dastard> <514C0309.1000104@jan-o-sch.net>
+	<20130324235135.GH6369@dastard>
+In-Reply-To: <20130324235135.GH6369@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,276 +34,124 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On 04/05/2013 03:00 AM, Dave Chinner wrote:
-> xfs: add metadata CRC documentation
+
+On Mon, March 25, 2013 at 00:51 (+0100), Dave Chinner wrote:
+> On Fri, Mar 22, 2013 at 08:06:49AM +0100, Jan Schmidt wrote:
+>> On Thu, March 21, 2013 at 22:12 (+0100), Dave Chinner wrote:> On Thu, Mar 21,
+>> 2013 at 09:51:05PM +0100, Jan Schmidt wrote:
+>>>>
+>>>>
+>>>> On 21.03.2013 20:50, Dave Chinner wrote:
+>>>>> On Thu, Mar 21, 2013 at 11:59:45AM +0100, Jan Schmidt wrote:
+>>>>>> From: Jan Schmidt <list.btrfs@jan-o-sch.net>
+>>>>>>
+>>>>>> This patch adds execution of a custom command in the middle of all fsstress
+>>>>>> operations. Its intended use is the creation of snapshots in the middle of a
+>>>>>> test run.
+>>>>>
+>>>>> Why do you need fsstress to do this? Why can't you just run fsstress
+>>>>> in the background and run a loop creating periodic snapshots in the
+>>>>> control script?
+>>>>
+>>>> Because I want reproducible results. Same random seed should result in
+>>>> the very same snapshots being created.
+>>>
+>>> Why can't you run fsstress for N operations, run a snapshot,
+>>> then run it again for M operations? That will give you exactly the
+>>> same results, wouldn't it?
+>>
+>> As far as I have understood what fsstress does, the second run would generate
+>> different filenames, i.e. it would never rename / truncate / punch holes into /
+>> ... files  created by the first run - it cannot even know that they exist.
 > 
-> From: Dave Chinner <dchinner@redhat.com>
+> Yes, you are right.
 > 
-> Add some documentation about the self describing metadata and the
-> code templates used to implement it.
-
-Thanks for the write up. Very nice read. A couple minor/random comments
-and a question to follow...
-
+>>>>> Also, did you intend that every process creates a snapshot? i.e. it
+>>>>> looks lik eif you run a 1000 processes, they'll all run a snapshot
+>>>>> operation at X operations? i.e. this will generate nproc * X
+>>>>> snapshots in a single run. This doesn't seem very wise to me....
+>>>>
+>>>> Agreed, I haven't thought of running more than one process. For the sake
+>>>> of reproducibility, I wouldn't want multiple processes for my test case
+>>>> either.
+>>>>
+>>>> I'm not sure if there are other applications than snapshot creation for
+>>>> such a feature, so I cannot argue whether to have each process execute
+>>>> such a command or not.
+>>>
+>>> If such a feature is necessary, I'd suggest that implementing the
+>>> snapshot ioctl as just another operation directly into fsstress is
+>>> probably a better way to implement this functionality. That way you
+>>> can control the frequency via the command line in exactly the same
+>>> way as every other operation....
+>>
+>> What I currently need is a function to make one reasonably weird snapshot. So my
+>> plan goes like this: do n weird operations, make a snapshot (this is going to be
+>> the base snapshot), do n weird operations (partly to the same files), make a
+>> second snapshot (this is going to be the incremental snapshot, I create that one
+>> myself after fsstress is done, currently). Having both snapshots with an equal
+>> number of modification operations isn't required, however at least a fair number
+>> of operations for each of them is desired.
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  .../filesystems/xfs-self-describing-metadata.txt   |  352 ++++++++++++++++++++
->  1 file changed, 352 insertions(+)
+> Ah, so you're wanting to test incremental backups based on
+> snapshots. Ok, that context puts it in a different light....
 > 
-> diff --git a/Documentation/filesystems/xfs-self-describing-metadata.txt b/Documentation/filesystems/xfs-self-describing-metadata.txt
-> new file mode 100644
-> index 0000000..da7edc9
-> --- /dev/null
-> +++ b/Documentation/filesystems/xfs-self-describing-metadata.txt
-> @@ -0,0 +1,352 @@
-> +XFS Self Describing Metadata
-> +----------------------------
-> +
-> +Introduction
-> +------------
-> +
-...
-> +
-> +
-> +Self Describing Metadata
-> +------------------------
-> +
-...
-> +
-> +Different types of metadata have different owner identifiers. For example,
-> +directory, attribute and extent tree blocks are all owned by an inode, whilst
-> +freespace btree blocks are owned by an allocation group. Hence the size and
-> +contents of the owner field are determined by the type of metadata object we are
-> +looking at. For example, directories, extent maps and attributes are owned by
-> +inodes, while freespace btree blocks are owned by a specific allocation group.
-
-Looks like repetition from the sentence before last.
-
-> +THe owner information can also identify misplaced writes (e.g. freespace btree
-> +block written to the wrong AG).
-> +
-> +Self describing metadata also needs to contain some indication of when it was
-> +written to the filesystem. One of the key information points when doing forensic
-> +analysis is how recently the block was modified. Correlation of set of corrupted
-> +metadata blocks based on modification times is important as it can indicate
-> +whether the corruptions are related, whether there's been multiple corruption
-> +events that lead to the eventual failure, and even whether there are corruptions
-> +present that the run-time verification is not detecting.
-> +
-> +For example, we can determine whether a metadata object is supposed to be free
-> +space or still allocated when it is still referenced by it's owner can be
-> +determined by looking at when the free space btree block that contains the block
-
-I think you mean to drop the "can be determined" mid-sentence.
-
-> +was last written compared to when the metadata object itself was last written.
-> +If the free space block is more recent than the object and the objects owner,
-> +then there is a very good chance that the block should have been removed from
-> +it's owner.
-> +
-...
-> +
-> +Runtime Validation
-> +------------------
-> +
-...
-> +
-> +The first step in read verification is checking the magic number and determining
-> +whether CRC validating is necessary. If it is, the CRC32c is caluclated and
-
-What do you mean by "determining whether CRC validating is necessary?"
-In other words, it's not always enabled but rather triggered by
-something else that elevates suspicion on the object?
-
-/me should probably use this to look at the code... ;)
-
-Brian
-
-> +compared against the value stored in the object itself. Once this is validated,
-> +further checks are made against the location information, followed by extensive
-> +object specific metadata validation. If any of these checks fail, then the
-> +buffer is considered corrupt and the EFSCORRUPTED error is set appropriately.
-> +
-> +Write verification is the opposite of the read verification - first the object
-> +is extensively verified and if it is OK we then update the LSN from the last
-> +modification made to the object, After this, we calculate the CRC and insert it
-> +into the object. Once this is done the write IO is allowed to continue. If any
-> +error occurs during this process, the buffer is again marked with a EFSCORRUPTED
-> +error for the higher layers to catch.
-> +
-> +Structures
-> +----------
-> +
-> +A typical on-disk structure needs to contain the following information:
-> +
-> +struct xfs_ondisk_hdr {
-> +        __be32  magic;		/* magic number */
-> +        __be32  crc;		/* CRC, not logged */
-> +        uuid_t  uuid;		/* filesystem identifier */
-> +        __be64  owner;		/* parent object */
-> +        __be64  blkno;		/* location on disk */
-> +        __be64  lsn;		/* last modification in log, not logged */
-> +};
-> +
-> +Depending on the metadata, this information may be part of a header stucture
-> +separate to the metadata contents, or may be distributed through an existing
-> +structure. The latter occurs with metadata that already contains some of this
-> +information, such as the superblock and AG headers.
-> +
-> +Other metadata may have different formats for the information, but the same
-> +level of information is generally provided. For example:
-> +
-> +	- short btree blocks have a 32 bit owner (ag number) and a 32 bit block
-> +	  number for location. The two of these combined provide the same
-> +	  information as @owner and @blkno in eh above structure, but using 8
-> +	  bytes less space on disk.
-> +
-> +	- directory/attribute node blocks have a 16 bit magic number, and the
-> +	  header that contains the magic number has other information in it as
-> +	  well. hence the additional metadata headers change the overall format
-> +	  of the metadata.
-> +
-> +A typical buffer read verifier is structured as follows:
-> +
-> +#define XFS_FOO_CRC_OFF		offsetof(struct xfs_ondisk_hdr, crc)
-> +
-> +static void
-> +xfs_foo_read_verify(
-> +	struct xfs_buf	*bp)
-> +{
-> +       struct xfs_mount *mp = bp->b_target->bt_mount;
-> +
-> +        if ((xfs_sb_version_hascrc(&mp->m_sb) &&
-> +             !xfs_verify_cksum(bp->b_addr, BBTOB(bp->b_length),
-> +					XFS_FOO_CRC_OFF)) ||
-> +            !xfs_foo_verify(bp)) {
-> +                XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
-> +                xfs_buf_ioerror(bp, EFSCORRUPTED);
-> +        }
-> +}
-> +
-> +The code ensures that the CRC is only checked if the filesystem has CRCs enabled
-> +by checking the superblock of the feature bit, and then if the CRC verifies OK
-> +(or is not needed) it then verifies the actual contents of the block.
-> +
-> +The verifier function will take a couple of different forms, depending on
-> +whether the magic number can be used to determine the format of the block. In
-> +the case it can't, the code will is structured as follows:
-> +
-> +static bool
-> +xfs_foo_verify(
-> +	struct xfs_buf		*bp)
-> +{
-> +        struct xfs_mount	*mp = bp->b_target->bt_mount;
-> +        struct xfs_ondisk_hdr	*hdr = bp->b_addr;
-> +
-> +        if (hdr->magic != cpu_to_be32(XFS_FOO_MAGIC))
-> +                return false;
-> +
-> +        if (!xfs_sb_version_hascrc(&mp->m_sb)) {
-> +		if (!uuid_equal(&hdr->uuid, &mp->m_sb.sb_uuid))
-> +			return false;
-> +		if (bp->b_bn != be64_to_cpu(hdr->blkno))
-> +			return false;
-> +		if (hdr->owner == 0)
-> +			return false;
-> +	}
-> +
-> +	/* object specific verification checks here */
-> +
-> +        return true;
-> +}
-> +
-> +If there are different magic numbers for the different formats, the verifier
-> +will look like:
-> +
-> +static bool
-> +xfs_foo_verify(
-> +	struct xfs_buf		*bp)
-> +{
-> +        struct xfs_mount	*mp = bp->b_target->bt_mount;
-> +        struct xfs_ondisk_hdr	*hdr = bp->b_addr;
-> +
-> +        if (hdr->magic == cpu_to_be32(XFS_FOO_CRC_MAGIC)) {
-> +		if (!uuid_equal(&hdr->uuid, &mp->m_sb.sb_uuid))
-> +			return false;
-> +		if (bp->b_bn != be64_to_cpu(hdr->blkno))
-> +			return false;
-> +		if (hdr->owner == 0)
-> +			return false;
-> +	} else if (hdr->magic != cpu_to_be32(XFS_FOO_MAGIC))
-> +		return false;
-> +
-> +	/* object specific verification checks here */
-> +
-> +        return true;
-> +}
-> +
-> +Write verifiers are very similar to the read verifiers, they just do things in
-> +the opposite order to the read verifiers. A typical write verifier:
-> +
-> +static void
-> +xfs_foo_write_verify(
-> +	struct xfs_buf	*bp)
-> +{
-> +	struct xfs_mount	*mp = bp->b_target->bt_mount;
-> +	struct xfs_buf_log_item	*bip = bp->b_fspriv;
-> +
-> +	if (!xfs_foo_verify(bp)) {
-> +		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
-> +		xfs_buf_ioerror(bp, EFSCORRUPTED);
-> +		return;
-> +	}
-> +
-> +	if (!xfs_sb_version_hascrc(&mp->m_sb))
-> +		return;
-> +
-> +
-> +	if (bip) {
-> +		struct xfs_ondisk_hdr	*hdr = bp->b_addr;
-> +		hdr->lsn = cpu_to_be64(bip->bli_item.li_lsn);
-> +	}
-> +	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length), XFS_FOO_CRC_OFF);
-> +}
-> +
-> +This will verify the internal structure of the metadata before we go any
-> +further, detecting corruptions that have occurred as the metadata has been
-> +modified in memory. If the metadata verifies OK, and CRCs are enabled, we then
-> +update the LSN field (when it was last modified) and calculate the CRC on the
-> +metadata. Once this is done, we can issue the IO.
-> +
-> +Inodes and Dquots
-> +-----------------
-> +
-> +Inodes and dquots are special snowflakes. They have per-object CRC and
-> +self-identifiers, but they are packed so that there are multiple objects per
-> +buffer. Hence we do not use per-buffer verifiers to do the work of per-object
-> +verification and CRC calculations. The per-buffer verifiers simply perform basic
-> +identification of the buffer - that they contain inodes or dquots, and that
-> +there are magic numbers in all the expected spots. All further CRC and
-> +verification checks are done when each inode is read from or written back to the
-> +buffer.
-> +
-> +The structure of the verifiers and the identifiers checks is very similar to the
-> +buffer code described above. The only difference is where they are called. For
-> +example, inode read verification is done in xfs_iread() when the inode is first
-> +read out of the buffer and the struct xfs_inode is instantiated. The inode is
-> +already extensively verified during writeback in xfs_iflush_int, so the only
-> +addition here add the LSN and CRC to the inode as it is copied back into the
-> +buffer.
-> +
-> +XXX: inode unlinked list modification doesn't recalculate the inode CRC! None of
-> +the unlinked list modifications check or update CRCs, neither during unlink nor
-> +log recovery. So, it's gone unnoticed until now. This won't matter immediately -
-> +repair will probably complain about it - but it needs to be fixed.
-> +
+>> Adding it as a normal fsstress operation would generate a whole lot of
+>> snapshots. I could, for like 50k operations, scale all the factors for each
+>> operation accordingly to get a single snapshot out of it. I still won't force it
+>> anywhere near the middle that way, though. Also, going from 50k operation to 60k
+>> operations gets cumbersome that way.
 > 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> *nod*
 > 
+>> Plumbing that into fsstress the way I did is the only solution I could think of
+>> to reach the mentioned goals. If nobody else needs it, I can of course keep it
+>> local, here. However, I'd really like to make an xfstest out of it sooner or
+>> later - currently, we've no test at all for (btrfs) send and receive.
+> 
+> For send/receive, you should probably start with some basic tests
+> that are easy to verify first. e.g. the equivalent of the basic
+> incremental xfsdump/restore tests like 064/065 which do well
+> defined, easy to verify operations to determine correct behaviour.
+
+That sounds like a good start.
+
+> I can see the value in adding a random variant in addition to these
+> basic tests, so I can see how having a predictable callout from
+> fsstress would be useful for incremental xfsdump/restore testing as
+> well.
+> 
+> FWIW, what does you current callout execute? A shell script that
+> runs a bunch of other commands that ends with a btrfs send?
+
+It's basically just "btrfs subvol snapshot", but yeah, for more complex things
+I'd put a shell script there.
+
+> The biggest question I have about this is how to make it valuable
+> for more types of fsstress execution, especially concurrent
+> execution. I can't see a use (yet) for a per-process callout, but
+> I'm wondering if we should have some kind of "wait for all processes
+> to do N ops, then run the callout" style of synchronisation.
+> 
+> I'm not sure what is best here as I don't know the full context of
+> what you are wanting to test (and how), but I think we can come up
+> with something better than "only works for single process
+> invocations". :)
+
+Well, in fact you do have the full context of what I'm wanting to test, as far
+as I can see it.
+
+I bet we could came up with a suggestion how to interpret something like the
+proposed -x switch in multi process context. However, I don't like to code for
+hypothetic situations I cannot really imagine a use case for. So, the best thing
+I came up with is a switch that can do something meaningful in single process
+applications of fsstress.
+
+I'm happy to code the rest of it, if a good suggestion comes up how this could
+be handled and how it could be useful to others as well.
+
+Thanks!
+-Jan
 
 _______________________________________________
 xfs mailing list
