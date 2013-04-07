@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 02C767F5D
+	by oss.sgi.com (Postfix) with ESMTP id 143657F5E
 	for <xfs@oss.sgi.com>; Sun,  7 Apr 2013 05:39:23 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8C737AC001
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A00BBAC002
 	for <xfs@oss.sgi.com>; Sun,  7 Apr 2013 03:39:22 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 3wd2Bs3lO33Il9Su for
-	<xfs@oss.sgi.com>; Sun, 07 Apr 2013 03:39:21 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r37AdLsS020731
+	cuda.sgi.com with ESMTP id wqDvvy3W4aK6SaLN for
+	<xfs@oss.sgi.com>; Sun, 07 Apr 2013 03:39:18 -0700 (PDT)
+Received: from int-mx02.intmail.prod.int.phx2.redhat.com
+	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r37AdIri020725
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Sun, 7 Apr 2013 06:39:21 -0400
+	for <xfs@oss.sgi.com>; Sun, 7 Apr 2013 06:39:18 -0400
 From: Eryu Guan <eguan@redhat.com>
-Subject: [PATCH 3/3] xfstests generic 310: fix common file path and other
-	cleanups
-Date: Sun,  7 Apr 2013 18:39:07 +0800
-Message-Id: <1365331147-15179-3-git-send-email-eguan@redhat.com>
+Subject: [PATCH 2/3] xfstests: replace $seq.full with $seqres.full in ext4/305
+	and generic/308
+Date: Sun,  7 Apr 2013 18:39:06 +0800
+Message-Id: <1365331147-15179-2-git-send-email-eguan@redhat.com>
 In-Reply-To: <1365331147-15179-1-git-send-email-eguan@redhat.com>
 References: <1365331147-15179-1-git-send-email-eguan@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -36,62 +36,62 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Eryu Guan <eguan@redhat.com>
 
-1. add one space between # and test description
-2. remove creator/owner info
-3. fix common/rc and common/filter path so they can be sourced correctly
-4. no need to remove $seq.full cause it's not used(or if verbose output
-   is needed, $seqres.full should be used)
+We use $seqres.full to record verbose output now, replace $seq.full with
+$seqres.full in ext4/305 and generic/308.
 
 Signed-off-by: Eryu Guan <eguan@redhat.com>
 ---
- tests/generic/310 | 12 +++++-------
- 1 file changed, 5 insertions(+), 7 deletions(-)
+ tests/ext4/305    | 6 +++---
+ tests/generic/308 | 6 +++---
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/tests/generic/310 b/tests/generic/310
-index ef51422..35baa23 100644
---- a/tests/generic/310
-+++ b/tests/generic/310
-@@ -1,8 +1,8 @@
- #! /bin/bash
- # FS QA Test No. 310
- #
--#Check if there are two threads,one keeps calling read() or lseek(), and
--#the other calling readdir(), both on the same directory fd.
-+# Check if there are two threads,one keeps calling read() or lseek(), and
-+# the other calling readdir(), both on the same directory fd.
- #
- # Based on a testcase from Li Zefan <lizefan@huawei.com>.
- #
-@@ -25,10 +25,9 @@
- # Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- #-----------------------------------------------------------------------
- #
--# creator
--owner=zhaohongjiang@huawei.com
+diff --git a/tests/ext4/305 b/tests/ext4/305
+index bf9d9cd..eee461a 100644
+--- a/tests/ext4/305
++++ b/tests/ext4/305
+@@ -46,12 +46,12 @@ _supported_os Linux
  
- seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
- echo "QA output created by $seq"
+ _require_scratch
  
- status=1	# failure is the default!
-@@ -40,8 +39,8 @@ _cleanup()
- trap "_cleanup; exit \$status" 0 1 2 3 15
- 
- # get standard environment, filters and checks
--. ./common.rc
--. ./common.filter
-+. ./common/rc
-+. ./common/filter
- 
- # real QA test starts here
- _supported_fs generic
-@@ -71,6 +70,5 @@ _test_lseek
- 
- # success, all done
- echo "*** done"
 -rm -f $seq.full
++rm -f $seqres.full
+ echo "Silence is golden"
+ 
+ DEV_BASENAME=$(basename $(readlink -f $SCRATCH_DEV))
+-echo "Start test on device $SCRATCH_DEV, basename $DEV_BASENAME" >$seq.full
+-_scratch_mkfs >>$seq.full 2>&1
++echo "Start test on device $SCRATCH_DEV, basename $DEV_BASENAME" >$seqres.full
++_scratch_mkfs >>$seqres.full 2>&1
+ 
+ while true;do
+ 	mount $SCRATCH_DEV $SCRATCH_MNT
+diff --git a/tests/generic/308 b/tests/generic/308
+index 0db093a..8037c08 100644
+--- a/tests/generic/308
++++ b/tests/generic/308
+@@ -45,7 +45,7 @@ testfile=$TEST_DIR/testfile.$seq
+ _supported_fs generic
+ _supported_os Linux
+ 
+-rm -f $seq.full
++rm -f $seqres.full
+ echo "Silence is golden"
+ 
+ block_size=`stat -f -c %s $TEST_DIR`
+@@ -58,11 +58,11 @@ block_size=`stat -f -c %s $TEST_DIR`
+ 
+ # Create a sparse file with an extent lays at one block before old s_maxbytes
+ offset=$(((2**32 - 2) * $block_size))
+-$XFS_IO_PROG -f -c "pwrite $offset $block_size" -c fsync $testfile >$seq.full 2>&1
++$XFS_IO_PROG -f -c "pwrite $offset $block_size" -c fsync $testfile >$seqres.full 2>&1
+ 
+ # Write to the block after the extent just created
+ offset=$(((2**32 - 1) * $block_size))
+-$XFS_IO_PROG -f -c "pwrite $offset $block_size" -c fsync $testfile >>$seq.full 2>&1
++$XFS_IO_PROG -f -c "pwrite $offset $block_size" -c fsync $testfile >>$seqres.full 2>&1
+ 
+ # Got here without hitting BUG_ON(), test passed
  status=0
- exit
 -- 
 1.8.1.4
 
