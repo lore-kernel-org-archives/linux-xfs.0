@@ -1,16 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C8D767F74
-	for <xfs@oss.sgi.com>; Mon,  8 Apr 2013 16:47:59 -0500 (CDT)
-Message-ID: <51633B0E.4010602@sgi.com>
-Date: Mon, 08 Apr 2013 16:47:58 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 651E67F4C
+	for <xfs@oss.sgi.com>; Mon,  8 Apr 2013 18:07:41 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 00466AC002
+	for <xfs@oss.sgi.com>; Mon,  8 Apr 2013 16:07:37 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	QnrQSIIEBb4WLcZ2 for <xfs@oss.sgi.com>;
+	Mon, 08 Apr 2013 16:07:36 -0700 (PDT)
+Date: Tue, 9 Apr 2013 09:07:34 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfstests should still make xfs as default?
+Message-ID: <20130408230733.GB17758@dastard>
+References: <20130327203231.GA26739@andromeda.usersys.redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH v2] xfs: fix assertion failure in xfs_vm_write_failed()
-References: <51469C90.1000001@oracle.com> <20130318233026.GS6369@dastard>
-	<514800DB.5070306@oracle.com> <20130319192322.GB6369@dastard>
-	<51491C5C.4040102@oracle.com>
-In-Reply-To: <51491C5C.4040102@oracle.com>
+Content-Disposition: inline
+In-Reply-To: <20130327203231.GA26739@andromeda.usersys.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,85 +25,59 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
-Cc: "Michael L. Semon" <mlsemon35@gmail.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: xfs@oss.sgi.com
 
+On Wed, Mar 27, 2013 at 05:32:32PM -0300, Carlos Maiolino wrote:
+> Hi, working on xfstests after its new directory structures I noticed we should
+> use now something like:
+> 
+> ./check xfs/<test>
+> 
+> to run some tests, IMHO this is not intuitive and I was working on a patch to
+> make us able to use something just like the old way:
+> 
+> ./check <test>
 
->>
->> Reviewed-by: Dave Chinner<dchinner@redhat.com>
->
-> Thanks Dave for correcting me with detailed comments, the revised patch was shown as following.
->
-> Regards,
-> -Jeff
->
->
-> In xfs_vm_write_failed(), we evaluate the block_offset of pos with PAGE_MASK
-> which is an unsigned long.  That is fine on 64-bit platforms regardless of
-> whether the request pos is 32-bit or 64-bit.  However, on 32-bit platforms
-> the value is 0xfffff000 and so the high 32 bits in it will be masked off with
-> (pos&  PAGE_MASK) for a 64-bit pos.  As a result, the evaluated block_offset is
-> incorrect which will cause this failure ASSERT(block_offset + from == pos); and
-> potentially pass the wrong block to xfs_vm_kill_delalloc_range().
->
-> In this case, we can get the following kernel Panic if the CONFIG_XFS_DEBUG is enabled:
->
-> [   68.700573] XFS: Assertion failed: block_offset + from == pos, file: fs/xfs/xfs_aops.c, line: 1504
-> [   68.700656] ------------[ cut here ]------------
-> [   68.700692] kernel BUG at fs/xfs/xfs_message.c:100!
-> [   68.700742] invalid opcode: 0000 [#1] SMP
-> ........
-> [   68.701678] Pid: 4057, comm: mkfs.xfs Tainted: G           O 3.9.0-rc2 #1
-> [   68.701722] EIP: 0060:[<f94a7e8b>] EFLAGS: 00010282 CPU: 0
-> [   68.701783] EIP is at assfail+0x2b/0x30 [xfs]
-> [   68.701819] EAX: 00000056 EBX: f6ef28a0 ECX: 00000007 EDX: f57d22a4
-> [   68.701852] ESI: 1c2fb000 EDI: 00000000 EBP: ea6b5d30 ESP: ea6b5d1c
-> [   68.701895]  DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
-> [   68.701934] CR0: 8005003b CR2: 094f3ff4 CR3: 2bcb4000 CR4: 000006f0
-> [   68.701970] DR0: 00000000 DR1: 00000000 DR2: 00000000 DR3: 00000000
-> [   68.702011] DR6: ffff0ff0 DR7: 00000400
-> [   68.702046] Process mkfs.xfs (pid: 4057, ti=ea6b4000 task=ea5799e0 task.ti=ea6b4000)
-> [   68.702086] Stack:
-> [   68.702124]  00000000 f9525c48 f951fa80 f951f96b 000005e4 ea6b5d7c f9494b34 c19b0ea2
-> [   68.702445]  00000066 f3d6c620 c19b0ea2 00000000 e9a91458 00001000 00000000 00000000
-> [   68.702868]  00000000 c15c7e89 00000000 1c2fb000 00000000 00000000 1c2fb000 00000080
-> [   68.703192] Call Trace:
-> [   68.703248]  [<f9494b34>] xfs_vm_write_failed+0x74/0x1b0 [xfs]
-> [   68.703441]  [<c15c7e89>] ? printk+0x4d/0x4f
-> [   68.703496]  [<f9494d7d>] xfs_vm_write_begin+0x10d/0x170 [xfs]
-> [   68.703535]  [<c110a34c>] generic_file_buffered_write+0xdc/0x210
-> [   68.703583]  [<f949b669>] xfs_file_buffered_aio_write+0xf9/0x190 [xfs]
-> [   68.703629]  [<f949b7f3>] xfs_file_aio_write+0xf3/0x160 [xfs]
-> [   68.703668]  [<c115e504>] do_sync_write+0x94/0xd0
-> [   68.703716]  [<c115ed1f>] vfs_write+0x8f/0x160
-> [   68.703753]  [<c115e470>] ? wait_on_retry_sync_kiocb+0x50/0x50
-> [   68.703794]  [<c115f017>] sys_write+0x47/0x80
-> [   68.703830]  [<c15d860d>] sysenter_do_call+0x12/0x28
-> .............
-> [   68.704203] EIP: [<f94a7e8b>] assfail+0x2b/0x30 [xfs] SS:ESP 0068:ea6b5d1c
-> [   68.706615] ---[ end trace cdd9af4f4ecab42f ]---
-> [   68.706687] Kernel panic - not syncing: Fatal exception
->
-> In order to avoid this, we can evaluate the block_offset of the start of the page
-> by using shifts rather than masks the mismatch problem.
->
-> Thanks Dave Chinner for help finding and fixing this bug.
->
-> Reported-by: Michael L. Semon<mlsemon35@gmail.com>
-> Reviewed-by: Dave Chinner<david@fromorbit.com>
-> Signed-off-by: Jie Liu<jeff.liu@oracle.com>
-> ---
->   fs/xfs/xfs_aops.c |   15 ++++++++++++++-
->   1 file changed, 14 insertions(+), 1 deletion(-)
->
+What do you do with duplicate test names?
 
-Looks good.
+The main reason that the interface changed was to keep the changes
+to the test harness down to a minimum as it was just moving tests
+around. All that code needs to be revisited to support arbitrary
+test names, so there wasn't much point in doing a massive rework
+only to have to rework it again...
 
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+But the question is: is the old way a sane way to specify tests in
+the brave new world? I'd much prefer that test specification is
+explict, and doesn't implicitly select tests. Indeed, if it
+implicitly selects tests (e.g. when there are duplicates it runs all
+duplicates) then we still need a method for running specific
+tests.....
+
+Note that what you are seeing is how the $have_test_arg code
+processes the test name. It requires that you tell it the directory
+so it knows where to look for the specific test. You could make it
+look in each test directory like get_group_list()/get_all_tests() do
+so we don't need to specify a directory.
+
+> But, since xfstests is becoming more generalist than xfs specific, I wonder if
+> we should still keep xfs as default.
+
+The default is whatever filesystem is on the $TEST_DEV, and I don't
+see that changing. i.e. what we set FSTYP to is the default. Note
+that get_group_list() and get_all_tests() specifically include the
+FSTYP directory,
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
