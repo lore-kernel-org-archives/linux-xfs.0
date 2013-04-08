@@ -1,23 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B4FA57F75
-	for <xfs@oss.sgi.com>; Sun,  7 Apr 2013 18:08:38 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3E33FAC001
-	for <xfs@oss.sgi.com>; Sun,  7 Apr 2013 16:08:38 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	ZkA5rPLZ7YBTvaWd for <xfs@oss.sgi.com>;
-	Sun, 07 Apr 2013 16:08:36 -0700 (PDT)
-Date: Mon, 8 Apr 2013 09:08:34 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 23/22] xfs: add metadata CRC documentation
-Message-ID: <20130407230834.GA17758@dastard>
-References: <1364965892-19623-1-git-send-email-david@fromorbit.com>
-	<20130405070006.GJ12011@dastard> <515EB6E4.7060508@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id BFF2629DFA
+	for <xfs@oss.sgi.com>; Sun,  7 Apr 2013 22:40:38 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A0DD3304032
+	for <xfs@oss.sgi.com>; Sun,  7 Apr 2013 20:40:35 -0700 (PDT)
+Received: from mail-pa0-f51.google.com (mail-pa0-f51.google.com
+	[209.85.220.51]) by cuda.sgi.com with ESMTP id CJZDt0nbKt4lSkbs
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sun, 07 Apr 2013 20:40:34 -0700 (PDT)
+Received: by mail-pa0-f51.google.com with SMTP id jh10so3025264pab.10
+	for <xfs@oss.sgi.com>; Sun, 07 Apr 2013 20:40:34 -0700 (PDT)
+Date: Mon, 8 Apr 2013 11:57:26 +0800
+From: Zheng Liu <gnehzuil.liu@gmail.com>
+Subject: Re: [PATCH v3] xfstests: add a new test case for ext4 indirect-based
+	file
+Message-ID: <20130408035725.GA32102@gmail.com>
+References: <1364119002-17350-1-git-send-email-wenqing.lz@taobao.com>
+	<515EE871.1060106@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <515EB6E4.7060508@redhat.com>
+In-Reply-To: <515EE871.1060106@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,40 +33,21 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Rich Johnston <rjohnston@sgi.com>
+Cc: linux-ext4@vger.kernel.org, Eric Sandeen <sandeen@sandeen.net>, Zheng Liu <wenqing.lz@taobao.com>, xfs@oss.sgi.com
 
-On Fri, Apr 05, 2013 at 07:35:00AM -0400, Brian Foster wrote:
-> On 04/05/2013 03:00 AM, Dave Chinner wrote:
-> > xfs: add metadata CRC documentation
-> > 
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Add some documentation about the self describing metadata and the
-> > code templates used to implement it.
-> > +
-> > +Runtime Validation
-> > +------------------
-> > +
-> ...
-> > +
-> > +The first step in read verification is checking the magic number and determining
-> > +whether CRC validating is necessary. If it is, the CRC32c is caluclated and
+On Fri, Apr 05, 2013 at 10:06:25AM -0500, Rich Johnston wrote:
+> Zheng,
 > 
-> What do you mean by "determining whether CRC validating is necessary?"
-> In other words, it's not always enabled but rather triggered by
-> something else that elevates suspicion on the object?
+> Another nice patch that needs to be reworked so that the test
+> resides in the tests/generic directory.  Don't worry about the test
+> number, it will be adjusted to be the next in test group when
+> committed.
 
-It is triggered by either the magic number indicating the object has
-CRC checking or (xfs_sb_version_hascrc(sb) == true) indicating the
-filesystem has metadata CRC checking enabled.
+Sorry for the late.  Yes, I am happy to rework this patch.
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Regards,
+                                                - Zheng
 
 _______________________________________________
 xfs mailing list
