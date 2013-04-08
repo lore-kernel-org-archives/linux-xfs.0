@@ -1,16 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3398F7F6C
-	for <xfs@oss.sgi.com>; Mon,  8 Apr 2013 09:04:43 -0500 (CDT)
-Message-ID: <5162CE93.7010301@sgi.com>
-Date: Mon, 8 Apr 2013 09:05:07 -0500
-From: Rich Johnston <rjohnston@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id 2F7AD7F62
+	for <xfs@oss.sgi.com>; Mon,  8 Apr 2013 15:59:19 -0500 (CDT)
+Message-ID: <51632FA8.8020703@sgi.com>
+Date: Mon, 08 Apr 2013 15:59:20 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 3/3] xfstests generic 310: fix common file path and other
-	cleanups
-References: <1365331147-15179-1-git-send-email-eguan@redhat.com>
-	<1365331147-15179-3-git-send-email-eguan@redhat.com>
-In-Reply-To: <1365331147-15179-3-git-send-email-eguan@redhat.com>
+Subject: Re: [PATCH] xfs: Update xfs_log_commit_cil() comments
+References: <515D34B2.9050807@oracle.com>
+In-Reply-To: <515D34B2.9050807@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,57 +21,44 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eryu Guan <eguan@redhat.com>, zhaohongjiang@huawei.com
-Cc: xfs@oss.sgi.com
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Hi Eryu,
-
-Thanks for this cleanup patch. I was going to revert patch "bbaf78c0" 
-which introduced test generic/310 but will wait and see if Zhao will 
-provide more information which could be added to this patch.
-
-
-On 04/07/2013 05:39 AM, Eryu Guan wrote:
-> 1. add one space between # and test description
-
-The rest of the changes look good, sorry I missed them when I reviewed ;).
-
-> 2. remove creator/owner info
-> 3. fix common/rc and common/filter path so they can be sourced correctly
-> 4. no need to remove $seq.full cause it's not used(or if verbose output
->     is needed, $seqres.full should be used)
+On 04/04/13 03:07, Jeff Liu wrote:
+> xfs_log_commit_iclog() function has been removed by commits 93b8a585:
+> 	xfs: remove the deprecated nodelaylog option
 >
-> Signed-off-by: Eryu Guan <eguan@redhat.com>
+> Beginning from Linux 3.3, only delayed logging is supported so that
+> we call xfs_log_commit_cil() at xfs_trans_commit() only, remove the
+> useless comments so.
+>
+> Signed-off-by: Jie Liu<jeff.liu@oracle.com>
 > ---
->   tests/generic/310 | 12 +++++-------
->   1 file changed, 5 insertions(+), 7 deletions(-)
+>   fs/xfs/xfs_log_cil.c |    4 ----
+>   1 file changed, 4 deletions(-)
 >
-> diff --git a/tests/generic/310 b/tests/generic/310
-> index ef51422..35baa23 100644
-> --- a/tests/generic/310
-> +++ b/tests/generic/310
-> @@ -1,8 +1,8 @@
->   #! /bin/bash
->   # FS QA Test No. 310
->   #
-> -#Check if there are two threads,one keeps calling read() or lseek(), and
-> -#the other calling readdir(), both on the same directory fd.
-> +# Check if there are two threads,one keeps calling read() or lseek(), and
-> +# the other calling readdir(), both on the same directory fd.
->   #
+> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+> index ddc4529..e3d0b85 100644
+> --- a/fs/xfs/xfs_log_cil.c
+> +++ b/fs/xfs/xfs_log_cil.c
+> @@ -668,10 +668,6 @@ xlog_cil_push_foreground(
+>    * transaction to the checkpoint context so we carry the busy extents through
+>    * to checkpoint completion, and then unlock all the items in the transaction.
+>    *
+> - * For more specific information about the order of operations in
+> - * xfs_log_commit_cil() please refer to the comments in
+> - * xfs_trans_commit_iclog().
+> - *
+>    * Called with the context lock already held in read mode to lock out
+>    * background commit, returns without it held once background commits are
+>    * allowed again.
 
-Hi Zhao,
+And the log is documented in 
+Documents/filesystems/xfs-delayed-logging-design.txt.
 
-I did see both threads running at the same time, but the more I look at 
-this, the more I am a loss as to what this test is doing.
+Looks good.
 
-Will you expand this a little please.  I should have asked for more 
-justification the first time I reviewed this. Please provide what bug
-this is testing or what failure/weakness this test exposes.  If there is 
-a commit this is related to, please reference it.
-
-Thanks
---Rich
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
