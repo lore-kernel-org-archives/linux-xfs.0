@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id AAA967F5D
-	for <xfs@oss.sgi.com>; Mon,  8 Apr 2013 08:01:10 -0500 (CDT)
-Message-ID: <5162BFAE.1030605@sgi.com>
-Date: Mon, 8 Apr 2013 08:01:34 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 3398F7F6C
+	for <xfs@oss.sgi.com>; Mon,  8 Apr 2013 09:04:43 -0500 (CDT)
+Message-ID: <5162CE93.7010301@sgi.com>
+Date: Mon, 8 Apr 2013 09:05:07 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 2/3] xfstests: replace $seq.full with $seqres.full in
-	ext4/305 and generic/308
+Subject: Re: [PATCH 3/3] xfstests generic 310: fix common file path and other
+	cleanups
 References: <1365331147-15179-1-git-send-email-eguan@redhat.com>
-	<1365331147-15179-2-git-send-email-eguan@redhat.com>
-In-Reply-To: <1365331147-15179-2-git-send-email-eguan@redhat.com>
+	<1365331147-15179-3-git-send-email-eguan@redhat.com>
+In-Reply-To: <1365331147-15179-3-git-send-email-eguan@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,18 +23,57 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eryu Guan <eguan@redhat.com>
+To: Eryu Guan <eguan@redhat.com>, zhaohongjiang@huawei.com
 Cc: xfs@oss.sgi.com
 
-Hey Eryu,
+Hi Eryu,
 
-Where is the patch [0/3] ;)
-Also patches should be submitted as inline attachments.
+Thanks for this cleanup patch. I was going to revert patch "bbaf78c0" 
+which introduced test generic/310 but will wait and see if Zhao will 
+provide more information which could be added to this patch.
 
-Thanks for the cleanup patch.
-Looks good.
 
-Reviewed-by: Rich Johnston <rjohnston@sgi.com>
+On 04/07/2013 05:39 AM, Eryu Guan wrote:
+> 1. add one space between # and test description
+
+The rest of the changes look good, sorry I missed them when I reviewed ;).
+
+> 2. remove creator/owner info
+> 3. fix common/rc and common/filter path so they can be sourced correctly
+> 4. no need to remove $seq.full cause it's not used(or if verbose output
+>     is needed, $seqres.full should be used)
+>
+> Signed-off-by: Eryu Guan <eguan@redhat.com>
+> ---
+>   tests/generic/310 | 12 +++++-------
+>   1 file changed, 5 insertions(+), 7 deletions(-)
+>
+> diff --git a/tests/generic/310 b/tests/generic/310
+> index ef51422..35baa23 100644
+> --- a/tests/generic/310
+> +++ b/tests/generic/310
+> @@ -1,8 +1,8 @@
+>   #! /bin/bash
+>   # FS QA Test No. 310
+>   #
+> -#Check if there are two threads,one keeps calling read() or lseek(), and
+> -#the other calling readdir(), both on the same directory fd.
+> +# Check if there are two threads,one keeps calling read() or lseek(), and
+> +# the other calling readdir(), both on the same directory fd.
+>   #
+
+Hi Zhao,
+
+I did see both threads running at the same time, but the more I look at 
+this, the more I am a loss as to what this test is doing.
+
+Will you expand this a little please.  I should have asked for more 
+justification the first time I reviewed this. Please provide what bug
+this is testing or what failure/weakness this test exposes.  If there is 
+a commit this is related to, please reference it.
+
+Thanks
+--Rich
 
 _______________________________________________
 xfs mailing list
