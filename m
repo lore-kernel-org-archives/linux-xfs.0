@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 651E67F4C
-	for <xfs@oss.sgi.com>; Mon,  8 Apr 2013 18:07:41 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 00466AC002
-	for <xfs@oss.sgi.com>; Mon,  8 Apr 2013 16:07:37 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	QnrQSIIEBb4WLcZ2 for <xfs@oss.sgi.com>;
-	Mon, 08 Apr 2013 16:07:36 -0700 (PDT)
-Date: Tue, 9 Apr 2013 09:07:34 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfstests should still make xfs as default?
-Message-ID: <20130408230733.GB17758@dastard>
-References: <20130327203231.GA26739@andromeda.usersys.redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 7A9C27F7E
+	for <xfs@oss.sgi.com>; Tue,  9 Apr 2013 00:29:23 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5A069304059
+	for <xfs@oss.sgi.com>; Mon,  8 Apr 2013 22:29:20 -0700 (PDT)
+Date: Tue, 9 Apr 2013 13:29:13 +0800
+From: Eryu Guan <eguan@redhat.com>
+Subject: Re: [PATCH 3/3] xfstests generic 310: fix common file path and other
+	cleanups
+Message-ID: <20130409052913.GF2453@eguan-t400.redhat.com>
+References: <1365331147-15179-1-git-send-email-eguan@redhat.com>
+	<1365331147-15179-3-git-send-email-eguan@redhat.com>
+	<5162CE93.7010301@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130327203231.GA26739@andromeda.usersys.redhat.com>
+In-Reply-To: <5162CE93.7010301@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,55 +28,68 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Carlos Maiolino <cmaiolino@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Rich Johnston <rjohnston@sgi.com>
+Cc: zhaohongjiang@huawei.com, xfs@oss.sgi.com
 
-On Wed, Mar 27, 2013 at 05:32:32PM -0300, Carlos Maiolino wrote:
-> Hi, working on xfstests after its new directory structures I noticed we should
-> use now something like:
+On Mon, Apr 08, 2013 at 09:05:07AM -0500, Rich Johnston wrote:
+> Hi Eryu,
 > 
-> ./check xfs/<test>
+> Thanks for this cleanup patch. I was going to revert patch
+> "bbaf78c0" which introduced test generic/310 but will wait and see
+> if Zhao will provide more information which could be added to this
+> patch.
+
+Make sense, thanks for the review.
 > 
-> to run some tests, IMHO this is not intuitive and I was working on a patch to
-> make us able to use something just like the old way:
 > 
-> ./check <test>
+> On 04/07/2013 05:39 AM, Eryu Guan wrote:
+> >1. add one space between # and test description
+> 
+> The rest of the changes look good, sorry I missed them when I reviewed ;).
+> 
+> >2. remove creator/owner info
+> >3. fix common/rc and common/filter path so they can be sourced correctly
+> >4. no need to remove $seq.full cause it's not used(or if verbose output
+> >    is needed, $seqres.full should be used)
+> >
+> >Signed-off-by: Eryu Guan <eguan@redhat.com>
+> >---
+> >  tests/generic/310 | 12 +++++-------
+> >  1 file changed, 5 insertions(+), 7 deletions(-)
+> >
+> >diff --git a/tests/generic/310 b/tests/generic/310
+> >index ef51422..35baa23 100644
+> >--- a/tests/generic/310
+> >+++ b/tests/generic/310
+> >@@ -1,8 +1,8 @@
+> >  #! /bin/bash
+> >  # FS QA Test No. 310
+> >  #
+> >-#Check if there are two threads,one keeps calling read() or lseek(), and
+> >-#the other calling readdir(), both on the same directory fd.
+> >+# Check if there are two threads,one keeps calling read() or lseek(), and
+> >+# the other calling readdir(), both on the same directory fd.
+> >  #
+> 
+> Hi Zhao,
+> 
+> I did see both threads running at the same time, but the more I look
+> at this, the more I am a loss as to what this test is doing.
+> 
+> Will you expand this a little please.  I should have asked for more
+> justification the first time I reviewed this. Please provide what
+> bug
+> this is testing or what failure/weakness this test exposes.  If
+> there is a commit this is related to, please reference it.
 
-What do you do with duplicate test names?
+I didn't look into the test deeply but I found the test seems to run for
+hours on my 3.9-rc4 test box, not sure what goes wrong here.
 
-The main reason that the interface changed was to keep the changes
-to the test harness down to a minimum as it was just moving tests
-around. All that code needs to be revisited to support arbitrary
-test names, so there wasn't much point in doing a massive rework
-only to have to rework it again...
-
-But the question is: is the old way a sane way to specify tests in
-the brave new world? I'd much prefer that test specification is
-explict, and doesn't implicitly select tests. Indeed, if it
-implicitly selects tests (e.g. when there are duplicates it runs all
-duplicates) then we still need a method for running specific
-tests.....
-
-Note that what you are seeing is how the $have_test_arg code
-processes the test name. It requires that you tell it the directory
-so it knows where to look for the specific test. You could make it
-look in each test directory like get_group_list()/get_all_tests() do
-so we don't need to specify a directory.
-
-> But, since xfstests is becoming more generalist than xfs specific, I wonder if
-> we should still keep xfs as default.
-
-The default is whatever filesystem is on the $TEST_DEV, and I don't
-see that changing. i.e. what we set FSTYP to is the default. Note
-that get_group_list() and get_all_tests() specifically include the
-FSTYP directory,
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+Eryu
+> 
+> Thanks
+> --Rich
 
 _______________________________________________
 xfs mailing list
