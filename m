@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4679929E12
-	for <xfs@oss.sgi.com>; Tue,  9 Apr 2013 12:10:40 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B975DAC002
-	for <xfs@oss.sgi.com>; Tue,  9 Apr 2013 10:10:36 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id HXvzF3sAQZLHe9ZF for <xfs@oss.sgi.com>;
-	Tue, 09 Apr 2013 10:10:32 -0700 (PDT)
-Message-ID: <51644B87.60400@sandeen.net>
-Date: Tue, 09 Apr 2013 12:10:31 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: need help how to debug xfs crash issue xfs_iunlink_remove:
-	xfs_inotobp() returned error 22
-References: <CADFMGuJm5bPPwbbUtYwrCVDL23KExJTw_-VRX2UEEdZjo+i5oA@mail.gmail.com>
-	<51642E5E.3040403@sandeen.net>
-	<CADFMGuL7968v6L-3=j3FY3YYjeA_XH1CyuLgnL88u-abxiwHvg@mail.gmail.com>
-In-Reply-To: <CADFMGuL7968v6L-3=j3FY3YYjeA_XH1CyuLgnL88u-abxiwHvg@mail.gmail.com>
+	by oss.sgi.com (Postfix) with ESMTP id A1B7829E1D
+	for <xfs@oss.sgi.com>; Tue,  9 Apr 2013 12:51:46 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 46D08AC001
+	for <xfs@oss.sgi.com>; Tue,  9 Apr 2013 10:51:46 -0700 (PDT)
+Received: from smtp4-g21.free.fr (smtp4-g21.free.fr [212.27.42.4]) by
+	cuda.sgi.com with ESMTP id BW6i6i8t2ifQ7EH6 for
+	<xfs@oss.sgi.com>; Tue, 09 Apr 2013 10:51:39 -0700 (PDT)
+Date: Tue, 9 Apr 2013 19:51:36 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: xfs_repair has been running for a very long time, no disk IO.
+Message-ID: <20130409195136.5e16473d@harpe.intellique.com>
+In-Reply-To: <20130409125402.GO17758@dastard>
+References: <20130409121726.6342519e@harpe.intellique.com>
+	<20130409120236.GL17758@dastard>
+	<20130409143010.114f3fda@harpe.intellique.com>
+	<20130409125402.GO17758@dastard>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,57 +26,34 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: =?UTF-8?B?56ym5rC45rab?= <yongtaofu@gmail.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-T24gNC85LzEzIDEwOjE4IEFNLCDnrKbmsLjmtpsgd3JvdGU6Cj4gVGhlIHNlcnZlcnMgYXJlIGJh
-Y2sgdG8gc2VydmljZSBub3cgYW5kIEl0J3MgaGFyZCB0byBydW4geGZzX3JlcGFpci4gSXQgYWx3
-YXlzIGhhcHBlbiBiZWxsb3cgaXMgdGhlIHhmc19yZXBhaXIgbG9nIHdoZW4gaXQgaGFwcGVucyBv
-biBhbm90aGVyIHNlcnZlciBzZXZlcmFsIGRheXMgYWdvLgoKLi4uCgo+IOesrOS6jOatpQo+IHJl
-cGFpcueahGxvZwo+IAo+IHNoLTQuMSQgc3VkbyB4ZnNfcmVwYWlyIC9kZXYvZ2x1c3RlcnZnL2ds
-dXN0ZXJsdgo+IFBoYXNlIDEgLSBmaW5kIGFuZCB2ZXJpZnkgc3VwZXJibG9ja+KApgo+IFBoYXNl
-IDIgLSB1c2luZyBpbnRlcm5hbCBsb2cKPiAgICAgICAgIC0gemVybyBsb2figKYKPiAgICAgICAg
-IC0gc2NhbiBmaWxlc3lzdGVtIGZyZWVzcGFjZSBhbmQgaW5vZGUgbWFwc+KApgo+IGFnaSB1bmxp
-bmtlZCBidWNrZXQgMCBpcyA0MDQ2ODQ4IGluIGFnIDAgKGlub2RlPTQwNDY4NDgpCj4gYWdpIHVu
-bGlua2VkIGJ1Y2tldCA1IGlzIDIzNDA0ODUgaW4gYWcgMCAoaW5vZGU9MjM0MDQ4NSkKPiBhZ2kg
-dW5saW5rZWQgYnVja2V0IDYgaXMgMjMyNjg1NCBpbiBhZyAwIChpbm9kZT0yMzI2ODU0KQo+IGFn
-aSB1bmxpbmtlZCBidWNrZXQgOCBpcyAxODAyMTIwIGluIGFnIDAgKGlub2RlPTE4MDIxMjApCj4g
-YWdpIHVubGlua2VkIGJ1Y2tldCAxNCBpcyA0OTU1NjYgaW4gYWcgMCAoaW5vZGU9NDk1NTY2KQo+
-IGFnaSB1bmxpbmtlZCBidWNrZXQgMTYgaXMgNTg5OTUzNiBpbiBhZyAwIChpbm9kZT01ODk5NTM2
-KQo+IGFnaSB1bmxpbmtlZCBidWNrZXQgMTkgaXMgNDAwODIxMSBpbiBhZyAwIChpbm9kZT00MDA4
-MjExKQo+IGFnaSB1bmxpbmtlZCBidWNrZXQgMjEgaXMgNDkwNjk2NSBpbiBhZyAwIChpbm9kZT00
-OTA2OTY1KQo+IGFnaSB1bmxpbmtlZCBidWNrZXQgMjMgaXMgMjAyMjIzMSBpbiBhZyAwIChpbm9k
-ZT0yMDIyMjMxKQo+IGFnaSB1bmxpbmtlZCBidWNrZXQgMjQgaXMgMTYyNjIwMCBpbiBhZyAwIChp
-bm9kZT0xNjI2MjAwKQo+IGFnaSB1bmxpbmtlZCBidWNrZXQgMjUgaXMgOTM4NTg1IGluIGFnIDAg
-KGlub2RlPTkzODU4NSkKPiBhZ2kgdW5saW5rZWQgYnVja2V0IDMwIGlzIDQyMjY1MjYgaW4gYWcg
-MCAoaW5vZGU9NDIyNjUyNikKPiBhZ2kgdW5saW5rZWQgYnVja2V0IDM0IGlzIDQxMDg5NjIgaW4g
-YWcgMCAoaW5vZGU9NDEwODk2MikKPiBhZ2kgdW5saW5rZWQgYnVja2V0IDM3IGlzIDE3NDAzODkg
-aW4gYWcgMCAoaW5vZGU9MTc0MDM4OSkKPiBhZ2kgdW5saW5rZWQgYnVja2V0IDM5IGlzIDI0NzM5
-OSBpbiBhZyAwIChpbm9kZT0yNDczOTkpCj4gYWdpIHVubGlua2VkIGJ1Y2tldCA0MCBpcyA2MjM3
-ODY0IGluIGFnIDAgKGlub2RlPTYyMzc4NjQpCj4gYWdpIHVubGlua2VkIGJ1Y2tldCA0MyBpcyAz
-NDA0MzMxIGluIGFnIDAgKGlub2RlPTM0MDQzMzEpCj4gYWdpIHVubGlua2VkIGJ1Y2tldCA0NSBp
-cyAyMDkyNzE3IGluIGFnIDAgKGlub2RlPTIwOTI3MTcpCj4gYWdpIHVubGlua2VkIGJ1Y2tldCA0
-OCBpcyA0MDQxMDA4IGluIGFnIDAgKGlub2RlPTQwNDEwMDgpCj4gYWdpIHVubGlua2VkIGJ1Y2tl
-dCA1MCBpcyAxNDU5NzYyIGluIGFnIDAgKGlub2RlPTE0NTk3NjIpCj4gYWdpIHVubGlua2VkIGJ1
-Y2tldCA1NiBpcyA4NTIwMjQgaW4gYWcgMCAoaW5vZGU9ODUyMDI0KQoKSWYgdGhpcyBtYWNoaW5l
-IGlzIHN0aWxsIGFyb3VuZCBpbiBzaW1pbGFyIHN0YXRlLCBjYW4geW91IGRvIGEKCiMgZmluZCAv
-cGF0aC90by9tb3VudCAtaW51bSAkSU5PREVfTlVNQkVSCgpmb3IgdGhlIGlub2RlIG51bWJlcnMg
-YWJvdmUsIGFuZCBzZWUgd2hhdCBmaWxlcyB0aGV5IGFyZT8KVGhhdCBtaWdodCBnaXZlIHVzIGEg
-Y2x1ZSBhYm91dCB3aGF0IG9wZXJhdGlvbnMgd2VyZSBoYXBwZW5pbmcKdG8gdGhlbS4gIER1bXBp
-bmcgdGhlIGdsdXN0ZXIgeGF0dHJzIG9uIHRob3NlIGZpbGVzCm1pZ2h0IGFsc28gYmUgaW50ZXJl
-c3RpbmcuICBKdXN0IGd1ZXNzZXMgaGVyZSwgYnV0IGl0J2QgYmUgYQpsaXR0bGUgbW9yZSBkYXRh
-LgoKKGlmIHRoaXMgaXMgYW4gb2xkIHJlcGFpciwgbWF5YmUgZG9pbmcgdGhlIHNhbWUgZm9yIHlv
-dXIgbW9zdApyZWNlbnQgaW5jaWRlbnQgd291bGQgYmUgYmVzdCkKClRoYW5rcywKLUVyaWMKCj4g
-ICAgICAgICAtIGZvdW5kIHJvb3QgaW4gb2RlIGNodW5rCj4gUGhhc2UgMyAtIGZvciBlYWNoIEFH
-4oCmCj4gICAgICAgICAtIHNjYW4gYW5kIGNsZWFyIGFnaSB1bmxpbmtlZCBsaXN0c+KApgo+ICAg
-ICAgICAgLSBwcm9jZXNzIGtub3duIGlub2RlcyBhbmQgcGVyZm9ybSBpbm9kZSBkaXNjb3Zlcnni
-gKYKPiAgICAgICAgIC0gYWdubyA9IDAKPiA3ZjgyMjBiZTY3MDA6IEJhZG5lc3MgaW4ga2V5IGxv
-b2t1cCAobGVuZ3RoKQo+IGJwPShibm8gMTIzNjk2LCBsZW4gMTYzODQgYnl0ZXMpIGtleT0oYm5v
-IDEyMzY5NiwgbGVuIDgxOTIgYnl0ZXMpCgooRldJVyB0aGUgYWJvdmUgd2FybmluZ3MgbG9vayBs
-aWtlIGFuIHhmc19yZXBhaXIgYnVnLCBub3QgcmVsYXRlZCkKCi1FcmljCgpfX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bv
-c3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+Le Tue, 9 Apr 2013 22:54:02 +1000
+Dave Chinner <david@fromorbit.com> =E9crivait:
+
+> Yes, it turns prefetching off, which is what usually what causes the
+> hangs. Though 3.1.4 is pretty old, and I think a few prefetch hangs
+> were fixed in 3.1.8....
+> =
+
+
+Actually 3.1.11-pre2 did it without -P. Thanks.
+
+-- =
+
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
