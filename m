@@ -1,19 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 17F0229DFA
-	for <xfs@oss.sgi.com>; Tue,  9 Apr 2013 04:14:53 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A59DBAC002
-	for <xfs@oss.sgi.com>; Tue,  9 Apr 2013 02:14:49 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id k7dwDIGBunLQ7yx2 for
-	<xfs@oss.sgi.com>; Tue, 09 Apr 2013 02:14:49 -0700 (PDT)
-From: Lukas Czerner <lczerner@redhat.com>
-Subject: [PATCH v3 05/18] xfs: use ->invalidatepage() length argument
-Date: Tue,  9 Apr 2013 11:14:14 +0200
-Message-Id: <1365498867-27782-6-git-send-email-lczerner@redhat.com>
-In-Reply-To: <1365498867-27782-1-git-send-email-lczerner@redhat.com>
-References: <1365498867-27782-1-git-send-email-lczerner@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id EF99B7F54
+	for <xfs@oss.sgi.com>; Tue,  9 Apr 2013 05:17:32 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D5CFF8F804C
+	for <xfs@oss.sgi.com>; Tue,  9 Apr 2013 03:17:31 -0700 (PDT)
+Received: from smtp4-g21.free.fr (smtp4-g21.free.fr [212.27.42.4]) by
+	cuda.sgi.com with ESMTP id blGc1lCJsVXPSQDR for
+	<xfs@oss.sgi.com>; Tue, 09 Apr 2013 03:17:29 -0700 (PDT)
+Received: from harpe.intellique.com (unknown [82.225.196.72])
+	by smtp4-g21.free.fr (Postfix) with ESMTP id 54E2B4C8425
+	for <xfs@oss.sgi.com>; Tue,  9 Apr 2013 12:17:25 +0200 (CEST)
+Date: Tue, 9 Apr 2013 12:17:26 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: xfs_repair has been running for a very long time, no disk IO.
+Message-ID: <20130409121726.6342519e@harpe.intellique.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,94 +24,81 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-mm@kvack.org
-Cc: linux-fsdevel@vger.kernel.org, Lukas Czerner <lczerner@redhat.com>, linux-ext4@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-->invalidatepage() aop now accepts range to invalidate so we can make
-use of it in xfs_vm_invalidatepage()
 
-Signed-off-by: Lukas Czerner <lczerner@redhat.com>
-Cc: xfs@oss.sgi.com
----
- fs/xfs/xfs_aops.c  |    5 +++--
- fs/xfs/xfs_trace.h |   41 ++++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 43 insertions(+), 3 deletions(-)
+On a quite badly mangled filesystem, xfs_repair (v. 3.1.4) seems to
+never end. It has run for 16 hours with absolutely no disk activity.
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index e426796..e8018d3 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -826,8 +826,9 @@ xfs_vm_invalidatepage(
- 	unsigned int		offset,
- 	unsigned int		length)
- {
--	trace_xfs_invalidatepage(page->mapping->host, page, offset);
--	block_invalidatepage(page, offset, PAGE_CACHE_SIZE - offset);
-+	trace_xfs_invalidatepage(page->mapping->host, page, offset,
-+				 length);
-+	block_invalidatepage(page, offset, length);
- }
- 
- /*
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 16a8129..91d6434 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -991,7 +991,46 @@ DEFINE_EVENT(xfs_page_class, name,	\
- 	TP_ARGS(inode, page, off))
- DEFINE_PAGE_EVENT(xfs_writepage);
- DEFINE_PAGE_EVENT(xfs_releasepage);
--DEFINE_PAGE_EVENT(xfs_invalidatepage);
-+
-+TRACE_EVENT(xfs_invalidatepage,
-+	TP_PROTO(struct inode *inode, struct page *page, unsigned int off,
-+		 unsigned int len),
-+	TP_ARGS(inode, page, off, len),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_ino_t, ino)
-+		__field(pgoff_t, pgoff)
-+		__field(loff_t, size)
-+		__field(unsigned int, offset)
-+		__field(unsigned int, length)
-+		__field(int, delalloc)
-+		__field(int, unwritten)
-+	),
-+	TP_fast_assign(
-+		int delalloc = -1, unwritten = -1;
-+
-+		if (page_has_buffers(page))
-+			xfs_count_page_state(page, &delalloc, &unwritten);
-+		__entry->dev = inode->i_sb->s_dev;
-+		__entry->ino = XFS_I(inode)->i_ino;
-+		__entry->pgoff = page_offset(page);
-+		__entry->size = i_size_read(inode);
-+		__entry->offset = off;
-+		__entry->length = len;
-+		__entry->delalloc = delalloc;
-+		__entry->unwritten = unwritten;
-+	),
-+	TP_printk("dev %d:%d ino 0x%llx pgoff 0x%lx size 0x%llx offset %x "
-+		  "length %x delalloc %d unwritten %d",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->ino,
-+		  __entry->pgoff,
-+		  __entry->size,
-+		  __entry->offset,
-+		  __entry->length,
-+		  __entry->delalloc,
-+		  __entry->unwritten)
-+)
- 
- DECLARE_EVENT_CLASS(xfs_imap_class,
- 	TP_PROTO(struct xfs_inode *ip, xfs_off_t offset, ssize_t count,
+Usually xfs_repair takes much less than one hour on a similar (9 TB)
+filesystem.
+
+I know I should try the latest version. What else can be wrong? 
+What should I try?
+
+Last lines of output of the still running xfs_repair where it has 
+been stuck since yesterday night:
+
+entry "Panel-2333" at block 3 offset 2464 in directory inode 2190114192 references non-existent inode 60238299
+        clearing inode number in entry at offset 2464...
+entry "Panel-2316" at block 3 offset 2512 in directory inode 2190114192 references non-existent inode 60238300
+        clearing inode number in entry at offset 2512...
+entry "Panel-2309" at block 3 offset 2560 in directory inode 2190114192 references non-existent inode 60238301
+        clearing inode number in entry at offset 2560...
+entry "Panel-2292" at block 3 offset 2608 in directory inode 2190114192 references non-existent inode 60238302
+        clearing inode number in entry at offset 2608...
+entry "Panel-2290" at block 3 offset 2656 in directory inode 2190114192 references non-existent inode 60238303
+        clearing inode number in entry at offset 2656...
+bad attribute format 1 in inode 2190120814, resetting value
+        - agno = 2
+        - agno = 3
+        - agno = 4
+        - agno = 5
+        - agno = 6
+        - agno = 7
+        - agno = 8
+        - agno = 9
+        - agno = 10
+        - agno = 11
+        - agno = 12
+        - agno = 13
+        - agno = 14
+        - agno = 15
+        - agno = 16
+        - agno = 17
+        - agno = 18
+        - agno = 19
+        - agno = 20
+        - agno = 21
+        - agno = 22
+        - agno = 23
+        - agno = 24
+        - agno = 25
+        - agno = 26
+        - agno = 27
+        - agno = 28
+        - agno = 29
+        - agno = 30
+        - agno = 31
+Phase 5 - rebuild AG headers and trees...
+        - reset superblock...
+Phase 6 - check inode connectivity...
+        - resetting contents of realtime bitmap and summary inodes
+        - traversing filesystem ...
+
+
+
 -- 
-1.7.7.6
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
 
 _______________________________________________
 xfs mailing list
