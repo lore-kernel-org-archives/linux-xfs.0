@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 710DB29E17
-	for <xfs@oss.sgi.com>; Tue,  9 Apr 2013 10:10:09 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5E7838F8068
-	for <xfs@oss.sgi.com>; Tue,  9 Apr 2013 08:10:09 -0700 (PDT)
-Received: from mail-ia0-f178.google.com (mail-ia0-f178.google.com
-	[209.85.210.178]) by cuda.sgi.com with ESMTP id
-	lTa5ItDGBJXEPFqK (version=TLSv1 cipher=RC4-SHA bits=128
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 980527FBF
+	for <xfs@oss.sgi.com>; Tue,  9 Apr 2013 10:19:02 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 2603BAC003
+	for <xfs@oss.sgi.com>; Tue,  9 Apr 2013 08:18:59 -0700 (PDT)
+Received: from mail-ie0-f177.google.com (mail-ie0-f177.google.com
+	[209.85.223.177]) by cuda.sgi.com with ESMTP id
+	atx6zKqcJ3zwVaji (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 09 Apr 2013 08:10:07 -0700 (PDT)
-Received: by mail-ia0-f178.google.com with SMTP id f27so724917iae.37
-	for <xfs@oss.sgi.com>; Tue, 09 Apr 2013 08:10:07 -0700 (PDT)
+	Tue, 09 Apr 2013 08:18:56 -0700 (PDT)
+Received: by mail-ie0-f177.google.com with SMTP id tp5so8330705ieb.8
+	for <xfs@oss.sgi.com>; Tue, 09 Apr 2013 08:18:56 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CADFMGuJaiH0wuxOHrDjDn7qRVH+vQkLOOSPUyqSdXnLcS47t3w@mail.gmail.com>
+In-Reply-To: <51642E5E.3040403@sandeen.net>
 References: <CADFMGuJm5bPPwbbUtYwrCVDL23KExJTw_-VRX2UEEdZjo+i5oA@mail.gmail.com>
-	<CADFMGu+=MM2yc=_peboV7JTNJ8F05TJfexmEErzcf0D8mAWFRg@mail.gmail.com>
-	<CADFMGuKqkPbpcU=taqjTR4sA3o=w1LLAnKoEuj=OhJqEbQVijw@mail.gmail.com>
-	<20130409145238.GE22182@sgi.com>
-	<CADFMGuJaiH0wuxOHrDjDn7qRVH+vQkLOOSPUyqSdXnLcS47t3w@mail.gmail.com>
-Date: Tue, 9 Apr 2013 23:10:03 +0800
-Message-ID: <CADFMGu+TdyjTjMTWMwpdHqmszhpCU162UA4Y-njARwSEjM1xNw@mail.gmail.com>
+	<51642E5E.3040403@sandeen.net>
+Date: Tue, 9 Apr 2013 23:18:56 +0800
+Message-ID: <CADFMGuL7968v6L-3=j3FY3YYjeA_XH1CyuLgnL88u-abxiwHvg@mail.gmail.com>
 Subject: Re: need help how to debug xfs crash issue xfs_iunlink_remove:
 	xfs_inotobp() returned error 22
 From: =?GB2312?B?t/vTwMzO?= <yongtaofu@gmail.com>
@@ -32,345 +29,735 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============4942538097170445020=="
+Content-Type: multipart/mixed; boundary="===============3216925519987356353=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs@oss.sgi.com
 
---===============4942538097170445020==
-Content-Type: multipart/alternative; boundary=14dae9340b5fb2378b04d9eef2d2
+--===============3216925519987356353==
+Content-Type: multipart/alternative; boundary=089e0111e0746d28cd04d9ef12a1
 
---14dae9340b5fb2378b04d9eef2d2
+--089e0111e0746d28cd04d9ef12a1
 Content-Type: text/plain; charset=GB2312
 Content-Transfer-Encoding: quoted-printable
 
-Today 3 of our servers were impacted by the xfs shutdown. The logs are
-identical.
+The servers are back to service now and It's hard to run xfs_repair. It
+always happen bellow is the xfs_repair log when it happens on another
+server several days ago.
+ -sh-4.1$ sudo xfs_repair -n /dev/glustervg/glusterlv
+Phase 1 - find and verify superblock=A1=AD
+Phase 2 - using internal log
+        - scan filesystem freespace and inode maps=A1=AD
+agi unlinked bucket 0 is 4046848 in ag 0 (inode=3D4046848)
+agi unlinked bucket 5 is 2340485 in ag 0 (inode=3D2340485)
+agi unlinked bucket 6 is 2326854 in ag 0 (inode=3D2326854)
+agi unlinked bucket 8 is 1802120 in ag 0 (inode=3D1802120)
+agi unlinked bucket 14 is 495566 in ag 0 (inode=3D495566)
+agi unlinked bucket 16 is 5899536 in ag 0 (inode=3D5899536)
+agi unlinked bucket 19 is 4008211 in ag 0 (inode=3D4008211)
+agi unlinked bucket 21 is 4906965 in ag 0 (inode=3D4906965)
+agi unlinked bucket 23 is 2022231 in ag 0 (inode=3D2022231)
+agi unlinked bucket 24 is 1626200 in ag 0 (inode=3D1626200)
+agi unlinked bucket 25 is 938585 in ag 0 (inode=3D938585)
+agi unlinked bucket 30 is 4226526 in ag 0 (inode=3D4226526)
+agi unlinked bucket 34 is 4108962 in ag 0 (inode=3D4108962)
+agi unlinked bucket 37 is 1740389 in ag 0 (inode=3D1740389)
+agi unlinked bucket 39 is 247399 in ag 0 (inode=3D247399)
+agi unlinked bucket 40 is 6237864 in ag 0 (inode=3D6237864)
+agi unlinked bucket 43 is 3404331 in ag 0 (inode=3D3404331)
+agi unlinked bucket 45 is 2092717 in ag 0 (inode=3D2092717)
+agi unlinked bucket 48 is 4041008 in ag 0 (inode=3D4041008)
+agi unlinked bucket 50 is 1459762 in ag 0 (inode=3D1459762)
+agi unlinked bucket 56 is 852024 in ag 0 (inode=3D852024)
+        - found root in ode chunk
+Phase 3 - for each AG=A1=AD
+        - scan (but don't clear) agi unlinked lists=A1=AD
+        - process known inodes and perform inode discovery=A1=AD
+        - agno =3D 0
+7f084d34e700: Badness in key lookup (length)
+bp=3D(bno 123696, len 16384 bytes) key=3D(bno 123696, len 8192 bytes)
+7f084d34e700: Badness in key lookup (length)
+bp=3D(bno 247776, len 16384 bytes) key=3D(bno 247776, len 8192 bytes)
+7f084d34e700: Badness in key lookup (length)
+bp=3D(bno 425984, len 16384 bytes) key=3D(bno 425984, len 8192 bytes)
+7f084d34e700: Badness in key lookup (length)
+bp=3D(bno 469280, len 16384 bytes) key=3D(bno 469280, len 8192 bytes)
+7f084d34e700: Badness in key lookup (length)
+bp=3D(bno 729856, len 16384 bytes) key=3D(bno 729856, len 8192 bytes)
+7f084d34e700: Badness in key lookup (length)
+bp=3D(bno 813072, len 16384 bytes) key=3D(bno 813072, len 8192 bytes)
+7f084d34e700: Badness in key lookup (length)
+bp=3D(bno 870176, len 16384 bytes) key=3D(bno 870176, len 8192 bytes)
+7f084d34e700: Badness in key lookup (length)
+bp=3D(bno 901056, len 16384 bytes) key=3D(bno 901056, len 8192 bytes)
+7f084d34e700: Badness in key lookup (length)
+bp=3D(bno 1011104, len 16384 bytes) key=3D(bno 1011104, len 8192 bytes)
+7f084d34e700: Badness in key lookup (length)
+bp=3D(bno 1046336, len 16384 bytes) key=3D(bno 1046336, len 8192 bytes)
+7f084d34e700: Badness in key lookup (length)
+bp=3D(bno 1163424, len 16384 bytes) key=3D(bno 1163424, len 8192 bytes)
+7f084d34e700: Badness in key lookup (length)
+bp=3D(bno 1170240, len 16384 bytes) key=3D(bno 1170240, len 8192 bytes)
+7f084d34e700: Badness in key lookup (length)
+bp=3D(bno 1702160, len 16384 bytes) key=3D(bno 1702160, len 8192 bytes)
+7f084d34e700: Badness in key lookup (length)
+bp=3D(bno 2004096, len 16384 bytes) key=3D(bno 2004096, len 8192 bytes)
+7f084d34e700: Badness in key lookup (length)
+bp=3D(bno 2020496, len 16384 bytes) key=3D(bno 2020496, len 8192 bytes)
+7f084d34e700: Badness in key lookup (length)
+bp=3D(bno 2023408, len 16384 bytes) key=3D(bno 2023408, len 8192 bytes)
+7f084d34e700: Badness in key lookup (length)
+bp=3D(bno 2054464, len 16384 bytes) key=3D(bno 2054464, len 8192 bytes)
+7f084d34e700: Badness in key lookup (length)
+bp=3D(bno 2113232, len 16384 bytes) key=3D(bno 2113232, len 8192 bytes)
+7f084d34e700: Badness in key lookup (length)
+bp=3D(bno 2453472, len 16384 bytes) key=3D(bno 2453472, len 8192 bytes)
+7f084d34e700: Badness in key lookup (length)
+bp=3D(bno 2949760, len 16384 bytes) key=3D(bno 2949760, len 8192 bytes)
+7f084d34e700: Badness in key lookup (length)
+bp=3D(bno 3118912, len 16384 bytes) key=3D(bno 3118912, len 8192 bytes)
+        - agno =3D 1
+        - agno =3D 2
+        - agno =3D 3
+        - agno =3D 4
+        - agno =3D 5
+        - agno =3D 6
+        - agno =3D 7
+        - agno =3D 8
+        - agno =3D 9
+        - agno =3D 10
+        - agno =3D 11
+        - agno =3D 12
+        - agno =3D 13
+        - agno =3D 14
+        - agno =3D 15
+        - agno =3D 16
+        - agno =3D 17
+        - agno =3D 18
+        - agno =3D 19
+        - agno =3D 20
+        - agno =3D 21
+        - agno =3D 22
+        - agno =3D 23
+        - agno =3D 24
+        - agno =3D 25
+        - agno =3D 26
+        - agno =3D 27
+        - agno =3D 28
+        - agno =3D 29
+        - agno =3D 30
+        - process newly discovered in odes..
+Phase 4 - check for duplicate blocks=A1=AD
+        - setting up duplicate extent list=A1=AD
+        - check for inodes claiming duplicate blocks=A1=AD
+        - agno =3D 0
+        - agno =3D 1
+        - agno =3D 3
+        - agno =3D 9
+        - agno =3D 12
+        - agno =3D 14
+        - agno =3D 5
+        - agno =3D 19
+        - agno =3D 23
+        - agno =3D 24
+        - agno =3D 25
+        - agno =3D 26
+        - agno =3D 27
+        - agno =3D 28
+        - agno =3D 29
+        - agno =3D 30
+        - agno =3D 4
+        - agno =3D 2
+        - agno =3D 17
+        - agno =3D 6
+        - agno =3D 8
+        - agno =3D 16
+        - agno =3D 11
+        - agno =3D 10
+        - agno =3D 18
+        - agno =3D 13
+        - agno =3D 15
+        - agno =3D 20
+        - agno =3D 22
+        - agno =3D 21
+        - agno =3D 7
+No modify flag set, skipping phase 5
+Phase 6 - check inode connectivity=A1=AD
+        - traversing filesystem =A1=AD
+        - traversal finished =A1=AD
+        - moving disconnected inodes to lost+found =A1=AD
+disconnected inode 6235944, would move to lost+found
+Phase 7 - verify link counts=A1=AD
+would have reset inode 6235944 nlinks from 0 to 1
+No modify flag set, skipping filesystem flush and exiting..
 
 
-2013/4/9 =B7=FB=D3=C0=CC=CE <yongtaofu@gmail.com>
 
-> before xfs force shutdown happens there seems no useful log in
-> /var/log/messages
->
-> Apr  9 10:38:08 cqdx smbd[4597]:   Unable to connect to CUPS server
-> localhost:631 - Connection refused
-> Apr  9 10:38:08 cqdx smbd[3394]: [2013/04/09 10:38:08.944125,  0]
-> printing/print_cups.c:468(cups_async_callback)
-> Apr  9 10:38:08 cqdx smbd[3394]:   failed to retrieve printer list:
-> NT_STATUS_UNSUCCESSFUL
-> Apr  9 10:51:09 cqdx smbd[5205]: [2013/04/09 10:51:09.723610,  0]
-> printing/print_cups.c:109(cups_connect)
-> Apr  9 10:51:09 cqdx smbd[5205]:   Unable to connect to CUPS server
-> localhost:631 - Connection refused
-> Apr  9 10:51:09 cqdx smbd[3394]: [2013/04/09 10:51:09.724132,  0]
-> printing/print_cups.c:468(cups_async_callback)
-> Apr  9 10:51:09 cqdx smbd[3394]:   failed to retrieve printer list:
-> NT_STATUS_UNSUCCESSFUL
-> Apr  9 11:01:30 cqdx kernel: XFS (sdb): xfs_iunlink_remove: xfs_inotobp()
-> returned error 22.
-> Apr  9 11:01:30 cqdx kernel: XFS (sdb): xfs_inactive: xfs_ifree returned
-> error 22
-> Apr  9 11:01:30 cqdx kernel: XFS (sdb): xfs_do_force_shutdown(0x1) called
-> from line 1184 of file fs/xfs/xfs_vnodeops.c.  Return address =3D
-> 0xffffffffa02ee20a
-> Apr  9 11:01:30 cqdx kernel: XFS (sdb): I/O Error Detected. Shutting down
-> filesystem
-> Apr  9 11:01:30 cqdx kernel: XFS (sdb): Please umount the filesystem and
-> rectify the problem(s)
-> Apr  9 11:01:51 cqdx kernel: XFS (sdb): xfs_log_force: error 5 returned.
-> Apr  9 11:02:21 cqdx kernel: XFS (sdb): xfs_log_force: error 5 returned.
-> Apr  9 11:02:51 cqdx kernel: XFS (sdb): xfs_log_force: error 5 returned.
-> Apr  9 11:03:21 cqdx kernel: XFS (sdb): xfs_log_force: error 5 returned.
-> Apr  9 11:03:51 cqdx kernel: XFS (sdb): xfs_log_force: error 5 returned.
-> Apr  9 11:03:57 cqdx init: tty (/dev/tty1) main process (3427) killed by
-> TERM signal
-> Apr  9 11:03:57 cqdx init: tty (/dev/tty2) main process (3429) killed by
-> TERM signal
->
->
->
-> 2013/4/9 Ben Myers <bpm@sgi.com>
->
->> Hey Yongtaofu,
->>
->> On Tue, Apr 09, 2013 at 09:05:32PM +0800, =B7=FB=D3=C0=CC=CE wrote:
->> > Also I want to know why all the server, all crash with the same crash
->> stack?
->> > Thank you, really need your help.
->>
->> What you've posted so far looks like evidence of a forced shutdown and
->> not a
->> crash.  Is there a crash in addition to this forced shutdown?  If so, ca=
-n
->> you
->> post the stack for that too?
->>
->> >
->> > 2013/4/9, =B7=FB=D3=C0=CC=CE <yongtaofu@gmail.com>:
->> > > BTW
->> > > xfs_info /dev/sdb
->> > > meta-data=3D/dev/sdb               isize=3D256    agcount=3D28,
->> agsize=3D268435440
->> > > blks
->> > >          =3D                       sectsz=3D512   attr=3D2
->> > > data     =3D                       bsize=3D4096   blocks=3D732430336=
-0,
->> imaxpct=3D5
->> > >          =3D                       sunit=3D16     swidth=3D160 blks
->> > > naming   =3Dversion 2              bsize=3D4096   ascii-ci=3D0
->> > > log      =3Dinternal               bsize=3D4096   blocks=3D521728, v=
-ersion=3D2
->> > >          =3D                       sectsz=3D512   sunit=3D16 blks,
->> lazy-count=3D1
->> > > realtime =3Dnone                   extsz=3D4096   blocks=3D0, rtexte=
-nts=3D0
->> > >
->> > > 2013/4/9, =B7=FB=D3=C0=CC=CE <yongtaofu@gmail.com>:
->> > >> Dear xfs experts,
->> > >> I really need your help sincerely!!! In our production enviroment w=
-e
->> > >> run glusterfs over top of xfs on Dell x720D(Raid 6). And the xfs fi=
-le
->> > >> system crash on some of the server frequently about every two weeks=
-.
->> > >> Can you help to give me a direction about how to debug this issue a=
-nd
->> > >> how to avoid it? Thank you very very much!
->> > >>
->> > >> uname -a
->> > >> Linux cqdx.miaoyan.cluster1.node11.qiyi.domain 2.6.32-279.el6.x86_6=
-4
->> > >> #1 SMP Wed Jun 13 18:24:36 EDT 2012 x86_64 x86_64 x86_64 GNU/Linux
->> > >>
->> > >> Every time the crash log is same, as following
->>
->> An initial guess is that somehow it is looking up a bad inode number,
->> e.g. it
->> is beyond the end of the filesystem and xfs_dilocate returns EINVAL.
->>
->> You could 'xfs_repair -n' to see what it finds (without modifying the
->> filesystem) as a first step.
->>
->> > >> 038 Apr  9 09:41:36 cqdx kernel: XFS (sdb): xfs_iunlink_remove:
->> > >> xfs_inotobp() returned error 22.
->>
->> Were there any lines of output before this?  In some codebases there are
->> prints
->> in xfs_inotobp that would help show what happened.
->>
->> > >> 1039 Apr  9 09:41:36 cqdx kernel: XFS (sdb): xfs_inactive: xfs_ifre=
-e
->> > >> returned error 22
->> > >> 1040 Apr  9 09:41:36 cqdx kernel: XFS (sdb):
->> > >> xfs_do_force_shutdown(0x1) called from line 1184 of file
->> > >> fs/xfs/xfs_vnodeops.c.  Return address =3D 0xffffffffa02ee20a
->> > >> 1041 Apr  9 09:41:36 cqdx kernel: XFS (sdb): I/O Error Detected.
->> > >> Shutting down filesystem
->> > >> 1042 Apr  9 09:41:36 cqdx kernel: XFS (sdb): Please umount the
->> > >> filesystem and rectify the problem(s)
->> > >> 1043 Apr  9 09:41:53 cqdx kernel: XFS (sdb): xfs_log_force: error 5
->> > >> returned.
->> > >> 1044 Apr  9 09:42:23 cqdx kernel: XFS (sdb): xfs_log_force: error 5
->> > >> returned.
->> > >> 1045 Apr  9 09:42:53 cqdx kernel: XFS (sdb): xfs_log_force: error 5
->> > >> returned.
->> > >> 1046 Apr  9 09:43:23 cqdx kernel: XFS (sdb): xfs_log_force: error 5
->> > >> returned.
->>
->> The error 5 (EIO) look scary but they are due to the forced shutdown,
->> don't
->> worry about them.
->>
->> Thanks,
->>         Ben
->>
->
->
->
-> --
-> =B7=FB=D3=C0=CC=CE
->
+=B5=DA=B6=FE=B2=BD
+repair=B5=C4log
 
+sh-4.1$ sudo xfs_repair /dev/glustervg/glusterlv
+Phase 1 - find and verify superblock=A1=AD
+Phase 2 - using internal log
+        - zero log=A1=AD
+        - scan filesystem freespace and inode maps=A1=AD
+agi unlinked bucket 0 is 4046848 in ag 0 (inode=3D4046848)
+agi unlinked bucket 5 is 2340485 in ag 0 (inode=3D2340485)
+agi unlinked bucket 6 is 2326854 in ag 0 (inode=3D2326854)
+agi unlinked bucket 8 is 1802120 in ag 0 (inode=3D1802120)
+agi unlinked bucket 14 is 495566 in ag 0 (inode=3D495566)
+agi unlinked bucket 16 is 5899536 in ag 0 (inode=3D5899536)
+agi unlinked bucket 19 is 4008211 in ag 0 (inode=3D4008211)
+agi unlinked bucket 21 is 4906965 in ag 0 (inode=3D4906965)
+agi unlinked bucket 23 is 2022231 in ag 0 (inode=3D2022231)
+agi unlinked bucket 24 is 1626200 in ag 0 (inode=3D1626200)
+agi unlinked bucket 25 is 938585 in ag 0 (inode=3D938585)
+agi unlinked bucket 30 is 4226526 in ag 0 (inode=3D4226526)
+agi unlinked bucket 34 is 4108962 in ag 0 (inode=3D4108962)
+agi unlinked bucket 37 is 1740389 in ag 0 (inode=3D1740389)
+agi unlinked bucket 39 is 247399 in ag 0 (inode=3D247399)
+agi unlinked bucket 40 is 6237864 in ag 0 (inode=3D6237864)
+agi unlinked bucket 43 is 3404331 in ag 0 (inode=3D3404331)
+agi unlinked bucket 45 is 2092717 in ag 0 (inode=3D2092717)
+agi unlinked bucket 48 is 4041008 in ag 0 (inode=3D4041008)
+agi unlinked bucket 50 is 1459762 in ag 0 (inode=3D1459762)
+agi unlinked bucket 56 is 852024 in ag 0 (inode=3D852024)
+        - found root in ode chunk
+Phase 3 - for each AG=A1=AD
+        - scan and clear agi unlinked lists=A1=AD
+        - process known inodes and perform inode discovery=A1=AD
+        - agno =3D 0
+7f8220be6700: Badness in key lookup (length)
+bp=3D(bno 123696, len 16384 bytes) key=3D(bno 123696, len 8192 bytes)
+7f8220be6700: Badness in key lookup (length)
+bp=3D(bno 247776, len 16384 bytes) key=3D(bno 247776, len 8192 bytes)
+7f8220be6700: Badness in key lookup (length)
+bp=3D(bno 425984, len 16384 bytes) key=3D(bno 425984, len 8192 bytes)
+7f8220be6700: Badness in key lookup (length)
+bp=3D(bno 469280, len 16384 bytes) key=3D(bno 469280, len 8192 bytes)
+7f8220be6700: Badness in key lookup (length)
+bp=3D(bno 729856, len 16384 bytes) key=3D(bno 729856, len 8192 bytes)
+7f8220be6700: Badness in key lookup (length)
+bp=3D(bno 813072, len 16384 bytes) key=3D(bno 813072, len 8192 bytes)
+7f8220be6700: Badness in key lookup (length)
+bp=3D(bno 870176, len 16384 bytes) key=3D(bno 870176, len 8192 bytes)
+7f8220be6700: Badness in key lookup (length)
+bp=3D(bno 901056, len 16384 bytes) key=3D(bno 901056, len 8192 bytes)
+7f8220be6700: Badness in key lookup (length)
+bp=3D(bno 1011104, len 16384 bytes) key=3D(bno 1011104, len 8192 bytes)
+7f8220be6700: Badness in key lookup (length)
+bp=3D(bno 1046336, len 16384 bytes) key=3D(bno 1046336, len 8192 bytes)
+7f8220be6700: Badness in key lookup (length)
+bp=3D(bno 1163424, len 16384 bytes) key=3D(bno 1163424, len 8192 bytes)
+7f8220be6700: Badness in key lookup (length)
+bp=3D(bno 1170240, len 16384 bytes) key=3D(bno 1170240, len 8192 bytes)
+7f8220be6700: Badness in key lookup (length)
+bp=3D(bno 1702160, len 16384 bytes) key=3D(bno 1702160, len 8192 bytes)
+7f8220be6700: Badness in key lookup (length)
+bp=3D(bno 2004096, len 16384 bytes) key=3D(bno 2004096, len 8192 bytes)
+7f8220be6700: Badness in key lookup (length)
+bp=3D(bno 2020496, len 16384 bytes) key=3D(bno 2020496, len 8192 bytes)
+7f8220be6700: Badness in key lookup (length)
+bp=3D(bno 2023408, len 16384 bytes) key=3D(bno 2023408, len 8192 bytes)
+7f8220be6700: Badness in key lookup (length)
+bp=3D(bno 2054464, len 16384 bytes) key=3D(bno 2054464, len 8192 bytes)
+7f8220be6700: Badness in key lookup (length)
+bp=3D(bno 2113232, len 16384 bytes) key=3D(bno 2113232, len 8192 bytes)
+7f8220be6700: Badness in key lookup (length)
+bp=3D(bno 2453472, len 16384 bytes) key=3D(bno 2453472, len 8192 bytes)
+7f8220be6700: Badness in key lookup (length)
+bp=3D(bno 2949760, len 16384 bytes) key=3D(bno 2949760, len 8192 bytes)
+7f8220be6700: Badness in key lookup (length)
+bp=3D(bno 3118912, len 16384 bytes) key=3D(bno 3118912, len 8192 bytes)
+        - agno =3D 1
+        - agno =3D 2
+        - agno =3D 3
+        - agno =3D 4
+        - agno =3D 5
+        - agno =3D 6
+        - agno =3D 7
+        - agno =3D 8
+        - agno =3D 9
+        - agno =3D 10
+        - agno =3D 11
+        - agno =3D 12
+        - agno =3D 13
+        - agno =3D 14
+        - agno =3D 15
+        - agno =3D 16
+        - agno =3D 17
+        - agno =3D 18
+        - agno =3D 19
+        - agno =3D 20
+        - agno =3D 21
+        - agno =3D 22
+        - agno =3D 23
+        - agno =3D 24
+        - agno =3D 25
+        - agno =3D 26
+        - agno =3D 27
+        - agno =3D 28
+        - agno =3D 29
+        - agno =3D 30
+        - process newly discovered in odes..
+Phase 4 - check for duplicate blocks=A1=AD
+        - setting up duplicate extent list=A1=AD
+        - check for inodes claiming duplicate blocks=A1=AD
+        - agno =3D 0
+        - agno =3D 4
+        - agno =3D 2
+        - agno =3D 3
+        - agno =3D 7
+        - agno =3D 18
+        - agno =3D 28
+        - agno =3D 6
+        - agno =3D 5
+        - agno =3D 1
+        - agno =3D 26
+        - agno =3D 8
+        - agno =3D 14
+        - agno =3D 17
+        - agno =3D 16
+        - agno =3D 10
+        - agno =3D 20
+        - agno =3D 13
+        - agno =3D 15
+        - agno =3D 11
+        - agno =3D 19
+        - agno =3D 22
+        - agno =3D 21
+        - agno =3D 23
+        - agno =3D 9
+        - agno =3D 12
+        - agno =3D 24
+        - agno =3D 27
+        - agno =3D 25
+        - agno =3D 29
+        - agno =3D 30
+Phase 5 - rebuild AG headers and trees=A1=AD
+        - reset superblock=A1=AD
+Phase 6 - check inode connectivity=A1=AD
+        - resetting contents of realtime bitmap and summary in odes
+        - traversing filesystem =A1=AD
+        - traversal finished =A1=AD
+        - moving disconnected inodes to lost+found =A1=AD
+disconnected inode 6235944, moving to lost+found
+Phase 7 - verify and correct link counts=A1=AD
+done
+sh-4.1$ .
+
+
+2013/4/9 Eric Sandeen <sandeen@sandeen.net>
+
+> On 4/9/13 7:53 AM, =B7=FB=D3=C0=CC=CE wrote:
+> > Dear xfs experts,
+> > I really need your help sincerely!!! In our production enviroment we
+> > run glusterfs over top of xfs on Dell x720D(Raid 6). And the xfs file
+> > system crash on some of the server frequently about every two weeks.
+> > Can you help to give me a direction about how to debug this issue and
+> > how to avoid it? Thank you very very much!
+>
+> So this happens reliably, but infrequently? (only every 2 weeks or so?)
+>
+> Can you provoke it any more often?
+>
+> > uname -a
+> > Linux cqdx.miaoyan.cluster1.node11.qiyi.domain 2.6.32-279.el6.x86_64
+> > #1 SMP Wed Jun 13 18:24:36 EDT 2012 x86_64 x86_64 x86_64 GNU/Linux
+>
+> That's a RHEL6 kernel; I'm assuming that this is a RHEL clone w/o RH
+> support?
+>
+> I agree with Ben that I'd like to see xfs_repair output.
+>
+> Since the fs has shut down, you should unmount, remount, and unmount
+> again to replay the dirty log.  Then do xfs_repair -n, and provide the
+> output
+> if it discovers any errors.
+>
+> Thanks,
+> -Eric
+>
+> > Every time the crash log is same, as following
+> >
+> > 038 Apr  9 09:41:36 cqdx kernel: XFS (sdb): xfs_iunlink_remove:
+> > xfs_inotobp() returned error 22.
+> > 1039 Apr  9 09:41:36 cqdx kernel: XFS (sdb): xfs_inactive: xfs_ifree
+> > returned error 22
+> > 1040 Apr  9 09:41:36 cqdx kernel: XFS (sdb):
+> > xfs_do_force_shutdown(0x1) called from line 1184 of file
+> > fs/xfs/xfs_vnodeops.c.  Return address =3D 0xffffffffa02ee20a
+> > 1041 Apr  9 09:41:36 cqdx kernel: XFS (sdb): I/O Error Detected.
+> > Shutting down filesystem
+> > 1042 Apr  9 09:41:36 cqdx kernel: XFS (sdb): Please umount the
+> > filesystem and rectify the problem(s)
+> > 1043 Apr  9 09:41:53 cqdx kernel: XFS (sdb): xfs_log_force: error 5
+> returned.
+> > 1044 Apr  9 09:42:23 cqdx kernel: XFS (sdb): xfs_log_force: error 5
+> returned.
+> > 1045 Apr  9 09:42:53 cqdx kernel: XFS (sdb): xfs_log_force: error 5
+> returned.
+> > 1046 Apr  9 09:43:23 cqdx kernel: XFS (sdb): xfs_log_force: error 5
+> returned.
+> >
+>
+>
 
 
 --=20
 =B7=FB=D3=C0=CC=CE
 
---14dae9340b5fb2378b04d9eef2d2
+--089e0111e0746d28cd04d9ef12a1
 Content-Type: text/html; charset=GB2312
 Content-Transfer-Encoding: quoted-printable
 
-<div dir=3D"ltr">Today 3 of our servers were impacted by the xfs shutdown. =
-The logs are identical.<br></div><div class=3D"gmail_extra"><br><br><div cl=
-ass=3D"gmail_quote">2013/4/9 =B7=FB=D3=C0=CC=CE <span dir=3D"ltr">&lt;<a hr=
-ef=3D"mailto:yongtaofu@gmail.com" target=3D"_blank">yongtaofu@gmail.com</a>=
-&gt;</span><br>
+<div dir=3D"ltr">The servers are back to service now and It&#39;s hard to r=
+un xfs_repair. It always happen bellow is the xfs_repair log when it happen=
+s on another server several days ago. <br>&nbsp;-sh-4.1$ sudo xfs_repair -n=
+ /dev/glustervg/glusterlv<br>
+Phase 1 - find and verify superblock&hellip;<br>Phase 2 - using internal lo=
+g<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - scan filesystem freespace=
+ and inode maps&hellip;<br>agi unlinked bucket 0 is 4046848 in ag 0 (inode=
+=3D4046848)<br>agi unlinked bucket 5 is 2340485 in ag 0 (inode=3D2340485)<b=
+r>
+agi unlinked bucket 6 is 2326854 in ag 0 (inode=3D2326854)<br>agi unlinked =
+bucket 8 is 1802120 in ag 0 (inode=3D1802120)<br>agi unlinked bucket 14 is =
+495566 in ag 0 (inode=3D495566)<br>agi unlinked bucket 16 is 5899536 in ag =
+0 (inode=3D5899536)<br>
+agi unlinked bucket 19 is 4008211 in ag 0 (inode=3D4008211)<br>agi unlinked=
+ bucket 21 is 4906965 in ag 0 (inode=3D4906965)<br>agi unlinked bucket 23 i=
+s 2022231 in ag 0 (inode=3D2022231)<br>agi unlinked bucket 24 is 1626200 in=
+ ag 0 (inode=3D1626200)<br>
+agi unlinked bucket 25 is 938585 in ag 0 (inode=3D938585)<br>agi unlinked b=
+ucket 30 is 4226526 in ag 0 (inode=3D4226526)<br>agi unlinked bucket 34 is =
+4108962 in ag 0 (inode=3D4108962)<br>agi unlinked bucket 37 is 1740389 in a=
+g 0 (inode=3D1740389)<br>
+agi unlinked bucket 39 is 247399 in ag 0 (inode=3D247399)<br>agi unlinked b=
+ucket 40 is 6237864 in ag 0 (inode=3D6237864)<br>agi unlinked bucket 43 is =
+3404331 in ag 0 (inode=3D3404331)<br>agi unlinked bucket 45 is 2092717 in a=
+g 0 (inode=3D2092717)<br>
+agi unlinked bucket 48 is 4041008 in ag 0 (inode=3D4041008)<br>agi unlinked=
+ bucket 50 is 1459762 in ag 0 (inode=3D1459762)<br>agi unlinked bucket 56 i=
+s 852024 in ag 0 (inode=3D852024)<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
+bsp; - found root in ode chunk<br>Phase 3 - for each AG&hellip;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - scan (but don&#39;t clear) agi=
+ unlinked lists&hellip;<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - pro=
+cess known inodes and perform inode discovery&hellip;<br>&nbsp;&nbsp;&nbsp;=
+&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 0<br>7f084d34e700: Badness in key looku=
+p (length)<br>bp=3D(bno 123696, len 16384 bytes) key=3D(bno 123696, len 819=
+2 bytes)<br>
+7f084d34e700: Badness in key lookup (length)<br>bp=3D(bno 247776, len 16384=
+ bytes) key=3D(bno 247776, len 8192 bytes)<br>7f084d34e700: Badness in key =
+lookup (length)<br>bp=3D(bno 425984, len 16384 bytes) key=3D(bno 425984, le=
+n 8192 bytes)<br>
+7f084d34e700: Badness in key lookup (length)<br>bp=3D(bno 469280, len 16384=
+ bytes) key=3D(bno 469280, len 8192 bytes)<br>7f084d34e700: Badness in key =
+lookup (length)<br>bp=3D(bno 729856, len 16384 bytes) key=3D(bno 729856, le=
+n 8192 bytes)<br>
+7f084d34e700: Badness in key lookup (length)<br>bp=3D(bno 813072, len 16384=
+ bytes) key=3D(bno 813072, len 8192 bytes)<br>7f084d34e700: Badness in key =
+lookup (length)<br>bp=3D(bno 870176, len 16384 bytes) key=3D(bno 870176, le=
+n 8192 bytes)<br>
+7f084d34e700: Badness in key lookup (length)<br>bp=3D(bno 901056, len 16384=
+ bytes) key=3D(bno 901056, len 8192 bytes)<br>7f084d34e700: Badness in key =
+lookup (length)<br>bp=3D(bno 1011104, len 16384 bytes) key=3D(bno 1011104, =
+len 8192 bytes)<br>
+7f084d34e700: Badness in key lookup (length)<br>bp=3D(bno 1046336, len 1638=
+4 bytes) key=3D(bno 1046336, len 8192 bytes)<br>7f084d34e700: Badness in ke=
+y lookup (length)<br>bp=3D(bno 1163424, len 16384 bytes) key=3D(bno 1163424=
+, len 8192 bytes)<br>
+7f084d34e700: Badness in key lookup (length)<br>bp=3D(bno 1170240, len 1638=
+4 bytes) key=3D(bno 1170240, len 8192 bytes)<br>7f084d34e700: Badness in ke=
+y lookup (length)<br>bp=3D(bno 1702160, len 16384 bytes) key=3D(bno 1702160=
+, len 8192 bytes)<br>
+7f084d34e700: Badness in key lookup (length)<br>bp=3D(bno 2004096, len 1638=
+4 bytes) key=3D(bno 2004096, len 8192 bytes)<br>7f084d34e700: Badness in ke=
+y lookup (length)<br>bp=3D(bno 2020496, len 16384 bytes) key=3D(bno 2020496=
+, len 8192 bytes)<br>
+7f084d34e700: Badness in key lookup (length)<br>bp=3D(bno 2023408, len 1638=
+4 bytes) key=3D(bno 2023408, len 8192 bytes)<br>7f084d34e700: Badness in ke=
+y lookup (length)<br>bp=3D(bno 2054464, len 16384 bytes) key=3D(bno 2054464=
+, len 8192 bytes)<br>
+7f084d34e700: Badness in key lookup (length)<br>bp=3D(bno 2113232, len 1638=
+4 bytes) key=3D(bno 2113232, len 8192 bytes)<br>7f084d34e700: Badness in ke=
+y lookup (length)<br>bp=3D(bno 2453472, len 16384 bytes) key=3D(bno 2453472=
+, len 8192 bytes)<br>
+7f084d34e700: Badness in key lookup (length)<br>bp=3D(bno 2949760, len 1638=
+4 bytes) key=3D(bno 2949760, len 8192 bytes)<br>7f084d34e700: Badness in ke=
+y lookup (length)<br>bp=3D(bno 3118912, len 16384 bytes) key=3D(bno 3118912=
+, len 8192 bytes)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 1<br>&nbsp;&nbsp;&nbs=
+p;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 2<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
+bsp;&nbsp; - agno =3D 3<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agn=
+o =3D 4<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 5<br>&nbsp=
+;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 6<br>&nbsp;&nbsp;&nbsp;&nb=
+sp;&nbsp;&nbsp;&nbsp; - agno =3D 7<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
+nbsp; - agno =3D 8<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D=
+ 9<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 10<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 11<br>&nbsp;&nbsp;&nb=
+sp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 12<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
+&nbsp;&nbsp; - agno =3D 13<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - =
+agno =3D 14<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 15<br>=
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 16<br>&nbsp;&nbsp;&nb=
+sp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 17<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
+&nbsp;&nbsp; - agno =3D 18<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - =
+agno =3D 19<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 20<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 21<br>&nbsp;&nbsp;&nb=
+sp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 22<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
+&nbsp;&nbsp; - agno =3D 23<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - =
+agno =3D 24<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 25<br>=
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 26<br>&nbsp;&nbsp;&nb=
+sp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 27<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
+&nbsp;&nbsp; - agno =3D 28<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - =
+agno =3D 29<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 30<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - process newly discovered in od=
+es..<br>Phase 4 - check for duplicate blocks&hellip;<br>&nbsp;&nbsp;&nbsp;&=
+nbsp;&nbsp;&nbsp;&nbsp; - setting up duplicate extent list&hellip;<br>&nbsp=
+;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - check for inodes claiming duplicate=
+ blocks&hellip;<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 0<=
+br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 1<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 3<br>&nbsp;&nbsp;&nbs=
+p;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 9<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
+bsp;&nbsp; - agno =3D 12<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - ag=
+no =3D 14<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 5<br>&nb=
+sp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 19<br>&nbsp;&nbsp;&nbsp;=
+&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 23<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
+sp;&nbsp; - agno =3D 24<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agn=
+o =3D 25<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 26<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 27<br>&nbsp;&nbsp;&nb=
+sp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 28<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
+&nbsp;&nbsp; - agno =3D 29<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - =
+agno =3D 30<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 4<br>&=
+nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 2<br>&nbsp;&nbsp;&nbsp=
+;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 17<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
+bsp;&nbsp; - agno =3D 6<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agn=
+o =3D 8<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 16<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 11<br>&nbsp;&nbsp;&nb=
+sp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 10<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
+&nbsp;&nbsp; - agno =3D 18<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - =
+agno =3D 13<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 15<br>=
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 20<br>&nbsp;&nbsp;&nb=
+sp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 22<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
+&nbsp;&nbsp; - agno =3D 21<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - =
+agno =3D 7<br>No modify flag set, skipping phase 5<br>
+Phase 6 - check inode connectivity&hellip;<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp=
+;&nbsp;&nbsp; - traversing filesystem &hellip;<br>&nbsp;&nbsp;&nbsp;&nbsp;&=
+nbsp;&nbsp;&nbsp; - traversal finished &hellip;<br>&nbsp;&nbsp;&nbsp;&nbsp;=
+&nbsp;&nbsp;&nbsp; - moving disconnected inodes to lost+found &hellip;<br>d=
+isconnected inode 6235944, would move to lost+found<br>
+Phase 7 - verify link counts&hellip;<br>would have reset inode 6235944 nlin=
+ks from 0 to 1<br>No modify flag set, skipping filesystem flush and exiting=
+..<br><br><br><br>=B5=DA=B6=FE=B2=BD<br>repair=B5=C4log<br><br>sh-4.1$ sudo=
+ xfs_repair /dev/glustervg/glusterlv<br>
+Phase 1 - find and verify superblock&hellip;<br>Phase 2 - using internal lo=
+g<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - zero log&hellip;<br>&nbsp=
+;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - scan filesystem freespace and inode=
+ maps&hellip;<br>agi unlinked bucket 0 is 4046848 in ag 0 (inode=3D4046848)=
+<br>agi unlinked bucket 5 is 2340485 in ag 0 (inode=3D2340485)<br>
+agi unlinked bucket 6 is 2326854 in ag 0 (inode=3D2326854)<br>agi unlinked =
+bucket 8 is 1802120 in ag 0 (inode=3D1802120)<br>agi unlinked bucket 14 is =
+495566 in ag 0 (inode=3D495566)<br>agi unlinked bucket 16 is 5899536 in ag =
+0 (inode=3D5899536)<br>
+agi unlinked bucket 19 is 4008211 in ag 0 (inode=3D4008211)<br>agi unlinked=
+ bucket 21 is 4906965 in ag 0 (inode=3D4906965)<br>agi unlinked bucket 23 i=
+s 2022231 in ag 0 (inode=3D2022231)<br>agi unlinked bucket 24 is 1626200 in=
+ ag 0 (inode=3D1626200)<br>
+agi unlinked bucket 25 is 938585 in ag 0 (inode=3D938585)<br>agi unlinked b=
+ucket 30 is 4226526 in ag 0 (inode=3D4226526)<br>agi unlinked bucket 34 is =
+4108962 in ag 0 (inode=3D4108962)<br>agi unlinked bucket 37 is 1740389 in a=
+g 0 (inode=3D1740389)<br>
+agi unlinked bucket 39 is 247399 in ag 0 (inode=3D247399)<br>agi unlinked b=
+ucket 40 is 6237864 in ag 0 (inode=3D6237864)<br>agi unlinked bucket 43 is =
+3404331 in ag 0 (inode=3D3404331)<br>agi unlinked bucket 45 is 2092717 in a=
+g 0 (inode=3D2092717)<br>
+agi unlinked bucket 48 is 4041008 in ag 0 (inode=3D4041008)<br>agi unlinked=
+ bucket 50 is 1459762 in ag 0 (inode=3D1459762)<br>agi unlinked bucket 56 i=
+s 852024 in ag 0 (inode=3D852024)<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
+bsp; - found root in ode chunk<br>Phase 3 - for each AG&hellip;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - scan and clear agi unlinked li=
+sts&hellip;<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - process known i=
+nodes and perform inode discovery&hellip;<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
+&nbsp;&nbsp; - agno =3D 0<br>7f8220be6700: Badness in key lookup (length)<b=
+r>bp=3D(bno 123696, len 16384 bytes) key=3D(bno 123696, len 8192 bytes)<br>
+7f8220be6700: Badness in key lookup (length)<br>bp=3D(bno 247776, len 16384=
+ bytes) key=3D(bno 247776, len 8192 bytes)<br>7f8220be6700: Badness in key =
+lookup (length)<br>bp=3D(bno 425984, len 16384 bytes) key=3D(bno 425984, le=
+n 8192 bytes)<br>
+7f8220be6700: Badness in key lookup (length)<br>bp=3D(bno 469280, len 16384=
+ bytes) key=3D(bno 469280, len 8192 bytes)<br>7f8220be6700: Badness in key =
+lookup (length)<br>bp=3D(bno 729856, len 16384 bytes) key=3D(bno 729856, le=
+n 8192 bytes)<br>
+7f8220be6700: Badness in key lookup (length)<br>bp=3D(bno 813072, len 16384=
+ bytes) key=3D(bno 813072, len 8192 bytes)<br>7f8220be6700: Badness in key =
+lookup (length)<br>bp=3D(bno 870176, len 16384 bytes) key=3D(bno 870176, le=
+n 8192 bytes)<br>
+7f8220be6700: Badness in key lookup (length)<br>bp=3D(bno 901056, len 16384=
+ bytes) key=3D(bno 901056, len 8192 bytes)<br>7f8220be6700: Badness in key =
+lookup (length)<br>bp=3D(bno 1011104, len 16384 bytes) key=3D(bno 1011104, =
+len 8192 bytes)<br>
+7f8220be6700: Badness in key lookup (length)<br>bp=3D(bno 1046336, len 1638=
+4 bytes) key=3D(bno 1046336, len 8192 bytes)<br>7f8220be6700: Badness in ke=
+y lookup (length)<br>bp=3D(bno 1163424, len 16384 bytes) key=3D(bno 1163424=
+, len 8192 bytes)<br>
+7f8220be6700: Badness in key lookup (length)<br>bp=3D(bno 1170240, len 1638=
+4 bytes) key=3D(bno 1170240, len 8192 bytes)<br>7f8220be6700: Badness in ke=
+y lookup (length)<br>bp=3D(bno 1702160, len 16384 bytes) key=3D(bno 1702160=
+, len 8192 bytes)<br>
+7f8220be6700: Badness in key lookup (length)<br>bp=3D(bno 2004096, len 1638=
+4 bytes) key=3D(bno 2004096, len 8192 bytes)<br>7f8220be6700: Badness in ke=
+y lookup (length)<br>bp=3D(bno 2020496, len 16384 bytes) key=3D(bno 2020496=
+, len 8192 bytes)<br>
+7f8220be6700: Badness in key lookup (length)<br>bp=3D(bno 2023408, len 1638=
+4 bytes) key=3D(bno 2023408, len 8192 bytes)<br>7f8220be6700: Badness in ke=
+y lookup (length)<br>bp=3D(bno 2054464, len 16384 bytes) key=3D(bno 2054464=
+, len 8192 bytes)<br>
+7f8220be6700: Badness in key lookup (length)<br>bp=3D(bno 2113232, len 1638=
+4 bytes) key=3D(bno 2113232, len 8192 bytes)<br>7f8220be6700: Badness in ke=
+y lookup (length)<br>bp=3D(bno 2453472, len 16384 bytes) key=3D(bno 2453472=
+, len 8192 bytes)<br>
+7f8220be6700: Badness in key lookup (length)<br>bp=3D(bno 2949760, len 1638=
+4 bytes) key=3D(bno 2949760, len 8192 bytes)<br>7f8220be6700: Badness in ke=
+y lookup (length)<br>bp=3D(bno 3118912, len 16384 bytes) key=3D(bno 3118912=
+, len 8192 bytes)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 1<br>&nbsp;&nbsp;&nbs=
+p;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 2<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
+bsp;&nbsp; - agno =3D 3<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agn=
+o =3D 4<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 5<br>&nbsp=
+;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 6<br>&nbsp;&nbsp;&nbsp;&nb=
+sp;&nbsp;&nbsp;&nbsp; - agno =3D 7<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
+nbsp; - agno =3D 8<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D=
+ 9<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 10<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 11<br>&nbsp;&nbsp;&nb=
+sp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 12<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
+&nbsp;&nbsp; - agno =3D 13<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - =
+agno =3D 14<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 15<br>=
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 16<br>&nbsp;&nbsp;&nb=
+sp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 17<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
+&nbsp;&nbsp; - agno =3D 18<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - =
+agno =3D 19<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 20<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 21<br>&nbsp;&nbsp;&nb=
+sp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 22<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
+&nbsp;&nbsp; - agno =3D 23<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - =
+agno =3D 24<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 25<br>=
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 26<br>&nbsp;&nbsp;&nb=
+sp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 27<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
+&nbsp;&nbsp; - agno =3D 28<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - =
+agno =3D 29<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 30<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - process newly discovered in od=
+es..<br>Phase 4 - check for duplicate blocks&hellip;<br>&nbsp;&nbsp;&nbsp;&=
+nbsp;&nbsp;&nbsp;&nbsp; - setting up duplicate extent list&hellip;<br>&nbsp=
+;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - check for inodes claiming duplicate=
+ blocks&hellip;<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 0<=
+br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 4<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 2<br>&nbsp;&nbsp;&nbs=
+p;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 3<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
+bsp;&nbsp; - agno =3D 7<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agn=
+o =3D 18<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 28<br>&nb=
+sp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 6<br>&nbsp;&nbsp;&nbsp;&=
+nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 5<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp=
+;&nbsp; - agno =3D 1<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =
+=3D 26<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 8<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 14<br>&nbsp;&nbsp;&nb=
+sp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 17<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
+&nbsp;&nbsp; - agno =3D 16<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - =
+agno =3D 10<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 20<br>=
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 13<br>&nbsp;&nbsp;&nb=
+sp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 15<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
+&nbsp;&nbsp; - agno =3D 11<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - =
+agno =3D 19<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 22<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 21<br>&nbsp;&nbsp;&nb=
+sp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 23<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
+&nbsp;&nbsp; - agno =3D 9<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - a=
+gno =3D 12<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 24<br>&=
+nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 27<br>&nbsp;&nbsp;&nbs=
+p;&nbsp;&nbsp;&nbsp;&nbsp; - agno =3D 25<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
+nbsp;&nbsp; - agno =3D 29<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - a=
+gno =3D 30<br>Phase 5 - rebuild AG headers and trees&hellip;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - reset superblock&hellip;<br>Ph=
+ase 6 - check inode connectivity&hellip;<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
+nbsp;&nbsp; - resetting contents of realtime bitmap and summary in odes<br>=
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - traversing filesystem &hellip;=
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - traversal finished &hellip=
+;<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - moving disconnected inode=
+s to lost+found &hellip;<br>
+disconnected inode 6235944, moving to lost+found<br>Phase 7 - verify and co=
+rrect link counts&hellip;<br>done<br>sh-4.1$ .<br></div><div class=3D"gmail=
+_extra"><br><br><div class=3D"gmail_quote">2013/4/9 Eric Sandeen <span dir=
+=3D"ltr">&lt;<a href=3D"mailto:sandeen@sandeen.net" target=3D"_blank">sande=
+en@sandeen.net</a>&gt;</span><br>
 <blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
-x #ccc solid;padding-left:1ex"><div dir=3D"ltr">before xfs force shutdown h=
-appens there seems no useful log in /var/log/messages<br><br>Apr&nbsp; 9 10=
-:38:08 cqdx smbd[4597]:&nbsp;&nbsp; Unable to connect to CUPS server localh=
-ost:631 - Connection refused<br>
-Apr&nbsp; 9 10:38:08 cqdx smbd[3394]: [2013/04/09 10:38:08.944125,&nbsp; 0]=
- printing/print_cups.c:468(cups_async_callback)<br>
-Apr&nbsp; 9 10:38:08 cqdx smbd[3394]:&nbsp;&nbsp; failed to retrieve printe=
-r list: NT_STATUS_UNSUCCESSFUL<br>Apr&nbsp; 9 10:51:09 cqdx smbd[5205]: [20=
-13/04/09 10:51:09.723610,&nbsp; 0] printing/print_cups.c:109(cups_connect)<=
-br>Apr&nbsp; 9 10:51:09 cqdx smbd[5205]:&nbsp;&nbsp; Unable to connect to C=
-UPS server localhost:631 - Connection refused<br>
-
-Apr&nbsp; 9 10:51:09 cqdx smbd[3394]: [2013/04/09 10:51:09.724132,&nbsp; 0]=
- printing/print_cups.c:468(cups_async_callback)<br>Apr&nbsp; 9 10:51:09 cqd=
-x smbd[3394]:&nbsp;&nbsp; failed to retrieve printer list: NT_STATUS_UNSUCC=
-ESSFUL<br>Apr&nbsp; 9 11:01:30 cqdx kernel: XFS (sdb): xfs_iunlink_remove: =
-xfs_inotobp() returned error 22.<br>
-
-Apr&nbsp; 9 11:01:30 cqdx kernel: XFS (sdb): xfs_inactive: xfs_ifree return=
-ed error 22<br>Apr&nbsp; 9 11:01:30 cqdx kernel: XFS (sdb): xfs_do_force_sh=
-utdown(0x1) called from line 1184 of file fs/xfs/xfs_vnodeops.c.&nbsp; Retu=
-rn address =3D 0xffffffffa02ee20a<br>
-
-Apr&nbsp; 9 11:01:30 cqdx kernel: XFS (sdb): I/O Error Detected. Shutting d=
-own filesystem<br>Apr&nbsp; 9 11:01:30 cqdx kernel: XFS (sdb): Please umoun=
-t the filesystem and rectify the problem(s)<br>Apr&nbsp; 9 11:01:51 cqdx ke=
-rnel: XFS (sdb): xfs_log_force: error 5 returned.<br>
-
-Apr&nbsp; 9 11:02:21 cqdx kernel: XFS (sdb): xfs_log_force: error 5 returne=
-d.<br>Apr&nbsp; 9 11:02:51 cqdx kernel: XFS (sdb): xfs_log_force: error 5 r=
-eturned.<br>Apr&nbsp; 9 11:03:21 cqdx kernel: XFS (sdb): xfs_log_force: err=
-or 5 returned.<br>
-
-Apr&nbsp; 9 11:03:51 cqdx kernel: XFS (sdb): xfs_log_force: error 5 returne=
-d.<br>Apr&nbsp; 9 11:03:57 cqdx init: tty (/dev/tty1) main process (3427) k=
-illed by TERM signal<br>Apr&nbsp; 9 11:03:57 cqdx init: tty (/dev/tty2) mai=
-n process (3429) killed by TERM signal<br>
-
-<br></div><div class=3D"gmail_extra"><div><div class=3D"h5"><br><br><div cl=
-ass=3D"gmail_quote">2013/4/9 Ben Myers <span dir=3D"ltr">&lt;<a href=3D"mai=
-lto:bpm@sgi.com" target=3D"_blank">bpm@sgi.com</a>&gt;</span><br><blockquot=
-e class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1px #ccc sol=
-id;padding-left:1ex">
-
-Hey Yongtaofu,<br>
-<div><br>
-On Tue, Apr 09, 2013 at 09:05:32PM +0800, =B7=FB=D3=C0=CC=CE wrote:<br>
-&gt; Also I want to know why all the server, all crash with the same crash =
-stack?<br>
-&gt; Thank you, really need your help.<br>
+x #ccc solid;padding-left:1ex"><div class=3D"im">On 4/9/13 7:53 AM, =B7=FB=
+=D3=C0=CC=CE wrote:<br>
+&gt; Dear xfs experts,<br>
+&gt; I really need your help sincerely!!! In our production enviroment we<b=
+r>
+&gt; run glusterfs over top of xfs on Dell x720D(Raid 6). And the xfs file<=
+br>
+&gt; system crash on some of the server frequently about every two weeks.<b=
+r>
+&gt; Can you help to give me a direction about how to debug this issue and<=
+br>
+&gt; how to avoid it? Thank you very very much!<br>
 <br>
-</div>What you&#39;ve posted so far looks like evidence of a forced shutdow=
-n and not a<br>
-crash. &nbsp;Is there a crash in addition to this forced shutdown? &nbsp;If=
- so, can you<br>
-post the stack for that too?<br>
-<div><br>
-&gt;<br>
-&gt; 2013/4/9, =B7=FB=D3=C0=CC=CE &lt;<a href=3D"mailto:yongtaofu@gmail.com=
-" target=3D"_blank">yongtaofu@gmail.com</a>&gt;:<br>
-&gt; &gt; BTW<br>
-&gt; &gt; xfs_info /dev/sdb<br>
-&gt; &gt; meta-data=3D/dev/sdb &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &n=
-bsp; isize=3D256 &nbsp; &nbsp;agcount=3D28, agsize=3D268435440<br>
-&gt; &gt; blks<br>
-&gt; &gt; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;=3D &nbsp; &nbsp; &nbsp; &nbsp;=
- &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; sectsz=3D512 &nbsp; attr=
-=3D2<br>
-&gt; &gt; data &nbsp; &nbsp; =3D &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; =
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; bsize=3D4096 &nbsp; blocks=3D7324303360,=
- imaxpct=3D5<br>
-&gt; &gt; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;=3D &nbsp; &nbsp; &nbsp; &nbsp;=
- &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; sunit=3D16 &nbsp; &nbsp; =
-swidth=3D160 blks<br>
-&gt; &gt; naming &nbsp; =3Dversion 2 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nb=
-sp; &nbsp;bsize=3D4096 &nbsp; ascii-ci=3D0<br>
-&gt; &gt; log &nbsp; &nbsp; &nbsp;=3Dinternal &nbsp; &nbsp; &nbsp; &nbsp; &=
-nbsp; &nbsp; &nbsp; bsize=3D4096 &nbsp; blocks=3D521728, version=3D2<br>
-&gt; &gt; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;=3D &nbsp; &nbsp; &nbsp; &nbsp;=
- &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; sectsz=3D512 &nbsp; sunit=
-=3D16 blks, lazy-count=3D1<br>
-&gt; &gt; realtime =3Dnone &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;=
- &nbsp; &nbsp; extsz=3D4096 &nbsp; blocks=3D0, rtextents=3D0<br>
-&gt; &gt;<br>
-&gt; &gt; 2013/4/9, =B7=FB=D3=C0=CC=CE &lt;<a href=3D"mailto:yongtaofu@gmai=
-l.com" target=3D"_blank">yongtaofu@gmail.com</a>&gt;:<br>
-&gt; &gt;&gt; Dear xfs experts,<br>
-&gt; &gt;&gt; I really need your help sincerely!!! In our production enviro=
-ment we<br>
-&gt; &gt;&gt; run glusterfs over top of xfs on Dell x720D(Raid 6). And the =
-xfs file<br>
-&gt; &gt;&gt; system crash on some of the server frequently about every two=
- weeks.<br>
-&gt; &gt;&gt; Can you help to give me a direction about how to debug this i=
-ssue and<br>
-&gt; &gt;&gt; how to avoid it? Thank you very very much!<br>
-&gt; &gt;&gt;<br>
-&gt; &gt;&gt; uname -a<br>
-&gt; &gt;&gt; Linux cqdx.miaoyan.cluster1.node11.qiyi.domain 2.6.32-279.el6=
-.x86_64<br>
-&gt; &gt;&gt; #1 SMP Wed Jun 13 18:24:36 EDT 2012 x86_64 x86_64 x86_64 GNU/=
-Linux<br>
-&gt; &gt;&gt;<br>
-&gt; &gt;&gt; Every time the crash log is same, as following<br>
+</div>So this happens reliably, but infrequently? (only every 2 weeks or so=
+?)<br>
 <br>
-</div>An initial guess is that somehow it is looking up a bad inode number,=
- e.g. it<br>
-is beyond the end of the filesystem and xfs_dilocate returns EINVAL.<br>
+Can you provoke it any more often?<br>
+<div class=3D"im"><br>
+&gt; uname -a<br>
+&gt; Linux cqdx.miaoyan.cluster1.node11.qiyi.domain 2.6.32-279.el6.x86_64<b=
+r>
+&gt; #1 SMP Wed Jun 13 18:24:36 EDT 2012 x86_64 x86_64 x86_64 GNU/Linux<br>
 <br>
-You could &#39;xfs_repair -n&#39; to see what it finds (without modifying t=
-he<br>
-filesystem) as a first step.<br>
-<div><br>
-&gt; &gt;&gt; 038 Apr &nbsp;9 09:41:36 cqdx kernel: XFS (sdb): xfs_iunlink_=
-remove:<br>
-&gt; &gt;&gt; xfs_inotobp() returned error 22.<br>
+</div>That&#39;s a RHEL6 kernel; I&#39;m assuming that this is a RHEL clone=
+ w/o RH support?<br>
 <br>
-</div>Were there any lines of output before this? &nbsp;In some codebases t=
-here are prints<br>
-in xfs_inotobp that would help show what happened.<br>
-<div><br>
-&gt; &gt;&gt; 1039 Apr &nbsp;9 09:41:36 cqdx kernel: XFS (sdb): xfs_inactiv=
-e: xfs_ifree<br>
-&gt; &gt;&gt; returned error 22<br>
-&gt; &gt;&gt; 1040 Apr &nbsp;9 09:41:36 cqdx kernel: XFS (sdb):<br>
-&gt; &gt;&gt; xfs_do_force_shutdown(0x1) called from line 1184 of file<br>
-&gt; &gt;&gt; fs/xfs/xfs_vnodeops.c. &nbsp;Return address =3D 0xffffffffa02=
-ee20a<br>
-&gt; &gt;&gt; 1041 Apr &nbsp;9 09:41:36 cqdx kernel: XFS (sdb): I/O Error D=
-etected.<br>
-&gt; &gt;&gt; Shutting down filesystem<br>
-&gt; &gt;&gt; 1042 Apr &nbsp;9 09:41:36 cqdx kernel: XFS (sdb): Please umou=
-nt the<br>
-&gt; &gt;&gt; filesystem and rectify the problem(s)<br>
-&gt; &gt;&gt; 1043 Apr &nbsp;9 09:41:53 cqdx kernel: XFS (sdb): xfs_log_for=
-ce: error 5<br>
-&gt; &gt;&gt; returned.<br>
-&gt; &gt;&gt; 1044 Apr &nbsp;9 09:42:23 cqdx kernel: XFS (sdb): xfs_log_for=
-ce: error 5<br>
-&gt; &gt;&gt; returned.<br>
-&gt; &gt;&gt; 1045 Apr &nbsp;9 09:42:53 cqdx kernel: XFS (sdb): xfs_log_for=
-ce: error 5<br>
-&gt; &gt;&gt; returned.<br>
-&gt; &gt;&gt; 1046 Apr &nbsp;9 09:43:23 cqdx kernel: XFS (sdb): xfs_log_for=
-ce: error 5<br>
-&gt; &gt;&gt; returned.<br>
+I agree with Ben that I&#39;d like to see xfs_repair output.<br>
 <br>
-</div>The error 5 (EIO) look scary but they are due to the forced shutdown,=
- don&#39;t<br>
-worry about them.<br>
+Since the fs has shut down, you should unmount, remount, and unmount<br>
+again to replay the dirty log. &nbsp;Then do xfs_repair -n, and provide the=
+ output<br>
+if it discovers any errors.<br>
 <br>
 Thanks,<br>
-&nbsp; &nbsp; &nbsp; &nbsp; Ben<br>
-</blockquote></div><br><br clear=3D"all"><br></div></div><span class=3D"HOE=
-nZb"><font color=3D"#888888">-- <br>=B7=FB=D3=C0=CC=CE
-</font></span></div>
-</blockquote></div><br><br clear=3D"all"><br>-- <br>=B7=FB=D3=C0=CC=CE
+-Eric<br>
+<div class=3D"HOEnZb"><div class=3D"h5"><br>
+&gt; Every time the crash log is same, as following<br>
+&gt;<br>
+&gt; 038 Apr &nbsp;9 09:41:36 cqdx kernel: XFS (sdb): xfs_iunlink_remove:<b=
+r>
+&gt; xfs_inotobp() returned error 22.<br>
+&gt; 1039 Apr &nbsp;9 09:41:36 cqdx kernel: XFS (sdb): xfs_inactive: xfs_if=
+ree<br>
+&gt; returned error 22<br>
+&gt; 1040 Apr &nbsp;9 09:41:36 cqdx kernel: XFS (sdb):<br>
+&gt; xfs_do_force_shutdown(0x1) called from line 1184 of file<br>
+&gt; fs/xfs/xfs_vnodeops.c. &nbsp;Return address =3D 0xffffffffa02ee20a<br>
+&gt; 1041 Apr &nbsp;9 09:41:36 cqdx kernel: XFS (sdb): I/O Error Detected.<=
+br>
+&gt; Shutting down filesystem<br>
+&gt; 1042 Apr &nbsp;9 09:41:36 cqdx kernel: XFS (sdb): Please umount the<br=
+>
+&gt; filesystem and rectify the problem(s)<br>
+&gt; 1043 Apr &nbsp;9 09:41:53 cqdx kernel: XFS (sdb): xfs_log_force: error=
+ 5 returned.<br>
+&gt; 1044 Apr &nbsp;9 09:42:23 cqdx kernel: XFS (sdb): xfs_log_force: error=
+ 5 returned.<br>
+&gt; 1045 Apr &nbsp;9 09:42:53 cqdx kernel: XFS (sdb): xfs_log_force: error=
+ 5 returned.<br>
+&gt; 1046 Apr &nbsp;9 09:43:23 cqdx kernel: XFS (sdb): xfs_log_force: error=
+ 5 returned.<br>
+&gt;<br>
+<br>
+</div></div></blockquote></div><br><br clear=3D"all"><br>-- <br>=B7=FB=D3=
+=C0=CC=CE
 </div>
 
---14dae9340b5fb2378b04d9eef2d2--
+--089e0111e0746d28cd04d9ef12a1--
 
 
---===============4942538097170445020==
+--===============3216925519987356353==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -381,4 +768,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============4942538097170445020==--
+--===============3216925519987356353==--
