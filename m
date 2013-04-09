@@ -1,22 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 47F0D29E11
-	for <xfs@oss.sgi.com>; Tue,  9 Apr 2013 09:04:15 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 35945304067
-	for <xfs@oss.sgi.com>; Tue,  9 Apr 2013 07:04:12 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id jIhHSeObBNxkIgmz for
-	<xfs@oss.sgi.com>; Tue, 09 Apr 2013 07:04:11 -0700 (PDT)
-Date: Tue, 9 Apr 2013 11:03:59 -0300
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: xfstests should still make xfs as default?
-Message-ID: <20130409140358.GA27522@andromeda.usersys.redhat.com>
-References: <20130327203231.GA26739@andromeda.usersys.redhat.com>
-	<20130408230733.GB17758@dastard>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 44B337F58
+	for <xfs@oss.sgi.com>; Tue,  9 Apr 2013 09:52:42 -0500 (CDT)
+Date: Tue, 9 Apr 2013 09:52:38 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: need help how to debug xfs crash issue xfs_iunlink_remove:
+	xfs_inotobp() returned error 22
+Message-ID: <20130409145238.GE22182@sgi.com>
+References: <CADFMGuJm5bPPwbbUtYwrCVDL23KExJTw_-VRX2UEEdZjo+i5oA@mail.gmail.com>
+	<CADFMGu+=MM2yc=_peboV7JTNJ8F05TJfexmEErzcf0D8mAWFRg@mail.gmail.com>
+	<CADFMGuKqkPbpcU=taqjTR4sA3o=w1LLAnKoEuj=OhJqEbQVijw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130408230733.GB17758@dastard>
+In-Reply-To: <CADFMGuKqkPbpcU=taqjTR4sA3o=w1LLAnKoEuj=OhJqEbQVijw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,66 +21,67 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: =?utf-8?B?56ym5rC45rab?= <yongtaofu@gmail.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Apr 09, 2013 at 09:07:34AM +1000, Dave Chinner wrote:
-> On Wed, Mar 27, 2013 at 05:32:32PM -0300, Carlos Maiolino wrote:
-> > Hi, working on xfstests after its new directory structures I noticed we should
-> > use now something like:
-> > 
-> > ./check xfs/<test>
-> > 
-> > to run some tests, IMHO this is not intuitive and I was working on a patch to
-> > make us able to use something just like the old way:
-> > 
-> > ./check <test>
-> 
-> What do you do with duplicate test names?
-> 
-> The main reason that the interface changed was to keep the changes
-> to the test harness down to a minimum as it was just moving tests
-> around. All that code needs to be revisited to support arbitrary
-> test names, so there wasn't much point in doing a massive rework
-> only to have to rework it again...
-> 
-> But the question is: is the old way a sane way to specify tests in
-> the brave new world? I'd much prefer that test specification is
-> explict, and doesn't implicitly select tests. Indeed, if it
-> implicitly selects tests (e.g. when there are duplicates it runs all
-> duplicates) then we still need a method for running specific
-> tests.....
-> 
-> Note that what you are seeing is how the $have_test_arg code
-> processes the test name. It requires that you tell it the directory
-> so it knows where to look for the specific test. You could make it
-> look in each test directory like get_group_list()/get_all_tests() do
-> so we don't need to specify a directory.
-> 
-> > But, since xfstests is becoming more generalist than xfs specific, I wonder if
-> > we should still keep xfs as default.
-> 
-> The default is whatever filesystem is on the $TEST_DEV, and I don't
-> see that changing. i.e. what we set FSTYP to is the default. Note
-> that get_group_list() and get_all_tests() specifically include the
-> FSTYP directory,
-> 
-Hi, this makes sense to me Dave, thanks to the explanation.
-
-We have some documentation which says xfstests will run tests for a xfs
-filesystem by default if no other fstype is specified, I'll change this into
-documentation then.
-
-Cheers,
-
--- 
-Carlos
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+SGV5IFlvbmd0YW9mdSwKCk9uIFR1ZSwgQXByIDA5LCAyMDEzIGF0IDA5OjA1OjMyUE0gKzA4MDAs
+IOespuawuOa2myB3cm90ZToKPiBBbHNvIEkgd2FudCB0byBrbm93IHdoeSBhbGwgdGhlIHNlcnZl
+ciwgYWxsIGNyYXNoIHdpdGggdGhlIHNhbWUgY3Jhc2ggc3RhY2s/Cj4gVGhhbmsgeW91LCByZWFs
+bHkgbmVlZCB5b3VyIGhlbHAuCgpXaGF0IHlvdSd2ZSBwb3N0ZWQgc28gZmFyIGxvb2tzIGxpa2Ug
+ZXZpZGVuY2Ugb2YgYSBmb3JjZWQgc2h1dGRvd24gYW5kIG5vdCBhCmNyYXNoLiAgSXMgdGhlcmUg
+YSBjcmFzaCBpbiBhZGRpdGlvbiB0byB0aGlzIGZvcmNlZCBzaHV0ZG93bj8gIElmIHNvLCBjYW4g
+eW91CnBvc3QgdGhlIHN0YWNrIGZvciB0aGF0IHRvbz8KCj4gCj4gMjAxMy80LzksIOespuawuOa2
+myA8eW9uZ3Rhb2Z1QGdtYWlsLmNvbT46Cj4gPiBCVFcKPiA+IHhmc19pbmZvIC9kZXYvc2RiCj4g
+PiBtZXRhLWRhdGE9L2Rldi9zZGIgICAgICAgICAgICAgICBpc2l6ZT0yNTYgICAgYWdjb3VudD0y
+OCwgYWdzaXplPTI2ODQzNTQ0MAo+ID4gYmxrcwo+ID4gICAgICAgICAgPSAgICAgICAgICAgICAg
+ICAgICAgICAgc2VjdHN6PTUxMiAgIGF0dHI9Mgo+ID4gZGF0YSAgICAgPSAgICAgICAgICAgICAg
+ICAgICAgICAgYnNpemU9NDA5NiAgIGJsb2Nrcz03MzI0MzAzMzYwLCBpbWF4cGN0PTUKPiA+ICAg
+ICAgICAgID0gICAgICAgICAgICAgICAgICAgICAgIHN1bml0PTE2ICAgICBzd2lkdGg9MTYwIGJs
+a3MKPiA+IG5hbWluZyAgID12ZXJzaW9uIDIgICAgICAgICAgICAgIGJzaXplPTQwOTYgICBhc2Np
+aS1jaT0wCj4gPiBsb2cgICAgICA9aW50ZXJuYWwgICAgICAgICAgICAgICBic2l6ZT00MDk2ICAg
+YmxvY2tzPTUyMTcyOCwgdmVyc2lvbj0yCj4gPiAgICAgICAgICA9ICAgICAgICAgICAgICAgICAg
+ICAgICBzZWN0c3o9NTEyICAgc3VuaXQ9MTYgYmxrcywgbGF6eS1jb3VudD0xCj4gPiByZWFsdGlt
+ZSA9bm9uZSAgICAgICAgICAgICAgICAgICBleHRzej00MDk2ICAgYmxvY2tzPTAsIHJ0ZXh0ZW50
+cz0wCj4gPgo+ID4gMjAxMy80LzksIOespuawuOa2myA8eW9uZ3Rhb2Z1QGdtYWlsLmNvbT46Cj4g
+Pj4gRGVhciB4ZnMgZXhwZXJ0cywKPiA+PiBJIHJlYWxseSBuZWVkIHlvdXIgaGVscCBzaW5jZXJl
+bHkhISEgSW4gb3VyIHByb2R1Y3Rpb24gZW52aXJvbWVudCB3ZQo+ID4+IHJ1biBnbHVzdGVyZnMg
+b3ZlciB0b3Agb2YgeGZzIG9uIERlbGwgeDcyMEQoUmFpZCA2KS4gQW5kIHRoZSB4ZnMgZmlsZQo+
+ID4+IHN5c3RlbSBjcmFzaCBvbiBzb21lIG9mIHRoZSBzZXJ2ZXIgZnJlcXVlbnRseSBhYm91dCBl
+dmVyeSB0d28gd2Vla3MuCj4gPj4gQ2FuIHlvdSBoZWxwIHRvIGdpdmUgbWUgYSBkaXJlY3Rpb24g
+YWJvdXQgaG93IHRvIGRlYnVnIHRoaXMgaXNzdWUgYW5kCj4gPj4gaG93IHRvIGF2b2lkIGl0PyBU
+aGFuayB5b3UgdmVyeSB2ZXJ5IG11Y2ghCj4gPj4KPiA+PiB1bmFtZSAtYQo+ID4+IExpbnV4IGNx
+ZHgubWlhb3lhbi5jbHVzdGVyMS5ub2RlMTEucWl5aS5kb21haW4gMi42LjMyLTI3OS5lbDYueDg2
+XzY0Cj4gPj4gIzEgU01QIFdlZCBKdW4gMTMgMTg6MjQ6MzYgRURUIDIwMTIgeDg2XzY0IHg4Nl82
+NCB4ODZfNjQgR05VL0xpbnV4Cj4gPj4KPiA+PiBFdmVyeSB0aW1lIHRoZSBjcmFzaCBsb2cgaXMg
+c2FtZSwgYXMgZm9sbG93aW5nCgpBbiBpbml0aWFsIGd1ZXNzIGlzIHRoYXQgc29tZWhvdyBpdCBp
+cyBsb29raW5nIHVwIGEgYmFkIGlub2RlIG51bWJlciwgZS5nLiBpdAppcyBiZXlvbmQgdGhlIGVu
+ZCBvZiB0aGUgZmlsZXN5c3RlbSBhbmQgeGZzX2RpbG9jYXRlIHJldHVybnMgRUlOVkFMLgoKWW91
+IGNvdWxkICd4ZnNfcmVwYWlyIC1uJyB0byBzZWUgd2hhdCBpdCBmaW5kcyAod2l0aG91dCBtb2Rp
+ZnlpbmcgdGhlCmZpbGVzeXN0ZW0pIGFzIGEgZmlyc3Qgc3RlcC4KCj4gPj4gMDM4IEFwciAgOSAw
+OTo0MTozNiBjcWR4IGtlcm5lbDogWEZTIChzZGIpOiB4ZnNfaXVubGlua19yZW1vdmU6Cj4gPj4g
+eGZzX2lub3RvYnAoKSByZXR1cm5lZCBlcnJvciAyMi4KCldlcmUgdGhlcmUgYW55IGxpbmVzIG9m
+IG91dHB1dCBiZWZvcmUgdGhpcz8gIEluIHNvbWUgY29kZWJhc2VzIHRoZXJlIGFyZSBwcmludHMK
+aW4geGZzX2lub3RvYnAgdGhhdCB3b3VsZCBoZWxwIHNob3cgd2hhdCBoYXBwZW5lZC4KCj4gPj4g
+MTAzOSBBcHIgIDkgMDk6NDE6MzYgY3FkeCBrZXJuZWw6IFhGUyAoc2RiKTogeGZzX2luYWN0aXZl
+OiB4ZnNfaWZyZWUKPiA+PiByZXR1cm5lZCBlcnJvciAyMgo+ID4+IDEwNDAgQXByICA5IDA5OjQx
+OjM2IGNxZHgga2VybmVsOiBYRlMgKHNkYik6Cj4gPj4geGZzX2RvX2ZvcmNlX3NodXRkb3duKDB4
+MSkgY2FsbGVkIGZyb20gbGluZSAxMTg0IG9mIGZpbGUKPiA+PiBmcy94ZnMveGZzX3Zub2Rlb3Bz
+LmMuICBSZXR1cm4gYWRkcmVzcyA9IDB4ZmZmZmZmZmZhMDJlZTIwYQo+ID4+IDEwNDEgQXByICA5
+IDA5OjQxOjM2IGNxZHgga2VybmVsOiBYRlMgKHNkYik6IEkvTyBFcnJvciBEZXRlY3RlZC4KPiA+
+PiBTaHV0dGluZyBkb3duIGZpbGVzeXN0ZW0KPiA+PiAxMDQyIEFwciAgOSAwOTo0MTozNiBjcWR4
+IGtlcm5lbDogWEZTIChzZGIpOiBQbGVhc2UgdW1vdW50IHRoZQo+ID4+IGZpbGVzeXN0ZW0gYW5k
+IHJlY3RpZnkgdGhlIHByb2JsZW0ocykKPiA+PiAxMDQzIEFwciAgOSAwOTo0MTo1MyBjcWR4IGtl
+cm5lbDogWEZTIChzZGIpOiB4ZnNfbG9nX2ZvcmNlOiBlcnJvciA1Cj4gPj4gcmV0dXJuZWQuCj4g
+Pj4gMTA0NCBBcHIgIDkgMDk6NDI6MjMgY3FkeCBrZXJuZWw6IFhGUyAoc2RiKTogeGZzX2xvZ19m
+b3JjZTogZXJyb3IgNQo+ID4+IHJldHVybmVkLgo+ID4+IDEwNDUgQXByICA5IDA5OjQyOjUzIGNx
+ZHgga2VybmVsOiBYRlMgKHNkYik6IHhmc19sb2dfZm9yY2U6IGVycm9yIDUKPiA+PiByZXR1cm5l
+ZC4KPiA+PiAxMDQ2IEFwciAgOSAwOTo0MzoyMyBjcWR4IGtlcm5lbDogWEZTIChzZGIpOiB4ZnNf
+bG9nX2ZvcmNlOiBlcnJvciA1Cj4gPj4gcmV0dXJuZWQuCgpUaGUgZXJyb3IgNSAoRUlPKSBsb29r
+IHNjYXJ5IGJ1dCB0aGV5IGFyZSBkdWUgdG8gdGhlIGZvcmNlZCBzaHV0ZG93biwgZG9uJ3QKd29y
+cnkgYWJvdXQgdGhlbS4KClRoYW5rcywKCUJlbgoKX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0
+cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
