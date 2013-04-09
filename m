@@ -1,23 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 53C7829DFA
-	for <xfs@oss.sgi.com>; Tue,  9 Apr 2013 17:18:33 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 41B3E8F804C
-	for <xfs@oss.sgi.com>; Tue,  9 Apr 2013 15:18:30 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id gNpWSQMmv517P7Bz for <xfs@oss.sgi.com>;
-	Tue, 09 Apr 2013 15:18:28 -0700 (PDT)
-Message-ID: <516493B3.5030106@sandeen.net>
-Date: Tue, 09 Apr 2013 17:18:27 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
+	by oss.sgi.com (Postfix) with ESMTP id 093747FA5
+	for <xfs@oss.sgi.com>; Tue,  9 Apr 2013 17:48:53 -0500 (CDT)
+Date: Tue, 9 Apr 2013 17:48:52 -0500
+From: Ben Myers <bpm@sgi.com>
 Subject: Re: need help how to debug xfs crash issue xfs_iunlink_remove:
 	xfs_inotobp() returned error 22
+Message-ID: <20130409224852.GF22182@sgi.com>
 References: <CADFMGuJm5bPPwbbUtYwrCVDL23KExJTw_-VRX2UEEdZjo+i5oA@mail.gmail.com>
 	<CADFMGu+=MM2yc=_peboV7JTNJ8F05TJfexmEErzcf0D8mAWFRg@mail.gmail.com>
 	<CAJzLF9k3f7ix7GD==26+JDg=5=AQWnJe3aopAHnQxXmzNPRkOw@mail.gmail.com>
-In-Reply-To: <CAJzLF9k3f7ix7GD==26+JDg=5=AQWnJe3aopAHnQxXmzNPRkOw@mail.gmail.com>
+	<516493B3.5030106@sandeen.net>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <516493B3.5030106@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,80 +22,32 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Michael L. Semon" <mlsemon35@gmail.com>
-Cc: =?UTF-8?B?56ym5rC45rab?= <yongtaofu@gmail.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>, "Michael L. Semon" <mlsemon35@gmail.com>, =?utf-8?B?56ym5rC45rab?= <yongtaofu@gmail.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-T24gNC85LzEzIDU6MTYgUE0sIE1pY2hhZWwgTC4gU2Vtb24gd3JvdGU6Cj4gQSBtZWFnZXIgbm9u
-LWV4cGVydCB1c2VyIHF1ZXN0aW9uIHdpdGggZnVsbCBpZ25vcmFuY2Ugb2YgZ2x1c3RlcmZzOgo+
-IFdoeSBhcmUgeW91IGhhdmluZyBJL08gZXJyb3JzIG9uY2UgZXZlcnkgdHdvIHdlZWtzPwoKSXQn
-cyBydW50aW1lIGVycm9ycyBvciBjb3JydXB0aW9uLCBmb2xsb3dlZCBieSBmcyBzaHV0ZG93biwg
-d2hpY2ggdGhlbgpyZXN1bHRzIGluIElPIGVycm9ycywgYmVjYXVzZSBhbGwgSU9zIGFyZSByZWpl
-Y3RlZCBvbiB0aGUgc2h1dGRvd24gRlMuCgpCdXQgdGhhdCdzIG5vdCBhbHdheXMgaW1tZWRpYXRl
-bHkgb2J2aW91cyBmcm9tIHRoZSBzdHJlYW0gb2YgcmVzdWx0aW5nCiJJL08gRXJyb3IiIG1lc3Nh
-Z2VzIDspCgotRXJpYwoKPiBUaGlzIGxvb2tzIGxpa2UgWEZTIGJlaGF2aW9yIEkndmUgc2VlbiB1
-bmRlciAyIGNvbmRpdGlvbnM6IDEpIHdoZW4gSQo+IHRlc3QgWEZTIG9uIHRoZSBkZXZpY2UtbWFw
-cGVyIGZsYWtleSBvYmplY3QsIHVzaW5nIFhGUyB3aXRob3V0IGFuCj4gZXh0ZXJuYWwgam91cm5h
-bCwgYW5kIDIpIHdoZW4gSSB0cnkgdG8gcHJlc3MgbXkgaGFyZC1kcml2ZSBjb25uZWN0b3JzCj4g
-YWdhaW5zdCB0aGUgbW90aGVyYm9hcmQgd2hpbGUgdGhlIFBDIGlzIHN0aWxsIHJ1bm5pbmcuICBZ
-b3VyIGVycm9yCj4gbWVzc2FnZSBsb29rcyBtb3JlIGxpa2UgdGhlIHJlc3VsdCBvZiAoMikgdGhh
-biBvZiAoMSkuCj4gCj4gWEZTIGJlaGF2aW9yIG9uIGZsYWtleSBpcyBub3QgdGhlIGJlc3QsIGFu
-ZCBJIHdpc2ggaXQgd291bGQgcmVjb3Zlcgo+IGluIHN1Y2ggc2l0dWF0aW9ucy4gIEluIENhc2Ug
-KDIpLCBJJ20gZmFpcmx5IHN1cmUgdGhhdCB0aGUgUEMgaXMKPiBjb25mdXNlZCBvbiBhIGhhcmR3
-YXJlIGxldmVsIGJlY2F1c2UgdGhlIGRyaXZlIGxpZ2h0IGRvZXMgbm90IGdvIG91dC4KPiBUaGVu
-IGFnYWluLCBzZWVpbmcgdGhlIGJlaGF2aW9yIG9mIG90aGVyIGZpbGUgc3lzdGVtcyB0aGF0IGZp
-Z2h0Cj4gdGhyb3VnaCB0aGUgZXJyb3JzLCBtYXliZSBpdCdzIGZvciB0aGUgYmVzdC4gIElmIHlv
-dSdyZSBmaWdodGluZyBJL08KPiBlcnJvcnMsIHRoZXJlIGlzIG5vIHdpbm5lciwgYW5kIGl0J3Mg
-YmVzdCB0byBnZXQgcmlkIG9mIHRoZSBJL08KPiBlcnJvci4KPiAKPiBPSywgSSdtIG9mZiB0aGUg
-c29hcGJveCBhbmQgd2lsbCBxdWlldGx5IHdhaXQgZm9yIGEgUkFJRCBleHBlcnQgbGlrZQo+IERh
-dmUgb3IgU3RhbiB0byBqdW1wIGluIGFuZCBtYWtlIG1lIGZlZWwgbGlrZSBhIGNvbXBsZXRlIGFt
-YXRldXIuLi4KPiAKPiBNSWNoYWVsCj4gCj4gT24gVHVlLCBBcHIgOSwgMjAxMyBhdCA5OjAzIEFN
-LCDnrKbmsLjmtpsgPHlvbmd0YW9mdUBnbWFpbC5jb20KPiA8bWFpbHRvOnlvbmd0YW9mdUBnbWFp
-bC5jb20+PiB3cm90ZToKPiAKPiBCVFcgeGZzX2luZm8gL2Rldi9zZGIgbWV0YS1kYXRhPS9kZXYv
-c2RiICAgICAgICAgICAgICAgaXNpemU9MjU2Cj4gYWdjb3VudD0yOCwgYWdzaXplPTI2ODQzNTQ0
-MCBibGtzID0gICAgICAgICAgICAgICAgICAgICAgIHNlY3Rzej01MTIKPiBhdHRyPTIgZGF0YSAg
-ICAgPSAgICAgICAgICAgICAgICAgICAgICAgYnNpemU9NDA5Ngo+IGJsb2Nrcz03MzI0MzAzMzYw
-IDx0ZWw6NzMyNDMwMzM2MD4sIGltYXhwY3Q9NSA9Cj4gc3VuaXQ9MTYgICAgIHN3aWR0aD0xNjAg
-YmxrcyBuYW1pbmcgICA9dmVyc2lvbiAyCj4gYnNpemU9NDA5NiAgIGFzY2lpLWNpPTAgbG9nICAg
-ICAgPWludGVybmFsICAgICAgICAgICAgICAgYnNpemU9NDA5Ngo+IGJsb2Nrcz01MjE3MjgsIHZl
-cnNpb249MiA9ICAgICAgICAgICAgICAgICAgICAgICBzZWN0c3o9NTEyCj4gc3VuaXQ9MTYgYmxr
-cywgbGF6eS1jb3VudD0xIHJlYWx0aW1lID1ub25lCj4gZXh0c3o9NDA5NiAgIGJsb2Nrcz0wLCBy
-dGV4dGVudHM9MAo+IAo+IDIwMTMvNC85LCDnrKbmsLjmtpsgPHlvbmd0YW9mdUBnbWFpbC5jb20g
-PG1haWx0bzp5b25ndGFvZnVAZ21haWwuY29tPj46Cj4+IERlYXIgeGZzIGV4cGVydHMsIEkgcmVh
-bGx5IG5lZWQgeW91ciBoZWxwIHNpbmNlcmVseSEhISBJbiBvdXIKPj4gcHJvZHVjdGlvbiBlbnZp
-cm9tZW50IHdlIHJ1biBnbHVzdGVyZnMgb3ZlciB0b3Agb2YgeGZzIG9uIERlbGwKPj4geDcyMEQo
-UmFpZCA2KS4gQW5kIHRoZSB4ZnMgZmlsZSBzeXN0ZW0gY3Jhc2ggb24gc29tZSBvZiB0aGUgc2Vy
-dmVyCj4+IGZyZXF1ZW50bHkgYWJvdXQgZXZlcnkgdHdvIHdlZWtzLiBDYW4geW91IGhlbHAgdG8g
-Z2l2ZSBtZSBhCj4+IGRpcmVjdGlvbiBhYm91dCBob3cgdG8gZGVidWcgdGhpcyBpc3N1ZSBhbmQg
-aG93IHRvIGF2b2lkIGl0PyBUaGFuawo+PiB5b3UgdmVyeSB2ZXJ5IG11Y2ghCj4+IAo+PiB1bmFt
-ZSAtYSBMaW51eCBjcWR4Lm1pYW95YW4uY2x1c3RlcjEubm9kZTExLnFpeWkuZG9tYWluCj4+IDIu
-Ni4zMi0yNzkuZWw2Lng4Nl82NCAjMSBTTVAgV2VkIEp1biAxMyAxODoyNDozNiBFRFQgMjAxMiB4
-ODZfNjQKPj4geDg2XzY0IHg4Nl82NCBHTlUvTGludXgKPj4gCj4+IEV2ZXJ5IHRpbWUgdGhlIGNy
-YXNoIGxvZyBpcyBzYW1lLCBhcyBmb2xsb3dpbmcKPj4gCj4+IDAzOCBBcHIgIDkgMDk6NDE6MzYg
-Y3FkeCBrZXJuZWw6IFhGUyAoc2RiKTogeGZzX2l1bmxpbmtfcmVtb3ZlOiAKPj4geGZzX2lub3Rv
-YnAoKSByZXR1cm5lZCBlcnJvciAyMi4gMTAzOSBBcHIgIDkgMDk6NDE6MzYgY3FkeCBrZXJuZWw6
-Cj4+IFhGUyAoc2RiKTogeGZzX2luYWN0aXZlOiB4ZnNfaWZyZWUgcmV0dXJuZWQgZXJyb3IgMjIg
-MTA0MCBBcHIgIDkKPj4gMDk6NDE6MzYgY3FkeCBrZXJuZWw6IFhGUyAoc2RiKTogeGZzX2RvX2Zv
-cmNlX3NodXRkb3duKDB4MSkgY2FsbGVkCj4+IGZyb20gbGluZSAxMTg0IG9mIGZpbGUgZnMveGZz
-L3hmc192bm9kZW9wcy5jLiAgUmV0dXJuIGFkZHJlc3MgPQo+PiAweGZmZmZmZmZmYTAyZWUyMGEg
-MTA0MSBBcHIgIDkgMDk6NDE6MzYgY3FkeCBrZXJuZWw6IFhGUyAoc2RiKTogSS9PCj4+IEVycm9y
-IERldGVjdGVkLiBTaHV0dGluZyBkb3duIGZpbGVzeXN0ZW0gMTA0MiBBcHIgIDkgMDk6NDE6MzYg
-Y3FkeAo+PiBrZXJuZWw6IFhGUyAoc2RiKTogUGxlYXNlIHVtb3VudCB0aGUgZmlsZXN5c3RlbSBh
-bmQgcmVjdGlmeSB0aGUKPj4gcHJvYmxlbShzKSAxMDQzIEFwciAgOSAwOTo0MTo1MyBjcWR4IGtl
-cm5lbDogWEZTIChzZGIpOgo+PiB4ZnNfbG9nX2ZvcmNlOiBlcnJvciA1IHJldHVybmVkLiAxMDQ0
-IEFwciAgOSAwOTo0MjoyMyBjcWR4IGtlcm5lbDoKPj4gWEZTIChzZGIpOiB4ZnNfbG9nX2ZvcmNl
-OiBlcnJvciA1IHJldHVybmVkLiAxMDQ1IEFwciAgOSAwOTo0Mjo1Mwo+PiBjcWR4IGtlcm5lbDog
-WEZTIChzZGIpOiB4ZnNfbG9nX2ZvcmNlOiBlcnJvciA1IHJldHVybmVkLiAxMDQ2IEFwcgo+PiA5
-IDA5OjQzOjIzIGNxZHgga2VybmVsOiBYRlMgKHNkYik6IHhmc19sb2dfZm9yY2U6IGVycm9yIDUg
-Cj4+IHJldHVybmVkLgo+PiAKPj4gLS0g56ym5rC45rabCj4+IAo+IAo+IAo+IC0tIOespuawuOa2
-mwo+IAo+IF9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fIHhm
-cyBtYWlsaW5nIGxpc3QgCj4geGZzQG9zcy5zZ2kuY29tIDxtYWlsdG86eGZzQG9zcy5zZ2kuY29t
-PiAKPiBodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMKPiAKPiAKPiAKPiAK
-PiBfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXyB4ZnMgbWFp
-bGluZyBsaXN0IAo+IHhmc0Bvc3Muc2dpLmNvbSBodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9s
-aXN0aW5mby94ZnMKPiAKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNv
-bS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+Hey,
+
+On Tue, Apr 09, 2013 at 05:18:27PM -0500, Eric Sandeen wrote:
+> On 4/9/13 5:16 PM, Michael L. Semon wrote:
+> > A meager non-expert user question with full ignorance of glusterfs:
+> > Why are you having I/O errors once every two weeks?
+> 
+> It's runtime errors or corruption, followed by fs shutdown, which then
+> results in IO errors, because all IOs are rejected on the shutdown FS.
+> 
+> But that's not always immediately obvious from the stream of resulting
+> "I/O Error" messages ;)
+
+The IO errors are maybe a bit excessive and scary.  I can understand why some
+people might misinterpret those messages and assume it's a hardware problem.
+
+-Ben
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
