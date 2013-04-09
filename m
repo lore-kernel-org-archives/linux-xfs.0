@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id EF99B7F54
-	for <xfs@oss.sgi.com>; Tue,  9 Apr 2013 05:17:32 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D5CFF8F804C
-	for <xfs@oss.sgi.com>; Tue,  9 Apr 2013 03:17:31 -0700 (PDT)
-Received: from smtp4-g21.free.fr (smtp4-g21.free.fr [212.27.42.4]) by
-	cuda.sgi.com with ESMTP id blGc1lCJsVXPSQDR for
-	<xfs@oss.sgi.com>; Tue, 09 Apr 2013 03:17:29 -0700 (PDT)
-Received: from harpe.intellique.com (unknown [82.225.196.72])
-	by smtp4-g21.free.fr (Postfix) with ESMTP id 54E2B4C8425
-	for <xfs@oss.sgi.com>; Tue,  9 Apr 2013 12:17:25 +0200 (CEST)
-Date: Tue, 9 Apr 2013 12:17:26 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: xfs_repair has been running for a very long time, no disk IO.
-Message-ID: <20130409121726.6342519e@harpe.intellique.com>
-Mime-Version: 1.0
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id A5CB67F6A
+	for <xfs@oss.sgi.com>; Tue,  9 Apr 2013 07:00:17 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 4FB24AC002
+	for <xfs@oss.sgi.com>; Tue,  9 Apr 2013 05:00:14 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	5WF2LcvYcGbLEvKx for <xfs@oss.sgi.com>;
+	Tue, 09 Apr 2013 05:00:09 -0700 (PDT)
+Date: Tue, 9 Apr 2013 22:00:06 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 3/3] xfstests generic 310: fix common file path and other
+	cleanups
+Message-ID: <20130409120006.GK17758@dastard>
+References: <5163B257.4080809@gmail.com> <20130409064030.GF17758@dastard>
+	<5163C27D.8000101@gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <5163C27D.8000101@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,77 +31,105 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Zhao Hongjiang <zhaohongjiang37@gmail.com>
+Cc: rjohnston@sgi.com, eguan@redhat.com, xfs@oss.sgi.com
 
+On Tue, Apr 09, 2013 at 03:25:49PM +0800, Zhao Hongjiang wrote:
+> On 2013-4-9 14:40, Dave Chinner wrote:
+> > On Tue, Apr 09, 2013 at 02:16:55PM +0800, Zhao Hongjiang wrote:
+> >> On 2013/4/8 22:05, Rich Johnston wrote:
+> >>> Hi Eryu,
+> >>>
+> >>> Thanks for this cleanup patch. I was going to revert patch "bbaf78c0" which introduced test generic/310 but will wait and see if Zhao will provide more information which could be added to this patch.
+> >>>
+> >>>
+> >>> On 04/07/2013 05:39 AM, Eryu Guan wrote:
+> >>>> 1. add one space between # and test description
+> >>>
+> >>> The rest of the changes look good, sorry I missed them when I reviewed .
+> >>>
+> >>>> 2. remove creator/owner info
+> >>>> 3. fix common/rc and common/filter path so they can be sourced correctly
+> >>>> 4. no need to remove $seq.full cause it's not used(or if verbose output
+> >>>>     is needed, $seqres.full should be used)
+> >>>>
+> >>>> Signed-off-by: Eryu Guan <eguan@redhat.com>
+> >>>> ---
+> >>>>   tests/generic/310 | 12 +++++-------
+> >>>>   1 file changed, 5 insertions(+), 7 deletions(-)
+> >>>>
+> >>>> diff --git a/tests/generic/310 b/tests/generic/310
+> >>>> index ef51422..35baa23 100644
+> >>>> --- a/tests/generic/310
+> >>>> +++ b/tests/generic/310
+> >>>> @@ -1,8 +1,8 @@
+> >>>>   #! /bin/bash
+> >>>>   # FS QA Test No. 310
+> >>>>   #
+> >>>> -#Check if there are two threads,one keeps calling read() or lseek(), and
+> >>>> -#the other calling readdir(), both on the same directory fd.
+> >>>> +# Check if there are two threads,one keeps calling read() or lseek(), and
+> >>>> +# the other calling readdir(), both on the same directory fd.
+> >>>>   #
+> >>>
+> >>> Hi Zhao,
+> >>>
+> >>> I did see both threads running at the same time, but the more I
+> >>> look at this, the more I am a loss as to what this test is
+> >>> doing.
+> >>>
+> >>> Will you expand this a little please.  I should have asked for
+> >>> more justification the first time I reviewed this. Please
+> >>> provide what bug this is testing or what failure/weakness this
+> >>> test exposes.  If there is a commit this is related to, please
+> >>> reference it.
+> >>>
+> >> When I ran it on ext2, ext3 and ext4 which has dir_index feature
+> >> disabled, I got something like this:
+> >>
+> >> EXT3-fs error (device loop1): ext3_readdir: bad entry in directory
+> >> #34817: rec_len is \ smaller than minimal - offset=993, inode=0,
+> >> rec_len=0, name_len=0 EXT3-fs error \ (device loop1):
+> >> ext3_readdir: bad entry in directory #34817: rec_len is smaller
+> >> than \ minimal - offset=1009, inode=0, rec_len=0, name_len=0
+> >> EXT3-fs error (device loop1): \ ext3_readdir: bad entry in
+> >> directory #34817: rec_len is smaller than minimal - \ offset=993,
+> >> inode=0, rec_len=0, name_len=0 EXT3-fs error (device loop1): \
+> >> ext3_readdir: bad entry in directory #34817: rec_len is smaller
+> >> than minimal - \ offset=1009, inode=0, rec_len=0, name_len=0 ...
+> >>
+> >> If we configured errors=remount-ro, the filesystem will become
+> >> read-only.
+> > 
+> > So what is the criteria for a test failure?  The test body is only
+> > reading from the filesystem, so a ro,remount won't cause an obvious
+> > failure of the test.
+> 
+> There haven't a obvious criteria for a test failure, you should see it
+> from dmesg while you run the test.
 
-On a quite badly mangled filesystem, xfs_repair (v. 3.1.4) seems to
-never end. It has run for 16 hours with absolutely no disk activity.
+Which means for most cases (i.e. automated test harnesses), a test
+failure will go unnoticed.
 
-Usually xfs_repair takes much less than one hour on a similar (9 TB)
-filesystem.
+The test *must* detect failures if it is to be useful as a
+regression test. That's the whole point of a regression test harness
+- that you don't have to do any extra work to determine if a test
+has passed or failed as it is determined for you by the harness.
 
-I know I should try the latest version. What else can be wrong? 
-What should I try?
+> > Perhaps the test should have more comments in it than "read this
+> > URL" to explain what it is doing and what constitutes a failure?
+> 
+> Yes, i'll add more comments to explain it!
 
-Last lines of output of the still running xfs_repair where it has 
-been stuck since yesterday night:
+Given that there is a failure that can be captured, then I'd suggest
+that this needs to be captured as well...
 
-entry "Panel-2333" at block 3 offset 2464 in directory inode 2190114192 references non-existent inode 60238299
-        clearing inode number in entry at offset 2464...
-entry "Panel-2316" at block 3 offset 2512 in directory inode 2190114192 references non-existent inode 60238300
-        clearing inode number in entry at offset 2512...
-entry "Panel-2309" at block 3 offset 2560 in directory inode 2190114192 references non-existent inode 60238301
-        clearing inode number in entry at offset 2560...
-entry "Panel-2292" at block 3 offset 2608 in directory inode 2190114192 references non-existent inode 60238302
-        clearing inode number in entry at offset 2608...
-entry "Panel-2290" at block 3 offset 2656 in directory inode 2190114192 references non-existent inode 60238303
-        clearing inode number in entry at offset 2656...
-bad attribute format 1 in inode 2190120814, resetting value
-        - agno = 2
-        - agno = 3
-        - agno = 4
-        - agno = 5
-        - agno = 6
-        - agno = 7
-        - agno = 8
-        - agno = 9
-        - agno = 10
-        - agno = 11
-        - agno = 12
-        - agno = 13
-        - agno = 14
-        - agno = 15
-        - agno = 16
-        - agno = 17
-        - agno = 18
-        - agno = 19
-        - agno = 20
-        - agno = 21
-        - agno = 22
-        - agno = 23
-        - agno = 24
-        - agno = 25
-        - agno = 26
-        - agno = 27
-        - agno = 28
-        - agno = 29
-        - agno = 30
-        - agno = 31
-Phase 5 - rebuild AG headers and trees...
-        - reset superblock...
-Phase 6 - check inode connectivity...
-        - resetting contents of realtime bitmap and summary inodes
-        - traversing filesystem ...
+Cheers,
 
-
-
+Dave.
 -- 
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
