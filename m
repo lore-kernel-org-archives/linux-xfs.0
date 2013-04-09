@@ -1,29 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B50FA7F93
-	for <xfs@oss.sgi.com>; Tue,  9 Apr 2013 02:08:53 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8F279304053
-	for <xfs@oss.sgi.com>; Tue,  9 Apr 2013 00:08:50 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	E6lz5DWbDOdak2Ag for <xfs@oss.sgi.com>;
-	Tue, 09 Apr 2013 00:08:48 -0700 (PDT)
-Date: Tue, 9 Apr 2013 17:08:32 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Loopback device hung [was Re: xfs deadlock on 3.9-rc5 running
-	xfstests case #78]
-Message-ID: <20130409070832.GI17758@dastard>
-References: <20130402073035.GD3670@kernel.dk>
-	<14055702.547701.1364891947331.JavaMail.root@redhat.com>
-	<20130402090047.GF3670@kernel.dk>
-	<985125161.581860.1364895066584.JavaMail.root@redhat.com>
-	<20130402094834.GA4667@kernel.dk> <20130403114142.GP4667@kernel.dk>
-	<515C4D9D.10103@ubuntu.com> <515DE2FE.1080201@ubuntu.com>
-	<20130409065519.GH17758@dastard> <20130409070139.GS12244@kernel.dk>
+	by oss.sgi.com (Postfix) with ESMTP id 1BCEF29DFE
+	for <xfs@oss.sgi.com>; Tue,  9 Apr 2013 02:26:28 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E4A13304053
+	for <xfs@oss.sgi.com>; Tue,  9 Apr 2013 00:26:27 -0700 (PDT)
+Received: from mail-pa0-f45.google.com (mail-pa0-f45.google.com
+	[209.85.220.45]) by cuda.sgi.com with ESMTP id yATFo0hMzOYY0BnT
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 09 Apr 2013 00:26:26 -0700 (PDT)
+Received: by mail-pa0-f45.google.com with SMTP id kl13so3692694pab.18
+	for <xfs@oss.sgi.com>; Tue, 09 Apr 2013 00:26:26 -0700 (PDT)
+Message-ID: <5163C27D.8000101@gmail.com>
+Date: Tue, 09 Apr 2013 15:25:49 +0800
+From: Zhao Hongjiang <zhaohongjiang37@gmail.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130409070139.GS12244@kernel.dk>
+Subject: Re: [PATCH 3/3] xfstests generic 310: fix common file path and other
+	cleanups
+References: <5163B257.4080809@gmail.com> <20130409064030.GF17758@dastard>
+In-Reply-To: <20130409064030.GF17758@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,49 +31,95 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Phillip Susi <psusi@ubuntu.com>, LKML <linux-kernel@vger.kernel.org>, CAI Qian <caiqian@redhat.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: rjohnston@sgi.com, eguan@redhat.com, xfs@oss.sgi.com
 
-On Tue, Apr 09, 2013 at 09:01:39AM +0200, Jens Axboe wrote:
-> On Tue, Apr 09 2013, Dave Chinner wrote:
-> > On Thu, Apr 04, 2013 at 04:30:54PM -0400, Phillip Susi wrote:
-> > > > I have not tested it yet, but I am pretty sure it won't work.  It
-> > > > looks like the patch changes the BLKRRPART path to go ahead and remove
-> > > > existing partitions when GENHD_FL_NO_PARTSCAN is set.  loop doesn't
-> > > > issue the BLKRRPART ioctl when !LO_FLAGS_PARTSCAN so this won't help.
-> > > >  I think loop needs to set GENHD_FL_NO_PARTSCAN and then issue the
-> > > > ioctl regardless of the LO_FLAGS_PARTSCAN flag to get the partitions
-> > > > to be removed.  I will try to test tonight.
-> > > 
-> > > After testing, my initial thoughts appeared to have been correct.  I had
-> > > to modify the patch as follows.  To test, simply do:
-> > > 
-> > > truncate -s 10m img
-> > > losetup /dev/loop0 img
-> > > parted /dev/loop0
-> > > mklabel msdos
-> > > mkpart primary ext2 1m 2m
-> > > quit
-> > > ls /dev/loop0*
-> > > 
-> > > Note the /dev/loop0p1 node.  Run losetup -d /dev/loop0 and see if it is
-> > > still there.
-> > 
-> > Jens, can we get one of these fixes merged quickly? xfstests is
-> > unusable on any kernel more recent than 3.9-rc4 because of these
-> > problems....
+On 2013-4-9 14:40, Dave Chinner wrote:
+> On Tue, Apr 09, 2013 at 02:16:55PM +0800, Zhao Hongjiang wrote:
+>> On 2013/4/8 22:05, Rich Johnston wrote:
+>>> Hi Eryu,
+>>>
+>>> Thanks for this cleanup patch. I was going to revert patch "bbaf78c0" which introduced test generic/310 but will wait and see if Zhao will provide more information which could be added to this patch.
+>>>
+>>>
+>>> On 04/07/2013 05:39 AM, Eryu Guan wrote:
+>>>> 1. add one space between # and test description
+>>>
+>>> The rest of the changes look good, sorry I missed them when I reviewed .
+>>>
+>>>> 2. remove creator/owner info
+>>>> 3. fix common/rc and common/filter path so they can be sourced correctly
+>>>> 4. no need to remove $seq.full cause it's not used(or if verbose output
+>>>>     is needed, $seqres.full should be used)
+>>>>
+>>>> Signed-off-by: Eryu Guan <eguan@redhat.com>
+>>>> ---
+>>>>   tests/generic/310 | 12 +++++-------
+>>>>   1 file changed, 5 insertions(+), 7 deletions(-)
+>>>>
+>>>> diff --git a/tests/generic/310 b/tests/generic/310
+>>>> index ef51422..35baa23 100644
+>>>> --- a/tests/generic/310
+>>>> +++ b/tests/generic/310
+>>>> @@ -1,8 +1,8 @@
+>>>>   #! /bin/bash
+>>>>   # FS QA Test No. 310
+>>>>   #
+>>>> -#Check if there are two threads,one keeps calling read() or lseek(), and
+>>>> -#the other calling readdir(), both on the same directory fd.
+>>>> +# Check if there are two threads,one keeps calling read() or lseek(), and
+>>>> +# the other calling readdir(), both on the same directory fd.
+>>>>   #
+>>>
+>>> Hi Zhao,
+>>>
+>>> I did see both threads running at the same time, but the more I
+>>> look at this, the more I am a loss as to what this test is
+>>> doing.
+>>>
+>>> Will you expand this a little please.  I should have asked for
+>>> more justification the first time I reviewed this. Please
+>>> provide what bug this is testing or what failure/weakness this
+>>> test exposes.  If there is a commit this is related to, please
+>>> reference it.
+>>>
+>> When I ran it on ext2, ext3 and ext4 which has dir_index feature
+>> disabled, I got something like this:
+>>
+>> EXT3-fs error (device loop1): ext3_readdir: bad entry in directory
+>> #34817: rec_len is \ smaller than minimal - offset=993, inode=0,
+>> rec_len=0, name_len=0 EXT3-fs error \ (device loop1):
+>> ext3_readdir: bad entry in directory #34817: rec_len is smaller
+>> than \ minimal - offset=1009, inode=0, rec_len=0, name_len=0
+>> EXT3-fs error (device loop1): \ ext3_readdir: bad entry in
+>> directory #34817: rec_len is smaller than minimal - \ offset=993,
+>> inode=0, rec_len=0, name_len=0 EXT3-fs error (device loop1): \
+>> ext3_readdir: bad entry in directory #34817: rec_len is smaller
+>> than minimal - \ offset=1009, inode=0, rec_len=0, name_len=0 ...
+>>
+>> If we configured errors=remount-ro, the filesystem will become
+>> read-only.
 > 
-> Yep, did the revert yesterday and it's going out today.
+> So what is the criteria for a test failure?  The test body is only
+> reading from the filesystem, so a ro,remount won't cause an obvious
+> failure of the test.
 
-Great, I didn't see an update in the latest -rc, so I wanted to make
-sure it hadn't fallen through he cracks....
+There haven't a obvious criteria for a test failure, you should see it
+from dmesg while you run the test.
 
-Cheers,
+> 
+> Perhaps the test should have more comments in it than "read this
+> URL" to explain what it is doing and what constitutes a failure?
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Yes, i'll add more comments to explain it!
+
+Thanks,
+Zhao Hongjiang
+> 
+> Cheers,
+> 
+> Dave.
+> 
 
 _______________________________________________
 xfs mailing list
