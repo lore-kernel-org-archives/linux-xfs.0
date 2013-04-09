@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1BCEF29DFE
-	for <xfs@oss.sgi.com>; Tue,  9 Apr 2013 02:26:28 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E4A13304053
-	for <xfs@oss.sgi.com>; Tue,  9 Apr 2013 00:26:27 -0700 (PDT)
-Received: from mail-pa0-f45.google.com (mail-pa0-f45.google.com
-	[209.85.220.45]) by cuda.sgi.com with ESMTP id yATFo0hMzOYY0BnT
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 09 Apr 2013 00:26:26 -0700 (PDT)
-Received: by mail-pa0-f45.google.com with SMTP id kl13so3692694pab.18
-	for <xfs@oss.sgi.com>; Tue, 09 Apr 2013 00:26:26 -0700 (PDT)
-Message-ID: <5163C27D.8000101@gmail.com>
-Date: Tue, 09 Apr 2013 15:25:49 +0800
-From: Zhao Hongjiang <zhaohongjiang37@gmail.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 819FC7F9B
+	for <xfs@oss.sgi.com>; Tue,  9 Apr 2013 02:33:41 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 080C8AC002
+	for <xfs@oss.sgi.com>; Tue,  9 Apr 2013 00:33:40 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	WXeI7mqpeic0vRkA for <xfs@oss.sgi.com>;
+	Tue, 09 Apr 2013 00:33:39 -0700 (PDT)
+Received: from dave by dastard with local (Exim 4.76)
+	(envelope-from <david@fromorbit.com>) id 1UPT3S-0007tV-7X
+	for xfs@oss.sgi.com; Tue, 09 Apr 2013 17:33:22 +1000
+Date: Tue, 9 Apr 2013 17:33:22 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 24/22] xfs: Teach dquot recovery about CONFIG_XFS_QUOTA
+Message-ID: <20130409073322.GJ17758@dastard>
+References: <1364965892-19623-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 3/3] xfstests generic 310: fix common file path and other
-	cleanups
-References: <5163B257.4080809@gmail.com> <20130409064030.GF17758@dastard>
-In-Reply-To: <20130409064030.GF17758@dastard>
+Content-Disposition: inline
+In-Reply-To: <1364965892-19623-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,95 +32,45 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: rjohnston@sgi.com, eguan@redhat.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 2013-4-9 14:40, Dave Chinner wrote:
-> On Tue, Apr 09, 2013 at 02:16:55PM +0800, Zhao Hongjiang wrote:
->> On 2013/4/8 22:05, Rich Johnston wrote:
->>> Hi Eryu,
->>>
->>> Thanks for this cleanup patch. I was going to revert patch "bbaf78c0" which introduced test generic/310 but will wait and see if Zhao will provide more information which could be added to this patch.
->>>
->>>
->>> On 04/07/2013 05:39 AM, Eryu Guan wrote:
->>>> 1. add one space between # and test description
->>>
->>> The rest of the changes look good, sorry I missed them when I reviewed .
->>>
->>>> 2. remove creator/owner info
->>>> 3. fix common/rc and common/filter path so they can be sourced correctly
->>>> 4. no need to remove $seq.full cause it's not used(or if verbose output
->>>>     is needed, $seqres.full should be used)
->>>>
->>>> Signed-off-by: Eryu Guan <eguan@redhat.com>
->>>> ---
->>>>   tests/generic/310 | 12 +++++-------
->>>>   1 file changed, 5 insertions(+), 7 deletions(-)
->>>>
->>>> diff --git a/tests/generic/310 b/tests/generic/310
->>>> index ef51422..35baa23 100644
->>>> --- a/tests/generic/310
->>>> +++ b/tests/generic/310
->>>> @@ -1,8 +1,8 @@
->>>>   #! /bin/bash
->>>>   # FS QA Test No. 310
->>>>   #
->>>> -#Check if there are two threads,one keeps calling read() or lseek(), and
->>>> -#the other calling readdir(), both on the same directory fd.
->>>> +# Check if there are two threads,one keeps calling read() or lseek(), and
->>>> +# the other calling readdir(), both on the same directory fd.
->>>>   #
->>>
->>> Hi Zhao,
->>>
->>> I did see both threads running at the same time, but the more I
->>> look at this, the more I am a loss as to what this test is
->>> doing.
->>>
->>> Will you expand this a little please.  I should have asked for
->>> more justification the first time I reviewed this. Please
->>> provide what bug this is testing or what failure/weakness this
->>> test exposes.  If there is a commit this is related to, please
->>> reference it.
->>>
->> When I ran it on ext2, ext3 and ext4 which has dir_index feature
->> disabled, I got something like this:
->>
->> EXT3-fs error (device loop1): ext3_readdir: bad entry in directory
->> #34817: rec_len is \ smaller than minimal - offset=993, inode=0,
->> rec_len=0, name_len=0 EXT3-fs error \ (device loop1):
->> ext3_readdir: bad entry in directory #34817: rec_len is smaller
->> than \ minimal - offset=1009, inode=0, rec_len=0, name_len=0
->> EXT3-fs error (device loop1): \ ext3_readdir: bad entry in
->> directory #34817: rec_len is smaller than minimal - \ offset=993,
->> inode=0, rec_len=0, name_len=0 EXT3-fs error (device loop1): \
->> ext3_readdir: bad entry in directory #34817: rec_len is smaller
->> than minimal - \ offset=1009, inode=0, rec_len=0, name_len=0 ...
->>
->> If we configured errors=remount-ro, the filesystem will become
->> read-only.
-> 
-> So what is the criteria for a test failure?  The test body is only
-> reading from the filesystem, so a ro,remount won't cause an obvious
-> failure of the test.
+From: Dave Chinner <dchinner@redhat.com>
 
-There haven't a obvious criteria for a test failure, you should see it
-from dmesg while you run the test.
+Fix a build error when CONFIG_XFS_QUOTA=n:
 
-> 
-> Perhaps the test should have more comments in it than "read this
-> URL" to explain what it is doing and what constitutes a failure?
+fs/built-in.o: In function `xlog_recovery_validate_buf_type':
+/home/dave/src/build/x86-64/xfsdev/fs/xfs/xfs_log_recover.c:1948: undefined
+reference to `xfs_dquot_buf_ops'
 
-Yes, i'll add more comments to explain it!
+Reported-by: Michael L. Semon <mlsemon35@gmail.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_log_recover.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
-Thanks,
-Zhao Hongjiang
-> 
-> Cheers,
-> 
-> Dave.
-> 
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 35ac504..1b32239 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -1940,12 +1940,18 @@ xlog_recovery_validate_buf_type(
+ 	case XFS_BLFT_UDQUOT_BUF:
+ 	case XFS_BLFT_PDQUOT_BUF:
+ 	case XFS_BLFT_GDQUOT_BUF:
++#ifdef CONFIG_XFS_QUOTA
+ 		if (magic16 != XFS_DQUOT_MAGIC) {
+ 			xfs_warn(mp, "Bad DQUOT block magic!");
+ 			ASSERT(0);
+ 			break;
+ 		}
+ 		bp->b_ops = &xfs_dquot_buf_ops;
++#else
++		xfs_alert(mp,
++	"Trying to recover dquots without QUOTA support built in!");
++		ASSERT(0);
++#endif
+ 		break;
+ 	case XFS_BLFT_DINO_BUF:
+ 		/*
 
 _______________________________________________
 xfs mailing list
