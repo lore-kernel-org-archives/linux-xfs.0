@@ -1,15 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4B30F7FC8
-	for <xfs@oss.sgi.com>; Wed, 10 Apr 2013 14:39:05 -0500 (CDT)
-Message-ID: <5165BFF4.8020601@sgi.com>
-Date: Wed, 10 Apr 2013 14:39:32 -0500
-From: Rich Johnston <rjohnston@sgi.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 9DF6C7FCC
+	for <xfs@oss.sgi.com>; Wed, 10 Apr 2013 14:52:52 -0500 (CDT)
+Date: Wed, 10 Apr 2013 14:52:49 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 14/22] xfs: shortform directory offsets change for dir3
+	format
+Message-ID: <20130410195249.GH22182@sgi.com>
+References: <1364965892-19623-1-git-send-email-david@fromorbit.com>
+	<1364965892-19623-15-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: reserve fields in inode for parent ptr and alloc
-	policy
-References: <20130410182438.268267840@sgi.com> <5165B5CB.2070203@sandeen.net>
-In-Reply-To: <5165B5CB.2070203@sandeen.net>
+Content-Disposition: inline
+In-Reply-To: <1364965892-19623-15-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,61 +20,28 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On 04/10/2013 01:56 PM, Eric Sandeen wrote:
-> On 4/10/13 1:24 PM, Mark Tinguely wrote:
->> Reserve fields in new inode layout for parent pointer and
->> allocation policy.
->> 		----
->> The inode will hold the parent information for the first
->> link to a file. Information for the other links will be
->> held in extended attribute entries.
->>
->> The "di_parino" is the inode of the parent directory. The
->> directory information for this entry is located the parent
->> directory with "di_paroff" offset.
->>
->> The di_parino/di_paroff concept code is running.
->> 		----
->> The "di_allocpolicy" will be used to remember the allocation
->> policy associated with this inode.
->
-> can you say more about this allocation policy?
->
-> -Eric
+On Wed, Apr 03, 2013 at 04:11:24PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Because the header size for the CRC enabled directory blocks is
+> larger, the offset of the first entry into a directory block is
+> different to the dir2 format. The shortform directory stores the
+> dirent's offset so that it doesn't change when moving from shortform
+> to block form and back again, and hence it needs to take into
+> account the different header sizes to maintain the correct offsets.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-No its super secret information. ;)
+Looks great.
 
-Its on my plate Eric, because Mark was making a change for parent ptrs, 
-I asked him to request space for allocation policies also.
-
-I don't have all the details yet but here is a very high level concept.
-
-Identify allocation groups by names (or numbers -- preferably using names
-in user-visible areas), allowing many different areas. Placing the 
-allocation
-policy outside of user programs is necessary for this to be successful.
-
-  Current thoughts on proposed a layered allocation policies:
-
-     Policy for the entire filesystem
-     Policy attached to a directory (whose policy would be inherited by 
-subdirectories when subdirectories are created)
-     Policy for a single file
-
-The policy would define:
-
-    where to place file data
-    where to place metadata for the files.
-    a prefered allocation group for placing file data (for directories).
-
---Rich
+-Ben
 
 _______________________________________________
 xfs mailing list
