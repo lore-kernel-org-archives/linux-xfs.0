@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 363747FB5
-	for <xfs@oss.sgi.com>; Wed, 10 Apr 2013 01:48:19 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id EFB777FB9
+	for <xfs@oss.sgi.com>; Wed, 10 Apr 2013 01:55:57 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 131B030406A
-	for <xfs@oss.sgi.com>; Tue,  9 Apr 2013 23:48:16 -0700 (PDT)
-Received: from mail-qa0-f47.google.com (mail-qa0-f47.google.com
-	[209.85.216.47]) by cuda.sgi.com with ESMTP id ixtmFBXMMzj52mCm
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 09 Apr 2013 23:48:14 -0700 (PDT)
-Received: by mail-qa0-f47.google.com with SMTP id hu16so2148913qab.13
-	for <xfs@oss.sgi.com>; Tue, 09 Apr 2013 23:48:14 -0700 (PDT)
-Message-ID: <51650B1F.7050704@gmail.com>
-Date: Wed, 10 Apr 2013 14:47:59 +0800
-From: Wang Sheng-Hui <shhuiw@gmail.com>
-MIME-Version: 1.0
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6D9BAAC002
+	for <xfs@oss.sgi.com>; Tue,  9 Apr 2013 23:55:57 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	phMSGFHShkoK7GfI for <xfs@oss.sgi.com>;
+	Tue, 09 Apr 2013 23:55:50 -0700 (PDT)
+Date: Wed, 10 Apr 2013 16:55:47 +1000
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: xfstests 'make install' failed
+Message-ID: <20130410065547.GS17758@dastard>
 References: <51615FBF.2020001@gmail.com>
-In-Reply-To: <51615FBF.2020001@gmail.com>
+ <51650B1F.7050704@gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <51650B1F.7050704@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,21 +26,22 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfstests <xfs@oss.sgi.com>, Dave Chinner <dchinner@redhat.com>
+To: Wang Sheng-Hui <shhuiw@gmail.com>
+Cc: xfstests <xfs@oss.sgi.com>
 
-T24gMjAxM+W5tDA05pyIMDfml6UgMTk6NTksIFdhbmcgU2hlbmctSHVpIHdyb3RlOgo+IEhpLAo+
-Cj4gVGhlIHRlc3RjYXNlcyBvZiB4ZnN0ZXN0cyBoYXZlIGJlZW4gcmVvcmdhbml6ZWQgaW50byBk
-aWZmZXJlbnQgc3ViZGlycyB0byBmaWxlc3lzdGVtcy4KPiBCdXQgdGhlICdpbnN0YWxsJyBzZWN0
-aW9uIG9mIE1ha2VmaWxlIHN0aWxsIHVzZXMgdGhlIG9sZCBsb2NhdGlvbiBvZiB0ZXN0Y2FzZXMu
-CgpJcyBhbnlvbmUgd29ya2luZyBvbiB0aGlzPwoKSSBwdWxsZWQgdGhlIGxhdGVzdCB4ZnN0ZXN0
-cyB0cmVlLCBidXQgZm91bmQgbm8gY2hhbmdlcyB0byB0aGUgTWFrZWZpbGUuCgo+Cj4gVGhlICdp
-bnN0YWxsJyBvZiBNYWtlZmlsZSBuZWVkcyB0byBiZSBtb2RpZmllZCBmb3IgdGhlIGxhdGVzdCBz
-b3VyY2UgY29kZSBvcmdhbml6YXRpb24uCj4KPiBDYW4gc29tZW9uZSBzaGFyZSBtZSBvbmUgcGF0
-Y2ggdG8gbWFrZSB0aGUgaW5zdGFsbCBzdWNjZXNzZnVsPwo+Cj4KPiBUaGFua3MsCj4gU2hlbmct
-SHVpCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMg
-bWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9s
-aXN0aW5mby94ZnMK
+T24gV2VkLCBBcHIgMTAsIDIwMTMgYXQgMDI6NDc6NTlQTSArMDgwMCwgV2FuZyBTaGVuZy1IdWkg
+d3JvdGU6Cj4gT24gMjAxM+W5tDA05pyIMDfml6UgMTk6NTksIFdhbmcgU2hlbmctSHVpIHdyb3Rl
+Ogo+ID5IaSwKPiA+Cj4gPlRoZSB0ZXN0Y2FzZXMgb2YgeGZzdGVzdHMgaGF2ZSBiZWVuIHJlb3Jn
+YW5pemVkIGludG8gZGlmZmVyZW50IHN1YmRpcnMgdG8gZmlsZXN5c3RlbXMuCj4gPkJ1dCB0aGUg
+J2luc3RhbGwnIHNlY3Rpb24gb2YgTWFrZWZpbGUgc3RpbGwgdXNlcyB0aGUgb2xkIGxvY2F0aW9u
+IG9mIHRlc3RjYXNlcy4KPiAKPiBJcyBhbnlvbmUgd29ya2luZyBvbiB0aGlzPwo+IAo+IEkgcHVs
+bGVkIHRoZSBsYXRlc3QgeGZzdGVzdHMgdHJlZSwgYnV0IGZvdW5kIG5vIGNoYW5nZXMgdG8gdGhl
+IE1ha2VmaWxlLgoKUGVyaGFwcyB5b3UnZCBsaWtlIHRvIHNlbmQgYSBwYXRjaCB0byBmaXggaXQ/
+CgpDaGVlcnMsCgpEYXZlLgotLSAKRGF2ZSBDaGlubmVyCmRhdmlkQGZyb21vcmJpdC5jb20KCl9f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5n
+IGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZv
+L3hmcwo=
