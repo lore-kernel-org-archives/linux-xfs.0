@@ -1,29 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 30B9D7F99
-	for <xfs@oss.sgi.com>; Wed, 10 Apr 2013 02:24:44 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 514A5AC004
-	for <xfs@oss.sgi.com>; Wed, 10 Apr 2013 00:24:40 -0700 (PDT)
-Received: from merlin.infradead.org (merlin.infradead.org [205.233.59.134]) by
-	cuda.sgi.com with ESMTP id gRJ75bF0vCVbskGB (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 10 Apr 2013 00:24:38 -0700 (PDT)
-Date: Wed, 10 Apr 2013 09:24:18 +0200
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: Loopback device hung [was Re: xfs deadlock on 3.9-rc5 running
-	xfstests case #78]
-Message-ID: <20130410072418.GW12244@kernel.dk>
-References: <14055702.547701.1364891947331.JavaMail.root@redhat.com>
-	<20130402090047.GF3670@kernel.dk>
-	<985125161.581860.1364895066584.JavaMail.root@redhat.com>
-	<20130402094834.GA4667@kernel.dk> <20130403114142.GP4667@kernel.dk>
-	<515C4D9D.10103@ubuntu.com> <515DE2FE.1080201@ubuntu.com>
-	<20130409065519.GH17758@dastard> <20130409070139.GS12244@kernel.dk>
-	<20130409070832.GI17758@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130409070832.GI17758@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 08EDE7F83
+	for <xfs@oss.sgi.com>; Wed, 10 Apr 2013 05:10:36 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E958A304067
+	for <xfs@oss.sgi.com>; Wed, 10 Apr 2013 03:10:32 -0700 (PDT)
+Received: from smtp4-g21.free.fr (smtp4-g21.free.fr [212.27.42.4]) by
+	cuda.sgi.com with ESMTP id XjgLXGSLU27mfRAG for
+	<xfs@oss.sgi.com>; Wed, 10 Apr 2013 03:10:30 -0700 (PDT)
+Date: Wed, 10 Apr 2013 12:10:25 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: need help how to debug xfs crash issue xfs_iunlink_remove:
+	xfs_inotobp() returned error 22
+Message-ID: <20130410121025.78a42b22@harpe.intellique.com>
+In-Reply-To: <CADFMGu+TdyjTjMTWMwpdHqmszhpCU162UA4Y-njARwSEjM1xNw@mail.gmail.com>
+References: <CADFMGuJm5bPPwbbUtYwrCVDL23KExJTw_-VRX2UEEdZjo+i5oA@mail.gmail.com>
+	<CADFMGu+=MM2yc=_peboV7JTNJ8F05TJfexmEErzcf0D8mAWFRg@mail.gmail.com>
+	<CADFMGuKqkPbpcU=taqjTR4sA3o=w1LLAnKoEuj=OhJqEbQVijw@mail.gmail.com>
+	<20130409145238.GE22182@sgi.com>
+	<CADFMGuJaiH0wuxOHrDjDn7qRVH+vQkLOOSPUyqSdXnLcS47t3w@mail.gmail.com>
+	<CADFMGu+TdyjTjMTWMwpdHqmszhpCU162UA4Y-njARwSEjM1xNw@mail.gmail.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,54 +29,25 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="gb2312"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Phillip Susi <psusi@ubuntu.com>, LKML <linux-kernel@vger.kernel.org>, CAI Qian <caiqian@redhat.com>, xfs@oss.sgi.com
+To: =?GB2312?Q?=B7=FB=D3=C0=CC=CE?= <yongtaofu@gmail.com>
+Cc: Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com
 
-On Tue, Apr 09 2013, Dave Chinner wrote:
-> On Tue, Apr 09, 2013 at 09:01:39AM +0200, Jens Axboe wrote:
-> > On Tue, Apr 09 2013, Dave Chinner wrote:
-> > > On Thu, Apr 04, 2013 at 04:30:54PM -0400, Phillip Susi wrote:
-> > > > > I have not tested it yet, but I am pretty sure it won't work.  It
-> > > > > looks like the patch changes the BLKRRPART path to go ahead and remove
-> > > > > existing partitions when GENHD_FL_NO_PARTSCAN is set.  loop doesn't
-> > > > > issue the BLKRRPART ioctl when !LO_FLAGS_PARTSCAN so this won't help.
-> > > > >  I think loop needs to set GENHD_FL_NO_PARTSCAN and then issue the
-> > > > > ioctl regardless of the LO_FLAGS_PARTSCAN flag to get the partitions
-> > > > > to be removed.  I will try to test tonight.
-> > > > 
-> > > > After testing, my initial thoughts appeared to have been correct.  I had
-> > > > to modify the patch as follows.  To test, simply do:
-> > > > 
-> > > > truncate -s 10m img
-> > > > losetup /dev/loop0 img
-> > > > parted /dev/loop0
-> > > > mklabel msdos
-> > > > mkpart primary ext2 1m 2m
-> > > > quit
-> > > > ls /dev/loop0*
-> > > > 
-> > > > Note the /dev/loop0p1 node.  Run losetup -d /dev/loop0 and see if it is
-> > > > still there.
-> > > 
-> > > Jens, can we get one of these fixes merged quickly? xfstests is
-> > > unusable on any kernel more recent than 3.9-rc4 because of these
-> > > problems....
-> > 
-> > Yep, did the revert yesterday and it's going out today.
-> 
-> Great, I didn't see an update in the latest -rc, so I wanted to make
-> sure it hadn't fallen through he cracks....
-
-Got pushed out yesterday, it is now upstream.
-
--- 
-Jens Axboe
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+TGUgVHVlLCA5IEFwciAyMDEzIDIzOjEwOjAzICswODAwCrf708DMziA8eW9uZ3Rhb2Z1QGdtYWls
+LmNvbT4gqKZjcml2YWl0OgoKPiA+IEFwciAgOSAxMTowMTozMCBjcWR4IGtlcm5lbDogWEZTIChz
+ZGIpOiBJL08gRXJyb3IgRGV0ZWN0ZWQuCj4gPiBTaHV0dGluZyBkb3duIGZpbGVzeXN0ZW0KClRo
+aXMuIEkvTyBlcnJvciBkZXRlY3RlZC4gVGhhdCBtZWFucyB0aGF0IGF0IHNvbWUgcG9pbnQgdGhl
+IHVuZGVybHlpbmcKZGV2aWNlIChkaXNrLCBSQUlEIGFycmF5LCBTQU4gdm9sdW1lKSBjb3VsZG4n
+dCBiZSByZWFjaGVkLiBTbyB0aGlzCmNvdWxkIHZlcnkgd2VsbCBiZSBhIGNhc2Ugb2YgYSBmbGFr
+ZXkgZHJpdmUsIGFycmF5LCBjYWJsZSBvciBTQ1NJCmRyaXZlci4KCldoYXQncyB0aGUgc3RvcmFn
+ZSBzZXR1cCBoZXJlPwoKLS0gCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpFbW1hbnVlbCBGbG9yYWMgICAgIHwg
+ICBEaXJlY3Rpb24gdGVjaG5pcXVlCiAgICAgICAgICAgICAgICAgICAgfCAgIEludGVsbGlxdWUK
+ICAgICAgICAgICAgICAgICAgICB8CTxlZmxvcmFjQGludGVsbGlxdWUuY29tPgogICAgICAgICAg
+ICAgICAgICAgIHwgICArMzMgMSA3OCA5NCA4NCAwMgotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KCl9fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QK
+eGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
