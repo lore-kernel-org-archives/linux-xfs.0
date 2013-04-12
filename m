@@ -1,21 +1,34 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DED7E29DFA
-	for <linux-xfs@oss.sgi.com>; Fri, 12 Apr 2013 05:38:55 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 6B8027F3F
+	for <xfs@oss.sgi.com>; Fri, 12 Apr 2013 07:14:25 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CC2078F8040
-	for <linux-xfs@oss.sgi.com>; Fri, 12 Apr 2013 03:38:52 -0700 (PDT)
-Received: from atlas.fiton.is (atlas.fiton.is [62.145.135.105]) by
-	cuda.sgi.com with ESMTP id KUdiW5qKiL1Drawm (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for
-	<linux-xfs@oss.sgi.com>; Fri, 12 Apr 2013 03:38:51 -0700 (PDT)
-Received: from localhost ([127.0.0.1]) by atlas.fiton.is
-	for linux-xfs@oss.sgi.com; Fri, 12 Apr 2013 10:38:49 +0000
-From: =?iso-8859-1?Q?Svavar_=D6rn_Eysteinsson?= <svavar@fiton.is>
-Subject: xfsaild causing load, and stuck in D state - Centos 6.4 x64
-Date: Fri, 12 Apr 2013 10:38:49 +0000
-Message-Id: <CC92A630-5658-4166-BA1F-8AA1F596461F@fiton.is>
-Mime-Version: 1.0 (Apple Message framework v1283)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4AD278F8040
+	for <xfs@oss.sgi.com>; Fri, 12 Apr 2013 05:14:22 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id MCO6auMTxYh1SPtI for
+	<xfs@oss.sgi.com>; Fri, 12 Apr 2013 05:14:21 -0700 (PDT)
+Message-ID: <5167F9FF.40800@redhat.com>
+Date: Fri, 12 Apr 2013 08:11:43 -0400
+From: Brian Foster <bfoster@redhat.com>
+MIME-Version: 1.0
+Subject: Re: need help how to debug xfs crash issue xfs_iunlink_remove:
+	xfs_inotobp() returned error 22
+References: <CADFMGuJm5bPPwbbUtYwrCVDL23KExJTw_-VRX2UEEdZjo+i5oA@mail.gmail.com>
+	<CADFMGu+=MM2yc=_peboV7JTNJ8F05TJfexmEErzcf0D8mAWFRg@mail.gmail.com>
+	<CADFMGuKqkPbpcU=taqjTR4sA3o=w1LLAnKoEuj=OhJqEbQVijw@mail.gmail.com>
+	<20130409145238.GE22182@sgi.com>
+	<CADFMGuJaiH0wuxOHrDjDn7qRVH+vQkLOOSPUyqSdXnLcS47t3w@mail.gmail.com>
+	<CADFMGu+TdyjTjMTWMwpdHqmszhpCU162UA4Y-njARwSEjM1xNw@mail.gmail.com>
+	<20130410121025.78a42b22@harpe.intellique.com>
+	<CADFMGu+yCg4ux0n6S98bqm_cXc=VCcijVBTqwRxvxmtKt_JO-A@mail.gmail.com>
+	<CADFMGuLxgBFU=FUK94tPsCh+qxRW0rEELxSXYoMQLFJ1u3=q0Q@mail.gmail.com>
+	<516746AC.3090808@redhat.com>
+	<CADFMGuK-tJQFQzN9wN0LiWWj6SY4tg_c0W9dJadctg=ytegB+w@mail.gmail.com>
+	<516798AE.9050908@sandeen.net>
+	<CADFMGuK67G85+J3LAjS=w_nkkSrj7At9HnPLSL-DBO6g0V=ThA@mail.gmail.com>
+	<CADFMGuJLEChscGDtQjhxNf1EOhpAP2Mj+2BfQsVtef2MSphjZA@mail.gmail.com>
+In-Reply-To: <CADFMGuJLEChscGDtQjhxNf1EOhpAP2Mj+2BfQsVtef2MSphjZA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,67 +37,74 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: =?UTF-8?B?56ym5rC45rab?= <yongtaofu@gmail.com>
+Cc: Ben Myers <bpm@sgi.com>, Eric Sandeen <sandeen@sandeen.net>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-PowerEdge 2850 with PERC SCSI RAID controller.
-16GB RAM
-Dual Intel(R) Xeon(TM) CPU 3.00GHz
-Using megaraid driver and xfs on 3x 300GB SCSI disks as /dev/sdb (total 572GB)  (RAID-5)
-
-Stock Centos 6.4 x64, everything updated.
-Kernel : 2.6.32-358.2.1.el6.x86_64 #1 SMP
-
-My Load always shows :
-
-top - 10:30:21 up 23:09,  1 users,  load average: 0.99, 0.96, 0.79
-
-yet there is no services what-so-ever doing anything.
-
-Using PowerTOP I can see that xfsaild is causing second most wake-ups (after kernel core : hrtimer_start (tick_sched_timer) )
-
-
-< Detailed C-state information is not P-states (frequencies)
-                                        3.00 Ghz   100.0%
-                                        1500 Mhz     0.0%
-                                        1125 Mhz     0.0%
-                                         750 Mhz     0.0%
-                                         375 Mhz     0.0%
-
-Wakeups-from-idle per second : 125.1    interval: 10.0s
-no ACPI power usage estimate available
-
-Top causes for wake-ups:
-  47.7% (119.6)     <kernel core> : hrtimer_start (tick_sched_timer) 
-  39.9% (100.0)      xfsaild/sdb1 : xfsaild (process_timeout)
-
-
-Again, using TOP I can see that xfsaild is stuck in D state. It never changes.
-
-
-10050 root      20   0     0    0    0 D  0.0  0.0   0:01.17 xfsaild/sdb1
-
-
-My only way to fix this, is either rebooting the machine, unmounting the volume
-and mounting it back online. I've been rsyncing data twice between this server and another
-one. The rsync process takes about 30m-1hour. After the rsync operation I see that
-the xfsaild is stuck in D State and my Load is near 1.00.
-
-
-I'v had no problem what-so-ever on centos 6.3 or early versions on other servers.
-
-Any thoughts ?
-Information, help would be much appreciated.
-
-Thanks in advance.
-
-Best regards,
-
-Svavar
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gMDQvMTIvMjAxMyAwMjowMCBBTSwg56ym5rC45rabIHdyb3RlOgo+IHN0YXAgLWUgJ3Byb2Jl
+IG1vZHVsZSgieGZzIikuZnVuY3Rpb24oInhmc19pdW5saW5rIil7fScKPiBXQVJOSU5HOiBjYW5u
+b3QgZmluZCBtb2R1bGUgeGZzIGRlYnVnaW5mbzogTm8gRFdBUkYgaW5mb3JtYXRpb24gZm91bmQK
+PiBzZW1hbnRpYyBlcnJvcjogbm8gbWF0Y2ggd2hpbGUgcmVzb2x2aW5nIHByb2JlIHBvaW50Cj4g
+bW9kdWxlKCJ4ZnMiKS5mdW5jdGlvbigieGZzX2l1bmxpbmsiKQo+IFBhc3MgMjogYW5hbHlzaXMg
+ZmFpbGVkLiAgVHJ5IGFnYWluIHdpdGggYW5vdGhlciAnLS12cCAwMScgb3B0aW9uLgo+IAoKVGhp
+cyBpcyB0aGUgZXJyb3IgSSBnZXQgaWYgSSByZW1vdmUKa2VybmVsLWRlYnVnaW5mby0yLjYuMzIt
+Mjc5LmVsNi54ODZfNjQucnBtLiBPdGhlcndpc2UsIHRoZSBleGFtcGxlCnhmc19pdW5saW5rKCkg
+cHJvYmUgd29ya3MgZm9yIG1lLiBUaGUgeGZzLmtvLmRlYnVnIG1vZHVsZSBpbnN0YWxsZWQgdG8K
+bXkgc3lzdGVtIG1hdGNoZXMgdGhlIHBhdGggeW91J3ZlIGxpc3RlZCBiZWxvdywgYXMgd2VsbC4K
+Ckkgc3VwcG9zZSBpdCBjb3VsZG4ndCBodXJ0IHRvIHRyeSBhbmQgcmVtb3ZlL3JlaW5zdGFsbCB0
+aGF0IG1vZHVsZS4gRG8KeW91IGdldCBhbnkgb3V0cHV0IGZyb20gJ29iamR1bXAgLS1kd2FyZiAu
+Li4veGZzLmtvLmRlYnVnPycKCkkgYWxzbyBub3RpY2UgdGhhdCB5b3UgaGF2ZSBhIG5ld2VyIGtl
+cm5lbCBpbnN0YWxsZWQgb24gdGhpcyBzeXN0ZW0uIEFyZQp5b3Ugc3VyZSB5b3UncmUgc3RpbGwg
+cnVubmluZyB0aGUgLTI3OSBidWlsZD8gSSdtIG5vdCBhbiBzdGFwIGV4cGVydCwKYnV0IGl0IHdv
+dWxkIGJlIG5pY2UgdG8gZmluZCBvdXQgd2hlcmUgaXQncyBsb29raW5nIGZvciBkZWJ1ZyBpbmZv
+IGF0CnJ1bnRpbWUuLi4KCkJyaWFuCgpQLlMuLCBUaGUgY29tbWFuZHMgeW91J3ZlIGxpc3RlZCBp
+biBhbm90aGVyIG1haWw6CgpzdWRvIHN0YXAgLUwgJ2tlcm5lbC50cmFjZSgiKiIpJ3xncmVwIHhm
+c19pdW5saW5rCnN1ZG8gc3RhcCAtTCAna2VybmVsLnRyYWNlKCIqIiknfGdyZXAgeGZzX2lmcmVl
+CgouLi4gZG9uJ3QgcHJpbnQgYW55dGhpbmcgb24gbXkgYm94IGVpdGhlciwgYnV0IGFzIG1lbnRp
+b25lZCwgdGhlCnhmc19pdW5saW5rKCkgcHJvYmUgd29ya3MuIEkgc3VzcGVjdCB0aGVzZSBhcmUg
+bm90IHJlbGV2YW50LiBQZXJoYXBzIHlvdQphcmUgbGlzdGluZyB0cmFjZXBvaW50cyBoZXJlPyBU
+aGUgZm9sbG93aW5nIGNvbW1hbmQgcHJpbnRzIHRoZSBwcm9iZQpwb2ludCBpbmZvIG9uIG15IGJv
+eDoKCnN0YXAgLUwgJ21vZHVsZSgieGZzIikuZnVuY3Rpb24oInhmc19pdW5saW5rIiknCgo+IAo+
+IDIwMTMvNC8xMiDnrKbmsLjmtpsgPHlvbmd0YW9mdUBnbWFpbC5jb20gPG1haWx0bzp5b25ndGFv
+ZnVAZ21haWwuY29tPj4KPiAKPiAgICAgbHMgLWwKPiAgICAgL3Vzci9saWIvZGVidWcvbGliL21v
+ZHVsZXMvMi42LjMyLTI3OS5lbDYueDg2XzY0L2tlcm5lbC9mcy94ZnMveGZzLmtvLmRlYnVnCj4g
+ICAgIC1yLS1yLS1yLS0gMSByb290IHJvb3QgMjEzOTMwMjQgQXByIDEyIDEyOjA4Cj4gICAgIC91
+c3IvbGliL2RlYnVnL2xpYi9tb2R1bGVzLzIuNi4zMi0yNzkuZWw2Lng4Nl82NC9rZXJuZWwvZnMv
+eGZzL3hmcy5rby5kZWJ1Zwo+IAo+ICAgICBycG0gLXFhfGdyZXAgIGtlcm5lbAo+ICAgICBrZXJu
+ZWwtaGVhZGVycy0yLjYuMzItMjc5LmVsNi54ODZfNjQKPiAgICAga2VybmVsLWRldmVsLTIuNi4z
+Mi0yNzkuZWw2Lng4Nl82NAo+ICAgICBrZXJuZWwtMi42LjMyLTM1OC5lbDYueDg2XzY0Cj4gICAg
+IGtlcm5lbC1kZWJ1Z2luZm8tY29tbW9uLXg4Nl82NC0yLjYuMzItMjc5LmVsNi54ODZfNjQKPiAg
+ICAgYWJydC1hZGRvbi1rZXJuZWxvb3BzLTIuMC44LTYuZWw2Lng4Nl82NAo+ICAgICBrZXJuZWwt
+ZmlybXdhcmUtMi42LjMyLTM1OC5lbDYubm9hcmNoCj4gICAgIGtlcm5lbC1kZWJ1Zy0yLjYuMzIt
+MzU4LmVsNi54ODZfNjQKPiAgICAga2VybmVsLWRlYnVnaW5mby0yLjYuMzItMjc5LmVsNi54ODZf
+NjQKPiAgICAgZHJhY3V0LWtlcm5lbC0wMDQtMjgzLmVsNi5ub2FyY2gKPiAgICAgbGlicmVwb3J0
+LXBsdWdpbi1rZXJuZWxvb3BzLTIuMC45LTUuZWw2Lng4Nl82NAo+ICAgICBrZXJuZWwtZGV2ZWwt
+Mi42LjMyLTM1OC5lbDYueDg2XzY0Cj4gICAgIGtlcm5lbC0yLjYuMzItMjc5LmVsNi54ODZfNjQK
+PiAKPiAgICAgcnBtIC1xIGtlcm5lbC1kZWJ1Z2luZm8KPiAgICAga2VybmVsLWRlYnVnaW5mby0y
+LjYuMzItMjc5LmVsNi54ODZfNjQKPiAKPiAgICAgcnBtIC1xIGtlcm5lbAo+ICAgICBrZXJuZWwt
+Mi42LjMyLTI3OS5lbDYueDg2XzY0Cj4gICAgIGtlcm5lbC0yLjYuMzItMzU4LmVsNi54ODZfNjQK
+PiAKPiAgICAgZG8gSSBuZWVkIHRvIHJlIHByb2JlIGl0Pwo+IAo+IAo+ICAgICAyMDEzLzQvMTIg
+RXJpYyBTYW5kZWVuIDxzYW5kZWVuQHNhbmRlZW4ubmV0Cj4gICAgIDxtYWlsdG86c2FuZGVlbkBz
+YW5kZWVuLm5ldD4+Cj4gCj4gICAgICAgICBPbiA0LzExLzEzIDExOjMyIFBNLCDnrKbmsLjmtpsg
+d3JvdGU6Cj4gICAgICAgICA+IEhpIEJyaWFuLAo+ICAgICAgICAgPiBTb3JyeSBidXQgd2hlbiBJ
+IGV4ZWN1dGUgdGhlIHNjcmlwdCBpdCBzYXlzOgo+ICAgICAgICAgPiBXQVJOSU5HOiBjYW5ub3Qg
+ZmluZCBtb2R1bGUgeGZzIGRlYnVnaW5mbzogTm8gRFdBUkYKPiAgICAgICAgIGluZm9ybWF0aW9u
+IGZvdW5kCj4gICAgICAgICA+IHNlbWFudGljIGVycm9yOiBubyBtYXRjaCB3aGlsZSByZXNvbHZp
+bmcgcHJvYmUgcG9pbnQKPiAgICAgICAgIG1vZHVsZSgieGZzIikuZnVuY3Rpb24oInhmc19pdW5s
+aW5rIikKPiAgICAgICAgID4KPiAgICAgICAgID4gdW5hbWUgLWEKPiAgICAgICAgID4gMi42LjMy
+LTI3OS5lbDYueDg2XzY0Cj4gICAgICAgICA+IGtlcm5lbCBkZWJ1Z2luZm8gaGFzIGJlZW4gaW5z
+dGFsbGVkLgo+ICAgICAgICAgPgo+ICAgICAgICAgPiBXaGVyZSBjYW4gSSBmaW5kIHRoZSBjb3Jy
+ZWN0IHhmcyBkZWJ1Z2luZm8/Cj4gCj4gICAgICAgICBpdCBzaG91bGQgYmUgaW4gdGhlIGtlcm5l
+bC1kZWJ1Z2luZm8gcnBtIChvZiB0aGUgc2FtZQo+ICAgICAgICAgdmVyc2lvbi9yZWxlYXNlIGFz
+IHRoZSBrZXJuZWwgcnBtIHlvdSdyZSBydW5uaW5nKQo+IAo+ICAgICAgICAgWW91IHNob3VsZCBo
+YXZlOgo+IAo+ICAgICAgICAgL3Vzci9saWIvZGVidWcvbGliL21vZHVsZXMvMi42LjMyLTI3OS5l
+bDYueDg2XzY0L2tlcm5lbC9mcy94ZnMveGZzLmtvLmRlYnVnCj4gCj4gICAgICAgICBJZiBub3Qs
+IGNhbiB5b3Ugc2hvdzoKPiAKPiAgICAgICAgICMgdW5hbWUgLWEKPiAgICAgICAgICMgcnBtIC1x
+IGtlcm5lbAo+ICAgICAgICAgIyBycG0gLXEga2VybmVsLWRlYnVnaW5mbwo+IAo+ICAgICAgICAg
+LUVyaWMKPiAKPiAKPiAKPiAKPiAKPiAgICAgLS0gCj4gICAgIOespuawuOa2mwo+IAo+IAo+IAo+
+IAo+IC0tIAo+IOespuawuOa2mwoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5z
+Z2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
