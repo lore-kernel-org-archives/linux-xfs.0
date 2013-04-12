@@ -1,19 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B911D29DFA
-	for <xfs@oss.sgi.com>; Fri, 12 Apr 2013 05:26:55 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id DED7E29DFA
+	for <linux-xfs@oss.sgi.com>; Fri, 12 Apr 2013 05:38:55 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8DE91304043
-	for <xfs@oss.sgi.com>; Fri, 12 Apr 2013 03:26:55 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id Qkkq3OT9G6UbRRJA (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 12 Apr 2013 03:26:51 -0700 (PDT)
-Message-ID: <5167E160.3020800@oracle.com>
-Date: Fri, 12 Apr 2013 18:26:40 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
-MIME-Version: 1.0
-Subject: [PATCH] xfs: fix s_max_bytes to MAX_LFS_FILESIZE if needed
+	by relay1.corp.sgi.com (Postfix) with ESMTP id CC2078F8040
+	for <linux-xfs@oss.sgi.com>; Fri, 12 Apr 2013 03:38:52 -0700 (PDT)
+Received: from atlas.fiton.is (atlas.fiton.is [62.145.135.105]) by
+	cuda.sgi.com with ESMTP id KUdiW5qKiL1Drawm (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for
+	<linux-xfs@oss.sgi.com>; Fri, 12 Apr 2013 03:38:51 -0700 (PDT)
+Received: from localhost ([127.0.0.1]) by atlas.fiton.is
+	for linux-xfs@oss.sgi.com; Fri, 12 Apr 2013 10:38:49 +0000
+From: =?iso-8859-1?Q?Svavar_=D6rn_Eysteinsson?= <svavar@fiton.is>
+Subject: xfsaild causing load, and stuck in D state - Centos 6.4 x64
+Date: Fri, 12 Apr 2013 10:38:49 +0000
+Message-Id: <CC92A630-5658-4166-BA1F-8AA1F596461F@fiton.is>
+Mime-Version: 1.0 (Apple Message framework v1283)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,82 +28,62 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
-Cc: "Michael L. Semon" <mlsemon35@gmail.com>
+To: linux-xfs@oss.sgi.com
 
-From: Jie Liu <jeff.liu@oracle.com>
+PowerEdge 2850 with PERC SCSI RAID controller.
+16GB RAM
+Dual Intel(R) Xeon(TM) CPU 3.00GHz
+Using megaraid driver and xfs on 3x 300GB SCSI disks as /dev/sdb (total 572GB)  (RAID-5)
 
-On 32-bit machine, the s_maxbytes is larger than the MAX_LFS_FILESIZE limits if CONFIG_LBDAF is
-not enabled.  Hence it's possible to create a huge file via buffered-IO write with a given offset
-beyond this limitation. e.g.
+Stock Centos 6.4 x64, everything updated.
+Kernel : 2.6.32-358.2.1.el6.x86_64 #1 SMP
 
-# block_size=4096
-# offset=$(((2**32 - 1) * $block_size))
-# xfs_io -f -c "pwrite $offset $block_size" /storage/test_file
+My Load always shows :
 
-In this case, xfs_io will hang at the page writeback stage soon since the given offset would
-cause an overflow at xfs_vm_writepage():
+top - 10:30:21 up 23:09,  1 users,  load average: 0.99, 0.96, 0.79
 
-end_index = offset >> PAGE_CACHE_SHIFT;
-last_index = (offset - 1) >> PAGE_CACHE_SHIFT;
-if (page->index >= end_index) {
-                unsigned offset_into_page = offset & (PAGE_CACHE_SIZE - 1);
+yet there is no services what-so-ever doing anything.
 
-                /*
-                 * Just skip the page if it is fully outside i_size, e.g. due
-                 * to a truncate operation that is in progress.
-                 */
-                if (page->index >= end_index + 1 || offset_into_page == 0) {
-		^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-                        unlock_page(page);
-                        return 0;
-                }
-end_index is unsigned long so that the max value is '2^32-1 = 4294967295', and it
-would be evaluated to the max value with the given offset(when writing the page offset
-up to s_max_bytes) for above test case.  As a result, (page->index >= end_index + 1) is
-ok as (end_index + 1) is overflowed to ZERO.
+Using PowerTOP I can see that xfsaild is causing second most wake-ups (after kernel core : hrtimer_start (tick_sched_timer) )
 
-Actually, create a file as above on 32-bit machine should be failed with EFBIG error returned
-because there has strict check up at generic_write_checks() against the given offset with a
-*correct* s_max_bytes.
 
-This patch fix the s_max_bytes to MAX_LFS_FILESIZE if the pre-calculated value is greater
-than it.
+< Detailed C-state information is not P-states (frequencies)
+                                        3.00 Ghz   100.0%
+                                        1500 Mhz     0.0%
+                                        1125 Mhz     0.0%
+                                         750 Mhz     0.0%
+                                         375 Mhz     0.0%
 
-Reported-by: Michael L. Semon <mlsemon35@gmail.com>
-Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+Wakeups-from-idle per second : 125.1    interval: 10.0s
+no ACPI power usage estimate available
 
----
- fs/xfs/xfs_super.c |    6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+Top causes for wake-ups:
+  47.7% (119.6)     <kernel core> : hrtimer_start (tick_sched_timer) 
+  39.9% (100.0)      xfsaild/sdb1 : xfsaild (process_timeout)
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index ea341ce..0644d61 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -585,6 +585,7 @@ xfs_max_file_offset(
- {
- 	unsigned int		pagefactor = 1;
- 	unsigned int		bitshift = BITS_PER_LONG - 1;
-+	__uint64_t		offset;
- 
- 	/* Figure out maximum filesize, on Linux this can depend on
- 	 * the filesystem blocksize (on 32 bit platforms).
-@@ -610,7 +611,10 @@ xfs_max_file_offset(
- # endif
- #endif
- 
--	return (((__uint64_t)pagefactor) << bitshift) - 1;
-+	offset = (((__uint64_t)pagefactor) << bitshift) - 1;
-+
-+	/* Check against VM & VFS exposed limits */
-+	return (offset > MAX_LFS_FILESIZE) ? MAX_LFS_FILESIZE : offset;
- }
- 
- xfs_agnumber_t
--- 
-1.7.9.5
 
+Again, using TOP I can see that xfsaild is stuck in D state. It never changes.
+
+
+10050 root      20   0     0    0    0 D  0.0  0.0   0:01.17 xfsaild/sdb1
+
+
+My only way to fix this, is either rebooting the machine, unmounting the volume
+and mounting it back online. I've been rsyncing data twice between this server and another
+one. The rsync process takes about 30m-1hour. After the rsync operation I see that
+the xfsaild is stuck in D State and my Load is near 1.00.
+
+
+I'v had no problem what-so-ever on centos 6.3 or early versions on other servers.
+
+Any thoughts ?
+Information, help would be much appreciated.
+
+Thanks in advance.
+
+Best regards,
+
+Svavar
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
