@@ -1,37 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id EA4457F37
-	for <xfs@oss.sgi.com>; Fri, 12 Apr 2013 01:00:44 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id E5DA77F3F
+	for <xfs@oss.sgi.com>; Fri, 12 Apr 2013 01:12:54 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8C45BAC005
-	for <xfs@oss.sgi.com>; Thu, 11 Apr 2013 23:00:41 -0700 (PDT)
-Received: from mail-ie0-f181.google.com (mail-ie0-f181.google.com
-	[209.85.223.181]) by cuda.sgi.com with ESMTP id
-	jLrkNHaGXWqYd2kd (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 11 Apr 2013 23:00:40 -0700 (PDT)
-Received: by mail-ie0-f181.google.com with SMTP id 17so2910267iea.40
-	for <xfs@oss.sgi.com>; Thu, 11 Apr 2013 23:00:39 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 81FE6AC005
+	for <xfs@oss.sgi.com>; Thu, 11 Apr 2013 23:12:51 -0700 (PDT)
+Received: from mail-da0-f54.google.com (mail-da0-f54.google.com
+	[209.85.210.54]) by cuda.sgi.com with ESMTP id JgPgtwsFkKh5mr6u
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 11 Apr 2013 23:12:50 -0700 (PDT)
+Received: by mail-da0-f54.google.com with SMTP id p1so998588dad.27
+	for <xfs@oss.sgi.com>; Thu, 11 Apr 2013 23:12:50 -0700 (PDT)
+Message-ID: <5167A5D3.4070903@gmail.com>
+Date: Fri, 12 Apr 2013 14:12:35 +0800
+From: Wang Sheng-Hui <shhuiw@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CADFMGuK67G85+J3LAjS=w_nkkSrj7At9HnPLSL-DBO6g0V=ThA@mail.gmail.com>
-References: <CADFMGuJm5bPPwbbUtYwrCVDL23KExJTw_-VRX2UEEdZjo+i5oA@mail.gmail.com>
-	<CADFMGu+=MM2yc=_peboV7JTNJ8F05TJfexmEErzcf0D8mAWFRg@mail.gmail.com>
-	<CADFMGuKqkPbpcU=taqjTR4sA3o=w1LLAnKoEuj=OhJqEbQVijw@mail.gmail.com>
-	<20130409145238.GE22182@sgi.com>
-	<CADFMGuJaiH0wuxOHrDjDn7qRVH+vQkLOOSPUyqSdXnLcS47t3w@mail.gmail.com>
-	<CADFMGu+TdyjTjMTWMwpdHqmszhpCU162UA4Y-njARwSEjM1xNw@mail.gmail.com>
-	<20130410121025.78a42b22@harpe.intellique.com>
-	<CADFMGu+yCg4ux0n6S98bqm_cXc=VCcijVBTqwRxvxmtKt_JO-A@mail.gmail.com>
-	<CADFMGuLxgBFU=FUK94tPsCh+qxRW0rEELxSXYoMQLFJ1u3=q0Q@mail.gmail.com>
-	<516746AC.3090808@redhat.com>
-	<CADFMGuK-tJQFQzN9wN0LiWWj6SY4tg_c0W9dJadctg=ytegB+w@mail.gmail.com>
-	<516798AE.9050908@sandeen.net>
-	<CADFMGuK67G85+J3LAjS=w_nkkSrj7At9HnPLSL-DBO6g0V=ThA@mail.gmail.com>
-Date: Fri, 12 Apr 2013 14:00:39 +0800
-Message-ID: <CADFMGuJLEChscGDtQjhxNf1EOhpAP2Mj+2BfQsVtef2MSphjZA@mail.gmail.com>
-Subject: Re: need help how to debug xfs crash issue xfs_iunlink_remove:
-	xfs_inotobp() returned error 22
-From: =?GB2312?B?t/vTwMzO?= <yongtaofu@gmail.com>
+Subject: [PATCH] xfstests: fix the regex pattern in get_group_list of check
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,192 +24,45 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============7483481300924652320=="
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Brian Foster <bfoster@redhat.com>, Ben Myers <bpm@sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Rich Johnston <rjohnston@sgi.com>, Dave Chinner <dchinner@redhat.com>, xfstests <xfs@oss.sgi.com>
 
---===============7483481300924652320==
-Content-Type: multipart/alternative; boundary=047d7bd75dec63cc6b04da239f09
+In group files, non comment line starts with a 3-digits, then followed by
+space and other characters, but no group names.
 
---047d7bd75dec63cc6b04da239f09
-Content-Type: text/plain; charset=GB2312
-Content-Transfer-Encoding: quoted-printable
+The old regex in get_group_list uses the group name as part of the regex,
+and fails './check -g xfs' run:
+         Group "xfs" is empty or not defined?
 
-stap -e 'probe module("xfs").function("xfs_iunlink"){}'
-WARNING: cannot find module xfs debuginfo: No DWARF information found
-semantic error: no match while resolving probe point
-module("xfs").function("xfs_iunlink")
-Pass 2: analysis failed.  Try again with another '--vp 01' option.
+The patch removes the pattern for group name, and thus we can trigger tests
+like "./check -g xfs" as normal.
+	
 
+Signed-off-by: Wang Sheng-Hui <shhuiw@gmail.com>
+---
+  check | 2 +-
+  1 file changed, 1 insertion(+), 1 deletion(-)
 
-2013/4/12 =B7=FB=D3=C0=CC=CE <yongtaofu@gmail.com>
-
-> ls -l
-> /usr/lib/debug/lib/modules/2.6.32-279.el6.x86_64/kernel/fs/xfs/xfs.ko.deb=
-ug
-> -r--r--r-- 1 root root 21393024 Apr 12 12:08
-> /usr/lib/debug/lib/modules/2.6.32-279.el6.x86_64/kernel/fs/xfs/xfs.ko.deb=
-ug
->
-> rpm -qa|grep  kernel
-> kernel-headers-2.6.32-279.el6.x86_64
-> kernel-devel-2.6.32-279.el6.x86_64
-> kernel-2.6.32-358.el6.x86_64
-> kernel-debuginfo-common-x86_64-2.6.32-279.el6.x86_64
-> abrt-addon-kerneloops-2.0.8-6.el6.x86_64
-> kernel-firmware-2.6.32-358.el6.noarch
-> kernel-debug-2.6.32-358.el6.x86_64
-> kernel-debuginfo-2.6.32-279.el6.x86_64
-> dracut-kernel-004-283.el6.noarch
-> libreport-plugin-kerneloops-2.0.9-5.el6.x86_64
-> kernel-devel-2.6.32-358.el6.x86_64
-> kernel-2.6.32-279.el6.x86_64
->
-> rpm -q kernel-debuginfo
-> kernel-debuginfo-2.6.32-279.el6.x86_64
->
-> rpm -q kernel
-> kernel-2.6.32-279.el6.x86_64
-> kernel-2.6.32-358.el6.x86_64
->
-> do I need to re probe it?
->
->
-> 2013/4/12 Eric Sandeen <sandeen@sandeen.net>
->
->> On 4/11/13 11:32 PM, =B7=FB=D3=C0=CC=CE wrote:
->> > Hi Brian,
->> > Sorry but when I execute the script it says:
->> > WARNING: cannot find module xfs debuginfo: No DWARF information found
->> > semantic error: no match while resolving probe point
->> module("xfs").function("xfs_iunlink")
->> >
->> > uname -a
->> > 2.6.32-279.el6.x86_64
->> > kernel debuginfo has been installed.
->> >
->> > Where can I find the correct xfs debuginfo?
->>
->> it should be in the kernel-debuginfo rpm (of the same version/release as
->> the kernel rpm you're running)
->>
->> You should have:
->>
->>
->> /usr/lib/debug/lib/modules/2.6.32-279.el6.x86_64/kernel/fs/xfs/xfs.ko.de=
-bug
->>
->> If not, can you show:
->>
->> # uname -a
->> # rpm -q kernel
->> # rpm -q kernel-debuginfo
->>
->> -Eric
->>
->>
->>
->
->
-> --
-> =B7=FB=D3=C0=CC=CE
->
-
-
-
---=20
-=B7=FB=D3=C0=CC=CE
-
---047d7bd75dec63cc6b04da239f09
-Content-Type: text/html; charset=GB2312
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr">stap -e &#39;probe module(&quot;xfs&quot;).function(&quot;=
-xfs_iunlink&quot;){}&#39;<br>WARNING: cannot find module xfs debuginfo: No =
-DWARF information found<br>semantic error: no match while resolving probe p=
-oint module(&quot;xfs&quot;).function(&quot;xfs_iunlink&quot;)<br>
-Pass 2: analysis failed.&nbsp; Try again with another &#39;--vp 01&#39; opt=
-ion.<br></div><div class=3D"gmail_extra"><br><br><div class=3D"gmail_quote"=
->2013/4/12 =B7=FB=D3=C0=CC=CE <span dir=3D"ltr">&lt;<a href=3D"mailto:yongt=
-aofu@gmail.com" target=3D"_blank">yongtaofu@gmail.com</a>&gt;</span><br>
-<blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
-x #ccc solid;padding-left:1ex"><div dir=3D"ltr"><div>ls -l /usr/lib/debug/l=
-ib/modules/2.6.32-279.el6.x86_64/kernel/fs/xfs/xfs.ko.debug<br>-r--r--r-- 1=
- root root 21393024 Apr 12 12:08 /usr/lib/debug/lib/modules/2.6.32-279.el6.=
-x86_64/kernel/fs/xfs/xfs.ko.debug<br>
-
-<br>rpm -qa|grep&nbsp; kernel<br>kernel-headers-2.6.32-279.el6.x86_64<br>ke=
-rnel-devel-2.6.32-279.el6.x86_64<br>kernel-2.6.32-358.el6.x86_64<br>kernel-=
-debuginfo-common-x86_64-2.6.32-279.el6.x86_64<br>abrt-addon-kerneloops-2.0.=
-8-6.el6.x86_64<br>
-
-kernel-firmware-2.6.32-358.el6.noarch<br>kernel-debug-2.6.32-358.el6.x86_64=
-<br>kernel-debuginfo-2.6.32-279.el6.x86_64<br>dracut-kernel-004-283.el6.noa=
-rch<br>libreport-plugin-kerneloops-2.0.9-5.el6.x86_64<br>kernel-devel-2.6.3=
-2-358.el6.x86_64<br>
-
-kernel-2.6.32-279.el6.x86_64<br><br>rpm -q kernel-debuginfo<br>kernel-debug=
-info-2.6.32-279.el6.x86_64<br><br>rpm -q kernel<br>kernel-2.6.32-279.el6.x8=
-6_64<br>kernel-2.6.32-358.el6.x86_64<br><br></div>do I need to re probe it?=
-<br>
-
-</div><div class=3D"gmail_extra"><div><div class=3D"h5"><br><br><div class=
-=3D"gmail_quote">2013/4/12 Eric Sandeen <span dir=3D"ltr">&lt;<a href=3D"ma=
-ilto:sandeen@sandeen.net" target=3D"_blank">sandeen@sandeen.net</a>&gt;</sp=
-an><br><blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-=
-left:1px #ccc solid;padding-left:1ex">
-
-<div>On 4/11/13 11:32 PM, =B7=FB=D3=C0=CC=CE wrote:<br>
-&gt; Hi Brian,<br>
-&gt; Sorry but when I execute the script it says:<br>
-&gt; WARNING: cannot find module xfs debuginfo: No DWARF information found<=
-br>
-&gt; semantic error: no match while resolving probe point module(&quot;xfs&=
-quot;).function(&quot;xfs_iunlink&quot;)<br>
-&gt;<br>
-&gt; uname -a<br>
-&gt; 2.6.32-279.el6.x86_64<br>
-&gt; kernel debuginfo has been installed.<br>
-&gt;<br>
-&gt; Where can I find the correct xfs debuginfo?<br>
-<br>
-</div>it should be in the kernel-debuginfo rpm (of the same version/release=
- as the kernel rpm you&#39;re running)<br>
-<br>
-You should have:<br>
-<br>
-/usr/lib/debug/lib/modules/2.6.32-279.el6.x86_64/kernel/fs/xfs/xfs.ko.debug=
-<br>
-<br>
-If not, can you show:<br>
-<br>
-# uname -a<br>
-# rpm -q kernel<br>
-# rpm -q kernel-debuginfo<br>
-<span><font color=3D"#888888"><br>
--Eric<br>
-<br>
-<br>
-</font></span></blockquote></div><br><br clear=3D"all"><br></div></div><spa=
-n class=3D"HOEnZb"><font color=3D"#888888">-- <br>=B7=FB=D3=C0=CC=CE
-</font></span></div>
-</blockquote></div><br><br clear=3D"all"><br>-- <br>=B7=FB=D3=C0=CC=CE
-</div>
-
---047d7bd75dec63cc6b04da239f09--
-
-
---===============7483481300924652320==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+diff --git a/check b/check
+index 966fbe5..abc65cb 100755
+--- a/check
++++ b/check
+@@ -100,7 +100,7 @@ get_group_list()
+  		l=$(sed -n < $SRC_DIR/$d/group \
+  			-e 's/#.*//' \
+  			-e 's/$/ /' \
+-			-e "s;\(^[0-9][0-9][0-9]\).* $grp .*;$SRC_DIR/$d/\1;p")
++			-e "s;\(^[0-9][0-9][0-9]\) .*;$SRC_DIR/$d/\1;p")
+  		grpl="$grpl $l"
+  	done
+  	echo $grpl
+-- 
+1.7.12.4
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============7483481300924652320==--
