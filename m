@@ -1,33 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 130F829DFA
-	for <xfs@oss.sgi.com>; Fri, 12 Apr 2013 10:48:41 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 758108F808E
-	for <xfs@oss.sgi.com>; Fri, 12 Apr 2013 08:48:40 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id q9Bd5u0rkouFXW62 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 12 Apr 2013 08:48:39 -0700 (PDT)
-Received: from ucsinet22.oracle.com (ucsinet22.oracle.com [156.151.31.94])
-	by aserp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
-	ESMTP id r3CFmcNF024293
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Fri, 12 Apr 2013 15:48:38 GMT
-Received: from aserz7022.oracle.com (aserz7022.oracle.com [141.146.126.231])
-	by ucsinet22.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r3CFmbdY009744
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
-	for <xfs@oss.sgi.com>; Fri, 12 Apr 2013 15:48:37 GMT
-Received: from abhmt104.oracle.com (abhmt104.oracle.com [141.146.116.56])
-	by aserz7022.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r3CFma1D025844 for <xfs@oss.sgi.com>; Fri, 12 Apr 2013 15:48:36 GMT
-Message-ID: <51682CCC.308@oracle.com>
-Date: Fri, 12 Apr 2013 23:48:28 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+	by oss.sgi.com (Postfix) with ESMTP id 9A6117CBF
+	for <xfs@oss.sgi.com>; Fri, 12 Apr 2013 11:38:59 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7824A8F8084
+	for <xfs@oss.sgi.com>; Fri, 12 Apr 2013 09:38:56 -0700 (PDT)
+Received: from mail-pb0-f48.google.com (mail-pb0-f48.google.com
+	[209.85.160.48]) by cuda.sgi.com with ESMTP id xLyPl5GB8RS46qRq
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 12 Apr 2013 09:38:55 -0700 (PDT)
+Received: by mail-pb0-f48.google.com with SMTP id xb4so1498740pbc.21
+	for <xfs@oss.sgi.com>; Fri, 12 Apr 2013 09:38:54 -0700 (PDT)
+Message-ID: <5168388C.5050404@gmail.com>
+Date: Sat, 13 Apr 2013 00:38:36 +0800
+From: Wang Sheng-Hui <shhuiw@gmail.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfs: don't return 0 if generic_segment_checks() find nothing
-	to write
+Subject: Re: [PATCH] xfstests: fix the regex pattern in get_group_list of check
+References: <5167A5D3.4070903@gmail.com> <20130412075728.GD30622@dastard>
+In-Reply-To: <20130412075728.GD30622@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,78 +26,47 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfstests <xfs@oss.sgi.com>, Rich Johnston <rjohnston@sgi.com>, Dave Chinner <dchinner@redhat.com>
 
-From: Jie Liu <jeff.liu@oracle.com>
-
-At xfs_file_aio_write(), we just return 0 which means a successfully operation if the ocount
-is evaluated to 0 at generic_segment_checks().  Generally, it'll occurred if the specified
-write count is 0 from the user space.  However, for example, if the given offset is over the
-maximum file size limitation although nothing would be written into the file, in this case,
-the underlying file system should detect this issue and return a proper errno instead.
-Hence, the beginning pre-checking up against ocount would conceal some real cause and confuse
-the user space program maybe.
-
-To fix it, we can delay the write count verification until xfs_file_aio_write_checks() is done.
-
-This test is performed on 32-bit system without CONFIG_LBADF is enabled.
-Before patching:
-xfs_io -f -c "pwrite 17592186040320 0" /storage/test_file
-wrote 0/0 bytes at offset 17592186040320
-0.000000 bytes, 0 ops; 0.0000 sec (0.000000 bytes/sec and 0.0000 ops/sec)
-
-After patching:
-xfs_io -f -c "pwrite 17592186040320 0" /storage/test_file
-pwrite64: File too large
-
-Signed-off-by: Jie Liu <jeff.liu@oracle.com>
-
----
- fs/xfs/xfs_file.c |    9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
-
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index f03bf1a..f8a933e 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -671,6 +671,9 @@ xfs_file_dio_aio_write(
- 	if (ret)
- 		goto out;
- 
-+	if (ocount == 0)
-+		goto out;
-+
- 	if (mapping->nrpages) {
- 		ret = -filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
- 						    pos, -1);
-@@ -725,6 +728,9 @@ xfs_file_buffered_aio_write(
- 	if (ret)
- 		goto out;
- 
-+	if (ocount == 0)
-+		goto out;
-+
- 	/* We can write back this queue in page reclaim */
- 	current->backing_dev_info = mapping->backing_dev_info;
- 
-@@ -772,9 +778,6 @@ xfs_file_aio_write(
- 	if (ret)
- 		return ret;
- 
--	if (ocount == 0)
--		return 0;
--
- 	sb_start_write(inode->i_sb);
- 
- 	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) {
--- 
-1.7.9.5
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gMjAxM+W5tDA05pyIMTLml6UgMTU6NTcsIERhdmUgQ2hpbm5lciB3cm90ZToKPiBPbiBGcmks
+IEFwciAxMiwgMjAxMyBhdCAwMjoxMjozNVBNICswODAwLCBXYW5nIFNoZW5nLUh1aSB3cm90ZToK
+Pj4gSW4gZ3JvdXAgZmlsZXMsIG5vbiBjb21tZW50IGxpbmUgc3RhcnRzIHdpdGggYSAzLWRpZ2l0
+cywgdGhlbiBmb2xsb3dlZCBieQo+PiBzcGFjZSBhbmQgb3RoZXIgY2hhcmFjdGVycywgYnV0IG5v
+IGdyb3VwIG5hbWVzLgo+Cj4gSSBkb24ndCBmb2xsb3cuIEEgZ3JvdXAgZmlsZSBsaW5lIGxvb2tz
+IGxpa2U6Cj4KPiAwMDMgZGIgYXV0byBxdWljawo+Cj4gV2hpY2ggZGVmaW5lcyB0aGUgdGVzdCBu
+YW1lLCBmb2xsb3dlZCBieSB0aGUgZ3JvdXAgbmFtZXMgdGhlIHRlc3QKPiBiZWxvbmdzIHRvLgo+
+Cj4+IFRoZSBvbGQgcmVnZXggaW4gZ2V0X2dyb3VwX2xpc3QgdXNlcyB0aGUgZ3JvdXAgbmFtZSBh
+cyBwYXJ0IG9mIHRoZSByZWdleCwKPj4gYW5kIGZhaWxzICcuL2NoZWNrIC1nIHhmcycgcnVuOgo+
+PiAgICAgICAgICBHcm91cCAieGZzIiBpcyBlbXB0eSBvciBub3QgZGVmaW5lZD8KPgo+IFdlbGws
+IHllcywgInhmcyIgaXMgbm90IGEgZGVmaW5lZCBncm91cCBuYW1lOgo+Cj4gJCBncmVwIHhmcyB0
+ZXN0cy8qL2dyb3VwCj4gJAo+Cj4gSWYgSSBkZWZpbmUgYSAieGZzIiBncm91cCBieSBhc3NpZ25p
+bmcgdGVzdHMgdG8gaXQsIGNoZWNrIHJ1bnMganVzdAo+IGZpbmUuCj4KPiAkIGdyZXAgeGZzIHRl
+c3RzLyovZ3JvdXAKPiB0ZXN0cy94ZnMvZ3JvdXA6MDAzIGRiIGF1dG8gcXVpY2sgeGZzCj4gJCBz
+dWRvIC4vY2hlY2sgLWcgeGZzCj4gRlNUWVAgICAgICAgICAtLSB4ZnMgKGRlYnVnKQo+IFBMQVRG
+T1JNICAgICAgLS0gTGludXgveDg2XzY0IHRlc3QtMiAzLjkuMC1yYzQtZGdjKwo+IE1LRlNfT1BU
+SU9OUyAgLS0gLWYgLWJzaXplPTQwOTYgL2Rldi92ZGIKPiBNT1VOVF9PUFRJT05TIC0tIC9kZXYv
+dmRiIC9tbnQvc2NyYXRjaAo+Cj4geGZzLzAwMyAgMXMKPiBSYW46IHhmcy8wMDMKPiBQYXNzZWQg
+YWxsIDEgdGVzdHMKPiAkCj4KPiBTbyB3aGF0IGNoZWNrIGlzIGRvaW5nIGxvb2tzIHBlcmZlY3Rs
+eSBPSyB0byBtZSBhbmQgZG9lc24ndCBuZWVkCj4gY2hhbmdpbmcuCj4KPj4gVGhlIHBhdGNoIHJl
+bW92ZXMgdGhlIHBhdHRlcm4gZm9yIGdyb3VwIG5hbWUsIGFuZCB0aHVzIHdlIGNhbiB0cmlnZ2Vy
+IHRlc3RzCj4+IGxpa2UgIi4vY2hlY2sgLWcgeGZzIiBhcyBub3JtYWwuCj4KPiBJZiB5b3Ugd2Fu
+dCB0byBydW4gYWxsIHRoZSB0ZXN0cyBpbiBhIHNwZWNpZmljIHN1YmRpcmVjdG9yeSByZWdhcmRs
+ZXNzCj4gb2YgZ3JvdXBzLCB0aGVuIHlvdSBjYW4gZG8gaXQgbGlrZToKPgo+ICQgc3VkbyAuL2No
+ZWNrIHhmcy9bMC05XVswLTldWzAtOV0KClRoYW5rcywgRGF2ZS4KCkkgY29uZnVzZWQgdGhlIGdy
+b3VwIHdpdGggZnMgdHlwZS4KCj4gRlNUWVAgICAgICAgICAtLSB4ZnMgKGRlYnVnKQo+IFBMQVRG
+T1JNICAgICAgLS0gTGludXgveDg2XzY0IHRlc3QtMiAzLjkuMC1yYzQtZGdjKwo+IE1LRlNfT1BU
+SU9OUyAgLS0gLWYgLWJzaXplPTQwOTYgL2Rldi92ZGIKPiBNT1VOVF9PUFRJT05TIC0tIC9kZXYv
+dmRiIC9tbnQvc2NyYXRjaAo+Cj4geGZzLzAwMyAgMHMKPiB4ZnMvMDA0ICAwcwo+IHhmcy8wMDgg
+IDFzCj4gLi4uLi4KPgo+IFRoZXJlJ3MgZGVmaW5pdGVseSBiZXR0ZXIgd2F5cyB0byBkbyB0aGlz
+LCBidXQgY29uZmxhdGluZyBzb3VyY2UgdHJlZQo+IGxheW91dCB3aXRoIHJ1bnRpbWUgdGVzdCBn
+cm91cCBkZWZpbml0aW9ucyBpcyBub3QgaXQuIDspCj4KPiBQZXJoYXBzIHNvbWV0aGluZyBsaWtl
+ICJjaGVjayB4ZnMiIHdpbGwganVzdCBydW4gYWxsIHRlc3RzIGluIHRoZQo+IHhmcyB0ZXN0IGRp
+ciwgc2ltaWxhciBmb3IgZXh0NCwgc2hhcmVkLCBldGM/Cj4KPiBDaGVlcnMsCj4KPiBEYXZlLgo+
+CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFp
+bGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0
+aW5mby94ZnMK
