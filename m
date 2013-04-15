@@ -1,33 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 120757F58
-	for <xfs@oss.sgi.com>; Mon, 15 Apr 2013 04:39:33 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id CB6FC7F4C
+	for <xfs@oss.sgi.com>; Mon, 15 Apr 2013 06:02:20 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id F41C8304039
-	for <xfs@oss.sgi.com>; Mon, 15 Apr 2013 02:39:29 -0700 (PDT)
-Received: from smtp-tls.univ-nantes.fr (smtptls2-lmb.cpub.univ-nantes.fr
-	[193.52.103.111]) by cuda.sgi.com with ESMTP id
-	jGRF9OqAl35cj1PN for <xfs@oss.sgi.com>;
-	Mon, 15 Apr 2013 02:39:28 -0700 (PDT)
-Received: from localhost (localhost [127.0.0.1])
-	by smtp-tls.univ-nantes.fr (Postfix) with ESMTP id 5686E40174D
-	for <xfs@oss.sgi.com>; Mon, 15 Apr 2013 11:39:27 +0200 (CEST)
-Received: from smtp-tls.univ-nantes.fr ([127.0.0.1])
-	by localhost (smtptls2-lmb.cpub.univ-nantes.fr [127.0.0.1])
-	(amavisd-new, port 10024)
-	with LMTP id ItPMMruBiSRt for <xfs@oss.sgi.com>;
-	Mon, 15 Apr 2013 11:39:27 +0200 (CEST)
-Received: from [IPv6:2001:660:7220:0:2da5:fb76:c9be:5314] (unknown
-	[IPv6:2001:660:7220:0:2da5:fb76:c9be:5314])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by smtp-tls.univ-nantes.fr (Postfix) with ESMTPSA id 391A34016E1
-	for <xfs@oss.sgi.com>; Mon, 15 Apr 2013 11:39:27 +0200 (CEST)
-Message-ID: <516BCACE.1040900@univ-nantes.fr>
-Date: Mon, 15 Apr 2013 11:39:26 +0200
-From: Yann Dupont <Yann.Dupont@univ-nantes.fr>
-MIME-Version: 1.0
-Subject: kernels 3.4 slower due to allocation workqueue
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B5AA08F8039
+	for <xfs@oss.sgi.com>; Mon, 15 Apr 2013 04:02:17 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id BeDZhi3UTJHyBPVa for
+	<xfs@oss.sgi.com>; Mon, 15 Apr 2013 04:02:17 -0700 (PDT)
+Received: from int-mx12.intmail.prod.int.phx2.redhat.com
+	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r3FB2GL5028254
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Mon, 15 Apr 2013 07:02:16 -0400
+From: Eryu Guan <eguan@redhat.com>
+Subject: [PATCH] xfstests generic 311: test fallocate(2) ENOSPC when file size
+	is greater than 4G
+Date: Mon, 15 Apr 2013 19:02:06 +0800
+Message-Id: <1366023726-6724-1-git-send-email-eguan@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,63 +26,117 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: Eryu Guan <eguan@redhat.com>
 
-Hello,
-last week we received new machines (DELL R720xd) for an extension of our =
+ENOSPC in fallocate(2) could corrupt ext4 when file size > 4G
 
-ceph cluster.
-(64 Gb ram, 2x Xeon E5-2650, PERC H710P (really LSI MEGARAID), and 12x3 =
+Regression test for commit
+29ae07b ext4: Fix overflow caused by missing cast in ext4_fallocate()
 
-TB disks + 2SSD (not used as cachecade))
+Signed-off-by: Eryu Guan <eguan@redhat.com>
+---
+ tests/generic/311     | 64 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/311.out |  2 ++
+ tests/generic/group   |  1 +
+ 3 files changed, 67 insertions(+)
+ create mode 100644 tests/generic/311
+ create mode 100644 tests/generic/311.out
 
-I was doing test on the raid card with kernel 3.4.38 to try to find what =
-
-I can get of this beast with RAID5, when I noticed an unusual slow =
-
-values on compilebench. The difference is very visible on the initial =
-
-create tests (can detail more if needed).
-
-I finally observed that ONLY 3.4 kernels exhibit that behaviour ; =
-
-3.3.xxx and before are OK, 3.5.xxx and later are back to good values.
-
-I bisected the problem to this commit
-
-c999a223c2f0d31c64ef7379814cea1378b2b800 is the first bad commit
-commit c999a223c2f0d31c64ef7379814cea1378b2b800
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Thu Mar 22 05:15:07 2012 +0000
-
-  xfs: introduce an allocation workqueue
-
-I understand this regression is not a bug, and probably just a corner =
-
-case of the new code, that was certainly corrected after during 3.5 =
-
-development (didn't tried to bisect this one, maybe dave know what is =
-
-the corrective patch ?)
-
-The problem is that 3.4 is the last long-term kernel for the moment, and =
-
-it's unfortunate it shows this regression.
-
-Maybe a backport of the fix (if this backport is possible AND not very =
-
-intrusive) could be a good idea ?
-
-Cheers,
-
--- =
-
-Yann Dupont - Service IRTS, DSI Universit=E9 de Nantes
-Tel : 02.53.48.49.20 - Mail/Jabber : Yann.Dupont@univ-nantes.fr
+diff --git a/tests/generic/311 b/tests/generic/311
+new file mode 100644
+index 0000000..721d8cc
+--- /dev/null
++++ b/tests/generic/311
+@@ -0,0 +1,64 @@
++#! /bin/bash
++# FS QA Test No. 311
++#
++# ENOSPC in fallocate(2) could corrupt ext4 when file size > 4G
++#
++# Regression test for commit
++# 29ae07b ext4: Fix overflow caused by missing cast in ext4_fallocate()
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2013 Red Hat, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux
++_require_xfs_io_falloc
++_require_scratch
++
++rm -f $seqres.full
++_scratch_mkfs_sized $((5 * 1024 * 1024 * 1024)) >>$seqres.full 2>&1
++_scratch_mount >>$seqres.full 2>&1
++
++echo "Silence is golden"
++
++# fallocate(2) a 6G(> 4G) file on a 5G fs
++$XFS_IO_PROG -f -c "falloc 0 6g" $SCRATCH_MNT/testfile.$seq >>$seqres.full 2>&1
++
++_scratch_unmount
++_check_scratch_fs
++status=0
++exit
+diff --git a/tests/generic/311.out b/tests/generic/311.out
+new file mode 100644
+index 0000000..62f2530
+--- /dev/null
++++ b/tests/generic/311.out
+@@ -0,0 +1,2 @@
++QA output created by 311
++Silence is golden
+diff --git a/tests/generic/group b/tests/generic/group
+index eb52833..cb15afe 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -113,3 +113,4 @@
+ 308 auto quick
+ 309 auto quick
+ 310 auto
++311 auto quick prealloc enospc
+-- 
+1.8.1.4
 
 _______________________________________________
 xfs mailing list
