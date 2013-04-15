@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C70B97F50
-	for <xfs@oss.sgi.com>; Mon, 15 Apr 2013 08:33:42 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 9D2B88F8037
-	for <xfs@oss.sgi.com>; Mon, 15 Apr 2013 06:33:42 -0700 (PDT)
-Received: from mail-ie0-f175.google.com (mail-ie0-f175.google.com
-	[209.85.223.175]) by cuda.sgi.com with ESMTP id
-	HWyoF2LCy9AoKHnZ (version=TLSv1 cipher=RC4-SHA bits=128
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 75FBD7F51
+	for <xfs@oss.sgi.com>; Mon, 15 Apr 2013 08:36:11 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B629CAC006
+	for <xfs@oss.sgi.com>; Mon, 15 Apr 2013 06:36:07 -0700 (PDT)
+Received: from mail-ie0-f178.google.com (mail-ie0-f178.google.com
+	[209.85.223.178]) by cuda.sgi.com with ESMTP id
+	PihS87vzYGkOeCOi (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 15 Apr 2013 06:33:40 -0700 (PDT)
-Received: by mail-ie0-f175.google.com with SMTP id c12so5670462ieb.20
-	for <xfs@oss.sgi.com>; Mon, 15 Apr 2013 06:33:39 -0700 (PDT)
+	Mon, 15 Apr 2013 06:36:04 -0700 (PDT)
+Received: by mail-ie0-f178.google.com with SMTP id bn7so5665554ieb.37
+	for <xfs@oss.sgi.com>; Mon, 15 Apr 2013 06:36:04 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CADFMGuJMjKc1QoS-Ewt6wG2uSWjyWfQevQg7ZVMer0XSpx3Vjg@mail.gmail.com>
+In-Reply-To: <CADFMGuJDhq810CRE1TMJga6LN25i+Xm9EeGEhO_wTZrbXe8EFg@mail.gmail.com>
 References: <CADFMGuJm5bPPwbbUtYwrCVDL23KExJTw_-VRX2UEEdZjo+i5oA@mail.gmail.com>
 	<CADFMGu+=MM2yc=_peboV7JTNJ8F05TJfexmEErzcf0D8mAWFRg@mail.gmail.com>
 	<CADFMGuKqkPbpcU=taqjTR4sA3o=w1LLAnKoEuj=OhJqEbQVijw@mail.gmail.com>
@@ -34,8 +34,9 @@ References: <CADFMGuJm5bPPwbbUtYwrCVDL23KExJTw_-VRX2UEEdZjo+i5oA@mail.gmail.com>
 	<CADFMGuJmNLTcyb4aQmbto--dgFBgP55QWeaP+grAoPL+q8eRCg@mail.gmail.com>
 	<CADFMGuKsDHFt_XOvjHKR=s6c7LsJYw=Jr5DXvTyswrXQT2g7yA@mail.gmail.com>
 	<CADFMGuJMjKc1QoS-Ewt6wG2uSWjyWfQevQg7ZVMer0XSpx3Vjg@mail.gmail.com>
-Date: Mon, 15 Apr 2013 21:33:39 +0800
-Message-ID: <CADFMGuJDhq810CRE1TMJga6LN25i+Xm9EeGEhO_wTZrbXe8EFg@mail.gmail.com>
+	<CADFMGuJDhq810CRE1TMJga6LN25i+Xm9EeGEhO_wTZrbXe8EFg@mail.gmail.com>
+Date: Mon, 15 Apr 2013 21:36:04 +0800
+Message-ID: <CADFMGuKdUJ6U5_tVNGStZRyALp94n=M7x7C_CVqAfAbEwsuBFw@mail.gmail.com>
 Subject: Re: need help how to debug xfs crash issue xfs_iunlink_remove:
 	xfs_inotobp() returned error 22
 From: =?GB2312?B?t/vTwMzO?= <yongtaofu@gmail.com>
@@ -47,422 +48,438 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============7372520950817931850=="
+Content-Type: multipart/mixed; boundary="===============4426932401414803422=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
 Cc: Ben Myers <bpm@sgi.com>, Eric Sandeen <sandeen@sandeen.net>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
---===============7372520950817931850==
-Content-Type: multipart/alternative; boundary=20cf303dd2b0f323ea04da664c60
+--===============4426932401414803422==
+Content-Type: multipart/alternative; boundary=089e0111e07498c28304da6655f4
 
---20cf303dd2b0f323ea04da664c60
+--089e0111e07498c28304da6655f4
 Content-Type: text/plain; charset=GB2312
 Content-Transfer-Encoding: quoted-printable
 
-and xfs kernel trace is:
-Apr 15 20:43:03 10 kernel: XFS (sdb): xfs_iunlink_remove: xfs_inotobp()
-returned error 22.
-Apr 15 20:43:03 10 kernel: XFS (sdb): xfs_inactive: xfs_ifree returned
-error 22
-Apr 15 20:43:03 10 kernel: Pid: 3093, comm: glusterfsd Not tainted
-2.6.32-279.el6.x86_64 #1
-Apr 15 20:43:03 10 kernel: Call Trace:
-Apr 15 20:43:03 10 kernel: [<ffffffffa02d4212>] ? xfs_inactive+0x442/0x460
-[xfs]
-Apr 15 20:43:03 10 kernel: [<ffffffffa02e1790>] ?
-xfs_fs_clear_inode+0xa0/0xd0 [xfs]
-Apr 15 20:43:03 10 kernel: [<ffffffff81195adc>] ? clear_inode+0xac/0x140
-Apr 15 20:43:03 10 kernel: [<ffffffff81196296>] ?
-generic_delete_inode+0x196/0x1d0
-Apr 15 20:43:03 10 kernel: [<ffffffff81196335>] ?
-generic_drop_inode+0x65/0x80
-Apr 15 20:43:03 10 kernel: [<ffffffff81195182>] ? iput+0x62/0x70
-Apr 15 20:43:03 10 kernel: [<ffffffff81191ce0>] ? dentry_iput+0x90/0x100
-Apr 15 20:43:03 10 kernel: [<ffffffff81191e41>] ? d_kill+0x31/0x60
-Apr 15 20:43:03 10 kernel: [<ffffffff8119386c>] ? dput+0x7c/0x150
-Apr 15 20:43:03 10 kernel: [<ffffffff8117c9c9>] ? __fput+0x189/0x210
-Apr 15 20:43:03 10 kernel: [<ffffffff8117ca75>] ? fput+0x25/0x30
-Apr 15 20:43:03 10 kernel: [<ffffffff8117849d>] ? filp_close+0x5d/0x90
-Apr 15 20:43:03 10 kernel: [<ffffffff81178575>] ? sys_close+0xa5/0x100
-Apr 15 20:43:03 10 kernel: [<ffffffff8100b308>] ? tracesys+0xd9/0xde
-Apr 15 20:43:03 10 kernel: XFS (sdb): xfs_do_force_shutdown(0x1) called
-from line 1186 of file fs/xfs/xfs_vnodeops.c.  Return address =3D
-0xffffffffa02d422b
-Apr 15 20:43:03 10 kernel: XFS (sdb): I/O Error Detected. Shutting down
-filesystem
-Apr 15 20:43:03 10 kernel: XFS (sdb): Please umount the filesystem and
-rectify the problem(s)
-Apr 15 20:43:13 10 kernel: XFS (sdb): xfs_log_force: error 5 returned.
+More info about it is: It happened exactly when glusterfs rebalance
+complete.
 
 
 2013/4/15 =B7=FB=D3=C0=CC=CE <yongtaofu@gmail.com>
 
-> Dear Brian and xfs experts,
-> Brain your scripts works and I am able to reproduce it with glusterfs
-> rebalance on our test cluster. 2 of our server xfs shutdown during
-> glusterfs rebalance, the shutdown userspace stacktrace both related to
-> pthread. See logs bellow, What's your opinion? Thank you very much!
-> logs:
-> [root@10.23.72.93 ~]# cat xfs.log
->
-> --- xfs_imap -- module("xfs").function("xfs_imap@fs/xfs/xfs_ialloc.c:1257=
-").return
-> -- return=3D0x16
-> vars: mp=3D0xffff882017a50800 tp=3D0xffff881c81797c70 ino=3D0xffffffff
-> imap=3D0xffff88100e2f7c08 flags=3D0x0 agbno=3D? agino=3D? agno=3D? blks_p=
-er_cluster=3D?
-> chunk_agbno=3D? cluster_agbno=3D? error=3D? offset=3D? offset_agbno=3D? _=
-_func__=3D[...]
-> mp: m_agno_log =3D 0x5, m_agino_log =3D 0x20
-> mp->m_sb: sb_agcount =3D 0x1c, sb_agblocks =3D 0xffffff0, sb_inopblog =3D=
- 0x4,
-> sb_agblklog =3D 0x1c, sb_dblocks =3D 0x1b4900000
-> imap: im_blkno =3D 0x0, im_len =3D 0xa078, im_boffset =3D 0x86ea
-> kernel backtrace:
-> Returning from:  0xffffffffa02b3ab0 : xfs_imap+0x0/0x280 [xfs]
-> Returning to  :  0xffffffffa02b9599 : xfs_inotobp+0x49/0xc0 [xfs]
->  0xffffffffa02b96f1 : xfs_iunlink_remove+0xe1/0x320 [xfs]
->  0xffffffff81501a69
->  0x0 (inexact)
-> user backtrace:
->  0x3bd1a0e5ad [/lib64/libpthread-2.12.so+0xe5ad/0x219000]
->
-> --- xfs_iunlink_remove -- module("xfs").function("xfs_iunlink_remove@fs/x=
-fs/xfs_inode.c:1680").return
-> -- return=3D0x16
-> vars: tp=3D0xffff881c81797c70 ip=3D0xffff881003c13c00 next_ino=3D? mp=3D?=
- agi=3D?
-> dip=3D? agibp=3D0xffff880109b47e20 ibp=3D? agno=3D? agino=3D? next_agino=
-=3D? last_ibp=3D?
-> last_dip=3D0xffff882000000000 bucket_index=3D? offset=3D?
-> last_offset=3D0xffffffffffff8810 error=3D? __func__=3D[...]
-> ip: i_ino =3D 0x113, i_flags =3D 0x0
-> ip->i_d: di_nlink =3D 0x0, di_gen =3D 0x0
-> [root@10.23.72.93 ~]#
-> [root@10.23.72.94 ~]# cat xfs.log
->
-> --- xfs_imap -- module("xfs").function("xfs_imap@fs/xfs/xfs_ialloc.c:1257=
-").return
-> -- return=3D0x16
-> vars: mp=3D0xffff881017c6c800 tp=3D0xffff8801037acea0 ino=3D0xffffffff
-> imap=3D0xffff882017101c08 flags=3D0x0 agbno=3D? agino=3D? agno=3D? blks_p=
-er_cluster=3D?
-> chunk_agbno=3D? cluster_agbno=3D? error=3D? offset=3D? offset_agbno=3D? _=
-_func__=3D[...]
-> mp: m_agno_log =3D 0x5, m_agino_log =3D 0x20
-> mp->m_sb: sb_agcount =3D 0x1c, sb_agblocks =3D 0xffffff0, sb_inopblog =3D=
- 0x4,
-> sb_agblklog =3D 0x1c, sb_dblocks =3D 0x1b4900000
-> imap: im_blkno =3D 0x0, im_len =3D 0xd98, im_boffset =3D 0x547
-> kernel backtrace:
-> Returning from:  0xffffffffa02b3ab0 : xfs_imap+0x0/0x280 [xfs]
-> Returning to  :  0xffffffffa02b9599 : xfs_inotobp+0x49/0xc0 [xfs]
->  0xffffffffa02b96f1 : xfs_iunlink_remove+0xe1/0x320 [xfs]
->  0xffffffff81501a69
->  0x0 (inexact)
-> user backtrace:
->  0x30cd40e5ad [/lib64/libpthread-2.12.so+0xe5ad/0x219000]
->
-> --- xfs_iunlink_remove -- module("xfs").function("xfs_iunlink_remove@fs/x=
-fs/xfs_inode.c:1680").return
-> -- return=3D0x16
-> vars: tp=3D0xffff8801037acea0 ip=3D0xffff880e697c8800 next_ino=3D? mp=3D?=
- agi=3D?
-> dip=3D? agibp=3D0xffff880d846c2d60 ibp=3D? agno=3D? agino=3D? next_agino=
-=3D? last_ibp=3D?
-> last_dip=3D0xffff881017c6c800 bucket_index=3D? offset=3D?
-> last_offset=3D0xffffffffffff880e error=3D? __func__=3D[...]
-> ip: i_ino =3D 0x142, i_flags =3D 0x0
-> ip->i_d: di_nlink =3D 0x0, di_gen =3D 0x3565732e
->
+> and xfs kernel trace is:
+> Apr 15 20:43:03 10 kernel: XFS (sdb): xfs_iunlink_remove: xfs_inotobp()
+> returned error 22.
+> Apr 15 20:43:03 10 kernel: XFS (sdb): xfs_inactive: xfs_ifree returned
+> error 22
+> Apr 15 20:43:03 10 kernel: Pid: 3093, comm: glusterfsd Not tainted
+> 2.6.32-279.el6.x86_64 #1
+> Apr 15 20:43:03 10 kernel: Call Trace:
+> Apr 15 20:43:03 10 kernel: [<ffffffffa02d4212>] ? xfs_inactive+0x442/0x46=
+0
+> [xfs]
+> Apr 15 20:43:03 10 kernel: [<ffffffffa02e1790>] ?
+> xfs_fs_clear_inode+0xa0/0xd0 [xfs]
+> Apr 15 20:43:03 10 kernel: [<ffffffff81195adc>] ? clear_inode+0xac/0x140
+> Apr 15 20:43:03 10 kernel: [<ffffffff81196296>] ?
+> generic_delete_inode+0x196/0x1d0
+> Apr 15 20:43:03 10 kernel: [<ffffffff81196335>] ?
+> generic_drop_inode+0x65/0x80
+> Apr 15 20:43:03 10 kernel: [<ffffffff81195182>] ? iput+0x62/0x70
+> Apr 15 20:43:03 10 kernel: [<ffffffff81191ce0>] ? dentry_iput+0x90/0x100
+> Apr 15 20:43:03 10 kernel: [<ffffffff81191e41>] ? d_kill+0x31/0x60
+> Apr 15 20:43:03 10 kernel: [<ffffffff8119386c>] ? dput+0x7c/0x150
+> Apr 15 20:43:03 10 kernel: [<ffffffff8117c9c9>] ? __fput+0x189/0x210
+> Apr 15 20:43:03 10 kernel: [<ffffffff8117ca75>] ? fput+0x25/0x30
+> Apr 15 20:43:03 10 kernel: [<ffffffff8117849d>] ? filp_close+0x5d/0x90
+> Apr 15 20:43:03 10 kernel: [<ffffffff81178575>] ? sys_close+0xa5/0x100
+> Apr 15 20:43:03 10 kernel: [<ffffffff8100b308>] ? tracesys+0xd9/0xde
+> Apr 15 20:43:03 10 kernel: XFS (sdb): xfs_do_force_shutdown(0x1) called
+> from line 1186 of file fs/xfs/xfs_vnodeops.c.  Return address =3D
+> 0xffffffffa02d422b
+> Apr 15 20:43:03 10 kernel: XFS (sdb): I/O Error Detected. Shutting down
+> filesystem
+> Apr 15 20:43:03 10 kernel: XFS (sdb): Please umount the filesystem and
+> rectify the problem(s)
+> Apr 15 20:43:13 10 kernel: XFS (sdb): xfs_log_force: error 5 returned.
 >
 >
 > 2013/4/15 =B7=FB=D3=C0=CC=CE <yongtaofu@gmail.com>
 >
->> Also glusterfs use a lot of hardlink for self-heal:
->> --------T 2 root root 0 Apr 15 11:58 /mnt/xfsd/testbug/998416323
->> ---------T 2 root root 0 Apr 15 11:58 /mnt/xfsd/testbug/999296624
->> ---------T 2 root root 0 Apr 15 12:24 /mnt/xfsd/testbug/999568484
->> ---------T 2 root root 0 Apr 15 11:58 /mnt/xfsd/testbug/999956875
->> ---------T 2 root root 0 Apr 15 11:58
->> /mnt/xfsd/testbug/.glusterfs/05/2f/052f4e3e-c379-4a3c-b995-a10fdaca33d0
->> ---------T 2 root root 0 Apr 15 11:58
->> /mnt/xfsd/testbug/.glusterfs/05/95/0595272e-ce2b-45d5-8693-d02c00b94d9d
->> ---------T 2 root root 0 Apr 15 11:58
->> /mnt/xfsd/testbug/.glusterfs/05/ca/05ca00a0-92a7-44cf-b6e3-380496aafaa4
->> ---------T 2 root root 0 Apr 15 12:24
->> /mnt/xfsd/testbug/.glusterfs/0a/23/0a238ca7-3cef-4540-9c98-6bf631551b21
->> ---------T 2 root root 0 Apr 15 11:58
->> /mnt/xfsd/testbug/.glusterfs/0a/4b/0a4b640b-f675-4708-bb59-e2369ffbbb9d
->> Does it related?
+>> Dear Brian and xfs experts,
+>> Brain your scripts works and I am able to reproduce it with glusterfs
+>> rebalance on our test cluster. 2 of our server xfs shutdown during
+>> glusterfs rebalance, the shutdown userspace stacktrace both related to
+>> pthread. See logs bellow, What's your opinion? Thank you very much!
+>> logs:
+>> [root@10.23.72.93 ~]# cat xfs.log
+>>
+>> --- xfs_imap -- module("xfs").function("xfs_imap@fs/xfs/xfs_ialloc.c:125=
+7").return
+>> -- return=3D0x16
+>> vars: mp=3D0xffff882017a50800 tp=3D0xffff881c81797c70 ino=3D0xffffffff
+>> imap=3D0xffff88100e2f7c08 flags=3D0x0 agbno=3D? agino=3D? agno=3D? blks_=
+per_cluster=3D?
+>> chunk_agbno=3D? cluster_agbno=3D? error=3D? offset=3D? offset_agbno=3D? =
+__func__=3D[...]
+>> mp: m_agno_log =3D 0x5, m_agino_log =3D 0x20
+>> mp->m_sb: sb_agcount =3D 0x1c, sb_agblocks =3D 0xffffff0, sb_inopblog =
+=3D 0x4,
+>> sb_agblklog =3D 0x1c, sb_dblocks =3D 0x1b4900000
+>> imap: im_blkno =3D 0x0, im_len =3D 0xa078, im_boffset =3D 0x86ea
+>> kernel backtrace:
+>> Returning from:  0xffffffffa02b3ab0 : xfs_imap+0x0/0x280 [xfs]
+>> Returning to  :  0xffffffffa02b9599 : xfs_inotobp+0x49/0xc0 [xfs]
+>>  0xffffffffa02b96f1 : xfs_iunlink_remove+0xe1/0x320 [xfs]
+>>  0xffffffff81501a69
+>>  0x0 (inexact)
+>> user backtrace:
+>>  0x3bd1a0e5ad [/lib64/libpthread-2.12.so+0xe5ad/0x219000]
+>>
+>> --- xfs_iunlink_remove -- module("xfs").function("xfs_iunlink_remove@fs/=
+xfs/xfs_inode.c:1680").return
+>> -- return=3D0x16
+>> vars: tp=3D0xffff881c81797c70 ip=3D0xffff881003c13c00 next_ino=3D? mp=3D=
+? agi=3D?
+>> dip=3D? agibp=3D0xffff880109b47e20 ibp=3D? agno=3D? agino=3D? next_agino=
+=3D? last_ibp=3D?
+>> last_dip=3D0xffff882000000000 bucket_index=3D? offset=3D?
+>> last_offset=3D0xffffffffffff8810 error=3D? __func__=3D[...]
+>> ip: i_ino =3D 0x113, i_flags =3D 0x0
+>> ip->i_d: di_nlink =3D 0x0, di_gen =3D 0x0
+>> [root@10.23.72.93 ~]#
+>> [root@10.23.72.94 ~]# cat xfs.log
+>>
+>> --- xfs_imap -- module("xfs").function("xfs_imap@fs/xfs/xfs_ialloc.c:125=
+7").return
+>> -- return=3D0x16
+>> vars: mp=3D0xffff881017c6c800 tp=3D0xffff8801037acea0 ino=3D0xffffffff
+>> imap=3D0xffff882017101c08 flags=3D0x0 agbno=3D? agino=3D? agno=3D? blks_=
+per_cluster=3D?
+>> chunk_agbno=3D? cluster_agbno=3D? error=3D? offset=3D? offset_agbno=3D? =
+__func__=3D[...]
+>> mp: m_agno_log =3D 0x5, m_agino_log =3D 0x20
+>> mp->m_sb: sb_agcount =3D 0x1c, sb_agblocks =3D 0xffffff0, sb_inopblog =
+=3D 0x4,
+>> sb_agblklog =3D 0x1c, sb_dblocks =3D 0x1b4900000
+>> imap: im_blkno =3D 0x0, im_len =3D 0xd98, im_boffset =3D 0x547
+>> kernel backtrace:
+>> Returning from:  0xffffffffa02b3ab0 : xfs_imap+0x0/0x280 [xfs]
+>> Returning to  :  0xffffffffa02b9599 : xfs_inotobp+0x49/0xc0 [xfs]
+>>  0xffffffffa02b96f1 : xfs_iunlink_remove+0xe1/0x320 [xfs]
+>>  0xffffffff81501a69
+>>  0x0 (inexact)
+>> user backtrace:
+>>  0x30cd40e5ad [/lib64/libpthread-2.12.so+0xe5ad/0x219000]
+>>
+>> --- xfs_iunlink_remove -- module("xfs").function("xfs_iunlink_remove@fs/=
+xfs/xfs_inode.c:1680").return
+>> -- return=3D0x16
+>> vars: tp=3D0xffff8801037acea0 ip=3D0xffff880e697c8800 next_ino=3D? mp=3D=
+? agi=3D?
+>> dip=3D? agibp=3D0xffff880d846c2d60 ibp=3D? agno=3D? agino=3D? next_agino=
+=3D? last_ibp=3D?
+>> last_dip=3D0xffff881017c6c800 bucket_index=3D? offset=3D?
+>> last_offset=3D0xffffffffffff880e error=3D? __func__=3D[...]
+>> ip: i_ino =3D 0x142, i_flags =3D 0x0
+>> ip->i_d: di_nlink =3D 0x0, di_gen =3D 0x3565732e
+>>
 >>
 >>
 >> 2013/4/15 =B7=FB=D3=C0=CC=CE <yongtaofu@gmail.com>
 >>
->>> Dear xfs experts,
->>> Now I'm deploying Brian's system script in out cluster. But from last
->>> night till now 5 servers in our 24 servers xfs shutdown with the same
->>> error. I run xfs_repair command and found all the lost inodes are glust=
-erfs
->>> dht link files. This explains why the xfs shutdown tend to happen durin=
-g
->>> glusterfs rebalance. During glusterfs rebalance procedure a lot of dhk =
-link
->>> files may be unlinked. For example the following inodes are found in
->>> lost+found in one of the servers:
->>> [root@* lost+found]# pwd
->>> /mnt/xfsd/lost+found
->>> [root@* lost+found]# ls -l
->>> total 740
->>> ---------T 1 root root 0 Apr  8 21:06 100119
->>> ---------T 1 root root 0 Apr  8 21:11 101123
->>> ---------T 1 root root 0 Apr  8 21:19 102659
->>> ---------T 1 root root 0 Apr 12 14:46 1040919
->>> ---------T 1 root root 0 Apr 12 14:58 1041943
->>> ---------T 1 root root 0 Apr  8 21:32 105219
->>> ---------T 1 root root 0 Apr  8 21:37 105731
->>> ---------T 1 root root 0 Apr 12 17:48 1068055
->>> ---------T 1 root root 0 Apr 12 18:38 1073943
->>> ---------T 1 root root 0 Apr  8 21:54 108035
->>> ---------T 1 root root 0 Apr 12 21:49 1091095
->>> ---------T 1 root root 0 Apr 13 00:17 1111063
->>> ---------T 1 root root 0 Apr 13 03:51 1121815
->>> ---------T 1 root root 0 Apr  8 22:25 112387
->>> ---------T 1 root root 0 Apr 13 06:39 1136151
->>> ...
->>> [root@* lost+found]# getfattr -m . -d -e hex *
->>>
->>> # file: 96007
->>> trusted.afr.mams-cq-mt-video-client-3=3D0x000000000000000000000000
->>> trusted.afr.mams-cq-mt-video-client-4=3D0x000000000000000000000000
->>> trusted.afr.mams-cq-mt-video-client-5=3D0x000000000000000000000000
->>> trusted.gfid=3D0xa0370d8a9f104dafbebbd0e6dd7ce1f7
->>>
->>> trusted.glusterfs.dht.linkto=3D0x6d616d732d63712d6d742d766964656f2d7265=
-706c69636174652d3600
->>>
->>> trusted.glusterfs.quota.ca34e1ce-f046-4ed4-bbd1-261b21bfe0b8.contri=3D0=
-x0000000049dff000
->>>
->>> # file: 97027
->>> trusted.afr.mams-cq-mt-video-client-3=3D0x000000000000000000000000
->>> trusted.afr.mams-cq-mt-video-client-4=3D0x000000000000000000000000
->>> trusted.afr.mams-cq-mt-video-client-5=3D0x000000000000000000000000
->>> trusted.gfid=3D0xc1c1fe2ec7034442a623385f43b04c25
->>>
->>> trusted.glusterfs.dht.linkto=3D0x6d616d732d63712d6d742d766964656f2d7265=
-706c69636174652d3600
->>>
->>> trusted.glusterfs.quota.ca34e1ce-f046-4ed4-bbd1-261b21bfe0b8.contri=3D0=
-x000000006ac78000
->>>
->>> # file: 97559
->>> trusted.afr.mams-cq-mt-video-client-3=3D0x000000000000000000000000
->>> trusted.afr.mams-cq-mt-video-client-4=3D0x000000000000000000000000
->>> trusted.afr.mams-cq-mt-video-client-5=3D0x000000000000000000000000
->>> trusted.gfid=3D0xcf7c17013c914511bda4d1c743fae118
->>>
->>> trusted.glusterfs.dht.linkto=3D0x6d616d732d63712d6d742d766964656f2d7265=
-706c69636174652d3500
->>>
->>> trusted.glusterfs.quota.ca34e1ce-f046-4ed4-bbd1-261b21bfe0b8.contri=3D0=
-x00000000519fb000
->>>
->>> # file: 98055
->>> trusted.afr.mams-cq-mt-video-client-3=3D0x000000000000000000000000
->>> trusted.afr.mams-cq-mt-video-client-4=3D0x000000000000000000000000
->>> trusted.afr.mams-cq-mt-video-client-5=3D0x000000000000000000000000
->>> trusted.gfid=3D0xe86abc6e2c4b44c28d415fbbe34f2102
->>>
->>> trusted.glusterfs.dht.linkto=3D0x6d616d732d63712d6d742d766964656f2d7265=
-706c69636174652d3600
->>>
->>> trusted.glusterfs.quota.ca34e1ce-f046-4ed4-bbd1-261b21bfe0b8.contri=3D0=
-x000000004c098000
->>>
->>> # file: 98567
->>> trusted.afr.mams-cq-mt-video-client-3=3D0x000000000000000000000000
->>> trusted.afr.mams-cq-mt-video-client-4=3D0x000000000000000000000000
->>> trusted.afr.mams-cq-mt-video-client-5=3D0x000000000000000000000000
->>> trusted.gfid=3D0x12543a2efbdf4b9fa61c6d89ca396f80
->>>
->>> trusted.glusterfs.dht.linkto=3D0x6d616d732d63712d6d742d766964656f2d7265=
-706c69636174652d3500
->>>
->>> trusted.glusterfs.quota.ca34e1ce-f046-4ed4-bbd1-261b21bfe0b8.contri=3D0=
-x000000006bc98000
->>>
->>> # file: 98583
->>> trusted.afr.mams-cq-mt-video-client-3=3D0x000000000000000000000000
->>> trusted.afr.mams-cq-mt-video-client-4=3D0x000000000000000000000000
->>> trusted.afr.mams-cq-mt-video-client-5=3D0x000000000000000000000000
->>> trusted.gfid=3D0x760d16d3b7974cfb9c0a665a0982c470
->>>
->>> trusted.glusterfs.dht.linkto=3D0x6d616d732d63712d6d742d766964656f2d7265=
-706c69636174652d3500
->>>
->>> trusted.glusterfs.quota.ca34e1ce-f046-4ed4-bbd1-261b21bfe0b8.contri=3D0=
-x000000006cde9000
->>>
->>> # file: 99607
->>> trusted.afr.mams-cq-mt-video-client-3=3D0x000000000000000000000000
->>> trusted.afr.mams-cq-mt-video-client-4=3D0x000000000000000000000000
->>> trusted.afr.mams-cq-mt-video-client-5=3D0x000000000000000000000000
->>> trusted.gfid=3D0x0849a732ea204bc3b8bae830b46881da
->>>
->>> trusted.glusterfs.dht.linkto=3D0x6d616d732d63712d6d742d766964656f2d7265=
-706c69636174652d3500
->>>
->>> trusted.glusterfs.quota.ca34e1ce-f046-4ed4-bbd1-261b21bfe0b8.contri=3D0=
-x00000000513f1000
->>> ...
->>>
->>> What do you think about it? Thank you very much.
+>>> Also glusterfs use a lot of hardlink for self-heal:
+>>> --------T 2 root root 0 Apr 15 11:58 /mnt/xfsd/testbug/998416323
+>>> ---------T 2 root root 0 Apr 15 11:58 /mnt/xfsd/testbug/999296624
+>>> ---------T 2 root root 0 Apr 15 12:24 /mnt/xfsd/testbug/999568484
+>>> ---------T 2 root root 0 Apr 15 11:58 /mnt/xfsd/testbug/999956875
+>>> ---------T 2 root root 0 Apr 15 11:58
+>>> /mnt/xfsd/testbug/.glusterfs/05/2f/052f4e3e-c379-4a3c-b995-a10fdaca33d0
+>>> ---------T 2 root root 0 Apr 15 11:58
+>>> /mnt/xfsd/testbug/.glusterfs/05/95/0595272e-ce2b-45d5-8693-d02c00b94d9d
+>>> ---------T 2 root root 0 Apr 15 11:58
+>>> /mnt/xfsd/testbug/.glusterfs/05/ca/05ca00a0-92a7-44cf-b6e3-380496aafaa4
+>>> ---------T 2 root root 0 Apr 15 12:24
+>>> /mnt/xfsd/testbug/.glusterfs/0a/23/0a238ca7-3cef-4540-9c98-6bf631551b21
+>>> ---------T 2 root root 0 Apr 15 11:58
+>>> /mnt/xfsd/testbug/.glusterfs/0a/4b/0a4b640b-f675-4708-bb59-e2369ffbbb9d
+>>> Does it related?
 >>>
 >>>
->>> 2013/4/12 =B7=FB=D3=C0=CC=CE <yongtaofu@gmail.com>
+>>> 2013/4/15 =B7=FB=D3=C0=CC=CE <yongtaofu@gmail.com>
 >>>
->>>> Hi Brian,
+>>>> Dear xfs experts,
+>>>> Now I'm deploying Brian's system script in out cluster. But from last
+>>>> night till now 5 servers in our 24 servers xfs shutdown with the same
+>>>> error. I run xfs_repair command and found all the lost inodes are glus=
+terfs
+>>>> dht link files. This explains why the xfs shutdown tend to happen duri=
+ng
+>>>> glusterfs rebalance. During glusterfs rebalance procedure a lot of dhk=
+ link
+>>>> files may be unlinked. For example the following inodes are found in
+>>>> lost+found in one of the servers:
+>>>> [root@* lost+found]# pwd
+>>>> /mnt/xfsd/lost+found
+>>>> [root@* lost+found]# ls -l
+>>>> total 740
+>>>> ---------T 1 root root 0 Apr  8 21:06 100119
+>>>> ---------T 1 root root 0 Apr  8 21:11 101123
+>>>> ---------T 1 root root 0 Apr  8 21:19 102659
+>>>> ---------T 1 root root 0 Apr 12 14:46 1040919
+>>>> ---------T 1 root root 0 Apr 12 14:58 1041943
+>>>> ---------T 1 root root 0 Apr  8 21:32 105219
+>>>> ---------T 1 root root 0 Apr  8 21:37 105731
+>>>> ---------T 1 root root 0 Apr 12 17:48 1068055
+>>>> ---------T 1 root root 0 Apr 12 18:38 1073943
+>>>> ---------T 1 root root 0 Apr  8 21:54 108035
+>>>> ---------T 1 root root 0 Apr 12 21:49 1091095
+>>>> ---------T 1 root root 0 Apr 13 00:17 1111063
+>>>> ---------T 1 root root 0 Apr 13 03:51 1121815
+>>>> ---------T 1 root root 0 Apr  8 22:25 112387
+>>>> ---------T 1 root root 0 Apr 13 06:39 1136151
+>>>> ...
+>>>> [root@* lost+found]# getfattr -m . -d -e hex *
 >>>>
->>>> Your scripts works for me now after I installed all the rpm built out
->>>> from kernel srpm. I'll try it. Thank you.
+>>>> # file: 96007
+>>>> trusted.afr.mams-cq-mt-video-client-3=3D0x000000000000000000000000
+>>>> trusted.afr.mams-cq-mt-video-client-4=3D0x000000000000000000000000
+>>>> trusted.afr.mams-cq-mt-video-client-5=3D0x000000000000000000000000
+>>>> trusted.gfid=3D0xa0370d8a9f104dafbebbd0e6dd7ce1f7
+>>>>
+>>>> trusted.glusterfs.dht.linkto=3D0x6d616d732d63712d6d742d766964656f2d726=
+5706c69636174652d3600
+>>>>
+>>>> trusted.glusterfs.quota.ca34e1ce-f046-4ed4-bbd1-261b21bfe0b8.contri=3D=
+0x0000000049dff000
+>>>>
+>>>> # file: 97027
+>>>> trusted.afr.mams-cq-mt-video-client-3=3D0x000000000000000000000000
+>>>> trusted.afr.mams-cq-mt-video-client-4=3D0x000000000000000000000000
+>>>> trusted.afr.mams-cq-mt-video-client-5=3D0x000000000000000000000000
+>>>> trusted.gfid=3D0xc1c1fe2ec7034442a623385f43b04c25
+>>>>
+>>>> trusted.glusterfs.dht.linkto=3D0x6d616d732d63712d6d742d766964656f2d726=
+5706c69636174652d3600
+>>>>
+>>>> trusted.glusterfs.quota.ca34e1ce-f046-4ed4-bbd1-261b21bfe0b8.contri=3D=
+0x000000006ac78000
+>>>>
+>>>> # file: 97559
+>>>> trusted.afr.mams-cq-mt-video-client-3=3D0x000000000000000000000000
+>>>> trusted.afr.mams-cq-mt-video-client-4=3D0x000000000000000000000000
+>>>> trusted.afr.mams-cq-mt-video-client-5=3D0x000000000000000000000000
+>>>> trusted.gfid=3D0xcf7c17013c914511bda4d1c743fae118
+>>>>
+>>>> trusted.glusterfs.dht.linkto=3D0x6d616d732d63712d6d742d766964656f2d726=
+5706c69636174652d3500
+>>>>
+>>>> trusted.glusterfs.quota.ca34e1ce-f046-4ed4-bbd1-261b21bfe0b8.contri=3D=
+0x00000000519fb000
+>>>>
+>>>> # file: 98055
+>>>> trusted.afr.mams-cq-mt-video-client-3=3D0x000000000000000000000000
+>>>> trusted.afr.mams-cq-mt-video-client-4=3D0x000000000000000000000000
+>>>> trusted.afr.mams-cq-mt-video-client-5=3D0x000000000000000000000000
+>>>> trusted.gfid=3D0xe86abc6e2c4b44c28d415fbbe34f2102
+>>>>
+>>>> trusted.glusterfs.dht.linkto=3D0x6d616d732d63712d6d742d766964656f2d726=
+5706c69636174652d3600
+>>>>
+>>>> trusted.glusterfs.quota.ca34e1ce-f046-4ed4-bbd1-261b21bfe0b8.contri=3D=
+0x000000004c098000
+>>>>
+>>>> # file: 98567
+>>>> trusted.afr.mams-cq-mt-video-client-3=3D0x000000000000000000000000
+>>>> trusted.afr.mams-cq-mt-video-client-4=3D0x000000000000000000000000
+>>>> trusted.afr.mams-cq-mt-video-client-5=3D0x000000000000000000000000
+>>>> trusted.gfid=3D0x12543a2efbdf4b9fa61c6d89ca396f80
+>>>>
+>>>> trusted.glusterfs.dht.linkto=3D0x6d616d732d63712d6d742d766964656f2d726=
+5706c69636174652d3500
+>>>>
+>>>> trusted.glusterfs.quota.ca34e1ce-f046-4ed4-bbd1-261b21bfe0b8.contri=3D=
+0x000000006bc98000
+>>>>
+>>>> # file: 98583
+>>>> trusted.afr.mams-cq-mt-video-client-3=3D0x000000000000000000000000
+>>>> trusted.afr.mams-cq-mt-video-client-4=3D0x000000000000000000000000
+>>>> trusted.afr.mams-cq-mt-video-client-5=3D0x000000000000000000000000
+>>>> trusted.gfid=3D0x760d16d3b7974cfb9c0a665a0982c470
+>>>>
+>>>> trusted.glusterfs.dht.linkto=3D0x6d616d732d63712d6d742d766964656f2d726=
+5706c69636174652d3500
+>>>>
+>>>> trusted.glusterfs.quota.ca34e1ce-f046-4ed4-bbd1-261b21bfe0b8.contri=3D=
+0x000000006cde9000
+>>>>
+>>>> # file: 99607
+>>>> trusted.afr.mams-cq-mt-video-client-3=3D0x000000000000000000000000
+>>>> trusted.afr.mams-cq-mt-video-client-4=3D0x000000000000000000000000
+>>>> trusted.afr.mams-cq-mt-video-client-5=3D0x000000000000000000000000
+>>>> trusted.gfid=3D0x0849a732ea204bc3b8bae830b46881da
+>>>>
+>>>> trusted.glusterfs.dht.linkto=3D0x6d616d732d63712d6d742d766964656f2d726=
+5706c69636174652d3500
+>>>>
+>>>> trusted.glusterfs.quota.ca34e1ce-f046-4ed4-bbd1-261b21bfe0b8.contri=3D=
+0x00000000513f1000
+>>>> ...
+>>>>
+>>>> What do you think about it? Thank you very much.
 >>>>
 >>>>
->>>> 2013/4/12 Brian Foster <bfoster@redhat.com>
+>>>> 2013/4/12 =B7=FB=D3=C0=CC=CE <yongtaofu@gmail.com>
 >>>>
->>>>> On 04/12/2013 04:32 AM, =B7=FB=D3=C0=CC=CE wrote:
->>>>> > Dear xfs experts,
->>>>> > Can I just call xfs_stack_trace(); in the second line of
->>>>> > xfs_do_force_shutdown() to print stack and rebuild kernel to check
->>>>> > what's the error?
->>>>> >
+>>>>> Hi Brian,
 >>>>>
->>>>> I suppose that's a start. If you're willing/able to create and run a
->>>>> modified kernel for the purpose of collecting more debug info, perhap=
-s
->>>>> we can get a bit more creative in collecting more data on the problem
->>>>> (but a stack trace there is a good start).
->>>>>
->>>>> BTW- you might want to place the call after the XFS_FORCED_SHUTDOWN(m=
-p)
->>>>> check almost halfway into the function to avoid duplicate messages.
->>>>>
->>>>> Brian
->>>>>
->>>>> >
->>>>> > 2013/4/12 =B7=FB=D3=C0=CC=CE <yongtaofu@gmail.com <mailto:yongtaofu=
-@gmail.com>>
->>>>> >
->>>>> >     Hi Brian,
->>>>> >     What else I'm missing? Thank you.
->>>>> >     stap -e 'probe module("xfs").function("xfs_iunlink"){}'
->>>>> >
->>>>> >     WARNING: cannot find module xfs debuginfo: No DWARF information
->>>>> found
->>>>> >     semantic error: no match while resolving probe point
->>>>> >     module("xfs").function("xfs_iunlink")
->>>>> >     Pass 2: analysis failed.  Try again with another '--vp 01'
->>>>> option.
->>>>> >
->>>>> >
->>>>> >     2013/4/12 =B7=FB=D3=C0=CC=CE <yongtaofu@gmail.com <mailto:yongt=
-aofu@gmail.com>>
->>>>> >
->>>>> >         ls -l
->>>>> >
->>>>> /usr/lib/debug/lib/modules/2.6.32-279.el6.x86_64/kernel/fs/xfs/xfs.ko=
-.debug
->>>>> >         -r--r--r-- 1 root root 21393024 Apr 12 12:08
->>>>> >
->>>>> /usr/lib/debug/lib/modules/2.6.32-279.el6.x86_64/kernel/fs/xfs/xfs.ko=
-.debug
->>>>> >
->>>>> >         rpm -qa|grep  kernel
->>>>> >         kernel-headers-2.6.32-279.el6.x86_64
->>>>> >         kernel-devel-2.6.32-279.el6.x86_64
->>>>> >         kernel-2.6.32-358.el6.x86_64
->>>>> >         kernel-debuginfo-common-x86_64-2.6.32-279.el6.x86_64
->>>>> >         abrt-addon-kerneloops-2.0.8-6.el6.x86_64
->>>>> >         kernel-firmware-2.6.32-358.el6.noarch
->>>>> >         kernel-debug-2.6.32-358.el6.x86_64
->>>>> >         kernel-debuginfo-2.6.32-279.el6.x86_64
->>>>> >         dracut-kernel-004-283.el6.noarch
->>>>> >         libreport-plugin-kerneloops-2.0.9-5.el6.x86_64
->>>>> >         kernel-devel-2.6.32-358.el6.x86_64
->>>>> >         kernel-2.6.32-279.el6.x86_64
->>>>> >
->>>>> >         rpm -q kernel-debuginfo
->>>>> >         kernel-debuginfo-2.6.32-279.el6.x86_64
->>>>> >
->>>>> >         rpm -q kernel
->>>>> >         kernel-2.6.32-279.el6.x86_64
->>>>> >         kernel-2.6.32-358.el6.x86_64
->>>>> >
->>>>> >         do I need to re probe it?
->>>>> >
->>>>> >
->>>>> >         2013/4/12 Eric Sandeen <sandeen@sandeen.net
->>>>> >         <mailto:sandeen@sandeen.net>>
->>>>> >
->>>>> >             On 4/11/13 11:32 PM, =B7=FB=D3=C0=CC=CE wrote:
->>>>> >             > Hi Brian,
->>>>> >             > Sorry but when I execute the script it says:
->>>>> >             > WARNING: cannot find module xfs debuginfo: No DWARF
->>>>> >             information found
->>>>> >             > semantic error: no match while resolving probe point
->>>>> >             module("xfs").function("xfs_iunlink")
->>>>> >             >
->>>>> >             > uname -a
->>>>> >             > 2.6.32-279.el6.x86_64
->>>>> >             > kernel debuginfo has been installed.
->>>>> >             >
->>>>> >             > Where can I find the correct xfs debuginfo?
->>>>> >
->>>>> >             it should be in the kernel-debuginfo rpm (of the same
->>>>> >             version/release as the kernel rpm you're running)
->>>>> >
->>>>> >             You should have:
->>>>> >
->>>>> >
->>>>> /usr/lib/debug/lib/modules/2.6.32-279.el6.x86_64/kernel/fs/xfs/xfs.ko=
-.debug
->>>>> >
->>>>> >             If not, can you show:
->>>>> >
->>>>> >             # uname -a
->>>>> >             # rpm -q kernel
->>>>> >             # rpm -q kernel-debuginfo
->>>>> >
->>>>> >             -Eric
->>>>> >
->>>>> >
->>>>> >
->>>>> >
->>>>> >
->>>>> >         --
->>>>> >         =B7=FB=D3=C0=CC=CE
->>>>> >
->>>>> >
->>>>> >
->>>>> >
->>>>> >     --
->>>>> >     =B7=FB=D3=C0=CC=CE
->>>>> >
->>>>> >
->>>>> >
->>>>> >
->>>>> > --
->>>>> > =B7=FB=D3=C0=CC=CE
->>>>> >
->>>>> >
->>>>> > _______________________________________________
->>>>> > xfs mailing list
->>>>> > xfs@oss.sgi.com
->>>>> > http://oss.sgi.com/mailman/listinfo/xfs
->>>>> >
+>>>>> Your scripts works for me now after I installed all the rpm built out
+>>>>> from kernel srpm. I'll try it. Thank you.
 >>>>>
 >>>>>
+>>>>> 2013/4/12 Brian Foster <bfoster@redhat.com>
+>>>>>
+>>>>>> On 04/12/2013 04:32 AM, =B7=FB=D3=C0=CC=CE wrote:
+>>>>>> > Dear xfs experts,
+>>>>>> > Can I just call xfs_stack_trace(); in the second line of
+>>>>>> > xfs_do_force_shutdown() to print stack and rebuild kernel to check
+>>>>>> > what's the error?
+>>>>>> >
+>>>>>>
+>>>>>> I suppose that's a start. If you're willing/able to create and run a
+>>>>>> modified kernel for the purpose of collecting more debug info, perha=
+ps
+>>>>>> we can get a bit more creative in collecting more data on the proble=
+m
+>>>>>> (but a stack trace there is a good start).
+>>>>>>
+>>>>>> BTW- you might want to place the call after the
+>>>>>> XFS_FORCED_SHUTDOWN(mp)
+>>>>>> check almost halfway into the function to avoid duplicate messages.
+>>>>>>
+>>>>>> Brian
+>>>>>>
+>>>>>> >
+>>>>>> > 2013/4/12 =B7=FB=D3=C0=CC=CE <yongtaofu@gmail.com <mailto:yongtaof=
+u@gmail.com>>
+>>>>>> >
+>>>>>> >     Hi Brian,
+>>>>>> >     What else I'm missing? Thank you.
+>>>>>> >     stap -e 'probe module("xfs").function("xfs_iunlink"){}'
+>>>>>> >
+>>>>>> >     WARNING: cannot find module xfs debuginfo: No DWARF informatio=
+n
+>>>>>> found
+>>>>>> >     semantic error: no match while resolving probe point
+>>>>>> >     module("xfs").function("xfs_iunlink")
+>>>>>> >     Pass 2: analysis failed.  Try again with another '--vp 01'
+>>>>>> option.
+>>>>>> >
+>>>>>> >
+>>>>>> >     2013/4/12 =B7=FB=D3=C0=CC=CE <yongtaofu@gmail.com <mailto:yong=
+taofu@gmail.com
+>>>>>> >>
+>>>>>> >
+>>>>>> >         ls -l
+>>>>>> >
+>>>>>> /usr/lib/debug/lib/modules/2.6.32-279.el6.x86_64/kernel/fs/xfs/xfs.k=
+o.debug
+>>>>>> >         -r--r--r-- 1 root root 21393024 Apr 12 12:08
+>>>>>> >
+>>>>>> /usr/lib/debug/lib/modules/2.6.32-279.el6.x86_64/kernel/fs/xfs/xfs.k=
+o.debug
+>>>>>> >
+>>>>>> >         rpm -qa|grep  kernel
+>>>>>> >         kernel-headers-2.6.32-279.el6.x86_64
+>>>>>> >         kernel-devel-2.6.32-279.el6.x86_64
+>>>>>> >         kernel-2.6.32-358.el6.x86_64
+>>>>>> >         kernel-debuginfo-common-x86_64-2.6.32-279.el6.x86_64
+>>>>>> >         abrt-addon-kerneloops-2.0.8-6.el6.x86_64
+>>>>>> >         kernel-firmware-2.6.32-358.el6.noarch
+>>>>>> >         kernel-debug-2.6.32-358.el6.x86_64
+>>>>>> >         kernel-debuginfo-2.6.32-279.el6.x86_64
+>>>>>> >         dracut-kernel-004-283.el6.noarch
+>>>>>> >         libreport-plugin-kerneloops-2.0.9-5.el6.x86_64
+>>>>>> >         kernel-devel-2.6.32-358.el6.x86_64
+>>>>>> >         kernel-2.6.32-279.el6.x86_64
+>>>>>> >
+>>>>>> >         rpm -q kernel-debuginfo
+>>>>>> >         kernel-debuginfo-2.6.32-279.el6.x86_64
+>>>>>> >
+>>>>>> >         rpm -q kernel
+>>>>>> >         kernel-2.6.32-279.el6.x86_64
+>>>>>> >         kernel-2.6.32-358.el6.x86_64
+>>>>>> >
+>>>>>> >         do I need to re probe it?
+>>>>>> >
+>>>>>> >
+>>>>>> >         2013/4/12 Eric Sandeen <sandeen@sandeen.net
+>>>>>> >         <mailto:sandeen@sandeen.net>>
+>>>>>> >
+>>>>>> >             On 4/11/13 11:32 PM, =B7=FB=D3=C0=CC=CE wrote:
+>>>>>> >             > Hi Brian,
+>>>>>> >             > Sorry but when I execute the script it says:
+>>>>>> >             > WARNING: cannot find module xfs debuginfo: No DWARF
+>>>>>> >             information found
+>>>>>> >             > semantic error: no match while resolving probe point
+>>>>>> >             module("xfs").function("xfs_iunlink")
+>>>>>> >             >
+>>>>>> >             > uname -a
+>>>>>> >             > 2.6.32-279.el6.x86_64
+>>>>>> >             > kernel debuginfo has been installed.
+>>>>>> >             >
+>>>>>> >             > Where can I find the correct xfs debuginfo?
+>>>>>> >
+>>>>>> >             it should be in the kernel-debuginfo rpm (of the same
+>>>>>> >             version/release as the kernel rpm you're running)
+>>>>>> >
+>>>>>> >             You should have:
+>>>>>> >
+>>>>>> >
+>>>>>> /usr/lib/debug/lib/modules/2.6.32-279.el6.x86_64/kernel/fs/xfs/xfs.k=
+o.debug
+>>>>>> >
+>>>>>> >             If not, can you show:
+>>>>>> >
+>>>>>> >             # uname -a
+>>>>>> >             # rpm -q kernel
+>>>>>> >             # rpm -q kernel-debuginfo
+>>>>>> >
+>>>>>> >             -Eric
+>>>>>> >
+>>>>>> >
+>>>>>> >
+>>>>>> >
+>>>>>> >
+>>>>>> >         --
+>>>>>> >         =B7=FB=D3=C0=CC=CE
+>>>>>> >
+>>>>>> >
+>>>>>> >
+>>>>>> >
+>>>>>> >     --
+>>>>>> >     =B7=FB=D3=C0=CC=CE
+>>>>>> >
+>>>>>> >
+>>>>>> >
+>>>>>> >
+>>>>>> > --
+>>>>>> > =B7=FB=D3=C0=CC=CE
+>>>>>> >
+>>>>>> >
+>>>>>> > _______________________________________________
+>>>>>> > xfs mailing list
+>>>>>> > xfs@oss.sgi.com
+>>>>>> > http://oss.sgi.com/mailman/listinfo/xfs
+>>>>>> >
+>>>>>>
+>>>>>>
+>>>>>
+>>>>>
+>>>>> --
+>>>>> =B7=FB=D3=C0=CC=CE
+>>>>>
+>>>>
 >>>>
 >>>>
 >>>> --
@@ -492,71 +509,91 @@ aofu@gmail.com>>
 --=20
 =B7=FB=D3=C0=CC=CE
 
---20cf303dd2b0f323ea04da664c60
+--089e0111e07498c28304da6655f4
 Content-Type: text/html; charset=GB2312
 Content-Transfer-Encoding: quoted-printable
 
-<div dir=3D"ltr">and xfs kernel trace is:<br>Apr 15 20:43:03 10 kernel: XFS=
- (sdb): xfs_iunlink_remove: xfs_inotobp() returned error 22.<br>Apr 15 20:4=
-3:03 10 kernel: XFS (sdb): xfs_inactive: xfs_ifree returned error 22<br>Apr=
- 15 20:43:03 10 kernel: Pid: 3093, comm: glusterfsd Not tainted 2.6.32-279.=
-el6.x86_64 #1<br>
+<div dir=3D"ltr">More info about it is: It happened exactly when glusterfs =
+rebalance complete.<br></div><div class=3D"gmail_extra"><br><br><div class=
+=3D"gmail_quote">2013/4/15 =B7=FB=D3=C0=CC=CE <span dir=3D"ltr">&lt;<a href=
+=3D"mailto:yongtaofu@gmail.com" target=3D"_blank">yongtaofu@gmail.com</a>&g=
+t;</span><br>
+<blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
+x #ccc solid;padding-left:1ex"><div dir=3D"ltr">and xfs kernel trace is:<br=
+>Apr 15 20:43:03 10 kernel: XFS (sdb): xfs_iunlink_remove: xfs_inotobp() re=
+turned error 22.<br>
+Apr 15 20:43:03 10 kernel: XFS (sdb): xfs_inactive: xfs_ifree returned erro=
+r 22<br>Apr 15 20:43:03 10 kernel: Pid: 3093, comm: glusterfsd Not tainted =
+2.6.32-279.el6.x86_64 #1<br>
 Apr 15 20:43:03 10 kernel: Call Trace:<br>Apr 15 20:43:03 10 kernel: [&lt;f=
 fffffffa02d4212&gt;] ? xfs_inactive+0x442/0x460 [xfs]<br>Apr 15 20:43:03 10=
  kernel: [&lt;ffffffffa02e1790&gt;] ? xfs_fs_clear_inode+0xa0/0xd0 [xfs]<br=
 >
+
 Apr 15 20:43:03 10 kernel: [&lt;ffffffff81195adc&gt;] ? clear_inode+0xac/0x=
 140<br>Apr 15 20:43:03 10 kernel: [&lt;ffffffff81196296&gt;] ? generic_dele=
 te_inode+0x196/0x1d0<br>Apr 15 20:43:03 10 kernel: [&lt;ffffffff81196335&gt=
 ;] ? generic_drop_inode+0x65/0x80<br>
+
 Apr 15 20:43:03 10 kernel: [&lt;ffffffff81195182&gt;] ? iput+0x62/0x70<br>A=
 pr 15 20:43:03 10 kernel: [&lt;ffffffff81191ce0&gt;] ? dentry_iput+0x90/0x1=
 00<br>Apr 15 20:43:03 10 kernel: [&lt;ffffffff81191e41&gt;] ? d_kill+0x31/0=
 x60<br>
+
 Apr 15 20:43:03 10 kernel: [&lt;ffffffff8119386c&gt;] ? dput+0x7c/0x150<br>=
 Apr 15 20:43:03 10 kernel: [&lt;ffffffff8117c9c9&gt;] ? __fput+0x189/0x210<=
 br>Apr 15 20:43:03 10 kernel: [&lt;ffffffff8117ca75&gt;] ? fput+0x25/0x30<b=
 r>
+
 Apr 15 20:43:03 10 kernel: [&lt;ffffffff8117849d&gt;] ? filp_close+0x5d/0x9=
 0<br>Apr 15 20:43:03 10 kernel: [&lt;ffffffff81178575&gt;] ? sys_close+0xa5=
 /0x100<br>Apr 15 20:43:03 10 kernel: [&lt;ffffffff8100b308&gt;] ? tracesys+=
 0xd9/0xde<br>
+
 Apr 15 20:43:03 10 kernel: XFS (sdb): xfs_do_force_shutdown(0x1) called fro=
 m line 1186 of file fs/xfs/xfs_vnodeops.c.&nbsp; Return address =3D 0xfffff=
 fffa02d422b<br>Apr 15 20:43:03 10 kernel: XFS (sdb): I/O Error Detected. Sh=
 utting down filesystem<br>
+
 Apr 15 20:43:03 10 kernel: XFS (sdb): Please umount the filesystem and rect=
 ify the problem(s)<br>Apr 15 20:43:13 10 kernel: XFS (sdb): xfs_log_force: =
-error 5 returned.<br></div><div class=3D"gmail_extra"><br><br><div class=3D=
-"gmail_quote">
+error 5 returned.<br></div><div class=3D"gmail_extra"><div><div class=3D"h5=
+">
+<br><br><div class=3D"gmail_quote">
 2013/4/15 =B7=FB=D3=C0=CC=CE <span dir=3D"ltr">&lt;<a href=3D"mailto:yongta=
 ofu@gmail.com" target=3D"_blank">yongtaofu@gmail.com</a>&gt;</span><br><blo=
 ckquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1px #c=
 cc solid;padding-left:1ex">
+
 <div dir=3D"ltr"><div><div>Dear Brian and xfs experts,<br></div>Brain your =
 scripts works and I am able to reproduce it with glusterfs rebalance on our=
  test cluster. 2 of our server xfs shutdown during glusterfs rebalance, the=
  shutdown userspace stacktrace both related to pthread. See logs bellow, Wh=
 at&#39;s your opinion? Thank you very much!<br>
 
+
 </div>logs:<br>[<a href=3D"mailto:root@10.23.72.93" target=3D"_blank">root@=
 10.23.72.93</a> ~]# cat xfs.log <br><br>--- xfs_imap -- module(&quot;xfs&qu=
 ot;).function(&quot;xfs_imap@fs/xfs/xfs_ialloc.c:1257&quot;).return -- retu=
 rn=3D0x16<br>
+
 vars: mp=3D0xffff882017a50800 tp=3D0xffff881c81797c70 ino=3D0xffffffff imap=
 =3D0xffff88100e2f7c08 flags=3D0x0 agbno=3D? agino=3D? agno=3D? blks_per_clu=
 ster=3D? chunk_agbno=3D? cluster_agbno=3D? error=3D? offset=3D? offset_agbn=
 o=3D? __func__=3D[...]<br>
+
 
 mp: m_agno_log =3D 0x5, m_agino_log =3D 0x20<br>mp-&gt;m_sb: sb_agcount =3D=
  0x1c, sb_agblocks =3D 0xffffff0, sb_inopblog =3D 0x4, sb_agblklog =3D 0x1c=
 , sb_dblocks =3D 0x1b4900000<br>imap: im_blkno =3D 0x0, im_len =3D 0xa078, =
 im_boffset =3D 0x86ea<br>
 
+
 kernel backtrace:<br>Returning from:&nbsp; 0xffffffffa02b3ab0 : xfs_imap+0x=
 0/0x280 [xfs]<br>Returning to&nbsp; :&nbsp; 0xffffffffa02b9599 : xfs_inotob=
 p+0x49/0xc0 [xfs]<br>&nbsp;0xffffffffa02b96f1 : xfs_iunlink_remove+0xe1/0x3=
 20 [xfs]<br>&nbsp;0xffffffff81501a69<br>
+
 
 &nbsp;0x0 (inexact)<br>user backtrace:<br>&nbsp;0x3bd1a0e5ad [/lib64/<a hre=
 f=3D"http://libpthread-2.12.so" target=3D"_blank">libpthread-2.12.so</a>+0x=
@@ -564,15 +601,18 @@ e5ad/0x219000]<br><br>--- xfs_iunlink_remove -- module(&quot;xfs&quot;).fun=
 ction(&quot;xfs_iunlink_remove@fs/xfs/xfs_inode.c:1680&quot;).return -- ret=
 urn=3D0x16<br>
 
+
 vars: tp=3D0xffff881c81797c70 ip=3D0xffff881003c13c00 next_ino=3D? mp=3D? a=
 gi=3D? dip=3D? agibp=3D0xffff880109b47e20 ibp=3D? agno=3D? agino=3D? next_a=
 gino=3D? last_ibp=3D? last_dip=3D0xffff882000000000 bucket_index=3D? offset=
 =3D? last_offset=3D0xffffffffffff8810 error=3D? __func__=3D[...]<br>
 
+
 ip: i_ino =3D 0x113, i_flags =3D 0x0<br>ip-&gt;i_d: di_nlink =3D 0x0, di_ge=
 n =3D 0x0<br>[<a href=3D"mailto:root@10.23.72.93" target=3D"_blank">root@10=
 .23.72.93</a> ~]# <br>[<a href=3D"mailto:root@10.23.72.94" target=3D"_blank=
 ">root@10.23.72.94</a> ~]# cat xfs.log <br>
+
 <br>
 --- xfs_imap -- module(&quot;xfs&quot;).function(&quot;xfs_imap@fs/xfs/xfs_=
 ialloc.c:1257&quot;).return -- return=3D0x16<br>vars: mp=3D0xffff881017c6c8=
@@ -580,15 +620,18 @@ ialloc.c:1257&quot;).return -- return=3D0x16<br>vars: mp=3D0xffff881017c6c8=
 =3D0x0 agbno=3D? agino=3D? agno=3D? blks_per_cluster=3D? chunk_agbno=3D? cl=
 uster_agbno=3D? error=3D? offset=3D? offset_agbno=3D? __func__=3D[...]<br>
 
+
 mp: m_agno_log =3D 0x5, m_agino_log =3D 0x20<br>mp-&gt;m_sb: sb_agcount =3D=
  0x1c, sb_agblocks =3D 0xffffff0, sb_inopblog =3D 0x4, sb_agblklog =3D 0x1c=
 , sb_dblocks =3D 0x1b4900000<br>imap: im_blkno =3D 0x0, im_len =3D 0xd98, i=
 m_boffset =3D 0x547<br>
 
+
 kernel backtrace:<br>Returning from:&nbsp; 0xffffffffa02b3ab0 : xfs_imap+0x=
 0/0x280 [xfs]<br>Returning to&nbsp; :&nbsp; 0xffffffffa02b9599 : xfs_inotob=
 p+0x49/0xc0 [xfs]<br>&nbsp;0xffffffffa02b96f1 : xfs_iunlink_remove+0xe1/0x3=
 20 [xfs]<br>&nbsp;0xffffffff81501a69<br>
+
 
 &nbsp;0x0 (inexact)<br>user backtrace:<br>&nbsp;0x30cd40e5ad [/lib64/<a hre=
 f=3D"http://libpthread-2.12.so" target=3D"_blank">libpthread-2.12.so</a>+0x=
@@ -596,21 +639,25 @@ e5ad/0x219000]<br><br>--- xfs_iunlink_remove -- module(&quot;xfs&quot;).fun=
 ction(&quot;xfs_iunlink_remove@fs/xfs/xfs_inode.c:1680&quot;).return -- ret=
 urn=3D0x16<br>
 
+
 vars: tp=3D0xffff8801037acea0 ip=3D0xffff880e697c8800 next_ino=3D? mp=3D? a=
 gi=3D? dip=3D? agibp=3D0xffff880d846c2d60 ibp=3D? agno=3D? agino=3D? next_a=
 gino=3D? last_ibp=3D? last_dip=3D0xffff881017c6c800 bucket_index=3D? offset=
 =3D? last_offset=3D0xffffffffffff880e error=3D? __func__=3D[...]<br>
 
+
 ip: i_ino =3D 0x142, i_flags =3D 0x0<br>ip-&gt;i_d: di_nlink =3D 0x0, di_ge=
-n =3D 0x3565732e<br><br></div><div class=3D"gmail_extra"><div><div class=3D=
-"h5"><br><br><div class=3D"gmail_quote">2013/4/15 =B7=FB=D3=C0=CC=CE <span =
-dir=3D"ltr">&lt;<a href=3D"mailto:yongtaofu@gmail.com" target=3D"_blank">yo=
-ngtaofu@gmail.com</a>&gt;</span><br>
+n =3D 0x3565732e<br><br></div><div class=3D"gmail_extra"><div><div><br><br>=
+<div class=3D"gmail_quote">2013/4/15 =B7=FB=D3=C0=CC=CE <span dir=3D"ltr">&=
+lt;<a href=3D"mailto:yongtaofu@gmail.com" target=3D"_blank">yongtaofu@gmail=
+.com</a>&gt;</span><br>
+
 
 <blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
 x #ccc solid;padding-left:1ex"><div dir=3D"ltr"><div>Also glusterfs use a l=
 ot of hardlink for self-heal:<br>--------T 2 root root 0 Apr 15 11:58 /mnt/=
 xfsd/testbug/998416323<br>
+
 
 ---------T 2 root root 0 Apr 15 11:58 /mnt/xfsd/testbug/999296624<br>------=
 ---T 2 root root 0 Apr 15 12:24 /mnt/xfsd/testbug/999568484<br>
@@ -620,10 +667,12 @@ xfsd/testbug/998416323<br>
 xfsd/testbug/.glusterfs/05/95/0595272e-ce2b-45d5-8693-d02c00b94d9d<br>
 
 
+
 ---------T 2 root root 0 Apr 15 11:58 /mnt/xfsd/testbug/.glusterfs/05/ca/05=
 ca00a0-92a7-44cf-b6e3-380496aafaa4<br>---------T 2 root root 0 Apr 15 12:24=
  /mnt/xfsd/testbug/.glusterfs/0a/23/0a238ca7-3cef-4540-9c98-6bf631551b21<br=
 >
+
 
 
 ---------T 2 root root 0 Apr 15 11:58 /mnt/xfsd/testbug/.glusterfs/0a/4b/0a=
@@ -643,10 +692,12 @@ n lost+found in one of the servers:<br>
 
 
 
+
 [root@* lost+found]# pwd<br>/mnt/xfsd/lost+found<br>[root@* lost+found]# ls=
  -l<br>total 740<br>---------T 1 root root 0 Apr&nbsp; 8 21:06 100119<br>--=
 -------T 1 root root 0 Apr&nbsp; 8 21:11 101123<br>---------T 1 root root 0=
  Apr&nbsp; 8 21:19 102659<br>
+
 
 
 
@@ -657,10 +708,12 @@ t 0 Apr 12 17:48 1068055<br>
 
 
 
+
 ---------T 1 root root 0 Apr 12 18:38 1073943<br>---------T 1 root root 0 A=
 pr&nbsp; 8 21:54 108035<br>---------T 1 root root 0 Apr 12 21:49 1091095<br=
 >---------T 1 root root 0 Apr 13 00:17 1111063<br>---------T 1 root root 0 =
 Apr 13 03:51 1121815<br>
+
 
 
 
@@ -671,6 +724,7 @@ hex *<br><br># file: 96007<br>trusted.afr.mams-cq-mt-video-client-3=3D0x000=
 
 
 
+
 trusted.afr.mams-cq-mt-video-client-4=3D0x000000000000000000000000<br>trust=
 ed.afr.mams-cq-mt-video-client-5=3D0x000000000000000000000000<br>trusted.gf=
 id=3D0xa0370d8a9f104dafbebbd0e6dd7ce1f7<br>trusted.glusterfs.dht.linkto=3D0=
@@ -678,10 +732,12 @@ x6d616d732d63712d6d742d766964656f2d7265706c69636174652d3600<br>
 
 
 
+
 trusted.glusterfs.quota.ca34e1ce-f046-4ed4-bbd1-261b21bfe0b8.contri=3D0x000=
 0000049dff000<br><br># file: 97027<br>trusted.afr.mams-cq-mt-video-client-3=
 =3D0x000000000000000000000000<br>trusted.afr.mams-cq-mt-video-client-4=3D0x=
 000000000000000000000000<br>
+
 
 
 
@@ -693,10 +749,12 @@ c78000<br>
 
 
 
+
 <br># file: 97559<br>trusted.afr.mams-cq-mt-video-client-3=3D0x000000000000=
 000000000000<br>trusted.afr.mams-cq-mt-video-client-4=3D0x00000000000000000=
 0000000<br>trusted.afr.mams-cq-mt-video-client-5=3D0x0000000000000000000000=
 00<br>
+
 
 
 
@@ -707,10 +765,12 @@ usted.glusterfs.quota.ca34e1ce-f046-4ed4-bbd1-261b21bfe0b8.contri=3D0x00000=
 
 
 
+
 <br># file: 98055<br>trusted.afr.mams-cq-mt-video-client-3=3D0x000000000000=
 000000000000<br>trusted.afr.mams-cq-mt-video-client-4=3D0x00000000000000000=
 0000000<br>trusted.afr.mams-cq-mt-video-client-5=3D0x0000000000000000000000=
 00<br>
+
 
 
 
@@ -721,10 +781,12 @@ usted.glusterfs.quota.ca34e1ce-f046-4ed4-bbd1-261b21bfe0b8.contri=3D0x00000=
 
 
 
+
 <br># file: 98567<br>trusted.afr.mams-cq-mt-video-client-3=3D0x000000000000=
 000000000000<br>trusted.afr.mams-cq-mt-video-client-4=3D0x00000000000000000=
 0000000<br>trusted.afr.mams-cq-mt-video-client-5=3D0x0000000000000000000000=
 00<br>
+
 
 
 
@@ -735,10 +797,12 @@ usted.glusterfs.quota.ca34e1ce-f046-4ed4-bbd1-261b21bfe0b8.contri=3D0x00000=
 
 
 
+
 <br># file: 98583<br>trusted.afr.mams-cq-mt-video-client-3=3D0x000000000000=
 000000000000<br>trusted.afr.mams-cq-mt-video-client-4=3D0x00000000000000000=
 0000000<br>trusted.afr.mams-cq-mt-video-client-5=3D0x0000000000000000000000=
 00<br>
+
 
 
 
@@ -749,10 +813,12 @@ usted.glusterfs.quota.ca34e1ce-f046-4ed4-bbd1-261b21bfe0b8.contri=3D0x00000=
 
 
 
+
 <br># file: 99607<br>trusted.afr.mams-cq-mt-video-client-3=3D0x000000000000=
 000000000000<br>trusted.afr.mams-cq-mt-video-client-4=3D0x00000000000000000=
 0000000<br>trusted.afr.mams-cq-mt-video-client-5=3D0x0000000000000000000000=
 00<br>
+
 
 
 
@@ -763,10 +829,12 @@ usted.glusterfs.quota.ca34e1ce-f046-4ed4-bbd1-261b21bfe0b8.contri=3D0x00000=
 
 
 
+
 ...<br><br></div>What do you think about it? Thank you very much.<br></div>=
 <div class=3D"gmail_extra"><div><div><br><br><div class=3D"gmail_quote">201=
 3/4/12 =B7=FB=D3=C0=CC=CE <span dir=3D"ltr">&lt;<a href=3D"mailto:yongtaofu=
 @gmail.com" target=3D"_blank">yongtaofu@gmail.com</a>&gt;</span><br>
+
 
 
 
@@ -777,12 +845,14 @@ x #ccc solid;padding-left:1ex"><div dir=3D"ltr"><div>Hi Brian,<br><br></div=
 
 
 
+
 </div><div class=3D"gmail_extra"><div><div><br><br><div class=3D"gmail_quot=
 e">
 2013/4/12 Brian Foster <span dir=3D"ltr">&lt;<a href=3D"mailto:bfoster@redh=
 at.com" target=3D"_blank">bfoster@redhat.com</a>&gt;</span><br><blockquote =
 class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid=
 ;padding-left:1ex">
+
 
 
 
@@ -948,16 +1018,19 @@ http://oss.sgi.com/mailman/listinfo/xfs</a><br>
 </blockquote></div><br><br clear=3D"all"><br></div></div><span><font color=
 =3D"#888888">-- <br>=B7=FB=D3=C0=CC=CE
 </font></span></div>
+</blockquote></div><br><br clear=3D"all"><br></div></div><span><font color=
+=3D"#888888">-- <br>=B7=FB=D3=C0=CC=CE
+</font></span></div>
 </blockquote></div><br><br clear=3D"all"><br></div></div><span class=3D"HOE=
 nZb"><font color=3D"#888888">-- <br>=B7=FB=D3=C0=CC=CE
 </font></span></div>
 </blockquote></div><br><br clear=3D"all"><br>-- <br>=B7=FB=D3=C0=CC=CE
 </div>
 
---20cf303dd2b0f323ea04da664c60--
+--089e0111e07498c28304da6655f4--
 
 
---===============7372520950817931850==
+--===============4426932401414803422==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -968,4 +1041,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============7372520950817931850==--
+--===============4426932401414803422==--
