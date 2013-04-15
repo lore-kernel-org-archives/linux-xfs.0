@@ -1,18 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 176F67F4C
-	for <xfs@oss.sgi.com>; Mon, 15 Apr 2013 18:17:23 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 652AD7F50
+	for <xfs@oss.sgi.com>; Mon, 15 Apr 2013 18:29:12 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 05E79304039
-	for <xfs@oss.sgi.com>; Mon, 15 Apr 2013 16:17:20 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id QNrBpjHVuJfZan6C for
-	<xfs@oss.sgi.com>; Mon, 15 Apr 2013 16:17:16 -0700 (PDT)
-Message-ID: <516C89DF.4070904@redhat.com>
-Date: Mon, 15 Apr 2013 19:14:39 -0400
-From: Brian Foster <bfoster@redhat.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D7BCFAC001
+	for <xfs@oss.sgi.com>; Mon, 15 Apr 2013 16:29:08 -0700 (PDT)
+Received: from mail-ie0-f181.google.com (mail-ie0-f181.google.com
+	[209.85.223.181]) by cuda.sgi.com with ESMTP id
+	FeUgkDcI5pnefeaX (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 15 Apr 2013 16:29:07 -0700 (PDT)
+Received: by mail-ie0-f181.google.com with SMTP id as1so2047550iec.40
+	for <xfs@oss.sgi.com>; Mon, 15 Apr 2013 16:29:07 -0700 (PDT)
+Message-ID: <516C8D34.7090602@gmail.com>
+Date: Tue, 16 Apr 2013 07:28:52 +0800
+From: Wang Sheng-Hui <shhuiw@gmail.com>
 MIME-Version: 1.0
-Subject: xfs_iunlink_remove: xfs_inotobp() returned error 22 -- debugging
+Subject: Re: [PATCH v3] xfstests: make install support common/ and tests/ dirs
+References: <516937F9.1020101@gmail.com> <516BFA10.6020102@sgi.com>
+In-Reply-To: <516BFA10.6020102@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,94 +27,65 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: yongtaofu@gmail.com
-Cc: sandeen@sandeen.net, xfs@oss.sgi.com
+To: Rich Johnston <rjohnston@sgi.com>
+Cc: xfstests <xfs@oss.sgi.com>, Dave Chinner <dchinner@redhat.com>
 
-Hi,
-
-Thanks for the data in the previous thread:
-
-http://oss.sgi.com/archives/xfs/2013-04/msg00327.html
-
-I'm spinning off a new thread specifically for this because the original
-thread is already too large and scattered to track. As Eric stated,
-please try to keep data contained in as few messages as possible.
-
-The data confirms Dave's theory where we are going off the end of the
-unlinked list when attempting to remove an inode, pass in NULLAGINO to
-xfs_inotobp() and the attempted conversion to a global inode number
-leads to EINVAL. The next question here is why wasn't the inode listed
-in the probe output on the unlinked inode list?
-
-Unfortunately we're probably going to require to start making some
-debug-level changes to the kernel to make progress on this issue. If you
-are able to recompile a kernel and/or xfs module (which you referred to
-doing in the previous thread), could you start with the patch appended
-to this message[1] and collect the xfs_iunlink and xfs_iunlink_remove
-tracepoint data the next time the problem occurs? E.g.,
-
-	echo 1 > /sys/kernel/debug/tracing/events/xfs/xfs_iunlink/enable
-	echo 1 > /sys/kernel/debug/tracing/events/xfs/xfs_iunlink_remove/enable
-	... reproduce ...
-	cat /sys/kernel/debug/tracing/trace > trace.output
-
-Please also include all data relevant to the crash (in a single mail):
-trace output, stap script output (so we know what inode to search for in
-the trace), references to metadump images, etc. Thanks.
-
-Brian
-
-[1] - Note that the code we're sending here is debug-level and lightly
-tested.
-
----
- fs/xfs/linux-2.6/xfs_trace.h |    2 ++
- fs/xfs/xfs_inode.c           |    4 ++++
- 2 files changed, 6 insertions(+), 0 deletions(-)
-
-diff --git a/fs/xfs/linux-2.6/xfs_trace.h b/fs/xfs/linux-2.6/xfs_trace.h
-index e8ce644..227eb33 100644
---- a/fs/xfs/linux-2.6/xfs_trace.h
-+++ b/fs/xfs/linux-2.6/xfs_trace.h
-@@ -581,6 +581,8 @@ DEFINE_INODE_EVENT(xfs_file_fsync);
- DEFINE_INODE_EVENT(xfs_destroy_inode);
- DEFINE_INODE_EVENT(xfs_write_inode);
- DEFINE_INODE_EVENT(xfs_clear_inode);
-+DEFINE_INODE_EVENT(xfs_iunlink);
-+DEFINE_INODE_EVENT(xfs_iunlink_remove);
-
- DEFINE_INODE_EVENT(xfs_dquot_dqalloc);
- DEFINE_INODE_EVENT(xfs_dquot_dqdetach);
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 796edce..a43bec5 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1670,6 +1670,8 @@ xfs_iunlink(
- 		(sizeof(xfs_agino_t) * bucket_index);
- 	xfs_trans_log_buf(tp, agibp, offset,
- 			  (offset + sizeof(xfs_agino_t) - 1));
-+
-+	trace_xfs_iunlink(ip);
- 	return 0;
- }
-
-@@ -1820,6 +1822,8 @@ xfs_iunlink_remove(
- 				  (offset + sizeof(xfs_agino_t) - 1));
- 		xfs_inobp_check(mp, last_ibp);
- 	}
-+
-+	trace_xfs_iunlink_remove(ip);
- 	return 0;
- }
-
--- 
-1.7.7.6
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gMjAxM+W5tDA05pyIMTXml6UgMjE6MDEsIFJpY2ggSm9obnN0b24gd3JvdGU6Cj4gT24gMDQv
+MTMvMjAxMyAwNTo0OCBBTSwgV2FuZyBTaGVuZy1IdWkgd3JvdGU6Cj4KPj4gZGlmZiAtLWdpdCBh
+L01ha2VmaWxlIGIvTWFrZWZpbGUKPj4gaW5kZXggNmVkZDU1Yy4uNjExYjM2ZCAxMDA2NDQKPj4g
+LS0tIGEvTWFrZWZpbGUKPj4gKysrIGIvTWFrZWZpbGUKPj4gQEAgLTUyLDEyICs1MiwxNSBAQCBM
+RElSVCArPSAkKFNSQ1RBUikKPj4gICBlbmRpZgo+Pgo+PiAgIExJQl9TVUJESVJTID0gaW5jbHVk
+ZSBsaWIKPj4gLVRPT0xfU1VCRElSUyA9IGx0cCBzcmMgbTQKPj4gK1RPT0xfU1VCRElSUyA9IGx0
+cCBzcmMgbTQgY29tbW9uCj4+ICAgaWZlcSAoJChIQVZFX0RNQVBJKSwgdHJ1ZSkKPj4gICBUT09M
+X1NVQkRJUlMgKz0gZG1hcGkKPj4gICBlbmRpZgo+Pgo+PiAtU1VCRElSUyA9ICQoTElCX1NVQkRJ
+UlMpICQoVE9PTF9TVUJESVJTKQo+PiArVEVTVFNfRElSID0gdGVzdHMKPj4gK2V4cG9ydCBURVNU
+U19ESVIKPj4gKwo+PiArU1VCRElSUyA9ICQoTElCX1NVQkRJUlMpICQoVE9PTF9TVUJESVJTKSAk
+KFRFU1RTX0RJUikKPj4KPj4gICBkZWZhdWx0OiBpbmNsdWRlL2J1aWxkZGVmcyAkKERNQVBJX01B
+S0VGSUxFKSAkKFRFU1RTKQo+PiAgIGlmZXEgKCQoSEFWRV9CVUlMRERFRlMpLCBubykKPj4gQEAg
+LTkxLDEyICs5NCw3IEBAIGRlcGVuZDogaW5jbHVkZS9idWlsZGRlZnMgJChhZGRzdWZmaXgKPj4g
+LWRlcGVuZCwkKFNVQkRJUlMpKQo+PiAgIGluc3RhbGw6IGRlZmF1bHQgJChhZGRzdWZmaXggLWlu
+c3RhbGwsJChTVUJESVJTKSkKPj4gICAgICAgJChJTlNUQUxMKSAtbSA3NTUgLWQgJChQS0dfTElC
+X0RJUikKPj4gICAgICAgJChJTlNUQUxMKSAtbSA3NTUgY2hlY2sgJChQS0dfTElCX0RJUikKPj4g
+LSAgICAkKElOU1RBTEwpIC1tIDc1NSBbMC05XT8/ICQoUEtHX0xJQl9ESVIpCj4+IC0gICAgJChJ
+TlNUQUxMKSAtbSA3NTUgcnVuLiogJChQS0dfTElCX0RJUikKPj4gLSAgICAkKElOU1RBTEwpIC1t
+IDY0NCBncm91cCAkKFBLR19MSUJfRElSKQo+PiAgICAgICAkKElOU1RBTEwpIC1tIDY0NCByYW5k
+b21pemUuYXdrICQoUEtHX0xJQl9ESVIpCj4+IC0gICAgJChJTlNUQUxMKSAtbSA2NDQgWzAtOV0/
+Py4qICQoUEtHX0xJQl9ESVIpCj4+IC0gICAgJChJTlNUQUxMKSAtbSA2NDQgY29tbW9uKiAkKFBL
+R19MSUJfRElSKQo+Pgo+PiAgICMgTm90aGluZy4KPj4gICBpbnN0YWxsLWRldiBpbnN0YWxsLWxp
+YjoKPgo+Cj4gTm90IHN1cmUgd2h5IE1ha2VmaWxlIGFib3ZlIHdvdWxkIG5vdCBhcHBseS4gSSBk
+aWQgdGhlIGZvbGxvd2luZzoKPgo+IGdpdCByZXNldCAtLWhhcmQgMmJmY2U2ZDMgIyBSZXZlcnQg
+dG8gY29tbWl0IGJlZm9yZSB2MiBvZiB0aGlzIHBhdGNoLgo+Cj4gQXR0ZW10ZWQgdG8gYXBwbHkg
+cGF0Y2gKPgo+IEFwcGx5aW5nIHBhdGNoIHYzLXhmc3Rlc3RzLW1ha2UtaW5zdGFsbC1zdXBwb3J0
+LWNvbW1vbi1hbmQtdGVzdHMtZGlycy5wYXRjaAo+IHBhdGNoaW5nIGZpbGUgTWFrZWZpbGUKPiBI
+dW5rICMxIEZBSUxFRCBhdCA1Mi4KPiBIdW5rICMyIEZBSUxFRCBhdCA5NC4KPiAyIG91dCBvZiAy
+IGh1bmtzIEZBSUxFRCAtLSByZWplY3RzIGluIGZpbGUgTWFrZWZpbGUKPgo+IFNvIEkgcmVwbGFj
+ZWQgeW91ciBNYWtlZmlsZSBwYXRjaCB3aXRoCj4KPiAgID4gZGlmZiAtLWdpdCBhL01ha2VmaWxl
+IGIvTWFrZWZpbGUKPj4gaW5kZXggNmVkZDU1Yy4uYjAxNDkxZSAxMDA2NDQKPj4gLS0tIGEvTWFr
+ZWZpbGUKPj4gKysrIGIvTWFrZWZpbGUKPj4gQEAgLTUyLDEyICs1MiwxNCBAQCBMRElSVCArPSAk
+KFNSQ1RBUikKPj4gIGVuZGlmCj4+Cj4+ICBMSUJfU1VCRElSUyA9IGluY2x1ZGUgbGliCj4+IC1U
+T09MX1NVQkRJUlMgPSBsdHAgc3JjIG00Cj4+ICtUT09MX1NVQkRJUlMgPSBsdHAgc3JjIG00IGNv
+bW1vbgo+PiAgaWZlcSAoJChIQVZFX0RNQVBJKSwgdHJ1ZSkKPj4gIFRPT0xfU1VCRElSUyArPSBk
+bWFwaQo+PiAgZW5kaWYKPj4KPj4gLVNVQkRJUlMgPSAkKExJQl9TVUJESVJTKSAkKFRPT0xfU1VC
+RElSUykKPj4gK1RFU1RTX0RJUiA9IHRlc3RzCj4+ICtleHBvcnQgVEVTVFNfRElSCj4+ICtTVUJE
+SVJTID0gJChMSUJfU1VCRElSUykgJChUT09MX1NVQkRJUlMpICQoVEVTVFNfRElSKQo+Pgo+PiAg
+ZGVmYXVsdDogaW5jbHVkZS9idWlsZGRlZnMgJChETUFQSV9NQUtFRklMRSkgJChURVNUUykKPj4g
+IGlmZXEgKCQoSEFWRV9CVUlMRERFRlMpLCBubykKPj4gQEAgLTkxLDEyICs5Myw3IEBAIGRlcGVu
+ZDogaW5jbHVkZS9idWlsZGRlZnMgJChhZGRzdWZmaXggLWRlcGVuZCwkKFNVQkRJUlMpKQo+PiAg
+aW5zdGFsbDogZGVmYXVsdCAkKGFkZHN1ZmZpeCAtaW5zdGFsbCwkKFNVQkRJUlMpKQo+PiAgICAg
+ICQoSU5TVEFMTCkgLW0gNzU1IC1kICQoUEtHX0xJQl9ESVIpCj4+ICAgICAgJChJTlNUQUxMKSAt
+bSA3NTUgY2hlY2sgJChQS0dfTElCX0RJUikKPj4gLSAgICAkKElOU1RBTEwpIC1tIDc1NSBbMC05
+XT8/ICQoUEtHX0xJQl9ESVIpCj4+IC0gICAgJChJTlNUQUxMKSAtbSA3NTUgcnVuLiogJChQS0df
+TElCX0RJUikKPj4gLSAgICAkKElOU1RBTEwpIC1tIDY0NCBncm91cCAkKFBLR19MSUJfRElSKQo+
+PiAgICAgICQoSU5TVEFMTCkgLW0gNjQ0IHJhbmRvbWl6ZS5hd2sgJChQS0dfTElCX0RJUikKPj4g
+LSAgICAkKElOU1RBTEwpIC1tIDY0NCBbMC05XT8/LiogJChQS0dfTElCX0RJUikKPj4gLSAgICAk
+KElOU1RBTEwpIC1tIDY0NCBjb21tb24qICQoUEtHX0xJQl9ESVIpCj4+Cj4+ICAjIE5vdGhpbmcu
+Cj4+ICBpbnN0YWxsLWRldiBpbnN0YWxsLWxpYjoKPgo+IFdpbGwgcmV2ZXJ0IHYyIChnaXQgcmV2
+ZXJ0IDI1MTlhOTdkKSBhbmQgY29tbWl0IHdpdGggdGhpcyBtaW5vciBjaGFuZ2UgaXMgRGF2ZSBh
+Z3JlZXMgdG8geW91ciBsYXRlc3QgdmVyc2lvbi4KClRoYW5rcywgUmljaCEKClJlZ2FyZHMsClNo
+ZW5nLUh1aQoKPgo+IFRoYW5rcwo+IC0tUmljaAo+Cj4KCl9fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29t
+Cmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
