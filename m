@@ -1,32 +1,35 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E6C627F4C
-	for <xfs@oss.sgi.com>; Mon, 15 Apr 2013 14:34:41 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C69198F8073
-	for <xfs@oss.sgi.com>; Mon, 15 Apr 2013 12:34:38 -0700 (PDT)
-Message-ID: <516C564A.7000709@redhat.com>
-Date: Mon, 15 Apr 2013 14:34:34 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 1F8EB7F4C
+	for <xfs@oss.sgi.com>; Mon, 15 Apr 2013 15:35:47 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E4F8F304048
+	for <xfs@oss.sgi.com>; Mon, 15 Apr 2013 13:35:43 -0700 (PDT)
+Received: from mail-vc0-f170.google.com (mail-vc0-f170.google.com
+	[209.85.220.170]) by cuda.sgi.com with ESMTP id
+	jVX24ZzaFVD6dpTi (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 15 Apr 2013 13:35:42 -0700 (PDT)
+Received: by mail-vc0-f170.google.com with SMTP id lf10so4325449vcb.1
+	for <xfs@oss.sgi.com>; Mon, 15 Apr 2013 13:35:41 -0700 (PDT)
+Message-ID: <516C649A.8010003@binghamton.edu>
+Date: Mon, 15 Apr 2013 16:35:38 -0400
+From: Dave Hall <kdhall@binghamton.edu>
 MIME-Version: 1.0
-Subject: Re: need help how to debug xfs crash issue xfs_iunlink_remove:
-	xfs_inotobp() returned error 22
-References: <CADFMGuJm5bPPwbbUtYwrCVDL23KExJTw_-VRX2UEEdZjo+i5oA@mail.gmail.com>
-	<516798AE.9050908@sandeen.net>
-	<CADFMGuK67G85+J3LAjS=w_nkkSrj7At9HnPLSL-DBO6g0V=ThA@mail.gmail.com>
-	<CADFMGuLNmSpA+e2Wo0qS5y2evQM=q_oVJJPf6kZkfAP4jfk=6w@mail.gmail.com>
-	<CADFMGuJoar_uKB_Lrq0nKFsbdjyZWFaHXU-ni2ky3sToSQwUSQ@mail.gmail.com>
-	<516800F7.80502@redhat.com>
-	<CADFMGuKH_jYhuxzMQ_4mj_Zv4EgPfpuBYR=fpqBfJPWf=POJPQ@mail.gmail.com>
-	<CADFMGuJmNLTcyb4aQmbto--dgFBgP55QWeaP+grAoPL+q8eRCg@mail.gmail.com>
-	<CADFMGuKsDHFt_XOvjHKR=s6c7LsJYw=Jr5DXvTyswrXQT2g7yA@mail.gmail.com>
-	<CADFMGuJMjKc1QoS-Ewt6wG2uSWjyWfQevQg7ZVMer0XSpx3Vjg@mail.gmail.com>
-	<CADFMGuJDhq810CRE1TMJga6LN25i+Xm9EeGEhO_wTZrbXe8EFg@mail.gmail.com>
-	<CADFMGuKdUJ6U5_tVNGStZRyALp94n=M7x7C_CVqAfAbEwsuBFw@mail.gmail.com>
-	<CADFMGuJ5vngJZDKUPn0=i32-Y_8fpJC+DRzutZ7+D9NSrfCy=Q@mail.gmail.com>
-	<516C0752.8070007@sandeen.net>
-	<CADFMGuJEiqqxn8cOftjLEHjFe2NRaW2f=ay-y55nurezPvkDuA@mail.gmail.com>
-In-Reply-To: <CADFMGuJEiqqxn8cOftjLEHjFe2NRaW2f=ay-y55nurezPvkDuA@mail.gmail.com>
+Subject: Re: xfs_fsr, sunit, and swidth
+References: <5141C1FC.4060209@hardwarefreak.com>
+	<5141C8C1.2080903@hardwarefreak.com>
+	<5141E5CF.10101@binghamton.edu>
+	<5142AE40.6040408@hardwarefreak.com>
+	<20130315114538.GF6369@dastard>
+	<5143F94C.1020708@hardwarefreak.com>
+	<20130316072126.GG6369@dastard> <515082C3.2000006@binghamton.edu>
+	<515361B5.8050603@hardwarefreak.com>
+	<5155F2B2.1010308@binghamton.edu>
+	<20130331012231.GJ6369@dastard> <515C3BF3.60601@binghamton.edu>
+	<51684382.50008@binghamton.edu>
+	<5168AC0B.5010100@hardwarefreak.com>
+In-Reply-To: <5168AC0B.5010100@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,84 +38,64 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: =?UTF-8?B?56ym5rC45rab?= <yongtaofu@gmail.com>
-Cc: Brian Foster <bfoster@redhat.com>, Ben Myers <bpm@sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: stan@hardwarefreak.com
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-T24gNC8xNS8xMyA5OjIxIEFNLCDnrKbmsLjmtpsgd3JvdGU6Cj4gSGkgRXJpYywKPiBJJ20gc29y
-cnkgZm9yIHNwYW1pbmcuCj4gQW5kIEkgZ290IHNvbWUgbW9yZSBpbmZvIGFuZCBob3BlIHlvdSdy
-ZSBpbnRlcmVzdGVkLgoKV2UgYXJlIGludGVyZXN0ZWQ7IFRCSCwgQnJpYW4gYW5kIEkgYXJlIHNw
-ZW5kaW5nIG1vcmUgdGltZSBvbiB0aGlzIG9uZSBiZWNhdXNlCndlIGhhdmUgYSBtdXR1YWwgaW50
-ZXJlc3QgaW4gZml4aW5nIGl0IGZvciBzb21lb25lIHdobyBoZWxwcyBwYXkgb3VyIHNhbGFyaWVz
-LgpXZSByZWFsbHkgYXBwcmVjaWF0ZSB5b3VyIHdpbGxpbmduZXNzIHRvIHRlc3QgJiBkZWJ1Zywg
-c2luY2Ugd2UndmUgYmVlbgp1bmFibGUgdG8gcmVwcm9kdWNlIHRoaXMgbG9jYWxseSBzbyBmYXIs
-IHNvIGFzIGxvbmcgYXMgeW91J3JlIHdpbGxpbmcgdG8KdHJ5IG5ldyB0aGluZ3Mgd2UncmUgd2ls
-bGluZyB0byBrZWVwIHN1Z2dlc3RpbmcgdGhlbS4gIDopCgpJJ20gZ29pbmcgdG8gdGFrZSBzb21l
-IHRpbWUgdG8gdHJ5IHRvIGRpZ2VzdCB0aGUgbmV3IGluZm9ybWF0aW9uLCBhbmQgQnJpYW4Kb3Ig
-SSB3aWxsIGxldCB5b3Uga25vdyBpZiB3ZSBoYXZlIG1vcmUgdGhpbmdzIHRvIHRyeS4KClRoYW5r
-cywKLUVyaWMKCj4gSW4gZ2x1c3RlcmZzMy4zCj4gZ2x1c3RlcmZzZC9zcmMvZ2x1c3RlcmZzZC5j
-IGxpbmUgMTMzMiB0aGVyZSdzIGFuIHVubGluayBvcGVyYXRpb24uCj4gICAgICAgICBpZiAoY3R4
-LT5jbWRfYXJncy5waWRfZmlsZSkgewo+ICAgICAgICAgICAgICAgICB1bmxpbmsgKGN0eC0+Y21k
-X2FyZ3MucGlkX2ZpbGUpOwo+ICAgICAgICAgICAgICAgICBjdHgtPmNtZF9hcmdzLnBpZF9maWxl
-ID0gTlVMTDsKPiAgICAgICAgIH0KPiBHbHVzdGVyZnMgdHJ5IHRvIHVubGluayB0aGUgcmViYWxh
-bmNlIHBpZCBmaWxlIGFmdGVyIGNvbXBsZXRlIGFuZCBtYXkgYmUgdGhpcyBpcyB3aGVyZSB0aGUg
-aXNzdWUgaGFwcGVucy4KPiBTZWUgbG9ncyBiZWxsb3c6Cj4gMS4KPiAvdmFyL2xvZy9zZWN1cmUg
-aW5kaWNhdGVzIEkgc3RhcnQgcmViYWxhbmNlIG9uIEFwciAxNSAxMTo1ODoxMQo+IEFwciAxNSAx
-MTo1ODoxMSAxMCBzdWRvOiAgICAgcm9vdCA6IFRUWT1wdHMvMiA7IFBXRD0vcm9vdCA7IFVTRVI9
-cm9vdCA7IENPTU1BTkQ9L3Vzci9zYmluL2dsdXN0ZXIgdm9sdW1lIHJlYmFsYW5jZSB0ZXN0YnVn
-IHN0YXJ0Cj4gMi4KPiBBZnRlciB4ZnMgc2h1dGRvd24gSSBnb3QgdGhlIGZvbGxvd2luZyBsb2c6
-Cj4gLS0tIHhmc19pdW5saW5rX3JlbW92ZSAtLSBtb2R1bGUoInhmcyIpLmZ1bmN0aW9uKCJ4ZnNf
-aXVubGlua19yZW1vdmVAZnMveGZzL3hmc19pbm9kZS5jOjE2ODAiKS5yZXR1cm4gLS0gcmV0dXJu
-PTB4MTYKPiB2YXJzOiB0cD0weGZmZmY4ODFjODE3OTdjNzAgaXA9MHhmZmZmODgxMDAzYzEzYzAw
-IG5leHRfaW5vPT8gbXA9PyBhZ2k9PyBkaXA9PyBhZ2licD0weGZmZmY4ODAxMDliNDdlMjAgaWJw
-PT8gYWdubz0/IGFnaW5vPT8gbmV4dF9hZ2lubz0/IGxhc3RfaWJwPT8gbGFzdF9kaXA9MHhmZmZm
-ODgyMDAwMDAwMDAwIGJ1Y2tldF9pbmRleD0/IG9mZnNldD0/IGxhc3Rfb2Zmc2V0PTB4ZmZmZmZm
-ZmZmZmZmODgxMCBlcnJvcj0/IF9fZnVuY19fPVsuLi5dCj4gaXA6IGlfaW5vID0gMHgxMTMsIGlf
-ZmxhZ3MgPSAweDAKPiB0aGUgaW5vZGUgaXMgbGVhZCB0byB4ZnMgc2h1dGRvd24gaXMKPiAweDEx
-Mwo+IDMuCj4gSSByZXBhaXIgeGZzIGFuZCBpbiBsb3N0K2ZvdWQgSSBmaW5kIHRoZSBpbm9kZToK
-PiBbcm9vdEAxMC4yMy43Mi45MyA8bWFpbHRvOnJvb3RAMTAuMjMuNzIuOTM+IGxvc3QrZm91bmRd
-IyBwd2QKPiAvbW50L3hmc2QvbG9zdCtmb3VuZAo+IFtyb290QDEwLjIzLjcyLjkzIDxtYWlsdG86
-cm9vdEAxMC4yMy43Mi45Mz4gbG9zdCtmb3VuZF0jIGxzIC1sIDI3NQo+IC0tLS0tLS0tLVQgMSBy
-b290IHJvb3QgMCBBcHIgMTUgMTE6NTggMjc1Cj4gW3Jvb3RAMTAuMjMuNzIuOTMgPG1haWx0bzpy
-b290QDEwLjIzLjcyLjkzPiBsb3N0K2ZvdW5kXSMgc3RhdCAyNzUKPiAgIEZpbGU6IGAyNzUnCj4g
-ICBTaXplOiAwICAgICAgICAgICAgICAgQmxvY2tzOiAwICAgICAgICAgIElPIEJsb2NrOiA0MDk2
-ICAgcmVndWxhciBlbXB0eSBmaWxlCj4gRGV2aWNlOiA4MTBoLzIwNjRkICAgICAgSW5vZGU6IDI3
-NSAgICAgICAgIExpbmtzOiAxCj4gQWNjZXNzOiAoMTAwMC8tLS0tLS0tLS1UKSAgVWlkOiAoICAg
-IDAvICAgIHJvb3QpICAgR2lkOiAoICAgIDAvICAgIHJvb3QpCj4gQWNjZXNzOiAyMDEzLTA0LTE1
-IDExOjU4OjI1LjgzMzQ0MzQ0NSArMDgwMAo+IE1vZGlmeTogMjAxMy0wNC0xNSAxMTo1ODoyNS45
-MTI0NjEyNTYgKzA4MDAKPiBDaGFuZ2U6IDIwMTMtMDQtMTUgMTE6NTg6MjUuOTE1NDQyMDkxICsw
-ODAwCj4gVGhpcyBmaWxlIGlzIGNyZWF0ZWQgYXJvdWQgMjAxMy0wNC0xNSAxMTo1OC4KPiBBbmQg
-dGhlIG90aGVyIGZpbGVzIGluIGxvc3QrZm91ZCBoYXMgZXh0ZW5kZWQgYXR0cmlidXRlIGJ1dCB0
-aGlzIGZpbGUgZG9lc24ndC4gV2hpY2ggbWVhbnMgaXQgaXMgbm90IHBhcnQgb2YgZ2x1c3RlcmZz
-IGJhY2tlbmQgZmlsZXMuIEl0IHNob3VsZCBiZSB0aGUgcmViYWxhbmNlIHBpZCBmaWxlLgo+IAo+
-IFNvIG1heSBiZSB1bmxpbmsgdGhlIHJlYmFsYW5jZSBwaWQgZmlsZSBsZWFkcyB0byB4ZnMgc2h1
-dGRvd24uCj4gCj4gVGhhbmsgeW91Lgo+IAo+IAo+IAo+IDIwMTMvNC8xNSBFcmljIFNhbmRlZW4g
-PHNhbmRlZW5Ac2FuZGVlbi5uZXQgPG1haWx0bzpzYW5kZWVuQHNhbmRlZW4ubmV0Pj4KPiAKPiAg
-ICAgT24gNC8xNS8xMyA4OjQ1IEFNLCDnrKbmsLjmtpsgd3JvdGU6Cj4gICAgID4gQW5kIGF0IHRo
-ZSBzYW1lIHRpbWUgd2UgZ290IHRoZSBmb2xsb3dpbmcgZXJyb3IgbG9nIG9mIGdsdXN0ZXJmczoK
-PiAgICAgPiBbMjAxMy0wNC0xNSAyMDo0MzowMy44NTExNjNdIEkgW2RodC1yZWJhbGFuY2UuYzox
-NjExOmdmX2RlZnJhZ19zdGF0dXNfZ2V0XSAwLWdsdXN0ZXJmczogUmViYWxhbmNlIGlzIGNvbXBs
-ZXRlZAo+ICAgICA+IFsyMDEzLTA0LTE1IDIwOjQzOjAzLjg1MTI0OF0gSSBbZGh0LXJlYmFsYW5j
-ZS5jOjE2MTQ6Z2ZfZGVmcmFnX3N0YXR1c19nZXRdIDAtZ2x1c3RlcmZzOiBGaWxlcyBtaWdyYXRl
-ZDogMTYyOSwgc2l6ZTogMTU4MjMyOTA2NTk1NCwgbG9va3VwczogMTEwMzYsIGZhaWx1cmVzOiA1
-NjEKPiAgICAgPiBbMjAxMy0wNC0xNSAyMDo0MzowMy44ODc2MzRdIFcgW2dsdXN0ZXJmc2QuYzo4
-MzE6Y2xlYW51cF9hbmRfZXhpdF0gKC0tPi9saWI2NC9saWJjLnNvLjYoY2xvbmUrMHg2ZCkgWzB4
-M2JkMTZlNzY3ZF0gKC0tPi9saWI2NC9saWJwdGhyZWFkLnNvLjAoKSBbMHgzYmQxYTA3ODUxXSAo
-LS0+L3Vzci9zYmluL2dsdXN0ZXJmcyhnbHVzdGVyZnNfc2lnd2FpdGVyKzB4ZGQpIFsweDQwNWM5
-ZF0pKSkgMC06IHJlY2VpdmVkIHNpZ251bSAoMTUpLCBzaHV0dGluZyBkb3duCj4gICAgID4gWzIw
-MTMtMDQtMTUgMjA6NDM6MDMuODg3ODc4XSBFIFtycGNzdmMuYzoxMTU1OnJwY3N2Y19wcm9ncmFt
-X3VucmVnaXN0ZXJfcG9ydG1hcF0gMC1ycGMtc2VydmljZTogQ291bGQgbm90IHVucmVnaXN0ZXIg
-d2l0aCBwb3J0bWFwCj4gICAgID4KPiAKPiAgICAgV2UnbGwgdGFrZSBhIGxvb2ssIHRoYW5rcy4K
-PiAKPiAgICAgR29pbmcgZm9yd2FyZCwgY291bGQgSSBhc2sgdGhhdCB5b3UgdGFrZSBhIGZldyBt
-aW51dGVzIHRvIGJhdGNoIHVwIHRoZSBpbmZvcm1hdGlvbiwgcmF0aGVyIHRoYW4gc2VuZGluZyBz
-ZXZlcmFsIGVtYWlscyBpbiBhIHJvdz8gIEl0IG1ha2VzIGl0IG11Y2ggaGFyZGVyIHRvIGNvbGxl
-Y3QgdGhlIGluZm9ybWF0aW9uIHdoZW4gaXQncyBzcHJlYWQgYWNyb3NzIHNvIG1hbnkgZW1haWxz
-Lgo+IAo+ICAgICBUaGFua3MsCj4gICAgIC1FcmljCj4gCj4gCj4gCj4gCj4gLS0gCj4g56ym5rC4
-5rabCj4gCj4gCj4gX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X18KPiB4ZnMgbWFpbGluZyBsaXN0Cj4geGZzQG9zcy5zZ2kuY29tCj4gaHR0cDovL29zcy5zZ2ku
-Y29tL21haWxtYW4vbGlzdGluZm8veGZzCj4gCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRw
-Oi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+Stan,
+
+I understand that this will be an ongoing problem.  It seems like all I 
+could do at this point would be to ' manually defrag' my inodes the hard 
+way by doing this 'copy' operation whenever things slow down.  (Either 
+that or go get my PHD in file systems and try to come up with a better 
+inode management algorithm.)  I will be keeping two copies of this data 
+going forward anyways.
+
+Are there any other suggestions you might have at this time - xfs or 
+otherwise?
+
+-Dave
+
+Dave Hall
+Binghamton University
+kdhall@binghamton.edu
+607-760-2328 (Cell)
+607-777-4641 (Office)
+
+
+On 04/12/2013 08:51 PM, Stan Hoeppner wrote:
+> On 4/12/2013 12:25 PM, Dave Hall wrote:
+>    
+>> Stan,
+>>
+>> IDid this post get lost in the shuffle?  Looking at it I think it could
+>> have been a bit unclear.  What I need to do anyways is have a second,
+>> off-site copy of my backup data.  So I'm going to be building a second
+>> array.  In copying, in order to preserve the hard link structure of the
+>> source array I'd have to run a sequence of cp -al / rsync calls that
+>> would mimic what rsnapshot did to get me to where I am right now.  (Note
+>> that I could also potentially use rsync --link-dest.)
+>>
+>> So the question is how would the target xfs file system fare as far as
+>> my inode fragmentation situation is concerned?  I'm hoping that since
+>> the target would be a fresh file system, and since during the 'copy'
+>> phase I'd only be adding inodes, that the inode allocation would be more
+>> compact and orderly than what I have on the source array since.  What do
+>> you think?
+>>      
+> The question isn't what it will look like initially, as your inodes
+> shouldn't be sparsely allocated as with your current aged filesystem.
+>
+> The question is how quickly the problem will arise on the new filesystem
+> as you free inodes.  I don't have the answer to that question.  There's
+> no way to predict this that I know of.
+>
+>    
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
