@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1421D7F4C
-	for <xfs@oss.sgi.com>; Mon, 15 Apr 2013 07:44:15 -0500 (CDT)
-Message-ID: <516BF5A7.4050100@sgi.com>
-Date: Mon, 15 Apr 2013 07:42:15 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 1C3637F52
+	for <xfs@oss.sgi.com>; Mon, 15 Apr 2013 07:44:21 -0500 (CDT)
+Message-ID: <516BF64C.2050108@sgi.com>
+Date: Mon, 15 Apr 2013 07:45:00 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
 Subject: Re: [PATCH v2] xfstests: make install support common/ and tests/ dirs
