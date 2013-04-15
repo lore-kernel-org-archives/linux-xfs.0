@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 885957F4C
-	for <xfs@oss.sgi.com>; Mon, 15 Apr 2013 06:10:04 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 166C8AC002
-	for <xfs@oss.sgi.com>; Mon, 15 Apr 2013 04:10:03 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id A0C567F52
+	for <xfs@oss.sgi.com>; Mon, 15 Apr 2013 06:10:06 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1C023AC002
+	for <xfs@oss.sgi.com>; Mon, 15 Apr 2013 04:10:05 -0700 (PDT)
 Received: from relay.sw.ru (mailhub.sw.ru [195.214.232.25]) by cuda.sgi.com
-	with ESMTP id UkyvQ9nBcJ8L4cBN (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id 9zDuqWd9eojNOaID (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 15 Apr 2013 04:10:01 -0700 (PDT)
+	Mon, 15 Apr 2013 04:10:00 -0700 (PDT)
 From: Dmitry Monakhov <dmonakhov@openvz.org>
-Subject: [PATCH 1/2] xfstests: dump _require_fio output to log
-Date: Mon, 15 Apr 2013 15:09:47 +0400
-Message-Id: <1366024188-21756-1-git-send-email-dmonakhov@openvz.org>
+Subject: [PATCH 2/2] xfstests: fix fio's arguments
+Date: Mon, 15 Apr 2013 15:09:48 +0400
+Message-Id: <1366024188-21756-2-git-send-email-dmonakhov@openvz.org>
+In-Reply-To: <1366024188-21756-1-git-send-email-dmonakhov@openvz.org>
+References: <1366024188-21756-1-git-send-email-dmonakhov@openvz.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,32 +31,65 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: linux-fsdevel@vger.kernel.org, Dmitry Monakhov <dmonakhov@openvz.org>, linux-ext4@vger.kernel.org, dchinner@redhat.com
 
-This should helps to find incompatibility issues.
+Option 'group_reporting' semantics was changes for recent fio versions
+In fact we do not need it here, let's just drop it.
 
 Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
 ---
- common/rc      |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
- mode change 100644 => 100755 tests/ext4/301
+ tests/ext4/301 |    1 -
+ tests/ext4/302 |    1 -
+ tests/ext4/303 |    1 -
+ tests/ext4/304 |    1 -
+ 4 files changed, 0 insertions(+), 4 deletions(-)
 
-diff --git a/common/rc b/common/rc
-index 09fb83f..ad3e378 100644
---- a/common/rc
-+++ b/common/rc
-@@ -1967,8 +1967,8 @@ _require_fio()
- 		return 1;
- 	fi
- 
--	$FIO_PROG --warnings-fatal --showcmd $job >/dev/null 2>&1
--	[ $? -eq 0 ] || _notrun "$FIO_PROG too old"
-+	$FIO_PROG --warnings-fatal --showcmd $job >> $seqres.full 2>&1
-+	[ $? -eq 0 ] || _notrun "$FIO_PROG too old, see $seqres.full"
- }
- 
- # Does freeze work on this fs?
 diff --git a/tests/ext4/301 b/tests/ext4/301
-old mode 100644
-new mode 100755
+index b6c2f11..e1583d4 100755
+--- a/tests/ext4/301
++++ b/tests/ext4/301
+@@ -59,7 +59,6 @@ filesize=${FILE_SIZE}
+ size=999G
+ buffered=0
+ fadvise_hint=0
+-group_reporting
+ 
+ #################################
+ # Test1
+diff --git a/tests/ext4/302 b/tests/ext4/302
+index 9307ab4..abca805 100644
+--- a/tests/ext4/302
++++ b/tests/ext4/302
+@@ -59,7 +59,6 @@ filesize=${FILE_SIZE}
+ size=999G
+ buffered=0
+ fadvise_hint=0
+-group_reporting
+ 
+ ##########################################
+ # Test2
+diff --git a/tests/ext4/303 b/tests/ext4/303
+index 84d8f7b..7051576 100644
+--- a/tests/ext4/303
++++ b/tests/ext4/303
+@@ -59,7 +59,6 @@ filesize=${FILE_SIZE}
+ size=999G
+ buffered=0
+ fadvise_hint=0
+-group_reporting
+ 
+ #################################
+ # Test3
+diff --git a/tests/ext4/304 b/tests/ext4/304
+index 7b90f1d..5d15ecb 100644
+--- a/tests/ext4/304
++++ b/tests/ext4/304
+@@ -60,7 +60,6 @@ filesize=${FILE_SIZE}
+ size=999G
+ buffered=0
+ fadvise_hint=0
+-group_reporting
+ 
+ #################################
+ # Test4
 -- 
 1.7.1
 
