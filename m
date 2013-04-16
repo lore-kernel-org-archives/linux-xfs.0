@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8C9A57F53
-	for <xfs@oss.sgi.com>; Tue, 16 Apr 2013 11:23:56 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6CE0F304051
-	for <xfs@oss.sgi.com>; Tue, 16 Apr 2013 09:23:53 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 56DE67F56
+	for <linux-xfs@oss.sgi.com>; Tue, 16 Apr 2013 11:25:34 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 378A38F8081
+	for <linux-xfs@oss.sgi.com>; Tue, 16 Apr 2013 09:25:31 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	hU7d7g6syToZ1QXS for <xfs@oss.sgi.com>;
-	Tue, 16 Apr 2013 09:23:51 -0700 (PDT)
-Date: Wed, 17 Apr 2013 02:24:17 +1000
+	9in5OlXXJC2EK5rB for <linux-xfs@oss.sgi.com>;
+	Tue, 16 Apr 2013 09:25:29 -0700 (PDT)
+Date: Wed, 17 Apr 2013 02:25:57 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs_iunlink_remove: xfs_inotobp() returned error 22 -- debugging
-Message-ID: <20130416162417.GC13938@destitution>
-References: <516C89DF.4070904@redhat.com>
+Subject: Re: xfs_repair misses an fs error?
+Message-ID: <20130416162557.GD13938@destitution>
+References: <k5gu3axace.ln2@goaway.wombat.san-francisco.ca.us>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <516C89DF.4070904@redhat.com>
+In-Reply-To: <k5gu3axace.ln2@goaway.wombat.san-francisco.ca.us>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,82 +29,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: sandeen@sandeen.net, yongtaofu@gmail.com, xfs@oss.sgi.com
+To: Keith Keller <kkeller@wombat.san-francisco.ca.us>
+Cc: linux-xfs@oss.sgi.com
 
-On Mon, Apr 15, 2013 at 07:14:39PM -0400, Brian Foster wrote:
-> Hi,
+On Mon, Apr 15, 2013 at 04:47:32PM -0700, Keith Keller wrote:
+> Hi all,
 > 
-> Thanks for the data in the previous thread:
+> I recently had a filesystem stop, and went through the usual umount,
+> mount, umount, xfs_repair path.  xfs_repair didn't find any errors, but
+> I noticed that I was still getting some strange issues where a file in a
+> directory didn't have an inode and was resulting in IO errors.  Thinking
+> to address the problem later, I moved the directory to a different
+> location on the filesystem so that future backups could proceed
+> normally.
 > 
-> http://oss.sgi.com/archives/xfs/2013-04/msg00327.html
+> Later, in an attempt to collect log errors, I re-ran xfs_repair on the
+> filesystem.  It then found errors and corrected them, and on remount, I
+> found that the directory in question was repaired and no longer had a
+> file entry with no inode.  (So I can't reproduce that output; I didn't
+> save it, thinking that the second xfs_repair wouldn't fix the issue, and
+> I'd generate it again before posting.)
 > 
-> I'm spinning off a new thread specifically for this because the original
-> thread is already too large and scattered to track. As Eric stated,
-> please try to keep data contained in as few messages as possible.
-> 
-> The data confirms Dave's theory where we are going off the end of the
-> unlinked list when attempting to remove an inode, pass in NULLAGINO to
-> xfs_inotobp() and the attempted conversion to a global inode number
-> leads to EINVAL. The next question here is why wasn't the inode listed
-> in the probe output on the unlinked inode list?
-> 
-> Unfortunately we're probably going to require to start making some
-> debug-level changes to the kernel to make progress on this issue. If you
-> are able to recompile a kernel and/or xfs module (which you referred to
-> doing in the previous thread), could you start with the patch appended
-> to this message[1] and collect the xfs_iunlink and xfs_iunlink_remove
-> tracepoint data the next time the problem occurs? E.g.,
-> 
-> 	echo 1 > /sys/kernel/debug/tracing/events/xfs/xfs_iunlink/enable
-> 	echo 1 > /sys/kernel/debug/tracing/events/xfs/xfs_iunlink_remove/enable
-> 	... reproduce ...
-> 	cat /sys/kernel/debug/tracing/trace > trace.output
+> Has anyone else seen a situation where xfs_repair misses a filesystem
+> problem, but then finds it if a file or directory is moved?  And more
 
-It's better to use trace-cmd for this. it will result in less
-dropped events. i.e.:
+Not recently. What version of xfs_repair are you using?
 
-	$ trace-cmd record -e xfs_iunlink\*
-	... reproduce ...
-	^C
-	$ trace-cmd report > trace.output
+> generally, is there a way to use xfs_db or similar to try to find other
+> inodes that might be causing similar problems?
 
-> --- a/fs/xfs/linux-2.6/xfs_trace.h
-> +++ b/fs/xfs/linux-2.6/xfs_trace.h
-> @@ -581,6 +581,8 @@ DEFINE_INODE_EVENT(xfs_file_fsync);
->  DEFINE_INODE_EVENT(xfs_destroy_inode);
->  DEFINE_INODE_EVENT(xfs_write_inode);
->  DEFINE_INODE_EVENT(xfs_clear_inode);
-> +DEFINE_INODE_EVENT(xfs_iunlink);
-> +DEFINE_INODE_EVENT(xfs_iunlink_remove);
-> 
->  DEFINE_INODE_EVENT(xfs_dquot_dqalloc);
->  DEFINE_INODE_EVENT(xfs_dquot_dqdetach);
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 796edce..a43bec5 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -1670,6 +1670,8 @@ xfs_iunlink(
->  		(sizeof(xfs_agino_t) * bucket_index);
->  	xfs_trans_log_buf(tp, agibp, offset,
->  			  (offset + sizeof(xfs_agino_t) - 1));
-> +
-> +	trace_xfs_iunlink(ip);
->  	return 0;
->  }
-> 
-> @@ -1820,6 +1822,8 @@ xfs_iunlink_remove(
->  				  (offset + sizeof(xfs_agino_t) - 1));
->  		xfs_inobp_check(mp, last_ibp);
->  	}
-> +
-> +	trace_xfs_iunlink_remove(ip);
->  	return 0;
-
-I would suggest that the the tracing shoul dbe at entry of the
-function, otherwise we won't get a tracepoint for the operation that
-triggers the shutdown. (That's the reason most tracepoints in XFS
-are at function entry...)
+xfs_repair -n is the usual way to find broken stuff without
+modifying anything....
 
 Cheers,
 
