@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 56DE67F56
-	for <linux-xfs@oss.sgi.com>; Tue, 16 Apr 2013 11:25:34 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 378A38F8081
-	for <linux-xfs@oss.sgi.com>; Tue, 16 Apr 2013 09:25:31 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	9in5OlXXJC2EK5rB for <linux-xfs@oss.sgi.com>;
-	Tue, 16 Apr 2013 09:25:29 -0700 (PDT)
-Date: Wed, 17 Apr 2013 02:25:57 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs_repair misses an fs error?
-Message-ID: <20130416162557.GD13938@destitution>
-References: <k5gu3axace.ln2@goaway.wombat.san-francisco.ca.us>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 1AD6F7F37
+	for <xfs@oss.sgi.com>; Tue, 16 Apr 2013 12:21:17 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 08A92304039
+	for <xfs@oss.sgi.com>; Tue, 16 Apr 2013 10:21:13 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id TjaAvDmiVjKkjSo8 for
+	<xfs@oss.sgi.com>; Tue, 16 Apr 2013 10:21:13 -0700 (PDT)
+Message-ID: <516D87E3.2010605@redhat.com>
+Date: Tue, 16 Apr 2013 13:18:27 -0400
+From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <k5gu3axace.ln2@goaway.wombat.san-francisco.ca.us>
+Subject: Re: xfs_iunlink_remove: xfs_inotobp() returned error 22 -- debugging
+References: <516C89DF.4070904@redhat.com> <20130416162417.GC13938@destitution>
+In-Reply-To: <20130416162417.GC13938@destitution>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,44 +27,96 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Keith Keller <kkeller@wombat.san-francisco.ca.us>
-Cc: linux-xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: sandeen@sandeen.net, yongtaofu@gmail.com, xfs@oss.sgi.com
 
-On Mon, Apr 15, 2013 at 04:47:32PM -0700, Keith Keller wrote:
-> Hi all,
+On 04/16/2013 12:24 PM, Dave Chinner wrote:
+> On Mon, Apr 15, 2013 at 07:14:39PM -0400, Brian Foster wrote:
+>> Hi,
+>>
+>> Thanks for the data in the previous thread:
+>>
+>> http://oss.sgi.com/archives/xfs/2013-04/msg00327.html
+>>
+...
+>>
+>> 	echo 1 > /sys/kernel/debug/tracing/events/xfs/xfs_iunlink/enable
+>> 	echo 1 > /sys/kernel/debug/tracing/events/xfs/xfs_iunlink_remove/enable
+>> 	... reproduce ...
+>> 	cat /sys/kernel/debug/tracing/trace > trace.output
 > 
-> I recently had a filesystem stop, and went through the usual umount,
-> mount, umount, xfs_repair path.  xfs_repair didn't find any errors, but
-> I noticed that I was still getting some strange issues where a file in a
-> directory didn't have an inode and was resulting in IO errors.  Thinking
-> to address the problem later, I moved the directory to a different
-> location on the filesystem so that future backups could proceed
-> normally.
+> It's better to use trace-cmd for this. it will result in less
+> dropped events. i.e.:
 > 
-> Later, in an attempt to collect log errors, I re-ran xfs_repair on the
-> filesystem.  It then found errors and corrected them, and on remount, I
-> found that the directory in question was repaired and no longer had a
-> file entry with no inode.  (So I can't reproduce that output; I didn't
-> save it, thinking that the second xfs_repair wouldn't fix the issue, and
-> I'd generate it again before posting.)
+> 	$ trace-cmd record -e xfs_iunlink\*
+> 	... reproduce ...
+> 	^C
+> 	$ trace-cmd report > trace.output
 > 
-> Has anyone else seen a situation where xfs_repair misses a filesystem
-> problem, but then finds it if a file or directory is moved?  And more
+>> --- a/fs/xfs/linux-2.6/xfs_trace.h
+>> +++ b/fs/xfs/linux-2.6/xfs_trace.h
+>> @@ -581,6 +581,8 @@ DEFINE_INODE_EVENT(xfs_file_fsync);
+...
+> 
+> I would suggest that the the tracing shoul dbe at entry of the
+> function, otherwise we won't get a tracepoint for the operation that
+> triggers the shutdown. (That's the reason most tracepoints in XFS
+> are at function entry...)
+> 
 
-Not recently. What version of xfs_repair are you using?
+Good points, thanks Dave. A v2 that pulls up the tracepoints towards
+function entry is appended.
 
-> generally, is there a way to use xfs_db or similar to try to find other
-> inodes that might be causing similar problems?
+Brian
 
-xfs_repair -n is the usual way to find broken stuff without
-modifying anything....
+>From 280943e78ebe0b97a774cba51e7815c42f044b55 Mon Sep 17 00:00:00 2001
+From: Brian Foster <bfoster@redhat.com>
+Date: Mon, 15 Apr 2013 18:16:24 -0400
+Subject: [PATCH v2] xfs: add tracepoints for xfs_iunlink and
+xfs_iunlink_remove
 
-Cheers,
+---
+ fs/xfs/linux-2.6/xfs_trace.h |    2 ++
+ fs/xfs/xfs_inode.c           |    4 ++++
+ 2 files changed, 6 insertions(+), 0 deletions(-)
 
-Dave.
+diff --git a/fs/xfs/linux-2.6/xfs_trace.h b/fs/xfs/linux-2.6/xfs_trace.h
+index adc6ec4..338a0f9 100644
+--- a/fs/xfs/linux-2.6/xfs_trace.h
++++ b/fs/xfs/linux-2.6/xfs_trace.h
+@@ -583,6 +583,8 @@ DEFINE_INODE_EVENT(xfs_file_fsync);
+ DEFINE_INODE_EVENT(xfs_destroy_inode);
+ DEFINE_INODE_EVENT(xfs_dirty_inode);
+ DEFINE_INODE_EVENT(xfs_clear_inode);
++DEFINE_INODE_EVENT(xfs_iunlink);
++DEFINE_INODE_EVENT(xfs_iunlink_remove);
+
+ DEFINE_INODE_EVENT(xfs_dquot_dqalloc);
+ DEFINE_INODE_EVENT(xfs_dquot_dqdetach);
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 19900f0..d705c77 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1615,6 +1615,8 @@ xfs_iunlink(
+
+ 	mp = tp->t_mountp;
+
++	trace_xfs_iunlink(ip);
++
+ 	/*
+ 	 * Get the agi buffer first.  It ensures lock ordering
+ 	 * on the list.
+@@ -1694,6 +1696,8 @@ xfs_iunlink_remove(
+ 	mp = tp->t_mountp;
+ 	agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
+
++	trace_xfs_iunlink_remove(ip);
++
+ 	/*
+ 	 * Get the agi buffer first.  It ensures lock ordering
+ 	 * on the list.
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.7.6
 
 _______________________________________________
 xfs mailing list
