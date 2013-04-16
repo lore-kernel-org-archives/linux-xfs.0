@@ -1,16 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B8ABF7F3F
-	for <xfs@oss.sgi.com>; Tue, 16 Apr 2013 08:37:08 -0500 (CDT)
-Message-ID: <516D5405.7020804@sgi.com>
-Date: Tue, 16 Apr 2013 08:37:09 -0500
+	by oss.sgi.com (Postfix) with ESMTP id E06697F3F
+	for <xfs@oss.sgi.com>; Tue, 16 Apr 2013 10:41:54 -0500 (CDT)
+Message-ID: <516D7146.8010308@sgi.com>
+Date: Tue, 16 Apr 2013 10:41:58 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: xfs: fallback to vmalloc for large buffers in
-	xfs_attrlist_by_handle
-References: <515CB2C1.1050109@tlinx.org> <20130404035237.GA12011@dastard>
-	<515D0A09.5030808@sandeen.net>
-In-Reply-To: <515D0A09.5030808@sandeen.net>
+Subject: Re: [PATCH v2] xfs: Avoid pathological backwards allocation
+References: <1365710996-16439-1-git-send-email-jack@suse.cz>
+In-Reply-To: <1365710996-16439-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,55 +21,57 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Jan Kara <jack@suse.cz>
+Cc: xfs@oss.sgi.com
 
-On 04/04/13 00:05, Eric Sandeen wrote:
-> On 4/3/13 10:52 PM, Dave Chinner wrote:
->> On Wed, Apr 03, 2013 at 03:52:49PM -0700, Linda Walsh wrote:
->>>
->>> Note -- I might have more attributes than some as the disks are shared via samba
->>> w/windows
->>> and samba stores ACL and xattr info from windows in xfs's attrs...
->>>
->>>
->>> xfsdump: WARNING: could not get list of root attributes for nondir ino
->>> 3412893285: Cannot allocate memory (12)
->>
->> ....
->>> [1007383.689492] xfsdump: page allocation failure: order:4, mode:0x10c0d0
->> ....
->>> [1007383.689531]  [<ffffffff81143a54>] kmalloc_order_trace+0x34/0xe0
->>> [1007383.689534]  [<ffffffff81146546>] __kmalloc+0x186/0x190
->>> [1007383.689541]  [<ffffffff8124263c>] xfs_attrlist_by_handle+0x8c/0x110
->>> [1007383.689544]  [<ffffffff81243487>] xfs_file_ioctl+0x437/0xb60
->>
->> So it's the attribute handle interfaces that need the vmalloc
->> treatment here, just like has been done for all the other attribute
->> interfaces....
+On 04/11/13 15:09, Jan Kara wrote:
+> Writing a large file using direct IO in 16 MB chunks sometimes results
+> in a pathological allocation pattern where 16 MB chunks of large free
+> extent are allocated to a file in a reversed order. So extents of a file
+> look for example as:
 >
-> Like this?
+>   ext logical physical expected length flags
+>     0        0        13          4550656
+>     1  4550656 188136807   4550668 12562432
+>     2 17113088 200699240 200699238 622592
+>     3 17735680 182046055 201321831   4096
+>     4 17739776 182041959 182050150   4096
+>     5 17743872 182037863 182046054   4096
+>     6 17747968 182033767 182041958   4096
+>     7 17752064 182029671 182037862   4096
+> ...
+> 6757 45400064 154381644 154389835   4096
+> 6758 45404160 154377548 154385739   4096
+> 6759 45408256 252951571 154381643  73728 eof
 >
-> From: Eric Sandeen<sandeen@redhat.com>
+> This happens because XFS_ALLOCTYPE_THIS_BNO allocation fails (the last
+> extent in the file cannot be further extended) so we fall back to
+> XFS_ALLOCTYPE_NEAR_BNO allocation which picks end of a large free
+> extent as the best place to continue the file. Since the chunk at the
+> end of the free extent again cannot be further extended, this behavior
+> repeats until the whole free extent is consumed in a reversed order.
 >
-> xfs: fallback to vmalloc for large buffers in xfs_attrlist_by_handle
+> For data allocations this backward allocation isn't beneficial so make
+> xfs_alloc_compute_diff() pick start of a free extent instead of its end
+> for them. That avoids the backward allocation pattern.
 >
-> Shamelessly copied from dchinner's:
-> ad650f5b xfs: fallback to vmalloc for large buffers in xfs_attrmulti_attr_get
+> See thread at http://oss.sgi.com/archives/xfs/2013-03/msg00144.html for
+> more details about the reproduction case and why this solution was
+> chosen.
 >
-> xfsdump uses for a large buffer for extended attributes, which has a
-> kmalloc'd shadow buffer in the kernel. This can fail after the
-> system has been running for some time as it is a high order
-> allocation. Add a fallback to vmalloc so that it doesn't require
-> contiguous memory and so won't randomly fail while xfsdump is
-> running.
+> Based on idea by Dave Chinner<dchinner@redhat.com>.
 >
-> Signed-off-by: Eric Sandeen<sandeen@redhat.com>
+> CC: Dave Chinner<dchinner@redhat.com>
+> Reviewed-by: Dave Chinner<dchinner@redhat.com>
+> Signed-off-by: Jan Kara<jack@suse.cz>
 > ---
+>   fs/xfs/xfs_alloc.c |   24 ++++++++++++++++++------
+>   1 files changed, 18 insertions(+), 6 deletions(-)
 >
-> built&  tested by running through xfstests ./check -g dump
+> v2: Updated comment and commit description.
+>
 
-Looks good. It is needed here too.
+Looks good. I also agree this should wait for Linux 3.11.
 
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
