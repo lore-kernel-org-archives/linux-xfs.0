@@ -1,18 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A6BD97F37
-	for <xfs@oss.sgi.com>; Tue, 16 Apr 2013 13:36:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 82FDB8F8074
-	for <xfs@oss.sgi.com>; Tue, 16 Apr 2013 11:36:12 -0700 (PDT)
-Message-ID: <516D9A0A.7060708@oracle.com>
-Date: Wed, 17 Apr 2013 02:35:54 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: don't return 0 if generic_segment_checks() find
-	nothing to write
-References: <51682CCC.308@oracle.com> <20130416182624.GK22182@sgi.com>
-In-Reply-To: <20130416182624.GK22182@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id E850B7F37
+	for <linux-xfs@oss.sgi.com>; Tue, 16 Apr 2013 13:49:37 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C99908F8074
+	for <linux-xfs@oss.sgi.com>; Tue, 16 Apr 2013 11:49:37 -0700 (PDT)
+Received: from plane.gmane.org (plane.gmane.org [80.91.229.3]) by cuda.sgi.com
+	with ESMTP id 7MOsYUJF1qxVmWPn (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <linux-xfs@oss.sgi.com>;
+	Tue, 16 Apr 2013 11:49:33 -0700 (PDT)
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1USAwd-0003Mk-TP
+	for linux-xfs@oss.sgi.com; Tue, 16 Apr 2013 20:49:31 +0200
+Received: from wombat.san-francisco.ca.us ([75.101.60.140])
+	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+	id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Tue, 16 Apr 2013 20:49:31 +0200
+Received: from kkeller by wombat.san-francisco.ca.us with local (Gmexim 0.1
+	(Debian)) id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Tue, 16 Apr 2013 20:49:31 +0200
+From: Keith Keller <kkeller@wombat.san-francisco.ca.us>
+Subject: Re: xfs_repair misses an fs error?
+Date: Tue, 16 Apr 2013 11:44:54 -0700
+Message-ID: <6qi04axkbr.ln2@goaway.wombat.san-francisco.ca.us>
+References: <k5gu3axace.ln2@goaway.wombat.san-francisco.ca.us>
+	<20130416162557.GD13938@destitution>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,33 +38,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: linux-xfs@oss.sgi.com
 
-Hi Ben,
+On 2013-04-16, Dave Chinner <david@fromorbit.com> wrote:
+>
+> Not recently. What version of xfs_repair are you using?
 
-On 04/17/2013 02:26 AM, Ben Myers wrote:
-> Hey Jeff,
-> 
-> On Fri, Apr 12, 2013 at 11:48:28PM +0800, Jeff Liu wrote:
->> From: Jie Liu <jeff.liu@oracle.com>
->>
->> At xfs_file_aio_write(), we just return 0 which means a successfully operation if the ocount
->> is evaluated to 0 at generic_segment_checks().  Generally, it'll occurred if the specified
->> write count is 0 from the user space.  However, for example, if the given offset is over the
->> maximum file size limitation although nothing would be written into the file, in this case,
->> the underlying file system should detect this issue and return a proper errno instead.
->> Hence, the beginning pre-checking up against ocount would conceal some real cause and confuse
->> the user space program maybe.
->>
->> To fix it, we can delay the write count verification until xfs_file_aio_write_checks() is done.
-> 
-> Could you wrap these around 72 columns or so in the future?  Don't worry
-> about reposting this one unless something technical comes up.
-Sure, I'll take care of the patch format in the future.
+Hmm, perhaps this is a difference.  I believe (though, again I did very
+poor logging, and I apologize) that the initial repair used 3.1.1.  The
+recent successful repair definitely used 3.1.10.  Is it possible 3.1.1
+is old enough that it might not have caught the issues I reported from
+the 3.1.10 log?
 
-Thanks,
--Jeff
+--keith
+
+
+-- 
+kkeller@wombat.san-francisco.ca.us
+
 
 _______________________________________________
 xfs mailing list
