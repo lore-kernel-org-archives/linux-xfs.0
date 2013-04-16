@@ -1,25 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 61B037F51
-	for <xfs@oss.sgi.com>; Tue, 16 Apr 2013 00:55:56 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 70F9F7F51
+	for <xfs@oss.sgi.com>; Tue, 16 Apr 2013 02:24:47 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id F3513AC001
-	for <xfs@oss.sgi.com>; Mon, 15 Apr 2013 22:55:52 -0700 (PDT)
-Received: from mail-gg0-f177.google.com (mail-gg0-f177.google.com
-	[209.85.161.177]) by cuda.sgi.com with ESMTP id
-	O7Pa4WuztvUMIBbD (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 15 Apr 2013 22:55:51 -0700 (PDT)
-Received: by mail-gg0-f177.google.com with SMTP id q1so13490gge.22
-	for <xfs@oss.sgi.com>; Mon, 15 Apr 2013 22:55:51 -0700 (PDT)
-Message-ID: <516CE7E0.6010307@gmail.com>
-Date: Tue, 16 Apr 2013 01:55:44 -0400
-From: "Michael L. Semon" <mlsemon35@gmail.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1BE7BAC005
+	for <xfs@oss.sgi.com>; Tue, 16 Apr 2013 00:24:43 -0700 (PDT)
+Received: from smtp-tls.univ-nantes.fr (smtptls1-cha.cpub.univ-nantes.fr
+	[193.52.103.113]) by cuda.sgi.com with ESMTP id
+	hCMV4eVTJOv1uVWK for <xfs@oss.sgi.com>;
+	Tue, 16 Apr 2013 00:24:42 -0700 (PDT)
+Message-ID: <516CFCB8.1060804@univ-nantes.fr>
+Date: Tue, 16 Apr 2013 09:24:40 +0200
+From: Yann Dupont <Yann.Dupont@univ-nantes.fr>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: fix s_max_bytes to MAX_LFS_FILESIZE if needed
-References: <5167E160.3020800@oracle.com> <5169CC34.9080902@gmail.com>
-	<516CE451.5010203@oracle.com>
-In-Reply-To: <516CE451.5010203@oracle.com>
+Subject: Re: kernels 3.4 slower due to allocation workqueue
+References: <516BCACE.1040900@univ-nantes.fr> <516C046C.8080908@sgi.com>
+In-Reply-To: <516C046C.8080908@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,94 +24,73 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: xfs@oss.sgi.com
 
-You're welcome.  Thanks for the explanation.  Now everything makes 
-logical sense.
-
-I'll re-run the tests with different block sizes.  The tests have been 
-run already with a) default mkfs options and b) with an external journal 
-and realtime device.
-
-Your related patch, "xfs: don't return 0 if generic_segment_checks() 
-find nothing to write," has also been applied.  The suggested test case 
-hasn't been tried, but the patch hasn't caused any additional problems, 
-either.
-
-Anyway, I hope you had/have a good stay here in the US.
-
-Michael
-
-On 04/16/2013 01:40 AM, Jeff Liu wrote:
-> Hi Michael,
+Le 15/04/2013 15:45, Mark Tinguely a =E9crit :
 >
-> Thanks a lot for help verifying this fix and sorry for my too late
-> response since I have traveled to US two days ago.
+> Here are the allocation worker changes.
 >
-> On 04/14/2013 05:20 AM, Michael L. Semon wrote:
->> Update:  My tests on my original hardware go exactly as they did in my
->> Pentium 4 test.  xfstests shared/[0-9][0-9][0-9] and xfs/003 through
->> xfs/136 were run against it.  No problems.  Good job.  I'm keeping the
->> patch.
->>
->> My final version of the bug summary goes like this:
->>
->> On a 32-bit x86 PC, with a Linux kernel that has CONFIG_LBDAF=y...
->>
->> xfstests generic/308, by writing to a file at an address just before
->> 2**32, causes the following conditions on an XFS filesystem:
->>
->> 1) CPU usage becomes very high,
->>
->> 2) The xfs_io process cannot be killed,
->>
->> 3) The best way to shut down the PC is through use of the magic SysRq keys.
->>
->> 4) Afterwards, attempts to mount the filesystem result in a soft oops.
->>
->> 5) After an `xfs_repair -L` on the filesystem, all is OK, other than for
->> what was lost by zeroing the log.
->>
->> J. Liu wrote a patch that solves this problem, but he found the answers
->> with CONFIG_LBDAF=n, which is a condition for which xfstests generic/308
->> passes on the two test PCs used.
-> Ooops! it's wrong.  My answer is misleading, you can think that I drink
-> too much at that time.:(  Actually, it quite the reverse, i.e. this
-> issue can be reproduced against 32-bit kernel with CONFIG_LBADF=y, this
-> is the default configuration of mine.
-> In this case, I observed that the s_maxbytes is larger than the
-> MAX_LFS_FILESIZE.  Hence, the current patch is written to make sure that
-> the s_maxbytes should not beyond this limits.
+
+Hello mark,  thanks for you answer
+
+> The biggest performance commit should be aa292847, which limits the =
+
+> callers to the worker.
 >
-> For 32-bit kernel with CONFIG_LBADF=n, the s_maxbytes is just equal to
-> MAX_LFS_FILESIZE, so the test is works to me.  BTW, I only verified this
-> fix upon the default mkfs options. i.e, 4k blocksize, that is, mkfs.xfs
-> /dev/sdX.
->>
->> Tests were conducted on a Pentium III (kernel 3.9-rc4 with numerous SGI
->> patches) and on a Pentium 4 (kernel 3.9-rc6 with numerous SGI patches).
->>
->> Could you verify these things by memory (no need to retest)?
-> As I mentioned above.
->> a) With CONFIG_LBDAF=y, generic/308 caused filesystem corruption, and
-> In this case, the operation should be denied with -EFBIG error returned
-> if trying to create a huge file.
->>
->> b) With CONFIG_LBDAF=n, generic/308 passed the test.
-> Even don't applying this patch, the test run passed for the default mkfs
-> setup.
->>
->> c) Having CONFIG_LBDAF=n helped you to find the answers and write this
->> fine patch.
-> CONFIG_LBADF=y instead.
+> commit 3b876c8f2a361ceeed3fed894980c69066f903a0
+> Author: Jeff Liu <jeff.liu@oracle.com>
+> Date:   Thu Jun 7 15:44:32 2012 +0800
 >
-> Thanks again!
-> -Jeff
+>     xfs: fix debug_object WARN at xfs_alloc_vextent()
+>
+> commit aa292847b9fc6e187547110de833a7d3131bbddf
+> Author: Dave Chinner <dchinner@redhat.com>
+> Date:   Thu Jul 12 07:40:43 2012 +1000
+>
+>     xfs: don't defer metadata allocation to the workqueue
+>
+
+Only These 2 commits are candidates, the others are post 3.5.
+I'll try to patch a 3.4 with each patch.
+
+>  commit 2455881c0b52f87be539c4c7deab1afff4d8a560
+> Author: Dave Chinner <dchinner@redhat.com>
+> Date:   Fri Oct 5 11:06:58 2012 +1000
+>
+>     xfs: introduce XFS_BMAPI_STACK_SWITCH
+>
+> commit e04426b9202bccd4cfcbc70b2fa2aeca1c86d8f5
+> Author: Dave Chinner <dchinner@redhat.com>
+> Date:   Fri Oct 5 11:06:59 2012 +1000
+>
+>     xfs: move allocation stack switch up to xfs_bmapi_allocate
+>
+> commit 9e96fe6df44425b69ed89f6ac20352cec1f127d7
+> Author: Brian Foster <bfoster@redhat.com>
+> Date:   Thu Jan 17 13:11:29 2013 -0500
+>
+>     xfs: pull up stack_switch check into xfs_bmapi_write
+>
+>
+> The last 3 patches address an AGF buffer hang with the allocation worker.
+>
+> --Mark.
+
+As 3.4 Kernels don't have thoses patches, is there a risk associated =
+
+with  3.4 kernels ?
+
+Cheers,
+
+-- =
+
+Yann Dupont - Service IRTS, DSI Universit=E9 de Nantes
+Tel : 02.53.48.49.20 - Mail/Jabber : Yann.Dupont@univ-nantes.fr
 
 _______________________________________________
 xfs mailing list
