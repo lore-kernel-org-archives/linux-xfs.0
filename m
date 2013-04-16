@@ -1,15 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C6A407F3F
-	for <xfs@oss.sgi.com>; Tue, 16 Apr 2013 08:26:38 -0500 (CDT)
-Message-ID: <516D518F.1000708@sgi.com>
-Date: Tue, 16 Apr 2013 08:26:39 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B8ABF7F3F
+	for <xfs@oss.sgi.com>; Tue, 16 Apr 2013 08:37:08 -0500 (CDT)
+Message-ID: <516D5405.7020804@sgi.com>
+Date: Tue, 16 Apr 2013 08:37:09 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: kernels 3.4 slower due to allocation workqueue
-References: <516BCACE.1040900@univ-nantes.fr> <516C046C.8080908@sgi.com>
-	<516CFCB8.1060804@univ-nantes.fr>
-In-Reply-To: <516CFCB8.1060804@univ-nantes.fr>
+Subject: Re: [PATCH] xfs: xfs: fallback to vmalloc for large buffers in
+	xfs_attrlist_by_handle
+References: <515CB2C1.1050109@tlinx.org> <20130404035237.GA12011@dastard>
+	<515D0A09.5030808@sandeen.net>
+In-Reply-To: <515D0A09.5030808@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,74 +19,61 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Yann Dupont <Yann.Dupont@univ-nantes.fr>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On 04/16/13 02:24, Yann Dupont wrote:
-> Le 15/04/2013 15:45, Mark Tinguely a =E9crit :
+On 04/04/13 00:05, Eric Sandeen wrote:
+> On 4/3/13 10:52 PM, Dave Chinner wrote:
+>> On Wed, Apr 03, 2013 at 03:52:49PM -0700, Linda Walsh wrote:
+>>>
+>>> Note -- I might have more attributes than some as the disks are shared via samba
+>>> w/windows
+>>> and samba stores ACL and xattr info from windows in xfs's attrs...
+>>>
+>>>
+>>> xfsdump: WARNING: could not get list of root attributes for nondir ino
+>>> 3412893285: Cannot allocate memory (12)
 >>
->> Here are the allocation worker changes.
+>> ....
+>>> [1007383.689492] xfsdump: page allocation failure: order:4, mode:0x10c0d0
+>> ....
+>>> [1007383.689531]  [<ffffffff81143a54>] kmalloc_order_trace+0x34/0xe0
+>>> [1007383.689534]  [<ffffffff81146546>] __kmalloc+0x186/0x190
+>>> [1007383.689541]  [<ffffffff8124263c>] xfs_attrlist_by_handle+0x8c/0x110
+>>> [1007383.689544]  [<ffffffff81243487>] xfs_file_ioctl+0x437/0xb60
 >>
+>> So it's the attribute handle interfaces that need the vmalloc
+>> treatment here, just like has been done for all the other attribute
+>> interfaces....
 >
-> Hello mark, thanks for you answer
+> Like this?
 >
->> The biggest performance commit should be aa292847, which limits the
->> callers to the worker.
->>
->> commit 3b876c8f2a361ceeed3fed894980c69066f903a0
->> Author: Jeff Liu <jeff.liu@oracle.com>
->> Date: Thu Jun 7 15:44:32 2012 +0800
->>
->> xfs: fix debug_object WARN at xfs_alloc_vextent()
->>
->> commit aa292847b9fc6e187547110de833a7d3131bbddf
->> Author: Dave Chinner <dchinner@redhat.com>
->> Date: Thu Jul 12 07:40:43 2012 +1000
->>
->> xfs: don't defer metadata allocation to the workqueue
->>
+> From: Eric Sandeen<sandeen@redhat.com>
 >
-> Only These 2 commits are candidates, the others are post 3.5.
-> I'll try to patch a 3.4 with each patch.
+> xfs: fallback to vmalloc for large buffers in xfs_attrlist_by_handle
 >
->> commit 2455881c0b52f87be539c4c7deab1afff4d8a560
->> Author: Dave Chinner <dchinner@redhat.com>
->> Date: Fri Oct 5 11:06:58 2012 +1000
->>
->> xfs: introduce XFS_BMAPI_STACK_SWITCH
->>
->> commit e04426b9202bccd4cfcbc70b2fa2aeca1c86d8f5
->> Author: Dave Chinner <dchinner@redhat.com>
->> Date: Fri Oct 5 11:06:59 2012 +1000
->>
->> xfs: move allocation stack switch up to xfs_bmapi_allocate
->>
->> commit 9e96fe6df44425b69ed89f6ac20352cec1f127d7
->> Author: Brian Foster <bfoster@redhat.com>
->> Date: Thu Jan 17 13:11:29 2013 -0500
->>
->> xfs: pull up stack_switch check into xfs_bmapi_write
->>
->>
->> The last 3 patches address an AGF buffer hang with the allocation worker.
->>
->> --Mark.
+> Shamelessly copied from dchinner's:
+> ad650f5b xfs: fallback to vmalloc for large buffers in xfs_attrmulti_attr_get
 >
-> As 3.4 Kernels don't have thoses patches, is there a risk associated
-> with 3.4 kernels ?
+> xfsdump uses for a large buffer for extended attributes, which has a
+> kmalloc'd shadow buffer in the kernel. This can fail after the
+> system has been running for some time as it is a high order
+> allocation. Add a fallback to vmalloc so that it doesn't require
+> contiguous memory and so won't randomly fail while xfsdump is
+> running.
 >
-> Cheers,
+> Signed-off-by: Eric Sandeen<sandeen@redhat.com>
+> ---
 >
+> built&  tested by running through xfstests ./check -g dump
 
-The filesystem can hang but only if the OS cannot allocate another =
+Looks good. It is needed here too.
 
-worker when doing certain calls.
-
---Mark.
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
