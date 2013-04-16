@@ -1,33 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E6D4C7F4C
-	for <xfs@oss.sgi.com>; Mon, 15 Apr 2013 20:45:16 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 5B4A27F4C
+	for <xfs@oss.sgi.com>; Tue, 16 Apr 2013 00:40:43 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C30388F8054
-	for <xfs@oss.sgi.com>; Mon, 15 Apr 2013 18:45:16 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id mokN4wGIFSAtKWda
-	for <xfs@oss.sgi.com>; Mon, 15 Apr 2013 18:45:16 -0700 (PDT)
-Message-ID: <516CAD27.4070408@hardwarefreak.com>
-Date: Mon, 15 Apr 2013 20:45:11 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 497E48F8074
+	for <xfs@oss.sgi.com>; Mon, 15 Apr 2013 22:40:40 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id VqjS1gTvWpICVoMy (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 15 Apr 2013 22:40:39 -0700 (PDT)
+Message-ID: <516CE451.5010203@oracle.com>
+Date: Tue, 16 Apr 2013 13:40:33 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: Re: xfs_fsr, sunit, and swidth
-References: <5141C1FC.4060209@hardwarefreak.com>
-	<5141C8C1.2080903@hardwarefreak.com>
-	<5141E5CF.10101@binghamton.edu>
-	<5142AE40.6040408@hardwarefreak.com>
-	<20130315114538.GF6369@dastard>
-	<5143F94C.1020708@hardwarefreak.com>
-	<20130316072126.GG6369@dastard> <515082C3.2000006@binghamton.edu>
-	<515361B5.8050603@hardwarefreak.com>
-	<5155F2B2.1010308@binghamton.edu>
-	<20130331012231.GJ6369@dastard> <515C3BF3.60601@binghamton.edu>
-	<51684382.50008@binghamton.edu>
-	<5168AC0B.5010100@hardwarefreak.com>
-	<516C649A.8010003@binghamton.edu>
-In-Reply-To: <516C649A.8010003@binghamton.edu>
-Reply-To: stan@hardwarefreak.com
+Subject: Re: [PATCH] xfs: fix s_max_bytes to MAX_LFS_FILESIZE if needed
+References: <5167E160.3020800@oracle.com> <5169CC34.9080902@gmail.com>
+In-Reply-To: <5169CC34.9080902@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,70 +28,159 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Hall <kdhall@binghamton.edu>
+To: "Michael L. Semon" <mlsemon35@gmail.com>
 Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 4/15/2013 3:35 PM, Dave Hall wrote:
-> Stan,
+Hi Michael,
+
+Thanks a lot for help verifying this fix and sorry for my too late
+response since I have traveled to US two days ago.
+
+On 04/14/2013 05:20 AM, Michael L. Semon wrote:
+> Update:  My tests on my original hardware go exactly as they did in my 
+> Pentium 4 test.  xfstests shared/[0-9][0-9][0-9] and xfs/003 through 
+> xfs/136 were run against it.  No problems.  Good job.  I'm keeping the 
+> patch.
 > 
-> I understand that this will be an ongoing problem.  It seems like all I could do at this point would be to ' manually defrag' my inodes the hard way by doing this 'copy' operation whenever things slow down.  (Either that or go get my PHD in file systems and try to come up with a better inode management algorithm.)  I will be keeping two copies of this data going forward anyways.
+> My final version of the bug summary goes like this:
 > 
-> Are there any other suggestions you might have at this time - xfs or otherwise?
-
-I'm no expert in this particular area, so I'll simply give the sysadmin 101 perspective:
-
-Always pick the right tool for the job.  If XFS isn't working satisfactorily for this job and no fix is forthcoming, I'd test EXT4 and JFS to see if either of them is more suitable for this job.
-
-The other option is to switch to a backup job that doesn't create/delete millions of hard links.
-
-There are likely other possibilities.
-
--- 
-Stan
-
-
-> -Dave
+> On a 32-bit x86 PC, with a Linux kernel that has CONFIG_LBDAF=y...
 > 
-> Dave Hall
-> Binghamton University
-> kdhall@binghamton.edu
-> 607-760-2328 (Cell)
-> 607-777-4641 (Office)
+> xfstests generic/308, by writing to a file at an address just before 
+> 2**32, causes the following conditions on an XFS filesystem:
 > 
+> 1) CPU usage becomes very high,
 > 
-> On 04/12/2013 08:51 PM, Stan Hoeppner wrote:
->> On 4/12/2013 12:25 PM, Dave Hall wrote:
->>   
->>> Stan,
->>>
->>> IDid this post get lost in the shuffle?  Looking at it I think it could
->>> have been a bit unclear.  What I need to do anyways is have a second,
->>> off-site copy of my backup data.  So I'm going to be building a second
->>> array.  In copying, in order to preserve the hard link structure of the
->>> source array I'd have to run a sequence of cp -al / rsync calls that
->>> would mimic what rsnapshot did to get me to where I am right now.  (Note
->>> that I could also potentially use rsync --link-dest.)
->>>
->>> So the question is how would the target xfs file system fare as far as
->>> my inode fragmentation situation is concerned?  I'm hoping that since
->>> the target would be a fresh file system, and since during the 'copy'
->>> phase I'd only be adding inodes, that the inode allocation would be more
->>> compact and orderly than what I have on the source array since.  What do
->>> you think?
->>>      
->> The question isn't what it will look like initially, as your inodes
->> shouldn't be sparsely allocated as with your current aged filesystem.
+> 2) The xfs_io process cannot be killed,
+> 
+> 3) The best way to shut down the PC is through use of the magic SysRq keys.
+> 
+> 4) Afterwards, attempts to mount the filesystem result in a soft oops.
+> 
+> 5) After an `xfs_repair -L` on the filesystem, all is OK, other than for 
+> what was lost by zeroing the log.
+> 
+> J. Liu wrote a patch that solves this problem, but he found the answers 
+> with CONFIG_LBDAF=n, which is a condition for which xfstests generic/308 
+> passes on the two test PCs used.
+Ooops! it's wrong.  My answer is misleading, you can think that I drink
+too much at that time.:(  Actually, it quite the reverse, i.e. this
+issue can be reproduced against 32-bit kernel with CONFIG_LBADF=y, this
+is the default configuration of mine.
+In this case, I observed that the s_maxbytes is larger than the
+MAX_LFS_FILESIZE.  Hence, the current patch is written to make sure that
+the s_maxbytes should not beyond this limits.
+
+For 32-bit kernel with CONFIG_LBADF=n, the s_maxbytes is just equal to
+MAX_LFS_FILESIZE, so the test is works to me.  BTW, I only verified this
+fix upon the default mkfs options. i.e, 4k blocksize, that is, mkfs.xfs
+/dev/sdX.
+> 
+> Tests were conducted on a Pentium III (kernel 3.9-rc4 with numerous SGI 
+> patches) and on a Pentium 4 (kernel 3.9-rc6 with numerous SGI patches).
+> 
+> Could you verify these things by memory (no need to retest)?
+As I mentioned above.
+> a) With CONFIG_LBDAF=y, generic/308 caused filesystem corruption, and
+In this case, the operation should be denied with -EFBIG error returned
+if trying to create a huge file.
+> 
+> b) With CONFIG_LBDAF=n, generic/308 passed the test.
+Even don't applying this patch, the test run passed for the default mkfs
+setup.
+> 
+> c) Having CONFIG_LBDAF=n helped you to find the answers and write this 
+> fine patch.
+CONFIG_LBADF=y instead.
+
+Thanks again!
+-Jeff
+> 
+> Otherwise, the conclusion is "I don't know how you got there, but you 
+> got there.  Good job! and thanks for finding the root cause of the problem."
+> 
+> Thanks again!
+> 
+> Michael
+> 
+> On 04/12/2013 06:26 AM, Jeff Liu wrote:
+>> From: Jie Liu <jeff.liu@oracle.com>
 >>
->> The question is how quickly the problem will arise on the new filesystem
->> as you free inodes.  I don't have the answer to that question.  There's
->> no way to predict this that I know of.
+>> On 32-bit machine, the s_maxbytes is larger than the MAX_LFS_FILESIZE limits if CONFIG_LBDAF is
+>> not enabled.  Hence it's possible to create a huge file via buffered-IO write with a given offset
+>> beyond this limitation. e.g.
 >>
->>    
+>> # block_size=4096
+>> # offset=$(((2**32 - 1) * $block_size))
+>> # xfs_io -f -c "pwrite $offset $block_size" /storage/test_file
+>>
+>> In this case, xfs_io will hang at the page writeback stage soon since the given offset would
+>> cause an overflow at xfs_vm_writepage():
+>>
+>> end_index = offset >> PAGE_CACHE_SHIFT;
+>> last_index = (offset - 1) >> PAGE_CACHE_SHIFT;
+>> if (page->index >= end_index) {
+>>                  unsigned offset_into_page = offset & (PAGE_CACHE_SIZE - 1);
+>>
+>>                  /*
+>>                   * Just skip the page if it is fully outside i_size, e.g. due
+>>                   * to a truncate operation that is in progress.
+>>                   */
+>>                  if (page->index >= end_index + 1 || offset_into_page == 0) {
+>> 		^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>>                          unlock_page(page);
+>>                          return 0;
+>>                  }
+>> end_index is unsigned long so that the max value is '2^32-1 = 4294967295', and it
+>> would be evaluated to the max value with the given offset(when writing the page offset
+>> up to s_max_bytes) for above test case.  As a result, (page->index >= end_index + 1) is
+>> ok as (end_index + 1) is overflowed to ZERO.
+>>
+>> Actually, create a file as above on 32-bit machine should be failed with EFBIG error returned
+>> because there has strict check up at generic_write_checks() against the given offset with a
+>> *correct* s_max_bytes.
+>>
+>> This patch fix the s_max_bytes to MAX_LFS_FILESIZE if the pre-calculated value is greater
+>> than it.
+>>
+>> Reported-by: Michael L. Semon <mlsemon35@gmail.com>
+>> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+>>
+>> ---
+>>   fs/xfs/xfs_super.c |    6 +++++-
+>>   1 file changed, 5 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+>> index ea341ce..0644d61 100644
+>> --- a/fs/xfs/xfs_super.c
+>> +++ b/fs/xfs/xfs_super.c
+>> @@ -585,6 +585,7 @@ xfs_max_file_offset(
+>>   {
+>>   	unsigned int		pagefactor = 1;
+>>   	unsigned int		bitshift = BITS_PER_LONG - 1;
+>> +	__uint64_t		offset;
+>>
+>>   	/* Figure out maximum filesize, on Linux this can depend on
+>>   	 * the filesystem blocksize (on 32 bit platforms).
+>> @@ -610,7 +611,10 @@ xfs_max_file_offset(
+>>   # endif
+>>   #endif
+>>
+>> -	return (((__uint64_t)pagefactor) << bitshift) - 1;
+>> +	offset = (((__uint64_t)pagefactor) << bitshift) - 1;
+>> +
+>> +	/* Check against VM & VFS exposed limits */
+>> +	return (offset > MAX_LFS_FILESIZE) ? MAX_LFS_FILESIZE : offset;
+>>   }
+>>
+>>   xfs_agnumber_t
+>>
 > 
 > _______________________________________________
 > xfs mailing list
 > xfs@oss.sgi.com
 > http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
