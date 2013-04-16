@@ -1,20 +1,41 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1AD6F7F37
-	for <xfs@oss.sgi.com>; Tue, 16 Apr 2013 12:21:17 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 08A92304039
-	for <xfs@oss.sgi.com>; Tue, 16 Apr 2013 10:21:13 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id TjaAvDmiVjKkjSo8 for
-	<xfs@oss.sgi.com>; Tue, 16 Apr 2013 10:21:13 -0700 (PDT)
-Message-ID: <516D87E3.2010605@redhat.com>
-Date: Tue, 16 Apr 2013 13:18:27 -0400
-From: Brian Foster <bfoster@redhat.com>
-MIME-Version: 1.0
-Subject: Re: xfs_iunlink_remove: xfs_inotobp() returned error 22 -- debugging
-References: <516C89DF.4070904@redhat.com> <20130416162417.GC13938@destitution>
-In-Reply-To: <20130416162417.GC13938@destitution>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id C83597F37
+	for <xfs@oss.sgi.com>; Tue, 16 Apr 2013 12:28:11 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 9AB0E8F804C
+	for <xfs@oss.sgi.com>; Tue, 16 Apr 2013 10:28:08 -0700 (PDT)
+Received: from e7.ny.us.ibm.com (e7.ny.us.ibm.com [32.97.182.137]) by
+	cuda.sgi.com with ESMTP id yMtNc9iN7Uh01SFC (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 16 Apr 2013 10:28:04 -0700 (PDT)
+Received: from /spool/local
+	by e7.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	Violators will be prosecuted
+	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
+	Tue, 16 Apr 2013 13:28:03 -0400
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id 211F5C90072
+	for <xfs@oss.sgi.com>; Tue, 16 Apr 2013 13:27:49 -0400 (EDT)
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	r3GHRmrO310500 for <xfs@oss.sgi.com>; Tue, 16 Apr 2013 13:27:48 -0400
+Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
+	by d01av03.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
+	r3GHRlZ1014105 for <xfs@oss.sgi.com>; Tue, 16 Apr 2013 14:27:47 -0300
+Received: from [9.41.106.170] (chandra-dt.austin.ibm.com [9.41.106.170])
+	by d01av03.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVin) with ESMTP id
+	r3GHRksN014004 for <xfs@oss.sgi.com>; Tue, 16 Apr 2013 14:27:47 -0300
+Subject: Re: Deprecating xfs_check
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+In-Reply-To: <20130412010407.GE31207@dastard>
+References: <1365716708.3762.32154.camel@chandra-dt.ibm.com>
+	<20130411221754.GI22182@sgi.com> <516740B8.4030704@sgi.com>
+	<20130412010407.GE31207@dastard>
+Date: Tue, 16 Apr 2013 12:27:46 -0500
+Message-ID: <1366133266.3762.32211.camel@chandra-dt.ibm.com>
+Mime-Version: 1.0
+Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,96 +48,127 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: sandeen@sandeen.net, yongtaofu@gmail.com, xfs@oss.sgi.com
+To: XFS mailing list <xfs@oss.sgi.com>
 
-On 04/16/2013 12:24 PM, Dave Chinner wrote:
-> On Mon, Apr 15, 2013 at 07:14:39PM -0400, Brian Foster wrote:
->> Hi,
->>
->> Thanks for the data in the previous thread:
->>
->> http://oss.sgi.com/archives/xfs/2013-04/msg00327.html
->>
-...
->>
->> 	echo 1 > /sys/kernel/debug/tracing/events/xfs/xfs_iunlink/enable
->> 	echo 1 > /sys/kernel/debug/tracing/events/xfs/xfs_iunlink_remove/enable
->> 	... reproduce ...
->> 	cat /sys/kernel/debug/tracing/trace > trace.output
+Hello All,
+
+While trying to replace xfs_check with xfs_repair -n in xfstests, I
+found that xfs_check is quiet if all is well, and prints information
+only if something is wrong. But, xfs_repair -n always prints information
+on different phases etc.,
+
+What should be our approach ?
+ 1. add a -q option to xfs_repair, which prints no message at all
+ 2. add a -q option, and it will be quiet, but is valid only if -n 
+    is specified.
+ 3. Leave it as is. Since users have to change their scripts anyways to 
+    replace xfs_check, they can as well change the logic around the 
+    output.
+
+Please suggest.
+
+Regards,
+
+Chandra 
+
+
+On Fri, 2013-04-12 at 11:04 +1000, Dave Chinner wrote:
+> [compendium reply]
 > 
-> It's better to use trace-cmd for this. it will result in less
-> dropped events. i.e.:
+> On Thu, Apr 11, 2013 at 06:01:12PM -0500, Troy McCorkell wrote:
+> > On 04/11/2013 05:17 PM, Ben Myers wrote:
+> > >Hey Chandra,
+> > >
+> > >On Thu, Apr 11, 2013 at 04:45:08PM -0500, Chandra Seetharaman wrote:
+> > >>Hello All,
+> > >>
+> > >>Alex Elder mentioned about deprecating xfs_check, and he suggested is to
+> > >>replace xfs_check command with a script, that says xfs_check is
+> > >>deprecated, use "xfs_repair -n".
+> > >>
+> > >>Sounds ok ?
 > 
-> 	$ trace-cmd record -e xfs_iunlink\*
-> 	... reproduce ...
-> 	^C
-> 	$ trace-cmd report > trace.output
+> Yes. I'd suggest that you also put a removal date in the output,
+> such as:
 > 
->> --- a/fs/xfs/linux-2.6/xfs_trace.h
->> +++ b/fs/xfs/linux-2.6/xfs_trace.h
->> @@ -581,6 +581,8 @@ DEFINE_INODE_EVENT(xfs_file_fsync);
-...
+> "xfs_check is deprecated and scheduled for removal in June 2014.
+>  Please use xfs_repair -n <dev> instead."
 > 
-> I would suggest that the the tracing shoul dbe at entry of the
-> function, otherwise we won't get a tracepoint for the operation that
-> triggers the shutdown. (That's the reason most tracepoints in XFS
-> are at function entry...)
+> The same information needs to go into the xfs_check man page.
 > 
+> xfstests also still needs to run xfs_check. That means we also need
+> either an override flag an make $XFS_CHECK_PROG have it set
+> appropriately or add an internal xfs_db wrapper that runs the
+> xfs_check functionality appropriately. The second is probably the
+> better option...
+> 
+> > >>Let me know if it is not the right approach.
+> > >That sounds ok to me.  You might also consider making xfs_check a hardlink to
+> > >xfs_repair and varying the behavior based on program name.  Then xfs_check ==
+> > >xfs_repair -n.
+> 
+> xfs_check is a shell script wrapper around xfs_db, so modifying the
+> shell script is the right thing to do at this point in time.
+> 
+> > Does "xfs_repair -n" need to provide all of the functionality that xfs_check
+> > provides before it is replaced?
+> 
+> It already does.
+> 
+> > xfs_check can be run on a filesystem mounted read-only.  xfs_repair
+> > -n can not.
+> 
+>        -d     Repair  dangerously.  Allow  xfs_repair  to  repair an XFS filesystem mounted read only. This is typically done on a root fileystem from single user
+>               mode, immediately followed by a reboot.
+> 
+> 
+> $ sudo mount -o remount,ro /mnt/scratch
+> $ grep scratch /proc/mounts
+> /dev/vdc /mnt/scratch xfs ro,relatime,attr2,nobarrier,inode64,logbsize=256k,noquota 0 0
+> $ sudo xfs_repair -dn /dev/vdc
+> Phase 1 - find and verify superblock...
+> Version 5 superblock detected. xfsprogs has EXPERIMENTAL support enabled!
+> Use of these features is at your own risk!
+> Not enough RAM available for repair to enable prefetching.
+> This will be _slow_.
+> You need at least 16061MB RAM to run with prefetching enabled.
+> Phase 2 - using internal log
+>         - scan filesystem freespace and inode maps...
+> ....
+>         - agno = 98
+>         - agno = 99
+> No modify flag set, skipping phase 5
+> Phase 6 - check inode connectivity...
+>         - traversing filesystem ...
+>         - traversal finished ...
+>         - moving disconnected inodes to lost+found ...
+> Phase 7 - verify link counts...
+> No modify flag set, skipping filesystem flush and exiting.
+> $
+> 
+> So it works just fine on read-only filesystems...
+> 
+> (Oh, yeah, that's a 100TB metadata crc enabled filesystem with 50
+> million inodes in it ;)
+> 
+> > xfs_check has two options:
+> >     -i ino   Specifies  verbose  behavior  for  the specified inode ino.
+> >     -b bno   Specifies  verbose behavior for the specific filesystem
+> > block at bno.
+> > which are not available with xfs_repair.
+> 
+> I've never used either of them in 10 years. If they are needed, you
+> can still use xfs_db to get that information directly:
+> 
+> # xfs_db -F -i -p xfs_check -c "check -i ino" <dev>
+> 
+> So, really, we are not losing any xfs_check functionality at all -
+> all we are doing is deprecating the user facing interface to it.
+> 
+> Cheers,
+> 
+> Dave.
 
-Good points, thanks Dave. A v2 that pulls up the tracepoints towards
-function entry is appended.
-
-Brian
-
->From 280943e78ebe0b97a774cba51e7815c42f044b55 Mon Sep 17 00:00:00 2001
-From: Brian Foster <bfoster@redhat.com>
-Date: Mon, 15 Apr 2013 18:16:24 -0400
-Subject: [PATCH v2] xfs: add tracepoints for xfs_iunlink and
-xfs_iunlink_remove
-
----
- fs/xfs/linux-2.6/xfs_trace.h |    2 ++
- fs/xfs/xfs_inode.c           |    4 ++++
- 2 files changed, 6 insertions(+), 0 deletions(-)
-
-diff --git a/fs/xfs/linux-2.6/xfs_trace.h b/fs/xfs/linux-2.6/xfs_trace.h
-index adc6ec4..338a0f9 100644
---- a/fs/xfs/linux-2.6/xfs_trace.h
-+++ b/fs/xfs/linux-2.6/xfs_trace.h
-@@ -583,6 +583,8 @@ DEFINE_INODE_EVENT(xfs_file_fsync);
- DEFINE_INODE_EVENT(xfs_destroy_inode);
- DEFINE_INODE_EVENT(xfs_dirty_inode);
- DEFINE_INODE_EVENT(xfs_clear_inode);
-+DEFINE_INODE_EVENT(xfs_iunlink);
-+DEFINE_INODE_EVENT(xfs_iunlink_remove);
-
- DEFINE_INODE_EVENT(xfs_dquot_dqalloc);
- DEFINE_INODE_EVENT(xfs_dquot_dqdetach);
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 19900f0..d705c77 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1615,6 +1615,8 @@ xfs_iunlink(
-
- 	mp = tp->t_mountp;
-
-+	trace_xfs_iunlink(ip);
-+
- 	/*
- 	 * Get the agi buffer first.  It ensures lock ordering
- 	 * on the list.
-@@ -1694,6 +1696,8 @@ xfs_iunlink_remove(
- 	mp = tp->t_mountp;
- 	agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
-
-+	trace_xfs_iunlink_remove(ip);
-+
- 	/*
- 	 * Get the agi buffer first.  It ensures lock ordering
- 	 * on the list.
--- 
-1.7.7.6
 
 _______________________________________________
 xfs mailing list
