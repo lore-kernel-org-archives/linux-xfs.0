@@ -1,26 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 299657F3F
-	for <xfs@oss.sgi.com>; Tue, 16 Apr 2013 07:39:10 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 166E28F80B5
-	for <xfs@oss.sgi.com>; Tue, 16 Apr 2013 05:39:07 -0700 (PDT)
-Received: from buxtehude.debian.org (buxtehude.debian.org [140.211.166.26]) by
-	cuda.sgi.com with ESMTP id kIjBZCav63PEGzJp (version=TLSv1
-	cipher=AES128-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 16 Apr 2013 05:39:06 -0700 (PDT)
-Subject: Bug#705483: xfsprogs: xfs_quota misinterprets usernames with leading
-	digits
-Resent-To: debian-bugs-dist@lists.debian.org
-Resent-Message-ID: <handler.705483.B705483.136611576726057@bugs.debian.org>
-Message-ID: <516D443C.3020903@sgi.com>
-Date: Tue, 16 Apr 2013 07:29:48 -0500
-From: Rich Johnston <rjohnston@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id C6A407F3F
+	for <xfs@oss.sgi.com>; Tue, 16 Apr 2013 08:26:38 -0500 (CDT)
+Message-ID: <516D518F.1000708@sgi.com>
+Date: Tue, 16 Apr 2013 08:26:39 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-References: <516C12DB.3060806@bytemark.co.uk> <516C25AC.60506@sgi.com>
-	<516D0911.5080408@bytemark.co.uk>
-In-Reply-To: <516D0911.5080408@bytemark.co.uk>
-Reply-To: Rich Johnston <rjohnston@sgi.com>, 705483@bugs.debian.org
+Subject: Re: kernels 3.4 slower due to allocation workqueue
+References: <516BCACE.1040900@univ-nantes.fr> <516C046C.8080908@sgi.com>
+	<516CFCB8.1060804@univ-nantes.fr>
+In-Reply-To: <516CFCB8.1060804@univ-nantes.fr>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,44 +18,74 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: James Carter <james.carter@bytemark.co.uk>, 705483@bugs.debian.org
+To: Yann Dupont <Yann.Dupont@univ-nantes.fr>
+Cc: xfs@oss.sgi.com
 
-On 04/16/2013 03:17 AM, James Carter wrote:
-> On 15/04/13 17:07, Rich Johnston wrote:
+On 04/16/13 02:24, Yann Dupont wrote:
+> Le 15/04/2013 15:45, Mark Tinguely a =E9crit :
 >>
->> I don't think this is a bug, username must begin with a character
->> (unless you created the user using NIS or adduser --force-badname).
+>> Here are the allocation worker changes.
+>>
 >
-> My understanding that this is a recommendation rather than a
-> requirement. useradd(8) has the following to say:
+> Hello mark, thanks for you answer
 >
->         On Debian, the only constraints are that usernames must neither
-> start
->         with a dash ('-') nor contain a colon (':') or a whitespace
-> (space: '
->         ', end of line: '\n', tabulation: '\t', etc.). Note that using a
-> slash
->         ('/') may break the default algorithm for the definition of the
-> user's
->         home directory.
+>> The biggest performance commit should be aa292847, which limits the
+>> callers to the worker.
+>>
+>> commit 3b876c8f2a361ceeed3fed894980c69066f903a0
+>> Author: Jeff Liu <jeff.liu@oracle.com>
+>> Date: Thu Jun 7 15:44:32 2012 +0800
+>>
+>> xfs: fix debug_object WARN at xfs_alloc_vextent()
+>>
+>> commit aa292847b9fc6e187547110de833a7d3131bbddf
+>> Author: Dave Chinner <dchinner@redhat.com>
+>> Date: Thu Jul 12 07:40:43 2012 +1000
+>>
+>> xfs: don't defer metadata allocation to the workqueue
+>>
 >
-> In any case, I'd still consider it a bug that trailing non-numeric
-> characters were just silently ignored.
+> Only These 2 commits are candidates, the others are post 3.5.
+> I'll try to patch a 3.4 with each patch.
+>
+>> commit 2455881c0b52f87be539c4c7deab1afff4d8a560
+>> Author: Dave Chinner <dchinner@redhat.com>
+>> Date: Fri Oct 5 11:06:58 2012 +1000
+>>
+>> xfs: introduce XFS_BMAPI_STACK_SWITCH
+>>
+>> commit e04426b9202bccd4cfcbc70b2fa2aeca1c86d8f5
+>> Author: Dave Chinner <dchinner@redhat.com>
+>> Date: Fri Oct 5 11:06:59 2012 +1000
+>>
+>> xfs: move allocation stack switch up to xfs_bmapi_allocate
+>>
+>> commit 9e96fe6df44425b69ed89f6ac20352cec1f127d7
+>> Author: Brian Foster <bfoster@redhat.com>
+>> Date: Thu Jan 17 13:11:29 2013 -0500
+>>
+>> xfs: pull up stack_switch check into xfs_bmapi_write
+>>
+>>
+>> The last 3 patches address an AGF buffer hang with the allocation worker.
+>>
+>> --Mark.
+>
+> As 3.4 Kernels don't have thoses patches, is there a risk associated
+> with 3.4 kernels ?
+>
+> Cheers,
 >
 
-Interesting I was not aware of the Debian difference.  My understanding 
-was that usernames with leading digits would have trouble with other 
-utilities on other versions of Unix and flavors of Linux as they would 
-interpret the username as numeric UID.  I was able to create a user with 
-leading digits and trailing alpha characters using vipw.  Because  chown 
-works using this username, we will look into fixing this bug.  Thanks 
-for pointing it out.
+The filesystem can hang but only if the OS cannot allocate another =
 
---Rich
+worker when doing certain calls.
+
+--Mark.
 
 _______________________________________________
 xfs mailing list
