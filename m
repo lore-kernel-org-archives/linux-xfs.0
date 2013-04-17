@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D15F77F4E
-	for <xfs@oss.sgi.com>; Wed, 17 Apr 2013 08:53:34 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 84FE07F4C
+	for <xfs@oss.sgi.com>; Wed, 17 Apr 2013 09:02:47 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 952EE304064
-	for <xfs@oss.sgi.com>; Wed, 17 Apr 2013 06:53:31 -0700 (PDT)
-Received: from mail-ie0-f177.google.com (mail-ie0-f177.google.com
-	[209.85.223.177]) by cuda.sgi.com with ESMTP id
-	U5jT2uKDfi0ft3g2 (version=TLSv1 cipher=RC4-SHA bits=128
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 56FC48F8074
+	for <xfs@oss.sgi.com>; Wed, 17 Apr 2013 07:02:44 -0700 (PDT)
+Received: from mail-wi0-f182.google.com (mail-wi0-f182.google.com
+	[209.85.212.182]) by cuda.sgi.com with ESMTP id
+	AnUwsEIKipR05ruJ (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 17 Apr 2013 06:53:30 -0700 (PDT)
-Received: by mail-ie0-f177.google.com with SMTP id 9so1922743iec.36
-	for <xfs@oss.sgi.com>; Wed, 17 Apr 2013 06:53:29 -0700 (PDT)
-Message-ID: <516EA959.6090205@gmail.com>
-Date: Wed, 17 Apr 2013 09:53:29 -0400
-From: Joe Landman <joe.landman@gmail.com>
+	Wed, 17 Apr 2013 07:02:37 -0700 (PDT)
+Received: by mail-wi0-f182.google.com with SMTP id m6so1580654wiv.3
+	for <xfs@oss.sgi.com>; Wed, 17 Apr 2013 07:02:35 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: Practical file system size question
-References: <CAFcHYYBBfsoxdaxNaRjnfyG3yVrRJYYfuoA5vNurdmu+1AUCyA@mail.gmail.com>
 In-Reply-To: <CAFcHYYBBfsoxdaxNaRjnfyG3yVrRJYYfuoA5vNurdmu+1AUCyA@mail.gmail.com>
+References: <CAFcHYYBBfsoxdaxNaRjnfyG3yVrRJYYfuoA5vNurdmu+1AUCyA@mail.gmail.com>
+From: Rafa Griman <rafagriman@gmail.com>
+Date: Wed, 17 Apr 2013 16:02:15 +0200
+Message-ID: <CANRt_=a91yzfw0f+5ktwUk0w5F4PuM8aWrPA0hONg1i=P2OgWQ@mail.gmail.com>
+Subject: Re: Practical file system size question
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,50 +27,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-On 04/17/2013 09:18 AM, Robert Bennett wrote:
+Hi :)
 
-[...]
-
+On Wed, Apr 17, 2013 at 3:18 PM, Robert Bennett
+<rbennett@mail.crawford.com> wrote:
+>
+> We have been running our Storage on XFS for over three years now and are
+> extremely happy.  We are running each file system on LSI Hardware Raid with
+> 3 RAID groups of 12+2 with 3 Hot Spares, and 8 file systems per Head Node.
+> These are running on 2TB SAS HDDs.  The individual file system size is 66TB
+> in this configuration.  The time has come to look into moving to 3TB SAS
+> HDDs.  With very rudimentary math, this should move us to the neighborhood
+> of 99TB per file system.  Our OS is linux 2.6.32-279.11.1.el6.x86_64.
+>
 > The question is - does anyone have experience with this type of
 > configuration and in particular with 3TB HDDs and a file system size of
-> 99TB?  The rebuild time with 2TB drives is ~ 24 hours.  Should I expect
-
-Yes, we've built up to 240TB raw (180TB usable) xfs systems for our 
-customers on our units.  Very doable, though there are some considerations.
-
-First off, why 3TB when 4TB are in market, pretty stable ... ?  Unless 
-there is a budgetary limitation you are working against, I'd advise at 
-least looking at those.
-
-Second, which LSI controllers are you using?  Firmware updates for the 
-controllers to use 3TB and higher drives are pretty much mandated.  Our 
-experience with various LSI cards has ranged from not so good to pretty 
-good, and this is a firmware version revision dependent (along with 
-driver) issue from what we found.
-
-> the rebuild time for the 3TB drives to be ~ 36 hours?
-
-Not in our experience.  Typically 5-10 hours depending upon RAID card 
-used, RAID configuration, drives chosen, and other issues.  Its pretty 
-complex, and hard to predict in advance without trying it.
+> 99TB?  The rebuild time with 2TB drives is ~ 24 hours.  Should I expect the
+> rebuild time for the 3TB drives to be ~ 36 hours?
+>
+> Thanks for all the hard work all of you do on a file system that continues
+> to dazzle.
 
 
--- 
-Joseph Landman, Ph.D
-Founder and CEO
-Scalable Informatics, Inc.
-email: landman@scalableinformatics.com
-web  : http://scalableinformatics.com
-        http://scalableinformatics.com/siflash
-phone: +1 734 786 8423 x121
-fax  : +1 866 888 3112
-cell : +1 734 612 4615
+When you say "LSI Hardware Raid", I assume it's some sort of
+NetApp/Engenio storage array (aka E2600, E2400, E5500). Am I correct?
+If so, you should try the new their new feature Dynamic Disk Pooling:
+
+http://www.netapp.com/us/system/pdf-reader.aspx?m=ds-3309.pdf&cc=us
+
+http://www.netapp.com/us/technology/dynamic-disk-pools.aspx
+
+It lowers your rebuild times quite a lot.
+
+If you mean internal LSI RAID PCIe controllers in a server ... can't
+be of much help here :(
+
+HTH
+
+   Rafa
 
 _______________________________________________
 xfs mailing list
