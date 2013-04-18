@@ -1,36 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7D01A7F59
-	for <xfs@oss.sgi.com>; Thu, 18 Apr 2013 12:44:32 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4BAD1304032
-	for <xfs@oss.sgi.com>; Thu, 18 Apr 2013 10:44:29 -0700 (PDT)
-Received: from e38.co.us.ibm.com (e38.co.us.ibm.com [32.97.110.159]) by
-	cuda.sgi.com with ESMTP id ZSlnwUPwvVRvRuM7 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 18 Apr 2013 10:44:28 -0700 (PDT)
-Received: from /spool/local
-	by e38.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
-	Violators will be prosecuted
-	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
-	Thu, 18 Apr 2013 11:44:23 -0600
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com
-	[9.17.195.106])
-	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id 63A983E40072
-	for <xfs@oss.sgi.com>; Thu, 18 Apr 2013 11:43:58 -0600 (MDT)
-Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	r3IHi4Ga366976 for <xfs@oss.sgi.com>; Thu, 18 Apr 2013 11:44:04 -0600
-Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av04.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
-	id r3IHi3qb004337
-	for <xfs@oss.sgi.com>; Thu, 18 Apr 2013 11:44:04 -0600
-Subject: [PATCH] xfstests: Remove dependence of xfs_check script
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Date: Thu, 18 Apr 2013 12:44:02 -0500
-Message-ID: <1366307042.3762.32361.camel@chandra-dt.ibm.com>
-Mime-Version: 1.0
-Reply-To: sekharan@us.ibm.com
+	by oss.sgi.com (Postfix) with ESMTP id 081CB7F5E
+	for <xfs@oss.sgi.com>; Thu, 18 Apr 2013 13:35:54 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E98C230406A
+	for <xfs@oss.sgi.com>; Thu, 18 Apr 2013 11:35:53 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id 6Erf6f4Gh0wOQ8OE for <xfs@oss.sgi.com>;
+	Thu, 18 Apr 2013 11:35:49 -0700 (PDT)
+Message-ID: <51703D05.6060308@sandeen.net>
+Date: Thu, 18 Apr 2013 11:35:49 -0700
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: xfs_iunlink_remove: xfs_inotobp() returned error 22 -- debugging
+References: <516C89DF.4070904@redhat.com> <20130416162417.GC13938@destitution>
+	<516D87E3.2010605@redhat.com>
+	<CADFMGuLgU2++ym4U9axhevV_L2t-2CMVaDoT5cyQcew2YZMsBA@mail.gmail.com>
+	<CADFMGuK3cPSmqZoMdFSSqOnUz3GLv+c01xXHDhzv9_dfUNUPPA@mail.gmail.com>
+	<CADFMGu+XD=-NJm3CAsnKpiMWykPj67t2LHgtxkPpyTpVmG3LDA@mail.gmail.com>
+	<CADFMGu+z32O5mVBfO6gb8F03y9mrwB5=nf+7LMbky4ttk2mbFw@mail.gmail.com>
+	<BA50C18A-BE51-4658-B05E-3EDB0F11BE36@sandeen.net>
+	<CADFMGuKfXwY=Z9dg6+wyX7mKzppu1hQhsqxcr9Fd=DjP4hii9w@mail.gmail.com>
+	<CADFMGuLDwde8te0Cs4-T9fdVmq2v22fmSTgkYbULHS3voHzw6A@mail.gmail.com>
+	<CADFMGuKmmJCz+FxsFL9KegqzNhhHsG2ZbVjrwCDyNCh1R_Zgpw@mail.gmail.com>
+	<516FDBDE.1070406@redhat.com>
+	<CADFMGuJ-An9MMmYtOKEjt5JdHmvu-cc0G+y361e_fioYf4j7HQ@mail.gmail.com>
+In-Reply-To: <CADFMGuJ-An9MMmYtOKEjt5JdHmvu-cc0G+y361e_fioYf4j7HQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,148 +34,47 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="gb2312"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: XFS mailing list <xfs@oss.sgi.com>
-Cc: Eric Sandeen <sandeen@redhat.com>
+To: =?GB2312?B?t/vTwMzO?= <yongtaofu@gmail.com>
+Cc: Brian Foster <bfoster@redhat.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Replace the usage of the script xfs_check and add the relevant code to
-xfstests.
-
-This is in preparation of the planned deprecation of xfs_check.
-
-Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
----
-
-diff --git a/common/config b/common/config
-index bf62996..dfbb5c2 100644
---- a/common/config
-+++ b/common/config
-@@ -154,7 +154,6 @@ export DF_PROG="`set_prog_path df`"
- 
- export XFS_LOGPRINT_PROG="`set_prog_path xfs_logprint`"
- export XFS_REPAIR_PROG="`set_prog_path xfs_repair`"
--export XFS_CHECK_PROG="`set_prog_path xfs_check`"
- export XFS_DB_PROG="`set_prog_path xfs_db`"
- export XFS_GROWFS_PROG=`set_prog_path xfs_growfs`
- export XFS_IO_PROG="`set_prog_path xfs_io`"
-diff --git a/common/rc b/common/rc
-index 09fb83f..2397795 100644
---- a/common/rc
-+++ b/common/rc
-@@ -166,7 +166,6 @@ case "$FSTYP" in
-     xfs)
- 	 [ "$XFS_LOGPRINT_PROG" = "" ] && _fatal "xfs_logprint not found"
- 	 [ "$XFS_REPAIR_PROG" = "" ] && _fatal "xfs_repair not found"
--	 [ "$XFS_CHECK_PROG" = "" ] && _fatal "xfs_check not found"
- 	 [ "$XFS_DB_PROG" = "" ] && _fatal "xfs_db not found"
- 	 [ "$MKFS_XFS_PROG" = "" ] && _fatal "mkfs_xfs not found"
- 	 ;;
-@@ -387,6 +386,34 @@ _scratch_mkfs_xfs()
-     return $mkfs_status
- }
- 
-+# xfs_check script is planned to be deprecated. But, we want to
-+# be able to invoke "xfs_check" behavior in xfstests in order to
-+# maintain the current verification levels. 
-+_xfs_check()
-+{
-+    OPTS=" "
-+    DBOPTS=" "
-+
-+    OPTIND=1
-+    while getopts "b:fi:l:stvV" c
-+    do
-+        case $c in
-+            s) OPTS=$OPTS"-s ";;
-+            t) OPTS=$OPTS"-t ";;
-+            v) OPTS=$OPTS"-v ";;
-+            i) OPTS=$OPTS"-i "$OPTARG" ";;
-+            b) OPTS=$OPTS"-b "$OPTARG" ";;
-+            f) DBOPTS=$DBOPTS" -f";;
-+            l) DBOPTS=$DBOPTS" -l "$OPTARG" ";;
-+            V) $XFS_DB_PROG -p xfs_check -V
-+                return $?
-+                ;;
-+        esac
-+    done
-+    ${XFS_DB_PROG}${DBOPTS} -F -i -p xfs_check -c "check$OPTS" $1
-+    return $?
-+}
-+
- _setup_large_ext4_fs()
- {
- 	fs_size=$1
-@@ -589,7 +616,7 @@ _scratch_xfs_check()
-         SCRATCH_OPTIONS="-l $SCRATCH_LOGDEV"
-     [ "$LARGE_SCRATCH_DEV" = yes ] && \
-         SCRATCH_OPTIONS=$SCRATCH_OPTIONS" -t"
--    $XFS_CHECK_PROG $SCRATCH_OPTIONS $* $SCRATCH_DEV
-+    _xfs_check $SCRATCH_OPTIONS $* $SCRATCH_DEV
- }
- 
- _scratch_xfs_repair()
-@@ -1426,7 +1453,7 @@ _check_xfs_filesystem()
-     # option (-t) to avoid indexing the free space trees doesn't make it pass on
-     # large filesystems. Avoid it.
-     if [ "$LARGE_SCRATCH_DEV" != yes ]; then
--	    $XFS_CHECK_PROG $extra_log_options $device 2>&1 |\
-+	    _xfs_check $extra_log_options $device 2>&1 |\
- 		 _fix_malloc >$tmp.fs_check
-     fi
-     if [ -s $tmp.fs_check ]
-diff --git a/crash/xfscrash b/crash/xfscrash
-index 7831d7e..579b724 100755
---- a/crash/xfscrash
-+++ b/crash/xfscrash
-@@ -120,11 +120,11 @@ _check()
-     if [ $expect -eq 0 ]
-     then
-         _echo "      *** xfs_check ($LOG/check_clean.out)"   
--        xfs_check $TEST_DEV &> $LOG/check_clean.out || fail=1
-+        _xfs_check $TEST_DEV &> $LOG/check_clean.out || fail=1
-         [ -s /tmp/xfs_check_clean.out ] && fail=1
-     else
-         _echo "      *** xfs_check ($LOG/check_dirty.out)"   
--        xfs_check $TEST_DEV &> $LOG/check_dirty.out || fail=1
-+        _xfs_check $TEST_DEV &> $LOG/check_dirty.out || fail=1
-     fi
-     
-     if [ $fail -eq 0 -a $expect -eq 0 ]
-diff --git a/tests/xfs/085 b/tests/xfs/085
-index 27f29a3..af71b77 100755
---- a/tests/xfs/085
-+++ b/tests/xfs/085
-@@ -70,7 +70,7 @@ _print_logstate
- 
- # curious if FS consistent at start
- if false; then
--    if $XFS_CHECK_PROG $SCRATCH_DEV; then
-+    if _xfs_check $SCRATCH_DEV; then
-        echo "*** checked ok ***"
-     fi
- fi
-diff --git a/tests/xfs/291 b/tests/xfs/291
-old mode 100644
-new mode 100755
-index f842679..7723b9e
---- a/tests/xfs/291
-+++ b/tests/xfs/291
-@@ -113,7 +113,7 @@ done
- _scratch_unmount
- # Can xfs_repair and xfs_check cope with this monster?
- _scratch_xfs_repair >> $seqres.full 2>&1 || _fail "xfs_repair failed"
--xfs_check $SCRATCH_DEV >> $seqres.full 2>&1 || _fail "xfs_check failed"
-+_xfs_check $SCRATCH_DEV >> $seqres.full 2>&1 || _fail "xfs_check failed"
- 
- # Yes they can!  Now...
- # Can xfs_metadump cope with this monster?
-
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gNC8xOC8xMyA4OjIzIEFNLCC3+9PAzM4gd3JvdGU6Cj4gSGkgQnJpYW4gYW5kIEVyaWMsCj4g
+VGhlIHNodXRkb3duIGlzIG5vdCBlYXN5IHRvIHByb2R1Y2UgYnV0IGZpbmFsbHkgcmlnaHQgbm93
+IDIgb2Ygb3VyIHNlcnZlcnMgaW4gb3VyIHRlc3QgY2x1c3RlciB4ZnMgd2FzIHNodXRkb3duLgo+
+IAo+IHRoZSB0cmFjZSBvdXRwdXQgYXMgZm9sbG93aW5nCj4gaHR0cHM6Ly9kb2NzLmdvb2dsZS5j
+b20vZmlsZS9kLzBCN24yQzRUNXRmTkNMWFJZVVdKMGIxOUpjV2MvZWRpdD91c3A9c2hhcmluZwo+
+IAoKaGVyZSdzIHNvbWV0aGluZyBpbnRlcmVzdGluZywgZm9yIDIgaW5vZGVzIHdlIGhhdmUgZG91
+YmxlL3JhY2luZyBjYWxscyB0byB4ZnNfaXVubGluazoKCj09PSAweDVjYzBiID09PQogICAgICAg
+ICAgIDwuLi4+LTgzMzYgIFswMDRdICA2OTMxLjM3MjkyNDogeGZzX2l1bmxpbms6IGRldiA4OjE2
+IGlubyAweDVjYzBiCiAgICAgICAgICAgPC4uLj4tODMzNiAgWzAwNF0gIDY5MzEuMzcyOTY1OiB4
+ZnNfaXVubGlua19yZW1vdmU6IGRldiA4OjE2IGlubyAweDVjYzBiCiAgICAgICAgICAgPC4uLj4t
+Mjc1NDEgWzAwMV0gMzUwNjEuMzQ5NzQ3OiB4ZnNfaXVubGluazogZGV2IDg6MTYgaW5vIDB4NWNj
+MGIKICAgICAgICAgICA8Li4uPi0zMzU2ICBbMDAxXSAzNjQ0OS43NjI1MDQ6IHhmc19pdW5saW5r
+X3JlbW92ZTogZGV2IDg6MTYgaW5vIDB4NWNjMGIKICAgICAgICAgICA8Li4uPi0zMzAwICBbMDAz
+XSA0MTAxMy4zOTg1NjY6IHhmc19pdW5saW5rOiBkZXYgODoxNiBpbm8gMHg1Y2MwYgogICAgICAg
+ICAgIDwuLi4+LTI2MTE1IFswMTJdIDQxMDEzLjM5OTg4NDogeGZzX2l1bmxpbms6IGRldiA4OjE2
+IGlubyAweDVjYzBiCiAgICAgICAgICAgPC4uLj4tMjYxMTUgWzAxMl0gNDEwMTMuMzk5OTM1OiB4
+ZnNfaXVubGlua19yZW1vdmU6IGRldiA4OjE2IGlubyAweDVjYzBiCiAgICAgICAgICAgPC4uLj4t
+Mjg5NjEgWzAwMF0gNjg5NzcuOTUxMjA4OiB4ZnNfaXVubGluazogZGV2IDg6MTYgaW5vIDB4NWNj
+MGIKICAgICAgICAgICA8Li4uPi0zMzY0ICBbMDIxXSA4MTYxNi4yMTA1MzM6IHhmc19pdW5saW5r
+X3JlbW92ZTogZGV2IDg6MTYgaW5vIDB4NWNjMGIKCj09PSAweDdlZjhjID09PQogICAgICAgICAg
+IDwuLi4+LTEzMTY5IFswMDFdIDExODc1MS41MzYwMjU6IHhmc19pdW5saW5rOiBkZXYgODoxNiBp
+bm8gMHg3ZWY4YwogICAgICAgICAgIDwuLi4+LTEzMTY5IFswMDFdIDExODc1MS41MzYwNDk6IHhm
+c19pdW5saW5rX3JlbW92ZTogZGV2IDg6MTYgaW5vIDB4N2VmOGMKICAgICAgICAgICA8Li4uPi0z
+NTk0ICBbMDE1XSAxMTkwMjcuMDA2MTYxOiB4ZnNfaXVubGluazogZGV2IDg6MTYgaW5vIDB4N2Vm
+OGMKICAgICAgICAgICA8Li4uPi0zNTk0ICBbMDE1XSAxMTkwMjcuMDA2MTg2OiB4ZnNfaXVubGlu
+a19yZW1vdmU6IGRldiA4OjE2IGlubyAweDdlZjhjCiAgICAgICAgICAgPC4uLj4tMzU5MSAgWzAw
+MV0gMTIxNDIzLjI4NjAwNDogeGZzX2l1bmxpbms6IGRldiA4OjE2IGlubyAweDdlZjhjCiAgICAg
+ICAgICAgPC4uLj4tNDE0MSAgWzAxOV0gMTIxNDIzLjI4ODUxODogeGZzX2l1bmxpbms6IGRldiA4
+OjE2IGlubyAweDdlZjhjCiAgICAgICAgICAgPC4uLj4tNDE0MSAgWzAxOV0gMTIxNDIzLjI4ODU0
+MTogeGZzX2l1bmxpbmtfcmVtb3ZlOiBkZXYgODoxNiBpbm8gMHg3ZWY4YwoKMiB0aHJlYWRzIG9u
+IDIgZGlmZmVyZW50IENQVXMgYWRkaW5nIHRoZSBzYW1lIGlub2RlIHRvIHRoZSB1bmxpbmtlZCBs
+aXN0IGluIGEgcmFjZTsKdGhpcyB3aWxsIGNvcnJ1cHQgdGhlIGxpc3QgYW5kIGxlYWQgdG8gdGhl
+IGZhaWx1cmUgdG8gZmluZCB0aGUgb3RoZXIgaW5vZGUgd2UncmUKbG9va2luZyBmb3IuICBTbywg
+cHJvZ3Jlc3MhICBXZSdsbCB0YWtlIGEgbG9vayBhdCB0aGUgaXVubGluayBwYXRocy4KCi1Fcmlj
+CgoKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBt
+YWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xp
+c3RpbmZvL3hmcwo=
