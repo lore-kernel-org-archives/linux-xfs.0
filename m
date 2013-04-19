@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 623B929DFA
-	for <xfs@oss.sgi.com>; Fri, 19 Apr 2013 07:56:09 -0500 (CDT)
-Message-ID: <51713EEE.3080609@sgi.com>
-Date: Fri, 19 Apr 2013 07:56:14 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 77EF029DFA
+	for <xfs@oss.sgi.com>; Fri, 19 Apr 2013 07:58:08 -0500 (CDT)
+Message-ID: <51713F63.6030106@sgi.com>
+Date: Fri, 19 Apr 2013 07:58:11 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
 Subject: Re: [PATCH] xfsprogs: Add depraction message for xfs_check
@@ -24,12 +24,16 @@ Sender: xfs-bounces@oss.sgi.com
 To: sekharan@us.ibm.com
 Cc: XFS mailing list <xfs@oss.sgi.com>
 
-Looks good.
+Thanks for submitting this patch Chandra, it has been committed.
 
-Regards
 --Rich
 
-Reviewed-by: Rich Johnston <rjohnston@sgi.com>
+commit 04e0266182839805213d8b1d94fd14d99e4a0420
+Author: Chandra Seetharaman <sekharan@us.ibm.com>
+Date:   Wed Apr 17 16:47:24 2013 +0000
+
+     xfsprogs: Add depraction message for xfs_check
+
 
 _______________________________________________
 xfs mailing list
