@@ -1,14 +1,34 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 77EF029DFA
-	for <xfs@oss.sgi.com>; Fri, 19 Apr 2013 07:58:08 -0500 (CDT)
-Message-ID: <51713F63.6030106@sgi.com>
-Date: Fri, 19 Apr 2013 07:58:11 -0500
-From: Rich Johnston <rjohnston@sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 7F3007CBF
+	for <xfs@oss.sgi.com>; Fri, 19 Apr 2013 09:59:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0EBF4AC005
+	for <xfs@oss.sgi.com>; Fri, 19 Apr 2013 07:59:36 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id IJkITlNvhnsMqqFU for <xfs@oss.sgi.com>;
+	Fri, 19 Apr 2013 07:59:34 -0700 (PDT)
+Message-ID: <51715BD4.8080501@sandeen.net>
+Date: Fri, 19 Apr 2013 07:59:32 -0700
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfsprogs: Add depraction message for xfs_check
-References: <1366217244.3762.32327.camel@chandra-dt.ibm.com>
-In-Reply-To: <1366217244.3762.32327.camel@chandra-dt.ibm.com>
+Subject: Re: xfs_iunlink_remove: xfs_inotobp() returned error 22 -- debugging
+References: <516C89DF.4070904@redhat.com> <20130416162417.GC13938@destitution>
+	<516D87E3.2010605@redhat.com>
+	<CADFMGuLgU2++ym4U9axhevV_L2t-2CMVaDoT5cyQcew2YZMsBA@mail.gmail.com>
+	<CADFMGuK3cPSmqZoMdFSSqOnUz3GLv+c01xXHDhzv9_dfUNUPPA@mail.gmail.com>
+	<CADFMGu+XD=-NJm3CAsnKpiMWykPj67t2LHgtxkPpyTpVmG3LDA@mail.gmail.com>
+	<CADFMGu+z32O5mVBfO6gb8F03y9mrwB5=nf+7LMbky4ttk2mbFw@mail.gmail.com>
+	<BA50C18A-BE51-4658-B05E-3EDB0F11BE36@sandeen.net>
+	<CADFMGuKfXwY=Z9dg6+wyX7mKzppu1hQhsqxcr9Fd=DjP4hii9w@mail.gmail.com>
+	<CADFMGuLDwde8te0Cs4-T9fdVmq2v22fmSTgkYbULHS3voHzw6A@mail.gmail.com>
+	<CADFMGuKmmJCz+FxsFL9KegqzNhhHsG2ZbVjrwCDyNCh1R_Zgpw@mail.gmail.com>
+	<516FDBDE.1070406@redhat.com>
+	<CADFMGuJ-An9MMmYtOKEjt5JdHmvu-cc0G+y361e_fioYf4j7HQ@mail.gmail.com>
+	<51705EC4.4000306@redhat.com>
+	<CADFMGu+hPV9RanG7298TAYY4p9gMiBOk0+mq5gf5rhQUWXf4TQ@mail.gmail.com>
+	<CADFMGuJYDp-YrPDqsz2KKx6_2RCkP37ZNGPLzdTVOpEgKDMsjA@mail.gmail.com>
+In-Reply-To: <CADFMGuJYDp-YrPDqsz2KKx6_2RCkP37ZNGPLzdTVOpEgKDMsjA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -17,25 +37,69 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: sekharan@us.ibm.com
-Cc: XFS mailing list <xfs@oss.sgi.com>
+To: =?UTF-8?B?56ym5rC45rab?= <yongtaofu@gmail.com>
+Cc: Brian Foster <bfoster@redhat.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Thanks for submitting this patch Chandra, it has been committed.
-
---Rich
-
-commit 04e0266182839805213d8b1d94fd14d99e4a0420
-Author: Chandra Seetharaman <sekharan@us.ibm.com>
-Date:   Wed Apr 17 16:47:24 2013 +0000
-
-     xfsprogs: Add depraction message for xfs_check
-
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gNC8xOS8xMyA0OjQxIEFNLCDnrKbmsLjmtpsgd3JvdGU6Cj4gRGVhciBCcmlhbiBhbmQgRXJp
+YywKPiAKPiBrZXJuZWwga2VybmVsLTIuNi4zMi0yNzkuMTkuMS5lbDYueDg2XzY0LnJwbSA8aHR0
+cDovL21pcnJvci5saW51eC5kdWtlLmVkdS9wdWIvY2VudG9zLzYuMy91cGRhdGVzL3g4Nl82NC9Q
+YWNrYWdlcy9rZXJuZWwtMi42LjMyLTI3OS4xOS4xLmVsNi54ODZfNjQucnBtPiBzdGlsbCBoYXZl
+IHRoaXMgcHJvYmxlbQo+IEkgYnVpbGQgdGhlIGtlcm5lbCBmcm9tIHRoaXMgc3JwbQo+IGh0dHBz
+Oi8vb3NzLm9yYWNsZS5jb20vb2w2L1NSUE1TLXVwZGF0ZXMva2VybmVsLTIuNi4zMi0yNzkuMTku
+MS5lbDYuc3JjLnJwbQo+IAo+IHRvZGF5IHRoZSBzaHV0ZG93biBoYXBwZW5zIGFnYWluIGR1cmlu
+ZyB0ZXN0Lgo+IFNlZWxvZ3MgYmVsbG93Ogo+IAo+IC92YXIvbG9nL21lc3NhZ2UKPiBBcHIgMTkg
+MTY6NDA6MDUgMTAga2VybmVsOiBYRlMgKHNkYik6IHhmc19pdW5saW5rX3JlbW92ZTogeGZzX2lu
+b3RvYnAoKSByZXR1cm5lZCBlcnJvciAyMi4KPiBBcHIgMTkgMTY6NDA6MDUgMTAga2VybmVsOiBY
+RlMgKHNkYik6IHhmc19pbmFjdGl2ZTogeGZzX2lmcmVlIHJldHVybmVkIGVycm9yIDIyCj4gQXBy
+IDE5IDE2OjQwOjA1IDEwIGtlcm5lbDogWEZTIChzZGIpOiB4ZnNfZG9fZm9yY2Vfc2h1dGRvd24o
+MHgxKSBjYWxsZWQgZnJvbSBsaW5lIDExODQgb2YgZmlsZSBmcy94ZnMveGZzX3Zub2Rlb3BzLmMu
+ICBSZXR1cm4gYWRkcmVzcyA9IDB4ZmZmZmZmZmZhMDJkNGJkYQo+IEFwciAxOSAxNjo0MDowNSAx
+MCBrZXJuZWw6IFhGUyAoc2RiKTogSS9PIEVycm9yIERldGVjdGVkLiBTaHV0dGluZyBkb3duIGZp
+bGVzeXN0ZW0KPiBBcHIgMTkgMTY6NDA6MDUgMTAga2VybmVsOiBYRlMgKHNkYik6IFBsZWFzZSB1
+bW91bnQgdGhlIGZpbGVzeXN0ZW0gYW5kIHJlY3RpZnkgdGhlIHByb2JsZW0ocykKPiBBcHIgMTkg
+MTY6NDA6MDcgMTAga2VybmVsOiBYRlMgKHNkYik6IHhmc19sb2dfZm9yY2U6IGVycm9yIDUgcmV0
+dXJuZWQuCj4gQXByIDE5IDE2OjQwOjM3IDEwIGtlcm5lbDogWEZTIChzZGIpOiB4ZnNfbG9nX2Zv
+cmNlOiBlcnJvciA1IHJldHVybmVkLgo+IAo+IHN5c3RlbXRhcCBzY3JpcHQgb3V0cHV0Ogo+IC0t
+LSB4ZnNfaW1hcCAtLSBtb2R1bGUoInhmcyIpLmZ1bmN0aW9uKCJ4ZnNfaW1hcEBmcy94ZnMveGZz
+X2lhbGxvYy5jOjEyNTciKS5yZXR1cm4gLS0gcmV0dXJuPTB4MTYKPiB2YXJzOiBtcD0weGZmZmY4
+ODEwMTgwMWU4MDAgdHA9MHhmZmZmODgwZmYxNDNhYzcwIGlubz0weGZmZmZmZmZmIGltYXA9MHhm
+ZmZmODgxMDBlOTNiYzA4IGZsYWdzPTB4MCBhZ2Jubz0/IGFnaW5vPT8gYWdubz0/IGJsa3NfcGVy
+X2NsdXN0ZXI9PyBjaHVua19hZ2Jubz0/IGNsdXN0ZXJfYWdibm89PyBlcnJvcj0/IG9mZnNldD0/
+IG9mZnNldF9hZ2Jubz0/IF9fZnVuY19fPVsuLi5dCj4gbXA6IG1fYWdub19sb2cgPSAweDUsIG1f
+YWdpbm9fbG9nID0gMHgyMAo+IG1wLT5tX3NiOiBzYl9hZ2NvdW50ID0gMHgxYywgc2JfYWdibG9j
+a3MgPSAweGZmZmZmZjAsIHNiX2lub3BibG9nID0gMHg0LCBzYl9hZ2Jsa2xvZyA9IDB4MWMsIHNi
+X2RibG9ja3MgPSAweDFiNDkwMDAwMAo+IGltYXA6IGltX2Jsa25vID0gMHgwLCBpbV9sZW4gPSAw
+eGU3NzgsIGltX2JvZmZzZXQgPSAweGQ5OTcKPiBrZXJuZWwgYmFja3RyYWNlOgo+IFJldHVybmlu
+ZyBmcm9tOiAgMHhmZmZmZmZmZmEwMmI0MjYwIDogeGZzX2ltYXArMHgwLzB4MjgwIFt4ZnNdCj4g
+UmV0dXJuaW5nIHRvICA6ICAweGZmZmZmZmZmYTAyYjlkNTkgOiB4ZnNfaW5vdG9icCsweDQ5LzB4
+YzAgW3hmc10KPiAgMHhmZmZmZmZmZmEwMmI5ZWMxIDogeGZzX2l1bmxpbmtfcmVtb3ZlKzB4ZjEv
+MHgzNjAgW3hmc10KPiAgMHhmZmZmZmZmZjgxNGVkZTg5Cj4gIDB4MCAoaW5leGFjdCkKPiB1c2Vy
+IGJhY2t0cmFjZToKPiAgMHgzZWMyNjBlNWFkIFsvbGliNjQvbGlicHRocmVhZC0yLjEyLnNvIDxo
+dHRwOi8vbGlicHRocmVhZC0yLjEyLnNvPisweGU1YWQvMHgyMTkwMDBdCj4gCj4gLS0tIHhmc19p
+dW5saW5rX3JlbW92ZSAtLSBtb2R1bGUoInhmcyIpLmZ1bmN0aW9uKCJ4ZnNfaXVubGlua19yZW1v
+dmVAZnMveGZzL3hmc19pbm9kZS5jOjE2ODEiKS5yZXR1cm4gLS0gcmV0dXJuPTB4MTYKPiB2YXJz
+OiB0cD0weGZmZmY4ODBmZjE0M2FjNzAgaXA9MHhmZmZmODgxMWVkMTExMDAwIG5leHRfaW5vPT8g
+bXA9PyBhZ2k9PyBkaXA9PyBhZ2licD0/IGlicD0/IGFnbm89PyBhZ2lubz0/IG5leHRfYWdpbm89
+PyBsYXN0X2licD0/IGxhc3RfZGlwPTB4ZmZmZjg4MTAwMDAwMDAwMSBidWNrZXRfaW5kZXg9PyBv
+ZmZzZXQ9PyBsYXN0X29mZnNldD0weGZmZmZmZmZmZmZmZjg4MTEgZXJyb3I9PyBfX2Z1bmNfXz1b
+Li4uXQo+IGlwOiBpX2lubyA9IDB4MWJkMzMsIGlfZmxhZ3MgPSAweDAKPiBpcC0+aV9kOiBkaV9u
+bGluayA9IDB4MCwgZGlfZ2VuID0gMHg1MzA2ODc5MQo+IAo+IGRlYnVnZnMgZXZlbnRzIHRyYWNl
+Ogo+IGh0dHBzOi8vZG9jcy5nb29nbGUuY29tL2ZpbGUvZC8wQjduMkM0VDV0Zk5DUkVadGRDMXlh
+bWMwUm5NL2VkaXQ/dXNwPXNoYXJpbmcKClNhbWUgaXNzdWUsIG9uZSBmaWxlIHdhcyB1bmxpbmtl
+ZCB0d2ljZSBpbiBhIHJhY2U6Cgo9PT0gaW5vIDB4NmIxMzMgPT09CiAgICAgICAgICAgPC4uLj4t
+NDQ3NyAgWzAwM10gIDI3MjEuMTc2NzkwOiB4ZnNfaXVubGluazogZGV2IDg6MTYgaW5vIDB4NmIx
+MzMKICAgICAgICAgICA8Li4uPi00NDc3ICBbMDAzXSAgMjcyMS4xNzY4Mzk6IHhmc19pdW5saW5r
+X3JlbW92ZTogZGV2IDg6MTYgaW5vIDB4NmIxMzMKICAgICAgICAgICA8Li4uPi00NDc3ICBbMDA5
+XSAgMzMyMC4xMjcyMjc6IHhmc19pdW5saW5rOiBkZXYgODoxNiBpbm8gMHg2YjEzMwogICAgICAg
+ICAgIDwuLi4+LTQ0NzcgIFswMDFdICAzMzIwLjE0MTEyNjogeGZzX2l1bmxpbmtfcmVtb3ZlOiBk
+ZXYgODoxNiBpbm8gMHg2YjEzMwogICAgICAgICAgIDwuLi4+LTQ0NzcgIFswMDNdICA3OTczLjEz
+NjM2ODogeGZzX2l1bmxpbms6IGRldiA4OjE2IGlubyAweDZiMTMzCiAgICAgICAgICAgPC4uLj4t
+NDQ3OSAgWzAxOF0gIDc5NzMuMTU4NDU3OiB4ZnNfaXVubGluazogZGV2IDg6MTYgaW5vIDB4NmIx
+MzMKICAgICAgICAgICA8Li4uPi00NDc5ICBbMDE4XSAgNzk3My4xNTg0OTc6IHhmc19pdW5saW5r
+X3JlbW92ZTogZGV2IDg6MTYgaW5vIDB4NmIxMzMKCi1FcmljCgpfX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dp
+LmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
