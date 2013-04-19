@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0F3967CBF
-	for <xfs@oss.sgi.com>; Fri, 19 Apr 2013 11:16:19 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id A27BA29DFA
+	for <xfs@oss.sgi.com>; Fri, 19 Apr 2013 11:47:52 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id F11518F8066
-	for <xfs@oss.sgi.com>; Fri, 19 Apr 2013 09:16:15 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id yt3Grymq0mEqxjAT for <xfs@oss.sgi.com>;
-	Fri, 19 Apr 2013 09:16:14 -0700 (PDT)
-Message-ID: <51716DCB.4060407@sandeen.net>
-Date: Fri, 19 Apr 2013 09:16:11 -0700
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 22742AC002
+	for <xfs@oss.sgi.com>; Fri, 19 Apr 2013 09:47:49 -0700 (PDT)
+Received: from mail-ie0-f170.google.com (mail-ie0-f170.google.com
+	[209.85.223.170]) by cuda.sgi.com with ESMTP id
+	9G5JeWRrEvb6dLmF (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 19 Apr 2013 09:47:46 -0700 (PDT)
+Received: by mail-ie0-f170.google.com with SMTP id at1so1320718iec.29
+	for <xfs@oss.sgi.com>; Fri, 19 Apr 2013 09:47:46 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: xfs_iunlink_remove: xfs_inotobp() returned error 22 -- debugging
+In-Reply-To: <51716DCB.4060407@sandeen.net>
 References: <516C89DF.4070904@redhat.com>
 	<CADFMGuK3cPSmqZoMdFSSqOnUz3GLv+c01xXHDhzv9_dfUNUPPA@mail.gmail.com>
 	<CADFMGu+XD=-NJm3CAsnKpiMWykPj67t2LHgtxkPpyTpVmG3LDA@mail.gmail.com>
@@ -29,7 +30,11 @@ References: <516C89DF.4070904@redhat.com>
 	<51715BD4.8080501@sandeen.net>
 	<CADFMGuLjsNBeWE8wTDBgophhpixm3p+wY=9QWwk5u483zL0C4g@mail.gmail.com>
 	<CADFMGuKuL8=B_NY=pKq5gj3aOK0kW0xuPWA=rSCDyziUgWGX6w@mail.gmail.com>
-In-Reply-To: <CADFMGuKuL8=B_NY=pKq5gj3aOK0kW0xuPWA=rSCDyziUgWGX6w@mail.gmail.com>
+	<51716DCB.4060407@sandeen.net>
+Date: Sat, 20 Apr 2013 00:47:46 +0800
+Message-ID: <CADFMGuJH106wg7zVQrt604DxvDWB_bnor==NEGpJ1Xcr9b+C8A@mail.gmail.com>
+Subject: Re: xfs_iunlink_remove: xfs_inotobp() returned error 22 -- debugging
+From: =?GB2312?B?t/vTwMzO?= <yongtaofu@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,99 +43,573 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/mixed; boundary="===============9147847137995757394=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: =?GB2312?B?t/vTwMzO?= <yongtaofu@gmail.com>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: Brian Foster <bfoster@redhat.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-T24gNC8xOS8xMyA4OjE4IEFNLCC3+9PAzM4gd3JvdGU6Cj4gRGVhciBFcmljLAo+IElmIGl0J3Mg
-cmFjaW5nIGlzc3VlIHdoZXJlIHRoZSBsb2NrIGlzIGludHJvZHVjZWQ/IEkgd2FudCB0byBzdHVk
-eSB0aGUgY29kZSBmcm9tIHlvdS4gVGhhbmsgeW91Lgo+IAoKZXNzZW50aWFsbHk6Cgp4ZnNfcmVt
-b3ZlKCkKewouLi4KICAgICAgICB4ZnNfbG9ja190d29faW5vZGVzKGRwLCBpcCwgWEZTX0lMT0NL
-X0VYQ0wpOwouLi4KCXhmc19kcm9wbGluaygpCgpZb3UgYXJlIDEwMCUgc3VyZSB0aGF0IHlvdSB3
-ZXJlIHJ1bm5pbmcgdGhlIDI3OS4xOS4xIGtlcm5lbD8KCihJJ20gbm90IHZlcnkgZmFtaWxpYXIg
-d2l0aCBPcmFjbGUncyBjbG9uZSBvZiBSSEVMIC0gSSBhc3N1bWUgdGhhdCB0aGV5IGhhdmUgY29w
-aWVkIGFsbCBvZiBSZWQgSGF0J3Mgd29yayB2ZXJiYXRpbSwgYnV0IEkgaGF2ZSBub3QgbG9va2Vk
-KQoKQ2FuIHlvdSB2ZXJpZnkgdGhhdCBpbjoKCl9fcndzZW1fZG9fd2FrZSgpCgp0aGUgdW5kbyB0
-YXJnZXQgbG9va3MgbGlrZToKCiAgb3V0OgogICAgICAgIHJldHVybiBzZW07CgoKICAgICAgICAv
-KiB1bmRvIHRoZSBjaGFuZ2UgdG8gdGhlIGFjdGl2ZSBjb3VudCwgYnV0IGNoZWNrIGZvciBhIHRy
-YW5zaXRpb24KICAgICAgICAgKiAxLT4wICovCiAgdW5kbzoKICAgICAgICBpZiAocndzZW1fYXRv
-bWljX3VwZGF0ZSgtUldTRU1fQUNUSVZFX0JJQVMsIHNlbSkgJiBSV1NFTV9BQ1RJVkVfTUFTSykK
-ICAgICAgICAgICAgICAgIGdvdG8gb3V0OwogICAgICAgIGdvdG8gdHJ5X2FnYWluOwoKCnRoYW5r
-cywKLUVyaWMKCj4gMjAxMy80LzE5ILf708DMziA8eW9uZ3Rhb2Z1QGdtYWlsLmNvbSA8bWFpbHRv
-Onlvbmd0YW9mdUBnbWFpbC5jb20+Pgo+IAo+ICAgICBTdXJlIHRoZSBzZXJpb3VzIHRoaW5nIGhl
-cmUgaXMgdGhhdCBpdCBjb3JydXB0IHRoZSB1bmxpbmtlZCBsaXN0LiBUaGUgaW5vZGUgMHgxYmQz
-MyB3aGljaCB0cmlnZ2VyIHhmcyBzaHV0ZG93biBpcyBub3QgIDB4NmIxMzMuCj4gCj4gCj4gICAg
-IDIwMTMvNC8xOSBFcmljIFNhbmRlZW4gPHNhbmRlZW5Ac2FuZGVlbi5uZXQgPG1haWx0bzpzYW5k
-ZWVuQHNhbmRlZW4ubmV0Pj4KPiAKPiAgICAgICAgIE9uIDQvMTkvMTMgNDo0MSBBTSwgt/vTwMzO
-IHdyb3RlOgo+ICAgICAgICAgPiBEZWFyIEJyaWFuIGFuZCBFcmljLAo+ICAgICAgICAgPgo+ICAg
-ICAgICAgPiBrZXJuZWwga2VybmVsLTIuNi4zMi0yNzkuMTkuMS5lbDYueDg2XzY0LnJwbSA8aHR0
-cDovL21pcnJvci5saW51eC5kdWtlLmVkdS9wdWIvY2VudG9zLzYuMy91cGRhdGVzL3g4Nl82NC9Q
-YWNrYWdlcy9rZXJuZWwtMi42LjMyLTI3OS4xOS4xLmVsNi54ODZfNjQucnBtPiBzdGlsbCBoYXZl
-IHRoaXMgcHJvYmxlbQo+ICAgICAgICAgPiBJIGJ1aWxkIHRoZSBrZXJuZWwgZnJvbSB0aGlzIHNy
-cG0KPiAgICAgICAgID4gaHR0cHM6Ly9vc3Mub3JhY2xlLmNvbS9vbDYvU1JQTVMtdXBkYXRlcy9r
-ZXJuZWwtMi42LjMyLTI3OS4xOS4xLmVsNi5zcmMucnBtCj4gICAgICAgICA+Cj4gICAgICAgICA+
-IHRvZGF5IHRoZSBzaHV0ZG93biBoYXBwZW5zIGFnYWluIGR1cmluZyB0ZXN0Lgo+ICAgICAgICAg
-PiBTZWVsb2dzIGJlbGxvdzoKPiAgICAgICAgID4KPiAgICAgICAgID4gL3Zhci9sb2cvbWVzc2Fn
-ZQo+ICAgICAgICAgPiBBcHIgMTkgMTY6NDA6MDUgMTAga2VybmVsOiBYRlMgKHNkYik6IHhmc19p
-dW5saW5rX3JlbW92ZTogeGZzX2lub3RvYnAoKSByZXR1cm5lZCBlcnJvciAyMi4KPiAgICAgICAg
-ID4gQXByIDE5IDE2OjQwOjA1IDEwIGtlcm5lbDogWEZTIChzZGIpOiB4ZnNfaW5hY3RpdmU6IHhm
-c19pZnJlZSByZXR1cm5lZCBlcnJvciAyMgo+ICAgICAgICAgPiBBcHIgMTkgMTY6NDA6MDUgMTAg
-a2VybmVsOiBYRlMgKHNkYik6IHhmc19kb19mb3JjZV9zaHV0ZG93bigweDEpIGNhbGxlZCBmcm9t
-IGxpbmUgMTE4NCBvZiBmaWxlIGZzL3hmcy94ZnNfdm5vZGVvcHMuYy4gIFJldHVybiBhZGRyZXNz
-ID0gMHhmZmZmZmZmZmEwMmQ0YmRhCj4gICAgICAgICA+IEFwciAxOSAxNjo0MDowNSAxMCBrZXJu
-ZWw6IFhGUyAoc2RiKTogSS9PIEVycm9yIERldGVjdGVkLiBTaHV0dGluZyBkb3duIGZpbGVzeXN0
-ZW0KPiAgICAgICAgID4gQXByIDE5IDE2OjQwOjA1IDEwIGtlcm5lbDogWEZTIChzZGIpOiBQbGVh
-c2UgdW1vdW50IHRoZSBmaWxlc3lzdGVtIGFuZCByZWN0aWZ5IHRoZSBwcm9ibGVtKHMpCj4gICAg
-ICAgICA+IEFwciAxOSAxNjo0MDowNyAxMCBrZXJuZWw6IFhGUyAoc2RiKTogeGZzX2xvZ19mb3Jj
-ZTogZXJyb3IgNSByZXR1cm5lZC4KPiAgICAgICAgID4gQXByIDE5IDE2OjQwOjM3IDEwIGtlcm5l
-bDogWEZTIChzZGIpOiB4ZnNfbG9nX2ZvcmNlOiBlcnJvciA1IHJldHVybmVkLgo+ICAgICAgICAg
-Pgo+ICAgICAgICAgPiBzeXN0ZW10YXAgc2NyaXB0IG91dHB1dDoKPiAgICAgICAgID4gLS0tIHhm
-c19pbWFwIC0tIG1vZHVsZSgieGZzIikuZnVuY3Rpb24oInhmc19pbWFwQGZzL3hmcy94ZnNfaWFs
-bG9jLmM6MTI1NyIpLnJldHVybiAtLSByZXR1cm49MHgxNgo+ICAgICAgICAgPiB2YXJzOiBtcD0w
-eGZmZmY4ODEwMTgwMWU4MDAgdHA9MHhmZmZmODgwZmYxNDNhYzcwIGlubz0weGZmZmZmZmZmIGlt
-YXA9MHhmZmZmODgxMDBlOTNiYzA4IGZsYWdzPTB4MCBhZ2Jubz0/IGFnaW5vPT8gYWdubz0/IGJs
-a3NfcGVyX2NsdXN0ZXI9PyBjaHVua19hZ2Jubz0/IGNsdXN0ZXJfYWdibm89PyBlcnJvcj0/IG9m
-ZnNldD0/IG9mZnNldF9hZ2Jubz0/IF9fZnVuY19fPVsuLi5dCj4gICAgICAgICA+IG1wOiBtX2Fn
-bm9fbG9nID0gMHg1LCBtX2FnaW5vX2xvZyA9IDB4MjAKPiAgICAgICAgID4gbXAtPm1fc2I6IHNi
-X2FnY291bnQgPSAweDFjLCBzYl9hZ2Jsb2NrcyA9IDB4ZmZmZmZmMCwgc2JfaW5vcGJsb2cgPSAw
-eDQsIHNiX2FnYmxrbG9nID0gMHgxYywgc2JfZGJsb2NrcyA9IDB4MWI0OTAwMDAwCj4gICAgICAg
-ICA+IGltYXA6IGltX2Jsa25vID0gMHgwLCBpbV9sZW4gPSAweGU3NzgsIGltX2JvZmZzZXQgPSAw
-eGQ5OTcKPiAgICAgICAgID4ga2VybmVsIGJhY2t0cmFjZToKPiAgICAgICAgID4gUmV0dXJuaW5n
-IGZyb206ICAweGZmZmZmZmZmYTAyYjQyNjAgOiB4ZnNfaW1hcCsweDAvMHgyODAgW3hmc10KPiAg
-ICAgICAgID4gUmV0dXJuaW5nIHRvICA6ICAweGZmZmZmZmZmYTAyYjlkNTkgOiB4ZnNfaW5vdG9i
-cCsweDQ5LzB4YzAgW3hmc10KPiAgICAgICAgID4gIDB4ZmZmZmZmZmZhMDJiOWVjMSA6IHhmc19p
-dW5saW5rX3JlbW92ZSsweGYxLzB4MzYwIFt4ZnNdCj4gICAgICAgICA+ICAweGZmZmZmZmZmODE0
-ZWRlODkKPiAgICAgICAgID4gIDB4MCAoaW5leGFjdCkKPiAgICAgICAgID4gdXNlciBiYWNrdHJh
-Y2U6Cj4gICAgICAgICA+ICAweDNlYzI2MGU1YWQgWy9saWI2NC9saWJwdGhyZWFkLTIuMTIuc28g
-PGh0dHA6Ly9saWJwdGhyZWFkLTIuMTIuc28+IDxodHRwOi8vbGlicHRocmVhZC0yLjEyLnNvPisw
-eGU1YWQvMHgyMTkwMDBdCj4gICAgICAgICA+Cj4gICAgICAgICA+IC0tLSB4ZnNfaXVubGlua19y
-ZW1vdmUgLS0gbW9kdWxlKCJ4ZnMiKS5mdW5jdGlvbigieGZzX2l1bmxpbmtfcmVtb3ZlQGZzL3hm
-cy94ZnNfaW5vZGUuYzoxNjgxIikucmV0dXJuIC0tIHJldHVybj0weDE2Cj4gICAgICAgICA+IHZh
-cnM6IHRwPTB4ZmZmZjg4MGZmMTQzYWM3MCBpcD0weGZmZmY4ODExZWQxMTEwMDAgbmV4dF9pbm89
-PyBtcD0/IGFnaT0/IGRpcD0/IGFnaWJwPT8gaWJwPT8gYWdubz0/IGFnaW5vPT8gbmV4dF9hZ2lu
-bz0/IGxhc3RfaWJwPT8gbGFzdF9kaXA9MHhmZmZmODgxMDAwMDAwMDAxIGJ1Y2tldF9pbmRleD0/
-IG9mZnNldD0/IGxhc3Rfb2Zmc2V0PTB4ZmZmZmZmZmZmZmZmODgxMSBlcnJvcj0/IF9fZnVuY19f
-PVsuLi5dCj4gICAgICAgICA+IGlwOiBpX2lubyA9IDB4MWJkMzMsIGlfZmxhZ3MgPSAweDAKPiAg
-ICAgICAgID4gaXAtPmlfZDogZGlfbmxpbmsgPSAweDAsIGRpX2dlbiA9IDB4NTMwNjg3OTEKPiAg
-ICAgICAgID4KPiAgICAgICAgID4gZGVidWdmcyBldmVudHMgdHJhY2U6Cj4gICAgICAgICA+IGh0
-dHBzOi8vZG9jcy5nb29nbGUuY29tL2ZpbGUvZC8wQjduMkM0VDV0Zk5DUkVadGRDMXlhbWMwUm5N
-L2VkaXQ/dXNwPXNoYXJpbmcKPiAKPiAgICAgICAgIFNhbWUgaXNzdWUsIG9uZSBmaWxlIHdhcyB1
-bmxpbmtlZCB0d2ljZSBpbiBhIHJhY2U6Cj4gCj4gICAgICAgICA9PT0gaW5vIDB4NmIxMzMgPT09
-Cj4gICAgICAgICAgICAgICAgICAgIDwuLi4+LTQ0NzcgIFswMDNdICAyNzIxLjE3Njc5MDogeGZz
-X2l1bmxpbms6IGRldiA4OjE2IGlubyAweDZiMTMzCj4gICAgICAgICAgICAgICAgICAgIDwuLi4+
-LTQ0NzcgIFswMDNdICAyNzIxLjE3NjgzOTogeGZzX2l1bmxpbmtfcmVtb3ZlOiBkZXYgODoxNiBp
-bm8gMHg2YjEzMwo+ICAgICAgICAgICAgICAgICAgICA8Li4uPi00NDc3ICBbMDA5XSAgMzMyMC4x
-MjcyMjc6IHhmc19pdW5saW5rOiBkZXYgODoxNiBpbm8gMHg2YjEzMwo+ICAgICAgICAgICAgICAg
-ICAgICA8Li4uPi00NDc3ICBbMDAxXSAgMzMyMC4xNDExMjY6IHhmc19pdW5saW5rX3JlbW92ZTog
-ZGV2IDg6MTYgaW5vIDB4NmIxMzMKPiAgICAgICAgICAgICAgICAgICAgPC4uLj4tNDQ3NyAgWzAw
-M10gIDc5NzMuMTM2MzY4OiB4ZnNfaXVubGluazogZGV2IDg6MTYgaW5vIDB4NmIxMzMKPiAgICAg
-ICAgICAgICAgICAgICAgPC4uLj4tNDQ3OSAgWzAxOF0gIDc5NzMuMTU4NDU3OiB4ZnNfaXVubGlu
-azogZGV2IDg6MTYgaW5vIDB4NmIxMzMKPiAgICAgICAgICAgICAgICAgICAgPC4uLj4tNDQ3OSAg
-WzAxOF0gIDc5NzMuMTU4NDk3OiB4ZnNfaXVubGlua19yZW1vdmU6IGRldiA4OjE2IGlubyAweDZi
-MTMzCj4gCj4gICAgICAgICAtRXJpYwo+IAo+IAo+IAo+IAo+ICAgICAtLSAKPiAgICAgt/vTwMzO
-Cj4gCj4gCj4gCj4gCj4gLS0gCj4gt/vTwMzOCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRw
-Oi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+--===============9147847137995757394==
+Content-Type: multipart/alternative; boundary=90e6ba3fcd278625cb04dab97aba
+
+--90e6ba3fcd278625cb04dab97aba
+Content-Type: text/plain; charset=GB2312
+Content-Transfer-Encoding: quoted-printable
+
+Hi Eric,
+Here's the server info:
+[root@10.23.72.95 ~]# rpm -qa|grep kernel
+kernel-debug-debuginfo-2.6.32-279.19.1.el6.x86_64
+kernel-headers-2.6.32-279.19.1.el6.x86_64
+abrt-addon-kerneloops-2.0.8-6.el6.x86_64
+dracut-kernel-004-283.el6.noarch
+kernel-debuginfo-common-x86_64-2.6.32-279.19.1.el6.x86_64
+kernel-debuginfo-2.6.32-279.19.1.el6.x86_64
+kernel-debug-2.6.32-279.19.1.el6.x86_64
+kernel-devel-2.6.32-279.19.1.el6.x86_64
+libreport-plugin-kerneloops-2.0.9-5.el6.x86_64
+kernel-firmware-2.6.32-279.19.1.el6.noarch
+kernel-2.6.32-279.19.1.el6.x86_64
+kernel-debug-devel-2.6.32-279.19.1.el6.x86_64
+[root@10.23.72.95 ~]# uname -a
+Linux 10.23.72.95 2.6.32-279.19.1.el6.x86_64 #1 SMP Fri Apr 19 10:44:52 CST
+2013 x86_64 x86_64 x86_64 GNU/Linux
+[root@10.23.72.95 ~]#
+
+The kernel code looks like:
+__rwsem_do_wake(struct rw_semaphore *sem, int wakewrite)
+{
+        struct rwsem_waiter *waiter;
+        struct task_struct *tsk;
+        int woken;
+
+        waiter =3D list_entry(sem->wait_list.next, struct rwsem_waiter, lis=
+t);
+
+        if (!wakewrite) {
+                if (waiter->flags & RWSEM_WAITING_FOR_WRITE)
+                        goto out;
+                goto dont_wake_writers;
+        }
+
+        /* if we are allowed to wake writers try to grant a single write
+lock
+         * if there's a writer at the front of the queue
+         * - we leave the 'waiting count' incremented to signify potential
+         *   contention
+         */
+        if (waiter->flags & RWSEM_WAITING_FOR_WRITE) {
+                sem->activity =3D -1;
+                list_del(&waiter->list);
+                tsk =3D waiter->task;
+                /* Don't touch waiter after ->task has been NULLed */
+                smp_mb();
+                waiter->task =3D NULL;
+                wake_up_process(tsk);
+                put_task_struct(tsk);
+                goto out;
+        }
+
+        /* grant an infinite number of read locks to the front of the queue
+*/
+ dont_wake_writers:
+        woken =3D 0;
+        while (waiter->flags & RWSEM_WAITING_FOR_READ) {
+                struct list_head *next =3D waiter->list.next;
+
+                list_del(&waiter->list);
+                tsk =3D waiter->task;
+                smp_mb();
+                waiter->task =3D NULL;
+                wake_up_process(tsk);
+                put_task_struct(tsk);
+                woken++;
+                if (list_empty(&sem->wait_list))
+                        break;
+                waiter =3D list_entry(next, struct rwsem_waiter, list);
+        }
+
+        sem->activity +=3D woken;
+
+ out:
+        return sem;
+}
+
+I use srpm because I want to apply the trace path. Can you help to provide
+the official 279.19.1 srpm link.
+Thank you.
+
+
+2013/4/20 Eric Sandeen <sandeen@sandeen.net>
+
+> On 4/19/13 8:18 AM, =B7=FB=D3=C0=CC=CE wrote:
+> > Dear Eric,
+> > If it's racing issue where the lock is introduced? I want to study the
+> code from you. Thank you.
+> >
+>
+> essentially:
+>
+> xfs_remove()
+> {
+> ...
+>         xfs_lock_two_inodes(dp, ip, XFS_ILOCK_EXCL);
+> ...
+>         xfs_droplink()
+>
+> You are 100% sure that you were running the 279.19.1 kernel?
+>
+> (I'm not very familiar with Oracle's clone of RHEL - I assume that they
+> have copied all of Red Hat's work verbatim, but I have not looked)
+>
+> Can you verify that in:
+>
+> __rwsem_do_wake()
+>
+> the undo target looks like:
+>
+>   out:
+>         return sem;
+>
+>
+>         /* undo the change to the active count, but check for a transitio=
+n
+>          * 1->0 */
+>   undo:
+>         if (rwsem_atomic_update(-RWSEM_ACTIVE_BIAS, sem) &
+> RWSEM_ACTIVE_MASK)
+>                 goto out;
+>         goto try_again;
+>
+>
+> thanks,
+> -Eric
+>
+> > 2013/4/19 =B7=FB=D3=C0=CC=CE <yongtaofu@gmail.com <mailto:yongtaofu@gma=
+il.com>>
+> >
+> >     Sure the serious thing here is that it corrupt the unlinked list.
+> The inode 0x1bd33 which trigger xfs shutdown is not  0x6b133.
+> >
+> >
+> >     2013/4/19 Eric Sandeen <sandeen@sandeen.net <mailto:
+> sandeen@sandeen.net>>
+> >
+> >         On 4/19/13 4:41 AM, =B7=FB=D3=C0=CC=CE wrote:
+> >         > Dear Brian and Eric,
+> >         >
+> >         > kernel kernel-2.6.32-279.19.1.el6.x86_64.rpm <
+> http://mirror.linux.duke.edu/pub/centos/6.3/updates/x86_64/Packages/kerne=
+l-2.6.32-279.19.1.el6.x86_64.rpm>
+> still have this problem
+> >         > I build the kernel from this srpm
+> >         >
+> https://oss.oracle.com/ol6/SRPMS-updates/kernel-2.6.32-279.19.1.el6.src.r=
+pm
+> >         >
+> >         > today the shutdown happens again during test.
+> >         > Seelogs bellow:
+> >         >
+> >         > /var/log/message
+> >         > Apr 19 16:40:05 10 kernel: XFS (sdb): xfs_iunlink_remove:
+> xfs_inotobp() returned error 22.
+> >         > Apr 19 16:40:05 10 kernel: XFS (sdb): xfs_inactive: xfs_ifree
+> returned error 22
+> >         > Apr 19 16:40:05 10 kernel: XFS (sdb):
+> xfs_do_force_shutdown(0x1) called from line 1184 of file
+> fs/xfs/xfs_vnodeops.c.  Return address =3D 0xffffffffa02d4bda
+> >         > Apr 19 16:40:05 10 kernel: XFS (sdb): I/O Error Detected.
+> Shutting down filesystem
+> >         > Apr 19 16:40:05 10 kernel: XFS (sdb): Please umount the
+> filesystem and rectify the problem(s)
+> >         > Apr 19 16:40:07 10 kernel: XFS (sdb): xfs_log_force: error 5
+> returned.
+> >         > Apr 19 16:40:37 10 kernel: XFS (sdb): xfs_log_force: error 5
+> returned.
+> >         >
+> >         > systemtap script output:
+> >         > --- xfs_imap -- module("xfs").function("xfs_imap@fs/xfs/xfs_i=
+alloc.c:1257").return
+> -- return=3D0x16
+> >         > vars: mp=3D0xffff88101801e800 tp=3D0xffff880ff143ac70
+> ino=3D0xffffffff imap=3D0xffff88100e93bc08 flags=3D0x0 agbno=3D? agino=3D=
+? agno=3D?
+> blks_per_cluster=3D? chunk_agbno=3D? cluster_agbno=3D? error=3D? offset=
+=3D?
+> offset_agbno=3D? __func__=3D[...]
+> >         > mp: m_agno_log =3D 0x5, m_agino_log =3D 0x20
+> >         > mp->m_sb: sb_agcount =3D 0x1c, sb_agblocks =3D 0xffffff0,
+> sb_inopblog =3D 0x4, sb_agblklog =3D 0x1c, sb_dblocks =3D 0x1b4900000
+> >         > imap: im_blkno =3D 0x0, im_len =3D 0xe778, im_boffset =3D 0xd=
+997
+> >         > kernel backtrace:
+> >         > Returning from:  0xffffffffa02b4260 : xfs_imap+0x0/0x280 [xfs=
+]
+> >         > Returning to  :  0xffffffffa02b9d59 : xfs_inotobp+0x49/0xc0
+> [xfs]
+> >         >  0xffffffffa02b9ec1 : xfs_iunlink_remove+0xf1/0x360 [xfs]
+> >         >  0xffffffff814ede89
+> >         >  0x0 (inexact)
+> >         > user backtrace:
+> >         >  0x3ec260e5ad [/lib64/libpthread-2.12.so <
+> http://libpthread-2.12.so> <http://libpthread-2.12.so>+0xe5ad/0x219000]
+> >         >
+> >         > --- xfs_iunlink_remove --
+> module("xfs").function("xfs_iunlink_remove@fs/xfs/xfs_inode.c:1681").retu=
+rn
+> -- return=3D0x16
+> >         > vars: tp=3D0xffff880ff143ac70 ip=3D0xffff8811ed111000 next_in=
+o=3D?
+> mp=3D? agi=3D? dip=3D? agibp=3D? ibp=3D? agno=3D? agino=3D? next_agino=3D=
+? last_ibp=3D?
+> last_dip=3D0xffff881000000001 bucket_index=3D? offset=3D?
+> last_offset=3D0xffffffffffff8811 error=3D? __func__=3D[...]
+> >         > ip: i_ino =3D 0x1bd33, i_flags =3D 0x0
+> >         > ip->i_d: di_nlink =3D 0x0, di_gen =3D 0x53068791
+> >         >
+> >         > debugfs events trace:
+> >         >
+> https://docs.google.com/file/d/0B7n2C4T5tfNCREZtdC1yamc0RnM/edit?usp=3Dsh=
+aring
+> >
+> >         Same issue, one file was unlinked twice in a race:
+> >
+> >         =3D=3D=3D ino 0x6b133 =3D=3D=3D
+> >                    <...>-4477  [003]  2721.176790: xfs_iunlink: dev 8:1=
+6
+> ino 0x6b133
+> >                    <...>-4477  [003]  2721.176839: xfs_iunlink_remove:
+> dev 8:16 ino 0x6b133
+> >                    <...>-4477  [009]  3320.127227: xfs_iunlink: dev 8:1=
+6
+> ino 0x6b133
+> >                    <...>-4477  [001]  3320.141126: xfs_iunlink_remove:
+> dev 8:16 ino 0x6b133
+> >                    <...>-4477  [003]  7973.136368: xfs_iunlink: dev 8:1=
+6
+> ino 0x6b133
+> >                    <...>-4479  [018]  7973.158457: xfs_iunlink: dev 8:1=
+6
+> ino 0x6b133
+> >                    <...>-4479  [018]  7973.158497: xfs_iunlink_remove:
+> dev 8:16 ino 0x6b133
+> >
+> >         -Eric
+> >
+> >
+> >
+> >
+> >     --
+> >     =B7=FB=D3=C0=CC=CE
+> >
+> >
+> >
+> >
+> > --
+> > =B7=FB=D3=C0=CC=CE
+>
+>
+
+
+--=20
+=B7=FB=D3=C0=CC=CE
+
+--90e6ba3fcd278625cb04dab97aba
+Content-Type: text/html; charset=GB2312
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><div><div><div>Hi Eric,<br></div>Here&#39;s the server inf=
+o:<br>[<a href=3D"mailto:root@10.23.72.95">root@10.23.72.95</a> ~]# rpm -qa=
+|grep kernel<br>kernel-debug-debuginfo-2.6.32-279.19.1.el6.x86_64<br>kernel=
+-headers-2.6.32-279.19.1.el6.x86_64<br>
+abrt-addon-kerneloops-2.0.8-6.el6.x86_64<br>dracut-kernel-004-283.el6.noarc=
+h<br>kernel-debuginfo-common-x86_64-2.6.32-279.19.1.el6.x86_64<br>kernel-de=
+buginfo-2.6.32-279.19.1.el6.x86_64<br>kernel-debug-2.6.32-279.19.1.el6.x86_=
+64<br>
+kernel-devel-2.6.32-279.19.1.el6.x86_64<br>libreport-plugin-kerneloops-2.0.=
+9-5.el6.x86_64<br>kernel-firmware-2.6.32-279.19.1.el6.noarch<br>kernel-2.6.=
+32-279.19.1.el6.x86_64<br>kernel-debug-devel-2.6.32-279.19.1.el6.x86_64<br>
+[<a href=3D"mailto:root@10.23.72.95">root@10.23.72.95</a> ~]# uname -a<br>L=
+inux 10.23.72.95 2.6.32-279.19.1.el6.x86_64 #1 SMP Fri Apr 19 10:44:52 CST =
+2013 x86_64 x86_64 x86_64 GNU/Linux<br>[<a href=3D"mailto:root@10.23.72.95"=
+>root@10.23.72.95</a> ~]# <br>
+<br>The kernel code looks like:<br>__rwsem_do_wake(struct rw_semaphore *sem=
+, int wakewrite)<br>{<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; struct =
+rwsem_waiter *waiter;<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; struct =
+task_struct *tsk;<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; int woken;<=
+br><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; waiter =3D list_entry(sem=
+-&gt;wait_list.next, struct rwsem_waiter, list);<br>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (!wakewrite) {<br>&nbsp;&=
+nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
+p;&nbsp; if (waiter-&gt;flags &amp; RWSEM_WAITING_FOR_WRITE)<br>&nbsp;&nbsp=
+;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
+bsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; goto out;<br>&nbsp;&nb=
+sp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
+&nbsp; goto dont_wake_writers;<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp=
+; }<br><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* if we are allowed =
+to wake writers try to grant a single write lock<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * if there&#39;s a writer =
+at the front of the queue<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
+p; * - we leave the &#39;waiting count&#39; incremented to signify potentia=
+l<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *&nbsp;&nbsp; content=
+ion<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; */<br>&nbsp;&nbsp;&=
+nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (waiter-&gt;flags &amp; RWSEM_WAITING_FOR_=
+WRITE) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
+sp;&nbsp;&nbsp; sem-&gt;activity =3D -1;<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
+nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; list_del(&amp;w=
+aiter-&gt;list);<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
+nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tsk =3D waiter-&gt;task;<br>&nbsp;&nbsp=
+;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n=
+bsp; /* Don&#39;t touch waiter after -&gt;task has been NULLed */<br>&nbsp;=
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
+sp;&nbsp; smp_mb();<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
+sp;&nbsp;&nbsp; waiter-&gt;task =3D NULL;<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; wake_up_proces=
+s(tsk);<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
+p;&nbsp;&nbsp;&nbsp;&nbsp; put_task_struct(tsk);<br>&nbsp;&nbsp;&nbsp;&nbsp=
+;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; goto ou=
+t;<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br><br>&nbsp;&nbsp;&nbsp=
+;&nbsp;&nbsp;&nbsp;&nbsp; /* grant an infinite number of read locks to the =
+front of the queue */<br>
+&nbsp;dont_wake_writers:<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; woke=
+n =3D 0;<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; while (waiter-&gt;fl=
+ags &amp; RWSEM_WAITING_FOR_READ) {<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; struct list_head *ne=
+xt =3D waiter-&gt;list.next;<br><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
+sp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; list_del(&amp;waiter-&g=
+t;list);<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; tsk =3D waiter-&gt;=
+task;<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
+&nbsp;&nbsp;&nbsp;&nbsp; smp_mb();<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
+nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; waiter-&gt;task =3D N=
+ULL;<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
+nbsp;&nbsp;&nbsp;&nbsp; wake_up_process(tsk);<br>&nbsp;&nbsp;&nbsp;&nbsp;&n=
+bsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; put_task_s=
+truct(tsk);<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; woken++;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb=
+sp;&nbsp;&nbsp; if (list_empty(&amp;sem-&gt;wait_list))<br>&nbsp;&nbsp;&nbs=
+p;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&=
+nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; break;<br>&nbsp;&nbsp;&nbsp=
+;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; w=
+aiter =3D list_entry(next, struct rwsem_waiter, list);<br>&nbsp;&nbsp;&nbsp=
+;&nbsp;&nbsp;&nbsp;&nbsp; }<br><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbs=
+p; sem-&gt;activity +=3D woken;<br>
+<br>&nbsp;out:<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return sem;<br=
+>}<br><br></div>I use srpm because I want to apply the trace path. Can you =
+help to provide the official 279.19.1 srpm link.<br></div>Thank you.<br></d=
+iv><div class=3D"gmail_extra"><br><br>
+<div class=3D"gmail_quote">2013/4/20 Eric Sandeen <span dir=3D"ltr">&lt;<a =
+href=3D"mailto:sandeen@sandeen.net" target=3D"_blank">sandeen@sandeen.net</=
+a>&gt;</span><br><blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8=
+ex;border-left:1px #ccc solid;padding-left:1ex">
+<div class=3D"im">On 4/19/13 8:18 AM, =B7=FB=D3=C0=CC=CE wrote:<br>
+&gt; Dear Eric,<br>
+&gt; If it&#39;s racing issue where the lock is introduced? I want to study=
+ the code from you. Thank you.<br>
+&gt;<br>
+<br>
+</div>essentially:<br>
+<br>
+xfs_remove()<br>
+{<br>
+...<br>
+&nbsp; &nbsp; &nbsp; &nbsp; xfs_lock_two_inodes(dp, ip, XFS_ILOCK_EXCL);<br=
+>
+...<br>
+&nbsp; &nbsp; &nbsp; &nbsp; xfs_droplink()<br>
+<br>
+You are 100% sure that you were running the 279.19.1 kernel?<br>
+<br>
+(I&#39;m not very familiar with Oracle&#39;s clone of RHEL - I assume that =
+they have copied all of Red Hat&#39;s work verbatim, but I have not looked)=
+<br>
+<br>
+Can you verify that in:<br>
+<br>
+__rwsem_do_wake()<br>
+<br>
+the undo target looks like:<br>
+<br>
+&nbsp; out:<br>
+&nbsp; &nbsp; &nbsp; &nbsp; return sem;<br>
+<br>
+<br>
+&nbsp; &nbsp; &nbsp; &nbsp; /* undo the change to the active count, but che=
+ck for a transition<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;* 1-&gt;0 */<br>
+&nbsp; undo:<br>
+&nbsp; &nbsp; &nbsp; &nbsp; if (rwsem_atomic_update(-RWSEM_ACTIVE_BIAS, sem=
+) &amp; RWSEM_ACTIVE_MASK)<br>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; goto out;<br>
+&nbsp; &nbsp; &nbsp; &nbsp; goto try_again;<br>
+<br>
+<br>
+thanks,<br>
+-Eric<br>
+<br>
+&gt; 2013/4/19 =B7=FB=D3=C0=CC=CE &lt;<a href=3D"mailto:yongtaofu@gmail.com=
+">yongtaofu@gmail.com</a> &lt;mailto:<a href=3D"mailto:yongtaofu@gmail.com"=
+>yongtaofu@gmail.com</a>&gt;&gt;<br>
+<div class=3D"im">&gt;<br>
+&gt; &nbsp; &nbsp; Sure the serious thing here is that it corrupt the unlin=
+ked list. The inode 0x1bd33 which trigger xfs shutdown is not &nbsp;0x6b133=
+.<br>
+&gt;<br>
+&gt;<br>
+</div>&gt; &nbsp; &nbsp; 2013/4/19 Eric Sandeen &lt;<a href=3D"mailto:sande=
+en@sandeen.net">sandeen@sandeen.net</a> &lt;mailto:<a href=3D"mailto:sandee=
+n@sandeen.net">sandeen@sandeen.net</a>&gt;&gt;<br>
+<div><div class=3D"h5">&gt;<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; On 4/19/13 4:41 AM, =B7=FB=D3=C0=CC=CE wro=
+te:<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; Dear Brian and Eric,<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt;<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; kernel kernel-2.6.32-279.19.1.el6.x86=
+_64.rpm &lt;<a href=3D"http://mirror.linux.duke.edu/pub/centos/6.3/updates/=
+x86_64/Packages/kernel-2.6.32-279.19.1.el6.x86_64.rpm" target=3D"_blank">ht=
+tp://mirror.linux.duke.edu/pub/centos/6.3/updates/x86_64/Packages/kernel-2.=
+6.32-279.19.1.el6.x86_64.rpm</a>&gt; still have this problem<br>
+
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; I build the kernel from this srpm<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; <a href=3D"https://oss.oracle.com/ol6=
+/SRPMS-updates/kernel-2.6.32-279.19.1.el6.src.rpm" target=3D"_blank">https:=
+//oss.oracle.com/ol6/SRPMS-updates/kernel-2.6.32-279.19.1.el6.src.rpm</a><b=
+r>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt;<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; today the shutdown happens again duri=
+ng test.<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; Seelogs bellow:<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt;<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; /var/log/message<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; Apr 19 16:40:05 10 kernel: XFS (sdb):=
+ xfs_iunlink_remove: xfs_inotobp() returned error 22.<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; Apr 19 16:40:05 10 kernel: XFS (sdb):=
+ xfs_inactive: xfs_ifree returned error 22<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; Apr 19 16:40:05 10 kernel: XFS (sdb):=
+ xfs_do_force_shutdown(0x1) called from line 1184 of file fs/xfs/xfs_vnodeo=
+ps.c. &nbsp;Return address =3D 0xffffffffa02d4bda<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; Apr 19 16:40:05 10 kernel: XFS (sdb):=
+ I/O Error Detected. Shutting down filesystem<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; Apr 19 16:40:05 10 kernel: XFS (sdb):=
+ Please umount the filesystem and rectify the problem(s)<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; Apr 19 16:40:07 10 kernel: XFS (sdb):=
+ xfs_log_force: error 5 returned.<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; Apr 19 16:40:37 10 kernel: XFS (sdb):=
+ xfs_log_force: error 5 returned.<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt;<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; systemtap script output:<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; --- xfs_imap -- module(&quot;xfs&quot=
+;).function(&quot;xfs_imap@fs/xfs/xfs_ialloc.c:1257&quot;).return -- return=
+=3D0x16<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; vars: mp=3D0xffff88101801e800 tp=3D0x=
+ffff880ff143ac70 ino=3D0xffffffff imap=3D0xffff88100e93bc08 flags=3D0x0 agb=
+no=3D? agino=3D? agno=3D? blks_per_cluster=3D? chunk_agbno=3D? cluster_agbn=
+o=3D? error=3D? offset=3D? offset_agbno=3D? __func__=3D[...]<br>
+
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; mp: m_agno_log =3D 0x5, m_agino_log =
+=3D 0x20<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; mp-&gt;m_sb: sb_agcount =3D 0x1c, sb_=
+agblocks =3D 0xffffff0, sb_inopblog =3D 0x4, sb_agblklog =3D 0x1c, sb_dbloc=
+ks =3D 0x1b4900000<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; imap: im_blkno =3D 0x0, im_len =3D 0x=
+e778, im_boffset =3D 0xd997<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; kernel backtrace:<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; Returning from: &nbsp;0xffffffffa02b4=
+260 : xfs_imap+0x0/0x280 [xfs]<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; Returning to &nbsp;: &nbsp;0xffffffff=
+a02b9d59 : xfs_inotobp+0x49/0xc0 [xfs]<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; &nbsp;0xffffffffa02b9ec1 : xfs_iunlin=
+k_remove+0xf1/0x360 [xfs]<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; &nbsp;0xffffffff814ede89<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; &nbsp;0x0 (inexact)<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; user backtrace:<br>
+</div></div>&gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; &nbsp;0x3ec260e5ad [/lib6=
+4/<a href=3D"http://libpthread-2.12.so" target=3D"_blank">libpthread-2.12.s=
+o</a> &lt;<a href=3D"http://libpthread-2.12.so" target=3D"_blank">http://li=
+bpthread-2.12.so</a>&gt; &lt;<a href=3D"http://libpthread-2.12.so" target=
+=3D"_blank">http://libpthread-2.12.so</a>&gt;+0xe5ad/0x219000]<br>
+
+<div class=3D"HOEnZb"><div class=3D"h5">&gt; &nbsp; &nbsp; &nbsp; &nbsp; &g=
+t;<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; --- xfs_iunlink_remove -- module(&quo=
+t;xfs&quot;).function(&quot;xfs_iunlink_remove@fs/xfs/xfs_inode.c:1681&quot=
+;).return -- return=3D0x16<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; vars: tp=3D0xffff880ff143ac70 ip=3D0x=
+ffff8811ed111000 next_ino=3D? mp=3D? agi=3D? dip=3D? agibp=3D? ibp=3D? agno=
+=3D? agino=3D? next_agino=3D? last_ibp=3D? last_dip=3D0xffff881000000001 bu=
+cket_index=3D? offset=3D? last_offset=3D0xffffffffffff8811 error=3D? __func=
+__=3D[...]<br>
+
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; ip: i_ino =3D 0x1bd33, i_flags =3D 0x=
+0<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; ip-&gt;i_d: di_nlink =3D 0x0, di_gen =
+=3D 0x53068791<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt;<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; debugfs events trace:<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; <a href=3D"https://docs.google.com/fi=
+le/d/0B7n2C4T5tfNCREZtdC1yamc0RnM/edit?usp=3Dsharing" target=3D"_blank">htt=
+ps://docs.google.com/file/d/0B7n2C4T5tfNCREZtdC1yamc0RnM/edit?usp=3Dsharing=
+</a><br>
+&gt;<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; Same issue, one file was unlinked twice in=
+ a race:<br>
+&gt;<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; =3D=3D=3D ino 0x6b133 =3D=3D=3D<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&=
+lt;...&gt;-4477 &nbsp;[003] &nbsp;2721.176790: xfs_iunlink: dev 8:16 ino 0x=
+6b133<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&=
+lt;...&gt;-4477 &nbsp;[003] &nbsp;2721.176839: xfs_iunlink_remove: dev 8:16=
+ ino 0x6b133<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&=
+lt;...&gt;-4477 &nbsp;[009] &nbsp;3320.127227: xfs_iunlink: dev 8:16 ino 0x=
+6b133<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&=
+lt;...&gt;-4477 &nbsp;[001] &nbsp;3320.141126: xfs_iunlink_remove: dev 8:16=
+ ino 0x6b133<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&=
+lt;...&gt;-4477 &nbsp;[003] &nbsp;7973.136368: xfs_iunlink: dev 8:16 ino 0x=
+6b133<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&=
+lt;...&gt;-4479 &nbsp;[018] &nbsp;7973.158457: xfs_iunlink: dev 8:16 ino 0x=
+6b133<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&=
+lt;...&gt;-4479 &nbsp;[018] &nbsp;7973.158497: xfs_iunlink_remove: dev 8:16=
+ ino 0x6b133<br>
+&gt;<br>
+&gt; &nbsp; &nbsp; &nbsp; &nbsp; -Eric<br>
+&gt;<br>
+&gt;<br>
+&gt;<br>
+&gt;<br>
+&gt; &nbsp; &nbsp; --<br>
+&gt; &nbsp; &nbsp; =B7=FB=D3=C0=CC=CE<br>
+&gt;<br>
+&gt;<br>
+&gt;<br>
+&gt;<br>
+&gt; --<br>
+&gt; =B7=FB=D3=C0=CC=CE<br>
+<br>
+</div></div></blockquote></div><br><br clear=3D"all"><br>-- <br>=B7=FB=D3=
+=C0=CC=CE
+</div>
+
+--90e6ba3fcd278625cb04dab97aba--
+
+
+--===============9147847137995757394==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============9147847137995757394==--
