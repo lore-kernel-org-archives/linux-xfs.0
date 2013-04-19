@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8703A29DFA
-	for <xfs@oss.sgi.com>; Fri, 19 Apr 2013 12:08:45 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 20D6D29DFA
+	for <xfs@oss.sgi.com>; Fri, 19 Apr 2013 12:17:22 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 644578F8066
-	for <xfs@oss.sgi.com>; Fri, 19 Apr 2013 10:08:45 -0700 (PDT)
-Received: from mail-ie0-f177.google.com (mail-ie0-f177.google.com
-	[209.85.223.177]) by cuda.sgi.com with ESMTP id
-	ICYXp5h5JisCCsbl (version=TLSv1 cipher=RC4-SHA bits=128
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0A41B8F8066
+	for <xfs@oss.sgi.com>; Fri, 19 Apr 2013 10:17:22 -0700 (PDT)
+Received: from mail-ie0-f181.google.com (mail-ie0-f181.google.com
+	[209.85.223.181]) by cuda.sgi.com with ESMTP id
+	PGmP5JBicRUdtvlj (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 19 Apr 2013 10:08:44 -0700 (PDT)
-Received: by mail-ie0-f177.google.com with SMTP id 9so4787044iec.8
-	for <xfs@oss.sgi.com>; Fri, 19 Apr 2013 10:08:44 -0700 (PDT)
+	Fri, 19 Apr 2013 10:17:21 -0700 (PDT)
+Received: by mail-ie0-f181.google.com with SMTP id tp5so2477224ieb.26
+	for <xfs@oss.sgi.com>; Fri, 19 Apr 2013 10:17:20 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <5171790C.70400@sandeen.net>
+In-Reply-To: <CADFMGuKfyw-mCsRn1Y5H5ek+z_nRMHDmW4bG-Ez9ANJm7_ec5A@mail.gmail.com>
 References: <516C89DF.4070904@redhat.com>
 	<CADFMGu+z32O5mVBfO6gb8F03y9mrwB5=nf+7LMbky4ttk2mbFw@mail.gmail.com>
 	<BA50C18A-BE51-4658-B05E-3EDB0F11BE36@sandeen.net>
@@ -32,8 +32,9 @@ References: <516C89DF.4070904@redhat.com>
 	<CADFMGuJH106wg7zVQrt604DxvDWB_bnor==NEGpJ1Xcr9b+C8A@mail.gmail.com>
 	<CADFMGuLcve0a5uiOzZYoVze8tm1UXTPxhEqForMWYsvCyuh0sg@mail.gmail.com>
 	<5171790C.70400@sandeen.net>
-Date: Sat, 20 Apr 2013 01:08:44 +0800
-Message-ID: <CADFMGuKfyw-mCsRn1Y5H5ek+z_nRMHDmW4bG-Ez9ANJm7_ec5A@mail.gmail.com>
+	<CADFMGuKfyw-mCsRn1Y5H5ek+z_nRMHDmW4bG-Ez9ANJm7_ec5A@mail.gmail.com>
+Date: Sat, 20 Apr 2013 01:17:20 +0800
+Message-ID: <CADFMGuL4+vSH9ZpWODXWbHVz9ndMcg2aZY9b0ccq74SJp3XzEw@mail.gmail.com>
 Subject: Re: xfs_iunlink_remove: xfs_inotobp() returned error 22 -- debugging
 From: =?GB2312?B?t/vTwMzO?= <yongtaofu@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -44,67 +45,88 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============7830701367123215616=="
+Content-Type: multipart/mixed; boundary="===============9158302016303332672=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
 Cc: Brian Foster <bfoster@redhat.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
---===============7830701367123215616==
-Content-Type: multipart/alternative; boundary=047d7bd75dec80443104dab9c51c
+--===============9158302016303332672==
+Content-Type: multipart/alternative; boundary=90e6ba3fcd274957e804dab9e437
 
---047d7bd75dec80443104dab9c51c
+--90e6ba3fcd274957e804dab9e437
 Content-Type: text/plain; charset=GB2312
 Content-Transfer-Encoding: quoted-printable
 
-There it is, I use latest 279.19.1 and only apply xfs trace path.
+Dear Eric,
+I noticed some functions call the xfs_lock_two_inodes(dp, ip,
+XFS_ILOCK_EXCL); twince but not in xfs_remove.
 
 
-2013/4/20 Eric Sandeen <sandeen@sandeen.net>
+2013/4/20 =B7=FB=D3=C0=CC=CE <yongtaofu@gmail.com>
 
-> On 4/19/13 10:00 AM, =B7=FB=D3=C0=CC=CE wrote:
-> > Dear Eric,
-> >
-> > I checked rh srpm
-> https://content-web.rhn.redhat.com/rhn/public/NULL/kernel/2.6.32-279.19.1=
-.el6/SRPMS/kernel-2.6.32-279.19.1.el6.src.rpm?__gda__=3D1366390847_8550b856=
-8c50ea46b3180266b476353d&ext=3D.rpm
-> > And the code is same, as following:
-> >
-> > __rwsem_do_wake(struct rw_semaphore *sem, int wakewrite)
-> > {
->
-> need to look in lib/rwsem.c not lib/rwsem-spinlock.c
->
-> Thanks,
-> -Eric
+> There it is, I use latest 279.19.1 and only apply xfs trace path.
 >
 >
+> 2013/4/20 Eric Sandeen <sandeen@sandeen.net>
+>
+>> On 4/19/13 10:00 AM, =B7=FB=D3=C0=CC=CE wrote:
+>> > Dear Eric,
+>> >
+>> > I checked rh srpm
+>> https://content-web.rhn.redhat.com/rhn/public/NULL/kernel/2.6.32-279.19.=
+1.el6/SRPMS/kernel-2.6.32-279.19.1.el6.src.rpm?__gda__=3D1366390847_8550b85=
+68c50ea46b3180266b476353d&ext=3D.rpm
+>> > And the code is same, as following:
+>> >
+>> > __rwsem_do_wake(struct rw_semaphore *sem, int wakewrite)
+>> > {
+>>
+>> need to look in lib/rwsem.c not lib/rwsem-spinlock.c
+>>
+>> Thanks,
+>> -Eric
+>>
+>>
+>
+>
+> --
+> =B7=FB=D3=C0=CC=CE
+>
+
 
 
 --=20
 =B7=FB=D3=C0=CC=CE
 
---047d7bd75dec80443104dab9c51c
+--90e6ba3fcd274957e804dab9e437
 Content-Type: text/html; charset=GB2312
 Content-Transfer-Encoding: quoted-printable
 
-<div dir=3D"ltr">There it is, I use latest 279.19.1 and only apply xfs trac=
-e path.<br></div><div class=3D"gmail_extra"><br><br><div class=3D"gmail_quo=
-te">2013/4/20 Eric Sandeen <span dir=3D"ltr">&lt;<a href=3D"mailto:sandeen@=
-sandeen.net" target=3D"_blank">sandeen@sandeen.net</a>&gt;</span><br>
+<div dir=3D"ltr"><div>Dear Eric,<br></div>I noticed some functions call the=
+ xfs_lock_two_inodes(dp, ip, XFS_ILOCK_EXCL); twince but not in xfs_remove.=
+<br></div><div class=3D"gmail_extra"><br><br><div class=3D"gmail_quote">201=
+3/4/20 =B7=FB=D3=C0=CC=CE <span dir=3D"ltr">&lt;<a href=3D"mailto:yongtaofu=
+@gmail.com" target=3D"_blank">yongtaofu@gmail.com</a>&gt;</span><br>
 <blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
-x #ccc solid;padding-left:1ex"><div class=3D"im">On 4/19/13 10:00 AM, =B7=
-=FB=D3=C0=CC=CE wrote:<br>
+x #ccc solid;padding-left:1ex"><div dir=3D"ltr">There it is, I use latest 2=
+79.19.1 and only apply xfs trace path.<br></div><div class=3D"gmail_extra">=
+<div>
+<div class=3D"h5"><br><br><div class=3D"gmail_quote">2013/4/20 Eric Sandeen=
+ <span dir=3D"ltr">&lt;<a href=3D"mailto:sandeen@sandeen.net" target=3D"_bl=
+ank">sandeen@sandeen.net</a>&gt;</span><br>
+<blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
+x #ccc solid;padding-left:1ex"><div>On 4/19/13 10:00 AM, =B7=FB=D3=C0=CC=CE=
+ wrote:<br>
 &gt; Dear Eric,<br>
 &gt;<br>
-</div><div class=3D"im">&gt; I checked rh srpm <a href=3D"https://content-w=
-eb.rhn.redhat.com/rhn/public/NULL/kernel/2.6.32-279.19.1.el6/SRPMS/kernel-2=
-.6.32-279.19.1.el6.src.rpm?__gda__=3D1366390847_8550b8568c50ea46b3180266b47=
-6353d&amp;ext=3D.rpm" target=3D"_blank">https://content-web.rhn.redhat.com/=
-rhn/public/NULL/kernel/2.6.32-279.19.1.el6/SRPMS/kernel-2.6.32-279.19.1.el6=
-.src.rpm?__gda__=3D1366390847_8550b8568c50ea46b3180266b476353d&amp;ext=3D.r=
-pm</a><br>
+</div><div>&gt; I checked rh srpm <a href=3D"https://content-web.rhn.redhat=
+.com/rhn/public/NULL/kernel/2.6.32-279.19.1.el6/SRPMS/kernel-2.6.32-279.19.=
+1.el6.src.rpm?__gda__=3D1366390847_8550b8568c50ea46b3180266b476353d&amp;ext=
+=3D.rpm" target=3D"_blank">https://content-web.rhn.redhat.com/rhn/public/NU=
+LL/kernel/2.6.32-279.19.1.el6/SRPMS/kernel-2.6.32-279.19.1.el6.src.rpm?__gd=
+a__=3D1366390847_8550b8568c50ea46b3180266b476353d&amp;ext=3D.rpm</a><br>
+
 
 &gt; And the code is same, as following:<br>
 &gt;<br>
@@ -116,13 +138,16 @@ pm</a><br>
 Thanks,<br>
 -Eric<br>
 <br>
+</blockquote></div><br><br clear=3D"all"><br></div></div><span class=3D"HOE=
+nZb"><font color=3D"#888888">-- <br>=B7=FB=D3=C0=CC=CE
+</font></span></div>
 </blockquote></div><br><br clear=3D"all"><br>-- <br>=B7=FB=D3=C0=CC=CE
 </div>
 
---047d7bd75dec80443104dab9c51c--
+--90e6ba3fcd274957e804dab9e437--
 
 
---===============7830701367123215616==
+--===============9158302016303332672==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -133,4 +158,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============7830701367123215616==--
+--===============9158302016303332672==--
