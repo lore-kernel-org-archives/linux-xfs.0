@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C4C457CBF
-	for <xfs@oss.sgi.com>; Fri, 19 Apr 2013 20:15:24 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 409F0AC004
-	for <xfs@oss.sgi.com>; Fri, 19 Apr 2013 18:15:21 -0700 (PDT)
-Received: from mail-ie0-f173.google.com (mail-ie0-f173.google.com
-	[209.85.223.173]) by cuda.sgi.com with ESMTP id
-	BzEgzS7wH0I8e875 (version=TLSv1 cipher=RC4-SHA bits=128
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5129A29DFA
+	for <xfs@oss.sgi.com>; Fri, 19 Apr 2013 21:51:15 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 12A7A8F8049
+	for <xfs@oss.sgi.com>; Fri, 19 Apr 2013 19:51:12 -0700 (PDT)
+Received: from mail-ie0-f178.google.com (mail-ie0-f178.google.com
+	[209.85.223.178]) by cuda.sgi.com with ESMTP id
+	H5PDKY7EJk0MvGXL (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 19 Apr 2013 18:15:19 -0700 (PDT)
-Received: by mail-ie0-f173.google.com with SMTP id k5so5334253iea.4
-	for <xfs@oss.sgi.com>; Fri, 19 Apr 2013 18:15:19 -0700 (PDT)
+	Fri, 19 Apr 2013 19:51:10 -0700 (PDT)
+Received: by mail-ie0-f178.google.com with SMTP id aq17so3881134iec.37
+	for <xfs@oss.sgi.com>; Fri, 19 Apr 2013 19:51:10 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CADFMGuK7FEbWibRrctK7B=XXAfAKtpjRej3NVB2k7JXhhYFLLg@mail.gmail.com>
+In-Reply-To: <CADFMGuJozkBQdp5o_BK7HbrPdv6iKUie=jHyz5LrtBBvHY1b4w@mail.gmail.com>
 References: <516C89DF.4070904@redhat.com>
 	<CADFMGu+z32O5mVBfO6gb8F03y9mrwB5=nf+7LMbky4ttk2mbFw@mail.gmail.com>
 	<BA50C18A-BE51-4658-B05E-3EDB0F11BE36@sandeen.net>
@@ -35,8 +35,9 @@ References: <516C89DF.4070904@redhat.com>
 	<CADFMGuKfyw-mCsRn1Y5H5ek+z_nRMHDmW4bG-Ez9ANJm7_ec5A@mail.gmail.com>
 	<CADFMGuL4+vSH9ZpWODXWbHVz9ndMcg2aZY9b0ccq74SJp3XzEw@mail.gmail.com>
 	<CADFMGuK7FEbWibRrctK7B=XXAfAKtpjRej3NVB2k7JXhhYFLLg@mail.gmail.com>
-Date: Sat, 20 Apr 2013 09:15:19 +0800
-Message-ID: <CADFMGuJozkBQdp5o_BK7HbrPdv6iKUie=jHyz5LrtBBvHY1b4w@mail.gmail.com>
+	<CADFMGuJozkBQdp5o_BK7HbrPdv6iKUie=jHyz5LrtBBvHY1b4w@mail.gmail.com>
+Date: Sat, 20 Apr 2013 10:51:09 +0800
+Message-ID: <CADFMGuL05J+b=bv5jAneLT451eQFNNz2RNHQHccBOjqWsE68Kw@mail.gmail.com>
 Subject: Re: xfs_iunlink_remove: xfs_inotobp() returned error 22 -- debugging
 From: =?GB2312?B?t/vTwMzO?= <yongtaofu@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -47,65 +48,82 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============7038194987550817850=="
+Content-Type: multipart/mixed; boundary="===============0494372422017146410=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
 Cc: Brian Foster <bfoster@redhat.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
---===============7038194987550817850==
-Content-Type: multipart/alternative; boundary=90e6ba3fcd27af072304dac0913d
+--===============0494372422017146410==
+Content-Type: multipart/alternative; boundary=089e0111e07472e35e04dac1e857
 
---90e6ba3fcd27af072304dac0913d
+--089e0111e07472e35e04dac1e857
 Content-Type: text/plain; charset=GB2312
 Content-Transfer-Encoding: quoted-printable
 
-Dear xfs experts,
-Does mount with sync option helps to isolate this problem?
+After change mount option to sync shutdown still happens, and I got a trace
+again, the inode 0x1c57d is abnormal.
+https://docs.google.com/file/d/0B7n2C4T5tfNCYW1jNWhBbXBYakE/edit?usp=3Dshar=
+ing
+I have a question if the problem is hard to reproduce why I got 8 times in
+a week only in a test cluster with 8 node?
+What's the problem?
 
 
 2013/4/20 =B7=FB=D3=C0=CC=CE <yongtaofu@gmail.com>
 
-> Dear Eric and xfs experts,
-> Updated progress is after more than one day glusterfs rebalance 3 of our
-> servers xfs shutdown(8 servers in the test cluster). The errors are
-> identical. Actually one of the most serious accident for us is 8 of our
-> servers xfs shutdown at the same time during glusterfs rebalance.
-> Thank you very much!
+> Dear xfs experts,
+> Does mount with sync option helps to isolate this problem?
 >
 >
 > 2013/4/20 =B7=FB=D3=C0=CC=CE <yongtaofu@gmail.com>
 >
->> Dear Eric,
->> I noticed some functions call the xfs_lock_two_inodes(dp, ip,
->> XFS_ILOCK_EXCL); twince but not in xfs_remove.
+>> Dear Eric and xfs experts,
+>> Updated progress is after more than one day glusterfs rebalance 3 of our
+>> servers xfs shutdown(8 servers in the test cluster). The errors are
+>> identical. Actually one of the most serious accident for us is 8 of our
+>> servers xfs shutdown at the same time during glusterfs rebalance.
+>> Thank you very much!
 >>
 >>
 >> 2013/4/20 =B7=FB=D3=C0=CC=CE <yongtaofu@gmail.com>
 >>
->>> There it is, I use latest 279.19.1 and only apply xfs trace path.
+>>> Dear Eric,
+>>> I noticed some functions call the xfs_lock_two_inodes(dp, ip,
+>>> XFS_ILOCK_EXCL); twince but not in xfs_remove.
 >>>
 >>>
->>> 2013/4/20 Eric Sandeen <sandeen@sandeen.net>
+>>> 2013/4/20 =B7=FB=D3=C0=CC=CE <yongtaofu@gmail.com>
 >>>
->>>> On 4/19/13 10:00 AM, =B7=FB=D3=C0=CC=CE wrote:
->>>> > Dear Eric,
->>>> >
->>>> > I checked rh srpm
->>>> https://content-web.rhn.redhat.com/rhn/public/NULL/kernel/2.6.32-279.1=
-9.1.el6/SRPMS/kernel-2.6.32-279.19.1.el6.src.rpm?__gda__=3D1366390847_8550b=
-8568c50ea46b3180266b476353d&ext=3D.rpm
->>>> > And the code is same, as following:
->>>> >
->>>> > __rwsem_do_wake(struct rw_semaphore *sem, int wakewrite)
->>>> > {
->>>>
->>>> need to look in lib/rwsem.c not lib/rwsem-spinlock.c
->>>>
->>>> Thanks,
->>>> -Eric
+>>>> There it is, I use latest 279.19.1 and only apply xfs trace path.
 >>>>
 >>>>
+>>>> 2013/4/20 Eric Sandeen <sandeen@sandeen.net>
+>>>>
+>>>>> On 4/19/13 10:00 AM, =B7=FB=D3=C0=CC=CE wrote:
+>>>>> > Dear Eric,
+>>>>> >
+>>>>> > I checked rh srpm
+>>>>> https://content-web.rhn.redhat.com/rhn/public/NULL/kernel/2.6.32-279.=
+19.1.el6/SRPMS/kernel-2.6.32-279.19.1.el6.src.rpm?__gda__=3D1366390847_8550=
+b8568c50ea46b3180266b476353d&ext=3D.rpm
+>>>>> > And the code is same, as following:
+>>>>> >
+>>>>> > __rwsem_do_wake(struct rw_semaphore *sem, int wakewrite)
+>>>>> > {
+>>>>>
+>>>>> need to look in lib/rwsem.c not lib/rwsem-spinlock.c
+>>>>>
+>>>>> Thanks,
+>>>>> -Eric
+>>>>>
+>>>>>
+>>>>
+>>>>
+>>>> --
+>>>> =B7=FB=D3=C0=CC=CE
+>>>>
+>>>
 >>>
 >>>
 >>> --
@@ -129,15 +147,29 @@ Does mount with sync option helps to isolate this problem?
 --=20
 =B7=FB=D3=C0=CC=CE
 
---90e6ba3fcd27af072304dac0913d
+--089e0111e07472e35e04dac1e857
 Content-Type: text/html; charset=GB2312
 Content-Transfer-Encoding: quoted-printable
 
+<div dir=3D"ltr"><div><div><div>After change mount option to sync shutdown =
+still happens, and I got a trace again, the inode 0x1c57d is abnormal.<br><=
+/div><a href=3D"https://docs.google.com/file/d/0B7n2C4T5tfNCYW1jNWhBbXBYakE=
+/edit?usp=3Dsharing">https://docs.google.com/file/d/0B7n2C4T5tfNCYW1jNWhBbX=
+BYakE/edit?usp=3Dsharing</a><br>
+</div>I have a question if the problem is hard to reproduce why I got 8 tim=
+es in a week only in a test cluster with 8 node?<br></div>What&#39;s the pr=
+oblem?<br></div><div class=3D"gmail_extra"><br><br><div class=3D"gmail_quot=
+e">
+2013/4/20 =B7=FB=D3=C0=CC=CE <span dir=3D"ltr">&lt;<a href=3D"mailto:yongta=
+ofu@gmail.com" target=3D"_blank">yongtaofu@gmail.com</a>&gt;</span><br><blo=
+ckquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1px #c=
+cc solid;padding-left:1ex">
 <div dir=3D"ltr"><div>Dear xfs experts,<br></div>Does mount with sync optio=
-n helps to isolate this problem?<br></div><div class=3D"gmail_extra"><br><b=
-r><div class=3D"gmail_quote">2013/4/20 =B7=FB=D3=C0=CC=CE <span dir=3D"ltr"=
->&lt;<a href=3D"mailto:yongtaofu@gmail.com" target=3D"_blank">yongtaofu@gma=
-il.com</a>&gt;</span><br>
+n helps to isolate this problem?<br></div><div class=3D"gmail_extra"><div><=
+div class=3D"h5"><br><br><div class=3D"gmail_quote">2013/4/20 =B7=FB=D3=C0=
+=CC=CE <span dir=3D"ltr">&lt;<a href=3D"mailto:yongtaofu@gmail.com" target=
+=3D"_blank">yongtaofu@gmail.com</a>&gt;</span><br>
+
 <blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
 x #ccc solid;padding-left:1ex"><div dir=3D"ltr"><div><div>Dear Eric and xfs=
  experts,<br></div>Updated progress is after more than one day glusterfs re=
@@ -146,10 +178,12 @@ rrors are identical. Actually one of the most serious accident for us is 8 =
 of our servers xfs shutdown at the same time during glusterfs rebalance. <b=
 r>
 
-</div>Thank you very much!<br></div><div class=3D"gmail_extra"><div><div cl=
-ass=3D"h5"><br><br><div class=3D"gmail_quote">2013/4/20 =B7=FB=D3=C0=CC=CE =
-<span dir=3D"ltr">&lt;<a href=3D"mailto:yongtaofu@gmail.com" target=3D"_bla=
-nk">yongtaofu@gmail.com</a>&gt;</span><br>
+
+</div>Thank you very much!<br></div><div class=3D"gmail_extra"><div><div><b=
+r><br><div class=3D"gmail_quote">2013/4/20 =B7=FB=D3=C0=CC=CE <span dir=3D"=
+ltr">&lt;<a href=3D"mailto:yongtaofu@gmail.com" target=3D"_blank">yongtaofu=
+@gmail.com</a>&gt;</span><br>
+
 <blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
 x #ccc solid;padding-left:1ex">
 <div dir=3D"ltr"><div>Dear Eric,<br></div>I noticed some functions call the=
@@ -157,12 +191,14 @@ x #ccc solid;padding-left:1ex">
 <br></div><div class=3D"gmail_extra"><div><div><br><br><div class=3D"gmail_=
 quote">
 
+
 2013/4/20 =B7=FB=D3=C0=CC=CE <span dir=3D"ltr">&lt;<a href=3D"mailto:yongta=
 ofu@gmail.com" target=3D"_blank">yongtaofu@gmail.com</a>&gt;</span><br>
 <blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
 x #ccc solid;padding-left:1ex"><div dir=3D"ltr">There it is, I use latest 2=
 79.19.1 and only apply xfs trace path.<br></div><div class=3D"gmail_extra">=
 <div>
+
 
 
 <div><br><br><div class=3D"gmail_quote">2013/4/20 Eric Sandeen <span dir=3D=
@@ -183,6 +219,7 @@ a__=3D1366390847_8550b8568c50ea46b3180266b476353d&amp;ext=3D.rpm</a><br>
 
 
 
+
 &gt; And the code is same, as following:<br>
 &gt;<br>
 &gt; __rwsem_do_wake(struct rw_semaphore *sem, int wakewrite)<br>
@@ -199,16 +236,19 @@ Thanks,<br>
 </blockquote></div><br><br clear=3D"all"><br></div></div><span><font color=
 =3D"#888888">-- <br>=B7=FB=D3=C0=CC=CE
 </font></span></div>
+</blockquote></div><br><br clear=3D"all"><br></div></div><span><font color=
+=3D"#888888">-- <br>=B7=FB=D3=C0=CC=CE
+</font></span></div>
 </blockquote></div><br><br clear=3D"all"><br></div></div><span class=3D"HOE=
 nZb"><font color=3D"#888888">-- <br>=B7=FB=D3=C0=CC=CE
 </font></span></div>
 </blockquote></div><br><br clear=3D"all"><br>-- <br>=B7=FB=D3=C0=CC=CE
 </div>
 
---90e6ba3fcd27af072304dac0913d--
+--089e0111e07472e35e04dac1e857--
 
 
---===============7038194987550817850==
+--===============0494372422017146410==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -219,4 +259,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============7038194987550817850==--
+--===============0494372422017146410==--
