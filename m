@@ -1,26 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5129A29DFA
-	for <xfs@oss.sgi.com>; Fri, 19 Apr 2013 21:51:15 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 12A7A8F8049
-	for <xfs@oss.sgi.com>; Fri, 19 Apr 2013 19:51:12 -0700 (PDT)
-Received: from mail-ie0-f178.google.com (mail-ie0-f178.google.com
-	[209.85.223.178]) by cuda.sgi.com with ESMTP id
-	H5PDKY7EJk0MvGXL (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 19 Apr 2013 19:51:10 -0700 (PDT)
-Received: by mail-ie0-f178.google.com with SMTP id aq17so3881134iec.37
-	for <xfs@oss.sgi.com>; Fri, 19 Apr 2013 19:51:10 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 1F8F529DFA
+	for <xfs@oss.sgi.com>; Fri, 19 Apr 2013 22:41:04 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 0CB55304067
+	for <xfs@oss.sgi.com>; Fri, 19 Apr 2013 20:41:03 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id nIXqkvZapr0pEewq for <xfs@oss.sgi.com>;
+	Fri, 19 Apr 2013 20:41:00 -0700 (PDT)
+Message-ID: <51720E49.9020001@sandeen.net>
+Date: Fri, 19 Apr 2013 20:40:57 -0700
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <CADFMGuJozkBQdp5o_BK7HbrPdv6iKUie=jHyz5LrtBBvHY1b4w@mail.gmail.com>
+Subject: Re: xfs_iunlink_remove: xfs_inotobp() returned error 22 -- debugging
 References: <516C89DF.4070904@redhat.com>
-	<CADFMGu+z32O5mVBfO6gb8F03y9mrwB5=nf+7LMbky4ttk2mbFw@mail.gmail.com>
-	<BA50C18A-BE51-4658-B05E-3EDB0F11BE36@sandeen.net>
-	<CADFMGuKfXwY=Z9dg6+wyX7mKzppu1hQhsqxcr9Fd=DjP4hii9w@mail.gmail.com>
-	<CADFMGuLDwde8te0Cs4-T9fdVmq2v22fmSTgkYbULHS3voHzw6A@mail.gmail.com>
-	<CADFMGuKmmJCz+FxsFL9KegqzNhhHsG2ZbVjrwCDyNCh1R_Zgpw@mail.gmail.com>
-	<516FDBDE.1070406@redhat.com>
 	<CADFMGuJ-An9MMmYtOKEjt5JdHmvu-cc0G+y361e_fioYf4j7HQ@mail.gmail.com>
 	<51705EC4.4000306@redhat.com>
 	<CADFMGu+hPV9RanG7298TAYY4p9gMiBOk0+mq5gf5rhQUWXf4TQ@mail.gmail.com>
@@ -36,10 +29,8 @@ References: <516C89DF.4070904@redhat.com>
 	<CADFMGuL4+vSH9ZpWODXWbHVz9ndMcg2aZY9b0ccq74SJp3XzEw@mail.gmail.com>
 	<CADFMGuK7FEbWibRrctK7B=XXAfAKtpjRej3NVB2k7JXhhYFLLg@mail.gmail.com>
 	<CADFMGuJozkBQdp5o_BK7HbrPdv6iKUie=jHyz5LrtBBvHY1b4w@mail.gmail.com>
-Date: Sat, 20 Apr 2013 10:51:09 +0800
-Message-ID: <CADFMGuL05J+b=bv5jAneLT451eQFNNz2RNHQHccBOjqWsE68Kw@mail.gmail.com>
-Subject: Re: xfs_iunlink_remove: xfs_inotobp() returned error 22 -- debugging
-From: =?GB2312?B?t/vTwMzO?= <yongtaofu@gmail.com>
+	<CADFMGuL05J+b=bv5jAneLT451eQFNNz2RNHQHccBOjqWsE68Kw@mail.gmail.com>
+In-Reply-To: <CADFMGuL05J+b=bv5jAneLT451eQFNNz2RNHQHccBOjqWsE68Kw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -48,215 +39,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============0494372422017146410=="
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
+To: =?UTF-8?B?56ym5rC45rab?= <yongtaofu@gmail.com>
 Cc: Brian Foster <bfoster@redhat.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
---===============0494372422017146410==
-Content-Type: multipart/alternative; boundary=089e0111e07472e35e04dac1e857
-
---089e0111e07472e35e04dac1e857
-Content-Type: text/plain; charset=GB2312
-Content-Transfer-Encoding: quoted-printable
-
-After change mount option to sync shutdown still happens, and I got a trace
-again, the inode 0x1c57d is abnormal.
-https://docs.google.com/file/d/0B7n2C4T5tfNCYW1jNWhBbXBYakE/edit?usp=3Dshar=
-ing
-I have a question if the problem is hard to reproduce why I got 8 times in
-a week only in a test cluster with 8 node?
-What's the problem?
-
-
-2013/4/20 =B7=FB=D3=C0=CC=CE <yongtaofu@gmail.com>
-
-> Dear xfs experts,
-> Does mount with sync option helps to isolate this problem?
->
->
-> 2013/4/20 =B7=FB=D3=C0=CC=CE <yongtaofu@gmail.com>
->
->> Dear Eric and xfs experts,
->> Updated progress is after more than one day glusterfs rebalance 3 of our
->> servers xfs shutdown(8 servers in the test cluster). The errors are
->> identical. Actually one of the most serious accident for us is 8 of our
->> servers xfs shutdown at the same time during glusterfs rebalance.
->> Thank you very much!
->>
->>
->> 2013/4/20 =B7=FB=D3=C0=CC=CE <yongtaofu@gmail.com>
->>
->>> Dear Eric,
->>> I noticed some functions call the xfs_lock_two_inodes(dp, ip,
->>> XFS_ILOCK_EXCL); twince but not in xfs_remove.
->>>
->>>
->>> 2013/4/20 =B7=FB=D3=C0=CC=CE <yongtaofu@gmail.com>
->>>
->>>> There it is, I use latest 279.19.1 and only apply xfs trace path.
->>>>
->>>>
->>>> 2013/4/20 Eric Sandeen <sandeen@sandeen.net>
->>>>
->>>>> On 4/19/13 10:00 AM, =B7=FB=D3=C0=CC=CE wrote:
->>>>> > Dear Eric,
->>>>> >
->>>>> > I checked rh srpm
->>>>> https://content-web.rhn.redhat.com/rhn/public/NULL/kernel/2.6.32-279.=
-19.1.el6/SRPMS/kernel-2.6.32-279.19.1.el6.src.rpm?__gda__=3D1366390847_8550=
-b8568c50ea46b3180266b476353d&ext=3D.rpm
->>>>> > And the code is same, as following:
->>>>> >
->>>>> > __rwsem_do_wake(struct rw_semaphore *sem, int wakewrite)
->>>>> > {
->>>>>
->>>>> need to look in lib/rwsem.c not lib/rwsem-spinlock.c
->>>>>
->>>>> Thanks,
->>>>> -Eric
->>>>>
->>>>>
->>>>
->>>>
->>>> --
->>>> =B7=FB=D3=C0=CC=CE
->>>>
->>>
->>>
->>>
->>> --
->>> =B7=FB=D3=C0=CC=CE
->>>
->>
->>
->>
->> --
->> =B7=FB=D3=C0=CC=CE
->>
->
->
->
-> --
-> =B7=FB=D3=C0=CC=CE
->
-
-
-
---=20
-=B7=FB=D3=C0=CC=CE
-
---089e0111e07472e35e04dac1e857
-Content-Type: text/html; charset=GB2312
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr"><div><div><div>After change mount option to sync shutdown =
-still happens, and I got a trace again, the inode 0x1c57d is abnormal.<br><=
-/div><a href=3D"https://docs.google.com/file/d/0B7n2C4T5tfNCYW1jNWhBbXBYakE=
-/edit?usp=3Dsharing">https://docs.google.com/file/d/0B7n2C4T5tfNCYW1jNWhBbX=
-BYakE/edit?usp=3Dsharing</a><br>
-</div>I have a question if the problem is hard to reproduce why I got 8 tim=
-es in a week only in a test cluster with 8 node?<br></div>What&#39;s the pr=
-oblem?<br></div><div class=3D"gmail_extra"><br><br><div class=3D"gmail_quot=
-e">
-2013/4/20 =B7=FB=D3=C0=CC=CE <span dir=3D"ltr">&lt;<a href=3D"mailto:yongta=
-ofu@gmail.com" target=3D"_blank">yongtaofu@gmail.com</a>&gt;</span><br><blo=
-ckquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1px #c=
-cc solid;padding-left:1ex">
-<div dir=3D"ltr"><div>Dear xfs experts,<br></div>Does mount with sync optio=
-n helps to isolate this problem?<br></div><div class=3D"gmail_extra"><div><=
-div class=3D"h5"><br><br><div class=3D"gmail_quote">2013/4/20 =B7=FB=D3=C0=
-=CC=CE <span dir=3D"ltr">&lt;<a href=3D"mailto:yongtaofu@gmail.com" target=
-=3D"_blank">yongtaofu@gmail.com</a>&gt;</span><br>
-
-<blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
-x #ccc solid;padding-left:1ex"><div dir=3D"ltr"><div><div>Dear Eric and xfs=
- experts,<br></div>Updated progress is after more than one day glusterfs re=
-balance 3 of our servers xfs shutdown(8 servers in the test cluster). The e=
-rrors are identical. Actually one of the most serious accident for us is 8 =
-of our servers xfs shutdown at the same time during glusterfs rebalance. <b=
-r>
-
-
-</div>Thank you very much!<br></div><div class=3D"gmail_extra"><div><div><b=
-r><br><div class=3D"gmail_quote">2013/4/20 =B7=FB=D3=C0=CC=CE <span dir=3D"=
-ltr">&lt;<a href=3D"mailto:yongtaofu@gmail.com" target=3D"_blank">yongtaofu=
-@gmail.com</a>&gt;</span><br>
-
-<blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
-x #ccc solid;padding-left:1ex">
-<div dir=3D"ltr"><div>Dear Eric,<br></div>I noticed some functions call the=
- xfs_lock_two_inodes(dp, ip, XFS_ILOCK_EXCL); twince but not in xfs_remove.=
-<br></div><div class=3D"gmail_extra"><div><div><br><br><div class=3D"gmail_=
-quote">
-
-
-2013/4/20 =B7=FB=D3=C0=CC=CE <span dir=3D"ltr">&lt;<a href=3D"mailto:yongta=
-ofu@gmail.com" target=3D"_blank">yongtaofu@gmail.com</a>&gt;</span><br>
-<blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
-x #ccc solid;padding-left:1ex"><div dir=3D"ltr">There it is, I use latest 2=
-79.19.1 and only apply xfs trace path.<br></div><div class=3D"gmail_extra">=
-<div>
-
-
-
-<div><br><br><div class=3D"gmail_quote">2013/4/20 Eric Sandeen <span dir=3D=
-"ltr">&lt;<a href=3D"mailto:sandeen@sandeen.net" target=3D"_blank">sandeen@=
-sandeen.net</a>&gt;</span><br>
-<blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
-x #ccc solid;padding-left:1ex"><div>On 4/19/13 10:00 AM, =B7=FB=D3=C0=CC=CE=
- wrote:<br>
-&gt; Dear Eric,<br>
-&gt;<br>
-</div><div>&gt; I checked rh srpm <a href=3D"https://content-web.rhn.redhat=
-.com/rhn/public/NULL/kernel/2.6.32-279.19.1.el6/SRPMS/kernel-2.6.32-279.19.=
-1.el6.src.rpm?__gda__=3D1366390847_8550b8568c50ea46b3180266b476353d&amp;ext=
-=3D.rpm" target=3D"_blank">https://content-web.rhn.redhat.com/rhn/public/NU=
-LL/kernel/2.6.32-279.19.1.el6/SRPMS/kernel-2.6.32-279.19.1.el6.src.rpm?__gd=
-a__=3D1366390847_8550b8568c50ea46b3180266b476353d&amp;ext=3D.rpm</a><br>
-
-
-
-
-
-&gt; And the code is same, as following:<br>
-&gt;<br>
-&gt; __rwsem_do_wake(struct rw_semaphore *sem, int wakewrite)<br>
-&gt; {<br>
-<br>
-</div>need to look in lib/rwsem.c not lib/rwsem-spinlock.c<br>
-<br>
-Thanks,<br>
--Eric<br>
-<br>
-</blockquote></div><br><br clear=3D"all"><br></div></div><span><font color=
-=3D"#888888">-- <br>=B7=FB=D3=C0=CC=CE
-</font></span></div>
-</blockquote></div><br><br clear=3D"all"><br></div></div><span><font color=
-=3D"#888888">-- <br>=B7=FB=D3=C0=CC=CE
-</font></span></div>
-</blockquote></div><br><br clear=3D"all"><br></div></div><span><font color=
-=3D"#888888">-- <br>=B7=FB=D3=C0=CC=CE
-</font></span></div>
-</blockquote></div><br><br clear=3D"all"><br></div></div><span class=3D"HOE=
-nZb"><font color=3D"#888888">-- <br>=B7=FB=D3=C0=CC=CE
-</font></span></div>
-</blockquote></div><br><br clear=3D"all"><br>-- <br>=B7=FB=D3=C0=CC=CE
-</div>
-
---089e0111e07472e35e04dac1e857--
-
-
---===============0494372422017146410==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
-
---===============0494372422017146410==--
+T24gNC8xOS8xMyA3OjUxIFBNLCDnrKbmsLjmtpsgd3JvdGU6Cj4gQWZ0ZXIgY2hhbmdlIG1vdW50
+IG9wdGlvbiB0byBzeW5jIHNodXRkb3duIHN0aWxsIGhhcHBlbnMsIGFuZCBJIGdvdCBhIHRyYWNl
+IGFnYWluLCB0aGUgaW5vZGUgMHgxYzU3ZCBpcyBhYm5vcm1hbC4KCnNpbmNlIHRoaXMgaXMgYSBy
+YWNlIG9uIG5hbWVzcGFjZSBvcGVyYXRpb25zLCBJIHdvdWxkbid0IGhhdmUgZXhwZWN0ZWQgc3lu
+YyB0byBtYXR0ZXIuCgo+IGh0dHBzOi8vZG9jcy5nb29nbGUuY29tL2ZpbGUvZC8wQjduMkM0VDV0
+Zk5DWVcxak5XaEJiWEJZYWtFL2VkaXQ/dXNwPXNoYXJpbmcKPiBJIGhhdmUgYSBxdWVzdGlvbiBp
+ZiB0aGUgcHJvYmxlbSBpcyBoYXJkIHRvIHJlcHJvZHVjZSB3aHkgSSBnb3QgOCB0aW1lcyBpbiBh
+IHdlZWsgb25seSBpbiBhIHRlc3QgY2x1c3RlciB3aXRoIDggbm9kZT8KPiBXaGF0J3MgdGhlIHBy
+b2JsZW0/Cgp5b3UgbXVzdCBoYXZlIHNvbWV0aGluZyB1bmlxdWUgaW4geW91ciBlbnZpcm9ubWVu
+dCwgYW5kIHdlIGRvbid0IGtub3cgd2hhdCBpdCBpcy4KClRvIGdhdGhlciBtb3JlIGluZm9ybWF0
+aW9uLCBjYW4geW91IGFsc28gdHVybiBvbiB0cmFjZXBvaW50cyBmb3I6Cgp4ZnNfcmVuYW1lCnhm
+c19jcmVhdGUKeGZzX2xpbmsKeGZzX3JlbW92ZQoKaW4gYWRkaXRpb24gdG8geGZzX2l1bmxpbmsg
+YW5kIHhmc19pdW5saW5rX3JlbW92ZSwKYW5kIHdlJ2xsIHNlZSB3aGF0IHRoYXQgdGVsbHMgdXMu
+CgpUaGVyZSBhcmUgbWFueSBwYXRocyB0aGF0IG1hbmlwdWxhdGUgdGhlIGRpX25saW5rIGNvdW50
+LCBhbmQgc29tZXRoaW5nIGlzIHJhY2luZywgYnV0IHdlIGRvbid0IHlldCBrbm93IHdoYXQgdHdv
+IGNhbGxjaGFpbnMgdGhleSBhcmUuCgpUaGUgYWJvdmUgYXJlIGFsbCB0aGUgY2FsbGVycyB0aGF0
+IG1hbmlwdWxhdGUgdGhlIGxpbmsgY291bnQsIHNvIHRoZXkgd2lsbCB5aWVsZCBtb3JlIGluZm9y
+bWF0aW9uIGFib3V0IHdobyBpcyBtYW5pcHVsYXRpbmcgdGhlIGNvdW50cy4KClRoYW5rcywKLUVy
+aWMKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBt
+YWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xp
+c3RpbmZvL3hmcwo=
