@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 283A129DFA
-	for <xfs@oss.sgi.com>; Sat, 20 Apr 2013 08:01:15 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 430F129DFA
+	for <xfs@oss.sgi.com>; Sat, 20 Apr 2013 08:12:38 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 18A26304067
-	for <xfs@oss.sgi.com>; Sat, 20 Apr 2013 06:01:11 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id w31bEibzAc0sW3Bj for
-	<xfs@oss.sgi.com>; Sat, 20 Apr 2013 06:01:11 -0700 (PDT)
-Message-ID: <517290F8.4010407@redhat.com>
-Date: Sat, 20 Apr 2013 08:58:32 -0400
-From: Brian Foster <bfoster@redhat.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 203DC304051
+	for <xfs@oss.sgi.com>; Sat, 20 Apr 2013 06:12:38 -0700 (PDT)
+Received: from mail-ie0-f182.google.com (mail-ie0-f182.google.com
+	[209.85.223.182]) by cuda.sgi.com with ESMTP id
+	q1EzENYRxpk4DoRJ (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 20 Apr 2013 06:12:36 -0700 (PDT)
+Received: by mail-ie0-f182.google.com with SMTP id bn7so3501138ieb.41
+	for <xfs@oss.sgi.com>; Sat, 20 Apr 2013 06:12:35 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: xfs_iunlink_remove: xfs_inotobp() returned error 22 -- debugging
+In-Reply-To: <517290F8.4010407@redhat.com>
 References: <516C89DF.4070904@redhat.com> <51716DCB.4060407@sandeen.net>
 	<CADFMGuJH106wg7zVQrt604DxvDWB_bnor==NEGpJ1Xcr9b+C8A@mail.gmail.com>
 	<CADFMGuLcve0a5uiOzZYoVze8tm1UXTPxhEqForMWYsvCyuh0sg@mail.gmail.com>
@@ -29,7 +30,11 @@ References: <516C89DF.4070904@redhat.com> <51716DCB.4060407@sandeen.net>
 	<CADFMGuLBat2fWbtpRd=Sb0bQpZiTOdF2p8NA97rak8A=+GhN1A@mail.gmail.com>
 	<51727E32.8080306@redhat.com>
 	<CADFMGuKE=1RCAfXW9iLMRW9MdjMk936F4jZw12adHpQ+wkNyWw@mail.gmail.com>
-In-Reply-To: <CADFMGuKE=1RCAfXW9iLMRW9MdjMk936F4jZw12adHpQ+wkNyWw@mail.gmail.com>
+	<517290F8.4010407@redhat.com>
+Date: Sat, 20 Apr 2013 21:12:35 +0800
+Message-ID: <CADFMGu+OvtLG1f5xNmeVR-dV_W_afy2Cv4LsdvvmGL-Vwpz0vg@mail.gmail.com>
+Subject: Re: xfs_iunlink_remove: xfs_inotobp() returned error 22 -- debugging
+From: =?GB2312?B?t/vTwMzO?= <yongtaofu@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,181 +43,675 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/mixed; boundary="===============5899760926032705825=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: =?UTF-8?B?56ym5rC45rab?= <yongtaofu@gmail.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: Eric Sandeen <sandeen@sandeen.net>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-T24gMDQvMjAvMjAxMyAwNzo1MiBBTSwg56ym5rC45rabIHdyb3RlOgo+IEhpIEJyYWluLAo+IEhl
-cmUgaXMgdGhlIGZpbGU6Cj4gZmluZCAuIC1pbnVtIDUzOTI3NAo+IC4vY3Jhc2h0ZXN0Ly5nbHVz
-dGVyZnMvaW5kaWNlcy94YXR0cm9wCj4gW3Jvb3RAMTAuMjMuNzIuOTQgPG1haWx0bzpyb290QDEw
-LjIzLjcyLjk0PiB4ZnNkXSMgbHMgLWxpaAo+IC4vY3Jhc2h0ZXN0Ly5nbHVzdGVyZnMvaW5kaWNl
-cy94YXR0cm9wCj4gdG90YWwgMAo+IDUzOTI3NSAtLS0tLS0tLS0tIDIgcm9vdCByb290IDAgQXBy
-IDIwIDE3OjE3Cj4gMTMyZWYyOTQtNzFkMS00NDM1LThkYWEtYWEwMDJlNjdjYjZlCj4gNTM5Mjc1
-IC0tLS0tLS0tLS0gMiByb290IHJvb3QgMCBBcHIgMjAgMTc6MTcKPiB4YXR0cm9wLWYzYWQ1ODlh
-LWI4ZGMtNDQxNi1hYjg0LWZjOWFkNDAzMzU0MAo+IGZpbmQgLiAtaW51bSA1MzkyNzUKPiAuL2Ny
-YXNodGVzdC8uZ2x1c3RlcmZzL2luZGljZXMveGF0dHJvcC94YXR0cm9wLWYzYWQ1ODlhLWI4ZGMt
-NDQxNi1hYjg0LWZjOWFkNDAzMzU0MAo+IC4vY3Jhc2h0ZXN0Ly5nbHVzdGVyZnMvaW5kaWNlcy94
-YXR0cm9wLzEzMmVmMjk0LTcxZDEtNDQzNS04ZGFhLWFhMDAyZTY3Y2I2ZQo+IEknbSBub3Qgc3Vy
-ZSBpZiBpdCBpcyBub3JtYWwgb3IgZ2x1c3RlcmZzIGZhbGwgaW4gaW5maW5pdGUgbG9vcC4gSXMK
-PiB0aGVyZSBhIGNoYW5nZSB0aGF0IHRoZSBrZXJuZWwgZmFsbCBpbnRvIGRlYWQgbG9vcD8KPiBJ
-J2xsIHN0dWR5IGl0Lgo+IAoKVmVyeSBpbnRlcmVzdGluZywgdGhhbmsgeW91LiBJIGRvbid0IGhh
-dmUgdGhlIGZ1bGwgY29udGV4dCBoZXJlIHlldCwgYnV0CnRoZSBzaG9ydCBvZiBpdCBpcyB0aGF0
-IHRoaXMgcGFydGljdWxhciBpbmRpY2VzL3hhdHRyb3AgZGlyZWN0b3J5IGlzCm1hbmFnZWQgYnkg
-YSBiYWNrZW5kIHRyYW5zbGF0b3IgYW5kIGRyaXZlbiBieSByZXBsaWNhdGlvbi4gSXQgYXBwZWFy
-cyB0bwpiZSBkb2luZyBzb21lIGtpbmQgb2YgdHJhbnNhY3Rpb24gbGV2ZWwgdHJhY2tpbmcgYmFz
-ZWQgb24gbGlua3MuIEUuZy4sCnNvbWUgcXVpY2sgYmVoYXZpb3JhbCBvYnNlcnZhdGlvbnM6Cgot
-IFRoaXMgZGlyZWN0b3J5IGlzIGNyZWF0ZWQgYW5kIGFuIHhhdHRyb3AtIyMjIyBmaWxlIGNyZWF0
-ZWQgKG5vIHNpemUpLgotIE9uIHN0YXJ0aW5nIGEgbGFyZ2Ugc2VxdWVudGlhbCB3cml0ZSBmcm9t
-IGEgY2xpZW50LCBJIHN0YXJ0IG9ic2VydmluZwphIGNvbnRpbnVvdXMgc2VxdWVuY2Ugb2YgeGZz
-X2xpbmsveGZzX3JlbW92ZSBvcGVyYXRpb25zIHZpYSB0cmFjaW5nLgotIFRoZSBiYWNrZW5kIGFw
-cGVhcnMgdG8gY3JlYXRlIGEgbGluayB0byB0aGUgeGF0dHItIyMjIyBmaWxlIGZvciBldmVyeQpy
-ZXBsaWNhdGlvbiB0cmFuc2FjdGlvbiAoaGFuZHdhdmUpIHdpdGggdGhlIG5hbWUgb2YgdGhlIGxp
-bmsgcmVmZXJyaW5nCnRvIHRoZSBnZmlkIG5hbWUgb2YgdGhlIGZpbGUgdW5kZXIgd3JpdGUgKGJ1
-dCBub3RlIGFnYWluIHRoZSBsaW5rIGlzIG5vdAp0byB0aGUgaW5vZGUgdW5kZXIgd3JpdGUsIGJ1
-dCB0aGlzIHNwZWNpYWwgeGF0dHItIyMjIyBmaWxlKS4gSXQgdGhlbgphcHBhcmVudGx5IHJlbW92
-ZXMgdGhpcyBsaW5rIG9uIHRyYW5zYWN0aW9uIGNvbXBsZXRpb24gYW5kIHRoZSBwcm9jZXNzCnJl
-cGVhdHMuIEkgc3VzcGVjdCB0aGlzIGhhcyB0byBkbyB3aXRoIGlkZW50aWZ5aW5nIHdoYXQgZmls
-ZXMgd2VyZSB1bmRlcgptb2RpZmljYXRpb24gaW4gdGhlIGV2ZW50IG9mIGEgY3Jhc2ggYmVmb3Jl
-IHRyYW5zYWN0aW9uIGNvbXBsZXRpb24sIGJ1dAp0aGUgdW5kZXJseWluZyBwYXR0ZXJuL3dvcmts
-b2FkIGlzIHdoYXQncyBtb3JlIGltcG9ydGFudCB0byB1cyBoZXJlIGZvcgp0aGUgdGltZSBiZWlu
-Zy4uLgoKU28gd2UncmUgc2VlaW5nIGEgaGVhdnkgbGluayByZWxhdGVkIHdvcmtsb2FkIG9uIGEg
-ZGlyZWN0b3J5IGlub2RlCigweDgzYThhKSB3aGVyZSB0aGUgZW50cmllcyBhcmUgYWxsIGxpbmtz
-IHRvIHRoZSBzYW1lIGlub2RlICgweDgzYThiKS4KVGhlc2UgaW5vZGVzIGhhcHBlbiB0byBiZSBj
-bG9zZSBpbiBwcm94aW1pdHksIHdoaWNoIG1heSBvciBtYXkgbm90IGJlIGEKZmFjdG9yLiBUaGUg
-dHJhbnNsYXRvciB0aGF0IGdlbmVyYXRlcyB0aGVzZSBsaW5rL3VubGluayBvcHMgc2l0cyByaWdo
-dAphYm92ZSBhIGdlbmVyaWMgdGhyZWFkIHBvb2wgdHJhbnNsYXRvciwgc28gdGhpcyBpcyBtdWx0
-aS10aHJlYWRlZC4KCldoYXQgaXNuJ3QgY2xlYXIgdG8gbWUgeWV0IGlzIHdoZXJlIHRoZSB4ZnNf
-aXVubGluaygpIGZvciB0aGlzIGhlYXZpbHkKbGlua2VkIGlub2RlIGlzIGluZHVjZWQuIFRoZSBw
-cmltYXJ5IGRlbnRyeSByZW1haW5zIGFmdGVyIG15IGZpbGUgY29weQp0ZXN0LCBidXQgdGhlbiB0
-YWtpbmcgYW5vdGhlciBsb29rIGFmdGVyIGEgZmV3IG1pbnV0ZXMgSSBzZWUgaXQgcmVtb3ZlZC4K
-VGhlIHNhbWUgdGhpbmcgb2NjdXJzIGlmIEkgZ3JhY2VmdWxseSByZXN0YXJ0IHRoZSB2b2x1bWUu
-IEknbSBnb2luZyB0bwpoYXZlIHRvIGRpZyBpbnRvIHRoYXQgc29tZSBtb3JlIGFuZCBhbHNvIHNl
-ZSBpZiB3ZSBjYW4gdXNlIHRoaXMgdG8KbmFycm93IGluIG9uIGEgcmVwcm9kdWNlci4gSSdtIHRo
-aW5raW5nIHNvbWV0aGluZyBhbG9uZyB0aGUgbGluZXMgb2Y6CgotIENyZWF0ZSBhIGRpcmVjdG9y
-eS9maWxlLiBJZGVhbGx5IHRoZSBkaXJlY3RvcnkgYW5kIGZpbGUgaW5vZGVzIGFyZSBpbgp0aGUg
-c2FtZSBjbHVzdGVyLgotIFN0YXJ0IGEgaGlnaGx5LXRocmVhZGVkIGxpbmstdW5saW5rIHdvcmts
-b2FkIGFnYWluc3QgdGhhdCBmaWxlIGluIHRoZQpzYW1lIGRpcmVjdG9yeS4KLSBTb21ld2hlcmUg
-aW4gdGhlIGJhY2tncm91bmQgdW5saW5rIHRoZSBtYWluIGZpbGUuCi0gQ2hlY2sgZm9yIG11bHRp
-cGxlIHhmc19pdW5saW5rKCkgb3BzLCByZXBlYXQuCgouLi4gdGhlIGFzc3VtcHRpb24gYmVpbmcg
-dGhhdCB0aGUgeGZzX2l1bmxpbmsoKSByYWNlIGNvdWxkIGhhdmUgbGVhZCB0bwphIHBvc3NpYmxl
-IHVubGlua2VkIGxpc3QgY29ycnVwdGlvbiBvbiB0aGUgYXNzb2NpYXRlZCBsaXN0LCBzdWNoIHRo
-YXQgYQpsYXRlciBpbmFjdGl2YXRpb24veGZzX2l1bmxpbmtfcmVtb3ZlIG9mIHNvbWUgb3RoZXIg
-aW5vZGUgaW4gdGhhdCBidWNrZXQKY291bGQgZmFpbC4KCkJyaWFuCgo+IAo+IDIwMTMvNC8yMCBC
-cmlhbiBGb3N0ZXIgPGJmb3N0ZXJAcmVkaGF0LmNvbSA8bWFpbHRvOmJmb3N0ZXJAcmVkaGF0LmNv
-bT4+Cj4gCj4gICAgIE9uIDA0LzIwLzIwMTMgMDY6MTAgQU0sIOespuawuOa2myB3cm90ZToKPiAg
-ICAgPiBEZWFyIEVyaWMsCj4gICAgID4gSSBoYXZlIGFwcGxpZWQgeW91ciBsYXRlc3QgcGF0Y2gg
-YW5kIGNvbGxlY3RlZCB0aGUgZm9sbG93aW5nIGxvZzoKPiAgICAgPgo+ICAgICA+IC92YXIvbG9n
-L21lc3NhZ2UKPiAgICAgPiBBcHIgMjAgMTc6Mjg6MjMgMTAga2VybmVsOiBYRlMgKHNkYik6IHhm
-c19pdW5saW5rX3JlbW92ZToKPiAgICAgeGZzX2lub3RvYnAoKQo+ICAgICA+IHJldHVybmVkIGVy
-cm9yIDIyIGZvciBpbm9kZSAweDFiMjBiIGFnIDAgYWdpbm8gMWIyMGIKPiAgICAgPiBBcHIgMjAg
-MTc6Mjg6MjMgMTAga2VybmVsOgo+ICAgICA+IEFwciAyMCAxNzoyODoyMyAxMCBrZXJuZWw6IFhG
-UyAoc2RiKTogeGZzX2luYWN0aXZlOiB4ZnNfaWZyZWUgcmV0dXJuZWQKPiAgICAgPiBlcnJvciAy
-Mgo+ICAgICA+IEFwciAyMCAxNzoyODoyMyAxMCBrZXJuZWw6IFhGUyAoc2RiKTogeGZzX2RvX2Zv
-cmNlX3NodXRkb3duKDB4MSkKPiAgICAgY2FsbGVkCj4gICAgID4gZnJvbSBsaW5lIDExODQgb2Yg
-ZmlsZSBmcy94ZnMveGZzX3Zub2Rlb3BzLmMuICBSZXR1cm4gYWRkcmVzcyA9Cj4gICAgID4gMHhm
-ZmZmZmZmZmEwMmQ0ZDBhCj4gICAgID4gQXByIDIwIDE3OjI4OjIzIDEwIGtlcm5lbDogWEZTIChz
-ZGIpOiBJL08gRXJyb3IgRGV0ZWN0ZWQuIFNodXR0aW5nCj4gICAgIGRvd24KPiAgICAgPiBmaWxl
-c3lzdGVtCj4gICAgID4gQXByIDIwIDE3OjI4OjIzIDEwIGtlcm5lbDogWEZTIChzZGIpOiBQbGVh
-c2UgdW1vdW50IHRoZSBmaWxlc3lzdGVtIGFuZAo+ICAgICA+IHJlY3RpZnkgdGhlIHByb2JsZW0o
-cykKPiAgICAgPiBBcHIgMjAgMTc6Mjg6MzcgMTAga2VybmVsOiBYRlMgKHNkYik6IHhmc19sb2df
-Zm9yY2U6IGVycm9yIDUgcmV0dXJuZWQuCj4gICAgID4gQXByIDIwIDE3OjI5OjA3IDEwIGtlcm5l
-bDogWEZTIChzZGIpOiB4ZnNfbG9nX2ZvcmNlOiBlcnJvciA1IHJldHVybmVkLgo+ICAgICA+IEFw
-ciAyMCAxNzoyOTozNyAxMCBrZXJuZWw6IFhGUyAoc2RiKTogeGZzX2xvZ19mb3JjZTogZXJyb3Ig
-NSByZXR1cm5lZC4KPiAgICAgPiBBcHIgMjAgMTc6MzA6MDcgMTAga2VybmVsOiBYRlMgKHNkYik6
-IHhmc19sb2dfZm9yY2U6IGVycm9yIDUgcmV0dXJuZWQuCj4gICAgID4KPiAgICAgPiBkZWJ1Z2Zz
-IHRyYWNlOgo+ICAgICA+Cj4gICAgIGh0dHBzOi8vZG9jcy5nb29nbGUuY29tL2ZpbGUvZC8wQjdu
-MkM0VDV0Zk5DVGxaR1VWcG5aRU5yWjNNL2VkaXQ/dXNwPXNoYXJpbmcKPiAgICAgPgo+IAo+ICAg
-ICBGV0lXLi4uCj4gCj4gICAgIDwuLi4+LTY5MDggIFswMDFdICA4NzM5Ljk2NzYyMzogeGZzX2l1
-bmxpbms6IGRldiA4OjE2IGlubyAweDgzYThiIG1vZGUKPiAgICAgMDEwMDAwMCwgZmxhZ3MgMHgw
-Cj4gICAgIDwuLi4+LTY5MDkgIFswMDFdICA4NzM5Ljk3MDI1MjogeGZzX2l1bmxpbms6IGRldiA4
-OjE2IGlubyAweDgzYThiIG1vZGUKPiAgICAgMDEwMDAwMCwgZmxhZ3MgMHgwCj4gCj4gICAgIDB4
-ODNhOGIgYW5kIDB4MWIyMGIgYm90aCBoYXNoIHRvIHVubGlua2VkIGxpc3QgYnVja2V0IDExLgo+
-IAo+ICAgICBBcyB0byB0aGUgcmVzdCBvZiB0aGUgdHJhY2UsIHRoZXJlIGFwcGVhcnMgdG8gYmUg
-YSBzaWduaWZpY2FudCBhbW91bnQgb2YKPiAgICAgbGluayBhY3Rpdml0eSBvbiAoZGlyZWN0b3J5
-KSBpbm9kZSAweDgzYThhICh0aGUgaW1tZWRpYXRlbHkgcHJpb3IgaW5vZGUKPiAgICAgdG8gdGhl
-IGlub2RlIGludm9sdmVkIGluIHRoZSByYWNlKS4gVGhlIG5hbWUgZGF0YSBpbiB0aGUgdHJhY2Ug
-c3VnZ2VzdHMKPiAgICAgYWN0aXZpdHkgc29tZXdoZXJlIHVuZGVyIC5nbHVzdGVyZnMuIEEgY291
-cGxlIHF1ZXN0aW9uczoKPiAKPiAgICAgMS4pIEFueSBpZGVhIHdoYXQgZW50cmllcyBwb2ludCB0
-byB0aGlzIGlub2RlIHJpZ2h0IG5vdyAoZS5nLiwgaG93IG1hbnkKPiAgICAgbGlua3Mgb24gdGhp
-cyBpbm9kZSkgYW5kIHdoZXJlIGl0IHJlc2lkZXMgaW4gdGhlIGZzIChwYXRoKT8KPiAKPiAgICAg
-Mi4pIENhbiB5b3UgYXNzb2NpYXRlIHRoaXMga2luZCBvZiBoZWF2eSByZW1vdmUvbGluayBwYXR0
-ZXJuIG9uIGEgc2luZ2xlCj4gICAgIGlub2RlIHRvIGEgaGlnaGVyIGxldmVsIGFjdGl2aXR5PyBG
-b3IgZXhhbXBsZSwgaWYgeW91IHdlcmUgdG8gd2F0Y2ggdGhlCj4gICAgIHRyYWNlIGRhdGEgbGl2
-ZSwgaXMgdGhpcyBhIG5vcm1hbCBwYXR0ZXJuIHlvdSBvYnNlcnZlPyBEb2VzIGl0IG9ubHkKPiAg
-ICAgb2NjdXIgd2hlbiBhIHJlYmFsYW5jZSBpcyBpbiBwcm9ncmVzcz8gT3Igd2hlbiBhIHJlYmFs
-YW5jZSBmaW5pc2hlcz8gQW55Cj4gICAgIGRldGFpbGVkIG9ic2VydmF0aW9ucyB5b3UgY2FuIG1h
-a2UgaW4gdGhhdCByZWdhcmQgY291bGQgYmUgaGVscGZ1bC4KPiAKPiAgICAgQnJpYW4KPiAKPiAg
-ICAgPiBUaGFuayB5b3UuCj4gICAgID4KPiAgICAgPgo+ICAgICA+IDIwMTMvNC8yMCDnrKbmsLjm
-tpsgPHlvbmd0YW9mdUBnbWFpbC5jb20gPG1haWx0bzp5b25ndGFvZnVAZ21haWwuY29tPgo+ICAg
-ICA8bWFpbHRvOnlvbmd0YW9mdUBnbWFpbC5jb20gPG1haWx0bzp5b25ndGFvZnVAZ21haWwuY29t
-Pj4+Cj4gICAgID4KPiAgICAgPiAgICAgSGkgRXJpYywKPiAgICAgPiAgICAgVGhlIHhmcyBtb2R1
-bGUgaXMgbG9hZGVkIGZyb20gc3lzdGVtIGtlcm5lbCwgaXQgaGFwcGVucyBvbiBvdXIKPiAgICAg
-PiAgICAgcHJvZHVjdGlvbiBzZXJ2ZXIgdG9vIChJIGRpZCBub3QgdG91Y2ggdGhhdCB0aWxsIG5v
-dykgYW5kIGlmCj4gICAgIHRoZSB4ZnMKPiAgICAgPiAgICAgbW9kdWxlIGlzIG1lc3MgdXAgdGhl
-IHN5c3RlbXN0YXAgbWF5IGFsc28gbm90IHdvcmtpbmcgYnV0IG5vdyBpdAo+ICAgICA+ICAgICB3
-b3Jrcy4gQXMgeW91IGhhdmUgbWVudGlvbmVkLCBzdHJhbmdlIHRoaW5nIGlzIHhmcyBzaHV0ZG93
-biBhbHdheXMKPiAgICAgPiAgICAgaGFwcGVucyB3aGVuIGdsdXN0ZXJmcyByZWJhbGFuY2UgY29t
-cGxldGVzLgo+ICAgICA+Cj4gICAgID4KPiAgICAgPiAgICAgMjAxMy80LzIwIEVyaWMgU2FuZGVl
-biA8c2FuZGVlbkBzYW5kZWVuLm5ldAo+ICAgICA8bWFpbHRvOnNhbmRlZW5Ac2FuZGVlbi5uZXQ+
-Cj4gICAgID4gICAgIDxtYWlsdG86c2FuZGVlbkBzYW5kZWVuLm5ldCA8bWFpbHRvOnNhbmRlZW5A
-c2FuZGVlbi5uZXQ+Pj4KPiAgICAgPgo+ICAgICA+ICAgICAgICAgT24gNC8xOS8xMyA5OjAzIFBN
-LCDnrKbmsLjmtpsgd3JvdGU6Cj4gICAgID4gICAgICAgICA+IEhpIEVyaWMsCj4gICAgID4gICAg
-ICAgICA+IEkgd2lsbCBlbmFibGUgdGhlbSBhbmQgcnVuIHRlc3QgYWdhaW4uIEkgY2FuIG9ubHkK
-PiAgICAgcmVwcm9kdWNlIGl0Cj4gICAgID4gICAgICAgICB3aXRoCj4gICAgID4gICAgICAgICA+
-IGdsdXN0ZXJmcyByZWJhbGFuY2UuIEdsdXN0ZXJmcyB1c2VzIGEgbWVjaGFuaXNtIGl0IGNhbGxl
-ZAo+ICAgICA+ICAgICAgICAgc3luY29wIHRvCj4gICAgID4gICAgICAgICA+IHVubGluayBmaWxl
-LiBGb3IgcmViYWxhbmNlIGl0IHVzZXMKPiAgICAgPiAgICAgICAgID4gc3luY29wX3VubGluayhn
-bHVzdGVyZnMvbGliZ2x1c3RlcmZzL3NyYy9zeW5jb3AuYykuIEluIHRoZQo+ICAgICA+ICAgICAg
-ICAgZ2x1c3RlcmZzCj4gICAgID4gICAgICAgICA+IHN5bmNfdGFzayBmcmFtZXdvcmsoZ2x1c3Rl
-cmZzL2xpYmdsdXN0ZXJmcy9zcmMvc3luY29wLmMpCj4gICAgIGl0IHVzZXMKPiAgICAgPiAgICAg
-ICAgID4gIm1ha2Vjb250ZXh0L3N3YXBjb250ZXh0Igo+ICAgICA+ICAgICAgICAgPgo+ICAgICA+
-ICAgICAgICAKPiAgICAgPGh0dHA6Ly93d3cub3Blbmdyb3VwLm9yZy9vbmxpbmVwdWJzLzAwOTY5
-NTM5OS9mdW5jdGlvbnMvbWFrZWNvbnRleHQuaHRtbD4uCj4gICAgID4gICAgICAgICA+IERvZXMg
-aXQgbGVhZHMgdG8gcmFjaW5nIHVubGluayBmcm9tIGRpZmZlcmVudCBDUFUgY29yZT8KPiAgICAg
-Pgo+ICAgICA+ICAgICAgICAgWWVwLCBJIHVuZGVyc3RhbmQgdGhhdCBpdCdzIHJlYmFsYW5jZS4g
-IEl0IGRpZXMgd2hlbiByZWJhbGFuY2UKPiAgICAgPiAgICAgICAgIGZpbmlzaGVzIGJlY2F1c2Ug
-YW4KPiAgICAgPiAgICAgICAgIG9wZW4gYnV0IHVubGlua2VkIGZpbGUgdHJpcHMgb3ZlciB0aGUg
-Y29ycnVwdGVkIGxpc3QgZnJvbQo+ICAgICA+ICAgICAgICAgZWFybGllciwgaXQgc2VlbXMuCj4g
-ICAgID4KPiAgICAgPiAgICAgICAgIEkgZG9uJ3Qga25vdyB3aHkgbWFrZWNvbnRleHQgd291bGQg
-bWF0dGVyLi4uCj4gICAgID4KPiAgICAgPiAgICAgICAgIEp1c3QgdG8gYmUgc3VyZSwgeW91IGFy
-ZSBkZWZpbml0ZWx5IGxvYWRpbmcgdGhlIHhmcyBtb2R1bGUKPiAgICAgZnJvbQo+ICAgICA+ICAg
-ICAgICAgdGhlIGtlcm5lbCB5b3UgYnVpbHQsIHJpZ2h0LCBhbmQgeW91IGRvbid0IGhhdmUgYSAi
-cHJpb3JpdHkiCj4gICAgID4gICAgICAgICBtb2R1bGUgZ2V0dGluZyBsb2FkZWQgZnJvbSBlbHNl
-d2hlcmU/ICBTZWVtcyB1bmxpa2VseSwgYnV0Cj4gICAgIGp1c3QKPiAgICAgPiAgICAgICAgIHRv
-IGJlIHN1cmUuCj4gICAgID4KPiAgICAgPiAgICAgICAgID4gVGhhbmsgeW91Lgo+ICAgICA+Cj4g
-ICAgID4gICAgICAgICBZb3UgY291bGQgYWxzbyBhZGQgdGhpcyBwYXRjaCB0byB0aGUgeGZzIHRy
-YWNlcG9pbnRzIHRvIHByaW50Cj4gICAgID4gICAgICAgICBtb3JlIGluZm9ybWF0aW9uIGFib3V0
-IHRoZSBpbm9kZXMgLSB0aGUgbW9kZSAmIGZsYWdzLgo+ICAgICA+Cj4gICAgID4gICAgICAgICAt
-RXJpYwo+ICAgICA+Cj4gICAgID4KPiAgICAgPiAgICAgICAgIGRpZmYgLS1naXQgYS9mcy94ZnMv
-bGludXgtMi42L3hmc190cmFjZS5oCj4gICAgID4gICAgICAgICBiL2ZzL3hmcy9saW51eC0yLjYv
-eGZzX3RyYWNlLmgKPiAgICAgPiAgICAgICAgIGluZGV4IGU4Y2U2NDQuLmMzMTRiODcgMTAwNjQ0
-Cj4gICAgID4gICAgICAgICAtLS0gYS9mcy94ZnMvbGludXgtMi42L3hmc190cmFjZS5oCj4gICAg
-ID4gICAgICAgICArKysgYi9mcy94ZnMvbGludXgtMi42L3hmc190cmFjZS5oCj4gICAgID4gICAg
-ICAgICBAQCAtNTQ0LDE0ICs1NDQsMTggQEAgREVDTEFSRV9FVkVOVF9DTEFTUyh4ZnNfaW5vZGVf
-Y2xhc3MsCj4gICAgID4gICAgICAgICAgICAgICAgIFRQX1NUUlVDVF9fZW50cnkoCj4gICAgID4g
-ICAgICAgICAgICAgICAgICAgICAgICAgX19maWVsZChkZXZfdCwgZGV2KQo+ICAgICA+ICAgICAg
-ICAgICAgICAgICAgICAgICAgIF9fZmllbGQoeGZzX2lub190LCBpbm8pCj4gICAgID4gICAgICAg
-ICArICAgICAgICAgICAgICAgX19maWVsZChfX3UxNiwgbW9kZSkKPiAgICAgPiAgICAgICAgICsg
-ICAgICAgICAgICAgICBfX2ZpZWxkKHVuc2lnbmVkIGxvbmcsIGZsYWdzKQo+ICAgICA+ICAgICAg
-ICAgICAgICAgICApLAo+ICAgICA+ICAgICAgICAgICAgICAgICBUUF9mYXN0X2Fzc2lnbigKPiAg
-ICAgPiAgICAgICAgICAgICAgICAgICAgICAgICBfX2VudHJ5LT5kZXYgPSBWRlNfSShpcCktPmlf
-c2ItPnNfZGV2Owo+ICAgICA+ICAgICAgICAgICAgICAgICAgICAgICAgIF9fZW50cnktPmlubyA9
-IGlwLT5pX2lubzsKPiAgICAgPiAgICAgICAgICsgICAgICAgICAgICAgICBfX2VudHJ5LT5tb2Rl
-ID0gVkZTX0koaXApLT5pX21vZGU7Cj4gICAgID4gICAgICAgICArICAgICAgICAgICAgICAgX19l
-bnRyeS0+ZmxhZ3MgPSBpcC0+aV9mbGFnczsKPiAgICAgPiAgICAgICAgICAgICAgICAgKSwKPiAg
-ICAgPiAgICAgICAgIC0gICAgICAgVFBfcHJpbnRrKCJkZXYgJWQ6JWQgaW5vIDB4JWxseCIsCj4g
-ICAgID4gICAgICAgICArICAgICAgIFRQX3ByaW50aygiZGV2ICVkOiVkIGlubyAweCVsbHggbW9k
-ZSAwJW8sIGZsYWdzCj4gICAgIDB4JWx4IiwKPiAgICAgPiAgICAgICAgICAgICAgICAgICAgICAg
-ICAgIE1BSk9SKF9fZW50cnktPmRldiksIE1JTk9SKF9fZW50cnktPmRldiksCj4gICAgID4gICAg
-ICAgICAtICAgICAgICAgICAgICAgICBfX2VudHJ5LT5pbm8pCj4gICAgID4gICAgICAgICArICAg
-ICAgICAgICAgICAgICBfX2VudHJ5LT5pbm8sIF9fZW50cnktPm1vZGUsIF9fZW50cnktPmZsYWdz
-KQo+ICAgICA+ICAgICAgICAgICkKPiAgICAgPgo+ICAgICA+ICAgICAgICAgICNkZWZpbmUgREVG
-SU5FX0lOT0RFX0VWRU5UKG5hbWUpIFwKPiAgICAgPgo+ICAgICA+Cj4gICAgID4KPiAgICAgPgo+
-ICAgICA+Cj4gICAgID4KPiAgICAgPiAgICAgLS0KPiAgICAgPiAgICAg56ym5rC45rabCj4gICAg
-ID4KPiAgICAgPgo+ICAgICA+Cj4gICAgID4KPiAgICAgPiAtLQo+ICAgICA+IOespuawuOa2mwo+
-IAo+IAo+IAo+IAo+IC0tIAo+IOespuawuOa2mwoKX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0
-cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+--===============5899760926032705825==
+Content-Type: multipart/alternative; boundary=14dae9340865d8a4a404daca966e
+
+--14dae9340865d8a4a404daca966e
+Content-Type: text/plain; charset=GB2312
+Content-Transfer-Encoding: quoted-printable
+
+Hi Brian,
+Yes, this directory (./crashtest/.glusterfs/indices) is glusterfs
+index-base directory for glusterfs features/index xlator.The
+./crashtest/.glusterfs/indices/xattrop directory is XATTROP_SUBDIR
+directory for glusterfs. This path can be set in glusterfs server-side
+volume file so before there're any progresses I'll try to isolate this
+issue by try to set it to a ext4 path or somewhere else.
+Thank you.
+
+
+2013/4/20 Brian Foster <bfoster@redhat.com>
+
+> On 04/20/2013 07:52 AM, =B7=FB=D3=C0=CC=CE wrote:
+> > Hi Brain,
+> > Here is the file:
+> > find . -inum 539274
+> > ./crashtest/.glusterfs/indices/xattrop
+> > [root@10.23.72.94 <mailto:root@10.23.72.94> xfsd]# ls -lih
+> > ./crashtest/.glusterfs/indices/xattrop
+> > total 0
+> > 539275 ---------- 2 root root 0 Apr 20 17:17
+> > 132ef294-71d1-4435-8daa-aa002e67cb6e
+> > 539275 ---------- 2 root root 0 Apr 20 17:17
+> > xattrop-f3ad589a-b8dc-4416-ab84-fc9ad4033540
+> > find . -inum 539275
+> >
+> ./crashtest/.glusterfs/indices/xattrop/xattrop-f3ad589a-b8dc-4416-ab84-fc=
+9ad4033540
+> >
+> ./crashtest/.glusterfs/indices/xattrop/132ef294-71d1-4435-8daa-aa002e67cb=
+6e
+> > I'm not sure if it is normal or glusterfs fall in infinite loop. Is
+> > there a change that the kernel fall into dead loop?
+> > I'll study it.
+> >
+>
+> Very interesting, thank you. I don't have the full context here yet, but
+> the short of it is that this particular indices/xattrop directory is
+> managed by a backend translator and driven by replication. It appears to
+> be doing some kind of transaction level tracking based on links. E.g.,
+> some quick behavioral observations:
+>
+> - This directory is created and an xattrop-#### file created (no size).
+> - On starting a large sequential write from a client, I start observing
+> a continuous sequence of xfs_link/xfs_remove operations via tracing.
+> - The backend appears to create a link to the xattr-#### file for every
+> replication transaction (handwave) with the name of the link referring
+> to the gfid name of the file under write (but note again the link is not
+> to the inode under write, but this special xattr-#### file). It then
+> apparently removes this link on transaction completion and the process
+> repeats. I suspect this has to do with identifying what files were under
+> modification in the event of a crash before transaction completion, but
+> the underlying pattern/workload is what's more important to us here for
+> the time being...
+>
+> So we're seeing a heavy link related workload on a directory inode
+> (0x83a8a) where the entries are all links to the same inode (0x83a8b).
+> These inodes happen to be close in proximity, which may or may not be a
+> factor. The translator that generates these link/unlink ops sits right
+> above a generic thread pool translator, so this is multi-threaded.
+>
+> What isn't clear to me yet is where the xfs_iunlink() for this heavily
+> linked inode is induced. The primary dentry remains after my file copy
+> test, but then taking another look after a few minutes I see it removed.
+> The same thing occurs if I gracefully restart the volume. I'm going to
+> have to dig into that some more and also see if we can use this to
+> narrow in on a reproducer. I'm thinking something along the lines of:
+>
+> - Create a directory/file. Ideally the directory and file inodes are in
+> the same cluster.
+> - Start a highly-threaded link-unlink workload against that file in the
+> same directory.
+> - Somewhere in the background unlink the main file.
+> - Check for multiple xfs_iunlink() ops, repeat.
+>
+> ... the assumption being that the xfs_iunlink() race could have lead to
+> a possible unlinked list corruption on the associated list, such that a
+> later inactivation/xfs_iunlink_remove of some other inode in that bucket
+> could fail.
+>
+> Brian
+>
+> >
+> > 2013/4/20 Brian Foster <bfoster@redhat.com <mailto:bfoster@redhat.com>>
+> >
+> >     On 04/20/2013 06:10 AM, =B7=FB=D3=C0=CC=CE wrote:
+> >     > Dear Eric,
+> >     > I have applied your latest patch and collected the following log:
+> >     >
+> >     > /var/log/message
+> >     > Apr 20 17:28:23 10 kernel: XFS (sdb): xfs_iunlink_remove:
+> >     xfs_inotobp()
+> >     > returned error 22 for inode 0x1b20b ag 0 agino 1b20b
+> >     > Apr 20 17:28:23 10 kernel:
+> >     > Apr 20 17:28:23 10 kernel: XFS (sdb): xfs_inactive: xfs_ifree
+> returned
+> >     > error 22
+> >     > Apr 20 17:28:23 10 kernel: XFS (sdb): xfs_do_force_shutdown(0x1)
+> >     called
+> >     > from line 1184 of file fs/xfs/xfs_vnodeops.c.  Return address =3D
+> >     > 0xffffffffa02d4d0a
+> >     > Apr 20 17:28:23 10 kernel: XFS (sdb): I/O Error Detected. Shuttin=
+g
+> >     down
+> >     > filesystem
+> >     > Apr 20 17:28:23 10 kernel: XFS (sdb): Please umount the filesyste=
+m
+> and
+> >     > rectify the problem(s)
+> >     > Apr 20 17:28:37 10 kernel: XFS (sdb): xfs_log_force: error 5
+> returned.
+> >     > Apr 20 17:29:07 10 kernel: XFS (sdb): xfs_log_force: error 5
+> returned.
+> >     > Apr 20 17:29:37 10 kernel: XFS (sdb): xfs_log_force: error 5
+> returned.
+> >     > Apr 20 17:30:07 10 kernel: XFS (sdb): xfs_log_force: error 5
+> returned.
+> >     >
+> >     > debugfs trace:
+> >     >
+> >
+> https://docs.google.com/file/d/0B7n2C4T5tfNCTlZGUVpnZENrZ3M/edit?usp=3Dsh=
+aring
+> >     >
+> >
+> >     FWIW...
+> >
+> >     <...>-6908  [001]  8739.967623: xfs_iunlink: dev 8:16 ino 0x83a8b
+> mode
+> >     0100000, flags 0x0
+> >     <...>-6909  [001]  8739.970252: xfs_iunlink: dev 8:16 ino 0x83a8b
+> mode
+> >     0100000, flags 0x0
+> >
+> >     0x83a8b and 0x1b20b both hash to unlinked list bucket 11.
+> >
+> >     As to the rest of the trace, there appears to be a significant
+> amount of
+> >     link activity on (directory) inode 0x83a8a (the immediately prior
+> inode
+> >     to the inode involved in the race). The name data in the trace
+> suggests
+> >     activity somewhere under .glusterfs. A couple questions:
+> >
+> >     1.) Any idea what entries point to this inode right now (e.g., how
+> many
+> >     links on this inode) and where it resides in the fs (path)?
+> >
+> >     2.) Can you associate this kind of heavy remove/link pattern on a
+> single
+> >     inode to a higher level activity? For example, if you were to watch
+> the
+> >     trace data live, is this a normal pattern you observe? Does it only
+> >     occur when a rebalance is in progress? Or when a rebalance finishes=
+?
+> Any
+> >     detailed observations you can make in that regard could be helpful.
+> >
+> >     Brian
+> >
+> >     > Thank you.
+> >     >
+> >     >
+> >     > 2013/4/20 =B7=FB=D3=C0=CC=CE <yongtaofu@gmail.com <mailto:yongtao=
+fu@gmail.com>
+> >     <mailto:yongtaofu@gmail.com <mailto:yongtaofu@gmail.com>>>
+> >     >
+> >     >     Hi Eric,
+> >     >     The xfs module is loaded from system kernel, it happens on ou=
+r
+> >     >     production server too (I did not touch that till now) and if
+> >     the xfs
+> >     >     module is mess up the systemstap may also not working but now
+> it
+> >     >     works. As you have mentioned, strange thing is xfs shutdown
+> always
+> >     >     happens when glusterfs rebalance completes.
+> >     >
+> >     >
+> >     >     2013/4/20 Eric Sandeen <sandeen@sandeen.net
+> >     <mailto:sandeen@sandeen.net>
+> >     >     <mailto:sandeen@sandeen.net <mailto:sandeen@sandeen.net>>>
+> >     >
+> >     >         On 4/19/13 9:03 PM, =B7=FB=D3=C0=CC=CE wrote:
+> >     >         > Hi Eric,
+> >     >         > I will enable them and run test again. I can only
+> >     reproduce it
+> >     >         with
+> >     >         > glusterfs rebalance. Glusterfs uses a mechanism it call=
+ed
+> >     >         syncop to
+> >     >         > unlink file. For rebalance it uses
+> >     >         > syncop_unlink(glusterfs/libglusterfs/src/syncop.c). In
+> the
+> >     >         glusterfs
+> >     >         > sync_task framework(glusterfs/libglusterfs/src/syncop.c=
+)
+> >     it uses
+> >     >         > "makecontext/swapcontext"
+> >     >         >
+> >     >
+> >     <
+> http://www.opengroup.org/onlinepubs/009695399/functions/makecontext.html>=
+.
+> >     >         > Does it leads to racing unlink from different CPU core?
+> >     >
+> >     >         Yep, I understand that it's rebalance.  It dies when
+> rebalance
+> >     >         finishes because an
+> >     >         open but unlinked file trips over the corrupted list from
+> >     >         earlier, it seems.
+> >     >
+> >     >         I don't know why makecontext would matter...
+> >     >
+> >     >         Just to be sure, you are definitely loading the xfs modul=
+e
+> >     from
+> >     >         the kernel you built, right, and you don't have a
+> "priority"
+> >     >         module getting loaded from elsewhere?  Seems unlikely, bu=
+t
+> >     just
+> >     >         to be sure.
+> >     >
+> >     >         > Thank you.
+> >     >
+> >     >         You could also add this patch to the xfs tracepoints to
+> print
+> >     >         more information about the inodes - the mode & flags.
+> >     >
+> >     >         -Eric
+> >     >
+> >     >
+> >     >         diff --git a/fs/xfs/linux-2.6/xfs_trace.h
+> >     >         b/fs/xfs/linux-2.6/xfs_trace.h
+> >     >         index e8ce644..c314b87 100644
+> >     >         --- a/fs/xfs/linux-2.6/xfs_trace.h
+> >     >         +++ b/fs/xfs/linux-2.6/xfs_trace.h
+> >     >         @@ -544,14 +544,18 @@ DECLARE_EVENT_CLASS(xfs_inode_class=
+,
+> >     >                 TP_STRUCT__entry(
+> >     >                         __field(dev_t, dev)
+> >     >                         __field(xfs_ino_t, ino)
+> >     >         +               __field(__u16, mode)
+> >     >         +               __field(unsigned long, flags)
+> >     >                 ),
+> >     >                 TP_fast_assign(
+> >     >                         __entry->dev =3D VFS_I(ip)->i_sb->s_dev;
+> >     >                         __entry->ino =3D ip->i_ino;
+> >     >         +               __entry->mode =3D VFS_I(ip)->i_mode;
+> >     >         +               __entry->flags =3D ip->i_flags;
+> >     >                 ),
+> >     >         -       TP_printk("dev %d:%d ino 0x%llx",
+> >     >         +       TP_printk("dev %d:%d ino 0x%llx mode 0%o, flags
+> >     0x%lx",
+> >     >                           MAJOR(__entry->dev), MINOR(__entry->dev=
+),
+> >     >         -                 __entry->ino)
+> >     >         +                 __entry->ino, __entry->mode,
+> __entry->flags)
+> >     >          )
+> >     >
+> >     >          #define DEFINE_INODE_EVENT(name) \
+> >     >
+> >     >
+> >     >
+> >     >
+> >     >
+> >     >
+> >     >     --
+> >     >     =B7=FB=D3=C0=CC=CE
+> >     >
+> >     >
+> >     >
+> >     >
+> >     > --
+> >     > =B7=FB=D3=C0=CC=CE
+> >
+> >
+> >
+> >
+> > --
+> > =B7=FB=D3=C0=CC=CE
+>
+>
+
+
+--=20
+=B7=FB=D3=C0=CC=CE
+
+--14dae9340865d8a4a404daca966e
+Content-Type: text/html; charset=GB2312
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><div>Hi Brian,<br></div><div>Yes, this directory (./crasht=
+est/.glusterfs/indices) is glusterfs index-base directory for glusterfs fea=
+tures/index xlator.The ./crashtest/.glusterfs/indices/xattrop directory is =
+XATTROP_SUBDIR directory for glusterfs. This path can be set in glusterfs s=
+erver-side volume file so before there&#39;re any progresses I&#39;ll try t=
+o isolate this issue by try to set it to a ext4 path or somewhere else.<br>
+</div><div>Thank you.<br></div></div><div class=3D"gmail_extra"><br><br><di=
+v class=3D"gmail_quote">2013/4/20 Brian Foster <span dir=3D"ltr">&lt;<a hre=
+f=3D"mailto:bfoster@redhat.com" target=3D"_blank">bfoster@redhat.com</a>&gt=
+;</span><br>
+<blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
+x #ccc solid;padding-left:1ex"><div class=3D"im">On 04/20/2013 07:52 AM, =
+=B7=FB=D3=C0=CC=CE wrote:<br>
+&gt; Hi Brain,<br>
+&gt; Here is the file:<br>
+&gt; find . -inum 539274<br>
+&gt; ./crashtest/.glusterfs/indices/xattrop<br>
+</div>&gt; [<a href=3D"mailto:root@10.23.72.94">root@10.23.72.94</a> &lt;ma=
+ilto:<a href=3D"mailto:root@10.23.72.94">root@10.23.72.94</a>&gt; xfsd]# ls=
+ -lih<br>
+<div class=3D"im">&gt; ./crashtest/.glusterfs/indices/xattrop<br>
+&gt; total 0<br>
+&gt; 539275 ---------- 2 root root 0 Apr 20 17:17<br>
+&gt; 132ef294-71d1-4435-8daa-aa002e67cb6e<br>
+&gt; 539275 ---------- 2 root root 0 Apr 20 17:17<br>
+&gt; xattrop-f3ad589a-b8dc-4416-ab84-fc9ad4033540<br>
+&gt; find . -inum 539275<br>
+&gt; ./crashtest/.glusterfs/indices/xattrop/xattrop-f3ad589a-b8dc-4416-ab84=
+-fc9ad4033540<br>
+&gt; ./crashtest/.glusterfs/indices/xattrop/132ef294-71d1-4435-8daa-aa002e6=
+7cb6e<br>
+&gt; I&#39;m not sure if it is normal or glusterfs fall in infinite loop. I=
+s<br>
+&gt; there a change that the kernel fall into dead loop?<br>
+&gt; I&#39;ll study it.<br>
+&gt;<br>
+<br>
+</div>Very interesting, thank you. I don&#39;t have the full context here y=
+et, but<br>
+the short of it is that this particular indices/xattrop directory is<br>
+managed by a backend translator and driven by replication. It appears to<br=
+>
+be doing some kind of transaction level tracking based on links. E.g.,<br>
+some quick behavioral observations:<br>
+<br>
+- This directory is created and an xattrop-#### file created (no size).<br>
+- On starting a large sequential write from a client, I start observing<br>
+a continuous sequence of xfs_link/xfs_remove operations via tracing.<br>
+- The backend appears to create a link to the xattr-#### file for every<br>
+replication transaction (handwave) with the name of the link referring<br>
+to the gfid name of the file under write (but note again the link is not<br=
+>
+to the inode under write, but this special xattr-#### file). It then<br>
+apparently removes this link on transaction completion and the process<br>
+repeats. I suspect this has to do with identifying what files were under<br=
+>
+modification in the event of a crash before transaction completion, but<br>
+the underlying pattern/workload is what&#39;s more important to us here for=
+<br>
+the time being...<br>
+<br>
+So we&#39;re seeing a heavy link related workload on a directory inode<br>
+(0x83a8a) where the entries are all links to the same inode (0x83a8b).<br>
+These inodes happen to be close in proximity, which may or may not be a<br>
+factor. The translator that generates these link/unlink ops sits right<br>
+above a generic thread pool translator, so this is multi-threaded.<br>
+<br>
+What isn&#39;t clear to me yet is where the xfs_iunlink() for this heavily<=
+br>
+linked inode is induced. The primary dentry remains after my file copy<br>
+test, but then taking another look after a few minutes I see it removed.<br=
+>
+The same thing occurs if I gracefully restart the volume. I&#39;m going to<=
+br>
+have to dig into that some more and also see if we can use this to<br>
+narrow in on a reproducer. I&#39;m thinking something along the lines of:<b=
+r>
+<br>
+- Create a directory/file. Ideally the directory and file inodes are in<br>
+the same cluster.<br>
+- Start a highly-threaded link-unlink workload against that file in the<br>
+same directory.<br>
+- Somewhere in the background unlink the main file.<br>
+- Check for multiple xfs_iunlink() ops, repeat.<br>
+<br>
+... the assumption being that the xfs_iunlink() race could have lead to<br>
+a possible unlinked list corruption on the associated list, such that a<br>
+later inactivation/xfs_iunlink_remove of some other inode in that bucket<br=
+>
+could fail.<br>
+<br>
+Brian<br>
+<br>
+&gt;<br>
+&gt; 2013/4/20 Brian Foster &lt;<a href=3D"mailto:bfoster@redhat.com">bfost=
+er@redhat.com</a> &lt;mailto:<a href=3D"mailto:bfoster@redhat.com">bfoster@=
+redhat.com</a>&gt;&gt;<br>
+<div><div class=3D"h5">&gt;<br>
+&gt; &nbsp; &nbsp; On 04/20/2013 06:10 AM, =B7=FB=D3=C0=CC=CE wrote:<br>
+&gt; &nbsp; &nbsp; &gt; Dear Eric,<br>
+&gt; &nbsp; &nbsp; &gt; I have applied your latest patch and collected the =
+following log:<br>
+&gt; &nbsp; &nbsp; &gt;<br>
+&gt; &nbsp; &nbsp; &gt; /var/log/message<br>
+&gt; &nbsp; &nbsp; &gt; Apr 20 17:28:23 10 kernel: XFS (sdb): xfs_iunlink_r=
+emove:<br>
+&gt; &nbsp; &nbsp; xfs_inotobp()<br>
+&gt; &nbsp; &nbsp; &gt; returned error 22 for inode 0x1b20b ag 0 agino 1b20=
+b<br>
+&gt; &nbsp; &nbsp; &gt; Apr 20 17:28:23 10 kernel:<br>
+&gt; &nbsp; &nbsp; &gt; Apr 20 17:28:23 10 kernel: XFS (sdb): xfs_inactive:=
+ xfs_ifree returned<br>
+&gt; &nbsp; &nbsp; &gt; error 22<br>
+&gt; &nbsp; &nbsp; &gt; Apr 20 17:28:23 10 kernel: XFS (sdb): xfs_do_force_=
+shutdown(0x1)<br>
+&gt; &nbsp; &nbsp; called<br>
+&gt; &nbsp; &nbsp; &gt; from line 1184 of file fs/xfs/xfs_vnodeops.c. &nbsp=
+;Return address =3D<br>
+&gt; &nbsp; &nbsp; &gt; 0xffffffffa02d4d0a<br>
+&gt; &nbsp; &nbsp; &gt; Apr 20 17:28:23 10 kernel: XFS (sdb): I/O Error Det=
+ected. Shutting<br>
+&gt; &nbsp; &nbsp; down<br>
+&gt; &nbsp; &nbsp; &gt; filesystem<br>
+&gt; &nbsp; &nbsp; &gt; Apr 20 17:28:23 10 kernel: XFS (sdb): Please umount=
+ the filesystem and<br>
+&gt; &nbsp; &nbsp; &gt; rectify the problem(s)<br>
+&gt; &nbsp; &nbsp; &gt; Apr 20 17:28:37 10 kernel: XFS (sdb): xfs_log_force=
+: error 5 returned.<br>
+&gt; &nbsp; &nbsp; &gt; Apr 20 17:29:07 10 kernel: XFS (sdb): xfs_log_force=
+: error 5 returned.<br>
+&gt; &nbsp; &nbsp; &gt; Apr 20 17:29:37 10 kernel: XFS (sdb): xfs_log_force=
+: error 5 returned.<br>
+&gt; &nbsp; &nbsp; &gt; Apr 20 17:30:07 10 kernel: XFS (sdb): xfs_log_force=
+: error 5 returned.<br>
+&gt; &nbsp; &nbsp; &gt;<br>
+&gt; &nbsp; &nbsp; &gt; debugfs trace:<br>
+&gt; &nbsp; &nbsp; &gt;<br>
+&gt; &nbsp; &nbsp; <a href=3D"https://docs.google.com/file/d/0B7n2C4T5tfNCT=
+lZGUVpnZENrZ3M/edit?usp=3Dsharing" target=3D"_blank">https://docs.google.co=
+m/file/d/0B7n2C4T5tfNCTlZGUVpnZENrZ3M/edit?usp=3Dsharing</a><br>
+&gt; &nbsp; &nbsp; &gt;<br>
+&gt;<br>
+&gt; &nbsp; &nbsp; FWIW...<br>
+&gt;<br>
+&gt; &nbsp; &nbsp; &lt;...&gt;-6908 &nbsp;[001] &nbsp;8739.967623: xfs_iunl=
+ink: dev 8:16 ino 0x83a8b mode<br>
+&gt; &nbsp; &nbsp; 0100000, flags 0x0<br>
+&gt; &nbsp; &nbsp; &lt;...&gt;-6909 &nbsp;[001] &nbsp;8739.970252: xfs_iunl=
+ink: dev 8:16 ino 0x83a8b mode<br>
+&gt; &nbsp; &nbsp; 0100000, flags 0x0<br>
+&gt;<br>
+&gt; &nbsp; &nbsp; 0x83a8b and 0x1b20b both hash to unlinked list bucket 11=
+.<br>
+&gt;<br>
+&gt; &nbsp; &nbsp; As to the rest of the trace, there appears to be a signi=
+ficant amount of<br>
+&gt; &nbsp; &nbsp; link activity on (directory) inode 0x83a8a (the immediat=
+ely prior inode<br>
+&gt; &nbsp; &nbsp; to the inode involved in the race). The name data in the=
+ trace suggests<br>
+&gt; &nbsp; &nbsp; activity somewhere under .glusterfs. A couple questions:=
+<br>
+&gt;<br>
+&gt; &nbsp; &nbsp; 1.) Any idea what entries point to this inode right now =
+(e.g., how many<br>
+&gt; &nbsp; &nbsp; links on this inode) and where it resides in the fs (pat=
+h)?<br>
+&gt;<br>
+&gt; &nbsp; &nbsp; 2.) Can you associate this kind of heavy remove/link pat=
+tern on a single<br>
+&gt; &nbsp; &nbsp; inode to a higher level activity? For example, if you we=
+re to watch the<br>
+&gt; &nbsp; &nbsp; trace data live, is this a normal pattern you observe? D=
+oes it only<br>
+&gt; &nbsp; &nbsp; occur when a rebalance is in progress? Or when a rebalan=
+ce finishes? Any<br>
+&gt; &nbsp; &nbsp; detailed observations you can make in that regard could =
+be helpful.<br>
+&gt;<br>
+&gt; &nbsp; &nbsp; Brian<br>
+&gt;<br>
+&gt; &nbsp; &nbsp; &gt; Thank you.<br>
+&gt; &nbsp; &nbsp; &gt;<br>
+&gt; &nbsp; &nbsp; &gt;<br>
+&gt; &nbsp; &nbsp; &gt; 2013/4/20 =B7=FB=D3=C0=CC=CE &lt;<a href=3D"mailto:=
+yongtaofu@gmail.com">yongtaofu@gmail.com</a> &lt;mailto:<a href=3D"mailto:y=
+ongtaofu@gmail.com">yongtaofu@gmail.com</a>&gt;<br>
+</div></div>&gt; &nbsp; &nbsp; &lt;mailto:<a href=3D"mailto:yongtaofu@gmail=
+.com">yongtaofu@gmail.com</a> &lt;mailto:<a href=3D"mailto:yongtaofu@gmail.=
+com">yongtaofu@gmail.com</a>&gt;&gt;&gt;<br>
+<div class=3D"im">&gt; &nbsp; &nbsp; &gt;<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; Hi Eric,<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; The xfs module is loaded from system =
+kernel, it happens on our<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; production server too (I did not touc=
+h that till now) and if<br>
+&gt; &nbsp; &nbsp; the xfs<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; module is mess up the systemstap may =
+also not working but now it<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; works. As you have mentioned, strange=
+ thing is xfs shutdown always<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; happens when glusterfs rebalance comp=
+letes.<br>
+&gt; &nbsp; &nbsp; &gt;<br>
+&gt; &nbsp; &nbsp; &gt;<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; 2013/4/20 Eric Sandeen &lt;<a href=3D=
+"mailto:sandeen@sandeen.net">sandeen@sandeen.net</a><br>
+&gt; &nbsp; &nbsp; &lt;mailto:<a href=3D"mailto:sandeen@sandeen.net">sandee=
+n@sandeen.net</a>&gt;<br>
+</div>&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &lt;mailto:<a href=3D"mailto:sa=
+ndeen@sandeen.net">sandeen@sandeen.net</a> &lt;mailto:<a href=3D"mailto:san=
+deen@sandeen.net">sandeen@sandeen.net</a>&gt;&gt;&gt;<br>
+<div class=3D"HOEnZb"><div class=3D"h5">&gt; &nbsp; &nbsp; &gt;<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; On 4/19/13 9:03 PM, =B7=
+=FB=D3=C0=CC=CE wrote:<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; Hi Eric,<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; I will enable them=
+ and run test again. I can only<br>
+&gt; &nbsp; &nbsp; reproduce it<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; with<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; glusterfs rebalanc=
+e. Glusterfs uses a mechanism it called<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; syncop to<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; unlink file. For r=
+ebalance it uses<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; syncop_unlink(glus=
+terfs/libglusterfs/src/syncop.c). In the<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; glusterfs<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; sync_task framewor=
+k(glusterfs/libglusterfs/src/syncop.c)<br>
+&gt; &nbsp; &nbsp; it uses<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; &quot;makecontext/=
+swapcontext&quot;<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt;<br>
+&gt; &nbsp; &nbsp; &gt;<br>
+&gt; &nbsp; &nbsp; &lt;<a href=3D"http://www.opengroup.org/onlinepubs/00969=
+5399/functions/makecontext.html" target=3D"_blank">http://www.opengroup.org=
+/onlinepubs/009695399/functions/makecontext.html</a>&gt;.<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; Does it leads to r=
+acing unlink from different CPU core?<br>
+&gt; &nbsp; &nbsp; &gt;<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; Yep, I understand that =
+it&#39;s rebalance. &nbsp;It dies when rebalance<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; finishes because an<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; open but unlinked file =
+trips over the corrupted list from<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; earlier, it seems.<br>
+&gt; &nbsp; &nbsp; &gt;<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; I don&#39;t know why ma=
+kecontext would matter...<br>
+&gt; &nbsp; &nbsp; &gt;<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; Just to be sure, you ar=
+e definitely loading the xfs module<br>
+&gt; &nbsp; &nbsp; from<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; the kernel you built, r=
+ight, and you don&#39;t have a &quot;priority&quot;<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; module getting loaded f=
+rom elsewhere? &nbsp;Seems unlikely, but<br>
+&gt; &nbsp; &nbsp; just<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; to be sure.<br>
+&gt; &nbsp; &nbsp; &gt;<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; &gt; Thank you.<br>
+&gt; &nbsp; &nbsp; &gt;<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; You could also add this=
+ patch to the xfs tracepoints to print<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; more information about =
+the inodes - the mode &amp; flags.<br>
+&gt; &nbsp; &nbsp; &gt;<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; -Eric<br>
+&gt; &nbsp; &nbsp; &gt;<br>
+&gt; &nbsp; &nbsp; &gt;<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; diff --git a/fs/xfs/lin=
+ux-2.6/xfs_trace.h<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; b/fs/xfs/linux-2.6/xfs_=
+trace.h<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; index e8ce644..c314b87 =
+100644<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; --- a/fs/xfs/linux-2.6/=
+xfs_trace.h<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; +++ b/fs/xfs/linux-2.6/=
+xfs_trace.h<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; @@ -544,14 +544,18 @@ D=
+ECLARE_EVENT_CLASS(xfs_inode_class,<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &n=
+bsp; TP_STRUCT__entry(<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &n=
+bsp; &nbsp; &nbsp; &nbsp; &nbsp; __field(dev_t, dev)<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &n=
+bsp; &nbsp; &nbsp; &nbsp; &nbsp; __field(xfs_ino_t, ino)<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; + &nbsp; &nbsp; &nbsp; =
+&nbsp; &nbsp; &nbsp; &nbsp; __field(__u16, mode)<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; + &nbsp; &nbsp; &nbsp; =
+&nbsp; &nbsp; &nbsp; &nbsp; __field(unsigned long, flags)<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &n=
+bsp; ),<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &n=
+bsp; TP_fast_assign(<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &n=
+bsp; &nbsp; &nbsp; &nbsp; &nbsp; __entry-&gt;dev =3D VFS_I(ip)-&gt;i_sb-&gt=
+;s_dev;<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &n=
+bsp; &nbsp; &nbsp; &nbsp; &nbsp; __entry-&gt;ino =3D ip-&gt;i_ino;<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; + &nbsp; &nbsp; &nbsp; =
+&nbsp; &nbsp; &nbsp; &nbsp; __entry-&gt;mode =3D VFS_I(ip)-&gt;i_mode;<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; + &nbsp; &nbsp; &nbsp; =
+&nbsp; &nbsp; &nbsp; &nbsp; __entry-&gt;flags =3D ip-&gt;i_flags;<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &n=
+bsp; ),<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; - &nbsp; &nbsp; &nbsp; =
+TP_printk(&quot;dev %d:%d ino 0x%llx&quot;,<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; + &nbsp; &nbsp; &nbsp; =
+TP_printk(&quot;dev %d:%d ino 0x%llx mode 0%o, flags<br>
+&gt; &nbsp; &nbsp; 0x%lx&quot;,<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &n=
+bsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; MAJOR(__entry-&gt;dev), MINOR(__ent=
+ry-&gt;dev),<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; - &nbsp; &nbsp; &nbsp; =
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; __entry-&gt;ino)<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; + &nbsp; &nbsp; &nbsp; =
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; __entry-&gt;ino, __entry-&gt;mode, __ent=
+ry-&gt;flags)<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;)<br>
+&gt; &nbsp; &nbsp; &gt;<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;#define DEFINE_IN=
+ODE_EVENT(name) \<br>
+&gt; &nbsp; &nbsp; &gt;<br>
+&gt; &nbsp; &nbsp; &gt;<br>
+&gt; &nbsp; &nbsp; &gt;<br>
+&gt; &nbsp; &nbsp; &gt;<br>
+&gt; &nbsp; &nbsp; &gt;<br>
+&gt; &nbsp; &nbsp; &gt;<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; --<br>
+&gt; &nbsp; &nbsp; &gt; &nbsp; &nbsp; =B7=FB=D3=C0=CC=CE<br>
+&gt; &nbsp; &nbsp; &gt;<br>
+&gt; &nbsp; &nbsp; &gt;<br>
+&gt; &nbsp; &nbsp; &gt;<br>
+&gt; &nbsp; &nbsp; &gt;<br>
+&gt; &nbsp; &nbsp; &gt; --<br>
+&gt; &nbsp; &nbsp; &gt; =B7=FB=D3=C0=CC=CE<br>
+&gt;<br>
+&gt;<br>
+&gt;<br>
+&gt;<br>
+&gt; --<br>
+&gt; =B7=FB=D3=C0=CC=CE<br>
+<br>
+</div></div></blockquote></div><br><br clear=3D"all"><br>-- <br>=B7=FB=D3=
+=C0=CC=CE
+</div>
+
+--14dae9340865d8a4a404daca966e--
+
+
+--===============5899760926032705825==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============5899760926032705825==--
