@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A3DC329E03
-	for <xfs@oss.sgi.com>; Sun, 21 Apr 2013 16:55:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 67F1D8F8059
-	for <xfs@oss.sgi.com>; Sun, 21 Apr 2013 14:55:12 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id EZrvuR9EWMZ4LAgj for <xfs@oss.sgi.com>;
-	Sun, 21 Apr 2013 14:55:07 -0700 (PDT)
-Message-ID: <5174603A.8030208@sandeen.net>
-Date: Sun, 21 Apr 2013 16:55:06 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id A5B2929DFA
+	for <xfs@oss.sgi.com>; Sun, 21 Apr 2013 17:39:05 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 946258F8033
+	for <xfs@oss.sgi.com>; Sun, 21 Apr 2013 15:39:05 -0700 (PDT)
+Received: from mail-vb0-f54.google.com (mail-vb0-f54.google.com
+	[209.85.212.54]) by cuda.sgi.com with ESMTP id 5qKMoZL0qgXB40Mu
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sun, 21 Apr 2013 15:39:00 -0700 (PDT)
+Received: by mail-vb0-f54.google.com with SMTP id w16so5324514vbf.27
+	for <xfs@oss.sgi.com>; Sun, 21 Apr 2013 15:39:00 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: shutdown filesystem if xfs_perag_get fails
-References: <20130419204102.736961610@sgi.com>
-	<20130421174107.007313126@sgi.com>
-In-Reply-To: <20130421174107.007313126@sgi.com>
+Date: Sun, 21 Apr 2013 23:38:59 +0100
+Message-ID: <CAEDdjHcoZc2eS=hgb7K7BVf=2z28uh3CMuEU8+qFPp5UFvj-iQ@mail.gmail.com>
+Subject: noop or deadline on an SSD?
+From: Pedro Ribeiro <pedrib@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,125 +24,80 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============8452504996575326520=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 4/21/13 12:41 PM, Mark Tinguely wrote:
+--===============8452504996575326520==
+Content-Type: multipart/alternative; boundary=20cf307d04384abef704dae69e44
 
-> This problem happened locally with a bad inode number from xfs
-> recovery. xfs_perag_get() can return NULL if given a bad agno.
-> Most callers of xfs_perag_get() do not check for a NULL before
-> using the pointer. This patch forces a shutdown of the filesystem
-> for those callers that do not check the return value rather than
-> crashing on a dereferenced NULL pointer.
+--20cf307d04384abef704dae69e44
+Content-Type: text/plain; charset=ISO-8859-1
 
-Hi Mark -
+Hi all,
 
-I'm curious, what was the callchain when this happened?  Was it
-during recovery?  If so, would aborting recovery be more prudent?
+I recently moved my system to an SSD.
 
-I might be missing something, but I'm not sure how shutting
-down avoids a subsequent null ptr deref & crash.
+I decided to do what the XFS FAQ says (
+http://xfs.org/index.php/XFS_FAQ#Q:_I_want_to_tune_my_XFS_filesystems_for_.3Csomething.3E)
+and I used all the defaults for creating the new XFS file systems.
 
-i.e. if a caller does something like:
+However the paragraph above also reads: "As of kernel 3.2.12, the default
+i/o scheduler, CFQ, will defeat much of the parallelization in XFS."
 
-        pag = xfs_perag_get(mp, agno);
-        spin_lock(&pag->pagb_lock);
+Ok, I also read that with an SSD I should be using noop or deadline. And
+which one of these would perform better with XFS with an SSD? And while I'm
+at it, which one would be best for a  mechanical drive?
 
-shutting down in xfs_perag_get doesn't save us from a
-null pag pointer, would it?
- 
-Thanks,
--Eric
+Thanks in advance.
 
-> Signed-off-by: Mark Tinguely <tinguely@sgi.com>
-> ---
->  fs/xfs/xfs_icache.c |    2 +-
->  fs/xfs/xfs_mount.c  |    4 ++--
->  fs/xfs/xfs_mount.h  |   17 ++++++++++++++++-
->  3 files changed, 19 insertions(+), 4 deletions(-)
-> 
-> Index: b/fs/xfs/xfs_icache.c
-> ===================================================================
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -656,7 +656,7 @@ xfs_inode_ag_iterator(
->  	xfs_agnumber_t		ag;
->  
->  	ag = 0;
-> -	while ((pag = xfs_perag_get(mp, ag))) {
-> +	while ((pag = __xfs_perag_get(mp, ag))) {
->  		ag = pag->pag_agno + 1;
->  		error = xfs_inode_ag_walk(mp, pag, execute, flags, args, -1);
->  		xfs_perag_put(pag);
-> Index: b/fs/xfs/xfs_mount.c
-> ===================================================================
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -193,7 +193,7 @@ xfs_uuid_unmount(
->   * have to protect against changes is the tree structure itself.
->   */
->  struct xfs_perag *
-> -xfs_perag_get(struct xfs_mount *mp, xfs_agnumber_t agno)
-> +__xfs_perag_get(struct xfs_mount *mp, xfs_agnumber_t agno)
->  {
->  	struct xfs_perag	*pag;
->  	int			ref = 0;
-> @@ -442,7 +442,7 @@ xfs_initialize_perag(
->  	 * AGs we don't find ready for initialisation.
->  	 */
->  	for (index = 0; index < agcount; index++) {
-> -		pag = xfs_perag_get(mp, index);
-> +		pag = __xfs_perag_get(mp, index);
->  		if (pag) {
->  			xfs_perag_put(pag);
->  			continue;
-> Index: b/fs/xfs/xfs_mount.h
-> ===================================================================
-> --- a/fs/xfs/xfs_mount.h
-> +++ b/fs/xfs/xfs_mount.h
-> @@ -336,12 +336,27 @@ xfs_daddr_to_agbno(struct xfs_mount *mp,
->  /*
->   * perag get/put wrappers for ref counting
->   */
-> -struct xfs_perag *xfs_perag_get(struct xfs_mount *mp, xfs_agnumber_t agno);
-> +struct xfs_perag *__xfs_perag_get(struct xfs_mount *mp, xfs_agnumber_t agno);
->  struct xfs_perag *xfs_perag_get_tag(struct xfs_mount *mp, xfs_agnumber_t agno,
->  					int tag);
->  void	xfs_perag_put(struct xfs_perag *pag);
->  
->  /*
-> + * Ensure the per AG entry was found. Shutting down the filesystem
-> + * is better than crashing the OS.
-> + */
-> +static inline struct xfs_perag *
-> +xfs_perag_get(struct xfs_mount *mp, xfs_agnumber_t agno)
-> +{
-> +	struct xfs_perag	*pag;
-> +
-> +	pag = __xfs_perag_get(mp, agno);
-> +	if (!pag)
-> +		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-> +	return pag;
-> +}
-> +
-> +/*
->   * Per-cpu superblock locking functions
->   */
->  #ifdef HAVE_PERCPU_SB
-> 
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+Regards,
+Pedro
+
+--20cf307d04384abef704dae69e44
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr">Hi all,<div><br></div><div style>I recently moved my syste=
+m to an SSD.=A0</div><div style><br></div><div style>I decided to do what t=
+he XFS FAQ says (<a href=3D"http://xfs.org/index.php/XFS_FAQ#Q:_I_want_to_t=
+une_my_XFS_filesystems_for_.3Csomething.3E">http://xfs.org/index.php/XFS_FA=
+Q#Q:_I_want_to_tune_my_XFS_filesystems_for_.3Csomething.3E</a>) and=A0I use=
+d all the defaults for creating the new XFS file systems.=A0</div>
+<div style><br></div><div style>However the paragraph above also reads: &qu=
+ot;<span style=3D"color:rgb(0,0,0);font-family:sans-serif;font-size:13px;li=
+ne-height:19.046875px">As of kernel 3.2.12, the default i/o scheduler, CFQ,=
+ will defeat much of the parallelization in XFS.&quot;</span></div>
+<div style><span style=3D"color:rgb(0,0,0);font-family:sans-serif;font-size=
+:13px;line-height:19.046875px"><br></span></div><div style><span style=3D"c=
+olor:rgb(0,0,0);font-family:sans-serif;font-size:13px;line-height:19.046875=
+px">Ok, I also read that with an SSD I should be using noop or deadline. An=
+d which one of these would perform better with XFS with an SSD? And while I=
+&#39;m at it, which one would be best for a =A0mechanical drive?</span></di=
+v>
+<div style><span style=3D"color:rgb(0,0,0);font-family:sans-serif;font-size=
+:13px;line-height:19.046875px"><br></span></div><div style><span style=3D"c=
+olor:rgb(0,0,0);font-family:sans-serif;font-size:13px;line-height:19.046875=
+px">Thanks in advance.</span></div>
+<div style><span style=3D"color:rgb(0,0,0);font-family:sans-serif;font-size=
+:13px;line-height:19.046875px"><br>Regards,</span></div><div style><span st=
+yle=3D"color:rgb(0,0,0);font-family:sans-serif;font-size:13px;line-height:1=
+9.046875px">Pedro</span></div>
+</div>
+
+--20cf307d04384abef704dae69e44--
+
+
+--===============8452504996575326520==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============8452504996575326520==--
