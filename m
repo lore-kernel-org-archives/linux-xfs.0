@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6AF3B29E03
-	for <xfs@oss.sgi.com>; Sun, 21 Apr 2013 19:58:09 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3B14D304053
-	for <xfs@oss.sgi.com>; Sun, 21 Apr 2013 17:58:06 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id 3FNR39JNlJO4b35O
-	for <xfs@oss.sgi.com>; Sun, 21 Apr 2013 17:58:05 -0700 (PDT)
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id EF6046C02E
-	for <xfs@oss.sgi.com>; Sun, 21 Apr 2013 19:58:04 -0500 (CDT)
-Message-ID: <51748B18.6040309@hardwarefreak.com>
-Date: Sun, 21 Apr 2013 19:58:00 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 7957329E03
+	for <xfs@oss.sgi.com>; Sun, 21 Apr 2013 21:44:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id ECED2AC003
+	for <xfs@oss.sgi.com>; Sun, 21 Apr 2013 19:44:28 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	tRfU8ZbZyI0FEnGt for <xfs@oss.sgi.com>;
+	Sun, 21 Apr 2013 19:44:26 -0700 (PDT)
+Date: Mon, 22 Apr 2013 12:45:01 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfsprogs: xfs_quota allow user or group names beginning
+	with digits
+Message-ID: <20130422024501.GH13938@destitution>
+References: <20130417183323.465181485@sgi.com>
 MIME-Version: 1.0
-Subject: Re: noop or deadline on an SSD?
-References: <CAEDdjHcoZc2eS=hgb7K7BVf=2z28uh3CMuEU8+qFPp5UFvj-iQ@mail.gmail.com>
-In-Reply-To: <CAEDdjHcoZc2eS=hgb7K7BVf=2z28uh3CMuEU8+qFPp5UFvj-iQ@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+Content-Disposition: inline
+In-Reply-To: <20130417183323.465181485@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,22 +30,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: rjohnston@sgi.com
+Cc: xfs@oss.sgi.com
 
-On 4/21/2013 5:38 PM, Pedro Ribeiro wrote:
+On Wed, Apr 17, 2013 at 01:32:53PM -0500, rjohnston@sgi.com wrote:
+> xfs_quota does not properly parse users or groups that begin with a number.
+> Only call atoi when user or group consists of digits only.
+> 
+> Signed-off-by: Rich Johnston <rjohnston@sgi.com>
+> 
+> ---
+>  include/input.h |    1 +
+>  libxcmd/input.c |   12 ++++++++++++
+>  quota/quota.c   |    4 ++--
+>  quota/quota.h   |    1 +
+>  4 files changed, 16 insertions(+), 2 deletions(-)
+> 
+> Index: b/include/input.h
+> ===================================================================
+> --- a/include/input.h
+> +++ b/include/input.h
+> @@ -46,6 +46,7 @@ extern void	timestr(struct timeval *tv,
+>  extern uid_t	uid_from_string(char *user);
+>  extern gid_t	gid_from_string(char *group);
+>  extern prid_t	prid_from_string(char *project);
+> +extern boolean_t isdigits_only(const char *str);
 
-> Ok, I also read that with an SSD I should be using noop or deadline. And
-> which one of these would perform better with XFS with an SSD? And while I'm
-> at it, which one would be best for a  mechanical drive?
+bool is the correct type, not boolean_t. My CRC patchset makes
+userspace fall in line with the removal of boolean_t from the kernel
+code, so we should probably make this correct from the start. ;)
 
-$ echo [noop|deadline] > /sys/block/sdX/queue/scheduler
+Cheers,
 
-Given the ease with which one can switch between the two, it's far
-better to test each yourself with your hardware and workloads, than to
-rely on any generic advice.
-
+Dave.
 -- 
-Stan
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
