@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6E6097F37
-	for <xfs@oss.sgi.com>; Mon, 22 Apr 2013 12:46:29 -0500 (CDT)
-Message-Id: <20130422173205.877894469@sgi.com>
-Date: Mon, 22 Apr 2013 12:32:05 -0500
-From: rjohnston@sgi.com
-Subject: [PATCH V3] xfsprogs: xfs_quota allow user or group names beginning
-	with
-Content-Disposition: inline;
-	filename=V3-xfsprogs-xfs_quota-allow-user-or-group-names-beginning-with-digits.patch
-	digits
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 7FDD27F37
+	for <xfs@oss.sgi.com>; Mon, 22 Apr 2013 13:25:22 -0500 (CDT)
+Message-ID: <51758099.9030302@sgi.com>
+Date: Mon, 22 Apr 2013 13:25:29 -0500
+From: Rich Johnston <rjohnston@sgi.com>
+MIME-Version: 1.0
+Subject: Re: xfstests: kludge patch for per-dir test number sorting by ./check
+References: <5169C4FE.4030209@gmail.com> <20130414232600.GA5117@destitution>
+	<516B740A.1050607@gmail.com>
+In-Reply-To: <516B740A.1050607@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,138 +18,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Eric Sandeen <sandeen@redhat.com>, Chandra Seetharaman <sekharan@us.ibm.com>, Dave Chinner <dchinner@redhat.com>
+To: "Michael L. Semon" <mlsemon35@gmail.com>
+Cc: xfstests <xfs@oss.sgi.com>
 
-xfs_quota does not properly parse users or groups that begin with a number.
-Only call atoi when user or group consists of digits only.
+On 04/14/2013 10:29 PM, Michael L. Semon wrote:
+> On 04/14/2013 07:26 PM, Dave Chinner wrote:
+>> On Sat, Apr 13, 2013 at 04:50:06PM -0400, Michael L. Semon wrote:
+>>> I'm trying to get the new xfstests to run the XFS tests first, then
+>>
+>> The question is why do you want to do this? Is there any specific
+>> reason for running the tests in that order?
+>>
+>> FWIW, if all you want to do is run the xfs tests, run:
+>>
+>> $ sudo ./check xfs[0-9][0-9][0-9]
+>>
+>> Cheers,
+>>
+>> Dave.
+>>
+>
+> Personal preference.  I'd like to run both series of tests, sometimes
+> attended, sometimes unattended.  It's fine if a generic/ test crashes
+> the PC while running unattended, but I'd much rather the xfs/ tests have
+> first crack at that.
+>
+> My version of the syntax was `./check xfs/[0-9][0-9][0-9]`, but that
+> becomes rough when skipping tests.  I'll still try your version, but
 
-Signed-off-by: Rich Johnston <rjohnston@sgi.com>
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+I think this is a reasonable change request and I can see how this would 
+be very rough if you wanted to skip tests. Anyone have a reason why not 
+to do this?
 
----
+Regards,
+--Rich
 
-Fresh clone of xfsprogs showed I missed a change in quota_proj_type()
-(Thanks Chandra pointing that out)
-
-V2:
-	Change 'i=0' to 'i = 0' (sandeen suggestion) 
-	Use bool instead of boolean_t (dchinner suggestion)
-V3:
-	Also change quota_proj_type() to use isdigits_only() (sekharan suggestion)
-
- include/input.h |    2 ++
- libxcmd/input.c |   13 +++++++++++++
- quota/quota.c   |    6 +++---
- quota/quota.h   |    2 ++
- 4 files changed, 20 insertions(+), 3 deletions(-)
-
-Index: b/include/input.h
-===================================================================
---- a/include/input.h
-+++ b/include/input.h
-@@ -22,6 +22,7 @@
- #include <grp.h>
- #include <sys/types.h>
- #include <xfs/project.h>
-+#include <stdbool.h>
- 
- extern char	**breakline(char *input, int *count);
- extern void	doneline(char *input, char **vec);
-@@ -46,6 +47,7 @@ extern void	timestr(struct timeval *tv,
- extern uid_t	uid_from_string(char *user);
- extern gid_t	gid_from_string(char *group);
- extern prid_t	prid_from_string(char *project);
-+extern bool	isdigits_only(const char *str);
- 
- #define HAVE_FTW_H 1	/* TODO: configure me */
- 
-Index: b/libxcmd/input.c
-===================================================================
---- a/libxcmd/input.c
-+++ b/libxcmd/input.c
-@@ -19,6 +19,7 @@
- #include <xfs/xfs.h>
- #include <xfs/input.h>
- #include <ctype.h>
-+#include <stdbool.h>
- 
- #if defined(ENABLE_READLINE)
- # include <readline/history.h>
-@@ -398,6 +399,18 @@ gid_from_string(
- 	return -1;
- }
- 
-+bool isdigits_only(
-+	const char *str)
-+{
-+	int i;
-+
-+	for (i = 0; i < strlen(str); i++) {
-+		if (!isdigit(str[i]))
-+			return false;
-+	}
-+	return true;
-+}
-+
- #define HAVE_FTW_H 1	/* TODO: configure me */
- 
- #ifndef HAVE_FTW_H
-Index: b/quota/quota.c
-===================================================================
---- a/quota/quota.c
-+++ b/quota/quota.c
-@@ -224,7 +224,7 @@ quota_user_type(
- 	uid_t		id;
- 
- 	if (name) {
--		if (isdigit(name[0])) {
-+		if (isdigits_only(name)) {
- 			id = atoi(name);
- 			name = getusername(id, flags & NO_LOOKUP_FLAG);
- 		} else if ((u = getpwnam(name))) {
-@@ -273,7 +273,7 @@ quota_group_type(
- 	int		i, ngroups, dofree = 0;
- 
- 	if (name) {
--		if (isdigit(name[0])) {
-+		if (isdigits_only(name)) {
- 			gid = atoi(name);
- 			name = getgroupname(gid, flags & NO_LOOKUP_FLAG);
- 		} else {
-@@ -344,7 +344,7 @@ quota_proj_type(
- 		return;
- 	}
- 
--	if (isdigit(name[0])) {
-+	if (isdigits_only(name)) {
- 		id = atoi(name);
- 		name = getprojectname(id, flags & NO_LOOKUP_FLAG);
- 	} else if ((p = getprnam(name))) {
-Index: b/quota/quota.h
-===================================================================
---- a/quota/quota.h
-+++ b/quota/quota.h
-@@ -19,6 +19,7 @@
- #include <xfs/xqm.h>
- #include <xfs/path.h>
- #include <xfs/project.h>
-+#include <stdbool.h>
- 
- /*
-  * Different forms of XFS quota
-@@ -80,4 +81,5 @@ enum {
- extern char *uid_to_name(__uint32_t __uid);
- extern char *gid_to_name(__uint32_t __gid);
- extern char *prid_to_name(__uint32_t __prid);
-+extern bool isdigits_only(const char *);
- 
-
+> irrationality and frustration have driven me to simply adding a "mls"
+> group to all of the tests/<fsgroup>/group files, then hoping that a
+> `./check -g mls` would run everything in the correct order.  That led to
+> trying to figure out why the generic/ tests were running first, and so
+> on and so forth...
+>
+> Thanks!
+>
+> Michael
 
 _______________________________________________
 xfs mailing list
