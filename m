@@ -1,14 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0BDF87F37
-	for <xfs@oss.sgi.com>; Mon, 22 Apr 2013 10:18:53 -0500 (CDT)
-Message-ID: <517554E7.7020408@sgi.com>
-Date: Mon, 22 Apr 2013 10:19:03 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C9C567F37
+	for <xfs@oss.sgi.com>; Mon, 22 Apr 2013 10:21:11 -0500 (CDT)
+Message-ID: <51755570.9070908@sgi.com>
+Date: Mon, 22 Apr 2013 10:21:20 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/2] xfstests: dump _require_fio output to log
+Subject: Re: [PATCH 2/2] xfstests: fix fio's arguments
 References: <1366024188-21756-1-git-send-email-dmonakhov@openvz.org>
-In-Reply-To: <1366024188-21756-1-git-send-email-dmonakhov@openvz.org>
+	<1366024188-21756-2-git-send-email-dmonakhov@openvz.org>
+In-Reply-To: <1366024188-21756-2-git-send-email-dmonakhov@openvz.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,7 +25,7 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dmitry Monakhov <dmonakhov@openvz.org>
 Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, dchinner@redhat.com, xfs@oss.sgi.com
 
-Yes I agree this will help, looks good.
+Looks good.
 
 --Rich
 
