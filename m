@@ -1,14 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1F83E7F37
-	for <xfs@oss.sgi.com>; Mon, 22 Apr 2013 14:17:15 -0500 (CDT)
-Message-ID: <51758CC1.7040400@sgi.com>
-Date: Mon, 22 Apr 2013 14:17:21 -0500
-From: Rich Johnston <rjohnston@sgi.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E90937F37
+	for <xfs@oss.sgi.com>; Mon, 22 Apr 2013 14:59:55 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D42768F8092
+	for <xfs@oss.sgi.com>; Mon, 22 Apr 2013 12:59:55 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id KHd4H9bezLZD6Cxi for <xfs@oss.sgi.com>;
+	Mon, 22 Apr 2013 12:59:54 -0700 (PDT)
+Message-ID: <517596BA.3060408@sandeen.net>
+Date: Mon, 22 Apr 2013 14:59:54 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] capture the failure result of 310
-References: <516B75E9.40605@huawei.com>
-In-Reply-To: <516B75E9.40605@huawei.com>
+Subject: Re: xfs_iunlink_remove: xfs_inotobp() returned error 22 -- debugging
+References: <516C89DF.4070904@redhat.com>
+In-Reply-To: <516C89DF.4070904@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -17,154 +23,63 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Zhao Hongjiang <zhaohongjiang@huawei.com>
-Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: yongtaofu@gmail.com, xfs@oss.sgi.com
 
-Hi Zhao Hongjiang,
+On 4/15/13 6:14 PM, Brian Foster wrote:
+> Hi,
+> 
+> Thanks for the data in the previous thread:
+> 
+> http://oss.sgi.com/archives/xfs/2013-04/msg00327.html
+> 
+> I'm spinning off a new thread specifically for this because the original
+> thread is already too large and scattered to track. As Eric stated,
+> please try to keep data contained in as few messages as possible.
+> 
 
-Eryu Guan submitted a cleanup patch for test 310, will you please 
-include them with your next version?
+Well, it's always simple in the end.  It just took a lot of debugging
+to figure out what was happening - we do appreciate your help with that!
 
-1. add one space between # and test description
-2. remove creator/owner info
-3. fix common/rc and common/filter path so they can be sourced correctly
-4. no need to remove $seq.full cause it's not used(or if verbose output
-    is needed, $seqres.full should be used)
+We were able to create a local reproducer, and it looks like
+this patch fixes things:
 
-Here is the link to the thread.
-http://oss.sgi.com/archives/xfs/2013-04/msg00128.html
+commit aae8a97d3ec30788790d1720b71d76fd8eb44b73
+Author: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
+Date:   Sat Jan 29 18:43:27 2011 +0530
 
-On 04/14/2013 10:37 PM, Zhao Hongjiang wrote:
-> Capture the failuer by the way of count error dmesg and give the description
-> how i run the test to trigger problems.
->
-> Signed-off-by: Zhao Hongjiang <zhaohongjiang@huawei.com>
+    fs: Don't allow to create hardlink for deleted file
+    
+    Add inode->i_nlink == 0 check in VFS. Some of the file systems
+    do this internally. A followup patch will remove those instance.
+    This is needed to ensure that with link by handle we don't allow
+    to create hardlink of an unlinked file. The check also prevent a race
+    between unlink and link
+    
+    Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
+    Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
 
-Please add the following line when you include the cleanup patch.
-[eguan@redhat.com fix common file path and other cleanups]
-
-> ---
->   tests/generic/310 |   57 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
->   1 files changed, 56 insertions(+), 1 deletions(-)
->   mode change 100644 => 100755 tests/generic/310
->
-> diff --git a/tests/generic/310 b/tests/generic/310
-> old mode 100644
-> new mode 100755
-> index ef51422..f44799a
-> --- a/tests/generic/310
-> +++ b/tests/generic/310
-> @@ -4,6 +4,17 @@
-
-Please add one space between # and test description.
-
->   #Check if there are two threads,one keeps calling read() or lseek(), and
->   #the other calling readdir(), both on the same directory fd.
->   #
-
-Try to keep personal pronouns out of any comments i.e.
-
-> +#When I ran this on ext3 (can be replaced with ext2/ext4) which has dir_index
-> +#feature disabled, I got this:
-
-# Testing on ext3: with dir_index disabled results in the following
-# dmesg output: (also occurs when testing ext2 and ext4)
-
-> +#
-> +#EXT3-fs error (device sdb): ext3_readdir: bad entry in directory #1134241:
-> +#rec_len % 4 != 0 - offset=2704, inode=16973836, rec_len=12850, name_len=52
-> +#EXT3-fs error (device sdb): ext3_readdir: bad entry in directory #1134241:
-> +#directory entry across blocks - offset=1672, inode=16973836, rec_len=14132,
-> +#name_len=57
-> +#
-
-> +#If we configured errors=remount-ro, the filesystem will become read-only.
-
-# The filesystem mount option 'errors=' will define the behavior
-# when an error is encountered. (see mount manpage)
-
-
-> +#
->   # Based on a testcase from Li Zefan <lizefan@huawei.com>.
->   #
->   # http://marc.info/?l=linux-kernel&m=136123703211869&w=2
-> @@ -47,6 +58,37 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
->   _supported_fs generic
->   _supported_os Linux
->
-> +dmesg -c > /dev/null
-> +
-> +nr_bug=`dmesg | grep -c "kernel BUG"`
-> +nr_error=`dmesg | grep -c "error"`
-> +nr_null=`dmesg | grep -c "kernel NULL pointer dereference"`
-> +nr_warning=`dmesg | grep -c "^WARNING"`
-> +nr_lockdep=`dmesg | grep -c "possible recursive locking detected"`
-> +
-> +#check if some kind of kernel bug happened
-> +check_kernel_bug()
-> +{
-> +	new_bug=`dmesg | grep -c "kernel BUG"`	
-> +	new_error=`dmesg | grep -c "error"`
-> +	new_null=`dmesg | grep -c "kernel NULL pointer dereference"`
-> +	new_warning=`dmesg | grep -c "^WARNING"`
-> +	new_lockdep=`dmesg | grep -c "possible recursive locking detected"`
-> +
-> +
-> +	# no kernel bug is detected
-> +	if [ $new_bug -eq $nr_bug -a $new_error -eq $nr_error -a \
-> +	     $new_null -eq $nr_null -a $new_warning -eq $nr_warning -a \
-> +	     $new_lockdep -eq $nr_lockdep ]; then
-> +		return 1
-> +	fi
-> +
-> +	nr_bug=$new_bug
-> +	nr_error=$new_error
-> +	nr_null=$new_null
-> +	nr_warning=$new_warning
-> +	nr_lockdep=$new_lockdep
-> +}
->   mkdir $TEST_DIR/tmp
->   for n in {1..4096}; do
->   	touch $TEST_DIR/tmp/$n
-> @@ -57,6 +99,13 @@ _test_read()
->   	src/t_readdir_1 $TEST_DIR/tmp &
->   	sleep 100
->   	killall src/t_readdir_1
-> +	check_kernel_bug
-> +	if [ $? -eq 1 ]; then
-> +		status=0
-> +	else
-> +		echo "error: kernel bug was found, you can see the
-> +			dmesg for more infomation."
-> +	fi
->   }
->
->   _test_lseek()
-> @@ -64,6 +113,13 @@ _test_lseek()
->   	src/t_readdir_2 $TEST_DIR/tmp &
->   	sleep 100
->   	killall src/t_readdir_2
-> +	check_kernel_bug
-> +	if [ $? -eq 1 ]; then
-> +		status=0
-> +	else
-> +		echo "error: kernel bug was found, you can see the
-> +			dmesg for more infomation."
-> +	fi
->   }
->
->   _test_read
-> @@ -72,5 +128,4 @@ _test_lseek
->   # success, all done
->   echo "*** done"
->   rm -f $seq.full
-> -status=0
->   exit
->
+diff --git a/fs/namei.c b/fs/namei.c
+index 83e92ba..33be51a 100644
+--- a/fs/namei.c
++++ b/fs/namei.c
+@@ -2906,7 +2906,11 @@ int vfs_link(struct dentry *old_dentry, struct inode *dir, struct dentry *new_de
+ 		return error;
+ 
+ 	mutex_lock(&inode->i_mutex);
+-	error = dir->i_op->link(old_dentry, dir, new_dentry);
++	/* Make sure we don't allow creating hardlink to an unlinked file */
++	if (inode->i_nlink == 0)
++		error =  -ENOENT;
++	else
++		error = dir->i_op->link(old_dentry, dir, new_dentry);
+ 	mutex_unlock(&inode->i_mutex);
+ 	if (!error)
+ 		fsnotify_link(dir, inode, new_dentry);
 
 
 _______________________________________________
