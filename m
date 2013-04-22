@@ -1,20 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 78E2129E03
-	for <xfs@oss.sgi.com>; Sun, 21 Apr 2013 17:51:57 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1129AAC001
-	for <xfs@oss.sgi.com>; Sun, 21 Apr 2013 15:51:56 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id LoEaZBmUD75IYZC7 for <xfs@oss.sgi.com>;
-	Sun, 21 Apr 2013 15:51:55 -0700 (PDT)
-Message-ID: <51746D8A.60707@sandeen.net>
-Date: Sun, 21 Apr 2013 17:51:54 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 6AF3B29E03
+	for <xfs@oss.sgi.com>; Sun, 21 Apr 2013 19:58:09 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3B14D304053
+	for <xfs@oss.sgi.com>; Sun, 21 Apr 2013 17:58:06 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id 3FNR39JNlJO4b35O
+	for <xfs@oss.sgi.com>; Sun, 21 Apr 2013 17:58:05 -0700 (PDT)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id EF6046C02E
+	for <xfs@oss.sgi.com>; Sun, 21 Apr 2013 19:58:04 -0500 (CDT)
+Message-ID: <51748B18.6040309@hardwarefreak.com>
+Date: Sun, 21 Apr 2013 19:58:00 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Subject: [PATCH V3] xfstests: fix common filter include in filter.btrfs
-References: <517386CC.8010406@redhat.com> <51746D07.5090300@sandeen.net>
-In-Reply-To: <51746D07.5090300@sandeen.net>
+Subject: Re: noop or deadline on an SSD?
+References: <CAEDdjHcoZc2eS=hgb7K7BVf=2z28uh3CMuEU8+qFPp5UFvj-iQ@mail.gmail.com>
+In-Reply-To: <CAEDdjHcoZc2eS=hgb7K7BVf=2z28uh3CMuEU8+qFPp5UFvj-iQ@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,33 +31,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-btrfs <linux-btrfs@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-Not sure how this happened, but filter.btrfs including
-itself leads to immense sadness for any file that includes it.
-(I got a segfault when I tried to run 307)
+On 4/21/2013 5:38 PM, Pedro Ribeiro wrote:
 
-It should be including ./common/filter not ./common/filter.btrfs
+> Ok, I also read that with an SSD I should be using noop or deadline. And
+> which one of these would perform better with XFS with an SSD? And while I'm
+> at it, which one would be best for a  mechanical drive?
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+$ echo [noop|deadline] > /sys/block/sdX/queue/scheduler
 
-cripes, I'm sorry that took 3 times to get right :/
+Given the ease with which one can switch between the two, it's far
+better to test each yourself with your hardware and workloads, than to
+rely on any generic advice.
 
-diff --git a/common/filter.btrfs b/common/filter.btrfs
-index b1aa733..e9a2bc2 100644
---- a/common/filter.btrfs
-+++ b/common/filter.btrfs
-@@ -1,6 +1,6 @@
- # Filters for btrfs command output
- 
--. ./common/filter.btrfs
-+. ./common/filter
- 
- # Some, but not all, commands emit "Btrfs <version>"
- _filter_btrfs_version()
-
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
