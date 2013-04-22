@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id EF7E17F52
-	for <xfs@oss.sgi.com>; Mon, 22 Apr 2013 17:42:09 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A7F13304064
-	for <xfs@oss.sgi.com>; Mon, 22 Apr 2013 15:42:09 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id BMGuddCP3r8Ka5YU for <xfs@oss.sgi.com>;
-	Mon, 22 Apr 2013 15:42:07 -0700 (PDT)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 966FF63BCC66
-	for <xfs@oss.sgi.com>; Mon, 22 Apr 2013 17:42:07 -0500 (CDT)
-Message-ID: <5175BCBE.8040306@sandeen.net>
-Date: Mon, 22 Apr 2013 17:42:06 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 5BC3E29E05
+	for <xfs@oss.sgi.com>; Mon, 22 Apr 2013 18:31:07 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id DF3B3AC002
+	for <xfs@oss.sgi.com>; Mon, 22 Apr 2013 16:31:03 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	JfhuCSypMTMucT2u for <xfs@oss.sgi.com>;
+	Mon, 22 Apr 2013 16:31:02 -0700 (PDT)
+Date: Tue, 23 Apr 2013 09:30:33 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: shutdown filesystem if xfs_perag_get fails
+Message-ID: <20130422233033.GK30622@dastard>
+References: <20130419204102.736961610@sgi.com>
+	<20130421174107.007313126@sgi.com> <5174603A.8030208@sandeen.net>
+	<51753EDE.6000301@sgi.com> <51754A13.5000808@sandeen.net>
+	<5175532B.3050509@sgi.com>
 MIME-Version: 1.0
-Subject: [PATCH 3/3] xfsprogs: Fix up usage() errors and omissions
-References: <5175BB8F.5090604@sandeen.net>
-In-Reply-To: <5175BB8F.5090604@sandeen.net>
+Content-Disposition: inline
+In-Reply-To: <5175532B.3050509@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,196 +32,55 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-Add missing options and remove invalid options in usage() output
-strings.
+On Mon, Apr 22, 2013 at 10:11:39AM -0500, Mark Tinguely wrote:
+>  #6 [ffff880135603980] _xfs_buf_find at ffffffffa01a7fef [xfs]
+>  #7 [ffff8801356039f0] xfs_buf_get at ffffffffa01a824a [xfs]
+>  #8 [ffff880135603a30] xfs_buf_read at ffffffffa01a83a4 [xfs]
+>  #9 [ffff880135603a60] xlog_recover_inode_pass2 at ffffffffa0193629 [xfs]
 
-* Add -V to several usage() strings
-* Remove deprecated/invalid -n and -s otions from xfs_fsr's usage
-* Remove invalid -I option from xfs_growfs's usage
-* Add -n (O_NONBLOCK) option to xfs_io's usage
-* Add -e (exit on error) option to xfs_logprint's usage
-* Remove invalid -b option from xfs_mdrestore's usage
-* Add -N (no-op), -K (no discard), and -f (force) to mkfs.xfs's usage
-* Add -x (expert) option to xfs_quota's usage
+So it's the same problem as this bug fix addresses:
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+commit 10616b806d1d7835b1d23b8d75ef638f92cb98b6
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Mon Jan 21 23:53:52 2013 +1100
 
-diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
-index c01e0b9..7f65de3 100644
---- a/copy/xfs_copy.c
-+++ b/copy/xfs_copy.c
-@@ -301,7 +301,7 @@ void
- usage(void)
- {
- 	fprintf(stderr,
--		_("Usage: %s [-bd] [-L logfile] source target [target ...]\n"),
-+		_("Usage: %s [-bdV] [-L logfile] source target [target ...]\n"),
- 		progname);
- 	exit(1);
- }
-diff --git a/db/init.c b/db/init.c
-index 2a31cb8..0e9e1a2 100644
---- a/db/init.c
-+++ b/db/init.c
-@@ -43,7 +43,7 @@ static void
- usage(void)
- {
- 	fprintf(stderr, _(
--		"Usage: %s [-fFrxV] [-p prog] [-l logdev] [-c cmd]... device\n"
-+		"Usage: %s [-ifFrxV] [-p prog] [-l logdev] [-c cmd]... device\n"
- 		), progname);
- 	exit(1);
- }
-diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
-index 3d017ca..2440bab 100644
---- a/fsr/xfs_fsr.c
-+++ b/fsr/xfs_fsr.c
-@@ -386,12 +386,9 @@ void
- usage(int ret)
- {
- 	fprintf(stderr, _(
--"Usage: %s [-d] [-v] [-n] [-s] [-g] [-t time] [-p passes] [-f leftf] [-m mtab]\n"
--"       %s [-d] [-v] [-n] [-s] [-g] xfsdev | dir | file ...\n\n"
-+"Usage: %s [-d] [-v] [-g] [-t time] [-p passes] [-f leftf] [-m mtab]\n"
-+"       %s [-d] [-v] [-g] xfsdev | dir | file ...\n\n"
- "Options:\n"
--"       -n              Do nothing, only interesting with -v. Not\n"
--"                       effective with in mtab mode.\n"
--"       -s		Print statistics only.\n"
- "       -g              Print to syslog (default if stdout not a tty).\n"
- "       -t time         How long to run in seconds.\n"
- "       -p passes	Number of passes before terminating global re-org.\n"
-diff --git a/growfs/xfs_growfs.c b/growfs/xfs_growfs.c
-index a6d298b..5d544da 100644
---- a/growfs/xfs_growfs.c
-+++ b/growfs/xfs_growfs.c
-@@ -19,14 +19,6 @@
- #include <xfs/libxfs.h>
- #include <xfs/path.h>
- 
--/*
-- * When growing a filesystem, this is the most significant
-- * bits we'll accept in the resulting inode numbers
-- * without warning the user.
-- */
--
--#define XFS_MAX_INODE_SIG_BITS 32
--
- static void
- usage(void)
- {
-@@ -37,7 +29,6 @@ Options:\n\
- 	-l          grow log section\n\
- 	-r          grow realtime section\n\
- 	-n          don't change anything, just show geometry\n\
--	-I          allow inode numbers to exceed %d significant bits\n\
- 	-i          convert log from external to internal format\n\
- 	-t          alternate location for mount table (/etc/mtab)\n\
- 	-x          convert log from internal to external format\n\
-@@ -47,7 +38,7 @@ Options:\n\
- 	-e size     set realtime extent size to size blks\n\
- 	-m imaxpct  set inode max percent to imaxpct\n\
- 	-V          print version information\n"),
--		progname, XFS_MAX_INODE_SIG_BITS);
-+		progname);
- 	exit(2);
- }
- 
-diff --git a/io/init.c b/io/init.c
-index fb93082..ca3055a 100644
---- a/io/init.c
-+++ b/io/init.c
-@@ -32,7 +32,7 @@ void
- usage(void)
- {
- 	fprintf(stderr,
--		_("Usage: %s [-adfmrRstx] [-p prog] [-c cmd]... file\n"),
-+		_("Usage: %s [-adfmnrRstVx] [-p prog] [-c cmd]... file\n"),
- 		progname);
- 	exit(1);
- }
-diff --git a/io/xfs_freeze.sh b/io/xfs_freeze.sh
-index 45e20d2..647aa96 100644
---- a/io/xfs_freeze.sh
-+++ b/io/xfs_freeze.sh
-@@ -4,7 +4,7 @@
- #
- 
- OPTS=""
--USAGE="Usage: xfs_freeze -f | -u <mountpoint>"
-+USAGE="Usage: xfs_freeze [-V] [-f | -u] <mountpoint>"
- DIRNAME=`dirname $0`
- VERSION=false
- FREEZE=false
-diff --git a/logprint/logprint.c b/logprint/logprint.c
-index 482fd4e..0923b0a 100644
---- a/logprint/logprint.c
-+++ b/logprint/logprint.c
-@@ -44,6 +44,7 @@ Options:\n\
-     -c	            try to continue if error found in log\n\
-     -C <filename>   copy the log from the filesystem to filename\n\
-     -d	            dump the log in log-record format\n\
-+    -e	            exit when an error is found in the log\n\
-     -f	            specified device is actually a file\n\
-     -l <device>     filename of external log\n\
-     -n	            don't try and interpret log data\n\
-diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
-index 509a3ed..479e677 100644
---- a/mdrestore/xfs_mdrestore.c
-+++ b/mdrestore/xfs_mdrestore.c
-@@ -178,7 +178,7 @@ perform_restore(
- static void
- usage(void)
- {
--	fprintf(stderr, "Usage: %s [-bg] source target\n", progname);
-+	fprintf(stderr, "Usage: %s [-V] [-g] source target\n", progname);
- 	exit(1);
- }
- 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index c57a855..09b5d5b 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -2911,6 +2911,9 @@ usage( void )
- /* realtime subvol */	[-r extsize=num,size=num,rtdev=xxx]\n\
- /* sectorsize */	[-s log=n|size=num]\n\
- /* version */		[-V]\n\
-+/* no-op info only */	[-N]\n\
-+/* no discard */	[-K]\n\
-+/* force overwrite */	[-f]\n\
- 			devicename\n\
- <devicename> is required unless -d name=xxx is given.\n\
- <num> is xxx (bytes), xxxs (sectors), xxxb (fs blocks), xxxk (xxx KiB),\n\
-diff --git a/quota/init.c b/quota/init.c
-index 0b481f7..aa99b1b 100644
---- a/quota/init.c
-+++ b/quota/init.c
-@@ -45,7 +45,7 @@ static void
- usage(void)
- {
- 	fprintf(stderr,
--		_("Usage: %s [-p prog] [-c cmd]... [-d project]... [path]\n"),
-+		_("Usage: %s [-x] [-p prog] [-c cmd]... [-d project]... [path]\n"),
- 		progname);
- 	exit(1);
- }
-diff --git a/rtcp/xfs_rtcp.c b/rtcp/xfs_rtcp.c
-index 6ea7ab9..f0b5936 100644
---- a/rtcp/xfs_rtcp.c
-+++ b/rtcp/xfs_rtcp.c
-@@ -27,7 +27,7 @@ char *progname;
- void
- usage()
- {
--	fprintf(stderr, _("%s [-e extsize] [-p] source target\n"), progname);
-+	fprintf(stderr, _("%s [-e extsize] [-p] [-V] source target\n"), progname);
- 	exit(2);
- }
- 
+    xfs: fix _xfs_buf_find oops on blocks beyond the filesystem end
+    
+    When _xfs_buf_find is passed an out of range address, it will fail
+    to find a relevant struct xfs_perag and oops with a null
+    dereference. This can happen when trying to walk a filesystem with a
+    metadata inode that has a partially corrupted extent map (i.e. the
+    block number returned is corrupt, but is otherwise intact) and we
+    try to read from the corrupted block address.
+    
+    In this case, just fail the lookup. If it is readahead being issued,
+    it will simply not be done, but if it is real read that fails we
+    will get an error being reported.  Ideally this case should result
+    in an EFSCORRUPTED error being reported, but we cannot return an
+    error through xfs_buf_read() or xfs_buf_get() so this lookup failure
+    may result in ENOMEM or EIO errors being reported instead.
+    
+    Signed-off-by: Dave Chinner <dchinner@redhat.com>
+    Reviewed-by: Brian Foster <bfoster@redhat.com>
+    Reviewed-by: Ben Myers <bpm@sgi.com>
+    Signed-off-by: Ben Myers <bpm@sgi.com>
 
+> The recovery value is bad and is a problem on its own, but XFS does
+> not verify the validity of ag number when doing a xfs_perag_get().
+
+Right, that's what the above fix does, but it can't be done on older
+kernels because grwofs relies on being able to get buffers beyond
+the existing filesystem limits...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
