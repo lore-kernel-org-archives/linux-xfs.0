@@ -1,20 +1,37 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E90937F37
-	for <xfs@oss.sgi.com>; Mon, 22 Apr 2013 14:59:55 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D42768F8092
-	for <xfs@oss.sgi.com>; Mon, 22 Apr 2013 12:59:55 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id KHd4H9bezLZD6Cxi for <xfs@oss.sgi.com>;
-	Mon, 22 Apr 2013 12:59:54 -0700 (PDT)
-Message-ID: <517596BA.3060408@sandeen.net>
-Date: Mon, 22 Apr 2013 14:59:54 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: xfs_iunlink_remove: xfs_inotobp() returned error 22 -- debugging
-References: <516C89DF.4070904@redhat.com>
-In-Reply-To: <516C89DF.4070904@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 34ACF7F37
+	for <xfs@oss.sgi.com>; Mon, 22 Apr 2013 15:22:37 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 04CFB304039
+	for <xfs@oss.sgi.com>; Mon, 22 Apr 2013 13:22:34 -0700 (PDT)
+Received: from e8.ny.us.ibm.com (e8.ny.us.ibm.com [32.97.182.138]) by
+	cuda.sgi.com with ESMTP id 15C57xnA4ipl7KO0 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 22 Apr 2013 13:22:33 -0700 (PDT)
+Received: from /spool/local
+	by e8.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	Violators will be prosecuted
+	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
+	Mon, 22 Apr 2013 16:22:32 -0400
+Received: from d01relay05.pok.ibm.com (d01relay05.pok.ibm.com [9.56.227.237])
+	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 083CA6E803F
+	for <xfs@oss.sgi.com>; Mon, 22 Apr 2013 16:22:28 -0400 (EDT)
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay05.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	r3MKMUNb315298 for <xfs@oss.sgi.com>; Mon, 22 Apr 2013 16:22:30 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
+	r3MKMTsF007515 for <xfs@oss.sgi.com>; Mon, 22 Apr 2013 17:22:30 -0300
+Subject: Re: [PATCH V3] xfsprogs: xfs_quota allow user or group names
+	beginning with
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+In-Reply-To: <20130422173205.877894469@sgi.com>
+References: <20130422173205.877894469@sgi.com>
+Date: Mon, 22 Apr 2013 15:22:28 -0500
+Message-ID: <1366662148.3762.32398.camel@chandra-dt.ibm.com>
+Mime-Version: 1.0
+Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,59 +44,144 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: yongtaofu@gmail.com, xfs@oss.sgi.com
+To: rjohnston@sgi.com
+Cc: Eric Sandeen <sandeen@redhat.com>, Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
 
-On 4/15/13 6:14 PM, Brian Foster wrote:
-> Hi,
+
+On Mon, 2013-04-22 at 12:32 -0500, rjohnston@sgi.com wrote:
+> xfs_quota does not properly parse users or groups that begin with a number.
+> Only call atoi when user or group consists of digits only.
 > 
-> Thanks for the data in the previous thread:
+> Signed-off-by: Rich Johnston <rjohnston@sgi.com>
+> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
+Reviewed-by: Chandra Seetharaman <sekharan@us.ibm.com>
+
 > 
-> http://oss.sgi.com/archives/xfs/2013-04/msg00327.html
+> ---
 > 
-> I'm spinning off a new thread specifically for this because the original
-> thread is already too large and scattered to track. As Eric stated,
-> please try to keep data contained in as few messages as possible.
+> Fresh clone of xfsprogs showed I missed a change in quota_proj_type()
+> (Thanks Chandra pointing that out)
 > 
-
-Well, it's always simple in the end.  It just took a lot of debugging
-to figure out what was happening - we do appreciate your help with that!
-
-We were able to create a local reproducer, and it looks like
-this patch fixes things:
-
-commit aae8a97d3ec30788790d1720b71d76fd8eb44b73
-Author: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
-Date:   Sat Jan 29 18:43:27 2011 +0530
-
-    fs: Don't allow to create hardlink for deleted file
-    
-    Add inode->i_nlink == 0 check in VFS. Some of the file systems
-    do this internally. A followup patch will remove those instance.
-    This is needed to ensure that with link by handle we don't allow
-    to create hardlink of an unlinked file. The check also prevent a race
-    between unlink and link
-    
-    Signed-off-by: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
-    Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
-
-diff --git a/fs/namei.c b/fs/namei.c
-index 83e92ba..33be51a 100644
---- a/fs/namei.c
-+++ b/fs/namei.c
-@@ -2906,7 +2906,11 @@ int vfs_link(struct dentry *old_dentry, struct inode *dir, struct dentry *new_de
- 		return error;
- 
- 	mutex_lock(&inode->i_mutex);
--	error = dir->i_op->link(old_dentry, dir, new_dentry);
-+	/* Make sure we don't allow creating hardlink to an unlinked file */
-+	if (inode->i_nlink == 0)
-+		error =  -ENOENT;
-+	else
-+		error = dir->i_op->link(old_dentry, dir, new_dentry);
- 	mutex_unlock(&inode->i_mutex);
- 	if (!error)
- 		fsnotify_link(dir, inode, new_dentry);
+> V2:
+> 	Change 'i=0' to 'i = 0' (sandeen suggestion) 
+> 	Use bool instead of boolean_t (dchinner suggestion)
+> V3:
+> 	Also change quota_proj_type() to use isdigits_only() (sekharan suggestion)
+> 
+>  include/input.h |    2 ++
+>  libxcmd/input.c |   13 +++++++++++++
+>  quota/quota.c   |    6 +++---
+>  quota/quota.h   |    2 ++
+>  4 files changed, 20 insertions(+), 3 deletions(-)
+> 
+> Index: b/include/input.h
+> ===================================================================
+> --- a/include/input.h
+> +++ b/include/input.h
+> @@ -22,6 +22,7 @@
+>  #include <grp.h>
+>  #include <sys/types.h>
+>  #include <xfs/project.h>
+> +#include <stdbool.h>
+> 
+>  extern char	**breakline(char *input, int *count);
+>  extern void	doneline(char *input, char **vec);
+> @@ -46,6 +47,7 @@ extern void	timestr(struct timeval *tv,
+>  extern uid_t	uid_from_string(char *user);
+>  extern gid_t	gid_from_string(char *group);
+>  extern prid_t	prid_from_string(char *project);
+> +extern bool	isdigits_only(const char *str);
+> 
+>  #define HAVE_FTW_H 1	/* TODO: configure me */
+> 
+> Index: b/libxcmd/input.c
+> ===================================================================
+> --- a/libxcmd/input.c
+> +++ b/libxcmd/input.c
+> @@ -19,6 +19,7 @@
+>  #include <xfs/xfs.h>
+>  #include <xfs/input.h>
+>  #include <ctype.h>
+> +#include <stdbool.h>
+> 
+>  #if defined(ENABLE_READLINE)
+>  # include <readline/history.h>
+> @@ -398,6 +399,18 @@ gid_from_string(
+>  	return -1;
+>  }
+> 
+> +bool isdigits_only(
+> +	const char *str)
+> +{
+> +	int i;
+> +
+> +	for (i = 0; i < strlen(str); i++) {
+> +		if (!isdigit(str[i]))
+> +			return false;
+> +	}
+> +	return true;
+> +}
+> +
+>  #define HAVE_FTW_H 1	/* TODO: configure me */
+> 
+>  #ifndef HAVE_FTW_H
+> Index: b/quota/quota.c
+> ===================================================================
+> --- a/quota/quota.c
+> +++ b/quota/quota.c
+> @@ -224,7 +224,7 @@ quota_user_type(
+>  	uid_t		id;
+> 
+>  	if (name) {
+> -		if (isdigit(name[0])) {
+> +		if (isdigits_only(name)) {
+>  			id = atoi(name);
+>  			name = getusername(id, flags & NO_LOOKUP_FLAG);
+>  		} else if ((u = getpwnam(name))) {
+> @@ -273,7 +273,7 @@ quota_group_type(
+>  	int		i, ngroups, dofree = 0;
+> 
+>  	if (name) {
+> -		if (isdigit(name[0])) {
+> +		if (isdigits_only(name)) {
+>  			gid = atoi(name);
+>  			name = getgroupname(gid, flags & NO_LOOKUP_FLAG);
+>  		} else {
+> @@ -344,7 +344,7 @@ quota_proj_type(
+>  		return;
+>  	}
+> 
+> -	if (isdigit(name[0])) {
+> +	if (isdigits_only(name)) {
+>  		id = atoi(name);
+>  		name = getprojectname(id, flags & NO_LOOKUP_FLAG);
+>  	} else if ((p = getprnam(name))) {
+> Index: b/quota/quota.h
+> ===================================================================
+> --- a/quota/quota.h
+> +++ b/quota/quota.h
+> @@ -19,6 +19,7 @@
+>  #include <xfs/xqm.h>
+>  #include <xfs/path.h>
+>  #include <xfs/project.h>
+> +#include <stdbool.h>
+> 
+>  /*
+>   * Different forms of XFS quota
+> @@ -80,4 +81,5 @@ enum {
+>  extern char *uid_to_name(__uint32_t __uid);
+>  extern char *gid_to_name(__uint32_t __gid);
+>  extern char *prid_to_name(__uint32_t __prid);
+> +extern bool isdigits_only(const char *);
+> 
+> 
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 
 _______________________________________________
