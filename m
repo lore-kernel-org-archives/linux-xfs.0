@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5BC3E29E05
-	for <xfs@oss.sgi.com>; Mon, 22 Apr 2013 18:31:07 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id DF3B3AC002
-	for <xfs@oss.sgi.com>; Mon, 22 Apr 2013 16:31:03 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 6719D7F37
+	for <xfs@oss.sgi.com>; Mon, 22 Apr 2013 19:08:42 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5513D8F8039
+	for <xfs@oss.sgi.com>; Mon, 22 Apr 2013 17:08:39 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	JfhuCSypMTMucT2u for <xfs@oss.sgi.com>;
-	Mon, 22 Apr 2013 16:31:02 -0700 (PDT)
-Date: Tue, 23 Apr 2013 09:30:33 +1000
+	WV1YJ91SuC7XX9lX for <xfs@oss.sgi.com>;
+	Mon, 22 Apr 2013 17:08:37 -0700 (PDT)
+Date: Tue, 23 Apr 2013 10:08:35 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: shutdown filesystem if xfs_perag_get fails
-Message-ID: <20130422233033.GK30622@dastard>
-References: <20130419204102.736961610@sgi.com>
-	<20130421174107.007313126@sgi.com> <5174603A.8030208@sandeen.net>
-	<51753EDE.6000301@sgi.com> <51754A13.5000808@sandeen.net>
-	<5175532B.3050509@sgi.com>
+Subject: Re: xfs_iunlink_remove: xfs_inotobp() returned error 22 -- debugging
+Message-ID: <20130423000835.GL30622@dastard>
+References: <516C89DF.4070904@redhat.com>
+ <517596BA.3060408@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <5175532B.3050509@sgi.com>
+In-Reply-To: <517596BA.3060408@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,48 +30,52 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Brian Foster <bfoster@redhat.com>, yongtaofu@gmail.com, xfs@oss.sgi.com
 
-On Mon, Apr 22, 2013 at 10:11:39AM -0500, Mark Tinguely wrote:
->  #6 [ffff880135603980] _xfs_buf_find at ffffffffa01a7fef [xfs]
->  #7 [ffff8801356039f0] xfs_buf_get at ffffffffa01a824a [xfs]
->  #8 [ffff880135603a30] xfs_buf_read at ffffffffa01a83a4 [xfs]
->  #9 [ffff880135603a60] xlog_recover_inode_pass2 at ffffffffa0193629 [xfs]
+On Mon, Apr 22, 2013 at 02:59:54PM -0500, Eric Sandeen wrote:
+> On 4/15/13 6:14 PM, Brian Foster wrote:
+> > Hi,
+> > 
+> > Thanks for the data in the previous thread:
+> > 
+> > http://oss.sgi.com/archives/xfs/2013-04/msg00327.html
+> > 
+> > I'm spinning off a new thread specifically for this because the original
+> > thread is already too large and scattered to track. As Eric stated,
+> > please try to keep data contained in as few messages as possible.
+> > 
+> 
+> Well, it's always simple in the end.  It just took a lot of debugging
+> to figure out what was happening - we do appreciate your help with that!
+> 
+> We were able to create a local reproducer, and it looks like
+> this patch fixes things:
+> 
+> commit aae8a97d3ec30788790d1720b71d76fd8eb44b73
+> Author: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
+> Date:   Sat Jan 29 18:43:27 2011 +0530
+> 
+>     fs: Don't allow to create hardlink for deleted file
 
-So it's the same problem as this bug fix addresses:
+Good find Eric - great work on the reproducer script.
 
-commit 10616b806d1d7835b1d23b8d75ef638f92cb98b6
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Mon Jan 21 23:53:52 2013 +1100
+FWIW, can you confirm that a debug kernel assert fails
+with a non-zero link count in xfs_bumplink() with your test case?
 
-    xfs: fix _xfs_buf_find oops on blocks beyond the filesystem end
-    
-    When _xfs_buf_find is passed an out of range address, it will fail
-    to find a relevant struct xfs_perag and oops with a null
-    dereference. This can happen when trying to walk a filesystem with a
-    metadata inode that has a partially corrupted extent map (i.e. the
-    block number returned is corrupt, but is otherwise intact) and we
-    try to read from the corrupted block address.
-    
-    In this case, just fail the lookup. If it is readahead being issued,
-    it will simply not be done, but if it is real read that fails we
-    will get an error being reported.  Ideally this case should result
-    in an EFSCORRUPTED error being reported, but we cannot return an
-    error through xfs_buf_read() or xfs_buf_get() so this lookup failure
-    may result in ENOMEM or EIO errors being reported instead.
-    
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Brian Foster <bfoster@redhat.com>
-    Reviewed-by: Ben Myers <bpm@sgi.com>
-    Signed-off-by: Ben Myers <bpm@sgi.com>
+int
+xfs_bumplink(
+        xfs_trans_t *tp,
+        xfs_inode_t *ip)
+{
+        xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
 
-> The recovery value is bad and is a problem on its own, but XFS does
-> not verify the validity of ag number when doing a xfs_perag_get().
+>>>>>   ASSERT(ip->i_d.di_nlink > 0);
+        ip->i_d.di_nlink++;
+        inc_nlink(VFS_I(ip));
 
-Right, that's what the above fix does, but it can't be done on older
-kernels because grwofs relies on being able to get buffers beyond
-the existing filesystem limits...
+If it does, we should consider this a in-memory corruption case and
+return and trigger a shutdown here....
 
 Cheers,
 
