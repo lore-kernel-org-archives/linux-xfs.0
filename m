@@ -1,25 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 26BF37F37
-	for <xfs@oss.sgi.com>; Tue, 23 Apr 2013 11:20:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 614F8AC007
-	for <xfs@oss.sgi.com>; Tue, 23 Apr 2013 09:20:41 -0700 (PDT)
-Received: from mail-we0-f176.google.com (mail-we0-f176.google.com
-	[74.125.82.176]) by cuda.sgi.com with ESMTP id iatLVBoKsHpIjXS9
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 23 Apr 2013 09:20:40 -0700 (PDT)
-Received: by mail-we0-f176.google.com with SMTP id s10so746009wey.7
-	for <xfs@oss.sgi.com>; Tue, 23 Apr 2013 09:20:39 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 496C929DFA
+	for <xfs@oss.sgi.com>; Tue, 23 Apr 2013 13:35:14 -0500 (CDT)
+Message-ID: <5176D46B.2030003@sgi.com>
+Date: Tue, 23 Apr 2013 13:35:23 -0500
+From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-In-Reply-To: <5176AFEA.1040609@sgi.com>
-References: <5175BB8F.5090604@sandeen.net> <5175BC20.9010403@sandeen.net>
-	<5176A639.5020703@sgi.com> <5176AC3E.30801@mrc-lmb.cam.ac.uk>
-	<5176AFEA.1040609@sgi.com>
-Date: Tue, 23 Apr 2013 18:20:39 +0200
-Message-ID: <CAAxjCEwF3Pj0eLdscXFk+NET=iDoq96H97ckUsqUzFVjbP1irg@mail.gmail.com>
-Subject: Re: [PATCH 1/3] xfsprogs: manpage spelling fixes
-From: Stefan Ring <stefanrin@gmail.com>
+Subject: Re: [PATCH 2/3] xfsprogs: Fix manpages for missing or incorrect
+	options
+References: <5175BB8F.5090604@sandeen.net> <5175BC67.1000902@sandeen.net>
+In-Reply-To: <5175BC67.1000902@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,19 +18,60 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Rich Johnston <rjohnston@sgi.com>
-Cc: Dave Howorth <dhoworth@mrc-lmb.cam.ac.uk>, Linux fs XFS <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
->> Do manpages have a policy as regards spelling?
->
-> Not to my knowledge.
+Hey Eric,
 
-But if the rest of the man page / package is en_US, as is likely the
-case, it would make sense to stick to this locale.
+Couple of comments.
+
+1. The OPTIONS are listed in several ways, (alphabetical order, same 
+order as they appear in the SYNOPSIS, ...).  I don't really have a 
+preference, but as long as we are cleaning up the manpages, I suggest we 
+be consistent. (case insensitive alpha order maybe???)
+
+2. How about making the -V option wording the same also?
+	xfs_db and xfs_repair are:
+    		Prints out the current version number and exits.
+			       ^^^^^^^^
+	The others:
+	man/man8/mkfs.xfs.8:Prints the version number and exits.
+	man/man8/xfs_admin.8:Prints the version number and exits.
+	man/man8/xfs_bmap.8:Prints the version number and exits.
+	man/man8/xfs_check.8:Prints the version number and exits.
+	man/man8/xfs_copy.8:Prints the version number and exits.
+	man/man8/xfs_growfs.8:Prints the version number and exits. The
+	man/man8/xfs_io.8:Prints the version number and exits.
+	man/man8/xfs_logprint.8:Prints the version number and exits.
+	man/man8/xfs_mkfile.8:Prints the version number and exits.
+	man/man8/xfs_ncheck.8:Prints the version number and exits.
+	man/man8/xfs_rtcp.8:Prints the version number and exits.
+
+3. The following are missing the -V option in both the SYNOPSIS and 
+OPTIONS sections.
+(I did verify the -V option works for all commands)
+man/man8/xfs_estimate.8
+man/man8/xfs_freeze.8
+man/man8/xfs_fsr.8
+man/man8/xfs_mdrestore.8
+man/man8/xfs_metadump.8
+man/man8/xfs_quota.8
+man/man8/xfs_repair.8
+
+
+4. The -V prints the version and exits, shouldn't all the SYNOPSIS look 
+like this for the -V option?
+
+SYNOPSIS
+        xfs_db [ -c cmd ] ... [ -i|r|x|F ] [ -f ] [ -l logdev ] ...
+        xfs_db -V
+
+Regards
+--Rich
 
 _______________________________________________
 xfs mailing list
