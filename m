@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B3E1E29DFA
-	for <xfs@oss.sgi.com>; Wed, 24 Apr 2013 04:02:19 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 38DFA29DFA
+	for <xfs@oss.sgi.com>; Wed, 24 Apr 2013 04:41:52 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 94AB18F8039
-	for <xfs@oss.sgi.com>; Wed, 24 Apr 2013 02:02:16 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	qs0snSg06dRuvGJa for <xfs@oss.sgi.com>;
-	Wed, 24 Apr 2013 02:02:15 -0700 (PDT)
-Date: Wed, 24 Apr 2013 19:02:13 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs_iunlink_remove: xfs_inotobp() returned error 22 -- debugging
-Message-ID: <20130424090213.GT10481@dastard>
-References: <516C89DF.4070904@redhat.com> <517596BA.3060408@sandeen.net>
-	<20130423000835.GL30622@dastard> <5175DB63.6030501@sandeen.net>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <5175DB63.6030501@sandeen.net>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id BCF21AC002
+	for <xfs@oss.sgi.com>; Wed, 24 Apr 2013 02:41:51 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id f6sfGmccFGgw3mPi for
+	<xfs@oss.sgi.com>; Wed, 24 Apr 2013 02:41:50 -0700 (PDT)
+Received: from int-mx01.intmail.prod.int.phx2.redhat.com
+	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r3O9fnaO021045
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Wed, 24 Apr 2013 05:41:49 -0400
+From: Eryu Guan <eguan@redhat.com>
+Subject: [PATCH v2] xfstests generic 311: test fallocate(2) ENOSPC when file
+	size is greater than 4G
+Date: Wed, 24 Apr 2013 17:41:35 +0800
+Message-Id: <1366796495-7420-1-git-send-email-eguan@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,82 +26,127 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Brian Foster <bfoster@redhat.com>, yongtaofu@gmail.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Eryu Guan <eguan@redhat.com>
 
-On Mon, Apr 22, 2013 at 07:52:51PM -0500, Eric Sandeen wrote:
-> On 4/22/13 7:08 PM, Dave Chinner wrote:
-> > On Mon, Apr 22, 2013 at 02:59:54PM -0500, Eric Sandeen wrote:
-> >> On 4/15/13 6:14 PM, Brian Foster wrote:
-> >>> Hi,
-> >>>
-> >>> Thanks for the data in the previous thread:
-> >>>
-> >>> http://oss.sgi.com/archives/xfs/2013-04/msg00327.html
-> >>>
-> >>> I'm spinning off a new thread specifically for this because the original
-> >>> thread is already too large and scattered to track. As Eric stated,
-> >>> please try to keep data contained in as few messages as possible.
-> >>>
-> >>
-> >> Well, it's always simple in the end.  It just took a lot of debugging
-> >> to figure out what was happening - we do appreciate your help with that!
-> >>
-> >> We were able to create a local reproducer, and it looks like
-> >> this patch fixes things:
-> >>
-> >> commit aae8a97d3ec30788790d1720b71d76fd8eb44b73
-> >> Author: Aneesh Kumar K.V <aneesh.kumar@linux.vnet.ibm.com>
-> >> Date:   Sat Jan 29 18:43:27 2011 +0530
-> >>
-> >>     fs: Don't allow to create hardlink for deleted file
-> > 
-> > Good find Eric - great work on the reproducer script.
-> > 
-> > FWIW, can you confirm that a debug kernel assert fails
-> > with a non-zero link count in xfs_bumplink() with your test case?
-> > 
-> > int
-> > xfs_bumplink(
-> >         xfs_trans_t *tp,
-> >         xfs_inode_t *ip)
-> > {
-> >         xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
-> > 
-> >>>>>>   ASSERT(ip->i_d.di_nlink > 0);
-> 
-> Yep, it does, I put a printk in there when I was testing
-> and it fired.
-> 
-> Guess we should have tested a debug xfs right off the bat ;)
+ENOSPC in fallocate(2) could corrupt ext4 when file size > 4G
 
-Perhaps, but that may have changed the timing sufficiently to make
-the race go away. What we really needed was a way to just turn the
-assert into a WARN_ON() without all the other debug code like we've
-previously talked about. So, rather than talk about it again, I
-posted patches to do this....
+Regression test for commit
+29ae07b ext4: Fix overflow caused by missing cast in ext4_fallocate()
 
-> >         ip->i_d.di_nlink++;
-> >         inc_nlink(VFS_I(ip));
-> > 
-> > If it does, we should consider this a in-memory corruption case and
-> > return and trigger a shutdown here....
-> 
-> I suppose that makes sense, it'd be a much less cryptic failure for
-> something that will fail soon anyway.
+Signed-off-by: Eryu Guan <eguan@redhat.com>
+---
+v2: Check for $SCRATCH_DEV size, _notrun if it's smaller than 5G
 
-Exactly.
+ tests/generic/311     | 72 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/311.out |  2 ++
+ tests/generic/group   |  1 +
+ 3 files changed, 75 insertions(+)
+ create mode 100644 tests/generic/311
+ create mode 100644 tests/generic/311.out
 
-Cheers,
-
-Dave.
+diff --git a/tests/generic/311 b/tests/generic/311
+new file mode 100644
+index 0000000..235be6e
+--- /dev/null
++++ b/tests/generic/311
+@@ -0,0 +1,72 @@
++#! /bin/bash
++# FS QA Test No. 311
++#
++# ENOSPC in fallocate(2) could corrupt ext4 when file size > 4G
++#
++# Regression test for commit
++# 29ae07b ext4: Fix overflow caused by missing cast in ext4_fallocate()
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2013 Red Hat, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux
++_require_xfs_io_falloc
++_require_scratch
++
++# 5G in byte
++fssize=$((2**30 * 5))
++required_blocks=$(($fssize / 1024))
++dev_blocks=$(grep $(basename $(readlink -f $SCRATCH_DEV)) /proc/partitions | $AWK_PROG '{print $3}')
++if [ $required_blocks -gt $dev_blocks ];then
++	_notrun "this test requires \$SCRATCH_DEV has ${fssize}B space"
++fi
++
++rm -f $seqres.full
++_scratch_mkfs_sized $fssize >>$seqres.full 2>&1
++_scratch_mount >>$seqres.full 2>&1
++
++echo "Silence is golden"
++
++# fallocate(2) a 6G(> 4G) file on a 5G fs
++$XFS_IO_PROG -f -c "falloc 0 6g" $SCRATCH_MNT/testfile.$seq >>$seqres.full 2>&1
++
++_scratch_unmount
++_check_scratch_fs
++status=0
++exit
+diff --git a/tests/generic/311.out b/tests/generic/311.out
+new file mode 100644
+index 0000000..62f2530
+--- /dev/null
++++ b/tests/generic/311.out
+@@ -0,0 +1,2 @@
++QA output created by 311
++Silence is golden
+diff --git a/tests/generic/group b/tests/generic/group
+index eb52833..cb15afe 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -113,3 +113,4 @@
+ 308 auto quick
+ 309 auto quick
+ 310 auto
++311 auto quick prealloc enospc
 -- 
-Dave Chinner
-david@fromorbit.com
+1.8.1.4
 
 _______________________________________________
 xfs mailing list
