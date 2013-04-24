@@ -1,16 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 311447F37
-	for <xfs@oss.sgi.com>; Tue, 23 Apr 2013 18:02:49 -0500 (CDT)
-Date: Tue, 23 Apr 2013 18:02:45 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 16/22] xfs: add CRCs to attr leaf blocks
-Message-ID: <20130423230245.GC29359@sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D6A917F37
+	for <xfs@oss.sgi.com>; Tue, 23 Apr 2013 19:33:27 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 48946AC00E
+	for <xfs@oss.sgi.com>; Tue, 23 Apr 2013 17:33:24 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	aRSa96FGyC6LmFCH for <xfs@oss.sgi.com>;
+	Tue, 23 Apr 2013 17:33:21 -0700 (PDT)
+Date: Wed, 24 Apr 2013 10:33:17 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 15/22] xfs: add CRCs to dir2/da node blocks
+Message-ID: <20130424003317.GO10481@dastard>
 References: <1364965892-19623-1-git-send-email-david@fromorbit.com>
-	<1364965892-19623-17-git-send-email-david@fromorbit.com>
+	<1364965892-19623-16-git-send-email-david@fromorbit.com>
+	<20130422185550.GA29359@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1364965892-19623-17-git-send-email-david@fromorbit.com>
+In-Reply-To: <20130422185550.GA29359@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,462 +31,402 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: Dave Chinner <davidatfromorbit.com@sgi.com>, xfs@oss.sgi.com
 
-Hi Dave,
-
-On Wed, Apr 03, 2013 at 04:11:26PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Mon, Apr 22, 2013 at 01:55:50PM -0500, Ben Myers wrote:
+> On Wed, Apr 03, 2013 at 04:11:25PM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner at redhat.com>
+> > 
+> > Signed-off-by: Dave Chinner <dchinner at redhat.com>
+....
+> > @@ -25,6 +24,7 @@
+> >  #include "xfs_sb.h"
+> >  #include "xfs_ag.h"
+> >  #include "xfs_mount.h"
+> > +#include "xfs_error.h"
+> >  #include "xfs_da_btree.h"
+> >  #include "xfs_bmap_btree.h"
+> >  #include "xfs_attr_sf.h"
+> > @@ -35,7 +35,6 @@
+> >  #include "xfs_bmap.h"
+> >  #include "xfs_attr.h"
+> >  #include "xfs_attr_leaf.h"
+> > -#include "xfs_error.h"
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Why did xfs_error.h need to be moved?
 
-Comments below.
+Most likely it got moved during debugging when I put stuff in static
+inline functions and I forgot to revert it when removing the
+debug. Fixed.
 
-> +static bool
-> +xfs_attr3_leaf_verify(
->  	struct xfs_buf		*bp)
->  {
->  	struct xfs_mount	*mp = bp->b_target->bt_mount;
-> -	struct xfs_attr_leaf_hdr *hdr = bp->b_addr;
-> -	int			block_ok = 0;
-> +	struct xfs_attr_leafblock *leaf = bp->b_addr;
-> +	struct xfs_attr3_icleaf_hdr ichdr;
->  
-> -	block_ok = hdr->info.magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC);
-> -	if (!block_ok) {
-> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, hdr);
-> -		xfs_buf_ioerror(bp, EFSCORRUPTED);
-> +	xfs_attr3_leaf_hdr_from_disk(&ichdr, leaf);
-> +
-> +	if (xfs_sb_version_hascrc(&mp->m_sb)) {
-> +		struct xfs_da3_node_hdr *hdr3 = bp->b_addr;
-> +
-> +		if (ichdr.magic != XFS_ATTR3_LEAF_MAGIC)
-> +			return false;
-> +
-> +		if (!uuid_equal(&hdr3->info.uuid, &mp->m_sb.sb_uuid))
-> +			return false;
-> +		if (be64_to_cpu(hdr3->info.blkno) != bp->b_bn)
-> +			return false;
-> +	} else {
-> +		if (ichdr.magic != XFS_ATTR_LEAF_MAGIC)
-> +			return false;
->  	}
-> +	if (ichdr.count == 0)
-> +		return false;
-> +
-> +	/* XXX: need to range check rest of attr header values */
-> +	/* XXX: hash order check? */
+> > @@ -935,16 +936,16 @@ xfs_attr_leaf_to_node(xfs_da_args_t *args)
+> >  	/*
+> >  	 * Set up the new root node.
+> >  	 */
+> > -	error = xfs_da_node_create(args, 0, 1, &bp1, XFS_ATTR_FORK);
+> > +	error = xfs_da3_node_create(args, 0, 1, &bp1, XFS_ATTR_FORK);
+> >  	if (error)
+> >  		goto out;
+> >  	node = bp1->b_addr;
+> >  	leaf = bp2->b_addr;
+> >  	ASSERT(leaf->hdr.info.magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC));
+> >  	/* both on-disk, don't endian-flip twice */
+> > -	node->btree[0].hashval =
+> > -		leaf->entries[be16_to_cpu(leaf->hdr.count)-1 ].hashval;
+> > -	node->btree[0].before = cpu_to_be32(blkno);
+> > +	btree = xfs_da3_node_tree_p(node);
+> > +	btree[0].hashval = leaf->entries[be16_to_cpu(leaf->hdr.count)-1 ].hashval;
+> 
+> Extra space.
 
-Seems reasonable for debug code.  Is that coming along in a subsequent patch?
+Sure, but it is in part of the expression that I wasn't modifying in
+this patch set. I convert the leaf->hdr stuff in the next patch -
+the space is removed there....
 
->  int
-> -xfs_attr_leaf_to_shortform(
-> -	struct xfs_buf	*bp,
-> -	xfs_da_args_t	*args,
-> -	int		forkoff)
-> +xfs_attr3_leaf_to_shortform(
-> +	struct xfs_buf		*bp,
-> +	struct xfs_da_args	*args,
-> +	int			forkoff)
->  {
-> -	xfs_attr_leafblock_t *leaf;
-> -	xfs_attr_leaf_entry_t *entry;
-> -	xfs_attr_leaf_name_local_t *name_loc;
-> -	xfs_da_args_t nargs;
-> -	xfs_inode_t *dp;
-> -	char *tmpbuffer;
-> -	int error, i;
-> +	struct xfs_attr_leafblock *leaf;
-> +	struct xfs_attr3_icleaf_hdr ichdr;
-> +	struct xfs_attr_leaf_entry *entry;
-> +	struct xfs_attr_leaf_name_local *name_loc;
-> +	struct xfs_da_args	nargs;
-> +	struct xfs_inode	*dp = args->dp;
-> +	char			*tmpbuffer;
-> +	int			error;
-> +	int			i;
->  
->  	trace_xfs_attr_leaf_to_sf(args);
->  
-> -	dp = args->dp;
->  	tmpbuffer = kmem_alloc(XFS_LBSIZE(dp->i_mount), KM_SLEEP);
-> -	ASSERT(tmpbuffer != NULL);
-> +	if (!tmpbuffer)
-> +		return ENOMEM;
->  
-> -	ASSERT(bp != NULL);
->  	memcpy(tmpbuffer, bp->b_addr, XFS_LBSIZE(dp->i_mount));
-> +
->  	leaf = (xfs_attr_leafblock_t *)tmpbuffer;
-> -	ASSERT(leaf->hdr.info.magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC));
-> +	xfs_attr3_leaf_hdr_from_disk(&ichdr, leaf);
-> +	entry = xfs_attr3_leaf_entryp(leaf);
-> +
-> +	/* XXX (dgc): buffer is about to be marked stale - why zero it? */
->  	memset(bp->b_addr, 0, XFS_LBSIZE(dp->i_mount));
+> > +	if (ichdr.count > mp->m_dir_node_ents &&
+> > +	    ichdr.count > mp->m_attr_node_ents)
+> > +		return false;
+> > +
+> > +	/* XXX: hash order check? */
+> 
+> Still planning to add that in a subsequent patch?
 
-Good point.  Why do we need a temporary buffer here?  It seems like we could
-keep the leaf around long enough to copy from it directly into shortform.
+Not in this patch set - all the "we should add more checks" comments
+are things that need to be added, but are not needed for the CRC
+conversions to work correctly. I intend to address these things once
+the initial patch set is sorted out....
 
->  int
-> -xfs_attr_leaf_to_node(xfs_da_args_t *args)
-> +xfs_attr3_leaf_to_node(
-> +	struct xfs_da_args	*args)
->  {
-> -	xfs_attr_leafblock_t *leaf;
-> -	xfs_da_intnode_t *node;
-> -	xfs_inode_t *dp;
-> -	struct xfs_buf *bp1, *bp2;
-> -	xfs_dablk_t blkno;
-> -	int error;
-> +	struct xfs_attr_leafblock *leaf;
-> +	struct xfs_attr3_icleaf_hdr icleafhdr;
-> +	struct xfs_attr_leaf_entry *entries;
->  	struct xfs_da_node_entry *btree;
-> +	struct xfs_da3_icnode_hdr icnodehdr;
-> +	struct xfs_da_intnode	*node;
-> +	struct xfs_inode	*dp = args->dp;
-> +	struct xfs_mount	*mp = dp->i_mount;
-> +	struct xfs_buf		*bp1 = NULL;
-> +	struct xfs_buf		*bp2 = NULL;
-> +	xfs_dablk_t		blkno;
-> +	int			error;
->  
->  	trace_xfs_attr_leaf_to_node(args);
->  
-> -	dp = args->dp;
-> -	bp1 = bp2 = NULL;
->  	error = xfs_da_grow_inode(args, &blkno);
->  	if (error)
->  		goto out;
-> -	error = xfs_attr_leaf_read(args->trans, args->dp, 0, -1, &bp1);
-> +	error = xfs_attr3_leaf_read(args->trans, dp, 0, -1, &bp1);
->  	if (error)
->  		goto out;
->  
-> -	bp2 = NULL;
-> -	error = xfs_da_get_buf(args->trans, args->dp, blkno, -1, &bp2,
-> -					    XFS_ATTR_FORK);
-> +	error = xfs_da_get_buf(args->trans, dp, blkno, -1, &bp2, XFS_ATTR_FORK);
->  	if (error)
->  		goto out;
-> +
-> +	/* copy leaf to new buffer, update identifiers */
->  	bp2->b_ops = bp1->b_ops;
-> -	memcpy(bp2->b_addr, bp1->b_addr, XFS_LBSIZE(dp->i_mount));
-> -	bp1 = NULL;
-> -	xfs_trans_log_buf(args->trans, bp2, 0, XFS_LBSIZE(dp->i_mount) - 1);
-> +	memcpy(bp2->b_addr, bp1->b_addr, XFS_LBSIZE(mp));
-> +	if (xfs_sb_version_hascrc(&mp->m_sb)) {
-> +		struct xfs_da3_blkinfo *hdr3 = bp2->b_addr;
-> +		hdr3->blkno = cpu_to_be64(bp2->b_bn);
+> > +xfs_da3_node_create(
+> > +	struct xfs_da_args	*args,
+> > +	xfs_dablk_t		blkno,
+> > +	int			level,
+> > +	struct xfs_buf		**bpp,
+> > +	int			whichfork)
+> >  {
+> > -	xfs_da_intnode_t *node;
+> > -	struct xfs_buf *bp;
+> > -	int error;
+> > -	xfs_trans_t *tp;
+> > +	struct xfs_da_intnode	*node;
+> > +	struct xfs_trans	*tp = args->trans;
+> > +	struct xfs_mount	*mp = tp->t_mountp;
+> > +	struct xfs_da3_icnode_hdr ichdr = {0};
+> > +	struct xfs_buf		*bp;
+> > +	int			error;
+> >  
+> >  	trace_xfs_da_node_create(args);
+> > +	ASSERT(level <= XFS_DA_NODE_MAXDEPTH);
+> >  
+> > -	tp = args->trans;
+> >  	error = xfs_da_get_buf(tp, args->dp, blkno, -1, &bp, whichfork);
+> 
+> Looks like this function can return 0 with a null bp.  We should probably check
+> for that.
 
-Ok, so the memcpy above got uuid, ino, etc, and we only need to update blkno.
+It will only return 0 with a null bp if mappedbno == -2. In this
+case it is -1, so it will return EFSCORRUPTED rather than zero for
+the case where we land incorrectly a hole in the mapping.
 
-> @@ -963,52 +1120,62 @@ out:
->   * or a leaf in a node attribute list.
->   */
->  STATIC int
-> -xfs_attr_leaf_create(
-> -	xfs_da_args_t	*args,
-> -	xfs_dablk_t	blkno,
-> -	struct xfs_buf	**bpp)
-> +xfs_attr3_leaf_create(
-> +	struct xfs_da_args	*args,
-> +	xfs_dablk_t		blkno,
-> +	struct xfs_buf		**bpp)
->  {
-> -	xfs_attr_leafblock_t *leaf;
-> -	xfs_attr_leaf_hdr_t *hdr;
-> -	xfs_inode_t *dp;
-> -	struct xfs_buf *bp;
-> -	int error;
-> +	struct xfs_attr_leafblock *leaf;
-> +	struct xfs_attr3_icleaf_hdr ichdr;
-> +	struct xfs_inode	*dp = args->dp;
-> +	struct xfs_mount	*mp = dp->i_mount;
-> +	struct xfs_buf		*bp;
-> +	int			error;
->  
->  	trace_xfs_attr_leaf_create(args);
->  
-> -	dp = args->dp;
-> -	ASSERT(dp != NULL);
->  	error = xfs_da_get_buf(args->trans, args->dp, blkno, -1, &bp,
->  					    XFS_ATTR_FORK);
->  	if (error)
-> -		return(error);
-> -	bp->b_ops = &xfs_attr_leaf_buf_ops;
-> +		return error;
-> +	bp->b_ops = &xfs_attr3_leaf_buf_ops;
->  	leaf = bp->b_addr;
-> -	memset((char *)leaf, 0, XFS_LBSIZE(dp->i_mount));
-> -	hdr = &leaf->hdr;
-> -	hdr->info.magic = cpu_to_be16(XFS_ATTR_LEAF_MAGIC);
-> -	hdr->firstused = cpu_to_be16(XFS_LBSIZE(dp->i_mount));
-> -	if (!hdr->firstused) {
-> -		hdr->firstused = cpu_to_be16(
-> -			XFS_LBSIZE(dp->i_mount) - XFS_ATTR_LEAF_NAME_ALIGN);
-> -	}
+> > @@ -320,8 +474,10 @@ xfs_da_split(xfs_da_state_t *state)
+> >  	 * just got bumped because of the addition of a new root node.
+> >  	 * There might be three blocks involved if a double split occurred,
+> >  	 * and the original block 0 could be at any position in the list.
+> > +	 *
+> > +	 * Note: the info structures being modified here for both v2 and v3 da
+> > +	 * headers, so we can do this linkage just using the v2 structures.
+> 
+> I had a hard time parsing that the first few times.  How about something like:
+> 
+> Note:  The xfs_da_blkinfo fields being modified here are shared by both
+> xfs_da_node_hdr and xfs_da3_intnode, and occur before the additional fields
+> added in xfs_da3_intnode, so this linkage can be done using just the v2
+> structures.
 
-Saw this several times in review.  I don't understand why that code would be
-there, given that we just set firstused to be XFS_LBSIZE, the blocksize of the
-filesystem.  It's dead code now, so it's fine to remove... There must be some
-history there.  Any idea?
+That's probably just as unclear. Changed to:
 
-> @@ -1113,82 +1279,90 @@ xfs_attr_leaf_add(
->  	 * and we don't have enough freespace, then compaction will do us
->  	 * no good and we should just give up.
->  	 */
-> -	if (!hdr->holes && (sum < entsize))
-> -		return(XFS_ERROR(ENOSPC));
-> +	if (!ichdr.holes && sum < entsize)
-> +		return XFS_ERROR(ENOSPC);
->  
->  	/*
->  	 * Compact the entries to coalesce free space.
->  	 * This may change the hdr->count via dropping INCOMPLETE entries.
->  	 */
-> -	xfs_attr_leaf_compact(args, bp);
-> +	xfs_attr3_leaf_compact(args, &ichdr, bp);
->  
->  	/*
->  	 * After compaction, the block is guaranteed to have only one
->  	 * free region, in freemap[0].  If it is not big enough, give up.
->  	 */
-> -	if (be16_to_cpu(hdr->freemap[0].size)
-> -				< (entsize + sizeof(xfs_attr_leaf_entry_t)))
-> -		return(XFS_ERROR(ENOSPC));
-> +	if (ichdr.freemap[0].size < (entsize + sizeof(xfs_attr_leaf_entry_t))) {
-> +		tmp = ENOSPC;
-> +		goto out_log_hdr;
+Note: the magic numbers and sibling pointers are in the same
+physical place for both v2 and v3 headers (by design). Hence it
+doesn't matter which version of the xfs_da_intnode structure we use
+here as the result will be the same using either structure.
 
-That represents a change in behavior that I'm not sure about... Before if we
-had ENOSPC here we would simply return and xfs_addr3_leaf_add_work would not
-have a chance to log the header.  Now...
+> 
+> > @@ -591,12 +801,12 @@ xfs_da_node_rebalance(xfs_da_state_t *state, xfs_da_state_blk_t *blk1,
+> >  		 * Move the req'd B-tree elements from high in node1 to
+> >  		 * low in node2.
+> >  		 */
+> > -		be16_add_cpu(&node2->hdr.count, count);
+> > +		nodehdr2.count += count;
+> >  		tmp = count * (uint)sizeof(xfs_da_node_entry_t);
+> > -		btree_s = &node1->btree[be16_to_cpu(node1->hdr.count) - count];
+> > -		btree_d = &node2->btree[0];
+> > +		btree_s = &btree1[nodehdr1.count- count];
+> 						^ 
+> Add a space.
 
-> +	}
-> +
-> +	tmp = xfs_attr3_leaf_add_work(bp, &ichdr, args, 0);
->  
-> -	return(xfs_attr_leaf_add_work(bp, args, 0));
-> +out_log_hdr:
-> +	xfs_attr3_leaf_hdr_to_disk(leaf, &ichdr);
-> +	xfs_trans_log_buf(args->trans, bp,
-> +		XFS_DA_LOGRANGE(leaf, &leaf->hdr,
-> +				xfs_attr3_leaf_hdr_size(leaf)));
+Fixed.
 
-We're logging the header here instead of in xfs_attr_leaf_add_work
+> >  /*
+> > - * Unbalance the btree elements between two intermediate nodes,
+> > + * Unbalance the elements between two intermediate nodes,
+> >   * move all Btree elements from one node into another.
+> >   */
+> >  STATIC void
+> > -xfs_da_node_unbalance(xfs_da_state_t *state, xfs_da_state_blk_t *drop_blk,
+> > -				     xfs_da_state_blk_t *save_blk)
+> > +xfs_da3_node_unbalance(
+> > +	struct xfs_da_state	*state,
+> > +	struct xfs_da_state_blk	*drop_blk,
+> > +	struct xfs_da_state_blk	*save_blk)
+> >  {
+> > -	xfs_da_intnode_t *drop_node, *save_node;
+> > -	xfs_da_node_entry_t *btree;
+> > -	int tmp;
+> > -	xfs_trans_t *tp;
+> > +	struct xfs_da_intnode	*drop_node;
+> > +	struct xfs_da_intnode	*save_node;
+> > +	struct xfs_da_node_entry *dbtree;
+> > +	struct xfs_da_node_entry *sbtree;
+> > +	struct xfs_da3_icnode_hdr dhdr;
+> > +	struct xfs_da3_icnode_hdr shdr;
+> 
+> Would be better as drop and save.
+> Extra spaces.
 
-> +	return tmp;
->  }
+Fixed.
 
-and then returning.  I think this would be better with a second goto so that we
-don't log the header in keeping with the old behavior.
+> > +	    (be32_to_cpu(dbtree[dhdr.count - 1].hashval) <
+> > +				be32_to_cpu(sbtree[shdr.count - 1].hashval))) {
+> > +		/* XXX: check this - is memmove dst correct? */
+> > +		tmp = shdr.count * (uint)sizeof(xfs_da_node_entry_t);
+> > +		memmove(&sbtree[dhdr.count], &sbtree[0], tmp);
+> 
+> I believe the destination in this memmove is correct.  We're moving items from
+> the beginning of the save_node toward the end of save_node so that later we can
+> copy from drop_node into the beginning of save_node.  Making room.
+> 
+> > +
+> > +		sindex = 0;
+> >  		xfs_trans_log_buf(tp, save_blk->bp,
+> > -			XFS_DA_LOGRANGE(save_node, btree,
+> > -				(be16_to_cpu(save_node->hdr.count) + be16_to_cpu(drop_node->hdr.count)) *
+> > -				sizeof(xfs_da_node_entry_t)));
+> > +			XFS_DA_LOGRANGE(save_node, &sbtree[0],
+> > +				(shdr.count + dhdr.count) *
+> > +						sizeof(xfs_da_node_entry_t)));
+> 
+> Seems like here we are logging more of the node than is strictly necessary.  So
+> far we have only modified save_node at shdr.count up to shdr.count +
+> dhdr.count, there is no need to log the beginning of save_node until after
+> we've copied from drop_node into it.  Not a big deal I guess.
 
-> @@ -1232,44 +1406,41 @@ xfs_attr_leaf_add_work(
->  		args->rmtblkcnt = XFS_B_TO_FSB(mp, args->valuelen);
->  	}
->  	xfs_trans_log_buf(args->trans, bp,
-> -	     XFS_DA_LOGRANGE(leaf, xfs_attr_leaf_name(leaf, args->index),
-> +	     XFS_DA_LOGRANGE(leaf, xfs_attr3_leaf_name(leaf, args->index),
->  				   xfs_attr_leaf_entsize(leaf, args->index)));
->  
->  	/*
->  	 * Update the control info for this leaf node
->  	 */
-> -	if (be16_to_cpu(entry->nameidx) < be16_to_cpu(hdr->firstused)) {
-> -		/* both on-disk, don't endian-flip twice */
-> -		hdr->firstused = entry->nameidx;
-> -	}
-> -	ASSERT(be16_to_cpu(hdr->firstused) >=
-> -	       ((be16_to_cpu(hdr->count) * sizeof(*entry)) + sizeof(*hdr)));
-> -	tmp = (be16_to_cpu(hdr->count)-1) * sizeof(xfs_attr_leaf_entry_t)
-> -					+ sizeof(xfs_attr_leaf_hdr_t);
-> -	map = &hdr->freemap[0];
-> +	if (be16_to_cpu(entry->nameidx) < ichdr->firstused)
-> +		ichdr->firstused = be16_to_cpu(entry->nameidx);
-> +
-> +	ASSERT(ichdr->firstused >= ichdr->count * sizeof(xfs_attr_leaf_entry_t)
-> +					+ xfs_attr3_leaf_hdr_size(leaf));
-> +	tmp = (ichdr->count - 1) * sizeof(xfs_attr_leaf_entry_t)
-> +					+ xfs_attr3_leaf_hdr_size(leaf);
-> +
->  	for (i = 0; i < XFS_ATTR_LEAF_MAPSIZE; map++, i++) {
+Logging is just tagging dirty regions - it can be done before or
+after the modification is made. The contents of the dirty regions
+have meaning at transaction commit time, but not here while the
+transactional modifications are being made....
 
-Looks like you can get rid of map.
-
-> @@ -1286,34 +1457,69 @@ xfs_attr_leaf_compact(
->  	 */
->  	leaf_s = (xfs_attr_leafblock_t *)tmpbuffer;
->  	leaf_d = bp->b_addr;
-> -	hdr_s = &leaf_s->hdr;
-> -	hdr_d = &leaf_d->hdr;
-> -	hdr_d->info = hdr_s->info;	/* struct copy */
-> -	hdr_d->firstused = cpu_to_be16(XFS_LBSIZE(mp));
-> -	/* handle truncation gracefully */
-> -	if (!hdr_d->firstused) {
-> -		hdr_d->firstused = cpu_to_be16(
-> -				XFS_LBSIZE(mp) - XFS_ATTR_LEAF_NAME_ALIGN);
-> -	}
-
-Another one.  Weird.
-
-> -	hdr_d->usedbytes = 0;
-> -	hdr_d->count = 0;
-> -	hdr_d->holes = 0;
-> -	hdr_d->freemap[0].base = cpu_to_be16(sizeof(xfs_attr_leaf_hdr_t));
-> -	hdr_d->freemap[0].size = cpu_to_be16(be16_to_cpu(hdr_d->firstused) -
-> -					     sizeof(xfs_attr_leaf_hdr_t));
-> +	ichdr_s = *ichdr_d;	/* struct copy */
-
-ichdr_s should be initialized from the copy we have in the temporary buffer
-rather than from a struct copy of ichdr_d.  I understand that what you have
-here probably works fine, but it is not very obvious, or clear that it was
-an intentional deviation from the struct copy up above.
-
-> +	ichdr_d->firstused = XFS_LBSIZE(mp);
-> +	ichdr_d->usedbytes = 0;
-> +	ichdr_d->count = 0;
-> +	ichdr_d->holes = 0;
-> +	ichdr_d->freemap[0].base = xfs_attr3_leaf_hdr_size(leaf_s);
-> +	ichdr_d->freemap[0].size = ichdr_d->firstused - ichdr_d->freemap[0].base;
->  
->  	/*
->  	 * Copy all entry's in the same (sorted) order,
->  	 * but allocate name/value pairs packed and in sequence.
->  	 */
-> -	xfs_attr_leaf_moveents(leaf_s, 0, leaf_d, 0,
-> -				be16_to_cpu(hdr_s->count), mp);
-> +	xfs_attr3_leaf_moveents(leaf_s, &ichdr_s, 0, leaf_d, ichdr_d, 0,
-> +				ichdr_s.count, mp);
-> +	/*
-> +	 * this logs the entire buffer, but the caller must write the header
-> +	 * back to the buffer when it is finished modifying it.
-> +	 */
->  	xfs_trans_log_buf(trans, bp, 0, XFS_LBSIZE(mp) - 1);
-
-Maybe better to just log the entries here, someday.
-
-> @@ -2201,45 +2425,41 @@ xfs_attr_leaf_moveents(xfs_attr_leafblock_t *leaf_s, int start_s,
->  	/*
->  	 * Set up environment.
->  	 */
-> -	ASSERT(leaf_s->hdr.info.magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC));
-> -	ASSERT(leaf_d->hdr.info.magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC));
-> -	hdr_s = &leaf_s->hdr;
-> -	hdr_d = &leaf_d->hdr;
-> -	ASSERT((be16_to_cpu(hdr_s->count) > 0) &&
-> -	       (be16_to_cpu(hdr_s->count) < (XFS_LBSIZE(mp)/8)));
-> -	ASSERT(be16_to_cpu(hdr_s->firstused) >=
-> -		((be16_to_cpu(hdr_s->count)
-> -					* sizeof(*entry_s))+sizeof(*hdr_s)));
-> -	ASSERT(be16_to_cpu(hdr_d->count) < (XFS_LBSIZE(mp)/8));
-> -	ASSERT(be16_to_cpu(hdr_d->firstused) >=
-> -		((be16_to_cpu(hdr_d->count)
-> -					* sizeof(*entry_d))+sizeof(*hdr_d)));
-> -
-> -	ASSERT(start_s < be16_to_cpu(hdr_s->count));
-> -	ASSERT(start_d <= be16_to_cpu(hdr_d->count));
-> -	ASSERT(count <= be16_to_cpu(hdr_s->count));
-> +	ASSERT(ichdr_s->magic == XFS_ATTR_LEAF_MAGIC ||
-> +	       ichdr_s->magic == XFS_ATTR3_LEAF_MAGIC);
-
-This assert might be unnecessary due to the asserts in hdr_from_disk.
-
-> @@ -2286,71 +2504,40 @@ xfs_attr_leaf_moveents(xfs_attr_leafblock_t *leaf_s, int start_s,
->  	/*
->  	 * Zero out the entries we just copied.
->  	 */
-> -	if (start_s == be16_to_cpu(hdr_s->count)) {
-> +	if (start_s == ichdr_s->count) {
->  		tmp = count * sizeof(xfs_attr_leaf_entry_t);
-> -		entry_s = &leaf_s->entries[start_s];
-> +		entry_s = &xfs_attr3_leaf_entryp(leaf_s)[start_s];
->  		ASSERT(((char *)entry_s + tmp) <=
->  		       ((char *)leaf_s + XFS_LBSIZE(mp)));
-> -		memset((char *)entry_s, 0, tmp);
-> +		memset(entry_s, 0, tmp);
->  	} else {
->  		/*
->  		 * Move the remaining entries down to fill the hole,
->  		 * then zero the entries at the top.
->  		 */
-> -		tmp  = be16_to_cpu(hdr_s->count) - count;
-> -		tmp *= sizeof(xfs_attr_leaf_entry_t);
-> -		entry_s = &leaf_s->entries[start_s + count];
-> -		entry_d = &leaf_s->entries[start_s];
-> -		memmove((char *)entry_d, (char *)entry_s, tmp);
-> +		tmp  = (ichdr_s->count - count) - sizeof(xfs_attr_leaf_entry_t);
-						*
-Multiply.
-
-> @@ -2379,20 +2567,21 @@ xfs_attr_leaf_lasthash(
->  STATIC int
->  xfs_attr_leaf_entsize(xfs_attr_leafblock_t *leaf, int index)
->  {
-> +	struct xfs_attr_leaf_entry *entries;
->  	xfs_attr_leaf_name_local_t *name_loc;
->  	xfs_attr_leaf_name_remote_t *name_rmt;
->  	int size;
->  
-> -	ASSERT(leaf->hdr.info.magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC));
-
-I don't see a replacement for this assert.
-
-> @@ -2786,38 +3003,44 @@ xfs_attr_root_inactive(xfs_trans_t **trans, xfs_inode_t *dp)
->  	 */
->  	error = xfs_da3_node_read(*trans, dp, 0, -1, &bp, XFS_ATTR_FORK);
->  	if (error)
-> -		return(error);
-> -	blkno = XFS_BUF_ADDR(bp);
-> +		return error;
-> +	blkno = bp->b_bn;
-
-I'm a little concerned about the switch from XFS_BUF_ADDR to bp->b_bn here, but
-have not looked into it yet.  If you have a quick explanation, that's great.
-Otherwise I'll come back to it.
-
-> +/*
-> + * incore, neutral version of the attribute leaf header
-> + */
-> +struct xfs_attr3_icleaf_hdr {
-> +	__uint32_t	forw;
-> +	__uint32_t	back;
-> +	__uint16_t	magic;
-> +	__uint16_t	count;
-> +	__uint16_t	usedbytes;
-> +	__uint16_t	firstused;
-> +	__u8		holes;
-> +	struct {
-> +		__uint16_t	base;
-> +		__uint16_t	size;
-> +	} freemap[XFS_ATTR_LEAF_MAPSIZE];
-
-Should that be an array of xfs_attr_leaf_map_t?  No, that's ondisk format.
-Nevermind then.
-
-> @@ -1479,7 +1480,9 @@ xfs_da3_node_lookup_int(
->  		curr = blk->bp->b_addr;
->  		blk->magic = be16_to_cpu(curr->magic);
->  
-> -		if (blk->magic == XFS_ATTR_LEAF_MAGIC) {
-> +		if (blk->magic == XFS_ATTR_LEAF_MAGIC ||
-> +		    blk->magic == XFS_ATTR3_LEAF_MAGIC) {
-> +			blk->magic = XFS_ATTR_LEAF_MAGIC;
-			^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-I'm still a little confused by these assignments.  I understand you're
-squashing them down from a comment, and that the correct magic is still in the
-buffer... I need to find who is looking at blk->magic.  Any hints?
+In this case, doing it before just means less branches and less
+complex code as we already have the context to make the right
+decision just before the modification is done.
 
 
-That's about it for now.
+> >  	} else {
+> > -		btree = &save_node->btree[be16_to_cpu(save_node->hdr.count)];
+> > +		sindex = shdr.count;
+> >  		xfs_trans_log_buf(tp, save_blk->bp,
+> > -			XFS_DA_LOGRANGE(save_node, btree,
+> > -				be16_to_cpu(drop_node->hdr.count) *
+> > -				sizeof(xfs_da_node_entry_t)));
+> > +			XFS_DA_LOGRANGE(save_node, &sbtree[sindex],
+> > +				dhdr.count * sizeof(xfs_da_node_entry_t)));
+> 
+> And here it seems that we're logging save_node before we've made any
+> modification to it.  Maybe I'm missing something.
 
-Thanks,
-Ben
+See above...
+
+> > -	tmp = be16_to_cpu(drop_node->hdr.count) * (uint)sizeof(xfs_da_node_entry_t);
+> > -	memcpy(btree, &drop_node->btree[0], tmp);
+> > -	be16_add_cpu(&save_node->hdr.count, be16_to_cpu(drop_node->hdr.count));
+> > +	tmp = dhdr.count * (uint)sizeof(xfs_da_node_entry_t);
+> > +	memcpy(&sbtree[sindex], &dbtree[0], tmp);
+> > +	shdr.count += dhdr.count;
+> > +	xfs_da3_node_hdr_to_disk(save_node, &shdr);
+> >  	xfs_trans_log_buf(tp, save_blk->bp,
+> >  		XFS_DA_LOGRANGE(save_node, &save_node->hdr,
+> > -			sizeof(save_node->hdr)));
+> > +				xfs_da3_node_hdr_size(save_node)));
+> >  
+> 
+> And then after modifying save_node by copying stuff in from drop_blk we only
+> log the header, and not the entries.  I guess I'd prefer to see the entries
+> logged after they've been modified.  It's not a bug, looks like.. just not what
+> I'm used to seeing.
+
+Yeah, it's a little unusual, but it's not incorrect, and this is
+done in some places simply because it makes the code more concise
+and less branch intensive....
+
+> > @@ -1190,66 +1478,73 @@ xfs_da_node_lookup_int(xfs_da_state_t *state, int *result)
+> >  		}
+> >  		curr = blk->bp->b_addr;
+> >  		blk->magic = be16_to_cpu(curr->magic);
+> > -		ASSERT(blk->magic == XFS_DA_NODE_MAGIC ||
+> > -		       blk->magic == XFS_DIR2_LEAFN_MAGIC ||
+> > -		       blk->magic == XFS_ATTR_LEAF_MAGIC);
+> > +
+> > +		if (blk->magic == XFS_ATTR_LEAF_MAGIC) {
+> > +			blk->hashval = xfs_attr_leaf_lasthash(blk->bp, NULL);
+> > +			break;
+> > +		}
+> > +
+> > +		if (blk->magic == XFS_DIR2_LEAFN_MAGIC ||
+> > +		    blk->magic == XFS_DIR3_LEAFN_MAGIC) {
+> > +			blk->magic = XFS_DIR2_LEAFN_MAGIC;
+> > +			blk->hashval = xfs_dir2_leafn_lasthash(blk->bp, NULL);
+> > +			break;
+> > +		}
+> 
+> Something like this would be better for this rearrangement:
+> 
+> 	if (blk->magic == XFS_ATTR_LEAF_MAGIC) {
+> 		...
+> 		break;
+> 	} else if (blk->magic == XFS_DIR2_LEAFN_MAGIC ||
+> 		   blk->magic == XFS_DIR3_LEAFN_MAGIC) {
+> 		...
+> 		break;
+> 	} else if (blk->magic != XFS_DA_NODE_MAGIC) {
+> 		return XFS_ERROR(EFSCORRUPTED);
+> 	}
+> 
+> So that we're sure what kind of block we have.
+
+It's not actually determining whether the block is valid or not -
+the call to xfs_da3_node_read() will have already checked that for
+us. i.e. we already know it is a ATTR/DIR/DA block and so are just
+breaking out of the root->leaf walk being done here...
+
+> 
+> > +
+> > +		blk->magic = XFS_DA_NODE_MAGIC;
+> > +
+> 
+> Why was that assignment necessary?
+
+Because this is the xfs_da_state block type, not the on-disk
+version. i.e. the da_state manipulation logic treats
+XFS_DA_NODE_MAGIC/XFS_DA3_NODE_MAGIC identically, so it makes no
+sense to have all the da_state code have to check for 2 different
+magic numbers everywhere. hence if
+
+		blk->magic = be16_to_cpu(curr->magic);
+
+gives us blk->magic == XFS_DA3_NODE_MAGIC, we need to reset it to
+XFS_DA_NODE_MAGIC so all the existing da_state code works without
+modification. The same is done with dir2/dir3 leafn magic numbers,
+and in a later patch with the attr3 leaf magic numbers.
+
+> > @@ -1316,9 +1647,6 @@ xfs_da_blk_link(xfs_da_state_t *state, xfs_da_state_blk_t *old_blk,
+> >  	ASSERT(old_blk->magic == XFS_DA_NODE_MAGIC ||
+> >  	       old_blk->magic == XFS_DIR2_LEAFN_MAGIC ||
+> >  	       old_blk->magic == XFS_ATTR_LEAF_MAGIC);
+> 
+> Seems like these asserts need to be updated.
+
+And this is exactly why the above code does what it does. The
+da_state code only cares about da_node/dir leaf/attr leaf
+distinctions, not what the physical encoding of the structures on
+disk are.
+
+> 
+> > -	ASSERT(old_blk->magic == be16_to_cpu(old_info->magic));
+> > -	ASSERT(new_blk->magic == be16_to_cpu(new_info->magic));
+> > -	ASSERT(old_blk->magic == new_blk->magic);
+> 
+> These seem like good asserts.
+
+But now wrong, because they are asserting that the da_state magic
+numbers are the same as the physical structure on disk.
+
+The callouts in the functions based on the magic numbers:
+
+        switch (old_blk->magic) {
+        case XFS_ATTR_LEAF_MAGIC:
+                before = xfs_attr_leaf_order(old_blk->bp, new_blk->bp);
+                break;
+        case XFS_DIR2_LEAFN_MAGIC:
+                before = xfs_dir2_leafn_order(old_blk->bp, new_blk->bp);
+                break;
+        case XFS_DA_NODE_MAGIC:
+                before = xfs_da3_node_order(old_blk->bp, new_blk->bp);
+                break;
+
+Do the correct verification of the physical magic numbers, as does
+the higher level calling code....
+
+FWIW, the da_state based code is a good candidate for converting to
+an ops based abstraction like the generic btree code uses so that
+these sorts of switch statements code go away....
+
+> > @@ -1449,8 +1738,6 @@ xfs_da_blk_unlink(xfs_da_state_t *state, xfs_da_state_blk_t *drop_blk,
+> >  	ASSERT(save_blk->magic == XFS_DA_NODE_MAGIC ||
+> >  	       save_blk->magic == XFS_DIR2_LEAFN_MAGIC ||
+> >  	       save_blk->magic == XFS_ATTR_LEAF_MAGIC);
+> 		
+> Seems like these asserts need to be updated.
+> 
+> > -	ASSERT(save_blk->magic == be16_to_cpu(save_info->magic));
+> > -	ASSERT(drop_blk->magic == be16_to_cpu(drop_info->magic));
+> 
+> These two seem like useful asserts.
+
+Validated by higher level code, and incorrect because of the above
+physical/logical discrimination...
+
+> > @@ -1856,17 +2176,22 @@ xfs_da_swap_lastblock(
+> >  		dead_level = 0;
+> >  		dead_hash = be32_to_cpu(ents[leafhdr.count - 1].hashval);
+> >  	} else {
+> > -		ASSERT(dead_info->magic == cpu_to_be16(XFS_DA_NODE_MAGIC));
+> > +		struct xfs_da3_icnode_hdr deadhdr;
+> > +
+> > +		ASSERT(dead_info->magic == cpu_to_be16(XFS_DA_NODE_MAGIC) ||
+> > +		       dead_info->magic == cpu_to_be16(XFS_DA3_NODE_MAGIC));
+> 
+> I think these are covered by asserts in xfs_da3_node_hdr_from_disk and can be removed.
+
+Fixed.
+
+> > @@ -1912,31 +2237,31 @@ xfs_da_swap_lastblock(
+> >  	 * Walk down the tree looking for the parent of the moved block.
+> >  	 */
+> >  	for (;;) {
+> > -		error = xfs_da_node_read(tp, ip, par_blkno, -1, &par_buf, w);
+> > +		error = xfs_da3_node_read(tp, ip, par_blkno, -1, &par_buf, w);
+> >  		if (error)
+> >  			goto done;
+> >  		par_node = par_buf->b_addr;
+> > -		if (unlikely(par_node->hdr.info.magic !=
+> > -		    cpu_to_be16(XFS_DA_NODE_MAGIC) ||
+> > -		    (level >= 0 && level != be16_to_cpu(par_node->hdr.level) + 1))) {
+> > +		xfs_da3_node_hdr_from_disk(&par_hdr, par_node);
+> > +		if (level >= 0 && level != par_hdr.level + 1) {
+> 
+> Do we need to test par_node magic here like we were before? 
+
+I don't think so, because we validated that it is a node/leaf block
+in xfs_da3_node_read(), debug kernels will assert fail in
+xfs_da3_node_hdr_from_disk(), and the level checks will catch
+problems with leaves being where nodes should be.  Hence I don't
+think we lose anything here in terms of corruption detection....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
