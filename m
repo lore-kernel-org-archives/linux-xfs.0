@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 73C9B29E03
-	for <xfs@oss.sgi.com>; Thu, 25 Apr 2013 09:12:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E27A9AC007
-	for <xfs@oss.sgi.com>; Thu, 25 Apr 2013 07:12:11 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id cNcdWTRYr5t2J4QI for <xfs@oss.sgi.com>;
-	Thu, 25 Apr 2013 07:12:10 -0700 (PDT)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 2C02763C59BC
-	for <xfs@oss.sgi.com>; Thu, 25 Apr 2013 09:12:09 -0500 (CDT)
-Message-ID: <517939B8.2010701@sandeen.net>
-Date: Thu, 25 Apr 2013 09:12:08 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id D3C0B29E03
+	for <xfs@oss.sgi.com>; Thu, 25 Apr 2013 09:13:04 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6B4FAAC007
+	for <xfs@oss.sgi.com>; Thu, 25 Apr 2013 07:13:04 -0700 (PDT)
+Received: from dkim1.fusionio.com (dkim1.fusionio.com [66.114.96.53]) by
+	cuda.sgi.com with ESMTP id tltO0T7Y1LGklRZu (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 25 Apr 2013 07:13:01 -0700 (PDT)
+Received: from mx1.fusionio.com (unknown [10.101.1.160])
+	by dkim1.fusionio.com (Postfix) with ESMTP id E72DE7C042F
+	for <xfs@oss.sgi.com>; Thu, 25 Apr 2013 08:13:00 -0600 (MDT)
+From: Josef Bacik <jbacik@fusionio.com>
+Subject: [PATCH] xfstests 311: test fsync with dm flakey V2
+Date: Thu, 25 Apr 2013 10:12:56 -0400
+Message-ID: <1366899176-12876-1-git-send-email-jbacik@fusionio.com>
 MIME-Version: 1.0
-Subject: [PATCH 1/3 V2] xfsprogs: manpage spelling fixes
-References: <5175BB8F.5090604@sandeen.net> <5175BC20.9010403@sandeen.net>
-In-Reply-To: <5175BC20.9010403@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,211 +29,1218 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-Fix several spelling errors in xfsprogs manpages.
+This test sets up a dm flakey target and then runs my fsync tester I've been
+using to verify btrfs's fsync() is working properly.  It will create a dm flakey
+device, mount it, run my test, make the flakey device start dropping writes, and
+then unmount the fs.  Then we mount it back up and make sure the md5sums match
+and then run fsck on the device to make sure we got a consistent fs.  I used the
+output from a run on BTRFS since it's the only one that passes this test
+properly.  I verified each test manually to make sure they were in fact valid
+files.  XFS and Ext4 both fail this test in one way or another.  Thanks,
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Josef Bacik <jbacik@fusionio.com>
 ---
+V1->V2
+-make _test_check_fs take an argument on wether or not to force an exit, this is
+because if we failed to fsck we'd leave the dmflakey device around which was
+super annoying.
+-fixed the drop caches bug (thanks Zach!)
+-fixed the output since XFS has a bug with that particular test, it leaves a 0
+length file behind which isn't right. 
 
-V2: fix serialization, guaranteed
+ common/config         |    1 +
+ common/punch          |    7 -
+ common/rc             |   71 +++++--
+ src/Makefile          |    2 +-
+ src/fsync-tester.c    |  538 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/311     |  177 ++++++++++++++++
+ tests/generic/311.out |  193 ++++++++++++++++++
+ tests/generic/group   |    1 +
+ 8 files changed, 967 insertions(+), 23 deletions(-)
+ create mode 100644 src/fsync-tester.c
+ create mode 100755 tests/generic/311
+ create mode 100644 tests/generic/311.out
 
-diff --git a/man/man5/projects.5 b/man/man5/projects.5
-index d8fb56d..6845540 100644
---- a/man/man5/projects.5
-+++ b/man/man5/projects.5
-@@ -1,6 +1,6 @@
- .TH projects 5
- .SH NAME
--projects \- persistent project root defintion
-+projects \- persistent project root definition
- .SH DESCRIPTION
- The
- .I /etc/projects
-diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
-index fa52152..f707881 100644
---- a/man/man8/mkfs.xfs.8
-+++ b/man/man8/mkfs.xfs.8
-@@ -279,7 +279,7 @@ with
- .BR log= ,
- or as the number fitting in a filesystem block with
- .BR perblock= .
--The mininum (and default)
-+The minimum (and default)
- .I value
- is 256 bytes.
- The maximum
-@@ -297,7 +297,7 @@ so if no inode size is given on the command line,
- .B mkfs.xfs
- will attempt to choose a size
- such that inode numbers will be < 32 bits.  If an inode size
--is specified, or if a filesystem is sufficently large,
-+is specified, or if a filesystem is sufficiently large,
- .B mkfs.xfs
- will warn if this will create inode numbers > 32 significant
- bits.
-@@ -450,7 +450,7 @@ suboption is specified.
- This changes the method of logging various persistent counters
- in the superblock.  Under metadata intensive workloads, these
- counters are updated and logged frequently enough that the superblock
--updates become a serialisation point in the filesystem. The
-+updates become a serialization point in the filesystem. The
- .I value
- can be either 0 or 1.
- .IP
-diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
-index 17ac601..0558671 100644
---- a/man/man8/xfs_db.8
-+++ b/man/man8/xfs_db.8
-@@ -64,7 +64,7 @@ and
- Allows execution on a mounted filesystem, provided it is mounted read-only.
- Useful for shell scripts such as
- .BR xfs_check (8),
--which must only operate on filesystems in a guarenteed consistent state
-+which must only operate on filesystems in a guaranteed consistent state
- (either unmounted or mounted read-only). These semantics are slightly
- different to that of the
- .B -r
-@@ -960,12 +960,12 @@ and
- (1 if the extent is unwritten).
- .TP
- .B keys
--[nonleaf blocks only] array of key records. These are the first key
-+[non-leaf blocks only] array of key records. These are the first key
- value of each block in the level below this one. Each record contains
- .BR startoff .
- .TP
- .B ptrs
--[nonleaf blocks only] array of child block pointers.
-+[non-leaf blocks only] array of child block pointers.
- Each pointer is a filesystem block number to the next level in the Btree.
- .PD
- .RE
-@@ -975,7 +975,7 @@ There is one set of filesystem blocks forming the by-block-number
- allocation Btree for each allocation group. The root block of this
- Btree is designated by the
- .B bnoroot
--field in the coresponding AGF block.
-+field in the corresponding AGF block.
- The blocks are linked to sibling left and right blocks at each level,
- as well as by pointers from parent to child blocks.
- Each block has the following fields:
-@@ -1004,14 +1004,14 @@ and
- .BR blockcount .
- .TP
- .B keys
--[nonleaf blocks only] array of key records. These are the first value
-+[non-leaf blocks only] array of key records. These are the first value
- of each block in the level below this one. Each record contains
- .B startblock
- and
- .BR blockcount .
- .TP
- .B ptrs
--[nonleaf blocks only] array of child block pointers. Each pointer is a
-+[non-leaf blocks only] array of child block pointers. Each pointer is a
- block number within the allocation group to the next level in the Btree.
- .PD
- .RE
-@@ -1021,7 +1021,7 @@ There is one set of filesystem blocks forming the by-block-count
- allocation Btree for each allocation group. The root block of this
- Btree is designated by the
- .B cntroot
--field in the coresponding AGF block. The blocks are linked to sibling
-+field in the corresponding AGF block. The blocks are linked to sibling
- left and right blocks at each level, as well as by pointers from parent
- to child blocks. Each block has the following fields:
- .RS 1.4i
-@@ -1049,14 +1049,14 @@ and
- .BR blockcount .
- .TP
- .B keys
--[nonleaf blocks only] array of key records. These are the first value
-+[non-leaf blocks only] array of key records. These are the first value
- of each block in the level below this one. Each record contains
- .B blockcount
- and
- .BR startblock .
- .TP
- .B ptrs
--[nonleaf blocks only] array of child block pointers. Each pointer is a
-+[non-leaf blocks only] array of child block pointers. Each pointer is a
- block number within the allocation group to the next level in the Btree.
- .PD
- .RE
-@@ -1368,7 +1368,7 @@ number of warnings issued about realtime block limit violations.
- There is one set of filesystem blocks forming the inode allocation Btree for
- each allocation group. The root block of this Btree is designated by the
- .B root
--field in the coresponding AGI block.
-+field in the corresponding AGI block.
- The blocks are linked to sibling left and right blocks at each level,
- as well as by pointers from parent to child blocks.
- Each block has the following fields:
-@@ -1400,12 +1400,12 @@ count of free inodes in this chunk, and
- bitmap, LSB corresponds to inode 0.
- .TP
- .B keys
--[nonleaf blocks only] array of key records. These are the first value of each
-+[non-leaf blocks only] array of key records. These are the first value of each
- block in the level below this one. Each record contains
- .BR startino .
- .TP
- .B ptrs
--[nonleaf blocks only] array of child block pointers. Each pointer is a
-+[non-leaf blocks only] array of child block pointers. Each pointer is a
- block number within the allocation group to the next level in the Btree.
- .PD
- .RE
-diff --git a/man/man8/xfs_mdrestore.8 b/man/man8/xfs_mdrestore.8
-index a7d2b68..7b9ba89 100644
---- a/man/man8/xfs_mdrestore.8
-+++ b/man/man8/xfs_mdrestore.8
-@@ -16,7 +16,7 @@ to a filesystem. The
- .I source
- argument specifies the location of the metadump image and the
- .I target
--argument specifies the destination for the filsystem image.
-+argument specifies the destination for the filesystem image.
- If the
- .I source
- is \-, then the metadata image is read from stdin. This allows the output of
-diff --git a/man/man8/xfs_quota.8 b/man/man8/xfs_quota.8
-index f3b54cc..9327feb 100644
---- a/man/man8/xfs_quota.8
-+++ b/man/man8/xfs_quota.8
-@@ -623,7 +623,7 @@ can be used to limit recursion level (\-1 is infinite, 0 is top level only,
- 1 is first level ... ).
- Option
- .B \-p
--adds posibility to specify project paths in command line without a need
-+adds possibility to specify project paths in command line without a need
- for
- .I /etc/projects
- to exist. Note that if projects file exists then it is also used.
-diff --git a/man/man8/xfs_repair.8 b/man/man8/xfs_repair.8
-index 57c97da..7b296ba 100644
---- a/man/man8/xfs_repair.8
-+++ b/man/man8/xfs_repair.8
-@@ -170,7 +170,7 @@ Verbose output.
- Repair dangerously. Allow
- .B xfs_repair
- to repair an XFS filesystem mounted read only. This is typically done
--on a root fileystem from single user mode, immediately followed by a reboot.
-+on a root filesystem from single user mode, immediately followed by a reboot.
- .TP
- .B \-V
- Prints out the current version number and exits.
-@@ -239,7 +239,7 @@ The name assigned is the inode number.
- aborts on most disk I/O errors. Therefore, if you are trying
- to repair a filesystem that was damaged due to a disk drive failure,
- steps should be taken to ensure that all blocks in the filesystem are
--readable and writeable before attempting to use
-+readable and writable before attempting to use
- .B xfs_repair
- to repair the filesystem. A possible method is using
- .BR dd (8)
-
+diff --git a/common/config b/common/config
+index dfbb5c2..b8ab593 100644
+--- a/common/config
++++ b/common/config
+@@ -177,6 +177,7 @@ export FIO_PROG="`set_prog_path fio`"
+ export FILEFRAG_PROG="`set_prog_path filefrag`"
+ export E4DEFRAG_PROG="`set_prog_path e4defrag`"
+ export LOGGER_PROG="`set_prog_path logger`"
++export DMSETUP_PROG="`set_prog_path dmsetup`"
+ 
+ # Generate a comparable xfsprogs version number in the form of
+ # major * 10000 + minor * 100 + release
+diff --git a/common/punch b/common/punch
+index cfbe576..b9f9acd 100644
+--- a/common/punch
++++ b/common/punch
+@@ -234,13 +234,6 @@ _filter_hole_fiemap()
+ 	_coalesce_extents
+ }
+ 
+-
+-# Prints the md5 checksum of a given file
+-_md5_checksum()
+-{
+-	md5sum $1 | cut -d ' ' -f1
+-}
+-
+ _filter_bmap()
+ {
+ 	awk '
+diff --git a/common/rc b/common/rc
+index b980697..0eea37d 100644
+--- a/common/rc
++++ b/common/rc
+@@ -57,6 +57,13 @@ dd()
+    fi
+ }
+ 
++# Prints the md5 checksum of a given file
++_md5_checksum()
++{
++	md5sum $1 | cut -d ' ' -f1
++}
++
++
+ # ls -l w/ selinux sometimes puts a dot at the end:
+ # -rwxrw-r--. id1 id2 file1
+ 
+@@ -478,7 +485,7 @@ _scratch_mkfs_ext4()
+ {
+ 	local tmp_dir=/tmp/
+ 
+-	/sbin/mkfs -t $FSTYP -- $MKFS_OPTIONS $* $SCRATCH_DEV \
++	/sbin/mkfs -t $FSTYP -- -F $MKFS_OPTIONS $* $SCRATCH_DEV \
+ 			2>$tmp_dir.mkfserr 1>$tmp_dir.mkfsstd
+ 	local mkfs_status=$?
+ 
+@@ -1041,6 +1048,27 @@ _require_command()
+     [ -n "$1" -a -x "$1" ] || _notrun "$_cmd utility required, skipped this test"
+ }
+ 
++# this test requires the device mapper flakey target
++#
++_require_dm_flakey()
++{
++    if [ "$HOSTOS" != "Linux" ]
++    then
++	_notrun "This test requires linux for dm flakey support"
++    fi
++
++    _require_command $DMSETUP_PROG
++
++    modprobe dm-flakey >/dev/null 2>&1
++    $DMSETUP_PROG targets | grep flakey >/dev/null 2>&1
++    if [ $? -eq 0 ]
++    then
++	:
++    else
++	_notrun "This test requires dm flakey support"
++    fi
++}
++
+ # this test requires the projid32bit feature to be available in
+ # mkfs.xfs
+ #
+@@ -1356,7 +1384,9 @@ _mount_or_remount_rw()
+ _check_generic_filesystem()
+ {
+     device=$1
++    force_exit=$2
+ 
++    ret=0
+     # If type is set, we're mounted
+     type=`_fs_type $device`
+     ok=1
+@@ -1395,22 +1425,24 @@ _check_generic_filesystem()
+ 
+     if [ $ok -eq 0 ]; then
+ 	status=1
+-	exit 1
++        ret=1
++	[ $force_exit -eq 1 ] && exit 1
+     fi
+ 
+-    return 0
++    return $ret
+ }
+ 
+ # run xfs_check and friends on a FS.
+ 
+ _check_xfs_filesystem()
+ {
+-    if [ $# -ne 3 ]
++    if [ $# -ne 4 ]
+     then
+-	echo "Usage: _check_xfs_filesystem device <logdev>|none <rtdev>|none" 1>&2
++	echo "Usage: _check_xfs_filesystem device <logdev>|none <rtdev>|none force_exit" 1>&2
+ 	exit 1
+     fi
+ 
++    force_exit=$4
+     extra_mount_options=""
+     device=$1
+     if [ "$2" != "none" ]; then
+@@ -1428,6 +1460,7 @@ _check_xfs_filesystem()
+ 
+     type=`_fs_type $device`
+     ok=1
++    ret=0
+ 
+     if [ "$type" = "xfs" ]
+     then
+@@ -1494,10 +1527,11 @@ _check_xfs_filesystem()
+ 
+     if [ $ok -eq 0 ]; then
+ 	status=1
+-	exit 1
++	ret=1
++	[ $force_exit -eq 1 ] && exit 1
+     fi
+ 
+-    return 0
++    return $ret
+ }
+ 
+ # Filter the knowen errors the UDF Verifier reports.
+@@ -1553,7 +1587,7 @@ _check_xfs_test_fs()
+     [ "$USE_EXTERNAL" = yes -a ! -z "$TEST_RTDEV" ] && \
+         TEST_RT="$TEST_RTDEV"
+ 
+-    _check_xfs_filesystem $TEST_DEV $TEST_LOG $TEST_RT
++    _check_xfs_filesystem $TEST_DEV $TEST_LOG $TEST_RT 1
+ 
+     # check for ipath consistency
+     if $XFS_GROWFS_PROG -n $TEST_DIR | grep -q 'inode-paths=1'; then
+@@ -1566,10 +1600,12 @@ _check_xfs_test_fs()
+ _check_btrfs_filesystem()
+ {
+     device=$1
++    force_exit=$2
+ 
+     # If type is set, we're mounted
+     type=`_fs_type $device`
+     ok=1
++    ret=0
+ 
+     if [ "$type" = "$FSTYP" ]
+     then
+@@ -1605,10 +1641,11 @@ _check_btrfs_filesystem()
+ 
+     if [ $ok -eq 0 ]; then
+ 	status=1
+-	exit 1
++	ret=1
++	[ $force_exit -eq 1 ] && exit 1
+     fi
+ 
+-    return 0
++    return $ret
+ }
+ 
+ _check_test_fs()
+@@ -1624,16 +1661,18 @@ _check_test_fs()
+ 	# do nothing for now
+ 	;;
+     btrfs)
+-	_check_btrfs_filesystem $TEST_DEV
++	_check_btrfs_filesystem $TEST_DEV 1
+ 	;;
+     *)
+-	_check_generic_filesystem $TEST_DEV
++	_check_generic_filesystem $TEST_DEV 1
+ 	;;
+     esac
+ }
+ 
+ _check_scratch_fs()
+ {
++    force_exit=1
++    [ $# -eq 1 ] && force_exit=$1
+     case $FSTYP in
+     xfs)
+ 	SCRATCH_LOG="none"
+@@ -1644,19 +1683,21 @@ _check_scratch_fs()
+ 	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_RTDEV" ] && \
+ 	    SCRATCH_RT="$SCRATCH_RTDEV"
+ 
+-	_check_xfs_filesystem $SCRATCH_DEV $SCRATCH_LOG $SCRATCH_RT
++	_check_xfs_filesystem $SCRATCH_DEV $SCRATCH_LOG $SCRATCH_RT $force_exit
+ 	;;
+     udf)
++	# Seems _check_udf_filesystem doesnt exit 1 if it fails so we're good
++	# here
+ 	_check_udf_filesystem $SCRATCH_DEV $udf_fsize
+ 	;;
+     nfs*)
+ 	# Don't know how to check an NFS filesystem, yet.
+ 	;;
+     btrfs)
+-	_check_btrfs_filesystem $SCRATCH_DEV
++	_check_btrfs_filesystem $SCRATCH_DEV $force_exit
+ 	;;
+     *)
+-	_check_generic_filesystem $SCRATCH_DEV
++	_check_generic_filesystem $SCRATCH_DEV $force_exit
+ 	;;
+     esac
+ }
+diff --git a/src/Makefile b/src/Makefile
+index 8d8e97f..c18ffc9 100644
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -18,7 +18,7 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
+ 	locktest unwritten_mmap bulkstat_unlink_test t_stripealign \
+ 	bulkstat_unlink_test_modified t_dir_offset t_futimens t_immutable \
+ 	stale_handle pwrite_mmap_blocked t_dir_offset2 seek_sanity_test \
+-	seek_copy_test t_readdir_1 t_readdir_2
++	seek_copy_test t_readdir_1 t_readdir_2 fsync-tester
+ 
+ SUBDIRS =
+ 
+diff --git a/src/fsync-tester.c b/src/fsync-tester.c
+new file mode 100644
+index 0000000..092d953
+--- /dev/null
++++ b/src/fsync-tester.c
+@@ -0,0 +1,538 @@
++#include <sys/time.h>
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <errno.h>
++#include <fcntl.h>
++#include <limits.h>
++#include <stdlib.h>
++#include <stdio.h>
++#include <string.h>
++#include <unistd.h>
++
++static int test_fd;
++static char *buf;
++static char *fname;
++
++/*
++ * Just creates a random file, overwriting the file in a random number of loops
++ * and fsyncing between each loop.
++ */
++static int test_one(int *max_blocks)
++{
++	int loops = (random() % 20) + 5;
++
++	lseek(test_fd, 0, SEEK_SET);
++	while (loops--) {
++		int character = (random() % 126) + 33; /* printable character */
++		int blocks = (random() % 100) + 1;
++
++		if (blocks > *max_blocks)
++			*max_blocks = blocks;
++		lseek(test_fd, 0, SEEK_SET);
++		memset(buf, character, 4096);
++		if (fsync(test_fd)) {
++			fprintf(stderr, "Fsync failed, test results will be "
++				"invalid: %d\n", errno);
++			return 1;
++		}
++
++		while (blocks--) {
++			if (write(test_fd, buf, 4096) < 4096) {
++				fprintf(stderr, "Short write %d\n", errno);
++				return 1;
++			}
++		}
++	}
++
++	return 0;
++}
++
++/*
++ * Preallocate a randomly sized file and then overwrite the entire thing and
++ * then fsync.
++ */
++static int test_two(int *max_blocks)
++{
++	int blocks = (random() % 1024) + 1;
++	int character = (random() % 126) + 33;
++
++	*max_blocks = blocks;
++
++	if (fallocate(test_fd, 0, 0, blocks * 4096)) {
++		fprintf(stderr, "Error fallocating %d (%s)\n", errno,
++			strerror(errno));
++		return 1;
++	}
++
++	lseek(test_fd, 0, SEEK_SET);
++	memset(buf, character, 4096);
++	while (blocks--) {
++		if (write(test_fd, buf, 4096) < 4096) {
++			fprintf(stderr, "Short write %d\n", errno);
++			return 1;
++		}
++	}
++
++	return 0;
++}
++
++static void drop_all_caches()
++{
++	char value[] = "3\n";
++	int fd;
++
++	if ((fd = open("/proc/sys/vm/drop_caches", O_WRONLY)) < 0) {
++		fprintf(stderr, "Error opening drop caches: %d\n", errno);
++		return;
++	}
++
++	write(fd, value, sizeof(value)-1);
++	close(fd);
++}
++
++/*
++ * Randomly write inside of a file, either creating a sparse file or prealloc
++ * the file and randomly write within it, depending on the prealloc flag
++ */
++static int test_three(int *max_blocks, int prealloc, int rand_fsync,
++		      int sync, int drop_caches)
++{
++	int size = (random() % 2048) + 4;
++	int blocks = size / 2;
++	int sync_block = blocks / 2;
++	int rand_sync_interval = (random() % blocks) + 1;
++	int character = (random() % 126) + 33;
++
++	printf("Size is %d, blocks is %d\n", size, blocks);
++	if (prealloc && fallocate(test_fd, 0, 0, size * 4096)) {
++		fprintf(stderr, "Error fallocating %d (%s)\n", errno,
++			strerror(errno));
++		return 1;
++	}
++
++	if (prealloc)
++		*max_blocks = size;
++
++	memset(buf, character, 4096);
++	while (blocks--) {
++		int block = (random() % size);
++
++		if ((block + 1) > *max_blocks)
++			*max_blocks = block + 1;
++
++		if (rand_fsync && !(blocks % rand_sync_interval)) {
++			if (fsync(test_fd)) {
++				fprintf(stderr, "Fsync failed, test results "
++					"will be invalid: %d\n", errno);
++				return 1;
++			}
++		}
++
++		/* Force a transaction commit in between just for fun */
++		if (blocks == sync_block && (sync || drop_caches)) {
++			if (sync)
++				syncfs(test_fd);
++			else
++				sync_file_range(test_fd, 0, 0,
++						SYNC_FILE_RANGE_WRITE|
++						SYNC_FILE_RANGE_WAIT_AFTER);
++
++			if (drop_caches) {
++				close(test_fd);
++				drop_all_caches();
++				test_fd = open(fname, O_RDWR);
++				if (test_fd < 0) {
++					test_fd = 0;
++					fprintf(stderr, "Error re-opening file: %d\n",
++						errno);
++					return 1;
++				}
++			}
++		}
++
++		if (pwrite(test_fd, buf, 4096, block * 4096) < 4096) {
++			fprintf(stderr, "Short write %d\n", errno);
++			return 1;
++		}
++	}
++
++	return 0;
++}
++
++static void timeval_subtract(struct timeval *result,struct timeval *x,
++			     struct timeval *y)
++{
++	if (x->tv_usec < y->tv_usec) {
++		int nsec = (y->tv_usec - x->tv_usec) / 1000000 + 1;
++		y->tv_usec -= 1000000 * nsec;
++		y->tv_sec += nsec;
++	}
++
++	if (x->tv_usec - y->tv_usec > 1000000) {
++		int nsec = (x->tv_usec - y->tv_usec) / 1000000;
++		y->tv_usec += 1000000 * nsec;
++		y->tv_sec -= nsec;
++	}
++
++	result->tv_sec = x->tv_sec - y->tv_sec;
++	result->tv_usec = x->tv_usec - y->tv_usec;
++}
++
++static int test_four(int *max_blocks)
++{
++	size_t size = 2621440;	/* 10 gigabytes */
++	size_t blocks = size / 2;
++	size_t sync_block = blocks / 8;	/* fsync 8 times */
++	int character = (random() % 126) + 33;
++	struct timeval start, end, diff;
++
++	memset(buf, character, 4096);
++	while (blocks--) {
++		off_t block = (random() % size);
++
++		if ((block + 1) > *max_blocks)
++			*max_blocks = block + 1;
++
++		if ((blocks % sync_block) == 0) {
++			if (gettimeofday(&start, NULL)) {
++				fprintf(stderr, "Error getting time: %d\n",
++					errno);
++				return 1;
++			}
++			if (fsync(test_fd)) {
++				fprintf(stderr, "Fsync failed, test results "
++					"will be invalid: %d\n", errno);
++				return 1;
++			}
++			if (gettimeofday(&end, NULL)) {
++				fprintf(stderr, "Error getting time: %d\n",
++					errno);
++				return 1;
++			}
++			timeval_subtract(&diff, &end, &start);
++			printf("Fsync time was %ds and %dus\n",
++			       (int)diff.tv_sec, (int)diff.tv_usec);
++		}
++
++		if (pwrite(test_fd, buf, 4096, block * 4096) < 4096) {
++			fprintf(stderr, "Short write %d\n", errno);
++			return 1;
++		}
++	}
++
++	return 0;
++}
++
++static int test_five()
++{
++	int character = (random() % 126) + 33;
++	int runs = (random() % 100) + 1;
++	int i;
++
++	memset(buf, character, 3072);
++	for (i = 0; i < runs; i++) {
++		size_t write_size = (random() % 3072) + 1;
++
++		if (pwrite(test_fd, buf, write_size, 0) < write_size) {
++			fprintf(stderr, "Short write %d\n", errno);
++			return 1;
++		}
++
++		if ((i % 8) == 0) {
++			if (fsync(test_fd)) {
++				fprintf(stderr, "Fsync failed, test results "
++					"will be invalid: %d\n", errno);
++				return 1;
++			}
++		}
++	}
++
++	return 0;
++}
++
++/*
++ * Reproducer for something like this
++ *
++ * [data][prealloc][data]
++ *
++ * and then in the [prealloc] section we have
++ *
++ * [ pre ][pre][     pre     ]
++ * [d][pp][dd][ppp][d][ppp][d]
++ *
++ * where each letter represents on block of either data or prealloc.
++ *
++ * This explains all the weirdly specific numbers.
++ */
++static int test_six()
++{
++	int character = (random() % 126) + 33;
++	int i;
++
++	memset(buf, character, 4096);
++
++	/* Write on either side of the file, leaving a hole in the middle */
++	for (i = 0; i < 10; i++) {
++		if (pwrite(test_fd, buf, 4096, i * 4096) < 4096) {
++			fprintf(stderr, "Short write %d\n", errno);
++			return 1;
++		}
++	}
++
++	if (fsync(test_fd)) {
++		fprintf(stderr, "Fsync failed %d\n", errno);
++		return 1;
++	}
++
++	/*
++	 * The test fs I had the prealloc extent was 13 4k blocks long so I'm
++	 * just using that to give myself the best chances of reproducing.
++	 */
++	for (i = 23; i < 33; i++) {
++		if (pwrite(test_fd, buf, 4096, i * 4096) < 4096) {
++			fprintf(stderr, "Short write %d\n", errno);
++			return 1;
++		}
++	}
++
++	if (fsync(test_fd)) {
++		fprintf(stderr, "Fsync failed %d\n", errno);
++		return 1;
++	}
++
++	if (fallocate(test_fd, 0, 10 * 4096, 4 * 4096)) {
++		fprintf(stderr, "Error fallocating %d\n", errno);
++		return 1;
++	}
++
++	if (fallocate(test_fd, 0, 14 * 4096, 5 * 4096)) {
++		fprintf(stderr, "Error fallocating %d\n", errno);
++		return 1;
++	}
++
++	if (fallocate(test_fd, 0, 19 * 4096, 4 * 4096)) {
++		fprintf(stderr, "Error fallocating %d\n", errno);
++		return 1;
++	}
++
++	if (pwrite(test_fd, buf, 4096, 10 * 4096) < 4096) {
++		fprintf(stderr, "Short write %d\n", errno);
++		return 1;
++	}
++
++	if (fsync(test_fd)) {
++		fprintf(stderr, "Fsync failed %d\n", errno);
++		return 1;
++	}
++
++	for (i = 13; i < 15; i++) {
++		if (pwrite(test_fd, buf, 4096, i * 4096) < 4096) {
++			fprintf(stderr, "Short write %d\n", errno);
++			return 1;
++		}
++	}
++
++	if (fsync(test_fd)) {
++		fprintf(stderr, "Fsync failed %d\n", errno);
++		return 1;
++	}
++
++	if (pwrite(test_fd, buf, 4096, 18 * 4096) < 4096) {
++		fprintf(stderr, "Short write %d\n", errno);
++		return 1;
++	}
++
++	if (fsync(test_fd)) {
++		fprintf(stderr, "Fsync failed %d\n", errno);
++		return 1;
++	}
++
++	if (pwrite(test_fd, buf, 4096, 22 * 4096) < 4096) {
++		fprintf(stderr, "Short write %d\n", errno);
++		return 1;
++	}
++
++	if (fsync(test_fd)) {
++		fprintf(stderr, "Fsync failed %d\n", errno);
++		return 1;
++	}
++
++	return 0;
++}
++
++static void usage()
++{
++	printf("Usage fsync-tester [-s <seed>] [-r] [-d] -t <test-num> <filename>\n");
++	printf("   -s seed   : seed for teh random map generator (defaults to reading /dev/urandom)\n");
++	printf("   -r        : don't reboot the box immediately\n");
++	printf("   -d        : use O_DIRECT\n");
++	printf("   -t test   : test nr to run, required\n");
++	exit(1);
++}
++
++int main(int argc, char **argv)
++{
++	int opt;
++	int fd;
++	int max_blocks = 0;
++	char *endptr;
++	unsigned int seed = 123;
++	int reboot = 1;
++	int direct_io = 0;
++	long int test = 1;
++	long int tmp;
++	int ret = 0;
++	int flags = O_RDWR|O_CREAT|O_TRUNC;
++
++	if (argc < 2)
++		usage();
++
++	fd = open("/dev/urandom", O_RDONLY);
++	if (fd >= 0) {
++		read(fd, &seed, sizeof(seed));
++		close(fd);
++	}
++
++	while ((opt = getopt(argc, argv, "s:rdt:")) != -1) {
++		switch (opt) {
++		case 's':
++			tmp = strtol(optarg, &endptr, 10);
++			if (tmp == LONG_MAX || endptr == optarg)
++				usage();
++			seed = tmp;
++			break;
++		case 'r':
++			reboot = 0;
++			break;
++		case 'd':
++			direct_io = 1;
++			break;
++		case 't':
++			test = strtol(optarg, &endptr, 10);
++			if (test == LONG_MAX || endptr == optarg)
++				usage();
++			break;
++		default:
++			usage();
++		}
++	}
++
++	if (optind >= argc)
++		usage();
++
++	fname = argv[optind];
++	if (!fname)
++		usage();
++
++	printf("Random seed is %u\n", seed);
++	srandom(seed);
++
++	if (direct_io) {
++		flags |= O_DIRECT;
++		ret = posix_memalign((void **)&buf, getpagesize(), 4096);
++		if (ret)
++			buf = NULL;
++	} else {
++		buf = malloc(4096);
++	}
++
++	if (!buf) {
++		fprintf(stderr, "Error allocating buf: %d\n", errno);
++		return 1;
++	}
++
++	test_fd = open(fname, flags, 0644);
++	if (test_fd < 0) {
++		fprintf(stderr, "Error opening file %d (%s)\n", errno,
++			strerror(errno));
++		return 1;
++	}
++
++	switch (test) {
++	case 1:
++		ret = test_one(&max_blocks);
++		break;
++	case 2:
++		ret = test_two(&max_blocks);
++		break;
++	case 3:
++		ret = test_three(&max_blocks, 0, 0, 0, 0);
++		break;
++	case 4:
++		ret = test_three(&max_blocks, 1, 0, 0, 0);
++		break;
++	case 5:
++		ret = test_three(&max_blocks, 0, 1, 0, 0);
++		break;
++	case 6:
++		ret = test_three(&max_blocks, 1, 1, 0, 0);
++		break;
++	case 7:
++		ret = test_three(&max_blocks, 0, 0, 1, 0);
++		break;
++	case 8:
++		ret = test_three(&max_blocks, 1, 0, 1, 0);
++		break;
++	case 9:
++		ret = test_three(&max_blocks, 0, 1, 1, 0);
++		break;
++	case 10:
++		ret = test_three(&max_blocks, 1, 1, 1, 0);
++		break;
++	case 11:
++		ret = test_three(&max_blocks, 0, 0, 0, 1);
++		break;
++	case 12:
++		ret = test_three(&max_blocks, 0, 1, 0, 1);
++		break;
++	case 13:
++		ret = test_three(&max_blocks, 0, 0, 1, 1);
++		break;
++	case 14:
++		ret = test_three(&max_blocks, 0, 1, 1, 1);
++		break;
++	case 15:
++		ret = test_three(&max_blocks, 1, 0, 0, 1);
++		break;
++	case 16:
++		ret = test_three(&max_blocks, 1, 1, 0, 1);
++		break;
++	case 17:
++		ret = test_three(&max_blocks, 1, 0, 1, 1);
++		break;
++	case 18:
++		ret = test_three(&max_blocks, 1, 1, 1, 1);
++		break;
++	case 19:
++		ret = test_five();
++		break;
++	case 20:
++		ret = test_six();
++		break;
++	case 21:
++		/*
++		 * This is just a perf test, keep moving it down so it's always
++		 * the last test option.
++		 */
++		reboot = 0;
++		ret = test_four(&max_blocks);
++		goto out;
++	default:
++		usage();
++	}
++
++	if (ret)
++		goto out;
++
++	if (fsync(test_fd)) {
++		fprintf(stderr, "Fsync failed, test results will be invalid: "
++			"%d\n", errno);
++		return 1;
++	}
++	if (reboot)
++		system("reboot -fn");
++out:
++	free(buf);
++	close(test_fd);
++	return ret;
++}
+diff --git a/tests/generic/311 b/tests/generic/311
+new file mode 100755
+index 0000000..3f7abe2
+--- /dev/null
++++ b/tests/generic/311
+@@ -0,0 +1,177 @@
++#! /bin/bash
++# FS QA Test No. 311
++#
++#Verify a file systems fsync is working properly.  This won't catch problems
++#with blockdev flushing, but at the very least it makes sure the file system is
++#doing the right thing with fsync logically.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2013 Fusion IO. All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++# creator
++owner=jbacik@fusionio.com
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++status=1	# failure is the default!
++
++_cleanup()
++{
++	$UMOUNT_PROG $SCRATCH_MNT > /dev/null 2>&1
++	$DMSETUP_PROG remove flakey-test > /dev/null 2>&1
++}
++
++_cleanup
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux
++_need_to_be_root
++_require_scratch
++_require_dm_flakey
++
++[ -x $here/src/fsync-tester ] || _notrun "fsync-tester not build"
++
++rm -f $seqres.full
++BLK_DEV_SIZE=`blockdev --getsz $SCRATCH_DEV`
++FLAKEY_DEV=/dev/mapper/flakey-test
++SEED=1
++testfile=$SCRATCH_MNT/$seq.fsync
++
++_mount_flakey()
++{
++	_scratch_options mount
++	_mount -t $FSTYP $SCRATCH_OPTIONS $MOUNT_OPTIONS $SELINUX_MOUNT_OPTIONS $* $FLAKEY_DEV $SCRATCH_MNT
++}
++
++_unmount_flakey()
++{
++	$UMOUNT_PROG $FLAKEY_DEV
++}
++_drop_writes()
++{
++	$DMSETUP_PROG suspend flakey-test
++	if [ $? -ne 0 ]; then
++		echo "failed to suspend flakey-test"
++		_unmount_flakey
++		_cleanup
++		exit
++	fi
++	$DMSETUP_PROG load flakey-test --table "0 $BLK_DEV_SIZE flakey $SCRATCH_DEV 0 0 180 1 drop_writes"
++	if [ $? -ne 0 ]; then
++		echo "failed to load table into flakey-test"
++		_unmount_flakey
++		_cleanup
++		exit
++	fi
++	$DMSETUP_PROG resume flakey-test
++	if [ $? -ne 0 ]; then
++		echo "failed to resumeflakey-test"
++		_unmount_flakey
++		_cleanup
++		exit
++	fi
++}
++
++_resume_writes()
++{
++	$DMSETUP_PROG suspend flakey-test
++	if [ $? -ne 0 ]; then
++		echo "failed to suspend flakey-test"
++		_unmount_flakey
++		_cleanup
++		exit
++	fi
++	$DMSETUP_PROG load flakey-test --table "0 $BLK_DEV_SIZE flakey $SCRATCH_DEV 0 180 0"
++	if [ $? -ne 0 ]; then
++		echo "failed to load table into flakey-test"
++		_unmount_flakey
++		_cleanup
++		exit
++	fi
++	$DMSETUP_PROG resume flakey-test
++	if [ $? -ne 0 ]; then
++		echo "failed to resumeflakey-test"
++		_unmount_flakey
++		_cleanup
++		exit
++	fi
++}
++
++_run_test()
++{
++	test_num=$1
++	extra=""
++
++	[ $2 -eq 1 ] && extra="-d"
++
++	$here/src/fsync-tester -s $SEED -r -t $test_num $extra $testfile
++	if [ $? -ne 0 ]; then
++		_unmount_flakey
++		_cleanup
++		exit
++	fi
++
++	_md5_checksum $testfile
++	_drop_writes
++	_unmount_flakey
++
++	#Ok mount so that any recovery that needs to happen is done
++	_resume_writes
++	_mount_flakey
++	_md5_checksum $testfile
++
++	#Unmount and fsck to make sure we got a valid fs after replay
++	_unmount_flakey
++	_check_scratch_fs 0
++	if [ $? -ne 0 ]; then
++		echo "fs inconsistent"
++		_cleanup
++		exit
++	fi
++	_mount_flakey
++}
++
++_scratch_mkfs >> $seqres.full 2>&1
++
++# Create a basic flakey device that will never error out
++$DMSETUP_PROG create flakey-test --table "0 $BLK_DEV_SIZE flakey $SCRATCH_DEV 0 180 0"
++if [ $? -ne 0 ]; then
++	echo "failed to create flakey device"
++	status=1
++	exit
++fi
++
++_mount_flakey
++
++for i in $(seq 1 20); do
++	echo "Running test $i buffered"
++	_run_test $i 0
++	echo "Running test $i direct"
++	_run_test $i 1
++done
++
++_cleanup
++status=0
++exit
+diff --git a/tests/generic/311.out b/tests/generic/311.out
+new file mode 100644
+index 0000000..59d173b
+--- /dev/null
++++ b/tests/generic/311.out
+@@ -0,0 +1,193 @@
++QA output created by 311
++Running test 1 buffered
++Random seed is 1
++ee6103415276cde95544b11b2675f132
++ee6103415276cde95544b11b2675f132
++Running test 1 direct
++Random seed is 1
++ee6103415276cde95544b11b2675f132
++ee6103415276cde95544b11b2675f132
++Running test 2 buffered
++Random seed is 1
++6ec7dd6da414514b832d9a8fc9098a06
++6ec7dd6da414514b832d9a8fc9098a06
++Running test 2 direct
++Random seed is 1
++6ec7dd6da414514b832d9a8fc9098a06
++6ec7dd6da414514b832d9a8fc9098a06
++Running test 3 buffered
++Random seed is 1
++Size is 1924, blocks is 962
++c80ba7f17988006f10bdc488efa9b372
++c80ba7f17988006f10bdc488efa9b372
++Running test 3 direct
++Random seed is 1
++Size is 1924, blocks is 962
++c80ba7f17988006f10bdc488efa9b372
++c80ba7f17988006f10bdc488efa9b372
++Running test 4 buffered
++Random seed is 1
++Size is 1924, blocks is 962
++c5f2b19e14d0f3e6755cac2986b8366d
++c5f2b19e14d0f3e6755cac2986b8366d
++Running test 4 direct
++Random seed is 1
++Size is 1924, blocks is 962
++c5f2b19e14d0f3e6755cac2986b8366d
++c5f2b19e14d0f3e6755cac2986b8366d
++Running test 5 buffered
++Random seed is 1
++Size is 1924, blocks is 962
++c80ba7f17988006f10bdc488efa9b372
++c80ba7f17988006f10bdc488efa9b372
++Running test 5 direct
++Random seed is 1
++Size is 1924, blocks is 962
++c80ba7f17988006f10bdc488efa9b372
++c80ba7f17988006f10bdc488efa9b372
++Running test 6 buffered
++Random seed is 1
++Size is 1924, blocks is 962
++c5f2b19e14d0f3e6755cac2986b8366d
++c5f2b19e14d0f3e6755cac2986b8366d
++Running test 6 direct
++Random seed is 1
++Size is 1924, blocks is 962
++c5f2b19e14d0f3e6755cac2986b8366d
++c5f2b19e14d0f3e6755cac2986b8366d
++Running test 7 buffered
++Random seed is 1
++Size is 1924, blocks is 962
++c80ba7f17988006f10bdc488efa9b372
++c80ba7f17988006f10bdc488efa9b372
++Running test 7 direct
++Random seed is 1
++Size is 1924, blocks is 962
++c80ba7f17988006f10bdc488efa9b372
++c80ba7f17988006f10bdc488efa9b372
++Running test 8 buffered
++Random seed is 1
++Size is 1924, blocks is 962
++c5f2b19e14d0f3e6755cac2986b8366d
++c5f2b19e14d0f3e6755cac2986b8366d
++Running test 8 direct
++Random seed is 1
++Size is 1924, blocks is 962
++c5f2b19e14d0f3e6755cac2986b8366d
++c5f2b19e14d0f3e6755cac2986b8366d
++Running test 9 buffered
++Random seed is 1
++Size is 1924, blocks is 962
++c80ba7f17988006f10bdc488efa9b372
++c80ba7f17988006f10bdc488efa9b372
++Running test 9 direct
++Random seed is 1
++Size is 1924, blocks is 962
++c80ba7f17988006f10bdc488efa9b372
++c80ba7f17988006f10bdc488efa9b372
++Running test 10 buffered
++Random seed is 1
++Size is 1924, blocks is 962
++c5f2b19e14d0f3e6755cac2986b8366d
++c5f2b19e14d0f3e6755cac2986b8366d
++Running test 10 direct
++Random seed is 1
++Size is 1924, blocks is 962
++c5f2b19e14d0f3e6755cac2986b8366d
++c5f2b19e14d0f3e6755cac2986b8366d
++Running test 11 buffered
++Random seed is 1
++Size is 1924, blocks is 962
++c80ba7f17988006f10bdc488efa9b372
++c80ba7f17988006f10bdc488efa9b372
++Running test 11 direct
++Random seed is 1
++Size is 1924, blocks is 962
++c80ba7f17988006f10bdc488efa9b372
++c80ba7f17988006f10bdc488efa9b372
++Running test 12 buffered
++Random seed is 1
++Size is 1924, blocks is 962
++c80ba7f17988006f10bdc488efa9b372
++c80ba7f17988006f10bdc488efa9b372
++Running test 12 direct
++Random seed is 1
++Size is 1924, blocks is 962
++c80ba7f17988006f10bdc488efa9b372
++c80ba7f17988006f10bdc488efa9b372
++Running test 13 buffered
++Random seed is 1
++Size is 1924, blocks is 962
++c80ba7f17988006f10bdc488efa9b372
++c80ba7f17988006f10bdc488efa9b372
++Running test 13 direct
++Random seed is 1
++Size is 1924, blocks is 962
++c80ba7f17988006f10bdc488efa9b372
++c80ba7f17988006f10bdc488efa9b372
++Running test 14 buffered
++Random seed is 1
++Size is 1924, blocks is 962
++c80ba7f17988006f10bdc488efa9b372
++c80ba7f17988006f10bdc488efa9b372
++Running test 14 direct
++Random seed is 1
++Size is 1924, blocks is 962
++c80ba7f17988006f10bdc488efa9b372
++c80ba7f17988006f10bdc488efa9b372
++Running test 15 buffered
++Random seed is 1
++Size is 1924, blocks is 962
++c5f2b19e14d0f3e6755cac2986b8366d
++c5f2b19e14d0f3e6755cac2986b8366d
++Running test 15 direct
++Random seed is 1
++Size is 1924, blocks is 962
++c5f2b19e14d0f3e6755cac2986b8366d
++c5f2b19e14d0f3e6755cac2986b8366d
++Running test 16 buffered
++Random seed is 1
++Size is 1924, blocks is 962
++c5f2b19e14d0f3e6755cac2986b8366d
++c5f2b19e14d0f3e6755cac2986b8366d
++Running test 16 direct
++Random seed is 1
++Size is 1924, blocks is 962
++c5f2b19e14d0f3e6755cac2986b8366d
++c5f2b19e14d0f3e6755cac2986b8366d
++Running test 17 buffered
++Random seed is 1
++Size is 1924, blocks is 962
++c5f2b19e14d0f3e6755cac2986b8366d
++c5f2b19e14d0f3e6755cac2986b8366d
++Running test 17 direct
++Random seed is 1
++Size is 1924, blocks is 962
++c5f2b19e14d0f3e6755cac2986b8366d
++c5f2b19e14d0f3e6755cac2986b8366d
++Running test 18 buffered
++Random seed is 1
++Size is 1924, blocks is 962
++c5f2b19e14d0f3e6755cac2986b8366d
++c5f2b19e14d0f3e6755cac2986b8366d
++Running test 18 direct
++Random seed is 1
++Size is 1924, blocks is 962
++c5f2b19e14d0f3e6755cac2986b8366d
++c5f2b19e14d0f3e6755cac2986b8366d
++Running test 19 buffered
++Random seed is 1
++9cc0323438bb10f5cc88cfbd5aaf5cfa
++9cc0323438bb10f5cc88cfbd5aaf5cfa
++Running test 19 direct
++Random seed is 1
++9cc0323438bb10f5cc88cfbd5aaf5cfa
++9cc0323438bb10f5cc88cfbd5aaf5cfa
++Running test 20 buffered
++Random seed is 1
++764e24deb80dc89aaecdadce4a656052
++764e24deb80dc89aaecdadce4a656052
++Running test 20 direct
++Random seed is 1
++764e24deb80dc89aaecdadce4a656052
++764e24deb80dc89aaecdadce4a656052
+diff --git a/tests/generic/group b/tests/generic/group
+index eb52833..a0830c1 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -113,3 +113,4 @@
+ 308 auto quick
+ 309 auto quick
+ 310 auto
++311 auto
+-- 
+1.7.7.6
 
 _______________________________________________
 xfs mailing list
