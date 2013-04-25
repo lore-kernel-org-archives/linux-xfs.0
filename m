@@ -1,43 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A07B029DFA
-	for <xfs@oss.sgi.com>; Thu, 25 Apr 2013 17:42:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 80A7930407A
-	for <xfs@oss.sgi.com>; Thu, 25 Apr 2013 15:42:40 -0700 (PDT)
-Received: from e33.co.us.ibm.com (e33.co.us.ibm.com [32.97.110.151]) by
-	cuda.sgi.com with ESMTP id wWolge7jBLHDJvMj (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 25 Apr 2013 15:42:39 -0700 (PDT)
-Received: from /spool/local
-	by e33.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
-	Violators will be prosecuted
-	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
-	Thu, 25 Apr 2013 16:42:38 -0600
-Received: from d03relay03.boulder.ibm.com (d03relay03.boulder.ibm.com
-	[9.17.195.228])
-	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id D61011FF003F
-	for <xfs@oss.sgi.com>; Thu, 25 Apr 2013 16:36:44 -0600 (MDT)
-Received: from d03av06.boulder.ibm.com (d03av06.boulder.ibm.com [9.17.195.245])
-	by d03relay03.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	r3PMflbS113194 for <xfs@oss.sgi.com>; Thu, 25 Apr 2013 16:41:47 -0600
-Received: from d03av06.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av06.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
-	id r3PMiebF010308
-	for <xfs@oss.sgi.com>; Thu, 25 Apr 2013 16:44:40 -0600
-Subject: Re: [PATCH] xfs: shutdown filesystem if xfs_perag_get fails
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-In-Reply-To: <20130423204956.GM10481@dastard>
-References: <20130419204102.736961610@sgi.com>
-	<20130421174107.007313126@sgi.com> <5174603A.8030208@sandeen.net>
-	<51753EDE.6000301@sgi.com> <51754A13.5000808@sandeen.net>
-	<5175532B.3050509@sgi.com> <20130422233033.GK30622@dastard>
-	<51769111.3050103@sgi.com>	<1366732475.3762.32402.camel@chandra-dt.ibm.com>
-	<20130423204956.GM10481@dastard>
-Date: Thu, 25 Apr 2013 17:41:46 -0500
-Message-ID: <1366929706.4098.6.camel@chandra-dt.ibm.com>
-Mime-Version: 1.0
-Reply-To: sekharan@us.ibm.com
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 972C229DFA
+	for <xfs@oss.sgi.com>; Thu, 25 Apr 2013 17:46:03 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 2D2CBAC006
+	for <xfs@oss.sgi.com>; Thu, 25 Apr 2013 15:46:03 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	vpV6TMZ3b7X3u4GY for <xfs@oss.sgi.com>;
+	Thu, 25 Apr 2013 15:46:01 -0700 (PDT)
+Date: Fri, 26 Apr 2013 08:45:56 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfstests 311: test fsync with dm flakey V2
+Message-ID: <20130425224556.GS30622@dastard>
+References: <1366899176-12876-1-git-send-email-jbacik@fusionio.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1366899176-12876-1-git-send-email-jbacik@fusionio.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -50,130 +29,287 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
+To: Josef Bacik <jbacik@fusionio.com>
+Cc: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-In which case something along the lines of
+On Thu, Apr 25, 2013 at 10:12:56AM -0400, Josef Bacik wrote:
+> This test sets up a dm flakey target and then runs my fsync tester I've been
+> using to verify btrfs's fsync() is working properly.  It will create a dm flakey
+> device, mount it, run my test, make the flakey device start dropping writes, and
+> then unmount the fs.  Then we mount it back up and make sure the md5sums match
+> and then run fsck on the device to make sure we got a consistent fs.  I used the
+> output from a run on BTRFS since it's the only one that passes this test
+> properly.  I verified each test manually to make sure they were in fact valid
+> files.  XFS and Ext4 both fail this test in one way or another.  Thanks,
+> 
+> Signed-off-by: Josef Bacik <jbacik@fusionio.com>
+> ---
+> V1->V2
+> -make _test_check_fs take an argument on wether or not to force an exit, this is
+> because if we failed to fsck we'd leave the dmflakey device around which was
+> super annoying.
 
---- 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 3806088..3fb2fa6 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -203,7 +203,13 @@ xfs_perag_get(struct xfs_mount *mp, xfs_agnumber_t
-agno)
-        if (pag) {
-                ASSERT(atomic_read(&pag->pag_ref) >= 0);
-                ref = atomic_inc_return(&pag->pag_ref);
--       }
-+       } else 
-+               /*
-+                * xfs_perag_get() is called with invalid agno,
-+                * which cannot happen. This indicates a problem
-+                * in the calling code.
-+                */
-+               BUG();
-        rcu_read_unlock();
-        trace_xfs_perag_get(mp, agno, ref, _RET_IP_);
-        return pag;
---------
+Why doesn't the standard trap command in the test code catch
+the exit case and run the _cleanup function and unmount it?
 
-would be useful ?. Since we have a NULL pag, we will trip somewhere
-else. At least with this, there is a pointer to the debugger/sysadmin
-about where/what to look for (may be with more valuable/correct comment
-than above).
+FWIW, if this change is actually necessary, then it needs to be in a
+separate patch.
 
-On Wed, 2013-04-24 at 06:49 +1000, Dave Chinner wrote:
-> On Tue, Apr 23, 2013 at 10:54:35AM -0500, Chandra Seetharaman wrote:
-> > On Tue, 2013-04-23 at 08:48 -0500, Mark Tinguely wrote:
-> > > On 04/22/13 18:30, Dave Chinner wrote:
-> > > > On Mon, Apr 22, 2013 at 10:11:39AM -0500, Mark Tinguely wrote:
-> > > >>   #6 [ffff880135603980] _xfs_buf_find at ffffffffa01a7fef [xfs]
-> > > >>   #7 [ffff8801356039f0] xfs_buf_get at ffffffffa01a824a [xfs]
-> > > >>   #8 [ffff880135603a30] xfs_buf_read at ffffffffa01a83a4 [xfs]
-> > > >>   #9 [ffff880135603a60] xlog_recover_inode_pass2 at ffffffffa0193629 [xfs]
-> > > >
-> > > > So it's the same problem as this bug fix addresses:
-> > > >
-> > > > commit 10616b806d1d7835b1d23b8d75ef638f92cb98b6
-> > > > Author: Dave Chinner<dchinner@redhat.com>
-> > > > Date:   Mon Jan 21 23:53:52 2013 +1100
-> > > >
-> > > >      xfs: fix _xfs_buf_find oops on blocks beyond the filesystem end
-> > > >
-> > > >      When _xfs_buf_find is passed an out of range address, it will fail
-> > > >      to find a relevant struct xfs_perag and oops with a null
-> > > >      dereference. This can happen when trying to walk a filesystem with a
-> > > >      metadata inode that has a partially corrupted extent map (i.e. the
-> > > >      block number returned is corrupt, but is otherwise intact) and we
-> > > >      try to read from the corrupted block address.
-> > > >
-> > > >      In this case, just fail the lookup. If it is readahead being issued,
-> > > >      it will simply not be done, but if it is real read that fails we
-> > > >      will get an error being reported.  Ideally this case should result
-> > > >      in an EFSCORRUPTED error being reported, but we cannot return an
-> > > >      error through xfs_buf_read() or xfs_buf_get() so this lookup failure
-> > > >      may result in ENOMEM or EIO errors being reported instead.
-> > > >
-> > > >      Signed-off-by: Dave Chinner<dchinner@redhat.com>
-> > > >      Reviewed-by: Brian Foster<bfoster@redhat.com>
-> > > >      Reviewed-by: Ben Myers<bpm@sgi.com>
-> > > >      Signed-off-by: Ben Myers<bpm@sgi.com>
-> > > >
-> > > >> The recovery value is bad and is a problem on its own, but XFS does
-> > > >> not verify the validity of ag number when doing a xfs_perag_get().
-> 
-> I'd be interested to know why the inode in recovery is bad - is this
-> on a kernel that CRCs the log records? Or a result of some other bug
-> or hardware corruption? i.e. xfs_perag_get is not the problem here,
-> it's a corruption of a trusted inode number and we failed to detect
-> that corruption....
-> 
-> > > > Right, that's what the above fix does, but it can't be done on older
-> > > > kernels because grwofs relies on being able to get buffers beyond
-> > > > the existing filesystem limits...
-> > > 
-> > > Thank-you, that make sense.
-> > > 
-> > > I still do not like assuming xfs_perag_get() will always return a valid 
-> > > perag pointer.
-> > 
-> > I second that.
-> > 
-> > Is there any reason we should _not_ check the return value from
-> > xfs_perag_get() for NULL ?
-> 
-> Yes. The input AG should already be bounds checked before the perag
-> is looked up. If we are asking for an invalid AG, then the bug is not
-> in xfs_perag_get(), it is in the code that is calling it. i.e. error
-> checking the xfs_perag_get() function is a band-aid for improper
-> object validation, not a solution to the problem.
-> 
-> That is, this function was designed to be extremely low overhead and
-> only to be handed validated data. If it is only handed validated
-> data, then it is guaranteed to return a valid per-ag structure,
-> and therefore error checking the return value is not necessary.
-> 
-> Because xfs_perag_get is not designed to handle untrusted data it is
-> up to the calling code to first validate the AGNO that is passed to
-> xfs_perag_get(). If we aren't first validating the object that the
-> AGNO is derived from, then the calling code has failed to validate
-> it's inputs sufficiently, and lots of other things can go wrong (not
-> just the xfs_perag_get() call).
-> 
-> For example, the above commit is a catchall for bad block numbers
-> being looked up in extent records. It was a quick fix, not a
-> targeted fix for the reported problems. For bad block numbers in
-> extents, we should be doing is validating block numbers when they
-> are looked up are within the filesystem bounds (eg. inside
-> xfs_bmapi_read/xfs_bmapi_write) so that a bad block number is caught
-> at lookup time, not at IO time. We only do that for extents that
-> point to block 0.
-> 
-> Cheers,
-> 
-> Dave.
+> -fixed the drop caches bug (thanks Zach!)
+> -fixed the output since XFS has a bug with that particular test, it leaves a 0
+> length file behind which isn't right. 
 
+What test, what bug, and why have you changed the test to work
+around it?
+
+.....
+> @@ -478,7 +485,7 @@ _scratch_mkfs_ext4()
+>  {
+>  	local tmp_dir=/tmp/
+>  
+> -	/sbin/mkfs -t $FSTYP -- $MKFS_OPTIONS $* $SCRATCH_DEV \
+> +	/sbin/mkfs -t $FSTYP -- -F $MKFS_OPTIONS $* $SCRATCH_DEV \
+>  			2>$tmp_dir.mkfserr 1>$tmp_dir.mkfsstd
+>  	local mkfs_status=$?
+
+That seems like an unrelated bug fix?
+
+> @@ -1041,6 +1048,27 @@ _require_command()
+>      [ -n "$1" -a -x "$1" ] || _notrun "$_cmd utility required, skipped this test"
+>  }
+>  
+> +# this test requires the device mapper flakey target
+> +#
+> +_require_dm_flakey()
+> +{
+> +    if [ "$HOSTOS" != "Linux" ]
+> +    then
+> +	_notrun "This test requires linux for dm flakey support"
+> +    fi
+
+No need to check this - any test that uses dm-flakey should have a
+"_supported_os Linux" line in it.
+
+> +    $DMSETUP_PROG targets | grep flakey >/dev/null 2>&1
+> +    if [ $? -eq 0 ]
+> +    then
+> +	:
+> +    else
+> +	_notrun "This test requires dm flakey support"
+> +    fi
+
+[ $? -ne 0 ] && _notrun "This test requires dm flakey support"
+
+<snip all the "force exit" mess>
+
+<snip the fsync-tester.c code>
+
+FWIW, rebooting the machine at the end of the test should not be the
+default behaviour of fsync-tester.c...
+
+> diff --git a/tests/generic/311 b/tests/generic/311
+> new file mode 100755
+> index 0000000..3f7abe2
+> --- /dev/null
+> +++ b/tests/generic/311
+> @@ -0,0 +1,177 @@
+> +#! /bin/bash
+> +# FS QA Test No. 311
+> +#
+> +#Verify a file systems fsync is working properly.  This won't catch problems
+> +#with blockdev flushing, but at the very least it makes sure the file system is
+> +#doing the right thing with fsync logically.
+
+How is this different to any of the other tests that test fsync() is
+working properly? Please describe what aspect of fsync is being
+tested....
+
+> +# creator
+> +owner=jbacik@fusionio.com
+
+We don't need to add these any more.
+
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +status=1	# failure is the default!
+> +
+> +_cleanup()
+> +{
+> +	$UMOUNT_PROG $SCRATCH_MNT > /dev/null 2>&1
+> +	$DMSETUP_PROG remove flakey-test > /dev/null 2>&1
+> +}
+> +
+> +_cleanup
+
+If we are called with a mounted scratch device, then something has
+gone badly wrong somewhere else - tests *always* start with
+unmounted test and scratch devices.
+
+What I suspect has gone wrong here is that you've removed the line:
+
+trap "_cleanup; exit \$status" 0 1 2 3 15
+
+That will trigger the cleanup function whenever the test exits. I'd
+say this is the cause of the problem you have that has caused you to
+add the "force exit" crap to the filesytsem check functions...
+
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +
+> +# real QA test starts here
+> +_supported_fs generic
+> +_supported_os Linux
+> +_need_to_be_root
+> +_require_scratch
+> +_require_dm_flakey
+> +
+> +[ -x $here/src/fsync-tester ] || _notrun "fsync-tester not build"
+> +
+> +rm -f $seqres.full
+> +BLK_DEV_SIZE=`blockdev --getsz $SCRATCH_DEV`
+> +FLAKEY_DEV=/dev/mapper/flakey-test
+> +SEED=1
+> +testfile=$SCRATCH_MNT/$seq.fsync
+> +
+> +_mount_flakey()
+> +{
+> +	_scratch_options mount
+> +	_mount -t $FSTYP $SCRATCH_OPTIONS $MOUNT_OPTIONS $SELINUX_MOUNT_OPTIONS $* $FLAKEY_DEV $SCRATCH_MNT
+> +}
+
+Why do you need to open code all this? We typically don't do
+this for loopback device mounts, so I'm not sure it is necessary
+here. Indeed, if you are testing on the flakey device, you don't
+want XFS using external log or realtime devices, so really just
+something like:
+
+mount -t $FSTYP $MOUNT_OPTIONS $FLAKEY_DEV $SCRATCH_MNT
+
+will suffice...
+
+> +_unmount_flakey()
+> +{
+> +	$UMOUNT_PROG $FLAKEY_DEV
+> +}
+
+Empty line after this needed. FWIW, why use $FLAKEY_DEV here and not
+$SCRATCH_MNT like in the cleanup function?
+
+
+> +_drop_writes()
+> +{
+> +	$DMSETUP_PROG suspend flakey-test
+
+That freezes the filesystem, right?
+
+> +	if [ $? -ne 0 ]; then
+> +		echo "failed to suspend flakey-test"
+> +		_unmount_flakey
+> +		_cleanup
+> +		exit
+> +	fi
+
+With a properly functioning trap that calls _cleanup(), this can be
+replaced with:
+
+	[ $? -ne 0 ] && _fatal "failed to suspend flakey-test"
+
+Same for all the other error cases.
+
+> +	$DMSETUP_PROG load flakey-test --table "0 $BLK_DEV_SIZE flakey $SCRATCH_DEV 0 0 180 1 drop_writes"
+
+Given that there are 2 different table configurations, perhaps
+defining them as variables will make it more obvious. e.g.
+
+FLAKEY_TABLE="0 $BLK_DEV_SIZE flakey $SCRATCH_DEV 0 0 180 0"
+FLAKEY_WRITE_TABLE="0 $BLK_DEV_SIZE flakey $SCRATCH_DEV 0 0 180 1 drop_writes"
+
+> +_run_test()
+> +{
+> +	test_num=$1
+> +	extra=""
+> +
+> +	[ $2 -eq 1 ] && extra="-d"
+
+I'm assuming that $2 == 1 means "use direct IO" given it is not
+actually documented? Perhaps "extra" is not such a good name?
+
+> +	$here/src/fsync-tester -s $SEED -r -t $test_num $extra $testfile
+> +	if [ $? -ne 0 ]; then
+> +		_unmount_flakey
+> +		_cleanup
+> +		exit
+> +	fi
+> +
+> +	_md5_checksum $testfile
+> +	_drop_writes
+> +	_unmount_flakey
+
+So, _drop_writes suspends the dm-flakey device, freezes the
+filesystem, turns off writes then thaws the filesystem, right?
+
+If so, doesn't that mean you're not actually testing fsync() as the
+freeze will effectively sync the entire filesystem before you start
+dropping writes?
+
+I can see why you want to stop unmount from writing back metadata to
+simulate a crash, but if you've already frozen the filesystem then
+writeback has already occurred before you stop the writes. So I
+can't see how this is actually testing fsync - what it appears to be
+testing is the fileystem freeze code...
+
+[ This is precisely the issue that XFS shutdown ioctls deal with to
+trigger an immediate forced shutdown of the filesystem that prevents
+*any* further writes from being issued by the filesystem - no sync
+operations get in the way and change the state of the filesystem
+after then fsync call, so we know that what is on disk is what was
+written by the sync/fsync calls being tested.
+
+This is how we test sync/fsync in other XFS tests (e.g.
+xfs/137-140), and this is the reason why us XFS people have
+suggested that other filesystems should implement the ioctls for
+this functionality rather than try to invent new ways of trying
+to stop filesystems from writing back dirty metadata for fsync/sync
+testing....
+
+Besides, if a corruption is detected, you need a method of stopping
+all dirty metadata from being written back in the filesystem to
+prevent propagation of the corruption.  These ioctls should just be
+an interface into that mechanism. ]
+
+> +_cleanup
+> +status=0
+> +exit
+
+No need to call _cleanup if you have a functioning trap. And, more
+importantly, the only reason that status variable exists is so that
+the trap function can ensure a correct exit value from the test.....
+
+> diff --git a/tests/generic/group b/tests/generic/group
+> index eb52833..a0830c1 100644
+> --- a/tests/generic/group
+> +++ b/tests/generic/group
+> @@ -113,3 +113,4 @@
+>  308 auto quick
+>  309 auto quick
+>  310 auto
+> +311 auto
+
+How long does this take to run? It seems like the quick group would
+be appropriate if it takes less than a minute. Also, fsync tests
+fall under the category of "metadata" and "log", so they probably
+should be added, too.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
