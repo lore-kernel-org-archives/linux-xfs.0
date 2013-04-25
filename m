@@ -1,27 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 13F1E29E03
+	by oss.sgi.com (Postfix) with ESMTP id 3581329DFA
 	for <xfs@oss.sgi.com>; Thu, 25 Apr 2013 10:40:43 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B3A38AC008
+	by relay3.corp.sgi.com (Postfix) with ESMTP id BF5B8AC00B
 	for <xfs@oss.sgi.com>; Thu, 25 Apr 2013 08:40:42 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id EKpE2R7CgSPhJ9VV for
+	cuda.sgi.com with ESMTP id ep8GKd409R8hJECo for
 	<xfs@oss.sgi.com>; Thu, 25 Apr 2013 08:40:42 -0700 (PDT)
-Received: from int-mx12.intmail.prod.int.phx2.redhat.com
-	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r3PFefdW023072
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r3PFef9h001412
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
 	for <xfs@oss.sgi.com>; Thu, 25 Apr 2013 11:40:41 -0400
 Received: from bfoster.bfoster (dhcp-189-135.bos.redhat.com [10.16.189.135])
-	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id r3PFef6Q025763
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id r3PFefw9023265
 	for <xfs@oss.sgi.com>; Thu, 25 Apr 2013 11:40:41 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 1/2] xfs: tracepoints for xfs_iunlink() and
+Subject: [PATCH 2/2] xfs: enhance warning on xfs_imap() failure in
 	xfs_iunlink_remove()
-Date: Thu, 25 Apr 2013 11:41:29 -0400
-Message-Id: <1366904490-46821-2-git-send-email-bfoster@redhat.com>
+Date: Thu, 25 Apr 2013 11:41:30 -0400
+Message-Id: <1366904490-46821-3-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1366904490-46821-1-git-send-email-bfoster@redhat.com>
 References: <1366904490-46821-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,51 +39,34 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Add tracepoints for xfs_iunlink() and xfs_iunlink_remove(). These
-tracepoints are useful for debugging inode link (and unlinked list
-issues).
+From: Eric Sandeen <sandeen@redhat.com>
+
+Include the global ino, ag number and agino in the warning message
+emitted should xfs_imap() fail in the xfs_iunlink_remove() code
+path.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_inode.c |    4 ++++
- fs/xfs/xfs_trace.h |    2 ++
- 2 files changed, 6 insertions(+), 0 deletions(-)
+ fs/xfs/xfs_inode.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 4f20165..c22f980 100644
+index c22f980..a4fe989 100644
 --- a/fs/xfs/xfs_inode.c
 +++ b/fs/xfs/xfs_inode.c
-@@ -1519,6 +1519,8 @@ xfs_iunlink(
- 
- 	mp = tp->t_mountp;
- 
-+	trace_xfs_iunlink(ip);
+@@ -1678,8 +1678,10 @@ xfs_iunlink_remove(
+ 			error = xfs_imap(mp, tp, next_ino, &imap, 0);
+ 			if (error) {
+ 				xfs_warn(mp,
+-	"%s: xfs_imap returned error %d.",
+-					 __func__, error);
++					"%s: xfs_imap() returned error %d "
++					"for inode 0x%llx ag %d agino 0x%x",
++					__func__, error, ip->i_ino, agno, agino);
 +
- 	/*
- 	 * Get the agi buffer first.  It ensures lock ordering
- 	 * on the list.
-@@ -1598,6 +1600,8 @@ xfs_iunlink_remove(
- 	mp = tp->t_mountp;
- 	agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
+ 				return error;
+ 			}
  
-+	trace_xfs_iunlink_remove(ip);
-+
- 	/*
- 	 * Get the agi buffer first.  It ensures lock ordering
- 	 * on the list.
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index aa4db33..43bd572 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -586,6 +586,8 @@ DEFINE_INODE_EVENT(xfs_file_fsync);
- DEFINE_INODE_EVENT(xfs_destroy_inode);
- DEFINE_INODE_EVENT(xfs_evict_inode);
- DEFINE_INODE_EVENT(xfs_update_time);
-+DEFINE_INODE_EVENT(xfs_iunlink);
-+DEFINE_INODE_EVENT(xfs_iunlink_remove);
- 
- DEFINE_INODE_EVENT(xfs_dquot_dqalloc);
- DEFINE_INODE_EVENT(xfs_dquot_dqdetach);
 -- 
 1.7.7.6
 
