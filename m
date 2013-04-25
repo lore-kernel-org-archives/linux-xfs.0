@@ -1,14 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DCC2329DFA
-	for <xfs@oss.sgi.com>; Thu, 25 Apr 2013 11:37:33 -0500 (CDT)
-Message-ID: <51795BD1.8020003@sgi.com>
-Date: Thu, 25 Apr 2013 11:37:37 -0500
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 0D68A29DFA
+	for <xfs@oss.sgi.com>; Thu, 25 Apr 2013 11:43:34 -0500 (CDT)
+Message-ID: <51795D39.70000@sgi.com>
+Date: Thu, 25 Apr 2013 11:43:37 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH TARBALL, DEV ONLY] xfsprogs: metadata CRC support V2
-References: <20130412145555.GF30622@dastard>
-In-Reply-To: <20130412145555.GF30622@dastard>
+Subject: Re: [PATCH] xfs: xfs: fallback to vmalloc for large buffers in
+	xfs_compat_attrlist_by_handle
+References: <515CB2C1.1050109@tlinx.org> <20130404035237.GA12011@dastard>
+	<515D0A09.5030808@sandeen.net> <51795612.3080806@sandeen.net>
+In-Reply-To: <51795612.3080806@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,62 +23,30 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On 04/12/13 09:55, Dave Chinner wrote:
-> Hi folks,
+On 04/25/13 11:13, Eric Sandeen wrote:
+> Shamelessly copied from dchinner's:
+> ad650f5b xfs: fallback to vmalloc for large buffers in xfs_attrmulti_attr_get
 >
-> I've attached a tarball containing the patch series that adds
-> metadata CRC support to xfsprogs. It is still very much a work in
-> progress, but is sufficient to start running xfstests on CRC enable
-> filesystems.
+> xfsdump uses a large buffer for extended attributes, which has a
+> kmalloc'd shadow buffer in the kernel. This can fail after the
+> system has been running for some time as it is a high order
+> allocation. Add a fallback to vmalloc so that it doesn't require
+> contiguous memory and so won't randomly fail while xfsdump is
+> running.
 >
-> THere is much missing functionality, especially with respect to
-> directly/attribute modifications. Only mkfs and xfs_repair have been
-> updated to explicitly support CRC on directory/sttribute blocks,
-> though all the other tools will stil run the result might be a
-> little unpredictable.
+> This was done for xfs_attrlist_by_handle but
+> xfs_compat_attrlist_by_handle (the 32-bit version) needs the same
+> attention.
 >
-> The patch series is as follows:
->
-> Dave Chinner (26):
->        xfsprogs: sync code to current kernel code
->        xfsprogs: update libxfs to 3.9-rc1 + xfsdev
->        xfsprogs: add CRC32c infrastructure
->        xfsprogs: updata libxlog to current kernel code
->        libxfs: add crc format changes to generic btrees
->        xfsprogs: add crc format chagnes to ag headers
->        libxfs: change quota buffer formats
->        libxfs: add version 3 inode support
->        libxfs: add support for crc headers on remote symlinks
->        xfs: add CRC checks to block format directory blocks
->        xfs: add CRC checking to dir2 free blocks
->        xfs: add CRC checking to dir2 data blocks
->        xfs: add CRC checking to dir2 leaf blocks
->        xfs: shortform directory offsets change for dir3 format
->        xfs: add CRCs to dir2/da node blocks
->        xfs: add CRCs to attr leaf blocks
->        xfs: split remote attribute code out
->        xfs: add CRC protection to remote attributes
->        xfs: add buffer types to directory and attribute buffers
->        xfs: buffer type overruns blf_flags field
->        xfs: add CRC checks to the superblock
->        xfs: implement extended feature masks
->        xfsprogs: introduce CRC support into mkfs.xfs
->        xfsprogs: add crc format support to repair
->        xfsprogs: add crc format support to db
->        xfs_repair: update for dir/attr crc format changes.
+> Signed-off-by: Eric Sandeen<sandeen@redhat.com>
+> ---
 
-The patch "logprint-agi-dump" needs a commit message and Signed-off-by.
+Looks shamelessly good.
 
-The patch "debug" be removed (empty) from series and directory.
-
-Thanks,
-
---Mark.
-
-
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
