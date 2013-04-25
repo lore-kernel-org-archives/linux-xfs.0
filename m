@@ -1,15 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D7B6529DFA
-	for <xfs@oss.sgi.com>; Thu, 25 Apr 2013 11:15:36 -0500 (CDT)
-Message-ID: <517956B4.10200@sgi.com>
-Date: Thu, 25 Apr 2013 11:15:48 -0500
-From: Rich Johnston <rjohnston@sgi.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id DCC2329DFA
+	for <xfs@oss.sgi.com>; Thu, 25 Apr 2013 11:37:33 -0500 (CDT)
+Message-ID: <51795BD1.8020003@sgi.com>
+Date: Thu, 25 Apr 2013 11:37:37 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 3/3 V2] xfsprogs: Fix up usage() errors and omissions
-References: <5175BB8F.5090604@sandeen.net> <5175BCBE.8040306@sandeen.net>
-	<517948D2.7070706@sandeen.net>
-In-Reply-To: <517948D2.7070706@sandeen.net>
+Subject: Re: [PATCH TARBALL, DEV ONLY] xfsprogs: metadata CRC support V2
+References: <20130412145555.GF30622@dastard>
+In-Reply-To: <20130412145555.GF30622@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,18 +21,61 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Thanks Eric, this has been committed.
+On 04/12/13 09:55, Dave Chinner wrote:
+> Hi folks,
+>
+> I've attached a tarball containing the patch series that adds
+> metadata CRC support to xfsprogs. It is still very much a work in
+> progress, but is sufficient to start running xfstests on CRC enable
+> filesystems.
+>
+> THere is much missing functionality, especially with respect to
+> directly/attribute modifications. Only mkfs and xfs_repair have been
+> updated to explicitly support CRC on directory/sttribute blocks,
+> though all the other tools will stil run the result might be a
+> little unpredictable.
+>
+> The patch series is as follows:
+>
+> Dave Chinner (26):
+>        xfsprogs: sync code to current kernel code
+>        xfsprogs: update libxfs to 3.9-rc1 + xfsdev
+>        xfsprogs: add CRC32c infrastructure
+>        xfsprogs: updata libxlog to current kernel code
+>        libxfs: add crc format changes to generic btrees
+>        xfsprogs: add crc format chagnes to ag headers
+>        libxfs: change quota buffer formats
+>        libxfs: add version 3 inode support
+>        libxfs: add support for crc headers on remote symlinks
+>        xfs: add CRC checks to block format directory blocks
+>        xfs: add CRC checking to dir2 free blocks
+>        xfs: add CRC checking to dir2 data blocks
+>        xfs: add CRC checking to dir2 leaf blocks
+>        xfs: shortform directory offsets change for dir3 format
+>        xfs: add CRCs to dir2/da node blocks
+>        xfs: add CRCs to attr leaf blocks
+>        xfs: split remote attribute code out
+>        xfs: add CRC protection to remote attributes
+>        xfs: add buffer types to directory and attribute buffers
+>        xfs: buffer type overruns blf_flags field
+>        xfs: add CRC checks to the superblock
+>        xfs: implement extended feature masks
+>        xfsprogs: introduce CRC support into mkfs.xfs
+>        xfsprogs: add crc format support to repair
+>        xfsprogs: add crc format support to db
+>        xfs_repair: update for dir/attr crc format changes.
 
---Rich
+The patch "logprint-agi-dump" needs a commit message and Signed-off-by.
 
-commit 30626ef667746c51a6b93e21fc95eb5607c0002a
-Author: Eric Sandeen <sandeen@sandeen.net>
-Date:   Thu Apr 25 15:16:34 2013 +0000
+The patch "debug" be removed (empty) from series and directory.
 
-     xfsprogs: Fix up usage() errors and omissions
+Thanks,
+
+--Mark.
+
 
 
 _______________________________________________
