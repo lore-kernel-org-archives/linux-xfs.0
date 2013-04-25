@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 72A6F29E09
-	for <xfs@oss.sgi.com>; Thu, 25 Apr 2013 11:13:14 -0500 (CDT)
-Message-ID: <51795629.1000708@sgi.com>
-Date: Thu, 25 Apr 2013 11:13:29 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D7B6529DFA
+	for <xfs@oss.sgi.com>; Thu, 25 Apr 2013 11:15:36 -0500 (CDT)
+Message-ID: <517956B4.10200@sgi.com>
+Date: Thu, 25 Apr 2013 11:15:48 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
 Subject: Re: [PATCH 3/3 V2] xfsprogs: Fix up usage() errors and omissions
@@ -25,27 +25,16 @@ Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs-oss <xfs@oss.sgi.com>
 
-On 04/25/2013 10:16 AM, Eric Sandeen wrote:
-> Add missing options and remove invalid options in usage() output
-> strings.
->
-> * Add -V to several usage() strings
-> * Remove deprecated/invalid -n and -s otions from xfs_fsr's usage
-> * Remove invalid -I option from xfs_growfs's usage
-> * Add -n (O_NONBLOCK) option to xfs_io's usage
-> * Add -e (exit on error) option to xfs_logprint's usage
-> * Remove invalid -b option from xfs_mdrestore's usage
-> * Add -N (no-op), -K (no discard), and -f (force) to mkfs.xfs's usage
-> * Add -x (expert) option to xfs_quota's usage
->
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
->
-> V2: address Rich's nitpicky review ;)  (i.e. fix good stuff)
+Thanks Eric, this has been committed.
 
-Thanks again for V2.  Looks good.
+--Rich
 
-Reviewed-by: Rich Johnston <rjohnston@sgi.com>
+commit 30626ef667746c51a6b93e21fc95eb5607c0002a
+Author: Eric Sandeen <sandeen@sandeen.net>
+Date:   Thu Apr 25 15:16:34 2013 +0000
+
+     xfsprogs: Fix up usage() errors and omissions
+
 
 _______________________________________________
 xfs mailing list
