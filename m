@@ -1,30 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D75BD7CBE
-	for <xfs@oss.sgi.com>; Fri, 26 Apr 2013 14:31:05 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C09F88F8033
-	for <xfs@oss.sgi.com>; Fri, 26 Apr 2013 12:31:05 -0700 (PDT)
-Received: from dkim1.fusionio.com (dkim1.fusionio.com [66.114.96.53]) by
-	cuda.sgi.com with ESMTP id 21pioygdjNMRBVFR (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 26 Apr 2013 12:31:04 -0700 (PDT)
-Received: from mx1.fusionio.com (unknown [10.101.1.160])
-	by dkim1.fusionio.com (Postfix) with ESMTP id 1689C7C0691
-	for <xfs@oss.sgi.com>; Fri, 26 Apr 2013 13:31:04 -0600 (MDT)
-Date: Fri, 26 Apr 2013 15:31:01 -0400
-From: Josef Bacik <jbacik@fusionio.com>
-Subject: Re: [BULK]  Re: [PATCH] xfstests 311: test fsync with dm flakey V2
-Message-ID: <20130426193101.GR2631@localhost.localdomain>
-References: <1366899176-12876-1-git-send-email-jbacik@fusionio.com>
-	<20130425224556.GS30622@dastard>
-	<20130426002404.GN2631@localhost.localdomain>
-	<20130426010829.GV30622@dastard>
-	<20130426013237.GO2631@localhost.localdomain>
-	<20130426021214.GX30622@dastard>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 14D7F7CBE
+	for <xfs@oss.sgi.com>; Fri, 26 Apr 2013 15:18:56 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8A645AC005
+	for <xfs@oss.sgi.com>; Fri, 26 Apr 2013 13:18:55 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id KcVKBJyfUn5zCpNn for
+	<xfs@oss.sgi.com>; Fri, 26 Apr 2013 13:18:54 -0700 (PDT)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r3QKIr8I002377
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Fri, 26 Apr 2013 16:18:54 -0400
+Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id r3QKIqTv003525
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Fri, 26 Apr 2013 16:18:53 -0400
+Message-ID: <517AE12C.2050902@redhat.com>
+Date: Fri, 26 Apr 2013 15:18:52 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130426021214.GX30622@dastard>
+Subject: [PATCH] xfstests shared/298: various fixes
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,83 +36,63 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, Josef Bacik <JBacik@fusionio.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Apr 25, 2013 at 08:12:14PM -0600, Dave Chinner wrote:
-> On Thu, Apr 25, 2013 at 09:32:37PM -0400, Josef Bacik wrote:
-> > On Thu, Apr 25, 2013 at 07:08:29PM -0600, Dave Chinner wrote:
-> > > On Thu, Apr 25, 2013 at 08:24:04PM -0400, Josef Bacik wrote:
-> > > > On Thu, Apr 25, 2013 at 04:45:56PM -0600, Dave Chinner wrote:
-> > > > > On Thu, Apr 25, 2013 at 10:12:56AM -0400, Josef Bacik wrote:
-> > > .....
-> > > > > > +	$here/src/fsync-tester -s $SEED -r -t $test_num $extra $testfile
-> > > > > > +	if [ $? -ne 0 ]; then
-> > > > > > +		_unmount_flakey
-> > > > > > +		_cleanup
-> > > > > > +		exit
-> > > > > > +	fi
-> > > > > > +
-> > > > > > +	_md5_checksum $testfile
-> > > > > > +	_drop_writes
-> > > > > > +	_unmount_flakey
-> > > > > 
-> > > > > So, _drop_writes suspends the dm-flakey device, freezes the
-> > > > > filesystem, turns off writes then thaws the filesystem, right?
-> > > > >
-> > > > > If so, doesn't that mean you're not actually testing fsync() as the
-> > > > > freeze will effectively sync the entire filesystem before you start
-> > > > > dropping writes?
-> > > > > 
-> > > > > I can see why you want to stop unmount from writing back metadata to
-> > > > > simulate a crash, but if you've already frozen the filesystem then
-> > > > > writeback has already occurred before you stop the writes. So I
-> > > > > can't see how this is actually testing fsync - what it appears to be
-> > > > > testing is the fileystem freeze code...
-> > > > > 
-> > > > > [ This is precisely the issue that XFS shutdown ioctls deal with to
-> > > > > trigger an immediate forced shutdown of the filesystem that prevents
-> > > > > *any* further writes from being issued by the filesystem - no sync
-> > > > > operations get in the way and change the state of the filesystem
-> > > > > after then fsync call, so we know that what is on disk is what was
-> > > > > written by the sync/fsync calls being tested.
-> > > > > 
-> > > > > This is how we test sync/fsync in other XFS tests (e.g.
-> > > > > xfs/137-140), and this is the reason why us XFS people have
-> > > > > suggested that other filesystems should implement the ioctls for
-> > > > > this functionality rather than try to invent new ways of trying
-> > > > > to stop filesystems from writing back dirty metadata for fsync/sync
-> > > > > testing....
-> > > > > 
-> > > > > Besides, if a corruption is detected, you need a method of stopping
-> > > > > all dirty metadata from being written back in the filesystem to
-> > > > > prevent propagation of the corruption.  These ioctls should just be
-> > > > > an interface into that mechanism. ]
-> > > > >
-> > > > 
-> > > > So I need to look at what this does.  I don't think it freezes the file system,
-> > > 
-> > > `dmsetup suspend` ends up in dm_suspend(). This calls lock_fs(), which
-> > > calls freeze_bdev()....
-> > > 
-> > > If you do `dmsetup suspend --nolockfs` then it won't freeze the
-> > > filesystem during the suspend...
-> > >
-> > 
-> > Ok so I think I'll just make this test do all the iterations of the fsync tester
-> > with and without --nolockfs, since without --nolockfs I'm still seeing problems,
-> > does that sound reasonable?
-> 
-> Sounds like a fine plan to me ;)
-> 
+fix shared/298:
 
-Btw its test 19 O_DIRECT that gives me a 0 length file, the buffered case is
-fine.  The test just does a randomly sized sub-block sized write over and over
-again for a random number of times and fsync()'s in there randomly.  The number
-is 3072 because that's the largest inline extent we can have in btrfs, I added
-it specifically to test our inline extent logging.  Thanks,
+* don't include common/config, not needed and breaks
+  stuff when $SCRATCH_DEV_POOL is defined:
+    Error: $SCRATCH_DEV should be unset when $SCRATCH_DEV_POOL is set
+* make sure xfs_io has fiemap, we'll need it
+* add -F to the xfs_io invocation, again
+* ignore ENOSPC errors from "garbage" loop; the only goal
+  is to fill it, ENOSPC doesn't matter.
 
-Josef
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+Wondering if we should just add " -F" to $XFS_IO_PROG . . . 
+
+diff --git a/tests/shared/298 b/tests/shared/298
+index f1a3432..e2eddda 100755
+--- a/tests/shared/298
++++ b/tests/shared/298
+@@ -28,12 +28,12 @@ echo "QA output created by $seq"
+ status=1	# failure is the default!
+ trap "_cleanup; exit \$status" 0 1 2 3 15
+ 
+-. common/config
+ . common/rc
+ 
+ _supported_fs ext4 xfs
+ _supported_os Linux
+ _require_fstrim
++_require_xfs_io_fiemap
+ _require_fs_space $TEST_DIR 307200
+ [ "$FSTYP" = "ext4" ] && _require_dumpe2fs
+ 
+@@ -49,7 +49,7 @@ _cleanup()
+ 
+ get_holes()
+ {
+-	$XFS_IO_PROG -c fiemap $1 | grep hole | $SED_PROG 's/.*\[\(.*\)\.\.\(.*\)\].*/\1 \2/'
++	$XFS_IO_PROG -F -c fiemap $1 | grep hole | $SED_PROG 's/.*\[\(.*\)\.\.\(.*\)\].*/\1 \2/'
+ }
+ 
+ get_free_sectors()
+@@ -136,9 +136,10 @@ $MKFS_PROG -t $FSTYP $MKFS_OPTIONS $loop_dev &> /dev/null
+ $MOUNT_PROG $loop_dev $loop_mnt
+ 
+ echo -n "Generating garbage on loop..."
++# Goal is to fill it up, ignore any errors.
+ for i in `seq 1 10`; do
+-	mkdir $loop_mnt/$i
+-	cp -r $here/* $loop_mnt/$i
++	mkdir $loop_mnt/$i &> /dev/null
++	cp -r $here/* $loop_mnt/$i &> /dev/null
+ done
+ 
+ # Get reference fiemap, this can contain i.e. uninitialized inode table
 
 _______________________________________________
 xfs mailing list
