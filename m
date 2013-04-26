@@ -1,24 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1291429DFA
-	for <xfs@oss.sgi.com>; Fri, 26 Apr 2013 01:12:37 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 3844029DFA
+	for <xfs@oss.sgi.com>; Fri, 26 Apr 2013 03:35:30 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 01D8E8F8037
-	for <xfs@oss.sgi.com>; Thu, 25 Apr 2013 23:12:33 -0700 (PDT)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	TM5zimEGRCPnlCRT (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 25 Apr 2013 23:12:33 -0700 (PDT)
-Date: Fri, 26 Apr 2013 02:12:31 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH TARBALL, DEV ONLY] xfsprogs: metadata CRC support V2
-Message-ID: <20130426061231.GA8338@infradead.org>
-References: <20130412145555.GF30622@dastard>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 27CBE304070
+	for <xfs@oss.sgi.com>; Fri, 26 Apr 2013 01:35:27 -0700 (PDT)
+Received: from mo-p05-ob.rzone.de (mo-p05-ob.rzone.de [81.169.146.182]) by
+	cuda.sgi.com with ESMTP id 9We2f9EqutEftBf7 for
+	<xfs@oss.sgi.com>; Fri, 26 Apr 2013 01:35:25 -0700 (PDT)
+Message-ID: <517A3C49.9090703@jan-o-sch.net>
+Date: Fri, 26 Apr 2013 10:35:21 +0200
+From: Jan Schmidt <list.btrfs@jan-o-sch.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130412145555.GF30622@dastard>
+Subject: Re: [PATCH] xfstests: btrfs/276 - stop all fsstress before exiting
+References: <517A10B1.7040107@redhat.com>
+In-Reply-To: <517A10B1.7040107@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,11 +27,86 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-btrfs <linux-btrfs@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
 
-Can you send out the libxfs resync separately?  I think that's something
-that should go in ASAP.
+On Fri, April 26, 2013 at 07:29 (+0200), Eric Sandeen wrote:
+> Tests after 276 were failing because the background fsstress
+> hadn't quit prior to exit, devices couldn't be unmounted, etc.
+
+I don't see how that would happen. Any further insight?
+
+> Just use the same trick as generic/068 does, and use
+> a tmpfile to control whether the background loop keeps
+> running.
+
+I like that trick :-)
+
+Thanks,
+-Jan
+
+> Also, no need to umount scratch at cleanup time, the scripts
+> do that for us.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> (nobody else ran into this?  really?)
+> 
+> diff --git a/tests/btrfs/276 b/tests/btrfs/276
+> index 0a5ce36..9d68b54 100755
+> --- a/tests/btrfs/276
+> +++ b/tests/btrfs/276
+> @@ -36,14 +36,8 @@ noise_pid=0
+>  
+>  _cleanup()
+>  {
+> -	if [ $noise_pid -ne 0 ]; then
+> -		echo "background noise kill $noise_pid" >>$seqres.full
+> -		kill $noise_pid
+> -		noise_pid=0
+> -		wait
+> -	fi
+> -	echo "*** unmount"
+> -	umount $SCRATCH_MNT 2>/dev/null
+> +	rm $tmp.running
+> +	wait
+>  	rm -f $tmp.*
+>  }
+>  trap "_cleanup; exit \$status" 0 1 2 3 15
+> @@ -210,7 +204,7 @@ workout()
+>  
+>  	if [ $do_bg_noise -ne 0 ]; then
+>  		# make background noise while backrefs are being walked
+> -		while /bin/true; do
+> +		while [ -f "$tmp.running" ]; do
+>  			echo background fsstress >>$seqres.full
+>  			run_check $FSSTRESS_PROG -d $SCRATCH_MNT/bgnoise -n 999
+>  			echo background rm >>$seqres.full
+> @@ -263,6 +257,8 @@ nfiles=4
+>  numprocs=1
+>  do_bg_noise=1
+>  
+> +touch $tmp.running
+> +
+>  workout $filesize $nfiles $numprocs $snap_name $do_bg_noise
+>  
+>  echo "*** done"
+> diff --git a/tests/btrfs/276.out b/tests/btrfs/276.out
+> index 2032dea..5113164 100644
+> --- a/tests/btrfs/276.out
+> +++ b/tests/btrfs/276.out
+> @@ -1,4 +1,3 @@
+>  QA output created by 276
+>  *** test backref walking
+>  *** done
+> -*** unmount
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-btrfs" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
 _______________________________________________
 xfs mailing list
