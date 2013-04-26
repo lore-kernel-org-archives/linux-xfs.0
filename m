@@ -1,27 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 67B8B7CBE
-	for <xfs@oss.sgi.com>; Fri, 26 Apr 2013 06:29:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 05DA8AC004
-	for <xfs@oss.sgi.com>; Fri, 26 Apr 2013 04:29:26 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id pP5thgR2GxNhfMav for
-	<xfs@oss.sgi.com>; Fri, 26 Apr 2013 04:29:26 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r3QBTPn1015933
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Fri, 26 Apr 2013 07:29:25 -0400
-Received: from bfoster.bfoster (dhcp-189-135.bos.redhat.com [10.16.189.135])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id r3QBTPsu014578
-	for <xfs@oss.sgi.com>; Fri, 26 Apr 2013 07:29:25 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 2/2] xfs: enhance warning on xfs_imap() failure in
-	xfs_iunlink_remove()
-Date: Fri, 26 Apr 2013 07:30:13 -0400
-Message-Id: <1366975813-65025-1-git-send-email-bfoster@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 06A497CBE
+	for <xfs@oss.sgi.com>; Fri, 26 Apr 2013 08:10:23 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id BBE958F8066
+	for <xfs@oss.sgi.com>; Fri, 26 Apr 2013 06:10:19 -0700 (PDT)
+Received: from mx4-phx2.redhat.com (mx4-phx2.redhat.com [209.132.183.25]) by
+	cuda.sgi.com with ESMTP id cej2ks2MekDuX4z4 for
+	<xfs@oss.sgi.com>; Fri, 26 Apr 2013 06:10:18 -0700 (PDT)
+Subject: Re: [PATCH] xfstests: btrfs/276 - stop all fsstress before exiting
+References: <517A10B1.7040107@redhat.com> <517A3C49.9090703@jan-o-sch.net>
+From: Eric Sandeen <esandeen@redhat.com>
+MIME-Version: 1.0
+In-Reply-To: <517A3C49.9090703@jan-o-sch.net>
+Message-Id: <7DC41D7F-396D-4769-B573-816E80372456@redhat.com>
+Date: Fri, 26 Apr 2013 09:10:14 -0400 (EDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,45 +23,98 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Jan Schmidt <list.btrfs@jan-o-sch.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-btrfs <linux-btrfs@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
 
-From: Eric Sandeen <sandeen@redhat.com>
+On Apr 26, 2013, at 3:35 AM, Jan Schmidt <list.btrfs@jan-o-sch.net> wrote:
 
-Include the global ino, ag number and agino in the warning message
-emitted should xfs_imap() fail in the xfs_iunlink_remove() code
-path.
+> On Fri, April 26, 2013 at 07:29 (+0200), Eric Sandeen wrote:
+>> Tests after 276 were failing because the background fsstress
+>> hadn't quit prior to exit, devices couldn't be unmounted, etc.
+> 
+> I don't see how that would happen. Any further insight?
+> 
+Yes, sorry for not including it.  The parent process was killed, but the fsstress processes just got reparented to init.  
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
-v2: Fix up indendation such that the string is on a single line.
+I tried for a while to use pkill to knock them of first but this seems simpler, actually.
 
- fs/xfs/xfs_inode.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+Eric
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index c22f980..f00c6d1 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1678,8 +1678,10 @@ xfs_iunlink_remove(
- 			error = xfs_imap(mp, tp, next_ino, &imap, 0);
- 			if (error) {
- 				xfs_warn(mp,
--	"%s: xfs_imap returned error %d.",
--					 __func__, error);
-+	"%s: xfs_imap() returned error %d for inode 0x%llx ag %d agino 0x%x",
-+					 __func__, error, ip->i_ino,
-+					 agno, agino);
-+
- 				return error;
- 			}
- 
--- 
-1.7.7.6
+>> Just use the same trick as generic/068 does, and use
+>> a tmpfile to control whether the background loop keeps
+>> running.
+> 
+> I like that trick :-)
+> 
+> Thanks,
+> -Jan
+> 
+>> Also, no need to umount scratch at cleanup time, the scripts
+>> do that for us.
+>> 
+>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+>> ---
+>> 
+>> (nobody else ran into this?  really?)
+>> 
+>> diff --git a/tests/btrfs/276 b/tests/btrfs/276
+>> index 0a5ce36..9d68b54 100755
+>> --- a/tests/btrfs/276
+>> +++ b/tests/btrfs/276
+>> @@ -36,14 +36,8 @@ noise_pid=0
+>> 
+>> _cleanup()
+>> {
+>> -    if [ $noise_pid -ne 0 ]; then
+>> -        echo "background noise kill $noise_pid" >>$seqres.full
+>> -        kill $noise_pid
+>> -        noise_pid=0
+>> -        wait
+>> -    fi
+>> -    echo "*** unmount"
+>> -    umount $SCRATCH_MNT 2>/dev/null
+>> +    rm $tmp.running
+>> +    wait
+>>    rm -f $tmp.*
+>> }
+>> trap "_cleanup; exit \$status" 0 1 2 3 15
+>> @@ -210,7 +204,7 @@ workout()
+>> 
+>>    if [ $do_bg_noise -ne 0 ]; then
+>>        # make background noise while backrefs are being walked
+>> -        while /bin/true; do
+>> +        while [ -f "$tmp.running" ]; do
+>>            echo background fsstress >>$seqres.full
+>>            run_check $FSSTRESS_PROG -d $SCRATCH_MNT/bgnoise -n 999
+>>            echo background rm >>$seqres.full
+>> @@ -263,6 +257,8 @@ nfiles=4
+>> numprocs=1
+>> do_bg_noise=1
+>> 
+>> +touch $tmp.running
+>> +
+>> workout $filesize $nfiles $numprocs $snap_name $do_bg_noise
+>> 
+>> echo "*** done"
+>> diff --git a/tests/btrfs/276.out b/tests/btrfs/276.out
+>> index 2032dea..5113164 100644
+>> --- a/tests/btrfs/276.out
+>> +++ b/tests/btrfs/276.out
+>> @@ -1,4 +1,3 @@
+>> QA output created by 276
+>> *** test backref walking
+>> *** done
+>> -*** unmount
+>> 
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-btrfs" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> 
 
 _______________________________________________
 xfs mailing list
