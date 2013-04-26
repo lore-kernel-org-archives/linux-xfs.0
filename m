@@ -1,30 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9EE217CBE
-	for <xfs@oss.sgi.com>; Fri, 26 Apr 2013 17:49:43 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 5978D7CBE
+	for <xfs@oss.sgi.com>; Fri, 26 Apr 2013 18:09:36 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 881E28F8033
-	for <xfs@oss.sgi.com>; Fri, 26 Apr 2013 15:49:43 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	vMFTsOJaMgWGh2UF for <xfs@oss.sgi.com>;
-	Fri, 26 Apr 2013 15:49:39 -0700 (PDT)
-Date: Sat, 27 Apr 2013 08:49:37 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [BULK]  Re: [PATCH] xfstests 311: test fsync with dm flakey V2
-Message-ID: <20130426224937.GA23072@dastard>
-References: <1366899176-12876-1-git-send-email-jbacik@fusionio.com>
-	<20130425224556.GS30622@dastard>
-	<20130426002404.GN2631@localhost.localdomain>
-	<20130426010829.GV30622@dastard>
-	<20130426013237.GO2631@localhost.localdomain>
-	<20130426021214.GX30622@dastard>
-	<20130426193101.GR2631@localhost.localdomain>
-	<20130426220521.GC30622@dastard>
-	<20130426223214.GA4117@localhost.localdomain>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130426223214.GA4117@localhost.localdomain>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 465968F8033
+	for <xfs@oss.sgi.com>; Fri, 26 Apr 2013 16:09:33 -0700 (PDT)
+Received: from mail-pd0-f172.google.com (mail-pd0-f172.google.com
+	[209.85.192.172]) by cuda.sgi.com with ESMTP id
+	NvdxXlvT37Raai68 (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 26 Apr 2013 16:09:32 -0700 (PDT)
+Received: by mail-pd0-f172.google.com with SMTP id 4so2692180pdd.17
+	for <xfs@oss.sgi.com>; Fri, 26 Apr 2013 16:09:31 -0700 (PDT)
+Subject: Re: [PATCH] [PATCH] xfstests: use -F when making scratch ext4 fs
+Mime-Version: 1.0 (Apple Message framework v1085)
+From: Andreas Dilger <adilger@dilger.ca>
+In-Reply-To: <517AD302.4000905@redhat.com>
+Date: Fri, 26 Apr 2013 17:09:28 -0600
+Message-Id: <E173CD13-2FD1-45A4-BEAE-815A9DEC4B62@dilger.ca>
+References: <1367003813-17686-1-git-send-email-jbacik@fusionio.com>
+	<517AD302.4000905@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,49 +32,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Josef Bacik <jbacik@fusionio.com>
-Cc: "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-ext4@vger.kernel.org, Josef Bacik <jbacik@fusionio.com>, xfs@oss.sgi.com
 
-On Fri, Apr 26, 2013 at 06:32:14PM -0400, Josef Bacik wrote:
-> On Fri, Apr 26, 2013 at 04:05:22PM -0600, Dave Chinner wrote:
-> > On Fri, Apr 26, 2013 at 03:31:01PM -0400, Josef Bacik wrote:
-> > > On Thu, Apr 25, 2013 at 08:12:14PM -0600, Dave Chinner wrote:
-> > > > > Ok so I think I'll just make this test do all the iterations of the fsync tester
-> > > > > with and without --nolockfs, since without --nolockfs I'm still seeing problems,
-> > > > > does that sound reasonable?
-> > > > 
-> > > > Sounds like a fine plan to me ;)
-> > > > 
-> > > 
-> > > Btw its test 19 O_DIRECT that gives me a 0 length file, the buffered case is
-> > > fine.  The test just does a randomly sized sub-block sized write over and over
-> > > again for a random number of times and fsync()'s in there randomly.  The number
-> > > is 3072 because that's the largest inline extent we can have in btrfs, I added
-> > > it specifically to test our inline extent logging.  Thanks,
-> > 
-> > Interesting - it only runs fsync every 8 iterations of the loop. Can
-> > you check that it is running enough loops to execute a fsync?
-> > 
+On 2013-04-26, at 1:18 PM, Eric Sandeen wrote:
+> On 4/26/13 2:16 PM, Josef Bacik wrote:
+>> mkfs.ext4 will ask you if you are sure if you try to mkfs an entire disk instead of just a partition, so any xfstest that uses a scratch device and you specify a full disk will appear to hang because it's waiting for you to say yes.  This fixes the problem by just forcing it to do its thing.  Thanks,
+>> 
+>> Signed-off-by: Josef Bacik <jbacik@fusionio.com>
 > 
-> If the loop doesn't fsync it still fsyncs before the program exits.
+> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+> 
+> The whole-disk test is pretty derpy anyway. Too bad -F overrides
+> much more than just that, but this is probably a decent
+> thing to do.
 
-Doh! I noticed that yesterday but forgot about it. Not enough
-coffee. I'll have a closer look, then.
+Yeah, we've had to work around the whole-device check for years,
+because the 512-byte sector offset for the DOS partition table
+kills performance on RAID systems.
 
-> Side note I once wasted a week because Chris's fsync tester
-> _didn't_ fsync() before exit so it would tell you a md5sum of a
-> file that hadn't fsync()ed before the md5sum and I just assumed
-> btrfs was broken.  This test does not make this mistake for that
-> reason :).  Thanks,
+Given that the kernel should hold the whole block device busy these
+days for O_EXCL opens if there are partitions on the device, it
+should be safe to remove this check from mke2fs, though the above
+workaround would still be needed for a while.
 
-I think we've all made mistakes like that at least once.... :/
+Cheers, Andreas
 
-Cheers,
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+
+
 
 _______________________________________________
 xfs mailing list
