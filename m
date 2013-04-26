@@ -1,18 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 27A637CBE
-	for <xfs@oss.sgi.com>; Fri, 26 Apr 2013 13:45:31 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 105B68F8033
-	for <xfs@oss.sgi.com>; Fri, 26 Apr 2013 11:45:30 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 89VYh06nPA9374Cx for
-	<xfs@oss.sgi.com>; Fri, 26 Apr 2013 11:45:30 -0700 (PDT)
-Message-ID: <517ACB41.2030002@redhat.com>
-Date: Fri, 26 Apr 2013 13:45:21 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 7B5BF7CBE
+	for <xfs@oss.sgi.com>; Fri, 26 Apr 2013 14:09:59 -0500 (CDT)
+Date: Fri, 26 Apr 2013 14:09:53 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 19/22] xfs: add buffer types to directory and attribute
+	buffers
+Message-ID: <20130426190953.GH29359@sgi.com>
+References: <1364965892-19623-1-git-send-email-david@fromorbit.com>
+	<1364965892-19623-20-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfstests btrfs/284: shorten duration, fix output
+Content-Disposition: inline
+In-Reply-To: <1364965892-19623-20-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,143 +24,118 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
-Cc: Liu Bo <liubo2009@cn.fujitsu.com>, linux-btrfs <linux-btrfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-test 284 had... some issues.
+Hi Dave,
 
-First, it took so long nobody ran it; so shorten the extent
-count by a factor of about 100.
+On Wed, Apr 03, 2013 at 04:11:29PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Add buffer types to the buffer log items so that log recovery can
+> validate the buffers and calculate CRCs correctly after the buffers
+> are recovered.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Having fixed that, we see failures in 2 cases; when start or
-len is -1, but the golden output file didn't have error
-output, as if they should pass.
+Comments below.
 
-I'm going to argue that these *should* both fail; start = -1
-has no real meaning.  length = -1 might mean "the rest
-of the file" but if that's what you really want, just
-don't specify -l.
+> diff --git a/fs/xfs/xfs_da_btree.c b/fs/xfs/xfs_da_btree.c
+> index 2b7c9f6..a78865e 100644
+> --- a/fs/xfs/xfs_da_btree.c
+> +++ b/fs/xfs/xfs_da_btree.c
+> @@ -292,7 +292,6 @@ const struct xfs_buf_ops xfs_da3_node_buf_ops = {
+>  	.verify_write = xfs_da3_node_write_verify,
+>  };
+>  
+> -
+>  int
+>  xfs_da3_node_read(
+>  	struct xfs_trans	*tp,
+> @@ -302,8 +301,35 @@ xfs_da3_node_read(
+>  	struct xfs_buf		**bpp,
+>  	int			which_fork)
+>  {
+> -	return xfs_da_read_buf(tp, dp, bno, mappedbno, bpp,
+> +	int			err;
+> +
+> +	err = xfs_da_read_buf(tp, dp, bno, mappedbno, bpp,
+>  					which_fork, &xfs_da3_node_buf_ops);
+> +	if (!err && tp) {
+> +		struct xfs_da_blkinfo	*info = (*bpp)->b_addr;
+> +		int			type;
+> +
+> +		switch (be16_to_cpu(info->magic)) {
+> +		case XFS_DA3_NODE_MAGIC:
+> +		case XFS_DA_NODE_MAGIC:
 
-So add failure output for those cases.
+Nit:  
+		case XFS_DA_NODE_MAGIC:
+		case XFS_DA3_NODE_MAGIC:
 
-Send all command output to $seq.full, in case that changes
-in the future; just capture the return value.
 
-Then remove the return value echo on failure (50?) because
-who knows when that might change to some other magic value.
+> +			type = XFS_BLF_DA_NODE_BUF;
+> +			break;
+> +		case XFS_ATTR_LEAF_MAGIC:
+> +		case XFS_ATTR3_LEAF_MAGIC:
+> +			type = XFS_BLF_ATTR_LEAF_BUF;
+> +			break;
+> +		case XFS_DIR2_LEAFN_MAGIC:
+> +		case XFS_DIR3_LEAFN_MAGIC:
+> +			type = XFS_BLF_DIR_LEAFN_BUF;
+> +			break;
+> +		default:
+> +			type = 0;
+> +			ASSERT(0);
+> +			break;
 
-Ok, then when defrag actually works, old defrag returned
-"20" (because?) but a recent commit changed it to 0.
-So accommodate that too.
+Would some kind of shutdown be desireable here?  Maybe not.
 
-And remove a stray "HAVE_DEFRAG=1" while we're at it.
-That variable is never used.
+> @@ -2004,19 +1960,169 @@ xlog_recover_do_reg_buffer(
+>  		bp->b_ops = &xfs_inode_buf_ops;
+>  		break;
+>  	case XFS_BLF_SYMLINK_BUF:
+> -		if (*(__be32 *)bp->b_addr != cpu_to_be32(XFS_SYMLINK_MAGIC)) {
+> +		if (magic32 != XFS_SYMLINK_MAGIC) {
+>  			xfs_warn(mp, "Bad symlink block magic!");
+>  			ASSERT(0);
+>  			break;
+>  		}
+>  		bp->b_ops = &xfs_symlink_buf_ops;
+>  		break;
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+...
 
-diff --git a/tests/btrfs/284 b/tests/btrfs/284
-old mode 100644
-new mode 100755
-index d952977..67161a3
---- a/tests/btrfs/284
-+++ b/tests/btrfs/284
-@@ -26,7 +26,7 @@ seqres=$RESULT_DIR/$seq
- echo "QA output created by $seq"
- here="`pwd`"
- tmp=/tmp/$$
--cnt=11999
-+cnt=119
- filesize=48000
- 
- status=1	# failure is the default!
-@@ -58,11 +58,12 @@ _create_file()
- _btrfs_online_defrag()
- {
- 	str=""
-+	# start = -1 is invalid, should fail
- 	if [ "$2" = "2" ];then
- 		str="$str -s -1 -l $((filesize / 2)) "
- 	elif [ "$2" = "3" ];then
- 		str="$str -s $((filesize + 1)) -l $((filesize / 2)) "
--		HAVE_DEFRAG=1
-+	# len = -1 is invalid, should fail
- 	elif [ "$2" = "4" ];then
- 		str="$str -l -1 "
- 	elif [ "$2" = "5" ];then
-@@ -76,20 +77,22 @@ _btrfs_online_defrag()
- 	fi
- 
- 	if [ "$str" != "" ]; then
--		$BTRFS_UTIL_PROG filesystem defragment $str $SCRATCH_MNT/tmp_file
-+		$BTRFS_UTIL_PROG filesystem defragment $str $SCRATCH_MNT/tmp_file >> $seq.full 2>&1
- 	else
- 		if [ "$1" = "1" ];then
--			$BTRFS_UTIL_PROG filesystem defragment $SCRATCH_MNT/tmp_file
-+			$BTRFS_UTIL_PROG filesystem defragment $SCRATCH_MNT/tmp_file >> $seq.full 2>&1
- 		elif [ "$1" = "2" ];then
--			$BTRFS_UTIL_PROG filesystem defragment $SCRATCH_MNT/tmp_dir
-+			$BTRFS_UTIL_PROG filesystem defragment $SCRATCH_MNT/tmp_dir >> $seq.full 2>&1
- 		elif [ "$1" = "3" ];then
--			$BTRFS_UTIL_PROG filesystem defragment $SCRATCH_MNT
-+			$BTRFS_UTIL_PROG filesystem defragment $SCRATCH_MNT >> $seq.full 2>&1
- 		fi
- 	fi
- 	ret_val=$?
- 	_scratch_remount
--	if [ $ret_val -ne 20 ];then
--		echo "btrfs filesystem defragment failed! err is $ret_val"
-+	# Older defrag returned "20" for success
-+	# e9393c2 btrfs-progs: defrag return zero on success
-+	if [ $ret_val -ne 0 -a $ret_val -ne 20 ]; then
-+		echo "btrfs filesystem defragment failed!"
- 	fi
- }
- 
-@@ -140,19 +143,19 @@ _scratch_mount
- _require_defrag
- 
- echo "defrag object | defragment range | defragment compress"
--echo "a single file |  default | off"
-+echo "a single file | default | off"
- _rundefrag 1 1 1
- 
- echo "a single file | default |  on"
- _rundefrag 1 1 2
- 
--echo "a single file | start < 0 && 0 < len < file size | off"
-+echo "a single file | start < 0 && 0 < len < file size | off (should fail)"
- _rundefrag 1 2 1
- 
- echo "a single file | start > file size && 0 < len < file size | off"
- _rundefrag 1 3 1
- 
--echo "a single file | start = 0 && len < 0 | off"
-+echo "a single file | start = 0 && len < 0 | off (should fail)"
- _rundefrag 1 4 1
- 
- echo "a single file | start = 0 && len > file size | off"
-diff --git a/tests/btrfs/284.out b/tests/btrfs/284.out
-index 4a69f82..c942271 100644
---- a/tests/btrfs/284.out
-+++ b/tests/btrfs/284.out
-@@ -1,10 +1,12 @@
- QA output created by 284
- defrag object | defragment range | defragment compress
--a single file |  default | off
-+a single file | default | off
- a single file | default |  on
--a single file | start < 0 && 0 < len < file size | off
-+a single file | start < 0 && 0 < len < file size | off (should fail)
-+btrfs filesystem defragment failed!
- a single file | start > file size && 0 < len < file size | off
--a single file | start = 0 && len < 0 | off
-+a single file | start = 0 && len < 0 | off (should fail)
-+btrfs filesystem defragment failed!
- a single file | start = 0 && len > file size | off
- a single file | start = 0 && 0 < len < file size | off
- a directory | default | off
+> +	case XFS_BLF_ATTR_RMT_BUF:
+> +		if (!xfs_sb_version_hascrc(&mp->m_sb))
+> +			break;
+> +		if (magicda != XFS_ATTR3_RMT_MAGIC) {
+		    magic32
 
+The new remote attribute header has magic at offset 0.
+
+> +STATIC void
+> +xlog_recover_do_reg_buffer(
+> +	struct xfs_mount	*mp,
+> +	xlog_recover_item_t	*item,
+> +	struct xfs_buf		*bp,
+> +	xfs_buf_log_format_t	*buf_f)
+> +{
+
+...
+
+> +	/* Shouldn't be any more regions */
+> +	ASSERT(i == item->ri_total);
+> +
+> +	xlog_recovery_validate_buf_type(mp, bp, buf_f);
+> +
+
+Extra line.
+
+
+Looks good.
+
+-Ben
 
 _______________________________________________
 xfs mailing list
