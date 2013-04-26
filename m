@@ -1,21 +1,40 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4A1B27CBE
-	for <xfs@oss.sgi.com>; Fri, 26 Apr 2013 11:07:08 -0500 (CDT)
-Date: Fri, 26 Apr 2013 11:07:04 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] xfs: shutdown filesystem if xfs_perag_get fails
-Message-ID: <20130426160704.GF29359@sgi.com>
-References: <5174603A.8030208@sandeen.net> <51753EDE.6000301@sgi.com>
-	<51754A13.5000808@sandeen.net> <5175532B.3050509@sgi.com>
-	<20130422233033.GK30622@dastard> <51769111.3050103@sgi.com>
-	<1366732475.3762.32402.camel@chandra-dt.ibm.com>
-	<20130423204956.GM10481@dastard>
-	<1366929706.4098.6.camel@chandra-dt.ibm.com>
-	<517A9E12.1030907@sgi.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <517A9E12.1030907@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id 2026F7CBE
+	for <xfs@oss.sgi.com>; Fri, 26 Apr 2013 12:24:21 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E2DA78F8033
+	for <xfs@oss.sgi.com>; Fri, 26 Apr 2013 10:24:20 -0700 (PDT)
+Received: from e37.co.us.ibm.com (e37.co.us.ibm.com [32.97.110.158]) by
+	cuda.sgi.com with ESMTP id vjpdjBvVdHd5HDVn (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 26 Apr 2013 10:24:20 -0700 (PDT)
+Received: from /spool/local
+	by e37.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	Violators will be prosecuted
+	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
+	Fri, 26 Apr 2013 11:24:18 -0600
+Received: from d03relay03.boulder.ibm.com (d03relay03.boulder.ibm.com
+	[9.17.195.228])
+	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id BD9323E4003F
+	for <xfs@oss.sgi.com>; Fri, 26 Apr 2013 11:24:00 -0600 (MDT)
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay03.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	r3QHOBvN098612 for <xfs@oss.sgi.com>; Fri, 26 Apr 2013 11:24:12 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id r3QHOAMk001006
+	for <xfs@oss.sgi.com>; Fri, 26 Apr 2013 11:24:10 -0600
+Received: from [9.41.106.170] (chandra-dt.austin.ibm.com [9.41.106.170])
+	by d03av02.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVin) with ESMTP id
+	r3QHOAVO000950 for <xfs@oss.sgi.com>; Fri, 26 Apr 2013 11:24:10 -0600
+Subject: xfs module insert fails with "xfs: Unknown symbol
+	exportfs_decode_fh (err 0)"
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Date: Fri, 26 Apr 2013 12:24:09 -0500
+Message-ID: <1366997050.4098.14.camel@chandra-dt.ibm.com>
+Mime-Version: 1.0
+Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,61 +47,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, sekharan@us.ibm.com, xfs@oss.sgi.com
+To: XFS mailing list <xfs@oss.sgi.com>
 
-Hi Mark and Chandra,
+Hello,
 
-On Fri, Apr 26, 2013 at 10:32:34AM -0500, Mark Tinguely wrote:
-> On 04/25/13 17:41, Chandra Seetharaman wrote:
-> >In which case something along the lines of
-> >
-> >---
-> >diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> >index 3806088..3fb2fa6 100644
-> >--- a/fs/xfs/xfs_mount.c
-> >+++ b/fs/xfs/xfs_mount.c
-> >@@ -203,7 +203,13 @@ xfs_perag_get(struct xfs_mount *mp, xfs_agnumber_t
-> >agno)
-> >         if (pag) {
-> >                 ASSERT(atomic_read(&pag->pag_ref)>= 0);
-> >                 ref = atomic_inc_return(&pag->pag_ref);
-> >-       }
-> >+       } else
-> >+               /*
-> >+                * xfs_perag_get() is called with invalid agno,
-> >+                * which cannot happen. This indicates a problem
-> >+                * in the calling code.
-> >+                */
-> >+               BUG();
-> >         rcu_read_unlock();
-> >         trace_xfs_perag_get(mp, agno, ref, _RET_IP_);
-> >         return pag;
-> >--------
-> >
-> >would be useful ?. Since we have a NULL pag, we will trip somewhere
-> >else. At least with this, there is a pointer to the debugger/sysadmin
-> >about where/what to look for (may be with more valuable/correct comment
-> >than above).
-> >
-> 
-> We will have to make sure the callers of xfs_perag_get() handle the NULL
-> before dereferencing it. Sometimes the NULL is normal and just means the
-> perag structure has not been initialize yet.
-> 
-> Properly handling the NULL from xfs_perag_get() in the caller will also
-> mean that the callers of the callers of xfs_perag_get() have to handle
-> the NULL returned to them. I will come back to this once the CRC stuff
-> has been put to rest.
+When I tried to insert xfs module in my test machine it failed with 
 
-I agree that we want to address this.  Our worst case should be a forced
-shutdown, rather than a NULL ptr deref, or a BUG().  Ideally one corrupted
-filesystem does not result in a full system outage, right?  ;)
+	xfs: Unknown symbol exportfs_decode_fh (err 0).
 
-There are some others like this.  e.g.  xfs_da_read_buf can return 0 with a
-null buffer pointer, and we rarely check for that before using bp.
+Found out that I did not have CONFIG_EXPORTFS enabled in my kernel
+config. 
 
--Ben
+All .*by_handle code in XFS is open coded. Wondering if they should be
+under #ifdef CONFIG_EXPORTFS ?
+
+I can create a patch, but wanted to find out if it is indeed needed :)
+
+Regards,
+
+Chandra
+
+
+
 
 _______________________________________________
 xfs mailing list
