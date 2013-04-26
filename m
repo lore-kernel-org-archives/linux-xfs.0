@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 06A497CBE
-	for <xfs@oss.sgi.com>; Fri, 26 Apr 2013 08:10:23 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id BBE958F8066
-	for <xfs@oss.sgi.com>; Fri, 26 Apr 2013 06:10:19 -0700 (PDT)
-Received: from mx4-phx2.redhat.com (mx4-phx2.redhat.com [209.132.183.25]) by
-	cuda.sgi.com with ESMTP id cej2ks2MekDuX4z4 for
-	<xfs@oss.sgi.com>; Fri, 26 Apr 2013 06:10:18 -0700 (PDT)
-Subject: Re: [PATCH] xfstests: btrfs/276 - stop all fsstress before exiting
-References: <517A10B1.7040107@redhat.com> <517A3C49.9090703@jan-o-sch.net>
-From: Eric Sandeen <esandeen@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 503FE7CBE
+	for <xfs@oss.sgi.com>; Fri, 26 Apr 2013 10:32:37 -0500 (CDT)
+Message-ID: <517A9E12.1030907@sgi.com>
+Date: Fri, 26 Apr 2013 10:32:34 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-In-Reply-To: <517A3C49.9090703@jan-o-sch.net>
-Message-Id: <7DC41D7F-396D-4769-B573-816E80372456@redhat.com>
-Date: Fri, 26 Apr 2013 09:10:14 -0400 (EDT)
+Subject: Re: [PATCH] xfs: shutdown filesystem if xfs_perag_get fails
+References: <20130419204102.736961610@sgi.com>
+	<20130421174107.007313126@sgi.com>
+	<5174603A.8030208@sandeen.net> <51753EDE.6000301@sgi.com>
+	<51754A13.5000808@sandeen.net> <5175532B.3050509@sgi.com>
+	<20130422233033.GK30622@dastard>
+	<51769111.3050103@sgi.com>	<1366732475.3762.32402.camel@chandra-dt.ibm.com>
+	<20130423204956.GM10481@dastard>
+	<1366929706.4098.6.camel@chandra-dt.ibm.com>
+In-Reply-To: <1366929706.4098.6.camel@chandra-dt.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,98 +24,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Schmidt <list.btrfs@jan-o-sch.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-btrfs <linux-btrfs@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+To: sekharan@us.ibm.com
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-On Apr 26, 2013, at 3:35 AM, Jan Schmidt <list.btrfs@jan-o-sch.net> wrote:
+On 04/25/13 17:41, Chandra Seetharaman wrote:
+> In which case something along the lines of
+>
+> ---
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index 3806088..3fb2fa6 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -203,7 +203,13 @@ xfs_perag_get(struct xfs_mount *mp, xfs_agnumber_t
+> agno)
+>          if (pag) {
+>                  ASSERT(atomic_read(&pag->pag_ref)>= 0);
+>                  ref = atomic_inc_return(&pag->pag_ref);
+> -       }
+> +       } else
+> +               /*
+> +                * xfs_perag_get() is called with invalid agno,
+> +                * which cannot happen. This indicates a problem
+> +                * in the calling code.
+> +                */
+> +               BUG();
+>          rcu_read_unlock();
+>          trace_xfs_perag_get(mp, agno, ref, _RET_IP_);
+>          return pag;
+> --------
+>
+> would be useful ?. Since we have a NULL pag, we will trip somewhere
+> else. At least with this, there is a pointer to the debugger/sysadmin
+> about where/what to look for (may be with more valuable/correct comment
+> than above).
+>
 
-> On Fri, April 26, 2013 at 07:29 (+0200), Eric Sandeen wrote:
->> Tests after 276 were failing because the background fsstress
->> hadn't quit prior to exit, devices couldn't be unmounted, etc.
-> 
-> I don't see how that would happen. Any further insight?
-> 
-Yes, sorry for not including it.  The parent process was killed, but the fsstress processes just got reparented to init.  
+We will have to make sure the callers of xfs_perag_get() handle the NULL
+before dereferencing it. Sometimes the NULL is normal and just means the
+perag structure has not been initialize yet.
 
-I tried for a while to use pkill to knock them of first but this seems simpler, actually.
+Properly handling the NULL from xfs_perag_get() in the caller will also
+mean that the callers of the callers of xfs_perag_get() have to handle
+the NULL returned to them. I will come back to this once the CRC stuff
+has been put to rest.
 
-Eric
-
->> Just use the same trick as generic/068 does, and use
->> a tmpfile to control whether the background loop keeps
->> running.
-> 
-> I like that trick :-)
-> 
-> Thanks,
-> -Jan
-> 
->> Also, no need to umount scratch at cleanup time, the scripts
->> do that for us.
->> 
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->> ---
->> 
->> (nobody else ran into this?  really?)
->> 
->> diff --git a/tests/btrfs/276 b/tests/btrfs/276
->> index 0a5ce36..9d68b54 100755
->> --- a/tests/btrfs/276
->> +++ b/tests/btrfs/276
->> @@ -36,14 +36,8 @@ noise_pid=0
->> 
->> _cleanup()
->> {
->> -    if [ $noise_pid -ne 0 ]; then
->> -        echo "background noise kill $noise_pid" >>$seqres.full
->> -        kill $noise_pid
->> -        noise_pid=0
->> -        wait
->> -    fi
->> -    echo "*** unmount"
->> -    umount $SCRATCH_MNT 2>/dev/null
->> +    rm $tmp.running
->> +    wait
->>    rm -f $tmp.*
->> }
->> trap "_cleanup; exit \$status" 0 1 2 3 15
->> @@ -210,7 +204,7 @@ workout()
->> 
->>    if [ $do_bg_noise -ne 0 ]; then
->>        # make background noise while backrefs are being walked
->> -        while /bin/true; do
->> +        while [ -f "$tmp.running" ]; do
->>            echo background fsstress >>$seqres.full
->>            run_check $FSSTRESS_PROG -d $SCRATCH_MNT/bgnoise -n 999
->>            echo background rm >>$seqres.full
->> @@ -263,6 +257,8 @@ nfiles=4
->> numprocs=1
->> do_bg_noise=1
->> 
->> +touch $tmp.running
->> +
->> workout $filesize $nfiles $numprocs $snap_name $do_bg_noise
->> 
->> echo "*** done"
->> diff --git a/tests/btrfs/276.out b/tests/btrfs/276.out
->> index 2032dea..5113164 100644
->> --- a/tests/btrfs/276.out
->> +++ b/tests/btrfs/276.out
->> @@ -1,4 +1,3 @@
->> QA output created by 276
->> *** test backref walking
->> *** done
->> -*** unmount
->> 
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-btrfs" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> 
+--Mark.
 
 _______________________________________________
 xfs mailing list
