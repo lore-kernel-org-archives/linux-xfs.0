@@ -1,23 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D2D0529DF8
-	for <xfs@oss.sgi.com>; Mon, 29 Apr 2013 17:10:00 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B2D27304075
-	for <xfs@oss.sgi.com>; Mon, 29 Apr 2013 15:09:57 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 783707F52
+	for <xfs@oss.sgi.com>; Mon, 29 Apr 2013 17:30:08 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D9A99AC001
+	for <xfs@oss.sgi.com>; Mon, 29 Apr 2013 15:30:07 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	l19syenyzJANE0AY for <xfs@oss.sgi.com>;
-	Mon, 29 Apr 2013 15:09:56 -0700 (PDT)
-Date: Tue, 30 Apr 2013 08:09:52 +1000
+	ScMkvXFBvdsQhqSm for <xfs@oss.sgi.com>;
+	Mon, 29 Apr 2013 15:30:03 -0700 (PDT)
+Date: Tue, 30 Apr 2013 08:30:01 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH TARBALL, DEV ONLY] xfsprogs: metadata CRC support V2
-Message-ID: <20130429220952.GB23072@dastard>
-References: <20130412145555.GF30622@dastard> <51799C24.8010901@sgi.com>
-	<20130425214040.GQ30622@dastard> <517EE729.2030706@sgi.com>
+Subject: Re: [PATCH] xfs: shutdown filesystem if xfs_perag_get fails
+Message-ID: <20130429223001.GC23072@dastard>
+References: <51753EDE.6000301@sgi.com> <51754A13.5000808@sandeen.net>
+	<5175532B.3050509@sgi.com> <20130422233033.GK30622@dastard>
+	<51769111.3050103@sgi.com>
+	<1366732475.3762.32402.camel@chandra-dt.ibm.com>
+	<20130423204956.GM10481@dastard>
+	<1366929706.4098.6.camel@chandra-dt.ibm.com>
+	<517A9E12.1030907@sgi.com> <20130426160704.GF29359@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <517EE729.2030706@sgi.com>
+In-Reply-To: <20130426160704.GF29359@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,113 +35,84 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: xfs@oss.sgi.com, Eric Sandeen <sandeen@sandeen.net>, Mark Tinguely <tinguely@sgi.com>, sekharan@us.ibm.com
 
-On Mon, Apr 29, 2013 at 04:33:29PM -0500, Mark Tinguely wrote:
-> On 04/25/13 16:40, Dave Chinner wrote:
-> >On Thu, Apr 25, 2013 at 04:12:04PM -0500, Mark Tinguely wrote:
-> >>On 04/12/13 09:55, Dave Chinner wrote:
-> >>>Hi folks,
-> >>>
-> >>>I've attached a tarball containing the patch series that adds
-> >>>metadata CRC support to xfsprogs. It is still very much a work in
-> >>>progress, but is sufficient to start running xfstests on CRC enable
-> >>>filesystems.
-> >>>
-> >>>THere is much missing functionality, especially with respect to
-> >>>directly/attribute modifications. Only mkfs and xfs_repair have been
-> >>>updated to explicitly support CRC on directory/sttribute blocks,
-> >>>though all the other tools will stil run the result might be a
-> >>>little unpredictable.
-> >>>
-> >>>The patch series is as follows:
-> >>>
-> >>
-> >>BTW forgot about this gem, the UBER/xfsprogs-kernel-3.8-update patch
-> >>has been kicking up duplicate defines in sles11sp2 (gcc 4.3.4), but
-> >>fine in newer distros (gcc 4.6.2). Looks like a compile difference
-> >>issue:
-> >>
-> >>xfs_dir2_data_aoff_t  xfs_dir2_format.h and xfs_dir2.h
-> >>xfs_dir2_db_t         xfs_dir2_format.h and xfs_dir2.h
-> >>
-> >>The one below seems new to me:
-> >>prid_t                project.h and xfs_types.h
-> >>
-> >>I have been removing the entry in xfs_dir2_format.h in the past to test.
-> >>I don't remember the prid_t duplicate.
-> >
-> >Hmmmm. I'm not getting those warnings here (gcc-4.7.2). I'll have a
-> >look into it....
-> >
-> >Cheers,
-> >
-> >Dave.
+On Fri, Apr 26, 2013 at 11:07:04AM -0500, Ben Myers wrote:
+> Hi Mark and Chandra,
 > 
+> On Fri, Apr 26, 2013 at 10:32:34AM -0500, Mark Tinguely wrote:
+> > On 04/25/13 17:41, Chandra Seetharaman wrote:
+> > >In which case something along the lines of
+> > >
+> > >---
+> > >diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> > >index 3806088..3fb2fa6 100644
+> > >--- a/fs/xfs/xfs_mount.c
+> > >+++ b/fs/xfs/xfs_mount.c
+> > >@@ -203,7 +203,13 @@ xfs_perag_get(struct xfs_mount *mp, xfs_agnumber_t
+> > >agno)
+> > >         if (pag) {
+> > >                 ASSERT(atomic_read(&pag->pag_ref)>= 0);
+> > >                 ref = atomic_inc_return(&pag->pag_ref);
+> > >-       }
+> > >+       } else
+> > >+               /*
+> > >+                * xfs_perag_get() is called with invalid agno,
+> > >+                * which cannot happen. This indicates a problem
+> > >+                * in the calling code.
+> > >+                */
+> > >+               BUG();
+> > >         rcu_read_unlock();
+> > >         trace_xfs_perag_get(mp, agno, ref, _RET_IP_);
+> > >         return pag;
+> > >--------
+> > >
+> > >would be useful ?. Since we have a NULL pag, we will trip somewhere
+> > >else. At least with this, there is a pointer to the debugger/sysadmin
+> > >about where/what to look for (may be with more valuable/correct comment
+> > >than above).
+> > >
+> > 
+> > We will have to make sure the callers of xfs_perag_get() handle the NULL
+> > before dereferencing it. Sometimes the NULL is normal and just means the
+> > perag structure has not been initialize yet.
+> > 
+> > Properly handling the NULL from xfs_perag_get() in the caller will also
+> > mean that the callers of the callers of xfs_perag_get() have to handle
+> > the NULL returned to them. I will come back to this once the CRC stuff
+> > has been put to rest.
 > 
-> I replaced the gcc-4.3 compiler with a gcc-4.6.3 compiler and the
-> duplicates errors disappeared.
-> 
-> The following patch works with both the gcc-4.3 and gcc-4.6 compilers.
-> 
-> Beyond the duplicates, the header and libxfs files in
-> thexfsprogs-kernel-3.8-update patch compare to Linux 3.8 kernel code
-> and I consider it Reviewed-by: me.
+> I agree that we want to address this.  Our worst case should be a forced
+> shutdown, rather than a NULL ptr deref, or a BUG().  Ideally one corrupted
+> filesystem does not result in a full system outage, right?  ;)
 
-I've got an updated version of the the update that has the dir v1
-removal staged before it that I've been testing the last couple of
-days. I'll post that later today with an updated version of your
-fixes and a couple of other fixes that I've been sent in the last
-couple of days as well...
+A BUG() or null pointer deref simply segv's the current process. It
+doesn't cause a reboot, hang or crash dump unless the system is
+configured to do so.
 
-> I will do the xfsprogs-kernel-3.9-rc1-dev-update tonight.
+But, as I've already stated, checking the return of xfs_perag_get()
+is not answer to this problem - it's just a band-aid. Lots of them,
+and mostly unneccessary, too. We need to address the input
+validation problem prior to calling xfs_perag_get() to catch the
+error at the source, not somewhere in the downstream call chain when
+an invalid agno is tripped over.
 
-It's probably worth waiting a short while before doing that ;)
+Indeed, the design of the code is such that the agno is *trusted* to
+be correct, just like we trust inode numbers coming from on-disk
+structures to be correct. We validate inode numbers properly, but we
+aren't validating block numbers returned from extent records
+completely. That's the source of the problem we are seeing -
+xfs_perag_get() returning NULL is just a symptom.  Put simply:
+no-one should *ever* pass an invalid agno to xfs_perag_get().
 
-> Index: b/include/xfs/project.h
-> ===================================================================
-> --- a/include/xfs/project.h
-> +++ b/include/xfs/project.h
-> @@ -20,10 +20,6 @@
-> 
->  #include <xfs/xfs.h>
-> 
-> -#if !defined(__sgi__)
-> -typedef __uint32_t	prid_t;
-> -#endif
-> -
+> There are some others like this.  e.g.  xfs_da_read_buf can return 0 with a
+> null buffer pointer, and we rarely check for that before using bp.
 
-Yeah, that can go, but what it means is that the Irix build will
-probably now break with duplicate definitions. I don't have an Irix
-build environment, so somebody else is going to have to fix that if
-they care...
-
->  extern int setprojid(const char *__name, int __fd, prid_t __id);
->  extern int getprojid(const char *__name, int __fd, prid_t *__id);
-> 
-> Index: b/include/xfs/xfs_dir2_format.h
-> ===================================================================
-> --- a/include/xfs/xfs_dir2_format.h
-> +++ b/include/xfs/xfs_dir2_format.h
-> @@ -40,7 +40,6 @@
->   */
->  typedef	__uint16_t	xfs_dir2_data_off_t;
->  #define	NULLDATAOFF	0xffffU
-> -typedef uint		xfs_dir2_data_aoff_t;	/* argument form */
-
-This file is common with the kernel code, so whatever other
-definition it conflicts with is the one to remove.
-
-> @@ -61,11 +60,6 @@ typedef	__uint32_t	xfs_dir2_dataptr_t;
->  typedef	xfs_off_t	xfs_dir2_off_t;
-> 
->  /*
-> - * Directory block number (logical dirblk in file)
-> - */
-> -typedef	__uint32_t	xfs_dir2_db_t;
-
-Same here.
+I've also pointed out that the case where that can occur is handled
+by the callers that trigger it. It does not need to be checked by
+every caller, because most of them can't trigger this return case.
+Let's not make a mountain out of a molehill....
 
 Cheers,
 
