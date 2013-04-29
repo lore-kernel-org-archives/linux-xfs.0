@@ -1,39 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4994C7F52
-	for <xfs@oss.sgi.com>; Mon, 29 Apr 2013 12:28:33 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B49F3AC001
-	for <xfs@oss.sgi.com>; Mon, 29 Apr 2013 10:28:29 -0700 (PDT)
-Received: from e37.co.us.ibm.com (e37.co.us.ibm.com [32.97.110.158]) by
-	cuda.sgi.com with ESMTP id 3obaUc0wB8CFerXN (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 29 Apr 2013 10:28:28 -0700 (PDT)
-Received: from /spool/local
-	by e37.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
-	Violators will be prosecuted
-	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
-	Mon, 29 Apr 2013 11:28:27 -0600
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com
-	[9.17.195.227])
-	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id 7BE0B19D804A
-	for <xfs@oss.sgi.com>; Mon, 29 Apr 2013 11:28:18 -0600 (MDT)
-Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	r3THSCDJ089908 for <xfs@oss.sgi.com>; Mon, 29 Apr 2013 11:28:13 -0600
-Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av01.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
-	id r3THSBtN006916
-	for <xfs@oss.sgi.com>; Mon, 29 Apr 2013 11:28:11 -0600
-Subject: Re: [PATCH v7 0/5] xfs: Allow pquota and gquota to be used together
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-In-Reply-To: <20130322020243.GR17758@dastard>
-References: <1363902774-19292-1-git-send-email-sekharan@us.ibm.com>
-	<20130322020243.GR17758@dastard>
-Date: Mon, 29 Apr 2013 12:28:03 -0500
-Message-ID: <1367256483.4098.22.camel@chandra-dt.ibm.com>
-Mime-Version: 1.0
-Reply-To: sekharan@us.ibm.com
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E556329DF8
+	for <xfs@oss.sgi.com>; Mon, 29 Apr 2013 16:33:27 -0500 (CDT)
+Message-ID: <517EE729.2030706@sgi.com>
+Date: Mon, 29 Apr 2013 16:33:29 -0500
+From: Mark Tinguely <tinguely@sgi.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH TARBALL, DEV ONLY] xfsprogs: metadata CRC support V2
+References: <20130412145555.GF30622@dastard> <51799C24.8010901@sgi.com>
+	<20130425214040.GQ30622@dastard>
+In-Reply-To: <20130425214040.GQ30622@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -42,50 +18,112 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: XFS mailing list <xfs@oss.sgi.com>
+Cc: xfs@oss.sgi.com
 
-Hi Dave,
-
-Now that CRC changes are in. I am beginning to get my patches on top ot
-the current tree.
-
-If you can review and provide me feedback on my patch set, I will work
-it in my next revision.
-
-Regards,
-
-Chandra
-On Fri, 2013-03-22 at 13:02 +1100, Dave Chinner wrote:
-> On Thu, Mar 21, 2013 at 04:52:49PM -0500, Chandra Seetharaman wrote:
-> > Hello All,
-> > 
-> > This is the version 7 of the changes to allow pquota and gquota to be used
-> > together.
-> > 
-> > Patchset applies cleanly on top of 56cea2d088811b8cf7d2893e29bcf369a912de69
-> > in xfs git tree.
-> > 
-> > Ran latest xfstests against it.
-> 
-> As an information point - I've got a separate pquota inode in the
-> version 5 superblock format used in the CRC patchset. Given that
-> this functionailty requires mkfs/db/repair support, woul dit be
-> better to wait until the CRC code goes in and we can then add this
-> feature without having to rework the superblock CRC patches around
-> it?
-> 
-> i.e. it will always be available on v5 superblocks, or v4
-> superblocks when the feature bit is set to indicate the pquota inode
-> part of the superblock is valid?
-> 
+On 04/25/13 16:40, Dave Chinner wrote:
+> On Thu, Apr 25, 2013 at 04:12:04PM -0500, Mark Tinguely wrote:
+>> On 04/12/13 09:55, Dave Chinner wrote:
+>>> Hi folks,
+>>>
+>>> I've attached a tarball containing the patch series that adds
+>>> metadata CRC support to xfsprogs. It is still very much a work in
+>>> progress, but is sufficient to start running xfstests on CRC enable
+>>> filesystems.
+>>>
+>>> THere is much missing functionality, especially with respect to
+>>> directly/attribute modifications. Only mkfs and xfs_repair have been
+>>> updated to explicitly support CRC on directory/sttribute blocks,
+>>> though all the other tools will stil run the result might be a
+>>> little unpredictable.
+>>>
+>>> The patch series is as follows:
+>>>
+>>
+>> BTW forgot about this gem, the UBER/xfsprogs-kernel-3.8-update patch
+>> has been kicking up duplicate defines in sles11sp2 (gcc 4.3.4), but
+>> fine in newer distros (gcc 4.6.2). Looks like a compile difference
+>> issue:
+>>
+>> xfs_dir2_data_aoff_t  xfs_dir2_format.h and xfs_dir2.h
+>> xfs_dir2_db_t         xfs_dir2_format.h and xfs_dir2.h
+>>
+>> The one below seems new to me:
+>> prid_t                project.h and xfs_types.h
+>>
+>> I have been removing the entry in xfs_dir2_format.h in the past to test.
+>> I don't remember the prid_t duplicate.
+>
+> Hmmmm. I'm not getting those warnings here (gcc-4.7.2). I'll have a
+> look into it....
+>
 > Cheers,
-> 
+>
 > Dave.
+
+
+I replaced the gcc-4.3 compiler with a gcc-4.6.3 compiler and the 
+duplicates errors disappeared.
+
+The following patch works with both the gcc-4.3 and gcc-4.6 compilers.
+
+Beyond the duplicates, the header and libxfs files in 
+thexfsprogs-kernel-3.8-update patch compare to Linux 3.8 kernel code and 
+I consider it Reviewed-by: me.
+
+I will do the xfsprogs-kernel-3.9-rc1-dev-update tonight.
+
+--Mark.
+
+---
+  include/xfs/project.h         |    4 ----
+  include/xfs/xfs_dir2_format.h |    6 ------
+  2 files changed, 10 deletions(-)
+
+Index: b/include/xfs/project.h
+===================================================================
+--- a/include/xfs/project.h
++++ b/include/xfs/project.h
+@@ -20,10 +20,6 @@
+
+  #include <xfs/xfs.h>
+
+-#if !defined(__sgi__)
+-typedef __uint32_t	prid_t;
+-#endif
+-
+  extern int setprojid(const char *__name, int __fd, prid_t __id);
+  extern int getprojid(const char *__name, int __fd, prid_t *__id);
+
+Index: b/include/xfs/xfs_dir2_format.h
+===================================================================
+--- a/include/xfs/xfs_dir2_format.h
++++ b/include/xfs/xfs_dir2_format.h
+@@ -40,7 +40,6 @@
+   */
+  typedef	__uint16_t	xfs_dir2_data_off_t;
+  #define	NULLDATAOFF	0xffffU
+-typedef uint		xfs_dir2_data_aoff_t;	/* argument form */
+
+  /*
+   * Normalized offset (in a data block) of the entry, really 
+xfs_dir2_data_off_t.
+@@ -61,11 +60,6 @@ typedef	__uint32_t	xfs_dir2_dataptr_t;
+  typedef	xfs_off_t	xfs_dir2_off_t;
+
+  /*
+- * Directory block number (logical dirblk in file)
+- */
+-typedef	__uint32_t	xfs_dir2_db_t;
+-
+-/*
+   * Inode number stored as 8 8-bit values.
+   */
+  typedef	struct { __uint8_t i[8]; } xfs_dir2_ino8_t;
 
 
 _______________________________________________
