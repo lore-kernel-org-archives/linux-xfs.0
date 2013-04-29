@@ -1,15 +1,39 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6FF5F7F4C
-	for <xfs@oss.sgi.com>; Mon, 29 Apr 2013 09:51:16 -0500 (CDT)
-Message-ID: <517E88E6.9070709@sgi.com>
-Date: Mon, 29 Apr 2013 09:51:18 -0500
-From: Mark Tinguely <tinguely@sgi.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: Don't keep silent if sunit/swidth can not be changed
-	via mount
-References: <517E5D12.5010809@oracle.com>
-In-Reply-To: <517E5D12.5010809@oracle.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 4994C7F52
+	for <xfs@oss.sgi.com>; Mon, 29 Apr 2013 12:28:33 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B49F3AC001
+	for <xfs@oss.sgi.com>; Mon, 29 Apr 2013 10:28:29 -0700 (PDT)
+Received: from e37.co.us.ibm.com (e37.co.us.ibm.com [32.97.110.158]) by
+	cuda.sgi.com with ESMTP id 3obaUc0wB8CFerXN (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 29 Apr 2013 10:28:28 -0700 (PDT)
+Received: from /spool/local
+	by e37.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	Violators will be prosecuted
+	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
+	Mon, 29 Apr 2013 11:28:27 -0600
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com
+	[9.17.195.227])
+	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id 7BE0B19D804A
+	for <xfs@oss.sgi.com>; Mon, 29 Apr 2013 11:28:18 -0600 (MDT)
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	r3THSCDJ089908 for <xfs@oss.sgi.com>; Mon, 29 Apr 2013 11:28:13 -0600
+Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id r3THSBtN006916
+	for <xfs@oss.sgi.com>; Mon, 29 Apr 2013 11:28:11 -0600
+Subject: Re: [PATCH v7 0/5] xfs: Allow pquota and gquota to be used together
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+In-Reply-To: <20130322020243.GR17758@dastard>
+References: <1363902774-19292-1-git-send-email-sekharan@us.ibm.com>
+	<20130322020243.GR17758@dastard>
+Date: Mon, 29 Apr 2013 12:28:03 -0500
+Message-ID: <1367256483.4098.22.camel@chandra-dt.ibm.com>
+Mime-Version: 1.0
+Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,87 +42,51 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: XFS mailing list <xfs@oss.sgi.com>
 
-On 04/29/13 06:44, Jeff Liu wrote:
-> From: Jie Liu<jeff.liu@oracle.com>
->
-> As per the mount man page, sunit and swidth can be changed via
-> mount options.  For XFS, on the face of it, those options seems
-> works if the specified alignments is properly, e.g.
-> # mount -o sunit=4096,swidth=8192 /dev/sdb1 /mnt
-> # mount | grep sdb1
-> /dev/sdb1 on /mnt type xfs (rw,sunit=4096,swidth=8192)
->
-> However, neither sunit nor swidth is shown from the xfs_info output.
-> # xfs_info /mnt
-> meta-data=/dev/sdb1    isize=256    agcount=4, agsize=262144 blks
->           =             sectsz=512   attr=2
-> data     =             bsize=4096   blocks=1048576, imaxpct=25
->           =             sunit=0      swidth=0 blks
-> 		       ^^^^^^^^^^^^^^^^^^^^^^^^^^
-> naming   =version 2    bsize=4096   ascii-ci=0
-> log      =internal     bsize=4096   blocks=2560, version=2
->           =             sectsz=512   sunit=0 blks, lazy-count=1
-> realtime =none         extsz=4096   blocks=0, rtextents=0
->
-> The reason is that the alignment can only be changed if the relevant
-> super block is already configured with alignments, otherwise, the
-> given value will be silently ignored, so it's better to tell user
-> that the alignment-changing can not take affect in one way or another.
->
-> With this fix, the attempt to mount a storage without strip alignment
-> setup on super block will failed if XFS_MOUNT_RETERR is enabled, or
-> just ignore the given alignment and drop a warning to indicate the
-> cause in syslog.
->
-> # mount -o sunit=4096,swidth=8192 /dev/sdb1 /mnt
-> mount: wrong fs type, bad option, bad superblock on /dev/sdb1,
->         missing codepage or helper program, or other error
->         In some cases useful info is found in syslog - try
->         dmesg | tail  or so
->
-> # dmesg|tail
-> .......
-> XFS (sdb1): can not change alignment: no data alignment on superblock
->
-> Signed-off-by: Jie Liu<jeff.liu@oracle.com>
->
-> ---
->   fs/xfs/xfs_mount.c |    7 +++++++
->   1 file changed, 7 insertions(+)
->
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index 3806088..bc7fdd4 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -924,6 +924,13 @@ xfs_update_alignment(xfs_mount_t *mp)
->   				sbp->sb_width = mp->m_swidth;
->   				mp->m_update_flags |= XFS_SB_WIDTH;
->   			}
-> +		} else {
-> +			xfs_warn(mp, "can not change alignment: "
-> +				"no data alignment on superblock");
-suggest that you keep the string together so it can be searched.
-   "superblock does not support data alignment"
+Hi Dave,
 
-> +			if (mp->m_flags&  XFS_MOUNT_RETERR)
-> +				return XFS_ERROR(EINVAL);
-> +			mp->m_dalign = 0;
-> +			mp->m_swidth = 0;
->   		}
->   	} else if ((mp->m_flags&  XFS_MOUNT_NOALIGN) != XFS_MOUNT_NOALIGN&&
->   		xfs_sb_version_hasdalign(&mp->m_sb)) {
+Now that CRC changes are in. I am beginning to get my patches on top ot
+the current tree.
 
+If you can review and provide me feedback on my patch set, I will work
+it in my next revision.
 
-Thanks,
+Regards,
 
---Mark.
+Chandra
+On Fri, 2013-03-22 at 13:02 +1100, Dave Chinner wrote:
+> On Thu, Mar 21, 2013 at 04:52:49PM -0500, Chandra Seetharaman wrote:
+> > Hello All,
+> > 
+> > This is the version 7 of the changes to allow pquota and gquota to be used
+> > together.
+> > 
+> > Patchset applies cleanly on top of 56cea2d088811b8cf7d2893e29bcf369a912de69
+> > in xfs git tree.
+> > 
+> > Ran latest xfstests against it.
+> 
+> As an information point - I've got a separate pquota inode in the
+> version 5 superblock format used in the CRC patchset. Given that
+> this functionailty requires mkfs/db/repair support, woul dit be
+> better to wait until the CRC code goes in and we can then add this
+> feature without having to rework the superblock CRC patches around
+> it?
+> 
+> i.e. it will always be available on v5 superblocks, or v4
+> superblocks when the feature bit is set to indicate the pquota inode
+> part of the superblock is valid?
+> 
+> Cheers,
+> 
+> Dave.
+
 
 _______________________________________________
 xfs mailing list
