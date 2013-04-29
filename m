@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 33E677F37
-	for <xfs@oss.sgi.com>; Sun, 28 Apr 2013 20:40:06 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id AEBF37F37
+	for <xfs@oss.sgi.com>; Sun, 28 Apr 2013 20:46:03 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1FC9F304066
-	for <xfs@oss.sgi.com>; Sun, 28 Apr 2013 18:40:05 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 958508F8037
+	for <xfs@oss.sgi.com>; Sun, 28 Apr 2013 18:46:03 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	yzoAVeBIV2FyfTND for <xfs@oss.sgi.com>;
-	Sun, 28 Apr 2013 18:40:04 -0700 (PDT)
-Date: Mon, 29 Apr 2013 11:40:02 +1000
+	X9NJQIjNpLLggdqC for <xfs@oss.sgi.com>;
+	Sun, 28 Apr 2013 18:46:02 -0700 (PDT)
+Date: Mon, 29 Apr 2013 11:46:00 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: linux-next: build failure after merge of the xfs tree
-Message-ID: <20130429014002.GY10481@dastard>
-References: <20130429112943.afdd088c7bb8d80046bdfd2f@canb.auug.org.au>
+Subject: Re: [PATCH TARBALL, DEV ONLY] xfsprogs: metadata CRC support V2
+Message-ID: <20130429014600.GZ10481@dastard>
+References: <20130412145555.GF30622@dastard>
+	<20130426061231.GA8338@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130429112943.afdd088c7bb8d80046bdfd2f@canb.auug.org.au>
+In-Reply-To: <20130426061231.GA8338@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,27 +30,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: Ben Myers <bpm@sgi.com>, linux-next@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Mon, Apr 29, 2013 at 11:29:43AM +1000, Stephen Rothwell wrote:
-> Hi all,
-> 
-> After merging the xfs tree, today's linux-next build (powerpc
-> ppc64_defconfig) failed like this:
-> 
-> ERROR: "xfs_dquot_buf_ops" [fs/xfs/xfs.ko] undefined!
-> 
-> Probably caused by commit 3fe58f30b4fc ("xfs: add CRC checks for quota
-> blocks").
-> 
-> I have used the xfs tree from next-20130426 for today.
+On Fri, Apr 26, 2013 at 02:12:31AM -0400, Christoph Hellwig wrote:
+> Can you send out the libxfs resync separately?  I think that's something
+> that should go in ASAP.
 
-CONFIG_XFS_QUOTA=y will fix it.
+Yes, the next version of the tarball will be split up into 3 parts:
 
-Or, alternatively, apply this patch:
+	1. - remove dirv1
+	   - libxfs kernel resync
+	   - add CRC infrstructure
+	   - libxlog kernel resync
 
-http://oss.sgi.com/pipermail/xfs/2013-April/025434.html
+	2. add CRC support to libxfs
+
+	3. Add CRC support to mkfs, repair, db, etc....
+
+The plan is to do the resync (part 1) as soon as the current
+xfsprogs RC is officially released as that gets the largest part of
+the patchset into the upstream tree. I've already got this part of
+it pretty much ready to go....
 
 Cheers,
 
