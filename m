@@ -1,16 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 211827F52
-	for <xfs@oss.sgi.com>; Tue, 30 Apr 2013 13:36:49 -0500 (CDT)
-Date: Tue, 30 Apr 2013 13:36:47 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: linux-next: build failure after merge of the xfs tree
-Message-ID: <20130430183647.GF812@sgi.com>
-References: <20130429112943.afdd088c7bb8d80046bdfd2f@canb.auug.org.au>
-	<20130429014002.GY10481@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130429014002.GY10481@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 314477F51
+	for <xfs@oss.sgi.com>; Tue, 30 Apr 2013 15:01:09 -0500 (CDT)
+Message-Id: <20130430193734.216401872@sgi.com>
+Date: Tue, 30 Apr 2013 14:37:34 -0500
+From: rjohnston@sgi.com
+Subject: [PATCH] xfsprogs: 3.1.11 release
+Content-Disposition: inline; filename=xfsprogs-update-version-to-3.1.11.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,39 +15,104 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: linux-next@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Nathan Scott <nathans@debian.org>
 
-Hey Stephen and Dave,
+Signed-off-by: Rich Johnston <rjohnston@sgi.com>
 
-On Mon, Apr 29, 2013 at 11:40:02AM +1000, Dave Chinner wrote:
-> On Mon, Apr 29, 2013 at 11:29:43AM +1000, Stephen Rothwell wrote:
-> > Hi all,
-> > 
-> > After merging the xfs tree, today's linux-next build (powerpc
-> > ppc64_defconfig) failed like this:
-> > 
-> > ERROR: "xfs_dquot_buf_ops" [fs/xfs/xfs.ko] undefined!
-> > 
-> > Probably caused by commit 3fe58f30b4fc ("xfs: add CRC checks for quota
-> > blocks").
-> > 
-> > I have used the xfs tree from next-20130426 for today.
-> 
-> CONFIG_XFS_QUOTA=y will fix it.
-> 
-> Or, alternatively, apply this patch:
-> 
-> http://oss.sgi.com/pipermail/xfs/2013-April/025434.html
+---
+ VERSION          |    2 +-
+ configure.ac     |    2 +-
+ debian/changelog |    6 ++++++
+ doc/CHANGES      |   37 +++++++++++++++++++++++++++++++++++++
+ 4 files changed, 45 insertions(+), 2 deletions(-)
 
-I applied this patch so it should be fixed today.
+Index: b/VERSION
+===================================================================
+--- a/VERSION
++++ b/VERSION
+@@ -3,5 +3,5 @@
+ #
+ PKG_MAJOR=3
+ PKG_MINOR=1
+-PKG_REVISION=10
++PKG_REVISION=11
+ PKG_BUILD=1
+Index: b/configure.ac
+===================================================================
+--- a/configure.ac
++++ b/configure.ac
+@@ -1,4 +1,4 @@
+-AC_INIT([xfsprogs], [3.1.10])
++AC_INIT([xfsprogs], [3.1.11])
+ AC_PREREQ(2.50)
+ AC_CONFIG_AUX_DIR([.])
+ AC_CONFIG_MACRO_DIR([m4])
+Index: b/debian/changelog
+===================================================================
+--- a/debian/changelog
++++ b/debian/changelog
+@@ -1,3 +1,9 @@
++xfsprogs (3.1.11) unstable; urgency=low
++
++  * New upstream release
++
++ -- Nathan Scott <nathans@debian.org>  Tue, 19 Mar 2013 14:25:00 +1100
++
+ xfsprogs (3.1.9) unstable; urgency=low
+ 
+   * New upstream release
+Index: b/doc/CHANGES
+===================================================================
+--- a/doc/CHANGES
++++ b/doc/CHANGES
+@@ -1,3 +1,40 @@
++xfsprogs-3.1.11 (30 April 2013)
++	- Support for relative paths in xfs_quota thanks to Satoru Takeuchi.
++	- mkfs.xfs will always go into multidisk mode when filesystem
++	  geometry is specified on the command line.
++	- Document all commands in xfs_io.
++	- Remove setfl command from xfs_io.
++	- xfs_metadump will obfuscate symlinks by path component.
++	- mkfs.xfs no longer accepts geometry settings smaller than the
++	  physical sector size.
++	- xfs_logprint now supports multiply-logged inode fields and
++	  handles continued inode transactions correctly.
++	- kill XLOG_SET
++	- Update release scripts to use git archive to address a
++	  missing source file reported by Arkadiusz Mi?kiewicz
++	- Fix a build error with -Werror=format-security, reported
++	  by Arkadiusz Mi?kiewicz
++	- mkfs.xfs no longer attempts to discard when -N option is used.
++	- Update 'make deb' to use tarball
++	- Sync up with log reservation changes in the kernel.
++	- Fix possible unallocated memory access in fiemap.
++	- Guard against string overflow in path_to_fspath.
++	- Fix setup_cursor array allocation.
++	- Fix free of unintialized pointer in xfs_acl_valid error path.
++	- Guard against path string overflows.
++	- Check strdup results properly in initallfs().
++	- Fix attribute no_change_count logic.
++	- Remove extraneous close() in fsrallfs().
++	- xfs_repair now skips the freelist scan of a corrupt agf
++	  when in no-modify mode.
++	- xfs_db now skips freelist scans of corrupt agfs.
++	- Remove unconditional ASSERT(0) in xfs_repair.
++	- Reduce bb_numrecs in bno/cnt btrees when log consumes all agf space.
++	- Add depraction message for xfs_check.
++	- xfs_quota allow user or group names beginning with digits reported by
++	  James Carter.
++	- Fix manpages and usage() spelling, errors and omissions.
++
+ xfsprogs-3.1.10 (13 December 2012)
+ 	- Update release script to make a source tarball.
+ 
 
-Regards,
-	Ben
 
 _______________________________________________
 xfs mailing list
