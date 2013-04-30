@@ -1,18 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 38F0A29DFA
-	for <xfs@oss.sgi.com>; Mon, 29 Apr 2013 21:11:48 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 446AD29DFA
+	for <xfs@oss.sgi.com>; Tue, 30 Apr 2013 01:19:06 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 277CD304081
-	for <xfs@oss.sgi.com>; Mon, 29 Apr 2013 19:11:45 -0700 (PDT)
-Message-ID: <517F2858.70004@oracle.com>
-Date: Tue, 30 Apr 2013 10:11:36 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E06DDAC001
+	for <xfs@oss.sgi.com>; Mon, 29 Apr 2013 23:19:02 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	Co3AxQSgu6I5JcO2 for <xfs@oss.sgi.com>;
+	Mon, 29 Apr 2013 23:19:00 -0700 (PDT)
+Date: Tue, 30 Apr 2013 16:18:56 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 24/22] xfs: Teach dquot recovery about CONFIG_XFS_QUOTA
+Message-ID: <20130430061856.GE23072@dastard>
+References: <1364965892-19623-1-git-send-email-david@fromorbit.com>
+	<20130409073322.GJ17758@dastard> <20130427204415.GJ29359@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: Don't keep silent if sunit/swidth can not be changed
-	via mount
-References: <517E5D12.5010809@oracle.com> <517E88E6.9070709@sgi.com>
-In-Reply-To: <517E88E6.9070709@sgi.com>
+Content-Disposition: inline
+In-Reply-To: <20130427204415.GJ29359@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,101 +30,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Ben Myers <bpm@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On 04/29/2013 10:51 PM, Mark Tinguely wrote:
-> On 04/29/13 06:44, Jeff Liu wrote:
->> From: Jie Liu<jeff.liu@oracle.com>
->>
->> As per the mount man page, sunit and swidth can be changed via
->> mount options.  For XFS, on the face of it, those options seems
->> works if the specified alignments is properly, e.g.
->> # mount -o sunit=4096,swidth=8192 /dev/sdb1 /mnt
->> # mount | grep sdb1
->> /dev/sdb1 on /mnt type xfs (rw,sunit=4096,swidth=8192)
->>
->> However, neither sunit nor swidth is shown from the xfs_info output.
->> # xfs_info /mnt
->> meta-data=/dev/sdb1    isize=256    agcount=4, agsize=262144 blks
->>           =             sectsz=512   attr=2
->> data     =             bsize=4096   blocks=1048576, imaxpct=25
->>           =             sunit=0      swidth=0 blks
->> 		       ^^^^^^^^^^^^^^^^^^^^^^^^^^
->> naming   =version 2    bsize=4096   ascii-ci=0
->> log      =internal     bsize=4096   blocks=2560, version=2
->>           =             sectsz=512   sunit=0 blks, lazy-count=1
->> realtime =none         extsz=4096   blocks=0, rtextents=0
->>
->> The reason is that the alignment can only be changed if the relevant
->> super block is already configured with alignments, otherwise, the
->> given value will be silently ignored, so it's better to tell user
->> that the alignment-changing can not take affect in one way or another.
->>
->> With this fix, the attempt to mount a storage without strip alignment
->> setup on super block will failed if XFS_MOUNT_RETERR is enabled, or
->> just ignore the given alignment and drop a warning to indicate the
->> cause in syslog.
->>
->> # mount -o sunit=4096,swidth=8192 /dev/sdb1 /mnt
->> mount: wrong fs type, bad option, bad superblock on /dev/sdb1,
->>         missing codepage or helper program, or other error
->>         In some cases useful info is found in syslog - try
->>         dmesg | tail  or so
->>
->> # dmesg|tail
->> .......
->> XFS (sdb1): can not change alignment: no data alignment on superblock
->>
->> Signed-off-by: Jie Liu<jeff.liu@oracle.com>
->>
->> ---
->>   fs/xfs/xfs_mount.c |    7 +++++++
->>   1 file changed, 7 insertions(+)
->>
->> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
->> index 3806088..bc7fdd4 100644
->> --- a/fs/xfs/xfs_mount.c
->> +++ b/fs/xfs/xfs_mount.c
->> @@ -924,6 +924,13 @@ xfs_update_alignment(xfs_mount_t *mp)
->>   				sbp->sb_width = mp->m_swidth;
->>   				mp->m_update_flags |= XFS_SB_WIDTH;
->>   			}
->> +		} else {
->> +			xfs_warn(mp, "can not change alignment: "
->> +				"no data alignment on superblock");
-> suggest that you keep the string together so it can be searched.
->    "superblock does not support data alignment"
-Do you means that the string would shown as: "superblock does not
-support data alignment"?
+On Sat, Apr 27, 2013 at 03:44:15PM -0500, Ben Myers wrote:
+> Hey,
+> 
+> On Tue, Apr 09, 2013 at 05:33:22PM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Fix a build error when CONFIG_XFS_QUOTA=n:
+> > 
+> > fs/built-in.o: In function `xlog_recovery_validate_buf_type':
+> > /home/dave/src/build/x86-64/xfsdev/fs/xfs/xfs_log_recover.c:1948: undefined
+> > reference to `xfs_dquot_buf_ops'
+> > 
+> > Reported-by: Michael L. Semon <mlsemon35@gmail.com>
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> 
+> This one didn't want to apply cleanly for some reason.  Will give it a closer
+> look in coming days.
 
-Or "cannot change alignment: superblock does not support data alignment"?
+Strange, my local copy applied cleanly to the updated tree. I'll
+repost it.
 
-I prefer to the later format because it can distinguish this special
-case from the previous alignment validation procedure, i.e,
-"alignment check failed: xxx".
+Cheers,
 
-Thanks,
--Jeff
-> 
->> +			if (mp->m_flags&  XFS_MOUNT_RETERR)
->> +				return XFS_ERROR(EINVAL);
->> +			mp->m_dalign = 0;
->> +			mp->m_swidth = 0;
->>   		}
->>   	} else if ((mp->m_flags&  XFS_MOUNT_NOALIGN) != XFS_MOUNT_NOALIGN&&
->>   		xfs_sb_version_hasdalign(&mp->m_sb)) {
-> 
-> 
-> Thanks,
-> 
-> --Mark.
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
