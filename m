@@ -1,24 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DE2E17F37
-	for <xfs@oss.sgi.com>; Tue, 30 Apr 2013 07:03:17 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id BE46E8F807A
-	for <xfs@oss.sgi.com>; Tue, 30 Apr 2013 05:03:14 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	CLsKnYym8e3Gpjnn for <xfs@oss.sgi.com>;
-	Tue, 30 Apr 2013 05:03:13 -0700 (PDT)
-Date: Tue, 30 Apr 2013 22:03:06 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH TARBALL, DEV ONLY] xfsprogs: metadata CRC support V2
-Message-ID: <20130430120306.GL23072@dastard>
-References: <20130412145555.GF30622@dastard> <51799C24.8010901@sgi.com>
-	<20130425214040.GQ30622@dastard> <517EE729.2030706@sgi.com>
-	<20130429220952.GB23072@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id 2C6A07F4C
+	for <xfs@oss.sgi.com>; Tue, 30 Apr 2013 09:17:54 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1B1788F8033
+	for <xfs@oss.sgi.com>; Tue, 30 Apr 2013 07:17:50 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id 8DnNz3xHN9rezHNV for <xfs@oss.sgi.com>;
+	Tue, 30 Apr 2013 07:17:50 -0700 (PDT)
+Message-ID: <517FD28D.3020402@sandeen.net>
+Date: Tue, 30 Apr 2013 09:17:49 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130429220952.GB23072@dastard>
+Subject: Re: [PATCH] xfstests shared/298: various fixes
+References: <517AE12C.2050902@redhat.com> <20130430074348.GK23072@dastard>
+In-Reply-To: <20130430074348.GK23072@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,53 +27,80 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Tue, Apr 30, 2013 at 08:09:52AM +1000, Dave Chinner wrote:
-> On Mon, Apr 29, 2013 at 04:33:29PM -0500, Mark Tinguely wrote:
-> > On 04/25/13 16:40, Dave Chinner wrote:
-> > >On Thu, Apr 25, 2013 at 04:12:04PM -0500, Mark Tinguely wrote:
-> > Index: b/include/xfs/xfs_dir2_format.h
-> > ===================================================================
-> > --- a/include/xfs/xfs_dir2_format.h
-> > +++ b/include/xfs/xfs_dir2_format.h
-> > @@ -40,7 +40,6 @@
-> >   */
-> >  typedef	__uint16_t	xfs_dir2_data_off_t;
-> >  #define	NULLDATAOFF	0xffffU
-> > -typedef uint		xfs_dir2_data_aoff_t;	/* argument form */
+On 4/30/13 2:43 AM, Dave Chinner wrote:
+> On Fri, Apr 26, 2013 at 03:18:52PM -0500, Eric Sandeen wrote:
+>> fix shared/298:
+>>
+>> * don't include common/config, not needed and breaks
+>>   stuff when $SCRATCH_DEV_POOL is defined:
+>>     Error: $SCRATCH_DEV should be unset when $SCRATCH_DEV_POOL is set
+>> * make sure xfs_io has fiemap, we'll need it
+>> * add -F to the xfs_io invocation, again
 > 
-> This file is common with the kernel code, so whatever other
-> definition it conflicts with is the one to remove.
+> What's it needed for this time?
+
+the same as last time.  :)  using old xfs_io on a non-xfs fs.
+
+>> * ignore ENOSPC errors from "garbage" loop; the only goal
+>>   is to fill it, ENOSPC doesn't matter.
+>>
+>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+>> ---
+>>
+>> Wondering if we should just add " -F" to $XFS_IO_PROG . . . 
+>>
+>> diff --git a/tests/shared/298 b/tests/shared/298
+>> index f1a3432..e2eddda 100755
+>> --- a/tests/shared/298
+>> +++ b/tests/shared/298
+>> @@ -28,12 +28,12 @@ echo "QA output created by $seq"
+>>  status=1	# failure is the default!
+>>  trap "_cleanup; exit \$status" 0 1 2 3 15
+>>  
+>> -. common/config
+>>  . common/rc
+>>  
+>>  _supported_fs ext4 xfs
+>>  _supported_os Linux
+>>  _require_fstrim
+>> +_require_xfs_io_fiemap
+>>  _require_fs_space $TEST_DIR 307200
+>>  [ "$FSTYP" = "ext4" ] && _require_dumpe2fs
+>>  
+>> @@ -49,7 +49,7 @@ _cleanup()
+>>  
+>>  get_holes()
+>>  {
+>> -	$XFS_IO_PROG -c fiemap $1 | grep hole | $SED_PROG 's/.*\[\(.*\)\.\.\(.*\)\].*/\1 \2/'
+>> +	$XFS_IO_PROG -F -c fiemap $1 | grep hole | $SED_PROG 's/.*\[\(.*\)\.\.\(.*\)\].*/\1 \2/'
+>>  }
+>>  
+>>  get_free_sectors()
+>> @@ -136,9 +136,10 @@ $MKFS_PROG -t $FSTYP $MKFS_OPTIONS $loop_dev &> /dev/null
+>>  $MOUNT_PROG $loop_dev $loop_mnt
+>>  
+>>  echo -n "Generating garbage on loop..."
+>> +# Goal is to fill it up, ignore any errors.
+>>  for i in `seq 1 10`; do
+>> -	mkdir $loop_mnt/$i
+>> -	cp -r $here/* $loop_mnt/$i
+>> +	mkdir $loop_mnt/$i &> /dev/null
+>> +	cp -r $here/* $loop_mnt/$i &> /dev/null
 > 
-> > @@ -61,11 +60,6 @@ typedef	__uint32_t	xfs_dir2_dataptr_t;
-> >  typedef	xfs_off_t	xfs_dir2_off_t;
-> > 
-> >  /*
-> > - * Directory block number (logical dirblk in file)
-> > - */
-> > -typedef	__uint32_t	xfs_dir2_db_t;
+> Can you break out of the loop once cp fails with an error? There's
+> no point hammering the filesystem for several loops after the first
+> ENOSPC occurs....
+
+yeah, ok.
+
+Thanks,
+-Eric
+
+> -Dave.
 > 
-> Same here.
-
-So looking at this in more detail, the reason these got added to
-xfs_dir2.h was that there are a bunch of function prototypes I had
-to move from xfs_dir2_priv.h to xfs_dir2.h so that they were visible
-outside libxfs. This is one of the changes I need to propagate back
-into the kernel code to bring the kernel headers inline with what is
-needed by userspace.
-
-So as a temporary measure, the above patch that just removes them
-from xfs_dir2_format.h is OK. I'll fold these into the current
-patchset.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
