@@ -1,20 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 935D97F4C
-	for <xfs@oss.sgi.com>; Tue, 30 Apr 2013 11:46:05 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7DFD68F806F
-	for <xfs@oss.sgi.com>; Tue, 30 Apr 2013 09:46:02 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id OBH9QzFrOC6E4Am7 for <xfs@oss.sgi.com>;
-	Tue, 30 Apr 2013 09:46:01 -0700 (PDT)
-Message-ID: <517FF548.1010309@sandeen.net>
-Date: Tue, 30 Apr 2013 11:46:00 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id 180847F51
+	for <xfs@oss.sgi.com>; Tue, 30 Apr 2013 13:22:07 -0500 (CDT)
+Date: Tue, 30 Apr 2013 13:22:03 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 1/4] xfs: Teach dquot recovery about CONFIG_XFS_QUOTA
+Message-ID: <20130430182203.GK29359@sgi.com>
+References: <1367321976-18268-1-git-send-email-david@fromorbit.com>
+	<1367321976-18268-2-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Subject: [PATCH V2] xfstests shared/298: various fixes
-References: <517AE12C.2050902@redhat.com>
-In-Reply-To: <517AE12C.2050902@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <1367321976-18268-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,67 +23,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-fix shared/298:
+On Tue, Apr 30, 2013 at 09:39:33PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Fix a build error when CONFIG_XFS_QUOTA=n:
+> 
+> fs/built-in.o: In function `xlog_recovery_validate_buf_type':
+> /home/dave/src/build/x86-64/xfsdev/fs/xfs/xfs_log_recover.c:1948: undefined
+> reference to `xfs_dquot_buf_ops'
+> 
+> Reported-by: Michael L. Semon <mlsemon35@gmail.com>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-* don't include common/config, not needed and breaks
-  stuff when $SCRATCH_DEV_POOL is defined:
-    Error: $SCRATCH_DEV should be unset when $SCRATCH_DEV_POOL is set
-* make sure xfs_io has fiemap, we'll need it
-* add -F to the xfs_io invocation, again, for use on
-  old xfsprogs on non-xfs filesystems
-* ignore ENOSPC errors from "garbage" loop; the only goal
-  is to fill it, ENOSPC doesn't matter.
+Applied fine this time.  Must have been a PEBKAC.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+Reviewed-by: Ben Myers <bpm@sgi.com>
 
-V2: break out of copy loop when full
 
-diff --git a/tests/shared/298 b/tests/shared/298
-index f1a3432..4541798 100755
---- a/tests/shared/298
-+++ b/tests/shared/298
-@@ -28,12 +28,12 @@ echo "QA output created by $seq"
- status=1	# failure is the default!
- trap "_cleanup; exit \$status" 0 1 2 3 15
- 
--. common/config
--. common/rc
-+. ./common/rc
- 
- _supported_fs ext4 xfs
- _supported_os Linux
- _require_fstrim
-+_require_xfs_io_fiemap
- _require_fs_space $TEST_DIR 307200
- [ "$FSTYP" = "ext4" ] && _require_dumpe2fs
- 
-@@ -49,7 +49,7 @@ _cleanup()
- 
- get_holes()
- {
--	$XFS_IO_PROG -c fiemap $1 | grep hole | $SED_PROG 's/.*\[\(.*\)\.\.\(.*\)\].*/\1 \2/'
-+	$XFS_IO_PROG -F -c fiemap $1 | grep hole | $SED_PROG 's/.*\[\(.*\)\.\.\(.*\)\].*/\1 \2/'
- }
- 
- get_free_sectors()
-@@ -136,9 +136,10 @@ $MKFS_PROG -t $FSTYP $MKFS_OPTIONS $loop_dev &> /dev/null
- $MOUNT_PROG $loop_dev $loop_mnt
- 
- echo -n "Generating garbage on loop..."
-+# Goal is to fill it up, ignore any errors.
- for i in `seq 1 10`; do
--	mkdir $loop_mnt/$i
--	cp -r $here/* $loop_mnt/$i
-+	mkdir $loop_mnt/$i &> /dev/null
-+	cp -r $here/* $loop_mnt/$i &> /dev/null || break
- done
- 
- # Get reference fiemap, this can contain i.e. uninitialized inode table
 
+> ---
+>  fs/xfs/xfs_log_recover.c |    6 ++++++
+>  1 file changed, 6 insertions(+)
+> 
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index 35ac504..ecaa4d4 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -1940,12 +1940,18 @@ xlog_recovery_validate_buf_type(
+>  	case XFS_BLFT_UDQUOT_BUF:
+>  	case XFS_BLFT_PDQUOT_BUF:
+>  	case XFS_BLFT_GDQUOT_BUF:
+> +#ifdef CONFIG_XFS_QUOTA
+>  		if (magic16 != XFS_DQUOT_MAGIC) {
+>  			xfs_warn(mp, "Bad DQUOT block magic!");
+>  			ASSERT(0);
+>  			break;
+>  		}
+>  		bp->b_ops = &xfs_dquot_buf_ops;
+> +#else
+> +		xfs_alert(mp,
+> +	"Trying to recover dquots without QUOTA support built in!");
+> +		ASSERT(0);
+
+Maybe it makes sense for recovery to fail in that case.
+
+-Ben
 
 _______________________________________________
 xfs mailing list
