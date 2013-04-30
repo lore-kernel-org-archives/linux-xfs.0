@@ -1,28 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 783707F52
-	for <xfs@oss.sgi.com>; Mon, 29 Apr 2013 17:30:08 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 38F0A29DFA
+	for <xfs@oss.sgi.com>; Mon, 29 Apr 2013 21:11:48 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D9A99AC001
-	for <xfs@oss.sgi.com>; Mon, 29 Apr 2013 15:30:07 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	ScMkvXFBvdsQhqSm for <xfs@oss.sgi.com>;
-	Mon, 29 Apr 2013 15:30:03 -0700 (PDT)
-Date: Tue, 30 Apr 2013 08:30:01 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: shutdown filesystem if xfs_perag_get fails
-Message-ID: <20130429223001.GC23072@dastard>
-References: <51753EDE.6000301@sgi.com> <51754A13.5000808@sandeen.net>
-	<5175532B.3050509@sgi.com> <20130422233033.GK30622@dastard>
-	<51769111.3050103@sgi.com>
-	<1366732475.3762.32402.camel@chandra-dt.ibm.com>
-	<20130423204956.GM10481@dastard>
-	<1366929706.4098.6.camel@chandra-dt.ibm.com>
-	<517A9E12.1030907@sgi.com> <20130426160704.GF29359@sgi.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 277CD304081
+	for <xfs@oss.sgi.com>; Mon, 29 Apr 2013 19:11:45 -0700 (PDT)
+Message-ID: <517F2858.70004@oracle.com>
+Date: Tue, 30 Apr 2013 10:11:36 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130426160704.GF29359@sgi.com>
+Subject: Re: [PATCH] xfs: Don't keep silent if sunit/swidth can not be changed
+	via mount
+References: <517E5D12.5010809@oracle.com> <517E88E6.9070709@sgi.com>
+In-Reply-To: <517E88E6.9070709@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,91 +25,101 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: xfs@oss.sgi.com, Eric Sandeen <sandeen@sandeen.net>, Mark Tinguely <tinguely@sgi.com>, sekharan@us.ibm.com
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Fri, Apr 26, 2013 at 11:07:04AM -0500, Ben Myers wrote:
-> Hi Mark and Chandra,
+On 04/29/2013 10:51 PM, Mark Tinguely wrote:
+> On 04/29/13 06:44, Jeff Liu wrote:
+>> From: Jie Liu<jeff.liu@oracle.com>
+>>
+>> As per the mount man page, sunit and swidth can be changed via
+>> mount options.  For XFS, on the face of it, those options seems
+>> works if the specified alignments is properly, e.g.
+>> # mount -o sunit=4096,swidth=8192 /dev/sdb1 /mnt
+>> # mount | grep sdb1
+>> /dev/sdb1 on /mnt type xfs (rw,sunit=4096,swidth=8192)
+>>
+>> However, neither sunit nor swidth is shown from the xfs_info output.
+>> # xfs_info /mnt
+>> meta-data=/dev/sdb1    isize=256    agcount=4, agsize=262144 blks
+>>           =             sectsz=512   attr=2
+>> data     =             bsize=4096   blocks=1048576, imaxpct=25
+>>           =             sunit=0      swidth=0 blks
+>> 		       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+>> naming   =version 2    bsize=4096   ascii-ci=0
+>> log      =internal     bsize=4096   blocks=2560, version=2
+>>           =             sectsz=512   sunit=0 blks, lazy-count=1
+>> realtime =none         extsz=4096   blocks=0, rtextents=0
+>>
+>> The reason is that the alignment can only be changed if the relevant
+>> super block is already configured with alignments, otherwise, the
+>> given value will be silently ignored, so it's better to tell user
+>> that the alignment-changing can not take affect in one way or another.
+>>
+>> With this fix, the attempt to mount a storage without strip alignment
+>> setup on super block will failed if XFS_MOUNT_RETERR is enabled, or
+>> just ignore the given alignment and drop a warning to indicate the
+>> cause in syslog.
+>>
+>> # mount -o sunit=4096,swidth=8192 /dev/sdb1 /mnt
+>> mount: wrong fs type, bad option, bad superblock on /dev/sdb1,
+>>         missing codepage or helper program, or other error
+>>         In some cases useful info is found in syslog - try
+>>         dmesg | tail  or so
+>>
+>> # dmesg|tail
+>> .......
+>> XFS (sdb1): can not change alignment: no data alignment on superblock
+>>
+>> Signed-off-by: Jie Liu<jeff.liu@oracle.com>
+>>
+>> ---
+>>   fs/xfs/xfs_mount.c |    7 +++++++
+>>   1 file changed, 7 insertions(+)
+>>
+>> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+>> index 3806088..bc7fdd4 100644
+>> --- a/fs/xfs/xfs_mount.c
+>> +++ b/fs/xfs/xfs_mount.c
+>> @@ -924,6 +924,13 @@ xfs_update_alignment(xfs_mount_t *mp)
+>>   				sbp->sb_width = mp->m_swidth;
+>>   				mp->m_update_flags |= XFS_SB_WIDTH;
+>>   			}
+>> +		} else {
+>> +			xfs_warn(mp, "can not change alignment: "
+>> +				"no data alignment on superblock");
+> suggest that you keep the string together so it can be searched.
+>    "superblock does not support data alignment"
+Do you means that the string would shown as: "superblock does not
+support data alignment"?
+
+Or "cannot change alignment: superblock does not support data alignment"?
+
+I prefer to the later format because it can distinguish this special
+case from the previous alignment validation procedure, i.e,
+"alignment check failed: xxx".
+
+Thanks,
+-Jeff
 > 
-> On Fri, Apr 26, 2013 at 10:32:34AM -0500, Mark Tinguely wrote:
-> > On 04/25/13 17:41, Chandra Seetharaman wrote:
-> > >In which case something along the lines of
-> > >
-> > >---
-> > >diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> > >index 3806088..3fb2fa6 100644
-> > >--- a/fs/xfs/xfs_mount.c
-> > >+++ b/fs/xfs/xfs_mount.c
-> > >@@ -203,7 +203,13 @@ xfs_perag_get(struct xfs_mount *mp, xfs_agnumber_t
-> > >agno)
-> > >         if (pag) {
-> > >                 ASSERT(atomic_read(&pag->pag_ref)>= 0);
-> > >                 ref = atomic_inc_return(&pag->pag_ref);
-> > >-       }
-> > >+       } else
-> > >+               /*
-> > >+                * xfs_perag_get() is called with invalid agno,
-> > >+                * which cannot happen. This indicates a problem
-> > >+                * in the calling code.
-> > >+                */
-> > >+               BUG();
-> > >         rcu_read_unlock();
-> > >         trace_xfs_perag_get(mp, agno, ref, _RET_IP_);
-> > >         return pag;
-> > >--------
-> > >
-> > >would be useful ?. Since we have a NULL pag, we will trip somewhere
-> > >else. At least with this, there is a pointer to the debugger/sysadmin
-> > >about where/what to look for (may be with more valuable/correct comment
-> > >than above).
-> > >
-> > 
-> > We will have to make sure the callers of xfs_perag_get() handle the NULL
-> > before dereferencing it. Sometimes the NULL is normal and just means the
-> > perag structure has not been initialize yet.
-> > 
-> > Properly handling the NULL from xfs_perag_get() in the caller will also
-> > mean that the callers of the callers of xfs_perag_get() have to handle
-> > the NULL returned to them. I will come back to this once the CRC stuff
-> > has been put to rest.
+>> +			if (mp->m_flags&  XFS_MOUNT_RETERR)
+>> +				return XFS_ERROR(EINVAL);
+>> +			mp->m_dalign = 0;
+>> +			mp->m_swidth = 0;
+>>   		}
+>>   	} else if ((mp->m_flags&  XFS_MOUNT_NOALIGN) != XFS_MOUNT_NOALIGN&&
+>>   		xfs_sb_version_hasdalign(&mp->m_sb)) {
 > 
-> I agree that we want to address this.  Our worst case should be a forced
-> shutdown, rather than a NULL ptr deref, or a BUG().  Ideally one corrupted
-> filesystem does not result in a full system outage, right?  ;)
-
-A BUG() or null pointer deref simply segv's the current process. It
-doesn't cause a reboot, hang or crash dump unless the system is
-configured to do so.
-
-But, as I've already stated, checking the return of xfs_perag_get()
-is not answer to this problem - it's just a band-aid. Lots of them,
-and mostly unneccessary, too. We need to address the input
-validation problem prior to calling xfs_perag_get() to catch the
-error at the source, not somewhere in the downstream call chain when
-an invalid agno is tripped over.
-
-Indeed, the design of the code is such that the agno is *trusted* to
-be correct, just like we trust inode numbers coming from on-disk
-structures to be correct. We validate inode numbers properly, but we
-aren't validating block numbers returned from extent records
-completely. That's the source of the problem we are seeing -
-xfs_perag_get() returning NULL is just a symptom.  Put simply:
-no-one should *ever* pass an invalid agno to xfs_perag_get().
-
-> There are some others like this.  e.g.  xfs_da_read_buf can return 0 with a
-> null buffer pointer, and we rarely check for that before using bp.
-
-I've also pointed out that the case where that can occur is handled
-by the callers that trigger it. It does not need to be checked by
-every caller, because most of them can't trigger this return case.
-Let's not make a mountain out of a molehill....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> 
+> Thanks,
+> 
+> --Mark.
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
