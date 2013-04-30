@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 18E557F4E
-	for <xfs@oss.sgi.com>; Tue, 30 Apr 2013 02:43:52 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 048E5304039
-	for <xfs@oss.sgi.com>; Tue, 30 Apr 2013 00:43:51 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	jI3DaGiNO3EZFE8U for <xfs@oss.sgi.com>;
-	Tue, 30 Apr 2013 00:43:50 -0700 (PDT)
-Date: Tue, 30 Apr 2013 17:43:49 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfstests shared/298: various fixes
-Message-ID: <20130430074348.GK23072@dastard>
-References: <517AE12C.2050902@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 473517F5A
+	for <xfs@oss.sgi.com>; Tue, 30 Apr 2013 02:55:22 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0ACCE8F8035
+	for <xfs@oss.sgi.com>; Tue, 30 Apr 2013 00:55:19 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id vj2FtDb4VYdOkoCI (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 30 Apr 2013 00:55:17 -0700 (PDT)
+Message-ID: <517F78D2.5020503@oracle.com>
+Date: Tue, 30 Apr 2013 15:54:58 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <517AE12C.2050902@redhat.com>
+Subject: Re: [PATCH] xfs: Don't keep silent if sunit/swidth can not be changed
+	via mount
+References: <517E5D12.5010809@oracle.com> <20130430073659.GH23072@dastard>
+In-Reply-To: <20130430073659.GH23072@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,75 +29,98 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Fri, Apr 26, 2013 at 03:18:52PM -0500, Eric Sandeen wrote:
-> fix shared/298:
+On 04/30/2013 03:36 PM, Dave Chinner wrote:
+> On Mon, Apr 29, 2013 at 07:44:18PM +0800, Jeff Liu wrote:
+>> From: Jie Liu <jeff.liu@oracle.com>
+>>
+>> As per the mount man page, sunit and swidth can be changed via
+>> mount options.  For XFS, on the face of it, those options seems
+>> works if the specified alignments is properly, e.g.
+>> # mount -o sunit=4096,swidth=8192 /dev/sdb1 /mnt
+>> # mount | grep sdb1
+>> /dev/sdb1 on /mnt type xfs (rw,sunit=4096,swidth=8192)
+>>
+>> However, neither sunit nor swidth is shown from the xfs_info output.
+>> # xfs_info /mnt
+>> meta-data=/dev/sdb1    isize=256    agcount=4, agsize=262144 blks
+>>          =             sectsz=512   attr=2
+>> data     =             bsize=4096   blocks=1048576, imaxpct=25
+>>          =             sunit=0      swidth=0 blks
+>> 		       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+>> naming   =version 2    bsize=4096   ascii-ci=0
+>> log      =internal     bsize=4096   blocks=2560, version=2
+>>          =             sectsz=512   sunit=0 blks, lazy-count=1
+>> realtime =none         extsz=4096   blocks=0, rtextents=0
+>>
+>> The reason is that the alignment can only be changed if the relevant
+>> super block is already configured with alignments, otherwise, the
+>> given value will be silently ignored, so it's better to tell user
+>> that the alignment-changing can not take affect in one way or another.
+>>
+>> With this fix, the attempt to mount a storage without strip alignment
+>> setup on super block will failed if XFS_MOUNT_RETERR is enabled, or
+>> just ignore the given alignment and drop a warning to indicate the
+>> cause in syslog.
+>>
+>> # mount -o sunit=4096,swidth=8192 /dev/sdb1 /mnt
+>> mount: wrong fs type, bad option, bad superblock on /dev/sdb1,
+>>        missing codepage or helper program, or other error
+>>        In some cases useful info is found in syslog - try
+>>        dmesg | tail  or so
+>>
+>> # dmesg|tail
+>> .......
+>> XFS (sdb1): can not change alignment: no data alignment on superblock
+>>
+>> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+>>
+>> ---
+>>  fs/xfs/xfs_mount.c |    7 +++++++
+>>  1 file changed, 7 insertions(+)
+>>
+>> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+>> index 3806088..bc7fdd4 100644
+>> --- a/fs/xfs/xfs_mount.c
+>> +++ b/fs/xfs/xfs_mount.c
+>> @@ -924,6 +924,13 @@ xfs_update_alignment(xfs_mount_t *mp)
+>>  				sbp->sb_width = mp->m_swidth;
+>>  				mp->m_update_flags |= XFS_SB_WIDTH;
+>>  			}
+>> +		} else {
+>> +			xfs_warn(mp, "can not change alignment: "
+>> +				"no data alignment on superblock");
+>> +			if (mp->m_flags & XFS_MOUNT_RETERR)
+>> +				return XFS_ERROR(EINVAL);
+>> +			mp->m_dalign = 0;
+>> +			mp->m_swidth = 0;
 > 
-> * don't include common/config, not needed and breaks
->   stuff when $SCRATCH_DEV_POOL is defined:
->     Error: $SCRATCH_DEV should be unset when $SCRATCH_DEV_POOL is set
-> * make sure xfs_io has fiemap, we'll need it
-> * add -F to the xfs_io invocation, again
-
-What's it needed for this time?
-
-> * ignore ENOSPC errors from "garbage" loop; the only goal
->   is to fill it, ENOSPC doesn't matter.
+> Can someone tell me why the XFS_MOUNT_RETERR flag exists?
+This is really a very opportune response because I also worked out
+another tiny patch for removing XFS_MOUNT_RETERR a few minutes ago,
+just hesitating if I missed anything or not.
 > 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
+> It looks like dead code to me as the only time mp->m_dalign is set
+> prior to calling xfs_update_alignment() is the same code that sets
+> XFS_MOUNT_RETERR in xfs_parseargs().
 > 
-> Wondering if we should just add " -F" to $XFS_IO_PROG . . . 
+> IOWs, any time we enter this "if (mp->m_dalign)" branch in
+> xfs_update_alignment(), XFS_MOUNT_RETERR is going to be set and so
+> we should always be emitting a warning and returning an error.
+Yes, I realized that as I can not trigger a warning only, it always
+returning an error to me. :(
 > 
-> diff --git a/tests/shared/298 b/tests/shared/298
-> index f1a3432..e2eddda 100755
-> --- a/tests/shared/298
-> +++ b/tests/shared/298
-> @@ -28,12 +28,12 @@ echo "QA output created by $seq"
->  status=1	# failure is the default!
->  trap "_cleanup; exit \$status" 0 1 2 3 15
->  
-> -. common/config
->  . common/rc
->  
->  _supported_fs ext4 xfs
->  _supported_os Linux
->  _require_fstrim
-> +_require_xfs_io_fiemap
->  _require_fs_space $TEST_DIR 307200
->  [ "$FSTYP" = "ext4" ] && _require_dumpe2fs
->  
-> @@ -49,7 +49,7 @@ _cleanup()
->  
->  get_holes()
->  {
-> -	$XFS_IO_PROG -c fiemap $1 | grep hole | $SED_PROG 's/.*\[\(.*\)\.\.\(.*\)\].*/\1 \2/'
-> +	$XFS_IO_PROG -F -c fiemap $1 | grep hole | $SED_PROG 's/.*\[\(.*\)\.\.\(.*\)\].*/\1 \2/'
->  }
->  
->  get_free_sectors()
-> @@ -136,9 +136,10 @@ $MKFS_PROG -t $FSTYP $MKFS_OPTIONS $loop_dev &> /dev/null
->  $MOUNT_PROG $loop_dev $loop_mnt
->  
->  echo -n "Generating garbage on loop..."
-> +# Goal is to fill it up, ignore any errors.
->  for i in `seq 1 10`; do
-> -	mkdir $loop_mnt/$i
-> -	cp -r $here/* $loop_mnt/$i
-> +	mkdir $loop_mnt/$i &> /dev/null
-> +	cp -r $here/* $loop_mnt/$i &> /dev/null
+> If this is correct, Jeff, can you remove the XFS_MOUNT_RETERR flag
+> and get rid of all the dead code in xfs_update_alignment() at the
+> same time, please?
+Sure, I'll post this patch tonight together with another initial patch
+for fixing transaction space over-reservation we have discussed two
+weeks ago, xfstests is running now.
 
-Can you break out of the loop once cp fails with an error? There's
-no point hammering the filesystem for several loops after the first
-ENOSPC occurs....
-
--Dave.
-
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+-Jeff
 
 _______________________________________________
 xfs mailing list
