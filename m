@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 44B857F80
-	for <xfs@oss.sgi.com>; Wed,  1 May 2013 11:20:48 -0500 (CDT)
-Date: Wed, 1 May 2013 11:20:44 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: Cleancache support in XFS
-Message-ID: <20130501162044.GN29359@sgi.com>
-References: <51810CED.4080003@zynstra.com>
+	by oss.sgi.com (Postfix) with ESMTP id 1773C7F52
+	for <xfs@oss.sgi.com>; Wed,  1 May 2013 11:40:21 -0500 (CDT)
+Message-ID: <51814578.9060408@sgi.com>
+Date: Wed, 01 May 2013 11:40:24 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <51810CED.4080003@zynstra.com>
+Subject: Re: [PATCH] xfs: fix log space reservation calculation if log stripe
+	unit is specified
+References: <51813BA5.3070306@oracle.com>
+In-Reply-To: <51813BA5.3070306@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,40 +18,101 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: James Dingwall <james.dingwall@zynstra.com>
-Cc: xfs@oss.sgi.com
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: Dave Chinner <dchinner@redhat.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Hi James, 
+On 05/01/13 10:58, Jeff Liu wrote:
+> Hello,
+>
+> About two weeks ago, Dave has found an issue by running xfstests/297.
+> http://oss.sgi.com/archives/xfs/2013-03/msg00273.html
+>
+> According to our previous discussion, if the log stripe unit is configured, we should
+> take it into account as it will dynamically increase the log reservation twice of it
+> per ticket.
+>
+> This patch is trying to fix it by checking the given log space against the maximum
+> request among those transactions(this procedure is implemented similar to xfsprogs/mkfs/maxres.c),
+> because the fundamental limit is that no single transaction can be larger than half of the log.
+> Also, looks at least another two log stripe unit should be added when calculating the minimum log
+> space, or else I can simply trigger a DEAD LOOP via create large number of files, I think I need
+> some time to digest Dave's comments posted on original bug ticket, i.e.
+>>> >>  The question is this: how much space do we need to reserve. I'm
+>>> >>  thinking a minimum of 4*lsu - 2*lsu for the existing CIL context, and
+>>> >>  another 2*lsu for any queued ticket waiting for space to come
+>>> >>  available.
+>
+> Put simply, with this fix, mount a partition with an improper log space setup vs log stripe
+> unit will failed although mkfs still works. Ah, maybe we can improve the user space xfs_mkfs
+> with some pre-checkup similar to the implementation inside kernel?  Besides that, it will
+> drop a warning to syslog and the suggested log space for the given log stripe unit is shown
+> there, which looks like the following:
+>
+> # mkfs.xfs -f -b size=512 -d agcount=16,su=256k,sw=12 -l su=256k,size=2560b /dev/sdb1
+> meta-data=/dev/sdb1              isize=256    agcount=16, agsize=524288 blks
+>           =                       sectsz=512   attr=2, projid32bit=0
+> data     =                       bsize=512    blocks=8388608, imaxpct=25
+>           =                       sunit=512    swidth=6144 blks
+> naming   =version 2              bsize=4096   ascii-ci=0
+> log      =internal log           bsize=512    blocks=2560, version=2
+>           =                       sectsz=512   sunit=512 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+>
 
-On Wed, May 01, 2013 at 01:39:09PM +0100, James Dingwall wrote:
-> In reference to: http://oss.sgi.com/archives/xfs/2012-05/msg00046.html
-> 
-> $ grep -r cleancache fs/xfs
-> on the 3.9 kernel source suggests that no patch was submitted to
-> enable cleancache for the XFS filesystem.  Since it was suggested
-> that this could be a one liner I've had a go and my first effort is
-> inline below.  While this seems to compile OK I have no experience
-> in filesystems so I would appreciate it if anyone can point out that
-> it is obviously wrong and likely to eat my data before I try booting
-> the kernel.
-> 
-> If it seems a reasonable attempt what would be the best way to check
-> that it isn't doing nasty things?
+Shouldn't mkfs.xfs also know it is building a filesystem that cannot be 
+mounted?
 
-Hrm.. Looks like there is a doc in Documentation/vm/cleancache.txt which
-includes a list of attributes the filesystem needs to have to work properly
-with cleancache.  I'd suggest going over that list and the code by inspection
-first, followed by some xfstests runs, and then wait for it to make a release
-before trusting any data to it.  For a test machine that I'm willing to crater,
-no worries.  But I wouldn't run this on my main workstation without doing the
-above first.  We can probably explore this for 3.11.  Thanks for the patch.
+When mkfs.xfs is given a log stripe unit is greater than 256KB, should 
+we divide the specified log stripe unit by 2 until it is under 256KB 
+rather than reset to 32KB?
 
-Regards,
-	Ben
+> # mount /dev/sdb1 /xfs1
+> mount: wrong fs type, bad option, bad superblock on /dev/sdb1,
+>         missing codepage or helper program, or other error
+>         In some cases useful info is found in syslog - try
+>         dmesg | tail  or so
+>
+> # dmesg:
+> .......
+> XFS (sdb1): log space of 2560 blocks too small, minimum request 6656
+> XFS (sdb1): log space validation failed
+> XFS (sdb1): log mount failed
+>
+>
+> Tests:
+> Ran some cases in xfstests as well as a few self-defined Bonnie++/FIO tests with above
+> configuration(6656 log blocks), looks the current fix works, at least no crash to me.:)
+>
+> But I have not yet dig into the detailed of how the suggested minimum log space would
+> affect the performance, given that the AIL push thresholds is defined to 25% of the log
+> space, a small logs might introduce IO overheads for pushing AIL too frequently.
+> In addition, considering the backgroup CIL commit threshold is 1/8 of the log, this would
+> also impact the log IO throughput IMHO.  Maybe we can figure out an optimized log space
+> combine those two cases and drop it to syslog along with the minimum size?
+>
+
+I think 1 MB is the smallest log size before we soft hang even without 
+stripe units define.
+
+>
+> To Dave,
+>
+> Sorry for the delay in drop this patch since I have mentioned that I'll post a fix
+> last night.  However, I have ran into an issue when testing it by creating/removing a
+> tons of files in parallel at that time:(
+
+The iclog buffers have to be a multiple of the log stripe unit or we 
+start punching the lsn in places that it should not. I think the idea 
+that was mentioned is to remove the power of two on the iclog buffer 
+size and replace with multiple of log stripe unit.
+
+http://oss.sgi.com/archives/xfs/2013-03/msg00039.html
+
+--Mark.
 
 _______________________________________________
 xfs mailing list
