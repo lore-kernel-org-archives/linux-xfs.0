@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 35BB67F52
-	for <xfs@oss.sgi.com>; Wed,  1 May 2013 17:03:17 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 191738F8035
-	for <xfs@oss.sgi.com>; Wed,  1 May 2013 15:03:13 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 896A27F52
+	for <xfs@oss.sgi.com>; Wed,  1 May 2013 17:10:14 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6B2C9304039
+	for <xfs@oss.sgi.com>; Wed,  1 May 2013 15:10:11 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	wGjlZMI0nNvSzjio for <xfs@oss.sgi.com>;
-	Wed, 01 May 2013 15:03:07 -0700 (PDT)
-Date: Thu, 2 May 2013 08:03:04 +1000
+	dTHPiuoCR4gBgwtI for <xfs@oss.sgi.com>;
+	Wed, 01 May 2013 15:10:09 -0700 (PDT)
+Date: Thu, 2 May 2013 08:10:07 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: deadlock on vmap_area_lock
-Message-ID: <20130501220303.GO10481@dastard>
-References: <20130501144341.GA2404@BohrerMBP.rgmadvisors.com>
-	<alpine.DEB.2.02.1305010855440.4547@chino.kir.corp.google.com>
+Subject: Re: xfsprogs-3.1.11 pre-release   please test!
+Message-ID: <20130501221007.GP10481@dastard>
+References: <51817712.6000807@sgi.com> <51817C88.4060208@sgi.com>
+	<518182BA.4010406@sandeen.net> <51818679.1030408@sgi.com>
+	<518187D0.6000809@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.02.1305010855440.4547@chino.kir.corp.google.com>
+In-Reply-To: <518187D0.6000809@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,78 +31,77 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: David Rientjes <rientjes@google.com>
-Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, Shawn Bohrer <sbohrer@rgmadvisors.com>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Rich Johnston <rjohnston@sgi.com>, Mark Tinguely <tinguely@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Wed, May 01, 2013 at 08:57:38AM -0700, David Rientjes wrote:
-> On Wed, 1 May 2013, Shawn Bohrer wrote:
+On Wed, May 01, 2013 at 04:23:28PM -0500, Eric Sandeen wrote:
+> On 5/1/13 4:17 PM, Mark Tinguely wrote:
+> > On 05/01/13 16:01, Eric Sandeen wrote:
+> >> On 5/1/13 3:35 PM, Mark Tinguely wrote:
+> >>> On 05/01/13 15:12, Rich Johnston wrote:
+> >>>> I have placed a pre-release tarball here:
+> >>>>
+> >>>> ftp://oss.sgi.com/projects/xfs/cmd_tars/pre-release/xfsprogs-pre-3.1.11-3.tar.gz
+> >>>>
+> >>>>
+> >>>> Please take a look and report any issues before next Wednesday (08 May
+> >>>> 2013). If there are other patches which you feel are essential, now is
+> >>>> the time to say so.
+> >>>>
+> >>>> Regards
+> >>>> --Rich
+> >>>
+> >>> The new lines (below) in xfs_check.sh breaks older xfstests:
+> >>>
+> >>>    xfs_check is deprecated and scheduled for removal in June 2014.
+> >>>    Please use xfs_repair -n<dev>  instead.
+> >>
+> >> Hum, I thought xfstests stopped calling xfs_check.sh and implemented
+> >> its own xfs_check internally:
+> >>
+> >> commit 187bccd310dc253feaebd69df4ccdda21eee12d0
+> >> Author: Chandra Seetharaman<sekharan@us.ibm.com>
+> >> Date:   Thu Apr 18 17:44:02 2013 +0000
+> >>
+> >>      xfstests: Remove dependence of xfs_check script
+> >>
+> >>      Replace the usage of the script xfs_check and add the relevant code to
+> >>      xfstests.
+> >>
+> >> ...
+> >> -        [ "$XFS_CHECK_PROG" = "" ]&&  _fatal "xfs_check not found"
+> >> ... etc ...
+> >>
+> >> where is check getting called directly?
+> >>
+> >> (Or: is your xfstests up to date?)
+> >>
+> >> -Eric
+> > 
+> > I disclosed it as an older xfstests.
 > 
-> > I've got two compute clusters with around 350 machines each which are
-> > running kernels based off of 3.1.9 (Yes I realize this is ancient by
-> > todays standards).
-
-xfs_info output of one of those filesystems? What platform are you
-running (32 or 64 bit)?
-
-> > All of the machines run a 'find' command once an
-> > hour on one of the mounted XFS filesystems.  Occasionally these find
-> > commands get stuck requiring a reboot of the system.  I took a peek
-> > today and see this with perf:
-> > 
-> >     72.22%          find  [kernel.kallsyms]          [k] _raw_spin_lock
-> >                     |
-> >                     --- _raw_spin_lock
-> >                        |          
-> >                        |--98.84%-- vm_map_ram
-> >                        |          _xfs_buf_map_pages
-> >                        |          xfs_buf_get
-> >                        |          xfs_buf_read
-> >                        |          xfs_trans_read_buf
-> >                        |          xfs_da_do_buf
-> >                        |          xfs_da_read_buf
-> >                        |          xfs_dir2_block_getdents
-> >                        |          xfs_readdir
-> >                        |          xfs_file_readdir
-> >                        |          vfs_readdir
-> >                        |          sys_getdents
-> >                        |          system_call_fastpath
-> >                        |          __getdents64
-> >                        |          
-> >                        |--1.12%-- _xfs_buf_map_pages
-> >                        |          xfs_buf_get
-> >                        |          xfs_buf_read
-> >                        |          xfs_trans_read_buf
-> >                        |          xfs_da_do_buf
-> >                        |          xfs_da_read_buf
-> >                        |          xfs_dir2_block_getdents
-> >                        |          xfs_readdir
-> >                        |          xfs_file_readdir
-> >                        |          vfs_readdir
-> >                        |          sys_getdents
-> >                        |          system_call_fastpath
-> >                        |          __getdents64
-> >                         --0.04%-- [...]
-> > 
-> > Looking at the code my best guess is that we are spinning on
-> > vmap_area_lock, but I could be wrong.  This is the only process
-> > spinning on the machine so I'm assuming either another process has
-> > blocked while holding the lock, or perhaps this find process has tried
-> > to acquire the vmap_area_lock twice?
-> > 
+> Sorry, I missed that.
 > 
-> Significant spinlock contention doesn't necessarily mean that there's a 
-> deadlock, but it also doesn't mean the opposite.  Depending on your 
-> definition of "occassionally", would it be possible to run with 
-> CONFIG_PROVE_LOCKING and CONFIG_LOCKDEP to see if it uncovers any real 
-> deadlock potential?
+> > It is conceivable that people will install the latest xfsprogs and not upgrade xfstests. I can hear it now, "It used to just work..." :)
+> 
+> So what's the proposed solution? ;)
 
-It sure will. We've been reporting that vm_map_ram is doing
-GFP_KERNEL allocations from GFP_NOFS context for years, and have
-reported plenty of lockdep dumps as a result of it.
+Upgrade xfstests.
 
-But that's not the problem that is occurring above - lockstat is
-probably a good thing to look at here to determine exactly what
-locks are being contended on....
+> TBH I think xfstests is the kind of thing that is in so much flux
+> you should always assume you need a newer version.
+
+That has always been the case.
+
+> And since it's mostly qe/devel types using it, I'd submit that
+> they can figure it out, but if you have a better idea, I'm all
+> ears!
+
+Given the number of people that are likely to hit this, then I think
+leaving it as it stands is just fine. The expectation is that you
+should be using an xfstests that matches the age of your userspace
+tools, otherwise you are not going be running all the tests necessary
+to exercise the current userspace functionality you have installed...
 
 Cheers,
 
