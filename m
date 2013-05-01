@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 77AEE29DF8
-	for <xfs@oss.sgi.com>; Wed,  1 May 2013 03:47:54 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5F8B68F8049
-	for <xfs@oss.sgi.com>; Wed,  1 May 2013 01:47:54 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id E8F197F52
+	for <xfs@oss.sgi.com>; Wed,  1 May 2013 04:32:28 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D4F658F8065
+	for <xfs@oss.sgi.com>; Wed,  1 May 2013 02:32:28 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	1fpXSjuGe0kee1CU for <xfs@oss.sgi.com>;
-	Wed, 01 May 2013 01:47:52 -0700 (PDT)
-Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UXShb-00089D-Dx
-	for xfs@oss.sgi.com; Wed, 01 May 2013 18:47:51 +1000
-Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UXShb-0000ok-9b
-	for xfs@oss.sgi.com; Wed, 01 May 2013 18:47:51 +1000
+	VubJqkPjIj07cice for <xfs@oss.sgi.com>;
+	Wed, 01 May 2013 02:32:27 -0700 (PDT)
+Received: from dave by dastard with local (Exim 4.76)
+	(envelope-from <david@fromorbit.com>) id 1UXTNz-0008E5-NG
+	for xfs@oss.sgi.com; Wed, 01 May 2013 19:31:39 +1000
+Date: Wed, 1 May 2013 19:31:39 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfstests: generic/241 requires dbench
-Date: Wed,  1 May 2013 18:47:51 +1000
-Message-Id: <1367398071-3112-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 0/5] xfstests: various fixes
+Message-ID: <20130501093139.GN10481@dastard>
+References: <1367397123-2530-1-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1367397123-2530-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,36 +28,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+On Wed, May 01, 2013 at 06:31:58PM +1000, Dave Chinner wrote:
+> Hi folks,
+> 
+> These are various fixes for xfstests.
+> 
+> The first patch is an infrastructure regression fix, resulting from
+> the patchset that split up the tests into subdirectories. It also
+> moves all the check.* output files to the result directory rather
+> than leaving them in the root directory of xfstests.
+> 
+> The second is a bunch of changes to generic/310 that should have
+> been done in the review cycle. It now works reliably for me.
+> 
+> The last 3 patches fix bugs in tests that result in files being left
+> in the root directory of xfstests.
 
-common/config doesn't configure DBENCH_PROG so it doesn't run.
+FWIW, with the V2 xfsprogs kernel sync tarball I've posted and these
+fixes to xfstests, I'm down to only 3 failures in xfstests for 4k
+block size filesystem tests:
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- common/config |    1 +
- 1 file changed, 1 insertion(+)
+Failures: generic/233 shared/298 xfs/296
 
-diff --git a/common/config b/common/config
-index dfbb5c2..b55a528 100644
---- a/common/config
-+++ b/common/config
-@@ -177,6 +177,7 @@ export FIO_PROG="`set_prog_path fio`"
- export FILEFRAG_PROG="`set_prog_path filefrag`"
- export E4DEFRAG_PROG="`set_prog_path e4defrag`"
- export LOGGER_PROG="`set_prog_path logger`"
-+export DBENCH_PROG="`set_prog_path dbench`"
- 
- # Generate a comparable xfsprogs version number in the form of
- # major * 10000 + minor * 100 + release
+generic/233 appears to be a small quota accounting mismatch,
+probably related to speculative preallocation. Not a major issue.
+
+shared/298 is failing due to the ENOSPC problem Eric posted patches
+to fix. Test bug.
+
+xfs/296 is failing due to an unresolved xfsdump issue w.r.t
+restoring security attributes. Unresolved.
+
+So, I'm much happier now about the state of xfsprogs and xfstests
+than I was this morning.  I'll be happier still when I fix the fsx
+failures on 512 byte block size filesystems, because that will bring
+my 512 byte block size filesystem tests to close to the same level.
+That's for tomorrow, though.
+
+Cheers,
+
+Dave.
 -- 
-1.7.10.4
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
