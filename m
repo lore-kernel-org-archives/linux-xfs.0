@@ -1,32 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id BCBFF7F9B
-	for <xfs@oss.sgi.com>; Wed,  1 May 2013 09:26:37 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 47753AC001
-	for <xfs@oss.sgi.com>; Wed,  1 May 2013 07:26:37 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id QjrUpNiLlhEoXHIp (version=TLSv1
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id ED6D07F4C
+	for <xfs@oss.sgi.com>; Wed,  1 May 2013 09:27:46 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CAF9D304066
+	for <xfs@oss.sgi.com>; Wed,  1 May 2013 07:27:43 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id zamhVrc07eGQOhOv (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 01 May 2013 07:26:35 -0700 (PDT)
-Received: from acsinet22.oracle.com (acsinet22.oracle.com [141.146.126.238])
-	by userp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
-	ESMTP id r41EQXcK017612
+	Wed, 01 May 2013 07:27:42 -0700 (PDT)
+Received: from ucsinet21.oracle.com (ucsinet21.oracle.com [156.151.31.93])
+	by aserp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
+	ESMTP id r41ERfrk009318
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 1 May 2013 14:26:34 GMT
-Received: from userz7022.oracle.com (userz7022.oracle.com [156.151.31.86])
-	by acsinet22.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r41EQXe6007768
+	for <xfs@oss.sgi.com>; Wed, 1 May 2013 14:27:42 GMT
+Received: from userz7021.oracle.com (userz7021.oracle.com [156.151.31.85])
+	by ucsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	r41EReqn017312
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
-	for <xfs@oss.sgi.com>; Wed, 1 May 2013 14:26:34 GMT
-Received: from abhmt115.oracle.com (abhmt115.oracle.com [141.146.116.67])
-	by userz7022.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r41EQXh0018240 for <xfs@oss.sgi.com>; Wed, 1 May 2013 14:26:33 GMT
-Message-ID: <51812614.2010807@oracle.com>
-Date: Wed, 01 May 2013 22:26:28 +0800
+	for <xfs@oss.sgi.com>; Wed, 1 May 2013 14:27:41 GMT
+Received: from abhmt112.oracle.com (abhmt112.oracle.com [141.146.116.64])
+	by userz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	r41EReH3017299 for <xfs@oss.sgi.com>; Wed, 1 May 2013 14:27:40 GMT
+Message-ID: <51812658.4060505@oracle.com>
+Date: Wed, 01 May 2013 22:27:36 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfs: Remove xfs_krash from struct xfs_mount
+Subject: [PATCH] xfs: Remove XFS_SWRITE_LOG_RES macros
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -43,27 +43,30 @@ To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
 From: Jie Liu <jeff.liu@oracle.com>
 
-Remove struct xfs_krash from xfs_mount as there is no user of it nowadays.
+Remove the XFS_SWRITE_LOG_RES macros as there is no user of it nowadays.
 
 Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 
 ---
- fs/xfs/xfs_mount.h |    2 --
- 1 file changed, 2 deletions(-)
+ fs/xfs/xfs_trans.h |    4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index bc90706..b68e56b 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -192,8 +192,6 @@ typedef struct xfs_mount {
- 	xfs_dablk_t		m_dirleafblk;	/* blockno of dir non-data v2 */
- 	xfs_dablk_t		m_dirfreeblk;	/* blockno of dirfreeindex v2 */
- 	uint			m_chsize;	/* size of next field */
--	struct xfs_chash	*m_chash;	/* fs private inode per-cluster
--						 * hash table */
- 	atomic_t		m_active_trans;	/* number trans frozen */
- #ifdef HAVE_PERCPU_SB
- 	xfs_icsb_cnts_t __percpu *m_sb_cnts;	/* per-cpu superblock counters */
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index cd29f61..cdff1c6 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -246,10 +246,8 @@ struct xfs_log_item_desc {
+ #define	XFS_GROWRTALLOC_LOG_RES(mp)	((mp)->m_reservations.tr_growrtalloc)
+ #define	XFS_GROWRTZERO_LOG_RES(mp)	((mp)->m_reservations.tr_growrtzero)
+ #define	XFS_GROWRTFREE_LOG_RES(mp)	((mp)->m_reservations.tr_growrtfree)
+-#define	XFS_SWRITE_LOG_RES(mp)	((mp)->m_reservations.tr_swrite)
+ /*
+- * Logging the inode timestamps on an fsync -- same as SWRITE
+- * as long as SWRITE logs the entire inode core
++ * Logging the inode timestamps on an fsync
+  */
+ #define XFS_FSYNC_TS_LOG_RES(mp)        ((mp)->m_reservations.tr_swrite)
+ #define	XFS_WRITEID_LOG_RES(mp)		((mp)->m_reservations.tr_swrite)
 -- 
 1.7.9.5
 
