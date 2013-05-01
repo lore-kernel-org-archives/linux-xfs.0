@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E72097F6D
-	for <xfs@oss.sgi.com>; Wed,  1 May 2013 01:31:50 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 75A88AC001
-	for <xfs@oss.sgi.com>; Tue, 30 Apr 2013 23:31:50 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 0A2417F76
+	for <xfs@oss.sgi.com>; Wed,  1 May 2013 02:06:30 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8E8D6AC002
+	for <xfs@oss.sgi.com>; Wed,  1 May 2013 00:06:29 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	qb1LLkkswACJnVtY for <xfs@oss.sgi.com>;
-	Tue, 30 Apr 2013 23:31:48 -0700 (PDT)
-Received: from dave by dastard with local (Exim 4.76)
-	(envelope-from <david@fromorbit.com>) id 1UXQZl-0007ux-1W
-	for xfs@oss.sgi.com; Wed, 01 May 2013 16:31:37 +1000
-Date: Wed, 1 May 2013 16:31:37 +1000
+	vEA4dB9Zk77B0YK5 for <xfs@oss.sgi.com>;
+	Wed, 01 May 2013 00:06:24 -0700 (PDT)
+Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1UXR70-0007yg-Tn
+	for xfs@oss.sgi.com; Wed, 01 May 2013 17:05:58 +1000
+Received: from dave by disappointment with local (Exim 4.80)
+	(envelope-from <dave@disappointment.disaster>) id 1UXR70-0008Sf-PJ
+	for xfs@oss.sgi.com; Wed, 01 May 2013 17:05:58 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 11/8] xfs_logprint: fix continuation transactions
-Message-ID: <20130501063136.GL10481@dastard>
-References: <20130430121300.GB10481@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130430121300.GB10481@dastard>
+Subject: [PATCH] xfstests: fix incorrect redirect in generic/232
+Date: Wed,  1 May 2013 17:05:58 +1000
+Message-Id: <1367391958-32494-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,6 +27,7 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
@@ -36,80 +36,32 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-As demonstrated by xfs/295, continuation transactions cause of
-problems for xfs_logprint. The failure demonstrated by the test is
-that the buffer log format structures are variable sized on disk -
-the dirty bitmap is sized according to the buffer length, not fixed
-to the length of the maximum supported buffer size.
-
-xfs_logprint assumes that the buf log format reocrds are of fixed
-size, and so when a short buffer is found it fails to handle it
-properly and treats it like a continuation record.  This causses the
-opheader pointer to be incremented incorrectly and then logprint
-wanders off into a dark corner and gets eaten by a grue.
-
-While fixing this, make the xlog_print_record code that does the
-transaction opheader walking a little easier to read and stop it
-from outputting binary data direct to the console by converting the
-no-data-print case to use a hex dumping loop.
+generic/232 attempts to direct output to tee, but instead of using a
+pipe it uses an append operator. Hence it leaves a file named "tee"
+in the root directory of the xfstests execution path. Just direct
+the output to the $seqres.full file rather than trying to tee it
+into the test output as well.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- logprint/log_misc.c |   22 +++++++++++++++++-----
- 1 file changed, 17 insertions(+), 5 deletions(-)
+ tests/generic/232 |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/logprint/log_misc.c b/logprint/log_misc.c
-index 30b7ea6..d08f900 100644
---- a/logprint/log_misc.c
-+++ b/logprint/log_misc.c
-@@ -268,7 +268,13 @@ xlog_print_trans_buffer(xfs_caddr_t *ptr, int len, int *i, int num_ops)
-     blen = f->blf_len;
-     map_size = f->blf_map_size;
-     flags = f->blf_flags;
--    struct_size = sizeof(xfs_buf_log_format_t);
-+
-+    /*
-+     * size of the format header is dependent on the size of the bitmap, not
-+     * the size of the in-memory structure. Hence the slightly obtuse
-+     * calculation.
-+     */
-+    struct_size = offsetof(struct xfs_buf_log_format, blf_map_size) + map_size;
+diff --git a/tests/generic/232 b/tests/generic/232
+index 2402c45..8ada8aa 100755
+--- a/tests/generic/232
++++ b/tests/generic/232
+@@ -55,7 +55,7 @@ _fsstress()
+ 	count=2000
+ 	args=`_scale_fsstress_args -d $out -n $count -p 7`
  
-     if (len >= struct_size) {
- 	ASSERT((len - sizeof(struct_size)) % sizeof(int) == 0);
-@@ -933,22 +939,28 @@ xlog_print_record(int			  fd,
- 	continued = ((op_head->oh_flags & XLOG_WAS_CONT_TRANS) ||
- 		     (op_head->oh_flags & XLOG_CONTINUE_TRANS));
- 
--	/* print transaction data */
--	if (print_no_data ||
--	    (continued && be32_to_cpu(op_head->oh_len) == 0)) {
-+	if (continued && be32_to_cpu(op_head->oh_len) == 0)
-+		continue;
-+
-+	if (print_no_data) {
- 	    for (n = 0; n < be32_to_cpu(op_head->oh_len); n++) {
--		printf("%c", *ptr);
-+		printf("0x%02x ", (unsigned int)*ptr);
-+		if (n % 16 == 15)
-+			printf("\n");
- 		ptr++;
- 	    }
- 	    printf("\n");
- 	    continue;
- 	}
-+
-+	/* print transaction data */
- 	if (xlog_print_find_tid(be32_to_cpu(op_head->oh_tid),
- 				op_head->oh_flags & XLOG_WAS_CONT_TRANS)) {
- 	    printf(_("Left over region from split log item\n"));
- 	    ptr += be32_to_cpu(op_head->oh_len);
- 	    continue;
- 	}
-+
- 	if (be32_to_cpu(op_head->oh_len) != 0) {
- 	    if (*(uint *)ptr == XFS_TRANS_HEADER_MAGIC) {
- 		skip = xlog_print_trans_header(&ptr,
+-	echo "fsstress $args" >> tee -a $seqres.full
++	echo "fsstress $args" >> $seqres.full
+ 	if ! $FSSTRESS_PROG $args | tee -a $seqres.full | _filter_num
+ 	then
+ 		echo "    fsstress $args returned $?"
+-- 
+1.7.10.4
 
 _______________________________________________
 xfs mailing list
