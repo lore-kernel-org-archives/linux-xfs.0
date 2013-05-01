@@ -1,16 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id DA7F77F9B
-	for <xfs@oss.sgi.com>; Wed,  1 May 2013 09:25:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 584F7AC001
-	for <xfs@oss.sgi.com>; Wed,  1 May 2013 07:25:30 -0700 (PDT)
-Message-ID: <518125CF.3050806@oracle.com>
-Date: Wed, 01 May 2013 22:25:19 +0800
+	by oss.sgi.com (Postfix) with ESMTP id BCBFF7F9B
+	for <xfs@oss.sgi.com>; Wed,  1 May 2013 09:26:37 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 47753AC001
+	for <xfs@oss.sgi.com>; Wed,  1 May 2013 07:26:37 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id QjrUpNiLlhEoXHIp (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 01 May 2013 07:26:35 -0700 (PDT)
+Received: from acsinet22.oracle.com (acsinet22.oracle.com [141.146.126.238])
+	by userp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
+	ESMTP id r41EQXcK017612
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Wed, 1 May 2013 14:26:34 GMT
+Received: from userz7022.oracle.com (userz7022.oracle.com [156.151.31.86])
+	by acsinet22.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	r41EQXe6007768
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
+	for <xfs@oss.sgi.com>; Wed, 1 May 2013 14:26:34 GMT
+Received: from abhmt115.oracle.com (abhmt115.oracle.com [141.146.116.67])
+	by userz7022.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	r41EQXh0018240 for <xfs@oss.sgi.com>; Wed, 1 May 2013 14:26:33 GMT
+Message-ID: <51812614.2010807@oracle.com>
+Date: Wed, 01 May 2013 22:26:28 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: [PATCH 2/2 v2] xfs: Don't keep silent if sunit/swidth can not be
-	changed via mount
+Subject: [PATCH] xfs: Remove xfs_krash from struct xfs_mount
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,69 +40,30 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
-Cc: Mark Tinguely <tinguely@sgi.com>
 
 From: Jie Liu <jeff.liu@oracle.com>
 
-As per the mount man page, sunit and swidth can be changed via
-mount options.  For XFS, on the face of it, those options seems
-works if the specified alignments is properly, e.g.
-# mount -o sunit=4096,swidth=8192 /dev/sdb1 /mnt
-# mount | grep sdb1
-/dev/sdb1 on /mnt type xfs (rw,sunit=4096,swidth=8192)
-
-However, neither sunit nor swidth is shown from the xfs_info output.
-# xfs_info /mnt
-meta-data=/dev/sdb1    isize=256    agcount=4, agsize=262144 blks
-         =             sectsz=512   attr=2
-data     =             bsize=4096   blocks=1048576, imaxpct=25
-         =             sunit=0      swidth=0 blks
-		       ^^^^^^^^^^^^^^^^^^^^^^^^^^
-naming   =version 2    bsize=4096   ascii-ci=0
-log      =internal     bsize=4096   blocks=2560, version=2
-         =             sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none         extsz=4096   blocks=0, rtextents=0
-
-The reason is that the alignment can only be changed if the relevant
-super block is already configured with alignments, otherwise, the
-given value is silently ignored.
-
-With this fix, the attempt to mount a storage without strip alignment
-setup on a super block will get an error with a warning in syslog to
-indicate the true cause.
-
-# mount -o sunit=4096,swidth=8192 /dev/sdb1 /mnt
-mount: wrong fs type, bad option, bad superblock on /dev/sdb1,
-       missing codepage or helper program, or other error
-       In some cases useful info is found in syslog - try
-	dmesg | tail  or so
-# dmesg|tail
-.......
-XFS (sdb1): can not change alignment: superblock does not support data
-alignment
+Remove struct xfs_krash from xfs_mount as there is no user of it nowadays.
 
 Signed-off-by: Jie Liu <jeff.liu@oracle.com>
-Cc: Mark Tinguely <tinguely@sgi.com>
-Cc: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_mount.c |    4 ++++
- 1 file changed, 4 insertions(+)
 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 29e8de8..2836ef6 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -909,6 +909,10 @@ xfs_update_alignment(xfs_mount_t *mp)
- 				sbp->sb_width = mp->m_swidth;
- 				mp->m_update_flags |= XFS_SB_WIDTH;
- 			}
-+		} else {
-+			xfs_warn(mp, "cannot change alignment: "
-+				 "superblock does not support data alignment");
-+			return XFS_ERROR(EINVAL);
- 		}
- 	} else if ((mp->m_flags & XFS_MOUNT_NOALIGN) != XFS_MOUNT_NOALIGN &&
- 		    xfs_sb_version_hasdalign(&mp->m_sb)) {
+---
+ fs/xfs/xfs_mount.h |    2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index bc90706..b68e56b 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -192,8 +192,6 @@ typedef struct xfs_mount {
+ 	xfs_dablk_t		m_dirleafblk;	/* blockno of dir non-data v2 */
+ 	xfs_dablk_t		m_dirfreeblk;	/* blockno of dirfreeindex v2 */
+ 	uint			m_chsize;	/* size of next field */
+-	struct xfs_chash	*m_chash;	/* fs private inode per-cluster
+-						 * hash table */
+ 	atomic_t		m_active_trans;	/* number trans frozen */
+ #ifdef HAVE_PERCPU_SB
+ 	xfs_icsb_cnts_t __percpu *m_sb_cnts;	/* per-cpu superblock counters */
 -- 
 1.7.9.5
 
