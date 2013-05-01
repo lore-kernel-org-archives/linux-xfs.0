@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 896A27F52
-	for <xfs@oss.sgi.com>; Wed,  1 May 2013 17:10:14 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 687A37F52
+	for <xfs@oss.sgi.com>; Wed,  1 May 2013 17:30:26 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6B2C9304039
-	for <xfs@oss.sgi.com>; Wed,  1 May 2013 15:10:11 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 41B97304043
+	for <xfs@oss.sgi.com>; Wed,  1 May 2013 15:30:26 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	dTHPiuoCR4gBgwtI for <xfs@oss.sgi.com>;
-	Wed, 01 May 2013 15:10:09 -0700 (PDT)
-Date: Thu, 2 May 2013 08:10:07 +1000
+	MfmXlne4id8R2RZf for <xfs@oss.sgi.com>;
+	Wed, 01 May 2013 15:30:24 -0700 (PDT)
+Date: Thu, 2 May 2013 08:30:22 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfsprogs-3.1.11 pre-release   please test!
-Message-ID: <20130501221007.GP10481@dastard>
-References: <51817712.6000807@sgi.com> <51817C88.4060208@sgi.com>
-	<518182BA.4010406@sandeen.net> <51818679.1030408@sgi.com>
-	<518187D0.6000809@sandeen.net>
+Subject: Re: Cleancache support in XFS
+Message-ID: <20130501223022.GQ10481@dastard>
+References: <51810CED.4080003@zynstra.com>
+ <20130501162044.GN29359@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <518187D0.6000809@sandeen.net>
+In-Reply-To: <20130501162044.GN29359@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,77 +30,84 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Rich Johnston <rjohnston@sgi.com>, Mark Tinguely <tinguely@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: Ben Myers <bpm@sgi.com>
+Cc: James Dingwall <james.dingwall@zynstra.com>, xfs@oss.sgi.com
 
-On Wed, May 01, 2013 at 04:23:28PM -0500, Eric Sandeen wrote:
-> On 5/1/13 4:17 PM, Mark Tinguely wrote:
-> > On 05/01/13 16:01, Eric Sandeen wrote:
-> >> On 5/1/13 3:35 PM, Mark Tinguely wrote:
-> >>> On 05/01/13 15:12, Rich Johnston wrote:
-> >>>> I have placed a pre-release tarball here:
-> >>>>
-> >>>> ftp://oss.sgi.com/projects/xfs/cmd_tars/pre-release/xfsprogs-pre-3.1.11-3.tar.gz
-> >>>>
-> >>>>
-> >>>> Please take a look and report any issues before next Wednesday (08 May
-> >>>> 2013). If there are other patches which you feel are essential, now is
-> >>>> the time to say so.
-> >>>>
-> >>>> Regards
-> >>>> --Rich
-> >>>
-> >>> The new lines (below) in xfs_check.sh breaks older xfstests:
-> >>>
-> >>>    xfs_check is deprecated and scheduled for removal in June 2014.
-> >>>    Please use xfs_repair -n<dev>  instead.
-> >>
-> >> Hum, I thought xfstests stopped calling xfs_check.sh and implemented
-> >> its own xfs_check internally:
-> >>
-> >> commit 187bccd310dc253feaebd69df4ccdda21eee12d0
-> >> Author: Chandra Seetharaman<sekharan@us.ibm.com>
-> >> Date:   Thu Apr 18 17:44:02 2013 +0000
-> >>
-> >>      xfstests: Remove dependence of xfs_check script
-> >>
-> >>      Replace the usage of the script xfs_check and add the relevant code to
-> >>      xfstests.
-> >>
-> >> ...
-> >> -        [ "$XFS_CHECK_PROG" = "" ]&&  _fatal "xfs_check not found"
-> >> ... etc ...
-> >>
-> >> where is check getting called directly?
-> >>
-> >> (Or: is your xfstests up to date?)
-> >>
-> >> -Eric
+On Wed, May 01, 2013 at 11:20:44AM -0500, Ben Myers wrote:
+> Hi James, 
+> 
+> On Wed, May 01, 2013 at 01:39:09PM +0100, James Dingwall wrote:
+> > In reference to: http://oss.sgi.com/archives/xfs/2012-05/msg00046.html
 > > 
-> > I disclosed it as an older xfstests.
+> > $ grep -r cleancache fs/xfs
+> > on the 3.9 kernel source suggests that no patch was submitted to
+> > enable cleancache for the XFS filesystem.  Since it was suggested
+> > that this could be a one liner I've had a go and my first effort is
+> > inline below.  While this seems to compile OK I have no experience
+> > in filesystems so I would appreciate it if anyone can point out that
+> > it is obviously wrong and likely to eat my data before I try booting
+> > the kernel.
+> > 
+> > If it seems a reasonable attempt what would be the best way to check
+> > that it isn't doing nasty things?
 > 
-> Sorry, I missed that.
-> 
-> > It is conceivable that people will install the latest xfsprogs and not upgrade xfstests. I can hear it now, "It used to just work..." :)
-> 
-> So what's the proposed solution? ;)
+> Hrm.. Looks like there is a doc in Documentation/vm/cleancache.txt which
+> includes a list of attributes the filesystem needs to have to work properly
+> with cleancache.
 
-Upgrade xfstests.
+So, those points are:
 
-> TBH I think xfstests is the kind of thing that is in so much flux
-> you should always assume you need a newer version.
+| Some points for a filesystem to consider:
+|
+| - The FS should be block-device-based (e.g. a ram-based FS such
+|  as tmpfs should not enable cleancache)
 
-That has always been the case.
+OK.
 
-> And since it's mostly qe/devel types using it, I'd submit that
-> they can figure it out, but if you have a better idea, I'm all
-> ears!
+|- To ensure coherency/correctness, the FS must ensure that all
+|  file removal or truncation operations either go through VFS or
+|  add hooks to do the equivalent cleancache "invalidate" operations
 
-Given the number of people that are likely to hit this, then I think
-leaving it as it stands is just fine. The expectation is that you
-should be using an xfstests that matches the age of your userspace
-tools, otherwise you are not going be running all the tests necessary
-to exercise the current userspace functionality you have installed...
+There be dragons - do all the XFS ioctls do the right thing?
+
+|- To ensure coherency/correctness, either inode numbers must
+|  be unique across the lifetime of the on-disk file OR the
+|  FS must provide an "encode_fh" function.
+
+Ok.
+
+|- The FS must call the VFS superblock alloc and deactivate routines
+|  or add hooks to do the equivalent cleancache calls done there.
+
+OK.
+
+|- To maximize performance, all pages fetched from the FS should
+|  go through the do_mpag_readpage routine or the FS should add
+|  hooks to do the equivalent (cf. btrfs)
+
+xfs uses mpage_readpages() so should be fine.
+
+|- Currently, the FS blocksize must be the same as PAGESIZE.  This
+|  is not an architectural restriction, but no backends currently
+|  support anything different.
+
+Which means that we need hooks in the mount path to determine if
+this is the case or not. I note that neither ext3/ext4 do this check
+so I can't determine why this restriction is mentioned, and I'm not
+sure if it has any relevance to btrfs.
+
+IOWs, I'd like to know why this restriction exists - what does
+cleancache care about how the filesystem maps blocks to the page in
+the page cache - any way the filesystem does this it uses
+page->private to hide this fact from the page cache....
+
+|- A clustered FS should invoke the "shared_init_fs" cleancache
+|  hook to get best performance for some backends.
+
+Not a problem.
+
+So there's a couple of things that need to be explained and
+explored, and a bunch of testing to be done....
 
 Cheers,
 
