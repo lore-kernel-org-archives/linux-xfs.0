@@ -1,25 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9A5FC7F89
-	for <xfs@oss.sgi.com>; Wed,  1 May 2013 12:01:48 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 8AE927F37
+	for <xfs@oss.sgi.com>; Wed,  1 May 2013 13:06:58 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 88185304077
-	for <xfs@oss.sgi.com>; Wed,  1 May 2013 10:01:45 -0700 (PDT)
-Received: from mail-da0-f42.google.com (mail-da0-f42.google.com
-	[209.85.210.42]) by cuda.sgi.com with ESMTP id DqMdQ6DzDnXViSI3
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 01 May 2013 10:01:44 -0700 (PDT)
-Received: by mail-da0-f42.google.com with SMTP id n15so736564dad.15
-	for <xfs@oss.sgi.com>; Wed, 01 May 2013 10:01:43 -0700 (PDT)
-Date: Wed, 1 May 2013 10:01:41 -0700 (PDT)
-From: David Rientjes <rientjes@google.com>
-Subject: Re: deadlock on vmap_area_lock
-In-Reply-To: <20130501164406.GC2404@BohrerMBP.rgmadvisors.com>
-Message-ID: <alpine.DEB.2.02.1305010959070.16591@chino.kir.corp.google.com>
-References: <20130501144341.GA2404@BohrerMBP.rgmadvisors.com>
-	<alpine.DEB.2.02.1305010855440.4547@chino.kir.corp.google.com>
-	<20130501164406.GC2404@BohrerMBP.rgmadvisors.com>
-MIME-Version: 1.0
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 7A494304070
+	for <xfs@oss.sgi.com>; Wed,  1 May 2013 11:06:55 -0700 (PDT)
+Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
+	cuda.sgi.com with ESMTP id 0S1bua9qlBwfQdMA for
+	<xfs@oss.sgi.com>; Wed, 01 May 2013 11:06:52 -0700 (PDT)
+Received: from galadriel.home (unknown [82.235.234.79])
+	by smtp3-g21.free.fr (Postfix) with ESMTP id C6F55A6289
+	for <xfs@oss.sgi.com>; Wed,  1 May 2013 20:06:48 +0200 (CEST)
+Date: Wed, 1 May 2013 20:06:33 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Weird message from xfs_repair
+Message-ID: <20130501200633.5d24caf5@galadriel.home>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,43 +28,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Shawn Bohrer <sbohrer@rgmadvisors.com>
-Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Wed, 1 May 2013, Shawn Bohrer wrote:
 
-> Correct it doesn't and I can't prove the find command is not making
-> progress, however these finds normally complete in under 15 min and
-> we've let the stuck ones run for days.  Additionally if this was just
-> contention I'd expect to see multiple threads/CPUs contending and I
-> only have a single CPU pegged running find at 99%. I should clarify
-> that the perf snippet above was for the entire system.  Profiling just
-> the find command shows:
-> 
->     82.56%     find  [kernel.kallsyms]  [k] _raw_spin_lock
+Hi everyone,
 
-Couple of options to figure out what spinlock this is: use lockstat (see 
-Documentation/lockstat.txt), which will also require a kernel rebuild, 
-some human intervention to collect the stats, and the accompanying 
-performance degradation, or you could try collecting
-/proc/$(pidof find)/stack at regular intervals and figure out which 
-spinlock it is.
+I've just had to resort to the latest devel version of xfs_repair to
+get back some heavily damaged filesystem (thanks to a failing RAID
+controller), and it ended with the following message:
 
-> > Depending on your 
-> > definition of "occassionally", would it be possible to run with 
-> > CONFIG_PROVE_LOCKING and CONFIG_LOCKDEP to see if it uncovers any real 
-> > deadlock potential?
-> 
-> Yeah, I can probably enable these on a few machines and hope I get
-> lucky.  These machines are used for real work so I'll have to gauge
-> what how significant the performance impact is to determine how many
-> machines I can sacrifice to the cause.
-> 
+cache_purge: shake on cache 0x672030 left 1 nodes!?
 
-You'll probably only need to enable it on one machine, if a deadlock 
-possibility exists here then lockdep will find it even without hitting it, 
-it simply has to exercise the path that leads to it.  It does have a 
-performance degradation for that one machine, though.
+What's this about? I didn't look at the source, but a new run of
+xfs_repair detected nothing. 
+
+-- 
+------------------------------------------------------------------------
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+------------------------------------------------------------------------
 
 _______________________________________________
 xfs mailing list
