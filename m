@@ -1,25 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E8F197F52
-	for <xfs@oss.sgi.com>; Wed,  1 May 2013 04:32:28 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B40397F84
+	for <xfs@oss.sgi.com>; Wed,  1 May 2013 07:39:22 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D4F658F8065
-	for <xfs@oss.sgi.com>; Wed,  1 May 2013 02:32:28 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	VubJqkPjIj07cice for <xfs@oss.sgi.com>;
-	Wed, 01 May 2013 02:32:27 -0700 (PDT)
-Received: from dave by dastard with local (Exim 4.76)
-	(envelope-from <david@fromorbit.com>) id 1UXTNz-0008E5-NG
-	for xfs@oss.sgi.com; Wed, 01 May 2013 19:31:39 +1000
-Date: Wed, 1 May 2013 19:31:39 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 0/5] xfstests: various fixes
-Message-ID: <20130501093139.GN10481@dastard>
-References: <1367397123-2530-1-git-send-email-david@fromorbit.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 4664EAC003
+	for <xfs@oss.sgi.com>; Wed,  1 May 2013 05:39:18 -0700 (PDT)
+Received: from emea01-am1-obe.outbound.protection.outlook.com
+	(mail-am1lp0014.outbound.protection.outlook.com
+	[213.199.154.14]) by cuda.sgi.com with ESMTP id
+	wNyyraUssyhvd5Vr (version=TLSv1 cipher=AES128-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 01 May 2013 05:39:17 -0700 (PDT)
+Message-ID: <51810CED.4080003@zynstra.com>
+Date: Wed, 1 May 2013 13:39:09 +0100
+From: James Dingwall <james.dingwall@zynstra.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1367397123-2530-1-git-send-email-david@fromorbit.com>
+Subject: Cleancache support in XFS
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,55 +24,47 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-On Wed, May 01, 2013 at 06:31:58PM +1000, Dave Chinner wrote:
-> Hi folks,
-> 
-> These are various fixes for xfstests.
-> 
-> The first patch is an infrastructure regression fix, resulting from
-> the patchset that split up the tests into subdirectories. It also
-> moves all the check.* output files to the result directory rather
-> than leaving them in the root directory of xfstests.
-> 
-> The second is a bunch of changes to generic/310 that should have
-> been done in the review cycle. It now works reliably for me.
-> 
-> The last 3 patches fix bugs in tests that result in files being left
-> in the root directory of xfstests.
+In reference to: http://oss.sgi.com/archives/xfs/2012-05/msg00046.html
 
-FWIW, with the V2 xfsprogs kernel sync tarball I've posted and these
-fixes to xfstests, I'm down to only 3 failures in xfstests for 4k
-block size filesystem tests:
+$ grep -r cleancache fs/xfs
+on the 3.9 kernel source suggests that no patch was submitted to enable 
+cleancache for the XFS filesystem.  Since it was suggested that this 
+could be a one liner I've had a go and my first effort is inline below.  
+While this seems to compile OK I have no experience in filesystems so I 
+would appreciate it if anyone can point out that it is obviously wrong 
+and likely to eat my data before I try booting the kernel.
 
-Failures: generic/233 shared/298 xfs/296
+If it seems a reasonable attempt what would be the best way to check 
+that it isn't doing nasty things?
 
-generic/233 appears to be a small quota accounting mismatch,
-probably related to speculative preallocation. Not a major issue.
+Thanks,
+James
 
-shared/298 is failing due to the ENOSPC problem Eric posted patches
-to fix. Test bug.
+--- xfs_super.c 2013-04-29 10:28:22.000000000 +0100
++++ xfs_super.cleancache.c      2013-05-01 13:22:44.367763564 +0100
+@@ -61,6 +61,7 @@
+  #include <linux/kthread.h>
+  #include <linux/freezer.h>
+  #include <linux/parser.h>
++#include <linux/cleancache.h>
 
-xfs/296 is failing due to an unresolved xfsdump issue w.r.t
-restoring security attributes. Unresolved.
+  static const struct super_operations xfs_super_operations;
+  static kmem_zone_t *xfs_ioend_zone;
+@@ -1489,6 +1490,8 @@
+                 goto out_unmount;
+         }
 
-So, I'm much happier now about the state of xfsprogs and xfstests
-than I was this morning.  I'll be happier still when I fix the fsx
-failures on 512 byte block size filesystems, because that will bring
-my 512 byte block size filesystem tests to close to the same level.
-That's for tomorrow, though.
++       cleancache_init_fs(sb);
++
+         return 0;
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+   out_filestream_unmount:
 
 _______________________________________________
 xfs mailing list
