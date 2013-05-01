@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C1B337F6D
-	for <xfs@oss.sgi.com>; Wed,  1 May 2013 01:30:35 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id E72097F6D
+	for <xfs@oss.sgi.com>; Wed,  1 May 2013 01:31:50 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id AC1A98F8037
-	for <xfs@oss.sgi.com>; Tue, 30 Apr 2013 23:30:35 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 75A88AC001
+	for <xfs@oss.sgi.com>; Tue, 30 Apr 2013 23:31:50 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	G7mnYFyR8feemmml for <xfs@oss.sgi.com>;
-	Tue, 30 Apr 2013 23:30:33 -0700 (PDT)
+	qb1LLkkswACJnVtY for <xfs@oss.sgi.com>;
+	Tue, 30 Apr 2013 23:31:48 -0700 (PDT)
 Received: from dave by dastard with local (Exim 4.76)
-	(envelope-from <david@fromorbit.com>) id 1UXQYJ-0007uo-0J
-	for xfs@oss.sgi.com; Wed, 01 May 2013 16:30:07 +1000
-Date: Wed, 1 May 2013 16:30:06 +1000
+	(envelope-from <david@fromorbit.com>) id 1UXQZl-0007ux-1W
+	for xfs@oss.sgi.com; Wed, 01 May 2013 16:31:37 +1000
+Date: Wed, 1 May 2013 16:31:37 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 10/8] xfsdb: re-instate DA btree node headers
-Message-ID: <20130501063006.GK10481@dastard>
+Subject: [PATCH 11/8] xfs_logprint: fix continuation transactions
+Message-ID: <20130501063136.GL10481@dastard>
 References: <20130430121300.GB10481@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
@@ -36,155 +36,80 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When removing the dirv1 code, it wasn't immediately obvious that the
-dir v2 code used a small chunk of the dirv1 field definitions. i.e.
-those for the DA btree node headers. Hence bits of xfs_db didn't
-work as expected, and some tests failed in non-obvious ways. e.g
-test 073 failed with this additional line of output:
+As demonstrated by xfs/295, continuation transactions cause of
+problems for xfs_logprint. The failure demonstrated by the test is
+that the buffer log format structures are variable sized on disk -
+the dirty bitmap is sized according to the buffer length, not fixed
+to the length of the maximum supported buffer size.
 
-Use of uninitialized value $logstart in numeric gt (>) at /home/dave/src/xfstests-dev/src/fill2fs line 84
+xfs_logprint assumes that the buf log format reocrds are of fixed
+size, and so when a short buffer is found it fails to handle it
+properly and treats it like a continuation record.  This causses the
+opheader pointer to be incremented incorrectly and then logprint
+wanders off into a dark corner and gets eaten by a grue.
 
-which was the result of the command:
-
-	xfs_db -r -c sb -c $TEST_DEV
-
-giving an unexpectedly incorrect output.
-
-Re-instate the needed field definitions and rename them from "DIR"
-to "DA" so it is obvious they are for decoding DA Btree format
-blocks.
+While fixing this, make the xlog_print_record code that does the
+transaction opheader walking a little easier to read and stop it
+from outputting binary data direct to the console by converting the
+no-data-print case to use a hex dumping loop.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- db/dir2.c  |   30 +++++++++++++++++++++++++++---
- db/dir2.h  |    4 ++++
- db/field.c |    7 +++++++
- db/field.h |   15 +++------------
- 4 files changed, 41 insertions(+), 15 deletions(-)
+ logprint/log_misc.c |   22 +++++++++++++++++-----
+ 1 file changed, 17 insertions(+), 5 deletions(-)
 
-diff --git a/db/dir2.c b/db/dir2.c
-index a13fa25..a539f2d 100644
---- a/db/dir2.c
-+++ b/db/dir2.c
-@@ -84,9 +84,9 @@ const field_t	dir2_flds[] = {
- 	  FLD_ARRAY|FLD_COUNT, TYP_NONE },
- 	{ "ltail", FLDT_DIR2_LEAF_TAIL, dir2_leaf_tail_offset,
- 	  dir2_leaf_tail_count, FLD_OFFSET|FLD_COUNT, TYP_NONE },
--	{ "nhdr", FLDT_DIR_NODE_HDR, OI(NOFF(hdr)), dir2_node_hdr_count,
-+	{ "nhdr", FLDT_DA_NODE_HDR, OI(NOFF(hdr)), dir2_node_hdr_count,
- 	  FLD_COUNT, TYP_NONE },
--	{ "nbtree", FLDT_DIR_NODE_ENTRY, OI(NOFF(btree)), dir2_node_btree_count,
-+	{ "nbtree", FLDT_DA_NODE_ENTRY, OI(NOFF(btree)), dir2_node_btree_count,
- 	  FLD_ARRAY|FLD_COUNT, TYP_NONE },
- 	{ "fhdr", FLDT_DIR2_FREE_HDR, OI(FOFF(hdr)), dir2_free_hdr_count,
- 	  FLD_COUNT, TYP_NONE },
-@@ -144,7 +144,7 @@ const field_t	dir2_leaf_entry_flds[] = {
+diff --git a/logprint/log_misc.c b/logprint/log_misc.c
+index 30b7ea6..d08f900 100644
+--- a/logprint/log_misc.c
++++ b/logprint/log_misc.c
+@@ -268,7 +268,13 @@ xlog_print_trans_buffer(xfs_caddr_t *ptr, int len, int *i, int num_ops)
+     blen = f->blf_len;
+     map_size = f->blf_map_size;
+     flags = f->blf_flags;
+-    struct_size = sizeof(xfs_buf_log_format_t);
++
++    /*
++     * size of the format header is dependent on the size of the bitmap, not
++     * the size of the in-memory structure. Hence the slightly obtuse
++     * calculation.
++     */
++    struct_size = offsetof(struct xfs_buf_log_format, blf_map_size) + map_size;
  
- #define	LHOFF(f)	bitize(offsetof(xfs_dir2_leaf_hdr_t, f))
- const field_t	dir2_leaf_hdr_flds[] = {
--	{ "info", FLDT_DIR_BLKINFO, OI(LHOFF(info)), C1, 0, TYP_NONE },
-+	{ "info", FLDT_DA_BLKINFO, OI(LHOFF(info)), C1, 0, TYP_NONE },
- 	{ "count", FLDT_UINT16D, OI(LHOFF(count)), C1, 0, TYP_NONE },
- 	{ "stale", FLDT_UINT16D, OI(LHOFF(stale)), C1, 0, TYP_NONE },
- 	{ NULL }
-@@ -165,6 +165,30 @@ const field_t	dir2_free_hdr_flds[] = {
- 	{ NULL }
- };
+     if (len >= struct_size) {
+ 	ASSERT((len - sizeof(struct_size)) % sizeof(int) == 0);
+@@ -933,22 +939,28 @@ xlog_print_record(int			  fd,
+ 	continued = ((op_head->oh_flags & XLOG_WAS_CONT_TRANS) ||
+ 		     (op_head->oh_flags & XLOG_CONTINUE_TRANS));
  
-+#define	DBOFF(f)	bitize(offsetof(xfs_da_blkinfo_t, f))
-+const field_t	da_blkinfo_flds[] = {
-+	{ "forw", FLDT_DIRBLOCK, OI(DBOFF(forw)), C1, 0, TYP_INODATA },
-+	{ "back", FLDT_DIRBLOCK, OI(DBOFF(back)), C1, 0, TYP_INODATA },
-+	{ "magic", FLDT_UINT16X, OI(DBOFF(magic)), C1, 0, TYP_NONE },
-+	{ "pad", FLDT_UINT16X, OI(DBOFF(pad)), C1, FLD_SKIPALL, TYP_NONE },
-+	{ NULL }
-+};
+-	/* print transaction data */
+-	if (print_no_data ||
+-	    (continued && be32_to_cpu(op_head->oh_len) == 0)) {
++	if (continued && be32_to_cpu(op_head->oh_len) == 0)
++		continue;
 +
-+#define	EOFF(f)	bitize(offsetof(xfs_da_node_entry_t, f))
-+const field_t	da_node_entry_flds[] = {
-+	{ "hashval", FLDT_UINT32X, OI(EOFF(hashval)), C1, 0, TYP_NONE },
-+	{ "before", FLDT_DIRBLOCK, OI(EOFF(before)), C1, 0, TYP_INODATA },
-+	{ NULL }
-+};
++	if (print_no_data) {
+ 	    for (n = 0; n < be32_to_cpu(op_head->oh_len); n++) {
+-		printf("%c", *ptr);
++		printf("0x%02x ", (unsigned int)*ptr);
++		if (n % 16 == 15)
++			printf("\n");
+ 		ptr++;
+ 	    }
+ 	    printf("\n");
+ 	    continue;
+ 	}
 +
-+#define	HOFF(f)	bitize(offsetof(xfs_da_node_hdr_t, f))
-+const field_t	da_node_hdr_flds[] = {
-+	{ "info", FLDT_DA_BLKINFO, OI(HOFF(info)), C1, 0, TYP_NONE },
-+	{ "count", FLDT_UINT16D, OI(HOFF(count)), C1, 0, TYP_NONE },
-+	{ "level", FLDT_UINT16D, OI(HOFF(level)), C1, 0, TYP_NONE },
-+	{ NULL }
-+};
++	/* print transaction data */
+ 	if (xlog_print_find_tid(be32_to_cpu(op_head->oh_tid),
+ 				op_head->oh_flags & XLOG_WAS_CONT_TRANS)) {
+ 	    printf(_("Left over region from split log item\n"));
+ 	    ptr += be32_to_cpu(op_head->oh_len);
+ 	    continue;
+ 	}
 +
- /*ARGSUSED*/
- static int
- dir2_block_hdr_count(
-diff --git a/db/dir2.h b/db/dir2.h
-index 5e117ac..a5f0bec 100644
---- a/db/dir2.h
-+++ b/db/dir2.h
-@@ -27,6 +27,10 @@ extern const field_t	dir2_leaf_entry_flds[];
- extern const field_t	dir2_leaf_hdr_flds[];
- extern const field_t	dir2_leaf_tail_flds[];
- 
-+extern const field_t	da_blkinfo_flds[];
-+extern const field_t	da_node_entry_flds[];
-+extern const field_t	da_node_hdr_flds[];
-+
- /*
-  * generic dir2 structures used by xfs_db
-  */
-diff --git a/db/field.c b/db/field.c
-index 002c5ae..dc72563 100644
---- a/db/field.c
-+++ b/db/field.c
-@@ -195,6 +195,13 @@ const ftattr_t	ftattrtab[] = {
- 	  SI(bitsz(xfs_dir2_sf_off_t)), 0, NULL, NULL },
- 	{ FLDT_DIR2SF, "dir2sf", NULL, (char *)dir2sf_flds, dir2sf_size,
- 	  FTARG_SIZE, NULL, dir2sf_flds },
-+	{ FLDT_DA_BLKINFO, "dir_blkinfo", NULL, (char *)da_blkinfo_flds,
-+	  SI(bitsz(struct xfs_da_blkinfo)), 0, NULL, da_blkinfo_flds },
-+	{ FLDT_DA_NODE_ENTRY, "dir_node_entry", fp_sarray,
-+	  (char *)da_node_entry_flds, SI(bitsz(struct xfs_da_node_entry)), 0,
-+	  NULL, da_node_entry_flds },
-+	{ FLDT_DA_NODE_HDR, "dir_node_hdr", NULL, (char *)da_node_hdr_flds,
-+	  SI(bitsz(struct xfs_da_node_hdr)), 0, NULL, da_node_hdr_flds },
- 	{ FLDT_DIRBLOCK, "dirblock", fp_num, "%u", SI(bitsz(__uint32_t)), 0,
- 	  fa_dirblock, NULL },
- 	{ FLDT_DISK_DQUOT, "disk_dquot", NULL, (char *)disk_dquot_flds,
-diff --git a/db/field.h b/db/field.h
-index 6962d69..72c225b 100644
---- a/db/field.h
-+++ b/db/field.h
-@@ -75,7 +75,6 @@ typedef enum fldt	{
- 	FLDT_DINODE_CORE,
- 	FLDT_DINODE_FMT,
- 	FLDT_DINODE_U,
--	FLDT_DIR,
- 	FLDT_DIR2,
- 	FLDT_DIR2_BLOCK_TAIL,
- 	FLDT_DIR2_DATA_FREE,
-@@ -94,18 +93,10 @@ typedef enum fldt	{
- 	FLDT_DIR2_SF_HDR,
- 	FLDT_DIR2_SF_OFF,
- 	FLDT_DIR2SF,
--	FLDT_DIR_BLKINFO,
--	FLDT_DIR_INO,
--	FLDT_DIR_LEAF_ENTRY,
--	FLDT_DIR_LEAF_HDR,
--	FLDT_DIR_LEAF_MAP,
--	FLDT_DIR_LEAF_NAME,
--	FLDT_DIR_NODE_ENTRY,
--	FLDT_DIR_NODE_HDR,
--	FLDT_DIR_SF_ENTRY,
--	FLDT_DIR_SF_HDR,
-+	FLDT_DA_BLKINFO,
-+	FLDT_DA_NODE_ENTRY,
-+	FLDT_DA_NODE_HDR,
- 	FLDT_DIRBLOCK,
--	FLDT_DIRSHORT,
- 	FLDT_DISK_DQUOT,
- 	FLDT_DQBLK,
- 	FLDT_DQID,
+ 	if (be32_to_cpu(op_head->oh_len) != 0) {
+ 	    if (*(uint *)ptr == XFS_TRANS_HEADER_MAGIC) {
+ 		skip = xlog_print_trans_header(&ptr,
 
 _______________________________________________
 xfs mailing list
