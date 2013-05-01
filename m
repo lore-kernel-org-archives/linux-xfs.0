@@ -1,15 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1773C7F52
-	for <xfs@oss.sgi.com>; Wed,  1 May 2013 11:40:21 -0500 (CDT)
-Message-ID: <51814578.9060408@sgi.com>
-Date: Wed, 01 May 2013 11:40:24 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id 130C07F72
+	for <xfs@oss.sgi.com>; Wed,  1 May 2013 11:44:33 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id DCB708F8065
+	for <xfs@oss.sgi.com>; Wed,  1 May 2013 09:44:32 -0700 (PDT)
+Received: from na3sys009aog130.obsmtp.com (na3sys009aog130.obsmtp.com
+	[74.125.149.143]) by cuda.sgi.com with SMTP id u1fMa2rcU80IyBfu
+	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 01 May 2013 09:44:31 -0700 (PDT)
+Received: by mail-oa0-f69.google.com with SMTP id l20so10449007oag.8
+	for <xfs@oss.sgi.com>; Wed, 01 May 2013 09:44:10 -0700 (PDT)
+Date: Wed, 1 May 2013 11:44:06 -0500
+From: Shawn Bohrer <sbohrer@rgmadvisors.com>
+Subject: Re: deadlock on vmap_area_lock
+Message-ID: <20130501164406.GC2404@BohrerMBP.rgmadvisors.com>
+References: <20130501144341.GA2404@BohrerMBP.rgmadvisors.com>
+	<alpine.DEB.2.02.1305010855440.4547@chino.kir.corp.google.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: fix log space reservation calculation if log stripe
-	unit is specified
-References: <51813BA5.3070306@oracle.com>
-In-Reply-To: <51813BA5.3070306@oracle.com>
+In-Reply-To: <alpine.DEB.2.02.1305010855440.4547@chino.kir.corp.google.com>
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,101 +28,150 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
-Cc: Dave Chinner <dchinner@redhat.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: David Rientjes <rientjes@google.com>
+Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On 05/01/13 10:58, Jeff Liu wrote:
-> Hello,
->
-> About two weeks ago, Dave has found an issue by running xfstests/297.
-> http://oss.sgi.com/archives/xfs/2013-03/msg00273.html
->
-> According to our previous discussion, if the log stripe unit is configured, we should
-> take it into account as it will dynamically increase the log reservation twice of it
-> per ticket.
->
-> This patch is trying to fix it by checking the given log space against the maximum
-> request among those transactions(this procedure is implemented similar to xfsprogs/mkfs/maxres.c),
-> because the fundamental limit is that no single transaction can be larger than half of the log.
-> Also, looks at least another two log stripe unit should be added when calculating the minimum log
-> space, or else I can simply trigger a DEAD LOOP via create large number of files, I think I need
-> some time to digest Dave's comments posted on original bug ticket, i.e.
->>> >>  The question is this: how much space do we need to reserve. I'm
->>> >>  thinking a minimum of 4*lsu - 2*lsu for the existing CIL context, and
->>> >>  another 2*lsu for any queued ticket waiting for space to come
->>> >>  available.
->
-> Put simply, with this fix, mount a partition with an improper log space setup vs log stripe
-> unit will failed although mkfs still works. Ah, maybe we can improve the user space xfs_mkfs
-> with some pre-checkup similar to the implementation inside kernel?  Besides that, it will
-> drop a warning to syslog and the suggested log space for the given log stripe unit is shown
-> there, which looks like the following:
->
-> # mkfs.xfs -f -b size=512 -d agcount=16,su=256k,sw=12 -l su=256k,size=2560b /dev/sdb1
-> meta-data=/dev/sdb1              isize=256    agcount=16, agsize=524288 blks
->           =                       sectsz=512   attr=2, projid32bit=0
-> data     =                       bsize=512    blocks=8388608, imaxpct=25
->           =                       sunit=512    swidth=6144 blks
-> naming   =version 2              bsize=4096   ascii-ci=0
-> log      =internal log           bsize=512    blocks=2560, version=2
->           =                       sectsz=512   sunit=512 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
->
+On Wed, May 01, 2013 at 08:57:38AM -0700, David Rientjes wrote:
+> On Wed, 1 May 2013, Shawn Bohrer wrote:
+> 
+> > I've got two compute clusters with around 350 machines each which are
+> > running kernels based off of 3.1.9 (Yes I realize this is ancient by
+> > todays standards).  All of the machines run a 'find' command once an
+> > hour on one of the mounted XFS filesystems.  Occasionally these find
+> > commands get stuck requiring a reboot of the system.  I took a peek
+> > today and see this with perf:
+> > 
+> >     72.22%          find  [kernel.kallsyms]          [k] _raw_spin_lock
+> >                     |
+> >                     --- _raw_spin_lock
+> >                        |          
+> >                        |--98.84%-- vm_map_ram
+> >                        |          _xfs_buf_map_pages
+> >                        |          xfs_buf_get
+> >                        |          xfs_buf_read
+> >                        |          xfs_trans_read_buf
+> >                        |          xfs_da_do_buf
+> >                        |          xfs_da_read_buf
+> >                        |          xfs_dir2_block_getdents
+> >                        |          xfs_readdir
+> >                        |          xfs_file_readdir
+> >                        |          vfs_readdir
+> >                        |          sys_getdents
+> >                        |          system_call_fastpath
+> >                        |          __getdents64
+> >                        |          
+> >                        |--1.12%-- _xfs_buf_map_pages
+> >                        |          xfs_buf_get
+> >                        |          xfs_buf_read
+> >                        |          xfs_trans_read_buf
+> >                        |          xfs_da_do_buf
+> >                        |          xfs_da_read_buf
+> >                        |          xfs_dir2_block_getdents
+> >                        |          xfs_readdir
+> >                        |          xfs_file_readdir
+> >                        |          vfs_readdir
+> >                        |          sys_getdents
+> >                        |          system_call_fastpath
+> >                        |          __getdents64
+> >                         --0.04%-- [...]
+> > 
+> > Looking at the code my best guess is that we are spinning on
+> > vmap_area_lock, but I could be wrong.  This is the only process
+> > spinning on the machine so I'm assuming either another process has
+> > blocked while holding the lock, or perhaps this find process has tried
+> > to acquire the vmap_area_lock twice?
+> > 
+> 
+> Significant spinlock contention doesn't necessarily mean that there's a 
+> deadlock, but it also doesn't mean the opposite.
 
-Shouldn't mkfs.xfs also know it is building a filesystem that cannot be 
-mounted?
+Correct it doesn't and I can't prove the find command is not making
+progress, however these finds normally complete in under 15 min and
+we've let the stuck ones run for days.  Additionally if this was just
+contention I'd expect to see multiple threads/CPUs contending and I
+only have a single CPU pegged running find at 99%. I should clarify
+that the perf snippet above was for the entire system.  Profiling just
+the find command shows:
 
-When mkfs.xfs is given a log stripe unit is greater than 256KB, should 
-we divide the specified log stripe unit by 2 until it is under 256KB 
-rather than reset to 32KB?
+    82.56%     find  [kernel.kallsyms]  [k] _raw_spin_lock
+    16.63%     find  [kernel.kallsyms]  [k] vm_map_ram
+     0.13%     find  [kernel.kallsyms]  [k] hrtimer_interrupt
+     0.04%     find  [kernel.kallsyms]  [k] update_curr
+     0.03%     find  [igb]              [k] igb_poll
+     0.03%     find  [kernel.kallsyms]  [k] irqtime_account_process_tick
+     0.03%     find  [kernel.kallsyms]  [k] account_system_vtime
+     0.03%     find  [kernel.kallsyms]  [k] task_tick_fair
+     0.03%     find  [kernel.kallsyms]  [k] perf_event_task_tick
+     0.03%     find  [kernel.kallsyms]  [k] scheduler_tick
+     0.03%     find  [kernel.kallsyms]  [k] rb_erase
+     0.02%     find  [kernel.kallsyms]  [k] native_write_msr_safe
+     0.02%     find  [kernel.kallsyms]  [k] native_sched_clock
+     0.02%     find  [kernel.kallsyms]  [k] dma_issue_pending_all
+     0.02%     find  [kernel.kallsyms]  [k] handle_irq_event_percpu
+     0.02%     find  [kernel.kallsyms]  [k] timerqueue_del
+     0.02%     find  [kernel.kallsyms]  [k] run_timer_softirq
+     0.02%     find  [kernel.kallsyms]  [k] get_mm_counter
+     0.02%     find  [kernel.kallsyms]  [k] __rcu_pending
+     0.02%     find  [kernel.kallsyms]  [k] tick_program_event
+     0.01%     find  [kernel.kallsyms]  [k] __netif_receive_skb
+     0.01%     find  [kernel.kallsyms]  [k] ip_route_input_common
+     0.01%     find  [kernel.kallsyms]  [k] __insert_vmap_area
+     0.01%     find  [igb]              [k] igb_alloc_rx_buffers_adv
+     0.01%     find  [kernel.kallsyms]  [k] irq_exit
+     0.01%     find  [kernel.kallsyms]  [k] acct_update_integrals
+     0.01%     find  [kernel.kallsyms]  [k] apic_timer_interrupt
+     0.01%     find  [kernel.kallsyms]  [k] tick_sched_timer
+     0.01%     find  [kernel.kallsyms]  [k] __remove_hrtimer
+     0.01%     find  [kernel.kallsyms]  [k] do_IRQ
+     0.01%     find  [kernel.kallsyms]  [k] dev_gro_receive
+     0.01%     find  [kernel.kallsyms]  [k] net_rx_action
+     0.01%     find  [kernel.kallsyms]  [k] classify
+     0.01%     find  [kernel.kallsyms]  [k] __udp4_lib_mcast_deliver
+     0.01%     find  [kernel.kallsyms]  [k] rb_next
+     0.01%     find  [kernel.kallsyms]  [k] smp_apic_timer_interrupt
+     0.01%     find  [kernel.kallsyms]  [k] intel_pmu_disable_all
+     0.01%     find  [ioatdma]          [k] ioat2_issue_pending
+     0.01%     find  [kernel.kallsyms]  [k] get_partial_node
+     0.01%     find  [kernel.kallsyms]  [k] ktime_get
+     0.01%     find  [kernel.kallsyms]  [k] radix_tree_lookup_element
+     0.01%     find  [kernel.kallsyms]  [k] swiotlb_map_page
+     0.01%     find  [kernel.kallsyms]  [k] __schedule
+     0.01%     find  [kernel.kallsyms]  [k] _raw_spin_lock_irq
+     0.01%     find  [kernel.kallsyms]  [k] hrtimer_forward
+     0.01%     find  [kernel.kallsyms]  [k] sched_clock_tick
+     0.01%     find  [kernel.kallsyms]  [k] clockevents_program_event
+     0.01%     find  [kernel.kallsyms]  [k] raw_local_deliver
+     0.01%     find  [kernel.kallsyms]  [k] exit_idle
+     0.01%     find  [kernel.kallsyms]  [k] sched_clock_cpu
+     0.01%     find  [kernel.kallsyms]  [k] sched_clock
+     0.01%     find  [kernel.kallsyms]  [k] idle_cpu
+     0.01%     find  [kernel.kallsyms]  [k] update_process_times
+     0.01%     find  [kernel.kallsyms]  [k] tick_dev_program_event
 
-> # mount /dev/sdb1 /xfs1
-> mount: wrong fs type, bad option, bad superblock on /dev/sdb1,
->         missing codepage or helper program, or other error
->         In some cases useful info is found in syslog - try
->         dmesg | tail  or so
->
-> # dmesg:
-> .......
-> XFS (sdb1): log space of 2560 blocks too small, minimum request 6656
-> XFS (sdb1): log space validation failed
-> XFS (sdb1): log mount failed
->
->
-> Tests:
-> Ran some cases in xfstests as well as a few self-defined Bonnie++/FIO tests with above
-> configuration(6656 log blocks), looks the current fix works, at least no crash to me.:)
->
-> But I have not yet dig into the detailed of how the suggested minimum log space would
-> affect the performance, given that the AIL push thresholds is defined to 25% of the log
-> space, a small logs might introduce IO overheads for pushing AIL too frequently.
-> In addition, considering the backgroup CIL commit threshold is 1/8 of the log, this would
-> also impact the log IO throughput IMHO.  Maybe we can figure out an optimized log space
-> combine those two cases and drop it to syslog along with the minimum size?
->
+> Depending on your 
+> definition of "occassionally", would it be possible to run with 
+> CONFIG_PROVE_LOCKING and CONFIG_LOCKDEP to see if it uncovers any real 
+> deadlock potential?
 
-I think 1 MB is the smallest log size before we soft hang even without 
-stripe units define.
+Yeah, I can probably enable these on a few machines and hope I get
+lucky.  These machines are used for real work so I'll have to gauge
+what how significant the performance impact is to determine how many
+machines I can sacrifice to the cause.
 
->
-> To Dave,
->
-> Sorry for the delay in drop this patch since I have mentioned that I'll post a fix
-> last night.  However, I have ran into an issue when testing it by creating/removing a
-> tons of files in parallel at that time:(
+Thanks,
+Shawn
 
-The iclog buffers have to be a multiple of the log stripe unit or we 
-start punching the lsn in places that it should not. I think the idea 
-that was mentioned is to remove the power of two on the iclog buffer 
-size and replace with multiple of log stripe unit.
+-- 
 
-http://oss.sgi.com/archives/xfs/2013-03/msg00039.html
-
---Mark.
+---------------------------------------------------------------
+This email, along with any attachments, is confidential. If you 
+believe you received this message in error, please contact the 
+sender immediately and delete all copies of the message.  
+Thank you.
 
 _______________________________________________
 xfs mailing list
