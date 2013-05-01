@@ -1,21 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B40397F84
-	for <xfs@oss.sgi.com>; Wed,  1 May 2013 07:39:22 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 37FD87F96
+	for <xfs@oss.sgi.com>; Wed,  1 May 2013 09:25:27 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4664EAC003
-	for <xfs@oss.sgi.com>; Wed,  1 May 2013 05:39:18 -0700 (PDT)
-Received: from emea01-am1-obe.outbound.protection.outlook.com
-	(mail-am1lp0014.outbound.protection.outlook.com
-	[213.199.154.14]) by cuda.sgi.com with ESMTP id
-	wNyyraUssyhvd5Vr (version=TLSv1 cipher=AES128-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 01 May 2013 05:39:17 -0700 (PDT)
-Message-ID: <51810CED.4080003@zynstra.com>
-Date: Wed, 1 May 2013 13:39:09 +0100
-From: James Dingwall <james.dingwall@zynstra.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B2C0EAC005
+	for <xfs@oss.sgi.com>; Wed,  1 May 2013 07:25:26 -0700 (PDT)
+Message-ID: <518125C9.8000008@oracle.com>
+Date: Wed, 01 May 2013 22:25:13 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: Cleancache support in XFS
+Subject: [PATCH 1/2] xfs: Remove XFS_MOUNT_RETERR
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,47 +18,125 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+Cc: Mark Tinguely <tinguely@sgi.com>
 
-In reference to: http://oss.sgi.com/archives/xfs/2012-05/msg00046.html
+From: Jie Liu <jeff.liu@oracle.com>
 
-$ grep -r cleancache fs/xfs
-on the 3.9 kernel source suggests that no patch was submitted to enable 
-cleancache for the XFS filesystem.  Since it was suggested that this 
-could be a one liner I've had a go and my first effort is inline below.  
-While this seems to compile OK I have no experience in filesystems so I 
-would appreciate it if anyone can point out that it is obviously wrong 
-and likely to eat my data before I try booting the kernel.
+XFS_MOUNT_RETERR is going to be set at xfs_parseargs() if
+mp->m_dalign is enabled, so any time we enter "if (mp->m_dalign)"
+branch in xfs_update_alignment(), XFS_MOUNT_RETERR is set and
+so we always be emitting a warning and returning an error.
 
-If it seems a reasonable attempt what would be the best way to check 
-that it isn't doing nasty things?
+Hence, we can remove it and get rid of a couple of redundant
+check up against it at xfs_upate_alignment(). 
 
-Thanks,
-James
+Thanks Dave Chinner for the confirmation.
 
---- xfs_super.c 2013-04-29 10:28:22.000000000 +0100
-+++ xfs_super.cleancache.c      2013-05-01 13:22:44.367763564 +0100
-@@ -61,6 +61,7 @@
-  #include <linux/kthread.h>
-  #include <linux/freezer.h>
-  #include <linux/parser.h>
-+#include <linux/cleancache.h>
+Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+Cc: Dave Chinner <dchinner@redhat.com>
+Cc: Mark Tinguely <tinguely@sgi.com>
+---
+ fs/xfs/xfs_mount.c |   39 ++++++++++++---------------------------
+ fs/xfs/xfs_mount.h |    2 --
+ fs/xfs/xfs_super.c |    5 +----
+ 3 files changed, 13 insertions(+), 33 deletions(-)
 
-  static const struct super_operations xfs_super_operations;
-  static kmem_zone_t *xfs_ioend_zone;
-@@ -1489,6 +1490,8 @@
-                 goto out_unmount;
-         }
-
-+       cleancache_init_fs(sb);
-+
-         return 0;
-
-   out_filestream_unmount:
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 3806088..29e8de8 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -872,42 +872,27 @@ xfs_update_alignment(xfs_mount_t *mp)
+ 		 */
+ 		if ((BBTOB(mp->m_dalign) & mp->m_blockmask) ||
+ 		    (BBTOB(mp->m_swidth) & mp->m_blockmask)) {
+-			if (mp->m_flags & XFS_MOUNT_RETERR) {
+-				xfs_warn(mp, "alignment check failed: "
+-					 "(sunit/swidth vs. blocksize)");
+-				return XFS_ERROR(EINVAL);
+-			}
+-			mp->m_dalign = mp->m_swidth = 0;
++			xfs_warn(mp, "alignment check failed: "
++				 "(sunit/swidth vs. blocksize)");
++			return XFS_ERROR(EINVAL);
+ 		} else {
+ 			/*
+ 			 * Convert the stripe unit and width to FSBs.
+ 			 */
+ 			mp->m_dalign = XFS_BB_TO_FSBT(mp, mp->m_dalign);
+ 			if (mp->m_dalign && (sbp->sb_agblocks % mp->m_dalign)) {
+-				if (mp->m_flags & XFS_MOUNT_RETERR) {
+-					xfs_warn(mp, "alignment check failed: "
+-						 "(sunit/swidth vs. ag size)");
+-					return XFS_ERROR(EINVAL);
+-				}
+-				xfs_warn(mp,
+-		"stripe alignment turned off: sunit(%d)/swidth(%d) "
+-		"incompatible with agsize(%d)",
+-					mp->m_dalign, mp->m_swidth,
+-					sbp->sb_agblocks);
+-
+-				mp->m_dalign = 0;
+-				mp->m_swidth = 0;
++				xfs_warn(mp, "alignment check failed: "
++			"sunit(%d)/swidth(%d) incompatible with agsize(%d)",
++					 mp->m_dalign, mp->m_swidth,
++					 sbp->sb_agblocks);
++				return XFS_ERROR(EINVAL);
+ 			} else if (mp->m_dalign) {
+ 				mp->m_swidth = XFS_BB_TO_FSBT(mp, mp->m_swidth);
+ 			} else {
+-				if (mp->m_flags & XFS_MOUNT_RETERR) {
+-					xfs_warn(mp, "alignment check failed: "
+-						"sunit(%d) less than bsize(%d)",
+-						mp->m_dalign,
+-						mp->m_blockmask +1);
+-					return XFS_ERROR(EINVAL);
+-				}
+-				mp->m_swidth = 0;
++				xfs_warn(mp, "alignment check failed: "
++					 "sunit(%d) less than bsize(%d)",
++					 mp->m_dalign, mp->m_blockmask + 1);
++				return XFS_ERROR(EINVAL);
+ 			}
+ 		}
+ 
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index bc90706..8145412 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -230,8 +230,6 @@ typedef struct xfs_mount {
+ 						   operations, typically for
+ 						   disk errors in metadata */
+ #define XFS_MOUNT_DISCARD	(1ULL << 5)	/* discard unused blocks */
+-#define XFS_MOUNT_RETERR	(1ULL << 6)     /* return alignment errors to
+-						   user */
+ #define XFS_MOUNT_NOALIGN	(1ULL << 7)	/* turn off stripe alignment
+ 						   allocations */
+ #define XFS_MOUNT_ATTR2		(1ULL << 8)	/* allow use of attr2 format */
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index ea341ce..51da4d2 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -446,11 +446,8 @@ done:
+ 		 * Before the mount call ends we will convert
+ 		 * these to FSBs.
+ 		 */
+-		if (dsunit) {
++		if (dsunit)
+ 			mp->m_dalign = dsunit;
+-			mp->m_flags |= XFS_MOUNT_RETERR;
+-		}
+-
+ 		if (dswidth)
+ 			mp->m_swidth = dswidth;
+ 	}
+-- 
+1.7.9.5
 
 _______________________________________________
 xfs mailing list
