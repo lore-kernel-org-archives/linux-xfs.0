@@ -1,16 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2860F7F50
-	for <xfs@oss.sgi.com>; Thu,  2 May 2013 15:48:42 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B9550AC002
-	for <xfs@oss.sgi.com>; Thu,  2 May 2013 13:48:38 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id RMS5pZKa7H93pQgO for
-	<xfs@oss.sgi.com>; Thu, 02 May 2013 13:48:38 -0700 (PDT)
-Message-ID: <5182D123.80005@redhat.com>
-Date: Thu, 02 May 2013 15:48:35 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 738A17F54
+	for <xfs@oss.sgi.com>; Thu,  2 May 2013 16:54:42 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5251A30406B
+	for <xfs@oss.sgi.com>; Thu,  2 May 2013 14:54:42 -0700 (PDT)
+Received: from mail-ob0-f182.google.com (mail-ob0-f182.google.com
+	[209.85.214.182]) by cuda.sgi.com with ESMTP id
+	Vb87we9p7t8eEhaz (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 02 May 2013 14:54:38 -0700 (PDT)
+Received: by mail-ob0-f182.google.com with SMTP id eh20so933103obb.13
+	for <xfs@oss.sgi.com>; Thu, 02 May 2013 14:54:37 -0700 (PDT)
+Message-ID: <5182E09B.7070109@gmail.com>
+Date: Thu, 02 May 2013 17:54:35 -0400
+From: "Michael L. Semon" <mlsemon35@gmail.com>
 MIME-Version: 1.0
 Subject: Re: [PATCH] xfstests: fix internal _xfs_check to handle logdev etc
 References: <51827DDF.4050708@redhat.com>
@@ -18,7 +22,8 @@ References: <51827DDF.4050708@redhat.com>
 	<51828F84.3040508@sandeen.net>
 	<1367516658.4098.87.camel@chandra-dt.ibm.com>
 	<5182B0FE.4030301@sandeen.net> <5182CE0D.8030502@gmail.com>
-In-Reply-To: <5182CE0D.8030502@gmail.com>
+	<5182D123.80005@redhat.com>
+In-Reply-To: <5182D123.80005@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,106 +32,177 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Michael L. Semon" <mlsemon35@gmail.com>
+To: Eric Sandeen <sandeen@redhat.com>
 Cc: Eric Sandeen <sandeen@sandeen.net>, sekharan@us.ibm.com, xfs-oss <xfs@oss.sgi.com>
 
-On 5/2/13 3:35 PM, Michael L. Semon wrote:
-> On 05/02/2013 02:31 PM, Eric Sandeen wrote:
->> On 5/2/13 12:44 PM, Chandra Seetharaman wrote:
->>> On Thu, 2013-05-02 at 11:08 -0500, Eric Sandeen wrote:
->>>> On 5/2/13 10:38 AM, Chandra Seetharaman wrote:
->>>>> On Thu, 2013-05-02 at 09:53 -0500, Eric Sandeen wrote:
->>>>>> Pull all of the old xfs_check script into common/rc:_xfs_check()
->>>>>> so that it properly handles all options, including external log
->>>>>> devices.
->>>>>
->>>>> I see changes only related to USAGE. iiuc, log devices are handled
->>>>> properly by current code.
->>>>
->>>> also:
->>>>
->>>>>> +    set -- extra $@
->>>>>> +    shift $OPTIND
->>>>
->>>> have you *tested* log devices w/ your original code?  It failed for
->>>> Michael and for myself, so...  ;)
->>>>
->>>> -Eric
->>>
->>> yikes. sorry :(
-> 
-> No worries, Chandra.  I couldn't even get the echo line for Eric's patched version and execute the script in the same pass.  There's something about debugging the passing of arguments in bash that is simply evil.
-> 
->> It's ok - I reviewed it, but I didn't test it.  ;)  It happens.
+On 05/02/2013 04:48 PM, Eric Sandeen wrote:
+>> =====================================================================
+>> This is how things went after using Eric's patch:
 >>
->> -Eric
->>
-> 
-> Oh, so leave it to me to hack my lone swap partition on this PC into a two-segment dm-linear device so I can test this...OK...that was successful for a change!  Even though `git am` complained about the whitespace (E-mail issue?), the patch worked as well.
-> 
-> Anyway, there are issues with these tests and whether the partitions are mounted at the time ./check is run, but that will be posted after my closing, just to put it out there that issues may exist in the mount checking.  [And I'm sure that I did an `export USE_EXTERNAL="yes"`, so it's surprising how the tests went about mounting.]
-> 
-> =====================================================================
-> This is how things went before using Eric's patch:
-> 
-> root@plbearer:/var/lib/xfstests# ./check generic/001
-> mount: wrong fs type, bad option, bad superblock on /dev/mapper/tData,
->        missing codepage or helper program, or other error
->        In some cases useful info is found in syslog - try
->        dmesg | tail  or so
-> 
-> common/rc: retrying test device mount with external set
-> FSTYP         -- xfs (non-debug)
-> PLATFORM      -- Linux/i686 plbearer 3.8.11
-> 
-> _check_xfs_filesystem: filesystem on /dev/mapper/tData is inconsistent (c) (see .full)
-> Passed all 0 tests
-> root@plbearer:/var/lib/xfstests# cat .full
-> _check_xfs_filesystem: filesystem on /dev/mapper/tData is inconsistent
-> *** xfs_check output ***
-> Usage: xfs_check [-ifFrxV] [-p prog] [-l logdev] [-c cmd]... device
-> *** end xfs_check output
-> *** mount output ***
-> /dev/sda1 on / type xfs (rw,uquota)
-> proc on /proc type proc (rw)
-> sysfs on /sys type sysfs (rw)
-> /dev/sda6 on /alt_sys type xfs (ro)
-> tmpfs on /dev/shm type tmpfs (rw)
-> debugfs on /sys/kernel/debug type debugfs (rw)
-> /dev/sdb1 on /media/uGeneral type f2fs (rw)
-> *** end mount output
-> 
-> Here is the echo line of what command was run:
-> /usr/sbin/xfs_db -l /dev/mapper/tLog -F -i -p xfs_check -c check -l/dev/mapper/tLog
-> 
-> =====================================================================
-> This is how things went after using Eric's patch:
-> 
-> root@plbearer:/var/lib/xfstests# ./check generic/001
-> mount: wrong fs type, bad option, bad superblock on /dev/mapper/tData,
->        missing codepage or helper program, or other error
->        In some cases useful info is found in syslog - try
->        dmesg | tail  or so
+>> root@plbearer:/var/lib/xfstests# ./check generic/001
+>> mount: wrong fs type, bad option, bad superblock on /dev/mapper/tData,
+>>         missing codepage or helper program, or other error
+>>         In some cases useful info is found in syslog - try
+>>         dmesg | tail  or so
+>
+> Yeah this seems . . . suboptimal, I haven't looked into it.
+>
+> If TEST_LOGDEV is set it seems like that should be the *first* thing
+> to try.  I don't recall if it did this before the reorganization.
+>
+> FWIW, I've seen problems in the past when using devicemapper devices.
+> One never knows what's a symlink ;)
+>
+> If you specify /dev/dm-X instead of the pretty name, does it go any
+> better for you?
+>
+> (I don't remember if that helped; I remember chasing dm issues before.
+> I just don't use dm in my testing anymore, TBH) :)
+>
+> -Eric
 
-Yeah this seems . . . suboptimal, I haven't looked into it.
+Ugh, that was a rather sobering experience.  Lesson learned.  To use 
+/dev/dm-X goes much worse.  The /dev/dm-0 for logdev goes untranslated, 
+but the /dev/dm-1 seems to get auto-translated back to /dev/mapper/tData 
+(more commentary after this):
 
-If TEST_LOGDEV is set it seems like that should be the *first* thing
-to try.  I don't recall if it did this before the reorganization.
+======================================================================
+root@plbearer:~# export TEST_DEV=/dev/dm-1
+root@plbearer:~# export TEST_LOGDEV=/dev/dm-0
+root@plbearer:~# export USE_EXTERNAL="yes"
+root@plbearer:~# cd /var/lib/xfstests/
 
-FWIW, I've seen problems in the past when using devicemapper devices.
-One never knows what's a symlink ;)
+root@plbearer:/var/lib/xfstests# mount | grep mapper
+/dev/mapper/tData on /mnt/testdir type xfs (rw,logdev=/dev/mapper/tLog)
 
-If you specify /dev/dm-X instead of the pretty name, does it go any
-better for you?
+root@plbearer:/var/lib/xfstests# ./check generic/001 generic/002
+mount: /dev/mapper/tData already mounted or /mnt/testdir busy
+mount: according to mtab, /dev/mapper/tData is already mounted on 
+/mnt/testdir
+common/rc: retrying test device mount with external set
+mount: /dev/mapper/tData already mounted or /mnt/testdir busy
+mount: according to mtab, /dev/mapper/tData is already mounted on 
+/mnt/testdir
+common/rc: could not mount /dev/dm-1 on /mnt/testdir
 
-(I don't remember if that helped; I remember chasing dm issues before.
-I just don't use dm in my testing anymore, TBH) :)
+root@plbearer:/var/lib/xfstests# ./check generic/001 generic/002
+mount: /dev/mapper/tData already mounted or /mnt/testdir busy
+mount: according to mtab, /dev/mapper/tData is already mounted on 
+/mnt/testdir
+common/rc: retrying test device mount with external set
+mount: /dev/mapper/tData already mounted or /mnt/testdir busy
+mount: according to mtab, /dev/mapper/tData is already mounted on 
+/mnt/testdir
+common/rc: could not mount /dev/dm-1 on /mnt/testdir
 
--Eric
+root@plbearer:/var/lib/xfstests# umount $TEST_DEV
+
+root@plbearer:/var/lib/xfstests# ./check generic/001 generic/002
+common/rc: Error: $TEST_DEV (/dev/dm-1) is not a MOUNTED xfs filesystem
+Filesystem     Type 1K-blocks  Used Available Use% Mounted on
+-              -       385460     0    385460   0% /dev
+
+root@plbearer:/var/lib/xfstests# ./check generic/001 generic/002
+mount: /dev/mapper/tData already mounted or /mnt/testdir busy
+mount: according to mtab, /dev/mapper/tData is already mounted on 
+/mnt/testdir
+common/rc: retrying test device mount with external set
+mount: /dev/mapper/tData already mounted or /mnt/testdir busy
+mount: according to mtab, /dev/mapper/tData is already mounted on 
+/mnt/testdir
+common/rc: could not mount /dev/dm-1 on /mnt/testdir
+
+root@plbearer:/var/lib/xfstests# umount $TEST_DEV
+
+root@plbearer:/var/lib/xfstests# mount -t xfs -o logdev=$TEST_LOGDEV 
+$TEST_DEV $TEST_DIR
+
+root@plbearer:/var/lib/xfstests# mount | grep mapper
+/dev/mapper/tData on /mnt/testdir type xfs (rw,logdev=/dev/dm-0)
+
+root@plbearer:/var/lib/xfstests# echo $TEST_DEV
+/dev/dm-1
+
+======================================================================
+
+So I got rid of the linear objects, went to cfdisk, brewed up some 
+good-old-fashioned MBR logical partitions, and then...
+
+======================================================================
+
+root@plbearer:~# mkfs.xfs -l logdev=/dev/sda5 /dev/sda6
+meta-data=/dev/sda6              isize=256    agcount=4, agsize=69774 blks
+          =                       sectsz=512   attr=2, projid32bit=0
+data     =                       bsize=4096   blocks=279095, imaxpct=25
+          =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0
+log      =/dev/sda5              bsize=4096   blocks=16057, version=2
+          =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+root@plbearer:~# export TEST_DEV=/dev/sda6
+root@plbearer:~# export TEST_LOGDEV=/dev/sda5
+root@plbearer:~# export TEST_DIR=/mnt/testdir
+root@plbearer:~# export USE_EXTERNAL="yes"
+root@plbearer:~# cd /var/lib/xfstests/
+
+root@plbearer:/var/lib/xfstests# ./check generic/001 generic/002
+FSTYP         -- xfs (non-debug)
+PLATFORM      -- Linux/i686 plbearer 3.8.11
+
+generic/001      7s
+generic/002      1s
+Ran: generic/001 generic/002
+Passed all 2 tests
+root@plbearer:/var/lib/xfstests# ./check generic/001 generic/002
+FSTYP         -- xfs (non-debug)
+PLATFORM      -- Linux/i686 plbearer 3.8.11
+
+generic/001      6s
+generic/002      1s
+Ran: generic/001 generic/002
+Passed all 2 tests
+root@plbearer:/var/lib/xfstests# ./check generic/001 generic/002
+FSTYP         -- xfs (non-debug)
+PLATFORM      -- Linux/i686 plbearer 3.8.11
+
+generic/001      7s
+generic/002      1s
+Ran: generic/001 generic/002
+Passed all 2 tests
+
+======================================================================
+
+And here's how it runs on bare partitions after reversing the patch and 
+reinstalling xfstests, as a sort of check figure...
+
+======================================================================
+
+root@plbearer:/var/lib/xfstests# ./check generic/001 generic/002
+FSTYP         -- xfs (non-debug)
+PLATFORM      -- Linux/i686 plbearer 3.8.11
+
+_check_xfs_filesystem: filesystem on /dev/sda6 is inconsistent (c) (see 
+.full)
+Passed all 0 tests
+root@plbearer:/var/lib/xfstests# ./check generic/001 generic/002
+FSTYP         -- xfs (non-debug)
+PLATFORM      -- Linux/i686 plbearer 3.8.11
+
+_check_xfs_filesystem: filesystem on /dev/sda6 is inconsistent (c) (see 
+.full)
+Passed all 0 tests
+
+======================================================================
+
+So I'll consider this problem solved as well as another trial-by-fire 
+lesson in using the device-mapper objects.  Thanks again!
+
+Michael
 
 _______________________________________________
 xfs mailing list
