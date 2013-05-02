@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7FBAC7F59
-	for <xfs@oss.sgi.com>; Thu,  2 May 2013 09:04:24 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 42F3C304051
-	for <xfs@oss.sgi.com>; Thu,  2 May 2013 07:04:24 -0700 (PDT)
-Received: from mail-wi0-f180.google.com (mail-wi0-f180.google.com
-	[209.85.212.180]) by cuda.sgi.com with ESMTP id
-	HBDLjxs3jszfC6ue (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 02 May 2013 07:04:23 -0700 (PDT)
-Received: by mail-wi0-f180.google.com with SMTP id h11so621531wiv.7
-	for <xfs@oss.sgi.com>; Thu, 02 May 2013 07:04:21 -0700 (PDT)
-From: ranto.boris@gmail.com
-Subject: [PATCH 3/3] xfstests: Do not fail on empty exclude groups
-Date: Thu,  2 May 2013 16:03:59 +0200
-Message-Id: <1367503439-12827-4-git-send-email-ranto.boris@gmail.com>
-In-Reply-To: <1367503439-12827-1-git-send-email-ranto.boris@gmail.com>
-References: <1367503439-12827-1-git-send-email-ranto.boris@gmail.com>
+	by oss.sgi.com (Postfix) with ESMTP id D60747F54
+	for <xfs@oss.sgi.com>; Thu,  2 May 2013 09:14:19 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BD159304053
+	for <xfs@oss.sgi.com>; Thu,  2 May 2013 07:14:19 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id gtaIFfOIcMhnZNfh (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 02 May 2013 07:14:18 -0700 (PDT)
+Message-ID: <518274B0.4050506@oracle.com>
+Date: Thu, 02 May 2013 22:14:08 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH] xfs: fix log space reservation calculation if log stripe
+	unit is specified
+References: <51813BA5.3070306@oracle.com> <51814578.9060408@sgi.com>
+	<20130502013632.GV10481@dastard>
+In-Reply-To: <20130502013632.GV10481@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,52 +26,146 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Boris Ranto <ranto.boris@gmail.com>
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, Dave Chinner <dchinner@redhat.com>
 
-From: Boris Ranto <ranto.boris@gmail.com>
+On 05/02/2013 09:36 AM, Dave Chinner wrote:
+> On Wed, May 01, 2013 at 11:40:24AM -0500, Mark Tinguely wrote:
+>> On 05/01/13 10:58, Jeff Liu wrote:
+>>> Hello,
+>>>
+>>> About two weeks ago, Dave has found an issue by running xfstests/297.
+>>> http://oss.sgi.com/archives/xfs/2013-03/msg00273.html
+>>>
+>>> According to our previous discussion, if the log stripe unit is configured, we should
+>>> take it into account as it will dynamically increase the log reservation twice of it
+>>> per ticket.
+>>>
+>>> This patch is trying to fix it by checking the given log space against the maximum
+>>> request among those transactions(this procedure is implemented similar to xfsprogs/mkfs/maxres.c),
+>>> because the fundamental limit is that no single transaction can be larger than half of the log.
+>>> Also, looks at least another two log stripe unit should be added when calculating the minimum log
+>>> space, or else I can simply trigger a DEAD LOOP via create large number of files, I think I need
+>>> some time to digest Dave's comments posted on original bug ticket, i.e.
+>>>>>>>  The question is this: how much space do we need to reserve. I'm
+>>>>>>>  thinking a minimum of 4*lsu - 2*lsu for the existing CIL context, and
+>>>>>>>  another 2*lsu for any queued ticket waiting for space to come
+>>>>>>>  available.
+>>>
+>>> Put simply, with this fix, mount a partition with an improper log space setup vs log stripe
+>>> unit will failed although mkfs still works. Ah, maybe we can improve the user space xfs_mkfs
+>>> with some pre-checkup similar to the implementation inside kernel?  Besides that, it will
+>>> drop a warning to syslog and the suggested log space for the given log stripe unit is shown
+>>> there, which looks like the following:
+>>>
+>>> # mkfs.xfs -f -b size=512 -d agcount=16,su=256k,sw=12 -l su=256k,size=2560b /dev/sdb1
+>>> meta-data=/dev/sdb1              isize=256    agcount=16, agsize=524288 blks
+>>>          =                       sectsz=512   attr=2, projid32bit=0
+>>> data     =                       bsize=512    blocks=8388608, imaxpct=25
+>>>          =                       sunit=512    swidth=6144 blks
+>>> naming   =version 2              bsize=4096   ascii-ci=0
+>>> log      =internal log           bsize=512    blocks=2560, version=2
+>>>          =                       sectsz=512   sunit=512 blks, lazy-count=1
+>>> realtime =none                   extsz=4096   blocks=0, rtextents=0
+>>>
+>>
+>> Shouldn't mkfs.xfs also know it is building a filesystem that cannot
+>> be mounted?
+> 
+> Yes, it should - this is what mkfs/maxtrres.c does. It looks like some
+> of this patch came from that code.....
+Yes, especially for figuring out the transaction with maximum log space
+reservation.  I'm going to sync up kernel changes to user space from the
+next round post.
+> 
+>> When mkfs.xfs is given a log stripe unit is greater than 256KB,
+>> should we divide the specified log stripe unit by 2 until it is
+>> under 256KB rather than reset to 32KB?
+> 
+> I think if it is specified on the command line, it shoul dbe
+> rejected. If it's automatically determined from the data device
+> sunit, then the divide-by-2-until-in-range algorithm seems fine to
+> me.
+> 
+>>
+>>> # mount /dev/sdb1 /xfs1
+>>> mount: wrong fs type, bad option, bad superblock on /dev/sdb1,
+>>>        missing codepage or helper program, or other error
+>>>        In some cases useful info is found in syslog - try
+>>>        dmesg | tail  or so
+>>>
+>>> # dmesg:
+>>> .......
+>>> XFS (sdb1): log space of 2560 blocks too small, minimum request 6656
+>>> XFS (sdb1): log space validation failed
+>>> XFS (sdb1): log mount failed
+>>>
+>>>
+>>> Tests:
+>>> Ran some cases in xfstests as well as a few self-defined Bonnie++/FIO tests with above
+>>> configuration(6656 log blocks), looks the current fix works, at least no crash to me.:)
+>>>
+>>> But I have not yet dig into the detailed of how the suggested minimum log space would
+>>> affect the performance, given that the AIL push thresholds is defined to 25% of the log
+>>> space, a small logs might introduce IO overheads for pushing AIL too frequently.
+> 
+> That's already a problem of using small logs. That's not something
+> we need to worry about when trying to determine the minimum valid
+> log size....
+> 
+>>> In addition, considering the backgroup CIL commit threshold is 1/8 of the log, this would
+>>> also impact the log IO throughput IMHO.  Maybe we can figure out an optimized log space
+>>> combine those two cases and drop it to syslog along with the minimum size?
+> 
+> Anyone who cares about metadata performance on their small
+> filesystems is not going to use a minimum sized log. As it is, on
+> any filesystem larger than about 50GB using a default log size
+> (about 25MB for a default mkfs), the log stripe unit simply isn't an
+> issue...
+Thanks for the clarification.
+> 
+>> I think 1 MB is the smallest log size before we soft hang even
+>> without stripe units define.
+> 
+> $ sudo mkfs.xfs -f -l size=256b -dsize=1g /dev/vdc
+> log size 256 blocks too small, minimum size is 512 blocks
+> $
+> 
+> mkfs won't allow a log size smaller than 2MB for default
+> configurations.
+> 
+>>> To Dave,
+>>>
+>>> Sorry for the delay in drop this patch since I have mentioned that I'll post a fix
+>>> last night.  However, I have ran into an issue when testing it by creating/removing a
+>>> tons of files in parallel at that time:(
+>>
+>> The iclog buffers have to be a multiple of the log stripe unit or we
+>> start punching the lsn in places that it should not. I think the
+>> idea that was mentioned is to remove the power of two on the iclog
+>> buffer size and replace with multiple of log stripe unit.
+>>
+>> http://oss.sgi.com/archives/xfs/2013-03/msg00039.html
+> 
+> Right:
+> 
+> | Personally, I'd prefer that logbsize be limited to power-of-2
+> | multiples of the lsunit or XLOG_MIN_RECORD_BSIZE (if lsunit = 0) as
+> | allowing arbitrary values to be specified by users leads to a
+> | testing and bug triage nightmare.
+> 
+> ie I think that the valid values for logbsize are:
+> 
+> 32k <= logbsize <= 256k
+> logbsize = logsunit * 2^N for N that does not violate the first rule.
+So I'll take this into account for validating log stripe unit.
 
-Currently, xfstests will fail as soon as it detects an empty exclude
-group. However, this may cause problems in automated testing. For
-example, if one wishes to exclude otherwise valid group dmapi for file
-system like tmpfs or nfs, the ./check script will hit the error about
-empty group and fail. This simple patch changes the error to warning,
-prints the warning to stderr and simply continue without excluding
-anything as there are no tests to be excluded.
-
-Signed-off-by: Boris Ranto <ranto.boris@gmail.com>
----
- check |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/check b/check
-index 4af2dbd..b888030 100755
---- a/check
-+++ b/check
-@@ -194,12 +194,13 @@ while [ $# -gt 0 ]; do
- 		[ ! -s $tmp.list ] && get_all_tests
- 
- 		group_list=$(get_group_list $xgroup)
-+		# Trim the test list only if there is something to trim it with
- 		if [ -z "$group_list" ]; then
--		    echo "Group \"$xgroup\" is empty or not defined?"
--		    exit 1
-+		    echo "Warning: Group \"$xgroup\" seems empty." 1>&2
-+		else
-+		    trim_test_list $group_list
- 		fi
- 
--		trim_test_list $group_list
- 		;;
- 
- 	-X)	xfile=$2; shift ;
--- 
-1.7.1
+Thanks,
+-Jeff
 
 _______________________________________________
 xfs mailing list
