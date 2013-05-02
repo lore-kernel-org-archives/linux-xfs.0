@@ -1,18 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 22CCB7F56
-	for <xfs@oss.sgi.com>; Thu,  2 May 2013 01:54:22 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 2975A7F55
+	for <xfs@oss.sgi.com>; Thu,  2 May 2013 01:55:21 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 92558AC001
-	for <xfs@oss.sgi.com>; Wed,  1 May 2013 23:54:21 -0700 (PDT)
-Message-ID: <51820D8E.7040308@oracle.com>
-Date: Thu, 02 May 2013 14:54:06 +0800
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 09B1F8F8037
+	for <xfs@oss.sgi.com>; Wed,  1 May 2013 23:55:20 -0700 (PDT)
+Message-ID: <51820DCC.4070606@oracle.com>
+Date: Thu, 02 May 2013 14:55:08 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 2/2 v2] xfs: Don't keep silent if sunit/swidth can not
-	be changed via mount
-References: <518125CF.3050806@oracle.com> <20130502011302.GS10481@dastard>
-In-Reply-To: <20130502011302.GS10481@dastard>
+Subject: Re: [PATCH 1/2] xfs: Remove XFS_MOUNT_RETERR
+References: <518125C9.8000008@oracle.com> <20130502011211.GR10481@dastard>
+In-Reply-To: <20130502011211.GR10481@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,73 +27,155 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: Mark Tinguely <tinguely@sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 05/02/2013 09:13 AM, Dave Chinner wrote:
-> On Wed, May 01, 2013 at 10:25:19PM +0800, Jeff Liu wrote:
+On 05/02/2013 09:12 AM, Dave Chinner wrote:
+> On Wed, May 01, 2013 at 10:25:13PM +0800, Jeff Liu wrote:
 >> From: Jie Liu <jeff.liu@oracle.com>
 >>
->> As per the mount man page, sunit and swidth can be changed via
->> mount options.  For XFS, on the face of it, those options seems
->> works if the specified alignments is properly, e.g.
->> # mount -o sunit=4096,swidth=8192 /dev/sdb1 /mnt
->> # mount | grep sdb1
->> /dev/sdb1 on /mnt type xfs (rw,sunit=4096,swidth=8192)
+>> XFS_MOUNT_RETERR is going to be set at xfs_parseargs() if
+>> mp->m_dalign is enabled, so any time we enter "if (mp->m_dalign)"
+>> branch in xfs_update_alignment(), XFS_MOUNT_RETERR is set and
+>> so we always be emitting a warning and returning an error.
 >>
->> However, neither sunit nor swidth is shown from the xfs_info output.
->> # xfs_info /mnt
->> meta-data=/dev/sdb1    isize=256    agcount=4, agsize=262144 blks
->>          =             sectsz=512   attr=2
->> data     =             bsize=4096   blocks=1048576, imaxpct=25
->>          =             sunit=0      swidth=0 blks
->> 		       ^^^^^^^^^^^^^^^^^^^^^^^^^^
->> naming   =version 2    bsize=4096   ascii-ci=0
->> log      =internal     bsize=4096   blocks=2560, version=2
->>          =             sectsz=512   sunit=0 blks, lazy-count=1
->> realtime =none         extsz=4096   blocks=0, rtextents=0
+>> Hence, we can remove it and get rid of a couple of redundant
+>> check up against it at xfs_upate_alignment(). 
 >>
->> The reason is that the alignment can only be changed if the relevant
->> super block is already configured with alignments, otherwise, the
->> given value is silently ignored.
->>
->> With this fix, the attempt to mount a storage without strip alignment
->> setup on a super block will get an error with a warning in syslog to
->> indicate the true cause.
->>
->> # mount -o sunit=4096,swidth=8192 /dev/sdb1 /mnt
->> mount: wrong fs type, bad option, bad superblock on /dev/sdb1,
->>        missing codepage or helper program, or other error
->>        In some cases useful info is found in syslog - try
->> 	dmesg | tail  or so
->> # dmesg|tail
->> .......
->> XFS (sdb1): can not change alignment: superblock does not support data
->> alignment
+>> Thanks Dave Chinner for the confirmation.
 >>
 >> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
->> Cc: Mark Tinguely <tinguely@sgi.com>
 >> Cc: Dave Chinner <dchinner@redhat.com>
+>> Cc: Mark Tinguely <tinguely@sgi.com>
 >> ---
->>  fs/xfs/xfs_mount.c |    4 ++++
->>  1 file changed, 4 insertions(+)
+>>  fs/xfs/xfs_mount.c |   39 ++++++++++++---------------------------
+>>  fs/xfs/xfs_mount.h |    2 --
+>>  fs/xfs/xfs_super.c |    5 +----
+>>  3 files changed, 13 insertions(+), 33 deletions(-)
 >>
 >> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
->> index 29e8de8..2836ef6 100644
+>> index 3806088..29e8de8 100644
 >> --- a/fs/xfs/xfs_mount.c
 >> +++ b/fs/xfs/xfs_mount.c
->> @@ -909,6 +909,10 @@ xfs_update_alignment(xfs_mount_t *mp)
->>  				sbp->sb_width = mp->m_swidth;
->>  				mp->m_update_flags |= XFS_SB_WIDTH;
->>  			}
->> +		} else {
->> +			xfs_warn(mp, "cannot change alignment: "
->> +				 "superblock does not support data alignment");
+>> @@ -872,42 +872,27 @@ xfs_update_alignment(xfs_mount_t *mp)
+>>  		 */
+>>  		if ((BBTOB(mp->m_dalign) & mp->m_blockmask) ||
+>>  		    (BBTOB(mp->m_swidth) & mp->m_blockmask)) {
+>> -			if (mp->m_flags & XFS_MOUNT_RETERR) {
+>> -				xfs_warn(mp, "alignment check failed: "
+>> -					 "(sunit/swidth vs. blocksize)");
+>> -				return XFS_ERROR(EINVAL);
+>> -			}
+>> -			mp->m_dalign = mp->m_swidth = 0;
+>> +			xfs_warn(mp, "alignment check failed: "
+>> +				 "(sunit/swidth vs. blocksize)");
 > 
-> Same comment again about single line format strings. Otherwise it's
-> ok.
-Ah, sorry! I misunderstood the comments of Mark before. I was bluffed
-into believing that I should cut the length of log string as short as
-possible. :(
-
-It will be fixed so.
+> Let's convert these format strings to a single line at the same
+> time and be consistent with output. ie:
+> 
+> 			xfs_warn(mp,
+> 	"alignment check failed: sunit/swidth vs. blocksize(%d)",
+> 				sbp->sb_blocksize);
+Ok.
+> 
+>> +			return XFS_ERROR(EINVAL);
+>>  		} else {
+>>  			/*
+>>  			 * Convert the stripe unit and width to FSBs.
+>>  			 */
+>>  			mp->m_dalign = XFS_BB_TO_FSBT(mp, mp->m_dalign);
+>>  			if (mp->m_dalign && (sbp->sb_agblocks % mp->m_dalign)) {
+>> -				if (mp->m_flags & XFS_MOUNT_RETERR) {
+>> -					xfs_warn(mp, "alignment check failed: "
+>> -						 "(sunit/swidth vs. ag size)");
+>> -					return XFS_ERROR(EINVAL);
+>> -				}
+>> -				xfs_warn(mp,
+>> -		"stripe alignment turned off: sunit(%d)/swidth(%d) "
+>> -		"incompatible with agsize(%d)",
+>> -					mp->m_dalign, mp->m_swidth,
+>> -					sbp->sb_agblocks);
+>> -
+>> -				mp->m_dalign = 0;
+>> -				mp->m_swidth = 0;
+>> +				xfs_warn(mp, "alignment check failed: "
+>> +			"sunit(%d)/swidth(%d) incompatible with agsize(%d)",
+> 
+> 	"alignment check failed: sunit/swidth vs. agsize(%d)",
+> 					sbp->sb_agblocks);
+> 
+>> +					 mp->m_dalign, mp->m_swidth,
+>> +					 sbp->sb_agblocks);
+>> +				return XFS_ERROR(EINVAL);
+>>  			} else if (mp->m_dalign) {
+>>  				mp->m_swidth = XFS_BB_TO_FSBT(mp, mp->m_swidth);
+>>  			} else {
+>> -				if (mp->m_flags & XFS_MOUNT_RETERR) {
+>> -					xfs_warn(mp, "alignment check failed: "
+>> -						"sunit(%d) less than bsize(%d)",
+>> -						mp->m_dalign,
+>> -						mp->m_blockmask +1);
+>> -					return XFS_ERROR(EINVAL);
+>> -				}
+>> -				mp->m_swidth = 0;
+>> +				xfs_warn(mp, "alignment check failed: "
+>> +					 "sunit(%d) less than bsize(%d)",
+>> +					 mp->m_dalign, mp->m_blockmask + 1);
+> 
+> 	"alignment check failed: sunit(%d) less than bsize(%d)",
+> 					mp->m_dalign, sbp->sb_blocksize);
+>> +				return XFS_ERROR(EINVAL);
+>>  			}
+>>  		}
+>>  
+>> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+>> index bc90706..8145412 100644
+>> --- a/fs/xfs/xfs_mount.h
+>> +++ b/fs/xfs/xfs_mount.h
+>> @@ -230,8 +230,6 @@ typedef struct xfs_mount {
+>>  						   operations, typically for
+>>  						   disk errors in metadata */
+>>  #define XFS_MOUNT_DISCARD	(1ULL << 5)	/* discard unused blocks */
+>> -#define XFS_MOUNT_RETERR	(1ULL << 6)     /* return alignment errors to
+>> -						   user */
+>>  #define XFS_MOUNT_NOALIGN	(1ULL << 7)	/* turn off stripe alignment
+>>  						   allocations */
+>>  #define XFS_MOUNT_ATTR2		(1ULL << 8)	/* allow use of attr2 format */
+>> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+>> index ea341ce..51da4d2 100644
+>> --- a/fs/xfs/xfs_super.c
+>> +++ b/fs/xfs/xfs_super.c
+>> @@ -446,11 +446,8 @@ done:
+>>  		 * Before the mount call ends we will convert
+>>  		 * these to FSBs.
+>>  		 */
+>> -		if (dsunit) {
+>> +		if (dsunit)
+>>  			mp->m_dalign = dsunit;
+>> -			mp->m_flags |= XFS_MOUNT_RETERR;
+>> -		}
+>> -
+>>  		if (dswidth)
+>>  			mp->m_swidth = dswidth;
+> 
+> This code can be simplified, too. We've already done this check:
+> 
+> 	if ((dsunit && !dswidth) || (!dsunit && dswidth)) {
+>                 xfs_warn(mp, "sunit and swidth must be specified together");
+>                 return EINVAL;
+>         }
+> 
+> So we know that dsunit/dswidth are either both zero or both set, so
+> the above code could simply end up as:
+> 
+>         if (dsunit && !(mp->m_flags & XFS_MOUNT_NOALIGN)) {
+>                 /*
+>                  * At this point the superblock has not been read
+>                  * in, therefore we do not know the block size.
+>                  * Before the mount call ends we will convert
+>                  * these to FSBs.
+>                  */
+> 		mp->m_dalign = dsunit;
+> 		mp->m_swidth = dswidth;
+>         }
+Exactly, will take care of this in next round of post.
 
 Thanks,
 -Jeff
