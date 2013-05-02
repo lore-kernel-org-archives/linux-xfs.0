@@ -1,18 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1F1D07F54
-	for <xfs@oss.sgi.com>; Thu,  2 May 2013 09:53:23 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id DF99030405F
-	for <xfs@oss.sgi.com>; Thu,  2 May 2013 07:53:22 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 07GDK3sjDunmx2Ew for
-	<xfs@oss.sgi.com>; Thu, 02 May 2013 07:53:22 -0700 (PDT)
-Message-ID: <51827DDF.4050708@redhat.com>
-Date: Thu, 02 May 2013 09:53:19 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 9EF837F53
+	for <xfs@oss.sgi.com>; Thu,  2 May 2013 10:09:04 -0500 (CDT)
+Message-ID: <51828192.6040101@sgi.com>
+Date: Thu, 02 May 2013 10:09:06 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfstests: fix internal _xfs_check to handle logdev etc
+Subject: Re: [PATCH v2] xfs: Remove struct xfs_chash from xfs_mount
+References: <51824CA8.9000209@oracle.com>
+In-Reply-To: <51824CA8.9000209@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,56 +17,53 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
-Cc: "Michael L. Semon" <mlsemon35@gmail.com>, Chandra Seetharaman <sekharan@us.ibm.com>
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Pull all of the old xfs_check script into common/rc:_xfs_check()
-so that it properly handles all options, including external log
-devices.
+On 05/02/13 06:23, Jeff Liu wrote:
+> v2->v1:
+> Fix a typo at comments, i.e. s/xfs_krash/xfs_chash/.
+>
+>
+> From: Jie Liu<jeff.liu@oracle.com>
+>
+> Remove struct xfs_chash from struct xfs_mount as there is no user of
+> it nowadays.
+>
+> Signed-off-by: Jie Liu<jeff.liu@oracle.com>
+> Reviewed-by: Dave Chinner<dchinner@redhat.com>
+> ---
+>   fs/xfs/xfs_mount.h |    2 --
+>   1 file changed, 2 deletions(-)
+>
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index bc90706..b68e56b 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -192,8 +192,6 @@ typedef struct xfs_mount {
+>          xfs_dablk_t             m_dirleafblk;   /* blockno of dir non-data v2 */
+>          xfs_dablk_t             m_dirfreeblk;   /* blockno of dirfreeindex v2 */
+>          uint                    m_chsize;       /* size of next field */
+> -       struct xfs_chash        *m_chash;       /* fs private inode per-cluster
+> -                                                * hash table */
+>          atomic_t                m_active_trans; /* number trans frozen */
+>   #ifdef HAVE_PERCPU_SB
+>          xfs_icsb_cnts_t __percpu *m_sb_cnts;    /* per-cpu superblock counters */
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+Your mailer may have damaged the patch. The <TAB> are now spaces.
 
-diff --git a/common/rc b/common/rc
-index 19a0e18..b47a53e 100644
---- a/common/rc
-+++ b/common/rc
-@@ -393,8 +393,8 @@ _xfs_check()
- {
-     OPTS=" "
-     DBOPTS=" "
-+    USAGE="Usage: xfs_check [-fsvV] [-l logdev] [-i ino]... [-b bno]... special"
- 
--    OPTIND=1
-     while getopts "b:fi:l:stvV" c
-     do
-         case $c in
-@@ -410,8 +410,17 @@ _xfs_check()
-                 ;;
-         esac
-     done
--    ${XFS_DB_PROG}${DBOPTS} -F -i -p xfs_check -c "check$OPTS" $1
--    return $?
-+    set -- extra $@
-+    shift $OPTIND
-+    case $# in
-+        1)    ${XFS_DB_PROG}${DBOPTS} -F -i -p xfs_check -c "check$OPTS" $1
-+               status=$?
-+               ;;
-+        2)    echo $USAGE 1>&1
-+              status=2
-+              ;;
-+    esac
-+    return $status
- }
- 
- _setup_large_ext4_fs()
+FYI, I had problems with another patch of yours:
+	http://oss.sgi.com/archives/xfs/2013-05/msg00022.html
+starting at the line:
+	@@ -630,6 +688,12 @@ xfs_log_mount(
 
+I think that this patch can be fixed rather resent. Looks good.
 
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
