@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D60747F54
-	for <xfs@oss.sgi.com>; Thu,  2 May 2013 09:14:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id BD159304053
-	for <xfs@oss.sgi.com>; Thu,  2 May 2013 07:14:19 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id gtaIFfOIcMhnZNfh (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 02 May 2013 07:14:18 -0700 (PDT)
-Message-ID: <518274B0.4050506@oracle.com>
-Date: Thu, 02 May 2013 22:14:08 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+	by oss.sgi.com (Postfix) with ESMTP id D8DEE7F54
+	for <xfs@oss.sgi.com>; Thu,  2 May 2013 09:45:32 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A13F2304077
+	for <xfs@oss.sgi.com>; Thu,  2 May 2013 07:45:32 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id dT8Y8FEViIyQp9Pe for <xfs@oss.sgi.com>;
+	Thu, 02 May 2013 07:45:30 -0700 (PDT)
+Message-ID: <51827C09.2080805@sandeen.net>
+Date: Thu, 02 May 2013 09:45:29 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: fix log space reservation calculation if log stripe
-	unit is specified
-References: <51813BA5.3070306@oracle.com> <51814578.9060408@sgi.com>
-	<20130502013632.GV10481@dastard>
-In-Reply-To: <20130502013632.GV10481@dastard>
+Subject: Re: xfsprogs-3.1.11 pre-release   please test!
+References: <51817712.6000807@sgi.com> <51817C88.4060208@sgi.com>
+	<51826B72.4030707@gmail.com>
+In-Reply-To: <51826B72.4030707@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,142 +28,118 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, Dave Chinner <dchinner@redhat.com>
+To: "Michael L. Semon" <mlsemon35@gmail.com>
+Cc: xfs@oss.sgi.com
 
-On 05/02/2013 09:36 AM, Dave Chinner wrote:
-> On Wed, May 01, 2013 at 11:40:24AM -0500, Mark Tinguely wrote:
->> On 05/01/13 10:58, Jeff Liu wrote:
->>> Hello,
->>>
->>> About two weeks ago, Dave has found an issue by running xfstests/297.
->>> http://oss.sgi.com/archives/xfs/2013-03/msg00273.html
->>>
->>> According to our previous discussion, if the log stripe unit is configured, we should
->>> take it into account as it will dynamically increase the log reservation twice of it
->>> per ticket.
->>>
->>> This patch is trying to fix it by checking the given log space against the maximum
->>> request among those transactions(this procedure is implemented similar to xfsprogs/mkfs/maxres.c),
->>> because the fundamental limit is that no single transaction can be larger than half of the log.
->>> Also, looks at least another two log stripe unit should be added when calculating the minimum log
->>> space, or else I can simply trigger a DEAD LOOP via create large number of files, I think I need
->>> some time to digest Dave's comments posted on original bug ticket, i.e.
->>>>>>>  The question is this: how much space do we need to reserve. I'm
->>>>>>>  thinking a minimum of 4*lsu - 2*lsu for the existing CIL context, and
->>>>>>>  another 2*lsu for any queued ticket waiting for space to come
->>>>>>>  available.
->>>
->>> Put simply, with this fix, mount a partition with an improper log space setup vs log stripe
->>> unit will failed although mkfs still works. Ah, maybe we can improve the user space xfs_mkfs
->>> with some pre-checkup similar to the implementation inside kernel?  Besides that, it will
->>> drop a warning to syslog and the suggested log space for the given log stripe unit is shown
->>> there, which looks like the following:
->>>
->>> # mkfs.xfs -f -b size=512 -d agcount=16,su=256k,sw=12 -l su=256k,size=2560b /dev/sdb1
->>> meta-data=/dev/sdb1              isize=256    agcount=16, agsize=524288 blks
->>>          =                       sectsz=512   attr=2, projid32bit=0
->>> data     =                       bsize=512    blocks=8388608, imaxpct=25
->>>          =                       sunit=512    swidth=6144 blks
->>> naming   =version 2              bsize=4096   ascii-ci=0
->>> log      =internal log           bsize=512    blocks=2560, version=2
->>>          =                       sectsz=512   sunit=512 blks, lazy-count=1
->>> realtime =none                   extsz=4096   blocks=0, rtextents=0
->>>
->>
->> Shouldn't mkfs.xfs also know it is building a filesystem that cannot
->> be mounted?
-> 
-> Yes, it should - this is what mkfs/maxtrres.c does. It looks like some
-> of this patch came from that code.....
-Yes, especially for figuring out the transaction with maximum log space
-reservation.  I'm going to sync up kernel changes to user space from the
-next round post.
-> 
->> When mkfs.xfs is given a log stripe unit is greater than 256KB,
->> should we divide the specified log stripe unit by 2 until it is
->> under 256KB rather than reset to 32KB?
-> 
-> I think if it is specified on the command line, it shoul dbe
-> rejected. If it's automatically determined from the data device
-> sunit, then the divide-by-2-until-in-range algorithm seems fine to
-> me.
-> 
->>
->>> # mount /dev/sdb1 /xfs1
->>> mount: wrong fs type, bad option, bad superblock on /dev/sdb1,
->>>        missing codepage or helper program, or other error
->>>        In some cases useful info is found in syslog - try
->>>        dmesg | tail  or so
->>>
->>> # dmesg:
->>> .......
->>> XFS (sdb1): log space of 2560 blocks too small, minimum request 6656
->>> XFS (sdb1): log space validation failed
->>> XFS (sdb1): log mount failed
+On 5/2/13 8:34 AM, Michael L. Semon wrote:
+> On 05/01/2013 04:35 PM, Mark Tinguely wrote:
+>> On 05/01/13 15:12, Rich Johnston wrote:
+>>> Hi Folks,
+>>> 
+>>> Here are the changes for this release:
+>>> 
+>>> xfsprogs-3.1.11 (30 April 2013)
+>>> 
+>>> - Support for relative paths in xfs_quota thanks to Satoru
+>>> Takeuchi. - mkfs.xfs will always go into multidisk mode when
+>>> filesystem geometry is specified on the command line. - Document
+>>> all commands in xfs_io. - Remove setfl command from xfs_io. -
+>>> xfs_metadump will obfuscate symlinks by path component. -
+>>> mkfs.xfs no longer accepts geometry settings smaller than the 
+>>> physical sector size. - xfs_logprint now supports multiply-logged
+>>> inode fields and handles continued inode transactions correctly. 
+>>> - kill XLOG_SET - Update release scripts to use git archive to
+>>> address a missing source file reported by Arkadiusz Mi?kiewicz -
+>>> Fix a build error with -Werror=format-security, reported by
+>>> Arkadiusz Mi?kiewicz - mkfs.xfs no longer attempts to discard
+>>> when -N option is used. - Update 'make deb' to use tarball - Sync
+>>> up with log reservation changes in the kernel. - Fix possible
+>>> unallocated memory access in fiemap. - Guard against string
+>>> overflow in path_to_fspath. - Fix setup_cursor array allocation. 
+>>> - Fix free of unintialized pointer in xfs_acl_valid error path. -
+>>> Guard against path string overflows. - Check strdup results
+>>> properly in initallfs(). - Fix attribute no_change_count logic. -
+>>> Remove extraneous close() in fsrallfs(). - xfs_repair now skips
+>>> the freelist scan of a corrupt agf when in no-modify mode. -
+>>> xfs_db now skips freelist scans of corrupt agfs. - Remove
+>>> unconditional ASSERT(0) in xfs_repair. - Reduce bb_numrecs in
+>>> bno/cnt btrees when log consumes all agf space. - Add depraction
+>>> message for xfs_check. - xfs_quota allow user or group names
+>>> beginning with digits reported by James Carter. - Fix manpages
+>>> and usage() spelling, errors and omissions.
+>>> 
+>>> I have placed a pre-release tarball here:
+>>> 
+>>> ftp://oss.sgi.com/projects/xfs/cmd_tars/pre-release/xfsprogs-pre-3.1.11-3.tar.gz
 >>>
 >>>
->>> Tests:
->>> Ran some cases in xfstests as well as a few self-defined Bonnie++/FIO tests with above
->>> configuration(6656 log blocks), looks the current fix works, at least no crash to me.:)
 >>>
->>> But I have not yet dig into the detailed of how the suggested minimum log space would
->>> affect the performance, given that the AIL push thresholds is defined to 25% of the log
->>> space, a small logs might introduce IO overheads for pushing AIL too frequently.
-> 
-> That's already a problem of using small logs. That's not something
-> we need to worry about when trying to determine the minimum valid
-> log size....
-> 
->>> In addition, considering the backgroup CIL commit threshold is 1/8 of the log, this would
->>> also impact the log IO throughput IMHO.  Maybe we can figure out an optimized log space
->>> combine those two cases and drop it to syslog along with the minimum size?
-> 
-> Anyone who cares about metadata performance on their small
-> filesystems is not going to use a minimum sized log. As it is, on
-> any filesystem larger than about 50GB using a default log size
-> (about 25MB for a default mkfs), the log stripe unit simply isn't an
-> issue...
-Thanks for the clarification.
-> 
->> I think 1 MB is the smallest log size before we soft hang even
->> without stripe units define.
-> 
-> $ sudo mkfs.xfs -f -l size=256b -dsize=1g /dev/vdc
-> log size 256 blocks too small, minimum size is 512 blocks
-> $
-> 
-> mkfs won't allow a log size smaller than 2MB for default
-> configurations.
-> 
->>> To Dave,
 >>>
->>> Sorry for the delay in drop this patch since I have mentioned that I'll post a fix
->>> last night.  However, I have ran into an issue when testing it by creating/removing a
->>> tons of files in parallel at that time:(
->>
->> The iclog buffers have to be a multiple of the log stripe unit or we
->> start punching the lsn in places that it should not. I think the
->> idea that was mentioned is to remove the power of two on the iclog
->> buffer size and replace with multiple of log stripe unit.
->>
->> http://oss.sgi.com/archives/xfs/2013-03/msg00039.html
+>>> 
+Please take a look and report any issues before next Wednesday (08 May
+>>> 2013). If there are other patches which you feel are essential,
+>>> now is the time to say so.
+>>> 
+>>> Regards --Rich
+>> 
+>> The new lines (below) in xfs_check.sh breaks older xfstests:
+>> 
+>> xfs_check is deprecated and scheduled for removal in June 2014. 
+>> Please use xfs_repair -n <dev> instead.
+>> 
+>> xfstests' ./check thinks the TEST directory is inconsistent and
+>> stops. I simply commented the lines out of the installed
+>> /usr/sbin/xfs_check for my tests.
+>> 
+>> FSTYP         -- xfs (debug) PLATFORM      -- Linux/x86_64 host
+>> 3.9.0-rc1+ MKFS_OPTIONS  -- -f -bsize=4096 {SCRATCH_DEV} 
+>> MOUNT_OPTIONS -- {SCRATCH_DEV} {SCRATCH_MNT}
+>> 
+>> _check_xfs_filesystem: filesystem on {TEST_DEV} is inconsistent (c)
+>> (see check.full) Passed all 0 tests
+>> 
+>> --Mark.
 > 
-> Right:
+> I'm battling this as well, coming to hazy conclusions late at night.
+> In the _xfs_check() function in common/rc of xfstests, there was
+> something like this:
 > 
-> | Personally, I'd prefer that logbsize be limited to power-of-2
-> | multiples of the lsunit or XLOG_MIN_RECORD_BSIZE (if lsunit = 0) as
-> | allowing arbitrary values to be specified by users leads to a
-> | testing and bug triage nightmare.
+> ${XFS_DB_PROG}${DBOPTS} -F -i -p xfs_check -c "check$OPTS" $1
 > 
-> ie I think that the valid values for logbsize are:
-> 
-> 32k <= logbsize <= 256k
-> logbsize = logsunit * 2^N for N that does not violate the first rule.
-So I'll take this into account for validating log stripe unit.
+> When doing XFS tests with an external logdev (at least), things
+> failed that way, so I threw an "echo command_about_to_run" line just
+> above that.  I got the impression that the flags "-l $TEST_LOGDEV"
+> were being passed to xfs_db twice (not fatal), but I didn't see where
+> the $TEST_DEV was being passed to xfs_db.  It looks like xfs_db is
+> giving back the standard usage line.  Again, it was late last night,
+> so might someone verify that the xfs_db is always called with the
+> correct data dev or mountpoint?
 
-Thanks,
--Jeff
+I'll send a patch.
+
+> Anyway, something indeed is up between the latest git xfsprogs and
+> the latest xfstests, but my blame list hasn't been set yet.  I did
+> see the deprecation message either in the ".full" file or one of the
+> /tmp files left behind, so you are indeed correct about that.
+> Whether that's the only error is another matter.
+> 
+> BTW, it looked like xfs_check is scheduled for removal in June 2014,
+> yet the xfstests folks are planning like it will be gone in June
+> 2013.  Is the year in the deprecation message correct?
+
+xfstests is planning ahead.  ;)  Nothing stops the end-user from dropping
+a tool before the ultimate deprecation date...
+
+-Eric
+
+ 
+> Thanks!
+> 
+> Michael
+> 
+> _______________________________________________ xfs mailing list 
+> xfs@oss.sgi.com http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
