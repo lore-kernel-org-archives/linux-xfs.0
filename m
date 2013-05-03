@@ -1,16 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 174157F89
-	for <xfs@oss.sgi.com>; Fri,  3 May 2013 14:26:04 -0500 (CDT)
-Message-ID: <51840F54.9060206@sgi.com>
-Date: Fri, 3 May 2013 14:26:12 -0500
-From: Rich Johnston <rjohnston@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id 291F829DF8
+	for <xfs@oss.sgi.com>; Fri,  3 May 2013 15:11:43 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 079E2304051
+	for <xfs@oss.sgi.com>; Fri,  3 May 2013 13:11:39 -0700 (PDT)
+Received: from dkim2.fusionio.com (dkim2.fusionio.com [66.114.96.54]) by
+	cuda.sgi.com with ESMTP id yQEDC6srCW3eNtTD (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 03 May 2013 13:11:38 -0700 (PDT)
+Received: from mx2.fusionio.com (unknown [10.101.1.160])
+	by dkim2.fusionio.com (Postfix) with ESMTP id 19C179A0017
+	for <xfs@oss.sgi.com>; Fri,  3 May 2013 14:11:38 -0600 (MDT)
+From: Josef Bacik <jbacik@fusionio.com>
+Subject: [PATCH] xfstests: unmount scratch mnt in test 307
+Date: Fri, 3 May 2013 16:11:35 -0400
+Message-ID: <1367611895-6852-1-git-send-email-jbacik@fusionio.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests 311: test fsync with dm flakey V3
-References: <1367003639-17621-1-git-send-email-jbacik@fusionio.com>
-	<51840047.4020908@sgi.com>
-	<20130503190514.GD12414@localhost.localdomain>
-In-Reply-To: <20130503190514.GD12414@localhost.localdomain>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,41 +25,64 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Josef Bacik <jbacik@fusionio.com>
-Cc: "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com, linux-btrfs@vger.kernel.org
 
-On 05/03/2013 02:05 PM, Josef Bacik wrote:
-> On Fri, May 03, 2013 at 12:21:59PM -0600, Rich Johnston wrote:
->> Thanks for another patch Josef, it has been committed with the change
->> discussed.
->>
->
-> Err I forgot to point out I already have a "sync" variable in there so it fails
-> to compile, we'll need to change the var to do_sync or something.  Want me to
-> send a patch along?  Thanks,
->
-> Josef
->
-Sorry this was my fault, I have reverted
+So if you have a mount command that doesn't use /etc/mtab then it will spit out
+a different device for the mounted device.  So say we have
 
+SCRATCH_DEV_POOL="/dev/sda /dev/sdb /dev/sdc"
 
-commit 7f622f44b651aec13b99ef62c2942388a6fbee5d
-Author: Rich Johnston <rjohnston@sgi.com>
-Date:   Fri May 3 14:07:59 2013 -0500
+we will turn this into
 
-     Revert "xfstests 311: test fsync with dm flakey V3"
+SCRATCH_DEV="/dev/sda"
+SCRATCH_DEV_POOL="/dev/sdb /dev/sdc"
 
-and committed it again.
+and then when you mkfs this you do _scratch_mkfs $SCRATCH_DEV_POOL which turns
+into this
 
-commit dd3b5268312e0518ae695e8ee2a618f13805c425
-Author: Josef Bacik <jbacik@fusionio.com>
-Date:   Fri Apr 26 19:13:59 2013 +0000
+mkfs.btrfs /dev/sdb /dev/sdc /dev/sda
 
-     xfstests 311: test fsync with dm flakey V4
+becuase we do
+
+mkfs $* $SCRATCH_DEV
+
+Then btrfs will always show the lowest devid in /proc/mounts to maintain
+consistency, so even though we do mount /dev/sda $SCRATCH_MNT, you will see
+/dev/sdb as the mounted device in /proc/mounts.  So then say the next test wants
+to just use $SCRATCH_DEV, it will do _require_scratchdev which will check to see
+if $SCRATCH_DEV is mounted, which it will look like it is not because
+/proc/mounts shows /dev/sdb instead of /dev/sda, and so it won't umount
+$SCRATCH_MNT, and then that test will fail because we can't mkfs the device
+because it is busy.  I reproduced this on a box that doesn't use /etc/mtab by
+doing
+
+./check btrfs/307 generic/015
+
+and 015 would fail.  With this patch it passes now.  Thanks,
+
+Signed-off-by: Josef Bacik <jbacik@fusionio.com>
+---
+ tests/btrfs/307 |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/tests/btrfs/307 b/tests/btrfs/307
+index 87314c6..15157b3 100644
+--- a/tests/btrfs/307
++++ b/tests/btrfs/307
+@@ -35,6 +35,7 @@ _cleanup()
+ {
+     cd /
+     rm -f $tmp.*
++    umount $SCRATCH_MNT
+ }
+ 
+ # get standard environment, filters and checks
+-- 
+1.7.7.6
 
 _______________________________________________
 xfs mailing list
