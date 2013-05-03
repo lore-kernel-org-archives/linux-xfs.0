@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 156417F5D
-	for <xfs@oss.sgi.com>; Fri,  3 May 2013 11:00:29 -0500 (CDT)
-Message-ID: <5183DF27.7030102@sgi.com>
-Date: Fri, 3 May 2013 11:00:39 -0500
+	by oss.sgi.com (Postfix) with ESMTP id 8E67129DF8
+	for <xfs@oss.sgi.com>; Fri,  3 May 2013 11:02:23 -0500 (CDT)
+Message-ID: <5183DF95.6010306@sgi.com>
+Date: Fri, 3 May 2013 11:02:29 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
 Subject: Re: [PATCH] xfstests: generic/241 requires dbench
@@ -24,9 +24,15 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-Looks good.
+Thanks Dave, this patch has been committed.
 
-Reviewed-by: Rich Johnston <rjohnston@sgi.com>
+--Rich
+
+commit 9982cdd2d8d5c2de5d27ac9d1013d98a259b6bae
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed May 1 08:47:51 2013 +0000
+
+     xfstests: generic/241 requires dbench
 
 _______________________________________________
 xfs mailing list
