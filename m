@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 133477F4C
-	for <xfs@oss.sgi.com>; Fri,  3 May 2013 07:28:51 -0500 (CDT)
-Message-ID: <5183AD53.7030403@sgi.com>
-Date: Fri, 3 May 2013 07:28:03 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 11DCC7F53
+	for <xfs@oss.sgi.com>; Fri,  3 May 2013 07:49:12 -0500 (CDT)
+Message-ID: <5183B23B.2070708@sgi.com>
+Date: Fri, 3 May 2013 07:48:59 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests 311: test fsync with dm flakey V3
-References: <1367003639-17621-1-git-send-email-jbacik@fusionio.com>
-In-Reply-To: <1367003639-17621-1-git-send-email-jbacik@fusionio.com>
+Subject: Re: [PATCH] [PATCH] xfstests: use -F when making scratch ext4 fs
+References: <1367003813-17686-1-git-send-email-jbacik@fusionio.com>
+In-Reply-To: <1367003813-17686-1-git-send-email-jbacik@fusionio.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,31 +22,19 @@ Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Josef Bacik <jbacik@fusionio.com>
-Cc: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+Cc: linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
-Josef,
+Hi Josef,
 
-The patch does not compile on older kernels (i.e. SLES11 SP2).
-
-fsync-tester.c: In function 'test_three':
-fsync-tester.c:133: warning: implicit declaration of function 'syncfs'
-/tmp/cciHR6Gb.o: In function `test_three':
-/data/lwork/gulag1c/rjohnston/xfstests/src/fsync-tester.c:133: undefined 
-reference to `syncfs'
-collect2: ld returned 1 exit status
-gmake[3]: *** [fsync-tester] Error 1
-gmake[2]: *** [src] Error 2
-make[1]: *** [default] Error 2
-make: *** [default] Error 2
-
-
-src/fsync-tester.c
-133                                 syncfs(test_fd);
-Typo ?????                          ^^^^^^
-Did you mean fsync?
+Thanks for this patch, it has been committed,
 
 Regards,
 --Rich
+commit c150d937f506912da8c48419d6939731d5063967
+Author: Josef Bacik <jbacik@fusionio.com>
+Date:   Fri Apr 26 19:16:53 2013 +0000
+
+     xfstests: use -F when making scratch ext4 fs
 
 _______________________________________________
 xfs mailing list
