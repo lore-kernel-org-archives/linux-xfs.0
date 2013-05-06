@@ -1,21 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C175829DF8
-	for <xfs@oss.sgi.com>; Mon,  6 May 2013 04:27:35 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id AE17330405F
-	for <xfs@oss.sgi.com>; Mon,  6 May 2013 02:27:35 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id VC5oAZYw9NXXQ8dN (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 06 May 2013 02:27:34 -0700 (PDT)
-Message-ID: <5187777D.7010802@oracle.com>
-Date: Mon, 06 May 2013 17:27:25 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 2E93229DF8
+	for <linux-xfs@oss.sgi.com>; Mon,  6 May 2013 04:40:28 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id BB703AC006
+	for <linux-xfs@oss.sgi.com>; Mon,  6 May 2013 02:40:27 -0700 (PDT)
+Received: from mailgw1.uni-kl.de (mailgw1.uni-kl.de [131.246.120.220]) by
+	cuda.sgi.com with ESMTP id MdDOVsvSlQuwDZqk (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for
+	<linux-xfs@oss.sgi.com>; Mon, 06 May 2013 02:40:26 -0700 (PDT)
+Received: from itwm2.itwm.fhg.de (itwm2.itwm.fhg.de [131.246.191.3])
+	by mailgw1.uni-kl.de (8.14.3/8.14.3/Debian-9.4) with ESMTP id
+	r469eObj023381
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NOT)
+	for <linux-xfs@oss.sgi.com>; Mon, 6 May 2013 11:40:24 +0200
+Received: from mail2.itwm.fhg.de ([131.246.191.79]:42122)
+	by itwm2.itwm.fhg.de with esmtps (TLSv1:DES-CBC3-SHA:168)
+	(/C=DE/ST=Rheinland-Pfalz/L=Kaiserslautern/O=Fraunhofer
+	ITWM/OU=SLG/CN=mail2.itwm.fhg.de)(verified=1) (Exim 4.74 #1)
+	id 1UZHuC-0002Pl-BL
+	for linux-xfs@oss.sgi.com; Mon, 06 May 2013 11:40:24 +0200
+Message-ID: <51877A88.6000009@itwm.fraunhofer.de>
+Date: Mon, 06 May 2013 11:40:24 +0200
+From: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
 MIME-Version: 1.0
-Subject: Re: xfs: add buffer types to directory and attribute buffers
-References: <20130506091116.GA2129@elgon.mountain>
-In-Reply-To: <20130506091116.GA2129@elgon.mountain>
+Subject: Re: 3.9.0: general protection fault
+References: <kltu6o$33j$1@ger.gmane.org> <km7oop$28c$1@ger.gmane.org>
+In-Reply-To: <km7oop$28c$1@ger.gmane.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,58 +35,19 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: xfs@oss.sgi.com, dchinner@redhat.com
+Cc: linux-xfs@oss.sgi.com
 
-On 05/06/2013 05:11 PM, Dan Carpenter wrote:
-> Hello Dave Chinner,
-> 
-> The patch d75afeb3d302: "xfs: add buffer types to directory and 
-> attribute buffers" from Apr 3, 2013, leads to the following Smatch warning:
-> "fs/xfs/xfs_log_recover.c:2042 xlog_recovery_validate_buf_type()
-> 	 warn: always true condition '(magicda != 1480675917) =>  (0-u16max != 1480675917)'"
-> 
-> fs/xfs/xfs_log_recover.c
->   2039          case XFS_BLFT_ATTR_RMT_BUF:
->   2040                  if (!xfs_sb_version_hascrc(&mp->m_sb))
->   2041                          break;
->   2042                  if (magicda != XFS_ATTR3_RMT_MAGIC) {
->                             ^^^^^^^
-> This is an unsigned short so it can never be equal to 0x5841524d.  Was
-> "magic32" intended here?
-You are right, but this issue has been fixed by:
+On 05/06/2013 10:14 AM, Bernd Schubert wrote:
+> And anpther protection fault, this time with 3.9.0. Always happens on
+> one of the servers. Its ECC memory, so I don't suspect a faulty memory
+> bank. Going to fsck now-
 
-commit cab09a81fbefcb21db5213a84461d421946f6eb8
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Tue Apr 30 21:39:36 2013 +1000
 
-    xfs: fix da node magic number mismatches
-
-It has been discussed on following thread before:
-http://oss.sgi.com/archives/xfs/2013-04/msg00645.html
-
-Thanks,
--Jeff
-> 
->   2043                          xfs_warn(mp, "Bad attr remote magic!");
->   2044                          ASSERT(0);
->   2045                          break;
->   2046                  }
->   2047                  bp->b_ops = &xfs_attr3_rmt_buf_ops;
->   2048                  break;
-> 
-> regards,
-> dan carpenter
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+xfs_repair didn't find anything.
 
 _______________________________________________
 xfs mailing list
