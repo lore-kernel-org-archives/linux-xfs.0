@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1F4D429DF8
-	for <xfs@oss.sgi.com>; Mon,  6 May 2013 07:07:38 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 0FD578F8035
-	for <xfs@oss.sgi.com>; Mon,  6 May 2013 05:07:35 -0700 (PDT)
-Received: from mail-lb0-f175.google.com (mail-lb0-f175.google.com
-	[209.85.217.175]) by cuda.sgi.com with ESMTP id
-	cycqHgQ2l7C3QvGC (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 06 May 2013 05:07:33 -0700 (PDT)
-Received: by mail-lb0-f175.google.com with SMTP id w20so3263267lbh.6
-	for <xfs@oss.sgi.com>; Mon, 06 May 2013 05:07:32 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 6264429DF8
+	for <linux-xfs@oss.sgi.com>; Mon,  6 May 2013 07:28:53 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E4B9FAC004
+	for <linux-xfs@oss.sgi.com>; Mon,  6 May 2013 05:28:49 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	IUbs7Zp1lCxl4BKU for <linux-xfs@oss.sgi.com>;
+	Mon, 06 May 2013 05:28:47 -0700 (PDT)
+Date: Mon, 6 May 2013 22:28:44 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: 3.9.0: general protection fault
+Message-ID: <20130506122844.GL19978@dastard>
+References: <kltu6o$33j$1@ger.gmane.org>
+ <km7oop$28c$1@ger.gmane.org>
 MIME-Version: 1.0
-From: Filippo Stenico <filippo.stenico@gmail.com>
-Date: Mon, 6 May 2013 14:06:52 +0200
-Message-ID: <CADNx=KsT9DC=vveyTZx8EovddFx9mhRS-yzygaORHZ_4VyXfzQ@mail.gmail.com>
-Subject: Xfs_repair segfaults.
+Content-Disposition: inline
+In-Reply-To: <km7oop$28c$1@ger.gmane.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,69 +26,35 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============9023464397804076369=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
+Cc: linux-xfs@oss.sgi.com
 
---===============9023464397804076369==
-Content-Type: multipart/alternative; boundary=001a11c2a884a4858704dc0b8bf2
+On Mon, May 06, 2013 at 10:14:22AM +0200, Bernd Schubert wrote:
+> And anpther protection fault, this time with 3.9.0. Always happens
+> on one of the servers. Its ECC memory, so I don't suspect a faulty
+> memory bank. Going to fsck now-
 
---001a11c2a884a4858704dc0b8bf2
-Content-Type: text/plain; charset=ISO-8859-1
+http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
 
-Hello,
-I've had an issue on a raid5 volume (2 disks failing at same time, and
-buggy NAS firmware trying hard to sync then stop for I/O error then retryes
-to sync leading (!?) to lost raid and an xfs data corruption.
+> 
+> >[303340.514052] general protection fault: 0000 [#1] SMP DEBUG_PAGEALLOC
+> >[303340.517913] Modules linked in: fhgfs(O) fhgfs_client_opentk(O)
 
-I've recreated raid, mounted the xfs filesystem, copied about 6TB of data
-out of 8TB, the rest of data being unreachable with "structrure needs
-cleaning" error.
-Thus I tried to unmount/mount and still got same error, then dumped
-metadata and tried various xfs_repair with different options but it always
-reaches a same point where it always segfaults.
+Kernel tainted with out of tree modules. Can you reproduce the
+problem with them?
 
-If someone is interested of investigating what's going on here and helping
-me recover more data I would be happy to send in in more details....
+Cheers,
 
-Cheers
-
+Dave.
 -- 
-F
-
---001a11c2a884a4858704dc0b8bf2
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-Hello, <br>I&#39;ve had an issue on a raid5 volume (2 disks failing at same=
- time, and buggy NAS firmware trying hard to sync then stop for I/O error t=
-hen retryes to sync leading (!?) to lost raid and an xfs data corruption.<b=
-r>
-
-<br>I&#39;ve recreated raid, mounted the xfs filesystem, copied about 6TB o=
-f data out of 8TB, the rest of data being unreachable with &quot;structrure=
- needs cleaning&quot; error.<br>Thus I tried to unmount/mount and still got=
- same error, then dumped metadata and tried various xfs_repair with differe=
-nt options but it always reaches a same point where it always segfaults.<br=
->
-
-<br>If someone is interested of investigating what&#39;s going on here and =
-helping me recover more data I would be happy to send in in more details...=
-.<br><br>Cheers <br clear=3D"all"><br>-- <br>F
-
---001a11c2a884a4858704dc0b8bf2--
-
-
---===============9023464397804076369==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============9023464397804076369==--
