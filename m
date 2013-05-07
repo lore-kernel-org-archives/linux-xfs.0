@@ -1,25 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 666FD29DFA
-	for <xfs@oss.sgi.com>; Tue,  7 May 2013 09:11:03 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 587698F8037
-	for <xfs@oss.sgi.com>; Tue,  7 May 2013 07:11:00 -0700 (PDT)
-Received: from dkim2.fusionio.com (dkim2.fusionio.com [66.114.96.54]) by
-	cuda.sgi.com with ESMTP id 8SwSFDnKm4ptl6vB (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 07 May 2013 07:10:59 -0700 (PDT)
-Received: from mx2.fusionio.com (unknown [10.101.1.160])
-	by dkim2.fusionio.com (Postfix) with ESMTP id A89289A0697
-	for <xfs@oss.sgi.com>; Tue,  7 May 2013 08:10:58 -0600 (MDT)
-Date: Tue, 7 May 2013 10:10:56 -0400
-From: Josef Bacik <jbacik@fusionio.com>
-Subject: Re: [BULK]  Re: [problem] xfstests generic/311 unreliable...
-Message-ID: <20130507141056.GO12414@localhost.localdomain>
-References: <20130507071102.GA24635@dastard> <20130507073717.GB24635@dastard>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 1C30829DFA
+	for <xfs@oss.sgi.com>; Tue,  7 May 2013 13:21:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8BF3DAC002
+	for <xfs@oss.sgi.com>; Tue,  7 May 2013 11:21:36 -0700 (PDT)
+Received: from mail-la0-f50.google.com (mail-la0-f50.google.com
+	[209.85.215.50]) by cuda.sgi.com with ESMTP id 4bJM9knaQ4wyMw4J
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 07 May 2013 11:21:31 -0700 (PDT)
+Received: by mail-la0-f50.google.com with SMTP id fl20so895065lab.37
+	for <xfs@oss.sgi.com>; Tue, 07 May 2013 11:21:30 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130507073717.GB24635@dastard>
+In-Reply-To: <CADNx=KvmA7jgqBUO0YvKddHvFaqxHNZKfF3eWajOW8GWKwNhbA@mail.gmail.com>
+References: <CADNx=KsT9DC=vveyTZx8EovddFx9mhRS-yzygaORHZ_4VyXfzQ@mail.gmail.com>
+	<5187BF8A.2040303@sandeen.net>
+	<CADNx=KvZPhbRn9Kc3+KdoAY7jZ3U0uyG6wgUB5vcxX85CkFdQg@mail.gmail.com>
+	<CADNx=Kv0bt3fNGW8Y24GziW9MOO-+b7fBGub4AYP70b5gAegxw@mail.gmail.com>
+	<5188FF88.6000508@sandeen.net>
+	<CADNx=KvmA7jgqBUO0YvKddHvFaqxHNZKfF3eWajOW8GWKwNhbA@mail.gmail.com>
+From: Filippo Stenico <filippo.stenico@gmail.com>
+Date: Tue, 7 May 2013 20:20:49 +0200
+Message-ID: <CADNx=Kv=7TFkJKom6_JM8B+A6YRckj175TbCcHrTWYL_N-qkYw@mail.gmail.com>
+Subject: Re: Xfs_repair segfaults.
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,100 +31,254 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============2075942264115609560=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Josef Bacik <JBacik@fusionio.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-On Tue, May 07, 2013 at 01:37:17AM -0600, Dave Chinner wrote:
-> Argh, add the cc to Josef...
-> 
-> On Tue, May 07, 2013 at 05:11:02PM +1000, Dave Chinner wrote:
-> > Hi Josef,
-> > 
-> > I was just looking at a generic/311, and I think there's something
-> > fundamentally wrong with the way it is checking the scratch device.
-> > 
-> > You reported it was failing for internal test 19 on XFS, but I'm
-> > seeing is fail after the first test or 2, randomly. It has never
-> > made it past test 3. So I had a little bit of a closer look at it's
-> > structure. Essentially it is doing this (and the contents seen by
-> > each step:
-> > 
-> > scratch dev + mkfs
-> > 	+-------------------------------+
-> > overlay dm-flakey
-> > 	D-------------------------------D
-> > mount/write/kill/unmount dm-flakey
-> > 	Dx-x-x-x-x-x-x------------------D
-> > 
-> > All good up to here. Now, you can _check_scratch_fs which sees:
-> > 
-> > scratch dev + check
-> > 	+-------------------------------+
-> > 
-> > i.e. it's not seeing all the changes written to dm-flakey and so
-> > xfs-check it seeing corruption.
-> > 
-> > After I realised this was stacking block devices and checking the
-> > underlying block device, the cause was pretty obvious: scratch-dev
-> > and dm-flakey have different address spaces, so changes written
-> > throughone address space will not be seen through the other address
-> > space if there is stale cached data in the original address space.
-> > 
-> > And that's exactly what is happening. This patch:
-> > 
-> > --- a/tests/generic/311
-> > +++ b/tests/generic/311
-> > @@ -79,6 +79,7 @@ _mount_flakey()
-> >  _unmount_flakey()
-> >  {
-> >         $UMOUNT_PROG $SCRATCH_MNT
-> > +       echo 3 > /proc/sys/vm/drop_caches
-> >  }
-> >  
-> >  _load_flakey_table()
-> > 
-> > Makes the problem go away for xfs_check. But really, I don't like
-> > the assumption that the test is built on - that writes through one
-> > block device are visible through another. It's just asking for weird
-> > problems.
-> > 
-> > Is there some way that you can restructure this test so it doesn't
-> > have this problem (e.g. do everything on dm-flakey)?
-> > 
+--===============2075942264115609560==
+Content-Type: multipart/alternative; boundary=089e013d1700e0f56f04dc24e261
 
-So I've made the following patch which I think will do what you want, it's kind
-of ugly but we have such specific things for fsck that I don't want to have to
-re-implement it all just for this test.  The thing is, I'm still seeing the
-failure with test 19 for xfs.  xfs_check always passes fine for me, it's the
-part where we re-mount the flakey device and then md5sum the file, it is the
-md5sum of an empty file and doesn't match the md5sum we take before we unmount.
-All of that is done on the flakey device so theres no stale caching going on
-there.  Let me know what you think about this patch, I'm open to other less
-horrible options.  Thanks,
+--089e013d1700e0f56f04dc24e261
+Content-Type: text/plain; charset=ISO-8859-1
 
-Josef
+xfs_repair -L -vv -P /dev/mapper/vg0-lv0 does the same kernel panic as my
+first report. No use to double info on this.
+I'll try xfs_repair -L -vv -P -m 2000 to keep memory consuption at a limit.
 
 
-index 2b3b569..f11119b
---- a/tests/generic/311
-+++ b/tests/generic/311
-@@ -125,7 +125,10 @@ _run_test()
- 
- 	#Unmount and fsck to make sure we got a valid fs after replay
- 	_unmount_flakey
-+	tmp=$SCRATCH_DEV
-+	SCRATCH_DEV=$FLAKEY_DEV
- 	_check_scratch_fs
-+	SCRATCH_DEV=$tmp
- 	[ $? -ne 0 ] && _fatal "fsck failed"
- 
- 	_mount_flakey
+On Tue, May 7, 2013 at 3:36 PM, Filippo Stenico
+<filippo.stenico@gmail.com>wrote:
+
+>
+>
+> On Tue, May 7, 2013 at 3:20 PM, Eric Sandeen <sandeen@sandeen.net> wrote:
+>
+>> On 5/7/13 4:27 AM, Filippo Stenico wrote:
+>> > Hello,
+>> > this is a start-over to try hard to recover some more data out of my
+>> raid5 - lvm - xfs toasted volume.
+>> > My goal is either to try the best to get some more data out of the
+>> volume, and see if I can reproduce the segfault.
+>> > I compiled xfsprogs 3.1.9 from deb-source. I ran a xfs_metarestore to
+>> put original metadata on the cloned raid volume i had zeroed the log on
+>> before via xfs_repair -L (i figured none of the actual data was modified
+>> before as I am just working on metadata.. right?).
+>> > Then I ran a mount, checked a dir that I knew it was corrupted, unmount
+>> and try an xfs_repair (commands.txt attached for details)
+>> > I went home to sleep, but at morning I found out that kernel paniced
+>> due "out of memory and no killable process".
+>> > I ran repair without -P... Should I try now disabling inode prefetch?
+>> > Attached are also output of "free" and "top" at time of panic, as well
+>> as the output of xfs_repair and strace attached to it. Dont think gdb
+>> symbols would help here....
+>> >
+>>
+>> >
+>>
+>> Ho hum, well, no segfault this time, just an out of memory error?
+>>
+> That's right....
+>
+>> No real way to know where it went from the available data I think.
+>>
+>> A few things:
+>>
+>> > root@ws1000:~# mount /dev/mapper/vg0-lv0 /raid0/data/
+>> > mount: Structure needs cleaning
+>>
+>> mount failed?  Now's the time to look at dmesg to see why.
+>>
+>
+> From attached logs it seems to be:
+>>
+>> > XFS internal error xlog_valid_rec_header(1) at line 3466 of file
+>> [...2.6.32...]/fs/xfs/xfs_log_recover.c
+>> > XFS: log mount/recovery failed: error 117
+>>
+>> > root@ws1000:~# mount
+>>
+>> <no raid0 mounted>
+>>
+>> > root@ws1000:~# mount /dev/mapper/vg0-lv0 /raid0/data/
+>> > root@ws1000:~# mount | grep raid0
+>> > /dev/mapper/vg0-lv0 on /raid0/data type xfs (rw,relatime,attr2,noquota)
+>>
+>> Uh, now it worked, with no other steps in between?  That's a little odd.
+>>
+> Looks odd to me too. But i just copied the commands issued as they where
+> on my console... so yes, nothing in between.
+>
+>> It found a clean log this time:
+>>
+>> > XFS mounting filesystem dm-1
+>> > Ending clean XFS mount for filesystem: dm-1
+>>
+>> which is unexpected.
+>>
+>> So the memory consumption might be a bug but there's not enough info to
+>> go on here.
+>>
+>> > PS. Let me know if you wish reports like this one on list.
+>>
+>> worth reporting, but I'm not sure what we can do with it.
+>> Your storage is in pretty bad shape, and xfs_repair can't make something
+>> out
+>> of nothing.
+>>
+>> -Eric
+>>
+>
+> I still got back around 6TB out of 7.2 TB of total data stored, so this
+> tells xfs is reliable even when major faults occur...
+>
+> Thanks anyways, I am trying with a "-L" repair, at this step I expect
+> another fail (due out of memory or something, as it happened last time)
+> then I will try with "xfs_repair -L -vv -P" and I expect to see that
+> segfault again.
+>
+> Will report next steps, maybe something interesting for you will pop up...
+> for me is not a waste of time, since this last try is worth being made.
+>
+> --
+> F
+
+
+
+
+-- 
+F
+
+--089e013d1700e0f56f04dc24e261
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+xfs_repair -L -vv -P /dev/mapper/vg0-lv0 does the same kernel panic as my f=
+irst report. No use to double info on this.<br>I&#39;ll try xfs_repair -L -=
+vv -P -m 2000 to keep memory consuption at a limit.<br><br><br><div class=
+=3D"gmail_quote">
+
+On Tue, May 7, 2013 at 3:36 PM, Filippo Stenico <span dir=3D"ltr">&lt;<a hr=
+ef=3D"mailto:filippo.stenico@gmail.com" target=3D"_blank">filippo.stenico@g=
+mail.com</a>&gt;</span> wrote:<br><blockquote class=3D"gmail_quote" style=
+=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex">
+
+<br><br><div class=3D"gmail_quote"><div class=3D"im">On Tue, May 7, 2013 at=
+ 3:20 PM, Eric Sandeen <span dir=3D"ltr">&lt;<a href=3D"mailto:sandeen@sand=
+een.net" target=3D"_blank">sandeen@sandeen.net</a>&gt;</span> wrote:<br><bl=
+ockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1px #=
+ccc solid;padding-left:1ex">
+
+
+<div>On 5/7/13 4:27 AM, Filippo Stenico wrote:<br>
+&gt; Hello,<br>
+</div><div>&gt; this is a start-over to try hard to recover some more data =
+out of my raid5 - lvm - xfs toasted volume.<br>
+&gt; My goal is either to try the best to get some more data out of the vol=
+ume, and see if I can reproduce the segfault.<br>
+&gt; I compiled xfsprogs 3.1.9 from deb-source. I ran a xfs_metarestore to =
+put original metadata on the cloned raid volume i had zeroed the log on bef=
+ore via xfs_repair -L (i figured none of the actual data was modified befor=
+e as I am just working on metadata.. right?).<br>
+
+
+
+&gt; Then I ran a mount, checked a dir that I knew it was corrupted, unmoun=
+t and try an xfs_repair (commands.txt attached for details)<br>
+&gt; I went home to sleep, but at morning I found out that kernel paniced d=
+ue &quot;out of memory and no killable process&quot;.<br>
+&gt; I ran repair without -P... Should I try now disabling inode prefetch?<=
+br>
+&gt; Attached are also output of &quot;free&quot; and &quot;top&quot; at ti=
+me of panic, as well as the output of xfs_repair and strace attached to it.=
+ Dont think gdb symbols would help here....<br>
+&gt;<br>
+<br>
+&gt;<br>
+<br>
+</div>Ho hum, well, no segfault this time, just an out of memory error?<br>=
+</blockquote></div><div>That&#39;s right....<br></div><div class=3D"im"><bl=
+ockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1px #=
+ccc solid;padding-left:1ex">
+
+
+
+No real way to know where it went from the available data I think.<br>
+<br>
+A few things:<br>
+<br>
+&gt; root@ws1000:~# mount /dev/mapper/vg0-lv0 /raid0/data/<br>
+&gt; mount: Structure needs cleaning<br>
+<br>
+mount failed? =A0Now&#39;s the time to look at dmesg to see why.<br>
+=A0</blockquote><blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8e=
+x;border-left:1px #ccc solid;padding-left:1ex">
+>From attached logs it seems to be:<br>
+<br>
+&gt; XFS internal error xlog_valid_rec_header(1) at line 3466 of file [...2=
+.6.32...]/fs/xfs/xfs_log_recover.c<br>
+&gt; XFS: log mount/recovery failed: error 117<br>
+<br>
+&gt; root@ws1000:~# mount<br>
+<br>
+&lt;no raid0 mounted&gt;<br>
+<br>
+&gt; root@ws1000:~# mount /dev/mapper/vg0-lv0 /raid0/data/<br>
+&gt; root@ws1000:~# mount | grep raid0<br>
+&gt; /dev/mapper/vg0-lv0 on /raid0/data type xfs (rw,relatime,attr2,noquota=
+)<br>
+<br>
+Uh, now it worked, with no other steps in between? =A0That&#39;s a little o=
+dd.<br>
+</blockquote></div><div>Looks odd to me too. But i just copied the commands=
+ issued as they where on my console... so yes, nothing in between.=A0 <br><=
+/div><div class=3D"im"><blockquote class=3D"gmail_quote" style=3D"margin:0 =
+0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex">
+
+
+It found a clean log this time:<br>
+<br>
+&gt; XFS mounting filesystem dm-1<br>
+&gt; Ending clean XFS mount for filesystem: dm-1<br>
+<br>
+which is unexpected.<br>
+<br>
+So the memory consumption might be a bug but there&#39;s not enough info to=
+ go on here.<br>
+<div><br>
+&gt; PS. Let me know if you wish reports like this one on list.<br>
+<br>
+</div>worth reporting, but I&#39;m not sure what we can do with it.<br>
+Your storage is in pretty bad shape, and xfs_repair can&#39;t make somethin=
+g out<br>
+of nothing.<br>
+<span><font color=3D"#888888"><br>
+-Eric<br></font></span></blockquote><div>=A0</div></div></div>I still got b=
+ack around 6TB out of 7.2 TB of total data stored, so this tells xfs is rel=
+iable even when major faults occur...<br><br>Thanks anyways, I am trying wi=
+th a &quot;-L&quot; repair, at this step I expect another fail (due out of =
+memory or something, as it happened last time) then I will try with &quot;x=
+fs_repair -L -vv -P&quot; and I expect to see that segfault again.<br>
+
+
+<br>Will report next steps, maybe something interesting for you will pop up=
+... for me is not a waste of time, since this last try is worth being made.=
+ <br><span class=3D"HOEnZb"><font color=3D"#888888"><br>-- <br>F
+</font></span></blockquote></div><br><br clear=3D"all"><br>-- <br>F
+
+--089e013d1700e0f56f04dc24e261--
+
+
+--===============2075942264115609560==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============2075942264115609560==--
