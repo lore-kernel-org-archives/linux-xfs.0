@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3FCBA29DF8
-	for <xfs@oss.sgi.com>; Tue,  7 May 2013 02:37:22 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 31A9430407F
-	for <xfs@oss.sgi.com>; Tue,  7 May 2013 00:37:22 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	Owo8ZGI9OCZDFcsZ for <xfs@oss.sgi.com>;
-	Tue, 07 May 2013 00:37:19 -0700 (PDT)
-Date: Tue, 7 May 2013 17:37:17 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [problem] xfstests generic/311 unreliable...
-Message-ID: <20130507073717.GB24635@dastard>
-References: <20130507071102.GA24635@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id DD6DC29DF8
+	for <xfs@oss.sgi.com>; Tue,  7 May 2013 02:53:53 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D1681304075
+	for <xfs@oss.sgi.com>; Tue,  7 May 2013 00:53:53 -0700 (PDT)
+Received: from mx3-phx2.redhat.com (mx3-phx2.redhat.com [209.132.183.24]) by
+	cuda.sgi.com with ESMTP id oXo6Ng4Q16He6TNS for
+	<xfs@oss.sgi.com>; Tue, 07 May 2013 00:53:52 -0700 (PDT)
+Date: Tue, 7 May 2013 03:53:51 -0400 (EDT)
+From: CAI Qian <caiqian@redhat.com>
+Message-ID: <647316680.8155487.1367913231441.JavaMail.root@redhat.com>
+In-Reply-To: <5187BEA5.4040107@sandeen.net>
+References: <1871204531.7584919.1367826613792.JavaMail.root@redhat.com>
+	<5187BEA5.4040107@sandeen.net>
+Subject: Re: 3.9.0: XFS rootfs corruption
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130507071102.GA24635@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,81 +28,192 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: jbacik@fusionio.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-Argh, add the cc to Josef...
 
-On Tue, May 07, 2013 at 05:11:02PM +1000, Dave Chinner wrote:
-> Hi Josef,
-> 
-> I was just looking at a generic/311, and I think there's something
-> fundamentally wrong with the way it is checking the scratch device.
-> 
-> You reported it was failing for internal test 19 on XFS, but I'm
-> seeing is fail after the first test or 2, randomly. It has never
-> made it past test 3. So I had a little bit of a closer look at it's
-> structure. Essentially it is doing this (and the contents seen by
-> each step:
-> 
-> scratch dev + mkfs
-> 	+-------------------------------+
-> overlay dm-flakey
-> 	D-------------------------------D
-> mount/write/kill/unmount dm-flakey
-> 	Dx-x-x-x-x-x-x------------------D
-> 
-> All good up to here. Now, you can _check_scratch_fs which sees:
-> 
-> scratch dev + check
-> 	+-------------------------------+
-> 
-> i.e. it's not seeing all the changes written to dm-flakey and so
-> xfs-check it seeing corruption.
-> 
-> After I realised this was stacking block devices and checking the
-> underlying block device, the cause was pretty obvious: scratch-dev
-> and dm-flakey have different address spaces, so changes written
-> throughone address space will not be seen through the other address
-> space if there is stale cached data in the original address space.
-> 
-> And that's exactly what is happening. This patch:
-> 
-> --- a/tests/generic/311
-> +++ b/tests/generic/311
-> @@ -79,6 +79,7 @@ _mount_flakey()
->  _unmount_flakey()
->  {
->         $UMOUNT_PROG $SCRATCH_MNT
-> +       echo 3 > /proc/sys/vm/drop_caches
->  }
->  
->  _load_flakey_table()
-> 
-> Makes the problem go away for xfs_check. But really, I don't like
-> the assumption that the test is built on - that writes through one
-> block device are visible through another. It's just asking for weird
-> problems.
-> 
-> Is there some way that you can restructure this test so it doesn't
-> have this problem (e.g. do everything on dm-flakey)?
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
 
--- 
-Dave Chinner
-david@fromorbit.com
+----- Original Message -----
+> From: "Eric Sandeen" <sandeen@sandeen.net>
+> To: "CAI Qian" <caiqian@redhat.com>
+> Cc: xfs@oss.sgi.com
+> Sent: Monday, May 6, 2013 10:31:01 PM
+> Subject: Re: 3.9.0: XFS rootfs corruption
+> 
+> On 5/6/13 2:50 AM, CAI Qian wrote:
+> > Saw this on several different Power7 systems after kdump reboot. It has
+> > xfsprogs-3.1.10
+> > and rootfs in on LVM. Never saw one of those in any of the RC releases.
+> > 
+> > ] Reached target Basic System.
+> > [    4.919316] bio: create slab <bio-1> at 1
+> > [    5.078616] SGI XFS with ACLs, security attributes, large block/inode
+> > numbers, no debug enabled
+> > [    5.081925] XFS (dm-1): Mounting Filesystem
+> > [    5.168530] XFS (dm-1): Starting recovery (logdev: internal)
+> > [    5.333575] XFS: Internal error XFS_WANT_CORRUPTED_RETURN at line 176 of
+> > file fs/xfs/xfs_dir2_data.c.  Caller 0xd000000002396fdc
+> 
+> here:
+> 
+>         /*
+>          * Need to have seen all the entries and all the bestfree slots.
+>          */
+>         XFS_WANT_CORRUPTED_RETURN(freeseen == 7);
+> 
+> I hope Dave knows offhand what this might mean.  :)
+> 
+> Could you get a metadump of the filesystem in question?
+Err, less familiar here. May I ask how can I do that?
+> 
+> > [    5.333575]
+> > [    5.333600] CPU: 2 PID: 372 Comm: mount Tainted: G        W    3.9.0+ #1
+> > [    5.333609] Call Trace:
+> > [    5.333619] [c0000003e7e02b40] [c000000000014e48] .show_stack+0x78/0x1e0
+> > (unreliable)
+> > [    5.333635] [c0000003e7e02c10] [c00000000074be70] .dump_stack+0x28/0x3c
+> > [    5.333690] [c0000003e7e02c80] [d00000000234ff14]
+> > .xfs_error_report+0x54/0x70 [xfs]
+> > [    5.333747] [c0000003e7e02cf0] [d000000002396e84]
+> > .__xfs_dir3_data_check+0x784/0x820 [xfs]
+> > [    5.333805] [c0000003e7e02df0] [d000000002396fdc]
+> > .xfs_dir3_data_verify+0xbc/0xe0 [xfs]
+> > [    5.333871] [c0000003e7e02e70] [d00000000239703c]
+> > .xfs_dir3_data_write_verify+0x3c/0x1c0 [xfs]
+> > [    5.333936] [c0000003e7e02f20] [d00000000234db94]
+> > ._xfs_buf_ioapply+0xd4/0x400 [xfs]
+> > [    5.334003] [c0000003e7e03060] [d00000000234dfcc]
+> > .xfs_buf_iorequest+0x4c/0xe0 [xfs]
+> > [    5.334055] [c0000003e7e030f0] [d00000000234e0c4]
+> > .xfs_bdstrat_cb+0x64/0x120 [xfs]
+> > [    5.334117] [c0000003e7e03180] [d00000000234e284]
+> > .__xfs_buf_delwri_submit+0x104/0x2a0 [xfs]
+> > [    5.334180] [c0000003e7e03270] [d00000000234f318]
+> > .xfs_buf_delwri_submit+0x38/0xd0 [xfs]
+> > [    5.334237] [c0000003e7e03310] [d0000000023b1904]
+> > .xlog_recover_commit_trans+0xd4/0x1b0 [xfs]
+> > [    5.334305] [c0000003e7e033d0] [d0000000023b1c4c]
+> > .xlog_recover_process_data+0x26c/0x340 [xfs]
+> > [    5.334372] [c0000003e7e034a0] [d0000000023b2108]
+> > .xlog_do_recovery_pass+0x3e8/0x5a0 [xfs]
+> > [    5.334438] [c0000003e7e03610] [d0000000023b2360]
+> > .xlog_do_log_recovery+0xa0/0x120 [xfs]
+> > [    5.334503] [c0000003e7e036b0] [d0000000023b2400]
+> > .xlog_do_recover+0x20/0x150 [xfs]
+> > [    5.334570] [c0000003e7e03740] [d0000000023b25c4]
+> > .xlog_recover+0x94/0x100 [xfs]
+> > [    5.334647] [c0000003e7e037d0] [d0000000023bcf84]
+> > .xfs_log_mount+0x144/0x1e0 [xfs]
+> > [    5.334705] [c0000003e7e03870] [d0000000023b6098]
+> > .xfs_mountfs+0x3c8/0x780 [xfs]
+> > [    5.334768] [c0000003e7e03930] [d00000000236435c]
+> > .xfs_fs_fill_super+0x31c/0x3b0 [xfs]
+> > [    5.334801] [c0000003e7e039d0] [c000000000217028]
+> > .mount_bdev+0x258/0x2b0
+> > [    5.334855] [c0000003e7e03aa0] [d000000002361c78]
+> > .xfs_fs_mount+0x18/0x30 [xfs]
+> > [    5.334878] [c0000003e7e03b10] [c000000000218040] .mount_fs+0x70/0x230
+> > [    5.334890] [c0000003e7e03bd0] [c00000000023a9f8]
+> > .vfs_kern_mount+0x58/0x140
+> > [    5.334901] [c0000003e7e03c80] [c00000000023d5f0] .do_mount+0x280/0xb10
+> > [    5.334912] [c0000003e7e03d70] [c00000000023df30] .SyS_mount+0xb0/0x110
+> > [    5.334924] [c0000003e7e03e30] [c000000000009e54] syscall_exit+0x0/0x98
+> > [    5.334945] c00000001bee2000: 58 44 32 44 09 50 00 40 0a 50 00 40 0b 50
+> > 00 40  XD2D.P.@.P.@.P.@
+> > [    5.334957] c00000001bee2010: 00 00 00 00 00 11 a3 8e 32 62 65 61 68 5f
+> > 74 61  ........2beah_ta
+> > [    5.334968] c00000001bee2020: 73 6b 5f 65 64 33 33 63 61 62 36 2d 32 65
+> > 30 31  sk_ed33cab6-2e01
+> > [    5.334979] c00000001bee2030: 2d 34 63 34 34 2d 38 63 31 65 2d 66 65 37
+> > 36 35  -4c44-8c1e-fe765
+> > [    5.334992] XFS (dm-1): Internal error xfs_dir3_data_write_verify at
+> > line 271 of file fs/xfs/xfs_dir2_data.c.  Caller 0xd00000000234db94
+> > [    5.334992]
+> > [    5.335017] CPU: 2 PID: 372 Comm: mount Tainted: G        W    3.9.0+ #1
+> > [    5.335025] Call Trace:
+> > [    5.335032] [c0000003e7e02c10] [c000000000014e48] .show_stack+0x78/0x1e0
+> > (unreliable)
+> > [    5.335046] [c0000003e7e02ce0] [c00000000074be70] .dump_stack+0x28/0x3c
+> > [    5.335099] [c0000003e7e02d50] [d00000000234ff14]
+> > .xfs_error_report+0x54/0x70 [xfs]
+> > [    5.335153] [c0000003e7e02dc0] [d00000000234ffac]
+> > .xfs_corruption_error+0x7c/0xb0 [xfs]
+> > [    5.335220] [c0000003e7e02e70] [d000000002397148]
+> > .xfs_dir3_data_write_verify+0x148/0x1c0 [xfs]
+> > [    5.335284] [c0000003e7e02f20] [d00000000234db94]
+> > ._xfs_buf_ioapply+0xd4/0x400 [xfs]
+> > [    5.335337] [c0000003e7e03060] [d00000000234dfcc]
+> > .xfs_buf_iorequest+0x4c/0xe0 [xfs]
+> > [    5.335403] [c0000003e7e030f0] [d00000000234e0c4]
+> > .xfs_bdstrat_cb+0x64/0x120 [xfs]
+> > [    5.335464] [c0000003e7e03180] [d00000000234e284]
+> > .__xfs_buf_delwri_submit+0x104/0x2a0 [xfs]
+> > [    5.335527] [c0000003e7e03270] [d00000000234f318]
+> > .xfs_buf_delwri_submit+0x38/0xd0 [xfs]
+> > [    5.335584] [c0000003e7e03310] [d0000000023b1904]
+> > .xlog_recover_commit_trans+0xd4/0x1b0 [xfs]
+> > [    5.335650] [c0000003e7e033d0] [d0000000023b1c4c]
+> > .xlog_recover_process_data+0x26c/0x340 [xfs]
+> > [    5.335718] [c0000003e7e034a0] [d0000000023b2108]
+> > .xlog_do_recovery_pass+0x3e8/0x5a0 [xfs]
+> > [    5.335785] [c0000003e7e03610] [d0000000023b2360]
+> > .xlog_do_log_recovery+0xa0/0x120 [xfs]
+> > [    5.335842] [c0000003e7e036b0] [d0000000023b2400]
+> > .xlog_do_recover+0x20/0x150 [xfs]
+> > [    5.335909] [c0000003e7e03740] [d0000000023b25c4]
+> > .xlog_recover+0x94/0x100 [xfs]
+> > [    5.335976] [c0000003e7e037d0] [d0000000023bcf84]
+> > .xfs_log_mount+0x144/0x1e0 [xfs]
+> > [    5.336033] [c0000003e7e03870] [d0000000023b6098]
+> > .xfs_mountfs+0x3c8/0x780 [xfs]
+> > [    5.336097] [c0000003e7e03930] [d00000000236435c]
+> > .xfs_fs_fill_super+0x31c/0x3b0 [xfs]
+> > [    5.336121] [c0000003e7e039d0] [c000000000217028]
+> > .mount_bdev+0x258/0x2b0
+> > [    5.336174] [c0000003e7e03aa0] [d000000002361c78]
+> > .xfs_fs_mount+0x18/0x30 [xfs]
+> > [    5.336206] [c0000003e7e03b10] [c000000000218040] .mount_fs+0x70/0x230
+> > [    5.336218] [c0000003e7e03bd0] [c00000000023a9f8]
+> > .vfs_kern_mount+0x58/0x140
+> > [    5.336229] [c0000003e7e03c80] [c00000000023d5f0] .do_mount+0x280/0xb10
+> > [    5.336240] [c0000003e7e03d70] [c00000000023df30] .SyS_mount+0xb0/0x110
+> > [    5.336251] [c0000003e7e03e30] [c000000000009e54] syscall_exit+0x0/0x98
+> 
+> 
+> > [    5.348410] XFS (dm-1): log mount/recovery failed: error 117
+> > [    5.348491] XFS (dm-1): log mount failed
+> > dracut-initqueue[275]: mount: mount
+> > /dev/mapper/rhel_ibm--p730--06--lp1-root on /sysroot failed: Structure
+> > needs cleaning
+> > dracut-initqueue[275]: Warning: Failed to mount -t xfs -o ro,ro
+> > /dev/mapper/rhel_ibm--p730--06--lp1-root /sysroot
+> > dracut-initqueue[275]: Warning: *** An error occurred during the file
+> > system check.
+> > dracut-initqueue[275]: Warning: *** Dropping you to a shell; the system
+> > will try
+> > 
+> > Also, never saw any of those in other architectures like x64, but started
+> > get those there in 3.9.0.
+> > Unsure if those are related.
+> > 
+> > [ 3224.369782]
+> > =============================================================================
+> > [ 3224.370017] BUG xfs_efi_item (Tainted: GF   B       ): Poison
+> > overwritten
+> > [ 3224.370017]
+> > -----------------------------------------------------------------------------
+> 
+>   2: 'F' if any module was force loaded by "insmod -f", ' ' if all
+>      modules were loaded normally.
+> 
+> Force loaded modules, what's that from?
+This could be just happened after the booting done or we were running a stress test later
+that does load (modprobe *) and unload (modprobe -r *) every module. Again, those warnings
+could be totally unrelated to the above rootfs corruption.
+CAI Qian
+> 
+> 
+> 
 
 _______________________________________________
 xfs mailing list
