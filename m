@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6C91E29E03
-	for <linux-xfs@oss.sgi.com>; Tue,  7 May 2013 17:07:51 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 504BE304067
-	for <linux-xfs@oss.sgi.com>; Tue,  7 May 2013 15:07:51 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	n595WAGpAZa1avpW for <linux-xfs@oss.sgi.com>;
-	Tue, 07 May 2013 15:07:46 -0700 (PDT)
-Date: Wed, 8 May 2013 08:07:42 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: 3.9.0: general protection fault
-Message-ID: <20130507220742.GC24635@dastard>
-References: <kltu6o$33j$1@ger.gmane.org> <km7oop$28c$1@ger.gmane.org>
-	<20130506122844.GL19978@dastard> <5187A663.707@itwm.fraunhofer.de>
-	<20130507011254.GP19978@dastard>
-	<5188E2F5.1090304@itwm.fraunhofer.de>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <5188E2F5.1090304@itwm.fraunhofer.de>
+	by oss.sgi.com (Postfix) with ESMTP id 637A729E03
+	for <xfs@oss.sgi.com>; Tue,  7 May 2013 17:09:44 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 554A3304067
+	for <xfs@oss.sgi.com>; Tue,  7 May 2013 15:09:40 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id OW208j9RXJFie3iH for <xfs@oss.sgi.com>;
+	Tue, 07 May 2013 15:09:39 -0700 (PDT)
+Received: from relay1.suse.de (unknown [195.135.220.254])
+	by mx2.suse.de (Postfix) with ESMTP id 4ABBBA5077
+	for <xfs@oss.sgi.com>; Wed,  8 May 2013 00:09:39 +0200 (CEST)
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH 2/2] Make test 306 use null and zero device nodes on
+	SCRATCH_MNT
+Date: Wed,  8 May 2013 00:09:33 +0200
+Message-Id: <1367964573-29620-2-git-send-email-jack@suse.cz>
+In-Reply-To: <1367964573-29620-1-git-send-email-jack@suse.cz>
+References: <1367964573-29620-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,58 +26,41 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
-Cc: linux-xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Jan Kara <jack@suse.cz>
 
-On Tue, May 07, 2013 at 01:18:13PM +0200, Bernd Schubert wrote:
-> On 05/07/2013 03:12 AM, Dave Chinner wrote:
-> >On Mon, May 06, 2013 at 02:47:31PM +0200, Bernd Schubert wrote:
-> >>On 05/06/2013 02:28 PM, Dave Chinner wrote:
-> >>>On Mon, May 06, 2013 at 10:14:22AM +0200, Bernd Schubert wrote:
-> >>>>And anpther protection fault, this time with 3.9.0. Always happens
-> >>>>on one of the servers. Its ECC memory, so I don't suspect a faulty
-> >>>>memory bank. Going to fsck now-
-> >>>
-> >>>http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
-> >>
-> >>Isn't that a bit overhead? And I can't provide /proc/meminfo and
-> >>others, as this issue causes a kernel panic a few traces later.
-> >
-> >Provide what information you can.  Without knowing a single thing
-> >about your hardware, storage config and workload, I can't help you
-> >at all. You're asking me to find a needle in a haystack blindfolded
-> >and with both hands tied behind my back....
-> 
-> I see that xfs_info, meminfo, etc are useful, but /proc/mounts?
-> Maybe you want "cat /proc/mounts | grep xfs"?. Attached is the
-> output of /proc/mounts, please let me know if you were really
-> interested in all of that non-xfs output?
+In one place of test 306, we mistakenly used /dev/null and /dev/zero
+instead of equivalent devices created on tested filesystem. So we were
+not really testing the functionality we intended.
 
-Yes. You never know what is relevant to a problem that is reported,
-especially if there are multiple filesystems sharing the same
-device...
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ tests/generic/306 | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-> And I just wonder what you are going to do with the information
-> about the hardware. So it is an Areca hw-raid5 device with 9 disks.
-> But does this help? It doesn't tell if one of the disks reads/writes
-> with hickups or provides any performance characteristics at all.
-
-Yes, it does, because Areca cards are by far the most unreliable HW
-RAID you can buy, which is not surprising because they are also the
-cheapest. This is through experience - we see reports of filesystems
-being badly corrupted ever few months because of problems with Areca
-controllers.
-
-Cheers,
-
-Dave.
+diff --git a/tests/generic/306 b/tests/generic/306
+index e8e0fc0..f45d142 100644
+--- a/tests/generic/306
++++ b/tests/generic/306
+@@ -73,9 +73,9 @@ _scratch_mount -o ro || _fail "Could not mount scratch readonly"
+ echo "== try to create new file"
+ touch $SCRATCH_MNT/this_should_fail 2>&1 | _filter_scratch
+ echo "== pwrite to null device"
+-$XFS_IO_PROG -F -c "pwrite 0 512" /dev/null | _filter_xfs_io
++$XFS_IO_PROG -F -c "pwrite 0 512" $DEVNULL | _filter_xfs_io
+ echo "== pread from zero device"
+-$XFS_IO_PROG -F -c "pread 0 512" /dev/zero | _filter_xfs_io
++$XFS_IO_PROG -F -c "pread 0 512" $DEVZERO | _filter_xfs_io
+ 
+ echo "== truncating write to null device"
+ echo foo > $DEVNULL 2>&1 | _filter_scratch
 -- 
-Dave Chinner
-david@fromorbit.com
+1.8.1.4
 
 _______________________________________________
 xfs mailing list
