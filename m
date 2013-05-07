@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2A52629E07
-	for <xfs@oss.sgi.com>; Tue,  7 May 2013 03:04:58 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id A9BC829E0C
+	for <xfs@oss.sgi.com>; Tue,  7 May 2013 03:05:00 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 23D708F8033
-	for <xfs@oss.sgi.com>; Tue,  7 May 2013 01:04:58 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A2B868F8033
+	for <xfs@oss.sgi.com>; Tue,  7 May 2013 01:04:57 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	fBmy69O866Kj0G95 for <xfs@oss.sgi.com>;
+	Cx1ZcCHt4goQT3jX for <xfs@oss.sgi.com>;
 	Tue, 07 May 2013 01:04:55 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UZctH-0006ZD-GM
+	(envelope-from <dave@fromorbit.com>) id 1UZctH-0006ZA-G7
 	for xfs@oss.sgi.com; Tue, 07 May 2013 18:04:51 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UZctH-0007rg-C4
+	(envelope-from <dave@disappointment.disaster>) id 1UZctH-0007rN-85
 	for xfs@oss.sgi.com; Tue, 07 May 2013 18:04:51 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 7/7] xfs: Inode create item recovery
-Date: Tue,  7 May 2013 18:04:36 +1000
-Message-Id: <1367913876-30086-8-git-send-email-david@fromorbit.com>
+Subject: [PATCH 3/7] xfs: Introduce an ordered buffer item
+Date: Tue,  7 May 2013 18:04:32 +1000
+Message-Id: <1367913876-30086-4-git-send-email-david@fromorbit.com>
 In-Reply-To: <1367913876-30086-1-git-send-email-david@fromorbit.com>
 References: <1367913876-30086-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -36,251 +36,316 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-When we find a icreate transaction, we need to get and initialise
-the buffers in the range that has been passed. Extract and verify
-the information in the item record, then loop over the range
-initialising and issuing the buffer writes delayed.
+If we have a buffer that we have modified but we do not wish to
+physically log in a transaction (e.g. we've logged a logical
+change), we still need to ensure that transactional integrity is
+maintained. Hence we must not move the tail of the log past the
+transaction that the buffer is associated with before the buffer is
+written to disk.
 
-Support an arbitrary size range to initialise so that in
-future when we allocate inodes in much larger chunks all kernels
-that understand this transaction can still recover them.
+This means these special buffers still need to be included in the
+transaction and added to the AIL just like a normal buffer, but we
+do not want the modifications to the buffer written into the
+transaction. IOWs, what we want is an "ordered buffer" that
+maintains the same transactional life cycle as a physically logged
+buffer, just without the transcribing of the modifications to the
+log.
+
+Hence we need to flag the buffer as an "ordered buffer" to avoid
+including it in vector size calculations or formatting during the
+transaction. Once the transaction is committed, the buffer appears
+for all intents to be the same as a physically logged buffer as it
+transitions through the log and AIL.
+
+Relogging will also work just fine for such an ordered buffer - the
+logical transaction will be replayed before the subsequent
+modifications that relog the buffer, so everything will be
+reconstructed correctly by recovery.
 
 Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/xfs_ialloc.c      |   24 ++++++++----
- fs/xfs/xfs_ialloc.h      |    5 ++-
- fs/xfs/xfs_log_recover.c |   94 ++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 113 insertions(+), 10 deletions(-)
+ fs/xfs/xfs_buf_item.c  |   75 +++++++++++++++++++++++++++++++-----------------
+ fs/xfs/xfs_buf_item.h  |    4 ++-
+ fs/xfs/xfs_trace.h     |    2 ++
+ fs/xfs/xfs_trans.h     |    1 +
+ fs/xfs/xfs_trans_buf.c |   33 +++++++++++++++++++--
+ 5 files changed, 84 insertions(+), 31 deletions(-)
 
-diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
-index 9126b59..51473ee 100644
---- a/fs/xfs/xfs_ialloc.c
-+++ b/fs/xfs/xfs_ialloc.c
-@@ -151,12 +151,16 @@ xfs_check_agi_freecount(
- #endif
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index cf26347..e547915 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -140,6 +140,16 @@ xfs_buf_item_size(
  
- /*
-- * Initialise a new set of inodes.
-+ * Initialise a new set of inodes. When called without a transaction context
-+ * (e.g. from recovery) we initiate a delayed write of the inode buffers rather
-+ * than logging them (which in a transaction context puts them into the AIL
-+ * for writeback rather than the xfsbufd queue).
-  */
- int
- xfs_ialloc_inode_init(
- 	struct xfs_mount	*mp,
- 	struct xfs_trans	*tp,
-+	struct list_head	*buffer_list,
- 	xfs_agnumber_t		agno,
- 	xfs_agblock_t		agbno,
- 	xfs_agblock_t		length,
-@@ -218,8 +222,9 @@ xfs_ialloc_inode_init(
- 		 * Hence we only need to log the buffers as "ordered" buffers so
- 		 * they track in the AIL as if they were physically logged.
- 		 */
--		xfs_icreate_log(tp, agno, agbno, XFS_IALLOC_INODES(mp),
--				mp->m_sb.sb_inodesize, length, gen);
-+		if (tp)
-+			xfs_icreate_log(tp, agno, agbno, XFS_IALLOC_INODES(mp),
-+					mp->m_sb.sb_inodesize, length, gen);
- 	} else if (xfs_sb_version_hasnlink(&mp->m_sb))
- 		version = 2;
- 	else
-@@ -254,14 +259,14 @@ xfs_ialloc_inode_init(
- 				ino++;
- 				uuid_copy(&free->di_uuid, &mp->m_sb.sb_uuid);
- 				xfs_dinode_calc_crc(mp, free);
--			} else {
-+			} else if (tp) {
- 				/* just log the inode core */
- 				xfs_trans_log_buf(tp, fbuf, ioffset,
- 						  ioffset + isize - 1);
- 			}
- 		}
+ 	ASSERT(bip->bli_flags & XFS_BLI_LOGGED);
  
--		if (version == 3) {
-+		if (version == 3 && tp) {
- 			/*
- 			 * Mark the buffer as ordered so that it is not logged
- 			 * in the transaction but still tracked in the AIL as
-@@ -279,7 +284,10 @@ xfs_ialloc_inode_init(
- 		 * past this transaction (i.e. by preventing relogging from
- 		 * moving it forward in the log).
- 		 */
--		xfs_trans_inode_alloc_buf(tp, fbuf);
-+		if (tp)
-+			xfs_trans_inode_alloc_buf(tp, fbuf);
-+		else
-+			xfs_buf_delwri_queue(fbuf, buffer_list);
++	if (bip->bli_flags & XFS_BLI_ORDERED) {
++		/*
++		 * The buffer has been logged just to order it.
++		 * It is not being included in the transaction
++		 * commit, so no vectors are used at all.
++		 */
++		trace_xfs_buf_item_size_ordered(bip);
++		return 0;
++	}
++
+ 	/*
+ 	 * the vector count is based on the number of buffer vectors we have
+ 	 * dirty bits in. This will only be greater than one when we have a
+@@ -212,6 +222,7 @@ xfs_buf_item_format_segment(
+ 		goto out;
  	}
- 	return 0;
- }
-@@ -324,7 +332,7 @@ xfs_ialloc_ag_alloc(
- 	 * First try to allocate inodes contiguous with the last-allocated
- 	 * chunk of inodes.  If the filesystem is striped, this will fill
- 	 * an entire stripe unit with inodes.
-- 	 */
-+	 */
- 	agi = XFS_BUF_TO_AGI(agbp);
- 	newino = be32_to_cpu(agi->agi_newino);
- 	agno = be32_to_cpu(agi->agi_seqno);
-@@ -423,7 +431,7 @@ xfs_ialloc_ag_alloc(
- 	 * rather than a linear progression to prevent the next generation
- 	 * number from being easily guessable.
+ 
++
+ 	/*
+ 	 * Fill in an iovec for each set of contiguous chunks.
  	 */
--	error = xfs_ialloc_inode_init(args.mp, tp, agno, args.agbno,
-+	error = xfs_ialloc_inode_init(args.mp, tp, NULL, agno, args.agbno,
- 			args.len, prandom_u32());
+@@ -316,6 +327,16 @@ xfs_buf_item_format(
+ 		bip->bli_flags &= ~XFS_BLI_INODE_BUF;
+ 	}
  
- 	if (error)
-diff --git a/fs/xfs/xfs_ialloc.h b/fs/xfs/xfs_ialloc.h
-index ec1cc48..ce6980b 100644
---- a/fs/xfs/xfs_ialloc.h
-+++ b/fs/xfs/xfs_ialloc.h
-@@ -156,7 +156,8 @@ extern const struct xfs_buf_ops xfs_agi_buf_ops;
-  * Inode buffer initialisation routine
-  */
- int xfs_ialloc_inode_init(struct xfs_mount *mp, struct xfs_trans *tp,
--		 xfs_agnumber_t agno, xfs_agblock_t agbno,
--		 xfs_agblock_t length, unsigned int gen);
-+			  struct list_head *buffer_list,
-+			  xfs_agnumber_t agno, xfs_agblock_t agbno,
-+			  xfs_agblock_t length, unsigned int gen);
++	if ((bip->bli_flags & (XFS_BLI_ORDERED|XFS_BLI_STALE)) ==
++							XFS_BLI_ORDERED) {
++		/*
++		 * The buffer has been logged just to order it.  It is not being
++		 * included in the transaction commit, so don't format it.
++		 */
++		trace_xfs_buf_item_format_ordered(bip);
++		return;
++	}
++
+ 	for (i = 0; i < bip->bli_format_count; i++) {
+ 		vecp = xfs_buf_item_format_segment(bip, vecp, offset,
+ 						&bip->bli_formats[i]);
+@@ -345,6 +366,7 @@ xfs_buf_item_pin(
  
- #endif	/* __XFS_IALLOC_H__ */
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 93f03ec..6d608ce 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -45,6 +45,7 @@
- #include "xfs_cksum.h"
- #include "xfs_trace.h"
- #include "xfs_icache.h"
-+#include "xfs_icreate_item.h"
+ 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
+ 	ASSERT((bip->bli_flags & XFS_BLI_LOGGED) ||
++	       (bip->bli_flags & XFS_BLI_ORDERED) ||
+ 	       (bip->bli_flags & XFS_BLI_STALE));
  
- /* Need all the magic numbers and buffer ops structures from these headers */
- #include "xfs_symlink.h"
-@@ -1618,6 +1619,9 @@ xlog_recover_reorder_trans(
- 		xfs_buf_log_format_t	*buf_f = item->ri_buf[0].i_addr;
+ 	trace_xfs_buf_item_pin(bip);
+@@ -517,8 +539,9 @@ xfs_buf_item_unlock(
+ {
+ 	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
+ 	struct xfs_buf		*bp = bip->bli_buf;
+-	int			aborted, clean, i;
+-	uint			hold;
++	bool			clean;
++	bool			aborted;
++	int			flags;
  
- 		switch (ITEM_TYPE(item)) {
-+		case XFS_LI_ICREATE:
-+			list_move(&item->ri_list, &trans->r_itemq);
-+			break;
- 		case XFS_LI_BUF:
- 			if (!(buf_f->blf_flags & XFS_BLF_CANCEL)) {
- 				trace_xfs_log_recover_item_reorder_head(log,
-@@ -2886,6 +2890,93 @@ xlog_recover_efd_pass2(
+ 	/* Clear the buffer's association with this transaction. */
+ 	bp->b_transp = NULL;
+@@ -529,23 +552,21 @@ xfs_buf_item_unlock(
+ 	 * (cancelled) buffers at unpin time, but we'll never go through the
+ 	 * pin/unpin cycle if we abort inside commit.
+ 	 */
+-	aborted = (lip->li_flags & XFS_LI_ABORTED) != 0;
+-
++	aborted = (lip->li_flags & XFS_LI_ABORTED) ? true : false;
+ 	/*
+-	 * Before possibly freeing the buf item, determine if we should
+-	 * release the buffer at the end of this routine.
++	 * Before possibly freeing the buf item, copy the per-transaction state
++	 * so we can reference it safely later after clearing it from the
++	 * buffer log item.
+ 	 */
+-	hold = bip->bli_flags & XFS_BLI_HOLD;
+-
+-	/* Clear the per transaction state. */
+-	bip->bli_flags &= ~(XFS_BLI_LOGGED | XFS_BLI_HOLD);
++	flags = bip->bli_flags;
++	bip->bli_flags &= ~(XFS_BLI_LOGGED | XFS_BLI_HOLD | XFS_BLI_ORDERED);
+ 
+ 	/*
+ 	 * If the buf item is marked stale, then don't do anything.  We'll
+ 	 * unlock the buffer and free the buf item when the buffer is unpinned
+ 	 * for the last time.
+ 	 */
+-	if (bip->bli_flags & XFS_BLI_STALE) {
++	if (flags & XFS_BLI_STALE) {
+ 		trace_xfs_buf_item_unlock_stale(bip);
+ 		ASSERT(bip->__bli_format.blf_flags & XFS_BLF_CANCEL);
+ 		if (!aborted) {
+@@ -562,13 +583,19 @@ xfs_buf_item_unlock(
+ 	 * be the only reference to the buf item, so we free it anyway
+ 	 * regardless of whether it is dirty or not. A dirty abort implies a
+ 	 * shutdown, anyway.
++	 *
++	 * Ordered buffers are dirty but may have no recorded changes, so ensure
++	 * we only release clean items here.
+ 	 */
+-	clean = 1;
+-	for (i = 0; i < bip->bli_format_count; i++) {
+-		if (!xfs_bitmap_empty(bip->bli_formats[i].blf_data_map,
+-			     bip->bli_formats[i].blf_map_size)) {
+-			clean = 0;
+-			break;
++	clean = (flags & XFS_BLI_DIRTY) ? false : true;
++	if (clean) {
++		int i;
++		for (i = 0; i < bip->bli_format_count; i++) {
++			if (!xfs_bitmap_empty(bip->bli_formats[i].blf_data_map,
++				     bip->bli_formats[i].blf_map_size)) {
++				clean = false;
++				break;
++			}
+ 		}
+ 	}
+ 	if (clean)
+@@ -581,7 +608,7 @@ xfs_buf_item_unlock(
+ 	} else
+ 		atomic_dec(&bip->bli_refcount);
+ 
+-	if (!hold)
++	if (!(flags & XFS_BLI_HOLD))
+ 		xfs_buf_relse(bp);
  }
+ 
+@@ -847,12 +874,6 @@ xfs_buf_item_log(
+ 	struct xfs_buf		*bp = bip->bli_buf;
+ 
+ 	/*
+-	 * Mark the item as having some dirty data for
+-	 * quick reference in xfs_buf_item_dirty.
+-	 */
+-	bip->bli_flags |= XFS_BLI_DIRTY;
+-
+-	/*
+ 	 * walk each buffer segment and mark them dirty appropriately.
+ 	 */
+ 	start = 0;
+@@ -878,7 +899,7 @@ xfs_buf_item_log(
+ 
  
  /*
-+ * This routine is called when an inode create format structure is found in a
-+ * committed transaction in the log.  It's purpose is to initialise the inodes
-+ * being allocated on disk. This requires us to get inode cluster buffers that
-+ * match the range to be intialised, stamped with inode templates and written
-+ * by delayed write so that subsequent modifications will hit the cached buffer
-+ * and only need writing out at the end of recovery.
-+ */
-+STATIC int
-+xlog_recover_do_icreate_pass2(
-+	struct xlog		*log,
-+	struct list_head	*buffer_list,
-+	xlog_recover_item_t	*item)
-+{
-+	struct xfs_mount	*mp = log->l_mp;
-+	struct xfs_icreate_log	*icl;
-+	xfs_agnumber_t		agno;
-+	xfs_agblock_t		agbno;
-+	unsigned int		count;
-+	unsigned int		isize;
-+	xfs_agblock_t		length;
-+
-+	icl = (struct xfs_icreate_log *)item->ri_buf[0].i_addr;
-+	if (icl->icl_type != XFS_LI_ICREATE) {
-+		xfs_warn(log->l_mp, "xlog_recover_do_icreate_trans: bad type");
-+		return EINVAL;
-+	}
-+
-+	if (icl->icl_size != 1) {
-+		xfs_warn(log->l_mp, "xlog_recover_do_icreate_trans: bad icl size");
-+		return EINVAL;
-+	}
-+
-+	agno = be32_to_cpu(icl->icl_ag);
-+	if (agno >= mp->m_sb.sb_agcount) {
-+		xfs_warn(log->l_mp, "xlog_recover_do_icreate_trans: bad agno");
-+		return EINVAL;
-+	}
-+	agbno = be32_to_cpu(icl->icl_agbno);
-+	if (!agbno || agbno == NULLAGBLOCK || agbno >= mp->m_sb.sb_agblocks) {
-+		xfs_warn(log->l_mp, "xlog_recover_do_icreate_trans: bad agbno");
-+		return EINVAL;
-+	}
-+	isize = be32_to_cpu(icl->icl_isize);
-+	if (isize != mp->m_sb.sb_inodesize) {
-+		xfs_warn(log->l_mp, "xlog_recover_do_icreate_trans: bad isize");
-+		return EINVAL;
-+	}
-+	count = be32_to_cpu(icl->icl_count);
-+	if (!count) {
-+		xfs_warn(log->l_mp, "xlog_recover_do_icreate_trans: bad count");
-+		return EINVAL;
-+	}
-+	length = be32_to_cpu(icl->icl_length);
-+	if (!length || length >= mp->m_sb.sb_agblocks) {
-+		xfs_warn(log->l_mp, "xlog_recover_do_icreate_trans: bad length");
-+		return EINVAL;
-+	}
-+
-+	/* existing allocation is fixed value */
-+	ASSERT(count == XFS_IALLOC_INODES(mp));
-+	ASSERT(length == XFS_IALLOC_BLOCKS(mp));
-+	if (count != XFS_IALLOC_INODES(mp) ||
-+	     length != XFS_IALLOC_BLOCKS(mp)) {
-+		xfs_warn(log->l_mp, "xlog_recover_do_icreate_trans: bad count 2");
-+		return EINVAL;
-+	}
+- * Return 1 if the buffer has some data that has been logged (at any
++ * Return 1 if the buffer has been logged or ordered in a transaction (at any
+  * point, not just the current transaction) and 0 if not.
+  */
+ uint
+@@ -912,11 +933,11 @@ void
+ xfs_buf_item_relse(
+ 	xfs_buf_t	*bp)
+ {
+-	xfs_buf_log_item_t	*bip;
++	xfs_buf_log_item_t	*bip = bp->b_fspriv;
+ 
+ 	trace_xfs_buf_item_relse(bp, _RET_IP_);
++	ASSERT(!(bip->bli_item.li_flags & XFS_LI_IN_AIL));
+ 
+-	bip = bp->b_fspriv;
+ 	bp->b_fspriv = bip->bli_item.li_bio_list;
+ 	if (bp->b_fspriv == NULL)
+ 		bp->b_iodone = NULL;
+diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
+index 2573d2a..0f1c247 100644
+--- a/fs/xfs/xfs_buf_item.h
++++ b/fs/xfs/xfs_buf_item.h
+@@ -120,6 +120,7 @@ xfs_blft_from_flags(struct xfs_buf_log_format *blf)
+ #define	XFS_BLI_INODE_ALLOC_BUF	0x10
+ #define XFS_BLI_STALE_INODE	0x20
+ #define	XFS_BLI_INODE_BUF	0x40
++#define	XFS_BLI_ORDERED		0x80
+ 
+ #define XFS_BLI_FLAGS \
+ 	{ XFS_BLI_HOLD,		"HOLD" }, \
+@@ -128,7 +129,8 @@ xfs_blft_from_flags(struct xfs_buf_log_format *blf)
+ 	{ XFS_BLI_LOGGED,	"LOGGED" }, \
+ 	{ XFS_BLI_INODE_ALLOC_BUF, "INODE_ALLOC" }, \
+ 	{ XFS_BLI_STALE_INODE,	"STALE_INODE" }, \
+-	{ XFS_BLI_INODE_BUF,	"INODE_BUF" }
++	{ XFS_BLI_INODE_BUF,	"INODE_BUF" }, \
++	{ XFS_BLI_ORDERED,	"ORDERED" }
+ 
+ 
+ #ifdef __KERNEL__
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index aa4db33..8dfc562 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -486,8 +486,10 @@ DEFINE_EVENT(xfs_buf_item_class, name, \
+ 	TP_PROTO(struct xfs_buf_log_item *bip), \
+ 	TP_ARGS(bip))
+ DEFINE_BUF_ITEM_EVENT(xfs_buf_item_size);
++DEFINE_BUF_ITEM_EVENT(xfs_buf_item_size_ordered);
+ DEFINE_BUF_ITEM_EVENT(xfs_buf_item_size_stale);
+ DEFINE_BUF_ITEM_EVENT(xfs_buf_item_format);
++DEFINE_BUF_ITEM_EVENT(xfs_buf_item_format_ordered);
+ DEFINE_BUF_ITEM_EVENT(xfs_buf_item_format_stale);
+ DEFINE_BUF_ITEM_EVENT(xfs_buf_item_pin);
+ DEFINE_BUF_ITEM_EVENT(xfs_buf_item_unpin);
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index a44dba5..850fe78 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -503,6 +503,7 @@ void		xfs_trans_bhold_release(xfs_trans_t *, struct xfs_buf *);
+ void		xfs_trans_binval(xfs_trans_t *, struct xfs_buf *);
+ void		xfs_trans_inode_buf(xfs_trans_t *, struct xfs_buf *);
+ void		xfs_trans_stale_inode_buf(xfs_trans_t *, struct xfs_buf *);
++void		xfs_trans_ordered_buf(xfs_trans_t *, struct xfs_buf *);
+ void		xfs_trans_dquot_buf(xfs_trans_t *, struct xfs_buf *, uint);
+ void		xfs_trans_inode_alloc_buf(xfs_trans_t *, struct xfs_buf *);
+ void		xfs_trans_ichgtime(struct xfs_trans *, struct xfs_inode *, int);
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index 73a5fa4..57160d2 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -397,7 +397,6 @@ shutdown_abort:
+ 	return XFS_ERROR(EIO);
+ }
+ 
+-
+ /*
+  * Release the buffer bp which was previously acquired with one of the
+  * xfs_trans_... buffer allocation routines if the buffer has not
+@@ -603,8 +602,14 @@ xfs_trans_log_buf(xfs_trans_t	*tp,
+ 
+ 	tp->t_flags |= XFS_TRANS_DIRTY;
+ 	bip->bli_item.li_desc->lid_flags |= XFS_LID_DIRTY;
+-	bip->bli_flags |= XFS_BLI_LOGGED;
+-	xfs_buf_item_log(bip, first, last);
 +
 +	/*
-+	 * Inode buffers can be freed. Do not replay the inode initialisation as
-+	 * we could be overwriting something written after this inode buffer was
-+	 * cancelled.
-+	 *
-+	 * XXX: we need to iterate all buffers and only init those that are not
-+	 * cancelled. I think that a more fine grained factoring of
-+	 * xfs_ialloc_inode_init may be appropriate here to enable this to be
-+	 * done easily.
++	 * If we have an ordered buffer we are not logging any dirty range but
++	 * it still needs to be marked dirty and that it has been logged.
 +	 */
-+	if (xlog_check_buffer_cancelled(log,
-+			XFS_AGB_TO_DADDR(mp, agno, agbno), length, 0))
-+		return 0;
++	bip->bli_flags |= XFS_BLI_DIRTY | XFS_BLI_LOGGED;
++	if (!(bip->bli_flags & XFS_BLI_ORDERED))
++		xfs_buf_item_log(bip, first, last);
+ }
+ 
+ 
+@@ -757,6 +762,28 @@ xfs_trans_inode_alloc_buf(
+ }
+ 
+ /*
++ * Mark the buffer as ordered for this transaction. This means
++ * that the contents of the buffer are not recorded in the transaction
++ * but it is tracked in the AIL as though it was. This allows us
++ * to record logical changes in transactions rather than the physical
++ * changes we make to the buffer without changing writeback ordering
++ * constraints of metadata buffers.
++ */
++void
++xfs_trans_ordered_buf(
++	struct xfs_trans	*tp,
++	struct xfs_buf		*bp)
++{
++	struct xfs_buf_log_item	*bip = bp->b_fspriv;
 +
-+	xfs_ialloc_inode_init(mp, NULL, buffer_list, agno, agbno, length,
-+					be32_to_cpu(icl->icl_gen));
-+	return 0;
++	ASSERT(bp->b_transp == tp);
++	ASSERT(bip != NULL);
++	ASSERT(atomic_read(&bip->bli_refcount) > 0);
++
++	bip->bli_flags |= XFS_BLI_ORDERED;
 +}
 +
 +/*
-  * Free up any resources allocated by the transaction
-  *
-  * Remember that EFIs, EFDs, and IUNLINKs are handled later.
-@@ -2927,6 +3018,7 @@ xlog_recover_commit_pass1(
- 	case XFS_LI_EFI:
- 	case XFS_LI_EFD:
- 	case XFS_LI_DQUOT:
-+	case XFS_LI_ICREATE:
- 		/* nothing to do in pass 1 */
- 		return 0;
- 	default:
-@@ -2957,6 +3049,8 @@ xlog_recover_commit_pass2(
- 		return xlog_recover_efd_pass2(log, item);
- 	case XFS_LI_DQUOT:
- 		return xlog_recover_dquot_pass2(log, buffer_list, item);
-+	case XFS_LI_ICREATE:
-+		return xlog_recover_do_icreate_pass2(log, buffer_list, item);
- 	case XFS_LI_QUOTAOFF:
- 		/* nothing to do in pass2 */
- 		return 0;
+  * Set the type of the buffer for log recovery so that it can correctly identify
+  * and hence attach the correct buffer ops to the buffer after replay.
+  */
 -- 
 1.7.10.4
 
