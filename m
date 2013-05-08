@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4C9B729E07
-	for <xfs@oss.sgi.com>; Wed,  8 May 2013 09:37:28 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1C2628F8074
-	for <xfs@oss.sgi.com>; Wed,  8 May 2013 07:37:27 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 9F30429E0E
+	for <xfs@oss.sgi.com>; Wed,  8 May 2013 09:43:56 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1DBD6AC009
+	for <xfs@oss.sgi.com>; Wed,  8 May 2013 07:43:52 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id E5YCeP350nCyTP0I for <xfs@oss.sgi.com>;
-	Wed, 08 May 2013 07:37:26 -0700 (PDT)
-Message-ID: <518A6325.3030809@sandeen.net>
-Date: Wed, 08 May 2013 09:37:25 -0500
+	ESMTP id o9nTjkQ26t2LIFbX for <xfs@oss.sgi.com>;
+	Wed, 08 May 2013 07:43:51 -0700 (PDT)
+Message-ID: <518A64A6.1060505@sandeen.net>
+Date: Wed, 08 May 2013 09:43:50 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH 2/2] xfstests: quota not supported on realtime filesystems
-References: <1367993066-9313-1-git-send-email-david@fromorbit.com>
-	<1367993066-9313-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1367993066-9313-3-git-send-email-david@fromorbit.com>
+Subject: Re: xfsdump: Release 3.1.3
+References: <20130501195229.468657797@sgi.com>
+	<20130501195229.468657797@sgi.com>
+In-Reply-To: <20130501195229.468657797@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,45 +28,90 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: rjohnston@sgi.com
 Cc: xfs@oss.sgi.com
 
-On 5/8/13 1:04 AM, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On 5/1/13 2:52 PM, rjohnston@sgi.com wrote:
+> Update version numbers and changelog.
 > 
-> Realtime XFS filesystems do not support quotas, so quota tests
-> always fail on such filesystems. Add a check to _require_quota to
-> detect this situation and notrun the quota tests...
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Rich Johnston <rjohnston@sgi.com>
+
+Fine by me.  TBH internal sgi review would be fine too
+on release process stuff like this, the deadline for feedback
+has passed, so, with proper date/time updates,
 
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-(PS why is USE_EXTERNAL a thing?  if it's set, shouldn't it be used?)
-
--Eric
-
 > ---
->  common/quota |    6 ++++++
->  1 file changed, 6 insertions(+)
+> v3: Updated doc/CHANGES since v2
+> v2: fix spelling errors reported by Nathan.  my goodness!
 > 
-> diff --git a/common/quota b/common/quota
-> index fd5374f..3550cd4 100644
-> --- a/common/quota
-> +++ b/common/quota
-> @@ -40,6 +40,12 @@ _require_quota()
->  	if [ ! -f /proc/fs/xfs/xqmstat ]; then
->  	    _notrun "Installed kernel does not support XFS quotas"
->          fi
-> +	if [ "$USE_EXTERNAL" = yes -a ! -z "$TEST_RTDEV" ]; then
-> +	    _notrun "Quotas not supported on realtime test device"
-> +	fi
-> +	if [ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_RTDEV" ]; then
-> +	    _notrun "Quotas not supported on realtime scratch device"
-> +	fi
->  	;;
->      *)
->  	_notrun "disk quotas not supported by this filesystem type: $FSTYP"
+>  VERSION          |    2 +-
+>  configure.ac     |    2 +-
+>  debian/changelog |    6 ++++++
+>  doc/CHANGES      |   11 +++++++++++
+>  4 files changed, 19 insertions(+), 2 deletions(-)
+> 
+> Index: b/VERSION
+> ===================================================================
+> --- a/VERSION
+> +++ b/VERSION
+> @@ -3,5 +3,5 @@
+>  #
+>  PKG_MAJOR=3
+>  PKG_MINOR=1
+> -PKG_REVISION=2
+> +PKG_REVISION=3
+>  PKG_BUILD=1
+> Index: b/configure.ac
+> ===================================================================
+> --- a/configure.ac
+> +++ b/configure.ac
+> @@ -1,4 +1,4 @@
+> -AC_INIT([xfsdump], [3.1.2])
+> +AC_INIT([xfsdump], [3.1.3])
+>  AC_PREREQ(2.50)
+>  AC_CONFIG_AUX_DIR([.])
+>  AC_CONFIG_MACRO_DIR([m4])
+> Index: b/debian/changelog
+> ===================================================================
+> --- a/debian/changelog
+> +++ b/debian/changelog
+> @@ -1,3 +1,9 @@
+> +xfsdump (3.1.3) unstable; urgency=low
+> +
+> +  * New upstream release
+> +
+> + -- Nathan Scott <nathans@debian.org>  Tue, 19 Mar 2013 14:20:01 +1100
+> +
+>  xfsdump (3.1.1) unstable; urgency=low
+>  
+>    * New upstream release
+> Index: b/doc/CHANGES
+> ===================================================================
+> --- a/doc/CHANGES
+> +++ b/doc/CHANGES
+> @@ -1,3 +1,14 @@
+> +xfsdump-3.1.3 (1 May 2013)
+> +	- Fix a segfault in xfsrestore when a path name is too long,
+> +	  thanks to Nigel Tamplin.
+> +	- Fix a backward compatibility problem.  Dumps created with
+> +	  version 3.1.2 where extended attributes are in use failed
+> +	  to restore with v3.1.0 due to file header checksum errors.
+> +	  Thanks to Fugazzi for reporting.
+> +	- Refactored release scripts to conform to using git archive.
+> +	- Changed the build process so that 'make deb' uses the same
+> +	  process of creating a source tree as the release script.
+> +
+>  xfsdump-3.1.2 (13 December 2012)
+>  	- Update release script to create a source tarball.
+>  
+> 
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 > 
 
 _______________________________________________
