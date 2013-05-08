@@ -1,22 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 67C1029E07
-	for <xfs@oss.sgi.com>; Tue,  7 May 2013 17:24:59 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 53B5D30406A
-	for <xfs@oss.sgi.com>; Tue,  7 May 2013 15:24:59 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	nuinyP6SHZKy9nXs for <xfs@oss.sgi.com>;
-	Tue, 07 May 2013 15:24:56 -0700 (PDT)
-Date: Wed, 8 May 2013 08:24:55 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/2] Fix test 298 to work for non-XFS filesystems
-Message-ID: <20130507222455.GE24635@dastard>
-References: <1367964573-29620-1-git-send-email-jack@suse.cz>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id F11CE29E12
+	for <xfs@oss.sgi.com>; Tue,  7 May 2013 19:01:44 -0500 (CDT)
+Date: Tue, 7 May 2013 19:01:41 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH] xfs: xfs: fallback to vmalloc for large buffers in
+	xfs_compat_attrlist_by_handle
+Message-ID: <20130508000141.GQ29359@sgi.com>
+References: <515CB2C1.1050109@tlinx.org> <20130404035237.GA12011@dastard>
+	<515D0A09.5030808@sandeen.net> <51795612.3080806@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1367964573-29620-1-git-send-email-jack@suse.cz>
+In-Reply-To: <51795612.3080806@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,25 +24,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Wed, May 08, 2013 at 12:09:32AM +0200, Jan Kara wrote:
-> Call to xfs_io in test 298 forgot to specify -F flag so it failed for
-> non-XFS filesystems.
+On Thu, Apr 25, 2013 at 11:13:06AM -0500, Eric Sandeen wrote:
+> Shamelessly copied from dchinner's:
+> ad650f5b xfs: fallback to vmalloc for large buffers in xfs_attrmulti_attr_get
+>     
+> xfsdump uses a large buffer for extended attributes, which has a
+> kmalloc'd shadow buffer in the kernel. This can fail after the
+> system has been running for some time as it is a high order
+> allocation. Add a fallback to vmalloc so that it doesn't require
+> contiguous memory and so won't randomly fail while xfsdump is
+> running.
 > 
-> Signed-off-by: Jan Kara <jack@suse.cz>
+> This was done for xfs_attrlist_by_handle but
+> xfs_compat_attrlist_by_handle (the 32-bit version) needs the same
+> attention.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-See Eric's recent patch series to fix this.
-
-http://oss.sgi.com/pipermail/xfs/2013-May/026057.html
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Applied.
 
 _______________________________________________
 xfs mailing list
