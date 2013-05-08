@@ -1,24 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1BB5F29E15
-	for <xfs@oss.sgi.com>; Wed,  8 May 2013 18:34:36 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 7127F29E15
+	for <xfs@oss.sgi.com>; Wed,  8 May 2013 18:39:26 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id ABEE4AC002
-	for <xfs@oss.sgi.com>; Wed,  8 May 2013 16:34:32 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4EC058F8064
+	for <xfs@oss.sgi.com>; Wed,  8 May 2013 16:39:26 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	L7bxkNGCjixNnIdZ for <xfs@oss.sgi.com>;
-	Wed, 08 May 2013 16:34:31 -0700 (PDT)
-Date: Thu, 9 May 2013 09:34:28 +1000
+	2h30DGz7Y35qMDNk for <xfs@oss.sgi.com>;
+	Wed, 08 May 2013 16:39:21 -0700 (PDT)
+Date: Thu, 9 May 2013 09:39:10 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] xfstests: quota not supported on realtime filesystems
-Message-ID: <20130508233428.GK24635@dastard>
-References: <1367993066-9313-1-git-send-email-david@fromorbit.com>
-	<1367993066-9313-3-git-send-email-david@fromorbit.com>
-	<518A6325.3030809@sandeen.net>
+Subject: Re: Xfs_repair segfaults.
+Message-ID: <20130508233910.GL24635@dastard>
+References: <CADNx=KsT9DC=vveyTZx8EovddFx9mhRS-yzygaORHZ_4VyXfzQ@mail.gmail.com>
+	<5187BF8A.2040303@sandeen.net>
+	<CADNx=KvZPhbRn9Kc3+KdoAY7jZ3U0uyG6wgUB5vcxX85CkFdQg@mail.gmail.com>
+	<CADNx=Kv0bt3fNGW8Y24GziW9MOO-+b7fBGub4AYP70b5gAegxw@mail.gmail.com>
+	<5188FF88.6000508@sandeen.net>
+	<CADNx=KvmA7jgqBUO0YvKddHvFaqxHNZKfF3eWajOW8GWKwNhbA@mail.gmail.com>
+	<CADNx=Kv=7TFkJKom6_JM8B+A6YRckj175TbCcHrTWYL_N-qkYw@mail.gmail.com>
+	<CADNx=KvxtCHEk9G07yS88-casVAXBxRTghV5nGKd_0LtcqpYpQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <518A6325.3030809@sandeen.net>
+In-Reply-To: <CADNx=KvxtCHEk9G07yS88-casVAXBxRTghV5nGKd_0LtcqpYpQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,26 +36,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: Filippo Stenico <filippo.stenico@gmail.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-On Wed, May 08, 2013 at 09:37:25AM -0500, Eric Sandeen wrote:
-> On 5/8/13 1:04 AM, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Realtime XFS filesystems do not support quotas, so quota tests
-> > always fail on such filesystems. Add a check to _require_quota to
-> > detect this situation and notrun the quota tests...
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> 
-> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-> 
-> (PS why is USE_EXTERNAL a thing?  if it's set, shouldn't it be used?)
+On Wed, May 08, 2013 at 07:30:05PM +0200, Filippo Stenico wrote:
+> Hello,
+> -m option seems not to handle the excessive memory consumption I ran into.
+> I actually ran xfs_repair -vv -m1750 and  looking into kern.log it  seems
+> that xfs_repair invoked oom killer, but was killed itself ( !! )
 
-Because if you have rtdev/logdev defined in your config, you can
-choose whether to test them or not without having to modify the
-config file. Very handy, really.
+That's exactly what the oom killer is supposed to do.
+
+> This is last try to reproduce segfault:
+> xfs_repair -vv -P -m1750
+
+I know your filesystem is around 7TB in size, but how much RAM do
+you have? It's not unusual for xfs_repair to require many GB of
+memory to run succesfully on filesystems of this size...
 
 Cheers,
 
