@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9D57B29E12
-	for <xfs@oss.sgi.com>; Wed,  8 May 2013 09:34:18 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 4C9B729E07
+	for <xfs@oss.sgi.com>; Wed,  8 May 2013 09:37:28 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7B36E304064
-	for <xfs@oss.sgi.com>; Wed,  8 May 2013 07:34:15 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1C2628F8074
+	for <xfs@oss.sgi.com>; Wed,  8 May 2013 07:37:27 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 15deIZNqOeZW5tHS for <xfs@oss.sgi.com>;
-	Wed, 08 May 2013 07:34:14 -0700 (PDT)
-Message-ID: <518A6265.5040404@sandeen.net>
-Date: Wed, 08 May 2013 09:34:13 -0500
+	ESMTP id E5YCeP350nCyTP0I for <xfs@oss.sgi.com>;
+	Wed, 08 May 2013 07:37:26 -0700 (PDT)
+Message-ID: <518A6325.3030809@sandeen.net>
+Date: Wed, 08 May 2013 09:37:25 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/2] xfstests: fix incorrect redirect in generic/233
+Subject: Re: [PATCH 2/2] xfstests: quota not supported on realtime filesystems
 References: <1367993066-9313-1-git-send-email-david@fromorbit.com>
-	<1367993066-9313-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1367993066-9313-2-git-send-email-david@fromorbit.com>
+	<1367993066-9313-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1367993066-9313-3-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,34 +34,39 @@ Cc: xfs@oss.sgi.com
 On 5/8/13 1:04 AM, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> generic/233 attempts to direct output to tee, but instead of using a
-> pipe it uses an append operator. Hence it leaves a file named "tee"
-> in the root directory of the xfstests execution path. Just direct
-> the output to the $seqres.full file rather than trying to tee it
-> into the test output as well.
+> Realtime XFS filesystems do not support quotas, so quota tests
+> always fail on such filesystems. Add a check to _require_quota to
+> detect this situation and notrun the quota tests...
 > 
-> Reported-by: "Michael L. Semon" <mlsemon35@gmail.com>
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
+(PS why is USE_EXTERNAL a thing?  if it's set, shouldn't it be used?)
+
+-Eric
+
 > ---
->  tests/generic/233 |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  common/quota |    6 ++++++
+>  1 file changed, 6 insertions(+)
 > 
-> diff --git a/tests/generic/233 b/tests/generic/233
-> index 2b6cd2f..58b3672 100755
-> --- a/tests/generic/233
-> +++ b/tests/generic/233
-> @@ -62,7 +62,7 @@ _fsstress()
->  -f rename=10 -f fsync=2 -f write=15 -f dwrite=15 \
->  -n $count -d $out -p 7`
->  
-> -	echo "fsstress $args" >> tee -a $seqres.full
-> +	echo "fsstress $args" >> $seqres.full
->  	if ! su $qa_user -c "$FSSTRESS_PROG $args" | tee -a $seqres.full | _filter_num
->  	then
->  		echo "    fsstress $args returned $?"
+> diff --git a/common/quota b/common/quota
+> index fd5374f..3550cd4 100644
+> --- a/common/quota
+> +++ b/common/quota
+> @@ -40,6 +40,12 @@ _require_quota()
+>  	if [ ! -f /proc/fs/xfs/xqmstat ]; then
+>  	    _notrun "Installed kernel does not support XFS quotas"
+>          fi
+> +	if [ "$USE_EXTERNAL" = yes -a ! -z "$TEST_RTDEV" ]; then
+> +	    _notrun "Quotas not supported on realtime test device"
+> +	fi
+> +	if [ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_RTDEV" ]; then
+> +	    _notrun "Quotas not supported on realtime scratch device"
+> +	fi
+>  	;;
+>      *)
+>  	_notrun "disk quotas not supported by this filesystem type: $FSTYP"
 > 
 
 _______________________________________________
