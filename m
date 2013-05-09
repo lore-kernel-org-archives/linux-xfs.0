@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D9A0D29DF8
-	for <xfs@oss.sgi.com>; Thu,  9 May 2013 09:59:48 -0500 (CDT)
-Message-ID: <518BB9E7.5090005@sgi.com>
-Date: Thu, 09 May 2013 09:59:51 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 3273C29DF8
+	for <xfs@oss.sgi.com>; Thu,  9 May 2013 10:07:12 -0500 (CDT)
+Message-ID: <518BBBA5.3060502@sgi.com>
+Date: Thu, 09 May 2013 10:07:17 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 11/8] xfs_logprint: fix continuation transactions
-References: <20130430121300.GB10481@dastard> <20130501063136.GL10481@dastard>
-In-Reply-To: <20130501063136.GL10481@dastard>
+Subject: Re: [PATCH 9/8] libxlog: fix log buffer alignment
+References: <20130430121300.GB10481@dastard> <20130501001714.GH10481@dastard>
+In-Reply-To: <20130501001714.GH10481@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,31 +24,27 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On 05/01/13 01:31, Dave Chinner wrote:
+On 04/30/13 19:17, Dave Chinner wrote:
 > From: Dave Chinner<dchinner@redhat.com>
 >
-> As demonstrated by xfs/295, continuation transactions cause of
-> problems for xfs_logprint. The failure demonstrated by the test is
-> that the buffer log format structures are variable sized on disk -
-> the dirty bitmap is sized according to the buffer length, not fixed
-> to the length of the maximum supported buffer size.
+> The libxlog sync changed the way log buffers used in recovery are
+> aligned to sector sizes. The old code used to check for a zero log
+> sector size and not do any alignment - this check was removed from
+> the kernel code because there is always log sector size configured.
+> It turns out that userspace *never* sets the log sector size, so
+> userspace has always simply ignored the alignment in log replay
+> (oops!).
 >
-> xfs_logprint assumes that the buf log format reocrds are of fixed
-> size, and so when a short buffer is found it fails to handle it
-> properly and treats it like a continuation record.  This causses the
-> opheader pointer to be incremented incorrectly and then logprint
-> wanders off into a dark corner and gets eaten by a grue.
+> This problem manifested itself as detecting a freshly mkfs'd
+> filesystem as having a totally zeroed log and hence xfs_check was
+> emitting output and hence xfstests was refusing to run.
 >
-> While fixing this, make the xlog_print_record code that does the
-> transaction opheader walking a little easier to read and stop it
-> from outputting binary data direct to the console by converting the
-> no-data-print case to use a hex dumping loop.
+> This patch correctly configures the callers that use the log
+> recovery code so that the log sector size is set appropriately and
+> ensures that log recovery operates as expected.
 >
 > Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > ---
->   logprint/log_misc.c |   22 +++++++++++++++++-----
->   1 file changed, 17 insertions(+), 5 deletions(-)
-
 
 Looks good.
 
