@@ -1,15 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id ACAD029DF8
-	for <xfs@oss.sgi.com>; Thu,  9 May 2013 08:41:39 -0500 (CDT)
-Message-ID: <518BA7A5.7000802@sgi.com>
-Date: Thu, 9 May 2013 08:41:57 -0500
-From: Rich Johnston <rjohnston@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id D9A0D29DF8
+	for <xfs@oss.sgi.com>; Thu,  9 May 2013 09:59:48 -0500 (CDT)
+Message-ID: <518BB9E7.5090005@sgi.com>
+Date: Thu, 09 May 2013 09:59:51 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH TARBALL, DEV ONLY] xfsprogs: metadata CRC support V2
-References: <20130412145555.GF30622@dastard> <518B999B.1000403@sgi.com>
-	<20130509132224.GQ24635@dastard> <518BA69A.5040708@sgi.com>
-In-Reply-To: <518BA69A.5040708@sgi.com>
+Subject: Re: [PATCH 11/8] xfs_logprint: fix continuation transactions
+References: <20130430121300.GB10481@dastard> <20130501063136.GL10481@dastard>
+In-Reply-To: <20130501063136.GL10481@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,44 +24,35 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On 05/09/2013 08:37 AM, Rich Johnston wrote:
-> On 05/09/2013 08:22 AM, Dave Chinner wrote:
->> On Thu, May 09, 2013 at 07:42:03AM -0500, Rich Johnston wrote:
->>> Dave,
->>>
->>> The following have been committed:
->>>
->>> logprint-agi-dump
->>> xfs-fsr-odirect-read
->>> xfsprogs-remove-dirv1-support
->>> xfsprogs-kernel-3.8-update
->>> xfsprogs-kernel-3.9-rc1-dev-update
->>
->> Which version did you commit? This ones posted in this thread were
->> superceded by the tarball I posted on May 1 (i.e [TARBALL V2]
->> xfsprogs: fixes and updates to current kernel code)...
->>
->> Cheers,
->>
->> Dave.
->>
->  From this tar
-> xfsprogs-kern-sync-patchset-v2.tar.gz
+On 05/01/13 01:31, Dave Chinner wrote:
+> From: Dave Chinner<dchinner@redhat.com>
 >
-Sorry for any confusion, the last 2 have also been commited.
+> As demonstrated by xfs/295, continuation transactions cause of
+> problems for xfs_logprint. The failure demonstrated by the test is
+> that the buffer log format structures are variable sized on disk -
+> the dirty bitmap is sized according to the buffer length, not fixed
+> to the length of the maximum supported buffer size.
+>
+> xfs_logprint assumes that the buf log format reocrds are of fixed
+> size, and so when a short buffer is found it fails to handle it
+> properly and treats it like a continuation record.  This causses the
+> opheader pointer to be incremented incorrectly and then logprint
+> wanders off into a dark corner and gets eaten by a grue.
+>
+> While fixing this, make the xlog_print_record code that does the
+> transaction opheader walking a little easier to read and stop it
+> from outputting binary data direct to the console by converting the
+> no-data-print case to use a hex dumping loop.
+>
+> Signed-off-by: Dave Chinner<dchinner@redhat.com>
+> ---
+>   logprint/log_misc.c |   22 +++++++++++++++++-----
+>   1 file changed, 17 insertions(+), 5 deletions(-)
 
-commit 999f0b9c38baf5ef72535c6bb4df7ca0db677192
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Thu May 9 08:19:06 2013 -0500
 
-     xfsprogs: updata libxlog to current kernel code
+Looks good.
 
-
-commit 7e280e68cab97e321e306c6d1b2e684095f47296
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Thu May 9 08:18:51 2013 -0500
-
-     xfsprogs: add CRC32c infrastructure
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
