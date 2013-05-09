@@ -1,15 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id F35C229DF8
-	for <xfs@oss.sgi.com>; Thu,  9 May 2013 14:50:54 -0500 (CDT)
-Message-ID: <518BFE1A.3040505@sgi.com>
-Date: Thu, 9 May 2013 14:50:50 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0910B29DF8
+	for <xfs@oss.sgi.com>; Thu,  9 May 2013 15:24:06 -0500 (CDT)
+Message-ID: <518C05E1.2010000@sgi.com>
+Date: Thu, 9 May 2013 15:24:01 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: add execution of a custom command to fsstress
-	(-x and -X options)
-References: <1363863585-25598-1-git-send-email-list.xfs@jan-o-sch.net>
-In-Reply-To: <1363863585-25598-1-git-send-email-list.xfs@jan-o-sch.net>
+Subject: Re: [PATCH TARBALL, DEV ONLY] xfsprogs: metadata CRC support V2
+References: <20130412145555.GF30622@dastard> <518B999B.1000403@sgi.com>
+	<20130509132224.GQ24635@dastard> <518BA69A.5040708@sgi.com>
+	<518BA7A5.7000802@sgi.com>
+In-Reply-To: <518BA7A5.7000802@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,21 +23,59 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Schmidt <list.xfs@jan-o-sch.net>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-Jan,
+On 05/09/2013 08:41 AM, Rich Johnston wrote:
+> On 05/09/2013 08:37 AM, Rich Johnston wrote:
+>> On 05/09/2013 08:22 AM, Dave Chinner wrote:
+>>> On Thu, May 09, 2013 at 07:42:03AM -0500, Rich Johnston wrote:
+>>>> Dave,
+>>>>
+>>>> The following have been committed:
+>>>>
+>>>> logprint-agi-dump
+>>>> xfs-fsr-odirect-read
+>>>> xfsprogs-remove-dirv1-support
+>>>> xfsprogs-kernel-3.8-update
+>>>> xfsprogs-kernel-3.9-rc1-dev-update
+>>>
+>>> Which version did you commit? This ones posted in this thread were
+>>> superceded by the tarball I posted on May 1 (i.e [TARBALL V2]
+>>> xfsprogs: fixes and updates to current kernel code)...
+>>>
+>>> Cheers,
+>>>
+>>> Dave.
+>>>
+>>  From this tar
+>> xfsprogs-kern-sync-patchset-v2.tar.gz
+>>
+> Sorry for any confusion, the last 2 have also been committed.
+>
+> commit 999f0b9c38baf5ef72535c6bb4df7ca0db677192
+> Author: Dave Chinner <dchinner@redhat.com>
+> Date:   Thu May 9 08:19:06 2013 -0500
+>
+>      xfsprogs: updata libxlog to current kernel code
+>
+>
+> commit 7e280e68cab97e321e306c6d1b2e684095f47296
+> Author: Dave Chinner <dchinner@redhat.com>
+> Date:   Thu May 9 08:18:51 2013 -0500
+>
+>      xfsprogs: add CRC32c infrastructure
+>
 
-Thanks for the patch it has been committed.
+They are all committed now, thanks for the patchset Dave.
 
 --Rich
 
-commit e47ebda011f69fab2c9f3090f50f1cfb9353f7e7
-Author: Jan Schmidt <list.btrfs@jan-o-sch.net>
-Date:   Thu May 9 14:40:00 2013 -0500
+commit 8e78288a3a994534a320f9699c91572f7c859b8c
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Thu May 9 11:20:13 2013 -0500
 
-      xfstests: add execution of a custom command to fsstress (-x and -X 
-options)
+     xfs_logprint: fix continuation transactions
 
 _______________________________________________
 xfs mailing list
