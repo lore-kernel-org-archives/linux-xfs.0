@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E6DDA29E0D
-	for <xfs@oss.sgi.com>; Wed,  8 May 2013 20:21:51 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id C547C29E13
+	for <xfs@oss.sgi.com>; Wed,  8 May 2013 20:21:56 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5E5DBAC001
-	for <xfs@oss.sgi.com>; Wed,  8 May 2013 18:21:48 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5BEA7AC002
+	for <xfs@oss.sgi.com>; Wed,  8 May 2013 18:21:56 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	2FwfAVZOQjUaaIaG for <xfs@oss.sgi.com>;
-	Wed, 08 May 2013 18:21:46 -0700 (PDT)
-Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UaFYF-00039O-RB
-	for xfs@oss.sgi.com; Thu, 09 May 2013 11:21:43 +1000
+	h5HcrAC0nl7VH7Os for <xfs@oss.sgi.com>;
+	Wed, 08 May 2013 18:21:55 -0700 (PDT)
+Received: from [192.168.1.1] (helo=disappointment)
+	by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1UaFYP-00039P-R7
+	for xfs@oss.sgi.com; Thu, 09 May 2013 11:21:53 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UaFYF-0003vT-Nt
+	(envelope-from <dave@disappointment.disaster>) id 1UaFYF-0003vX-PW
 	for xfs@oss.sgi.com; Thu, 09 May 2013 11:21:43 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/3] xfstests: fix incorrect redirect in generic/233
-Date: Thu,  9 May 2013 11:21:39 +1000
-Message-Id: <1368062501-15046-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/3] xfstests: quota not supported on realtime filesystems
+Date: Thu,  9 May 2013 11:21:40 +1000
+Message-Id: <1368062501-15046-3-git-send-email-david@fromorbit.com>
 In-Reply-To: <1368062501-15046-1-git-send-email-david@fromorbit.com>
 References: <1368062501-15046-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,32 +39,58 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-generic/233 attempts to direct output to tee, but instead of using a
-pipe it uses an append operator. Hence it leaves a file named "tee"
-in the root directory of the xfstests execution path. Just direct
-the output to the $seqres.full file rather than trying to tee it
-into the test output as well.
+Realtime XFS filesystems do not support quotas, so quota tests
+always fail on such filesystems. Add a check to _require_quota to
+detect this situation and notrun the quota tests...
 
-Reported-by: "Michael L. Semon" <mlsemon35@gmail.com>
+Also, fix _require_xfs_quota and _require_prjquota to have the same
+checks.
+
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 ---
- tests/generic/233 |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ common/quota |   15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-diff --git a/tests/generic/233 b/tests/generic/233
-index 2b6cd2f..58b3672 100755
---- a/tests/generic/233
-+++ b/tests/generic/233
-@@ -62,7 +62,7 @@ _fsstress()
- -f rename=10 -f fsync=2 -f write=15 -f dwrite=15 \
- -n $count -d $out -p 7`
+diff --git a/common/quota b/common/quota
+index fd5374f..b320cf2 100644
+--- a/common/quota
++++ b/common/quota
+@@ -40,6 +40,12 @@ _require_quota()
+ 	if [ ! -f /proc/fs/xfs/xqmstat ]; then
+ 	    _notrun "Installed kernel does not support XFS quotas"
+         fi
++	if [ "$USE_EXTERNAL" = yes -a ! -z "$TEST_RTDEV" ]; then
++	    _notrun "Quotas not supported on realtime test device"
++	fi
++	if [ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_RTDEV" ]; then
++	    _notrun "Quotas not supported on realtime scratch device"
++	fi
+ 	;;
+     *)
+ 	_notrun "disk quotas not supported by this filesystem type: $FSTYP"
+@@ -62,6 +68,12 @@ _require_xfs_quota()
+ {
+     src/feature -q $TEST_DEV
+     [ $? -ne 0 ] && _notrun "Installed kernel does not support XFS quota"
++    if [ "$USE_EXTERNAL" = yes -a ! -z "$TEST_RTDEV" ]; then
++	_notrun "Quotas not supported on realtime test device"
++    fi
++    if [ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_RTDEV" ]; then
++	_notrun "Quotas not supported on realtime scratch device"
++    fi
+     [ -n $XFS_QUOTA_PROG ] || _notrun "XFS quota user tools not installed"
+ }
  
--	echo "fsstress $args" >> tee -a $seqres.full
-+	echo "fsstress $args" >> $seqres.full
- 	if ! su $qa_user -c "$FSSTRESS_PROG $args" | tee -a $seqres.full | _filter_num
- 	then
- 		echo "    fsstress $args returned $?"
+@@ -73,6 +85,9 @@ _require_prjquota()
+     [ -n "$1" ] && _dev="$1" || _dev="$TEST_DEV"
+     src/feature -p $_dev
+     [ $? -ne 0 ] && _notrun "Installed kernel does not support project quotas"
++    if [ "$USE_EXTERNAL" = yes -a ! -z "$_dev" ]; then
++	_notrun "Project quotas not supported on realtime filesystem"
++    fi
+ }
+ 
+ #
 -- 
 1.7.10.4
 
