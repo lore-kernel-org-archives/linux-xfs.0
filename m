@@ -1,32 +1,34 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 00B3F29DF8
-	for <linux-xfs@oss.sgi.com>; Fri, 10 May 2013 05:19:31 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E096A304077
-	for <linux-xfs@oss.sgi.com>; Fri, 10 May 2013 03:19:27 -0700 (PDT)
-Received: from mailgw1.uni-kl.de (mailgw1.uni-kl.de [131.246.120.220]) by
-	cuda.sgi.com with ESMTP id OVqHrFcZsNOYlh8m (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for
-	<linux-xfs@oss.sgi.com>; Fri, 10 May 2013 03:19:26 -0700 (PDT)
-Received: from itwm2.itwm.fhg.de (itwm2.itwm.fhg.de [131.246.191.3])
-	by mailgw1.uni-kl.de (8.14.3/8.14.3/Debian-9.4) with ESMTP id
-	r4AAJNSE013681
-	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NOT)
-	for <linux-xfs@oss.sgi.com>; Fri, 10 May 2013 12:19:23 +0200
-Message-ID: <518CC9A9.9060500@itwm.fraunhofer.de>
-Date: Fri, 10 May 2013 12:19:21 +0200
-From: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
+	by oss.sgi.com (Postfix) with ESMTP id BC51629DF8
+	for <xfs@oss.sgi.com>; Fri, 10 May 2013 06:01:22 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A92833040FA
+	for <xfs@oss.sgi.com>; Fri, 10 May 2013 04:01:19 -0700 (PDT)
+Received: from mail-la0-f41.google.com (mail-la0-f41.google.com
+	[209.85.215.41]) by cuda.sgi.com with ESMTP id ncFuo32CsEYHXwJK
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 10 May 2013 04:01:18 -0700 (PDT)
+Received: by mail-la0-f41.google.com with SMTP id lx15so1394466lab.14
+	for <xfs@oss.sgi.com>; Fri, 10 May 2013 04:01:16 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: 3.9.0: general protection fault
-References: <kltu6o$33j$1@ger.gmane.org> <km7oop$28c$1@ger.gmane.org>
-	<20130506122844.GL19978@dastard> <5187A663.707@itwm.fraunhofer.de>
-	<20130507011254.GP19978@dastard>
-	<5188E2F5.1090304@itwm.fraunhofer.de>
-	<20130507220742.GC24635@dastard>
-	<518A8FD4.40700@itwm.fraunhofer.de>
-	<20130509004115.GM24635@dastard>
-In-Reply-To: <20130509004115.GM24635@dastard>
+In-Reply-To: <CADNx=KuQjMNHUk6t0+hBZ5DN6s=RXqrPEjeoSxpBta47CJoDgQ@mail.gmail.com>
+References: <5187BF8A.2040303@sandeen.net>
+	<CADNx=KvZPhbRn9Kc3+KdoAY7jZ3U0uyG6wgUB5vcxX85CkFdQg@mail.gmail.com>
+	<CADNx=Kv0bt3fNGW8Y24GziW9MOO-+b7fBGub4AYP70b5gAegxw@mail.gmail.com>
+	<5188FF88.6000508@sandeen.net>
+	<CADNx=KvmA7jgqBUO0YvKddHvFaqxHNZKfF3eWajOW8GWKwNhbA@mail.gmail.com>
+	<CADNx=Kv=7TFkJKom6_JM8B+A6YRckj175TbCcHrTWYL_N-qkYw@mail.gmail.com>
+	<CADNx=KvxtCHEk9G07yS88-casVAXBxRTghV5nGKd_0LtcqpYpQ@mail.gmail.com>
+	<20130508233910.GL24635@dastard>
+	<CADNx=KuvQ1u+i+PgaCUqLbeGA0-8yfaCP=pez7ptGdm2pL_oGw@mail.gmail.com>
+	<CADNx=KuUBVObX=UuWH+DpmES1kGppptMEMgjVnt_2kTzBDadDw@mail.gmail.com>
+	<20130509223928.GT24635@dastard>
+	<CADNx=KuQjMNHUk6t0+hBZ5DN6s=RXqrPEjeoSxpBta47CJoDgQ@mail.gmail.com>
+From: Filippo Stenico <filippo.stenico@gmail.com>
+Date: Fri, 10 May 2013 13:00:36 +0200
+Message-ID: <CADNx=Kubyg86qCRaJXB6unK_nQ3_DYtmTvj5t1A4KrxUeeV4Ag@mail.gmail.com>
+Subject: Re: Xfs_repair segfaults.
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,139 +37,235 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: multipart/mixed; boundary="===============1925288439351312465=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@oss.sgi.com
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-On 05/09/2013 02:41 AM, Dave Chinner wrote:
-> On Wed, May 08, 2013 at 07:48:04PM +0200, Bernd Schubert wrote:
->> On 05/08/2013 12:07 AM, Dave Chinner wrote:
->>> On Tue, May 07, 2013 at 01:18:13PM +0200, Bernd Schubert wrote:
->>>> On 05/07/2013 03:12 AM, Dave Chinner wrote:
->>>>> On Mon, May 06, 2013 at 02:47:31PM +0200, Bernd Schubert wrote:
->>>>>> On 05/06/2013 02:28 PM, Dave Chinner wrote:
->>>>>>> On Mon, May 06, 2013 at 10:14:22AM +0200, Bernd Schubert wrote:
->>>>>>>> And anpther protection fault, this time with 3.9.0. Always happens
->>>>>>>> on one of the servers. Its ECC memory, so I don't suspect a faulty
->>>>>>>> memory bank. Going to fsck now-
->>>>>>>
->>>>>>> http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
->>>>>>
->>>>>> Isn't that a bit overhead? And I can't provide /proc/meminfo and
->>>>>> others, as this issue causes a kernel panic a few traces later.
->>>>>
->>>>> Provide what information you can.  Without knowing a single thing
->>>>> about your hardware, storage config and workload, I can't help you
->>>>> at all. You're asking me to find a needle in a haystack blindfolded
->>>>> and with both hands tied behind my back....
->>>>
->>>> I see that xfs_info, meminfo, etc are useful, but /proc/mounts?
->>>> Maybe you want "cat /proc/mounts | grep xfs"?. Attached is the
->>>> output of /proc/mounts, please let me know if you were really
->>>> interested in all of that non-xfs output?
->>>
->>> Yes. You never know what is relevant to a problem that is reported,
->>> especially if there are multiple filesystems sharing the same
->>> device...
->>
->> Hmm, I see. But you need to extend your questions to multipathing
->> and shared storage.
+--===============1925288439351312465==
+Content-Type: multipart/alternative; boundary=001a11c3705208b2ad04dc5b16dc
+
+--001a11c3705208b2ad04dc5b16dc
+Content-Type: text/plain; charset=ISO-8859-1
+
+Below is the backtrace, and last lines of verbose output at the end.
+
+I am no skilled software developer so this has little meaning to me.. only
+that I expected a bit more output of this backtrace..
+
+root@ws1000:~# gdb xfs_repair core
+GNU gdb (GDB) 7.4.1-debian
+Copyright (C) 2012 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html
 >
-> why would we? Anyone using such a configuration reporting a bug
-> usually is clueful enough to mention it in their bug report when
-> describing their RAID/LVM setup.  The FAQ entry covers the basic
-> information needed to start meaingful triage, not *all* the
-> infomration we might ask for. It's the baseline we start from.
->
-> Indeed, the FAQ exists because I got sick of asking people for the
-> same information several times a week, every week in response to
-> poor bug reports like yours. it's far more efficient to paste a link
-> several times a week.  i.e. The FAQ entry is there for my benefit,
-> not yours.
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+and "show warranty" for details.
+This GDB was configured as "x86_64-linux-gnu".
+For bug reporting instructions, please see:
+<http://www.gnu.org/software/gdb/bugs/>...
+Reading symbols from /sbin/xfs_repair...done.
+[New LWP 5187]
 
-Poor bug report or not, most information you ask about in the FAQ are 
-entirely irrelevant for this issue.
+warning: Can't read pathname for load map: Input/output error.
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+Core was generated by `xfs_repair -vv -L -P -m 1750 /dev/mapper/vg0-lv0'.
+Program terminated with signal 11, Segmentation fault.
+#0  0x00007fa8a1e05bcc in _wordcopy_bwd_dest_aligned (dstp=140734808924136,
+    srcp=98541856, len=2305843009212646584) at wordcopy.c:395
+395    wordcopy.c: No such file or directory.
+(gdb) bt
+#0  0x00007fa8a1e05bcc in _wordcopy_bwd_dest_aligned (dstp=140734808924136,
+    srcp=98541856, len=2305843009212646584) at wordcopy.c:395
+#1  0x0000000000000000 in ?? ()
+(gdb) q
+root@ws1000:~# uname -r
+3.2.0-4-amd64
+root@ws1000:~# tail xfs_repair_gdb/xfs_repair-vv-L-P-m1750.out
+correcting nextents for inode 28722522
+bad data fork in inode 28722522
+cleared inode 28722522
+inode 28722524 - bad extent starting block number 3387062910, offset 0
+correcting nextents for inode 28722524
+bad data fork in inode 28722524
+cleared inode 28722524
+entry
+"
+qs " in shortform directory 28722525 references invalid inode 0
+size of last entry overflows space left in in shortform dir 28722525,
+resetting to -2
+entry contains offset out of order in shortform dir 28722525
 
->
-> I don't really care if you don't understand why we are asking for
-> that information, I simply expect you to provide it as best you can
-> if you want your problem solved.
-
-And here we go, the bug I reported is not my problem. I simply reported 
-a bug in XFS. You can use it or not, I do not care at all. This is not a 
-production system and if XFS is not running sufficiently stable I'm 
-simply going to switch to another file system.
-Of course I don't like bugs and I'm going to help to fix it, but I have 
-a long daily todo list and I'm not going to spend my time filling in 
-irrelevent items.
-
->
->> Both time you can easily get double mounts... I
->> probably should try to find some time to add ext4s MMP to XFS.
->
-> Doesn't solve the problem. It doesn't prevent multiple write access
-> to the lun:
->
-> 	Ah, a free lun. I'll just put LVM on it and mkfs it and....
-> 	Oh, sorry, were you using that lun?
-
-MMP is not about human mistakes. MMP is an *additional* protection for 
-software managed shared storage devices. If your HA software runs into a 
-bug or gets split brain for some reasons you easily get a double mount. 
-The fact the MMP also protects against a few human errors is just a nice 
-addon.
-
->
-> So, naive hacks like MMP don't belong in filesystems....#
-
-Maybe there are better solutions, but it works fine as it is.
-
->
->>>> And I just wonder what you are going to do with the information
->>>> about the hardware. So it is an Areca hw-raid5 device with 9 disks.
->>>> But does this help? It doesn't tell if one of the disks reads/writes
->>>> with hickups or provides any performance characteristics at all.
->>>
->>> Yes, it does, because Areca cards are by far the most unreliable HW
->>> RAID you can buy, which is not surprising because they are also the
->>
->> Ahem. Compared to other hardware raids Areca is very stable.
->
-> Maybe in your experience. We get a report every 3-4 months about
-> Areca hardware causing catastrophic data loss. It outnumbers every
-> other type of hardware RAID by at least 10:1 when it comes to such
-> problem reports.
-
-The number of your reports simply correlates to the number of installed 
-areca controllers. The vendor I'm talking about only has externally 
-connected boxes and isn't that much used as areca. And don't get me 
-wrong, I don't want to defend Areca at all. And personally I don't like 
-any of these cheap raid solutions at all for several reasons (e.g. no 
-disk latency stats, no parity verification, etc).
-
->
->> You might want to add to your FAQ something like:
->>
->> Q: Are you sure there is not disk / controller / memory data
->> corruption? If so please state why!
->
-> No, the FAQ entry is for gathering facts and data, not what
-> the bug reporter *thinks* might be the problem. If there's
-> corruption we'll see it in the information that is gathered, and
-> then we can start to look for the source.
-
-You *might* see it in the information that is gathered. But without 
-additional checksums you are writing yourself you never can be sure. 
-Meta CRCs as you implemented them will certainly help.
-
+....
 
 Cheers,
-Bernd
+F
+
+P.S.
+sorry for the double mail, Eric.
+On Fri, May 10, 2013 at 12:39 AM, Dave Chinner <david@fromorbit.com> wrote:
+
+> On Thu, May 09, 2013 at 07:22:32PM +0200, Filippo Stenico wrote:
+>> > Hello,
+>> > ran xfs_repair -vv -L -P -m1750 and segfault at expected point.
+>> >
+>> > I got the core-dump with dbg symbols, along with repair output and
+>> strace
+>> > output.
+>> >
+>> > What should I do with it? Provide as it is?
+>>
+>> Run it in gdb to get a stack trace of where it died.
+>>
+>> $ gdb xfs_repair corefile
+>> ...
+>> > bt
+>>
+>> and post the output, along with the repair output from the run that
+>> crashed...
+>>
+>> Cheers,
+>>
+>> Dave.
+>> --
+>> Dave Chinner
+>> david@fromorbit.com
+>>
+>
+>
+>
+> --
+> F
+
+
+
+
+-- 
+F
+
+--001a11c3705208b2ad04dc5b16dc
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+Below is the backtrace, and last lines of verbose output at the end.<br><br=
+>I am no skilled software developer so this has little meaning to me.. only=
+ that I expected a bit more output of this backtrace..<br><br>root@ws1000:~=
+# gdb xfs_repair core<br>
+
+
+GNU gdb (GDB) 7.4.1-debian<br>Copyright (C) 2012 Free Software Foundation, =
+Inc.<br>License GPLv3+: GNU GPL version 3 or later &lt;<a href=3D"http://gn=
+u.org/licenses/gpl.html" target=3D"_blank">http://gnu.org/licenses/gpl.html=
+</a>&gt;<br>
+
+This is free software: you are free to change and redistribute it.<br>
+There is NO WARRANTY, to the extent permitted by law.=A0 Type &quot;show co=
+pying&quot;<br>and &quot;show warranty&quot; for details.<br>This GDB was c=
+onfigured as &quot;x86_64-linux-gnu&quot;.<br>For bug reporting instruction=
+s, please see:<br>
+
+
+&lt;<a href=3D"http://www.gnu.org/software/gdb/bugs/" target=3D"_blank">htt=
+p://www.gnu.org/software/gdb/bugs/</a>&gt;...<br>Reading symbols from /sbin=
+/xfs_repair...done.<br>[New LWP 5187]<br><br>warning: Can&#39;t read pathna=
+me for load map: Input/output error.<br>
+
+
+[Thread debugging using libthread_db enabled]<br>Using host libthread_db li=
+brary &quot;/lib/x86_64-linux-gnu/libthread_db.so.1&quot;.<br>Core was gene=
+rated by `xfs_repair -vv -L -P -m 1750 /dev/mapper/vg0-lv0&#39;.<br>Program=
+ terminated with signal 11, Segmentation fault.<br>
+
+
+#0=A0 0x00007fa8a1e05bcc in _wordcopy_bwd_dest_aligned (dstp=3D140734808924=
+136, <br>=A0=A0=A0 srcp=3D98541856, len=3D2305843009212646584) at wordcopy.=
+c:395<br>395=A0=A0=A0 wordcopy.c: No such file or directory.<br>(gdb) bt<br=
+>#0=A0 0x00007fa8a1e05bcc in _wordcopy_bwd_dest_aligned (dstp=3D14073480892=
+4136, <br>
+
+
+=A0=A0=A0 srcp=3D98541856, len=3D2305843009212646584) at wordcopy.c:395<br>=
+#1=A0 0x0000000000000000 in ?? ()<br>(gdb) q<br>root@ws1000:~# uname -r<br>=
+3.2.0-4-amd64<br>root@ws1000:~# tail xfs_repair_gdb/xfs_repair-vv-L-P-m1750=
+.out <br>
+
+correcting nextents for inode 28722522<br>bad data fork in inode 28722522<b=
+r>cleared inode 28722522<br>inode 28722524 - bad extent starting block numb=
+er 3387062910, offset 0<br>correcting nextents for inode 28722524<br>bad da=
+ta fork in inode 28722524<br>
+
+cleared inode 28722524<br>entry &quot;=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0 qs  &quot; in shortform directory 28722525 references inval=
+id inode 0<br>
+
+size of last entry overflows space left in in shortform dir 28722525, reset=
+ting to -2<br>entry contains offset out of order in shortform dir 28722525<=
+br><br>....<br><br>Cheers,<br>F<br><br>P.S.<br>sorry for the double mail, E=
+ric.<br>
+
+On Fri, May 10, 2013 at 12:39 AM, Dave Chinner <span dir=3D"ltr">&lt;<a hre=
+f=3D"mailto:david@fromorbit.com" target=3D"_blank">david@fromorbit.com</a>&=
+gt;</span> wrote:<br>
+<div class=3D"gmail_quote"><blockquote class=3D"gmail_quote" style=3D"margi=
+n:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex"><div class=3D"HOE=
+nZb"><div class=3D"h5"><div class=3D"gmail_quote"><blockquote class=3D"gmai=
+l_quote" style=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left=
+:1ex">
+
+<div>On Thu, May 09, 2013 at 07:22:32PM +0200, Filippo Stenico wrote:<br>
+&gt; Hello,<br>
+</div><div>&gt; ran xfs_repair -vv -L -P -m1750 and segfault at expected po=
+int.<br>
+&gt;<br>
+&gt; I got the core-dump with dbg symbols, along with repair output and str=
+ace<br>
+&gt; output.<br>
+&gt;<br>
+&gt; What should I do with it? Provide as it is?<br>
+<br>
+</div>Run it in gdb to get a stack trace of where it died.<br>
+<br>
+$ gdb xfs_repair corefile<br>
+...<br>
+&gt; bt<br>
+<br>
+and post the output, along with the repair output from the run that<br>
+crashed...<br>
+<div><div><br>
+Cheers,<br>
+<br>
+Dave.<br>
+--<br>
+Dave Chinner<br>
+<a href=3D"mailto:david@fromorbit.com" target=3D"_blank">david@fromorbit.co=
+m</a><br>
+</div></div></blockquote></div><br><br clear=3D"all"><br></div></div><span =
+class=3D"HOEnZb"><font color=3D"#888888">-- <br>F
+</font></span></blockquote></div><br><br clear=3D"all"><br>-- <br>F
+
+--001a11c3705208b2ad04dc5b16dc--
+
+
+--===============1925288439351312465==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============1925288439351312465==--
