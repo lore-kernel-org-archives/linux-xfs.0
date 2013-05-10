@@ -1,16 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DF40329DF8
-	for <xfs@oss.sgi.com>; Thu,  9 May 2013 18:00:33 -0500 (CDT)
-Message-ID: <518C2A90.703@sgi.com>
-Date: Thu, 9 May 2013 18:00:32 -0500
-From: Rich Johnston <rjohnston@sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 2186929DF8
+	for <xfs@oss.sgi.com>; Thu,  9 May 2013 20:38:34 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id ACBF8AC001
+	for <xfs@oss.sgi.com>; Thu,  9 May 2013 18:38:33 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	AtiAWjuxIiY6mnsH for <xfs@oss.sgi.com>;
+	Thu, 09 May 2013 18:38:32 -0700 (PDT)
+Date: Fri, 10 May 2013 11:38:30 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs_efi_item slab corruption. (v3.9-10936-g51a26ae)
+Message-ID: <20130510013830.GO23072@dastard>
+References: <20130507193146.GA7539@redhat.com> <51895CD7.7040806@sgi.com>
+	<20130507195954.GA8384@redhat.com> <51895E51.2050508@sgi.com>
+	<20130507202217.GA9883@redhat.com> <518962FC.2060509@sgi.com>
+	<20130507222256.GD24635@dastard> <51898400.8000900@sgi.com>
+	<20130507235458.GG24635@dastard> <518A5213.60307@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH TARBALL, DEV ONLY] xfsprogs: metadata CRC support V2
-References: <20130412145555.GF30622@dastard> <518B999B.1000403@sgi.com>
-	<20130509132224.GQ24635@dastard> <518BA69A.5040708@sgi.com>
-	<20130509223532.GR24635@dastard>
-In-Reply-To: <20130509223532.GR24635@dastard>
+Content-Disposition: inline
+In-Reply-To: <518A5213.60307@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,79 +29,41 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: Dave Jones <davej@redhat.com>, CAI Qian <caiqian@redhat.com>, xfs@oss.sgi.com
 
-On 05/09/2013 05:35 PM, Dave Chinner wrote:
-> On Thu, May 09, 2013 at 08:37:30AM -0500, Rich Johnston wrote:
->> On 05/09/2013 08:22 AM, Dave Chinner wrote:
->>> On Thu, May 09, 2013 at 07:42:03AM -0500, Rich Johnston wrote:
->>>> Dave,
->>>>
->>>> The following have been committed:
->>>>
->>>> logprint-agi-dump
->>>> xfs-fsr-odirect-read
->>>> xfsprogs-remove-dirv1-support
->>>> xfsprogs-kernel-3.8-update
->>>> xfsprogs-kernel-3.9-rc1-dev-update
->>>
->>> Which version did you commit? This ones posted in this thread were
->>> superceded by the tarball I posted on May 1 (i.e [TARBALL V2]
->>> xfsprogs: fixes and updates to current kernel code)...
->>>
->>> Cheers,
->>>
->>> Dave.
->>>
->>  From this tar
->> xfsprogs-kern-sync-patchset-v2.tar.gz
->
-> Ok. In future, can you make sure you respond to the thread that
-> patchset was posted in so there isn't any confusion about what you
-> committed?
->
-> Cheers,
->
-> Dave.
->
+On Wed, May 08, 2013 at 08:24:35AM -0500, Mark Tinguely wrote:
+> On 05/07/13 18:54, Dave Chinner wrote:
+> 
+> 
+> Checking the EFI for whether it is being released from recovery
+> after we've already released the known active reference is a mistake
+> worthy of a brown paper bag. Fix the (now) obvious use after free
+> that it can cause.
+> 
+> Reported-by: Dave Jones <davej@redhat.com>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_extfree_item.c |   14 +++++++++++++-
+>  1 file changed, 13 insertions(+), 1 deletion(-)
+> 
+> Looks good.
+> 
+> Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
-I did It shows up threaded in thunderbird.
+Zach pointed out that the fix is much more complex than it needs to
+be. I'll respin the patch and resend it later today.
 
-Here is your post
+Cheers,
 
-Received: from dave by dastard with local (Exim 4.76)	(envelope-from
-  <david@fromorbit.com>) id 1UQfON-0000vN-KC	for xfs@oss.sgi.com; Sat, 
-13 Apr
-  2013 00:55:55 +1000
-Date: Sat, 13 Apr 2013 00:55:55 +1000
-From: Dave Chinner <david@fromorbit.com>
-To: <xfs@oss.sgi.com>
-Subject: [PATCH TARBALL, DEV ONLY] xfsprogs: metadata CRC support V2
-Message-ID: <20130412145555.GF30622@dastard>
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-> Message-ID: <518B999B.1000403@sgi.com>
-> Date: Thu, 9 May 2013 07:42:03 -0500
-> From: Rich Johnston <rjohnston@sgi.com>
-> User-Agent: Mozilla/5.0 (X11; Linux i686;
-> 	rv:17.0) Gecko/20130329 Thunderbird/17.0.5
-> To: Dave Chinner <david@fromorbit.com>
-> Subject: Re: [PATCH TARBALL, DEV ONLY] xfsprogs: metadata CRC support V2
-> References: <20130412145555.GF30622@dastard>
-> In-Reply-To: <20130412145555.GF30622@dastard>
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-And my reply:
-
-
-Regards
---Rich
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
