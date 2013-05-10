@@ -1,21 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3BB9E29DF8
-	for <xfs@oss.sgi.com>; Fri, 10 May 2013 08:23:54 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1B8393040FD
-	for <xfs@oss.sgi.com>; Fri, 10 May 2013 06:23:50 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id PBukK1XDwJrtArPt for
-	<xfs@oss.sgi.com>; Fri, 10 May 2013 06:23:50 -0700 (PDT)
-Message-ID: <518CF4E3.4050504@redhat.com>
-Date: Fri, 10 May 2013 08:23:47 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D7AA929DF8
+	for <linux-xfs@oss.sgi.com>; Fri, 10 May 2013 08:33:25 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 72860AC025
+	for <linux-xfs@oss.sgi.com>; Fri, 10 May 2013 06:33:22 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id HBqNOQLdfnk7R8QR for <linux-xfs@oss.sgi.com>;
+	Fri, 10 May 2013 06:33:20 -0700 (PDT)
+Message-ID: <518CF71F.8060800@sandeen.net>
+Date: Fri, 10 May 2013 08:33:19 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH V2] xfstests: regression test for ext4 resize with non-extent
-	files
-References: <518C1D08.4080309@redhat.com>
-In-Reply-To: <518C1D08.4080309@redhat.com>
+Subject: Re: 3.9.0: general protection fault
+References: <kltu6o$33j$1@ger.gmane.org> <km7oop$28c$1@ger.gmane.org>
+	<20130506122844.GL19978@dastard> <5187A663.707@itwm.fraunhofer.de>
+	<20130507011254.GP19978@dastard>
+	<5188E2F5.1090304@itwm.fraunhofer.de>
+	<20130507220742.GC24635@dastard>
+	<518A8FD4.40700@itwm.fraunhofer.de>
+	<20130509004115.GM24635@dastard>
+	<518CC9A9.9060500@itwm.fraunhofer.de>
+In-Reply-To: <518CC9A9.9060500@itwm.fraunhofer.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,138 +34,72 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
-Cc: ext4 development <linux-ext4@vger.kernel.org>
+To: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
+Cc: linux-xfs@oss.sgi.com
 
-Regression test for:
+On 5/10/13 5:19 AM, Bernd Schubert wrote:
+> On 05/09/2013 02:41 AM, Dave Chinner wrote:
+>> On Wed, May 08, 2013 at 07:48:04PM +0200, Bernd Schubert wrote:
+>>> On 05/08/2013 12:07 AM, Dave Chinner wrote:
+>>>> On Tue, May 07, 2013 at 01:18:13PM +0200, Bernd Schubert wrote:
+>>>>> On 05/07/2013 03:12 AM, Dave Chinner wrote:
+>>>>>> On Mon, May 06, 2013 at 02:47:31PM +0200, Bernd Schubert wrote:
+>>>>>>> On 05/06/2013 02:28 PM, Dave Chinner wrote:
+>>>>>>>> On Mon, May 06, 2013 at 10:14:22AM +0200, Bernd Schubert wrote:
+>>>>>>>>> And anpther protection fault, this time with 3.9.0. Always happens
+>>>>>>>>> on one of the servers. Its ECC memory, so I don't suspect a faulty
+>>>>>>>>> memory bank. Going to fsck now-
+>>>>>>>>
+>>>>>>>> http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+>>>>>>>
+>>>>>>> Isn't that a bit overhead? And I can't provide /proc/meminfo and
+>>>>>>> others, as this issue causes a kernel panic a few traces later.
+>>>>>>
+>>>>>> Provide what information you can.  Without knowing a single thing
+>>>>>> about your hardware, storage config and workload, I can't help you
+>>>>>> at all. You're asking me to find a needle in a haystack blindfolded
+>>>>>> and with both hands tied behind my back....
+>>>>>
+>>>>> I see that xfs_info, meminfo, etc are useful, but /proc/mounts?
+>>>>> Maybe you want "cat /proc/mounts | grep xfs"?. Attached is the
+>>>>> output of /proc/mounts, please let me know if you were really
+>>>>> interested in all of that non-xfs output?
+>>>>
+>>>> Yes. You never know what is relevant to a problem that is reported,
+>>>> especially if there are multiple filesystems sharing the same
+>>>> device...
+>>>
+>>> Hmm, I see. But you need to extend your questions to multipathing
+>>> and shared storage.
 
-c5c72d8 ext4: fix online resizing for ext3-compat file systems
+If you'd like to add that to the wiki it'd be great.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+>> why would we? Anyone using such a configuration reporting a bug
+>> usually is clueful enough to mention it in their bug report when
+>> describing their RAID/LVM setup.  The FAQ entry covers the basic
+>> information needed to start meaingful triage, not *all* the
+>> infomration we might ask for. It's the baseline we start from.
+>>
+>> Indeed, the FAQ exists because I got sick of asking people for the
+>> same information several times a week, every week in response to
+>> poor bug reports like yours. it's far more efficient to paste a link
+>> several times a week.  i.e. The FAQ entry is there for my benefit,
+>> not yours.
+> 
+> Poor bug report or not, most information you ask about in the FAQ are entirely irrelevant for this issue.
 
-V2: s/dangerous/auto/
+If I had a dollar for every time a bug reporter left out "irrelevant"
+information that turned out to be critical, I might be retired by now.  :)
 
-good luck!
+If a few developers on the list are going to scale to supporting every
+user with a problem, we need to share the effort efficiently, and that
+means putting just a bit more burden on the reporter, to cut down
+on the back and forth cycles of trying to gather more information.
 
-diff --git a/tests/ext4/306 b/tests/ext4/306
-new file mode 100755
-index 0000000..6a961ee
---- /dev/null
-+++ b/tests/ext4/306
-@@ -0,0 +1,83 @@
-+#! /bin/bash
-+# FS QA Test No. ext4/306
-+#
-+# Test that blocks are available to non-extent files after a resize2fs
-+# Regression test for commit:
-+# c5c72d8 ext4: fix online resizing for ext3-compat file systems
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2013 Red Hat, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+PIDS=""
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    _scratch_unmount
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_fs ext4
-+_supported_os Linux
-+
-+_require_scratch
-+
-+# This needs to mount ext3; might require ext3 driver, or ext4
-+# might handle it itself.  Find out if we have it one way or another.
-+modprobe ext3 > /dev/null 2>&1
-+grep -q ext3 /proc/filesystems || _notrun "This test requires ext3 support"
-+
-+rm -f $seqres.full
-+echo "Silence is golden"
-+
-+# Make a small ext3 fs, (extents disabled) & mount it
-+yes | mkfs.ext3 $SCRATCH_DEV 512m >> $seqres.full 2>&1
-+_scratch_mount -t ext3 || _fail "couldn't mount fs as ext3"
-+# Create a small non-extent-based file
-+echo "Create 1m testfile1"
-+$XFS_IO_PROG -f $SCRATCH_MNT/testfile1 -c "pwrite 0 1m" | _filter_xfs_io
-+echo "Create testfile2 to fill the fs"
-+# A large non-extent-based file filling the fs; this will run out & fail
-+$XFS_IO_PROG -f $SCRATCH_MNT/testfile2 -c "pwrite 0 512m" | _filter_xfs_io
-+
-+# Remount as ext4
-+_scratch_unmount
-+_scratch_mount -t ext4 || _fail "couldn't remount fs as ext4"
-+df -h $SCRATCH_MNT >> $seqres.full
-+
-+# Grow it by 512m
-+echo "Resize to 1g"
-+resize2fs $SCRATCH_DEV 1g >> $seqres.full 2>&1 || _fail "Could not resize to 1g"
-+df -h $SCRATCH_MNT >> $seqres.full
-+
-+# See if we can add more blocks to the files
-+echo "append 2m to testfile1"
-+$XFS_IO_PROG -f $SCRATCH_MNT/testfile1 -c "pwrite 1m 2m" | _filter_xfs_io
-+echo "append 2m to testfile2"
-+$XFS_IO_PROG -f $SCRATCH_MNT/testfile1 -c "pwrite 512m 2m" | _filter_xfs_io
-+
-+status=0
-+exit
-diff --git a/tests/ext4/306.out b/tests/ext4/306.out
-new file mode 100644
-index 0000000..654637d
---- /dev/null
-+++ b/tests/ext4/306.out
-@@ -0,0 +1,14 @@
-+QA output created by 306
-+Silence is golden
-+Create 1m testfile1
-+wrote 1048576/1048576 bytes at offset 0
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+Create testfile2 to fill the fs
-+pwrite64: No space left on device
-+Resize to 1g
-+append 2m to testfile1
-+wrote 2097152/2097152 bytes at offset 1048576
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-+append 2m to testfile2
-+wrote 2097152/2097152 bytes at offset 536870912
-+XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-diff --git a/tests/ext4/group b/tests/ext4/group
-index 53af708..4c3e2f4 100644
---- a/tests/ext4/group
-+++ b/tests/ext4/group
-@@ -9,3 +9,4 @@
- 303 aio dangerous ioctl rw stress
- 304 aio dangerous ioctl rw stress
- 305 auto
-+306 auto rw resize quick
+If anyone wants a quick & useful project, perhaps a script which gathers
+all requested info in the faq would be a step in the right direction.
+
+-Eric
 
 _______________________________________________
 xfs mailing list
