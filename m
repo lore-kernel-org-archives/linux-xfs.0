@@ -1,27 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D7AA929DF8
-	for <linux-xfs@oss.sgi.com>; Fri, 10 May 2013 08:33:25 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 19F6729DF8
+	for <xfs@oss.sgi.com>; Fri, 10 May 2013 11:17:57 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 72860AC025
-	for <linux-xfs@oss.sgi.com>; Fri, 10 May 2013 06:33:22 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id HBqNOQLdfnk7R8QR for <linux-xfs@oss.sgi.com>;
-	Fri, 10 May 2013 06:33:20 -0700 (PDT)
-Message-ID: <518CF71F.8060800@sandeen.net>
-Date: Fri, 10 May 2013 08:33:19 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E05418F8033
+	for <xfs@oss.sgi.com>; Fri, 10 May 2013 09:17:53 -0700 (PDT)
+Received: from mail-qa0-f41.google.com (mail-qa0-f41.google.com
+	[209.85.216.41]) by cuda.sgi.com with ESMTP id Vj25GKVx7LCSvBv3
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 10 May 2013 09:17:52 -0700 (PDT)
+Received: by mail-qa0-f41.google.com with SMTP id bv4so413211qab.14
+	for <xfs@oss.sgi.com>; Fri, 10 May 2013 09:17:52 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: 3.9.0: general protection fault
-References: <kltu6o$33j$1@ger.gmane.org> <km7oop$28c$1@ger.gmane.org>
-	<20130506122844.GL19978@dastard> <5187A663.707@itwm.fraunhofer.de>
-	<20130507011254.GP19978@dastard>
-	<5188E2F5.1090304@itwm.fraunhofer.de>
-	<20130507220742.GC24635@dastard>
-	<518A8FD4.40700@itwm.fraunhofer.de>
-	<20130509004115.GM24635@dastard>
-	<518CC9A9.9060500@itwm.fraunhofer.de>
-In-Reply-To: <518CC9A9.9060500@itwm.fraunhofer.de>
+Date: Fri, 10 May 2013 21:47:51 +0530
+Message-ID: <CAEUQcejFPKDqqwbT_BNFJEVkUeAY=mgYGv-kUvLX6Ys7YQkqfg@mail.gmail.com>
+Subject: Error during bulk removal of files
+From: Subranshu Patel <spatel.ml@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,72 +28,89 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
-Cc: linux-xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 5/10/13 5:19 AM, Bernd Schubert wrote:
-> On 05/09/2013 02:41 AM, Dave Chinner wrote:
->> On Wed, May 08, 2013 at 07:48:04PM +0200, Bernd Schubert wrote:
->>> On 05/08/2013 12:07 AM, Dave Chinner wrote:
->>>> On Tue, May 07, 2013 at 01:18:13PM +0200, Bernd Schubert wrote:
->>>>> On 05/07/2013 03:12 AM, Dave Chinner wrote:
->>>>>> On Mon, May 06, 2013 at 02:47:31PM +0200, Bernd Schubert wrote:
->>>>>>> On 05/06/2013 02:28 PM, Dave Chinner wrote:
->>>>>>>> On Mon, May 06, 2013 at 10:14:22AM +0200, Bernd Schubert wrote:
->>>>>>>>> And anpther protection fault, this time with 3.9.0. Always happens
->>>>>>>>> on one of the servers. Its ECC memory, so I don't suspect a faulty
->>>>>>>>> memory bank. Going to fsck now-
->>>>>>>>
->>>>>>>> http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
->>>>>>>
->>>>>>> Isn't that a bit overhead? And I can't provide /proc/meminfo and
->>>>>>> others, as this issue causes a kernel panic a few traces later.
->>>>>>
->>>>>> Provide what information you can.  Without knowing a single thing
->>>>>> about your hardware, storage config and workload, I can't help you
->>>>>> at all. You're asking me to find a needle in a haystack blindfolded
->>>>>> and with both hands tied behind my back....
->>>>>
->>>>> I see that xfs_info, meminfo, etc are useful, but /proc/mounts?
->>>>> Maybe you want "cat /proc/mounts | grep xfs"?. Attached is the
->>>>> output of /proc/mounts, please let me know if you were really
->>>>> interested in all of that non-xfs output?
->>>>
->>>> Yes. You never know what is relevant to a problem that is reported,
->>>> especially if there are multiple filesystems sharing the same
->>>> device...
->>>
->>> Hmm, I see. But you need to extend your questions to multipathing
->>> and shared storage.
+I am using mdtest benchmarking tool to remove 7 million files of 1KB.
+After some time, the mdtest process gets blocked.
 
-If you'd like to add that to the wiki it'd be great.
+Dmesg shows the following
 
->> why would we? Anyone using such a configuration reporting a bug
->> usually is clueful enough to mention it in their bug report when
->> describing their RAID/LVM setup.  The FAQ entry covers the basic
->> information needed to start meaingful triage, not *all* the
->> infomration we might ask for. It's the baseline we start from.
->>
->> Indeed, the FAQ exists because I got sick of asking people for the
->> same information several times a week, every week in response to
->> poor bug reports like yours. it's far more efficient to paste a link
->> several times a week.  i.e. The FAQ entry is there for my benefit,
->> not yours.
-> 
-> Poor bug report or not, most information you ask about in the FAQ are entirely irrelevant for this issue.
+--------------------->8------------
 
-If I had a dollar for every time a bug reporter left out "irrelevant"
-information that turned out to be critical, I might be retired by now.  :)
+May 10 18:49:00 machine1 kernel: INFO: task xfssyncd/dm-3:8156 blocked
+for more than 120 seconds.
 
-If a few developers on the list are going to scale to supporting every
-user with a problem, we need to share the effort efficiently, and that
-means putting just a bit more burden on the reporter, to cut down
-on the back and forth cycles of trying to gather more information.
+May 10 18:49:00 machine1 kernel: "echo 0 >
+/proc/sys/kernel/hung_task_timeout_secs" disables this message.
 
-If anyone wants a quick & useful project, perhaps a script which gathers
-all requested info in the faq would be a step in the right direction.
+May 10 18:49:00 machine1 kernel: xfssyncd/dm-3 D 0000000000000002 0
+8156 2 0x00000080
 
--Eric
+May 10 18:49:00 machine1 kernel: ffff88185932bc70 0000000000000046
+ffff88185e58a400 ffff8800282566e8
+
+May 10 18:49:00 machine1 kernel: 00000000000176f6 ffff88185fb44080
+ffff880c6100aaa0 ffffffff8160b400
+
+May 10 18:49:00 machine1 kernel: ffff88185fb44638 ffff88185932bfd8
+000000000000fb88 ffff88185fb44638
+
+May 10 18:49:00 machine1 kernel: Call Trace:
+
+May 10 18:49:00 machine1 kernel: [<ffffffffa056c492>] xlog_wait+0x72/0x90 [xfs]
+
+May 10 18:49:00 machine1 kernel: [<ffffffff81060250>] ?
+default_wake_function+0x0/0x20
+
+May 10 18:49:00 machine1 kernel: [<ffffffffa056e08b>]
+xlog_grant_log_space+0x3ab/0x520 [xfs]
+
+May 10 18:49:00 machine1 kernel: [<ffffffffa0582d1a>] ?
+kmem_zone_zalloc+0x3a/0x50 [xfs]
+
+May 10 18:49:00 machine1 kernel: [<ffffffff8127f3ac>] ? random32+0x1c/0x20
+
+May 10 18:49:00 machine1 kernel: [<ffffffffa057d201>] ?
+xfs_trans_ail_push+0x21/0x80 [xfs]
+
+May 10 18:49:00 machine1 kernel: [<ffffffffa056e2e6>]
+xfs_log_reserve+0xe6/0x140 [xfs]
+
+May 10 18:49:00 machine1 kernel: [<ffffffffa057bad0>]
+xfs_trans_reserve+0xa0/0x210 [xfs]
+
+May 10 18:49:00 machine1 kernel: [<ffffffffa055f0a3>]
+xfs_fs_log_dummy+0x43/0x90 [xfs]
+
+May 10 18:49:00 machine1 kernel: [<ffffffffa056c9c4>] ?
+xfs_log_need_covered+0x94/0xd0 [xfs]
+
+May 10 18:49:00 machine1 kernel: [<ffffffffa0591831>]
+xfs_sync_worker+0x81/0x90 [xfs]
+
+May 10 18:49:00 machine1 kernel: [<ffffffffa059171e>] xfssyncd+0x17e/0x210 [xfs]
+
+May 10 18:49:00 machine1 kernel: [<ffffffffa05915a0>] ? xfssyncd+0x0/0x210 [xfs]
+
+May 10 18:49:00 machine1 kernel: [<ffffffff81091d66>] kthread+0x96/0xa0
+
+May 10 18:49:00 machine1 kernel: [<ffffffff8100c14a>] child_rip+0xa/0x20
+
+May 10 18:49:00 machine1 kernel: [<ffffffff81091cd0>] ? kthread+0x0/0xa0
+
+May 10 18:49:00 machine1 kernel: [<ffffffff8100c140>] ? child_rip+0x0/0x20
+
+--------------------->8------------
+
+The XFS filesystem size is 14TB (LVM), kernel version 2.6.32
+
+Machine has a memory of 96GB
+
+Please let me know if this is a known issue and have been already
+fixed in higher kernel version.
+
+--
+Subranshu
 
 _______________________________________________
 xfs mailing list
