@@ -1,29 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E545A29DF8
-	for <xfs@oss.sgi.com>; Fri, 10 May 2013 23:48:59 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B46608F8049
-	for <xfs@oss.sgi.com>; Fri, 10 May 2013 21:48:56 -0700 (PDT)
-Received: from mail-gg0-f174.google.com (mail-gg0-f174.google.com
-	[209.85.161.174]) by cuda.sgi.com with ESMTP id
-	8PWjPNUbovg64hHG (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 10 May 2013 21:48:55 -0700 (PDT)
-Received: by mail-gg0-f174.google.com with SMTP id y1so9446ggc.33
-	for <xfs@oss.sgi.com>; Fri, 10 May 2013 21:48:54 -0700 (PDT)
-Message-ID: <518DCDB1.30408@gmail.com>
-Date: Sat, 11 May 2013 00:48:49 -0400
-From: "Michael L. Semon" <mlsemon35@gmail.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 289817F37
+	for <xfs@oss.sgi.com>; Sat, 11 May 2013 07:09:50 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1859130405F
+	for <xfs@oss.sgi.com>; Sat, 11 May 2013 05:09:47 -0700 (PDT)
+Received: from mail-la0-f42.google.com (mail-la0-f42.google.com
+	[209.85.215.42]) by cuda.sgi.com with ESMTP id yNj571Fpq0mljDTg
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sat, 11 May 2013 05:09:45 -0700 (PDT)
+Received: by mail-la0-f42.google.com with SMTP id er20so1966224lab.29
+	for <xfs@oss.sgi.com>; Sat, 11 May 2013 05:09:44 -0700 (PDT)
+From: Dmitry Monakhov <dmonakhov@openvz.org>
+Subject: Re: xfs_efi_item slab corruption. (v3.9-10936-g51a26ae)
+In-Reply-To: <20130507133707.GA18301@redhat.com>
+References: <20130507133707.GA18301@redhat.com>
+Date: Sat, 11 May 2013 16:09:40 +0400
+Message-ID: <87k3n5en0b.fsf@openvz.org>
 MIME-Version: 1.0
-Subject: Re: Rambling noise #1: generic/230 can trigger kernel debug lock
-	detector
-References: <518B08D9.1060906@gmail.com> <20130509031646.GN24635@dastard>
-	<20130509072045.GO24635@dastard> <518C54AA.7070908@gmail.com>
-	<20130510021942.GP23072@dastard>
-	<CAJzLF9kmBuQ5+-7NbzPqjUxG5yUELxCxjhh=3NiTFD0dNh-UXQ@mail.gmail.com>
-	<20130511011732.GC32675@dastard>
-In-Reply-To: <20130511011732.GC32675@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,150 +26,142 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Dave Jones <davej@redhat.com>, Linux Kernel <linux-kernel@vger.kernel.org>
+Cc: xfs@oss.sgi.com
 
-On 05/10/2013 09:17 PM, Dave Chinner wrote:
-> On Fri, May 10, 2013 at 03:07:19PM -0400, Michael L. Semon wrote:
->> On Thu, May 9, 2013 at 10:19 PM, Dave Chinner <david@fromorbit.com> wrote:
->>> On Thu, May 09, 2013 at 10:00:10PM -0400, Michael L. Semon wrote:
+On Tue, 7 May 2013 09:37:07 -0400, Dave Jones <davej@redhat.com> wrote:
+> started compiling a kernel, and then...
+> 
+I've bisected this one.
+commit 666d644cd72a9ec58b353209ff191d7430f3b357
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed Apr 3 14:09:21 2013 +1100
 
->> Thanks for looking at it.  There are going to be plenty of false
->> positives out there.  Is there a pecking order of what works best?  As
->> in...
->>
->> * IRQ (IRQs-off?) checking: worth reporting...?
->> * sleep inside atomic sections: fascinating, but almost anything can trigger it
->> * multiple-CPU deadlock detection: can only speculate on a uniprocessor system
->> * circular dependency checking: YMMV
->> * reclaim-fs checking: which I knew how much developers need to
->> conform to reclaim-fs, or what it is
->
-> If there's XFS in the trace, then just post them. We try to fix
-> false positives (as well as real bugs) so lockdep reporting gets more
-> accurate and less noisy over time.
->
-> Cheers,
->
-> Dave.
->
+    xfs: don't free EFIs before the EFDs are committed
 
-Feel free to ignore and flame them as well.  I'm going to make another 
-attempt to triage my eldest Pentium 4, and there's a high chance that 
-you'll have to reply, "Despite the xfs_* functions, that looks like a 
-DRM issue.  Go bug those guys."
+#xfstests  ./check generic/007 generic/007 generic/007
 
-Thanks!
-
-Michael
-
-During generic/249 (lucky, first test out)...
-======================================================
-[ INFO: possible circular locking dependency detected ]
-3.9.0+ #2 Not tainted
--------------------------------------------------------
-xfs_io/1181 is trying to acquire lock:
-  (sb_writers#3){.+.+.+}, at: [<c10f01be>] 
-generic_file_splice_write+0x7e/0x1b0
-
-but task is already holding lock:
-  (&(&ip->i_iolock)->mr_lock){++++++}, at: [<c11dca9a>] xfs_ilock+0xea/0x190
-
-which lock already depends on the new lock.
-
-
-the existing dependency chain (in reverse order) is:
-
--> #2 (&(&ip->i_iolock)->mr_lock){++++++}:
-        [<c1061580>] lock_acquire+0x80/0x100
-        [<c1047184>] down_write_nested+0x54/0xa0
-        [<c11dca9a>] xfs_ilock+0xea/0x190
-        [<c1190d2c>] xfs_setattr_size+0x30c/0x4a0
-        [<c1190eec>] xfs_vn_setattr+0x2c/0x30
-        [<c10dd40c>] notify_change+0x13c/0x360
-        [<c10c233a>] do_truncate+0x5a/0xa0
-        [<c10cfcce>] do_last.isra.46+0x31e/0xb90
-        [<c10d05db>] path_openat.isra.47+0x9b/0x3e0
-        [<c10d0951>] do_filp_open+0x31/0x80
-        [<c10c35f1>] do_sys_open+0xf1/0x1c0
-        [<c10c36e8>] sys_open+0x28/0x30
-        [<c140e1df>] sysenter_do_call+0x12/0x36
-
--> #1 (&sb->s_type->i_mutex_key#6){+.+.+.}:
-        [<c1061580>] lock_acquire+0x80/0x100
-        [<c140a1d4>] mutex_lock_nested+0x64/0x2b0
-        [<c10c2330>] do_truncate+0x50/0xa0
-        [<c10cfcce>] do_last.isra.46+0x31e/0xb90
-        [<c10d05db>] path_openat.isra.47+0x9b/0x3e0
-        [<c10d0951>] do_filp_open+0x31/0x80
-        [<c10c35f1>] do_sys_open+0xf1/0x1c0
-        [<c10c36e8>] sys_open+0x28/0x30
-        [<c140e1df>] sysenter_do_call+0x12/0x36
-
--> #0 (sb_writers#3){.+.+.+}:
-        [<c1060d55>] __lock_acquire+0x1465/0x1690
-        [<c1061580>] lock_acquire+0x80/0x100
-        [<c10c75ad>] __sb_start_write+0xad/0x1b0
-        [<c10f01be>] generic_file_splice_write+0x7e/0x1b0
-        [<c1184813>] xfs_file_splice_write+0x83/0x120
-        [<c10ee8c5>] do_splice_from+0x65/0x90
-        [<c10ee91b>] direct_splice_actor+0x2b/0x40
-        [<c10f03d9>] splice_direct_to_actor+0xb9/0x1e0
-        [<c10f0562>] do_splice_direct+0x62/0x80
-        [<c10c5166>] do_sendfile+0x1b6/0x2d0
-        [<c10c538e>] sys_sendfile64+0x4e/0xb0
-        [<c140e1df>] sysenter_do_call+0x12/0x36
-
-other info that might help us debug this:
-
-Chain exists of:
-   sb_writers#3 --> &sb->s_type->i_mutex_key#6 --> &(&ip->i_iolock)->mr_lock
-
-  Possible unsafe locking scenario:
-
-        CPU0                    CPU1
-        ----                    ----
-   lock(&(&ip->i_iolock)->mr_lock);
-                                lock(&sb->s_type->i_mutex_key#6);
-                                lock(&(&ip->i_iolock)->mr_lock);
-   lock(sb_writers#3);
-
-  *** DEADLOCK ***
-
-1 lock held by xfs_io/1181:
-  #0:  (&(&ip->i_iolock)->mr_lock){++++++}, at: [<c11dca9a>] 
-xfs_ilock+0xea/0x190
-
-stack backtrace:
-Pid: 1181, comm: xfs_io Not tainted 3.9.0+ #2
-Call Trace:
-  [<c1406cc7>] print_circular_bug+0x1b8/0x1c2
-  [<c1060d55>] __lock_acquire+0x1465/0x1690
-  [<c105e4bb>] ? trace_hardirqs_off+0xb/0x10
-  [<c1061580>] lock_acquire+0x80/0x100
-  [<c10f01be>] ? generic_file_splice_write+0x7e/0x1b0
-  [<c10c75ad>] __sb_start_write+0xad/0x1b0
-  [<c10f01be>] ? generic_file_splice_write+0x7e/0x1b0
-  [<c10f01be>] ? generic_file_splice_write+0x7e/0x1b0
-  [<c10f01be>] generic_file_splice_write+0x7e/0x1b0
-  [<c11dca9a>] ? xfs_ilock+0xea/0x190
-  [<c1184813>] xfs_file_splice_write+0x83/0x120
-  [<c1184790>] ? xfs_file_fsync+0x210/0x210
-  [<c10ee8c5>] do_splice_from+0x65/0x90
-  [<c10ee91b>] direct_splice_actor+0x2b/0x40
-  [<c10f03d9>] splice_direct_to_actor+0xb9/0x1e0
-  [<c10ee8f0>] ? do_splice_from+0x90/0x90
-  [<c10f0562>] do_splice_direct+0x62/0x80
-  [<c10c5166>] do_sendfile+0x1b6/0x2d0
-  [<c10b45b4>] ? might_fault+0x94/0xa0
-  [<c10c538e>] sys_sendfile64+0x4e/0xb0
-  [<c140e1df>] sysenter_do_call+0x12/0x36
-XFS (sdb5): Mounting Filesystem
-XFS (sdb5): Ending clean mount
+> [  172.233200] =============================================================================
+> [  172.233205] BUG xfs_efi_item (Not tainted): Poison overwritten
+> [  172.233207] -----------------------------------------------------------------------------
+> 
+> [  172.233210] Disabling lock debugging due to kernel taint
+> [  172.233213] INFO: 0xffff8800aaac4ea8-0xffff8800aaac4ea8. First byte 0x6a instead of 0x6b
+> [  172.233235] INFO: Allocated in kmem_zone_alloc+0x67/0xf0 [xfs] age=29290 cpu=1 pid=1357
+> [  172.233239] 	__slab_alloc+0x468/0x52c
+> [  172.233243] 	kmem_cache_alloc+0x2b4/0x320
+> [  172.233256] 	kmem_zone_alloc+0x67/0xf0 [xfs]
+> [  172.233269] 	kmem_zone_zalloc+0x14/0x40 [xfs]
+> [  172.233287] 	xfs_efi_init+0x41/0xa0 [xfs]
+> [  172.233305] 	xfs_trans_get_efi+0x58/0x90 [xfs]
+> [  172.233320] 	xfs_bmap_finish+0x76/0x1b0 [xfs]
+> [  172.233338] 	xfs_itruncate_extents+0x2cd/0x610 [xfs]
+> [  172.233353] 	xfs_inactive+0x401/0x530 [xfs]
+> [  172.233367] 	xfs_fs_evict_inode+0x8c/0x1b0 [xfs]
+> [  172.233370] 	evict+0xa3/0x1a0
+> [  172.233372] 	iput+0xf5/0x180
+> [  172.233374] 	dput+0x208/0x2f0
+> [  172.233378] 	SYSC_renameat+0x3be/0x430
+> [  172.233380] 	SyS_renameat+0xe/0x10
+> [  172.233383] 	SyS_rename+0x1b/0x20
+> [  172.233399] INFO: Freed in xfs_efi_item_free+0x21/0x40 [xfs] age=27303 cpu=1 pid=177
+> [  172.233402] 	__slab_free+0x41/0x39f
+> [  172.233405] 	kmem_cache_free+0x326/0x370
+> [  172.233420] 	xfs_efi_item_free+0x21/0x40 [xfs]
+> [  172.233435] 	__xfs_efi_release+0x4e/0x60 [xfs]
+> [  172.233449] 	xfs_efi_release+0x50/0x70 [xfs]
+> [  172.233463] 	xfs_efd_item_committed+0x22/0x40 [xfs]
+> [  172.233479] 	xfs_trans_committed_bulk+0xcf/0x290 [xfs]
+> [  172.233494] 	xlog_cil_committed+0x37/0x110 [xfs]
+> [  172.233510] 	xlog_state_do_callback+0x1b8/0x3f0 [xfs]
+> [  172.233525] 	xlog_state_done_syncing+0xf2/0x110 [xfs]
+> [  172.233539] 	xlog_iodone+0x87/0x110 [xfs]
+> [  172.233550] 	xfs_buf_iodone_work+0x5e/0xd0 [xfs]
+> [  172.233554] 	process_one_work+0x211/0x700
+> [  172.233556] 	worker_thread+0x11d/0x3a0
+> [  172.233559] 	kthread+0xed/0x100
+> [  172.233562] 	ret_from_fork+0x7c/0xb0
+> [  172.233565] INFO: Slab 0xffffea0002aab100 objects=22 used=22 fp=0x          (null) flags=0x20000000004080
+> [  172.233567] INFO: Object 0xffff8800aaac4e38 @offset=3640 fp=0xffff8800aaac7058
+> 
+> [  172.233570] Bytes b4 ffff8800aaac4e28: 07 a2 fd ff 00 00 00 00 5a 5a 5a 5a 5a 5a 5a 5a  ........ZZZZZZZZ
+> [  172.233573] Object ffff8800aaac4e38: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+> [  172.233575] Object ffff8800aaac4e48: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+> [  172.233577] Object ffff8800aaac4e58: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+> [  172.233579] Object ffff8800aaac4e68: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+> [  172.233581] Object ffff8800aaac4e78: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+> [  172.233583] Object ffff8800aaac4e88: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+> [  172.233586] Object ffff8800aaac4e98: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+> [  172.233588] Object ffff8800aaac4ea8: 6a 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  jkkkkkkkkkkkkkkk
+> [  172.233590] Object ffff8800aaac4eb8: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+> [  172.233592] Object ffff8800aaac4ec8: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+> [  172.233594] Object ffff8800aaac4ed8: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+> [  172.233597] Object ffff8800aaac4ee8: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+> [  172.233599] Object ffff8800aaac4ef8: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+> [  172.233601] Object ffff8800aaac4f08: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+> [  172.233603] Object ffff8800aaac4f18: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+> [  172.233605] Object ffff8800aaac4f28: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+> [  172.233608] Object ffff8800aaac4f38: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+> [  172.233610] Object ffff8800aaac4f48: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+> [  172.233612] Object ffff8800aaac4f58: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+> [  172.233614] Object ffff8800aaac4f68: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+> [  172.233616] Object ffff8800aaac4f78: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+> [  172.233618] Object ffff8800aaac4f88: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+> [  172.233620] Object ffff8800aaac4f98: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+> [  172.233622] Object ffff8800aaac4fa8: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+> [  172.233625] Object ffff8800aaac4fb8: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b a5  kkkkkkkkkkkkkkk.
+> [  172.233627] Redzone ffff8800aaac4fc8: bb bb bb bb bb bb bb bb                          ........
+> [  172.233629] Padding ffff8800aaac5108: 5a 5a 5a 5a 5a 5a 5a 5a                          ZZZZZZZZ
+> [  172.233632] CPU: 1 PID: 1658 Comm: gcc Tainted: G    B        3.9.0+ #1 [loadavg: 0.68 0.43 0.17 4/333 1660]
+> [  172.233636] Hardware name: LENOVO 2356JK8/2356JK8, BIOS G7ET92WW (2.52 ) 02/18/2013
+> [  172.233638]  ffffea0002aab100 ffff8800a4b03918 ffffffff815f5588 ffff8800a4b03968
+> [  172.233644]  ffffffff81185944 0000000000000008 ffff880000000001 ffffffff81078016
+> [  172.233648]  ffff8800aaac4ea8 ffff8800aaac4ea9 ffff880115937cc0 000000000000006b
+> [  172.233653] Call Trace:
+> [  172.233658]  [<ffffffff815f5588>] dump_stack+0x19/0x1b
+> [  172.233662]  [<ffffffff81185944>] print_trailer+0x154/0x210
+> [  172.233666]  [<ffffffff81078016>] ? perf_trace_sched_process_template+0xe6/0x100
+> [  172.233669]  [<ffffffff81185b3f>] check_bytes_and_report+0xcf/0x110
+> [  172.233673]  [<ffffffff81187037>] check_object+0x1e7/0x260
+> [  172.233676]  [<ffffffff811864f7>] ? check_slab+0x87/0x130
+> [  172.233691]  [<ffffffffa0543fa7>] ? kmem_zone_alloc+0x67/0xf0 [xfs]
+> [  172.233694]  [<ffffffff815f2ea3>] alloc_debug_processing+0x76/0x118
+> [  172.233697]  [<ffffffff815f3b8d>] __slab_alloc+0x468/0x52c
+> [  172.233716]  [<ffffffffa0592787>] ? xfs_iext_bno_to_ext+0x97/0x180 [xfs]
+> [  172.233731]  [<ffffffffa0543fa7>] ? kmem_zone_alloc+0x67/0xf0 [xfs]
+> [  172.233735]  [<ffffffff8118a754>] kmem_cache_alloc+0x2b4/0x320
+> [  172.233748]  [<ffffffffa0543fa7>] ? kmem_zone_alloc+0x67/0xf0 [xfs]
+> [  172.233762]  [<ffffffffa0543fa7>] kmem_zone_alloc+0x67/0xf0 [xfs]
+> [  172.233776]  [<ffffffffa0544044>] kmem_zone_zalloc+0x14/0x40 [xfs]
+> [  172.233792]  [<ffffffffa05ae031>] xfs_efi_init+0x41/0xa0 [xfs]
+> [  172.233809]  [<ffffffffa05b32b8>] xfs_trans_get_efi+0x58/0x90 [xfs]
+> [  172.233825]  [<ffffffffa055a0a6>] xfs_bmap_finish+0x76/0x1b0 [xfs]
+> [  172.233844]  [<ffffffffa058ef0d>] xfs_itruncate_extents+0x2cd/0x610 [xfs]
+> [  172.233859]  [<ffffffffa0540e41>] xfs_inactive+0x401/0x530 [xfs]
+> [  172.233874]  [<ffffffffa053dbec>] xfs_fs_evict_inode+0x8c/0x1b0 [xfs]
+> [  172.233877]  [<ffffffff811c1033>] evict+0xa3/0x1a0
+> [  172.233880]  [<ffffffff811c19c5>] iput+0xf5/0x180
+> [  172.233883]  [<ffffffff811bcf18>] dput+0x208/0x2f0
+> [  172.233887]  [<ffffffff811b43ae>] SYSC_renameat+0x3be/0x430
+> [  172.233892]  [<ffffffff810ad32e>] ? lock_release_holdtime.part.30+0xee/0x170
+> [  172.233895]  [<ffffffff8107c18d>] ? get_parent_ip+0xd/0x50
+> [  172.233899]  [<ffffffff810afe7d>] ? trace_hardirqs_on+0xd/0x10
+> [  172.233904]  [<ffffffff8100e358>] ? syscall_trace_enter+0x18/0x230
+> [  172.233907]  [<ffffffff811b67fe>] SyS_renameat+0xe/0x10
+> [  172.233911]  [<ffffffff811b681b>] SyS_rename+0x1b/0x20
+> [  172.233914]  [<ffffffff816051d4>] tracesys+0xdd/0xe2
+> [  172.233917] FIX xfs_efi_item: Restoring 0xffff8800aaac4ea8-0xffff8800aaac4ea8=0x6b
+> [  172.233919] FIX xfs_efi_item: Marking all objects used
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
 
 _______________________________________________
 xfs mailing list
