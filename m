@@ -1,23 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 45DD629DF8
-	for <xfs@oss.sgi.com>; Fri, 10 May 2013 20:15:13 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 31D6C30405F
-	for <xfs@oss.sgi.com>; Fri, 10 May 2013 18:15:13 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 7541A29DF8
+	for <xfs@oss.sgi.com>; Fri, 10 May 2013 20:17:38 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3B6DF304053
+	for <xfs@oss.sgi.com>; Fri, 10 May 2013 18:17:38 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	KwS8huHkOtSIBcoG for <xfs@oss.sgi.com>;
-	Fri, 10 May 2013 18:15:08 -0700 (PDT)
-Date: Sat, 11 May 2013 11:15:05 +1000
+	VaiPy3ggpNTJpcXH for <xfs@oss.sgi.com>;
+	Fri, 10 May 2013 18:17:33 -0700 (PDT)
+Date: Sat, 11 May 2013 11:17:32 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Error during bulk removal of files
-Message-ID: <20130511011505.GB32675@dastard>
-References: <CAEUQcejFPKDqqwbT_BNFJEVkUeAY=mgYGv-kUvLX6Ys7YQkqfg@mail.gmail.com>
-	<518D22F0.8040405@sgi.com>
+Subject: Re: Rambling noise #1: generic/230 can trigger kernel debug lock
+	detector
+Message-ID: <20130511011732.GC32675@dastard>
+References: <518B08D9.1060906@gmail.com> <20130509031646.GN24635@dastard>
+	<20130509072045.GO24635@dastard> <518C54AA.7070908@gmail.com>
+	<20130510021942.GP23072@dastard>
+	<CAJzLF9kmBuQ5+-7NbzPqjUxG5yUELxCxjhh=3NiTFD0dNh-UXQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <518D22F0.8040405@sgi.com>
+In-Reply-To: <CAJzLF9kmBuQ5+-7NbzPqjUxG5yUELxCxjhh=3NiTFD0dNh-UXQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,45 +33,57 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: Subranshu Patel <spatel.ml@gmail.com>, xfs@oss.sgi.com
+To: "Michael L. Semon" <mlsemon35@gmail.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Fri, May 10, 2013 at 11:40:16AM -0500, Mark Tinguely wrote:
-> On 05/10/13 11:17, Subranshu Patel wrote:
-> 
-> <reformated> Call Trace:
-> 
->  [<ffffffffa056c492>] xlog_wait+0x72/0x90 [xfs]
->  [<ffffffff81060250>] ? default_wake_function+0x0/0x20
->  [<ffffffffa056e08b>] xlog_grant_log_space+0x3ab/0x520 [xfs]
->  [<ffffffffa0582d1a>] ? kmem_zone_zalloc+0x3a/0x50 [xfs]
->  [<ffffffff8127f3ac>] ? random32+0x1c/0x20
->  [<ffffffffa057d201>] ? xfs_trans_ail_push+0x21/0x80 [xfs]
->  [<ffffffffa056e2e6>] xfs_log_reserve+0xe6/0x140 [xfs]
->  [<ffffffffa057bad0>] xfs_trans_reserve+0xa0/0x210 [xfs]
->  [<ffffffffa055f0a3>] xfs_fs_log_dummy+0x43/0x90 [xfs]
->  [<ffffffffa056c9c4>] ? xfs_log_need_covered+0x94/0xd0 [xfs]
->  [<ffffffffa0591831>] xfs_sync_worker+0x81/0x90 [xfs]
->  [<ffffffffa059171e>] xfssyncd+0x17e/0x210 [xfs]
->  [<ffffffffa05915a0>] ? xfssyncd+0x0/0x210 [xfs]
->  [<ffffffff81091d66>] kthread+0x96/0xa0
->  [<ffffffff8100c14a>] child_rip+0xa/0x20
->  [<ffffffff81091cd0>] ? kthread+0x0/0xa0
->  [<ffffffff8100c140>] ? child_rip+0x0/0x20
-> 
-> Ran out of log grant space trying to write out the dummy record in
-> the sync worker.
-> 
-> Something is not getting moved off the AIL. This could be a symptom;
-> for example a lock not being released could lead to depleted log
-> space. What else is happening on the filesystem?
-> 
+On Fri, May 10, 2013 at 03:07:19PM -0400, Michael L. Semon wrote:
+> On Thu, May 9, 2013 at 10:19 PM, Dave Chinner <david@fromorbit.com> wrote:
+> > On Thu, May 09, 2013 at 10:00:10PM -0400, Michael L. Semon wrote:
+> >> xfs/012 13s ...[ 1851.323902]
+> >> [ 1851.325479] =================================
+> >> [ 1851.326551] [ INFO: inconsistent lock state ]
+> >> [ 1851.326551] 3.9.0+ #1 Not tainted
+> >> [ 1851.326551] ---------------------------------
+> >> [ 1851.326551] inconsistent {RECLAIM_FS-ON-R} -> {IN-RECLAIM_FS-W} usage.
+> >> [ 1851.326551] kswapd0/18 [HC0[0]:SC0[0]:HE1:SE1] takes:
+> >> [ 1851.326551]  (&(&ip->i_lock)->mr_lock){++++-+}, at: [<c11dcabf>]
+> >> xfs_ilock+0x10f/0x190
+> >> [ 1851.326551] {RECLAIM_FS-ON-R} state was registered at:
+> >> [ 1851.326551]   [<c105e10a>] mark_held_locks+0x8a/0xf0
+> >> [ 1851.326551]   [<c105e69c>] lockdep_trace_alloc+0x5c/0xa0
+> >> [ 1851.326551]   [<c109c52c>] __alloc_pages_nodemask+0x7c/0x670
+> >> [ 1851.326551]   [<c10bfd8e>] new_slab+0x6e/0x2a0
+> >> [ 1851.326551]   [<c14083a9>] __slab_alloc.isra.59.constprop.67+0x1d3/0x40a
+> >> [ 1851.326551]   [<c10c12cd>] __kmalloc+0x10d/0x180
+> >> [ 1851.326551]   [<c1199b56>] kmem_alloc+0x56/0xd0
+> >> [ 1851.326551]   [<c1199be1>] kmem_zalloc+0x11/0xd0
+> >> [ 1851.326551]   [<c11c666e>] xfs_dabuf_map.isra.2.constprop.5+0x22e/0x520
 > >
-> >--------------------->8------------
+> > Yup, needs a KM_NOFS allocation there because we come through
+> > here outside a transaction and so it doesn't get KM_NOFS implicitly
+> > in this case. There's been a couple of these reported in the past
+> > week or two - I need to do an audit and sweep them all up....
 > >
-> >The XFS filesystem size is 14TB (LVM), kernel version 2.6.32
+> > Technically, though, this can't cause a deadlock on the inode we
+> > hold a lock on here because it's a directory inode, not a regular
+> > file and so it will never be seen in the reclaim data writeback path
+> > nor on the inode LRU when the shrinker runs. So most likely it is a
+> > false positive...
+> 
+> Thanks for looking at it.  There are going to be plenty of false
+> positives out there.  Is there a pecking order of what works best?  As
+> in...
+> 
+> * IRQ (IRQs-off?) checking: worth reporting...?
+> * sleep inside atomic sections: fascinating, but almost anything can trigger it
+> * multiple-CPU deadlock detection: can only speculate on a uniprocessor system
+> * circular dependency checking: YMMV
+> * reclaim-fs checking: which I knew how much developers need to
+> conform to reclaim-fs, or what it is
 
-What 2.6.32 kernel? Output of uname -a?
+If there's XFS in the trace, then just post them. We try to fix
+false positives (as well as real bugs) so lockdep reporting gets more
+accurate and less noisy over time.
 
 Cheers,
 
