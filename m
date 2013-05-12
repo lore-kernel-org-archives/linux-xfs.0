@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 543D17F37
-	for <xfs@oss.sgi.com>; Sun, 12 May 2013 03:19:36 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 43B66304051
-	for <xfs@oss.sgi.com>; Sun, 12 May 2013 01:19:33 -0700 (PDT)
-Received: from mail-pb0-f52.google.com (mail-pb0-f52.google.com
-	[209.85.160.52]) by cuda.sgi.com with ESMTP id a8BAkZWC2ykAt7XX
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 12 May 2013 01:19:32 -0700 (PDT)
-Received: by mail-pb0-f52.google.com with SMTP id xa7so3720588pbc.11
-	for <xfs@oss.sgi.com>; Sun, 12 May 2013 01:19:31 -0700 (PDT)
-From: Zheng Liu <gnehzuil.liu@gmail.com>
-Subject: [PATCH] xfstests: change file mode
-Date: Sun, 12 May 2013 16:37:06 +0800
-Message-Id: <1368347826-32152-1-git-send-email-wenqing.lz@taobao.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id AA3A77F37
+	for <xfs@oss.sgi.com>; Sun, 12 May 2013 04:01:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 56CB9AC001
+	for <xfs@oss.sgi.com>; Sun, 12 May 2013 02:01:45 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id CqgAzotL9JMlHzzF for
+	<xfs@oss.sgi.com>; Sun, 12 May 2013 02:01:44 -0700 (PDT)
+Received: from int-mx12.intmail.prod.int.phx2.redhat.com
+	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r4C91iiU013788
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Sun, 12 May 2013 05:01:44 -0400
+From: Tomas Racek <tracek@redhat.com>
+Subject: [PATCH 1/2] xfstests 200: remove words from output
+Date: Sun, 12 May 2013 11:01:12 +0200
+Message-Id: <1368349273-23968-1-git-send-email-tracek@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,106 +31,47 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: Zheng Liu <wenqing.lz@taobao.com>
+Cc: lczerner@redhat.com, Tomas Racek <tracek@redhat.com>
 
-Now in tests/ there are some test cases whose mode is 0644.  But they
-should be 0755.  So fix it.
+Remove phrase "block device" from 200.out since mount warning message
+does not use it.
 
-Signed-off-by: Zheng Liu <wenqing.lz@taobao.com>
-Cc: Dave Chinner <david@fromorbit.com>
+Signed-off-by: Tomas Racek <tracek@redhat.com>
 ---
- 0 files changed
- mode change 100644 => 100755 tests/btrfs/284
- mode change 100644 => 100755 tests/btrfs/307
- mode change 100644 => 100755 tests/generic/285
- mode change 100644 => 100755 tests/generic/286
- mode change 100644 => 100755 tests/generic/288
- mode change 100644 => 100755 tests/generic/294
- mode change 100644 => 100755 tests/generic/299
- mode change 100644 => 100755 tests/generic/300
- mode change 100644 => 100755 tests/generic/306
- mode change 100644 => 100755 tests/generic/307
- mode change 100644 => 100755 tests/generic/308
- mode change 100644 => 100755 tests/generic/309
- mode change 100644 => 100755 tests/generic/311
- mode change 100644 => 100755 tests/shared/298
- mode change 100644 => 100755 tests/shared/305
- mode change 100644 => 100755 tests/xfs/287
- mode change 100644 => 100755 tests/xfs/290
- mode change 100644 => 100755 tests/xfs/292
- mode change 100644 => 100755 tests/xfs/293
- mode change 100644 => 100755 tests/xfs/295
- mode change 100644 => 100755 tests/xfs/296
- mode change 100644 => 100755 tests/xfs/297
+ tests/xfs/200.out | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/tests/btrfs/284 b/tests/btrfs/284
-old mode 100644
-new mode 100755
-diff --git a/tests/btrfs/307 b/tests/btrfs/307
-old mode 100644
-new mode 100755
-diff --git a/tests/generic/285 b/tests/generic/285
-old mode 100644
-new mode 100755
-diff --git a/tests/generic/286 b/tests/generic/286
-old mode 100644
-new mode 100755
-diff --git a/tests/generic/288 b/tests/generic/288
-old mode 100644
-new mode 100755
-diff --git a/tests/generic/294 b/tests/generic/294
-old mode 100644
-new mode 100755
-diff --git a/tests/generic/299 b/tests/generic/299
-old mode 100644
-new mode 100755
-diff --git a/tests/generic/300 b/tests/generic/300
-old mode 100644
-new mode 100755
-diff --git a/tests/generic/306 b/tests/generic/306
-old mode 100644
-new mode 100755
-diff --git a/tests/generic/307 b/tests/generic/307
-old mode 100644
-new mode 100755
-diff --git a/tests/generic/308 b/tests/generic/308
-old mode 100644
-new mode 100755
-diff --git a/tests/generic/309 b/tests/generic/309
-old mode 100644
-new mode 100755
-diff --git a/tests/generic/311 b/tests/generic/311
-old mode 100644
-new mode 100755
-diff --git a/tests/shared/298 b/tests/shared/298
-old mode 100644
-new mode 100755
-diff --git a/tests/shared/305 b/tests/shared/305
-old mode 100644
-new mode 100755
-diff --git a/tests/xfs/287 b/tests/xfs/287
-old mode 100644
-new mode 100755
-diff --git a/tests/xfs/290 b/tests/xfs/290
-old mode 100644
-new mode 100755
-diff --git a/tests/xfs/292 b/tests/xfs/292
-old mode 100644
-new mode 100755
-diff --git a/tests/xfs/293 b/tests/xfs/293
-old mode 100644
-new mode 100755
-diff --git a/tests/xfs/295 b/tests/xfs/295
-old mode 100644
-new mode 100755
-diff --git a/tests/xfs/296 b/tests/xfs/296
-old mode 100644
-new mode 100755
-diff --git a/tests/xfs/297 b/tests/xfs/297
-old mode 100644
-new mode 100755
+diff --git a/tests/xfs/200.out b/tests/xfs/200.out
+index 2629541..27a76c0 100644
+--- a/tests/xfs/200.out
++++ b/tests/xfs/200.out
+@@ -1,7 +1,7 @@
+ QA output created by 200
+ setting device read-only
+ mounting read-only block device:
+-mount: block device SCRATCH_DEV is write-protected, mounting read-only
++mount: SCRATCH_DEV is write-protected, mounting read-only
+ touching file on read-only filesystem (should fail)
+ touch: cannot touch `SCRATCH_MNT/foo': Read-only file system
+ unmounting read-only filesystem
+@@ -12,12 +12,12 @@ going down:
+ unmounting shutdown filesystem:
+ setting device read-only
+ mounting filesystem that needs recovery on a read-only device:
+-mount: block device SCRATCH_DEV is write-protected, mounting read-only
+-mount: cannot mount block device SCRATCH_DEV read-only
++mount: SCRATCH_DEV is write-protected, mounting read-only
++mount: cannot mount SCRATCH_DEV read-only
+ unmounting read-only filesystem
+ umount: SCRATCH_MNT: not mounted
+ mounting filesystem with -o norecovery on a read-only device:
+-mount: block device SCRATCH_DEV is write-protected, mounting read-only
++mount: SCRATCH_DEV is write-protected, mounting read-only
+ unmounting read-only filesystem
+ setting device read-write
+ mounting filesystem that needs recovery with -o ro:
 -- 
-1.7.12.rc2.18.g61b472e
+1.7.11.7
 
 _______________________________________________
 xfs mailing list
