@@ -1,16 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A07B27CBF
-	for <xfs@oss.sgi.com>; Mon, 13 May 2013 12:55:52 -0500 (CDT)
-Message-ID: <51912928.3020300@sgi.com>
-Date: Mon, 13 May 2013 12:55:52 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 6DA107F50
+	for <xfs@oss.sgi.com>; Mon, 13 May 2013 12:56:10 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4022F30405F
+	for <xfs@oss.sgi.com>; Mon, 13 May 2013 10:56:06 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id l2C6tBkfRvsiQLdk
+	for <xfs@oss.sgi.com>; Mon, 13 May 2013 10:56:06 -0700 (PDT)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id 90B606C0E7
+	for <xfs@oss.sgi.com>; Mon, 13 May 2013 12:56:05 -0500 (CDT)
+Message-ID: <51912937.4030404@hardwarefreak.com>
+Date: Mon, 13 May 2013 12:56:07 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Subject: Re: Error during bulk removal of files
-References: <CAEUQcejFPKDqqwbT_BNFJEVkUeAY=mgYGv-kUvLX6Ys7YQkqfg@mail.gmail.com>
-	<518D22F0.8040405@sgi.com> <20130511011505.GB32675@dastard>
-	<CAEUQceg6iy=TBrBkhan5bN5vO4y=JGcNy6LGhgfvO-7ereiB=Q@mail.gmail.com>
-In-Reply-To: <CAEUQceg6iy=TBrBkhan5bN5vO4y=JGcNy6LGhgfvO-7ereiB=Q@mail.gmail.com>
+Subject: Re: xfs_repair force_geometry
+References: <5190DB7F.2050505@tum.de>
+In-Reply-To: <5190DB7F.2050505@tum.de>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,36 +27,42 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Subranshu Patel <spatel.ml@gmail.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 05/13/13 11:15, Subranshu Patel wrote:
->> What 2.6.32 kernel? Output of uname -a?
->
->   uname -a
-> Linux machine1 2.6.32-279.el6.x86_64 #1 SMP Wed Jun 13 18:24:36 EDT
-> 2012 x86_64 x86_64 x86_64 GNU/Linux
->
->   # cat /etc/issue
-> Red Hat Enterprise Linux Server release 6.3 (Santiago)
->
-> I am using mdtest program to delete 7 million files (of 1KB size).
-> Total 128 concurrent mdtest process are there. Each process removes
-> approx 54000 files ( 7 million / 128).
-> mdtest runs for a while, after that, it gets blocked and does not do
-> anything. However the machine is still responsive.
->
+On 5/13/2013 7:24 AM, Benedikt Schmidt wrote:
+> Hi,
+> currently I'm looking for the correct usage of the force_geometry option
+> of xfs_repair. I wasn't able to find more documentation on this option
+> beside that it exists. Could please somebody explain it to me?
 
-Is the delay log enabled? If so have you tried the command with it disabled?
+> For a more detailed description of my problem: I've got here a hard disk
+> which is dying at the moment, so I copied all the content with dd_rescue
+> to a new and bigger one. To use xfs_copy wasn't possible as the
+> filesystem was already corrupted. 
 
-Are you willing to take a crash of the hang? Or want to look at the 
-entries on the AIL?
+This is a standalone disk which wholly contains an XFS filesystem, yes?
+ The filesystem is corrupted and cannot be repaired?  And it won't mount?
 
---Mark.
+> So now I've got nearly everything on
+> the second hard disk (dd_rescue could'nt copy something around 6 or 7
+> MB), but I can not mount the filesystem or even run xfs_repair on it, as
+> it fails to find a superblock. I think the problem lies in the fact that
+> the new disk has a different geometry than the previous one.
+
+Given the fact that the filesystem is already corrupted and not
+repairable, and the disk is in a state of failure, it's not surprising
+you can't repair or mount after the ddrescue copy, which now contains
+the same corrupted structures.
+
+If the original can't be repaired nor mounted, why would you believe a
+sector-by-sector copy could be?
+
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
