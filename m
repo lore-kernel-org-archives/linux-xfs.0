@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6DA107F50
-	for <xfs@oss.sgi.com>; Mon, 13 May 2013 12:56:10 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4022F30405F
-	for <xfs@oss.sgi.com>; Mon, 13 May 2013 10:56:06 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id l2C6tBkfRvsiQLdk
-	for <xfs@oss.sgi.com>; Mon, 13 May 2013 10:56:06 -0700 (PDT)
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id 90B606C0E7
-	for <xfs@oss.sgi.com>; Mon, 13 May 2013 12:56:05 -0500 (CDT)
-Message-ID: <51912937.4030404@hardwarefreak.com>
-Date: Mon, 13 May 2013 12:56:07 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 2944B7CBF
+	for <xfs@oss.sgi.com>; Mon, 13 May 2013 13:28:50 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 9B1F8AC004
+	for <xfs@oss.sgi.com>; Mon, 13 May 2013 11:28:49 -0700 (PDT)
+Received: from mail-vb0-f48.google.com (mail-vb0-f48.google.com
+	[209.85.212.48]) by cuda.sgi.com with ESMTP id MeaPcjuT0vFrdsmF
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 13 May 2013 11:28:48 -0700 (PDT)
+Received: by mail-vb0-f48.google.com with SMTP id q16so5446232vbe.35
+	for <xfs@oss.sgi.com>; Mon, 13 May 2013 11:28:47 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: xfs_repair force_geometry
-References: <5190DB7F.2050505@tum.de>
-In-Reply-To: <5190DB7F.2050505@tum.de>
-Reply-To: stan@hardwarefreak.com
+Date: Mon, 13 May 2013 13:28:47 -0500
+Message-ID: <CAHBw7oSxcTYEEFzzhpZfH_EshyYXOsRBpf=S+bLEgCyQZkLFsA@mail.gmail.com>
+Subject: xfs - high CPU usage when removing files
+From: Radoslaw Garbacz <radoslaw.garbacz@xtremedatainc.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,44 +24,56 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============0959966147033403114=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-On 5/13/2013 7:24 AM, Benedikt Schmidt wrote:
-> Hi,
-> currently I'm looking for the correct usage of the force_geometry option
-> of xfs_repair. I wasn't able to find more documentation on this option
-> beside that it exists. Could please somebody explain it to me?
+--===============0959966147033403114==
+Content-Type: multipart/alternative; boundary=047d7bb04ce602301e04dc9db08e
 
-> For a more detailed description of my problem: I've got here a hard disk
-> which is dying at the moment, so I copied all the content with dd_rescue
-> to a new and bigger one. To use xfs_copy wasn't possible as the
-> filesystem was already corrupted. 
+--047d7bb04ce602301e04dc9db08e
+Content-Type: text/plain; charset=ISO-8859-1
 
-This is a standalone disk which wholly contains an XFS filesystem, yes?
- The filesystem is corrupted and cannot be repaired?  And it won't mount?
+Hi,
 
-> So now I've got nearly everything on
-> the second hard disk (dd_rescue could'nt copy something around 6 or 7
-> MB), but I can not mount the filesystem or even run xfs_repair on it, as
-> it fails to find a superblock. I think the problem lies in the fact that
-> the new disk has a different geometry than the previous one.
+I noticed a high CPU usage when removing files from XFS partition on Linux,
+CentOS (always close to 100%).
+Is it a known issue, or is it more likely to be attributed to my testing
+methodology ('time' command)?
 
-Given the fact that the filesystem is already corrupted and not
-repairable, and the disk is in a state of failure, it's not surprising
-you can't repair or mount after the ddrescue copy, which now contains
-the same corrupted structures.
-
-If the original can't be repaired nor mounted, why would you believe a
-sector-by-sector copy could be?
+Thanks in advance,
 
 -- 
-Stan
+Best Regards,
+
+Radoslaw Garbacz
+
+--047d7bb04ce602301e04dc9db08e
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><div><div>Hi,<br><br></div>I noticed a high CPU usage when=
+ removing files from XFS partition on Linux, CentOS (always close to 100%).=
+<br></div>Is it a known issue, or is it more likely to be attributed to my =
+testing methodology (&#39;time&#39; command)?<br>
+<div><br></div><div>Thanks in advance,<br><br></div><div><div><div><div><di=
+v>-- <br><div dir=3D"ltr"><div>Best Regards,<br><br>Radoslaw Garbacz<br></d=
+iv></div>
+</div></div></div></div></div></div>
+
+--047d7bb04ce602301e04dc9db08e--
+
+
+--===============0959966147033403114==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============0959966147033403114==--
