@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9E4707F37
-	for <xfs@oss.sgi.com>; Sun, 12 May 2013 19:25:24 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2BAEBAC002
-	for <xfs@oss.sgi.com>; Sun, 12 May 2013 17:25:21 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 224B97F37
+	for <xfs@oss.sgi.com>; Sun, 12 May 2013 19:44:43 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 0B00A304032
+	for <xfs@oss.sgi.com>; Sun, 12 May 2013 17:44:43 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	DhaQ7E8OGE8s3fib for <xfs@oss.sgi.com>;
-	Sun, 12 May 2013 17:25:19 -0700 (PDT)
-Date: Mon, 13 May 2013 10:25:01 +1000
+	eW8PKdRzlaq1DBek for <xfs@oss.sgi.com>;
+	Sun, 12 May 2013 17:44:41 -0700 (PDT)
+Date: Mon, 13 May 2013 10:44:39 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] xfstests: unify apostrophes in output files
-Message-ID: <20130513002500.GI32675@dastard>
-References: <1368349273-23968-1-git-send-email-tracek@redhat.com>
-	<1368349273-23968-2-git-send-email-tracek@redhat.com>
+Subject: Re: [PATCH v4] xfstests: add a new test case for ext4 indirect-based
+	file
+Message-ID: <20130513004439.GJ32675@dastard>
+References: <1368358464-11173-1-git-send-email-wenqing.lz@taobao.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1368349273-23968-2-git-send-email-tracek@redhat.com>
+In-Reply-To: <1368358464-11173-1-git-send-email-wenqing.lz@taobao.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,27 +30,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Tomas Racek <tracek@redhat.com>
-Cc: lczerner@redhat.com, xfs@oss.sgi.com
+To: Zheng Liu <gnehzuil.liu@gmail.com>
+Cc: Rich Johnston <rjohnston@sgi.com>, Zheng Liu <wenqing.lz@taobao.com>, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-On Sun, May 12, 2013 at 11:01:13AM +0200, Tomas Racek wrote:
-> With coreutils v8.16 the style of apostrophes changed from `word' to
-> 'word'. This is breaking some tests which use the older form.
+On Sun, May 12, 2013 at 07:34:24PM +0800, Zheng Liu wrote:
+> From: Zheng Liu <wenqing.lz@taobao.com>
 > 
-> This commit introduces function _filter_apostrophes and changes the
-> affected tests.
+> After applied this commit (864688d3), xfstests #255 will not test a
+> file system that cannot support fallocate(2), such as a indirect-based
+> file in ext4.  So we need to add a new generic test case to test it.
+> 
+> The difference between #255 and this test case is only to use pwrite to
+> allocate blocks.  Other filesystems should survive in this test case.
+> In the mean time, a new argument '-u' is added into _test_generic_punch
+> not to run unwritten tests.
+> 
+> Meanwhile this commit fixes a minor problem in #255 that testfile should
+> use $seq.$$ as testfile.
+> 
+> Signed-off-by: Zheng Liu <wenqing.lz@taobao.com>
+> Cc: Eric Sandeen <sandeen@sandeen.net>
+> Cc: Dave Chinner <david@fromorbit.com>
+> Cc: Rich Johnston <rjohnston@sgi.com>
 
-I'm not sure this is the best approach as it means we have to
-remember in future to do this filtering in the places that need it.
+This will need to be rebased on top of Eric's patch that removes the
+need to pass -F to xfs_io for non-xfs filesystems....
 
-I suspect that we'd do better to filter the entire output file from
-check before we diff the golden output and the test output. An
-inplace sed modification would be all that is needed like:
+> --- a/tests/generic/group
+> +++ b/tests/generic/group
+> @@ -114,3 +114,4 @@
+>  309 auto quick
+>  310 auto
+>  311 auto metadata log
+> +314 auto quick prealloc
 
-	# coreutils 2.20+ changed quote formats in error messages.
-	# filter the damage out so that golden images match both old
-	# and new versions of coreutils.
-	sed -i 's/`/'\''/g' <test output file>
+Why would you add it to the prealloc group? The whole point of the
+test is that it doesn't use prealloc, right?
 
 Cheers,
 
