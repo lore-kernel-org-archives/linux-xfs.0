@@ -1,33 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 40B327F37
-	for <xfs@oss.sgi.com>; Tue, 14 May 2013 09:50:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0DD8D304067
-	for <xfs@oss.sgi.com>; Tue, 14 May 2013 07:50:28 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id FyDlcFC36gN3TNJY (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 14 May 2013 07:50:27 -0700 (PDT)
-Received: from acsinet21.oracle.com (acsinet21.oracle.com [141.146.126.237])
-	by aserp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
-	ESMTP id r4EEoQgT009051
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Tue, 14 May 2013 14:50:27 GMT
-Received: from userz7022.oracle.com (userz7022.oracle.com [156.151.31.86])
-	by acsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r4EEoPZk002247
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
-	for <xfs@oss.sgi.com>; Tue, 14 May 2013 14:50:26 GMT
-Received: from abhmt105.oracle.com (abhmt105.oracle.com [141.146.116.57])
-	by userz7022.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r4EEoP9K026720 for <xfs@oss.sgi.com>; Tue, 14 May 2013 14:50:25 GMT
-Message-ID: <51924F2D.8030706@oracle.com>
-Date: Tue, 14 May 2013 22:50:21 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A534F7F37
+	for <xfs@oss.sgi.com>; Tue, 14 May 2013 10:19:21 -0500 (CDT)
+Message-ID: <51925612.5050002@sgi.com>
+Date: Tue, 14 May 2013 10:19:46 -0500
+From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfs: Remove redundant error variable from
-	xfs_growfs_data_private()
+Subject: Re: [PATCH] xfstests btrfs/284: shorten duration, fix output
+References: <517ACB41.2030002@redhat.com>
+In-Reply-To: <517ACB41.2030002@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,39 +17,72 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: Liu Bo <liubo2009@cn.fujitsu.com>, linux-btrfs <linux-btrfs@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
 
-From: Jie Liu <jeff.liu@oracle.com>
+On 04/26/2013 01:45 PM, Eric Sandeen wrote:
+> test 284 had... some issues.
+>
+> First, it took so long nobody ran it; so shorten the extent
+> count by a factor of about 100.
+>
+> Having fixed that, we see failures in 2 cases; when start or
+> len is -1, but the golden output file didn't have error
+> output, as if they should pass.
+>
+> I'm going to argue that these *should* both fail; start = -1
+> has no real meaning.  length = -1 might mean "the rest
+> of the file" but if that's what you really want, just
+> don't specify -l.
+>
+> So add failure output for those cases.
+>
+> Send all command output to $seq.full, in case that changes
+> in the future; just capture the return value.
+>
+> Then remove the return value echo on failure (50?) because
+> who knows when that might change to some other magic value.
+>
+> Ok, then when defrag actually works, old defrag returned
+> "20" (because?) but a recent commit changed it to 0.
+> So accommodate that too.
+>
+> And remove a stray "HAVE_DEFRAG=1" while we're at it.
+> That variable is never used.
+>
 
-Commit eab4e633 "xfs: uncached buffer reads need to return an error".
+So should I be seeing failures with
+btrfs-progs-0.20-0.2.git91d9eec.el6.x86_64 installed?
 
-Remove redundant error variable, using the function level error variable
-to store bp->b_error instead.
+./check btrfs/284
+FSTYP         -- btrfs
+PLATFORM      -- Linux/x86_64 cxfsxe4 3.9.0+
+MKFS_OPTIONS  -- /dev/sdk2
+MOUNT_OPTIONS -- /dev/sdk2 /mnt/scratch
 
-Signed-off-by: Jie Liu <jeff.liu@oracle.com>
----
- fs/xfs/xfs_fsops.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 2866b8c..7a99854 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -174,7 +174,7 @@ xfs_growfs_data_private(
- 	if (!bp)
- 		return EIO;
- 	if (bp->b_error) {
--		int	error = bp->b_error;
-+		error = bp->b_error;
- 		xfs_buf_relse(bp);
- 		return error;
- 	}
--- 
-1.7.9.5
+btrfs/284	 - output mismatch (see 
+/usr/src/rcj/xfstests/results/btrfs/284.out.bad)
+     --- tests/btrfs/284.out	2013-05-14 09:31:35.000000000 -0500
+     +++ /usr/src/rcj/xfstests/results/btrfs/284.out.bad	2013-05-14 
+10:10:45.000000000 -0500
+     @@ -6,7 +6,6 @@
+      btrfs filesystem defragment failed!
+      a single file | start > file size && 0 < len < file size | off
+      a single file | start = 0 && len < 0 | off (should fail)
+     -btrfs filesystem defragment failed!
+      a single file | start = 0 && len > file size | off
+      a single file | start = 0 && 0 < len < file size | off
+      a directory | default | off
+      ...
+      (Run 'diff -u tests/btrfs/284.out 
+/usr/src/rcj/xfstests/results/btrfs/284.out.bad' to see the entire diff)
+Ran: btrfs/284
+Failures: btrfs/284
+Failed 1 of 1 tests
 
 _______________________________________________
 xfs mailing list
