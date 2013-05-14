@@ -1,14 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3A8B37F4C
-	for <xfs@oss.sgi.com>; Tue, 14 May 2013 08:41:58 -0500 (CDT)
-Message-ID: <51923F42.6040801@sgi.com>
-Date: Tue, 14 May 2013 08:42:26 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 9807E7F4E
+	for <xfs@oss.sgi.com>; Tue, 14 May 2013 08:47:16 -0500 (CDT)
+Message-ID: <51924081.70809@sgi.com>
+Date: Tue, 14 May 2013 08:47:45 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH V2] xfstests: automatically add -F to xfs_io on non-xfs
-References: <51850BED.6050109@redhat.com> <5189B9DA.7010807@sandeen.net>
-In-Reply-To: <5189B9DA.7010807@sandeen.net>
+Subject: Re: [PATCH 1/2] xfstests: fix incorrect redirect in generic/233
+References: <1367993066-9313-1-git-send-email-david@fromorbit.com>
+	<1367993066-9313-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1367993066-9313-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,23 +22,26 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, Jan Kara <jack@suse.cz>, xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On 05/07/2013 09:35 PM, Eric Sandeen wrote:
-> The -F flag to xfs_io originally enabled it to operate on non-xfs
-> filesystems.  This restriction was removed upstream in favor of
-> gracefully failing on the handful of operations that actually
-> required xfs, and the option was deprecated.
+On 05/08/2013 01:04 AM, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+>
+> generic/233 attempts to direct output to tee, but instead of using a
+> pipe it uses an append operator. Hence it leaves a file named "tee"
+> in the root directory of the xfstests execution path. Just direct
+> the output to the $seqres.full file rather than trying to tee it
+> into the test output as well.
 >
 
-This has been committed:
+This patch has been committed:
 
-commit 96fce07867cdd55f1731663a0014b418d8b0ed6c
-Author: Eric Sandeen <sandeen@sandeen.net>
-Date:   Tue May 14 08:33:44 2013 -0500
+commit ef6b44446143e7bea4ef17b4493e23ca1cdb64b2
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Tue May 14 08:34:44 2013 -0500
 
-     xfstests: automatically add -F to xfs_io on non-xfs
+     xfstests: fix incorrect redirect in generic/233
 
 Thanks
 --Rich
