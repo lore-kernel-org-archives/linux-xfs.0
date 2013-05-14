@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D47AD7F37
-	for <xfs@oss.sgi.com>; Tue, 14 May 2013 13:15:27 -0500 (CDT)
-Message-ID: <51927F59.3050101@sgi.com>
-Date: Tue, 14 May 2013 13:15:53 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 78C667F37
+	for <xfs@oss.sgi.com>; Tue, 14 May 2013 13:17:46 -0500 (CDT)
+Message-ID: <51927FE7.1030107@sgi.com>
+Date: Tue, 14 May 2013 13:18:15 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
 Subject: Re: [PATCH V2] xfstests shared/298: various fixes
@@ -27,11 +27,27 @@ Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 On 04/30/2013 11:46 AM, Eric Sandeen wrote:
 > fix shared/298:
 >
+> * don't include common/config, not needed and breaks
+>    stuff when $SCRATCH_DEV_POOL is defined:
+>      Error: $SCRATCH_DEV should be unset when $SCRATCH_DEV_POOL is set
+> * make sure xfs_io has fiemap, we'll need it
+> * add -F to the xfs_io invocation, again, for use on
+>    old xfsprogs on non-xfs filesystems
+> * ignore ENOSPC errors from "garbage" loop; the only goal
+>    is to fill it, ENOSPC doesn't matter.
+>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Looks good.
+This has been committed:
 
-Reviewed-by: Rich Johnston <rjohnston@sgi.com>
+commit ecd7386cc9ddb9c4661bae563dc9cbb5835a9e45
+Author: Eric Sandeen <sandeen@sandeen.net>
+Date:   Tue May 14 13:08:45 2013 -0500
 
+     xfstests shared/298: various fixes
+
+Thanks
+--Rich
 
 _______________________________________________
 xfs mailing list
