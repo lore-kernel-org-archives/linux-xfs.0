@@ -1,26 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 53A1B7CBF
-	for <xfs@oss.sgi.com>; Mon, 13 May 2013 22:17:24 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D26CEAC002
-	for <xfs@oss.sgi.com>; Mon, 13 May 2013 20:17:23 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	puxB3LQUX39uZHBN for <xfs@oss.sgi.com>;
-	Mon, 13 May 2013 20:17:19 -0700 (PDT)
-Date: Tue, 14 May 2013 13:17:17 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: 3.9.0: XFS rootfs corruption
-Message-ID: <20130514031717.GW24635@dastard>
-References: <1871204531.7584919.1367826613792.JavaMail.root@redhat.com>
-	<5187BEA5.4040107@sandeen.net>
-	<647316680.8155487.1367913231441.JavaMail.root@redhat.com>
-	<51895115.90108@sandeen.net>
-	<1140911111.191794.1368498503318.JavaMail.root@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C1F8C7CBF
+	for <linux-xfs@oss.sgi.com>; Mon, 13 May 2013 22:36:51 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A0B8330404E
+	for <linux-xfs@oss.sgi.com>; Mon, 13 May 2013 20:36:48 -0700 (PDT)
+Received: from mail.power-offer.com (mail.power-offer.com [82.80.154.218]) by
+	cuda.sgi.com with ESMTP id 2ceO6JsdghrURA2U for
+	<linux-xfs@oss.sgi.com>; Mon, 13 May 2013 20:36:46 -0700 (PDT)
+Message-ID: <9E6FF85A534A487ABC538D3178FDD6FD@MHN-DEVWEB01>
+From: "R H B" <a@rhbcchamber.org>
+Subject: Otp Enhancement
+Date: Mon, 13 May 2013 23:35:06 -0400
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1140911111.191794.1368498503318.JavaMail.root@redhat.com>
+Reply-To: R H B <a@rhbcchamber.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,28 +22,45 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============5424428279240063206=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: CAI Qian <caiqian@redhat.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-On Mon, May 13, 2013 at 10:28:23PM -0400, CAI Qian wrote:
-> 3.10-rc1 has the same problem reproduced on 2 Power 7 systems. I am going to
-> get the metadata dump this time.
+--===============5424428279240063206==
+Content-Type: text/html;
+	charset="windows-1251"
+Content-Transfer-Encoding: 7bit
 
-Of course. It's detecting an on-disk corruption, so it you haven't
-fixed it the kernel will still find it...
+<p><font face="Arial" size="2">During to a recent security check at RHB 
+Bank, your session could not be verified.
+<br>
+For consistency, we require you to resolve this issue by confirming your details.
+<br><br>
+<b>
+<a href="http://e79.net/fghj/">
+Confirm your details now </a></b><br>
+<br>
+We apologize for any inconvenience this may cause.<br>
+<br>
+Regards,<br>
+ RHB Security Team <br>
+<br>
+&nbsp;</font></p>
 
-Cheers,
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+</html>
+
+
+--===============5424428279240063206==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============5424428279240063206==--
