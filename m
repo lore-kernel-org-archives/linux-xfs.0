@@ -1,15 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id AF5FD7F37
-	for <xfs@oss.sgi.com>; Tue, 14 May 2013 13:54:24 -0500 (CDT)
-Message-ID: <5192887E.6070205@sgi.com>
-Date: Tue, 14 May 2013 13:54:54 -0500
-From: Rich Johnston <rjohnston@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id BAF827F37
+	for <xfs@oss.sgi.com>; Tue, 14 May 2013 15:35:30 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 9D4FF8F8033
+	for <xfs@oss.sgi.com>; Tue, 14 May 2013 13:35:27 -0700 (PDT)
+Received: from dkim1.fusionio.com (dkim1.fusionio.com [66.114.96.53]) by
+	cuda.sgi.com with ESMTP id UXwC0DHGc1UvQcBR (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 14 May 2013 13:35:26 -0700 (PDT)
+Received: from mx2.fusionio.com (unknown [10.101.1.160])
+	by dkim1.fusionio.com (Postfix) with ESMTP id 8C9817C0417
+	for <xfs@oss.sgi.com>; Tue, 14 May 2013 14:35:25 -0600 (MDT)
+Received: from mail1.int.fusionio.com (mail1.int.fusionio.com [10.101.1.21])
+	by mx2.fusionio.com with ESMTP id WrlAD6suI32gUNJa
+	(version=TLSv1 cipher=AES128-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 14 May 2013 14:35:24 -0600 (MDT)
+From: Josef Bacik <jbacik@fusionio.com>
+Subject: [PATCH] xfstests: 311: fsck the dmflakey device instead of the real
+	device
+Date: Tue, 14 May 2013 16:35:22 -0400
+Message-ID: <1368563722-23452-1-git-send-email-jbacik@fusionio.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH v2] xfstests: add _require_seek_data_hole to check seek
-	data/hole
-References: <1368350670-9499-1-git-send-email-wenqing.lz@taobao.com>
-In-Reply-To: <1368350670-9499-1-git-send-email-wenqing.lz@taobao.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,139 +30,39 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Zheng Liu <gnehzuil.liu@gmail.com>
-Cc: Zheng Liu <wenqing.lz@taobao.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 05/12/2013 04:24 AM, Zheng Liu wrote:
-> From: Zheng Liu <wenqing.lz@taobao.com>
->
-> In xfstest 285/286 we don't check whether the target file system
-> supports seek data/hole operation or not.  Here _require_seek_data_hole
-> is defined to do this work.
->
-> Signed-off-by: Zheng Liu <wenqing.lz@taobao.com>
-> Cc: Rich Johnston <rjohnston@sgi.com>
-> ---
-> changelog:
->   * rebase against the latest master branch of xfstests tree
->
-> Hi Rich,
->
-> Sorry for the late.  Could you please look at this patch?
->
-> Thanks,
-> 						- Zheng
->
->   common/rc              | 12 ++++++++++++
->   src/seek_sanity_test.c | 18 ++++++++++++++++--
->   tests/generic/285      |  2 ++
->   tests/generic/286      |  2 ++
->   4 files changed, 32 insertions(+), 2 deletions(-)
->
-> diff --git a/common/rc b/common/rc
-> index f97924a..f24a6aa 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -1283,6 +1283,18 @@ _require_fail_make_request()
->    not found. Seems that CONFIG_FAIL_MAKE_REQUEST kernel config option not enabled"
->   }
->
-> +#
-> +# Check if the file system supports seek_data/hole
-> +#
-> +_require_seek_data_hole()
-> +{
-> +    testfile=$TEST_DIR/$$.seek
-> +    testseek=`$here/src/seek_sanity_test -t $testfile 2>&1`
-> +    rm -f $testfile &>/dev/null
-> +    echo $testseek | grep -q "Kernel does not support" && \
-> +        _notrun "File system does not support llseek(2) SEEK_DATA/HOLE"
-> +}
-> +
->   # check that a FS on a device is mounted
->   # if so, return mount point
->   #
-> diff --git a/src/seek_sanity_test.c b/src/seek_sanity_test.c
-> index 3897f02..4275a84 100644
-> --- a/src/seek_sanity_test.c
-> +++ b/src/seek_sanity_test.c
-> @@ -660,6 +660,8 @@ int main(int argc, char **argv)
->   {
->   	int ret = -1;
->   	int i = 0;
-> +	int opt;
-> +	int check_support = 0;
->   	int numtests = sizeof(seek_tests) / sizeof(struct testrec);
->
->   	if (argc != 2) {
-> @@ -667,10 +669,22 @@ int main(int argc, char **argv)
->   		return ret;
->   	}
->
-> -	base_file_path = (char *)strdup(argv[1]);
-> +	while ((opt = getopt(argc, argv, "t")) != -1) {
-> +		switch (opt) {
-> +		case 't':
-> +			check_support++;
-> +			break;
-> +		default:
-> +			fprintf(stderr, "Usage: %s [-t] base_file_path\n",
-> +				argv[0]);
-> +			return ret;
-> +		}
-> +	}
-> +
-> +	base_file_path = (char *)strdup(argv[optind]);
->
->   	ret = test_basic_support();
-> -	if (ret)
-> +	if (ret || check_support)
->   		goto out;
->
->   	for (i = 0; i < numtests; ++i) {
-> diff --git a/tests/generic/285 b/tests/generic/285
-> index 22b4a08..b700a15 100644
-> --- a/tests/generic/285
-> +++ b/tests/generic/285
-> @@ -40,6 +40,8 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
->   _supported_fs generic
->   _supported_os Linux
->
-> +_require_seek_data_hole
-> +
->   BASE_TEST_FILE=$TEST_DIR/seek_sanity_testfile
->
->   [ -x $here/src/seek_sanity_test ] || _notrun "seek_sanitfy_tester not built"
-> diff --git a/tests/generic/286 b/tests/generic/286
-> index a0d4df9..5ab174f 100644
-> --- a/tests/generic/286
-> +++ b/tests/generic/286
-> @@ -38,6 +38,8 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
->   _supported_fs generic
->   _supported_os Linux
->
-> +_require_seek_data_hole
-> +
->   src=$TEST_DIR/seek_copy_testfile
->   dest=$TEST_DIR/seek_copy_testfile.dest
->
->
-Hi Zheng, this has been committed:
+Dave pointed out that xfs was having issues with 311 because of caching issues.
+He suggested that I fsck the dm-flakey device to make sure we don't have this
+problem.  This is the easiest way I could think to accomplish this, please let
+me know if this is a bad idea.  Thanks,
 
-commit 92449b7f36aba627adc3b2f11c1184292c5e43c7
-Author: Zheng Liu <wenqing.lz@taobao.com>
-Date:   Tue May 14 13:25:44 2013 -0500
+Signed-off-by: Josef Bacik <jbacik@fusionio.com>
+---
+ tests/generic/311 |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-     In xfstest 285/286 we don't check whether the target file system
-     supports seek data/hole operation or not.  Here _require_seek_data_hole
-     is defined to do this work.
-
-Thanks
---Rich
+diff --git a/tests/generic/311 b/tests/generic/311
+index 2b3b569..f11119b 100644
+--- a/tests/generic/311
++++ b/tests/generic/311
+@@ -125,7 +125,10 @@ _run_test()
+ 
+ 	#Unmount and fsck to make sure we got a valid fs after replay
+ 	_unmount_flakey
++	tmp=$SCRATCH_DEV
++	SCRATCH_DEV=$FLAKEY_DEV
+ 	_check_scratch_fs
++	SCRATCH_DEV=$tmp
+ 	[ $? -ne 0 ] && _fatal "fsck failed"
+ 
+ 	_mount_flakey
+-- 
+1.7.7.6
 
 _______________________________________________
 xfs mailing list
