@@ -1,22 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5005B7F37
-	for <xfs@oss.sgi.com>; Wed, 15 May 2013 08:16:28 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id DDD33AC008
-	for <xfs@oss.sgi.com>; Wed, 15 May 2013 06:16:27 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id Hyd5AP5DOxPL5YCU (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 15 May 2013 06:16:26 -0700 (PDT)
-Message-ID: <51938AA4.4090008@oracle.com>
-Date: Wed, 15 May 2013 21:16:20 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 4A1977F4E
+	for <xfs@oss.sgi.com>; Wed, 15 May 2013 08:22:23 -0500 (CDT)
+Message-ID: <51938C29.4010904@sgi.com>
+Date: Wed, 15 May 2013 08:22:49 -0500
+From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: Rambling noise #2: Learning to use the v8 pquota/uquota patchset
-References: <5191FB46.2080300@gmail.com> <519241A1.9050704@oracle.com>
-	<51933585.80400@gmail.com>
-In-Reply-To: <51933585.80400@gmail.com>
+Subject: Re: [PATCH] xfstests: change file mode
+References: <1368347826-32152-1-git-send-email-wenqing.lz@taobao.com>
+In-Reply-To: <1368347826-32152-1-git-send-email-wenqing.lz@taobao.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,63 +17,36 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Michael L. Semon" <mlsemon35@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Zheng Liu <gnehzuil.liu@gmail.com>
+Cc: Zheng Liu <wenqing.lz@taobao.com>, xfs@oss.sgi.com
 
-On 05/15/2013 03:13 PM, Michael L. Semon wrote:
-> On 05/14/2013 09:52 AM, Jeff Liu wrote:
->> Hi Michael,
->>
->> Have you tried this patch set with the v2 user space changes?
->>
->> Looks this is the latest update from Chandra that I can searched from
->> the mailing list:
->> http://oss.sgi.com/archives/xfs/2012-07/msg00293.html
->>
->> Thanks,
->> -Jeff
-> 
-> It looks like it's not patching very well in light of Dave's CRC 
-> userspace changes, and I botched the mkfs part of the merge.
-Yes, that is based on the older version of xfsprogs with out CRC changes
-applied.
+On 05/12/2013 03:37 AM, Zheng Liu wrote:
+> Now in tests/ there are some test cases whose mode is 0644.  But they
+> should be 0755.  So fix it.
+>
+> Signed-off-by: Zheng Liu <wenqing.lz@taobao.com>
+>
+This patch has been committed:
 
-So we have to wait until an updated version is delivered. :)
+commit fbf6e863ccb628ff5dd7407d58a065e5f264a7ab
+Author: Zheng Liu <wenqing.lz@taobao.com>
+Date:   Wed May 15 08:17:51 2013 -0500
 
-Thanks,
--Jeff
-> 
-> For xfsprogs include/xfs_sb.h, Patch #1 has this:
-> 
-> +#define XFS_SB_VERSION2_NO_OQUOTA      0x00000100      /* sep prj quota 
-> inode */
-> 
-> However, in the current xfsprogs include/xfs_sb.h, there is this line:
-> 
-> #define XFS_SB_VERSION2_CRCBIT		0x00000100	/* metadata CRCs */
-> 
-> This overloaded meaning of 0x00000100 did not seem right, so after my 
-> failure with the finished mkfs.xfs, it was time to go back to the 
-> current git xfsprogs.  I'm sure that the userspace will be reworked 
-> before the kernel code is final.  I'll show some patience, and Dave's 
-> upcoming CRC code activation will probably force me to back Chandra's 
-> patchset out anyway.
-> 
-> Despite my bumbling through it all, the kernel gquota/pquota patchset 
-> shows promise.
-> 
-> Thanks!
-> 
-> Michael
-> 
-> P.S. - I applied your xfs_growfs_data_private patch, and all seems well 
-> so far.  In particular, there was no change in the test results from 
-> `./check -xfs -g growfs`.
-> 
+     xfstests: change test case file mode to 0755
+
+     Now in tests/ there are some test cases whose mode is 0644.  But they
+     should be 0755.  So fix it.
+
+     Signed-off-by: Zheng Liu <wenqing.lz@taobao.com>
+     Reviewed-by: Dave Chinner <david@redhat.com>
+     Signed-off-by: Rich Johnston <rjohnston@sgi.com>
+
+Thanks
+--Rich
 
 _______________________________________________
 xfs mailing list
