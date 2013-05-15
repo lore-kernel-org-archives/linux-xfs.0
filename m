@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 66DF67F37
-	for <xfs@oss.sgi.com>; Wed, 15 May 2013 02:13:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 01AD2AC002
-	for <xfs@oss.sgi.com>; Wed, 15 May 2013 00:13:39 -0700 (PDT)
-Received: from mail-ie0-f179.google.com (mail-ie0-f179.google.com
-	[209.85.223.179]) by cuda.sgi.com with ESMTP id
-	RWm53vS7pgP9vHRn (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 15 May 2013 00:13:39 -0700 (PDT)
-Received: by mail-ie0-f179.google.com with SMTP id c13so2884728ieb.24
-	for <xfs@oss.sgi.com>; Wed, 15 May 2013 00:13:38 -0700 (PDT)
-Message-ID: <51933585.80400@gmail.com>
-Date: Wed, 15 May 2013 03:13:09 -0400
-From: "Michael L. Semon" <mlsemon35@gmail.com>
+	by oss.sgi.com (Postfix) with ESMTP id B2FBA7F37
+	for <xfs@oss.sgi.com>; Wed, 15 May 2013 02:30:08 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 37505AC009
+	for <xfs@oss.sgi.com>; Wed, 15 May 2013 00:30:08 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	vzeXPhJRvwWqwwqa for <xfs@oss.sgi.com>;
+	Wed, 15 May 2013 00:30:06 -0700 (PDT)
+Date: Wed, 15 May 2013 17:30:04 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v4 05/20] xfs: use ->invalidatepage() length argument
+Message-ID: <20130515073004.GQ29466@dastard>
+References: <1368549454-8930-1-git-send-email-lczerner@redhat.com>
+	<1368549454-8930-6-git-send-email-lczerner@redhat.com>
 MIME-Version: 1.0
-Subject: Re: Rambling noise #2: Learning to use the v8 pquota/uquota patchset
-References: <5191FB46.2080300@gmail.com> <519241A1.9050704@oracle.com>
-In-Reply-To: <519241A1.9050704@oracle.com>
+Content-Disposition: inline
+In-Reply-To: <1368549454-8930-6-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,54 +26,26 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
-Cc: xfs@oss.sgi.com
+To: Lukas Czerner <lczerner@redhat.com>
+Cc: hughd@google.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, akpm@linux-foundation.org, linux-ext4@vger.kernel.org
 
-On 05/14/2013 09:52 AM, Jeff Liu wrote:
-> Hi Michael,
->
-> Have you tried this patch set with the v2 user space changes?
->
-> Looks this is the latest update from Chandra that I can searched from
-> the mailing list:
-> http://oss.sgi.com/archives/xfs/2012-07/msg00293.html
->
-> Thanks,
-> -Jeff
+On Tue, May 14, 2013 at 06:37:19PM +0200, Lukas Czerner wrote:
+> ->invalidatepage() aop now accepts range to invalidate so we can make
+> use of it in xfs_vm_invalidatepage()
+> 
+> Signed-off-by: Lukas Czerner <lczerner@redhat.com>
+> Reviewed-by: Ben Myers <bpm@sgi.com>
+> Cc: xfs@oss.sgi.com
 
-It looks like it's not patching very well in light of Dave's CRC 
-userspace changes, and I botched the mkfs part of the merge.
+Acked-by: Dave Chinner <dchinner@redhat.com>
 
-For xfsprogs include/xfs_sb.h, Patch #1 has this:
-
-+#define XFS_SB_VERSION2_NO_OQUOTA      0x00000100      /* sep prj quota 
-inode */
-
-However, in the current xfsprogs include/xfs_sb.h, there is this line:
-
-#define XFS_SB_VERSION2_CRCBIT		0x00000100	/* metadata CRCs */
-
-This overloaded meaning of 0x00000100 did not seem right, so after my 
-failure with the finished mkfs.xfs, it was time to go back to the 
-current git xfsprogs.  I'm sure that the userspace will be reworked 
-before the kernel code is final.  I'll show some patience, and Dave's 
-upcoming CRC code activation will probably force me to back Chandra's 
-patchset out anyway.
-
-Despite my bumbling through it all, the kernel gquota/pquota patchset 
-shows promise.
-
-Thanks!
-
-Michael
-
-P.S. - I applied your xfs_growfs_data_private patch, and all seems well 
-so far.  In particular, there was no change in the test results from 
-`./check -xfs -g growfs`.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
