@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 64BD67F37
-	for <xfs@oss.sgi.com>; Wed, 15 May 2013 02:09:02 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 41F6F304066
-	for <xfs@oss.sgi.com>; Wed, 15 May 2013 00:09:02 -0700 (PDT)
-Received: from mail-la0-f44.google.com (mail-la0-f44.google.com
-	[209.85.215.44]) by cuda.sgi.com with ESMTP id nz0BpAXgSFgZFkEb
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 15 May 2013 00:08:58 -0700 (PDT)
-Received: by mail-la0-f44.google.com with SMTP id fr10so1431129lab.3
-	for <xfs@oss.sgi.com>; Wed, 15 May 2013 00:08:56 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 66DF67F37
+	for <xfs@oss.sgi.com>; Wed, 15 May 2013 02:13:43 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 01AD2AC002
+	for <xfs@oss.sgi.com>; Wed, 15 May 2013 00:13:39 -0700 (PDT)
+Received: from mail-ie0-f179.google.com (mail-ie0-f179.google.com
+	[209.85.223.179]) by cuda.sgi.com with ESMTP id
+	RWm53vS7pgP9vHRn (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 15 May 2013 00:13:39 -0700 (PDT)
+Received: by mail-ie0-f179.google.com with SMTP id c13so2884728ieb.24
+	for <xfs@oss.sgi.com>; Wed, 15 May 2013 00:13:38 -0700 (PDT)
+Message-ID: <51933585.80400@gmail.com>
+Date: Wed, 15 May 2013 03:13:09 -0400
+From: "Michael L. Semon" <mlsemon35@gmail.com>
 MIME-Version: 1.0
-Date: Wed, 15 May 2013 15:08:56 +0800
-Message-ID: <CACeqxwRdq-wuz9xpa9p=kQvYgjJQYRMP2JLsyv7SChqx8b-ujw@mail.gmail.com>
-Subject: Why xfs can not mount use barrier option?
-From: ch huang <justlooks@gmail.com>
+Subject: Re: Rambling noise #2: Learning to use the v8 pquota/uquota patchset
+References: <5191FB46.2080300@gmail.com> <519241A1.9050704@oracle.com>
+In-Reply-To: <519241A1.9050704@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,48 +27,56 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============2850201990080185922=="
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: xfs@oss.sgi.com
 
---===============2850201990080185922==
-Content-Type: multipart/alternative; boundary=047d7b342f385b6dd404dcbc6cbc
+On 05/14/2013 09:52 AM, Jeff Liu wrote:
+> Hi Michael,
+>
+> Have you tried this patch set with the v2 user space changes?
+>
+> Looks this is the latest update from Chandra that I can searched from
+> the mailing list:
+> http://oss.sgi.com/archives/xfs/2012-07/msg00293.html
+>
+> Thanks,
+> -Jeff
 
---047d7b342f385b6dd404dcbc6cbc
-Content-Type: text/plain; charset=ISO-8859-1
+It looks like it's not patching very well in light of Dave's CRC 
+userspace changes, and I botched the mkfs part of the merge.
 
-i use lvm on raid 1,/dev/CHVG01/conxfs is a logical volume,if i  mount with
-barrier,the /proc/mounts still show nobarrier option ,why?
+For xfsprogs include/xfs_sb.h, Patch #1 has this:
 
-#  mount -t xfs -o barrier,attr2,noikeep,inode64 /dev/CHVG01/conxfs
- /opt/contest/
-# cat /proc/mounts
-/dev/CHVG01/conxfs /opt/contest xfs rw,attr2,nobarrier,inode64,noquota 0 0
++#define XFS_SB_VERSION2_NO_OQUOTA      0x00000100      /* sep prj quota 
+inode */
 
---047d7b342f385b6dd404dcbc6cbc
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+However, in the current xfsprogs include/xfs_sb.h, there is this line:
 
-<div dir=3D"ltr">i use lvm on raid 1,/dev/CHVG01/conxfs is a logical volume=
-,if i =A0mount with barrier,the /proc/mounts still show nobarrier option ,w=
-hy?=A0<div><br></div><div># =A0mount -t xfs -o barrier,attr2,noikeep,inode6=
-4 /dev/CHVG01/conxfs =A0/opt/contest/<br>
-</div><div><div># cat /proc/mounts</div></div><div>/dev/CHVG01/conxfs /opt/=
-contest xfs rw,attr2,nobarrier,inode64,noquota 0 0<br></div></div>
+#define XFS_SB_VERSION2_CRCBIT		0x00000100	/* metadata CRCs */
 
---047d7b342f385b6dd404dcbc6cbc--
+This overloaded meaning of 0x00000100 did not seem right, so after my 
+failure with the finished mkfs.xfs, it was time to go back to the 
+current git xfsprogs.  I'm sure that the userspace will be reworked 
+before the kernel code is final.  I'll show some patience, and Dave's 
+upcoming CRC code activation will probably force me to back Chandra's 
+patchset out anyway.
 
+Despite my bumbling through it all, the kernel gquota/pquota patchset 
+shows promise.
 
---===============2850201990080185922==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Thanks!
+
+Michael
+
+P.S. - I applied your xfs_growfs_data_private patch, and all seems well 
+so far.  In particular, there was no change in the test results from 
+`./check -xfs -g growfs`.
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============2850201990080185922==--
