@@ -1,14 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2DE0D7F37
-	for <xfs@oss.sgi.com>; Wed, 15 May 2013 07:29:53 -0500 (CDT)
-Message-ID: <51937FDB.2090906@sgi.com>
-Date: Wed, 15 May 2013 07:30:19 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 9ED057F37
+	for <xfs@oss.sgi.com>; Wed, 15 May 2013 08:13:59 -0500 (CDT)
+Message-ID: <51938A33.50202@sgi.com>
+Date: Wed, 15 May 2013 08:14:27 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests btrfs/284: shorten duration, fix output
-References: <517ACB41.2030002@redhat.com>
-In-Reply-To: <517ACB41.2030002@redhat.com>
+Subject: Re: [PATCH v3] xfstests generic 312: test fallocate(2) ENOSPC when
+	file size is greater than 4G
+References: <1367833355-14473-1-git-send-email-eguan@redhat.com>
+In-Reply-To: <1367833355-14473-1-git-send-email-eguan@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,35 +22,20 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: Liu Bo <liubo2009@cn.fujitsu.com>, linux-btrfs <linux-btrfs@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+To: Eryu Guan <eguan@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On 04/26/2013 01:45 PM, Eric Sandeen wrote:
-> test 284 had... some issues.
+On 05/06/2013 04:42 AM, Eryu Guan wrote:
+> ENOSPC in fallocate(2) could corrupt ext4 when file size > 4G
 >
-
-> diff --git a/tests/btrfs/284 b/tests/btrfs/284
-> old mode 100644
-> new mode 100755
-> index d952977..67161a3
-> --- a/tests/btrfs/284
-> +++ b/tests/btrfs/284
-
+> Regression test for commit
+> 29ae07b ext4: Fix overflow caused by missing cast in ext4_fallocate()
 >
-This patch has been committed:
+> Signed-off-by: Eryu Guan <eguan@redhat.com>
 
-commit 91f87e3b89c0f7350a56d397ba7255d0e3d6b486
-Author: Eric Sandeen <sandeen@redhat.com>
-Date:   Wed May 15 07:18:07 2013 -0500
+Tested fine for xfs and ext4, Looks good.
 
-     xfstests btrfs/284: shorten duration, fix output
-
-     Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-     Reviewed-by: Josef Bacik <jbacik@fusionio.com>
-     Reviewed-by: Liu Bo <bo.li.liu@oracle.com>
-
-Thanks
---Rich
+Reviewed-by: Rich Johnston <rjohnston@sgi.com>
 
 _______________________________________________
 xfs mailing list
