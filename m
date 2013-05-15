@@ -1,15 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 84C3F7F37
-	for <xfs@oss.sgi.com>; Wed, 15 May 2013 08:15:45 -0500 (CDT)
-Message-ID: <51938A9F.9050206@sgi.com>
-Date: Wed, 15 May 2013 08:16:15 -0500
-From: Rich Johnston <rjohnston@sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 5005B7F37
+	for <xfs@oss.sgi.com>; Wed, 15 May 2013 08:16:28 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id DDD33AC008
+	for <xfs@oss.sgi.com>; Wed, 15 May 2013 06:16:27 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id Hyd5AP5DOxPL5YCU (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 15 May 2013 06:16:26 -0700 (PDT)
+Message-ID: <51938AA4.4090008@oracle.com>
+Date: Wed, 15 May 2013 21:16:20 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH v3] xfstests generic 312: test fallocate(2) ENOSPC when
-	file size is greater than 4G
-References: <1367833355-14473-1-git-send-email-eguan@redhat.com>
-In-Reply-To: <1367833355-14473-1-git-send-email-eguan@redhat.com>
+Subject: Re: Rambling noise #2: Learning to use the v8 pquota/uquota patchset
+References: <5191FB46.2080300@gmail.com> <519241A1.9050704@oracle.com>
+	<51933585.80400@gmail.com>
+In-Reply-To: <51933585.80400@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,40 +25,63 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eryu Guan <eguan@redhat.com>
+To: "Michael L. Semon" <mlsemon35@gmail.com>
 Cc: xfs@oss.sgi.com
 
-On 05/06/2013 04:42 AM, Eryu Guan wrote:
-> ENOSPC in fallocate(2) could corrupt ext4 when file size > 4G
->
-> Regression test for commit
-> 29ae07b ext4: Fix overflow caused by missing cast in ext4_fallocate()
->
-> Signed-off-by: Eryu Guan <eguan@redhat.com>
-> ---
->
+On 05/15/2013 03:13 PM, Michael L. Semon wrote:
+> On 05/14/2013 09:52 AM, Jeff Liu wrote:
+>> Hi Michael,
+>>
+>> Have you tried this patch set with the v2 user space changes?
+>>
+>> Looks this is the latest update from Chandra that I can searched from
+>> the mailing list:
+>> http://oss.sgi.com/archives/xfs/2012-07/msg00293.html
+>>
+>> Thanks,
+>> -Jeff
+> 
+> It looks like it's not patching very well in light of Dave's CRC 
+> userspace changes, and I botched the mkfs part of the merge.
+Yes, that is based on the older version of xfsprogs with out CRC changes
+applied.
 
-This patch has been committed:
+So we have to wait until an updated version is delivered. :)
 
-commit 355beacfaf705294b119a3da372512589ff893e9
-Author: Eryu Guan <eguan@redhat.com>
-Date:   Wed May 15 07:48:41 2013 -0500
-
-     ENOSPC in fallocate(2) could corrupt ext4 when file size > 4G
-
-     Regression test for commit
-     29ae07b ext4: Fix overflow caused by missing cast in ext4_fallocate()
-
-     Signed-off-by: Eryu Guan <eguan@redhat.com>
-     Reviewed-by: Rich Johnston <rjohnston@sgi.com>
-     Signed-off-by: Rich Johnston <rjohnston@sgi.com>
-
-Thanks
---Rich
+Thanks,
+-Jeff
+> 
+> For xfsprogs include/xfs_sb.h, Patch #1 has this:
+> 
+> +#define XFS_SB_VERSION2_NO_OQUOTA      0x00000100      /* sep prj quota 
+> inode */
+> 
+> However, in the current xfsprogs include/xfs_sb.h, there is this line:
+> 
+> #define XFS_SB_VERSION2_CRCBIT		0x00000100	/* metadata CRCs */
+> 
+> This overloaded meaning of 0x00000100 did not seem right, so after my 
+> failure with the finished mkfs.xfs, it was time to go back to the 
+> current git xfsprogs.  I'm sure that the userspace will be reworked 
+> before the kernel code is final.  I'll show some patience, and Dave's 
+> upcoming CRC code activation will probably force me to back Chandra's 
+> patchset out anyway.
+> 
+> Despite my bumbling through it all, the kernel gquota/pquota patchset 
+> shows promise.
+> 
+> Thanks!
+> 
+> Michael
+> 
+> P.S. - I applied your xfs_growfs_data_private patch, and all seems well 
+> so far.  In particular, there was no change in the test results from 
+> `./check -xfs -g growfs`.
+> 
 
 _______________________________________________
 xfs mailing list
