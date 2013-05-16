@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 784397F4E
-	for <xfs@oss.sgi.com>; Thu, 16 May 2013 07:32:30 -0500 (CDT)
-Message-ID: <5194D1FB.90004@sgi.com>
-Date: Thu, 16 May 2013 07:32:59 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B93E67F53
+	for <xfs@oss.sgi.com>; Thu, 16 May 2013 07:34:27 -0500 (CDT)
+Message-ID: <5194D273.80202@sgi.com>
+Date: Thu, 16 May 2013 07:34:59 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
 Subject: Re: [PATCH 2/3] xfstests: quota not supported on realtime filesystems
@@ -37,53 +37,17 @@ On 05/08/2013 08:21 PM, Dave Chinner wrote:
 >
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->   common/quota |   15 +++++++++++++++
->   1 file changed, 15 insertions(+)
->
-> diff --git a/common/quota b/common/quota
-> index fd5374f..b320cf2 100644
-> --- a/common/quota
-> +++ b/common/quota
-> @@ -40,6 +40,12 @@ _require_quota()
->   	if [ ! -f /proc/fs/xfs/xqmstat ]; then
->   	    _notrun "Installed kernel does not support XFS quotas"
->           fi
-> +	if [ "$USE_EXTERNAL" = yes -a ! -z "$TEST_RTDEV" ]; then
-> +	    _notrun "Quotas not supported on realtime test device"
-> +	fi
-> +	if [ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_RTDEV" ]; then
-> +	    _notrun "Quotas not supported on realtime scratch device"
-> +	fi
->   	;;
->       *)
->   	_notrun "disk quotas not supported by this filesystem type: $FSTYP"
-> @@ -62,6 +68,12 @@ _require_xfs_quota()
->   {
->       src/feature -q $TEST_DEV
->       [ $? -ne 0 ] && _notrun "Installed kernel does not support XFS quota"
-> +    if [ "$USE_EXTERNAL" = yes -a ! -z "$TEST_RTDEV" ]; then
-> +	_notrun "Quotas not supported on realtime test device"
-> +    fi
-> +    if [ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_RTDEV" ]; then
-> +	_notrun "Quotas not supported on realtime scratch device"
-> +    fi
->       [ -n $XFS_QUOTA_PROG ] || _notrun "XFS quota user tools not installed"
->   }
->
-> @@ -73,6 +85,9 @@ _require_prjquota()
->       [ -n "$1" ] && _dev="$1" || _dev="$TEST_DEV"
->       src/feature -p $_dev
->       [ $? -ne 0 ] && _notrun "Installed kernel does not support project quotas"
-> +    if [ "$USE_EXTERNAL" = yes -a ! -z "$_dev" ]; then
-> +	_notrun "Project quotas not supported on realtime filesystem"
-> +    fi
->   }
->
->   #
->
-Another nice cleanup patch, looks good.
 
-Reviewed-by: Rich Johnston <rjohnston@sgi.com>
+This patch has been committed:
+
+commit 4e787f8fd42fdfdc6e988a8667119a21ab3b194e
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Thu May 16 06:52:05 2013 -0500
+
+     xfstests: quota not supported on realtime filesystems
+
+Thanks
+--Rich
 
 _______________________________________________
 xfs mailing list
