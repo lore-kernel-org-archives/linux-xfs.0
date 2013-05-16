@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8B60F7F3F
-	for <xfs@oss.sgi.com>; Wed, 15 May 2013 19:59:24 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7AE0A30404E
-	for <xfs@oss.sgi.com>; Wed, 15 May 2013 17:59:21 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	qzk1GUaVpaKH9Usj for <xfs@oss.sgi.com>;
-	Wed, 15 May 2013 17:59:19 -0700 (PDT)
-Date: Thu, 16 May 2013 10:59:13 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: high-speed disk I/O is CPU-bound?
-Message-ID: <20130516005913.GE24635@dastard>
-References: <518CFE7C.9080708@ll.mit.edu>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <518CFE7C.9080708@ll.mit.edu>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 40EF37F37
+	for <xfs@oss.sgi.com>; Wed, 15 May 2013 22:35:01 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2945F8F8054
+	for <xfs@oss.sgi.com>; Wed, 15 May 2013 20:34:58 -0700 (PDT)
+Received: from mail-pd0-f170.google.com (mail-pd0-f170.google.com
+	[209.85.192.170]) by cuda.sgi.com with ESMTP id
+	ue3uOfT6aoR0gArG (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 15 May 2013 20:34:56 -0700 (PDT)
+Received: by mail-pd0-f170.google.com with SMTP id r10so59141pdi.29
+	for <xfs@oss.sgi.com>; Wed, 15 May 2013 20:34:55 -0700 (PDT)
+From: Zheng Liu <gnehzuil.liu@gmail.com>
+Subject: [PATCH v6] xfstests: add a new test case for ext4 indirect-based file
+Date: Thu, 16 May 2013 11:52:39 +0800
+Message-Id: <1368676359-2404-1-git-send-email-wenqing.lz@taobao.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,91 +24,532 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: David Oostdyk <daveo@ll.mit.edu>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Rich Johnston <rjohnston@sgi.com>, Eric Sandeen <sandeen@sandeen.net>, Zheng Liu <wenqing.lz@taobao.com>
 
-[cc xfs list, seeing as that's where all the people who use XFS in
-these sorts of configurations hang out. ]
+From: Zheng Liu <wenqing.lz@taobao.com>
 
-On Fri, May 10, 2013 at 10:04:44AM -0400, David Oostdyk wrote:
-> Hello,
-> 
-> I have a few relatively high-end systems with hardware RAIDs which
-> are being used for recording systems, and I'm trying to get a better
-> understanding of contiguous write performance.
-> 
-> The hardware that I've tested with includes two high-end Intel
-> E5-2600 and E5-4600 (~3GHz) series systems, as well as a slightly
-> older Xeon 5600 system.  The JBODs include a 45x3.5" JBOD, a 28x3.5"
-> JBOD (with either 7200RPM or 10kRPM SAS drives), and a 24x2.5" JBOD
-> with 10kRPM drives.  I've tried LSI controllers (9285-8e, 9266-8i,
-> as well as the integrated Intel LSI controllers) as well as Adaptec
-> Series 7 RAID controllers (72405 and 71685).
-> 
-> Normally I'll setup the RAIDs as RAID60 and format them as XFS, but
-> the exact RAID level, filesystem type, and even RAID hardware don't
-> seem to matter very much from my observations (but I'm willing to
-> try any suggestions).
+After applied this commit (864688d3), xfstests #255 will not test a
+file system that cannot support fallocate(2), such as a indirect-based
+file in ext4.  So we need to add a new generic test case to test it.
 
-Document them. There's many ways to screw them up and get bad
-performance.
+The difference between #255 and this test case is only to use pwrite to
+allocate blocks.  Other filesystems should survive in this test case.
+In the mean time, a new argument '-u' is added into _test_generic_punch
+not to run unwritten tests.
 
-> As a basic benchmark, I have an application
-> that simply writes the same buffer (say, 128MB) to disk repeatedly.
-> Alternatively you could use the "dd" utility.  (For these
-> benchmarks, I set /proc/sys/vm/dirty_bytes to 512M or lower, since
-> these systems have a lot of RAM.)
-> 
-> The basic observations are:
-> 
-> 1.  "single-threaded" writes, either a file on the mounted
-> filesystem or with a "dd" to the raw RAID device, seem to be limited
-> to 1200-1400MB/sec.  These numbers vary slightly based on whether
-> TurboBoost is affecting the writing process or not.  "top" will show
-> this process running at 100% CPU.
+Meanwhile this commit fixes a minor problem in #255 that testfile should
+use $seq.$$ as testfile.
 
-Expected. You are using buffered IO. Write speed is limited by the
-rate at which your user process can memcpy data into the page cache.
+Signed-off-by: Zheng Liu <wenqing.lz@taobao.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>
+Cc: Dave Chinner <david@fromorbit.com>
+Cc: Rich Johnston <rjohnston@sgi.com>
+---
+changelog:
+ * rebase against the latest master of xfstests tree (Based-on Eric's patch).
 
-> 2.  With two benchmarks running on the same device, I see aggregate
-> write speeds of up to ~2.4GB/sec, which is closer to what I'd expect
-> the drives of being able to deliver.  This can either be with two
-> applications writing to separate files on the same mounted file
-> system, or two separate "dd" applications writing to distinct
-> locations on the raw device.  (Increasing the number of writers
-> beyond two does not seem to increase aggregate performance; "top"
-> will show both processes running at perhaps 80% CPU).
+ common/punch          | 164 ++++++++++++++++++++++++++-----------------------
+ tests/generic/255     |   2 +-
+ tests/generic/314     |  67 ++++++++++++++++++++
+ tests/generic/314.out | 165 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/group   |   1 +
+ 5 files changed, 323 insertions(+), 76 deletions(-)
+ create mode 100755 tests/generic/314
+ create mode 100644 tests/generic/314.out
 
-Still using buffered IO, which means you are typically limited by
-the rate at which the flusher thread can do writeback.
-
-> 3.  I haven't been able to find any tricks (lio_listio, multiple
-> threads writing to distinct file offsets, etc) that seem to deliver
-> higher write speeds when writing to a single file.  (This might be
-> xfs-specific, though)
-
-How about using direct IO? Single threaded direct IO will beslower
-than buffered IO, but throughput should scale linearly with the
-number of threads if the IO size is large enough (e.g. 32MB).
-
-> 4.  Cheap tricks like making a software RAID0 of two hardware RAID
-> devices does not deliver any improved performance for
-> single-threaded writes.  (Have not thoroughly tested this
-> configuration fully with multiple writers, though.)
-
-Of course not - you are CPU bound and nothing you do to the storage
-will change that.
-
-Cheers,
-
-Dave.
+diff --git a/common/punch b/common/punch
+index d8f73d0..7b3c009 100644
+--- a/common/punch
++++ b/common/punch
+@@ -285,19 +285,25 @@ die_now()
+ # Use the -d flag to not sync the file between tests.
+ # This will test the handling of delayed extents
+ #
++# Use the -u flag to not run unwritten tests.
++# This will eliminate some unnecessary information.
++#
+ _test_generic_punch()
+ {
+ 
+ 	remove_testfile=1
+ 	sync_cmd="-c fsync"
++	unwritten_tests=1
+ 	OPTIND=1
+-	while getopts 'dk' OPTION
++	while getopts 'dku' OPTION
+ 	do
+ 		case $OPTION in
+ 		k)	remove_testfile=
+ 		;;
+ 		d)	sync_cmd=
+ 		;;
++		u)	unwritten_tests=
++		;;
+ 		?)	echo Invalid flag
+ 		exit 1
+ 		;;
+@@ -333,16 +339,18 @@ _test_generic_punch()
+ 	[ $? -ne 0 ] && die_now
+ 	_md5_checksum $testfile
+ 
+-	echo "	3. into unwritten space"
+-	if [ "$remove_testfile" ]; then
+-		rm -f $testfile
++	if [ "$unwritten_tests" ]; then
++		echo "	3. into unwritten space"
++		if [ "$remove_testfile" ]; then
++			rm -f $testfile
++		fi
++		$XFS_IO_PROG -f -c "truncate 20k" \
++			-c "$alloc_cmd 0 20k" \
++			-c "$zero_cmd 4k 8k" \
++			-c "$map_cmd -v" $testfile | $filter_cmd
++		[ $? -ne 0 ] && die_now
++		_md5_checksum $testfile
+ 	fi
+-	$XFS_IO_PROG -f -c "truncate 20k" \
+-		-c "$alloc_cmd 0 20k" \
+-		-c "$zero_cmd 4k 8k" \
+-		-c "$map_cmd -v" $testfile | $filter_cmd
+-	[ $? -ne 0 ] && die_now
+-	_md5_checksum $testfile
+ 
+ 	echo "	4. hole -> data"
+ 	if [ "$remove_testfile" ]; then
+@@ -355,16 +363,18 @@ _test_generic_punch()
+ 	[ $? -ne 0 ] && die_now
+ 	_md5_checksum $testfile
+ 
+-	echo "	5. hole -> unwritten"
+-	if [ "$remove_testfile" ]; then
+-		rm -f $testfile
++	if [ "$unwritten_tests" ]; then
++		echo "	5. hole -> unwritten"
++		if [ "$remove_testfile" ]; then
++			rm -f $testfile
++		fi
++		$XFS_IO_PROG -f -c "truncate 20k" \
++			-c "$alloc_cmd 8k 8k" \
++			-c "$zero_cmd 4k 8k" \
++			-c "$map_cmd -v" $testfile | $filter_cmd
++		[ $? -ne 0 ] && die_now
++		_md5_checksum $testfile
+ 	fi
+-	$XFS_IO_PROG -f -c "truncate 20k" \
+-		-c "$alloc_cmd 8k 8k" \
+-		-c "$zero_cmd 4k 8k" \
+-		-c "$map_cmd -v" $testfile | $filter_cmd
+-	[ $? -ne 0 ] && die_now
+-	_md5_checksum $testfile
+ 
+ 	echo "	6. data -> hole"
+ 	if [ "$remove_testfile" ]; then
+@@ -377,40 +387,42 @@ _test_generic_punch()
+ 	[ $? -ne 0 ] && die_now
+ 	_md5_checksum $testfile
+ 
+-	echo "	7. data -> unwritten"
+-	if [ "$remove_testfile" ]; then
+-		rm -f $testfile
+-	fi
+-	$XFS_IO_PROG -f -c "truncate 20k" \
+-		-c "pwrite 0 8k" $sync_cmd \
+-		-c "$alloc_cmd 8k 8k" \
+-		-c "$zero_cmd 4k 8k" \
+-		-c "$map_cmd -v" $testfile | $filter_cmd
+-	[ $? -ne 0 ] && die_now
+-	_md5_checksum $testfile
+-
+-	echo "	8. unwritten -> hole"
+-	if [ "$remove_testfile" ]; then
+-		rm -f $testfile
+-	fi
+-	$XFS_IO_PROG -f -c "truncate 20k" \
+-		-c "$alloc_cmd 0 8k" \
+-		-c "$zero_cmd 4k 8k" \
+-		-c "$map_cmd -v" $testfile | $filter_cmd
+-	[ $? -ne 0 ] && die_now
+-	_md5_checksum $testfile
+-
+-	echo "	9. unwritten -> data"
+-	if [ "$remove_testfile" ]; then
+-		rm -f $testfile
++	if [ "$unwritten_tests" ]; then
++		echo "	7. data -> unwritten"
++		if [ "$remove_testfile" ]; then
++			rm -f $testfile
++		fi
++		$XFS_IO_PROG -f -c "truncate 20k" \
++			-c "pwrite 0 8k" $sync_cmd \
++			-c "$alloc_cmd 8k 8k" \
++			-c "$zero_cmd 4k 8k" \
++			-c "$map_cmd -v" $testfile | $filter_cmd
++		[ $? -ne 0 ] && die_now
++		_md5_checksum $testfile
++
++		echo "	8. unwritten -> hole"
++		if [ "$remove_testfile" ]; then
++			rm -f $testfile
++		fi
++		$XFS_IO_PROG -f -c "truncate 20k" \
++			-c "$alloc_cmd 0 8k" \
++			-c "$zero_cmd 4k 8k" \
++			-c "$map_cmd -v" $testfile | $filter_cmd
++		[ $? -ne 0 ] && die_now
++		_md5_checksum $testfile
++
++		echo "	9. unwritten -> data"
++		if [ "$remove_testfile" ]; then
++			rm -f $testfile
++		fi
++		$XFS_IO_PROG -f -c "truncate 20k" \
++			-c "$alloc_cmd 0 8k" \
++			-c "pwrite 8k 8k" $sync_cmd \
++			-c "$zero_cmd 4k 8k" \
++			-c "$map_cmd -v" $testfile | $filter_cmd
++		[ $? -ne 0 ] && die_now
++		_md5_checksum $testfile
+ 	fi
+-	$XFS_IO_PROG -f -c "truncate 20k" \
+-		-c "$alloc_cmd 0 8k" \
+-		-c "pwrite 8k 8k" $sync_cmd \
+-		-c "$zero_cmd 4k 8k" \
+-		-c "$map_cmd -v" $testfile | $filter_cmd
+-	[ $? -ne 0 ] && die_now
+-	_md5_checksum $testfile
+ 
+ 	echo "	10. hole -> data -> hole"
+ 	if [ "$remove_testfile" ]; then
+@@ -437,30 +449,32 @@ _test_generic_punch()
+ 	[ $? -ne 0 ] && die_now
+ 	_md5_checksum $testfile
+ 
+-	echo "	12. unwritten -> data -> unwritten"
+-	if [ "$remove_testfile" ]; then
+-		rm -f $testfile
+-	fi
+-	$XFS_IO_PROG -f -c "truncate 20k" \
+-		-c "$alloc_cmd 0 20k" \
+-		-c "pwrite 8k 4k" $sync_cmd \
+-		-c "$zero_cmd 4k 12k" \
+-		-c "$map_cmd -v" $testfile | $filter_cmd
+-	[ $? -ne 0 ] && die_now
+-	_md5_checksum $testfile
+-
+-	echo "	13. data -> unwritten -> data"
+-	if [ "$remove_testfile" ]; then
+-		rm -f $testfile
++	if [ "$unwritten_tests" ]; then
++		echo "	12. unwritten -> data -> unwritten"
++		if [ "$remove_testfile" ]; then
++			rm -f $testfile
++		fi
++		$XFS_IO_PROG -f -c "truncate 20k" \
++			-c "$alloc_cmd 0 20k" \
++			-c "pwrite 8k 4k" $sync_cmd \
++			-c "$zero_cmd 4k 12k" \
++			-c "$map_cmd -v" $testfile | $filter_cmd
++		[ $? -ne 0 ] && die_now
++		_md5_checksum $testfile
++
++		echo "	13. data -> unwritten -> data"
++		if [ "$remove_testfile" ]; then
++			rm -f $testfile
++		fi
++		$XFS_IO_PROG -f -c "truncate 20k" \
++			-c "$alloc_cmd 0 20k" \
++			-c "pwrite 0k 8k" $sync_cmd \
++			-c "pwrite 12k 8k" -c "fsync" \
++			-c "$zero_cmd 4k 12k" \
++			-c "$map_cmd -v" $testfile | $filter_cmd
++		[ $? -ne 0 ] && die_now
++		_md5_checksum $testfile
+ 	fi
+-	$XFS_IO_PROG -f -c "truncate 20k" \
+-		-c "$alloc_cmd 0 20k" \
+-		-c "pwrite 0k 8k" $sync_cmd \
+-		-c "pwrite 12k 8k" -c "fsync" \
+-		-c "$zero_cmd 4k 12k" \
+-		-c "$map_cmd -v" $testfile | $filter_cmd
+-	[ $? -ne 0 ] && die_now
+-	_md5_checksum $testfile
+ 
+ 	echo "	14. data -> hole @ EOF"
+ 	rm -f $testfile
+diff --git a/tests/generic/255 b/tests/generic/255
+index dd329b4..4275c51 100755
+--- a/tests/generic/255
++++ b/tests/generic/255
+@@ -50,7 +50,7 @@ _require_xfs_io_falloc_punch
+ _require_xfs_io_falloc
+ _require_xfs_io_fiemap
+ 
+-testfile=$TEST_DIR/255.$$
++testfile=$TEST_DIR/$seq.$$
+ 
+ # Standard punch hole tests
+ _test_generic_punch falloc fpunch fpunch fiemap _filter_hole_fiemap $testfile
+diff --git a/tests/generic/314 b/tests/generic/314
+new file mode 100755
+index 0000000..4cd7462
+--- /dev/null
++++ b/tests/generic/314
+@@ -0,0 +1,67 @@
++#! /bin/bash
++# FS QA Test No. 314
++#
++# Test Generic fallocate hole punching w/o unwritten extent
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2013 Alibaba Group.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/punch
++
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux
++
++_require_xfs_io_falloc_punch
++_require_xfs_io_fiemap
++
++testfile=$TEST_DIR/$seq.$$
++
++# Standard punch hole tests
++_test_generic_punch -u pwrite fpunch fpunch fiemap _filter_hole_fiemap $testfile
++
++# Delayed allocation punch hole tests
++_test_generic_punch -u -d pwrite fpunch fpunch fiemap _filter_hole_fiemap $testfile
++
++# Multi hole punch tests
++_test_generic_punch -u -k pwrite fpunch fpunch fiemap _filter_hole_fiemap $testfile
++
++# Delayed allocation multi punch hole tests
++_test_generic_punch -u -d -k pwrite fpunch fpunch fiemap _filter_hole_fiemap $testfile
++
++# success, all done
++status=0
++exit
+diff --git a/tests/generic/314.out b/tests/generic/314.out
+new file mode 100644
+index 0000000..06aa705
+--- /dev/null
++++ b/tests/generic/314.out
+@@ -0,0 +1,165 @@
++QA output created by 314
++	1. into a hole
++daa100df6e6711906b61c9ab5aa16032
++	2. into allocated space
++0: [0..7]: extent
++1: [8..23]: hole
++2: [24..39]: extent
++cc58a7417c2d7763adc45b6fcd3fa024
++	4. hole -> data
++0: [0..23]: hole
++1: [24..31]: extent
++2: [32..39]: hole
++cc63069677939f69a6e8f68cae6a6dac
++	6. data -> hole
++0: [0..7]: extent
++1: [8..39]: hole
++1b3779878366498b28c702ef88c4a773
++	10. hole -> data -> hole
++daa100df6e6711906b61c9ab5aa16032
++	11. data -> hole -> data
++0: [0..7]: extent
++1: [8..31]: hole
++2: [32..39]: extent
++f6aeca13ec49e5b266cd1c913cd726e3
++	14. data -> hole @ EOF
++0: [0..23]: extent
++1: [24..39]: hole
++e1f024eedd27ea6b1c3e9b841c850404
++	15. data -> hole @ 0
++0: [0..15]: hole
++1: [16..39]: extent
++eecb7aa303d121835de05028751d301c
++	16. data -> cache cold ->hole
++0: [0..15]: hole
++1: [16..39]: extent
++eecb7aa303d121835de05028751d301c
++	17. data -> hole in single block file
++0: [0..7]: extent
++13535fd4d496bf0b74bb2335aa4d1b31
++	1. into a hole
++daa100df6e6711906b61c9ab5aa16032
++	2. into allocated space
++0: [0..7]: extent
++1: [8..23]: hole
++2: [24..39]: extent
++cc58a7417c2d7763adc45b6fcd3fa024
++	4. hole -> data
++0: [0..23]: hole
++1: [24..31]: extent
++2: [32..39]: hole
++cc63069677939f69a6e8f68cae6a6dac
++	6. data -> hole
++0: [0..7]: extent
++1: [8..39]: hole
++1b3779878366498b28c702ef88c4a773
++	10. hole -> data -> hole
++daa100df6e6711906b61c9ab5aa16032
++	11. data -> hole -> data
++0: [0..7]: extent
++1: [8..31]: hole
++2: [32..39]: extent
++f6aeca13ec49e5b266cd1c913cd726e3
++	14. data -> hole @ EOF
++0: [0..23]: extent
++1: [24..39]: hole
++e1f024eedd27ea6b1c3e9b841c850404
++	15. data -> hole @ 0
++0: [0..15]: hole
++1: [16..39]: extent
++eecb7aa303d121835de05028751d301c
++	16. data -> cache cold ->hole
++0: [0..15]: hole
++1: [16..39]: extent
++eecb7aa303d121835de05028751d301c
++	17. data -> hole in single block file
++0: [0..7]: extent
++13535fd4d496bf0b74bb2335aa4d1b31
++	1. into a hole
++0: [0..7]: extent
++1: [8..39]: hole
++5a58e46082be047d0f13bee7974015b9
++	2. into allocated space
++0: [0..7]: extent
++1: [8..23]: hole
++2: [24..39]: extent
++cc58a7417c2d7763adc45b6fcd3fa024
++	4. hole -> data
++0: [0..7]: extent
++1: [8..23]: hole
++2: [24..39]: extent
++cc58a7417c2d7763adc45b6fcd3fa024
++	6. data -> hole
++0: [0..7]: extent
++1: [8..23]: hole
++2: [24..39]: extent
++cc58a7417c2d7763adc45b6fcd3fa024
++	10. hole -> data -> hole
++0: [0..7]: extent
++1: [8..31]: hole
++2: [32..39]: extent
++f6aeca13ec49e5b266cd1c913cd726e3
++	11. data -> hole -> data
++0: [0..7]: extent
++1: [8..31]: hole
++2: [32..39]: extent
++f6aeca13ec49e5b266cd1c913cd726e3
++	14. data -> hole @ EOF
++0: [0..23]: extent
++1: [24..39]: hole
++e1f024eedd27ea6b1c3e9b841c850404
++	15. data -> hole @ 0
++0: [0..15]: hole
++1: [16..39]: extent
++eecb7aa303d121835de05028751d301c
++	16. data -> cache cold ->hole
++0: [0..15]: hole
++1: [16..39]: extent
++eecb7aa303d121835de05028751d301c
++	17. data -> hole in single block file
++0: [0..7]: extent
++13535fd4d496bf0b74bb2335aa4d1b31
++	1. into a hole
++0: [0..7]: extent
++1: [8..39]: hole
++5a58e46082be047d0f13bee7974015b9
++	2. into allocated space
++0: [0..7]: extent
++1: [8..23]: hole
++2: [24..39]: extent
++cc58a7417c2d7763adc45b6fcd3fa024
++	4. hole -> data
++0: [0..7]: extent
++1: [8..23]: hole
++2: [24..39]: extent
++cc58a7417c2d7763adc45b6fcd3fa024
++	6. data -> hole
++0: [0..7]: extent
++1: [8..23]: hole
++2: [24..39]: extent
++cc58a7417c2d7763adc45b6fcd3fa024
++	10. hole -> data -> hole
++0: [0..7]: extent
++1: [8..31]: hole
++2: [32..39]: extent
++f6aeca13ec49e5b266cd1c913cd726e3
++	11. data -> hole -> data
++0: [0..7]: extent
++1: [8..31]: hole
++2: [32..39]: extent
++f6aeca13ec49e5b266cd1c913cd726e3
++	14. data -> hole @ EOF
++0: [0..23]: extent
++1: [24..39]: hole
++e1f024eedd27ea6b1c3e9b841c850404
++	15. data -> hole @ 0
++0: [0..15]: hole
++1: [16..39]: extent
++eecb7aa303d121835de05028751d301c
++	16. data -> cache cold ->hole
++0: [0..15]: hole
++1: [16..39]: extent
++eecb7aa303d121835de05028751d301c
++	17. data -> hole in single block file
++0: [0..7]: extent
++13535fd4d496bf0b74bb2335aa4d1b31
+diff --git a/tests/generic/group b/tests/generic/group
+index e2ef70e..c8b0b9f 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -115,3 +115,4 @@
+ 310 auto
+ 311 auto metadata log
+ 312 auto quick prealloc enospc
++314 auto quick
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.12.rc2.18.g61b472e
 
 _______________________________________________
 xfs mailing list
