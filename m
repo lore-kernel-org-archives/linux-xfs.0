@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 119827F37
-	for <xfs@oss.sgi.com>; Wed, 15 May 2013 22:40:15 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id EE1C18F8054
-	for <xfs@oss.sgi.com>; Wed, 15 May 2013 20:40:14 -0700 (PDT)
-Received: from mail-pa0-f50.google.com (mail-pa0-f50.google.com
-	[209.85.220.50]) by cuda.sgi.com with ESMTP id Nud8i06jySDMUGRR
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 15 May 2013 20:40:10 -0700 (PDT)
-Received: by mail-pa0-f50.google.com with SMTP id fb10so2089126pad.9
-	for <xfs@oss.sgi.com>; Wed, 15 May 2013 20:40:10 -0700 (PDT)
-Date: Thu, 16 May 2013 11:57:58 +0800
-From: Zheng Liu <gnehzuil.liu@gmail.com>
-Subject: Re: [PATCH v5] xfstests: add a new test case for ext4 indirect-based
-	file
-Message-ID: <20130516035758.GA6823@gmail.com>
-References: <1368463235-14478-1-git-send-email-wenqing.lz@taobao.com>
-	<5193AA69.7050507@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id F34157F37
+	for <xfs@oss.sgi.com>; Wed, 15 May 2013 22:56:55 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B941D8F8064
+	for <xfs@oss.sgi.com>; Wed, 15 May 2013 20:56:55 -0700 (PDT)
+Received: from chinook.cae-engineering.hu (chinook.cae-engineering.hu
+	[213.165.74.136]) by cuda.sgi.com with ESMTP id
+	Fnn4Wt3JiKOnxLpy for <xfs@oss.sgi.com>;
+	Wed, 15 May 2013 20:56:53 -0700 (PDT)
+Date: Thu, 16 May 2013 05:56:51 +0200
+From: Andras Korn <korn-xfs@elan.rulez.org>
+Subject: Re: wishlist: xfs_repair should detect files with too small sizes
+Message-ID: <20130516035651.GH17261@hellgate>
+References: <20130514215550.GK17260@hellgate> <20130515004736.GM29466@dastard>
+	<20130515080355.GL17260@hellgate> <20130515214105.GZ24635@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <5193AA69.7050507@sandeen.net>
+In-Reply-To: <20130515214105.GZ24635@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,66 +30,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Rich Johnston <rjohnston@sgi.com>, Zheng Liu <wenqing.lz@taobao.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, May 15, 2013 at 10:31:53AM -0500, Eric Sandeen wrote:
-> On 5/13/13 11:40 AM, Zheng Liu wrote:
-> > From: Zheng Liu <wenqing.lz@taobao.com>
-> > 
-> > After applied this commit (864688d3), xfstests #255 will not test a
-> > file system that cannot support fallocate(2), such as a indirect-based
-> > file in ext4.  So we need to add a new generic test case to test it.
-> > 
-> > The difference between #255 and this test case is only to use pwrite to
-> > allocate blocks.  Other filesystems should survive in this test case.
-> > In the mean time, a new argument '-u' is added into _test_generic_punch
-> > not to run unwritten tests.
-> > 
-> > Meanwhile this commit fixes a minor problem in #255 that testfile should
-> > use $seq.$$ as testfile.
-> > 
-> > Signed-off-by: Zheng Liu <wenqing.lz@taobao.com>
-> > Cc: Eric Sandeen <sandeen@sandeen.net>
-> > Cc: Dave Chinner <david@fromorbit.com>
-> > Cc: Rich Johnston <rjohnston@sgi.com>
-> > ---
-> > changelog:
-> >  * rebase against Eric's patch
-> >  * remove 'prealloc" from group
-> > 
-> > Hi Eric,
-> > 
-> > I take a close look at your patch, and 'xfs_io_opt' has been removed in your
-> > patch.  I am not sure whether I need to adjust my patch or not.  Please let me
-> > know if I need to change it.  Currently I only remove '-F' argument from test
-> > case.
-> 
-> xfs_io_opt was an option passed to _test_generic_punch used for "-F", as in:
-> 
-> _test_generic_punch -k falloc fpunch fpunch fiemap _filter_hole_fiemap $testfile -F
-> 
-> -F is no longer needed, so I just dropped the whole thing.
-> 
-> I'm sorry this patch has required so much work.  :(
-> 
-> If you simply replace "$xfs_io_opt " with "" in this patch, it applies
-> again with some fuzz.  i.e. in vim I just did:  
-> 
-> :%s/$xfs_io_opt //g
-> 
-> to fix up the patch itself.
-> 
-> There is also still one instance of "-F" in the context of the hunk
-> in tests/generic/255 as well which causes a little fuzz.]
+On Thu, May 16, 2013 at 07:41:05AM +1000, Dave Chinner wrote:
 
-Hi Eric,
+> > OK, thinking about it I realise there doesn't appear to be a good way of
+> > preventing the problem, but I'm still not sure some heuristic couldn't be
+> > invented to detect and partially remedy it after the fact.
+> 
+> Trying to remedy it in xfs_repair does more harm than good. What
+> happens now allows recovery of data if the inode size was wrong. If
+> we remove the blocks beyond EOF, we lose that ability and hence make
+> unrecoverable data loss more likely in common failure scenarios.
 
-Thanks for pointing it out.  I have sent a newer version to the mailing
-list.  Could you please review this patch?
+That's clear (xfs_repair not freeing up the space is what allowed me to
+recover the data). I meant "remedy" as in _either_ increase the inode size
+OR free up the extra space. Perhaps xfs_db could be extended to do this?
 
-Thanks,
-                                                - Zheng
+Of course, increasing the size as stored in the inode can add garbage (at
+the very least, binary zeroes) to the end of files, but if the data would
+otherwise have been lost, this is probably still preferable. I can even
+imagine an xfs_db command that increases file size up to the last non-zero
+data byte in the allocated space.
+
+-- 
+                     Andras Korn <korn at elan.rulez.org>
+                    No wanna work. Wanna bang on keyboard.
 
 _______________________________________________
 xfs mailing list
