@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8D8727F37
-	for <xfs@oss.sgi.com>; Thu, 16 May 2013 19:16:22 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5F1A48F8039
-	for <xfs@oss.sgi.com>; Thu, 16 May 2013 17:16:19 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 32C677F37
+	for <xfs@oss.sgi.com>; Thu, 16 May 2013 20:12:01 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 105E5304053
+	for <xfs@oss.sgi.com>; Thu, 16 May 2013 18:12:01 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	OnF8JPnTcEM0A1E5 for <xfs@oss.sgi.com>;
-	Thu, 16 May 2013 17:16:17 -0700 (PDT)
-Date: Fri, 17 May 2013 10:16:04 +1000
+	fxPBzQmwutVFeFSb for <xfs@oss.sgi.com>;
+	Thu, 16 May 2013 18:11:59 -0700 (PDT)
+Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1Ud9Bn-0007LL-9c
+	for xfs@oss.sgi.com; Fri, 17 May 2013 11:10:31 +1000
+Received: from dave by disappointment with local (Exim 4.80)
+	(envelope-from <dave@disappointment.disaster>) id 1Ud9Bn-0002bu-6R
+	for xfs@oss.sgi.com; Fri, 17 May 2013 11:10:31 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: wishlist: xfs_repair should detect files with too small sizes
-Message-ID: <20130517001604.GJ24635@dastard>
-References: <20130514215550.GK17260@hellgate> <20130515004736.GM29466@dastard>
-	<20130515080355.GL17260@hellgate> <20130515214105.GZ24635@dastard>
-	<20130516035651.GH17261@hellgate>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130516035651.GH17261@hellgate>
+Subject: [PATCH 4/5] xfs: avoid nesting transactions in xfs_qm_scall_setqlim()
+Date: Fri, 17 May 2013 11:10:28 +1000
+Message-Id: <1368753029-9977-5-git-send-email-david@fromorbit.com>
+In-Reply-To: <1368753029-9977-1-git-send-email-david@fromorbit.com>
+References: <1368753029-9977-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,57 +29,103 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Andras Korn <korn-xfs@elan.rulez.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, May 16, 2013 at 05:56:51AM +0200, Andras Korn wrote:
-> On Thu, May 16, 2013 at 07:41:05AM +1000, Dave Chinner wrote:
-> 
-> > > OK, thinking about it I realise there doesn't appear to be a good way of
-> > > preventing the problem, but I'm still not sure some heuristic couldn't be
-> > > invented to detect and partially remedy it after the fact.
-> > 
-> > Trying to remedy it in xfs_repair does more harm than good. What
-> > happens now allows recovery of data if the inode size was wrong. If
-> > we remove the blocks beyond EOF, we lose that ability and hence make
-> > unrecoverable data loss more likely in common failure scenarios.
-> 
-> That's clear (xfs_repair not freeing up the space is what allowed me to
-> recover the data). I meant "remedy" as in _either_ increase the inode size
-> OR free up the extra space. Perhaps xfs_db could be extended to do this?
+From: Dave Chinner <dchinner@redhat.com>
 
-You can already change the inode size with xfs_db by writing the
-field directly.
+Lockdep reports:
 
-> Of course, increasing the size as stored in the inode can add garbage (at
-> the very least, binary zeroes) to the end of files, but if the data would
-> otherwise have been lost, this is probably still preferable.
+=============================================
+[ INFO: possible recursive locking detected ]
+3.9.0+ #3 Not tainted
+---------------------------------------------
+setquota/28368 is trying to acquire lock:
+ (sb_internal){++++.?}, at: [<c11e8846>] xfs_trans_alloc+0x26/0x50
 
-No, it's not preferable, because if data wasn't written after the
-extents are allocated, extending the file size exposes stale data
-that is already on disk that the owner of the file should not have
-access to.
+but task is already holding lock:
+ (sb_internal){++++.?}, at: [<c11e8846>] xfs_trans_alloc+0x26/0x50
 
-You are free to do this yourself, but we are not going to add
-potential stale data exposure holes into repair/db if this situation
-arises.
+from xfs_qm_scall_setqlim()->xfs_dqread() when a dquot needs to be
+allocated.
 
-> I can even
-> imagine an xfs_db command that increases file size up to the last non-zero
-> data byte in the allocated space.
+xfs_qm_scall_setqlim() is starting a transaction and then not
+passing it into xfs_qm_dqet() and so it starts it's own transaction
+when allocating the dquot.  Splat!
 
-Stale data regions rarely contain zero.
+Fix this by not allocating the dquot in xfs_qm_scall_setqlim()
+inside the setqlim transaction. This requires getting the dquot
+first (and allocating it if necessary) then dropping and relocking
+the dquot before joining it to the setqlim transaction.
 
-Cheers,
+Reported-by: Michael L. Semon <mlsemon35@gmail.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_qm_syscalls.c |   35 ++++++++++++++++++++---------------
+ 1 file changed, 20 insertions(+), 15 deletions(-)
 
-Dave.
+diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+index c41190c..dfa5c05 100644
+--- a/fs/xfs/xfs_qm_syscalls.c
++++ b/fs/xfs/xfs_qm_syscalls.c
+@@ -489,31 +489,36 @@ xfs_qm_scall_setqlim(
+ 	if ((newlim->d_fieldmask & XFS_DQ_MASK) == 0)
+ 		return 0;
+ 
+-	tp = xfs_trans_alloc(mp, XFS_TRANS_QM_SETQLIM);
+-	error = xfs_trans_reserve(tp, 0, XFS_QM_SETQLIM_LOG_RES(mp),
+-				  0, 0, XFS_DEFAULT_LOG_COUNT);
+-	if (error) {
+-		xfs_trans_cancel(tp, 0);
+-		return (error);
+-	}
+-
+ 	/*
+ 	 * We don't want to race with a quotaoff so take the quotaoff lock.
+-	 * (We don't hold an inode lock, so there's nothing else to stop
+-	 * a quotaoff from happening). (XXXThis doesn't currently happen
+-	 * because we take the vfslock before calling xfs_qm_sysent).
++	 * We don't hold an inode lock, so there's nothing else to stop
++	 * a quotaoff from happening.
+ 	 */
+ 	mutex_lock(&q->qi_quotaofflock);
+ 
+ 	/*
+-	 * Get the dquot (locked), and join it to the transaction.
+-	 * Allocate the dquot if this doesn't exist.
++	 * Get the dquot (locked) before we start, as we need to do a
++	 * transaction to allocate it if it doesn't exist. Once we have the
++	 * dquot, unlock it so we can start the next transaction safely. We hold
++	 * a reference to the dquot, so it's safe to do this unlock/lock without
++	 * it being reclaimed in the mean time.
+ 	 */
+-	if ((error = xfs_qm_dqget(mp, NULL, id, type, XFS_QMOPT_DQALLOC, &dqp))) {
+-		xfs_trans_cancel(tp, XFS_TRANS_ABORT);
++	error = xfs_qm_dqget(mp, NULL, id, type, XFS_QMOPT_DQALLOC, &dqp);
++	if (error) {
+ 		ASSERT(error != ENOENT);
+ 		goto out_unlock;
+ 	}
++	xfs_dqunlock(dqp);
++
++	tp = xfs_trans_alloc(mp, XFS_TRANS_QM_SETQLIM);
++	error = xfs_trans_reserve(tp, 0, XFS_QM_SETQLIM_LOG_RES(mp),
++				  0, 0, XFS_DEFAULT_LOG_COUNT);
++	if (error) {
++		xfs_trans_cancel(tp, 0);
++		goto out_unlock;
++	}
++
++	xfs_dqlock(dqp);
+ 	xfs_trans_dqjoin(tp, dqp);
+ 	ddq = &dqp->q_core;
+ 
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.10.4
 
 _______________________________________________
 xfs mailing list
