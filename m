@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 407CC7F37
-	for <xfs@oss.sgi.com>; Thu, 16 May 2013 23:46:09 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1E9988F8039
-	for <xfs@oss.sgi.com>; Thu, 16 May 2013 21:46:09 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 168067F37
+	for <xfs@oss.sgi.com>; Fri, 17 May 2013 00:10:09 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id CE53B8F80C4
+	for <xfs@oss.sgi.com>; Thu, 16 May 2013 22:10:05 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	iWCFJy52MTfuz3do for <xfs@oss.sgi.com>;
-	Thu, 16 May 2013 21:46:06 -0700 (PDT)
-Date: Fri, 17 May 2013 14:46:04 +1000
+	PVH6FIJHD5c4QhGq for <xfs@oss.sgi.com>;
+	Thu, 16 May 2013 22:10:03 -0700 (PDT)
+Date: Fri, 17 May 2013 15:10:01 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v8 3/5] xfs: Start using pquotaino from the superblock
-Message-ID: <20130517044604.GO24635@dastard>
+Subject: Re: [PATCH v8 4/5] xfs: Add proper versioning support to fs_quota_stat
+Message-ID: <20130517051001.GP24635@dastard>
 References: <1368220889-25188-1-git-send-email-sekharan@us.ibm.com>
-	<1368220889-25188-4-git-send-email-sekharan@us.ibm.com>
+	<1368220889-25188-5-git-send-email-sekharan@us.ibm.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1368220889-25188-4-git-send-email-sekharan@us.ibm.com>
+In-Reply-To: <1368220889-25188-5-git-send-email-sekharan@us.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,301 +33,212 @@ Sender: xfs-bounces@oss.sgi.com
 To: Chandra Seetharaman <sekharan@us.ibm.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, May 10, 2013 at 04:21:27PM -0500, Chandra Seetharaman wrote:
-> Define a macro to check if the superblock has pquotino.
+On Fri, May 10, 2013 at 04:21:28PM -0500, Chandra Seetharaman wrote:
+> Added appropriate pads and code for backward compatibility.
 > 
-> Keep backward compatibilty by alowing mount of older superblock
-> with no separate pquota inode.
-....
+> Copied over the old version as it is different from the newer padded
+> version.
+> 
+> New callers of the system call have to just set the version of the data
+> structure being passed, and kernel will fill as much data as requested.
+> 
+> Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
 
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index 1b79906..233f88e 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -601,21 +601,6 @@ xfs_sb_from_disk(
->  	to->sb_uquotino = be64_to_cpu(from->sb_uquotino);
->  	to->sb_gquotino = be64_to_cpu(from->sb_gquotino);
->  	to->sb_qflags = be16_to_cpu(from->sb_qflags);
-> -	if ((to->sb_qflags & (XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD)) &&
-> -			(to->sb_qflags & (XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD |
-> -				XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD))) {
-> -		xfs_notice(NULL, "Super block has XFS_OQUOTA bits along with "
-> -		    "XFS_PQUOTA and/or XFS_GQUOTA bits. Quota check forced.\n");
-> -		force_quota_check = true;
-> -	}
-> -	if (to->sb_qflags & XFS_OQUOTA_ENFD)
-> -		to->sb_qflags |= (to->sb_qflags & XFS_PQUOTA_ACCT) ?
-> -					XFS_PQUOTA_ENFD : XFS_GQUOTA_ENFD;
-> -	if (to->sb_qflags & XFS_OQUOTA_CHKD)
-> -		to->sb_qflags |= (to->sb_qflags & XFS_PQUOTA_ACCT) ?
-> -					XFS_PQUOTA_CHKD : XFS_GQUOTA_CHKD;
-> -	to->sb_qflags &= ~(XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD);
-> -
->  	to->sb_flags = from->sb_flags;
->  	to->sb_shared_vn = from->sb_shared_vn;
->  	to->sb_inoalignmt = be32_to_cpu(from->sb_inoalignmt);
-> @@ -636,6 +621,44 @@ xfs_sb_from_disk(
->  	to->sb_pquotino = be64_to_cpu(from->sb_pquotino);
->  	to->sb_lsn = be64_to_cpu(from->sb_lsn);
->  
-> +	if (xfs_sb_version_has_pquota(to)) {
-> +		if (to->sb_qflags & (XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD)) {
-> +			xfs_notice(NULL, "Super block has XFS_OQUOTA bits "
-> +			"with version PQUOTINO. Quota check forced.\n");
-> +			to->sb_qflags &= ~(XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD);
-> +			force_quota_check = true;
-> +		}
-> +		to->sb_pquotino = be64_to_cpu(from->sb_pquotino);
-> +	} else {
-> +		if (to->sb_qflags & (XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD |
-> +					XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD)) {
-> +			xfs_notice(NULL, "Super block has XFS_[G|P]UOTA "
-> +				"bits in version older than PQUOTINO. "
-> +				"Quota check forced.\n");
-> +
-> +			to->sb_qflags &= ~(XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD |
-> +					XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD);
-> +			force_quota_check = true;
-> +		}
-> +
-> +		/*
-> +		 * On disk superblock qflags uses XFS_OQUOTA.* to support
-> +		 * either PQUOTA or GQUOTA. But, in memory qflags uses
-> +		 * XFS_PQUOTA.* or XFS_GQUOTA.* depending on which quota
-> +		 * is used.
-> +		 * Following block translates XFS_OQUOTA.* to either
-> +		 * GQUOTA or PQUOTA.
-> +		 */
-> +		if (to->sb_qflags & XFS_OQUOTA_ENFD)
-> +			to->sb_qflags |= (to->sb_qflags & XFS_PQUOTA_ACCT) ?
-> +					XFS_PQUOTA_ENFD : XFS_GQUOTA_ENFD;
-> +		if (to->sb_qflags & XFS_OQUOTA_CHKD)
-> +			to->sb_qflags |= (to->sb_qflags & XFS_PQUOTA_ACCT) ?
-> +					XFS_PQUOTA_CHKD : XFS_GQUOTA_CHKD;
-> +		to->sb_qflags &= ~(XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD);
-> +
-> +	}
-> +
->  	if (force_quota_check)
->  		to->sb_qflags &= ~(XFS_GQUOTA_CHKD | XFS_PQUOTA_CHKD);
->  }
+This needs to be cc'd to Steve Whitehouse so he's aware that we are
+changing the quota interface...
 
-This all gets restructured here - as per my previous comments, this
-probably should all be in xfs_readsb(), not here.
-
-> @@ -657,27 +680,51 @@ xfs_sb_to_disk(
->  	int		first;
->  	int		size;
->  	__uint16_t	qflags = from->sb_qflags;
-> +	xfs_ino_t	gquotino = from->sb_gquotino;
->  
->  	ASSERT(fields);
->  	if (!fields)
->  		return;
->  
-> -	if (fields & XFS_SB_QFLAGS) {
-> +	if (!xfs_sb_version_has_pquota(from)) {
-
-This should be moved to a separate function, I think.
-
-> +		if (fields & XFS_SB_QFLAGS) {
-> +			/*
-> +			 * The in-core version of sb_qflags do not have
-> +			 * XFS_OQUOTA_* flags, whereas the on-disk version
-> +			 * does.  So, convert incore XFS_{PG}QUOTA_* flags
-> +			 * to on-disk XFS_OQUOTA_* flags.
-> +			 */
-> +			qflags &= ~(XFS_PQUOTA_ENFD | XFS_PQUOTA_CHKD |
-> +					XFS_GQUOTA_ENFD | XFS_GQUOTA_CHKD);
-> +
-> +			if (from->sb_qflags &
-> +					(XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD))
-> +				qflags |= XFS_OQUOTA_ENFD;
-> +			if (from->sb_qflags &
-> +					(XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD))
-> +				qflags |= XFS_OQUOTA_CHKD;
-
-Now that we have the new flags set correct, write it directly to
-to->sb_qflags and clear XFS_SB_QFLAGS from the fields varaible.
-
-> +		}
-> +
->  		/*
-> -		 * The in-core version of sb_qflags do not have
-> -		 * XFS_OQUOTA_* flags, whereas the on-disk version
-> -		 * does.  So, convert incore XFS_{PG}QUOTA_* flags 
-> -		 * to on-disk XFS_OQUOTA_* flags.
-> +		 * On-disk version earlier than pquota doesn't have
-> +		 * sb_pquotino. so, we need to copy the value to gquotino.
->  		 */
-> -		qflags &= ~(XFS_PQUOTA_ENFD | XFS_PQUOTA_CHKD |
-> -				XFS_GQUOTA_ENFD | XFS_GQUOTA_CHKD);
-> +		if (fields & XFS_SB_PQUOTINO) {
-> +			fields &= (__int64_t)~XFS_SB_PQUOTINO;
-> +			fields |= (__int64_t)XFS_SB_GQUOTINO;
-> +			gquotino = from->sb_pquotino;
-> +		}
-
-Same here - write the inode number directly to the to->sb_gquotino
-field and clear the XFS_SB_PQUOTINO flag.
-
->  
-> -		if (from->sb_qflags &
-> -				(XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD))
-> -			qflags |= XFS_OQUOTA_ENFD;
-> -		if (from->sb_qflags &
-> -				(XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD))
-> -			qflags |= XFS_OQUOTA_CHKD;
-> +		/* If any quota inodes are written, write all quota inodes */
-> +		if (fields & (XFS_SB_UQUOTINO|XFS_SB_GQUOTINO))
-> +			fields |= (XFS_SB_UQUOTINO|XFS_SB_GQUOTINO);
-
-Why write things that haven't been modified?
-
-> +
-> +	} else {
-> +		/* If any quota inodes are written, write all quota inodes */
-> +		if (fields & (XFS_SB_UQUOTINO | XFS_SB_GQUOTINO
-> +							| XFS_SB_PQUOTINO))
-> +			fields |= (XFS_SB_UQUOTINO | XFS_SB_GQUOTINO
-> +							| XFS_SB_PQUOTINO);
-
-Same - the flags pssed in are supposed to document everything that
-has been modified. If the flags passed in are wrong, then fix the
-bad callers.....
->  	}
-
->  
->  	while (fields) {
-> @@ -691,6 +738,8 @@ xfs_sb_to_disk(
->  			memcpy(to_ptr + first, from_ptr + first, size);
->  		} else if (f == XFS_SBS_QFLAGS) {
->  			*(__be16 *)(to_ptr + first) = cpu_to_be16(qflags);
-> +		} else if (f == XFS_SBS_GQUOTINO) {
-> +			*(__be64 *)(to_ptr + first) = cpu_to_be64(gquotino);
-
-If we clear the XFS_SBS_GQUOTINO/XFS_SBS_QFLAGS flags like I
-suggested above, this grot can go away and the loop remain
-completely generic.
-
->  		} else {
->  			switch (size) {
->  			case 2:
-> @@ -872,6 +921,18 @@ reread:
->  	 */
->  	xfs_sb_from_disk(&mp->m_sb, XFS_BUF_TO_SBP(bp));
->  
-> +	if (!xfs_sb_version_has_pquota(&mp->m_sb) && XFS_IS_PQUOTA_ON(mp)) {
-> +		/*
-> +		 * On disk superblock only has sb_gquotino, and in memory
-> +		 * superblock has both sb_gquotino and sb_pquotino. But,
-> +		 * only one them is supported at any point of time.
-> +		 * So, if PQUOTA is set in disk superblock, copy over
-> +		 * sb_gquotino to sb_pquotino.
-> +		 */
-> +		mp->m_sb.sb_pquotino = mp->m_sb.sb_gquotino;
-> +		mp->m_sb.sb_gquotino = NULLFSINO;
-> +	}
-
-Yup, that's the right place for doing all this on-disk->incore
-translation stuff at mount time ;)
-
-> -	if (ino == mp->m_sb.sb_uquotino || ino == mp->m_sb.sb_gquotino) {
-> +	if (ino == mp->m_sb.sb_uquotino ||
-> +	    ino == mp->m_sb.sb_gquotino ||
-> +	    ino == mp->m_sb.sb_pquotino) {
-
-Seeing how often this is repeated, perhaps we need a helper function
-called "xfs_is_quota_inode(mp, ino)"?
-
-> @@ -1505,7 +1506,7 @@ xfs_qm_init_quotainos(
->  	}
->  	if (XFS_IS_PQUOTA_ON(mp) && pip == NULL) {
->  		error = xfs_qm_qino_alloc(mp, &pip,
-> -					     sbflags | XFS_SB_GQUOTINO,
-> +					     sbflags | XFS_SB_PQUOTINO,
->  					     flags | XFS_QMOPT_PQUOTA);
-
-Isn't that fixing a bug in the previous patch?
-
-> @@ -412,17 +413,20 @@ xfs_qm_scall_getqstat(
->  	struct fs_quota_stat	*out)
+> ---
+>  fs/gfs2/quota.c                |    3 ---
+>  fs/quota/quota.c               |   40 ++++++++++++++++++++++++++++++++++++++--
+>  fs/xfs/xfs_qm_syscalls.c       |    4 ----
+>  include/uapi/linux/dqblk_xfs.h |   38 ++++++++++++++++++++++++++++++++++++--
+>  4 files changed, 74 insertions(+), 11 deletions(-)
+> 
+> diff --git a/fs/gfs2/quota.c b/fs/gfs2/quota.c
+> index c7c840e..ca0dccd 100644
+> --- a/fs/gfs2/quota.c
+> +++ b/fs/gfs2/quota.c
+> @@ -1443,9 +1443,6 @@ static int gfs2_quota_get_xstate(struct super_block *sb,
 >  {
->  	struct xfs_quotainfo	*q = mp->m_quotainfo;
-> -	struct xfs_inode	*uip, *gip;
-> -	bool                    tempuqip, tempgqip;
-> +	struct xfs_inode	*uip = NULL;
-> +	struct xfs_inode	*gip = NULL;
-> +	struct xfs_inode	*pip = NULL;
-> +	bool                    tempuqip = false;
-> +	bool                    tempgqip = false;
-> +	bool                    temppqip = false;
-
-See my previous comments about naming variables. At least
-add an underscore into the name like temp_uqip....
-
-> @@ -420,12 +420,6 @@ xfs_parseargs(
->  	}
->  #endif
+>  	struct gfs2_sbd *sdp = sb->s_fs_info;
 >  
-> -	if ((mp->m_qflags & (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE)) &&
-> -	    (mp->m_qflags & (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE))) {
-> -		xfs_warn(mp, "cannot mount with both project and group quota");
-> -		return EINVAL;
-> -	}
+> -	memset(fqs, 0, sizeof(struct fs_quota_stat));
+> -	fqs->qs_version = FS_QSTAT_VERSION;
 > -
->  	if ((dsunit && !dswidth) || (!dsunit && dswidth)) {
->  		xfs_warn(mp, "sunit and swidth must be specified together");
->  		return EINVAL;
-> @@ -1388,6 +1382,14 @@ xfs_finish_flags(
->  		return XFS_ERROR(EROFS);
->  	}
+>  	switch (sdp->sd_args.ar_quota) {
+>  	case GFS2_QUOTA_ON:
+>  		fqs->qs_flags |= (FS_QUOTA_UDQ_ENFD | FS_QUOTA_GDQ_ENFD);
+> diff --git a/fs/quota/quota.c b/fs/quota/quota.c
+> index c7314f1..510464e 100644
+> --- a/fs/quota/quota.c
+> +++ b/fs/quota/quota.c
+> @@ -207,12 +207,48 @@ static int quota_setxstate(struct super_block *sb, int cmd, void __user *addr)
+>  static int quota_getxstate(struct super_block *sb, void __user *addr)
+>  {
+>  	struct fs_quota_stat fqs;
+> -	int ret;
+> +	struct fs_quota_stat_v1 fqs_v1;
+> +	int ret, size;
+> +	void *cp = &fqs;
+
+What's "cp" mean? Wouldn't fqsp be a better name? And initialise it
+just before it gets used makes more sense, too.
+
 >  
-> +	if ((mp->m_qflags & (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE)) &&
-> +	    (mp->m_qflags & (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE)) &&
-> +	    !xfs_sb_version_has_pquota(&mp->m_sb)) {
-> +		xfs_warn(mp, "Super block does not support "
-> +				 "project and group quota together");
-> +		return XFS_ERROR(EINVAL);
+>  	if (!sb->s_qcop->get_xstate)
+>  		return -ENOSYS;
+> +
+> +	memset(&fqs, 0, sizeof(struct fs_quota_stat));
+> +	if (copy_from_user(&fqs, addr, 1)) /* just get the version */
+> +		return -EFAULT;
+> +
+> +	switch (fqs.qs_version) {
+> +	case FS_QSTAT_VERSION_2:
+> +		size = FS_QSTAT_V2_SIZE;
+> +		break;
+> +	default:
+> +		fqs.qs_version = FS_QSTAT_VERSION;
+> +		/* fallthrough */
+> +	case FS_QSTAT_VERSION:
+> +		size = FS_QSTAT_V1_SIZE;
+> +		cp = &fqs_v1;
 > +	}
 
-Why move this check? just leave it where it is and add the extra
-check to it...
+Missing a break on the last case there.
 
-> @@ -157,7 +157,8 @@ xfs_trans_mod_dquot_byino(
->  	if (!XFS_IS_QUOTA_RUNNING(mp) ||
->  	    !XFS_IS_QUOTA_ON(mp) ||
->  	    ip->i_ino == mp->m_sb.sb_uquotino ||
-> -	    ip->i_ino == mp->m_sb.sb_gquotino)
-> +	    ip->i_ino == mp->m_sb.sb_gquotino ||
-> +	    ip->i_ino == mp->m_sb.sb_pquotino)
->  		return;
+> +
+>  	ret = sb->s_qcop->get_xstate(sb, &fqs);
+> -	if (!ret && copy_to_user(addr, &fqs, sizeof(fqs)))
+> +	if (ret)
+> +		return ret;
+> +
+> +	if (fqs.qs_version == FS_QSTAT_VERSION) {
+> +		fqs_v1.qs_version = fqs.qs_version;
+> +		fqs_v1.qs_flags = fqs.qs_flags;
+> +		fqs_v1.qs_pad = 0;
+> +		fqs_v1.qs_uquota = fqs.qs_uquota;
+> +		fqs_v1.qs_gquota = fqs.qs_gquota;
+> +		fqs_v1.qs_incoredqs = fqs.qs_incoredqs;
+> +		fqs_v1.qs_btimelimit = fqs.qs_btimelimit;
+> +		fqs_v1.qs_itimelimit = fqs.qs_itimelimit;
+> +		fqs_v1.qs_rtbtimelimit = fqs.qs_rtbtimelimit;
+> +		fqs_v1.qs_bwarnlimit = fqs.qs_bwarnlimit;
+> +		fqs_v1.qs_iwarnlimit = fqs.qs_iwarnlimit;
 
-I see a helper....
+		fsqp = &fsq_v1;
+	} else {
+		fsqp = &fsq_v2;
+	}
 
->  	if (tp->t_dqinfo == NULL)
-> @@ -825,6 +826,7 @@ xfs_trans_reserve_quota_nblks(
->  
->  	ASSERT(ip->i_ino != mp->m_sb.sb_uquotino);
->  	ASSERT(ip->i_ino != mp->m_sb.sb_gquotino);
-> +	ASSERT(ip->i_ino != mp->m_sb.sb_pquotino);
-
-And that becomes ASSERT(!xfs_is_quota_inode(mp, ip->i_ino))....
-
+> +
+> +	if (copy_to_user(addr, &cp, size))
+>  		return -EFAULT;
+>  	return ret;
+>  }
 > diff --git a/include/uapi/linux/dqblk_xfs.h b/include/uapi/linux/dqblk_xfs.h
-> index 8655280..f17e3bb 100644
+> index f17e3bb..d9629c1 100644
 > --- a/include/uapi/linux/dqblk_xfs.h
 > +++ b/include/uapi/linux/dqblk_xfs.h
-> @@ -155,6 +155,7 @@ typedef struct fs_quota_stat {
->  	__s8		qs_pad;		/* unused */
+> @@ -18,6 +18,7 @@
+>  #define _LINUX_DQBLK_XFS_H
+>  
+>  #include <linux/types.h>
+> +#include <linux/stddef.h>
+
+Really? What's new that requires this include?
+
+>  
+>  /*
+>   * Disk quota - quotactl(2) commands for the XFS Quota Manager (XQM).
+> @@ -137,8 +138,12 @@ typedef struct fs_disk_quota {
+>   * Provides a centralized way to get meta information about the quota subsystem.
+>   * eg. space taken up for user and group quotas, number of dquots currently
+>   * incore.
+> + * User space caller should set qs_version to the appropriate version
+> + * of the fs_quota_stat data structure they are providing. Not providing
+> + * a version will be treated as FS_QSTAT_VERSION.
+>   */
+>  #define FS_QSTAT_VERSION	1	/* fs_quota_stat.qs_version */
+> +#define FS_QSTAT_VERSION_2	2	/* new field qs_pquota */
+>  
+>  /*
+>   * Some basic information about 'quota files'.
+> @@ -149,19 +154,48 @@ typedef struct fs_qfilestat {
+>  	__u32		qfs_nextents;	/* number of extents */
+>  } fs_qfilestat_t;
+>  
+> +typedef struct fs_quota_stat_v1 {
+
+Kill the typedef. Add a comment stating that this structure is
+likely to have compatibility problems across architectures due to
+implicit padding and offset alignment in the structure definition
+and that the v2 structure should be used if these problems are being
+seen.
+
+> +	__s8		qs_version;	/* version number for future changes */
+> +	__u16		qs_flags;	/* FS_QUOTA_{U,P,G}DQ_{ACCT,ENFD} */
+> +	__u8		qs_pad;		/* unused */
+> +	fs_qfilestat_t	qs_uquota;	/* user quota storage information */
+> +	fs_qfilestat_t	qs_gquota;	/* group quota storage information */
+> +	__u32		qs_incoredqs;	/* number of dquots incore */
+> +	__s32		qs_btimelimit;  /* limit for blks timer */	
+> +	__s32		qs_itimelimit;  /* limit for inodes timer */	
+> +	__s32		qs_rtbtimelimit;/* limit for rt blks timer */	
+> +	__u16		qs_bwarnlimit;	/* limit for num warnings */
+> +	__u16		qs_iwarnlimit;	/* limit for num warnings */
+> +} fs_quota_stat_v1_t;
+> +
+>  typedef struct fs_quota_stat {
+
+Kill the typedef.
+
+>  	__s8		qs_version;	/* version number for future changes */
+> +	__u8		qs_pad1;	/* unused */
+>  	__u16		qs_flags;	/* FS_QUOTA_{U,P,G}DQ_{ACCT,ENFD} */
+> -	__s8		qs_pad;		/* unused */
+> +	__u8		qs_pad2[4];	/* unused */
 >  	fs_qfilestat_t	qs_uquota;	/* user quota storage information */
 >  	fs_qfilestat_t	qs_gquota;	/* group quota storage information */
-> +#define qs_pquota	qs_gquota
+> -#define qs_pquota	qs_gquota
 >  	__u32		qs_incoredqs;	/* number of dquots incore */
 >  	__s32		qs_btimelimit;  /* limit for blks timer */	
 >  	__s32		qs_itimelimit;  /* limit for inodes timer */	
+>  	__s32		qs_rtbtimelimit;/* limit for rt blks timer */	
+>  	__u16		qs_bwarnlimit;	/* limit for num warnings */
+>  	__u16		qs_iwarnlimit;	/* limit for num warnings */
+> +	__u8		qs_pad3[4];	/* unused */
+> +	fs_qfilestat_t	qs_pquota;	/* project quota storage information */
+> +	/* End of Data structure for FS_QSTAT_VERSION_2 */
 
-Ugly, but will do until the next patch ;)
+No need for that comment.
+
+>  } fs_quota_stat_t;
+
+Use pahole on the built object file to determine if the end ofthe
+structure is 64 bit aligned. If it isn't, please pad it to 64 bit
+alignment.
+
+Um. fs_qfilestat_t is { u64, u64, u32 }, and so there's going to be
+alignment problems with that. We need a fs_qfilestat_v1 definition
+and add padding to fs_qfilestat_t so that it is 64 bit aligned.....
+
+
+>  
+> +/*
+> + * Since Version 1 did not have padding at appropriate places,
+> + * a new data structure has been defined for the older version to
+> + * provide backward compatibility.
+> + * Future extentions of this data structure won't require new
+> + * data structure definitions as the current one can be extended
+> + * with the logic and padding in place now.
+> + */
+> +#define FS_QSTAT_V1_SIZE	(sizeof(struct fs_quota_stat_v1))
+> +#define FS_QSTAT_V2_SIZE	(offsetof(struct fs_quota_stat, qs_pquota) + \
+> +					sizeof(fs_qfilestat_t))
+
+Just use sizeof(struct fs_quota_stat) as the size. Indeed, for
+future enhancements, maybe we should add 64 bytes of empty space at
+the end of the structure....
 
 Cheers,
 
