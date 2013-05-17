@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DF10129E20
-	for <xfs@oss.sgi.com>; Fri, 17 May 2013 06:14:12 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 359FF7F4C
+	for <xfs@oss.sgi.com>; Fri, 17 May 2013 06:14:14 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 923D68F8035
-	for <xfs@oss.sgi.com>; Fri, 17 May 2013 04:14:12 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C5EC0AC001
+	for <xfs@oss.sgi.com>; Fri, 17 May 2013 04:14:13 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	A8Q0qBS7yj7AjrNp for <xfs@oss.sgi.com>;
-	Fri, 17 May 2013 04:14:09 -0700 (PDT)
+	4zADMdYsXraVypfx for <xfs@oss.sgi.com>;
+	Fri, 17 May 2013 04:14:11 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UdIbh-0008SK-Bz
-	for xfs@oss.sgi.com; Fri, 17 May 2013 21:13:53 +1000
+	(envelope-from <dave@fromorbit.com>) id 1UdIbr-0008Sf-LY
+	for xfs@oss.sgi.com; Fri, 17 May 2013 21:14:03 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UdIbX-0005Er-4s
-	for xfs@oss.sgi.com; Fri, 17 May 2013 21:13:43 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1UdIbh-0005FJ-CY
+	for xfs@oss.sgi.com; Fri, 17 May 2013 21:13:53 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 16/30] xfs: split remote attribute code out
-Date: Fri, 17 May 2013 21:13:11 +1000
-Message-Id: <1368789205-19969-17-git-send-email-david@fromorbit.com>
+Subject: [PATCH 21/30] xfs: implement extended feature masks
+Date: Fri, 17 May 2013 21:13:16 +1000
+Message-Id: <1368789205-19969-22-git-send-email-david@fromorbit.com>
 In-Reply-To: <1368789205-19969-1-git-send-email-david@fromorbit.com>
 References: <1368789205-19969-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,734 +38,264 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Adding CRC support to remote attributes adds a significant amount of
-remote attribute specific code. Split the existing remote attribute
-code out into it's own file so that all the relevant remote
-attribute code is in a single, easy to find place.
+The version 5 superblock has extended feature masks for compatible,
+incompatible and read-only compatible feature sets. Implement the
+masking and mount-time checking for these feature masks.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/libxfs.h          |    1 +
- include/xfs_attr_remote.h |   31 +++++
- libxfs/Makefile           |    2 +-
- libxfs/xfs.h              |    9 +-
- libxfs/xfs_attr.c         |  296 -------------------------------------------
- libxfs/xfs_attr_remote.c  |  306 +++++++++++++++++++++++++++++++++++++++++++++
- 6 files changed, 346 insertions(+), 299 deletions(-)
- create mode 100644 include/xfs_attr_remote.h
- create mode 100644 libxfs/xfs_attr_remote.c
+ include/xfs_sb.h           |   70 ++++++++++++++++++++++++++++++++++++++++++--
+ libxfs/xfs_mount.c         |   53 ++++++++++++++++++++++++---------
+ logprint/log_print_trans.c |   18 ++++++++++++
+ 3 files changed, 125 insertions(+), 16 deletions(-)
 
-diff --git a/include/libxfs.h b/include/libxfs.h
-index 41cb585..972d850 100644
---- a/include/libxfs.h
-+++ b/include/libxfs.h
-@@ -589,6 +589,7 @@ extern unsigned long	libxfs_physmem(void);	/* in kilobytes */
- #include <xfs/xfs_rtalloc.h>
+diff --git a/include/xfs_sb.h b/include/xfs_sb.h
+index d6709db..51db6f2 100644
+--- a/include/xfs_sb.h
++++ b/include/xfs_sb.h
+@@ -168,8 +168,10 @@ typedef struct xfs_sb {
+ 	__uint32_t	sb_features_compat;
+ 	__uint32_t	sb_features_ro_compat;
+ 	__uint32_t	sb_features_incompat;
++	__uint32_t	sb_features_log_incompat;
  
- #include <xfs/xfs_attr_leaf.h>
-+#include <xfs/xfs_attr_remote.h>
- #include <xfs/xfs_quota.h>
- #include <xfs/xfs_trans_space.h>
- #include <xfs/xfs_log.h>
-diff --git a/include/xfs_attr_remote.h b/include/xfs_attr_remote.h
-new file mode 100644
-index 0000000..b4be90e
---- /dev/null
-+++ b/include/xfs_attr_remote.h
-@@ -0,0 +1,31 @@
-+/*
-+ * Copyright (c) 2013 Red Hat, Inc.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2.1 of the GNU Lesser General Public License
-+ * as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-+ *
-+ * Further, this software is distributed without any warranty that it is
-+ * free of the rightful claim of any third person regarding infringement
-+ * or the like.  Any license provided herein, whether implied or
-+ * otherwise, applies only to this software file.  Patent licenses, if
-+ * any, provided herein do not apply to combinations of this program with
-+ * other software, or any other product whatsoever.
-+ *
-+ * You should have received a copy of the GNU Lesser General Public
-+ * License along with this program; if not, write the Free Software
-+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston MA 02111-1307,
-+ * USA.
-+ */
-+#ifndef __XFS_ATTR_REMOTE_H__
-+#define	__XFS_ATTR_REMOTE_H__
-+
-+int xfs_attr_rmtval_get(struct xfs_da_args *args);
-+int xfs_attr_rmtval_set(struct xfs_da_args *args);
-+int xfs_attr_rmtval_remove(struct xfs_da_args *args);
-+
-+#endif /* __XFS_ATTR_REMOTE_H__ */
-diff --git a/libxfs/Makefile b/libxfs/Makefile
-index 75f365c..d0b483d 100644
---- a/libxfs/Makefile
-+++ b/libxfs/Makefile
-@@ -16,7 +16,7 @@ CFILES = cache.c init.c kmem.c logitem.c radix-tree.c rdwr.c trans.c util.c \
- 	xfs_ialloc_btree.c xfs_bmap_btree.c xfs_da_btree.c \
- 	xfs_dir2.c xfs_dir2_leaf.c xfs_attr_leaf.c xfs_dir2_block.c \
- 	xfs_dir2_node.c xfs_dir2_data.c xfs_dir2_sf.c xfs_bmap.c \
--	xfs_mount.c xfs_rtalloc.c xfs_trans.c xfs_attr.c \
-+	xfs_mount.c xfs_rtalloc.c xfs_trans.c xfs_attr.c xfs_attr_remote.c \
- 	crc32.c xfs_symlink.c
+ 	__uint32_t	sb_crc;		/* superblock crc */
++	__uint32_t	sb_pad;
  
- CFILES += $(PKG_PLATFORM).c
-diff --git a/libxfs/xfs.h b/libxfs/xfs.h
-index b3b45bb..c69dc4a 100644
---- a/libxfs/xfs.h
-+++ b/libxfs/xfs.h
-@@ -180,14 +180,19 @@ roundup_pow_of_two(uint v)
- #define XFS_BUF_SET_VTYPE_REF(a,b,c)	((void) 0)
- #define XFS_BUF_SET_BDSTRAT_FUNC(a,b)	((void) 0)
+ 	xfs_ino_t	sb_pquotino;	/* project quota inode */
+ 	xfs_lsn_t	sb_lsn;		/* last write sequence */
+@@ -250,8 +252,10 @@ typedef struct xfs_dsb {
+ 	__be32		sb_features_compat;
+ 	__be32		sb_features_ro_compat;
+ 	__be32		sb_features_incompat;
++	__be32		sb_features_log_incompat;
  
--#define xfs_incore(bt,blkno,len,lockit)	0
-+/* avoid gcc warning */
-+#define xfs_incore(bt,blkno,len,lockit)	({		\
-+	typeof(blkno) __foo = (blkno);			\
-+	(blkno) = __foo;				\
-+	NULL;						\
-+})
- #define xfs_buf_relse(bp)		libxfs_putbuf(bp)
- #define xfs_read_buf(mp,devp,blkno,len,f,bpp)	\
- 					(*(bpp) = libxfs_readbuf((devp), \
- 							(blkno), (len), 1), 0)
- #define xfs_buf_get(devp,blkno,len,f)	\
- 					(libxfs_getbuf((devp), (blkno), (len)))
--#define xfs_bwrite(mp,bp)		libxfs_writebuf((bp), 0)
-+#define xfs_bwrite(bp)			libxfs_writebuf((bp), 0)
+ 	__le32		sb_crc;		/* superblock crc */
++	__be32		sb_pad;
  
- #define XBRW_READ			LIBXFS_BREAD
- #define XBRW_WRITE			LIBXFS_BWRITE
-diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
-index 4429cb7..cfc2f4b 100644
---- a/libxfs/xfs_attr.c
-+++ b/libxfs/xfs_attr.c
-@@ -49,13 +49,6 @@ STATIC int xfs_attr_node_removename(xfs_da_args_t *args);
- STATIC int xfs_attr_fillstate(xfs_da_state_t *state);
- STATIC int xfs_attr_refillstate(xfs_da_state_t *state);
+ 	__be64		sb_pquotino;	/* project quota inode */
+ 	__be64		sb_lsn;		/* last write sequence */
+@@ -276,7 +280,8 @@ typedef enum {
+ 	XFS_SBS_INOALIGNMT, XFS_SBS_UNIT, XFS_SBS_WIDTH, XFS_SBS_DIRBLKLOG,
+ 	XFS_SBS_LOGSECTLOG, XFS_SBS_LOGSECTSIZE, XFS_SBS_LOGSUNIT,
+ 	XFS_SBS_FEATURES2, XFS_SBS_BAD_FEATURES2, XFS_SBS_FEATURES_COMPAT,
+-	XFS_SBS_FEATURES_RO_COMPAT, XFS_SBS_FEATURES_INCOMPAT, XFS_SBS_CRC,
++	XFS_SBS_FEATURES_RO_COMPAT, XFS_SBS_FEATURES_INCOMPAT,
++	XFS_SBS_FEATURES_LOG_INCOMPAT, XFS_SBS_CRC, XFS_SBS_PAD,
+ 	XFS_SBS_PQUOTINO, XFS_SBS_LSN,
+ 	XFS_SBS_FIELDCOUNT
+ } xfs_sb_field_t;
+@@ -306,6 +311,7 @@ typedef enum {
+ #define XFS_SB_FEATURES_COMPAT	XFS_SB_MVAL(FEATURES_COMPAT)
+ #define XFS_SB_FEATURES_RO_COMPAT XFS_SB_MVAL(FEATURES_RO_COMPAT)
+ #define XFS_SB_FEATURES_INCOMPAT XFS_SB_MVAL(FEATURES_INCOMPAT)
++#define XFS_SB_FEATURES_LOG_INCOMPAT XFS_SB_MVAL(FEATURES_LOG_INCOMPAT)
+ #define XFS_SB_CRC		XFS_SB_MVAL(CRC)
+ #define XFS_SB_PQUOTINO		XFS_SB_MVAL(PQUOTINO)
+ #define	XFS_SB_NUM_BITS		((int)XFS_SBS_FIELDCOUNT)
+@@ -316,7 +322,8 @@ typedef enum {
+ 	 XFS_SB_QFLAGS | XFS_SB_SHARED_VN | XFS_SB_UNIT | XFS_SB_WIDTH | \
+ 	 XFS_SB_ICOUNT | XFS_SB_IFREE | XFS_SB_FDBLOCKS | XFS_SB_FEATURES2 | \
+ 	 XFS_SB_BAD_FEATURES2 | XFS_SB_FEATURES_COMPAT | \
+-	 XFS_SB_FEATURES_RO_COMPAT | XFS_SB_FEATURES_INCOMPAT | XFS_SB_PQUOTINO)
++	 XFS_SB_FEATURES_RO_COMPAT | XFS_SB_FEATURES_INCOMPAT | \
++	 XFS_SB_FEATURES_LOG_INCOMPAT | XFS_SB_PQUOTINO)
  
--/*
-- * Routines to manipulate out-of-line attribute values.
-- */
--STATIC int xfs_attr_rmtval_set(xfs_da_args_t *args);
--STATIC int xfs_attr_rmtval_remove(xfs_da_args_t *args);
--
--#define ATTR_RMTVALUE_MAPSIZE	1	/* # of map entries at once */
  
- STATIC int
- xfs_attr_name_to_xname(
-@@ -1518,292 +1511,3 @@ xfs_attr_node_get(xfs_da_args_t *args)
- 	xfs_da_state_free(state);
- 	return(retval);
+ /*
+@@ -559,6 +566,65 @@ static inline int xfs_sb_version_hascrc(xfs_sb_t *sbp)
+ 	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5;
  }
--
--/*========================================================================
-- * External routines for manipulating out-of-line attribute values.
-- *========================================================================*/
--
--/*
-- * Read the value associated with an attribute from the out-of-line buffer
-- * that we stored it in.
-- */
--int
--xfs_attr_rmtval_get(xfs_da_args_t *args)
--{
--	xfs_bmbt_irec_t map[ATTR_RMTVALUE_MAPSIZE];
--	xfs_mount_t *mp;
--	xfs_daddr_t dblkno;
--	void *dst;
--	xfs_buf_t *bp;
--	int nmap, error, tmp, valuelen, blkcnt, i;
--	xfs_dablk_t lblkno;
--
--	trace_xfs_attr_rmtval_get(args);
--
--	ASSERT(!(args->flags & ATTR_KERNOVAL));
--
--	mp = args->dp->i_mount;
--	dst = args->value;
--	valuelen = args->valuelen;
--	lblkno = args->rmtblkno;
--	while (valuelen > 0) {
--		nmap = ATTR_RMTVALUE_MAPSIZE;
--		error = xfs_bmapi_read(args->dp, (xfs_fileoff_t)lblkno,
--				       args->rmtblkcnt, map, &nmap,
--				       XFS_BMAPI_ATTRFORK);
--		if (error)
--			return(error);
--		ASSERT(nmap >= 1);
--
--		for (i = 0; (i < nmap) && (valuelen > 0); i++) {
--			ASSERT((map[i].br_startblock != DELAYSTARTBLOCK) &&
--			       (map[i].br_startblock != HOLESTARTBLOCK));
--			dblkno = XFS_FSB_TO_DADDR(mp, map[i].br_startblock);
--			blkcnt = XFS_FSB_TO_BB(mp, map[i].br_blockcount);
--			error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp,
--						   dblkno, blkcnt, 0, &bp, NULL);
--			if (error)
--				return(error);
--
--			tmp = min_t(int, valuelen, BBTOB(bp->b_length));
--			xfs_buf_iomove(bp, 0, tmp, dst, XBRW_READ);
--			xfs_buf_relse(bp);
--			dst += tmp;
--			valuelen -= tmp;
--
--			lblkno += map[i].br_blockcount;
--		}
--	}
--	ASSERT(valuelen == 0);
--	return(0);
--}
--
--/*
-- * Write the value associated with an attribute into the out-of-line buffer
-- * that we have defined for it.
-- */
--STATIC int
--xfs_attr_rmtval_set(xfs_da_args_t *args)
--{
--	xfs_mount_t *mp;
--	xfs_fileoff_t lfileoff;
--	xfs_inode_t *dp;
--	xfs_bmbt_irec_t map;
--	xfs_daddr_t dblkno;
--	void *src;
--	xfs_buf_t *bp;
--	xfs_dablk_t lblkno;
--	int blkcnt, valuelen, nmap, error, tmp, committed;
--
--	trace_xfs_attr_rmtval_set(args);
--
--	dp = args->dp;
--	mp = dp->i_mount;
--	src = args->value;
--
--	/*
--	 * Find a "hole" in the attribute address space large enough for
--	 * us to drop the new attribute's value into.
--	 */
--	blkcnt = XFS_B_TO_FSB(mp, args->valuelen);
--	lfileoff = 0;
--	error = xfs_bmap_first_unused(args->trans, args->dp, blkcnt, &lfileoff,
--						   XFS_ATTR_FORK);
--	if (error) {
--		return(error);
--	}
--	args->rmtblkno = lblkno = (xfs_dablk_t)lfileoff;
--	args->rmtblkcnt = blkcnt;
--
--	/*
--	 * Roll through the "value", allocating blocks on disk as required.
--	 */
--	while (blkcnt > 0) {
--		/*
--		 * Allocate a single extent, up to the size of the value.
--		 */
--		xfs_bmap_init(args->flist, args->firstblock);
--		nmap = 1;
--		error = xfs_bmapi_write(args->trans, dp, (xfs_fileoff_t)lblkno,
--				  blkcnt,
--				  XFS_BMAPI_ATTRFORK | XFS_BMAPI_METADATA,
--				  args->firstblock, args->total, &map, &nmap,
--				  args->flist);
--		if (!error) {
--			error = xfs_bmap_finish(&args->trans, args->flist,
--						&committed);
--		}
--		if (error) {
--			ASSERT(committed);
--			args->trans = NULL;
--			xfs_bmap_cancel(args->flist);
--			return(error);
--		}
--
--		/*
--		 * bmap_finish() may have committed the last trans and started
--		 * a new one.  We need the inode to be in all transactions.
--		 */
--		if (committed)
--			xfs_trans_ijoin(args->trans, dp, 0);
--
--		ASSERT(nmap == 1);
--		ASSERT((map.br_startblock != DELAYSTARTBLOCK) &&
--		       (map.br_startblock != HOLESTARTBLOCK));
--		lblkno += map.br_blockcount;
--		blkcnt -= map.br_blockcount;
--
--		/*
--		 * Start the next trans in the chain.
--		 */
--		error = xfs_trans_roll(&args->trans, dp);
--		if (error)
--			return (error);
--	}
--
--	/*
--	 * Roll through the "value", copying the attribute value to the
--	 * already-allocated blocks.  Blocks are written synchronously
--	 * so that we can know they are all on disk before we turn off
--	 * the INCOMPLETE flag.
--	 */
--	lblkno = args->rmtblkno;
--	valuelen = args->valuelen;
--	while (valuelen > 0) {
--		int buflen;
--
--		/*
--		 * Try to remember where we decided to put the value.
--		 */
--		xfs_bmap_init(args->flist, args->firstblock);
--		nmap = 1;
--		error = xfs_bmapi_read(dp, (xfs_fileoff_t)lblkno,
--				       args->rmtblkcnt, &map, &nmap,
--				       XFS_BMAPI_ATTRFORK);
--		if (error)
--			return(error);
--		ASSERT(nmap == 1);
--		ASSERT((map.br_startblock != DELAYSTARTBLOCK) &&
--		       (map.br_startblock != HOLESTARTBLOCK));
--
--		dblkno = XFS_FSB_TO_DADDR(mp, map.br_startblock),
--		blkcnt = XFS_FSB_TO_BB(mp, map.br_blockcount);
--
--		bp = xfs_buf_get(mp->m_ddev_targp, dblkno, blkcnt, 0);
--		if (!bp)
--			return ENOMEM;
--
--		buflen = BBTOB(bp->b_length);
--		tmp = min_t(int, valuelen, buflen);
--		xfs_buf_iomove(bp, 0, tmp, src, XBRW_WRITE);
--		if (tmp < buflen)
--			xfs_buf_zero(bp, tmp, buflen - tmp);
--
--		error = xfs_bwrite(mp, bp);	/* GROT: NOTE: synchronous write */
--		xfs_buf_relse(bp);
--		if (error)
--			return error;
--		src += tmp;
--		valuelen -= tmp;
--
--		lblkno += map.br_blockcount;
--	}
--	ASSERT(valuelen == 0);
--	return(0);
--}
--
--/*
-- * Remove the value associated with an attribute by deleting the
-- * out-of-line buffer that it is stored on.
-- */
--STATIC int
--xfs_attr_rmtval_remove(xfs_da_args_t *args)
--{
--	xfs_mount_t *mp;
--	xfs_bmbt_irec_t map;
--	xfs_buf_t *bp;
--	xfs_daddr_t dblkno;
--	xfs_dablk_t lblkno;
--	int valuelen, blkcnt, nmap, error, done, committed;
--
--	trace_xfs_attr_rmtval_remove(args);
--
--	mp = args->dp->i_mount;
--
--	/*
--	 * Roll through the "value", invalidating the attribute value's
--	 * blocks.
--	 */
--	lblkno = args->rmtblkno;
--	valuelen = args->rmtblkcnt;
--	while (valuelen > 0) {
--		/*
--		 * Try to remember where we decided to put the value.
--		 */
--		nmap = 1;
--		error = xfs_bmapi_read(args->dp, (xfs_fileoff_t)lblkno,
--				       args->rmtblkcnt, &map, &nmap,
--				       XFS_BMAPI_ATTRFORK);
--		if (error)
--			return(error);
--		ASSERT(nmap == 1);
--		ASSERT((map.br_startblock != DELAYSTARTBLOCK) &&
--		       (map.br_startblock != HOLESTARTBLOCK));
--
--		dblkno = XFS_FSB_TO_DADDR(mp, map.br_startblock),
--		blkcnt = XFS_FSB_TO_BB(mp, map.br_blockcount);
--
--		/*
--		 * If the "remote" value is in the cache, remove it.
--		 */
--		bp = xfs_incore(mp->m_ddev_targp, dblkno, blkcnt, XBF_TRYLOCK);
--		if (bp) {
--			xfs_buf_stale(bp);
--			xfs_buf_relse(bp);
--			bp = NULL;
--		}
--
--		valuelen -= map.br_blockcount;
--
--		lblkno += map.br_blockcount;
--	}
--
--	/*
--	 * Keep de-allocating extents until the remote-value region is gone.
--	 */
--	lblkno = args->rmtblkno;
--	blkcnt = args->rmtblkcnt;
--	done = 0;
--	while (!done) {
--		xfs_bmap_init(args->flist, args->firstblock);
--		error = xfs_bunmapi(args->trans, args->dp, lblkno, blkcnt,
--				    XFS_BMAPI_ATTRFORK | XFS_BMAPI_METADATA,
--				    1, args->firstblock, args->flist,
--				    &done);
--		if (!error) {
--			error = xfs_bmap_finish(&args->trans, args->flist,
--						&committed);
--		}
--		if (error) {
--			ASSERT(committed);
--			args->trans = NULL;
--			xfs_bmap_cancel(args->flist);
--			return(error);
--		}
--
--		/*
--		 * bmap_finish() may have committed the last trans and started
--		 * a new one.  We need the inode to be in all transactions.
--		 */
--		if (committed)
--			xfs_trans_ijoin(args->trans, args->dp, 0);
--
--		/*
--		 * Close out trans and start the next one in the chain.
--		 */
--		error = xfs_trans_roll(&args->trans, args->dp);
--		if (error)
--			return (error);
--	}
--	return(0);
--}
-diff --git a/libxfs/xfs_attr_remote.c b/libxfs/xfs_attr_remote.c
-new file mode 100644
-index 0000000..36f8b5d
---- /dev/null
-+++ b/libxfs/xfs_attr_remote.c
-@@ -0,0 +1,306 @@
-+/*
-+ * Copyright (c) 2000-2005 Silicon Graphics, Inc.
-+ * All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+#include <xfs.h>
-+
-+#define ATTR_RMTVALUE_MAPSIZE	1	/* # of map entries at once */
+ 
 +
 +/*
-+ * Read the value associated with an attribute from the out-of-line buffer
-+ * that we stored it in.
++ * Extended v5 superblock feature masks. These are to be used for new v5
++ * superblock features only.
++ *
++ * Compat features are new features that old kernels will not notice or affect
++ * and so can mount read-write without issues.
++ *
++ * RO-Compat (read only) are features that old kernels can read but will break
++ * if they write. Hence only read-only mounts of such filesystems are allowed on
++ * kernels that don't support the feature bit.
++ *
++ * InCompat features are features which old kernels will not understand and so
++ * must not mount.
++ *
++ * Log-InCompat features are for changes to log formats or new transactions that
++ * can't be replayed on older kernels. The fields are set when the filesystem is
++ * mounted, and a clean unmount clears the fields.
 + */
-+int
-+xfs_attr_rmtval_get(xfs_da_args_t *args)
++#define XFS_SB_FEAT_COMPAT_ALL 0
++#define XFS_SB_FEAT_COMPAT_UNKNOWN	~XFS_SB_FEAT_COMPAT_ALL
++static inline bool
++xfs_sb_has_compat_feature(
++	struct xfs_sb	*sbp,
++	__uint32_t	feature)
 +{
-+	xfs_bmbt_irec_t map[ATTR_RMTVALUE_MAPSIZE];
-+	xfs_mount_t *mp;
-+	xfs_daddr_t dblkno;
-+	void *dst;
-+	xfs_buf_t *bp;
-+	int nmap, error, tmp, valuelen, blkcnt, i;
-+	xfs_dablk_t lblkno;
-+
-+	trace_xfs_attr_rmtval_get(args);
-+
-+	ASSERT(!(args->flags & ATTR_KERNOVAL));
-+
-+	mp = args->dp->i_mount;
-+	dst = args->value;
-+	valuelen = args->valuelen;
-+	lblkno = args->rmtblkno;
-+	while (valuelen > 0) {
-+		nmap = ATTR_RMTVALUE_MAPSIZE;
-+		error = xfs_bmapi_read(args->dp, (xfs_fileoff_t)lblkno,
-+				       args->rmtblkcnt, map, &nmap,
-+				       XFS_BMAPI_ATTRFORK);
-+		if (error)
-+			return(error);
-+		ASSERT(nmap >= 1);
-+
-+		for (i = 0; (i < nmap) && (valuelen > 0); i++) {
-+			ASSERT((map[i].br_startblock != DELAYSTARTBLOCK) &&
-+			       (map[i].br_startblock != HOLESTARTBLOCK));
-+			dblkno = XFS_FSB_TO_DADDR(mp, map[i].br_startblock);
-+			blkcnt = XFS_FSB_TO_BB(mp, map[i].br_blockcount);
-+			error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp,
-+						   dblkno, blkcnt, 0, &bp, NULL);
-+			if (error)
-+				return(error);
-+
-+			tmp = min_t(int, valuelen, BBTOB(bp->b_length));
-+			xfs_buf_iomove(bp, 0, tmp, dst, XBRW_READ);
-+			xfs_buf_relse(bp);
-+			dst += tmp;
-+			valuelen -= tmp;
-+
-+			lblkno += map[i].br_blockcount;
-+		}
-+	}
-+	ASSERT(valuelen == 0);
-+	return(0);
++	return (sbp->sb_features_compat & feature) != 0;
 +}
 +
-+/*
-+ * Write the value associated with an attribute into the out-of-line buffer
-+ * that we have defined for it.
-+ */
-+int
-+xfs_attr_rmtval_set(xfs_da_args_t *args)
++#define XFS_SB_FEAT_RO_COMPAT_ALL 0
++#define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
++static inline bool
++xfs_sb_has_ro_compat_feature(
++	struct xfs_sb	*sbp,
++	__uint32_t	feature)
 +{
-+	xfs_mount_t *mp;
-+	xfs_fileoff_t lfileoff;
-+	xfs_inode_t *dp;
-+	xfs_bmbt_irec_t map;
-+	xfs_daddr_t dblkno;
-+	void *src;
-+	xfs_buf_t *bp;
-+	xfs_dablk_t lblkno;
-+	int blkcnt, valuelen, nmap, error, tmp, committed;
-+
-+	trace_xfs_attr_rmtval_set(args);
-+
-+	dp = args->dp;
-+	mp = dp->i_mount;
-+	src = args->value;
-+
-+	/*
-+	 * Find a "hole" in the attribute address space large enough for
-+	 * us to drop the new attribute's value into.
-+	 */
-+	blkcnt = XFS_B_TO_FSB(mp, args->valuelen);
-+	lfileoff = 0;
-+	error = xfs_bmap_first_unused(args->trans, args->dp, blkcnt, &lfileoff,
-+						   XFS_ATTR_FORK);
-+	if (error) {
-+		return(error);
-+	}
-+	args->rmtblkno = lblkno = (xfs_dablk_t)lfileoff;
-+	args->rmtblkcnt = blkcnt;
-+
-+	/*
-+	 * Roll through the "value", allocating blocks on disk as required.
-+	 */
-+	while (blkcnt > 0) {
-+		/*
-+		 * Allocate a single extent, up to the size of the value.
-+		 */
-+		xfs_bmap_init(args->flist, args->firstblock);
-+		nmap = 1;
-+		error = xfs_bmapi_write(args->trans, dp, (xfs_fileoff_t)lblkno,
-+				  blkcnt,
-+				  XFS_BMAPI_ATTRFORK | XFS_BMAPI_METADATA,
-+				  args->firstblock, args->total, &map, &nmap,
-+				  args->flist);
-+		if (!error) {
-+			error = xfs_bmap_finish(&args->trans, args->flist,
-+						&committed);
-+		}
-+		if (error) {
-+			ASSERT(committed);
-+			args->trans = NULL;
-+			xfs_bmap_cancel(args->flist);
-+			return(error);
-+		}
-+
-+		/*
-+		 * bmap_finish() may have committed the last trans and started
-+		 * a new one.  We need the inode to be in all transactions.
-+		 */
-+		if (committed)
-+			xfs_trans_ijoin(args->trans, dp, 0);
-+
-+		ASSERT(nmap == 1);
-+		ASSERT((map.br_startblock != DELAYSTARTBLOCK) &&
-+		       (map.br_startblock != HOLESTARTBLOCK));
-+		lblkno += map.br_blockcount;
-+		blkcnt -= map.br_blockcount;
-+
-+		/*
-+		 * Start the next trans in the chain.
-+		 */
-+		error = xfs_trans_roll(&args->trans, dp);
-+		if (error)
-+			return (error);
-+	}
-+
-+	/*
-+	 * Roll through the "value", copying the attribute value to the
-+	 * already-allocated blocks.  Blocks are written synchronously
-+	 * so that we can know they are all on disk before we turn off
-+	 * the INCOMPLETE flag.
-+	 */
-+	lblkno = args->rmtblkno;
-+	valuelen = args->valuelen;
-+	while (valuelen > 0) {
-+		int buflen;
-+
-+		/*
-+		 * Try to remember where we decided to put the value.
-+		 */
-+		xfs_bmap_init(args->flist, args->firstblock);
-+		nmap = 1;
-+		error = xfs_bmapi_read(dp, (xfs_fileoff_t)lblkno,
-+				       args->rmtblkcnt, &map, &nmap,
-+				       XFS_BMAPI_ATTRFORK);
-+		if (error)
-+			return(error);
-+		ASSERT(nmap == 1);
-+		ASSERT((map.br_startblock != DELAYSTARTBLOCK) &&
-+		       (map.br_startblock != HOLESTARTBLOCK));
-+
-+		dblkno = XFS_FSB_TO_DADDR(mp, map.br_startblock),
-+		blkcnt = XFS_FSB_TO_BB(mp, map.br_blockcount);
-+
-+		bp = xfs_buf_get(mp->m_ddev_targp, dblkno, blkcnt, 0);
-+		if (!bp)
-+			return ENOMEM;
-+
-+		buflen = BBTOB(bp->b_length);
-+		tmp = min_t(int, valuelen, buflen);
-+		xfs_buf_iomove(bp, 0, tmp, src, XBRW_WRITE);
-+		if (tmp < buflen)
-+			xfs_buf_zero(bp, tmp, buflen - tmp);
-+
-+		error = xfs_bwrite(bp);	/* GROT: NOTE: synchronous write */
-+		xfs_buf_relse(bp);
-+		if (error)
-+			return error;
-+		src += tmp;
-+		valuelen -= tmp;
-+
-+		lblkno += map.br_blockcount;
-+	}
-+	ASSERT(valuelen == 0);
-+	return(0);
++	return (sbp->sb_features_ro_compat & feature) != 0;
 +}
 +
-+/*
-+ * Remove the value associated with an attribute by deleting the
-+ * out-of-line buffer that it is stored on.
-+ */
-+int
-+xfs_attr_rmtval_remove(xfs_da_args_t *args)
++#define XFS_SB_FEAT_INCOMPAT_ALL 0
++#define XFS_SB_FEAT_INCOMPAT_UNKNOWN	~XFS_SB_FEAT_INCOMPAT_ALL
++static inline bool
++xfs_sb_has_incompat_feature(
++	struct xfs_sb	*sbp,
++	__uint32_t	feature)
 +{
-+	xfs_mount_t *mp;
-+	xfs_bmbt_irec_t map;
-+	xfs_buf_t *bp;
-+	xfs_daddr_t dblkno;
-+	xfs_dablk_t lblkno;
-+	int valuelen, blkcnt, nmap, error, done, committed;
-+
-+	trace_xfs_attr_rmtval_remove(args);
-+
-+	mp = args->dp->i_mount;
-+
-+	/*
-+	 * Roll through the "value", invalidating the attribute value's
-+	 * blocks.
-+	 */
-+	lblkno = args->rmtblkno;
-+	valuelen = args->rmtblkcnt;
-+	while (valuelen > 0) {
-+		/*
-+		 * Try to remember where we decided to put the value.
-+		 */
-+		nmap = 1;
-+		error = xfs_bmapi_read(args->dp, (xfs_fileoff_t)lblkno,
-+				       args->rmtblkcnt, &map, &nmap,
-+				       XFS_BMAPI_ATTRFORK);
-+		if (error)
-+			return(error);
-+		ASSERT(nmap == 1);
-+		ASSERT((map.br_startblock != DELAYSTARTBLOCK) &&
-+		       (map.br_startblock != HOLESTARTBLOCK));
-+
-+		dblkno = XFS_FSB_TO_DADDR(mp, map.br_startblock),
-+		blkcnt = XFS_FSB_TO_BB(mp, map.br_blockcount);
-+
-+		/*
-+		 * If the "remote" value is in the cache, remove it.
-+		 */
-+		bp = xfs_incore(mp->m_ddev_targp, dblkno, blkcnt, XBF_TRYLOCK);
-+		if (bp) {
-+			xfs_buf_stale(bp);
-+			xfs_buf_relse(bp);
-+			bp = NULL;
-+		}
-+
-+		valuelen -= map.br_blockcount;
-+
-+		lblkno += map.br_blockcount;
-+	}
-+
-+	/*
-+	 * Keep de-allocating extents until the remote-value region is gone.
-+	 */
-+	lblkno = args->rmtblkno;
-+	blkcnt = args->rmtblkcnt;
-+	done = 0;
-+	while (!done) {
-+		xfs_bmap_init(args->flist, args->firstblock);
-+		error = xfs_bunmapi(args->trans, args->dp, lblkno, blkcnt,
-+				    XFS_BMAPI_ATTRFORK | XFS_BMAPI_METADATA,
-+				    1, args->firstblock, args->flist,
-+				    &done);
-+		if (!error) {
-+			error = xfs_bmap_finish(&args->trans, args->flist,
-+						&committed);
-+		}
-+		if (error) {
-+			ASSERT(committed);
-+			args->trans = NULL;
-+			xfs_bmap_cancel(args->flist);
-+			return(error);
-+		}
-+
-+		/*
-+		 * bmap_finish() may have committed the last trans and started
-+		 * a new one.  We need the inode to be in all transactions.
-+		 */
-+		if (committed)
-+			xfs_trans_ijoin(args->trans, args->dp, 0);
-+
-+		/*
-+		 * Close out trans and start the next one in the chain.
-+		 */
-+		error = xfs_trans_roll(&args->trans, args->dp);
-+		if (error)
-+			return (error);
-+	}
-+	return(0);
++	return (sbp->sb_features_incompat & feature) != 0;
 +}
 +
++#define XFS_SB_FEAT_INCOMPAT_LOG_ALL 0
++#define XFS_SB_FEAT_INCOMPAT_LOG_UNKNOWN	~XFS_SB_FEAT_INCOMPAT_LOG_ALL
++static inline bool
++xfs_sb_has_incompat_log_feature(
++	struct xfs_sb	*sbp,
++	__uint32_t	feature)
++{
++	return (sbp->sb_features_log_incompat & feature) != 0;
++}
++
+ /*
+  * end of superblock version macros
+  */
+diff --git a/libxfs/xfs_mount.c b/libxfs/xfs_mount.c
+index 07b892b..f66f63d 100644
+--- a/libxfs/xfs_mount.c
++++ b/libxfs/xfs_mount.c
+@@ -73,7 +73,9 @@ static const struct {
+     { offsetof(xfs_sb_t, sb_features_compat), 0 },
+     { offsetof(xfs_sb_t, sb_features_ro_compat), 0 },
+     { offsetof(xfs_sb_t, sb_features_incompat), 0 },
++    { offsetof(xfs_sb_t, sb_features_log_incompat), 0 },
+     { offsetof(xfs_sb_t, sb_crc),	 0 },
++    { offsetof(xfs_sb_t, sb_pad),	 0 },
+     { offsetof(xfs_sb_t, sb_pquotino),	 0 },
+     { offsetof(xfs_sb_t, sb_lsn),	 0 },
+     { sizeof(xfs_sb_t),			 0 }
+@@ -140,18 +142,44 @@ xfs_mount_validate_sb(
+ 	}
+ 
+ 	/*
+-	 * Do not allow Version 5 superblocks to mount right now, even though
+-	 * support is in place. We need to implement the proper feature masks
+-	 * first.
++	 * Version 5 superblock feature mask validation. Reject combinations the
++	 * kernel cannot support up front before checking anything else.
+ 	 */
+-	if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) {
++	if (check_inprogress && XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) {
+ 		xfs_alert(mp,
+-	"Version 5 superblock detected. Experimental support not yet enabled!");
+-		return XFS_ERROR(EINVAL);
++"Version 5 superblock detected. xfsprogs has EXPERIMENTAL support enabled!\n"
++"Use of these features is at your own risk!");
++
++		if (xfs_sb_has_compat_feature(sbp,
++					XFS_SB_FEAT_COMPAT_UNKNOWN)) {
++			xfs_warn(mp,
++"Superblock has unknown compatible features (0x%x) enabled.\n"
++"Using a more recent xfsprogs is recommended.",
++				(sbp->sb_features_compat &
++						XFS_SB_FEAT_COMPAT_UNKNOWN));
++		}
++
++		if (xfs_sb_has_ro_compat_feature(sbp,
++					XFS_SB_FEAT_RO_COMPAT_UNKNOWN)) {
++			xfs_warn(mp,
++"Superblock has unknown read-only compatible features (0x%x) enabled.\n"
++"Using a more recent xfsprogs is recommended.",
++				(sbp->sb_features_ro_compat &
++						XFS_SB_FEAT_RO_COMPAT_UNKNOWN));
++		}
++		if (xfs_sb_has_incompat_feature(sbp,
++					XFS_SB_FEAT_INCOMPAT_UNKNOWN)) {
++			xfs_warn(mp,
++"Superblock has unknown incompatible features (0x%x) enabled.\n"
++"Filesystem can not be safely operated on by this xfsprogs installation",
++				(sbp->sb_features_incompat &
++						XFS_SB_FEAT_INCOMPAT_UNKNOWN));
++			return XFS_ERROR(EINVAL);
++		}
+ 	}
+ 
+ 	if (unlikely(
+-	    sbp->sb_logstart == 0 && mp->m_logdev == mp->m_dev)) {
++	    sbp->sb_logstart == 0 && mp->m_logdev_targp == mp->m_ddev_targp)) {
+ 		xfs_warn(mp,
+ 		"filesystem is marked as having an external log; "
+ 		"specify logdev on the mount command line.");
+@@ -159,7 +187,7 @@ xfs_mount_validate_sb(
+ 	}
+ 
+ 	if (unlikely(
+-	    sbp->sb_logstart != 0 && mp->m_logdev != mp->m_dev)) {
++	    sbp->sb_logstart != 0 && mp->m_logdev_targp != mp->m_ddev_targp)) {
+ 		xfs_warn(mp,
+ 		"filesystem is marked as having an internal log; "
+ 		"do not specify logdev on the mount command line.");
+@@ -214,12 +242,6 @@ xfs_mount_validate_sb(
+ 		return XFS_ERROR(ENOSYS);
+ 	}
+ 
+-
+-	if (check_inprogress && sbp->sb_inprogress) {
+-		xfs_warn(mp, "Offline file system operation in progress!");
+-		return XFS_ERROR(EFSCORRUPTED);
+-	}
+-
+ 	/*
+ 	 * Version 1 directory format has never worked on Linux.
+ 	 */
+@@ -285,6 +307,9 @@ xfs_sb_from_disk(
+ 	to->sb_features_compat = be32_to_cpu(from->sb_features_compat);
+ 	to->sb_features_ro_compat = be32_to_cpu(from->sb_features_ro_compat);
+ 	to->sb_features_incompat = be32_to_cpu(from->sb_features_incompat);
++	to->sb_features_log_incompat =
++				be32_to_cpu(from->sb_features_log_incompat);
++	to->sb_pad = 0;
+ 	to->sb_pquotino = be64_to_cpu(from->sb_pquotino);
+ 	to->sb_lsn = be64_to_cpu(from->sb_lsn);
+ }
+diff --git a/logprint/log_print_trans.c b/logprint/log_print_trans.c
+index 86e1c42..2dd3a10 100644
+--- a/logprint/log_print_trans.c
++++ b/logprint/log_print_trans.c
+@@ -68,6 +68,24 @@ xfs_log_print_trans(
+ 
+ 	if (head_blk == tail_blk)
+ 		return;
++
++	/*
++	 * Version 5 superblock log feature mask validation. We know the
++	 * log is dirty so check if there are any unknown log features
++	 * in what we need to recover. If there are unknown features
++	 * (e.g. unsupported transactions) then warn about it.
++	 */
++	if (XFS_SB_VERSION_NUM(&log->l_mp->m_sb) == XFS_SB_VERSION_5 &&
++	    xfs_sb_has_incompat_log_feature(&log->l_mp->m_sb,
++				XFS_SB_FEAT_INCOMPAT_LOG_UNKNOWN)) {
++		printf(_(
++"Superblock has unknown incompatible log features (0x%x) enabled.\n"
++"Output may be incomplete or inaccurate. It is recommended that you\n"
++"upgrade your xfsprogs installation to match the filesystem features.\n"),
++			(log->l_mp->m_sb.sb_features_log_incompat &
++				XFS_SB_FEAT_INCOMPAT_LOG_UNKNOWN));
++	}
++
+ 	if ((error = xlog_do_recovery_pass(log, head_blk, tail_blk, XLOG_RECOVER_PASS1))) {
+ 		fprintf(stderr, _("%s: failed in xfs_do_recovery_pass, error: %d\n"),
+ 			progname, error);
 -- 
 1.7.10.4
 
