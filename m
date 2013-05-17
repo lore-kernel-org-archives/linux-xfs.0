@@ -1,24 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 79C617F37
-	for <xfs@oss.sgi.com>; Fri, 17 May 2013 00:15:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 54AF48F80D7
-	for <xfs@oss.sgi.com>; Thu, 16 May 2013 22:15:12 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	k6NEXzSn7SEYn00f for <xfs@oss.sgi.com>;
-	Thu, 16 May 2013 22:15:10 -0700 (PDT)
-Date: Fri, 17 May 2013 15:14:41 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v8 5/5] xfs: Use new qs_pquota field in fs_quota_stat for
-	Q_XGETQSTAT
-Message-ID: <20130517051441.GQ24635@dastard>
-References: <1368220889-25188-1-git-send-email-sekharan@us.ibm.com>
-	<1368220889-25188-6-git-send-email-sekharan@us.ibm.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 388D07F37
+	for <xfs@oss.sgi.com>; Fri, 17 May 2013 00:38:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id AD15DAC04F
+	for <xfs@oss.sgi.com>; Thu, 16 May 2013 22:38:09 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id BilpvlB5hBv430t3 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 16 May 2013 22:38:08 -0700 (PDT)
+Received: from ucsinet22.oracle.com (ucsinet22.oracle.com [156.151.31.94])
+	by userp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
+	ESMTP id r4H5c5Bb030627
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Fri, 17 May 2013 05:38:06 GMT
+Received: from aserz7021.oracle.com (aserz7021.oracle.com [141.146.126.230])
+	by ucsinet22.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	r4H5c6dZ007180
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
+	for <xfs@oss.sgi.com>; Fri, 17 May 2013 05:38:07 GMT
+Received: from abhmt109.oracle.com (abhmt109.oracle.com [141.146.116.61])
+	by aserz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	r4H5c6JX012437 for <xfs@oss.sgi.com>; Fri, 17 May 2013 05:38:06 GMT
+Message-ID: <5195C239.5010905@oracle.com>
+Date: Fri, 17 May 2013 13:38:01 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1368220889-25188-6-git-send-email-sekharan@us.ibm.com>
+Subject: [PATCH v2 0/8] xfs: log space validation
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,102 +39,55 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Chandra Seetharaman <sekharan@us.ibm.com>
-Cc: xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Fri, May 10, 2013 at 04:21:29PM -0500, Chandra Seetharaman wrote:
-> For the Q_XGETQSTAT quota command, if the new version of fs_quota_stat
-> data structure is used, fill the project quota information.
-> 
-> Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-> ---
->  fs/xfs/xfs_qm_syscalls.c |   39 +++++++++++++++++++++++++--------------
->  1 files changed, 25 insertions(+), 14 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-> index c27b0e4..7c5876b 100644
-> --- a/fs/xfs/xfs_qm_syscalls.c
-> +++ b/fs/xfs/xfs_qm_syscalls.c
-> @@ -420,20 +420,14 @@ xfs_qm_scall_getqstat(
->  	bool                    tempgqip = false;
->  	bool                    temppqip = false;
->  
-> -	if (!xfs_sb_version_hasquota(&mp->m_sb)) {
-> -		out->qs_uquota.qfs_ino = NULLFSINO;
-> -		out->qs_gquota.qfs_ino = NULLFSINO;
-> -		out->qs_pquota.qfs_ino = NULLFSINO;
-> +	out->qs_uquota.qfs_ino = NULLFSINO;
-> +	out->qs_gquota.qfs_ino = NULLFSINO;
-> +	out->qs_pquota.qfs_ino = NULLFSINO;
-> +
-> +	if (!xfs_sb_version_hasquota(&mp->m_sb))
->  		return (0);
-> -	}
->  	out->qs_flags = (__uint16_t) xfs_qm_export_flags(mp->m_qflags &
-> -							(XFS_ALL_QUOTA_ACCT|
-> -							 XFS_ALL_QUOTA_ENFD));
-> -	out->qs_uquota.qfs_ino = mp->m_sb.sb_uquotino;
-> -	out->qs_gquota.qfs_ino = mp->m_sb.sb_gquotino;
-> -	if (&out->qs_gquota != &out->qs_pquota)
-> -		out->qs_pquota.qfs_ino = mp->m_sb.sb_pquotino;
-> -
-> +				(XFS_ALL_QUOTA_ACCT| XFS_ALL_QUOTA_ENFD));
->  	if (q) {
->  		uip = q->qi_uquotaip;
->  		gip = q->qi_gquotaip;
-> @@ -454,21 +448,38 @@ xfs_qm_scall_getqstat(
->  					0, 0, &pip) == 0)
->  			temppqip = true;
->  	}
-> +
->  	if (uip) {
-> +		out->qs_uquota.qfs_ino = mp->m_sb.sb_uquotino;
->  		out->qs_uquota.qfs_nblks = uip->i_d.di_nblocks;
->  		out->qs_uquota.qfs_nextents = uip->i_d.di_nextents;
->  		if (tempuqip)
->  			IRELE(uip);
->  	}
->  	if (gip) {
-> +		out->qs_gquota.qfs_ino = mp->m_sb.sb_gquotino;
->  		out->qs_gquota.qfs_nblks = gip->i_d.di_nblocks;
->  		out->qs_gquota.qfs_nextents = gip->i_d.di_nextents;
->  		if (tempgqip)
->  			IRELE(gip);
->  	}
->  	if (pip) {
-> -		out->qs_pquota.qfs_nblks = pip->i_d.di_nblocks;
-> -		out->qs_pquota.qfs_nextents = pip->i_d.di_nextents;
-> +		if (out->qs_version >= FS_QSTAT_VERSION_2) {
-> +			out->qs_pquota.qfs_ino = mp->m_sb.sb_pquotino;
-> +			out->qs_pquota.qfs_nblks = pip->i_d.di_nblocks;
-> +			out->qs_pquota.qfs_nextents = pip->i_d.di_nextents;
-> +		} else {
-> +			/*
-> +			 * In FS_QSTAT_VERSION version, there is no
-> +			 * qs_pquota, and there is no combined support
-> +			 * for gquota/pquota. qs_gquota is shared for
-> +			 * providing the pquota/gquota information to
-> +			 * the user space.
-> +			 */
+Hello,
 
-Move that comment to the head of the function. i.e.:
+This is version 2 of fix log space calculation if the log stripe unit is specified.
 
-/*
- * We support two different versions of the fs_quota_stat structure
- * here. If the version is FS_QSTAT_VERSION, then there is no
- * separate project quota fields, and so we write project quota
- * information into the group quota fields. With FS_QSTAT_VERSION_2,
- * there is a separate project quota field so we can use that
- * instead to pass both group and project quota back to user space
- * in the one call.
- */
+I changed the subject in this round since there are many changes belong to the log
+space reservation interface adjustment.
 
-Cheers,
+Major changes of v2->v1:
+- The interface of xfs_trans_reserve() has been changed to:
+  xfs_trans_reserve(struct xfs_trans *tp, xfs_trans_res *tres, int blocks, int rtextents);
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+- Introduce a new inline helper m_tresp() to fetch pointer of mp->m_reservations structure,
+  so that we don't need a big code change if someday we rename m_reservations to another
+  name.
+
+- Introduce xfs_log_rlimit.[c|h] to isolate the maximum transaction log space validation
+  related routines.  There are two functions can be shared with the user space which are:
+  void xfs_log_adjust_max_attrsetm_res();
+  void xfs_log_get_max_trans_res();
+
+- Calculate the maximum length in bytes that would be required for a local attribute value
+  as large attributes out of line are not logged according to Dave's advise.
+
+- Don't return if the given log space at mount time is too small, drop a message via syslog
+  in critical level instead.
+
+Testing:
+xfstests/generic and xfs specified test cases(except a dozens of cases need a tap device or
+xfsdump) works without panic.
+
+[PATCH 1/8] xfs: Introduce a new structure to hold transaction reservation items
+[PATCH 2/8] xfs: Introduce tr_fsyncts to m_reservation
+[PATCH 3/8] xfs: Make writeid transaction use tr_writeid
+[PATCH 4/8] xfs: Refactor xfs_trans_reserve() interface
+[PATCH 5/8] xfs: Get rid of all XFS_XXX_LOG_RES() macros
+[PATCH 6/8] xfs: Refactor xfs_ticket_alloc() to extract a new helper
+[PATCH 7/8] xfs: Add xfs_log_rlimit.[c|h]
+[PATCH 8/8] xfs: Validate log space at mount time
+
+The patches of user space sync up with those kernel space change will be sent out later as I
+have to go out to deal with a urgent thing right now.
+
+v1:
+http://comments.gmane.org/gmane.comp.file-systems.xfs.general/52201
+
+Thanks,
+-Jeff
 
 _______________________________________________
 xfs mailing list
