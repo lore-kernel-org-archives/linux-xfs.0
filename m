@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 86B6F7F37
-	for <xfs@oss.sgi.com>; Fri, 17 May 2013 05:29:52 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 743068F8049
-	for <xfs@oss.sgi.com>; Fri, 17 May 2013 03:29:49 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	bincGzW0vJ8frWJS for <xfs@oss.sgi.com>;
-	Fri, 17 May 2013 03:29:47 -0700 (PDT)
-Date: Fri, 17 May 2013 20:29:46 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 7/8] xfs: Add xfs_log_rlimit.[c|h]
-Message-ID: <20130517102946.GT24635@dastard>
-References: <5195C279.3060502@oracle.com> <5195EC13.2060502@gmail.com>
-	<5195FB1B.9000803@oracle.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id CFA917F37
+	for <xfs@oss.sgi.com>; Fri, 17 May 2013 05:34:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 4B091AC003
+	for <xfs@oss.sgi.com>; Fri, 17 May 2013 03:34:40 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id HvhfznYoywWjYCpR (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 17 May 2013 03:34:39 -0700 (PDT)
+Message-ID: <519607B6.5090009@oracle.com>
+Date: Fri, 17 May 2013 18:34:30 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <5195FB1B.9000803@oracle.com>
+Subject: Re: [PATCH v2 7/8] xfs: Add xfs_log_rlimit.[c|h]
+References: <5195C279.3060502@oracle.com> <5195EC13.2060502@gmail.com>
+	<5195FB1B.9000803@oracle.com> <20130517102946.GT24635@dastard>
+In-Reply-To: <20130517102946.GT24635@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,24 +29,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: "Michael L. Semon" <mlsemon35@gmail.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Fri, May 17, 2013 at 05:40:43PM +0800, Jeff Liu wrote:
-> Hi Michael,
+On 05/17/2013 06:29 PM, Dave Chinner wrote:
+> On Fri, May 17, 2013 at 05:40:43PM +0800, Jeff Liu wrote:
+>> Hi Michael,
+>>
+>> Are you compiling kernel on 32-bit system?
+>>
+>> Looks this issue is regarding 64-bit division at roundup() on 32-bit if so.
 > 
-> Are you compiling kernel on 32-bit system?
-> 
-> Looks this issue is regarding 64-bit division at roundup() on 32-bit if so.
+> roundup_64() is what you want, then.
+Yep, will take care of it.
 
-roundup_64() is what you want, then.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+-Jeff
 
 _______________________________________________
 xfs mailing list
