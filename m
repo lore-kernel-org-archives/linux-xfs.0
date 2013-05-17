@@ -1,21 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D2F797F37
-	for <xfs@oss.sgi.com>; Fri, 31 May 2013 23:51:38 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B44E58F8033
-	for <xfs@oss.sgi.com>; Fri, 31 May 2013 21:51:35 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 8no2T3EXDPpXe1hA for <xfs@oss.sgi.com>;
-	Fri, 31 May 2013 21:51:34 -0700 (PDT)
-References: <51A8C59B.3030308@redhat.com> <20130531172456.GB6915@gmail.com>
-	<51A8DACB.2030806@redhat.com> <51A8F3CE.4030801@sgi.com>
-Mime-Version: 1.0 (1.0)
-In-Reply-To: <51A8F3CE.4030801@sgi.com>
-Message-Id: <5E41AE1A-97B8-4746-84DA-A6C0B9A714B3@sandeen.net>
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: [PATCH] xfstests: fix seek_sanity_test for fs w/o fallocate
-Date: Fri, 31 May 2013 23:51:32 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 1EEEA7F37
+	for <xfs@oss.sgi.com>; Fri, 17 May 2013 05:15:52 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A5B49AC002
+	for <xfs@oss.sgi.com>; Fri, 17 May 2013 03:15:51 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	FjiybuFFcyUsMcFW for <xfs@oss.sgi.com>;
+	Fri, 17 May 2013 03:15:50 -0700 (PDT)
+Received: from dave by dastard with local (Exim 4.76)
+	(envelope-from <david@fromorbit.com>) id 1UdHhR-0008KQ-GP
+	for xfs@oss.sgi.com; Fri, 17 May 2013 20:15:45 +1000
+Date: Fri, 17 May 2013 20:15:45 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 6/5] xfs: xfs_da3_node_read_verify() doesn't handle
+	XFS_ATTR3_LEAF_MAGIC
+Message-ID: <20130517101545.GR24635@dastard>
+References: <1368753029-9977-1-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1368753029-9977-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,46 +33,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Rich Johnston <rjohnston@sgi.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, ext4 development <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On May 31, 2013, at 2:02 PM, Rich Johnston <rjohnston@sgi.com> wrote:
 
-> On 05/31/2013 12:15 PM, Eric Sandeen wrote:
->> On 5/31/13 12:24 PM, Zheng Liu wrote:
->>> On Fri, May 31, 2013 at 10:45:31AM -0500, Eric Sandeen wrote:
->>>> currently the seek_sanity_test (generic/285) fails on ext3
->>>> or ext2 due to fallocate() failures.  Just ignore that test
->>>> if the fs doesn't support fallocate.
->>> 
->>> Hi Eric,
->>> 
->>> I remember that my patch had been applied [1].  But stranger I couldn't
->>> find it in xfstests tree.  However, I think that your patch is better.
->>> 
->>> 1. http://oss.sgi.com/archives/xfs/2013-05/msg00534.html
->> 
->> Oh, right, I had forgotten about that.  Rich, any idea?
-> 
-> No other than it was a Friday.  My apologies Zheng.
-> Zheng as your's should have been committed, what do you want me to do?
-> 
-Actually let's merge mine since it allows testing on ext2/3.  The other just disables those filesystems...
+From: Dave Chinner <dchinner@redhat.com>
 
--Eric
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_da_btree.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-> --Rich
-> 
->> 
->> I don't care which patch goes in....
->> 
->> -Eric
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+diff --git a/fs/xfs/xfs_da_btree.c b/fs/xfs/xfs_da_btree.c
+index 41ea7e1..0b8b2a1 100644
+--- a/fs/xfs/xfs_da_btree.c
++++ b/fs/xfs/xfs_da_btree.c
+@@ -270,6 +270,7 @@ xfs_da3_node_read_verify(
+ 				break;
+ 			return;
+ 		case XFS_ATTR_LEAF_MAGIC:
++		case XFS_ATTR3_LEAF_MAGIC:
+ 			bp->b_ops = &xfs_attr3_leaf_buf_ops;
+ 			bp->b_ops->verify_read(bp);
+ 			return;
 
 _______________________________________________
 xfs mailing list
