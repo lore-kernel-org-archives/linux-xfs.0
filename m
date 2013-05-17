@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8A7437F37
-	for <xfs@oss.sgi.com>; Thu, 16 May 2013 21:55:23 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 26142AC003
-	for <xfs@oss.sgi.com>; Thu, 16 May 2013 19:55:20 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 7BF0C7F37
+	for <xfs@oss.sgi.com>; Thu, 16 May 2013 22:01:37 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5B4028F8049
+	for <xfs@oss.sgi.com>; Thu, 16 May 2013 20:01:34 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	mnid0x4S2Kw4JM3B for <xfs@oss.sgi.com>;
-	Thu, 16 May 2013 19:55:18 -0700 (PDT)
-Date: Fri, 17 May 2013 12:55:15 +1000
+	zLB2NIoZBm8VE534 for <xfs@oss.sgi.com>;
+	Thu, 16 May 2013 20:01:32 -0700 (PDT)
+Date: Fri, 17 May 2013 13:01:26 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v8 1/5] xfs: Remove incore use of XFS_OQUOTA_ENFD and
-	XFS_OQUOTA_CHKD
-Message-ID: <20130517025515.GM24635@dastard>
+Subject: Re: [PATCH v8 2/5] xfs: Add pquota fields where gquota is used.
+Message-ID: <20130517030125.GT29466@dastard>
 References: <1368220889-25188-1-git-send-email-sekharan@us.ibm.com>
-	<1368220889-25188-2-git-send-email-sekharan@us.ibm.com>
+	<1368220889-25188-3-git-send-email-sekharan@us.ibm.com>
+	<51906528.3030307@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1368220889-25188-2-git-send-email-sekharan@us.ibm.com>
+In-Reply-To: <51906528.3030307@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,165 +31,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Chandra Seetharaman <sekharan@us.ibm.com>
-Cc: xfs@oss.sgi.com
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: Chandra Seetharaman <sekharan@us.ibm.com>, xfs@oss.sgi.com
 
-On Fri, May 10, 2013 at 04:21:25PM -0500, Chandra Seetharaman wrote:
-> Remove all incore use of XFS_OQUOTA_ENFD and XFS_OQUOTA_CHKD. Instead,
-> start using XFS_GQUOTA_.* XFS_PQUOTA_.* counterparts for GQUOTA and
-> PQUOTA respectively.
+On Mon, May 13, 2013 at 11:59:36AM +0800, Jeff Liu wrote:
+> Hi,
 > 
-> On-disk copy still uses XFS_OQUOTA_ENFD and XFS_OQUOTA_CHKD.
-> 
-> Read and write of the superblock does the conversion from *OQUOTA*
-> to *[PG]QUOTA*.
-> 
-> Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_mount.c       |   41 +++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/xfs_qm.c          |    9 ++++++---
->  fs/xfs/xfs_qm_syscalls.c |   39 +++++++++++++++++++++------------------
->  fs/xfs/xfs_quota.h       |   42 ++++++++++++++++++++++++++++--------------
->  fs/xfs/xfs_quotaops.c    |    6 ++++--
->  fs/xfs/xfs_super.c       |   16 ++++++++--------
->  fs/xfs/xfs_trans_dquot.c |    4 ++--
->  7 files changed, 110 insertions(+), 47 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index f6bfbd7..1b79906 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -564,6 +564,8 @@ xfs_sb_from_disk(
->  	struct xfs_sb	*to,
->  	xfs_dsb_t	*from)
->  {
-> +	bool force_quota_check = false;
-> +
->  	to->sb_magicnum = be32_to_cpu(from->sb_magicnum);
->  	to->sb_blocksize = be32_to_cpu(from->sb_blocksize);
->  	to->sb_dblocks = be64_to_cpu(from->sb_dblocks);
-> @@ -599,6 +601,21 @@ xfs_sb_from_disk(
->  	to->sb_uquotino = be64_to_cpu(from->sb_uquotino);
->  	to->sb_gquotino = be64_to_cpu(from->sb_gquotino);
->  	to->sb_qflags = be16_to_cpu(from->sb_qflags);
-> +	if ((to->sb_qflags & (XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD)) &&
-> +			(to->sb_qflags & (XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD |
-> +				XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD))) {
-> +		xfs_notice(NULL, "Super block has XFS_OQUOTA bits along with "
-> +		    "XFS_PQUOTA and/or XFS_GQUOTA bits. Quota check forced.\n");
-> +		force_quota_check = true;
-> +	}
+> > +struct xfs_inode *
+> > +xfs_dq_to_quota_inode(struct xfs_dquot *dqp)
+> > +{
+> > +	if (XFS_QM_ISUDQ(dqp))
+> > +		return dqp->q_mount->m_quotainfo->qi_uquotaip;
+> > +	if (XFS_QM_ISGDQ(dqp))
+> > +		return dqp->q_mount->m_quotainfo->qi_gquotaip;
+> > +	ASSERT(XFS_QM_ISPDQ(dqp));
+> > +	return dqp->q_mount->m_quotainfo->qi_pquotaip;
+> > +}
+> Is it better to replace above conditional judgment with 'switch...case'?
+> i.e.
+> static inline struct xfs_inode *
+> xfs_dq_to_qip(struct xfs_dquot *dqp)
+> {
+> 	switch (dqp->dq_flags) {
+> 	case XFS_DQ_USER:
+> 		return dqp->q_mount->m_quotainfo->qi_uquotaip;
+> 	case XFS_DQ_GROUP:
+> 		return dqp->q_mount->m_quotainfo->qi_gqoutaip;
+> 	case XFS_DQ_PROJ:
+> 		return dqp->q_mount->m_quotainfo->qi_pquotaip;
+> 	}
 
-We can't do these quota check manipulations to the superblock quota
-flags during disk->incore translation anymore - there is more than
-one place that converts the superblock from on-disk to incore format
-(e.g.  the verification callbacks) and so emitting this message when
-we are *writing* the superblock is not good.
+Doesn't work because dq_flags can have other fields set in it (e.g
+XFS_DQ_DIRTY). It would need to be:
 
-Also, if the XFS_PQUOTA_CHKD/XFS_PQUOTA_ENFD flags are set and
-the superblock is not a V5 superblock, then I think we should refuse
-to mount the filesystem because that is an invalid state - those
-flags should only be set now on a V5 superblock, and never at any
-other time. Hence this specific check should probably be moved to
-xfs_mount_validate_sb() and cause an EFSCORRUPTED return if it
-fails. That will catch something setting the flags incorrectly (i.e.
-at superblock write) as well as prevent mounting in this situation.
-
-I know, this is different to what I've said in the past, but the
-on-disk format checking is now a lot stricter and so I think that if
-the filesystem is in some kind of wierd state we should just throw
-an error and let the administrator work out how this problem
-happened and how to resolve it.
-
-> +	if (to->sb_qflags & XFS_OQUOTA_ENFD)
-> +		to->sb_qflags |= (to->sb_qflags & XFS_PQUOTA_ACCT) ?
-> +					XFS_PQUOTA_ENFD : XFS_GQUOTA_ENFD;
-> +	if (to->sb_qflags & XFS_OQUOTA_CHKD)
-> +		to->sb_qflags |= (to->sb_qflags & XFS_PQUOTA_ACCT) ?
-> +					XFS_PQUOTA_CHKD : XFS_GQUOTA_CHKD;
-> +	to->sb_qflags &= ~(XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD);
-> +
-
-This translation of the quota flags needs to be external to
-this function, and then only called in the mount path where we are
-initially setting up the in-core superblock (i.e. in xfs_readsb())
-because that is the only place where the incore values are
-permanently stored.
-
-> @@ -636,11 +656,30 @@ xfs_sb_to_disk(
->  	xfs_sb_field_t	f;
->  	int		first;
->  	int		size;
-> +	__uint16_t	qflags = from->sb_qflags;
->  
->  	ASSERT(fields);
->  	if (!fields)
->  		return;
->  
-> +	if (fields & XFS_SB_QFLAGS) {
-> +		/*
-> +		 * The in-core version of sb_qflags do not have
-> +		 * XFS_OQUOTA_* flags, whereas the on-disk version
-> +		 * does.  So, convert incore XFS_{PG}QUOTA_* flags 
-> +		 * to on-disk XFS_OQUOTA_* flags.
-> +		 */
-> +		qflags &= ~(XFS_PQUOTA_ENFD | XFS_PQUOTA_CHKD |
-> +				XFS_GQUOTA_ENFD | XFS_GQUOTA_CHKD);
-> +
-> +		if (from->sb_qflags &
-> +				(XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD))
-> +			qflags |= XFS_OQUOTA_ENFD;
-> +		if (from->sb_qflags &
-> +				(XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD))
-> +			qflags |= XFS_OQUOTA_CHKD;
-> +	}
-
-Given that we have a new superblock version, we can write the new
-XFS_[PG]QUOTA_CHKD/XFS_[PG]QUOTA_ENFD flags directly into the
-sb_qflags knowing that we can't get an older kernel to interpret
-these new fields because they'll fail the superblck version test. So
-that would mean we only need to do this translation for filesystems
-for non-v5 superblock filesystems.
-
-Ah, I see that in a later patch you introduce
-xfs_sb_version_has_pquota() and modify this code path to do
-something similar, and it becomes rather complex and nasty.
-
-OK, I know this is a bit of work, but can you introduce
-xfs_sb_version_has_pquota() in this patch (as we already have the
-pquota inode defined in the on-disk format) as:
-
-static inline int xfs_sb_version_haspquota(xfs_sb_t *sbp)
-{
-        return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5;
-}
-
-and make these OQUOTA flag translations dependent on this not being
-set right from the start?
-
-Also, given how nasty this manipulation ends up, can you push it out
-into a function that is called from xfs_sb_to_disk(). That way
-xfs_sb_to_disk() doesn't end up mostly being 70% quota field
-manipulation code...
-
-
->  /*
-> + * Start differentiating group quota and project quota in-core
-> + * using distinct flags, instead of using the combined OQUOTA flags.
-> + *
-> + * Conversion to and from the combined OQUOTA flag (if necessary)
-> + * is done only in xfs_sb_{to,from}_disk()
-> + */
-> +#define XFS_GQUOTA_ENFD	0x0080  /* group quota limits enforced */
-> +#define XFS_GQUOTA_CHKD	0x0100  /* quotacheck run on group quotas */
-> +#define XFS_PQUOTA_ENFD	0x0200  /* project quota limits enforced */
-> +#define XFS_PQUOTA_CHKD	0x0400  /* quotacheck run on project quotas */
-
-These become new on-disk fields for xfs_sb_version_haspquota()
-filesystems, so they are not specifically in-core values.
-
-Other than these to/from disk changes, the patch looks fine.
+	switch (dqp->dq_flags & XFS_DQ_ALLTYPES) {
+	....
+	}
 
 Cheers,
 
