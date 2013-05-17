@@ -1,23 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D7DF57F50
-	for <xfs@oss.sgi.com>; Fri, 17 May 2013 00:40:27 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 65814AC04D
-	for <xfs@oss.sgi.com>; Thu, 16 May 2013 22:40:27 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id XqMGdmCC134F1p6X (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 16 May 2013 22:40:26 -0700 (PDT)
-Message-ID: <5195C2C3.3000603@oracle.com>
-Date: Fri, 17 May 2013 13:40:19 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+	by oss.sgi.com (Postfix) with ESMTP id EC8D97F37
+	for <xfs@oss.sgi.com>; Fri, 17 May 2013 01:32:16 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 79E22AC038
+	for <xfs@oss.sgi.com>; Thu, 16 May 2013 23:32:13 -0700 (PDT)
+Date: Fri, 17 May 2013 09:31:59 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: [patch] xfs: bug widening binary "not" operation
+Message-ID: <20130517063159.GO1360@mwanda>
+References: <20130516075330.GB7494@elgon.mountain>
+	<20130516230314.GH24635@dastard>
 MIME-Version: 1.0
-Subject: Re: [PATCH v8 2/5] xfs: Add pquota fields where gquota is used.
-References: <1368220889-25188-1-git-send-email-sekharan@us.ibm.com>
-	<1368220889-25188-3-git-send-email-sekharan@us.ibm.com>
-	<51906528.3030307@oracle.com> <20130517030125.GT29466@dastard>
-In-Reply-To: <20130517030125.GT29466@dastard>
+Content-Disposition: inline
+In-Reply-To: <20130516230314.GH24635@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,46 +27,27 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Chandra Seetharaman <sekharan@us.ibm.com>, xfs@oss.sgi.com
+Cc: Ben Myers <bpm@sgi.com>, Alex Elder <elder@kernel.org>, kernel-janitors@vger.kernel.org, xfs@oss.sgi.com
 
-On 05/17/2013 11:01 AM, Dave Chinner wrote:
-> On Mon, May 13, 2013 at 11:59:36AM +0800, Jeff Liu wrote:
->> Hi,
->>
->>> +struct xfs_inode *
->>> +xfs_dq_to_quota_inode(struct xfs_dquot *dqp)
->>> +{
->>> +	if (XFS_QM_ISUDQ(dqp))
->>> +		return dqp->q_mount->m_quotainfo->qi_uquotaip;
->>> +	if (XFS_QM_ISGDQ(dqp))
->>> +		return dqp->q_mount->m_quotainfo->qi_gquotaip;
->>> +	ASSERT(XFS_QM_ISPDQ(dqp));
->>> +	return dqp->q_mount->m_quotainfo->qi_pquotaip;
->>> +}
->> Is it better to replace above conditional judgment with 'switch...case'?
->> i.e.
->> static inline struct xfs_inode *
->> xfs_dq_to_qip(struct xfs_dquot *dqp)
->> {
->> 	switch (dqp->dq_flags) {
->> 	case XFS_DQ_USER:
->> 		return dqp->q_mount->m_quotainfo->qi_uquotaip;
->> 	case XFS_DQ_GROUP:
->> 		return dqp->q_mount->m_quotainfo->qi_gqoutaip;
->> 	case XFS_DQ_PROJ:
->> 		return dqp->q_mount->m_quotainfo->qi_pquotaip;
->> 	}
+On Fri, May 17, 2013 at 09:03:14AM +1000, Dave Chinner wrote:
+> As it is, the static checker missed the:
 > 
-> Doesn't work because dq_flags can have other fields set in it (e.g
-> XFS_DQ_DIRTY). It would need to be:
+> 	rounding = max_t(uint, ....);
 > 
-> 	switch (dqp->dq_flags & XFS_DQ_ALLTYPES) {
-> 	....
-> 	}
-Ah, yep. thanks for the teaching. :)
+> The line before the above usage. I posted a patch to fix this this
+> 2 weeks ago here:
+> 
+> http://oss.sgi.com/pipermail/xfs/2013-May/025986.html
+> 
 
-Thanks,
--Jeff
+Ah.  Grand.  There is still a problem with the max_t().  The shift
+operation will wrap before we do the cast.  It should be:
+
+-	rounding = max_t(xfs_off_t, 1 << mp->m_sb.sb_blocklog, PAGE_CACHE_SIZE);
++	rounding = max_t(xfs_off_t, 1ULL << mp->m_sb.sb_blocklog, PAGE_CACHE_SIZE);
+
+regards,
+dan carpenter
 
 _______________________________________________
 xfs mailing list
