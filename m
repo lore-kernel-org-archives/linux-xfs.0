@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3232B7F50
-	for <linux-xfs@oss.sgi.com>; Thu, 16 May 2013 20:12:55 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0BC82304059
-	for <linux-xfs@oss.sgi.com>; Thu, 16 May 2013 18:12:51 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id YLK4pL57d6fNquSy for <linux-xfs@oss.sgi.com>;
-	Thu, 16 May 2013 18:12:50 -0700 (PDT)
-Message-ID: <51958411.70008@sandeen.net>
-Date: Thu, 16 May 2013 20:12:49 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id CE6BE7F37
+	for <xfs@oss.sgi.com>; Thu, 16 May 2013 21:00:26 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 69B58AC006
+	for <xfs@oss.sgi.com>; Thu, 16 May 2013 19:00:26 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	Vf9crhE5X47cJGh0 for <xfs@oss.sgi.com>;
+	Thu, 16 May 2013 19:00:20 -0700 (PDT)
+Date: Fri, 17 May 2013 12:00:17 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Polish translation update for xfsprogs 3.1.11 and xfsdump 3.1.3
+Message-ID: <20130517020017.GL24635@dastard>
+References: <20130514142827.GD32293@stranger.qboosh.pl>
 MIME-Version: 1.0
-Subject: Re: see the file content by xfs_db
-References: <loom.20130516T084318-878@post.gmane.org>
-In-Reply-To: <loom.20130516T084318-878@post.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20130514142827.GD32293@stranger.qboosh.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,33 +29,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "chen.szu.fan" <chen.szu.fan@gmail.com>
-Cc: linux-xfs@oss.sgi.com
+To: Jakub Bogusz <qboosh@pld-linux.org>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On 5/16/13 1:48 AM, chen.szu.fan wrote:
-> is it possible to see the file content by xfs_db? and how-to?
+On Tue, May 14, 2013 at 04:28:27PM +0200, Jakub Bogusz wrote:
+> Hello,
+> 
+> I updated Polish translations for xfsprogs 3.1.11 and xfsdump 3.1.3.
+> They are available at:
+> http://qboosh.pl/pl.po/xfsprogs-3.1.11.pl.po
+> http://qboosh.pl/pl.po/xfsdump-3.1.3.pl.po
 
-you can get the file mapping & dump file blocks one at a time, anyway:
+Thanks, Jakub.
 
-[root@bp-05 ~]# mount /dev/sdb4 /mnt/test
-[root@bp-05 ~]# echo "mydata" > /mnt/test/testfile
-[root@bp-05 ~]# ls -i /mnt/test/testfile
-53573991 /mnt/test/testfile
-[root@bp-05 ~]# umount /dev/sdb4
+Out of interest, is there any way we can let you know about an
+upcoming release so we can get translations done before the release
+and hence ship them in the released package?
 
+Cheers,
 
-[root@bp-05 ~]# xfs_db /dev/sdb4
-xfs_db> inode 53573991
-xfs_db> p u.bmx
-u.bmx[0] = [startoff,startblock,blockcount,extentflag] 0:[0,3348403,1,0]
-xfs_db> fsblock 3348403
-xfs_db> type text
-xfs_db> p
-000:  6d 79 64 61 74 61 0a 00 00 00 00 00 00 00 00 00  mydata..........
-010:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-<snip>
-
--Eric
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
