@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 90D0C29DFA
-	for <xfs@oss.sgi.com>; Fri, 17 May 2013 07:17:32 -0500 (CDT)
-Message-ID: <51961FFB.5040605@sgi.com>
-Date: Fri, 17 May 2013 07:18:03 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id D88377F3F
+	for <xfs@oss.sgi.com>; Fri, 17 May 2013 07:19:59 -0500 (CDT)
+Message-ID: <51962091.1090307@sgi.com>
+Date: Fri, 17 May 2013 07:20:33 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
 Subject: Re: [PATCH v2] xfstests: check falloc in 285
@@ -34,29 +34,17 @@ On 05/12/2013 04:42 AM, Zheng Liu wrote:
 > support fallocate.  So here we need to check it.
 >
 > Signed-off-by: Zheng Liu <wenqing.lz@taobao.com>
-> Cc: Rich Johnston <rjohnston@sgi.com>
-> ---
->   tests/generic/285 | 2 ++
->   1 file changed, 2 insertions(+)
->
-> diff --git a/tests/generic/285 b/tests/generic/285
-> index 22b4a08..d1a1baa 100644
-> --- a/tests/generic/285
-> +++ b/tests/generic/285
-> @@ -40,6 +40,8 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
->   _supported_fs generic
->   _supported_os Linux
->
-> +_require_xfs_io_falloc
-> +
->   BASE_TEST_FILE=$TEST_DIR/seek_sanity_testfile
->
->   [ -x $here/src/seek_sanity_test ] || _notrun "seek_sanitfy_tester not built"
->
 
-Looks good.
+Zheng, this has been committed:
 
-Reviewed-by: Rich Johnston <rjohnston@sgi.com>
+commit fd0afdb443cae47a3963dd8a23fd9785f1f4aebc
+Author: Zheng Liu <wenqing.lz@taobao.com>
+Date:   Thu May 16 08:49:03 2013 -0500
+
+     xfstests: check falloc in 285
+
+Thanks
+--Rich
 
 _______________________________________________
 xfs mailing list
