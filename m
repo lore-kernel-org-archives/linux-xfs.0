@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DCBAD29E41
-	for <xfs@oss.sgi.com>; Fri, 17 May 2013 06:14:17 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 3BBCE29E03
+	for <xfs@oss.sgi.com>; Fri, 17 May 2013 06:14:24 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 8D55E8F8035
-	for <xfs@oss.sgi.com>; Fri, 17 May 2013 04:14:17 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id F0EC28F8040
+	for <xfs@oss.sgi.com>; Fri, 17 May 2013 04:14:23 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	FAXVnPkvUGxdRhyc for <xfs@oss.sgi.com>;
-	Fri, 17 May 2013 04:14:14 -0700 (PDT)
+	IeVooA4hYbvQSEIf for <xfs@oss.sgi.com>;
+	Fri, 17 May 2013 04:14:21 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UdIbw-0008Sb-GN
-	for xfs@oss.sgi.com; Fri, 17 May 2013 21:14:08 +1000
+	(envelope-from <dave@fromorbit.com>) id 1UdIbx-0008TD-Cv
+	for xfs@oss.sgi.com; Fri, 17 May 2013 21:14:09 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UdIbX-0005FA-9T
-	for xfs@oss.sgi.com; Fri, 17 May 2013 21:13:43 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1UdIbm-0005G7-UF
+	for xfs@oss.sgi.com; Fri, 17 May 2013 21:13:58 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 19/30] xfs: buffer type overruns blf_flags field
-Date: Fri, 17 May 2013 21:13:14 +1000
-Message-Id: <1368789205-19969-20-git-send-email-david@fromorbit.com>
+Subject: [PATCH 30/30] xfsprogs: add crc format support to db
+Date: Fri, 17 May 2013 21:13:25 +1000
+Message-Id: <1368789205-19969-31-git-send-email-david@fromorbit.com>
 In-Reply-To: <1368789205-19969-1-git-send-email-david@fromorbit.com>
 References: <1368789205-19969-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,493 +38,680 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The buffer type passed to log recvoery in the buffer log item
-overruns the blf_flags field. I had assumed that flags field was a
-32 bit value, and it turns out it is a unisgned short. Therefore
-having 19 flags doesn't really work.
-
-Convert the buffer type field to numeric value, and use the top 5
-bits of the flags field for it. We currently have 17 types of
-buffers, so using 5 bits gives us plenty of room for expansion in
-future....
-
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/xfs_buf_item.h  |   92 +++++++++++++++++++++++++++--------------------
- include/xfs_trans.h     |    4 ---
- libxfs/trans.c          |    2 +-
- libxfs/xfs_alloc.c      |    4 +--
- libxfs/xfs_attr_leaf.c  |    6 ++--
- libxfs/xfs_bmap.c       |    2 +-
- libxfs/xfs_btree.c      |    8 ++---
- libxfs/xfs_da_btree.c   |   12 +++----
- libxfs/xfs_dir2_block.c |    4 +--
- libxfs/xfs_dir2_data.c  |    4 +--
- libxfs/xfs_dir2_leaf.c  |   12 +++----
- libxfs/xfs_dir2_node.c  |   10 +++---
- libxfs/xfs_ialloc.c     |    2 +-
- 13 files changed, 86 insertions(+), 76 deletions(-)
+ db/agf.c      |    3 ++
+ db/agfl.c     |   16 +++++++
+ db/agfl.h     |    2 +
+ db/agi.c      |    3 ++
+ db/btblock.c  |  145 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ db/btblock.h  |   10 ++++
+ db/field.c    |   16 +++++++
+ db/field.h    |    8 ++++
+ db/freesp.c   |    6 ++-
+ db/init.c     |    4 ++
+ db/inode.c    |   27 +++++++++++
+ db/inode.h    |    3 ++
+ db/type.c     |   34 +++++++++++++-
+ db/type.h     |    3 +-
+ libxfs/util.c |    1 -
+ 15 files changed, 276 insertions(+), 5 deletions(-)
 
-diff --git a/include/xfs_buf_item.h b/include/xfs_buf_item.h
-index 640adcf..2573d2a 100644
---- a/include/xfs_buf_item.h
-+++ b/include/xfs_buf_item.h
-@@ -39,45 +39,6 @@ extern kmem_zone_t	*xfs_buf_item_zone;
- #define XFS_BLF_PDQUOT_BUF	(1<<3)
- #define	XFS_BLF_GDQUOT_BUF	(1<<4)
+diff --git a/db/agf.c b/db/agf.c
+index 668637a..389cb43 100644
+--- a/db/agf.c
++++ b/db/agf.c
+@@ -69,6 +69,9 @@ const field_t	agf_flds[] = {
+ 	{ "freeblks", FLDT_EXTLEN, OI(OFF(freeblks)), C1, 0, TYP_NONE },
+ 	{ "longest", FLDT_EXTLEN, OI(OFF(longest)), C1, 0, TYP_NONE },
+ 	{ "btreeblks", FLDT_UINT32D, OI(OFF(btreeblks)), C1, 0, TYP_NONE },
++	{ "uuid", FLDT_UUID, OI(OFF(uuid)), C1, 0, TYP_NONE },
++	{ "lsn", FLDT_UINT64X, OI(OFF(lsn)), C1, 0, TYP_NONE },
++	{ "crc", FLDT_UINT32X, OI(OFF(crc)), C1, 0, TYP_NONE },
+ 	{ NULL }
+ };
  
--/*
-- * all buffers now need flags to tell recovery where the magic number
-- * is so that it can verify and calculate the CRCs on the buffer correctly
-- * once the changes have been replayed into the buffer.
-- */
--#define XFS_BLF_BTREE_BUF	(1<<5)
--#define XFS_BLF_AGF_BUF		(1<<6)
--#define XFS_BLF_AGFL_BUF	(1<<7)
--#define XFS_BLF_AGI_BUF		(1<<8)
--#define XFS_BLF_DINO_BUF	(1<<9)
--#define XFS_BLF_SYMLINK_BUF	(1<<10)
--#define XFS_BLF_DIR_BLOCK_BUF	(1<<11)
--#define XFS_BLF_DIR_DATA_BUF	(1<<12)
--#define XFS_BLF_DIR_FREE_BUF	(1<<13)
--#define XFS_BLF_DIR_LEAF1_BUF	(1<<14)
--#define XFS_BLF_DIR_LEAFN_BUF	(1<<15)
--#define XFS_BLF_DA_NODE_BUF	(1<<16)
--#define XFS_BLF_ATTR_LEAF_BUF	(1<<17)
--#define XFS_BLF_ATTR_RMT_BUF	(1<<18)
--
--#define XFS_BLF_TYPE_MASK	\
--		(XFS_BLF_UDQUOT_BUF | \
--		 XFS_BLF_PDQUOT_BUF | \
--		 XFS_BLF_GDQUOT_BUF | \
--		 XFS_BLF_BTREE_BUF | \
--		 XFS_BLF_AGF_BUF | \
--		 XFS_BLF_AGFL_BUF | \
--		 XFS_BLF_AGI_BUF | \
--		 XFS_BLF_DINO_BUF | \
--		 XFS_BLF_SYMLINK_BUF | \
--		 XFS_BLF_DIR_BLOCK_BUF | \
--		 XFS_BLF_DIR_DATA_BUF | \
--		 XFS_BLF_DIR_FREE_BUF | \
--		 XFS_BLF_DIR_LEAF1_BUF | \
--		 XFS_BLF_DIR_LEAFN_BUF | \
--		 XFS_BLF_DA_NODE_BUF | \
--		 XFS_BLF_ATTR_LEAF_BUF | \
--		 XFS_BLF_ATTR_RMT_BUF)
--
- #define	XFS_BLF_CHUNK		128
- #define	XFS_BLF_SHIFT		7
- #define	BIT_TO_WORD_SHIFT	5
-@@ -101,6 +62,55 @@ typedef struct xfs_buf_log_format {
- } xfs_buf_log_format_t;
+diff --git a/db/agfl.c b/db/agfl.c
+index 72dca23..e2340e6 100644
+--- a/db/agfl.c
++++ b/db/agfl.c
+@@ -41,8 +41,24 @@ const field_t	agfl_hfld[] = { {
+ 	{ NULL }
+ };
  
- /*
-+ * All buffers now need to tell recovery where the magic number
-+ * is so that it can verify and calculate the CRCs on the buffer correctly
-+ * once the changes have been replayed into the buffer.
-+ *
-+ * The type value is held in the upper 5 bits of the blf_flags field, which is
-+ * an unsigned 16 bit field. Hence we need to shift it 11 bits up and down.
-+ */
-+#define XFS_BLFT_BITS	5
-+#define XFS_BLFT_SHIFT	11
-+#define XFS_BLFT_MASK	(((1 << XFS_BLFT_BITS) - 1) << XFS_BLFT_SHIFT)
-+
-+enum xfs_blft {
-+	XFS_BLFT_UNKNOWN_BUF = 0,
-+	XFS_BLFT_UDQUOT_BUF,
-+	XFS_BLFT_PDQUOT_BUF,
-+	XFS_BLFT_GDQUOT_BUF,
-+	XFS_BLFT_BTREE_BUF,
-+	XFS_BLFT_AGF_BUF,
-+	XFS_BLFT_AGFL_BUF,
-+	XFS_BLFT_AGI_BUF,
-+	XFS_BLFT_DINO_BUF,
-+	XFS_BLFT_SYMLINK_BUF,
-+	XFS_BLFT_DIR_BLOCK_BUF,
-+	XFS_BLFT_DIR_DATA_BUF,
-+	XFS_BLFT_DIR_FREE_BUF,
-+	XFS_BLFT_DIR_LEAF1_BUF,
-+	XFS_BLFT_DIR_LEAFN_BUF,
-+	XFS_BLFT_DA_NODE_BUF,
-+	XFS_BLFT_ATTR_LEAF_BUF,
-+	XFS_BLFT_ATTR_RMT_BUF,
-+	XFS_BLFT_SB_BUF,
-+	XFS_BLFT_MAX_BUF = (1 << XFS_BLFT_BITS),
++const field_t	agfl_crc_hfld[] = { {
++	"", FLDT_AGFL_CRC, OI(0), C1, 0, TYP_NONE, },
++	{ NULL }
 +};
 +
-+static inline void
-+xfs_blft_to_flags(struct xfs_buf_log_format *blf, enum xfs_blft type)
-+{
-+	ASSERT(type > XFS_BLFT_UNKNOWN_BUF && type < XFS_BLFT_MAX_BUF);
-+	blf->blf_flags &= ~XFS_BLFT_MASK;
-+	blf->blf_flags |= ((type << XFS_BLFT_SHIFT) & XFS_BLFT_MASK);
-+}
+ #define	OFF(f)	bitize(offsetof(xfs_agfl_t, agfl_ ## f))
+ const field_t	agfl_flds[] = {
++	{ "bno", FLDT_AGBLOCKNZ, OI(OFF(magicnum)), agfl_bno_size,
++	  FLD_ARRAY|FLD_COUNT, TYP_DATA },
++	{ NULL }
++};
 +
-+static inline __uint16_t
-+xfs_blft_from_flags(struct xfs_buf_log_format *blf)
-+{
-+	return (blf->blf_flags & XFS_BLFT_MASK) >> XFS_BLFT_SHIFT;
-+}
-+
-+/*
-  * buf log item flags
-  */
- #define	XFS_BLI_HOLD		0x01
-@@ -153,6 +163,10 @@ void	xfs_buf_attach_iodone(struct xfs_buf *,
- void	xfs_buf_iodone_callbacks(struct xfs_buf *);
- void	xfs_buf_iodone(struct xfs_buf *, struct xfs_log_item *);
++const field_t	agfl_crc_flds[] = {
++	{ "magicnum", FLDT_UINT32X, OI(OFF(magicnum)), C1, 0, TYP_NONE },
++	{ "seqno", FLDT_AGNUMBER, OI(OFF(seqno)), C1, 0, TYP_NONE },
++	{ "uuid", FLDT_UUID, OI(OFF(uuid)), C1, 0, TYP_NONE },
++	{ "lsn", FLDT_UINT64X, OI(OFF(lsn)), C1, 0, TYP_NONE },
++	{ "crc", FLDT_UINT32X, OI(OFF(crc)), C1, 0, TYP_NONE },
+ 	{ "bno", FLDT_AGBLOCKNZ, OI(OFF(bno)), agfl_bno_size,
+ 	  FLD_ARRAY|FLD_COUNT, TYP_DATA },
+ 	{ NULL }
+diff --git a/db/agfl.h b/db/agfl.h
+index 7b7631b..177ad41 100644
+--- a/db/agfl.h
++++ b/db/agfl.h
+@@ -18,6 +18,8 @@
  
-+void	xfs_trans_buf_set_type(struct xfs_trans *, struct xfs_buf *,
-+			       enum xfs_blft);
-+void	xfs_trans_buf_copy_type(struct xfs_buf *dst_bp, struct xfs_buf *src_bp);
-+
- #endif	/* __KERNEL__ */
+ extern const struct field	agfl_flds[];
+ extern const struct field	agfl_hfld[];
++extern const struct field	agfl_crc_flds[];
++extern const struct field	agfl_crc_hfld[];
  
- #endif	/* __XFS_BUF_ITEM_H__ */
-diff --git a/include/xfs_trans.h b/include/xfs_trans.h
-index 9e145e9..acf1381 100644
---- a/include/xfs_trans.h
-+++ b/include/xfs_trans.h
-@@ -500,10 +500,6 @@ void		xfs_trans_inode_buf(xfs_trans_t *, struct xfs_buf *);
- void		xfs_trans_stale_inode_buf(xfs_trans_t *, struct xfs_buf *);
- void		xfs_trans_dquot_buf(xfs_trans_t *, struct xfs_buf *, uint);
- void		xfs_trans_inode_alloc_buf(xfs_trans_t *, struct xfs_buf *);
--void		xfs_trans_buf_set_type(struct xfs_trans *, struct xfs_buf *,
--				       uint);
--void		xfs_trans_buf_copy_type(struct xfs_buf *dst_bp,
--					struct xfs_buf *src_bp);
- void		xfs_trans_ichgtime(struct xfs_trans *, struct xfs_inode *, int);
- void		xfs_trans_ijoin(struct xfs_trans *, struct xfs_inode *, uint);
- void		xfs_trans_log_buf(xfs_trans_t *, struct xfs_buf *, uint, uint);
-diff --git a/libxfs/trans.c b/libxfs/trans.c
-index 619aad1..831e42a 100644
---- a/libxfs/trans.c
-+++ b/libxfs/trans.c
-@@ -218,7 +218,7 @@ libxfs_trans_inode_alloc_buf(
- 	ASSERT(XFS_BUF_FSPRIVATE(bp, void *) != NULL);
- 	bip = XFS_BUF_FSPRIVATE(bp, xfs_buf_log_item_t *);
- 	bip->bli_flags |= XFS_BLI_INODE_ALLOC_BUF;
--	xfs_trans_buf_set_type(tp, bp, XFS_BLF_DINO_BUF);
-+	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_DINO_BUF);
- }
+ extern void	agfl_init(void);
+ extern int	agfl_size(void *obj, int startoff, int idx);
+diff --git a/db/agi.c b/db/agi.c
+index 02d5d30..6b2e889 100644
+--- a/db/agi.c
++++ b/db/agi.c
+@@ -54,6 +54,9 @@ const field_t	agi_flds[] = {
+ 	{ "dirino", FLDT_AGINO, OI(OFF(dirino)), C1, 0, TYP_INODE },
+ 	{ "unlinked", FLDT_AGINONN, OI(OFF(unlinked)),
+ 	  CI(XFS_AGI_UNLINKED_BUCKETS), FLD_ARRAY, TYP_NONE },
++	{ "uuid", FLDT_UUID, OI(OFF(uuid)), C1, 0, TYP_NONE },
++	{ "lsn", FLDT_UINT64X, OI(OFF(lsn)), C1, 0, TYP_NONE },
++	{ "crc", FLDT_UINT32X, OI(OFF(crc)), C1, 0, TYP_NONE },
+ 	{ NULL }
+ };
+ 
+diff --git a/db/btblock.c b/db/btblock.c
+index 2c199b2..37b9903 100644
+--- a/db/btblock.c
++++ b/db/btblock.c
+@@ -60,6 +60,31 @@ struct xfs_db_btree {
+ 		sizeof(xfs_inobt_rec_t),
+ 		sizeof(__be32),
+ 	},
++	[/*0x424d415*/8] = { /* BMAP_CRC */
++		XFS_BTREE_LBLOCK_CRC_LEN,
++		sizeof(xfs_bmbt_key_t),
++		sizeof(xfs_bmbt_rec_t),
++		sizeof(__be64),
++	},
++	[/*0x4142544*/0xa] = { /* ABTB_CRC */
++		XFS_BTREE_SBLOCK_CRC_LEN,
++		sizeof(xfs_alloc_key_t),
++		sizeof(xfs_alloc_rec_t),
++		sizeof(__be32),
++	},
++	[/*0x414254*/0xb] = { /* ABTC_CRC */
++		XFS_BTREE_SBLOCK_CRC_LEN,
++		sizeof(xfs_alloc_key_t),
++		sizeof(xfs_alloc_rec_t),
++		sizeof(__be32),
++	},
++	[/*0x4941425*/0xc] = { /* IABT_CRC */
++		XFS_BTREE_SBLOCK_CRC_LEN,
++		sizeof(xfs_inobt_key_t),
++		sizeof(xfs_inobt_rec_t),
++		sizeof(__be32),
++	},
++
+ };
  
  /*
-diff --git a/libxfs/xfs_alloc.c b/libxfs/xfs_alloc.c
-index 30fc5f4..1041f8f 100644
---- a/libxfs/xfs_alloc.c
-+++ b/libxfs/xfs_alloc.c
-@@ -2079,7 +2079,7 @@ xfs_alloc_log_agf(
+@@ -208,6 +233,15 @@ const field_t	bmapbtd_hfld[] = {
+ 	{ NULL }
+ };
  
- 	trace_xfs_agf(tp->t_mountp, XFS_BUF_TO_AGF(bp), fields, _RET_IP_);
++const field_t	bmapbta_crc_hfld[] = {
++	{ "", FLDT_BMAPBTA_CRC, OI(0), C1, 0, TYP_NONE },
++	{ NULL }
++};
++const field_t	bmapbtd_crc_hfld[] = {
++	{ "", FLDT_BMAPBTD_CRC, OI(0), C1, 0, TYP_NONE },
++	{ NULL }
++};
++
+ #define	OFF(f)	bitize(offsetof(struct xfs_btree_block, bb_ ## f))
+ const field_t	bmapbta_flds[] = {
+ 	{ "magic", FLDT_UINT32X, OI(OFF(magic)), C1, 0, TYP_NONE },
+@@ -237,6 +271,45 @@ const field_t	bmapbtd_flds[] = {
+ 	  FLD_ARRAY|FLD_ABASE1|FLD_COUNT|FLD_OFFSET, TYP_BMAPBTD },
+ 	{ NULL }
+ };
++/* crc enabled versions */
++const field_t	bmapbta_crc_flds[] = {
++	{ "magic", FLDT_UINT32X, OI(OFF(magic)), C1, 0, TYP_NONE },
++	{ "level", FLDT_UINT16D, OI(OFF(level)), C1, 0, TYP_NONE },
++	{ "numrecs", FLDT_UINT16D, OI(OFF(numrecs)), C1, 0, TYP_NONE },
++	{ "leftsib", FLDT_DFSBNO, OI(OFF(u.l.bb_leftsib)), C1, 0, TYP_BMAPBTA },
++	{ "rightsib", FLDT_DFSBNO, OI(OFF(u.l.bb_rightsib)), C1, 0, TYP_BMAPBTA },
++	{ "bno", FLDT_DFSBNO, OI(OFF(u.l.bb_blkno)), C1, 0, TYP_BMAPBTD },
++	{ "lsn", FLDT_UINT64X, OI(OFF(u.l.bb_lsn)), C1, 0, TYP_NONE },
++	{ "uuid", FLDT_UUID, OI(OFF(u.l.bb_uuid)), C1, 0, TYP_NONE },
++	{ "owner", FLDT_INO, OI(OFF(u.l.bb_owner)), C1, 0, TYP_NONE },
++	{ "crc", FLDT_UINT32X, OI(OFF(u.l.bb_crc)), C1, 0, TYP_NONE },
++	{ "recs", FLDT_BMAPBTAREC, btblock_rec_offset, btblock_rec_count,
++	  FLD_ARRAY|FLD_ABASE1|FLD_COUNT|FLD_OFFSET, TYP_NONE },
++	{ "keys", FLDT_BMAPBTAKEY, btblock_key_offset, btblock_key_count,
++	  FLD_ARRAY|FLD_ABASE1|FLD_COUNT|FLD_OFFSET, TYP_NONE },
++	{ "ptrs", FLDT_BMAPBTAPTR, btblock_ptr_offset, btblock_key_count,
++	  FLD_ARRAY|FLD_ABASE1|FLD_COUNT|FLD_OFFSET, TYP_BMAPBTA },
++	{ NULL }
++};
++const field_t	bmapbtd_crc_flds[] = {
++	{ "magic", FLDT_UINT32X, OI(OFF(magic)), C1, 0, TYP_NONE },
++	{ "level", FLDT_UINT16D, OI(OFF(level)), C1, 0, TYP_NONE },
++	{ "numrecs", FLDT_UINT16D, OI(OFF(numrecs)), C1, 0, TYP_NONE },
++	{ "leftsib", FLDT_DFSBNO, OI(OFF(u.l.bb_leftsib)), C1, 0, TYP_BMAPBTD },
++	{ "rightsib", FLDT_DFSBNO, OI(OFF(u.l.bb_rightsib)), C1, 0, TYP_BMAPBTD },
++	{ "bno", FLDT_DFSBNO, OI(OFF(u.l.bb_blkno)), C1, 0, TYP_BMAPBTD },
++	{ "lsn", FLDT_UINT64X, OI(OFF(u.l.bb_lsn)), C1, 0, TYP_NONE },
++	{ "uuid", FLDT_UUID, OI(OFF(u.l.bb_uuid)), C1, 0, TYP_NONE },
++	{ "owner", FLDT_INO, OI(OFF(u.l.bb_owner)), C1, 0, TYP_NONE },
++	{ "crc", FLDT_UINT32X, OI(OFF(u.l.bb_crc)), C1, 0, TYP_NONE },
++	{ "recs", FLDT_BMAPBTDREC, btblock_rec_offset, btblock_rec_count,
++	  FLD_ARRAY|FLD_ABASE1|FLD_COUNT|FLD_OFFSET, TYP_NONE },
++	{ "keys", FLDT_BMAPBTDKEY, btblock_key_offset, btblock_key_count,
++	  FLD_ARRAY|FLD_ABASE1|FLD_COUNT|FLD_OFFSET, TYP_NONE },
++	{ "ptrs", FLDT_BMAPBTDPTR, btblock_ptr_offset, btblock_key_count,
++	  FLD_ARRAY|FLD_ABASE1|FLD_COUNT|FLD_OFFSET, TYP_BMAPBTD },
++	{ NULL }
++};
+ #undef OFF
  
--	xfs_trans_buf_set_type(tp, bp, XFS_BLF_AGF_BUF);
-+	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_AGF_BUF);
+ #define	KOFF(f)	bitize(offsetof(xfs_bmbt_key_t, br_ ## f))
+@@ -289,6 +362,11 @@ const field_t	inobt_hfld[] = {
+ 	{ NULL }
+ };
  
- 	xfs_btree_offsets(fields, offsets, XFS_AGF_NUM_BITS, &first, &last);
- 	xfs_trans_log_buf(tp, bp, (uint)first, (uint)last);
-@@ -2159,7 +2159,7 @@ xfs_alloc_put_freelist(
++const field_t	inobt_crc_hfld[] = {
++	{ "", FLDT_INOBT_CRC, OI(0), C1, 0, TYP_NONE },
++	{ NULL }
++};
++
+ #define	OFF(f)	bitize(offsetof(struct xfs_btree_block, bb_ ## f))
+ const field_t	inobt_flds[] = {
+ 	{ "magic", FLDT_UINT32X, OI(OFF(magic)), C1, 0, TYP_NONE },
+@@ -304,6 +382,25 @@ const field_t	inobt_flds[] = {
+ 	  FLD_ARRAY|FLD_ABASE1|FLD_COUNT|FLD_OFFSET, TYP_INOBT },
+ 	{ NULL }
+ };
++const field_t	inobt_crc_flds[] = {
++	{ "magic", FLDT_UINT32X, OI(OFF(magic)), C1, 0, TYP_NONE },
++	{ "level", FLDT_UINT16D, OI(OFF(level)), C1, 0, TYP_NONE },
++	{ "numrecs", FLDT_UINT16D, OI(OFF(numrecs)), C1, 0, TYP_NONE },
++	{ "leftsib", FLDT_AGBLOCK, OI(OFF(u.s.bb_leftsib)), C1, 0, TYP_INOBT },
++	{ "rightsib", FLDT_AGBLOCK, OI(OFF(u.s.bb_rightsib)), C1, 0, TYP_INOBT },
++	{ "bno", FLDT_DFSBNO, OI(OFF(u.s.bb_blkno)), C1, 0, TYP_INOBT },
++	{ "lsn", FLDT_UINT64X, OI(OFF(u.s.bb_lsn)), C1, 0, TYP_NONE },
++	{ "uuid", FLDT_UUID, OI(OFF(u.s.bb_uuid)), C1, 0, TYP_NONE },
++	{ "owner", FLDT_AGNUMBER, OI(OFF(u.s.bb_owner)), C1, 0, TYP_NONE },
++	{ "crc", FLDT_UINT32X, OI(OFF(u.s.bb_crc)), C1, 0, TYP_NONE },
++	{ "recs", FLDT_INOBTREC, btblock_rec_offset, btblock_rec_count,
++	  FLD_ARRAY|FLD_ABASE1|FLD_COUNT|FLD_OFFSET, TYP_NONE },
++	{ "keys", FLDT_INOBTKEY, btblock_key_offset, btblock_key_count,
++	  FLD_ARRAY|FLD_ABASE1|FLD_COUNT|FLD_OFFSET, TYP_NONE },
++	{ "ptrs", FLDT_INOBTPTR, btblock_ptr_offset, btblock_key_count,
++	  FLD_ARRAY|FLD_ABASE1|FLD_COUNT|FLD_OFFSET, TYP_INOBT },
++	{ NULL }
++};
+ #undef OFF
  
- 	xfs_alloc_log_agf(tp, agbp, logflags);
+ #define	KOFF(f)	bitize(offsetof(xfs_inobt_key_t, ir_ ## f))
+@@ -331,6 +428,11 @@ const field_t	bnobt_hfld[] = {
+ 	{ NULL }
+ };
  
--	xfs_trans_buf_set_type(tp, agflbp, XFS_BLF_AGFL_BUF);
-+	xfs_trans_buf_set_type(tp, agflbp, XFS_BLFT_AGFL_BUF);
- 	xfs_trans_log_buf(tp, agflbp, startoff,
- 			  startoff + sizeof(xfs_agblock_t) - 1);
- 	return 0;
-diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
-index 7724781..b28266a 100644
---- a/libxfs/xfs_attr_leaf.c
-+++ b/libxfs/xfs_attr_leaf.c
-@@ -241,7 +241,7 @@ xfs_attr3_leaf_read(
- 	err = xfs_da_read_buf(tp, dp, bno, mappedbno, bpp,
- 				XFS_ATTR_FORK, &xfs_attr3_leaf_buf_ops);
- 	if (!err && tp)
--		xfs_trans_buf_set_type(tp, *bpp, XFS_BLF_ATTR_LEAF_BUF);
-+		xfs_trans_buf_set_type(tp, *bpp, XFS_BLFT_ATTR_LEAF_BUF);
- 	return err;
- }
++const field_t	bnobt_crc_hfld[] = {
++	{ "", FLDT_BNOBT_CRC, OI(0), C1, 0, TYP_NONE },
++	{ NULL }
++};
++
+ #define	OFF(f)	bitize(offsetof(struct xfs_btree_block, bb_ ## f))
+ const field_t	bnobt_flds[] = {
+ 	{ "magic", FLDT_UINT32X, OI(OFF(magic)), C1, 0, TYP_NONE },
+@@ -346,6 +448,25 @@ const field_t	bnobt_flds[] = {
+ 	  FLD_ARRAY|FLD_ABASE1|FLD_COUNT|FLD_OFFSET, TYP_BNOBT },
+ 	{ NULL }
+ };
++const field_t	bnobt_crc_flds[] = {
++	{ "magic", FLDT_UINT32X, OI(OFF(magic)), C1, 0, TYP_NONE },
++	{ "level", FLDT_UINT16D, OI(OFF(level)), C1, 0, TYP_NONE },
++	{ "numrecs", FLDT_UINT16D, OI(OFF(numrecs)), C1, 0, TYP_NONE },
++	{ "leftsib", FLDT_AGBLOCK, OI(OFF(u.s.bb_leftsib)), C1, 0, TYP_BNOBT },
++	{ "rightsib", FLDT_AGBLOCK, OI(OFF(u.s.bb_rightsib)), C1, 0, TYP_BNOBT },
++	{ "bno", FLDT_DFSBNO, OI(OFF(u.s.bb_blkno)), C1, 0, TYP_BNOBT },
++	{ "lsn", FLDT_UINT64X, OI(OFF(u.s.bb_lsn)), C1, 0, TYP_NONE },
++	{ "uuid", FLDT_UUID, OI(OFF(u.s.bb_uuid)), C1, 0, TYP_NONE },
++	{ "owner", FLDT_AGNUMBER, OI(OFF(u.s.bb_owner)), C1, 0, TYP_NONE },
++	{ "crc", FLDT_UINT32X, OI(OFF(u.s.bb_crc)), C1, 0, TYP_NONE },
++	{ "recs", FLDT_BNOBTREC, btblock_rec_offset, btblock_rec_count,
++	  FLD_ARRAY|FLD_ABASE1|FLD_COUNT|FLD_OFFSET, TYP_NONE },
++	{ "keys", FLDT_BNOBTKEY, btblock_key_offset, btblock_key_count,
++	  FLD_ARRAY|FLD_ABASE1|FLD_COUNT|FLD_OFFSET, TYP_NONE },
++	{ "ptrs", FLDT_BNOBTPTR, btblock_ptr_offset, btblock_key_count,
++	  FLD_ARRAY|FLD_ABASE1|FLD_COUNT|FLD_OFFSET, TYP_BNOBT },
++	{ NULL }
++};
+ #undef OFF
  
-@@ -872,7 +872,7 @@ xfs_attr3_leaf_to_node(
- 		goto out;
+ #define	KOFF(f)	bitize(offsetof(xfs_alloc_key_t, ar_ ## f))
+@@ -369,6 +490,11 @@ const field_t	cntbt_hfld[] = {
+ 	{ NULL }
+ };
  
- 	/* copy leaf to new buffer, update identifiers */
--	xfs_trans_buf_set_type(args->trans, bp2, XFS_BLF_ATTR_LEAF_BUF);
-+	xfs_trans_buf_set_type(args->trans, bp2, XFS_BLFT_ATTR_LEAF_BUF);
- 	bp2->b_ops = bp1->b_ops;
- 	memcpy(bp2->b_addr, bp1->b_addr, XFS_LBSIZE(mp));
- 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
-@@ -935,7 +935,7 @@ xfs_attr3_leaf_create(
- 	if (error)
- 		return error;
- 	bp->b_ops = &xfs_attr3_leaf_buf_ops;
--	xfs_trans_buf_set_type(args->trans, bp, XFS_BLF_ATTR_LEAF_BUF);
-+	xfs_trans_buf_set_type(args->trans, bp, XFS_BLFT_ATTR_LEAF_BUF);
- 	leaf = bp->b_addr;
- 	memset(leaf, 0, XFS_LBSIZE(mp));
++const field_t	cntbt_crc_hfld[] = {
++	{ "", FLDT_CNTBT_CRC, OI(0), C1, 0, TYP_NONE },
++	{ NULL }
++};
++
+ #define	OFF(f)	bitize(offsetof(struct xfs_btree_block, bb_ ## f))
+ const field_t	cntbt_flds[] = {
+ 	{ "magic", FLDT_UINT32X, OI(OFF(magic)), C1, 0, TYP_NONE },
+@@ -384,6 +510,25 @@ const field_t	cntbt_flds[] = {
+ 	  FLD_ARRAY|FLD_ABASE1|FLD_COUNT|FLD_OFFSET, TYP_CNTBT },
+ 	{ NULL }
+ };
++const field_t	cntbt_crc_flds[] = {
++	{ "magic", FLDT_UINT32X, OI(OFF(magic)), C1, 0, TYP_NONE },
++	{ "level", FLDT_UINT16D, OI(OFF(level)), C1, 0, TYP_NONE },
++	{ "numrecs", FLDT_UINT16D, OI(OFF(numrecs)), C1, 0, TYP_NONE },
++	{ "leftsib", FLDT_AGBLOCK, OI(OFF(u.s.bb_leftsib)), C1, 0, TYP_CNTBT },
++	{ "rightsib", FLDT_AGBLOCK, OI(OFF(u.s.bb_rightsib)), C1, 0, TYP_CNTBT },
++	{ "bno", FLDT_DFSBNO, OI(OFF(u.s.bb_blkno)), C1, 0, TYP_CNTBT },
++	{ "lsn", FLDT_UINT64X, OI(OFF(u.s.bb_lsn)), C1, 0, TYP_NONE },
++	{ "uuid", FLDT_UUID, OI(OFF(u.s.bb_uuid)), C1, 0, TYP_NONE },
++	{ "owner", FLDT_AGNUMBER, OI(OFF(u.s.bb_owner)), C1, 0, TYP_NONE },
++	{ "crc", FLDT_UINT32X, OI(OFF(u.s.bb_crc)), C1, 0, TYP_NONE },
++	{ "recs", FLDT_CNTBTREC, btblock_rec_offset, btblock_rec_count,
++	  FLD_ARRAY|FLD_ABASE1|FLD_COUNT|FLD_OFFSET, TYP_NONE },
++	{ "keys", FLDT_CNTBTKEY, btblock_key_offset, btblock_key_count,
++	  FLD_ARRAY|FLD_ABASE1|FLD_COUNT|FLD_OFFSET, TYP_NONE },
++	{ "ptrs", FLDT_CNTBTPTR, btblock_ptr_offset, btblock_key_count,
++	  FLD_ARRAY|FLD_ABASE1|FLD_COUNT|FLD_OFFSET, TYP_CNTBT },
++	{ NULL }
++};
+ #undef OFF
  
-diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index 5e736a5..6664265 100644
---- a/libxfs/xfs_bmap.c
-+++ b/libxfs/xfs_bmap.c
-@@ -1217,7 +1217,7 @@ xfs_bmap_local_to_extents_init_fn(
- {
- 	bp->b_ops = &xfs_bmbt_buf_ops;
- 	memcpy(bp->b_addr, ifp->if_u1.if_data, ifp->if_bytes);
--	xfs_trans_buf_set_type(tp, bp, XFS_BLF_BTREE_BUF);
-+	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_BTREE_BUF);
- }
+ #define	KOFF(f)	bitize(offsetof(xfs_alloc_key_t, ar_ ## f))
+diff --git a/db/btblock.h b/db/btblock.h
+index 0631e66..daee060 100644
+--- a/db/btblock.h
++++ b/db/btblock.h
+@@ -18,26 +18,36 @@
  
- STATIC void
-diff --git a/libxfs/xfs_btree.c b/libxfs/xfs_btree.c
-index a7c19e9..a613294 100644
---- a/libxfs/xfs_btree.c
-+++ b/libxfs/xfs_btree.c
-@@ -1227,7 +1227,7 @@ xfs_btree_log_keys(
- 	XFS_BTREE_TRACE_ARGBII(cur, bp, first, last);
+ extern const struct field	bmapbta_flds[];
+ extern const struct field	bmapbta_hfld[];
++extern const struct field	bmapbta_crc_flds[];
++extern const struct field	bmapbta_crc_hfld[];
+ extern const struct field	bmapbta_key_flds[];
+ extern const struct field	bmapbta_rec_flds[];
  
- 	if (bp) {
--		xfs_trans_buf_set_type(cur->bc_tp, bp, XFS_BLF_BTREE_BUF);
-+		xfs_trans_buf_set_type(cur->bc_tp, bp, XFS_BLFT_BTREE_BUF);
- 		xfs_trans_log_buf(cur->bc_tp, bp,
- 				  xfs_btree_key_offset(cur, first),
- 				  xfs_btree_key_offset(cur, last + 1) - 1);
-@@ -1252,7 +1252,7 @@ xfs_btree_log_recs(
- 	XFS_BTREE_TRACE_CURSOR(cur, XBT_ENTRY);
- 	XFS_BTREE_TRACE_ARGBII(cur, bp, first, last);
+ extern const struct field	bmapbtd_flds[];
+ extern const struct field	bmapbtd_hfld[];
++extern const struct field	bmapbtd_crc_flds[];
++extern const struct field	bmapbtd_crc_hfld[];
+ extern const struct field	bmapbtd_key_flds[];
+ extern const struct field	bmapbtd_rec_flds[];
  
--	xfs_trans_buf_set_type(cur->bc_tp, bp, XFS_BLF_BTREE_BUF);
-+	xfs_trans_buf_set_type(cur->bc_tp, bp, XFS_BLFT_BTREE_BUF);
- 	xfs_trans_log_buf(cur->bc_tp, bp,
- 			  xfs_btree_rec_offset(cur, first),
- 			  xfs_btree_rec_offset(cur, last + 1) - 1);
-@@ -1277,7 +1277,7 @@ xfs_btree_log_ptrs(
- 		struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
- 		int			level = xfs_btree_get_level(block);
+ extern const struct field	inobt_flds[];
+ extern const struct field	inobt_hfld[];
++extern const struct field	inobt_crc_flds[];
++extern const struct field	inobt_crc_hfld[];
+ extern const struct field	inobt_key_flds[];
+ extern const struct field	inobt_rec_flds[];
  
--		xfs_trans_buf_set_type(cur->bc_tp, bp, XFS_BLF_BTREE_BUF);
-+		xfs_trans_buf_set_type(cur->bc_tp, bp, XFS_BLFT_BTREE_BUF);
- 		xfs_trans_log_buf(cur->bc_tp, bp,
- 				xfs_btree_ptr_offset(cur, first, level),
- 				xfs_btree_ptr_offset(cur, last + 1, level) - 1);
-@@ -1352,7 +1352,7 @@ xfs_btree_log_block(
- 				  (cur->bc_flags & XFS_BTREE_LONG_PTRS) ?
- 					loffsets : soffsets,
- 				  nbits, &first, &last);
--		xfs_trans_buf_set_type(cur->bc_tp, bp, XFS_BLF_BTREE_BUF);
-+		xfs_trans_buf_set_type(cur->bc_tp, bp, XFS_BLFT_BTREE_BUF);
- 		xfs_trans_log_buf(cur->bc_tp, bp, first, last);
- 	} else {
- 		xfs_trans_log_inode(cur->bc_tp, cur->bc_private.b.ip,
-diff --git a/libxfs/xfs_da_btree.c b/libxfs/xfs_da_btree.c
-index ef443ae..a76962d 100644
---- a/libxfs/xfs_da_btree.c
-+++ b/libxfs/xfs_da_btree.c
-@@ -290,15 +290,15 @@ xfs_da3_node_read(
- 		switch (be16_to_cpu(info->magic)) {
- 		case XFS_DA3_NODE_MAGIC:
- 		case XFS_DA_NODE_MAGIC:
--			type = XFS_BLF_DA_NODE_BUF;
-+			type = XFS_BLFT_DA_NODE_BUF;
- 			break;
- 		case XFS_ATTR_LEAF_MAGIC:
- 		case XFS_ATTR3_LEAF_MAGIC:
--			type = XFS_BLF_ATTR_LEAF_BUF;
-+			type = XFS_BLFT_ATTR_LEAF_BUF;
- 			break;
- 		case XFS_DIR2_LEAFN_MAGIC:
- 		case XFS_DIR3_LEAFN_MAGIC:
--			type = XFS_BLF_DIR_LEAFN_BUF;
-+			type = XFS_BLFT_DIR_LEAFN_BUF;
- 			break;
- 		default:
- 			type = 0;
-@@ -339,7 +339,7 @@ xfs_da3_node_create(
- 	if (error)
- 		return(error);
- 	bp->b_ops = &xfs_da3_node_buf_ops;
--	xfs_trans_buf_set_type(tp, bp, XFS_BLF_DA_NODE_BUF);
-+	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_DA_NODE_BUF);
- 	node = bp->b_addr;
+ extern const struct field	bnobt_flds[];
+ extern const struct field	bnobt_hfld[];
++extern const struct field	bnobt_crc_flds[];
++extern const struct field	bnobt_crc_hfld[];
+ extern const struct field	bnobt_key_flds[];
+ extern const struct field	bnobt_rec_flds[];
  
- 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
-@@ -573,7 +573,7 @@ xfs_da3_root_split(
- 		 * we are about to copy oldroot to bp, so set up the type
- 		 * of bp while we know exactly what it will be.
- 		 */
--		xfs_trans_buf_set_type(tp, bp, XFS_BLF_DA_NODE_BUF);
-+		xfs_trans_buf_set_type(tp, bp, XFS_BLFT_DA_NODE_BUF);
- 	} else {
- 		struct xfs_dir3_icleaf_hdr leafhdr;
- 		struct xfs_dir2_leaf_entry *ents;
-@@ -591,7 +591,7 @@ xfs_da3_root_split(
- 		 * we are about to copy oldroot to bp, so set up the type
- 		 * of bp while we know exactly what it will be.
- 		 */
--		xfs_trans_buf_set_type(tp, bp, XFS_BLF_DIR_LEAFN_BUF);
-+		xfs_trans_buf_set_type(tp, bp, XFS_BLFT_DIR_LEAFN_BUF);
+ extern const struct field	cntbt_flds[];
+ extern const struct field	cntbt_hfld[];
++extern const struct field	cntbt_crc_flds[];
++extern const struct field	cntbt_crc_hfld[];
+ extern const struct field	cntbt_key_flds[];
+ extern const struct field	cntbt_rec_flds[];
+ 
+diff --git a/db/field.c b/db/field.c
+index dc72563..510ad84 100644
+--- a/db/field.c
++++ b/db/field.c
+@@ -46,6 +46,8 @@ const ftattr_t	ftattrtab[] = {
+ 	  agf_flds },
+ 	{ FLDT_AGFL, "agfl", NULL, (char *)agfl_flds, agfl_size, FTARG_SIZE,
+ 	  NULL, agfl_flds },
++	{ FLDT_AGFL_CRC, "agfl", NULL, (char *)agfl_crc_flds, agfl_size,
++	  FTARG_SIZE, NULL, agfl_crc_flds },
+ 	{ FLDT_AGI, "agi", NULL, (char *)agi_flds, agi_size, FTARG_SIZE, NULL,
+ 	  agi_flds },
+ 	{ FLDT_AGINO, "agino", fp_num, "%u", SI(bitsz(xfs_agino_t)),
+@@ -84,6 +86,8 @@ const ftattr_t	ftattrtab[] = {
+ 	  attrshort_size, FTARG_SIZE, NULL, attr_shortform_flds },
+ 	{ FLDT_BMAPBTA, "bmapbta", NULL, (char *)bmapbta_flds, btblock_size,
+ 	  FTARG_SIZE, NULL, bmapbta_flds },
++	{ FLDT_BMAPBTA_CRC, "bmapbta", NULL, (char *)bmapbta_crc_flds,
++	  btblock_size, FTARG_SIZE, NULL, bmapbta_crc_flds },
+ 	{ FLDT_BMAPBTAKEY, "bmapbtakey", fp_sarray, (char *)bmapbta_key_flds,
+ 	  SI(bitsz(xfs_bmbt_key_t)), 0, NULL, bmapbta_key_flds },
+ 	{ FLDT_BMAPBTAPTR, "bmapbtaptr", fp_num, "%llu",
+@@ -92,6 +96,8 @@ const ftattr_t	ftattrtab[] = {
+ 	  SI(bitsz(xfs_bmbt_rec_t)), 0, NULL, bmapbta_rec_flds },
+ 	{ FLDT_BMAPBTD, "bmapbtd", NULL, (char *)bmapbtd_flds, btblock_size,
+ 	  FTARG_SIZE, NULL, bmapbtd_flds },
++	{ FLDT_BMAPBTD_CRC, "bmapbtd", NULL, (char *)bmapbtd_crc_flds,
++	  btblock_size, FTARG_SIZE, NULL, bmapbtd_crc_flds },
+ 	{ FLDT_BMAPBTDKEY, "bmapbtdkey", fp_sarray, (char *)bmapbtd_key_flds,
+ 	  SI(bitsz(xfs_bmbt_key_t)), 0, NULL, bmapbtd_key_flds },
+ 	{ FLDT_BMAPBTDPTR, "bmapbtdptr", fp_num, "%llu",
+@@ -112,6 +118,8 @@ const ftattr_t	ftattrtab[] = {
+ 	  SI(bitsz(xfs_bmdr_ptr_t)), 0, fa_dfsbno, NULL },
+ 	{ FLDT_BNOBT, "bnobt", NULL, (char *)bnobt_flds, btblock_size, FTARG_SIZE,
+ 	  NULL, bnobt_flds },
++	{ FLDT_BNOBT_CRC, "bnobt", NULL, (char *)bnobt_crc_flds, btblock_size,
++	  FTARG_SIZE, NULL, bnobt_crc_flds },
+ 	{ FLDT_BNOBTKEY, "bnobtkey", fp_sarray, (char *)bnobt_key_flds,
+ 	  SI(bitsz(xfs_alloc_key_t)), 0, NULL, bnobt_key_flds },
+ 	{ FLDT_BNOBTPTR, "bnobtptr", fp_num, "%u", SI(bitsz(xfs_alloc_ptr_t)),
+@@ -133,6 +141,8 @@ const ftattr_t	ftattrtab[] = {
+ 	{ FLDT_CHARS, "chars", fp_num, "%c", SI(bitsz(char)), 0, NULL, NULL },
+ 	{ FLDT_CNTBT, "cntbt", NULL, (char *)cntbt_flds, btblock_size, FTARG_SIZE,
+ 	  NULL, cntbt_flds },
++	{ FLDT_CNTBT_CRC, "cntbt", NULL, (char *)cntbt_crc_flds, btblock_size,
++	  FTARG_SIZE, NULL, cntbt_crc_flds },
+ 	{ FLDT_CNTBTKEY, "cntbtkey", fp_sarray, (char *)cntbt_key_flds,
+ 	  SI(bitsz(xfs_alloc_key_t)), 0, NULL, cntbt_key_flds },
+ 	{ FLDT_CNTBTPTR, "cntbtptr", fp_num, "%u", SI(bitsz(xfs_alloc_ptr_t)),
+@@ -154,6 +164,8 @@ const ftattr_t	ftattrtab[] = {
+ 	  SI(bitsz(__int8_t)), 0, NULL, NULL },
+ 	{ FLDT_DINODE_U, "dinode_u", NULL, (char *)inode_u_flds, inode_u_size,
+ 	  FTARG_SIZE|FTARG_OKEMPTY, NULL, inode_u_flds },
++	{ FLDT_DINODE_V3, "dinode_v3", NULL, (char *)inode_v3_flds,
++	  SI(bitsz(xfs_dinode_t)), 0, NULL, inode_v3_flds },
+ 	{ FLDT_DIR2, "dir2", NULL, (char *)dir2_flds, dir2_size, FTARG_SIZE,
+ 	  NULL, dir2_flds },
+ 	{ FLDT_DIR2_BLOCK_TAIL, "dir2_block_tail", NULL,
+@@ -224,6 +236,8 @@ const ftattr_t	ftattrtab[] = {
+ 	  fa_ino, NULL },
+ 	{ FLDT_INOBT, "inobt",  NULL, (char *)inobt_flds, btblock_size,
+ 	  FTARG_SIZE, NULL, inobt_flds },
++	{ FLDT_INOBT_CRC, "inobt",  NULL, (char *)inobt_crc_flds, btblock_size,
++	  FTARG_SIZE, NULL, inobt_crc_flds },
+ 	{ FLDT_INOBTKEY, "inobtkey", fp_sarray, (char *)inobt_key_flds,
+ 	  SI(bitsz(xfs_inobt_key_t)), 0, NULL, inobt_key_flds },
+ 	{ FLDT_INOBTPTR, "inobtptr", fp_num, "%u", SI(bitsz(xfs_inobt_ptr_t)),
+@@ -232,6 +246,8 @@ const ftattr_t	ftattrtab[] = {
+ 	  SI(bitsz(xfs_inobt_rec_t)), 0, NULL, inobt_rec_flds },
+ 	{ FLDT_INODE, "inode", NULL, (char *)inode_flds, inode_size, FTARG_SIZE,
+ 	  NULL, inode_flds },
++	{ FLDT_INODE_CRC, "inode", NULL, (char *)inode_crc_flds, inode_size,
++	  FTARG_SIZE, NULL, inode_crc_flds },
+ 	{ FLDT_INOFREE, "inofree", fp_num, "%#llx", SI(bitsz(xfs_inofree_t)), 0,
+ 	  NULL, NULL },
+ 	{ FLDT_INT16D, "int16d", fp_num, "%d", SI(bitsz(__int16_t)),
+diff --git a/db/field.h b/db/field.h
+index 72c225b..9b332f5 100644
+--- a/db/field.h
++++ b/db/field.h
+@@ -22,6 +22,7 @@ typedef enum fldt	{
+ 	FLDT_AGBLOCKNZ,
+ 	FLDT_AGF,
+ 	FLDT_AGFL,
++	FLDT_AGFL_CRC,
+ 	FLDT_AGI,
+ 	FLDT_AGINO,
+ 	FLDT_AGINONN,
+@@ -39,10 +40,12 @@ typedef enum fldt	{
+ 	FLDT_ATTRBLOCK,
+ 	FLDT_ATTRSHORT,
+ 	FLDT_BMAPBTA,
++	FLDT_BMAPBTA_CRC,
+ 	FLDT_BMAPBTAKEY,
+ 	FLDT_BMAPBTAPTR,
+ 	FLDT_BMAPBTAREC,
+ 	FLDT_BMAPBTD,
++	FLDT_BMAPBTD_CRC,
+ 	FLDT_BMAPBTDKEY,
+ 	FLDT_BMAPBTDPTR,
+ 	FLDT_BMAPBTDREC,
+@@ -53,6 +56,7 @@ typedef enum fldt	{
+ 	FLDT_BMROOTDKEY,
+ 	FLDT_BMROOTDPTR,
+ 	FLDT_BNOBT,
++	FLDT_BNOBT_CRC,
+ 	FLDT_BNOBTKEY,
+ 	FLDT_BNOBTPTR,
+ 	FLDT_BNOBTREC,
+@@ -64,6 +68,7 @@ typedef enum fldt	{
+ 	FLDT_CHARNS,
+ 	FLDT_CHARS,
+ 	FLDT_CNTBT,
++	FLDT_CNTBT_CRC,
+ 	FLDT_CNTBTKEY,
+ 	FLDT_CNTBTPTR,
+ 	FLDT_CNTBTREC,
+@@ -75,6 +80,7 @@ typedef enum fldt	{
+ 	FLDT_DINODE_CORE,
+ 	FLDT_DINODE_FMT,
+ 	FLDT_DINODE_U,
++	FLDT_DINODE_V3,
+ 	FLDT_DIR2,
+ 	FLDT_DIR2_BLOCK_TAIL,
+ 	FLDT_DIR2_DATA_FREE,
+@@ -107,10 +113,12 @@ typedef enum fldt	{
+ 	FLDT_FSIZE,
+ 	FLDT_INO,
+ 	FLDT_INOBT,
++	FLDT_INOBT_CRC,
+ 	FLDT_INOBTKEY,
+ 	FLDT_INOBTPTR,
+ 	FLDT_INOBTREC,
+ 	FLDT_INODE,
++	FLDT_INODE_CRC,
+ 	FLDT_INOFREE,
+ 	FLDT_INT16D,
+ 	FLDT_INT32D,
+diff --git a/db/freesp.c b/db/freesp.c
+index 228ca07..6f69eba 100644
+--- a/db/freesp.c
++++ b/db/freesp.c
+@@ -301,7 +301,8 @@ scanfunc_bno(
+ 	xfs_alloc_ptr_t		*pp;
+ 	xfs_alloc_rec_t		*rp;
+ 
+-	if (be32_to_cpu(block->bb_magic) != XFS_ABTB_MAGIC)
++	if (!(be32_to_cpu(block->bb_magic) == XFS_ABTB_MAGIC ||
++	      be32_to_cpu(block->bb_magic) == XFS_ABTB_CRC_MAGIC))
+ 		return;
+ 
+ 	if (level == 0) {
+@@ -328,7 +329,8 @@ scanfunc_cnt(
+ 	xfs_alloc_ptr_t		*pp;
+ 	xfs_alloc_rec_t		*rp;
+ 
+-	if (be32_to_cpu(block->bb_magic) != XFS_ABTC_MAGIC)
++	if (!(be32_to_cpu(block->bb_magic) == XFS_ABTC_MAGIC ||
++	      be32_to_cpu(block->bb_magic) == XFS_ABTC_CRC_MAGIC))
+ 		return;
+ 
+ 	if (level == 0) {
+diff --git a/db/init.c b/db/init.c
+index 1033f3a..2932e51 100644
+--- a/db/init.c
++++ b/db/init.c
+@@ -26,6 +26,7 @@
+ #include "sig.h"
+ #include "output.h"
+ #include "malloc.h"
++#include "type.h"
+ 
+ static char	**cmdline;
+ static int	ncmdline;
+@@ -160,6 +161,9 @@ init(
  	}
+ 	blkbb = 1 << mp->m_blkbb_log;
+ 
++	if (xfs_sb_version_hascrc(&mp->m_sb))
++		type_set_tab_crc();
++
+ 	push_cur();
+ 	init_commands();
+ 	init_sig();
+diff --git a/db/inode.c b/db/inode.c
+index c8cb7ac..68ef564 100644
+--- a/db/inode.c
++++ b/db/inode.c
+@@ -57,6 +57,10 @@ const field_t	inode_hfld[] = {
+ 	{ "", FLDT_INODE, OI(0), C1, 0, TYP_NONE },
+ 	{ NULL }
+ };
++const field_t	inode_crc_hfld[] = {
++	{ "", FLDT_INODE_CRC, OI(0), C1, 0, TYP_NONE },
++	{ NULL }
++};
+ 
+ /* XXX: fix this up! */
+ #define	OFF(f)	bitize(offsetof(xfs_dinode_t, di_ ## f))
+@@ -69,6 +73,17 @@ const field_t	inode_flds[] = {
+ 	  FLD_COUNT|FLD_OFFSET, TYP_NONE },
+ 	{ NULL }
+ };
++const field_t	inode_crc_flds[] = {
++	{ "core", FLDT_DINODE_CORE, OI(OFF(magic)), C1, 0, TYP_NONE },
++	{ "next_unlinked", FLDT_AGINO, OI(OFF(next_unlinked)), C1, 0,
++	  TYP_INODE },
++	{ "v3", FLDT_DINODE_V3, OI(OFF(magic)), C1, 0, TYP_NONE },
++	{ "u", FLDT_DINODE_U, inode_u_offset, C1, FLD_OFFSET, TYP_NONE },
++	{ "a", FLDT_DINODE_A, inode_a_offset, inode_a_count,
++	  FLD_COUNT|FLD_OFFSET, TYP_NONE },
++	{ NULL }
++};
++
+ 
+ #define	COFF(f)	bitize(offsetof(xfs_dinode_t, di_ ## f))
+ const field_t	inode_core_flds[] = {
+@@ -151,6 +166,18 @@ const field_t	inode_core_flds[] = {
+ 	{ NULL }
+ };
+ 
++const field_t	inode_v3_flds[] = {
++	{ "crc", FLDT_UINT32X, OI(COFF(crc)), C1, 0, TYP_NONE },
++	{ "change_count", FLDT_UINT64D, OI(COFF(changecount)), C1, 0, TYP_NONE },
++	{ "lsn", FLDT_UINT64X, OI(COFF(lsn)), C1, 0, TYP_NONE },
++	{ "flags2", FLDT_UINT64X, OI(COFF(flags2)), C1, 0, TYP_NONE },
++	{ "crtime", FLDT_TIMESTAMP, OI(COFF(crtime)), C1, 0, TYP_NONE },
++	{ "inumber", FLDT_INO, OI(COFF(ino)), C1, 0, TYP_NONE },
++	{ "uuid", FLDT_UUID, OI(COFF(uuid)), C1, 0, TYP_NONE },
++	{ NULL }
++};
++
++
+ #define	TOFF(f)	bitize(offsetof(xfs_timestamp_t, t_ ## f))
+ const field_t	timestamp_flds[] = {
+ 	{ "sec", FLDT_TIME, OI(TOFF(sec)), C1, 0, TYP_NONE },
+diff --git a/db/inode.h b/db/inode.h
+index 6c1ac5c..1624f1d 100644
+--- a/db/inode.h
++++ b/db/inode.h
+@@ -18,8 +18,11 @@
+ 
+ extern const struct field	inode_a_flds[];
+ extern const struct field	inode_core_flds[];
++extern const struct field	inode_v3_flds[];
+ extern const struct field	inode_flds[];
++extern const struct field	inode_crc_flds[];
+ extern const struct field	inode_hfld[];
++extern const struct field	inode_crc_hfld[];
+ extern const struct field	inode_u_flds[];
+ extern const struct field	timestamp_flds[];
+ 
+diff --git a/db/type.c b/db/type.c
+index 529c9e7..97f3548 100644
+--- a/db/type.c
++++ b/db/type.c
+@@ -48,7 +48,7 @@ static const cmdinfo_t	type_cmd =
+ 	{ "type", NULL, type_f, 0, 1, 1, N_("[newtype]"),
+ 	  N_("set/show current data type"), NULL };
+ 
+-const typ_t	typtab[] = {
++static const typ_t	__typtab[] = {
+ 	{ TYP_AGF, "agf", handle_struct, agf_hfld },
+ 	{ TYP_AGFL, "agfl", handle_struct, agfl_hfld },
+ 	{ TYP_AGI, "agi", handle_struct, agi_hfld },
+@@ -72,6 +72,38 @@ const typ_t	typtab[] = {
+ 	{ TYP_NONE, NULL }
+ };
+ 
++static const typ_t	__typtab_crc[] = {
++	{ TYP_AGF, "agf", handle_struct, agf_hfld },
++	{ TYP_AGFL, "agfl", handle_struct, agfl_crc_hfld },
++	{ TYP_AGI, "agi", handle_struct, agi_hfld },
++	{ TYP_ATTR, "attr", handle_struct, attr_hfld },
++	{ TYP_BMAPBTA, "bmapbta", handle_struct, bmapbta_crc_hfld },
++	{ TYP_BMAPBTD, "bmapbtd", handle_struct, bmapbtd_crc_hfld },
++	{ TYP_BNOBT, "bnobt", handle_struct, bnobt_crc_hfld },
++	{ TYP_CNTBT, "cntbt", handle_struct, cntbt_crc_hfld },
++	{ TYP_DATA, "data", handle_block, NULL },
++	{ TYP_DIR2, "dir2", handle_struct, dir2_hfld },
++	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld },
++	{ TYP_INOBT, "inobt", handle_struct, inobt_crc_hfld },
++	{ TYP_INODATA, "inodata", NULL, NULL },
++	{ TYP_INODE, "inode", handle_struct, inode_crc_hfld },
++	{ TYP_LOG, "log", NULL, NULL },
++	{ TYP_RTBITMAP, "rtbitmap", NULL, NULL },
++	{ TYP_RTSUMMARY, "rtsummary", NULL, NULL },
++	{ TYP_SB, "sb", handle_struct, sb_hfld },
++	{ TYP_SYMLINK, "symlink", handle_string, NULL },
++	{ TYP_TEXT, "text", handle_text, NULL },
++	{ TYP_NONE, NULL }
++};
++
++const typ_t	*typtab = __typtab;
++
++void
++type_set_tab_crc(void)
++{
++	typtab = __typtab_crc;
++}
++
+ static const typ_t *
+ findtyp(
+ 	char		*name)
+diff --git a/db/type.h b/db/type.h
+index 4a1d328..c41aca4 100644
+--- a/db/type.h
++++ b/db/type.h
+@@ -43,9 +43,10 @@ typedef struct typ
+ 	pfunc_t			pfunc;
+ 	const struct field	*fields;
+ } typ_t;
+-extern const typ_t	typtab[], *cur_typ;
++extern const typ_t	*typtab, *cur_typ;
+ 
+ extern void	type_init(void);
++extern void	type_set_tab_crc(void);
+ extern void	handle_block(int action, const struct field *fields, int argc,
+ 			     char **argv);
+ extern void	handle_string(int action, const struct field *fields, int argc,
+diff --git a/libxfs/util.c b/libxfs/util.c
+index abe16cf..1d3113a 100644
+--- a/libxfs/util.c
++++ b/libxfs/util.c
+@@ -79,7 +79,6 @@ libxfs_ialloc(
+ 	xfs_inode_t	*ip;
+ 	uint		flags;
+ 	int		error;
+-	int		times;
  
  	/*
-diff --git a/libxfs/xfs_dir2_block.c b/libxfs/xfs_dir2_block.c
-index 574e414..dc69394 100644
---- a/libxfs/xfs_dir2_block.c
-+++ b/libxfs/xfs_dir2_block.c
-@@ -119,7 +119,7 @@ xfs_dir3_block_read(
- 	err = xfs_da_read_buf(tp, dp, mp->m_dirdatablk, -1, bpp,
- 				XFS_DATA_FORK, &xfs_dir3_block_buf_ops);
- 	if (!err && tp)
--		xfs_trans_buf_set_type(tp, *bpp, XFS_BLF_DIR_BLOCK_BUF);
-+		xfs_trans_buf_set_type(tp, *bpp, XFS_BLFT_DIR_BLOCK_BUF);
- 	return err;
- }
- 
-@@ -133,7 +133,7 @@ xfs_dir3_block_init(
- 	struct xfs_dir3_blk_hdr *hdr3 = bp->b_addr;
- 
- 	bp->b_ops = &xfs_dir3_block_buf_ops;
--	xfs_trans_buf_set_type(tp, bp, XFS_BLF_DIR_BLOCK_BUF);
-+	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_DIR_BLOCK_BUF);
- 
- 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
- 		memset(hdr3, 0, sizeof(*hdr3));
-diff --git a/libxfs/xfs_dir2_data.c b/libxfs/xfs_dir2_data.c
-index 9752ae3..155352c 100644
---- a/libxfs/xfs_dir2_data.c
-+++ b/libxfs/xfs_dir2_data.c
-@@ -288,7 +288,7 @@ xfs_dir3_data_read(
- 	err = xfs_da_read_buf(tp, dp, bno, mapped_bno, bpp,
- 				XFS_DATA_FORK, &xfs_dir3_data_buf_ops);
- 	if (!err && tp)
--		xfs_trans_buf_set_type(tp, *bpp, XFS_BLF_DIR_DATA_BUF);
-+		xfs_trans_buf_set_type(tp, *bpp, XFS_BLFT_DIR_DATA_BUF);
- 	return err;
- }
- 
-@@ -558,7 +558,7 @@ xfs_dir3_data_init(
- 	if (error)
- 		return error;
- 	bp->b_ops = &xfs_dir3_data_buf_ops;
--	xfs_trans_buf_set_type(tp, bp, XFS_BLF_DIR_DATA_BUF);
-+	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_DIR_DATA_BUF);
- 
- 	/*
- 	 * Initialize the header.
-diff --git a/libxfs/xfs_dir2_leaf.c b/libxfs/xfs_dir2_leaf.c
-index 3d1ec23..a287bb1 100644
---- a/libxfs/xfs_dir2_leaf.c
-+++ b/libxfs/xfs_dir2_leaf.c
-@@ -284,7 +284,7 @@ xfs_dir3_leaf_read(
- 	err = xfs_da_read_buf(tp, dp, fbno, mappedbno, bpp,
- 				XFS_DATA_FORK, &xfs_dir3_leaf1_buf_ops);
- 	if (!err && tp)
--		xfs_trans_buf_set_type(tp, *bpp, XFS_BLF_DIR_LEAF1_BUF);
-+		xfs_trans_buf_set_type(tp, *bpp, XFS_BLFT_DIR_LEAF1_BUF);
- 	return err;
- }
- 
-@@ -301,7 +301,7 @@ xfs_dir3_leafn_read(
- 	err = xfs_da_read_buf(tp, dp, fbno, mappedbno, bpp,
- 				XFS_DATA_FORK, &xfs_dir3_leafn_buf_ops);
- 	if (!err && tp)
--		xfs_trans_buf_set_type(tp, *bpp, XFS_BLF_DIR_LEAFN_BUF);
-+		xfs_trans_buf_set_type(tp, *bpp, XFS_BLFT_DIR_LEAFN_BUF);
- 	return err;
- }
- 
-@@ -346,10 +346,10 @@ xfs_dir3_leaf_init(
- 		ltp = xfs_dir2_leaf_tail_p(mp, leaf);
- 		ltp->bestcount = 0;
- 		bp->b_ops = &xfs_dir3_leaf1_buf_ops;
--		xfs_trans_buf_set_type(tp, bp, XFS_BLF_DIR_LEAF1_BUF);
-+		xfs_trans_buf_set_type(tp, bp, XFS_BLFT_DIR_LEAF1_BUF);
- 	} else {
- 		bp->b_ops = &xfs_dir3_leafn_buf_ops;
--		xfs_trans_buf_set_type(tp, bp, XFS_BLF_DIR_LEAFN_BUF);
-+		xfs_trans_buf_set_type(tp, bp, XFS_BLFT_DIR_LEAFN_BUF);
- 	}
- }
- 
-@@ -470,7 +470,7 @@ xfs_dir2_block_to_leaf(
- 	 * Fix up the block header, make it a data block.
- 	 */
- 	dbp->b_ops = &xfs_dir3_data_buf_ops;
--	xfs_trans_buf_set_type(tp, dbp, XFS_BLF_DIR_DATA_BUF);
-+	xfs_trans_buf_set_type(tp, dbp, XFS_BLFT_DIR_DATA_BUF);
- 	if (hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC))
- 		hdr->magic = cpu_to_be32(XFS_DIR2_DATA_MAGIC);
- 	else
-@@ -1791,7 +1791,7 @@ xfs_dir2_node_to_leaf(
- 		xfs_dir3_leaf_compact(args, &leafhdr, lbp);
- 
- 	lbp->b_ops = &xfs_dir3_leaf1_buf_ops;
--	xfs_trans_buf_set_type(tp, lbp, XFS_BLF_DIR_LEAF1_BUF);
-+	xfs_trans_buf_set_type(tp, lbp, XFS_BLFT_DIR_LEAF1_BUF);
- 	leafhdr.magic = (leafhdr.magic == XFS_DIR2_LEAFN_MAGIC)
- 					? XFS_DIR2_LEAF1_MAGIC
- 					: XFS_DIR3_LEAF1_MAGIC;
-diff --git a/libxfs/xfs_dir2_node.c b/libxfs/xfs_dir2_node.c
-index a88049b..be955bf 100644
---- a/libxfs/xfs_dir2_node.c
-+++ b/libxfs/xfs_dir2_node.c
-@@ -151,7 +151,7 @@ __xfs_dir3_free_read(
- 
- 	/* try read returns without an error or *bpp if it lands in a hole */
- 	if (!err && tp && *bpp)
--		xfs_trans_buf_set_type(tp, *bpp, XFS_BLF_DIR_FREE_BUF);
-+		xfs_trans_buf_set_type(tp, *bpp, XFS_BLFT_DIR_FREE_BUF);
- 	return err;
- }
- 
-@@ -239,7 +239,7 @@ xfs_dir3_free_get_buf(
- 	if (error)
- 		return error;
- 
--	xfs_trans_buf_set_type(tp, bp, XFS_BLF_DIR_FREE_BUF);
-+	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_DIR_FREE_BUF);
- 	bp->b_ops = &xfs_dir3_free_buf_ops;
- 
- 	/*
-@@ -388,7 +388,7 @@ xfs_dir2_leaf_to_node(
- 	else
- 		leaf->hdr.info.magic = cpu_to_be16(XFS_DIR3_LEAFN_MAGIC);
- 	lbp->b_ops = &xfs_dir3_leafn_buf_ops;
--	xfs_trans_buf_set_type(tp, lbp, XFS_BLF_DIR_LEAFN_BUF);
-+	xfs_trans_buf_set_type(tp, lbp, XFS_BLFT_DIR_LEAFN_BUF);
- 	xfs_dir3_leaf_log_header(tp, lbp);
- 	xfs_dir3_leaf_check(mp, lbp);
- 	return 0;
-@@ -804,7 +804,7 @@ xfs_dir2_leafn_lookup_for_entry(
- 							(char *)curbp->b_addr);
- 			state->extrablk.magic = XFS_DIR2_DATA_MAGIC;
- 			curbp->b_ops = &xfs_dir3_data_buf_ops;
--			xfs_trans_buf_set_type(tp, curbp, XFS_BLF_DIR_DATA_BUF);
-+			xfs_trans_buf_set_type(tp, curbp, XFS_BLFT_DIR_DATA_BUF);
- 			if (cmp == XFS_CMP_EXACT)
- 				return XFS_ERROR(EEXIST);
- 		}
-@@ -819,7 +819,7 @@ xfs_dir2_leafn_lookup_for_entry(
- 			state->extrablk.blkno = curdb;
- 			state->extrablk.magic = XFS_DIR2_DATA_MAGIC;
- 			curbp->b_ops = &xfs_dir3_data_buf_ops;
--			xfs_trans_buf_set_type(tp, curbp, XFS_BLF_DIR_DATA_BUF);
-+			xfs_trans_buf_set_type(tp, curbp, XFS_BLFT_DIR_DATA_BUF);
- 		} else {
- 			/* If the curbp is not the CI match block, drop it */
- 			if (state->extrablk.bp != curbp)
-diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
-index 57fbae2..76fdcea 100644
---- a/libxfs/xfs_ialloc.c
-+++ b/libxfs/xfs_ialloc.c
-@@ -1286,7 +1286,7 @@ xfs_ialloc_log_agi(
- 	/*
- 	 * Log the allocation group inode header buffer.
- 	 */
--	xfs_trans_buf_set_type(tp, bp, XFS_BLF_AGI_BUF);
-+	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_AGI_BUF);
- 	xfs_trans_log_buf(tp, bp, first, last);
- }
- 
+ 	 * Call the space management code to pick
 -- 
 1.7.10.4
 
