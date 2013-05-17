@@ -1,17 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9B9107F37
-	for <xfs@oss.sgi.com>; Fri, 17 May 2013 06:59:58 -0500 (CDT)
-Message-ID: <51961BE0.2080708@sgi.com>
-Date: Fri, 17 May 2013 07:00:32 -0500
-From: Rich Johnston <rjohnston@sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 13DB229DF8
+	for <xfs@oss.sgi.com>; Fri, 17 May 2013 07:02:27 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 96AB0AC002
+	for <xfs@oss.sgi.com>; Fri, 17 May 2013 05:02:26 -0700 (PDT)
+Received: from trent.utfs.org (trent.utfs.org [94.185.90.103]) by cuda.sgi.com
+	with ESMTP id 74neLNnPwDjrHrI9 for <xfs@oss.sgi.com>;
+	Fri, 17 May 2013 05:02:24 -0700 (PDT)
+Date: Fri, 17 May 2013 05:02:21 -0700 (PDT)
+From: Christian Kujau <lists@nerdbynature.de>
+Subject: xattr performance
+Message-ID: <alpine.DEB.2.10.1305170444590.13746@trent.utfs.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: 311: fsck the dmflakey device instead of the
-	real device V2
-References: <1368631217-15511-1-git-send-email-jbacik@fusionio.com>
-	<5194E764.6030207@sgi.com>
-	<20130516203035.GE1765@localhost.localdomain>
-In-Reply-To: <20130516203035.GE1765@localhost.localdomain>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,38 +21,38 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Josef Bacik <jbacik@fusionio.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: jfs-discussion@lists.sourceforge.net, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com
 
-On 05/16/2013 03:30 PM, Josef Bacik wrote:
-> On Thu, May 16, 2013 at 08:04:20AM -0600, Rich Johnston wrote:
->> On 05/15/2013 10:20 AM, Josef Bacik wrote:
->>> Dave pointed out that xfs was having issues with 311 because of caching issues.
->>> He suggested that I fsck the dm-flakey device to make sure we don't have this
->>> problem.  Make _check_scratch_fs take an optional argument to use as the device
->>> to fsck.  Thanks,
->>>
->>> Signed-off-by: Josef Bacik <jbacik@fusionio.com>
->>> ---
->> Hi Josef,
->>
->> Looks like it fails test 19 , are we supposed to see failures for ext4
->> and xfs?
->>
->
-> Yeah that's what I was seeing, if you run the fsync tester without the reboot
-> option and look at the file itself it should match the md5sum thats in the good
-> output.  Thanks,
->
-> Josef
->
-Looks good.
+Hi,
 
-Reviewed-by: Rich Johnston <rjohnston@sgi.com>
+a while ago I was setting & reading extended attributes to ~25000 files 
+in a directory structure on an XFS filesystem. The files were usually a 
+few MB in size, but some where up to 2GB in size.
+
+Anyway, I *felt* that setting or reading these xattrs was going very
+slowly. While the storage may be not the fastest, stat()'ing these
+files was fine, but getfattr/setfattr took very long.
+
+I got curious and while it turned out that the slowness was related to the 
+wrapper script I used to read/set those values, I created a little test 
+suite to 1) create a few thousand files and 2) do xattr operations on 
+them and see if xattr performance was filesystem specific:
+
+   http://nerdbynature.de/bits/xattr/
+
+Not very sophisticated, true. But it was interesting to see that 
+ext3/ext4/xfs behaved kinda well for all these tests; btrfs/jfs/reiserfs
+sometimes took way longer than the others.
+
+Christian.
+-- 
+BOFH excuse #43:
+
+boss forgot system password
 
 _______________________________________________
 xfs mailing list
