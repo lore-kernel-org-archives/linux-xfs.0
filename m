@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D42D47F3F
-	for <xfs@oss.sgi.com>; Sat, 18 May 2013 07:13:31 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C3F85304032
-	for <xfs@oss.sgi.com>; Sat, 18 May 2013 05:13:31 -0700 (PDT)
-Received: from mail-la0-f48.google.com (mail-la0-f48.google.com
-	[209.85.215.48]) by cuda.sgi.com with ESMTP id ceXaElQM9wJzHMn5
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 18 May 2013 05:13:30 -0700 (PDT)
-Received: by mail-la0-f48.google.com with SMTP id fs12so5065951lab.21
-	for <xfs@oss.sgi.com>; Sat, 18 May 2013 05:13:29 -0700 (PDT)
-From: Dmitry Monakhov <dmonakhov@openvz.org>
-Subject: Re: [PATCH] xfstests: test data integrity under disk failure
-In-Reply-To: <20130516233153.GI24635@dastard>
-References: <1368706052-24391-1-git-send-email-dmonakhov@openvz.org>
-	<20130516233153.GI24635@dastard>
-Date: Sat, 18 May 2013 16:13:25 +0400
-Message-ID: <878v3cv63e.fsf@openvz.org>
+	by oss.sgi.com (Postfix) with ESMTP id 2291D7F3F
+	for <xfs@oss.sgi.com>; Sat, 18 May 2013 13:13:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 0377D30405F
+	for <xfs@oss.sgi.com>; Sat, 18 May 2013 11:13:47 -0700 (PDT)
+Received: from mail-ie0-f176.google.com (mail-ie0-f176.google.com
+	[209.85.223.176]) by cuda.sgi.com with ESMTP id
+	6HCMc5EFf9cTrfYw (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 18 May 2013 11:13:44 -0700 (PDT)
+Received: by mail-ie0-f176.google.com with SMTP id at1so11423397iec.35
+	for <xfs@oss.sgi.com>; Sat, 18 May 2013 11:13:43 -0700 (PDT)
+Message-ID: <5197C4C1.4050009@gmail.com>
+Date: Sat, 18 May 2013 14:13:21 -0400
+From: "Michael L. Semon" <mlsemon35@gmail.com>
 MIME-Version: 1.0
+Subject: Re: [PATCH 00/30] xfsprogs: Initial CRC support
+References: <1368789205-19969-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1368789205-19969-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,65 +27,43 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Fri, 17 May 2013 09:31:53 +1000, Dave Chinner <david@fromorbit.com> wrote:
-> On Thu, May 16, 2013 at 04:07:32PM +0400, Dmitry Monakhov wrote:
-> > Parallels team have old good tool called hwflush-check which is server/client
-> > application for testing data integrity under system/disk failure conditions.
-> > Usually we run hwflush-check on two different hosts and use PMU to trigger real
-> > power failure of the client as a whole unit. This tests may be used for
-> > SSD checking (some of them are known to have probelms with hwflush).
-> > I hope it will be good to share it with community.
-> > 
-> > This tests simulate just one disk failure while client system should
-> > survive this failure. This test extend idea of shared/305.
-> > 1) Run hwflush-check server and client on same host as usual
-> > 2) Simulare disk failure via blkdev failt injection API aka 'make-it-fail'
-> > 3) Umount failed device
-> > 4) Makes disk operatable again
-> > 5) Mount filesystem
-> > 3) Check data integrity
-> 
-> So, for local disk failure, why do we need a client/server network
-> architecture? That just complicates the code, and AFAICT
-> 
-> all the client does is send report report packets to server which
-> contain an id number that is kept in memory. If on restart of the
-> client after failure the ID in the report packet doesn't match what
-> the server wants, then it fails the test.
-> 
-> So, why is the server needed here? Just dump the IDs the client
-> writes to the file on a device not being tested, and either diff
-> them against a golden image or run a check to see all the IDs are
-> monotonically increasing. That removes all the networking code from
-> the test, the need for a client/server architecture, etc, and makes
-> the test far easier to review
-In fact the reason is quite simple. Initially the this tool was designed
-for real disk cache testing under power failure conditions. And want to
-share it with community. Off course it is possible to simplify things 
-for 'one hose' case but it is not too big. Let's review it one and keep
-it simple but useful not just for local but also for real power failure
-tests.
-Fairly to say that initial idea was to add persistent state to FIO.
-But logic starts to getting too complex so we write hwflush-check.
+On 05/17/2013 07:12 AM, Dave Chinner wrote:
+> Hi Folks,
+>
+> This is the first real "works ok" CRC patchset for xfsprogs. It
+> provides full support for mkfs.xfs and xfs_repair, and partial
+> read-only support for xfs_db.
+>
+> For mkfs.xfs, it does everything properly, and filesystems that are
+> freshly made also run cleanly through xfs_repair and mount and run
+> just fine.
 
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This seemed to be worthy of early note:
+
+xfs/031 30s ...[  587.843478] XFS (sdb6): Version 5 superblock detected. 
+This kernel has EXPERIMENTAL support enabled!
+[  587.843478] Use of these features in this kernel is at your own risk!
+*** Error in `/sbin/mkfs.xfs': malloc(): smallbin double linked list 
+corrupted: 0x0907f7d0 ***
+
+The test doesn't seem to finish, but Ctrl-c ends the test cleanly.  No 
+dmesg stuff is added, and strace doesn't show anything between the mount 
+message and the error message.  I'll need to re-enable tracers to 
+provide a trace...and as traces can be huge, I'll wait on your advice.
+
+[BTW, the "30s" reference time is from the non-CRC run of your patched 
+xfsprogs.  The non-CRC run looked good.]
+
+Thanks!
+
+Michael
 
 _______________________________________________
 xfs mailing list
