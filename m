@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id F027529E06
-	for <xfs@oss.sgi.com>; Sun, 19 May 2013 18:51:45 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id D9BBA29E10
+	for <xfs@oss.sgi.com>; Sun, 19 May 2013 18:51:47 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D044E8F8033
-	for <xfs@oss.sgi.com>; Sun, 19 May 2013 16:51:45 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id AA65C304043
+	for <xfs@oss.sgi.com>; Sun, 19 May 2013 16:51:47 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	szJIk5AW2vhAVnC0 for <xfs@oss.sgi.com>;
-	Sun, 19 May 2013 16:51:44 -0700 (PDT)
+	N3wkg36WCBJwPVtk for <xfs@oss.sgi.com>;
+	Sun, 19 May 2013 16:51:45 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UeDO2-00069t-RA
+	(envelope-from <dave@fromorbit.com>) id 1UeDO2-00069f-JM
 	for xfs@oss.sgi.com; Mon, 20 May 2013 09:51:34 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UeDO2-0003yu-OV
+	(envelope-from <dave@disappointment.disaster>) id 1UeDO2-0003yK-GA
 	for xfs@oss.sgi.com; Mon, 20 May 2013 09:51:34 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 09/14] xfs: remote attribute lookups require the value length
-Date: Mon, 20 May 2013 09:51:16 +1000
-Message-Id: <1369007481-15185-10-git-send-email-david@fromorbit.com>
+Subject: [PATCH 01/14] xfs: fix sub-page blocksize data integrity writes
+Date: Mon, 20 May 2013 09:51:08 +1000
+Message-Id: <1369007481-15185-2-git-send-email-david@fromorbit.com>
 In-Reply-To: <1369007481-15185-1-git-send-email-david@fromorbit.com>
 References: <1369007481-15185-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,35 +38,73 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When reading a remote attribute, to correctly calculate the length
-of the data buffer for CRC enable filesystems, we need to know the
-length of the attribute data. We get this information when we look
-up the attribute, but we don't store it in the args structure along
-with the other remote attr information we get from the lookup. Add
-this information to the args structure so we can use it
-appropriately.
+FSX on 512 byte block size filesystems has been failing for some
+time with corrupted data. The fault dates back to the change in
+the writeback data integrity algorithm that uses a mark-and-sweep
+approach to avoid data writeback livelocks.
+
+Unfortunately, a side effect of this mark-and-sweep approach is that
+each page will only be written once for a data integrity sync, and
+there is a condition in writeback in XFS where a page may require
+two writeback attempts to be fully written. As a result of the high
+level change, we now only get a partial page writeback during the
+integrity sync because the first pass through writeback clears the
+mark left on the page index to tell writeback that the page needs
+writeback....
+
+The cause is writing a partial page in the clustering code. This can
+happen when a mapping boundary falls in the middle of a page - we
+end up writing back the first part of the page that the mapping
+covers, but then never revisit the page to have the remainder mapped
+and written.
+
+The fix is simple - if the mapping boundary falls inside a page,
+then simple abort clustering without touching the page. This means
+that the next ->writepage entry that write_cache_pages() will make
+is the page we aborted on, and xfs_vm_writepage() will map all
+sections of the page correctly. This behaviour is also optimal for
+non-data integrity writes, as it results in contiguous sequential
+writeback of the file rather than missing small holes and having to
+write them a "random" writes in a future pass.
+
+With this fix, all the fsx tests in xfstests now pass on a 512 byte
+block size filesystem on a 4k page machine.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_attr_leaf.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_aops.c |   19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
-diff --git a/fs/xfs/xfs_attr_leaf.c b/fs/xfs/xfs_attr_leaf.c
-index 8eeb88f..0bce1b3 100644
---- a/fs/xfs/xfs_attr_leaf.c
-+++ b/fs/xfs/xfs_attr_leaf.c
-@@ -2332,9 +2332,10 @@ xfs_attr3_leaf_lookup_int(
- 			if (!xfs_attr_namesp_match(args->flags, entry->flags))
- 				continue;
- 			args->index = probe;
-+			args->valuelen = be32_to_cpu(name_rmt->valuelen);
- 			args->rmtblkno = be32_to_cpu(name_rmt->valueblk);
- 			args->rmtblkcnt = XFS_B_TO_FSB(args->dp->i_mount,
--						   be32_to_cpu(name_rmt->valuelen));
-+						       args->valuelen);
- 			return XFS_ERROR(EEXIST);
- 		}
- 	}
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 2b2691b..f04eceb 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -725,6 +725,25 @@ xfs_convert_page(
+ 			(xfs_off_t)(page->index + 1) << PAGE_CACHE_SHIFT,
+ 			i_size_read(inode));
+ 
++	/*
++	 * If the current map does not span the entire page we are about to try
++	 * to write, then give up. The only way we can write a page that spans
++	 * multiple mappings in a single writeback iteration is via the
++	 * xfs_vm_writepage() function. Data integrity writeback requires the
++	 * entire page to be written in a single attempt, otherwise the part of
++	 * the page we don't write here doesn't get written as part of the data
++	 * integrity sync.
++	 *
++	 * For normal writeback, we also don't attempt to write partial pages
++	 * here as it simply means that write_cache_pages() will see it under
++	 * writeback and ignore the page until some pointin the future, at which
++	 * time this will be the only page inteh file that needs writeback.
++	 * Hence for more optimal IO patterns, we should always avoid partial
++	 * page writeback due to multiple mappings on a page here.
++	 */
++	if (!xfs_imap_valid(inode, imap, end_offset))
++		goto fail_unlock_page;
++
+ 	len = 1 << inode->i_blkbits;
+ 	p_offset = min_t(unsigned long, end_offset & (PAGE_CACHE_SIZE - 1),
+ 					PAGE_CACHE_SIZE);
 -- 
 1.7.10.4
 
