@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 73DFA29E36
-	for <xfs@oss.sgi.com>; Sun, 19 May 2013 18:52:02 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 3849229E36
+	for <xfs@oss.sgi.com>; Sun, 19 May 2013 18:52:03 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1269EAC001
+	by relay3.corp.sgi.com (Postfix) with ESMTP id AD01DAC001
 	for <xfs@oss.sgi.com>; Sun, 19 May 2013 16:52:02 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	KEWIj6qBJa8ECC7j for <xfs@oss.sgi.com>;
-	Sun, 19 May 2013 16:51:55 -0700 (PDT)
+	wsCVePEyQ6kDlk4c for <xfs@oss.sgi.com>;
+	Sun, 19 May 2013 16:52:01 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UeDOC-0006AD-QA
-	for xfs@oss.sgi.com; Mon, 20 May 2013 09:51:44 +1000
+	(envelope-from <dave@fromorbit.com>) id 1UeDOC-00069z-VX
+	for xfs@oss.sgi.com; Mon, 20 May 2013 09:51:45 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UeDO2-0003yp-NZ
+	(envelope-from <dave@disappointment.disaster>) id 1UeDO2-0003zD-Sw
 	for xfs@oss.sgi.com; Mon, 20 May 2013 09:51:34 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 08/14] xfs: remote attribute allocation may be contiguous
-Date: Mon, 20 May 2013 09:51:15 +1000
-Message-Id: <1369007481-15185-9-git-send-email-david@fromorbit.com>
+Subject: [PATCH 13/14] xfs: fully initialise temp leaf in
+	xfs_attr3_leaf_unbalance
+Date: Mon, 20 May 2013 09:51:20 +1000
+Message-Id: <1369007481-15185-14-git-send-email-david@fromorbit.com>
 In-Reply-To: <1369007481-15185-1-git-send-email-david@fromorbit.com>
 References: <1369007481-15185-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,44 +39,54 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When CRCs are enabled, there may be multiple allocations made if the
-headers cause a length overflow. This, however, does not mean that
-the number of headers required increases, as the second and
-subsequent extents may be contiguous with the previous extent. Hence
-when we map the extents to write the attribute data, we may end up
-with less extents than allocations made. Hence the assertion that we
-consume th enumber of headers we calculated in the allocation loop
-is incorrect and needs to be removed.
+xfs_attr3_leaf_unbalance() uses a temporary buffer for recombining
+the entries in two leaves when the destination leaf requires
+compaction. The temporary buffer ends up being copied back over the
+original destination buffer, so the header in the temporary buffer
+needs to contain all the information that is in the destination
+buffer.
+
+To make sure the temporary buffer is fully initialised, once we've
+set up the temporary incore header appropriately, write is back to
+the temporary buffer before starting to move entries around.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_attr_remote.c |    6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_attr_leaf.c |   16 +++++++++++++---
+ 1 file changed, 13 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/xfs_attr_remote.c b/fs/xfs/xfs_attr_remote.c
-index dee8446..aad95b0 100644
---- a/fs/xfs/xfs_attr_remote.c
-+++ b/fs/xfs/xfs_attr_remote.c
-@@ -359,6 +359,11 @@ xfs_attr_rmtval_set(
- 		 * into requiring more blocks. e.g. for 512 byte blocks, we'll
- 		 * spill for another block every 9 headers we require in this
- 		 * loop.
-+		 *
-+		 * Note that this can result in contiguous allocation of blocks,
-+		 * so we don't use all the space we allocate for headers as we
-+		 * have one less header for each contiguous allocation that
-+		 * occurs in the map/write loop below.
- 		 */
- 		if (crcs && blkcnt == 0) {
- 			int total_len;
-@@ -439,7 +444,6 @@ xfs_attr_rmtval_set(
- 		lblkno += map.br_blockcount;
- 	}
- 	ASSERT(valuelen == 0);
--	ASSERT(hdrcnt == 0);
- 	return 0;
- }
+diff --git a/fs/xfs/xfs_attr_leaf.c b/fs/xfs/xfs_attr_leaf.c
+index 0bce1b3..79ece72 100644
+--- a/fs/xfs/xfs_attr_leaf.c
++++ b/fs/xfs/xfs_attr_leaf.c
+@@ -2181,14 +2181,24 @@ xfs_attr3_leaf_unbalance(
+ 		struct xfs_attr_leafblock *tmp_leaf;
+ 		struct xfs_attr3_icleaf_hdr tmphdr;
  
+-		tmp_leaf = kmem_alloc(state->blocksize, KM_SLEEP);
+-		memset(tmp_leaf, 0, state->blocksize);
+-		memset(&tmphdr, 0, sizeof(tmphdr));
++		tmp_leaf = kmem_zalloc(state->blocksize, KM_SLEEP);
++
++		/*
++		 * Copy the header into the temp leaf so that all the stuff
++		 * not in the incore header is present and gets copied back in
++		 * once we've moved all the entries.
++		 */
++		memcpy(tmp_leaf, save_leaf, xfs_attr3_leaf_hdr_size(save_leaf));
+ 
++		memset(&tmphdr, 0, sizeof(tmphdr));
+ 		tmphdr.magic = savehdr.magic;
+ 		tmphdr.forw = savehdr.forw;
+ 		tmphdr.back = savehdr.back;
+ 		tmphdr.firstused = state->blocksize;
++
++		/* write the header to the temp buffer to initialise it */
++		xfs_attr3_leaf_hdr_to_disk(tmp_leaf, &tmphdr);
++
+ 		if (xfs_attr3_leaf_order(save_blk->bp, &savehdr,
+ 					 drop_blk->bp, &drophdr)) {
+ 			xfs_attr3_leaf_moveents(drop_leaf, &drophdr, 0,
 -- 
 1.7.10.4
 
