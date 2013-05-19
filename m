@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E99BF29E1B
-	for <xfs@oss.sgi.com>; Sun, 19 May 2013 18:51:51 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 73DFA29E36
+	for <xfs@oss.sgi.com>; Sun, 19 May 2013 18:52:02 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D8E3C304053
-	for <xfs@oss.sgi.com>; Sun, 19 May 2013 16:51:51 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1269EAC001
+	for <xfs@oss.sgi.com>; Sun, 19 May 2013 16:52:02 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	LuLXBlYSx12GeP9F for <xfs@oss.sgi.com>;
-	Sun, 19 May 2013 16:51:50 -0700 (PDT)
+	KEWIj6qBJa8ECC7j for <xfs@oss.sgi.com>;
+	Sun, 19 May 2013 16:51:55 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UeDO2-00069g-KR
-	for xfs@oss.sgi.com; Mon, 20 May 2013 09:51:34 +1000
+	(envelope-from <dave@fromorbit.com>) id 1UeDOC-0006AD-QA
+	for xfs@oss.sgi.com; Mon, 20 May 2013 09:51:44 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UeDO2-0003yO-Hq
+	(envelope-from <dave@disappointment.disaster>) id 1UeDO2-0003yp-NZ
 	for xfs@oss.sgi.com; Mon, 20 May 2013 09:51:34 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 02/14] xfs: fix rounding in xfs_free_file_space
-Date: Mon, 20 May 2013 09:51:09 +1000
-Message-Id: <1369007481-15185-3-git-send-email-david@fromorbit.com>
+Subject: [PATCH 08/14] xfs: remote attribute allocation may be contiguous
+Date: Mon, 20 May 2013 09:51:15 +1000
+Message-Id: <1369007481-15185-9-git-send-email-david@fromorbit.com>
 In-Reply-To: <1369007481-15185-1-git-send-email-david@fromorbit.com>
 References: <1369007481-15185-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,44 +38,44 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The offset passed into xfs_free_file_space() needs to be rounded
-down to a certain size, but the rounding mask is built by a 32 bit
-variable. Hence the mask will always mask off the upper 32 bits of
-the offset and lead to incorrect writeback and invalidation ranges.
-
-This is not actually exposed as a bug because we writeback and
-invalidate from the rounded offset to the end of the file, and hence
-the offset we are actually punching a hole out of will always be
-covered by the code. This needs fixing, however, if we ever want to
-use exact ranges for writeback/invalidation here...
+When CRCs are enabled, there may be multiple allocations made if the
+headers cause a length overflow. This, however, does not mean that
+the number of headers required increases, as the second and
+subsequent extents may be contiguous with the previous extent. Hence
+when we map the extents to write the attribute data, we may end up
+with less extents than allocations made. Hence the assertion that we
+consume th enumber of headers we calculated in the allocation loop
+is incorrect and needs to be removed.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_vnodeops.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_attr_remote.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-index 1501f4f..0176bb2 100644
---- a/fs/xfs/xfs_vnodeops.c
-+++ b/fs/xfs/xfs_vnodeops.c
-@@ -1453,7 +1453,7 @@ xfs_free_file_space(
- 	xfs_mount_t		*mp;
- 	int			nimap;
- 	uint			resblks;
--	uint			rounding;
-+	xfs_off_t		rounding;
- 	int			rt;
- 	xfs_fileoff_t		startoffset_fsb;
- 	xfs_trans_t		*tp;
-@@ -1482,7 +1482,7 @@ xfs_free_file_space(
- 		inode_dio_wait(VFS_I(ip));
+diff --git a/fs/xfs/xfs_attr_remote.c b/fs/xfs/xfs_attr_remote.c
+index dee8446..aad95b0 100644
+--- a/fs/xfs/xfs_attr_remote.c
++++ b/fs/xfs/xfs_attr_remote.c
+@@ -359,6 +359,11 @@ xfs_attr_rmtval_set(
+ 		 * into requiring more blocks. e.g. for 512 byte blocks, we'll
+ 		 * spill for another block every 9 headers we require in this
+ 		 * loop.
++		 *
++		 * Note that this can result in contiguous allocation of blocks,
++		 * so we don't use all the space we allocate for headers as we
++		 * have one less header for each contiguous allocation that
++		 * occurs in the map/write loop below.
+ 		 */
+ 		if (crcs && blkcnt == 0) {
+ 			int total_len;
+@@ -439,7 +444,6 @@ xfs_attr_rmtval_set(
+ 		lblkno += map.br_blockcount;
  	}
+ 	ASSERT(valuelen == 0);
+-	ASSERT(hdrcnt == 0);
+ 	return 0;
+ }
  
--	rounding = max_t(uint, 1 << mp->m_sb.sb_blocklog, PAGE_CACHE_SIZE);
-+	rounding = max_t(xfs_off_t, 1 << mp->m_sb.sb_blocklog, PAGE_CACHE_SIZE);
- 	ioffset = offset & ~(rounding - 1);
- 	error = -filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
- 					      ioffset, -1);
 -- 
 1.7.10.4
 
