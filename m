@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E847B29E13
-	for <xfs@oss.sgi.com>; Sun, 19 May 2013 18:51:49 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 63E26AC002
-	for <xfs@oss.sgi.com>; Sun, 19 May 2013 16:51:49 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E99BF29E1B
+	for <xfs@oss.sgi.com>; Sun, 19 May 2013 18:51:51 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D8E3C304053
+	for <xfs@oss.sgi.com>; Sun, 19 May 2013 16:51:51 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	hElSaE7jczjMvp02 for <xfs@oss.sgi.com>;
-	Sun, 19 May 2013 16:51:47 -0700 (PDT)
+	LuLXBlYSx12GeP9F for <xfs@oss.sgi.com>;
+	Sun, 19 May 2013 16:51:50 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UeDOC-0006AC-Ot
-	for xfs@oss.sgi.com; Mon, 20 May 2013 09:51:44 +1000
+	(envelope-from <dave@fromorbit.com>) id 1UeDO2-00069g-KR
+	for xfs@oss.sgi.com; Mon, 20 May 2013 09:51:34 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UeDO2-0003ym-Mb
+	(envelope-from <dave@disappointment.disaster>) id 1UeDO2-0003yO-Hq
 	for xfs@oss.sgi.com; Mon, 20 May 2013 09:51:34 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 07/14] xfs: xfs_attr_shortform_allfit() does not handle attr3
-	format.
-Date: Mon, 20 May 2013 09:51:14 +1000
-Message-Id: <1369007481-15185-8-git-send-email-david@fromorbit.com>
+Subject: [PATCH 02/14] xfs: fix rounding in xfs_free_file_space
+Date: Mon, 20 May 2013 09:51:09 +1000
+Message-Id: <1369007481-15185-3-git-send-email-david@fromorbit.com>
 In-Reply-To: <1369007481-15185-1-git-send-email-david@fromorbit.com>
 References: <1369007481-15185-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,72 +38,44 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-xfstests generic/117 fails with:
+The offset passed into xfs_free_file_space() needs to be rounded
+down to a certain size, but the rounding mask is built by a 32 bit
+variable. Hence the mask will always mask off the upper 32 bits of
+the offset and lead to incorrect writeback and invalidation ranges.
 
-XFS: Assertion failed: leaf->hdr.info.magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC)
-
-indicating a function that does not handle the attr3 format
-correctly. Fix it.
+This is not actually exposed as a bug because we writeback and
+invalidate from the rounded offset to the end of the file, and hence
+the offset we are actually punching a hole out of will always be
+covered by the code. This needs fixing, however, if we ever want to
+use exact ranges for writeback/invalidation here...
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_attr_leaf.c |   24 +++++++++++++-----------
- 1 file changed, 13 insertions(+), 11 deletions(-)
+ fs/xfs/xfs_vnodeops.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_attr_leaf.c b/fs/xfs/xfs_attr_leaf.c
-index 08d5457..8eeb88f 100644
---- a/fs/xfs/xfs_attr_leaf.c
-+++ b/fs/xfs/xfs_attr_leaf.c
-@@ -931,20 +931,22 @@ xfs_attr_shortform_list(xfs_attr_list_context_t *context)
-  */
- int
- xfs_attr_shortform_allfit(
--	struct xfs_buf	*bp,
--	struct xfs_inode *dp)
-+	struct xfs_buf		*bp,
-+	struct xfs_inode	*dp)
- {
--	xfs_attr_leafblock_t *leaf;
--	xfs_attr_leaf_entry_t *entry;
-+	struct xfs_attr_leafblock *leaf;
-+	struct xfs_attr_leaf_entry *entry;
- 	xfs_attr_leaf_name_local_t *name_loc;
--	int bytes, i;
-+	struct xfs_attr3_icleaf_hdr leafhdr;
-+	int			bytes;
-+	int			i;
- 
- 	leaf = bp->b_addr;
--	ASSERT(leaf->hdr.info.magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC));
-+	xfs_attr3_leaf_hdr_from_disk(&leafhdr, leaf);
-+	entry = xfs_attr3_leaf_entryp(leaf);
- 
--	entry = &leaf->entries[0];
- 	bytes = sizeof(struct xfs_attr_sf_hdr);
--	for (i = 0; i < be16_to_cpu(leaf->hdr.count); entry++, i++) {
-+	for (i = 0; i < leafhdr.count; entry++, i++) {
- 		if (entry->flags & XFS_ATTR_INCOMPLETE)
- 			continue;		/* don't copy partial entries */
- 		if (!(entry->flags & XFS_ATTR_LOCAL))
-@@ -954,15 +956,15 @@ xfs_attr_shortform_allfit(
- 			return(0);
- 		if (be16_to_cpu(name_loc->valuelen) >= XFS_ATTR_SF_ENTSIZE_MAX)
- 			return(0);
--		bytes += sizeof(struct xfs_attr_sf_entry)-1
-+		bytes += sizeof(struct xfs_attr_sf_entry) - 1
- 				+ name_loc->namelen
- 				+ be16_to_cpu(name_loc->valuelen);
+diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+index 1501f4f..0176bb2 100644
+--- a/fs/xfs/xfs_vnodeops.c
++++ b/fs/xfs/xfs_vnodeops.c
+@@ -1453,7 +1453,7 @@ xfs_free_file_space(
+ 	xfs_mount_t		*mp;
+ 	int			nimap;
+ 	uint			resblks;
+-	uint			rounding;
++	xfs_off_t		rounding;
+ 	int			rt;
+ 	xfs_fileoff_t		startoffset_fsb;
+ 	xfs_trans_t		*tp;
+@@ -1482,7 +1482,7 @@ xfs_free_file_space(
+ 		inode_dio_wait(VFS_I(ip));
  	}
- 	if ((dp->i_mount->m_flags & XFS_MOUNT_ATTR2) &&
- 	    (dp->i_d.di_format != XFS_DINODE_FMT_BTREE) &&
- 	    (bytes == sizeof(struct xfs_attr_sf_hdr)))
--		return(-1);
--	return(xfs_attr_shortform_bytesfit(dp, bytes));
-+		return -1;
-+	return xfs_attr_shortform_bytesfit(dp, bytes);
- }
  
- /*
+-	rounding = max_t(uint, 1 << mp->m_sb.sb_blocklog, PAGE_CACHE_SIZE);
++	rounding = max_t(xfs_off_t, 1 << mp->m_sb.sb_blocklog, PAGE_CACHE_SIZE);
+ 	ioffset = offset & ~(rounding - 1);
+ 	error = -filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
+ 					      ioffset, -1);
 -- 
 1.7.10.4
 
