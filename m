@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D9BBA29E10
-	for <xfs@oss.sgi.com>; Sun, 19 May 2013 18:51:47 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id AA65C304043
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 1CC3C29E11
+	for <xfs@oss.sgi.com>; Sun, 19 May 2013 18:51:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0BF158F8035
 	for <xfs@oss.sgi.com>; Sun, 19 May 2013 16:51:47 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	N3wkg36WCBJwPVtk for <xfs@oss.sgi.com>;
-	Sun, 19 May 2013 16:51:45 -0700 (PDT)
+	pQymhit1AhvXA9AB for <xfs@oss.sgi.com>;
+	Sun, 19 May 2013 16:51:46 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UeDO2-00069f-JM
-	for xfs@oss.sgi.com; Mon, 20 May 2013 09:51:34 +1000
+	(envelope-from <dave@fromorbit.com>) id 1UeDOC-0006AA-O9
+	for xfs@oss.sgi.com; Mon, 20 May 2013 09:51:44 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UeDO2-0003yK-GA
+	(envelope-from <dave@disappointment.disaster>) id 1UeDO2-0003yd-Kp
 	for xfs@oss.sgi.com; Mon, 20 May 2013 09:51:34 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 01/14] xfs: fix sub-page blocksize data integrity writes
-Date: Mon, 20 May 2013 09:51:08 +1000
-Message-Id: <1369007481-15185-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 05/14] xfs: fix missing KM_NOFS tags to keep lockdep happy
+Date: Mon, 20 May 2013 09:51:12 +1000
+Message-Id: <1369007481-15185-6-git-send-email-david@fromorbit.com>
 In-Reply-To: <1369007481-15185-1-git-send-email-david@fromorbit.com>
 References: <1369007481-15185-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,73 +38,85 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-FSX on 512 byte block size filesystems has been failing for some
-time with corrupted data. The fault dates back to the change in
-the writeback data integrity algorithm that uses a mark-and-sweep
-approach to avoid data writeback livelocks.
-
-Unfortunately, a side effect of this mark-and-sweep approach is that
-each page will only be written once for a data integrity sync, and
-there is a condition in writeback in XFS where a page may require
-two writeback attempts to be fully written. As a result of the high
-level change, we now only get a partial page writeback during the
-integrity sync because the first pass through writeback clears the
-mark left on the page index to tell writeback that the page needs
-writeback....
-
-The cause is writing a partial page in the clustering code. This can
-happen when a mapping boundary falls in the middle of a page - we
-end up writing back the first part of the page that the mapping
-covers, but then never revisit the page to have the remainder mapped
-and written.
-
-The fix is simple - if the mapping boundary falls inside a page,
-then simple abort clustering without touching the page. This means
-that the next ->writepage entry that write_cache_pages() will make
-is the page we aborted on, and xfs_vm_writepage() will map all
-sections of the page correctly. This behaviour is also optimal for
-non-data integrity writes, as it results in contiguous sequential
-writeback of the file rather than missing small holes and having to
-write them a "random" writes in a future pass.
-
-With this fix, all the fsx tests in xfstests now pass on a 512 byte
-block size filesystem on a 4k page machine.
+There are several places where we use KM_SLEEP allocation contexts
+and use the fact that there are called from transaction context to
+add KM_NOFS where appropriate. Unfortunately, there are several
+places where the code makes this assumption but can be called from
+outside transaction context but with filesystem locks held. These
+places need explicit KM_NOFS annotations to avoid lockdep
+complaining about reclaim contexts.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_aops.c |   19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+ fs/xfs/xfs_buf.c       |    2 +-
+ fs/xfs/xfs_da_btree.c  |    6 ++++--
+ fs/xfs/xfs_dir2_leaf.c |    2 +-
+ fs/xfs/xfs_log_cil.c   |    2 +-
+ 4 files changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 2b2691b..f04eceb 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -725,6 +725,25 @@ xfs_convert_page(
- 			(xfs_off_t)(page->index + 1) << PAGE_CACHE_SHIFT,
- 			i_size_read(inode));
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 82b70bd..0d25542 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1649,7 +1649,7 @@ xfs_alloc_buftarg(
+ {
+ 	xfs_buftarg_t		*btp;
  
-+	/*
-+	 * If the current map does not span the entire page we are about to try
-+	 * to write, then give up. The only way we can write a page that spans
-+	 * multiple mappings in a single writeback iteration is via the
-+	 * xfs_vm_writepage() function. Data integrity writeback requires the
-+	 * entire page to be written in a single attempt, otherwise the part of
-+	 * the page we don't write here doesn't get written as part of the data
-+	 * integrity sync.
-+	 *
-+	 * For normal writeback, we also don't attempt to write partial pages
-+	 * here as it simply means that write_cache_pages() will see it under
-+	 * writeback and ignore the page until some pointin the future, at which
-+	 * time this will be the only page inteh file that needs writeback.
-+	 * Hence for more optimal IO patterns, we should always avoid partial
-+	 * page writeback due to multiple mappings on a page here.
-+	 */
-+	if (!xfs_imap_valid(inode, imap, end_offset))
-+		goto fail_unlock_page;
-+
- 	len = 1 << inode->i_blkbits;
- 	p_offset = min_t(unsigned long, end_offset & (PAGE_CACHE_SIZE - 1),
- 					PAGE_CACHE_SIZE);
+-	btp = kmem_zalloc(sizeof(*btp), KM_SLEEP);
++	btp = kmem_zalloc(sizeof(*btp), KM_SLEEP | KM_NOFS);
+ 
+ 	btp->bt_mount = mp;
+ 	btp->bt_dev =  bdev->bd_dev;
+diff --git a/fs/xfs/xfs_da_btree.c b/fs/xfs/xfs_da_btree.c
+index 9b26a99..41ea7e1 100644
+--- a/fs/xfs/xfs_da_btree.c
++++ b/fs/xfs/xfs_da_btree.c
+@@ -2464,7 +2464,8 @@ xfs_buf_map_from_irec(
+ 	ASSERT(nirecs >= 1);
+ 
+ 	if (nirecs > 1) {
+-		map = kmem_zalloc(nirecs * sizeof(struct xfs_buf_map), KM_SLEEP);
++		map = kmem_zalloc(nirecs * sizeof(struct xfs_buf_map),
++				  KM_SLEEP | KM_NOFS);
+ 		if (!map)
+ 			return ENOMEM;
+ 		*mapp = map;
+@@ -2520,7 +2521,8 @@ xfs_dabuf_map(
+ 		 * Optimize the one-block case.
+ 		 */
+ 		if (nfsb != 1)
+-			irecs = kmem_zalloc(sizeof(irec) * nfsb, KM_SLEEP);
++			irecs = kmem_zalloc(sizeof(irec) * nfsb,
++					    KM_SLEEP | KM_NOFS);
+ 
+ 		nirecs = nfsb;
+ 		error = xfs_bmapi_read(dp, (xfs_fileoff_t)bno, nfsb, irecs,
+diff --git a/fs/xfs/xfs_dir2_leaf.c b/fs/xfs/xfs_dir2_leaf.c
+index 721ba2f..da71a18 100644
+--- a/fs/xfs/xfs_dir2_leaf.c
++++ b/fs/xfs/xfs_dir2_leaf.c
+@@ -1336,7 +1336,7 @@ xfs_dir2_leaf_getdents(
+ 				     mp->m_sb.sb_blocksize);
+ 	map_info = kmem_zalloc(offsetof(struct xfs_dir2_leaf_map_info, map) +
+ 				(length * sizeof(struct xfs_bmbt_irec)),
+-			       KM_SLEEP);
++			       KM_SLEEP | KM_NOFS);
+ 	map_info->map_size = length;
+ 
+ 	/*
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index e3d0b85..d0833b5 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -139,7 +139,7 @@ xlog_cil_prepare_log_vecs(
+ 
+ 		new_lv = kmem_zalloc(sizeof(*new_lv) +
+ 				niovecs * sizeof(struct xfs_log_iovec),
+-				KM_SLEEP);
++				KM_SLEEP|KM_NOFS);
+ 
+ 		/* The allocated iovec region lies beyond the log vector. */
+ 		new_lv->lv_iovecp = (struct xfs_log_iovec *)&new_lv[1];
 -- 
 1.7.10.4
 
