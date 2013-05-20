@@ -1,27 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 24A427F37
-	for <xfs@oss.sgi.com>; Mon, 20 May 2013 01:53:15 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E3AF2304039
-	for <xfs@oss.sgi.com>; Sun, 19 May 2013 23:53:14 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id D06A07F50
+	for <xfs@oss.sgi.com>; Mon, 20 May 2013 01:53:16 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A9BBB304032
+	for <xfs@oss.sgi.com>; Sun, 19 May 2013 23:53:13 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	ysy7UdsJkO6v024p for <xfs@oss.sgi.com>;
+	lbCqr93d9xF7IXiJ for <xfs@oss.sgi.com>;
 	Sun, 19 May 2013 23:53:12 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UeJxz-0006qu-Ly
+	(envelope-from <dave@fromorbit.com>) id 1UeJxz-0006qr-JL
 	for xfs@oss.sgi.com; Mon, 20 May 2013 16:53:07 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UeJxz-0006Vs-Io
+	(envelope-from <dave@disappointment.disaster>) id 1UeJxz-0006Vg-F2
 	for xfs@oss.sgi.com; Mon, 20 May 2013 16:53:07 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/6] xfs_db: factor some common dir2 field parsing code.
-Date: Mon, 20 May 2013 16:53:00 +1000
-Message-Id: <1369032783-24973-4-git-send-email-david@fromorbit.com>
-In-Reply-To: <1369032783-24973-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 0/6] xfsprogs: more CRC support patches
+Date: Mon, 20 May 2013 16:52:57 +1000
+Message-Id: <1369032783-24973-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1368789205-19969-1-git-send-email-david@fromorbit.com>
 References: <1368789205-19969-1-git-send-email-david@fromorbit.com>
-	<1369032783-24973-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,266 +36,32 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+[ well, really patches 31..36 :) ]
 
-Why duplicate it?
+Hi folks,
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- db/dir2.c |  172 ++++++++++++++++++++++++++++++-------------------------------
- 1 file changed, 84 insertions(+), 88 deletions(-)
+More work on top of the original series of 30 patches, including
+xfs_db support for parsing the v3 directory format.
 
-diff --git a/db/dir2.c b/db/dir2.c
-index 90378e6..594d9d2 100644
---- a/db/dir2.c
-+++ b/db/dir2.c
-@@ -189,6 +189,72 @@ const field_t	da_node_hdr_flds[] = {
- 	{ NULL }
- };
- 
-+/*
-+ * Worker functions shared between either dir2/dir3 or block/data formats
-+ */
-+static int
-+__dir2_block_tail_offset(
-+	struct xfs_dir2_data_hdr *block,
-+	int			startoff,
-+	int			idx)
-+{
-+	struct xfs_dir2_block_tail *btp;
-+
-+	ASSERT(startoff == 0);
-+	ASSERT(idx == 0);
-+	btp = xfs_dir2_block_tail_p(mp, block);
-+	return bitize((int)((char *)btp - (char *)block));
-+}
-+
-+static int
-+__dir2_data_entries_count(
-+	char	*ptr,
-+	char	*endptr)
-+{
-+	int	i;
-+
-+	for (i = 0; ptr < endptr; i++) {
-+		struct xfs_dir2_data_entry *dep;
-+		struct xfs_dir2_data_unused *dup;
-+
-+		dup = (xfs_dir2_data_unused_t *)ptr;
-+		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG)
-+			ptr += be16_to_cpu(dup->length);
-+		else {
-+			dep = (xfs_dir2_data_entry_t *)ptr;
-+			ptr += xfs_dir2_data_entsize(dep->namelen);
-+		}
-+	}
-+	return i;
-+}
-+
-+static char *
-+__dir2_data_entry_offset(
-+	char	*ptr,
-+	char	*endptr,
-+	int	idx)
-+{
-+	int	i;
-+
-+	for (i = 0; i < idx; i++) {
-+		struct xfs_dir2_data_entry *dep;
-+		struct xfs_dir2_data_unused *dup;
-+
-+		ASSERT(ptr < endptr);
-+		dup = (xfs_dir2_data_unused_t *)ptr;
-+		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG)
-+			ptr += be16_to_cpu(dup->length);
-+		else {
-+			dep = (xfs_dir2_data_entry_t *)ptr;
-+			ptr += xfs_dir2_data_entsize(dep->namelen);
-+		}
-+	}
-+	return ptr;
-+}
-+
-+/*
-+ * Block format functions
-+ */
- static int
- dir2_block_hdr_count(
- 	void			*obj,
-@@ -254,86 +320,50 @@ dir2_block_tail_offset(
- 	int			startoff,
- 	int			idx)
- {
--	struct xfs_dir2_data_hdr *block;
--	struct xfs_dir2_block_tail *btp;
-+	struct xfs_dir2_data_hdr *block = obj;
- 
--	ASSERT(startoff == 0);
--	ASSERT(idx == 0);
--	block = obj;
- 	ASSERT(be32_to_cpu(block->magic) == XFS_DIR2_BLOCK_MAGIC);
--	btp = xfs_dir2_block_tail_p(mp, block);
--	return bitize((int)((char *)btp - (char *)block));
-+	return __dir2_block_tail_offset(block, startoff, idx);
- }
- 
--/*ARGSUSED*/
- static int
- dir2_block_u_count(
- 	void			*obj,
- 	int			startoff)
- {
--	struct xfs_dir2_data_hdr *block;
-+	struct xfs_dir2_data_hdr *block = obj;
- 	struct xfs_dir2_block_tail *btp;
--	char			*endptr;
--	int			i;
--	char			*ptr;
- 
- 	ASSERT(startoff == 0);
--	block = obj;
- 	if (be32_to_cpu(block->magic) != XFS_DIR2_BLOCK_MAGIC)
- 		return 0;
--	btp = xfs_dir2_block_tail_p(mp, block);
--	ptr = (char *)xfs_dir3_data_unused_p(block);
--	endptr = (char *)xfs_dir2_block_leaf_p(btp);
--	for (i = 0; ptr < endptr; i++) {
--		struct xfs_dir2_data_entry *dep;
--		struct xfs_dir2_data_unused *dup;
- 
--		dup = (xfs_dir2_data_unused_t *)ptr;
--		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG)
--			ptr += be16_to_cpu(dup->length);
--		else {
--			dep = (xfs_dir2_data_entry_t *)ptr;
--			ptr += xfs_dir2_data_entsize(dep->namelen);
--		}
--	}
--	return i;
-+	btp = xfs_dir2_block_tail_p(mp, block);
-+	return __dir2_data_entries_count((char *)xfs_dir3_data_unused_p(block),
-+					 (char *)xfs_dir2_block_leaf_p(btp));
- }
- 
--/*ARGSUSED*/
- static int
- dir2_block_u_offset(
- 	void			*obj,
- 	int			startoff,
- 	int			idx)
- {
--	struct xfs_dir2_data_hdr *block;
-+	struct xfs_dir2_data_hdr *block = obj;
- 	struct xfs_dir2_block_tail *btp;
--	char			*endptr;
--	int			i;
- 	char			*ptr;
- 
- 	ASSERT(startoff == 0);
--	block = obj;
- 	ASSERT(be32_to_cpu(block->magic) == XFS_DIR2_BLOCK_MAGIC);
- 	btp = xfs_dir2_block_tail_p(mp, block);
--	ptr = (char *)xfs_dir3_data_unused_p(block);
--	endptr = (char *)xfs_dir2_block_leaf_p(btp);
--	for (i = 0; i < idx; i++) {
--		struct xfs_dir2_data_entry *dep;
--		struct xfs_dir2_data_unused *dup;
--
--		ASSERT(ptr < endptr);
--		dup = (xfs_dir2_data_unused_t *)ptr;
--		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG)
--			ptr += be16_to_cpu(dup->length);
--		else {
--			dep = (xfs_dir2_data_entry_t *)ptr;
--			ptr += xfs_dir2_data_entsize(dep->namelen);
--		}
--	}
-+	ptr = __dir2_data_entry_offset((char *)xfs_dir3_data_unused_p(block),
-+				       (char *)xfs_dir2_block_leaf_p(btp), idx);
- 	return bitize((int)(ptr - (char *)block));
- }
- 
-+/*
-+ * Data block format functions
-+ */
- static int
- dir2_data_union_freetag_count(
- 	void			*obj,
-@@ -489,66 +519,32 @@ dir2_data_u_count(
- 	void			*obj,
- 	int			startoff)
- {
--	struct xfs_dir2_data_hdr *data;
--	char			*endptr;
--	int			i;
--	char			*ptr;
-+	struct xfs_dir2_data_hdr *data = obj;
- 
- 	ASSERT(startoff == 0);
--	data = obj;
- 	if (be32_to_cpu(data->magic) != XFS_DIR2_DATA_MAGIC)
- 		return 0;
--	ptr = (char *)xfs_dir3_data_unused_p(data);
--	endptr = (char *)data + mp->m_dirblksize;
--	for (i = 0; ptr < endptr; i++) {
--		struct xfs_dir2_data_entry *dep;
--		struct xfs_dir2_data_unused *dup;
- 
--		dup = (xfs_dir2_data_unused_t *)ptr;
--		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG)
--			ptr += be16_to_cpu(dup->length);
--		else {
--			dep = (xfs_dir2_data_entry_t *)ptr;
--			ptr += xfs_dir2_data_entsize(dep->namelen);
--		}
--	}
--	return i;
-+	return __dir2_data_entries_count((char *)xfs_dir3_data_unused_p(data),
-+					 (char *)data + mp->m_dirblksize);
- }
- 
--/*ARGSUSED*/
- static int
- dir2_data_u_offset(
- 	void			*obj,
- 	int			startoff,
- 	int			idx)
- {
--	struct xfs_dir2_data_hdr *data;
--	char			*endptr;
--	int			i;
-+	struct xfs_dir2_data_hdr *data = obj;
- 	char			*ptr;
- 
- 	ASSERT(startoff == 0);
--	data = obj;
- 	ASSERT(be32_to_cpu(data->magic) == XFS_DIR2_DATA_MAGIC);
--	ptr = (char *)xfs_dir3_data_unused_p(data);
--	endptr = (char *)data + mp->m_dirblksize;
--	for (i = 0; i < idx; i++) {
--		struct xfs_dir2_data_entry *dep;
--		struct xfs_dir2_data_unused *dup;
--
--		ASSERT(ptr < endptr);
--		dup = (xfs_dir2_data_unused_t *)ptr;
--		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG)
--			ptr += be16_to_cpu(dup->length);
--		else {
--			dep = (xfs_dir2_data_entry_t *)ptr;
--			ptr += xfs_dir2_data_entsize(dep->namelen);
--		}
--	}
-+	ptr = __dir2_data_entry_offset((char *)xfs_dir3_data_unused_p(data),
-+				       (char *)data + mp->m_dirblksize, idx);
- 	return bitize((int)(ptr - (char *)data));
- }
- 
--/*ARGSUSED*/
- int
- dir2_data_union_size(
- 	void			*obj,
--- 
-1.7.10.4
+Note that there are also two patches in here that convert both
+xfs_db and xfs_repair to use the libxfs directory block type
+definitions. While it may have once been convenient for them to have
+a basic definition, it does not lend itself to making the code
+support the v3 format quickly and concisely. Reusing the
+libxfs/kernel structure definitions and abstraction means that the
+code quickly becomes v3 aware and has just works.
+
+Right now this patchset and the current kernel patchset (all the
+attr fixes) runs through xfstests quite far on a 4k block size
+filesystem - all the generic tests pass, and most of the XFS
+specific tests that don't rely on write or attr output support in
+xfs_db also pass.
+
+I'll get the attr db support done tomorrow.....
+
+Cheers,
+
+Dave.
 
 _______________________________________________
 xfs mailing list
