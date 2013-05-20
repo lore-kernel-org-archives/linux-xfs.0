@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 712407F37
-	for <xfs@oss.sgi.com>; Mon, 20 May 2013 18:00:47 -0500 (CDT)
-Date: Mon, 20 May 2013 18:00:46 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 326077F37
+	for <xfs@oss.sgi.com>; Mon, 20 May 2013 18:01:25 -0500 (CDT)
+Date: Mon, 20 May 2013 18:01:21 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 10/14] xfs: remote attribute read too short
-Message-ID: <20130520230046.GH20028@sgi.com>
+Subject: Re: [PATCH 11/14] xfs: remote attribute tail zeroing does too much
+Message-ID: <20130520230121.GI20028@sgi.com>
 References: <1369007481-15185-1-git-send-email-david@fromorbit.com>
-	<1369007481-15185-11-git-send-email-david@fromorbit.com>
+	<1369007481-15185-12-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1369007481-15185-11-git-send-email-david@fromorbit.com>
+In-Reply-To: <1369007481-15185-12-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,52 +26,45 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, May 20, 2013 at 09:51:17AM +1000, Dave Chinner wrote:
+On Mon, May 20, 2013 at 09:51:18AM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> Reading a maximally size remote attribute fails when CRCs are
-> enabled with this verification error:
+> When an attribute data does not fill then entire remote block, we
+> zero the remaining part of the buffer. This, however, needs to take
+> into account that the buffer has a header, and so the offset where
+> zeroing starts and the length of zeroing need to take this into
+> account. Otherwise we end up with zeros over the end of the
+> attribute value when CRCs are enabled.
 > 
-> XFS (vdb): remote attribute header does not match required off/len/owner)
-> 
-> There are two reasons for this, the first being that the
-> length of the buffer being read is determined from the
-> args->rmtblkcnt which doesn't take into account CRC headers. Hence
-> the mapped length ends up being too short and so we need to
-> calculate it directly from the value length.
-> 
-> The second is that the byte count of valid data within a buffer is
-> capped by the length of the data and so doesn't take into account
-> that the buffer might be longer due to headers. Hence we need to
-> calculate the data space in the buffer first before calculating the
-> actual byte count of data.
+> While there, make sure we only ask to map an extent that covers the
+> remaining range of the attribute, rather than asking every time for
+> the full length of remote data. If the remote attribute blocks are
+> contiguous with other parts of the attribute tree, it will map those
+> blocks as well and we can potentially zero them incorrectly. We can
+> also get buffer size mistmatches when trying to read or remove the
+> remote attribute, and this can lead to not finding the correct
+> buffer when looking it up in cache.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  fs/xfs/xfs_attr_remote.c |   15 +++++++++------
->  1 file changed, 9 insertions(+), 6 deletions(-)
+>  fs/xfs/xfs_attr_remote.c |   37 ++++++++++++++++++-------------------
+>  1 file changed, 18 insertions(+), 19 deletions(-)
 > 
 > diff --git a/fs/xfs/xfs_attr_remote.c b/fs/xfs/xfs_attr_remote.c
-> index aad95b0..bcdc07c 100644
+> index bcdc07c..e207bf0 100644
 > --- a/fs/xfs/xfs_attr_remote.c
 > +++ b/fs/xfs/xfs_attr_remote.c
-> @@ -52,9 +52,11 @@ xfs_attr3_rmt_blocks(
->  	struct xfs_mount *mp,
->  	int		attrlen)
->  {
-> -	int		buflen = XFS_ATTR3_RMT_BUF_SPACE(mp,
-> -							 mp->m_sb.sb_blocksize);
-> -	return (attrlen + buflen - 1) / buflen;
-> +	if (xfs_sb_version_hascrc(&mp->m_sb)) {
-> +		int buflen = XFS_ATTR3_RMT_BUF_SPACE(mp, mp->m_sb.sb_blocksize);
-> +		return (attrlen + buflen - 1) / buflen;
-> +	}
-> +	return XFS_B_TO_FSB(mp, attrlen);
->  }
+> @@ -296,10 +296,7 @@ xfs_attr_rmtval_set(
+>  	 * and we may not need that many, so we have to handle this when
+>  	 * allocating the blocks below. 
+>  	 */
+> -	if (!crcs)
+> -		blkcnt = XFS_B_TO_FSB(mp, args->valuelen);
+> -	else
+> -		blkcnt = xfs_attr3_rmt_blocks(mp, args->valuelen);
+> +	blkcnt = xfs_attr3_rmt_blocks(mp, args->valuelen);
 
-xfs_attr_rmtval_set, previously the only caller of xfs_attr3_rmt_blocks already
-checks for crcs.  Can one of the two conditionals be dispensed with?
-
+Oh.  There you have it.  Nevermind.
 
 _______________________________________________
 xfs mailing list
