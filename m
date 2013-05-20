@@ -1,26 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D06A07F50
-	for <xfs@oss.sgi.com>; Mon, 20 May 2013 01:53:16 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A9BBB304032
-	for <xfs@oss.sgi.com>; Sun, 19 May 2013 23:53:13 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 2B1F97F55
+	for <xfs@oss.sgi.com>; Mon, 20 May 2013 01:53:20 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 136D8304043
+	for <xfs@oss.sgi.com>; Sun, 19 May 2013 23:53:20 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	lbCqr93d9xF7IXiJ for <xfs@oss.sgi.com>;
-	Sun, 19 May 2013 23:53:12 -0700 (PDT)
+	k0op7rjn2yOBlEPU for <xfs@oss.sgi.com>;
+	Sun, 19 May 2013 23:53:18 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UeJxz-0006qr-JL
-	for xfs@oss.sgi.com; Mon, 20 May 2013 16:53:07 +1000
+	(envelope-from <dave@fromorbit.com>) id 1UeJy9-0006r9-Q0
+	for xfs@oss.sgi.com; Mon, 20 May 2013 16:53:17 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UeJxz-0006Vg-F2
-	for xfs@oss.sgi.com; Mon, 20 May 2013 16:53:07 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1UeJy9-0006W7-Mf
+	for xfs@oss.sgi.com; Mon, 20 May 2013 16:53:17 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 0/6] xfsprogs: more CRC support patches
-Date: Mon, 20 May 2013 16:52:57 +1000
-Message-Id: <1369032783-24973-1-git-send-email-david@fromorbit.com>
-In-Reply-To: <1368789205-19969-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 6/6] xfs_repair: make directory freespace table CRC format
+	aware.
+Date: Mon, 20 May 2013 16:53:03 +1000
+Message-Id: <1369032783-24973-7-git-send-email-david@fromorbit.com>
+In-Reply-To: <1369032783-24973-1-git-send-email-david@fromorbit.com>
 References: <1368789205-19969-1-git-send-email-david@fromorbit.com>
+	<1369032783-24973-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,32 +38,44 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-[ well, really patches 31..36 :) ]
+From: Dave Chinner <dchinner@redhat.com>
 
-Hi folks,
+We fail to take into account the format of the directory block when
+reading the best free space form a directory data block for free
+space block verification. This causes occasionaly failures in
+xfstests.
 
-More work on top of the original series of 30 patches, including
-xfs_db support for parsing the v3 directory format.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ repair/phase6.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-Note that there are also two patches in here that convert both
-xfs_db and xfs_repair to use the libxfs directory block type
-definitions. While it may have once been convenient for them to have
-a basic definition, it does not lend itself to making the code
-support the v3 format quickly and concisely. Reusing the
-libxfs/kernel structure definitions and abstraction means that the
-code quickly becomes v3 aware and has just works.
-
-Right now this patchset and the current kernel patchset (all the
-attr fixes) runs through xfstests quite far on a 4k block size
-filesystem - all the generic tests pass, and most of the XFS
-specific tests that don't rely on write or attr output support in
-xfs_db also pass.
-
-I'll get the attr db support done tomorrow.....
-
-Cheers,
-
-Dave.
+diff --git a/repair/phase6.c b/repair/phase6.c
+index 1fdd4c8..2905a1c 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -1395,6 +1395,7 @@ longform_dir2_entry_check_data(
+ 	xfs_dir2_db_t		db;
+ 	xfs_dir2_data_entry_t	*dep;
+ 	xfs_dir2_data_unused_t	*dup;
++	struct xfs_dir2_data_free *bf;
+ 	char			*endptr;
+ 	int			error;
+ 	xfs_fsblock_t		firstblock;
+@@ -1808,7 +1809,10 @@ _("entry \"%s\" in dir inode %" PRIu64 " inconsistent with .. value (%" PRIu64 "
+ 		libxfs_dir2_data_log_header(tp, bp);
+ 	libxfs_bmap_finish(&tp, &flist, &committed);
+ 	libxfs_trans_commit(tp, 0);
+-	freetab->ents[db].v = be16_to_cpu(d->bestfree[0].length);
++
++	/* record the largest free space in the freetab for later checking */
++	bf = xfs_dir3_data_bestfree_p(d);
++	freetab->ents[db].v = be16_to_cpu(bf[0].length);
+ 	freetab->ents[db].s = 0;
+ }
+ 
+-- 
+1.7.10.4
 
 _______________________________________________
 xfs mailing list
