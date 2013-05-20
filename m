@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A1A277F50
-	for <xfs@oss.sgi.com>; Mon, 20 May 2013 12:52:04 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 8B6308F8037
-	for <xfs@oss.sgi.com>; Mon, 20 May 2013 10:52:04 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id C501B7F37
+	for <xfs@oss.sgi.com>; Mon, 20 May 2013 12:58:49 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7E7EB8F8039
+	for <xfs@oss.sgi.com>; Mon, 20 May 2013 10:58:49 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id PbgIsWSFKgHNE5wa for
-	<xfs@oss.sgi.com>; Mon, 20 May 2013 10:52:03 -0700 (PDT)
-Received: from int-mx02.intmail.prod.int.phx2.redhat.com
-	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r4KHq3ab023701
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Mon, 20 May 2013 13:52:03 -0400
-From: Eryu Guan <eguan@redhat.com>
-Subject: [PATCH] xfstests: fix typo in check
-Date: Tue, 21 May 2013 01:51:59 +0800
-Message-Id: <1369072319-13738-1-git-send-email-eguan@redhat.com>
+	cuda.sgi.com with ESMTP id qCed5HT8fVj0RKkK for
+	<xfs@oss.sgi.com>; Mon, 20 May 2013 10:58:48 -0700 (PDT)
+Message-ID: <519A6553.4090801@redhat.com>
+Date: Mon, 20 May 2013 14:02:59 -0400
+From: Brian Foster <bfoster@redhat.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH 01/14] xfs: fix sub-page blocksize data integrity writes
+References: <1369007481-15185-1-git-send-email-david@fromorbit.com>
+	<1369007481-15185-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1369007481-15185-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,36 +24,89 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Eryu Guan <eguan@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-There is no $testname, should be $test_name
+On 05/19/2013 07:51 PM, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> FSX on 512 byte block size filesystems has been failing for some
+> time with corrupted data. The fault dates back to the change in
+> the writeback data integrity algorithm that uses a mark-and-sweep
+> approach to avoid data writeback livelocks.
+> 
+> Unfortunately, a side effect of this mark-and-sweep approach is that
+> each page will only be written once for a data integrity sync, and
+> there is a condition in writeback in XFS where a page may require
+> two writeback attempts to be fully written. As a result of the high
+> level change, we now only get a partial page writeback during the
+> integrity sync because the first pass through writeback clears the
+> mark left on the page index to tell writeback that the page needs
+> writeback....
+> 
+> The cause is writing a partial page in the clustering code. This can
+> happen when a mapping boundary falls in the middle of a page - we
+> end up writing back the first part of the page that the mapping
+> covers, but then never revisit the page to have the remainder mapped
+> and written.
+> 
+> The fix is simple - if the mapping boundary falls inside a page,
+> then simple abort clustering without touching the page. This means
+> that the next ->writepage entry that write_cache_pages() will make
+> is the page we aborted on, and xfs_vm_writepage() will map all
+> sections of the page correctly. This behaviour is also optimal for
+> non-data integrity writes, as it results in contiguous sequential
+> writeback of the file rather than missing small holes and having to
+> write them a "random" writes in a future pass.
+> 
+> With this fix, all the fsx tests in xfstests now pass on a 512 byte
+> block size filesystem on a 4k page machine.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
 
-Signed-off-by: Eryu Guan <eguan@redhat.com>
----
- check | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Looks good to me.
 
-diff --git a/check b/check
-index a79747e..8d32486 100755
---- a/check
-+++ b/check
-@@ -242,7 +242,7 @@ if $have_test_arg; then
- 			test_name=`basename $1`
- 			group_file=$SRC_DIR/$test_dir/group
- 
--			if grep "^$testname" $group_file >/dev/null ; then
-+			if grep "^$test_name" $group_file >/dev/null ; then
- 				# in group file ... OK
- 				echo $SRC_DIR/$1 >>$tmp.list
- 			else
--- 
-1.8.1
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  fs/xfs/xfs_aops.c |   19 +++++++++++++++++++
+>  1 file changed, 19 insertions(+)
+> 
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 2b2691b..f04eceb 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -725,6 +725,25 @@ xfs_convert_page(
+>  			(xfs_off_t)(page->index + 1) << PAGE_CACHE_SHIFT,
+>  			i_size_read(inode));
+>  
+> +	/*
+> +	 * If the current map does not span the entire page we are about to try
+> +	 * to write, then give up. The only way we can write a page that spans
+> +	 * multiple mappings in a single writeback iteration is via the
+> +	 * xfs_vm_writepage() function. Data integrity writeback requires the
+> +	 * entire page to be written in a single attempt, otherwise the part of
+> +	 * the page we don't write here doesn't get written as part of the data
+> +	 * integrity sync.
+> +	 *
+> +	 * For normal writeback, we also don't attempt to write partial pages
+> +	 * here as it simply means that write_cache_pages() will see it under
+> +	 * writeback and ignore the page until some pointin the future, at which
+> +	 * time this will be the only page inteh file that needs writeback.
+> +	 * Hence for more optimal IO patterns, we should always avoid partial
+> +	 * page writeback due to multiple mappings on a page here.
+> +	 */
+> +	if (!xfs_imap_valid(inode, imap, end_offset))
+> +		goto fail_unlock_page;
+> +
+>  	len = 1 << inode->i_blkbits;
+>  	p_offset = min_t(unsigned long, end_offset & (PAGE_CACHE_SIZE - 1),
+>  					PAGE_CACHE_SIZE);
+> 
 
 _______________________________________________
 xfs mailing list
