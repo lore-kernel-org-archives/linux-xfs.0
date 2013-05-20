@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D49DD7F37
-	for <xfs@oss.sgi.com>; Mon, 20 May 2013 12:07:20 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5E674AC004
-	for <xfs@oss.sgi.com>; Mon, 20 May 2013 10:07:20 -0700 (PDT)
-Received: from mail-ee0-f43.google.com (mail-ee0-f43.google.com
-	[74.125.83.43]) by cuda.sgi.com with ESMTP id VREhnkyypW7g6Gkl
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 20 May 2013 10:07:15 -0700 (PDT)
-Received: by mail-ee0-f43.google.com with SMTP id d41so3915226eek.16
-	for <xfs@oss.sgi.com>; Mon, 20 May 2013 10:07:14 -0700 (PDT)
-Date: Mon, 20 May 2013 19:07:10 +0200
-From: Paolo Pisati <p.pisati@gmail.com>
-Subject: Re: 3.5+, xfs and 32bit armhf - xfs_buf_get: failed to map pages
-Message-ID: <20130520170710.GA2591@luxor.wired.org>
-References: <20130517104529.GA12490@luxor.wired.org>
-	<20130519011354.GE6495@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id 898967F37
+	for <xfs@oss.sgi.com>; Mon, 20 May 2013 12:20:39 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0A886AC002
+	for <xfs@oss.sgi.com>; Mon, 20 May 2013 10:20:38 -0700 (PDT)
+Received: from dkim1.fusionio.com (dkim1.fusionio.com [66.114.96.53]) by
+	cuda.sgi.com with ESMTP id 3DrRdgHLMdmAVQQM (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 20 May 2013 10:20:37 -0700 (PDT)
+Received: from mx2.fusionio.com (unknown [10.101.1.160])
+	by dkim1.fusionio.com (Postfix) with ESMTP id 014F07C04D8
+	for <xfs@oss.sgi.com>; Mon, 20 May 2013 11:20:37 -0600 (MDT)
+From: Josef Bacik <jbacik@fusionio.com>
+Subject: [PATCH] xfstests: btrfs 308: regression test for btrfs send
+Date: Mon, 20 May 2013 13:20:34 -0400
+Message-ID: <1369070434-20852-1-git-send-email-jbacik@fusionio.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130519011354.GE6495@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,199 +29,173 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com, Paolo Pisati <p.pisati@gmail.com>
+To: xfs@oss.sgi.com, linux-btrfs@vger.kernel.org
 
-On Sun, May 19, 2013 at 11:13:54AM +1000, Dave Chinner wrote:
-> 
-> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1176977
-> 
-> which contains information that everyone looking at the problem
-> should know. Also, any progress on testing the backported fix
-> mentioned in the bug?
+I'm not sure how the numbering is supposed to work now that we've split
+everything out so I'm just going with the next number in the directory.  This is
+a regression test for btrfs send, we had a problem where we'd try to send a file
+that had been deleted in the source snapshot.  This is just to make sure we
+don't have the same problem in the future.  Thanks,
 
-the problem with the 'fix' is that it prevents xfs from erroring out, but
-swift-test fails regardless after ~25% of fs usage and i think having a bold
-'xfs error' and a stack trace is more useful.
+Signed-off-by: Josef Bacik <jbacik@fusionio.com>
+---
+ src/Makefile        |    2 +-
+ src/hold-open.c     |   29 ++++++++++++++++++++
+ tests/btrfs/308     |   74 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/btrfs/308.out |    2 +
+ tests/btrfs/group   |    1 +
+ 5 files changed, 107 insertions(+), 1 deletions(-)
+ create mode 100644 src/hold-open.c
+ create mode 100644 tests/btrfs/308
+ create mode 100644 tests/btrfs/308.out
+
+diff --git a/src/Makefile b/src/Makefile
+index c18ffc9..3ab9a21 100644
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -18,7 +18,7 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
+ 	locktest unwritten_mmap bulkstat_unlink_test t_stripealign \
+ 	bulkstat_unlink_test_modified t_dir_offset t_futimens t_immutable \
+ 	stale_handle pwrite_mmap_blocked t_dir_offset2 seek_sanity_test \
+-	seek_copy_test t_readdir_1 t_readdir_2 fsync-tester
++	seek_copy_test t_readdir_1 t_readdir_2 fsync-tester hold-open
  
-> You're testing swift benchmark which is probably a small file
-> workload with large attributes attached.  It's a good chance that
-> the workload is fragmenting free space because swift is doing bad
-> things to allocation patterns.  It's almost certainly exacerbated by
-> the tiny filesystem you are using (1.5GB), but you can probably work
-> around this problem for now with allocsize=4096.
-
-ok, i repartitioned my disk but i can still reprodue it fairly easily:
-
-df -h:
-/dev/sda6       216G  573M  215G   1% /mnt/sdb1
-
-df -i:
-/dev/sda6      56451072 235458 56215614    1% /mnt/sdb1
-
-dmesg:
-...
-[  363.130877] XFS (sda6): Mounting Filesystem
-[  363.146708] XFS (sda6): Ending clean mount
-[ 3055.520769] alloc_vmap_area: 18 callbacks suppressed
-[ 3055.520783] vmap allocation for size 2097152 failed: use vmalloc=<size> to increase size.
-[ 3055.520817] vmap allocation for size 2097152 failed: use vmalloc=<size> to increase size.
-[ 3055.520845] vmap allocation for size 2097152 failed: use vmalloc=<size> to increase size.
-[ 3055.520861] XFS (sda6): xfs_buf_get: failed to map pages
-[ 3055.520861]
-[ 3055.520882] XFS (sda6): Internal error xfs_trans_cancel at line 1466 of file /build/buildd/linux-3.5.0/fs/xfs/xfs_trans.c.  Caller 0xbf0235e0
-[ 3055.520882]
-[ 3055.535135] [<c00164cc>] (unwind_backtrace+0x0/0x104) from [<c04ed624>] (dump_stack+0x20/0x24)
-[ 3055.535345] [<c04ed624>] (dump_stack+0x20/0x24) from [<bf01091c>] (xfs_error_report+0x60/0x6c [xfs])
-[ 3055.535687] [<bf01091c>] (xfs_error_report+0x60/0x6c [xfs]) from [<bf0633f8>] (xfs_trans_cancel+0xfc/0x11c [xfs])
-[ 3055.536023] [<bf0633f8>] (xfs_trans_cancel+0xfc/0x11c [xfs]) from [<bf0235e0>] (xfs_create+0x228/0x558 [xfs])
-[ 3055.536314] [<bf0235e0>] (xfs_create+0x228/0x558 [xfs]) from [<bf01a7cc>] (xfs_vn_mknod+0x9c/0x180 [xfs])
-[ 3055.536589] [<bf01a7cc>] (xfs_vn_mknod+0x9c/0x180 [xfs]) from [<bf01a8f0>] (xfs_vn_create+0x1c/0x20 [xfs])
-[ 3055.536741] [<bf01a8f0>] (xfs_vn_create+0x1c/0x20 [xfs]) from [<c01359d4>] (vfs_create+0xb4/0x120)
-[ 3055.536760] [<c01359d4>] (vfs_create+0xb4/0x120) from [<c0137c3c>] (do_last+0x860/0x9bc)
-[ 3055.536775] [<c0137c3c>] (do_last+0x860/0x9bc) from [<c0137fdc>] (path_openat+0xcc/0x428)
-[ 3055.536787] [<c0137fdc>] (path_openat+0xcc/0x428) from [<c0138458>] (do_filp_open+0x3c/0x90)
-[ 3055.536805] [<c0138458>] (do_filp_open+0x3c/0x90) from [<c0128248>] (do_sys_open+0xfc/0x1d0)
-[ 3055.536817] [<c0128248>] (do_sys_open+0xfc/0x1d0) from [<c0128348>] (sys_open+0x2c/0x30)
-[ 3055.536832] [<c0128348>] (sys_open+0x2c/0x30) from [<c000e320>] (ret_fast_syscall+0x0/0x30)
-[ 3055.536848] XFS (sda6): xfs_do_force_shutdown(0x8) called from line 1467 of file /build/buildd/linux-3.5.0/fs/xfs/xfs_trans.c.  Return address = 0xbf06340c
-[ 3055.537327] XFS (sda6): Corruption of in-memory data detected.  Shutting down filesystem
-[ 3055.545439] XFS (sda6): Please umount the filesystem and rectify the problem(s)
-[ 3070.301048] XFS (sda6): xfs_log_force: error 5 returned.
-[ 3100.381068] XFS (sda6): xfs_log_force: error 5 returned.
-[ 3130.461041] XFS (sda6): xfs_log_force: error 5 returned.
-[ 3160.541042] XFS (sda6): xfs_log_force: error 5 returned.
-[ 3190.621042] XFS (sda6): xfs_log_force: error 5 returned.
-[ 3220.701040] XFS (sda6): xfs_log_force: error 5 returned.
-[ 3250.781039] XFS (sda6): xfs_log_force: error 5 returned.
-[ 3280.861036] XFS (sda6): xfs_log_force: error 5 returned.
-[ 3310.941047] XFS (sda6): xfs_log_force: error 5 returned.
-[ 3341.021044] XFS (sda6): xfs_log_force: error 5 returned.
-[ 3371.101044] XFS (sda6): xfs_log_force: error 5 returned.
-[ 3401.181036] XFS (sda6): xfs_log_force: error 5 returned.
-[ 3431.261036] XFS (sda6): xfs_log_force: error 5 returned.
-[ 3461.341038] XFS (sda6): xfs_log_force: error 5 returned.
-[ 3491.421038] XFS (sda6): xfs_log_force: error 5 returned.
-[ 3521.501051] XFS (sda6): xfs_log_force: error 5 returned.
-[ 3551.581037] XFS (sda6): xfs_log_force: error 5 returned.
-[ 3581.661041] XFS (sda6): xfs_log_force: error 5 returned.
-
-> I've got a fix that I'm testing for the underlying cause of the
-> problem I'm aware of with this workload, but I'll need more
-> information about your storage/filesystem config to confirm it is
-> the same root cause first. Can you include the info from here:
-> 
-> http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
-
-flag@c13:~$ uname -a
-Linux c13 3.5.0-30-highbank #51-Ubuntu SMP Tue May 14 22:57:15 UTC 2013 armv7l armv7l armv7l GNU/Linux
-
-lag@c13:~$ xfs_repair -V
-xfs_repair version 3.1.7
-
-armhf highbank node, 4 cores, 4GB mem
-
-flag@c13:~$ cat /proc/meminfo
-MemTotal:        4137004 kB
-MemFree:         2719752 kB
-Buffers:           39688 kB
-Cached:           580508 kB
-SwapCached:            0 kB
-Active:           631136 kB
-Inactive:         204552 kB
-Active(anon):     215520 kB
-Inactive(anon):      232 kB
-Active(file):     415616 kB
-Inactive(file):   204320 kB
-Unevictable:           0 kB
-Mlocked:               0 kB
-HighTotal:       3408896 kB
-HighFree:        2606516 kB
-LowTotal:         728108 kB
-LowFree:          113236 kB
-SwapTotal:       8378364 kB
-SwapFree:        8378364 kB
-Dirty:                 4 kB
-Writeback:             0 kB
-AnonPages:        215516 kB
-Mapped:             8676 kB
-Shmem:               264 kB
-Slab:             317000 kB
-SReclaimable:     230392 kB
-SUnreclaim:        86608 kB
-KernelStack:        2192 kB
-PageTables:         2284 kB
-NFS_Unstable:          0 kB
-Bounce:                0 kB
-WritebackTmp:          0 kB
-CommitLimit:    10446864 kB
-Committed_AS:    1049624 kB
-VmallocTotal:     245760 kB
-VmallocUsed:        2360 kB
-VmallocChunk:     241428 kB
-
-flag@c13:~$ cat /proc/mounts
-rootfs / rootfs rw 0 0
-sysfs /sys sysfs rw,nosuid,nodev,noexec,relatime 0 0
-proc /proc proc rw,nosuid,nodev,noexec,relatime 0 0
-udev /dev devtmpfs rw,relatime,size=2059248k,nr_inodes=177400,mode=755 0 0
-devpts /dev/pts devpts rw,nosuid,noexec,relatime,gid=5,mode=620,ptmxmode=000 0 0
-tmpfs /run tmpfs rw,nosuid,relatime,size=827404k,mode=755 0 0
-/dev/disk/by-uuid/6594b183-3198-4dec-a97d-a3f834b98011 / ext4 rw,relatime,errors=remount-ro,data=ordered 0 0
-none /sys/fs/fuse/connections fusectl rw,relatime 0 0
-none /sys/kernel/debug debugfs rw,relatime 0 0
-none /sys/kernel/security securityfs rw,relatime 0 0
-none /run/lock tmpfs rw,nosuid,nodev,noexec,relatime,size=5120k 0 0
-none /run/shm tmpfs rw,nosuid,nodev,relatime 0 0
-none /run/user tmpfs rw,nosuid,nodev,noexec,relatime,size=102400k,mode=755 0 0
-/dev/sda1 /boot ext2 rw,relatime,errors=continue 0 0
-/dev/sda6 /mnt/sdb1 xfs rw,noatime,nodiratime,attr2,nobarrier,logbufs=8,noquota 0 0
-
-flag@c13:~$ cat /proc/partitions
-major minor  #blocks  name
-
-   8        0  250059096 sda
-   8        1     248832 sda1
-   8        2   15625000 sda2
-   8        3          1 sda3
-   8        5    8378369 sda5
-   8        6  225804288 sda6
-
-no RAID, no LVM
-
-common sata disk
-
-write cache on (unknown size)
-
-no BBWC AFAIK
-
-flag@c13:~$ xfs_info /mnt/sdb1/
-meta-data=/dev/sda6              isize=1024   agcount=4, agsize=14112768 blks
-         =                       sectsz=512   attr=2
-data     =                       bsize=4096   blocks=56451072, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0
-log      =internal               bsize=4096   blocks=27564, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-
-> 
-> As well the freespace info that Jeff asked for?
-
-flag@c13:~$ sudo xfs_db -r "-c freesp -s" /dev/sda6 
-   from      to extents  blocks    pct
-      1       1     423     423   0.00
-      2       3     897    2615   0.01
-      4       7     136     915   0.00
-      8      15   24833  365797   0.86
-8388608 14112768       3 41928421  99.13
-total free extents 26292
-total free blocks 42298171
-average free extent size 1608.78
-
+ SUBDIRS =
+ 
+diff --git a/src/hold-open.c b/src/hold-open.c
+new file mode 100644
+index 0000000..f44c1dd
+--- /dev/null
++++ b/src/hold-open.c
+@@ -0,0 +1,29 @@
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <fcntl.h>
++#include <stdio.h>
++#include <errno.h>
++#include <unistd.h>
++
++int main(int argc, char **argv)
++{
++	int fd;
++
++	if (argc < 2) {
++		fprintf(stderr, "Usage: hold-open <filename>\n");
++		return -1;
++	}
++
++	fd = open(argv[1], O_RDONLY);
++	if (fd < 0) {
++		fprintf(stderr, "Error opening file: %d\n", errno);
++		return -1;
++	}
++
++	while (1) {
++		sleep(60);
++	}
++
++	close(fd);
++	return 0;
++}
+diff --git a/tests/btrfs/308 b/tests/btrfs/308
+new file mode 100644
+index 0000000..144be99
+--- /dev/null
++++ b/tests/btrfs/308
+@@ -0,0 +1,74 @@
++#! /bin/bash
++# FS QA Test No. btrfs/308
++#
++# btrfs send ESTALE regression test, kernel.org bugzilla 57491
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2013 Fusion IO.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++
++_cleanup()
++{
++    rm -f $tmp.*
++}
++
++trap "_cleanup ; exit \$status" 0 1 2 3 15
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# real QA test starts here
++_supported_fs btrfs
++_supported_os Linux
++_require_scratch
++
++_scratch_mkfs > /dev/null 2>&1
++_scratch_mount
++
++dd if=/dev/zero of=$SCRATCH_MNT/foo bs=1M count=10 > /dev/null 2>&1
++sync
++$BTRFS_UTIL_PROG subvol snap -r $SCRATCH_MNT $SCRATCH_MNT/snap > /dev/null 2>&1
++dd if=/dev/zero of=$SCRATCH_MNT/foo bs=1M count=10 oflag=append > /dev/null 2>&1
++sync
++
++# We need to hold the file open, tail -f makes the output file look weird so
++# here is this awful hack to get around that
++$here/src/hold-open $SCRATCH_MNT/foo &
++
++# need this so that tail doesn't error out racing with the rm
++sleep 1
++rm -f $SCRATCH_MNT/foo
++$BTRFS_UTIL_PROG subvol snap -r $SCRATCH_MNT $SCRATCH_MNT/snap1 > /dev/null 2>&1
++$BTRFS_UTIL_PROG send -f /dev/null -p $SCRATCH_MNT/snap $SCRATCH_MNT/snap1 >/dev/null 2>&1
++if [ $? -ne 0 ]
++then
++	echo "send failed"
++fi
++kill $!
++
++echo "Silence is golden"
++status=0 ; exit
+diff --git a/tests/btrfs/308.out b/tests/btrfs/308.out
+new file mode 100644
+index 0000000..a731eaa
+--- /dev/null
++++ b/tests/btrfs/308.out
+@@ -0,0 +1,2 @@
++QA output created by 308
++Silence is golden
+diff --git a/tests/btrfs/group b/tests/btrfs/group
+index bc6c256..666054b 100644
+--- a/tests/btrfs/group
++++ b/tests/btrfs/group
+@@ -9,3 +9,4 @@
+ 276 auto rw metadata
+ 284 auto
+ 307 auto quick
++308 auto quick
 -- 
-bye,
-p.
+1.7.7.6
 
 _______________________________________________
 xfs mailing list
