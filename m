@@ -1,16 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 464C829DF8
-	for <xfs@oss.sgi.com>; Mon, 20 May 2013 13:10:42 -0500 (CDT)
-Date: Mon, 20 May 2013 13:10:38 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH v2] xfs: Avoid pathological backwards allocation
-Message-ID: <20130520181038.GY29359@sgi.com>
-References: <1365710996-16439-1-git-send-email-jack@suse.cz>
-	<20130520135607.GA11502@quack.suse.cz>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 3148D7F37
+	for <xfs@oss.sgi.com>; Mon, 20 May 2013 13:59:39 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0B4678F8033
+	for <xfs@oss.sgi.com>; Mon, 20 May 2013 11:59:38 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 96jxOR5F7ELdWwZG for
+	<xfs@oss.sgi.com>; Mon, 20 May 2013 11:59:38 -0700 (PDT)
+Message-ID: <519A7395.9060806@redhat.com>
+Date: Mon, 20 May 2013 15:03:49 -0400
+From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130520135607.GA11502@quack.suse.cz>
+Subject: Re: [PATCH 08/14] xfs: remote attribute allocation may be contiguous
+References: <1369007481-15185-1-git-send-email-david@fromorbit.com>
+	<1369007481-15185-9-git-send-email-david@fromorbit.com>
+In-Reply-To: <1369007481-15185-9-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,60 +28,58 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: dchinner@redhat.com, tinguely@sgi.com, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Mon, May 20, 2013 at 03:56:07PM +0200, Jan Kara wrote:
-> On Thu 11-04-13 22:09:56, Jan Kara wrote:
-> > Writing a large file using direct IO in 16 MB chunks sometimes results
-> > in a pathological allocation pattern where 16 MB chunks of large free
-> > extent are allocated to a file in a reversed order. So extents of a file
-> > look for example as:
-> > 
-> >  ext logical physical expected length flags
-> >    0        0        13          4550656
-> >    1  4550656 188136807   4550668 12562432
-> >    2 17113088 200699240 200699238 622592
-> >    3 17735680 182046055 201321831   4096
-> >    4 17739776 182041959 182050150   4096
-> >    5 17743872 182037863 182046054   4096
-> >    6 17747968 182033767 182041958   4096
-> >    7 17752064 182029671 182037862   4096
-> > ...
-> > 6757 45400064 154381644 154389835   4096
-> > 6758 45404160 154377548 154385739   4096
-> > 6759 45408256 252951571 154381643  73728 eof
-> > 
-> > This happens because XFS_ALLOCTYPE_THIS_BNO allocation fails (the last
-> > extent in the file cannot be further extended) so we fall back to
-> > XFS_ALLOCTYPE_NEAR_BNO allocation which picks end of a large free
-> > extent as the best place to continue the file. Since the chunk at the
-> > end of the free extent again cannot be further extended, this behavior
-> > repeats until the whole free extent is consumed in a reversed order.
-> > 
-> > For data allocations this backward allocation isn't beneficial so make
-> > xfs_alloc_compute_diff() pick start of a free extent instead of its end
-> > for them. That avoids the backward allocation pattern.
-> > 
-> > See thread at http://oss.sgi.com/archives/xfs/2013-03/msg00144.html for
-> > more details about the reproduction case and why this solution was
-> > chosen.
-> > 
-> > Based on idea by Dave Chinner <dchinner@redhat.com>.
-> > 
-> > CC: Dave Chinner <dchinner@redhat.com>
-> > Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> > Signed-off-by: Jan Kara <jack@suse.cz>
-> > ---
-> >  fs/xfs/xfs_alloc.c |   24 ++++++++++++++++++------
-> >  1 files changed, 18 insertions(+), 6 deletions(-)
-> > 
-> > v2: Updated comment and commit description.
->   Could anybody pull this patch into XFS tree? I don't see it there...
+On 05/19/2013 07:51 PM, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> When CRCs are enabled, there may be multiple allocations made if the
+> headers cause a length overflow. This, however, does not mean that
+> the number of headers required increases, as the second and
+> subsequent extents may be contiguous with the previous extent. Hence
+> when we map the extents to write the attribute data, we may end up
+> with less extents than allocations made. Hence the assertion that we
+> consume th enumber of headers we calculated in the allocation loop
+> is incorrect and needs to be removed.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_attr_remote.c |    6 +++++-
+>  1 file changed, 5 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_attr_remote.c b/fs/xfs/xfs_attr_remote.c
+> index dee8446..aad95b0 100644
+> --- a/fs/xfs/xfs_attr_remote.c
+> +++ b/fs/xfs/xfs_attr_remote.c
+> @@ -359,6 +359,11 @@ xfs_attr_rmtval_set(
+>  		 * into requiring more blocks. e.g. for 512 byte blocks, we'll
+>  		 * spill for another block every 9 headers we require in this
+>  		 * loop.
+> +		 *
+> +		 * Note that this can result in contiguous allocation of blocks,
+> +		 * so we don't use all the space we allocate for headers as we
+> +		 * have one less header for each contiguous allocation that
+> +		 * occurs in the map/write loop below.
+>  		 */
+>  		if (crcs && blkcnt == 0) {
+>  			int total_len;
+> @@ -439,7 +444,6 @@ xfs_attr_rmtval_set(
+>  		lblkno += map.br_blockcount;
+>  	}
+>  	ASSERT(valuelen == 0);
+> -	ASSERT(hdrcnt == 0);
 
-Applied.
+I can't say I grok the context enough atm to send a Reviewed-by, but if
+we're removing this, why not just remove the hdrcnt-- a few lines up as
+well? It doesn't appear to be used after the first loop at this point.
 
-Thanks Jan.
+Brian
+
+>  	return 0;
+>  }
+>  
+> 
 
 _______________________________________________
 xfs mailing list
