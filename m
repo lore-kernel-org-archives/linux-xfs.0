@@ -1,16 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 323857F37
-	for <xfs@oss.sgi.com>; Mon, 20 May 2013 16:16:11 -0500 (CDT)
-Date: Mon, 20 May 2013 16:16:07 -0500
+	by oss.sgi.com (Postfix) with ESMTP id 747A87F37
+	for <xfs@oss.sgi.com>; Mon, 20 May 2013 16:32:51 -0500 (CDT)
+Date: Mon, 20 May 2013 16:32:50 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 05/14] xfs: fix missing KM_NOFS tags to keep lockdep happy
-Message-ID: <20130520211607.GC20028@sgi.com>
+Subject: Re: [PATCH 06/14] xfs: xfs_da3_node_read_verify() doesn't handle
+	XFS_ATTR3_LEAF_MAGIC
+Message-ID: <20130520213250.GD20028@sgi.com>
 References: <1369007481-15185-1-git-send-email-david@fromorbit.com>
-	<1369007481-15185-6-git-send-email-david@fromorbit.com>
+	<1369007481-15185-7-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1369007481-15185-6-git-send-email-david@fromorbit.com>
+In-Reply-To: <1369007481-15185-7-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,32 +27,38 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, May 20, 2013 at 09:51:12AM +1000, Dave Chinner wrote:
+On Mon, May 20, 2013 at 09:51:13AM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
-> 
-> There are several places where we use KM_SLEEP allocation contexts
-> and use the fact that there are called from transaction context to
-			they
-
-(fixed)
-
-> add KM_NOFS where appropriate.
-
-I think you're referring to the usage of PF_FSTRANS and us clearing __GFP_FS in
-kmem_flags_convert?
-
-> Unfortunately, there are several
-> places where the code makes this assumption but can be called from
-> outside transaction context but with filesystem locks held. These
-> places need explicit KM_NOFS annotations to avoid lockdep
-> complaining about reclaim contexts.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Looks good.  In each case you added KM_NOFS where there was no transaction and
-locks would have been held.  Applied.
+Looks good.  Applied.
 
 Reviewed-by: Ben Myers <bpm@sgi.com>
+
+> ---
+>  fs/xfs/xfs_da_btree.c |    1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/fs/xfs/xfs_da_btree.c b/fs/xfs/xfs_da_btree.c
+> index 41ea7e1..0b8b2a1 100644
+> --- a/fs/xfs/xfs_da_btree.c
+> +++ b/fs/xfs/xfs_da_btree.c
+> @@ -270,6 +270,7 @@ xfs_da3_node_read_verify(
+>  				break;
+>  			return;
+>  		case XFS_ATTR_LEAF_MAGIC:
+> +		case XFS_ATTR3_LEAF_MAGIC:
+>  			bp->b_ops = &xfs_attr3_leaf_buf_ops;
+>  			bp->b_ops->verify_read(bp);
+>  			return;
+> -- 
+> 1.7.10.4
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
