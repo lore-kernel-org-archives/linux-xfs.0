@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C501B7F37
-	for <xfs@oss.sgi.com>; Mon, 20 May 2013 12:58:49 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id EA85C7F50
+	for <xfs@oss.sgi.com>; Mon, 20 May 2013 12:58:54 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7E7EB8F8039
-	for <xfs@oss.sgi.com>; Mon, 20 May 2013 10:58:49 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C4BB8304053
+	for <xfs@oss.sgi.com>; Mon, 20 May 2013 10:58:54 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id qCed5HT8fVj0RKkK for
-	<xfs@oss.sgi.com>; Mon, 20 May 2013 10:58:48 -0700 (PDT)
-Message-ID: <519A6553.4090801@redhat.com>
-Date: Mon, 20 May 2013 14:02:59 -0400
+	cuda.sgi.com with ESMTP id cQ1NMkKG3o8FQ0Zw for
+	<xfs@oss.sgi.com>; Mon, 20 May 2013 10:58:54 -0700 (PDT)
+Message-ID: <519A655A.3020900@redhat.com>
+Date: Mon, 20 May 2013 14:03:06 -0400
 From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 01/14] xfs: fix sub-page blocksize data integrity writes
+Subject: Re: [PATCH 03/14] xfs: Don't reference the EFI after it is freed
 References: <1369007481-15185-1-git-send-email-david@fromorbit.com>
-	<1369007481-15185-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1369007481-15185-2-git-send-email-david@fromorbit.com>
+	<1369007481-15185-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1369007481-15185-4-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,38 +34,12 @@ Cc: xfs@oss.sgi.com
 On 05/19/2013 07:51 PM, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> FSX on 512 byte block size filesystems has been failing for some
-> time with corrupted data. The fault dates back to the change in
-> the writeback data integrity algorithm that uses a mark-and-sweep
-> approach to avoid data writeback livelocks.
+> Checking the EFI for whether it is being released from recovery
+> after we've already released the known active reference is a mistake
+> worthy of a brown paper bag. Fix the (now) obvious use after free
+> that it can cause.
 > 
-> Unfortunately, a side effect of this mark-and-sweep approach is that
-> each page will only be written once for a data integrity sync, and
-> there is a condition in writeback in XFS where a page may require
-> two writeback attempts to be fully written. As a result of the high
-> level change, we now only get a partial page writeback during the
-> integrity sync because the first pass through writeback clears the
-> mark left on the page index to tell writeback that the page needs
-> writeback....
-> 
-> The cause is writing a partial page in the clustering code. This can
-> happen when a mapping boundary falls in the middle of a page - we
-> end up writing back the first part of the page that the mapping
-> covers, but then never revisit the page to have the remainder mapped
-> and written.
-> 
-> The fix is simple - if the mapping boundary falls inside a page,
-> then simple abort clustering without touching the page. This means
-> that the next ->writepage entry that write_cache_pages() will make
-> is the page we aborted on, and xfs_vm_writepage() will map all
-> sections of the page correctly. This behaviour is also optimal for
-> non-data integrity writes, as it results in contiguous sequential
-> writeback of the file rather than missing small holes and having to
-> write them a "random" writes in a future pass.
-> 
-> With this fix, all the fsx tests in xfstests now pass on a 512 byte
-> block size filesystem on a 4k page machine.
-> 
+> Reported-by: Dave Jones <davej@redhat.com>
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
 
@@ -73,39 +47,28 @@ Looks good to me.
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  fs/xfs/xfs_aops.c |   19 +++++++++++++++++++
->  1 file changed, 19 insertions(+)
+>  fs/xfs/xfs_extfree_item.c |    5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 2b2691b..f04eceb 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -725,6 +725,25 @@ xfs_convert_page(
->  			(xfs_off_t)(page->index + 1) << PAGE_CACHE_SHIFT,
->  			i_size_read(inode));
->  
-> +	/*
-> +	 * If the current map does not span the entire page we are about to try
-> +	 * to write, then give up. The only way we can write a page that spans
-> +	 * multiple mappings in a single writeback iteration is via the
-> +	 * xfs_vm_writepage() function. Data integrity writeback requires the
-> +	 * entire page to be written in a single attempt, otherwise the part of
-> +	 * the page we don't write here doesn't get written as part of the data
-> +	 * integrity sync.
-> +	 *
-> +	 * For normal writeback, we also don't attempt to write partial pages
-> +	 * here as it simply means that write_cache_pages() will see it under
-> +	 * writeback and ignore the page until some pointin the future, at which
-> +	 * time this will be the only page inteh file that needs writeback.
-> +	 * Hence for more optimal IO patterns, we should always avoid partial
-> +	 * page writeback due to multiple mappings on a page here.
-> +	 */
-> +	if (!xfs_imap_valid(inode, imap, end_offset))
-> +		goto fail_unlock_page;
+> diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
+> index c0f3750..452920a 100644
+> --- a/fs/xfs/xfs_extfree_item.c
+> +++ b/fs/xfs/xfs_extfree_item.c
+> @@ -305,11 +305,12 @@ xfs_efi_release(xfs_efi_log_item_t	*efip,
+>  {
+>  	ASSERT(atomic_read(&efip->efi_next_extent) >= nextents);
+>  	if (atomic_sub_and_test(nextents, &efip->efi_next_extent)) {
+> -		__xfs_efi_release(efip);
+> -
+>  		/* recovery needs us to drop the EFI reference, too */
+>  		if (test_bit(XFS_EFI_RECOVERED, &efip->efi_flags))
+>  			__xfs_efi_release(efip);
 > +
->  	len = 1 << inode->i_blkbits;
->  	p_offset = min_t(unsigned long, end_offset & (PAGE_CACHE_SIZE - 1),
->  					PAGE_CACHE_SIZE);
+> +		__xfs_efi_release(efip);
+> +		/* efip may now have been freed, do not reference it again. */
+>  	}
+>  }
+>  
 > 
 
 _______________________________________________
