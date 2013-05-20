@@ -1,15 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E8DA67F37
-	for <xfs@oss.sgi.com>; Mon, 20 May 2013 14:38:02 -0500 (CDT)
-Date: Mon, 20 May 2013 14:37:59 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 323857F37
+	for <xfs@oss.sgi.com>; Mon, 20 May 2013 16:16:11 -0500 (CDT)
+Date: Mon, 20 May 2013 16:16:07 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 00/14] xfs: fixes for 3.10-rc2 (update)
-Message-ID: <20130520193759.GB20028@sgi.com>
+Subject: Re: [PATCH 05/14] xfs: fix missing KM_NOFS tags to keep lockdep happy
+Message-ID: <20130520211607.GC20028@sgi.com>
 References: <1369007481-15185-1-git-send-email-david@fromorbit.com>
+	<1369007481-15185-6-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1369007481-15185-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1369007481-15185-6-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,17 +26,32 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, May 20, 2013 at 09:51:07AM +1000, Dave Chinner wrote:
-> THis is my current patch queue for 3.10-rc2. It contains the same first 6
-> patches as posted here:
+On Mon, May 20, 2013 at 09:51:12AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> http://oss.sgi.com/pipermail/xfs/2013-May/026366.html
-> 
-> This update adds another 8 patches that fix attribute bugs on CRC
-> enabled filesystems. These patches make the attr group in xfstests
-> pass rather than assert fail or oops.
+> There are several places where we use KM_SLEEP allocation contexts
+> and use the fact that there are called from transaction context to
+			they
 
-Applied 1-3.  Will work on reviews for the others.
+(fixed)
+
+> add KM_NOFS where appropriate.
+
+I think you're referring to the usage of PF_FSTRANS and us clearing __GFP_FS in
+kmem_flags_convert?
+
+> Unfortunately, there are several
+> places where the code makes this assumption but can be called from
+> outside transaction context but with filesystem locks held. These
+> places need explicit KM_NOFS annotations to avoid lockdep
+> complaining about reclaim contexts.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+
+Looks good.  In each case you added KM_NOFS where there was no transaction and
+locks would have been held.  Applied.
+
+Reviewed-by: Ben Myers <bpm@sgi.com>
 
 _______________________________________________
 xfs mailing list
