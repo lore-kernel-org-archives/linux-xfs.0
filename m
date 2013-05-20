@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id AABCE7F54
-	for <xfs@oss.sgi.com>; Mon, 20 May 2013 01:53:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 92301304043
-	for <xfs@oss.sgi.com>; Sun, 19 May 2013 23:53:19 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 4CDB47F66
+	for <xfs@oss.sgi.com>; Mon, 20 May 2013 01:53:34 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id AB299AC004
+	for <xfs@oss.sgi.com>; Sun, 19 May 2013 23:53:33 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	ZL50NPjLHbqr7llO for <xfs@oss.sgi.com>;
-	Sun, 19 May 2013 23:53:15 -0700 (PDT)
+	PFheBKt2rTDYHhxR for <xfs@oss.sgi.com>;
+	Sun, 19 May 2013 23:53:30 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UeJxz-0006qt-Kz
-	for xfs@oss.sgi.com; Mon, 20 May 2013 16:53:07 +1000
+	(envelope-from <dave@fromorbit.com>) id 1UeJyJ-0006r7-O7
+	for xfs@oss.sgi.com; Mon, 20 May 2013 16:53:27 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UeJxz-0006Vn-Hq
-	for xfs@oss.sgi.com; Mon, 20 May 2013 16:53:07 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1UeJy9-0006Vx-Ji
+	for xfs@oss.sgi.com; Mon, 20 May 2013 16:53:17 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/6] xfs_db: convert directory parsing to use libxfs structure
-Date: Mon, 20 May 2013 16:52:59 +1000
-Message-Id: <1369032783-24973-3-git-send-email-david@fromorbit.com>
+Subject: [PATCH 4/6] xfs_db: update field printing for dir crc format changes.
+Date: Mon, 20 May 2013 16:53:01 +1000
+Message-Id: <1369032783-24973-5-git-send-email-david@fromorbit.com>
 In-Reply-To: <1369032783-24973-1-git-send-email-david@fromorbit.com>
 References: <1368789205-19969-1-git-send-email-david@fromorbit.com>
 	<1369032783-24973-1-git-send-email-david@fromorbit.com>
@@ -39,849 +39,776 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-xfs_db rolls it's own "opaque" directory types for the different
-block formats. All it cares about is where the headers end and the
-data starts, and none of the other details in the structures. Rather
-than duplicate this for the dir3 format, we already have perfectly
-good headers and abstraction functions for finding this information
-in libxfs.  Using these means that the dir2 code used for printing
-fields, metadump and check need to be modified to use libxfs
-definitions.
+Note that this also requires changing the type parsing to only
+allow dir3 data block parsing on CRC enabled filesystems. This is
+slighly more complex than it needs to be  because of the way the
+type table is walked and the assumption that all the entries are in
+type number order.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- db/check.c    |   70 +++++++++++++++---------------
- db/dir2.c     |  133 ++++++++++++++++++++++++++++-----------------------------
- db/dir2.h     |   25 -----------
- db/dir2sf.c   |   62 +++++++++++++--------------
- db/metadump.c |   31 +++++++-------
- 5 files changed, 148 insertions(+), 173 deletions(-)
+ db/dir2.c  |  319 +++++++++++++++++++++++++++++++++++++++++++++++++-----------
+ db/dir2.h  |   33 +++++--
+ db/field.c |   21 ++++
+ db/field.h |   14 +++
+ db/type.c  |   14 ++-
+ db/type.h  |    2 +-
+ 6 files changed, 336 insertions(+), 67 deletions(-)
 
-diff --git a/db/check.c b/db/check.c
-index dadfa97..d490f81 100644
---- a/db/check.c
-+++ b/db/check.c
-@@ -278,9 +278,9 @@ static xfs_ino_t	process_data_dir_v2(int *dot, int *dotdot,
- 					    inodata_t *id, int v,
- 					    xfs_dablk_t dabno,
- 					    freetab_t **freetabp);
--static xfs_dir2_data_free_t
--			*process_data_dir_v2_freefind(xfs_dir2_data_t *data,
--						   xfs_dir2_data_unused_t *dup);
-+static xfs_dir2_data_free_t *process_data_dir_v2_freefind(
-+					struct xfs_dir2_data_hdr *data,
-+					struct xfs_dir2_data_unused *dup);
- static void		process_dir(xfs_dinode_t *dip, blkmap_t *blkmap,
- 				    inodata_t *id);
- static int		process_dir_v2(xfs_dinode_t *dip, blkmap_t *blkmap,
-@@ -2188,11 +2188,11 @@ process_data_dir_v2(
- 	xfs_dir2_dataptr_t	addr;
- 	xfs_dir2_data_free_t	*bf;
- 	int			bf_err;
--	xfs_dir2_block_t	*block;
-+	struct xfs_dir2_data_hdr *block;
- 	xfs_dir2_block_tail_t	*btp = NULL;
- 	inodata_t		*cid;
- 	int			count;
--	xfs_dir2_data_t		*data;
-+	struct xfs_dir2_data_hdr *data;
- 	xfs_dir2_db_t		db;
- 	xfs_dir2_data_entry_t	*dep;
- 	xfs_dir2_data_free_t	*dfp;
-@@ -2214,20 +2214,20 @@ process_data_dir_v2(
- 
- 	data = iocur_top->data;
- 	block = iocur_top->data;
--	if (be32_to_cpu(block->hdr.magic) != XFS_DIR2_BLOCK_MAGIC &&
--			be32_to_cpu(data->hdr.magic) != XFS_DIR2_DATA_MAGIC) {
-+	if (be32_to_cpu(block->magic) != XFS_DIR2_BLOCK_MAGIC &&
-+			be32_to_cpu(data->magic) != XFS_DIR2_DATA_MAGIC) {
- 		if (!sflag || v)
- 			dbprintf(_("bad directory data magic # %#x for dir ino "
- 				 "%lld block %d\n"),
--				be32_to_cpu(data->hdr.magic), id->ino, dabno);
-+				be32_to_cpu(data->magic), id->ino, dabno);
- 		error++;
- 		return NULLFSINO;
- 	}
- 	db = xfs_dir2_da_to_db(mp, dabno);
--	bf = data->hdr.bestfree;
--	ptr = (char *)data->u;
--	if (be32_to_cpu(block->hdr.magic) == XFS_DIR2_BLOCK_MAGIC) {
--		btp = xfs_dir2_block_tail_p(mp, &block->hdr);
-+	bf = xfs_dir3_data_bestfree_p(data);
-+	ptr = (char *)xfs_dir3_data_unused_p(data);
-+	if (be32_to_cpu(block->magic) == XFS_DIR2_BLOCK_MAGIC) {
-+		btp = xfs_dir2_block_tail_p(mp, block);
- 		lep = xfs_dir2_block_leaf_p(btp);
- 		endptr = (char *)lep;
- 		if (endptr <= ptr || endptr > (char *)btp) {
-@@ -2372,7 +2372,7 @@ process_data_dir_v2(
- 			(*dot)++;
- 		}
- 	}
--	if (be32_to_cpu(data->hdr.magic) == XFS_DIR2_BLOCK_MAGIC) {
-+	if (be32_to_cpu(data->magic) == XFS_DIR2_BLOCK_MAGIC) {
- 		endptr = (char *)data + mp->m_dirblksize;
- 		for (i = stale = 0; lep && i < be32_to_cpu(btp->count); i++) {
- 			if ((char *)&lep[i] >= endptr) {
-@@ -2404,9 +2404,8 @@ process_data_dir_v2(
- 				id->ino, dabno);
- 		error++;
- 	}
--	if (be32_to_cpu(data->hdr.magic) == XFS_DIR2_BLOCK_MAGIC &&
--				count != be32_to_cpu(btp->count) - 
--						be32_to_cpu(btp->stale)) {
-+	if (be32_to_cpu(data->magic) == XFS_DIR2_BLOCK_MAGIC &&
-+	    count != be32_to_cpu(btp->count) - be32_to_cpu(btp->stale)) {
- 		if (!sflag || v)
- 			dbprintf(_("dir %lld block %d bad block tail count %d "
- 				 "(stale %d)\n"), 
-@@ -2414,7 +2413,7 @@ process_data_dir_v2(
- 				be32_to_cpu(btp->stale));
- 		error++;
- 	}
--	if (be32_to_cpu(data->hdr.magic) == XFS_DIR2_BLOCK_MAGIC && 
-+	if (be32_to_cpu(data->magic) == XFS_DIR2_BLOCK_MAGIC && 
- 					stale != be32_to_cpu(btp->stale)) {
- 		if (!sflag || v)
- 			dbprintf(_("dir %lld block %d bad stale tail count %d\n"),
-@@ -2439,18 +2438,19 @@ process_data_dir_v2(
- 
- static xfs_dir2_data_free_t *
- process_data_dir_v2_freefind(
--	xfs_dir2_data_t		*data,
-+	struct xfs_dir2_data_hdr *data,
- 	xfs_dir2_data_unused_t	*dup)
- {
--	xfs_dir2_data_free_t	*dfp;
-+	struct xfs_dir2_data_free *bf;
-+	struct xfs_dir2_data_free *dfp;
- 	xfs_dir2_data_aoff_t	off;
- 
- 	off = (xfs_dir2_data_aoff_t)((char *)dup - (char *)data);
--	if (be16_to_cpu(dup->length) < be16_to_cpu(data->hdr.
--				bestfree[XFS_DIR2_DATA_FD_COUNT - 1].length))
-+	bf = xfs_dir3_data_bestfree_p(data);
-+	if (be16_to_cpu(dup->length) <
-+			be16_to_cpu(bf[XFS_DIR2_DATA_FD_COUNT - 1].length))
- 		return NULL;
--	for (dfp = &data->hdr.bestfree[0]; dfp < &data->hdr.
--				bestfree[XFS_DIR2_DATA_FD_COUNT]; dfp++) {
-+	for (dfp = bf; dfp < &bf[XFS_DIR2_DATA_FD_COUNT]; dfp++) {
- 		if (be16_to_cpu(dfp->offset) == 0)
- 			return NULL;
- 		if (be16_to_cpu(dfp->offset) == off)
-@@ -3421,20 +3421,20 @@ process_sf_dir_v2(
- 	int			i8;
- 	xfs_ino_t		lino;
- 	int			offset;
--	xfs_dir2_sf_t		*sf;
-+	struct xfs_dir2_sf_hdr	*sf;
- 	xfs_dir2_sf_entry_t	*sfe;
- 	int			v;
- 
--	sf = (xfs_dir2_sf_t *)XFS_DFORK_DPTR(dip);
-+	sf = (struct xfs_dir2_sf_hdr *)XFS_DFORK_DPTR(dip);
- 	addlink_inode(id);
- 	v = verbose || id->ilist;
- 	if (v)
- 		dbprintf(_("dir %lld entry . %lld\n"), id->ino, id->ino);
- 	(*dot)++;
--	sfe = xfs_dir2_sf_firstentry(&sf->hdr);
-+	sfe = xfs_dir2_sf_firstentry(sf);
- 	offset = XFS_DIR3_DATA_FIRST_OFFSET(mp);
--	for (i = sf->hdr.count - 1, i8 = 0; i >= 0; i--) {
--		if ((__psint_t)sfe + xfs_dir2_sf_entsize(&sf->hdr,sfe->namelen) -
-+	for (i = sf->count - 1, i8 = 0; i >= 0; i--) {
-+		if ((__psint_t)sfe + xfs_dir2_sf_entsize(sf, sfe->namelen) -
- 		    (__psint_t)sf > be64_to_cpu(dip->di_size)) {
- 			if (!sflag)
- 				dbprintf(_("dir %llu bad size in entry at %d\n"),
-@@ -3443,7 +3443,7 @@ process_sf_dir_v2(
- 			error++;
- 			break;
- 		}
--		lino = xfs_dir2_sfe_get_ino(&sf->hdr, sfe);
-+		lino = xfs_dir2_sfe_get_ino(sf, sfe);
- 		if (lino > XFS_DIR2_MAX_SHORT_INUM)
- 			i8++;
- 		cid = find_inode(lino, 1);
-@@ -3473,8 +3473,8 @@ process_sf_dir_v2(
- 		}
- 		offset =
- 			xfs_dir2_sf_get_offset(sfe) +
--			xfs_dir2_sf_entsize(&sf->hdr, sfe->namelen);
--		sfe = xfs_dir2_sf_nextentry(&sf->hdr, sfe);
-+			xfs_dir2_sf_entsize(sf, sfe->namelen);
-+		sfe = xfs_dir2_sf_nextentry(sf, sfe);
- 	}
- 	if (i < 0 && (__psint_t)sfe - (__psint_t)sf != 
- 					be64_to_cpu(dip->di_size)) {
-@@ -3484,13 +3484,13 @@ process_sf_dir_v2(
- 				(uint)((char *)sfe - (char *)sf));
- 		error++;
- 	}
--	if (offset + (sf->hdr.count + 2) * sizeof(xfs_dir2_leaf_entry_t) +
-+	if (offset + (sf->count + 2) * sizeof(xfs_dir2_leaf_entry_t) +
- 	    sizeof(xfs_dir2_block_tail_t) > mp->m_dirblksize) {
- 		if (!sflag)
- 			dbprintf(_("dir %llu offsets too high\n"), id->ino);
- 		error++;
- 	}
--	lino = xfs_dir2_sf_get_parent_ino(&sf->hdr);
-+	lino = xfs_dir2_sf_get_parent_ino(sf);
- 	if (lino > XFS_DIR2_MAX_SHORT_INUM)
- 		i8++;
- 	cid = find_inode(lino, 1);
-@@ -3504,11 +3504,11 @@ process_sf_dir_v2(
- 	}
- 	if (v)
- 		dbprintf(_("dir %lld entry .. %lld\n"), id->ino, lino);
--	if (i8 != sf->hdr.i8count) {
-+	if (i8 != sf->i8count) {
- 		if (!sflag)
- 			dbprintf(_("dir %lld i8count mismatch is %d should be "
- 				 "%d\n"),
--				id->ino, sf->hdr.i8count, i8);
-+				id->ino, sf->i8count, i8);
- 		error++;
- 	}
- 	(*dotdot)++;
 diff --git a/db/dir2.c b/db/dir2.c
-index 7094a83..90378e6 100644
+index 594d9d2..85240b0 100644
 --- a/db/dir2.c
 +++ b/db/dir2.c
-@@ -58,13 +58,13 @@ const field_t	dir2_hfld[] = {
- 	{ NULL }
- };
- 
--#define	BOFF(f)	bitize(offsetof(xfs_dir2_block_t, f))
--#define	DOFF(f)	bitize(offsetof(xfs_dir2_data_t, f))
--#define	FOFF(f)	bitize(offsetof(xfs_dir2_free_t, f))
--#define	LOFF(f)	bitize(offsetof(xfs_dir2_leaf_t, f))
--#define	NOFF(f)	bitize(offsetof(xfs_da_intnode_t, f))
-+#define	BOFF(f)	bitize(offsetof(struct xfs_dir2_data_hdr, f))
-+#define	DOFF(f)	bitize(offsetof(struct xfs_dir2_data_hdr, f))
-+#define	FOFF(f)	bitize(offsetof(struct xfs_dir2_free, f))
-+#define	LOFF(f)	bitize(offsetof(struct xfs_dir2_leaf, f))
-+#define	NOFF(f)	bitize(offsetof(struct xfs_da_intnode, f))
- const field_t	dir2_flds[] = {
--	{ "bhdr", FLDT_DIR2_DATA_HDR, OI(BOFF(hdr)), dir2_block_hdr_count,
-+	{ "bhdr", FLDT_DIR2_DATA_HDR, OI(BOFF(magic)), dir2_block_hdr_count,
- 	  FLD_COUNT, TYP_NONE },
- 	{ "bu", FLDT_DIR2_DATA_UNION, dir2_block_u_offset, dir2_block_u_count,
- 	  FLD_ARRAY|FLD_OFFSET|FLD_COUNT, TYP_NONE },
-@@ -72,7 +72,7 @@ const field_t	dir2_flds[] = {
- 	  dir2_block_leaf_count, FLD_ARRAY|FLD_OFFSET|FLD_COUNT, TYP_NONE },
- 	{ "btail", FLDT_DIR2_BLOCK_TAIL, dir2_block_tail_offset,
- 	  dir2_block_tail_count, FLD_OFFSET|FLD_COUNT, TYP_NONE },
--	{ "dhdr", FLDT_DIR2_DATA_HDR, OI(DOFF(hdr)), dir2_data_hdr_count,
-+	{ "dhdr", FLDT_DIR2_DATA_HDR, OI(DOFF(magic)), dir2_data_hdr_count,
- 	  FLD_COUNT, TYP_NONE },
- 	{ "du", FLDT_DIR2_DATA_UNION, dir2_data_u_offset, dir2_data_u_count,
- 	  FLD_ARRAY|FLD_OFFSET|FLD_COUNT, TYP_NONE },
-@@ -189,66 +189,62 @@ const field_t	da_node_hdr_flds[] = {
- 	{ NULL }
- };
- 
--/*ARGSUSED*/
- static int
- dir2_block_hdr_count(
+@@ -260,24 +260,34 @@ dir2_block_hdr_count(
  	void			*obj,
  	int			startoff)
  {
--	xfs_dir2_block_t	*block;
-+	struct xfs_dir2_data_hdr *block;
+-	struct xfs_dir2_data_hdr *block;
++	struct xfs_dir2_data_hdr *block = obj;
  
  	ASSERT(startoff == 0);
- 	block = obj;
--	return be32_to_cpu(block->hdr.magic) == XFS_DIR2_BLOCK_MAGIC;
-+	return be32_to_cpu(block->magic) == XFS_DIR2_BLOCK_MAGIC;
+-	block = obj;
+ 	return be32_to_cpu(block->magic) == XFS_DIR2_BLOCK_MAGIC;
  }
  
--/*ARGSUSED*/
  static int
++dir3_block_hdr_count(
++	void			*obj,
++	int			startoff)
++{
++	struct xfs_dir2_data_hdr *block = obj;
++
++	ASSERT(startoff == 0);
++	return be32_to_cpu(block->magic) == XFS_DIR3_BLOCK_MAGIC;
++}
++
++static int
  dir2_block_leaf_count(
  	void			*obj,
  	int			startoff)
  {
--	xfs_dir2_block_t	*block;
--	xfs_dir2_block_tail_t	*btp;
-+	struct xfs_dir2_data_hdr *block;
-+	struct xfs_dir2_block_tail *btp;
+-	struct xfs_dir2_data_hdr *block;
++	struct xfs_dir2_data_hdr *block = obj;
+ 	struct xfs_dir2_block_tail *btp;
  
  	ASSERT(startoff == 0);
- 	block = obj;
--	if (be32_to_cpu(block->hdr.magic) != XFS_DIR2_BLOCK_MAGIC)
-+	if (be32_to_cpu(block->magic) != XFS_DIR2_BLOCK_MAGIC)
+-	block = obj;
+-	if (be32_to_cpu(block->magic) != XFS_DIR2_BLOCK_MAGIC)
++	if (be32_to_cpu(block->magic) != XFS_DIR2_BLOCK_MAGIC &&
++	    be32_to_cpu(block->magic) != XFS_DIR3_BLOCK_MAGIC)
  		return 0;
--	btp = xfs_dir2_block_tail_p(mp, &block->hdr);
-+	btp = xfs_dir2_block_tail_p(mp, block);
+ 	btp = xfs_dir2_block_tail_p(mp, block);
  	return be32_to_cpu(btp->count);
- }
- 
--/*ARGSUSED*/
- static int
- dir2_block_leaf_offset(
- 	void			*obj,
+@@ -289,13 +299,13 @@ dir2_block_leaf_offset(
  	int			startoff,
  	int			idx)
  {
--	xfs_dir2_block_t	*block;
--	xfs_dir2_block_tail_t	*btp;
--	xfs_dir2_leaf_entry_t	*lep;
-+	struct xfs_dir2_data_hdr *block;
-+	struct xfs_dir2_block_tail *btp;
-+	struct xfs_dir2_leaf_entry *lep;
+-	struct xfs_dir2_data_hdr *block;
++	struct xfs_dir2_data_hdr *block = obj;
+ 	struct xfs_dir2_block_tail *btp;
+ 	struct xfs_dir2_leaf_entry *lep;
  
  	ASSERT(startoff == 0);
- 	block = obj;
--	ASSERT(be32_to_cpu(block->hdr.magic) == XFS_DIR2_BLOCK_MAGIC);
--	btp = xfs_dir2_block_tail_p(mp, &block->hdr);
-+	ASSERT(be32_to_cpu(block->magic) == XFS_DIR2_BLOCK_MAGIC);
-+	btp = xfs_dir2_block_tail_p(mp, block);
+-	block = obj;
+-	ASSERT(be32_to_cpu(block->magic) == XFS_DIR2_BLOCK_MAGIC);
++	ASSERT(be32_to_cpu(block->magic) == XFS_DIR2_BLOCK_MAGIC ||
++	       be32_to_cpu(block->magic) == XFS_DIR3_BLOCK_MAGIC);
+ 	btp = xfs_dir2_block_tail_p(mp, block);
  	lep = xfs_dir2_block_leaf_p(btp) + idx;
  	return bitize((int)((char *)lep - (char *)block));
+@@ -306,14 +316,23 @@ dir2_block_tail_count(
+ 	void			*obj,
+ 	int			startoff)
+ {
+-	struct xfs_dir2_data_hdr *block;
++	struct xfs_dir2_data_hdr *block = obj;
+ 
+ 	ASSERT(startoff == 0);
+-	block = obj;
+ 	return be32_to_cpu(block->magic) == XFS_DIR2_BLOCK_MAGIC;
+ }
+ 
+-/*ARGSUSED*/
++static int
++dir3_block_tail_count(
++	void			*obj,
++	int			startoff)
++{
++	struct xfs_dir2_data_hdr *block = obj;
++
++	ASSERT(startoff == 0);
++	return be32_to_cpu(block->magic) == XFS_DIR3_BLOCK_MAGIC;
++}
++
+ static int
+ dir2_block_tail_offset(
+ 	void			*obj,
+@@ -322,7 +341,8 @@ dir2_block_tail_offset(
+ {
+ 	struct xfs_dir2_data_hdr *block = obj;
+ 
+-	ASSERT(be32_to_cpu(block->magic) == XFS_DIR2_BLOCK_MAGIC);
++	ASSERT(be32_to_cpu(block->magic) == XFS_DIR2_BLOCK_MAGIC ||
++	       be32_to_cpu(block->magic) == XFS_DIR3_BLOCK_MAGIC);
+ 	return __dir2_block_tail_offset(block, startoff, idx);
+ }
+ 
+@@ -335,7 +355,8 @@ dir2_block_u_count(
+ 	struct xfs_dir2_block_tail *btp;
+ 
+ 	ASSERT(startoff == 0);
+-	if (be32_to_cpu(block->magic) != XFS_DIR2_BLOCK_MAGIC)
++	if (be32_to_cpu(block->magic) != XFS_DIR2_BLOCK_MAGIC &&
++	    be32_to_cpu(block->magic) != XFS_DIR3_BLOCK_MAGIC)
+ 		return 0;
+ 
+ 	btp = xfs_dir2_block_tail_p(mp, block);
+@@ -354,7 +375,8 @@ dir2_block_u_offset(
+ 	char			*ptr;
+ 
+ 	ASSERT(startoff == 0);
+-	ASSERT(be32_to_cpu(block->magic) == XFS_DIR2_BLOCK_MAGIC);
++	ASSERT(be32_to_cpu(block->magic) == XFS_DIR2_BLOCK_MAGIC ||
++	       be32_to_cpu(block->magic) == XFS_DIR3_BLOCK_MAGIC);
+ 	btp = xfs_dir2_block_tail_p(mp, block);
+ 	ptr = __dir2_data_entry_offset((char *)xfs_dir3_data_unused_p(block),
+ 				       (char *)xfs_dir2_block_leaf_p(btp), idx);
+@@ -479,7 +501,6 @@ dir2_data_union_tag_count(
+ 	return end <= (char *)obj + mp->m_dirblksize;
  }
  
 -/*ARGSUSED*/
  static int
- dir2_block_tail_count(
+ dir2_data_union_tag_offset(
+ 	void			*obj,
+@@ -500,20 +521,28 @@ dir2_data_union_tag_offset(
+ 			    (char *)dep));
+ }
+ 
+-/*ARGSUSED*/
+ static int
+ dir2_data_hdr_count(
  	void			*obj,
  	int			startoff)
  {
--	xfs_dir2_block_t	*block;
-+	struct xfs_dir2_data_hdr *block;
+-	struct xfs_dir2_data_hdr *data;
++	struct xfs_dir2_data_hdr *data = obj;
  
  	ASSERT(startoff == 0);
- 	block = obj;
--	return be32_to_cpu(block->hdr.magic) == XFS_DIR2_BLOCK_MAGIC;
-+	return be32_to_cpu(block->magic) == XFS_DIR2_BLOCK_MAGIC;
+-	data = obj;
+ 	return be32_to_cpu(data->magic) == XFS_DIR2_DATA_MAGIC;
  }
  
- /*ARGSUSED*/
-@@ -258,14 +254,14 @@ dir2_block_tail_offset(
- 	int			startoff,
- 	int			idx)
- {
--	xfs_dir2_block_t	*block;
--	xfs_dir2_block_tail_t	*btp;
-+	struct xfs_dir2_data_hdr *block;
-+	struct xfs_dir2_block_tail *btp;
- 
- 	ASSERT(startoff == 0);
- 	ASSERT(idx == 0);
- 	block = obj;
--	ASSERT(be32_to_cpu(block->hdr.magic) == XFS_DIR2_BLOCK_MAGIC);
--	btp = xfs_dir2_block_tail_p(mp, &block->hdr);
-+	ASSERT(be32_to_cpu(block->magic) == XFS_DIR2_BLOCK_MAGIC);
-+	btp = xfs_dir2_block_tail_p(mp, block);
- 	return bitize((int)((char *)btp - (char *)block));
- }
- 
-@@ -275,22 +271,23 @@ dir2_block_u_count(
+-/*ARGSUSED*/
++static int
++dir3_data_hdr_count(
++	void			*obj,
++	int			startoff)
++{
++	struct xfs_dir2_data_hdr *data = obj;
++
++	ASSERT(startoff == 0);
++	return be32_to_cpu(data->magic) == XFS_DIR3_DATA_MAGIC;
++}
++
+ static int
+ dir2_data_u_count(
  	void			*obj,
- 	int			startoff)
- {
--	xfs_dir2_block_t	*block;
--	xfs_dir2_block_tail_t	*btp;
--	xfs_dir2_data_entry_t	*dep;
--	xfs_dir2_data_unused_t	*dup;
-+	struct xfs_dir2_data_hdr *block;
-+	struct xfs_dir2_block_tail *btp;
- 	char			*endptr;
- 	int			i;
- 	char			*ptr;
+@@ -522,7 +551,8 @@ dir2_data_u_count(
+ 	struct xfs_dir2_data_hdr *data = obj;
  
  	ASSERT(startoff == 0);
- 	block = obj;
--	if (be32_to_cpu(block->hdr.magic) != XFS_DIR2_BLOCK_MAGIC)
-+	if (be32_to_cpu(block->magic) != XFS_DIR2_BLOCK_MAGIC)
+-	if (be32_to_cpu(data->magic) != XFS_DIR2_DATA_MAGIC)
++	if (be32_to_cpu(data->magic) != XFS_DIR2_DATA_MAGIC &&
++	    be32_to_cpu(data->magic) != XFS_DIR3_DATA_MAGIC)
  		return 0;
--	btp = xfs_dir2_block_tail_p(mp, &block->hdr);
--	ptr = (char *)block->u;
-+	btp = xfs_dir2_block_tail_p(mp, block);
-+	ptr = (char *)xfs_dir3_data_unused_p(block);
- 	endptr = (char *)xfs_dir2_block_leaf_p(btp);
- 	for (i = 0; ptr < endptr; i++) {
-+		struct xfs_dir2_data_entry *dep;
-+		struct xfs_dir2_data_unused *dup;
-+
- 		dup = (xfs_dir2_data_unused_t *)ptr;
- 		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG)
- 			ptr += be16_to_cpu(dup->length);
-@@ -309,21 +306,22 @@ dir2_block_u_offset(
- 	int			startoff,
- 	int			idx)
- {
--	xfs_dir2_block_t	*block;
--	xfs_dir2_block_tail_t	*btp;
--	xfs_dir2_data_entry_t	*dep;
--	xfs_dir2_data_unused_t	*dup;
-+	struct xfs_dir2_data_hdr *block;
-+	struct xfs_dir2_block_tail *btp;
- 	char			*endptr;
- 	int			i;
+ 
+ 	return __dir2_data_entries_count((char *)xfs_dir3_data_unused_p(data),
+@@ -539,7 +569,8 @@ dir2_data_u_offset(
  	char			*ptr;
  
  	ASSERT(startoff == 0);
- 	block = obj;
--	ASSERT(be32_to_cpu(block->hdr.magic) == XFS_DIR2_BLOCK_MAGIC);
--	btp = xfs_dir2_block_tail_p(mp, &block->hdr);
--	ptr = (char *)block->u;
-+	ASSERT(be32_to_cpu(block->magic) == XFS_DIR2_BLOCK_MAGIC);
-+	btp = xfs_dir2_block_tail_p(mp, block);
-+	ptr = (char *)xfs_dir3_data_unused_p(block);
- 	endptr = (char *)xfs_dir2_block_leaf_p(btp);
- 	for (i = 0; i < idx; i++) {
-+		struct xfs_dir2_data_entry *dep;
-+		struct xfs_dir2_data_unused *dup;
-+
- 		ASSERT(ptr < endptr);
- 		dup = (xfs_dir2_data_unused_t *)ptr;
- 		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG)
-@@ -478,11 +476,11 @@ dir2_data_hdr_count(
- 	void			*obj,
- 	int			startoff)
- {
--	xfs_dir2_data_t		*data;
-+	struct xfs_dir2_data_hdr *data;
- 
- 	ASSERT(startoff == 0);
- 	data = obj;
--	return be32_to_cpu(data->hdr.magic) == XFS_DIR2_DATA_MAGIC;
-+	return be32_to_cpu(data->magic) == XFS_DIR2_DATA_MAGIC;
+-	ASSERT(be32_to_cpu(data->magic) == XFS_DIR2_DATA_MAGIC);
++	ASSERT(be32_to_cpu(data->magic) == XFS_DIR2_DATA_MAGIC ||
++	       be32_to_cpu(data->magic) == XFS_DIR3_DATA_MAGIC);
+ 	ptr = __dir2_data_entry_offset((char *)xfs_dir3_data_unused_p(data),
+ 				       (char *)data + mp->m_dirblksize, idx);
+ 	return bitize((int)(ptr - (char *)data));
+@@ -565,160 +596,236 @@ dir2_data_union_size(
+ 	}
  }
  
- /*ARGSUSED*/
-@@ -491,20 +489,21 @@ dir2_data_u_count(
+-/*ARGSUSED*/
++/*
++ * Free block functions
++ */
+ static int
+ dir2_free_bests_count(
  	void			*obj,
  	int			startoff)
  {
--	xfs_dir2_data_t		*data;
--	xfs_dir2_data_entry_t	*dep;
--	xfs_dir2_data_unused_t	*dup;
-+	struct xfs_dir2_data_hdr *data;
- 	char			*endptr;
- 	int			i;
- 	char			*ptr;
+-	struct xfs_dir2_free	*free;
++	struct xfs_dir2_free	*free = obj;
  
  	ASSERT(startoff == 0);
- 	data = obj;
--	if (be32_to_cpu(data->hdr.magic) != XFS_DIR2_DATA_MAGIC)
-+	if (be32_to_cpu(data->magic) != XFS_DIR2_DATA_MAGIC)
+-	free = obj;
+ 	if (be32_to_cpu(free->hdr.magic) != XFS_DIR2_FREE_MAGIC)
  		return 0;
--	ptr = (char *)data->u;
-+	ptr = (char *)xfs_dir3_data_unused_p(data);
- 	endptr = (char *)data + mp->m_dirblksize;
- 	for (i = 0; ptr < endptr; i++) {
-+		struct xfs_dir2_data_entry *dep;
-+		struct xfs_dir2_data_unused *dup;
+ 	return be32_to_cpu(free->hdr.nvalid);
+ }
+ 
+-/*ARGSUSED*/
++static int
++dir3_free_bests_count(
++	void			*obj,
++	int			startoff)
++{
++	struct xfs_dir3_free	*free = obj;
 +
- 		dup = (xfs_dir2_data_unused_t *)ptr;
- 		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG)
- 			ptr += be16_to_cpu(dup->length);
-@@ -523,20 +522,20 @@ dir2_data_u_offset(
++	ASSERT(startoff == 0);
++	if (be32_to_cpu(free->hdr.hdr.magic) != XFS_DIR3_FREE_MAGIC)
++		return 0;
++	return be32_to_cpu(free->hdr.nvalid);
++}
++
+ static int
+ dir2_free_hdr_count(
+ 	void			*obj,
+ 	int			startoff)
+ {
+-	struct xfs_dir2_free	*free;
++	struct xfs_dir2_free	*free = obj;
+ 
+ 	ASSERT(startoff == 0);
+-	free = obj;
+ 	return be32_to_cpu(free->hdr.magic) == XFS_DIR2_FREE_MAGIC;
+ }
+ 
+-/*ARGSUSED*/
++static int
++dir3_free_hdr_count(
++	void			*obj,
++	int			startoff)
++{
++	struct xfs_dir3_free	*free = obj;
++
++	ASSERT(startoff == 0);
++	return be32_to_cpu(free->hdr.hdr.magic) == XFS_DIR3_FREE_MAGIC;
++}
++
++/*
++ * Leaf block functions
++ */
+ static int
+ dir2_leaf_bests_count(
+ 	void			*obj,
+ 	int			startoff)
+ {
+-	struct xfs_dir2_leaf	*leaf;
++	struct xfs_dir2_leaf	*leaf = obj;
+ 	struct xfs_dir2_leaf_tail *ltp;
+ 
+ 	ASSERT(startoff == 0);
+-	leaf = obj;
+-	if (be16_to_cpu(leaf->hdr.info.magic) != XFS_DIR2_LEAF1_MAGIC)
++	if (be16_to_cpu(leaf->hdr.info.magic) != XFS_DIR2_LEAF1_MAGIC &&
++	    be16_to_cpu(leaf->hdr.info.magic) != XFS_DIR3_LEAF1_MAGIC)
+ 		return 0;
+ 	ltp = xfs_dir2_leaf_tail_p(mp, leaf);
+ 	return be32_to_cpu(ltp->bestcount);
+ }
+ 
+-/*ARGSUSED*/
+ static int
+ dir2_leaf_bests_offset(
+ 	void			*obj,
  	int			startoff,
  	int			idx)
  {
--	xfs_dir2_data_t		*data;
--	xfs_dir2_data_entry_t	*dep;
--	xfs_dir2_data_unused_t	*dup;
--				/*REFERENCED*/
-+	struct xfs_dir2_data_hdr *data;
- 	char			*endptr;
- 	int			i;
- 	char			*ptr;
- 
- 	ASSERT(startoff == 0);
- 	data = obj;
--	ASSERT(be32_to_cpu(data->hdr.magic) == XFS_DIR2_DATA_MAGIC);
--	ptr = (char *)data->u;
-+	ASSERT(be32_to_cpu(data->magic) == XFS_DIR2_DATA_MAGIC);
-+	ptr = (char *)xfs_dir3_data_unused_p(data);
- 	endptr = (char *)data + mp->m_dirblksize;
- 	for (i = 0; i < idx; i++) {
-+		struct xfs_dir2_data_entry *dep;
-+		struct xfs_dir2_data_unused *dup;
-+
- 		ASSERT(ptr < endptr);
- 		dup = (xfs_dir2_data_unused_t *)ptr;
- 		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG)
-@@ -576,7 +575,7 @@ dir2_free_bests_count(
- 	void			*obj,
- 	int			startoff)
- {
--	xfs_dir2_free_t		*free;
-+	struct xfs_dir2_free	*free;
- 
- 	ASSERT(startoff == 0);
- 	free = obj;
-@@ -591,7 +590,7 @@ dir2_free_hdr_count(
- 	void			*obj,
- 	int			startoff)
- {
--	xfs_dir2_free_t		*free;
-+	struct xfs_dir2_free	*free;
- 
- 	ASSERT(startoff == 0);
- 	free = obj;
-@@ -604,8 +603,8 @@ dir2_leaf_bests_count(
- 	void			*obj,
- 	int			startoff)
- {
--	xfs_dir2_leaf_t		*leaf;
--	xfs_dir2_leaf_tail_t	*ltp;
-+	struct xfs_dir2_leaf	*leaf;
-+	struct xfs_dir2_leaf_tail *ltp;
- 
- 	ASSERT(startoff == 0);
- 	leaf = obj;
-@@ -622,9 +621,9 @@ dir2_leaf_bests_offset(
- 	int			startoff,
- 	int			idx)
- {
-+	struct xfs_dir2_leaf	*leaf;
-+	struct xfs_dir2_leaf_tail *ltp;
+-	struct xfs_dir2_leaf	*leaf;
++	struct xfs_dir2_leaf	*leaf = obj;
+ 	struct xfs_dir2_leaf_tail *ltp;
  	__be16			*lbp;
--	xfs_dir2_leaf_t		*leaf;
--	xfs_dir2_leaf_tail_t	*ltp;
  
  	ASSERT(startoff == 0);
- 	leaf = obj;
-@@ -640,7 +639,7 @@ dir2_leaf_ents_count(
+-	leaf = obj;
+-	ASSERT(be16_to_cpu(leaf->hdr.info.magic) == XFS_DIR2_LEAF1_MAGIC);
++	ASSERT(be16_to_cpu(leaf->hdr.info.magic) == XFS_DIR2_LEAF1_MAGIC ||
++	       be16_to_cpu(leaf->hdr.info.magic) == XFS_DIR3_LEAF1_MAGIC);
+ 	ltp = xfs_dir2_leaf_tail_p(mp, leaf);
+ 	lbp = xfs_dir2_leaf_bests_p(ltp) + idx;
+ 	return bitize((int)((char *)lbp - (char *)leaf));
+ }
+ 
+-/*ARGSUSED*/
+ static int
+ dir2_leaf_ents_count(
  	void			*obj,
  	int			startoff)
  {
--	xfs_dir2_leaf_t		*leaf;
-+	struct xfs_dir2_leaf	*leaf;
+-	struct xfs_dir2_leaf	*leaf;
++	struct xfs_dir2_leaf	*leaf = obj;
  
  	ASSERT(startoff == 0);
- 	leaf = obj;
-@@ -656,7 +655,7 @@ dir2_leaf_hdr_count(
+-	leaf = obj;
+ 	if (be16_to_cpu(leaf->hdr.info.magic) != XFS_DIR2_LEAF1_MAGIC &&
+ 	    be16_to_cpu(leaf->hdr.info.magic) != XFS_DIR2_LEAFN_MAGIC)
+ 		return 0;
+ 	return be16_to_cpu(leaf->hdr.count);
+ }
+ 
+-/*ARGSUSED*/
++static int
++dir3_leaf_ents_count(
++	void			*obj,
++	int			startoff)
++{
++	struct xfs_dir3_leaf	*leaf = obj;
++
++	ASSERT(startoff == 0);
++	if (be16_to_cpu(leaf->hdr.info.hdr.magic) != XFS_DIR3_LEAF1_MAGIC &&
++	    be16_to_cpu(leaf->hdr.info.hdr.magic) != XFS_DIR3_LEAFN_MAGIC)
++		return 0;
++	return be16_to_cpu(leaf->hdr.count);
++}
++
+ static int
+ dir2_leaf_hdr_count(
  	void			*obj,
  	int			startoff)
  {
--	xfs_dir2_leaf_t		*leaf;
-+	struct xfs_dir2_leaf	*leaf;
+-	struct xfs_dir2_leaf	*leaf;
++	struct xfs_dir2_leaf	*leaf = obj;
  
  	ASSERT(startoff == 0);
- 	leaf = obj;
-@@ -670,7 +669,7 @@ dir2_leaf_tail_count(
+-	leaf = obj;
+ 	return be16_to_cpu(leaf->hdr.info.magic) == XFS_DIR2_LEAF1_MAGIC ||
+ 	       be16_to_cpu(leaf->hdr.info.magic) == XFS_DIR2_LEAFN_MAGIC;
+ }
+ 
+-/*ARGSUSED*/
++static int
++dir3_leaf_hdr_count(
++	void			*obj,
++	int			startoff)
++{
++	struct xfs_dir3_leaf	*leaf = obj;
++
++	ASSERT(startoff == 0);
++	return be16_to_cpu(leaf->hdr.info.hdr.magic) == XFS_DIR3_LEAF1_MAGIC ||
++	       be16_to_cpu(leaf->hdr.info.hdr.magic) == XFS_DIR3_LEAFN_MAGIC;
++}
++
+ static int
+ dir2_leaf_tail_count(
  	void			*obj,
  	int			startoff)
  {
--	xfs_dir2_leaf_t		*leaf;
-+	struct xfs_dir2_leaf	*leaf;
+-	struct xfs_dir2_leaf	*leaf;
++	struct xfs_dir2_leaf	*leaf = obj;
  
  	ASSERT(startoff == 0);
- 	leaf = obj;
-@@ -684,8 +683,8 @@ dir2_leaf_tail_offset(
+-	leaf = obj;
+ 	return be16_to_cpu(leaf->hdr.info.magic) == XFS_DIR2_LEAF1_MAGIC;
+ }
+ 
+-/*ARGSUSED*/
++static int
++dir3_leaf_tail_count(
++	void			*obj,
++	int			startoff)
++{
++	struct xfs_dir3_leaf	*leaf = obj;
++
++	ASSERT(startoff == 0);
++	return be16_to_cpu(leaf->hdr.info.hdr.magic) == XFS_DIR3_LEAF1_MAGIC;
++}
++
+ static int
+ dir2_leaf_tail_offset(
+ 	void			*obj,
  	int			startoff,
  	int			idx)
  {
--	xfs_dir2_leaf_t		*leaf;
--	xfs_dir2_leaf_tail_t	*ltp;
-+	struct xfs_dir2_leaf	*leaf;
-+	struct xfs_dir2_leaf_tail *ltp;
+-	struct xfs_dir2_leaf	*leaf;
++	struct xfs_dir2_leaf	*leaf = obj;
+ 	struct xfs_dir2_leaf_tail *ltp;
  
  	ASSERT(startoff == 0);
  	ASSERT(idx == 0);
-@@ -716,7 +715,7 @@ dir2_node_hdr_count(
+-	leaf = obj;
+-	ASSERT(be16_to_cpu(leaf->hdr.info.magic) == XFS_DIR2_LEAF1_MAGIC);
++	ASSERT(be16_to_cpu(leaf->hdr.info.magic) == XFS_DIR2_LEAF1_MAGIC ||
++	       be16_to_cpu(leaf->hdr.info.magic) == XFS_DIR3_LEAF1_MAGIC);
+ 	ltp = xfs_dir2_leaf_tail_p(mp, leaf);
+ 	return bitize((int)((char *)ltp - (char *)leaf));
+ }
+ 
+-/*ARGSUSED*/
++/*
++ * Node format functions
++ */
+ static int
+ dir2_node_btree_count(
  	void			*obj,
  	int			startoff)
  {
 -	xfs_da_intnode_t	*node;
-+	struct xfs_da_intnode	*node;
++	xfs_da_intnode_t	*node = obj;
  
  	ASSERT(startoff == 0);
- 	node = obj;
-diff --git a/db/dir2.h b/db/dir2.h
-index a5f0bec..05ab354 100644
---- a/db/dir2.h
-+++ b/db/dir2.h
-@@ -31,31 +31,6 @@ extern const field_t	da_blkinfo_flds[];
- extern const field_t	da_node_entry_flds[];
- extern const field_t	da_node_hdr_flds[];
- 
--/*
-- * generic dir2 structures used by xfs_db
-- */
--typedef union {
--	xfs_dir2_data_entry_t	entry;
--	xfs_dir2_data_unused_t	unused;
--} xfs_dir2_data_union_t;
--
--typedef struct xfs_dir2_data {
--	xfs_dir2_data_hdr_t	hdr;		/* magic XFS_DIR2_DATA_MAGIC */
--	xfs_dir2_data_union_t	u[1];
--} xfs_dir2_data_t;
--
--typedef struct xfs_dir2_block {
--	xfs_dir2_data_hdr_t	hdr;		/* magic XFS_DIR2_BLOCK_MAGIC */
--	xfs_dir2_data_union_t	u[1];
--	xfs_dir2_leaf_entry_t	leaf[1];
--	xfs_dir2_block_tail_t	tail;
--} xfs_dir2_block_t;
--
--typedef struct xfs_dir2_sf {
--	xfs_dir2_sf_hdr_t	hdr;		/* shortform header */
--	xfs_dir2_sf_entry_t	list[1];	/* shortform entries */
--} xfs_dir2_sf_t;
--
- static inline xfs_dir2_inou_t *xfs_dir2_sf_inumberp(xfs_dir2_sf_entry_t *sfep)
- {
- 	return (xfs_dir2_inou_t *)&(sfep)->name[(sfep)->namelen];
-diff --git a/db/dir2sf.c b/db/dir2sf.c
-index 271e08a..b32ca32 100644
---- a/db/dir2sf.c
-+++ b/db/dir2sf.c
-@@ -32,9 +32,9 @@ static int	dir2_sf_entry_name_count(void *obj, int startoff);
- static int	dir2_sf_list_count(void *obj, int startoff);
- static int	dir2_sf_list_offset(void *obj, int startoff, int idx);
- 
--#define	OFF(f)	bitize(offsetof(xfs_dir2_sf_t, f))
-+#define	OFF(f)	bitize(offsetof(struct xfs_dir2_sf_hdr, f))
- const field_t	dir2sf_flds[] = {
--	{ "hdr", FLDT_DIR2_SF_HDR, OI(OFF(hdr)), C1, 0, TYP_NONE },
-+	{ "hdr", FLDT_DIR2_SF_HDR, OI(OFF(count)), C1, 0, TYP_NONE },
- 	{ "list", FLDT_DIR2_SF_ENTRY, dir2_sf_list_offset, dir2_sf_list_count,
- 	  FLD_ARRAY|FLD_COUNT|FLD_OFFSET, TYP_NONE },
- 	{ NULL }
-@@ -75,11 +75,11 @@ dir2_inou_i4_count(
- 	int		startoff)
- {
- 	struct xfs_dinode *dip = obj;
--	xfs_dir2_sf_t	*sf;
-+	struct xfs_dir2_sf_hdr	*sf;
- 
- 	ASSERT(bitoffs(startoff) == 0);
--	sf = (xfs_dir2_sf_t *)XFS_DFORK_DPTR(dip);
--	return sf->hdr.i8count == 0;
-+	sf = (struct xfs_dir2_sf_hdr *)XFS_DFORK_DPTR(dip);
-+	return sf->i8count == 0;
+-	node = obj;
+ 	if (be16_to_cpu(node->hdr.info.magic) != XFS_DA_NODE_MAGIC)
+ 		return 0;
+ 	return be16_to_cpu(node->hdr.__count);
  }
  
- /*ARGSUSED*/
-@@ -89,11 +89,11 @@ dir2_inou_i8_count(
- 	int		startoff)
- {
- 	struct xfs_dinode *dip = obj;
--	xfs_dir2_sf_t	*sf;
-+	struct xfs_dir2_sf_hdr	*sf;
- 
- 	ASSERT(bitoffs(startoff) == 0);
--	sf = (xfs_dir2_sf_t *)XFS_DFORK_DPTR(dip);
--	return sf->hdr.i8count != 0;
-+	sf = (struct xfs_dir2_sf_hdr *)XFS_DFORK_DPTR(dip);
-+	return sf->i8count != 0;
- }
- 
- /*ARGSUSED*/
-@@ -104,12 +104,12 @@ dir2_inou_size(
- 	int		idx)
- {
- 	struct xfs_dinode *dip = obj;
--	xfs_dir2_sf_t	*sf;
-+	struct xfs_dir2_sf_hdr	*sf;
- 
- 	ASSERT(bitoffs(startoff) == 0);
- 	ASSERT(idx == 0);
--	sf = (xfs_dir2_sf_t *)XFS_DFORK_DPTR(dip);
--	return bitize(sf->hdr.i8count ?
-+	sf = (struct xfs_dir2_sf_hdr *)XFS_DFORK_DPTR(dip);
-+	return bitize(sf->i8count ?
- 		      (uint)sizeof(xfs_dir2_ino8_t) :
- 		      (uint)sizeof(xfs_dir2_ino4_t));
- }
-@@ -149,14 +149,14 @@ dir2_sf_entry_size(
- {
- 	xfs_dir2_sf_entry_t	*e;
- 	int			i;
--	xfs_dir2_sf_t		*sf;
-+	struct xfs_dir2_sf_hdr	*sf;
- 
- 	ASSERT(bitoffs(startoff) == 0);
--	sf = (xfs_dir2_sf_t *)((char *)obj + byteize(startoff));
--	e = xfs_dir2_sf_firstentry(&sf->hdr);
-+	sf = (struct xfs_dir2_sf_hdr *)((char *)obj + byteize(startoff));
-+	e = xfs_dir2_sf_firstentry(sf);
- 	for (i = 0; i < idx; i++)
--		e = xfs_dir2_sf_nextentry(&sf->hdr, e);
--	return bitize((int)xfs_dir2_sf_entsize(&sf->hdr, e->namelen));
-+		e = xfs_dir2_sf_nextentry(sf, e);
-+	return bitize((int)xfs_dir2_sf_entsize(sf, e->namelen));
- }
- 
- /*ARGSUSED*/
-@@ -166,12 +166,12 @@ dir2_sf_hdr_size(
- 	int		startoff,
- 	int		idx)
- {
--	xfs_dir2_sf_t	*sf;
-+	struct xfs_dir2_sf_hdr	*sf;
- 
- 	ASSERT(bitoffs(startoff) == 0);
- 	ASSERT(idx == 0);
--	sf = (xfs_dir2_sf_t *)((char *)obj + byteize(startoff));
--	return bitize(xfs_dir2_sf_hdr_size(sf->hdr.i8count));
-+	sf = (struct xfs_dir2_sf_hdr *)((char *)obj + byteize(startoff));
-+	return bitize(xfs_dir2_sf_hdr_size(sf->i8count));
- }
- 
+-/*ARGSUSED*/
++static int
++dir3_node_btree_count(
++	void			*obj,
++	int			startoff)
++{
++	struct xfs_da3_intnode	*node = obj;
++
++	ASSERT(startoff == 0);
++	if (be16_to_cpu(node->hdr.info.hdr.magic) != XFS_DA3_NODE_MAGIC)
++		return 0;
++	return be16_to_cpu(node->hdr.__count);
++}
++
  static int
-@@ -179,11 +179,11 @@ dir2_sf_list_count(
+ dir2_node_hdr_count(
  	void			*obj,
  	int			startoff)
  {
--	xfs_dir2_sf_t		*sf;
-+	struct xfs_dir2_sf_hdr	*sf;
+-	struct xfs_da_intnode	*node;
++	struct xfs_da_intnode	*node = obj;
  
- 	ASSERT(bitoffs(startoff) == 0);
--	sf = (xfs_dir2_sf_t *)((char *)obj + byteize(startoff));
--	return sf->hdr.count;
-+	sf = (struct xfs_dir2_sf_hdr *)((char *)obj + byteize(startoff));
-+	return sf->count;
+ 	ASSERT(startoff == 0);
+-	node = obj;
+ 	return be16_to_cpu(node->hdr.info.magic) == XFS_DA_NODE_MAGIC;
  }
  
- static int
-@@ -194,13 +194,13 @@ dir2_sf_list_offset(
- {
- 	xfs_dir2_sf_entry_t	*e;
- 	int			i;
--	xfs_dir2_sf_t		*sf;
-+	struct xfs_dir2_sf_hdr	*sf;
- 
- 	ASSERT(bitoffs(startoff) == 0);
--	sf = (xfs_dir2_sf_t *)((char *)obj + byteize(startoff));
--	e = xfs_dir2_sf_firstentry(&sf->hdr);
-+	sf = (struct xfs_dir2_sf_hdr *)((char *)obj + byteize(startoff));
-+	e = xfs_dir2_sf_firstentry(sf);
- 	for (i = 0; i < idx; i++)
--		e = xfs_dir2_sf_nextentry(&sf->hdr, e);
-+		e = xfs_dir2_sf_nextentry(sf, e);
- 	return bitize((int)((char *)e - (char *)sf));
- }
- 
-@@ -213,13 +213,13 @@ dir2sf_size(
- {
- 	xfs_dir2_sf_entry_t	*e;
- 	int			i;
--	xfs_dir2_sf_t		*sf;
-+	struct xfs_dir2_sf_hdr	*sf;
- 
- 	ASSERT(bitoffs(startoff) == 0);
- 	ASSERT(idx == 0);
--	sf = (xfs_dir2_sf_t *)((char *)obj + byteize(startoff));
--	e = xfs_dir2_sf_firstentry(&sf->hdr);
--	for (i = 0; i < sf->hdr.count; i++)
--		e = xfs_dir2_sf_nextentry(&sf->hdr, e);
-+	sf = (struct xfs_dir2_sf_hdr *)((char *)obj + byteize(startoff));
-+	e = xfs_dir2_sf_firstentry(sf);
-+	for (i = 0; i < sf->count; i++)
-+		e = xfs_dir2_sf_nextentry(sf, e);
- 	return bitize((int)((char *)e - (char *)sf));
- }
-diff --git a/db/metadump.c b/db/metadump.c
-index 44e7162..bc1c7fa 100644
---- a/db/metadump.c
-+++ b/db/metadump.c
-@@ -906,12 +906,12 @@ static void
- obfuscate_sf_dir(
- 	xfs_dinode_t		*dip)
- {
--	xfs_dir2_sf_t		*sfp;
-+	struct xfs_dir2_sf_hdr	*sfp;
- 	xfs_dir2_sf_entry_t	*sfep;
- 	__uint64_t		ino_dir_size;
- 	int			i;
- 
--	sfp = (xfs_dir2_sf_t *)XFS_DFORK_DPTR(dip);
-+	sfp = (struct xfs_dir2_sf_hdr *)XFS_DFORK_DPTR(dip);
- 	ino_dir_size = be64_to_cpu(dip->di_size);
- 	if (ino_dir_size > XFS_DFORK_DSIZE(dip, mp)) {
- 		ino_dir_size = XFS_DFORK_DSIZE(dip, mp);
-@@ -920,8 +920,8 @@ obfuscate_sf_dir(
- 					(long long)cur_ino);
- 	}
- 
--	sfep = xfs_dir2_sf_firstentry(&sfp->hdr);
--	for (i = 0; (i < sfp->hdr.count) &&
-+	sfep = xfs_dir2_sf_firstentry(sfp);
-+	for (i = 0; (i < sfp->count) &&
- 			((char *)sfep - (char *)sfp < ino_dir_size); i++) {
- 
- 		/*
-@@ -934,27 +934,27 @@ obfuscate_sf_dir(
- 			if (show_warnings)
- 				print_warning("zero length entry in dir inode "
- 						"%llu", (long long)cur_ino);
--			if (i != sfp->hdr.count - 1)
-+			if (i != sfp->count - 1)
- 				break;
- 			namelen = ino_dir_size - ((char *)&sfep->name[0] -
- 					 (char *)sfp);
- 		} else if ((char *)sfep - (char *)sfp +
--				xfs_dir2_sf_entsize(&sfp->hdr, sfep->namelen) >
-+				xfs_dir2_sf_entsize(sfp, sfep->namelen) >
- 				ino_dir_size) {
- 			if (show_warnings)
- 				print_warning("entry length in dir inode %llu "
- 					"overflows space", (long long)cur_ino);
--			if (i != sfp->hdr.count - 1)
-+			if (i != sfp->count - 1)
- 				break;
- 			namelen = ino_dir_size - ((char *)&sfep->name[0] -
- 					 (char *)sfp);
- 		}
- 
--		generate_obfuscated_name(xfs_dir2_sfe_get_ino(&sfp->hdr, sfep),
-+		generate_obfuscated_name(xfs_dir2_sfe_get_ino(sfp, sfep),
- 					 namelen, &sfep->name[0]);
- 
- 		sfep = (xfs_dir2_sf_entry_t *)((char *)sfep +
--				xfs_dir2_sf_entsize(&sfp->hdr, namelen));
-+				xfs_dir2_sf_entsize(sfp, namelen));
- 	}
- }
- 
-@@ -1101,6 +1101,9 @@ obfuscate_dir_data_blocks(
- 
- 		if (dir_data.block_index == 0) {
- 			int		wantmagic;
-+			struct xfs_dir2_data_hdr *datahdr;
+-/*ARGSUSED*/
++static int
++dir3_node_hdr_count(
++	void			*obj,
++	int			startoff)
++{
++	struct xfs_da3_intnode	*node = obj;
 +
-+			datahdr = (struct xfs_dir2_data_hdr *)block;
++	ASSERT(startoff == 0);
++	return be16_to_cpu(node->hdr.info.hdr.magic) == XFS_DA3_NODE_MAGIC;
++}
++
+ int
+ dir2_size(
+ 	void	*obj,
+@@ -727,3 +834,105 @@ dir2_size(
+ {
+ 	return bitize(mp->m_dirblksize);
+ }
++
++/*
++ * CRC enabled structure definitions
++ */
++const field_t	dir3_hfld[] = {
++	{ "", FLDT_DIR3, OI(0), C1, 0, TYP_NONE },
++	{ NULL }
++};
++
++#define	B3OFF(f)	bitize(offsetof(struct xfs_dir3_data_hdr, f))
++#define	D3OFF(f)	bitize(offsetof(struct xfs_dir3_data_hdr, f))
++#define	F3OFF(f)	bitize(offsetof(struct xfs_dir3_free, f))
++#define	L3OFF(f)	bitize(offsetof(struct xfs_dir3_leaf, f))
++#define	N3OFF(f)	bitize(offsetof(struct xfs_da3_intnode, f))
++const field_t	dir3_flds[] = {
++	{ "bhdr", FLDT_DIR3_DATA_HDR, OI(B3OFF(hdr)), dir3_block_hdr_count,
++	  FLD_COUNT, TYP_NONE },
++	{ "bu", FLDT_DIR2_DATA_UNION, dir2_block_u_offset, dir2_block_u_count,
++	  FLD_ARRAY|FLD_OFFSET|FLD_COUNT, TYP_NONE },
++	{ "bleaf", FLDT_DIR2_LEAF_ENTRY, dir2_block_leaf_offset,
++	  dir2_block_leaf_count, FLD_ARRAY|FLD_OFFSET|FLD_COUNT, TYP_NONE },
++	{ "btail", FLDT_DIR2_BLOCK_TAIL, dir2_block_tail_offset,
++	  dir3_block_tail_count, FLD_OFFSET|FLD_COUNT, TYP_NONE },
++	{ "dhdr", FLDT_DIR3_DATA_HDR, OI(D3OFF(hdr)), dir3_data_hdr_count,
++	  FLD_COUNT, TYP_NONE },
++	{ "du", FLDT_DIR2_DATA_UNION, dir2_data_u_offset, dir2_data_u_count,
++	  FLD_ARRAY|FLD_OFFSET|FLD_COUNT, TYP_NONE },
++	{ "lhdr", FLDT_DIR3_LEAF_HDR, OI(L3OFF(hdr)), dir3_leaf_hdr_count,
++	  FLD_COUNT, TYP_NONE },
++	{ "lbests", FLDT_DIR2_DATA_OFF, dir2_leaf_bests_offset,
++	  dir2_leaf_bests_count, FLD_ARRAY|FLD_OFFSET|FLD_COUNT, TYP_NONE },
++	{ "lents", FLDT_DIR2_LEAF_ENTRY, OI(L3OFF(__ents)), dir3_leaf_ents_count,
++	  FLD_ARRAY|FLD_COUNT, TYP_NONE },
++	{ "ltail", FLDT_DIR2_LEAF_TAIL, dir2_leaf_tail_offset,
++	  dir3_leaf_tail_count, FLD_OFFSET|FLD_COUNT, TYP_NONE },
++	{ "nhdr", FLDT_DA3_NODE_HDR, OI(N3OFF(hdr)), dir3_node_hdr_count,
++	  FLD_COUNT, TYP_NONE },
++	{ "nbtree", FLDT_DA_NODE_ENTRY, OI(N3OFF(__btree)), dir3_node_btree_count,
++	  FLD_ARRAY|FLD_COUNT, TYP_NONE },
++	{ "fhdr", FLDT_DIR3_FREE_HDR, OI(F3OFF(hdr)), dir3_free_hdr_count,
++	  FLD_COUNT, TYP_NONE },
++	{ "fbests", FLDT_DIR2_DATA_OFFNZ, OI(F3OFF(bests)),
++	  dir3_free_bests_count, FLD_ARRAY|FLD_COUNT, TYP_NONE },
++	{ NULL }
++};
++
++#define	DBH3OFF(f)	bitize(offsetof(struct xfs_dir3_blk_hdr, f))
++const field_t	dir3_blkhdr_flds[] = {
++	{ "magic", FLDT_UINT32X, OI(DBH3OFF(magic)), C1, 0, TYP_NONE },
++	{ "crc", FLDT_UINT32X, OI(DBH3OFF(crc)), C1, 0, TYP_NONE },
++	{ "bno", FLDT_DFSBNO, OI(DBH3OFF(blkno)), C1, 0, TYP_BMAPBTD },
++	{ "lsn", FLDT_UINT64X, OI(DBH3OFF(lsn)), C1, 0, TYP_NONE },
++	{ "uuid", FLDT_UUID, OI(DBH3OFF(uuid)), C1, 0, TYP_NONE },
++	{ "owner", FLDT_INO, OI(DBH3OFF(owner)), C1, 0, TYP_NONE },
++	{ NULL }
++};
++
++#define	DH3OFF(f)	bitize(offsetof(struct xfs_dir3_data_hdr, f))
++const field_t	dir3_data_hdr_flds[] = {
++	{ "hdr", FLDT_DIR3_BLKHDR, OI(DH3OFF(hdr)), C1, 0, TYP_NONE },
++	{ "bestfree", FLDT_DIR2_DATA_FREE, OI(DH3OFF(best_free)),
++	  CI(XFS_DIR2_DATA_FD_COUNT), FLD_ARRAY, TYP_NONE },
++	{ NULL }
++};
++
++#define	LH3OFF(f)	bitize(offsetof(struct xfs_dir3_leaf_hdr, f))
++const field_t	dir3_leaf_hdr_flds[] = {
++	{ "info", FLDT_DA3_BLKINFO, OI(LH3OFF(info)), C1, 0, TYP_NONE },
++	{ "count", FLDT_UINT16D, OI(LH3OFF(count)), C1, 0, TYP_NONE },
++	{ "stale", FLDT_UINT16D, OI(LH3OFF(stale)), C1, 0, TYP_NONE },
++	{ NULL }
++};
++
++#define	FH3OFF(f)	bitize(offsetof(struct xfs_dir3_free_hdr, f))
++const field_t	dir3_free_hdr_flds[] = {
++	{ "hdr", FLDT_DIR3_BLKHDR, OI(FH3OFF(hdr)), C1, 0, TYP_NONE },
++	{ "firstdb", FLDT_INT32D, OI(FH3OFF(firstdb)), C1, 0, TYP_NONE },
++	{ "nvalid", FLDT_INT32D, OI(FH3OFF(nvalid)), C1, 0, TYP_NONE },
++	{ "nused", FLDT_INT32D, OI(FH3OFF(nused)), C1, 0, TYP_NONE },
++	{ NULL }
++};
++
++
++#define	DB3OFF(f)	bitize(offsetof(struct xfs_da3_blkinfo, f))
++const field_t	da3_blkinfo_flds[] = {
++	{ "hdr", FLDT_DA_BLKINFO, OI(DB3OFF(hdr)), C1, 0, TYP_NONE },
++	{ "crc", FLDT_UINT32X, OI(DB3OFF(crc)), C1, 0, TYP_NONE },
++	{ "bno", FLDT_DFSBNO, OI(DB3OFF(blkno)), C1, 0, TYP_BMAPBTD },
++	{ "lsn", FLDT_UINT64X, OI(DB3OFF(lsn)), C1, 0, TYP_NONE },
++	{ "uuid", FLDT_UUID, OI(DB3OFF(uuid)), C1, 0, TYP_NONE },
++	{ "owner", FLDT_INO, OI(DB3OFF(owner)), C1, 0, TYP_NONE },
++	{ NULL }
++};
++
++#define	H3OFF(f)	bitize(offsetof(struct xfs_da3_node_hdr, f))
++const field_t	da3_node_hdr_flds[] = {
++	{ "info", FLDT_DA3_BLKINFO, OI(H3OFF(info)), C1, 0, TYP_NONE },
++	{ "count", FLDT_UINT16D, OI(H3OFF(__count)), C1, 0, TYP_NONE },
++	{ "level", FLDT_UINT16D, OI(H3OFF(__level)), C1, 0, TYP_NONE },
++	{ "pad", FLDT_UINT32D, OI(H3OFF(__pad32)), C1, 0, TYP_NONE },
++	{ NULL }
++};
+diff --git a/db/dir2.h b/db/dir2.h
+index 05ab354..d9dc27b 100644
+--- a/db/dir2.h
++++ b/db/dir2.h
+@@ -16,21 +16,42 @@
+  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+  */
  
- 			if (offset % mp->m_dirblkfsbs != 0)
- 				return;	/* corrupted, leave it alone */
-@@ -1110,10 +1113,8 @@ obfuscate_dir_data_blocks(
- 			if (is_block_format) {
- 				xfs_dir2_leaf_entry_t	*blp;
- 				xfs_dir2_block_tail_t	*btp;
--				xfs_dir2_block_t	*blk;
+-extern const field_t	dir2_flds[];
+-extern const field_t	dir2_hfld[];
++/*
++ * common types across directory formats
++ */
+ extern const field_t	dir2_block_tail_flds[];
+ extern const field_t	dir2_data_free_flds[];
+-extern const field_t	dir2_data_hdr_flds[];
+ extern const field_t	dir2_data_union_flds[];
+-extern const field_t	dir2_free_hdr_flds[];
++extern const field_t	dir2_leaf_tail_flds[];
+ extern const field_t	dir2_leaf_entry_flds[];
++
++extern const field_t	da_node_entry_flds[];
++
++/*
++ * dirv2 specific types
++ */
++extern const field_t	dir2_flds[];
++extern const field_t	dir2_hfld[];
++extern const field_t	dir2_data_hdr_flds[];
++extern const field_t	dir2_free_hdr_flds[];
+ extern const field_t	dir2_leaf_hdr_flds[];
+-extern const field_t	dir2_leaf_tail_flds[];
  
--				blk = (xfs_dir2_block_t *)block;
--				btp = xfs_dir2_block_tail_p(mp, &blk->hdr);
-+				btp = xfs_dir2_block_tail_p(mp, datahdr);
- 				blp = xfs_dir2_block_leaf_p(btp);
- 				if ((char *)blp > (char *)btp)
- 					blp = (xfs_dir2_leaf_entry_t *)btp;
-@@ -1125,10 +1126,10 @@ obfuscate_dir_data_blocks(
- 						mp->m_sb.sb_blocklog;
- 				wantmagic = XFS_DIR2_DATA_MAGIC;
+ extern const field_t	da_blkinfo_flds[];
+-extern const field_t	da_node_entry_flds[];
+ extern const field_t	da_node_hdr_flds[];
+ 
++/*
++ * dirv3 specific types
++ */
++extern const field_t	dir3_flds[];
++extern const field_t	dir3_hfld[];
++extern const field_t	dir3_blkhdr_flds[];
++extern const field_t	dir3_data_hdr_flds[];
++extern const field_t	dir3_free_hdr_flds[];
++extern const field_t	dir3_leaf_hdr_flds[];
++
++extern const field_t	da3_blkinfo_flds[];
++extern const field_t	da3_node_hdr_flds[];
++
+ static inline xfs_dir2_inou_t *xfs_dir2_sf_inumberp(xfs_dir2_sf_entry_t *sfep)
+ {
+ 	return (xfs_dir2_inou_t *)&(sfep)->name[(sfep)->namelen];
+diff --git a/db/field.c b/db/field.c
+index 510ad84..cb15318 100644
+--- a/db/field.c
++++ b/db/field.c
+@@ -166,6 +166,8 @@ const ftattr_t	ftattrtab[] = {
+ 	  FTARG_SIZE|FTARG_OKEMPTY, NULL, inode_u_flds },
+ 	{ FLDT_DINODE_V3, "dinode_v3", NULL, (char *)inode_v3_flds,
+ 	  SI(bitsz(xfs_dinode_t)), 0, NULL, inode_v3_flds },
++
++/* dir v2 fields */
+ 	{ FLDT_DIR2, "dir2", NULL, (char *)dir2_flds, dir2_size, FTARG_SIZE,
+ 	  NULL, dir2_flds },
+ 	{ FLDT_DIR2_BLOCK_TAIL, "dir2_block_tail", NULL,
+@@ -207,6 +209,20 @@ const ftattr_t	ftattrtab[] = {
+ 	  SI(bitsz(xfs_dir2_sf_off_t)), 0, NULL, NULL },
+ 	{ FLDT_DIR2SF, "dir2sf", NULL, (char *)dir2sf_flds, dir2sf_size,
+ 	  FTARG_SIZE, NULL, dir2sf_flds },
++
++/* dir v3 fields */
++	{ FLDT_DIR3, "dir3", NULL, (char *)dir3_flds, dir2_size, FTARG_SIZE,
++	  NULL, dir3_flds },
++	{ FLDT_DIR3_BLKHDR, "dir3_blk_hdr", NULL, (char *)dir3_blkhdr_flds,
++	  SI(bitsz(struct xfs_dir3_blk_hdr)), 0, NULL, dir3_blkhdr_flds },
++	{ FLDT_DIR3_DATA_HDR, "dir3_data_hdr", NULL, (char *)dir3_data_hdr_flds,
++	  SI(bitsz(struct xfs_dir3_data_hdr)), 0, NULL, dir3_data_hdr_flds },
++	{ FLDT_DIR3_FREE_HDR, "dir3_free_hdr", NULL, (char *)dir3_free_hdr_flds,
++	  SI(bitsz(struct xfs_dir3_free_hdr)), 0, NULL, dir3_free_hdr_flds },
++	{ FLDT_DIR3_LEAF_HDR, "dir3_leaf_hdr", NULL, (char *)dir3_leaf_hdr_flds,
++	  SI(bitsz(struct xfs_dir3_leaf_hdr)), 0, NULL, dir3_leaf_hdr_flds },
++
++/* dir v2/3 node fields */
+ 	{ FLDT_DA_BLKINFO, "dir_blkinfo", NULL, (char *)da_blkinfo_flds,
+ 	  SI(bitsz(struct xfs_da_blkinfo)), 0, NULL, da_blkinfo_flds },
+ 	{ FLDT_DA_NODE_ENTRY, "dir_node_entry", fp_sarray,
+@@ -214,6 +230,11 @@ const ftattr_t	ftattrtab[] = {
+ 	  NULL, da_node_entry_flds },
+ 	{ FLDT_DA_NODE_HDR, "dir_node_hdr", NULL, (char *)da_node_hdr_flds,
+ 	  SI(bitsz(struct xfs_da_node_hdr)), 0, NULL, da_node_hdr_flds },
++	{ FLDT_DA3_BLKINFO, "dir_blkinfo", NULL, (char *)da3_blkinfo_flds,
++	  SI(bitsz(struct xfs_da3_blkinfo)), 0, NULL, da3_blkinfo_flds },
++	{ FLDT_DA3_NODE_HDR, "dir_node_hdr", NULL, (char *)da3_node_hdr_flds,
++	  SI(bitsz(struct xfs_da3_node_hdr)), 0, NULL, da3_node_hdr_flds },
++
+ 	{ FLDT_DIRBLOCK, "dirblock", fp_num, "%u", SI(bitsz(__uint32_t)), 0,
+ 	  fa_dirblock, NULL },
+ 	{ FLDT_DISK_DQUOT, "disk_dquot", NULL, (char *)disk_dquot_flds,
+diff --git a/db/field.h b/db/field.h
+index 9b332f5..5671571 100644
+--- a/db/field.h
++++ b/db/field.h
+@@ -81,6 +81,8 @@ typedef enum fldt	{
+ 	FLDT_DINODE_FMT,
+ 	FLDT_DINODE_U,
+ 	FLDT_DINODE_V3,
++
++	/* dir v2 fields */
+ 	FLDT_DIR2,
+ 	FLDT_DIR2_BLOCK_TAIL,
+ 	FLDT_DIR2_DATA_FREE,
+@@ -99,9 +101,21 @@ typedef enum fldt	{
+ 	FLDT_DIR2_SF_HDR,
+ 	FLDT_DIR2_SF_OFF,
+ 	FLDT_DIR2SF,
++
++	/* dir v3 fields */
++	FLDT_DIR3,
++	FLDT_DIR3_BLKHDR,
++	FLDT_DIR3_DATA_HDR,
++	FLDT_DIR3_FREE_HDR,
++	FLDT_DIR3_LEAF_HDR,
++
++	/* dir v2/3 node fields */
+ 	FLDT_DA_BLKINFO,
+ 	FLDT_DA_NODE_ENTRY,
+ 	FLDT_DA_NODE_HDR,
++	FLDT_DA3_BLKINFO,
++	FLDT_DA3_NODE_HDR,
++
+ 	FLDT_DIRBLOCK,
+ 	FLDT_DISK_DQUOT,
+ 	FLDT_DQBLK,
+diff --git a/db/type.c b/db/type.c
+index 97f3548..0c64422 100644
+--- a/db/type.c
++++ b/db/type.c
+@@ -59,6 +59,7 @@ static const typ_t	__typtab[] = {
+ 	{ TYP_CNTBT, "cntbt", handle_struct, cntbt_hfld },
+ 	{ TYP_DATA, "data", handle_block, NULL },
+ 	{ TYP_DIR2, "dir2", handle_struct, dir2_hfld },
++	{ TYP_DIR3, NULL, NULL, NULL },
+ 	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld },
+ 	{ TYP_INOBT, "inobt", handle_struct, inobt_hfld },
+ 	{ TYP_INODATA, "inodata", NULL, NULL },
+@@ -82,7 +83,8 @@ static const typ_t	__typtab_crc[] = {
+ 	{ TYP_BNOBT, "bnobt", handle_struct, bnobt_crc_hfld },
+ 	{ TYP_CNTBT, "cntbt", handle_struct, cntbt_crc_hfld },
+ 	{ TYP_DATA, "data", handle_block, NULL },
+-	{ TYP_DIR2, "dir2", handle_struct, dir2_hfld },
++	{ TYP_DIR2, NULL, NULL, NULL },
++	{ TYP_DIR3, "dir3", handle_struct, dir3_hfld },
+ 	{ TYP_DQBLK, "dqblk", handle_struct, dqblk_hfld },
+ 	{ TYP_INOBT, "inobt", handle_struct, inobt_crc_hfld },
+ 	{ TYP_INODATA, "inodata", NULL, NULL },
+@@ -110,9 +112,9 @@ findtyp(
+ {
+ 	const typ_t	*tt;
+ 
+-	for (tt = typtab; tt->name != NULL; tt++) {
++	for (tt = typtab; tt->typnm != TYP_NONE; tt++) {
+ 		ASSERT(tt->typnm == (typnm_t)(tt - typtab));
+-		if (strcmp(tt->name, name) == 0)
++		if (tt->name && strcmp(tt->name, name) == 0)
+ 			return tt;
+ 	}
+ 	return NULL;
+@@ -133,12 +135,14 @@ type_f(
+ 			dbprintf(_("current type is \"%s\"\n"), cur_typ->name);
+ 
+ 		dbprintf(_("\n supported types are:\n "));
+-		for (tt = typtab, count = 0; tt->name != NULL; tt++) {
++		for (tt = typtab, count = 0; tt->typnm != TYP_NONE; tt++) {
++			if (tt->name == NULL)
++				continue;
+ 			if ((tt+1)->name != NULL) {
+ 				dbprintf("%s, ", tt->name);
+ 				if ((++count % 8) == 0)
+ 					dbprintf("\n ");
+-			} else {
++			} else if ((tt+1)->typnm == TYP_NONE) {
+ 				dbprintf("%s\n", tt->name);
  			}
--			dir_data.offset_to_entry = offsetof(xfs_dir2_data_t, u);
-+			dir_data.offset_to_entry =
-+					xfs_dir3_data_entry_offset(datahdr);
- 
--			if (be32_to_cpu(((xfs_dir2_data_hdr_t*)block)->magic) !=
--					wantmagic) {
-+			if (be32_to_cpu(datahdr->magic) != wantmagic) {
- 				if (show_warnings)
- 					print_warning("invalid magic in dir "
- 						"inode %llu block %ld",
+ 		}
+diff --git a/db/type.h b/db/type.h
+index c41aca4..8fd8dc3 100644
+--- a/db/type.h
++++ b/db/type.h
+@@ -25,7 +25,7 @@ typedef enum typnm
+ {
+ 	TYP_AGF, TYP_AGFL, TYP_AGI, TYP_ATTR, TYP_BMAPBTA,
+ 	TYP_BMAPBTD, TYP_BNOBT, TYP_CNTBT, TYP_DATA,
+-	TYP_DIR2, TYP_DQBLK, TYP_INOBT, TYP_INODATA, TYP_INODE,
++	TYP_DIR2, TYP_DIR3, TYP_DQBLK, TYP_INOBT, TYP_INODATA, TYP_INODE,
+ 	TYP_LOG, TYP_RTBITMAP, TYP_RTSUMMARY, TYP_SB, TYP_SYMLINK,
+ 	TYP_TEXT, TYP_NONE
+ } typnm_t;
 -- 
 1.7.10.4
 
