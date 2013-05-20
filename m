@@ -1,22 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 477347F59
-	for <xfs@oss.sgi.com>; Mon, 20 May 2013 12:58:58 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 31986304053
-	for <xfs@oss.sgi.com>; Mon, 20 May 2013 10:58:58 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id aGNB8ASuWJWKKwrp for
-	<xfs@oss.sgi.com>; Mon, 20 May 2013 10:58:57 -0700 (PDT)
-Message-ID: <519A655D.4020001@redhat.com>
-Date: Mon, 20 May 2013 14:03:09 -0400
-From: Brian Foster <bfoster@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 464C829DF8
+	for <xfs@oss.sgi.com>; Mon, 20 May 2013 13:10:42 -0500 (CDT)
+Date: Mon, 20 May 2013 13:10:38 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH v2] xfs: Avoid pathological backwards allocation
+Message-ID: <20130520181038.GY29359@sgi.com>
+References: <1365710996-16439-1-git-send-email-jack@suse.cz>
+	<20130520135607.GA11502@quack.suse.cz>
 MIME-Version: 1.0
-Subject: Re: [PATCH 04/14] xfs: avoid nesting transactions in
-	xfs_qm_scall_setqlim()
-References: <1369007481-15185-1-git-send-email-david@fromorbit.com>
-	<1369007481-15185-5-git-send-email-david@fromorbit.com>
-In-Reply-To: <1369007481-15185-5-git-send-email-david@fromorbit.com>
+Content-Disposition: inline
+In-Reply-To: <20130520135607.GA11502@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,107 +23,60 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Jan Kara <jack@suse.cz>
+Cc: dchinner@redhat.com, tinguely@sgi.com, xfs@oss.sgi.com
 
-On 05/19/2013 07:51 PM, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Lockdep reports:
-> 
-> =============================================
-> [ INFO: possible recursive locking detected ]
-> 3.9.0+ #3 Not tainted
-> ---------------------------------------------
-> setquota/28368 is trying to acquire lock:
->  (sb_internal){++++.?}, at: [<c11e8846>] xfs_trans_alloc+0x26/0x50
-> 
-> but task is already holding lock:
->  (sb_internal){++++.?}, at: [<c11e8846>] xfs_trans_alloc+0x26/0x50
-> 
-> from xfs_qm_scall_setqlim()->xfs_dqread() when a dquot needs to be
-> allocated.
-> 
-> xfs_qm_scall_setqlim() is starting a transaction and then not
-> passing it into xfs_qm_dqet() and so it starts it's own transaction
-> when allocating the dquot.  Splat!
-> 
-> Fix this by not allocating the dquot in xfs_qm_scall_setqlim()
-> inside the setqlim transaction. This requires getting the dquot
-> first (and allocating it if necessary) then dropping and relocking
-> the dquot before joining it to the setqlim transaction.
-> 
-> Reported-by: Michael L. Semon <mlsemon35@gmail.com>
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_qm_syscalls.c |   35 ++++++++++++++++++++---------------
->  1 file changed, 20 insertions(+), 15 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-> index c41190c..dfa5c05 100644
-> --- a/fs/xfs/xfs_qm_syscalls.c
-> +++ b/fs/xfs/xfs_qm_syscalls.c
-> @@ -489,31 +489,36 @@ xfs_qm_scall_setqlim(
->  	if ((newlim->d_fieldmask & XFS_DQ_MASK) == 0)
->  		return 0;
->  
-> -	tp = xfs_trans_alloc(mp, XFS_TRANS_QM_SETQLIM);
-> -	error = xfs_trans_reserve(tp, 0, XFS_QM_SETQLIM_LOG_RES(mp),
-> -				  0, 0, XFS_DEFAULT_LOG_COUNT);
-> -	if (error) {
-> -		xfs_trans_cancel(tp, 0);
-> -		return (error);
-> -	}
-> -
->  	/*
->  	 * We don't want to race with a quotaoff so take the quotaoff lock.
-> -	 * (We don't hold an inode lock, so there's nothing else to stop
-> -	 * a quotaoff from happening). (XXXThis doesn't currently happen
-> -	 * because we take the vfslock before calling xfs_qm_sysent).
-> +	 * We don't hold an inode lock, so there's nothing else to stop
-> +	 * a quotaoff from happening.
->  	 */
->  	mutex_lock(&q->qi_quotaofflock);
->  
->  	/*
-> -	 * Get the dquot (locked), and join it to the transaction.
-> -	 * Allocate the dquot if this doesn't exist.
-> +	 * Get the dquot (locked) before we start, as we need to do a
-> +	 * transaction to allocate it if it doesn't exist. Once we have the
-> +	 * dquot, unlock it so we can start the next transaction safely. We hold
-> +	 * a reference to the dquot, so it's safe to do this unlock/lock without
-> +	 * it being reclaimed in the mean time.
->  	 */
-> -	if ((error = xfs_qm_dqget(mp, NULL, id, type, XFS_QMOPT_DQALLOC, &dqp))) {
-> -		xfs_trans_cancel(tp, XFS_TRANS_ABORT);
-> +	error = xfs_qm_dqget(mp, NULL, id, type, XFS_QMOPT_DQALLOC, &dqp);
-> +	if (error) {
->  		ASSERT(error != ENOENT);
->  		goto out_unlock;
->  	}
-> +	xfs_dqunlock(dqp);
-> +
-> +	tp = xfs_trans_alloc(mp, XFS_TRANS_QM_SETQLIM);
-> +	error = xfs_trans_reserve(tp, 0, XFS_QM_SETQLIM_LOG_RES(mp),
-> +				  0, 0, XFS_DEFAULT_LOG_COUNT);
-> +	if (error) {
-> +		xfs_trans_cancel(tp, 0);
-> +		goto out_unlock;
+On Mon, May 20, 2013 at 03:56:07PM +0200, Jan Kara wrote:
+> On Thu 11-04-13 22:09:56, Jan Kara wrote:
+> > Writing a large file using direct IO in 16 MB chunks sometimes results
+> > in a pathological allocation pattern where 16 MB chunks of large free
+> > extent are allocated to a file in a reversed order. So extents of a file
+> > look for example as:
+> > 
+> >  ext logical physical expected length flags
+> >    0        0        13          4550656
+> >    1  4550656 188136807   4550668 12562432
+> >    2 17113088 200699240 200699238 622592
+> >    3 17735680 182046055 201321831   4096
+> >    4 17739776 182041959 182050150   4096
+> >    5 17743872 182037863 182046054   4096
+> >    6 17747968 182033767 182041958   4096
+> >    7 17752064 182029671 182037862   4096
+> > ...
+> > 6757 45400064 154381644 154389835   4096
+> > 6758 45404160 154377548 154385739   4096
+> > 6759 45408256 252951571 154381643  73728 eof
+> > 
+> > This happens because XFS_ALLOCTYPE_THIS_BNO allocation fails (the last
+> > extent in the file cannot be further extended) so we fall back to
+> > XFS_ALLOCTYPE_NEAR_BNO allocation which picks end of a large free
+> > extent as the best place to continue the file. Since the chunk at the
+> > end of the free extent again cannot be further extended, this behavior
+> > repeats until the whole free extent is consumed in a reversed order.
+> > 
+> > For data allocations this backward allocation isn't beneficial so make
+> > xfs_alloc_compute_diff() pick start of a free extent instead of its end
+> > for them. That avoids the backward allocation pattern.
+> > 
+> > See thread at http://oss.sgi.com/archives/xfs/2013-03/msg00144.html for
+> > more details about the reproduction case and why this solution was
+> > chosen.
+> > 
+> > Based on idea by Dave Chinner <dchinner@redhat.com>.
+> > 
+> > CC: Dave Chinner <dchinner@redhat.com>
+> > Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> > Signed-off-by: Jan Kara <jack@suse.cz>
+> > ---
+> >  fs/xfs/xfs_alloc.c |   24 ++++++++++++++++++------
+> >  1 files changed, 18 insertions(+), 6 deletions(-)
+> > 
+> > v2: Updated comment and commit description.
+>   Could anybody pull this patch into XFS tree? I don't see it there...
 
-By shuffling the transaction allocation and xfs_qm_dqget() around, it
-looks like you now have an error path with a referenced dquot. Perhaps
-here we should jump to a new label that includes the xfs_qm_dqrele() at
-the end of the function?
+Applied.
 
-Brian
-
-> +	}
-> +
-> +	xfs_dqlock(dqp);
->  	xfs_trans_dqjoin(tp, dqp);
->  	ddq = &dqp->q_core;
->  
-> 
+Thanks Jan.
 
 _______________________________________________
 xfs mailing list
