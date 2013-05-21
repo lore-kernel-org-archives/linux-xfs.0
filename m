@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5904329E0E
-	for <xfs@oss.sgi.com>; Tue, 21 May 2013 03:02:37 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 38F408F8039
-	for <xfs@oss.sgi.com>; Tue, 21 May 2013 01:02:37 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 99B7829E06
+	for <xfs@oss.sgi.com>; Tue, 21 May 2013 03:02:36 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 19719AC002
+	for <xfs@oss.sgi.com>; Tue, 21 May 2013 01:02:35 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	ILpbaPiF3ho0qqi5 for <xfs@oss.sgi.com>;
-	Tue, 21 May 2013 01:02:35 -0700 (PDT)
+	utkg1rL85ZwU9oxX for <xfs@oss.sgi.com>;
+	Tue, 21 May 2013 01:02:34 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 06/11] xfs: fully initialise temp leaf in
-	xfs_attr3_leaf_unbalance
-Date: Tue, 21 May 2013 18:02:05 +1000
-Message-Id: <1369123330-9579-7-git-send-email-david@fromorbit.com>
+Subject: [PATCH 05/11] xfs: correctly map remote attr buffers during removal
+Date: Tue, 21 May 2013 18:02:04 +1000
+Message-Id: <1369123330-9579-6-git-send-email-david@fromorbit.com>
 In-Reply-To: <1369123330-9579-1-git-send-email-david@fromorbit.com>
 References: <1369123330-9579-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,54 +33,89 @@ Cc: bpm@sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-xfs_attr3_leaf_unbalance() uses a temporary buffer for recombining
-the entries in two leaves when the destination leaf requires
-compaction. The temporary buffer ends up being copied back over the
-original destination buffer, so the header in the temporary buffer
-needs to contain all the information that is in the destination
-buffer.
-
-To make sure the temporary buffer is fully initialised, once we've
-set up the temporary incore header appropriately, write is back to
-the temporary buffer before starting to move entries around.
+If we don't map the buffers correctly (same as for get/set
+operations) then the incore buffer lookup will fail. If a block
+number matches but a length is wrong, then debug kernels will ASSERT
+fail in _xfs_buf_find() due to the length mismatch. Ensure that we
+map the buffers correctly by basing the length of the buffer on the
+attribute data length rather than the remote block count.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_attr_leaf.c |   16 +++++++++++++---
- 1 file changed, 13 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_attr_remote.c |   27 ++++++++++++++++++---------
+ 1 file changed, 18 insertions(+), 9 deletions(-)
 
-diff --git a/fs/xfs/xfs_attr_leaf.c b/fs/xfs/xfs_attr_leaf.c
-index 0bce1b3..79ece72 100644
---- a/fs/xfs/xfs_attr_leaf.c
-+++ b/fs/xfs/xfs_attr_leaf.c
-@@ -2181,14 +2181,24 @@ xfs_attr3_leaf_unbalance(
- 		struct xfs_attr_leafblock *tmp_leaf;
- 		struct xfs_attr3_icleaf_hdr tmphdr;
+diff --git a/fs/xfs/xfs_attr_remote.c b/fs/xfs/xfs_attr_remote.c
+index e207bf0..d8bcb2d 100644
+--- a/fs/xfs/xfs_attr_remote.c
++++ b/fs/xfs/xfs_attr_remote.c
+@@ -468,19 +468,25 @@ xfs_attr_rmtval_remove(xfs_da_args_t *args)
+ 	mp = args->dp->i_mount;
  
--		tmp_leaf = kmem_alloc(state->blocksize, KM_SLEEP);
--		memset(tmp_leaf, 0, state->blocksize);
--		memset(&tmphdr, 0, sizeof(tmphdr));
-+		tmp_leaf = kmem_zalloc(state->blocksize, KM_SLEEP);
+ 	/*
+-	 * Roll through the "value", invalidating the attribute value's
+-	 * blocks.
++	 * Roll through the "value", invalidating the attribute value's blocks.
++	 * Note that args->rmtblkcnt is the minimum number of data blocks we'll
++	 * see for a CRC enabled remote attribute. Each extent will have a
++	 * header, and so we may have more blocks than we realise here.  If we
++	 * fail to map the blocks correctly, we'll have problems with the buffer
++	 * lookups.
+ 	 */
+ 	lblkno = args->rmtblkno;
+-	valuelen = args->rmtblkcnt;
++	valuelen = args->valuelen;
++	blkcnt = xfs_attr3_rmt_blocks(mp, valuelen);
+ 	while (valuelen > 0) {
++		int dblkcnt;
 +
-+		/*
-+		 * Copy the header into the temp leaf so that all the stuff
-+		 * not in the incore header is present and gets copied back in
-+		 * once we've moved all the entries.
-+		 */
-+		memcpy(tmp_leaf, save_leaf, xfs_attr3_leaf_hdr_size(save_leaf));
+ 		/*
+ 		 * Try to remember where we decided to put the value.
+ 		 */
+ 		nmap = 1;
+ 		error = xfs_bmapi_read(args->dp, (xfs_fileoff_t)lblkno,
+-				       args->rmtblkcnt, &map, &nmap,
+-				       XFS_BMAPI_ATTRFORK);
++				       blkcnt, &map, &nmap, XFS_BMAPI_ATTRFORK);
+ 		if (error)
+ 			return(error);
+ 		ASSERT(nmap == 1);
+@@ -488,28 +494,31 @@ xfs_attr_rmtval_remove(xfs_da_args_t *args)
+ 		       (map.br_startblock != HOLESTARTBLOCK));
  
-+		memset(&tmphdr, 0, sizeof(tmphdr));
- 		tmphdr.magic = savehdr.magic;
- 		tmphdr.forw = savehdr.forw;
- 		tmphdr.back = savehdr.back;
- 		tmphdr.firstused = state->blocksize;
-+
-+		/* write the header to the temp buffer to initialise it */
-+		xfs_attr3_leaf_hdr_to_disk(tmp_leaf, &tmphdr);
-+
- 		if (xfs_attr3_leaf_order(save_blk->bp, &savehdr,
- 					 drop_blk->bp, &drophdr)) {
- 			xfs_attr3_leaf_moveents(drop_leaf, &drophdr, 0,
+ 		dblkno = XFS_FSB_TO_DADDR(mp, map.br_startblock),
+-		blkcnt = XFS_FSB_TO_BB(mp, map.br_blockcount);
++		dblkcnt = XFS_FSB_TO_BB(mp, map.br_blockcount);
+ 
+ 		/*
+ 		 * If the "remote" value is in the cache, remove it.
+ 		 */
+-		bp = xfs_incore(mp->m_ddev_targp, dblkno, blkcnt, XBF_TRYLOCK);
++		bp = xfs_incore(mp->m_ddev_targp, dblkno, dblkcnt, XBF_TRYLOCK);
+ 		if (bp) {
+ 			xfs_buf_stale(bp);
+ 			xfs_buf_relse(bp);
+ 			bp = NULL;
+ 		}
+ 
+-		valuelen -= map.br_blockcount;
++		valuelen -= XFS_ATTR3_RMT_BUF_SPACE(mp,
++					XFS_FSB_TO_B(mp, map.br_blockcount));
+ 
+ 		lblkno += map.br_blockcount;
++		blkcnt -= map.br_blockcount;
++		blkcnt = max(blkcnt, xfs_attr3_rmt_blocks(mp, valuelen));
+ 	}
+ 
+ 	/*
+ 	 * Keep de-allocating extents until the remote-value region is gone.
+ 	 */
++	blkcnt = lblkno - args->rmtblkno;
+ 	lblkno = args->rmtblkno;
+-	blkcnt = args->rmtblkcnt;
+ 	done = 0;
+ 	while (!done) {
+ 		xfs_bmap_init(args->flist, args->firstblock);
 -- 
 1.7.10.4
 
