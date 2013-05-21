@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2965029DF8
-	for <xfs@oss.sgi.com>; Tue, 21 May 2013 03:02:30 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0E88429E06
+	for <xfs@oss.sgi.com>; Tue, 21 May 2013 03:02:35 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 172D98F8039
-	for <xfs@oss.sgi.com>; Tue, 21 May 2013 01:02:27 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E0E3B30404E
+	for <xfs@oss.sgi.com>; Tue, 21 May 2013 01:02:34 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	9D22blVP4u9Yygql for <xfs@oss.sgi.com>;
-	Tue, 21 May 2013 01:02:22 -0700 (PDT)
+	4uwvUHEyjklfBOAg for <xfs@oss.sgi.com>;
+	Tue, 21 May 2013 01:02:33 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 08/11] xfs: don't emit v5 superblock warnings on write
-Date: Tue, 21 May 2013 18:02:07 +1000
-Message-Id: <1369123330-9579-9-git-send-email-david@fromorbit.com>
+Subject: [PATCH 02/11] xfs: remote attribute allocation may be contiguous
+Date: Tue, 21 May 2013 18:02:01 +1000
+Message-Id: <1369123330-9579-3-git-send-email-david@fromorbit.com>
 In-Reply-To: <1369123330-9579-1-git-send-email-david@fromorbit.com>
 References: <1369123330-9579-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,86 +33,44 @@ Cc: bpm@sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-We write the superblock every 30s or so which results in the
-verifier being called. Right now that results in this output
-every 30s:
-
-XFS (vda): Version 5 superblock detected. This kernel has EXPERIMENTAL support enabled!
-Use of these features in this kernel is at your own risk!
-
-And spamming the logs. Stop this output from occurring on superblock
-writes.
+When CRCs are enabled, there may be multiple allocations made if the
+headers cause a length overflow. This, however, does not mean that
+the number of headers required increases, as the second and
+subsequent extents may be contiguous with the previous extent. Hence
+when we map the extents to write the attribute data, we may end up
+with less extents than allocations made. Hence the assertion that we
+consume th enumber of headers we calculated in the allocation loop
+is incorrect and needs to be removed.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_mount.c |   18 +++++++++++-------
- 1 file changed, 11 insertions(+), 7 deletions(-)
+ fs/xfs/xfs_attr_remote.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index f6bfbd7..e8e310c 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -314,7 +314,8 @@ STATIC int
- xfs_mount_validate_sb(
- 	xfs_mount_t	*mp,
- 	xfs_sb_t	*sbp,
--	bool		check_inprogress)
-+	bool		check_inprogress,
-+	bool		check_version)
- {
- 
- 	/*
-@@ -337,9 +338,10 @@ xfs_mount_validate_sb(
- 
- 	/*
- 	 * Version 5 superblock feature mask validation. Reject combinations the
--	 * kernel cannot support up front before checking anything else.
-+	 * kernel cannot support up front before checking anything else. For
-+	 * write validation, we don't need to check feature masks.
- 	 */
--	if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) {
-+	if (check_version && XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) {
- 		xfs_alert(mp,
- "Version 5 superblock detected. This kernel has EXPERIMENTAL support enabled!\n"
- "Use of these features in this kernel is at your own risk!");
-@@ -675,7 +677,8 @@ xfs_sb_to_disk(
- 
- static int
- xfs_sb_verify(
--	struct xfs_buf	*bp)
-+	struct xfs_buf	*bp,
-+	bool		check_version)
- {
- 	struct xfs_mount *mp = bp->b_target->bt_mount;
- 	struct xfs_sb	sb;
-@@ -686,7 +689,8 @@ xfs_sb_verify(
- 	 * Only check the in progress field for the primary superblock as
- 	 * mkfs.xfs doesn't clear it from secondary superblocks.
- 	 */
--	return xfs_mount_validate_sb(mp, &sb, bp->b_bn == XFS_SB_DADDR);
-+	return xfs_mount_validate_sb(mp, &sb, bp->b_bn == XFS_SB_DADDR,
-+				     check_version);
+diff --git a/fs/xfs/xfs_attr_remote.c b/fs/xfs/xfs_attr_remote.c
+index dee8446..aad95b0 100644
+--- a/fs/xfs/xfs_attr_remote.c
++++ b/fs/xfs/xfs_attr_remote.c
+@@ -359,6 +359,11 @@ xfs_attr_rmtval_set(
+ 		 * into requiring more blocks. e.g. for 512 byte blocks, we'll
+ 		 * spill for another block every 9 headers we require in this
+ 		 * loop.
++		 *
++		 * Note that this can result in contiguous allocation of blocks,
++		 * so we don't use all the space we allocate for headers as we
++		 * have one less header for each contiguous allocation that
++		 * occurs in the map/write loop below.
+ 		 */
+ 		if (crcs && blkcnt == 0) {
+ 			int total_len;
+@@ -439,7 +444,6 @@ xfs_attr_rmtval_set(
+ 		lblkno += map.br_blockcount;
+ 	}
+ 	ASSERT(valuelen == 0);
+-	ASSERT(hdrcnt == 0);
+ 	return 0;
  }
  
- /*
-@@ -719,7 +723,7 @@ xfs_sb_read_verify(
- 			goto out_error;
- 		}
- 	}
--	error = xfs_sb_verify(bp);
-+	error = xfs_sb_verify(bp, true);
- 
- out_error:
- 	if (error) {
-@@ -758,7 +762,7 @@ xfs_sb_write_verify(
- 	struct xfs_buf_log_item	*bip = bp->b_fspriv;
- 	int			error;
- 
--	error = xfs_sb_verify(bp);
-+	error = xfs_sb_verify(bp, false);
- 	if (error) {
- 		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
- 		xfs_buf_ioerror(bp, error);
 -- 
 1.7.10.4
 
