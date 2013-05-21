@@ -1,25 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A2D1829DF8
-	for <xfs@oss.sgi.com>; Tue, 21 May 2013 15:27:20 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4C1C8AC003
-	for <xfs@oss.sgi.com>; Tue, 21 May 2013 13:27:17 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	kUrdOWFiNfKs7CMB for <xfs@oss.sgi.com>;
-	Tue, 21 May 2013 13:27:16 -0700 (PDT)
-Date: Wed, 22 May 2013 06:27:14 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 11/11] xfs: increase number of ACL entries for V5
-	superblocks
-Message-ID: <20130521202714.GP24543@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id 73BAD29DF8
+	for <xfs@oss.sgi.com>; Tue, 21 May 2013 15:52:50 -0500 (CDT)
+Date: Tue, 21 May 2013 15:52:49 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 00/11] xfs: fixes for 3.10-rc3
+Message-ID: <20130521205249.GL20028@sgi.com>
 References: <1369123330-9579-1-git-send-email-david@fromorbit.com>
-	<1369123330-9579-12-git-send-email-david@fromorbit.com>
-	<519B7DE9.8030604@redhat.com>
+	<20130521162647.GD19505@sgi.com> <20130521202445.GO24543@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <519B7DE9.8030604@redhat.com>
+In-Reply-To: <20130521202445.GO24543@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,77 +23,67 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: bpm@sgi.com, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, May 21, 2013 at 10:00:09AM -0400, Brian Foster wrote:
-> On 05/21/2013 04:02 AM, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
+Hey,
+
+On Wed, May 22, 2013 at 06:24:45AM +1000, Dave Chinner wrote:
+> On Tue, May 21, 2013 at 11:26:47AM -0500, Ben Myers wrote:
+> > Hi Dave,
 > > 
-> > The limit of 25 ACL entries is arbitrary, but baked into the on-disk
-> > format.  For version 5 superblocks, increase it to the maximum nuber
-> > of ACLs that can fit into a single xattr.
+> > On Tue, May 21, 2013 at 06:01:59PM +1000, Dave Chinner wrote:
+> > > This is my current kernel bug fix patch series. I've updated it
+> > > against a current xfsdev tree, and contains all the fixes mentioned
+> > > in the "fixes for 3.10-rc2 (updated)" thread. The first 7 patches
+> > > are patches from that series. The last 4 are new patches.
+> > >
+> > > The first new patch stops CRC enabled filesystems from spamming the
+> > > log. It currently emits an "Experimental" warning ever time the
+> > > superblock is written, which is typically every 30s.
+> > >
+> > > The second path ("rework remote attr CRCs") is the changes I
+> > > mentioned in the "fixes for 3.10-rc2 (updated)" thread. The code is
+> > > far more robust as a result of these changes, and I think we really
+> > > need to change the format as done in this patch. Once we have
+> > > decided on the way forward, I'll port this to userspace.
+> > > 
+> > > The third patch fixes a remote symlink problem - I didn't hit this
+> > > until I'd redone the remote attr CRCs and the 1k block size
+> > > filesystem testing made it passed the attribute tests it was failing
+> > > on.
+> > > 
+> > > Finally, the last patch is another on-disk format change - one that
+> > > removes the 25 entry limit on ACLs. It doesn't invalidate anything
+> > > that is already on disk, just allows ACLs on v5 superblock
+> > > filesystems to store more than 25 ACLs in an xattr. In fact, it
+> > > allows (65536 - 4) / 12 = 5461 entries to be stored in a single
+> > > ACL, so I don't see anyone running out on v5 superblocks....
+> > > 
+> > > Thoughts, comments?
 > > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  fs/xfs/xfs_acl.c |   31 ++++++++++++++++++-------------
-> >  fs/xfs/xfs_acl.h |   30 +++++++++++++++++++++++-------
-> >  2 files changed, 41 insertions(+), 20 deletions(-)
-> > 
-> ...
-> > diff --git a/fs/xfs/xfs_acl.h b/fs/xfs/xfs_acl.h
-> > index 39632d9..5310a52 100644
-> > --- a/fs/xfs/xfs_acl.h
-> > +++ b/fs/xfs/xfs_acl.h
-> > @@ -22,19 +22,35 @@ struct inode;
-> >  struct posix_acl;
-> >  struct xfs_inode;
-> >  
-> > -#define XFS_ACL_MAX_ENTRIES 25
-> >  #define XFS_ACL_NOT_PRESENT (-1)
-> >  
-> >  /* On-disk XFS access control list structure */
-> > +struct xfs_acl_entry {
-> > +	__be32	ae_tag;
-> > +	__be32	ae_id;
-> > +	__be16	ae_perm;
-> > +	__be16	ae_pad;		/* fill the implicit hole in the structure */
-> > +};
-> > +
-> >  struct xfs_acl {
-> > -	__be32		acl_cnt;
-> > -	struct xfs_acl_entry {
-> > -		__be32	ae_tag;
-> > -		__be32	ae_id;
-> > -		__be16	ae_perm;
-> > -	} acl_entry[XFS_ACL_MAX_ENTRIES];
-> > +	__be32			acl_cnt;
-> > +	struct xfs_acl_entry	acl_entry[0];
-> >  };
-> >  
-> > +/*
-> > + * The number of ACL entries allowed is defined by the on-disk format.
-> > + * For v4 superblocks, that is limited to 25 entries. For v5 superblocks, it is
-> > + * limited only by the maximum size of the xattr that stores the information.
-> > + */
-> > +#define XFS_ACL_MAX_ENTRIES(mp)	\
-> > +	(xfs_sb_version_hascrc(&mp->m_sb) \
-> > +	   ?  (XATTR_SIZE_MAX - sizeof(__be32) / sizeof(struct xfs_acl_entry)) \
-> 					
-> It looks like this should be:
+> > I'll look into these but I am concerned that we're starting to get into 3.11
+> > territory.
 > 
-> 	(XATTR_SIZE_MAX - sizeof(__be32)) / sizeof(struct xfs_acl_entry)
-> 
-> (i.e., misplaced parens)
+> The moment we release the first kernel with the format in it, we
+> need to use feature bits for on-disk format changes, experimental
+> tag or not. Hence IMO this needs to be fixed before an initial
+> release.
 
-Yup, good catch.
+There's plenty of bits to go around.  ;)
 
-Cheers,
+> It's not a huge change from a code perspective, and it's a lot more
+> reliable in my testing....
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I'm just a bit leery of a redesign at this late juncture.  We always seem to
+get into trouble at the last minute...  Another option is to revert just the
+xattr crc support and slap it back in once it has stablized after the release,
+but we need to flip a bit for that too...  Anyway, I need to look your proposed
+code to see what's what.
+
+Seems like xattrs might be one area where we could use some work in xfstests?
+
+-Ben
 
 _______________________________________________
 xfs mailing list
