@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id BED0829E17
-	for <xfs@oss.sgi.com>; Tue, 21 May 2013 03:02:40 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 4451C29E06
+	for <xfs@oss.sgi.com>; Tue, 21 May 2013 03:02:43 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id AB20D8F8049
-	for <xfs@oss.sgi.com>; Tue, 21 May 2013 01:02:40 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 322D8304032
+	for <xfs@oss.sgi.com>; Tue, 21 May 2013 01:02:43 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	OinyaWjEv0sKcCb7 for <xfs@oss.sgi.com>;
-	Tue, 21 May 2013 01:02:39 -0700 (PDT)
+	JXI1bCiIW2AOmaWX for <xfs@oss.sgi.com>;
+	Tue, 21 May 2013 01:02:41 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 10/11] xfs: fix incorrect remote symlink block count
-Date: Tue, 21 May 2013 18:02:09 +1000
-Message-Id: <1369123330-9579-11-git-send-email-david@fromorbit.com>
+Subject: [PATCH 04/11] xfs: remote attribute tail zeroing does too much
+Date: Tue, 21 May 2013 18:02:03 +1000
+Message-Id: <1369123330-9579-5-git-send-email-david@fromorbit.com>
 In-Reply-To: <1369123330-9579-1-git-send-email-david@fromorbit.com>
 References: <1369123330-9579-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,83 +33,114 @@ Cc: bpm@sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When CRCs are enabled, the number of blocks needed to hold a remote
-symlink on a 1k block size filesystem may be 2 instead of 1. The
-transaction reservation for the allocated bloks was not taking this
-into account and only allocating one block. hence when trying to
-read or invalidate such symlinks, we are mapping a hole where there
-should be a block and things go bad at that point.
+When an attribute data does not fill then entire remote block, we
+zero the remaining part of the buffer. This, however, needs to take
+into account that the buffer has a header, and so the offset where
+zeroing starts and the length of zeroing need to take this into
+account. Otherwise we end up with zeros over the end of the
+attribute value when CRCs are enabled.
 
-Fix the reservation to use the correct block count, clean up the
-block count calculation similar to the remote attribute calculation,
-and add a debug guard to detect when we don't write the entire
-symlink to disk.
+While there, make sure we only ask to map an extent that covers the
+remaining range of the attribute, rather than asking every time for
+the full length of remote data. If the remote attribute blocks are
+contiguous with other parts of the attribute tree, it will map those
+blocks as well and we can potentially zero them incorrectly. We can
+also get buffer size mistmatches when trying to read or remove the
+remote attribute, and this can lead to not finding the correct
+buffer when looking it up in cache.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_symlink.c |   20 ++++++--------------
- 1 file changed, 6 insertions(+), 14 deletions(-)
+ fs/xfs/xfs_attr_remote.c |   37 ++++++++++++++++++-------------------
+ 1 file changed, 18 insertions(+), 19 deletions(-)
 
-diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-index 5f234389..195a403 100644
---- a/fs/xfs/xfs_symlink.c
-+++ b/fs/xfs/xfs_symlink.c
-@@ -56,16 +56,9 @@ xfs_symlink_blocks(
- 	struct xfs_mount *mp,
- 	int		pathlen)
- {
--	int		fsblocks = 0;
--	int		len = pathlen;
-+	int buflen = XFS_SYMLINK_BUF_SPACE(mp, mp->m_sb.sb_blocksize);
+diff --git a/fs/xfs/xfs_attr_remote.c b/fs/xfs/xfs_attr_remote.c
+index bcdc07c..e207bf0 100644
+--- a/fs/xfs/xfs_attr_remote.c
++++ b/fs/xfs/xfs_attr_remote.c
+@@ -296,10 +296,7 @@ xfs_attr_rmtval_set(
+ 	 * and we may not need that many, so we have to handle this when
+ 	 * allocating the blocks below. 
+ 	 */
+-	if (!crcs)
+-		blkcnt = XFS_B_TO_FSB(mp, args->valuelen);
+-	else
+-		blkcnt = xfs_attr3_rmt_blocks(mp, args->valuelen);
++	blkcnt = xfs_attr3_rmt_blocks(mp, args->valuelen);
  
--	do {
--		fsblocks++;
--		len -= XFS_SYMLINK_BUF_SPACE(mp, mp->m_sb.sb_blocksize);
--	} while (len > 0);
+ 	error = xfs_bmap_first_unused(args->trans, args->dp, blkcnt, &lfileoff,
+ 						   XFS_ATTR_FORK);
+@@ -394,8 +391,11 @@ xfs_attr_rmtval_set(
+ 	 */
+ 	lblkno = args->rmtblkno;
+ 	valuelen = args->valuelen;
++	blkcnt = args->rmtblkcnt;
+ 	while (valuelen > 0) {
+ 		int	byte_cnt;
++		int	hdr_size;
++		int	dblkcnt;
+ 		char	*buf;
+ 
+ 		/*
+@@ -404,7 +404,7 @@ xfs_attr_rmtval_set(
+ 		xfs_bmap_init(args->flist, args->firstblock);
+ 		nmap = 1;
+ 		error = xfs_bmapi_read(dp, (xfs_fileoff_t)lblkno,
+-				       args->rmtblkcnt, &map, &nmap,
++				       blkcnt, &map, &nmap,
+ 				       XFS_BMAPI_ATTRFORK);
+ 		if (error)
+ 			return(error);
+@@ -413,26 +413,25 @@ xfs_attr_rmtval_set(
+ 		       (map.br_startblock != HOLESTARTBLOCK));
+ 
+ 		dblkno = XFS_FSB_TO_DADDR(mp, map.br_startblock),
+-		blkcnt = XFS_FSB_TO_BB(mp, map.br_blockcount);
++		dblkcnt = XFS_FSB_TO_BB(mp, map.br_blockcount);
+ 
+-		bp = xfs_buf_get(mp->m_ddev_targp, dblkno, blkcnt, 0);
++		bp = xfs_buf_get(mp->m_ddev_targp, dblkno, dblkcnt, 0);
+ 		if (!bp)
+ 			return ENOMEM;
+ 		bp->b_ops = &xfs_attr3_rmt_buf_ops;
 -
--	ASSERT(fsblocks <= XFS_SYMLINK_MAPS);
--	return fsblocks;
-+	return (pathlen + buflen - 1) / buflen;
- }
+-		byte_cnt = BBTOB(bp->b_length);
+-		byte_cnt = XFS_ATTR3_RMT_BUF_SPACE(mp, byte_cnt);
+-		if (valuelen < byte_cnt)
+-			byte_cnt = valuelen;
+-
+ 		buf = bp->b_addr;
+-		buf += xfs_attr3_rmt_hdr_set(mp, dp->i_ino, offset,
++
++		byte_cnt = XFS_ATTR3_RMT_BUF_SPACE(mp, BBTOB(bp->b_length));
++		byte_cnt = min_t(int, valuelen, byte_cnt);
++		hdr_size = xfs_attr3_rmt_hdr_set(mp, dp->i_ino, offset,
+ 					     byte_cnt, bp);
+-		memcpy(buf, src, byte_cnt);
++		ASSERT(hdr_size + byte_cnt <= BBTOB(bp->b_length));
  
- static int
-@@ -405,7 +398,7 @@ xfs_symlink(
- 	if (pathlen <= XFS_LITINO(mp, dp->i_d.di_version))
- 		fs_blocks = 0;
- 	else
--		fs_blocks = XFS_B_TO_FSB(mp, pathlen);
-+		fs_blocks = xfs_symlink_blocks(mp, pathlen);
- 	resblks = XFS_SYMLINK_SPACE_RES(mp, link_name->len, fs_blocks);
- 	error = xfs_trans_reserve(tp, resblks, XFS_SYMLINK_LOG_RES(mp), 0,
- 			XFS_TRANS_PERM_LOG_RES, XFS_SYMLINK_LOG_COUNT);
-@@ -512,7 +505,7 @@ xfs_symlink(
- 		cur_chunk = target_path;
- 		offset = 0;
- 		for (n = 0; n < nmaps; n++) {
--			char *buf;
-+			char	*buf;
+-		if (byte_cnt < BBTOB(bp->b_length))
+-			xfs_buf_zero(bp, byte_cnt,
+-				     BBTOB(bp->b_length) - byte_cnt);
++		memcpy(buf + hdr_size, src, byte_cnt);
++
++		if (byte_cnt + hdr_size < BBTOB(bp->b_length))
++			xfs_buf_zero(bp, byte_cnt + hdr_size,
++				     BBTOB(bp->b_length) - byte_cnt - hdr_size);
  
- 			d = XFS_FSB_TO_DADDR(mp, mval[n].br_startblock);
- 			byte_cnt = XFS_FSB_TO_B(mp, mval[n].br_blockcount);
-@@ -525,9 +518,7 @@ xfs_symlink(
- 			bp->b_ops = &xfs_symlink_buf_ops;
+ 		error = xfs_bwrite(bp);	/* GROT: NOTE: synchronous write */
+ 		xfs_buf_relse(bp);
+@@ -442,9 +441,9 @@ xfs_attr_rmtval_set(
+ 		src += byte_cnt;
+ 		valuelen -= byte_cnt;
+ 		offset += byte_cnt;
+-		hdrcnt--;
  
- 			byte_cnt = XFS_SYMLINK_BUF_SPACE(mp, byte_cnt);
--			if (pathlen < byte_cnt) {
--				byte_cnt = pathlen;
--			}
-+			byte_cnt = min(byte_cnt, pathlen);
- 
- 			buf = bp->b_addr;
- 			buf += xfs_symlink_hdr_set(mp, ip->i_ino, offset,
-@@ -542,6 +533,7 @@ xfs_symlink(
- 			xfs_trans_log_buf(tp, bp, 0, (buf + byte_cnt - 1) -
- 							(char *)bp->b_addr);
- 		}
-+		ASSERT(pathlen == 0);
+ 		lblkno += map.br_blockcount;
++		blkcnt -= map.br_blockcount;
  	}
- 
- 	/*
+ 	ASSERT(valuelen == 0);
+ 	return 0;
 -- 
 1.7.10.4
 
