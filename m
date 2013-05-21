@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C63A029E06
-	for <xfs@oss.sgi.com>; Tue, 21 May 2013 03:02:35 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id AB51B29E07
+	for <xfs@oss.sgi.com>; Tue, 21 May 2013 03:02:36 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B259E304043
-	for <xfs@oss.sgi.com>; Tue, 21 May 2013 01:02:35 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 734B5304043
+	for <xfs@oss.sgi.com>; Tue, 21 May 2013 01:02:36 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	4mCLtl2T5cgfDKtW for <xfs@oss.sgi.com>;
+	CXu0C5Vcp0IlmHMq for <xfs@oss.sgi.com>;
 	Tue, 21 May 2013 01:02:34 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 01/11] xfs: avoid nesting transactions in
-	xfs_qm_scall_setqlim()
-Date: Tue, 21 May 2013 18:02:00 +1000
-Message-Id: <1369123330-9579-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 03/11] xfs: remote attribute read too short
+Date: Tue, 21 May 2013 18:02:02 +1000
+Message-Id: <1369123330-9579-4-git-send-email-david@fromorbit.com>
 In-Reply-To: <1369123330-9579-1-git-send-email-david@fromorbit.com>
 References: <1369123330-9579-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,105 +33,69 @@ Cc: bpm@sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Lockdep reports:
+Reading a maximally size remote attribute fails when CRCs are
+enabled with this verification error:
 
-=============================================
-[ INFO: possible recursive locking detected ]
-3.9.0+ #3 Not tainted
----------------------------------------------
-setquota/28368 is trying to acquire lock:
- (sb_internal){++++.?}, at: [<c11e8846>] xfs_trans_alloc+0x26/0x50
+XFS (vdb): remote attribute header does not match required off/len/owner)
 
-but task is already holding lock:
- (sb_internal){++++.?}, at: [<c11e8846>] xfs_trans_alloc+0x26/0x50
+There are two reasons for this, the first being that the
+length of the buffer being read is determined from the
+args->rmtblkcnt which doesn't take into account CRC headers. Hence
+the mapped length ends up being too short and so we need to
+calculate it directly from the value length.
 
-from xfs_qm_scall_setqlim()->xfs_dqread() when a dquot needs to be
-allocated.
+The second is that the byte count of valid data within a buffer is
+capped by the length of the data and so doesn't take into account
+that the buffer might be longer due to headers. Hence we need to
+calculate the data space in the buffer first before calculating the
+actual byte count of data.
 
-xfs_qm_scall_setqlim() is starting a transaction and then not
-passing it into xfs_qm_dqet() and so it starts it's own transaction
-when allocating the dquot.  Splat!
-
-Fix this by not allocating the dquot in xfs_qm_scall_setqlim()
-inside the setqlim transaction. This requires getting the dquot
-first (and allocating it if necessary) then dropping and relocking
-the dquot before joining it to the setqlim transaction.
-
-Reported-by: Michael L. Semon <mlsemon35@gmail.com>
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_qm_syscalls.c |   40 +++++++++++++++++++++++-----------------
- 1 file changed, 23 insertions(+), 17 deletions(-)
+ fs/xfs/xfs_attr_remote.c |   15 +++++++++------
+ 1 file changed, 9 insertions(+), 6 deletions(-)
 
-diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-index c41190c..6cdf6ff 100644
---- a/fs/xfs/xfs_qm_syscalls.c
-+++ b/fs/xfs/xfs_qm_syscalls.c
-@@ -489,31 +489,36 @@ xfs_qm_scall_setqlim(
- 	if ((newlim->d_fieldmask & XFS_DQ_MASK) == 0)
- 		return 0;
- 
--	tp = xfs_trans_alloc(mp, XFS_TRANS_QM_SETQLIM);
--	error = xfs_trans_reserve(tp, 0, XFS_QM_SETQLIM_LOG_RES(mp),
--				  0, 0, XFS_DEFAULT_LOG_COUNT);
--	if (error) {
--		xfs_trans_cancel(tp, 0);
--		return (error);
--	}
--
- 	/*
- 	 * We don't want to race with a quotaoff so take the quotaoff lock.
--	 * (We don't hold an inode lock, so there's nothing else to stop
--	 * a quotaoff from happening). (XXXThis doesn't currently happen
--	 * because we take the vfslock before calling xfs_qm_sysent).
-+	 * We don't hold an inode lock, so there's nothing else to stop
-+	 * a quotaoff from happening.
- 	 */
- 	mutex_lock(&q->qi_quotaofflock);
- 
- 	/*
--	 * Get the dquot (locked), and join it to the transaction.
--	 * Allocate the dquot if this doesn't exist.
-+	 * Get the dquot (locked) before we start, as we need to do a
-+	 * transaction to allocate it if it doesn't exist. Once we have the
-+	 * dquot, unlock it so we can start the next transaction safely. We hold
-+	 * a reference to the dquot, so it's safe to do this unlock/lock without
-+	 * it being reclaimed in the mean time.
- 	 */
--	if ((error = xfs_qm_dqget(mp, NULL, id, type, XFS_QMOPT_DQALLOC, &dqp))) {
--		xfs_trans_cancel(tp, XFS_TRANS_ABORT);
-+	error = xfs_qm_dqget(mp, NULL, id, type, XFS_QMOPT_DQALLOC, &dqp);
-+	if (error) {
- 		ASSERT(error != ENOENT);
- 		goto out_unlock;
- 	}
-+	xfs_dqunlock(dqp);
-+
-+	tp = xfs_trans_alloc(mp, XFS_TRANS_QM_SETQLIM);
-+	error = xfs_trans_reserve(tp, 0, XFS_QM_SETQLIM_LOG_RES(mp),
-+				  0, 0, XFS_DEFAULT_LOG_COUNT);
-+	if (error) {
-+		xfs_trans_cancel(tp, 0);
-+		goto out_rele;
+diff --git a/fs/xfs/xfs_attr_remote.c b/fs/xfs/xfs_attr_remote.c
+index aad95b0..bcdc07c 100644
+--- a/fs/xfs/xfs_attr_remote.c
++++ b/fs/xfs/xfs_attr_remote.c
+@@ -52,9 +52,11 @@ xfs_attr3_rmt_blocks(
+ 	struct xfs_mount *mp,
+ 	int		attrlen)
+ {
+-	int		buflen = XFS_ATTR3_RMT_BUF_SPACE(mp,
+-							 mp->m_sb.sb_blocksize);
+-	return (attrlen + buflen - 1) / buflen;
++	if (xfs_sb_version_hascrc(&mp->m_sb)) {
++		int buflen = XFS_ATTR3_RMT_BUF_SPACE(mp, mp->m_sb.sb_blocksize);
++		return (attrlen + buflen - 1) / buflen;
 +	}
-+
-+	xfs_dqlock(dqp);
- 	xfs_trans_dqjoin(tp, dqp);
- 	ddq = &dqp->q_core;
- 
-@@ -621,9 +626,10 @@ xfs_qm_scall_setqlim(
- 	xfs_trans_log_dquot(tp, dqp);
- 
- 	error = xfs_trans_commit(tp, 0);
--	xfs_qm_dqrele(dqp);
- 
-- out_unlock:
-+out_rele:
-+	xfs_qm_dqrele(dqp);
-+out_unlock:
- 	mutex_unlock(&q->qi_quotaofflock);
- 	return error;
++	return XFS_B_TO_FSB(mp, attrlen);
  }
+ 
+ static bool
+@@ -206,8 +208,9 @@ xfs_attr_rmtval_get(
+ 
+ 	while (valuelen > 0) {
+ 		nmap = ATTR_RMTVALUE_MAPSIZE;
++		blkcnt = xfs_attr3_rmt_blocks(mp, valuelen);
+ 		error = xfs_bmapi_read(args->dp, (xfs_fileoff_t)lblkno,
+-				       args->rmtblkcnt, map, &nmap,
++				       blkcnt, map, &nmap,
+ 				       XFS_BMAPI_ATTRFORK);
+ 		if (error)
+ 			return error;
+@@ -227,8 +230,8 @@ xfs_attr_rmtval_get(
+ 			if (error)
+ 				return error;
+ 
+-			byte_cnt = min_t(int, valuelen, BBTOB(bp->b_length));
+-			byte_cnt = XFS_ATTR3_RMT_BUF_SPACE(mp, byte_cnt);
++			byte_cnt = XFS_ATTR3_RMT_BUF_SPACE(mp, BBTOB(bp->b_length));
++			byte_cnt = min_t(int, valuelen, byte_cnt);
+ 
+ 			src = bp->b_addr;
+ 			if (xfs_sb_version_hascrc(&mp->m_sb)) {
 -- 
 1.7.10.4
 
