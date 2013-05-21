@@ -1,15 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 60A4F29DF8
-	for <xfs@oss.sgi.com>; Tue, 21 May 2013 11:26:48 -0500 (CDT)
-Date: Tue, 21 May 2013 11:26:47 -0500
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 6063329DF8
+	for <xfs@oss.sgi.com>; Tue, 21 May 2013 13:26:33 -0500 (CDT)
+Date: Tue, 21 May 2013 13:26:30 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 00/11] xfs: fixes for 3.10-rc3
-Message-ID: <20130521162647.GD19505@sgi.com>
-References: <1369123330-9579-1-git-send-email-david@fromorbit.com>
+Subject: Re: [BUG] XFS: Assertion failed: atomic_read(&pag->pag_ref) == 0,
+	file:	fs/xfs/xfs_mount.c, line: 272
+Message-ID: <20130521182630.GJ20028@sgi.com>
+References: <519B6738.9030603@open-e.com>
+ <519B6915.2010407@open-e.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1369123330-9579-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <519B6915.2010407@open-e.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,53 +20,65 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Arkadiusz =?utf-8?Q?Buba=C5=82a?= <arkadiusz.bubala@open-e.com>
 Cc: xfs@oss.sgi.com
 
-Hi Dave,
-
-On Tue, May 21, 2013 at 06:01:59PM +1000, Dave Chinner wrote:
-> This is my current kernel bug fix patch series. I've updated it
-> against a current xfsdev tree, and contains all the fixes mentioned
-> in the "fixes for 3.10-rc2 (updated)" thread. The first 7 patches
-> are patches from that series. The last 4 are new patches.
->
-> The first new patch stops CRC enabled filesystems from spamming the
-> log. It currently emits an "Experimental" warning ever time the
-> superblock is written, which is typically every 30s.
->
-> The second path ("rework remote attr CRCs") is the changes I
-> mentioned in the "fixes for 3.10-rc2 (updated)" thread. The code is
-> far more robust as a result of these changes, and I think we really
-> need to change the format as done in this patch. Once we have
-> decided on the way forward, I'll port this to userspace.
-> 
-> The third patch fixes a remote symlink problem - I didn't hit this
-> until I'd redone the remote attr CRCs and the 1k block size
-> filesystem testing made it passed the attribute tests it was failing
-> on.
-> 
-> Finally, the last patch is another on-disk format change - one that
-> removes the 25 entry limit on ACLs. It doesn't invalidate anything
-> that is already on disk, just allows ACLs on v5 superblock
-> filesystems to store more than 25 ACLs in an xattr. In fact, it
-> allows (65536 - 4) / 12 = 5461 entries to be stored in a single
-> ACL, so I don't see anyone running out on v5 superblocks....
-> 
-> Thoughts, comments?
-
-I'll look into these but I am concerned that we're starting to get into 3.11
-territory.  We'll see how the reviews go.  FWIW I have no objection to changing
-the on-disk format at any time until the 'experimental' tag is removed.
-
-Regards,
-	Ben
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+SGV5IEFya2FkaXVzeiwKCk9uIFR1ZSwgTWF5IDIxLCAyMDEzIGF0IDAyOjMxOjE3UE0gKzAyMDAs
+IEFya2FkaXVzeiBCdWJhxYJhIHdyb3RlOgo+IE9uIDIxLjA1LjIwMTMgMTQ6MjMsIEFya2FkaXVz
+eiBCdWJhxYJhIHdyb3RlOgo+ID5IZWxsbywKPiA+SSd2ZSBnb3QgYSBjYWxsIHRyYWNlIHdoaWNo
+IHNob3VsZCBiZSBmaXhlZCBieSAiZHJvcCBidWZmZXIgaW8KPiA+cmVmZXJlbmNlIHdoZW4gYSBi
+YWQgYmlvIGlzIGJ1aWx0IiBwYXRjaAo+ID4oaHR0cDovL3BhdGNod29yay54ZnMub3JnL3BhdGNo
+LzM5NTYvKS4gRXJyb3Igb2NjdXJlZCBvbiBhbHJlYWR5Cj4gPnBhdGNoZWQgTGludXgga2VybmVs
+IDMuMi40Mi4KPiA+Cj4gPlRlc3QgZW52aXJvbm1lbnQgY29uc2lzdCB0d28gbWFjaGluZXMgdGFy
+Z2V0IGFuZCBpbml0aWF0b3IuCj4gPkZpcnN0IG1hY2hpbmUgd29ya3MgYXMgdGFyZ2V0IHdpdGgg
+UUxvZ2ljIENvcnAuIElTUDI0MzItYmFzZWQgNEdiCj4gPkZpYnJlIENoYW5uZWwgZGV2aWNlLiBT
+dG9yYWdlIGlzIHBsYWNlZCBvbiB0d28gS0lOR1NUT04gU05WNDI1Uwo+ID5TU0Qgd29ya2luZyBh
+cyBSQUlEMCBhcnJheS4gUkFJRCBpcyBtYW5hZ2VkIGJ5IExTSSBNZWdhUkFJRCBTQVMKPiA+MTA2
+OCBjb250cm9sbGVyLgo+ID5TZWNvbmQgbWFjaGluZSB3b3JrcyBhcyBpbml0aWF0b3Igd2l0aCB0
+aGUgc2FtZSBRTG9naWMgY2FyZC4KPiA+Cj4gPkFmdGVyIGZldyBkYXlzIG9mIHJ1bm5pbmcgdGVz
+dCBzY3JpcHQgSSBnb3QgZm9sbG93aW5nIGNhbGwgdHJhY2UKPiA+YW5kIFhGUyBzdG9wcGVkIHdv
+cmtpbmcuCj4gPgo+IFNvcnJ5IEkgcHJvdmlkZWQgaW5jb21wbGV0ZSBkbWVzZyBsb2dzLiBUaGVz
+ZSBzaG91bGQgcHJvdmlkZSBtb3JlCj4gaW5mb3JtYXRpb246Cj4gCj4gWzkwMDExLjg4NDgxMl0g
+WEZTIChkbS00Nik6IG1ldGFkYXRhIEkvTyBlcnJvcjogYmxvY2sgMHgxICgieGZzX3RyYW5zX3Jl
+YWRfYnVmIikgZXJyb3IgNSBidWYgY291bnQgNTEyCj4gWzkwMDExLjk0MTM3Nl0gWEZTIChkbS00
+Nik6IHhsb2dfcmVjb3Zlcl9jaGVja19zdW1tYXJ5IGFnZiByZWFkIGZhaWxlZCBhZ25vIDAgZXJy
+b3IgNQo+IFs5MDAxMS45ODc4OTBdIFhGUyAoZG0tNDYpOiBtZXRhZGF0YSBJL08gZXJyb3I6IGJs
+b2NrIDB4MiAoInhmc190cmFuc19yZWFkX2J1ZiIpIGVycm9yIDUgYnVmIGNvdW50IDUxMgo+IFs5
+MDAxMi4wNDQxNzldIFhGUyAoZG0tNDYpOiB4bG9nX3JlY292ZXJfY2hlY2tfc3VtbWFyeSBhZ2kg
+cmVhZCBmYWlsZWQgYWdubyAwIGVycm9yIDUKPiBbOTAwMTIuMDkyMTc2XSBYRlMgKGRtLTQ2KTog
+bWV0YWRhdGEgSS9PIGVycm9yOiBibG9jayAweDdkMDAwMSAoInhmc190cmFuc19yZWFkX2J1ZiIp
+IGVycm9yIDUgYnVmIGNvdW50IDUxMgo+IFs5MDAxMi4xNTAzNzldIFhGUyAoZG0tNDYpOiB4bG9n
+X3JlY292ZXJfY2hlY2tfc3VtbWFyeSBhZ2YgcmVhZCBmYWlsZWQgYWdubyAxIGVycm9yIDUKPiBb
+OTAwMTIuMTk2Nzc2XSBYRlMgKGRtLTQ2KTogbWV0YWRhdGEgSS9PIGVycm9yOiBibG9jayAweDdk
+MDAwMiAoInhmc190cmFuc19yZWFkX2J1ZiIpIGVycm9yIDUgYnVmIGNvdW50IDUxMgo+IFs5MDAx
+Mi4xOTY3ODBdIFhGUyAoZG0tNDYpOiB4bG9nX3JlY292ZXJfY2hlY2tfc3VtbWFyeSBhZ2kgcmVh
+ZCBmYWlsZWQgYWdubyAxIGVycm9yIDUKPiBbOTAwMTIuMTk2NzkxXSBYRlMgKGRtLTQ2KTogbWV0
+YWRhdGEgSS9PIGVycm9yOiBibG9jayAweGZhMDAwMSAoInhmc190cmFuc19yZWFkX2J1ZiIpIGVy
+cm9yIDUgYnVmIGNvdW50IDUxMgo+IFs5MDAxMi4xOTY3OTVdIFhGUyAoZG0tNDYpOiB4bG9nX3Jl
+Y292ZXJfY2hlY2tfc3VtbWFyeSBhZ2YgcmVhZCBmYWlsZWQgYWdubyAyIGVycm9yIDUKPiBbOTAw
+MTIuMTk2ODAyXSBYRlMgKGRtLTQ2KTogbWV0YWRhdGEgSS9PIGVycm9yOiBibG9jayAweGZhMDAw
+MiAoInhmc190cmFuc19yZWFkX2J1ZiIpIGVycm9yIDUgYnVmIGNvdW50IDUxMgo+IFs5MDAxMi4x
+OTY4MDZdIFhGUyAoZG0tNDYpOiB4bG9nX3JlY292ZXJfY2hlY2tfc3VtbWFyeSBhZ2kgcmVhZCBm
+YWlsZWQgYWdubyAyIGVycm9yIDUKPiBbOTAwMTIuMTk2ODEzXSBYRlMgKGRtLTQ2KTogbWV0YWRh
+dGEgSS9PIGVycm9yOiBibG9jayAweDE3NzAwMDEgKCJ4ZnNfdHJhbnNfcmVhZF9idWYiKSBlcnJv
+ciA1IGJ1ZiBjb3VudCA1MTIKPiBbOTAwMTIuMTk2ODE3XSBYRlMgKGRtLTQ2KTogeGxvZ19yZWNv
+dmVyX2NoZWNrX3N1bW1hcnkgYWdmIHJlYWQgZmFpbGVkIGFnbm8gMyBlcnJvciA1Cj4gWzkwMDEy
+LjE5NjgyM10gWEZTIChkbS00Nik6IG1ldGFkYXRhIEkvTyBlcnJvcjogYmxvY2sgMHgxNzcwMDAy
+ICgieGZzX3RyYW5zX3JlYWRfYnVmIikgZXJyb3IgNSBidWYgY291bnQgNTEyCj4gWzkwMDEyLjE5
+NjgyN10gWEZTIChkbS00Nik6IHhsb2dfcmVjb3Zlcl9jaGVja19zdW1tYXJ5IGFnaSByZWFkIGZh
+aWxlZCBhZ25vIDMgZXJyb3IgNQo+IFs5MDAxMi4xOTY4NDNdIFhGUyAoZG0tNDYpOiBtZXRhZGF0
+YSBJL08gZXJyb3I6IGJsb2NrIDB4NDAgKCJ4ZnNfdHJhbnNfcmVhZF9idWYiKSBlcnJvciA1IGJ1
+ZiBjb3VudCA4MTkyCj4gWzkwMDEyLjE5Njg0N10gWEZTIChkbS00Nik6IHhmc19pbWFwX3RvX2Jw
+OiB4ZnNfdHJhbnNfcmVhZF9idWYoKSByZXR1cm5lZCBlcnJvciA1Lgo+IFs5MDAxMi4xOTY4NTJd
+IFhGUyAoZG0tNDYpOiBmYWlsZWQgdG8gcmVhZCByb290IGlub2RlCj4gWzkwMDEyLjE5Njk2M10g
+WEZTOiBBc3NlcnRpb24gZmFpbGVkOiBhdG9taWNfcmVhZCgmcGFnLT5wYWdfcmVmKSA9PSAwLCBm
+aWxlOiBmcy94ZnMveGZzX21vdW50LmMsIGxpbmU6IDI3MgoKQW55ICd4bG9nX3NwYWNlX2xlZnQn
+IG1lc3NhZ2VzIGFzIHdlcmUgcmVwb3J0ZWQgd2l0aCB0aGUgY29tbWl0IHlvdSBtZW50aW9uZWQ/
+CkhhdmUgeW91IGF0dGVtcHRlZCB0byBiYWNrcG9ydCB0aGUgcGF0Y2ggeWV0PwoKUmVnYXJkcywK
+CUJlbgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZz
+IG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4v
+bGlzdGluZm8veGZzCg==
