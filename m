@@ -1,22 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 50C9A29DF8
-	for <xfs@oss.sgi.com>; Tue, 21 May 2013 07:31:26 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2AF59304070
-	for <xfs@oss.sgi.com>; Tue, 21 May 2013 05:31:25 -0700 (PDT)
-Received: from moutng.kundenserver.de (moutng.kundenserver.de [212.227.17.9])
-	by cuda.sgi.com with ESMTP id sDCPGsh9JZQMQeot (version=TLSv1
-	cipher=RC4-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 21 May 2013 05:31:24 -0700 (PDT)
-Message-ID: <519B6915.2010407@open-e.com>
-Date: Tue, 21 May 2013 14:31:17 +0200
-From: =?UTF-8?B?QXJrYWRpdXN6IEJ1YmHFgmE=?= <arkadiusz.bubala@open-e.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 261EC29DF8
+	for <xfs@oss.sgi.com>; Tue, 21 May 2013 09:03:04 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id EAC778F804C
+	for <xfs@oss.sgi.com>; Tue, 21 May 2013 07:03:00 -0700 (PDT)
+Message-ID: <519B7DE9.8030604@redhat.com>
+Date: Tue, 21 May 2013 10:00:09 -0400
+From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [BUG] XFS: Assertion failed: atomic_read(&pag->pag_ref) == 0,
-	file:	fs/xfs/xfs_mount.c, line: 272
-References: <519B6738.9030603@open-e.com>
-In-Reply-To: <519B6738.9030603@open-e.com>
+Subject: Re: [PATCH 11/11] xfs: increase number of ACL entries for V5
+	superblocks
+References: <1369123330-9579-1-git-send-email-david@fromorbit.com>
+	<1369123330-9579-12-git-send-email-david@fromorbit.com>
+In-Reply-To: <1369123330-9579-12-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,117 +22,86 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: bpm@sgi.com, xfs@oss.sgi.com
 
-T24gMjEuMDUuMjAxMyAxNDoyMywgQXJrYWRpdXN6IEJ1YmHFgmEgd3JvdGU6Cj4gSGVsbG8sCj4g
-SSd2ZSBnb3QgYSBjYWxsIHRyYWNlIHdoaWNoIHNob3VsZCBiZSBmaXhlZCBieSAiZHJvcCBidWZm
-ZXIgaW8gCj4gcmVmZXJlbmNlIHdoZW4gYSBiYWQgYmlvIGlzIGJ1aWx0IiBwYXRjaCAKPiAoaHR0
-cDovL3BhdGNod29yay54ZnMub3JnL3BhdGNoLzM5NTYvKS4gRXJyb3Igb2NjdXJlZCBvbiBhbHJl
-YWR5IAo+IHBhdGNoZWQgTGludXgga2VybmVsIDMuMi40Mi4KPgo+IFRlc3QgZW52aXJvbm1lbnQg
-Y29uc2lzdCB0d28gbWFjaGluZXMgdGFyZ2V0IGFuZCBpbml0aWF0b3IuCj4gRmlyc3QgbWFjaGlu
-ZSB3b3JrcyBhcyB0YXJnZXQgd2l0aCBRTG9naWMgQ29ycC4gSVNQMjQzMi1iYXNlZCA0R2IgCj4g
-RmlicmUgQ2hhbm5lbCBkZXZpY2UuIFN0b3JhZ2UgaXMgcGxhY2VkIG9uIHR3byBLSU5HU1RPTiBT
-TlY0MjVTIFNTRCAKPiB3b3JraW5nIGFzIFJBSUQwIGFycmF5LiBSQUlEIGlzIG1hbmFnZWQgYnkg
-TFNJIE1lZ2FSQUlEIFNBUyAxMDY4IAo+IGNvbnRyb2xsZXIuCj4gU2Vjb25kIG1hY2hpbmUgd29y
-a3MgYXMgaW5pdGlhdG9yIHdpdGggdGhlIHNhbWUgUUxvZ2ljIGNhcmQuCj4KPiBBZnRlciBmZXcg
-ZGF5cyBvZiBydW5uaW5nIHRlc3Qgc2NyaXB0IEkgZ290IGZvbGxvd2luZyBjYWxsIHRyYWNlIGFu
-ZCAKPiBYRlMgc3RvcHBlZCB3b3JraW5nLgo+ClNvcnJ5IEkgcHJvdmlkZWQgaW5jb21wbGV0ZSBk
-bWVzZyBsb2dzLiBUaGVzZSBzaG91bGQgcHJvdmlkZSBtb3JlIAppbmZvcm1hdGlvbjoKCls5MDAx
-MS44ODQ4MTJdIFhGUyAoZG0tNDYpOiBtZXRhZGF0YSBJL08gZXJyb3I6IGJsb2NrIDB4MSAoInhm
-c190cmFuc19yZWFkX2J1ZiIpIGVycm9yIDUgYnVmIGNvdW50IDUxMgpbOTAwMTEuOTQxMzc2XSBY
-RlMgKGRtLTQ2KTogeGxvZ19yZWNvdmVyX2NoZWNrX3N1bW1hcnkgYWdmIHJlYWQgZmFpbGVkIGFn
-bm8gMCBlcnJvciA1Cls5MDAxMS45ODc4OTBdIFhGUyAoZG0tNDYpOiBtZXRhZGF0YSBJL08gZXJy
-b3I6IGJsb2NrIDB4MiAoInhmc190cmFuc19yZWFkX2J1ZiIpIGVycm9yIDUgYnVmIGNvdW50IDUx
-MgpbOTAwMTIuMDQ0MTc5XSBYRlMgKGRtLTQ2KTogeGxvZ19yZWNvdmVyX2NoZWNrX3N1bW1hcnkg
-YWdpIHJlYWQgZmFpbGVkIGFnbm8gMCBlcnJvciA1Cls5MDAxMi4wOTIxNzZdIFhGUyAoZG0tNDYp
-OiBtZXRhZGF0YSBJL08gZXJyb3I6IGJsb2NrIDB4N2QwMDAxICgieGZzX3RyYW5zX3JlYWRfYnVm
-IikgZXJyb3IgNSBidWYgY291bnQgNTEyCls5MDAxMi4xNTAzNzldIFhGUyAoZG0tNDYpOiB4bG9n
-X3JlY292ZXJfY2hlY2tfc3VtbWFyeSBhZ2YgcmVhZCBmYWlsZWQgYWdubyAxIGVycm9yIDUKWzkw
-MDEyLjE5Njc3Nl0gWEZTIChkbS00Nik6IG1ldGFkYXRhIEkvTyBlcnJvcjogYmxvY2sgMHg3ZDAw
-MDIgKCJ4ZnNfdHJhbnNfcmVhZF9idWYiKSBlcnJvciA1IGJ1ZiBjb3VudCA1MTIKWzkwMDEyLjE5
-Njc4MF0gWEZTIChkbS00Nik6IHhsb2dfcmVjb3Zlcl9jaGVja19zdW1tYXJ5IGFnaSByZWFkIGZh
-aWxlZCBhZ25vIDEgZXJyb3IgNQpbOTAwMTIuMTk2NzkxXSBYRlMgKGRtLTQ2KTogbWV0YWRhdGEg
-SS9PIGVycm9yOiBibG9jayAweGZhMDAwMSAoInhmc190cmFuc19yZWFkX2J1ZiIpIGVycm9yIDUg
-YnVmIGNvdW50IDUxMgpbOTAwMTIuMTk2Nzk1XSBYRlMgKGRtLTQ2KTogeGxvZ19yZWNvdmVyX2No
-ZWNrX3N1bW1hcnkgYWdmIHJlYWQgZmFpbGVkIGFnbm8gMiBlcnJvciA1Cls5MDAxMi4xOTY4MDJd
-IFhGUyAoZG0tNDYpOiBtZXRhZGF0YSBJL08gZXJyb3I6IGJsb2NrIDB4ZmEwMDAyICgieGZzX3Ry
-YW5zX3JlYWRfYnVmIikgZXJyb3IgNSBidWYgY291bnQgNTEyCls5MDAxMi4xOTY4MDZdIFhGUyAo
-ZG0tNDYpOiB4bG9nX3JlY292ZXJfY2hlY2tfc3VtbWFyeSBhZ2kgcmVhZCBmYWlsZWQgYWdubyAy
-IGVycm9yIDUKWzkwMDEyLjE5NjgxM10gWEZTIChkbS00Nik6IG1ldGFkYXRhIEkvTyBlcnJvcjog
-YmxvY2sgMHgxNzcwMDAxICgieGZzX3RyYW5zX3JlYWRfYnVmIikgZXJyb3IgNSBidWYgY291bnQg
-NTEyCls5MDAxMi4xOTY4MTddIFhGUyAoZG0tNDYpOiB4bG9nX3JlY292ZXJfY2hlY2tfc3VtbWFy
-eSBhZ2YgcmVhZCBmYWlsZWQgYWdubyAzIGVycm9yIDUKWzkwMDEyLjE5NjgyM10gWEZTIChkbS00
-Nik6IG1ldGFkYXRhIEkvTyBlcnJvcjogYmxvY2sgMHgxNzcwMDAyICgieGZzX3RyYW5zX3JlYWRf
-YnVmIikgZXJyb3IgNSBidWYgY291bnQgNTEyCls5MDAxMi4xOTY4MjddIFhGUyAoZG0tNDYpOiB4
-bG9nX3JlY292ZXJfY2hlY2tfc3VtbWFyeSBhZ2kgcmVhZCBmYWlsZWQgYWdubyAzIGVycm9yIDUK
-WzkwMDEyLjE5Njg0M10gWEZTIChkbS00Nik6IG1ldGFkYXRhIEkvTyBlcnJvcjogYmxvY2sgMHg0
-MCAoInhmc190cmFuc19yZWFkX2J1ZiIpIGVycm9yIDUgYnVmIGNvdW50IDgxOTIKWzkwMDEyLjE5
-Njg0N10gWEZTIChkbS00Nik6IHhmc19pbWFwX3RvX2JwOiB4ZnNfdHJhbnNfcmVhZF9idWYoKSBy
-ZXR1cm5lZCBlcnJvciA1LgpbOTAwMTIuMTk2ODUyXSBYRlMgKGRtLTQ2KTogZmFpbGVkIHRvIHJl
-YWQgcm9vdCBpbm9kZQpbOTAwMTIuMTk2OTYzXSBYRlM6IEFzc2VydGlvbiBmYWlsZWQ6IGF0b21p
-Y19yZWFkKCZwYWctPnBhZ19yZWYpID09IDAsIGZpbGU6IGZzL3hmcy94ZnNfbW91bnQuYywgbGlu
-ZTogMjcyCls5MDAxMi4xOTY5ODJdIC0tLS0tLS0tLS0tLVsgY3V0IGhlcmUgXS0tLS0tLS0tLS0t
-LQpbOTAwMTIuMTk2OTg0XSBrZXJuZWwgQlVHIGF0IGZzL3hmcy94ZnNfbWVzc2FnZS5jOjEwMSEK
-WzkwMDEyLjE5Njk4N10gaW52YWxpZCBvcGNvZGU6IDAwMDAgWyMxXSBTTVAKWzkwMDEyLjE5Njk5
-MF0gQ1BVIDIKWzkwMDEyLjE5Njk5Ml0gTW9kdWxlcyBsaW5rZWQgaW46IGlzY3NpX3Njc3QoTykg
-c2NzdF92ZGlzayhPKSBsaWJjcmMzMmMgcWxhMngwMHRndChPKSBzY3N0KE8pIGV4dDIgZHJiZChP
-KSBpc2NzaV90Y3AgbGliaXNjc2lfdGNwIGxpYmlzY3NpIHNjc2lfdHJhbnNwb3J0X2lzY3NpIGJv
-bmRpbmcgcWxhMnh4eChPKSBzZyBzY3NpX3RyYW5zcG9ydF9mYyBtZWdhcmFpZF9zYXMgYm54MiBh
-Y3BpX3Bvd2VyX21ldGVyIHVzYnNlcmlhbCB1aGNpX2hjZCBvaGNpX2hjZCBlaGNpX2hjZCBhdWZz
-IFtsYXN0IHVubG9hZGVkOiBtZWdhcmFpZF9zYXNdCls5MDAxMi4xOTcwMTNdCls5MDAxMi4xOTcw
-MTZdIFBpZDogMTAyNjIsIGNvbW06IG1vdW50IFRhaW50ZWQ6IEcgICAgICAgICAgIE8gMy4yLjQy
-LW9lNjQtMDAwMDAtZzEyZGI4YjUgIzE0IERlbGwgSW5jLiBQb3dlckVkZ2UgUjUxMC8wRFBSS0YK
-WzkwMDEyLjE5NzAyMl0gUklQOiAwMDEwOls8ZmZmZmZmZmY4MTJmZjhlZD5dICBbPGZmZmZmZmZm
-ODEyZmY4ZWQ+XSBhc3NmYWlsKzB4MWQvMHgzMApbOTAwMTIuMTk3MDMxXSBSU1A6IDAwMDA6ZmZm
-Zjg4MDBiZTQzZmM2OCAgRUZMQUdTOiAwMDAxMDI5NgpbOTAwMTIuMTk3MDM0XSBSQVg6IDAwMDAw
-MDAwMDAwMDAwNzEgUkJYOiBmZmZmODgwMDUxMmU4Y2MwIFJDWDogMDAwMDAwMDAwMDAwMDA0Ngpb
-OTAwMTIuMTk3MDM3XSBSRFg6IDAwMDAwMDAwMDAwMDAwMDAgUlNJOiAwMDAwMDAwMDAwMDAwMDQ2
-IFJESTogZmZmZmZmZmY4MWMxYzM4MApbOTAwMTIuMTk3MDM5XSBSQlA6IGZmZmY4ODAwYmU0M2Zj
-NjggUjA4OiAwMDAwMDAwMDAwMDAwMDA2IFIwOTogMDAwMDAwMDAwMDAwZmZmZgpbOTAwMTIuMTk3
-MDQyXSBSMTA6IDAwMDAwMDAwMDAwMDAwMDYgUjExOiAwMDAwMDAwMDAwMDAwMDBhIFIxMjogZmZm
-Zjg4MDBhNDFmNDgwMApbOTAwMTIuMTk3MDQ1XSBSMTM6IDAwMDAwMDAwMDAwMDAwMDAgUjE0OiBm
-ZmZmODgwMGE0MWY0OWU4IFIxNTogZmZmZjg4MDBhNDFmNDlmOApbOTAwMTIuMTk3MDQ5XSBGUzog
-IDAwMDAwMDAwMDAwMDAwMDAoMDAwMCkgR1M6ZmZmZjg4MDEyYjI0MDAwMCgwMDYzKSBrbmxHUzow
-MDAwMDAwMGY3NTQ1NmMwCls5MDAxMi4xOTcwNTJdIENTOiAgMDAxMCBEUzogMDAyYiBFUzogMDAy
-YiBDUjA6IDAwMDAwMDAwODAwNTAwM2IKWzkwMDEyLjE5NzA1NV0gQ1IyOiAwMDAwMDAwMDA4MThl
-NTA4IENSMzogMDAwMDAwMDAxZDlkNzAwMCBDUjQ6IDAwMDAwMDAwMDAwMDA2ZTAKWzkwMDEyLjE5
-NzA1OF0gRFIwOiAwMDAwMDAwMDAwMDAwMDAwIERSMTogMDAwMDAwMDAwMDAwMDAwMCBEUjI6IDAw
-MDAwMDAwMDAwMDAwMDAKWzkwMDEyLjE5NzA2MV0gRFIzOiAwMDAwMDAwMDAwMDAwMDAwIERSNjog
-MDAwMDAwMDBmZmZmMGZmMCBEUjc6IDAwMDAwMDAwMDAwMDA0MDAKWzkwMDEyLjE5NzA2NF0gUHJv
-Y2VzcyBtb3VudCAocGlkOiAxMDI2MiwgdGhyZWFkaW5mbyBmZmZmODgwMGJlNDNlMDAwLCB0YXNr
-IGZmZmY4ODAwN2ZlNjRhNjApCls5MDAxMi4xOTcwNjZdIFN0YWNrOgpbOTAwMTIuMTk3MDY4XSAg
-ZmZmZjg4MDBiZTQzZmNhOCBmZmZmZmZmZjgxMzRlYjdhIDAwMDAwMDAwMDAwMDAwMDUgZmZmZjg4
-MDBhNDFmNDgwMApbOTAwMTIuMTk3MDcyXSAgZmZmZjg4MDBhNDFmNDgxOCAwMDAwMDAwMDAwMDAw
-MDA1IGZmZmY4ODAwYTQxZjQ4MDAgMDAwMDAwMDAwMDAwMDAwMApbOTAwMTIuMTk3MDc2XSAgZmZm
-Zjg4MDBiZTQzZmNmOCBmZmZmZmZmZjgxMzUwNTRkIDAwMDAwMDAwMDAwMDAwMDAgMDAwMDAwMDAw
-MDAwMDAwMApbOTAwMTIuMTk3MDgwXSBDYWxsIFRyYWNlOgpbOTAwMTIuMTk3MDg4XSAgWzxmZmZm
-ZmZmZjgxMzRlYjdhPl0geGZzX2ZyZWVfcGVyYWcrMHg4YS8weGMwCls5MDAxMi4xOTcwOTJdICBb
-PGZmZmZmZmZmODEzNTA1NGQ+XSB4ZnNfbW91bnRmcysweDMxZC8weDcwMApbOTAwMTIuMTk3MDk3
-XSAgWzxmZmZmZmZmZjgxMzAxZmFiPl0geGZzX2ZzX2ZpbGxfc3VwZXIrMHgxY2IvMHgyNzAKWzkw
-MDEyLjE5NzEwM10gIFs8ZmZmZmZmZmY4MTE0NzZkYT5dIG1vdW50X2JkZXYrMHgxOWEvMHgxZDAK
-WzkwMDEyLjE5NzEwN10gIFs8ZmZmZmZmZmY4MTMwMWRlMD5dID8geGZzX2ZzX3dyaXRlX2lub2Rl
-KzB4MTgwLzB4MTgwCls5MDAxMi4xOTcxMTRdICBbPGZmZmZmZmZmODEzOGIwMTY+XSA/IHNlbGlu
-dXhfc2JfY29weV9kYXRhKzB4MTU2LzB4MWQwCls5MDAxMi4xOTcxMThdICBbPGZmZmZmZmZmODEz
-MDAyMDA+XSB4ZnNfZnNfbW91bnQrMHgxMC8weDIwCls5MDAxMi4xOTcxMjNdICBbPGZmZmZmZmZm
-ODExNDZkZjE+XSBtb3VudF9mcysweDQxLzB4MTgwCls5MDAxMi4xOTcxMjldICBbPGZmZmZmZmZm
-ODExNWY3YWU+XSB2ZnNfa2Vybl9tb3VudCsweDVlLzB4YzAKWzkwMDEyLjE5NzEzM10gIFs8ZmZm
-ZmZmZmY4MTE2MDc1ZT5dIGRvX2tlcm5fbW91bnQrMHg0ZS8weDEwMApbOTAwMTIuMTk3MTM4XSAg
-WzxmZmZmZmZmZjgxMTYxZjI2Pl0gZG9fbW91bnQrMHg1MTYvMHg3NDAKWzkwMDEyLjE5NzE0NF0g
-IFs8ZmZmZmZmZmY4MTEwNjRlOT5dID8gX19nZXRfZnJlZV9wYWdlcysweDkvMHg0MApbOTAwMTIu
-MTk3MTUwXSAgWzxmZmZmZmZmZjgxMTg3Y2MyPl0gY29tcGF0X3N5c19tb3VudCsweGEyLzB4MjIw
-Cls5MDAxMi4xOTcxNTZdICBbPGZmZmZmZmZmODE3OGJlODM+XSBpYTMyX2RvX2NhbGwrMHgxMy8w
-eDEzCls5MDAxMi4xOTcxNThdIENvZGU6IDY2IDY2IDkwIDY2IDY2IDY2IDkwIDY2IDY2IDY2IDkw
-IDY2IDY2IDkwIDU1IDQxIDg5IGQwIDQ4IDg5IGYxIDQ4IDg5IGZhIDQ4IGM3IGM2IGI4IGJmIDli
-IDgxIDMxIGZmIDQ4IDg5IGU1IDMxIGMwIGU4IDUzIGZmIGZmIGZmPDBmPiAgMGIgZWIgZmUgOTAg
-OTAgOTAgOTAgOTAgOTAgOTAgOTAgOTAgOTAgOTAgOTAgOTAgOTAgOTAgNTUgMzEKWzkwMDEyLjE5
-NzE4OV0gUklQICBbPGZmZmZmZmZmODEyZmY4ZWQ+XSBhc3NmYWlsKzB4MWQvMHgzMApbOTAwMTIu
-MTk3MTkzXSAgUlNQPGZmZmY4ODAwYmU0M2ZjNjg+Cls5MDAxMi4xOTcxOTZdIC0tLVsgZW5kIHRy
-YWNlIGVkMmUzNDkyMjVmNzc3NjMgXS0tLQpbOTAwMTUuOTYwMzc3XSBYRlMgKGRtLTQ0KTogeGZz
-X2xvZ19mb3JjZTogZXJyb3IgNSByZXR1cm5lZC4KCgoKLS0gCkJlc3QgcmVnYXJkcwpBcmthZGl1
-c3ogQnViYcWCYQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21h
-aWxtYW4vbGlzdGluZm8veGZzCg==
+On 05/21/2013 04:02 AM, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> The limit of 25 ACL entries is arbitrary, but baked into the on-disk
+> format.  For version 5 superblocks, increase it to the maximum nuber
+> of ACLs that can fit into a single xattr.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_acl.c |   31 ++++++++++++++++++-------------
+>  fs/xfs/xfs_acl.h |   30 +++++++++++++++++++++++-------
+>  2 files changed, 41 insertions(+), 20 deletions(-)
+> 
+...
+> diff --git a/fs/xfs/xfs_acl.h b/fs/xfs/xfs_acl.h
+> index 39632d9..5310a52 100644
+> --- a/fs/xfs/xfs_acl.h
+> +++ b/fs/xfs/xfs_acl.h
+> @@ -22,19 +22,35 @@ struct inode;
+>  struct posix_acl;
+>  struct xfs_inode;
+>  
+> -#define XFS_ACL_MAX_ENTRIES 25
+>  #define XFS_ACL_NOT_PRESENT (-1)
+>  
+>  /* On-disk XFS access control list structure */
+> +struct xfs_acl_entry {
+> +	__be32	ae_tag;
+> +	__be32	ae_id;
+> +	__be16	ae_perm;
+> +	__be16	ae_pad;		/* fill the implicit hole in the structure */
+> +};
+> +
+>  struct xfs_acl {
+> -	__be32		acl_cnt;
+> -	struct xfs_acl_entry {
+> -		__be32	ae_tag;
+> -		__be32	ae_id;
+> -		__be16	ae_perm;
+> -	} acl_entry[XFS_ACL_MAX_ENTRIES];
+> +	__be32			acl_cnt;
+> +	struct xfs_acl_entry	acl_entry[0];
+>  };
+>  
+> +/*
+> + * The number of ACL entries allowed is defined by the on-disk format.
+> + * For v4 superblocks, that is limited to 25 entries. For v5 superblocks, it is
+> + * limited only by the maximum size of the xattr that stores the information.
+> + */
+> +#define XFS_ACL_MAX_ENTRIES(mp)	\
+> +	(xfs_sb_version_hascrc(&mp->m_sb) \
+> +	   ?  (XATTR_SIZE_MAX - sizeof(__be32) / sizeof(struct xfs_acl_entry)) \
+					
+It looks like this should be:
+
+	(XATTR_SIZE_MAX - sizeof(__be32)) / sizeof(struct xfs_acl_entry)
+
+(i.e., misplaced parens)
+
+Brian
+
+> +	   : 25)
+> +
+> +#define XFS_ACL_SIZE(mp) \
+> +	(sizeof(struct xfs_acl) + \
+> +		sizeof(struct xfs_acl_entry) * XFS_ACL_MAX_ENTRIES((mp)))
+> +
+>  /* On-disk XFS extended attribute names */
+>  #define SGI_ACL_FILE		(unsigned char *)"SGI_ACL_FILE"
+>  #define SGI_ACL_DEFAULT		(unsigned char *)"SGI_ACL_DEFAULT"
+> 
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
