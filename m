@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2A01229E0D
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5904329E0E
 	for <xfs@oss.sgi.com>; Tue, 21 May 2013 03:02:37 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 16FD9304053
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 38F408F8039
 	for <xfs@oss.sgi.com>; Tue, 21 May 2013 01:02:37 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	uFohnFtKmV4zTbAE for <xfs@oss.sgi.com>;
+	ILpbaPiF3ho0qqi5 for <xfs@oss.sgi.com>;
 	Tue, 21 May 2013 01:02:35 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 07/11] xfs: fully initialise temp leaf in
-	xfs_attr3_leaf_compact
-Date: Tue, 21 May 2013 18:02:06 +1000
-Message-Id: <1369123330-9579-8-git-send-email-david@fromorbit.com>
+Subject: [PATCH 06/11] xfs: fully initialise temp leaf in
+	xfs_attr3_leaf_unbalance
+Date: Tue, 21 May 2013 18:02:05 +1000
+Message-Id: <1369123330-9579-7-git-send-email-david@fromorbit.com>
 In-Reply-To: <1369123330-9579-1-git-send-email-david@fromorbit.com>
 References: <1369123330-9579-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,97 +34,54 @@ Cc: bpm@sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-xfs_attr3_leaf_compact() uses a temporary buffer for compacting the
-the entries in a leaf. It copies the the original buffer into the
-temporary buffer, then zeros the original buffer completely. It then
-copies the entries back into the original buffer.  However, the
-original buffer has not been correctly initialised, and so the
-movement of the entries goes horribly wrong.
+xfs_attr3_leaf_unbalance() uses a temporary buffer for recombining
+the entries in two leaves when the destination leaf requires
+compaction. The temporary buffer ends up being copied back over the
+original destination buffer, so the header in the temporary buffer
+needs to contain all the information that is in the destination
+buffer.
 
-Make sure the zeroed destination buffer is fully initialised, and
-once we've set up the destination incore header appropriately, write
-is back to the buffer before starting to move entries around.
-
-While debugging this, the _d/_s prefixes weren't sufficient to
-remind me what buffer was what, so rename then all _src/_dst.
+To make sure the temporary buffer is fully initialised, once we've
+set up the temporary incore header appropriately, write is back to
+the temporary buffer before starting to move entries around.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_attr_leaf.c |   42 ++++++++++++++++++++++++++----------------
- 1 file changed, 26 insertions(+), 16 deletions(-)
+ fs/xfs/xfs_attr_leaf.c |   16 +++++++++++++---
+ 1 file changed, 13 insertions(+), 3 deletions(-)
 
 diff --git a/fs/xfs/xfs_attr_leaf.c b/fs/xfs/xfs_attr_leaf.c
-index 79ece72..5b03d15 100644
+index 0bce1b3..79ece72 100644
 --- a/fs/xfs/xfs_attr_leaf.c
 +++ b/fs/xfs/xfs_attr_leaf.c
-@@ -1445,11 +1445,12 @@ xfs_attr3_leaf_add_work(
- STATIC void
- xfs_attr3_leaf_compact(
- 	struct xfs_da_args	*args,
--	struct xfs_attr3_icleaf_hdr *ichdr_d,
-+	struct xfs_attr3_icleaf_hdr *ichdr_dst,
- 	struct xfs_buf		*bp)
- {
--	xfs_attr_leafblock_t	*leaf_s, *leaf_d;
--	struct xfs_attr3_icleaf_hdr ichdr_s;
-+	struct xfs_attr_leafblock *leaf_src;
-+	struct xfs_attr_leafblock *leaf_dst;
-+	struct xfs_attr3_icleaf_hdr ichdr_src;
- 	struct xfs_trans	*trans = args->trans;
- 	struct xfs_mount	*mp = trans->t_mountp;
- 	char			*tmpbuffer;
-@@ -1457,29 +1458,38 @@ xfs_attr3_leaf_compact(
- 	trace_xfs_attr_leaf_compact(args);
+@@ -2181,14 +2181,24 @@ xfs_attr3_leaf_unbalance(
+ 		struct xfs_attr_leafblock *tmp_leaf;
+ 		struct xfs_attr3_icleaf_hdr tmphdr;
  
- 	tmpbuffer = kmem_alloc(XFS_LBSIZE(mp), KM_SLEEP);
--	ASSERT(tmpbuffer != NULL);
- 	memcpy(tmpbuffer, bp->b_addr, XFS_LBSIZE(mp));
- 	memset(bp->b_addr, 0, XFS_LBSIZE(mp));
-+	leaf_src = (xfs_attr_leafblock_t *)tmpbuffer;
-+	leaf_dst = bp->b_addr;
+-		tmp_leaf = kmem_alloc(state->blocksize, KM_SLEEP);
+-		memset(tmp_leaf, 0, state->blocksize);
+-		memset(&tmphdr, 0, sizeof(tmphdr));
++		tmp_leaf = kmem_zalloc(state->blocksize, KM_SLEEP);
++
++		/*
++		 * Copy the header into the temp leaf so that all the stuff
++		 * not in the incore header is present and gets copied back in
++		 * once we've moved all the entries.
++		 */
++		memcpy(tmp_leaf, save_leaf, xfs_attr3_leaf_hdr_size(save_leaf));
  
- 	/*
--	 * Copy basic information
-+	 * Copy the on-disk header back into the destination buffer to ensure
-+	 * all the information in the header that is not part of the incore
-+	 * header structure is preserved.
- 	 */
--	leaf_s = (xfs_attr_leafblock_t *)tmpbuffer;
--	leaf_d = bp->b_addr;
--	ichdr_s = *ichdr_d;	/* struct copy */
--	ichdr_d->firstused = XFS_LBSIZE(mp);
--	ichdr_d->usedbytes = 0;
--	ichdr_d->count = 0;
--	ichdr_d->holes = 0;
--	ichdr_d->freemap[0].base = xfs_attr3_leaf_hdr_size(leaf_s);
--	ichdr_d->freemap[0].size = ichdr_d->firstused - ichdr_d->freemap[0].base;
-+	memcpy(bp->b_addr, tmpbuffer, xfs_attr3_leaf_hdr_size(leaf_src));
++		memset(&tmphdr, 0, sizeof(tmphdr));
+ 		tmphdr.magic = savehdr.magic;
+ 		tmphdr.forw = savehdr.forw;
+ 		tmphdr.back = savehdr.back;
+ 		tmphdr.firstused = state->blocksize;
 +
-+	/* Initialise the incore headers */
-+	ichdr_src = *ichdr_dst;	/* struct copy */
-+	ichdr_dst->firstused = XFS_LBSIZE(mp);
-+	ichdr_dst->usedbytes = 0;
-+	ichdr_dst->count = 0;
-+	ichdr_dst->holes = 0;
-+	ichdr_dst->freemap[0].base = xfs_attr3_leaf_hdr_size(leaf_src);
-+	ichdr_dst->freemap[0].size = ichdr_dst->firstused -
-+						ichdr_dst->freemap[0].base;
++		/* write the header to the temp buffer to initialise it */
++		xfs_attr3_leaf_hdr_to_disk(tmp_leaf, &tmphdr);
 +
-+
-+	/* write the header back to initialise the underlying buffer */
-+	xfs_attr3_leaf_hdr_to_disk(leaf_dst, ichdr_dst);
- 
- 	/*
- 	 * Copy all entry's in the same (sorted) order,
- 	 * but allocate name/value pairs packed and in sequence.
- 	 */
--	xfs_attr3_leaf_moveents(leaf_s, &ichdr_s, 0, leaf_d, ichdr_d, 0,
--				ichdr_s.count, mp);
-+	xfs_attr3_leaf_moveents(leaf_src, &ichdr_src, 0, leaf_dst, ichdr_dst, 0,
-+				ichdr_src.count, mp);
- 	/*
- 	 * this logs the entire buffer, but the caller must write the header
- 	 * back to the buffer when it is finished modifying it.
+ 		if (xfs_attr3_leaf_order(save_blk->bp, &savehdr,
+ 					 drop_blk->bp, &drophdr)) {
+ 			xfs_attr3_leaf_moveents(drop_leaf, &drophdr, 0,
 -- 
 1.7.10.4
 
