@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7E30E29DF8
-	for <xfs@oss.sgi.com>; Tue, 21 May 2013 16:27:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6DF5F304032
-	for <xfs@oss.sgi.com>; Tue, 21 May 2013 14:27:27 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 12BD529DF8
+	for <xfs@oss.sgi.com>; Tue, 21 May 2013 16:32:21 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B369CAC003
+	for <xfs@oss.sgi.com>; Tue, 21 May 2013 14:32:17 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	8kdztrnsqSaePWPI for <xfs@oss.sgi.com>;
-	Tue, 21 May 2013 14:27:22 -0700 (PDT)
-Date: Wed, 22 May 2013 07:27:19 +1000
+	gdA4hMBhEd6W3YDt for <xfs@oss.sgi.com>;
+	Tue, 21 May 2013 14:32:16 -0700 (PDT)
+Date: Wed, 22 May 2013 07:32:15 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 00/11] xfs: fixes for 3.10-rc3
-Message-ID: <20130521212719.GQ24543@dastard>
-References: <1369123330-9579-1-git-send-email-david@fromorbit.com>
-	<20130521162647.GD19505@sgi.com> <20130521202445.GO24543@dastard>
-	<20130521205249.GL20028@sgi.com>
+Subject: Re: [PATCH] xfstests: btrfs 308: regression test for btrfs send V2
+Message-ID: <20130521213215.GR24543@dastard>
+References: <1369169947-13748-1-git-send-email-jbacik@fusionio.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130521205249.GL20028@sgi.com>
+In-Reply-To: <1369169947-13748-1-git-send-email-jbacik@fusionio.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,75 +29,57 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
+To: Josef Bacik <jbacik@fusionio.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, May 21, 2013 at 03:52:49PM -0500, Ben Myers wrote:
-> Hey,
+On Tue, May 21, 2013 at 04:59:07PM -0400, Josef Bacik wrote:
+> I'm not sure how the numbering is supposed to work now that we've split
+> everything out so I'm just going with the next number in the directory.
+
+Number them however you want - numbers are unique within a
+subdirectory.
+
+> This is
+> a regression test for btrfs send, we had a problem where we'd try to send a file
+> that had been deleted in the source snapshot.  This is just to make sure we
+> don't have the same problem in the future.  Thanks,
 > 
-> On Wed, May 22, 2013 at 06:24:45AM +1000, Dave Chinner wrote:
-> > On Tue, May 21, 2013 at 11:26:47AM -0500, Ben Myers wrote:
-> > > Hi Dave,
-> > > 
-> > > On Tue, May 21, 2013 at 06:01:59PM +1000, Dave Chinner wrote:
-> > > > This is my current kernel bug fix patch series. I've updated it
-> > > > against a current xfsdev tree, and contains all the fixes mentioned
-> > > > in the "fixes for 3.10-rc2 (updated)" thread. The first 7 patches
-> > > > are patches from that series. The last 4 are new patches.
-> > > >
-> > > > The first new patch stops CRC enabled filesystems from spamming the
-> > > > log. It currently emits an "Experimental" warning ever time the
-> > > > superblock is written, which is typically every 30s.
-> > > >
-> > > > The second path ("rework remote attr CRCs") is the changes I
-> > > > mentioned in the "fixes for 3.10-rc2 (updated)" thread. The code is
-> > > > far more robust as a result of these changes, and I think we really
-> > > > need to change the format as done in this patch. Once we have
-> > > > decided on the way forward, I'll port this to userspace.
-> > > > 
-> > > > The third patch fixes a remote symlink problem - I didn't hit this
-> > > > until I'd redone the remote attr CRCs and the 1k block size
-> > > > filesystem testing made it passed the attribute tests it was failing
-> > > > on.
-> > > > 
-> > > > Finally, the last patch is another on-disk format change - one that
-> > > > removes the 25 entry limit on ACLs. It doesn't invalidate anything
-> > > > that is already on disk, just allows ACLs on v5 superblock
-> > > > filesystems to store more than 25 ACLs in an xattr. In fact, it
-> > > > allows (65536 - 4) / 12 = 5461 entries to be stored in a single
-> > > > ACL, so I don't see anyone running out on v5 superblocks....
-> > > > 
-> > > > Thoughts, comments?
-> > > 
-> > > I'll look into these but I am concerned that we're starting to get into 3.11
-> > > territory.
-> > 
-> > The moment we release the first kernel with the format in it, we
-> > need to use feature bits for on-disk format changes, experimental
-> > tag or not. Hence IMO this needs to be fixed before an initial
-> > release.
-> 
-> There's plenty of bits to go around.  ;)
+> Signed-off-by: Josef Bacik <jbacik@fusionio.com>
+> ---
+> V1->V2: 
+> -added a -x optoin to multi_open_unlink to make it not check for existing
+>  files
+> -made all the normal output go to $seqres.full
+....
+> @@ -73,6 +74,9 @@ main(int argc, char *argv[])
+>  			case 'v':  /* value size on eas */
+>  				value_size = atoi(optarg);
+>  				break;
+> +			case 'x': /* don't use O_EXCL, for use with exsint files */
 
-Sure, but it's unnecessary complexity.
+Typo - "exsint"
 
-> > It's not a huge change from a code perspective, and it's a lot more
-> > reliable in my testing....
-> 
-> I'm just a bit leery of a redesign at this late juncture.  We always seem to
-> get into trouble at the last minute...  Another option is to revert just the
-> xattr crc support and slap it back in once it has stablized after the release,
-> but we need to flip a bit for that too...  Anyway, I need to look your proposed
-> code to see what's what.
-> 
-> Seems like xattrs might be one area where we could use some work in xfstests?
+.....
+> +trap "_cleanup ; exit \$status" 0 1 2 3 15
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +
+> +# real QA test starts here
+> +_supported_fs btrfs
+> +_supported_os Linux
+> +_require_scratch
+> +
+> +_scratch_mkfs > /dev/null 2>&1
+> +_scratch_mount
 
-Not really - it's getting the xfstests xattr tests to pass that have
-lead to this.
+You probably want to remove $seqres.full here, so that on failure
+only the output of the current run is in the file.
 
-Cheers,
+Other than those two minor things, it looks good.
 
-Dave.
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 -- 
 Dave Chinner
 david@fromorbit.com
