@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9167629E06
-	for <xfs@oss.sgi.com>; Tue, 21 May 2013 03:02:44 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 62226304032
-	for <xfs@oss.sgi.com>; Tue, 21 May 2013 01:02:44 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	MH9DrSiBhgEfhEXc for <xfs@oss.sgi.com>;
-	Tue, 21 May 2013 01:02:42 -0700 (PDT)
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 11/11] xfs: increase number of ACL entries for V5 superblocks
-Date: Tue, 21 May 2013 18:02:10 +1000
-Message-Id: <1369123330-9579-12-git-send-email-david@fromorbit.com>
-In-Reply-To: <1369123330-9579-1-git-send-email-david@fromorbit.com>
-References: <1369123330-9579-1-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id ED37B29DF8
+	for <xfs@oss.sgi.com>; Tue, 21 May 2013 05:54:03 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6BFFCAC004
+	for <xfs@oss.sgi.com>; Tue, 21 May 2013 03:54:00 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id LVVdnMmDud6X4aEU for
+	<xfs@oss.sgi.com>; Tue, 21 May 2013 03:53:59 -0700 (PDT)
+Message-ID: <519B519C.5030405@redhat.com>
+Date: Tue, 21 May 2013 06:51:08 -0400
+From: Brian Foster <bfoster@redhat.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH 04/14 V2] xfs: avoid nesting transactions in
+	xfs_qm_scall_setqlim()
+References: <1369007481-15185-1-git-send-email-david@fromorbit.com>
+	<1369007481-15185-5-git-send-email-david@fromorbit.com>
+	<20130521003647.GK24543@dastard>
+In-Reply-To: <20130521003647.GK24543@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,178 +26,128 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: bpm@sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+On 05/20/2013 08:36 PM, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Lockdep reports:
+> 
+> =============================================
+> [ INFO: possible recursive locking detected ]
+> 3.9.0+ #3 Not tainted
+> ---------------------------------------------
+> setquota/28368 is trying to acquire lock:
+>  (sb_internal){++++.?}, at: [<c11e8846>] xfs_trans_alloc+0x26/0x50
+> 
+> but task is already holding lock:
+>  (sb_internal){++++.?}, at: [<c11e8846>] xfs_trans_alloc+0x26/0x50
+> 
+> from xfs_qm_scall_setqlim()->xfs_dqread() when a dquot needs to be
+> allocated.
+> 
+> xfs_qm_scall_setqlim() is starting a transaction and then not
+> passing it into xfs_qm_dqet() and so it starts it's own transaction
+> when allocating the dquot.  Splat!
+> 
+> Fix this by not allocating the dquot in xfs_qm_scall_setqlim()
+> inside the setqlim transaction. This requires getting the dquot
+> first (and allocating it if necessary) then dropping and relocking
+> the dquot before joining it to the setqlim transaction.
+> 
+> Reported-by: Michael L. Semon <mlsemon35@gmail.com>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+> V2: fix error handling path that failed to release the dquot.
+> 
 
-The limit of 25 ACL entries is arbitrary, but baked into the on-disk
-format.  For version 5 superblocks, increase it to the maximum nuber
-of ACLs that can fit into a single xattr.
+Looks good.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_acl.c |   31 ++++++++++++++++++-------------
- fs/xfs/xfs_acl.h |   30 +++++++++++++++++++++++-------
- 2 files changed, 41 insertions(+), 20 deletions(-)
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
-index 1d32f1d..b6bed9b 100644
---- a/fs/xfs/xfs_acl.c
-+++ b/fs/xfs/xfs_acl.c
-@@ -21,6 +21,8 @@
- #include "xfs_bmap_btree.h"
- #include "xfs_inode.h"
- #include "xfs_vnodeops.h"
-+#include "xfs_sb.h"
-+#include "xfs_mount.h"
- #include "xfs_trace.h"
- #include <linux/slab.h>
- #include <linux/xattr.h>
-@@ -34,7 +36,9 @@
-  */
- 
- STATIC struct posix_acl *
--xfs_acl_from_disk(struct xfs_acl *aclp)
-+xfs_acl_from_disk(
-+	struct xfs_acl	*aclp,
-+	int		max_entries)
- {
- 	struct posix_acl_entry *acl_e;
- 	struct posix_acl *acl;
-@@ -42,7 +46,7 @@ xfs_acl_from_disk(struct xfs_acl *aclp)
- 	unsigned int count, i;
- 
- 	count = be32_to_cpu(aclp->acl_cnt);
--	if (count > XFS_ACL_MAX_ENTRIES)
-+	if (count > max_entries)
- 		return ERR_PTR(-EFSCORRUPTED);
- 
- 	acl = posix_acl_alloc(count, GFP_KERNEL);
-@@ -108,7 +112,7 @@ xfs_get_acl(struct inode *inode, int type)
- 	struct xfs_inode *ip = XFS_I(inode);
- 	struct posix_acl *acl;
- 	struct xfs_acl *xfs_acl;
--	int len = sizeof(struct xfs_acl);
-+	int len = XFS_ACL_SIZE(ip->i_mount);
- 	unsigned char *ea_name;
- 	int error;
- 
-@@ -133,8 +137,8 @@ xfs_get_acl(struct inode *inode, int type)
- 	 * If we have a cached ACLs value just return it, not need to
- 	 * go out to the disk.
- 	 */
--
--	xfs_acl = kzalloc(sizeof(struct xfs_acl), GFP_KERNEL);
-+	len = XFS_ACL_SIZE(ip->i_mount);
-+	xfs_acl = kzalloc(len, GFP_KERNEL);
- 	if (!xfs_acl)
- 		return ERR_PTR(-ENOMEM);
- 
-@@ -153,7 +157,7 @@ xfs_get_acl(struct inode *inode, int type)
- 		goto out;
- 	}
- 
--	acl = xfs_acl_from_disk(xfs_acl);
-+	acl = xfs_acl_from_disk(xfs_acl, XFS_ACL_MAX_ENTRIES(ip->i_mount));
- 	if (IS_ERR(acl))
- 		goto out;
- 
-@@ -189,16 +193,17 @@ xfs_set_acl(struct inode *inode, int type, struct posix_acl *acl)
- 
- 	if (acl) {
- 		struct xfs_acl *xfs_acl;
--		int len;
-+		int len = XFS_ACL_SIZE(ip->i_mount);
- 
--		xfs_acl = kzalloc(sizeof(struct xfs_acl), GFP_KERNEL);
-+		xfs_acl = kzalloc(len, GFP_KERNEL);
- 		if (!xfs_acl)
- 			return -ENOMEM;
- 
- 		xfs_acl_to_disk(xfs_acl, acl);
--		len = sizeof(struct xfs_acl) -
--			(sizeof(struct xfs_acl_entry) *
--			 (XFS_ACL_MAX_ENTRIES - acl->a_count));
-+
-+		/* subtract away the unused acl entries */
-+		len -= sizeof(struct xfs_acl_entry) *
-+			 (XFS_ACL_MAX_ENTRIES(ip->i_mount) - acl->a_count);
- 
- 		error = -xfs_attr_set(ip, ea_name, (unsigned char *)xfs_acl,
- 				len, ATTR_ROOT);
-@@ -243,7 +248,7 @@ xfs_set_mode(struct inode *inode, umode_t mode)
- static int
- xfs_acl_exists(struct inode *inode, unsigned char *name)
- {
--	int len = sizeof(struct xfs_acl);
-+	int len = XFS_ACL_SIZE(XFS_M(inode->i_sb));
- 
- 	return (xfs_attr_get(XFS_I(inode), name, NULL, &len,
- 			    ATTR_ROOT|ATTR_KERNOVAL) == 0);
-@@ -379,7 +384,7 @@ xfs_xattr_acl_set(struct dentry *dentry, const char *name,
- 		goto out_release;
- 
- 	error = -EINVAL;
--	if (acl->a_count > XFS_ACL_MAX_ENTRIES)
-+	if (acl->a_count > XFS_ACL_MAX_ENTRIES(XFS_M(inode->i_sb)))
- 		goto out_release;
- 
- 	if (type == ACL_TYPE_ACCESS) {
-diff --git a/fs/xfs/xfs_acl.h b/fs/xfs/xfs_acl.h
-index 39632d9..5310a52 100644
---- a/fs/xfs/xfs_acl.h
-+++ b/fs/xfs/xfs_acl.h
-@@ -22,19 +22,35 @@ struct inode;
- struct posix_acl;
- struct xfs_inode;
- 
--#define XFS_ACL_MAX_ENTRIES 25
- #define XFS_ACL_NOT_PRESENT (-1)
- 
- /* On-disk XFS access control list structure */
-+struct xfs_acl_entry {
-+	__be32	ae_tag;
-+	__be32	ae_id;
-+	__be16	ae_perm;
-+	__be16	ae_pad;		/* fill the implicit hole in the structure */
-+};
-+
- struct xfs_acl {
--	__be32		acl_cnt;
--	struct xfs_acl_entry {
--		__be32	ae_tag;
--		__be32	ae_id;
--		__be16	ae_perm;
--	} acl_entry[XFS_ACL_MAX_ENTRIES];
-+	__be32			acl_cnt;
-+	struct xfs_acl_entry	acl_entry[0];
- };
- 
-+/*
-+ * The number of ACL entries allowed is defined by the on-disk format.
-+ * For v4 superblocks, that is limited to 25 entries. For v5 superblocks, it is
-+ * limited only by the maximum size of the xattr that stores the information.
-+ */
-+#define XFS_ACL_MAX_ENTRIES(mp)	\
-+	(xfs_sb_version_hascrc(&mp->m_sb) \
-+	   ?  (XATTR_SIZE_MAX - sizeof(__be32) / sizeof(struct xfs_acl_entry)) \
-+	   : 25)
-+
-+#define XFS_ACL_SIZE(mp) \
-+	(sizeof(struct xfs_acl) + \
-+		sizeof(struct xfs_acl_entry) * XFS_ACL_MAX_ENTRIES((mp)))
-+
- /* On-disk XFS extended attribute names */
- #define SGI_ACL_FILE		(unsigned char *)"SGI_ACL_FILE"
- #define SGI_ACL_DEFAULT		(unsigned char *)"SGI_ACL_DEFAULT"
--- 
-1.7.10.4
+>  fs/xfs/xfs_qm_syscalls.c |   40 +++++++++++++++++++++++-----------------
+>  1 file changed, 23 insertions(+), 17 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+> index c41190c..6cdf6ff 100644
+> --- a/fs/xfs/xfs_qm_syscalls.c
+> +++ b/fs/xfs/xfs_qm_syscalls.c
+> @@ -489,31 +489,36 @@ xfs_qm_scall_setqlim(
+>  	if ((newlim->d_fieldmask & XFS_DQ_MASK) == 0)
+>  		return 0;
+>  
+> -	tp = xfs_trans_alloc(mp, XFS_TRANS_QM_SETQLIM);
+> -	error = xfs_trans_reserve(tp, 0, XFS_QM_SETQLIM_LOG_RES(mp),
+> -				  0, 0, XFS_DEFAULT_LOG_COUNT);
+> -	if (error) {
+> -		xfs_trans_cancel(tp, 0);
+> -		return (error);
+> -	}
+> -
+>  	/*
+>  	 * We don't want to race with a quotaoff so take the quotaoff lock.
+> -	 * (We don't hold an inode lock, so there's nothing else to stop
+> -	 * a quotaoff from happening). (XXXThis doesn't currently happen
+> -	 * because we take the vfslock before calling xfs_qm_sysent).
+> +	 * We don't hold an inode lock, so there's nothing else to stop
+> +	 * a quotaoff from happening.
+>  	 */
+>  	mutex_lock(&q->qi_quotaofflock);
+>  
+>  	/*
+> -	 * Get the dquot (locked), and join it to the transaction.
+> -	 * Allocate the dquot if this doesn't exist.
+> +	 * Get the dquot (locked) before we start, as we need to do a
+> +	 * transaction to allocate it if it doesn't exist. Once we have the
+> +	 * dquot, unlock it so we can start the next transaction safely. We hold
+> +	 * a reference to the dquot, so it's safe to do this unlock/lock without
+> +	 * it being reclaimed in the mean time.
+>  	 */
+> -	if ((error = xfs_qm_dqget(mp, NULL, id, type, XFS_QMOPT_DQALLOC, &dqp))) {
+> -		xfs_trans_cancel(tp, XFS_TRANS_ABORT);
+> +	error = xfs_qm_dqget(mp, NULL, id, type, XFS_QMOPT_DQALLOC, &dqp);
+> +	if (error) {
+>  		ASSERT(error != ENOENT);
+>  		goto out_unlock;
+>  	}
+> +	xfs_dqunlock(dqp);
+> +
+> +	tp = xfs_trans_alloc(mp, XFS_TRANS_QM_SETQLIM);
+> +	error = xfs_trans_reserve(tp, 0, XFS_QM_SETQLIM_LOG_RES(mp),
+> +				  0, 0, XFS_DEFAULT_LOG_COUNT);
+> +	if (error) {
+> +		xfs_trans_cancel(tp, 0);
+> +		goto out_rele;
+> +	}
+> +
+> +	xfs_dqlock(dqp);
+>  	xfs_trans_dqjoin(tp, dqp);
+>  	ddq = &dqp->q_core;
+>  
+> @@ -621,9 +626,10 @@ xfs_qm_scall_setqlim(
+>  	xfs_trans_log_dquot(tp, dqp);
+>  
+>  	error = xfs_trans_commit(tp, 0);
+> -	xfs_qm_dqrele(dqp);
+>  
+> - out_unlock:
+> +out_rele:
+> +	xfs_qm_dqrele(dqp);
+> +out_unlock:
+>  	mutex_unlock(&q->qi_quotaofflock);
+>  	return error;
+>  }
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
