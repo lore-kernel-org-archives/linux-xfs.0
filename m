@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 95F9B29DF8
-	for <xfs@oss.sgi.com>; Wed, 22 May 2013 17:58:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2C02AAC001
-	for <xfs@oss.sgi.com>; Wed, 22 May 2013 15:58:45 -0700 (PDT)
-Received: from mail-ie0-f177.google.com (mail-ie0-f177.google.com
-	[209.85.223.177]) by cuda.sgi.com with ESMTP id
-	VNNSpDL7CagvTKWC (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 22 May 2013 15:58:44 -0700 (PDT)
-Received: by mail-ie0-f177.google.com with SMTP id 9so6730319iec.36
-	for <xfs@oss.sgi.com>; Wed, 22 May 2013 15:58:43 -0700 (PDT)
-Message-ID: <519D4D87.2070806@gmail.com>
-Date: Wed, 22 May 2013 18:58:15 -0400
-From: "Michael L. Semon" <mlsemon35@gmail.com>
+	by oss.sgi.com (Postfix) with ESMTP id 3F55629DF8
+	for <xfs@oss.sgi.com>; Wed, 22 May 2013 18:04:39 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B49BAAC001
+	for <xfs@oss.sgi.com>; Wed, 22 May 2013 16:04:35 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	hNpbQG8w2APPAnAz for <xfs@oss.sgi.com>;
+	Wed, 22 May 2013 16:04:33 -0700 (PDT)
+Date: Thu, 23 May 2013 09:04:30 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfsprogs: libhandle/Makefile - fix make install
+Message-ID: <20130522230430.GM29466@dastard>
+References: <20130522205819.586978467@gulag1.americas.sgi.com>
+	<519D3716.8080502@sandeen.net> <519D4136.6080908@sgi.com>
 MIME-Version: 1.0
-Subject: Re: generic/258 questions (mount issue)...
-References: <519C14A1.8000009@gmail.com> <20130522012620.GA29466@dastard>
-In-Reply-To: <20130522012620.GA29466@dastard>
+Content-Disposition: inline
+In-Reply-To: <519D4136.6080908@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,79 +30,127 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Rich Johnston <rjohnston@sgi.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-On 05/21/2013 09:26 PM, Dave Chinner wrote:
-> On Tue, May 21, 2013 at 08:43:13PM -0400, Michael L. Semon wrote:
->> Hi!  When using xfstests generic/258 with along with $TEST_RTDEV
->> $TEST_LOGDEV, it tends to scream bloody murder about corrupted
->> partitions and such.  In fact, the commands in the test seem to do
->> the right thing when executed by hand.  So once again, I grasped for
->> straws and came up with this:
->>
->> --- xfstests/tests/generic/258.orig	2013-05-21 20:19:38.430754829 -0400
->> +++ xfstests/tests/generic/258	2013-05-21 20:10:11.509021368 -0400
->> @@ -62,7 +62,7 @@
->>  # unmount, remount, and check the timestamp
->>  echo "Remounting to flush cache"
->>  umount $TEST_DEV
->> -mount $TEST_DEV $TEST_DIR
->> +_test_mount
->>
->>  # Should yield -315593940 (prior to epoch)
->>  echo "Testing for negative seconds since epoch"
->>
->> My questions are these:
->>
->> 1) Was there a better way to do this?
-> 
-> No, your change is correct. Can you clean up the description of the
-> problem you had and add a Signed-off-by?
-> 
->> 2) Not knowing the policy on umounting $TEST_DEV, could this have
->> been a test for $SCRATCH_DEV?
-> 
-> There are a handful of other tests that also unmount the TEST_DEV.
-> Perhaps adding a _test_umount() wrapper to common/rc (similar to
-> _scratch_umount) would be best. At least shared/243 needs the same
-> _test_mount treatment as this test.
-> 
-> Cheers,
-> 
-> Dave.
-> 
+On Wed, May 22, 2013 at 05:05:42PM -0500, Rich Johnston wrote:
+> On 05/22/2013 04:22 PM, Eric Sandeen wrote:
+> >On 5/22/13 3:58 PM, rjohnston@sgi.com wrote:
+> >>In the default section of libhandle/Makefile, ltdepend prevented
+> >>libhandle.so from being installed properly so remove it.
+> >
+> >Can you explain how it prevented it?
+> >
+> >[sandeen@sandeen xfsprogs]$ grep ltdepend */Makefile
+> >libdisk/Makefile:default: ltdepend $(LTLIBRARY)
+> >libhandle/Makefile:default: ltdepend $(LTLIBRARY)
+> >libxcmd/Makefile:default: ltdepend $(LTLIBRARY)
+> >libxfs/Makefile:default: crc32selftest ltdepend $(LTLIBRARY)
+> >libxlog/Makefile:default: ltdepend $(LTLIBRARY)
+> >
+> >seems to exist in every subdir, why is this one causing trouble?
+> Because libhandle is the only one that is installed. ;)
 
-I have a simple _test_mount change in shared/243, tested and ready to 
-post.  However, it may work the same either way.  AFAIK, the test seems 
-to go like this:
+So, after you've done a builds what does libhandle/.libs contain?
+it shoul dlook something lik ethis:
 
-xfs_io this;
-if ( ext4 )
-{
-  umount;
-  do some unmounted ext4 stuff;
-  mount -t ${FSTYP} ...;
-}
-xfs_io that;
-if ( ext4 )
-{
-  ...
-}
-...
+$ ls -l libhandle/.libs/ total 180
+-rw-r--r-- 1 dave dave 39416 May 23 08:50 handle.o
+-rw-r--r-- 1 dave dave 21936 May 23 08:50 jdm.o
+-rw-r--r-- 1 dave dave 61834 May 23 08:50 libhandle.a
+lrwxrwxrwx 1 dave dave    15 May 23 08:50 libhandle.la -> ../libhandle.la
+-rw-r--r-- 1 dave dave   938 May 23 08:50 libhandle.lai
+lrwxrwxrwx 1 dave dave    18 May 23 08:50 libhandle.so -> libhandle.so.1.0.3
+lrwxrwxrwx 1 dave dave    18 May 23 08:50 libhandle.so.1 -> libhandle.so.1.0.3
+-rwxr-xr-x 1 dave dave 45667 May 23 08:50 libhandle.so.1.0.3
+$
 
-So if it isn't ext4 being tested, $TEST_DEV is not umounted at all.
-Until I got a closer look at this, it was a surprise to see the 
-XFS+rtdev+logdev pass without changes.
+And the libhandle.lai should contain:
 
-The rest of your comments will be followed when I get home.  To use the 
-external logdev means a 20%-30% improvement in some test results on XFS.
-To get the other file systems to do this will certainly have me looking
-at the $TEST_DEV mount and umount code anyway.
+$ cat libhandle/.libs/libhandle.lai
+libhandle.la - a libtool library file
+# Generated by libtool (GNU libtool) 2.4.2 Debian-2.4.2-1.1
+#
+# Please DO NOT delete this file!
+# It is necessary for linking the library.
 
-Thanks!
+# The name that we can dlopen(3).
+dlname='libhandle.so.1'
 
-Michael
+# Names of this library.
+library_names='libhandle.so.1.0.3 libhandle.so.1 libhandle.so'
+
+# The name of the static archive.
+old_library='libhandle.a'
+
+# Linker flags that can not go in dependency_libs.
+inherited_linker_flags=''
+
+# Libraries that this one depends upon.
+dependency_libs=''
+
+# Names of additional weak libraries provided by this library
+weak_library_names=''
+
+# Version information for libhandle.
+current=1
+age=0
+revision=3
+
+# Is this an already installed library?
+installed=yes
+
+# Should we warn about portability when linking against -modules?
+shouldnotlink=no
+
+# Files to dlopen/dlpreopen
+dlopen=''
+dlpreopen=''
+
+# Directory that this library needs to be installed in:
+libdir='/lib'
+$
+
+See $library_names? That should be all the names that are created,
+and there are three. The are set up via 'install-sh -T so_????'
+options.
+
+So, look at the install rules being run:
+
+> cd ../libhandle/.libs;
+
+Obvious.
+
+> ../../install-sh -o root -g root -m 755 -d /lib64;
+
+Setting owner/perms on /lib64.
+
+> ../../install-sh -o root -g root -m 755 -T so_dot_version libhandle.lai /lib64;
+
+"-T so_dot_version" is supposed to copy libhandle.so.1.0.3 to
+/lib64/libhandle.so.1.0.3. i.e. install the current library.
+
+> ../../install-sh -o root -g root -T so_dot_current libhandle.lai /lib64
+
+That's supposed to set up the /lib64/libhandle.so.1 link back to
+/lib64/libhandle.so.1.0.3.
+
+And that's it. So, what's missing? 
+
+Right - there's nothing that sets up /lib64/libhandle.so i.e.
+this is missing:
+
+../../install-sh -o root -g root -T so_base libhandle.lai /lib64
+
+which would set up the /lib64/libhandle.so link to
+/lib64/libhandle.so.1.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
