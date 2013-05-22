@@ -1,23 +1,39 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3F55629DF8
-	for <xfs@oss.sgi.com>; Wed, 22 May 2013 18:04:39 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B49BAAC001
-	for <xfs@oss.sgi.com>; Wed, 22 May 2013 16:04:35 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	hNpbQG8w2APPAnAz for <xfs@oss.sgi.com>;
-	Wed, 22 May 2013 16:04:33 -0700 (PDT)
-Date: Thu, 23 May 2013 09:04:30 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfsprogs: libhandle/Makefile - fix make install
-Message-ID: <20130522230430.GM29466@dastard>
-References: <20130522205819.586978467@gulag1.americas.sgi.com>
-	<519D3716.8080502@sandeen.net> <519D4136.6080908@sgi.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <519D4136.6080908@sgi.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 72A4D29DF8
+	for <xfs@oss.sgi.com>; Wed, 22 May 2013 18:12:51 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 510FF8F8066
+	for <xfs@oss.sgi.com>; Wed, 22 May 2013 16:12:48 -0700 (PDT)
+Received: from e39.co.us.ibm.com (e39.co.us.ibm.com [32.97.110.160]) by
+	cuda.sgi.com with ESMTP id zolCDc8HO1CJh1zO (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 22 May 2013 16:12:47 -0700 (PDT)
+Received: from /spool/local
+	by e39.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	Violators will be prosecuted
+	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
+	Wed, 22 May 2013 17:12:47 -0600
+Received: from d03relay03.boulder.ibm.com (d03relay03.boulder.ibm.com
+	[9.17.195.228])
+	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id 720FA1FF001B
+	for <xfs@oss.sgi.com>; Wed, 22 May 2013 17:07:36 -0600 (MDT)
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by d03relay03.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	r4MNCif2130964 for <xfs@oss.sgi.com>; Wed, 22 May 2013 17:12:44 -0600
+Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id r4MNCihc024735
+	for <xfs@oss.sgi.com>; Wed, 22 May 2013 17:12:44 -0600
+Received: from [9.41.106.170] (chandra-dt.austin.ibm.com [9.41.106.170])
+	by d03av01.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVin) with ESMTP id
+	r4MNCiBY024711 for <xfs@oss.sgi.com>; Wed, 22 May 2013 17:12:44 -0600
+Subject: deadlock with &log->l_cilp->xc_ctx_lock semaphone
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Date: Wed, 22 May 2013 18:12:43 -0500
+Message-ID: <1369264363.10223.2994.camel@chandra-dt.ibm.com>
+Mime-Version: 1.0
+Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,127 +46,64 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Rich Johnston <rjohnston@sgi.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: XFS mailing list <xfs@oss.sgi.com>
 
-On Wed, May 22, 2013 at 05:05:42PM -0500, Rich Johnston wrote:
-> On 05/22/2013 04:22 PM, Eric Sandeen wrote:
-> >On 5/22/13 3:58 PM, rjohnston@sgi.com wrote:
-> >>In the default section of libhandle/Makefile, ltdepend prevented
-> >>libhandle.so from being installed properly so remove it.
-> >
-> >Can you explain how it prevented it?
-> >
-> >[sandeen@sandeen xfsprogs]$ grep ltdepend */Makefile
-> >libdisk/Makefile:default: ltdepend $(LTLIBRARY)
-> >libhandle/Makefile:default: ltdepend $(LTLIBRARY)
-> >libxcmd/Makefile:default: ltdepend $(LTLIBRARY)
-> >libxfs/Makefile:default: crc32selftest ltdepend $(LTLIBRARY)
-> >libxlog/Makefile:default: ltdepend $(LTLIBRARY)
-> >
-> >seems to exist in every subdir, why is this one causing trouble?
-> Because libhandle is the only one that is installed. ;)
+Hello,
 
-So, after you've done a builds what does libhandle/.libs contain?
-it shoul dlook something lik ethis:
+While testing and rearranging my pquota/gquota code, I stumbled on a
+xfs_shutdown() during a mount. But the mount just hung.
 
-$ ls -l libhandle/.libs/ total 180
--rw-r--r-- 1 dave dave 39416 May 23 08:50 handle.o
--rw-r--r-- 1 dave dave 21936 May 23 08:50 jdm.o
--rw-r--r-- 1 dave dave 61834 May 23 08:50 libhandle.a
-lrwxrwxrwx 1 dave dave    15 May 23 08:50 libhandle.la -> ../libhandle.la
--rw-r--r-- 1 dave dave   938 May 23 08:50 libhandle.lai
-lrwxrwxrwx 1 dave dave    18 May 23 08:50 libhandle.so -> libhandle.so.1.0.3
-lrwxrwxrwx 1 dave dave    18 May 23 08:50 libhandle.so.1 -> libhandle.so.1.0.3
--rwxr-xr-x 1 dave dave 45667 May 23 08:50 libhandle.so.1.0.3
-$
+I debugged and found that it is in a code path where
+&log->l_cilp->xc_ctx_lock is first acquired in read mode and some levels
+down the same semaphore is being acquired in write mode causing a
+deadlock.
 
-And the libhandle.lai should contain:
+This is the stack:
+xfs_log_commit_cil -> acquires &log->l_cilp->xc_ctx_lock in read mode
+  xlog_print_tic_res
+    xfs_force_shutdown
+      xfs_log_force_umount
+        xlog_cil_force
+          xlog_cil_force_lsn
+            xlog_cil_push_foreground
+              xlog_cil_push - tries to acquire same semaphore in write mode
+-------------------------
 
-$ cat libhandle/.libs/libhandle.lai
-libhandle.la - a libtool library file
-# Generated by libtool (GNU libtool) 2.4.2 Debian-2.4.2-1.1
-#
-# Please DO NOT delete this file!
-# It is necessary for linking the library.
+Here is the actual stack from /var/log/messages:
 
-# The name that we can dlopen(3).
-dlname='libhandle.so.1'
+-------------------------
+schedule+0x29/0x70
+rwsem_down_write_failed+0xf5/0x1a0
+call_rwsem_down_write_failed+0x13/0x20
+? down_write+0x31/0x40
+xlog_cil_push+0xd6/0x3e0 [xfs]
+? __cond_resched+0x2a/0x40
+xlog_cil_force_lsn+0x154/0x160 [xfs]
+? __xfs_printk+0x31/0x50 [xfs]
+xfs_log_force_umount+0x5c/0x170 [xfs]
+xfs_do_force_shutdown+0x6b/0x170 [xfs]
+? xlog_print_tic_res+0x112/0x120 [xfs]
+xlog_print_tic_res+0x112/0x120 [xfs]
+xfs_log_commit_cil+0x336/0x4a0 [xfs]
+xfs_trans_commit+0x79/0x270 [xfs]  
+xfs_qm_write_sb_changes+0x61/0x90 [xfs]
+xfs_qm_mount_quotas+0x82/0x180 [xfs]
+xfs_mountfs+0x5f6/0x6b0 [xfs]
+xfs_fs_fill_super+0x2af/0x330 [xfs]
+mount_bdev+0x1be/0x200
+? __free_pages+0x2d/0x40
+? xfs_setup_devices+0xa0/0xa0 [xfs]
+? selinux_sb_copy_data+0x14a/0x1e0 
+xfs_fs_mount+0x15/0x20 [xfs]
+mount_fs+0x43/0x1a0
+vfs_kern_mount+0x72/0x100
+do_mount+0x3e3/0x980
+SyS_mount+0x90/0xe0
+tracesys+0xdd/0xe2
 
-# Names of this library.
-library_names='libhandle.so.1.0.3 libhandle.so.1 libhandle.so'
+--------------------------
 
-# The name of the static archive.
-old_library='libhandle.a'
 
-# Linker flags that can not go in dependency_libs.
-inherited_linker_flags=''
-
-# Libraries that this one depends upon.
-dependency_libs=''
-
-# Names of additional weak libraries provided by this library
-weak_library_names=''
-
-# Version information for libhandle.
-current=1
-age=0
-revision=3
-
-# Is this an already installed library?
-installed=yes
-
-# Should we warn about portability when linking against -modules?
-shouldnotlink=no
-
-# Files to dlopen/dlpreopen
-dlopen=''
-dlpreopen=''
-
-# Directory that this library needs to be installed in:
-libdir='/lib'
-$
-
-See $library_names? That should be all the names that are created,
-and there are three. The are set up via 'install-sh -T so_????'
-options.
-
-So, look at the install rules being run:
-
-> cd ../libhandle/.libs;
-
-Obvious.
-
-> ../../install-sh -o root -g root -m 755 -d /lib64;
-
-Setting owner/perms on /lib64.
-
-> ../../install-sh -o root -g root -m 755 -T so_dot_version libhandle.lai /lib64;
-
-"-T so_dot_version" is supposed to copy libhandle.so.1.0.3 to
-/lib64/libhandle.so.1.0.3. i.e. install the current library.
-
-> ../../install-sh -o root -g root -T so_dot_current libhandle.lai /lib64
-
-That's supposed to set up the /lib64/libhandle.so.1 link back to
-/lib64/libhandle.so.1.0.3.
-
-And that's it. So, what's missing? 
-
-Right - there's nothing that sets up /lib64/libhandle.so i.e.
-this is missing:
-
-../../install-sh -o root -g root -T so_base libhandle.lai /lib64
-
-which would set up the /lib64/libhandle.so link to
-/lib64/libhandle.so.1.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
