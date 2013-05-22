@@ -1,27 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id EDCDA7F3F
-	for <xfs@oss.sgi.com>; Wed, 22 May 2013 04:46:56 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D9620304043
-	for <xfs@oss.sgi.com>; Wed, 22 May 2013 02:46:56 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 26D4C7F77
+	for <xfs@oss.sgi.com>; Wed, 22 May 2013 04:53:04 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E9B21304053
+	for <xfs@oss.sgi.com>; Wed, 22 May 2013 02:53:03 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	F2RtIjPte8QvdiyF for <xfs@oss.sgi.com>;
-	Wed, 22 May 2013 02:46:52 -0700 (PDT)
-Date: Wed, 22 May 2013 19:46:48 +1000
+	TsBhDs6JbYBg4UAm for <xfs@oss.sgi.com>;
+	Wed, 22 May 2013 02:53:02 -0700 (PDT)
+Date: Wed, 22 May 2013 19:53:00 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: 3.9.0: XFS rootfs corruption
-Message-ID: <20130522094648.GJ29466@dastard>
-References: <1871204531.7584919.1367826613792.JavaMail.root@redhat.com>
-	<5187BEA5.4040107@sandeen.net>
-	<647316680.8155487.1367913231441.JavaMail.root@redhat.com>
-	<51895115.90108@sandeen.net>
-	<2132292786.4417784.1369195807747.JavaMail.root@redhat.com>
-	<2013798179.4502334.1369212536770.JavaMail.root@redhat.com>
+Subject: Re: 3.9.2: xfstests triggered panic
+Message-ID: <20130522095300.GK29466@dastard>
+References: <40971621.4497871.1369211701112.JavaMail.root@redhat.com>
+	<1805266998.4499261.1369211998387.JavaMail.root@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <2013798179.4502334.1369212536770.JavaMail.root@redhat.com>
+In-Reply-To: <1805266998.4499261.1369211998387.JavaMail.root@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,39 +26,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: CAI Qian <caiqian@redhat.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+Cc: LKML <linux-kernel@vger.kernel.org>, stable@vger.kernel.org, xfs@oss.sgi.com
 
-On Wed, May 22, 2013 at 04:48:56AM -0400, CAI Qian wrote:
-> 
-> 
-> ----- Original Message -----
-> > From: "CAI Qian" <caiqian@redhat.com>
-> > To: "Eric Sandeen" <sandeen@sandeen.net>
-> > Cc: xfs@oss.sgi.com
-> > Sent: Wednesday, May 22, 2013 12:10:07 PM
-> > Subject: Re: 3.9.0: XFS rootfs corruption
-> > 
-> > OK, this has never been reproduced in 3.9-rc1 so far. It may because the
-> > rootfs became full after crash dump testing though.
-> > CAI Qian
-> Oops, it is still there,
-
-Have you run xfs_repair -n  <dev>  to determine what is corrupted on
-disk? Can you post the output when you do?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gV2VkLCBNYXkgMjIsIDIwMTMgYXQgMDQ6Mzk6NThBTSAtMDQwMCwgQ0FJIFFpYW4gd3JvdGU6
+Cj4gUmVwcm9kdWNlZCBvbiBhbG1vc3QgYWxsIHMzOTB4IGd1ZXN0cyBieSBydW5uaW5nIHhmc3Rl
+c3RzLgo+IAo+IDE0NjM0LjM5NjY1OMKoIFhGUyAoZG0tMSk6IE1vdW50aW5nIEZpbGVzeXN0ZW0g
+Cj4gMTQ2MzQuNTI1NTIywqggWEZTIChkbS0xKTogRW5kaW5nIGNsZWFuIG1vdW50IAo+IDE0NjQw
+LjQxMzAwN8KoICA8MDAwMDAwMDAwMDE3YzZkND7CqCBpZGxlX2JhbGFuY2UrMHgxYTAvMHgzNDAg
+Cj4gMTQ2NDAuNDEzMDEwwqggIDwwMDAwMDAwMDAwNjMzMDNlPsKoIF9fc2NoZWR1bGUrMHhhMjIv
+MHhhZjAgCj4gMTQ2NDAuNDI4Mjc5wqggIDwwMDAwMDAwMDAwNjMwZGE2PsKoIHNjaGVkdWxlX3Rp
+bWVvdXQrMHgxODYvMHgyYzAgCj4gMTQ2NDAuNDI4Mjg5wqggIDwwMDAwMDAwMDAwMWNmODY0PsKo
+IHJjdV9ncF9rdGhyZWFkKzB4MWJjLzB4Mjk4IAo+IDE0NjQwLjQyODMwMMKoICA8MDAwMDAwMDAw
+MDE1OGM1YT7CqCBrdGhyZWFkKzB4ZTYvMHhlYyAKPiAxNDY0MC40MjgzMDTCqCAgPDAwMDAwMDAw
+MDA2MzRkZTY+wqgga2VybmVsX3RocmVhZF9zdGFydGVyKzB4Ni8weGMgCj4gMTQ2NDAuNDI4MzA4
+wqggIDwwMDAwMDAwMDAwNjM0ZGUwPsKoIGtlcm5lbF90aHJlYWRfc3RhcnRlcisweDAvMHhjIAo+
+IDE0NjQwLjQyODMxMcKoIExhc3QgQnJlYWtpbmctRXZlbnQtQWRkcmVzczogCj4gMTQ2NDAuNDI4
+MzE0wqggIDwwMDAwMDAwMDAwMTZiZDc2PsKoIHdhbGtfdGdfdHJlZV9mcm9tKzB4M2EvMHhmNCAK
+PiAxNDY0MC40MjgzMTnCqCAgbGlzdF9hZGQgY29ycnVwdGlvbi4gbmV4dC0+cHJldiBzaG91bGQg
+YmUgcHJldiAoMDAwMDAwMDAwMDAwMDkxOCAKPiApLCBidXQgd2FzICAgICAgICAgICAobnVsbCku
+IChuZXh0PSAgICAgICAgICAobnVsbCkpLiAKCldoZXJlJ3MgWEZTIGluIHRoaXM/IHdhbGtfdGdf
+dHJlZV9mcm9tKCkgaXMgcGFydCBvZiB0aGUgc2NoZWR1bGVyCmNvZGUuIFRoaXMga2luZCBvZiBp
+bXBsaWVzIGEgc3RhY2sgY29ycnVwdGlvbi4uLi4KCj4gU29tZXRpbWVzLCB0aGlzIHBvcHMgdXAs
+Cj4gWzE2OTA3LjI3NTAwMl0gV0FSTklORzogYXQga2VybmVsL3JjdXRyZWUuYzoxOTYwIAo+IAo+
+IG9yIHRoaXMsCj4gMTUzMTYuMTU0MTcxwqggWEZTIChkbS0xKTogTW91bnRpbmcgRmlsZXN5c3Rl
+bSAKPiAxNTMxNi4yNTU3OTbCqCBYRlMgKGRtLTEpOiBFbmRpbmcgY2xlYW4gbW91bnQgCj4gMTUz
+MjAuMzY0MjQ2wqggICAgICAgICAgICAwMDAwMDAwMDAwNjM2N2EyOiBlMzEwYjAwODAwMDQgICAg
+ICAgIGxnICAgICAgJXIxLDgoJXIgCj4gMTEpIAo+IDE1MzIwLjM2NDI0OcKoICAgICAgICAgICAg
+MDAwMDAwMDAwMDYzNjdhODogNDExMDEwMTAgICAgICAgICAgICBsYSAgICAgICVyMSwxNiglIAo+
+IHIxKSAKPiAxNTMyMC4zNjQyNTHCqCAgICAgICAgICAgIDAwMDAwMDAwMDA2MzY3YWM6IGUzMzAx
+MDAwMDAwNCAgICAgICAgbGcgICAgICAlcjMsMCglciAKPiAxKSAKPiAxNTMyMC4zNjQyNTLCqCBD
+YWxsIFRyYWNlOiAKPiAxNTMyMC4zNjQyNTLCqCBMYXN0IEJyZWFraW5nLUV2ZW50LUFkZHJlc3M6
+IAo+IDE1MzIwLjM2NDI1M8KoICDvv70gPDAwMDAwMDAwMDAwMDAwMDA+wqggS2VybmVsIHN0YWNr
+IG92ZXJmbG93LiAKPiAxNTMyMC4zNjQzMDjCqCBDUFU6IDAgVGFpbnRlZDogR0YgICAgICAgVyAg
+ICAzLjkuMiAjMSAKPiAxNTMyMC4zNjQzMDnCqCBQcm9jZXNzIHJodHMtdGVzdC1ydW5uZSAocGlk
+OiA2MjUsIHRhc2s6IDAwMDAwMDAwM2RjY2M4OTAsIGtzcDogMCAKCi4uLi4gYW5kIHRoZXJlIHlv
+dSBnbyAtIGEgc3RhY2sgb3ZlcmZsb3cuIFlvdXIga2VybmVsIHN0YWNrIHNpemUgaXMKdG9vIHNt
+YWxsLgoKSSdkIHN1Z2dlc3QgdGhhdCB5b3UgbmVlZCAxNmsgc3RhY2tzIG9uIHMzOTAgLSBJSVJD
+IGV2ZXJ5IGZ1bmN0aW9uCmNhbGwgaGFzIDEyOCBieXRlIHN0YWNrIGZyYW1lLCBhbmQgdGhlcmUg
+YXJlIGNhbGwgY2hhaW5zIDcwLTgwCmZ1bmN0aW9ucyBkZWVwIGluIHRoZSBzdG9yYWdlIHN0YWNr
+Li4uCgpDaGVlcnMsCgpEYXZlLgotLSAKRGF2ZSBDaGlubmVyCmRhdmlkQGZyb21vcmJpdC5jb20K
+Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWls
+aW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3Rp
+bmZvL3hmcwo=
