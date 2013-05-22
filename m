@@ -1,24 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 7E27E29E03
-	for <xfs@oss.sgi.com>; Tue, 21 May 2013 22:04:26 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6C9D78F8040
-	for <xfs@oss.sgi.com>; Tue, 21 May 2013 20:04:23 -0700 (PDT)
-Received: from mail-ie0-f178.google.com (mail-ie0-f178.google.com
-	[209.85.223.178]) by cuda.sgi.com with ESMTP id
-	3Lyt8AJAdYSJpk0h (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 21 May 2013 20:04:22 -0700 (PDT)
-Received: by mail-ie0-f178.google.com with SMTP id b11so4138179iee.9
-	for <xfs@oss.sgi.com>; Tue, 21 May 2013 20:04:22 -0700 (PDT)
-Message-ID: <519C3596.7080109@gmail.com>
-Date: Tue, 21 May 2013 23:03:50 -0400
-From: "Michael L. Semon" <mlsemon35@gmail.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B221B29E03
+	for <xfs@oss.sgi.com>; Tue, 21 May 2013 23:03:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 4961EAC002
+	for <xfs@oss.sgi.com>; Tue, 21 May 2013 21:03:26 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	OsAaCg2lRNKlKMKC for <xfs@oss.sgi.com>;
+	Tue, 21 May 2013 21:03:20 -0700 (PDT)
+Date: Wed, 22 May 2013 14:03:18 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: XFS assertion from truncate. (3.10-rc2)
+Message-ID: <20130522040318.GG29466@dastard>
+References: <20130521225257.GA12713@redhat.com>
+	<20130521233429.GW29466@dastard>
+	<20130521234016.GB14347@redhat.com>
+	<20130521235410.GY29466@dastard>
+	<20130522000803.GA19891@redhat.com>
+	<20130522001603.GZ29466@dastard>
+	<20130522025605.GA29767@redhat.com>
 MIME-Version: 1.0
-Subject: Re: generic/258 questions (mount issue)...
-References: <519C14A1.8000009@gmail.com> <20130522012620.GA29466@dastard>
-In-Reply-To: <20130522012620.GA29466@dastard>
+Content-Disposition: inline
+In-Reply-To: <20130522025605.GA29767@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,88 +35,113 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Dave Jones <davej@redhat.com>, Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-On 05/21/2013 09:26 PM, Dave Chinner wrote:
-> On Tue, May 21, 2013 at 08:43:13PM -0400, Michael L. Semon wrote:
->> Hi!  When using xfstests generic/258 with along with $TEST_RTDEV
->> $TEST_LOGDEV, it tends to scream bloody murder about corrupted
->> partitions and such.  In fact, the commands in the test seem to do
->> the right thing when executed by hand.  So once again, I grasped for
->> straws and came up with this:
->>
->> --- xfstests/tests/generic/258.orig	2013-05-21 20:19:38.430754829 -0400
->> +++ xfstests/tests/generic/258	2013-05-21 20:10:11.509021368 -0400
->> @@ -62,7 +62,7 @@
->>  # unmount, remount, and check the timestamp
->>  echo "Remounting to flush cache"
->>  umount $TEST_DEV
->> -mount $TEST_DEV $TEST_DIR
->> +_test_mount
->>
->>  # Should yield -315593940 (prior to epoch)
->>  echo "Testing for negative seconds since epoch"
->>
->> My questions are these:
->>
->> 1) Was there a better way to do this?
+On Tue, May 21, 2013 at 10:56:05PM -0400, Dave Jones wrote:
+> On Wed, May 22, 2013 at 10:16:03AM +1000, Dave Chinner wrote:
 > 
-> No, your change is correct. Can you clean up the description of the
-> problem you had and add a Signed-off-by?
-> 
->> 2) Not knowing the policy on umounting $TEST_DEV, could this have
->> been a test for $SCRATCH_DEV?
-> 
-> There are a handful of other tests that also unmount the TEST_DEV.
-> Perhaps adding a _test_umount() wrapper to common/rc (similar to
-> _scratch_umount) would be best. At least shared/243 needs the same
-> _test_mount treatment as this test.
-> 
-> Cheers,
-> 
-> Dave.
-> 
+> Seems like I can trigger this from paths other than truncate too.. (eg, sys_open)
 
-This is my first attempt at doing a `git format-patch --stdout`.  
-Hopefully, this is somewhat more presentable to git.  Comments and 
-brow-beating are welcome.
+O_TRUNC?
 
-Thanks!
+> The mask is always 0xa068 though if that helps.
 
-Michael
+A bit - it confirms what I thought - a truncate killing SUID bits.
+i.e. mask = ATTR_FORCE|ATTR_KILL_SUID|ATTR_CTIME|ATTR_SIZE.
 
->From 7dc0667e1f8cd1c98f15ebf412dd0f038b55306e Mon Sep 17 00:00:00 2001
-From: "Michael L. Semon" <mlsemon35@gmail.com>
-Date: Tue, 21 May 2013 22:50:59 -0400
-Subject: [PATCH] Change mount method for generic/258
+But then here's the next question - where the hell is the ATTR_MODE
+bit?  In do_truncate(), the should_remove_suid() return is or'd into
+the mask along with ATTR_FORCE. The ATTR_KILL_SUID is returned after
+this check:
 
-Use the built-in _test_mount function from xfstests so it will use
-the correct mount options for xfstests.  The script used a simple
-umount-and-mount sequence, which caused a test failure on an XFS
-filesystem that used both realtime and external log devices.
+        umode_t mode = dentry->d_inode->i_mode;
+        int kill = 0;
 
-Signed-off-by: Michael L. Semon <mlsemon35@gmail.com>
+        /* suid always must be killed */
+        if (unlikely(mode & S_ISUID))
+                kill = ATTR_KILL_SUID;
+
+However, notify_change() takes this mask and the inode and does this
+when the ATTR_KILL_SUID flag is set:
+
+	umode_t mode = inode->i_mode;
+...
+        if (ia_valid & ATTR_KILL_SUID) {
+                if (mode & S_ISUID) {
+                        ia_valid = attr->ia_valid |= ATTR_MODE;
+                        attr->ia_mode = (inode->i_mode & ~S_ISUID);
+                }
+        }
+
+
+So, we know that (mode & S_ISUID) is true, because that's how
+ATTR_KILL_SUID gets set, but that same check here doesn't result
+in ATTR_MODE being set....
+
+That doesn't make a whole lot of sense to me. What am I missing?
+Are you seeing this fire at all from notify_change()?
+
+	WARN_ON_ONCE(!mutex_is_locked(&inode->i_mutex));
+
+<Light Bulb>
+
+What's wrong with this code in do_truncate()?
+
+        /* Remove suid/sgid on truncate too */
+        ret = should_remove_suid(dentry);
+        if (ret)
+                newattrs.ia_valid |= ret | ATTR_FORCE;
+
+        mutex_lock(&dentry->d_inode->i_mutex);
+        ret = notify_change(dentry, &newattrs);
+        mutex_unlock(&dentry->d_inode->i_mutex);
+
+Patch below to fix this.
+
+However, it probably doesn't fix the fact that truncate can change
+the size and kill suid/sgid bits at the same time and XFS doesn't
+appear to handle that sanely right now. Can you run the patch below
+just so when it fails we can see that the mask is actually sane?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+vfs: do_truncate() needs to serialise should_remove_suid
+
+From: Dave Chinner <dchinner@redhat.com>
+
+Otherwise someone else can come in an remove the suid bit before the
+truncate locks the inode and calls notify_change(). This results in
+XFS throwing asserts because it's getting a strange attr mask being
+passed down to it that it doesn't know how to handle correctly.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+
 ---
- tests/generic/258 | 2 +-
+ fs/open.c |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/tests/generic/258 b/tests/generic/258
-index fb091ae..3aeb5ce 100755
---- a/tests/generic/258
-+++ b/tests/generic/258
-@@ -62,7 +62,7 @@ fi
- # unmount, remount, and check the timestamp
- echo "Remounting to flush cache"
- umount $TEST_DEV
--mount $TEST_DEV $TEST_DIR
-+_test_mount
+diff --git a/fs/open.c b/fs/open.c
+index 8c74100..b8d4899 100644
+--- a/fs/open.c
++++ b/fs/open.c
+@@ -52,11 +52,11 @@ int do_truncate(struct dentry *dentry, loff_t length, unsigned int time_attrs,
+ 	}
  
- # Should yield -315593940 (prior to epoch)
- echo "Testing for negative seconds since epoch"
--- 
-1.8.2
-
+ 	/* Remove suid/sgid on truncate too */
++	mutex_lock(&dentry->d_inode->i_mutex);
+ 	ret = should_remove_suid(dentry);
+ 	if (ret)
+ 		newattrs.ia_valid |= ret | ATTR_FORCE;
+ 
+-	mutex_lock(&dentry->d_inode->i_mutex);
+ 	ret = notify_change(dentry, &newattrs);
+ 	mutex_unlock(&dentry->d_inode->i_mutex);
+ 	return ret;
 
 _______________________________________________
 xfs mailing list
