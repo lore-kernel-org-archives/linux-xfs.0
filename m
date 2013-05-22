@@ -1,25 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4028F7F63
-	for <xfs@oss.sgi.com>; Wed, 22 May 2013 09:12:57 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id AB354AC004
-	for <xfs@oss.sgi.com>; Wed, 22 May 2013 07:12:56 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id IXSv2LhoHzHQltMt for <xfs@oss.sgi.com>;
-	Wed, 22 May 2013 07:12:55 -0700 (PDT)
-Message-ID: <519CD268.10306@sandeen.net>
-Date: Wed, 22 May 2013 09:12:56 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id 33D677F6C
+	for <xfs@oss.sgi.com>; Wed, 22 May 2013 09:23:01 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id CEF3EAC005
+	for <xfs@oss.sgi.com>; Wed, 22 May 2013 07:23:00 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id l0i58xRwyngRqiyZ for
+	<xfs@oss.sgi.com>; Wed, 22 May 2013 07:23:00 -0700 (PDT)
+Date: Wed, 22 May 2013 10:22:52 -0400
+From: Dave Jones <davej@redhat.com>
+Subject: Re: XFS assertion from truncate. (3.10-rc2)
+Message-ID: <20130522142252.GB1407@redhat.com>
+References: <20130521234016.GB14347@redhat.com>
+	<20130521235410.GY29466@dastard>
+	<20130522000803.GA19891@redhat.com>
+	<20130522001603.GZ29466@dastard>
+	<20130522025605.GA29767@redhat.com>
+	<20130522040318.GG29466@dastard> <20130522041521.GA1837@redhat.com>
+	<20130522051243.GH29466@dastard> <20130522052938.GA2573@redhat.com>
+	<20130522055147.GI29466@dastard>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests comma separated group names
-References: <CANW9uytRpGXcd9x=HWMEoFvd3_9G98CN_Tv3YacTtd1h+Gq=4g@mail.gmail.com>
-	<20130520113045.GB24543@dastard>
-	<CANW9uytQDPaBr_VAGMuwSqhStCfyMCGmV_A3ccNzOExi-KeZfQ@mail.gmail.com>
-	<20130521004553.GL24543@dastard>
-	<CANW9uyvUgS6i+z0iUtyuJDe2YhbtnVYmYs87xB74=fJCMuG06Q@mail.gmail.com>
-	<20130521052118.GM24543@dastard>
-In-Reply-To: <20130521052118.GM24543@dastard>
+Content-Disposition: inline
+In-Reply-To: <20130522055147.GI29466@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,69 +36,31 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Itaru Kitayama <itaru.kitayama@gmail.com>, xfs@oss.sgi.com
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-On 5/21/13 12:21 AM, Dave Chinner wrote:
-> On Tue, May 21, 2013 at 12:45:32PM +0900, Itaru Kitayama wrote:
->> In the current check script the -g option assumes only one group is given.
->> With this patch, the -g option
->> understands comma separated multiple groups as the argument as well.
->> Existing scripts are not affected
->> by this patch.
->>
->> Reviewed-by: Dave Chinner <david@redhat.com>
-> 
-> No, I didn't. A comment on a patch is not a review.
-> 
-> The only time you should add tags like this is if you receive them
-> in email from the person in question. Once I've actaully done a
-> review of the code, I'll respond with such a tag. See
-> Documentation/SubmittingPatches for more information about what the
-> reviewed-by tag actually means...
-> 
->> Signed-off-by: Itaru Kitayama <itaru.kitayama@gmail.com>
->>
->> ---
->>
->>  check |   23 ++++++++++++-----------
->>  1 file changed, 12 insertions(+), 11 deletions(-)
->>
->> diff --git a/check b/check
->> index a79747e..0e0f208 100755
->> --- a/check
->> +++ b/check
->> @@ -164,18 +164,19 @@ while [ $# -gt 0 ]; do
->>         -nfs)   FSTYP=nfs ;;
->>
->>         -g)     group=$2 ; shift ;
->> -               group_list=$(get_group_list $group)
->> -               if [ -z "$group_list" ]; then
->> -                   echo "Group \"$group\" is empty or not defined?"
->> -                   exit 1
->> -               fi
->> -
->> -               [ ! -s $tmp.list ] && touch $tmp.list
->> -               for t in $group_list; do
->> -                       grep -s "^$t\$" $tmp.list >/dev/null || \
->> -                                                       echo "$t"
->>>> $tmp.list
-> 
-> There's a whitespace and wrapping problem with your mailer. it's
-> converting all tabs to spaces, and it's wrapping long lines in the
-> patch. Please see Documentation/email-clients.txt for help to set
-> your mailer up properly.
+On Wed, May 22, 2013 at 03:51:47PM +1000, Dave Chinner wrote:
 
-Dave is a tough teacher but you can learn a lot from him.  ;)
+ > > Tomorrow I'll also try running some older kernels with the same
+ > > options to see if it's something new, or an older bug. This is a
+ > > new machine, so it may be something that's been around for a
+ > > while, and for whatever reason, my other machines don't hit
+ > > this.
+ > 
+ > Another thing that just occurred to me - what compiler are you
+ > using?  We had a report last week on #xfs that xfsdump was failing
+ > with bad checksums because of link time optimisation (LTO) in
+ > gcc-4.8.0. When they turned that off, everything worked fine. So if
+ > you are using 4.8.0, perhaps trying a different compiler might be a
+ > good idea, too.
 
-Thanks for sending the patch, I agree that this will be nice to have,
-once the patch submission issues get fixed up.
+Yeah, this is 4.8.0. This box is running F19-beta. 
+I managed to shoehorn the gcc-4.7 from f18 on there though.
+Bug reproduced instantly, so I think we can rule out compiler.
 
--Eric
+I ran 3.9 with the same debug options. Seems stable.
+I'll do a bisect.
 
-> Cheers,
-> 
-> Dave.
-> 
+	Dave
 
 _______________________________________________
 xfs mailing list
