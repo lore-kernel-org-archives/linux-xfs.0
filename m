@@ -1,22 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id DE7667F55
-	for <xfs@oss.sgi.com>; Wed, 22 May 2013 11:19:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 7B5BDAC002
-	for <xfs@oss.sgi.com>; Wed, 22 May 2013 09:19:09 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id pH2yLMtCgoR5RAap for <xfs@oss.sgi.com>;
-	Wed, 22 May 2013 09:19:08 -0700 (PDT)
-Message-ID: <519CEFFB.1080209@sandeen.net>
-Date: Wed, 22 May 2013 11:19:07 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E0C7C7F55
+	for <xfs@oss.sgi.com>; Wed, 22 May 2013 11:19:56 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C08AC8F808F
+	for <xfs@oss.sgi.com>; Wed, 22 May 2013 09:19:53 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id ztHdcuj0MXFJGiVt for
+	<xfs@oss.sgi.com>; Wed, 22 May 2013 09:19:53 -0700 (PDT)
+Date: Wed, 22 May 2013 12:19:46 -0400
+From: Dave Jones <davej@redhat.com>
+Subject: Re: XFS assertion from truncate. (3.10-rc2)
+Message-ID: <20130522161946.GA25906@redhat.com>
+References: <20130521235410.GY29466@dastard>
+	<20130522000803.GA19891@redhat.com>
+	<20130522001603.GZ29466@dastard>
+	<20130522025605.GA29767@redhat.com>
+	<20130522040318.GG29466@dastard> <20130522041521.GA1837@redhat.com>
+	<20130522051243.GH29466@dastard> <20130522052938.GA2573@redhat.com>
+	<20130522055147.GI29466@dastard> <20130522142252.GB1407@redhat.com>
 MIME-Version: 1.0
-Subject: Re: generic/258 questions (mount issue)...
-References: <519C14A1.8000009@gmail.com> <20130522012620.GA29466@dastard>
-	<519C3596.7080109@gmail.com> <519CD1D9.8050904@sandeen.net>
-	<519CEF04.7060503@gmail.com>
-In-Reply-To: <519CEF04.7060503@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20130522142252.GB1407@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,87 +34,65 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Michael L. Semon" <mlsemon35@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>, Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-On 5/22/13 11:15 AM, Michael L. Semon wrote:
-> On 05/22/2013 10:10 AM, Eric Sandeen wrote:
->> On 5/21/13 10:03 PM, Michael L. Semon wrote:
->>
->> ...
->>
->>> From 7dc0667e1f8cd1c98f15ebf412dd0f038b55306e Mon Sep 17 00:00:00 2001
->>> From: "Michael L. Semon" <mlsemon35@gmail.com>
->>> Date: Tue, 21 May 2013 22:50:59 -0400
->>> Subject: [PATCH] Change mount method for generic/258
->>>
->>> Use the built-in _test_mount function from xfstests so it will use
->>> the correct mount options for xfstests.  The script used a simple
->>> umount-and-mount sequence, which caused a test failure on an XFS
->>> filesystem that used both realtime and external log devices.
->>>
->>> Signed-off-by: Michael L. Semon <mlsemon35@gmail.com>
->>
->> Thanks, this was my fault  :(
->>
->> Reviewed-by: Eric Sandeen <sandeen@rehat.com>
->>
->> Want to consider dave's other suggestions in another patch?
->>
->>> There are a handful of other tests that also unmount the TEST_DEV.
->>> Perhaps adding a _test_umount() wrapper to common/rc (similar to
->>> _scratch_umount) would be best. At least shared/243 needs the same
->>> _test_mount treatment as this test.
->>
->> Eternal git-log fame would be yours.  ;)
->>
->> -Eric
-> 
-> Will do.  Let me get my feet back under me.  The initial 
-> `grep -l _test_mount [0-9][0-9][0-9]` returned 014, 097, 192; so 
-> the thread was started in the spirit of "there's no way this can 
-> possibly be the correct function to use."
-> 
-> I'll look at shared/243.
-> 
-> One day, I would like to earn git-log fame by incorporating better 
-> support for JFS and especially NILFS2 into xfstests.  However, 
-> that's a topic for another day.  I know that I have uses for both 
-> filesystems, but that doesn't mean anybody else does.  Their 
-> mailing lists don't give much hint of user community or progress.
+On Wed, May 22, 2013 at 10:22:52AM -0400, Dave Jones wrote:
+ > On Wed, May 22, 2013 at 03:51:47PM +1000, Dave Chinner wrote:
+ > 
+ >  > > Tomorrow I'll also try running some older kernels with the same
+ >  > > options to see if it's something new, or an older bug. This is a
+ >  > > new machine, so it may be something that's been around for a
+ >  > > while, and for whatever reason, my other machines don't hit
+ >  > > this.
+ >  > 
+ >  > Another thing that just occurred to me - what compiler are you
+ >  > using?  We had a report last week on #xfs that xfsdump was failing
+ >  > with bad checksums because of link time optimisation (LTO) in
+ >  > gcc-4.8.0. When they turned that off, everything worked fine. So if
+ >  > you are using 4.8.0, perhaps trying a different compiler might be a
+ >  > good idea, too.
+ > 
+ > Yeah, this is 4.8.0. This box is running F19-beta. 
+ > I managed to shoehorn the gcc-4.7 from f18 on there though.
+ > Bug reproduced instantly, so I think we can rule out compiler.
+ > 
+ > I ran 3.9 with the same debug options. Seems stable.
+ > I'll do a bisect.
 
-The generic tests hopefully work; if not, it should be a fairly
-simple fixup.  And you're free to add fs-specific tests :)
+good news.  It wasn't until I started bisecting I realised I was still
+carrying this patch from you to fix slab corruption I was seeing.
 
-(I'm not sure if we fall back by default to mkfs.$FSTYP and fsck.$FSTYP;
-if so, it might just work)
+It seems to be the culprit (or is masking another problem -- I had to apply
+it at each step of the bisect to get past the slab corruption bug).
 
--Eric
+	Dave
 
-> Thanks!
-> 
-> Michael
-> 
->>> ---
->>>  tests/generic/258 | 2 +-
->>>  1 file changed, 1 insertion(+), 1 deletion(-)
->>>
->>> diff --git a/tests/generic/258 b/tests/generic/258
->>> index fb091ae..3aeb5ce 100755
->>> --- a/tests/generic/258
->>> +++ b/tests/generic/258
->>> @@ -62,7 +62,7 @@ fi
->>>  # unmount, remount, and check the timestamp
->>>  echo "Remounting to flush cache"
->>>  umount $TEST_DEV
->>> -mount $TEST_DEV $TEST_DIR
->>> +_test_mount
->>>  
->>>  # Should yield -315593940 (prior to epoch)
->>>  echo "Testing for negative seconds since epoch"
->>>
->>
-> 
+--- /home/davej/src/kernel/git-trees/linux/fs/xfs/xfs_extfree_item.c	2013-05-03 10:03:05.331370231 -0400
++++ linux-dj/fs/xfs/xfs_extfree_item.c	2013-05-07 20:46:42.389262296 -0400
+@@ -305,10 +305,22 @@ xfs_efi_release(xfs_efi_log_item_t	*efip
+ {
+ 	ASSERT(atomic_read(&efip->efi_next_extent) >= nextents);
+ 	if (atomic_sub_and_test(nextents, &efip->efi_next_extent)) {
++		int recovered;
++
++		/*
++		 * __xfs_efi_release() can release the last reference to the EFI
++		 * and free it, so it is unsafe to reference it after we've
++		 * released the reference. The only case this is safe to do is
++		 * if we are in recovery and the XFS_EFI_RECOVERED bit is set,
++		 * meaning that we have two references to release. Check the
++		 * recovered bit before the initial release, as we cannot
++		 * reliably check it afterwards.
++		 */
++		recovered = test_bit(XFS_EFI_RECOVERED, &efip->efi_flags);
+ 		__xfs_efi_release(efip);
+ 
+ 		/* recovery needs us to drop the EFI reference, too */
+-		if (test_bit(XFS_EFI_RECOVERED, &efip->efi_flags))
++		if (recovered)
+ 			__xfs_efi_release(efip);
+ 	}
+ }
 
 _______________________________________________
 xfs mailing list
