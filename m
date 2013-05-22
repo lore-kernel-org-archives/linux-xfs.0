@@ -1,27 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0BE2029DF8
-	for <xfs@oss.sgi.com>; Wed, 22 May 2013 18:54:02 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0462929DF8
+	for <xfs@oss.sgi.com>; Wed, 22 May 2013 18:54:53 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B12958F8068
-	for <xfs@oss.sgi.com>; Wed, 22 May 2013 16:54:02 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id JALcJzAARq8kpVYh for
-	<xfs@oss.sgi.com>; Wed, 22 May 2013 16:54:01 -0700 (PDT)
-Date: Wed, 22 May 2013 19:53:55 -0400
-From: Dave Jones <davej@redhat.com>
-Subject: Re: XFS assertion from truncate. (3.10-rc2)
-Message-ID: <20130522235355.GA31001@redhat.com>
-References: <20130522001603.GZ29466@dastard>
-	<20130522025605.GA29767@redhat.com>
-	<20130522040318.GG29466@dastard> <20130522041521.GA1837@redhat.com>
-	<20130522051243.GH29466@dastard> <20130522052938.GA2573@redhat.com>
-	<20130522055147.GI29466@dastard> <20130522142252.GB1407@redhat.com>
-	<20130522161946.GA25906@redhat.com>
-	<20130522220933.GV24543@dastard>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C728B304032
+	for <xfs@oss.sgi.com>; Wed, 22 May 2013 16:54:53 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	zLC8B9EdTTqcLH3N for <xfs@oss.sgi.com>;
+	Wed, 22 May 2013 16:54:52 -0700 (PDT)
+Date: Thu, 23 May 2013 09:54:50 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 06/11] xfs: fully initialise temp leaf in
+	xfs_attr3_leaf_unbalance
+Message-ID: <20130522235450.GO29466@dastard>
+References: <1369123330-9579-1-git-send-email-david@fromorbit.com>
+	<1369123330-9579-7-git-send-email-david@fromorbit.com>
+	<20130522205059.GP20028@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130522220933.GV24543@dastard>
+In-Reply-To: <20130522205059.GP20028@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,54 +32,77 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, May 23, 2013 at 08:09:33AM +1000, Dave Chinner wrote:
- > On Wed, May 22, 2013 at 12:19:46PM -0400, Dave Jones wrote:
- > > On Wed, May 22, 2013 at 10:22:52AM -0400, Dave Jones wrote:
- > >  > On Wed, May 22, 2013 at 03:51:47PM +1000, Dave Chinner wrote:
- > >  > 
- > >  >  > > Tomorrow I'll also try running some older kernels with the same
- > >  >  > > options to see if it's something new, or an older bug. This is a
- > >  >  > > new machine, so it may be something that's been around for a
- > >  >  > > while, and for whatever reason, my other machines don't hit
- > >  >  > > this.
- > >  >  > 
- > >  >  > Another thing that just occurred to me - what compiler are you
- > >  >  > using?  We had a report last week on #xfs that xfsdump was failing
- > >  >  > with bad checksums because of link time optimisation (LTO) in
- > >  >  > gcc-4.8.0. When they turned that off, everything worked fine. So if
- > >  >  > you are using 4.8.0, perhaps trying a different compiler might be a
- > >  >  > good idea, too.
- > >  > 
- > >  > Yeah, this is 4.8.0. This box is running F19-beta. 
- > >  > I managed to shoehorn the gcc-4.7 from f18 on there though.
- > >  > Bug reproduced instantly, so I think we can rule out compiler.
- > >  > 
- > >  > I ran 3.9 with the same debug options. Seems stable.
- > >  > I'll do a bisect.
- > > 
- > > good news.  It wasn't until I started bisecting I realised I was still
- > > carrying this patch from you to fix slab corruption I was seeing.
- > > 
- > > It seems to be the culprit (or is masking another problem -- I had to apply
- > > it at each step of the bisect to get past the slab corruption bug).
- > 
- > That doesn't make a whole lot of sense to me. The fix in the xfsdev
- > tree is a little different:
- > 
- > http://oss.sgi.com/cgi-bin/gitweb.cgi?p=xfs/xfs.git;a=commitdiff;h=52c24ad39ff02d7bd73c92eb0c926fb44984a41d
- > 
- > but I can't set how this makes any difference to the problem at all.
- > See my previous post about the fact that 0xa068 is actually a valid
- > mask and should not be tripping the assert....
+On Wed, May 22, 2013 at 03:50:59PM -0500, Ben Myers wrote:
+> On Tue, May 21, 2013 at 06:02:05PM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > xfs_attr3_leaf_unbalance() uses a temporary buffer for recombining
+> > the entries in two leaves when the destination leaf requires
+> > compaction. The temporary buffer ends up being copied back over the
+> > original destination buffer, so the header in the temporary buffer
+> > needs to contain all the information that is in the destination
+> > buffer.
+> > 
+> > To make sure the temporary buffer is fully initialised, once we've
+> > set up the temporary incore header appropriately, write is back to
+> > the temporary buffer before starting to move entries around.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> >
+> > ---
+> >  fs/xfs/xfs_attr_leaf.c |   16 +++++++++++++---
+> >  1 file changed, 13 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_attr_leaf.c b/fs/xfs/xfs_attr_leaf.c
+> > index 0bce1b3..79ece72 100644
+> > --- a/fs/xfs/xfs_attr_leaf.c
+> > +++ b/fs/xfs/xfs_attr_leaf.c
+> > @@ -2181,14 +2181,24 @@ xfs_attr3_leaf_unbalance(
+> >  		struct xfs_attr_leafblock *tmp_leaf;
+> >  		struct xfs_attr3_icleaf_hdr tmphdr;
+> >  
+> > -		tmp_leaf = kmem_alloc(state->blocksize, KM_SLEEP);
+> > -		memset(tmp_leaf, 0, state->blocksize);
+> > -		memset(&tmphdr, 0, sizeof(tmphdr));
+> > +		tmp_leaf = kmem_zalloc(state->blocksize, KM_SLEEP);
+> > +
+> > +		/*
+> > +		 * Copy the header into the temp leaf so that all the stuff
+> > +		 * not in the incore header is present and gets copied back in
+> > +		 * once we've moved all the entries.
+> > +		 */
+> > +		memcpy(tmp_leaf, save_leaf, xfs_attr3_leaf_hdr_size(save_leaf));
+> >  
+> > +		memset(&tmphdr, 0, sizeof(tmphdr));
+> >  		tmphdr.magic = savehdr.magic;
+> >  		tmphdr.forw = savehdr.forw;
+> >  		tmphdr.back = savehdr.back;
+> >  		tmphdr.firstused = state->blocksize;
+> > +
+> > +		/* write the header to the temp buffer to initialise it */
+> > +		xfs_attr3_leaf_hdr_to_disk(tmp_leaf, &tmphdr);
+> > +
+> 
+> Hrm.  It seemed like the memset 0 for the incore temp header should have been
+> enough for the purposes of moveents.  Why did you have to add this additional
+> hdr_to_disk?
 
-Hmm, I did git bisect fs/xfs/, so maybe itit's something outside of that subdir
-that's the cause. I'll start over on the whole tree once I'm done bisecting
-another entirely different bug.
+Because we've modified the tmphdr so it is different to what is in
+the tmp_leaf, and I'm being paranoid and not making any assumptions
+that a callee doesn't reread the tmphdr from the tmp_leaf.
 
-	Dave
+i.e. I'm initialising both the on-disk and the incore headers to
+be identical before we do anything else. Once bitten, twice shy.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
