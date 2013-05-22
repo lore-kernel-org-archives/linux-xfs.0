@@ -1,17 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6F52E7CBF
-	for <xfs@oss.sgi.com>; Wed, 22 May 2013 16:59:34 -0500 (CDT)
-Date: Wed, 22 May 2013 16:59:34 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 07/11] xfs: fully initialise temp leaf in
-	xfs_attr3_leaf_compact
-Message-ID: <20130522215934.GQ20028@sgi.com>
-References: <1369123330-9579-1-git-send-email-david@fromorbit.com>
-	<1369123330-9579-8-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id EF07F7CBF
+	for <xfs@oss.sgi.com>; Wed, 22 May 2013 17:05:01 -0500 (CDT)
+Message-ID: <519D4136.6080908@sgi.com>
+Date: Wed, 22 May 2013 17:05:42 -0500
+From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1369123330-9579-8-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH] xfsprogs: libhandle/Makefile - fix make install
+References: <20130522205819.586978467@gulag1.americas.sgi.com>
+	<519D3716.8080502@sandeen.net>
+In-Reply-To: <519D3716.8080502@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,104 +18,150 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs@oss.sgi.com
 
-On Tue, May 21, 2013 at 06:02:06PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> xfs_attr3_leaf_compact() uses a temporary buffer for compacting the
-> the entries in a leaf. It copies the the original buffer into the
-> temporary buffer, then zeros the original buffer completely. It then
-> copies the entries back into the original buffer.  However, the
-> original buffer has not been correctly initialised, and so the
-> movement of the entries goes horribly wrong.
-> 
-> Make sure the zeroed destination buffer is fully initialised, and
-> once we've set up the destination incore header appropriately, write
-> is back to the buffer before starting to move entries around.
-  it
+On 05/22/2013 04:22 PM, Eric Sandeen wrote:
+> On 5/22/13 3:58 PM, rjohnston@sgi.com wrote:
+>> In the default section of libhandle/Makefile, ltdepend prevented
+>> libhandle.so from being installed properly so remove it.
+>
+> Can you explain how it prevented it?
+>
+> [sandeen@sandeen xfsprogs]$ grep ltdepend */Makefile
+> libdisk/Makefile:default: ltdepend $(LTLIBRARY)
+> libhandle/Makefile:default: ltdepend $(LTLIBRARY)
+> libxcmd/Makefile:default: ltdepend $(LTLIBRARY)
+> libxfs/Makefile:default: crc32selftest ltdepend $(LTLIBRARY)
+> libxlog/Makefile:default: ltdepend $(LTLIBRARY)
+>
+> seems to exist in every subdir, why is this one causing trouble?
+Because libhandle is the only one that is installed. ;)
 
-> 
-> While debugging this, the _d/_s prefixes weren't sufficient to
-> remind me what buffer was what, so rename then all _src/_dst.
+make install
+Installing include-install
+gmake[1]: Nothing to be done for `install'.
+Installing libxfs-install
+gmake[1]: Nothing to be done for `install'.
+Installing libxlog-install
+gmake[1]: Nothing to be done for `install'.
+Installing libxcmd-install
+gmake[1]: Nothing to be done for `install'.
+Installing libhandle-install
+cd ../libhandle/.libs; ../../install-sh -o root -g root -m 755 -d 
+/lib64; ../../install-sh -o root -g root -m 755 -T so_dot_version 
+libhandle.lai /lib64; ../../install-sh -o root -g root -T so_dot_current 
+libhandle.lai /lib64
+Installing libdisk-install
+gmake[1]: Nothing to be done for `install'.
 
-Yeah, it helps.
 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_attr_leaf.c |   42 ++++++++++++++++++++++++++----------------
->  1 file changed, 26 insertions(+), 16 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_attr_leaf.c b/fs/xfs/xfs_attr_leaf.c
-> index 79ece72..5b03d15 100644
-> --- a/fs/xfs/xfs_attr_leaf.c
-> +++ b/fs/xfs/xfs_attr_leaf.c
-> @@ -1445,11 +1445,12 @@ xfs_attr3_leaf_add_work(
->  STATIC void
->  xfs_attr3_leaf_compact(
->  	struct xfs_da_args	*args,
-> -	struct xfs_attr3_icleaf_hdr *ichdr_d,
-> +	struct xfs_attr3_icleaf_hdr *ichdr_dst,
->  	struct xfs_buf		*bp)
->  {
-> -	xfs_attr_leafblock_t	*leaf_s, *leaf_d;
-> -	struct xfs_attr3_icleaf_hdr ichdr_s;
-> +	struct xfs_attr_leafblock *leaf_src;
-> +	struct xfs_attr_leafblock *leaf_dst;
-> +	struct xfs_attr3_icleaf_hdr ichdr_src;
->  	struct xfs_trans	*trans = args->trans;
->  	struct xfs_mount	*mp = trans->t_mountp;
->  	char			*tmpbuffer;
-> @@ -1457,29 +1458,38 @@ xfs_attr3_leaf_compact(
->  	trace_xfs_attr_leaf_compact(args);
->  
->  	tmpbuffer = kmem_alloc(XFS_LBSIZE(mp), KM_SLEEP);
-> -	ASSERT(tmpbuffer != NULL);
->  	memcpy(tmpbuffer, bp->b_addr, XFS_LBSIZE(mp));
->  	memset(bp->b_addr, 0, XFS_LBSIZE(mp));
-> +	leaf_src = (xfs_attr_leafblock_t *)tmpbuffer;
-> +	leaf_dst = bp->b_addr;
->  
->  	/*
-> -	 * Copy basic information
-> +	 * Copy the on-disk header back into the destination buffer to ensure
-> +	 * all the information in the header that is not part of the incore
-> +	 * header structure is preserved.
->  	 */
-> -	leaf_s = (xfs_attr_leafblock_t *)tmpbuffer;
-> -	leaf_d = bp->b_addr;
-> -	ichdr_s = *ichdr_d;	/* struct copy */
-> -	ichdr_d->firstused = XFS_LBSIZE(mp);
-> -	ichdr_d->usedbytes = 0;
-> -	ichdr_d->count = 0;
-> -	ichdr_d->holes = 0;
-> -	ichdr_d->freemap[0].base = xfs_attr3_leaf_hdr_size(leaf_s);
-> -	ichdr_d->freemap[0].size = ichdr_d->firstused - ichdr_d->freemap[0].base;
-> +	memcpy(bp->b_addr, tmpbuffer, xfs_attr3_leaf_hdr_size(leaf_src));
-> +
-> +	/* Initialise the incore headers */
-> +	ichdr_src = *ichdr_dst;	/* struct copy */
-> +	ichdr_dst->firstused = XFS_LBSIZE(mp);
-> +	ichdr_dst->usedbytes = 0;
-> +	ichdr_dst->count = 0;
-> +	ichdr_dst->holes = 0;
-> +	ichdr_dst->freemap[0].base = xfs_attr3_leaf_hdr_size(leaf_src);
-> +	ichdr_dst->freemap[0].size = ichdr_dst->firstused -
-> +						ichdr_dst->freemap[0].base;
-> +
-> +
-> +	/* write the header back to initialise the underlying buffer */
-> +	xfs_attr3_leaf_hdr_to_disk(leaf_dst, ichdr_dst);
+make install-dev
+Installing include-install-dev
+../install-sh -o root -g root -m 755 -d /usr/include/xfs
+../install-sh -o root -g root -m 644 handle.h jdm.h xqm.h xfs.h xfs_fs.h 
+xfs_types.h linux.h /usr/include/xfs
+../install-sh -o root -g root -m 644 platform_defs.h /usr/include/xfs
+Installing libxfs-install-dev
+gmake[1]: Nothing to be done for `install-dev'.
+Installing libxlog-install-dev
+gmake[1]: Nothing to be done for `install-dev'.
+Installing libxcmd-install-dev
+gmake[1]: Nothing to be done for `install-dev'.
+Installing libhandle-install-dev
+cd ../libhandle/.libs; ../../install-sh -o root -g root -m 755 -d 
+/usr/lib64; ../../install-sh -o root -g root -m 644 -T old_lib 
+libhandle.lai /usr/lib64; ../../install-sh -o root -g root -m 644 
+libhandle.lai /usr/lib64/libhandle.la ; ../../install-sh -o root -g root 
+-m 755 -d /lib64; ../../install-sh -o root -g root -T so_base 
+libhandle.lai /lib64; if test "x/usr/lib64" != "x/lib64" ; then 
+../../install-sh -o root -g root -S /usr/lib64/libhandle.a 
+/lib64/libhandle.a; ../../install-sh -o root -g root -S 
+/usr/lib64/libhandle.la /lib64/libhandle.la; ../../install-sh -o root -g 
+root -S /lib64/libhandle.so /usr/lib64/libhandle.so; fi
+Installing libdisk-install-dev
+gmake[1]: Nothing to be done for `install-dev'.
 
-I can see that the memcpy is necessary but again I'm having a hard time
-	understanding what field was messed up for moveents.
 
-The patch looks fine in general...  I must be blind.
+[xfsprogs]$ grep -A 2 install lib*/Makefile
+libdisk/Makefile:install: default
+libdisk/Makefile-
+libdisk/Makefile:install-dev: default
+libdisk/Makefile-
+libdisk/Makefile:install-qa: install-dev
+libdisk/Makefile-
+libdisk/Makefile--include .ltdep
+--
+libhandle/Makefile:install: default
+libhandle/Makefile-	$(INSTALL_LTLIB)
+libhandle/Makefile-
+libhandle/Makefile:install-dev: default
+libhandle/Makefile-	$(INSTALL_LTLIB_DEV)
+libhandle/Makefile-
+libhandle/Makefile:install-qa: install-dev
+libhandle/Makefile-
+libhandle/Makefile--include .ltdep
+--
+libxcmd/Makefile:install install-dev install-qa: default
+libxcmd/Makefile-
+libxcmd/Makefile--include .ltdep
+--
+libxfs/Makefile:install: default
+libxfs/Makefile-
+libxfs/Makefile:install-dev: default
+libxfs/Makefile-
+libxfs/Makefile:install-qa: default
+libxfs/Makefile-
+libxfs/Makefile--include .ltdep
+--
+libxlog/Makefile:install install-dev install-qa: default
+libxlog/Makefile-
+libxlog/Makefile--include .ltdep
+
+I compared it to libdm/Makefile which removed it from the default: target.
+
+default: $(LTLIBRARY)
+
+include $(BUILDRULES)
+
+install: default
+	$(INSTALL_LTLIB)
+
+install-dev: default
+	$(INSTALL_LTLIB_DEV)
+
+
+>
+> /me goes off to dig around in makefiles
+>
+>
+>> Signed-off-by: Rich Johnston <rjohnston@sgi.com>
+>> --
+>> diff --git a/libhandle/Makefile b/libhandle/Makefile
+>> index 865ca22..2f39173 100644
+>> --- a/libhandle/Makefile
+>> +++ b/libhandle/Makefile
+>> @@ -15,7 +15,7 @@ LTLDFLAGS += -Wl,--version-script,libhandle.sym
+>>   CFILES = handle.c jdm.c
+>>   LSRCFILES = libhandle.sym
+>>
+>> -default: ltdepend $(LTLIBRARY)
+>> +default: $(LTLIBRARY)
+>>
+>>   include $(BUILDRULES)
+>>
+>>
+>>
+>> _______________________________________________
+>> xfs mailing list
+>> xfs@oss.sgi.com
+>> http://oss.sgi.com/mailman/listinfo/xfs
+>>
+>
 
 _______________________________________________
 xfs mailing list
