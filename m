@@ -1,22 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C8A8D7CBF
-	for <xfs@oss.sgi.com>; Wed, 22 May 2013 17:16:28 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A99048F804C
-	for <xfs@oss.sgi.com>; Wed, 22 May 2013 15:16:28 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	Pdn294l6RapHlt88 for <xfs@oss.sgi.com>;
-	Wed, 22 May 2013 15:16:27 -0700 (PDT)
-Date: Thu, 23 May 2013 08:16:02 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfsprogs: libhandle/Makefile - fix make install
-Message-ID: <20130522221602.GW24543@dastard>
-References: <20130522205819.586978467@gulag1.americas.sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 851337CBF
+	for <xfs@oss.sgi.com>; Wed, 22 May 2013 17:26:09 -0500 (CDT)
+Date: Wed, 22 May 2013 17:26:08 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 08/11] xfs: don't emit v5 superblock warnings on write
+Message-ID: <20130522222608.GR20028@sgi.com>
+References: <1369123330-9579-1-git-send-email-david@fromorbit.com>
+	<1369123330-9579-9-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130522205819.586978467@gulag1.americas.sgi.com>
+In-Reply-To: <1369123330-9579-9-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,36 +23,64 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: rjohnston@sgi.com
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, May 22, 2013 at 03:58:19PM -0500, rjohnston@sgi.com wrote:
-> In the default section of libhandle/Makefile, ltdepend prevented
-> libhandle.so from being installed properly so remove it.
+On Tue, May 21, 2013 at 06:02:07PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Signed-off-by: Rich Johnston <rjohnston@sgi.com>
-> --
-> diff --git a/libhandle/Makefile b/libhandle/Makefile
-> index 865ca22..2f39173 100644
-> --- a/libhandle/Makefile
-> +++ b/libhandle/Makefile
-> @@ -15,7 +15,7 @@ LTLDFLAGS += -Wl,--version-script,libhandle.sym
->  CFILES = handle.c jdm.c
->  LSRCFILES = libhandle.sym
+> We write the superblock every 30s or so which results in the
+> verifier being called. Right now that results in this output
+> every 30s:
+> 
+> XFS (vda): Version 5 superblock detected. This kernel has EXPERIMENTAL support enabled!
+> Use of these features in this kernel is at your own risk!
+> 
+> And spamming the logs. Stop this output from occurring on superblock
+> writes.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_mount.c |   18 +++++++++++-------
+>  1 file changed, 11 insertions(+), 7 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index f6bfbd7..e8e310c 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -314,7 +314,8 @@ STATIC int
+>  xfs_mount_validate_sb(
+>  	xfs_mount_t	*mp,
+>  	xfs_sb_t	*sbp,
+> -	bool		check_inprogress)
+> +	bool		check_inprogress,
+> +	bool		check_version)
+>  {
 >  
-> -default: ltdepend $(LTLIBRARY)
-> +default: $(LTLIBRARY)
+>  	/*
+> @@ -337,9 +338,10 @@ xfs_mount_validate_sb(
+>  
+>  	/*
+>  	 * Version 5 superblock feature mask validation. Reject combinations the
+> -	 * kernel cannot support up front before checking anything else.
+> +	 * kernel cannot support up front before checking anything else. For
+> +	 * write validation, we don't need to check feature masks.
+>  	 */
+> -	if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) {
+> +	if (check_version && XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) {
 
-PLease explain how removing the makefile build dependency generation
-fixes a library install problem. This, AFAICT, will just break
-rebuild detection of the library when we modify srouce files.
+if (!quiet_version) {
+>  		xfs_alert(mp,
+>  "Version 5 superblock detected. This kernel has EXPERIMENTAL support enabled!\n"
+>  "Use of these features in this kernel is at your own risk!");
 
-Cheers,
+}
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Since the stated goal of the patch is to be quieter and not to disable useful
+tests in the verifier, I suggest you disable the print rather than disable the
+test.
+
+-Ben
 
 _______________________________________________
 xfs mailing list
