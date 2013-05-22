@@ -1,17 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 08A787CBF
-	for <xfs@oss.sgi.com>; Wed, 22 May 2013 12:01:21 -0500 (CDT)
-Date: Wed, 22 May 2013 12:01:17 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 05/11] xfs: correctly map remote attr buffers during
-	removal
-Message-ID: <20130522170117.GO20028@sgi.com>
-References: <1369123330-9579-1-git-send-email-david@fromorbit.com>
-	<1369123330-9579-6-git-send-email-david@fromorbit.com>
+	by oss.sgi.com (Postfix) with ESMTP id 4A8167F37
+	for <xfs@oss.sgi.com>; Wed, 22 May 2013 12:08:22 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 163E48F8049
+	for <xfs@oss.sgi.com>; Wed, 22 May 2013 10:08:22 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id JTa5neMU4wgQpwlD for <xfs@oss.sgi.com>;
+	Wed, 22 May 2013 10:08:20 -0700 (PDT)
+Message-ID: <519CFB84.1030207@sandeen.net>
+Date: Wed, 22 May 2013 12:08:20 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1369123330-9579-6-git-send-email-david@fromorbit.com>
+Subject: Re: generic/258 questions (mount issue)...
+References: <519C14A1.8000009@gmail.com> <20130522012620.GA29466@dastard>
+	<519C3596.7080109@gmail.com> <519CD1D9.8050904@sandeen.net>
+	<519CEF04.7060503@gmail.com> <519CEFFB.1080209@sandeen.net>
+	<519CF6CE.8020901@gmail.com>
+In-Reply-To: <519CF6CE.8020901@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,111 +30,71 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: "Michael L. Semon" <mlsemon35@gmail.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, May 21, 2013 at 06:02:04PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On 5/22/13 11:48 AM, Michael L. Semon wrote:
+> On 05/22/2013 12:19 PM, Eric Sandeen wrote:
+>> On 5/22/13 11:15 AM, Michael L. Semon wrote:
+>>> On 05/22/2013 10:10 AM, Eric Sandeen wrote:
+>>>> On 5/21/13 10:03 PM, Michael L. Semon wrote:
 > 
-> If we don't map the buffers correctly (same as for get/set
-> operations) then the incore buffer lookup will fail. If a block
-> number matches but a length is wrong, then debug kernels will ASSERT
-> fail in _xfs_buf_find() due to the length mismatch. Ensure that we
-> map the buffers correctly by basing the length of the buffer on the
-> attribute data length rather than the remote block count.
+>>> One day, I would like to earn git-log fame by incorporating better 
+>>> support for JFS and especially NILFS2 into xfstests.  However, 
+>>> that's a topic for another day.  I know that I have uses for both 
+>>> filesystems, but that doesn't mean anybody else does.  Their 
+>>> mailing lists don't give much hint of user community or progress.
+>>
+>> The generic tests hopefully work; if not, it should be a fairly
+>> simple fixup.  And you're free to add fs-specific tests :)
+>>
+>> (I'm not sure if we fall back by default to mkfs.$FSTYP and fsck.$FSTYP;
+>> if so, it might just work)
+>>
+>> -Eric
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-
-Yeah.  Looks fine.
-Reviewed-by: Ben Myers <bpm@sgi.com>
-
-> ---
->  fs/xfs/xfs_attr_remote.c |   27 ++++++++++++++++++---------
->  1 file changed, 18 insertions(+), 9 deletions(-)
+> They work fine--JFS currently survives all of generic/* intact--but...
 > 
-> diff --git a/fs/xfs/xfs_attr_remote.c b/fs/xfs/xfs_attr_remote.c
-> index e207bf0..d8bcb2d 100644
-> --- a/fs/xfs/xfs_attr_remote.c
-> +++ b/fs/xfs/xfs_attr_remote.c
-> @@ -468,19 +468,25 @@ xfs_attr_rmtval_remove(xfs_da_args_t *args)
->  	mp = args->dp->i_mount;
->  
->  	/*
-> -	 * Roll through the "value", invalidating the attribute value's
-> -	 * blocks.
-> +	 * Roll through the "value", invalidating the attribute value's blocks.
-> +	 * Note that args->rmtblkcnt is the minimum number of data blocks we'll
-> +	 * see for a CRC enabled remote attribute. Each extent will have a
-> +	 * header, and so we may have more blocks than we realise here.  If we
-> +	 * fail to map the blocks correctly, we'll have problems with the buffer
-> +	 * lookups.
->  	 */
->  	lblkno = args->rmtblkno;
-> -	valuelen = args->rmtblkcnt;
-> +	valuelen = args->valuelen;
-> +	blkcnt = xfs_attr3_rmt_blocks(mp, valuelen);
->  	while (valuelen > 0) {
-> +		int dblkcnt;
-> +
->  		/*
->  		 * Try to remember where we decided to put the value.
->  		 */
->  		nmap = 1;
->  		error = xfs_bmapi_read(args->dp, (xfs_fileoff_t)lblkno,
-> -				       args->rmtblkcnt, &map, &nmap,
-> -				       XFS_BMAPI_ATTRFORK);
-> +				       blkcnt, &map, &nmap, XFS_BMAPI_ATTRFORK);
->  		if (error)
->  			return(error);
->  		ASSERT(nmap == 1);
-> @@ -488,28 +494,31 @@ xfs_attr_rmtval_remove(xfs_da_args_t *args)
->  		       (map.br_startblock != HOLESTARTBLOCK));
->  
->  		dblkno = XFS_FSB_TO_DADDR(mp, map.br_startblock),
-> -		blkcnt = XFS_FSB_TO_BB(mp, map.br_blockcount);
-> +		dblkcnt = XFS_FSB_TO_BB(mp, map.br_blockcount);
->  
->  		/*
->  		 * If the "remote" value is in the cache, remove it.
->  		 */
-> -		bp = xfs_incore(mp->m_ddev_targp, dblkno, blkcnt, XBF_TRYLOCK);
-> +		bp = xfs_incore(mp->m_ddev_targp, dblkno, dblkcnt, XBF_TRYLOCK);
->  		if (bp) {
->  			xfs_buf_stale(bp);
->  			xfs_buf_relse(bp);
->  			bp = NULL;
->  		}
->  
-> -		valuelen -= map.br_blockcount;
-> +		valuelen -= XFS_ATTR3_RMT_BUF_SPACE(mp,
-> +					XFS_FSB_TO_B(mp, map.br_blockcount));
->  
->  		lblkno += map.br_blockcount;
-> +		blkcnt -= map.br_blockcount;
-> +		blkcnt = max(blkcnt, xfs_attr3_rmt_blocks(mp, valuelen));
+> JFS: The syntax for a lot of things is very close to that of ReiserFS, 
+> ext3, and ext4 filesystems.  However, before just inserting "jfs" into 
+> the common/rc case switches, test results need to be audited for JFS.  
+> Additionally, I don't know if the current tests use external journals 
+> for non-XFS filesystems:  My first attempt stepped all over the XFS 
+> journal creation script, looked messy, and was probably buggy as well.
 
-max for fragmentation... can be removed once its header per block, i think.
+xfs doesn't use external journal by default, it needs to have an extra
+couple env. vars set (I think README covers this)
 
+To test JFS that way it'd need more tweaking I suppose.  It could
+be done, certainly.
 
+> NILFS2: fsstress/fsx seems to slowly rip NILFS2 to bits, and I have 
+> to come up with a narrower test and report bugs to those guys.
 
->  	}
->  
->  	/*
->  	 * Keep de-allocating extents until the remote-value region is gone.
->  	 */
-> +	blkcnt = lblkno - args->rmtblkno;
->  	lblkno = args->rmtblkno;
-> -	blkcnt = args->rmtblkcnt;
->  	done = 0;
->  	while (!done) {
->  		xfs_bmap_init(args->flist, args->firstblock);
-> -- 
-> 1.7.10.4
+:)  not too surprising.  (first time I looked at ecryptfs vs.
+fsx, fsx won the fight in about 3 ops.  Much better now.)
+
+I'd just use fsx directly to narrow down failures to the smallest
+set of operations.
+
+> common/rc could be revised to better target filesystems with no 
+> fsck whatsoever, such as NILFS2 and F2FS.  I've been getting by with 
+> a simple `ln -s /bin/true /sbin/fsck.nilfs2`, and really, that is the 
+> best long-term solution from an administrative standpoint.
+
+Yeah I'd suggest that maybe nilfs2-utils should just ship something like that.
+
+> So you see how this might be an easy fix but still take up hours in 
+> debugging...
+
+Yup.
+
+-Eric
+
+> Thanks again!
 > 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> Michael
+> 
 
 _______________________________________________
 xfs mailing list
