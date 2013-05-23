@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 24CB97F37
-	for <xfs@oss.sgi.com>; Thu, 23 May 2013 17:51:23 -0500 (CDT)
-Date: Thu, 23 May 2013 17:51:22 -0500
+	by oss.sgi.com (Postfix) with ESMTP id 32ED129E03
+	for <xfs@oss.sgi.com>; Thu, 23 May 2013 17:51:42 -0500 (CDT)
+Date: Thu, 23 May 2013 17:51:41 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 06/11] xfs: fully initialise temp leaf in
-	xfs_attr3_leaf_unbalance
-Message-ID: <20130523225122.GU20028@sgi.com>
+Subject: Re: [PATCH 07/11] xfs: fully initialise temp leaf in
+	xfs_attr3_leaf_compact
+Message-ID: <20130523225141.GV20028@sgi.com>
 References: <1369123330-9579-1-git-send-email-david@fromorbit.com>
-	<1369123330-9579-7-git-send-email-david@fromorbit.com>
-	<20130522205059.GP20028@sgi.com> <20130522235450.GO29466@dastard>
+	<1369123330-9579-8-git-send-email-david@fromorbit.com>
+	<20130522215934.GQ20028@sgi.com> <20130522235820.GP29466@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130522235450.GO29466@dastard>
+In-Reply-To: <20130522235820.GP29466@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,68 +28,105 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, May 23, 2013 at 09:54:50AM +1000, Dave Chinner wrote:
-> On Wed, May 22, 2013 at 03:50:59PM -0500, Ben Myers wrote:
-> > On Tue, May 21, 2013 at 06:02:05PM +1000, Dave Chinner wrote:
+On Thu, May 23, 2013 at 09:58:20AM +1000, Dave Chinner wrote:
+> On Wed, May 22, 2013 at 04:59:34PM -0500, Ben Myers wrote:
+> > On Tue, May 21, 2013 at 06:02:06PM +1000, Dave Chinner wrote:
 > > > From: Dave Chinner <dchinner@redhat.com>
 > > > 
-> > > xfs_attr3_leaf_unbalance() uses a temporary buffer for recombining
-> > > the entries in two leaves when the destination leaf requires
-> > > compaction. The temporary buffer ends up being copied back over the
-> > > original destination buffer, so the header in the temporary buffer
-> > > needs to contain all the information that is in the destination
-> > > buffer.
+> > > xfs_attr3_leaf_compact() uses a temporary buffer for compacting the
+> > > the entries in a leaf. It copies the the original buffer into the
+> > > temporary buffer, then zeros the original buffer completely. It then
+> > > copies the entries back into the original buffer.  However, the
+> > > original buffer has not been correctly initialised, and so the
+> > > movement of the entries goes horribly wrong.
 > > > 
-> > > To make sure the temporary buffer is fully initialised, once we've
-> > > set up the temporary incore header appropriately, write is back to
-> > > the temporary buffer before starting to move entries around.
+> > > Make sure the zeroed destination buffer is fully initialised, and
+> > > once we've set up the destination incore header appropriately, write
+> > > is back to the buffer before starting to move entries around.
+> >   it
+> > 
 > > > 
+> > > While debugging this, the _d/_s prefixes weren't sufficient to
+> > > remind me what buffer was what, so rename then all _src/_dst.
+> > 
+> > Yeah, it helps.
+> > 
 > > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > >
 > > > ---
-> > >  fs/xfs/xfs_attr_leaf.c |   16 +++++++++++++---
-> > >  1 file changed, 13 insertions(+), 3 deletions(-)
+> > >  fs/xfs/xfs_attr_leaf.c |   42 ++++++++++++++++++++++++++----------------
+> > >  1 file changed, 26 insertions(+), 16 deletions(-)
 > > > 
 > > > diff --git a/fs/xfs/xfs_attr_leaf.c b/fs/xfs/xfs_attr_leaf.c
-> > > index 0bce1b3..79ece72 100644
+> > > index 79ece72..5b03d15 100644
 > > > --- a/fs/xfs/xfs_attr_leaf.c
 > > > +++ b/fs/xfs/xfs_attr_leaf.c
-> > > @@ -2181,14 +2181,24 @@ xfs_attr3_leaf_unbalance(
-> > >  		struct xfs_attr_leafblock *tmp_leaf;
-> > >  		struct xfs_attr3_icleaf_hdr tmphdr;
+> > > @@ -1445,11 +1445,12 @@ xfs_attr3_leaf_add_work(
+> > >  STATIC void
+> > >  xfs_attr3_leaf_compact(
+> > >  	struct xfs_da_args	*args,
+> > > -	struct xfs_attr3_icleaf_hdr *ichdr_d,
+> > > +	struct xfs_attr3_icleaf_hdr *ichdr_dst,
+> > >  	struct xfs_buf		*bp)
+> > >  {
+> > > -	xfs_attr_leafblock_t	*leaf_s, *leaf_d;
+> > > -	struct xfs_attr3_icleaf_hdr ichdr_s;
+> > > +	struct xfs_attr_leafblock *leaf_src;
+> > > +	struct xfs_attr_leafblock *leaf_dst;
+> > > +	struct xfs_attr3_icleaf_hdr ichdr_src;
+> > >  	struct xfs_trans	*trans = args->trans;
+> > >  	struct xfs_mount	*mp = trans->t_mountp;
+> > >  	char			*tmpbuffer;
+> > > @@ -1457,29 +1458,38 @@ xfs_attr3_leaf_compact(
+> > >  	trace_xfs_attr_leaf_compact(args);
 > > >  
-> > > -		tmp_leaf = kmem_alloc(state->blocksize, KM_SLEEP);
-> > > -		memset(tmp_leaf, 0, state->blocksize);
-> > > -		memset(&tmphdr, 0, sizeof(tmphdr));
-> > > +		tmp_leaf = kmem_zalloc(state->blocksize, KM_SLEEP);
-> > > +
-> > > +		/*
-> > > +		 * Copy the header into the temp leaf so that all the stuff
-> > > +		 * not in the incore header is present and gets copied back in
-> > > +		 * once we've moved all the entries.
-> > > +		 */
-> > > +		memcpy(tmp_leaf, save_leaf, xfs_attr3_leaf_hdr_size(save_leaf));
+> > >  	tmpbuffer = kmem_alloc(XFS_LBSIZE(mp), KM_SLEEP);
+> > > -	ASSERT(tmpbuffer != NULL);
+> > >  	memcpy(tmpbuffer, bp->b_addr, XFS_LBSIZE(mp));
+> > >  	memset(bp->b_addr, 0, XFS_LBSIZE(mp));
+> > > +	leaf_src = (xfs_attr_leafblock_t *)tmpbuffer;
+> > > +	leaf_dst = bp->b_addr;
 > > >  
-> > > +		memset(&tmphdr, 0, sizeof(tmphdr));
-> > >  		tmphdr.magic = savehdr.magic;
-> > >  		tmphdr.forw = savehdr.forw;
-> > >  		tmphdr.back = savehdr.back;
-> > >  		tmphdr.firstused = state->blocksize;
+> > >  	/*
+> > > -	 * Copy basic information
+> > > +	 * Copy the on-disk header back into the destination buffer to ensure
+> > > +	 * all the information in the header that is not part of the incore
+> > > +	 * header structure is preserved.
+> > >  	 */
+> > > -	leaf_s = (xfs_attr_leafblock_t *)tmpbuffer;
+> > > -	leaf_d = bp->b_addr;
+> > > -	ichdr_s = *ichdr_d;	/* struct copy */
+> > > -	ichdr_d->firstused = XFS_LBSIZE(mp);
+> > > -	ichdr_d->usedbytes = 0;
+> > > -	ichdr_d->count = 0;
+> > > -	ichdr_d->holes = 0;
+> > > -	ichdr_d->freemap[0].base = xfs_attr3_leaf_hdr_size(leaf_s);
+> > > -	ichdr_d->freemap[0].size = ichdr_d->firstused - ichdr_d->freemap[0].base;
+> > > +	memcpy(bp->b_addr, tmpbuffer, xfs_attr3_leaf_hdr_size(leaf_src));
 > > > +
-> > > +		/* write the header to the temp buffer to initialise it */
-> > > +		xfs_attr3_leaf_hdr_to_disk(tmp_leaf, &tmphdr);
+> > > +	/* Initialise the incore headers */
+> > > +	ichdr_src = *ichdr_dst;	/* struct copy */
+> > > +	ichdr_dst->firstused = XFS_LBSIZE(mp);
+> > > +	ichdr_dst->usedbytes = 0;
+> > > +	ichdr_dst->count = 0;
+> > > +	ichdr_dst->holes = 0;
+> > > +	ichdr_dst->freemap[0].base = xfs_attr3_leaf_hdr_size(leaf_src);
+> > > +	ichdr_dst->freemap[0].size = ichdr_dst->firstused -
+> > > +						ichdr_dst->freemap[0].base;
 > > > +
+> > > +
+> > > +	/* write the header back to initialise the underlying buffer */
+> > > +	xfs_attr3_leaf_hdr_to_disk(leaf_dst, ichdr_dst);
 > > 
-> > Hrm.  It seemed like the memset 0 for the incore temp header should have been
-> > enough for the purposes of moveents.  Why did you have to add this additional
-> > hdr_to_disk?
+> > I can see that the memcpy is necessary but again I'm having a hard time
+> > 	understanding what field was messed up for moveents.
 > 
-> Because we've modified the tmphdr so it is different to what is in
-> the tmp_leaf, and I'm being paranoid and not making any assumptions
-> that a callee doesn't reread the tmphdr from the tmp_leaf.
-> 
-> i.e. I'm initialising both the on-disk and the incore headers to
-> be identical before we do anything else. Once bitten, twice shy.
+> moveents wasn't messed up - it was all the non-incore headers that
+> were invalid (owner, uuid, blkno, etc) due to the zeroing of the tmp
+> buffer and then only writing the incore header back to it after
+> moveents. That's what the addition memcpy of the header fixes, and
+> then the xfs_attr3_leaf_hdr_to_disk() call updates all the fields
+> modified by initialisation so that before we start the in-core and
+> "on-disk" structures are identical.
 
 Reviewed-by: Ben Myers <bpm@sgi.com>
 
