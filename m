@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 290ED29DF8
-	for <xfs@oss.sgi.com>; Wed, 22 May 2013 19:03:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id AB612AC001
-	for <xfs@oss.sgi.com>; Wed, 22 May 2013 17:03:39 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	h1Mw6Tep5Mw4Upxd for <xfs@oss.sgi.com>;
-	Wed, 22 May 2013 17:03:33 -0700 (PDT)
-Date: Thu, 23 May 2013 10:03:27 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 08/11] xfs: don't emit v5 superblock warnings on write
-Message-ID: <20130523000327.GQ29466@dastard>
-References: <1369123330-9579-1-git-send-email-david@fromorbit.com>
-	<1369123330-9579-9-git-send-email-david@fromorbit.com>
-	<20130522222608.GR20028@sgi.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B71CB29DF8
+	for <xfs@oss.sgi.com>; Wed, 22 May 2013 21:27:52 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 95FDC8F804B
+	for <xfs@oss.sgi.com>; Wed, 22 May 2013 19:27:49 -0700 (PDT)
+Received: from mail-ie0-f172.google.com (mail-ie0-f172.google.com
+	[209.85.223.172]) by cuda.sgi.com with ESMTP id
+	WCdynaukFWgBN6dG (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 22 May 2013 19:27:48 -0700 (PDT)
+Received: by mail-ie0-f172.google.com with SMTP id 16so7113276iea.17
+	for <xfs@oss.sgi.com>; Wed, 22 May 2013 19:27:48 -0700 (PDT)
+Message-ID: <519D7E89.8060201@gmail.com>
+Date: Wed, 22 May 2013 22:27:21 -0400
+From: "Michael L. Semon" <mlsemon35@gmail.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130522222608.GR20028@sgi.com>
+Subject: [PATCH] xfstests: Change mount method for shared/243
+References: <519C14A1.8000009@gmail.com> <20130522012620.GA29466@dastard>
+In-Reply-To: <20130522012620.GA29466@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,78 +31,52 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, May 22, 2013 at 05:26:08PM -0500, Ben Myers wrote:
-> On Tue, May 21, 2013 at 06:02:07PM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > We write the superblock every 30s or so which results in the
-> > verifier being called. Right now that results in this output
-> > every 30s:
-> > 
-> > XFS (vda): Version 5 superblock detected. This kernel has EXPERIMENTAL support enabled!
-> > Use of these features in this kernel is at your own risk!
-> > 
-> > And spamming the logs. Stop this output from occurring on superblock
-> > writes.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  fs/xfs/xfs_mount.c |   18 +++++++++++-------
-> >  1 file changed, 11 insertions(+), 7 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> > index f6bfbd7..e8e310c 100644
-> > --- a/fs/xfs/xfs_mount.c
-> > +++ b/fs/xfs/xfs_mount.c
-> > @@ -314,7 +314,8 @@ STATIC int
-> >  xfs_mount_validate_sb(
-> >  	xfs_mount_t	*mp,
-> >  	xfs_sb_t	*sbp,
-> > -	bool		check_inprogress)
-> > +	bool		check_inprogress,
-> > +	bool		check_version)
-> >  {
-> >  
-> >  	/*
-> > @@ -337,9 +338,10 @@ xfs_mount_validate_sb(
-> >  
-> >  	/*
-> >  	 * Version 5 superblock feature mask validation. Reject combinations the
-> > -	 * kernel cannot support up front before checking anything else.
-> > +	 * kernel cannot support up front before checking anything else. For
-> > +	 * write validation, we don't need to check feature masks.
-> >  	 */
-> > -	if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) {
-> > +	if (check_version && XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) {
-> 
-> if (!quiet_version) {
-> >  		xfs_alert(mp,
-> >  "Version 5 superblock detected. This kernel has EXPERIMENTAL support enabled!\n"
-> >  "Use of these features in this kernel is at your own risk!");
-> 
-> }
-> 
-> Since the stated goal of the patch is to be quieter and not to disable useful
-> tests in the verifier, I suggest you disable the print rather than disable the
-> test.
+Hi!  This patch updates the mount method in xfstests shared/243 
+without seeming to change the behavior of the test.  Should this 
+patch get a NACK for not being useful, no worries!  There will be 
+other opportunities.
 
-Checking the feature fields for whether the kernel supports the
-features in them on write is not useful in any way. That's why the
-variable is named "check_version" because it skips the v5
-version field checking. This is stuff that is used by the mount
-path (i.e. superblock read path), not the writeback path.
+The patch was tested with ext4, with and without external journals. 
+It was also tested on XFS with an external logdev.  The MOUNT_OPTIONS 
+for the ext4 tests included '-o barrier=1' and '-o barrier=0'.  The 
+test results varied on ext4 with an external journal, but the 
+results shown by /proc/mounts was OK.  [barrier=1 causes a failed 
+test, barrier=0 succeeds, both in the original and patched test.]
 
-I'll update the commit message to reflect this.
+>From 8762f621a5fb9556fa96ec289bceffc4fcc844f3 Mon Sep 17 00:00:00 2001
+From: "Michael L. Semon" <mlsemon35@gmail.com>
+Date: Wed, 22 May 2013 20:57:56 -0400
+Subject: [PATCH] xfstests: Change mount method for shared/243
 
-Cheers,
+Change the mount invocations in shared/243 to use the built-in
+_test_mount function of xfstests.  This was done as part of a
+clean-up recommendation.  Currently, only ext4 file systems are
+affected by this change.
 
-Dave.
+Signed-off-by: Michael L. Semon <mlsemon35@gmail.com>
+---
+ tests/shared/243 | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tests/shared/243 b/tests/shared/243
+index e0f2db2..b3eb025 100755
+--- a/tests/shared/243
++++ b/tests/shared/243
+@@ -108,7 +108,7 @@ _check_ext4_eof_flag()
+     fi
+ 
+     # Mount the ${TEST_DEV}
+-    mount ${TEST_DEV} -t ${FSTYP} ${TEST_DIR}
++    _test_mount
+   fi
+ }
+ 
 -- 
-Dave Chinner
-david@fromorbit.com
+1.8.2
+
 
 _______________________________________________
 xfs mailing list
