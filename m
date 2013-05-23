@@ -1,21 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C183729DF8
-	for <xfs@oss.sgi.com>; Wed, 22 May 2013 22:17:03 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id AF876304043
-	for <xfs@oss.sgi.com>; Wed, 22 May 2013 20:17:00 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id B5CC829DF8
+	for <xfs@oss.sgi.com>; Wed, 22 May 2013 22:21:19 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5C343304059
+	for <xfs@oss.sgi.com>; Wed, 22 May 2013 20:21:19 -0700 (PDT)
 Received: from mx4-phx2.redhat.com (mx4-phx2.redhat.com [209.132.183.25]) by
-	cuda.sgi.com with ESMTP id T2t8aiEY8IPHrxHc for
-	<xfs@oss.sgi.com>; Wed, 22 May 2013 20:16:59 -0700 (PDT)
-Date: Wed, 22 May 2013 23:16:56 -0400 (EDT)
+	cuda.sgi.com with ESMTP id YNKvkKMfF7OTNAl4 for
+	<xfs@oss.sgi.com>; Wed, 22 May 2013 20:21:17 -0700 (PDT)
+Date: Wed, 22 May 2013 23:21:17 -0400 (EDT)
 From: CAI Qian <caiqian@redhat.com>
-Message-ID: <1483868349.4996990.1369279016162.JavaMail.root@redhat.com>
-In-Reply-To: <20130522095300.GK29466@dastard>
-References: <40971621.4497871.1369211701112.JavaMail.root@redhat.com>
-	<1805266998.4499261.1369211998387.JavaMail.root@redhat.com>
-	<20130522095300.GK29466@dastard>
-Subject: Re: 3.9.2: xfstests triggered panic
+Message-ID: <1985929268.4997720.1369279277543.JavaMail.root@redhat.com>
+In-Reply-To: <510292845.4997401.1369279175460.JavaMail.root@redhat.com>
+Subject: 3.9.3: Oops running xfstests
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -25,147 +22,133 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, stable@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: stable@vger.kernel.org
 
-CgotLS0tLSBPcmlnaW5hbCBNZXNzYWdlIC0tLS0tCj4gRnJvbTogIkRhdmUgQ2hpbm5lciIgPGRh
-dmlkQGZyb21vcmJpdC5jb20+Cj4gVG86ICJDQUkgUWlhbiIgPGNhaXFpYW5AcmVkaGF0LmNvbT4K
-PiBDYzogIkxLTUwiIDxsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnPiwgc3RhYmxlQHZnZXIu
-a2VybmVsLm9yZywgeGZzQG9zcy5zZ2kuY29tCj4gU2VudDogV2VkbmVzZGF5LCBNYXkgMjIsIDIw
-MTMgNTo1MzowMCBQTQo+IFN1YmplY3Q6IFJlOiAzLjkuMjogeGZzdGVzdHMgdHJpZ2dlcmVkIHBh
-bmljCj4gCj4gT24gV2VkLCBNYXkgMjIsIDIwMTMgYXQgMDQ6Mzk6NThBTSAtMDQwMCwgQ0FJIFFp
-YW4gd3JvdGU6Cj4gPiBSZXByb2R1Y2VkIG9uIGFsbW9zdCBhbGwgczM5MHggZ3Vlc3RzIGJ5IHJ1
-bm5pbmcgeGZzdGVzdHMuCj4gPiAKPiA+IDE0NjM0LjM5NjY1OMKoIFhGUyAoZG0tMSk6IE1vdW50
-aW5nIEZpbGVzeXN0ZW0KPiA+IDE0NjM0LjUyNTUyMsKoIFhGUyAoZG0tMSk6IEVuZGluZyBjbGVh
-biBtb3VudAo+ID4gMTQ2NDAuNDEzMDA3wqggIDwwMDAwMDAwMDAwMTdjNmQ0PsKoIGlkbGVfYmFs
-YW5jZSsweDFhMC8weDM0MAo+ID4gMTQ2NDAuNDEzMDEwwqggIDwwMDAwMDAwMDAwNjMzMDNlPsKo
-IF9fc2NoZWR1bGUrMHhhMjIvMHhhZjAKPiA+IDE0NjQwLjQyODI3OcKoICA8MDAwMDAwMDAwMDYz
-MGRhNj7CqCBzY2hlZHVsZV90aW1lb3V0KzB4MTg2LzB4MmMwCj4gPiAxNDY0MC40MjgyODnCqCAg
-PDAwMDAwMDAwMDAxY2Y4NjQ+wqggcmN1X2dwX2t0aHJlYWQrMHgxYmMvMHgyOTgKPiA+IDE0NjQw
-LjQyODMwMMKoICA8MDAwMDAwMDAwMDE1OGM1YT7CqCBrdGhyZWFkKzB4ZTYvMHhlYwo+ID4gMTQ2
-NDAuNDI4MzA0wqggIDwwMDAwMDAwMDAwNjM0ZGU2PsKoIGtlcm5lbF90aHJlYWRfc3RhcnRlcisw
-eDYvMHhjCj4gPiAxNDY0MC40MjgzMDjCqCAgPDAwMDAwMDAwMDA2MzRkZTA+wqgga2VybmVsX3Ro
-cmVhZF9zdGFydGVyKzB4MC8weGMKPiA+IDE0NjQwLjQyODMxMcKoIExhc3QgQnJlYWtpbmctRXZl
-bnQtQWRkcmVzczoKPiA+IDE0NjQwLjQyODMxNMKoICA8MDAwMDAwMDAwMDE2YmQ3Nj7CqCB3YWxr
-X3RnX3RyZWVfZnJvbSsweDNhLzB4ZjQKPiA+IDE0NjQwLjQyODMxOcKoICBsaXN0X2FkZCBjb3Jy
-dXB0aW9uLiBuZXh0LT5wcmV2IHNob3VsZCBiZSBwcmV2Cj4gPiAoMDAwMDAwMDAwMDAwMDkxOAo+
-ID4gKSwgYnV0IHdhcyAgICAgICAgICAgKG51bGwpLiAobmV4dD0gICAgICAgICAgKG51bGwpKS4K
-PiAKPiBXaGVyZSdzIFhGUyBpbiB0aGlzPyB3YWxrX3RnX3RyZWVfZnJvbSgpIGlzIHBhcnQgb2Yg
-dGhlIHNjaGVkdWxlcgo+IGNvZGUuIFRoaXMga2luZCBvZiBpbXBsaWVzIGEgc3RhY2sgY29ycnVw
-dGlvbi4uLi4KPiAKPiA+IFNvbWV0aW1lcywgdGhpcyBwb3BzIHVwLAo+ID4gWzE2OTA3LjI3NTAw
-Ml0gV0FSTklORzogYXQga2VybmVsL3JjdXRyZWUuYzoxOTYwCj4gPiAKPiA+IG9yIHRoaXMsCj4g
-PiAxNTMxNi4xNTQxNzHCqCBYRlMgKGRtLTEpOiBNb3VudGluZyBGaWxlc3lzdGVtCj4gPiAxNTMx
-Ni4yNTU3OTbCqCBYRlMgKGRtLTEpOiBFbmRpbmcgY2xlYW4gbW91bnQKPiA+IDE1MzIwLjM2NDI0
-NsKoICAgICAgICAgICAgMDAwMDAwMDAwMDYzNjdhMjogZTMxMGIwMDgwMDA0ICAgICAgICBsZwo+
-ID4gJXIxLDgoJXIKPiA+IDExKQo+ID4gMTUzMjAuMzY0MjQ5wqggICAgICAgICAgICAwMDAwMDAw
-MDAwNjM2N2E4OiA0MTEwMTAxMCAgICAgICAgICAgIGxhCj4gPiAlcjEsMTYoJQo+ID4gcjEpCj4g
-PiAxNTMyMC4zNjQyNTHCqCAgICAgICAgICAgIDAwMDAwMDAwMDA2MzY3YWM6IGUzMzAxMDAwMDAw
-NCAgICAgICAgbGcKPiA+ICVyMywwKCVyCj4gPiAxKQo+ID4gMTUzMjAuMzY0MjUywqggQ2FsbCBU
-cmFjZToKPiA+IDE1MzIwLjM2NDI1MsKoIExhc3QgQnJlYWtpbmctRXZlbnQtQWRkcmVzczoKPiA+
-IDE1MzIwLjM2NDI1M8KoICDvv70gPDAwMDAwMDAwMDAwMDAwMDA+wqggS2VybmVsIHN0YWNrIG92
-ZXJmbG93Lgo+ID4gMTUzMjAuMzY0MzA4wqggQ1BVOiAwIFRhaW50ZWQ6IEdGICAgICAgIFcgICAg
-My45LjIgIzEKPiA+IDE1MzIwLjM2NDMwOcKoIFByb2Nlc3Mgcmh0cy10ZXN0LXJ1bm5lIChwaWQ6
-IDYyNSwgdGFzazogMDAwMDAwMDAzZGNjYzg5MCwKPiA+IGtzcDogMAo+IAo+IC4uLi4gYW5kIHRo
-ZXJlIHlvdSBnbyAtIGEgc3RhY2sgb3ZlcmZsb3cuIFlvdXIga2VybmVsIHN0YWNrIHNpemUgaXMK
-PiB0b28gc21hbGwuCj4gCj4gSSdkIHN1Z2dlc3QgdGhhdCB5b3UgbmVlZCAxNmsgc3RhY2tzIG9u
-IHMzOTAgLSBJSVJDIGV2ZXJ5IGZ1bmN0aW9uCj4gY2FsbCBoYXMgMTI4IGJ5dGUgc3RhY2sgZnJh
-bWUsIGFuZCB0aGVyZSBhcmUgY2FsbCBjaGFpbnMgNzAtODAKPiBmdW5jdGlvbnMgZGVlcCBpbiB0
-aGUgc3RvcmFnZSBzdGFjay4uLgpIbW0sIEkgYW0gdW5zdXJlIGhvdyB0byBzZXQgdG8gMTZrIHN0
-YWNrIHRoZXJlLCBhbmQgcG93ZXIgNyBoYXMgbG9va3MKbGlrZSBoYXMgdGhlIHNhbWUgcHJvYmxl
-bS4KClsxNDkyNy4xMTcwMTddIFhGUyAoZG0tMCk6IE1vdW50aW5nIEZpbGVzeXN0ZW0gClsxNDky
-Ny4yOTk4NTRdIFhGUyAoZG0tMCk6IEVuZGluZyBjbGVhbiBtb3VudCAKWzE0OTI3LjY2ODkwOV0g
-VW5hYmxlIHRvIGhhbmRsZSBrZXJuZWwgcGFnaW5nIHJlcXVlc3QgZm9yIGRhdGEgYXQgYWRkcmVz
-cyAweDAwMDAwMDQwIApbMTQ5MjcuNjY4OTEzXSBVbmFibGUgdG8gaGFuZGxlIGtlcm5lbCBwYWdp
-bmcgcmVxdWVzdCBmb3IgZGF0YSBhdCBhZGRyZXNzIDB4MDAwMDAwZjggClsxNDkyNy42Njg5MTRd
-IFVuYWJsZSB0byBoYW5kbGUga2VybmVsIHBhZ2luZyByZXF1ZXN0IGZvciBkYXRhIGF0IGFkZHJl
-c3MgMHgwMDAwMDBiYiAKWzE0OTI3LjY2ODkxNV0gRmF1bHRpbmcgaW5zdHJ1Y3Rpb24gYWRkcmVz
-czogMHhjMDAwMDAwMDAwMGQxYmQ4IApbMTQ5MjcuNjY4OTE2XSBGYXVsdGluZyBpbnN0cnVjdGlv
-biBhZGRyZXNzOiAweGMwMDAwMDAwMDAwZDFiZDggClsxNDkyNy42Njg5MTldIFVuYWJsZSB0byBo
-YW5kbGUga2VybmVsIHBhZ2luZyByZXF1ZXN0IGZvciBkYXRhIGF0IGFkZHJlc3MgMHgwMDAwMDAx
-OCAKWzE0OTI3LjY2ODkyMF0gRmF1bHRpbmcgaW5zdHJ1Y3Rpb24gYWRkcmVzczogMHhjMDAwMDAw
-MDAwM2QzNGI4IApbMTQ5MjcuNjY4OTIyXSBPb3BzOiBLZXJuZWwgYWNjZXNzIG9mIGJhZCBhcmVh
-LCBzaWc6IDExIFsjMV0gClsxNDkyNy42Njg5MjRdIFNNUCBOUl9DUFVTPTEwMjQgTlVNQSBwU2Vy
-aWVzIApbMTQ5MjcuNjY4OTI3XSBNb2R1bGVzIGxpbmtlZCBpbjogYmluZm10X21pc2MoRikgdHVu
-KEYpIGlwdF9VTE9HKEYpIHJkcyhGKSBzY3NpX3RyYW5zcG9ydF9pc2NzaShGKSBhdG0oRikgbmZj
-KEYpIHBwcG9lKEYpIHBwcG94KEYpIHBwcF9nZW5lcmljKEYpIHNsaGMoRikgYWZfODAyMTU0KEYp
-IGFmX2tleShGKSBzY3RwKEYpIGJ0cmZzKEYpIHJhaWQ2X3BxKEYpIHhvcihGKSB2ZmF0KEYpIGZh
-dChGKSBuZnN2MyhGKSBuZnNfYWNsKEYpIG5mcyhGKSBsb2NrZChGKSBzdW5ycGMoRikgZnNjYWNo
-ZShGKSBuZm5ldGxpbmtfbG9nKEYpIG5mbmV0bGluayhGKSBibHVldG9vdGgoRikgcmZraWxsKEYp
-IGFyYzQoRikgbWQ0KEYpIG5sc191dGY4KEYpIGNpZnMoRikgZG5zX3Jlc29sdmVyKEYpIG5mX3Rw
-cm94eV9jb3JlKEYpIG5sc19rb2k4X3UoRikgbmxzX2NwOTMyKEYpIHRzX2ttcChGKVsxNDkyNy42
-Njg5NTVdIEZhdWx0aW5nIGluc3RydWN0aW9uIGFkZHJlc3M6IDB4YzAwMDAwMDAwMDBkMWJkOCAK
-IGZ1c2UoRikgbmZfY29ubnRyYWNrX25ldGJpb3NfbnMoRikgbmZfY29ubnRyYWNrX2Jyb2FkY2Fz
-dChGKSBpcHRfTUFTUVVFUkFERShGKSBpcDZ0YWJsZV9uYXQoRikgbmZfbmF0X2lwdjYoRikgaXA2
-dGFibGVfbWFuZ2xlKEYpIGlwNnRfUkVKRUNUKEYpIG5mX2Nvbm50cmFja19pcHY2KEYpIG5mX2Rl
-ZnJhZ19pcHY2KEYpIGlwdGFibGVfbmF0KEYpIG5mX25hdF9pcHY0KEYpIG5mX25hdChGKSBpcHRh
-YmxlX21hbmdsZShGKSBpcHRfUkVKRUNUKEYpIG5mX2Nvbm50cmFja19pcHY0KEYpIG5mX2RlZnJh
-Z19pcHY0KEYpIHh0X2Nvbm50cmFjayhGKSBuZl9jb25udHJhY2soRikgZWJ0YWJsZV9maWx0ZXIo
-RikgZWJ0YWJsZXMoRikgaXA2dGFibGVfZmlsdGVyKEYpIGlwNl90YWJsZXMoRikgaXB0YWJsZV9m
-aWx0ZXIoRikgaXBfdGFibGVzKEYpIHNnKEYpIGVoZWEoRikgeGZzKEYpIGxpYmNyYzMyYyhGKSBz
-ZF9tb2QoRikgY3JjX3QxMGRpZihGKSBpYm12c2NzaShGKSBzY3NpX3RyYW5zcG9ydF9zcnAoRikg
-c2NzaV90Z3QoRikgZG1fbWlycm9yKEYpIGRtX3JlZ2lvbl9oYXNoKEYpIGRtX2xvZyhGKSBkbV9t
-b2QoRikgW2xhc3QgdW5sb2FkZWQ6IGJyZF0gClsxNDkyNy42NjkwNDFdIE5JUDogYzAwMDAwMDAw
-MDBkMWJkOCBMUjogYzAwMDAwMDAwMDBkMWI5NCBDVFI6IGMwMDAwMDAwMDAwZDdlMzAgClsxNDky
-Ny42NjkwNDhdIFJFR1M6IGMwMDAwMDAxZmJmYjMxMjAgVFJBUDogMDMwMCAgIFRhaW50ZWQ6IEdG
-ICAgICAgICAgICAgICgzLjkuMykgClsxNDkyNy42NjkwNTNdIE1TUjogODAwMDAwMDAwMDAwOTAz
-MiA8U0YsRUUsTUUsSVIsRFIsUkk+ICBDUjogMjgwMDAwMjggIFhFUjogMDAwMDAwMDAgClsxNDky
-Ny42NjkwNjldIFNPRlRFOiAwIApbMTQ5MjcuNjY5MDcyXSBDRkFSOiBjMDAwMDAwMDAwMDA5MDhj
-IApbMTQ5MjcuNjY5MDc2XSBEQVI6IDAwMDAwMDAwMDAwMDAwZjgsIERTSVNSOiA0MDAwMDAwMCAK
-WzE0OTI3LjY2OTA4MF0gVEFTSyA9IGMwMDAwMDAxZmJmMTQ4ODBbMF0gJ3N3YXBwZXIvMicgVEhS
-RUFEOiBjMDAwMDAwMWZiZmIwMDAwIENQVTogMiAKR1BSMDA6IGMwMDAwMDAwMDAwZDFiOTQgYzAw
-MDAwMDFmYmZiMzNhMCBjMDAwMDAwMDAxMGYzMDM4IDAwMDAwZDkzOWU2NmFkZDYgIApHUFIwNDog
-MDAwMDAwMDAwMDAwMDAwMCAwMDAwMDAwMTAwMTY1MWYyIDAwMDAwMDAwMDAwMDAwOTkgYzAwMDAw
-MDAwMGFmMzAzOCAgCkdQUjA4OiBjMDAwMDAwMDAxMTYzMDM4IDAwMDAwMDAwMDAwMDAwMDIgMDAw
-MDAwMDAwMDAwMDBiOCAwMDBjMzQyMDk1M2QxMTVkICAKR1BSMTI6IDAwMDAwMDAwNDgwMDAwMjIg
-YzAwMDAwMDAwZWQ5MDgwMCBjMDAwMDAwMWZiZmIzZjkwIDAwMDAwMDAwMGVlZTdiYzAgIApHUFIx
-NjogMDAwMDAwMDAxMDIwMDA0MCAwMDAwMDAwMTAwMTY1MWYyIGMwMDAwMDAwMDExNTIxMDAgMDAw
-MDAwMDAwMDAwMDAwMCAgCkdQUjIwOiBjMDAwMDAwMDAwYWYzZjgwIGMwMDAwMDAwMDExNTIxODAg
-MDAwMDAwMDAwMDAwMDAwMCAwMDAwMDAwMDAwMDAwMDAwICAKR1BSMjQ6IGMwMDAwMDAwMDA3ODAx
-ZTggMDAwMDAwMDAwMDAwMDAwMSAwMDAwMDAwMDAwMjAwMjAwIGMwMDAwMDAwMDE1NTUwZDAgIApH
-UFIyODogYzAwMDAwMDAwMTU1NDg4MCAwMDAwMDAwMDAwMDAwMDAwIGMwMDAwMDAxZjU1NjQyMDAg
-MDAwMDAwMDAwMDAwMDAwMCAgClsxNDkyNy42NjkxNTldIE5JUCBbYzAwMDAwMDAwMDBkMWJkOF0g
-LnVwZGF0ZV9ibG9ja2VkX2F2ZXJhZ2VzKzB4YzgvMHg1YzAgClsxNDkyNy42NjkxNjVdIExSIFtj
-MDAwMDAwMDAwMGQxYjk0XSAudXBkYXRlX2Jsb2NrZWRfYXZlcmFnZXMrMHg4NC8weDVjMCAKWzE0
-OTI3LjY2OTE3MF0gQ2FsbCBUcmFjZTogClsxNDkyNy42NjkxNzRdIFtjMDAwMDAwMWZiZmIzM2Ew
-XSBbYzAwMDAwMDAwMDBkMWI5NF0gLnVwZGF0ZV9ibG9ja2VkX2F2ZXJhZ2VzKzB4ODQvMHg1YzAg
-KHVucmVsaWFibGUpIApbMTQ5MjcuNjY5MTgzXSBbYzAwMDAwMDFmYmZiMzQ5MF0gW2MwMDAwMDAw
-MDAwZDdjNTRdIC5yZWJhbGFuY2VfZG9tYWlucysweDg0LzB4MjYwIApbMTQ5MjcuNjY5MTkwXSBb
-YzAwMDAwMDFmYmZiMzU3MF0gW2MwMDAwMDAwMDAwZDdlYjRdIC5ydW5fcmViYWxhbmNlX2RvbWFp
-bnMrMHg4NC8weDIzMCAKWzE0OTI3LjY2OTE5OF0gW2MwMDAwMDAxZmJmYjM2NTBdIFtjMDAwMDAw
-MDAwMDkxMjI4XSAuX19kb19zb2Z0aXJxKzB4MTQ4LzB4MzEwIApbMTQ5MjcuNjY5MjA1XSBbYzAw
-MDAwMDFmYmZiMzc0MF0gW2MwMDAwMDAwMDAwOTE2MDhdIC5pcnFfZXhpdCsweGM4LzB4ZTAgClsx
-NDkyNy42NjkyMTJdIFtjMDAwMDAwMWZiZmIzN2MwXSBbYzAwMDAwMDAwMDAxZDIxNF0gLnRpbWVy
-X2ludGVycnVwdCsweDE1NC8weDJlMCAKWzE0OTI3LjY2OTIyMF0gW2MwMDAwMDAxZmJmYjM4NzBd
-IFtjMDAwMDAwMDAwMDAyNGQ0XSBkZWNyZW1lbnRlcl9jb21tb24rMHgxNTQvMHgxODAgClsxNDky
-Ny42NjkyMzBdIC0tLSBFeGNlcHRpb246IDkwMSBhdCAucGxwYXJfaGNhbGxfbm9yZXRzKzB4ODQv
-MHhkNCAKWzE0OTI3LjY2OTIzMF0gICAgIExSID0gLmNoZWNrX2FuZF9jZWRlX3Byb2Nlc3Nvcisw
-eDI0LzB4NDAgClsxNDkyNy42NjkyNDBdIFtjMDAwMDAwMWZiZmIzYjYwXSBbMDAwMDAwMDAwMDAw
-MDAwMV0gMHgxICh1bnJlbGlhYmxlKSAKWzE0OTI3LjY2OTI0N10gW2MwMDAwMDAxZmJmYjNiZDBd
-IFtjMDAwMDAwMDAwMDZkMDcwXSAuc2hhcmVkX2NlZGVfbG9vcCsweDUwLzB4ZTAgClsxNDkyNy42
-NjkyNTZdIFtjMDAwMDAwMWZiZmIzYzkwXSBbYzAwMDAwMDAwMDViODE4Y10gLmNwdWlkbGVfZW50
-ZXIrMHgyYy8weDQwIApbMTQ5MjcuNjY5MjYzXSBbYzAwMDAwMDFmYmZiM2QwMF0gW2MwMDAwMDAw
-MDA1YjhhZDBdIC5jcHVpZGxlX2lkbGVfY2FsbCsweGYwLzB4MzAwIApbMTQ5MjcuNjY5MjcwXSBb
-YzAwMDAwMDFmYmZiM2RiMF0gW2MwMDAwMDAwMDAwNWRhYjBdIC5wU2VyaWVzX2lkbGUrMHgxMC8w
-eDQwIApbMTQ5MjcuNjY5Mjc4XSBbYzAwMDAwMDFmYmZiM2UyMF0gW2MwMDAwMDAwMDAwMTcxYjhd
-IC5jcHVfaWRsZSsweDE1OC8weDJhMCAKWzE0OTI3LjY2OTI4NV0gW2MwMDAwMDAxZmJmYjNlZDBd
-IFtjMDAwMDAwMDAwNzRjMDMwXSAuc3RhcnRfc2Vjb25kYXJ5KzB4M2E0LzB4M2FjIApbMTQ5Mjcu
-NjY5MjkzXSBbYzAwMDAwMDFmYmZiM2Y5MF0gW2MwMDAwMDAwMDAwMDk3NmNdIC5zdGFydF9zZWNv
-bmRhcnlfcHJvbG9nKzB4MTAvMHgxNCAKWzE0OTI3LjY2OTI5OV0gSW5zdHJ1Y3Rpb24gZHVtcDog
-ClsxNDkyNy42NjkzMDNdIDdmYmJmMDQwIDNiZGVmZjUwIDQxOWUwMWYwIDNmNDAwMDIwIDNmMDJm
-ZjY5IDNhZTAwMDAwIDNhYzAwMDAwIDNiMThkMWIwICAKWzE0OTI3LjY2OTMxNF0gNjM1YTAyMDAg
-NjAwMDAwMDAgZTkzYzA5MTIgZTk1ZTAwYzAgPGU5MGEwMDQwPiBlOTRhMDA0OCA3OTI5MWYyNCA3
-ZmU4NDgyYSAgClsxNDkyNy42NjkzMzRdIC0tLVsgZW5kIHRyYWNlIGFjNDkzNmJhZmZjOGI0N2Ig
-XS0tLSAKWzE0OTI3LjY3MTI2MV0gIApbMTQ5MjcuNjcxMjY2XSBPb3BzOiBLZXJuZWwgYWNjZXNz
-IG9mIGJhZCBhcmVhLCBzaWc6IDExIFsjMl0gClsxNDkyNy42NzEyNzJdIFNNUCBOUl9DUFVTPTEw
-MjQgTlVNQSBwU2VyaWVzIAoKQ0FJIFFpYW4KPiAKPiBDaGVlcnMsCj4gCj4gRGF2ZS4KPiAtLQo+
-IERhdmUgQ2hpbm5lcgo+IGRhdmlkQGZyb21vcmJpdC5jb20KPiAtLQo+IFRvIHVuc3Vic2NyaWJl
-IGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBzdGFibGUiIGluCj4g
-dGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcKPiBNb3Jl
-IG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZv
-Lmh0bWwKPiAKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-CnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWls
-bWFuL2xpc3RpbmZvL3hmcwo=
+Fedora-19 based distro and LVM partitions.
+
+[  301.385639] XFS (dm-2): Mounting Filesystem 
+[  301.434479] XFS (dm-2): Ending clean mount 
+[  301.972477] XFS (dm-0): Mounting Filesystem 
+[  302.264395] XFS (dm-0): Ending clean mount 
+[  302.819270] BUG: unable to handle kernel paging request at ffff8801fbf19000 
+[  302.858096] IP: [<ffffffff813022fa>] memmove+0x4a/0x1a0 
+[  302.886832] PGD 1ddf067 PUD 20bdf9067 PMD 1fb92e063 PTE 80000001fbf19161 
+[  302.923831] Oops: 0003 [#1] SMP  
+[  302.939820] Modules linked in: lockd sunrpc nf_conntrack_netbios_ns nf_conntrack_broadcast ipt_MASQUERADE ip6table_nat nf_nat_ipv6 ip6table_mangle ip6t_REJECT nf_conntrack_ipv6 nf_defrag_ipv6 iptable_nat nf_nat_ipv4 nf_nat iptable_mangle ipt_REJECT nf_conntrack_ipv4 nf_defrag_ipv4 xt_conntrack nf_conntrack ebtable_filter ebtables ip6table_filter ip6_tables iptable_filter ip_tables sg iTCO_wdt e1000e iTCO_vendor_support ixgbe mdio dca ptp pps_core pcspkr hpwdt hpilo lpc_ich microcode mfd_core xfs libcrc32c sd_mod crc_t10dif ata_generic pata_acpi mgag200 i2c_algo_bit drm_kms_helper ata_piix ttm drm libata i2c_core hpsa dm_mirror dm_region_hash dm_log dm_mod 
+[  303.231016] CPU 3  
+[  303.240132] Pid: 19129, comm: attr Not tainted 3.9.3 #1 HP ProLiant DL120 G7 
+[  303.278111] RIP: 0010:[<ffffffff813022fa>]  [<ffffffff813022fa>] memmove+0x4a/0x1a0 
+[  303.316747] RSP: 0018:ffff8801d1bd5ad8  EFLAGS: 00010286 
+[  303.343135] RAX: ffff8801fbeb0020 RBX: ffff8801fd7e0000 RCX: 000000000000d00b 
+[  303.381919] RDX: fffffffffff96fd8 RSI: ffff8801fbf193f8 RDI: ffff8801fbf19000 
+[  303.420250] RBP: ffff8801d1bd5b30 R08: 7720657079742065 R09: 6c75646f6d202b50 
+[  303.459969] R10: 465320646574726f R11: 707075736e75206e R12: ffff8801fbeb0000 
+[  303.498346] R13: 00000000000003d8 R14: 0000000000001800 R15: 000000000000007b 
+[  303.535369] FS:  00007f0026971740(0000) GS:ffff88020b460000(0000) knlGS:0000000000000000 
+[  303.576159] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033 
+[  303.604432] CR2: ffff8801fbf19000 CR3: 00000001e6403000 CR4: 00000000000407e0 
+[  303.640327] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000 
+[  303.675585] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400 
+[  303.711631] Process attr (pid: 19129, threadinfo ffff8801d1bd4000, task ffff8801e676b580) 
+[  303.753011] Stack: 
+[  303.762850]  ffffffffa01971a1 0000000000000000 0000000000000000 ffff8801fbeb0020 
+[  303.799908]  ffff8801fbeb0000 0000000000000018 ffff8801fbeb0000 0000000000000000 
+[  303.836554]  ffff8801e2066618 ffff8801d3ac2680 ffff8801d16d9a20 ffff8801d1bd5b68 
+[  303.874096] Call Trace: 
+[  303.886242]  [<ffffffffa01971a1>] ? xfs_attr_leaf_moveents.isra.2+0x91/0x280 [xfs] 
+[  303.925533]  [<ffffffffa0197467>] xfs_attr_leaf_compact+0xd7/0x130 [xfs] 
+[  303.962494]  [<ffffffffa0198a2e>] xfs_attr_leaf_add+0xce/0x170 [xfs] 
+[  303.996629]  [<ffffffffa0194850>] xfs_attr_leaf_addname+0xc0/0x3d0 [xfs] 
+[  304.033242]  [<ffffffffa01a2d4e>] ? xfs_bmap_one_block+0x3e/0xa0 [xfs] 
+[  304.069208]  [<ffffffffa019578c>] xfs_attr_set_int+0x30c/0x420 [xfs] 
+[  304.100911]  [<ffffffff811be9f4>] ? setxattr+0xa4/0x1c0 
+[  304.126845]  [<ffffffffa0195d1f>] xfs_attr_set+0x7f/0x90 [xfs] 
+[  304.156492]  [<ffffffffa018ba12>] xfs_xattr_set+0x42/0x70 [xfs] 
+[  304.185868]  [<ffffffff811bdef2>] generic_setxattr+0x62/0x80 
+[  304.214985]  [<ffffffff811be743>] __vfs_setxattr_noperm+0x63/0x1b0 
+[  304.245755]  [<ffffffff811be945>] vfs_setxattr+0xb5/0xc0 
+[  304.273386]  [<ffffffff811bea76>] setxattr+0x126/0x1c0 
+[  304.299844]  [<ffffffff8118358d>] ? kmem_cache_free+0x1cd/0x1e0 
+[  304.329476]  [<ffffffff811a72b2>] ? final_putname+0x22/0x50 
+[  304.357290]  [<ffffffff811a74cb>] ? putname+0x2b/0x40 
+[  304.382481]  [<ffffffff811ab96f>] ? user_path_at_empty+0x5f/0x90 
+[  304.412902]  [<ffffffff8119e5c9>] ? __sb_start_write+0x49/0x100 
+[  304.442884]  [<ffffffff811bedef>] sys_lsetxattr+0x8f/0xd0 
+[  304.469523]  [<ffffffff81619359>] system_call_fastpath+0x16/0x1b 
+[  304.502054] Code: 00 00 48 81 fa a8 02 00 00 72 05 40 38 fe 74 41 48 83 ea 20 48 83 ea 20 4c 8b 1e 4c 8b 56 08 4c 8b 4e 10 4c 8b 46 18 48 8d 76 20 <4c> 89 1f 4c 89 57 08 4c 89 4f 10 4c 89 47 18 48 8d 7f 20 73 d4  
+[  304.605187] RIP  [<ffffffff813022fa>] memmove+0x4a/0x1a0 
+[  304.631499]  RSP <ffff8801d1bd5ad8> 
+[  304.649339] CR2: ffff8801fbf19000 
+[  304.665667] ---[ end trace b3069cd0e14b6ad0 ]--- 
+[  304.665670] general protection fault: 0000 [#2] SMP  
+[  304.665682] Modules linked in: lockd sunrpc nf_conntrack_netbios_ns nf_conntrack_broadcast ipt_MASQUERADE ip6table_nat nf_nat_ipv6 ip6table_mangle ip6t_REJECT nf_conntrack_ipv6 nf_defrag_ipv6 iptable_nat nf_nat_ipv4 nf_nat iptable_mangle ipt_REJECT nf_conntrack_ipv4 nf_defrag_ipv4 xt_conntrack nf_conntrack ebtable_filter ebtables ip6table_filter ip6_tables iptable_filter ip_tables sg iTCO_wdt e1000e iTCO_vendor_support ixgbe mdio dca ptp pps_core pcspkr hpwdt hpilo lpc_ich microcode mfd_core xfs libcrc32c sd_mod crc_t10dif ata_generic pata_acpi mgag200 i2c_algo_bit drm_kms_helper ata_piix ttm drm libata i2c_core hpsa dm_mirror dm_region_hash dm_log dm_mod 
+[  304.665684] CPU 2  
+[  304.665684] Pid: 1202, comm: rhts-test-runne Tainted: G      D      3.9.3 #1 HP ProLiant DL120 G7 
+[  304.665687] RIP: 0010:[<ffffffff812960e2>]  [<ffffffff812960e2>] avc_has_perm_noaudit+0x72/0x110 
+[  304.665688] RSP: 0018:ffff8801dee91cd8  EFLAGS: 00010202 
+[  304.665688] RAX: 00010a102504ff45 RBX: 0000000000000143 RCX: ffff8801f9a82df0 
+[  304.665689] RDX: ffff8801f9a82e10 RSI: 0000000000000004 RDI: 0000000000000143 
+[  304.665689] RBP: ffff8801dee91d10 R08: 0000000000000000 R09: ffff8801dee91d34 
+[  304.665690] R10: 0000000000000001 R11: ffff880200937800 R12: 0000000000000143 
+[  304.665690] R13: 0000000000200000 R14: 0000000000000000 R15: 0000000000000004 
+[  304.665691] FS:  00007f7f2c2b7740(0000) GS:ffff88020b440000(0000) knlGS:0000000000000000 
+[  304.665692] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033 
+[  304.665692] CR2: 0000000001d5e0a8 CR3: 00000001def1c000 CR4: 00000000000407e0 
+[  304.665693] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000 
+[  304.665694] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400 
+[  304.665694] Process rhts-test-runne (pid: 1202, threadinfo ffff8801dee90000, task ffff8801e00a5040) 
+[  304.665694] Stack: 
+[  304.665696]  ffff8801dee91da8 0000000000000296 0000000000200000 0000000000000143 
+[  304.665697]  0000000000000000 0000000000000004 ffff8801fb965a00 ffff8801dee91d90 
+[  304.665698]  ffffffff8129966c ffff880200000000 ffffffff8105e848 000000d000000002 
+[  304.665698] Call Trace: 
+[  304.665701]  [<ffffffff8129966c>] cred_has_capability+0x5c/0x100 
+[  304.665702]  [<ffffffff8105e848>] ? dup_mm+0x208/0x660 
+[  304.665705]  [<ffffffff81178819>] ? alloc_pages_current+0xa9/0x170 
+[  304.665706]  [<ffffffff8129973e>] selinux_capable+0x2e/0x40 
+[  304.665707]  [<ffffffff81299885>] selinux_vm_enough_memory+0x35/0x50 
+[  304.665710]  [<ffffffff81293a83>] security_vm_enough_memory_mm+0x13/0x20 
+[  304.665710]  [<ffffffff8105e82f>] dup_mm+0x1ef/0x660 
+[  304.665712]  [<ffffffff8105f6a9>] copy_process.part.26+0x9d9/0x13d0 
+[  304.665713]  [<ffffffff8106019d>] do_fork+0xad/0x340 
+[  304.665714]  [<ffffffff811b7f40>] ? get_unused_fd_flags+0x30/0x40 
+[  304.665715]  [<ffffffff810604b6>] sys_clone+0x16/0x20 
+[  304.665717]  [<ffffffff816196b9>] stub_clone+0x69/0x90 
+[  304.665718]  [<ffffffff81619359>] ? system_call_fastpath+0x16/0x1b 
+[  304.665727] Code: db 81 31 c0 65 ff 04 25 00 0a 01 00 48 8d 4a e0 48 85 d2 48 0f 45 c1 eb 0d 48 8b 40 20 48 85 c0 74 3f 48 83 e8 20 48 85 c0 74 36 <3b> 18 75 ea 66 3b 70 08 75 e4 44 3b 60 04 75 de 48 8d 50 0c 48  
+[  304.665728] RIP  [<ffffffff812960e2>] avc_has_perm_noaudit+0x72/0x110 
+[  304.665729]  RSP <ffff8801dee91cd8> 
+[  304.665763] ---[ end trace b3069cd0e14b6ad1 ]--- 
+[  304.898489] ============================================================================= 
+[  304.898489] BUG kmalloc-4096 (Tainted: G      D     ): Padding overwritten. 0xffff8801fbeb7c28-0xffff8801fbeb7fff 
+[  304.898490] ----------------------------------------------------------------------------- 
+[  304.898490]  
+[  304.898491] INFO: Slab 0xffffea0007efac00 objects=7 used=7 fp=0x          (null) flags=0x20000000004080 
+[  304.898492] Pid: 357, comm: systemd-udevd Tainted: G    B D      3.9.3 #1 
+[  304.898492] Call Trace: 
+[  304.898495]  [<ffffffff81181ed2>] slab_err+0xc2/0xf0 
+[  304.898497]  [<ffffffff8118176d>] ? init_object+0x3d/0x70 
+[  304.898498]  [<ffffffff81181ff5>] slab_pad_check.part.41+0xf5/0x170 
+[  304.898500]  [<ffffffff811bda63>] ? seq_read+0x2e3/0x3b0 
+[  304.898501]  [<ffffffff811820e3>] check_slab+0x73/0x100 
+[  304.898503]  [<ffffffff81606b50>] alloc_debug_processing+0x21/0x118 
+[  304.898504]  [<ffffffff8160772f>] __slab_alloc+0x3b8/0x4a2 
+[  304.898506]  [<ffffffff81161b57>] ? vma_link+0xb7/0xc0 
+[  304.898508]  [<ffffffff811bda63>] ? seq_read+0x2e3/0x3b0 
+[  304.898509]  [<ffffffff81184dd1>] kmem_cache_alloc_trace+0x1b1/0x200 
+[  304.898510]  [<ffffffff811bda63>] seq_read+0x2e3/0x3b0 
+[  304.898512]  [<ffffffff8119c56c>] vfs_read+0x9c/0x170 
+[  304.898513]  [<ffffffff8119c939>] sys_read+0x49/0xa0 
+[  304.898514]  [<ffffffff81619359>] system_call_fastpath+0x16/0x1b 
+
+CAI Qian
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
