@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D827F29DF8
-	for <xfs@oss.sgi.com>; Wed, 22 May 2013 22:51:21 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B4D4F30404E
-	for <xfs@oss.sgi.com>; Wed, 22 May 2013 20:51:21 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	LEqellCI6uTi4Fkc for <xfs@oss.sgi.com>;
-	Wed, 22 May 2013 20:51:17 -0700 (PDT)
-Date: Thu, 23 May 2013 13:51:15 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: 3.9.3: Oops running xfstests
-Message-ID: <20130523035115.GY24543@dastard>
-References: <510292845.4997401.1369279175460.JavaMail.root@redhat.com>
-	<1985929268.4997720.1369279277543.JavaMail.root@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 9B35029DF8
+	for <xfs@oss.sgi.com>; Wed, 22 May 2013 23:11:37 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5DD91304039
+	for <xfs@oss.sgi.com>; Wed, 22 May 2013 21:11:34 -0700 (PDT)
+Received: from mx3-phx2.redhat.com (mx3-phx2.redhat.com [209.132.183.24]) by
+	cuda.sgi.com with ESMTP id eNu7BA4ByezvNoNH for
+	<xfs@oss.sgi.com>; Wed, 22 May 2013 21:11:33 -0700 (PDT)
+Date: Thu, 23 May 2013 00:11:30 -0400 (EDT)
+From: CAI Qian <caiqian@redhat.com>
+Message-ID: <915421596.5010452.1369282290151.JavaMail.root@redhat.com>
+In-Reply-To: <20130523034611.GX24543@dastard>
+References: <40971621.4497871.1369211701112.JavaMail.root@redhat.com>
+	<1805266998.4499261.1369211998387.JavaMail.root@redhat.com>
+	<20130522095300.GK29466@dastard>
+	<1483868349.4996990.1369279016162.JavaMail.root@redhat.com>
+	<20130523034611.GX24543@dastard>
+Subject: Re: 3.9.2: xfstests triggered panic
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1985929268.4997720.1369279277543.JavaMail.root@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,59 +27,89 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: CAI Qian <caiqian@redhat.com>
-Cc: stable@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, stable@vger.kernel.org, xfs@oss.sgi.com
 
-On Wed, May 22, 2013 at 11:21:17PM -0400, CAI Qian wrote:
-> Fedora-19 based distro and LVM partitions.
-
-Cai: As I've asked previously please include all the relevant
-information about your test system and the workload it is running
-when the problem occurs.  Stack traces aren't any good to us in
-isolation, and just dumping them on us causes unnecessary round
-trips.
-
-http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
-
-
-> [  304.898489] ============================================================================= 
-> [  304.898489] BUG kmalloc-4096 (Tainted: G      D     ): Padding overwritten. 0xffff8801fbeb7c28-0xffff8801fbeb7fff 
-> [  304.898490] ----------------------------------------------------------------------------- 
-> [  304.898490]  
-> [  304.898491] INFO: Slab 0xffffea0007efac00 objects=7 used=7 fp=0x          (null) flags=0x20000000004080 
-> [  304.898492] Pid: 357, comm: systemd-udevd Tainted: G    B D      3.9.3 #1 
-> [  304.898492] Call Trace: 
-> [  304.898495]  [<ffffffff81181ed2>] slab_err+0xc2/0xf0 
-> [  304.898497]  [<ffffffff8118176d>] ? init_object+0x3d/0x70 
-> [  304.898498]  [<ffffffff81181ff5>] slab_pad_check.part.41+0xf5/0x170 
-> [  304.898500]  [<ffffffff811bda63>] ? seq_read+0x2e3/0x3b0 
-> [  304.898501]  [<ffffffff811820e3>] check_slab+0x73/0x100 
-> [  304.898503]  [<ffffffff81606b50>] alloc_debug_processing+0x21/0x118 
-> [  304.898504]  [<ffffffff8160772f>] __slab_alloc+0x3b8/0x4a2 
-> [  304.898506]  [<ffffffff81161b57>] ? vma_link+0xb7/0xc0 
-> [  304.898508]  [<ffffffff811bda63>] ? seq_read+0x2e3/0x3b0 
-> [  304.898509]  [<ffffffff81184dd1>] kmem_cache_alloc_trace+0x1b1/0x200 
-> [  304.898510]  [<ffffffff811bda63>] seq_read+0x2e3/0x3b0 
-> [  304.898512]  [<ffffffff8119c56c>] vfs_read+0x9c/0x170 
-> [  304.898513]  [<ffffffff8119c939>] sys_read+0x49/0xa0 
-> [  304.898514]  [<ffffffff81619359>] system_call_fastpath+0x16/0x1b 
-
-That's something different, and indicates memory corruption is being
-seen as a result of something that is occuring through the /proc or
-/sys filesystems. Unrelated to XFS, I think...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+CgotLS0tLSBPcmlnaW5hbCBNZXNzYWdlIC0tLS0tCj4gRnJvbTogIkRhdmUgQ2hpbm5lciIgPGRh
+dmlkQGZyb21vcmJpdC5jb20+Cj4gVG86ICJDQUkgUWlhbiIgPGNhaXFpYW5AcmVkaGF0LmNvbT4K
+PiBDYzogIkxLTUwiIDxsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnPiwgc3RhYmxlQHZnZXIu
+a2VybmVsLm9yZywgeGZzQG9zcy5zZ2kuY29tCj4gU2VudDogVGh1cnNkYXksIE1heSAyMywgMjAx
+MyAxMTo0NjoxMSBBTQo+IFN1YmplY3Q6IFJlOiAzLjkuMjogeGZzdGVzdHMgdHJpZ2dlcmVkIHBh
+bmljCj4gCj4gT24gV2VkLCBNYXkgMjIsIDIwMTMgYXQgMTE6MTY6NTZQTSAtMDQwMCwgQ0FJIFFp
+YW4gd3JvdGU6Cj4gPiAtLS0tLSBPcmlnaW5hbCBNZXNzYWdlIC0tLS0tCj4gPiA+IEZyb206ICJE
+YXZlIENoaW5uZXIiIDxkYXZpZEBmcm9tb3JiaXQuY29tPgo+ID4gPiBUbzogIkNBSSBRaWFuIiA8
+Y2FpcWlhbkByZWRoYXQuY29tPgo+ID4gPiBDYzogIkxLTUwiIDxsaW51eC1rZXJuZWxAdmdlci5r
+ZXJuZWwub3JnPiwgc3RhYmxlQHZnZXIua2VybmVsLm9yZywKPiA+ID4geGZzQG9zcy5zZ2kuY29t
+Cj4gPiA+IFNlbnQ6IFdlZG5lc2RheSwgTWF5IDIyLCAyMDEzIDU6NTM6MDAgUE0KPiA+ID4gU3Vi
+amVjdDogUmU6IDMuOS4yOiB4ZnN0ZXN0cyB0cmlnZ2VyZWQgcGFuaWMKPiA+ID4gCj4gPiA+IE9u
+IFdlZCwgTWF5IDIyLCAyMDEzIGF0IDA0OjM5OjU4QU0gLTA0MDAsIENBSSBRaWFuIHdyb3RlOgo+
+ID4gPiA+IFJlcHJvZHVjZWQgb24gYWxtb3N0IGFsbCBzMzkweCBndWVzdHMgYnkgcnVubmluZyB4
+ZnN0ZXN0cy4KPiA+ID4gPiAKPiA+ID4gPiAxNDYzNC4zOTY2NTjCqCBYRlMgKGRtLTEpOiBNb3Vu
+dGluZyBGaWxlc3lzdGVtCj4gPiA+ID4gMTQ2MzQuNTI1NTIywqggWEZTIChkbS0xKTogRW5kaW5n
+IGNsZWFuIG1vdW50Cj4gPiA+ID4gMTQ2NDAuNDEzMDA3wqggIDwwMDAwMDAwMDAwMTdjNmQ0PsKo
+IGlkbGVfYmFsYW5jZSsweDFhMC8weDM0MAo+ID4gPiA+IDE0NjQwLjQxMzAxMMKoICA8MDAwMDAw
+MDAwMDYzMzAzZT7CqCBfX3NjaGVkdWxlKzB4YTIyLzB4YWYwCj4gPiA+ID4gMTQ2NDAuNDI4Mjc5
+wqggIDwwMDAwMDAwMDAwNjMwZGE2PsKoIHNjaGVkdWxlX3RpbWVvdXQrMHgxODYvMHgyYzAKPiA+
+ID4gPiAxNDY0MC40MjgyODnCqCAgPDAwMDAwMDAwMDAxY2Y4NjQ+wqggcmN1X2dwX2t0aHJlYWQr
+MHgxYmMvMHgyOTgKPiA+ID4gPiAxNDY0MC40MjgzMDDCqCAgPDAwMDAwMDAwMDAxNThjNWE+wqgg
+a3RocmVhZCsweGU2LzB4ZWMKPiA+ID4gPiAxNDY0MC40MjgzMDTCqCAgPDAwMDAwMDAwMDA2MzRk
+ZTY+wqgga2VybmVsX3RocmVhZF9zdGFydGVyKzB4Ni8weGMKPiA+ID4gPiAxNDY0MC40MjgzMDjC
+qCAgPDAwMDAwMDAwMDA2MzRkZTA+wqgga2VybmVsX3RocmVhZF9zdGFydGVyKzB4MC8weGMKPiA+
+ID4gPiAxNDY0MC40MjgzMTHCqCBMYXN0IEJyZWFraW5nLUV2ZW50LUFkZHJlc3M6Cj4gPiA+ID4g
+MTQ2NDAuNDI4MzE0wqggIDwwMDAwMDAwMDAwMTZiZDc2PsKoIHdhbGtfdGdfdHJlZV9mcm9tKzB4
+M2EvMHhmNAo+ID4gPiA+IDE0NjQwLjQyODMxOcKoICBsaXN0X2FkZCBjb3JydXB0aW9uLiBuZXh0
+LT5wcmV2IHNob3VsZCBiZSBwcmV2Cj4gPiA+ID4gKDAwMDAwMDAwMDAwMDA5MTgKPiA+ID4gPiAp
+LCBidXQgd2FzICAgICAgICAgICAobnVsbCkuIChuZXh0PSAgICAgICAgICAobnVsbCkpLgo+ID4g
+PiAKPiA+ID4gV2hlcmUncyBYRlMgaW4gdGhpcz8gd2Fsa190Z190cmVlX2Zyb20oKSBpcyBwYXJ0
+IG9mIHRoZSBzY2hlZHVsZXIKPiA+ID4gY29kZS4gVGhpcyBraW5kIG9mIGltcGxpZXMgYSBzdGFj
+ayBjb3JydXB0aW9uLi4uLgo+ID4gPiAKPiA+ID4gPiBTb21ldGltZXMsIHRoaXMgcG9wcyB1cCwK
+PiA+ID4gPiBbMTY5MDcuMjc1MDAyXSBXQVJOSU5HOiBhdCBrZXJuZWwvcmN1dHJlZS5jOjE5NjAK
+PiA+ID4gPiAKPiA+ID4gPiBvciB0aGlzLAo+ID4gPiA+IDE1MzE2LjE1NDE3McKoIFhGUyAoZG0t
+MSk6IE1vdW50aW5nIEZpbGVzeXN0ZW0KPiA+ID4gPiAxNTMxNi4yNTU3OTbCqCBYRlMgKGRtLTEp
+OiBFbmRpbmcgY2xlYW4gbW91bnQKPiA+ID4gPiAxNTMyMC4zNjQyNDbCqCAgICAgICAgICAgIDAw
+MDAwMDAwMDA2MzY3YTI6IGUzMTBiMDA4MDAwNCAgICAgICAgbGcKPiA+ID4gPiAlcjEsOCglcgo+
+ID4gPiA+IDExKQo+ID4gPiA+IDE1MzIwLjM2NDI0OcKoICAgICAgICAgICAgMDAwMDAwMDAwMDYz
+NjdhODogNDExMDEwMTAgICAgICAgICAgICBsYQo+ID4gPiA+ICVyMSwxNiglCj4gPiA+ID4gcjEp
+Cj4gPiA+ID4gMTUzMjAuMzY0MjUxwqggICAgICAgICAgICAwMDAwMDAwMDAwNjM2N2FjOiBlMzMw
+MTAwMDAwMDQgICAgICAgIGxnCj4gPiA+ID4gJXIzLDAoJXIKPiA+ID4gPiAxKQo+ID4gPiA+IDE1
+MzIwLjM2NDI1MsKoIENhbGwgVHJhY2U6Cj4gPiA+ID4gMTUzMjAuMzY0MjUywqggTGFzdCBCcmVh
+a2luZy1FdmVudC1BZGRyZXNzOgo+ID4gPiA+IDE1MzIwLjM2NDI1M8KoICDvv70gPDAwMDAwMDAw
+MDAwMDAwMDA+wqggS2VybmVsIHN0YWNrIG92ZXJmbG93Lgo+ID4gPiA+IDE1MzIwLjM2NDMwOMKo
+IENQVTogMCBUYWludGVkOiBHRiAgICAgICBXICAgIDMuOS4yICMxCj4gPiA+ID4gMTUzMjAuMzY0
+MzA5wqggUHJvY2VzcyByaHRzLXRlc3QtcnVubmUgKHBpZDogNjI1LCB0YXNrOgo+ID4gPiA+IDAw
+MDAwMDAwM2RjY2M4OTAsCj4gPiA+ID4ga3NwOiAwCj4gPiA+IAo+ID4gPiAuLi4uIGFuZCB0aGVy
+ZSB5b3UgZ28gLSBhIHN0YWNrIG92ZXJmbG93LiBZb3VyIGtlcm5lbCBzdGFjayBzaXplIGlzCj4g
+PiA+IHRvbyBzbWFsbC4KPiA+ID4gCj4gPiA+IEknZCBzdWdnZXN0IHRoYXQgeW91IG5lZWQgMTZr
+IHN0YWNrcyBvbiBzMzkwIC0gSUlSQyBldmVyeSBmdW5jdGlvbgo+ID4gPiBjYWxsIGhhcyAxMjgg
+Ynl0ZSBzdGFjayBmcmFtZSwgYW5kIHRoZXJlIGFyZSBjYWxsIGNoYWlucyA3MC04MAo+ID4gPiBm
+dW5jdGlvbnMgZGVlcCBpbiB0aGUgc3RvcmFnZSBzdGFjay4uLgo+ID4gSG1tLCBJIGFtIHVuc3Vy
+ZSBob3cgdG8gc2V0IHRvIDE2ayBzdGFjayB0aGVyZQo+IAo+IEFyZSB5b3UgYnVpbGQgYSA2NCBi
+aXQgczM5MCBrZXJuZWwgb3IgYSAzMiBiaXQga2VybmVsPyAzMiBiaXQKPiBrZXJuZWxzIG9ubHkg
+aGF2ZSBhbiA4ayBzdGFjayBzaXplLCA2NCBiaXQga2VybmVscyBhcmUgMTZrIChzZWUKPiBhcmNo
+L3MzOTAvTWFrZWZpbGUpLgpJdCBpcyA2NC1iaXQuCj4gCj4gJCBnaXQgZ3JlcCBTVEFDS19TSVpF
+IGFyY2gvczM5MCB8aGVhZCAtMgo+IGFyY2gvczM5MC9NYWtlZmlsZTpTVEFDS19TSVpFICAgOj0g
+ODE5Mgo+IGFyY2gvczM5MC9NYWtlZmlsZTpTVEFDS19TSVpFICAgOj0gMTYzODQKPiAKPiBBcyBp
+dCBpcywgdGhlIHN0YWNrIGZyYW1lIHVzYWdlIGlzIHdvcnNlIHRoYW4gSSB0aG91Z2h0Ogo+IAo+
+ICQgZ2l0IGdyZXAgU1RBQ0tfRlJBTUVfT1ZFUkhFQUQgYXJjaC9zMzkwIHxoZWFkIC0yCj4gYXJj
+aC9zMzkwL2luY2x1ZGUvdWFwaS9hc20vcHRyYWNlLmg6I2RlZmluZSBTVEFDS19GUkFNRV9PVkVS
+SEVBRCA5NiAgICAgIC8qCj4gc2l6ZSBvZiBtaW5pbXVtIHN0YWNrIGZyYW1lICovCj4gYXJjaC9z
+MzkwL2luY2x1ZGUvdWFwaS9hc20vcHRyYWNlLmg6I2RlZmluZSBTVEFDS19GUkFNRV9PVkVSSEVB
+RCAxNjAgICAgICAvKgo+IHNpemUgb2YgbWluaW11bSBzdGFjayBmcmFtZSAqLwo+IAo+IE92ZXJo
+ZWFkIGlzIDk2IGJ5dGVzIGZvciAzMiBiaXQgYW5kIDE2MCBieXRlcyBmb3IgNjQgYml0LiBTbyAx
+NmsKPiBzdGFjayBzaXplIGlzIGdvaW5nIHRvIGhhdmUgYmlnIHRyb3VibGVzIHdpdGggYSA3MC04
+MCBmdW5jdGlvbiBkZWVwCj4gY2FsbCBjaGFpbi4KPiAKPiBBcyBmb3IgcG93ZXJwYzoKPiAKPiBh
+cmNoL3Bvd2VycGMvaW5jbHVkZS9hc20vcHBjX2FzbS5oOiNkZWZpbmUgU1RBQ0tGUkFNRVNJWkUg
+MjU2Cj4gCj4gWWVhaCwgc2FtZSBpc3N1ZS4KPiAKPiBCdXQsIHNlcmlvdXNseSwgdGhlc2Ugc3Rh
+Y2sgdHJhY2VzIGFyZSBtZWFuaW5nbGVzcyB0byBhbnlvbmUgbm90Cj4gZmFtaWxpYXIgd2l0aCBz
+MzkwIG9yIHBvd2VyNyAtIHRoZXkgaW5kaWNhdGUgYSBwcm9ibGVtIGRldGVjdGVkCj4gaW4gdGhl
+IGlkbGUgbG9vcCwgbm90IHdoZXJlIGV2ZXIgdGhlIHN0YWNrIG92ZXJyYW4uCj4gCj4gQ2FuIHlv
+dSBwbGVhc2Ugd29yayB3aXRoIHRoZSBzMzkwL3Bvd2VyNyBwZW9wbGUgdG8gb2J0YWluIHdoYXRl
+dmVyCj4gc3RhY2sgaXQgd2FzIHRoYXQgb3ZlcmZsb3dlZCwgYW5kIHdlIGNhbiBnbyBmcm9tIHRo
+ZXJlLgpPSywgSSdsbCBkby4KQ0FJIFFpYW4KPiAKPiBDaGVlcnMsCj4gCj4gRGF2ZS4KPiAtLQo+
+IERhdmUgQ2hpbm5lcgo+IGRhdmlkQGZyb21vcmJpdC5jb20KPiAKCl9fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5z
+Z2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
