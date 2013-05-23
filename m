@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 962647CBF
-	for <xfs@oss.sgi.com>; Wed, 22 May 2013 23:57:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 039C9AC001
-	for <xfs@oss.sgi.com>; Wed, 22 May 2013 21:57:26 -0700 (PDT)
-Received: from mx4-phx2.redhat.com (mx4-phx2.redhat.com [209.132.183.25]) by
-	cuda.sgi.com with ESMTP id TmG7JGLmQyo7Jnso for
-	<xfs@oss.sgi.com>; Wed, 22 May 2013 21:57:25 -0700 (PDT)
-Date: Thu, 23 May 2013 00:57:20 -0400 (EDT)
-From: CAI Qian <caiqian@redhat.com>
-Message-ID: <1125086079.5019070.1369285040855.JavaMail.root@redhat.com>
-In-Reply-To: <20130523034611.GX24543@dastard>
-References: <40971621.4497871.1369211701112.JavaMail.root@redhat.com>
-	<1805266998.4499261.1369211998387.JavaMail.root@redhat.com>
-	<20130522095300.GK29466@dastard>
-	<1483868349.4996990.1369279016162.JavaMail.root@redhat.com>
-	<20130523034611.GX24543@dastard>
-Subject: 3.9.2/3.9.3: stack overrun on s390x and ppc64 (WAS Re: 3.9.2:
-	xfstests triggered panic)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 0B91A7F37
+	for <xfs@oss.sgi.com>; Thu, 23 May 2013 01:38:46 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D25648F8033
+	for <xfs@oss.sgi.com>; Wed, 22 May 2013 23:38:42 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	trJtAwhyIQAOoj6U for <xfs@oss.sgi.com>;
+	Wed, 22 May 2013 23:38:37 -0700 (PDT)
+Date: Thu, 23 May 2013 16:38:35 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Lockdep message on 3.9.3 (already fixed?)...
+Message-ID: <20130523063834.GZ24543@dastard>
+References: <519B9EF5.5060809@gmail.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <519B9EF5.5060809@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,91 +25,75 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-s390 <linux-s390@vger.kernel.org>, linuxppc-dev@lists.ozlabs.org
-Cc: LKML <linux-kernel@vger.kernel.org>, Steve Best <sbest@redhat.com>, xfs@oss.sgi.com, stable@vger.kernel.org, Hendrik Brueckner <bhendrik@redhat.com>
+To: "Michael L. Semon" <mlsemon35@gmail.com>
+Cc: xfs@oss.sgi.com
 
-T3JpZ2luYWwgcmVwb3J0OgpodHRwOi8vb3NzLnNnaS5jb20vYXJjaGl2ZXMveGZzLzIwMTMtMDUv
-bXNnMDA2ODMuaHRtbAoKQWxzbyBzZWVuIG9uIFBvd2VyNzoKaHR0cDovL21hcmMuaW5mby8/bD1s
-aW51eC1rZXJuZWwmbT0xMzY5Mjc5MDQ5MDA2OTImdz0yCgpDQUkgUWlhbgoKLS0tLS0gT3JpZ2lu
-YWwgTWVzc2FnZSAtLS0tLQo+IEZyb206ICJEYXZlIENoaW5uZXIiIDxkYXZpZEBmcm9tb3JiaXQu
-Y29tPgo+IFRvOiAiQ0FJIFFpYW4iIDxjYWlxaWFuQHJlZGhhdC5jb20+Cj4gQ2M6ICJMS01MIiA8
-bGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZz4sIHN0YWJsZUB2Z2VyLmtlcm5lbC5vcmcsIHhm
-c0Bvc3Muc2dpLmNvbQo+IFNlbnQ6IFRodXJzZGF5LCBNYXkgMjMsIDIwMTMgMTE6NDY6MTEgQU0K
-PiBTdWJqZWN0OiBSZTogMy45LjI6IHhmc3Rlc3RzIHRyaWdnZXJlZCBwYW5pYwo+IAo+IE9uIFdl
-ZCwgTWF5IDIyLCAyMDEzIGF0IDExOjE2OjU2UE0gLTA0MDAsIENBSSBRaWFuIHdyb3RlOgo+ID4g
-LS0tLS0gT3JpZ2luYWwgTWVzc2FnZSAtLS0tLQo+ID4gPiBGcm9tOiAiRGF2ZSBDaGlubmVyIiA8
-ZGF2aWRAZnJvbW9yYml0LmNvbT4KPiA+ID4gVG86ICJDQUkgUWlhbiIgPGNhaXFpYW5AcmVkaGF0
-LmNvbT4KPiA+ID4gQ2M6ICJMS01MIiA8bGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZz4sIHN0
-YWJsZUB2Z2VyLmtlcm5lbC5vcmcsCj4gPiA+IHhmc0Bvc3Muc2dpLmNvbQo+ID4gPiBTZW50OiBX
-ZWRuZXNkYXksIE1heSAyMiwgMjAxMyA1OjUzOjAwIFBNCj4gPiA+IFN1YmplY3Q6IFJlOiAzLjku
-MjogeGZzdGVzdHMgdHJpZ2dlcmVkIHBhbmljCj4gPiA+IAo+ID4gPiBPbiBXZWQsIE1heSAyMiwg
-MjAxMyBhdCAwNDozOTo1OEFNIC0wNDAwLCBDQUkgUWlhbiB3cm90ZToKPiA+ID4gPiBSZXByb2R1
-Y2VkIG9uIGFsbW9zdCBhbGwgczM5MHggZ3Vlc3RzIGJ5IHJ1bm5pbmcgeGZzdGVzdHMuCj4gPiA+
-ID4gCj4gPiA+ID4gMTQ2MzQuMzk2NjU4wqggWEZTIChkbS0xKTogTW91bnRpbmcgRmlsZXN5c3Rl
-bQo+ID4gPiA+IDE0NjM0LjUyNTUyMsKoIFhGUyAoZG0tMSk6IEVuZGluZyBjbGVhbiBtb3VudAo+
-ID4gPiA+IDE0NjQwLjQxMzAwN8KoICA8MDAwMDAwMDAwMDE3YzZkND7CqCBpZGxlX2JhbGFuY2Ur
-MHgxYTAvMHgzNDAKPiA+ID4gPiAxNDY0MC40MTMwMTDCqCAgPDAwMDAwMDAwMDA2MzMwM2U+wqgg
-X19zY2hlZHVsZSsweGEyMi8weGFmMAo+ID4gPiA+IDE0NjQwLjQyODI3OcKoICA8MDAwMDAwMDAw
-MDYzMGRhNj7CqCBzY2hlZHVsZV90aW1lb3V0KzB4MTg2LzB4MmMwCj4gPiA+ID4gMTQ2NDAuNDI4
-Mjg5wqggIDwwMDAwMDAwMDAwMWNmODY0PsKoIHJjdV9ncF9rdGhyZWFkKzB4MWJjLzB4Mjk4Cj4g
-PiA+ID4gMTQ2NDAuNDI4MzAwwqggIDwwMDAwMDAwMDAwMTU4YzVhPsKoIGt0aHJlYWQrMHhlNi8w
-eGVjCj4gPiA+ID4gMTQ2NDAuNDI4MzA0wqggIDwwMDAwMDAwMDAwNjM0ZGU2PsKoIGtlcm5lbF90
-aHJlYWRfc3RhcnRlcisweDYvMHhjCj4gPiA+ID4gMTQ2NDAuNDI4MzA4wqggIDwwMDAwMDAwMDAw
-NjM0ZGUwPsKoIGtlcm5lbF90aHJlYWRfc3RhcnRlcisweDAvMHhjCj4gPiA+ID4gMTQ2NDAuNDI4
-MzExwqggTGFzdCBCcmVha2luZy1FdmVudC1BZGRyZXNzOgo+ID4gPiA+IDE0NjQwLjQyODMxNMKo
-ICA8MDAwMDAwMDAwMDE2YmQ3Nj7CqCB3YWxrX3RnX3RyZWVfZnJvbSsweDNhLzB4ZjQKPiA+ID4g
-PiAxNDY0MC40MjgzMTnCqCAgbGlzdF9hZGQgY29ycnVwdGlvbi4gbmV4dC0+cHJldiBzaG91bGQg
-YmUgcHJldgo+ID4gPiA+ICgwMDAwMDAwMDAwMDAwOTE4Cj4gPiA+ID4gKSwgYnV0IHdhcyAgICAg
-ICAgICAgKG51bGwpLiAobmV4dD0gICAgICAgICAgKG51bGwpKS4KPiA+ID4gCj4gPiA+IFdoZXJl
-J3MgWEZTIGluIHRoaXM/IHdhbGtfdGdfdHJlZV9mcm9tKCkgaXMgcGFydCBvZiB0aGUgc2NoZWR1
-bGVyCj4gPiA+IGNvZGUuIFRoaXMga2luZCBvZiBpbXBsaWVzIGEgc3RhY2sgY29ycnVwdGlvbi4u
-Li4KPiA+ID4gCj4gPiA+ID4gU29tZXRpbWVzLCB0aGlzIHBvcHMgdXAsCj4gPiA+ID4gWzE2OTA3
-LjI3NTAwMl0gV0FSTklORzogYXQga2VybmVsL3JjdXRyZWUuYzoxOTYwCj4gPiA+ID4gCj4gPiA+
-ID4gb3IgdGhpcywKPiA+ID4gPiAxNTMxNi4xNTQxNzHCqCBYRlMgKGRtLTEpOiBNb3VudGluZyBG
-aWxlc3lzdGVtCj4gPiA+ID4gMTUzMTYuMjU1Nzk2wqggWEZTIChkbS0xKTogRW5kaW5nIGNsZWFu
-IG1vdW50Cj4gPiA+ID4gMTUzMjAuMzY0MjQ2wqggICAgICAgICAgICAwMDAwMDAwMDAwNjM2N2Ey
-OiBlMzEwYjAwODAwMDQgICAgICAgIGxnCj4gPiA+ID4gJXIxLDgoJXIKPiA+ID4gPiAxMSkKPiA+
-ID4gPiAxNTMyMC4zNjQyNDnCqCAgICAgICAgICAgIDAwMDAwMDAwMDA2MzY3YTg6IDQxMTAxMDEw
-ICAgICAgICAgICAgbGEKPiA+ID4gPiAlcjEsMTYoJQo+ID4gPiA+IHIxKQo+ID4gPiA+IDE1MzIw
-LjM2NDI1McKoICAgICAgICAgICAgMDAwMDAwMDAwMDYzNjdhYzogZTMzMDEwMDAwMDA0ICAgICAg
-ICBsZwo+ID4gPiA+ICVyMywwKCVyCj4gPiA+ID4gMSkKPiA+ID4gPiAxNTMyMC4zNjQyNTLCqCBD
-YWxsIFRyYWNlOgo+ID4gPiA+IDE1MzIwLjM2NDI1MsKoIExhc3QgQnJlYWtpbmctRXZlbnQtQWRk
-cmVzczoKPiA+ID4gPiAxNTMyMC4zNjQyNTPCqCAg77+9IDwwMDAwMDAwMDAwMDAwMDAwPsKoIEtl
-cm5lbCBzdGFjayBvdmVyZmxvdy4KPiA+ID4gPiAxNTMyMC4zNjQzMDjCqCBDUFU6IDAgVGFpbnRl
-ZDogR0YgICAgICAgVyAgICAzLjkuMiAjMQo+ID4gPiA+IDE1MzIwLjM2NDMwOcKoIFByb2Nlc3Mg
-cmh0cy10ZXN0LXJ1bm5lIChwaWQ6IDYyNSwgdGFzazoKPiA+ID4gPiAwMDAwMDAwMDNkY2NjODkw
-LAo+ID4gPiA+IGtzcDogMAo+ID4gPiAKPiA+ID4gLi4uLiBhbmQgdGhlcmUgeW91IGdvIC0gYSBz
-dGFjayBvdmVyZmxvdy4gWW91ciBrZXJuZWwgc3RhY2sgc2l6ZSBpcwo+ID4gPiB0b28gc21hbGwu
-Cj4gPiA+IAo+ID4gPiBJJ2Qgc3VnZ2VzdCB0aGF0IHlvdSBuZWVkIDE2ayBzdGFja3Mgb24gczM5
-MCAtIElJUkMgZXZlcnkgZnVuY3Rpb24KPiA+ID4gY2FsbCBoYXMgMTI4IGJ5dGUgc3RhY2sgZnJh
-bWUsIGFuZCB0aGVyZSBhcmUgY2FsbCBjaGFpbnMgNzAtODAKPiA+ID4gZnVuY3Rpb25zIGRlZXAg
-aW4gdGhlIHN0b3JhZ2Ugc3RhY2suLi4KPiA+IEhtbSwgSSBhbSB1bnN1cmUgaG93IHRvIHNldCB0
-byAxNmsgc3RhY2sgdGhlcmUKPiAKPiBBcmUgeW91IGJ1aWxkIGEgNjQgYml0IHMzOTAga2VybmVs
-IG9yIGEgMzIgYml0IGtlcm5lbD8gMzIgYml0Cj4ga2VybmVscyBvbmx5IGhhdmUgYW4gOGsgc3Rh
-Y2sgc2l6ZSwgNjQgYml0IGtlcm5lbHMgYXJlIDE2ayAoc2VlCj4gYXJjaC9zMzkwL01ha2VmaWxl
-KS4KPiAKPiAkIGdpdCBncmVwIFNUQUNLX1NJWkUgYXJjaC9zMzkwIHxoZWFkIC0yCj4gYXJjaC9z
-MzkwL01ha2VmaWxlOlNUQUNLX1NJWkUgICA6PSA4MTkyCj4gYXJjaC9zMzkwL01ha2VmaWxlOlNU
-QUNLX1NJWkUgICA6PSAxNjM4NAo+IAo+IEFzIGl0IGlzLCB0aGUgc3RhY2sgZnJhbWUgdXNhZ2Ug
-aXMgd29yc2UgdGhhbiBJIHRob3VnaHQ6Cj4gCj4gJCBnaXQgZ3JlcCBTVEFDS19GUkFNRV9PVkVS
-SEVBRCBhcmNoL3MzOTAgfGhlYWQgLTIKPiBhcmNoL3MzOTAvaW5jbHVkZS91YXBpL2FzbS9wdHJh
-Y2UuaDojZGVmaW5lIFNUQUNLX0ZSQU1FX09WRVJIRUFEIDk2ICAgICAgLyoKPiBzaXplIG9mIG1p
-bmltdW0gc3RhY2sgZnJhbWUgKi8KPiBhcmNoL3MzOTAvaW5jbHVkZS91YXBpL2FzbS9wdHJhY2Uu
-aDojZGVmaW5lIFNUQUNLX0ZSQU1FX09WRVJIRUFEIDE2MCAgICAgIC8qCj4gc2l6ZSBvZiBtaW5p
-bXVtIHN0YWNrIGZyYW1lICovCj4gCj4gT3ZlcmhlYWQgaXMgOTYgYnl0ZXMgZm9yIDMyIGJpdCBh
-bmQgMTYwIGJ5dGVzIGZvciA2NCBiaXQuIFNvIDE2awo+IHN0YWNrIHNpemUgaXMgZ29pbmcgdG8g
-aGF2ZSBiaWcgdHJvdWJsZXMgd2l0aCBhIDcwLTgwIGZ1bmN0aW9uIGRlZXAKPiBjYWxsIGNoYWlu
-Lgo+IAo+IEFzIGZvciBwb3dlcnBjOgo+IAo+IGFyY2gvcG93ZXJwYy9pbmNsdWRlL2FzbS9wcGNf
-YXNtLmg6I2RlZmluZSBTVEFDS0ZSQU1FU0laRSAyNTYKPiAKPiBZZWFoLCBzYW1lIGlzc3VlLgo+
-IAo+IEJ1dCwgc2VyaW91c2x5LCB0aGVzZSBzdGFjayB0cmFjZXMgYXJlIG1lYW5pbmdsZXNzIHRv
-IGFueW9uZSBub3QKPiBmYW1pbGlhciB3aXRoIHMzOTAgb3IgcG93ZXI3IC0gdGhleSBpbmRpY2F0
-ZSBhIHByb2JsZW0gZGV0ZWN0ZWQKPiBpbiB0aGUgaWRsZSBsb29wLCBub3Qgd2hlcmUgZXZlciB0
-aGUgc3RhY2sgb3ZlcnJhbi4KPiAKPiBDYW4geW91IHBsZWFzZSB3b3JrIHdpdGggdGhlIHMzOTAv
-cG93ZXI3IHBlb3BsZSB0byBvYnRhaW4gd2hhdGV2ZXIKPiBzdGFjayBpdCB3YXMgdGhhdCBvdmVy
-Zmxvd2VkLCBhbmQgd2UgY2FuIGdvIGZyb20gdGhlcmUuCj4gCj4gQ2hlZXJzLAo+IAo+IERhdmUu
-Cj4gLS0KPiBEYXZlIENoaW5uZXIKPiBkYXZpZEBmcm9tb3JiaXQuY29tCj4gCgpfX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhm
-c0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On Tue, May 21, 2013 at 12:21:09PM -0400, Michael L. Semon wrote:
+> Hi!  I'm beginning to lose track of lockdep messages and feel like a
+> new message is sneaking in there.
+> 
+> This lockdep comes from kernel 3.9.3, which I was asked to use in
+> order to gather DRM info.  The PC was booted to a console and left
+> to do a long 24kB/s download and default distro cron duties (slocate
+> and such), in hopes that console inactivity, console blanking, and
+> monitor sleep would kick up a soft oops from DRM like it does on
+> 3.10.0-rc.
+> 
+> This may also apply to the devel kernels, but the PC needs to be
+> left alone for me to verify this.
+> 
+> I've read the Dave Chinner position on stable kernels but don't know
+> if they apply to the first stable kernel out of
+> mainline...especially because that kernel has a lifespan of a
+> housefly nowadays...
+> 
+> As always, thanks for reading!
+> 
+> Michael
+> 
+> =================================
+> [ INFO: inconsistent lock state ]
+> 3.9.3 #1 Not tainted
+> ---------------------------------
+> inconsistent {RECLAIM_FS-ON-R} -> {IN-RECLAIM_FS-W} usage.
+> kswapd0/18 [HC0[0]:SC0[0]:HE1:SE1] takes:
+>  (&(&ip->i_lock)->mr_lock){++++-?}, at: [<c120e2ea>] xfs_ilock+0xff/0x15e
+> {RECLAIM_FS-ON-R} state was registered at:
+>   [<c10638e7>] mark_held_locks+0x80/0xcb
+>   [<c1063e18>] lockdep_trace_alloc+0x59/0x9d
+>   [<c10a9846>] __alloc_pages_nodemask+0x70/0x6f2
+>   [<c10a9ee4>] __get_free_pages+0x1c/0x3d
+>   [<c1025644>] pte_alloc_one_kernel+0x14/0x16
+>   [<c10beb1b>] __pte_alloc_kernel+0x16/0x71
+>   [<c10c8380>] vmap_page_range_noflush+0x12e/0x13c
+>   [<c10c9480>] vm_map_ram+0x3b9/0x46c
+>   [<c11c0739>] _xfs_buf_map_pages+0x5b/0xe7
+>   [<c11c1372>] xfs_buf_get_map+0x67/0x13a
+>   [<c11c1ff2>] xfs_buf_read_map+0x1f/0xc0
+>   [<c11c20da>] xfs_buf_readahead_map+0x47/0x57
+>   [<c11ffc18>] xfs_da_reada_buf+0xaf/0xbd
+>   [<c120276c>] xfs_dir2_data_readahead+0x2f/0x36
+
+Known issue. vm_map_ram() won't let us pass GFP_NOFS, so it does
+GFP_KERNEL allocations in places that cause lockdep to go nuts. This
+one here is not going to deadlock, but there are other cases where
+it potentially could...
+
+The VM folk refuse to allow us to pass gfp flags, so we're stuck
+we're stuck with this lockdep noise.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
