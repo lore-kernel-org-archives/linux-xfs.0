@@ -1,19 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 777907F37
-	for <linux-xfs@oss.sgi.com>; Thu, 23 May 2013 06:49:51 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 916C67F37
+	for <xfs@oss.sgi.com>; Thu, 23 May 2013 07:30:52 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4883F8F8074
-	for <linux-xfs@oss.sgi.com>; Thu, 23 May 2013 04:49:48 -0700 (PDT)
-Received: from institution-global.e-mailinghub.com
-	(institution-global.e-mailinghub.com [207.99.108.246]) by
-	cuda.sgi.com with ESMTP id SzcNmE4O7IyBtWVo for
-	<linux-xfs@oss.sgi.com>; Thu, 23 May 2013 04:49:45 -0700 (PDT)
-Date: Thu, 23 May 2013 07:49:45 -0400 (EDT)
-From: Anthem Blue Cross and Blue Shield <noreply@wellpoint.com>
-Message-ID: <1574534699.1369309785026.if.qeyfgjhwznohplqtsibl@institution-global.e-mailinghub.com.131326442>
-Subject: Affordable Health Plans Since 1944
-MIME-Version: 1.0
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 2CAD5AC00B
+	for <xfs@oss.sgi.com>; Thu, 23 May 2013 05:30:52 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	c3azI2DmmpHkU8s4 for <xfs@oss.sgi.com>;
+	Thu, 23 May 2013 05:30:50 -0700 (PDT)
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 2/2] xfs: fix split buffer vector log recovery support
+Date: Thu, 23 May 2013 22:30:40 +1000
+Message-Id: <1369312240-5925-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1369312240-5925-1-git-send-email-david@fromorbit.com>
+References: <1369123330-9579-1-git-send-email-david@fromorbit.com>
+	<1369312240-5925-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,189 +24,224 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============0694738977120951666=="
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: bpm@sgi.com
 
---===============0694738977120951666==
-Content-Type: multipart/alternative;
-	boundary="----=_Part_166191807_1945578243.1369309785025"
+From: Dave Chinner <dchinner@redhat.com>
 
-------=_Part_166191807_1945578243.1369309785025
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+A long time ago in a galaxy far away....
 
-***************************************************************************=
-*******
-Lower Cost Individual Health Plans in Indiana
+.. the was a commit made to fix some ilinux specific "fragmented
+buffer" log recovery problem:
 
-***************************************************************************=
-*******
+http://oss.sgi.com/cgi-bin/gitweb.cgi?p=archive/xfs-import.git;a=commitdiff;h=b29c0bece51da72fb3ff3b61391a391ea54e1603
 
-Affordable monthly premiums, Prescription drug benefits, Your choice of doc=
-tors
+That problem occurred when a contiguous dirty region of a buffer was
+split across across two pages of an unmapped buffer. It's been a
+long time since that has been done in XFS, and the changes to log
+the entire inode buffers for CRC enabled filesystems has
+re-introduced that corner case.
 
+And, of course, it turns out that the above commit didn't actually
+fix anything - it just ensured that log recovery is guaranteed to
+fail when this situation occurs. And now for the gory details.
 
-Compare and save on health insurance =20
+xfstest xfs/085 is failing with this assert:
 
+XFS (vdb): bad number of regions (0) in inode log format
+XFS: Assertion failed: 0, file: fs/xfs/xfs_log_recover.c, line: 1583
 
-Medical costs are at an all-time high. So having good health insurance is m=
-ore important than ever.
-That's where we can help. Get coverage at a great price now!
-=20
+Largely undocumented factoid #1: Log recovery depends on all log
+buffer format items starting with this format:
 
-Click here to start an instant quote:=20
-http://h.e-mailinghub.com/ling/chhpxpfRoiwthnRliihRs96dnuRfvigRpsapvg/2/get=
-.anthem.com/in/index.aspx?Referrer=3Dspyder
+struct foo_log_format {
+	__uint16_t	type;
+	__uint16_t	size;
+	....
 
-Or call (866) 807-0553 to speak with a representative today.
----------------------------------------------------------------------------=
---
- =09
-Anthem Blue Cross and Blue Shield is the trade name of Anthem Insurance Com=
-panies, Inc.=20
-Independent licensee of the Blue Cross and Blue Shield Association. =C2=AE =
-ANTHEM is a registered=20
-trademark of Anthem Insurance Companies, Inc. The Blue Cross and Blue Shiel=
-d names and symbols=20
-are registered marks of the Blue Cross and Blue Shield Association.=20
+As recoery uses the size field and assumptions about 32 bit
+alignment in decoding format items.  So don't pay much attention to
+the fact log recovery thinks that it decoding an inode log format
+item - it just uses them to determine what the size of the item is.
 
+But why would it see a log format item with a zero size? Well,
+luckily enough xfs_logprint uses the same code and gives the same
+error, so with a bit of gdb magic, it turns out that it isn't a log
+format that is being decoded. What logprint tells us is this:
 
-To unsubscribe from this newsletter, click here.=20
-http://h.e-mailinghub.com/ling/chhpxpfRoiwthnRliihRs96dnuRfvigRpsapvg/2/get=
-.anthem.com/unsubscribe.aspx
-Or write to:
-Anthem Blue Cross and Blue Shield Unsubscribe,=20
-160 East Via Verde Avenue, Suite 100, San Dimas, CA 91773, USA.
+Oper (130): tid: a0375e1a  len: 28  clientid: TRANS  flags: none
+BUF:  #regs: 2   start blkno: 144 (0x90)  len: 16  bmap size: 2  flags: 0x4000
+Oper (131): tid: a0375e1a  len: 4096  clientid: TRANS  flags: none
+BUF DATA
+----------------------------------------------------------------------------
+Oper (132): tid: a0375e1a  len: 4096  clientid: TRANS  flags: none
+xfs_logprint: unknown log operation type (4e49)
+**********************************************************************
+* ERROR: data block=2                                                 *
+**********************************************************************
 
+That we've got a buffer format item (oper 130) that has two regions;
+the format item itself and one dirty region. The subsequent region
+after the buffer format item and it's data is them what we are
+tripping over, and the first bytes of it at an inode magic number.
+Not a log opheader like there is supposed to be.
 
+That means there's a problem with the buffer format item. It's dirty
+data region is 4096 bytes, and it contains - you guessed it -
+initialised inodes. But inode buffers are 8k, not 4k, and we log
+them in their entirety. So something is wrong here. The buffer
+format item contains:
 
----------------------------------------------------------------------------=
---
+(gdb) p /x *(struct xfs_buf_log_format *)in_f
+$22 = {blf_type = 0x123c, blf_size = 0x2, blf_flags = 0x4000,
+       blf_len = 0x10, blf_blkno = 0x90, blf_map_size = 0x2,
+       blf_data_map = {0xffffffff, 0xffffffff, .... }}
 
+Two regions, and a signle dirty contiguous region of 64 bits.  64 *
+128 = 8k, so this should be followed by a single 8k region of data.
+And the blf_flags tell us that the type of buffer is a
+XFS_BLFT_DINO_BUF. It contains inodes. And because it doesn't have
+the XFS_BLF_INODE_BUF flag set, that means it's an inode allocation
+buffer. So, it should be followed by 8k of inode data.
 
-Please click here to opt out of future email communication:http://h.e-maili=
-nghub.com/hubm/0/chhpxpfRoiwthnRliihRs96dnuRfvigRpsapvg
+But we know that the next region has a header of:
 
-------=_Part_166191807_1945578243.1369309785025
-Content-Type: text/html; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+(gdb) p /x *ohead
+$25 = {oh_tid = 0x1a5e37a0, oh_len = 0x100000, oh_clientid = 0x69,
+       oh_flags = 0x0, oh_res2 = 0x0}
 
-<p>
-	<IMG SRC="http://h.e-mailinghub.com/emai/chhpxlwRnhvsgmRkhhgRr85cmtRdthfRor9ouf/b.gif"  WIDTH=1 HEIGHT=1></p>
-<table align="center" width="584">
-	<tbody>
-		<tr>
-			<td>
-				<font color="#666666" face="Helvetica, Arial, sans-serif" size="1"><a href="http://h.e-mailinghub.com/hubm/4/chhpxlwRnhvsgmRkhhgRr85cmtRdthfRor9ouf" style="color:#1879bf;">Click here</a> if you cannot view this email.</font></td>
-		</tr>
-		<tr>
-			<td>
-				<table align="center" border="0" cellpadding="0" cellspacing="0" height="159" width="584">
-					<tbody>
-						<tr>
-							<td align="left" colspan="2" height="20" valign="top">
-								<img alt="" height="20" src="http://anthemforin.com/email/penelope/images/va_iadv_em_v02r01_prod_01.jpg" width="285" /></td>
-							<td align="left" colspan="2" valign="top">
-								<img alt="" height="20" src="http://anthemforin.com/email/penelope/images/va_iadv_em_v02r01_prod_02.jpg" width="299" /></td>
-						</tr>
-						<tr>
-							<td align="left" colspan="2" valign="top">
-								<img alt="" height="66" src="http://anthemforin.com/email/penelope/images/va_iadv_em_v02r01_prod_03.jpg" width="285" /></td>
-							<td align="right" height="66" width="260">
-								<span style="font-family:Arial, Helvetica, sans-serif; font-size:14px; color:#006699;">Indiana residents call us toll free at:</span><br />
-								<span style="font-family:Arial, Helvetica, sans-serif; font-size:35px; color:#006699; line-height:25px;">866-807-0553</span></td>
-							<td align="right" valign="top">
-								<img alt="" height="66" src="http://anthemforin.com/email/penelope/images/ALL_iadv_em_v02_prod_05.jpg" width="39" /></td>
-						</tr>
-						<tr>
-							<td align="left" colspan="2" valign="top" width="285">
-								<img alt="" height="211" src="http://anthemforin.com/email/penelope/images/01.jpg" width="285" /></td>
-							<td align="left" colspan="5" valign="top" width="299">
-								<img alt="" height="211" src="http://anthemforin.com/email/penelope/images/header_copy.jpg" width="299" /></td>
-						</tr>
-						<tr>
-							<td align="left" colspan="2" valign="top" width="285">
-								<img alt="" height="103" src="http://anthemforin.com/email/penelope/images/03.jpg" width="285" /></td>
-							<td align="left" colspan="5" valign="top" width="299">
-								<a href="http://h.e-mailinghub.com/ling/chhpxlwRnhvsgmRkhhgRr85cmtRdthfRor9ouf/2/tracking.dsmmadvantage.com/redirect/Redirect.aspx?wm_ctID=85&amp;wm_kwID=47696674&amp;wm_mtID=201&amp;wm_DefaultURL=http%3a%2f%2fanthem.com%2f"><img alt="" border="0" height="103" src="http://anthemforin.com/email/penelope/images/btn-instantQuote.jpg" width="299" /></a></td>
-						</tr>
-						<tr>
-							<td align="left" colspan="7" valign="top" width="584">
-								<img alt="" height="81" src="http://anthemforin.com/email/penelope/images/04.jpg" width="584" /></td>
-						</tr>
-					</tbody>
-				</table>
-				<!-- BODY CONTENT -->
-				<table align="center" bgcolor="#006699" border="0" cellpadding="0" cellspacing="0" width="584">
-					<tbody>
-						<tr>
-							<td align="left" bgcolor="#006699" rowspan="3" valign="top" width="67">
-								<img alt="" height="300" src="http://anthemforin.com/email/penelope/images/06.png" width="67" /></td>
-							<td align="left" bgcolor="#006699" colspan="4" height="47" style="font-family: Arial, Helvetica, sans-serif; font-size:25px; color:#FFFFFF;" width="450">
-								Compare and save on health insurance<br />
-								&nbsp;</td>
-							<td align="right" bgcolor="#006699" colspan="2" rowspan="3" width="67">
-								<img alt="" height="300" src="http://anthemforin.com/email/penelope/images/va_iadv_em_v02r01_prod_17.jpg" width="67" /></td>
-						</tr>
-						<tr>
-							<td align="left" bgcolor="#006699" colspan="2" height="116" style="font-family:Arial, Helvetica, sans-serif; font-size:16px; color:#FFFFFF; line-height:22px; padding-top:5px;" valign="top" width="271">
-								Medical costs are at an all-time high. So having good health insurance is more important than ever. That&#39;s where we can help. Get coverage at a great price now!<br />
-								&nbsp;</td>
-							<td align="left" bgcolor="#006699" colspan="2" valign="top" width="179">
-								<a href="http://h.e-mailinghub.com/ling/chhpxlwRnhvsgmRkhhgRr85cmtRdthfRor9ouf/2/tracking.dsmmadvantage.com/redirect/Redirect.aspx?wm_ctID=85&amp;wm_kwID=47696674&amp;wm_mtID=201&amp;wm_DefaultURL=http%3a%2f%2fanthem.com%2f"><img alt="" border="0" height="116" src="http://anthemforin.com/email/penelope/images/btn-instantQuote2.png" width="179" /></a></td>
-						</tr>
-						<tr>
-							<td align="center" bgcolor="#006699" colspan="4" height="67" width="450">
-								<span style="font-family:Arial, Helvetica, sans-serif; font-size:14px; color:#FFFFFF;">Indiana residents call us toll free at:</span><br />
-								<span style="font-family:Arial, Helvetica, sans-serif; font-size:35px; color:#FFFFFF; line-height:35px;">866-807-0553</span></td>
-						</tr>
-						<tr>
-							<td align="left" colspan="7" valign="top" width="584">
-								<img alt="" height="51" src="http://anthemforin.com/email/penelope/images/07.png" width="584" /></td>
-						</tr>
-					</tbody>
-				</table>
-				<!-- FOOOTER CONTENT -->
-				<table align="center" border="0" cellpadding="0" cellspacing="0" height="159" width="584">
-					<tbody>
-						<tr>
-							<td colspan="4" height="315" rowspan="2" style="font-family:Arial, Helvetica, sans-serif; font-size:11px; color:#333;" valign="top" width="415">
-								This policy has exclusions, limitations, and terms under which the policy may be continued in force or discontinued. For costs and complete details of the coverage, contact your insurance agent, &reg;ANTHEM or visit us on the web.<br />
-								<br />
-								Anthem Blue Cross and Blue Shield is the trade name of Anthem Insurance Companies, Inc. Independent licensee of the Blue Cross and Blue Shield Association. &reg;ANTHEM is a registered trademark of Anthem Insurance Companies, Inc. The Blue Cross and Blue Shield names and symbols are registered marks of the Blue Cross and Blue Shield Association.<br />
-								<br />
-								<p>
-									<font color="#333" face="Helvetica, Arial, sans-serif" size="1">160 East Via Verde Avenue, Suite 100, San Dimas, CA 91773, USA.</font></p>
-								<p>
-									&nbsp;</p>
-							</td>
-							<td colspan="3" valign="top" width="75">
-								<span style="border-bottom: 1px solid #e5e5e3;"><img alt="Anthem - Health. Join In." height="75" src="http://anthemforin.com/email/penelope/images/logo2.png" width="169" /></span></td>
-						</tr>
-					</tbody>
-				</table>
-			</td>
-		</tr>
-	</tbody>
-</table>
-<br />
-<div align="center">
-	<font size="-1"><a href="http://h.e-mailinghub.com/hubm/0/chhpxlwRnhvsgmRkhhgRr85cmtRdthfRor9ouf"> Please click here to opt out of future email communication.</a> </font></div>
+and so be32_to_cpu(oh_len) = 0x1000 = 4096 bytes. It's simply not
+long enough to hold all the logged data. There must be another
+region. There is - there's a following opheader for another 4k of
+data that contains the other half of the inode cluster data - the
+one we assert fail on because it's not a log format header.
 
-------=_Part_166191807_1945578243.1369309785025--
+So why is the second part of the data not being accounted to the
+correct buffer log format structure? It took a little more work with
+gdb to work out that the buffer log format structure was both
+expecting it to be there but hadn't accounted for it. It was at that
+point I went to the kernel code, as clearly this wasn't a bug in
+xfs_logprint and the kernel was writing bad stuff to the log.
 
+First port of call was the buffer item formatting code, and the
+discontiguous memory/contiguous dirty region handling code
+immediately stood out. I've wondered for a long time why the code
+had this comment in it:
 
---===============0694738977120951666==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+                        vecp->i_addr = xfs_buf_offset(bp, buffer_offset);
+                        vecp->i_len = nbits * XFS_BLF_CHUNK;
+                        vecp->i_type = XLOG_REG_TYPE_BCHUNK;
+/*
+ * You would think we need to bump the nvecs here too, but we do not
+ * this number is used by recovery, and it gets confused by the boundary
+ * split here
+ *                      nvecs++;
+ */
+                        vecp++;
+
+And it didn't account for the extra vector pointer. The case being
+handled here is that a contiguous dirty region lies across a
+boundary that cannot be memcpy()d across, and so has to be split
+into two separate operations for xlog_write() to perform.
+
+What this code assumes is that what is written to the log is two
+consecutive blocks of data that are accounted in the buf log format
+item as the same contiguous dirty region and so will get decoded as
+such by the log recovery code.
+
+The thing is, xlog_write() knows nothing about this, and so just
+does it's normal thing of adding an opheader for each vector. That
+means the 8k region gets written to the log as two separate regions
+of 4k each, but because nvecs has not been incremented, the buf log
+format item accounts for only one of them.
+
+Hence when we come to log recovery, we process the first 4k region
+and then expect to come across a new item that starts with a log
+format structure of some kind that tells us whenteh next data is
+going to be. Instead, we hit raw buffer data and things go bad real
+quick.
+
+So, the commit from 2002 that commented out nvecs++ is just plain
+wrong. It breaks log recovery completely, and it would seem the only
+reason this hasn't been since then is that we don't log large
+contigous regions of multi-page unmapped buffers very often. Never
+would be a closer estimate, at least until the CRC code came along....
+
+So, lets fix that by restoring the nvecs accounting for the extra
+region when we hit this case.....
+
+.... and there's the problemin log recovery it is apparently working
+around:
+
+XFS: Assertion failed: i == item->ri_total, file: fs/xfs/xfs_log_recover.c, line: 2135
+
+Yup, xlog_recover_do_reg_buffer() doesn't handle contigous dirty
+regions being broken up into multiple regions by the log formatting
+code. That's an easy fix, though - if the number of contiguous dirty
+bits exceeds the length of the region being copied out of the log,
+only account for the number of dirty bits that region covers, and
+then loop again and copy more from the next region. It's a 2 line
+fix.
+
+Now xfstests xfs/085 passes, we have one less piece of mystery
+code, and one more important piece of knowledge about how to
+structure new log format items..
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_buf_item.c    |    7 +------
+ fs/xfs/xfs_log_recover.c |   11 +++++++++++
+ 2 files changed, 12 insertions(+), 6 deletions(-)
+
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index cf26347..4ec4317 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -262,12 +262,7 @@ xfs_buf_item_format_segment(
+ 			vecp->i_addr = xfs_buf_offset(bp, buffer_offset);
+ 			vecp->i_len = nbits * XFS_BLF_CHUNK;
+ 			vecp->i_type = XLOG_REG_TYPE_BCHUNK;
+-/*
+- * You would think we need to bump the nvecs here too, but we do not
+- * this number is used by recovery, and it gets confused by the boundary
+- * split here
+- *			nvecs++;
+- */
++			nvecs++;
+ 			vecp++;
+ 			first_bit = next_bit;
+ 			last_bit = next_bit;
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 0be37d7..d6204d1 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -2097,6 +2097,17 @@ xlog_recover_do_reg_buffer(
+ 		       ((uint)bit << XFS_BLF_SHIFT) + (nbits << XFS_BLF_SHIFT));
+ 
+ 		/*
++		 * The dirty regions logged in the buffer, even though
++		 * contiguous, may span multiple chunks. This is because the
++		 * dirty region may span a physical page boundary in a buffer
++		 * and hence be split into two separate vectors for writing into
++		 * the log. Hence we need to trim nbits back to the length of
++		 * the current region being copied out of the log.
++		 */
++		if (item->ri_buf[i].i_len < (nbits << XFS_BLF_SHIFT))
++			nbits = item->ri_buf[i].i_len >> XFS_BLF_SHIFT;
++
++		/*
+ 		 * Do a sanity check if this is a dquot buffer. Just checking
+ 		 * the first dquot in the buffer should do. XXXThis is
+ 		 * probably a good thing to do for other buf types also.
+-- 
+1.7.10.4
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============0694738977120951666==--
