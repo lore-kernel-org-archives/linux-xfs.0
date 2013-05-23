@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CAB4629DF8
-	for <xfs@oss.sgi.com>; Wed, 22 May 2013 22:46:21 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4B856AC001
-	for <xfs@oss.sgi.com>; Wed, 22 May 2013 20:46:18 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id D827F29DF8
+	for <xfs@oss.sgi.com>; Wed, 22 May 2013 22:51:21 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B4D4F30404E
+	for <xfs@oss.sgi.com>; Wed, 22 May 2013 20:51:21 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	2yG0Z3nlS1lyBTrR for <xfs@oss.sgi.com>;
-	Wed, 22 May 2013 20:46:16 -0700 (PDT)
-Date: Thu, 23 May 2013 13:46:11 +1000
+	LEqellCI6uTi4Fkc for <xfs@oss.sgi.com>;
+	Wed, 22 May 2013 20:51:17 -0700 (PDT)
+Date: Thu, 23 May 2013 13:51:15 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: 3.9.2: xfstests triggered panic
-Message-ID: <20130523034611.GX24543@dastard>
-References: <40971621.4497871.1369211701112.JavaMail.root@redhat.com>
-	<1805266998.4499261.1369211998387.JavaMail.root@redhat.com>
-	<20130522095300.GK29466@dastard>
-	<1483868349.4996990.1369279016162.JavaMail.root@redhat.com>
+Subject: Re: 3.9.3: Oops running xfstests
+Message-ID: <20130523035115.GY24543@dastard>
+References: <510292845.4997401.1369279175460.JavaMail.root@redhat.com>
+	<1985929268.4997720.1369279277543.JavaMail.root@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1483868349.4996990.1369279016162.JavaMail.root@redhat.com>
+In-Reply-To: <1985929268.4997720.1369279277543.JavaMail.root@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,80 +26,59 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: CAI Qian <caiqian@redhat.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, stable@vger.kernel.org, xfs@oss.sgi.com
+Cc: stable@vger.kernel.org, xfs@oss.sgi.com
 
-T24gV2VkLCBNYXkgMjIsIDIwMTMgYXQgMTE6MTY6NTZQTSAtMDQwMCwgQ0FJIFFpYW4gd3JvdGU6
-Cj4gLS0tLS0gT3JpZ2luYWwgTWVzc2FnZSAtLS0tLQo+ID4gRnJvbTogIkRhdmUgQ2hpbm5lciIg
-PGRhdmlkQGZyb21vcmJpdC5jb20+Cj4gPiBUbzogIkNBSSBRaWFuIiA8Y2FpcWlhbkByZWRoYXQu
-Y29tPgo+ID4gQ2M6ICJMS01MIiA8bGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZz4sIHN0YWJs
-ZUB2Z2VyLmtlcm5lbC5vcmcsIHhmc0Bvc3Muc2dpLmNvbQo+ID4gU2VudDogV2VkbmVzZGF5LCBN
-YXkgMjIsIDIwMTMgNTo1MzowMCBQTQo+ID4gU3ViamVjdDogUmU6IDMuOS4yOiB4ZnN0ZXN0cyB0
-cmlnZ2VyZWQgcGFuaWMKPiA+IAo+ID4gT24gV2VkLCBNYXkgMjIsIDIwMTMgYXQgMDQ6Mzk6NThB
-TSAtMDQwMCwgQ0FJIFFpYW4gd3JvdGU6Cj4gPiA+IFJlcHJvZHVjZWQgb24gYWxtb3N0IGFsbCBz
-MzkweCBndWVzdHMgYnkgcnVubmluZyB4ZnN0ZXN0cy4KPiA+ID4gCj4gPiA+IDE0NjM0LjM5NjY1
-OMKoIFhGUyAoZG0tMSk6IE1vdW50aW5nIEZpbGVzeXN0ZW0KPiA+ID4gMTQ2MzQuNTI1NTIywqgg
-WEZTIChkbS0xKTogRW5kaW5nIGNsZWFuIG1vdW50Cj4gPiA+IDE0NjQwLjQxMzAwN8KoICA8MDAw
-MDAwMDAwMDE3YzZkND7CqCBpZGxlX2JhbGFuY2UrMHgxYTAvMHgzNDAKPiA+ID4gMTQ2NDAuNDEz
-MDEwwqggIDwwMDAwMDAwMDAwNjMzMDNlPsKoIF9fc2NoZWR1bGUrMHhhMjIvMHhhZjAKPiA+ID4g
-MTQ2NDAuNDI4Mjc5wqggIDwwMDAwMDAwMDAwNjMwZGE2PsKoIHNjaGVkdWxlX3RpbWVvdXQrMHgx
-ODYvMHgyYzAKPiA+ID4gMTQ2NDAuNDI4Mjg5wqggIDwwMDAwMDAwMDAwMWNmODY0PsKoIHJjdV9n
-cF9rdGhyZWFkKzB4MWJjLzB4Mjk4Cj4gPiA+IDE0NjQwLjQyODMwMMKoICA8MDAwMDAwMDAwMDE1
-OGM1YT7CqCBrdGhyZWFkKzB4ZTYvMHhlYwo+ID4gPiAxNDY0MC40MjgzMDTCqCAgPDAwMDAwMDAw
-MDA2MzRkZTY+wqgga2VybmVsX3RocmVhZF9zdGFydGVyKzB4Ni8weGMKPiA+ID4gMTQ2NDAuNDI4
-MzA4wqggIDwwMDAwMDAwMDAwNjM0ZGUwPsKoIGtlcm5lbF90aHJlYWRfc3RhcnRlcisweDAvMHhj
-Cj4gPiA+IDE0NjQwLjQyODMxMcKoIExhc3QgQnJlYWtpbmctRXZlbnQtQWRkcmVzczoKPiA+ID4g
-MTQ2NDAuNDI4MzE0wqggIDwwMDAwMDAwMDAwMTZiZDc2PsKoIHdhbGtfdGdfdHJlZV9mcm9tKzB4
-M2EvMHhmNAo+ID4gPiAxNDY0MC40MjgzMTnCqCAgbGlzdF9hZGQgY29ycnVwdGlvbi4gbmV4dC0+
-cHJldiBzaG91bGQgYmUgcHJldgo+ID4gPiAoMDAwMDAwMDAwMDAwMDkxOAo+ID4gPiApLCBidXQg
-d2FzICAgICAgICAgICAobnVsbCkuIChuZXh0PSAgICAgICAgICAobnVsbCkpLgo+ID4gCj4gPiBX
-aGVyZSdzIFhGUyBpbiB0aGlzPyB3YWxrX3RnX3RyZWVfZnJvbSgpIGlzIHBhcnQgb2YgdGhlIHNj
-aGVkdWxlcgo+ID4gY29kZS4gVGhpcyBraW5kIG9mIGltcGxpZXMgYSBzdGFjayBjb3JydXB0aW9u
-Li4uLgo+ID4gCj4gPiA+IFNvbWV0aW1lcywgdGhpcyBwb3BzIHVwLAo+ID4gPiBbMTY5MDcuMjc1
-MDAyXSBXQVJOSU5HOiBhdCBrZXJuZWwvcmN1dHJlZS5jOjE5NjAKPiA+ID4gCj4gPiA+IG9yIHRo
-aXMsCj4gPiA+IDE1MzE2LjE1NDE3McKoIFhGUyAoZG0tMSk6IE1vdW50aW5nIEZpbGVzeXN0ZW0K
-PiA+ID4gMTUzMTYuMjU1Nzk2wqggWEZTIChkbS0xKTogRW5kaW5nIGNsZWFuIG1vdW50Cj4gPiA+
-IDE1MzIwLjM2NDI0NsKoICAgICAgICAgICAgMDAwMDAwMDAwMDYzNjdhMjogZTMxMGIwMDgwMDA0
-ICAgICAgICBsZwo+ID4gPiAlcjEsOCglcgo+ID4gPiAxMSkKPiA+ID4gMTUzMjAuMzY0MjQ5wqgg
-ICAgICAgICAgICAwMDAwMDAwMDAwNjM2N2E4OiA0MTEwMTAxMCAgICAgICAgICAgIGxhCj4gPiA+
-ICVyMSwxNiglCj4gPiA+IHIxKQo+ID4gPiAxNTMyMC4zNjQyNTHCqCAgICAgICAgICAgIDAwMDAw
-MDAwMDA2MzY3YWM6IGUzMzAxMDAwMDAwNCAgICAgICAgbGcKPiA+ID4gJXIzLDAoJXIKPiA+ID4g
-MSkKPiA+ID4gMTUzMjAuMzY0MjUywqggQ2FsbCBUcmFjZToKPiA+ID4gMTUzMjAuMzY0MjUywqgg
-TGFzdCBCcmVha2luZy1FdmVudC1BZGRyZXNzOgo+ID4gPiAxNTMyMC4zNjQyNTPCqCAg77+9IDww
-MDAwMDAwMDAwMDAwMDAwPsKoIEtlcm5lbCBzdGFjayBvdmVyZmxvdy4KPiA+ID4gMTUzMjAuMzY0
-MzA4wqggQ1BVOiAwIFRhaW50ZWQ6IEdGICAgICAgIFcgICAgMy45LjIgIzEKPiA+ID4gMTUzMjAu
-MzY0MzA5wqggUHJvY2VzcyByaHRzLXRlc3QtcnVubmUgKHBpZDogNjI1LCB0YXNrOiAwMDAwMDAw
-MDNkY2NjODkwLAo+ID4gPiBrc3A6IDAKPiA+IAo+ID4gLi4uLiBhbmQgdGhlcmUgeW91IGdvIC0g
-YSBzdGFjayBvdmVyZmxvdy4gWW91ciBrZXJuZWwgc3RhY2sgc2l6ZSBpcwo+ID4gdG9vIHNtYWxs
-Lgo+ID4gCj4gPiBJJ2Qgc3VnZ2VzdCB0aGF0IHlvdSBuZWVkIDE2ayBzdGFja3Mgb24gczM5MCAt
-IElJUkMgZXZlcnkgZnVuY3Rpb24KPiA+IGNhbGwgaGFzIDEyOCBieXRlIHN0YWNrIGZyYW1lLCBh
-bmQgdGhlcmUgYXJlIGNhbGwgY2hhaW5zIDcwLTgwCj4gPiBmdW5jdGlvbnMgZGVlcCBpbiB0aGUg
-c3RvcmFnZSBzdGFjay4uLgo+IEhtbSwgSSBhbSB1bnN1cmUgaG93IHRvIHNldCB0byAxNmsgc3Rh
-Y2sgdGhlcmUKCkFyZSB5b3UgYnVpbGQgYSA2NCBiaXQgczM5MCBrZXJuZWwgb3IgYSAzMiBiaXQg
-a2VybmVsPyAzMiBiaXQKa2VybmVscyBvbmx5IGhhdmUgYW4gOGsgc3RhY2sgc2l6ZSwgNjQgYml0
-IGtlcm5lbHMgYXJlIDE2ayAoc2VlCmFyY2gvczM5MC9NYWtlZmlsZSkuCgokIGdpdCBncmVwIFNU
-QUNLX1NJWkUgYXJjaC9zMzkwIHxoZWFkIC0yCmFyY2gvczM5MC9NYWtlZmlsZTpTVEFDS19TSVpF
-ICAgOj0gODE5MgphcmNoL3MzOTAvTWFrZWZpbGU6U1RBQ0tfU0laRSAgIDo9IDE2Mzg0CgpBcyBp
-dCBpcywgdGhlIHN0YWNrIGZyYW1lIHVzYWdlIGlzIHdvcnNlIHRoYW4gSSB0aG91Z2h0OgoKJCBn
-aXQgZ3JlcCBTVEFDS19GUkFNRV9PVkVSSEVBRCBhcmNoL3MzOTAgfGhlYWQgLTIKYXJjaC9zMzkw
-L2luY2x1ZGUvdWFwaS9hc20vcHRyYWNlLmg6I2RlZmluZSBTVEFDS19GUkFNRV9PVkVSSEVBRCA5
-NiAgICAgIC8qIHNpemUgb2YgbWluaW11bSBzdGFjayBmcmFtZSAqLwphcmNoL3MzOTAvaW5jbHVk
-ZS91YXBpL2FzbS9wdHJhY2UuaDojZGVmaW5lIFNUQUNLX0ZSQU1FX09WRVJIRUFEIDE2MCAgICAg
-IC8qIHNpemUgb2YgbWluaW11bSBzdGFjayBmcmFtZSAqLwoKT3ZlcmhlYWQgaXMgOTYgYnl0ZXMg
-Zm9yIDMyIGJpdCBhbmQgMTYwIGJ5dGVzIGZvciA2NCBiaXQuIFNvIDE2awpzdGFjayBzaXplIGlz
-IGdvaW5nIHRvIGhhdmUgYmlnIHRyb3VibGVzIHdpdGggYSA3MC04MCBmdW5jdGlvbiBkZWVwCmNh
-bGwgY2hhaW4uCgpBcyBmb3IgcG93ZXJwYzoKCmFyY2gvcG93ZXJwYy9pbmNsdWRlL2FzbS9wcGNf
-YXNtLmg6I2RlZmluZSBTVEFDS0ZSQU1FU0laRSAyNTYKClllYWgsIHNhbWUgaXNzdWUuCgpCdXQs
-IHNlcmlvdXNseSwgdGhlc2Ugc3RhY2sgdHJhY2VzIGFyZSBtZWFuaW5nbGVzcyB0byBhbnlvbmUg
-bm90CmZhbWlsaWFyIHdpdGggczM5MCBvciBwb3dlcjcgLSB0aGV5IGluZGljYXRlIGEgcHJvYmxl
-bSBkZXRlY3RlZAppbiB0aGUgaWRsZSBsb29wLCBub3Qgd2hlcmUgZXZlciB0aGUgc3RhY2sgb3Zl
-cnJhbi4KCkNhbiB5b3UgcGxlYXNlIHdvcmsgd2l0aCB0aGUgczM5MC9wb3dlcjcgcGVvcGxlIHRv
-IG9idGFpbiB3aGF0ZXZlcgpzdGFjayBpdCB3YXMgdGhhdCBvdmVyZmxvd2VkLCBhbmQgd2UgY2Fu
-IGdvIGZyb20gdGhlcmUuCgpDaGVlcnMsCgpEYXZlLgotLSAKRGF2ZSBDaGlubmVyCmRhdmlkQGZy
-b21vcmJpdC5jb20KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9t
-YWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On Wed, May 22, 2013 at 11:21:17PM -0400, CAI Qian wrote:
+> Fedora-19 based distro and LVM partitions.
+
+Cai: As I've asked previously please include all the relevant
+information about your test system and the workload it is running
+when the problem occurs.  Stack traces aren't any good to us in
+isolation, and just dumping them on us causes unnecessary round
+trips.
+
+http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+
+
+> [  304.898489] ============================================================================= 
+> [  304.898489] BUG kmalloc-4096 (Tainted: G      D     ): Padding overwritten. 0xffff8801fbeb7c28-0xffff8801fbeb7fff 
+> [  304.898490] ----------------------------------------------------------------------------- 
+> [  304.898490]  
+> [  304.898491] INFO: Slab 0xffffea0007efac00 objects=7 used=7 fp=0x          (null) flags=0x20000000004080 
+> [  304.898492] Pid: 357, comm: systemd-udevd Tainted: G    B D      3.9.3 #1 
+> [  304.898492] Call Trace: 
+> [  304.898495]  [<ffffffff81181ed2>] slab_err+0xc2/0xf0 
+> [  304.898497]  [<ffffffff8118176d>] ? init_object+0x3d/0x70 
+> [  304.898498]  [<ffffffff81181ff5>] slab_pad_check.part.41+0xf5/0x170 
+> [  304.898500]  [<ffffffff811bda63>] ? seq_read+0x2e3/0x3b0 
+> [  304.898501]  [<ffffffff811820e3>] check_slab+0x73/0x100 
+> [  304.898503]  [<ffffffff81606b50>] alloc_debug_processing+0x21/0x118 
+> [  304.898504]  [<ffffffff8160772f>] __slab_alloc+0x3b8/0x4a2 
+> [  304.898506]  [<ffffffff81161b57>] ? vma_link+0xb7/0xc0 
+> [  304.898508]  [<ffffffff811bda63>] ? seq_read+0x2e3/0x3b0 
+> [  304.898509]  [<ffffffff81184dd1>] kmem_cache_alloc_trace+0x1b1/0x200 
+> [  304.898510]  [<ffffffff811bda63>] seq_read+0x2e3/0x3b0 
+> [  304.898512]  [<ffffffff8119c56c>] vfs_read+0x9c/0x170 
+> [  304.898513]  [<ffffffff8119c939>] sys_read+0x49/0xa0 
+> [  304.898514]  [<ffffffff81619359>] system_call_fastpath+0x16/0x1b 
+
+That's something different, and indicates memory corruption is being
+seen as a result of something that is occuring through the /proc or
+/sys filesystems. Unrelated to XFS, I think...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
