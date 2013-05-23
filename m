@@ -1,21 +1,39 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 48BA729DF8
-	for <xfs@oss.sgi.com>; Thu, 23 May 2013 12:08:03 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 34B798F8073
-	for <xfs@oss.sgi.com>; Thu, 23 May 2013 10:08:00 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id zAghxEwRdJ6ikMbL for <xfs@oss.sgi.com>;
-	Thu, 23 May 2013 10:07:58 -0700 (PDT)
-Message-ID: <519E4CED.9020509@sandeen.net>
-Date: Thu, 23 May 2013 12:07:57 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: btrfs/309: sparse copy of a directory tree
-	on btrfs
-References: <519E4734.40904@redhat.com>
-In-Reply-To: <519E4734.40904@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 3310A7F37
+	for <xfs@oss.sgi.com>; Thu, 23 May 2013 13:09:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1FB4D304032
+	for <xfs@oss.sgi.com>; Thu, 23 May 2013 11:09:36 -0700 (PDT)
+Received: from e39.co.us.ibm.com (e39.co.us.ibm.com [32.97.110.160]) by
+	cuda.sgi.com with ESMTP id 1A61jVMPtSTazdI4 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 23 May 2013 11:09:33 -0700 (PDT)
+Received: from /spool/local
+	by e39.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	Violators will be prosecuted
+	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
+	Thu, 23 May 2013 12:09:32 -0600
+Received: from d03relay01.boulder.ibm.com (d03relay01.boulder.ibm.com
+	[9.17.195.226])
+	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id BA4261FF0074
+	for <xfs@oss.sgi.com>; Thu, 23 May 2013 12:04:21 -0600 (MDT)
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay01.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	r4NI9CAW118184 for <xfs@oss.sgi.com>; Thu, 23 May 2013 12:09:12 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id r4NI98OZ031112
+	for <xfs@oss.sgi.com>; Thu, 23 May 2013 12:09:09 -0600
+Subject: Re: deadlock with &log->l_cilp->xc_ctx_lock semaphone
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+In-Reply-To: <20130522234129.GN29466@dastard>
+References: <1369264363.10223.2994.camel@chandra-dt.ibm.com>
+	<20130522234129.GN29466@dastard>
+Date: Thu, 23 May 2013 13:09:02 -0500
+Message-ID: <1369332542.10223.5271.camel@chandra-dt.ibm.com>
+Mime-Version: 1.0
+Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,189 +46,75 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: Koen De Wit <koen.de.wit@oracle.com>, linux-btrfs <linux-btrfs@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: XFS mailing list <xfs@oss.sgi.com>
 
-This and the other reflink tests should all be:
+On Thu, 2013-05-23 at 09:41 +1000, Dave Chinner wrote:
+> On Wed, May 22, 2013 at 06:12:43PM -0500, Chandra Seetharaman wrote:
+> > Hello,
+> > 
+> > While testing and rearranging my pquota/gquota code, I stumbled on a
+> > xfs_shutdown() during a mount. But the mount just hung.
+> > 
+> > I debugged and found that it is in a code path where
+> > &log->l_cilp->xc_ctx_lock is first acquired in read mode and some levels
+> > down the same semaphore is being acquired in write mode causing a
+> > deadlock.
+> > 
+> > This is the stack:
+> > xfs_log_commit_cil -> acquires &log->l_cilp->xc_ctx_lock in read mode
+> >   xlog_print_tic_res
+> >     xfs_force_shutdown
+> >       xfs_log_force_umount
+> >         xlog_cil_force
+> >           xlog_cil_force_lsn
+> >             xlog_cil_push_foreground
+> >               xlog_cil_push - tries to acquire same semaphore in write mode
+> 
+> Which means you had a transaction reservation overrun. Is it
+> reproducable? iDo you have the output from xlog_print_tic_res()?
+> Because:
 
-From: Koen De Wit <koen.de.wit@oracle.com>
+Here it is:
 
-to maintain original authorship, sorry I forgot to add that on the patches
-in the middle.  Rich, if you can fix that up on commit it'd be
-great, unless I need to submit V2s then I can do it.
+May 23 10:48:52 test46 kernel: [   77.500728] XFS (sdh8): xlog_write: reservation summary:
+May 23 10:48:52 test46 kernel: [   77.500728]   trans type  = QM_SBCHANGE (26)
+May 23 10:48:52 test46 kernel: [   77.500728]   unit res    = 2740 bytes
+May 23 10:48:52 test46 kernel: [   77.500728]   current res = -48 bytes
+May 23 10:48:52 test46 kernel: [   77.500728]   total reg   = 0 bytes (o/flow = 0 bytes)
+May 23 10:48:52 test46 kernel: [   77.500728]   ophdrs      = 0 (ophdr space = 0 bytes)
+May 23 10:48:52 test46 kernel: [   77.500728]   ophdr + reg = 0 bytes
+May 23 10:48:52 test46 kernel: [   77.500728]   num regions = 0
+May 23 10:48:52 test46 kernel: [   77.500728]
 
-Koen, I haven't gone over all of them, will try to get the rest
-tidied up and resubmitted unless you want to - which would be
-just fine!
+Yes. I can readily reproduce the problem, but it is with my mangled up
+patchsets :). There is a small change that makes this problem reproduce
+consistently.
+> 
+> > xfs_trans_commit+0x79/0x270 [xfs]  
+> > xfs_qm_write_sb_changes+0x61/0x90 [xfs]
+> > xfs_qm_mount_quotas+0x82/0x180 [xfs]
+> > xfs_mountfs+0x5f6/0x6b0 [xfs]
+> 
+> This transaction only modifies the superblock, and it has a buffer
+> reservation for a superblock sized buffer, and hence should never
+> overrun.
+> 
+> IOWs, I'm ifar more concerned about the fact there was a
+> transaction overrun than they was a hang in the path that handles
 
--Eric
+As I mentioned above, it may be a manipulation of my patch entanglement.
 
-On 5/23/13 11:43 AM, Eric Sandeen wrote:
-> # Tests file clone functionality of btrfs ("reflinks") on directory trees.
-> #   - Create directory and subdirectory, each having one file
-> #   - Create 2 recursive reflinked copies of the tree
-> #   - Modify the original files
-> #   - Modify one of the copies
+> the overrun. The fact this hang has been there since 2.6.35 tells
+> you how rare transactions overruns are....
 > 
-> [sandeen: mostly cosmetic changes]
+> FWIW, the fix for the hang is to make xlog_print_tic_res() return an
+> error and have the caller handle the shutdown.
 > 
-> Signed-off-by: Koen De Wit <koen.de.wit@oracle.com>
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
+> Cheers,
 > 
-> Originally submitted as
-> xfstests: 298: sparse copy of a directory tree on btrfs
-> 
-> diff --git a/tests/btrfs/309 b/tests/btrfs/309
-> new file mode 100755
-> index 0000000..b3927ba
-> --- /dev/null
-> +++ b/tests/btrfs/309
-> @@ -0,0 +1,98 @@
-> +#! /bin/bash
-> +# FS QA Test No. btrfs/309
-> +#
-> +# Tests file clone functionality of btrfs ("reflinks") on directory trees.
-> +#   - Create directory and subdirectory, each having one file
-> +#   - Create 2 recursive reflinked copies of the tree
-> +#   - Modify the original files
-> +#   - Modify one of the copies
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2013, Oracle and/or its affiliates.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +
-> +seq=`basename $0`
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1    # failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +    cd /
-> +    rm -f $tmp.*
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. common/rc
-> +. common/filter
-> +
-> +# real QA test starts here
-> +_supported_fs btrfs
-> +_supported_os Linux
-> +
-> +_require_xfs_io_fiemap
-> +_require_cp_reflink
-> +
-> +TESTDIR1=$TEST_DIR/test-$seq
-> +rm -rf $TESTDIR1
-> +mkdir $TESTDIR1
-> +
-> +_checksum_files() {
-> +    for F in original/file1 original/subdir/file2 \
-> +                 copy1/file1 copy1/subdir/file2 \
-> +                 copy2/file1 copy2/subdir/file2
-> +        do
-> +            md5sum $TESTDIR1/$F | _filter_test_dir
-> +        done
-> +}
-> +
-> +rm -f $seqres.full
-> +
-> +mkdir $TESTDIR1/original
-> +mkdir $TESTDIR1/original/subdir
-> +
-> +echo "Create the original files and reflink dirs"
-> +$XFS_IO_PROG -F -f -c 'pwrite -S 0x61 0 9000' $TESTDIR1/original/file1  >> $seqres.full 2>&1
-> +$XFS_IO_PROG -F -f -c 'pwrite -S 0x62 0 11000' $TESTDIR1/original/subdir/file2  >> $seqres.full 2>&1
-> +cp --recursive --reflink $TESTDIR1/original $TESTDIR1/copy1
-> +cp --recursive --reflink $TESTDIR1/copy1 $TESTDIR1/copy2
-> +
-> +_verify_reflink $TESTDIR1/original/file1 $TESTDIR1/copy1/file1
-> +_verify_reflink $TESTDIR1/original/subdir/file2 $TESTDIR1/copy1/subdir/file2
-> +_verify_reflink $TESTDIR1/original/file1 $TESTDIR1/copy2/file1
-> +_verify_reflink $TESTDIR1/original/subdir/file2 $TESTDIR1/copy2/subdir/file2
-> +
-> +echo "Original md5sums:"
-> +_checksum_files
-> +
-> +echo "Overwrite original/file1 and original/subdir/file2 with new data"
-> +$XFS_IO_PROG -c 'pwrite -S 0x63 0 13000' $TESTDIR1/original/file1  >> $seqres.full 2>&1
-> +$XFS_IO_PROG -c 'pwrite -S 0x64 5000 1000'  $TESTDIR1/original/subdir/file2 >> $seqres.full 2>&1
-> +echo "md5sums now:"
-> +_checksum_files
-> +
-> +echo "Overwrite copy1/file1 and copy1/subdir/file2 with new data"
-> +$XFS_IO_PROG -c 'pwrite -S 0x65 0 9000' $TESTDIR1/copy1/file1  >> $seqres.full 2>&1
-> +$XFS_IO_PROG -c 'pwrite -S 0x66 5000 25000' $TESTDIR1/copy1/subdir/file2  >> $seqres.full 2>&1
-> +echo "md5sums now:"
-> +_checksum_files
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/btrfs/309.out b/tests/btrfs/309.out
-> new file mode 100644
-> index 0000000..93197d8
-> --- /dev/null
-> +++ b/tests/btrfs/309.out
-> @@ -0,0 +1,25 @@
-> +QA output created by 309
-> +Create the original files and reflink dirs
-> +Original md5sums:
-> +42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-309/original/file1
-> +ca390545f0aedb54b808d6128c56a7dd  TEST_DIR/test-309/original/subdir/file2
-> +42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-309/copy1/file1
-> +ca390545f0aedb54b808d6128c56a7dd  TEST_DIR/test-309/copy1/subdir/file2
-> +42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-309/copy2/file1
-> +ca390545f0aedb54b808d6128c56a7dd  TEST_DIR/test-309/copy2/subdir/file2
-> +Overwrite original/file1 and original/subdir/file2 with new data
-> +md5sums now:
-> +260f6785c0537fd12582dcae28a3c1a9  TEST_DIR/test-309/original/file1
-> +b8d91fb600f6f2191f2ba66665374860  TEST_DIR/test-309/original/subdir/file2
-> +42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-309/copy1/file1
-> +ca390545f0aedb54b808d6128c56a7dd  TEST_DIR/test-309/copy1/subdir/file2
-> +42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-309/copy2/file1
-> +ca390545f0aedb54b808d6128c56a7dd  TEST_DIR/test-309/copy2/subdir/file2
-> +Overwrite copy1/file1 and copy1/subdir/file2 with new data
-> +md5sums now:
-> +260f6785c0537fd12582dcae28a3c1a9  TEST_DIR/test-309/original/file1
-> +b8d91fb600f6f2191f2ba66665374860  TEST_DIR/test-309/original/subdir/file2
-> +b20229a003e3985c4b0e6806abcd6642  TEST_DIR/test-309/copy1/file1
-> +b815b24069db14e0a3a07169fd563e93  TEST_DIR/test-309/copy1/subdir/file2
-> +42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-309/copy2/file1
-> +ca390545f0aedb54b808d6128c56a7dd  TEST_DIR/test-309/copy2/subdir/file2
-> diff --git a/tests/btrfs/group b/tests/btrfs/group
-> index f24628c..a5bd6aa 100644
-> --- a/tests/btrfs/group
-> +++ b/tests/btrfs/group
-> @@ -10,3 +10,4 @@
->  284 auto
->  307 auto quick
->  308 auto quick reflink
-> +309 auto quick reflink
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+> Dave.
+
 
 _______________________________________________
 xfs mailing list
