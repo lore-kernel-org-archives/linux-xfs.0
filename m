@@ -1,19 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id ED9D87F37
-	for <xfs@oss.sgi.com>; Thu, 23 May 2013 12:06:36 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CA64130407B
-	for <xfs@oss.sgi.com>; Thu, 23 May 2013 10:06:33 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id WEWsrTQMJu093UL0 for
-	<xfs@oss.sgi.com>; Thu, 23 May 2013 10:06:33 -0700 (PDT)
-Message-ID: <519E4C96.3000901@redhat.com>
-Date: Thu, 23 May 2013 12:06:30 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 48BA729DF8
+	for <xfs@oss.sgi.com>; Thu, 23 May 2013 12:08:03 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 34B798F8073
+	for <xfs@oss.sgi.com>; Thu, 23 May 2013 10:08:00 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id zAghxEwRdJ6ikMbL for <xfs@oss.sgi.com>;
+	Thu, 23 May 2013 10:07:58 -0700 (PDT)
+Message-ID: <519E4CED.9020509@sandeen.net>
+Date: Thu, 23 May 2013 12:07:57 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH] xfstests: btrfs/311: sparse copy between different
-	filesystems/mountpoints on btrfs
+Subject: Re: [PATCH] xfstests: btrfs/309: sparse copy of a directory tree
+	on btrfs
+References: <519E4734.40904@redhat.com>
+In-Reply-To: <519E4734.40904@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,171 +28,189 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>, linux-btrfs <linux-btrfs@vger.kernel.org>, Koen De Wit <koen.de.wit@oracle.com>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: Koen De Wit <koen.de.wit@oracle.com>, linux-btrfs <linux-btrfs@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+
+This and the other reflink tests should all be:
 
 From: Koen De Wit <koen.de.wit@oracle.com>
 
-# Check if creating a sparse copy ("reflink") of a file on btrfs
-# expectedly fails when it's done between different filesystems or
-# different mount points of the same filesystem.
-#
-# For both situations, these actions are executed:
-#    - Copy a file with the reflink=auto option.
-#      A normal copy should be created.
-#    - Copy a file with the reflink=always option. Should result in error,
-#      no file should be created.
+to maintain original authorship, sorry I forgot to add that on the patches
+in the middle.  Rich, if you can fix that up on commit it'd be
+great, unless I need to submit V2s then I can do it.
 
-[sandeen: mostly cosmetic changes]
+Koen, I haven't gone over all of them, will try to get the rest
+tidied up and resubmitted unless you want to - which would be
+just fine!
 
-Signed-off-by: Koen De Wit <koen.de.wit@oracle.com>
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+-Eric
 
-Originally submitted as:
-xfstests: 301: sparse copy between different filesystems/mountpoints on btrfs
-
-diff --git a/tests/btrfs/311 b/tests/btrfs/311
-new file mode 100755
-index 0000000..9256e7a
---- /dev/null
-+++ b/tests/btrfs/311
-@@ -0,0 +1,106 @@
-+#! /bin/bash
-+# FS QA Test No. 311
-+#
-+# Check if creating a sparse copy ("reflink") of a file on btrfs
-+# expectedly fails when it's done between different filesystems or
-+# different mount points of the same filesystem.
-+#
-+# For both situations, these actions are executed:
-+#    - Copy a file with the reflink=auto option.
-+#      A normal copy should be created.
-+#    - Copy a file with the reflink=always option. Should result in error,
-+#      no file should be created.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2013, Oracle and/or its affiliates.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+seq=`basename $0`
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    umount $SCRATCH_MNT &>/dev/null
-+    cd /
-+    rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_fs btrfs
-+_supported_os Linux
-+
-+_require_scratch
-+_require_cp_reflink
-+
-+SOURCE_DIR=$TEST_DIR/test-$seq
-+CROSS_DEV_DIR=$SCRATCH_MNT/test-$seq
-+# mount point & target for twice-mounted device
-+TEST_DIR2=$TEST_DIR/mount2
-+DUAL_MOUNT_DIR=$SCRATCH_MNT/test-bis-$seq
-+
-+rm -rf $SOURCE_DIR
-+mkdir $SOURCE_DIR
-+
-+rm -f $seqres.full
-+
-+_scratch_mkfs
-+$XFS_IO_PROG -f -c 'pwrite -S 0x61 0 9000' $SOURCE_DIR/original >> $seqres.fll
-+
-+_filter_testdirs()
-+{
-+	_filter_test_dir | _filter_scratch
-+}
-+
-+_create_reflinks_to()
-+{
-+    # auto reflink, should fall back to non-reflink
-+    rm -rf $1; mkdir $1
-+    echo "reflink=auto:"
-+    cp --reflink=auto $SOURCE_DIR/original $1/copy
-+    md5sum $SOURCE_DIR/original | _filter_testdirs
-+    md5sum $1/copy | _filter_testdirs
-+
-+    # always reflink, should fail outright
-+    rm -rf $1; mkdir $1
-+    echo "reflink=always:"
-+    cp --reflink=always $SOURCE_DIR/original $1/copyfail 2>&1 | _filter_testdirs
-+
-+    # The failed target actually gets created by cp:
-+    ls $1/copyfail | _filter_testdirs
-+}
-+
-+echo "test reflinks across different devices"
-+_scratch_mount
-+_create_reflinks_to $CROSS_DEV_DIR
-+_scratch_unmount
-+
-+echo "test reflinks across different mountpoints of same device"
-+mount $TEST_DEV $SCRATCH_MNT || _fail "Couldn't double-mount $TEST_DEV"
-+_create_reflinks_to $DUAL_MOUNT_DIR
-+umount $SCRATCH_MNT
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/btrfs/311.out b/tests/btrfs/311.out
-new file mode 100644
-index 0000000..210727b
---- /dev/null
-+++ b/tests/btrfs/311.out
-@@ -0,0 +1,15 @@
-+QA output created by 311
-+test reflinks across different devices
-+reflink=auto:
-+42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-311/original
-+42d69d1a6d333a7ebdf64792a555e392  SCRATCH_MNT/test-311/copy
-+reflink=always:
-+cp: failed to clone `SCRATCH_MNT/test-311/copyfail': Invalid cross-device link
-+SCRATCH_MNT/test-311/copyfail
-+test reflinks across different mountpoints of same device
-+reflink=auto:
-+42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-311/original
-+42d69d1a6d333a7ebdf64792a555e392  SCRATCH_MNT/test-bis-311/copy
-+reflink=always:
-+cp: failed to clone `SCRATCH_MNT/test-bis-311/copyfail': Invalid cross-device link
-+SCRATCH_MNT/test-bis-311/copyfail
-diff --git a/tests/btrfs/group b/tests/btrfs/group
-index bd624c4..c897118 100644
---- a/tests/btrfs/group
-+++ b/tests/btrfs/group
-@@ -12,3 +12,4 @@
- 308 auto quick reflink
- 309 auto quick reflink
- 310 auto quick reflink
-+311 auto quick reflink
+On 5/23/13 11:43 AM, Eric Sandeen wrote:
+> # Tests file clone functionality of btrfs ("reflinks") on directory trees.
+> #   - Create directory and subdirectory, each having one file
+> #   - Create 2 recursive reflinked copies of the tree
+> #   - Modify the original files
+> #   - Modify one of the copies
+> 
+> [sandeen: mostly cosmetic changes]
+> 
+> Signed-off-by: Koen De Wit <koen.de.wit@oracle.com>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> Originally submitted as
+> xfstests: 298: sparse copy of a directory tree on btrfs
+> 
+> diff --git a/tests/btrfs/309 b/tests/btrfs/309
+> new file mode 100755
+> index 0000000..b3927ba
+> --- /dev/null
+> +++ b/tests/btrfs/309
+> @@ -0,0 +1,98 @@
+> +#! /bin/bash
+> +# FS QA Test No. btrfs/309
+> +#
+> +# Tests file clone functionality of btrfs ("reflinks") on directory trees.
+> +#   - Create directory and subdirectory, each having one file
+> +#   - Create 2 recursive reflinked copies of the tree
+> +#   - Modify the original files
+> +#   - Modify one of the copies
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2013, Oracle and/or its affiliates.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +
+> +seq=`basename $0`
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1    # failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +    cd /
+> +    rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. common/rc
+> +. common/filter
+> +
+> +# real QA test starts here
+> +_supported_fs btrfs
+> +_supported_os Linux
+> +
+> +_require_xfs_io_fiemap
+> +_require_cp_reflink
+> +
+> +TESTDIR1=$TEST_DIR/test-$seq
+> +rm -rf $TESTDIR1
+> +mkdir $TESTDIR1
+> +
+> +_checksum_files() {
+> +    for F in original/file1 original/subdir/file2 \
+> +                 copy1/file1 copy1/subdir/file2 \
+> +                 copy2/file1 copy2/subdir/file2
+> +        do
+> +            md5sum $TESTDIR1/$F | _filter_test_dir
+> +        done
+> +}
+> +
+> +rm -f $seqres.full
+> +
+> +mkdir $TESTDIR1/original
+> +mkdir $TESTDIR1/original/subdir
+> +
+> +echo "Create the original files and reflink dirs"
+> +$XFS_IO_PROG -F -f -c 'pwrite -S 0x61 0 9000' $TESTDIR1/original/file1  >> $seqres.full 2>&1
+> +$XFS_IO_PROG -F -f -c 'pwrite -S 0x62 0 11000' $TESTDIR1/original/subdir/file2  >> $seqres.full 2>&1
+> +cp --recursive --reflink $TESTDIR1/original $TESTDIR1/copy1
+> +cp --recursive --reflink $TESTDIR1/copy1 $TESTDIR1/copy2
+> +
+> +_verify_reflink $TESTDIR1/original/file1 $TESTDIR1/copy1/file1
+> +_verify_reflink $TESTDIR1/original/subdir/file2 $TESTDIR1/copy1/subdir/file2
+> +_verify_reflink $TESTDIR1/original/file1 $TESTDIR1/copy2/file1
+> +_verify_reflink $TESTDIR1/original/subdir/file2 $TESTDIR1/copy2/subdir/file2
+> +
+> +echo "Original md5sums:"
+> +_checksum_files
+> +
+> +echo "Overwrite original/file1 and original/subdir/file2 with new data"
+> +$XFS_IO_PROG -c 'pwrite -S 0x63 0 13000' $TESTDIR1/original/file1  >> $seqres.full 2>&1
+> +$XFS_IO_PROG -c 'pwrite -S 0x64 5000 1000'  $TESTDIR1/original/subdir/file2 >> $seqres.full 2>&1
+> +echo "md5sums now:"
+> +_checksum_files
+> +
+> +echo "Overwrite copy1/file1 and copy1/subdir/file2 with new data"
+> +$XFS_IO_PROG -c 'pwrite -S 0x65 0 9000' $TESTDIR1/copy1/file1  >> $seqres.full 2>&1
+> +$XFS_IO_PROG -c 'pwrite -S 0x66 5000 25000' $TESTDIR1/copy1/subdir/file2  >> $seqres.full 2>&1
+> +echo "md5sums now:"
+> +_checksum_files
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/btrfs/309.out b/tests/btrfs/309.out
+> new file mode 100644
+> index 0000000..93197d8
+> --- /dev/null
+> +++ b/tests/btrfs/309.out
+> @@ -0,0 +1,25 @@
+> +QA output created by 309
+> +Create the original files and reflink dirs
+> +Original md5sums:
+> +42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-309/original/file1
+> +ca390545f0aedb54b808d6128c56a7dd  TEST_DIR/test-309/original/subdir/file2
+> +42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-309/copy1/file1
+> +ca390545f0aedb54b808d6128c56a7dd  TEST_DIR/test-309/copy1/subdir/file2
+> +42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-309/copy2/file1
+> +ca390545f0aedb54b808d6128c56a7dd  TEST_DIR/test-309/copy2/subdir/file2
+> +Overwrite original/file1 and original/subdir/file2 with new data
+> +md5sums now:
+> +260f6785c0537fd12582dcae28a3c1a9  TEST_DIR/test-309/original/file1
+> +b8d91fb600f6f2191f2ba66665374860  TEST_DIR/test-309/original/subdir/file2
+> +42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-309/copy1/file1
+> +ca390545f0aedb54b808d6128c56a7dd  TEST_DIR/test-309/copy1/subdir/file2
+> +42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-309/copy2/file1
+> +ca390545f0aedb54b808d6128c56a7dd  TEST_DIR/test-309/copy2/subdir/file2
+> +Overwrite copy1/file1 and copy1/subdir/file2 with new data
+> +md5sums now:
+> +260f6785c0537fd12582dcae28a3c1a9  TEST_DIR/test-309/original/file1
+> +b8d91fb600f6f2191f2ba66665374860  TEST_DIR/test-309/original/subdir/file2
+> +b20229a003e3985c4b0e6806abcd6642  TEST_DIR/test-309/copy1/file1
+> +b815b24069db14e0a3a07169fd563e93  TEST_DIR/test-309/copy1/subdir/file2
+> +42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-309/copy2/file1
+> +ca390545f0aedb54b808d6128c56a7dd  TEST_DIR/test-309/copy2/subdir/file2
+> diff --git a/tests/btrfs/group b/tests/btrfs/group
+> index f24628c..a5bd6aa 100644
+> --- a/tests/btrfs/group
+> +++ b/tests/btrfs/group
+> @@ -10,3 +10,4 @@
+>  284 auto
+>  307 auto quick
+>  308 auto quick reflink
+> +309 auto quick reflink
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
