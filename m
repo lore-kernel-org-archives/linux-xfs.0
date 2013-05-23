@@ -1,16 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A27AD7F3F
-	for <xfs@oss.sgi.com>; Thu, 23 May 2013 10:37:59 -0500 (CDT)
-Received: from gulag1.americas.sgi.com (gulag1.americas.sgi.com
-	[128.162.236.41])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3CEA9AC004
-	for <xfs@oss.sgi.com>; Thu, 23 May 2013 08:37:59 -0700 (PDT)
-Message-Id: <20130523143005.713972968@sgi.com>
-From: rjohnston@sgi.com
-Subject: [PATCH V3] xfsprogs: libhandle/Makefile - fix make install-dev
-References: <20130522205819.586978467@gulag1.americas.sgi.com>
-Date: Thu, 23 May 2013 10:37:59 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 38CC87F37
+	for <xfs@oss.sgi.com>; Thu, 23 May 2013 10:47:47 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B48EAAC003
+	for <xfs@oss.sgi.com>; Thu, 23 May 2013 08:47:46 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id jGupTrwUCJlWOhlv for <xfs@oss.sgi.com>;
+	Thu, 23 May 2013 08:47:45 -0700 (PDT)
+Message-ID: <519E3A20.7060102@sandeen.net>
+Date: Thu, 23 May 2013 10:47:44 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: [PATCH, V2] xfstests: fail test if it causes a kernel taint
+References: <51916146.80308@redhat.com>
+In-Reply-To: <51916146.80308@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,73 +23,83 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-Both make install and make install-dev are required to install all the
-pieces of libhandle.
+This modification will fail a test if it introduces one of
+a handful of "serious" kernel taints.  I mask on a few taint
+values because using an out of tree module or a non-GPL module
+should never fail a test, for example.
 
-  # rm -f /lib64/libhandle* /usr/lib64/libhandle*
-  # make install    
-  # ls -l /lib64/libhandle* /usr/lib64/libhandle*
-  ls: cannot access /usr/lib64/libhandle*: No such file or directory
-  lrwxrwxrwx 1 root root /lib64/libhandle.so.1 -> libhandle.so.1.0.3
-  -rwxr-xr-x 1 root root /lib64/libhandle.so.1.0.3
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-  # rm -f /lib64/libhandle* /usr/lib64/libhandle*
-  # make install-dev    
-  # ls -l /lib64/libhandle* /usr/lib64/libhandle*
-  lrwxrwxrwx 1 root root /lib64/libhandle.a -> /usr/lib64/libhandle.a
-  lrwxrwxrwx 1 root root /lib64/libhandle.la -> /usr/lib64/libhandle.la
-  lrwxrwxrwx 1 root root /lib64/libhandle.so -> libhandle.so.1
-  -rw-r--r-- 1 root root /usr/lib64/libhandle.a
-  -rw-r--r-- 1 root root /usr/lib64/libhandle.la
-  lrwxrwxrwx 1 root root /usr/lib64/libhandle.so -> /lib64/libhandle.so
+Tested by modifying tests/generic/001 to modprobe a "staging"
+driver, and adding the staging taint bit (1024) to the mask.
 
-Fix the libtool macros INSTALL_LTLIB and INSTALL_LTLIB_DEV.
+V2: fail test by modifying the test output so the golden
+output check will fail, per dchinner's suggestion.
 
-Signed-off-by: Rich Johnston <rjohnston@sgi.com>
---
-V1->V2
-As Dave pointed out removing the ltdepend would prevent proper rebuilds.
-Don't just make the install work ;) correct the dependancy for install-dev.
-
-V2->V3
-Not a libtool expert, make the change to the libtool macros instead of
-cluttering up the Makefile.
-
-diff --git a/include/buildmacros b/include/buildmacros
-index 7a01880..98d25af 100644
---- a/include/buildmacros
-+++ b/include/buildmacros
-@@ -54,13 +54,7 @@ LTLDFLAGS += -rpath $(PKG_ROOT_LIB_DIR)
- LTLDFLAGS += -version-info $(LTVERSION)
- endif
+diff --git a/check b/check
+index a79747e..7ba6696 100755
+--- a/check
++++ b/check
+@@ -446,6 +446,11 @@ do
+ 	fi
+ 	rm -f core $seqres.notrun
  
--ifeq ($(ENABLE_SHARED),yes)
--INSTALL_LTLIB = \
--       cd $(TOPDIR)/$(LIBNAME)/.libs; \
--       ../$(INSTALL) -m 755 -d $(PKG_ROOT_LIB_DIR); \
--       ../$(INSTALL) -m 755 -T so_dot_version $(LIBNAME).lai $(PKG_ROOT_LIB_DIR); \
--       ../$(INSTALL) -T so_dot_current $(LIBNAME).lai $(PKG_ROOT_LIB_DIR)
--endif
-+INSTALL_LTLIB = $(INSTALL_LTLIB_DEV)
++	if [ "$HOSTOS" == "Linux" ]; then
++		tainted=`sysctl -n kernel.tainted`
++		let "tainted &= $TAINT_FAIL"
++	fi
++
+ 	start=`_wallclock`
+ 	$timestamp && echo -n "	["`date "+%T"`"]"
+ 	[ ! -x $seq ] && chmod u+x $seq # ensure we can run it
+@@ -458,6 +463,19 @@ do
+ 	_fix_malloc <$tmp.rawout >$tmp.out
+ 	rm -f $tmp.rawout
  
- # Libtool thinks the static and shared libs should be in the same dir, so
- # make the static lib appear in the place we chose as rpath (using the two
-@@ -75,6 +69,8 @@ INSTALL_LTLIB_DEV = \
-        ../$(INSTALL) -m 644 -T old_lib $(LIBNAME).lai $(PKG_LIB_DIR); \
-        ../$(INSTALL) -m 644 $(LIBNAME).lai $(PKG_LIB_DIR)/$(LIBNAME).la ; \
-        ../$(INSTALL) -m 755 -d $(PKG_ROOT_LIB_DIR); \
-+       ../$(INSTALL) -m 755 -T so_dot_version $(LIBNAME).lai $(PKG_ROOT_LIB_DIR); \
-+       ../$(INSTALL) -T so_dot_current $(LIBNAME).lai $(PKG_ROOT_LIB_DIR); \
-        ../$(INSTALL) -T so_base $(LIBNAME).lai $(PKG_ROOT_LIB_DIR); \
-        if test "x$(PKG_LIB_DIR)" != "x$(PKG_ROOT_LIB_DIR)" ; then \
-        ../$(INSTALL) -S $(PKG_LIB_DIR)/$(LIBNAME).a $(PKG_ROOT_LIB_DIR)/$(LIBNAME).a; \
++	# See if this run tainted the kernel due to oops, etc
++	# If so, break the test via the golden output file
++	if [ "$HOSTOS" == "Linux" ]
++	then
++		tainted2=`sysctl -n kernel.tainted`
++		let "tainted2 &= $TAINT_FAIL"
++		if [ "$tainted" != "$tainted2" ]
++		then
++			echo " Kernel taint changed from $tainted to $tainted2." >> $tmp.out
++			echo " See dmesg for details." >> $tmp.out
++		fi
++	fi
++
+ 	if [ -f core ]
+ 	then
+ 	    echo -n " [dumped core]"
+diff --git a/common/config b/common/config
+index 67c1498..6483ded 100644
+--- a/common/config
++++ b/common/config
+@@ -82,6 +82,15 @@ export PWD=`pwd`
+ export MALLOCLIB=${MALLOCLIB:=/usr/lib/libefence.a}
+ export LOCAL_CONFIGURE_OPTIONS=${LOCAL_CONFIGURE_OPTIONS:=--enable-readline=yes}
+ 
++# kernel taint values on Linux (from kernel.taint sysctl)
++TAINT_MACHINE_CHECK=16
++TAINT_BAD_PAGE=32
++TAINT_DIED=128
++TAINT_WARNING=512
++# If a test introduces one of these taints we consider it to have failed
++let "TAINT_FAIL=( $TAINT_MACHINE_CHECK | $TAINT_BAD_PAGE | $TAINT_DIED | $TAINT_WARNING )"
++export TAINT_FAIL
++
+ # $1 = prog to look for, $2* = default pathnames if not found in $PATH
+ set_prog_path()
+ {
 
 _______________________________________________
 xfs mailing list
