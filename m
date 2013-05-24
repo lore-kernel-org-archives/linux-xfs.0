@@ -1,36 +1,38 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 542C429DF8
-	for <xfs@oss.sgi.com>; Fri, 24 May 2013 17:09:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 42CB630404E
-	for <xfs@oss.sgi.com>; Fri, 24 May 2013 15:09:09 -0700 (PDT)
-Received: from e9.ny.us.ibm.com (e9.ny.us.ibm.com [32.97.182.139]) by
-	cuda.sgi.com with ESMTP id HtY29KGjWNgC0Fn8 (version=TLSv1
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 125DC29DF8
+	for <xfs@oss.sgi.com>; Fri, 24 May 2013 17:17:49 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 969A9AC002
+	for <xfs@oss.sgi.com>; Fri, 24 May 2013 15:17:45 -0700 (PDT)
+Received: from e39.co.us.ibm.com (e39.co.us.ibm.com [32.97.110.160]) by
+	cuda.sgi.com with ESMTP id nXUbbkHJ62IPNiuI (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 24 May 2013 15:09:08 -0700 (PDT)
+	Fri, 24 May 2013 15:17:44 -0700 (PDT)
 Received: from /spool/local
-	by e9.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	by e39.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
 	Violators will be prosecuted
 	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
-	Fri, 24 May 2013 18:09:07 -0400
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id ADE3C6E803A
-	for <xfs@oss.sgi.com>; Fri, 24 May 2013 18:09:02 -0400 (EDT)
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	r4OM96bL286306 for <xfs@oss.sgi.com>; Fri, 24 May 2013 18:09:06 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
-	r4OM94pe000718 for <xfs@oss.sgi.com>; Fri, 24 May 2013 19:09:05 -0300
-Subject: Re: [PATCH v8 3/5] xfs: Start using pquotaino from the superblock
+	Fri, 24 May 2013 16:17:44 -0600
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id E671BC90050
+	for <xfs@oss.sgi.com>; Fri, 24 May 2013 18:17:40 -0400 (EDT)
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	r4OMHeGS344448 for <xfs@oss.sgi.com>; Fri, 24 May 2013 18:17:41 -0400
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id r4OMHdnc032304
+	for <xfs@oss.sgi.com>; Fri, 24 May 2013 16:17:40 -0600
+Subject: Re: [PATCH v8 5/5] xfs: Use new qs_pquota field in fs_quota_stat
+	for Q_XGETQSTAT
 From: Chandra Seetharaman <sekharan@us.ibm.com>
-In-Reply-To: <20130517044604.GO24635@dastard>
+In-Reply-To: <20130517051441.GQ24635@dastard>
 References: <1368220889-25188-1-git-send-email-sekharan@us.ibm.com>
-	<1368220889-25188-4-git-send-email-sekharan@us.ibm.com>
-	<20130517044604.GO24635@dastard>
-Date: Fri, 24 May 2013 17:09:03 -0500
-Message-ID: <1369433343.9551.958.camel@chandra-dt.ibm.com>
+	<1368220889-25188-6-git-send-email-sekharan@us.ibm.com>
+	<20130517051441.GQ24635@dastard>
+Date: Fri, 24 May 2013 17:17:39 -0500
+Message-ID: <1369433859.9551.968.camel@chandra-dt.ibm.com>
 Mime-Version: 1.0
 Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -48,326 +50,95 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, 2013-05-17 at 14:46 +1000, Dave Chinner wrote:
-> On Fri, May 10, 2013 at 04:21:27PM -0500, Chandra Seetharaman wrote:
-> > Define a macro to check if the superblock has pquotino.
+On Fri, 2013-05-17 at 15:14 +1000, Dave Chinner wrote:
+> On Fri, May 10, 2013 at 04:21:29PM -0500, Chandra Seetharaman wrote:
+> > For the Q_XGETQSTAT quota command, if the new version of fs_quota_stat
+> > data structure is used, fill the project quota information.
 > > 
-> > Keep backward compatibilty by alowing mount of older superblock
-> > with no separate pquota inode.
-> ....
-> 
-> > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> > index 1b79906..233f88e 100644
-> > --- a/fs/xfs/xfs_mount.c
-> > +++ b/fs/xfs/xfs_mount.c
-> > @@ -601,21 +601,6 @@ xfs_sb_from_disk(
-> >  	to->sb_uquotino = be64_to_cpu(from->sb_uquotino);
-> >  	to->sb_gquotino = be64_to_cpu(from->sb_gquotino);
-> >  	to->sb_qflags = be16_to_cpu(from->sb_qflags);
-> > -	if ((to->sb_qflags & (XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD)) &&
-> > -			(to->sb_qflags & (XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD |
-> > -				XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD))) {
-> > -		xfs_notice(NULL, "Super block has XFS_OQUOTA bits along with "
-> > -		    "XFS_PQUOTA and/or XFS_GQUOTA bits. Quota check forced.\n");
-> > -		force_quota_check = true;
+> > Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+> > ---
+> >  fs/xfs/xfs_qm_syscalls.c |   39 +++++++++++++++++++++++++--------------
+> >  1 files changed, 25 insertions(+), 14 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+> > index c27b0e4..7c5876b 100644
+> > --- a/fs/xfs/xfs_qm_syscalls.c
+> > +++ b/fs/xfs/xfs_qm_syscalls.c
+> > @@ -420,20 +420,14 @@ xfs_qm_scall_getqstat(
+> >  	bool                    tempgqip = false;
+> >  	bool                    temppqip = false;
+> >  
+> > -	if (!xfs_sb_version_hasquota(&mp->m_sb)) {
+> > -		out->qs_uquota.qfs_ino = NULLFSINO;
+> > -		out->qs_gquota.qfs_ino = NULLFSINO;
+> > -		out->qs_pquota.qfs_ino = NULLFSINO;
+> > +	out->qs_uquota.qfs_ino = NULLFSINO;
+> > +	out->qs_gquota.qfs_ino = NULLFSINO;
+> > +	out->qs_pquota.qfs_ino = NULLFSINO;
+> > +
+> > +	if (!xfs_sb_version_hasquota(&mp->m_sb))
+> >  		return (0);
 > > -	}
-> > -	if (to->sb_qflags & XFS_OQUOTA_ENFD)
-> > -		to->sb_qflags |= (to->sb_qflags & XFS_PQUOTA_ACCT) ?
-> > -					XFS_PQUOTA_ENFD : XFS_GQUOTA_ENFD;
-> > -	if (to->sb_qflags & XFS_OQUOTA_CHKD)
-> > -		to->sb_qflags |= (to->sb_qflags & XFS_PQUOTA_ACCT) ?
-> > -					XFS_PQUOTA_CHKD : XFS_GQUOTA_CHKD;
-> > -	to->sb_qflags &= ~(XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD);
+> >  	out->qs_flags = (__uint16_t) xfs_qm_export_flags(mp->m_qflags &
+> > -							(XFS_ALL_QUOTA_ACCT|
+> > -							 XFS_ALL_QUOTA_ENFD));
+> > -	out->qs_uquota.qfs_ino = mp->m_sb.sb_uquotino;
+> > -	out->qs_gquota.qfs_ino = mp->m_sb.sb_gquotino;
+> > -	if (&out->qs_gquota != &out->qs_pquota)
+> > -		out->qs_pquota.qfs_ino = mp->m_sb.sb_pquotino;
 > > -
-> >  	to->sb_flags = from->sb_flags;
-> >  	to->sb_shared_vn = from->sb_shared_vn;
-> >  	to->sb_inoalignmt = be32_to_cpu(from->sb_inoalignmt);
-> > @@ -636,6 +621,44 @@ xfs_sb_from_disk(
-> >  	to->sb_pquotino = be64_to_cpu(from->sb_pquotino);
-> >  	to->sb_lsn = be64_to_cpu(from->sb_lsn);
-> >  
-> > +	if (xfs_sb_version_has_pquota(to)) {
-> > +		if (to->sb_qflags & (XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD)) {
-> > +			xfs_notice(NULL, "Super block has XFS_OQUOTA bits "
-> > +			"with version PQUOTINO. Quota check forced.\n");
-> > +			to->sb_qflags &= ~(XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD);
-> > +			force_quota_check = true;
-> > +		}
-> > +		to->sb_pquotino = be64_to_cpu(from->sb_pquotino);
-> > +	} else {
-> > +		if (to->sb_qflags & (XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD |
-> > +					XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD)) {
-> > +			xfs_notice(NULL, "Super block has XFS_[G|P]UOTA "
-> > +				"bits in version older than PQUOTINO. "
-> > +				"Quota check forced.\n");
+> > +				(XFS_ALL_QUOTA_ACCT| XFS_ALL_QUOTA_ENFD));
+> >  	if (q) {
+> >  		uip = q->qi_uquotaip;
+> >  		gip = q->qi_gquotaip;
+> > @@ -454,21 +448,38 @@ xfs_qm_scall_getqstat(
+> >  					0, 0, &pip) == 0)
+> >  			temppqip = true;
+> >  	}
 > > +
-> > +			to->sb_qflags &= ~(XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD |
-> > +					XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD);
-> > +			force_quota_check = true;
-> > +		}
-> > +
-> > +		/*
-> > +		 * On disk superblock qflags uses XFS_OQUOTA.* to support
-> > +		 * either PQUOTA or GQUOTA. But, in memory qflags uses
-> > +		 * XFS_PQUOTA.* or XFS_GQUOTA.* depending on which quota
-> > +		 * is used.
-> > +		 * Following block translates XFS_OQUOTA.* to either
-> > +		 * GQUOTA or PQUOTA.
-> > +		 */
-> > +		if (to->sb_qflags & XFS_OQUOTA_ENFD)
-> > +			to->sb_qflags |= (to->sb_qflags & XFS_PQUOTA_ACCT) ?
-> > +					XFS_PQUOTA_ENFD : XFS_GQUOTA_ENFD;
-> > +		if (to->sb_qflags & XFS_OQUOTA_CHKD)
-> > +			to->sb_qflags |= (to->sb_qflags & XFS_PQUOTA_ACCT) ?
-> > +					XFS_PQUOTA_CHKD : XFS_GQUOTA_CHKD;
-> > +		to->sb_qflags &= ~(XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD);
-> > +
-> > +	}
-> > +
-> >  	if (force_quota_check)
-> >  		to->sb_qflags &= ~(XFS_GQUOTA_CHKD | XFS_PQUOTA_CHKD);
-> >  }
-> 
-> This all gets restructured here - as per my previous comments, this
-> probably should all be in xfs_readsb(), not here.
-> 
-> > @@ -657,27 +680,51 @@ xfs_sb_to_disk(
-> >  	int		first;
-> >  	int		size;
-> >  	__uint16_t	qflags = from->sb_qflags;
-> > +	xfs_ino_t	gquotino = from->sb_gquotino;
-> >  
-> >  	ASSERT(fields);
-> >  	if (!fields)
-> >  		return;
-> >  
-> > -	if (fields & XFS_SB_QFLAGS) {
-> > +	if (!xfs_sb_version_has_pquota(from)) {
-> 
-> This should be moved to a separate function, I think.
-> 
-> > +		if (fields & XFS_SB_QFLAGS) {
+> >  	if (uip) {
+> > +		out->qs_uquota.qfs_ino = mp->m_sb.sb_uquotino;
+> >  		out->qs_uquota.qfs_nblks = uip->i_d.di_nblocks;
+> >  		out->qs_uquota.qfs_nextents = uip->i_d.di_nextents;
+> >  		if (tempuqip)
+> >  			IRELE(uip);
+> >  	}
+> >  	if (gip) {
+> > +		out->qs_gquota.qfs_ino = mp->m_sb.sb_gquotino;
+> >  		out->qs_gquota.qfs_nblks = gip->i_d.di_nblocks;
+> >  		out->qs_gquota.qfs_nextents = gip->i_d.di_nextents;
+> >  		if (tempgqip)
+> >  			IRELE(gip);
+> >  	}
+> >  	if (pip) {
+> > -		out->qs_pquota.qfs_nblks = pip->i_d.di_nblocks;
+> > -		out->qs_pquota.qfs_nextents = pip->i_d.di_nextents;
+> > +		if (out->qs_version >= FS_QSTAT_VERSION_2) {
+> > +			out->qs_pquota.qfs_ino = mp->m_sb.sb_pquotino;
+> > +			out->qs_pquota.qfs_nblks = pip->i_d.di_nblocks;
+> > +			out->qs_pquota.qfs_nextents = pip->i_d.di_nextents;
+> > +		} else {
 > > +			/*
-> > +			 * The in-core version of sb_qflags do not have
-> > +			 * XFS_OQUOTA_* flags, whereas the on-disk version
-> > +			 * does.  So, convert incore XFS_{PG}QUOTA_* flags
-> > +			 * to on-disk XFS_OQUOTA_* flags.
+> > +			 * In FS_QSTAT_VERSION version, there is no
+> > +			 * qs_pquota, and there is no combined support
+> > +			 * for gquota/pquota. qs_gquota is shared for
+> > +			 * providing the pquota/gquota information to
+> > +			 * the user space.
 > > +			 */
-> > +			qflags &= ~(XFS_PQUOTA_ENFD | XFS_PQUOTA_CHKD |
-> > +					XFS_GQUOTA_ENFD | XFS_GQUOTA_CHKD);
-> > +
-> > +			if (from->sb_qflags &
-> > +					(XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD))
-> > +				qflags |= XFS_OQUOTA_ENFD;
-> > +			if (from->sb_qflags &
-> > +					(XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD))
-> > +				qflags |= XFS_OQUOTA_CHKD;
 > 
-> Now that we have the new flags set correct, write it directly to
-> to->sb_qflags and clear XFS_SB_QFLAGS from the fields varaible.
-
-So, you are suggesting to move this block of functionality to a new
-function, and set the fields in the "to" data structure in that function
-and clear the appropriate bits in the same function ?
-  
+> Move that comment to the head of the function. i.e.:
 > 
-> > +		}
-> > +
-> >  		/*
-> > -		 * The in-core version of sb_qflags do not have
-> > -		 * XFS_OQUOTA_* flags, whereas the on-disk version
-> > -		 * does.  So, convert incore XFS_{PG}QUOTA_* flags 
-> > -		 * to on-disk XFS_OQUOTA_* flags.
-> > +		 * On-disk version earlier than pquota doesn't have
-> > +		 * sb_pquotino. so, we need to copy the value to gquotino.
-> >  		 */
-> > -		qflags &= ~(XFS_PQUOTA_ENFD | XFS_PQUOTA_CHKD |
-> > -				XFS_GQUOTA_ENFD | XFS_GQUOTA_CHKD);
-> > +		if (fields & XFS_SB_PQUOTINO) {
-> > +			fields &= (__int64_t)~XFS_SB_PQUOTINO;
-> > +			fields |= (__int64_t)XFS_SB_GQUOTINO;
-> > +			gquotino = from->sb_pquotino;
-> > +		}
+> /*
+>  * We support two different versions of the fs_quota_stat structure
+>  * here. If the version is FS_QSTAT_VERSION, then there is no
+>  * separate project quota fields, and so we write project quota
+>  * information into the group quota fields. With FS_QSTAT_VERSION_2,
+>  * there is a separate project quota field so we can use that
+>  * instead to pass both group and project quota back to user space
+>  * in the one call.
+>  */
 > 
-> Same here - write the inode number directly to the to->sb_gquotino
-> field and clear the XFS_SB_PQUOTINO flag.
-> 
-> >  
-> > -		if (from->sb_qflags &
-> > -				(XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD))
-> > -			qflags |= XFS_OQUOTA_ENFD;
-> > -		if (from->sb_qflags &
-> > -				(XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD))
-> > -			qflags |= XFS_OQUOTA_CHKD;
-> > +		/* If any quota inodes are written, write all quota inodes */
-> > +		if (fields & (XFS_SB_UQUOTINO|XFS_SB_GQUOTINO))
-> > +			fields |= (XFS_SB_UQUOTINO|XFS_SB_GQUOTINO);
-> 
-> Why write things that haven't been modified?
-
-fixed it
-> 
-> > +
-> > +	} else {
-> > +		/* If any quota inodes are written, write all quota inodes */
-> > +		if (fields & (XFS_SB_UQUOTINO | XFS_SB_GQUOTINO
-> > +							| XFS_SB_PQUOTINO))
-> > +			fields |= (XFS_SB_UQUOTINO | XFS_SB_GQUOTINO
-> > +							| XFS_SB_PQUOTINO);
-> 
-> Same - the flags pssed in are supposed to document everything that
-> has been modified. If the flags passed in are wrong, then fix the
-> bad callers.....
-
-fixed it.
-> >  	}
-> 
-> >  
-> >  	while (fields) {
-> > @@ -691,6 +738,8 @@ xfs_sb_to_disk(
-> >  			memcpy(to_ptr + first, from_ptr + first, size);
-> >  		} else if (f == XFS_SBS_QFLAGS) {
-> >  			*(__be16 *)(to_ptr + first) = cpu_to_be16(qflags);
-> > +		} else if (f == XFS_SBS_GQUOTINO) {
-> > +			*(__be64 *)(to_ptr + first) = cpu_to_be64(gquotino);
-> 
-> If we clear the XFS_SBS_GQUOTINO/XFS_SBS_QFLAGS flags like I
-> suggested above, this grot can go away and the loop remain
-> completely generic.
-
-sure.
-> 
-> >  		} else {
-> >  			switch (size) {
-> >  			case 2:
-> > @@ -872,6 +921,18 @@ reread:
-> >  	 */
-> >  	xfs_sb_from_disk(&mp->m_sb, XFS_BUF_TO_SBP(bp));
-> >  
-> > +	if (!xfs_sb_version_has_pquota(&mp->m_sb) && XFS_IS_PQUOTA_ON(mp)) {
-> > +		/*
-> > +		 * On disk superblock only has sb_gquotino, and in memory
-> > +		 * superblock has both sb_gquotino and sb_pquotino. But,
-> > +		 * only one them is supported at any point of time.
-> > +		 * So, if PQUOTA is set in disk superblock, copy over
-> > +		 * sb_gquotino to sb_pquotino.
-> > +		 */
-> > +		mp->m_sb.sb_pquotino = mp->m_sb.sb_gquotino;
-> > +		mp->m_sb.sb_gquotino = NULLFSINO;
-> > +	}
-> 
-> Yup, that's the right place for doing all this on-disk->incore
-> translation stuff at mount time ;)
-> 
-> > -	if (ino == mp->m_sb.sb_uquotino || ino == mp->m_sb.sb_gquotino) {
-> > +	if (ino == mp->m_sb.sb_uquotino ||
-> > +	    ino == mp->m_sb.sb_gquotino ||
-> > +	    ino == mp->m_sb.sb_pquotino) {
-> 
-> Seeing how often this is repeated, perhaps we need a helper function
-> called "xfs_is_quota_inode(mp, ino)"?
-
-will do.
-> 
-> > @@ -1505,7 +1506,7 @@ xfs_qm_init_quotainos(
-> >  	}
-> >  	if (XFS_IS_PQUOTA_ON(mp) && pip == NULL) {
-> >  		error = xfs_qm_qino_alloc(mp, &pip,
-> > -					     sbflags | XFS_SB_GQUOTINO,
-> > +					     sbflags | XFS_SB_PQUOTINO,
-> >  					     flags | XFS_QMOPT_PQUOTA);
-> 
-> Isn't that fixing a bug in the previous patch?
-
-No, pquotino is not being used until this function.
-
-> 
-> > @@ -412,17 +413,20 @@ xfs_qm_scall_getqstat(
-> >  	struct fs_quota_stat	*out)
-> >  {
-> >  	struct xfs_quotainfo	*q = mp->m_quotainfo;
-> > -	struct xfs_inode	*uip, *gip;
-> > -	bool                    tempuqip, tempgqip;
-> > +	struct xfs_inode	*uip = NULL;
-> > +	struct xfs_inode	*gip = NULL;
-> > +	struct xfs_inode	*pip = NULL;
-> > +	bool                    tempuqip = false;
-> > +	bool                    tempgqip = false;
-> > +	bool                    temppqip = false;
-> 
-> See my previous comments about naming variables. At least
-> add an underscore into the name like temp_uqip....
-> 
-
-why not.
-
-> > @@ -420,12 +420,6 @@ xfs_parseargs(
-> >  	}
-> >  #endif
-> >  
-> > -	if ((mp->m_qflags & (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE)) &&
-> > -	    (mp->m_qflags & (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE))) {
-> > -		xfs_warn(mp, "cannot mount with both project and group quota");
-> > -		return EINVAL;
-> > -	}
-> > -
-> >  	if ((dsunit && !dswidth) || (!dsunit && dswidth)) {
-> >  		xfs_warn(mp, "sunit and swidth must be specified together");
-> >  		return EINVAL;
-> > @@ -1388,6 +1382,14 @@ xfs_finish_flags(
-> >  		return XFS_ERROR(EROFS);
-> >  	}
-> >  
-> > +	if ((mp->m_qflags & (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE)) &&
-> > +	    (mp->m_qflags & (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE)) &&
-> > +	    !xfs_sb_version_has_pquota(&mp->m_sb)) {
-> > +		xfs_warn(mp, "Super block does not support "
-> > +				 "project and group quota together");
-> > +		return XFS_ERROR(EINVAL);
-> > +	}
-> 
-> Why move this check? just leave it where it is and add the extra
-> check to it...
-
-Superblock hasn't been read yet at the old place. So, this block has to
-be moved to a place after superblock is read.
-
-> 
-> > @@ -157,7 +157,8 @@ xfs_trans_mod_dquot_byino(
-> >  	if (!XFS_IS_QUOTA_RUNNING(mp) ||
-> >  	    !XFS_IS_QUOTA_ON(mp) ||
-> >  	    ip->i_ino == mp->m_sb.sb_uquotino ||
-> > -	    ip->i_ino == mp->m_sb.sb_gquotino)
-> > +	    ip->i_ino == mp->m_sb.sb_gquotino ||
-> > +	    ip->i_ino == mp->m_sb.sb_pquotino)
-> >  		return;
-> 
-> I see a helper....
-> 
-> >  	if (tp->t_dqinfo == NULL)
-> > @@ -825,6 +826,7 @@ xfs_trans_reserve_quota_nblks(
-> >  
-> >  	ASSERT(ip->i_ino != mp->m_sb.sb_uquotino);
-> >  	ASSERT(ip->i_ino != mp->m_sb.sb_gquotino);
-> > +	ASSERT(ip->i_ino != mp->m_sb.sb_pquotino);
-> 
-> And that becomes ASSERT(!xfs_is_quota_inode(mp, ip->i_ino))....
-> 
-> > diff --git a/include/uapi/linux/dqblk_xfs.h b/include/uapi/linux/dqblk_xfs.h
-> > index 8655280..f17e3bb 100644
-> > --- a/include/uapi/linux/dqblk_xfs.h
-> > +++ b/include/uapi/linux/dqblk_xfs.h
-> > @@ -155,6 +155,7 @@ typedef struct fs_quota_stat {
-> >  	__s8		qs_pad;		/* unused */
-> >  	fs_qfilestat_t	qs_uquota;	/* user quota storage information */
-> >  	fs_qfilestat_t	qs_gquota;	/* group quota storage information */
-> > +#define qs_pquota	qs_gquota
-> >  	__u32		qs_incoredqs;	/* number of dquots incore */
-> >  	__s32		qs_btimelimit;  /* limit for blks timer */	
-> >  	__s32		qs_itimelimit;  /* limit for inodes timer */	
-> 
-> Ugly, but will do until the next patch ;)
-> 
+sure
 > Cheers,
 > 
 > Dave.
