@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id F0ACE7F37
-	for <xfs@oss.sgi.com>; Fri, 24 May 2013 00:03:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id DFF6C8F8065
-	for <xfs@oss.sgi.com>; Thu, 23 May 2013 22:03:45 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 566997F37
+	for <xfs@oss.sgi.com>; Fri, 24 May 2013 00:14:46 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 45D36304051
+	for <xfs@oss.sgi.com>; Thu, 23 May 2013 22:14:43 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id C2qm3FahLVw6ud6i for
-	<xfs@oss.sgi.com>; Thu, 23 May 2013 22:03:44 -0700 (PDT)
-Message-ID: <519EF4AE.60702@redhat.com>
-Date: Fri, 24 May 2013 00:03:42 -0500
+	cuda.sgi.com with ESMTP id 2ZhFDUL9Y1HkG4zF for
+	<xfs@oss.sgi.com>; Thu, 23 May 2013 22:14:42 -0700 (PDT)
+Message-ID: <519EF740.1000907@redhat.com>
+Date: Fri, 24 May 2013 00:14:40 -0500
 From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfstests: fix src/seek_sanity_test -t option
+Subject: [PATCH V2] xfstests: fix src/seek_sanity_test -t option
+References: <519EF4AE.60702@redhat.com>
+In-Reply-To: <519EF4AE.60702@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -46,6 +48,8 @@ too many args as well.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
+
+V2: saner test for too many args
 
 diff --git a/src/seek_sanity_test.c b/src/seek_sanity_test.c
 index 4275a84..f957178 100644
@@ -87,12 +91,13 @@ index 4275a84..f957178 100644
  	}
  
 +	/* should be exactly one arg left, the filename */
-+	if (!argv[optind] || argv[optind+1])
++	if (optind != argc - 1)
 +		usage(argv[0]);
 +
  	base_file_path = (char *)strdup(argv[optind]);
  
  	ret = test_basic_support();
+
 
 
 _______________________________________________
