@@ -1,15 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id AE6277CBF
-	for <xfs@oss.sgi.com>; Fri, 24 May 2013 13:29:41 -0500 (CDT)
-Date: Fri, 24 May 2013 13:29:37 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 00/11] xfs: fixes for 3.10-rc3
-Message-ID: <20130524182937.GY19505@sgi.com>
-References: <1369123330-9579-1-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 48FAC7CBF
+	for <xfs@oss.sgi.com>; Fri, 24 May 2013 15:17:08 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 293018F8033
+	for <xfs@oss.sgi.com>; Fri, 24 May 2013 13:17:04 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id KusK1Kx1WNgTc7lR for
+	<xfs@oss.sgi.com>; Fri, 24 May 2013 13:17:04 -0700 (PDT)
+Date: Fri, 24 May 2013 16:16:55 -0400
+From: Dave Jones <davej@redhat.com>
+Subject: Re: XFS assertion from truncate. (3.10-rc2)
+Message-ID: <20130524201655.GA23086@redhat.com>
+References: <20130522052938.GA2573@redhat.com> <20130522055147.GI29466@dastard>
+	<20130522215454.GL29466@dastard>
+	<20130523184948.GA11151@redhat.com>
+	<20130523223038.GB24543@dastard>
+	<20130524004906.GA21171@redhat.com>
+	<20130524012625.GH24543@dastard>
+	<20130524015219.GA28486@redhat.com>
+	<20130524030300.GA30760@redhat.com>
+	<20130524080300.GI24543@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1369123330-9579-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <20130524080300.GI24543@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,37 +37,37 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-On Tue, May 21, 2013 at 06:01:59PM +1000, Dave Chinner wrote:
-> This is my current kernel bug fix patch series. I've updated it
-> against a current xfsdev tree, and contains all the fixes mentioned
-> in the "fixes for 3.10-rc2 (updated)" thread. The first 7 patches
-> are patches from that series. The last 4 are new patches.
-> 
-> The first new patch stops CRC enabled filesystems from spamming the
-> log. It currently emits an "Experimental" warning ever time the
-> superblock is written, which is typically every 30s.
-> 
-> The second path ("rework remote attr CRCs") is the changes I
-> mentioned in the "fixes for 3.10-rc2 (updated)" thread. The code is
-> far more robust as a result of these changes, and I think we really
-> need to change the format as done in this patch. Once we have
-> decided on the way forward, I'll port this to userspace.
-> 
-> The third patch fixes a remote symlink problem - I didn't hit this
-> until I'd redone the remote attr CRCs and the 1k block size
-> filesystem testing made it passed the attribute tests it was failing
-> on.
-> 
-> Finally, the last patch is another on-disk format change - one that
-> removes the 25 entry limit on ACLs. It doesn't invalidate anything
-> that is already on disk, just allows ACLs on v5 superblock
-> filesystems to store more than 25 ACLs in an xattr. In fact, it
-> allows (65536 - 4) / 12 = 5461 entries to be stored in a single
-> ACL, so I don't see anyone running out on v5 superblocks....
+On Fri, May 24, 2013 at 06:03:00PM +1000, Dave Chinner wrote:
 
-Pulled in patches 3-7, and 9.  Still reviewing the others.
+ > xfstest generic/193 is *supposed* to test behaviour of suid/sgid bits
+ > and clearing them is various situations.
+ > 
+ > You know what I'm about to say, don't you? The test doesn't test
+ > what it thinks it is testing. it puts the destination file in root
+ > directory of the xfstests harness, not in the filesystems being
+ > tested.
+
+awesome, two bugs for the price of one!
+
+ > So, on all my machines, it runs on ext3 filesystems, never on the
+ > ext4, btrfs, xfs, etc filesystems that I'm actually testing.
+ > 
+ > That's beside the point, because it doesn't test truncate behaviour.
+ > But at least I know now why my attempts to reproduce the problem
+ > didn't work...
+ > 
+ > Right, patch below should fix the problem.
+
+Haven't seen anything out of the ordinary since I applied that,
+so I'd call it good.
+ 
+ > What a frustrating bug. Now, where's my bottle of scotch?
+
+heh, enjoy the weekend.
+
+	Dave
 
 _______________________________________________
 xfs mailing list
