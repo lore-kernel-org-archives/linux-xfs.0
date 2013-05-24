@@ -1,17 +1,42 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id ACC247CBF
-	for <xfs@oss.sgi.com>; Fri, 24 May 2013 15:39:10 -0500 (CDT)
-Date: Fri, 24 May 2013 15:39:10 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 10/11] xfs: fix incorrect remote symlink block count
-Message-ID: <20130524203910.GX20028@sgi.com>
-References: <1369123330-9579-1-git-send-email-david@fromorbit.com>
-	<1369123330-9579-11-git-send-email-david@fromorbit.com>
-	<20130524203633.GW20028@sgi.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130524203633.GW20028@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id 8D0507F4E
+	for <xfs@oss.sgi.com>; Fri, 24 May 2013 16:41:18 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6D65F8F8039
+	for <xfs@oss.sgi.com>; Fri, 24 May 2013 14:41:18 -0700 (PDT)
+Received: from e36.co.us.ibm.com (e36.co.us.ibm.com [32.97.110.154]) by
+	cuda.sgi.com with ESMTP id wcIuwKmh7JnGpCiT (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 24 May 2013 14:41:17 -0700 (PDT)
+Received: from /spool/local
+	by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	Violators will be prosecuted
+	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
+	Fri, 24 May 2013 15:41:16 -0600
+Received: from d03relay01.boulder.ibm.com (d03relay01.boulder.ibm.com
+	[9.17.195.226])
+	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id 0D3CD19D803E
+	for <xfs@oss.sgi.com>; Fri, 24 May 2013 15:41:06 -0600 (MDT)
+Received: from d03av05.boulder.ibm.com (d03av05.boulder.ibm.com [9.17.195.85])
+	by d03relay01.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP
+	id r4OLfCMM133746
+	for <xfs@oss.sgi.com>; Fri, 24 May 2013 15:41:12 -0600
+Received: from d03av05.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av05.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id r4OLfBvk024066
+	for <xfs@oss.sgi.com>; Fri, 24 May 2013 15:41:12 -0600
+Subject: Re: deadlock with &log->l_cilp->xc_ctx_lock semaphone
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+In-Reply-To: <20130523234214.GG24543@dastard>
+References: <1369264363.10223.2994.camel@chandra-dt.ibm.com>
+	<20130522234129.GN29466@dastard>
+	<1369332542.10223.5271.camel@chandra-dt.ibm.com>
+	<20130523234214.GG24543@dastard>
+Date: Fri, 24 May 2013 16:41:11 -0500
+Message-ID: <1369431671.9551.919.camel@chandra-dt.ibm.com>
+Mime-Version: 1.0
+Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,95 +50,66 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+Cc: XFS mailing list <xfs@oss.sgi.com>
 
-On Fri, May 24, 2013 at 03:36:33PM -0500, Ben Myers wrote:
-> On Tue, May 21, 2013 at 06:02:09PM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
+On Fri, 2013-05-24 at 09:42 +1000, Dave Chinner wrote:
+> On Thu, May 23, 2013 at 01:09:02PM -0500, Chandra Seetharaman wrote:
+> > On Thu, 2013-05-23 at 09:41 +1000, Dave Chinner wrote:
+> > > On Wed, May 22, 2013 at 06:12:43PM -0500, Chandra Seetharaman wrote:
+> > > > Hello,
+> > > > 
+> > > > While testing and rearranging my pquota/gquota code, I stumbled on a
+> > > > xfs_shutdown() during a mount. But the mount just hung.
+> > > > 
+> > > > I debugged and found that it is in a code path where
+> > > > &log->l_cilp->xc_ctx_lock is first acquired in read mode and some levels
+> > > > down the same semaphore is being acquired in write mode causing a
+> > > > deadlock.
+> > > > 
+> > > > This is the stack:
+> > > > xfs_log_commit_cil -> acquires &log->l_cilp->xc_ctx_lock in read mode
+> > > >   xlog_print_tic_res
+> > > >     xfs_force_shutdown
+> > > >       xfs_log_force_umount
+> > > >         xlog_cil_force
+> > > >           xlog_cil_force_lsn
+> > > >             xlog_cil_push_foreground
+> > > >               xlog_cil_push - tries to acquire same semaphore in write mode
+> > > 
+> > > Which means you had a transaction reservation overrun. Is it
+> > > reproducable? iDo you have the output from xlog_print_tic_res()?
+> > > Because:
 > > 
-> > When CRCs are enabled, the number of blocks needed to hold a remote
-> > symlink on a 1k block size filesystem may be 2 instead of 1. The
-> > transaction reservation for the allocated bloks was not taking this
-> 					    blocks
-> > into account and only allocating one block. hence when trying to
-> 					      H
-> 
-> fixed.
-> 
-> > read or invalidate such symlinks, we are mapping a hole where there
-> > should be a block and things go bad at that point.
+> > Here it is:
 > > 
-> > Fix the reservation to use the correct block count, clean up the
-> > block count calculation similar to the remote attribute calculation,
-> > and add a debug guard to detect when we don't write the entire
-> > symlink to disk.
+> > May 23 10:48:52 test46 kernel: [   77.500728] XFS (sdh8): xlog_write: reservation summary:
+> > May 23 10:48:52 test46 kernel: [   77.500728]   trans type  = QM_SBCHANGE (26)
+> > May 23 10:48:52 test46 kernel: [   77.500728]   unit res    = 2740 bytes
+> > May 23 10:48:52 test46 kernel: [   77.500728]   current res = -48 bytes
+> > May 23 10:48:52 test46 kernel: [   77.500728]   total reg   = 0 bytes (o/flow = 0 bytes)
+> > May 23 10:48:52 test46 kernel: [   77.500728]   ophdrs      = 0 (ophdr space = 0 bytes)
+> > May 23 10:48:52 test46 kernel: [   77.500728]   ophdr + reg = 0 bytes
+> > May 23 10:48:52 test46 kernel: [   77.500728]   num regions = 0
+> > May 23 10:48:52 test46 kernel: [   77.500728]
 > > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  fs/xfs/xfs_symlink.c |   20 ++++++--------------
-> >  1 file changed, 6 insertions(+), 14 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-> > index 5f234389..195a403 100644
-> > --- a/fs/xfs/xfs_symlink.c
-> > +++ b/fs/xfs/xfs_symlink.c
-> > @@ -56,16 +56,9 @@ xfs_symlink_blocks(
-> >  	struct xfs_mount *mp,
-> >  	int		pathlen)
-> >  {
-> > -	int		fsblocks = 0;
-> > -	int		len = pathlen;
-> > +	int buflen = XFS_SYMLINK_BUF_SPACE(mp, mp->m_sb.sb_blocksize);
-> >  
-> > -	do {
-> > -		fsblocks++;
-> > -		len -= XFS_SYMLINK_BUF_SPACE(mp, mp->m_sb.sb_blocksize);
-> > -	} while (len > 0);
-> > -
-> > -	ASSERT(fsblocks <= XFS_SYMLINK_MAPS);
-> > -	return fsblocks;
-> > +	return (pathlen + buflen - 1) / buflen;
+> > Yes. I can readily reproduce the problem, but it is with my mangled up
+> > patchsets :). There is a small change that makes this problem reproduce
+> > consistently.
 > 
-> Nice to get rid of that loop.
+> Interesting. That implies that the CIL stole the reservation for the
+> checkpoint headers from this reservation, and then it overran by 48
+> bytes. An increase in the number of quotas should not affect this.
 > 
-> >  }
-> >  
-> >  static int
-> > @@ -405,7 +398,7 @@ xfs_symlink(
-> >  	if (pathlen <= XFS_LITINO(mp, dp->i_d.di_version))
-> >  		fs_blocks = 0;
-> >  	else
-> > -		fs_blocks = XFS_B_TO_FSB(mp, pathlen);
-> > +		fs_blocks = xfs_symlink_blocks(mp, pathlen);
-> >  	resblks = XFS_SYMLINK_SPACE_RES(mp, link_name->len, fs_blocks);
-> >  	error = xfs_trans_reserve(tp, resblks, XFS_SYMLINK_LOG_RES(mp), 0,
-> >  			XFS_TRANS_PERM_LOG_RES, XFS_SYMLINK_LOG_COUNT);
-> > @@ -512,7 +505,7 @@ xfs_symlink(
-> >  		cur_chunk = target_path;
-> >  		offset = 0;
-> >  		for (n = 0; n < nmaps; n++) {
-> > -			char *buf;
-> > +			char	*buf;
-> >  
-> >  			d = XFS_FSB_TO_DADDR(mp, mval[n].br_startblock);
-> >  			byte_cnt = XFS_FSB_TO_B(mp, mval[n].br_blockcount);
-> > @@ -525,9 +518,7 @@ xfs_symlink(
-> >  			bp->b_ops = &xfs_symlink_buf_ops;
-> >  
-> >  			byte_cnt = XFS_SYMLINK_BUF_SPACE(mp, byte_cnt);
-> > -			if (pathlen < byte_cnt) {
-> > -				byte_cnt = pathlen;
-> > -			}
-> > +			byte_cnt = min(byte_cnt, pathlen);
-> 
-> The min is necessary due since we can have up to three extents in here,
-> according to the comment above the define for XFS_SYMLINK_MAPS.  So byte_cnt
-> can be less than pathlen.
+> What is the xfs_info output on the filesystem that is triggering
+> this?
 
-D'oh.  I wanted to point out that it looks like this issue with 'min' here
-should be causing problems with symlinks on non-crc enabled filesystems.
+I have the same set of patches, but it is not happening any more :(. I
+will keep trying.
+> 
+> Cheers,
+> 
+> Dave.
 
--Ben
 
 _______________________________________________
 xfs mailing list
