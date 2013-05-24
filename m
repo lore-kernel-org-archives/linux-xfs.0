@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 27D837CBF
-	for <xfs@oss.sgi.com>; Fri, 24 May 2013 03:52:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 907A2AC001
-	for <xfs@oss.sgi.com>; Fri, 24 May 2013 01:52:11 -0700 (PDT)
-Received: from mx4-phx2.redhat.com (mx4-phx2.redhat.com [209.132.183.25]) by
-	cuda.sgi.com with ESMTP id aZGYAL13N7Ndajeh for
-	<xfs@oss.sgi.com>; Fri, 24 May 2013 01:52:09 -0700 (PDT)
-Date: Fri, 24 May 2013 04:52:06 -0400 (EDT)
-From: CAI Qian <caiqian@redhat.com>
-Message-ID: <986348673.5787542.1369385526612.JavaMail.root@redhat.com>
-In-Reply-To: <20130523035115.GY24543@dastard>
-References: <510292845.4997401.1369279175460.JavaMail.root@redhat.com>
-	<1985929268.4997720.1369279277543.JavaMail.root@redhat.com>
-	<20130523035115.GY24543@dastard>
-Subject: Re: 3.9.3: Oops running xfstests
-MIME-Version: 1.0
+	by oss.sgi.com (Postfix) with ESMTP id 8A57F7F4C
+	for <xfs@oss.sgi.com>; Fri, 24 May 2013 03:54:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E7B41AC002
+	for <xfs@oss.sgi.com>; Fri, 24 May 2013 01:54:28 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	wvK3EZHoqLLVg3dE for <xfs@oss.sgi.com>;
+	Fri, 24 May 2013 01:54:26 -0700 (PDT)
+Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1UfnlX-0001NY-LE
+	for xfs@oss.sgi.com; Fri, 24 May 2013 18:54:23 +1000
+Received: from dave by disappointment with local (Exim 4.80)
+	(envelope-from <dave@disappointment.disaster>) id 1UfnlX-0004QP-H9
+	for xfs@oss.sgi.com; Fri, 24 May 2013 18:54:23 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 2/2] xfstests: ensure all mkfs output is redirected properly
+Date: Fri, 24 May 2013 18:54:19 +1000
+Message-Id: <1369385659-16970-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1369385659-16970-1-git-send-email-david@fromorbit.com>
+References: <1369385659-16970-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,200 +29,459 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: stable@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
+From: Dave Chinner <dchinner@redhat.com>
 
+mkfs.xfs with experimental CRC support outputs extra warnings about
+being experimental on stderr, and so some tests do not redirect the
+output correctly. These tests fail with a golden output mismatch due
+to this. Fix these tests by redirecting stderr to either seqres.full
+or /dev/null.
 
------ Original Message -----
-> From: "Dave Chinner" <david@fromorbit.com>
-> To: "CAI Qian" <caiqian@redhat.com>
-> Cc: xfs@oss.sgi.com, stable@vger.kernel.org
-> Sent: Thursday, May 23, 2013 11:51:15 AM
-> Subject: Re: 3.9.3: Oops running xfstests
-> 
-> On Wed, May 22, 2013 at 11:21:17PM -0400, CAI Qian wrote:
-> > Fedora-19 based distro and LVM partitions.
-> 
-> Cai: As I've asked previously please include all the relevant
-> information about your test system and the workload it is running
-> when the problem occurs.  Stack traces aren't any good to us in
-> isolation, and just dumping them on us causes unnecessary round
-> trips.
-> 
-> http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
-Sometimes, those information is going to drive me crazy due to the
-amount of information need to gather from a system that been already
-returned to the automation testing system pool and I never have access
-to it anymore. Some of the information has like very little percentage
-of the relevant as far as I can tell. I knew sometimes that 1% percentage
-does count but the amount of efforts need to gather that 1% just crazy. :)
-Since we have been in the same company, feel free to ping me and I can
-give you the instruction to access the system and reproducer for it. Also,
-I have been reproduced this on several x64 systems and nothing special
-about the hardware and this panic at memmove is also very much similar to
-those s390x/ppc64 stack overrun cases which has memove, xfs-leaf on the
-trace, http://oss.sgi.com/archives/xfs/2013-05/msg00768.html
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ common/dump   |    4 ++--
+ common/rc     |    2 +-
+ common/repair |    2 ++
+ tests/xfs/004 |    3 ++-
+ tests/xfs/021 |    2 +-
+ tests/xfs/029 |    2 +-
+ tests/xfs/030 |    2 +-
+ tests/xfs/031 |    2 ++
+ tests/xfs/033 |    4 ++--
+ tests/xfs/041 |    5 +++--
+ tests/xfs/042 |    2 +-
+ tests/xfs/050 |    2 +-
+ tests/xfs/052 |    2 +-
+ tests/xfs/067 |    4 ++--
+ tests/xfs/071 |    2 +-
+ tests/xfs/072 |    3 +--
+ tests/xfs/073 |    5 +++--
+ tests/xfs/104 |    2 +-
+ tests/xfs/106 |    2 +-
+ tests/xfs/107 |    2 +-
+ tests/xfs/108 |    2 +-
+ tests/xfs/109 |    3 ++-
+ tests/xfs/110 |    2 +-
+ tests/xfs/118 |    2 +-
+ tests/xfs/178 |    2 +-
+ tests/xfs/189 |    2 +-
+ tests/xfs/244 |    6 ++++--
+ tests/xfs/287 |    4 ++--
+ 28 files changed, 43 insertions(+), 34 deletions(-)
 
-I will provide the information as far I knew for now.
-- kernel version (uname -a): 3.9.3
-- xfsprogs version (xfs_repair -V): Fedora-19 xfsprogs-3.1.10
-- number of CPUs: 8
-- contents of /proc/meminfo:
-MemTotal:       16367152 kB
-MemFree:        15723040 kB
-Buffers:            1172 kB
-Cached:           313016 kB
-SwapCached:            0 kB
-Active:           252388 kB
-Inactive:         172832 kB
-Active(anon):     111376 kB
-Inactive(anon):      260 kB
-Active(file):     141012 kB
-Inactive(file):   172572 kB
-Unevictable:           0 kB
-Mlocked:               0 kB
-SwapTotal:       8257532 kB
-SwapFree:        8257532 kB
-Dirty:              5008 kB
-Writeback:             0 kB
-AnonPages:        110800 kB
-Mapped:            22944 kB
-Shmem:               564 kB
-Slab:              69100 kB
-SReclaimable:      26524 kB
-SUnreclaim:        42576 kB
-KernelStack:        1488 kB
-PageTables:         5896 kB
-NFS_Unstable:          0 kB
-Bounce:                0 kB
-WritebackTmp:          0 kB
-CommitLimit:    16441108 kB
-Committed_AS:     265500 kB
-VmallocTotal:   34359738367 kB
-VmallocUsed:       45288 kB
-VmallocChunk:   34347010568 kB
-HardwareCorrupted:     0 kB
-AnonHugePages:      2048 kB
-HugePages_Total:       0
-HugePages_Free:        0
-HugePages_Rsvd:        0
-HugePages_Surp:        0
-Hugepagesize:       2048 kB
-DirectMap4k:       77440 kB
-DirectMap2M:    16764928 kB
-- contents of /proc/mounts: nothing special. Just Fedora-19 autopart
-- contents of /proc/partitions: nothing special. Just Fedora-19 autopart
-- RAID layout (hardware and/or software):
-Nothing special,
-06:21:51,812 INFO kernel:[   27.480775] mptsas: ioc0: attaching ssp device: fw_channel 0, fw_id 0, phy 0, sas_addr 0x500000e0130ddbe2
-06:21:51,812 NOTICE kernel:[   27.539634] scsi 0:0:0:0: Direct-Access     IBM-ESXS MAY2073RC        T107 PQ: 0 ANSI: 5
-06:21:51,812 INFO kernel:[   27.592421] mptsas: ioc0: attaching ssp device: fw_channel 0, fw_id 1, phy 1, sas_addr 0x500000e0130fa8f2
-06:21:51,812 NOTICE kernel:[   27.651334] scsi 0:0:1:0: Direct-Access     IBM-ESXS MAY2073RC        T107 PQ: 0 ANSI: 5
-06:21:51,812 NOTICE kernel:[   27.753114] sd 0:0:0:0: [sda] 143374000 512-byte logical blocks: (73.4 GB/68.3 GiB)
-06:21:51,812 NOTICE kernel:[   27.798987] sd 0:0:1:0: [sdb] 143374000 512-byte logical blocks: (73.4 GB/68.3 GiB)
-06:21:51,812 NOTICE kernel:[   27.847388] sd 0:0:0:0: [sda] Write Protect is off
-06:21:51,812 NOTICE kernel:[   27.847396] sd 0:0:1:0: [sdb] Write Protect is off
-06:21:51,812 DEBUG kernel:[   27.847398] sd 0:0:1:0: [sdb] Mode Sense: d7 00 00 08
-06:21:51,812 DEBUG kernel:[   27.904710] sd 0:0:0:0: [sda] Mode Sense: d7 00 00 08
-06:21:51,812 NOTICE kernel:[   27.905323] sd 0:0:1:0: [sdb] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
-06:21:51,812 NOTICE kernel:[   27.960059] sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
-06:21:51,812 INFO kernel:[   27.998854]  sdb: sdb1
-06:21:51,812 NOTICE kernel:[   28.025249] sd 0:0:1:0: [sdb] Attached SCSI disk
-06:21:51,812 INFO kernel:[   28.096714]  sda: sda1 sda2
-06:21:51,812 NOTICE kernel:[   28.139844] sd 0:0:0:0: [sda] Attached SCSI disk
-- LVM configuration: nothing special. Just Fedora-19 autopart. The below information
-  from the installation time. Later, everything been formatted to XFS.
-  name = vg_ibmls4102-lv_root  status = True  kids = 0 id = 7
-  parents = ['existing 139508MB lvmvg vg_ibmls4102 (3)']
-  uuid = wVn1JV-DQ4U-vXHD-liJi-kX0M-O6eA-geU4gs  size = 51200.0
-  format = existing ext4 filesystem
-  major = 0  minor = 0  exists = True  protected = False
-  sysfs path = /devices/virtual/block/dm-1  partedDevice = parted.Device instance --
-  model: Linux device-mapper (linear)  path: /dev/mapper/vg_ibmls4102-lv_root  type: 12
-  sectorSize: 512  physicalSectorSize:  512
-  length: 104857600  openCount: 0  readOnly: False
-  externalMode: False  dirty: False  bootDirty: False
-  host: 13107  did: 13107  busy: False
-  hardwareGeometry: (6527, 255, 63)  biosGeometry: (6527, 255, 63)
-  PedDevice: <_ped.Device object at 0x7f5ffd504b00>
-  target size = 51200.0  path = /dev/mapper/vg_ibmls4102-lv_root
-  format args = []  originalFormat = ext4  target = None  dmUuid = None  VG device = LVMVolumeGroupDevice instance (0x7f5fee7e3590) --
-  name = vg_ibmls4102  status = True  kids = 3 id = 3
-  parents = ['existing 69505MB partition sda2 (2) with existing lvmpv',
- 'existing 70005MB partition sdb1 (5) with existing lvmpv']
-  uuid = X0Bee2-lAuT-egUe-AXc1-a69j-dfmK-3ex1CB  size = 139508
-  format = existing None
-  major = 0  minor = 0  exists = True  protected = False
-  sysfs path =   partedDevice = None
-  target size = 0  path = /dev/mapper/vg_ibmls4102
-  format args = []  originalFormat = None  target = None  dmUuid = None  free = 0.0  PE Size = 4.0  PE Count = 34877
-  PE Free = 0  PV Count = 2
-  LV Names = ['lv_home', 'lv_root', 'lv_swap']  modified = False
-  extents = 34877.0  free space = 0
-  free extents = 0.0  reserved percent = 0  reserved space = 0
-  PVs = ['existing 69505MB partition sda2 (2) with existing lvmpv',
- 'existing 70005MB partition sdb1 (5) with existing lvmpv']
-  LVs = ['existing 71028MB lvmlv vg_ibmls4102-lv_home (6) with existing ext4 filesystem',
- 'existing 51200MB lvmlv vg_ibmls4102-lv_root (7) with existing ext4 filesystem',
- 'existing 17280MB lvmlv vg_ibmls4102-lv_swap (8) with existing swap']
-  percent = 0
-  mirrored = False stripes = 1  snapshot total =  0MB
-  VG space used = 51200MB
-- type of disks you are using: nothing special
-- write cache status of drives: missed; need to reprovision the system.
-- size of BBWC and mode it is running in: missed; need to reprovision the system.
-- xfs_info output on the filesystem in question: missed; need to reprovision the system.
-- dmesg output showing all error messages and stack traces:
-  http://people.redhat.com/qcai/stable/console.txt
-> 
-> 
-> > [  304.898489]
-> > =============================================================================
-> > [  304.898489] BUG kmalloc-4096 (Tainted: G      D     ): Padding
-> > overwritten. 0xffff8801fbeb7c28-0xffff8801fbeb7fff
-> > [  304.898490]
-> > -----------------------------------------------------------------------------
-> > [  304.898490]
-> > [  304.898491] INFO: Slab 0xffffea0007efac00 objects=7 used=7 fp=0x
-> > (null) flags=0x20000000004080
-> > [  304.898492] Pid: 357, comm: systemd-udevd Tainted: G    B D      3.9.3
-> > #1
-> > [  304.898492] Call Trace:
-> > [  304.898495]  [<ffffffff81181ed2>] slab_err+0xc2/0xf0
-> > [  304.898497]  [<ffffffff8118176d>] ? init_object+0x3d/0x70
-> > [  304.898498]  [<ffffffff81181ff5>] slab_pad_check.part.41+0xf5/0x170
-> > [  304.898500]  [<ffffffff811bda63>] ? seq_read+0x2e3/0x3b0
-> > [  304.898501]  [<ffffffff811820e3>] check_slab+0x73/0x100
-> > [  304.898503]  [<ffffffff81606b50>] alloc_debug_processing+0x21/0x118
-> > [  304.898504]  [<ffffffff8160772f>] __slab_alloc+0x3b8/0x4a2
-> > [  304.898506]  [<ffffffff81161b57>] ? vma_link+0xb7/0xc0
-> > [  304.898508]  [<ffffffff811bda63>] ? seq_read+0x2e3/0x3b0
-> > [  304.898509]  [<ffffffff81184dd1>] kmem_cache_alloc_trace+0x1b1/0x200
-> > [  304.898510]  [<ffffffff811bda63>] seq_read+0x2e3/0x3b0
-> > [  304.898512]  [<ffffffff8119c56c>] vfs_read+0x9c/0x170
-> > [  304.898513]  [<ffffffff8119c939>] sys_read+0x49/0xa0
-> > [  304.898514]  [<ffffffff81619359>] system_call_fastpath+0x16/0x1b
-> 
-> That's something different, and indicates memory corruption is being
-> seen as a result of something that is occuring through the /proc or
-> /sys filesystems. Unrelated to XFS, I think...
-> 
-> Cheers,
-> 
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe stable" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+diff --git a/common/dump b/common/dump
+index 7fe50f6..9c998e5 100644
+--- a/common/dump
++++ b/common/dump
+@@ -236,8 +236,8 @@ _wipe_fs()
+ {
+     _require_scratch
+ 
+-    _scratch_mkfs_xfs >>$seqres.full || _fail "mkfs failed"
+-    _scratch_mount >>$seqres.full || _fail "mount failed"
++    _scratch_mkfs_xfs >>$seqres.full 2>&1 || _fail "mkfs failed"
++    _scratch_mount >>$seqres.full 2>&1 || _fail "mount failed"
+ }
+ 
+ #
+diff --git a/common/rc b/common/rc
+index fe6bbfc..88d38ef 100644
+--- a/common/rc
++++ b/common/rc
+@@ -1078,7 +1078,7 @@ _require_dm_flakey()
+ #
+ _require_projid32bit()
+ {
+-        _scratch_mkfs_xfs -f -i projid32bit=0 2>&1 >/dev/null \
++        _scratch_mkfs_xfs -f -i projid32bit=0 >/dev/null 2>&1 \
+ 	   || _notrun "mkfs.xfs doesn't have projid32bit feature"
+ }
+ 
+diff --git a/common/repair b/common/repair
+index db160bb..243f70f 100644
+--- a/common/repair
++++ b/common/repair
+@@ -80,6 +80,8 @@ s/\s+- \d+:\d\d:\d\d:.*\n//g;
+ # crc enabled filesystem output
+ /XFS_CORRUPTION_ERROR/ && next;
+ /^bad uuid/ && next;
++/^Version 5 superblock detected./ && next;
++/^Use of these features/ && next;
+ 	print;'
+ }
+ 
+diff --git a/tests/xfs/004 b/tests/xfs/004
+index 978943d..3cb7a08 100755
+--- a/tests/xfs/004
++++ b/tests/xfs/004
+@@ -41,7 +41,8 @@ trap "_cleanup" 0 1 2 3 15
+ _populate_scratch()
+ {
+ 	echo "=== mkfs output ===" >>$seqres.full
+-	_scratch_mkfs_xfs | tee -a $seqres.full | _filter_mkfs 2>$tmp.mkfs
++	_scratch_mkfs_xfs 2> /dev/null | tee -a $seqres.full \
++					| _filter_mkfs 2>$tmp.mkfs
+ 	. $tmp.mkfs
+ 	_scratch_mount
+ 	dd if=/dev/zero of=$SCRATCH_MNT/foo count=200 bs=4096 >/dev/null 2>&1 &
+diff --git a/tests/xfs/021 b/tests/xfs/021
+index a727b51..46a3f1b 100755
+--- a/tests/xfs/021
++++ b/tests/xfs/021
+@@ -83,7 +83,7 @@ rm -f $seqres.full
+ umount $SCRATCH_DEV >/dev/null 2>&1
+ 
+ echo "*** mkfs"
+-_scratch_mkfs_xfs >/dev/null \
++_scratch_mkfs_xfs >/dev/null 2>&1 \
+ 	|| _fail "mkfs failed"
+ 
+ echo "*** mount FS"
+diff --git a/tests/xfs/029 b/tests/xfs/029
+index 0709fce..ffe6e5a 100755
+--- a/tests/xfs/029
++++ b/tests/xfs/029
+@@ -58,7 +58,7 @@ _supported_os Linux
+ _require_scratch
+ 
+ echo
+-_scratch_mkfs_xfs | _filter_mkfs 2>/dev/null
++_scratch_mkfs_xfs > /dev/null 2>&1
+ 
+ echo
+ _scratch_xfs_logprint | _filter_logprint
+diff --git a/tests/xfs/030 b/tests/xfs/030
+index af03166..c89ffe1 100755
+--- a/tests/xfs/030
++++ b/tests/xfs/030
+@@ -98,7 +98,7 @@ src/devzero -v -1 -n "$clear" $SCRATCH_DEV >/dev/null
+ 
+ # now kick off the real repair test...
+ #
+-_scratch_mkfs_xfs $DSIZE | _filter_mkfs 2>$tmp.mkfs
++_scratch_mkfs_xfs $DSIZE 2>/dev/null | _filter_mkfs 2>$tmp.mkfs
+ . $tmp.mkfs
+ _check_ag 0
+ _check_ag -1
+diff --git a/tests/xfs/031 b/tests/xfs/031
+index 48a97e1..3fbc7de 100755
+--- a/tests/xfs/031
++++ b/tests/xfs/031
+@@ -56,6 +56,8 @@ _check_repair()
+ 		fi
+ 		# echo all interesting stuff...
+ 		perl -ne '
++			/EXPERIMENTAL/d;
++			/Use of these features/d;
+ 			s/(rebuilding directory inode) (\d+)/\1 INO/g;
+ 			s/internal log/<TYPEOF> log/g;
+ 			s/external log on \S+/<TYPEOF> log/g;
+diff --git a/tests/xfs/033 b/tests/xfs/033
+index bf906e0..bfdffce 100755
+--- a/tests/xfs/033
++++ b/tests/xfs/033
+@@ -81,10 +81,10 @@ _require_scratch
+ _require_no_large_scratch_dev
+ 
+ # devzero blows away 512byte blocks, so make 512byte inodes (at least)
+-_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs
++_scratch_mkfs_xfs 2> /dev/null | _filter_mkfs 2>$tmp.mkfs
+ . $tmp.mkfs
+ [ $isize -lt 512 ] && \
+-	_scratch_mkfs_xfs -isize=512 | _filter_mkfs >/dev/null 2>&1
++	_scratch_mkfs_xfs -isize=512 2> /dev/null | _filter_mkfs >/dev/null 2>&1
+ 
+ `xfs_db -r -c sb -c p $SCRATCH_DEV | grep 'ino = ' | \
+ 	sed -e 's/ //g' -e 's/^/export /'`
+diff --git a/tests/xfs/041 b/tests/xfs/041
+index 8b109fc..f25975a 100755
+--- a/tests/xfs/041
++++ b/tests/xfs/041
+@@ -63,8 +63,9 @@ _do_die_on_error=message_only
+ rm -f $seqres.full
+ agsize=32
+ echo -n "Make $agsize megabyte filesystem on SCRATCH_DEV and mount... "
+-_scratch_mkfs_xfs -dsize=${agsize}m,agcount=1 2>&1 >/dev/null || _fail "mkfs failed"
+-bsize=`_scratch_mkfs_xfs -dsize=${agsize}m,agcount=1 2>&1 | _filter_mkfs 2>&1 \
++_scratch_mkfs_xfs -dsize=${agsize}m,agcount=1 >/dev/null 2>&1 || _fail "mkfs failed"
++bsize=`_scratch_mkfs_xfs -dsize=${agsize}m,agcount=1 2> /dev/null \
++		|_filter_mkfs 2>&1 \
+ 		| perl -ne 'if (/dbsize=(\d+)/) {print $1;}'`
+ onemeginblocks=`expr 1048576 / $bsize`
+ _scratch_mount || _fail "mount failed"
+diff --git a/tests/xfs/042 b/tests/xfs/042
+index db0fa28..bb9ab03 100755
+--- a/tests/xfs/042
++++ b/tests/xfs/042
+@@ -91,7 +91,7 @@ rm -f $seqres.full
+ _do_die_on_error=message_only
+ 
+ echo -n "Make a 48 megabyte filesystem on SCRATCH_DEV and mount... "
+-_scratch_mkfs_xfs -dsize=48m,agcount=3 2>&1 >/dev/null || _fail "mkfs failed"
++_scratch_mkfs_xfs -dsize=48m,agcount=3 >/dev/null 2>&1 || _fail "mkfs failed"
+ _scratch_mount || _fail "mount failed" 
+ 
+ echo "done"
+diff --git a/tests/xfs/050 b/tests/xfs/050
+index 6641e7d..ab85107 100755
+--- a/tests/xfs/050
++++ b/tests/xfs/050
+@@ -116,7 +116,7 @@ _qsetup()
+ 
+ _exercise()
+ {
+-	_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs
++	_scratch_mkfs_xfs 2> /dev/null | _filter_mkfs 2>$tmp.mkfs
+ 	cat $tmp.mkfs >>$seqres.full
+ 
+ 	# keep the blocksize and data size for dd later
+diff --git a/tests/xfs/052 b/tests/xfs/052
+index c2cf596..0d3d6b7 100755
+--- a/tests/xfs/052
++++ b/tests/xfs/052
+@@ -59,7 +59,7 @@ _require_nobody
+ # setup a default run
+ _qmount_option uquota
+ 
+-_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs
++_scratch_mkfs_xfs 2> /dev/null | _filter_mkfs 2>$tmp.mkfs
+ cat $tmp.mkfs >>$seqres.full
+ chmod a+w $seqres.full     # arbitrary users will write here
+ 
+diff --git a/tests/xfs/067 b/tests/xfs/067
+index 27f5713..fd664b6 100755
+--- a/tests/xfs/067
++++ b/tests/xfs/067
+@@ -47,10 +47,10 @@ _require_scratch
+ 
+ # set up fs for 1K inodes
+ isize=0
+-_scratch_mkfs_xfs | _filter_mkfs >$seqres.full 2>$tmp.mkfs
++_scratch_mkfs_xfs 2>&1 | _filter_mkfs >$seqres.full 2>$tmp.mkfs
+ [ $? -eq 0 ] && source $tmp.mkfs
+ if [ "$isize" -lt 1024 ]; then
+-    _scratch_mkfs_xfs -i size=1024 >>$seqres.full \
++    _scratch_mkfs_xfs -i size=1024 >>$seqres.full 2>&1 \
+ 	|| _notrun "Cannot mkfs for this test using MKFS_OPTIONS specified"
+ fi
+ _scratch_mount >>$seqres.full || _fail "mount failed"
+diff --git a/tests/xfs/071 b/tests/xfs/071
+index 86c6899..52c56ac 100755
+--- a/tests/xfs/071
++++ b/tests/xfs/071
+@@ -105,7 +105,7 @@ _supported_os IRIX Linux
+ [ -n "$XFS_IO_PROG" ] || _notrun "xfs_io executable not found"
+ 
+ _require_scratch
+-_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs
++_scratch_mkfs_xfs 2> /dev/null | _filter_mkfs 2>$tmp.mkfs
+ . $tmp.mkfs
+ echo
+ _scratch_mount
+diff --git a/tests/xfs/072 b/tests/xfs/072
+index 9949749..e71bb08 100755
+--- a/tests/xfs/072
++++ b/tests/xfs/072
+@@ -51,9 +51,8 @@ _supported_os IRIX Linux
+ _require_scratch
+ 
+ rm -f $seqres.full
+-umount $SCRATCH_DEV >/dev/null 2>&1
+ 
+-_scratch_mkfs_xfs >/dev/null	|| _fail "mkfs failed"
++_scratch_mkfs_xfs >/dev/null 2>&1 || _fail "mkfs failed"
+ _scratch_mount >/dev/null	|| _fail "mount failed"
+ 
+ # check there's enough freespace on $SCRATCH_MNT ... (1GiB + 1MiB)
+diff --git a/tests/xfs/073 b/tests/xfs/073
+index ad38059..b3204f8 100755
+--- a/tests/xfs/073
++++ b/tests/xfs/073
+@@ -133,7 +133,7 @@ _supported_os Linux
+ _require_scratch
+ _require_loop
+ 
+-_scratch_mkfs_xfs -dsize=41m,agcount=2 | _filter_mkfs 2>/dev/null
++_scratch_mkfs_xfs -dsize=41m,agcount=2 2> /dev/null | _filter_mkfs 2>/dev/null
+ _scratch_mount 2>/dev/null || _fail "initial scratch mount failed"
+ 
+ echo
+@@ -153,7 +153,8 @@ _verify_copy $imgs.image $SCRATCH_DEV $SCRATCH_MNT
+ 
+ echo 
+ echo === copying scratch device to single target, large ro device
+-${MKFS_PROG}.xfs -dfile,name=$imgs.source,size=100g | _filter_mkfs 2>/dev/null
++${MKFS_PROG}.xfs -dfile,name=$imgs.source,size=100g 2> /dev/null \
++		| _filter_mkfs 2>/dev/null
+ rmdir $imgs.source_dir 2>/dev/null
+ mkdir $imgs.source_dir
+ 
+diff --git a/tests/xfs/104 b/tests/xfs/104
+index d31cf16..5938f54 100755
+--- a/tests/xfs/104
++++ b/tests/xfs/104
+@@ -71,7 +71,7 @@ _stress_scratch()
+ # real QA test starts here
+ _supported_fs xfs
+ _require_scratch
+-_scratch_mkfs_xfs | tee -a $seqres.full | _filter_mkfs 2>$tmp.mkfs
++_scratch_mkfs_xfs 2> /dev/null | tee -a $seqres.full | _filter_mkfs 2>$tmp.mkfs
+ . $tmp.mkfs	# extract blocksize and data size for scratch device
+ 
+ endsize=`expr 550 \* 1048576`	# stop after growing this big
+diff --git a/tests/xfs/106 b/tests/xfs/106
+index 7f97722..3fb914a 100755
+--- a/tests/xfs/106
++++ b/tests/xfs/106
+@@ -44,7 +44,7 @@ _require_scratch
+ _require_xfs_quota
+ 
+ # real QA test starts here
+-_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs
++_scratch_mkfs_xfs 2> /dev/null | _filter_mkfs 2>$tmp.mkfs
+ cat $tmp.mkfs >$seqres.full
+ . $tmp.mkfs
+ 
+diff --git a/tests/xfs/107 b/tests/xfs/107
+index 2bd20a3..72c2642 100755
+--- a/tests/xfs/107
++++ b/tests/xfs/107
+@@ -56,7 +56,7 @@ _require_scratch
+ _require_xfs_quota
+ 
+ # real QA test starts here
+-_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs
++_scratch_mkfs_xfs 2> /dev/null | _filter_mkfs 2>$tmp.mkfs
+ cat $tmp.mkfs >$seqres.full
+ . $tmp.mkfs
+ 
+diff --git a/tests/xfs/108 b/tests/xfs/108
+index 5a47009..0d41988 100755
+--- a/tests/xfs/108
++++ b/tests/xfs/108
+@@ -83,7 +83,7 @@ _require_prjquota $SCRATCH_DEV
+ # real QA test starts here
+ rm -f $tmp.projects $seqres.full
+ umount $SCRATCH_DEV 2>/dev/null
+-_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs
++_scratch_mkfs_xfs 2> /dev/null | _filter_mkfs 2>$tmp.mkfs
+ cat $tmp.mkfs >>$seqres.full
+ _scratch_mount
+ 
+diff --git a/tests/xfs/109 b/tests/xfs/109
+index 5578c90..e7a6d15 100755
+--- a/tests/xfs/109
++++ b/tests/xfs/109
+@@ -102,7 +102,8 @@ if [ -n "$FASTSTART" -a -f $SCRATCH_MNT/f0 ]; then
+ fi
+ umount $SCRATCH_DEV
+ 
+-_scratch_mkfs_xfs -dsize=160m,agcount=4 $faststart | _filter_mkfs 2>$tmp.mkfs
++_scratch_mkfs_xfs -dsize=160m,agcount=4 $faststart 2> /dev/null \
++			| _filter_mkfs 2>$tmp.mkfs
+ cat $tmp.mkfs >>$seqres.full
+ _scratch_mount
+ 
+diff --git a/tests/xfs/110 b/tests/xfs/110
+index 48bea45..46fe2f7 100755
+--- a/tests/xfs/110
++++ b/tests/xfs/110
+@@ -42,7 +42,7 @@ _require_scratch
+ 
+ # real QA test starts here
+ umount $SCRATCH_DEV 2>/dev/null
+-_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs
++_scratch_mkfs_xfs 2> /dev/null | _filter_mkfs 2>$tmp.mkfs
+ 
+ STR1=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+ STR2=BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
+diff --git a/tests/xfs/118 b/tests/xfs/118
+index 8414594..a0c1a54 100755
+--- a/tests/xfs/118
++++ b/tests/xfs/118
+@@ -72,7 +72,7 @@ _chowning_file()
+ }
+ 
+ echo "mkfs on scratch"
+-_scratch_mkfs_xfs >$seqres.full
++_scratch_mkfs_xfs >$seqres.full 2> /dev/null
+ 
+ echo "mount with quotas"
+ export MOUNT_OPTIONS="-o uquota"
+diff --git a/tests/xfs/178 b/tests/xfs/178
+index 9db8d05..4efba35 100755
+--- a/tests/xfs/178
++++ b/tests/xfs/178
+@@ -74,7 +74,7 @@ _supported_os Linux
+ #             fix filesystem, new mkfs.xfs will be fine.
+ 
+ _require_scratch
+-_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs \
++_scratch_mkfs_xfs 2> /dev/null | _filter_mkfs 2>$tmp.mkfs \
+         || _fail "mkfs failed!"
+ 
+ # By executing the followint tmp file, will get on the mkfs options stored in
+diff --git a/tests/xfs/189 b/tests/xfs/189
+index 27bfb63..9f6921a 100755
+--- a/tests/xfs/189
++++ b/tests/xfs/189
+@@ -241,7 +241,7 @@ _require_scratch
+ unset SCRATCH_RTDEV
+ unset SCRATCH_LOGDEV
+ 
+-_scratch_mkfs_xfs | _filter_mkfs 2>/dev/null
++_scratch_mkfs_xfs 2> /dev/null | _filter_mkfs 2>/dev/null
+ 
+ _add_scratch_fstab
+ _test_remount_rw
+diff --git a/tests/xfs/244 b/tests/xfs/244
+index d899a3d..7d2a2d3 100755
+--- a/tests/xfs/244
++++ b/tests/xfs/244
+@@ -52,7 +52,8 @@ _require_projid32bit
+ export MOUNT_OPTIONS="-opquota"
+ 
+ # make fs with no projid32bit
+-_scratch_mkfs_xfs -i projid32bit=0 >> $seqres.full || _fail "mkfs failed"
++_scratch_mkfs_xfs -i projid32bit=0 2> /dev/null >> $seqres.full \
++		|| _fail "mkfs failed"
+ _qmount
+ # make sure project quota is supported
+ _require_prjquota ${SCRATCH_DEV}
+@@ -96,7 +97,8 @@ fi
+ 
+ #  Do testing on filesystem with projid32bit feature enabled
+ umount $SCRATCH_DEV 2>/dev/null
+-_scratch_mkfs_xfs -i projid32bit=1 >> $seqres.full || _fail "mkfs failed"
++_scratch_mkfs_xfs -i projid32bit=1 >> $seqres.full 2> /dev/null \
++		|| _fail "mkfs failed"
+ _qmount
+ mkdir $dir
+ 
+diff --git a/tests/xfs/287 b/tests/xfs/287
+index 10853d1..9de0b3d 100755
+--- a/tests/xfs/287
++++ b/tests/xfs/287
+@@ -58,8 +58,8 @@ _require_scratch
+ _require_projid32bit
+ 
+ # create xfs fs without projid32bit ability, will be gained by xfs_admin
+-_scratch_mkfs_xfs -i projid32bit=0 -d size=200m >> $seqres.full \
+-		|| _fail "mkfs failed"
++_scratch_mkfs_xfs -i projid32bit=0 -d size=200m 2> /dev/null >> $seqres.full \
++		 || _fail "mkfs failed"
+ _qmount_option "pquota"
+ _qmount
+ # require project quotas
+-- 
+1.7.10.4
 
 _______________________________________________
 xfs mailing list
