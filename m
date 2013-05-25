@@ -1,32 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1B8F57F37
-	for <xfs@oss.sgi.com>; Sat, 25 May 2013 01:39:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 7C607AC006
-	for <xfs@oss.sgi.com>; Fri, 24 May 2013 23:39:18 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id T4NX4PlJApKIuTAw
-	for <xfs@oss.sgi.com>; Fri, 24 May 2013 23:39:14 -0700 (PDT)
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id B10426C192
-	for <xfs@oss.sgi.com>; Sat, 25 May 2013 01:39:13 -0500 (CDT)
-Message-ID: <51A05C96.1070101@hardwarefreak.com>
-Date: Sat, 25 May 2013 01:39:18 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	by oss.sgi.com (Postfix) with ESMTP id 55FC87F37
+	for <xfs@oss.sgi.com>; Sat, 25 May 2013 10:16:36 -0500 (CDT)
+Date: Sat, 25 May 2013 10:16:32 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 10/11] xfs: fix incorrect remote symlink block count
+Message-ID: <20130525151631.GY20028@sgi.com>
+References: <1369123330-9579-1-git-send-email-david@fromorbit.com>
+	<1369123330-9579-11-git-send-email-david@fromorbit.com>
+	<20130524203633.GW20028@sgi.com> <20130524203910.GX20028@sgi.com>
+	<20130524234144.GJ24543@dastard>
 MIME-Version: 1.0
-Subject: Re: XFS assertion from truncate. (3.10-rc2)
-References: <20130522051243.GH29466@dastard> <20130522052938.GA2573@redhat.com>
-	<20130522055147.GI29466@dastard> <20130522215454.GL29466@dastard>
-	<20130523184948.GA11151@redhat.com>
-	<20130523223038.GB24543@dastard>
-	<20130524004906.GA21171@redhat.com>
-	<20130524012625.GH24543@dastard>
-	<20130524015219.GA28486@redhat.com>
-	<20130524030300.GA30760@redhat.com>
-	<20130524080300.GI24543@dastard> <51A044E5.1030105@sandeen.net>
-In-Reply-To: <51A044E5.1030105@sandeen.net>
-Reply-To: stan@hardwarefreak.com
+Content-Disposition: inline
+In-Reply-To: <20130524234144.GJ24543@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,26 +25,57 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On 5/24/2013 11:58 PM, Eric Sandeen wrote:
-> On 5/24/13 3:03 AM, Dave Chinner wrote:
+On Sat, May 25, 2013 at 09:41:44AM +1000, Dave Chinner wrote:
+> On Fri, May 24, 2013 at 03:39:10PM -0500, Ben Myers wrote:
+> > On Fri, May 24, 2013 at 03:36:33PM -0500, Ben Myers wrote:
+> > > On Tue, May 21, 2013 at 06:02:09PM +1000, Dave Chinner wrote:
+> > > > From: Dave Chinner <dchinner@redhat.com>
+> > > > 
+> > > > When CRCs are enabled, the number of blocks needed to hold a remote
+> > > > symlink on a 1k block size filesystem may be 2 instead of 1. The
+> > > > transaction reservation for the allocated bloks was not taking this
+> > > 					    blocks
+> > > > into account and only allocating one block. hence when trying to
+> > > 					      H
+> > > 
+> > > fixed.
+> > > 
+> > > > read or invalidate such symlinks, we are mapping a hole where there
+> > > > should be a block and things go bad at that point.
+> > > > 
+> > > > Fix the reservation to use the correct block count, clean up the
+> > > > block count calculation similar to the remote attribute calculation,
+> > > > and add a debug guard to detect when we don't write the entire
+> > > > symlink to disk.
+> > > > 
+> > > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ...
 > 
->> Right, patch below should fix the problem.
->>
->> What a frustrating bug. Now, where's my bottle of scotch?
+> > > > @@ -525,9 +518,7 @@ xfs_symlink(
+> > > >  			bp->b_ops = &xfs_symlink_buf_ops;
+> > > >  
+> > > >  			byte_cnt = XFS_SYMLINK_BUF_SPACE(mp, byte_cnt);
+> > > > -			if (pathlen < byte_cnt) {
+> > > > -				byte_cnt = pathlen;
+> > > > -			}
+> > > > +			byte_cnt = min(byte_cnt, pathlen);
+> > > 
+> > > The min is necessary due since we can have up to three extents in here,
+> > > according to the comment above the define for XFS_SYMLINK_MAPS.  So byte_cnt
+> > > can be less than pathlen.
+> > 
+> > D'oh.  I wanted to point out that it looks like this issue with 'min' here
+> > should be causing problems with symlinks on non-crc enabled filesystems.
 > 
-> In your pantry, Dave.  Next to the others! ;)
+> What issue might that be? The result is identical in either case, I
+> just converted this to min to be more concise and consistent with
+> the same code loops in the remote attr copyin/copyout.
 
-Be careful with that stuff lest you have more bugs to fix. ;)
-
-Heheh, how bout a T-Shirt:  "Don't drink and code" on the front, w/a
-graphic of intoxicated Calvin tangled up in a wrecked PC on the back.
-At least he won't be pissing on anything in this one. ;)
-
--- 
-Stan
-
+My impression was that if you have byte_cnt < pathlen we'll copy past the end
+of the extent.  Looks like I was wrong.
 
 _______________________________________________
 xfs mailing list
