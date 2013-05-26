@@ -1,30 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 71ED97F37
-	for <xfs@oss.sgi.com>; Sun, 26 May 2013 17:43:44 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5D17730404E
-	for <xfs@oss.sgi.com>; Sun, 26 May 2013 15:43:44 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 31DE97F37
+	for <xfs@oss.sgi.com>; Sun, 26 May 2013 17:44:56 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B24A4AC001
+	for <xfs@oss.sgi.com>; Sun, 26 May 2013 15:44:52 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	oArg2DtCT5rFBtTJ for <xfs@oss.sgi.com>;
-	Sun, 26 May 2013 15:43:42 -0700 (PDT)
-Date: Mon, 27 May 2013 08:43:38 +1000
+	Y4LVbNiPasQLnP2Z for <xfs@oss.sgi.com>;
+	Sun, 26 May 2013 15:44:51 -0700 (PDT)
+Date: Mon, 27 May 2013 08:44:49 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS assertion from truncate. (3.10-rc2)
-Message-ID: <20130526224338.GL24543@dastard>
-References: <20130522215454.GL29466@dastard>
-	<20130523184948.GA11151@redhat.com>
-	<20130523223038.GB24543@dastard>
-	<20130524004906.GA21171@redhat.com>
-	<20130524012625.GH24543@dastard>
-	<20130524015219.GA28486@redhat.com>
-	<20130524030300.GA30760@redhat.com>
-	<20130524080300.GI24543@dastard> <51A044E5.1030105@sandeen.net>
-	<51A05C96.1070101@hardwarefreak.com>
+Subject: Re: xfsprogs: is it one issue?
+Message-ID: <20130526224449.GM24543@dastard>
+References: <CAEH94LjnVn-uD6cfwOcChC4wq1PppcD8BN30F93SD=YjdTbbuw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <51A05C96.1070101@hardwarefreak.com>
+In-Reply-To: <CAEH94LjnVn-uD6cfwOcChC4wq1PppcD8BN30F93SD=YjdTbbuw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,41 +25,23 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Stan Hoeppner <stan@hardwarefreak.com>
+To: Zhi Yong Wu <zwu.kernel@gmail.com>
 Cc: xfs@oss.sgi.com
 
-On Sat, May 25, 2013 at 01:39:18AM -0500, Stan Hoeppner wrote:
-> On 5/24/2013 11:58 PM, Eric Sandeen wrote:
-> > On 5/24/13 3:03 AM, Dave Chinner wrote:
-> > 
-> >> Right, patch below should fix the problem.
-> >>
-> >> What a frustrating bug. Now, where's my bottle of scotch?
-> > 
-> > In your pantry, Dave.  Next to the others! ;)
-
-Yeah, there's a few on the top shelf to choose from....
-
-> Be careful with that stuff lest you have more bugs to fix. ;)
-
-The secret is to wait till the next day before posting the patches.
-
-> Heheh, how bout a T-Shirt:  "Don't drink and code" on the front,
-
-Sorry, Stan, but you lost me at "Don't drink".... :)
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gU3VuLCBNYXkgMjYsIDIwMTMgYXQgMTI6Mjk6MTFBTSArMDgwMCwgWmhpIFlvbmcgV3Ugd3Jv
+dGU6Cj4gSEksCj4gCj4gRGlkIGFueW9uZSBoaXQgdGhpcyBpc3N1ZT8KPiAKPiBbcm9vdEBmMTUg
+eGZzcHJvZ3NdIyBtYWtlCj4gQnVpbGRpbmcgaW5jbHVkZQo+IEJ1aWxkaW5nIGxpYnhmcwo+ICAg
+ICBbVEVTVF0gICAgQ1JDMzIKPiBJbiBmaWxlIGluY2x1ZGVkIGZyb20gLi4vaW5jbHVkZS9saWJ4
+ZnMuaDo1ODQ6MCwKPiAgICAgICAgICAgICAgICAgIGZyb20gY3JjMzIuYzozNjoKPiAuLi9pbmNs
+dWRlL3hmcy94ZnNfaWFsbG9jLmg6NzU6MjogZXJyb3I6IHVua25vd24gdHlwZSBuYW1lIOKAmHVt
+b2RlX3TigJkKPiBnbWFrZVsyXTogKioqIFtjcmMzMnNlbGZ0ZXN0XSBFcnJvciAxCj4gZ21ha2Vb
+MV06ICoqKiBbbGlieGZzXSBFcnJvciAyCj4gbWFrZTogKioqIFtkZWZhdWx0XSBFcnJvciAyCgpJ
+bnN0YWxsIHRoZSBsYXRlc3Qga2VybmVsIGhlYWRlcnMgcGFja2FnZSBmb3IgeW91ciBkaXN0cm8u
+CgpDaGVlcnMsCgpEYXZlLgotLSAKRGF2ZSBDaGlubmVyCmRhdmlkQGZyb21vcmJpdC5jb20KCl9f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5n
+IGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZv
+L3hmcwo=
