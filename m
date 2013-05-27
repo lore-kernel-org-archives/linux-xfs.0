@@ -1,26 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DB9FA29DF8
-	for <xfs@oss.sgi.com>; Mon, 27 May 2013 01:38:45 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id E139929E06
+	for <xfs@oss.sgi.com>; Mon, 27 May 2013 01:38:48 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A79D1304039
-	for <xfs@oss.sgi.com>; Sun, 26 May 2013 23:38:45 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BF9C6304039
+	for <xfs@oss.sgi.com>; Sun, 26 May 2013 23:38:48 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	z6XUrdXtA4kDwo09 for <xfs@oss.sgi.com>;
-	Sun, 26 May 2013 23:38:43 -0700 (PDT)
+	gyTXbUxc0MomOvaD for <xfs@oss.sgi.com>;
+	Sun, 26 May 2013 23:38:47 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1Ugr4f-0008FX-O7
-	for xfs@oss.sgi.com; Mon, 27 May 2013 16:38:29 +1000
+	(envelope-from <dave@fromorbit.com>) id 1Ugr4p-0008FV-MH
+	for xfs@oss.sgi.com; Mon, 27 May 2013 16:38:39 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1Ugr4f-0003x7-Kt
+	(envelope-from <dave@disappointment.disaster>) id 1Ugr4f-0003x0-Hn
 	for xfs@oss.sgi.com; Mon, 27 May 2013 16:38:29 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/9] xfs: fix incorrect remote symlink block count
-Date: Mon, 27 May 2013 16:38:20 +1000
-Message-Id: <1369636707-15150-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1369636707-15150-1-git-send-email-david@fromorbit.com>
-References: <1369636707-15150-1-git-send-email-david@fromorbit.com>
+Subject: [PATH 0/9] xfs: fixes for 3.10-rc4
+Date: Mon, 27 May 2013 16:38:18 +1000
+Message-Id: <1369636707-15150-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,87 +34,19 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi Ben,
 
-When CRCs are enabled, the number of blocks needed to hold a remote
-symlink on a 1k block size filesystem may be 2 instead of 1. The
-transaction reservation for the allocated bloks was not taking this
-into account and only allocating one block. hence when trying to
-read or invalidate such symlinks, we are mapping a hole where there
-should be a block and things go bad at that point.
+This is an update for all the fixes I have for 3,10-rc4.
 
-Fix the reservation to use the correct block count, clean up the
-block count calculation similar to the remote attribute calculation,
-and add a debug guard to detect when we don't write the entire
-symlink to disk.
+All the comments on the previous patches have been updated in this
+series, and there are two new patches. The first patch adds support
+for indicating that the filesystem has CRC enabled to userspace, and
+the second fixes the missing CRC updates on the unlinked inode list
+manipulations.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_symlink.c |   20 ++++++--------------
- 1 file changed, 6 insertions(+), 14 deletions(-)
+Cheers,
 
-diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-index 5f234389..195a403 100644
---- a/fs/xfs/xfs_symlink.c
-+++ b/fs/xfs/xfs_symlink.c
-@@ -56,16 +56,9 @@ xfs_symlink_blocks(
- 	struct xfs_mount *mp,
- 	int		pathlen)
- {
--	int		fsblocks = 0;
--	int		len = pathlen;
-+	int buflen = XFS_SYMLINK_BUF_SPACE(mp, mp->m_sb.sb_blocksize);
- 
--	do {
--		fsblocks++;
--		len -= XFS_SYMLINK_BUF_SPACE(mp, mp->m_sb.sb_blocksize);
--	} while (len > 0);
--
--	ASSERT(fsblocks <= XFS_SYMLINK_MAPS);
--	return fsblocks;
-+	return (pathlen + buflen - 1) / buflen;
- }
- 
- static int
-@@ -405,7 +398,7 @@ xfs_symlink(
- 	if (pathlen <= XFS_LITINO(mp, dp->i_d.di_version))
- 		fs_blocks = 0;
- 	else
--		fs_blocks = XFS_B_TO_FSB(mp, pathlen);
-+		fs_blocks = xfs_symlink_blocks(mp, pathlen);
- 	resblks = XFS_SYMLINK_SPACE_RES(mp, link_name->len, fs_blocks);
- 	error = xfs_trans_reserve(tp, resblks, XFS_SYMLINK_LOG_RES(mp), 0,
- 			XFS_TRANS_PERM_LOG_RES, XFS_SYMLINK_LOG_COUNT);
-@@ -512,7 +505,7 @@ xfs_symlink(
- 		cur_chunk = target_path;
- 		offset = 0;
- 		for (n = 0; n < nmaps; n++) {
--			char *buf;
-+			char	*buf;
- 
- 			d = XFS_FSB_TO_DADDR(mp, mval[n].br_startblock);
- 			byte_cnt = XFS_FSB_TO_B(mp, mval[n].br_blockcount);
-@@ -525,9 +518,7 @@ xfs_symlink(
- 			bp->b_ops = &xfs_symlink_buf_ops;
- 
- 			byte_cnt = XFS_SYMLINK_BUF_SPACE(mp, byte_cnt);
--			if (pathlen < byte_cnt) {
--				byte_cnt = pathlen;
--			}
-+			byte_cnt = min(byte_cnt, pathlen);
- 
- 			buf = bp->b_addr;
- 			buf += xfs_symlink_hdr_set(mp, ip->i_ino, offset,
-@@ -542,6 +533,7 @@ xfs_symlink(
- 			xfs_trans_log_buf(tp, bp, 0, (buf + byte_cnt - 1) -
- 							(char *)bp->b_addr);
- 		}
-+		ASSERT(pathlen == 0);
- 	}
- 
- 	/*
--- 
-1.7.10.4
+Dave.
 
 _______________________________________________
 xfs mailing list
