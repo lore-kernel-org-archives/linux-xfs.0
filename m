@@ -1,26 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A52F329E05
-	for <xfs@oss.sgi.com>; Mon, 27 May 2013 02:15:21 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D083B29E05
+	for <xfs@oss.sgi.com>; Mon, 27 May 2013 02:15:23 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 677978F8033
-	for <xfs@oss.sgi.com>; Mon, 27 May 2013 00:15:18 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 60156AC004
+	for <xfs@oss.sgi.com>; Mon, 27 May 2013 00:15:23 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	F5LP7kvNXsQSxGmI for <xfs@oss.sgi.com>;
-	Mon, 27 May 2013 00:15:17 -0700 (PDT)
+	oP7e6cBQj7u4jMhn for <xfs@oss.sgi.com>;
+	Mon, 27 May 2013 00:15:21 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1Ugrdy-0008LB-IT
+	(envelope-from <dave@fromorbit.com>) id 1Ugrdy-0008LE-Lj
 	for xfs@oss.sgi.com; Mon, 27 May 2013 17:14:58 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1Ugrdy-0006To-Dd
+	(envelope-from <dave@disappointment.disaster>) id 1Ugrdy-0006U0-Hh
 	for xfs@oss.sgi.com; Mon, 27 May 2013 17:14:58 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 0/4] xfsprogs: more CRC patches
-Date: Mon, 27 May 2013 17:14:52 +1000
-Message-Id: <1369638896-24872-1-git-send-email-david@fromorbit.com>
-In-Reply-To: <1369312565-6266-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 3/4] xfs_mdrestore: recalculate sb CRC before writing
+Date: Mon, 27 May 2013 17:14:55 +1000
+Message-Id: <1369638896-24872-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1369638896-24872-1-git-send-email-david@fromorbit.com>
 References: <1369312565-6266-1-git-send-email-david@fromorbit.com>
+	<1369638896-24872-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,13 +37,35 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-A few more patches. The first enforced the fixed config bits for CRC
-enabled filesystems at mkfs time. The second adds "-m crc=?" output
-to xfs-info, the last two effectively disable metadump/restore
-functionality on CRC enabled filesystems until xfs_db supports CRC
-calculations properly.
+From: Dave Chinner <dchinner@redhat.com>
 
--Dave.
+xfs_mdrestore writes the superblock after modifying it, and so the
+CRC is not necessarily correct. make sure the CRC is correct
+before we write the superblock back.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ mdrestore/xfs_mdrestore.c |    5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/mdrestore/xfs_mdrestore.c b/mdrestore/xfs_mdrestore.c
+index 479e677..e57bdb2 100644
+--- a/mdrestore/xfs_mdrestore.c
++++ b/mdrestore/xfs_mdrestore.c
+@@ -169,6 +169,11 @@ perform_restore(
+ 	memset(block_buffer, 0, sb.sb_sectsize);
+ 	sb.sb_inprogress = 0;
+ 	libxfs_sb_to_disk((xfs_dsb_t *)block_buffer, &sb, XFS_SB_ALL_BITS);
++	if (xfs_sb_version_hascrc(&sb)) {
++		xfs_update_cksum(block_buffer, sb.sb_sectsize,
++				 offsetof(struct xfs_sb, sb_crc));
++	}
++
+ 	if (pwrite(dst_fd, block_buffer, sb.sb_sectsize, 0) < 0)
+ 		fatal("error writing primary superblock: %s\n", strerror(errno));
+ 
+-- 
+1.7.10.4
 
 _______________________________________________
 xfs mailing list
