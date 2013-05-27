@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0638E29E06
-	for <xfs@oss.sgi.com>; Mon, 27 May 2013 06:39:50 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C88A68F8037
-	for <xfs@oss.sgi.com>; Mon, 27 May 2013 04:39:49 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 7274229E06
+	for <xfs@oss.sgi.com>; Mon, 27 May 2013 06:39:51 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E7BD1AC006
+	for <xfs@oss.sgi.com>; Mon, 27 May 2013 04:39:50 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	VjOKEV3tCzRHRK6z for <xfs@oss.sgi.com>;
-	Mon, 27 May 2013 04:39:48 -0700 (PDT)
+	TeQlGBnzaqMf3foJ for <xfs@oss.sgi.com>;
+	Mon, 27 May 2013 04:39:49 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UgvmF-0000OC-Eb
+	(envelope-from <dave@fromorbit.com>) id 1UgvmF-0000OD-FT
 	for xfs@oss.sgi.com; Mon, 27 May 2013 21:39:47 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1Ugvm5-0006sg-BE
+	(envelope-from <dave@disappointment.disaster>) id 1Ugvm5-0006sk-Cs
 	for xfs@oss.sgi.com; Mon, 27 May 2013 21:39:37 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/3] xfs: don't use speculative prealloc for small files
-Date: Mon, 27 May 2013 21:39:31 +1000
-Message-Id: <1369654773-26391-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/3] xfs: don't do IO when creating an new inode
+Date: Mon, 27 May 2013 21:39:32 +1000
+Message-Id: <1369654773-26391-3-git-send-email-david@fromorbit.com>
 In-Reply-To: <1369654773-26391-1-git-send-email-david@fromorbit.com>
 References: <1369654773-26391-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,85 +38,88 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Dedicated small file workloads have been seeing significant free
-space fragmentation causing premature inode allocation failure
-when large inode sizes are in use. A particular test case showed
-that a workload that runs to a real ENOSPC on 256 byte inodes would
-fail inode allocation with ENOSPC about about 80% full with 512 byte
-inodes, and at about 50% full with 1024 byte inodes.
+When we are allocating a new inode, we read the inode cluster off
+disk to increment the generation number. We are already using a
+random generation number for newly allocated inodes, so if we are not
+using the ikeep mode, we can just generate a new generation number
+when we initialise the newly allocated inode.
 
-The same workload, when run with -o allocsize=4096 on 1024 byte
-inodes would run to being 100% full before giving ENOSPC. That is,
-no freespace fragmentation at all.
-
-The issue was caused by the specific IO pattern the application had
-- the framework it was using did not support direct IO, and so it
-was emulating it by using fadvise(DONT_NEED). The result was that
-the data was getting written back before the speculative prealloc
-had been trimmed from memory by the close(), and so small single
-block files were being allocated with 2 blocks, and then having one
-truncated away. The result was lots of small 4k free space extents,
-and hence each new 8k allocation would take another 8k from
-contiguous free space and turn it into 4k of allocated space and 4k
-of free space.
-
-Hence inode allocation, which requires contiguous, aligned
-allocation of 16k (256 byte inodes), 32k (512 byte inodes) or 64k
-(1024 byte inodes) can fail to find sufficiently large freespace and
-hence fail while there is still lots of free space available.
-
-There's a simple fix for this, and one that has precendence in the
-allocator code already - don't do speculative allocation unless the
-size of the file is larger than a certain size. In this case, that
-size is the minimum default preallocation size:
-mp->m_writeio_blocks. And to keep with the concept of being nice to
-people when the files are still relatively small, cap the prealloc
-to mp->m_writeio_blocks until the file goes over a stripe unit is
-size, at which point we'll fall back to the current behaviour based
-on the last extent size.
-
-This will effectively turn off speculative prealloc for very small
-files, keep preallocation low for small files, and behave as it
-currently does for any file larger than a stripe unit. This
-completely avoids the freespace fragmentation problem this
-particular IO pattern was causing.
+This avoids the need for reading the inode buffer during inode
+creation. This will speed up allocation of inodes in cold, partially
+allocated clusters as they will no longer need to be read from disk
+during allocation. It will also reduce the CPU overhead of inode
+allocation by not having the process the buffer read, even on cache
+hits.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_iomap.c |   13 +++++++++++++
- 1 file changed, 13 insertions(+)
+ fs/xfs/xfs_inode.c |   36 ++++++++++++++++++++++++++++--------
+ 1 file changed, 28 insertions(+), 8 deletions(-)
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 8f8aaee..14be676 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -284,6 +284,15 @@ xfs_iomap_eof_want_preallocate(
- 		return 0;
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index f4daadf..71c074f 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1028,6 +1028,11 @@ xfs_dinode_calc_crc(
  
- 	/*
-+	 * If the file is smaller than the minimum prealloc and we are using
-+	 * dynamic preallocation, don't do any preallocation at all as it is
-+	 * likely this is the only write to the file that is going to be done.
-+	 */
-+	if (!(mp->m_flags & XFS_MOUNT_DFLT_IOSIZE) &&
-+	    XFS_ISIZE(ip) < mp->m_writeio_blocks)
+ /*
+  * Read the disk inode attributes into the in-core inode structure.
++ *
++ * If we are initialising a new inode and we are not utilising the
++ * XFS_MOUNT_IKEEP inode cluster mode, we can simple build the new inode core
++ * with a random generation number. If we are keeping inodes around, we need to
++ * read the inode cluster to get the existing generation number off disk.
+  */
+ int
+ xfs_iread(
+@@ -1047,6 +1052,22 @@ xfs_iread(
+ 	if (error)
+ 		return error;
+ 
++	/* shortcut IO on inode allocation if possible */
++	if ((iget_flags & XFS_IGET_CREATE) &&
++	    !(mp->m_flags & XFS_MOUNT_IKEEP)) {
++		/* initialise the on-disk inode core */
++		memset(&ip->i_d, 0, sizeof(ip->i_d));
++		ip->i_d.di_magic = XFS_DINODE_MAGIC;
++		ip->i_d.di_gen = prandom_u32();
++		if (xfs_sb_version_hascrc(&mp->m_sb)) {
++			ip->i_d.di_version = 3;
++			ip->i_d.di_ino = ip->i_ino;
++			uuid_copy(&ip->i_d.di_uuid, &mp->m_sb.sb_uuid);
++		} else
++			ip->i_d.di_version = 2;
 +		return 0;
++	}
 +
-+	/*
- 	 * If there are any real blocks past eof, then don't
- 	 * do any speculative allocation.
+ 	/*
+ 	 * Get pointers to the on-disk inode and the buffer containing it.
  	 */
-@@ -345,6 +354,10 @@ xfs_iomap_eof_prealloc_initial_size(
- 	if (mp->m_flags & XFS_MOUNT_DFLT_IOSIZE)
- 		return 0;
+@@ -1133,17 +1154,16 @@ xfs_iread(
+ 	xfs_buf_set_ref(bp, XFS_INO_REF);
  
-+	/* If the file is small, then use the minimum prealloc */
-+	if (XFS_ISIZE(ip) < mp->m_dalign)
-+		return 0;
-+
  	/*
- 	 * As we write multiple pages, the offset will always align to the
- 	 * start of a page and hence point to a hole at EOF. i.e. if the size is
+-	 * Use xfs_trans_brelse() to release the buffer containing the
+-	 * on-disk inode, because it was acquired with xfs_trans_read_buf()
+-	 * in xfs_imap_to_bp() above.  If tp is NULL, this is just a normal
++	 * Use xfs_trans_brelse() to release the buffer containing the on-disk
++	 * inode, because it was acquired with xfs_trans_read_buf() in
++	 * xfs_imap_to_bp() above.  If tp is NULL, this is just a normal
+ 	 * brelse().  If we're within a transaction, then xfs_trans_brelse()
+ 	 * will only release the buffer if it is not dirty within the
+ 	 * transaction.  It will be OK to release the buffer in this case,
+-	 * because inodes on disk are never destroyed and we will be
+-	 * locking the new in-core inode before putting it in the hash
+-	 * table where other processes can find it.  Thus we don't have
+-	 * to worry about the inode being changed just because we released
+-	 * the buffer.
++	 * because inodes on disk are never destroyed and we will be locking the
++	 * new in-core inode before putting it in the cache where other
++	 * processes can find it.  Thus we don't have to worry about the inode
++	 * being changed just because we released the buffer.
+ 	 */
+  out_brelse:
+ 	xfs_trans_brelse(tp, bp);
 -- 
 1.7.10.4
 
