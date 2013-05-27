@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 504B929E07
-	for <xfs@oss.sgi.com>; Mon, 27 May 2013 01:38:50 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 8E7E629E16
+	for <xfs@oss.sgi.com>; Mon, 27 May 2013 01:38:54 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D1A47AC006
-	for <xfs@oss.sgi.com>; Sun, 26 May 2013 23:38:49 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5E3C48F8033
+	for <xfs@oss.sgi.com>; Sun, 26 May 2013 23:38:51 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	arcL7OzGBfYa41Ic for <xfs@oss.sgi.com>;
-	Sun, 26 May 2013 23:38:48 -0700 (PDT)
-Received: from [192.168.1.1] (helo=disappointment)
-	by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1Ugr4p-0008FW-Lz
+	qFEUfoHLDyxeQFrj for <xfs@oss.sgi.com>;
+	Sun, 26 May 2013 23:38:49 -0700 (PDT)
+Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1Ugr4p-0008Fg-Qm
 	for xfs@oss.sgi.com; Mon, 27 May 2013 16:38:39 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1Ugr4f-0003x3-J5
+	(envelope-from <dave@disappointment.disaster>) id 1Ugr4f-0003xI-NJ
 	for xfs@oss.sgi.com; Mon, 27 May 2013 16:38:29 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/9] xfs: don't emit v5 superblock warnings on write
-Date: Mon, 27 May 2013 16:38:19 +1000
-Message-Id: <1369636707-15150-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 4/9] xfs: rework dquot CRCs
+Date: Mon, 27 May 2013 16:38:22 +1000
+Message-Id: <1369636707-15150-5-git-send-email-david@fromorbit.com>
 In-Reply-To: <1369636707-15150-1-git-send-email-david@fromorbit.com>
 References: <1369636707-15150-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,91 +38,256 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-We write the superblock every 30s or so which results in the
-verifier being called. Right now that results in this output
-every 30s:
+Calculating dquot CRCs when the backing buffer is written back just
+doesn't work reliably. There are several places which manipulate
+dquots directly in the buffers, and they don't calculate CRCs
+appropriately, nor do they always set the buffer up to calculate
+CRCs appropriately.
 
-XFS (vda): Version 5 superblock detected. This kernel has EXPERIMENTAL support enabled!
-Use of these features in this kernel is at your own risk!
+Firstly, if we log a dquot buffer (e.g. during allocation) it gets
+logged without valid CRC, and so on recovery we end up with a dquot
+that is not valid.
 
-And spamming the logs.
+Secondly, if we recover/repair a dquot, we don't have a verifier
+attached to the buffer and hence CRCs arenot calculate don the way
+down to disk.
 
-We don't need to check for whether we support v5 superblocks or
-whether there are feature bits we don't support set as these are
-only relevant when we first mount the filesytem. i.e. on superblock
-read. Hence for the write verification we can just skip all the
-checks (and hence verbose output) altogether.
+Thirdly, calculating the CRC after we've changed the contents means
+that if we re-read the dquot from the buffer, we cannot verify the
+contents of the dquot are valid, as the CRC is invalid.
+
+So, to avoid all the dquot CRC errors that are being detected by the
+read verifier, change to using the same model as for inodes. that
+is, dquot CRCs are calculated and written to the backing buffer at
+the time the dquot is flushed to the backing buffer. If we modify
+the dquuot directly in the backing buffer, calculate the CRC
+immediately after the modification is complete. Hence the dquot in
+the on-disk buffer should always have a valid CRC.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_mount.c |   18 +++++++++++-------
- 1 file changed, 11 insertions(+), 7 deletions(-)
+ fs/xfs/xfs_dquot.c       |   37 ++++++++++++++++---------------------
+ fs/xfs/xfs_log_recover.c |   10 ++++++++++
+ fs/xfs/xfs_qm.c          |   36 ++++++++++++++++++++++++++----------
+ fs/xfs/xfs_quota.h       |    2 ++
+ 4 files changed, 54 insertions(+), 31 deletions(-)
 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index f6bfbd7..e8e310c 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -314,7 +314,8 @@ STATIC int
- xfs_mount_validate_sb(
- 	xfs_mount_t	*mp,
- 	xfs_sb_t	*sbp,
--	bool		check_inprogress)
-+	bool		check_inprogress,
-+	bool		check_version)
- {
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index a41f8bf..044e97a 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -249,8 +249,11 @@ xfs_qm_init_dquot_blk(
+ 		d->dd_diskdq.d_version = XFS_DQUOT_VERSION;
+ 		d->dd_diskdq.d_id = cpu_to_be32(curid);
+ 		d->dd_diskdq.d_flags = type;
+-		if (xfs_sb_version_hascrc(&mp->m_sb))
++		if (xfs_sb_version_hascrc(&mp->m_sb)) {
+ 			uuid_copy(&d->dd_uuid, &mp->m_sb.sb_uuid);
++			xfs_update_cksum((char *)d, sizeof(struct xfs_dqblk),
++					 XFS_DQUOT_CRC_OFF);
++		}
+ 	}
  
- 	/*
-@@ -337,9 +338,10 @@ xfs_mount_validate_sb(
- 
- 	/*
- 	 * Version 5 superblock feature mask validation. Reject combinations the
--	 * kernel cannot support up front before checking anything else.
-+	 * kernel cannot support up front before checking anything else. For
-+	 * write validation, we don't need to check feature masks.
- 	 */
--	if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) {
-+	if (check_version && XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) {
- 		xfs_alert(mp,
- "Version 5 superblock detected. This kernel has EXPERIMENTAL support enabled!\n"
- "Use of these features in this kernel is at your own risk!");
-@@ -675,7 +677,8 @@ xfs_sb_to_disk(
- 
- static int
- xfs_sb_verify(
--	struct xfs_buf	*bp)
-+	struct xfs_buf	*bp,
-+	bool		check_version)
- {
- 	struct xfs_mount *mp = bp->b_target->bt_mount;
- 	struct xfs_sb	sb;
-@@ -686,7 +689,8 @@ xfs_sb_verify(
- 	 * Only check the in progress field for the primary superblock as
- 	 * mkfs.xfs doesn't clear it from secondary superblocks.
- 	 */
--	return xfs_mount_validate_sb(mp, &sb, bp->b_bn == XFS_SB_DADDR);
-+	return xfs_mount_validate_sb(mp, &sb, bp->b_bn == XFS_SB_DADDR,
-+				     check_version);
+ 	xfs_trans_dquot_buf(tp, bp,
+@@ -286,23 +289,6 @@ xfs_dquot_set_prealloc_limits(struct xfs_dquot *dqp)
+ 	dqp->q_low_space[XFS_QLOWSP_5_PCNT] = space * 5;
  }
  
- /*
-@@ -719,7 +723,7 @@ xfs_sb_read_verify(
- 			goto out_error;
- 		}
+-STATIC void
+-xfs_dquot_buf_calc_crc(
+-	struct xfs_mount	*mp,
+-	struct xfs_buf		*bp)
+-{
+-	struct xfs_dqblk	*d = (struct xfs_dqblk *)bp->b_addr;
+-	int			i;
+-
+-	if (!xfs_sb_version_hascrc(&mp->m_sb))
+-		return;
+-
+-	for (i = 0; i < mp->m_quotainfo->qi_dqperchunk; i++, d++) {
+-		xfs_update_cksum((char *)d, sizeof(struct xfs_dqblk),
+-				 offsetof(struct xfs_dqblk, dd_crc));
+-	}
+-}
+-
+ STATIC bool
+ xfs_dquot_buf_verify_crc(
+ 	struct xfs_mount	*mp,
+@@ -328,12 +314,11 @@ xfs_dquot_buf_verify_crc(
+ 
+ 	for (i = 0; i < ndquots; i++, d++) {
+ 		if (!xfs_verify_cksum((char *)d, sizeof(struct xfs_dqblk),
+-				 offsetof(struct xfs_dqblk, dd_crc)))
++				 XFS_DQUOT_CRC_OFF))
+ 			return false;
+ 		if (!uuid_equal(&d->dd_uuid, &mp->m_sb.sb_uuid))
+ 			return false;
  	}
--	error = xfs_sb_verify(bp);
-+	error = xfs_sb_verify(bp, true);
+-
+ 	return true;
+ }
  
- out_error:
- 	if (error) {
-@@ -758,7 +762,7 @@ xfs_sb_write_verify(
- 	struct xfs_buf_log_item	*bip = bp->b_fspriv;
- 	int			error;
+@@ -393,6 +378,11 @@ xfs_dquot_buf_read_verify(
+ 	}
+ }
  
--	error = xfs_sb_verify(bp);
-+	error = xfs_sb_verify(bp, false);
- 	if (error) {
- 		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
- 		xfs_buf_ioerror(bp, error);
++/*
++ * we don't calculate the CRC here as that is done when the dquot is flushed to
++ * the buffer after the update is done. This ensures that the dquot in the
++ * buffer always has an up-to-date CRC value.
++ */
+ void
+ xfs_dquot_buf_write_verify(
+ 	struct xfs_buf	*bp)
+@@ -404,7 +394,6 @@ xfs_dquot_buf_write_verify(
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
+ 		return;
+ 	}
+-	xfs_dquot_buf_calc_crc(mp, bp);
+ }
+ 
+ const struct xfs_buf_ops xfs_dquot_buf_ops = {
+@@ -1151,11 +1140,17 @@ xfs_qm_dqflush(
+ 	 * copy the lsn into the on-disk dquot now while we have the in memory
+ 	 * dquot here. This can't be done later in the write verifier as we
+ 	 * can't get access to the log item at that point in time.
++	 *
++	 * We also calculate the CRC here so that the on-disk dquot in the
++	 * buffer always has a valid CRC. This ensures there is no possibility
++	 * of a dquot without an up-to-date CRC getting to disk.
+ 	 */
+ 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+ 		struct xfs_dqblk *dqb = (struct xfs_dqblk *)ddqp;
+ 
+ 		dqb->dd_lsn = cpu_to_be64(dqp->q_logitem.qli_item.li_lsn);
++		xfs_update_cksum((char *)dqb, sizeof(struct xfs_dqblk),
++				 XFS_DQUOT_CRC_OFF);
+ 	}
+ 
+ 	/*
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 93f03ec..0be37d7 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -2255,6 +2255,12 @@ xfs_qm_dqcheck(
+ 	d->dd_diskdq.d_flags = type;
+ 	d->dd_diskdq.d_id = cpu_to_be32(id);
+ 
++	if (xfs_sb_version_hascrc(&mp->m_sb)) {
++		uuid_copy(&d->dd_uuid, &mp->m_sb.sb_uuid);
++		xfs_update_cksum((char *)d, sizeof(struct xfs_dqblk),
++				 XFS_DQUOT_CRC_OFF);
++	}
++
+ 	return errs;
+ }
+ 
+@@ -2782,6 +2788,10 @@ xlog_recover_dquot_pass2(
+ 	}
+ 
+ 	memcpy(ddq, recddq, item->ri_buf[1].i_len);
++	if (xfs_sb_version_hascrc(&mp->m_sb)) {
++		xfs_update_cksum((char *)ddq, sizeof(struct xfs_dqblk),
++				 XFS_DQUOT_CRC_OFF);
++	}
+ 
+ 	ASSERT(dq_f->qlf_size == 2);
+ 	ASSERT(bp->b_target->bt_mount == mp);
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index f41702b..d181542 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -41,6 +41,7 @@
+ #include "xfs_qm.h"
+ #include "xfs_trace.h"
+ #include "xfs_icache.h"
++#include "xfs_cksum.h"
+ 
+ /*
+  * The global quota manager. There is only one of these for the entire
+@@ -839,7 +840,7 @@ xfs_qm_reset_dqcounts(
+ 	xfs_dqid_t	id,
+ 	uint		type)
+ {
+-	xfs_disk_dquot_t	*ddq;
++	struct xfs_dqblk	*dqb;
+ 	int			j;
+ 
+ 	trace_xfs_reset_dqcounts(bp, _RET_IP_);
+@@ -853,8 +854,12 @@ xfs_qm_reset_dqcounts(
+ 	do_div(j, sizeof(xfs_dqblk_t));
+ 	ASSERT(mp->m_quotainfo->qi_dqperchunk == j);
+ #endif
+-	ddq = bp->b_addr;
++	dqb = bp->b_addr;
+ 	for (j = 0; j < mp->m_quotainfo->qi_dqperchunk; j++) {
++		struct xfs_disk_dquot	*ddq;
++
++		ddq =  (struct xfs_disk_dquot *)&dqb[j];
++
+ 		/*
+ 		 * Do a sanity check, and if needed, repair the dqblk. Don't
+ 		 * output any warnings because it's perfectly possible to
+@@ -871,7 +876,8 @@ xfs_qm_reset_dqcounts(
+ 		ddq->d_bwarns = 0;
+ 		ddq->d_iwarns = 0;
+ 		ddq->d_rtbwarns = 0;
+-		ddq = (xfs_disk_dquot_t *) ((xfs_dqblk_t *)ddq + 1);
++		xfs_update_cksum((char *)&dqb[j], sizeof(struct xfs_dqblk),
++					 XFS_DQUOT_CRC_OFF);
+ 	}
+ }
+ 
+@@ -907,19 +913,29 @@ xfs_qm_dqiter_bufs(
+ 			      XFS_FSB_TO_DADDR(mp, bno),
+ 			      mp->m_quotainfo->qi_dqchunklen, 0, &bp,
+ 			      &xfs_dquot_buf_ops);
+-		if (error)
+-			break;
+ 
+ 		/*
+-		 * XXX(hch): need to figure out if it makes sense to validate
+-		 *	     the CRC here.
++		 * CRC and validation errors will return a EFSCORRUPTED here. If
++		 * this occurs, re-read without CRC validation so that we can
++		 * repair the damage via xfs_qm_reset_dqcounts(). This process
++		 * will leave a trace in the log indicating corruption has
++		 * been detected.
+ 		 */
++		if (error == EFSCORRUPTED) {
++			error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp,
++				      XFS_FSB_TO_DADDR(mp, bno),
++				      mp->m_quotainfo->qi_dqchunklen, 0, &bp,
++				      NULL);
++		}
++
++		if (error)
++			break;
++
+ 		xfs_qm_reset_dqcounts(mp, bp, firstid, type);
+ 		xfs_buf_delwri_queue(bp, buffer_list);
+ 		xfs_buf_relse(bp);
+-		/*
+-		 * goto the next block.
+-		 */
++
++		/* goto the next block. */
+ 		bno++;
+ 		firstid += mp->m_quotainfo->qi_dqperchunk;
+ 	}
+diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
+index c61e31c..c38068f 100644
+--- a/fs/xfs/xfs_quota.h
++++ b/fs/xfs/xfs_quota.h
+@@ -87,6 +87,8 @@ typedef struct xfs_dqblk {
+ 	uuid_t		  dd_uuid;	/* location information */
+ } xfs_dqblk_t;
+ 
++#define XFS_DQUOT_CRC_OFF	offsetof(struct xfs_dqblk, dd_crc)
++
+ /*
+  * flags for q_flags field in the dquot.
+  */
 -- 
 1.7.10.4
 
