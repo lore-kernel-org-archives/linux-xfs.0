@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9E55B29E0F
+	by oss.sgi.com (Postfix) with ESMTP id B265729E10
 	for <xfs@oss.sgi.com>; Mon, 27 May 2013 01:38:51 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7D8EC8F8033
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 9F1E18F8035
 	for <xfs@oss.sgi.com>; Sun, 26 May 2013 23:38:51 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	XrIFBLCUUPzvE7c3 for <xfs@oss.sgi.com>;
-	Sun, 26 May 2013 23:38:49 -0700 (PDT)
+	hSipnY67BH9wJhHE for <xfs@oss.sgi.com>;
+	Sun, 26 May 2013 23:38:50 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1Ugr4p-0008Fo-U9
-	for xfs@oss.sgi.com; Mon, 27 May 2013 16:38:39 +1000
+	(envelope-from <dave@fromorbit.com>) id 1Ugr4p-0008Fr-Vt
+	for xfs@oss.sgi.com; Mon, 27 May 2013 16:38:40 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1Ugr4p-0003xY-QH
+	(envelope-from <dave@disappointment.disaster>) id 1Ugr4p-0003xc-RL
 	for xfs@oss.sgi.com; Mon, 27 May 2013 16:38:39 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 7/9] xfs: kill suid/sgid through the truncate path.
-Date: Mon, 27 May 2013 16:38:25 +1000
-Message-Id: <1369636707-15150-8-git-send-email-david@fromorbit.com>
+Subject: [PATCH 8/9] xfs: add fsgeom flag for v5 superblock support.
+Date: Mon, 27 May 2013 16:38:26 +1000
+Message-Id: <1369636707-15150-9-git-send-email-david@fromorbit.com>
 In-Reply-To: <1369636707-15150-1-git-send-email-david@fromorbit.com>
 References: <1369636707-15150-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,97 +38,45 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-XFS has failed to kill suid/sgid bits correctly when truncating
-files of non-zero size since commit c4ed4243 ("xfs: split
-xfs_setattr") introduced in the 3.1 kernel. Fix it.
+Currently userspace has no way of determining that a filesystem is
+CRC enabled. Add a flag to the XFS_IOC_FSGEOMETRY ioctl output to
+indicate that the filesystem has v5 superblock support enabled.
+This will allow xfs_info to correctly report the state of the
+filesystem.
 
-Fix it.
-
-cc: stable kernel <stable@vger.kernel.org>
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_iops.c |   47 ++++++++++++++++++++++++++++++++---------------
- 1 file changed, 32 insertions(+), 15 deletions(-)
+ fs/xfs/xfs_fs.h    |    1 +
+ fs/xfs/xfs_fsops.c |    4 +++-
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index d82efaa..ca9ecaa 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -455,6 +455,28 @@ xfs_vn_getattr(
- 	return 0;
- }
+diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
+index 6dda3f9..d046955 100644
+--- a/fs/xfs/xfs_fs.h
++++ b/fs/xfs/xfs_fs.h
+@@ -236,6 +236,7 @@ typedef struct xfs_fsop_resblks {
+ #define XFS_FSOP_GEOM_FLAGS_PROJID32	0x0800  /* 32-bit project IDs	*/
+ #define XFS_FSOP_GEOM_FLAGS_DIRV2CI	0x1000	/* ASCII only CI names	*/
+ #define XFS_FSOP_GEOM_FLAGS_LAZYSB	0x4000	/* lazy superblock counters */
++#define XFS_FSOP_GEOM_FLAGS_V5SB	0x8000	/* version 5 superblock */
  
-+static void
-+xfs_setattr_mode(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*ip,
-+	struct iattr		*iattr)
-+{
-+	struct inode	*inode = VFS_I(ip);
-+	umode_t		mode = iattr->ia_mode;
-+
-+	ASSERT(tp);
-+	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-+
-+	if (!in_group_p(inode->i_gid) && !capable(CAP_FSETID))
-+		mode &= ~S_ISGID;
-+
-+	ip->i_d.di_mode &= S_IFMT;
-+	ip->i_d.di_mode |= mode & ~S_IFMT;
-+
-+	inode->i_mode &= S_IFMT;
-+	inode->i_mode |= mode & ~S_IFMT;
-+}
-+
- int
- xfs_setattr_nonsize(
- 	struct xfs_inode	*ip,
-@@ -606,18 +628,8 @@ xfs_setattr_nonsize(
- 	/*
- 	 * Change file access modes.
- 	 */
--	if (mask & ATTR_MODE) {
--		umode_t mode = iattr->ia_mode;
--
--		if (!in_group_p(inode->i_gid) && !capable(CAP_FSETID))
--			mode &= ~S_ISGID;
--
--		ip->i_d.di_mode &= S_IFMT;
--		ip->i_d.di_mode |= mode & ~S_IFMT;
--
--		inode->i_mode &= S_IFMT;
--		inode->i_mode |= mode & ~S_IFMT;
--	}
-+	if (mask & ATTR_MODE)
-+		xfs_setattr_mode(tp, ip, iattr);
  
- 	/*
- 	 * Change file access or modified times.
-@@ -714,9 +726,8 @@ xfs_setattr_size(
- 		return XFS_ERROR(error);
- 
- 	ASSERT(S_ISREG(ip->i_d.di_mode));
--	ASSERT((mask & (ATTR_MODE|ATTR_UID|ATTR_GID|ATTR_ATIME|ATTR_ATIME_SET|
--			ATTR_MTIME_SET|ATTR_KILL_SUID|ATTR_KILL_SGID|
--			ATTR_KILL_PRIV|ATTR_TIMES_SET)) == 0);
-+	ASSERT((mask & (ATTR_UID|ATTR_GID|ATTR_ATIME|ATTR_ATIME_SET|
-+			ATTR_MTIME_SET|ATTR_KILL_PRIV|ATTR_TIMES_SET)) == 0);
- 
- 	if (!(flags & XFS_ATTR_NOLOCK)) {
- 		lock_flags |= XFS_IOLOCK_EXCL;
-@@ -860,6 +871,12 @@ xfs_setattr_size(
- 		xfs_inode_clear_eofblocks_tag(ip);
- 	}
- 
-+	/*
-+	 * Change file access modes.
-+	 */
-+	if (mask & ATTR_MODE)
-+		xfs_setattr_mode(tp, ip, iattr);
-+
- 	if (mask & ATTR_CTIME) {
- 		inode->i_ctime = iattr->ia_ctime;
- 		ip->i_d.di_ctime.t_sec = iattr->ia_ctime.tv_sec;
+ /*
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 87595b2..3c3644e 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -99,7 +99,9 @@ xfs_fs_geometry(
+ 			(xfs_sb_version_hasattr2(&mp->m_sb) ?
+ 				XFS_FSOP_GEOM_FLAGS_ATTR2 : 0) |
+ 			(xfs_sb_version_hasprojid32bit(&mp->m_sb) ?
+-				XFS_FSOP_GEOM_FLAGS_PROJID32 : 0);
++				XFS_FSOP_GEOM_FLAGS_PROJID32 : 0) |
++			(xfs_sb_version_hascrc(&mp->m_sb) ?
++				XFS_FSOP_GEOM_FLAGS_V5SB : 0);
+ 		geo->logsectsize = xfs_sb_version_hassector(&mp->m_sb) ?
+ 				mp->m_sb.sb_logsectsize : BBSIZE;
+ 		geo->rtsectsize = mp->m_sb.sb_blocksize;
 -- 
 1.7.10.4
 
