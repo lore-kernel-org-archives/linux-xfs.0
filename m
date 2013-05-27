@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5729B29E09
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 3E52C29E06
 	for <xfs@oss.sgi.com>; Mon, 27 May 2013 01:38:50 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2F90A304039
-	for <xfs@oss.sgi.com>; Sun, 26 May 2013 23:38:50 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C906CAC005
+	for <xfs@oss.sgi.com>; Sun, 26 May 2013 23:38:46 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	oGhZkddTCIzeEm5H for <xfs@oss.sgi.com>;
-	Sun, 26 May 2013 23:38:48 -0700 (PDT)
+	8LPJeLUokivnyYzY for <xfs@oss.sgi.com>;
+	Sun, 26 May 2013 23:38:44 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1Ugr4p-0008Ff-Qc
-	for xfs@oss.sgi.com; Mon, 27 May 2013 16:38:39 +1000
+	(envelope-from <dave@fromorbit.com>) id 1Ugr4f-0008FZ-Rh
+	for xfs@oss.sgi.com; Mon, 27 May 2013 16:38:29 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1Ugr4f-0003xC-M2
+	(envelope-from <dave@disappointment.disaster>) id 1Ugr4f-0003xL-OO
 	for xfs@oss.sgi.com; Mon, 27 May 2013 16:38:29 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/9] xfs: increase number of ACL entries for V5 superblocks
-Date: Mon, 27 May 2013 16:38:21 +1000
-Message-Id: <1369636707-15150-4-git-send-email-david@fromorbit.com>
+Subject: [PATCH 5/9] xfs: fix split buffer vector log recovery support
+Date: Mon, 27 May 2013 16:38:23 +1000
+Message-Id: <1369636707-15150-6-git-send-email-david@fromorbit.com>
 In-Reply-To: <1369636707-15150-1-git-send-email-david@fromorbit.com>
 References: <1369636707-15150-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,166 +38,210 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The limit of 25 ACL entries is arbitrary, but baked into the on-disk
-format.  For version 5 superblocks, increase it to the maximum nuber
-of ACLs that can fit into a single xattr.
+A long time ago in a galaxy far away....
+
+.. the was a commit made to fix some ilinux specific "fragmented
+buffer" log recovery problem:
+
+http://oss.sgi.com/cgi-bin/gitweb.cgi?p=archive/xfs-import.git;a=commitdiff;h=b29c0bece51da72fb3ff3b61391a391ea54e1603
+
+That problem occurred when a contiguous dirty region of a buffer was
+split across across two pages of an unmapped buffer. It's been a
+long time since that has been done in XFS, and the changes to log
+the entire inode buffers for CRC enabled filesystems has
+re-introduced that corner case.
+
+And, of course, it turns out that the above commit didn't actually
+fix anything - it just ensured that log recovery is guaranteed to
+fail when this situation occurs. And now for the gory details.
+
+xfstest xfs/085 is failing with this assert:
+
+XFS (vdb): bad number of regions (0) in inode log format
+XFS: Assertion failed: 0, file: fs/xfs/xfs_log_recover.c, line: 1583
+
+Largely undocumented factoid #1: Log recovery depends on all log
+buffer format items starting with this format:
+
+struct foo_log_format {
+	__uint16_t	type;
+	__uint16_t	size;
+	....
+
+As recoery uses the size field and assumptions about 32 bit
+alignment in decoding format items.  So don't pay much attention to
+the fact log recovery thinks that it decoding an inode log format
+item - it just uses them to determine what the size of the item is.
+
+But why would it see a log format item with a zero size? Well,
+luckily enough xfs_logprint uses the same code and gives the same
+error, so with a bit of gdb magic, it turns out that it isn't a log
+format that is being decoded. What logprint tells us is this:
+
+Oper (130): tid: a0375e1a  len: 28  clientid: TRANS  flags: none
+BUF:  #regs: 2   start blkno: 144 (0x90)  len: 16  bmap size: 2  flags: 0x4000
+Oper (131): tid: a0375e1a  len: 4096  clientid: TRANS  flags: none
+BUF DATA
+----------------------------------------------------------------------------
+Oper (132): tid: a0375e1a  len: 4096  clientid: TRANS  flags: none
+xfs_logprint: unknown log operation type (4e49)
+**********************************************************************
+* ERROR: data block=2                                                 *
+**********************************************************************
+
+That we've got a buffer format item (oper 130) that has two regions;
+the format item itself and one dirty region. The subsequent region
+after the buffer format item and it's data is them what we are
+tripping over, and the first bytes of it at an inode magic number.
+Not a log opheader like there is supposed to be.
+
+That means there's a problem with the buffer format item. It's dirty
+data region is 4096 bytes, and it contains - you guessed it -
+initialised inodes. But inode buffers are 8k, not 4k, and we log
+them in their entirety. So something is wrong here. The buffer
+format item contains:
+
+(gdb) p /x *(struct xfs_buf_log_format *)in_f
+$22 = {blf_type = 0x123c, blf_size = 0x2, blf_flags = 0x4000,
+       blf_len = 0x10, blf_blkno = 0x90, blf_map_size = 0x2,
+       blf_data_map = {0xffffffff, 0xffffffff, .... }}
+
+Two regions, and a signle dirty contiguous region of 64 bits.  64 *
+128 = 8k, so this should be followed by a single 8k region of data.
+And the blf_flags tell us that the type of buffer is a
+XFS_BLFT_DINO_BUF. It contains inodes. And because it doesn't have
+the XFS_BLF_INODE_BUF flag set, that means it's an inode allocation
+buffer. So, it should be followed by 8k of inode data.
+
+But we know that the next region has a header of:
+
+(gdb) p /x *ohead
+$25 = {oh_tid = 0x1a5e37a0, oh_len = 0x100000, oh_clientid = 0x69,
+       oh_flags = 0x0, oh_res2 = 0x0}
+
+and so be32_to_cpu(oh_len) = 0x1000 = 4096 bytes. It's simply not
+long enough to hold all the logged data. There must be another
+region. There is - there's a following opheader for another 4k of
+data that contains the other half of the inode cluster data - the
+one we assert fail on because it's not a log format header.
+
+So why is the second part of the data not being accounted to the
+correct buffer log format structure? It took a little more work with
+gdb to work out that the buffer log format structure was both
+expecting it to be there but hadn't accounted for it. It was at that
+point I went to the kernel code, as clearly this wasn't a bug in
+xfs_logprint and the kernel was writing bad stuff to the log.
+
+First port of call was the buffer item formatting code, and the
+discontiguous memory/contiguous dirty region handling code
+immediately stood out. I've wondered for a long time why the code
+had this comment in it:
+
+                        vecp->i_addr = xfs_buf_offset(bp, buffer_offset);
+                        vecp->i_len = nbits * XFS_BLF_CHUNK;
+                        vecp->i_type = XLOG_REG_TYPE_BCHUNK;
+/*
+ * You would think we need to bump the nvecs here too, but we do not
+ * this number is used by recovery, and it gets confused by the boundary
+ * split here
+ *                      nvecs++;
+ */
+                        vecp++;
+
+And it didn't account for the extra vector pointer. The case being
+handled here is that a contiguous dirty region lies across a
+boundary that cannot be memcpy()d across, and so has to be split
+into two separate operations for xlog_write() to perform.
+
+What this code assumes is that what is written to the log is two
+consecutive blocks of data that are accounted in the buf log format
+item as the same contiguous dirty region and so will get decoded as
+such by the log recovery code.
+
+The thing is, xlog_write() knows nothing about this, and so just
+does it's normal thing of adding an opheader for each vector. That
+means the 8k region gets written to the log as two separate regions
+of 4k each, but because nvecs has not been incremented, the buf log
+format item accounts for only one of them.
+
+Hence when we come to log recovery, we process the first 4k region
+and then expect to come across a new item that starts with a log
+format structure of some kind that tells us whenteh next data is
+going to be. Instead, we hit raw buffer data and things go bad real
+quick.
+
+So, the commit from 2002 that commented out nvecs++ is just plain
+wrong. It breaks log recovery completely, and it would seem the only
+reason this hasn't been since then is that we don't log large
+contigous regions of multi-page unmapped buffers very often. Never
+would be a closer estimate, at least until the CRC code came along....
+
+So, lets fix that by restoring the nvecs accounting for the extra
+region when we hit this case.....
+
+.... and there's the problemin log recovery it is apparently working
+around:
+
+XFS: Assertion failed: i == item->ri_total, file: fs/xfs/xfs_log_recover.c, line: 2135
+
+Yup, xlog_recover_do_reg_buffer() doesn't handle contigous dirty
+regions being broken up into multiple regions by the log formatting
+code. That's an easy fix, though - if the number of contiguous dirty
+bits exceeds the length of the region being copied out of the log,
+only account for the number of dirty bits that region covers, and
+then loop again and copy more from the next region. It's a 2 line
+fix.
+
+Now xfstests xfs/085 passes, we have one less piece of mystery
+code, and one more important piece of knowledge about how to
+structure new log format items..
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_acl.c |   31 ++++++++++++++++++-------------
- fs/xfs/xfs_acl.h |   30 +++++++++++++++++++++++-------
- 2 files changed, 41 insertions(+), 20 deletions(-)
+ fs/xfs/xfs_buf_item.c    |    7 +------
+ fs/xfs/xfs_log_recover.c |   11 +++++++++++
+ 2 files changed, 12 insertions(+), 6 deletions(-)
 
-diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
-index 1d32f1d..b6bed9b 100644
---- a/fs/xfs/xfs_acl.c
-+++ b/fs/xfs/xfs_acl.c
-@@ -21,6 +21,8 @@
- #include "xfs_bmap_btree.h"
- #include "xfs_inode.h"
- #include "xfs_vnodeops.h"
-+#include "xfs_sb.h"
-+#include "xfs_mount.h"
- #include "xfs_trace.h"
- #include <linux/slab.h>
- #include <linux/xattr.h>
-@@ -34,7 +36,9 @@
-  */
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index cf26347..4ec4317 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -262,12 +262,7 @@ xfs_buf_item_format_segment(
+ 			vecp->i_addr = xfs_buf_offset(bp, buffer_offset);
+ 			vecp->i_len = nbits * XFS_BLF_CHUNK;
+ 			vecp->i_type = XLOG_REG_TYPE_BCHUNK;
+-/*
+- * You would think we need to bump the nvecs here too, but we do not
+- * this number is used by recovery, and it gets confused by the boundary
+- * split here
+- *			nvecs++;
+- */
++			nvecs++;
+ 			vecp++;
+ 			first_bit = next_bit;
+ 			last_bit = next_bit;
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 0be37d7..d6204d1 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -2097,6 +2097,17 @@ xlog_recover_do_reg_buffer(
+ 		       ((uint)bit << XFS_BLF_SHIFT) + (nbits << XFS_BLF_SHIFT));
  
- STATIC struct posix_acl *
--xfs_acl_from_disk(struct xfs_acl *aclp)
-+xfs_acl_from_disk(
-+	struct xfs_acl	*aclp,
-+	int		max_entries)
- {
- 	struct posix_acl_entry *acl_e;
- 	struct posix_acl *acl;
-@@ -42,7 +46,7 @@ xfs_acl_from_disk(struct xfs_acl *aclp)
- 	unsigned int count, i;
- 
- 	count = be32_to_cpu(aclp->acl_cnt);
--	if (count > XFS_ACL_MAX_ENTRIES)
-+	if (count > max_entries)
- 		return ERR_PTR(-EFSCORRUPTED);
- 
- 	acl = posix_acl_alloc(count, GFP_KERNEL);
-@@ -108,7 +112,7 @@ xfs_get_acl(struct inode *inode, int type)
- 	struct xfs_inode *ip = XFS_I(inode);
- 	struct posix_acl *acl;
- 	struct xfs_acl *xfs_acl;
--	int len = sizeof(struct xfs_acl);
-+	int len = XFS_ACL_SIZE(ip->i_mount);
- 	unsigned char *ea_name;
- 	int error;
- 
-@@ -133,8 +137,8 @@ xfs_get_acl(struct inode *inode, int type)
- 	 * If we have a cached ACLs value just return it, not need to
- 	 * go out to the disk.
- 	 */
--
--	xfs_acl = kzalloc(sizeof(struct xfs_acl), GFP_KERNEL);
-+	len = XFS_ACL_SIZE(ip->i_mount);
-+	xfs_acl = kzalloc(len, GFP_KERNEL);
- 	if (!xfs_acl)
- 		return ERR_PTR(-ENOMEM);
- 
-@@ -153,7 +157,7 @@ xfs_get_acl(struct inode *inode, int type)
- 		goto out;
- 	}
- 
--	acl = xfs_acl_from_disk(xfs_acl);
-+	acl = xfs_acl_from_disk(xfs_acl, XFS_ACL_MAX_ENTRIES(ip->i_mount));
- 	if (IS_ERR(acl))
- 		goto out;
- 
-@@ -189,16 +193,17 @@ xfs_set_acl(struct inode *inode, int type, struct posix_acl *acl)
- 
- 	if (acl) {
- 		struct xfs_acl *xfs_acl;
--		int len;
-+		int len = XFS_ACL_SIZE(ip->i_mount);
- 
--		xfs_acl = kzalloc(sizeof(struct xfs_acl), GFP_KERNEL);
-+		xfs_acl = kzalloc(len, GFP_KERNEL);
- 		if (!xfs_acl)
- 			return -ENOMEM;
- 
- 		xfs_acl_to_disk(xfs_acl, acl);
--		len = sizeof(struct xfs_acl) -
--			(sizeof(struct xfs_acl_entry) *
--			 (XFS_ACL_MAX_ENTRIES - acl->a_count));
+ 		/*
++		 * The dirty regions logged in the buffer, even though
++		 * contiguous, may span multiple chunks. This is because the
++		 * dirty region may span a physical page boundary in a buffer
++		 * and hence be split into two separate vectors for writing into
++		 * the log. Hence we need to trim nbits back to the length of
++		 * the current region being copied out of the log.
++		 */
++		if (item->ri_buf[i].i_len < (nbits << XFS_BLF_SHIFT))
++			nbits = item->ri_buf[i].i_len >> XFS_BLF_SHIFT;
 +
-+		/* subtract away the unused acl entries */
-+		len -= sizeof(struct xfs_acl_entry) *
-+			 (XFS_ACL_MAX_ENTRIES(ip->i_mount) - acl->a_count);
- 
- 		error = -xfs_attr_set(ip, ea_name, (unsigned char *)xfs_acl,
- 				len, ATTR_ROOT);
-@@ -243,7 +248,7 @@ xfs_set_mode(struct inode *inode, umode_t mode)
- static int
- xfs_acl_exists(struct inode *inode, unsigned char *name)
- {
--	int len = sizeof(struct xfs_acl);
-+	int len = XFS_ACL_SIZE(XFS_M(inode->i_sb));
- 
- 	return (xfs_attr_get(XFS_I(inode), name, NULL, &len,
- 			    ATTR_ROOT|ATTR_KERNOVAL) == 0);
-@@ -379,7 +384,7 @@ xfs_xattr_acl_set(struct dentry *dentry, const char *name,
- 		goto out_release;
- 
- 	error = -EINVAL;
--	if (acl->a_count > XFS_ACL_MAX_ENTRIES)
-+	if (acl->a_count > XFS_ACL_MAX_ENTRIES(XFS_M(inode->i_sb)))
- 		goto out_release;
- 
- 	if (type == ACL_TYPE_ACCESS) {
-diff --git a/fs/xfs/xfs_acl.h b/fs/xfs/xfs_acl.h
-index 39632d9..0da8725 100644
---- a/fs/xfs/xfs_acl.h
-+++ b/fs/xfs/xfs_acl.h
-@@ -22,19 +22,35 @@ struct inode;
- struct posix_acl;
- struct xfs_inode;
- 
--#define XFS_ACL_MAX_ENTRIES 25
- #define XFS_ACL_NOT_PRESENT (-1)
- 
- /* On-disk XFS access control list structure */
-+struct xfs_acl_entry {
-+	__be32	ae_tag;
-+	__be32	ae_id;
-+	__be16	ae_perm;
-+	__be16	ae_pad;		/* fill the implicit hole in the structure */
-+};
-+
- struct xfs_acl {
--	__be32		acl_cnt;
--	struct xfs_acl_entry {
--		__be32	ae_tag;
--		__be32	ae_id;
--		__be16	ae_perm;
--	} acl_entry[XFS_ACL_MAX_ENTRIES];
-+	__be32			acl_cnt;
-+	struct xfs_acl_entry	acl_entry[0];
- };
- 
-+/*
-+ * The number of ACL entries allowed is defined by the on-disk format.
-+ * For v4 superblocks, that is limited to 25 entries. For v5 superblocks, it is
-+ * limited only by the maximum size of the xattr that stores the information.
-+ */
-+#define XFS_ACL_MAX_ENTRIES(mp)	\
-+	(xfs_sb_version_hascrc(&mp->m_sb) \
-+	   ?  (XATTR_SIZE_MAX - sizeof(__be32)) / sizeof(struct xfs_acl_entry) \
-+	   : 25)
-+
-+#define XFS_ACL_SIZE(mp) \
-+	(sizeof(struct xfs_acl) + \
-+		sizeof(struct xfs_acl_entry) * XFS_ACL_MAX_ENTRIES((mp)))
-+
- /* On-disk XFS extended attribute names */
- #define SGI_ACL_FILE		(unsigned char *)"SGI_ACL_FILE"
- #define SGI_ACL_DEFAULT		(unsigned char *)"SGI_ACL_DEFAULT"
++		/*
+ 		 * Do a sanity check if this is a dquot buffer. Just checking
+ 		 * the first dquot in the buffer should do. XXXThis is
+ 		 * probably a good thing to do for other buf types also.
 -- 
 1.7.10.4
 
