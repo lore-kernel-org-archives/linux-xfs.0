@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3E52C29E06
-	for <xfs@oss.sgi.com>; Mon, 27 May 2013 01:38:50 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C906CAC005
-	for <xfs@oss.sgi.com>; Sun, 26 May 2013 23:38:46 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 9E55B29E0F
+	for <xfs@oss.sgi.com>; Mon, 27 May 2013 01:38:51 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 7D8EC8F8033
+	for <xfs@oss.sgi.com>; Sun, 26 May 2013 23:38:51 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	8LPJeLUokivnyYzY for <xfs@oss.sgi.com>;
-	Sun, 26 May 2013 23:38:44 -0700 (PDT)
+	XrIFBLCUUPzvE7c3 for <xfs@oss.sgi.com>;
+	Sun, 26 May 2013 23:38:49 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1Ugr4f-0008FZ-Rh
-	for xfs@oss.sgi.com; Mon, 27 May 2013 16:38:29 +1000
+	(envelope-from <dave@fromorbit.com>) id 1Ugr4p-0008Fo-U9
+	for xfs@oss.sgi.com; Mon, 27 May 2013 16:38:39 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1Ugr4f-0003xL-OO
-	for xfs@oss.sgi.com; Mon, 27 May 2013 16:38:29 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1Ugr4p-0003xY-QH
+	for xfs@oss.sgi.com; Mon, 27 May 2013 16:38:39 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 5/9] xfs: fix split buffer vector log recovery support
-Date: Mon, 27 May 2013 16:38:23 +1000
-Message-Id: <1369636707-15150-6-git-send-email-david@fromorbit.com>
+Subject: [PATCH 7/9] xfs: kill suid/sgid through the truncate path.
+Date: Mon, 27 May 2013 16:38:25 +1000
+Message-Id: <1369636707-15150-8-git-send-email-david@fromorbit.com>
 In-Reply-To: <1369636707-15150-1-git-send-email-david@fromorbit.com>
 References: <1369636707-15150-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,210 +38,97 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-A long time ago in a galaxy far away....
+XFS has failed to kill suid/sgid bits correctly when truncating
+files of non-zero size since commit c4ed4243 ("xfs: split
+xfs_setattr") introduced in the 3.1 kernel. Fix it.
 
-.. the was a commit made to fix some ilinux specific "fragmented
-buffer" log recovery problem:
+Fix it.
 
-http://oss.sgi.com/cgi-bin/gitweb.cgi?p=archive/xfs-import.git;a=commitdiff;h=b29c0bece51da72fb3ff3b61391a391ea54e1603
-
-That problem occurred when a contiguous dirty region of a buffer was
-split across across two pages of an unmapped buffer. It's been a
-long time since that has been done in XFS, and the changes to log
-the entire inode buffers for CRC enabled filesystems has
-re-introduced that corner case.
-
-And, of course, it turns out that the above commit didn't actually
-fix anything - it just ensured that log recovery is guaranteed to
-fail when this situation occurs. And now for the gory details.
-
-xfstest xfs/085 is failing with this assert:
-
-XFS (vdb): bad number of regions (0) in inode log format
-XFS: Assertion failed: 0, file: fs/xfs/xfs_log_recover.c, line: 1583
-
-Largely undocumented factoid #1: Log recovery depends on all log
-buffer format items starting with this format:
-
-struct foo_log_format {
-	__uint16_t	type;
-	__uint16_t	size;
-	....
-
-As recoery uses the size field and assumptions about 32 bit
-alignment in decoding format items.  So don't pay much attention to
-the fact log recovery thinks that it decoding an inode log format
-item - it just uses them to determine what the size of the item is.
-
-But why would it see a log format item with a zero size? Well,
-luckily enough xfs_logprint uses the same code and gives the same
-error, so with a bit of gdb magic, it turns out that it isn't a log
-format that is being decoded. What logprint tells us is this:
-
-Oper (130): tid: a0375e1a  len: 28  clientid: TRANS  flags: none
-BUF:  #regs: 2   start blkno: 144 (0x90)  len: 16  bmap size: 2  flags: 0x4000
-Oper (131): tid: a0375e1a  len: 4096  clientid: TRANS  flags: none
-BUF DATA
-----------------------------------------------------------------------------
-Oper (132): tid: a0375e1a  len: 4096  clientid: TRANS  flags: none
-xfs_logprint: unknown log operation type (4e49)
-**********************************************************************
-* ERROR: data block=2                                                 *
-**********************************************************************
-
-That we've got a buffer format item (oper 130) that has two regions;
-the format item itself and one dirty region. The subsequent region
-after the buffer format item and it's data is them what we are
-tripping over, and the first bytes of it at an inode magic number.
-Not a log opheader like there is supposed to be.
-
-That means there's a problem with the buffer format item. It's dirty
-data region is 4096 bytes, and it contains - you guessed it -
-initialised inodes. But inode buffers are 8k, not 4k, and we log
-them in their entirety. So something is wrong here. The buffer
-format item contains:
-
-(gdb) p /x *(struct xfs_buf_log_format *)in_f
-$22 = {blf_type = 0x123c, blf_size = 0x2, blf_flags = 0x4000,
-       blf_len = 0x10, blf_blkno = 0x90, blf_map_size = 0x2,
-       blf_data_map = {0xffffffff, 0xffffffff, .... }}
-
-Two regions, and a signle dirty contiguous region of 64 bits.  64 *
-128 = 8k, so this should be followed by a single 8k region of data.
-And the blf_flags tell us that the type of buffer is a
-XFS_BLFT_DINO_BUF. It contains inodes. And because it doesn't have
-the XFS_BLF_INODE_BUF flag set, that means it's an inode allocation
-buffer. So, it should be followed by 8k of inode data.
-
-But we know that the next region has a header of:
-
-(gdb) p /x *ohead
-$25 = {oh_tid = 0x1a5e37a0, oh_len = 0x100000, oh_clientid = 0x69,
-       oh_flags = 0x0, oh_res2 = 0x0}
-
-and so be32_to_cpu(oh_len) = 0x1000 = 4096 bytes. It's simply not
-long enough to hold all the logged data. There must be another
-region. There is - there's a following opheader for another 4k of
-data that contains the other half of the inode cluster data - the
-one we assert fail on because it's not a log format header.
-
-So why is the second part of the data not being accounted to the
-correct buffer log format structure? It took a little more work with
-gdb to work out that the buffer log format structure was both
-expecting it to be there but hadn't accounted for it. It was at that
-point I went to the kernel code, as clearly this wasn't a bug in
-xfs_logprint and the kernel was writing bad stuff to the log.
-
-First port of call was the buffer item formatting code, and the
-discontiguous memory/contiguous dirty region handling code
-immediately stood out. I've wondered for a long time why the code
-had this comment in it:
-
-                        vecp->i_addr = xfs_buf_offset(bp, buffer_offset);
-                        vecp->i_len = nbits * XFS_BLF_CHUNK;
-                        vecp->i_type = XLOG_REG_TYPE_BCHUNK;
-/*
- * You would think we need to bump the nvecs here too, but we do not
- * this number is used by recovery, and it gets confused by the boundary
- * split here
- *                      nvecs++;
- */
-                        vecp++;
-
-And it didn't account for the extra vector pointer. The case being
-handled here is that a contiguous dirty region lies across a
-boundary that cannot be memcpy()d across, and so has to be split
-into two separate operations for xlog_write() to perform.
-
-What this code assumes is that what is written to the log is two
-consecutive blocks of data that are accounted in the buf log format
-item as the same contiguous dirty region and so will get decoded as
-such by the log recovery code.
-
-The thing is, xlog_write() knows nothing about this, and so just
-does it's normal thing of adding an opheader for each vector. That
-means the 8k region gets written to the log as two separate regions
-of 4k each, but because nvecs has not been incremented, the buf log
-format item accounts for only one of them.
-
-Hence when we come to log recovery, we process the first 4k region
-and then expect to come across a new item that starts with a log
-format structure of some kind that tells us whenteh next data is
-going to be. Instead, we hit raw buffer data and things go bad real
-quick.
-
-So, the commit from 2002 that commented out nvecs++ is just plain
-wrong. It breaks log recovery completely, and it would seem the only
-reason this hasn't been since then is that we don't log large
-contigous regions of multi-page unmapped buffers very often. Never
-would be a closer estimate, at least until the CRC code came along....
-
-So, lets fix that by restoring the nvecs accounting for the extra
-region when we hit this case.....
-
-.... and there's the problemin log recovery it is apparently working
-around:
-
-XFS: Assertion failed: i == item->ri_total, file: fs/xfs/xfs_log_recover.c, line: 2135
-
-Yup, xlog_recover_do_reg_buffer() doesn't handle contigous dirty
-regions being broken up into multiple regions by the log formatting
-code. That's an easy fix, though - if the number of contiguous dirty
-bits exceeds the length of the region being copied out of the log,
-only account for the number of dirty bits that region covers, and
-then loop again and copy more from the next region. It's a 2 line
-fix.
-
-Now xfstests xfs/085 passes, we have one less piece of mystery
-code, and one more important piece of knowledge about how to
-structure new log format items..
-
+cc: stable kernel <stable@vger.kernel.org>
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_buf_item.c    |    7 +------
- fs/xfs/xfs_log_recover.c |   11 +++++++++++
- 2 files changed, 12 insertions(+), 6 deletions(-)
+ fs/xfs/xfs_iops.c |   47 ++++++++++++++++++++++++++++++++---------------
+ 1 file changed, 32 insertions(+), 15 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index cf26347..4ec4317 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -262,12 +262,7 @@ xfs_buf_item_format_segment(
- 			vecp->i_addr = xfs_buf_offset(bp, buffer_offset);
- 			vecp->i_len = nbits * XFS_BLF_CHUNK;
- 			vecp->i_type = XLOG_REG_TYPE_BCHUNK;
--/*
-- * You would think we need to bump the nvecs here too, but we do not
-- * this number is used by recovery, and it gets confused by the boundary
-- * split here
-- *			nvecs++;
-- */
-+			nvecs++;
- 			vecp++;
- 			first_bit = next_bit;
- 			last_bit = next_bit;
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 0be37d7..d6204d1 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -2097,6 +2097,17 @@ xlog_recover_do_reg_buffer(
- 		       ((uint)bit << XFS_BLF_SHIFT) + (nbits << XFS_BLF_SHIFT));
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index d82efaa..ca9ecaa 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -455,6 +455,28 @@ xfs_vn_getattr(
+ 	return 0;
+ }
  
- 		/*
-+		 * The dirty regions logged in the buffer, even though
-+		 * contiguous, may span multiple chunks. This is because the
-+		 * dirty region may span a physical page boundary in a buffer
-+		 * and hence be split into two separate vectors for writing into
-+		 * the log. Hence we need to trim nbits back to the length of
-+		 * the current region being copied out of the log.
-+		 */
-+		if (item->ri_buf[i].i_len < (nbits << XFS_BLF_SHIFT))
-+			nbits = item->ri_buf[i].i_len >> XFS_BLF_SHIFT;
++static void
++xfs_setattr_mode(
++	struct xfs_trans	*tp,
++	struct xfs_inode	*ip,
++	struct iattr		*iattr)
++{
++	struct inode	*inode = VFS_I(ip);
++	umode_t		mode = iattr->ia_mode;
 +
-+		/*
- 		 * Do a sanity check if this is a dquot buffer. Just checking
- 		 * the first dquot in the buffer should do. XXXThis is
- 		 * probably a good thing to do for other buf types also.
++	ASSERT(tp);
++	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
++
++	if (!in_group_p(inode->i_gid) && !capable(CAP_FSETID))
++		mode &= ~S_ISGID;
++
++	ip->i_d.di_mode &= S_IFMT;
++	ip->i_d.di_mode |= mode & ~S_IFMT;
++
++	inode->i_mode &= S_IFMT;
++	inode->i_mode |= mode & ~S_IFMT;
++}
++
+ int
+ xfs_setattr_nonsize(
+ 	struct xfs_inode	*ip,
+@@ -606,18 +628,8 @@ xfs_setattr_nonsize(
+ 	/*
+ 	 * Change file access modes.
+ 	 */
+-	if (mask & ATTR_MODE) {
+-		umode_t mode = iattr->ia_mode;
+-
+-		if (!in_group_p(inode->i_gid) && !capable(CAP_FSETID))
+-			mode &= ~S_ISGID;
+-
+-		ip->i_d.di_mode &= S_IFMT;
+-		ip->i_d.di_mode |= mode & ~S_IFMT;
+-
+-		inode->i_mode &= S_IFMT;
+-		inode->i_mode |= mode & ~S_IFMT;
+-	}
++	if (mask & ATTR_MODE)
++		xfs_setattr_mode(tp, ip, iattr);
+ 
+ 	/*
+ 	 * Change file access or modified times.
+@@ -714,9 +726,8 @@ xfs_setattr_size(
+ 		return XFS_ERROR(error);
+ 
+ 	ASSERT(S_ISREG(ip->i_d.di_mode));
+-	ASSERT((mask & (ATTR_MODE|ATTR_UID|ATTR_GID|ATTR_ATIME|ATTR_ATIME_SET|
+-			ATTR_MTIME_SET|ATTR_KILL_SUID|ATTR_KILL_SGID|
+-			ATTR_KILL_PRIV|ATTR_TIMES_SET)) == 0);
++	ASSERT((mask & (ATTR_UID|ATTR_GID|ATTR_ATIME|ATTR_ATIME_SET|
++			ATTR_MTIME_SET|ATTR_KILL_PRIV|ATTR_TIMES_SET)) == 0);
+ 
+ 	if (!(flags & XFS_ATTR_NOLOCK)) {
+ 		lock_flags |= XFS_IOLOCK_EXCL;
+@@ -860,6 +871,12 @@ xfs_setattr_size(
+ 		xfs_inode_clear_eofblocks_tag(ip);
+ 	}
+ 
++	/*
++	 * Change file access modes.
++	 */
++	if (mask & ATTR_MODE)
++		xfs_setattr_mode(tp, ip, iattr);
++
+ 	if (mask & ATTR_CTIME) {
+ 		inode->i_ctime = iattr->ia_ctime;
+ 		ip->i_d.di_ctime.t_sec = iattr->ia_ctime.tv_sec;
 -- 
 1.7.10.4
 
