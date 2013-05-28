@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id BDCDF7F3F
-	for <xfs@oss.sgi.com>; Tue, 28 May 2013 10:25:26 -0500 (CDT)
-Message-ID: <51A4CC99.2040901@sgi.com>
-Date: Tue, 28 May 2013 10:26:17 -0500
+	by oss.sgi.com (Postfix) with ESMTP id 2D2597F4E
+	for <xfs@oss.sgi.com>; Tue, 28 May 2013 10:56:29 -0500 (CDT)
+Message-ID: <51A4D3E2.3020204@sgi.com>
+Date: Tue, 28 May 2013 10:57:22 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: cleanup the codes related to h_chksum
-References: <1369523732-10649-1-git-send-email-zwu.kernel@gmail.com>
-In-Reply-To: <1369523732-10649-1-git-send-email-zwu.kernel@gmail.com>
+Subject: Re: [PATCH] xfstests: fix src/seek_sanity_test -t option
+References: <519EF4AE.60702@redhat.com>
+In-Reply-To: <519EF4AE.60702@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,30 +21,36 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: zwu.kernel@gmail.com
-Cc: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: ext4 development <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
 
-On 05/25/2013 06:15 PM, zwu.kernel@gmail.com wrote:
-> From: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
+On 05/24/2013 12:03 AM, Eric Sandeen wrote:
+> _require_seek_data_hole() does not work because
+> the -t (test) option of seek_sanity_test is broken,
+> because of an early check for (argc != 2):
 >
->    Since h_chksum field has gone away, we should cleanup the related codes
+> # src/seek_sanity_test -t foo
+> Usage: src/seek_sanity_test base_file_path
 >
->      [CC]    loggen
-> loggen.c: In function 'loggen_unmount':
-> loggen.c:137:9: error: 'xlog_rec_header_t' has no member named 'h_chksum'
-> loggen.c: In function 'loggen_empty':
-> loggen.c:205:9: error: 'xlog_rec_header_t' has no member named 'h_chksum'
+> So _require_seek_data_hole() doesn't see the
+> "Kernel does not support" string it's looking for,
+> and passes the check.
 >
-> Signed-off-by: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
+> So rather than _notrun-ing the test, it proceeds to
+> fail with noisy errors.
+>
+> Fix that, make a common usage() function, and check for
+> too many args as well.
+>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Thanks for the patch, it has been committed:
+Thanks, this has been committed:
 
-commit f761cd9a6aa9b44be7f3056f01c419edf1356789
-Author: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
-Date:   Tue May 28 08:31:52 2013 -0500
+commit bd13bf9e2a87a40d3aab2644967029b854ed2d11
+Author: Eric Sandeen <sandeen@redhat.com>
+Date:   Tue May 28 10:37:39 2013 -0500
 
-     xfstests: cleanup the codes related to h_chksum
-
+     xfstests: fix src/seek_sanity_test -t option
 
 --Rich
 
