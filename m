@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2D2597F4E
-	for <xfs@oss.sgi.com>; Tue, 28 May 2013 10:56:29 -0500 (CDT)
-Message-ID: <51A4D3E2.3020204@sgi.com>
-Date: Tue, 28 May 2013 10:57:22 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id A8DED7F52
+	for <xfs@oss.sgi.com>; Tue, 28 May 2013 11:04:50 -0500 (CDT)
+Message-ID: <51A4D5D7.1040708@sgi.com>
+Date: Tue, 28 May 2013 11:05:43 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: fix src/seek_sanity_test -t option
-References: <519EF4AE.60702@redhat.com>
-In-Reply-To: <519EF4AE.60702@redhat.com>
+Subject: Re: [PATCH] add generic/286 to the auto and quick groups
+References: <1369369981-7035-1-git-send-email-tytso@mit.edu>
+In-Reply-To: <1369369981-7035-1-git-send-email-tytso@mit.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,36 +21,39 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: ext4 development <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs@oss.sgi.com
 
-On 05/24/2013 12:03 AM, Eric Sandeen wrote:
-> _require_seek_data_hole() does not work because
-> the -t (test) option of seek_sanity_test is broken,
-> because of an early check for (argc != 2):
+On 05/23/2013 11:33 PM, Theodore Ts'o wrote:
+> The generic/286 test tests SEEK_HOLE and SEEK_DATA, and is reasonably
+> fast.  We should just run the test by default.
 >
-> # src/seek_sanity_test -t foo
-> Usage: src/seek_sanity_test base_file_path
+> Signed-off-by: "Theodore Ts'o" <tytso@mit.edu>
+> ---
+>   tests/generic/group | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
 >
-> So _require_seek_data_hole() doesn't see the
-> "Kernel does not support" string it's looking for,
-> and passes the check.
+> diff --git a/tests/generic/group b/tests/generic/group
+> index e2ef70e..bd443c1 100644
+> --- a/tests/generic/group
+> +++ b/tests/generic/group
+> @@ -103,7 +103,7 @@
+>   277 auto ioctl quick metadata
+>   280 auto quota freeze dangerous
+>   285 auto rw
+> -286 other
+> +286 auto quick other
+>   288 auto quick ioctl trim
+>   294 auto quick
+>   299 auto aio enospc rw stress
 >
-> So rather than _notrun-ing the test, it proceeds to
-> fail with noisy errors.
->
-> Fix that, make a common usage() function, and check for
-> too many args as well.
->
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Thanks, this patch has been committed:
 
-Thanks, this has been committed:
+commit f45c6881577221e04f6cfe19d25e571bee088996
+Author: Theodore Ts'o <tytso@mit.edu>
+Date:   Tue May 28 11:01:01 2013 -0500
 
-commit bd13bf9e2a87a40d3aab2644967029b854ed2d11
-Author: Eric Sandeen <sandeen@redhat.com>
-Date:   Tue May 28 10:37:39 2013 -0500
-
-     xfstests: fix src/seek_sanity_test -t option
+     xfstests: add generic/286 to the auto and quick groups
 
 --Rich
 
