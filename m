@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B4EE629DF8
-	for <xfs@oss.sgi.com>; Mon, 27 May 2013 07:41:01 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id BFC6829DF8
+	for <xfs@oss.sgi.com>; Mon, 27 May 2013 23:31:26 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A290C30404E
-	for <xfs@oss.sgi.com>; Mon, 27 May 2013 05:40:58 -0700 (PDT)
-Received: from moutng.kundenserver.de (moutng.kundenserver.de
-	[212.227.126.171]) by cuda.sgi.com with ESMTP id
-	xzI32ACWGairpE2c (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 27 May 2013 05:40:56 -0700 (PDT)
-Message-ID: <51A35455.9070004@open-e.com>
-Date: Mon, 27 May 2013 14:40:53 +0200
-From: =?UTF-8?B?QXJrYWRpdXN6IEJ1YmHFgmE=?= <arkadiusz.bubala@open-e.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 9D8468F8039
+	for <xfs@oss.sgi.com>; Mon, 27 May 2013 21:31:26 -0700 (PDT)
+Received: from mx3-phx2.redhat.com (mx3-phx2.redhat.com [209.132.183.24]) by
+	cuda.sgi.com with ESMTP id 1CTbcQK9Ta5OvL8b for
+	<xfs@oss.sgi.com>; Mon, 27 May 2013 21:31:24 -0700 (PDT)
+Date: Tue, 28 May 2013 00:31:20 -0400 (EDT)
+From: CAI Qian <caiqian@redhat.com>
+Message-ID: <861701102.7163229.1369715480182.JavaMail.root@redhat.com>
+In-Reply-To: <20130527053608.GS29466@dastard>
+References: <510292845.4997401.1369279175460.JavaMail.root@redhat.com>
+	<1985929268.4997720.1369279277543.JavaMail.root@redhat.com>
+	<20130523035115.GY24543@dastard>
+	<986348673.5787542.1369385526612.JavaMail.root@redhat.com>
+	<20130527053608.GS29466@dastard>
+Subject: Re: 3.9.3: Oops running xfstests
 MIME-Version: 1.0
-Subject: Re: [BUG] XFS: Assertion failed: atomic_read(&pag->pag_ref) == 0,
-	file: fs/xfs/xfs_mount.c, line: 272
-References: <519B6738.9030603@open-e.com>
-	<20130521233937.GX29466@dastard>	<519C7D97.50909@open-e.com>
-	<519CD080.2030501@sandeen.net>
-In-Reply-To: <519CD080.2030501@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,210 +27,361 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: stable@vger.kernel.org, xfs@oss.sgi.com
 
-SGVsbG8sCj4+Pj4gVGVzdCBlbnZpcm9ubWVudCBjb25zaXN0IHR3byBtYWNoaW5lcyB0YXJnZXQg
-YW5kIGluaXRpYXRvci4KPj4+PiBGaXJzdCBtYWNoaW5lIHdvcmtzIGFzIHRhcmdldCB3aXRoIFFM
-b2dpYyBDb3JwLiBJU1AyNDMyLWJhc2VkIDRHYgo+Pj4+IEZpYnJlIENoYW5uZWwgZGV2aWNlLiBT
-dG9yYWdlIGlzIHBsYWNlZCBvbiB0d28gS0lOR1NUT04gU05WNDI1UyBTU0QKPj4+PiB3b3JraW5n
-IGFzIFJBSUQwIGFycmF5LiBSQUlEIGlzIG1hbmFnZWQgYnkgTFNJIE1lZ2FSQUlEIFNBUyAxMDY4
-Cj4+Pj4gY29udHJvbGxlci4KPj4+PiBTZWNvbmQgbWFjaGluZSB3b3JrcyBhcyBpbml0aWF0b3Ig
-d2l0aCB0aGUgc2FtZSBRTG9naWMgY2FyZC4KPj4+Pgo+Pj4+IEFmdGVyIGZldyBkYXlzIG9mIHJ1
-bm5pbmcgdGVzdCBzY3JpcHQgSSBnb3QgZm9sbG93aW5nIGNhbGwgdHJhY2UgYW5kCj4+Pj4gWEZT
-IHN0b3BwZWQgd29ya2luZy4KPj4+Pgo+Pj4+ICAgICAgICAgIAo+Pj4gQ2FuIHlvdSBuYXJyb3cg
-dGhpcyBkb3duIGZyb20gInRha2VzIHNldmVyYWwgZGF5cyIgdG8gdGhlIHNpbXBsZXN0Cj4+PiBw
-b3NzaWJsZSByZXByb2R1Y2VyPyBJdCBoYXBwZW5lZCBkdWUgdG8gSU8gZXJyb3JzIGR1cmluZyBt
-b3VudCwgc28KPj4+IG1heWJlIHlvdSBjYW4gZGlkIHRoYXQgcGFydCBvdXQgb2YgeW91ciBzY3Jp
-cHQgYW5kIGdpdmUgdXMgYSB0ZXN0Cj4+PiBjYXNlIHRoYXQgcmVwcm9kdWNlcyBvbiB0aGUgZmly
-c3QgbW91bnQ/Cj4+Pgo+Pj4KPj4+ICAgICAgICAKPj4gSSAnbGwgdHJ5LiBUaGlzIGVycm9ycyBv
-Y2N1cnMgb25seSBvbiBoZWF2eSBsb2FkLgo+PiBJcyB0aGVyZSBhbnkgcG9zc2liaWxpdHkgdG8g
-c2ltdWxhdGUgSS9PIGVycm9ycyBvbiBYRlMgZmlsZXN5c3RlbT8KPj4gICAgICAKPiBZb3UgY2Fu
-IHVzZSBzb21ldGhpbmcgbGlrZSBhIGRtLWZsYWtleSBvciBtZC1mYXVsdHkgYmxvY2sgZGV2aWNl
-cyBwZXJoYXBzLgo+ICAgIApUaGFuayB5b3UgdmVyeSBtdWNoLiBNZC1mYXVsdHkgaGVscHMgdG8g
-cmVwcm9kdWNlIHRoaXMgcHJvYmxlbS4gSSBjYW4gCnJlcGVhdCB0aGlzIHByb2JsZW0gYWZ0ZXIg
-YSBmZXcgbW91bnRzLgpTaW1wbGUgdGVzdCBzY3JpcHQgc291cmNlIGZvciByZXByb2R1Y2luZyB0
-aGlzIHByb2JsZW06CgojIS9iaW4vYmFzaAoKbWRhZG0gLS1jcmVhdGUgLWwgZmF1bHR5IC9kZXYv
-bWQwIC1uMSAvZGV2L3NkYQpwYXJ0ZWQgL2Rldi9tZDAgLS1zY3JpcHQgbWtsYWJlbCBtc2Rvcwpw
-YXJ0ZWQgL2Rldi9tZDAgLS1zY3JpcHQgbWtwYXJ0IHByaW1hcnkgMSAxMDAKCm1rZnMgLXQgeGZz
-IC1mIC1sIGxhenktY291bnQ9MCAvZGV2L21kMHAxCgptZGFkbSAtRyAvZGV2L21kMCAtbCBmYXVs
-dHkgLS1sYXlvdXQ9cnQ0MApta2RpciAvbW50L3Rlc3QKCndoaWxlIHRydWU7IGRvCgptb3VudCAt
-dCB4ZnMgLW8gZGVmYXVsdHMsdXNycXVvdGEsZ3JwcXVvdGEsbm91dWlkLG5vYXRpbWUsbm9kaXJh
-dGltZSAKL2Rldi9tZDBwMSAvbW50L3Rlc3QKc2xlZXAgMQp1bW91bnQgL2Rldi9tZDBwMQoKZG9u
-ZQoKQW5kIGEgY2FsbCB0cmFjZToKClsgIDk5NC40MDM5ODBdIFhGUyAobWQwcDEpOiBNb3VudGlu
-ZyBGaWxlc3lzdGVtClsgIDk5NC40MzkzOTJdIFhGUyAobWQwcDEpOiBFbmRpbmcgY2xlYW4gbW91
-bnQKWyAgOTk0LjQzOTgwNV0gWEZTIChtZDBwMSk6IFF1b3RhY2hlY2sgbmVlZGVkOiBQbGVhc2Ug
-d2FpdC4KWyAgOTk0LjQ1MzUyM10gWEZTIChtZDBwMSk6IFF1b3RhY2hlY2s6IERvbmUuClsgIDk5
-NS40OTQ3MTVdIFhGUyAobWQwcDEpOiBNb3VudGluZyBGaWxlc3lzdGVtClsgIDk5NS40OTUzMTBd
-IFhGUyAobWQwcDEpOiBtZXRhZGF0YSBJL08gZXJyb3I6IGJsb2NrIDB4MTkwNWYgCigieGxvZ19i
-cmVhZF9ub2FsaWduIikgZXJyb3IgNSBidWYgY291bnQgNTEyClsgIDk5NS41NTc4NDhdIFhGUyAo
-bWQwcDEpOiBlbXB0eSBsb2cgY2hlY2sgZmFpbGVkClsgIDk5NS41NTc4NTFdIFhGUyAobWQwcDEp
-OiBsb2cgbW91bnQvcmVjb3ZlcnkgZmFpbGVkOiBlcnJvciA1ClsgIDk5NS41NTgyODRdIFhGUyAo
-bWQwcDEpOiBsb2cgbW91bnQgZmFpbGVkClsgIDk5Ni41ODU0NjVdIFhGUyAobWQwcDEpOiBNb3Vu
-dGluZyBGaWxlc3lzdGVtClsgIDk5Ni42MDQwMDddIFhGUyAobWQwcDEpOiBFbmRpbmcgY2xlYW4g
-bW91bnQKWyAgOTk3LjYzMzU4NV0gWEZTIChtZDBwMSk6IGxhc3Qgc2VjdG9yIHJlYWQgZmFpbGVk
-ClsgIDk5OC42NDI1NTddIFhGUyAobWQwcDEpOiBNb3VudGluZyBGaWxlc3lzdGVtClsgIDk5OC42
-NjA5MjddIFhGUyAobWQwcDEpOiBtZXRhZGF0YSBJL08gZXJyb3I6IGJsb2NrIDB4NjAgCigieGZz
-X3RyYW5zX3JlYWRfYnVmIikgZXJyb3IgNSBidWYgY291bnQgNDA5NgpbICA5OTguNzIzMDE4XSBY
-RlMgKG1kMHAxKTogRW5kaW5nIGNsZWFuIG1vdW50ClsgIDk5OS43NTE3ODJdIFhGUyAobWQwcDEp
-OiBNb3VudGluZyBGaWxlc3lzdGVtClsgIDk5OS43Nzk2NjVdIFhGUyAobWQwcDEpOiBtZXRhZGF0
-YSBJL08gZXJyb3I6IGJsb2NrIDB4NjAgCigieGZzX3RyYW5zX3JlYWRfYnVmIikgZXJyb3IgNSBi
-dWYgY291bnQgNDA5NgpbICA5OTkuODQyMDk0XSBYRlMgKG1kMHAxKTogRW5kaW5nIGNsZWFuIG1v
-dW50ClsgMTAwMC44Njc1MDhdIFhGUyAobWQwcDEpOiBNb3VudGluZyBGaWxlc3lzdGVtClsgMTAw
-MC44OTUzNTRdIFhGUyAobWQwcDEpOiBtZXRhZGF0YSBJL08gZXJyb3I6IGJsb2NrIDB4NDAgCigi
-eGZzX3RyYW5zX3JlYWRfYnVmIikgZXJyb3IgNSBidWYgY291bnQgODE5MgpbIDEwMDAuOTU4MTY4
-XSBYRlMgKG1kMHAxKTogeGZzX2ltYXBfdG9fYnA6IHhmc190cmFuc19yZWFkX2J1ZigpIApyZXR1
-cm5lZCBlcnJvciA1LgpbIDEwMDAuOTU4MTcyXSBYRlMgKG1kMHAxKTogZmFpbGVkIHRvIHJlYWQg
-cm9vdCBpbm9kZQpbIDEwMDAuOTU4MjQwXSBYRlM6IEFzc2VydGlvbiBmYWlsZWQ6IGF0b21pY19y
-ZWFkKCZwYWctPnBhZ19yZWYpID09IDAsIApmaWxlOiBmcy94ZnMveGZzX21vdW50LmMsIGxpbmU6
-IDI3MgpbIDEwMDEuMDIyNTU3XSAtLS0tLS0tLS0tLS1bIGN1dCBoZXJlIF0tLS0tLS0tLS0tLS0K
-WyAxMDAxLjA1NDQ1OF0ga2VybmVsIEJVRyBhdCBmcy94ZnMveGZzX21lc3NhZ2UuYzoxMDEhClsg
-MTAwMS4wNTQ0NjFdIGludmFsaWQgb3Bjb2RlOiAwMDAwIFsjMV0gU01QClsgMTAwMS4wNTQ0NjRd
-IENQVSAxClsgMTAwMS4wNTQ0NjVdIE1vZHVsZXMgbGlua2VkIGluOiBpc2NzaV9zY3N0KE8pIHNj
-c3RfdmRpc2soTykgc2NzdChPKSAKbGliY3JjMzJjIGV4dDIgZHJiZChPKSBpc2NzaV90Y3AgbGli
-aXNjc2lfdGNwIGxpYmlzY3NpIApzY3NpX3RyYW5zcG9ydF9pc2NzaSBib25kaW5nIHNnIGUxMDAw
-ZShPKSB1c2JzZXJpYWwgdWhjaV9oY2Qgb2hjaV9oY2QgCmVoY2lfaGNkIGF1ZnMgW2xhc3QgdW5s
-b2FkZWQ6IG9oY2lfaGNkXQpbIDEwMDEuMDU0NDc3XQpbIDEwMDEuMDU0NDc5XSBQaWQ6IDE4ODEz
-LCBjb21tOiBtb3VudCBUYWludGVkOiBHICAgICAgICAgICBPIAozLjIuNDItb2U2NC0wMDAwMC1n
-ZDU3MjMzMCAjMSBTdXBlcm1pY3JvIEMyU0JDLVEvQzJTQkMtUQpbIDEwMDEuMDU0NDgyXSBSSVA6
-IDAwMTA6WzxmZmZmZmZmZjgxMmZmOGVkPl0gIFs8ZmZmZmZmZmY4MTJmZjhlZD5dIAphc3NmYWls
-KzB4MWQvMHgzMApbIDEwMDEuMDU0NDg4XSBSU1A6IDAwMDA6ZmZmZjg4MDExMjg0OWM2OCAgRUZM
-QUdTOiAwMDAxMDI5NgpbIDEwMDEuMDU0NDkwXSBSQVg6IDAwMDAwMDAwMDAwMDAwNzEgUkJYOiBm
-ZmZmODgwMTA4ZDc3ODQwIFJDWDogCmZmZmY4ODAxM2IwMDZjMDAKWyAxMDAxLjA1NDQ5MV0gUkRY
-OiAwMDAwMDAwMDAwMDAwMGMyIFJTSTogMDAwMDAwMDAwMDAwMDAwMCBSREk6IApmZmZmZmZmZjgx
-ZGVkNTE4ClsgMTAwMS4wNTQ0OTNdIFJCUDogZmZmZjg4MDExMjg0OWM2OCBSMDg6IGZmZmY4ODAx
-M2IwMDZjMDAgUjA5OiAKZmZmZjg4MDEzZmQxMjBjMApbIDEwMDEuMDU0NDk0XSBSMTA6IDAwMDAw
-MDAwMDAwMDAwMDAgUjExOiAwMDAwMDAwMDAwMDAwMDAyIFIxMjogCmZmZmY4ODAxMzk4OGQwMDAK
-WyAxMDAxLjA1NDQ5Nl0gUjEzOiAwMDAwMDAwMDAwMDAwMDAwIFIxNDogZmZmZjg4MDEzOTg4ZDFl
-OCBSMTU6IApmZmZmODgwMTM5ODhkMWY4ClsgMTAwMS4wNTQ0OThdIEZTOiAgMDAwMDAwMDAwMDAw
-MDAwMCgwMDAwKSBHUzpmZmZmODgwMTNmZDAwMDAwKDAwNjMpIAprbmxHUzowMDAwMDAwMGY3NTM4
-NmMwClsgMTAwMS4wNTQ0OTldIENTOiAgMDAxMCBEUzogMDAyYiBFUzogMDAyYiBDUjA6IDAwMDAw
-MDAwODAwNTAwM2IKWyAxMDAxLjA1NDUwMV0gQ1IyOiAwMDAwMDAwMGY3NWY1NTQwIENSMzogMDAw
-MDAwMDEzNWQzMzAwMCBDUjQ6IAowMDAwMDAwMDAwMDQwNmUwClsgMTAwMS4wNTQ1MDJdIERSMDog
-MDAwMDAwMDAwMDAwMDAwMCBEUjE6IDAwMDAwMDAwMDAwMDAwMDAgRFIyOiAKMDAwMDAwMDAwMDAw
-MDAwMApbIDEwMDEuMDU0NTA0XSBEUjM6IDAwMDAwMDAwMDAwMDAwMDAgRFI2OiAwMDAwMDAwMGZm
-ZmYwZmYwIERSNzogCjAwMDAwMDAwMDAwMDA0MDAKWyAxMDAxLjA1NDUwNl0gUHJvY2VzcyBtb3Vu
-dCAocGlkOiAxODgxMywgdGhyZWFkaW5mbyBmZmZmODgwMTEyODQ4MDAwLCAKdGFzayBmZmZmODgw
-MTM1NWNiNDEwKQpbIDEwMDEuMDU0NTA3XSBTdGFjazoKWyAxMDAxLjA1NDUwOF0gIGZmZmY4ODAx
-MTI4NDljYTggZmZmZmZmZmY4MTM0ZWI3YSAwMDAwMDAwMDAwMDAwMDA1IApmZmZmODgwMTM5ODhk
-MDAwClsgMTAwMS4wNTQ1MTBdICBmZmZmODgwMTM5ODhkMDE4IDAwMDAwMDAwMDAwMDAwMDUgZmZm
-Zjg4MDEzOTg4ZDAwMCAKMDAwMDAwMDAwMDAwMDAwMApbIDEwMDEuMDU0NTEzXSAgZmZmZjg4MDEx
-Mjg0OWNmOCBmZmZmZmZmZjgxMzUwNTRkIDAwMDAwMDAwMDAwMDAwMDAgCjAwMDAwMDAwMDAwMDAw
-MDAKWyAxMDAxLjA1NDUxNV0gQ2FsbCBUcmFjZToKWyAxMDAxLjA1NDUxOV0gIFs8ZmZmZmZmZmY4
-MTM0ZWI3YT5dIHhmc19mcmVlX3BlcmFnKzB4OGEvMHhjMApbIDEwMDEuMDU0NTIxXSAgWzxmZmZm
-ZmZmZjgxMzUwNTRkPl0geGZzX21vdW50ZnMrMHgzMWQvMHg3MDAKWyAxMDAxLjA1NDUyNF0gIFs8
-ZmZmZmZmZmY4MTMwMWZhYj5dIHhmc19mc19maWxsX3N1cGVyKzB4MWNiLzB4MjcwClsgMTAwMS4w
-NTQ1MjddICBbPGZmZmZmZmZmODExNDc2ZGE+XSBtb3VudF9iZGV2KzB4MTlhLzB4MWQwClsgMTAw
-MS4wNTQ1MjldICBbPGZmZmZmZmZmODEzMDFkZTA+XSA/IHhmc19mc193cml0ZV9pbm9kZSsweDE4
-MC8weDE4MApbIDEwMDEuMDU0NTMzXSAgWzxmZmZmZmZmZjgxMzhiMDA2Pl0gPyBzZWxpbnV4X3Ni
-X2NvcHlfZGF0YSsweDE1Ni8weDFkMApbIDEwMDEuMDU0NTM2XSAgWzxmZmZmZmZmZjgxMzAwMjAw
-Pl0geGZzX2ZzX21vdW50KzB4MTAvMHgyMApbIDEwMDEuMDU0NTM4XSAgWzxmZmZmZmZmZjgxMTQ2
-ZGYxPl0gbW91bnRfZnMrMHg0MS8weDE4MApbIDEwMDEuMDU0NTQxXSAgWzxmZmZmZmZmZjgxMTVm
-N2FlPl0gdmZzX2tlcm5fbW91bnQrMHg1ZS8weGMwClsgMTAwMS4wNTQ1NDNdICBbPGZmZmZmZmZm
-ODExNjA3NWU+XSBkb19rZXJuX21vdW50KzB4NGUvMHgxMDAKWyAxMDAxLjA1NDU0NV0gIFs8ZmZm
-ZmZmZmY4MTE2MWYyNj5dIGRvX21vdW50KzB4NTE2LzB4NzQwClsgMTAwMS4wNTQ1NDhdICBbPGZm
-ZmZmZmZmODExMDY0ZTk+XSA/IF9fZ2V0X2ZyZWVfcGFnZXMrMHg5LzB4NDAKWyAxMDAxLjA1NDU1
-MV0gIFs8ZmZmZmZmZmY4MTE4N2NjMj5dIGNvbXBhdF9zeXNfbW91bnQrMHhhMi8weDIyMApbIDEw
-MDEuMDU0NTU0XSAgWzxmZmZmZmZmZjgxNzhiZTQzPl0gaWEzMl9kb19jYWxsKzB4MTMvMHgxMwpb
-IDEwMDEuMDU0NTU1XSBDb2RlOiA2NiA2NiA5MCA2NiA2NiA2NiA5MCA2NiA2NiA2NiA5MCA2NiA2
-NiA5MCA1NSA0MSA4OSAKZDAgNDggODkgZjEgNDggODkgZmEgNDggYzcgYzYgYjggYmYgOWIgODEg
-MzEgZmYgNDggODkgZTUgMzEgYzAgZTggNTMgZmYgCmZmIGZmIDwwZj4gMGIgZWIgZmUgOTAgOTAg
-OTAgOTAgOTAgOTAgOTAgOTAgOTAgOTAgOTAgOTAgOTAgOTAgOTAgNTUgMzEKWyAxMDAxLjA1NDU3
-MV0gUklQICBbPGZmZmZmZmZmODEyZmY4ZWQ+XSBhc3NmYWlsKzB4MWQvMHgzMApbIDEwMDEuMDU0
-NTczXSAgUlNQIDxmZmZmODgwMTEyODQ5YzY4PgpbIDEwMDEuMDU0NTc1XSAtLS1bIGVuZCB0cmFj
-ZSA5ZmE4NjlhNWQ2OTMxMTAwIF0tLS0KCkkgYWxzbyByZXByb2R1Y2VkIHRoaXMgY2FsbCB0cmFj
-ZSBvbiBrZXJuZWwgMy40LjM5CgpbICA0ODYuMzM4MTkwXSBtZDogYmluZDxzZGE+ClsgIDQ4Ni4z
-NDIzNzVdIGJpbzogY3JlYXRlIHNsYWIgPGJpby0xPiBhdCAxClsgIDQ4Ni4zNDIzODddIG1kMDog
-ZGV0ZWN0ZWQgY2FwYWNpdHkgY2hhbmdlIGZyb20gMCB0byA1MDAxMDc3NzE5MDQKWyAgNDg2LjM1
-NDI1MF0gIG1kMDogcDEKWyAgNDg2LjcwOTg2M10gWEZTIChtZDBwMSk6IE1vdW50aW5nIEZpbGVz
-eXN0ZW0KWyAgNDg2LjczODc0MV0gWEZTIChtZDBwMSk6IEVuZGluZyBjbGVhbiBtb3VudApbICA0
-ODYuNzM5MTM2XSBYRlMgKG1kMHAxKTogUXVvdGFjaGVjayBuZWVkZWQ6IFBsZWFzZSB3YWl0Lgpb
-ICA0ODYuNzY3NzI3XSBYRlMgKG1kMHAxKTogUXVvdGFjaGVjazogRG9uZS4KWyAgNDg3LjgwODkx
-OF0gWEZTIChtZDBwMSk6IE1vdW50aW5nIEZpbGVzeXN0ZW0KWyAgNDg3LjgwOTUwMF0gWEZTICht
-ZDBwMSk6IG1ldGFkYXRhIEkvTyBlcnJvcjogYmxvY2sgMHgxOTA1ZiAKKCJ4bG9nX2JyZWFkX25v
-YWxpZ24iKSBlcnJvciA1IGJ1ZiBjb3VudCA1MTIKWyAgNDg3Ljg3MTU4OV0gWEZTIChtZDBwMSk6
-IGVtcHR5IGxvZyBjaGVjayBmYWlsZWQKWyAgNDg3Ljg3MTU5MV0gWEZTIChtZDBwMSk6IGxvZyBt
-b3VudC9yZWNvdmVyeSBmYWlsZWQ6IGVycm9yIDUKWyAgNDg3Ljg3MTY2N10gWEZTIChtZDBwMSk6
-IGxvZyBtb3VudCBmYWlsZWQKWyAgNDg4Ljg5OTY4MF0gWEZTIChtZDBwMSk6IE1vdW50aW5nIEZp
-bGVzeXN0ZW0KWyAgNDg4LjkxNzQ4NF0gWEZTIChtZDBwMSk6IEVuZGluZyBjbGVhbiBtb3VudApb
-ICA0ODkuOTQzNDMwXSBYRlMgKG1kMHAxKTogbGFzdCBzZWN0b3IgcmVhZCBmYWlsZWQKWyAgNDkw
-Ljk1NzU3N10gWEZTIChtZDBwMSk6IE1vdW50aW5nIEZpbGVzeXN0ZW0KWyAgNDkwLjk3NTAyMl0g
-WEZTIChtZDBwMSk6IG1ldGFkYXRhIEkvTyBlcnJvcjogYmxvY2sgMHg2MCAKKCJ4ZnNfdHJhbnNf
-cmVhZF9idWYiKSBlcnJvciA1IGJ1ZiBjb3VudCA0MDk2ClsgIDQ5MS4wMzcyMDldIFhGUyAobWQw
-cDEpOiBFbmRpbmcgY2xlYW4gbW91bnQKWyAgNDk0LjQ3ODI2MF0gQnVmZmVyIEkvTyBlcnJvciBv
-biBkZXZpY2UgbWQwcDEsIGxvZ2ljYWwgYmxvY2sgMjMKWyAgNDk0LjQ3OTIwNF0gQnVmZmVyIEkv
-TyBlcnJvciBvbiBkZXZpY2UgbWQwcDEsIGxvZ2ljYWwgYmxvY2sgNjMKWyAgNDk0LjQ3OTU0MF0g
-QnVmZmVyIEkvTyBlcnJvciBvbiBkZXZpY2UgbWQwcDEsIGxvZ2ljYWwgYmxvY2sgMTUKWyAgNDk4
-LjU3NzI4M10gWEZTIChtZDBwMSk6IE1vdW50aW5nIEZpbGVzeXN0ZW0KWyAgNDk4LjYwNDIyNV0g
-WEZTIChtZDBwMSk6IG1ldGFkYXRhIEkvTyBlcnJvcjogYmxvY2sgMHg2MCAKKCJ4ZnNfdHJhbnNf
-cmVhZF9idWYiKSBlcnJvciA1IGJ1ZiBjb3VudCA0MDk2ClsgIDQ5OC42NjY4MjVdIFhGUyAobWQw
-cDEpOiBFbmRpbmcgY2xlYW4gbW91bnQKWyAgNDk5LjY5MzMxMF0gWEZTIChtZDBwMSk6IE1vdW50
-aW5nIEZpbGVzeXN0ZW0KWyAgNDk5LjcxOTc0OV0gWEZTIChtZDBwMSk6IG1ldGFkYXRhIEkvTyBl
-cnJvcjogYmxvY2sgMHg0MCAKKCJ4ZnNfdHJhbnNfcmVhZF9idWYiKSBlcnJvciA1IGJ1ZiBjb3Vu
-dCA4MTkyClsgIDQ5OS43ODI0MDVdIFhGUyAobWQwcDEpOiB4ZnNfaW1hcF90b19icDogeGZzX3Ry
-YW5zX3JlYWRfYnVmKCkgCnJldHVybmVkIGVycm9yIDUuClsgIDQ5OS43ODI0MDldIFhGUyAobWQw
-cDEpOiBmYWlsZWQgdG8gcmVhZCByb290IGlub2RlClsgIDQ5OS43ODI0ODJdIFhGUzogQXNzZXJ0
-aW9uIGZhaWxlZDogYXRvbWljX3JlYWQoJnBhZy0+cGFnX3JlZikgPT0gMCwgCmZpbGU6IGZzL3hm
-cy94ZnNfbW91bnQuYywgbGluZTogMjcyClsgIDQ5OS44NDY2MTVdIC0tLS0tLS0tLS0tLVsgY3V0
-IGhlcmUgXS0tLS0tLS0tLS0tLQpbICA0OTkuODc4NDEwXSBrZXJuZWwgQlVHIGF0IGZzL3hmcy94
-ZnNfbWVzc2FnZS5jOjEwMSEKWyAgNDk5Ljg3ODQxMl0gaW52YWxpZCBvcGNvZGU6IDAwMDAgWyMx
-XSBTTVAKWyAgNDk5Ljg3ODQxNV0gQ1BVIDAKWyAgNDk5Ljg3ODQxNl0gTW9kdWxlcyBsaW5rZWQg
-aW46IGlzY3NpX3Njc3QoTykgc2NzdF92ZGlzayhPKSBzY3N0KE8pIApsaWJjcmMzMmMgZXh0MiBk
-cmJkKE8pIGlzY3NpX3RjcCBsaWJpc2NzaV90Y3AgbGliaXNjc2kgCnNjc2lfdHJhbnNwb3J0X2lz
-Y3NpIGJvbmRpbmcgc2cgZTEwMDBlKE8pIHVzYnNlcmlhbCB1aGNpX2hjZCBvaGNpX2hjZCAKZWhj
-aV9oY2QgYXVmcyBbbGFzdCB1bmxvYWRlZDogb2hjaV9oY2RdClsgIDQ5OS44Nzg0MjZdClsgIDQ5
-OS44Nzg0MjhdIFBpZDogMTc2MzIsIGNvbW06IG1vdW50IFRhaW50ZWQ6IEcgICAgICAgICAgIE8g
-CjMuNC4zOS1vZTY0LTAwMDAwLWc4YjBkN2U1ICM5IFN1cGVybWljcm8gQzJTQkMtUS9DMlNCQy1R
-ClsgIDQ5OS44Nzg0MzFdIFJJUDogMDAxMDpbPGZmZmZmZmZmODEyZmU2OGQ+XSAgWzxmZmZmZmZm
-ZjgxMmZlNjhkPl0gCmFzc2ZhaWwrMHgxZC8weDMwClsgIDQ5OS44Nzg0MzddIFJTUDogMDAwMDpm
-ZmZmODgwMTM1MzgxYzc4ICBFRkxBR1M6IDAwMDEwMjk2ClsgIDQ5OS44Nzg0MzldIFJBWDogMDAw
-MDAwMDAwMDAwMDA3MSBSQlg6IGZmZmY4ODAxM2E1YzA1NDAgUkNYOiAKZmZmZjg4MDEzYjAwNmMw
-MApbICA0OTkuODc4NDQwXSBSRFg6IDAwMDAwMDAwMDAwMDAwZWIgUlNJOiAwMDAwMDAwMDAwMDAw
-MDQ2IFJESTogCjAwMDAwMDAwMDAwMDAwMDAKWyAgNDk5Ljg3ODQ0Ml0gUkJQOiBmZmZmODgwMTM1
-MzgxYzc4IFIwODogZmZmZjg4MDEzYjAwNmMwMCBSMDk6IApmZmZmODgwMTNmYzEyNDQwClsgIDQ5
-OS44Nzg0NDNdIFIxMDogZmZmZjg4MDEzZmQxMjRlOCBSMTE6IDAwMDAwMDAwMDAwMDAwMDAgUjEy
-OiAKZmZmZjg4MDEzOTczNjAwMApbICA0OTkuODc4NDQ1XSBSMTM6IDAwMDAwMDAwMDAwMDAwMDAg
-UjE0OiBmZmZmODgwMTM5NzM2MWU4IFIxNTogCmZmZmY4ODAxMzk3MzYxZjgKWyAgNDk5Ljg3ODQ0
-Nl0gRlM6ICAwMDAwMDAwMDAwMDAwMDAwKDAwMDApIEdTOmZmZmY4ODAxM2ZjMDAwMDAoMDA2Mykg
-CmtubEdTOjAwMDAwMDAwZjc1MTQ2YzAKWyAgNDk5Ljg3ODQ0OF0gQ1M6ICAwMDEwIERTOiAwMDJi
-IEVTOiAwMDJiIENSMDogMDAwMDAwMDA4MDA1MDAzYgpbICA0OTkuODc4NDQ5XSBDUjI6IDAwMDAw
-MDAwZjc3NTExODEgQ1IzOiAwMDAwMDAwMTM1OWI0MDAwIENSNDogCjAwMDAwMDAwMDAwNDA3ZjAK
-WyAgNDk5Ljg3ODQ1MV0gRFIwOiAwMDAwMDAwMDAwMDAwMDAwIERSMTogMDAwMDAwMDAwMDAwMDAw
-MCBEUjI6IAowMDAwMDAwMDAwMDAwMDAwClsgIDQ5OS44Nzg0NTJdIERSMzogMDAwMDAwMDAwMDAw
-MDAwMCBEUjY6IDAwMDAwMDAwZmZmZjBmZjAgRFI3OiAKMDAwMDAwMDAwMDAwMDQwMApbICA0OTku
-ODc4NDU0XSBQcm9jZXNzIG1vdW50IChwaWQ6IDE3NjMyLCB0aHJlYWRpbmZvIGZmZmY4ODAxMzUz
-ODAwMDAsIAp0YXNrIGZmZmY4ODAxMzUwMDUxMjApClsgIDQ5OS44Nzg0NTVdIFN0YWNrOgpbICA0
-OTkuODc4NDU2XSAgZmZmZjg4MDEzNTM4MWNiOCBmZmZmZmZmZjgxMzRlNjhiIDAwMDAwMDAwMDAw
-MDAwMDUgCmZmZmY4ODAxMzk3MzYwMDAKWyAgNDk5Ljg3ODQ1OF0gIGZmZmY4ODAxMzk3MzYwMTgg
-MDAwMDAwMDAwMDAwMDAwNSBmZmZmODgwMTM5NzM2MDAwIApmZmZmODgwMTM1MmE5YzAwClsgIDQ5
-OS44Nzg0NjFdICBmZmZmODgwMTM1MzgxZDA4IGZmZmZmZmZmODEzNTAwOGQgMDAwMDAwMDAwMDAw
-MDAwMCAKMDAwMDAwMDAwMDAwMDAwMApbICA0OTkuODc4NDYzXSBDYWxsIFRyYWNlOgpbICA0OTku
-ODc4NDY2XSAgWzxmZmZmZmZmZjgxMzRlNjhiPl0geGZzX2ZyZWVfcGVyYWcrMHg4Yi8weGMwClsg
-IDQ5OS44Nzg0NjldICBbPGZmZmZmZmZmODEzNTAwOGQ+XSB4ZnNfbW91bnRmcysweDMxZC8weDcw
-MApbICA0OTkuODc4NDcxXSAgWzxmZmZmZmZmZjgxMzAwZGQwPl0geGZzX2ZzX2ZpbGxfc3VwZXIr
-MHgxZTAvMHgyODAKWyAgNDk5Ljg3ODQ3NF0gIFs8ZmZmZmZmZmY4MTE0ZGNhYj5dIG1vdW50X2Jk
-ZXYrMHgxOWIvMHgxZDAKWyAgNDk5Ljg3ODQ3Nl0gIFs8ZmZmZmZmZmY4MTMwMGJmMD5dID8geGZz
-X2ZzX2V2aWN0X2lub2RlKzB4MTMwLzB4MTMwClsgIDQ5OS44Nzg0NzldICBbPGZmZmZmZmZmODEz
-ODhmNDY+XSA/IHNlbGludXhfc2JfY29weV9kYXRhKzB4MTU2LzB4MWQwClsgIDQ5OS44Nzg0ODFd
-ICBbPGZmZmZmZmZmODEyZmYwNTA+XSB4ZnNfZnNfbW91bnQrMHgxMC8weDIwClsgIDQ5OS44Nzg0
-ODNdICBbPGZmZmZmZmZmODExNGQzNDE+XSBtb3VudF9mcysweDQxLzB4MTgwClsgIDQ5OS44Nzg0
-ODZdICBbPGZmZmZmZmZmODExNjZmOTk+XSB2ZnNfa2Vybl9tb3VudCsweDY5LzB4ZjAKWyAgNDk5
-Ljg3ODQ4OF0gIFs8ZmZmZmZmZmY4MTE2NzBhZT5dIGRvX2tlcm5fbW91bnQrMHg0ZS8weDEwMApb
-ICA0OTkuODc4NDkwXSAgWzxmZmZmZmZmZjgxMTY4MDVhPl0gZG9fbW91bnQrMHg1MWEvMHg3NjAK
-WyAgNDk5Ljg3ODQ5Ml0gIFs8ZmZmZmZmZmY4MTEwYmVlOT5dID8gX19nZXRfZnJlZV9wYWdlcysw
-eDkvMHg0MApbICA0OTkuODc4NDk2XSAgWzxmZmZmZmZmZjgxMThlZTMyPl0gY29tcGF0X3N5c19t
-b3VudCsweGEyLzB4MjIwClsgIDQ5OS44Nzg0OThdICBbPGZmZmZmZmZmODEwODY5NGY+XSA/IHN5
-c19ydF9zaWdwcm9jbWFzaysweGJmLzB4ZDAKWyAgNDk5Ljg3ODUwMV0gIFs8ZmZmZmZmZmY4MTc5
-NDE2OT5dIGlhMzJfZG9fY2FsbCsweDEzLzB4MTMKWyAgNDk5Ljg3ODUwMl0gQ29kZTogNjYgNjYg
-OTAgNjYgNjYgNjYgOTAgNjYgNjYgNjYgOTAgNjYgNjYgOTAgNTUgNDEgODkgCmQwIDQ4IDg5IGYx
-IDQ4IDg5IGZhIDQ4IGM3IGM2IGQwIGNiIDliIDgxIDMxIGZmIDQ4IDg5IGU1IDMxIGMwIGU4IDUz
-IGZmIApmZiBmZiA8MGY+IDBiIGViIGZlIDkwIDkwIDkwIDkwIDkwIDkwIDkwIDkwIDkwIDkwIDkw
-IDkwIDkwIDkwIDkwIDU1IDMxClsgIDQ5OS44Nzg1MThdIFJJUCAgWzxmZmZmZmZmZjgxMmZlNjhk
-Pl0gYXNzZmFpbCsweDFkLzB4MzAKWyAgNDk5Ljg3ODUyMF0gIFJTUCA8ZmZmZjg4MDEzNTM4MWM3
-OD4KWyAgNDk5Ljg3ODUyMl0gLS0tWyBlbmQgdHJhY2UgMzdlODgwMzFiNjgzMTFmMyBdLS0tCgot
-LSAKCkJlc3QgcmVnYXJkcwpBcmthZGl1c3ogQnViYcWCYQoKCl9fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2ku
-Y29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+Below is more information,
+
+> What type of CPUs? That's why we ask for /proc/cpuinfo....
++ lscpu
+Architecture:          x86_64
+CPU op-mode(s):        32-bit, 64-bit
+Byte Order:            Little Endian
+CPU(s):                8
+On-line CPU(s) list:   0-7
+Thread(s) per core:    1
+Core(s) per socket:    2
+Socket(s):             4
+NUMA node(s):          4
+Vendor ID:             AuthenticAMD
+CPU family:            15
+Model:                 65
+Model name:            Dual-Core AMD Opteron(tm) Processor 8218
+Stepping:              2
+CPU MHz:               2599.855
+BogoMIPS:              5199.28
+Virtualization:        AMD-V
+L1d cache:             64K
+L1i cache:             64K
+L2 cache:              1024K
+NUMA node0 CPU(s):     0,4
+NUMA node1 CPU(s):     1,5
+NUMA node2 CPU(s):     2,6
+NUMA node3 CPU(s):     3,7
+
+or
+
++ lscpu
+Architecture:          x86_64
+CPU op-mode(s):        32-bit, 64-bit
+Byte Order:            Little Endian
+CPU(s):                4
+On-line CPU(s) list:   0-3
+Thread(s) per core:    1
+Core(s) per socket:    4
+Socket(s):             1
+NUMA node(s):          1
+Vendor ID:             GenuineIntel
+CPU family:            6
+Model:                 42
+Model name:            Intel(R) Xeon(R) CPU E31220 @ 3.10GHz
+Stepping:              7
+CPU MHz:               3092.721
+BogoMIPS:              6185.44
+Virtualization:        VT-x
+L1d cache:             32K
+L1i cache:             32K
+L2 cache:              256K
+L3 cache:              8192K
+NUMA node0 CPU(s):     0-3
+
+> 
+> > - contents of /proc/mounts: nothing special. Just Fedora-19 autopart
+> 
+> What are the contents?
++ cat /proc/mounts
+rootfs / rootfs rw 0 0
+proc /proc proc rw,nosuid,nodev,noexec,relatime 0 0
+sysfs /sys sysfs rw,seclabel,nosuid,nodev,noexec,relatime 0 0
+devtmpfs /dev devtmpfs rw,seclabel,nosuid,size=8201464k,nr_inodes=2050366,mode=755 0 0
+securityfs /sys/kernel/security securityfs rw,nosuid,nodev,noexec,relatime 0 0
+selinuxfs /sys/fs/selinux selinuxfs rw,relatime 0 0
+tmpfs /dev/shm tmpfs rw,seclabel,nosuid,nodev 0 0
+devpts /dev/pts devpts rw,seclabel,nosuid,noexec,relatime,gid=5,mode=620,ptmxmode=000 0 0
+tmpfs /run tmpfs rw,seclabel,nosuid,nodev,mode=755 0 0
+tmpfs /sys/fs/cgroup tmpfs rw,seclabel,nosuid,nodev,noexec,mode=755 0 0
+cgroup /sys/fs/cgroup/systemd cgroup rw,nosuid,nodev,noexec,relatime,release_agent=/usr/lib/systemd/systemd-cgroups-agent,name=systemd 0 0
+pstore /sys/fs/pstore pstore rw,nosuid,nodev,noexec,relatime 0 0
+cgroup /sys/fs/cgroup/cpuset cgroup rw,nosuid,nodev,noexec,relatime,cpuset 0 0
+cgroup /sys/fs/cgroup/cpu,cpuacct cgroup rw,nosuid,nodev,noexec,relatime,cpuacct,cpu 0 0
+cgroup /sys/fs/cgroup/memory cgroup rw,nosuid,nodev,noexec,relatime,memory 0 0
+cgroup /sys/fs/cgroup/devices cgroup rw,nosuid,nodev,noexec,relatime,devices 0 0
+cgroup /sys/fs/cgroup/freezer cgroup rw,nosuid,nodev,noexec,relatime,freezer 0 0
+cgroup /sys/fs/cgroup/net_cls cgroup rw,nosuid,nodev,noexec,relatime,net_cls 0 0
+cgroup /sys/fs/cgroup/blkio cgroup rw,nosuid,nodev,noexec,relatime,blkio 0 0
+cgroup /sys/fs/cgroup/perf_event cgroup rw,nosuid,nodev,noexec,relatime,perf_event 0 0
+/dev/mapper/rhel_ibm--ls41--02-root / xfs rw,seclabel,relatime,attr2,inode64,noquota 0 0
+systemd-1 /proc/sys/fs/binfmt_misc autofs rw,relatime,fd=32,pgrp=1,timeout=300,minproto=5,maxproto=5,direct 0 0
+configfs /sys/kernel/config configfs rw,relatime 0 0
+hugetlbfs /dev/hugepages hugetlbfs rw,seclabel,relatime 0 0
+mqueue /dev/mqueue mqueue rw,seclabel,relatime 0 0
+debugfs /sys/kernel/debug debugfs rw,relatime 0 0
+tmpfs /tmp tmpfs rw,seclabel 0 0
+/dev/sda1 /boot xfs rw,seclabel,relatime,attr2,inode64,noquota 0 0
+/dev/mapper/rhel_ibm--ls41--02-home /home xfs rw,seclabel,relatime,attr2,inode64,noquota 0 0
+
+or
+
++ cat /proc/mounts
+rootfs / rootfs rw 0 0
+proc /proc proc rw,nosuid,nodev,noexec,relatime 0 0
+sysfs /sys sysfs rw,seclabel,nosuid,nodev,noexec,relatime 0 0
+devtmpfs /dev devtmpfs rw,seclabel,nosuid,size=4054696k,nr_inodes=1013674,mode=755 0 0
+securityfs /sys/kernel/security securityfs rw,nosuid,nodev,noexec,relatime 0 0
+selinuxfs /sys/fs/selinux selinuxfs rw,relatime 0 0
+tmpfs /dev/shm tmpfs rw,seclabel,nosuid,nodev 0 0
+devpts /dev/pts devpts rw,seclabel,nosuid,noexec,relatime,gid=5,mode=620,ptmxmode=000 0 0
+tmpfs /run tmpfs rw,seclabel,nosuid,nodev,mode=755 0 0
+tmpfs /sys/fs/cgroup tmpfs rw,seclabel,nosuid,nodev,noexec,mode=755 0 0
+cgroup /sys/fs/cgroup/systemd cgroup rw,nosuid,nodev,noexec,relatime,release_agent=/usr/lib/systemd/systemd-cgroups-agent,name=systemd 0 0
+pstore /sys/fs/pstore pstore rw,nosuid,nodev,noexec,relatime 0 0
+cgroup /sys/fs/cgroup/cpuset cgroup rw,nosuid,nodev,noexec,relatime,cpuset 0 0
+cgroup /sys/fs/cgroup/cpu,cpuacct cgroup rw,nosuid,nodev,noexec,relatime,cpuacct,cpu 0 0
+cgroup /sys/fs/cgroup/memory cgroup rw,nosuid,nodev,noexec,relatime,memory 0 0
+cgroup /sys/fs/cgroup/devices cgroup rw,nosuid,nodev,noexec,relatime,devices 0 0
+cgroup /sys/fs/cgroup/freezer cgroup rw,nosuid,nodev,noexec,relatime,freezer 0 0
+cgroup /sys/fs/cgroup/net_cls cgroup rw,nosuid,nodev,noexec,relatime,net_cls 0 0
+cgroup /sys/fs/cgroup/blkio cgroup rw,nosuid,nodev,noexec,relatime,blkio 0 0
+cgroup /sys/fs/cgroup/perf_event cgroup rw,nosuid,nodev,noexec,relatime,perf_event 0 0
+/dev/mapper/rhel_storageqe--13-root / xfs rw,seclabel,relatime,attr2,inode64,noquota 0 0
+systemd-1 /proc/sys/fs/binfmt_misc autofs rw,relatime,fd=32,pgrp=1,timeout=300,minproto=5,maxproto=5,direct 0 0
+configfs /sys/kernel/config configfs rw,relatime 0 0
+tmpfs /tmp tmpfs rw,seclabel 0 0
+debugfs /sys/kernel/debug debugfs rw,relatime 0 0
+mqueue /dev/mqueue mqueue rw,seclabel,relatime 0 0
+hugetlbfs /dev/hugepages hugetlbfs rw,seclabel,relatime 0 0
+/dev/mapper/rhel_storageqe--13-home /home xfs rw,seclabel,relatime,attr2,inode64,noquota 0 0
+/dev/sda1 /boot xfs rw,seclabel,relatime,attr2,inode64,noquota 0 0
+> 
+> > - contents of /proc/partitions: nothing special. Just Fedora-19 autopart
+> 
+> Contents, please.
++ cat /proc/partitions
+major minor  #blocks  name
+
+   8       16   71687000 sdb
+   8       17   71685120 sdb1
+   8        0   71687000 sda
+   8        1     512000 sda1
+   8        2   71173120 sda2
+ 253        0    8257536 dm-0
+ 253        1   52428800 dm-1
+ 253        2   82169856 dm-2
+
+or
+
++ cat /proc/partitions
+major minor  #blocks  name
+
+   8        0   71652960 sda
+   8        1     512000 sda1
+   8        2   71139328 sda2
+ 253        0    8142848 dm-0
+ 253        1   42328064 dm-1
+ 253        2   20664320 dm-2
+
+> But what I see here is that there are partitions and LVM, and
+> everything is using ext4. That's not useful to me. What I'm after is
+> the output of pvdisplay, vgdisplay and lvdisplay. That's not very
+> hard...
++ pvdisplay
+  --- Physical volume ---
+  PV Name               /dev/sda2
+  VG Name               rhel_ibm-ls41-02
+  PV Size               67.88 GiB / not usable 0   
+  Allocatable           yes (but full)
+  PE Size               4.00 MiB
+  Total PE              17376
+  Free PE               0
+  Allocated PE          17376
+  PV UUID               Y2xyqY-0Bcf-4NRi-9fmD-fYCm-XD8a-wtvwX6
+   
+  --- Physical volume ---
+  PV Name               /dev/sdb1
+  VG Name               rhel_ibm-ls41-02
+  PV Size               68.36 GiB / not usable 0   
+  Allocatable           yes (but full)
+  PE Size               4.00 MiB
+  Total PE              17501
+  Free PE               0
+  Allocated PE          17501
+  PV UUID               RcT6SU-EP1j-Ig3S-pBD0-21p6-C3W1-ersGf9
+   
++ echo
+
++ vgdisplay
+  --- Volume group ---
+  VG Name               rhel_ibm-ls41-02
+  System ID             
+  Format                lvm2
+  Metadata Areas        2
+  Metadata Sequence No  4
+  VG Access             read/write
+  VG Status             resizable
+  MAX LV                0
+  Cur LV                3
+  Open LV               3
+  Max PV                0
+  Cur PV                2
+  Act PV                2
+  VG Size               136.24 GiB
+  PE Size               4.00 MiB
+  Total PE              34877
+  Alloc PE / Size       34877 / 136.24 GiB
+  Free  PE / Size       0 / 0   
+  VG UUID               vciDnL-1VvD-Xxx1-caV8-06EH-cZLQ-f9X0vI
+   
++ echo
+
++ lvdisplay
+  --- Logical volume ---
+  LV Path                /dev/rhel_ibm-ls41-02/swap
+  LV Name                swap
+  VG Name                rhel_ibm-ls41-02
+  LV UUID                EgGvG9-XKJ0-sVBq-iQGQ-3jAc-rhbX-ZtCkPK
+  LV Write Access        read/write
+  LV Status              available
+  # open                 2
+  LV Size                7.88 GiB
+  Current LE             2016
+  Segments               1
+  Allocation             inherit
+  Read ahead sectors     auto
+  - currently set to     256
+  Block device           253:0
+   
+  --- Logical volume ---
+  LV Path                /dev/rhel_ibm-ls41-02/home
+  LV Name                home
+  VG Name                rhel_ibm-ls41-02
+  LV UUID                RFonzm-OXSb-rVKo-zZRi-YMri-fBC8-GdyRkq
+  LV Write Access        read/write
+  LV Status              available
+  # open                 1
+  LV Size                78.36 GiB
+  Current LE             20061
+  Segments               2
+  Allocation             inherit
+  Read ahead sectors     auto
+  - currently set to     256
+  Block device           253:2
+   
+  --- Logical volume ---
+  LV Path                /dev/rhel_ibm-ls41-02/root
+  LV Name                root
+  VG Name                rhel_ibm-ls41-02
+  LV UUID                AXEjh5-BakC-UwOu-AKjW-7JwD-dsoW-u57ffj
+  LV Write Access        read/write
+  LV Status              available
+  # open                 1
+  LV Size                50.00 GiB
+  Current LE             12800
+  Segments               1
+  Allocation             inherit
+  Read ahead sectors     auto
+  - currently set to     256
+  Block device           253:1
+
+or
+
++ pvdisplay
+  --- Physical volume ---
+  PV Name               /dev/sda2
+  VG Name               rhel_storageqe-13
+  PV Size               67.84 GiB / not usable 4.00 MiB
+  Allocatable           yes (but full)
+  PE Size               4.00 MiB
+  Total PE              17367
+  Free PE               0
+  Allocated PE          17367
+  PV UUID               qJGFib-CawR-Dlhz-gXew-aqt4-erPL-LLtCeE
+   
++ echo
+
++ vgdisplay
+  --- Volume group ---
+  VG Name               rhel_storageqe-13
+  System ID             
+  Format                lvm2
+  Metadata Areas        1
+  Metadata Sequence No  4
+  VG Access             read/write
+  VG Status             resizable
+  MAX LV                0
+  Cur LV                3
+  Open LV               3
+  Max PV                0
+  Cur PV                1
+  Act PV                1
+  VG Size               67.84 GiB
+  PE Size               4.00 MiB
+  Total PE              17367
+  Alloc PE / Size       17367 / 67.84 GiB
+  Free  PE / Size       0 / 0   
+  VG UUID               21QGVb-IqM8-DBto-Q1kl-23ql-y28i-ouwb0e
+   
++ echo
+
++ lvdisplay
+  --- Logical volume ---
+  LV Path                /dev/rhel_storageqe-13/swap
+  LV Name                swap
+  VG Name                rhel_storageqe-13
+  LV UUID                jBYJTC-BPds-lfo8-52rJ-MEXR-Chn5-tSChwg
+  LV Write Access        read/write
+  LV Status              available
+  # open                 2
+  LV Size                7.77 GiB
+  Current LE             1988
+  Segments               1
+  Allocation             inherit
+  Read ahead sectors     auto
+  - currently set to     256
+  Block device           253:0
+   
+  --- Logical volume ---
+  LV Path                /dev/rhel_storageqe-13/home
+  LV Name                home
+  VG Name                rhel_storageqe-13
+  LV UUID                3lJRDR-rnNO-7BBf-3Iyy-32ho-Sbnb-qP3Ut1
+  LV Write Access        read/write
+  LV Status              available
+  # open                 1
+  LV Size                19.71 GiB
+  Current LE             5045
+  Segments               1
+  Allocation             inherit
+  Read ahead sectors     auto
+  - currently set to     256
+  Block device           253:2
+   
+  --- Logical volume ---
+  LV Path                /dev/rhel_storageqe-13/root
+  LV Name                root
+  VG Name                rhel_storageqe-13
+  LV UUID                I2xPqj-Ew0z-NePE-4d7w-nfev-5DMo-fRuFUL
+  LV Write Access        read/write
+  LV Status              available
+  # open                 1
+  LV Size                40.37 GiB
+  Current LE             10334
+  Segments               1
+  Allocation             inherit
+  Read ahead sectors     auto
+  - currently set to     256
+  Block device           253:1
+
+I never have had a chance to reproduce this just by running xfstests alone,
+so it looks like there needs to be some fixture of the loads here. I'll try
+to see if I can craft out a simpler reproducer...
+
+CAI Qian
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
