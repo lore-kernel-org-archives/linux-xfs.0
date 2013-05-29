@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 33D987F37
-	for <xfs@oss.sgi.com>; Wed, 29 May 2013 11:43:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1E72A30405F
-	for <xfs@oss.sgi.com>; Wed, 29 May 2013 09:43:43 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 5F12329DF8
+	for <xfs@oss.sgi.com>; Wed, 29 May 2013 14:01:26 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E9590AC00E
+	for <xfs@oss.sgi.com>; Wed, 29 May 2013 12:01:22 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 8DcWvvetsLSUyjDg for
-	<xfs@oss.sgi.com>; Wed, 29 May 2013 09:43:42 -0700 (PDT)
-Message-ID: <51A62F92.8060506@redhat.com>
-Date: Wed, 29 May 2013 12:40:50 -0400
+	cuda.sgi.com with ESMTP id lfzisz646uYgdFqI for
+	<xfs@oss.sgi.com>; Wed, 29 May 2013 12:01:22 -0700 (PDT)
+Message-ID: <51A64FD3.8000606@redhat.com>
+Date: Wed, 29 May 2013 14:58:27 -0400
 From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 3/9] xfs: increase number of ACL entries for V5 superblocks
+Subject: Re: [PATCH 4/9] xfs: rework dquot CRCs
 References: <1369636707-15150-1-git-send-email-david@fromorbit.com>
-	<1369636707-15150-4-git-send-email-david@fromorbit.com>
-In-Reply-To: <1369636707-15150-4-git-send-email-david@fromorbit.com>
+	<1369636707-15150-5-git-send-email-david@fromorbit.com>
+In-Reply-To: <1369636707-15150-5-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,172 +34,150 @@ Cc: xfs@oss.sgi.com
 On 05/27/2013 02:38 AM, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> The limit of 25 ACL entries is arbitrary, but baked into the on-disk
-> format.  For version 5 superblocks, increase it to the maximum nuber
-> of ACLs that can fit into a single xattr.
+> Calculating dquot CRCs when the backing buffer is written back just
+> doesn't work reliably. There are several places which manipulate
+> dquots directly in the buffers, and they don't calculate CRCs
+> appropriately, nor do they always set the buffer up to calculate
+> CRCs appropriately.
+> 
+> Firstly, if we log a dquot buffer (e.g. during allocation) it gets
+> logged without valid CRC, and so on recovery we end up with a dquot
+> that is not valid.
+> 
+> Secondly, if we recover/repair a dquot, we don't have a verifier
+> attached to the buffer and hence CRCs arenot calculate don the way
+> down to disk.
+> 
+> Thirdly, calculating the CRC after we've changed the contents means
+> that if we re-read the dquot from the buffer, we cannot verify the
+> contents of the dquot are valid, as the CRC is invalid.
+> 
+> So, to avoid all the dquot CRC errors that are being detected by the
+> read verifier, change to using the same model as for inodes. that
+> is, dquot CRCs are calculated and written to the backing buffer at
+> the time the dquot is flushed to the backing buffer. If we modify
+> the dquuot directly in the backing buffer, calculate the CRC
+> immediately after the modification is complete. Hence the dquot in
+> the on-disk buffer should always have a valid CRC.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  fs/xfs/xfs_acl.c |   31 ++++++++++++++++++-------------
->  fs/xfs/xfs_acl.h |   30 +++++++++++++++++++++++-------
->  2 files changed, 41 insertions(+), 20 deletions(-)
+>  fs/xfs/xfs_dquot.c       |   37 ++++++++++++++++---------------------
+>  fs/xfs/xfs_log_recover.c |   10 ++++++++++
+>  fs/xfs/xfs_qm.c          |   36 ++++++++++++++++++++++++++----------
+>  fs/xfs/xfs_quota.h       |    2 ++
+>  4 files changed, 54 insertions(+), 31 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
-> index 1d32f1d..b6bed9b 100644
-> --- a/fs/xfs/xfs_acl.c
-> +++ b/fs/xfs/xfs_acl.c
-> @@ -21,6 +21,8 @@
->  #include "xfs_bmap_btree.h"
->  #include "xfs_inode.h"
->  #include "xfs_vnodeops.h"
-> +#include "xfs_sb.h"
-> +#include "xfs_mount.h"
+...
+> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> index f41702b..d181542 100644
+> --- a/fs/xfs/xfs_qm.c
+> +++ b/fs/xfs/xfs_qm.c
+> @@ -41,6 +41,7 @@
+>  #include "xfs_qm.h"
 >  #include "xfs_trace.h"
->  #include <linux/slab.h>
->  #include <linux/xattr.h>
-> @@ -34,7 +36,9 @@
->   */
+>  #include "xfs_icache.h"
+> +#include "xfs_cksum.h"
 >  
->  STATIC struct posix_acl *
-> -xfs_acl_from_disk(struct xfs_acl *aclp)
-> +xfs_acl_from_disk(
-> +	struct xfs_acl	*aclp,
-> +	int		max_entries)
+>  /*
+>   * The global quota manager. There is only one of these for the entire
+> @@ -839,7 +840,7 @@ xfs_qm_reset_dqcounts(
+>  	xfs_dqid_t	id,
+>  	uint		type)
 >  {
->  	struct posix_acl_entry *acl_e;
->  	struct posix_acl *acl;
-> @@ -42,7 +46,7 @@ xfs_acl_from_disk(struct xfs_acl *aclp)
->  	unsigned int count, i;
+> -	xfs_disk_dquot_t	*ddq;
+> +	struct xfs_dqblk	*dqb;
+>  	int			j;
 >  
->  	count = be32_to_cpu(aclp->acl_cnt);
-> -	if (count > XFS_ACL_MAX_ENTRIES)
-> +	if (count > max_entries)
->  		return ERR_PTR(-EFSCORRUPTED);
->  
->  	acl = posix_acl_alloc(count, GFP_KERNEL);
-> @@ -108,7 +112,7 @@ xfs_get_acl(struct inode *inode, int type)
->  	struct xfs_inode *ip = XFS_I(inode);
->  	struct posix_acl *acl;
->  	struct xfs_acl *xfs_acl;
-> -	int len = sizeof(struct xfs_acl);
-> +	int len = XFS_ACL_SIZE(ip->i_mount);
->  	unsigned char *ea_name;
->  	int error;
->  
-> @@ -133,8 +137,8 @@ xfs_get_acl(struct inode *inode, int type)
->  	 * If we have a cached ACLs value just return it, not need to
->  	 * go out to the disk.
->  	 */
-> -
-> -	xfs_acl = kzalloc(sizeof(struct xfs_acl), GFP_KERNEL);
-> +	len = XFS_ACL_SIZE(ip->i_mount);
+>  	trace_xfs_reset_dqcounts(bp, _RET_IP_);
+> @@ -853,8 +854,12 @@ xfs_qm_reset_dqcounts(
+>  	do_div(j, sizeof(xfs_dqblk_t));
+>  	ASSERT(mp->m_quotainfo->qi_dqperchunk == j);
+>  #endif
+> -	ddq = bp->b_addr;
+> +	dqb = bp->b_addr;
+>  	for (j = 0; j < mp->m_quotainfo->qi_dqperchunk; j++) {
+> +		struct xfs_disk_dquot	*ddq;
+> +
+> +		ddq =  (struct xfs_disk_dquot *)&dqb[j];
+> +
+>  		/*
+>  		 * Do a sanity check, and if needed, repair the dqblk. Don't
+>  		 * output any warnings because it's perfectly possible to
+> @@ -871,7 +876,8 @@ xfs_qm_reset_dqcounts(
+>  		ddq->d_bwarns = 0;
+>  		ddq->d_iwarns = 0;
+>  		ddq->d_rtbwarns = 0;
+> -		ddq = (xfs_disk_dquot_t *) ((xfs_dqblk_t *)ddq + 1);
+> +		xfs_update_cksum((char *)&dqb[j], sizeof(struct xfs_dqblk),
+> +					 XFS_DQUOT_CRC_OFF);
 
-Duplicate initialization of len. Harmless (perhaps Ben can drop it) and
-the parens in XFS_ACL_MAX_ENTRIES() are fixed, so:
+Nice cleanup on the cast ugliness even without the crc change. Is there
+a technical reason for the unconditional crc update here beyond that
+we're doing a reset? I'm wondering if there's any value in leaving those
+bits untouched for a filesystem that might have never enabled crc
+(quotacheck or not).
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+FWIW, the rest of this patch looks sane to me (I'm less familiar with
+the log recovery code, but the changes seem isolated and
+straightforward) and I couldn't locate anywhere else we modify the
+backing buffer for the dquot.
 
-> +	xfs_acl = kzalloc(len, GFP_KERNEL);
->  	if (!xfs_acl)
->  		return ERR_PTR(-ENOMEM);
->  
-> @@ -153,7 +157,7 @@ xfs_get_acl(struct inode *inode, int type)
->  		goto out;
+Brian
+
 >  	}
+>  }
 >  
-> -	acl = xfs_acl_from_disk(xfs_acl);
-> +	acl = xfs_acl_from_disk(xfs_acl, XFS_ACL_MAX_ENTRIES(ip->i_mount));
->  	if (IS_ERR(acl))
->  		goto out;
+> @@ -907,19 +913,29 @@ xfs_qm_dqiter_bufs(
+>  			      XFS_FSB_TO_DADDR(mp, bno),
+>  			      mp->m_quotainfo->qi_dqchunklen, 0, &bp,
+>  			      &xfs_dquot_buf_ops);
+> -		if (error)
+> -			break;
 >  
-> @@ -189,16 +193,17 @@ xfs_set_acl(struct inode *inode, int type, struct posix_acl *acl)
->  
->  	if (acl) {
->  		struct xfs_acl *xfs_acl;
-> -		int len;
-> +		int len = XFS_ACL_SIZE(ip->i_mount);
->  
-> -		xfs_acl = kzalloc(sizeof(struct xfs_acl), GFP_KERNEL);
-> +		xfs_acl = kzalloc(len, GFP_KERNEL);
->  		if (!xfs_acl)
->  			return -ENOMEM;
->  
->  		xfs_acl_to_disk(xfs_acl, acl);
-> -		len = sizeof(struct xfs_acl) -
-> -			(sizeof(struct xfs_acl_entry) *
-> -			 (XFS_ACL_MAX_ENTRIES - acl->a_count));
+>  		/*
+> -		 * XXX(hch): need to figure out if it makes sense to validate
+> -		 *	     the CRC here.
+> +		 * CRC and validation errors will return a EFSCORRUPTED here. If
+> +		 * this occurs, re-read without CRC validation so that we can
+> +		 * repair the damage via xfs_qm_reset_dqcounts(). This process
+> +		 * will leave a trace in the log indicating corruption has
+> +		 * been detected.
+>  		 */
+> +		if (error == EFSCORRUPTED) {
+> +			error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp,
+> +				      XFS_FSB_TO_DADDR(mp, bno),
+> +				      mp->m_quotainfo->qi_dqchunklen, 0, &bp,
+> +				      NULL);
+> +		}
 > +
-> +		/* subtract away the unused acl entries */
-> +		len -= sizeof(struct xfs_acl_entry) *
-> +			 (XFS_ACL_MAX_ENTRIES(ip->i_mount) - acl->a_count);
->  
->  		error = -xfs_attr_set(ip, ea_name, (unsigned char *)xfs_acl,
->  				len, ATTR_ROOT);
-> @@ -243,7 +248,7 @@ xfs_set_mode(struct inode *inode, umode_t mode)
->  static int
->  xfs_acl_exists(struct inode *inode, unsigned char *name)
->  {
-> -	int len = sizeof(struct xfs_acl);
-> +	int len = XFS_ACL_SIZE(XFS_M(inode->i_sb));
->  
->  	return (xfs_attr_get(XFS_I(inode), name, NULL, &len,
->  			    ATTR_ROOT|ATTR_KERNOVAL) == 0);
-> @@ -379,7 +384,7 @@ xfs_xattr_acl_set(struct dentry *dentry, const char *name,
->  		goto out_release;
->  
->  	error = -EINVAL;
-> -	if (acl->a_count > XFS_ACL_MAX_ENTRIES)
-> +	if (acl->a_count > XFS_ACL_MAX_ENTRIES(XFS_M(inode->i_sb)))
->  		goto out_release;
->  
->  	if (type == ACL_TYPE_ACCESS) {
-> diff --git a/fs/xfs/xfs_acl.h b/fs/xfs/xfs_acl.h
-> index 39632d9..0da8725 100644
-> --- a/fs/xfs/xfs_acl.h
-> +++ b/fs/xfs/xfs_acl.h
-> @@ -22,19 +22,35 @@ struct inode;
->  struct posix_acl;
->  struct xfs_inode;
->  
-> -#define XFS_ACL_MAX_ENTRIES 25
->  #define XFS_ACL_NOT_PRESENT (-1)
->  
->  /* On-disk XFS access control list structure */
-> +struct xfs_acl_entry {
-> +	__be32	ae_tag;
-> +	__be32	ae_id;
-> +	__be16	ae_perm;
-> +	__be16	ae_pad;		/* fill the implicit hole in the structure */
-> +};
+> +		if (error)
+> +			break;
 > +
->  struct xfs_acl {
-> -	__be32		acl_cnt;
-> -	struct xfs_acl_entry {
-> -		__be32	ae_tag;
-> -		__be32	ae_id;
-> -		__be16	ae_perm;
-> -	} acl_entry[XFS_ACL_MAX_ENTRIES];
-> +	__be32			acl_cnt;
-> +	struct xfs_acl_entry	acl_entry[0];
->  };
+>  		xfs_qm_reset_dqcounts(mp, bp, firstid, type);
+>  		xfs_buf_delwri_queue(bp, buffer_list);
+>  		xfs_buf_relse(bp);
+> -		/*
+> -		 * goto the next block.
+> -		 */
+> +
+> +		/* goto the next block. */
+>  		bno++;
+>  		firstid += mp->m_quotainfo->qi_dqperchunk;
+>  	}
+> diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
+> index c61e31c..c38068f 100644
+> --- a/fs/xfs/xfs_quota.h
+> +++ b/fs/xfs/xfs_quota.h
+> @@ -87,6 +87,8 @@ typedef struct xfs_dqblk {
+>  	uuid_t		  dd_uuid;	/* location information */
+>  } xfs_dqblk_t;
 >  
-> +/*
-> + * The number of ACL entries allowed is defined by the on-disk format.
-> + * For v4 superblocks, that is limited to 25 entries. For v5 superblocks, it is
-> + * limited only by the maximum size of the xattr that stores the information.
-> + */
-> +#define XFS_ACL_MAX_ENTRIES(mp)	\
-> +	(xfs_sb_version_hascrc(&mp->m_sb) \
-> +	   ?  (XATTR_SIZE_MAX - sizeof(__be32)) / sizeof(struct xfs_acl_entry) \
-> +	   : 25)
+> +#define XFS_DQUOT_CRC_OFF	offsetof(struct xfs_dqblk, dd_crc)
 > +
-> +#define XFS_ACL_SIZE(mp) \
-> +	(sizeof(struct xfs_acl) + \
-> +		sizeof(struct xfs_acl_entry) * XFS_ACL_MAX_ENTRIES((mp)))
-> +
->  /* On-disk XFS extended attribute names */
->  #define SGI_ACL_FILE		(unsigned char *)"SGI_ACL_FILE"
->  #define SGI_ACL_DEFAULT		(unsigned char *)"SGI_ACL_DEFAULT"
+>  /*
+>   * flags for q_flags field in the dquot.
+>   */
 > 
 
 _______________________________________________
