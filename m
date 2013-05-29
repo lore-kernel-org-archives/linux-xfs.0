@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0FD827F37
-	for <xfs@oss.sgi.com>; Wed, 29 May 2013 08:17:45 -0500 (CDT)
-Message-ID: <51A6002D.4020003@sgi.com>
-Date: Wed, 29 May 2013 08:18:37 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0B6897F50
+	for <xfs@oss.sgi.com>; Wed, 29 May 2013 08:19:08 -0500 (CDT)
+Message-ID: <51A60080.4080002@sgi.com>
+Date: Wed, 29 May 2013 08:20:00 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
 Subject: Re: [PATCH] xfstests: fix typo in check
@@ -29,9 +29,15 @@ On 05/20/2013 12:51 PM, Eryu Guan wrote:
 >
 > Signed-off-by: Eryu Guan <eguan@redhat.com>
 
-Looks good.
+Thanks, this patch has been committed:
 
-Reviewed-by Rich Johnston <rjohnston@sgi.com>
+commit 38d58591fc0607bfd262fc8d363e52047fcf0e9c
+Author: Eryu Guan <eguan@redhat.com>
+Date:   Wed May 29 08:12:44 2013 -0500
+
+     xfstests: fix typo in check
+
+--Rich
 
 _______________________________________________
 xfs mailing list
