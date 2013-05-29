@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 453C67F50
-	for <xfs@oss.sgi.com>; Wed, 29 May 2013 11:42:26 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E4868AC001
-	for <xfs@oss.sgi.com>; Wed, 29 May 2013 09:42:25 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 33D987F37
+	for <xfs@oss.sgi.com>; Wed, 29 May 2013 11:43:43 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1E72A30405F
+	for <xfs@oss.sgi.com>; Wed, 29 May 2013 09:43:43 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id SAzecfXmLTVkfxh0 for
-	<xfs@oss.sgi.com>; Wed, 29 May 2013 09:42:25 -0700 (PDT)
-Message-ID: <51A62F45.5000004@redhat.com>
-Date: Wed, 29 May 2013 12:39:33 -0400
+	cuda.sgi.com with ESMTP id 8DcWvvetsLSUyjDg for
+	<xfs@oss.sgi.com>; Wed, 29 May 2013 09:43:42 -0700 (PDT)
+Message-ID: <51A62F92.8060506@redhat.com>
+Date: Wed, 29 May 2013 12:40:50 -0400
 From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 2/9] xfs: fix incorrect remote symlink block count
+Subject: Re: [PATCH 3/9] xfs: increase number of ACL entries for V5 superblocks
 References: <1369636707-15150-1-git-send-email-david@fromorbit.com>
-	<1369636707-15150-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1369636707-15150-3-git-send-email-david@fromorbit.com>
+	<1369636707-15150-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1369636707-15150-4-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,92 +34,172 @@ Cc: xfs@oss.sgi.com
 On 05/27/2013 02:38 AM, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> When CRCs are enabled, the number of blocks needed to hold a remote
-> symlink on a 1k block size filesystem may be 2 instead of 1. The
-> transaction reservation for the allocated bloks was not taking this
-> into account and only allocating one block. hence when trying to
-> read or invalidate such symlinks, we are mapping a hole where there
-> should be a block and things go bad at that point.
-> 
-> Fix the reservation to use the correct block count, clean up the
-> block count calculation similar to the remote attribute calculation,
-> and add a debug guard to detect when we don't write the entire
-> symlink to disk.
+> The limit of 25 ACL entries is arbitrary, but baked into the on-disk
+> format.  For version 5 superblocks, increase it to the maximum nuber
+> of ACLs that can fit into a single xattr.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
+>  fs/xfs/xfs_acl.c |   31 ++++++++++++++++++-------------
+>  fs/xfs/xfs_acl.h |   30 +++++++++++++++++++++++-------
+>  2 files changed, 41 insertions(+), 20 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
+> index 1d32f1d..b6bed9b 100644
+> --- a/fs/xfs/xfs_acl.c
+> +++ b/fs/xfs/xfs_acl.c
+> @@ -21,6 +21,8 @@
+>  #include "xfs_bmap_btree.h"
+>  #include "xfs_inode.h"
+>  #include "xfs_vnodeops.h"
+> +#include "xfs_sb.h"
+> +#include "xfs_mount.h"
+>  #include "xfs_trace.h"
+>  #include <linux/slab.h>
+>  #include <linux/xattr.h>
+> @@ -34,7 +36,9 @@
+>   */
+>  
+>  STATIC struct posix_acl *
+> -xfs_acl_from_disk(struct xfs_acl *aclp)
+> +xfs_acl_from_disk(
+> +	struct xfs_acl	*aclp,
+> +	int		max_entries)
+>  {
+>  	struct posix_acl_entry *acl_e;
+>  	struct posix_acl *acl;
+> @@ -42,7 +46,7 @@ xfs_acl_from_disk(struct xfs_acl *aclp)
+>  	unsigned int count, i;
+>  
+>  	count = be32_to_cpu(aclp->acl_cnt);
+> -	if (count > XFS_ACL_MAX_ENTRIES)
+> +	if (count > max_entries)
+>  		return ERR_PTR(-EFSCORRUPTED);
+>  
+>  	acl = posix_acl_alloc(count, GFP_KERNEL);
+> @@ -108,7 +112,7 @@ xfs_get_acl(struct inode *inode, int type)
+>  	struct xfs_inode *ip = XFS_I(inode);
+>  	struct posix_acl *acl;
+>  	struct xfs_acl *xfs_acl;
+> -	int len = sizeof(struct xfs_acl);
+> +	int len = XFS_ACL_SIZE(ip->i_mount);
+>  	unsigned char *ea_name;
+>  	int error;
+>  
+> @@ -133,8 +137,8 @@ xfs_get_acl(struct inode *inode, int type)
+>  	 * If we have a cached ACLs value just return it, not need to
+>  	 * go out to the disk.
+>  	 */
+> -
+> -	xfs_acl = kzalloc(sizeof(struct xfs_acl), GFP_KERNEL);
+> +	len = XFS_ACL_SIZE(ip->i_mount);
+
+Duplicate initialization of len. Harmless (perhaps Ben can drop it) and
+the parens in XFS_ACL_MAX_ENTRIES() are fixed, so:
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Unrelated question... I noticed we update di_size in xfs_symlink(). I
-presume this is safe because, even in the non-local case, we actually
-log the data (the path) in the buffers as well, right?
-
-Brian
-
->  fs/xfs/xfs_symlink.c |   20 ++++++--------------
->  1 file changed, 6 insertions(+), 14 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-> index 5f234389..195a403 100644
-> --- a/fs/xfs/xfs_symlink.c
-> +++ b/fs/xfs/xfs_symlink.c
-> @@ -56,16 +56,9 @@ xfs_symlink_blocks(
->  	struct xfs_mount *mp,
->  	int		pathlen)
->  {
-> -	int		fsblocks = 0;
-> -	int		len = pathlen;
-> +	int buflen = XFS_SYMLINK_BUF_SPACE(mp, mp->m_sb.sb_blocksize);
+> +	xfs_acl = kzalloc(len, GFP_KERNEL);
+>  	if (!xfs_acl)
+>  		return ERR_PTR(-ENOMEM);
 >  
-> -	do {
-> -		fsblocks++;
-> -		len -= XFS_SYMLINK_BUF_SPACE(mp, mp->m_sb.sb_blocksize);
-> -	} while (len > 0);
-> -
-> -	ASSERT(fsblocks <= XFS_SYMLINK_MAPS);
-> -	return fsblocks;
-> +	return (pathlen + buflen - 1) / buflen;
->  }
->  
->  static int
-> @@ -405,7 +398,7 @@ xfs_symlink(
->  	if (pathlen <= XFS_LITINO(mp, dp->i_d.di_version))
->  		fs_blocks = 0;
->  	else
-> -		fs_blocks = XFS_B_TO_FSB(mp, pathlen);
-> +		fs_blocks = xfs_symlink_blocks(mp, pathlen);
->  	resblks = XFS_SYMLINK_SPACE_RES(mp, link_name->len, fs_blocks);
->  	error = xfs_trans_reserve(tp, resblks, XFS_SYMLINK_LOG_RES(mp), 0,
->  			XFS_TRANS_PERM_LOG_RES, XFS_SYMLINK_LOG_COUNT);
-> @@ -512,7 +505,7 @@ xfs_symlink(
->  		cur_chunk = target_path;
->  		offset = 0;
->  		for (n = 0; n < nmaps; n++) {
-> -			char *buf;
-> +			char	*buf;
->  
->  			d = XFS_FSB_TO_DADDR(mp, mval[n].br_startblock);
->  			byte_cnt = XFS_FSB_TO_B(mp, mval[n].br_blockcount);
-> @@ -525,9 +518,7 @@ xfs_symlink(
->  			bp->b_ops = &xfs_symlink_buf_ops;
->  
->  			byte_cnt = XFS_SYMLINK_BUF_SPACE(mp, byte_cnt);
-> -			if (pathlen < byte_cnt) {
-> -				byte_cnt = pathlen;
-> -			}
-> +			byte_cnt = min(byte_cnt, pathlen);
->  
->  			buf = bp->b_addr;
->  			buf += xfs_symlink_hdr_set(mp, ip->i_ino, offset,
-> @@ -542,6 +533,7 @@ xfs_symlink(
->  			xfs_trans_log_buf(tp, bp, 0, (buf + byte_cnt - 1) -
->  							(char *)bp->b_addr);
->  		}
-> +		ASSERT(pathlen == 0);
+> @@ -153,7 +157,7 @@ xfs_get_acl(struct inode *inode, int type)
+>  		goto out;
 >  	}
 >  
->  	/*
+> -	acl = xfs_acl_from_disk(xfs_acl);
+> +	acl = xfs_acl_from_disk(xfs_acl, XFS_ACL_MAX_ENTRIES(ip->i_mount));
+>  	if (IS_ERR(acl))
+>  		goto out;
+>  
+> @@ -189,16 +193,17 @@ xfs_set_acl(struct inode *inode, int type, struct posix_acl *acl)
+>  
+>  	if (acl) {
+>  		struct xfs_acl *xfs_acl;
+> -		int len;
+> +		int len = XFS_ACL_SIZE(ip->i_mount);
+>  
+> -		xfs_acl = kzalloc(sizeof(struct xfs_acl), GFP_KERNEL);
+> +		xfs_acl = kzalloc(len, GFP_KERNEL);
+>  		if (!xfs_acl)
+>  			return -ENOMEM;
+>  
+>  		xfs_acl_to_disk(xfs_acl, acl);
+> -		len = sizeof(struct xfs_acl) -
+> -			(sizeof(struct xfs_acl_entry) *
+> -			 (XFS_ACL_MAX_ENTRIES - acl->a_count));
+> +
+> +		/* subtract away the unused acl entries */
+> +		len -= sizeof(struct xfs_acl_entry) *
+> +			 (XFS_ACL_MAX_ENTRIES(ip->i_mount) - acl->a_count);
+>  
+>  		error = -xfs_attr_set(ip, ea_name, (unsigned char *)xfs_acl,
+>  				len, ATTR_ROOT);
+> @@ -243,7 +248,7 @@ xfs_set_mode(struct inode *inode, umode_t mode)
+>  static int
+>  xfs_acl_exists(struct inode *inode, unsigned char *name)
+>  {
+> -	int len = sizeof(struct xfs_acl);
+> +	int len = XFS_ACL_SIZE(XFS_M(inode->i_sb));
+>  
+>  	return (xfs_attr_get(XFS_I(inode), name, NULL, &len,
+>  			    ATTR_ROOT|ATTR_KERNOVAL) == 0);
+> @@ -379,7 +384,7 @@ xfs_xattr_acl_set(struct dentry *dentry, const char *name,
+>  		goto out_release;
+>  
+>  	error = -EINVAL;
+> -	if (acl->a_count > XFS_ACL_MAX_ENTRIES)
+> +	if (acl->a_count > XFS_ACL_MAX_ENTRIES(XFS_M(inode->i_sb)))
+>  		goto out_release;
+>  
+>  	if (type == ACL_TYPE_ACCESS) {
+> diff --git a/fs/xfs/xfs_acl.h b/fs/xfs/xfs_acl.h
+> index 39632d9..0da8725 100644
+> --- a/fs/xfs/xfs_acl.h
+> +++ b/fs/xfs/xfs_acl.h
+> @@ -22,19 +22,35 @@ struct inode;
+>  struct posix_acl;
+>  struct xfs_inode;
+>  
+> -#define XFS_ACL_MAX_ENTRIES 25
+>  #define XFS_ACL_NOT_PRESENT (-1)
+>  
+>  /* On-disk XFS access control list structure */
+> +struct xfs_acl_entry {
+> +	__be32	ae_tag;
+> +	__be32	ae_id;
+> +	__be16	ae_perm;
+> +	__be16	ae_pad;		/* fill the implicit hole in the structure */
+> +};
+> +
+>  struct xfs_acl {
+> -	__be32		acl_cnt;
+> -	struct xfs_acl_entry {
+> -		__be32	ae_tag;
+> -		__be32	ae_id;
+> -		__be16	ae_perm;
+> -	} acl_entry[XFS_ACL_MAX_ENTRIES];
+> +	__be32			acl_cnt;
+> +	struct xfs_acl_entry	acl_entry[0];
+>  };
+>  
+> +/*
+> + * The number of ACL entries allowed is defined by the on-disk format.
+> + * For v4 superblocks, that is limited to 25 entries. For v5 superblocks, it is
+> + * limited only by the maximum size of the xattr that stores the information.
+> + */
+> +#define XFS_ACL_MAX_ENTRIES(mp)	\
+> +	(xfs_sb_version_hascrc(&mp->m_sb) \
+> +	   ?  (XATTR_SIZE_MAX - sizeof(__be32)) / sizeof(struct xfs_acl_entry) \
+> +	   : 25)
+> +
+> +#define XFS_ACL_SIZE(mp) \
+> +	(sizeof(struct xfs_acl) + \
+> +		sizeof(struct xfs_acl_entry) * XFS_ACL_MAX_ENTRIES((mp)))
+> +
+>  /* On-disk XFS extended attribute names */
+>  #define SGI_ACL_FILE		(unsigned char *)"SGI_ACL_FILE"
+>  #define SGI_ACL_DEFAULT		(unsigned char *)"SGI_ACL_DEFAULT"
 > 
 
 _______________________________________________
