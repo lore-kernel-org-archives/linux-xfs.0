@@ -1,22 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 3E76F7F37
-	for <xfs@oss.sgi.com>; Wed, 29 May 2013 16:09:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2D07B304062
-	for <xfs@oss.sgi.com>; Wed, 29 May 2013 14:09:02 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Ll6RDpElE1oYM5Ka for
-	<xfs@oss.sgi.com>; Wed, 29 May 2013 14:09:02 -0700 (PDT)
-Message-ID: <51A66DC0.10405@redhat.com>
-Date: Wed, 29 May 2013 17:06:08 -0400
-From: Brian Foster <bfoster@redhat.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH 6/9] xfs: disable swap extents ioctl on CRC enabled
-	filesystems
+	by oss.sgi.com (Postfix) with ESMTP id 177257F37
+	for <xfs@oss.sgi.com>; Wed, 29 May 2013 16:43:02 -0500 (CDT)
+Date: Wed, 29 May 2013 16:43:01 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 8/9] xfs: add fsgeom flag for v5 superblock support.
+Message-ID: <20130529214301.GB20028@sgi.com>
 References: <1369636707-15150-1-git-send-email-david@fromorbit.com>
-	<1369636707-15150-7-git-send-email-david@fromorbit.com>
-In-Reply-To: <1369636707-15150-7-git-send-email-david@fromorbit.com>
+	<1369636707-15150-9-git-send-email-david@fromorbit.com>
+	<51A61A55.1000306@sandeen.net>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <51A61A55.1000306@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,56 +24,48 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs@oss.sgi.com
 
-On 05/27/2013 02:38 AM, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Currently, swapping extents from one inode to another is a simple
-> act of switching data and attribute forks from one inode to another.
-> This, unfortunately in no longer so simple with CRC enabled
-> filesystems as there is owner information embedded into the BMBT
-> blocks that are swapped between inodes. Hence swapping the forks
-> between inodes results in the inodes having mapping blocks that
-> point to the wrong owner and hence are considered corrupt.
-> 
-> To fix this we need an extent tree block or record based swap
-> algorithm so that the BMBT block owner information can be updated
-> atomically in the swap transaction. This is a significant piece of
-> new work, so for the moment simply don't allow swap extent
-> operations to succeed on CRC enabled filesystems.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
+Hi Eric,
 
-Pretty straightforward...
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/xfs_dfrag.c |    8 ++++++++
->  1 file changed, 8 insertions(+)
+On Wed, May 29, 2013 at 10:10:13AM -0500, Eric Sandeen wrote:
+> On 5/27/13 1:38 AM, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Currently userspace has no way of determining that a filesystem is
+> > CRC enabled. Add a flag to the XFS_IOC_FSGEOMETRY ioctl output to
+> > indicate that the filesystem has v5 superblock support enabled.
+> > This will allow xfs_info to correctly report the state of the
+> > filesystem.
 > 
-> diff --git a/fs/xfs/xfs_dfrag.c b/fs/xfs/xfs_dfrag.c
-> index f852b08..c407e1c 100644
-> --- a/fs/xfs/xfs_dfrag.c
-> +++ b/fs/xfs/xfs_dfrag.c
-> @@ -219,6 +219,14 @@ xfs_swap_extents(
->  	int		taforkblks = 0;
->  	__uint64_t	tmp;
->  
-> +	/*
-> +	 * We have no way of updating owner information in the BMBT blocks for
-> +	 * each inode on CRC enabled filesystems, so to avoid corrupting the
-> +	 * this metadata we simply don't allow extent swaps to occur.
-> +	 */
-> +	if (xfs_sb_version_hascrc(&mp->m_sb))
-> +		return XFS_ERROR(EINVAL);
-> +
->  	tempifp = kmem_alloc(sizeof(xfs_ifork_t), KM_MAYFAIL);
->  	if (!tempifp) {
->  		error = XFS_ERROR(ENOMEM);
 > 
+> Looks fine,
+> 
+> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+> 
+> Ben, having this in place for for the next point release will let
+> userspace work & testing proceed w/o the need for a patched
+> kernel... if you could consider pulling it in that'd be great.
+
+Sounds reasonable.  I'll check it out.
+
+> Dave, just out of curiosity, most other features sort of match between
+> the "_has_*" and the flag names, is there a reason for the
+> crc <-> sbv5 difference?  Just semantics, but just curious.
+> 
+> (i.e. xfs_sb_version_hasprojid32bit checks XFS_SB_VERSION2_PROJID32BIT,
+> but xfs_sb_version_hascrc checks XFS_SB_VERSION_5)
+> 
+> Answering my own question maybe, I guess SB_VERSION_5 was conceived
+> with crc already in place, so there's no need for a feature flag on
+> top of the sb version, right...?
+
+Seems like we're also out of space in xfs_fsop_geom.flags.  There may even be
+people who prefer to use v5 super blocks without crcs turned on, so maybe
+conflating the two ideas here is undesireable.
+
+-Ben
 
 _______________________________________________
 xfs mailing list
