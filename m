@@ -1,21 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5F12329DF8
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 9009829DFA
 	for <xfs@oss.sgi.com>; Wed, 29 May 2013 14:01:26 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E9590AC00E
-	for <xfs@oss.sgi.com>; Wed, 29 May 2013 12:01:22 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id lfzisz646uYgdFqI for
-	<xfs@oss.sgi.com>; Wed, 29 May 2013 12:01:22 -0700 (PDT)
-Message-ID: <51A64FD3.8000606@redhat.com>
-Date: Wed, 29 May 2013 14:58:27 -0400
-From: Brian Foster <bfoster@redhat.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH 4/9] xfs: rework dquot CRCs
+Date: Wed, 29 May 2013 14:01:22 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATH 0/9] xfs: fixes for 3.10-rc4
+Message-ID: <20130529190122.GE19505@sgi.com>
 References: <1369636707-15150-1-git-send-email-david@fromorbit.com>
-	<1369636707-15150-5-git-send-email-david@fromorbit.com>
-In-Reply-To: <1369636707-15150-5-git-send-email-david@fromorbit.com>
+	<20130528175627.GZ20028@sgi.com> <20130528235424.GY29466@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20130528235424.GY29466@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,154 +26,267 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On 05/27/2013 02:38 AM, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Calculating dquot CRCs when the backing buffer is written back just
-> doesn't work reliably. There are several places which manipulate
-> dquots directly in the buffers, and they don't calculate CRCs
-> appropriately, nor do they always set the buffer up to calculate
-> CRCs appropriately.
-> 
-> Firstly, if we log a dquot buffer (e.g. during allocation) it gets
-> logged without valid CRC, and so on recovery we end up with a dquot
-> that is not valid.
-> 
-> Secondly, if we recover/repair a dquot, we don't have a verifier
-> attached to the buffer and hence CRCs arenot calculate don the way
-> down to disk.
-> 
-> Thirdly, calculating the CRC after we've changed the contents means
-> that if we re-read the dquot from the buffer, we cannot verify the
-> contents of the dquot are valid, as the CRC is invalid.
-> 
-> So, to avoid all the dquot CRC errors that are being detected by the
-> read verifier, change to using the same model as for inodes. that
-> is, dquot CRCs are calculated and written to the backing buffer at
-> the time the dquot is flushed to the backing buffer. If we modify
-> the dquuot directly in the backing buffer, calculate the CRC
-> immediately after the modification is complete. Hence the dquot in
-> the on-disk buffer should always have a valid CRC.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_dquot.c       |   37 ++++++++++++++++---------------------
->  fs/xfs/xfs_log_recover.c |   10 ++++++++++
->  fs/xfs/xfs_qm.c          |   36 ++++++++++++++++++++++++++----------
->  fs/xfs/xfs_quota.h       |    2 ++
->  4 files changed, 54 insertions(+), 31 deletions(-)
-> 
-...
-> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-> index f41702b..d181542 100644
-> --- a/fs/xfs/xfs_qm.c
-> +++ b/fs/xfs/xfs_qm.c
-> @@ -41,6 +41,7 @@
->  #include "xfs_qm.h"
->  #include "xfs_trace.h"
->  #include "xfs_icache.h"
-> +#include "xfs_cksum.h"
->  
->  /*
->   * The global quota manager. There is only one of these for the entire
-> @@ -839,7 +840,7 @@ xfs_qm_reset_dqcounts(
->  	xfs_dqid_t	id,
->  	uint		type)
->  {
-> -	xfs_disk_dquot_t	*ddq;
-> +	struct xfs_dqblk	*dqb;
->  	int			j;
->  
->  	trace_xfs_reset_dqcounts(bp, _RET_IP_);
-> @@ -853,8 +854,12 @@ xfs_qm_reset_dqcounts(
->  	do_div(j, sizeof(xfs_dqblk_t));
->  	ASSERT(mp->m_quotainfo->qi_dqperchunk == j);
->  #endif
-> -	ddq = bp->b_addr;
-> +	dqb = bp->b_addr;
->  	for (j = 0; j < mp->m_quotainfo->qi_dqperchunk; j++) {
-> +		struct xfs_disk_dquot	*ddq;
-> +
-> +		ddq =  (struct xfs_disk_dquot *)&dqb[j];
-> +
->  		/*
->  		 * Do a sanity check, and if needed, repair the dqblk. Don't
->  		 * output any warnings because it's perfectly possible to
-> @@ -871,7 +876,8 @@ xfs_qm_reset_dqcounts(
->  		ddq->d_bwarns = 0;
->  		ddq->d_iwarns = 0;
->  		ddq->d_rtbwarns = 0;
-> -		ddq = (xfs_disk_dquot_t *) ((xfs_dqblk_t *)ddq + 1);
-> +		xfs_update_cksum((char *)&dqb[j], sizeof(struct xfs_dqblk),
-> +					 XFS_DQUOT_CRC_OFF);
+Hi Dave,
 
-Nice cleanup on the cast ugliness even without the crc change. Is there
-a technical reason for the unconditional crc update here beyond that
-we're doing a reset? I'm wondering if there's any value in leaving those
-bits untouched for a filesystem that might have never enabled crc
-(quotacheck or not).
-
-FWIW, the rest of this patch looks sane to me (I'm less familiar with
-the log recovery code, but the changes seem isolated and
-straightforward) and I couldn't locate anywhere else we modify the
-backing buffer for the dquot.
-
-Brian
-
->  	}
->  }
->  
-> @@ -907,19 +913,29 @@ xfs_qm_dqiter_bufs(
->  			      XFS_FSB_TO_DADDR(mp, bno),
->  			      mp->m_quotainfo->qi_dqchunklen, 0, &bp,
->  			      &xfs_dquot_buf_ops);
-> -		if (error)
-> -			break;
->  
->  		/*
-> -		 * XXX(hch): need to figure out if it makes sense to validate
-> -		 *	     the CRC here.
-> +		 * CRC and validation errors will return a EFSCORRUPTED here. If
-> +		 * this occurs, re-read without CRC validation so that we can
-> +		 * repair the damage via xfs_qm_reset_dqcounts(). This process
-> +		 * will leave a trace in the log indicating corruption has
-> +		 * been detected.
->  		 */
-> +		if (error == EFSCORRUPTED) {
-> +			error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp,
-> +				      XFS_FSB_TO_DADDR(mp, bno),
-> +				      mp->m_quotainfo->qi_dqchunklen, 0, &bp,
-> +				      NULL);
-> +		}
-> +
-> +		if (error)
-> +			break;
-> +
->  		xfs_qm_reset_dqcounts(mp, bp, firstid, type);
->  		xfs_buf_delwri_queue(bp, buffer_list);
->  		xfs_buf_relse(bp);
-> -		/*
-> -		 * goto the next block.
-> -		 */
-> +
-> +		/* goto the next block. */
->  		bno++;
->  		firstid += mp->m_quotainfo->qi_dqperchunk;
->  	}
-> diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
-> index c61e31c..c38068f 100644
-> --- a/fs/xfs/xfs_quota.h
-> +++ b/fs/xfs/xfs_quota.h
-> @@ -87,6 +87,8 @@ typedef struct xfs_dqblk {
->  	uuid_t		  dd_uuid;	/* location information */
->  } xfs_dqblk_t;
->  
-> +#define XFS_DQUOT_CRC_OFF	offsetof(struct xfs_dqblk, dd_crc)
-> +
->  /*
->   * flags for q_flags field in the dquot.
->   */
+On Wed, May 29, 2013 at 09:54:24AM +1000, Dave Chinner wrote:
+> On Tue, May 28, 2013 at 12:56:27PM -0500, Ben Myers wrote:
+> > On Mon, May 27, 2013 at 04:38:18PM +1000, Dave Chinner wrote:
+> > > This is an update for all the fixes I have for 3,10-rc4.
+> > > 
+> > > All the comments on the previous patches have been updated in this
+> > > series, and there are two new patches. The first patch adds support
+> > > for indicating that the filesystem has CRC enabled to userspace, and
+> > > the second fixes the missing CRC updates on the unlinked inode list
+> > > manipulations.
+> > 
+> > This seems to be getting a bit out of hand for a release candidate pull
+> > request:
 > 
+> You don't need to send them all at once. The ones you committed from
+> my initial -rc2 series could just be sent to Linus immediately, and
+> that halves the current outstanding queue. Then there's only 8-9
+> patches remaining...
+
+I am more concerned about the content of the patches than the number of
+them.
+
+> > Fixes for xfs without crcs:
+> > f648167f xfs: avoid nesting transactions in xfs_qm_scall_setqlim()
+> > 	 xfs: fix split buffer vector log recovery support
+> > 	 xfs: kill suid/sgid through the truncate path.
+> 
+> And the log recovery ordering fix I just sent out.
+> 
+> > Fixes for xfs with crcs:
+> > 90253cf1 xfs: remote attribute allocation may be contiguous 
+> > 913e96bc xfs: remote attribute read too short
+> > 4af3644c xfs: remote attribute tail zeroing does too much
+> > 6863ef84 xfs: correctly map remote attr buffers during removal
+> > 8517de2a xfs: fully initialise temp leaf in xfs_attr3_leaf_unbalance
+> > d4c712bc xfs: fully initialise temp leaf in xfs_attr3_leaf_compact
+> 
+> All of which fix filesystem corruption or - in the case of the
+> buffer cache coherency problems -  can lead to stale data exposure.
+> 
+> > ad1858d7 xfs: rework remote attr CRCs
+> 
+> Fixes cache coherency issues via a change in the on-disk format for
+> remote attributes. We need to get that included before a full
+> release is made, otherwise we need feature bits to distinguish
+> between the original and the new formats. 
+> 
+> > 9a5b6dee xfs: fix incorrect remote symlink block count
+> > 	 xfs: rework dquot CRCs
+> 
+> More filesystem corruption fixes.
+> 
+> > 	 xfs: inode unlinked list needs to recalculate the inode CRC 	* replaced with "2-3 patches"
+> 
+> Another corruption fix, now with an addition log recovery ordering
+> fix which prevents log recovery from potentially causing silent
+> filesystem corruption.
+> 
+> > 	 xfs: fix dir3 freespace block corruption			* maybe this effects filesystems w/o crcs?
+> 
+> Again, a filesystem corruption, including fixing a problem in the
+> on-disk format definition. While it probably doesn't affect
+> non-crc filesystems, it's a landmine that should be removed....
+> 
+> > Dev work for xfs with crcs:
+> > 	 xfs: increase number of ACL entries for V5 superblocks
+> 
+> On disk format change. We need to get that out before release,
+> otherwise it needs a feature bit.
+> 
+> > 	 xfs: don't emit v5 superblock warnings on write
+> 
+> Fixes a nasty log spamming problem. Certainly not development code.
+> 
+> > 	 xfs: add fsgeom flag for v5 superblock support.
+> 
+> Needed for userspace support of CRC filesystems, trivial patch. if
+> we expect anyone to test this kernel code, we need this patch so
+> userspace can correctly identify crc-enabled filesystems.
+> 
+> > 	 xfs: disable swap extents ioctl on CRC enabled filesystems
+> 
+> Filesystem corruption fix, caused simply by running xfs_fsr.
+> 
+> But, really, this entire series is not that much change in terms of
+> volume:
+> 
+> $ git diff --stat b38958d..bf6331a -- fs/xfs
+>  fs/xfs/xfs_acl.c         |   31 ++--
+>  fs/xfs/xfs_acl.h         |   30 +++-
+>  fs/xfs/xfs_attr_leaf.c   |   74 ++++++---
+>  fs/xfs/xfs_attr_remote.c |  408 +++++++++++++++++++++++++++++-------------------
+>  fs/xfs/xfs_attr_remote.h |   10 ++
+>  fs/xfs/xfs_buf.c         |    1 +
+>  fs/xfs/xfs_buf_item.c    |    7 +-
+>  fs/xfs/xfs_dfrag.c       |    8 +
+>  fs/xfs/xfs_dir2_format.h |    1 +
+>  fs/xfs/xfs_dir2_node.c   |   13 +-
+>  fs/xfs/xfs_dquot.c       |   37 ++---
+>  fs/xfs/xfs_fs.h          |    1 +
+>  fs/xfs/xfs_fsops.c       |    4 +-
+>  fs/xfs/xfs_inode.c       |   42 ++++-
+>  fs/xfs/xfs_iops.c        |   47 ++++--
+>  fs/xfs/xfs_log_recover.c |   95 ++++++++++-
+>  fs/xfs/xfs_mount.c       |   18 ++-
+>  fs/xfs/xfs_qm.c          |   36 +++--
+>  fs/xfs/xfs_qm_syscalls.c |   40 +++--
+>  fs/xfs/xfs_quota.h       |    2 +
+>  fs/xfs/xfs_symlink.c     |   20 +--
+>  21 files changed, 612 insertions(+), 313 deletions(-)
+> 
+> And a large proportion of that change is the single attr CRC rework
+> patch.
+> 
+> > We're representing 3 patches which are clearly approprate for a release
+> > candidate, 11 fixes for CRCs + 2 more for the rework of unlinked lists patch,
+> > and 4 patches which are development work.
+> 
+> Most file filesystem corruptions. Without those fixes, CRC enabled
+> filesystems simple cannot be used without all these patches being
+> applied.  It's not an experimental feature at this point - it's just
+> broken.
+
+If as an experimental feature "it's just broken" in -rc1, maybe I should
+never have merged it.
+
+> > We pulled in the CRC work with the understanding that it is an
+> > experimental feature that might not be perfect, and with a focus
+> > upon preventing regression for existing users.  This did not imply
+> > that we're going after perfection for CRCs during the 3.10 release
+> > candidate series.
+> 
+> Right, but there was also the understanding that the CRC code would
+> be usable by release time, and so there would be fixes committed
+> throughout the -rc series to fix problems with the CRC code so that
+> it is usable.
+>
+> As it is, the result of all these patches is that xfstests is almost
+> entirely passing on a 4k block size filesystem. The only tests that
+> aren't passing are those that already fail or require userspace
+> support that isn't currently available (e.g. xfs-db write support,
+> metadump). And 1k block size filesystems mostly pass xfstests, too,
+> though there are random assert failures from time to time.
+> 
+> IOWs after this patch set is applied, the CRC functionality fits the
+> definition of the 'experimental' tag.  It mostly works, but still
+> has some lurking issues that need to be flushed out. I'm unlikely to
+> be posting 2-3 bug fix patches a day from this point onwards....
+> 
+> Indeed, the last two days I've been doing 3.11 development work
+> because xfstests on CRC enabled filesystems is now usable for
+> regression testing. i.e. the majority of the "easy-to-hit" problems
+> have been flushed out by this patchset.
+>
+> > I'll be happy to review the 17 CRC related patches for inclusion
+> > in the master branch ASAP,
+> 
+> That's a good start, but...
+> 
+> > but I'm afraid 17 patches is a bit much
+> > to ask for a release candidate, even if it were -rc2.
+> 
+> ... I think you're being way too conservative here.
+>
+> BTRFS in january for an -rc merge:
+> 
+> https://lkml.org/lkml/2013/1/25/11
+> 
+> That was 30 commits and +300/-100 lines. There was a another pull
+> request 2 weeks later with another 9 commits. The same thing
+> happened with the RAID5/6 integration into btrfs in 3.9 - the -rc
+> merges following it had 13, 7 and 15 commits. And for 3.10-rc, the
+> first post-rc1 merge was 25 commits (+350/-250 lines).
+
+You have announced publicly on several occasions that you feel BTRFS is
+not ready for production use.  If it is true that BTRFS is not ready for
+production, then the concerns for BTRFS are different than those for XFS
+in this context.
+
+> And if you want another example, the ext4 extent status cache fixes
+> that went into 3.9-rc4:
+> 
+> https://lkml.org/lkml/2013/3/21/644
+> 
+> that was 21 commits and +540/-81 lines.
+
+Was extent status cache experimental code when this was merged?
+
+> Yup, new filesystem code has bugs, and they get fixed in -rc
+> releases. What makes new XFS code so special we can't do this?
+>
+> The amount of change we are talking about here is not unreasonable
+> even for an -rc4 release, as evidenced by other filesystems under
+> development. Hence I don't think "it's too late" is really a viable
+> reason for not fixing all these filesystem corruption issues in the
+> CRC code...
+
+The 6-8 weeks after -rc1 is not the time to be changing the ondisk
+format or rewriting swaths of code we didn't get right the first time,
+unless absolutely necessary.  Issues with an experimental feature that
+are only relevant to the few developers and testers who have the
+temerity to apply the userspace CRC patches do not merit the level of
+risk which some of these patches represent to the much larger number of
+XFS users who will not be using CRCs in 3.10.
+
+> > Here we are in 3.11/feature-bit territory.
+> 
+> I'd much prefer that we don't have to add code to 3.11 to reject any
+> CRC-enabled filesystem without any feature bits set because we don't
+> support a broken remote attr format that was fixed weeks before 3.10
+> released but was not allowed to be fixed in 3.10. That's just crazy
+> from any release management perspective you care to look at it from.
+
+So would I.
+ 
+> Ben, if the problem is that you can't review all the fixes in a timely
+> manner, then we can fix that. I'm sure that Mark, Eric and Brian can
+> help review the code if this is the sticking point.
+
+Reviews are always welcome...
+
+> There are also
+> people like Michael who are actively testing the CRC code and
+> reporting bugs to me all the time, so there's demand for these fixes
+> to be integrated into the 3.10 tree...
+
+I bet Michael can grab sources from the master branch.
+
+> Everyone knew there would be fixes for the CRC code coming along in
+> the -rc period - we discussed it on the weekly concall before the the
+> CRC code was merged into 3.10. Hence I'm a bit surprised to get what
+> appears to be a blanket rejection for these fixes to the CRC code this
+> early in the 3.10-rc cycle.
+
+Three (or is it 4 now?) on-disk changes, one of which is completely unrelated
+to CRCs, along with a bunch of the changes deep in the remote attribute, quota,
+and inode unlinked list code is not worth the risk in the middle of release
+candidates.  I'm ok with lower risk changes.
+ 
+> Let's not waste all the effort that we put into getting the CRC code into
+> 3.10 by not fixing known corruptions and on-disk format deficiencies. 
+
+I don't consider it to be a waste of effort if CRCs weren't quite perfect for
+3.10.  There is plenty to show for it, such as not having introduced
+regressions for everyone else.  People who want to test CRCs will be coming to
+the list for the userspace patches anyway.  It's easy enough to point them to
+the master branch to get the kernel fixes too.
+
+> Releasing CRC support in a seriously broken state that
+> we need to add permanent workarounds for in 3.11 is about the worst
+> possible outcome that could occur right now....
+
+A worse outcome is that I pull in this code and something goes very
+wrong for the thousands of users of 3.10 with existing non-crc XFS
+filesystems.  A feature bit and some inconvenience for a few XFS
+developers and testers is a safer choice.
+
+Regards,
+Ben
 
 _______________________________________________
 xfs mailing list
