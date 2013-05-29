@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 845377F37
-	for <xfs@oss.sgi.com>; Wed, 29 May 2013 11:21:21 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 70CF7304059
-	for <xfs@oss.sgi.com>; Wed, 29 May 2013 09:21:18 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id QCsAP8JJIqYsjuCu for <xfs@oss.sgi.com>;
-	Wed, 29 May 2013 09:21:17 -0700 (PDT)
-Message-ID: <51A62AFC.9050704@sandeen.net>
-Date: Wed, 29 May 2013 11:21:16 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id EAAF27F37
+	for <xfs@oss.sgi.com>; Wed, 29 May 2013 11:42:08 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 96260AC00A
+	for <xfs@oss.sgi.com>; Wed, 29 May 2013 09:42:05 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 0fKB9MLtGsyCbAeU for
+	<xfs@oss.sgi.com>; Wed, 29 May 2013 09:42:04 -0700 (PDT)
+Message-ID: <51A62F2F.6040807@redhat.com>
+Date: Wed, 29 May 2013 12:39:11 -0400
+From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: add missing colon in _filter_ln
-References: <1369842106-9869-1-git-send-email-eguan@redhat.com>
-In-Reply-To: <1369842106-9869-1-git-send-email-eguan@redhat.com>
+Subject: Re: [PATCH 1/9] xfs: don't emit v5 superblock warnings on write
+References: <1369636707-15150-1-git-send-email-david@fromorbit.com>
+	<1369636707-15150-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1369636707-15150-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,53 +28,100 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eryu Guan <eguan@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On 5/29/13 10:41 AM, Eryu Guan wrote:
-> On distros with older coreutils(eg. RHEL5) generic/294 fails like
+On 05/27/2013 02:38 AM, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
->     -ln: creating symbolic link `SCRATCH_MNT/294.test/testlink': File exists
->     +ln: creating symbolic link `SCRATCH_MNT/294.test/testlink'File exists
+> We write the superblock every 30s or so which results in the
+> verifier being called. Right now that results in this output
+> every 30s:
 > 
-> _filter_ln ate the ": ". xfs/103 has similar issue. Add ": " back.
-
-Ok, so older coreutils does i.e.:
-
-ln: creating symbolic link `b' to `a': File exists
-
-and newer:
-
-ln: creating symbolic link `b': File exists
-
-We want to convert the older output to the newer, by removing the " to `a'" part.
-
-Seems like my sed script is the long way around that ;)
-
-Still, looks like your fix does the right thing, thanks.
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
--Eric
-
-> Signed-off-by: Eryu Guan <eguan@redhat.com>
+> XFS (vda): Version 5 superblock detected. This kernel has EXPERIMENTAL support enabled!
+> Use of these features in this kernel is at your own risk!
+> 
+> And spamming the logs.
+> 
+> We don't need to check for whether we support v5 superblocks or
+> whether there are feature bits we don't support set as these are
+> only relevant when we first mount the filesytem. i.e. on superblock
+> read. Hence for the write verification we can just skip all the
+> checks (and hence verbose output) altogether.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  common/filter | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  fs/xfs/xfs_mount.c |   18 +++++++++++-------
+>  1 file changed, 11 insertions(+), 7 deletions(-)
 > 
-> diff --git a/common/filter b/common/filter
-> index bdd6427..dbb1674 100644
-> --- a/common/filter
-> +++ b/common/filter
-> @@ -243,7 +243,7 @@ _filter_spaces()
->  # Account for different "ln" failure messages
->  _filter_ln()
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index f6bfbd7..e8e310c 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -314,7 +314,8 @@ STATIC int
+>  xfs_mount_validate_sb(
+>  	xfs_mount_t	*mp,
+>  	xfs_sb_t	*sbp,
+> -	bool		check_inprogress)
+> +	bool		check_inprogress,
+> +	bool		check_version)
 >  {
-> -	sed -e "s,\(creating symbolic link .*\) to .*: ,\1," \
-> +	sed -e "s,\(creating symbolic link .*\) to .*: ,\1: ," \
->  	    -e "s,failed to create,creating,"
+>  
+>  	/*
+> @@ -337,9 +338,10 @@ xfs_mount_validate_sb(
+>  
+>  	/*
+>  	 * Version 5 superblock feature mask validation. Reject combinations the
+> -	 * kernel cannot support up front before checking anything else.
+> +	 * kernel cannot support up front before checking anything else. For
+> +	 * write validation, we don't need to check feature masks.
+>  	 */
+> -	if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) {
+> +	if (check_version && XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) {
+>  		xfs_alert(mp,
+>  "Version 5 superblock detected. This kernel has EXPERIMENTAL support enabled!\n"
+>  "Use of these features in this kernel is at your own risk!");
+> @@ -675,7 +677,8 @@ xfs_sb_to_disk(
+>  
+>  static int
+>  xfs_sb_verify(
+> -	struct xfs_buf	*bp)
+> +	struct xfs_buf	*bp,
+> +	bool		check_version)
+>  {
+>  	struct xfs_mount *mp = bp->b_target->bt_mount;
+>  	struct xfs_sb	sb;
+> @@ -686,7 +689,8 @@ xfs_sb_verify(
+>  	 * Only check the in progress field for the primary superblock as
+>  	 * mkfs.xfs doesn't clear it from secondary superblocks.
+>  	 */
+> -	return xfs_mount_validate_sb(mp, &sb, bp->b_bn == XFS_SB_DADDR);
+> +	return xfs_mount_validate_sb(mp, &sb, bp->b_bn == XFS_SB_DADDR,
+> +				     check_version);
 >  }
 >  
+>  /*
+> @@ -719,7 +723,7 @@ xfs_sb_read_verify(
+>  			goto out_error;
+>  		}
+>  	}
+> -	error = xfs_sb_verify(bp);
+> +	error = xfs_sb_verify(bp, true);
+>  
+>  out_error:
+>  	if (error) {
+> @@ -758,7 +762,7 @@ xfs_sb_write_verify(
+>  	struct xfs_buf_log_item	*bip = bp->b_fspriv;
+>  	int			error;
+>  
+> -	error = xfs_sb_verify(bp);
+> +	error = xfs_sb_verify(bp, false);
+>  	if (error) {
+>  		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+>  		xfs_buf_ioerror(bp, error);
 > 
 
 _______________________________________________
