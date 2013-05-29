@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id EAAF27F37
-	for <xfs@oss.sgi.com>; Wed, 29 May 2013 11:42:08 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 453C67F50
+	for <xfs@oss.sgi.com>; Wed, 29 May 2013 11:42:26 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 96260AC00A
-	for <xfs@oss.sgi.com>; Wed, 29 May 2013 09:42:05 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E4868AC001
+	for <xfs@oss.sgi.com>; Wed, 29 May 2013 09:42:25 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 0fKB9MLtGsyCbAeU for
-	<xfs@oss.sgi.com>; Wed, 29 May 2013 09:42:04 -0700 (PDT)
-Message-ID: <51A62F2F.6040807@redhat.com>
-Date: Wed, 29 May 2013 12:39:11 -0400
+	cuda.sgi.com with ESMTP id SAzecfXmLTVkfxh0 for
+	<xfs@oss.sgi.com>; Wed, 29 May 2013 09:42:25 -0700 (PDT)
+Message-ID: <51A62F45.5000004@redhat.com>
+Date: Wed, 29 May 2013 12:39:33 -0400
 From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/9] xfs: don't emit v5 superblock warnings on write
+Subject: Re: [PATCH 2/9] xfs: fix incorrect remote symlink block count
 References: <1369636707-15150-1-git-send-email-david@fromorbit.com>
-	<1369636707-15150-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1369636707-15150-2-git-send-email-david@fromorbit.com>
+	<1369636707-15150-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1369636707-15150-3-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,94 +34,92 @@ Cc: xfs@oss.sgi.com
 On 05/27/2013 02:38 AM, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> We write the superblock every 30s or so which results in the
-> verifier being called. Right now that results in this output
-> every 30s:
+> When CRCs are enabled, the number of blocks needed to hold a remote
+> symlink on a 1k block size filesystem may be 2 instead of 1. The
+> transaction reservation for the allocated bloks was not taking this
+> into account and only allocating one block. hence when trying to
+> read or invalidate such symlinks, we are mapping a hole where there
+> should be a block and things go bad at that point.
 > 
-> XFS (vda): Version 5 superblock detected. This kernel has EXPERIMENTAL support enabled!
-> Use of these features in this kernel is at your own risk!
-> 
-> And spamming the logs.
-> 
-> We don't need to check for whether we support v5 superblocks or
-> whether there are feature bits we don't support set as these are
-> only relevant when we first mount the filesytem. i.e. on superblock
-> read. Hence for the write verification we can just skip all the
-> checks (and hence verbose output) altogether.
+> Fix the reservation to use the correct block count, clean up the
+> block count calculation similar to the remote attribute calculation,
+> and add a debug guard to detect when we don't write the entire
+> symlink to disk.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  fs/xfs/xfs_mount.c |   18 +++++++++++-------
->  1 file changed, 11 insertions(+), 7 deletions(-)
+Unrelated question... I noticed we update di_size in xfs_symlink(). I
+presume this is safe because, even in the non-local case, we actually
+log the data (the path) in the buffers as well, right?
+
+Brian
+
+>  fs/xfs/xfs_symlink.c |   20 ++++++--------------
+>  1 file changed, 6 insertions(+), 14 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index f6bfbd7..e8e310c 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -314,7 +314,8 @@ STATIC int
->  xfs_mount_validate_sb(
->  	xfs_mount_t	*mp,
->  	xfs_sb_t	*sbp,
-> -	bool		check_inprogress)
-> +	bool		check_inprogress,
-> +	bool		check_version)
+> diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+> index 5f234389..195a403 100644
+> --- a/fs/xfs/xfs_symlink.c
+> +++ b/fs/xfs/xfs_symlink.c
+> @@ -56,16 +56,9 @@ xfs_symlink_blocks(
+>  	struct xfs_mount *mp,
+>  	int		pathlen)
 >  {
+> -	int		fsblocks = 0;
+> -	int		len = pathlen;
+> +	int buflen = XFS_SYMLINK_BUF_SPACE(mp, mp->m_sb.sb_blocksize);
 >  
->  	/*
-> @@ -337,9 +338,10 @@ xfs_mount_validate_sb(
->  
->  	/*
->  	 * Version 5 superblock feature mask validation. Reject combinations the
-> -	 * kernel cannot support up front before checking anything else.
-> +	 * kernel cannot support up front before checking anything else. For
-> +	 * write validation, we don't need to check feature masks.
->  	 */
-> -	if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) {
-> +	if (check_version && XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) {
->  		xfs_alert(mp,
->  "Version 5 superblock detected. This kernel has EXPERIMENTAL support enabled!\n"
->  "Use of these features in this kernel is at your own risk!");
-> @@ -675,7 +677,8 @@ xfs_sb_to_disk(
->  
->  static int
->  xfs_sb_verify(
-> -	struct xfs_buf	*bp)
-> +	struct xfs_buf	*bp,
-> +	bool		check_version)
->  {
->  	struct xfs_mount *mp = bp->b_target->bt_mount;
->  	struct xfs_sb	sb;
-> @@ -686,7 +689,8 @@ xfs_sb_verify(
->  	 * Only check the in progress field for the primary superblock as
->  	 * mkfs.xfs doesn't clear it from secondary superblocks.
->  	 */
-> -	return xfs_mount_validate_sb(mp, &sb, bp->b_bn == XFS_SB_DADDR);
-> +	return xfs_mount_validate_sb(mp, &sb, bp->b_bn == XFS_SB_DADDR,
-> +				     check_version);
+> -	do {
+> -		fsblocks++;
+> -		len -= XFS_SYMLINK_BUF_SPACE(mp, mp->m_sb.sb_blocksize);
+> -	} while (len > 0);
+> -
+> -	ASSERT(fsblocks <= XFS_SYMLINK_MAPS);
+> -	return fsblocks;
+> +	return (pathlen + buflen - 1) / buflen;
 >  }
 >  
->  /*
-> @@ -719,7 +723,7 @@ xfs_sb_read_verify(
->  			goto out_error;
+>  static int
+> @@ -405,7 +398,7 @@ xfs_symlink(
+>  	if (pathlen <= XFS_LITINO(mp, dp->i_d.di_version))
+>  		fs_blocks = 0;
+>  	else
+> -		fs_blocks = XFS_B_TO_FSB(mp, pathlen);
+> +		fs_blocks = xfs_symlink_blocks(mp, pathlen);
+>  	resblks = XFS_SYMLINK_SPACE_RES(mp, link_name->len, fs_blocks);
+>  	error = xfs_trans_reserve(tp, resblks, XFS_SYMLINK_LOG_RES(mp), 0,
+>  			XFS_TRANS_PERM_LOG_RES, XFS_SYMLINK_LOG_COUNT);
+> @@ -512,7 +505,7 @@ xfs_symlink(
+>  		cur_chunk = target_path;
+>  		offset = 0;
+>  		for (n = 0; n < nmaps; n++) {
+> -			char *buf;
+> +			char	*buf;
+>  
+>  			d = XFS_FSB_TO_DADDR(mp, mval[n].br_startblock);
+>  			byte_cnt = XFS_FSB_TO_B(mp, mval[n].br_blockcount);
+> @@ -525,9 +518,7 @@ xfs_symlink(
+>  			bp->b_ops = &xfs_symlink_buf_ops;
+>  
+>  			byte_cnt = XFS_SYMLINK_BUF_SPACE(mp, byte_cnt);
+> -			if (pathlen < byte_cnt) {
+> -				byte_cnt = pathlen;
+> -			}
+> +			byte_cnt = min(byte_cnt, pathlen);
+>  
+>  			buf = bp->b_addr;
+>  			buf += xfs_symlink_hdr_set(mp, ip->i_ino, offset,
+> @@ -542,6 +533,7 @@ xfs_symlink(
+>  			xfs_trans_log_buf(tp, bp, 0, (buf + byte_cnt - 1) -
+>  							(char *)bp->b_addr);
 >  		}
+> +		ASSERT(pathlen == 0);
 >  	}
-> -	error = xfs_sb_verify(bp);
-> +	error = xfs_sb_verify(bp, true);
 >  
->  out_error:
->  	if (error) {
-> @@ -758,7 +762,7 @@ xfs_sb_write_verify(
->  	struct xfs_buf_log_item	*bip = bp->b_fspriv;
->  	int			error;
->  
-> -	error = xfs_sb_verify(bp);
-> +	error = xfs_sb_verify(bp, false);
->  	if (error) {
->  		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
->  		xfs_buf_ioerror(bp, error);
+>  	/*
 > 
 
 _______________________________________________
