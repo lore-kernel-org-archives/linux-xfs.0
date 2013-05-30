@@ -1,26 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 412997F37
-	for <xfs@oss.sgi.com>; Thu, 30 May 2013 00:40:36 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id DCE61AC003
-	for <xfs@oss.sgi.com>; Wed, 29 May 2013 22:40:35 -0700 (PDT)
-Received: from mx3-phx2.redhat.com (mx3-phx2.redhat.com [209.132.183.24]) by
-	cuda.sgi.com with ESMTP id 2JLry0TSCZUTyHc0 for
-	<xfs@oss.sgi.com>; Wed, 29 May 2013 22:40:34 -0700 (PDT)
-Date: Thu, 30 May 2013 01:40:32 -0400 (EDT)
-From: CAI Qian <caiqian@redhat.com>
-Message-ID: <1824023060.8558101.1369892432333.JavaMail.root@redhat.com>
-In-Reply-To: <20130530052049.GK29466@dastard>
-References: <510292845.4997401.1369279175460.JavaMail.root@redhat.com>
-	<1985929268.4997720.1369279277543.JavaMail.root@redhat.com>
-	<20130523035115.GY24543@dastard>
-	<986348673.5787542.1369385526612.JavaMail.root@redhat.com>
-	<20130527053608.GS29466@dastard>
-	<1588848128.8530921.1369885528565.JavaMail.root@redhat.com>
-	<20130530052049.GK29466@dastard>
-Subject: Re: 3.9.3: Oops running xfstests
+	by oss.sgi.com (Postfix) with ESMTP id 38CFC7F37
+	for <xfs@oss.sgi.com>; Thu, 30 May 2013 03:07:27 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B9E91AC003
+	for <xfs@oss.sgi.com>; Thu, 30 May 2013 01:07:23 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id aQw7oLMEpb4HrhNG (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 30 May 2013 01:07:19 -0700 (PDT)
+Received: from acsinet22.oracle.com (acsinet22.oracle.com [141.146.126.238])
+	by aserp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
+	ESMTP id r4U87IBx003195
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Thu, 30 May 2013 08:07:19 GMT
+Received: from userz7022.oracle.com (userz7022.oracle.com [156.151.31.86])
+	by acsinet22.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	r4U87HBa001854
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Thu, 30 May 2013 08:07:18 GMT
+Received: from abhmt120.oracle.com (abhmt120.oracle.com [141.146.116.72])
+	by userz7022.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	r4U87HsX006277 for <xfs@oss.sgi.com>; Thu, 30 May 2013 08:07:17 GMT
+Message-ID: <51A708B2.2080701@oracle.com>
+Date: Thu, 30 May 2013 12:07:14 +0400
+From: alexander.tsvetkov@oracle.com
 MIME-Version: 1.0
+Subject: XFStest suite problem
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,100 +35,73 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: stable@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
+Hello,
 
+There is a problem found in XFS tests suite: attempt to run XFS tests 
+with some tests excluded from run, for example, "./check -g auto -X 231" 
+causes the unexpected exclusion of some other tests (for example 
+generic/127 in this case). Looking into suite's created exclude list 
+indicates that it was incorrectly built by including some garbage 
+together with correct test numbers records, so /tmp/30535.xlist looks like:
 
------ Original Message -----
-> From: "Dave Chinner" <david@fromorbit.com>
-> To: "CAI Qian" <caiqian@redhat.com>
-> Cc: xfs@oss.sgi.com, stable@vger.kernel.org
-> Sent: Thursday, May 30, 2013 1:20:49 PM
-> Subject: Re: 3.9.3: Oops running xfstests
-> 
-> On Wed, May 29, 2013 at 11:45:28PM -0400, CAI Qian wrote:
-> > Also reproduced this on 3.9.4 on several different machines.
-> 
-> How? what workload are you running that causes it to occur?
-I have been running the following workloads, trinity, ltp (including
-oom tests and some filesystem tests), some hugetlbfs tests, selinux
-test suite, tracepoint tests, connectathon tests and then xfstests.
-I am still trying to narrow down the minimal workload that could
-reproduce this.
-> 
-> <snip stack trace showing page overrun in
-> xfs_attr_leaf_compact/xfs_attr_leaf_moveents>
-> 
-> > System information is below:
-> > 
-> > + cat /proc/mounts
-> ....
-> > /dev/mapper/rhel_hp--xw9400--02-root / xfs
-> > rw,seclabel,relatime,attr2,inode64,noquota 0 0
-> > /dev/mapper/rhel_hp--xw9400--02-home /home xfs
-> > rw,seclabel,relatime,attr2,inode64,noquota 0 0
-> > /dev/sda1 /boot xfs rw,seclabel,relatime,attr2,inode64,noquota 0 0
-> 
-> Which of these filesystems did it happen on? Or some other
-> filesystem not mounted when you took this snapshot?
-+ export TEST_DEV=/dev/mapper/rhel_hp--bl495cg5--02-swap
-+ TEST_DEV=/dev/mapper/rhel_hp--bl495cg5--02-swap
-+ export TEST_DIR=/mnt/testarea/test
-+ TEST_DIR=/mnt/testarea/test
-+ export SCRATCH_DEV=/dev/mapper/rhel_hp--bl495cg5--02-home
-+ SCRATCH_DEV=/dev/mapper/rhel_hp--bl495cg5--02-home
-+ export SCRATCH_MNT=/mnt/testarea/scratch
-+ SCRATCH_MNT=/mnt/testarea/scratch
-+ mkdir -p /mnt/testarea/test
-home = /dev/mapper/rhel_hp--bl495cg5--02-home
-+ mkdir -p /mnt/testarea/scratch
-+ mkfs.xfs -f /dev/mapper/rhel_hp--bl495cg5--02-swap
-meta-data=/dev/mapper/rhel_hp--bl495cg5--02-swap isize=256    agcount=4, agsize=510976 blks
-         =                       sectsz=512   attr=2, projid32bit=0
-data     =                       bsize=4096   blocks=2043904, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0
-log      =internal log           bsize=4096   blocks=2560, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-+ mkfs.xfs -f /dev/mapper/rhel_hp--bl495cg5--02-home
-meta-data=/dev/mapper/rhel_hp--bl495cg5--02-home isize=256    agcount=4, agsize=1103872 blks
-         =                       sectsz=512   attr=2, projid32bit=0
-data     =                       bsize=4096   blocks=4415488, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0
-log      =internal log           bsize=4096   blocks=2560, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-> 
-> And can you post the xfs_info output of the filesystems under test,
-> too?
-xfs_info: /dev/mapper/rhel_hp--bl495cg5--02-swap is not a mounted XFS filesystem
-+ echo
+"generic/#!
+generic//bin/bash
+generic/#
+generic/FSQA
+generic/Test
+generic/No.
+generic/231
+generic/#
+generic/#
+generic/Run
+generic/fsx
+generic/with
+generic/quotas
+generic/enabled
+generic/and
+generic/verify
+generic/accounted
+generic/quotas
+generic/in
+generic/the
+generic/end
+generic/#
+generic/#
+generic/Derived
+generic/from
+generic/test
+generic/127
+generic/#-----------------------------------------------------------------------
+generic/#
+generic/Copyright
+generic/(c)
+generic/2006
+generic/Silicon
+generic/Graphics,
+..."
 
-+ xfs_info /dev/mapper/rhel_hp--bl495cg5--02-home
-meta-data=/dev/mapper/rhel_hp--bl495cg5--02-home isize=256    agcount=4, agsize=1103872 blks
-         =                       sectsz=512   attr=2
-data     =                       bsize=4096   blocks=4415488, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0
-log      =internal               bsize=4096   blocks=2560, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-CAI Qian
-> 
-> Cheers,
-> 
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
-> 
+I think the following code of "check" script incorrectly builds this 
+exclude list:
+
+"-X) xfile=$2; shift ;
+for d in $SRC_GROUPS $FSTYP; do
+[ -f $SRC_DIR/$d/$xfile ] || continue
+for f in `cat $SRC_DIR/$d/$xfile`; do
+echo $d/$f >> $tmp.xlist
+done
+done
+;;"
+
+Used XFStests suite version from 2013-05-22.
+
+Thanks,
+Alexander Tsvetkov
 
 _______________________________________________
 xfs mailing list
