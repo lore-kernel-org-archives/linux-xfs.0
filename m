@@ -1,17 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 305C77F58
-	for <xfs@oss.sgi.com>; Thu, 30 May 2013 12:49:48 -0500 (CDT)
-Date: Thu, 30 May 2013 12:49:47 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 817347F37
+	for <xfs@oss.sgi.com>; Thu, 30 May 2013 12:56:03 -0500 (CDT)
+Date: Thu, 30 May 2013 12:56:00 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 5/9] xfs: fix split buffer vector log recovery support
-Message-ID: <20130530174947.GD20932@sgi.com>
+Subject: Re: [PATCH 6/9] xfs: disable swap extents ioctl on CRC enabled
+	filesystems
+Message-ID: <20130530175600.GE20932@sgi.com>
 References: <1369636707-15150-1-git-send-email-david@fromorbit.com>
-	<1369636707-15150-6-git-send-email-david@fromorbit.com>
-	<51A65550.50508@sgi.com>
+	<1369636707-15150-7-git-send-email-david@fromorbit.com>
+	<51A66DC0.10405@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <51A65550.50508@sgi.com>
+In-Reply-To: <51A66DC0.10405@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,35 +25,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, May 29, 2013 at 02:21:52PM -0500, Mark Tinguely wrote:
-> On 05/27/13 01:38, Dave Chinner wrote:
-> >From: Dave Chinner<dchinner@redhat.com>
-> >
-> >A long time ago in a galaxy far away....
-> >
-> >.. the was a commit made to fix some ilinux specific "fragmented
-> >buffer" log recovery problem:
-> >
-> >http://oss.sgi.com/cgi-bin/gitweb.cgi?p=archive/xfs-import.git;a=commitdiff;h=b29c0bece51da72fb3ff3b61391a391ea54e1603
-> >
-> >That problem occurred when a contiguous dirty region of a buffer was
-> >split across across two pages of an unmapped buffer. It's been a
-> >long time since that has been done in XFS, and the changes to log
-> >the entire inode buffers for CRC enabled filesystems has
-> >re-introduced that corner case.
-> >
-> >And, of course, it turns out that the above commit didn't actually
-> >fix anything - it just ensured that log recovery is guaranteed to
-> >fail when this situation occurs. And now for the gory details.
-> >
-> ...
+On Wed, May 29, 2013 at 05:06:08PM -0400, Brian Foster wrote:
+> On 05/27/2013 02:38 AM, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Currently, swapping extents from one inode to another is a simple
+> > act of switching data and attribute forks from one inode to another.
+> > This, unfortunately in no longer so simple with CRC enabled
+> > filesystems as there is owner information embedded into the BMBT
+> > blocks that are swapped between inodes. Hence swapping the forks
+> > between inodes results in the inodes having mapping blocks that
+> > point to the wrong owner and hence are considered corrupt.
+> > 
+> > To fix this we need an extent tree block or record based swap
+> > algorithm so that the BMBT block owner information can be updated
+> > atomically in the swap transaction. This is a significant piece of
+> > new work, so for the moment simply don't allow swap extent
+> > operations to succeed on CRC enabled filesystems.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > ---
 > 
-> Thanks for the great walk through of the problem.
+> Pretty straightforward...
 > 
-> Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
 
 Applied.
 
