@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 04E567F3F
-	for <xfs@oss.sgi.com>; Thu, 30 May 2013 08:47:37 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 68F5C7F3F
+	for <xfs@oss.sgi.com>; Thu, 30 May 2013 08:48:28 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8746CAC001
-	for <xfs@oss.sgi.com>; Thu, 30 May 2013 06:47:33 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id DE8A7AC004
+	for <xfs@oss.sgi.com>; Thu, 30 May 2013 06:48:27 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id OtKrZE7pqd8QodD1 for
-	<xfs@oss.sgi.com>; Thu, 30 May 2013 06:47:32 -0700 (PDT)
-Message-ID: <51A75872.4080909@redhat.com>
-Date: Thu, 30 May 2013 08:47:30 -0500
+	cuda.sgi.com with ESMTP id eUr8uhCOfZNDPXRQ for
+	<xfs@oss.sgi.com>; Thu, 30 May 2013 06:48:26 -0700 (PDT)
+Message-ID: <51A758A8.80502@redhat.com>
+Date: Thu, 30 May 2013 08:48:24 -0500
 From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 2/3] 285: Fix file syncing
+Subject: Re: [PATCH 3/3] 285: Test offsets over 4GB
 References: <1369917939-22660-1-git-send-email-jack@suse.cz>
-	<1369917939-22660-2-git-send-email-jack@suse.cz>
-In-Reply-To: <1369917939-22660-2-git-send-email-jack@suse.cz>
+	<1369917939-22660-3-git-send-email-jack@suse.cz>
+In-Reply-To: <1369917939-22660-3-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,52 +32,84 @@ To: Jan Kara <jack@suse.cz>
 Cc: linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
 On 5/30/13 7:45 AM, Jan Kara wrote:
-> The intention of tests 08 and 09 in test generic/285 is to sync the
-> whole file before checking for data and holes. However the helper is
-> called with nbytes argument set to 0 which results in not syncing
-> anything. Set nbytes properly.
+> Test whether SEEK_HOLE and SEEK_DATA works correctly with offsets over
+> 4GB.
 
-Hm, are you sure? (Is the man page wrong, or is the sync_file_range
-implementation wrong?)
 
-DESCRIPTION
-       sync_file_range()  permits  fine  control when synchronizing the
-       open file referred to by the file descriptor fd with disk.
+Hm, should we add 2T as well while we're at it?
 
-       offset is the starting byte of the file  range  to  be  synchro-
-       nized.   nbytes specifies the length of the range to be synchro-
-       nized, in bytes; if nbytes is zero, then all bytes  from  offset
-       through to the end of file are synchronized.
+(and does this cause any new failures?)
 
 -Eric
 
 > Signed-off-by: Jan Kara <jack@suse.cz>
 > ---
->  src/seek_sanity_test.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+>  src/seek_sanity_test.c | 38 ++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 38 insertions(+)
 > 
 > diff --git a/src/seek_sanity_test.c b/src/seek_sanity_test.c
-> index eec6903..7d5868b 100644
+> index 7d5868b..55e7ed6 100644
 > --- a/src/seek_sanity_test.c
 > +++ b/src/seek_sanity_test.c
-> @@ -229,7 +229,7 @@ static int test09(int fd, int testnum)
->  	 * Sync out dirty pages from bufsz * 100, this will convert
->  	 * the dirty page to writeback.
->  	 */
-> -	ret = do_sync_dirty_pages(fd, bufsz * 100, 0);
-> +	ret = do_sync_dirty_pages(fd, bufsz * 100, filsz);
->  	if (ret)
->  		goto out;
+> @@ -18,6 +18,7 @@
+>   */
 >  
-> @@ -269,7 +269,7 @@ static int test08(int fd, int testnum)
->  		goto out;
+>  #define _XOPEN_SOURCE 500
+> +#define _FILE_OFFSET_BITS 64
+>  #include <sys/types.h>
+>  #include <sys/stat.h>
+>  #include <sys/vfs.h>
+> @@ -191,6 +192,42 @@ static int do_lseek(int testnum, int subtest, int fd, int filsz, int origin,
+>  	return ret;
+>  }
 >  
->  	/* Sync out all file */
-> -	ret = do_sync_dirty_pages(fd, 0, 0);
-> +	ret = do_sync_dirty_pages(fd, 0, filsz);
->  	if (ret)
->  		goto out;
+> +/* test a huge file to check for 4G overflows */
+> +static int test10(int fd, int testnum)
+> +{
+> +	char *buf = NULL;
+> +	int bufsz = alloc_size;
+> +	off_t filsz = 8ULL << 30;	/* 8G */
+> +	off_t off = filsz - 2*bufsz;
+> +	int ret = -1;
+> +
+> +	buf = do_malloc(bufsz);
+> +	if (!buf)
+> +		goto out;
+> +	memset(buf, 'a', bufsz);
+> +
+> +	ret = do_pwrite(fd, buf, bufsz, 0);
+> +	if (ret)
+> +		goto out;
+> +	ret = do_pwrite(fd, buf, bufsz, off);
+> +	if (ret)
+> +		goto out;
+> +
+> +	/* offset at the beginning */
+> +	ret += do_lseek(testnum,  1, fd, filsz, SEEK_HOLE, 0, bufsz);
+> +	ret += do_lseek(testnum,  2, fd, filsz, SEEK_HOLE, 1, bufsz);
+> +	ret += do_lseek(testnum,  3, fd, filsz, SEEK_DATA, 0, 0);
+> +	ret += do_lseek(testnum,  4, fd, filsz, SEEK_DATA, 1, 1);
+> +
+> +	/* offset around eof */
+> +	ret += do_lseek(testnum,  5, fd, filsz, SEEK_HOLE, off, off + bufsz);
+> +	ret += do_lseek(testnum,  6, fd, filsz, SEEK_DATA, off, off);
+> +	ret += do_lseek(testnum,  7, fd, filsz, SEEK_DATA, off + 1, off + 1);
+> +
+> +out:
+> +	do_free(buf);
+> +	return ret;
+> +}
+>  /*
+>   * test file with unwritten extents, have both dirty and
+>   * writeback pages in page cache.
+> @@ -577,6 +614,7 @@ struct testrec seek_tests[] = {
+>         {  7, test07, "Test file with unwritten extents, only have dirty pages" },
+>         {  8, test08, "Test file with unwritten extents, only have unwritten pages" },
+>         {  9, test09, "Test file with unwritten extents, have both dirty && unwritten pages" },
+> +       { 10, test10, "Test a huge file" },
+>  };
 >  
+>  static int run_test(struct testrec *tr)
 > 
 
 _______________________________________________
