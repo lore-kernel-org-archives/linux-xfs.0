@@ -1,27 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A7FB87F37
-	for <xfs@oss.sgi.com>; Wed, 29 May 2013 19:42:21 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B0BBC7F37
+	for <xfs@oss.sgi.com>; Wed, 29 May 2013 19:46:06 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 95FDC8F8059
-	for <xfs@oss.sgi.com>; Wed, 29 May 2013 17:42:21 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 34904AC001
+	for <xfs@oss.sgi.com>; Wed, 29 May 2013 17:46:06 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	fqRsKM3oVHzPFaiE for <xfs@oss.sgi.com>;
-	Wed, 29 May 2013 17:42:17 -0700 (PDT)
-Date: Thu, 30 May 2013 10:42:15 +1000
+	EsjMNdMQtGNfCcXu for <xfs@oss.sgi.com>;
+	Wed, 29 May 2013 17:46:04 -0700 (PDT)
+Date: Thu, 30 May 2013 10:46:02 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: 3.5+, xfs and 32bit armhf - xfs_buf_get: failed to map pages
-Message-ID: <20130530004215.GD29466@dastard>
-References: <20130517104529.GA12490@luxor.wired.org>
-	<20130519011354.GE6495@dastard>
-	<20130520170710.GA2591@luxor.wired.org>
-	<20130521000208.GF24543@dastard>
-	<20130523143456.GB19815@luxor.wired.org>
-	<20130529135641.GB4889@luxor.wired.org>
+Subject: Re: [PATCH 2/9] xfs: fix incorrect remote symlink block count
+Message-ID: <20130530004602.GE29466@dastard>
+References: <1369636707-15150-1-git-send-email-david@fromorbit.com>
+	<1369636707-15150-3-git-send-email-david@fromorbit.com>
+	<51A62F45.5000004@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130529135641.GB4889@luxor.wired.org>
+In-Reply-To: <51A62F45.5000004@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,48 +31,41 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Paolo Pisati <p.pisati@gmail.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, May 29, 2013 at 03:56:41PM +0200, Paolo Pisati wrote:
-> On Thu, May 23, 2013 at 04:34:56PM +0200, Paolo Pisati wrote:
-> > On Tue, May 21, 2013 at 10:02:09AM +1000, Dave Chinner wrote:
-> > > 
-> > > And that fix I mentioned will be useless if you don't apply the
-> > > patch that avoids the vmap allocation problem....
+On Wed, May 29, 2013 at 12:39:33PM -0400, Brian Foster wrote:
+> On 05/27/2013 02:38 AM, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
 > > 
+> > When CRCs are enabled, the number of blocks needed to hold a remote
+> > symlink on a 1k block size filesystem may be 2 instead of 1. The
+> > transaction reservation for the allocated bloks was not taking this
+> > into account and only allocating one block. hence when trying to
+> > read or invalidate such symlinks, we are mapping a hole where there
+> > should be a block and things go bad at that point.
 > > 
-> > ok, so i recompiled a kernel+aforementioend fix, i repartitioned my disk and i
-> > ran the swift-bench for 2 days in a row until i got this:
+> > Fix the reservation to use the correct block count, clean up the
+> > block count calculation similar to the remote attribute calculation,
+> > and add a debug guard to detect when we don't write the entire
+> > symlink to disk.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > ---
 > 
-> i'm testing a 3.5.y kernel plus those 3 patches:
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
 > 
-> 549142a xfs: don't use speculative prealloc for small files
-> f0843f4 xfs: limit speculative prealloc size on sparse files
-> 454da09 xfs: inode allocation should use unmapped buffers.
-> 
-> and i can confirm that:
-> 
-> -using a small fs (2G) i cannot reproduce any -ENOSPC or vmalloc() problem
-> anymore, the benchmark runs until running out of inodes 
-> 
-> -using a bigger fs (~250G), two days and my tests are still running good
+> Unrelated question... I noticed we update di_size in xfs_symlink(). I
+> presume this is safe because, even in the non-local case, we actually
+> log the data (the path) in the buffers as well, right?
 
-Ok, good to know. The first patch you list there hasn't even been
-reviewed yet, so it might take some time before that is ready for
--stable backport.
-
-Also, there are a bunch of fixes needed to the second patch you have
-there (f0843f4 xfs: limit speculative prealloc...) that would also
-be necessary for a -stable backport. i.e:
-
-e8108ce xfs: fix xfs_iomap_eof_prealloc_initial_size type
-e114b5f xfs: increase prealloc size to double that of the previous extent
-e78c420 xfs: fix potential infinite loop in xfs_iomap_prealloc_size()
+Yes, the remote symlink block allocation and contents is logged in
+the same transaction so cwit is safe to update di_size directly and
+log that, too.
 
 Cheers,
 
-Dave.
+Dave
 -- 
 Dave Chinner
 david@fromorbit.com
