@@ -1,16 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 147437F37
-	for <xfs@oss.sgi.com>; Thu, 30 May 2013 14:15:58 -0500 (CDT)
-Date: Thu, 30 May 2013 14:15:53 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 10/9] xfs: fix dir3 freespace block corruption
-Message-ID: <20130530191553.GG20932@sgi.com>
-References: <1369636707-15150-1-git-send-email-david@fromorbit.com>
-	<20130528083717.GU29466@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 52EF17F37
+	for <xfs@oss.sgi.com>; Thu, 30 May 2013 14:57:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 206BF304066
+	for <xfs@oss.sgi.com>; Thu, 30 May 2013 12:57:26 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id HGxPe71RQcreDosI for <xfs@oss.sgi.com>;
+	Thu, 30 May 2013 12:57:24 -0700 (PDT)
+Date: Thu, 30 May 2013 21:57:23 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 2/3] 285: Fix file syncing
+Message-ID: <20130530195723.GB586@quack.suse.cz>
+References: <1369917939-22660-1-git-send-email-jack@suse.cz>
+	<1369917939-22660-2-git-send-email-jack@suse.cz>
+	<51A75872.4080909@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130528083717.GU29466@dastard>
+In-Reply-To: <51A75872.4080909@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,51 +30,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-ext4@vger.kernel.org, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
 
-On Tue, May 28, 2013 at 06:37:17PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Thu 30-05-13 08:47:30, Eric Sandeen wrote:
+> On 5/30/13 7:45 AM, Jan Kara wrote:
+> > The intention of tests 08 and 09 in test generic/285 is to sync the
+> > whole file before checking for data and holes. However the helper is
+> > called with nbytes argument set to 0 which results in not syncing
+> > anything. Set nbytes properly.
 > 
-> When the directory freespace index grows to a second block (2017
-> 4k data blocks in the directory), the initialisation of the second
-> new block header goes wrong. The write verifier fires a corruption
-> error indicating that the block number in the header is zero. This
-> was being tripped by xfs/110.
+> Hm, are you sure? (Is the man page wrong, or is the sync_file_range
+> implementation wrong?)
 > 
-> The problem is that the initialisation of the new block is done just
-> fine in xfs_dir3_free_get_buf(), but the caller then users a dirv2
-> structure to zero on-disk header fields that xfs_dir3_free_get_buf()
-> has already zeroed. These lined up with the block number in the dir
-> v3 header format.
+> DESCRIPTION
+>        sync_file_range()  permits  fine  control when synchronizing the
+>        open file referred to by the file descriptor fd with disk.
 > 
-> While looking at this, I noticed that the struct xfs_dir3_free_hdr()
-> had 4 bytes of padding in it that wasn't defined as padding or being
-> zeroed by the initialisation. Add a pad field declaration and fully
-> zero the on disk and in-core headers in xfs_dir3_free_get_buf() so
-> that this is never an issue in the future. Note that this doesn't
-> change the on-disk layout, just makes the 32 bits of padding in the
-> layout explicit.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_dir2_format.h |    1 +
->  fs/xfs/xfs_dir2_node.c   |   13 ++++++-------
->  2 files changed, 7 insertions(+), 7 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_dir2_format.h b/fs/xfs/xfs_dir2_format.h
-> index a3b1bd8..995f1f5 100644
-> --- a/fs/xfs/xfs_dir2_format.h
-> +++ b/fs/xfs/xfs_dir2_format.h
-> @@ -715,6 +715,7 @@ struct xfs_dir3_free_hdr {
->  	__be32			firstdb;	/* db of first entry */
->  	__be32			nvalid;		/* count of valid entries */
->  	__be32			nused;		/* count of used entries */
-> +	__be32			pad;		/* 64 bit alignment. */
+>        offset is the starting byte of the file  range  to  be  synchro-
+>        nized.   nbytes specifies the length of the range to be synchro-
+>        nized, in bytes; if nbytes is zero, then all bytes  from  offset
+>        through to the end of file are synchronized.
+  My fault that I didn't read the manpage carefully enough. Scratch this
+patch.
 
-Yeah, my count also puts nused short of 64 bit alignment.  Looks ok.
-
-Reviewed-by: Ben Myers <bpm@sgi.com>
+								Honza
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
