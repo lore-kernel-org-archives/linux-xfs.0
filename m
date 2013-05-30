@@ -1,29 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5CCD07F37
-	for <xfs@oss.sgi.com>; Wed, 29 May 2013 17:30:23 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id EC0797F37
+	for <xfs@oss.sgi.com>; Wed, 29 May 2013 19:38:58 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3D4BA304071
-	for <xfs@oss.sgi.com>; Wed, 29 May 2013 15:30:20 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id bYzZZH3y3K4hGAKF for
-	<xfs@oss.sgi.com>; Wed, 29 May 2013 15:30:19 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r4TMUGl2022992
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 29 May 2013 18:30:18 -0400
-Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id r4TMUDnH002616
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Wed, 29 May 2013 18:30:15 -0400
-Message-ID: <51A68175.9020202@redhat.com>
-Date: Wed, 29 May 2013 17:30:13 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6C7E6AC003
+	for <xfs@oss.sgi.com>; Wed, 29 May 2013 17:38:55 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	mVaDPHCw1HRjtEX5 for <xfs@oss.sgi.com>;
+	Wed, 29 May 2013 17:38:53 -0700 (PDT)
+Date: Thu, 30 May 2013 10:38:49 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: 3.5+, xfs and 32bit armhf - xfs_buf_get: failed to map pages
+Message-ID: <20130530003849.GC29466@dastard>
+References: <20130517104529.GA12490@luxor.wired.org>
+	<20130519011354.GE6495@dastard>
+	<20130520170710.GA2591@luxor.wired.org>
+	<20130521000208.GF24543@dastard>
+	<20130523143456.GB19815@luxor.wired.org>
 MIME-Version: 1.0
-Subject: [PATCH] xfstests: generic/313, test sgid inheritance on subdirs
+Content-Disposition: inline
+In-Reply-To: <20130523143456.GB19815@luxor.wired.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,111 +33,78 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Paolo Pisati <p.pisati@gmail.com>
+Cc: xfs@oss.sgi.com
 
-On XFS this test fails today due to some over-eager
-SGID removal in xfs core code; ext4 & btrfs pass.
-Document it in a test, will send xfs patch in a bit.
+On Thu, May 23, 2013 at 04:34:56PM +0200, Paolo Pisati wrote:
+> On Tue, May 21, 2013 at 10:02:09AM +1000, Dave Chinner wrote:
+> > 
+> > And that fix I mentioned will be useless if you don't apply the
+> > patch that avoids the vmap allocation problem....
+> 
+> 
+> ok, so i recompiled a kernel+aforementioend fix, i repartitioned my disk and i
+> ran the swift-bench for 2 days in a row until i got this:
+> 
+> dmesg:
+> ...
+> [163596.605253] updatedb.mlocat: page allocation failure: order:0, mode:0x20
+> [163596.605299] [<c00164cc>] (unwind_backtrace+0x0/0x104) from [<c04edb20>] (dump_stack+0x20/0x24)
+> [163596.605320] [<c04edb20>] (dump_stack+0x20/0x24) from [<c00e7780>] (warn_alloc_failed+0xd8/0x118)
+> [163596.605335] [<c00e7780>] (warn_alloc_failed+0xd8/0x118) from [<c00e9b88>] (__alloc_pages_nodemask+0x524/0x708)
+> [163596.605354] [<c00e9b88>] (__alloc_pages_nodemask+0x524/0x708) from [<c011b798>] (new_slab+0x22c/0x248)
+> [163596.605370] [<c011b798>] (new_slab+0x22c/0x248) from [<c04f04f8>] (__slab_alloc.constprop.46+0x1a4/0x4c8)
+> [163596.605383] [<c04f04f8>] (__slab_alloc.constprop.46+0x1a4/0x4c8) from [<c011ced4>] (kmem_cache_alloc+0x158/0x190)
+> [163596.605402] [<c011ced4>] (kmem_cache_alloc+0x158/0x190) from [<c0332be0>] (scsi_pool_alloc_command+0x30/0x74)
+> [163596.605417] [<c0332be0>] (scsi_pool_alloc_command+0x30/0x74) from [<c0332c80>] (scsi_host_alloc_command+0x24/0x78)
+> [163596.605428] [<c0332c80>] (scsi_host_alloc_command+0x24/0x78) from [<c0332cf0>] (__scsi_get_command+0x1c/0xa0)
+> [163596.605439] [<c0332cf0>] (__scsi_get_command+0x1c/0xa0) from [<c0332db0>] (scsi_get_command+0x3c/0xb0)
+> [163596.605453] [<c0332db0>] (scsi_get_command+0x3c/0xb0) from [<c0338d44>] (scsi_get_cmd_from_req+0x50/0x60)
+> [163596.605466] [<c0338d44>] (scsi_get_cmd_from_req+0x50/0x60) from [<c0339fd8>] (scsi_setup_fs_cmnd+0x4c/0xac)
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+ENOMEM deep in the SCSI stack for an order 0 GFP_ATOMIC allocation.
+That's not an XFS problem - that's a SCSI stack issue. You should
+probably report that to the scsi list...
 
-p.s.  I'm going to just flaunt my ignorance and say:
-I've never understood acls well.  I'm hoping someone who does
-can help me write a better changelog, because this one
-is no good at all!
+> [163596.608574] active_anon:26367 inactive_anon:29153 isolated_anon:0
+> [163596.608574]  active_file:396338 inactive_file:397959 isolated_file:0
+> [163596.608574]  unevictable:0 dirty:0 writeback:5 unstable:0
+> [163596.608574]  free:5145 slab_reclaimable:57625 slab_unreclaimable:7729
+> [163596.608574]  mapped:1703 shmem:10 pagetables:581 bounce:0
+> [163596.608602] Normal free:15256kB min:3508kB low:4384kB high:5260kB active_anon:0kB inactive_anon:8kB active_file:848kB inactive_file:1560kB unevictable:0kB isolated(anon):0kB isolated(file):0kB present:772160kB mlocked:0kB dirty:0kB writeback:0kB mapped:0kB shmem:0kB slab_reclaimable:230500kB slab_unreclaimable:30916kB kernel_stack:2208kB pagetables:0kB unstable:0kB bounce:0kB writeback_tmp:0kB pages_scanned:0 all_unreclaimable? no
+> [163596.608607] lowmem_reserve[]: 0 26423 26423
+> [163596.608628] HighMem free:5324kB min:512kB low:4352kB high:8192kB active_anon:105468kB inactive_anon:116604kB active_file:1584504kB inactive_file:1590276kB unevictable:0kB isolated(anon):0kB isolated(file):0kB present:3382264kB mlocked:0kB dirty:0kB writeback:20kB mapped:6812kB shmem:40kB slab_reclaimable:0kB slab_unreclaimable:0kB kernel_stack:0kB pagetables:2324kB unstable:0kB bounce:0kB writeback_tmp:0kB pages_scanned:0 all_unreclaimable? no
+> [163596.608634] lowmem_reserve[]: 0 0 0
+> [163596.608643] Normal: 216*4kB 215*8kB 216*16kB 216*32kB 36*64kB 0*128kB 0*256kB 0*512kB 0*1024kB 0*2048kB 0*4096kB = 15256kB
+> [163596.608668] HighMem: 233*4kB 67*8kB 141*16kB 22*32kB 8*64kB 1*128kB 1*256kB 0*512kB 0*1024kB 0*2048kB 0*4096kB = 5324kB
 
-diff --git a/tests/generic/313 b/tests/generic/313
-new file mode 100755
-index 0000000..289fd6f
---- /dev/null
-+++ b/tests/generic/313
-@@ -0,0 +1,67 @@
-+#! /bin/bash
-+# FS QA Test No. 313
-+#
-+# Test SGID inheritance on subdirectories
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2013 Red Hat, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_fs generic
-+_require_acls
-+_require_user
-+_need_to_be_root
-+
-+rm -rf $TEST_DIR/$seq-dir
-+
-+# Make dir owned by qa user, and an unrelated group:
-+mkdir $TEST_DIR/$seq-dir
-+chown $qa_user:12345 $TEST_DIR/$seq-dir
-+
-+# Make parent dir sgid
-+chmod 2775 $TEST_DIR/$seq-dir
-+
-+# Make subdirs before & after acl set
-+su $qa_user -c "mkdir $TEST_DIR/$seq-dir/subdir"
-+su $qa_user -c "setfacl -m u:$qa_user:rwx,d:u:$qa_user:rwx $TEST_DIR/$seq-dir"
-+su $qa_user -c "mkdir $TEST_DIR/$seq-dir/subdir2"
-+
-+# Both subdirs should have inherited sgid
-+ls -ld $TEST_DIR/$seq-dir/subdir* | _filter_test_dir | awk '{print $1,$NF}'
-+
-+status=0
-+exit
-diff --git a/tests/generic/313.out b/tests/generic/313.out
-new file mode 100644
-index 0000000..326a929
---- /dev/null
-+++ b/tests/generic/313.out
-@@ -0,0 +1,3 @@
-+QA output created by 313
-+drwxr-sr-x. TEST_DIR/313-dir/subdir
-+drwxrwsr-x+ TEST_DIR/313-dir/subdir2
-diff --git a/tests/generic/group b/tests/generic/group
-index bd443c1..d5ec8d5 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -115,3 +115,4 @@
- 310 auto
- 311 auto metadata log
- 312 auto quick prealloc enospc
-+313 auto quick acl
+Though this says there is plenty  of free order 0 pages in both low
+and high memory....
+
+> [163596.608692] 794329 total pagecache pages
+> [163596.608697] 12 pages in swap cache
+> [163596.608703] Swap cache stats: add 79, delete 67, find 9/11
+> [163596.608708] Free swap  = 8378092kB
+> [163596.608712] Total swap = 8378364kB
+> [163596.670667] 1046784 pages of RAM
+> [163596.670674] 6801 free pages
+> [163596.670679] 12533 reserved pages
+> [163596.670683] 36489 slab pages
+> [163596.670687] 631668 pages shared
+> [163596.670692] 12 pages swap cached
+> [163596.670701] SLUB: Unable to allocate memory on node -1 (gfp=0x8020)
+> [163596.670710]   cache: kmalloc-192, object size: 192, buffer size: 192, default order: 0, min order: 0
+> [163596.670718]   node 0: slabs: 2733, objs: 57393, free: 0
+
+And it was slub that was unable to find a page when it should have
+been able to, so perhaps this is a VM problem?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
