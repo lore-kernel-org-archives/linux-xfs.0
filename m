@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id BB9DA7F37
-	for <xfs@oss.sgi.com>; Fri, 31 May 2013 07:09:15 -0500 (CDT)
-Message-ID: <51A89322.5090302@sgi.com>
-Date: Fri, 31 May 2013 07:10:10 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 883BC7F37
+	for <xfs@oss.sgi.com>; Fri, 31 May 2013 07:29:25 -0500 (CDT)
+Message-ID: <51A897DC.1030801@sgi.com>
+Date: Fri, 31 May 2013 07:30:20 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH V2] xfstests: Fix test wildcard expansion.
-References: <51A7CC6B.3030607@sgi.com> <51A7D390.3040108@sgi.com>
-	<20130530223823.GS29466@dastard>
-In-Reply-To: <20130530223823.GS29466@dastard>
+Subject: Re: [PATCH 2/3 v2] 285: Fix indentation of do_pwrite
+References: <1369948905-6693-1-git-send-email-jack@suse.cz>
+	<1369948905-6693-2-git-send-email-jack@suse.cz>
+In-Reply-To: <1369948905-6693-2-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,35 +22,24 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfstests <xfs@oss.sgi.com>
+To: Jan Kara <jack@suse.cz>
+Cc: linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
-On 05/30/2013 05:38 PM, Dave Chinner wrote:
-> On Thu, May 30, 2013 at 05:32:48PM -0500, Rich Johnston wrote:
->>
->> Before commit 38d58591 "xfstests: fix typo in check",
->> check xfs/[0-9]?? would execute all tests/xfs/[0-9]?? because:
->>
->> Change to use egrep to fix the parsing.
->>
->> Signed-off-by: Rich Johnston <rjohnston@sgi.com>
->> ---
->> V1-V2
->> Use egrep instead of my bulky method
+On 05/30/2013 04:21 PM, Jan Kara wrote:
+> Signed-off-by: Jan Kara <jack@suse.cz>
+> ---
+>   src/seek_sanity_test.c | 26 +++++++++++++-------------
+>   1 file changed, 13 insertions(+), 13 deletions(-)
 >
-> looks like you lost a bit of the commit message. Otherwise it works
-> fine here ;)
-Oops dang cut/paste, I put it back.
->
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
->
-Thanks for the review Dave.
+Thanks for the patch, it has been committed:
 
-commit 9267afb16b8e861888e54f829015667753034980
-Author: Rich Johnston <rjohnston@sgi.com>
-Date:   Fri May 31 07:02:48 2013 -0500
+commit 1515c26fd44ee2f84ce43ebcd9168130801dd9a0
+Author: Jan Kara <jack@suse.cz>
+Date:   Fri May 31 07:19:47 2013 -0500
 
-     xfstests: Fix test wildcard expansion.
+     xfstests 285: Fix indentation of do_pwrite
+
+--Rich
 
 _______________________________________________
 xfs mailing list
