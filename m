@@ -1,16 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 117707F37
-	for <xfs@oss.sgi.com>; Fri, 31 May 2013 16:54:12 -0500 (CDT)
-Date: Fri, 31 May 2013 16:54:10 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 10/9] xfs: fix dir3 freespace block corruption
-Message-ID: <20130531215410.GH20932@sgi.com>
-References: <1369636707-15150-1-git-send-email-david@fromorbit.com>
-	<20130528083717.GU29466@dastard> <20130530191553.GG20932@sgi.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130530191553.GG20932@sgi.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id D2F797F37
+	for <xfs@oss.sgi.com>; Fri, 31 May 2013 23:51:38 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B44E58F8033
+	for <xfs@oss.sgi.com>; Fri, 31 May 2013 21:51:35 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id 8no2T3EXDPpXe1hA for <xfs@oss.sgi.com>;
+	Fri, 31 May 2013 21:51:34 -0700 (PDT)
+References: <51A8C59B.3030308@redhat.com> <20130531172456.GB6915@gmail.com>
+	<51A8DACB.2030806@redhat.com> <51A8F3CE.4030801@sgi.com>
+Mime-Version: 1.0 (1.0)
+In-Reply-To: <51A8F3CE.4030801@sgi.com>
+Message-Id: <5E41AE1A-97B8-4746-84DA-A6C0B9A714B3@sandeen.net>
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: [PATCH] xfstests: fix seek_sanity_test for fs w/o fallocate
+Date: Fri, 31 May 2013 23:51:32 -0500
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,54 +28,46 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Rich Johnston <rjohnston@sgi.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, ext4 development <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
 
-On Thu, May 30, 2013 at 02:15:53PM -0500, Ben Myers wrote:
-> On Tue, May 28, 2013 at 06:37:17PM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > When the directory freespace index grows to a second block (2017
-> > 4k data blocks in the directory), the initialisation of the second
-> > new block header goes wrong. The write verifier fires a corruption
-> > error indicating that the block number in the header is zero. This
-> > was being tripped by xfs/110.
-> > 
-> > The problem is that the initialisation of the new block is done just
-> > fine in xfs_dir3_free_get_buf(), but the caller then users a dirv2
-> > structure to zero on-disk header fields that xfs_dir3_free_get_buf()
-> > has already zeroed. These lined up with the block number in the dir
-> > v3 header format.
-> > 
-> > While looking at this, I noticed that the struct xfs_dir3_free_hdr()
-> > had 4 bytes of padding in it that wasn't defined as padding or being
-> > zeroed by the initialisation. Add a pad field declaration and fully
-> > zero the on disk and in-core headers in xfs_dir3_free_get_buf() so
-> > that this is never an issue in the future. Note that this doesn't
-> > change the on-disk layout, just makes the 32 bits of padding in the
-> > layout explicit.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  fs/xfs/xfs_dir2_format.h |    1 +
-> >  fs/xfs/xfs_dir2_node.c   |   13 ++++++-------
-> >  2 files changed, 7 insertions(+), 7 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_dir2_format.h b/fs/xfs/xfs_dir2_format.h
-> > index a3b1bd8..995f1f5 100644
-> > --- a/fs/xfs/xfs_dir2_format.h
-> > +++ b/fs/xfs/xfs_dir2_format.h
-> > @@ -715,6 +715,7 @@ struct xfs_dir3_free_hdr {
-> >  	__be32			firstdb;	/* db of first entry */
-> >  	__be32			nvalid;		/* count of valid entries */
-> >  	__be32			nused;		/* count of used entries */
-> > +	__be32			pad;		/* 64 bit alignment. */
-> 
-> Yeah, my count also puts nused short of 64 bit alignment.  Looks ok.
-> 
-> Reviewed-by: Ben Myers <bpm@sgi.com>
+On May 31, 2013, at 2:02 PM, Rich Johnston <rjohnston@sgi.com> wrote:
 
-Applied this.
+> On 05/31/2013 12:15 PM, Eric Sandeen wrote:
+>> On 5/31/13 12:24 PM, Zheng Liu wrote:
+>>> On Fri, May 31, 2013 at 10:45:31AM -0500, Eric Sandeen wrote:
+>>>> currently the seek_sanity_test (generic/285) fails on ext3
+>>>> or ext2 due to fallocate() failures.  Just ignore that test
+>>>> if the fs doesn't support fallocate.
+>>> 
+>>> Hi Eric,
+>>> 
+>>> I remember that my patch had been applied [1].  But stranger I couldn't
+>>> find it in xfstests tree.  However, I think that your patch is better.
+>>> 
+>>> 1. http://oss.sgi.com/archives/xfs/2013-05/msg00534.html
+>> 
+>> Oh, right, I had forgotten about that.  Rich, any idea?
+> 
+> No other than it was a Friday.  My apologies Zheng.
+> Zheng as your's should have been committed, what do you want me to do?
+> 
+Actually let's merge mine since it allows testing on ext2/3.  The other just disables those filesystems...
+
+-Eric
+
+> --Rich
+> 
+>> 
+>> I don't care which patch goes in....
+>> 
+>> -Eric
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
