@@ -1,16 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E0A797CBF
-	for <xfs@oss.sgi.com>; Mon,  3 Jun 2013 16:38:32 -0500 (CDT)
-Message-ID: <51AD0CD6.80404@sgi.com>
-Date: Mon, 03 Jun 2013 16:38:30 -0500
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 885B47CBF
+	for <xfs@oss.sgi.com>; Mon,  3 Jun 2013 17:08:49 -0500 (CDT)
+Message-ID: <51AD13E6.2090502@sgi.com>
+Date: Mon, 03 Jun 2013 17:08:38 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 5/6] xfs: disable noattr2/attr2 mount options for CRC
-	enabled filesystems
+Subject: Re: [PATCH 6/6] xfs: increase number of ACL entries for V5 superblocks
 References: <1370237332-24757-1-git-send-email-david@fromorbit.com>
-	<1370237332-24757-6-git-send-email-david@fromorbit.com>
-In-Reply-To: <1370237332-24757-6-git-send-email-david@fromorbit.com>
+	<1370237332-24757-7-git-send-email-david@fromorbit.com>
+In-Reply-To: <1370237332-24757-7-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,48 +28,88 @@ Cc: bpm@sgi.com, xfs@oss.sgi.com
 On 06/03/13 00:28, Dave Chinner wrote:
 > From: Dave Chinner<dchinner@redhat.com>
 >
-> attr2 format is always enabled for v5 superblock filesystems, so the
-> mount options to enable or disable it need to be cause mount errors.
+> The limit of 25 ACL entries is arbitrary, but baked into the on-disk
+> format.  For version 5 superblocks, increase it to the maximum nuber
+> of ACLs that can fit into a single xattr.
 >
 > Signed-off-by: Dave Chinner<dchinner@redhat.com>
+> Reviewed-by: Brian Foster<bfoster@redhat.com>
 > ---
->   Documentation/filesystems/xfs.txt |    3 +++
->   fs/xfs/xfs_super.c                |   11 +++++++++++
->   2 files changed, 14 insertions(+)
->
-> diff --git a/Documentation/filesystems/xfs.txt b/Documentation/filesystems/xfs.txt
-> index 3e4b3dd..83577f0 100644
-> --- a/Documentation/filesystems/xfs.txt
-> +++ b/Documentation/filesystems/xfs.txt
-> @@ -33,6 +33,9 @@ When mounting an XFS filesystem, the following options are accepted.
->   	removing extended attributes) the on-disk superblock feature
->   	bit field will be updated to reflect this format being in use.
->
-> +	CRC enabled filesystems always use the attr2 format, and so
-Filesystems using the version 5 superblock always use the attr2 format, 
-and so
-> +	will reject the noattr2 mount option if it is set.
-  reject the noattr2 mount option if it is set.
-> +
->     barrier
->   	Enables the use of block layer write barriers for writes into
->   	the journal and unwritten extent conversion.  This allows for
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index ea341ce..f62abb2 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1373,6 +1373,17 @@ xfs_finish_flags(
->   	}
->
->   	/*
-> +	 * CRC enabled filesystems always use attr2 format for attributes.
 
-             V5 filesystems always use attr2 format for attributes.
+> @@ -189,16 +193,17 @@ xfs_set_acl(struct inode *inode, int type, struct posix_acl *acl)
+>
+>   	if (acl) {
+>   		struct xfs_acl *xfs_acl;
+> -		int len;
+> +		int len = XFS_ACL_SIZE(ip->i_mount);
+>
+> -		xfs_acl = kzalloc(sizeof(struct xfs_acl), GFP_KERNEL);
+> +		xfs_acl = kzalloc(len, GFP_KERNEL);
 
-> +	 */
-> +	if (xfs_sb_version_hascrc(&mp->m_sb)&&
+Isn't that physical contiguous allocator? wouldn't a virtual contiguous 
+be good enough for the acl?
 
 ...
+
+>   	if (type == ACL_TYPE_ACCESS) {
+> diff --git a/fs/xfs/xfs_acl.h b/fs/xfs/xfs_acl.h
+> index 39632d9..0da8725 100644
+> --- a/fs/xfs/xfs_acl.h
+> +++ b/fs/xfs/xfs_acl.h
+> @@ -22,19 +22,35 @@ struct inode;
+>   struct posix_acl;
+>   struct xfs_inode;
+>
+> -#define XFS_ACL_MAX_ENTRIES 25
+>   #define XFS_ACL_NOT_PRESENT (-1)
+>
+>   /* On-disk XFS access control list structure */
+> +struct xfs_acl_entry {
+> +	__be32	ae_tag;
+> +	__be32	ae_id;
+> +	__be16	ae_perm;
+> +	__be16	ae_pad;		/* fill the implicit hole in the structure */
+> +};
+> +
+>   struct xfs_acl {
+> -	__be32		acl_cnt;
+> -	struct xfs_acl_entry {
+> -		__be32	ae_tag;
+> -		__be32	ae_id;
+> -		__be16	ae_perm;
+> -	} acl_entry[XFS_ACL_MAX_ENTRIES];
+> +	__be32			acl_cnt;
+> +	struct xfs_acl_entry	acl_entry[0];
+>   };
+>
+> +/*
+> + * The number of ACL entries allowed is defined by the on-disk format.
+> + * For v4 superblocks, that is limited to 25 entries. For v5 superblocks, it is
+> + * limited only by the maximum size of the xattr that stores the information.
+> + */
+> +#define XFS_ACL_MAX_ENTRIES(mp)	\
+> +	(xfs_sb_version_hascrc(&mp->m_sb) \
+> +	   ?  (XATTR_SIZE_MAX - sizeof(__be32)) / sizeof(struct xfs_acl_entry) \
+> +	   : 25)
+
+
+XFS_ACL_MAX_ENTRIES(mp)  == (65536 - 4) / 12 == 5461
+
+> +
+> +#define XFS_ACL_SIZE(mp) \
+> +	(sizeof(struct xfs_acl) + \
+> +		sizeof(struct xfs_acl_entry) * XFS_ACL_MAX_ENTRIES((mp)))
+
+XFS_ACL_SIZE(mp) == (4 + 12) + 12 * ((64K - 4) / 12) == 65548
+
+Did you want to add in the sizeof(struct xfs_acl) to the first term or 
+the sizeof(__be32)? I would think the acl_entry[0] is the start of the 
+array.
+
+> +
+>   /* On-disk XFS extended attribute names */
+>   #define SGI_ACL_FILE		(unsigned char *)"SGI_ACL_FILE"
+>   #define SGI_ACL_DEFAULT		(unsigned char *)"SGI_ACL_DEFAULT"
 
 --Mark.
 
