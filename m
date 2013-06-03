@@ -1,20 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 44EE929E17
-	for <xfs@oss.sgi.com>; Mon,  3 Jun 2013 00:29:25 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C8EA8AC003
-	for <xfs@oss.sgi.com>; Sun,  2 Jun 2013 22:29:24 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	pCtXCsZ8jsxcSr3M for <xfs@oss.sgi.com>;
-	Sun, 02 Jun 2013 22:29:22 -0700 (PDT)
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 6/6] xfs: increase number of ACL entries for V5 superblocks
-Date: Mon,  3 Jun 2013 15:28:51 +1000
-Message-Id: <1370237332-24757-7-git-send-email-david@fromorbit.com>
-In-Reply-To: <1370237332-24757-1-git-send-email-david@fromorbit.com>
-References: <1370237332-24757-1-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id C7E477F55
+	for <xfs@oss.sgi.com>; Mon,  3 Jun 2013 02:44:42 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 98F7C8F8039
+	for <xfs@oss.sgi.com>; Mon,  3 Jun 2013 00:44:42 -0700 (PDT)
+Received: from mx3-phx2.redhat.com (mx3-phx2.redhat.com [209.132.183.24]) by
+	cuda.sgi.com with ESMTP id JcWubZeZnnSH1CF0 for
+	<xfs@oss.sgi.com>; Mon, 03 Jun 2013 00:44:41 -0700 (PDT)
+Date: Mon, 3 Jun 2013 03:44:38 -0400 (EDT)
+From: CAI Qian <caiqian@redhat.com>
+Message-ID: <154590181.10568924.1370245478015.JavaMail.root@redhat.com>
+In-Reply-To: <20130522094648.GJ29466@dastard>
+References: <1871204531.7584919.1367826613792.JavaMail.root@redhat.com>
+	<5187BEA5.4040107@sandeen.net>
+	<647316680.8155487.1367913231441.JavaMail.root@redhat.com>
+	<51895115.90108@sandeen.net>
+	<2132292786.4417784.1369195807747.JavaMail.root@redhat.com>
+	<2013798179.4502334.1369212536770.JavaMail.root@redhat.com>
+	<20130522094648.GJ29466@dastard>
+Subject: Re: 3.9.0: XFS rootfs corruption
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,181 +29,108 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: bpm@sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
 
-The limit of 25 ACL entries is arbitrary, but baked into the on-disk
-format.  For version 5 superblocks, increase it to the maximum nuber
-of ACLs that can fit into a single xattr.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_acl.c |   31 ++++++++++++++++++-------------
- fs/xfs/xfs_acl.h |   30 +++++++++++++++++++++++-------
- 2 files changed, 41 insertions(+), 20 deletions(-)
+----- Original Message -----
+> From: "Dave Chinner" <david@fromorbit.com>
+> To: "CAI Qian" <caiqian@redhat.com>
+> Cc: "Eric Sandeen" <sandeen@sandeen.net>, xfs@oss.sgi.com
+> Sent: Wednesday, May 22, 2013 5:46:48 PM
+> Subject: Re: 3.9.0: XFS rootfs corruption
+> 
+> On Wed, May 22, 2013 at 04:48:56AM -0400, CAI Qian wrote:
+> > 
+> > 
+> > ----- Original Message -----
+> > > From: "CAI Qian" <caiqian@redhat.com>
+> > > To: "Eric Sandeen" <sandeen@sandeen.net>
+> > > Cc: xfs@oss.sgi.com
+> > > Sent: Wednesday, May 22, 2013 12:10:07 PM
+> > > Subject: Re: 3.9.0: XFS rootfs corruption
+> > > 
+> > > OK, this has never been reproduced in 3.9-rc1 so far. It may because the
+> > > rootfs became full after crash dump testing though.
+> > > CAI Qian
+> > Oops, it is still there,
+> 
+> Have you run xfs_repair -n  <dev>  to determine what is corrupted on
+> disk? Can you post the output when you do?
+Here you go.
+CAI Qian
 
-diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
-index 1d32f1d..58b6da3 100644
---- a/fs/xfs/xfs_acl.c
-+++ b/fs/xfs/xfs_acl.c
-@@ -21,6 +21,8 @@
- #include "xfs_bmap_btree.h"
- #include "xfs_inode.h"
- #include "xfs_vnodeops.h"
-+#include "xfs_sb.h"
-+#include "xfs_mount.h"
- #include "xfs_trace.h"
- #include <linux/slab.h>
- #include <linux/xattr.h>
-@@ -34,7 +36,9 @@
-  */
- 
- STATIC struct posix_acl *
--xfs_acl_from_disk(struct xfs_acl *aclp)
-+xfs_acl_from_disk(
-+	struct xfs_acl	*aclp,
-+	int		max_entries)
- {
- 	struct posix_acl_entry *acl_e;
- 	struct posix_acl *acl;
-@@ -42,7 +46,7 @@ xfs_acl_from_disk(struct xfs_acl *aclp)
- 	unsigned int count, i;
- 
- 	count = be32_to_cpu(aclp->acl_cnt);
--	if (count > XFS_ACL_MAX_ENTRIES)
-+	if (count > max_entries)
- 		return ERR_PTR(-EFSCORRUPTED);
- 
- 	acl = posix_acl_alloc(count, GFP_KERNEL);
-@@ -108,9 +112,9 @@ xfs_get_acl(struct inode *inode, int type)
- 	struct xfs_inode *ip = XFS_I(inode);
- 	struct posix_acl *acl;
- 	struct xfs_acl *xfs_acl;
--	int len = sizeof(struct xfs_acl);
- 	unsigned char *ea_name;
- 	int error;
-+	int len;
- 
- 	acl = get_cached_acl(inode, type);
- 	if (acl != ACL_NOT_CACHED)
-@@ -133,8 +137,8 @@ xfs_get_acl(struct inode *inode, int type)
- 	 * If we have a cached ACLs value just return it, not need to
- 	 * go out to the disk.
- 	 */
--
--	xfs_acl = kzalloc(sizeof(struct xfs_acl), GFP_KERNEL);
-+	len = XFS_ACL_SIZE(ip->i_mount);
-+	xfs_acl = kzalloc(len, GFP_KERNEL);
- 	if (!xfs_acl)
- 		return ERR_PTR(-ENOMEM);
- 
-@@ -153,7 +157,7 @@ xfs_get_acl(struct inode *inode, int type)
- 		goto out;
- 	}
- 
--	acl = xfs_acl_from_disk(xfs_acl);
-+	acl = xfs_acl_from_disk(xfs_acl, XFS_ACL_MAX_ENTRIES(ip->i_mount));
- 	if (IS_ERR(acl))
- 		goto out;
- 
-@@ -189,16 +193,17 @@ xfs_set_acl(struct inode *inode, int type, struct posix_acl *acl)
- 
- 	if (acl) {
- 		struct xfs_acl *xfs_acl;
--		int len;
-+		int len = XFS_ACL_SIZE(ip->i_mount);
- 
--		xfs_acl = kzalloc(sizeof(struct xfs_acl), GFP_KERNEL);
-+		xfs_acl = kzalloc(len, GFP_KERNEL);
- 		if (!xfs_acl)
- 			return -ENOMEM;
- 
- 		xfs_acl_to_disk(xfs_acl, acl);
--		len = sizeof(struct xfs_acl) -
--			(sizeof(struct xfs_acl_entry) *
--			 (XFS_ACL_MAX_ENTRIES - acl->a_count));
-+
-+		/* subtract away the unused acl entries */
-+		len -= sizeof(struct xfs_acl_entry) *
-+			 (XFS_ACL_MAX_ENTRIES(ip->i_mount) - acl->a_count);
- 
- 		error = -xfs_attr_set(ip, ea_name, (unsigned char *)xfs_acl,
- 				len, ATTR_ROOT);
-@@ -243,7 +248,7 @@ xfs_set_mode(struct inode *inode, umode_t mode)
- static int
- xfs_acl_exists(struct inode *inode, unsigned char *name)
- {
--	int len = sizeof(struct xfs_acl);
-+	int len = XFS_ACL_SIZE(XFS_M(inode->i_sb));
- 
- 	return (xfs_attr_get(XFS_I(inode), name, NULL, &len,
- 			    ATTR_ROOT|ATTR_KERNOVAL) == 0);
-@@ -379,7 +384,7 @@ xfs_xattr_acl_set(struct dentry *dentry, const char *name,
- 		goto out_release;
- 
- 	error = -EINVAL;
--	if (acl->a_count > XFS_ACL_MAX_ENTRIES)
-+	if (acl->a_count > XFS_ACL_MAX_ENTRIES(XFS_M(inode->i_sb)))
- 		goto out_release;
- 
- 	if (type == ACL_TYPE_ACCESS) {
-diff --git a/fs/xfs/xfs_acl.h b/fs/xfs/xfs_acl.h
-index 39632d9..0da8725 100644
---- a/fs/xfs/xfs_acl.h
-+++ b/fs/xfs/xfs_acl.h
-@@ -22,19 +22,35 @@ struct inode;
- struct posix_acl;
- struct xfs_inode;
- 
--#define XFS_ACL_MAX_ENTRIES 25
- #define XFS_ACL_NOT_PRESENT (-1)
- 
- /* On-disk XFS access control list structure */
-+struct xfs_acl_entry {
-+	__be32	ae_tag;
-+	__be32	ae_id;
-+	__be16	ae_perm;
-+	__be16	ae_pad;		/* fill the implicit hole in the structure */
-+};
-+
- struct xfs_acl {
--	__be32		acl_cnt;
--	struct xfs_acl_entry {
--		__be32	ae_tag;
--		__be32	ae_id;
--		__be16	ae_perm;
--	} acl_entry[XFS_ACL_MAX_ENTRIES];
-+	__be32			acl_cnt;
-+	struct xfs_acl_entry	acl_entry[0];
- };
- 
-+/*
-+ * The number of ACL entries allowed is defined by the on-disk format.
-+ * For v4 superblocks, that is limited to 25 entries. For v5 superblocks, it is
-+ * limited only by the maximum size of the xattr that stores the information.
-+ */
-+#define XFS_ACL_MAX_ENTRIES(mp)	\
-+	(xfs_sb_version_hascrc(&mp->m_sb) \
-+	   ?  (XATTR_SIZE_MAX - sizeof(__be32)) / sizeof(struct xfs_acl_entry) \
-+	   : 25)
-+
-+#define XFS_ACL_SIZE(mp) \
-+	(sizeof(struct xfs_acl) + \
-+		sizeof(struct xfs_acl_entry) * XFS_ACL_MAX_ENTRIES((mp)))
-+
- /* On-disk XFS extended attribute names */
- #define SGI_ACL_FILE		(unsigned char *)"SGI_ACL_FILE"
- #define SGI_ACL_DEFAULT		(unsigned char *)"SGI_ACL_DEFAULT"
--- 
-1.7.10.4
+:/# xfs_repair -n  /dev/mapper/rhel_ibm--p720--01--lp4-root 
+Phase 1 - find and verify superblock...
+Phase 2 - using internal log
+        - scan filesystem freespace and inode maps...
+agi_freecount 10, counted 8 in ag 1
+sb_icount 149248, counted 149312
+sb_ifree 216, counted 27
+sb_fdblocks 10788304, counted 10784210
+        - found root inode chunk
+Phase 3 - for each AG...
+        - scan (but don't clear) agi unlinked lists...
+        - process known inodes and perform inode discovery...
+        - agno = 0
+bad entry count in block 8388610 of directory inode 113571
+bad entry count in block 8388610 of directory inode 1178385
+bad entry count in block 8388610 of directory inode 1519037
+        - agno = 1
+bad entry count in block 8388610 of directory inode 67109016
+bad entry count in block 8388610 of directory inode 67929825
+bad entry count in block 8388610 of directory inode 69407749
+bad entry count in block 8388610 of directory inode 69490381
+bad entry count in block 8388610 of directory inode 69534546
+bad entry count in block 8388610 of directory inode 69842112
+        - agno = 2
+bad entry count in block 8388610 of directory inode 134321722
+bad entry count in block 8388610 of directory inode 134321726
+bad entry count in block 8388610 of directory inode 136067648
+bad entry count in block 8388610 of directory inode 144715871
+        - agno = 3
+bad entry count in block 8388610 of directory inode 201326727
+bad entry count in block 8388610 of directory inode 201326754
+bad entry count in block 8388610 of directory inode 201327172
+bad entry count in block 8388610 of directory inode 201951914
+bad entry count in block 8388610 of directory inode 202409289
+bad entry count in block 8388610 of directory inode 206245507
+bad entry count in block 8388610 of directory inode 206253502
+bad entry count in block 8388610 of directory inode 206308010
+bad entry count in block 8388610 of directory inode 206632072
+bad entry count in block 8388610 of directory inode 212625436
+        - process newly discovered inodes...
+Phase 4 - check for duplicate blocks...
+        - setting up duplicate extent list...
+        - check for inodes claiming duplicate blocks...
+        - agno = 0
+        - agno = 3
+        - agno = 2
+        - agno = 1
+entry "tmp.Iive34" at block 0 offset 2664 in directory inode 69369993 references free inode 69015237
+	would clear inode number in entry at offset 2664...
+No modify flag set, skipping phase 5
+Phase 6 - check inode connectivity...
+        - traversing filesystem ...
+entry "tmp.Iive34" in directory inode 69369993 points to free inode 69015237, would junk entry
+bad hash table for directory inode 69369993 (no data entry): would rebuild
+        - traversal finished ...
+        - moving disconnected inodes to lost+found ...
+Phase 7 - verify link counts...
+No modify flag set, skipping filesystem flush and exiting.
+> 
+> Cheers,
+> 
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
+> 
 
 _______________________________________________
 xfs mailing list
