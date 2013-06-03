@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id AD9FC7CBF
-	for <xfs@oss.sgi.com>; Mon,  3 Jun 2013 13:55:31 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 981378F804C
-	for <xfs@oss.sgi.com>; Mon,  3 Jun 2013 11:55:31 -0700 (PDT)
-Message-ID: <51ACE78B.6040308@redhat.com>
-Date: Mon, 03 Jun 2013 14:59:23 -0400
+	by oss.sgi.com (Postfix) with ESMTP id 4DD707CBF
+	for <xfs@oss.sgi.com>; Mon,  3 Jun 2013 13:58:29 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 26E518F804C
+	for <xfs@oss.sgi.com>; Mon,  3 Jun 2013 11:58:29 -0700 (PDT)
+Message-ID: <51ACE83B.4060007@redhat.com>
+Date: Mon, 03 Jun 2013 15:02:19 -0400
 From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 4/6] xfs: fix remote attribute invalidation for a leaf
+Subject: Re: [PATCH 5/6] xfs: disable noattr2/attr2 mount options for CRC
+	enabled filesystems
 References: <1370237332-24757-1-git-send-email-david@fromorbit.com>
-	<1370237332-24757-5-git-send-email-david@fromorbit.com>
-In-Reply-To: <1370237332-24757-5-git-send-email-david@fromorbit.com>
+	<1370237332-24757-6-git-send-email-david@fromorbit.com>
+In-Reply-To: <1370237332-24757-6-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,33 +32,59 @@ Cc: bpm@sgi.com, xfs@oss.sgi.com
 On 06/03/2013 01:28 AM, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> When invalidating an attribute leaf block block, there might be
-> remote attributes that it points to. With the recent rework of the
-> remote attribute format, we have to make sure we calculate the
-> length of the attribute correctly. We aren't doing that in
-> xfs_attr3_leaf_inactive(), so fix it.
+> attr2 format is always enabled for v5 superblock filesystems, so the
+> mount options to enable or disable it need to be cause mount errors.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  Documentation/filesystems/xfs.txt |    3 +++
+>  fs/xfs/xfs_super.c                |   11 +++++++++++
+>  2 files changed, 14 insertions(+)
+> 
+> diff --git a/Documentation/filesystems/xfs.txt b/Documentation/filesystems/xfs.txt
+> index 3e4b3dd..83577f0 100644
+> --- a/Documentation/filesystems/xfs.txt
+> +++ b/Documentation/filesystems/xfs.txt
+> @@ -33,6 +33,9 @@ When mounting an XFS filesystem, the following options are accepted.
+>  	removing extended attributes) the on-disk superblock feature
+>  	bit field will be updated to reflect this format being in use.
+>  
+> +	CRC enabled filesystems always use the attr2 format, and so
+> +	will reject the noattr2 mount option if it is set.
+> +
+>    barrier
+>  	Enables the use of block layer write barriers for writes into
+>  	the journal and unwritten extent conversion.  This allows for
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index ea341ce..f62abb2 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1373,6 +1373,17 @@ xfs_finish_flags(
+>  	}
+>  
+>  	/*
+> +	 * CRC enabled filesystems always use attr2 format for attributes.
+> +	 */
+> +	if (xfs_sb_version_hascrc(&mp->m_sb) &&
+> +	    (mp->m_flags & XFS_MOUNT_NOATTR2)) {
+> +		xfs_warn(mp,
+> +"Cannot mount a V5 filesystems as %s. %s is always enabled for v5 filesystems.",
+		      filesystem
+
+(or alternatively remove the 'a').
+
+... and V5 and v5 is inconsistent, fwiw. :P Nits, nonetheless...
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-> ---
->  fs/xfs/xfs_attr_leaf.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_attr_leaf.c b/fs/xfs/xfs_attr_leaf.c
-> index d788302..31d3cd1 100644
-> --- a/fs/xfs/xfs_attr_leaf.c
-> +++ b/fs/xfs/xfs_attr_leaf.c
-> @@ -3258,7 +3258,7 @@ xfs_attr3_leaf_inactive(
->  			name_rmt = xfs_attr3_leaf_name_remote(leaf, i);
->  			if (name_rmt->valueblk) {
->  				lp->valueblk = be32_to_cpu(name_rmt->valueblk);
-> -				lp->valuelen = XFS_B_TO_FSB(dp->i_mount,
-> +				lp->valuelen = xfs_attr3_rmt_blocks(dp->i_mount,
->  						    be32_to_cpu(name_rmt->valuelen));
->  				lp++;
->  			}
+> +			MNTOPT_NOATTR2, MNTOPT_ATTR2);
+> +		return XFS_ERROR(EINVAL);
+> +	}
+> +
+> +	/*
+>  	 * mkfs'ed attr2 will turn on attr2 mount unless explicitly
+>  	 * told by noattr2 to turn it off
+>  	 */
 > 
 
 _______________________________________________
