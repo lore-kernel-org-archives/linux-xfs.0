@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E7EBF29E16
-	for <xfs@oss.sgi.com>; Mon,  3 Jun 2013 00:29:26 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 44EE929E17
+	for <xfs@oss.sgi.com>; Mon,  3 Jun 2013 00:29:25 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 85C01AC001
-	for <xfs@oss.sgi.com>; Sun,  2 Jun 2013 22:29:23 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C8EA8AC003
+	for <xfs@oss.sgi.com>; Sun,  2 Jun 2013 22:29:24 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	6GDQbOEv6iMECKNt for <xfs@oss.sgi.com>;
-	Sun, 02 Jun 2013 22:29:21 -0700 (PDT)
+	pCtXCsZ8jsxcSr3M for <xfs@oss.sgi.com>;
+	Sun, 02 Jun 2013 22:29:22 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 5/6] xfs: disable noattr2/attr2 mount options for CRC enabled
-	filesystems
-Date: Mon,  3 Jun 2013 15:28:50 +1000
-Message-Id: <1370237332-24757-6-git-send-email-david@fromorbit.com>
+Subject: [PATCH 6/6] xfs: increase number of ACL entries for V5 superblocks
+Date: Mon,  3 Jun 2013 15:28:51 +1000
+Message-Id: <1370237332-24757-7-git-send-email-david@fromorbit.com>
 In-Reply-To: <1370237332-24757-1-git-send-email-david@fromorbit.com>
 References: <1370237332-24757-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,51 +33,169 @@ Cc: bpm@sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-attr2 format is always enabled for v5 superblock filesystems, so the
-mount options to enable or disable it need to be cause mount errors.
+The limit of 25 ACL entries is arbitrary, but baked into the on-disk
+format.  For version 5 superblocks, increase it to the maximum nuber
+of ACLs that can fit into a single xattr.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- Documentation/filesystems/xfs.txt |    3 +++
- fs/xfs/xfs_super.c                |   11 +++++++++++
- 2 files changed, 14 insertions(+)
+ fs/xfs/xfs_acl.c |   31 ++++++++++++++++++-------------
+ fs/xfs/xfs_acl.h |   30 +++++++++++++++++++++++-------
+ 2 files changed, 41 insertions(+), 20 deletions(-)
 
-diff --git a/Documentation/filesystems/xfs.txt b/Documentation/filesystems/xfs.txt
-index 3e4b3dd..83577f0 100644
---- a/Documentation/filesystems/xfs.txt
-+++ b/Documentation/filesystems/xfs.txt
-@@ -33,6 +33,9 @@ When mounting an XFS filesystem, the following options are accepted.
- 	removing extended attributes) the on-disk superblock feature
- 	bit field will be updated to reflect this format being in use.
+diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
+index 1d32f1d..58b6da3 100644
+--- a/fs/xfs/xfs_acl.c
++++ b/fs/xfs/xfs_acl.c
+@@ -21,6 +21,8 @@
+ #include "xfs_bmap_btree.h"
+ #include "xfs_inode.h"
+ #include "xfs_vnodeops.h"
++#include "xfs_sb.h"
++#include "xfs_mount.h"
+ #include "xfs_trace.h"
+ #include <linux/slab.h>
+ #include <linux/xattr.h>
+@@ -34,7 +36,9 @@
+  */
  
-+	CRC enabled filesystems always use the attr2 format, and so
-+	will reject the noattr2 mount option if it is set.
-+
-   barrier
- 	Enables the use of block layer write barriers for writes into
- 	the journal and unwritten extent conversion.  This allows for
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index ea341ce..f62abb2 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1373,6 +1373,17 @@ xfs_finish_flags(
+ STATIC struct posix_acl *
+-xfs_acl_from_disk(struct xfs_acl *aclp)
++xfs_acl_from_disk(
++	struct xfs_acl	*aclp,
++	int		max_entries)
+ {
+ 	struct posix_acl_entry *acl_e;
+ 	struct posix_acl *acl;
+@@ -42,7 +46,7 @@ xfs_acl_from_disk(struct xfs_acl *aclp)
+ 	unsigned int count, i;
+ 
+ 	count = be32_to_cpu(aclp->acl_cnt);
+-	if (count > XFS_ACL_MAX_ENTRIES)
++	if (count > max_entries)
+ 		return ERR_PTR(-EFSCORRUPTED);
+ 
+ 	acl = posix_acl_alloc(count, GFP_KERNEL);
+@@ -108,9 +112,9 @@ xfs_get_acl(struct inode *inode, int type)
+ 	struct xfs_inode *ip = XFS_I(inode);
+ 	struct posix_acl *acl;
+ 	struct xfs_acl *xfs_acl;
+-	int len = sizeof(struct xfs_acl);
+ 	unsigned char *ea_name;
+ 	int error;
++	int len;
+ 
+ 	acl = get_cached_acl(inode, type);
+ 	if (acl != ACL_NOT_CACHED)
+@@ -133,8 +137,8 @@ xfs_get_acl(struct inode *inode, int type)
+ 	 * If we have a cached ACLs value just return it, not need to
+ 	 * go out to the disk.
+ 	 */
+-
+-	xfs_acl = kzalloc(sizeof(struct xfs_acl), GFP_KERNEL);
++	len = XFS_ACL_SIZE(ip->i_mount);
++	xfs_acl = kzalloc(len, GFP_KERNEL);
+ 	if (!xfs_acl)
+ 		return ERR_PTR(-ENOMEM);
+ 
+@@ -153,7 +157,7 @@ xfs_get_acl(struct inode *inode, int type)
+ 		goto out;
  	}
  
- 	/*
-+	 * CRC enabled filesystems always use attr2 format for attributes.
-+	 */
-+	if (xfs_sb_version_hascrc(&mp->m_sb) &&
-+	    (mp->m_flags & XFS_MOUNT_NOATTR2)) {
-+		xfs_warn(mp,
-+"Cannot mount a V5 filesystems as %s. %s is always enabled for v5 filesystems.",
-+			MNTOPT_NOATTR2, MNTOPT_ATTR2);
-+		return XFS_ERROR(EINVAL);
-+	}
+-	acl = xfs_acl_from_disk(xfs_acl);
++	acl = xfs_acl_from_disk(xfs_acl, XFS_ACL_MAX_ENTRIES(ip->i_mount));
+ 	if (IS_ERR(acl))
+ 		goto out;
+ 
+@@ -189,16 +193,17 @@ xfs_set_acl(struct inode *inode, int type, struct posix_acl *acl)
+ 
+ 	if (acl) {
+ 		struct xfs_acl *xfs_acl;
+-		int len;
++		int len = XFS_ACL_SIZE(ip->i_mount);
+ 
+-		xfs_acl = kzalloc(sizeof(struct xfs_acl), GFP_KERNEL);
++		xfs_acl = kzalloc(len, GFP_KERNEL);
+ 		if (!xfs_acl)
+ 			return -ENOMEM;
+ 
+ 		xfs_acl_to_disk(xfs_acl, acl);
+-		len = sizeof(struct xfs_acl) -
+-			(sizeof(struct xfs_acl_entry) *
+-			 (XFS_ACL_MAX_ENTRIES - acl->a_count));
 +
-+	/*
- 	 * mkfs'ed attr2 will turn on attr2 mount unless explicitly
- 	 * told by noattr2 to turn it off
- 	 */
++		/* subtract away the unused acl entries */
++		len -= sizeof(struct xfs_acl_entry) *
++			 (XFS_ACL_MAX_ENTRIES(ip->i_mount) - acl->a_count);
+ 
+ 		error = -xfs_attr_set(ip, ea_name, (unsigned char *)xfs_acl,
+ 				len, ATTR_ROOT);
+@@ -243,7 +248,7 @@ xfs_set_mode(struct inode *inode, umode_t mode)
+ static int
+ xfs_acl_exists(struct inode *inode, unsigned char *name)
+ {
+-	int len = sizeof(struct xfs_acl);
++	int len = XFS_ACL_SIZE(XFS_M(inode->i_sb));
+ 
+ 	return (xfs_attr_get(XFS_I(inode), name, NULL, &len,
+ 			    ATTR_ROOT|ATTR_KERNOVAL) == 0);
+@@ -379,7 +384,7 @@ xfs_xattr_acl_set(struct dentry *dentry, const char *name,
+ 		goto out_release;
+ 
+ 	error = -EINVAL;
+-	if (acl->a_count > XFS_ACL_MAX_ENTRIES)
++	if (acl->a_count > XFS_ACL_MAX_ENTRIES(XFS_M(inode->i_sb)))
+ 		goto out_release;
+ 
+ 	if (type == ACL_TYPE_ACCESS) {
+diff --git a/fs/xfs/xfs_acl.h b/fs/xfs/xfs_acl.h
+index 39632d9..0da8725 100644
+--- a/fs/xfs/xfs_acl.h
++++ b/fs/xfs/xfs_acl.h
+@@ -22,19 +22,35 @@ struct inode;
+ struct posix_acl;
+ struct xfs_inode;
+ 
+-#define XFS_ACL_MAX_ENTRIES 25
+ #define XFS_ACL_NOT_PRESENT (-1)
+ 
+ /* On-disk XFS access control list structure */
++struct xfs_acl_entry {
++	__be32	ae_tag;
++	__be32	ae_id;
++	__be16	ae_perm;
++	__be16	ae_pad;		/* fill the implicit hole in the structure */
++};
++
+ struct xfs_acl {
+-	__be32		acl_cnt;
+-	struct xfs_acl_entry {
+-		__be32	ae_tag;
+-		__be32	ae_id;
+-		__be16	ae_perm;
+-	} acl_entry[XFS_ACL_MAX_ENTRIES];
++	__be32			acl_cnt;
++	struct xfs_acl_entry	acl_entry[0];
+ };
+ 
++/*
++ * The number of ACL entries allowed is defined by the on-disk format.
++ * For v4 superblocks, that is limited to 25 entries. For v5 superblocks, it is
++ * limited only by the maximum size of the xattr that stores the information.
++ */
++#define XFS_ACL_MAX_ENTRIES(mp)	\
++	(xfs_sb_version_hascrc(&mp->m_sb) \
++	   ?  (XATTR_SIZE_MAX - sizeof(__be32)) / sizeof(struct xfs_acl_entry) \
++	   : 25)
++
++#define XFS_ACL_SIZE(mp) \
++	(sizeof(struct xfs_acl) + \
++		sizeof(struct xfs_acl_entry) * XFS_ACL_MAX_ENTRIES((mp)))
++
+ /* On-disk XFS extended attribute names */
+ #define SGI_ACL_FILE		(unsigned char *)"SGI_ACL_FILE"
+ #define SGI_ACL_DEFAULT		(unsigned char *)"SGI_ACL_DEFAULT"
 -- 
 1.7.10.4
 
