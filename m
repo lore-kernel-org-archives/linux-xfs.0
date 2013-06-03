@@ -1,34 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 031377CBF
-	for <linux-xfs@oss.sgi.com>; Mon,  3 Jun 2013 11:40:07 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 395937CBF
+	for <xfs@oss.sgi.com>; Mon,  3 Jun 2013 13:14:43 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E54B130408B
-	for <linux-xfs@oss.sgi.com>; Mon,  3 Jun 2013 09:40:03 -0700 (PDT)
-Received: from mailgw1.uni-kl.de (mailgw1.uni-kl.de [131.246.120.220]) by
-	cuda.sgi.com with ESMTP id 392kUcwNfrktI298 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for
-	<linux-xfs@oss.sgi.com>; Mon, 03 Jun 2013 09:40:02 -0700 (PDT)
-Received: from itwm2.itwm.fhg.de (itwm2.itwm.fhg.de [131.246.191.3])
-	by mailgw1.uni-kl.de (8.14.3/8.14.3/Debian-9.4) with ESMTP id
-	r53Ge0Q3018742
-	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NOT)
-	for <linux-xfs@oss.sgi.com>; Mon, 3 Jun 2013 18:40:00 +0200
-Message-ID: <51ACC6DF.4050507@itwm.fraunhofer.de>
-Date: Mon, 03 Jun 2013 18:39:59 +0200
-From: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 288218F8039
+	for <xfs@oss.sgi.com>; Mon,  3 Jun 2013 11:14:39 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id T64ORkFgAxFE4T68 for
+	<xfs@oss.sgi.com>; Mon, 03 Jun 2013 11:14:39 -0700 (PDT)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r53IEcmb002351
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Mon, 3 Jun 2013 14:14:38 -0400
+Received: from bfoster.bfoster (dhcp-189-135.bos.redhat.com [10.16.189.135])
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id r53IEbvc031133
+	for <xfs@oss.sgi.com>; Mon, 3 Jun 2013 14:14:38 -0400
+Message-ID: <51ACDDF9.1040202@redhat.com>
+Date: Mon, 03 Jun 2013 14:18:33 -0400
+From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Subject: Re: 3.9.0: general protection fault
-References: <kltu6o$33j$1@ger.gmane.org> <km7oop$28c$1@ger.gmane.org>
-	<20130506122844.GL19978@dastard> <5187A663.707@itwm.fraunhofer.de>
-	<20130507011254.GP19978@dastard>
-	<5188E2F5.1090304@itwm.fraunhofer.de>
-	<20130507220742.GC24635@dastard>
-	<518A8FD4.40700@itwm.fraunhofer.de>
-	<20130509004115.GM24635@dastard>
-	<518CC9A9.9060500@itwm.fraunhofer.de>
-	<20130511001213.GA32675@dastard>
-In-Reply-To: <20130511001213.GA32675@dastard>
+Subject: Re: [PATCH 1/6] xfs: rework dquot CRCs
+References: <1370237332-24757-1-git-send-email-david@fromorbit.com>
+	<1370237332-24757-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1370237332-24757-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,44 +33,273 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Just an update here, the issue only came up once again on another system 
-and I didn't have time for a couple of days to even save the collectl 
-log file. I then increased the max number of rotated log files, but it 
-didn't happen again ever since. So I don't have any logs about the state 
-of the system at crash time so far.
-However, I just got a captured file corruption:
+On 06/03/2013 01:28 AM, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Calculating dquot CRCs when the backing buffer is written back just
+> doesn't work reliably. There are several places which manipulate
+> dquots directly in the buffers, and they don't calculate CRCs
+> appropriately, nor do they always set the buffer up to calculate
+> CRCs appropriately.
+> 
+> Firstly, if we log a dquot buffer (e.g. during allocation) it gets
+> logged without valid CRC, and so on recovery we end up with a dquot
+> that is not valid.
+> 
+> Secondly, if we recover/repair a dquot, we don't have a verifier
+> attached to the buffer and hence CRCs arenot calculate don the way
+> down to disk.
+> 
+> Thirdly, calculating the CRC after we've changed the contents means
+> that if we re-read the dquot from the buffer, we cannot verify the
+> contents of the dquot are valid, as the CRC is invalid.
+> 
+> So, to avoid all the dquot CRC errors that are being detected by the
+> read verifier, change to using the same model as for inodes. that
+> is, dquot CRCs are calculated and written to the backing buffer at
+> the time the dquot is flushed to the backing buffer. If we modify
+> the dquuot directly in the backing buffer, calculate the CRC
+> immediately after the modification is complete. Hence the dquot in
+> the on-disk buffer should always have a valid CRC.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-> (squeeze)fslab3:~/fstests# cat /mnt/fhgfs//fslab4/ql-fstest/fstest13579.err
-> File corruption in /mnt/fhgfs//fslab4/ql-fstest/fstest.13635/d040/d030/7ae214d1 (create time: Mon Jun  3 17:36:11 2013) around 246415360 [pattern = 7ae214d1]
-> After n-checks: 3
-> Expected: d1, got: 83 (pos = 247324600)
-> Expected: 14, got: ec (pos = 247324601)
-> Expected: e2, got: 30 (pos = 247324602)
-> Expected: 7a, got: 48 (pos = 247324603)
-> Expected: d1, got: 89 (pos = 247324604)
-> Expected: 14, got: 5d (pos = 247324605)
-> Expected: e2, got: e8 (pos = 247324606)
-...
-> Expected: 14, got: 84 (pos = 247324661)
-> Expected: e2, got: b9 (pos = 247324662)
-> Expected: 7a, got: 0 (pos = 247324663)
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Hmm, exactly 64 bytes of corrupted data, the file itself has a size of 
-512MiB.
-
-I'm going to export single disks from the controller to use it with 
-md-raid6 as this allows to do parity checks and to identify bad disks.
-
-
-Cheers,
-Bernd
+> ---
+>  fs/xfs/xfs_dquot.c       |   37 ++++++++++++++++---------------------
+>  fs/xfs/xfs_log_recover.c |   10 ++++++++++
+>  fs/xfs/xfs_qm.c          |   40 ++++++++++++++++++++++++++++++----------
+>  fs/xfs/xfs_quota.h       |    2 ++
+>  4 files changed, 58 insertions(+), 31 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+> index a41f8bf..044e97a 100644
+> --- a/fs/xfs/xfs_dquot.c
+> +++ b/fs/xfs/xfs_dquot.c
+> @@ -249,8 +249,11 @@ xfs_qm_init_dquot_blk(
+>  		d->dd_diskdq.d_version = XFS_DQUOT_VERSION;
+>  		d->dd_diskdq.d_id = cpu_to_be32(curid);
+>  		d->dd_diskdq.d_flags = type;
+> -		if (xfs_sb_version_hascrc(&mp->m_sb))
+> +		if (xfs_sb_version_hascrc(&mp->m_sb)) {
+>  			uuid_copy(&d->dd_uuid, &mp->m_sb.sb_uuid);
+> +			xfs_update_cksum((char *)d, sizeof(struct xfs_dqblk),
+> +					 XFS_DQUOT_CRC_OFF);
+> +		}
+>  	}
+>  
+>  	xfs_trans_dquot_buf(tp, bp,
+> @@ -286,23 +289,6 @@ xfs_dquot_set_prealloc_limits(struct xfs_dquot *dqp)
+>  	dqp->q_low_space[XFS_QLOWSP_5_PCNT] = space * 5;
+>  }
+>  
+> -STATIC void
+> -xfs_dquot_buf_calc_crc(
+> -	struct xfs_mount	*mp,
+> -	struct xfs_buf		*bp)
+> -{
+> -	struct xfs_dqblk	*d = (struct xfs_dqblk *)bp->b_addr;
+> -	int			i;
+> -
+> -	if (!xfs_sb_version_hascrc(&mp->m_sb))
+> -		return;
+> -
+> -	for (i = 0; i < mp->m_quotainfo->qi_dqperchunk; i++, d++) {
+> -		xfs_update_cksum((char *)d, sizeof(struct xfs_dqblk),
+> -				 offsetof(struct xfs_dqblk, dd_crc));
+> -	}
+> -}
+> -
+>  STATIC bool
+>  xfs_dquot_buf_verify_crc(
+>  	struct xfs_mount	*mp,
+> @@ -328,12 +314,11 @@ xfs_dquot_buf_verify_crc(
+>  
+>  	for (i = 0; i < ndquots; i++, d++) {
+>  		if (!xfs_verify_cksum((char *)d, sizeof(struct xfs_dqblk),
+> -				 offsetof(struct xfs_dqblk, dd_crc)))
+> +				 XFS_DQUOT_CRC_OFF))
+>  			return false;
+>  		if (!uuid_equal(&d->dd_uuid, &mp->m_sb.sb_uuid))
+>  			return false;
+>  	}
+> -
+>  	return true;
+>  }
+>  
+> @@ -393,6 +378,11 @@ xfs_dquot_buf_read_verify(
+>  	}
+>  }
+>  
+> +/*
+> + * we don't calculate the CRC here as that is done when the dquot is flushed to
+> + * the buffer after the update is done. This ensures that the dquot in the
+> + * buffer always has an up-to-date CRC value.
+> + */
+>  void
+>  xfs_dquot_buf_write_verify(
+>  	struct xfs_buf	*bp)
+> @@ -404,7 +394,6 @@ xfs_dquot_buf_write_verify(
+>  		xfs_buf_ioerror(bp, EFSCORRUPTED);
+>  		return;
+>  	}
+> -	xfs_dquot_buf_calc_crc(mp, bp);
+>  }
+>  
+>  const struct xfs_buf_ops xfs_dquot_buf_ops = {
+> @@ -1151,11 +1140,17 @@ xfs_qm_dqflush(
+>  	 * copy the lsn into the on-disk dquot now while we have the in memory
+>  	 * dquot here. This can't be done later in the write verifier as we
+>  	 * can't get access to the log item at that point in time.
+> +	 *
+> +	 * We also calculate the CRC here so that the on-disk dquot in the
+> +	 * buffer always has a valid CRC. This ensures there is no possibility
+> +	 * of a dquot without an up-to-date CRC getting to disk.
+>  	 */
+>  	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+>  		struct xfs_dqblk *dqb = (struct xfs_dqblk *)ddqp;
+>  
+>  		dqb->dd_lsn = cpu_to_be64(dqp->q_logitem.qli_item.li_lsn);
+> +		xfs_update_cksum((char *)dqb, sizeof(struct xfs_dqblk),
+> +				 XFS_DQUOT_CRC_OFF);
+>  	}
+>  
+>  	/*
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index d9e4d3c..d6204d1 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -2266,6 +2266,12 @@ xfs_qm_dqcheck(
+>  	d->dd_diskdq.d_flags = type;
+>  	d->dd_diskdq.d_id = cpu_to_be32(id);
+>  
+> +	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+> +		uuid_copy(&d->dd_uuid, &mp->m_sb.sb_uuid);
+> +		xfs_update_cksum((char *)d, sizeof(struct xfs_dqblk),
+> +				 XFS_DQUOT_CRC_OFF);
+> +	}
+> +
+>  	return errs;
+>  }
+>  
+> @@ -2793,6 +2799,10 @@ xlog_recover_dquot_pass2(
+>  	}
+>  
+>  	memcpy(ddq, recddq, item->ri_buf[1].i_len);
+> +	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+> +		xfs_update_cksum((char *)ddq, sizeof(struct xfs_dqblk),
+> +				 XFS_DQUOT_CRC_OFF);
+> +	}
+>  
+>  	ASSERT(dq_f->qlf_size == 2);
+>  	ASSERT(bp->b_target->bt_mount == mp);
+> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> index f41702b..b75c9bb 100644
+> --- a/fs/xfs/xfs_qm.c
+> +++ b/fs/xfs/xfs_qm.c
+> @@ -41,6 +41,7 @@
+>  #include "xfs_qm.h"
+>  #include "xfs_trace.h"
+>  #include "xfs_icache.h"
+> +#include "xfs_cksum.h"
+>  
+>  /*
+>   * The global quota manager. There is only one of these for the entire
+> @@ -839,7 +840,7 @@ xfs_qm_reset_dqcounts(
+>  	xfs_dqid_t	id,
+>  	uint		type)
+>  {
+> -	xfs_disk_dquot_t	*ddq;
+> +	struct xfs_dqblk	*dqb;
+>  	int			j;
+>  
+>  	trace_xfs_reset_dqcounts(bp, _RET_IP_);
+> @@ -853,8 +854,12 @@ xfs_qm_reset_dqcounts(
+>  	do_div(j, sizeof(xfs_dqblk_t));
+>  	ASSERT(mp->m_quotainfo->qi_dqperchunk == j);
+>  #endif
+> -	ddq = bp->b_addr;
+> +	dqb = bp->b_addr;
+>  	for (j = 0; j < mp->m_quotainfo->qi_dqperchunk; j++) {
+> +		struct xfs_disk_dquot	*ddq;
+> +
+> +		ddq = (struct xfs_disk_dquot *)&dqb[j];
+> +
+>  		/*
+>  		 * Do a sanity check, and if needed, repair the dqblk. Don't
+>  		 * output any warnings because it's perfectly possible to
+> @@ -871,7 +876,12 @@ xfs_qm_reset_dqcounts(
+>  		ddq->d_bwarns = 0;
+>  		ddq->d_iwarns = 0;
+>  		ddq->d_rtbwarns = 0;
+> -		ddq = (xfs_disk_dquot_t *) ((xfs_dqblk_t *)ddq + 1);
+> +
+> +		if (xfs_sb_version_hascrc(&mp->m_sb)) {
+> +			xfs_update_cksum((char *)&dqb[j],
+> +					 sizeof(struct xfs_dqblk),
+> +					 XFS_DQUOT_CRC_OFF);
+> +		}
+>  	}
+>  }
+>  
+> @@ -907,19 +917,29 @@ xfs_qm_dqiter_bufs(
+>  			      XFS_FSB_TO_DADDR(mp, bno),
+>  			      mp->m_quotainfo->qi_dqchunklen, 0, &bp,
+>  			      &xfs_dquot_buf_ops);
+> -		if (error)
+> -			break;
+>  
+>  		/*
+> -		 * XXX(hch): need to figure out if it makes sense to validate
+> -		 *	     the CRC here.
+> +		 * CRC and validation errors will return a EFSCORRUPTED here. If
+> +		 * this occurs, re-read without CRC validation so that we can
+> +		 * repair the damage via xfs_qm_reset_dqcounts(). This process
+> +		 * will leave a trace in the log indicating corruption has
+> +		 * been detected.
+>  		 */
+> +		if (error == EFSCORRUPTED) {
+> +			error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp,
+> +				      XFS_FSB_TO_DADDR(mp, bno),
+> +				      mp->m_quotainfo->qi_dqchunklen, 0, &bp,
+> +				      NULL);
+> +		}
+> +
+> +		if (error)
+> +			break;
+> +
+>  		xfs_qm_reset_dqcounts(mp, bp, firstid, type);
+>  		xfs_buf_delwri_queue(bp, buffer_list);
+>  		xfs_buf_relse(bp);
+> -		/*
+> -		 * goto the next block.
+> -		 */
+> +
+> +		/* goto the next block. */
+>  		bno++;
+>  		firstid += mp->m_quotainfo->qi_dqperchunk;
+>  	}
+> diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
+> index c61e31c..c38068f 100644
+> --- a/fs/xfs/xfs_quota.h
+> +++ b/fs/xfs/xfs_quota.h
+> @@ -87,6 +87,8 @@ typedef struct xfs_dqblk {
+>  	uuid_t		  dd_uuid;	/* location information */
+>  } xfs_dqblk_t;
+>  
+> +#define XFS_DQUOT_CRC_OFF	offsetof(struct xfs_dqblk, dd_crc)
+> +
+>  /*
+>   * flags for q_flags field in the dquot.
+>   */
+> 
 
 _______________________________________________
 xfs mailing list
