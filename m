@@ -1,19 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4DD707CBF
-	for <xfs@oss.sgi.com>; Mon,  3 Jun 2013 13:58:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 26E518F804C
-	for <xfs@oss.sgi.com>; Mon,  3 Jun 2013 11:58:29 -0700 (PDT)
-Message-ID: <51ACE83B.4060007@redhat.com>
-Date: Mon, 03 Jun 2013 15:02:19 -0400
-From: Brian Foster <bfoster@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id B3C807CBF
+	for <xfs@oss.sgi.com>; Mon,  3 Jun 2013 14:08:29 -0500 (CDT)
+Message-ID: <51ACE9A7.30208@sgi.com>
+Date: Mon, 3 Jun 2013 14:08:23 -0500
+From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 5/6] xfs: disable noattr2/attr2 mount options for CRC
-	enabled filesystems
-References: <1370237332-24757-1-git-send-email-david@fromorbit.com>
-	<1370237332-24757-6-git-send-email-david@fromorbit.com>
-In-Reply-To: <1370237332-24757-6-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 1/3 v2] 285: Fix test for ext4 in some configurations
+References: <1369948905-6693-1-git-send-email-jack@suse.cz>
+In-Reply-To: <1369948905-6693-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,70 +17,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: bpm@sgi.com, xfs@oss.sgi.com
+To: Jan Kara <jack@suse.cz>
+Cc: linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
-On 06/03/2013 01:28 AM, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> attr2 format is always enabled for v5 superblock filesystems, so the
-> mount options to enable or disable it need to be cause mount errors.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  Documentation/filesystems/xfs.txt |    3 +++
->  fs/xfs/xfs_super.c                |   11 +++++++++++
->  2 files changed, 14 insertions(+)
-> 
-> diff --git a/Documentation/filesystems/xfs.txt b/Documentation/filesystems/xfs.txt
-> index 3e4b3dd..83577f0 100644
-> --- a/Documentation/filesystems/xfs.txt
-> +++ b/Documentation/filesystems/xfs.txt
-> @@ -33,6 +33,9 @@ When mounting an XFS filesystem, the following options are accepted.
->  	removing extended attributes) the on-disk superblock feature
->  	bit field will be updated to reflect this format being in use.
->  
-> +	CRC enabled filesystems always use the attr2 format, and so
-> +	will reject the noattr2 mount option if it is set.
-> +
->    barrier
->  	Enables the use of block layer write barriers for writes into
->  	the journal and unwritten extent conversion.  This allows for
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index ea341ce..f62abb2 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1373,6 +1373,17 @@ xfs_finish_flags(
->  	}
->  
->  	/*
-> +	 * CRC enabled filesystems always use attr2 format for attributes.
-> +	 */
-> +	if (xfs_sb_version_hascrc(&mp->m_sb) &&
-> +	    (mp->m_flags & XFS_MOUNT_NOATTR2)) {
-> +		xfs_warn(mp,
-> +"Cannot mount a V5 filesystems as %s. %s is always enabled for v5 filesystems.",
-		      filesystem
+On 05/30/2013 04:21 PM, Jan Kara wrote:
+> In some configurations (e.g. 1 KB block size), ext4 can decide it is
+> better to zero out several blocks rather than splitting unwritten
+> extent. This changes results SEEK_HOLE / SEEK_DATA returns and thus the
+> test fails. Fix the problem by disabling the feature for this test.
+>
+> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+> Signed-off-by: Jan Kara <jack@suse.cz>
 
-(or alternatively remove the 'a').
+Thanks, this patch has been committed.
 
-... and V5 and v5 is inconsistent, fwiw. :P Nits, nonetheless...
+commit ce9d1cdd618eaea256356c81cfd579039169b999
+Author: Jan Kara <jack@suse.cz>
+Date:   Mon Jun 3 13:40:36 2013 -0500
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+     xfstests 285: Fix test for ext4 in some configurations
 
-> +			MNTOPT_NOATTR2, MNTOPT_ATTR2);
-> +		return XFS_ERROR(EINVAL);
-> +	}
-> +
-> +	/*
->  	 * mkfs'ed attr2 will turn on attr2 mount unless explicitly
->  	 * told by noattr2 to turn it off
->  	 */
-> 
+--Rich
 
 _______________________________________________
 xfs mailing list
