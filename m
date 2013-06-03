@@ -1,14 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B3C807CBF
-	for <xfs@oss.sgi.com>; Mon,  3 Jun 2013 14:08:29 -0500 (CDT)
-Message-ID: <51ACE9A7.30208@sgi.com>
-Date: Mon, 3 Jun 2013 14:08:23 -0500
-From: Rich Johnston <rjohnston@sgi.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 29D5E7CBF
+	for <xfs@oss.sgi.com>; Mon,  3 Jun 2013 14:09:51 -0500 (CDT)
+Message-ID: <51ACE9FC.9010008@sgi.com>
+Date: Mon, 03 Jun 2013 14:09:48 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/3 v2] 285: Fix test for ext4 in some configurations
-References: <1369948905-6693-1-git-send-email-jack@suse.cz>
-In-Reply-To: <1369948905-6693-1-git-send-email-jack@suse.cz>
+Subject: Re: [PATCH 4/6] xfs: fix remote attribute invalidation for a leaf
+References: <1370237332-24757-1-git-send-email-david@fromorbit.com>
+	<1370237332-24757-5-git-send-email-david@fromorbit.com>
+In-Reply-To: <1370237332-24757-5-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,27 +22,39 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: linux-ext4@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: bpm@sgi.com, xfs@oss.sgi.com
 
-On 05/30/2013 04:21 PM, Jan Kara wrote:
-> In some configurations (e.g. 1 KB block size), ext4 can decide it is
-> better to zero out several blocks rather than splitting unwritten
-> extent. This changes results SEEK_HOLE / SEEK_DATA returns and thus the
-> test fails. Fix the problem by disabling the feature for this test.
+On 06/03/13 00:28, Dave Chinner wrote:
+> From: Dave Chinner<dchinner@redhat.com>
 >
-> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-> Signed-off-by: Jan Kara <jack@suse.cz>
+> When invalidating an attribute leaf block block, there might be
+> remote attributes that it points to. With the recent rework of the
+> remote attribute format, we have to make sure we calculate the
+> length of the attribute correctly. We aren't doing that in
+> xfs_attr3_leaf_inactive(), so fix it.
+>
+> Signed-off-by: Dave Chinner<dchinner@redhat.com>
 
-Thanks, this patch has been committed.
+I scratched my head reading:
 
-commit ce9d1cdd618eaea256356c81cfd579039169b999
-Author: Jan Kara <jack@suse.cz>
-Date:   Mon Jun 3 13:40:36 2013 -0500
+in xfs_attr_leaf.h:
+/*
+  * Used to keep a list of "remote value" extents when unlinking an inode.
+  */
+typedef struct xfs_attr_inactive_list {
+	xfs_dablk_t	valueblk;	/* block number of value bytes */
+	int		valuelen;	/* number of bytes in value */
+						     ^^^^^
+						     |||||
+} xfs_attr_inactive_list_t;
 
-     xfstests 285: Fix test for ext4 in some configurations
+Where "valuelen" is clearly being used as blocks. A more obvious name is
+the former "valueblk". Blame commit d7929ff6 for the confusion. Should 
+change
+the comment and/or variable one of these days ...
 
---Rich
+Reviewed-by: Mark Tinguely <tinuguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
