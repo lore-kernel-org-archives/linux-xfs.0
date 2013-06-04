@@ -1,25 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5BEEA29DF8
-	for <xfs@oss.sgi.com>; Tue,  4 Jun 2013 17:08:52 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 060CCAC001
-	for <xfs@oss.sgi.com>; Tue,  4 Jun 2013 15:08:51 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	i4LVshjOeLSe8ApY for <xfs@oss.sgi.com>;
-	Tue, 04 Jun 2013 15:08:50 -0700 (PDT)
-Date: Wed, 5 Jun 2013 08:08:49 +1000
-From: Dave Chinner <david@fromorbit.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C2FF329DF8
+	for <xfs@oss.sgi.com>; Tue,  4 Jun 2013 17:09:10 -0500 (CDT)
+Date: Tue, 4 Jun 2013 17:09:10 -0500
+From: Ben Myers <bpm@sgi.com>
 Subject: Re: Debunking myths about metadata CRC overhead
-Message-ID: <20130604220849.GK29466@dastard>
+Message-ID: <20130604220910.GS19505@sgi.com>
 References: <20130603074452.GZ29466@dastard>
 	<20130603111011.461d10b5@galadriel.home>
-	<20130604025307.GB29466@dastard>
-	<1370371109.3898.10.camel@chandra-dt.ibm.com>
+	<20130604025307.GB29466@dastard> <20130604162030.GJ20932@sgi.com>
+	<20130604220610.GJ29466@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1370371109.3898.10.camel@chandra-dt.ibm.com>
+In-Reply-To: <20130604220610.GJ29466@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,69 +25,68 @@ Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Chandra Seetharaman <sekharan@us.ibm.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Jun 04, 2013 at 01:38:29PM -0500, Chandra Seetharaman wrote:
-> On Tue, 2013-06-04 at 12:53 +1000, Dave Chinner wrote:
-> > On Mon, Jun 03, 2013 at 11:10:11AM +0200, Emmanuel Florac wrote:
-> > > Le Mon, 3 Jun 2013 17:44:52 +1000 vous =E9criviez:
-> > > =
-
-> > > > There has been some assertions made recently that metadata CRCs have
-> > > > too much overhead to always be enabled.  So I'll run some quick
-> > > > benchmarks to demonstrate the "too much overhead" assertions are
-> > > > completely unfounded.
-> > > =
-
-> > > Just a quick question: what is the minimal kernel version and xfsprogs
-> > > version needed to run xfs with metadata CRC? I'd happily test it on
-> > > real hardware, I have a couple of storage servers in test in the 40 to
-> > > 108 TB range.
+On Wed, Jun 05, 2013 at 08:06:10AM +1000, Dave Chinner wrote:
+> On Tue, Jun 04, 2013 at 11:20:30AM -0500, Ben Myers wrote:
+> > Dave,
 > > =
 
-> > If the maintainers merge all the patches I send for the 3.10-rc
-> > series, then the 3.10 release should be stable enough to use for
-> > testing with data you don't care if you lose.
+> > On Tue, Jun 04, 2013 at 12:53:07PM +1000, Dave Chinner wrote:
+> > > On Mon, Jun 03, 2013 at 11:10:11AM +0200, Emmanuel Florac wrote:
+> > > > Le Mon, 3 Jun 2013 17:44:52 +1000 vous =E9criviez:
+> > > > =
+
+> > > > > There has been some assertions made recently that metadata CRCs h=
+ave
+> > > > > too much overhead to always be enabled.  So I'll run some quick
+> > > > > benchmarks to demonstrate the "too much overhead" assertions are
+> > > > > completely unfounded.
+> > > > =
+
+> > > > Just a quick question: what is the minimal kernel version and xfspr=
+ogs
+> > > > version needed to run xfs with metadata CRC? I'd happily test it on
+> > > > real hardware, I have a couple of storage servers in test in the 40=
+ to
+> > > > 108 TB range.
+> > > =
+
+> > > If the maintainers merge all the patches I send for the 3.10-rc
+> > > series, then the 3.10 release should be stable enough to use for
+> > > testing with data you don't care if you lose.
+> > > =
+
+> > > As for the userspace code - that is still just a patchset. I haven't
+> > > had any feedback from the maintainers about it in the past month, so
+> > > I've got no idea what they are doing with it. I'll post out a new
+> > > version in the next couple of days - it's 50-odd patches by now, so
+> > > it'd be nice to have it in the xfsprogs git tree so people could
+> > > just pull it and build it for testing purposes by the time that 3.10
+> > > releases....
 > > =
 
-> > As for the userspace code - that is still just a patchset. I haven't
-> > had any feedback from the maintainers about it in the past month, so
-> > I've got no idea what they are doing with it. I'll post out a new
-> > version in the next couple of days - it's 50-odd patches by now, so
-> > it'd be nice to have it in the xfsprogs git tree so people could
-> > just pull it and build it for testing purposes by the time that 3.10
-> > releases....
+> > When it is reviewed and adequately tested we'll pull it in.  Until then
+> > Emmanuel will need to pull down the patchset.  Right now the focus is on
+> > 3.10.
 > =
 
-> Dave,
+> And when will that be? I've already been waiting the best part of a
+> month for anyone to even comment on it, and I've got 5 private pings
+> in the past 3 days asking about how to get the userspace code so
+> they can test the new kernel code....
 > =
 
-> I was of the impression that the user space changes will be released
-> sometime later (i.e when CRC comes out of experimental). If we make the
-> user space changes to create V5 filesystem now, it will be an annoyance
-> for people that created V5 super blocks without my changes (getting rid
-> of OQUOTA.* flags). =
+> How about this: I post an up-to-date patch set, and you guys commit
+> it to a "crc-dev" branch in the oss xfsprogs git tree. The branch
+> can be thrown away when the code is reviewed, but in the mean time
+> we can point early adopters and testers to that branch rather than
+> ask them to pull down and apply a 50 patch series to a git tree?
 
+Sounds good to me.
 
-People still need access to the code to test it. I'm not talking
-about an official release here at all, just getting it committed to
-the git tree to make it easy for people to get the code and for
-developers to build on top of it and fix bugs.
-
-> BTW, I am waiting for your response to do a final re-post on the kernel
-> changes, after which I will post my user space changes.
-
-I must have missed your question, I'll go back and have a look for
-it.
-
-Cheers,
-
-Dave.
--- =
-
-Dave Chinner
-david@fromorbit.com
+-Ben
 
 _______________________________________________
 xfs mailing list
