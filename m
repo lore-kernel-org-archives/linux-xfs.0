@@ -1,24 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5BF737CBF
-	for <xfs@oss.sgi.com>; Mon,  3 Jun 2013 22:26:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2012F304059
-	for <xfs@oss.sgi.com>; Mon,  3 Jun 2013 20:26:43 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 54DC87CBF
+	for <xfs@oss.sgi.com>; Mon,  3 Jun 2013 23:16:27 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3F7098F8033
+	for <xfs@oss.sgi.com>; Mon,  3 Jun 2013 21:16:24 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	dvgPGxkQEijAkfn3 for <xfs@oss.sgi.com>;
-	Mon, 03 Jun 2013 20:26:41 -0700 (PDT)
-Date: Tue, 4 Jun 2013 13:26:40 +1000
+	AsdazXjixNW8tz8u for <xfs@oss.sgi.com>;
+	Mon, 03 Jun 2013 21:16:21 -0700 (PDT)
+Date: Tue, 4 Jun 2013 14:16:18 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 6/6] xfs: increase number of ACL entries for V5 superblocks
-Message-ID: <20130604032640.GE29466@dastard>
-References: <1370237332-24757-1-git-send-email-david@fromorbit.com>
-	<1370237332-24757-7-git-send-email-david@fromorbit.com>
-	<51AD13E6.2090502@sgi.com>
+Subject: Re: 3.9.4 Oops running xfstests (WAS Re: 3.9.3: Oops running xfstests)
+Message-ID: <20130604041617.GF29466@dastard>
+References: <510292845.4997401.1369279175460.JavaMail.root@redhat.com>
+	<1588848128.8530921.1369885528565.JavaMail.root@redhat.com>
+	<20130530052049.GK29466@dastard>
+	<1824023060.8558101.1369892432333.JavaMail.root@redhat.com>
+	<1462663454.9294499.1369969415681.JavaMail.root@redhat.com>
+	<20130531060415.GU29466@dastard>
+	<1517224799.10311874.1370228651422.JavaMail.root@redhat.com>
+	<20130603040038.GX29466@dastard>
+	<1317567060.11044929.1370315696270.JavaMail.root@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <51AD13E6.2090502@sgi.com>
+In-Reply-To: <1317567060.11044929.1370315696270.JavaMail.root@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,101 +37,132 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: bpm@sgi.com, xfs@oss.sgi.com
+To: CAI Qian <caiqian@redhat.com>
+Cc: linux-mm <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, stable@vger.kernel.org, xfs@oss.sgi.com
 
-On Mon, Jun 03, 2013 at 05:08:38PM -0500, Mark Tinguely wrote:
-> On 06/03/13 00:28, Dave Chinner wrote:
-> >From: Dave Chinner<dchinner@redhat.com>
-> >
-> >The limit of 25 ACL entries is arbitrary, but baked into the on-disk
-> >format.  For version 5 superblocks, increase it to the maximum nuber
-> >of ACLs that can fit into a single xattr.
-> >
-> >Signed-off-by: Dave Chinner<dchinner@redhat.com>
-> >Reviewed-by: Brian Foster<bfoster@redhat.com>
-> >---
+On Mon, Jun 03, 2013 at 11:14:56PM -0400, CAI Qian wrote:
 > 
-> >@@ -189,16 +193,17 @@ xfs_set_acl(struct inode *inode, int type, struct posix_acl *acl)
-> >
-> >  	if (acl) {
-> >  		struct xfs_acl *xfs_acl;
-> >-		int len;
-> >+		int len = XFS_ACL_SIZE(ip->i_mount);
-> >
-> >-		xfs_acl = kzalloc(sizeof(struct xfs_acl), GFP_KERNEL);
-> >+		xfs_acl = kzalloc(len, GFP_KERNEL);
 > 
-> Isn't that physical contiguous allocator? wouldn't a virtual
-> contiguous be good enough for the acl?
+> ----- Original Message -----
+> > From: "Dave Chinner" <david@fromorbit.com>
+> > To: "CAI Qian" <caiqian@redhat.com>
+> > Cc: xfs@oss.sgi.com, stable@vger.kernel.org, "LKML" <linux-kernel@vger.kernel.org>, "linux-mm" <linux-mm@kvack.org>
+> > Sent: Monday, June 3, 2013 12:00:38 PM
+> > Subject: Re: 3.9.4 Oops running xfstests (WAS Re: 3.9.3: Oops running xfstests)
+> > 
+> > On Sun, Jun 02, 2013 at 11:04:11PM -0400, CAI Qian wrote:
+> > > 
+> > > > There's memory corruption all over the place.  It is most likely
+> > > > that trinity is causing this - it's purpose is to trigger corruption
+> > > > issues, but they aren't always immediately seen.  If you can trigger
+> > > > this xfs trace without trinity having been run and without all the
+> > > > RCU/idle/scheduler/cgroup issues occuring at the same time, then
+> > > > it's likely to be caused by XFS. But right now, I'd say XFS is just
+> > > > an innocent bystander caught in the crossfire. There's nothing I can
+> > > > do from an XFS persepctive to track this down...
+> > > OK, this can be reproduced by just running LTP and then xfstests without
+> > > trinity at all...
+> > 
+> > Cai, can you be more precise about what is triggering it?  LTP and
+> > xfstests do a large amount of stuff, and stack traces do not do not
+> > help narrow down the cause at all.  Can you provide the follwoing
+> > information and perform the follwoing steps:
+> > 
+> > 	1. What xfstest is tripping over it?
+> Test #20.
+> > 	2. Can you reproduce it just by running that one specific test
+> > 	  on a pristine system (i.e. freshly mkfs'd filesystems,
+> > 	  immediately after boot)
+> Yes, it was reproduced without LTP at all.
+> [   98.534402] XFS (dm-0): Mounting Filesystem
+> [   98.586673] XFS (dm-0): Ending clean mount
+> [   99.741704] XFS (dm-2): Mounting Filesystem
+> [  100.117248] XFS (dm-2): Ending clean mount
+> [  100.723228] XFS (dm-0): Mounting Filesystem
+> [  100.775965] XFS (dm-0): Ending clean mount
+> [  101.980250] BUG: unable to handle kernel NULL pointer dereference at 0000000000000098
+> [  101.988136] IP: [<ffffffff81098cac>] tg_load_down+0x4c/0x80
 
-posix_acl_alloc() uses kmalloc, so if it's not failing to allocate
-there, then we don't need to use vmalloc here. besides, if we've got
-over a single page of acls, then we are talking about 350 ACLs on an
-inode. Most admins go insane at more than 20, and the people asking
-for more than 25 are using 30-40 ACLs at most. So i don't see there
-being a problem here using kzalloc.
+first bug, in scheduler
 
-> >  	if (type == ACL_TYPE_ACCESS) {
-> >diff --git a/fs/xfs/xfs_acl.h b/fs/xfs/xfs_acl.h
-> >index 39632d9..0da8725 100644
-> >--- a/fs/xfs/xfs_acl.h
-> >+++ b/fs/xfs/xfs_acl.h
-> >@@ -22,19 +22,35 @@ struct inode;
-> >  struct posix_acl;
-> >  struct xfs_inode;
-> >
-> >-#define XFS_ACL_MAX_ENTRIES 25
-> >  #define XFS_ACL_NOT_PRESENT (-1)
-> >
-> >  /* On-disk XFS access control list structure */
-> >+struct xfs_acl_entry {
-> >+	__be32	ae_tag;
-> >+	__be32	ae_id;
-> >+	__be16	ae_perm;
-> >+	__be16	ae_pad;		/* fill the implicit hole in the structure */
-> >+};
-> >+
-> >  struct xfs_acl {
-> >-	__be32		acl_cnt;
-> >-	struct xfs_acl_entry {
-> >-		__be32	ae_tag;
-> >-		__be32	ae_id;
-> >-		__be16	ae_perm;
-> >-	} acl_entry[XFS_ACL_MAX_ENTRIES];
-> >+	__be32			acl_cnt;
-> >+	struct xfs_acl_entry	acl_entry[0];
-> >  };
-> >
-> >+/*
-> >+ * The number of ACL entries allowed is defined by the on-disk format.
-> >+ * For v4 superblocks, that is limited to 25 entries. For v5 superblocks, it is
-> >+ * limited only by the maximum size of the xattr that stores the information.
-> >+ */
-> >+#define XFS_ACL_MAX_ENTRIES(mp)	\
-> >+	(xfs_sb_version_hascrc(&mp->m_sb) \
-> >+	   ?  (XATTR_SIZE_MAX - sizeof(__be32)) / sizeof(struct xfs_acl_entry) \
-> >+	   : 25)
-> 
-> 
-> XFS_ACL_MAX_ENTRIES(mp)  == (65536 - 4) / 12 == 5461
-> 
-> >+
-> >+#define XFS_ACL_SIZE(mp) \
-> >+	(sizeof(struct xfs_acl) + \
-> >+		sizeof(struct xfs_acl_entry) * XFS_ACL_MAX_ENTRIES((mp)))
-> 
-> XFS_ACL_SIZE(mp) == (4 + 12) + 12 * ((64K - 4) / 12) == 65548
-> 
-> Did you want to add in the sizeof(struct xfs_acl) to the first term
-> or the sizeof(__be32)? I would think the acl_entry[0] is the start
-> of the array.
+> [  102.312714] BUG: unable to handle kernel NULL pointer dereference at 0000000000000098
+> [  102.312719] IP: [<ffffffff81098cac>] tg_load_down+0x4c/0x80
 
-Ugh, I lost that in translation somewhere. Good catch.
+second bug, in scheduler
+
+> [  102.312842] ---[ end trace ba964230a74993ff ]---
+> [  102.312866] general protection fault: 0000 [#3] SMP 
+
+Third bug
+
+> [  102.312903] Pid: 1999, comm: attr Tainted: G      D      3.9.4 #1 Hewlett-Packard HP Z210 Workstation/1587h
+> [  102.312908] RIP: 0010:[<ffffffff810983a9>]  [<ffffffff810983a9>] irqtime_account_process_tick.isra.2+0x239/0x3c0
+
+In the timer tick code.
+
+> [  102.312909] =============================================================================
+> [  102.312910] RSP: 0018:ffff88007d083e08  EFLAGS: 00010003
+> [  102.312912] BUG kmalloc-1024 (Tainted: G      D     ): Padding overwritten. 0xffff88005b4e7ec0-0xffff88005b4e7fff
+> [  102.312913] RAX: ffff88005b656288 RBX: ffff880079b43c80 RCX: 00000000000000a7
+> [  102.312914] -----------------------------------------------------------------------------
+
+And a memory overwrite.
+
+> [  102.313009] Padding ffff88005b4e7ec0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> [  102.313010] Padding ffff88005b4e7ed0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> [  102.313011] Padding ffff88005b4e7ee0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> [  102.313013] Padding ffff88005b4e7ef0: 00 00 00 00 00 00 00 00 00 00 00 00 00 29 01 00  .............)..
+> [  102.313014] Padding ffff88005b4e7f00: 07 1b 04 73 65 6c 69 6e 75 78 73 79 73 74 65 6d  ...selinuxsystem
+> [  102.313015] Padding ffff88005b4e7f10: 5f 75 3a 6f 62 6a 65 63 74 5f 72 3a 75 73 72 5f  _u:object_r:usr_
+> [  102.313032] Padding ffff88005b4e7f20: 74 3a 73 30 00 00 00 00 49 4e 81 a4 02 02 00 00  t:s0....IN......
+> [  102.313033] Padding ffff88005b4e7f30: 00 00 00 00 00 00 00 00 00 00 00 01 00 00 00 00  ................
+> [  102.313033] Padding ffff88005b4e7f40: 00 00 00 00 00 00 00 02 51 47 09 00 00 00 00 00  ........QG......
+> [  102.313043] Padding ffff88005b4e7f50: 51 47 09 00 00 00 00 00 51 ac 1e 27 21 f1 4e ad  QG......Q..'!.N.
+> [  102.313043] Padding ffff88005b4e7f60: 00 00 00 00 00 00 00 f2 00 00 00 00 00 00 00 01  ................
+> [  102.313044] Padding ffff88005b4e7f70: 00 00 00 00 00 00 00 01 00 00 0e 01 00 00 00 00  ................
+> [  102.313053] Padding ffff88005b4e7f80: 00 00 00 00 c1 6d 78 44 ff ff ff ff 00 00 00 00  .....mxD........
+> [  102.313054] Padding ffff88005b4e7f90: 00 00 00 00 00 00 08 10 36 a0 00 01 00 00 00 00  ........6.......
+> [  102.313062] Padding ffff88005b4e7fa0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> [  102.313063] Padding ffff88005b4e7fb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> [  102.313072] Padding ffff88005b4e7fc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> [  102.313073] Padding ffff88005b4e7fd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> [  102.313074] Padding ffff88005b4e7fe0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> [  102.313082] Padding ffff88005b4e7ff0: 00 00 00 00 00 00 00 00 00 00 00 00 00 29 01 00  .............)..
+
+Oh, look, that contains attributes, and being at the top of a page,
+that tallies with the attribute code copying data from the top of
+the block down....
+
+
+> [  102.313013]  [<ffffffff813022f6>] ? memmove+0x46/0x1a0
+> [  102.313032]  [<ffffffffa02801a1>] ? xfs_attr_leaf_moveents.isra.2+0x91/0x280 [xfs]
+> [  102.313042]  [<ffffffffa0280467>] xfs_attr_leaf_compact+0xd7/0x130 [xfs]
+
+And the attribute code is writing into a block sized buffer that is
+allocated in xfs_attr_leaf_compact().
+
+So, whatever page got handed to xfs_attr_leaf_compact() is actually
+referenced by the 1024 byte and supposed to be free. So, did XFS ask
+for a 1k block, or something else?
+
+Cai, I did ask you for the information that would have answered this
+question:
+
+> > 	3. if you can't reproduce it like that, does it reproduce on
+> > 	  an xfstest run on a pristine system? If so, what command
+> > 	  line are you running, and what are the filesystem
+> > 	  configurations?
+
+So, I need xfstests command line and the xfs_info output from the
+filesystems in use at the time this problem occurs..
+
+That said, this still looks like something has corrupted the heap
+and XFS is just tripping over it....
 
 Cheers,
 
 Dave.
+
 -- 
 Dave Chinner
 david@fromorbit.com
