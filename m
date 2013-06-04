@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, master,
+Subject: [XFS updates] XFS development tree branch, for-next,
 	updated. v3.10-rc1-25-g59913f1
-Message-Id: <20130604223700.CF1B929DF8@oss.sgi.com>
-Date: Tue,  4 Jun 2013 17:37:00 -0500 (CDT)
+Message-Id: <20130604223710.149A529E0C@oss.sgi.com>
+Date: Tue,  4 Jun 2013 17:37:09 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,7 +23,7 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, master has been updated
+The branch, for-next has been updated
   59913f1 xfs: fix remote attribute invalidation for a leaf
   6fcdc59 xfs: rework dquot CRCs
       from  5ae6e6a401957698f2bd8c9f4a86d86d02199fea (commit)
