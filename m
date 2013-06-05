@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, master,
+Subject: [XFS updates] XFS development tree branch, for-next,
 	updated. v3.10-rc1-29-g5c87d4b
-Message-Id: <20130605162906.827487F37@oss.sgi.com>
-Date: Wed,  5 Jun 2013 11:29:06 -0500 (CDT)
+Message-Id: <20130605162921.1C7D67F52@oss.sgi.com>
+Date: Wed,  5 Jun 2013 11:29:20 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,7 +23,7 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, master has been updated
+The branch, for-next has been updated
   5c87d4b xfs: increase number of ACL entries for V5 superblocks
   d3eaace xfs: disable noattr2/attr2 mount options for CRC enabled filesystems
   0a32c26 xfs: inode unlinked list needs to recalculate the inode CRC
