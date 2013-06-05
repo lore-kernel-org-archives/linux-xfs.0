@@ -1,27 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9028329DF8
-	for <xfs@oss.sgi.com>; Tue,  4 Jun 2013 17:59:39 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7D1558F8035
-	for <xfs@oss.sgi.com>; Tue,  4 Jun 2013 15:59:39 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	DXv6LPKcFWJZia8s for <xfs@oss.sgi.com>;
-	Tue, 04 Jun 2013 15:59:37 -0700 (PDT)
-Date: Wed, 5 Jun 2013 08:59:35 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Debunking myths about metadata CRC overhead
-Message-ID: <20130604225935.GM29466@dastard>
-References: <20130603074452.GZ29466@dastard>
-	<20130603111011.461d10b5@galadriel.home>
-	<20130604025307.GB29466@dastard>
-	<1370371109.3898.10.camel@chandra-dt.ibm.com>
-	<20130604220849.GK29466@dastard>
-	<1370385616.22504.7.camel@chandra-dt.ibm.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B1AA729DF8
+	for <xfs@oss.sgi.com>; Tue,  4 Jun 2013 19:22:38 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 7F4B130405F
+	for <xfs@oss.sgi.com>; Tue,  4 Jun 2013 17:22:35 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id jEem72DSR6FCCCu7 for <xfs@oss.sgi.com>;
+	Tue, 04 Jun 2013 17:22:34 -0700 (PDT)
+Message-ID: <51AE84C9.5030903@sandeen.net>
+Date: Tue, 04 Jun 2013 19:22:33 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1370385616.22504.7.camel@chandra-dt.ibm.com>
+Subject: Re: garbage block(s) after powercycle/reboot + sparse writes
+References: <alpine.DEB.2.00.1306041210070.15156@cobra.newdream.net>
+In-Reply-To: <alpine.DEB.2.00.1306041210070.15156@cobra.newdream.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,94 +23,91 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Chandra Seetharaman <sekharan@us.ibm.com>
+To: Sage Weil <sage@inktank.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Jun 04, 2013 at 05:40:16PM -0500, Chandra Seetharaman wrote:
-> On Wed, 2013-06-05 at 08:08 +1000, Dave Chinner wrote:
-> > On Tue, Jun 04, 2013 at 01:38:29PM -0500, Chandra Seetharaman wrote:
-> > > On Tue, 2013-06-04 at 12:53 +1000, Dave Chinner wrote:
-> > > > On Mon, Jun 03, 2013 at 11:10:11AM +0200, Emmanuel Florac wrote:
-> > > > > Le Mon, 3 Jun 2013 17:44:52 +1000 vous =E9criviez:
-> > > > > =
+On 6/4/13 2:24 PM, Sage Weil wrote:
+> I'm observing an interesting data corruption pattern:
+> 
+> - write a bunch of files
+> - power cycle the box
 
-> > > > > > There has been some assertions made recently that metadata CRCs=
- have
-> > > > > > too much overhead to always be enabled.  So I'll run some quick
-> > > > > > benchmarks to demonstrate the "too much overhead" assertions are
-> > > > > > completely unfounded.
-> > > > > =
+I guess this part is important?  But I'm wondering why...
 
-> > > > > Just a quick question: what is the minimal kernel version and xfs=
-progs
-> > > > > version needed to run xfs with metadata CRC? I'd happily test it =
-on
-> > > > > real hardware, I have a couple of storage servers in test in the =
-40 to
-> > > > > 108 TB range.
-> > > > =
+> - remount
+> - immediately (within 1-2 seconds) write create a file and
 
-> > > > If the maintainers merge all the patches I send for the 3.10-rc
-> > > > series, then the 3.10 release should be stable enough to use for
-> > > > testing with data you don't care if you lose.
-> > > > =
+a new file, right?
 
-> > > > As for the userspace code - that is still just a patchset. I haven't
-> > > > had any feedback from the maintainers about it in the past month, so
-> > > > I've got no idea what they are doing with it. I'll post out a new
-> > > > version in the next couple of days - it's 50-odd patches by now, so
-> > > > it'd be nice to have it in the xfsprogs git tree so people could
-> > > > just pull it and build it for testing purposes by the time that 3.10
-> > > > releases....
-> > > =
+>  - write to a lower offset, say offset 430423 len 527614
+>  - write to a higher offset, say offset 1360810 len 269613
+>  (there is other random io going to other files too)
+> 
+> - about 5 seconds later, read the whole file and verify content
+> 
+> And what I see:
+> 
+> - the first region is correct, and intact
 
-> > > Dave,
-> > > =
+the lower offset you wrote?
 
-> > > I was of the impression that the user space changes will be released
-> > > sometime later (i.e when CRC comes out of experimental). If we make t=
-he
-> > > user space changes to create V5 filesystem now, it will be an annoyan=
-ce
-> > > for people that created V5 super blocks without my changes (getting r=
-id
-> > > of OQUOTA.* flags). =
+> - the bytes that follow, up until the block boundary, are 0
 
-> > =
+that's good ;)
 
-> > People still need access to the code to test it. I'm not talking
-> > about an official release here at all, just getting it committed to
-> > the git tree to make it easy for people to get the code and for
-> > developers to build on top of it and fix bugs.
-> > =
+> - the next few blocks are *not* zero! (i've observed 1 and 6 4k blocks)
 
-> =
+that's bad!
 
-> Oh, I see. It is clear now.
-> =
+> - then lots of zeros, up until the second region, which appears intact.
 
-> Also, is there a git tree where I can pull your xfsprogs changes from ?
-> I tried to apply xfsprogs-kern-sync-patchset-v2.tar.gz on top of
-> xfsprogs git tree, it seems to have some problems.
-> =
+the lot-of-zeros are probably holes?
 
-> Or is there a later version ?
+What does xfs_bmap -vvp <filename> say about the file in question?
 
-I'm cleaning up my current tree right now. I'll post it out as soon
-as it is ready to go. Hopefully Ben can get that into a branch in
-the xfsprogs git tree and you can pull from there.
+> I'm pretty reliably hitting this, and have reproduced it twice now and 
+> found the above consistent pattern (but different filenames, different 
+> offsets).  What I haven't yet confirmed is whether the file was written at 
+> all prior to the powercycle, since that tends to blow away the last 
+> bit of the ceph logs, too.  I'm adding some additional checks to see 
+> whether the file is in fact new when the first extent is written.
+> 
+> The other possibly interesting thing is the offsets.  The garbage regions 
+> I saw were
+> 
+>  0xea000 - 0xf0000
 
-Cheers,
+234-240 4k blocks
 
-Dave.
--- =
+>  0xff000 - 0x100000
 
-Dave Chinner
-david@fromorbit.com
+255-256 4k blocks  *shrug*
+
+Is this what you saw w/ the write offsets & sizes you specified above?
+
+I'm wondering if this could possibly have to do w/ speculative preallocation
+on the file somehow exposing these blocks?  But that's just handwaving.
+
+-Eric
+
+> 
+> Does this failure pattern look familiar to anyone? I'm pretty sure it is 
+> new in 3.9, which we switched over to right around the time when this 
+> started happening.  I'm confirming that as well, but just wanted to see if 
+> this is ringing any bells...
+> 
+> Thanks!
+> sage
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
