@@ -1,24 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B54E07F37
-	for <xfs@oss.sgi.com>; Thu,  6 Jun 2013 12:49:31 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 82C9B7F37
+	for <xfs@oss.sgi.com>; Thu,  6 Jun 2013 12:54:22 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 34B7AAC004
-	for <xfs@oss.sgi.com>; Thu,  6 Jun 2013 10:49:27 -0700 (PDT)
-Received: from dkim2.fusionio.com (dkim2.fusionio.com [66.114.96.54]) by
-	cuda.sgi.com with ESMTP id 19mI4oN1C54nU8wV (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 06 Jun 2013 10:49:26 -0700 (PDT)
-Received: from mx2.fusionio.com (unknown [10.101.1.160])
-	by dkim2.fusionio.com (Postfix) with ESMTP id B68909A0692
-	for <xfs@oss.sgi.com>; Thu,  6 Jun 2013 11:49:25 -0600 (MDT)
-Date: Thu, 6 Jun 2013 13:49:22 -0400
-From: Josef Bacik <jbacik@fusionio.com>
-Subject: Re: [PATCH] xfstests btrfs/314: test send / receive
-Message-ID: <20130606174922.GB29248@localhost.localdomain>
-References: <1370532033-20561-1-git-send-email-list.xfs@jan-o-sch.net>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id F11BEAC009
+	for <xfs@oss.sgi.com>; Thu,  6 Jun 2013 10:54:21 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id K9rjPYsEyUgL9JAz for
+	<xfs@oss.sgi.com>; Thu, 06 Jun 2013 10:54:20 -0700 (PDT)
+Message-ID: <51B0CCC6.2010500@redhat.com>
+Date: Thu, 06 Jun 2013 12:54:14 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
+Subject: Re: [PATCH] xfstests btrfs/314: test send / receive
+References: <1370532033-20561-1-git-send-email-list.xfs@jan-o-sch.net>
 In-Reply-To: <1370532033-20561-1-git-send-email-list.xfs@jan-o-sch.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -33,14 +28,27 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Jan Schmidt <list.xfs@jan-o-sch.net>
-Cc: "sbehrens@giantdisaster.de" <sbehrens@giantdisaster.de>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+Cc: sbehrens@giantdisaster.de, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Thu, Jun 06, 2013 at 09:20:33AM -0600, Jan Schmidt wrote:
+On 6/6/13 10:20 AM, Jan Schmidt wrote:
 > Basic send / receive functionality test for btrfs. Requires current
 > version of fsstress built (-x support). Relies on fssum tool, which is
 > not part of the test suite but can skip the test if it is missing.
 > 
 > Signed-off-by: Jan Schmidt <list.xfs@jan-o-sch.net>
+
+w/o commenting on the test itself, I'm a little uneasy about requiring
+some external, not-widely-installed tool for this to run.  The fear is
+that it won't be run as often as it could/should be.
+
+Could the same test be done w/o fssum, or should we maybe put a copy
+of fssum into xfstests/src/fssum.c ?
+
+Or does fssum exist in any standard distro package?
+
+Thanks,
+-Eric
+
 > ---
 >  README              |    3 +
 >  common/config       |    2 +
@@ -216,18 +224,7 @@ On Thu, Jun 06, 2013 at 09:20:33AM -0600, Jan Schmidt wrote:
 >  284 auto
 >  307 auto quick
 > +314 auto rw metadata
-> -- 
-> 1.7.2.2
 > 
-
-It applys and runs fine with fssum and exits cleanly if it's not there.  The
-test itself looks sane, so 
-
-Reviewed-by: Josef Bacik <jbacik@fusionio.com>
-
-Thanks,
-
-Josef
 
 _______________________________________________
 xfs mailing list
