@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 178F47F37
+	by oss.sgi.com (Postfix) with ESMTP id 3835C7F3F
 	for <xfs@oss.sgi.com>; Thu,  6 Jun 2013 11:11:52 -0500 (CDT)
 Received: from eagdhcp-232-136.americas.sgi.com
 	(eagdhcp-232-136.americas.sgi.com [128.162.232.136])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9F75DAC006
+	by relay3.corp.sgi.com (Postfix) with ESMTP id AEAC8AC008
 	for <xfs@oss.sgi.com>; Thu,  6 Jun 2013 09:11:48 -0700 (PDT)
 Received: from eagdhcp-232-136.americas.sgi.com (localhost [127.0.0.1])
 	by eagdhcp-232-136.americas.sgi.com (8.14.5/8.14.5) with ESMTP id
-	r56GBn5n002456
+	r56GBneI002460
 	for <xfs@oss.sgi.com>; Thu, 6 Jun 2013 11:11:49 -0500 (CDT)
 	(envelope-from tinguely@sgi.com)
-Message-Id: <20130606161032.753011157@sgi.com>
-Date: Thu, 06 Jun 2013 11:10:32 -0500
+Message-Id: <20130606161027.166439519@sgi.com>
+Date: Thu, 06 Jun 2013 11:10:33 -0500
 From: Mark Tinguely <tinguely@sgi.com>
-Subject: [PATCH 0/1] xfs: xfs_inactive fails to cleanup symlinks with
-	attributes
+Subject: [PATCH 1/1] xfs: fix the symbolic link assert in xfs_ifree
+References: <20130606161032.753011157@sgi.com>
+Content-Disposition: inline; filename=xfs-fix-assert-in-xfs_ifree.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,23 +32,30 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Found this bug testing extended attributes.
+Adding an extended attribute to a symbolic link can force that
+link to an remote extent. xfs_inactive() incorrectly assumes
+that any symbolic link small enough to be in the inode core
+is incore, the remote extent is not cleaned and xfs_ifree()
+asserts on presence the remote extent.
 
-# make a big symbolic link that is in the inode core and mostly fills it.
-# CRC enabled filesystem will use a 68 byte smaller link in the test.
+Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+---
+ fs/xfs/xfs_vnodeops.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-ln -s 1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/1234567890/0123456/a a
-
-# the extended attribute will bump the symbolic link to a remote extent
-# I think only one of these attribute is needed, but they are so fun...
-attr  -Rs 1234567890ad a < /dev/null
-attr  -Rs 1234567890ae a < /dev/null
-attr  -Rs 1234567890af a < /dev/null
-
-# the following remove will assert a debug kernel:
-#  XFS: Assertion failed: ip->i_d.di_nextents == 0, file: fs/xfs/xfs_inode.c, line: 2036
-
-rm a
+Index: b/fs/xfs/xfs_vnodeops.c
+===================================================================
+--- a/fs/xfs/xfs_vnodeops.c
++++ b/fs/xfs/xfs_vnodeops.c
+@@ -325,7 +325,7 @@ xfs_inactive(
+ 		/*
+ 		 * Zero length symlinks _can_ exist.
+ 		 */
+-		if (ip->i_d.di_size > XFS_IFORK_DSIZE(ip)) {
++		if (ip->i_d.di_nextents) {
+ 			error = xfs_inactive_symlink_rmt(ip, &tp);
+ 			if (error)
+ 				goto out_cancel;
 
 
 _______________________________________________
