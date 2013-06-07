@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6D8B67FB0
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B36627FB8
 	for <xfs@oss.sgi.com>; Thu,  6 Jun 2013 19:26:59 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4C4E18F8059
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A26AD304087
 	for <xfs@oss.sgi.com>; Thu,  6 Jun 2013 17:26:59 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	Yig5mHG4eFHOpBiN for <xfs@oss.sgi.com>;
-	Thu, 06 Jun 2013 17:26:57 -0700 (PDT)
+	QrAg0EfXxPn5z8zB for <xfs@oss.sgi.com>;
+	Thu, 06 Jun 2013 17:26:58 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UkkW8-0003w2-KT
-	for xfs@oss.sgi.com; Fri, 07 Jun 2013 10:26:56 +1000
+	(envelope-from <dave@fromorbit.com>) id 1UkkW9-0003wB-AC
+	for xfs@oss.sgi.com; Fri, 07 Jun 2013 10:26:57 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UkkVt-0001Le-A0
-	for xfs@oss.sgi.com; Fri, 07 Jun 2013 10:26:41 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1UkkW9-0001MQ-7M
+	for xfs@oss.sgi.com; Fri, 07 Jun 2013 10:26:57 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 29/48] xfsdb: support version 5 superblock in versionnum
-	command
-Date: Fri,  7 Jun 2013 10:25:52 +1000
-Message-Id: <1370564771-4929-30-git-send-email-david@fromorbit.com>
+Subject: [PATCH 36/48] xfs_repair: make directory freespace table CRC format
+	aware.
+Date: Fri,  7 Jun 2013 10:25:59 +1000
+Message-Id: <1370564771-4929-37-git-send-email-david@fromorbit.com>
 In-Reply-To: <1370564771-4929-1-git-send-email-david@fromorbit.com>
 References: <1370564771-4929-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,112 +39,40 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-While there, add visibility of the new superblock fields in the "sb"
-command.
+We fail to take into account the format of the directory block when
+reading the best free space form a directory data block for free
+space block verification. This causes occasionaly failures in
+xfstests.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- db/sb.c |   46 +++++++++++++++++++++++++++++++++++++++++-----
- 1 file changed, 41 insertions(+), 5 deletions(-)
+ repair/phase6.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/db/sb.c b/db/sb.c
-index 54ca7dd..d178f58 100644
---- a/db/sb.c
-+++ b/db/sb.c
-@@ -108,7 +108,19 @@ const field_t	sb_flds[] = {
- 	{ "logsectsize", FLDT_UINT16D, OI(OFF(logsectsize)), C1, 0, TYP_NONE },
- 	{ "logsunit", FLDT_UINT32D, OI(OFF(logsunit)), C1, 0, TYP_NONE },
- 	{ "features2", FLDT_UINT32X, OI(OFF(features2)), C1, 0, TYP_NONE },
--	{ "bad_features2", FLDT_UINT32X, OI(OFF(bad_features2)), C1, 0, TYP_NONE },
-+	{ "bad_features2", FLDT_UINT32X, OI(OFF(bad_features2)),
-+		C1, 0, TYP_NONE },
-+	{ "features_compat", FLDT_UINT32X, OI(OFF(features_compat)),
-+		C1, 0, TYP_NONE },
-+	{ "features_ro_compat", FLDT_UINT32X, OI(OFF(features_ro_compat)),
-+		C1, 0, TYP_NONE },
-+	{ "features_incompat", FLDT_UINT32X, OI(OFF(features_incompat)),
-+		C1, 0, TYP_NONE },
-+	{ "features_log_incompat", FLDT_UINT32X, OI(OFF(features_log_incompat)),
-+		C1, 0, TYP_NONE },
-+	{ "crc", FLDT_UINT32X, OI(OFF(crc)), C1, 0, TYP_NONE },
-+	{ "pquotino", FLDT_INO, OI(OFF(pquotino)), C1, 0, TYP_INODE },
-+	{ "lsn", FLDT_UINT64X, OI(OFF(lsn)), C1, 0, TYP_NONE },
- 	{ NULL }
- };
- 
-@@ -597,6 +609,8 @@ version_string(
- 		strcpy(s, "V3");
- 	else if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_4)
- 		strcpy(s, "V4");
-+	else if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5)
-+		strcpy(s, "V5");
- 
- 	if (xfs_sb_version_hasattr(sbp))
- 		strcat(s, ",ATTR");
-@@ -628,9 +642,17 @@ version_string(
- 		strcat(s, ",LAZYSBCOUNT");
- 	if (xfs_sb_version_hasprojid32bit(sbp))
- 		strcat(s, ",PROJID32BIT");
-+	if (xfs_sb_version_hascrc(sbp))
-+		strcat(s, ",CRC");
- 	return s;
+diff --git a/repair/phase6.c b/repair/phase6.c
+index 1fdd4c8..2905a1c 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -1395,6 +1395,7 @@ longform_dir2_entry_check_data(
+ 	xfs_dir2_db_t		db;
+ 	xfs_dir2_data_entry_t	*dep;
+ 	xfs_dir2_data_unused_t	*dup;
++	struct xfs_dir2_data_free *bf;
+ 	char			*endptr;
+ 	int			error;
+ 	xfs_fsblock_t		firstblock;
+@@ -1808,7 +1809,10 @@ _("entry \"%s\" in dir inode %" PRIu64 " inconsistent with .. value (%" PRIu64 "
+ 		libxfs_dir2_data_log_header(tp, bp);
+ 	libxfs_bmap_finish(&tp, &flist, &committed);
+ 	libxfs_trans_commit(tp, 0);
+-	freetab->ents[db].v = be16_to_cpu(d->bestfree[0].length);
++
++	/* record the largest free space in the freetab for later checking */
++	bf = xfs_dir3_data_bestfree_p(d);
++	freetab->ents[db].v = be16_to_cpu(bf[0].length);
+ 	freetab->ents[db].s = 0;
  }
  
-+/*
-+ * XXX: this only supports reading and writing to version 4 superblock fields.
-+ * V5 superblocks always define certain V4 feature bits - they are blocked from
-+ * being changed if a V5 sb is detected, but otherwise v5 superblock features
-+ * are not handled here.
-+ */
- static int
- version_f(
- 	int		argc,
-@@ -662,12 +684,16 @@ version_f(
- 				break;
- 			case XFS_SB_VERSION_4:
- 				if (xfs_sb_version_hasextflgbit(&mp->m_sb))
--					dbprintf(_("unwritten extents flag"
--						 " is already enabled\n"));
-+					dbprintf(
-+		_("unwritten extents flag is already enabled\n"));
- 				else
- 					version = mp->m_sb.sb_versionnum |
- 						  XFS_SB_VERSION_EXTFLGBIT;
- 				break;
-+			case XFS_SB_VERSION_5:
-+				dbprintf(
-+		_("unwritten extents always enabled for v5 superblocks.\n"));
-+				break;
- 			}
- 		} else if (!strcasecmp(argv[1], "log2")) {
- 			switch (XFS_SB_VERSION_NUM(&mp->m_sb)) {
-@@ -682,14 +708,24 @@ version_f(
- 				break;
- 			case XFS_SB_VERSION_4:
- 				if (xfs_sb_version_haslogv2(&mp->m_sb))
--					dbprintf(_("version 2 log format"
--						 " is already in use\n"));
-+					dbprintf(
-+		_("version 2 log format is already in use\n"));
- 				else
- 					version = mp->m_sb.sb_versionnum |
- 						  XFS_SB_VERSION_LOGV2BIT;
- 				break;
-+			case XFS_SB_VERSION_5:
-+				dbprintf(
-+		_("Version 2 logs always enabled for v5 superblocks.\n"));
-+				break;
- 			}
-+		} else if (XFS_SB_VERSION_NUM(&mp->m_sb) == XFS_SB_VERSION_5) {
-+			dbprintf(
-+		_("%s: Cannot change %s on v5 superblocks.\n"),
-+				progname, argv[1]);
-+			return 0;
- 		} else if (!strcasecmp(argv[1], "attr1")) {
-+
- 			if (xfs_sb_version_hasattr2(&mp->m_sb)) {
- 				if (!(mp->m_sb.sb_features2 &=
- 						~XFS_SB_VERSION2_ATTR2BIT))
 -- 
 1.7.10.4
 
