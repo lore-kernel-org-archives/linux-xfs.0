@@ -1,22 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id ECEAD7F37
-	for <xfs@oss.sgi.com>; Thu,  6 Jun 2013 22:50:55 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CD7638F8052
-	for <xfs@oss.sgi.com>; Thu,  6 Jun 2013 20:50:52 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	uCsY4n5C01J7601f for <xfs@oss.sgi.com>;
-	Thu, 06 Jun 2013 20:50:50 -0700 (PDT)
-Date: Fri, 7 Jun 2013 13:50:46 +1000
-From: Dave Chinner <david@fromorbit.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 7888D7F37
+	for <xfs@oss.sgi.com>; Fri,  7 Jun 2013 00:04:36 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 17067AC002
+	for <xfs@oss.sgi.com>; Thu,  6 Jun 2013 22:04:32 -0700 (PDT)
+Received: from mail-ee0-f45.google.com (mail-ee0-f45.google.com
+	[74.125.83.45]) by cuda.sgi.com with ESMTP id v61ZILXYFdYshKvI
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 06 Jun 2013 22:04:31 -0700 (PDT)
+Received: by mail-ee0-f45.google.com with SMTP id c1so1179251eek.18
+	for <xfs@oss.sgi.com>; Thu, 06 Jun 2013 22:04:29 -0700 (PDT)
+Received: from t400.localnet (89-69-21-174.dynamic.chello.pl. [89.69.21.174])
+	by mx.google.com with ESMTPSA id
+	cf47sm6982269eeb.17.2013.06.06.22.04.28 for <xfs@oss.sgi.com>
+	(version=TLSv1.2 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
+	Thu, 06 Jun 2013 22:04:29 -0700 (PDT)
+From: Arkadiusz =?utf-8?q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
 Subject: Re: XFS Adding Quotas - Skip Quota check on first mount/boot
-Message-ID: <20130607035046.GJ29338@dastard>
+Date: Fri, 7 Jun 2013 07:04:27 +0200
 References: <CAO9TOLffaO62ZtvchpKnnORuNd0GJMsqKDeAhmdSQ1mnFn1EpA@mail.gmail.com>
+	<20130607035046.GJ29338@dastard>
+In-Reply-To: <20130607035046.GJ29338@dastard>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAO9TOLffaO62ZtvchpKnnORuNd0GJMsqKDeAhmdSQ1mnFn1EpA@mail.gmail.com>
+Message-Id: <201306070704.28004.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,57 +32,33 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Adam Brenner <aebrenne@uci.edu>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, Jun 06, 2013 at 07:59:34PM -0700, Adam Brenner wrote:
-> Howdy XFS Devs,
-> 
-> We run a 14TB XFS fileserver on our cluster and want to add quota
-> support. This is running 3.9.2-1.el6.elrepo.x86_64 kernel under CentOS
-> 6.3 (Final).
-
-How many files in the filesystem?
-
-> The issue is when we unmount the XFS RAID, and re-mount it adding
-> quota support, the mount command hangs.
-
-It won't have hung, it will just be busy doing a quotacheck.
-
-> Sever IS responsive and the
-> XFS mount point is not accessible. Reverting our changes in /etc/fstab
-> to remove the quota options does not have mount hang.
-
-Because it doesn't do a quotacheck.
-
-> I suspect that upon re-mount, XFS is running a quota check on the 14TB
-> RAID. My question is: how do I disable the initial quota check so it
-> can mount it properly and have quota check run in the background?
-
-You can't. quotacheck relies on exclusive access to the filesystem,
-and so the mount cannot process until it completes. Quotas need to
-be consistent before you can start using the filesystem....
-
-Now, there's the possibility that we could parallelise quotacheck
-because it uses bulkstat for iteration, but somebody would have to
-find the time to do that and it won't solve your immediate problem.
-
-Hence I suggest just waiting for it to complete - if you have
-millions of inodes it could hours to complete, so just let it go
-overnight...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gRnJpZGF5IDA3IG9mIEp1bmUgMjAxMywgRGF2ZSBDaGlubmVyIHdyb3RlOgoKPiA+IEkgc3Vz
+cGVjdCB0aGF0IHVwb24gcmUtbW91bnQsIFhGUyBpcyBydW5uaW5nIGEgcXVvdGEgY2hlY2sgb24g
+dGhlIDE0VEIKPiA+IFJBSUQuIE15IHF1ZXN0aW9uIGlzOiBob3cgZG8gSSBkaXNhYmxlIHRoZSBp
+bml0aWFsIHF1b3RhIGNoZWNrIHNvIGl0Cj4gPiBjYW4gbW91bnQgaXQgcHJvcGVybHkgYW5kIGhh
+dmUgcXVvdGEgY2hlY2sgcnVuIGluIHRoZSBiYWNrZ3JvdW5kPwo+IAo+IFlvdSBjYW4ndC4gcXVv
+dGFjaGVjayByZWxpZXMgb24gZXhjbHVzaXZlIGFjY2VzcyB0byB0aGUgZmlsZXN5c3RlbSwKPiBh
+bmQgc28gdGhlIG1vdW50IGNhbm5vdCBwcm9jZXNzIHVudGlsIGl0IGNvbXBsZXRlcy4gUXVvdGFz
+IG5lZWQgdG8KPiBiZSBjb25zaXN0ZW50IGJlZm9yZSB5b3UgY2FuIHN0YXJ0IHVzaW5nIHRoZSBm
+aWxlc3lzdGVtLi4uLgo+IAo+IE5vdywgdGhlcmUncyB0aGUgcG9zc2liaWxpdHkgdGhhdCB3ZSBj
+b3VsZCBwYXJhbGxlbGlzZSBxdW90YWNoZWNrCj4gYmVjYXVzZSBpdCB1c2VzIGJ1bGtzdGF0IGZv
+ciBpdGVyYXRpb24sIGJ1dCBzb21lYm9keSB3b3VsZCBoYXZlIHRvCj4gZmluZCB0aGUgdGltZSB0
+byBkbyB0aGF0IGFuZCBpdCB3b24ndCBzb2x2ZSB5b3VyIGltbWVkaWF0ZSBwcm9ibGVtLgoKSSdt
+IGZhY2luZyBzaW1pbGFyIHByb2JsZW0gc29tZXRpbWVzLiBUaGUgcGFyYWxsZWxpc2F0aW9uIHdv
+dWxkIGJlIG5pY2UgYnV0IApJJ20gbWlzc2luZyBzb21ldGhpbmcgbW9yZSBvYnZpb3VzIC0ga2lu
+ZCBvZiBwcm9ncmVzcyBpbmRpY2F0b3IsIGxpa2UgcHJpbnRrZWQgCm1lc3NhZ2UgKG9yIGluIHBy
+b2Mvc3lzZnMpIGFmdGVyIHByb2Nlc3Npbmcgc29tZSBrbm93biBwYXJ0IG9mIGpvYi4KClRoaXMg
+aXMgbmVlZGVkIHB1cmVseSBmb3IgZXN0aW1hdGluZyBkb3dudGltZSBvZiB0aGUgc2VydmljZS4K
+Cj4gSGVuY2UgSSBzdWdnZXN0IGp1c3Qgd2FpdGluZyBmb3IgaXQgdG8gY29tcGxldGUgLSBpZiB5
+b3UgaGF2ZQo+IG1pbGxpb25zIG9mIGlub2RlcyBpdCBjb3VsZCBob3VycyB0byBjb21wbGV0ZSwg
+c28ganVzdCBsZXQgaXQgZ28KPiBvdmVybmlnaHQuLi4KCi4uLiBhbmQgc2F5IHVzZXJzIGdvb2Ri
+eWUgOykKCj4gCj4gQ2hlZXJzLAo+IAo+IERhdmUuCgoKLS0gCkFya2FkaXVzeiBNacWba2lld2lj
+eiwgYXJla20gLyBtYXZlbi5wbAoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5z
+Z2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
