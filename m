@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0A5E67F56
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0A21D7F50
 	for <xfs@oss.sgi.com>; Fri,  7 Jun 2013 00:46:03 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id BFCC28F8052
-	for <xfs@oss.sgi.com>; Thu,  6 Jun 2013 22:45:59 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 947F8AC005
+	for <xfs@oss.sgi.com>; Thu,  6 Jun 2013 22:46:02 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	yCQuFmaEZQpTEjPS for <xfs@oss.sgi.com>;
-	Thu, 06 Jun 2013 22:45:57 -0700 (PDT)
+	jr9K4IRK6Df4M1ez for <xfs@oss.sgi.com>;
+	Thu, 06 Jun 2013 22:46:01 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UkpUT-0004Xt-79
-	for xfs@oss.sgi.com; Fri, 07 Jun 2013 15:45:33 +1000
+	(envelope-from <dave@fromorbit.com>) id 1UkpUd-0004Y0-CB
+	for xfs@oss.sgi.com; Fri, 07 Jun 2013 15:45:43 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UkpUT-0003kL-2S
+	(envelope-from <dave@disappointment.disaster>) id 1UkpUT-0003kh-91
 	for xfs@oss.sgi.com; Fri, 07 Jun 2013 15:45:33 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 00/17] xfs: current patch queue for 3.11
-Date: Fri,  7 Jun 2013 15:45:12 +1000
-Message-Id: <1370583929-14276-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 05/17] xfs: don't do IO when creating an new inode
+Date: Fri,  7 Jun 2013 15:45:17 +1000
+Message-Id: <1370583929-14276-6-git-send-email-david@fromorbit.com>
+In-Reply-To: <1370583929-14276-1-git-send-email-david@fromorbit.com>
+References: <1370583929-14276-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,103 +36,92 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hi folks,
+From: Dave Chinner <dchinner@redhat.com>
 
-This is my current patch queue for the 3.11 release cycle. There is
-an update to the mount option/sysctl documentation that includes
-date for removal of deprecated mount options and sysctls in this, so
-make sure you read it.
+When we are allocating a new inode, we read the inode cluster off
+disk to increment the generation number. We are already using a
+random generation number for newly allocated inodes, so if we are not
+using the ikeep mode, we can just generate a new generation number
+when we initialise the newly allocated inode.
 
-There are a couple of readahead plugging fixes to make sure we merge
-adjacent readahead buffers before dispatching them. This makes a big
-difference to directory and bulkstat performance when the IO
-subsystem is IOPS bound.
+This avoids the need for reading the inode buffer during inode
+creation. This will speed up allocation of inodes in cold, partially
+allocated clusters as they will no longer need to be read from disk
+during allocation. It will also reduce the CPU overhead of inode
+allocation by not having the process the buffer read, even on cache
+hits.
 
-There's a specualtive preallocation tweak to avoid speculative
-prealloc for small files. This is primarily designed for workloads
-that use small files exclusively like certain gluster/swift
-workloads that are becoming more common.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_inode.c |   36 ++++++++++++++++++++++++++++--------
+ 1 file changed, 28 insertions(+), 8 deletions(-)
 
-Following this are a couple of patches to reduce the number of
-buffer cache lookups we need to do when creating and unlinking
-inodes. The inode create path now does not need to do IO to allocate
-a new inode, which means it is more deterministic and less likely to
-get blocked behind other IO operations.
-
-Then there is a series of patches to introduce a new logical inode
-create transaction for CRC enabld filesystems. This just logs a
-small structure that indicates where the inodes being created exist,
-and uses a new concept of "ordered buffers" to ensure that the
-correct transactional life cycle is maintained for the inodes that
-were allocated. This requires special ordered log vector support so
-this information tracks correct through the CIL. This significantly
-reduces the amoutn of log traffic needed by inode creation, as well
-as removes one of the nasty warts around inode buffer handling in
-log recovery.
-
-Next is a patch to move all inode fork local to extent conversion
-code into the callers that need the coversion, rather than having it
-done implicitly by xfs_bmapi_write(). This clarifies the code paths 
-that the directory and attribute code are using to do this
-conversion by moving it directly into the functions that are doing
-the short-form to block conversion.
-
-Finally, there are a series of patches that move directory and
-attribute code around to separate kerel only code from shared
-userspace/kernel code. This greatly reduces the differences between
-the shared files, and will make future userspace code
-synchronisation much simpler and easy to do. There's more work to do
-here, but this is the low hanging fruit....
-
-Flames, comments, reviews all welcome.
-
--Dave.
-
-$ git diff --stat --summary -C -M 6cb25a8..
- Documentation/filesystems/xfs.txt |  282 +++++++++++------
- fs/xfs/Makefile                   |    4 +
- fs/xfs/xfs_attr.c                 |  388 +----------------------
- fs/xfs/xfs_attr.h                 |    1 +
- fs/xfs/xfs_attr_inactive.c        |  453 +++++++++++++++++++++++++++
- fs/xfs/xfs_attr_leaf.c            |  643 +------------------------------------
- fs/xfs/xfs_attr_list.c            |  655 ++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_bmap.c                 |  199 +++++-------
- fs/xfs/xfs_bmap.h                 |    1 +
- fs/xfs/xfs_buf_item.c             |   87 ++++--
- fs/xfs/xfs_buf_item.h             |    4 +-
- fs/xfs/xfs_dir2.c                 |   34 --
- fs/xfs/xfs_dir2.h                 |   71 +++++
- fs/xfs/xfs_dir2_block.c           |  120 +------
- fs/xfs/xfs_dir2_data.c            |    1 +
- fs/xfs/xfs_dir2_format.h          |   24 --
- fs/xfs/xfs_dir2_leaf.c            |  389 +----------------------
- fs/xfs/xfs_dir2_node.c            |    1 +
- fs/xfs/xfs_dir2_priv.h            |   33 +-
- fs/xfs/xfs_dir2_readdir.c         |  661 +++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_dir2_sf.c              |  103 +-----
- fs/xfs/xfs_file.c                 |    3 +-
- fs/xfs/xfs_ialloc.c               |   67 +++-
- fs/xfs/xfs_ialloc.h               |    8 +
- fs/xfs/xfs_icreate_item.c         |  195 ++++++++++++
- fs/xfs/xfs_icreate_item.h         |   52 +++
- fs/xfs/xfs_inode.c                |   68 ++--
- fs/xfs/xfs_iomap.c                |   13 +
- fs/xfs/xfs_itable.c               |    3 +
- fs/xfs/xfs_log.c                  |   21 +-
- fs/xfs/xfs_log.h                  |    5 +-
- fs/xfs/xfs_log_cil.c              |   75 +++--
- fs/xfs/xfs_log_recover.c          |  116 ++++++-
- fs/xfs/xfs_super.c                |    8 +
- fs/xfs/xfs_trace.h                |    4 +
- fs/xfs/xfs_trans.c                |  118 ++++---
- fs/xfs/xfs_trans.h                |    5 +-
- fs/xfs/xfs_trans_buf.c            |   34 +-
- 38 files changed, 2865 insertions(+), 2084 deletions(-)
- create mode 100644 fs/xfs/xfs_attr_inactive.c
- create mode 100644 fs/xfs/xfs_attr_list.c
- create mode 100644 fs/xfs/xfs_dir2_readdir.c
- create mode 100644 fs/xfs/xfs_icreate_item.c
- create mode 100644 fs/xfs/xfs_icreate_item.h
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 7f7be5f..d1f76da 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1028,6 +1028,11 @@ xfs_dinode_calc_crc(
+ 
+ /*
+  * Read the disk inode attributes into the in-core inode structure.
++ *
++ * If we are initialising a new inode and we are not utilising the
++ * XFS_MOUNT_IKEEP inode cluster mode, we can simple build the new inode core
++ * with a random generation number. If we are keeping inodes around, we need to
++ * read the inode cluster to get the existing generation number off disk.
+  */
+ int
+ xfs_iread(
+@@ -1047,6 +1052,22 @@ xfs_iread(
+ 	if (error)
+ 		return error;
+ 
++	/* shortcut IO on inode allocation if possible */
++	if ((iget_flags & XFS_IGET_CREATE) &&
++	    !(mp->m_flags & XFS_MOUNT_IKEEP)) {
++		/* initialise the on-disk inode core */
++		memset(&ip->i_d, 0, sizeof(ip->i_d));
++		ip->i_d.di_magic = XFS_DINODE_MAGIC;
++		ip->i_d.di_gen = prandom_u32();
++		if (xfs_sb_version_hascrc(&mp->m_sb)) {
++			ip->i_d.di_version = 3;
++			ip->i_d.di_ino = ip->i_ino;
++			uuid_copy(&ip->i_d.di_uuid, &mp->m_sb.sb_uuid);
++		} else
++			ip->i_d.di_version = 2;
++		return 0;
++	}
++
+ 	/*
+ 	 * Get pointers to the on-disk inode and the buffer containing it.
+ 	 */
+@@ -1133,17 +1154,16 @@ xfs_iread(
+ 	xfs_buf_set_ref(bp, XFS_INO_REF);
+ 
+ 	/*
+-	 * Use xfs_trans_brelse() to release the buffer containing the
+-	 * on-disk inode, because it was acquired with xfs_trans_read_buf()
+-	 * in xfs_imap_to_bp() above.  If tp is NULL, this is just a normal
++	 * Use xfs_trans_brelse() to release the buffer containing the on-disk
++	 * inode, because it was acquired with xfs_trans_read_buf() in
++	 * xfs_imap_to_bp() above.  If tp is NULL, this is just a normal
+ 	 * brelse().  If we're within a transaction, then xfs_trans_brelse()
+ 	 * will only release the buffer if it is not dirty within the
+ 	 * transaction.  It will be OK to release the buffer in this case,
+-	 * because inodes on disk are never destroyed and we will be
+-	 * locking the new in-core inode before putting it in the hash
+-	 * table where other processes can find it.  Thus we don't have
+-	 * to worry about the inode being changed just because we released
+-	 * the buffer.
++	 * because inodes on disk are never destroyed and we will be locking the
++	 * new in-core inode before putting it in the cache where other
++	 * processes can find it.  Thus we don't have to worry about the inode
++	 * being changed just because we released the buffer.
+ 	 */
+  out_brelse:
+ 	xfs_trans_brelse(tp, bp);
+-- 
+1.7.10.4
 
 _______________________________________________
 xfs mailing list
