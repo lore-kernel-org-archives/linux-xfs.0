@@ -1,26 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 94BBF7CBF
-	for <xfs@oss.sgi.com>; Fri,  7 Jun 2013 08:06:49 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 833C58F8040
-	for <xfs@oss.sgi.com>; Fri,  7 Jun 2013 06:06:49 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 81F427F4E
+	for <xfs@oss.sgi.com>; Fri,  7 Jun 2013 08:06:50 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 10222AC00C
+	for <xfs@oss.sgi.com>; Fri,  7 Jun 2013 06:06:47 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	TVAXLN7OUhVB5LHF for <xfs@oss.sgi.com>;
-	Fri, 07 Jun 2013 06:06:47 -0700 (PDT)
+	z9M5aQGQyWM7dpp0 for <xfs@oss.sgi.com>;
+	Fri, 07 Jun 2013 06:06:45 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UkwNN-0005a5-6m
+	(envelope-from <dave@fromorbit.com>) id 1UkwNN-0005a4-5w
 	for xfs@oss.sgi.com; Fri, 07 Jun 2013 23:06:41 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UkwNN-0003om-2v
+	(envelope-from <dave@disappointment.disaster>) id 1UkwNN-0003oj-1h
 	for xfs@oss.sgi.com; Fri, 07 Jun 2013 23:06:41 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/6] xfstests: generic/193 runs tests in wrong location
-Date: Fri,  7 Jun 2013 23:06:33 +1000
-Message-Id: <1370610398-14630-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1370610398-14630-1-git-send-email-david@fromorbit.com>
-References: <1370610398-14630-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 0/6] xfstests: various fixes
+Date: Fri,  7 Jun 2013 23:06:32 +1000
+Message-Id: <1370610398-14630-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,309 +34,19 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi folks,
 
-generic/193 runs the test in $here - the root of the xfstests source
-tree/installation. IOWs, it doesn't test the filesystem on either
-the TEST_DIR or SCRATCH_MNT, and so it not testing the filesystem
-we think it is testing. Bad. Fixing this is the majority of the
-change - introducing $test_root and $test_user for the files with
-different owners, and then redirecting error output and filtering
-the output appropriately.
+I figured that sending 77 patches to the list in one day wasn't
+enough, so here's another 6 for xfstests. These patches fix the suid
+tests in generic/193 to run on the target filesystem, test suid/sgid
+behaviour for truncate, stop the experimatal warnings from CRC
+enabled xfsprogs from making tests fail, fix a missing $seq to
+$seqres conversion, convert an ENOSPC test to work with arbitrary
+block sizes, avoid tests that currently won't run or are not
+relevant for CRC enabled filesystems, and add a multithreaded test
+mode to the bstat test program....
 
-And then add checks that truncate clears the suid/sgid bits
-appropriately, somethign that has never been tested on XFS (and
-likely other filesystems) so will cause kernels between 3.1 and 3.9
-to assert fail as Dave Jones has recently reported.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- tests/generic/193     |  135 ++++++++++++++++++++++++++++++++-----------------
- tests/generic/193.out |   17 ++++++-
- 2 files changed, 105 insertions(+), 47 deletions(-)
-
-diff --git a/tests/generic/193 b/tests/generic/193
-index cdf04c2..4fa20ff 100755
---- a/tests/generic/193
-+++ b/tests/generic/193
-@@ -43,9 +43,9 @@ tag="added by qa $seq"
- #
- _create_files()
- {
--	touch test.root
--	touch test.${qa_user}
--	chown ${qa_user}:${qa_user} test.${qa_user}
-+	touch $test_root
-+	touch $test_user
-+	chown ${qa_user}:${qa_user} $test_user
- }
- 
- #
-@@ -53,8 +53,13 @@ _create_files()
- #
- _cleanup_files()
- {
--	rm -f test.${qa_user}
--	rm -f test.root
-+	rm -f $test_user
-+	rm -f $test_root
-+}
-+
-+_filter_files()
-+{
-+	sed -e "s,$test_root,test.root,g" -e "s,$test_user,test.user,g"
- }
- 
- # get standard environment, filters and checks
-@@ -68,6 +73,9 @@ _supported_os Linux
- _require_user
- _need_to_be_root
- 
-+test_root=$TEST_DIR/$seq.$$.root
-+test_user=$TEST_DIR/$seq.$$.user
-+
- #
- # make sure we have a normal umask set
- #
-@@ -83,17 +91,17 @@ echo
- _create_files
- 
- echo "user: chown root owned file to qa_user (should fail)"
--su ${qa_user} -c "chown ${qa_user} test.root"
-+su ${qa_user} -c "chown ${qa_user} $test_root" 2>&1 | _filter_files
- 
- echo "user: chown root owned file to root (should fail)"
--su ${qa_user} -c "chown root test.root"
-+su ${qa_user} -c "chown root $test_root" 2>&1 | _filter_files
- 
- echo "user: chown qa_user owned file to qa_user (should succeed)"
--su ${qa_user} -c "chown ${qa_user} test.${qa_user}"
-+su ${qa_user} -c "chown ${qa_user} $test_user"
- 
- # this would work without _POSIX_CHOWN_RESTRICTED
- echo "user: chown qa_user owned file to root (should fail)"
--su ${qa_user} -c "chown root test.${qa_user}"
-+su ${qa_user} -c "chown root $test_user" 2>&1 | _filter_files
- 
- _cleanup_files
- 
-@@ -107,19 +115,19 @@ echo
- _create_files
- 
- echo "user: chgrp root owned file to root (should fail)"
--su ${qa_user} -c "chgrp root test.root"
-+su ${qa_user} -c "chgrp root $test_root" 2>&1 | _filter_files
- 
- echo "user: chgrp qa_user owned file to root (should fail)"
--su ${qa_user} -c "chgrp root test.${qa_user}"
-+su ${qa_user} -c "chgrp root $test_user" 2>&1 | _filter_files
- 
- echo "user: chgrp root owned file to qa_user (should fail)"
--su ${qa_user} -c "chgrp ${qa_user} test.root"
-+su ${qa_user} -c "chgrp ${qa_user} $test_root" 2>&1 | _filter_files
- 
- echo "user: chgrp qa_user owned file to qa_user (should succeed)"
--su ${qa_user} -c "chgrp ${qa_user} test.${qa_user}"
-+su ${qa_user} -c "chgrp ${qa_user} $test_user"
- 
- #echo "user: chgrp qa_user owned file to secondary group (should succeed)"
--#su ${qa_user} -c "chgrp ${group2} test.${qa_user}"
-+#su ${qa_user} -c "chgrp ${group2} $test_user"
- 
- _cleanup_files
- 
-@@ -133,10 +141,10 @@ echo
- _create_files
- 
- echo "user: chmod a+r on qa_user owned file (should succeed)"
--su ${qa_user} -c "chmod a+r test.${qa_user}"
-+su ${qa_user} -c "chmod a+r $test_user"
- 
- echo "user: chmod a+r on root owned file (should fail)"
--su ${qa_user} -c "chmod a+r test.root"
-+su ${qa_user} -c "chmod a+r $test_root" 2>&1 | _filter_files
- 
- #
- # Setup a file owned by the qa_user, but with a group ID that
-@@ -153,12 +161,12 @@ su ${qa_user} -c "chmod a+r test.root"
- # reg file + file's gid not in process' group set + no approp. privileges -> clear sgid
- #
- echo "check that the sgid bit is cleared"
--chown ${qa_user}:root test.${qa_user}
--chmod g+s test.${qa_user}
-+chown ${qa_user}:root $test_user
-+chmod g+s $test_user
- 
- # and let the qa_user change permission bits
--su ${qa_user} -c "chmod a+w test.${qa_user}"
--stat -c '%A' test.${qa_user}
-+su ${qa_user} -c "chmod a+w $test_user"
-+stat -c '%A' $test_user
- 
- #
- # Setup a file owned by the qa_user and with the suid bit set.
-@@ -166,9 +174,9 @@ stat -c '%A' test.${qa_user}
- # There is nothing in Posix that says it should but just checking.
- #
- echo "check that suid bit is not cleared"
--chmod u+s test.${qa_user}
--chmod a+w test.${qa_user}
--stat -c '%A' test.${qa_user}
-+chmod u+s $test_user
-+chmod a+w $test_user
-+stat -c '%A' $test_user
- 
- _cleanup_files
- 
-@@ -196,35 +204,72 @@ _create_files
- echo "check that suid/sgid bits are cleared after successful chown..."
- 
- echo "with no exec perm"
--chmod ug+s test.${qa_user}
--echo -n "before: "; stat -c '%A' test.${qa_user}
--chown root test.${qa_user}
--echo -n "after:  "; stat -c '%A' test.${qa_user}
-+chmod ug+s $test_user
-+echo -n "before: "; stat -c '%A' $test_user
-+chown root $test_user
-+echo -n "after:  "; stat -c '%A' $test_user
- 
- echo "with user exec perm"
--chmod ug+s test.${qa_user}
--chmod u+x test.${qa_user}
--echo -n "before: "; stat -c '%A' test.${qa_user}
--chown root test.${qa_user}
--echo -n "after:  "; stat -c '%A' test.${qa_user}
-+chmod ug+s $test_user
-+chmod u+x $test_user
-+echo -n "before: "; stat -c '%A' $test_user
-+chown root $test_user
-+echo -n "after:  "; stat -c '%A' $test_user
- 
- echo "with group exec perm"
--chmod ug+s test.${qa_user}
--chmod g+x test.${qa_user}
--chmod u-x test.${qa_user}
--echo -n "before: "; stat -c '%A' test.${qa_user}
--chown root test.${qa_user}
--echo -n "after:  "; stat -c '%A' test.${qa_user}
-+chmod ug+s $test_user
-+chmod g+x $test_user
-+chmod u-x $test_user
-+echo -n "before: "; stat -c '%A' $test_user
-+chown root $test_user
-+echo -n "after:  "; stat -c '%A' $test_user
- 
- echo "with user+group exec perm"
--chmod ug+s test.${qa_user}
--chmod ug+x test.${qa_user}
--echo -n "before: "; stat -c '%A' test.${qa_user}
--chown root test.${qa_user}
--echo -n "after:  "; stat -c '%A' test.${qa_user}
-+chmod ug+s $test_user
-+chmod ug+x $test_user
-+echo -n "before: "; stat -c '%A' $test_user
-+chown root $test_user
-+echo -n "after:  "; stat -c '%A' $test_user
- 
- _cleanup_files
- 
-+_create_files
-+# Now test out the clear of suid/sgid for truncate
-+#
-+echo "check that suid/sgid bits are cleared after successful truncate..."
-+
-+echo "with no exec perm"
-+echo frobnozzle >> $test_user
-+chmod ug+s $test_user
-+echo -n "before: "; stat -c '%A' $test_user
-+su ${qa_user} -c "echo > $test_user"
-+echo -n "after:  "; stat -c '%A' $test_user
-+
-+echo "with user exec perm"
-+echo frobnozzle >> $test_user
-+chmod ug+s $test_user
-+chmod u+x $test_user
-+echo -n "before: "; stat -c '%A' $test_user
-+su ${qa_user} -c "echo > $test_user"
-+echo -n "after:  "; stat -c '%A' $test_user
-+
-+echo "with group exec perm"
-+echo frobnozzle >> $test_user
-+chmod ug+s $test_user
-+chmod g+x $test_user
-+chmod u-x $test_user
-+echo -n "before: "; stat -c '%A' $test_user
-+su ${qa_user} -c "echo > $test_user"
-+echo -n "after:  "; stat -c '%A' $test_user
-+
-+echo "with user+group exec perm"
-+echo frobnozzle >> $test_user
-+chmod ug+s $test_user
-+chmod ug+x $test_user
-+echo -n "before: "; stat -c '%A' $test_user
-+su ${qa_user} -c "echo > $test_user"
-+echo -n "after:  "; stat -c '%A' $test_user
-+
- #
- # Test ATTR_*TIMES_SET
- #
-@@ -235,10 +280,10 @@ echo
- _create_files
- 
- echo "user: touch qa_user file (should succeed)"
--su ${qa_user} -c "touch test.${qa_user}"
-+su ${qa_user} -c "touch $test_user"
- 
- echo "user: touch root file (should fail)"
--su ${qa_user} -c "touch test.root"
-+su ${qa_user} -c "touch $test_root" 2>&1 | _filter_files
- 
- _cleanup_files
- 
-diff --git a/tests/generic/193.out b/tests/generic/193.out
-index b89add3..357a7c1 100644
---- a/tests/generic/193.out
-+++ b/tests/generic/193.out
-@@ -8,14 +8,14 @@ user: chown root owned file to root (should fail)
- chown: changing ownership of `test.root': Operation not permitted
- user: chown qa_user owned file to qa_user (should succeed)
- user: chown qa_user owned file to root (should fail)
--chown: changing ownership of `test.fsgqa': Operation not permitted
-+chown: changing ownership of `test.user': Operation not permitted
- 
- testing ATTR_GID
- 
- user: chgrp root owned file to root (should fail)
- chgrp: changing group of `test.root': Operation not permitted
- user: chgrp qa_user owned file to root (should fail)
--chgrp: changing group of `test.fsgqa': Operation not permitted
-+chgrp: changing group of `test.user': Operation not permitted
- user: chgrp root owned file to qa_user (should fail)
- chgrp: changing group of `test.root': Operation not permitted
- user: chgrp qa_user owned file to qa_user (should succeed)
-@@ -42,6 +42,19 @@ after:  -rw-r-xr--
- with user+group exec perm
- before: -rwsr-sr--
- after:  -rwxr-xr--
-+check that suid/sgid bits are cleared after successful truncate...
-+with no exec perm
-+before: -rwSr-Sr--
-+after:  -rw-r-Sr--
-+with user exec perm
-+before: -rwsr-Sr--
-+after:  -rwxr-Sr--
-+with group exec perm
-+before: -rwSr-sr--
-+after:  -rw-r-xr--
-+with user+group exec perm
-+before: -rwsr-sr--
-+after:  -rwxr-xr--
- 
- testing ATTR_*TIMES_SET
- 
--- 
-1.7.10.4
+-Dave.
 
 _______________________________________________
 xfs mailing list
