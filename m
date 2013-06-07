@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A08927F3F
-	for <xfs@oss.sgi.com>; Fri,  7 Jun 2013 01:36:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2B053AC002
-	for <xfs@oss.sgi.com>; Thu,  6 Jun 2013 23:36:45 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id DqbPj86cOTh9SEGR
-	for <xfs@oss.sgi.com>; Thu, 06 Jun 2013 23:36:44 -0700 (PDT)
-Message-ID: <51B17F7F.8010500@hardwarefreak.com>
-Date: Fri, 07 Jun 2013 01:36:47 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0BF9E7CBF
+	for <xfs@oss.sgi.com>; Fri,  7 Jun 2013 02:19:09 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id EF60A30408B
+	for <xfs@oss.sgi.com>; Fri,  7 Jun 2013 00:19:05 -0700 (PDT)
+Received: from mo-p05-ob.rzone.de (mo-p05-ob.rzone.de [81.169.146.182]) by
+	cuda.sgi.com with ESMTP id yRCwrLimHCLMubHX for
+	<xfs@oss.sgi.com>; Fri, 07 Jun 2013 00:19:03 -0700 (PDT)
+Message-ID: <51B18962.3090504@jan-o-sch.net>
+Date: Fri, 07 Jun 2013 09:18:58 +0200
+From: Jan Schmidt <list.xfs@jan-o-sch.net>
 MIME-Version: 1.0
-Subject: Re: XFS Adding Quotas - Skip Quota check on first mount/boot
-References: <CAO9TOLffaO62ZtvchpKnnORuNd0GJMsqKDeAhmdSQ1mnFn1EpA@mail.gmail.com>
-	<20130607035046.GJ29338@dastard>
-In-Reply-To: <20130607035046.GJ29338@dastard>
-Reply-To: stan@hardwarefreak.com
+Subject: Re: [PATCH] xfstests btrfs/314: test send / receive
+References: <1370532033-20561-1-git-send-email-list.xfs@jan-o-sch.net>
+	<51B0CCC6.2010500@redhat.com>
+In-Reply-To: <51B0CCC6.2010500@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,57 +28,225 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Adam Brenner <aebrenne@uci.edu>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: Arne Jansen <sensille@gmx.net>, sbehrens@giantdisaster.de, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On 6/6/2013 10:50 PM, Dave Chinner wrote:
+(cc Arne for far-progs discussion)
 
-> Hence I suggest just waiting for it to complete - if you have
-> millions of inodes it could hours to complete, so just let it go
-> overnight...
+On Thu, June 06, 2013 at 19:54 (+0200), Eric Sandeen wrote:
+> On 6/6/13 10:20 AM, Jan Schmidt wrote:
+>> Basic send / receive functionality test for btrfs. Requires current
+>> version of fsstress built (-x support). Relies on fssum tool, which is
+>> not part of the test suite but can skip the test if it is missing.
+>>
+>> Signed-off-by: Jan Schmidt <list.xfs@jan-o-sch.net>
+> 
+> w/o commenting on the test itself, I'm a little uneasy about requiring
+> some external, not-widely-installed tool for this to run.  The fear is
+> that it won't be run as often as it could/should be.
 
-> On Thu, Jun 06, 2013 at 07:59:34PM -0700, Adam Brenner wrote:
+The main purpose is to have it run by developers changing something around btrfs
+send / receive and probably the backref walker (while there exists a separate
+test not requiring fssum for backrefs). I think we can get them to install fssum.
 
-> I do not mind high CPU usage or slow performance while the mount point
-> is active, but having it unavailable is not an option we would like
-> stick with. I suspect running quota check on 14TB would take roughly a
-> full work day and then some.
+> Could the same test be done w/o fssum, or should we maybe put a copy
+> of fssum into xfstests/src/fssum.c ?
 
-Hi Adam,
+I don't know any adequate replacement for fssum in this case. The purpose is to
+build a checksum for a whole file system tree, including data and partly metadata.
 
-This 14TB XFS is the mpc-data1 workspace (/w1/$USER), correct?  User
-compute cluster jobs access this filesystem 24x7, correct?  So to allow
-for the remount quotacheck to complete you will need to have users move
-jobs to the 40TB mpc-data2 workspace, or another temporary workspace,
-until /w1 is accessible again.  Or, their jobs simply must wait until
-quotacheck completes.  Or?
+I don't feel like copying fssum from far-progs into xfstests, though it probably
+won't hurt much. However, I cannot promise we won't make changes to it for
+far-progs, probably creating two incompatible versions of fssum in the wild. Arne?
 
-As Dave said there's no way around the initial quotacheck.  If you
-provide the file count Dave requested he may be able to provide a rough
-estimate of completion time.  This may benefit your outage planning.
-I.e. it make complete much sooner than you currently guess, or it may
-actually take substantially longer.  I learned long ago that when devs
-and experienced users on this mailing list ask for information, there's
-a good reason.  Thus it's best to answer all questions.  You skipped
-this one.
+> Or does fssum exist in any standard distro package?
 
-FWIW, I just checked mount(8), the XFS FAQ, User Guide, and Training
-Labs, and I could not find a caveat or warning WRT mount time when
-enabling quotas on existing filesystems.  Dave, might this be suitable
-for the FAQ?  I'd guess many users have no idea the entire filesystem
-must be walked when quota is enabled, since most enable it on freshly
-made XFS.  Could we add to the end of this something like below?
-http://www.xfs.org/index.php/XFS_FAQ#Q:_Quota:_Do_quotas_work_on_XFS.3F
+It doesn't. Perhaps Josef can hurry and make a Fedora package for it, if that
+prevents a separate copy to xfstests :-)
 
-"A check is run at mount after enabling quotas.  If you already have
-many files this will take some time: multiple hours with millions of
-files.  During this time the filesystem is unavailable."
+Thanks,
+-Jan
 
-I don't believe I ever got an account, so I don't think I can make
-edits.  If this is a bad suggestion, maybe that's why I have no acct. ;)
-
--- 
-Stan
+> Thanks,
+> -Eric
+> 
+>> ---
+>>  README              |    3 +
+>>  common/config       |    2 +
+>>  tests/btrfs/314     |  113 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>>  tests/btrfs/314.out |    4 ++
+>>  tests/btrfs/group   |    1 +
+>>  5 files changed, 123 insertions(+), 0 deletions(-)
+>>  create mode 100755 tests/btrfs/314
+>>  create mode 100644 tests/btrfs/314.out
+>>
+>> diff --git a/README b/README
+>> index d4d4f31..56b31f0 100644
+>> --- a/README
+>> +++ b/README
+>> @@ -26,6 +26,9 @@ Preparing system for tests (IRIX and Linux):
+>>        http://www.extra.research.philips.com/udf/, then copy the udf_test 
+>>        binary to xfstests/src/. If you wish to disable UDF verification test
+>>        set the environment variable DISABLE_UDF_TEST to 1.
+>> +    - If you wish to run the btrfs send / receive components of the suite
+>> +      install fssum from
+>> +        git://git.kernel.org/pub/scm/linux/kernel/git/arne/far-progs.git
+>>  	
+>>      
+>>      - create one or two partitions to use for testing
+>> diff --git a/common/config b/common/config
+>> index 67c1498..1c11da3 100644
+>> --- a/common/config
+>> +++ b/common/config
+>> @@ -146,6 +146,8 @@ export SED_PROG="`set_prog_path sed`"
+>>  export BC_PROG="`set_prog_path bc`"
+>>  [ "$BC_PROG" = "" ] && _fatal "bc not found"
+>>  
+>> +export FSSUM_PROG="`set_prog_path fssum`"
+>> +
+>>  export PS_ALL_FLAGS="-ef"
+>>  
+>>  export DF_PROG="`set_prog_path df`"
+>> diff --git a/tests/btrfs/314 b/tests/btrfs/314
+>> new file mode 100755
+>> index 0000000..2e86428
+>> --- /dev/null
+>> +++ b/tests/btrfs/314
+>> @@ -0,0 +1,113 @@
+>> +#! /bin/bash
+>> +# FSQA Test No. 314
+>> +#
+>> +# Run fsstress to create a reasonably strange file system, make a
+>> +# snapshot (base) and run more fsstress. Then take another snapshot
+>> +# (incr) and send both snapshots to a temp file. Remake the file
+>> +# system and receive from the files. Check both states with fssum.
+>> +#
+>> +#-----------------------------------------------------------------------
+>> +# Copyright (C) 2013 STRATO.  All rights reserved.
+>> +#
+>> +# This program is free software; you can redistribute it and/or
+>> +# modify it under the terms of the GNU General Public License as
+>> +# published by the Free Software Foundation.
+>> +#
+>> +# This program is distributed in the hope that it would be useful,
+>> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+>> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+>> +# GNU General Public License for more details.
+>> +#
+>> +# You should have received a copy of the GNU General Public License
+>> +# along with this program; if not, write the Free Software Foundation,
+>> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+>> +#
+>> +#-----------------------------------------------------------------------
+>> +#
+>> +# creator
+>> +owner=list.btrfs@jan-o-sch.net
+>> +
+>> +seq=`basename $0`
+>> +seqres=$RESULT_DIR/$seq
+>> +echo "QA output created by $seq"
+>> +
+>> +here=`pwd`
+>> +tmp=`mktemp -d`
+>> +status=1
+>> +
+>> +_cleanup()
+>> +{
+>> +	echo "*** unmount"
+>> +	umount $SCRATCH_MNT 2>/dev/null
+>> +	rm -f $tmp.*
+>> +}
+>> +trap "_cleanup; exit \$status" 0 1 2 3 15
+>> +
+>> +# get standard environment, filters and checks
+>> +. ./common/rc
+>> +. ./common/filter
+>> +
+>> +# real QA test starts here
+>> +_need_to_be_root
+>> +_supported_fs btrfs
+>> +_supported_os Linux
+>> +_require_scratch
+>> +_require_command $FSSUM_PROG fssum
+>> +
+>> +rm -f $seqres.full
+>> +
+>> +workout()
+>> +{
+>> +	fsz=$1
+>> +	ops=$2
+>> +
+>> +	umount $SCRATCH_DEV >/dev/null 2>&1
+>> +	echo "*** mkfs -dsize=$fsz"    >>$seqres.full
+>> +	echo ""                                     >>$seqres.full
+>> +	_scratch_mkfs_sized $fsz >>$seqres.full 2>&1 \
+>> +		|| _fail "size=$fsz mkfs failed"
+>> +	run_check _scratch_mount "-o noatime"
+>> +
+>> +	run_check $FSSTRESS_PROG -d $SCRATCH_MNT -n $ops $FSSTRESS_AVOID -x \
+>> +		"$BTRFS_UTIL_PROG subvol snap -r $SCRATCH_MNT $SCRATCH_MNT/base"
+>> +
+>> +	run_check $BTRFS_UTIL_PROG subvol snap -r $SCRATCH_MNT $SCRATCH_MNT/incr
+>> +
+>> +	echo "# $BTRFS_UTIL_PROG send $SCRATCH_MNT/base > $tmp/base.snap" \
+>> +		>> $seqres.full
+>> +	$BTRFS_UTIL_PROG send $SCRATCH_MNT/base > $tmp/base.snap 2>> $seqres.full \
+>> +		|| _fail "failed: '$@'"
+>> +	echo "# $BTRFS_UTIL_PROG send -p $SCRATCH_MNT/base\
+>> +		$SCRATCH_MNT/incr > $tmp/incr.snap" >> $seqres.full
+>> +	$BTRFS_UTIL_PROG send -p $SCRATCH_MNT/base \
+>> +		$SCRATCH_MNT/incr > $tmp/incr.snap 2>> $seqres.full \
+>> +		|| _fail "failed: '$@'"
+>> +
+>> +	run_check $FSSUM_PROG -A -f -w $tmp/base.fssum $SCRATCH_MNT/base
+>> +	run_check $FSSUM_PROG -A -f -w $tmp/incr.fssum -x $SCRATCH_MNT/incr/base \
+>> +		$SCRATCH_MNT/incr
+>> +
+>> +	umount $SCRATCH_DEV >/dev/null 2>&1
+>> +	echo "*** mkfs -dsize=$fsz"    >>$seqres.full
+>> +	echo ""                                     >>$seqres.full
+>> +	_scratch_mkfs_sized $fsz >>$seqres.full 2>&1 \
+>> +		|| _fail "size=$fsz mkfs failed"
+>> +	run_check _scratch_mount "-o noatime"
+>> +
+>> +	run_check $BTRFS_UTIL_PROG receive $SCRATCH_MNT < $tmp/base.snap
+>> +	run_check $FSSUM_PROG -r $tmp/base.fssum $SCRATCH_MNT/base
+>> +
+>> +	run_check $BTRFS_UTIL_PROG receive $SCRATCH_MNT < $tmp/incr.snap
+>> +	run_check $FSSUM_PROG -r $tmp/incr.fssum $SCRATCH_MNT/incr
+>> +}
+>> +
+>> +echo "*** test send / receive"
+>> +
+>> +fssize=`expr 2000 \* 1024 \* 1024`
+>> +ops=200
+>> +
+>> +workout $fssize $ops
+>> +
+>> +echo "*** done"
+>> +status=0
+>> +exit
+>> diff --git a/tests/btrfs/314.out b/tests/btrfs/314.out
+>> new file mode 100644
+>> index 0000000..3d491da
+>> --- /dev/null
+>> +++ b/tests/btrfs/314.out
+>> @@ -0,0 +1,4 @@
+>> +QA output created by 314
+>> +*** test send / receive
+>> +*** done
+>> +*** unmount
+>> diff --git a/tests/btrfs/group b/tests/btrfs/group
+>> index bc6c256..3ce34b2 100644
+>> --- a/tests/btrfs/group
+>> +++ b/tests/btrfs/group
+>> @@ -9,3 +9,4 @@
+>>  276 auto rw metadata
+>>  284 auto
+>>  307 auto quick
+>> +314 auto rw metadata
+>>
+> 
 
 _______________________________________________
 xfs mailing list
