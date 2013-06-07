@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E830F7F37
-	for <xfs@oss.sgi.com>; Fri,  7 Jun 2013 08:06:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 66B72AC002
-	for <xfs@oss.sgi.com>; Fri,  7 Jun 2013 06:06:48 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 94BBF7CBF
+	for <xfs@oss.sgi.com>; Fri,  7 Jun 2013 08:06:49 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 833C58F8040
+	for <xfs@oss.sgi.com>; Fri,  7 Jun 2013 06:06:49 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	XL7NfxSlKLFEvPO3 for <xfs@oss.sgi.com>;
-	Fri, 07 Jun 2013 06:06:46 -0700 (PDT)
+	TVAXLN7OUhVB5LHF for <xfs@oss.sgi.com>;
+	Fri, 07 Jun 2013 06:06:47 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UkwNN-0005aK-F1
+	(envelope-from <dave@fromorbit.com>) id 1UkwNN-0005a5-6m
 	for xfs@oss.sgi.com; Fri, 07 Jun 2013 23:06:41 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UkwNN-0003p0-6X
+	(envelope-from <dave@disappointment.disaster>) id 1UkwNN-0003om-2v
 	for xfs@oss.sgi.com; Fri, 07 Jun 2013 23:06:41 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 4/6] xfstests: Make 204 work with different block and inode
-	sizes.
-Date: Fri,  7 Jun 2013 23:06:36 +1000
-Message-Id: <1370610398-14630-5-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/6] xfstests: generic/193 runs tests in wrong location
+Date: Fri,  7 Jun 2013 23:06:33 +1000
+Message-Id: <1370610398-14630-2-git-send-email-david@fromorbit.com>
 In-Reply-To: <1370610398-14630-1-git-send-email-david@fromorbit.com>
 References: <1370610398-14630-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,102 +38,305 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Otherwise it fails with ENOSPC on CRC enabled filesystems because
-ofhte larger inode size.
+generic/193 runs the test in $here - the root of the xfstests source
+tree/installation. IOWs, it doesn't test the filesystem on either
+the TEST_DIR or SCRATCH_MNT, and so it not testing the filesystem
+we think it is testing. Bad. Fixing this is the majority of the
+change - introducing $test_root and $test_user for the files with
+different owners, and then redirecting error output and filtering
+the output appropriately.
+
+And then add checks that truncate clears the suid/sgid bits
+appropriately, somethign that has never been tested on XFS (and
+likely other filesystems) so will cause kernels between 3.1 and 3.9
+to assert fail as Dave Jones has recently reported.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- common/filter     |   10 +++++++++-
- tests/generic/204 |   37 ++++++++++++++++++++++++++++++++-----
- 2 files changed, 41 insertions(+), 6 deletions(-)
+ tests/generic/193     |  135 ++++++++++++++++++++++++++++++++-----------------
+ tests/generic/193.out |   17 ++++++-
+ 2 files changed, 105 insertions(+), 47 deletions(-)
 
-diff --git a/common/filter b/common/filter
-index dbb1674..1bf9e9c 100644
---- a/common/filter
-+++ b/common/filter
-@@ -131,9 +131,17 @@ _filter_date()
+diff --git a/tests/generic/193 b/tests/generic/193
+index cdf04c2..4fa20ff 100755
+--- a/tests/generic/193
++++ b/tests/generic/193
+@@ -43,9 +43,9 @@ tag="added by qa $seq"
+ #
+ _create_files()
+ {
+-	touch test.root
+-	touch test.${qa_user}
+-	chown ${qa_user}:${qa_user} test.${qa_user}
++	touch $test_root
++	touch $test_user
++	chown ${qa_user}:${qa_user} $test_user
  }
  
- # prints filtered output on stdout, values (use eval) on stderr
--# 
-+# Non XFS filesystems always return a 4k block size and a 256 byte inode.
- _filter_mkfs()
+ #
+@@ -53,8 +53,13 @@ _create_files()
+ #
+ _cleanup_files()
  {
-+    case $FSTYP in
-+    xfs)
-+	;;
-+    *)
-+	perl -e 'print STDERR "dbsize=4096\nisize=256\n"'
-+	return ;;
-+    esac
-+
-     set -
-     perl -ne '
-     if (/^meta-data=([\w,|\/.-]+)\s+isize=(\d+)\s+agcount=(\d+), agsize=(\d+) blks/) {
-diff --git a/tests/generic/204 b/tests/generic/204
-index 62bd248..ecc9923 100755
---- a/tests/generic/204
-+++ b/tests/generic/204
-@@ -28,6 +28,12 @@ echo "QA output created by $seq"
- here=`pwd`
- tmp=/tmp/$$
- status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	rm -f $tmp.*
+-	rm -f test.${qa_user}
+-	rm -f test.root
++	rm -f $test_user
++	rm -f $test_root
 +}
++
++_filter_files()
++{
++	sed -e "s,$test_root,test.root,g" -e "s,$test_user,test.user,g"
+ }
  
  # get standard environment, filters and checks
- . ./common/rc
-@@ -39,20 +45,41 @@ _supported_os Linux
+@@ -68,6 +73,9 @@ _supported_os Linux
+ _require_user
+ _need_to_be_root
  
- _require_scratch
++test_root=$TEST_DIR/$seq.$$.root
++test_user=$TEST_DIR/$seq.$$.user
++
+ #
+ # make sure we have a normal umask set
+ #
+@@ -83,17 +91,17 @@ echo
+ _create_files
  
-+rm -f $seqres.full
-+
-+# get the block size first
-+_scratch_mkfs 2> /dev/null | _filter_mkfs 2> $tmp.mkfs > /dev/null
-+. $tmp.mkfs
-+
- SIZE=`expr 104 \* 1024 \* 1024`
--_scratch_mkfs_sized $SIZE  &> /dev/null
-+_scratch_mkfs_sized $SIZE $dbsize 2> /dev/null \
-+		| _filter_mkfs 2> $tmp.mkfs > /dev/null
- _scratch_mount
+ echo "user: chown root owned file to qa_user (should fail)"
+-su ${qa_user} -c "chown ${qa_user} test.root"
++su ${qa_user} -c "chown ${qa_user} $test_root" 2>&1 | _filter_files
  
-+. $tmp.mkfs
-+
- # fix the reserve block pool to a known size so that the enospc calculations
--# work out correctly.
--_scratch_resvblks 1024 > $seqres.full 2>&1
-+# work out correctly. Space usages is based 22500 files and 1024 reserved blocks
-+# on a 4k block size 256 byte inode size filesystem.
-+resv_blks=1024
-+space=97920000
+ echo "user: chown root owned file to root (should fail)"
+-su ${qa_user} -c "chown root test.root"
++su ${qa_user} -c "chown root $test_root" 2>&1 | _filter_files
  
--for i in `seq 1 22500`; do
-+# decrease files for inode size.
-+#	22500 * (256 + 4k) = ~97MB
-+#	files * (isize + bsize) = 97MB
-+#	files = (97920000 / (isize + bsize))
-+
-+files=$((space / (isize + dbsize)))
-+resv_blks=$((resv_blks * (4096 / dbsize)))
-+
-+echo files $files, resvblks $resv_blks >> $seqres.full
-+_scratch_resvblks $resv_blks >> $seqres.full 2>&1
-+
-+for i in `seq 1 $files`; do
-     echo -n > $SCRATCH_MNT/$i
-     echo XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX > $SCRATCH_MNT/$i
- done
+ echo "user: chown qa_user owned file to qa_user (should succeed)"
+-su ${qa_user} -c "chown ${qa_user} test.${qa_user}"
++su ${qa_user} -c "chown ${qa_user} $test_user"
  
- # success, all done
- echo "*** done"
--rm -f $seqres.full
- status=0
+ # this would work without _POSIX_CHOWN_RESTRICTED
+ echo "user: chown qa_user owned file to root (should fail)"
+-su ${qa_user} -c "chown root test.${qa_user}"
++su ${qa_user} -c "chown root $test_user" 2>&1 | _filter_files
+ 
+ _cleanup_files
+ 
+@@ -107,19 +115,19 @@ echo
+ _create_files
+ 
+ echo "user: chgrp root owned file to root (should fail)"
+-su ${qa_user} -c "chgrp root test.root"
++su ${qa_user} -c "chgrp root $test_root" 2>&1 | _filter_files
+ 
+ echo "user: chgrp qa_user owned file to root (should fail)"
+-su ${qa_user} -c "chgrp root test.${qa_user}"
++su ${qa_user} -c "chgrp root $test_user" 2>&1 | _filter_files
+ 
+ echo "user: chgrp root owned file to qa_user (should fail)"
+-su ${qa_user} -c "chgrp ${qa_user} test.root"
++su ${qa_user} -c "chgrp ${qa_user} $test_root" 2>&1 | _filter_files
+ 
+ echo "user: chgrp qa_user owned file to qa_user (should succeed)"
+-su ${qa_user} -c "chgrp ${qa_user} test.${qa_user}"
++su ${qa_user} -c "chgrp ${qa_user} $test_user"
+ 
+ #echo "user: chgrp qa_user owned file to secondary group (should succeed)"
+-#su ${qa_user} -c "chgrp ${group2} test.${qa_user}"
++#su ${qa_user} -c "chgrp ${group2} $test_user"
+ 
+ _cleanup_files
+ 
+@@ -133,10 +141,10 @@ echo
+ _create_files
+ 
+ echo "user: chmod a+r on qa_user owned file (should succeed)"
+-su ${qa_user} -c "chmod a+r test.${qa_user}"
++su ${qa_user} -c "chmod a+r $test_user"
+ 
+ echo "user: chmod a+r on root owned file (should fail)"
+-su ${qa_user} -c "chmod a+r test.root"
++su ${qa_user} -c "chmod a+r $test_root" 2>&1 | _filter_files
+ 
+ #
+ # Setup a file owned by the qa_user, but with a group ID that
+@@ -153,12 +161,12 @@ su ${qa_user} -c "chmod a+r test.root"
+ # reg file + file's gid not in process' group set + no approp. privileges -> clear sgid
+ #
+ echo "check that the sgid bit is cleared"
+-chown ${qa_user}:root test.${qa_user}
+-chmod g+s test.${qa_user}
++chown ${qa_user}:root $test_user
++chmod g+s $test_user
+ 
+ # and let the qa_user change permission bits
+-su ${qa_user} -c "chmod a+w test.${qa_user}"
+-stat -c '%A' test.${qa_user}
++su ${qa_user} -c "chmod a+w $test_user"
++stat -c '%A' $test_user
+ 
+ #
+ # Setup a file owned by the qa_user and with the suid bit set.
+@@ -166,9 +174,9 @@ stat -c '%A' test.${qa_user}
+ # There is nothing in Posix that says it should but just checking.
+ #
+ echo "check that suid bit is not cleared"
+-chmod u+s test.${qa_user}
+-chmod a+w test.${qa_user}
+-stat -c '%A' test.${qa_user}
++chmod u+s $test_user
++chmod a+w $test_user
++stat -c '%A' $test_user
+ 
+ _cleanup_files
+ 
+@@ -196,35 +204,72 @@ _create_files
+ echo "check that suid/sgid bits are cleared after successful chown..."
+ 
+ echo "with no exec perm"
+-chmod ug+s test.${qa_user}
+-echo -n "before: "; stat -c '%A' test.${qa_user}
+-chown root test.${qa_user}
+-echo -n "after:  "; stat -c '%A' test.${qa_user}
++chmod ug+s $test_user
++echo -n "before: "; stat -c '%A' $test_user
++chown root $test_user
++echo -n "after:  "; stat -c '%A' $test_user
+ 
+ echo "with user exec perm"
+-chmod ug+s test.${qa_user}
+-chmod u+x test.${qa_user}
+-echo -n "before: "; stat -c '%A' test.${qa_user}
+-chown root test.${qa_user}
+-echo -n "after:  "; stat -c '%A' test.${qa_user}
++chmod ug+s $test_user
++chmod u+x $test_user
++echo -n "before: "; stat -c '%A' $test_user
++chown root $test_user
++echo -n "after:  "; stat -c '%A' $test_user
+ 
+ echo "with group exec perm"
+-chmod ug+s test.${qa_user}
+-chmod g+x test.${qa_user}
+-chmod u-x test.${qa_user}
+-echo -n "before: "; stat -c '%A' test.${qa_user}
+-chown root test.${qa_user}
+-echo -n "after:  "; stat -c '%A' test.${qa_user}
++chmod ug+s $test_user
++chmod g+x $test_user
++chmod u-x $test_user
++echo -n "before: "; stat -c '%A' $test_user
++chown root $test_user
++echo -n "after:  "; stat -c '%A' $test_user
+ 
+ echo "with user+group exec perm"
+-chmod ug+s test.${qa_user}
+-chmod ug+x test.${qa_user}
+-echo -n "before: "; stat -c '%A' test.${qa_user}
+-chown root test.${qa_user}
+-echo -n "after:  "; stat -c '%A' test.${qa_user}
++chmod ug+s $test_user
++chmod ug+x $test_user
++echo -n "before: "; stat -c '%A' $test_user
++chown root $test_user
++echo -n "after:  "; stat -c '%A' $test_user
+ 
+ _cleanup_files
+ 
++_create_files
++# Now test out the clear of suid/sgid for truncate
++#
++echo "check that suid/sgid bits are cleared after successful truncate..."
++
++echo "with no exec perm"
++echo frobnozzle >> $test_user
++chmod ug+s $test_user
++echo -n "before: "; stat -c '%A' $test_user
++su ${qa_user} -c "echo > $test_user"
++echo -n "after:  "; stat -c '%A' $test_user
++
++echo "with user exec perm"
++echo frobnozzle >> $test_user
++chmod ug+s $test_user
++chmod u+x $test_user
++echo -n "before: "; stat -c '%A' $test_user
++su ${qa_user} -c "echo > $test_user"
++echo -n "after:  "; stat -c '%A' $test_user
++
++echo "with group exec perm"
++echo frobnozzle >> $test_user
++chmod ug+s $test_user
++chmod g+x $test_user
++chmod u-x $test_user
++echo -n "before: "; stat -c '%A' $test_user
++su ${qa_user} -c "echo > $test_user"
++echo -n "after:  "; stat -c '%A' $test_user
++
++echo "with user+group exec perm"
++echo frobnozzle >> $test_user
++chmod ug+s $test_user
++chmod ug+x $test_user
++echo -n "before: "; stat -c '%A' $test_user
++su ${qa_user} -c "echo > $test_user"
++echo -n "after:  "; stat -c '%A' $test_user
++
+ #
+ # Test ATTR_*TIMES_SET
+ #
+@@ -235,10 +280,10 @@ echo
+ _create_files
+ 
+ echo "user: touch qa_user file (should succeed)"
+-su ${qa_user} -c "touch test.${qa_user}"
++su ${qa_user} -c "touch $test_user"
+ 
+ echo "user: touch root file (should fail)"
+-su ${qa_user} -c "touch test.root"
++su ${qa_user} -c "touch $test_root" 2>&1 | _filter_files
+ 
+ _cleanup_files
+ 
+diff --git a/tests/generic/193.out b/tests/generic/193.out
+index b89add3..357a7c1 100644
+--- a/tests/generic/193.out
++++ b/tests/generic/193.out
+@@ -8,14 +8,14 @@ user: chown root owned file to root (should fail)
+ chown: changing ownership of `test.root': Operation not permitted
+ user: chown qa_user owned file to qa_user (should succeed)
+ user: chown qa_user owned file to root (should fail)
+-chown: changing ownership of `test.fsgqa': Operation not permitted
++chown: changing ownership of `test.user': Operation not permitted
+ 
+ testing ATTR_GID
+ 
+ user: chgrp root owned file to root (should fail)
+ chgrp: changing group of `test.root': Operation not permitted
+ user: chgrp qa_user owned file to root (should fail)
+-chgrp: changing group of `test.fsgqa': Operation not permitted
++chgrp: changing group of `test.user': Operation not permitted
+ user: chgrp root owned file to qa_user (should fail)
+ chgrp: changing group of `test.root': Operation not permitted
+ user: chgrp qa_user owned file to qa_user (should succeed)
+@@ -42,6 +42,19 @@ after:  -rw-r-xr--
+ with user+group exec perm
+ before: -rwsr-sr--
+ after:  -rwxr-xr--
++check that suid/sgid bits are cleared after successful truncate...
++with no exec perm
++before: -rwSr-Sr--
++after:  -rw-r-Sr--
++with user exec perm
++before: -rwsr-Sr--
++after:  -rwxr-Sr--
++with group exec perm
++before: -rwSr-sr--
++after:  -rw-r-xr--
++with user+group exec perm
++before: -rwsr-sr--
++after:  -rwxr-xr--
+ 
+ testing ATTR_*TIMES_SET
+ 
 -- 
 1.7.10.4
 
