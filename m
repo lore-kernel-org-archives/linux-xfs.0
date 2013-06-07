@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 915B97F4C
-	for <xfs@oss.sgi.com>; Thu,  6 Jun 2013 21:59:39 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 626BC30407A
-	for <xfs@oss.sgi.com>; Thu,  6 Jun 2013 19:59:39 -0700 (PDT)
-Received: from esmtp1.es.uci.edu (esmtp1.es.uci.edu [128.195.153.131]) by
-	cuda.sgi.com with ESMTP id rnHJtHG0mju7XqaN (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 06 Jun 2013 19:59:38 -0700 (PDT)
-Received: from mail-we0-f171.google.com (mail-we0-f171.google.com
-	[74.125.82.171]) (authenticated bits=0)
-	by esmtp1.es.uci.edu (8.13.8/8.13.8) with ESMTP id r572xZkx413083
-	(version=TLSv1/SSLv3 cipher=RC4-SHA bits=128 verify=NOT)
-	for <xfs@oss.sgi.com>; Thu, 6 Jun 2013 19:59:37 -0700
-Received: by mail-we0-f171.google.com with SMTP id m46so2638843wev.2
-	for <xfs@oss.sgi.com>; Thu, 06 Jun 2013 19:59:34 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id ECEAD7F37
+	for <xfs@oss.sgi.com>; Thu,  6 Jun 2013 22:50:55 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id CD7638F8052
+	for <xfs@oss.sgi.com>; Thu,  6 Jun 2013 20:50:52 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	uCsY4n5C01J7601f for <xfs@oss.sgi.com>;
+	Thu, 06 Jun 2013 20:50:50 -0700 (PDT)
+Date: Fri, 7 Jun 2013 13:50:46 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: XFS Adding Quotas - Skip Quota check on first mount/boot
+Message-ID: <20130607035046.GJ29338@dastard>
+References: <CAO9TOLffaO62ZtvchpKnnORuNd0GJMsqKDeAhmdSQ1mnFn1EpA@mail.gmail.com>
 MIME-Version: 1.0
-Date: Thu, 6 Jun 2013 19:59:34 -0700
-Message-ID: <CAO9TOLffaO62ZtvchpKnnORuNd0GJMsqKDeAhmdSQ1mnFn1EpA@mail.gmail.com>
-Subject: XFS Adding Quotas - Skip Quota check on first mount/boot
-From: Adam Brenner <aebrenne@uci.edu>
+Content-Disposition: inline
+In-Reply-To: <CAO9TOLffaO62ZtvchpKnnORuNd0GJMsqKDeAhmdSQ1mnFn1EpA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,55 +29,51 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Adam Brenner <aebrenne@uci.edu>
+Cc: xfs@oss.sgi.com
 
-Howdy XFS Devs,
+On Thu, Jun 06, 2013 at 07:59:34PM -0700, Adam Brenner wrote:
+> Howdy XFS Devs,
+> 
+> We run a 14TB XFS fileserver on our cluster and want to add quota
+> support. This is running 3.9.2-1.el6.elrepo.x86_64 kernel under CentOS
+> 6.3 (Final).
 
-We run a 14TB XFS fileserver on our cluster and want to add quota
-support. This is running 3.9.2-1.el6.elrepo.x86_64 kernel under CentOS
-6.3 (Final).
+How many files in the filesystem?
 
-The issue is when we unmount the XFS RAID, and re-mount it adding
-quota support, the mount command hangs. Sever IS responsive and the
-XFS mount point is not accessible. Reverting our changes in /etc/fstab
-to remove the quota options does not have mount hang.
+> The issue is when we unmount the XFS RAID, and re-mount it adding
+> quota support, the mount command hangs.
 
-I suspect that upon re-mount, XFS is running a quota check on the 14TB
-RAID. My question is: how do I disable the initial quota check so it
-can mount it properly and have quota check run in the background?
+It won't have hung, it will just be busy doing a quotacheck.
 
-/etc/fstab entry:
+> Sever IS responsive and the
+> XFS mount point is not accessible. Reverting our changes in /etc/fstab
+> to remove the quota options does not have mount hang.
 
-    /dev/sdb   /w1    xfs   defaults,noatime,usrquota,grpquota 1 2
+Because it doesn't do a quotacheck.
 
+> I suspect that upon re-mount, XFS is running a quota check on the 14TB
+> RAID. My question is: how do I disable the initial quota check so it
+> can mount it properly and have quota check run in the background?
 
-/var/log/messages output:
+You can't. quotacheck relies on exclusive access to the filesystem,
+and so the mount cannot process until it completes. Quotas need to
+be consistent before you can start using the filesystem....
 
-    Jun  6 11:37:43 nas-2-1 kernel: XFS (sdb): Mounting Filesystem
-    Jun  6 11:37:43 nas-2-1 kernel: XFS (sdb): Ending clean mount
-    Jun  6 11:37:43 nas-2-1 kernel: XFS (sdb): Quotacheck needed:
-                                    Please wait.
+Now, there's the possibility that we could parallelise quotacheck
+because it uses bulkstat for iteration, but somebody would have to
+find the time to do that and it won't solve your immediate problem.
 
-I do not mind high CPU usage or slow performance while the mount point
-is active, but having it unavailable is not an option we would like
-stick with. I suspect running quota check on 14TB would take roughly a
-full work day and then some.
+Hence I suggest just waiting for it to complete - if you have
+millions of inodes it could hours to complete, so just let it go
+overnight...
 
-Thanks,
--Adam
+Cheers,
 
---
-Adam Brenner
-Computer Science, Undergraduate Student
-Donald Bren School of Information and Computer Sciences
-
-Research Computing Support
-Office of Information Technology
-http://www.oit.uci.edu/rcs/
-
-University of California, Irvine
-www.ics.uci.edu/~aebrenne/
-aebrenne@uci.edu
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
