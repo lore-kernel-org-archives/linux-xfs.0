@@ -1,27 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4D70B7F52
-	for <xfs@oss.sgi.com>; Thu,  6 Jun 2013 20:41:07 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 29A648F8059
-	for <xfs@oss.sgi.com>; Thu,  6 Jun 2013 18:41:07 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	n8EIeS7jB2kr2BXl for <xfs@oss.sgi.com>;
-	Thu, 06 Jun 2013 18:41:05 -0700 (PDT)
-Received: from dave by dastard with local (Exim 4.76)
-	(envelope-from <david@fromorbit.com>) id 1Uklfq-00048D-Tz
-	for xfs@oss.sgi.com; Fri, 07 Jun 2013 11:41:02 +1000
-Date: Fri, 7 Jun 2013 11:41:02 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 48/48] xfsprogs: Document XFs specific mount options in
-	xfs(5)
-Message-ID: <20130607014102.GI29338@dastard>
-References: <1370564771-4929-1-git-send-email-david@fromorbit.com>
-	<1370564771-4929-49-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 915B97F4C
+	for <xfs@oss.sgi.com>; Thu,  6 Jun 2013 21:59:39 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 626BC30407A
+	for <xfs@oss.sgi.com>; Thu,  6 Jun 2013 19:59:39 -0700 (PDT)
+Received: from esmtp1.es.uci.edu (esmtp1.es.uci.edu [128.195.153.131]) by
+	cuda.sgi.com with ESMTP id rnHJtHG0mju7XqaN (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 06 Jun 2013 19:59:38 -0700 (PDT)
+Received: from mail-we0-f171.google.com (mail-we0-f171.google.com
+	[74.125.82.171]) (authenticated bits=0)
+	by esmtp1.es.uci.edu (8.13.8/8.13.8) with ESMTP id r572xZkx413083
+	(version=TLSv1/SSLv3 cipher=RC4-SHA bits=128 verify=NOT)
+	for <xfs@oss.sgi.com>; Thu, 6 Jun 2013 19:59:37 -0700
+Received: by mail-we0-f171.google.com with SMTP id m46so2638843wev.2
+	for <xfs@oss.sgi.com>; Thu, 06 Jun 2013 19:59:34 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1370564771-4929-49-git-send-email-david@fromorbit.com>
+Date: Thu, 6 Jun 2013 19:59:34 -0700
+Message-ID: <CAO9TOLffaO62ZtvchpKnnORuNd0GJMsqKDeAhmdSQ1mnFn1EpA@mail.gmail.com>
+Subject: XFS Adding Quotas - Skip Quota check on first mount/boot
+From: Adam Brenner <aebrenne@uci.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,24 +35,53 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-On Fri, Jun 07, 2013 at 10:26:11AM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Rather than reference mount(8) to see xfs specific mount options,
-> document them directly in the xfs(5) man page in this package. That
-> way it is easy to update XFS mount options when the change.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Howdy XFS Devs,
 
-I didn't mean to include this patch in the series - it's not
-completely up to date yet....
+We run a 14TB XFS fileserver on our cluster and want to add quota
+support. This is running 3.9.2-1.el6.elrepo.x86_64 kernel under CentOS
+6.3 (Final).
 
-Cheers,
+The issue is when we unmount the XFS RAID, and re-mount it adding
+quota support, the mount command hangs. Sever IS responsive and the
+XFS mount point is not accessible. Reverting our changes in /etc/fstab
+to remove the quota options does not have mount hang.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I suspect that upon re-mount, XFS is running a quota check on the 14TB
+RAID. My question is: how do I disable the initial quota check so it
+can mount it properly and have quota check run in the background?
+
+/etc/fstab entry:
+
+    /dev/sdb   /w1    xfs   defaults,noatime,usrquota,grpquota 1 2
+
+
+/var/log/messages output:
+
+    Jun  6 11:37:43 nas-2-1 kernel: XFS (sdb): Mounting Filesystem
+    Jun  6 11:37:43 nas-2-1 kernel: XFS (sdb): Ending clean mount
+    Jun  6 11:37:43 nas-2-1 kernel: XFS (sdb): Quotacheck needed:
+                                    Please wait.
+
+I do not mind high CPU usage or slow performance while the mount point
+is active, but having it unavailable is not an option we would like
+stick with. I suspect running quota check on 14TB would take roughly a
+full work day and then some.
+
+Thanks,
+-Adam
+
+--
+Adam Brenner
+Computer Science, Undergraduate Student
+Donald Bren School of Information and Computer Sciences
+
+Research Computing Support
+Office of Information Technology
+http://www.oit.uci.edu/rcs/
+
+University of California, Irvine
+www.ics.uci.edu/~aebrenne/
+aebrenne@uci.edu
 
 _______________________________________________
 xfs mailing list
