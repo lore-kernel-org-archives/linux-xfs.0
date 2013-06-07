@@ -1,16 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D4E4C7CBF
-	for <xfs@oss.sgi.com>; Fri,  7 Jun 2013 16:04:50 -0500 (CDT)
-Date: Fri, 7 Jun 2013 16:04:47 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 00/48] xfsprogs: CRC support
-Message-ID: <20130607210447.GP20932@sgi.com>
-References: <1370564771-4929-1-git-send-email-david@fromorbit.com>
-	<20130607061139.GM29338@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130607061139.GM29338@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8D5DF7CBF
+	for <linux-xfs@oss.sgi.com>; Fri,  7 Jun 2013 17:40:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 648F4304066
+	for <linux-xfs@oss.sgi.com>; Fri,  7 Jun 2013 15:40:10 -0700 (PDT)
+Received: from plane.gmane.org (plane.gmane.org [80.91.229.3]) by cuda.sgi.com
+	with ESMTP id Cq9rzAM3Nbj9wuFg (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <linux-xfs@oss.sgi.com>;
+	Fri, 07 Jun 2013 15:40:08 -0700 (PDT)
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1Ul5KF-0005Oj-WA
+	for linux-xfs@oss.sgi.com; Sat, 08 Jun 2013 00:40:04 +0200
+Received: from 89-69-21-174.dynamic.chello.pl ([89.69.21.174])
+	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+	id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Sat, 08 Jun 2013 00:40:03 +0200
+Received: from arekm by 89-69-21-174.dynamic.chello.pl with local (Gmexim 0.1
+	(Debian)) id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Sat, 08 Jun 2013 00:40:03 +0200
+From: Arkadiusz =?ISO-8859-2?Q?Mi=B6kiewicz?= <arekm@maven.pl>
+Subject: Re: xfsprogs: is it one issue?
+Date: Sat, 08 Jun 2013 00:31:55 +0200
+Message-ID: <kotn0m$fmo$1@ger.gmane.org>
+References: <CAEH94LjnVn-uD6cfwOcChC4wq1PppcD8BN30F93SD=YjdTbbuw@mail.gmail.com>
+	<20130526224449.GM24543@dastard> <20130526224805.GN24543@dastard>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,48 +34,71 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-2"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-Hey,
+Dave Chinner wrote:
 
-On Fri, Jun 07, 2013 at 04:11:39PM +1000, Dave Chinner wrote:
-> On Fri, Jun 07, 2013 at 10:25:23AM +1000, Dave Chinner wrote:
-> > Hi folks,
-> > 
-> > This is the latest update of the series of patches tht introduces
-> > CRC support into xfsprogs. Of note, for CRC enabled filesystems;
-> > 
-> > 	- write support for xfs-db is disabled
-> > 	- obfuscation for metadump is disabled
-> > 	- xfs_check does nothing ("always succeed") so that xfstests
-> > 	  can run without needing this
-> > 	- all structures shoul dbe supported for printing in xfs_db
-> > 	- xfs_repair should be able to fully validate the structure
-> > 	  of a CRC enabled filesystem.
-> > 	- xfs_repair still ignores CRC validation errors when
-> > 	  reading metadata
-> > 	- mkfs.xfs enforces limitations on the format of CRC enabled
-> > 	  filesystems (inode size, attr format, projid32bit, etc).
-> > 	- whenever a v5 superblock is parsed on read by any utility,
-> > 	  it outputs a wanring about it being an experimental
-> > 	  format.
-> > 
-> > Bug reports, patches, comments, reviews, etc all welcome.
-> 
-> I've just realised that I haven't ported any of the recent kernel
-> fixes across to this patch set, so there will be another few patches
-> needed for those as well...
+> On Mon, May 27, 2013 at 08:44:49AM +1000, Dave Chinner wrote:
+>> On Sun, May 26, 2013 at 12:29:11AM +0800, Zhi Yong Wu wrote:
+>> > HI,
+>> > =
 
-These two series are applied to the crc-dev branch at
-git://oss.sgi.com/xfs/cmds/xfsprogs.git 
+>> > Did anyone hit this issue?
+>> > =
 
-Regards,
-	Ben
+>> > [root@f15 xfsprogs]# make
+>> > Building include
+>> > Building libxfs
+>> >     [TEST]    CRC32
+>> > In file included from ../include/libxfs.h:584:0,
+>> >                  from crc32.c:36:
+>> > ../include/xfs/xfs_ialloc.h:75:2: error: unknown type name ?umode_t?
+>> > gmake[2]: *** [crc32selftest] Error 1
+>> > gmake[1]: *** [libxfs] Error 2
+>> > make: *** [default] Error 2
+>> =
+
+>> Install the latest kernel headers package for your distro.
+> =
+
+> Actually, on debian it's part of a libc-dev package:
+> =
+
+> $ grep -r umode /usr/include |head -1
+> /usr/include/asm-generic/types.h:typedef unsigned short umode_t
+> $ apt-file search /usr/include/asm-generic/types.h
+> linux-libc-dev: /usr/include/asm-generic/types.h
+> $
+
+This won't work on recent kernels. Recent kernels export sanitized headers =
+- it's called UAPI .
+
+>From irc conversation:
+
+00:07 < arekm> anyway current kernels export uapi headers (aka user space a=
+pi headers,
+https://lwn.net/Articles/507794/) and these don't export things like umode_=
+t -
+https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/includ=
+e/uapi/asm-generic/types.h =
+
+https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/includ=
+e/uapi/asm-generic/int-ll64.h
+00:10 < bpm> arekm, linux/types.h has it on 3.10
+00:10 < arekm> bpm: yes but this is not userspace installed header. it's ke=
+rnel only
+00:11 < arekm> bpm: linux-*/include/uapi/asm-generic/types.h is the one bei=
+ng installed for userspace
+
+
+
+-- =
+
+Arkadiusz Mi=B6kiewicz, arekm / maven.pl
 
 _______________________________________________
 xfs mailing list
