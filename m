@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id F095829E1E
-	for <xfs@oss.sgi.com>; Thu,  6 Jun 2013 19:27:41 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id DEAA0304089
-	for <xfs@oss.sgi.com>; Thu,  6 Jun 2013 17:27:41 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5CCC729E31
+	for <xfs@oss.sgi.com>; Thu,  6 Jun 2013 19:27:44 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2DF038F8059
+	for <xfs@oss.sgi.com>; Thu,  6 Jun 2013 17:27:44 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	wnWitLk6Yok557ji for <xfs@oss.sgi.com>;
-	Thu, 06 Jun 2013 17:27:34 -0700 (PDT)
-Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UkkWi-0003wy-Jc
+	VKT9ALYUb4ZFaXq9 for <xfs@oss.sgi.com>;
+	Thu, 06 Jun 2013 17:27:42 -0700 (PDT)
+Received: from [192.168.1.1] (helo=disappointment)
+	by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1UkkWi-0003x4-Lv
 	for xfs@oss.sgi.com; Fri, 07 Jun 2013 10:27:32 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UkkWY-0001NF-G4
+	(envelope-from <dave@disappointment.disaster>) id 1UkkWY-0001NV-Jq
 	for xfs@oss.sgi.com; Fri, 07 Jun 2013 10:27:22 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 45/48] xfs_repair: fix btree block magic number mapping
-Date: Fri,  7 Jun 2013 10:26:08 +1000
-Message-Id: <1370564771-4929-46-git-send-email-david@fromorbit.com>
+Subject: [PATCH 48/48] xfsprogs: Document XFs specific mount options in xfs(5)
+Date: Fri,  7 Jun 2013 10:26:11 +1000
+Message-Id: <1370564771-4929-49-git-send-email-david@fromorbit.com>
 In-Reply-To: <1370564771-4929-1-git-send-email-david@fromorbit.com>
 References: <1370564771-4929-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,121 +39,223 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The magic numbers for generic btree blocks were modified some time
-ago (before the kernel code was committed) but the xfs_repair
-mapping code was not updated to match. It's no longer a simple
-mapping, so just make the code a dense array and use the magic
-number as the search key.
+Rather than reference mount(8) to see xfs specific mount options,
+document them directly in the xfs(5) man page in this package. That
+way it is easy to update XFS mount options when the change.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- db/btblock.c |   37 +++++++++++++++++++++++++------------
- 1 file changed, 25 insertions(+), 12 deletions(-)
+ man/man5/xfs.5 |  197 +++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 194 insertions(+), 3 deletions(-)
 
-diff --git a/db/btblock.c b/db/btblock.c
-index 37b9903..34188db 100644
---- a/db/btblock.c
-+++ b/db/btblock.c
-@@ -26,65 +26,66 @@
- #include "bit.h"
- #include "init.h"
- 
--
- /*
-  * Definition of the possible btree block layouts.
-  */
- struct xfs_db_btree {
-+	uint32_t		magic;
- 	size_t			block_len;
- 	size_t			key_len;
- 	size_t			rec_len;
- 	size_t			ptr_len;
- } btrees[] = {
--	[/*0x424d415*/0] = { /* BMAP */
-+	{	XFS_BMAP_MAGIC,
- 		XFS_BTREE_LBLOCK_LEN,
- 		sizeof(xfs_bmbt_key_t),
- 		sizeof(xfs_bmbt_rec_t),
- 		sizeof(__be64),
- 	},
--	[/*0x4142544*/2] = { /* ABTB */
-+	{	XFS_ABTB_MAGIC,
- 		XFS_BTREE_SBLOCK_LEN,
- 		sizeof(xfs_alloc_key_t),
- 		sizeof(xfs_alloc_rec_t),
- 		sizeof(__be32),
- 	},
--	[/*0x4142544*/3] = { /* ABTC */
-+	{	XFS_ABTC_MAGIC,
- 		XFS_BTREE_SBLOCK_LEN,
- 		sizeof(xfs_alloc_key_t),
- 		sizeof(xfs_alloc_rec_t),
- 		sizeof(__be32),
- 	},
--	[/*0x4941425*/4] = { /* IABT */
-+	{	XFS_IBT_MAGIC,
- 		XFS_BTREE_SBLOCK_LEN,
- 		sizeof(xfs_inobt_key_t),
- 		sizeof(xfs_inobt_rec_t),
- 		sizeof(__be32),
- 	},
--	[/*0x424d415*/8] = { /* BMAP_CRC */
-+	{	XFS_BMAP_CRC_MAGIC,
- 		XFS_BTREE_LBLOCK_CRC_LEN,
- 		sizeof(xfs_bmbt_key_t),
- 		sizeof(xfs_bmbt_rec_t),
- 		sizeof(__be64),
- 	},
--	[/*0x4142544*/0xa] = { /* ABTB_CRC */
-+	{	XFS_ABTB_CRC_MAGIC,
- 		XFS_BTREE_SBLOCK_CRC_LEN,
- 		sizeof(xfs_alloc_key_t),
- 		sizeof(xfs_alloc_rec_t),
- 		sizeof(__be32),
- 	},
--	[/*0x414254*/0xb] = { /* ABTC_CRC */
-+	{	XFS_ABTC_CRC_MAGIC,
- 		XFS_BTREE_SBLOCK_CRC_LEN,
- 		sizeof(xfs_alloc_key_t),
- 		sizeof(xfs_alloc_rec_t),
- 		sizeof(__be32),
- 	},
--	[/*0x4941425*/0xc] = { /* IABT_CRC */
-+	{	XFS_IBT_CRC_MAGIC,
- 		XFS_BTREE_SBLOCK_CRC_LEN,
- 		sizeof(xfs_inobt_key_t),
- 		sizeof(xfs_inobt_rec_t),
- 		sizeof(__be32),
- 	},
--
-+	{	0,
-+	},
- };
- 
- /*
-@@ -93,8 +94,20 @@ struct xfs_db_btree {
-  * We use the least significant bit of the magic number as index into
-  * the array of block defintions.
-  */
--#define block_to_bt(bb) \
--	(&btrees[be32_to_cpu((bb)->bb_magic) & 0xf])
-+static struct xfs_db_btree *
-+block_to_bt(
-+	struct xfs_btree_block	*bb)
-+{
-+	struct xfs_db_btree *btp = &btrees[0];
-+
-+	do {
-+		if (be32_to_cpu((bb)->bb_magic) == btp->magic)
-+			return btp;
-+		btp++;
-+	} while (btp->magic != 0);
-+
-+	return NULL;
-+}
- 
- /* calculate max records.  Only for non-leaves. */
- static int
+diff --git a/man/man5/xfs.5 b/man/man5/xfs.5
+index 0f490f0..7123008 100644
+--- a/man/man5/xfs.5
++++ b/man/man5/xfs.5
+@@ -98,9 +98,200 @@ and by-handle (see
+ .BR open_by_handle (3))
+ interfaces.
+ .SH MOUNT OPTIONS
+-Refer to the
+-.BR mount (8)
+-manual entry for descriptions of the individual XFS mount options.
++.TP
++.BI allocsize= size
++Sets the buffered I/O end-of-file preallocation size when
++doing delayed allocation writeout (default size is 64KiB).
++Valid values for this option are page size (typically 4KiB)
++through to 1GiB, inclusive, in power-of-2 increments.
++.TP
++.BR attr2 | noattr2
++The options enable/disable (default is enabled) an "opportunistic"
++improvement to be made in the way inline extended attributes are
++stored on-disk.
++When the new form is used for the first time (by setting or
++removing extended attributes) the on-disk superblock feature
++bit field will be updated to reflect this format being in use.
++.TP
++.B barrier | nobarrier
++Enables/disables the use of block layer write barriers for writes into
++the journal and for data integrity operations.
++This allows for drive level write caching to be enabled, for devices that
++support write barriers.
++The default behaviour is to have barriers enabled.
++.TP
++.BR ikeep | noikeep
++When inode clusters are emptied of inodes, keep them around
++on the disk (ikeep) - this is the traditional XFS behaviour
++and is still the default for now.  Using the noikeep option,
++inode clusters are returned to the free space pool.
++.TP
++.B inode64
++Indicates that XFS is allowed to create inodes at any location
++in the filesystem, including those which will result in inode
++numbers occupying more than 32 bits of significance.  This is
++provided for backwards compatibility, but causes problems for
++backup applications that cannot handle large inode numbers.
++.TP
++.BR largeio | nolargeio
++If
++.B nolargeio
++is specified, the optimal I/O reported in
++st_blksize by
++.BR stat (2)
++will be as small as possible to allow user
++applications to avoid inefficient read/modify/write I/O.
++If
++.B largeio
++is specified, a filesystem that has a
++.B swidth
++specified
++will return the
++.B swidth
++value (in bytes) in st_blksize. If the
++filesystem does not have a
++.B swidth
++specified but does specify
++an
++.B allocsize
++then
++.B allocsize
++(in bytes) will be returned
++instead.
++If neither of these two options are specified, then filesystem
++will behave as if
++.B nolargeio
++was specified.
++.TP
++.BI logbufs= value
++Set the number of in-memory log buffers.  Valid numbers range
++from 2-8 inclusive.
++The default value is 8 buffers for any recent kernel.
++.TP
++.BI logbsize= value
++Set the size of each in-memory log buffer.
++Size may be specified in bytes, or in kilobytes with a "k" suffix.
++Valid sizes for version 1 and version 2 logs are 16384 (16k) and
++32768 (32k).  Valid sizes for version 2 logs also include
++65536 (64k), 131072 (128k) and 262144 (256k).
++The default value for any recent kernel is 32768.
++.TP
++\fBlogdev=\fP\fIdevice\fP and \fBrtdev=\fP\fIdevice\fP
++Use an external log (metadata journal) and/or real-time device.
++An XFS filesystem has up to three parts: a data section, a log section,
++and a real-time section.
++The real-time section is optional, and the log section can be separate
++from the data section or contained within it.
++Refer to
++.BR xfs (5).
++.TP
++.BI  mtpt= mountpoint
++Use with the
++.B dmapi
++option. The value specified here will be
++included in the DMAPI mount event, and should be the path of
++the actual mountpoint that is used.
++.TP
++.B noalign
++Data allocations will not be aligned at stripe unit boundaries.
++.TP
++.B noatime
++Access timestamps are not updated when a file is read.
++.TP
++.B norecovery
++The filesystem will be mounted without running log recovery.
++If the filesystem was not cleanly unmounted, it is likely to
++be inconsistent when mounted in
++.B norecovery
++mode.
++Some files or directories may not be accessible because of this.
++Filesystems mounted
++.B norecovery
++must be mounted read-only or the mount will fail.
++.TP
++.B nouuid
++Don't check for double mounted filesystems using the filesystem uuid.
++This is useful to mount LVM snapshot volumes.
++.TP
++.B osyncisosync
++Make O_SYNC writes implement true O_SYNC.  WITHOUT this option,
++Linux XFS behaves as if an
++.B osyncisdsync
++option is used,
++which will make writes to files opened with the O_SYNC flag set
++behave as if the O_DSYNC flag had been used instead.
++This can result in better performance without compromising
++data safety.
++However if this option is not in effect, timestamp updates from
++O_SYNC writes can be lost if the system crashes.
++If timestamp updates are critical, use the
++.B osyncisosync
++option.
++.TP
++.BR uquota | usrquota | uqnoenforce | quota
++User disk quota accounting enabled, and limits (optionally)
++enforced.  Refer to
++.BR xfs_quota (8)
++for further details.
++.TP
++.BR gquota | grpquota | gqnoenforce
++Group disk quota accounting enabled and limits (optionally)
++enforced. Refer to
++.BR xfs_quota (8)
++for further details.
++.TP
++.BR pquota | prjquota | pqnoenforce
++Project disk quota accounting enabled and limits (optionally)
++enforced. Refer to
++.BR xfs_quota (8)
++for further details.
++.TP
++\fBsunit=\fP\fIvalue\fP and \fBswidth=\fP\fIvalue\fP
++Used to specify the stripe unit and width for a RAID device or a stripe
++volume.
++.I value
++must be specified in 512-byte block units.
++If this option is not specified and the filesystem was made on a stripe
++volume or the stripe width or unit were specified for the RAID device at
++mkfs time, then the mount system call will restore the value from the
++superblock.
++For filesystems that are made directly on RAID devices, these options can be
++used to override the information in the superblock if the underlying disk
++layout changes after the filesystem has been created.
++The
++.B swidth
++option is required if the
++.B sunit
++option has been specified,
++and must be a multiple of the
++.B sunit
++value.
++.TP
++.B swalloc
++Data allocations will be rounded up to stripe width boundaries
++when the current end of file is being extended and the file
++size is larger than the stripe width size.
++.TP
++.B dmapi
++Enable the DMAPI (Data Management API) event callouts.
++Use with the
++.B mtpt
++option.
++.TP
++.BR grpid | bsdgroups " and " nogrpid | sysvgroups
++These options define what group ID a newly created file gets.
++When grpid is set, it takes the group ID of the directory in
++which it is created; otherwise (the default) it takes the fsgid
++of the current process, unless the directory has the setgid bit
++set, in which case it takes the gid from the parent directory,
++and also gets the setgid bit set if it is a directory itself.
++.TP
++.BI ihashsize= value
++Sets the number of hash buckets available for hashing the
++in-memory inodes of the specified mount point.  If a value
++of zero is used, the value selected by the default algorithm
++will be displayed in
++.IR /proc/mounts .
+ .SH SEE ALSO
+ .BR xfsctl (3),
+ .BR mount (8),
 -- 
 1.7.10.4
 
