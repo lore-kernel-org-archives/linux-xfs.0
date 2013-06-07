@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id EAA897F69
-	for <xfs@oss.sgi.com>; Fri,  7 Jun 2013 07:25:18 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id D950F7F63
+	for <xfs@oss.sgi.com>; Fri,  7 Jun 2013 07:25:19 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 83BA8AC00C
-	for <xfs@oss.sgi.com>; Fri,  7 Jun 2013 05:25:18 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 90AA7304075
+	for <xfs@oss.sgi.com>; Fri,  7 Jun 2013 05:25:19 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	RpPBb16YjtrmGXat for <xfs@oss.sgi.com>;
-	Fri, 07 Jun 2013 05:25:16 -0700 (PDT)
+	7pn1RUFFt96VVnBq for <xfs@oss.sgi.com>;
+	Fri, 07 Jun 2013 05:25:18 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UkvjG-0005TF-Je
+	(envelope-from <dave@fromorbit.com>) id 1UkvjG-0005TL-MW
 	for xfs@oss.sgi.com; Fri, 07 Jun 2013 22:25:14 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UkvjG-00031L-G9
+	(envelope-from <dave@disappointment.disaster>) id 1UkvjG-00031b-JC
 	for xfs@oss.sgi.com; Fri, 07 Jun 2013 22:25:14 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 07/12] xfs: remote attribute tail zeroing does too much
-Date: Fri,  7 Jun 2013 22:24:56 +1000
-Message-Id: <1370607901-11538-8-git-send-email-david@fromorbit.com>
+Subject: [PATCH 10/12] xfs: fully initialise temp leaf in
+	xfs_attr3_leaf_compact
+Date: Fri,  7 Jun 2013 22:24:59 +1000
+Message-Id: <1370607901-11538-11-git-send-email-david@fromorbit.com>
 In-Reply-To: <1370607901-11538-1-git-send-email-david@fromorbit.com>
 References: <1370564771-4929-1-git-send-email-david@fromorbit.com>
 	<1370607901-11538-1-git-send-email-david@fromorbit.com>
@@ -39,113 +40,97 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When an attribute data does not fill then entire remote block, we
-zero the remaining part of the buffer. This, however, needs to take
-into account that the buffer has a header, and so the offset where
-zeroing starts and the length of zeroing need to take this into
-account. Otherwise we end up with zeros over the end of the
-attribute value when CRCs are enabled.
+xfs_attr3_leaf_compact() uses a temporary buffer for compacting the
+the entries in a leaf. It copies the the original buffer into the
+temporary buffer, then zeros the original buffer completely. It then
+copies the entries back into the original buffer.  However, the
+original buffer has not been correctly initialised, and so the
+movement of the entries goes horribly wrong.
 
-While there, make sure we only ask to map an extent that covers the
-remaining range of the attribute, rather than asking every time for
-the full length of remote data. If the remote attribute blocks are
-contiguous with other parts of the attribute tree, it will map those
-blocks as well and we can potentially zero them incorrectly. We can
-also get buffer size mistmatches when trying to read or remove the
-remote attribute, and this can lead to not finding the correct
-buffer when looking it up in cache.
+Make sure the zeroed destination buffer is fully initialised, and
+once we've set up the destination incore header appropriately, write
+is back to the buffer before starting to move entries around.
+
+While debugging this, the _d/_s prefixes weren't sufficient to
+remind me what buffer was what, so rename then all _src/_dst.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- libxfs/xfs_attr_remote.c |   35 +++++++++++++++++------------------
- 1 file changed, 17 insertions(+), 18 deletions(-)
+ libxfs/xfs_attr_leaf.c |   42 ++++++++++++++++++++++++++----------------
+ 1 file changed, 26 insertions(+), 16 deletions(-)
 
-diff --git a/libxfs/xfs_attr_remote.c b/libxfs/xfs_attr_remote.c
-index b9b2b50..901cfdc 100644
---- a/libxfs/xfs_attr_remote.c
-+++ b/libxfs/xfs_attr_remote.c
-@@ -273,10 +273,7 @@ xfs_attr_rmtval_set(
- 	 * and we may not need that many, so we have to handle this when
- 	 * allocating the blocks below. 
+diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
+index d7db336..2aac9d9 100644
+--- a/libxfs/xfs_attr_leaf.c
++++ b/libxfs/xfs_attr_leaf.c
+@@ -1235,11 +1235,12 @@ xfs_attr3_leaf_add_work(
+ STATIC void
+ xfs_attr3_leaf_compact(
+ 	struct xfs_da_args	*args,
+-	struct xfs_attr3_icleaf_hdr *ichdr_d,
++	struct xfs_attr3_icleaf_hdr *ichdr_dst,
+ 	struct xfs_buf		*bp)
+ {
+-	xfs_attr_leafblock_t	*leaf_s, *leaf_d;
+-	struct xfs_attr3_icleaf_hdr ichdr_s;
++	struct xfs_attr_leafblock *leaf_src;
++	struct xfs_attr_leafblock *leaf_dst;
++	struct xfs_attr3_icleaf_hdr ichdr_src;
+ 	struct xfs_trans	*trans = args->trans;
+ 	struct xfs_mount	*mp = trans->t_mountp;
+ 	char			*tmpbuffer;
+@@ -1247,29 +1248,38 @@ xfs_attr3_leaf_compact(
+ 	trace_xfs_attr_leaf_compact(args);
+ 
+ 	tmpbuffer = kmem_alloc(XFS_LBSIZE(mp), KM_SLEEP);
+-	ASSERT(tmpbuffer != NULL);
+ 	memcpy(tmpbuffer, bp->b_addr, XFS_LBSIZE(mp));
+ 	memset(bp->b_addr, 0, XFS_LBSIZE(mp));
++	leaf_src = (xfs_attr_leafblock_t *)tmpbuffer;
++	leaf_dst = bp->b_addr;
+ 
+ 	/*
+-	 * Copy basic information
++	 * Copy the on-disk header back into the destination buffer to ensure
++	 * all the information in the header that is not part of the incore
++	 * header structure is preserved.
  	 */
--	if (!crcs)
--		blkcnt = XFS_B_TO_FSB(mp, args->valuelen);
--	else
--		blkcnt = xfs_attr3_rmt_blocks(mp, args->valuelen);
-+	blkcnt = xfs_attr3_rmt_blocks(mp, args->valuelen);
- 
- 	error = xfs_bmap_first_unused(args->trans, args->dp, blkcnt, &lfileoff,
- 						   XFS_ATTR_FORK);
-@@ -371,8 +368,11 @@ xfs_attr_rmtval_set(
- 	 */
- 	lblkno = args->rmtblkno;
- 	valuelen = args->valuelen;
-+	blkcnt = args->rmtblkcnt;
- 	while (valuelen > 0) {
- 		int	byte_cnt;
-+		int	hdr_size;
-+		int	dblkcnt;
- 		char	*buf;
- 
- 		/*
-@@ -381,7 +381,7 @@ xfs_attr_rmtval_set(
- 		xfs_bmap_init(args->flist, args->firstblock);
- 		nmap = 1;
- 		error = xfs_bmapi_read(dp, (xfs_fileoff_t)lblkno,
--				       args->rmtblkcnt, &map, &nmap,
-+				       blkcnt, &map, &nmap,
- 				       XFS_BMAPI_ATTRFORK);
- 		if (error)
- 			return(error);
-@@ -390,26 +390,25 @@ xfs_attr_rmtval_set(
- 		       (map.br_startblock != HOLESTARTBLOCK));
- 
- 		dblkno = XFS_FSB_TO_DADDR(mp, map.br_startblock),
--		blkcnt = XFS_FSB_TO_BB(mp, map.br_blockcount);
-+		dblkcnt = XFS_FSB_TO_BB(mp, map.br_blockcount);
- 
--		bp = xfs_buf_get(mp->m_ddev_targp, dblkno, blkcnt, 0);
-+		bp = xfs_buf_get(mp->m_ddev_targp, dblkno, dblkcnt, 0);
- 		if (!bp)
- 			return ENOMEM;
- 		bp->b_ops = &xfs_attr3_rmt_buf_ops;
- 
--		byte_cnt = BBTOB(bp->b_length);
--		byte_cnt = XFS_ATTR3_RMT_BUF_SPACE(mp, byte_cnt);
--		if (valuelen < byte_cnt)
--			byte_cnt = valuelen;
--
- 		buf = bp->b_addr;
--		buf += xfs_attr3_rmt_hdr_set(mp, dp->i_ino, offset,
-+		byte_cnt = XFS_ATTR3_RMT_BUF_SPACE(mp, BBTOB(bp->b_length));
-+		byte_cnt = min_t(int, valuelen, byte_cnt);
-+		hdr_size = xfs_attr3_rmt_hdr_set(mp, dp->i_ino, offset,
- 					     byte_cnt, bp);
--		memcpy(buf, src, byte_cnt);
-+		ASSERT(hdr_size + byte_cnt <= BBTOB(bp->b_length));
+-	leaf_s = (xfs_attr_leafblock_t *)tmpbuffer;
+-	leaf_d = bp->b_addr;
+-	ichdr_s = *ichdr_d;	/* struct copy */
+-	ichdr_d->firstused = XFS_LBSIZE(mp);
+-	ichdr_d->usedbytes = 0;
+-	ichdr_d->count = 0;
+-	ichdr_d->holes = 0;
+-	ichdr_d->freemap[0].base = xfs_attr3_leaf_hdr_size(leaf_s);
+-	ichdr_d->freemap[0].size = ichdr_d->firstused - ichdr_d->freemap[0].base;
++	memcpy(bp->b_addr, tmpbuffer, xfs_attr3_leaf_hdr_size(leaf_src));
 +
-+		memcpy(buf + hdr_size, src, byte_cnt);
++	/* Initialise the incore headers */
++	ichdr_src = *ichdr_dst;	/* struct copy */
++	ichdr_dst->firstused = XFS_LBSIZE(mp);
++	ichdr_dst->usedbytes = 0;
++	ichdr_dst->count = 0;
++	ichdr_dst->holes = 0;
++	ichdr_dst->freemap[0].base = xfs_attr3_leaf_hdr_size(leaf_src);
++	ichdr_dst->freemap[0].size = ichdr_dst->firstused -
++						ichdr_dst->freemap[0].base;
++
++
++	/* write the header back to initialise the underlying buffer */
++	xfs_attr3_leaf_hdr_to_disk(leaf_dst, ichdr_dst);
  
--		if (byte_cnt < BBTOB(bp->b_length))
--			xfs_buf_zero(bp, byte_cnt,
--				     BBTOB(bp->b_length) - byte_cnt);
-+		if (byte_cnt + hdr_size < BBTOB(bp->b_length))
-+			xfs_buf_zero(bp, byte_cnt + hdr_size,
-+				     BBTOB(bp->b_length) - byte_cnt - hdr_size);
- 
- 		error = xfs_bwrite(bp);	/* GROT: NOTE: synchronous write */
- 		xfs_buf_relse(bp);
-@@ -419,9 +418,9 @@ xfs_attr_rmtval_set(
- 		src += byte_cnt;
- 		valuelen -= byte_cnt;
- 		offset += byte_cnt;
--		hdrcnt--;
- 
- 		lblkno += map.br_blockcount;
-+		blkcnt -= map.br_blockcount;
- 	}
- 	ASSERT(valuelen == 0);
- 	return 0;
+ 	/*
+ 	 * Copy all entry's in the same (sorted) order,
+ 	 * but allocate name/value pairs packed and in sequence.
+ 	 */
+-	xfs_attr3_leaf_moveents(leaf_s, &ichdr_s, 0, leaf_d, ichdr_d, 0,
+-				ichdr_s.count, mp);
++	xfs_attr3_leaf_moveents(leaf_src, &ichdr_src, 0, leaf_dst, ichdr_dst, 0,
++				ichdr_src.count, mp);
+ 	/*
+ 	 * this logs the entire buffer, but the caller must write the header
+ 	 * back to the buffer when it is finished modifying it.
 -- 
 1.7.10.4
 
