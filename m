@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id CDC6E7F77
-	for <xfs@oss.sgi.com>; Fri,  7 Jun 2013 07:25:27 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id BA83B7F77
+	for <xfs@oss.sgi.com>; Fri,  7 Jun 2013 07:25:28 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id AC997304077
-	for <xfs@oss.sgi.com>; Fri,  7 Jun 2013 05:25:27 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A6B76304077
+	for <xfs@oss.sgi.com>; Fri,  7 Jun 2013 05:25:28 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	I8WfZ52BoH00QYDB for <xfs@oss.sgi.com>;
-	Fri, 07 Jun 2013 05:25:26 -0700 (PDT)
+	b10o1fA9FH1jKT8V for <xfs@oss.sgi.com>;
+	Fri, 07 Jun 2013 05:25:27 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UkvjQ-0005TI-KC
+	(envelope-from <dave@fromorbit.com>) id 1UkvjQ-0005TY-Ob
 	for xfs@oss.sgi.com; Fri, 07 Jun 2013 22:25:24 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UkvjG-00031R-HB
-	for xfs@oss.sgi.com; Fri, 07 Jun 2013 22:25:14 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1UkvjQ-00031l-LE
+	for xfs@oss.sgi.com; Fri, 07 Jun 2013 22:25:24 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 08/12] xfs: correctly map remote attr buffers during removal
-Date: Fri,  7 Jun 2013 22:24:57 +1000
-Message-Id: <1370607901-11538-9-git-send-email-david@fromorbit.com>
+Subject: [PATCH 12/12] xfs: don't emit v5 superblock warnings on write
+Date: Fri,  7 Jun 2013 22:25:01 +1000
+Message-Id: <1370607901-11538-13-git-send-email-david@fromorbit.com>
 In-Reply-To: <1370607901-11538-1-git-send-email-david@fromorbit.com>
 References: <1370564771-4929-1-git-send-email-david@fromorbit.com>
 	<1370607901-11538-1-git-send-email-david@fromorbit.com>
@@ -39,89 +39,69 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-If we don't map the buffers correctly (same as for get/set
-operations) then the incore buffer lookup will fail. If a block
-number matches but a length is wrong, then debug kernels will ASSERT
-fail in _xfs_buf_find() due to the length mismatch. Ensure that we
-map the buffers correctly by basing the length of the buffer on the
-attribute data length rather than the remote block count.
+We write the superblock every 30s or so which results in the
+verifier being called. Right now that results in this output
+every 30s:
+
+XFS (vda): Version 5 superblock detected. This kernel has EXPERIMENTAL support enabled!
+Use of these features in this kernel is at your own risk!
+
+And spamming the logs.
+
+We don't need to check for whether we support v5 superblocks or
+whether there are feature bits we don't support set as these are
+only relevant when we first mount the filesytem. i.e. on superblock
+read. Hence for the write verification we can just skip all the
+checks (and hence verbose output) altogether.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- libxfs/xfs_attr_remote.c |   27 ++++++++++++++++++---------
- 1 file changed, 18 insertions(+), 9 deletions(-)
+ libxfs/xfs_mount.c |   11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/libxfs/xfs_attr_remote.c b/libxfs/xfs_attr_remote.c
-index 901cfdc..1424878 100644
---- a/libxfs/xfs_attr_remote.c
-+++ b/libxfs/xfs_attr_remote.c
-@@ -445,19 +445,25 @@ xfs_attr_rmtval_remove(xfs_da_args_t *args)
- 	mp = args->dp->i_mount;
+diff --git a/libxfs/xfs_mount.c b/libxfs/xfs_mount.c
+index e7e7445..db3785d 100644
+--- a/libxfs/xfs_mount.c
++++ b/libxfs/xfs_mount.c
+@@ -120,7 +120,8 @@ STATIC int
+ xfs_mount_validate_sb(
+ 	xfs_mount_t	*mp,
+ 	xfs_sb_t	*sbp,
+-	bool		check_inprogress)
++	bool		check_inprogress,
++	bool		check_version)
+ {
  
  	/*
--	 * Roll through the "value", invalidating the attribute value's
--	 * blocks.
-+	 * Roll through the "value", invalidating the attribute value's blocks.
-+	 * Note that args->rmtblkcnt is the minimum number of data blocks we'll
-+	 * see for a CRC enabled remote attribute. Each extent will have a
-+	 * header, and so we may have more blocks than we realise here.  If we
-+	 * fail to map the blocks correctly, we'll have problems with the buffer
-+	 * lookups.
+@@ -145,7 +146,7 @@ xfs_mount_validate_sb(
+ 	 * Version 5 superblock feature mask validation. Reject combinations the
+ 	 * kernel cannot support up front before checking anything else.
  	 */
- 	lblkno = args->rmtblkno;
--	valuelen = args->rmtblkcnt;
-+	valuelen = args->valuelen;
-+	blkcnt = xfs_attr3_rmt_blocks(mp, valuelen);
- 	while (valuelen > 0) {
-+		int dblkcnt;
-+
- 		/*
- 		 * Try to remember where we decided to put the value.
- 		 */
- 		nmap = 1;
- 		error = xfs_bmapi_read(args->dp, (xfs_fileoff_t)lblkno,
--				       args->rmtblkcnt, &map, &nmap,
--				       XFS_BMAPI_ATTRFORK);
-+				       blkcnt, &map, &nmap, XFS_BMAPI_ATTRFORK);
- 		if (error)
- 			return(error);
- 		ASSERT(nmap == 1);
-@@ -465,28 +471,31 @@ xfs_attr_rmtval_remove(xfs_da_args_t *args)
- 		       (map.br_startblock != HOLESTARTBLOCK));
- 
- 		dblkno = XFS_FSB_TO_DADDR(mp, map.br_startblock),
--		blkcnt = XFS_FSB_TO_BB(mp, map.br_blockcount);
-+		dblkcnt = XFS_FSB_TO_BB(mp, map.br_blockcount);
- 
- 		/*
- 		 * If the "remote" value is in the cache, remove it.
- 		 */
--		bp = xfs_incore(mp->m_ddev_targp, dblkno, blkcnt, XBF_TRYLOCK);
-+		bp = xfs_incore(mp->m_ddev_targp, dblkno, dblkcnt, XBF_TRYLOCK);
- 		if (bp) {
- 			xfs_buf_stale(bp);
- 			xfs_buf_relse(bp);
- 			bp = NULL;
- 		}
- 
--		valuelen -= map.br_blockcount;
-+		valuelen -= XFS_ATTR3_RMT_BUF_SPACE(mp,
-+					XFS_FSB_TO_B(mp, map.br_blockcount));
- 
- 		lblkno += map.br_blockcount;
-+		blkcnt -= map.br_blockcount;
-+		blkcnt = max(blkcnt, xfs_attr3_rmt_blocks(mp, valuelen));
- 	}
- 
- 	/*
- 	 * Keep de-allocating extents until the remote-value region is gone.
+-	if (check_inprogress && XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) {
++	if (check_version && XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) {
+ 		xfs_alert(mp,
+ "Version 5 superblock detected. xfsprogs has EXPERIMENTAL support enabled!\n"
+ "Use of these features is at your own risk!");
+@@ -370,7 +371,7 @@ xfs_sb_to_disk(
+ static int
+ xfs_sb_verify(
+ 	struct xfs_buf	*bp,
+-	bool		verbose)
++	bool		check_version)
+ {
+ 	struct xfs_mount *mp = bp->b_target->bt_mount;
+ 	struct xfs_sb	sb;
+@@ -381,8 +382,8 @@ xfs_sb_verify(
+ 	 * Only check the in progress field for the primary superblock as
+ 	 * mkfs.xfs doesn't clear it from secondary superblocks.
  	 */
-+	blkcnt = lblkno - args->rmtblkno;
- 	lblkno = args->rmtblkno;
--	blkcnt = args->rmtblkcnt;
- 	done = 0;
- 	while (!done) {
- 		xfs_bmap_init(args->flist, args->firstblock);
+-	return xfs_mount_validate_sb(mp, &sb,
+-				     verbose && bp->b_bn == XFS_SB_DADDR);
++	return xfs_mount_validate_sb(mp, &sb, bp->b_bn == XFS_SB_DADDR,
++				     check_version);
+ }
+ 
+ /*
 -- 
 1.7.10.4
 
