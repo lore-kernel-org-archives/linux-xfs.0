@@ -1,23 +1,37 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D5A247F37
-	for <xfs@oss.sgi.com>; Mon, 10 Jun 2013 16:31:21 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id E51277F37
+	for <xfs@oss.sgi.com>; Mon, 10 Jun 2013 17:16:39 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C240F8F8037
-	for <xfs@oss.sgi.com>; Mon, 10 Jun 2013 14:31:18 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	2PwoxvFAhA9FepHu for <xfs@oss.sgi.com>;
-	Mon, 10 Jun 2013 14:31:16 -0700 (PDT)
-Date: Tue, 11 Jun 2013 07:31:00 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: fsx failure on 3.10.0-rc1+ (xfstests 263) -- Mapped Read:
-	non-zero data past EOF
-Message-ID: <20130610213100.GC29376@dastard>
-References: <51B5D1EB.9080200@redhat.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <51B5D1EB.9080200@redhat.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D25028F8037
+	for <xfs@oss.sgi.com>; Mon, 10 Jun 2013 15:16:36 -0700 (PDT)
+Received: from e7.ny.us.ibm.com (e7.ny.us.ibm.com [32.97.182.137]) by
+	cuda.sgi.com with ESMTP id AdeXqPp8hbwzmvWu (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 10 Jun 2013 15:16:36 -0700 (PDT)
+Received: from /spool/local
+	by e7.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	Violators will be prosecuted
+	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
+	Mon, 10 Jun 2013 18:16:35 -0400
+Received: from d01relay03.pok.ibm.com (d01relay03.pok.ibm.com [9.56.227.235])
+	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 7B8BD6E803F
+	for <xfs@oss.sgi.com>; Mon, 10 Jun 2013 18:16:27 -0400 (EDT)
+Received: from d01av05.pok.ibm.com (d01av05.pok.ibm.com [9.56.224.195])
+	by d01relay03.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	r5AMGVS2282168 for <xfs@oss.sgi.com>; Mon, 10 Jun 2013 18:16:31 -0400
+Received: from d01av05.pok.ibm.com (loopback [127.0.0.1])
+	by d01av05.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
+	r5AMGUrw018650 for <xfs@oss.sgi.com>; Mon, 10 Jun 2013 18:16:31 -0400
+Subject: Re: [PATCH 00/48] xfsprogs: CRC support
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+In-Reply-To: <20130607210447.GP20932@sgi.com>
+References: <1370564771-4929-1-git-send-email-david@fromorbit.com>
+	<20130607061139.GM29338@dastard>  <20130607210447.GP20932@sgi.com>
+Date: Mon, 10 Jun 2013 17:16:29 -0500
+Message-ID: <1370902589.22504.8.camel@chandra-dt.ibm.com>
+Mime-Version: 1.0
+Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,73 +44,55 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
+To: Ben Myers <bpm@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Jun 10, 2013 at 09:17:31AM -0400, Brian Foster wrote:
-> Hi guys,
+This is helpful. Thanks.
+
+Chandra
+On Fri, 2013-06-07 at 16:04 -0500, Ben Myers wrote:
+> Hey,
 > 
-> I wanted to get this onto the list... I suspect this could be
-> similar/related to the issue reported here:
+> On Fri, Jun 07, 2013 at 04:11:39PM +1000, Dave Chinner wrote:
+> > On Fri, Jun 07, 2013 at 10:25:23AM +1000, Dave Chinner wrote:
+> > > Hi folks,
+> > > 
+> > > This is the latest update of the series of patches tht introduces
+> > > CRC support into xfsprogs. Of note, for CRC enabled filesystems;
+> > > 
+> > > 	- write support for xfs-db is disabled
+> > > 	- obfuscation for metadump is disabled
+> > > 	- xfs_check does nothing ("always succeed") so that xfstests
+> > > 	  can run without needing this
+> > > 	- all structures shoul dbe supported for printing in xfs_db
+> > > 	- xfs_repair should be able to fully validate the structure
+> > > 	  of a CRC enabled filesystem.
+> > > 	- xfs_repair still ignores CRC validation errors when
+> > > 	  reading metadata
+> > > 	- mkfs.xfs enforces limitations on the format of CRC enabled
+> > > 	  filesystems (inode size, attr format, projid32bit, etc).
+> > > 	- whenever a v5 superblock is parsed on read by any utility,
+> > > 	  it outputs a wanring about it being an experimental
+> > > 	  format.
+> > > 
+> > > Bug reports, patches, comments, reviews, etc all welcome.
+> > 
+> > I've just realised that I haven't ported any of the recent kernel
+> > fixes across to this patch set, so there will be another few patches
+> > needed for those as well...
 > 
-> http://oss.sgi.com/archives/xfs/2013-06/msg00066.html
-
-Unlikely - generic/263 tests mmap IO vs direct IO, and Sage's
-problem has neither...
-
-> While running xfstests, the only apparent regression I hit from 3.9.0
-> was generic/263. This test fails due to the following command (and
-> resulting output):
-
-Not a regression - 263 has been failing ever since it was introduced
-in 2011 by:
-
-commit 0d69e10ed15b01397e8c6fd7833fa3c2970ec024
-Author: Christoph Hellwig <hch@infradead.org>
-Date:   Mon Oct 10 18:22:16 2011 +0000
-
-    split mapped writes vs direct I/O tests from 091
-    
-    This effectively reverts
-    
-        xfstests: add mapped write fsx operations to 091
-    
-    and adds a new test case for it.  It tests something slightly
-    different, and regressions in existing tests due to new features
-    are pretty nasty in a test suite.
-    
-    Signed-off-by: Christoph Hellwig <hch@lst.de>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Alex Elder <aelder@sgi.com>
-
-It is testing mmap() writes vs direct IO, something that is known to
-be fundamentally broken (i.e. racy) as mmap() page fault path does
-not hold the XFS_IOLOCK or i_mutex in any way.  The direct IO path
-tries to wark around this by flushing and invalidating cached pages
-before IO submission, but the lack of locking in the page fault path
-means we can't avoid the race entirely.
-
-> P.S., I also came across the following thread which, if related,
-> suggests this might be known/understood to a degree:
+> These two series are applied to the crc-dev branch at
+> git://oss.sgi.com/xfs/cmds/xfsprogs.git 
 > 
-> http://oss.sgi.com/archives/xfs/2012-04/msg00703.html
+> Regards,
+> 	Ben
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
-Yup, that's potentially one aspect of it. However, have you run the
-test code on ext3/4? it works just fine - it's only XFS that has
-problems with this case, so it's not clear that this is a DIO
-problem. It was never able to work out where ext3/ext4 were zeroing
-the part of the page beyond EOF, and I couldn't ever make the DIO
-code reliably do the right thing. It's one of the reasons that lead
-to this discussion as LSFMM:
-
-http://lwn.net/Articles/548351/
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
