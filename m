@@ -1,29 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1DD2929DF8
-	for <xfs@oss.sgi.com>; Sun,  9 Jun 2013 07:13:10 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0DAC1304032
-	for <xfs@oss.sgi.com>; Sun,  9 Jun 2013 05:13:09 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 83oajnjIGAeoBw4k for
-	<xfs@oss.sgi.com>; Sun, 09 Jun 2013 05:13:06 -0700 (PDT)
-Received: from int-mx01.intmail.prod.int.phx2.redhat.com
-	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r59CD5a3012342
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Sun, 9 Jun 2013 08:13:05 -0400
-Received: from tunkums.home (ovpn-113-21.phx2.redhat.com [10.3.113.21])
-	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
-	id r59CD4Jt015574
-	for <xfs@oss.sgi.com>; Sun, 9 Jun 2013 08:13:05 -0400
-Message-ID: <51B47150.6000500@redhat.com>
-Date: Sun, 09 Jun 2013 08:13:04 -0400
-From: Ric Wheeler <rwheeler@redhat.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 6642F7F37
+	for <xfs@oss.sgi.com>; Mon, 10 Jun 2013 04:43:39 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 02D83AC002
+	for <xfs@oss.sgi.com>; Mon, 10 Jun 2013 02:43:35 -0700 (PDT)
+Received: from mail-we0-f178.google.com (mail-we0-f178.google.com
+	[74.125.82.178]) by cuda.sgi.com with ESMTP id lb0sDRILQp4hObT2
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 10 Jun 2013 02:43:34 -0700 (PDT)
+Received: by mail-we0-f178.google.com with SMTP id u53so4726963wes.9
+	for <xfs@oss.sgi.com>; Mon, 10 Jun 2013 02:43:33 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: attack upon XFS, misinformation abounds, linux-raid list
-References: <51B45CFD.20500@hardwarefreak.com>
 In-Reply-To: <51B45CFD.20500@hardwarefreak.com>
+References: <51B45CFD.20500@hardwarefreak.com>
+Date: Mon, 10 Jun 2013 11:43:32 +0200
+Message-ID: <CAAxjCEznq0RDnnYR_mQ=gmSeson4acyiLVcVdOh2vmQo1cVAzA@mail.gmail.com>
+Subject: Re: attack upon XFS, misinformation abounds, linux-raid list
+From: Stefan Ring <stefanrin@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,13 +26,14 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: stan@hardwarefreak.com
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 06/09/2013 06:46 AM, Stan Hoeppner wrote:
+On Sun, Jun 9, 2013 at 12:46 PM, Stan Hoeppner <stan@hardwarefreak.com> wrote:
 > In a recent linux-raid list thread here:
 > http://marc.info/?l=linux-raid&m=137072140106867&w=2
 >
@@ -54,12 +49,23 @@ On 06/09/2013 06:46 AM, Stan Hoeppner wrote:
 > debunk every such post, but this one may be worth a read at least,
 > especially given the weight Google gives to vger lists.
 
-Thanks for pointing that out - I responded as well.
+The really unfortunate thing about this is that the bug[1] which would
+prevent transaction flushing from happening got imported and shipped
+for a rather long time in RHEL. It's one thing to get a file zeroed
+that's a few seconds old, but having the same happen to files which
+haven't been touched in hours, even before issuing manual sync, is
+certainly not very reassuring.
 
-Funny that he decided to use ext4 after basing it on a google search for "xfs 
-zero" and did not bother to the same query with "ext4 zero length files" :)
+As a very satisfied user of XFS on CentOS 6, I have been nervous
+enough about that to go through the trouble of rebooting our main
+server for a kernel upgrade a few weeks ago. Thanks to RedHat's
+deceptive tactics regarding kernel patches, I have also not been able
+to pin-point the exact range of kernel versions affected by this in a
+reasonable amount of time and hence have not found out (thankfully not
+the hard way) if it was even necessary.
 
-Ric
+[1] https://access.redhat.com/site/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/6.4_Technical_Notes/kernel.html
+"BZ#855139"
 
 _______________________________________________
 xfs mailing list
