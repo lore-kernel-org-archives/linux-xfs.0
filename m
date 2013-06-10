@@ -1,21 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8BDBB7F37
-	for <xfs@oss.sgi.com>; Mon, 10 Jun 2013 18:20:25 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 13E9B7F52
+	for <xfs@oss.sgi.com>; Mon, 10 Jun 2013 18:20:52 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 07A86AC004
-	for <xfs@oss.sgi.com>; Mon, 10 Jun 2013 16:20:24 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id AxNBxMUwgDeZBxFA for
-	<xfs@oss.sgi.com>; Mon, 10 Jun 2013 16:20:20 -0700 (PDT)
-Message-ID: <51B65E82.5030305@redhat.com>
-Date: Mon, 10 Jun 2013 19:17:22 -0400
-From: Brian Foster <bfoster@redhat.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 015798F8035
+	for <xfs@oss.sgi.com>; Mon, 10 Jun 2013 16:20:48 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	qbHl1yJGV8C32pqN for <xfs@oss.sgi.com>;
+	Mon, 10 Jun 2013 16:20:47 -0700 (PDT)
+Date: Tue, 11 Jun 2013 09:20:45 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v8 3/5] xfs: Start using pquotaino from the superblock
+Message-ID: <20130610232045.GE29376@dastard>
+References: <1368220889-25188-1-git-send-email-sekharan@us.ibm.com>
+	<1368220889-25188-4-git-send-email-sekharan@us.ibm.com>
+	<20130517044604.GO24635@dastard>
+	<1369433343.9551.958.camel@chandra-dt.ibm.com>
 MIME-Version: 1.0
-Subject: Re: fsx failure on 3.10.0-rc1+ (xfstests 263) -- Mapped Read: non-zero
-	data past EOF
-References: <51B5D1EB.9080200@redhat.com> <20130610213100.GC29376@dastard>
-In-Reply-To: <20130610213100.GC29376@dastard>
+Content-Disposition: inline
+In-Reply-To: <1369433343.9551.958.camel@chandra-dt.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,74 +32,65 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Chandra Seetharaman <sekharan@us.ibm.com>
 Cc: xfs@oss.sgi.com
 
-On 06/10/2013 05:31 PM, Dave Chinner wrote:
-> On Mon, Jun 10, 2013 at 09:17:31AM -0400, Brian Foster wrote:
->> Hi guys,
->>
->> I wanted to get this onto the list... I suspect this could be
->> similar/related to the issue reported here:
->>
->> http://oss.sgi.com/archives/xfs/2013-06/msg00066.html
+On Fri, May 24, 2013 at 05:09:03PM -0500, Chandra Seetharaman wrote:
+> On Fri, 2013-05-17 at 14:46 +1000, Dave Chinner wrote:
+> > On Fri, May 10, 2013 at 04:21:27PM -0500, Chandra Seetharaman wrote:
+> > > Define a macro to check if the superblock has pquotino.
+> > > 
+> > > Keep backward compatibilty by alowing mount of older superblock
+> > > with no separate pquota inode.
+> > ....
+> > 
+> > > @@ -657,27 +680,51 @@ xfs_sb_to_disk(
+> > >  	int		first;
+> > >  	int		size;
+> > >  	__uint16_t	qflags = from->sb_qflags;
+> > > +	xfs_ino_t	gquotino = from->sb_gquotino;
+> > >  
+> > >  	ASSERT(fields);
+> > >  	if (!fields)
+> > >  		return;
+> > >  
+> > > -	if (fields & XFS_SB_QFLAGS) {
+> > > +	if (!xfs_sb_version_has_pquota(from)) {
+> > 
+> > This should be moved to a separate function, I think.
+> > 
+> > > +		if (fields & XFS_SB_QFLAGS) {
+> > > +			/*
+> > > +			 * The in-core version of sb_qflags do not have
+> > > +			 * XFS_OQUOTA_* flags, whereas the on-disk version
+> > > +			 * does.  So, convert incore XFS_{PG}QUOTA_* flags
+> > > +			 * to on-disk XFS_OQUOTA_* flags.
+> > > +			 */
+> > > +			qflags &= ~(XFS_PQUOTA_ENFD | XFS_PQUOTA_CHKD |
+> > > +					XFS_GQUOTA_ENFD | XFS_GQUOTA_CHKD);
+> > > +
+> > > +			if (from->sb_qflags &
+> > > +					(XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD))
+> > > +				qflags |= XFS_OQUOTA_ENFD;
+> > > +			if (from->sb_qflags &
+> > > +					(XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD))
+> > > +				qflags |= XFS_OQUOTA_CHKD;
+> > 
+> > Now that we have the new flags set correct, write it directly to
+> > to->sb_qflags and clear XFS_SB_QFLAGS from the fields varaible.
 > 
-> Unlikely - generic/263 tests mmap IO vs direct IO, and Sage's
-> problem has neither...
-> 
+> So, you are suggesting to move this block of functionality to a new
+> function, and set the fields in the "to" data structure in that function
+> and clear the appropriate bits in the same function ?
 
-Oh, Ok. I didn't look at that one closely enough then.
+Yes.
 
->> While running xfstests, the only apparent regression I hit from 3.9.0
->> was generic/263. This test fails due to the following command (and
->> resulting output):
-> 
-> Not a regression - 263 has been failing ever since it was introduced
-> in 2011 by:
-> 
-> commit 0d69e10ed15b01397e8c6fd7833fa3c2970ec024
-...
-> 
-> It is testing mmap() writes vs direct IO, something that is known to
-> be fundamentally broken (i.e. racy) as mmap() page fault path does
-> not hold the XFS_IOLOCK or i_mutex in any way.  The direct IO path
-> tries to wark around this by flushing and invalidating cached pages
-> before IO submission, but the lack of locking in the page fault path
-> means we can't avoid the race entirely.
-> 
+Cheers,
 
-Thanks for the explanation.
-
->> P.S., I also came across the following thread which, if related,
->> suggests this might be known/understood to a degree:
->>
->> http://oss.sgi.com/archives/xfs/2012-04/msg00703.html
-> 
-> Yup, that's potentially one aspect of it. However, have you run the
-> test code on ext3/4? it works just fine - it's only XFS that has
-> problems with this case, so it's not clear that this is a DIO
-> problem. It was never able to work out where ext3/ext4 were zeroing
-> the part of the page beyond EOF, and I couldn't ever make the DIO
-> code reliably do the right thing. It's one of the reasons that lead
-> to this discussion as LSFMM:
-> 
-> http://lwn.net/Articles/548351/
-> 
-
-Interesting, thanks again. I did happen to run the script and the fsx
-test on the ext4 rootfs of my VM and observed expected behavior.
-
-Note that I mentioned this was harder to reproduce with fixed alloc
-sizes less than 128k or so. I don't believe ext4 does any kind of
-speculative preallocation in the manner that XFS does. Perhaps that is a
-factor..?
-
-Brian
-
-> Cheers,
-> 
-> Dave.
-> 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
