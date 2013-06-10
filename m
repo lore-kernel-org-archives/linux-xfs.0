@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C9DD07F37
-	for <xfs@oss.sgi.com>; Mon, 10 Jun 2013 18:42:21 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 69CE37F37
+	for <xfs@oss.sgi.com>; Mon, 10 Jun 2013 18:57:07 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 40CFDAC003
-	for <xfs@oss.sgi.com>; Mon, 10 Jun 2013 16:42:21 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 448A7304043
+	for <xfs@oss.sgi.com>; Mon, 10 Jun 2013 16:57:06 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	SDGw0q77BFdZXkjP for <xfs@oss.sgi.com>;
-	Mon, 10 Jun 2013 16:42:19 -0700 (PDT)
-Date: Tue, 11 Jun 2013 09:42:07 +1000
+	e6vXXWuevA7j0aN4 for <xfs@oss.sgi.com>;
+	Mon, 10 Jun 2013 16:57:04 -0700 (PDT)
+Date: Tue, 11 Jun 2013 09:56:41 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: fsx failure on 3.10.0-rc1+ (xfstests 263) -- Mapped Read:
-	non-zero data past EOF
-Message-ID: <20130610234207.GG29376@dastard>
-References: <51B5D1EB.9080200@redhat.com> <20130610213100.GC29376@dastard>
-	<51B65E82.5030305@redhat.com>
+Subject: Re: [PATCH 00/48] xfsprogs: CRC support
+Message-ID: <20130610235641.GH29376@dastard>
+References: <1370564771-4929-1-git-send-email-david@fromorbit.com>
+	<20130607061139.GM29338@dastard> <20130607210447.GP20932@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <51B65E82.5030305@redhat.com>
+In-Reply-To: <20130607210447.GP20932@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,80 +30,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
+To: Ben Myers <bpm@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Jun 10, 2013 at 07:17:22PM -0400, Brian Foster wrote:
-> On 06/10/2013 05:31 PM, Dave Chinner wrote:
-> > On Mon, Jun 10, 2013 at 09:17:31AM -0400, Brian Foster wrote:
-> >> Hi guys,
-> >>
-> >> I wanted to get this onto the list... I suspect this could be
-> >> similar/related to the issue reported here:
-> >>
-> >> http://oss.sgi.com/archives/xfs/2013-06/msg00066.html
-> > 
-> > Unlikely - generic/263 tests mmap IO vs direct IO, and Sage's
-> > problem has neither...
-> > 
+On Fri, Jun 07, 2013 at 04:04:47PM -0500, Ben Myers wrote:
+> Hey,
 > 
-> Oh, Ok. I didn't look at that one closely enough then.
+> On Fri, Jun 07, 2013 at 04:11:39PM +1000, Dave Chinner wrote:
+> > On Fri, Jun 07, 2013 at 10:25:23AM +1000, Dave Chinner wrote:
+> > > Hi folks,
+> > > 
+> > > This is the latest update of the series of patches tht introduces
+> > > CRC support into xfsprogs. Of note, for CRC enabled filesystems;
+> > > 
+> > > 	- write support for xfs-db is disabled
+> > > 	- obfuscation for metadump is disabled
+> > > 	- xfs_check does nothing ("always succeed") so that xfstests
+> > > 	  can run without needing this
+> > > 	- all structures shoul dbe supported for printing in xfs_db
+> > > 	- xfs_repair should be able to fully validate the structure
+> > > 	  of a CRC enabled filesystem.
+> > > 	- xfs_repair still ignores CRC validation errors when
+> > > 	  reading metadata
+> > > 	- mkfs.xfs enforces limitations on the format of CRC enabled
+> > > 	  filesystems (inode size, attr format, projid32bit, etc).
+> > > 	- whenever a v5 superblock is parsed on read by any utility,
+> > > 	  it outputs a wanring about it being an experimental
+> > > 	  format.
+> > > 
+> > > Bug reports, patches, comments, reviews, etc all welcome.
+> > 
+> > I've just realised that I haven't ported any of the recent kernel
+> > fixes across to this patch set, so there will be another few patches
+> > needed for those as well...
 > 
-> >> While running xfstests, the only apparent regression I hit from 3.9.0
-> >> was generic/263. This test fails due to the following command (and
-> >> resulting output):
-> > 
-> > Not a regression - 263 has been failing ever since it was introduced
-> > in 2011 by:
-> > 
-> > commit 0d69e10ed15b01397e8c6fd7833fa3c2970ec024
-> ...
-> > 
-> > It is testing mmap() writes vs direct IO, something that is known to
-> > be fundamentally broken (i.e. racy) as mmap() page fault path does
-> > not hold the XFS_IOLOCK or i_mutex in any way.  The direct IO path
-> > tries to wark around this by flushing and invalidating cached pages
-> > before IO submission, but the lack of locking in the page fault path
-> > means we can't avoid the race entirely.
-> > 
-> 
-> Thanks for the explanation.
-> 
-> >> P.S., I also came across the following thread which, if related,
-> >> suggests this might be known/understood to a degree:
-> >>
-> >> http://oss.sgi.com/archives/xfs/2012-04/msg00703.html
-> > 
-> > Yup, that's potentially one aspect of it. However, have you run the
-> > test code on ext3/4? it works just fine - it's only XFS that has
-> > problems with this case, so it's not clear that this is a DIO
-> > problem. It was never able to work out where ext3/ext4 were zeroing
-> > the part of the page beyond EOF, and I couldn't ever make the DIO
-> > code reliably do the right thing. It's one of the reasons that lead
-> > to this discussion as LSFMM:
-> > 
-> > http://lwn.net/Articles/548351/
-> > 
-> 
-> Interesting, thanks again. I did happen to run the script and the fsx
-> test on the ext4 rootfs of my VM and observed expected behavior.
-> 
-> Note that I mentioned this was harder to reproduce with fixed alloc
-> sizes less than 128k or so. I don't believe ext4 does any kind of
-> speculative preallocation in the manner that XFS does. Perhaps that is a
-> factor..?
+> These two series are applied to the crc-dev branch at
+> git://oss.sgi.com/xfs/cmds/xfsprogs.git 
 
-Oh, it most likely is, but XFS has done speculative prealloc since,
-well, forever, so this isn't a regression as such.  FWIW, the old
-default for speculative prealloc was XFS_WRITEIO_LOG_LARGE (16
-filesystem blocks), so this test would have failed before any of the
-dynamic speculative alloc changes were made....
+Hi Ben,
 
-Indeed, if you mount with -o allocsize=4k, you'll find the test case
-no longer fails - it requires allocsize=32k (or larger) to fail
-here. That's not surprising, given that the test is writing across a
-16k-beyond-eof boundary when it triggers the problem, and so needs a
-prealloc size of >16k to trigger...
+Thanks for doing this. This patch, however:
+
+[PATCH 10/12] xfs: fully initialise temp leaf in xfs_attr3_leaf_compact
+
+is missing from the branch. Can you commit it, please?
 
 Cheers,
 
