@@ -1,37 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E51277F37
-	for <xfs@oss.sgi.com>; Mon, 10 Jun 2013 17:16:39 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D25028F8037
-	for <xfs@oss.sgi.com>; Mon, 10 Jun 2013 15:16:36 -0700 (PDT)
-Received: from e7.ny.us.ibm.com (e7.ny.us.ibm.com [32.97.182.137]) by
-	cuda.sgi.com with ESMTP id AdeXqPp8hbwzmvWu (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 10 Jun 2013 15:16:36 -0700 (PDT)
-Received: from /spool/local
-	by e7.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
-	Violators will be prosecuted
-	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
-	Mon, 10 Jun 2013 18:16:35 -0400
-Received: from d01relay03.pok.ibm.com (d01relay03.pok.ibm.com [9.56.227.235])
-	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 7B8BD6E803F
-	for <xfs@oss.sgi.com>; Mon, 10 Jun 2013 18:16:27 -0400 (EDT)
-Received: from d01av05.pok.ibm.com (d01av05.pok.ibm.com [9.56.224.195])
-	by d01relay03.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	r5AMGVS2282168 for <xfs@oss.sgi.com>; Mon, 10 Jun 2013 18:16:31 -0400
-Received: from d01av05.pok.ibm.com (loopback [127.0.0.1])
-	by d01av05.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
-	r5AMGUrw018650 for <xfs@oss.sgi.com>; Mon, 10 Jun 2013 18:16:31 -0400
-Subject: Re: [PATCH 00/48] xfsprogs: CRC support
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-In-Reply-To: <20130607210447.GP20932@sgi.com>
-References: <1370564771-4929-1-git-send-email-david@fromorbit.com>
-	<20130607061139.GM29338@dastard>  <20130607210447.GP20932@sgi.com>
-Date: Mon, 10 Jun 2013 17:16:29 -0500
-Message-ID: <1370902589.22504.8.camel@chandra-dt.ibm.com>
-Mime-Version: 1.0
-Reply-To: sekharan@us.ibm.com
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id DB17A7F37
+	for <xfs@oss.sgi.com>; Mon, 10 Jun 2013 18:17:38 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C83DC304051
+	for <xfs@oss.sgi.com>; Mon, 10 Jun 2013 16:17:35 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	jMzg0VuseWuWrHHt for <xfs@oss.sgi.com>;
+	Mon, 10 Jun 2013 16:17:33 -0700 (PDT)
+Date: Tue, 11 Jun 2013 09:17:29 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v8 2/5] xfs: Add pquota fields where gquota is used.
+Message-ID: <20130610231729.GD29376@dastard>
+References: <1368220889-25188-1-git-send-email-sekharan@us.ibm.com>
+	<1368220889-25188-3-git-send-email-sekharan@us.ibm.com>
+	<20130517042303.GN24635@dastard>
+	<1369432625.9551.946.camel@chandra-dt.ibm.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1369432625.9551.946.camel@chandra-dt.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -44,55 +32,134 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
+To: Chandra Seetharaman <sekharan@us.ibm.com>
 Cc: xfs@oss.sgi.com
 
-This is helpful. Thanks.
-
-Chandra
-On Fri, 2013-06-07 at 16:04 -0500, Ben Myers wrote:
-> Hey,
-> 
-> On Fri, Jun 07, 2013 at 04:11:39PM +1000, Dave Chinner wrote:
-> > On Fri, Jun 07, 2013 at 10:25:23AM +1000, Dave Chinner wrote:
-> > > Hi folks,
+On Fri, May 24, 2013 at 04:57:05PM -0500, Chandra Seetharaman wrote:
+> On Fri, 2013-05-17 at 14:23 +1000, Dave Chinner wrote: 
+> > On Fri, May 10, 2013 at 04:21:26PM -0500, Chandra Seetharaman wrote:
+> > > Add project quota changes to all the places where group quota field
+> > > is used:
+> > >    * add separate project quota members into various structures
+> > >    * split project quota and group quotas so that instead of overriding
+> > >      the group quota members incore, the new project quota members are
+> > >      used instead
+> > >    * get rid of usage of the OQUOTA flag incore, in favor of separate
+> > >    * group
+> > >      and project quota flags.
+> > >    * add a project dquot argument to various functions.
 > > > 
-> > > This is the latest update of the series of patches tht introduces
-> > > CRC support into xfsprogs. Of note, for CRC enabled filesystems;
-> > > 
-> > > 	- write support for xfs-db is disabled
-> > > 	- obfuscation for metadump is disabled
-> > > 	- xfs_check does nothing ("always succeed") so that xfstests
-> > > 	  can run without needing this
-> > > 	- all structures shoul dbe supported for printing in xfs_db
-> > > 	- xfs_repair should be able to fully validate the structure
-> > > 	  of a CRC enabled filesystem.
-> > > 	- xfs_repair still ignores CRC validation errors when
-> > > 	  reading metadata
-> > > 	- mkfs.xfs enforces limitations on the format of CRC enabled
-> > > 	  filesystems (inode size, attr format, projid32bit, etc).
-> > > 	- whenever a v5 superblock is parsed on read by any utility,
-> > > 	  it outputs a wanring about it being an experimental
-> > > 	  format.
-> > > 
-> > > Bug reports, patches, comments, reviews, etc all welcome.
+> > > No externally visible interfaces changed.
 > > 
-> > I've just realised that I haven't ported any of the recent kernel
-> > fixes across to this patch set, so there will be another few patches
-> > needed for those as well...
+> > Looks pretty good. Some relatively minor changes below.
+.....
+> > >  		if (code)
+> > >  			return code;
+> > >  	}
+> > > @@ -994,8 +994,8 @@ xfs_ioctl_setattr(
+> > >  		    XFS_IS_PQUOTA_ON(mp) &&
+> > >  		    xfs_get_projid(ip) != fa->fsx_projid) {
+> > >  			ASSERT(tp);
+> > > -			code = xfs_qm_vop_chown_reserve(tp, ip, udqp, gdqp,
+> > > -						capable(CAP_FOWNER) ?
+> > > +			code = xfs_qm_vop_chown_reserve(tp, ip, udqp, NULL,
+> > > +						pdqp, capable(CAP_FOWNER) ?
+> > >  						XFS_QMOPT_FORCE_RES : 0);
+> > > @@ -1113,7 +1113,7 @@ xfs_ioctl_setattr(
+> > >  		if (xfs_get_projid(ip) != fa->fsx_projid) {
+> > >  			if (XFS_IS_QUOTA_RUNNING(mp) && XFS_IS_PQUOTA_ON(mp)) {
+> > >  				olddquot = xfs_qm_vop_chown(tp, ip,
+> > > -							&ip->i_gdquot, gdqp);
+> > > +							&ip->i_pdquot, pdqp);
+> > 
+> > xfs_qm_vop_chown() is only called on one dquot at a time, so it can
+> > only exchange one dquot at a time. and udqp is not used for hints,
+> > so it looks to me like udqp and gdqp are wholly unnecessary in this
+> > function....
 > 
-> These two series are applied to the crc-dev branch at
-> git://oss.sgi.com/xfs/cmds/xfsprogs.git 
-> 
-> Regards,
-> 	Ben
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+> Did not fully understand this comment. Can you please elaborate ?
 
+What I was saying here is that throughout the function udqp and gdqp
+are passed to the various quota functions, but they are not used at
+all by the functions being called. i.e. you could pass NULL instead,
+and the code would still function identically. IOWs, we don't
+actually need to define anything other than the project quota
+related variables...
+
+> > > diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> > > index d82efaa..7c54ea4 100644
+> > > --- a/fs/xfs/xfs_iops.c
+> > > +++ b/fs/xfs/xfs_iops.c
+> > > @@ -517,7 +517,7 @@ xfs_setattr_nonsize(
+> > >  		ASSERT(udqp == NULL);
+> > >  		ASSERT(gdqp == NULL);
+> > >  		error = xfs_qm_vop_dqalloc(ip, uid, gid, xfs_get_projid(ip),
+> > > -					 qflags, &udqp, &gdqp);
+> > > +					 qflags, &udqp, &gdqp, NULL);
+> > 
+> > Why is there no project quota support here, even though we pass in a
+> > project ID? I know the answer, but please add a comment so that a
+> > couple of years down the track I don't need to go remind myself of
+> > why....
+> 
+> Not clear what you are expecting here.
+
+I'm expecting you to write a comment explaining why we pass
+uid/gid/projid to the xfs_qm_vop_dqalloc() function, but then only
+pass udqp and gdqp but NULL instead of a project quota dquot
+pointer. Indeed, I already don't remember why this is a valid, so it
+clearly needs a comment explaining it....
+
+
+> > 
+> > 
+> > 			qino = xfs_sb_version_has_pquota(&mp->m_sb) ?
+> > 						mp->m_sb.sb_pquotino :
+> > 						mp->m_sb.sb_gquotino;
+> > 
+> > And the correct on-disk inode is read....
+> > 
+> The object of this patch is to replace all gquota with pquota stuff. I
+> am not using the pquotino or xfs_sb_version_has_pquota() until patch 3.
+> 
+> If I get the change forward, I have to merge patch 3 and part of this
+> patch into patch 1, which adds up lots of work.
+> 
+> The way the patches are split now, IMO, is easy to follow and works
+> independently.
+
+That's fine. I review the patches one by one, so I make comments
+that are relevant to the current patch context. It may be that you
+changed it in a later patch and that often is fine - comments like
+this indicate that perhaps the commit message hasn't quite described
+the full context of the patch within the series correctly...
+
+> > > +	if (pdqp) {
+> > > +		ASSERT(ip->i_pdquot == NULL);
+> > > +		ASSERT(XFS_IS_PQUOTA_ON(mp));
+> > > +		ASSERT(xfs_get_projid(ip) == be32_to_cpu(pdqp->q_core.d_id));
+> > > +
+> > > +		ip->i_pdquot = xfs_qm_dqhold(pdqp);
+> > > +		xfs_trans_mod_dquot(tp, pdqp, XFS_TRANS_DQ_ICOUNT, 1);
+> > > +	}
+> > >  }
+> > 
+> > Something this just triggered. All transaction reservations that
+> > reserve space for dquots need to be upped from 2 to 3 dquots.
+> 
+> Can you elaborate please.
+
+A transaction ithat modifies space can now modify 3 dquots (u+g+p)
+instead of only 2 (u+(g or p)), and so the log space for any such 
+transaction goes up. It may be that you've already handled this, but
+if you're asking for an explanation then maybe not :/
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
