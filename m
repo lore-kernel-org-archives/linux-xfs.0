@@ -1,23 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id DAC0729DF8
-	for <linux-xfs@oss.sgi.com>; Tue, 11 Jun 2013 08:35:38 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 54A8DAC004
-	for <linux-xfs@oss.sgi.com>; Tue, 11 Jun 2013 06:35:38 -0700 (PDT)
-Received: from mail-we0-f169.google.com (mail-we0-f169.google.com
-	[74.125.82.169]) by cuda.sgi.com with ESMTP id Z5bqSMqOvesAoqin
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<linux-xfs@oss.sgi.com>; Tue, 11 Jun 2013 06:35:36 -0700 (PDT)
-Received: by mail-we0-f169.google.com with SMTP id n57so5966350wev.0
-	for <linux-xfs@oss.sgi.com>; Tue, 11 Jun 2013 06:35:35 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 37A1B29DF8
+	for <xfs@oss.sgi.com>; Tue, 11 Jun 2013 08:52:42 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 09BDE304053
+	for <xfs@oss.sgi.com>; Tue, 11 Jun 2013 06:52:38 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id IogfV7rZQD9dBN0Z for
+	<xfs@oss.sgi.com>; Tue, 11 Jun 2013 06:52:38 -0700 (PDT)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r5BDqbnu027684
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Tue, 11 Jun 2013 09:52:37 -0400
+Received: from tunkums.home (ovpn-113-106.phx2.redhat.com [10.3.113.106])
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id r5BDqbqT025451
+	for <xfs@oss.sgi.com>; Tue, 11 Jun 2013 09:52:37 -0400
+Message-ID: <51B72BA4.6030701@redhat.com>
+Date: Tue, 11 Jun 2013 09:52:36 -0400
+From: Ric Wheeler <rwheeler@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <loom.20130611T112155-970@post.gmane.org>
-References: <loom.20130611T112155-970@post.gmane.org>
-Date: Tue, 11 Jun 2013 15:35:35 +0200
-Message-ID: <CAAxjCEyjhz7kK5oTLvRGsVK+7QPd-Jw5T4AhRergqk9_Lh7OZw@mail.gmail.com>
 Subject: Re: Questions about XFS
-From: Stefan Ring <stefanrin@gmail.com>
+References: <loom.20130611T112155-970@post.gmane.org>
+In-Reply-To: <loom.20130611T112155-970@post.gmane.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,39 +32,27 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Steve Bergman <sbergman27@gmail.com>
-Cc: linux-xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-> I have a few questions about XFS that didn't make the XFS FAQ. I'm trying to
-> get a feel for where I might want to use it on my servers (or at home). A
-> mix of ext3 & ext4 has worked well for me. But I'd like to get to know XFS a
-> bit better. The target OS would be RHEL6.
+On 06/11/2013 05:56 AM, Steve Bergman wrote:
+> 3. Why doesn't RHEL6 support XFS on root, when the XFS FAQ says XFS on root
+> is fine? Is there some issue I should be aware of?
 
-That's what I'm using as well. Answers are obviously biased by my
-limited experience. I'm not an XFS veteran and have only started using
-it after delaylog was added.
+This is a vendor specific issue, not an upstream one, so let me put on my fedora 
+and respond.
 
-> 1. I don't have "lots and large". Why should I run XFS?
+When Red Hat added XFS support several years back, we decided to roll it out in 
+a very controlled way. Not a comment on any limitation on XFS as root.
 
-For me, the main reason is this: on a multi-user system with a decent
-amount of memory (let's say >= 32GB), a single user untarring a large
-source tarball, checking out a large source repository etc. will
-effectively stall an ext3/4 filesystem for minutes on end. This does
-not happen with XFS. Maybe this has been solved with recent kernels,
-but it used to be a major nuisance for several years with kernels in
-the 2.6.25-2.6.30 range at least.
+Note that in RHEL7, we will be supporting XFS without this restriction.
 
-> 2. I don't have "lots and large". Why shouldn't I run XFS?
+Thanks!
 
-Cache/memory accounting as well as displayed % wait time in top are "strange".
-
-XFS performance is more sensitive to free space fragmentation than
-ext4. For this reason, I find that it is not overly problematic to
-fill an ext filesystem 95%, while with XFS I would stay below 85%.
+Ric
 
 _______________________________________________
 xfs mailing list
