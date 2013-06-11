@@ -1,30 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 242AC29DF8
-	for <xfs@oss.sgi.com>; Tue, 11 Jun 2013 16:43:14 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id AEBA229DF8
+	for <xfs@oss.sgi.com>; Tue, 11 Jun 2013 16:47:32 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D49A68F8049
-	for <xfs@oss.sgi.com>; Tue, 11 Jun 2013 14:43:13 -0700 (PDT)
-Received: from mail-qe0-f41.google.com (mail-qe0-f41.google.com
-	[209.85.128.41]) by cuda.sgi.com with ESMTP id 7XdQOzTRLJCFCEU5
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 11 Jun 2013 14:43:12 -0700 (PDT)
-Received: by mail-qe0-f41.google.com with SMTP id b4so1970030qen.14
-	for <xfs@oss.sgi.com>; Tue, 11 Jun 2013 14:43:11 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20130611210312.GN29338@dastard>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 7202E304043
+	for <xfs@oss.sgi.com>; Tue, 11 Jun 2013 14:47:29 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	Vs82ZEmsFtsBjCaj for <xfs@oss.sgi.com>;
+	Tue, 11 Jun 2013 14:47:27 -0700 (PDT)
+Date: Wed, 12 Jun 2013 07:47:25 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Questions about XFS
+Message-ID: <20130611214725.GO29338@dastard>
 References: <loom.20130611T112155-970@post.gmane.org>
 	<51B72D3D.5010206@redhat.com>
 	<CAO9HMNGjdikgX+_434aGVJ2NAJ0hxDNLo+Vsa46GH3psXr4sKQ@mail.gmail.com>
-	<51B75C39.3030306@redhat.com>
-	<CAAxjCEyne63XH1Uk6_7jzjaxDbsSopO9E+=6oo3xE=PvjBFcjA@mail.gmail.com>
-	<51B75EF7.40801@redhat.com>
-	<CAO9HMNEk1qNVGzM+a052O1y0nm3-cxqM17BGWBZDc1byfWTa7w@mail.gmail.com>
-	<20130611210312.GN29338@dastard>
-Date: Tue, 11 Jun 2013 16:43:11 -0500
-Message-ID: <CAO9HMNFUnWUzSE3NhOwXmtzuqxjB1Ri3JxpOU-FTugQt3CdkPQ@mail.gmail.com>
-Subject: Re: Questions about XFS
-From: Steve Bergman <sbergman27@gmail.com>
+	<51B75E42.4070105@sandeen.net>
+	<CAO9HMNFj4Y8bEg3xZct0PTk_4wmGCtuNgFf4m4TR-PnZR_BrNQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <CAO9HMNFj4Y8bEg3xZct0PTk_4wmGCtuNgFf4m4TR-PnZR_BrNQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,35 +33,53 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Stefan Ring <stefanrin@gmail.com>, Ric Wheeler <rwheeler@redhat.com>, Linux fs XFS <xfs@oss.sgi.com>
+To: Steve Bergman <sbergman27@gmail.com>
+Cc: Ric Wheeler <rwheeler@redhat.com>, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-> I get it. You want a pony, and you don't want to pay anything for
-it.
+On Tue, Jun 11, 2013 at 02:17:16PM -0500, Steve Bergman wrote:
+> Now about ext3 behavior. (Sorry, I know this is an XFS list, but I've
+> been dying to have this clarified. And this does kind of relate to
+> XFS.) Not only does data get flushed more frequently. But it gets
+> careful treatment. It gets written out immediately before the
+> metadata.
 
-Hi Dave,
+That's not careful treatment, that's just ordering. XFS has "careful
+treatment", too, but it orders data and metadata differently.
 
-Not at all. I don't mind incurring a performance penalty in that LV.
-Ext3 performance is quite acceptable, with the exception of a single
-maintenance operation which I perform periodically (which can be quite
-slow, indeed, on the larger files. Very intensive random writes.)
-Fortunately, the filesystem intensive part of that operation occurs in
-its own work directory. The files in that directory are just temporary
-work files. And at the end of the processing, the resulting files get
-copied back to the main data directory tree.  XFS performs extremely
-well for this operation. For about a dozen years, I've been using Ext3
-for the whole thing, and the resiliency has been much more than just
-adequate. (If I needed more, I'd mount ext3 data=journal; I can't
-imagine mounting synchronously.) But for this new server, and probably
-future ones, I'll be using Ext3 for the permanent data, and XFS for
-the work directory. It makes a huge difference for that one operation,
-and leverages the strengths of both filesystems to yield something
-more appropriate for the workload than either one alone. As Ted is
-fond of noting, one of Linux's greatest strengths is the variety of
-filesystems it offers. And sometimes filesystem performance just
-doesn't matter.
+XFS doesn't actually update the inode size until after
+the data is written i.e. the size is still zero until the data is
+written. That's how XFS orders data vs metadata updates - metadata
+that is oly valid after data IO completes is not modified until
+after the data IO completes...
 
--Steve
+Hence if you create a file, write some data and then crash before
+the data is written, you'll get the create replayed but nothing else.
+i.e. a zero length file. Often it is just the inode size transaction
+that is missing from the log - the data is actually on disk and *can
+be recovered* if you know what you are doing...
+
+IOWs, the thing that causes people to complain about XFS and zero
+length files is that XFS leaves *observable evidence* of data loss
+behind, while ext3 and ext4 don't. Hence when people switch to XFS
+they actually notice (maybe for the first time!) that running their
+laptop battery dead leads to data loss and that their applications
+are not behaving safely. They then shoot the messenger (i.e XFS)
+for losing data as ext3/ext4 don't "lose data" as they don't leave
+any observable evidence of partial file states...
+
+Filesystems behave differently, but those observable differences in
+behaviour don't mean one filesystem loses more data than another.
+Some filesystems just makes it easier to find evidence of such data
+loss and hence make it easier to recover from, not to mention make
+it obvious which applications write data unsafely and hence
+shouldn't be trusted....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
