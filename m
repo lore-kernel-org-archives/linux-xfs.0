@@ -1,26 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id AEBA229DF8
-	for <xfs@oss.sgi.com>; Tue, 11 Jun 2013 16:47:32 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7202E304043
-	for <xfs@oss.sgi.com>; Tue, 11 Jun 2013 14:47:29 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id E858929DF8
+	for <xfs@oss.sgi.com>; Tue, 11 Jun 2013 16:50:55 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D5796304053
+	for <xfs@oss.sgi.com>; Tue, 11 Jun 2013 14:50:55 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	Vs82ZEmsFtsBjCaj for <xfs@oss.sgi.com>;
-	Tue, 11 Jun 2013 14:47:27 -0700 (PDT)
-Date: Wed, 12 Jun 2013 07:47:25 +1000
+	HINugJuNKarXKOc5 for <xfs@oss.sgi.com>;
+	Tue, 11 Jun 2013 14:50:54 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Questions about XFS
-Message-ID: <20130611214725.GO29338@dastard>
-References: <loom.20130611T112155-970@post.gmane.org>
-	<51B72D3D.5010206@redhat.com>
-	<CAO9HMNGjdikgX+_434aGVJ2NAJ0hxDNLo+Vsa46GH3psXr4sKQ@mail.gmail.com>
-	<51B75E42.4070105@sandeen.net>
-	<CAO9HMNFj4Y8bEg3xZct0PTk_4wmGCtuNgFf4m4TR-PnZR_BrNQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAO9HMNFj4Y8bEg3xZct0PTk_4wmGCtuNgFf4m4TR-PnZR_BrNQ@mail.gmail.com>
+Subject: [PATCH] xfs: don't shutdown log recovery on validation errors
+Date: Wed, 12 Jun 2013 07:50:42 +1000
+Message-Id: <1370987442-30601-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,57 +21,81 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Steve Bergman <sbergman27@gmail.com>
-Cc: Ric Wheeler <rwheeler@redhat.com>, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: davej@redhat.com, bpm@sgi.com
 
-On Tue, Jun 11, 2013 at 02:17:16PM -0500, Steve Bergman wrote:
-> Now about ext3 behavior. (Sorry, I know this is an XFS list, but I've
-> been dying to have this clarified. And this does kind of relate to
-> XFS.) Not only does data get flushed more frequently. But it gets
-> careful treatment. It gets written out immediately before the
-> metadata.
+From: Dave Chinner <dchinner@redhat.com>
 
-That's not careful treatment, that's just ordering. XFS has "careful
-treatment", too, but it orders data and metadata differently.
+Unfortunately, we cannot guarantee that items logged multiple times
+and replayed by log recovery do not take objects back in time. When
+theya re taken back in time, the go into an intermediate state which
+is corrupt, and hence verification that occurs on this intermediate
+state causes log recovery to abort with a corruption shutdown.
 
-XFS doesn't actually update the inode size until after
-the data is written i.e. the size is still zero until the data is
-written. That's how XFS orders data vs metadata updates - metadata
-that is oly valid after data IO completes is not modified until
-after the data IO completes...
+Instead of causing a shutdown and unmountable filesystem, don't
+verify post-recovery items before they are written to disk. This is
+less than optimal, but there is no way to detect this issue for
+non-CRC filesystems If log recovery successfully completes, this
+will be undone and the object will be consistent by subsequent
+transactions that are replayed, so in most cases we don't need to
+take drastic action.
 
-Hence if you create a file, write some data and then crash before
-the data is written, you'll get the create replayed but nothing else.
-i.e. a zero length file. Often it is just the inode size transaction
-that is missing from the log - the data is actually on disk and *can
-be recovered* if you know what you are doing...
+For CRC enabled filesystems, leave the verifiers in place - we need
+to call them to recalculate the CRCs on the objects anyway. This
+recovery problem canbe solved for such filesystems - we have a LSN
+stamped in all metadata at writeback time that we can to determine
+whether the item should be replayed or not. This is a separate piece
+of work, so is not addressed by this patch.
 
-IOWs, the thing that causes people to complain about XFS and zero
-length files is that XFS leaves *observable evidence* of data loss
-behind, while ext3 and ext4 don't. Hence when people switch to XFS
-they actually notice (maybe for the first time!) that running their
-laptop battery dead leads to data loss and that their applications
-are not behaving safely. They then shoot the messenger (i.e XFS)
-for losing data as ext3/ext4 don't "lose data" as they don't leave
-any observable evidence of partial file states...
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_log_recover.c |   19 +++++++++++++++++--
+ 1 file changed, 17 insertions(+), 2 deletions(-)
 
-Filesystems behave differently, but those observable differences in
-behaviour don't mean one filesystem loses more data than another.
-Some filesystems just makes it easier to find evidence of such data
-loss and hence make it easier to recover from, not to mention make
-it obvious which applications write data unsafely and hence
-shouldn't be trusted....
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 45a85ff..7cf5e4e 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -1845,7 +1845,13 @@ xlog_recover_do_inode_buffer(
+ 	xfs_agino_t		*buffer_nextp;
+ 
+ 	trace_xfs_log_recover_buf_inode_buf(mp->m_log, buf_f);
+-	bp->b_ops = &xfs_inode_buf_ops;
++
++	/*
++	 * Post recovery validation only works properly on CRC enabled
++	 * filesystems.
++	 */
++	if (xfs_sb_version_hascrc(&mp->m_sb))
++		bp->b_ops = &xfs_inode_buf_ops;
+ 
+ 	inodes_per_buf = BBTOB(bp->b_io_length) >> mp->m_sb.sb_inodelog;
+ 	for (i = 0; i < inodes_per_buf; i++) {
+@@ -2205,7 +2211,16 @@ xlog_recover_do_reg_buffer(
+ 	/* Shouldn't be any more regions */
+ 	ASSERT(i == item->ri_total);
+ 
+-	xlog_recovery_validate_buf_type(mp, bp, buf_f);
++	/*
++	 * We can only do post recovery validation on items on CRC enabled
++	 * fielsystems as we need to know when the buffer was written to be able
++	 * to determine if we should have replayed the item. If we replay old
++	 * metadata over a newer buffer, then it will enter a temporarily
++	 * inconsistent state resulting in verification failures. Hence for now
++	 * just avoid the verification stage for non-crc filesystems
++	 */
++	if (xfs_sb_version_hascrc(&mp->m_sb))
++		xlog_recovery_validate_buf_type(mp, bp, buf_f);
+ }
+ 
+ /*
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.10.4
 
 _______________________________________________
 xfs mailing list
