@@ -1,38 +1,40 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A3D1C29DF8
-	for <xfs@oss.sgi.com>; Tue, 11 Jun 2013 18:08:27 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 946F6304043
-	for <xfs@oss.sgi.com>; Tue, 11 Jun 2013 16:08:24 -0700 (PDT)
-Received: from e9.ny.us.ibm.com (e9.ny.us.ibm.com [32.97.182.139]) by
-	cuda.sgi.com with ESMTP id itm5hHOB0iEzc3I9 (version=TLSv1
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 28C9329DF8
+	for <xfs@oss.sgi.com>; Tue, 11 Jun 2013 18:13:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id BB9C8AC004
+	for <xfs@oss.sgi.com>; Tue, 11 Jun 2013 16:13:09 -0700 (PDT)
+Received: from e34.co.us.ibm.com (e34.co.us.ibm.com [32.97.110.152]) by
+	cuda.sgi.com with ESMTP id QpfdAUeARSjialFg (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 11 Jun 2013 16:08:23 -0700 (PDT)
+	Tue, 11 Jun 2013 16:13:09 -0700 (PDT)
 Received: from /spool/local
-	by e9.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	by e34.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
 	Violators will be prosecuted
 	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
-	Tue, 11 Jun 2013 19:08:23 -0400
-Received: from d01relay03.pok.ibm.com (d01relay03.pok.ibm.com [9.56.227.235])
-	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 2956E6E8028
-	for <xfs@oss.sgi.com>; Tue, 11 Jun 2013 19:08:17 -0400 (EDT)
-Received: from d01av05.pok.ibm.com (d01av05.pok.ibm.com [9.56.224.195])
-	by d01relay03.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	r5BN8KgE298186 for <xfs@oss.sgi.com>; Tue, 11 Jun 2013 19:08:20 -0400
-Received: from d01av05.pok.ibm.com (loopback [127.0.0.1])
-	by d01av05.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
-	r5BN8Kvi008230 for <xfs@oss.sgi.com>; Tue, 11 Jun 2013 19:08:20 -0400
-Subject: Re: [PATCH v8 2/5] xfs: Add pquota fields where gquota is used.
+	Tue, 11 Jun 2013 17:13:08 -0600
+Received: from d03relay05.boulder.ibm.com (d03relay05.boulder.ibm.com
+	[9.17.195.107])
+	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id 455023E40044
+	for <xfs@oss.sgi.com>; Tue, 11 Jun 2013 17:12:49 -0600 (MDT)
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
+	by d03relay05.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	r5BND7l6140950 for <xfs@oss.sgi.com>; Tue, 11 Jun 2013 17:13:07 -0600
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id r5BND7Em018339
+	for <xfs@oss.sgi.com>; Tue, 11 Jun 2013 17:13:07 -0600
+Subject: Re: [PATCH v8 4/5] xfs: Add proper versioning support to fs_quota_stat
 From: Chandra Seetharaman <sekharan@us.ibm.com>
-In-Reply-To: <20130610231729.GD29376@dastard>
+In-Reply-To: <20130610232722.GF29376@dastard>
 References: <1368220889-25188-1-git-send-email-sekharan@us.ibm.com>
-	<1368220889-25188-3-git-send-email-sekharan@us.ibm.com>
-	<20130517042303.GN24635@dastard>
-	<1369432625.9551.946.camel@chandra-dt.ibm.com>
-	<20130610231729.GD29376@dastard>
-Date: Tue, 11 Jun 2013 18:08:19 -0500
-Message-ID: <1370992099.22504.22.camel@chandra-dt.ibm.com>
+	<1368220889-25188-5-git-send-email-sekharan@us.ibm.com>
+	<20130517051001.GP24635@dastard>
+	<1369433842.9551.967.camel@chandra-dt.ibm.com>
+	<20130610232722.GF29376@dastard>
+Date: Tue, 11 Jun 2013 18:13:06 -0500
+Message-ID: <1370992386.22504.27.camel@chandra-dt.ibm.com>
 Mime-Version: 1.0
 Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -50,142 +52,62 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, 2013-06-11 at 09:17 +1000, Dave Chinner wrote:
-> On Fri, May 24, 2013 at 04:57:05PM -0500, Chandra Seetharaman wrote:
-> > On Fri, 2013-05-17 at 14:23 +1000, Dave Chinner wrote: 
-> > > On Fri, May 10, 2013 at 04:21:26PM -0500, Chandra Seetharaman wrote:
-> > > > Add project quota changes to all the places where group quota field
-> > > > is used:
-> > > >    * add separate project quota members into various structures
-> > > >    * split project quota and group quotas so that instead of overriding
-> > > >      the group quota members incore, the new project quota members are
-> > > >      used instead
-> > > >    * get rid of usage of the OQUOTA flag incore, in favor of separate
-> > > >    * group
-> > > >      and project quota flags.
-> > > >    * add a project dquot argument to various functions.
+On Tue, 2013-06-11 at 09:27 +1000, Dave Chinner wrote:
+> On Fri, May 24, 2013 at 05:17:22PM -0500, Chandra Seetharaman wrote:
+> > On Fri, 2013-05-17 at 15:10 +1000, Dave Chinner wrote:
+> > > On Fri, May 10, 2013 at 04:21:28PM -0500, Chandra Seetharaman wrote:
+> > > > Added appropriate pads and code for backward compatibility.
 > > > > 
-> > > > No externally visible interfaces changed.
+> > > > Copied over the old version as it is different from the newer padded
+> > > > version.
+> > > > 
+> > > > New callers of the system call have to just set the version of the data
+> > > > structure being passed, and kernel will fill as much data as requested.
+> > > > 
+> > > > Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
 > > > 
-> > > Looks pretty good. Some relatively minor changes below.
-> .....
-> > > >  		if (code)
-> > > >  			return code;
-> > > >  	}
-> > > > @@ -994,8 +994,8 @@ xfs_ioctl_setattr(
-> > > >  		    XFS_IS_PQUOTA_ON(mp) &&
-> > > >  		    xfs_get_projid(ip) != fa->fsx_projid) {
-> > > >  			ASSERT(tp);
-> > > > -			code = xfs_qm_vop_chown_reserve(tp, ip, udqp, gdqp,
-> > > > -						capable(CAP_FOWNER) ?
-> > > > +			code = xfs_qm_vop_chown_reserve(tp, ip, udqp, NULL,
-> > > > +						pdqp, capable(CAP_FOWNER) ?
-> > > >  						XFS_QMOPT_FORCE_RES : 0);
-> > > > @@ -1113,7 +1113,7 @@ xfs_ioctl_setattr(
-> > > >  		if (xfs_get_projid(ip) != fa->fsx_projid) {
-> > > >  			if (XFS_IS_QUOTA_RUNNING(mp) && XFS_IS_PQUOTA_ON(mp)) {
-> > > >  				olddquot = xfs_qm_vop_chown(tp, ip,
-> > > > -							&ip->i_gdquot, gdqp);
-> > > > +							&ip->i_pdquot, pdqp);
+> > > This needs to be cc'd to Steve Whitehouse so he's aware that we are
+> > > changing the quota interface...
+> 
+> > > > +/*
+> > > > + * Since Version 1 did not have padding at appropriate places,
+> > > > + * a new data structure has been defined for the older version to
+> > > > + * provide backward compatibility.
+> > > > + * Future extentions of this data structure won't require new
+> > > > + * data structure definitions as the current one can be extended
+> > > > + * with the logic and padding in place now.
+> > > > + */
+> > > > +#define FS_QSTAT_V1_SIZE	(sizeof(struct fs_quota_stat_v1))
+> > > > +#define FS_QSTAT_V2_SIZE	(offsetof(struct fs_quota_stat, qs_pquota) + \
+> > > > +					sizeof(fs_qfilestat_t))
 > > > 
-> > > xfs_qm_vop_chown() is only called on one dquot at a time, so it can
-> > > only exchange one dquot at a time. and udqp is not used for hints,
-> > > so it looks to me like udqp and gdqp are wholly unnecessary in this
-> > > function....
+> > > Just use sizeof(struct fs_quota_stat) as the size. Indeed, for
 > > 
-> > Did not fully understand this comment. Can you please elaborate ?
+> > My thinking w.r.t not making it sizeof (fs_quota_stat) is ...future
+> > changes doesn't have to touch the macro definitions of earlier versions,
+> > they can define a new macro just by copying the last V?_SIZE macro and
+> > changing the last field name.
 > 
-> What I was saying here is that throughout the function udqp and gdqp
-> are passed to the various quota functions, but they are not used at
-> all by the functions being called. i.e. you could pass NULL instead,
-> and the code would still function identically. IOWs, we don't
-> actually need to define anything other than the project quota
-> related variables...
+> If we need a future revision, we can deal with the structure
+> differences and versions at that point in time. Second guessing
+> unknown future requirements is not necessary. ;)
 
-I see...
-You want me to get rid of uid/gid usages from this context ? and pid
-information from xfs_setattr_nonsize() function ?
-
+sure.
 > 
-> > > > diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> > > > index d82efaa..7c54ea4 100644
-> > > > --- a/fs/xfs/xfs_iops.c
-> > > > +++ b/fs/xfs/xfs_iops.c
-> > > > @@ -517,7 +517,7 @@ xfs_setattr_nonsize(
-> > > >  		ASSERT(udqp == NULL);
-> > > >  		ASSERT(gdqp == NULL);
-> > > >  		error = xfs_qm_vop_dqalloc(ip, uid, gid, xfs_get_projid(ip),
-> > > > -					 qflags, &udqp, &gdqp);
-> > > > +					 qflags, &udqp, &gdqp, NULL);
-> > > 
-> > > Why is there no project quota support here, even though we pass in a
-> > > project ID? I know the answer, but please add a comment so that a
-> > > couple of years down the track I don't need to go remind myself of
-> > > why....
+> > > future enhancements, maybe we should add 64 bytes of empty space at
+> > > the end of the structure....
 > > 
-> > Not clear what you are expecting here.
+> > Since this version is fully backward compatible, I didn't think a future
+> > pad was needed. Do you want me to add ?
 > 
-> I'm expecting you to write a comment explaining why we pass
-> uid/gid/projid to the xfs_qm_vop_dqalloc() function, but then only
-> pass udqp and gdqp but NULL instead of a project quota dquot
-> pointer. Indeed, I already don't remember why this is a valid, so it
-> clearly needs a comment explaining it....
+> We only really need to change the structure version when we change
+> input parameters, the size or the shape of the structure being
+> passed in from userspace. If we add padding now, then we can expand
+> output of the call without needing to bump the version of the
+> structure. Old code simply won't know (or care) about the new output
+> in the region of the structure it considers empty padding....
 
->From what I see, we don't even have to send projid information in this
-context. Do you want me to get rid of that (as mentioned above) ?
-
-Does this comment sound correct ?
-/*
- * Since no project related information is being changed, we do not
- * have to handle project quota information here.
- */
-
-> 
-> > > 
-> > > 
-> > > 			qino = xfs_sb_version_has_pquota(&mp->m_sb) ?
-> > > 						mp->m_sb.sb_pquotino :
-> > > 						mp->m_sb.sb_gquotino;
-> > > 
-> > > And the correct on-disk inode is read....
-> > > 
-> > The object of this patch is to replace all gquota with pquota stuff. I
-> > am not using the pquotino or xfs_sb_version_has_pquota() until patch 3.
-> > 
-> > If I get the change forward, I have to merge patch 3 and part of this
-> > patch into patch 1, which adds up lots of work.
-> > 
-> > The way the patches are split now, IMO, is easy to follow and works
-> > independently.
-> 
-> That's fine. I review the patches one by one, so I make comments
-> that are relevant to the current patch context. It may be that you
-> changed it in a later patch and that often is fine - comments like
-> this indicate that perhaps the commit message hasn't quite described
-> the full context of the patch within the series correctly...
-> 
-> > > > +	if (pdqp) {
-> > > > +		ASSERT(ip->i_pdquot == NULL);
-> > > > +		ASSERT(XFS_IS_PQUOTA_ON(mp));
-> > > > +		ASSERT(xfs_get_projid(ip) == be32_to_cpu(pdqp->q_core.d_id));
-> > > > +
-> > > > +		ip->i_pdquot = xfs_qm_dqhold(pdqp);
-> > > > +		xfs_trans_mod_dquot(tp, pdqp, XFS_TRANS_DQ_ICOUNT, 1);
-> > > > +	}
-> > > >  }
-> > > 
-> > > Something this just triggered. All transaction reservations that
-> > > reserve space for dquots need to be upped from 2 to 3 dquots.
-> > 
-> > Can you elaborate please.
-> 
-> A transaction ithat modifies space can now modify 3 dquots (u+g+p)
-> instead of only 2 (u+(g or p)), and so the log space for any such 
-> transaction goes up. It may be that you've already handled this, but
-> if you're asking for an explanation then maybe not :/
-
-IIUC, I am handling it by increasing the number of array elements in the
-data structure xfs_dquot_acct. Let me know if it is incorrect.
+Ok. I will all 64 bytes of additional padding at the end.
 
 > 
 > Cheers,
