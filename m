@@ -1,17 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D0B8A29DF8
-	for <linux-xfs@oss.sgi.com>; Tue, 11 Jun 2013 15:08:14 -0500 (CDT)
-Date: Tue, 11 Jun 2013 15:08:11 -0500
-From: Ben Myers <bpm@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id 4BB7229DF8
+	for <xfs@oss.sgi.com>; Tue, 11 Jun 2013 16:03:21 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 29C258F8049
+	for <xfs@oss.sgi.com>; Tue, 11 Jun 2013 14:03:18 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	9roBQXQce0nEgmIQ for <xfs@oss.sgi.com>;
+	Tue, 11 Jun 2013 14:03:16 -0700 (PDT)
+Date: Wed, 12 Jun 2013 07:03:12 +1000
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: Questions about XFS
-Message-ID: <20130611200811.GO32736@sgi.com>
+Message-ID: <20130611210312.GN29338@dastard>
 References: <loom.20130611T112155-970@post.gmane.org>
-	<20130611193525.GT20932@sgi.com>
-	<CAO9HMNEt4XKdV6+jfKwHVPrDaVNytx65MQDK52Uckcy-O6YikQ@mail.gmail.com>
+	<51B72D3D.5010206@redhat.com>
+	<CAO9HMNGjdikgX+_434aGVJ2NAJ0hxDNLo+Vsa46GH3psXr4sKQ@mail.gmail.com>
+	<51B75C39.3030306@redhat.com>
+	<CAAxjCEyne63XH1Uk6_7jzjaxDbsSopO9E+=6oo3xE=PvjBFcjA@mail.gmail.com>
+	<51B75EF7.40801@redhat.com>
+	<CAO9HMNEk1qNVGzM+a052O1y0nm3-cxqM17BGWBZDc1byfWTa7w@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAO9HMNEt4XKdV6+jfKwHVPrDaVNytx65MQDK52Uckcy-O6YikQ@mail.gmail.com>
+In-Reply-To: <CAO9HMNEk1qNVGzM+a052O1y0nm3-cxqM17BGWBZDc1byfWTa7w@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,42 +36,33 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Steve Bergman <sbergman27@gmail.com>
-Cc: linux-xfs@oss.sgi.com
+Cc: Stefan Ring <stefanrin@gmail.com>, Ric Wheeler <rwheeler@redhat.com>, Linux fs XFS <xfs@oss.sgi.com>
 
-Hey Steve,
+On Tue, Jun 11, 2013 at 02:30:36PM -0500, Steve Bergman wrote:
+> Thanks. But I'm specifically *not* talking about database apps, I'm
+> talking about non-database applications written in languages that
+> don't even have a concept of fsync.
 
-On Tue, Jun 11, 2013 at 02:55:09PM -0500, Steve Bergman wrote:
-> I'm setting up a new server right now, and I'm breaking it up into a
-> number of different LV's for flexibility. I've gone through a number
-> of possibilities, and I think it's going to look something like this:
-> 
-> / - Ext4
-> /root - Ext4
-> /home - Ext4
-> /var - Ext4
-> /usr/local - Ext4
-> /usr/local/worktmp - XFS (Very intensive & time-consuming random
-> writes, here. But all files are temporary work files. XFS is
-> performing well here in my testing.)
+I get it. You want a pony, and you don't want to pay anything for
+it.
 
-Good.
+Any language is fundamentally broken if it has no concept and/or
+method for ensuring data integrity for data that is written through
+it. If you have such a language and you need data integrity then
+your only filesystem option for guaranteeing no data loss is
+synchronous writes and metadata updates. 
 
-> /usr/local/data - Ext3 (Cobol doesn't know about fsync. I need
-> pony-magic in this LV.)
+XFS allows you to minimise the impact of such legacy languages and
+applications to just the data sets those applications use through
+the use of 'chattr -S' and the /proc/sys/fs/xfs/xfs_inherit_sync
+sysctl....
 
-You might be better served (with whatever filesystem you are using) by
-looking into whether you can teach cobol about fsync.  I've never worked
-with cobol so I don't know if it can be done.  Based upon a quick web
-search I suspect that it may be possible.
+Cheers,
 
-> Backup on the /usr/local/worktmp is not critical, due to its nature.
-> But can't I just lvm2-snapshot an XFS LV and rsync that to USB drive
-> like I do everything else?
-
-Snapshot and rsync should work fine with xfs.  
-
-Regards,
-	Ben
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
