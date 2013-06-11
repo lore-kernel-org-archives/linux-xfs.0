@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 69CE37F37
-	for <xfs@oss.sgi.com>; Mon, 10 Jun 2013 18:57:07 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 7F0F629DF8
+	for <xfs@oss.sgi.com>; Tue, 11 Jun 2013 01:05:54 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 448A7304043
-	for <xfs@oss.sgi.com>; Mon, 10 Jun 2013 16:57:06 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	e6vXXWuevA7j0aN4 for <xfs@oss.sgi.com>;
-	Mon, 10 Jun 2013 16:57:04 -0700 (PDT)
-Date: Tue, 11 Jun 2013 09:56:41 +1000
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5E6C4304051
+	for <xfs@oss.sgi.com>; Mon, 10 Jun 2013 23:05:51 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	oJ9XsXyL9Juce3Zj for <xfs@oss.sgi.com>;
+	Mon, 10 Jun 2013 23:05:49 -0700 (PDT)
+Date: Tue, 11 Jun 2013 16:05:46 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 00/48] xfsprogs: CRC support
-Message-ID: <20130610235641.GH29376@dastard>
-References: <1370564771-4929-1-git-send-email-david@fromorbit.com>
-	<20130607061139.GM29338@dastard> <20130607210447.GP20932@sgi.com>
+Subject: Re: [PATCH 1/9] xfs: don't emit v5 superblock warnings on write
+Message-ID: <20130611060546.GK29376@dastard>
+References: <1369636707-15150-1-git-send-email-david@fromorbit.com>
+	<1369636707-15150-2-git-send-email-david@fromorbit.com>
+	<51A62F2F.6040807@redhat.com> <20130530174915.GB20932@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130607210447.GP20932@sgi.com>
+In-Reply-To: <20130530174915.GB20932@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,49 +32,38 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Ben Myers <bpm@sgi.com>
-Cc: xfs@oss.sgi.com
+Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
 
-On Fri, Jun 07, 2013 at 04:04:47PM -0500, Ben Myers wrote:
-> Hey,
-> 
-> On Fri, Jun 07, 2013 at 04:11:39PM +1000, Dave Chinner wrote:
-> > On Fri, Jun 07, 2013 at 10:25:23AM +1000, Dave Chinner wrote:
-> > > Hi folks,
+On Thu, May 30, 2013 at 12:49:15PM -0500, Ben Myers wrote:
+> On Wed, May 29, 2013 at 12:39:11PM -0400, Brian Foster wrote:
+> > On 05/27/2013 02:38 AM, Dave Chinner wrote:
+> > > From: Dave Chinner <dchinner@redhat.com>
 > > > 
-> > > This is the latest update of the series of patches tht introduces
-> > > CRC support into xfsprogs. Of note, for CRC enabled filesystems;
+> > > We write the superblock every 30s or so which results in the
+> > > verifier being called. Right now that results in this output
+> > > every 30s:
 > > > 
-> > > 	- write support for xfs-db is disabled
-> > > 	- obfuscation for metadump is disabled
-> > > 	- xfs_check does nothing ("always succeed") so that xfstests
-> > > 	  can run without needing this
-> > > 	- all structures shoul dbe supported for printing in xfs_db
-> > > 	- xfs_repair should be able to fully validate the structure
-> > > 	  of a CRC enabled filesystem.
-> > > 	- xfs_repair still ignores CRC validation errors when
-> > > 	  reading metadata
-> > > 	- mkfs.xfs enforces limitations on the format of CRC enabled
-> > > 	  filesystems (inode size, attr format, projid32bit, etc).
-> > > 	- whenever a v5 superblock is parsed on read by any utility,
-> > > 	  it outputs a wanring about it being an experimental
-> > > 	  format.
+> > > XFS (vda): Version 5 superblock detected. This kernel has EXPERIMENTAL support enabled!
+> > > Use of these features in this kernel is at your own risk!
 > > > 
-> > > Bug reports, patches, comments, reviews, etc all welcome.
+> > > And spamming the logs.
+> > > 
+> > > We don't need to check for whether we support v5 superblocks or
+> > > whether there are feature bits we don't support set as these are
+> > > only relevant when we first mount the filesytem. i.e. on superblock
+> > > read. Hence for the write verification we can just skip all the
+> > > checks (and hence verbose output) altogether.
+> > > 
+> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > > ---
 > > 
-> > I've just realised that I haven't ported any of the recent kernel
-> > fixes across to this patch set, so there will be another few patches
-> > needed for those as well...
+> > Reviewed-by: Brian Foster <bfoster@redhat.com>
 > 
-> These two series are applied to the crc-dev branch at
-> git://oss.sgi.com/xfs/cmds/xfsprogs.git 
+> Applied.
 
-Hi Ben,
-
-Thanks for doing this. This patch, however:
-
-[PATCH 10/12] xfs: fully initialise temp leaf in xfs_attr3_leaf_compact
-
-is missing from the branch. Can you commit it, please?
+Ben, while I see this in the xfsdev tree, I don't see it in Linus'
+tree. Did it get missed on the recent merges? If so, can you queue
+it up for 3.10-rc6?
 
 Cheers,
 
