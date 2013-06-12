@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 95111800C
-	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 05:37:03 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D8A6D7FB6
+	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 05:37:04 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8577B304043
-	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 03:37:03 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 58FDFAC005
+	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 03:37:04 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	o6ZOjquEfGtxCFPX for <xfs@oss.sgi.com>;
-	Wed, 12 Jun 2013 03:37:00 -0700 (PDT)
+	DyZe3ds4bwByqOXR for <xfs@oss.sgi.com>;
+	Wed, 12 Jun 2013 03:37:01 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UmiQD-0001BU-DQ
-	for xfs@oss.sgi.com; Wed, 12 Jun 2013 20:36:57 +1000
+	(envelope-from <dave@fromorbit.com>) id 1UmiQ3-0001BZ-HK
+	for xfs@oss.sgi.com; Wed, 12 Jun 2013 20:36:47 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UmiQ3-0006mu-7t
+	(envelope-from <dave@disappointment.disaster>) id 1UmiQ3-0006n3-BQ
 	for xfs@oss.sgi.com; Wed, 12 Jun 2013 20:36:47 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 06/22] xfsprogs: remove xfs_mount.h
-Date: Wed, 12 Jun 2013 20:36:18 +1000
-Message-Id: <1371033394-26006-7-git-send-email-david@fromorbit.com>
+Subject: [PATCH 08/22] xfs: remove local fork format handling from
+	xfs_bmapi_write()
+Date: Wed, 12 Jun 2013 20:36:20 +1000
+Message-Id: <1371033394-26006-9-git-send-email-david@fromorbit.com>
 In-Reply-To: <1371033394-26006-1-git-send-email-david@fromorbit.com>
 References: <1371033394-26006-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,424 +39,372 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-It is no longer used by anything in userspace, so we don't need it
-anymore. Remove it.
+The conversion from local format to extent format requires
+interpretation of the data in the fork being converted, so it cannot
+be done in a generic way. It is up to the caller to convert the fork
+format to extent format before calling into xfs_bmapi_write() so
+format conversion can be done correctly.
+
+The code in xfs_bmapi_write() to convert the format is used
+implicitly by the attribute and directory code, but they
+specifically zero the fork size so that the conversion does not do
+any allocation or manipulation. Move this conversion into the
+shortform to leaf functions for the dir/attr code so the conversions
+are explicitly controlled by all callers.
+
+Now we can remove the conversion code in xfs_bmapi_write.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/Makefile    |    2 +-
- include/libxfs.h    |    7 +-
- include/xfs_mount.h |  356 ---------------------------------------------------
- 3 files changed, 6 insertions(+), 359 deletions(-)
- delete mode 100644 include/xfs_mount.h
+ include/xfs_bmap.h      |    1 +
+ libxfs/xfs_attr_leaf.c  |    2 +
+ libxfs/xfs_bmap.c       |  197 ++++++++++++++++++++---------------------------
+ libxfs/xfs_dir2_block.c |   19 +++--
+ 4 files changed, 97 insertions(+), 122 deletions(-)
 
-diff --git a/include/Makefile b/include/Makefile
-index ba2c80d..a69df5b 100644
---- a/include/Makefile
-+++ b/include/Makefile
-@@ -28,7 +28,7 @@ QAHFILES = libxfs.h libxlog.h \
- 	xfs_extfree_item.h xfs_ialloc.h xfs_ialloc_btree.h \
- 	xfs_icreate_item.h xfs_inode.h xfs_inode_item.h xfs_inum.h \
- 	xfs_log.h xfs_log_priv.h xfs_log_recover.h xfs_metadump.h \
--	xfs_mount.h xfs_quota.h xfs_rtalloc.h xfs_sb.h xfs_symlink.h \
-+	xfs_quota.h xfs_rtalloc.h xfs_sb.h xfs_symlink.h \
- 	xfs_trace.h xfs_trans.h xfs_trans_space.h xfs_dfrag.h
+diff --git a/include/xfs_bmap.h b/include/xfs_bmap.h
+index de451a2..ffa67b1 100644
+--- a/include/xfs_bmap.h
++++ b/include/xfs_bmap.h
+@@ -169,6 +169,7 @@ void	xfs_bmap_trace_exlist(struct xfs_inode *ip, xfs_extnum_t cnt,
+ #endif
  
- HFILES = handle.h jdm.h xqm.h xfs.h xfs_fs.h xfs_types.h
-diff --git a/include/libxfs.h b/include/libxfs.h
-index 9ab9604..ee69cac 100644
---- a/include/libxfs.h
-+++ b/include/libxfs.h
-@@ -41,7 +41,6 @@
- #include <xfs/xfs_sb.h>
- #include <xfs/xfs_ag.h>
- #include <xfs/xfs_dir2.h>
--#include <xfs/xfs_mount.h>
- #include <xfs/xfs_da_btree.h>
- #include <xfs/xfs_bmap_btree.h>
- #include <xfs/xfs_alloc_btree.h>
-@@ -600,6 +599,10 @@ extern void	libxfs_fs_cmn_err(int, struct xfs_mount *, char *, ...);
- extern void cmn_err(int, char *, ...);
- enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE_WARN, CE_ALERT, CE_PANIC };
+ int	xfs_bmap_add_attrfork(struct xfs_inode *ip, int size, int rsvd);
++void	xfs_bmap_local_to_extents_empty(struct xfs_inode *ip, int whichfork);
+ void	xfs_bmap_add_free(xfs_fsblock_t bno, xfs_filblks_t len,
+ 		struct xfs_bmap_free *flist, struct xfs_mount *mp);
+ void	xfs_bmap_cancel(struct xfs_bmap_free *flist);
+diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
+index 687c872..0226b3d 100644
+--- a/libxfs/xfs_attr_leaf.c
++++ b/libxfs/xfs_attr_leaf.c
+@@ -655,6 +655,8 @@ xfs_attr_shortform_to_leaf(xfs_da_args_t *args)
+ 	sf = (xfs_attr_shortform_t *)tmpbuffer;
  
-+#define xfs_daddr_to_agno(mp,d) \
-+	((xfs_agnumber_t)(XFS_BB_TO_FSBT(mp, d) / (mp)->m_sb.sb_agblocks))
-+#define xfs_daddr_to_agbno(mp,d) \
-+	((xfs_agblock_t)(XFS_BB_TO_FSBT(mp, d) % (mp)->m_sb.sb_agblocks))
+ 	xfs_idata_realloc(dp, -size, XFS_ATTR_FORK);
++	xfs_bmap_local_to_extents_empty(dp, XFS_ATTR_FORK);
++
+ 	bp = NULL;
+ 	error = xfs_da_grow_inode(args, &blkno);
+ 	if (error) {
+diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
+index 6664265..4e3c792 100644
+--- a/libxfs/xfs_bmap.c
++++ b/libxfs/xfs_bmap.c
+@@ -1042,6 +1042,24 @@ xfs_bmap_extents_to_btree(
+  * since the file data needs to get logged so things will stay consistent.
+  * (The bmap-level manipulations are ok, though).
+  */
++void
++xfs_bmap_local_to_extents_empty(
++	struct xfs_inode	*ip,
++	int			whichfork)
++{
++	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
++
++	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_LOCAL);
++	ASSERT(ifp->if_bytes == 0);
++	ASSERT(XFS_IFORK_NEXTENTS(ip, whichfork) == 0);
++
++	xfs_bmap_forkoff_reset(ip->i_mount, ip, whichfork);
++	ifp->if_flags &= ~XFS_IFINLINE;
++	ifp->if_flags |= XFS_IFEXTENTS;
++	XFS_IFORK_FMT_SET(ip, whichfork, XFS_DINODE_FMT_EXTENTS);
++}
++
++
+ STATIC int				/* error */
+ xfs_bmap_local_to_extents(
+ 	xfs_trans_t	*tp,		/* transaction pointer */
+@@ -1055,9 +1073,12 @@ xfs_bmap_local_to_extents(
+ 				   struct xfs_inode *ip,
+ 				   struct xfs_ifork *ifp))
+ {
+-	int		error;		/* error return value */
++	int		error = 0;
+ 	int		flags;		/* logging flags returned */
+ 	xfs_ifork_t	*ifp;		/* inode fork pointer */
++	xfs_alloc_arg_t	args;		/* allocation arguments */
++	xfs_buf_t	*bp;		/* buffer for extent block */
++	xfs_bmbt_rec_host_t *ep;	/* extent record pointer */
  
- #define LIBXFS_BBTOOFF64(bbs)	(((xfs_off_t)(bbs)) << BBSHIFT)
- extern int		libxfs_nproc(void);
-@@ -686,7 +689,7 @@ void	xfs_dinode_from_disk(struct xfs_icdinode *,
- #define libxfs_idata_realloc		xfs_idata_realloc
- #define libxfs_idestroy_fork		xfs_idestroy_fork
+ 	/*
+ 	 * We don't want to deal with the case of keeping inode data inline yet.
+@@ -1066,68 +1087,65 @@ xfs_bmap_local_to_extents(
+ 	ASSERT(!(S_ISREG(ip->i_d.di_mode) && whichfork == XFS_DATA_FORK));
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+ 	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_LOCAL);
++
++	if (!ifp->if_bytes) {
++		xfs_bmap_local_to_extents_empty(ip, whichfork);
++		flags = XFS_ILOG_CORE;
++		goto done;
++	}
++
+ 	flags = 0;
+ 	error = 0;
+-	if (ifp->if_bytes) {
+-		xfs_alloc_arg_t	args;	/* allocation arguments */
+-		xfs_buf_t	*bp;	/* buffer for extent block */
+-		xfs_bmbt_rec_host_t *ep;/* extent record pointer */
+-
+-		ASSERT((ifp->if_flags &
+-			(XFS_IFINLINE|XFS_IFEXTENTS|XFS_IFEXTIREC)) == XFS_IFINLINE);
+-		memset(&args, 0, sizeof(args));
+-		args.tp = tp;
+-		args.mp = ip->i_mount;
+-		args.firstblock = *firstblock;
+-		/*
+-		 * Allocate a block.  We know we need only one, since the
+-		 * file currently fits in an inode.
+-		 */
+-		if (*firstblock == NULLFSBLOCK) {
+-			args.fsbno = XFS_INO_TO_FSB(args.mp, ip->i_ino);
+-			args.type = XFS_ALLOCTYPE_START_BNO;
+-		} else {
+-			args.fsbno = *firstblock;
+-			args.type = XFS_ALLOCTYPE_NEAR_BNO;
+-		}
+-		args.total = total;
+-		args.minlen = args.maxlen = args.prod = 1;
+-		error = xfs_alloc_vextent(&args);
+-		if (error)
+-			goto done;
+-
+-		/* Can't fail, the space was reserved. */
+-		ASSERT(args.fsbno != NULLFSBLOCK);
+-		ASSERT(args.len == 1);
+-		*firstblock = args.fsbno;
+-		bp = xfs_btree_get_bufl(args.mp, tp, args.fsbno, 0);
+-
+-		/* initialise the block and copy the data */
+-		init_fn(tp, bp, ip, ifp);
+-
+-		/* account for the change in fork size and log everything */
+-		xfs_trans_log_buf(tp, bp, 0, ifp->if_bytes - 1);
+-		xfs_bmap_forkoff_reset(args.mp, ip, whichfork);
+-		xfs_idata_realloc(ip, -ifp->if_bytes, whichfork);
+-		xfs_iext_add(ifp, 0, 1);
+-		ep = xfs_iext_get_ext(ifp, 0);
+-		xfs_bmbt_set_allf(ep, 0, args.fsbno, 1, XFS_EXT_NORM);
+-		trace_xfs_bmap_post_update(ip, 0,
+-				whichfork == XFS_ATTR_FORK ? BMAP_ATTRFORK : 0,
+-				_THIS_IP_);
+-		XFS_IFORK_NEXT_SET(ip, whichfork, 1);
+-		ip->i_d.di_nblocks = 1;
+-		xfs_trans_mod_dquot_byino(tp, ip,
+-			XFS_TRANS_DQ_BCOUNT, 1L);
+-		flags |= xfs_ilog_fext(whichfork);
++	ASSERT((ifp->if_flags & (XFS_IFINLINE|XFS_IFEXTENTS|XFS_IFEXTIREC)) ==
++								XFS_IFINLINE);
++	memset(&args, 0, sizeof(args));
++	args.tp = tp;
++	args.mp = ip->i_mount;
++	args.firstblock = *firstblock;
++	/*
++	 * Allocate a block.  We know we need only one, since the
++	 * file currently fits in an inode.
++	 */
++	if (*firstblock == NULLFSBLOCK) {
++		args.fsbno = XFS_INO_TO_FSB(args.mp, ip->i_ino);
++		args.type = XFS_ALLOCTYPE_START_BNO;
+ 	} else {
+-		ASSERT(XFS_IFORK_NEXTENTS(ip, whichfork) == 0);
+-		xfs_bmap_forkoff_reset(ip->i_mount, ip, whichfork);
++		args.fsbno = *firstblock;
++		args.type = XFS_ALLOCTYPE_NEAR_BNO;
+ 	}
+-	ifp->if_flags &= ~XFS_IFINLINE;
+-	ifp->if_flags |= XFS_IFEXTENTS;
+-	XFS_IFORK_FMT_SET(ip, whichfork, XFS_DINODE_FMT_EXTENTS);
++	args.total = total;
++	args.minlen = args.maxlen = args.prod = 1;
++	error = xfs_alloc_vextent(&args);
++	if (error)
++		goto done;
++
++	/* Can't fail, the space was reserved. */
++	ASSERT(args.fsbno != NULLFSBLOCK);
++	ASSERT(args.len == 1);
++	*firstblock = args.fsbno;
++	bp = xfs_btree_get_bufl(args.mp, tp, args.fsbno, 0);
++
++	/* initialise the block and copy the data */
++	init_fn(tp, bp, ip, ifp);
++
++	/* account for the change in fork size and log everything */
++	xfs_trans_log_buf(tp, bp, 0, ifp->if_bytes - 1);
++	xfs_idata_realloc(ip, -ifp->if_bytes, whichfork);
++	xfs_bmap_local_to_extents_empty(ip, whichfork);
+ 	flags |= XFS_ILOG_CORE;
++
++	xfs_iext_add(ifp, 0, 1);
++	ep = xfs_iext_get_ext(ifp, 0);
++	xfs_bmbt_set_allf(ep, 0, args.fsbno, 1, XFS_EXT_NORM);
++	trace_xfs_bmap_post_update(ip, 0,
++			whichfork == XFS_ATTR_FORK ? BMAP_ATTRFORK : 0,
++			_THIS_IP_);
++	XFS_IFORK_NEXT_SET(ip, whichfork, 1);
++	ip->i_d.di_nblocks = 1;
++	xfs_trans_mod_dquot_byino(tp, ip,
++		XFS_TRANS_DQ_BCOUNT, 1L);
++	flags |= xfs_ilog_fext(whichfork);
++
+ done:
+ 	*logflagsp = flags;
+ 	return error;
+@@ -1203,23 +1221,6 @@ xfs_bmap_add_attrfork_extents(
+ 	return error;
+ }
  
--/* xfs_mount.h */
-+/* xfs_sb.h */
- #define libxfs_mod_sb			xfs_mod_sb
- #define libxfs_sb_from_disk		xfs_sb_from_disk
- #define libxfs_sb_to_disk		xfs_sb_to_disk
-diff --git a/include/xfs_mount.h b/include/xfs_mount.h
-deleted file mode 100644
-index ce0adfb..0000000
---- a/include/xfs_mount.h
-+++ /dev/null
-@@ -1,356 +0,0 @@
 -/*
-- * Copyright (c) 2000-2005 Silicon Graphics, Inc.
-- * All Rights Reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it would be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write the Free Software Foundation,
-- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- * Block initialisation functions for local to extent format conversion.
+- * As these get more complex, they will be moved to the relevant files,
+- * but for now they are too simple to worry about.
 - */
--#ifndef __XFS_MOUNT_H__
--#define	__XFS_MOUNT_H__
--
--
--#ifndef __KERNEL__
--
--#define xfs_daddr_to_agno(mp,d) \
--	((xfs_agnumber_t)(XFS_BB_TO_FSBT(mp, d) / (mp)->m_sb.sb_agblocks))
--#define xfs_daddr_to_agbno(mp,d) \
--	((xfs_agblock_t)(XFS_BB_TO_FSBT(mp, d) % (mp)->m_sb.sb_agblocks))
--
--#else /* __KERNEL__ */
--
--struct xlog;
--struct xfs_inode;
--struct xfs_mru_cache;
--struct xfs_nameops;
--struct xfs_ail;
--struct xfs_quotainfo;
--
--#ifdef HAVE_PERCPU_SB
--
--/*
-- * Valid per-cpu incore superblock counters. Note that if you add new counters,
-- * you may need to define new counter disabled bit field descriptors as there
-- * are more possible fields in the superblock that can fit in a bitfield on a
-- * 32 bit platform. The XFS_SBS_* values for the current current counters just
-- * fit.
-- */
--typedef struct xfs_icsb_cnts {
--	uint64_t	icsb_fdblocks;
--	uint64_t	icsb_ifree;
--	uint64_t	icsb_icount;
--	unsigned long	icsb_flags;
--} xfs_icsb_cnts_t;
--
--#define XFS_ICSB_FLAG_LOCK	(1 << 0)	/* counter lock bit */
--
--#define XFS_ICSB_LAZY_COUNT	(1 << 1)	/* accuracy not needed */
--
--extern int	xfs_icsb_init_counters(struct xfs_mount *);
--extern void	xfs_icsb_reinit_counters(struct xfs_mount *);
--extern void	xfs_icsb_destroy_counters(struct xfs_mount *);
--extern void	xfs_icsb_sync_counters(struct xfs_mount *, int);
--extern void	xfs_icsb_sync_counters_locked(struct xfs_mount *, int);
--extern int	xfs_icsb_modify_counters(struct xfs_mount *, xfs_sb_field_t,
--						int64_t, int);
--
--#else
--#define xfs_icsb_init_counters(mp)		(0)
--#define xfs_icsb_destroy_counters(mp)		do { } while (0)
--#define xfs_icsb_reinit_counters(mp)		do { } while (0)
--#define xfs_icsb_sync_counters(mp, flags)	do { } while (0)
--#define xfs_icsb_sync_counters_locked(mp, flags) do { } while (0)
--#define xfs_icsb_modify_counters(mp, field, delta, rsvd) \
--	xfs_mod_incore_sb(mp, field, delta, rsvd)
--#endif
--
--/* dynamic preallocation free space thresholds, 5% down to 1% */
--enum {
--	XFS_LOWSP_1_PCNT = 0,
--	XFS_LOWSP_2_PCNT,
--	XFS_LOWSP_3_PCNT,
--	XFS_LOWSP_4_PCNT,
--	XFS_LOWSP_5_PCNT,
--	XFS_LOWSP_MAX,
--};
--
--typedef struct xfs_mount {
--	struct super_block	*m_super;
--	xfs_tid_t		m_tid;		/* next unused tid for fs */
--	struct xfs_ail		*m_ail;		/* fs active log item list */
--	xfs_sb_t		m_sb;		/* copy of fs superblock */
--	spinlock_t		m_sb_lock;	/* sb counter lock */
--	struct xfs_buf		*m_sb_bp;	/* buffer for superblock */
--	char			*m_fsname;	/* filesystem name */
--	int			m_fsname_len;	/* strlen of fs name */
--	char			*m_rtname;	/* realtime device name */
--	char			*m_logname;	/* external log device name */
--	int			m_bsize;	/* fs logical block size */
--	xfs_agnumber_t		m_agfrotor;	/* last ag where space found */
--	xfs_agnumber_t		m_agirotor;	/* last ag dir inode alloced */
--	spinlock_t		m_agirotor_lock;/* .. and lock protecting it */
--	xfs_agnumber_t		m_maxagi;	/* highest inode alloc group */
--	uint			m_readio_log;	/* min read size log bytes */
--	uint			m_readio_blocks; /* min read size blocks */
--	uint			m_writeio_log;	/* min write size log bytes */
--	uint			m_writeio_blocks; /* min write size blocks */
--	struct xlog		*m_log;		/* log specific stuff */
--	int			m_logbufs;	/* number of log buffers */
--	int			m_logbsize;	/* size of each log buffer */
--	uint			m_rsumlevels;	/* rt summary levels */
--	uint			m_rsumsize;	/* size of rt summary, bytes */
--	struct xfs_inode	*m_rbmip;	/* pointer to bitmap inode */
--	struct xfs_inode	*m_rsumip;	/* pointer to summary inode */
--	struct xfs_inode	*m_rootip;	/* pointer to root directory */
--	struct xfs_quotainfo	*m_quotainfo;	/* disk quota information */
--	xfs_buftarg_t		*m_ddev_targp;	/* saves taking the address */
--	xfs_buftarg_t		*m_logdev_targp;/* ptr to log device */
--	xfs_buftarg_t		*m_rtdev_targp;	/* ptr to rt device */
--	__uint8_t		m_blkbit_log;	/* blocklog + NBBY */
--	__uint8_t		m_blkbb_log;	/* blocklog - BBSHIFT */
--	__uint8_t		m_agno_log;	/* log #ag's */
--	__uint8_t		m_agino_log;	/* #bits for agino in inum */
--	__uint16_t		m_inode_cluster_size;/* min inode buf size */
--	uint			m_blockmask;	/* sb_blocksize-1 */
--	uint			m_blockwsize;	/* sb_blocksize in words */
--	uint			m_blockwmask;	/* blockwsize-1 */
--	uint			m_alloc_mxr[2];	/* max alloc btree records */
--	uint			m_alloc_mnr[2];	/* min alloc btree records */
--	uint			m_bmap_dmxr[2];	/* max bmap btree records */
--	uint			m_bmap_dmnr[2];	/* min bmap btree records */
--	uint			m_inobt_mxr[2];	/* max inobt btree records */
--	uint			m_inobt_mnr[2];	/* min inobt btree records */
--	uint			m_ag_maxlevels;	/* XFS_AG_MAXLEVELS */
--	uint			m_bm_maxlevels[2]; /* XFS_BM_MAXLEVELS */
--	uint			m_in_maxlevels;	/* max inobt btree levels. */
--	struct radix_tree_root	m_perag_tree;	/* per-ag accounting info */
--	spinlock_t		m_perag_lock;	/* lock for m_perag_tree */
--	struct mutex		m_growlock;	/* growfs mutex */
--	int			m_fixedfsid[2];	/* unchanged for life of FS */
--	uint			m_dmevmask;	/* DMI events for this FS */
--	__uint64_t		m_flags;	/* global mount flags */
--	uint			m_dir_node_ents; /* #entries in a dir danode */
--	uint			m_attr_node_ents; /* #entries in attr danode */
--	int			m_ialloc_inos;	/* inodes in inode allocation */
--	int			m_ialloc_blks;	/* blocks in inode allocation */
--	int			m_inoalign_mask;/* mask sb_inoalignmt if used */
--	uint			m_qflags;	/* quota status flags */
--	xfs_trans_reservations_t m_reservations;/* precomputed res values */
--	__uint64_t		m_maxicount;	/* maximum inode count */
--	__uint64_t		m_resblks;	/* total reserved blocks */
--	__uint64_t		m_resblks_avail;/* available reserved blocks */
--	__uint64_t		m_resblks_save;	/* reserved blks @ remount,ro */
--	int			m_dalign;	/* stripe unit */
--	int			m_swidth;	/* stripe width */
--	int			m_sinoalign;	/* stripe unit inode alignment */
--	int			m_attr_magicpct;/* 37% of the blocksize */
--	int			m_dir_magicpct;	/* 37% of the dir blocksize */
--	__uint8_t		m_sectbb_log;	/* sectlog - BBSHIFT */
--	const struct xfs_nameops *m_dirnameops;	/* vector of dir name ops */
--	int			m_dirblksize;	/* directory block sz--bytes */
--	int			m_dirblkfsbs;	/* directory block sz--fsbs */
--	xfs_dablk_t		m_dirdatablk;	/* blockno of dir data v2 */
--	xfs_dablk_t		m_dirleafblk;	/* blockno of dir non-data v2 */
--	xfs_dablk_t		m_dirfreeblk;	/* blockno of dirfreeindex v2 */
--	uint			m_chsize;	/* size of next field */
--	struct xfs_chash	*m_chash;	/* fs private inode per-cluster
--						 * hash table */
--	atomic_t		m_active_trans;	/* number trans frozen */
--#ifdef HAVE_PERCPU_SB
--	xfs_icsb_cnts_t __percpu *m_sb_cnts;	/* per-cpu superblock counters */
--	unsigned long		m_icsb_counters; /* disabled per-cpu counters */
--	struct notifier_block	m_icsb_notifier; /* hotplug cpu notifier */
--	struct mutex		m_icsb_mutex;	/* balancer sync lock */
--#endif
--	struct xfs_mru_cache	*m_filestream;  /* per-mount filestream data */
--	struct delayed_work	m_reclaim_work;	/* background inode reclaim */
--	struct delayed_work	m_eofblocks_work; /* background eof blocks
--						     trimming */
--	__int64_t		m_update_flags;	/* sb flags we need to update
--						   on the next remount,rw */
--	int64_t			m_low_space[XFS_LOWSP_MAX];
--						/* low free space thresholds */
--
--	struct workqueue_struct	*m_data_workqueue;
--	struct workqueue_struct	*m_unwritten_workqueue;
--	struct workqueue_struct	*m_cil_workqueue;
--	struct workqueue_struct	*m_reclaim_workqueue;
--	struct workqueue_struct	*m_log_workqueue;
--	struct workqueue_struct *m_eofblocks_workqueue;
--} xfs_mount_t;
--
--/*
-- * Flags for m_flags.
-- */
--#define XFS_MOUNT_WSYNC		(1ULL << 0)	/* for nfs - all metadata ops
--						   must be synchronous except
--						   for space allocations */
--#define XFS_MOUNT_WAS_CLEAN	(1ULL << 3)
--#define XFS_MOUNT_FS_SHUTDOWN	(1ULL << 4)	/* atomic stop of all filesystem
--						   operations, typically for
--						   disk errors in metadata */
--#define XFS_MOUNT_DISCARD	(1ULL << 5)	/* discard unused blocks */
--#define XFS_MOUNT_RETERR	(1ULL << 6)     /* return alignment errors to
--						   user */
--#define XFS_MOUNT_NOALIGN	(1ULL << 7)	/* turn off stripe alignment
--						   allocations */
--#define XFS_MOUNT_ATTR2		(1ULL << 8)	/* allow use of attr2 format */
--#define XFS_MOUNT_GRPID		(1ULL << 9)	/* group-ID assigned from directory */
--#define XFS_MOUNT_NORECOVERY	(1ULL << 10)	/* no recovery - dirty fs */
--#define XFS_MOUNT_DFLT_IOSIZE	(1ULL << 12)	/* set default i/o size */
--#define XFS_MOUNT_32BITINODES	(1ULL << 14)	/* do not create inodes above
--						 * 32 bits in size */
--#define XFS_MOUNT_SMALL_INUMS	(1ULL << 15)	/* users wants 32bit inodes */
--#define XFS_MOUNT_NOUUID	(1ULL << 16)	/* ignore uuid during mount */
--#define XFS_MOUNT_BARRIER	(1ULL << 17)
--#define XFS_MOUNT_IKEEP		(1ULL << 18)	/* keep empty inode clusters*/
--#define XFS_MOUNT_SWALLOC	(1ULL << 19)	/* turn on stripe width
--						 * allocation */
--#define XFS_MOUNT_RDONLY	(1ULL << 20)	/* read-only fs */
--#define XFS_MOUNT_DIRSYNC	(1ULL << 21)	/* synchronous directory ops */
--#define XFS_MOUNT_COMPAT_IOSIZE	(1ULL << 22)	/* don't report large preferred
--						 * I/O size in stat() */
--#define XFS_MOUNT_FILESTREAMS	(1ULL << 24)	/* enable the filestreams
--						   allocator */
--#define XFS_MOUNT_NOATTR2	(1ULL << 25)	/* disable use of attr2 format */
--
--
--/*
-- * Default minimum read and write sizes.
-- */
--#define XFS_READIO_LOG_LARGE	16
--#define XFS_WRITEIO_LOG_LARGE	16
--
--/*
-- * Max and min values for mount-option defined I/O
-- * preallocation sizes.
-- */
--#define XFS_MAX_IO_LOG		30	/* 1G */
--#define XFS_MIN_IO_LOG		PAGE_SHIFT
--
--/*
-- * Synchronous read and write sizes.  This should be
-- * better for NFSv2 wsync filesystems.
-- */
--#define	XFS_WSYNC_READIO_LOG	15	/* 32k */
--#define	XFS_WSYNC_WRITEIO_LOG	14	/* 16k */
--
--/*
-- * Allow large block sizes to be reported to userspace programs if the
-- * "largeio" mount option is used.
-- *
-- * If compatibility mode is specified, simply return the basic unit of caching
-- * so that we don't get inefficient read/modify/write I/O from user apps.
-- * Otherwise....
-- *
-- * If the underlying volume is a stripe, then return the stripe width in bytes
-- * as the recommended I/O size. It is not a stripe and we've set a default
-- * buffered I/O size, return that, otherwise return the compat default.
-- */
--static inline unsigned long
--xfs_preferred_iosize(xfs_mount_t *mp)
+-STATIC void
+-xfs_bmap_local_to_extents_init_fn(
+-	struct xfs_trans	*tp,
+-	struct xfs_buf		*bp,
+-	struct xfs_inode	*ip,
+-	struct xfs_ifork	*ifp)
 -{
--	if (mp->m_flags & XFS_MOUNT_COMPAT_IOSIZE)
--		return PAGE_CACHE_SIZE;
--	return (mp->m_swidth ?
--		(mp->m_swidth << mp->m_sb.sb_blocklog) :
--		((mp->m_flags & XFS_MOUNT_DFLT_IOSIZE) ?
--			(1 << (int)MAX(mp->m_readio_log, mp->m_writeio_log)) :
--			PAGE_CACHE_SIZE));
+-	bp->b_ops = &xfs_bmbt_buf_ops;
+-	memcpy(bp->b_addr, ifp->if_u1.if_data, ifp->if_bytes);
+-	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_BTREE_BUF);
 -}
 -
--#define XFS_LAST_UNMOUNT_WAS_CLEAN(mp)	\
--				((mp)->m_flags & XFS_MOUNT_WAS_CLEAN)
--#define XFS_FORCED_SHUTDOWN(mp)	((mp)->m_flags & XFS_MOUNT_FS_SHUTDOWN)
--void xfs_do_force_shutdown(struct xfs_mount *mp, int flags, char *fname,
--		int lnnum);
--#define xfs_force_shutdown(m,f)	\
--	xfs_do_force_shutdown(m, f, __FILE__, __LINE__)
+ STATIC void
+ xfs_symlink_local_to_remote(
+ 	struct xfs_trans	*tp,
+@@ -1272,9 +1273,9 @@ xfs_bmap_add_attrfork_local(
+ 						 flags, XFS_DATA_FORK,
+ 						 xfs_symlink_local_to_remote);
+ 
+-	return xfs_bmap_local_to_extents(tp, ip, firstblock, 1, flags,
+-					 XFS_DATA_FORK,
+-					 xfs_bmap_local_to_extents_init_fn);
++	/* should only be called for types that support local format data */
++	ASSERT(0);
++	return EFSCORRUPTED;
+ }
+ 
+ /*
+@@ -4656,20 +4657,19 @@ xfs_bmapi_write(
+ 	orig_mval = mval;
+ 	orig_nmap = *nmap;
+ #endif
++	whichfork = (flags & XFS_BMAPI_ATTRFORK) ?
++		XFS_ATTR_FORK : XFS_DATA_FORK;
+ 
+ 	ASSERT(*nmap >= 1);
+ 	ASSERT(*nmap <= XFS_BMAP_MAX_NMAP);
+ 	ASSERT(!(flags & XFS_BMAPI_IGSTATE));
+ 	ASSERT(tp != NULL);
+ 	ASSERT(len > 0);
 -
--#define SHUTDOWN_META_IO_ERROR	0x0001	/* write attempt to metadata failed */
--#define SHUTDOWN_LOG_IO_ERROR	0x0002	/* write attempt to the log failed */
--#define SHUTDOWN_FORCE_UMOUNT	0x0004	/* shutdown from a forced unmount */
--#define SHUTDOWN_CORRUPT_INCORE	0x0008	/* corrupt in-memory data structures */
--#define SHUTDOWN_REMOTE_REQ	0x0010	/* shutdown came from remote cell */
--#define SHUTDOWN_DEVICE_REQ	0x0020	/* failed all paths to the device */
+-	whichfork = (flags & XFS_BMAPI_ATTRFORK) ?
+-		XFS_ATTR_FORK : XFS_DATA_FORK;
++	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL);
+ 
+ 	if (unlikely(XFS_TEST_ERROR(
+ 	    (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
+-	     XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE &&
+-	     XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL),
++	     XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE),
+ 	     mp, XFS_ERRTAG_BMAPIFORMAT, XFS_RANDOM_BMAPIFORMAT))) {
+ 		XFS_ERROR_REPORT("xfs_bmapi_write", XFS_ERRLEVEL_LOW, mp);
+ 		return XFS_ERROR(EFSCORRUPTED);
+@@ -4682,37 +4682,6 @@ xfs_bmapi_write(
+ 
+ 	XFS_STATS_INC(xs_blk_mapw);
+ 
+-	if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_LOCAL) {
+-		/*
+-		 * XXX (dgc): This assumes we are only called for inodes that
+-		 * contain content neutral data in local format. Anything that
+-		 * contains caller-specific data in local format that needs
+-		 * transformation to move to a block format needs to do the
+-		 * conversion to extent format itself.
+-		 *
+-		 * Directory data forks and attribute forks handle this
+-		 * themselves, but with the addition of metadata verifiers every
+-		 * data fork in local format now contains caller specific data
+-		 * and as such conversion through this function is likely to be
+-		 * broken.
+-		 *
+-		 * The only likely user of this branch is for remote symlinks,
+-		 * but we cannot overwrite the data fork contents of the symlink
+-		 * (EEXIST occurs higher up the stack) and so it will never go
+-		 * from local format to extent format here. Hence I don't think
+-		 * this branch is ever executed intentionally and we should
+-		 * consider removing it and asserting that xfs_bmapi_write()
+-		 * cannot be called directly on local format forks. i.e. callers
+-		 * are completely responsible for local to extent format
+-		 * conversion, not xfs_bmapi_write().
+-		 */
+-		error = xfs_bmap_local_to_extents(tp, ip, firstblock, total,
+-					&bma.logflags, whichfork,
+-					xfs_bmap_local_to_extents_init_fn);
+-		if (error)
+-			goto error0;
+-	}
 -
--/*
-- * Flags for xfs_mountfs
-- */
--#define XFS_MFSI_QUIET		0x40	/* Be silent if mount errors found */
--
--static inline xfs_agnumber_t
--xfs_daddr_to_agno(struct xfs_mount *mp, xfs_daddr_t d)
--{
--	xfs_daddr_t ld = XFS_BB_TO_FSBT(mp, d);
--	do_div(ld, mp->m_sb.sb_agblocks);
--	return (xfs_agnumber_t) ld;
--}
--
--static inline xfs_agblock_t
--xfs_daddr_to_agbno(struct xfs_mount *mp, xfs_daddr_t d)
--{
--	xfs_daddr_t ld = XFS_BB_TO_FSBT(mp, d);
--	return (xfs_agblock_t) do_div(ld, mp->m_sb.sb_agblocks);
--}
--
--/*
-- * Per-cpu superblock locking functions
-- */
--#ifdef HAVE_PERCPU_SB
--static inline void
--xfs_icsb_lock(xfs_mount_t *mp)
--{
--	mutex_lock(&mp->m_icsb_mutex);
--}
--
--static inline void
--xfs_icsb_unlock(xfs_mount_t *mp)
--{
--	mutex_unlock(&mp->m_icsb_mutex);
--}
--#else
--#define xfs_icsb_lock(mp)
--#define xfs_icsb_unlock(mp)
--#endif
--
--/*
-- * This structure is for use by the xfs_mod_incore_sb_batch() routine.
-- * xfs_growfs can specify a few fields which are more than int limit
-- */
--typedef struct xfs_mod_sb {
--	xfs_sb_field_t	msb_field;	/* Field to modify, see below */
--	int64_t		msb_delta;	/* Change to make to specified field */
--} xfs_mod_sb_t;
--
--extern int	xfs_log_sbcount(xfs_mount_t *);
--extern __uint64_t xfs_default_resblks(xfs_mount_t *mp);
--extern int	xfs_mountfs(xfs_mount_t *mp);
--
--extern void	xfs_unmountfs(xfs_mount_t *);
--extern int	xfs_mod_incore_sb(xfs_mount_t *, xfs_sb_field_t, int64_t, int);
--extern int	xfs_mod_incore_sb_batch(xfs_mount_t *, xfs_mod_sb_t *,
--			uint, int);
--extern int	xfs_mount_log_sb(xfs_mount_t *, __int64_t);
--extern struct xfs_buf *xfs_getsb(xfs_mount_t *, int);
--extern int	xfs_readsb(xfs_mount_t *, int);
--extern void	xfs_freesb(xfs_mount_t *);
--extern int	xfs_fs_writable(xfs_mount_t *);
--extern int	xfs_sb_validate_fsb_count(struct xfs_sb *, __uint64_t);
--
--extern int	xfs_dev_is_read_only(struct xfs_mount *, char *);
--
--extern void	xfs_set_low_space_thresholds(struct xfs_mount *);
--
--#endif	/* __KERNEL__ */
--
--#endif	/* __XFS_MOUNT_H__ */
+ 	if (*firstblock == NULLFSBLOCK) {
+ 		if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_BTREE)
+ 			bma.minleft = be16_to_cpu(ifp->if_broot->bb_level) + 1;
+diff --git a/libxfs/xfs_dir2_block.c b/libxfs/xfs_dir2_block.c
+index dc69394..d94b9b2 100644
+--- a/libxfs/xfs_dir2_block.c
++++ b/libxfs/xfs_dir2_block.c
+@@ -1051,13 +1051,15 @@ xfs_dir2_sf_to_block(
+ 	__be16			*tagp;		/* end of data entry */
+ 	xfs_trans_t		*tp;		/* transaction pointer */
+ 	struct xfs_name		name;
++	struct xfs_ifork	*ifp;
+ 
+ 	trace_xfs_dir2_sf_to_block(args);
+ 
+ 	dp = args->dp;
+ 	tp = args->trans;
+ 	mp = dp->i_mount;
+-	ASSERT(dp->i_df.if_flags & XFS_IFINLINE);
++	ifp = XFS_IFORK_PTR(dp, XFS_DATA_FORK);
++	ASSERT(ifp->if_flags & XFS_IFINLINE);
+ 	/*
+ 	 * Bomb out if the shortform directory is way too short.
+ 	 */
+@@ -1066,22 +1068,23 @@ xfs_dir2_sf_to_block(
+ 		return XFS_ERROR(EIO);
+ 	}
+ 
+-	oldsfp = (xfs_dir2_sf_hdr_t *)dp->i_df.if_u1.if_data;
++	oldsfp = (xfs_dir2_sf_hdr_t *)ifp->if_u1.if_data;
+ 
+-	ASSERT(dp->i_df.if_bytes == dp->i_d.di_size);
+-	ASSERT(dp->i_df.if_u1.if_data != NULL);
++	ASSERT(ifp->if_bytes == dp->i_d.di_size);
++	ASSERT(ifp->if_u1.if_data != NULL);
+ 	ASSERT(dp->i_d.di_size >= xfs_dir2_sf_hdr_size(oldsfp->i8count));
++	ASSERT(dp->i_d.di_nextents == 0);
+ 
+ 	/*
+ 	 * Copy the directory into a temporary buffer.
+ 	 * Then pitch the incore inode data so we can make extents.
+ 	 */
+-	sfp = kmem_alloc(dp->i_df.if_bytes, KM_SLEEP);
+-	memcpy(sfp, oldsfp, dp->i_df.if_bytes);
++	sfp = kmem_alloc(ifp->if_bytes, KM_SLEEP);
++	memcpy(sfp, oldsfp, ifp->if_bytes);
+ 
+-	xfs_idata_realloc(dp, -dp->i_df.if_bytes, XFS_DATA_FORK);
++	xfs_idata_realloc(dp, -ifp->if_bytes, XFS_DATA_FORK);
++	xfs_bmap_local_to_extents_empty(dp, XFS_DATA_FORK);
+ 	dp->i_d.di_size = 0;
+-	xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
+ 
+ 	/*
+ 	 * Add block 0 to the inode.
 -- 
 1.7.10.4
 
