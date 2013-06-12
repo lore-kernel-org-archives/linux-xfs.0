@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 01BB17F92
-	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 05:23:36 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 27D2A7FA5
+	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 05:23:49 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 68F56AC005
-	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 03:23:35 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C28F0304051
+	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 03:23:48 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	lIlmuDYgiRZc5A3R for <xfs@oss.sgi.com>;
-	Wed, 12 Jun 2013 03:23:30 -0700 (PDT)
+	fl5Vy2oZGD6qq1CI for <xfs@oss.sgi.com>;
+	Wed, 12 Jun 2013 03:23:44 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UmiD4-00017B-0w
-	for xfs@oss.sgi.com; Wed, 12 Jun 2013 20:23:22 +1000
+	(envelope-from <dave@fromorbit.com>) id 1UmiDE-00017X-ET
+	for xfs@oss.sgi.com; Wed, 12 Jun 2013 20:23:32 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UmiD3-00066d-LZ
-	for xfs@oss.sgi.com; Wed, 12 Jun 2013 20:23:21 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1UmiD4-00066x-1X
+	for xfs@oss.sgi.com; Wed, 12 Jun 2013 20:23:22 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 21/27] xfs: introduce xfs_sb.c for sharing with libxfs
-Date: Wed, 12 Jun 2013 20:22:41 +1000
-Message-Id: <1371032567-21772-22-git-send-email-david@fromorbit.com>
+Subject: [PATCH 25/27] xfs: split out transaction reservation code
+Date: Wed, 12 Jun 2013 20:22:45 +1000
+Message-Id: <1371032567-21772-26-git-send-email-david@fromorbit.com>
 In-Reply-To: <1371032567-21772-1-git-send-email-david@fromorbit.com>
 References: <1371032567-21772-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,1004 +38,870 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-xfs_mount.c is shared with userspace, but the only functions that
-are shared are to do with physical superblock manipulations. This
-means that less than 25% of the xfs_mount.c code is actually shared
-with userspace. Move all the superblock functions to xfs_sb.c and
-share that instead with libxfs.
-
-Note that this will leave all the in-core transaction related
-superblock counter modifications in xfs_mount.c as none of that is
-shared with userspace. With a few more small changes, xfs_mount.h
-won't need to be shared with userspace anymore, either.
+The transaction reservation size calculations is used by both kernel
+and userspace, but most of the transaction code in xfs_trans.c is
+kernel specific. Split all the transaction reservation code out into
+it's own files to make shareing with userspace simpler.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/Makefile    |    3 +-
- fs/xfs/xfs_mount.c |  828 ++++++----------------------------------------------
- fs/xfs/xfs_mount.h |   19 +-
- fs/xfs/xfs_sb.c    |  714 ++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_sb.h    |   19 ++
- 5 files changed, 821 insertions(+), 762 deletions(-)
- create mode 100644 fs/xfs/xfs_sb.c
+ fs/xfs/Makefile         |    3 +-
+ fs/xfs/xfs_mount.h      |    2 +-
+ fs/xfs/xfs_trans.c      |  654 +------------------------------------------
+ fs/xfs/xfs_trans.h      |  114 +-------
+ fs/xfs/xfs_trans_resv.c |  705 +++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_trans_resv.h |  135 +++++++++
+ 6 files changed, 846 insertions(+), 767 deletions(-)
+ create mode 100644 fs/xfs/xfs_trans_resv.c
+ create mode 100644 fs/xfs/xfs_trans_resv.h
 
 diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 8567bd6..ba7d292 100644
+index ba7d292..3281a20 100644
 --- a/fs/xfs/Makefile
 +++ b/fs/xfs/Makefile
-@@ -49,6 +49,7 @@ xfs-y				+= xfs_aops.o \
- 				   xfs_iops.o \
- 				   xfs_itable.o \
- 				   xfs_message.o \
-+				   xfs_mount.o \
+@@ -53,6 +53,7 @@ xfs-y				+= xfs_aops.o \
  				   xfs_mru_cache.o \
  				   xfs_rename.o \
  				   xfs_super.o \
-@@ -78,7 +79,7 @@ xfs-y				+= xfs_alloc.o \
- 				   xfs_icreate_item.o \
- 				   xfs_inode.o \
++				   xfs_trans.o \
+ 				   xfs_utils.o \
+ 				   xfs_xattr.o \
+ 				   kmem.o \
+@@ -81,7 +82,7 @@ xfs-y				+= xfs_alloc.o \
  				   xfs_log_recover.o \
--				   xfs_mount.o \
-+				   xfs_sb.o \
+ 				   xfs_sb.o \
  				   xfs_symlink.o \
- 				   xfs_trans.o
+-				   xfs_trans.o
++				   xfs_trans_resv.o
  
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index e8e310c..462b420 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -59,69 +59,6 @@ STATIC void	xfs_icsb_disable_counter(xfs_mount_t *, xfs_sb_field_t);
- #define xfs_icsb_balance_counter_locked(mp, a, b)	do { } while (0)
- #endif
- 
--static const struct {
--	short offset;
--	short type;	/* 0 = integer
--			 * 1 = binary / string (no translation)
--			 */
--} xfs_sb_info[] = {
--    { offsetof(xfs_sb_t, sb_magicnum),   0 },
--    { offsetof(xfs_sb_t, sb_blocksize),  0 },
--    { offsetof(xfs_sb_t, sb_dblocks),    0 },
--    { offsetof(xfs_sb_t, sb_rblocks),    0 },
--    { offsetof(xfs_sb_t, sb_rextents),   0 },
--    { offsetof(xfs_sb_t, sb_uuid),       1 },
--    { offsetof(xfs_sb_t, sb_logstart),   0 },
--    { offsetof(xfs_sb_t, sb_rootino),    0 },
--    { offsetof(xfs_sb_t, sb_rbmino),     0 },
--    { offsetof(xfs_sb_t, sb_rsumino),    0 },
--    { offsetof(xfs_sb_t, sb_rextsize),   0 },
--    { offsetof(xfs_sb_t, sb_agblocks),   0 },
--    { offsetof(xfs_sb_t, sb_agcount),    0 },
--    { offsetof(xfs_sb_t, sb_rbmblocks),  0 },
--    { offsetof(xfs_sb_t, sb_logblocks),  0 },
--    { offsetof(xfs_sb_t, sb_versionnum), 0 },
--    { offsetof(xfs_sb_t, sb_sectsize),   0 },
--    { offsetof(xfs_sb_t, sb_inodesize),  0 },
--    { offsetof(xfs_sb_t, sb_inopblock),  0 },
--    { offsetof(xfs_sb_t, sb_fname[0]),   1 },
--    { offsetof(xfs_sb_t, sb_blocklog),   0 },
--    { offsetof(xfs_sb_t, sb_sectlog),    0 },
--    { offsetof(xfs_sb_t, sb_inodelog),   0 },
--    { offsetof(xfs_sb_t, sb_inopblog),   0 },
--    { offsetof(xfs_sb_t, sb_agblklog),   0 },
--    { offsetof(xfs_sb_t, sb_rextslog),   0 },
--    { offsetof(xfs_sb_t, sb_inprogress), 0 },
--    { offsetof(xfs_sb_t, sb_imax_pct),   0 },
--    { offsetof(xfs_sb_t, sb_icount),     0 },
--    { offsetof(xfs_sb_t, sb_ifree),      0 },
--    { offsetof(xfs_sb_t, sb_fdblocks),   0 },
--    { offsetof(xfs_sb_t, sb_frextents),  0 },
--    { offsetof(xfs_sb_t, sb_uquotino),   0 },
--    { offsetof(xfs_sb_t, sb_gquotino),   0 },
--    { offsetof(xfs_sb_t, sb_qflags),     0 },
--    { offsetof(xfs_sb_t, sb_flags),      0 },
--    { offsetof(xfs_sb_t, sb_shared_vn),  0 },
--    { offsetof(xfs_sb_t, sb_inoalignmt), 0 },
--    { offsetof(xfs_sb_t, sb_unit),	 0 },
--    { offsetof(xfs_sb_t, sb_width),	 0 },
--    { offsetof(xfs_sb_t, sb_dirblklog),	 0 },
--    { offsetof(xfs_sb_t, sb_logsectlog), 0 },
--    { offsetof(xfs_sb_t, sb_logsectsize),0 },
--    { offsetof(xfs_sb_t, sb_logsunit),	 0 },
--    { offsetof(xfs_sb_t, sb_features2),	 0 },
--    { offsetof(xfs_sb_t, sb_bad_features2), 0 },
--    { offsetof(xfs_sb_t, sb_features_compat), 0 },
--    { offsetof(xfs_sb_t, sb_features_ro_compat), 0 },
--    { offsetof(xfs_sb_t, sb_features_incompat), 0 },
--    { offsetof(xfs_sb_t, sb_features_log_incompat), 0 },
--    { offsetof(xfs_sb_t, sb_crc),	 0 },
--    { offsetof(xfs_sb_t, sb_pad),	 0 },
--    { offsetof(xfs_sb_t, sb_pquotino),	 0 },
--    { offsetof(xfs_sb_t, sb_lsn),	 0 },
--    { sizeof(xfs_sb_t),			 0 }
--};
--
- static DEFINE_MUTEX(xfs_uuid_table_mutex);
- static int xfs_uuid_table_size;
- static uuid_t *xfs_uuid_table;
-@@ -197,64 +134,6 @@ xfs_uuid_unmount(
- }
- 
- 
--/*
-- * Reference counting access wrappers to the perag structures.
-- * Because we never free per-ag structures, the only thing we
-- * have to protect against changes is the tree structure itself.
-- */
--struct xfs_perag *
--xfs_perag_get(struct xfs_mount *mp, xfs_agnumber_t agno)
--{
--	struct xfs_perag	*pag;
--	int			ref = 0;
--
--	rcu_read_lock();
--	pag = radix_tree_lookup(&mp->m_perag_tree, agno);
--	if (pag) {
--		ASSERT(atomic_read(&pag->pag_ref) >= 0);
--		ref = atomic_inc_return(&pag->pag_ref);
--	}
--	rcu_read_unlock();
--	trace_xfs_perag_get(mp, agno, ref, _RET_IP_);
--	return pag;
--}
--
--/*
-- * search from @first to find the next perag with the given tag set.
-- */
--struct xfs_perag *
--xfs_perag_get_tag(
--	struct xfs_mount	*mp,
--	xfs_agnumber_t		first,
--	int			tag)
--{
--	struct xfs_perag	*pag;
--	int			found;
--	int			ref;
--
--	rcu_read_lock();
--	found = radix_tree_gang_lookup_tag(&mp->m_perag_tree,
--					(void **)&pag, first, 1, tag);
--	if (found <= 0) {
--		rcu_read_unlock();
--		return NULL;
--	}
--	ref = atomic_inc_return(&pag->pag_ref);
--	rcu_read_unlock();
--	trace_xfs_perag_get_tag(mp, pag->pag_agno, ref, _RET_IP_);
--	return pag;
--}
--
--void
--xfs_perag_put(struct xfs_perag *pag)
--{
--	int	ref;
--
--	ASSERT(atomic_read(&pag->pag_ref) > 0);
--	ref = atomic_dec_return(&pag->pag_ref);
--	trace_xfs_perag_put(pag->pag_mount, pag->pag_agno, ref, _RET_IP_);
--}
--
- STATIC void
- __xfs_free_perag(
- 	struct rcu_head	*head)
-@@ -285,198 +164,6 @@ xfs_free_perag(
- 	}
- }
- 
--/*
-- * Check size of device based on the (data/realtime) block count.
-- * Note: this check is used by the growfs code as well as mount.
-- */
--int
--xfs_sb_validate_fsb_count(
--	xfs_sb_t	*sbp,
--	__uint64_t	nblocks)
--{
--	ASSERT(PAGE_SHIFT >= sbp->sb_blocklog);
--	ASSERT(sbp->sb_blocklog >= BBSHIFT);
--
--#if XFS_BIG_BLKNOS     /* Limited by ULONG_MAX of page cache index */
--	if (nblocks >> (PAGE_CACHE_SHIFT - sbp->sb_blocklog) > ULONG_MAX)
--		return EFBIG;
--#else                  /* Limited by UINT_MAX of sectors */
--	if (nblocks << (sbp->sb_blocklog - BBSHIFT) > UINT_MAX)
--		return EFBIG;
--#endif
--	return 0;
--}
--
--/*
-- * Check the validity of the SB found.
-- */
--STATIC int
--xfs_mount_validate_sb(
--	xfs_mount_t	*mp,
--	xfs_sb_t	*sbp,
--	bool		check_inprogress,
--	bool		check_version)
--{
--
--	/*
--	 * If the log device and data device have the
--	 * same device number, the log is internal.
--	 * Consequently, the sb_logstart should be non-zero.  If
--	 * we have a zero sb_logstart in this case, we may be trying to mount
--	 * a volume filesystem in a non-volume manner.
--	 */
--	if (sbp->sb_magicnum != XFS_SB_MAGIC) {
--		xfs_warn(mp, "bad magic number");
--		return XFS_ERROR(EWRONGFS);
--	}
--
--
--	if (!xfs_sb_good_version(sbp)) {
--		xfs_warn(mp, "bad version");
--		return XFS_ERROR(EWRONGFS);
--	}
--
--	/*
--	 * Version 5 superblock feature mask validation. Reject combinations the
--	 * kernel cannot support up front before checking anything else. For
--	 * write validation, we don't need to check feature masks.
--	 */
--	if (check_version && XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) {
--		xfs_alert(mp,
--"Version 5 superblock detected. This kernel has EXPERIMENTAL support enabled!\n"
--"Use of these features in this kernel is at your own risk!");
--
--		if (xfs_sb_has_compat_feature(sbp,
--					XFS_SB_FEAT_COMPAT_UNKNOWN)) {
--			xfs_warn(mp,
--"Superblock has unknown compatible features (0x%x) enabled.\n"
--"Using a more recent kernel is recommended.",
--				(sbp->sb_features_compat &
--						XFS_SB_FEAT_COMPAT_UNKNOWN));
--		}
--
--		if (xfs_sb_has_ro_compat_feature(sbp,
--					XFS_SB_FEAT_RO_COMPAT_UNKNOWN)) {
--			xfs_alert(mp,
--"Superblock has unknown read-only compatible features (0x%x) enabled.",
--				(sbp->sb_features_ro_compat &
--						XFS_SB_FEAT_RO_COMPAT_UNKNOWN));
--			if (!(mp->m_flags & XFS_MOUNT_RDONLY)) {
--				xfs_warn(mp,
--"Attempted to mount read-only compatible filesystem read-write.\n"
--"Filesystem can only be safely mounted read only.");
--				return XFS_ERROR(EINVAL);
--			}
--		}
--		if (xfs_sb_has_incompat_feature(sbp,
--					XFS_SB_FEAT_INCOMPAT_UNKNOWN)) {
--			xfs_warn(mp,
--"Superblock has unknown incompatible features (0x%x) enabled.\n"
--"Filesystem can not be safely mounted by this kernel.",
--				(sbp->sb_features_incompat &
--						XFS_SB_FEAT_INCOMPAT_UNKNOWN));
--			return XFS_ERROR(EINVAL);
--		}
--	}
--
--	if (unlikely(
--	    sbp->sb_logstart == 0 && mp->m_logdev_targp == mp->m_ddev_targp)) {
--		xfs_warn(mp,
--		"filesystem is marked as having an external log; "
--		"specify logdev on the mount command line.");
--		return XFS_ERROR(EINVAL);
--	}
--
--	if (unlikely(
--	    sbp->sb_logstart != 0 && mp->m_logdev_targp != mp->m_ddev_targp)) {
--		xfs_warn(mp,
--		"filesystem is marked as having an internal log; "
--		"do not specify logdev on the mount command line.");
--		return XFS_ERROR(EINVAL);
--	}
--
--	/*
--	 * More sanity checking.  Most of these were stolen directly from
--	 * xfs_repair.
--	 */
--	if (unlikely(
--	    sbp->sb_agcount <= 0					||
--	    sbp->sb_sectsize < XFS_MIN_SECTORSIZE			||
--	    sbp->sb_sectsize > XFS_MAX_SECTORSIZE			||
--	    sbp->sb_sectlog < XFS_MIN_SECTORSIZE_LOG			||
--	    sbp->sb_sectlog > XFS_MAX_SECTORSIZE_LOG			||
--	    sbp->sb_sectsize != (1 << sbp->sb_sectlog)			||
--	    sbp->sb_blocksize < XFS_MIN_BLOCKSIZE			||
--	    sbp->sb_blocksize > XFS_MAX_BLOCKSIZE			||
--	    sbp->sb_blocklog < XFS_MIN_BLOCKSIZE_LOG			||
--	    sbp->sb_blocklog > XFS_MAX_BLOCKSIZE_LOG			||
--	    sbp->sb_blocksize != (1 << sbp->sb_blocklog)		||
--	    sbp->sb_inodesize < XFS_DINODE_MIN_SIZE			||
--	    sbp->sb_inodesize > XFS_DINODE_MAX_SIZE			||
--	    sbp->sb_inodelog < XFS_DINODE_MIN_LOG			||
--	    sbp->sb_inodelog > XFS_DINODE_MAX_LOG			||
--	    sbp->sb_inodesize != (1 << sbp->sb_inodelog)		||
--	    (sbp->sb_blocklog - sbp->sb_inodelog != sbp->sb_inopblog)	||
--	    (sbp->sb_rextsize * sbp->sb_blocksize > XFS_MAX_RTEXTSIZE)	||
--	    (sbp->sb_rextsize * sbp->sb_blocksize < XFS_MIN_RTEXTSIZE)	||
--	    (sbp->sb_imax_pct > 100 /* zero sb_imax_pct is valid */)	||
--	    sbp->sb_dblocks == 0					||
--	    sbp->sb_dblocks > XFS_MAX_DBLOCKS(sbp)			||
--	    sbp->sb_dblocks < XFS_MIN_DBLOCKS(sbp))) {
--		XFS_CORRUPTION_ERROR("SB sanity check failed",
--				XFS_ERRLEVEL_LOW, mp, sbp);
--		return XFS_ERROR(EFSCORRUPTED);
--	}
--
--	/*
--	 * Until this is fixed only page-sized or smaller data blocks work.
--	 */
--	if (unlikely(sbp->sb_blocksize > PAGE_SIZE)) {
--		xfs_warn(mp,
--		"File system with blocksize %d bytes. "
--		"Only pagesize (%ld) or less will currently work.",
--				sbp->sb_blocksize, PAGE_SIZE);
--		return XFS_ERROR(ENOSYS);
--	}
--
--	/*
--	 * Currently only very few inode sizes are supported.
--	 */
--	switch (sbp->sb_inodesize) {
--	case 256:
--	case 512:
--	case 1024:
--	case 2048:
--		break;
--	default:
--		xfs_warn(mp, "inode size of %d bytes not supported",
--				sbp->sb_inodesize);
--		return XFS_ERROR(ENOSYS);
--	}
--
--	if (xfs_sb_validate_fsb_count(sbp, sbp->sb_dblocks) ||
--	    xfs_sb_validate_fsb_count(sbp, sbp->sb_rblocks)) {
--		xfs_warn(mp,
--		"file system too large to be mounted on this system.");
--		return XFS_ERROR(EFBIG);
--	}
--
--	if (check_inprogress && sbp->sb_inprogress) {
--		xfs_warn(mp, "Offline file system operation in progress!");
--		return XFS_ERROR(EFSCORRUPTED);
--	}
--
--	/*
--	 * Version 1 directory format has never worked on Linux.
--	 */
--	if (unlikely(!xfs_sb_version_hasdirv2(sbp))) {
--		xfs_warn(mp, "file system using version 1 directory format");
--		return XFS_ERROR(ENOSYS);
--	}
--
--	return 0;
--}
--
- int
- xfs_initialize_perag(
- 	xfs_mount_t	*mp,
-@@ -561,241 +248,114 @@ out_unwind:
- 	return error;
- }
- 
--void
--xfs_sb_from_disk(
--	struct xfs_sb	*to,
--	xfs_dsb_t	*from)
--{
--	to->sb_magicnum = be32_to_cpu(from->sb_magicnum);
--	to->sb_blocksize = be32_to_cpu(from->sb_blocksize);
--	to->sb_dblocks = be64_to_cpu(from->sb_dblocks);
--	to->sb_rblocks = be64_to_cpu(from->sb_rblocks);
--	to->sb_rextents = be64_to_cpu(from->sb_rextents);
--	memcpy(&to->sb_uuid, &from->sb_uuid, sizeof(to->sb_uuid));
--	to->sb_logstart = be64_to_cpu(from->sb_logstart);
--	to->sb_rootino = be64_to_cpu(from->sb_rootino);
--	to->sb_rbmino = be64_to_cpu(from->sb_rbmino);
--	to->sb_rsumino = be64_to_cpu(from->sb_rsumino);
--	to->sb_rextsize = be32_to_cpu(from->sb_rextsize);
--	to->sb_agblocks = be32_to_cpu(from->sb_agblocks);
--	to->sb_agcount = be32_to_cpu(from->sb_agcount);
--	to->sb_rbmblocks = be32_to_cpu(from->sb_rbmblocks);
--	to->sb_logblocks = be32_to_cpu(from->sb_logblocks);
--	to->sb_versionnum = be16_to_cpu(from->sb_versionnum);
--	to->sb_sectsize = be16_to_cpu(from->sb_sectsize);
--	to->sb_inodesize = be16_to_cpu(from->sb_inodesize);
--	to->sb_inopblock = be16_to_cpu(from->sb_inopblock);
--	memcpy(&to->sb_fname, &from->sb_fname, sizeof(to->sb_fname));
--	to->sb_blocklog = from->sb_blocklog;
--	to->sb_sectlog = from->sb_sectlog;
--	to->sb_inodelog = from->sb_inodelog;
--	to->sb_inopblog = from->sb_inopblog;
--	to->sb_agblklog = from->sb_agblklog;
--	to->sb_rextslog = from->sb_rextslog;
--	to->sb_inprogress = from->sb_inprogress;
--	to->sb_imax_pct = from->sb_imax_pct;
--	to->sb_icount = be64_to_cpu(from->sb_icount);
--	to->sb_ifree = be64_to_cpu(from->sb_ifree);
--	to->sb_fdblocks = be64_to_cpu(from->sb_fdblocks);
--	to->sb_frextents = be64_to_cpu(from->sb_frextents);
--	to->sb_uquotino = be64_to_cpu(from->sb_uquotino);
--	to->sb_gquotino = be64_to_cpu(from->sb_gquotino);
--	to->sb_qflags = be16_to_cpu(from->sb_qflags);
--	to->sb_flags = from->sb_flags;
--	to->sb_shared_vn = from->sb_shared_vn;
--	to->sb_inoalignmt = be32_to_cpu(from->sb_inoalignmt);
--	to->sb_unit = be32_to_cpu(from->sb_unit);
--	to->sb_width = be32_to_cpu(from->sb_width);
--	to->sb_dirblklog = from->sb_dirblklog;
--	to->sb_logsectlog = from->sb_logsectlog;
--	to->sb_logsectsize = be16_to_cpu(from->sb_logsectsize);
--	to->sb_logsunit = be32_to_cpu(from->sb_logsunit);
--	to->sb_features2 = be32_to_cpu(from->sb_features2);
--	to->sb_bad_features2 = be32_to_cpu(from->sb_bad_features2);
--	to->sb_features_compat = be32_to_cpu(from->sb_features_compat);
--	to->sb_features_ro_compat = be32_to_cpu(from->sb_features_ro_compat);
--	to->sb_features_incompat = be32_to_cpu(from->sb_features_incompat);
--	to->sb_features_log_incompat =
--				be32_to_cpu(from->sb_features_log_incompat);
--	to->sb_pad = 0;
--	to->sb_pquotino = be64_to_cpu(from->sb_pquotino);
--	to->sb_lsn = be64_to_cpu(from->sb_lsn);
--}
--
- /*
-- * Copy in core superblock to ondisk one.
-- *
-- * The fields argument is mask of superblock fields to copy.
-+ * Update alignment values based on mount options and sb values
-  */
--void
--xfs_sb_to_disk(
--	xfs_dsb_t	*to,
--	xfs_sb_t	*from,
--	__int64_t	fields)
-+STATIC int
-+xfs_update_alignment(xfs_mount_t *mp)
- {
--	xfs_caddr_t	to_ptr = (xfs_caddr_t)to;
--	xfs_caddr_t	from_ptr = (xfs_caddr_t)from;
--	xfs_sb_field_t	f;
--	int		first;
--	int		size;
--
--	ASSERT(fields);
--	if (!fields)
--		return;
--
--	while (fields) {
--		f = (xfs_sb_field_t)xfs_lowbit64((__uint64_t)fields);
--		first = xfs_sb_info[f].offset;
--		size = xfs_sb_info[f + 1].offset - first;
--
--		ASSERT(xfs_sb_info[f].type == 0 || xfs_sb_info[f].type == 1);
-+	xfs_sb_t	*sbp = &(mp->m_sb);
- 
--		if (size == 1 || xfs_sb_info[f].type == 1) {
--			memcpy(to_ptr + first, from_ptr + first, size);
-+	if (mp->m_dalign) {
-+		/*
-+		 * If stripe unit and stripe width are not multiples
-+		 * of the fs blocksize turn off alignment.
-+		 */
-+		if ((BBTOB(mp->m_dalign) & mp->m_blockmask) ||
-+		    (BBTOB(mp->m_swidth) & mp->m_blockmask)) {
-+			if (mp->m_flags & XFS_MOUNT_RETERR) {
-+				xfs_warn(mp, "alignment check failed: "
-+					 "(sunit/swidth vs. blocksize)");
-+				return XFS_ERROR(EINVAL);
-+			}
-+			mp->m_dalign = mp->m_swidth = 0;
- 		} else {
--			switch (size) {
--			case 2:
--				*(__be16 *)(to_ptr + first) =
--					cpu_to_be16(*(__u16 *)(from_ptr + first));
--				break;
--			case 4:
--				*(__be32 *)(to_ptr + first) =
--					cpu_to_be32(*(__u32 *)(from_ptr + first));
--				break;
--			case 8:
--				*(__be64 *)(to_ptr + first) =
--					cpu_to_be64(*(__u64 *)(from_ptr + first));
--				break;
--			default:
--				ASSERT(0);
-+			/*
-+			 * Convert the stripe unit and width to FSBs.
-+			 */
-+			mp->m_dalign = XFS_BB_TO_FSBT(mp, mp->m_dalign);
-+			if (mp->m_dalign && (sbp->sb_agblocks % mp->m_dalign)) {
-+				if (mp->m_flags & XFS_MOUNT_RETERR) {
-+					xfs_warn(mp, "alignment check failed: "
-+						 "(sunit/swidth vs. ag size)");
-+					return XFS_ERROR(EINVAL);
-+				}
-+				xfs_warn(mp,
-+		"stripe alignment turned off: sunit(%d)/swidth(%d) "
-+		"incompatible with agsize(%d)",
-+					mp->m_dalign, mp->m_swidth,
-+					sbp->sb_agblocks);
-+
-+				mp->m_dalign = 0;
-+				mp->m_swidth = 0;
-+			} else if (mp->m_dalign) {
-+				mp->m_swidth = XFS_BB_TO_FSBT(mp, mp->m_swidth);
-+			} else {
-+				if (mp->m_flags & XFS_MOUNT_RETERR) {
-+					xfs_warn(mp, "alignment check failed: "
-+						"sunit(%d) less than bsize(%d)",
-+						mp->m_dalign,
-+						mp->m_blockmask +1);
-+					return XFS_ERROR(EINVAL);
-+				}
-+				mp->m_swidth = 0;
- 			}
- 		}
- 
--		fields &= ~(1LL << f);
--	}
--}
--
--static int
--xfs_sb_verify(
--	struct xfs_buf	*bp,
--	bool		check_version)
--{
--	struct xfs_mount *mp = bp->b_target->bt_mount;
--	struct xfs_sb	sb;
--
--	xfs_sb_from_disk(&sb, XFS_BUF_TO_SBP(bp));
--
--	/*
--	 * Only check the in progress field for the primary superblock as
--	 * mkfs.xfs doesn't clear it from secondary superblocks.
--	 */
--	return xfs_mount_validate_sb(mp, &sb, bp->b_bn == XFS_SB_DADDR,
--				     check_version);
--}
--
--/*
-- * If the superblock has the CRC feature bit set or the CRC field is non-null,
-- * check that the CRC is valid.  We check the CRC field is non-null because a
-- * single bit error could clear the feature bit and unused parts of the
-- * superblock are supposed to be zero. Hence a non-null crc field indicates that
-- * we've potentially lost a feature bit and we should check it anyway.
-- */
--static void
--xfs_sb_read_verify(
--	struct xfs_buf	*bp)
--{
--	struct xfs_mount *mp = bp->b_target->bt_mount;
--	struct xfs_dsb	*dsb = XFS_BUF_TO_SBP(bp);
--	int		error;
--
--	/*
--	 * open code the version check to avoid needing to convert the entire
--	 * superblock from disk order just to check the version number
--	 */
--	if (dsb->sb_magicnum == cpu_to_be32(XFS_SB_MAGIC) &&
--	    (((be16_to_cpu(dsb->sb_versionnum) & XFS_SB_VERSION_NUMBITS) ==
--						XFS_SB_VERSION_5) ||
--	     dsb->sb_crc != 0)) {
--
--		if (!xfs_verify_cksum(bp->b_addr, be16_to_cpu(dsb->sb_sectsize),
--				      offsetof(struct xfs_sb, sb_crc))) {
--			error = EFSCORRUPTED;
--			goto out_error;
-+		/*
-+		 * Update superblock with new values
-+		 * and log changes
-+		 */
-+		if (xfs_sb_version_hasdalign(sbp)) {
-+			if (sbp->sb_unit != mp->m_dalign) {
-+				sbp->sb_unit = mp->m_dalign;
-+				mp->m_update_flags |= XFS_SB_UNIT;
-+			}
-+			if (sbp->sb_width != mp->m_swidth) {
-+				sbp->sb_width = mp->m_swidth;
-+				mp->m_update_flags |= XFS_SB_WIDTH;
-+			}
- 		}
-+	} else if ((mp->m_flags & XFS_MOUNT_NOALIGN) != XFS_MOUNT_NOALIGN &&
-+		    xfs_sb_version_hasdalign(&mp->m_sb)) {
-+			mp->m_dalign = sbp->sb_unit;
-+			mp->m_swidth = sbp->sb_width;
- 	}
--	error = xfs_sb_verify(bp, true);
- 
--out_error:
--	if (error) {
--		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
--		xfs_buf_ioerror(bp, error);
--	}
-+	return 0;
- }
- 
- /*
-- * We may be probed for a filesystem match, so we may not want to emit
-- * messages when the superblock buffer is not actually an XFS superblock.
-- * If we find an XFS superblock, the run a normal, noisy mount because we are
-- * really going to mount it and want to know about errors.
-+ * Check size of device based on the (data/realtime) block count.
-+ * Note: this check is used by the growfs code as well as mount.
-  */
--static void
--xfs_sb_quiet_read_verify(
--	struct xfs_buf	*bp)
--{
--	struct xfs_dsb	*dsb = XFS_BUF_TO_SBP(bp);
--
--
--	if (dsb->sb_magicnum == cpu_to_be32(XFS_SB_MAGIC)) {
--		/* XFS filesystem, verify noisily! */
--		xfs_sb_read_verify(bp);
--		return;
--	}
--	/* quietly fail */
--	xfs_buf_ioerror(bp, EWRONGFS);
--}
--
--static void
--xfs_sb_write_verify(
--	struct xfs_buf		*bp)
-+int
-+xfs_sb_validate_fsb_count(
-+	xfs_sb_t	*sbp,
-+	__uint64_t	nblocks)
- {
--	struct xfs_mount	*mp = bp->b_target->bt_mount;
--	struct xfs_buf_log_item	*bip = bp->b_fspriv;
--	int			error;
--
--	error = xfs_sb_verify(bp, false);
--	if (error) {
--		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
--		xfs_buf_ioerror(bp, error);
--		return;
--	}
--
--	if (!xfs_sb_version_hascrc(&mp->m_sb))
--		return;
--
--	if (bip)
--		XFS_BUF_TO_SBP(bp)->sb_lsn = cpu_to_be64(bip->bli_item.li_lsn);
-+	ASSERT(PAGE_SHIFT >= sbp->sb_blocklog);
-+	ASSERT(sbp->sb_blocklog >= BBSHIFT);
- 
--	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length),
--			 offsetof(struct xfs_sb, sb_crc));
-+#if XFS_BIG_BLKNOS     /* Limited by ULONG_MAX of page cache index */
-+	if (nblocks >> (PAGE_CACHE_SHIFT - sbp->sb_blocklog) > ULONG_MAX)
-+		return EFBIG;
-+#else                  /* Limited by UINT_MAX of sectors */
-+	if (nblocks << (sbp->sb_blocklog - BBSHIFT) > UINT_MAX)
-+		return EFBIG;
-+#endif
-+	return 0;
- }
- 
--const struct xfs_buf_ops xfs_sb_buf_ops = {
--	.verify_read = xfs_sb_read_verify,
--	.verify_write = xfs_sb_write_verify,
--};
--
--static const struct xfs_buf_ops xfs_sb_quiet_buf_ops = {
--	.verify_read = xfs_sb_quiet_read_verify,
--	.verify_write = xfs_sb_write_verify,
--};
--
- /*
-  * xfs_readsb
-  *
-  * Does the initial read of the superblock.
-  */
- int
--xfs_readsb(xfs_mount_t *mp, int flags)
-+xfs_readsb(
-+	struct xfs_mount *mp,
-+	int		flags)
- {
- 	unsigned int	sector_size;
- 	struct xfs_buf	*bp;
-@@ -871,184 +431,6 @@ release_buf:
- 	return error;
- }
- 
--
--/*
-- * xfs_mount_common
-- *
-- * Mount initialization code establishing various mount
-- * fields from the superblock associated with the given
-- * mount structure
-- */
--STATIC void
--xfs_mount_common(xfs_mount_t *mp, xfs_sb_t *sbp)
--{
--	mp->m_agfrotor = mp->m_agirotor = 0;
--	spin_lock_init(&mp->m_agirotor_lock);
--	mp->m_maxagi = mp->m_sb.sb_agcount;
--	mp->m_blkbit_log = sbp->sb_blocklog + XFS_NBBYLOG;
--	mp->m_blkbb_log = sbp->sb_blocklog - BBSHIFT;
--	mp->m_sectbb_log = sbp->sb_sectlog - BBSHIFT;
--	mp->m_agno_log = xfs_highbit32(sbp->sb_agcount - 1) + 1;
--	mp->m_agino_log = sbp->sb_inopblog + sbp->sb_agblklog;
--	mp->m_blockmask = sbp->sb_blocksize - 1;
--	mp->m_blockwsize = sbp->sb_blocksize >> XFS_WORDLOG;
--	mp->m_blockwmask = mp->m_blockwsize - 1;
--
--	mp->m_alloc_mxr[0] = xfs_allocbt_maxrecs(mp, sbp->sb_blocksize, 1);
--	mp->m_alloc_mxr[1] = xfs_allocbt_maxrecs(mp, sbp->sb_blocksize, 0);
--	mp->m_alloc_mnr[0] = mp->m_alloc_mxr[0] / 2;
--	mp->m_alloc_mnr[1] = mp->m_alloc_mxr[1] / 2;
--
--	mp->m_inobt_mxr[0] = xfs_inobt_maxrecs(mp, sbp->sb_blocksize, 1);
--	mp->m_inobt_mxr[1] = xfs_inobt_maxrecs(mp, sbp->sb_blocksize, 0);
--	mp->m_inobt_mnr[0] = mp->m_inobt_mxr[0] / 2;
--	mp->m_inobt_mnr[1] = mp->m_inobt_mxr[1] / 2;
--
--	mp->m_bmap_dmxr[0] = xfs_bmbt_maxrecs(mp, sbp->sb_blocksize, 1);
--	mp->m_bmap_dmxr[1] = xfs_bmbt_maxrecs(mp, sbp->sb_blocksize, 0);
--	mp->m_bmap_dmnr[0] = mp->m_bmap_dmxr[0] / 2;
--	mp->m_bmap_dmnr[1] = mp->m_bmap_dmxr[1] / 2;
--
--	mp->m_bsize = XFS_FSB_TO_BB(mp, 1);
--	mp->m_ialloc_inos = (int)MAX((__uint16_t)XFS_INODES_PER_CHUNK,
--					sbp->sb_inopblock);
--	mp->m_ialloc_blks = mp->m_ialloc_inos >> sbp->sb_inopblog;
--}
--
--/*
-- * xfs_initialize_perag_data
-- *
-- * Read in each per-ag structure so we can count up the number of
-- * allocated inodes, free inodes and used filesystem blocks as this
-- * information is no longer persistent in the superblock. Once we have
-- * this information, write it into the in-core superblock structure.
-- */
--STATIC int
--xfs_initialize_perag_data(xfs_mount_t *mp, xfs_agnumber_t agcount)
--{
--	xfs_agnumber_t	index;
--	xfs_perag_t	*pag;
--	xfs_sb_t	*sbp = &mp->m_sb;
--	uint64_t	ifree = 0;
--	uint64_t	ialloc = 0;
--	uint64_t	bfree = 0;
--	uint64_t	bfreelst = 0;
--	uint64_t	btree = 0;
--	int		error;
--
--	for (index = 0; index < agcount; index++) {
--		/*
--		 * read the agf, then the agi. This gets us
--		 * all the information we need and populates the
--		 * per-ag structures for us.
--		 */
--		error = xfs_alloc_pagf_init(mp, NULL, index, 0);
--		if (error)
--			return error;
--
--		error = xfs_ialloc_pagi_init(mp, NULL, index);
--		if (error)
--			return error;
--		pag = xfs_perag_get(mp, index);
--		ifree += pag->pagi_freecount;
--		ialloc += pag->pagi_count;
--		bfree += pag->pagf_freeblks;
--		bfreelst += pag->pagf_flcount;
--		btree += pag->pagf_btreeblks;
--		xfs_perag_put(pag);
--	}
--	/*
--	 * Overwrite incore superblock counters with just-read data
--	 */
--	spin_lock(&mp->m_sb_lock);
--	sbp->sb_ifree = ifree;
--	sbp->sb_icount = ialloc;
--	sbp->sb_fdblocks = bfree + bfreelst + btree;
--	spin_unlock(&mp->m_sb_lock);
--
--	/* Fixup the per-cpu counters as well. */
--	xfs_icsb_reinit_counters(mp);
--
--	return 0;
--}
--
--/*
-- * Update alignment values based on mount options and sb values
-- */
--STATIC int
--xfs_update_alignment(xfs_mount_t *mp)
--{
--	xfs_sb_t	*sbp = &(mp->m_sb);
--
--	if (mp->m_dalign) {
--		/*
--		 * If stripe unit and stripe width are not multiples
--		 * of the fs blocksize turn off alignment.
--		 */
--		if ((BBTOB(mp->m_dalign) & mp->m_blockmask) ||
--		    (BBTOB(mp->m_swidth) & mp->m_blockmask)) {
--			if (mp->m_flags & XFS_MOUNT_RETERR) {
--				xfs_warn(mp, "alignment check failed: "
--					 "(sunit/swidth vs. blocksize)");
--				return XFS_ERROR(EINVAL);
--			}
--			mp->m_dalign = mp->m_swidth = 0;
--		} else {
--			/*
--			 * Convert the stripe unit and width to FSBs.
--			 */
--			mp->m_dalign = XFS_BB_TO_FSBT(mp, mp->m_dalign);
--			if (mp->m_dalign && (sbp->sb_agblocks % mp->m_dalign)) {
--				if (mp->m_flags & XFS_MOUNT_RETERR) {
--					xfs_warn(mp, "alignment check failed: "
--						 "(sunit/swidth vs. ag size)");
--					return XFS_ERROR(EINVAL);
--				}
--				xfs_warn(mp,
--		"stripe alignment turned off: sunit(%d)/swidth(%d) "
--		"incompatible with agsize(%d)",
--					mp->m_dalign, mp->m_swidth,
--					sbp->sb_agblocks);
--
--				mp->m_dalign = 0;
--				mp->m_swidth = 0;
--			} else if (mp->m_dalign) {
--				mp->m_swidth = XFS_BB_TO_FSBT(mp, mp->m_swidth);
--			} else {
--				if (mp->m_flags & XFS_MOUNT_RETERR) {
--					xfs_warn(mp, "alignment check failed: "
--						"sunit(%d) less than bsize(%d)",
--						mp->m_dalign,
--						mp->m_blockmask +1);
--					return XFS_ERROR(EINVAL);
--				}
--				mp->m_swidth = 0;
--			}
--		}
--
--		/*
--		 * Update superblock with new values
--		 * and log changes
--		 */
--		if (xfs_sb_version_hasdalign(sbp)) {
--			if (sbp->sb_unit != mp->m_dalign) {
--				sbp->sb_unit = mp->m_dalign;
--				mp->m_update_flags |= XFS_SB_UNIT;
--			}
--			if (sbp->sb_width != mp->m_swidth) {
--				sbp->sb_width = mp->m_swidth;
--				mp->m_update_flags |= XFS_SB_WIDTH;
--			}
--		}
--	} else if ((mp->m_flags & XFS_MOUNT_NOALIGN) != XFS_MOUNT_NOALIGN &&
--		    xfs_sb_version_hasdalign(&mp->m_sb)) {
--			mp->m_dalign = sbp->sb_unit;
--			mp->m_swidth = sbp->sb_width;
--	}
--
--	return 0;
--}
--
- /*
-  * Set the maximum inode count for this filesystem
-  */
-@@ -1275,7 +657,7 @@ xfs_mountfs(
- 	uint		quotaflags = 0;
- 	int		error = 0;
- 
--	xfs_mount_common(mp, sbp);
-+	xfs_sb_mount_common(mp, sbp);
- 
- 	/*
- 	 * Check for a mismatched features2 values.  Older kernels
-@@ -1712,48 +1094,6 @@ xfs_log_sbcount(xfs_mount_t *mp)
- }
- 
- /*
-- * xfs_mod_sb() can be used to copy arbitrary changes to the
-- * in-core superblock into the superblock buffer to be logged.
-- * It does not provide the higher level of locking that is
-- * needed to protect the in-core superblock from concurrent
-- * access.
-- */
--void
--xfs_mod_sb(xfs_trans_t *tp, __int64_t fields)
--{
--	xfs_buf_t	*bp;
--	int		first;
--	int		last;
--	xfs_mount_t	*mp;
--	xfs_sb_field_t	f;
--
--	ASSERT(fields);
--	if (!fields)
--		return;
--	mp = tp->t_mountp;
--	bp = xfs_trans_getsb(tp, mp, 0);
--	first = sizeof(xfs_sb_t);
--	last = 0;
--
--	/* translate/copy */
--
--	xfs_sb_to_disk(XFS_BUF_TO_SBP(bp), &mp->m_sb, fields);
--
--	/* find modified range */
--	f = (xfs_sb_field_t)xfs_highbit64((__uint64_t)fields);
--	ASSERT((1LL << f) & XFS_SB_MOD_BITS);
--	last = xfs_sb_info[f + 1].offset - 1;
--
--	f = (xfs_sb_field_t)xfs_lowbit64((__uint64_t)fields);
--	ASSERT((1LL << f) & XFS_SB_MOD_BITS);
--	first = xfs_sb_info[f].offset;
--
--	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_SB_BUF);
--	xfs_trans_log_buf(tp, bp, first, last);
--}
--
--
--/*
-  * xfs_mod_incore_sb_unlocked() is a utility routine common used to apply
-  * a delta to a specified field in the in-core superblock.  Simply
-  * switch on the field indicated and apply the delta to that field.
+ # low-level transaction/log code
+ xfs-y				+= xfs_log.o \
 diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index b004cec..10761c3 100644
+index dedda31..e3acebd 100644
 --- a/fs/xfs/xfs_mount.h
 +++ b/fs/xfs/xfs_mount.h
-@@ -334,14 +334,6 @@ xfs_daddr_to_agbno(struct xfs_mount *mp, xfs_daddr_t d)
+@@ -134,7 +134,7 @@ typedef struct xfs_mount {
+ 	int			m_ialloc_blks;	/* blocks in inode allocation */
+ 	int			m_inoalign_mask;/* mask sb_inoalignmt if used */
+ 	uint			m_qflags;	/* quota status flags */
+-	struct xfs_trans_reservations m_reservations;/* precomputed res values */
++	struct xfs_trans_resv	m_reservations;/* precomputed res values */
+ 	__uint64_t		m_maxicount;	/* maximum inode count */
+ 	__uint64_t		m_resblks;	/* total reserved blocks */
+ 	__uint64_t		m_resblks_avail;/* available reserved blocks */
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index 35a2299..ed24650 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -49,629 +49,6 @@ kmem_zone_t	*xfs_trans_zone;
+ kmem_zone_t	*xfs_log_item_desc_zone;
+ 
+ /*
+- * A buffer has a format structure overhead in the log in addition
+- * to the data, so we need to take this into account when reserving
+- * space in a transaction for a buffer.  Round the space required up
+- * to a multiple of 128 bytes so that we don't change the historical
+- * reservation that has been used for this overhead.
+- */
+-STATIC uint
+-xfs_buf_log_overhead(void)
+-{
+-	return round_up(sizeof(struct xlog_op_header) +
+-			sizeof(struct xfs_buf_log_format), 128);
+-}
+-
+-/*
+- * Calculate out transaction log reservation per item in bytes.
+- *
+- * The nbufs argument is used to indicate the number of items that
+- * will be changed in a transaction.  size is used to tell how many
+- * bytes should be reserved per item.
+- */
+-STATIC uint
+-xfs_calc_buf_res(
+-	uint		nbufs,
+-	uint		size)
+-{
+-	return nbufs * (size + xfs_buf_log_overhead());
+-}
+-
+-/*
+- * Various log reservation values.
+- *
+- * These are based on the size of the file system block because that is what
+- * most transactions manipulate.  Each adds in an additional 128 bytes per
+- * item logged to try to account for the overhead of the transaction mechanism.
+- *
+- * Note:  Most of the reservations underestimate the number of allocation
+- * groups into which they could free extents in the xfs_bmap_finish() call.
+- * This is because the number in the worst case is quite high and quite
+- * unusual.  In order to fix this we need to change xfs_bmap_finish() to free
+- * extents in only a single AG at a time.  This will require changes to the
+- * EFI code as well, however, so that the EFI for the extents not freed is
+- * logged again in each transaction.  See SGI PV #261917.
+- *
+- * Reservation functions here avoid a huge stack in xfs_trans_init due to
+- * register overflow from temporaries in the calculations.
+- */
+-
+-
+-/*
+- * In a write transaction we can allocate a maximum of 2
+- * extents.  This gives:
+- *    the inode getting the new extents: inode size
+- *    the inode's bmap btree: max depth * block size
+- *    the agfs of the ags from which the extents are allocated: 2 * sector
+- *    the superblock free block counter: sector size
+- *    the allocation btrees: 2 exts * 2 trees * (2 * max depth - 1) * block size
+- * And the bmap_finish transaction can free bmap blocks in a join:
+- *    the agfs of the ags containing the blocks: 2 * sector size
+- *    the agfls of the ags containing the blocks: 2 * sector size
+- *    the super block free block counter: sector size
+- *    the allocation btrees: 2 exts * 2 trees * (2 * max depth - 1) * block size
+- */
+-STATIC uint
+-xfs_calc_write_reservation(
+-	struct xfs_mount	*mp)
+-{
+-	return XFS_DQUOT_LOGRES(mp) +
+-		MAX((xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
+-		     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK),
+-				      XFS_FSB_TO_B(mp, 1)) +
+-		     xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
+-		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 2),
+-				      XFS_FSB_TO_B(mp, 1))),
+-		    (xfs_calc_buf_res(5, mp->m_sb.sb_sectsize) +
+-		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 2),
+-				      XFS_FSB_TO_B(mp, 1))));
+-}
+-
+-/*
+- * In truncating a file we free up to two extents at once.  We can modify:
+- *    the inode being truncated: inode size
+- *    the inode's bmap btree: (max depth + 1) * block size
+- * And the bmap_finish transaction can free the blocks and bmap blocks:
+- *    the agf for each of the ags: 4 * sector size
+- *    the agfl for each of the ags: 4 * sector size
+- *    the super block to reflect the freed blocks: sector size
+- *    worst case split in allocation btrees per extent assuming 4 extents:
+- *		4 exts * 2 trees * (2 * max depth - 1) * block size
+- *    the inode btree: max depth * blocksize
+- *    the allocation btrees: 2 trees * (max depth - 1) * block size
+- */
+-STATIC uint
+-xfs_calc_itruncate_reservation(
+-	struct xfs_mount	*mp)
+-{
+-	return XFS_DQUOT_LOGRES(mp) +
+-		MAX((xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
+-		     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) + 1,
+-				      XFS_FSB_TO_B(mp, 1))),
+-		    (xfs_calc_buf_res(9, mp->m_sb.sb_sectsize) +
+-		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 4),
+-				      XFS_FSB_TO_B(mp, 1)) +
+-		    xfs_calc_buf_res(5, 0) +
+-		    xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
+-				     XFS_FSB_TO_B(mp, 1)) +
+-		    xfs_calc_buf_res(2 + XFS_IALLOC_BLOCKS(mp) +
+-				     mp->m_in_maxlevels, 0)));
+-}
+-
+-/*
+- * In renaming a files we can modify:
+- *    the four inodes involved: 4 * inode size
+- *    the two directory btrees: 2 * (max depth + v2) * dir block size
+- *    the two directory bmap btrees: 2 * max depth * block size
+- * And the bmap_finish transaction can free dir and bmap blocks (two sets
+- *	of bmap blocks) giving:
+- *    the agf for the ags in which the blocks live: 3 * sector size
+- *    the agfl for the ags in which the blocks live: 3 * sector size
+- *    the superblock for the free block count: sector size
+- *    the allocation btrees: 3 exts * 2 trees * (2 * max depth - 1) * block size
+- */
+-STATIC uint
+-xfs_calc_rename_reservation(
+-	struct xfs_mount	*mp)
+-{
+-	return XFS_DQUOT_LOGRES(mp) +
+-		MAX((xfs_calc_buf_res(4, mp->m_sb.sb_inodesize) +
+-		     xfs_calc_buf_res(2 * XFS_DIROP_LOG_COUNT(mp),
+-				      XFS_FSB_TO_B(mp, 1))),
+-		    (xfs_calc_buf_res(7, mp->m_sb.sb_sectsize) +
+-		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 3),
+-				      XFS_FSB_TO_B(mp, 1))));
+-}
+-
+-/*
+- * For creating a link to an inode:
+- *    the parent directory inode: inode size
+- *    the linked inode: inode size
+- *    the directory btree could split: (max depth + v2) * dir block size
+- *    the directory bmap btree could join or split: (max depth + v2) * blocksize
+- * And the bmap_finish transaction can free some bmap blocks giving:
+- *    the agf for the ag in which the blocks live: sector size
+- *    the agfl for the ag in which the blocks live: sector size
+- *    the superblock for the free block count: sector size
+- *    the allocation btrees: 2 trees * (2 * max depth - 1) * block size
+- */
+-STATIC uint
+-xfs_calc_link_reservation(
+-	struct xfs_mount	*mp)
+-{
+-	return XFS_DQUOT_LOGRES(mp) +
+-		MAX((xfs_calc_buf_res(2, mp->m_sb.sb_inodesize) +
+-		     xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp),
+-				      XFS_FSB_TO_B(mp, 1))),
+-		    (xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
+-		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
+-				      XFS_FSB_TO_B(mp, 1))));
+-}
+-
+-/*
+- * For removing a directory entry we can modify:
+- *    the parent directory inode: inode size
+- *    the removed inode: inode size
+- *    the directory btree could join: (max depth + v2) * dir block size
+- *    the directory bmap btree could join or split: (max depth + v2) * blocksize
+- * And the bmap_finish transaction can free the dir and bmap blocks giving:
+- *    the agf for the ag in which the blocks live: 2 * sector size
+- *    the agfl for the ag in which the blocks live: 2 * sector size
+- *    the superblock for the free block count: sector size
+- *    the allocation btrees: 2 exts * 2 trees * (2 * max depth - 1) * block size
+- */
+-STATIC uint
+-xfs_calc_remove_reservation(
+-	struct xfs_mount	*mp)
+-{
+-	return XFS_DQUOT_LOGRES(mp) +
+-		MAX((xfs_calc_buf_res(2, mp->m_sb.sb_inodesize) +
+-		     xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp),
+-				      XFS_FSB_TO_B(mp, 1))),
+-		    (xfs_calc_buf_res(5, mp->m_sb.sb_sectsize) +
+-		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 2),
+-				      XFS_FSB_TO_B(mp, 1))));
+-}
+-
+-/*
+- * For create, break it in to the two cases that the transaction
+- * covers. We start with the modify case - allocation done by modification
+- * of the state of existing inodes - and the allocation case.
+- */
+-
+-/*
+- * For create we can modify:
+- *    the parent directory inode: inode size
+- *    the new inode: inode size
+- *    the inode btree entry: block size
+- *    the superblock for the nlink flag: sector size
+- *    the directory btree: (max depth + v2) * dir block size
+- *    the directory inode's bmap btree: (max depth + v2) * block size
+- */
+-STATIC uint
+-xfs_calc_create_resv_modify(
+-	struct xfs_mount	*mp)
+-{
+-	return xfs_calc_buf_res(2, mp->m_sb.sb_inodesize) +
+-		xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
+-		(uint)XFS_FSB_TO_B(mp, 1) +
+-		xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp), XFS_FSB_TO_B(mp, 1));
+-}
+-
+-/*
+- * For create we can allocate some inodes giving:
+- *    the agi and agf of the ag getting the new inodes: 2 * sectorsize
+- *    the superblock for the nlink flag: sector size
+- *    the inode blocks allocated: XFS_IALLOC_BLOCKS * blocksize
+- *    the inode btree: max depth * blocksize
+- *    the allocation btrees: 2 trees * (max depth - 1) * block size
+- */
+-STATIC uint
+-xfs_calc_create_resv_alloc(
+-	struct xfs_mount	*mp)
+-{
+-	return xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
+-		mp->m_sb.sb_sectsize +
+-		xfs_calc_buf_res(XFS_IALLOC_BLOCKS(mp), XFS_FSB_TO_B(mp, 1)) +
+-		xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1)) +
+-		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
+-				 XFS_FSB_TO_B(mp, 1));
+-}
+-
+-STATIC uint
+-__xfs_calc_create_reservation(
+-	struct xfs_mount	*mp)
+-{
+-	return XFS_DQUOT_LOGRES(mp) +
+-		MAX(xfs_calc_create_resv_alloc(mp),
+-		    xfs_calc_create_resv_modify(mp));
+-}
+-
+-/*
+- * For icreate we can allocate some inodes giving:
+- *    the agi and agf of the ag getting the new inodes: 2 * sectorsize
+- *    the superblock for the nlink flag: sector size
+- *    the inode btree: max depth * blocksize
+- *    the allocation btrees: 2 trees * (max depth - 1) * block size
+- */
+-STATIC uint
+-xfs_calc_icreate_resv_alloc(
+-	struct xfs_mount	*mp)
+-{
+-	return xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
+-		mp->m_sb.sb_sectsize +
+-		xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1)) +
+-		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
+-				 XFS_FSB_TO_B(mp, 1));
+-}
+-
+-STATIC uint
+-xfs_calc_icreate_reservation(xfs_mount_t *mp)
+-{
+-	return XFS_DQUOT_LOGRES(mp) +
+-		MAX(xfs_calc_icreate_resv_alloc(mp),
+-		    xfs_calc_create_resv_modify(mp));
+-}
+-
+-STATIC uint
+-xfs_calc_create_reservation(
+-	struct xfs_mount	*mp)
+-{
+-	if (xfs_sb_version_hascrc(&mp->m_sb))
+-		return xfs_calc_icreate_reservation(mp);
+-	return __xfs_calc_create_reservation(mp);
+-
+-}
+-
+-/*
+- * Making a new directory is the same as creating a new file.
+- */
+-STATIC uint
+-xfs_calc_mkdir_reservation(
+-	struct xfs_mount	*mp)
+-{
+-	return xfs_calc_create_reservation(mp);
+-}
+-
+-
+-/*
+- * Making a new symplink is the same as creating a new file, but
+- * with the added blocks for remote symlink data which can be up to 1kB in
+- * length (MAXPATHLEN).
+- */
+-STATIC uint
+-xfs_calc_symlink_reservation(
+-	struct xfs_mount	*mp)
+-{
+-	return xfs_calc_create_reservation(mp) +
+-	       xfs_calc_buf_res(1, MAXPATHLEN);
+-}
+-
+-/*
+- * In freeing an inode we can modify:
+- *    the inode being freed: inode size
+- *    the super block free inode counter: sector size
+- *    the agi hash list and counters: sector size
+- *    the inode btree entry: block size
+- *    the on disk inode before ours in the agi hash list: inode cluster size
+- *    the inode btree: max depth * blocksize
+- *    the allocation btrees: 2 trees * (max depth - 1) * block size
+- */
+-STATIC uint
+-xfs_calc_ifree_reservation(
+-	struct xfs_mount	*mp)
+-{
+-	return XFS_DQUOT_LOGRES(mp) +
+-		xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
+-		xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
+-		xfs_calc_buf_res(1, XFS_FSB_TO_B(mp, 1)) +
+-		MAX((__uint16_t)XFS_FSB_TO_B(mp, 1),
+-		    XFS_INODE_CLUSTER_SIZE(mp)) +
+-		xfs_calc_buf_res(1, 0) +
+-		xfs_calc_buf_res(2 + XFS_IALLOC_BLOCKS(mp) +
+-				 mp->m_in_maxlevels, 0) +
+-		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
+-				 XFS_FSB_TO_B(mp, 1));
+-}
+-
+-/*
+- * When only changing the inode we log the inode and possibly the superblock
+- * We also add a bit of slop for the transaction stuff.
+- */
+-STATIC uint
+-xfs_calc_ichange_reservation(
+-	struct xfs_mount	*mp)
+-{
+-	return XFS_DQUOT_LOGRES(mp) +
+-		mp->m_sb.sb_inodesize +
+-		mp->m_sb.sb_sectsize +
+-		512;
+-
+-}
+-
+-/*
+- * Growing the data section of the filesystem.
+- *	superblock
+- *	agi and agf
+- *	allocation btrees
+- */
+-STATIC uint
+-xfs_calc_growdata_reservation(
+-	struct xfs_mount	*mp)
+-{
+-	return xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
+-		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
+-				 XFS_FSB_TO_B(mp, 1));
+-}
+-
+-/*
+- * Growing the rt section of the filesystem.
+- * In the first set of transactions (ALLOC) we allocate space to the
+- * bitmap or summary files.
+- *	superblock: sector size
+- *	agf of the ag from which the extent is allocated: sector size
+- *	bmap btree for bitmap/summary inode: max depth * blocksize
+- *	bitmap/summary inode: inode size
+- *	allocation btrees for 1 block alloc: 2 * (2 * maxdepth - 1) * blocksize
+- */
+-STATIC uint
+-xfs_calc_growrtalloc_reservation(
+-	struct xfs_mount	*mp)
+-{
+-	return xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
+-		xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK),
+-				 XFS_FSB_TO_B(mp, 1)) +
+-		xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
+-		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
+-				 XFS_FSB_TO_B(mp, 1));
+-}
+-
+-/*
+- * Growing the rt section of the filesystem.
+- * In the second set of transactions (ZERO) we zero the new metadata blocks.
+- *	one bitmap/summary block: blocksize
+- */
+-STATIC uint
+-xfs_calc_growrtzero_reservation(
+-	struct xfs_mount	*mp)
+-{
+-	return xfs_calc_buf_res(1, mp->m_sb.sb_blocksize);
+-}
+-
+-/*
+- * Growing the rt section of the filesystem.
+- * In the third set of transactions (FREE) we update metadata without
+- * allocating any new blocks.
+- *	superblock: sector size
+- *	bitmap inode: inode size
+- *	summary inode: inode size
+- *	one bitmap block: blocksize
+- *	summary blocks: new summary size
+- */
+-STATIC uint
+-xfs_calc_growrtfree_reservation(
+-	struct xfs_mount	*mp)
+-{
+-	return xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
+-		xfs_calc_buf_res(2, mp->m_sb.sb_inodesize) +
+-		xfs_calc_buf_res(1, mp->m_sb.sb_blocksize) +
+-		xfs_calc_buf_res(1, mp->m_rsumsize);
+-}
+-
+-/*
+- * Logging the inode modification timestamp on a synchronous write.
+- *	inode
+- */
+-STATIC uint
+-xfs_calc_swrite_reservation(
+-	struct xfs_mount	*mp)
+-{
+-	return xfs_calc_buf_res(1, mp->m_sb.sb_inodesize);
+-}
+-
+-/*
+- * Logging the inode mode bits when writing a setuid/setgid file
+- *	inode
+- */
+-STATIC uint
+-xfs_calc_writeid_reservation(xfs_mount_t *mp)
+-{
+-	return xfs_calc_buf_res(1, mp->m_sb.sb_inodesize);
+-}
+-
+-/*
+- * Converting the inode from non-attributed to attributed.
+- *	the inode being converted: inode size
+- *	agf block and superblock (for block allocation)
+- *	the new block (directory sized)
+- *	bmap blocks for the new directory block
+- *	allocation btrees
+- */
+-STATIC uint
+-xfs_calc_addafork_reservation(
+-	struct xfs_mount	*mp)
+-{
+-	return XFS_DQUOT_LOGRES(mp) +
+-		xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
+-		xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
+-		xfs_calc_buf_res(1, mp->m_dirblksize) +
+-		xfs_calc_buf_res(XFS_DAENTER_BMAP1B(mp, XFS_DATA_FORK) + 1,
+-				 XFS_FSB_TO_B(mp, 1)) +
+-		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
+-				 XFS_FSB_TO_B(mp, 1));
+-}
+-
+-/*
+- * Removing the attribute fork of a file
+- *    the inode being truncated: inode size
+- *    the inode's bmap btree: max depth * block size
+- * And the bmap_finish transaction can free the blocks and bmap blocks:
+- *    the agf for each of the ags: 4 * sector size
+- *    the agfl for each of the ags: 4 * sector size
+- *    the super block to reflect the freed blocks: sector size
+- *    worst case split in allocation btrees per extent assuming 4 extents:
+- *		4 exts * 2 trees * (2 * max depth - 1) * block size
+- */
+-STATIC uint
+-xfs_calc_attrinval_reservation(
+-	struct xfs_mount	*mp)
+-{
+-	return MAX((xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
+-		    xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_ATTR_FORK),
+-				     XFS_FSB_TO_B(mp, 1))),
+-		   (xfs_calc_buf_res(9, mp->m_sb.sb_sectsize) +
+-		    xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 4),
+-				     XFS_FSB_TO_B(mp, 1))));
+-}
+-
+-/*
+- * Setting an attribute at mount time.
+- *	the inode getting the attribute
+- *	the superblock for allocations
+- *	the agfs extents are allocated from
+- *	the attribute btree * max depth
+- *	the inode allocation btree
+- * Since attribute transaction space is dependent on the size of the attribute,
+- * the calculation is done partially at mount time and partially at runtime(see
+- * below).
+- */
+-STATIC uint
+-xfs_calc_attrsetm_reservation(
+-	struct xfs_mount	*mp)
+-{
+-	return XFS_DQUOT_LOGRES(mp) +
+-		xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
+-		xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
+-		xfs_calc_buf_res(XFS_DA_NODE_MAXDEPTH, XFS_FSB_TO_B(mp, 1));
+-}
+-
+-/*
+- * Setting an attribute at runtime, transaction space unit per block.
+- * 	the superblock for allocations: sector size
+- *	the inode bmap btree could join or split: max depth * block size
+- * Since the runtime attribute transaction space is dependent on the total
+- * blocks needed for the 1st bmap, here we calculate out the space unit for
+- * one block so that the caller could figure out the total space according
+- * to the attibute extent length in blocks by: ext * XFS_ATTRSETRT_LOG_RES(mp).
+- */
+-STATIC uint
+-xfs_calc_attrsetrt_reservation(
+-	struct xfs_mount	*mp)
+-{
+-	return xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
+-		xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_ATTR_FORK),
+-				 XFS_FSB_TO_B(mp, 1));
+-}
+-
+-/*
+- * Removing an attribute.
+- *    the inode: inode size
+- *    the attribute btree could join: max depth * block size
+- *    the inode bmap btree could join or split: max depth * block size
+- * And the bmap_finish transaction can free the attr blocks freed giving:
+- *    the agf for the ag in which the blocks live: 2 * sector size
+- *    the agfl for the ag in which the blocks live: 2 * sector size
+- *    the superblock for the free block count: sector size
+- *    the allocation btrees: 2 exts * 2 trees * (2 * max depth - 1) * block size
+- */
+-STATIC uint
+-xfs_calc_attrrm_reservation(
+-	struct xfs_mount	*mp)
+-{
+-	return XFS_DQUOT_LOGRES(mp) +
+-		MAX((xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
+-		     xfs_calc_buf_res(XFS_DA_NODE_MAXDEPTH,
+-				      XFS_FSB_TO_B(mp, 1)) +
+-		     (uint)XFS_FSB_TO_B(mp,
+-					XFS_BM_MAXLEVELS(mp, XFS_ATTR_FORK)) +
+-		     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK), 0)),
+-		    (xfs_calc_buf_res(5, mp->m_sb.sb_sectsize) +
+-		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 2),
+-				      XFS_FSB_TO_B(mp, 1))));
+-}
+-
+-/*
+- * Clearing a bad agino number in an agi hash bucket.
+- */
+-STATIC uint
+-xfs_calc_clear_agi_bucket_reservation(
+-	struct xfs_mount	*mp)
+-{
+-	return xfs_calc_buf_res(1, mp->m_sb.sb_sectsize);
+-}
+-
+-/*
+- * Clearing the quotaflags in the superblock.
+- *	the super block for changing quota flags: sector size
+- */
+-STATIC uint
+-xfs_calc_qm_sbchange_reservation(
+-	struct xfs_mount	*mp)
+-{
+-	return xfs_calc_buf_res(1, mp->m_sb.sb_sectsize);
+-}
+-
+-/*
+- * Adjusting quota limits.
+- *    the xfs_disk_dquot_t: sizeof(struct xfs_disk_dquot)
+- */
+-STATIC uint
+-xfs_calc_qm_setqlim_reservation(
+-	struct xfs_mount	*mp)
+-{
+-	return xfs_calc_buf_res(1, sizeof(struct xfs_disk_dquot));
+-}
+-
+-/*
+- * Allocating quota on disk if needed.
+- *	the write transaction log space: XFS_WRITE_LOG_RES(mp)
+- *	the unit of quota allocation: one system block size
+- */
+-STATIC uint
+-xfs_calc_qm_dqalloc_reservation(
+-	struct xfs_mount	*mp)
+-{
+-	return XFS_WRITE_LOG_RES(mp) +
+-		xfs_calc_buf_res(1,
+-			XFS_FSB_TO_B(mp, XFS_DQUOT_CLUSTER_SIZE_FSB) - 1);
+-}
+-
+-/*
+- * Turning off quotas.
+- *    the xfs_qoff_logitem_t: sizeof(struct xfs_qoff_logitem) * 2
+- *    the superblock for the quota flags: sector size
+- */
+-STATIC uint
+-xfs_calc_qm_quotaoff_reservation(
+-	struct xfs_mount	*mp)
+-{
+-	return sizeof(struct xfs_qoff_logitem) * 2 +
+-		xfs_calc_buf_res(1, mp->m_sb.sb_sectsize);
+-}
+-
+-/*
+- * End of turning off quotas.
+- *    the xfs_qoff_logitem_t: sizeof(struct xfs_qoff_logitem) * 2
+- */
+-STATIC uint
+-xfs_calc_qm_quotaoff_end_reservation(
+-	struct xfs_mount	*mp)
+-{
+-	return sizeof(struct xfs_qoff_logitem) * 2;
+-}
+-
+-/*
+- * Syncing the incore super block changes to disk.
+- *     the super block to reflect the changes: sector size
+- */
+-STATIC uint
+-xfs_calc_sb_reservation(
+-	struct xfs_mount	*mp)
+-{
+-	return xfs_calc_buf_res(1, mp->m_sb.sb_sectsize);
+-}
+-
+-/*
+  * Initialize the precomputed transaction reservation values
+  * in the mount structure.
+  */
+@@ -679,36 +56,7 @@ void
+ xfs_trans_init(
+ 	struct xfs_mount	*mp)
+ {
+-	struct xfs_trans_reservations *resp = &mp->m_reservations;
+-
+-	resp->tr_write = xfs_calc_write_reservation(mp);
+-	resp->tr_itruncate = xfs_calc_itruncate_reservation(mp);
+-	resp->tr_rename = xfs_calc_rename_reservation(mp);
+-	resp->tr_link = xfs_calc_link_reservation(mp);
+-	resp->tr_remove = xfs_calc_remove_reservation(mp);
+-	resp->tr_symlink = xfs_calc_symlink_reservation(mp);
+-	resp->tr_create = xfs_calc_create_reservation(mp);
+-	resp->tr_mkdir = xfs_calc_mkdir_reservation(mp);
+-	resp->tr_ifree = xfs_calc_ifree_reservation(mp);
+-	resp->tr_ichange = xfs_calc_ichange_reservation(mp);
+-	resp->tr_growdata = xfs_calc_growdata_reservation(mp);
+-	resp->tr_swrite = xfs_calc_swrite_reservation(mp);
+-	resp->tr_writeid = xfs_calc_writeid_reservation(mp);
+-	resp->tr_addafork = xfs_calc_addafork_reservation(mp);
+-	resp->tr_attrinval = xfs_calc_attrinval_reservation(mp);
+-	resp->tr_attrsetm = xfs_calc_attrsetm_reservation(mp);
+-	resp->tr_attrsetrt = xfs_calc_attrsetrt_reservation(mp);
+-	resp->tr_attrrm = xfs_calc_attrrm_reservation(mp);
+-	resp->tr_clearagi = xfs_calc_clear_agi_bucket_reservation(mp);
+-	resp->tr_growrtalloc = xfs_calc_growrtalloc_reservation(mp);
+-	resp->tr_growrtzero = xfs_calc_growrtzero_reservation(mp);
+-	resp->tr_growrtfree = xfs_calc_growrtfree_reservation(mp);
+-	resp->tr_qm_sbchange = xfs_calc_qm_sbchange_reservation(mp);
+-	resp->tr_qm_setqlim = xfs_calc_qm_setqlim_reservation(mp);
+-	resp->tr_qm_dqalloc = xfs_calc_qm_dqalloc_reservation(mp);
+-	resp->tr_qm_quotaoff = xfs_calc_qm_quotaoff_reservation(mp);
+-	resp->tr_qm_equotaoff = xfs_calc_qm_quotaoff_end_reservation(mp);
+-	resp->tr_sb = xfs_calc_sb_reservation(mp);
++	xfs_trans_resv_calc(mp, &mp->m_reservations);
  }
  
  /*
-- * perag get/put wrappers for ref counting
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index 2d6b5e8..21cafaa 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -20,6 +20,8 @@
+ 
+ struct xfs_log_item;
+ 
++#include "xfs_trans_resv.h"
++
+ /*
+  * This is the structure written in the log at the head of
+  * every transaction. It identifies the type and id of the
+@@ -210,118 +212,6 @@ struct xfs_log_item_desc {
+ #define	XFS_TRANS_SB_REXTSLOG		0x00002000
+ 
+ /*
+- * structure for maintaining pre-calculated transaction reservations.
 - */
--struct xfs_perag *xfs_perag_get(struct xfs_mount *mp, xfs_agnumber_t agno);
--struct xfs_perag *xfs_perag_get_tag(struct xfs_mount *mp, xfs_agnumber_t agno,
--					int tag);
--void	xfs_perag_put(struct xfs_perag *pag);
+-struct xfs_trans_reservations {
+-	uint	tr_write;	/* extent alloc trans */
+-	uint	tr_itruncate;	/* truncate trans */
+-	uint	tr_rename;	/* rename trans */
+-	uint	tr_link;	/* link trans */
+-	uint	tr_remove;	/* unlink trans */
+-	uint	tr_symlink;	/* symlink trans */
+-	uint	tr_create;	/* create trans */
+-	uint	tr_mkdir;	/* mkdir trans */
+-	uint	tr_ifree;	/* inode free trans */
+-	uint	tr_ichange;	/* inode update trans */
+-	uint	tr_growdata;	/* fs data section grow trans */
+-	uint	tr_swrite;	/* sync write inode trans */
+-	uint	tr_addafork;	/* cvt inode to attributed trans */
+-	uint	tr_writeid;	/* write setuid/setgid file */
+-	uint	tr_attrinval;	/* attr fork buffer invalidation */
+-	uint	tr_attrsetm;	/* set/create an attribute at mount time */
+-	uint	tr_attrsetrt;	/* set/create an attribute at runtime */
+-	uint	tr_attrrm;	/* remove an attribute */
+-	uint	tr_clearagi;	/* clear bad agi unlinked ino bucket */
+-	uint	tr_growrtalloc;	/* grow realtime allocations */
+-	uint	tr_growrtzero;	/* grow realtime zeroing */
+-	uint	tr_growrtfree;	/* grow realtime freeing */
+-	uint	tr_qm_sbchange;	/* change quota flags */
+-	uint	tr_qm_setqlim;	/* adjust quota limits */
+-	uint	tr_qm_dqalloc;	/* allocate quota on disk */
+-	uint	tr_qm_quotaoff;	/* turn quota off */
+-	uint	tr_qm_equotaoff;/* end of turn quota off */
+-	uint	tr_sb;		/* modify superblock */
+-};
 -
 -/*
-  * Per-cpu superblock locking functions
-  */
- #ifdef HAVE_PERCPU_SB
-@@ -373,6 +365,8 @@ typedef struct xfs_mod_sb {
- extern int	xfs_log_sbcount(xfs_mount_t *);
- extern __uint64_t xfs_default_resblks(xfs_mount_t *mp);
- extern int	xfs_mountfs(xfs_mount_t *mp);
-+extern int	xfs_initialize_perag(xfs_mount_t *mp, xfs_agnumber_t agcount,
-+				     xfs_agnumber_t *maxagi);
- 
- extern void	xfs_unmountfs(xfs_mount_t *);
- extern int	xfs_mod_incore_sb(xfs_mount_t *, xfs_sb_field_t, int64_t, int);
-@@ -391,13 +385,4 @@ extern void	xfs_set_low_space_thresholds(struct xfs_mount *);
- 
- #endif	/* __KERNEL__ */
- 
--extern void	xfs_sb_calc_crc(struct xfs_buf	*);
--extern void	xfs_mod_sb(struct xfs_trans *, __int64_t);
--extern int	xfs_initialize_perag(struct xfs_mount *, xfs_agnumber_t,
--					xfs_agnumber_t *);
--extern void	xfs_sb_from_disk(struct xfs_sb *, struct xfs_dsb *);
--extern void	xfs_sb_to_disk(struct xfs_dsb *, struct xfs_sb *, __int64_t);
+- * Per-extent log reservation for the allocation btree changes
+- * involved in freeing or allocating an extent.
+- * 2 trees * (2 blocks/level * max depth - 1) * block size
+- */
+-#define	XFS_ALLOCFREE_LOG_RES(mp,nx) \
+-	((nx) * (2 * XFS_FSB_TO_B((mp), 2 * XFS_AG_MAXLEVELS(mp) - 1)))
+-#define	XFS_ALLOCFREE_LOG_COUNT(mp,nx) \
+-	((nx) * (2 * (2 * XFS_AG_MAXLEVELS(mp) - 1)))
 -
--extern const struct xfs_buf_ops xfs_sb_buf_ops;
+-/*
+- * Per-directory log reservation for any directory change.
+- * dir blocks: (1 btree block per level + data block + free block) * dblock size
+- * bmap btree: (levels + 2) * max depth * block size
+- * v2 directory blocks can be fragmented below the dirblksize down to the fsb
+- * size, so account for that in the DAENTER macros.
+- */
+-#define	XFS_DIROP_LOG_RES(mp)	\
+-	(XFS_FSB_TO_B(mp, XFS_DAENTER_BLOCKS(mp, XFS_DATA_FORK)) + \
+-	 (XFS_FSB_TO_B(mp, XFS_DAENTER_BMAPS(mp, XFS_DATA_FORK) + 1)))
+-#define	XFS_DIROP_LOG_COUNT(mp)	\
+-	(XFS_DAENTER_BLOCKS(mp, XFS_DATA_FORK) + \
+-	 XFS_DAENTER_BMAPS(mp, XFS_DATA_FORK) + 1)
 -
- #endif	/* __XFS_MOUNT_H__ */
-diff --git a/fs/xfs/xfs_sb.c b/fs/xfs/xfs_sb.c
+-
+-#define	XFS_WRITE_LOG_RES(mp)	((mp)->m_reservations.tr_write)
+-#define	XFS_ITRUNCATE_LOG_RES(mp)   ((mp)->m_reservations.tr_itruncate)
+-#define	XFS_RENAME_LOG_RES(mp)	((mp)->m_reservations.tr_rename)
+-#define	XFS_LINK_LOG_RES(mp)	((mp)->m_reservations.tr_link)
+-#define	XFS_REMOVE_LOG_RES(mp)	((mp)->m_reservations.tr_remove)
+-#define	XFS_SYMLINK_LOG_RES(mp)	((mp)->m_reservations.tr_symlink)
+-#define	XFS_CREATE_LOG_RES(mp)	((mp)->m_reservations.tr_create)
+-#define	XFS_MKDIR_LOG_RES(mp)	((mp)->m_reservations.tr_mkdir)
+-#define	XFS_IFREE_LOG_RES(mp)	((mp)->m_reservations.tr_ifree)
+-#define	XFS_ICHANGE_LOG_RES(mp)	((mp)->m_reservations.tr_ichange)
+-#define	XFS_GROWDATA_LOG_RES(mp)    ((mp)->m_reservations.tr_growdata)
+-#define	XFS_GROWRTALLOC_LOG_RES(mp)	((mp)->m_reservations.tr_growrtalloc)
+-#define	XFS_GROWRTZERO_LOG_RES(mp)	((mp)->m_reservations.tr_growrtzero)
+-#define	XFS_GROWRTFREE_LOG_RES(mp)	((mp)->m_reservations.tr_growrtfree)
+-#define	XFS_SWRITE_LOG_RES(mp)	((mp)->m_reservations.tr_swrite)
+-/*
+- * Logging the inode timestamps on an fsync -- same as SWRITE
+- * as long as SWRITE logs the entire inode core
+- */
+-#define XFS_FSYNC_TS_LOG_RES(mp)        ((mp)->m_reservations.tr_swrite)
+-#define	XFS_WRITEID_LOG_RES(mp)		((mp)->m_reservations.tr_swrite)
+-#define	XFS_ADDAFORK_LOG_RES(mp)	((mp)->m_reservations.tr_addafork)
+-#define	XFS_ATTRINVAL_LOG_RES(mp)	((mp)->m_reservations.tr_attrinval)
+-#define	XFS_ATTRSETM_LOG_RES(mp)	((mp)->m_reservations.tr_attrsetm)
+-#define	XFS_ATTRSETRT_LOG_RES(mp)	((mp)->m_reservations.tr_attrsetrt)
+-#define	XFS_ATTRRM_LOG_RES(mp)		((mp)->m_reservations.tr_attrrm)
+-#define	XFS_CLEAR_AGI_BUCKET_LOG_RES(mp)  ((mp)->m_reservations.tr_clearagi)
+-#define XFS_QM_SBCHANGE_LOG_RES(mp)	((mp)->m_reservations.tr_qm_sbchange)
+-#define XFS_QM_SETQLIM_LOG_RES(mp)	((mp)->m_reservations.tr_qm_setqlim)
+-#define XFS_QM_DQALLOC_LOG_RES(mp)	((mp)->m_reservations.tr_qm_dqalloc)
+-#define XFS_QM_QUOTAOFF_LOG_RES(mp)	((mp)->m_reservations.tr_qm_quotaoff)
+-#define XFS_QM_QUOTAOFF_END_LOG_RES(mp)	((mp)->m_reservations.tr_qm_equotaoff)
+-#define XFS_SB_LOG_RES(mp)		((mp)->m_reservations.tr_sb)
+-
+-/*
+- * Various log count values.
+- */
+-#define	XFS_DEFAULT_LOG_COUNT		1
+-#define	XFS_DEFAULT_PERM_LOG_COUNT	2
+-#define	XFS_ITRUNCATE_LOG_COUNT		2
+-#define XFS_INACTIVE_LOG_COUNT		2
+-#define	XFS_CREATE_LOG_COUNT		2
+-#define	XFS_MKDIR_LOG_COUNT		3
+-#define	XFS_SYMLINK_LOG_COUNT		3
+-#define	XFS_REMOVE_LOG_COUNT		2
+-#define	XFS_LINK_LOG_COUNT		2
+-#define	XFS_RENAME_LOG_COUNT		2
+-#define	XFS_WRITE_LOG_COUNT		2
+-#define	XFS_ADDAFORK_LOG_COUNT		2
+-#define	XFS_ATTRINVAL_LOG_COUNT		1
+-#define	XFS_ATTRSET_LOG_COUNT		3
+-#define	XFS_ATTRRM_LOG_COUNT		3
+-
+-/*
+  * Here we centralize the specification of XFS meta-data buffer
+  * reference count values.  This determine how hard the buffer
+  * cache tries to hold onto the buffer.
+diff --git a/fs/xfs/xfs_trans_resv.c b/fs/xfs/xfs_trans_resv.c
 new file mode 100644
-index 0000000..c19ae45
+index 0000000..91c6f42
 --- /dev/null
-+++ b/fs/xfs/xfs_sb.c
-@@ -0,0 +1,714 @@
++++ b/fs/xfs/xfs_trans_resv.c
+@@ -0,0 +1,705 @@
 +/*
-+ * Copyright (c) 2000-2005 Silicon Graphics, Inc.
++ * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
++ * Copyright (C) 2010 Red Hat, Inc.
 + * All Rights Reserved.
 + *
 + * This program is free software; you can redistribute it and/or
@@ -1054,15 +920,14 @@ index 0000000..c19ae45
 +#include "xfs.h"
 +#include "xfs_fs.h"
 +#include "xfs_types.h"
-+#include "xfs_bit.h"
 +#include "xfs_log.h"
-+#include "xfs_inum.h"
++#include "xfs_trans_resv.h"
 +#include "xfs_trans.h"
-+#include "xfs_trans_priv.h"
 +#include "xfs_sb.h"
 +#include "xfs_ag.h"
-+#include "xfs_dir2.h"
 +#include "xfs_mount.h"
++#include "xfs_error.h"
++#include "xfs_da_btree.h"
 +#include "xfs_bmap_btree.h"
 +#include "xfs_alloc_btree.h"
 +#include "xfs_ialloc_btree.h"
@@ -1071,718 +936,815 @@ index 0000000..c19ae45
 +#include "xfs_btree.h"
 +#include "xfs_ialloc.h"
 +#include "xfs_alloc.h"
-+#include "xfs_rtalloc.h"
++#include "xfs_extent_busy.h"
 +#include "xfs_bmap.h"
-+#include "xfs_error.h"
 +#include "xfs_quota.h"
-+#include "xfs_fsops.h"
-+#include "xfs_trace.h"
-+#include "xfs_cksum.h"
++#include "xfs_qm.h"
++#include "xfs_trans_priv.h"
++#include "xfs_trans_space.h"
++#include "xfs_inode_item.h"
++#include "xfs_log_priv.h"
 +#include "xfs_buf_item.h"
++#include "xfs_trace.h"
 +
 +/*
-+ * Physical superblock buffer manipulations. Shared with libxfs in userspace.
++ * A buffer has a format structure overhead in the log in addition
++ * to the data, so we need to take this into account when reserving
++ * space in a transaction for a buffer.  Round the space required up
++ * to a multiple of 128 bytes so that we don't change the historical
++ * reservation that has been used for this overhead.
 + */
-+
-+static const struct {
-+	short offset;
-+	short type;	/* 0 = integer
-+			 * 1 = binary / string (no translation)
-+			 */
-+} xfs_sb_info[] = {
-+    { offsetof(xfs_sb_t, sb_magicnum),   0 },
-+    { offsetof(xfs_sb_t, sb_blocksize),  0 },
-+    { offsetof(xfs_sb_t, sb_dblocks),    0 },
-+    { offsetof(xfs_sb_t, sb_rblocks),    0 },
-+    { offsetof(xfs_sb_t, sb_rextents),   0 },
-+    { offsetof(xfs_sb_t, sb_uuid),       1 },
-+    { offsetof(xfs_sb_t, sb_logstart),   0 },
-+    { offsetof(xfs_sb_t, sb_rootino),    0 },
-+    { offsetof(xfs_sb_t, sb_rbmino),     0 },
-+    { offsetof(xfs_sb_t, sb_rsumino),    0 },
-+    { offsetof(xfs_sb_t, sb_rextsize),   0 },
-+    { offsetof(xfs_sb_t, sb_agblocks),   0 },
-+    { offsetof(xfs_sb_t, sb_agcount),    0 },
-+    { offsetof(xfs_sb_t, sb_rbmblocks),  0 },
-+    { offsetof(xfs_sb_t, sb_logblocks),  0 },
-+    { offsetof(xfs_sb_t, sb_versionnum), 0 },
-+    { offsetof(xfs_sb_t, sb_sectsize),   0 },
-+    { offsetof(xfs_sb_t, sb_inodesize),  0 },
-+    { offsetof(xfs_sb_t, sb_inopblock),  0 },
-+    { offsetof(xfs_sb_t, sb_fname[0]),   1 },
-+    { offsetof(xfs_sb_t, sb_blocklog),   0 },
-+    { offsetof(xfs_sb_t, sb_sectlog),    0 },
-+    { offsetof(xfs_sb_t, sb_inodelog),   0 },
-+    { offsetof(xfs_sb_t, sb_inopblog),   0 },
-+    { offsetof(xfs_sb_t, sb_agblklog),   0 },
-+    { offsetof(xfs_sb_t, sb_rextslog),   0 },
-+    { offsetof(xfs_sb_t, sb_inprogress), 0 },
-+    { offsetof(xfs_sb_t, sb_imax_pct),   0 },
-+    { offsetof(xfs_sb_t, sb_icount),     0 },
-+    { offsetof(xfs_sb_t, sb_ifree),      0 },
-+    { offsetof(xfs_sb_t, sb_fdblocks),   0 },
-+    { offsetof(xfs_sb_t, sb_frextents),  0 },
-+    { offsetof(xfs_sb_t, sb_uquotino),   0 },
-+    { offsetof(xfs_sb_t, sb_gquotino),   0 },
-+    { offsetof(xfs_sb_t, sb_qflags),     0 },
-+    { offsetof(xfs_sb_t, sb_flags),      0 },
-+    { offsetof(xfs_sb_t, sb_shared_vn),  0 },
-+    { offsetof(xfs_sb_t, sb_inoalignmt), 0 },
-+    { offsetof(xfs_sb_t, sb_unit),	 0 },
-+    { offsetof(xfs_sb_t, sb_width),	 0 },
-+    { offsetof(xfs_sb_t, sb_dirblklog),	 0 },
-+    { offsetof(xfs_sb_t, sb_logsectlog), 0 },
-+    { offsetof(xfs_sb_t, sb_logsectsize),0 },
-+    { offsetof(xfs_sb_t, sb_logsunit),	 0 },
-+    { offsetof(xfs_sb_t, sb_features2),	 0 },
-+    { offsetof(xfs_sb_t, sb_bad_features2), 0 },
-+    { offsetof(xfs_sb_t, sb_features_compat), 0 },
-+    { offsetof(xfs_sb_t, sb_features_ro_compat), 0 },
-+    { offsetof(xfs_sb_t, sb_features_incompat), 0 },
-+    { offsetof(xfs_sb_t, sb_features_log_incompat), 0 },
-+    { offsetof(xfs_sb_t, sb_crc),	 0 },
-+    { offsetof(xfs_sb_t, sb_pad),	 0 },
-+    { offsetof(xfs_sb_t, sb_pquotino),	 0 },
-+    { offsetof(xfs_sb_t, sb_lsn),	 0 },
-+    { sizeof(xfs_sb_t),			 0 }
-+};
++STATIC uint
++xfs_buf_log_overhead(void)
++{
++	return round_up(sizeof(struct xlog_op_header) +
++			sizeof(struct xfs_buf_log_format), 128);
++}
 +
 +/*
-+ * Reference counting access wrappers to the perag structures.
-+ * Because we never free per-ag structures, the only thing we
-+ * have to protect against changes is the tree structure itself.
++ * Calculate out transaction log reservation per item in bytes.
++ *
++ * The nbufs argument is used to indicate the number of items that
++ * will be changed in a transaction.  size is used to tell how many
++ * bytes should be reserved per item.
 + */
-+struct xfs_perag *
-+xfs_perag_get(
++STATIC uint
++xfs_calc_buf_res(
++	uint		nbufs,
++	uint		size)
++{
++	return nbufs * (size + xfs_buf_log_overhead());
++}
++
++/*
++ * Various log reservation values.
++ *
++ * These are based on the size of the file system block because that is what
++ * most transactions manipulate.  Each adds in an additional 128 bytes per
++ * item logged to try to account for the overhead of the transaction mechanism.
++ *
++ * Note:  Most of the reservations underestimate the number of allocation
++ * groups into which they could free extents in the xfs_bmap_finish() call.
++ * This is because the number in the worst case is quite high and quite
++ * unusual.  In order to fix this we need to change xfs_bmap_finish() to free
++ * extents in only a single AG at a time.  This will require changes to the
++ * EFI code as well, however, so that the EFI for the extents not freed is
++ * logged again in each transaction.  See SGI PV #261917.
++ *
++ * Reservation functions here avoid a huge stack in xfs_trans_init due to
++ * register overflow from temporaries in the calculations.
++ */
++
++
++/*
++ * In a write transaction we can allocate a maximum of 2
++ * extents.  This gives:
++ *    the inode getting the new extents: inode size
++ *    the inode's bmap btree: max depth * block size
++ *    the agfs of the ags from which the extents are allocated: 2 * sector
++ *    the superblock free block counter: sector size
++ *    the allocation btrees: 2 exts * 2 trees * (2 * max depth - 1) * block size
++ * And the bmap_finish transaction can free bmap blocks in a join:
++ *    the agfs of the ags containing the blocks: 2 * sector size
++ *    the agfls of the ags containing the blocks: 2 * sector size
++ *    the super block free block counter: sector size
++ *    the allocation btrees: 2 exts * 2 trees * (2 * max depth - 1) * block size
++ */
++STATIC uint
++xfs_calc_write_reservation(
++	struct xfs_mount	*mp)
++{
++	return XFS_DQUOT_LOGRES(mp) +
++		MAX((xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
++		     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK),
++				      XFS_FSB_TO_B(mp, 1)) +
++		     xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
++		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 2),
++				      XFS_FSB_TO_B(mp, 1))),
++		    (xfs_calc_buf_res(5, mp->m_sb.sb_sectsize) +
++		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 2),
++				      XFS_FSB_TO_B(mp, 1))));
++}
++
++/*
++ * In truncating a file we free up to two extents at once.  We can modify:
++ *    the inode being truncated: inode size
++ *    the inode's bmap btree: (max depth + 1) * block size
++ * And the bmap_finish transaction can free the blocks and bmap blocks:
++ *    the agf for each of the ags: 4 * sector size
++ *    the agfl for each of the ags: 4 * sector size
++ *    the super block to reflect the freed blocks: sector size
++ *    worst case split in allocation btrees per extent assuming 4 extents:
++ *		4 exts * 2 trees * (2 * max depth - 1) * block size
++ *    the inode btree: max depth * blocksize
++ *    the allocation btrees: 2 trees * (max depth - 1) * block size
++ */
++STATIC uint
++xfs_calc_itruncate_reservation(
++	struct xfs_mount	*mp)
++{
++	return XFS_DQUOT_LOGRES(mp) +
++		MAX((xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
++		     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) + 1,
++				      XFS_FSB_TO_B(mp, 1))),
++		    (xfs_calc_buf_res(9, mp->m_sb.sb_sectsize) +
++		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 4),
++				      XFS_FSB_TO_B(mp, 1)) +
++		    xfs_calc_buf_res(5, 0) +
++		    xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
++				     XFS_FSB_TO_B(mp, 1)) +
++		    xfs_calc_buf_res(2 + XFS_IALLOC_BLOCKS(mp) +
++				     mp->m_in_maxlevels, 0)));
++}
++
++/*
++ * In renaming a files we can modify:
++ *    the four inodes involved: 4 * inode size
++ *    the two directory btrees: 2 * (max depth + v2) * dir block size
++ *    the two directory bmap btrees: 2 * max depth * block size
++ * And the bmap_finish transaction can free dir and bmap blocks (two sets
++ *	of bmap blocks) giving:
++ *    the agf for the ags in which the blocks live: 3 * sector size
++ *    the agfl for the ags in which the blocks live: 3 * sector size
++ *    the superblock for the free block count: sector size
++ *    the allocation btrees: 3 exts * 2 trees * (2 * max depth - 1) * block size
++ */
++STATIC uint
++xfs_calc_rename_reservation(
++	struct xfs_mount	*mp)
++{
++	return XFS_DQUOT_LOGRES(mp) +
++		MAX((xfs_calc_buf_res(4, mp->m_sb.sb_inodesize) +
++		     xfs_calc_buf_res(2 * XFS_DIROP_LOG_COUNT(mp),
++				      XFS_FSB_TO_B(mp, 1))),
++		    (xfs_calc_buf_res(7, mp->m_sb.sb_sectsize) +
++		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 3),
++				      XFS_FSB_TO_B(mp, 1))));
++}
++
++/*
++ * For creating a link to an inode:
++ *    the parent directory inode: inode size
++ *    the linked inode: inode size
++ *    the directory btree could split: (max depth + v2) * dir block size
++ *    the directory bmap btree could join or split: (max depth + v2) * blocksize
++ * And the bmap_finish transaction can free some bmap blocks giving:
++ *    the agf for the ag in which the blocks live: sector size
++ *    the agfl for the ag in which the blocks live: sector size
++ *    the superblock for the free block count: sector size
++ *    the allocation btrees: 2 trees * (2 * max depth - 1) * block size
++ */
++STATIC uint
++xfs_calc_link_reservation(
++	struct xfs_mount	*mp)
++{
++	return XFS_DQUOT_LOGRES(mp) +
++		MAX((xfs_calc_buf_res(2, mp->m_sb.sb_inodesize) +
++		     xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp),
++				      XFS_FSB_TO_B(mp, 1))),
++		    (xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
++		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
++				      XFS_FSB_TO_B(mp, 1))));
++}
++
++/*
++ * For removing a directory entry we can modify:
++ *    the parent directory inode: inode size
++ *    the removed inode: inode size
++ *    the directory btree could join: (max depth + v2) * dir block size
++ *    the directory bmap btree could join or split: (max depth + v2) * blocksize
++ * And the bmap_finish transaction can free the dir and bmap blocks giving:
++ *    the agf for the ag in which the blocks live: 2 * sector size
++ *    the agfl for the ag in which the blocks live: 2 * sector size
++ *    the superblock for the free block count: sector size
++ *    the allocation btrees: 2 exts * 2 trees * (2 * max depth - 1) * block size
++ */
++STATIC uint
++xfs_calc_remove_reservation(
++	struct xfs_mount	*mp)
++{
++	return XFS_DQUOT_LOGRES(mp) +
++		MAX((xfs_calc_buf_res(2, mp->m_sb.sb_inodesize) +
++		     xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp),
++				      XFS_FSB_TO_B(mp, 1))),
++		    (xfs_calc_buf_res(5, mp->m_sb.sb_sectsize) +
++		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 2),
++				      XFS_FSB_TO_B(mp, 1))));
++}
++
++/*
++ * For create, break it in to the two cases that the transaction
++ * covers. We start with the modify case - allocation done by modification
++ * of the state of existing inodes - and the allocation case.
++ */
++
++/*
++ * For create we can modify:
++ *    the parent directory inode: inode size
++ *    the new inode: inode size
++ *    the inode btree entry: block size
++ *    the superblock for the nlink flag: sector size
++ *    the directory btree: (max depth + v2) * dir block size
++ *    the directory inode's bmap btree: (max depth + v2) * block size
++ */
++STATIC uint
++xfs_calc_create_resv_modify(
++	struct xfs_mount	*mp)
++{
++	return xfs_calc_buf_res(2, mp->m_sb.sb_inodesize) +
++		xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
++		(uint)XFS_FSB_TO_B(mp, 1) +
++		xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp), XFS_FSB_TO_B(mp, 1));
++}
++
++/*
++ * For create we can allocate some inodes giving:
++ *    the agi and agf of the ag getting the new inodes: 2 * sectorsize
++ *    the superblock for the nlink flag: sector size
++ *    the inode blocks allocated: XFS_IALLOC_BLOCKS * blocksize
++ *    the inode btree: max depth * blocksize
++ *    the allocation btrees: 2 trees * (max depth - 1) * block size
++ */
++STATIC uint
++xfs_calc_create_resv_alloc(
++	struct xfs_mount	*mp)
++{
++	return xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
++		mp->m_sb.sb_sectsize +
++		xfs_calc_buf_res(XFS_IALLOC_BLOCKS(mp), XFS_FSB_TO_B(mp, 1)) +
++		xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1)) +
++		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
++				 XFS_FSB_TO_B(mp, 1));
++}
++
++STATIC uint
++__xfs_calc_create_reservation(
++	struct xfs_mount	*mp)
++{
++	return XFS_DQUOT_LOGRES(mp) +
++		MAX(xfs_calc_create_resv_alloc(mp),
++		    xfs_calc_create_resv_modify(mp));
++}
++
++/*
++ * For icreate we can allocate some inodes giving:
++ *    the agi and agf of the ag getting the new inodes: 2 * sectorsize
++ *    the superblock for the nlink flag: sector size
++ *    the inode btree: max depth * blocksize
++ *    the allocation btrees: 2 trees * (max depth - 1) * block size
++ */
++STATIC uint
++xfs_calc_icreate_resv_alloc(
++	struct xfs_mount	*mp)
++{
++	return xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
++		mp->m_sb.sb_sectsize +
++		xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1)) +
++		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
++				 XFS_FSB_TO_B(mp, 1));
++}
++
++STATIC uint
++xfs_calc_icreate_reservation(xfs_mount_t *mp)
++{
++	return XFS_DQUOT_LOGRES(mp) +
++		MAX(xfs_calc_icreate_resv_alloc(mp),
++		    xfs_calc_create_resv_modify(mp));
++}
++
++STATIC uint
++xfs_calc_create_reservation(
++	struct xfs_mount	*mp)
++{
++	if (xfs_sb_version_hascrc(&mp->m_sb))
++		return xfs_calc_icreate_reservation(mp);
++	return __xfs_calc_create_reservation(mp);
++
++}
++
++/*
++ * Making a new directory is the same as creating a new file.
++ */
++STATIC uint
++xfs_calc_mkdir_reservation(
++	struct xfs_mount	*mp)
++{
++	return xfs_calc_create_reservation(mp);
++}
++
++
++/*
++ * Making a new symplink is the same as creating a new file, but
++ * with the added blocks for remote symlink data which can be up to 1kB in
++ * length (MAXPATHLEN).
++ */
++STATIC uint
++xfs_calc_symlink_reservation(
++	struct xfs_mount	*mp)
++{
++	return xfs_calc_create_reservation(mp) +
++	       xfs_calc_buf_res(1, MAXPATHLEN);
++}
++
++/*
++ * In freeing an inode we can modify:
++ *    the inode being freed: inode size
++ *    the super block free inode counter: sector size
++ *    the agi hash list and counters: sector size
++ *    the inode btree entry: block size
++ *    the on disk inode before ours in the agi hash list: inode cluster size
++ *    the inode btree: max depth * blocksize
++ *    the allocation btrees: 2 trees * (max depth - 1) * block size
++ */
++STATIC uint
++xfs_calc_ifree_reservation(
++	struct xfs_mount	*mp)
++{
++	return XFS_DQUOT_LOGRES(mp) +
++		xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
++		xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
++		xfs_calc_buf_res(1, XFS_FSB_TO_B(mp, 1)) +
++		MAX((__uint16_t)XFS_FSB_TO_B(mp, 1),
++		    XFS_INODE_CLUSTER_SIZE(mp)) +
++		xfs_calc_buf_res(1, 0) +
++		xfs_calc_buf_res(2 + XFS_IALLOC_BLOCKS(mp) +
++				 mp->m_in_maxlevels, 0) +
++		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
++				 XFS_FSB_TO_B(mp, 1));
++}
++
++/*
++ * When only changing the inode we log the inode and possibly the superblock
++ * We also add a bit of slop for the transaction stuff.
++ */
++STATIC uint
++xfs_calc_ichange_reservation(
++	struct xfs_mount	*mp)
++{
++	return XFS_DQUOT_LOGRES(mp) +
++		mp->m_sb.sb_inodesize +
++		mp->m_sb.sb_sectsize +
++		512;
++
++}
++
++/*
++ * Growing the data section of the filesystem.
++ *	superblock
++ *	agi and agf
++ *	allocation btrees
++ */
++STATIC uint
++xfs_calc_growdata_reservation(
++	struct xfs_mount	*mp)
++{
++	return xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
++		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
++				 XFS_FSB_TO_B(mp, 1));
++}
++
++/*
++ * Growing the rt section of the filesystem.
++ * In the first set of transactions (ALLOC) we allocate space to the
++ * bitmap or summary files.
++ *	superblock: sector size
++ *	agf of the ag from which the extent is allocated: sector size
++ *	bmap btree for bitmap/summary inode: max depth * blocksize
++ *	bitmap/summary inode: inode size
++ *	allocation btrees for 1 block alloc: 2 * (2 * maxdepth - 1) * blocksize
++ */
++STATIC uint
++xfs_calc_growrtalloc_reservation(
++	struct xfs_mount	*mp)
++{
++	return xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
++		xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK),
++				 XFS_FSB_TO_B(mp, 1)) +
++		xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
++		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
++				 XFS_FSB_TO_B(mp, 1));
++}
++
++/*
++ * Growing the rt section of the filesystem.
++ * In the second set of transactions (ZERO) we zero the new metadata blocks.
++ *	one bitmap/summary block: blocksize
++ */
++STATIC uint
++xfs_calc_growrtzero_reservation(
++	struct xfs_mount	*mp)
++{
++	return xfs_calc_buf_res(1, mp->m_sb.sb_blocksize);
++}
++
++/*
++ * Growing the rt section of the filesystem.
++ * In the third set of transactions (FREE) we update metadata without
++ * allocating any new blocks.
++ *	superblock: sector size
++ *	bitmap inode: inode size
++ *	summary inode: inode size
++ *	one bitmap block: blocksize
++ *	summary blocks: new summary size
++ */
++STATIC uint
++xfs_calc_growrtfree_reservation(
++	struct xfs_mount	*mp)
++{
++	return xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
++		xfs_calc_buf_res(2, mp->m_sb.sb_inodesize) +
++		xfs_calc_buf_res(1, mp->m_sb.sb_blocksize) +
++		xfs_calc_buf_res(1, mp->m_rsumsize);
++}
++
++/*
++ * Logging the inode modification timestamp on a synchronous write.
++ *	inode
++ */
++STATIC uint
++xfs_calc_swrite_reservation(
++	struct xfs_mount	*mp)
++{
++	return xfs_calc_buf_res(1, mp->m_sb.sb_inodesize);
++}
++
++/*
++ * Logging the inode mode bits when writing a setuid/setgid file
++ *	inode
++ */
++STATIC uint
++xfs_calc_writeid_reservation(xfs_mount_t *mp)
++{
++	return xfs_calc_buf_res(1, mp->m_sb.sb_inodesize);
++}
++
++/*
++ * Converting the inode from non-attributed to attributed.
++ *	the inode being converted: inode size
++ *	agf block and superblock (for block allocation)
++ *	the new block (directory sized)
++ *	bmap blocks for the new directory block
++ *	allocation btrees
++ */
++STATIC uint
++xfs_calc_addafork_reservation(
++	struct xfs_mount	*mp)
++{
++	return XFS_DQUOT_LOGRES(mp) +
++		xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
++		xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
++		xfs_calc_buf_res(1, mp->m_dirblksize) +
++		xfs_calc_buf_res(XFS_DAENTER_BMAP1B(mp, XFS_DATA_FORK) + 1,
++				 XFS_FSB_TO_B(mp, 1)) +
++		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
++				 XFS_FSB_TO_B(mp, 1));
++}
++
++/*
++ * Removing the attribute fork of a file
++ *    the inode being truncated: inode size
++ *    the inode's bmap btree: max depth * block size
++ * And the bmap_finish transaction can free the blocks and bmap blocks:
++ *    the agf for each of the ags: 4 * sector size
++ *    the agfl for each of the ags: 4 * sector size
++ *    the super block to reflect the freed blocks: sector size
++ *    worst case split in allocation btrees per extent assuming 4 extents:
++ *		4 exts * 2 trees * (2 * max depth - 1) * block size
++ */
++STATIC uint
++xfs_calc_attrinval_reservation(
++	struct xfs_mount	*mp)
++{
++	return MAX((xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
++		    xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_ATTR_FORK),
++				     XFS_FSB_TO_B(mp, 1))),
++		   (xfs_calc_buf_res(9, mp->m_sb.sb_sectsize) +
++		    xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 4),
++				     XFS_FSB_TO_B(mp, 1))));
++}
++
++/*
++ * Setting an attribute at mount time.
++ *	the inode getting the attribute
++ *	the superblock for allocations
++ *	the agfs extents are allocated from
++ *	the attribute btree * max depth
++ *	the inode allocation btree
++ * Since attribute transaction space is dependent on the size of the attribute,
++ * the calculation is done partially at mount time and partially at runtime(see
++ * below).
++ */
++STATIC uint
++xfs_calc_attrsetm_reservation(
++	struct xfs_mount	*mp)
++{
++	return XFS_DQUOT_LOGRES(mp) +
++		xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
++		xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
++		xfs_calc_buf_res(XFS_DA_NODE_MAXDEPTH, XFS_FSB_TO_B(mp, 1));
++}
++
++/*
++ * Setting an attribute at runtime, transaction space unit per block.
++ * 	the superblock for allocations: sector size
++ *	the inode bmap btree could join or split: max depth * block size
++ * Since the runtime attribute transaction space is dependent on the total
++ * blocks needed for the 1st bmap, here we calculate out the space unit for
++ * one block so that the caller could figure out the total space according
++ * to the attibute extent length in blocks by: ext * XFS_ATTRSETRT_LOG_RES(mp).
++ */
++STATIC uint
++xfs_calc_attrsetrt_reservation(
++	struct xfs_mount	*mp)
++{
++	return xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
++		xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_ATTR_FORK),
++				 XFS_FSB_TO_B(mp, 1));
++}
++
++/*
++ * Removing an attribute.
++ *    the inode: inode size
++ *    the attribute btree could join: max depth * block size
++ *    the inode bmap btree could join or split: max depth * block size
++ * And the bmap_finish transaction can free the attr blocks freed giving:
++ *    the agf for the ag in which the blocks live: 2 * sector size
++ *    the agfl for the ag in which the blocks live: 2 * sector size
++ *    the superblock for the free block count: sector size
++ *    the allocation btrees: 2 exts * 2 trees * (2 * max depth - 1) * block size
++ */
++STATIC uint
++xfs_calc_attrrm_reservation(
++	struct xfs_mount	*mp)
++{
++	return XFS_DQUOT_LOGRES(mp) +
++		MAX((xfs_calc_buf_res(1, mp->m_sb.sb_inodesize) +
++		     xfs_calc_buf_res(XFS_DA_NODE_MAXDEPTH,
++				      XFS_FSB_TO_B(mp, 1)) +
++		     (uint)XFS_FSB_TO_B(mp,
++					XFS_BM_MAXLEVELS(mp, XFS_ATTR_FORK)) +
++		     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK), 0)),
++		    (xfs_calc_buf_res(5, mp->m_sb.sb_sectsize) +
++		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 2),
++				      XFS_FSB_TO_B(mp, 1))));
++}
++
++/*
++ * Clearing a bad agino number in an agi hash bucket.
++ */
++STATIC uint
++xfs_calc_clear_agi_bucket_reservation(
++	struct xfs_mount	*mp)
++{
++	return xfs_calc_buf_res(1, mp->m_sb.sb_sectsize);
++}
++
++/*
++ * Clearing the quotaflags in the superblock.
++ *	the super block for changing quota flags: sector size
++ */
++STATIC uint
++xfs_calc_qm_sbchange_reservation(
++	struct xfs_mount	*mp)
++{
++	return xfs_calc_buf_res(1, mp->m_sb.sb_sectsize);
++}
++
++/*
++ * Adjusting quota limits.
++ *    the xfs_disk_dquot_t: sizeof(struct xfs_disk_dquot)
++ */
++STATIC uint
++xfs_calc_qm_setqlim_reservation(
++	struct xfs_mount	*mp)
++{
++	return xfs_calc_buf_res(1, sizeof(struct xfs_disk_dquot));
++}
++
++/*
++ * Allocating quota on disk if needed.
++ *	the write transaction log space: XFS_WRITE_LOG_RES(mp)
++ *	the unit of quota allocation: one system block size
++ */
++STATIC uint
++xfs_calc_qm_dqalloc_reservation(
++	struct xfs_mount	*mp)
++{
++	return XFS_WRITE_LOG_RES(mp) +
++		xfs_calc_buf_res(1,
++			XFS_FSB_TO_B(mp, XFS_DQUOT_CLUSTER_SIZE_FSB) - 1);
++}
++
++/*
++ * Turning off quotas.
++ *    the xfs_qoff_logitem_t: sizeof(struct xfs_qoff_logitem) * 2
++ *    the superblock for the quota flags: sector size
++ */
++STATIC uint
++xfs_calc_qm_quotaoff_reservation(
++	struct xfs_mount	*mp)
++{
++	return sizeof(struct xfs_qoff_logitem) * 2 +
++		xfs_calc_buf_res(1, mp->m_sb.sb_sectsize);
++}
++
++/*
++ * End of turning off quotas.
++ *    the xfs_qoff_logitem_t: sizeof(struct xfs_qoff_logitem) * 2
++ */
++STATIC uint
++xfs_calc_qm_quotaoff_end_reservation(
++	struct xfs_mount	*mp)
++{
++	return sizeof(struct xfs_qoff_logitem) * 2;
++}
++
++/*
++ * Syncing the incore super block changes to disk.
++ *     the super block to reflect the changes: sector size
++ */
++STATIC uint
++xfs_calc_sb_reservation(
++	struct xfs_mount	*mp)
++{
++	return xfs_calc_buf_res(1, mp->m_sb.sb_sectsize);
++}
++
++void
++xfs_trans_resv_calc(
 +	struct xfs_mount	*mp,
-+	xfs_agnumber_t		agno)
++	struct xfs_trans_resv	*resp)
 +{
-+	struct xfs_perag	*pag;
-+	int			ref = 0;
-+
-+	rcu_read_lock();
-+	pag = radix_tree_lookup(&mp->m_perag_tree, agno);
-+	if (pag) {
-+		ASSERT(atomic_read(&pag->pag_ref) >= 0);
-+		ref = atomic_inc_return(&pag->pag_ref);
-+	}
-+	rcu_read_unlock();
-+	trace_xfs_perag_get(mp, agno, ref, _RET_IP_);
-+	return pag;
++	resp->tr_write = xfs_calc_write_reservation(mp);
++	resp->tr_itruncate = xfs_calc_itruncate_reservation(mp);
++	resp->tr_rename = xfs_calc_rename_reservation(mp);
++	resp->tr_link = xfs_calc_link_reservation(mp);
++	resp->tr_remove = xfs_calc_remove_reservation(mp);
++	resp->tr_symlink = xfs_calc_symlink_reservation(mp);
++	resp->tr_create = xfs_calc_create_reservation(mp);
++	resp->tr_mkdir = xfs_calc_mkdir_reservation(mp);
++	resp->tr_ifree = xfs_calc_ifree_reservation(mp);
++	resp->tr_ichange = xfs_calc_ichange_reservation(mp);
++	resp->tr_growdata = xfs_calc_growdata_reservation(mp);
++	resp->tr_swrite = xfs_calc_swrite_reservation(mp);
++	resp->tr_writeid = xfs_calc_writeid_reservation(mp);
++	resp->tr_addafork = xfs_calc_addafork_reservation(mp);
++	resp->tr_attrinval = xfs_calc_attrinval_reservation(mp);
++	resp->tr_attrsetm = xfs_calc_attrsetm_reservation(mp);
++	resp->tr_attrsetrt = xfs_calc_attrsetrt_reservation(mp);
++	resp->tr_attrrm = xfs_calc_attrrm_reservation(mp);
++	resp->tr_clearagi = xfs_calc_clear_agi_bucket_reservation(mp);
++	resp->tr_growrtalloc = xfs_calc_growrtalloc_reservation(mp);
++	resp->tr_growrtzero = xfs_calc_growrtzero_reservation(mp);
++	resp->tr_growrtfree = xfs_calc_growrtfree_reservation(mp);
++	resp->tr_qm_sbchange = xfs_calc_qm_sbchange_reservation(mp);
++	resp->tr_qm_setqlim = xfs_calc_qm_setqlim_reservation(mp);
++	resp->tr_qm_dqalloc = xfs_calc_qm_dqalloc_reservation(mp);
++	resp->tr_qm_quotaoff = xfs_calc_qm_quotaoff_reservation(mp);
++	resp->tr_qm_equotaoff = xfs_calc_qm_quotaoff_end_reservation(mp);
++	resp->tr_sb = xfs_calc_sb_reservation(mp);
 +}
-+
+diff --git a/fs/xfs/xfs_trans_resv.h b/fs/xfs/xfs_trans_resv.h
+new file mode 100644
+index 0000000..0936f93
+--- /dev/null
++++ b/fs/xfs/xfs_trans_resv.h
+@@ -0,0 +1,135 @@
 +/*
-+ * search from @first to find the next perag with the given tag set.
-+ */
-+struct xfs_perag *
-+xfs_perag_get_tag(
-+	struct xfs_mount	*mp,
-+	xfs_agnumber_t		first,
-+	int			tag)
-+{
-+	struct xfs_perag	*pag;
-+	int			found;
-+	int			ref;
-+
-+	rcu_read_lock();
-+	found = radix_tree_gang_lookup_tag(&mp->m_perag_tree,
-+					(void **)&pag, first, 1, tag);
-+	if (found <= 0) {
-+		rcu_read_unlock();
-+		return NULL;
-+	}
-+	ref = atomic_inc_return(&pag->pag_ref);
-+	rcu_read_unlock();
-+	trace_xfs_perag_get_tag(mp, pag->pag_agno, ref, _RET_IP_);
-+	return pag;
-+}
-+
-+void
-+xfs_perag_put(
-+	struct xfs_perag	*pag)
-+{
-+	int	ref;
-+
-+	ASSERT(atomic_read(&pag->pag_ref) > 0);
-+	ref = atomic_dec_return(&pag->pag_ref);
-+	trace_xfs_perag_put(pag->pag_mount, pag->pag_agno, ref, _RET_IP_);
-+}
-+
-+/*
-+ * Check the validity of the SB found.
-+ */
-+STATIC int
-+xfs_mount_validate_sb(
-+	xfs_mount_t	*mp,
-+	xfs_sb_t	*sbp,
-+	bool		check_inprogress,
-+	bool		check_version)
-+{
-+
-+	/*
-+	 * If the log device and data device have the
-+	 * same device number, the log is internal.
-+	 * Consequently, the sb_logstart should be non-zero.  If
-+	 * we have a zero sb_logstart in this case, we may be trying to mount
-+	 * a volume filesystem in a non-volume manner.
-+	 */
-+	if (sbp->sb_magicnum != XFS_SB_MAGIC) {
-+		xfs_warn(mp, "bad magic number");
-+		return XFS_ERROR(EWRONGFS);
-+	}
-+
-+
-+	if (!xfs_sb_good_version(sbp)) {
-+		xfs_warn(mp, "bad version");
-+		return XFS_ERROR(EWRONGFS);
-+	}
-+
-+	/*
-+	 * Version 5 superblock feature mask validation. Reject combinations the
-+	 * kernel cannot support up front before checking anything else. For
-+	 * write validation, we don't need to check feature masks.
-+	 */
-+	if (check_version && XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) {
-+		xfs_alert(mp,
-+"Version 5 superblock detected. This kernel has EXPERIMENTAL support enabled!\n"
-+"Use of these features in this kernel is at your own risk!");
-+
-+		if (xfs_sb_has_compat_feature(sbp,
-+					XFS_SB_FEAT_COMPAT_UNKNOWN)) {
-+			xfs_warn(mp,
-+"Superblock has unknown compatible features (0x%x) enabled.\n"
-+"Using a more recent kernel is recommended.",
-+				(sbp->sb_features_compat &
-+						XFS_SB_FEAT_COMPAT_UNKNOWN));
-+		}
-+
-+		if (xfs_sb_has_ro_compat_feature(sbp,
-+					XFS_SB_FEAT_RO_COMPAT_UNKNOWN)) {
-+			xfs_alert(mp,
-+"Superblock has unknown read-only compatible features (0x%x) enabled.",
-+				(sbp->sb_features_ro_compat &
-+						XFS_SB_FEAT_RO_COMPAT_UNKNOWN));
-+			if (!(mp->m_flags & XFS_MOUNT_RDONLY)) {
-+				xfs_warn(mp,
-+"Attempted to mount read-only compatible filesystem read-write.\n"
-+"Filesystem can only be safely mounted read only.");
-+				return XFS_ERROR(EINVAL);
-+			}
-+		}
-+		if (xfs_sb_has_incompat_feature(sbp,
-+					XFS_SB_FEAT_INCOMPAT_UNKNOWN)) {
-+			xfs_warn(mp,
-+"Superblock has unknown incompatible features (0x%x) enabled.\n"
-+"Filesystem can not be safely mounted by this kernel.",
-+				(sbp->sb_features_incompat &
-+						XFS_SB_FEAT_INCOMPAT_UNKNOWN));
-+			return XFS_ERROR(EINVAL);
-+		}
-+	}
-+
-+	if (unlikely(
-+	    sbp->sb_logstart == 0 && mp->m_logdev_targp == mp->m_ddev_targp)) {
-+		xfs_warn(mp,
-+		"filesystem is marked as having an external log; "
-+		"specify logdev on the mount command line.");
-+		return XFS_ERROR(EINVAL);
-+	}
-+
-+	if (unlikely(
-+	    sbp->sb_logstart != 0 && mp->m_logdev_targp != mp->m_ddev_targp)) {
-+		xfs_warn(mp,
-+		"filesystem is marked as having an internal log; "
-+		"do not specify logdev on the mount command line.");
-+		return XFS_ERROR(EINVAL);
-+	}
-+
-+	/*
-+	 * More sanity checking.  Most of these were stolen directly from
-+	 * xfs_repair.
-+	 */
-+	if (unlikely(
-+	    sbp->sb_agcount <= 0					||
-+	    sbp->sb_sectsize < XFS_MIN_SECTORSIZE			||
-+	    sbp->sb_sectsize > XFS_MAX_SECTORSIZE			||
-+	    sbp->sb_sectlog < XFS_MIN_SECTORSIZE_LOG			||
-+	    sbp->sb_sectlog > XFS_MAX_SECTORSIZE_LOG			||
-+	    sbp->sb_sectsize != (1 << sbp->sb_sectlog)			||
-+	    sbp->sb_blocksize < XFS_MIN_BLOCKSIZE			||
-+	    sbp->sb_blocksize > XFS_MAX_BLOCKSIZE			||
-+	    sbp->sb_blocklog < XFS_MIN_BLOCKSIZE_LOG			||
-+	    sbp->sb_blocklog > XFS_MAX_BLOCKSIZE_LOG			||
-+	    sbp->sb_blocksize != (1 << sbp->sb_blocklog)		||
-+	    sbp->sb_inodesize < XFS_DINODE_MIN_SIZE			||
-+	    sbp->sb_inodesize > XFS_DINODE_MAX_SIZE			||
-+	    sbp->sb_inodelog < XFS_DINODE_MIN_LOG			||
-+	    sbp->sb_inodelog > XFS_DINODE_MAX_LOG			||
-+	    sbp->sb_inodesize != (1 << sbp->sb_inodelog)		||
-+	    (sbp->sb_blocklog - sbp->sb_inodelog != sbp->sb_inopblog)	||
-+	    (sbp->sb_rextsize * sbp->sb_blocksize > XFS_MAX_RTEXTSIZE)	||
-+	    (sbp->sb_rextsize * sbp->sb_blocksize < XFS_MIN_RTEXTSIZE)	||
-+	    (sbp->sb_imax_pct > 100 /* zero sb_imax_pct is valid */)	||
-+	    sbp->sb_dblocks == 0					||
-+	    sbp->sb_dblocks > XFS_MAX_DBLOCKS(sbp)			||
-+	    sbp->sb_dblocks < XFS_MIN_DBLOCKS(sbp))) {
-+		XFS_CORRUPTION_ERROR("SB sanity check failed",
-+				XFS_ERRLEVEL_LOW, mp, sbp);
-+		return XFS_ERROR(EFSCORRUPTED);
-+	}
-+
-+	/*
-+	 * Until this is fixed only page-sized or smaller data blocks work.
-+	 */
-+	if (unlikely(sbp->sb_blocksize > PAGE_SIZE)) {
-+		xfs_warn(mp,
-+		"File system with blocksize %d bytes. "
-+		"Only pagesize (%ld) or less will currently work.",
-+				sbp->sb_blocksize, PAGE_SIZE);
-+		return XFS_ERROR(ENOSYS);
-+	}
-+
-+	/*
-+	 * Currently only very few inode sizes are supported.
-+	 */
-+	switch (sbp->sb_inodesize) {
-+	case 256:
-+	case 512:
-+	case 1024:
-+	case 2048:
-+		break;
-+	default:
-+		xfs_warn(mp, "inode size of %d bytes not supported",
-+				sbp->sb_inodesize);
-+		return XFS_ERROR(ENOSYS);
-+	}
-+
-+	if (xfs_sb_validate_fsb_count(sbp, sbp->sb_dblocks) ||
-+	    xfs_sb_validate_fsb_count(sbp, sbp->sb_rblocks)) {
-+		xfs_warn(mp,
-+		"file system too large to be mounted on this system.");
-+		return XFS_ERROR(EFBIG);
-+	}
-+
-+	if (check_inprogress && sbp->sb_inprogress) {
-+		xfs_warn(mp, "Offline file system operation in progress!");
-+		return XFS_ERROR(EFSCORRUPTED);
-+	}
-+
-+	/*
-+	 * Version 1 directory format has never worked on Linux.
-+	 */
-+	if (unlikely(!xfs_sb_version_hasdirv2(sbp))) {
-+		xfs_warn(mp, "file system using version 1 directory format");
-+		return XFS_ERROR(ENOSYS);
-+	}
-+
-+	return 0;
-+}
-+
-+void
-+xfs_sb_from_disk(
-+	struct xfs_sb	*to,
-+	xfs_dsb_t	*from)
-+{
-+	to->sb_magicnum = be32_to_cpu(from->sb_magicnum);
-+	to->sb_blocksize = be32_to_cpu(from->sb_blocksize);
-+	to->sb_dblocks = be64_to_cpu(from->sb_dblocks);
-+	to->sb_rblocks = be64_to_cpu(from->sb_rblocks);
-+	to->sb_rextents = be64_to_cpu(from->sb_rextents);
-+	memcpy(&to->sb_uuid, &from->sb_uuid, sizeof(to->sb_uuid));
-+	to->sb_logstart = be64_to_cpu(from->sb_logstart);
-+	to->sb_rootino = be64_to_cpu(from->sb_rootino);
-+	to->sb_rbmino = be64_to_cpu(from->sb_rbmino);
-+	to->sb_rsumino = be64_to_cpu(from->sb_rsumino);
-+	to->sb_rextsize = be32_to_cpu(from->sb_rextsize);
-+	to->sb_agblocks = be32_to_cpu(from->sb_agblocks);
-+	to->sb_agcount = be32_to_cpu(from->sb_agcount);
-+	to->sb_rbmblocks = be32_to_cpu(from->sb_rbmblocks);
-+	to->sb_logblocks = be32_to_cpu(from->sb_logblocks);
-+	to->sb_versionnum = be16_to_cpu(from->sb_versionnum);
-+	to->sb_sectsize = be16_to_cpu(from->sb_sectsize);
-+	to->sb_inodesize = be16_to_cpu(from->sb_inodesize);
-+	to->sb_inopblock = be16_to_cpu(from->sb_inopblock);
-+	memcpy(&to->sb_fname, &from->sb_fname, sizeof(to->sb_fname));
-+	to->sb_blocklog = from->sb_blocklog;
-+	to->sb_sectlog = from->sb_sectlog;
-+	to->sb_inodelog = from->sb_inodelog;
-+	to->sb_inopblog = from->sb_inopblog;
-+	to->sb_agblklog = from->sb_agblklog;
-+	to->sb_rextslog = from->sb_rextslog;
-+	to->sb_inprogress = from->sb_inprogress;
-+	to->sb_imax_pct = from->sb_imax_pct;
-+	to->sb_icount = be64_to_cpu(from->sb_icount);
-+	to->sb_ifree = be64_to_cpu(from->sb_ifree);
-+	to->sb_fdblocks = be64_to_cpu(from->sb_fdblocks);
-+	to->sb_frextents = be64_to_cpu(from->sb_frextents);
-+	to->sb_uquotino = be64_to_cpu(from->sb_uquotino);
-+	to->sb_gquotino = be64_to_cpu(from->sb_gquotino);
-+	to->sb_qflags = be16_to_cpu(from->sb_qflags);
-+	to->sb_flags = from->sb_flags;
-+	to->sb_shared_vn = from->sb_shared_vn;
-+	to->sb_inoalignmt = be32_to_cpu(from->sb_inoalignmt);
-+	to->sb_unit = be32_to_cpu(from->sb_unit);
-+	to->sb_width = be32_to_cpu(from->sb_width);
-+	to->sb_dirblklog = from->sb_dirblklog;
-+	to->sb_logsectlog = from->sb_logsectlog;
-+	to->sb_logsectsize = be16_to_cpu(from->sb_logsectsize);
-+	to->sb_logsunit = be32_to_cpu(from->sb_logsunit);
-+	to->sb_features2 = be32_to_cpu(from->sb_features2);
-+	to->sb_bad_features2 = be32_to_cpu(from->sb_bad_features2);
-+	to->sb_features_compat = be32_to_cpu(from->sb_features_compat);
-+	to->sb_features_ro_compat = be32_to_cpu(from->sb_features_ro_compat);
-+	to->sb_features_incompat = be32_to_cpu(from->sb_features_incompat);
-+	to->sb_features_log_incompat =
-+				be32_to_cpu(from->sb_features_log_incompat);
-+	to->sb_pad = 0;
-+	to->sb_pquotino = be64_to_cpu(from->sb_pquotino);
-+	to->sb_lsn = be64_to_cpu(from->sb_lsn);
-+}
-+
-+/*
-+ * Copy in core superblock to ondisk one.
++ * Copyright (c) 2000-2002,2005 Silicon Graphics, Inc.
++ * All Rights Reserved.
 + *
-+ * The fields argument is mask of superblock fields to copy.
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 + */
-+void
-+xfs_sb_to_disk(
-+	xfs_dsb_t	*to,
-+	xfs_sb_t	*from,
-+	__int64_t	fields)
-+{
-+	xfs_caddr_t	to_ptr = (xfs_caddr_t)to;
-+	xfs_caddr_t	from_ptr = (xfs_caddr_t)from;
-+	xfs_sb_field_t	f;
-+	int		first;
-+	int		size;
-+
-+	ASSERT(fields);
-+	if (!fields)
-+		return;
-+
-+	while (fields) {
-+		f = (xfs_sb_field_t)xfs_lowbit64((__uint64_t)fields);
-+		first = xfs_sb_info[f].offset;
-+		size = xfs_sb_info[f + 1].offset - first;
-+
-+		ASSERT(xfs_sb_info[f].type == 0 || xfs_sb_info[f].type == 1);
-+
-+		if (size == 1 || xfs_sb_info[f].type == 1) {
-+			memcpy(to_ptr + first, from_ptr + first, size);
-+		} else {
-+			switch (size) {
-+			case 2:
-+				*(__be16 *)(to_ptr + first) =
-+					cpu_to_be16(*(__u16 *)(from_ptr + first));
-+				break;
-+			case 4:
-+				*(__be32 *)(to_ptr + first) =
-+					cpu_to_be32(*(__u32 *)(from_ptr + first));
-+				break;
-+			case 8:
-+				*(__be64 *)(to_ptr + first) =
-+					cpu_to_be64(*(__u64 *)(from_ptr + first));
-+				break;
-+			default:
-+				ASSERT(0);
-+			}
-+		}
-+
-+		fields &= ~(1LL << f);
-+	}
-+}
-+
-+static int
-+xfs_sb_verify(
-+	struct xfs_buf	*bp,
-+	bool		check_version)
-+{
-+	struct xfs_mount *mp = bp->b_target->bt_mount;
-+	struct xfs_sb	sb;
-+
-+	xfs_sb_from_disk(&sb, XFS_BUF_TO_SBP(bp));
-+
-+	/*
-+	 * Only check the in progress field for the primary superblock as
-+	 * mkfs.xfs doesn't clear it from secondary superblocks.
-+	 */
-+	return xfs_mount_validate_sb(mp, &sb, bp->b_bn == XFS_SB_DADDR,
-+				     check_version);
-+}
++#ifndef	__XFS_TRANS_RESV_H__
++#define	__XFS_TRANS_RESV_H__
 +
 +/*
-+ * If the superblock has the CRC feature bit set or the CRC field is non-null,
-+ * check that the CRC is valid.  We check the CRC field is non-null because a
-+ * single bit error could clear the feature bit and unused parts of the
-+ * superblock are supposed to be zero. Hence a non-null crc field indicates that
-+ * we've potentially lost a feature bit and we should check it anyway.
++ * structure for maintaining pre-calculated transaction reservations.
 + */
-+static void
-+xfs_sb_read_verify(
-+	struct xfs_buf	*bp)
-+{
-+	struct xfs_mount *mp = bp->b_target->bt_mount;
-+	struct xfs_dsb	*dsb = XFS_BUF_TO_SBP(bp);
-+	int		error;
-+
-+	/*
-+	 * open code the version check to avoid needing to convert the entire
-+	 * superblock from disk order just to check the version number
-+	 */
-+	if (dsb->sb_magicnum == cpu_to_be32(XFS_SB_MAGIC) &&
-+	    (((be16_to_cpu(dsb->sb_versionnum) & XFS_SB_VERSION_NUMBITS) ==
-+						XFS_SB_VERSION_5) ||
-+	     dsb->sb_crc != 0)) {
-+
-+		if (!xfs_verify_cksum(bp->b_addr, be16_to_cpu(dsb->sb_sectsize),
-+				      offsetof(struct xfs_sb, sb_crc))) {
-+			error = EFSCORRUPTED;
-+			goto out_error;
-+		}
-+	}
-+	error = xfs_sb_verify(bp, true);
-+
-+out_error:
-+	if (error) {
-+		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
-+		xfs_buf_ioerror(bp, error);
-+	}
-+}
-+
-+/*
-+ * We may be probed for a filesystem match, so we may not want to emit
-+ * messages when the superblock buffer is not actually an XFS superblock.
-+ * If we find an XFS superblock, the run a normal, noisy mount because we are
-+ * really going to mount it and want to know about errors.
-+ */
-+static void
-+xfs_sb_quiet_read_verify(
-+	struct xfs_buf	*bp)
-+{
-+	struct xfs_dsb	*dsb = XFS_BUF_TO_SBP(bp);
-+
-+
-+	if (dsb->sb_magicnum == cpu_to_be32(XFS_SB_MAGIC)) {
-+		/* XFS filesystem, verify noisily! */
-+		xfs_sb_read_verify(bp);
-+		return;
-+	}
-+	/* quietly fail */
-+	xfs_buf_ioerror(bp, EWRONGFS);
-+}
-+
-+static void
-+xfs_sb_write_verify(
-+	struct xfs_buf		*bp)
-+{
-+	struct xfs_mount	*mp = bp->b_target->bt_mount;
-+	struct xfs_buf_log_item	*bip = bp->b_fspriv;
-+	int			error;
-+
-+	error = xfs_sb_verify(bp, false);
-+	if (error) {
-+		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
-+		xfs_buf_ioerror(bp, error);
-+		return;
-+	}
-+
-+	if (!xfs_sb_version_hascrc(&mp->m_sb))
-+		return;
-+
-+	if (bip)
-+		XFS_BUF_TO_SBP(bp)->sb_lsn = cpu_to_be64(bip->bli_item.li_lsn);
-+
-+	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length),
-+			 offsetof(struct xfs_sb, sb_crc));
-+}
-+
-+const struct xfs_buf_ops xfs_sb_buf_ops = {
-+	.verify_read = xfs_sb_read_verify,
-+	.verify_write = xfs_sb_write_verify,
-+};
-+
-+const struct xfs_buf_ops xfs_sb_quiet_buf_ops = {
-+	.verify_read = xfs_sb_quiet_read_verify,
-+	.verify_write = xfs_sb_write_verify,
++struct xfs_trans_resv {
++	uint	tr_write;	/* extent alloc trans */
++	uint	tr_itruncate;	/* truncate trans */
++	uint	tr_rename;	/* rename trans */
++	uint	tr_link;	/* link trans */
++	uint	tr_remove;	/* unlink trans */
++	uint	tr_symlink;	/* symlink trans */
++	uint	tr_create;	/* create trans */
++	uint	tr_mkdir;	/* mkdir trans */
++	uint	tr_ifree;	/* inode free trans */
++	uint	tr_ichange;	/* inode update trans */
++	uint	tr_growdata;	/* fs data section grow trans */
++	uint	tr_swrite;	/* sync write inode trans */
++	uint	tr_addafork;	/* cvt inode to attributed trans */
++	uint	tr_writeid;	/* write setuid/setgid file */
++	uint	tr_attrinval;	/* attr fork buffer invalidation */
++	uint	tr_attrsetm;	/* set/create an attribute at mount time */
++	uint	tr_attrsetrt;	/* set/create an attribute at runtime */
++	uint	tr_attrrm;	/* remove an attribute */
++	uint	tr_clearagi;	/* clear bad agi unlinked ino bucket */
++	uint	tr_growrtalloc;	/* grow realtime allocations */
++	uint	tr_growrtzero;	/* grow realtime zeroing */
++	uint	tr_growrtfree;	/* grow realtime freeing */
++	uint	tr_qm_sbchange;	/* change quota flags */
++	uint	tr_qm_setqlim;	/* adjust quota limits */
++	uint	tr_qm_dqalloc;	/* allocate quota on disk */
++	uint	tr_qm_quotaoff;	/* turn quota off */
++	uint	tr_qm_equotaoff;/* end of turn quota off */
++	uint	tr_sb;		/* modify superblock */
 +};
 +
 +/*
-+ * xfs_mount_common
-+ *
-+ * Mount initialization code establishing various mount
-+ * fields from the superblock associated with the given
-+ * mount structure
++ * Per-extent log reservation for the allocation btree changes
++ * involved in freeing or allocating an extent.
++ * 2 trees * (2 blocks/level * max depth - 1) * block size
 + */
-+void
-+xfs_sb_mount_common(
-+	struct xfs_mount *mp,
-+	struct xfs_sb	*sbp)
-+{
-+	mp->m_agfrotor = mp->m_agirotor = 0;
-+	spin_lock_init(&mp->m_agirotor_lock);
-+	mp->m_maxagi = mp->m_sb.sb_agcount;
-+	mp->m_blkbit_log = sbp->sb_blocklog + XFS_NBBYLOG;
-+	mp->m_blkbb_log = sbp->sb_blocklog - BBSHIFT;
-+	mp->m_sectbb_log = sbp->sb_sectlog - BBSHIFT;
-+	mp->m_agno_log = xfs_highbit32(sbp->sb_agcount - 1) + 1;
-+	mp->m_agino_log = sbp->sb_inopblog + sbp->sb_agblklog;
-+	mp->m_blockmask = sbp->sb_blocksize - 1;
-+	mp->m_blockwsize = sbp->sb_blocksize >> XFS_WORDLOG;
-+	mp->m_blockwmask = mp->m_blockwsize - 1;
-+
-+	mp->m_alloc_mxr[0] = xfs_allocbt_maxrecs(mp, sbp->sb_blocksize, 1);
-+	mp->m_alloc_mxr[1] = xfs_allocbt_maxrecs(mp, sbp->sb_blocksize, 0);
-+	mp->m_alloc_mnr[0] = mp->m_alloc_mxr[0] / 2;
-+	mp->m_alloc_mnr[1] = mp->m_alloc_mxr[1] / 2;
-+
-+	mp->m_inobt_mxr[0] = xfs_inobt_maxrecs(mp, sbp->sb_blocksize, 1);
-+	mp->m_inobt_mxr[1] = xfs_inobt_maxrecs(mp, sbp->sb_blocksize, 0);
-+	mp->m_inobt_mnr[0] = mp->m_inobt_mxr[0] / 2;
-+	mp->m_inobt_mnr[1] = mp->m_inobt_mxr[1] / 2;
-+
-+	mp->m_bmap_dmxr[0] = xfs_bmbt_maxrecs(mp, sbp->sb_blocksize, 1);
-+	mp->m_bmap_dmxr[1] = xfs_bmbt_maxrecs(mp, sbp->sb_blocksize, 0);
-+	mp->m_bmap_dmnr[0] = mp->m_bmap_dmxr[0] / 2;
-+	mp->m_bmap_dmnr[1] = mp->m_bmap_dmxr[1] / 2;
-+
-+	mp->m_bsize = XFS_FSB_TO_BB(mp, 1);
-+	mp->m_ialloc_inos = (int)MAX((__uint16_t)XFS_INODES_PER_CHUNK,
-+					sbp->sb_inopblock);
-+	mp->m_ialloc_blks = mp->m_ialloc_inos >> sbp->sb_inopblog;
-+}
++#define	XFS_ALLOCFREE_LOG_RES(mp,nx) \
++	((nx) * (2 * XFS_FSB_TO_B((mp), 2 * XFS_AG_MAXLEVELS(mp) - 1)))
++#define	XFS_ALLOCFREE_LOG_COUNT(mp,nx) \
++	((nx) * (2 * (2 * XFS_AG_MAXLEVELS(mp) - 1)))
 +
 +/*
-+ * xfs_initialize_perag_data
-+ *
-+ * Read in each per-ag structure so we can count up the number of
-+ * allocated inodes, free inodes and used filesystem blocks as this
-+ * information is no longer persistent in the superblock. Once we have
-+ * this information, write it into the in-core superblock structure.
++ * Per-directory log reservation for any directory change.
++ * dir blocks: (1 btree block per level + data block + free block) * dblock size
++ * bmap btree: (levels + 2) * max depth * block size
++ * v2 directory blocks can be fragmented below the dirblksize down to the fsb
++ * size, so account for that in the DAENTER macros.
 + */
-+int
-+xfs_initialize_perag_data(xfs_mount_t *mp, xfs_agnumber_t agcount)
-+{
-+	xfs_agnumber_t	index;
-+	xfs_perag_t	*pag;
-+	xfs_sb_t	*sbp = &mp->m_sb;
-+	uint64_t	ifree = 0;
-+	uint64_t	ialloc = 0;
-+	uint64_t	bfree = 0;
-+	uint64_t	bfreelst = 0;
-+	uint64_t	btree = 0;
-+	int		error;
++#define	XFS_DIROP_LOG_RES(mp)	\
++	(XFS_FSB_TO_B(mp, XFS_DAENTER_BLOCKS(mp, XFS_DATA_FORK)) + \
++	 (XFS_FSB_TO_B(mp, XFS_DAENTER_BMAPS(mp, XFS_DATA_FORK) + 1)))
++#define	XFS_DIROP_LOG_COUNT(mp)	\
++	(XFS_DAENTER_BLOCKS(mp, XFS_DATA_FORK) + \
++	 XFS_DAENTER_BMAPS(mp, XFS_DATA_FORK) + 1)
 +
-+	for (index = 0; index < agcount; index++) {
-+		/*
-+		 * read the agf, then the agi. This gets us
-+		 * all the information we need and populates the
-+		 * per-ag structures for us.
-+		 */
-+		error = xfs_alloc_pagf_init(mp, NULL, index, 0);
-+		if (error)
-+			return error;
 +
-+		error = xfs_ialloc_pagi_init(mp, NULL, index);
-+		if (error)
-+			return error;
-+		pag = xfs_perag_get(mp, index);
-+		ifree += pag->pagi_freecount;
-+		ialloc += pag->pagi_count;
-+		bfree += pag->pagf_freeblks;
-+		bfreelst += pag->pagf_flcount;
-+		btree += pag->pagf_btreeblks;
-+		xfs_perag_put(pag);
-+	}
-+	/*
-+	 * Overwrite incore superblock counters with just-read data
-+	 */
-+	spin_lock(&mp->m_sb_lock);
-+	sbp->sb_ifree = ifree;
-+	sbp->sb_icount = ialloc;
-+	sbp->sb_fdblocks = bfree + bfreelst + btree;
-+	spin_unlock(&mp->m_sb_lock);
-+
-+	/* Fixup the per-cpu counters as well. */
-+	xfs_icsb_reinit_counters(mp);
-+
-+	return 0;
-+}
++#define	XFS_WRITE_LOG_RES(mp)	((mp)->m_reservations.tr_write)
++#define	XFS_ITRUNCATE_LOG_RES(mp)   ((mp)->m_reservations.tr_itruncate)
++#define	XFS_RENAME_LOG_RES(mp)	((mp)->m_reservations.tr_rename)
++#define	XFS_LINK_LOG_RES(mp)	((mp)->m_reservations.tr_link)
++#define	XFS_REMOVE_LOG_RES(mp)	((mp)->m_reservations.tr_remove)
++#define	XFS_SYMLINK_LOG_RES(mp)	((mp)->m_reservations.tr_symlink)
++#define	XFS_CREATE_LOG_RES(mp)	((mp)->m_reservations.tr_create)
++#define	XFS_MKDIR_LOG_RES(mp)	((mp)->m_reservations.tr_mkdir)
++#define	XFS_IFREE_LOG_RES(mp)	((mp)->m_reservations.tr_ifree)
++#define	XFS_ICHANGE_LOG_RES(mp)	((mp)->m_reservations.tr_ichange)
++#define	XFS_GROWDATA_LOG_RES(mp)    ((mp)->m_reservations.tr_growdata)
++#define	XFS_GROWRTALLOC_LOG_RES(mp)	((mp)->m_reservations.tr_growrtalloc)
++#define	XFS_GROWRTZERO_LOG_RES(mp)	((mp)->m_reservations.tr_growrtzero)
++#define	XFS_GROWRTFREE_LOG_RES(mp)	((mp)->m_reservations.tr_growrtfree)
++#define	XFS_SWRITE_LOG_RES(mp)	((mp)->m_reservations.tr_swrite)
++/*
++ * Logging the inode timestamps on an fsync -- same as SWRITE
++ * as long as SWRITE logs the entire inode core
++ */
++#define XFS_FSYNC_TS_LOG_RES(mp)        ((mp)->m_reservations.tr_swrite)
++#define	XFS_WRITEID_LOG_RES(mp)		((mp)->m_reservations.tr_swrite)
++#define	XFS_ADDAFORK_LOG_RES(mp)	((mp)->m_reservations.tr_addafork)
++#define	XFS_ATTRINVAL_LOG_RES(mp)	((mp)->m_reservations.tr_attrinval)
++#define	XFS_ATTRSETM_LOG_RES(mp)	((mp)->m_reservations.tr_attrsetm)
++#define	XFS_ATTRSETRT_LOG_RES(mp)	((mp)->m_reservations.tr_attrsetrt)
++#define	XFS_ATTRRM_LOG_RES(mp)		((mp)->m_reservations.tr_attrrm)
++#define	XFS_CLEAR_AGI_BUCKET_LOG_RES(mp)  ((mp)->m_reservations.tr_clearagi)
++#define XFS_QM_SBCHANGE_LOG_RES(mp)	((mp)->m_reservations.tr_qm_sbchange)
++#define XFS_QM_SETQLIM_LOG_RES(mp)	((mp)->m_reservations.tr_qm_setqlim)
++#define XFS_QM_DQALLOC_LOG_RES(mp)	((mp)->m_reservations.tr_qm_dqalloc)
++#define XFS_QM_QUOTAOFF_LOG_RES(mp)	((mp)->m_reservations.tr_qm_quotaoff)
++#define XFS_QM_QUOTAOFF_END_LOG_RES(mp)	((mp)->m_reservations.tr_qm_equotaoff)
++#define XFS_SB_LOG_RES(mp)		((mp)->m_reservations.tr_sb)
 +
 +/*
-+ * xfs_mod_sb() can be used to copy arbitrary changes to the
-+ * in-core superblock into the superblock buffer to be logged.
-+ * It does not provide the higher level of locking that is
-+ * needed to protect the in-core superblock from concurrent
-+ * access.
++ * Various log count values.
 + */
-+void
-+xfs_mod_sb(xfs_trans_t *tp, __int64_t fields)
-+{
-+	xfs_buf_t	*bp;
-+	int		first;
-+	int		last;
-+	xfs_mount_t	*mp;
-+	xfs_sb_field_t	f;
++#define	XFS_DEFAULT_LOG_COUNT		1
++#define	XFS_DEFAULT_PERM_LOG_COUNT	2
++#define	XFS_ITRUNCATE_LOG_COUNT		2
++#define XFS_INACTIVE_LOG_COUNT		2
++#define	XFS_CREATE_LOG_COUNT		2
++#define	XFS_MKDIR_LOG_COUNT		3
++#define	XFS_SYMLINK_LOG_COUNT		3
++#define	XFS_REMOVE_LOG_COUNT		2
++#define	XFS_LINK_LOG_COUNT		2
++#define	XFS_RENAME_LOG_COUNT		2
++#define	XFS_WRITE_LOG_COUNT		2
++#define	XFS_ADDAFORK_LOG_COUNT		2
++#define	XFS_ATTRINVAL_LOG_COUNT		1
++#define	XFS_ATTRSET_LOG_COUNT		3
++#define	XFS_ATTRRM_LOG_COUNT		3
 +
-+	ASSERT(fields);
-+	if (!fields)
-+		return;
-+	mp = tp->t_mountp;
-+	bp = xfs_trans_getsb(tp, mp, 0);
-+	first = sizeof(xfs_sb_t);
-+	last = 0;
++void xfs_trans_resv_calc(struct xfs_mount *mp, struct xfs_trans_resv *resp);
 +
-+	/* translate/copy */
-+
-+	xfs_sb_to_disk(XFS_BUF_TO_SBP(bp), &mp->m_sb, fields);
-+
-+	/* find modified range */
-+	f = (xfs_sb_field_t)xfs_highbit64((__uint64_t)fields);
-+	ASSERT((1LL << f) & XFS_SB_MOD_BITS);
-+	last = xfs_sb_info[f + 1].offset - 1;
-+
-+	f = (xfs_sb_field_t)xfs_lowbit64((__uint64_t)fields);
-+	ASSERT((1LL << f) & XFS_SB_MOD_BITS);
-+	first = xfs_sb_info[f].offset;
-+
-+	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_SB_BUF);
-+	xfs_trans_log_buf(tp, bp, first, last);
-+}
-diff --git a/fs/xfs/xfs_sb.h b/fs/xfs/xfs_sb.h
-index 2de58a8..25d19d0 100644
---- a/fs/xfs/xfs_sb.h
-+++ b/fs/xfs/xfs_sb.h
-@@ -26,6 +26,7 @@
- 
- struct xfs_buf;
- struct xfs_mount;
-+struct xfs_trans;
- 
- #define	XFS_SB_MAGIC		0x58465342	/* 'XFSB' */
- #define	XFS_SB_VERSION_1	1		/* 5.3, 6.0.1, 6.1 */
-@@ -654,4 +655,22 @@ xfs_sb_has_incompat_log_feature(
- #define XFS_B_TO_FSBT(mp,b)	(((__uint64_t)(b)) >> (mp)->m_sb.sb_blocklog)
- #define XFS_B_FSB_OFFSET(mp,b)	((b) & (mp)->m_blockmask)
- 
-+/*
-+ * perag get/put wrappers for ref counting
-+ */
-+extern struct xfs_perag *xfs_perag_get(struct xfs_mount *, xfs_agnumber_t);
-+extern struct xfs_perag *xfs_perag_get_tag(struct xfs_mount *, xfs_agnumber_t,
-+					   int tag);
-+extern void	xfs_perag_put(struct xfs_perag *pag);
-+extern int	xfs_initialize_perag_data(struct xfs_mount *, xfs_agnumber_t);
-+
-+extern void	xfs_sb_calc_crc(struct xfs_buf	*);
-+extern void	xfs_mod_sb(struct xfs_trans *, __int64_t);
-+extern void	xfs_sb_mount_common(struct xfs_mount *, struct xfs_sb *);
-+extern void	xfs_sb_from_disk(struct xfs_sb *, struct xfs_dsb *);
-+extern void	xfs_sb_to_disk(struct xfs_dsb *, struct xfs_sb *, __int64_t);
-+
-+extern const struct xfs_buf_ops xfs_sb_buf_ops;
-+extern const struct xfs_buf_ops xfs_sb_quiet_buf_ops;
-+
- #endif	/* __XFS_SB_H__ */
++#endif	/* __XFS_TRANS_RESV_H__ */
 -- 
 1.7.10.4
 
