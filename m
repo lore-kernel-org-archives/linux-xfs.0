@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0B28A7CBF
-	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 05:23:34 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D1EF7304064
-	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 03:23:33 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id EFCFD7F90
+	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 05:23:35 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C7D288F8065
+	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 03:23:35 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	5L0zVlmH9dKK5nnT for <xfs@oss.sgi.com>;
-	Wed, 12 Jun 2013 03:23:32 -0700 (PDT)
+	Oxo8A6HUbueQd0NW for <xfs@oss.sgi.com>;
+	Wed, 12 Jun 2013 03:23:33 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UmiD3-00016u-EF
-	for xfs@oss.sgi.com; Wed, 12 Jun 2013 20:23:21 +1000
+	(envelope-from <dave@fromorbit.com>) id 1UmiDD-00017Q-SU
+	for xfs@oss.sgi.com; Wed, 12 Jun 2013 20:23:31 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UmiCt-00065v-9q
-	for xfs@oss.sgi.com; Wed, 12 Jun 2013 20:23:11 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1UmiD3-00066n-OV
+	for xfs@oss.sgi.com; Wed, 12 Jun 2013 20:23:21 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 12/27] xfs: Use inode create transaction
-Date: Wed, 12 Jun 2013 20:22:32 +1000
-Message-Id: <1371032567-21772-13-git-send-email-david@fromorbit.com>
+Subject: [PATCH 23/27] xfs: sync minor header differences needed by userspace.
+Date: Wed, 12 Jun 2013 20:22:43 +1000
+Message-Id: <1371032567-21772-24-git-send-email-david@fromorbit.com>
 In-Reply-To: <1371032567-21772-1-git-send-email-david@fromorbit.com>
 References: <1371032567-21772-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -36,120 +36,294 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Replace the use of buffer based logging of inode initialisation,
-uses the new logical form to describe the range to be initialised
-in recovery. We continue to "log" the inode buffers to push them
-into the AIL and ensure that the inode create transaction is not
-removed from the log before the inode buffers are written to disk.
+From: Dave Chinner <dchinner@redhat.com>
 
-Update the transaction identifier and reservations to match the
-changed implementation.
+Little things like exported functions, __KERNEL__ protections, and
+so on that ensure user and kernel shared headers are identical.
 
-Signed-off-by: Dave Chinner <david@fromorbit.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_buf_item.c |   12 ++++++++++--
- fs/xfs/xfs_ialloc.c   |   32 +++++++++++++++++++++++---------
- 2 files changed, 33 insertions(+), 11 deletions(-)
+ fs/xfs/xfs_attr.c          |    1 +
+ fs/xfs/xfs_attr_inactive.c |    1 +
+ fs/xfs/xfs_attr_leaf.c     |    1 +
+ fs/xfs/xfs_attr_leaf.h     |    2 ++
+ fs/xfs/xfs_attr_remote.c   |    1 +
+ fs/xfs/xfs_bmap.h          |    2 ++
+ fs/xfs/xfs_btree.h         |    2 --
+ fs/xfs/xfs_dir2_format.h   |    3 +++
+ fs/xfs/xfs_fs.h            |   17 +++++++++++++++++
+ fs/xfs/xfs_icreate_item.h  |    4 ++++
+ fs/xfs/xfs_sb.h            |    7 +++++++
+ fs/xfs/xfs_symlink.h       |    3 ++-
+ fs/xfs/xfs_trans.h         |    8 +++-----
+ fs/xfs/xfs_trans_priv.h    |    3 +++
+ fs/xfs/xfs_types.h         |    3 ++-
+ 15 files changed, 49 insertions(+), 9 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 61f6876..bfc4e0c 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -310,13 +310,21 @@ xfs_buf_item_format(
+diff --git a/fs/xfs/xfs_attr.c b/fs/xfs/xfs_attr.c
+index 0c9bb2e..f61d2bb 100644
+--- a/fs/xfs/xfs_attr.c
++++ b/fs/xfs/xfs_attr.c
+@@ -21,6 +21,7 @@
+ #include "xfs_bit.h"
+ #include "xfs_log.h"
+ #include "xfs_trans.h"
++#include "xfs_trans_priv.h"
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_mount.h"
+diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
+index 0d344ed..a19439b 100644
+--- a/fs/xfs/xfs_attr_inactive.c
++++ b/fs/xfs/xfs_attr_inactive.c
+@@ -22,6 +22,7 @@
+ #include "xfs_bit.h"
+ #include "xfs_log.h"
+ #include "xfs_trans.h"
++#include "xfs_trans_priv.h"
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_mount.h"
+diff --git a/fs/xfs/xfs_attr_leaf.c b/fs/xfs/xfs_attr_leaf.c
+index 791ade2..a7fdd0d 100644
+--- a/fs/xfs/xfs_attr_leaf.c
++++ b/fs/xfs/xfs_attr_leaf.c
+@@ -22,6 +22,7 @@
+ #include "xfs_bit.h"
+ #include "xfs_log.h"
+ #include "xfs_trans.h"
++#include "xfs_trans_priv.h"
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_mount.h"
+diff --git a/fs/xfs/xfs_attr_leaf.h b/fs/xfs/xfs_attr_leaf.h
+index 444a770..c102213 100644
+--- a/fs/xfs/xfs_attr_leaf.h
++++ b/fs/xfs/xfs_attr_leaf.h
+@@ -333,6 +333,8 @@ int	xfs_attr3_leaf_read(struct xfs_trans *tp, struct xfs_inode *dp,
+ 			struct xfs_buf **bpp);
+ void	xfs_attr3_leaf_hdr_from_disk(struct xfs_attr3_icleaf_hdr *to,
+ 				     struct xfs_attr_leafblock *from);
++void	xfs_attr3_leaf_hdr_to_disk(struct xfs_attr_leafblock *to,
++				   struct xfs_attr3_icleaf_hdr *from);
  
- 	/*
- 	 * If it is an inode buffer, transfer the in-memory state to the
--	 * format flags and clear the in-memory state. We do not transfer
-+	 * format flags and clear the in-memory state.
-+	 *
-+	 * For buffer based inode allocation, we do not transfer
- 	 * this state if the inode buffer allocation has not yet been committed
- 	 * to the log as setting the XFS_BLI_INODE_BUF flag will prevent
- 	 * correct replay of the inode allocation.
-+	 *
-+	 * For icreate item based inode allocation, the buffers aren't written
-+	 * to the journal during allocation, and hence we should always tag the
-+	 * buffer as an inode buffer so that the correct unlinked list replay
-+	 * occurs during recovery.
- 	 */
- 	if (bip->bli_flags & XFS_BLI_INODE_BUF) {
--		if (!((bip->bli_flags & XFS_BLI_INODE_ALLOC_BUF) &&
-+		if (xfs_sb_version_hascrc(&lip->li_mountp->m_sb) ||
-+		    !((bip->bli_flags & XFS_BLI_INODE_ALLOC_BUF) &&
- 		      xfs_log_item_in_current_chkpt(lip)))
- 			bip->__bli_format.blf_flags |= XFS_BLF_INODE_BUF;
- 		bip->bli_flags &= ~XFS_BLI_INODE_BUF;
-diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
-index d5ef81a..319d9e4 100644
---- a/fs/xfs/xfs_ialloc.c
-+++ b/fs/xfs/xfs_ialloc.c
-@@ -38,6 +38,7 @@
- #include "xfs_bmap.h"
- #include "xfs_cksum.h"
- #include "xfs_buf_item.h"
-+#include "xfs_icreate_item.h"
+ extern const struct xfs_buf_ops xfs_attr3_leaf_buf_ops;
  
+diff --git a/fs/xfs/xfs_attr_remote.c b/fs/xfs/xfs_attr_remote.c
+index ef6b0c1..39a59ea 100644
+--- a/fs/xfs/xfs_attr_remote.c
++++ b/fs/xfs/xfs_attr_remote.c
+@@ -22,6 +22,7 @@
+ #include "xfs_bit.h"
+ #include "xfs_log.h"
+ #include "xfs_trans.h"
++#include "xfs_trans_priv.h"
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_mount.h"
+diff --git a/fs/xfs/xfs_bmap.h b/fs/xfs/xfs_bmap.h
+index cbcaf00..31b7c0e 100644
+--- a/fs/xfs/xfs_bmap.h
++++ b/fs/xfs/xfs_bmap.h
+@@ -136,9 +136,11 @@ typedef struct xfs_bmalloca {
+ 	char			conv;	/* overwriting unwritten extents */
+ 	char			stack_switch;
+ 	int			flags;
++#ifdef __KERNEL__
+ 	struct completion	*done;
+ 	struct work_struct	work;
+ 	int			result;
++#endif /* __KERNEL__ */
+ } xfs_bmalloca_t;
  
  /*
-@@ -155,7 +156,7 @@ xfs_check_agi_freecount(
-  * than logging them (which in a transaction context puts them into the AIL
-  * for writeback rather than the xfsbufd queue).
+diff --git a/fs/xfs/xfs_btree.h b/fs/xfs/xfs_btree.h
+index 55e3c7c..c8473c7 100644
+--- a/fs/xfs/xfs_btree.h
++++ b/fs/xfs/xfs_btree.h
+@@ -88,13 +88,11 @@ struct xfs_btree_block {
+ #define XFS_BTREE_SBLOCK_CRC_LEN	(XFS_BTREE_SBLOCK_LEN + 40)
+ #define XFS_BTREE_LBLOCK_CRC_LEN	(XFS_BTREE_LBLOCK_LEN + 48)
+ 
+-
+ #define XFS_BTREE_SBLOCK_CRC_OFF \
+ 	offsetof(struct xfs_btree_block, bb_u.s.bb_crc)
+ #define XFS_BTREE_LBLOCK_CRC_OFF \
+ 	offsetof(struct xfs_btree_block, bb_u.l.bb_crc)
+ 
+-
+ /*
+  * Generic key, ptr and record wrapper structures.
+  *
+diff --git a/fs/xfs/xfs_dir2_format.h b/fs/xfs/xfs_dir2_format.h
+index b125a8b..d771219 100644
+--- a/fs/xfs/xfs_dir2_format.h
++++ b/fs/xfs/xfs_dir2_format.h
+@@ -495,6 +495,9 @@ struct xfs_dir3_leaf {
+ 
+ #define XFS_DIR3_LEAF_CRC_OFF  offsetof(struct xfs_dir3_leaf_hdr, info.crc)
+ 
++extern void xfs_dir3_leaf_hdr_from_disk(struct xfs_dir3_icleaf_hdr *to,
++					struct xfs_dir2_leaf *from);
++
+ static inline int
+ xfs_dir3_leaf_hdr_size(struct xfs_dir2_leaf *lp)
+ {
+diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
+index d046955..68c2e18 100644
+--- a/fs/xfs/xfs_fs.h
++++ b/fs/xfs/xfs_fs.h
+@@ -311,6 +311,17 @@ typedef struct xfs_bstat {
+ } xfs_bstat_t;
+ 
+ /*
++ * Project quota id helpers (previously projid was 16bit only
++ * and using two 16bit values to hold new 32bit projid was choosen
++ * to retain compatibility with "old" filesystems).
++ */
++static inline __uint32_t
++bstat_get_projid(struct xfs_bstat *bs)
++{
++	return (__uint32_t)bs->bs_projid_hi << 16 | bs->bs_projid_lo;
++}
++
++/*
+  * The user-level BulkStat Request interface structure.
   */
--STATIC int
-+int
- xfs_ialloc_inode_init(
- 	struct xfs_mount	*mp,
- 	struct xfs_trans	*tp,
-@@ -212,6 +213,18 @@ xfs_ialloc_inode_init(
- 		version = 3;
- 		ino = XFS_AGINO_TO_INO(mp, agno,
- 				       XFS_OFFBNO_TO_AGINO(mp, agbno, 0));
+ typedef struct xfs_fsop_bulkreq {
+@@ -511,8 +522,14 @@ typedef struct xfs_handle {
+ #define XFS_IOC_ERROR_INJECTION	     _IOW ('X', 116, struct xfs_error_injection)
+ #define XFS_IOC_ERROR_CLEARALL	     _IOW ('X', 117, struct xfs_error_injection)
+ /*	XFS_IOC_ATTRCTL_BY_HANDLE -- deprecated 118	 */
 +
-+		/*
-+		 * log the initialisation that is about to take place as an
-+		 * logical operation. This means the transaction does not
-+		 * need to log the physical changes to the inode buffers as log
-+		 * recovery will know what initialisation is actually needed.
-+		 * Hence we only need to log the buffers as "ordered" buffers so
-+		 * they track in the AIL as if they were physically logged.
-+		 */
-+		if (tp)
-+			xfs_icreate_log(tp, agno, agbno, XFS_IALLOC_INODES(mp),
-+					mp->m_sb.sb_inodesize, length, gen);
- 	} else if (xfs_sb_version_hasnlink(&mp->m_sb))
- 		version = 2;
- 	else
-@@ -227,13 +240,8 @@ xfs_ialloc_inode_init(
- 					 XBF_UNMAPPED);
- 		if (!fbuf)
- 			return ENOMEM;
--		/*
--		 * Initialize all inodes in this buffer and then log them.
--		 *
--		 * XXX: It would be much better if we had just one transaction
--		 *	to log a whole cluster of inodes instead of all the
--		 *	individual transactions causing a lot of log traffic.
--		 */
+ /*	XFS_IOC_FREEZE		  -- FIFREEZE   119	 */
+ /*	XFS_IOC_THAW		  -- FITHAW     120	 */
++#ifndef FIFREEZE
++#define XFS_IOC_FREEZE		     _IOWR('X', 119, int)
++#define XFS_IOC_THAW		     _IOWR('X', 120, int)
++#endif
 +
-+		/* Initialize the inode buffers and log them appropriately. */
- 		fbuf->b_ops = &xfs_inode_buf_ops;
- 		xfs_buf_zero(fbuf, 0, BBTOB(fbuf->b_length));
- 		for (i = 0; i < ninodes; i++) {
-@@ -269,7 +277,13 @@ xfs_ialloc_inode_init(
- 			 */
- 			xfs_trans_inode_alloc_buf(tp, fbuf);
- 			if (version == 3) {
--				/* need to log the entire buffer */
-+				/*
-+				 * Mark the buffer as ordered so that they are
-+				 * not physically logged in the transaction but
-+				 * still tracked in the AIL as part of the
-+				 * transaction and pin the log appropriately.
-+				 */
-+				xfs_trans_ordered_buf(tp, fbuf);
- 				xfs_trans_log_buf(tp, fbuf, 0,
- 						  BBTOB(fbuf->b_length) - 1);
- 			}
+ #define XFS_IOC_FSSETDM_BY_HANDLE    _IOW ('X', 121, struct xfs_fsop_setdm_handlereq)
+ #define XFS_IOC_ATTRLIST_BY_HANDLE   _IOW ('X', 122, struct xfs_fsop_attrlist_handlereq)
+ #define XFS_IOC_ATTRMULTI_BY_HANDLE  _IOW ('X', 123, struct xfs_fsop_attrmulti_handlereq)
+diff --git a/fs/xfs/xfs_icreate_item.h b/fs/xfs/xfs_icreate_item.h
+index 88ba8aa..79df981 100644
+--- a/fs/xfs/xfs_icreate_item.h
++++ b/fs/xfs/xfs_icreate_item.h
+@@ -36,6 +36,8 @@ struct xfs_icreate_log {
+ 	__be32		icl_gen;	/* inode generation number to use */
+ };
+ 
++#ifdef __KERNEL__
++
+ /* in memory log item structure */
+ struct xfs_icreate_item {
+ 	struct xfs_log_item	ic_item;
+@@ -49,4 +51,6 @@ void xfs_icreate_log(struct xfs_trans *tp, xfs_agnumber_t agno,
+ 			unsigned int inode_size, xfs_agblock_t length,
+ 			unsigned int generation);
+ 
++#endif /* __KERNEL__ */
++
+ #endif	/* XFS_ICREATE_ITEM_H */
+diff --git a/fs/xfs/xfs_sb.h b/fs/xfs/xfs_sb.h
+index 25d19d0..8f78df1 100644
+--- a/fs/xfs/xfs_sb.h
++++ b/fs/xfs/xfs_sb.h
+@@ -555,6 +555,13 @@ static inline int xfs_sb_version_hasprojid32bit(xfs_sb_t *sbp)
+ 		(sbp->sb_features2 & XFS_SB_VERSION2_PROJID32BIT));
+ }
+ 
++static inline void xfs_sb_version_addprojid32bit(xfs_sb_t *sbp)
++{
++	sbp->sb_versionnum |= XFS_SB_VERSION_MOREBITSBIT;
++	sbp->sb_features2 |= XFS_SB_VERSION2_PROJID32BIT;
++	sbp->sb_bad_features2 |= XFS_SB_VERSION2_PROJID32BIT;
++}
++
+ static inline int xfs_sb_version_hascrc(xfs_sb_t *sbp)
+ {
+ 	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5;
+diff --git a/fs/xfs/xfs_symlink.h b/fs/xfs/xfs_symlink.h
+index b39398d..4818edf 100644
+--- a/fs/xfs/xfs_symlink.h
++++ b/fs/xfs/xfs_symlink.h
+@@ -49,7 +49,8 @@ struct xfs_dsymlink_hdr {
+ 			sizeof(struct xfs_dsymlink_hdr) : 0))
+ 
+ int xfs_symlink_blocks(struct xfs_mount *mp, int pathlen);
+-
++bool xfs_symlink_hdr_ok(struct xfs_mount *mp, xfs_ino_t ino, uint32_t offset,
++			uint32_t size, struct xfs_buf *bp);
+ void xfs_symlink_local_to_remote(struct xfs_trans *tp, struct xfs_buf *bp,
+ 				 struct xfs_inode *ip, struct xfs_ifork *ifp);
+ 
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index 60427aa..2d6b5e8 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -57,7 +57,8 @@ typedef struct xfs_trans_header {
+ 	{ XFS_LI_INODE,		"XFS_LI_INODE" }, \
+ 	{ XFS_LI_BUF,		"XFS_LI_BUF" }, \
+ 	{ XFS_LI_DQUOT,		"XFS_LI_DQUOT" }, \
+-	{ XFS_LI_QUOTAOFF,	"XFS_LI_QUOTAOFF" }
++	{ XFS_LI_QUOTAOFF,	"XFS_LI_QUOTAOFF" }, \
++	{ XFS_LI_ICREATE,	"XFS_LI_ICREATE" }
+ 
+ /*
+  * Transaction types.  Used to distinguish types of buffers.
+@@ -291,7 +292,7 @@ struct xfs_trans_reservations {
+ #define	XFS_ADDAFORK_LOG_RES(mp)	((mp)->m_reservations.tr_addafork)
+ #define	XFS_ATTRINVAL_LOG_RES(mp)	((mp)->m_reservations.tr_attrinval)
+ #define	XFS_ATTRSETM_LOG_RES(mp)	((mp)->m_reservations.tr_attrsetm)
+-#define XFS_ATTRSETRT_LOG_RES(mp)	((mp)->m_reservations.tr_attrsetrt)
++#define	XFS_ATTRSETRT_LOG_RES(mp)	((mp)->m_reservations.tr_attrsetrt)
+ #define	XFS_ATTRRM_LOG_RES(mp)		((mp)->m_reservations.tr_attrrm)
+ #define	XFS_CLEAR_AGI_BUCKET_LOG_RES(mp)  ((mp)->m_reservations.tr_clearagi)
+ #define XFS_QM_SBCHANGE_LOG_RES(mp)	((mp)->m_reservations.tr_qm_sbchange)
+@@ -568,7 +569,4 @@ extern kmem_zone_t	*xfs_log_item_desc_zone;
+ 
+ #endif	/* __KERNEL__ */
+ 
+-void		xfs_trans_init(struct xfs_mount *);
+-int		xfs_trans_roll(struct xfs_trans **, struct xfs_inode *);
+-
+ #endif	/* __XFS_TRANS_H__ */
+diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
+index 53b7c9b..d43b130 100644
+--- a/fs/xfs/xfs_trans_priv.h
++++ b/fs/xfs/xfs_trans_priv.h
+@@ -25,6 +25,9 @@ struct xfs_trans;
+ struct xfs_ail;
+ struct xfs_log_vec;
+ 
++
++void	xfs_trans_init(struct xfs_mount *);
++int	xfs_trans_roll(struct xfs_trans **, struct xfs_inode *);
+ void	xfs_trans_add_item(struct xfs_trans *, struct xfs_log_item *);
+ void	xfs_trans_del_item(struct xfs_log_item *);
+ void	xfs_trans_free_items(struct xfs_trans *tp, xfs_lsn_t commit_lsn,
+diff --git a/fs/xfs/xfs_types.h b/fs/xfs/xfs_types.h
+index 61ba1cf..dd6bf71 100644
+--- a/fs/xfs/xfs_types.h
++++ b/fs/xfs/xfs_types.h
+@@ -32,7 +32,6 @@ typedef unsigned int		__uint32_t;
+ typedef signed long long int	__int64_t;
+ typedef unsigned long long int	__uint64_t;
+ 
+-typedef __uint32_t		prid_t;		/* project ID */
+ typedef __uint32_t		inst_t;		/* an instruction */
+ 
+ typedef __s64			xfs_off_t;	/* <file offset> type */
+@@ -55,6 +54,8 @@ typedef __uint64_t __psunsigned_t;
+ 
+ #endif	/* __KERNEL__ */
+ 
++typedef __uint32_t	prid_t;		/* project ID */
++
+ typedef __uint32_t	xfs_agblock_t;	/* blockno in alloc. group */
+ typedef	__uint32_t	xfs_agino_t;	/* inode # within allocation grp */
+ typedef	__uint32_t	xfs_extlen_t;	/* extent length in blocks */
 -- 
 1.7.10.4
 
