@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E099929DF8
-	for <xfs@oss.sgi.com>; Tue, 11 Jun 2013 21:48:15 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E7CCA7CBF
+	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 03:27:01 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 873B8AC001
-	for <xfs@oss.sgi.com>; Tue, 11 Jun 2013 19:48:12 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	DmiW96BJkQ8yaopD for <xfs@oss.sgi.com>;
-	Tue, 11 Jun 2013 19:48:11 -0700 (PDT)
-Date: Wed, 12 Jun 2013 12:48:09 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfstests: fsync-tester: fix pwrite() return check and
-	disable direct for test 19
-Message-ID: <20130612024809.GW29338@dastard>
-References: <1370999583-16725-1-git-send-email-jbacik@fusionio.com>
-	<20130612023515.GV29338@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130612023515.GV29338@dastard>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C95FE8F8049
+	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 01:26:58 -0700 (PDT)
+Received: from stockholm.opq.se ([213.88.151.150]) by cuda.sgi.com with ESMTP
+	id zkpuQRw1R3pEiY3A (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 12 Jun 2013 01:26:56 -0700 (PDT)
+Received: from [10.2.10.35] (shark.pacific [10.2.10.35])
+	by stockholm.opq.se (8.13.4/8.13.4/SuSE Linux 0.7) with ESMTP id
+	r5C8Qpu6027988 for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 10:26:53 +0200
+Message-ID: <1371025611.7096.10.camel@acme>
+Subject: Re: Questions about XFS
+From: Roger Oberholtzer <roger@opq.se>
+Date: Wed, 12 Jun 2013 10:26:51 +0200
+In-Reply-To: <CAO9HMNGjdikgX+_434aGVJ2NAJ0hxDNLo+Vsa46GH3psXr4sKQ@mail.gmail.com>
+References: <loom.20130611T112155-970@post.gmane.org>
+	<51B72D3D.5010206@redhat.com>
+	<CAO9HMNGjdikgX+_434aGVJ2NAJ0hxDNLo+Vsa46GH3psXr4sKQ@mail.gmail.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,67 +33,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Josef Bacik <jbacik@fusionio.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, Jun 12, 2013 at 12:35:15PM +1000, Dave Chinner wrote:
-> On Tue, Jun 11, 2013 at 09:13:03PM -0400, Josef Bacik wrote:
-> > Test 19 in direct mode was failing on xfs because it was not actually doing the
-> > write because the writes were not sectorsize aligned.  This test is to test
-> > btrfs's inline extent fsync()ing so the writes won't be sectorsize aligned, and
-> > inline extents will fall back to buffered anyway so direct mode is meaningless
-> > for this test.  So just check if we are test 19 and disable direct mode so we
-> > don't have to change the golden output.  Also change test_five() to compare
-> > against a ssize_t instead of a size_t since apparently comparing against size_t
-> > makes it cast the return value of pwrite() to size_t which screws up the error
-> > case, so instead of seeing the pwrite() error on xfs which would have explained
-> > this all it appeared as if it was succeeding and screwing up the fsync(), which
-> > unfortunately wasted a bit of Daves time.  This patch should fix all this up.
-> 
-> You need to breathe when you type, Josef. ;)
-> 
-> > Thanks,
-> > 
-> > Signed-off-by: Josef Bacik <jbacik@fusionio.com>
-> > ---
-> >  src/fsync-tester.c |   10 +++++++++-
-> >  1 files changed, 9 insertions(+), 1 deletions(-)
-> > 
-> > diff --git a/src/fsync-tester.c b/src/fsync-tester.c
-> > index f0875fc..1c03ed0 100644
-> > --- a/src/fsync-tester.c
-> > +++ b/src/fsync-tester.c
-> > @@ -230,7 +230,7 @@ static int test_five()
-> >  
-> >  	memset(buf, character, 3072);
-> >  	for (i = 0; i < runs; i++) {
-> > -		size_t write_size = (random() % 3072) + 1;
-> > +		ssize_t write_size = (random() % 3072) + 1;
-> >  
-> >  		if (pwrite(test_fd, buf, write_size, 0) < write_size) {
-> >  			fprintf(stderr, "Short write %d\n", errno);
-> > @@ -419,6 +419,14 @@ int main(int argc, char **argv)
-> >  	if (optind >= argc)
-> >  		usage();
-> >  
-> > +	/*
-> > +	 * test 19 is for smaller than blocksize writes to test btrfs's inline
-> > +	 * extent fsyncing, so direct_io doesn't make sense and in fact doesn't
-> > +	 * work for other file systems, so just disable direct io for this test.
-> > +	 */
-> > +	if (test == 19)
-> > +		direct_io = 0;
-> > +
-> 
-> Yup, looks good. Passes for me now ;)
+On Tue, 2013-06-11 at 11:12 -0500, Steve Bergman wrote: 
+> Are you saying that with XFS there is no periodic
+> flushing mechanism at all? And that unless there's an
+> fsync/fdatasync/sync or the memory needs to be reclaimed, that it can
+> sit in the page cache forever?
 
-And I forgot:
+I read the later responses to this and they seemed to say that the data
+in the page cache should be written to the disk periodically. I am not
+meaning to hijack the thread. I just have a question directly related to
+this point.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+I have an application that is streaming data to an XFS disk at a
+sustained 25 MB/sec. This is well below what the hardware supports. The
+application does fopen/fwrite/fclose (no active flushing or syncing).
 
--- 
-Dave Chinner
-david@fromorbit.com
+I see that as my application writes data (the only process writing the
+only open file on the disk), the system cache grows and grows. Here is
+the unusual part: periodically, writes take some number of seconds to
+complete, rather than the typical <50 msecs). The increased time seems
+to correspond to the increasing size of the page cache.
+
+If I do:
+
+echo 1 > /proc/sys/vm/drop_caches
+
+while the application is runnung, then the writes do not occasionally
+take longer. Until the cache grows again, and I do the echo again.
+
+I am sure I must be misinterpreting what I see.
+
+(on openSUSE 12.1. kernel 3.1.0)
+
+--
+Roger Oberholtzer
 
 _______________________________________________
 xfs mailing list
