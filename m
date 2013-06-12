@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 00ECD7F4E
-	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 11:06:27 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E50EA304067
-	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 09:06:23 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Dx2XtS3Ty5EZa8uc for
-	<xfs@oss.sgi.com>; Wed, 12 Jun 2013 09:06:23 -0700 (PDT)
-Message-ID: <51B89D58.80108@redhat.com>
-Date: Wed, 12 Jun 2013 12:10:00 -0400
-From: Brian Foster <bfoster@redhat.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id C1CE87F53
+	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 12:02:57 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 845778F8052
+	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 10:02:54 -0700 (PDT)
+Received: from cobra.newdream.net (cobra.newdream.net [66.33.216.30]) by
+	cuda.sgi.com with ESMTP id AdxF7dd0smPve92F for
+	<xfs@oss.sgi.com>; Wed, 12 Jun 2013 10:02:53 -0700 (PDT)
+Date: Wed, 12 Jun 2013 10:02:52 -0700 (PDT)
+From: Sage Weil <sage@inktank.com>
+Subject: Re: garbage block(s) after powercycle/reboot + sparse writes
+In-Reply-To: <51AE84C9.5030903@sandeen.net>
+Message-ID: <alpine.DEB.2.00.1306120955460.15386@cobra.newdream.net>
+References: <alpine.DEB.2.00.1306041210070.15156@cobra.newdream.net>
+	<51AE84C9.5030903@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH 04/27] xfs: don't use speculative prealloc for small files
-References: <1371032567-21772-1-git-send-email-david@fromorbit.com>
-	<1371032567-21772-5-git-send-email-david@fromorbit.com>
-In-Reply-To: <1371032567-21772-5-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,66 +28,128 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Eric Sandeen <sandeen@sandeen.net>, david@fromorbit.com
 Cc: xfs@oss.sgi.com
 
-On 06/12/2013 06:22 AM, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+Hi guys,
+
+I reproduced this on two more boxes and have more data.  The full set of 
+notes/logs is at
+
+	http://newdream.net/~sage/bug-4976/notes.txt
+
+I stashed a copy of the ceph log and the file itself for each case too:
+
+	http://newdream.net/~sage/bug-4976/
+
+The new information:
+ - the file was created and allocated prior to the powercycle.
+ - the writes were then replayed by the ceph journaling after restart
+ - garbage data appears at offsets we never wrote to
+
+If this pattern isn't suggesting any likely theories, I could rig things 
+up to try to capture the ceph log output leading up to the crash so I 
+positively confirm what the sequence was leading up to the power cycle.  
+
+Any ideas?
+
+Thanks!
+sage
+
+On Tue, 4 Jun 2013, Eric Sandeen wrote:
+> On 6/4/13 2:24 PM, Sage Weil wrote:
+> > I'm observing an interesting data corruption pattern:
+> > 
+> > - write a bunch of files
+> > - power cycle the box
 > 
-...
-> ---
->  fs/xfs/xfs_iomap.c |   13 +++++++++++++
->  1 file changed, 13 insertions(+)
+> I guess this part is important?  But I'm wondering why...
 > 
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 8f8aaee..14be676 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -284,6 +284,15 @@ xfs_iomap_eof_want_preallocate(
->  		return 0;
->  
->  	/*
-> +	 * If the file is smaller than the minimum prealloc and we are using
-> +	 * dynamic preallocation, don't do any preallocation at all as it is
-> +	 * likely this is the only write to the file that is going to be done.
-> +	 */
-> +	if (!(mp->m_flags & XFS_MOUNT_DFLT_IOSIZE) &&
-> +	    XFS_ISIZE(ip) < mp->m_writeio_blocks)
-> +		return 0;
-> +
+> > - remount
+> > - immediately (within 1-2 seconds) write create a file and
+> 
+> a new file, right?
 
-I stuck this on a box, got a 64k prealloc on an 8k file and then noticed
-this was comparing inode size against a block count. This should
-probably be:
+It was created and written to (w/ the same pattern) before the crash.  We 
+then repeat the sequence after when replaying the ceph journal.
 
-	XFS_ISIZE(ip) < XFS_FSB_TO_B(mp, mp->m_writeio_blocks)
+> >  - write to a lower offset, say offset 430423 len 527614
+> >  - write to a higher offset, say offset 1360810 len 269613
+> >  (there is other random io going to other files too)
+> > 
+> > - about 5 seconds later, read the whole file and verify content
+> > 
+> > And what I see:
+> > 
+> > - the first region is correct, and intact
+> 
+> the lower offset you wrote?
 
-Given that, we avoid preallocs entirely until the file size reaches the
-minimum write size (assuming dynamic prealloc mode).
+Right
 
-> +	/*
->  	 * If there are any real blocks past eof, then don't
->  	 * do any speculative allocation.
->  	 */
-> @@ -345,6 +354,10 @@ xfs_iomap_eof_prealloc_initial_size(
->  	if (mp->m_flags & XFS_MOUNT_DFLT_IOSIZE)
->  		return 0;
->  
-> +	/* If the file is small, then use the minimum prealloc */
-> +	if (XFS_ISIZE(ip) < mp->m_dalign)
-> +		return 0;
-> +
-...
+> > - the bytes that follow, up until the block boundary, are 0
+> 
+> that's good ;)
+> 
+> > - the next few blocks are *not* zero! (i've observed 1 and 6 4k blocks)
+> 
+> that's bad!
+> 
+> > - then lots of zeros, up until the second region, which appears intact.
+> 
+> the lot-of-zeros are probably holes?
 
-... and the same fsb->b conversion applies here.
+Right
 
-If the file is larger than the minimum write size but smaller than the
-stripe unit, we prealloc by the minimum prealloc size (m_writeio_blocks)
-until the file grows beyond the stripe unit. That means if the stripe
-unit is smaller than m_writeio_blocks or not specified, we'd just start
-right into the dynamic prealloc algorithm. Seems reasonable.
+> What does xfs_bmap -vvp <filename> say about the file in question?
 
-Brian
+The notes.txt file linked above has the bmap output.
+
+Thanks!
+sage
+
+
+> > I'm pretty reliably hitting this, and have reproduced it twice now and 
+> > found the above consistent pattern (but different filenames, different 
+> > offsets).  What I haven't yet confirmed is whether the file was written at 
+> > all prior to the powercycle, since that tends to blow away the last 
+> > bit of the ceph logs, too.  I'm adding some additional checks to see 
+> > whether the file is in fact new when the first extent is written.
+> > 
+> > The other possibly interesting thing is the offsets.  The garbage regions 
+> > I saw were
+> > 
+> >  0xea000 - 0xf0000
+> 
+> 234-240 4k blocks
+> 
+> >  0xff000 - 0x100000
+> 
+> 255-256 4k blocks  *shrug*
+> 
+> Is this what you saw w/ the write offsets & sizes you specified above?
+> 
+> I'm wondering if this could possibly have to do w/ speculative preallocation
+> on the file somehow exposing these blocks?  But that's just handwaving.
+> 
+> -Eric
+> 
+> > 
+> > Does this failure pattern look familiar to anyone? I'm pretty sure it is 
+> > new in 3.9, which we switched over to right around the time when this 
+> > started happening.  I'm confirming that as well, but just wanted to see if 
+> > this is ringing any bells...
+> > 
+> > Thanks!
+> > sage
+> > 
+> > _______________________________________________
+> > xfs mailing list
+> > xfs@oss.sgi.com
+> > http://oss.sgi.com/mailman/listinfo/xfs
+> > 
+> 
+> 
 
 _______________________________________________
 xfs mailing list
