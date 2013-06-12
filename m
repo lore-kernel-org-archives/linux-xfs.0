@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1386F7CBF
-	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 05:22:59 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 1A4467F37
+	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 05:23:00 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A5357AC004
-	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 03:22:58 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id ABAFEAC004
+	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 03:22:56 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	dfCfOGL5zJGX0lLe for <xfs@oss.sgi.com>;
-	Wed, 12 Jun 2013 03:22:56 -0700 (PDT)
+	IBw8mertVO3CfCsy for <xfs@oss.sgi.com>;
+	Wed, 12 Jun 2013 03:22:55 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UmiCZ-00015w-11
+	(envelope-from <dave@fromorbit.com>) id 1UmiCZ-00015z-4S
 	for xfs@oss.sgi.com; Wed, 12 Jun 2013 20:22:51 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UmiCY-0005kx-TE
-	for xfs@oss.sgi.com; Wed, 12 Jun 2013 20:22:50 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1UmiCZ-0005lB-0g
+	for xfs@oss.sgi.com; Wed, 12 Jun 2013 20:22:51 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 01/27] xfs: update mount options documentation
-Date: Wed, 12 Jun 2013 20:22:21 +1000
-Message-Id: <1371032567-21772-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 04/27] xfs: don't use speculative prealloc for small files
+Date: Wed, 12 Jun 2013 20:22:24 +1000
+Message-Id: <1371032567-21772-5-git-send-email-david@fromorbit.com>
 In-Reply-To: <1371032567-21772-1-git-send-email-david@fromorbit.com>
 References: <1371032567-21772-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,383 +38,85 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Because it's horribly out of date.
+Dedicated small file workloads have been seeing significant free
+space fragmentation causing premature inode allocation failure
+when large inode sizes are in use. A particular test case showed
+that a workload that runs to a real ENOSPC on 256 byte inodes would
+fail inode allocation with ENOSPC about about 80% full with 512 byte
+inodes, and at about 50% full with 1024 byte inodes.
 
-And mark various deprecated options as deprecated and give them a
-removal date.
+The same workload, when run with -o allocsize=4096 on 1024 byte
+inodes would run to being 100% full before giving ENOSPC. That is,
+no freespace fragmentation at all.
+
+The issue was caused by the specific IO pattern the application had
+- the framework it was using did not support direct IO, and so it
+was emulating it by using fadvise(DONT_NEED). The result was that
+the data was getting written back before the speculative prealloc
+had been trimmed from memory by the close(), and so small single
+block files were being allocated with 2 blocks, and then having one
+truncated away. The result was lots of small 4k free space extents,
+and hence each new 8k allocation would take another 8k from
+contiguous free space and turn it into 4k of allocated space and 4k
+of free space.
+
+Hence inode allocation, which requires contiguous, aligned
+allocation of 16k (256 byte inodes), 32k (512 byte inodes) or 64k
+(1024 byte inodes) can fail to find sufficiently large freespace and
+hence fail while there is still lots of free space available.
+
+There's a simple fix for this, and one that has precendence in the
+allocator code already - don't do speculative allocation unless the
+size of the file is larger than a certain size. In this case, that
+size is the minimum default preallocation size:
+mp->m_writeio_blocks. And to keep with the concept of being nice to
+people when the files are still relatively small, cap the prealloc
+to mp->m_writeio_blocks until the file goes over a stripe unit is
+size, at which point we'll fall back to the current behaviour based
+on the last extent size.
+
+This will effectively turn off speculative prealloc for very small
+files, keep preallocation low for small files, and behave as it
+currently does for any file larger than a stripe unit. This
+completely avoids the freespace fragmentation problem this
+particular IO pattern was causing.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- Documentation/filesystems/xfs.txt |  282 +++++++++++++++++++++++++------------
- 1 file changed, 192 insertions(+), 90 deletions(-)
+ fs/xfs/xfs_iomap.c |   13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-diff --git a/Documentation/filesystems/xfs.txt b/Documentation/filesystems/xfs.txt
-index 83577f0..28afbd1 100644
---- a/Documentation/filesystems/xfs.txt
-+++ b/Documentation/filesystems/xfs.txt
-@@ -25,6 +25,13 @@ When mounting an XFS filesystem, the following options are accepted.
- 	Valid values for this option are page size (typically 4KiB)
- 	through to 1GiB, inclusive, in power-of-2 increments.
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 8f8aaee..14be676 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -284,6 +284,15 @@ xfs_iomap_eof_want_preallocate(
+ 		return 0;
  
-+	The default behaviour is for dynamic end-of-file
-+	preallocation size, which uses a set of heuristics to
-+	optimise the preallocation size based on the current
-+	allocation patterns within the file and the access patterns
-+	to the file. Specifying a fixed allocsize value turns off
-+	the dynamic behaviour.
+ 	/*
++	 * If the file is smaller than the minimum prealloc and we are using
++	 * dynamic preallocation, don't do any preallocation at all as it is
++	 * likely this is the only write to the file that is going to be done.
++	 */
++	if (!(mp->m_flags & XFS_MOUNT_DFLT_IOSIZE) &&
++	    XFS_ISIZE(ip) < mp->m_writeio_blocks)
++		return 0;
 +
-   attr2/noattr2
- 	The options enable/disable (default is disabled for backward
- 	compatibility on-disk) an "opportunistic" improvement to be
-@@ -36,86 +43,108 @@ When mounting an XFS filesystem, the following options are accepted.
- 	CRC enabled filesystems always use the attr2 format, and so
- 	will reject the noattr2 mount option if it is set.
++	/*
+ 	 * If there are any real blocks past eof, then don't
+ 	 * do any speculative allocation.
+ 	 */
+@@ -345,6 +354,10 @@ xfs_iomap_eof_prealloc_initial_size(
+ 	if (mp->m_flags & XFS_MOUNT_DFLT_IOSIZE)
+ 		return 0;
  
--  barrier
--	Enables the use of block layer write barriers for writes into
--	the journal and unwritten extent conversion.  This allows for
--	drive level write caching to be enabled, for devices that
--	support write barriers.
-+  barrier/nobarrier
-+	Enables/disables the use of block layer write barriers for
-+	writes into the journal and for data integrity operations.
-+	This allows for drive level write caching to be enabled, for
-+	devices that support write barriers.
- 
--  discard
--	Issue command to let the block device reclaim space freed by the
--	filesystem.  This is useful for SSD devices, thinly provisioned
--	LUNs and virtual machine images, but may have a performance
--	impact.
-+	The default behaviour is to enable barriers.
- 
--  dmapi
--	Enable the DMAPI (Data Management API) event callouts.
--	Use with the "mtpt" option.
-+  discard/nodiscard
- 
--  grpid/bsdgroups and nogrpid/sysvgroups
--	These options define what group ID a newly created file gets.
--	When grpid is set, it takes the group ID of the directory in
--	which it is created; otherwise (the default) it takes the fsgid
--	of the current process, unless the directory has the setgid bit
--	set, in which case it takes the gid from the parent directory,
--	and also gets the setgid bit set if it is a directory itself.
-+	Enable/disable the issuing of commands to let the block
-+	device reclaim space freed by the filesystem.  This is
-+	useful for SSD devices, thinly provisioned LUNs and virtual
-+	machine images, but may have a performance impact.
- 
--  ihashsize=value
--	In memory inode hashes have been removed, so this option has
--	no function as of August 2007. Option is deprecated.
-+	The default behaviour is disable discard commands.
++	/* If the file is small, then use the minimum prealloc */
++	if (XFS_ISIZE(ip) < mp->m_dalign)
++		return 0;
 +
-+	Note: It is currently recommended that you use the fstrim
-+	application to discard unused blocks rather than the discard
-+	mount option because the performance impact of this option
-+	is quite severe.
-+
-+  grpid/bsdgroups and nogrpid/sysvgroups
-+	These options define what group ID a newly created file
-+	gets.  When grpid is set, it takes the group ID of the
-+	directory in which it is created; otherwise (the default) it
-+	takes the fsgid of the current process, unless the directory
-+	has the setgid bit set, in which case it takes the gid from
-+	the parent directory, and also gets the setgid bit set if it
-+	is a directory itself.
-+
-+  filestreams
-+	Make the data allocator use the filestreams allocation mode
-+	across the entire filesystem rather than just on directories
-+	configured to use it.
- 
-   ikeep/noikeep
--	When ikeep is specified, XFS does not delete empty inode clusters
--	and keeps them around on disk. ikeep is the traditional XFS
--	behaviour. When noikeep is specified, empty inode clusters
--	are returned to the free space pool. The default is noikeep for
--	non-DMAPI mounts, while ikeep is the default when DMAPI is in use.
-+	When ikeep is specified, XFS does not delete empty inode
-+	clusters and keeps them around on disk.  When noikeep is
-+	specified, empty inode clusters are returned to the free
-+	space pool.
-+
-+	The default behaviour is delete inode clusters (noikeep).
- 
-   inode64
--	Indicates that XFS is allowed to create inodes at any location
--	in the filesystem, including those which will result in inode
--	numbers occupying more than 32 bits of significance.  This is
--	the default allocation option. Applications which do not handle
--	inode numbers bigger than 32 bits, should use inode32 option.
-+	When inode64 is specified, it indicates that XFS is allowed
-+	to create inodes at any location in the filesystem,
-+	including those which will result in inode numbers occupying
-+	more than 32 bits of significance.  Applications which do
-+	not handle inode numbers bigger than 32 bits should use
-+	inode32 option.
-+
-+	This is the default allocation behaviour, even on 32 bit
-+	machines when neither inode64 or inode32 is specified.
- 
-   inode32
--	Indicates that XFS is limited to create inodes at locations which
--	will not result in inode numbers with more than 32 bits of
--	significance. This is provided for backwards compatibility, since
--	64 bits inode numbers might cause problems for some applications
--	that cannot handle large inode numbers.
-+	When inode32 is specified, it indicates that XFS limits
-+	inode creation to locations which will not result in inode
-+	numbers with more than 32 bits of significance. This is
-+	provided for backwards compatibility with older systems and
-+	applications, since 64 bits inode numbers might cause
-+	problems for some applications that cannot handle large
-+	inode numbers.
- 
-   largeio/nolargeio
- 	If "nolargeio" is specified, the optimal I/O reported in
--	st_blksize by stat(2) will be as small as possible to allow user
--	applications to avoid inefficient read/modify/write I/O.
--	If "largeio" specified, a filesystem that has a "swidth" specified
--	will return the "swidth" value (in bytes) in st_blksize. If the
--	filesystem does not have a "swidth" specified but does specify
--	an "allocsize" then "allocsize" (in bytes) will be returned
--	instead.
-+	st_blksize by stat(2) will be as small as possible to allow
-+	user applications to avoid inefficient read/modify/write
-+	I/O.  This is typically the page size of the machine, as
-+	this is the granularity of the page cache.
-+
-+	If "largeio" specified, a filesystem that was created with a
-+	"swidth" specified will return the "swidth" value (in bytes)
-+	in st_blksize. If the filesystem does not have a "swidth"
-+	specified but does specify an "allocsize" then "allocsize"
-+	(in bytes) will be returned instead. Otherwise the behaviour
-+	is the same as if "nolargeio" was specified.
-+
- 	If neither of these two options are specified, then filesystem
- 	will behave as if "nolargeio" was specified.
- 
-   logbufs=value
--	Set the number of in-memory log buffers.  Valid numbers range
--	from 2-8 inclusive.
--	The default value is 8 buffers for filesystems with a
--	blocksize of 64KiB, 4 buffers for filesystems with a blocksize
--	of 32KiB, 3 buffers for filesystems with a blocksize of 16KiB
--	and 2 buffers for all other configurations.  Increasing the
--	number of buffers may increase performance on some workloads
--	at the cost of the memory used for the additional log buffers
--	and their associated control structures.
-+	Set the number of in-memory log buffers.  Valid numbers
-+	range from 2-8 inclusive.
-+
-+	The default value is 8 buffers.
-+
-+	If the memory cost of 8 log buffers is too high on small
-+	systems, then it may be reduced at some cost to performance
-+	on metadata intensive workloads.
- 
-   logbsize=value
--	Set the size of each in-memory log buffer.
--	Size may be specified in bytes, or in kilobytes with a "k" suffix.
--	Valid sizes for version 1 and version 2 logs are 16384 (16k) and
--	32768 (32k).  Valid sizes for version 2 logs also include
--	65536 (64k), 131072 (128k) and 262144 (256k).
--	The default value for machines with more than 32MiB of memory
--	is 32768, machines with less memory use 16384 by default.
-+	Set the size of each in-memory log buffer.  The size may be
-+	specified in bytes, or in kilobytes with a "k" suffix.
-+	Valid sizes for version 1 and version 2 logs are 16384 (16k)
-+	and 32768 (32k).  Valid sizes for version 2 logs also
-+	include 65536 (64k), 131072 (128k) and 262144 (256k). The
-+	version 2 log size must be an integer multiple of the log
-+	stripe unit configured at mkfs time.
-+
-+	The default value for for version 1 logs is 32768, while the
-+	default value for version 2 logs is MAX(32768, log_sunit).
- 
-   logdev=device and rtdev=device
- 	Use an external log (metadata journal) and/or real-time device.
-@@ -124,16 +153,12 @@ When mounting an XFS filesystem, the following options are accepted.
- 	optional, and the log section can be separate from the data
- 	section or contained within it.
- 
--  mtpt=mountpoint
--	Use with the "dmapi" option.  The value specified here will be
--	included in the DMAPI mount event, and should be the path of
--	the actual mountpoint that is used.
--
-   noalign
--	Data allocations will not be aligned at stripe unit boundaries.
- 
--  noatime
--	Access timestamps are not updated when a file is read.
-+	Data allocations will not be aligned at stripe unit
-+	boundaries. This is only relevant to filesystems created
-+	with non-zero data alignment parameters (sunit, swidth) by
-+	mkfs.
- 
-   norecovery
- 	The filesystem will be mounted without running log recovery.
-@@ -144,8 +169,14 @@ When mounting an XFS filesystem, the following options are accepted.
- 	the mount will fail.
- 
-   nouuid
--	Don't check for double mounted file systems using the file system uuid.
--	This is useful to mount LVM snapshot volumes.
-+	Don't check for double mounted file systems using the file
-+	system uuid.  This is useful to mount LVM snapshot volumes,
-+	and often used in combination with "norecovery" for mounting
-+	read-only snapshots.
-+
-+  noquota
-+	Forcibly turns off all quota accounting and enforcement
-+	within the filesystem.
- 
-   uquota/usrquota/uqnoenforce/quota
- 	User disk quota accounting enabled, and limits (optionally)
-@@ -160,24 +191,68 @@ When mounting an XFS filesystem, the following options are accepted.
- 	enforced.  Refer to xfs_quota(8) for further details.
- 
-   sunit=value and swidth=value
--	Used to specify the stripe unit and width for a RAID device or
--	a stripe volume.  "value" must be specified in 512-byte block
--	units.
--	If this option is not specified and the filesystem was made on
--	a stripe volume or the stripe width or unit were specified for
--	the RAID device at mkfs time, then the mount system call will
--	restore the value from the superblock.  For filesystems that
--	are made directly on RAID devices, these options can be used
--	to override the information in the superblock if the underlying
--	disk layout changes after the filesystem has been created.
--	The "swidth" option is required if the "sunit" option has been
--	specified, and must be a multiple of the "sunit" value.
-+	Used to specify the stripe unit and width for a RAID device
-+	or a stripe volume.  "value" must be specified in 512-byte
-+	block units. These options are only relevant to filesystems
-+	that were created with non-zero data alignment parameters.
-+
-+	The sunit and swidth parameters specified must be compatible
-+	with the existing filesystem alignment characteristics. If
-+	the filesystem was not created with data alignment
-+	constraints, then it may be impossible to set a valid sunit
-+	(and hence swidth) value.  In general, that means the only
-+	valid changes to sunit are increasing it by a power-of-2
-+	multiple. Valid swidth values are any integer multiple of a
-+	valid sunit value.
-+
-+	For filesystems that have existing data alignment values on
-+	disk (i.e. specified by mkfs), any new valid values passed
-+	in as mount options will overwrite the values stored on
-+	disk. Hence this mount option does not need to be specified
-+	for every mount operation in this case.
- 
-   swalloc
- 	Data allocations will be rounded up to stripe width boundaries
- 	when the current end of file is being extended and the file
- 	size is larger than the stripe width size.
- 
-+  wsync
-+	When specified, all filesystem namespace operations are
-+	executed synchronously. This ensures that when the namespace
-+	operation (create, unlink, etc) completes, the change to the
-+	namespace is on stable storage. This is useful in HA setups
-+	where failover must not result in clients seeing
-+	inconsistent namespace presentation during or after a
-+	failover event.
-+
-+
-+Deprecated Mount Options
-+========================
-+
-+  delaylog/nodelaylog
-+	Delayed logging is the only logging method that XFS supports
-+	now, so these mount options are now ignored.
-+
-+	Due for removal in 3.12.
-+
-+  ihashsize=value
-+	In memory inode hashes have been removed, so this option has
-+	no function as of August 2007. Option is deprecated.
-+
-+	Due for removal in 3.12.
-+
-+  irixsgid
-+	This behaviour is now controlled by a sysctl, so the mount
-+	option is ignored.
-+
-+	Due for removal in 3.12.
-+
-+  osyncisdsync
-+  osyncisosync
-+	O_SYNC and O_DSYNC are fully supported, so there is no need
-+	for these options any more.
-+
-+	Due for removal in 3.12.
- 
- sysctls
- =======
-@@ -189,15 +264,20 @@ The following sysctls are available for the XFS filesystem:
- 	in /proc/fs/xfs/stat.  It then immediately resets to "0".
- 
-   fs.xfs.xfssyncd_centisecs	(Min: 100  Default: 3000  Max: 720000)
--  	The interval at which the xfssyncd thread flushes metadata
--  	out to disk.  This thread will flush log activity out, and
--  	do some processing on unlinked inodes.
-+	The interval at which the filesystem flushes metadata
-+	out to disk and runs internal cache cleanup routines.
- 
--  fs.xfs.xfsbufd_centisecs	(Min: 50  Default: 100	Max: 3000)
--	The interval at which xfsbufd scans the dirty metadata buffers list.
-+  fs.xfs.filestream_centisecs	(Min: 1  Default: 3000  Max: 360000)
-+	The interval at which the filesystem ages filestreams cache
-+	references and returns timed-out AGs back to the free stream
-+	pool.
- 
--  fs.xfs.age_buffer_centisecs	(Min: 100  Default: 1500  Max: 720000)
--	The age at which xfsbufd flushes dirty metadata buffers to disk.
-+  fs.xfs.speculative_prealloc_lifetime
-+		(Units: seconds   Min: 1  Default: 300  Max: 86400)
-+	The interval at which the background scanning for inodes
-+	with unused speculative preallocation runs at. The scan
-+	removes unused preallocation from clean inodes and releases
-+	the unused space back to the free pool.
- 
-   fs.xfs.error_level		(Min: 0  Default: 3  Max: 11)
- 	A volume knob for error reporting when internal errors occur.
-@@ -254,9 +334,31 @@ The following sysctls are available for the XFS filesystem:
- 	by the xfs_io(8) chattr command on a directory to be
- 	inherited by files in that directory.
- 
-+  fs.xfs.inherit_nodefrag	(Min: 0  Default: 1  Max: 1)
-+	Setting this to "1" will cause the "nodefrag" flag set
-+	by the xfs_io(8) chattr command on a directory to be
-+	inherited by files in that directory.
-+
-   fs.xfs.rotorstep		(Min: 1  Default: 1  Max: 256)
- 	In "inode32" allocation mode, this option determines how many
- 	files the allocator attempts to allocate in the same allocation
- 	group before moving to the next allocation group.  The intent
- 	is to control the rate at which the allocator moves between
- 	allocation groups when allocating extents for new files.
-+
-+Deprecated Sysctls
-+==================
-+
-+  fs.xfs.xfsbufd_centisecs	(Min: 50  Default: 100	Max: 3000)
-+	Dirty metadata is now tracked by the log subsystem and
-+	flushing is driven by log space and idling demands. The
-+	xfsbufd no longer exists, so this syctl does nothing.
-+
-+	Due for removal in 3.14.
-+
-+  fs.xfs.age_buffer_centisecs	(Min: 100  Default: 1500  Max: 720000)
-+	Dirty metadata is now tracked by the log subsystem and
-+	flushing is driven by log space and idling demands. The
-+	xfsbufd no longer exists, so this syctl does nothing.
-+
-+	Due for removal in 3.14.
+ 	/*
+ 	 * As we write multiple pages, the offset will always align to the
+ 	 * start of a page and hence point to a hole at EOF. i.e. if the size is
 -- 
 1.7.10.4
 
