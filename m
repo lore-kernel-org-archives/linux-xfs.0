@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C1CE87F53
-	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 12:02:57 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 845778F8052
-	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 10:02:54 -0700 (PDT)
-Received: from cobra.newdream.net (cobra.newdream.net [66.33.216.30]) by
-	cuda.sgi.com with ESMTP id AdxF7dd0smPve92F for
-	<xfs@oss.sgi.com>; Wed, 12 Jun 2013 10:02:53 -0700 (PDT)
-Date: Wed, 12 Jun 2013 10:02:52 -0700 (PDT)
-From: Sage Weil <sage@inktank.com>
-Subject: Re: garbage block(s) after powercycle/reboot + sparse writes
-In-Reply-To: <51AE84C9.5030903@sandeen.net>
-Message-ID: <alpine.DEB.2.00.1306120955460.15386@cobra.newdream.net>
-References: <alpine.DEB.2.00.1306041210070.15156@cobra.newdream.net>
-	<51AE84C9.5030903@sandeen.net>
-MIME-Version: 1.0
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 48C317F3F
+	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 13:31:07 -0500 (CDT)
+Received: from eagdhcp-232-136.americas.sgi.com
+	(eagdhcp-232-136.americas.sgi.com [128.162.232.136])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 15EFC30406B
+	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 11:31:07 -0700 (PDT)
+Received: from eagdhcp-232-136.americas.sgi.com (localhost [127.0.0.1])
+	by eagdhcp-232-136.americas.sgi.com (8.14.5/8.14.5) with ESMTP id
+	r5CIV7vQ003170
+	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 13:31:07 -0500 (CDT)
+	(envelope-from tinguely@sgi.com)
+Message-Id: <20130612182836.141843930@sgi.com>
+Date: Wed, 12 Jun 2013 13:28:19 -0500
+From: Mark Tinguely <tinguely@sgi.com>
+Subject: [PATCH v2] xfs: fix the symbolic link assert in xfs_ifree
+References: <20130612182818.363497890@.sgi.com>
+Content-Disposition: inline; filename=v2-xfs-fix-assert-in-xfs_ifree.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,132 +25,106 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>, david@fromorbit.com
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Hi guys,
+Adding an extended attribute to a symbolic link can force that
+link to an remote extent. xfs_inactive() incorrectly assumes
+that any symbolic link small enough to be in the inode core
+is incore, resulting in the remote extent to not be removed.
+xfs_ifree() will assert on presence of this leaked remote extent.
 
-I reproduced this on two more boxes and have more data.  The full set of 
-notes/logs is at
+Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+---
+xfstest is coming.
 
-	http://newdream.net/~sage/bug-4976/notes.txt
+ fs/xfs/xfs_symlink.c  |   24 +++++++++++++++++++++++-
+ fs/xfs/xfs_symlink.h  |    1 +
+ fs/xfs/xfs_vnodeops.c |   15 +++------------
+ 3 files changed, 27 insertions(+), 13 deletions(-)
 
-I stashed a copy of the ceph log and the file itself for each case too:
+Index: b/fs/xfs/xfs_symlink.c
+===================================================================
+--- a/fs/xfs/xfs_symlink.c
++++ b/fs/xfs/xfs_symlink.c
+@@ -606,7 +606,7 @@ xfs_inactive_symlink_rmt(
+ 
+ 	tp = *tpp;
+ 	mp = ip->i_mount;
+-	ASSERT(ip->i_d.di_size > XFS_IFORK_DSIZE(ip));
++	ASSERT(ip->i_df.if_flags & XFS_IFEXTENTS);
+ 	/*
+ 	 * We're freeing a symlink that has some
+ 	 * blocks allocated to it.  Free the
+@@ -720,3 +720,25 @@ xfs_inactive_symlink_rmt(
+  error0:
+ 	return error;
+ }
++
++/*
++ * xfs_inactive_symlink - free a symlink
++ */
++int
++xfs_inactive_symlink(
++	struct xfs_inode	*ip,
++	struct xfs_trans	**tp)
++{
++
++	/*
++	 * Zero length symlinks _can_ exist.
++	 */
++	if (ip->i_df.if_flags & XFS_IFINLINE) {
++		if (ip->i_df.if_bytes > 0)
++			xfs_idata_realloc(ip, -(ip->i_df.if_bytes),
++					  XFS_DATA_FORK);
++		ASSERT(ip->i_df.if_bytes == 0);
++		return 0;
++	} else
++		return (xfs_inactive_symlink_rmt(ip, tp));
++}
+Index: b/fs/xfs/xfs_symlink.h
+===================================================================
+--- a/fs/xfs/xfs_symlink.h
++++ b/fs/xfs/xfs_symlink.h
+@@ -61,6 +61,7 @@ int xfs_symlink(struct xfs_inode *dp, st
+ 		const char *target_path, umode_t mode, struct xfs_inode **ipp);
+ int xfs_readlink(struct xfs_inode *ip, char *link);
+ int xfs_inactive_symlink_rmt(struct xfs_inode *ip, struct xfs_trans **tpp);
++int xfs_inactive_symlink(struct xfs_inode *ip, struct xfs_trans **tpp);
+ 
+ #endif /* __KERNEL__ */
+ #endif /* __XFS_SYMLINK_H */
+Index: b/fs/xfs/xfs_vnodeops.c
+===================================================================
+--- a/fs/xfs/xfs_vnodeops.c
++++ b/fs/xfs/xfs_vnodeops.c
+@@ -322,18 +322,9 @@ xfs_inactive(
+ 	xfs_trans_ijoin(tp, ip, 0);
+ 
+ 	if (S_ISLNK(ip->i_d.di_mode)) {
+-		/*
+-		 * Zero length symlinks _can_ exist.
+-		 */
+-		if (ip->i_d.di_size > XFS_IFORK_DSIZE(ip)) {
+-			error = xfs_inactive_symlink_rmt(ip, &tp);
+-			if (error)
+-				goto out_cancel;
+-		} else if (ip->i_df.if_bytes > 0) {
+-			xfs_idata_realloc(ip, -(ip->i_df.if_bytes),
+-					  XFS_DATA_FORK);
+-			ASSERT(ip->i_df.if_bytes == 0);
+-		}
++		error = xfs_inactive_symlink(ip, &tp);
++		if (error)
++			goto out_cancel;
+ 	} else if (truncate) {
+ 		ip->i_d.di_size = 0;
+ 		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
 
-	http://newdream.net/~sage/bug-4976/
-
-The new information:
- - the file was created and allocated prior to the powercycle.
- - the writes were then replayed by the ceph journaling after restart
- - garbage data appears at offsets we never wrote to
-
-If this pattern isn't suggesting any likely theories, I could rig things 
-up to try to capture the ceph log output leading up to the crash so I 
-positively confirm what the sequence was leading up to the power cycle.  
-
-Any ideas?
-
-Thanks!
-sage
-
-On Tue, 4 Jun 2013, Eric Sandeen wrote:
-> On 6/4/13 2:24 PM, Sage Weil wrote:
-> > I'm observing an interesting data corruption pattern:
-> > 
-> > - write a bunch of files
-> > - power cycle the box
-> 
-> I guess this part is important?  But I'm wondering why...
-> 
-> > - remount
-> > - immediately (within 1-2 seconds) write create a file and
-> 
-> a new file, right?
-
-It was created and written to (w/ the same pattern) before the crash.  We 
-then repeat the sequence after when replaying the ceph journal.
-
-> >  - write to a lower offset, say offset 430423 len 527614
-> >  - write to a higher offset, say offset 1360810 len 269613
-> >  (there is other random io going to other files too)
-> > 
-> > - about 5 seconds later, read the whole file and verify content
-> > 
-> > And what I see:
-> > 
-> > - the first region is correct, and intact
-> 
-> the lower offset you wrote?
-
-Right
-
-> > - the bytes that follow, up until the block boundary, are 0
-> 
-> that's good ;)
-> 
-> > - the next few blocks are *not* zero! (i've observed 1 and 6 4k blocks)
-> 
-> that's bad!
-> 
-> > - then lots of zeros, up until the second region, which appears intact.
-> 
-> the lot-of-zeros are probably holes?
-
-Right
-
-> What does xfs_bmap -vvp <filename> say about the file in question?
-
-The notes.txt file linked above has the bmap output.
-
-Thanks!
-sage
-
-
-> > I'm pretty reliably hitting this, and have reproduced it twice now and 
-> > found the above consistent pattern (but different filenames, different 
-> > offsets).  What I haven't yet confirmed is whether the file was written at 
-> > all prior to the powercycle, since that tends to blow away the last 
-> > bit of the ceph logs, too.  I'm adding some additional checks to see 
-> > whether the file is in fact new when the first extent is written.
-> > 
-> > The other possibly interesting thing is the offsets.  The garbage regions 
-> > I saw were
-> > 
-> >  0xea000 - 0xf0000
-> 
-> 234-240 4k blocks
-> 
-> >  0xff000 - 0x100000
-> 
-> 255-256 4k blocks  *shrug*
-> 
-> Is this what you saw w/ the write offsets & sizes you specified above?
-> 
-> I'm wondering if this could possibly have to do w/ speculative preallocation
-> on the file somehow exposing these blocks?  But that's just handwaving.
-> 
-> -Eric
-> 
-> > 
-> > Does this failure pattern look familiar to anyone? I'm pretty sure it is 
-> > new in 3.9, which we switched over to right around the time when this 
-> > started happening.  I'm confirming that as well, but just wanted to see if 
-> > this is ringing any bells...
-> > 
-> > Thanks!
-> > sage
-> > 
-> > _______________________________________________
-> > xfs mailing list
-> > xfs@oss.sgi.com
-> > http://oss.sgi.com/mailman/listinfo/xfs
-> > 
-> 
-> 
 
 _______________________________________________
 xfs mailing list
