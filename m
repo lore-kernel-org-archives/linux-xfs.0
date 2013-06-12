@@ -1,20 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A7BFD7F55
-	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 08:02:54 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 88843304032
-	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 06:02:51 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Ikndax02iMngoJxW for
-	<xfs@oss.sgi.com>; Wed, 12 Jun 2013 06:02:50 -0700 (PDT)
-Message-ID: <51B87253.8060905@redhat.com>
-Date: Wed, 12 Jun 2013 09:06:27 -0400
-From: Brian Foster <bfoster@redhat.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH 00/27] xfs: current patch queue for 3.11
-References: <1371032567-21772-1-git-send-email-david@fromorbit.com>
-In-Reply-To: <1371032567-21772-1-git-send-email-david@fromorbit.com>
+	by oss.sgi.com (Postfix) with ESMTP id 597227F5E
+	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 08:48:55 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 280E5304039
+	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 06:48:55 -0700 (PDT)
+Received: from stockholm.opq.se ([213.88.151.150]) by cuda.sgi.com with ESMTP
+	id ydqIawPRFYLHtKHo (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 12 Jun 2013 06:48:52 -0700 (PDT)
+Received: from [10.2.10.41] (acme.pacific [10.2.10.41])
+	by stockholm.opq.se (8.13.4/8.13.4/SuSE Linux 0.7) with ESMTP id
+	r5CDmmK2029478 for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 15:48:50 +0200
+Subject: Re: Questions about XFS
+From: Roger Oberholtzer <roger@opq.se>
+In-Reply-To: <51B865B2.5030208@hardwarefreak.com>
+References: <loom.20130611T112155-970@post.gmane.org>
+	<51B72D3D.5010206@redhat.com>
+	<CAO9HMNGjdikgX+_434aGVJ2NAJ0hxDNLo+Vsa46GH3psXr4sKQ@mail.gmail.com>
+	<1371025611.7096.10.camel@acme>  <51B865B2.5030208@hardwarefreak.com>
+Date: Wed, 12 Jun 2013 15:48:47 +0200
+Message-ID: <1371044927.16366.14.camel@acme.pacific>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,112 +30,56 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 06/12/2013 06:22 AM, Dave Chinner wrote:
-> Hi folks,
-> =
-
-> This is an update of my current patch queue for the 3.11 release
-> cycle. This series starts on top of the patch series I posted for
-> 3.10-rc6, and builds upon the series previously posted last week:
-> =
-
-> http://oss.sgi.com/pipermail/xfs/2013-June/027040.html
-> =
-
-
-Just a heads up, I applied this to tot and hit a few minor build errors:
-
-fs/xfs/xfs_dir2_readdir.c:40:1: error: static declaration of
-=91xfs_dir2_sf_getdents=92 follows non-static declaration
-In file included from fs/xfs/xfs_dir2_readdir.c:34:0:
-fs/xfs/xfs_dir2_priv.h:127:12: note: previous declaration of
-=91xfs_dir2_sf_getdents=92 was here
-fs/xfs/xfs_dir2_readdir.c:143:1: error: static declaration of
-=91xfs_dir2_block_getdents=92 follows non-static declaration
-In file included from fs/xfs/xfs_dir2_readdir.c:34:0:
-fs/xfs/xfs_dir2_priv.h:32:12: note: previous declaration of
-=91xfs_dir2_block_getdents=92 was here
-fs/xfs/xfs_dir2_readdir.c:455:1: error: static declaration of
-=91xfs_dir2_leaf_getdents=92 follows non-static declaration
-In file included from fs/xfs/xfs_dir2_readdir.c:34:0:
-fs/xfs/xfs_dir2_priv.h:68:12: note: previous declaration of
-=91xfs_dir2_leaf_getdents=92 was here
-
-In each case, it looks like patch 14/27 (xfs: move getdents code into
-it's own file) moved the associated function and added a STATIC to the
-function definition. Given the title of the patch, I removed the
-STATIC's and moved on to this one:
-
-fs/xfs/xfs_dir2_data.c:39:1: error: static declaration of
-=91xfs_dir2_data_freefind=92 follows non-static declaration
-In file included from fs/xfs/xfs_dir2_data.c:31:0:
-fs/xfs/xfs_dir2.h:125:35: note: previous declaration of
-=91xfs_dir2_data_freefind=92 was here
-
-That one appears to be due to 15/27 (xfs: reshuffle dir2 definitions
-around for userspace) adding a header declaration to a static function.
-
-diff appended for reference.
-
-Brian
-
---- 8< ---
-
-diff --git a/fs/xfs/xfs_dir2.h b/fs/xfs/xfs_dir2.h
-index 804238d..3bef13a 100644
---- a/fs/xfs/xfs_dir2.h
-+++ b/fs/xfs/xfs_dir2.h
-@@ -122,9 +122,6 @@ extern void xfs_dir2_data_use_free(struct xfs_trans
-*tp, struct xfs_buf *bp,
- 		struct xfs_dir2_data_unused *dup, xfs_dir2_data_aoff_t offset,
- 		xfs_dir2_data_aoff_t len, int *needlogp, int *needscanp);
-
--extern struct xfs_dir2_data_free *xfs_dir2_data_freefind(
--		struct xfs_dir2_data_hdr *hdr, struct xfs_dir2_data_unused *dup);
--
- extern const struct xfs_buf_ops xfs_dir3_block_buf_ops;
- extern const struct xfs_buf_ops xfs_dir3_leafn_buf_ops;
- extern const struct xfs_buf_ops xfs_dir3_leaf1_buf_ops;
-diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-index dcf17cf..ed86deb 100644
---- a/fs/xfs/xfs_dir2_readdir.c
-+++ b/fs/xfs/xfs_dir2_readdir.c
-@@ -36,7 +36,7 @@
- #include "xfs_trace.h"
- #include "xfs_bmap.h"
-
--STATIC int
-+int
- xfs_dir2_sf_getdents(
- 	xfs_inode_t		*dp,		/* incore directory inode */
- 	void			*dirent,
-@@ -139,7 +139,7 @@ xfs_dir2_sf_getdents(
- /*
-  * Readdir for block directories.
-  */
--STATIC int
-+int
- xfs_dir2_block_getdents(
- 	xfs_inode_t		*dp,		/* incore inode */
- 	void			*dirent,
-@@ -451,7 +451,7 @@ out:
-  * Getdents (readdir) for leaf and node directories.
-  * This reads the data blocks only, so is the same for both forms.
-  */
--STATIC int
-+int
- xfs_dir2_leaf_getdents(
- 	xfs_inode_t		*dp,		/* incore directory inode */
- 	void			*dirent,
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gV2VkLCAyMDEzLTA2LTEyIGF0IDA3OjEyIC0wNTAwLCBTdGFuIEhvZXBwbmVyIHdyb3RlOgo+
+IE9uIDYvMTIvMjAxMyAzOjI2IEFNLCBSb2dlciBPYmVyaG9sdHplciB3cm90ZToKPiAuLi4KPiA+
+IEkgaGF2ZSBhbiBhcHBsaWNhdGlvbiB0aGF0IGlzIHN0cmVhbWluZyBkYXRhIHRvIGFuIFhGUyBk
+aXNrIGF0IGEKPiA+IHN1c3RhaW5lZCAyNSBNQi9zZWMuIFRoaXMgaXMgd2VsbCBiZWxvdyB3aGF0
+IHRoZSBoYXJkd2FyZSBzdXBwb3J0cy4gVGhlCj4gPiBhcHBsaWNhdGlvbiBkb2VzIGZvcGVuL2Z3
+cml0ZS9mY2xvc2UgKG5vIGFjdGl2ZSBmbHVzaGluZyBvciBzeW5jaW5nKS4KPiAKPiBCdWZmZXJl
+ZCBJTy4KPiAKPiA+IEkgc2VlIHRoYXQgYXMgbXkgYXBwbGljYXRpb24gd3JpdGVzIGRhdGEgKHRo
+ZSBvbmx5IHByb2Nlc3Mgd3JpdGluZyB0aGUKPiA+IG9ubHkgb3BlbiBmaWxlIG9uIHRoZSBkaXNr
+KSwgdGhlIHN5c3RlbSBjYWNoZSBncm93cyBhbmQgZ3Jvd3MuIEhlcmUgaXMKPiA+IHRoZSB1bnVz
+dWFsIHBhcnQ6IHBlcmlvZGljYWxseSwgd3JpdGVzIHRha2Ugc29tZSBudW1iZXIgb2Ygc2Vjb25k
+cyB0bwo+ID4gY29tcGxldGUsIHJhdGhlciB0aGFuIHRoZSB0eXBpY2FsIDw1MCBtc2VjcykuIFRo
+ZSBpbmNyZWFzZWQgdGltZSBzZWVtcwo+ID4gdG8gY29ycmVzcG9uZCB0byB0aGUgaW5jcmVhc2lu
+ZyBzaXplIG9mIHRoZSBwYWdlIGNhY2hlLgo+IAo+IFN0YW5kYXJkIExpbnV4IGJ1ZmZlcmVkIElP
+IGJlaGF2aW9yLiAgTm90ZSB0aGlzIGlzIG5vdCBYRlMgc3BlY2lmaWMuCgpUaGF0IGlzIGNvcnJl
+Y3QuIEJ1dCB1c2VycyBvZiBYRlMsIGxpa2UgYW55IG90aGVycywgbWF5IGV4cGVyaWVuY2UgdGhp
+cwphbmQgaGF2ZSBhIHNvbHV0aW9uLiBBbmQgaXQgc2VlbWVkIHRvIGJlIHJlbGF0ZWQgdGhlIHRo
+ZSBxdWVzdGlvbiBpbiB0aGUKb3JpZ2luYWwgcG9zdC4KCj4gPiBJZiBJIGRvOgo+ID4gCj4gPiBl
+Y2hvIDEgPiAvcHJvYy9zeXMvdm0vZHJvcF9jYWNoZXMKPiAKPiBEdW1wcyB0aGUgcGFnZSBjYWNo
+ZSBmb3JjaW5nIHlvdXIgYnVmZmVyZWQgd3JpdGVzIHRvIGRpc2suCgpUaGUgaW50ZXJlc3Rpbmcg
+dGhpbmcgaXMgdGhhdCB3aGVuIHRoaXMgaXMgZG9uZSwgYW5kIHRoZSAzIG9yIDQgR0Igb2YKY2Fj
+aGUgZ29lcyBhd2F5LCBpdCBzZWVtcyByYXRoZXIgcXVpY2suIExpa2UgdGhlIHBhZ2VzIGFyZSBu
+b3QKY29udGFpbmluZyBkYXRhIHRoYXQgbXVzdCBiZSB3cml0dGVuLiBCdXQgaWYgdGhhdCBpcyB0
+aGUgY2FzZSwgd2h5IHRoZQppbmNyZWFzaW5nbHkgbG9uZyBwZXJpb2RpYyB3cml0ZSBkZWxheXMg
+YXMgdGhlIGNhY2hlIGdldHMgYmlnZ2VyPwoKPiA+IHdoaWxlIHRoZSBhcHBsaWNhdGlvbiBpcyBy
+dW5udW5nLCB0aGVuIHRoZSB3cml0ZXMgZG8gbm90IG9jY2FzaW9uYWxseQo+ID4gdGFrZSBsb25n
+ZXIuIFVudGlsIHRoZSBjYWNoZSBncm93cyBhZ2FpbiwgYW5kIEkgZG8gdGhlIGVjaG8gYWdhaW4u
+Cj4gCj4gV2hpY2ggc2VlbXMgYSBiaXQgbGFib3Jpb3VzLgo+IAo+ID4gSSBhbSBzdXJlIEkgbXVz
+dCBiZSBtaXNpbnRlcnByZXRpbmcgd2hhdCBJIHNlZS4KPiAKPiBOb3BlLiAgVGhlIExpbnV4IHZp
+cnR1YWwgbWVtb3J5IHN5c3RlbSBoYXMgYmVoYXZlZCB0aGlzIHdheSBmb3IgcXVpdGUKPiBzb21l
+IHRpbWUuICBZb3UgY2FuIHRlYWsgaG93IGxvbmcgSU9zIHN0YXkgaW4gY2FjaGUuICBTZWUgZGly
+dHlfKiBhdAo+IGh0dHBzOi8vd3d3Lmtlcm5lbC5vcmcvZG9jL0RvY3VtZW50YXRpb24vc3lzY3Rs
+L3ZtLnR4dAoKPiAKPiBHaXZlbiB0aGUgc3RyZWFtaW5nIG5hdHVyZSB5b3UgZGVzY3JpYmUsIGhh
+dmUgeW91IGxvb2tlZCBhdCBwb3NzaWJseQo+IHVzaW5nIE9fRElSRUNUPwoKSSB3b3VsZCByZWFs
+bHkgbGlrZSB0byBhdm9pZCB0aGlzIGlmIHBvc3NpYmxlLiBUaGUgZGF0YSBpcyBub3QgaW4KdW5p
+Zm9ybSBjaHVua3MsIHNvIGl0IHdvdWxkIG5lZWQgdG8gYmUgYnVmZmVyZWQgaW4gdGhlIGFwcCB0
+byBtYWtlIGl0CnNvLiBUaGUgc3lzdGVtIGNhbiBvYnZpb3VzbHkga2VlcCB1cCB3aXRoIHRoZSBk
+YXRhIHJhdGUgLSBhcyBsb25nIGFzIGl0CmRvZXMgbm90IGdldCBncmVlZHkgd2l0aCBhbGwgdGhh
+dCBSQU0ganVzdCBzaXR0aW5nIHRoZXJlLi4uCgpJIGhhdmUgYmVlbiB0aGlua2luZyB0aGF0IEkg
+bWF5IG5lZWQgdG8gZG8gYW4gb2NjYXNpb25hbApmZmx1c2gvZmRhdGFzeW5jIHRvIGJlIHN1cmUg
+dGhlIHdyaXRlIGNhY2hlIHN0YXlzIHJlYXNvbmFibHkgc21hbGwuCgoKWW91cnMgc2luY2VyZWx5
+LAoKUm9nZXIgT2JlcmhvbHR6ZXIKClJhbWLDtmxsIFJTVCAvIFN5c3RlbXMKCk9mZmljZTogSW50
+ICs0NiAxMC02MTUgNjAgMjAKTW9iaWxlOiBJbnQgKzQ2IDcwLTgxNSAxNjk2CnJvZ2VyLm9iZXJo
+b2x0emVyQHJhbWJvbGwuc2UKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+XwoKUmFtYsO2bGwgU3ZlcmlnZSBBQgpLcnVrbWFrYXJnYXRhbiAyMQpQLk8uIEJveCAxNzAwOQpT
+RS0xMDQgNjIgU3RvY2tob2xtLCBTd2VkZW4Kd3d3LnJhbWJvbGxyc3Quc2UKCgpfX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhm
+c0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
