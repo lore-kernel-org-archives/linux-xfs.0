@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A685E7FB6
-	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 05:37:08 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 8B1848017
+	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 05:37:09 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 270EDAC005
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 09017AC005
 	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 03:37:08 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	FFrAChqaCE5g4JJn for <xfs@oss.sgi.com>;
-	Wed, 12 Jun 2013 03:37:05 -0700 (PDT)
-Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UmiQE-0001CL-5V
-	for xfs@oss.sgi.com; Wed, 12 Jun 2013 20:36:58 +1000
+	F9yFTFzObyMjE9XW for <xfs@oss.sgi.com>;
+	Wed, 12 Jun 2013 03:37:06 -0700 (PDT)
+Received: from [192.168.1.1] (helo=disappointment)
+	by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1UmiQD-0001Bn-PE
+	for xfs@oss.sgi.com; Wed, 12 Jun 2013 20:36:57 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UmiQ3-0006nt-QQ
+	(envelope-from <dave@disappointment.disaster>) id 1UmiQ3-0006nf-Mt
 	for xfs@oss.sgi.com; Wed, 12 Jun 2013 20:36:47 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 19/22] libxfs: sync dir2 kernel differences
-Date: Wed, 12 Jun 2013 20:36:31 +1000
-Message-Id: <1371033394-26006-20-git-send-email-david@fromorbit.com>
+Subject: [PATCH 16/22] libxfs: sync xfs_da_btree.c
+Date: Wed, 12 Jun 2013 20:36:28 +1000
+Message-Id: <1371033394-26006-17-git-send-email-david@fromorbit.com>
 In-Reply-To: <1371033394-26006-1-git-send-email-david@fromorbit.com>
 References: <1371033394-26006-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,243 +39,156 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
+Some variables we renamed in the kernel code, and there are a few
+other minor differences. Fix them up.
+
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- libxfs/xfs_dir2.c      |   45 +++++++++++++++++++++++++++++++++++++++++++++
- libxfs/xfs_dir2_data.c |   20 ++++++++++----------
- libxfs/xfs_dir2_leaf.c |    4 ++--
- libxfs/xfs_dir2_node.c |   30 ++++++++++++++----------------
- 4 files changed, 71 insertions(+), 28 deletions(-)
+ libxfs/xfs_da_btree.c |   63 ++++++++++++++++++++++++++-----------------------
+ 1 file changed, 33 insertions(+), 30 deletions(-)
 
-diff --git a/libxfs/xfs_dir2.c b/libxfs/xfs_dir2.c
-index 6a4027f..830fe3e 100644
---- a/libxfs/xfs_dir2.c
-+++ b/libxfs/xfs_dir2.c
-@@ -392,6 +392,51 @@ xfs_dir_replace(
- }
- 
- /*
-+ * See if this entry can be added to the directory without allocating space.
-+ * First checks that the caller couldn't reserve enough space (resblks = 0).
-+ */
-+int
-+xfs_dir_canenter(
-+	xfs_trans_t	*tp,
-+	xfs_inode_t	*dp,
-+	struct xfs_name	*name,		/* name of entry to add */
-+	uint		resblks)
-+{
-+	xfs_da_args_t	args;
-+	int		rval;
-+	int		v;		/* type-checking value */
-+
-+	if (resblks)
-+		return 0;
-+
-+	ASSERT(S_ISDIR(dp->i_d.di_mode));
-+
-+	memset(&args, 0, sizeof(xfs_da_args_t));
-+	args.name = name->name;
-+	args.namelen = name->len;
-+	args.hashval = dp->i_mount->m_dirnameops->hashname(name);
-+	args.dp = dp;
-+	args.whichfork = XFS_DATA_FORK;
-+	args.trans = tp;
-+	args.op_flags = XFS_DA_OP_JUSTCHECK | XFS_DA_OP_ADDNAME |
-+							XFS_DA_OP_OKNOENT;
-+
-+	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
-+		rval = xfs_dir2_sf_addname(&args);
-+	else if ((rval = xfs_dir2_isblock(tp, dp, &v)))
-+		return rval;
-+	else if (v)
-+		rval = xfs_dir2_block_addname(&args);
-+	else if ((rval = xfs_dir2_isleaf(tp, dp, &v)))
-+		return rval;
-+	else if (v)
-+		rval = xfs_dir2_leaf_addname(&args);
-+	else
-+		rval = xfs_dir2_node_addname(&args);
-+	return rval;
-+}
-+
-+/*
-  * Utility routines.
-  */
- 
-diff --git a/libxfs/xfs_dir2_data.c b/libxfs/xfs_dir2_data.c
-index 155352c..064ddb2 100644
---- a/libxfs/xfs_dir2_data.c
-+++ b/libxfs/xfs_dir2_data.c
-@@ -53,15 +53,15 @@ __xfs_dir3_data_check(
- 	bf = xfs_dir3_data_bestfree_p(hdr);
- 	p = (char *)xfs_dir3_data_entry_p(hdr);
- 
--	switch (be32_to_cpu(hdr->magic)) {
--	case XFS_DIR2_BLOCK_MAGIC:
--	case XFS_DIR3_BLOCK_MAGIC:
-+	switch (hdr->magic) {
-+	case cpu_to_be32(XFS_DIR3_BLOCK_MAGIC):
-+	case cpu_to_be32(XFS_DIR2_BLOCK_MAGIC):
- 		btp = xfs_dir2_block_tail_p(mp, hdr);
- 		lep = xfs_dir2_block_leaf_p(btp);
- 		endp = (char *)lep;
- 		break;
--	case XFS_DIR2_DATA_MAGIC:
--	case XFS_DIR3_DATA_MAGIC:
-+	case cpu_to_be32(XFS_DIR3_DATA_MAGIC):
-+	case cpu_to_be32(XFS_DIR2_DATA_MAGIC):
- 		endp = (char *)hdr + mp->m_dirblksize;
- 		break;
- 	default:
-@@ -209,14 +209,14 @@ xfs_dir3_data_reada_verify(
- 	struct xfs_mount	*mp = bp->b_target->bt_mount;
- 	struct xfs_dir2_data_hdr *hdr = bp->b_addr;
- 
--	switch (be32_to_cpu(hdr->magic)) {
--	case XFS_DIR2_BLOCK_MAGIC:
--	case XFS_DIR3_BLOCK_MAGIC:
-+	switch (hdr->magic) {
-+	case cpu_to_be32(XFS_DIR2_BLOCK_MAGIC):
-+	case cpu_to_be32(XFS_DIR3_BLOCK_MAGIC):
- 		bp->b_ops = &xfs_dir3_block_buf_ops;
- 		bp->b_ops->verify_read(bp);
- 		return;
--	case XFS_DIR2_DATA_MAGIC:
--	case XFS_DIR3_DATA_MAGIC:
-+	case cpu_to_be32(XFS_DIR2_DATA_MAGIC):
-+	case cpu_to_be32(XFS_DIR3_DATA_MAGIC):
- 		xfs_dir3_data_verify(bp);
- 		return;
- 	default:
-diff --git a/libxfs/xfs_dir2_leaf.c b/libxfs/xfs_dir2_leaf.c
-index a287bb1..8c20b9e 100644
---- a/libxfs/xfs_dir2_leaf.c
-+++ b/libxfs/xfs_dir2_leaf.c
-@@ -247,14 +247,14 @@ xfs_dir3_leaf1_write_verify(
- 	__write_verify(bp, XFS_DIR2_LEAF1_MAGIC);
- }
- 
--void
-+static void
- xfs_dir3_leafn_read_verify(
- 	struct xfs_buf	*bp)
+diff --git a/libxfs/xfs_da_btree.c b/libxfs/xfs_da_btree.c
+index e83a3ad..d7798af 100644
+--- a/libxfs/xfs_da_btree.c
++++ b/libxfs/xfs_da_btree.c
+@@ -480,8 +480,10 @@ xfs_da3_split(
+ 	 * There might be three blocks involved if a double split occurred,
+ 	 * and the original block 0 could be at any position in the list.
+ 	 *
+-	 * Note: the info structures being modified here for both v2 and v3 da
+-	 * headers, so we can do this linkage just using the v2 structures.
++	 * Note: the magic numbers and sibling pointers are in the same
++	 * physical place for both v2 and v3 headers (by design). Hence it
++	 * doesn't matter which version of the xfs_da_intnode structure we use
++	 * here as the result will be the same using either structure.
+ 	 */
+ 	node = oldblk->bp->b_addr;
+ 	if (node->hdr.info.forw) {
+@@ -820,7 +822,7 @@ xfs_da3_node_rebalance(
+ 		 */
+ 		nodehdr2.count += count;
+ 		tmp = count * (uint)sizeof(xfs_da_node_entry_t);
+-		btree_s = &btree1[nodehdr1.count- count];
++		btree_s = &btree1[nodehdr1.count - count];
+ 		btree_d = &btree2[0];
+ 		memcpy(btree_d, btree_s, tmp);
+ 		nodehdr1.count -= count;
+@@ -1380,10 +1382,10 @@ xfs_da3_node_unbalance(
  {
- 	__read_verify(bp, XFS_DIR2_LEAFN_MAGIC);
+ 	struct xfs_da_intnode	*drop_node;
+ 	struct xfs_da_intnode	*save_node;
+-	struct xfs_da_node_entry *dbtree;
+-	struct xfs_da_node_entry *sbtree;
+-	struct xfs_da3_icnode_hdr dhdr;
+-	struct xfs_da3_icnode_hdr shdr;
++	struct xfs_da_node_entry *drop_btree;
++	struct xfs_da_node_entry *save_btree;
++	struct xfs_da3_icnode_hdr drop_hdr;
++	struct xfs_da3_icnode_hdr save_hdr;
+ 	struct xfs_trans	*tp;
+ 	int			sindex;
+ 	int			tmp;
+@@ -1392,43 +1394,44 @@ xfs_da3_node_unbalance(
+ 
+ 	drop_node = drop_blk->bp->b_addr;
+ 	save_node = save_blk->bp->b_addr;
+-	xfs_da3_node_hdr_from_disk(&dhdr, drop_node);
+-	xfs_da3_node_hdr_from_disk(&shdr, save_node);
+-	dbtree = xfs_da3_node_tree_p(drop_node);
+-	sbtree = xfs_da3_node_tree_p(save_node);
++	xfs_da3_node_hdr_from_disk(&drop_hdr, drop_node);
++	xfs_da3_node_hdr_from_disk(&save_hdr, save_node);
++	drop_btree = xfs_da3_node_tree_p(drop_node);
++	save_btree = xfs_da3_node_tree_p(save_node);
+ 	tp = state->args->trans;
+ 
+ 	/*
+ 	 * If the dying block has lower hashvals, then move all the
+ 	 * elements in the remaining block up to make a hole.
+ 	 */
+-	if ((be32_to_cpu(dbtree[0].hashval) < be32_to_cpu(sbtree[ 0 ].hashval)) ||
+-	    (be32_to_cpu(dbtree[dhdr.count - 1].hashval) <
+-				be32_to_cpu(sbtree[shdr.count - 1].hashval))) {
++	if ((be32_to_cpu(drop_btree[0].hashval) <
++			be32_to_cpu(save_btree[0].hashval)) ||
++	    (be32_to_cpu(drop_btree[drop_hdr.count - 1].hashval) <
++			be32_to_cpu(save_btree[save_hdr.count - 1].hashval))) {
+ 		/* XXX: check this - is memmove dst correct? */
+-		tmp = shdr.count * (uint)sizeof(xfs_da_node_entry_t);
+-		memmove(&sbtree[dhdr.count], &sbtree[0], tmp);
++		tmp = save_hdr.count * sizeof(xfs_da_node_entry_t);
++		memmove(&save_btree[drop_hdr.count], &save_btree[0], tmp);
+ 
+ 		sindex = 0;
+ 		xfs_trans_log_buf(tp, save_blk->bp,
+-			XFS_DA_LOGRANGE(save_node, &sbtree[0],
+-				(shdr.count + dhdr.count) *
++			XFS_DA_LOGRANGE(save_node, &save_btree[0],
++				(save_hdr.count + drop_hdr.count) *
+ 						sizeof(xfs_da_node_entry_t)));
+ 	} else {
+-		sindex = shdr.count;
++		sindex = save_hdr.count;
+ 		xfs_trans_log_buf(tp, save_blk->bp,
+-			XFS_DA_LOGRANGE(save_node, &sbtree[sindex],
+-				dhdr.count * sizeof(xfs_da_node_entry_t)));
++			XFS_DA_LOGRANGE(save_node, &save_btree[sindex],
++				drop_hdr.count * sizeof(xfs_da_node_entry_t)));
+ 	}
+ 
+ 	/*
+ 	 * Move all the B-tree elements from drop_blk to save_blk.
+ 	 */
+-	tmp = dhdr.count * (uint)sizeof(xfs_da_node_entry_t);
+-	memcpy(&sbtree[sindex], &dbtree[0], tmp);
+-	shdr.count += dhdr.count;
++	tmp = drop_hdr.count * (uint)sizeof(xfs_da_node_entry_t);
++	memcpy(&save_btree[sindex], &drop_btree[0], tmp);
++	save_hdr.count += drop_hdr.count;
+ 
+-	xfs_da3_node_hdr_to_disk(save_node, &shdr);
++	xfs_da3_node_hdr_to_disk(save_node, &save_hdr);
+ 	xfs_trans_log_buf(tp, save_blk->bp,
+ 		XFS_DA_LOGRANGE(save_node, &save_node->hdr,
+ 				xfs_da3_node_hdr_size(save_node)));
+@@ -1436,7 +1439,7 @@ xfs_da3_node_unbalance(
+ 	/*
+ 	 * Save the last hashval in the remaining block for upward propagation.
+ 	 */
+-	save_blk->hashval = be32_to_cpu(sbtree[shdr.count - 1].hashval);
++	save_blk->hashval = be32_to_cpu(save_btree[save_hdr.count - 1].hashval);
  }
  
--void
-+static void
- xfs_dir3_leafn_write_verify(
- 	struct xfs_buf	*bp)
- {
-diff --git a/libxfs/xfs_dir2_node.c b/libxfs/xfs_dir2_node.c
-index bdce1b3..222f08c 100644
---- a/libxfs/xfs_dir2_node.c
-+++ b/libxfs/xfs_dir2_node.c
-@@ -257,7 +257,6 @@ xfs_dir3_free_get_buf(
- 		hdr3->hdr.blkno = cpu_to_be64(bp->b_bn);
- 		hdr3->hdr.owner = cpu_to_be64(dp->i_ino);
- 		uuid_copy(&hdr3->hdr.uuid, &mp->m_sb.sb_uuid);
--
- 	} else
- 		hdr.magic = XFS_DIR2_FREE_MAGIC;
- 	xfs_dir3_free_hdr_to_disk(bp->b_addr, &hdr);
-@@ -978,7 +977,7 @@ xfs_dir2_leafn_rebalance(
- 	xfs_dir2_leaf_t		*leaf1;		/* first leaf structure */
- 	xfs_dir2_leaf_t		*leaf2;		/* second leaf structure */
- 	int			mid;		/* midpoint leaf index */
--#ifdef DEBUG
-+#if defined(DEBUG) || defined(XFS_WARN)
- 	int			oldstale;	/* old count of stale leaves */
- #endif
- 	int			oldsum;		/* old total leaf count */
-@@ -1007,7 +1006,7 @@ xfs_dir2_leafn_rebalance(
- 	ents2 = xfs_dir3_leaf_ents_p(leaf2);
+ /*========================================================================
+@@ -2201,8 +2204,6 @@ xfs_da3_swap_lastblock(
+ 	} else {
+ 		struct xfs_da3_icnode_hdr deadhdr;
  
- 	oldsum = hdr1.count + hdr2.count;
--#ifdef DEBUG
-+#if defined(DEBUG) || defined(XFS_WARN)
- 	oldstale = hdr1.stale + hdr2.stale;
- #endif
- 	mid = oldsum >> 1;
-@@ -1101,7 +1100,6 @@ xfs_dir3_data_block_free(
- 	__be16			*bests;
- 	struct xfs_dir3_icfree_hdr freehdr;
+-		ASSERT(dead_info->magic == cpu_to_be16(XFS_DA_NODE_MAGIC) ||
+-		       dead_info->magic == cpu_to_be16(XFS_DA3_NODE_MAGIC));
+ 		dead_node = (xfs_da_intnode_t *)dead_info;
+ 		xfs_da3_node_hdr_from_disk(&deadhdr, dead_node);
+ 		btree = xfs_da3_node_tree_p(dead_node);
+@@ -2441,7 +2442,8 @@ xfs_buf_map_from_irec(
+ 	ASSERT(nirecs >= 1);
  
--
- 	xfs_dir3_free_hdr_from_disk(&freehdr, free);
- 
- 	bests = xfs_dir3_free_bests_p(tp->t_mountp, free);
-@@ -1115,12 +1113,14 @@ xfs_dir3_data_block_free(
- 		return 0;
- 	}
- 
--	/*
--	 * One less used entry in the free table. Unused is not converted
--	 * because we only need to know if it zero
--	 */
-+	/* One less used entry in the free table. */
- 	freehdr.nused--;
- 
-+	/*
-+	 * If this was the last entry in the table, we can trim the table size
-+	 * back.  There might be other entries at the end referring to
-+	 * non-existent data blocks, get those too.
-+	 */
- 	if (findex == freehdr.nvalid - 1) {
- 		int	i;		/* free entry index */
- 
-@@ -1159,7 +1159,6 @@ xfs_dir3_data_block_free(
+ 	if (nirecs > 1) {
+-		map = kmem_zalloc(nirecs * sizeof(struct xfs_buf_map), KM_SLEEP);
++		map = kmem_zalloc(nirecs * sizeof(struct xfs_buf_map),
++				  KM_SLEEP | KM_NOFS);
+ 		if (!map)
+ 			return ENOMEM;
+ 		*mapp = map;
+@@ -2497,7 +2499,8 @@ xfs_dabuf_map(
+ 		 * Optimize the one-block case.
  		 */
- 	}
+ 		if (nfsb != 1)
+-			irecs = kmem_zalloc(sizeof(irec) * nfsb, KM_SLEEP);
++			irecs = kmem_zalloc(sizeof(irec) * nfsb,
++					    KM_SLEEP | KM_NOFS);
  
--
- 	/* Log the free entry that changed, unless we got rid of it.  */
- 	if (logfree)
- 		xfs_dir2_free_log_bests(tp, fbp, findex, findex);
-@@ -1275,9 +1274,8 @@ xfs_dir2_leafn_remove(
- 	{
- 		struct xfs_dir3_icfree_hdr freehdr;
- 		xfs_dir3_free_hdr_from_disk(&freehdr, free);
--		ASSERT(freehdr.firstdb ==
--				       xfs_dir3_free_max_bests(mp) *
--				       (fdb - XFS_DIR2_FREE_FIRSTDB(mp)));
-+		ASSERT(freehdr.firstdb == xfs_dir3_free_max_bests(mp) *
-+					  (fdb - XFS_DIR2_FREE_FIRSTDB(mp)));
- 	}
- #endif
- 		/*
-@@ -1425,7 +1423,7 @@ xfs_dir2_leafn_toosmall(
- 	leaf = blk->bp->b_addr;
- 	xfs_dir3_leaf_hdr_from_disk(&leafhdr, leaf);
- 	ents = xfs_dir3_leaf_ents_p(leaf);
--	xfs_dir3_leaf_check(mp, blk->bp);
-+	xfs_dir3_leaf_check(state->args->dp->i_mount, blk->bp);
- 
- 	count = leafhdr.count - leafhdr.stale;
- 	bytes = xfs_dir3_leaf_hdr_size(leaf) + count * sizeof(ents[0]);
-@@ -1795,9 +1793,9 @@ xfs_dir2_node_addname_int(
- 		/*
- 		 * Look at the current free entry.  Is it good enough?
- 		 *
--		 * The bests initialisation should be wher eteh bufer is read in
-+		 * The bests initialisation should be where the bufer is read in
- 		 * the above branch. But gcc is too stupid to realise that bests
--		 * iand the freehdr are actually initialised if they are placed
-+		 * and the freehdr are actually initialised if they are placed
- 		 * there, so we have to do it here to avoid warnings. Blech.
- 		 */
- 		bests = xfs_dir3_free_bests_p(mp, free);
-@@ -1863,7 +1861,7 @@ xfs_dir2_node_addname_int(
- 		 * If there wasn't a freespace block, the read will
- 		 * return a NULL fbp.  Allocate and initialize a new one.
- 		 */
--		if(!fbp) {
-+		if (!fbp) {
- 			error = xfs_dir2_grow_inode(args, XFS_DIR2_FREE_SPACE,
- 						    &fbno);
- 			if (error)
+ 		nirecs = nfsb;
+ 		error = xfs_bmapi_read(dp, (xfs_fileoff_t)bno, nfsb, irecs,
 -- 
 1.7.10.4
 
