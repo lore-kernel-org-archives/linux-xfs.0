@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id EB7817FD5
-	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 05:37:00 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 18B747FD5
+	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 05:37:02 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CC5D9304043
-	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 03:37:00 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id EC2078F8037
+	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 03:37:01 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	Ow4deSX4jiCawXIb for <xfs@oss.sgi.com>;
-	Wed, 12 Jun 2013 03:36:58 -0700 (PDT)
+	FVdZ9xAUSLsqubKM for <xfs@oss.sgi.com>;
+	Wed, 12 Jun 2013 03:37:00 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UmiPt-0001BC-4z
-	for xfs@oss.sgi.com; Wed, 12 Jun 2013 20:36:37 +1000
+	(envelope-from <dave@fromorbit.com>) id 1UmiQ3-0001BT-Cl
+	for xfs@oss.sgi.com; Wed, 12 Jun 2013 20:36:47 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UmiPs-0006mS-V0
-	for xfs@oss.sgi.com; Wed, 12 Jun 2013 20:36:36 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1UmiQ3-0006mo-6E
+	for xfs@oss.sgi.com; Wed, 12 Jun 2013 20:36:47 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 00/22] xfsprogs: sync up with 3.11 kernel code
-Date: Wed, 12 Jun 2013 20:36:12 +1000
-Message-Id: <1371033394-26006-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 05/22] libxfs: move the transaction reservation structures
+Date: Wed, 12 Jun 2013 20:36:17 +1000
+Message-Id: <1371033394-26006-6-git-send-email-david@fromorbit.com>
+In-Reply-To: <1371033394-26006-1-git-send-email-david@fromorbit.com>
+References: <1371033394-26006-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,106 +36,148 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hi folks,
+From: Dave Chinner <dchinner@redhat.com>
 
-This is the xfsprogs patchset that goes along with the 3.11 kernel
-code patchset I just posted. It introduces all the support needed for
-the new icreate transaction, and syncs all the header and c files to
-the kernel code that has been modified to minimise the diffs between
-kernel and userspace. It also fixes all the outstanding compile
-warnigns I get here.
+To prepare for getting rid of xfs_mount.h, we need to move the
+definition of the struct for pre-calculated transaction reservations
+out of xfs_mount.h. Move it to xfs_trans.h along with all the other
+transaction reservation definitions.
 
-A benefit of the sync-up with the kernel code is that all the fixes
-made to the kernel that were missed from the userspace code have now
-been picked up.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ include/libxfs.h    |    5 ++---
+ include/xfs_mount.h |   30 ------------------------------
+ include/xfs_trans.h |   30 ++++++++++++++++++++++++++++++
+ mkfs/maxtrres.c     |    2 +-
+ 4 files changed, 33 insertions(+), 34 deletions(-)
 
-This patchset is built on top of the current crc-dev branch of the
-git://oss.sgi.com/xfs/cmds/xfsprogs.git repository. It is not
-dependent on the 3.11 kernel changes, so will work just fine on a
-kernel 3.10 kernel as well.
-
-Ben, is is possible to get this committed quickly to the crc-dev
-branch so that people don't have to find the latest patch set to
-keep up with what I'm doing?
-
-Comments, thoughts, flames, testing?
-
-Cheers,
-
-Dave.
-
-$ git diff --stat --summary -C -M 94edda8..
- copy/xfs_copy.c                          |   12 +-
- db/bmroot.c                              |    6 +-
- include/Makefile                         |    6 +-
- include/libxfs.h                         |   38 ++-
- include/libxlog.h                        |    1 +
- include/platform_defs.h.in               |    5 +
- include/swab.h                           |    6 +-
- include/xfs_ag.h                         |    2 +-
- include/xfs_alloc_btree.h                |    3 +-
- include/xfs_attr_leaf.h                  |    1 +
- include/xfs_attr_remote.h                |   28 +--
- include/xfs_bmap.h                       |   15 +-
- include/xfs_bmap_btree.h                 |    3 +-
- include/xfs_btree.h                      |    3 +-
- include/xfs_buf_item.h                   |    4 +-
- include/xfs_dir2.h                       |   34 ++-
- include/xfs_dir2_format.h                |   39 +---
- include/xfs_extfree_item.h               |   14 +-
- include/xfs_fs.h                         |   26 ++-
- include/xfs_ialloc.h                     |    8 +
- include/xfs_ialloc_btree.h               |    3 +-
- include/xfs_icreate_item.h               |   56 +++++
- include/xfs_inode.h                      |  339 +--------------------------
- include/xfs_log.h                        |    5 +-
- include/xfs_log_priv.h                   |    1 -
- include/xfs_mount.h                      |  403 --------------------------------
- include/xfs_quota.h                      |    2 +
- include/xfs_sb.h                         |   19 ++
- include/xfs_symlink.h                    |   22 ++
- include/xfs_trace.h                      |    1 +
- include/xfs_trans.h                      |   91 +-------
- include/xfs_trans_resv.h                 |  135 +++++++++++
- io/init.h                                |    3 -
- libxfs/Makefile                          |    4 +-
- libxfs/init.c                            |    2 +-
- libxfs/rdwr.c                            |    1 -
- libxfs/trans.c                           |  118 ++++++++++
- libxfs/xfs.h                             |   23 +-
- libxfs/xfs_alloc.c                       |   31 ++-
- libxfs/xfs_alloc_btree.c                 |   23 +-
- libxfs/xfs_attr.c                        |    6 +-
- libxfs/xfs_attr_leaf.c                   |   50 ++--
- libxfs/xfs_attr_remote.c                 |    8 +-
- libxfs/xfs_bmap.c                        |  212 +++++++----------
- libxfs/xfs_bmap_btree.c                  |   14 +-
- libxfs/xfs_btree.c                       |   10 +
- libxfs/xfs_da_btree.c                    |   69 +++---
- libxfs/xfs_dir2.c                        |   45 ++++
- libxfs/xfs_dir2_block.c                  |   19 +-
- libxfs/xfs_dir2_data.c                   |   20 +-
- libxfs/xfs_dir2_leaf.c                   |    4 +-
- libxfs/xfs_dir2_node.c                   |   32 +--
- libxfs/xfs_ialloc.c                      |  266 ++++++++++++++++++---
- libxfs/xfs_ialloc_btree.c                |   16 +-
- libxfs/xfs_inode.c                       |  170 +++++++-------
- libxfs/xfs_rtalloc.c                     |    4 +-
- libxfs/{xfs_mount.c => xfs_sb.c}         |   61 ++++-
- libxfs/xfs_symlink.c                     |   29 +++
- libxfs/{xfs_trans.c => xfs_trans_resv.c} |  314 ++++++++++++-------------
- logprint/log_misc.c                      |   36 +++
- logprint/log_print_all.c                 |   21 ++
- mkfs/maxtrres.c                          |    8 +-
- repair/attr_repair.c                     |    2 +
- repair/incore_ino.c                      |    2 +
- repair/scan.c                            |    1 +
- 65 files changed, 1483 insertions(+), 1472 deletions(-)
- create mode 100644 include/xfs_icreate_item.h
- delete mode 100644 include/xfs_mount.h
- create mode 100644 include/xfs_trans_resv.h
- rename libxfs/{xfs_mount.c => xfs_sb.c} (94%)
- rename libxfs/{xfs_trans.c => xfs_trans_resv.c} (79%)
+diff --git a/include/libxfs.h b/include/libxfs.h
+index 900b115..9ab9604 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -58,6 +58,7 @@
+ #include <xfs/xfs_trace.h>
+ #include <xfs/xfs_symlink.h>
+ #include <xfs/xfs_icreate_item.h>
++#include <xfs/xfs_trans.h>
+ 
+ #ifndef ARRAY_SIZE
+ #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+@@ -202,7 +203,7 @@ typedef struct xfs_mount {
+ 	int			m_ialloc_blks;	/* blocks in inode allocation */
+ 	int			m_litino;	/* size of inode union area */
+ 	int			m_inoalign_mask;/* mask sb_inoalignmt if used */
+-	xfs_trans_reservations_t m_reservations;/* precomputed res values */
++	struct xfs_trans_reservations m_reservations;/* precomputed res values */
+ 	__uint64_t		m_maxicount;	/* maximum inode count */
+ 	int			m_dalign;	/* stripe unit */
+ 	int			m_swidth;	/* stripe width */
+@@ -436,8 +437,6 @@ typedef struct xfs_buf_log_item {
+ 	xfs_buf_log_format_t	bli_format;	/* in-log header */
+ } xfs_buf_log_item_t;
+ 
+-#include <xfs/xfs_trans.h>
+-
+ typedef struct xfs_trans {
+ 	unsigned int	t_type;			/* transaction type */
+ 	unsigned int	t_log_res;		/* amt of log space resvd */
+diff --git a/include/xfs_mount.h b/include/xfs_mount.h
+index e609b5f..ce0adfb 100644
+--- a/include/xfs_mount.h
++++ b/include/xfs_mount.h
+@@ -18,36 +18,6 @@
+ #ifndef __XFS_MOUNT_H__
+ #define	__XFS_MOUNT_H__
+ 
+-typedef struct xfs_trans_reservations {
+-	uint	tr_write;	/* extent alloc trans */
+-	uint	tr_itruncate;	/* truncate trans */
+-	uint	tr_rename;	/* rename trans */
+-	uint	tr_link;	/* link trans */
+-	uint	tr_remove;	/* unlink trans */
+-	uint	tr_symlink;	/* symlink trans */
+-	uint	tr_create;	/* create trans */
+-	uint	tr_mkdir;	/* mkdir trans */
+-	uint	tr_ifree;	/* inode free trans */
+-	uint	tr_ichange;	/* inode update trans */
+-	uint	tr_growdata;	/* fs data section grow trans */
+-	uint	tr_swrite;	/* sync write inode trans */
+-	uint	tr_addafork;	/* cvt inode to attributed trans */
+-	uint	tr_writeid;	/* write setuid/setgid file */
+-	uint	tr_attrinval;	/* attr fork buffer invalidation */
+-	uint	tr_attrsetm;    /* set/create an attribute at mount time */
+-	uint	tr_attrsetrt;   /* set/create an attribute at runtime */
+-	uint	tr_attrrm;	/* remove an attribute */
+-	uint	tr_clearagi;	/* clear bad agi unlinked ino bucket */
+-	uint	tr_growrtalloc;	/* grow realtime allocations */
+-	uint	tr_growrtzero;	/* grow realtime zeroing */
+-	uint	tr_growrtfree;	/* grow realtime freeing */
+-	uint	tr_qm_sbchange;	/* change quota flags */
+-	uint	tr_qm_setqlim;	/* adjust quota limits */
+-	uint	tr_qm_dqalloc;	/* allocate quota on disk */
+-	uint	tr_qm_quotaoff;	/* turn quota off */
+-	uint	tr_qm_equotaoff;/* end of turn quota off */
+-	uint	tr_sb;		/* modify superblock */
+-} xfs_trans_reservations_t;
+ 
+ #ifndef __KERNEL__
+ 
+diff --git a/include/xfs_trans.h b/include/xfs_trans.h
+index 36a0026..78074f3 100644
+--- a/include/xfs_trans.h
++++ b/include/xfs_trans.h
+@@ -209,6 +209,36 @@ struct xfs_log_item_desc {
+ #define	XFS_TRANS_SB_REXTENTS		0x00001000
+ #define	XFS_TRANS_SB_REXTSLOG		0x00002000
+ 
++struct xfs_trans_reservations {
++	uint	tr_write;	/* extent alloc trans */
++	uint	tr_itruncate;	/* truncate trans */
++	uint	tr_rename;	/* rename trans */
++	uint	tr_link;	/* link trans */
++	uint	tr_remove;	/* unlink trans */
++	uint	tr_symlink;	/* symlink trans */
++	uint	tr_create;	/* create trans */
++	uint	tr_mkdir;	/* mkdir trans */
++	uint	tr_ifree;	/* inode free trans */
++	uint	tr_ichange;	/* inode update trans */
++	uint	tr_growdata;	/* fs data section grow trans */
++	uint	tr_swrite;	/* sync write inode trans */
++	uint	tr_addafork;	/* cvt inode to attributed trans */
++	uint	tr_writeid;	/* write setuid/setgid file */
++	uint	tr_attrinval;	/* attr fork buffer invalidation */
++	uint	tr_attrsetm;    /* set/create an attribute at mount time */
++	uint	tr_attrsetrt;   /* set/create an attribute at runtime */
++	uint	tr_attrrm;	/* remove an attribute */
++	uint	tr_clearagi;	/* clear bad agi unlinked ino bucket */
++	uint	tr_growrtalloc;	/* grow realtime allocations */
++	uint	tr_growrtzero;	/* grow realtime zeroing */
++	uint	tr_growrtfree;	/* grow realtime freeing */
++	uint	tr_qm_sbchange;	/* change quota flags */
++	uint	tr_qm_setqlim;	/* adjust quota limits */
++	uint	tr_qm_dqalloc;	/* allocate quota on disk */
++	uint	tr_qm_quotaoff;	/* turn quota off */
++	uint	tr_qm_equotaoff;/* end of turn quota off */
++	uint	tr_sb;		/* modify superblock */
++};
+ 
+ /*
+  * Per-extent log reservation for the allocation btree changes
+diff --git a/mkfs/maxtrres.c b/mkfs/maxtrres.c
+index d571d77..373e582 100644
+--- a/mkfs/maxtrres.c
++++ b/mkfs/maxtrres.c
+@@ -56,7 +56,7 @@ max_trans_res_by_mount(
+ {
+ 	uint				*p;
+ 	int				rval;
+-	xfs_trans_reservations_t	*tr = &mp->m_reservations;
++	struct xfs_trans_reservations	*tr = &mp->m_reservations;
+ 
+ 	for (rval = 0, p = (uint *)tr; p < (uint *)(tr + 1); p++) {
+ 		if ((int)*p > rval)
+-- 
+1.7.10.4
 
 _______________________________________________
 xfs mailing list
