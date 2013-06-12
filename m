@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0D24A800C
+	by oss.sgi.com (Postfix) with ESMTP id 3B1FB8031
 	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 05:37:08 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id F16198F8037
-	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 03:37:07 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2B7E18F8037
+	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 03:37:08 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	47TdaXps8mlEcFXa for <xfs@oss.sgi.com>;
+	9KGFPwqDXYARoWDA for <xfs@oss.sgi.com>;
 	Wed, 12 Jun 2013 03:37:06 -0700 (PDT)
-Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UmiQ3-0001Bi-Mw
-	for xfs@oss.sgi.com; Wed, 12 Jun 2013 20:36:47 +1000
+Received: from [192.168.1.1] (helo=disappointment)
+	by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1UmiQD-0001By-WA
+	for xfs@oss.sgi.com; Wed, 12 Jun 2013 20:36:58 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UmiQ3-0006nN-Hz
+	(envelope-from <dave@disappointment.disaster>) id 1UmiQ3-0006o2-Tp
 	for xfs@oss.sgi.com; Wed, 12 Jun 2013 20:36:47 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 12/22] libxfs: fix directory/attribute format issues
-Date: Wed, 12 Jun 2013 20:36:24 +1000
-Message-Id: <1371033394-26006-13-git-send-email-david@fromorbit.com>
+Subject: [PATCH 21/22] xfsprogs: define min/max once and use them everywhere.
+Date: Wed, 12 Jun 2013 20:36:33 +1000
+Message-Id: <1371033394-26006-22-git-send-email-david@fromorbit.com>
 In-Reply-To: <1371033394-26006-1-git-send-email-david@fromorbit.com>
 References: <1371033394-26006-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,57 +39,64 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-directory data headers and attr leaf headers need padding for 32 bit
-systems to correctly align the data sections on 64 bit boundaries.
-
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/xfs_attr_leaf.h   |    1 +
- include/xfs_dir2_format.h |    5 +++--
- 2 files changed, 4 insertions(+), 2 deletions(-)
+ include/libxfs.h           |    1 -
+ include/platform_defs.h.in |    5 +++++
+ io/init.h                  |    3 ---
+ libxfs/rdwr.c              |    1 -
+ 4 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/include/xfs_attr_leaf.h b/include/xfs_attr_leaf.h
-index b3e93bb..c102213 100644
---- a/include/xfs_attr_leaf.h
-+++ b/include/xfs_attr_leaf.h
-@@ -128,6 +128,7 @@ struct xfs_attr3_leaf_hdr {
- 	__u8			holes;
- 	__u8			pad1;
- 	struct xfs_attr_leaf_map freemap[XFS_ATTR_LEAF_MAPSIZE];
-+	__be32			pad2;		/* 64 bit alignment */
- };
+diff --git a/include/libxfs.h b/include/libxfs.h
+index e57e2fd..6331067 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -72,7 +72,6 @@
+ #define __round_mask(x, y) ((__typeof__(x))((y)-1))
+ #define round_up(x, y) ((((x)-1) | __round_mask(x, y))+1)
+ #define round_down(x, y) ((x) & ~__round_mask(x, y))
+-#define min(a,b)	((a) < (b) ? (a) : (b))
  
- #define XFS_ATTR3_LEAF_CRC_OFF	(offsetof(struct xfs_attr3_leaf_hdr, info.crc))
-diff --git a/include/xfs_dir2_format.h b/include/xfs_dir2_format.h
-index 80caf54..d771219 100644
---- a/include/xfs_dir2_format.h
-+++ b/include/xfs_dir2_format.h
-@@ -242,6 +242,7 @@ struct xfs_dir3_blk_hdr {
- struct xfs_dir3_data_hdr {
- 	struct xfs_dir3_blk_hdr	hdr;
- 	xfs_dir2_data_free_t	best_free[XFS_DIR2_DATA_FD_COUNT];
-+	__be32			pad;	/* 64 bit alignment */
- };
+ /*
+  * Argument structure for libxfs_init().
+diff --git a/include/platform_defs.h.in b/include/platform_defs.h.in
+index 217d6c0..03391f5 100644
+--- a/include/platform_defs.h.in
++++ b/include/platform_defs.h.in
+@@ -168,4 +168,9 @@ typedef unsigned long long __psunsigned_t;
+ #define __arch_pack
+ #endif
  
- #define XFS_DIR3_DATA_CRC_OFF  offsetof(struct xfs_dir3_data_hdr, hdr.crc)
-@@ -453,7 +454,7 @@ struct xfs_dir3_leaf_hdr {
- 	struct xfs_da3_blkinfo	info;		/* header for da routines */
- 	__be16			count;		/* count of entries */
- 	__be16			stale;		/* count of stale entries */
--	__be32			pad;
-+	__be32			pad;		/* 64 bit alignment */
- };
++#ifndef min
++#define min(a,b)	(((a)<(b))?(a):(b))
++#define max(a,b)	(((a)>(b))?(a):(b))
++#endif
++
+ #endif	/* __XFS_PLATFORM_DEFS_H__ */
+diff --git a/io/init.h b/io/init.h
+index 1dac211..d773b1b 100644
+--- a/io/init.h
++++ b/io/init.h
+@@ -26,7 +26,4 @@ extern int	expert;
+ extern size_t	pagesize;
+ extern struct timeval stopwatch;
  
- struct xfs_dir3_icleaf_hdr {
-@@ -694,7 +695,7 @@ struct xfs_dir3_free_hdr {
- 	__be32			firstdb;	/* db of first entry */
- 	__be32			nvalid;		/* count of valid entries */
- 	__be32			nused;		/* count of used entries */
--	__be32			pad;		/* 64 bit alignment. */
-+	__be32			pad;		/* 64 bit alignment */
- };
+-#define min(a,b)	(((a)<(b))?(a):(b))
+-#define max(a,b)	(((a)>(b))?(a):(b))
+-
+ extern void init_cvtnum(size_t *blocksize, size_t *sectsize);
+diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+index c679f81..93beb23 100644
+--- a/libxfs/rdwr.c
++++ b/libxfs/rdwr.c
+@@ -22,7 +22,6 @@
+ #include "init.h"
  
- struct xfs_dir3_free {
+ #define BDSTRAT_SIZE	(256 * 1024)
+-#define min(x, y)	((x) < (y) ? (x) : (y))
+ 
+ #define IO_BCOMPARE_CHECK
+ 
 -- 
 1.7.10.4
 
