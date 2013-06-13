@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id DAB2B7F51
-	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 14:23:34 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 68D57AC004
-	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 12:23:31 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id IGPKeWlgQLtfdZ84 for
-	<xfs@oss.sgi.com>; Wed, 12 Jun 2013 12:23:27 -0700 (PDT)
-Date: Wed, 12 Jun 2013 16:23:20 -0300
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH V2] xfstests: generic/313, test sgid inheritance on subdirs
-Message-ID: <20130612192320.GA12955@andromeda.usersys.redhat.com>
-References: <51A68175.9020202@redhat.com>
- <51A7B03E.2080909@sandeen.net>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id EAC9F7F56
+	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 19:48:46 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D98A38F8049
+	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 17:48:43 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	IoaAPGMcj5to1m7g for <xfs@oss.sgi.com>;
+	Wed, 12 Jun 2013 17:48:42 -0700 (PDT)
+Date: Thu, 13 Jun 2013 10:48:40 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Questions about XFS
+Message-ID: <20130613004840.GZ29338@dastard>
+References: <loom.20130611T112155-970@post.gmane.org>
+	<51B72D3D.5010206@redhat.com>
+	<CAO9HMNGjdikgX+_434aGVJ2NAJ0hxDNLo+Vsa46GH3psXr4sKQ@mail.gmail.com>
+	<1371025611.7096.10.camel@acme>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <51A7B03E.2080909@sandeen.net>
+In-Reply-To: <1371025611.7096.10.camel@acme>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,136 +32,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Roger Oberholtzer <roger@opq.se>
+Cc: xfs@oss.sgi.com
 
-I'm personally working on this bug with Eric, and the test properly trigger the
-bug on 100% of the test runs, but, it should also ensure that
-`irix_sgid_inherit` sysctl is set to 0, if not, the test will fail.
+On Wed, Jun 12, 2013 at 10:26:51AM +0200, Roger Oberholtzer wrote:
+> On Tue, 2013-06-11 at 11:12 -0500, Steve Bergman wrote: 
+> > Are you saying that with XFS there is no periodic
+> > flushing mechanism at all? And that unless there's an
+> > fsync/fdatasync/sync or the memory needs to be reclaimed, that it can
+> > sit in the page cache forever?
+> 
+> I read the later responses to this and they seemed to say that the data
+> in the page cache should be written to the disk periodically. I am not
+> meaning to hijack the thread. I just have a question directly related to
+> this point.
+> 
+> I have an application that is streaming data to an XFS disk at a
+> sustained 25 MB/sec. This is well below what the hardware supports. The
+> application does fopen/fwrite/fclose (no active flushing or syncing).
 
-follow is a suggestion for a better changelog:
+fadvise(DONTNEED)
 
-Tests if subdirectories created on the filesystem will properly inherit sgid bit
-when this is set on the parent directory, once the process has the properly
-permissions to create a subdirectory, this, should inherit parent's sgid bit if
-this is set and irix_sgid_inherit sysctl is disabled.
+Cheers,
 
-Thanks for the test Eric, very helpful :)
-On Thu, May 30, 2013 at 03:02:06PM -0500, Eric Sandeen wrote:
-> On XFS this test fails today due to some over-eager
-> SGID removal in xfs core code; ext4 & btrfs pass.
-> Document it in a test, will send xfs patch in a bit.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-> 
-> p.s.  I'm going to just flaunt my ignorance and say:
-> I've never understood acls well.  I'm hoping someone who does
-> can help me write a better changelog, because this one
-> is no good at all!
-> 
-> V2: add missing source of "attr" file for _require_acls
-> 
-> diff --git a/tests/generic/313 b/tests/generic/313
-> new file mode 100755
-> index 0000000..3dee609
-> --- /dev/null
-> +++ b/tests/generic/313
-> @@ -0,0 +1,68 @@
-> +#! /bin/bash
-> +# FS QA Test No. 313
-> +#
-> +# Test SGID inheritance on subdirectories
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2013 Red Hat, Inc.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#-----------------------------------------------------------------------
-> +#
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +    cd /
-> +    rm -f $tmp.*
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +. ./common/attr
-> +
-> +# real QA test starts here
-> +_supported_fs generic
-> +_require_acls
-> +_require_user
-> +_need_to_be_root
-> +
-> +rm -rf $TEST_DIR/$seq-dir
-> +
-> +# Make dir owned by qa user, and an unrelated group:
-> +mkdir $TEST_DIR/$seq-dir
-> +chown $qa_user:12345 $TEST_DIR/$seq-dir
-> +
-> +# Make parent dir sgid
-> +chmod 2775 $TEST_DIR/$seq-dir
-> +
-> +# Make subdirs before & after acl set
-> +su $qa_user -c "mkdir $TEST_DIR/$seq-dir/subdir"
-> +su $qa_user -c "setfacl -m u:$qa_user:rwx,d:u:$qa_user:rwx $TEST_DIR/$seq-dir"
-> +su $qa_user -c "mkdir $TEST_DIR/$seq-dir/subdir2"
-> +
-> +# Both subdirs should have inherited sgid
-> +ls -ld $TEST_DIR/$seq-dir/subdir* | _filter_test_dir | awk '{print $1,$NF}'
-> +
-> +status=0
-> +exit
-> diff --git a/tests/generic/313.out b/tests/generic/313.out
-> new file mode 100644
-> index 0000000..326a929
-> --- /dev/null
-> +++ b/tests/generic/313.out
-> @@ -0,0 +1,3 @@
-> +QA output created by 313
-> +drwxr-sr-x. TEST_DIR/313-dir/subdir
-> +drwxrwsr-x+ TEST_DIR/313-dir/subdir2
-> diff --git a/tests/generic/group b/tests/generic/group
-> index bd443c1..d5ec8d5 100644
-> --- a/tests/generic/group
-> +++ b/tests/generic/group
-> @@ -115,3 +115,4 @@
->  310 auto
->  311 auto metadata log
->  312 auto quick prealloc enospc
-> +313 auto quick acl
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-
+Dave.
 -- 
-Carlos
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
