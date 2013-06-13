@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id EAC9F7F56
-	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 19:48:46 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D98A38F8049
-	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 17:48:43 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 5B00B7F56
+	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 19:51:00 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 375E98F804B
+	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 17:51:00 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	IoaAPGMcj5to1m7g for <xfs@oss.sgi.com>;
-	Wed, 12 Jun 2013 17:48:42 -0700 (PDT)
-Date: Thu, 13 Jun 2013 10:48:40 +1000
+	HOBenRXUvzf2wbLa for <xfs@oss.sgi.com>;
+	Wed, 12 Jun 2013 17:50:58 -0700 (PDT)
+Date: Thu, 13 Jun 2013 10:50:50 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Questions about XFS
-Message-ID: <20130613004840.GZ29338@dastard>
-References: <loom.20130611T112155-970@post.gmane.org>
-	<51B72D3D.5010206@redhat.com>
-	<CAO9HMNGjdikgX+_434aGVJ2NAJ0hxDNLo+Vsa46GH3psXr4sKQ@mail.gmail.com>
-	<1371025611.7096.10.camel@acme>
+Subject: Re: [PATCH 04/27] xfs: don't use speculative prealloc for small files
+Message-ID: <20130613005050.GA29338@dastard>
+References: <1371032567-21772-1-git-send-email-david@fromorbit.com>
+	<1371032567-21772-5-git-send-email-david@fromorbit.com>
+	<51B89D58.80108@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1371025611.7096.10.camel@acme>
+In-Reply-To: <51B89D58.80108@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,28 +31,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Roger Oberholtzer <roger@opq.se>
+To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, Jun 12, 2013 at 10:26:51AM +0200, Roger Oberholtzer wrote:
-> On Tue, 2013-06-11 at 11:12 -0500, Steve Bergman wrote: 
-> > Are you saying that with XFS there is no periodic
-> > flushing mechanism at all? And that unless there's an
-> > fsync/fdatasync/sync or the memory needs to be reclaimed, that it can
-> > sit in the page cache forever?
+On Wed, Jun 12, 2013 at 12:10:00PM -0400, Brian Foster wrote:
+> On 06/12/2013 06:22 AM, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> ...
+> > ---
+> >  fs/xfs/xfs_iomap.c |   13 +++++++++++++
+> >  1 file changed, 13 insertions(+)
+> > 
+> > diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> > index 8f8aaee..14be676 100644
+> > --- a/fs/xfs/xfs_iomap.c
+> > +++ b/fs/xfs/xfs_iomap.c
+> > @@ -284,6 +284,15 @@ xfs_iomap_eof_want_preallocate(
+> >  		return 0;
+> >  
+> >  	/*
+> > +	 * If the file is smaller than the minimum prealloc and we are using
+> > +	 * dynamic preallocation, don't do any preallocation at all as it is
+> > +	 * likely this is the only write to the file that is going to be done.
+> > +	 */
+> > +	if (!(mp->m_flags & XFS_MOUNT_DFLT_IOSIZE) &&
+> > +	    XFS_ISIZE(ip) < mp->m_writeio_blocks)
+> > +		return 0;
+> > +
 > 
-> I read the later responses to this and they seemed to say that the data
-> in the page cache should be written to the disk periodically. I am not
-> meaning to hijack the thread. I just have a question directly related to
-> this point.
+> I stuck this on a box, got a 64k prealloc on an 8k file and then noticed
+> this was comparing inode size against a block count. This should
+> probably be:
 > 
-> I have an application that is streaming data to an XFS disk at a
-> sustained 25 MB/sec. This is well below what the hardware supports. The
-> application does fopen/fwrite/fclose (no active flushing or syncing).
+> 	XFS_ISIZE(ip) < XFS_FSB_TO_B(mp, mp->m_writeio_blocks)
+> 
+> Given that, we avoid preallocs entirely until the file size reaches the
+> minimum write size (assuming dynamic prealloc mode).
 
-fadvise(DONTNEED)
+Doh! Will fix.
 
-Cheers,
+Cheers
 
 Dave.
 -- 
