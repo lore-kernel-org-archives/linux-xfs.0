@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D6E077F61
-	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 20:14:23 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A75748F8049
-	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 18:14:20 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0FAB17F63
+	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 20:39:14 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B9FF5304051
+	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 18:39:10 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	XkBwgBUvds95rCyT for <xfs@oss.sgi.com>;
-	Wed, 12 Jun 2013 18:14:19 -0700 (PDT)
-Date: Thu, 13 Jun 2013 11:14:14 +1000
+	LtSigWxoV0ppmoLW for <xfs@oss.sgi.com>;
+	Wed, 12 Jun 2013 18:39:08 -0700 (PDT)
+Date: Thu, 13 Jun 2013 11:39:07 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 18/27] xfs: split out xfs inode operations into separate
-	file
-Message-ID: <20130613011414.GB29338@dastard>
+Subject: Re: [PATCH 19/27] xfs: consolidate xfs_vnodeops.c into xfs_inode_ops.c
+Message-ID: <20130613013907.GC29338@dastard>
 References: <1371032567-21772-1-git-send-email-david@fromorbit.com>
-	<1371032567-21772-19-git-send-email-david@fromorbit.com>
-	<20130612140519.GB28988@infradead.org>
+	<1371032567-21772-20-git-send-email-david@fromorbit.com>
+	<20130612135916.GA28988@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130612140519.GB28988@infradead.org>
+In-Reply-To: <20130612135916.GA28988@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,52 +34,63 @@ Sender: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Wed, Jun 12, 2013 at 07:05:19AM -0700, Christoph Hellwig wrote:
-> On Wed, Jun 12, 2013 at 08:22:38PM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > The core xfs inode operations such as locking, allocation, reading
-> > and writing are not shared with userspace. However, much of the
-> > remaining internal inode code such as the incore extent tracking and
-> > formatting is. Split the XFS inode operations out into a new
-> > xfs_inode_iops.c file to minimise the differences between the files
-> > shred with userspace.
-> 
-> Having struct xfs_inode in an xfs_inode_ops.h file while xfs_inode.h
-> is still around strikes me as extremely odd.
+On Wed, Jun 12, 2013 at 06:59:16AM -0700, Christoph Hellwig wrote:
+> I can't say I really like the _ops naming, but so far I can't really
+> can't come up with a much better name.
 
-Consider it a first step in a longer process....
+Neither could I :(
 
-> It seems like icdinode
-> should be in xfs_inode_item.h as is part of the log format primarily.
+> I also think that most of
+> xfs_vnodeops.c really should go into xfs_iops.c as it's fairly Linux
+> specific and should just be merged with the actual entry points.
 
-Yes, I've definitely been looking at that, because xfs_inode_item.h is
-shared with userspace and there are some issues with cyclic
-inclusion and definitions in userspace based around the fact that
-the icdinode is defined in xfs_inode.h and so needs to be included
-before the struct xfs_inode is defined in include/libxfs.h. Yet
-there is static inline code in xfs_inode.h that needs to know the
-structure of the struct xfs_inode....
+Yes, that's definitely a good end goal (merging with entry points),
+but what I'm trying to do now is create a solid obvious demarcation
+line between kernel-only and shared source files. The current code
+goes:
 
-So there's a bunch of issues around xfs_inode.h, and this really is
-the first step to cleaning it all up. What currently remains in
-xfs_inode.h can be moved to different files - most of what is there
-deals with inode forks or the xfs_icdinode, and so if I move them to
-specific header files we ned up with an empty xfs_inode.h header.
+	xfs_iops.c ->  xfs_inode.c		(shared with libxfs)
+		   ->  xfs_vnodeops.c		(kernel only)
+		   ->  xfs_rename.c		(kernel only)
+		   ->  xfs_util.c		(kernel only)
 
-At taht point, we can stop sharing xfs_inode.h with userspace, and
-we can move all the kernel-only inode defintions back into
-xfs_inode.h, and #include all the other header files with the shared
-definitions directly. Userspace can do the same thing through
-libxfs.h....
+And there's a tricky maze of paths through those files for different
+locking operations, inode allocation, and so on. The real issue is
+that the code paths hop between shared and kernel only files, so
+what I'm wanting to end up with for 3.11 is a linear progression
+through the source files like this:
 
-Indeed, the underlying reason for all this separation is that in the
-medium term, __KERNEL__ is going to be removed from the kernel
-build. That's the direction being set by all the UAPI work that
-David Howells has been doing, and XFS is really a special snowflake
-when it comes to headers and userspace code sharing. Hence I'm
-trying to restructure the code now while we are doing lots of
-userspace work.
+	xfs_iops.c -> xfs_inode_ops.c -> xfs_inode.c
+				      -> xfs_ialloc.c
+
+i.e:
+
+	kernel only -> kernel only -> shared with libxfs
+
+Once there's a clear boundary in the kernel code,
+merging/simplifying stuff on either side of the boundary is easy to
+do, but it's a secondary step. I'd consider this something for the
+3.12 cycle, not the upcoming 3.11 cycle.
+
+FWIW, I seriously considering introducing a fs/xfs/libxfs/ subdir
+for the kernel build to make this a very obvious boundary and place
+all the shared headers in include/linux/uapi/xfs. This would make is
+extremely obvious what code is shared with userspace, and make
+future kernel/user srouce code syncs quite simple....
+
+> Also once the big code move around starts xfs_rename.c really should
+> die and rename should be treated the same as the other namespace
+> operations.
+
+Yup, I haven't got to xfs_rename.c and xfs_utils.c yet - I want them
+to go away, too. :) I'm just going to pull them directly into
+xfs_inode_ops.c to give a consistent structure for 3.11.
+
+FWIW, now that I have the shared files in almost perfect sync, it
+makes it much easier to make the change in the kernel tree, take the
+patch, apply a couple of sed filters to it and then apply it
+directly to the xfsprogs tree. I only have to do the work once now,
+and so it's much faster to restructure the code now.
 
 Cheers,
 
