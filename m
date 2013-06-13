@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, master,
+Subject: [XFS updates] XFS development tree branch, for-next,
 	updated. v3.10-rc1-31-gade1335
-Message-Id: <20130613191904.ACB3529DFA@oss.sgi.com>
-Date: Thu, 13 Jun 2013 14:19:04 -0500 (CDT)
+Message-Id: <20130613191914.6B7E729E0C@oss.sgi.com>
+Date: Thu, 13 Jun 2013 14:19:14 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,7 +23,7 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, master has been updated
+The branch, for-next has been updated
   ade1335 xfs: ensure btree root split sets blkno correctly
       from  8a1fd2950e1fe267e11fc8c85dcaa6b023b51b60 (commit)
 
