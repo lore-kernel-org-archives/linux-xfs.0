@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 86E087F6C
-	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 20:39:29 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id EEB907F63
+	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 20:40:56 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6C852304053
-	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 18:39:29 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5B0DCAC004
+	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 18:40:56 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	nfgXL3QpVOq2KD6k for <xfs@oss.sgi.com>;
-	Wed, 12 Jun 2013 18:39:28 -0700 (PDT)
-Date: Thu, 13 Jun 2013 11:39:26 +1000
+	dFVmM5Qf5ZaJ0Huc for <xfs@oss.sgi.com>;
+	Wed, 12 Jun 2013 18:40:54 -0700 (PDT)
+Date: Thu, 13 Jun 2013 11:40:22 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 24/27] xfs: move xfs_bmap_punch_delalloc() to xfs_aops.c
-Message-ID: <20130613013926.GD29338@dastard>
+Subject: Re: [PATCH 00/27] xfs: current patch queue for 3.11
+Message-ID: <20130613014022.GE29338@dastard>
 References: <1371032567-21772-1-git-send-email-david@fromorbit.com>
-	<1371032567-21772-25-git-send-email-david@fromorbit.com>
-	<20130612140649.GC28988@infradead.org>
+	<51B87253.8060905@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130612140649.GC28988@infradead.org>
+In-Reply-To: <51B87253.8060905@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,31 +26,51 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, Jun 12, 2013 at 07:06:49AM -0700, Christoph Hellwig wrote:
-> On Wed, Jun 12, 2013 at 08:22:44PM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > It is only used in that file, and delayed allocation is only used
-> > in the kernel. Hence it has to be removed from xfs_bmap.c in
-> > userspace, so to minimise the differences between kernel and
-> > userspace, move this function out of xfs_bmap.c.
-> 
-> Why not call it just xfs_punch_delalloc_range?
-
-Sure, will do.
-
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gV2VkLCBKdW4gMTIsIDIwMTMgYXQgMDk6MDY6MjdBTSAtMDQwMCwgQnJpYW4gRm9zdGVyIHdy
+b3RlOgo+IE9uIDA2LzEyLzIwMTMgMDY6MjIgQU0sIERhdmUgQ2hpbm5lciB3cm90ZToKPiA+IEhp
+IGZvbGtzLAo+ID4gCj4gPiBUaGlzIGlzIGFuIHVwZGF0ZSBvZiBteSBjdXJyZW50IHBhdGNoIHF1
+ZXVlIGZvciB0aGUgMy4xMSByZWxlYXNlCj4gPiBjeWNsZS4gVGhpcyBzZXJpZXMgc3RhcnRzIG9u
+IHRvcCBvZiB0aGUgcGF0Y2ggc2VyaWVzIEkgcG9zdGVkIGZvcgo+ID4gMy4xMC1yYzYsIGFuZCBi
+dWlsZHMgdXBvbiB0aGUgc2VyaWVzIHByZXZpb3VzbHkgcG9zdGVkIGxhc3Qgd2VlazoKPiA+IAo+
+ID4gaHR0cDovL29zcy5zZ2kuY29tL3BpcGVybWFpbC94ZnMvMjAxMy1KdW5lLzAyNzA0MC5odG1s
+Cj4gPiAKPiAKPiBKdXN0IGEgaGVhZHMgdXAsIEkgYXBwbGllZCB0aGlzIHRvIHRvdCBhbmQgaGl0
+IGEgZmV3IG1pbm9yIGJ1aWxkIGVycm9yczoKPiAKPiBmcy94ZnMveGZzX2RpcjJfcmVhZGRpci5j
+OjQwOjE6IGVycm9yOiBzdGF0aWMgZGVjbGFyYXRpb24gb2YKPiDigJh4ZnNfZGlyMl9zZl9nZXRk
+ZW50c+KAmSBmb2xsb3dzIG5vbi1zdGF0aWMgZGVjbGFyYXRpb24KPiBJbiBmaWxlIGluY2x1ZGVk
+IGZyb20gZnMveGZzL3hmc19kaXIyX3JlYWRkaXIuYzozNDowOgo+IGZzL3hmcy94ZnNfZGlyMl9w
+cml2Lmg6MTI3OjEyOiBub3RlOiBwcmV2aW91cyBkZWNsYXJhdGlvbiBvZgo+IOKAmHhmc19kaXIy
+X3NmX2dldGRlbnRz4oCZIHdhcyBoZXJlCj4gZnMveGZzL3hmc19kaXIyX3JlYWRkaXIuYzoxNDM6
+MTogZXJyb3I6IHN0YXRpYyBkZWNsYXJhdGlvbiBvZgo+IOKAmHhmc19kaXIyX2Jsb2NrX2dldGRl
+bnRz4oCZIGZvbGxvd3Mgbm9uLXN0YXRpYyBkZWNsYXJhdGlvbgo+IEluIGZpbGUgaW5jbHVkZWQg
+ZnJvbSBmcy94ZnMveGZzX2RpcjJfcmVhZGRpci5jOjM0OjA6Cj4gZnMveGZzL3hmc19kaXIyX3By
+aXYuaDozMjoxMjogbm90ZTogcHJldmlvdXMgZGVjbGFyYXRpb24gb2YKPiDigJh4ZnNfZGlyMl9i
+bG9ja19nZXRkZW50c+KAmSB3YXMgaGVyZQo+IGZzL3hmcy94ZnNfZGlyMl9yZWFkZGlyLmM6NDU1
+OjE6IGVycm9yOiBzdGF0aWMgZGVjbGFyYXRpb24gb2YKPiDigJh4ZnNfZGlyMl9sZWFmX2dldGRl
+bnRz4oCZIGZvbGxvd3Mgbm9uLXN0YXRpYyBkZWNsYXJhdGlvbgo+IEluIGZpbGUgaW5jbHVkZWQg
+ZnJvbSBmcy94ZnMveGZzX2RpcjJfcmVhZGRpci5jOjM0OjA6Cj4gZnMveGZzL3hmc19kaXIyX3By
+aXYuaDo2ODoxMjogbm90ZTogcHJldmlvdXMgZGVjbGFyYXRpb24gb2YKPiDigJh4ZnNfZGlyMl9s
+ZWFmX2dldGRlbnRz4oCZIHdhcyBoZXJlCj4gCj4gSW4gZWFjaCBjYXNlLCBpdCBsb29rcyBsaWtl
+IHBhdGNoIDE0LzI3ICh4ZnM6IG1vdmUgZ2V0ZGVudHMgY29kZSBpbnRvCj4gaXQncyBvd24gZmls
+ZSkgbW92ZWQgdGhlIGFzc29jaWF0ZWQgZnVuY3Rpb24gYW5kIGFkZGVkIGEgU1RBVElDIHRvIHRo
+ZQo+IGZ1bmN0aW9uIGRlZmluaXRpb24uIEdpdmVuIHRoZSB0aXRsZSBvZiB0aGUgcGF0Y2gsIEkg
+cmVtb3ZlZCB0aGUKPiBTVEFUSUMncyBhbmQgbW92ZWQgb24gdG8gdGhpcyBvbmU6Cj4gCj4gZnMv
+eGZzL3hmc19kaXIyX2RhdGEuYzozOToxOiBlcnJvcjogc3RhdGljIGRlY2xhcmF0aW9uIG9mCj4g
+4oCYeGZzX2RpcjJfZGF0YV9mcmVlZmluZOKAmSBmb2xsb3dzIG5vbi1zdGF0aWMgZGVjbGFyYXRp
+b24KPiBJbiBmaWxlIGluY2x1ZGVkIGZyb20gZnMveGZzL3hmc19kaXIyX2RhdGEuYzozMTowOgo+
+IGZzL3hmcy94ZnNfZGlyMi5oOjEyNTozNTogbm90ZTogcHJldmlvdXMgZGVjbGFyYXRpb24gb2YK
+PiDigJh4ZnNfZGlyMl9kYXRhX2ZyZWVmaW5k4oCZIHdhcyBoZXJlCj4gCj4gVGhhdCBvbmUgYXBw
+ZWFycyB0byBiZSBkdWUgdG8gMTUvMjcgKHhmczogcmVzaHVmZmxlIGRpcjIgZGVmaW5pdGlvbnMK
+PiBhcm91bmQgZm9yIHVzZXJzcGFjZSkgYWRkaW5nIGEgaGVhZGVyIGRlY2xhcmF0aW9uIHRvIGEg
+c3RhdGljIGZ1bmN0aW9uLgo+IAo+IGRpZmYgYXBwZW5kZWQgZm9yIHJlZmVyZW5jZS4KCk9oLCBJ
+IGhhdmVuJ3QgYnVpbGQgYSBub24tZGVidWcgdmVyc2lvbiBvZiB0aGUga2VybmVsLiBNeSBiYWQu
+IEknbGwKZml4IGl0IHVwLgoKQ2hlZXJzLAoKRGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBm
+cm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20v
+bWFpbG1hbi9saXN0aW5mby94ZnMK
