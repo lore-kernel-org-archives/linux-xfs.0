@@ -1,27 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 638A57F75
-	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 20:41:02 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id AB82729DF8
+	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 20:58:42 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3AA008F804B
-	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 18:41:02 -0700 (PDT)
-Received: from mail-gh0-f178.google.com (mail-gh0-f178.google.com
-	[209.85.160.178]) by cuda.sgi.com with ESMTP id
-	FRo0Qeyj2iAoO4vZ (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 12 Jun 2013 18:41:01 -0700 (PDT)
-Received: by mail-gh0-f178.google.com with SMTP id g15so814423ghb.37
-	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 18:41:00 -0700 (PDT)
-Message-ID: <51B9231F.9050707@gmail.com>
-Date: Wed, 12 Jun 2013 21:40:47 -0400
-From: "Michael L. Semon" <mlsemon35@gmail.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 19549AC009
+	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 18:58:42 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	zvYvL1bBMxUHSKDk for <xfs@oss.sgi.com>;
+	Wed, 12 Jun 2013 18:58:40 -0700 (PDT)
+Date: Thu, 13 Jun 2013 11:58:36 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 00/27] xfs: current patch queue for 3.11
+Message-ID: <20130613015836.GF29338@dastard>
+References: <1371032567-21772-1-git-send-email-david@fromorbit.com>
+	<20130612141743.GV20932@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 2/3] xfs: fix implicit padding in directory and attr CRC
-	formats
-References: <1371003548-4026-1-git-send-email-david@fromorbit.com>
-	<1371003548-4026-3-git-send-email-david@fromorbit.com>
-	<20130613005819.GW20932@sgi.com>
-In-Reply-To: <20130613005819.GW20932@sgi.com>
+Content-Disposition: inline
+In-Reply-To: <20130612141743.GV20932@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,59 +33,59 @@ Sender: xfs-bounces@oss.sgi.com
 To: Ben Myers <bpm@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On 06/12/2013 08:58 PM, Ben Myers wrote:
-> On Wed, Jun 12, 2013 at 12:19:07PM +1000, Dave Chinner wrote:
->> From: Dave Chinner <dchinner@redhat.com>
->>
->> Michael L. Semon has been testing CRC patches ona 32 bit system and
-> 						on a
+On Wed, Jun 12, 2013 at 09:17:43AM -0500, Ben Myers wrote:
+> Hey Dave,
 > 
->> been seeing assert failures in the directory code from xfs/080.
->> Thanks to Michael's heroic efforts with printk debugging, we found
->> that the problem was that the last free space being left in the
->> directory structure was too small to fit a unused tag structure and
->> it was being corrupted and attempting to log a region out of bounds.
->> Hence the assert failure looked something like:
->>
->> .....
->> #5 calling xfs_dir2_data_log_unused() 36 32
->> #1 4092 4095 4096
->> #2 8182 8183 4096
->      first? 
->           last?
->                bp->b_length?
+> On Wed, Jun 12, 2013 at 08:22:20PM +1000, Dave Chinner wrote:
+> > Thoughts, comments, flames?
+> 
+> Do you have any performance numbers recorded for the block queue plugging for
+> bulkstat and the new inode create transaction?
 
-           BBTOB(bp->b_length)
+The new inode create transaction doesn't change performance on my
+test rigs. It significantly reduces log traffic under heavey create
+workloads (up to 50% lower). However, given the reduction is only
+from 60MB/s down to 30MB/s at 110,000 inodes/s being created,  log
+performance is not a performance limiting factor on any of my test
+rigs.
 
-This is all terrible numbering on my part...
+That said, the reason for the change is not so much for immediate
+improvements in inode create performance.  Want to allocate a stripe
+width of inodes at a time?  The new transaction can do that
+atomically....
 
->> #1 4092 4095 4096
->> #2 8182 8183 4096
+Ordered buffers allow all sorts of interesting things to be done -
+do you want to add an ext3/4 style data=ordered mode? We can do that
+with ordered buffers.  Synchronous writes of remote attribute data?
+Ordered buffers can be used to make that async and driven by AIL
+flushing.
 
-xfs_dir2_data_log_unused() calls xfs_trans_log_buf() twice in the same 
-function.  #1 is the first call, #2 is the second call, and there's no 
-running count.  The printk() is a copy-and-paste of those two function 
-calls plus a BBTOB(bp->b_length) below it.
+Want to use intent-based logging for operations rather than physical
+object logging? Ordered log items and metadata stamped with the last
+modification LSN are necessary, and with this icreate transaction we
+end up with all the pieces we need to do this....
 
->> #5 calling xfs_dir2_data_log_unused() 36 32
+And for bulkstat, performance differences were documented in
+this email where I found the problem:
 
-The #5 was caused by numbering all the calls to 
-xfs_dir2_data_log_unused() to see if one code path was being called 
-every time.  #5 is in the xfs_dir2_data_use_free() function, starting 
-with this else-if...
+http://oss.sgi.com/pipermail/xfs/2013-June/026922.html
 
-        else if (matchfront) {
-                newdup = (xfs_dir2_data_unused_t *)((char *)hdr + offset + len);
-                newdup->freetag = cpu_to_be16(XFS_DIR2_DATA_FREE_TAG);
-                newdup->length = cpu_to_be16(oldlen - len);
-                *xfs_dir2_data_unused_tag_p(newdup) =
-                        cpu_to_be16((char *)newdup - (char *)hdr);
-                printk( KERN_INFO "#5 calling xfs_dir2_data_log_unused() %d %d\n", oldlen, len );
-                xfs_dir2_data_log_unused(tp, bp, newdup);
+It took a mulithreaded bulkstat from being IO bound at 450,000
+inodes/s @ 220MB/s and 27,000 IOPS to being CPU bound at 750,000
+inodes/s @ 350MB/s and 14000 IOPS.
 
-Sorry about that!
+And given that it increased IO sizes from 8k to 16k for 256 byte
+inodes and to 32k for 512 byte inodes, that is going to increase
+performance on any busy filesystem simply through the fact that
+bulkstat IOPS overhead goes down by a factor of 2/4/8/16 depending
+on inode size.....
 
-Michael
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
