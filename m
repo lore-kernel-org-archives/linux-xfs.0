@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id AD8E47F37
-	for <xfs@oss.sgi.com>; Thu, 13 Jun 2013 10:14:04 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id EFA7029DFA
+	for <xfs@oss.sgi.com>; Thu, 13 Jun 2013 12:07:22 -0500 (CDT)
 Received: from eagdhcp-232-136.americas.sgi.com
 	(eagdhcp-232-136.americas.sgi.com [128.162.232.136])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7CDFF304043
-	for <xfs@oss.sgi.com>; Thu, 13 Jun 2013 08:14:01 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id CAD668F804B
+	for <xfs@oss.sgi.com>; Thu, 13 Jun 2013 10:07:19 -0700 (PDT)
 Received: from eagdhcp-232-136.americas.sgi.com (localhost [127.0.0.1])
 	by eagdhcp-232-136.americas.sgi.com (8.14.5/8.14.5) with ESMTP id
-	r5DFE20O002406
-	for <xfs@oss.sgi.com>; Thu, 13 Jun 2013 10:14:02 -0500 (CDT)
+	r5DH7KsO004170
+	for <xfs@oss.sgi.com>; Thu, 13 Jun 2013 12:07:20 -0500 (CDT)
 	(envelope-from tinguely@sgi.com)
-Message-Id: <20130613151037.271434256@sgi.com>
-Date: Thu, 13 Jun 2013 10:10:08 -0500
+Message-Id: <20130613170449.144027450@sgi.com>
+Date: Thu, 13 Jun 2013 12:04:49 -0500
 From: Mark Tinguely <tinguely@sgi.com>
-Subject: [PATCH] xfstest: ensure small symlink is removed
-References: <20130613151007.449190598@sgi.com>
-Content-Disposition: inline;
-	filename=xfstests-small_remote_symlink_removal.patch
+Subject: [PATCH v3] xfs: fix the symbolic link assert in xfs_ifree
+Content-Disposition: inline; filename=v3-xfs-fix-assert-in-xfs_ifree.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,161 +31,143 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Tests that XFS symlinks that are small enough to be in the
-inode, but were move to a remote symlink due to an extended
-attribute were correctly removed.
+Adding an extended attribute to a symbolic link can force that
+link to an remote extent. xfs_inactive() incorrectly assumes
+that any symbolic link small enough to be in the inode core
+is incore, resulting in the remote extent to not be removed.
+xfs_ifree() will assert on presence of this leaked remote extent.
 
 Signed-off-by: Mark Tinguely <tinguely@sgi.com>
 ---
- new/xfstests/tests/xfs/298     |   92 +++++++++++++++++++++++++++++++++++++++++
- new/xfstests/tests/xfs/298.out |   33 ++++++++++++++
- new/xfstests/tests/xfs/group   |    1 
- 3 files changed, 126 insertions(+)
+ fs/xfs/xfs_symlink.c  |   49 +++++++++++++++++++++++++++++++++++++++++++++++--
+ fs/xfs/xfs_symlink.h  |    2 +-
+ fs/xfs/xfs_trace.h    |    2 ++
+ fs/xfs/xfs_vnodeops.c |   15 +++------------
+ 4 files changed, 53 insertions(+), 15 deletions(-)
 
-Index: b/new/xfstests/tests/xfs/298
+Index: b/fs/xfs/xfs_symlink.c
 ===================================================================
---- /dev/null
-+++ b/new/xfstests/tests/xfs/298
-@@ -0,0 +1,92 @@
-+#! /bin/bash
-+# FS QA Test No. 298
-+#
-+# Test that inline symlinks are removed from the inode when an extended
-+# attributes forces it into being remote symlink.
-+# Warning: this test will ASSERT on unpatched DEBUG XFS.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2013 SGI.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
+--- a/fs/xfs/xfs_symlink.c
++++ b/fs/xfs/xfs_symlink.c
+@@ -585,7 +585,7 @@ xfs_symlink(
+ /*
+  * Free a symlink that has blocks associated with it.
+  */
+-int
++STATIC int
+ xfs_inactive_symlink_rmt(
+ 	xfs_inode_t	*ip,
+ 	xfs_trans_t	**tpp)
+@@ -606,7 +606,7 @@ xfs_inactive_symlink_rmt(
+ 
+ 	tp = *tpp;
+ 	mp = ip->i_mount;
+-	ASSERT(ip->i_d.di_size > XFS_IFORK_DSIZE(ip));
++	ASSERT(ip->i_df.if_flags & XFS_IFEXTENTS);
+ 	/*
+ 	 * We're freeing a symlink that has some
+ 	 * blocks allocated to it.  Free the
+@@ -720,3 +720,48 @@ xfs_inactive_symlink_rmt(
+  error0:
+ 	return error;
+ }
 +
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
++/*
++ * xfs_inactive_symlink - free a symlink
++ */
++int
++xfs_inactive_symlink(
++	struct xfs_inode	*ip,
++	struct xfs_trans	**tp)
 +{
-+    cd /
-+    rm -f $tmp.*
++	struct xfs_mount *mp = ip->i_mount;
++	xfs_fsize_t	pathlen;
++
++	trace_xfs_readlink(ip);
++
++	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
++
++	if (XFS_FORCED_SHUTDOWN(mp))
++		return XFS_ERROR(EIO);
++
++	/*
++	 * Zero length symlinks _can_ exist.
++	 */
++	pathlen = ip->i_d.di_size;
++	if (!pathlen)
++		return 0;
++
++	if (pathlen < 0 || pathlen > MAXPATHLEN) {
++		xfs_alert(mp, "%s: inode (%llu) bad symlink length (%lld)",
++			 __func__, (unsigned long long) ip->i_ino,
++			 (long long) pathlen);
++		ASSERT(0);
++		return XFS_ERROR(EFSCORRUPTED);
++	}
++
++	if (ip->i_df.if_flags & XFS_IFINLINE) {
++		if (ip->i_df.if_bytes > 0)
++			xfs_idata_realloc(ip, -(ip->i_df.if_bytes),
++					  XFS_DATA_FORK);
++		ASSERT(ip->i_df.if_bytes == 0);
++		return 0;
++	}
++
++	/* remove the remote symlink */
++	return(xfs_inactive_symlink_rmt(ip, tp));
 +}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+
-+# Modify as appropriate.
-+_supported_fs xfs
-+_supported_os Linux
-+
-+_require_scratch
-+
-+rm -f $seqres.full
-+_scratch_mkfs_xfs >/dev/null 2>&1
-+
-+SYMLINK_FILE="$SCRATCH_MNT/symlink"
-+SYMLINK=""
-+SYMLINK_ADD="0123456789ABCDEF01234567890ABCDEF"
-+
-+# test 32 to 512 byte symlink. This should make sure that 256 and
-+# 512 byte inodes version 2 and 3 are covered.
-+LOOP=16
-+SIZE=32
-+while [ $LOOP -gt 0 ];do
-+	_scratch_mount >/dev/null 2>&1
-+	cd $SCRATCH_MNT
-+	echo "Testing symlink size $SIZE"
-+	SYMLINK="${SYMLINK}${SYMLINK_ADD}"
-+	ln -s $SYMLINK $SYMLINK_FILE > /dev/null 2>&1
-+
-+	inode=`ls -li $SYMLINK_FILE | awk '{print $1}'`
-+# add the extended attributes
-+	attr  -Rs 1234567890ab $SYMLINK_FILE < /dev/null > /dev/null 2>&1
-+	attr  -Rs 1234567890ac $SYMLINK_FILE < /dev/null > /dev/null 2>&1
-+	attr  -Rs 1234567890ad $SYMLINK_FILE < /dev/null > /dev/null 2>&1
-+# remove the extended attributes
-+	attr  -Rr 1234567890ab $SYMLINK_FILE > /dev/null 2>&1
-+	attr  -Rr 1234567890ac $SYMLINK_FILE > /dev/null 2>&1
-+	attr  -Rr 1234567890ad $SYMLINK_FILE > /dev/null 2>&1
-+# remove the symlink - make sure ifree removes the remote symlink.
-+	rm $SYMLINK_FILE
-+# umount and check the number of extents on the inode. Should be 0.
-+	cd
-+	_scratch_unmount >/dev/null 2>&1
-+	$XFS_DB_PROG  -c "inode $inode" -c "p core.nextents" $SCRATCH_DEV
-+
-+	let LOOP=$LOOP-1
-+	let SIZE=$SIZE+32
-+done
-+
-+status=0
-+exit
-Index: b/new/xfstests/tests/xfs/298.out
+Index: b/fs/xfs/xfs_symlink.h
 ===================================================================
---- /dev/null
-+++ b/new/xfstests/tests/xfs/298.out
-@@ -0,0 +1,33 @@
-+QA output created by 298
-+Testing symlink size 32
-+core.nextents = 0
-+Testing symlink size 64
-+core.nextents = 0
-+Testing symlink size 96
-+core.nextents = 0
-+Testing symlink size 128
-+core.nextents = 0
-+Testing symlink size 160
-+core.nextents = 0
-+Testing symlink size 192
-+core.nextents = 0
-+Testing symlink size 224
-+core.nextents = 0
-+Testing symlink size 256
-+core.nextents = 0
-+Testing symlink size 288
-+core.nextents = 0
-+Testing symlink size 320
-+core.nextents = 0
-+Testing symlink size 352
-+core.nextents = 0
-+Testing symlink size 384
-+core.nextents = 0
-+Testing symlink size 416
-+core.nextents = 0
-+Testing symlink size 448
-+core.nextents = 0
-+Testing symlink size 480
-+core.nextents = 0
-+Testing symlink size 512
-+core.nextents = 0
-Index: b/new/xfstests/tests/xfs/group
+--- a/fs/xfs/xfs_symlink.h
++++ b/fs/xfs/xfs_symlink.h
+@@ -60,7 +60,7 @@ extern const struct xfs_buf_ops xfs_syml
+ int xfs_symlink(struct xfs_inode *dp, struct xfs_name *link_name,
+ 		const char *target_path, umode_t mode, struct xfs_inode **ipp);
+ int xfs_readlink(struct xfs_inode *ip, char *link);
+-int xfs_inactive_symlink_rmt(struct xfs_inode *ip, struct xfs_trans **tpp);
++int xfs_inactive_symlink(struct xfs_inode *ip, struct xfs_trans **tpp);
+ 
+ #endif /* __KERNEL__ */
+ #endif /* __XFS_SYMLINK_H */
+Index: b/fs/xfs/xfs_trace.h
 ===================================================================
---- a/new/xfstests/tests/xfs/group
-+++ b/new/xfstests/tests/xfs/group
-@@ -177,3 +177,4 @@
- 295 auto logprint quick
- 296 dump auto quick
- 297 auto freeze
-+298 auto attr symlink
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -594,6 +594,8 @@ DEFINE_INODE_EVENT(xfs_inode_set_eofbloc
+ DEFINE_INODE_EVENT(xfs_inode_clear_eofblocks_tag);
+ DEFINE_INODE_EVENT(xfs_inode_free_eofblocks_invalid);
+ 
++DEFINE_INODE_EVENT(xfs_symlink_inactive);
++
+ DECLARE_EVENT_CLASS(xfs_iref_class,
+ 	TP_PROTO(struct xfs_inode *ip, unsigned long caller_ip),
+ 	TP_ARGS(ip, caller_ip),
+Index: b/fs/xfs/xfs_vnodeops.c
+===================================================================
+--- a/fs/xfs/xfs_vnodeops.c
++++ b/fs/xfs/xfs_vnodeops.c
+@@ -322,18 +322,9 @@ xfs_inactive(
+ 	xfs_trans_ijoin(tp, ip, 0);
+ 
+ 	if (S_ISLNK(ip->i_d.di_mode)) {
+-		/*
+-		 * Zero length symlinks _can_ exist.
+-		 */
+-		if (ip->i_d.di_size > XFS_IFORK_DSIZE(ip)) {
+-			error = xfs_inactive_symlink_rmt(ip, &tp);
+-			if (error)
+-				goto out_cancel;
+-		} else if (ip->i_df.if_bytes > 0) {
+-			xfs_idata_realloc(ip, -(ip->i_df.if_bytes),
+-					  XFS_DATA_FORK);
+-			ASSERT(ip->i_df.if_bytes == 0);
+-		}
++		error = xfs_inactive_symlink(ip, &tp);
++		if (error)
++			goto out_cancel;
+ 	} else if (truncate) {
+ 		ip->i_d.di_size = 0;
+ 		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
 
 
 _______________________________________________
