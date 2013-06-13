@@ -1,18 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 63D4429DFA
-	for <xfs@oss.sgi.com>; Thu, 13 Jun 2013 16:31:19 -0500 (CDT)
-Date: Thu, 13 Jun 2013 16:31:15 -0500
+	by oss.sgi.com (Postfix) with ESMTP id 5F29429DFA
+	for <xfs@oss.sgi.com>; Thu, 13 Jun 2013 17:09:07 -0500 (CDT)
+Date: Thu, 13 Jun 2013 17:09:03 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 2/3] xfs: fix implicit padding in directory and attr
-	CRC formats
-Message-ID: <20130613213115.GZ20932@sgi.com>
+Subject: Re: [PATCH 1/3] xfs: don't shutdown log recovery on validation errors
+Message-ID: <20130613220903.GA20932@sgi.com>
 References: <1371003548-4026-1-git-send-email-david@fromorbit.com>
-	<1371003548-4026-3-git-send-email-david@fromorbit.com>
-	<20130613005819.GW20932@sgi.com> <20130613022729.GH29338@dastard>
+	<1371003548-4026-2-git-send-email-david@fromorbit.com>
+	<20130613010441.GX20932@sgi.com> <20130613020827.GG29338@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130613022729.GH29338@dastard>
+In-Reply-To: <20130613020827.GG29338@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,67 +25,67 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: "Michael L. Semon" <mlsemon35@gmail.com>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-Hey Dave,
+Hi Dave,
 
-On Thu, Jun 13, 2013 at 12:27:29PM +1000, Dave Chinner wrote:
-> On Wed, Jun 12, 2013 at 07:58:19PM -0500, Ben Myers wrote:
-> > On Wed, Jun 12, 2013 at 12:19:07PM +1000, Dave Chinner wrote:
+On Thu, Jun 13, 2013 at 12:08:27PM +1000, Dave Chinner wrote:
+> On Wed, Jun 12, 2013 at 08:04:41PM -0500, Ben Myers wrote:
+> > On Wed, Jun 12, 2013 at 12:19:06PM +1000, Dave Chinner wrote:
 > > > From: Dave Chinner <dchinner@redhat.com>
 > > > 
-> > > Michael L. Semon has been testing CRC patches ona 32 bit system and
-> > 						on a
-> > 
-> > > been seeing assert failures in the directory code from xfs/080.
-> > > Thanks to Michael's heroic efforts with printk debugging, we found
-> > > that the problem was that the last free space being left in the
-> > > directory structure was too small to fit a unused tag structure and
-> > > it was being corrupted and attempting to log a region out of bounds.
-> > > Hence the assert failure looked something like:
+> > > Unfortunately, we cannot guarantee that items logged multiple times
+> > > and replayed by log recovery do not take objects back in time. When
+> > > theya re taken back in time, the go into an intermediate state which
+> > > is corrupt, and hence verification that occurs on this intermediate
+> > > state causes log recovery to abort with a corruption shutdown.
 > > > 
-> > > .....
-> > > #5 calling xfs_dir2_data_log_unused() 36 32
-> > > #1 4092 4095 4096
-> > > #2 8182 8183 4096
-> >      first? 
-> >           last?
-> >                bp->b_length?
-> 
-> Yup.
-> 
+> > > Instead of causing a shutdown and unmountable filesystem, don't
+> > > verify post-recovery items before they are written to disk. This is
+> > > less than optimal, but there is no way to detect this issue for
+> > > non-CRC filesystems If log recovery successfully completes, this
+> > > will be undone and the object will be consistent by subsequent
+> > > transactions that are replayed, so in most cases we don't need to
+> > > take drastic action.
 > > > 
-> > > Note that this only affects 32 bit systems with CRCs enabled.
-> > > Everything else is just fine. Note that filesystems created before
-> > 					 CRC enabled filesystems
+> > > For CRC enabled filesystems, leave the verifiers in place - we need
+> > > to call them to recalculate the CRCs on the objects anyway. This
+> > > recovery problem canbe solved for such filesystems - we have a LSN
+> > > stamped in all metadata at writeback time that we can to determine
+> > > whether the item should be replayed or not. This is a separate piece
+> > > of work, so is not addressed by this patch.
 > > 
-> > I suggest this be added to head off any confusion.
+> > Is there a test case for this one?  How are you reproducing this?
 > 
-> Sure.  Do I need to resubmit this, or are you going to just modify
-> the commit message yourself before applying it?
-
-Nah, I'll do it.
-
-> > > index 995f1f5..7826782 100644
-> > > --- a/fs/xfs/xfs_dir2_format.h
-> > > +++ b/fs/xfs/xfs_dir2_format.h
-> > > @@ -266,6 +266,7 @@ struct xfs_dir3_blk_hdr {
-> > >  struct xfs_dir3_data_hdr {
-> > >  	struct xfs_dir3_blk_hdr	hdr;
-> > >  	xfs_dir2_data_free_t	best_free[XFS_DIR2_DATA_FD_COUNT];
-> > > +	__be32			pad;	/* 64 bit alignment */
-> > 
-> > I counted these up and it looks fine.  Nice work gents.
+> The test case was Dave Jones running sysrq-b on a hung test machine.
+> The machine would occasionally end up with a corrupt home directory.
 > 
-> pahole is a much better way of determining structure size - it tells
-> you exactly what the compiler did, rather than having to assume what
-> the compiler is going to do...
+> http://oss.sgi.com/pipermail/xfs/2013-May/026759.html
 > 
-> $ pahole fs/xfs/xfs_dir2_data.o |less
+> Analysis from a metdadump provided by Dave:
+> 
+> http://oss.sgi.com/pipermail/xfs/2013-June/026965.html
+>
+> And Cai also appeared to be hitting this after a crash on 3.10-rc4,
+> as it's giving exactly the same "verifier failed during log recovery"
+> stack trace:
+> 
+> http://oss.sgi.com/pipermail/xfs/2013-June/026889.html
 
-Thanks, I'll check it out.  Applied this.
+Thanks.  It appears that the verifiers have found corruption due to a
+flaw in log recovery, and the fix you are proposing is to stop using
+them.  If we do that, we'll have no way of detecting the corruption and
+will end up hanging users of older kernels out to dry.
 
--Ben
+I think your suggestion that non-debug systems could warn instead of
+fail is a good one, but removing the verifier altogether is
+inappropriate.
+
+Can you make the metadump available?  I need to understand this better
+before I can sign off.  Also:  Any idea how far back this one goes?
+
+Regards,
+	Ben
 
 _______________________________________________
 xfs mailing list
