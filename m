@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E50A57F72
-	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 21:27:36 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 53C6BAC001
-	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 19:27:33 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 326CA7F72
+	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 21:37:49 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E53A88F804B
+	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 19:37:48 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	G5xksUEK4RlF86a7 for <xfs@oss.sgi.com>;
-	Wed, 12 Jun 2013 19:27:31 -0700 (PDT)
-Date: Thu, 13 Jun 2013 12:27:29 +1000
+	2GGCxOBzMoqkuuHo for <xfs@oss.sgi.com>;
+	Wed, 12 Jun 2013 19:37:47 -0700 (PDT)
+Date: Thu, 13 Jun 2013 12:37:44 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/3] xfs: fix implicit padding in directory and attr CRC
-	formats
-Message-ID: <20130613022729.GH29338@dastard>
-References: <1371003548-4026-1-git-send-email-david@fromorbit.com>
-	<1371003548-4026-3-git-send-email-david@fromorbit.com>
-	<20130613005819.GW20932@sgi.com>
+Subject: Re: [PATCH v2] xfs: fix the symbolic link assert in xfs_ifree
+Message-ID: <20130613023744.GI29338@dastard>
+References: <20130612182818.363497890@.sgi.com>
+	<20130612182836.141843930@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130613005819.GW20932@sgi.com>
+In-Reply-To: <20130612182836.141843930@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,81 +30,91 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: "Michael L. Semon" <mlsemon35@gmail.com>, xfs@oss.sgi.com
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, Jun 12, 2013 at 07:58:19PM -0500, Ben Myers wrote:
-> On Wed, Jun 12, 2013 at 12:19:07PM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Michael L. Semon has been testing CRC patches ona 32 bit system and
-> 						on a
+On Wed, Jun 12, 2013 at 01:28:19PM -0500, Mark Tinguely wrote:
+> Adding an extended attribute to a symbolic link can force that
+> link to an remote extent. xfs_inactive() incorrectly assumes
+> that any symbolic link small enough to be in the inode core
+> is incore, resulting in the remote extent to not be removed.
+> xfs_ifree() will assert on presence of this leaked remote extent.
 > 
-> > been seeing assert failures in the directory code from xfs/080.
-> > Thanks to Michael's heroic efforts with printk debugging, we found
-> > that the problem was that the last free space being left in the
-> > directory structure was too small to fit a unused tag structure and
-> > it was being corrupted and attempting to log a region out of bounds.
-> > Hence the assert failure looked something like:
-> > 
-> > .....
-> > #5 calling xfs_dir2_data_log_unused() 36 32
-> > #1 4092 4095 4096
-> > #2 8182 8183 4096
->      first? 
->           last?
->                bp->b_length?
-
-Yup.
-
-> > 
-> > Note that this only affects 32 bit systems with CRCs enabled.
-> > Everything else is just fine. Note that filesystems created before
-> 					 CRC enabled filesystems
+> Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+> ---
+> xfstest is coming.
 > 
-> I suggest this be added to head off any confusion.
-
-Sure.  Do I need to resubmit this, or are you going to just modify
-the commit message yourself before applying it?
-
-> > index 995f1f5..7826782 100644
-> > --- a/fs/xfs/xfs_dir2_format.h
-> > +++ b/fs/xfs/xfs_dir2_format.h
-> > @@ -266,6 +266,7 @@ struct xfs_dir3_blk_hdr {
-> >  struct xfs_dir3_data_hdr {
-> >  	struct xfs_dir3_blk_hdr	hdr;
-> >  	xfs_dir2_data_free_t	best_free[XFS_DIR2_DATA_FD_COUNT];
-> > +	__be32			pad;	/* 64 bit alignment */
+>  fs/xfs/xfs_symlink.c  |   24 +++++++++++++++++++++++-
+>  fs/xfs/xfs_symlink.h  |    1 +
+>  fs/xfs/xfs_vnodeops.c |   15 +++------------
+>  3 files changed, 27 insertions(+), 13 deletions(-)
 > 
-> I counted these up and it looks fine.  Nice work gents.
+> Index: b/fs/xfs/xfs_symlink.c
+> ===================================================================
+> --- a/fs/xfs/xfs_symlink.c
+> +++ b/fs/xfs/xfs_symlink.c
+> @@ -606,7 +606,7 @@ xfs_inactive_symlink_rmt(
+>  
+>  	tp = *tpp;
+>  	mp = ip->i_mount;
+> -	ASSERT(ip->i_d.di_size > XFS_IFORK_DSIZE(ip));
+> +	ASSERT(ip->i_df.if_flags & XFS_IFEXTENTS);
+>  	/*
+>  	 * We're freeing a symlink that has some
+>  	 * blocks allocated to it.  Free the
+> @@ -720,3 +720,25 @@ xfs_inactive_symlink_rmt(
+>   error0:
+>  	return error;
+>  }
+> +
+> +/*
+> + * xfs_inactive_symlink - free a symlink
+> + */
+> +int
+> +xfs_inactive_symlink(
+> +	struct xfs_inode	*ip,
+> +	struct xfs_trans	**tp)
+> +{
+> +
 
-pahole is a much better way of determining structure size - it tells
-you exactly what the compiler did, rather than having to assume what
-the compiler is going to do...
+Needs to:
 
-$ pahole fs/xfs/xfs_dir2_data.o |less
-.....
-struct xfs_dir3_blk_hdr {
-        __be32                     magic;                /*     0     4 */
-        __be32                     crc;                  /*     4     4 */
-        __be64                     blkno;                /*     8     8 */
-        __be64                     lsn;                  /*    16     8 */
-        uuid_t                     uuid;                 /*    24    16 */
-        __be64                     owner;                /*    40     8 */
+	- emit a tracepoint (trace_xfs_symlink_inactive(ip))
+	- assert the inode is locked appropriately
+	- check for a shutdown condition
+	- check for zero size and return success immediately
+	- check inode size is within bounds (0 < size < MAXPATHLEN)
 
-        /* size: 48, cachelines: 1, members: 6 */
-        /* last cacheline: 48 bytes */
-};
-struct xfs_dir3_data_hdr {
-        struct xfs_dir3_blk_hdr    hdr;                  /*     0    48 */
-        xfs_dir2_data_free_t       best_free[3];         /*    48    12 */
-        __be32                     pad;                  /*    60     4 */
-        /* --- cacheline 1 boundary (64 bytes) --- */
+i.e. all the same preamble that xfs_readlink() has.
 
-        /* size: 64, cachelines: 1, members: 3 */
-};
-....
+> +	/*
+> +	 * Zero length symlinks _can_ exist.
+> +	 */
+> +	if (ip->i_df.if_flags & XFS_IFINLINE) {
+> +		if (ip->i_df.if_bytes > 0)
+> +			xfs_idata_realloc(ip, -(ip->i_df.if_bytes),
+> +					  XFS_DATA_FORK);
+> +		ASSERT(ip->i_df.if_bytes == 0);
+> +		return 0;
+> +	} else
+> +		return (xfs_inactive_symlink_rmt(ip, tp));
 
+No need for an else here, and no need for the () around the
+xfs_inactive_symlink_rmt() function call.
+
+> +}
+> Index: b/fs/xfs/xfs_symlink.h
+> ===================================================================
+> --- a/fs/xfs/xfs_symlink.h
+> +++ b/fs/xfs/xfs_symlink.h
+> @@ -61,6 +61,7 @@ int xfs_symlink(struct xfs_inode *dp, st
+>  		const char *target_path, umode_t mode, struct xfs_inode **ipp);
+>  int xfs_readlink(struct xfs_inode *ip, char *link);
+>  int xfs_inactive_symlink_rmt(struct xfs_inode *ip, struct xfs_trans **tpp);
+> +int xfs_inactive_symlink(struct xfs_inode *ip, struct xfs_trans **tpp);
+
+xfs_inactive_symlink_rmt() is no longer exported, so it can be
+removed from the header and made STATIC.
 
 Cheers,
 
