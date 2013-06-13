@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B973C7F72
-	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 21:08:33 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id E50A57F72
+	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 21:27:36 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 85E14304039
-	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 19:08:30 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 53C6BAC001
+	for <xfs@oss.sgi.com>; Wed, 12 Jun 2013 19:27:33 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	ciqCksVyImU2RfEC for <xfs@oss.sgi.com>;
-	Wed, 12 Jun 2013 19:08:28 -0700 (PDT)
-Date: Thu, 13 Jun 2013 12:08:27 +1000
+	G5xksUEK4RlF86a7 for <xfs@oss.sgi.com>;
+	Wed, 12 Jun 2013 19:27:31 -0700 (PDT)
+Date: Thu, 13 Jun 2013 12:27:29 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/3] xfs: don't shutdown log recovery on validation errors
-Message-ID: <20130613020827.GG29338@dastard>
+Subject: Re: [PATCH 2/3] xfs: fix implicit padding in directory and attr CRC
+	formats
+Message-ID: <20130613022729.GH29338@dastard>
 References: <1371003548-4026-1-git-send-email-david@fromorbit.com>
-	<1371003548-4026-2-git-send-email-david@fromorbit.com>
-	<20130613010441.GX20932@sgi.com>
+	<1371003548-4026-3-git-send-email-david@fromorbit.com>
+	<20130613005819.GW20932@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130613010441.GX20932@sgi.com>
+In-Reply-To: <20130613005819.GW20932@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,51 +33,80 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Ben Myers <bpm@sgi.com>
-Cc: xfs@oss.sgi.com
+Cc: "Michael L. Semon" <mlsemon35@gmail.com>, xfs@oss.sgi.com
 
-On Wed, Jun 12, 2013 at 08:04:41PM -0500, Ben Myers wrote:
-> Hey Dave,
-> 
-> On Wed, Jun 12, 2013 at 12:19:06PM +1000, Dave Chinner wrote:
+On Wed, Jun 12, 2013 at 07:58:19PM -0500, Ben Myers wrote:
+> On Wed, Jun 12, 2013 at 12:19:07PM +1000, Dave Chinner wrote:
 > > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > Unfortunately, we cannot guarantee that items logged multiple times
-> > and replayed by log recovery do not take objects back in time. When
-> > theya re taken back in time, the go into an intermediate state which
-> > is corrupt, and hence verification that occurs on this intermediate
-> > state causes log recovery to abort with a corruption shutdown.
-> > 
-> > Instead of causing a shutdown and unmountable filesystem, don't
-> > verify post-recovery items before they are written to disk. This is
-> > less than optimal, but there is no way to detect this issue for
-> > non-CRC filesystems If log recovery successfully completes, this
-> > will be undone and the object will be consistent by subsequent
-> > transactions that are replayed, so in most cases we don't need to
-> > take drastic action.
-> > 
-> > For CRC enabled filesystems, leave the verifiers in place - we need
-> > to call them to recalculate the CRCs on the objects anyway. This
-> > recovery problem canbe solved for such filesystems - we have a LSN
-> > stamped in all metadata at writeback time that we can to determine
-> > whether the item should be replayed or not. This is a separate piece
-> > of work, so is not addressed by this patch.
+> > Michael L. Semon has been testing CRC patches ona 32 bit system and
+> 						on a
 > 
-> Is there a test case for this one?  How are you reproducing this?
+> > been seeing assert failures in the directory code from xfs/080.
+> > Thanks to Michael's heroic efforts with printk debugging, we found
+> > that the problem was that the last free space being left in the
+> > directory structure was too small to fit a unused tag structure and
+> > it was being corrupted and attempting to log a region out of bounds.
+> > Hence the assert failure looked something like:
+> > 
+> > .....
+> > #5 calling xfs_dir2_data_log_unused() 36 32
+> > #1 4092 4095 4096
+> > #2 8182 8183 4096
+>      first? 
+>           last?
+>                bp->b_length?
 
-The test case was Dave Jones running sysrq-b on a hung test machine.
-The machine would occasionally end up with a corrupt home directory.
+Yup.
 
-http://oss.sgi.com/pipermail/xfs/2013-May/026759.html
+> > 
+> > Note that this only affects 32 bit systems with CRCs enabled.
+> > Everything else is just fine. Note that filesystems created before
+> 					 CRC enabled filesystems
+> 
+> I suggest this be added to head off any confusion.
 
-Analysis from a metdadump provided by Dave:
+Sure.  Do I need to resubmit this, or are you going to just modify
+the commit message yourself before applying it?
 
-http://oss.sgi.com/pipermail/xfs/2013-June/026965.html
+> > index 995f1f5..7826782 100644
+> > --- a/fs/xfs/xfs_dir2_format.h
+> > +++ b/fs/xfs/xfs_dir2_format.h
+> > @@ -266,6 +266,7 @@ struct xfs_dir3_blk_hdr {
+> >  struct xfs_dir3_data_hdr {
+> >  	struct xfs_dir3_blk_hdr	hdr;
+> >  	xfs_dir2_data_free_t	best_free[XFS_DIR2_DATA_FD_COUNT];
+> > +	__be32			pad;	/* 64 bit alignment */
+> 
+> I counted these up and it looks fine.  Nice work gents.
 
-And Cai also appeared to be hitting this after a crash on 3.10-rc4,
-as it's giving exactly the same "verifier failed during log recovery"
-stack trace:
+pahole is a much better way of determining structure size - it tells
+you exactly what the compiler did, rather than having to assume what
+the compiler is going to do...
 
-http://oss.sgi.com/pipermail/xfs/2013-June/026889.html
+$ pahole fs/xfs/xfs_dir2_data.o |less
+.....
+struct xfs_dir3_blk_hdr {
+        __be32                     magic;                /*     0     4 */
+        __be32                     crc;                  /*     4     4 */
+        __be64                     blkno;                /*     8     8 */
+        __be64                     lsn;                  /*    16     8 */
+        uuid_t                     uuid;                 /*    24    16 */
+        __be64                     owner;                /*    40     8 */
+
+        /* size: 48, cachelines: 1, members: 6 */
+        /* last cacheline: 48 bytes */
+};
+struct xfs_dir3_data_hdr {
+        struct xfs_dir3_blk_hdr    hdr;                  /*     0    48 */
+        xfs_dir2_data_free_t       best_free[3];         /*    48    12 */
+        __be32                     pad;                  /*    60     4 */
+        /* --- cacheline 1 boundary (64 bytes) --- */
+
+        /* size: 64, cachelines: 1, members: 3 */
+};
+....
+
 
 Cheers,
 
