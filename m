@@ -1,25 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 01A6C7F37
-	for <xfs@oss.sgi.com>; Fri, 14 Jun 2013 14:18:23 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B97DE8F8033
-	for <xfs@oss.sgi.com>; Fri, 14 Jun 2013 12:18:23 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id ukZyhgBUJyDzQAy6 for <xfs@oss.sgi.com>;
-	Fri, 14 Jun 2013 12:18:22 -0700 (PDT)
-Message-ID: <51BB6C7C.6050300@sandeen.net>
-Date: Fri, 14 Jun 2013 14:18:20 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH 1/3] xfs: don't shutdown log recovery on validation errors
-References: <1371003548-4026-1-git-send-email-david@fromorbit.com>
-	<1371003548-4026-2-git-send-email-david@fromorbit.com>
-	<20130613010441.GX20932@sgi.com> <20130613020827.GG29338@dastard>
-	<20130613220903.GA20932@sgi.com> <20130614001306.GM29338@dastard>
-	<20130614160940.GA32736@sgi.com> <51BB41AD.4050303@sandeen.net>
-	<20130614190850.GB20932@sgi.com>
-In-Reply-To: <20130614190850.GB20932@sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id E8BA57F37
+	for <xfs@oss.sgi.com>; Fri, 14 Jun 2013 14:41:27 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6B732AC00B
+	for <xfs@oss.sgi.com>; Fri, 14 Jun 2013 12:41:24 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id E0z1vuXg0WkgvZYI for
+	<xfs@oss.sgi.com>; Fri, 14 Jun 2013 12:41:23 -0700 (PDT)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r5EJfMgU011979
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Fri, 14 Jun 2013 15:41:22 -0400
+Received: from hades.maiolino.org.com (ovpn-113-168.phx2.redhat.com
+	[10.3.113.168])
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id r5EJfLFL010862
+	for <xfs@oss.sgi.com>; Fri, 14 Jun 2013 15:41:21 -0400
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [PATCH] xfs: fix sgid inheritance for subdirectories inheriting
+	default acls
+Date: Fri, 14 Jun 2013 16:41:17 -0300
+Message-Id: <1371238877-5722-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,183 +31,139 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Dave Jones <davej@redhat.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 6/14/13 2:08 PM, Ben Myers wrote:
-> Hey Eric,
-> 
-> On Fri, Jun 14, 2013 at 11:15:41AM -0500, Eric Sandeen wrote:
->> On 6/14/13 11:09 AM, Ben Myers wrote:
->>> On Fri, Jun 14, 2013 at 10:13:06AM +1000, Dave Chinner wrote:
->>>> On Thu, Jun 13, 2013 at 05:09:03PM -0500, Ben Myers wrote:
->>>>> On Thu, Jun 13, 2013 at 12:08:27PM +1000, Dave Chinner wrote:
->>>>>> On Wed, Jun 12, 2013 at 08:04:41PM -0500, Ben Myers wrote:
->>>>>>> On Wed, Jun 12, 2013 at 12:19:06PM +1000, Dave Chinner wrote:
->>>>>>>> From: Dave Chinner <dchinner@redhat.com>
->>>>>>>>
->>>>>>>> Unfortunately, we cannot guarantee that items logged multiple times
->>>>>>>> and replayed by log recovery do not take objects back in time. When
->>>>>>>> theya re taken back in time, the go into an intermediate state which
->>>>>>>> is corrupt, and hence verification that occurs on this intermediate
->>>>>>>> state causes log recovery to abort with a corruption shutdown.
->>>>>>>>
->>>>>>>> Instead of causing a shutdown and unmountable filesystem, don't
->>>>>>>> verify post-recovery items before they are written to disk. This is
->>>>>>>> less than optimal, but there is no way to detect this issue for
->>>>>>>> non-CRC filesystems If log recovery successfully completes, this
->>>>>>>> will be undone and the object will be consistent by subsequent
->>>>>>>> transactions that are replayed, so in most cases we don't need to
->>>>>>>> take drastic action.
->>>>>>>>
->>>>>>>> For CRC enabled filesystems, leave the verifiers in place - we need
->>>>>>>> to call them to recalculate the CRCs on the objects anyway. This
->>>>>>>> recovery problem canbe solved for such filesystems - we have a LSN
->>>>>>>> stamped in all metadata at writeback time that we can to determine
->>>>>>>> whether the item should be replayed or not. This is a separate piece
->>>>>>>> of work, so is not addressed by this patch.
->>>>>>>
->>>>>>> Is there a test case for this one?  How are you reproducing this?
->>>>>>
->>>>>> The test case was Dave Jones running sysrq-b on a hung test machine.
->>>>>> The machine would occasionally end up with a corrupt home directory.
->>>>>>
->>>>>> http://oss.sgi.com/pipermail/xfs/2013-May/026759.html
->>>>>>
->>>>>> Analysis from a metdadump provided by Dave:
->>>>>>
->>>>>> http://oss.sgi.com/pipermail/xfs/2013-June/026965.html
->>>>>>
->>>>>> And Cai also appeared to be hitting this after a crash on 3.10-rc4,
->>>>>> as it's giving exactly the same "verifier failed during log recovery"
->>>>>> stack trace:
->>>>>>
->>>>>> http://oss.sgi.com/pipermail/xfs/2013-June/026889.html
->>>>>
->>>>> Thanks.  It appears that the verifiers have found corruption due to a
->>>>> flaw in log recovery, and the fix you are proposing is to stop using
->>>>> them.  If we do that, we'll have no way of detecting the corruption and
->>>>> will end up hanging users of older kernels out to dry.
->>>>
->>>> We've never detected it before, and it's causing regressions for
->>>> multiple people. We *can't fix it* because we can't detect the
->>>> situation sanely, and we are not leaving people with old kernels
->>>> hanging out to dry. The opposite is true: we are fucking over
->>>> current users by preventing log recovery on filesystems that will
->>>> recovery perfectly OK and have almost always recovered just fine in
->>>> the past.
->>>>
->>>>> I think your suggestion that non-debug systems could warn instead of
->>>>> fail is a good one, but removing the verifier altogether is
->>>>> inappropriate.
->>>>
->>>> Changing every single verifier in a non-trivial way is not something
->>>> I'm about to do for a -rc6 kernel. Removing the verifiers from log
->>>> recovery just reverts to the pre-3.8 situation, so is perfectly
->>>> acceptable short term solution while we do the more invasive verify
->>>> changes.
->>>>
->>>>> Can you make the metadump available?  I need to understand this better
->>>>> before I can sign off.  Also:  Any idea how far back this one goes?
->>>>
->>>> No, I can't make the metadump available to you - it was provided
->>>> privately and not obfuscated and so you'd have to ask Dave for it.
->>>
->>> Dave (Jones), could you make the metadump available to me?  I'd like to
->>> understand this a little bit better.  I'm a bit uncomfortable with the
->>> proposition that we should corrupt silently in this case...
->>
->> Ben, isn't it the case that the corruption would only happen if
->> log replay failed for some reason (as has always been the case,
->> verifier or not), but with the verifier in place, it kills replay
->> even w/o other problems due to a logical problem with the
->> (recently added) verifiers?
-> 
-> It seems like the verifier prevented corruption from hitting disk during
-> log replay.  
+XFS removes sgid bits of subdirectories created under a directory containing a
+default acl.
 
-It detected a an inconsistent *interim* state during replay, which is
-always made correct by log replay completion.  But it *stopped* that log
-replay completion.  And caused log replay to fail.  And mount to fail.
-This is *new* behavior, and bad.
+When a default acl is set, it implies xfs to call xfs_setattr_nonsize() in its
+code path. Such function is shared among mkdir and chmod system calls, and
+does some checks unneeded by mkdir (calling inode_change_ok()). Such checks
+remove sgid bit from the inode after it has been granted. So, this patch wraps
+up these checks to be used only in chmod path.
 
-As I understand it.
+Also, chmod should not remove sgid bit from an inode if this is a directory, so,
+it adds a check if S_ISDIR is set in the inode mode, into xfs_setattr_nonsize()
 
-> It is enforcing a partial replay up to the point where the
-> corruption occurred.  Now you should be able to zero the log and the
-> filesystem is not corrupted.
-> 
->> IOW - this seems like an actual functional regression due to the
->> addition of the verifier, and dchinner's patch gets us back
->> to the almost-always-fine state we were in prior to the change.
-> 
-> Oh, the spin doctor is *in*!
+Done that, xfs_setattr_mode() doesn't need to re-check for group id and
+capabilities permissions, this only implies in another try to remove sgid bit
+from the directories. Such check is already done either on inode_change_ok() or
+xfs_setattr_nonsize().
 
-This is not spin.
+This addresses SGI bug 280:
+http://oss.sgi.com/bugzilla/show_bug.cgi?id=280
 
-> This isn't a logical problem with the verifier, it's a logical problem
-> with log replay.  We need to find a way for recovery to know whether a
-> given transaction should be replayed.  Fixing that is nontrivial.
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+---
+ fs/xfs/xfs_iops.c |   51 ++++++++++++++++++++++++++++++++++-----------------
+ 1 files changed, 34 insertions(+), 17 deletions(-)
 
-Right.
-
-And it's been around for years.  The verifier now detects that
-interim state, and makes things *worse* than they would be had log
-replay been allowed to continue.
-
-Fixing the interim state may be nontrivial; allowing log replay
-to continue to a consistent state as it always has *is* trivial,
-it's what's done in Dave's small patch.
-
->> As we're at -rc6, it seems quite reasonable to me as a quick
->> fix to just short-circuit it for now.
-> 
-> If we're talking about a short term fix, that's fine.  This should be
-> conditional on CONFIG_XFS_DEBUG and marked as such.
-> 
-> Long term, removing the verifiers is the wrong thing to do here.  We
-> need to fix the recovery bug and then remove this temporary workaround.  
-> 
->> If you have time to analyze dave's metadump that's cool, but
->> this seems like something that really needs to be addressed
->> before 3.10 gets out the door.
-> 
-> If this really is a day one bug then it's been out the door almost
-> twenty years.  And you want to hurry now?  ;)
-
-We seem to be talking past each other.
-
-The corrupted interim state has been around for years.  Up until
-now, log replay completion left things in perfect state.
-
-The verifier now *breaks replay* at that interim point.
-Were it allowed to continue, everything would be fine.
-
-As things stand, it is not fine, and this is a recent change
-which Dave is trying to correct.
-
-Leaving it in place will cause filesystems which were replaying
-logs just fine until recently to now fail with no good way out.
-
--Eric
-
->> Whenever you're ready, you can also add:
->>
->> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-> 
-> Sure.
-> 
->> (And dchinner, should this cc: stable for 3.9?)
-> 
-> Looks like verifiers were added in 3.7.  We should Cc stable.
-> 
-> Thanks,
-> 	Ben
-> 
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index ca9ecaa..5c9c505 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -467,9 +467,6 @@ xfs_setattr_mode(
+ 	ASSERT(tp);
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+ 
+-	if (!in_group_p(inode->i_gid) && !capable(CAP_FSETID))
+-		mode &= ~S_ISGID;
+-
+ 	ip->i_d.di_mode &= S_IFMT;
+ 	ip->i_d.di_mode |= mode & ~S_IFMT;
+ 
+@@ -477,23 +474,20 @@ xfs_setattr_mode(
+ 	inode->i_mode |= mode & ~S_IFMT;
+ }
+ 
++/* Check inode permissions and filesystem errors
++ *
++ * Wrapper to some pre-checks needed while changing
++ * inode attributes
++ */
+ int
+-xfs_setattr_nonsize(
++xfs_setattr_setup(
+ 	struct xfs_inode	*ip,
+ 	struct iattr		*iattr,
+ 	int			flags)
+ {
+ 	xfs_mount_t		*mp = ip->i_mount;
+ 	struct inode		*inode = VFS_I(ip);
+-	int			mask = iattr->ia_valid;
+-	xfs_trans_t		*tp;
+ 	int			error;
+-	uid_t			uid = 0, iuid = 0;
+-	gid_t			gid = 0, igid = 0;
+-	struct xfs_dquot	*udqp = NULL, *gdqp = NULL;
+-	struct xfs_dquot	*olddquot1 = NULL, *olddquot2 = NULL;
+-
+-	trace_xfs_setattr(ip);
+ 
+ 	if (mp->m_flags & XFS_MOUNT_RDONLY)
+ 		return XFS_ERROR(EROFS);
+@@ -505,6 +499,27 @@ xfs_setattr_nonsize(
+ 	if (error)
+ 		return XFS_ERROR(error);
+ 
++	return xfs_setattr_nonsize(ip, iattr, flags);
++}
++
++int
++xfs_setattr_nonsize(
++	struct xfs_inode	*ip,
++	struct iattr		*iattr,
++	int			flags)
++{
++	xfs_mount_t		*mp = ip->i_mount;
++	struct inode		*inode = VFS_I(ip);
++	int			mask = iattr->ia_valid;
++	xfs_trans_t		*tp;
++	int			error;
++	uid_t			uid = 0, iuid = 0;
++	gid_t			gid = 0, igid = 0;
++	struct xfs_dquot	*udqp = NULL, *gdqp = NULL;
++	struct xfs_dquot	*olddquot1 = NULL, *olddquot2 = NULL;
++
++	trace_xfs_setattr(ip);
++
+ 	ASSERT((mask & ATTR_SIZE) == 0);
+ 
+ 	/*
+@@ -592,11 +607,13 @@ xfs_setattr_nonsize(
+ 		 * CAP_FSETID overrides the following restrictions:
+ 		 *
+ 		 * The set-user-ID and set-group-ID bits of a file will be
+-		 * cleared upon successful return from chown()
++		 * cleared upon successful return from chown().
++		 * Of a directory, these bits should be kept.
+ 		 */
+-		if ((ip->i_d.di_mode & (S_ISUID|S_ISGID)) &&
+-		    !capable(CAP_FSETID))
+-			ip->i_d.di_mode &= ~(S_ISUID|S_ISGID);
++		if (!S_ISDIR(inode->i_mode))
++			if ((ip->i_d.di_mode & (S_ISUID|S_ISGID)) &&
++			    !capable(CAP_FSETID))
++				ip->i_d.di_mode &= ~(S_ISUID|S_ISGID);
+ 
+ 		/*
+ 		 * Change the ownerships and register quota modifications
+@@ -915,7 +932,7 @@ xfs_vn_setattr(
+ {
+ 	if (iattr->ia_valid & ATTR_SIZE)
+ 		return -xfs_setattr_size(XFS_I(dentry->d_inode), iattr, 0);
+-	return -xfs_setattr_nonsize(XFS_I(dentry->d_inode), iattr, 0);
++	return -xfs_setattr_setup(XFS_I(dentry->d_inode), iattr, 0);
+ }
+ 
+ STATIC int
+-- 
+1.7.1
 
 _______________________________________________
 xfs mailing list
