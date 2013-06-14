@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 84A557CBF
-	for <xfs@oss.sgi.com>; Thu, 13 Jun 2013 21:11:18 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 718238F804B
-	for <xfs@oss.sgi.com>; Thu, 13 Jun 2013 19:11:15 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 08AC07CBF
+	for <xfs@oss.sgi.com>; Thu, 13 Jun 2013 21:17:28 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id EAD04304032
+	for <xfs@oss.sgi.com>; Thu, 13 Jun 2013 19:17:24 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	YeXo1WAIeUYZWgy7 for <xfs@oss.sgi.com>;
-	Thu, 13 Jun 2013 19:11:13 -0700 (PDT)
-Date: Fri, 14 Jun 2013 12:11:07 +1000
+	5r2GDErVShn3bEe8 for <xfs@oss.sgi.com>;
+	Thu, 13 Jun 2013 19:17:22 -0700 (PDT)
+Date: Fri, 14 Jun 2013 12:17:20 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfstest: ensure small symlink is removed
-Message-ID: <20130614021107.GQ29338@dastard>
-References: <20130613151007.449190598@sgi.com>
-	<20130613151037.271434256@sgi.com>
+Subject: Re: [PATCH v3] xfs: fix the symbolic link assert in xfs_ifree
+Message-ID: <20130614021720.GR29338@dastard>
+References: <20130613170449.144027450@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130613151037.271434256@sgi.com>
+In-Reply-To: <20130613170449.144027450@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,76 +32,105 @@ Sender: xfs-bounces@oss.sgi.com
 To: Mark Tinguely <tinguely@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Jun 13, 2013 at 10:10:08AM -0500, Mark Tinguely wrote:
-> Tests that XFS symlinks that are small enough to be in the
-> inode, but were move to a remote symlink due to an extended
-> attribute were correctly removed.
+On Thu, Jun 13, 2013 at 12:04:49PM -0500, Mark Tinguely wrote:
+> Adding an extended attribute to a symbolic link can force that
+> link to an remote extent. xfs_inactive() incorrectly assumes
+> that any symbolic link small enough to be in the inode core
+> is incore, resulting in the remote extent to not be removed.
+> xfs_ifree() will assert on presence of this leaked remote extent.
 > 
 > Signed-off-by: Mark Tinguely <tinguely@sgi.com>
-> ---
->  new/xfstests/tests/xfs/298     |   92 +++++++++++++++++++++++++++++++++++++++++
->  new/xfstests/tests/xfs/298.out |   33 ++++++++++++++
->  new/xfstests/tests/xfs/group   |    1 
+.....
+> +/*
+> + * xfs_inactive_symlink - free a symlink
+> + */
+> +int
+> +xfs_inactive_symlink(
+> +	struct xfs_inode	*ip,
+> +	struct xfs_trans	**tp)
+> +{
+> +	struct xfs_mount *mp = ip->i_mount;
+> +	xfs_fsize_t	pathlen;
 
-I don't see anything that really needs to be XFS specific about this
-test - can you make it generic?
+int will do here - it can't be more than MAXPATHLEN = 1024, and this
+gets rid of the casts in the error print.
 
-> +SYMLINK=""
-> +SYMLINK_ADD="0123456789ABCDEF01234567890ABCDEF"
 > +
-> +# test 32 to 512 byte symlink. This should make sure that 256 and
-> +# 512 byte inodes version 2 and 3 are covered.
+> +	trace_xfs_readlink(ip);
 
-Better to test all the way to MAXPATHLEN, rather than just an
-arbitrary sub-range of the possible symlink ranges.
+trace_xfs_inactive_symlink, as you mentioned ;)
 
-> +LOOP=16
-> +SIZE=32
-> +while [ $LOOP -gt 0 ];do
-
-while [ $SIZE -le 512 ]; do
-
-> +	_scratch_mount >/dev/null 2>&1
-> +	cd $SCRATCH_MNT
-> +	echo "Testing symlink size $SIZE"
-> +	SYMLINK="${SYMLINK}${SYMLINK_ADD}"
-> +	ln -s $SYMLINK $SYMLINK_FILE > /dev/null 2>&1
 > +
-> +	inode=`ls -li $SYMLINK_FILE | awk '{print $1}'`
-> +# add the extended attributes
-> +	attr  -Rs 1234567890ab $SYMLINK_FILE < /dev/null > /dev/null 2>&1
-> +	attr  -Rs 1234567890ac $SYMLINK_FILE < /dev/null > /dev/null 2>&1
-> +	attr  -Rs 1234567890ad $SYMLINK_FILE < /dev/null > /dev/null 2>&1
-> +# remove the extended attributes
-> +	attr  -Rr 1234567890ab $SYMLINK_FILE > /dev/null 2>&1
-> +	attr  -Rr 1234567890ac $SYMLINK_FILE > /dev/null 2>&1
-> +	attr  -Rr 1234567890ad $SYMLINK_FILE > /dev/null 2>&1
-> +# remove the symlink - make sure ifree removes the remote symlink.
-> +	rm $SYMLINK_FILE
-> +# umount and check the number of extents on the inode. Should be 0.
-> +	cd
-> +	_scratch_unmount >/dev/null 2>&1
-> +	$XFS_DB_PROG  -c "inode $inode" -c "p core.nextents" $SCRATCH_DEV
+> +	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+> +
+> +	if (XFS_FORCED_SHUTDOWN(mp))
+> +		return XFS_ERROR(EIO);
+> +
+> +	/*
+> +	 * Zero length symlinks _can_ exist.
+> +	 */
+> +	pathlen = ip->i_d.di_size;
+> +	if (!pathlen)
+> +		return 0;
+> +
+> +	if (pathlen < 0 || pathlen > MAXPATHLEN) {
+> +		xfs_alert(mp, "%s: inode (%llu) bad symlink length (%lld)",
+> +			 __func__, (unsigned long long) ip->i_ino,
+                                                       ^ whitespace
+> +			 (long long) pathlen);
 
-I'm not sure that's actually a valid thing to do - the inode has
-been removed, so the underlying inode chunk may have been removed
-and hence marked stale rather than been written back. Hence you
-cannot rely on xfs_db being able to print the extent count after the
-inode has been unlinked and the filesystem unmounted.
+Can we change this to a hex-based inode number (much easier to read)
+and the pathlen cast can go away if you use an int. i.e.:
 
-As it is, it's not really necessary for the test to detect the
-problem that you found, right? i.e. that the kernel would assert
-fail? If you drop the xfs_db stuff here, then the test is generic...
+		xfs_alert(mp, "%s: inode (0x%llx) bad symlink length (%d)",
+			 __func__, (unsigned long long)ip->i_ino, pathlen);
 
-> --- a/new/xfstests/tests/xfs/group
-> +++ b/new/xfstests/tests/xfs/group
-> @@ -177,3 +177,4 @@
->  295 auto logprint quick
->  296 dump auto quick
->  297 auto freeze
-> +298 auto attr symlink
 
-+ quick.
+> +		ASSERT(0);
+> +		return XFS_ERROR(EFSCORRUPTED);
+> +	}
+> +
+> +	if (ip->i_df.if_flags & XFS_IFINLINE) {
+> +		if (ip->i_df.if_bytes > 0)
+> +			xfs_idata_realloc(ip, -(ip->i_df.if_bytes),
+> +					  XFS_DATA_FORK);
+> +		ASSERT(ip->i_df.if_bytes == 0);
+> +		return 0;
+> +	}
+> +
+> +	/* remove the remote symlink */
+> +	return(xfs_inactive_symlink_rmt(ip, tp));
+
+And no () around xfs_inactive_symlink_rmt().
+
+> +}
+> Index: b/fs/xfs/xfs_symlink.h
+> ===================================================================
+> --- a/fs/xfs/xfs_symlink.h
+> +++ b/fs/xfs/xfs_symlink.h
+> @@ -60,7 +60,7 @@ extern const struct xfs_buf_ops xfs_syml
+>  int xfs_symlink(struct xfs_inode *dp, struct xfs_name *link_name,
+>  		const char *target_path, umode_t mode, struct xfs_inode **ipp);
+>  int xfs_readlink(struct xfs_inode *ip, char *link);
+> -int xfs_inactive_symlink_rmt(struct xfs_inode *ip, struct xfs_trans **tpp);
+> +int xfs_inactive_symlink(struct xfs_inode *ip, struct xfs_trans **tpp);
+>  
+>  #endif /* __KERNEL__ */
+>  #endif /* __XFS_SYMLINK_H */
+> Index: b/fs/xfs/xfs_trace.h
+> ===================================================================
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -594,6 +594,8 @@ DEFINE_INODE_EVENT(xfs_inode_set_eofbloc
+>  DEFINE_INODE_EVENT(xfs_inode_clear_eofblocks_tag);
+>  DEFINE_INODE_EVENT(xfs_inode_free_eofblocks_invalid);
+>  
+> +DEFINE_INODE_EVENT(xfs_symlink_inactive);
+> +
+
+No need for the extra whitespace, just put it hard up against the
+other DEFINE_INODE_EVENT()s. Might be better to put it directly
+after the readlink trace definition.
 
 Cheers,
 
