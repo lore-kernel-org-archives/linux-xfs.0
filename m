@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 768A77CBF
-	for <xfs@oss.sgi.com>; Thu, 13 Jun 2013 21:41:58 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5E0788F8037
-	for <xfs@oss.sgi.com>; Thu, 13 Jun 2013 19:41:58 -0700 (PDT)
-Received: from labridge.com (perches-mx.perches.com [206.117.179.246]) by
-	cuda.sgi.com with ESMTP id ciCpKQnGsDsPOlgG (version=SSLv3
-	cipher=DES-CBC3-SHA bits=168 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 13 Jun 2013 19:41:57 -0700 (PDT)
-From: Joe Perches <joe@perches.com>
-Subject: [Trivial PATCH 25/33] xfs: Convert use of typedef ctl_table to struct
-	ctl_table
-Date: Thu, 13 Jun 2013 19:37:50 -0700
-Message-Id: <1cd76f83a114f3bc5bf6450bc71098aa2c6baa33.1371177118.git.joe@perches.com>
-In-Reply-To: <cover.1371177118.git.joe@perches.com>
-References: <cover.1371177118.git.joe@perches.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id ECFFF7CBF
+	for <xfs@oss.sgi.com>; Thu, 13 Jun 2013 21:51:36 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 800F6AC004
+	for <xfs@oss.sgi.com>; Thu, 13 Jun 2013 19:51:36 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id iiutNwnkvPofAqCy (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 13 Jun 2013 19:51:35 -0700 (PDT)
+Message-ID: <51BA852F.4040706@oracle.com>
+Date: Fri, 14 Jun 2013 10:51:27 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH v2 0/8] xfs: log space validation
+References: <5195C239.5010905@oracle.com> <20130614015928.GP29338@dastard>
+In-Reply-To: <20130614015928.GP29338@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,88 +24,38 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jiri Kosina <trivial@kernel.org>
-Cc: Ben Myers <bpm@sgi.com>, Alex Elder <elder@kernel.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-This typedef is unnecessary and should just be removed.
+Hi Dave,
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- fs/xfs/xfs_sysctl.c | 26 +++++++++++++-------------
- 1 file changed, 13 insertions(+), 13 deletions(-)
+On 06/14/2013 09:59 AM, Dave Chinner wrote:
 
-diff --git a/fs/xfs/xfs_sysctl.c b/fs/xfs/xfs_sysctl.c
-index 2801b5c..1743b9f 100644
---- a/fs/xfs/xfs_sysctl.c
-+++ b/fs/xfs/xfs_sysctl.c
-@@ -25,11 +25,11 @@ static struct ctl_table_header *xfs_table_header;
- #ifdef CONFIG_PROC_FS
- STATIC int
- xfs_stats_clear_proc_handler(
--	ctl_table	*ctl,
--	int		write,
--	void		__user *buffer,
--	size_t		*lenp,
--	loff_t		*ppos)
-+	struct ctl_table	*ctl,
-+	int			write,
-+	void			__user *buffer,
-+	size_t			*lenp,
-+	loff_t			*ppos)
- {
- 	int		c, ret, *valp = ctl->data;
- 	__uint32_t	vn_active;
-@@ -55,11 +55,11 @@ xfs_stats_clear_proc_handler(
- 
- STATIC int
- xfs_panic_mask_proc_handler(
--	ctl_table	*ctl,
--	int		write,
--	void		__user *buffer,
--	size_t		*lenp,
--	loff_t		*ppos)
-+	struct ctl_table	*ctl,
-+	int			write,
-+	void			__user *buffer,
-+	size_t			*lenp,
-+	loff_t			*ppos)
- {
- 	int		ret, *valp = ctl->data;
- 
-@@ -74,7 +74,7 @@ xfs_panic_mask_proc_handler(
- }
- #endif /* CONFIG_PROC_FS */
- 
--static ctl_table xfs_table[] = {
-+static struct ctl_table xfs_table[] = {
- 	{
- 		.procname	= "irix_sgid_inherit",
- 		.data		= &xfs_params.sgid_inherit.val,
-@@ -227,7 +227,7 @@ static ctl_table xfs_table[] = {
- 	{}
- };
- 
--static ctl_table xfs_dir_table[] = {
-+static struct ctl_table xfs_dir_table[] = {
- 	{
- 		.procname	= "xfs",
- 		.mode		= 0555,
-@@ -236,7 +236,7 @@ static ctl_table xfs_dir_table[] = {
- 	{}
- };
- 
--static ctl_table xfs_root_table[] = {
-+static struct ctl_table xfs_root_table[] = {
- 	{
- 		.procname	= "fs",
- 		.mode		= 0555,
--- 
-1.8.1.2.459.gbcd45b4.dirty
+> On Fri, May 17, 2013 at 01:38:01PM +0800, Jeff Liu wrote:
+>> Hello,
+>>
+>> This is version 2 of fix log space calculation if the log stripe unit is specified.
+>>
+>> I changed the subject in this round since there are many changes belong to the log
+>> space reservation interface adjustment.
+> 
+> Hi Jeff, 
+> 
+> Given that I'm in the middle of reworking the kernel and userspace
+> source structures, do you might if I pull this patchset into my tree
+> for 3.11 and rework it to fit the modified structure I have now?
+> I'll do the same with the userspace patch if you have no objections.
+
+That sounded fine to me so that I can have more time for investigating
+the possibility of performing quota check in parallel as well as the
+compressed inode caching. :)
+
+Thanks,
+-Jeff
 
 _______________________________________________
 xfs mailing list
