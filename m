@@ -1,14 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 536047F37
-	for <xfs@oss.sgi.com>; Fri, 14 Jun 2013 08:30:18 -0500 (CDT)
-Message-ID: <51BB1AEA.8060100@sgi.com>
-Date: Fri, 14 Jun 2013 08:30:18 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id 867D67F37
+	for <xfs@oss.sgi.com>; Fri, 14 Jun 2013 09:08:51 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 719348F8054
+	for <xfs@oss.sgi.com>; Fri, 14 Jun 2013 07:08:48 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id uNtg9yUrtTfSh1H4 for
+	<xfs@oss.sgi.com>; Fri, 14 Jun 2013 07:08:47 -0700 (PDT)
+Date: Fri, 14 Jun 2013 16:08:41 +0200 (CEST)
+From: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>
+Subject: Re: [PATCH] xfstests: print missing utility name
+In-Reply-To: <20130613025350.GJ29338@dastard>
+Message-ID: <alpine.LFD.2.00.1306141608200.2327@localhost.localdomain>
+References: <alpine.LFD.2.00.1306121558030.14273@localhost.localdomain>
+	<20130613025350.GJ29338@dastard>
 MIME-Version: 1.0
-Subject: Re: [PATCH v3] xfs: fix the symbolic link assert in xfs_ifree
-References: <20130613170449.144027450@sgi.com> <20130614021720.GR29338@dastard>
-In-Reply-To: <20130614021720.GR29338@dastard>
+Content-Type: MULTIPART/MIXED; BOUNDARY="8323328-2006138564-1371218924=:2327"
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -17,133 +25,82 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On 06/13/13 21:17, Dave Chinner wrote:
-> On Thu, Jun 13, 2013 at 12:04:49PM -0500, Mark Tinguely wrote:
->> Adding an extended attribute to a symbolic link can force that
->> link to an remote extent. xfs_inactive() incorrectly assumes
->> that any symbolic link small enough to be in the inode core
->> is incore, resulting in the remote extent to not be removed.
->> xfs_ifree() will assert on presence of this leaked remote extent.
->>
->> Signed-off-by: Mark Tinguely<tinguely@sgi.com>
-> .....
->> +/*
->> + * xfs_inactive_symlink - free a symlink
->> + */
->> +int
->> +xfs_inactive_symlink(
->> +	struct xfs_inode	*ip,
->> +	struct xfs_trans	**tp)
->> +{
->> +	struct xfs_mount *mp = ip->i_mount;
->> +	xfs_fsize_t	pathlen;
->
-> int will do here - it can't be more than MAXPATHLEN = 1024, and this
-> gets rid of the casts in the error print.
->
->> +
->> +	trace_xfs_readlink(ip);
->
-> trace_xfs_inactive_symlink, as you mentioned ;)
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-sigh, and I reverted the inactive and symlink in the trace below. sigh 
-again.
+--8323328-2006138564-1371218924=:2327
+Content-Type: TEXT/PLAIN; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 
->
->> +
->> +	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
->> +
->> +	if (XFS_FORCED_SHUTDOWN(mp))
->> +		return XFS_ERROR(EIO);
->> +
->> +	/*
->> +	 * Zero length symlinks _can_ exist.
->> +	 */
->> +	pathlen = ip->i_d.di_size;
->> +	if (!pathlen)
->> +		return 0;
->> +
->> +	if (pathlen<  0 || pathlen>  MAXPATHLEN) {
->> +		xfs_alert(mp, "%s: inode (%llu) bad symlink length (%lld)",
->> +			 __func__, (unsigned long long) ip->i_ino,
->                                                         ^ whitespace
->> +			 (long long) pathlen);
->
-> Can we change this to a hex-based inode number (much easier to read)
-> and the pathlen cast can go away if you use an int. i.e.:
->
-> 		xfs_alert(mp, "%s: inode (0x%llx) bad symlink length (%d)",
-> 			 __func__, (unsigned long long)ip->i_ino, pathlen);
->
->
+On Thu, 13 Jun 2013, Dave Chinner wrote:
 
-Both of the items above were stole directly from xfs_readlink().
-Thought they should be consistent(ly wrong :) ).
-
-
->> +		ASSERT(0);
->> +		return XFS_ERROR(EFSCORRUPTED);
->> +	}
->> +
->> +	if (ip->i_df.if_flags&  XFS_IFINLINE) {
->> +		if (ip->i_df.if_bytes>  0)
->> +			xfs_idata_realloc(ip, -(ip->i_df.if_bytes),
->> +					  XFS_DATA_FORK);
->> +		ASSERT(ip->i_df.if_bytes == 0);
->> +		return 0;
->> +	}
->> +
->> +	/* remove the remote symlink */
->> +	return(xfs_inactive_symlink_rmt(ip, tp));
->
-> And no () around xfs_inactive_symlink_rmt().
-
->
->> +}
->> Index: b/fs/xfs/xfs_symlink.h
->> ===================================================================
->> --- a/fs/xfs/xfs_symlink.h
->> +++ b/fs/xfs/xfs_symlink.h
->> @@ -60,7 +60,7 @@ extern const struct xfs_buf_ops xfs_syml
->>   int xfs_symlink(struct xfs_inode *dp, struct xfs_name *link_name,
->>   		const char *target_path, umode_t mode, struct xfs_inode **ipp);
->>   int xfs_readlink(struct xfs_inode *ip, char *link);
->> -int xfs_inactive_symlink_rmt(struct xfs_inode *ip, struct xfs_trans **tpp);
->> +int xfs_inactive_symlink(struct xfs_inode *ip, struct xfs_trans **tpp);
->>
->>   #endif /* __KERNEL__ */
->>   #endif /* __XFS_SYMLINK_H */
->> Index: b/fs/xfs/xfs_trace.h
->> ===================================================================
->> --- a/fs/xfs/xfs_trace.h
->> +++ b/fs/xfs/xfs_trace.h
->> @@ -594,6 +594,8 @@ DEFINE_INODE_EVENT(xfs_inode_set_eofbloc
->>   DEFINE_INODE_EVENT(xfs_inode_clear_eofblocks_tag);
->>   DEFINE_INODE_EVENT(xfs_inode_free_eofblocks_invalid);
->>
->> +DEFINE_INODE_EVENT(xfs_symlink_inactive);
->> +
->
-> No need for the extra whitespace, just put it hard up against the
-> other DEFINE_INODE_EVENT()s. Might be better to put it directly
-> after the readlink trace definition.
->
+> Date: Thu, 13 Jun 2013 12:53:50 +1000
+> From: Dave Chinner <david@fromorbit.com>
+> To: Lukáš Czerner <lczerner@redhat.com>
+> Cc: xfs-oss <xfs@oss.sgi.com>
+> Subject: Re: [PATCH] xfstests: print missing utility name
+> 
+> On Wed, Jun 12, 2013 at 04:02:19PM +0200, Lukáš Czerner wrote:
+> > Currently when the utility such as fio or dmsetup is missing user does
+> > not get the information about the utility name which is actually
+> > missing. Fix it by providing second argument to the _require_command().
+> > 
+> > Signed-off-by: Lukas Czerner <lczerner@redhat.com>
+> > ---
+> >  common/rc | 5 +++--
+> >  1 file changed, 3 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/common/rc b/common/rc
+> > index fe6bbfc..984cef1 100644
+> > --- a/common/rc
+> > +++ b/common/rc
+> > @@ -1054,6 +1054,7 @@ _require_realtime()
+> >  _require_command()
+> >  {
+> >      [ -n "$1" ] && _cmd="$1" || _cmd="$2"
+> > +    [ -z $_cmd ] && _cmd="<fill utility name>"
+> 
+> 
+> The problem here is that the command will be empty if it doesn't
+> exist, so it's difficult to tell if one or two parameters is valid.
+> 
+> So, I'd suggest that _require_command should be changed to:
+> 
+> _require_command()
+> {
+> 	_name=$1
+> 	_cmd=$2
+> 
+> 	[ $# -ge 1 ] || _fatal "Brainfart! What command is required?"
+> 	[ -n $_cmd -a -x $_cmd ] || _notrun "$_name not found, skipping test."
+> }
+> 
+> And all the callers have their parameters swapped to avoid this
+> confusion about what exists and what doesn't....
+> 
 > Cheers,
->
+> 
 > Dave.
 
-Thanks.
+Fair enough.
 
---Mark.
+-Lukas
+> 
+> 
+--8323328-2006138564-1371218924=:2327
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--8323328-2006138564-1371218924=:2327--
