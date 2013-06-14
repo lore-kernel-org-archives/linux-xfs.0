@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id CF1857F3F
-	for <xfs@oss.sgi.com>; Fri, 14 Jun 2013 11:37:21 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A7716304064
-	for <xfs@oss.sgi.com>; Fri, 14 Jun 2013 09:37:21 -0700 (PDT)
-Received: from mail-qc0-f180.google.com (mail-qc0-f180.google.com
-	[209.85.216.180]) by cuda.sgi.com with ESMTP id
-	EXE5z4VzbEnvAsa4 (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 14 Jun 2013 09:37:20 -0700 (PDT)
-Received: by mail-qc0-f180.google.com with SMTP id a1so421149qcx.11
-	for <xfs@oss.sgi.com>; Fri, 14 Jun 2013 09:37:20 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 073C77F37
+	for <xfs@oss.sgi.com>; Fri, 14 Jun 2013 12:15:11 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 768C3AC008
+	for <xfs@oss.sgi.com>; Fri, 14 Jun 2013 10:15:07 -0700 (PDT)
+Received: from mail-ee0-f44.google.com (mail-ee0-f44.google.com
+	[74.125.83.44]) by cuda.sgi.com with ESMTP id Fy9HCMsfJwrrUB6c
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 14 Jun 2013 10:15:06 -0700 (PDT)
+Received: by mail-ee0-f44.google.com with SMTP id c13so502405eek.31
+	for <xfs@oss.sgi.com>; Fri, 14 Jun 2013 10:15:04 -0700 (PDT)
 MIME-Version: 1.0
-Date: Fri, 14 Jun 2013 12:37:20 -0400
-Message-ID: <CAC2B=ZFP_Fg34aFpk857stgB7MGcrYs9tybRS-ttw1CXNeU41Q@mail.gmail.com>
-Subject: definitions for /proc/fs/xfs/stat
-From: Mark Seger <mjseger@gmail.com>
+Date: Fri, 14 Jun 2013 21:15:04 +0400
+Message-ID: <CA+aXbB5ohJkDde8qJSE0AU6B0dh59YjNPVfxVjXCOg73k7ihXQ@mail.gmail.com>
+Subject: possible null pointer in xlog_iodone
+From: Vlad Bespalov <vlad.botanic@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,44 +24,59 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============1173783851535142093=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============1173783851535142093==
-Content-Type: multipart/alternative; boundary=001a11c3d92c578b2704df1fdc8b
+i`m running an xfs filesystem over device going offline/online and
+sometimes offline may be done in parallel with unmounting
 
---001a11c3d92c578b2704df1fdc8b
-Content-Type: text/plain; charset=ISO-8859-1
+at some point i got several crashes with null pointer panic in
+xlog_iodone: xlog_t structure taken from input buffer is null
 
-I've been thinking about adding xfs support to collectl but am having a
-hard time trying to decode he data in the stat file.  can someone point me
-to a decoder ring?  thanks.
--mark
+i wonder if the following call path combined with disk online/offline
+handling could have led to this crash:
 
---001a11c3d92c578b2704df1fdc8b
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+--------------
+xfs_unmountfs()
+    xfs_log_unmount_write(mp)
+        xlog_state_release_iclog(log)
+            xlog_sync(log, iclog = log->l_iclog)
+            (bp=iclog->ic_bp)
+                xlog_bdstrat(bp)
+                (iclog->ic_state != XLOG_STATE_ERROR ? )
+                    xfs_buf_iorequest(bp)
+                        xfs_buf_ioend (called with scheduling (*) )
+                        (queues  : bp->b_iodone_work,
+                         callback: xlog_iodone)
+    xfs_log_unmount(mp)
+        xfs_trans_ail_destroy(mp);
+        xlog_dealloc_log(mp->m_log); /*frees and nullifies all iclog->ic_log*/
+-----------
 
-<div dir=3D"ltr">I&#39;ve been thinking about adding xfs support to collect=
-l but am having a hard time trying to decode he data in the stat file. =A0c=
-an someone point me to a decoder ring? =A0thanks.<div style>-mark</div><div=
- style>
-<br></div></div>
+(after we`ve cleaned up log structures we switch processes*)
+    xlog_iodone(bp)
+    {
+        iclog = bp->private
+        l = iclog->ic_log
+        if (XFS_TEST_ERROR((XFS_BUF_GETERROR(bp)), l->l_mp,
+                        XFS_ERRTAG_IODONE_IOERR, XFS_RANDOM_IODONE_IOERR))
+        {
 
---001a11c3d92c578b2704df1fdc8b--
+                    xfs_buf_ioerror_alert(bp, __func__);
+                    XFS_BUF_STALE(bp);
+/*l ?= NULL*/ xfs_force_shutdown(l->l_mp, SHUTDOWN_LOG_IO_ERROR);
+        }
+    }
 
 
---===============1173783851535142093==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Thanks for your time.
+Best regards,
+Vlad Bespalov.
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============1173783851535142093==--
