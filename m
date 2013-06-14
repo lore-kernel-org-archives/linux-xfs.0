@@ -1,9 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, for-next,
-	updated. v3.10-rc1-32-g9222a9c
-Message-Id: <20130614203108.D7CED7F51@oss.sgi.com>
-Date: Fri, 14 Jun 2013 15:31:08 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A70297F37
+	for <xfs@oss.sgi.com>; Fri, 14 Jun 2013 16:48:07 -0500 (CDT)
+Subject: [GIT PULL] XFS update for 3.10-rc6
+Message-Id: <20130614214804.26550500B4B@whiskey.americas.sgi.com>
+Date: Fri, 14 Jun 2013 16:48:04 -0500 (CDT)
+From: bpm@sgi.com (Ben Myers)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -17,62 +19,53 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-This is an automated email from the git hooks/post-receive script. It was
-generated because a ref change was pushed to the repository containing
-the project "XFS development tree".
+Hi Linus,
 
-The branch, for-next has been updated
-  9222a9c xfs: don't shutdown log recovery on validation errors
-      from  ade1335afef556df6538eb02e8c0dc91fbd9cc37 (commit)
+   Please pull these fixes for XFS.  These fixes remove shouty warnings which
+   spam system logs, align dir/attr structures with CRCs correctly, set the
+   block number on the new child block during a btree root split correctly, and
+   the last one disables verifiers as a temporary workaround for a flaw in
+   recovery.
 
-Those revisions listed above that are new to this repository have
-not appeared on any other notification email; so we list those
-revisions in full, below.
+Thanks,
+	Ben
 
-- Log -----------------------------------------------------------------
-commit 9222a9cf86c0d64ffbedf567412b55da18763aa3
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Wed Jun 12 12:19:06 2013 +1000
+The following changes since commit 0a8aa1939777dd114479677f0044652c1fd72398:
 
-    xfs: don't shutdown log recovery on validation errors
-    
-    Unfortunately, we cannot guarantee that items logged multiple times
-    and replayed by log recovery do not take objects back in time. When
-    they are taken back in time, the go into an intermediate state which
-    is corrupt, and hence verification that occurs on this intermediate
-    state causes log recovery to abort with a corruption shutdown.
-    
-    Instead of causing a shutdown and unmountable filesystem, don't
-    verify post-recovery items before they are written to disk. This is
-    less than optimal, but there is no way to detect this issue for
-    non-CRC filesystems If log recovery successfully completes, this
-    will be undone and the object will be consistent by subsequent
-    transactions that are replayed, so in most cases we don't need to
-    take drastic action.
-    
-    For CRC enabled filesystems, leave the verifiers in place - we need
-    to call them to recalculate the CRCs on the objects anyway. This
-    recovery problem can be solved for such filesystems - we have a LSN
-    stamped in all metadata at writeback time that we can to determine
-    whether the item should be replayed or not. This is a separate piece
-    of work, so is not addressed by this patch.
-    
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Ben Myers <bpm@sgi.com>
-    Signed-off-by: Ben Myers <bpm@sgi.com>
+  xfs: increase number of ACL entries for V5 superblocks (2013-06-06 10:52:15 -0500)
 
------------------------------------------------------------------------
+are available in the git repository at:
 
-Summary of changes:
+  git://oss.sgi.com/xfs/xfs.git tags/for-linus-v3.10-rc6
+
+for you to fetch changes up to d302cf1d316dca5f567e89872cf5d475c9a55f74:
+
+  xfs: don't shutdown log recovery on validation errors (2013-06-14 15:59:45 -0500)
+
+----------------------------------------------------------------
+xfs: fixes for 3.10-rc6
+
+- Remove noisy warnings about experimental support which spams the logs
+- Add padding to align directory and attr structures correctly
+- Set block number on child buffer on a root btree split
+- Disable verifiers during log recovery for non-CRC filesystems
+
+----------------------------------------------------------------
+Dave Chinner (4):
+      xfs: don't emit v5 superblock warnings on write
+      xfs: fix implicit padding in directory and attr CRC formats
+      xfs: ensure btree root split sets blkno correctly
+      xfs: don't shutdown log recovery on validation errors
+
+ fs/xfs/xfs_attr_leaf.h   |  1 +
+ fs/xfs/xfs_btree.c       | 10 ++++++++++
+ fs/xfs/xfs_dir2_format.h |  5 +++--
  fs/xfs/xfs_log_recover.c | 19 +++++++++++++++++--
- 1 file changed, 17 insertions(+), 2 deletions(-)
-
-
-hooks/post-receive
--- 
-XFS development tree
+ fs/xfs/xfs_mount.c       | 18 +++++++++++-------
+ 5 files changed, 42 insertions(+), 11 deletions(-)
 
 _______________________________________________
 xfs mailing list
