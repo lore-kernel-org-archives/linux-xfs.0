@@ -1,32 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5D3157F37
-	for <xfs@oss.sgi.com>; Fri, 14 Jun 2013 03:51:35 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2E7D18F8037
-	for <xfs@oss.sgi.com>; Fri, 14 Jun 2013 01:51:32 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id 9vRz11kxynmZGl5P (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 14 Jun 2013 01:51:30 -0700 (PDT)
-Received: from acsinet22.oracle.com (acsinet22.oracle.com [141.146.126.238])
-	by userp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
-	ESMTP id r5E8pQdX024206
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Fri, 14 Jun 2013 08:51:27 GMT
-Received: from aserz7021.oracle.com (aserz7021.oracle.com [141.146.126.230])
-	by acsinet22.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r5E8pSV8015205
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 14 Jun 2013 08:51:28 GMT
-Received: from abhmt105.oracle.com (abhmt105.oracle.com [141.146.116.57])
-	by aserz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r5E8pSAg026390 for <xfs@oss.sgi.com>; Fri, 14 Jun 2013 08:51:28 GMT
-Message-ID: <51BAD98D.90808@oracle.com>
-Date: Fri, 14 Jun 2013 12:51:25 +0400
-From: alexander.tsvetkov@oracle.com
+	by oss.sgi.com (Postfix) with ESMTP id CAE687F37
+	for <xfs@oss.sgi.com>; Fri, 14 Jun 2013 07:55:03 -0500 (CDT)
+Message-ID: <51BB12A5.606@sgi.com>
+Date: Fri, 14 Jun 2013 07:55:01 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: dmsetup arguments
+Subject: Re: [PATCH 1/3] xfs: don't shutdown log recovery on validation errors
+References: <1371003548-4026-1-git-send-email-david@fromorbit.com>
+	<1371003548-4026-2-git-send-email-david@fromorbit.com>
+	<20130613010441.GX20932@sgi.com> <20130613020827.GG29338@dastard>
+	<20130613220903.GA20932@sgi.com> <20130614001306.GM29338@dastard>
+In-Reply-To: <20130614001306.GM29338@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,159 +20,118 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3449099299502042075=="
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com
 
-This is a multi-part message in MIME format.
---===============3449099299502042075==
-Content-Type: multipart/alternative;
- boundary="------------040502080304000108040407"
+On 06/13/13 19:13, Dave Chinner wrote:
+> On Thu, Jun 13, 2013 at 05:09:03PM -0500, Ben Myers wrote:
+>> Hi Dave,
+>>
+>> On Thu, Jun 13, 2013 at 12:08:27PM +1000, Dave Chinner wrote:
+>>> On Wed, Jun 12, 2013 at 08:04:41PM -0500, Ben Myers wrote:
+>>>> On Wed, Jun 12, 2013 at 12:19:06PM +1000, Dave Chinner wrote:
+>>>>> From: Dave Chinner<dchinner@redhat.com>
+>>>>>
+>>>>> Unfortunately, we cannot guarantee that items logged multiple times
+>>>>> and replayed by log recovery do not take objects back in time. When
+>>>>> theya re taken back in time, the go into an intermediate state which
+>>>>> is corrupt, and hence verification that occurs on this intermediate
+>>>>> state causes log recovery to abort with a corruption shutdown.
+>>>>>
+>>>>> Instead of causing a shutdown and unmountable filesystem, don't
+>>>>> verify post-recovery items before they are written to disk. This is
+>>>>> less than optimal, but there is no way to detect this issue for
+>>>>> non-CRC filesystems If log recovery successfully completes, this
+>>>>> will be undone and the object will be consistent by subsequent
+>>>>> transactions that are replayed, so in most cases we don't need to
+>>>>> take drastic action.
+>>>>>
+>>>>> For CRC enabled filesystems, leave the verifiers in place - we need
+>>>>> to call them to recalculate the CRCs on the objects anyway. This
+>>>>> recovery problem canbe solved for such filesystems - we have a LSN
+>>>>> stamped in all metadata at writeback time that we can to determine
+>>>>> whether the item should be replayed or not. This is a separate piece
+>>>>> of work, so is not addressed by this patch.
+>>>>
+>>>> Is there a test case for this one?  How are you reproducing this?
+>>>
+>>> The test case was Dave Jones running sysrq-b on a hung test machine.
+>>> The machine would occasionally end up with a corrupt home directory.
+>>>
+>>> http://oss.sgi.com/pipermail/xfs/2013-May/026759.html
+>>>
+>>> Analysis from a metdadump provided by Dave:
+>>>
+>>> http://oss.sgi.com/pipermail/xfs/2013-June/026965.html
+>>>
+>>> And Cai also appeared to be hitting this after a crash on 3.10-rc4,
+>>> as it's giving exactly the same "verifier failed during log recovery"
+>>> stack trace:
+>>>
+>>> http://oss.sgi.com/pipermail/xfs/2013-June/026889.html
+>>
+>> Thanks.  It appears that the verifiers have found corruption due to a
+>> flaw in log recovery, and the fix you are proposing is to stop using
+>> them.  If we do that, we'll have no way of detecting the corruption and
+>> will end up hanging users of older kernels out to dry.
+>
+> We've never detected it before, and it's causing regressions for
+> multiple people. We *can't fix it* because we can't detect the
+> situation sanely, and we are not leaving people with old kernels
+> hanging out to dry. The opposite is true: we are fucking over
+> current users by preventing log recovery on filesystems that will
+> recovery perfectly OK and have almost always recovered just fine in
+> the past.
+>
+>> I think your suggestion that non-debug systems could warn instead of
+>> fail is a good one, but removing the verifier altogether is
+>> inappropriate.
+>
+> Changing every single verifier in a non-trivial way is not something
+> I'm about to do for a -rc6 kernel. Removing the verifiers from log
+> recovery just reverts to the pre-3.8 situation, so is perfectly
+> acceptable short term solution while we do the more invasive verify
+> changes.
+>
+>> Can you make the metadump available?  I need to understand this better
+>> before I can sign off.  Also:  Any idea how far back this one goes?
+>
+> No, I can't make the metadump available to you - it was provided
+> privately and not obfuscated and so you'd have to ask Dave for it.
+>
+> As to how long this problem has existed? It's a zero-day bug. Like I
+> said, I've suspected for years that this can happen, and only now do
+> we have proof of it...
+>
+> Cheers,
+>
+> Dave.
 
-This is a multi-part message in MIME format.
---------------040502080304000108040407
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+My gut feeling for the patch was the same as Ben's, but thinking this 
+over, I have to take back all the eloquent curse works. IMO, we have to 
+bring the patch in because the goal for Linux 3.10 is to have a stable 
+environment for the non-CRC case and the verifier is breaking XFS log 
+recovery for the common non-CRC case.
+                   ---
+In the common case, the verifier is tripping over the fundemental 
+difference between how the AIL works (consolidate buffer writes into one 
+and it can write anything that made it to log up to l_last_sync_lsn) and 
+the log recovery, which works on each modification.
 
-Hi,
+If there is another unknown kind of future write, then it would be nice 
+to know and having a warning message would help. Unfortunately, the 
+warning may make recovery noisy and falsely concern the users, but we 
+are in uncharted waters.
 
-XFStests suite generic/311 test fails on command: "sbin/dmsetup load 
-flakey-test --table "0 150000001 flakey /dev/sdc2 0 0 180 1 drop_writes" 
-with error: "device-mapper: reload ioctl on flakey-test failed: Invalid 
-argument", so as I understand the command format provided to ioctl is 
-incorrect here. Kernel logs has message:
+I will blame and put a reviewed-by on the patch.
 
-"Jun 13 16:47:15 tests kernel: device-mapper: table: 252:3: flakey: 
-dm-flakey: Invalid argument count
-Jun 13 16:47:15 tests kernel: device-mapper: ioctl: error adding target 
-to table"
-
-Looking into the source code of package LVM2.02.98 which devmapper 
-library belongs to I find argument "drop_writes" used in the command 
-only in documentation doc/kernel/flakey.txt:
-
-"Optional feature parameters:
-   If no feature parameters are present, during the periods of
-   unreliability, all I/O returns errors.
-
-   drop_writes:
-         All write I/O is silently ignored.
-         Read I/O is handled correctly."
-
-This argument feature was added in the patch from "27 Jun 2011":
-
-"[dm-devel] [PATCH 0/9] dm flakey: add features
-------------------------------------------------------------------------
-
-    * /From/: Mike Snitzer <snitzer redhat com>
-    * /To/: <dm-devel redhat com>
-    * /Cc/: Mike Snitzer <snitzer redhat com>
-    * /Subject/: [dm-devel] [PATCH 0/9] dm flakey: add features
-    * /Date/: Mon, 27 Jun 2011 15:53:34 -0400
-
-------------------------------------------------------------------------
-
-Add "drop_writes", "corrupt_bio_byte" and "debug" features to the
-flakey target."
-
-https://www.redhat.com/archives/dm-devel/2011-June/msg00081.html
-
-but was patch modifications included in library of LVM2.02.98 package? 
-Or may be it was already removed from it after?
-
-Thanks,
-Alexander Tsvetkov
-
-
-
-
-
-
-
-
---------------040502080304000108040407
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-  <head>
-
-    <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
-  </head>
-  <body bgcolor="#ffffff" text="#000000">
-    Hi,<br>
-    <br>
-    XFStests suite generic/311 test fails on command: "sbin/dmsetup load
-    flakey-test --table "0 150000001 flakey /dev/sdc2 0 0 180 1
-    drop_writes" with error: "device-mapper: reload ioctl on flakey-test
-    failed: Invalid argument", so as I understand the command format
-    provided to ioctl is incorrect here. Kernel logs has message:<br>
-    <br>
-    "Jun 13 16:47:15 tests kernel: device-mapper: table: 252:3: flakey:
-    dm-flakey: Invalid argument count<br>
-    Jun 13 16:47:15 tests kernel: device-mapper: ioctl: error adding
-    target to table"<br>
-    <br>
-    Looking into the source code of package LVM2.02.98 which devmapper
-    library belongs to I find argument "drop_writes" used in the command
-    only in documentation doc/kernel/flakey.txt:<br>
-    <br>
-    "Optional feature parameters:<br>
-    &nbsp; If no feature parameters are present, during the periods of<br>
-    &nbsp; unreliability, all I/O returns errors.<br>
-    <br>
-    &nbsp; drop_writes:<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; All write I/O is silently ignored.<br>
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Read I/O is handled correctly."<br>
-    <br>
-    This argument feature was added in the patch from "27 Jun 2011":<br>
-    <br>
-    "[dm-devel] [PATCH 0/9] dm flakey: add features
-    <hr>
-    <ul>
-      <li><em>From</em>: Mike Snitzer &lt;snitzer redhat com&gt;</li>
-      <li><em>To</em>: &lt;dm-devel redhat com&gt;</li>
-      <li><em>Cc</em>: Mike Snitzer &lt;snitzer redhat com&gt;</li>
-      <li><em>Subject</em>: [dm-devel] [PATCH 0/9] dm flakey: add
-        features</li>
-      <li><em>Date</em>: Mon, 27 Jun 2011 15:53:34 -0400</li>
-    </ul>
-    <hr>
-    <pre>Add "drop_writes", "corrupt_bio_byte" and "debug" features to the
-flakey target."
-</pre>
-    <a
-      href="https://www.redhat.com/archives/dm-devel/2011-June/msg00081.html">https://www.redhat.com/archives/dm-devel/2011-June/msg00081.html</a><br>
-    <br>
-    but was patch modifications included in library of LVM2.02.98
-    package? Or may be it was already removed from it after?<br>
-    <br>
-    Thanks,<br>
-    Alexander Tsvetkov<br>
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
-  </body>
-</html>
-
---------------040502080304000108040407--
-
-
---===============3449099299502042075==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+--Mark.
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============3449099299502042075==--
