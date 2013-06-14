@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, master,
+Subject: [XFS updates] XFS development tree branch, for-next,
 	updated. v3.10-rc1-32-g9222a9c
-Message-Id: <20130614203052.7648E7F3F@oss.sgi.com>
-Date: Fri, 14 Jun 2013 15:30:52 -0500 (CDT)
+Message-Id: <20130614203108.D7CED7F51@oss.sgi.com>
+Date: Fri, 14 Jun 2013 15:31:08 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,7 +23,7 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, master has been updated
+The branch, for-next has been updated
   9222a9c xfs: don't shutdown log recovery on validation errors
       from  ade1335afef556df6538eb02e8c0dc91fbd9cc37 (commit)
 
