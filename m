@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B83FE7F37
-	for <xfs@oss.sgi.com>; Fri, 14 Jun 2013 11:31:24 -0500 (CDT)
-Date: Fri, 14 Jun 2013 11:31:19 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 1/3] xfs: don't shutdown log recovery on validation errors
-Message-ID: <20130614163119.GB32736@sgi.com>
-References: <1371003548-4026-1-git-send-email-david@fromorbit.com>
-	<1371003548-4026-2-git-send-email-david@fromorbit.com>
-	<20130613010441.GX20932@sgi.com> <20130613020827.GG29338@dastard>
-	<20130613220903.GA20932@sgi.com> <20130614001306.GM29338@dastard>
-	<20130614160940.GA32736@sgi.com>
-	<20130614161724.GA11235@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id CF1857F3F
+	for <xfs@oss.sgi.com>; Fri, 14 Jun 2013 11:37:21 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A7716304064
+	for <xfs@oss.sgi.com>; Fri, 14 Jun 2013 09:37:21 -0700 (PDT)
+Received: from mail-qc0-f180.google.com (mail-qc0-f180.google.com
+	[209.85.216.180]) by cuda.sgi.com with ESMTP id
+	EXE5z4VzbEnvAsa4 (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 14 Jun 2013 09:37:20 -0700 (PDT)
+Received: by mail-qc0-f180.google.com with SMTP id a1so421149qcx.11
+	for <xfs@oss.sgi.com>; Fri, 14 Jun 2013 09:37:20 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130614161724.GA11235@redhat.com>
+Date: Fri, 14 Jun 2013 12:37:20 -0400
+Message-ID: <CAC2B=ZFP_Fg34aFpk857stgB7MGcrYs9tybRS-ttw1CXNeU41Q@mail.gmail.com>
+Subject: definitions for /proc/fs/xfs/stat
+From: Mark Seger <mjseger@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,46 +25,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============1173783851535142093=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Jones <davej@redhat.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Hi Dave,
+--===============1173783851535142093==
+Content-Type: multipart/alternative; boundary=001a11c3d92c578b2704df1fdc8b
 
-On Fri, Jun 14, 2013 at 12:17:24PM -0400, Dave Jones wrote:
-> On Fri, Jun 14, 2013 at 11:09:40AM -0500, Ben Myers wrote:
-> 
->  > > > I think your suggestion that non-debug systems could warn instead of
->  > > > fail is a good one, but removing the verifier altogether is
->  > > > inappropriate.
->  > > 
->  > > Changing every single verifier in a non-trivial way is not something
->  > > I'm about to do for a -rc6 kernel. Removing the verifiers from log
->  > > recovery just reverts to the pre-3.8 situation, so is perfectly
->  > > acceptable short term solution while we do the more invasive verify
->  > > changes.
->  > > 
->  > > > Can you make the metadump available?  I need to understand this better
->  > > > before I can sign off.  Also:  Any idea how far back this one goes?
->  > > 
->  > > No, I can't make the metadump available to you - it was provided
->  > > privately and not obfuscated and so you'd have to ask Dave for it.
->  > 
->  > Dave (Jones), could you make the metadump available to me?  I'd like to
->  > understand this a little bit better.  I'm a bit uncomfortable with the
->  > proposition that we should corrupt silently in this case...
-> 
-> Sorry, I don't have it any more.   I'll see if I can recreate the problem
-> next week and prepare another dump.
+--001a11c3d92c578b2704df1fdc8b
+Content-Type: text/plain; charset=ISO-8859-1
 
-Much appreciated.  Thanks!
+I've been thinking about adding xfs support to collectl but am having a
+hard time trying to decode he data in the stat file.  can someone point me
+to a decoder ring?  thanks.
+-mark
 
--Ben
+--001a11c3d92c578b2704df1fdc8b
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr">I&#39;ve been thinking about adding xfs support to collect=
+l but am having a hard time trying to decode he data in the stat file. =A0c=
+an someone point me to a decoder ring? =A0thanks.<div style>-mark</div><div=
+ style>
+<br></div></div>
+
+--001a11c3d92c578b2704df1fdc8b--
+
+
+--===============1173783851535142093==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============1173783851535142093==--
