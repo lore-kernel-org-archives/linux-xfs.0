@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E6CA67CBF
-	for <xfs@oss.sgi.com>; Thu, 13 Jun 2013 19:13:24 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 33F747CBF
+	for <xfs@oss.sgi.com>; Thu, 13 Jun 2013 19:21:29 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D56C8304067
-	for <xfs@oss.sgi.com>; Thu, 13 Jun 2013 17:13:21 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C04E2AC008
+	for <xfs@oss.sgi.com>; Thu, 13 Jun 2013 17:21:25 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	1u4qnsuwXCi9ESgU for <xfs@oss.sgi.com>;
-	Thu, 13 Jun 2013 17:13:19 -0700 (PDT)
-Date: Fri, 14 Jun 2013 10:13:06 +1000
+	4gKxd3JDxkGxCd47 for <xfs@oss.sgi.com>;
+	Thu, 13 Jun 2013 17:21:24 -0700 (PDT)
+Date: Fri, 14 Jun 2013 10:21:22 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/3] xfs: don't shutdown log recovery on validation errors
-Message-ID: <20130614001306.GM29338@dastard>
+Subject: Re: [PATCH 3/3] xfs: ensure btree root split sets blkno correctly
+Message-ID: <20130614002122.GN29338@dastard>
 References: <1371003548-4026-1-git-send-email-david@fromorbit.com>
-	<1371003548-4026-2-git-send-email-david@fromorbit.com>
-	<20130613010441.GX20932@sgi.com> <20130613020827.GG29338@dastard>
-	<20130613220903.GA20932@sgi.com>
+	<1371003548-4026-4-git-send-email-david@fromorbit.com>
+	<20130613191617.GY20932@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130613220903.GA20932@sgi.com>
+In-Reply-To: <20130613191617.GY20932@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,84 +34,36 @@ Sender: xfs-bounces@oss.sgi.com
 To: Ben Myers <bpm@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Jun 13, 2013 at 05:09:03PM -0500, Ben Myers wrote:
-> Hi Dave,
+On Thu, Jun 13, 2013 at 02:16:17PM -0500, Ben Myers wrote:
+> On Wed, Jun 12, 2013 at 12:19:08PM +1000, Dave Chinner wrote:
+> > Turns out that on a 1k filesystem, generic/234 accounts for one of
+> > those two root splits, and that is somewhat of a smoking gun. In
+> > fact, it's the same problem we saw in the directory/attr code where
+> > headers are memcpy()d from one block to another without updating the
+> > self describing metadata.
 > 
-> On Thu, Jun 13, 2013 at 12:08:27PM +1000, Dave Chinner wrote:
-> > On Wed, Jun 12, 2013 at 08:04:41PM -0500, Ben Myers wrote:
-> > > On Wed, Jun 12, 2013 at 12:19:06PM +1000, Dave Chinner wrote:
-> > > > From: Dave Chinner <dchinner@redhat.com>
-> > > > 
-> > > > Unfortunately, we cannot guarantee that items logged multiple times
-> > > > and replayed by log recovery do not take objects back in time. When
-> > > > theya re taken back in time, the go into an intermediate state which
-> > > > is corrupt, and hence verification that occurs on this intermediate
-> > > > state causes log recovery to abort with a corruption shutdown.
-> > > > 
-> > > > Instead of causing a shutdown and unmountable filesystem, don't
-> > > > verify post-recovery items before they are written to disk. This is
-> > > > less than optimal, but there is no way to detect this issue for
-> > > > non-CRC filesystems If log recovery successfully completes, this
-> > > > will be undone and the object will be consistent by subsequent
-> > > > transactions that are replayed, so in most cases we don't need to
-> > > > take drastic action.
-> > > > 
-> > > > For CRC enabled filesystems, leave the verifiers in place - we need
-> > > > to call them to recalculate the CRCs on the objects anyway. This
-> > > > recovery problem canbe solved for such filesystems - we have a LSN
-> > > > stamped in all metadata at writeback time that we can to determine
-> > > > whether the item should be replayed or not. This is a separate piece
-> > > > of work, so is not addressed by this patch.
-> > > 
-> > > Is there a test case for this one?  How are you reproducing this?
-> > 
-> > The test case was Dave Jones running sysrq-b on a hung test machine.
-> > The machine would occasionally end up with a corrupt home directory.
-> > 
-> > http://oss.sgi.com/pipermail/xfs/2013-May/026759.html
-> > 
-> > Analysis from a metdadump provided by Dave:
-> > 
-> > http://oss.sgi.com/pipermail/xfs/2013-June/026965.html
-> >
-> > And Cai also appeared to be hitting this after a crash on 3.10-rc4,
-> > as it's giving exactly the same "verifier failed during log recovery"
-> > stack trace:
-> > 
-> > http://oss.sgi.com/pipermail/xfs/2013-June/026889.html
-> 
-> Thanks.  It appears that the verifiers have found corruption due to a
-> flaw in log recovery, and the fix you are proposing is to stop using
-> them.  If we do that, we'll have no way of detecting the corruption and
-> will end up hanging users of older kernels out to dry.
+> It is very interesting that this area of code is exercised so infrequently.
 
-We've never detected it before, and it's causing regressions for
-multiple people. We *can't fix it* because we can't detect the
-situation sanely, and we are not leaving people with old kernels
-hanging out to dry. The opposite is true: we are fucking over
-current users by preventing log recovery on filesystems that will
-recovery perfectly OK and have almost always recovered just fine in
-the past.
+Well known problem - I remember that we did xfstests code coverage
+analysis way back in 2005 at SGI, and this was something that popped
+out. The stats simple confirmed what the code coverage profiling was
+telling us...
 
-> I think your suggestion that non-debug systems could warn instead of
-> fail is a good one, but removing the verifier altogether is
-> inappropriate.
+That's the reason I run 512 byte/1k block size testing all the time
+with xfstests - it covers all of these code paths that 4k block size
+doesn't cover.
 
-Changing every single verifier in a non-trivial way is not something
-I'm about to do for a -rc6 kernel. Removing the verifiers from log
-recovery just reverts to the pre-3.8 situation, so is perfectly
-acceptable short term solution while we do the more invasive verify
-changes.
+> I
+> remember seeing a paper that described a tool that would list codepaths that
+> are exercised during a test run.  Does that ring a bell?  It seems like this
+> might be worth looking into more generally.
 
-> Can you make the metadump available?  I need to understand this better
-> before I can sign off.  Also:  Any idea how far back this one goes?
+You mean code coverage profiling?
 
-No, I can't make the metadump available to you - it was provided
-privately and not obfuscated and so you'd have to ask Dave for it.
-
-As to how long this problem has existed? It's a zero-day bug. Like I
-said, I've suspected for years that this can happen, and only now do
-we have proof of it...
+FWIW, RH QA has run some xfstests code coverage analysis recently,
+too, and it has mostly confirmed the same results that we got at SGI
+years ago - we get roughly 70% code coverage of the kernel code
+froma default 4k filesystem xfstests run.
 
 Cheers,
 
