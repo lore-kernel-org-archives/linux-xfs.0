@@ -1,22 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A58177F37
-	for <xfs@oss.sgi.com>; Fri, 14 Jun 2013 22:09:36 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 5058C29DF8
+	for <xfs@oss.sgi.com>; Sat, 15 Jun 2013 05:35:08 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 615D98F8033
-	for <xfs@oss.sgi.com>; Fri, 14 Jun 2013 20:09:33 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	xczjphD453L4dWZ6 for <xfs@oss.sgi.com>;
-	Fri, 14 Jun 2013 20:09:31 -0700 (PDT)
-Date: Sat, 15 Jun 2013 13:09:28 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS (vdb): Corruption detected. Unmount and run xfs_repair
-Message-ID: <20130615030928.GC29338@dastard>
-References: <20130615023620.GA23586@localhost>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id EF658AC002
+	for <xfs@oss.sgi.com>; Sat, 15 Jun 2013 03:35:04 -0700 (PDT)
+Received: from mail-qe0-f46.google.com (mail-qe0-f46.google.com
+	[209.85.128.46]) by cuda.sgi.com with ESMTP id ETQPtO38zWH4wMSs
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sat, 15 Jun 2013 03:35:03 -0700 (PDT)
+Received: by mail-qe0-f46.google.com with SMTP id nd7so822718qeb.5
+	for <xfs@oss.sgi.com>; Sat, 15 Jun 2013 03:35:02 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130615023620.GA23586@localhost>
+In-Reply-To: <20130615020414.GB29338@dastard>
+References: <CAC2B=ZFP_Fg34aFpk857stgB7MGcrYs9tybRS-ttw1CXNeU41Q@mail.gmail.com>
+	<91017249.1356192.1371248207334.JavaMail.root@redhat.com>
+	<CAC2B=ZHYV6d-1PO_=-jXsQidZnYPHVwcVAaQh2mxJt=5K03AEA@mail.gmail.com>
+	<504625587.1365681.1371255450937.JavaMail.root@redhat.com>
+	<CAC2B=ZF+eMyNLPQmhA_onDPEUqgNfcgCdZVvobNH9pofvioN7Q@mail.gmail.com>
+	<20130615020414.GB29338@dastard>
+Date: Sat, 15 Jun 2013 06:35:02 -0400
+Message-ID: <CAC2B=ZEUkd+ADnQLUKj9S-3rdo2=93WbW0tbLbwwHUvkh6v7Rw@mail.gmail.com>
+Subject: Re: definitions for /proc/fs/xfs/stat
+From: Mark Seger <mjseger@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,97 +31,311 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============2342674766651925377=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Fengguang Wu <fengguang.wu@intel.com>
-Cc: linux-fsdevel@vger.kernel.org, Ben Myers <bpm@sgi.com>, Jan Kara <jack@suse.cz>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Nathan Scott <nathans@redhat.com>, xfs@oss.sgi.com
 
-[cc xfs@oss.sgi.com, where XFS bug reports should go]
+--===============2342674766651925377==
+Content-Type: multipart/alternative; boundary=047d7bf0f41a82362604df2eea16
 
-On Sat, Jun 15, 2013 at 10:36:20AM +0800, Fengguang Wu wrote:
-> Greetings,
-> 
-> I got the below dmesg in both upstream and linux-next, and the first
-> bad commit *might be* commit 211d022c43ca ("xfs: Avoid pathological
-> backwards allocation").
->     
-> [   74.595386] 
-> [   74.603826] CPU: 0 PID: 2137 Comm: kworker/0:1H Not tainted 3.10.0-rc1-00031-gade1335 #1508
-> [   74.609255] Hardware name: Bochs Bochs, BIOS Bochs 01/01/2007
-> [   74.612498] Workqueue: xfslogd xfs_buf_iodone_work
-> [   74.615690]  0000000000000001 ffff880016815c68 ffffffff81aa456f ffff880016815c88
-> [   74.621548]  ffffffff8130b179 ffffffff81309514 0000000000000001 ffff880016815cc8
-> [   74.627417]  ffffffff8130b1d0 0000000000000000 00000000000002da 0000000000000016
-> [   74.633321] Call Trace:
-> [   74.635427]  [<ffffffff81aa456f>] dump_stack+0x19/0x1b
-> [   74.638412]  [<ffffffff8130b179>] xfs_error_report+0x3d/0x3f
-> [   74.641627]  [<ffffffff81309514>] ? xfs_buf_iodone_work+0x4a/0x83
-> [   74.644970]  [<ffffffff8130b1d0>] xfs_corruption_error+0x55/0x71
-> [   74.648217]  [<ffffffff81352ce1>] xfs_sb_read_verify+0xee/0x105
-> [   74.651478]  [<ffffffff81309514>] ? xfs_buf_iodone_work+0x4a/0x83
-> [   74.654820]  [<ffffffff8108045d>] ? ftrace_raw_event_workqueue_execute_start+0x92/0xa1
-> [   74.659821]  [<ffffffff81309514>] xfs_buf_iodone_work+0x4a/0x83
-> [   74.663042]  [<ffffffff81082561>] process_one_work+0x26c/0x470
-> [   74.666296]  [<ffffffff810824bf>] ? process_one_work+0x1ca/0x470
-> [   74.669647]  [<ffffffff81082ee6>] worker_thread+0x1d0/0x2cb
-> [   74.672770]  [<ffffffff81082d16>] ? manage_workers.isra.19+0x1c3/0x1c3
-> [   74.676201]  [<ffffffff8108a590>] kthread+0xd5/0xdd
-> [   74.679151]  [<ffffffff810bd47c>] ? trace_hardirqs_on+0xd/0xf
-> [   74.682411]  [<ffffffff8108a4bb>] ? __init_kthread_worker+0x5a/0x5a
-> [   74.685776]  [<ffffffff81ab74dc>] ret_from_fork+0x7c/0xb0
-> [   74.688798]  [<ffffffff8108a4bb>] ? __init_kthread_worker+0x5a/0x5a
-> [   74.692206] XFS (vdb): Corruption detected. Unmount and run xfs_repair
-> [   74.696000] XFS (vdb): SB validate failed with error 22.
+--047d7bf0f41a82362604df2eea16
+Content-Type: text/plain; charset=ISO-8859-1
 
-EINVAL, which means there should have been some kind of output in
-the log before the -corruption report- that explains why EINVAL was
-returned.
+Basically everything do it with collectl, a tool I wrote and opensourced
+almost 10 years ago.  it's numbers are very accurate - I've compared with
+iostat on numerous occasions whenever I might have had doubts and they
+always agree.  Since both tools get their data from the same place,
+/proc/diskstats, it's hard for them not to agree AND its numbers also agree
+with /proc/fs/xfs.
 
-> I'm not sure whether it's the first bad commit because
+Here's an example of comparing the two on a short run, leaving off the -m
+since collectl reports its output in KB.
 
-It's not, because it isn't in the upstream kernel and so if you are
-seeing it in the upstream kernel, it can't be the cause. And,
-besides:
+Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s avgrq-sz
+avgqu-sz   await r_await w_await  svctm  %util
+sdc               0.00     0.00    0.00  494.00     0.00 126464.00   512.00
+    0.11    0.22    0.00    0.22   0.22  11.00
 
-> [   74.570969] XFS (vdb): bad magic number
-> [   74.573837] ffff8800170ed000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-> [   74.579266] ffff8800170ed010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-> [   74.584581] ffff8800170ed020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-> [   74.590036] ffff8800170ed030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-> [   74.595386] XFS (vdb): Internal error xfs_sb_read_verify at line 730 of file /c/kernel-tests/src/stable/fs/xfs/xfs_mount.c.  Caller 0xffffffff81309514
-.....
-> [   74.692206] XFS (vdb): Corruption detected. Unmount and run xfs_repair
-> [   74.696000] XFS (vdb): SB validate failed with error 22.
+#
+<---------reads---------><---------writes---------><--------averages-------->
+Pct
+#Time     Name       KBytes Merged  IOs Size  KBytes Merged  IOs Size
+ RWSize  QLen  Wait SvcTim Util
+10:18:32 sdc1             0      0    0    0  127488      0  498  256
+256     1     0      0    7
+10:18:33 sdc1             0      0    0    0  118784      0  464  256
+256     1     0      0    4
 
-It's obviously not an XFS filesystem you are asking the kernel to
-mount, so it's perfectly valid to throw a corruption error at you.
-What it has actually thrown is EWRONGFS, but because you've asked
-the kernel specifically to mount the device as an XFS filesystem,
-the kernel is explicitly telling you that it's a corrupt
-filesystem... :)
+for grins I also ran a set of numbers at a monitoring interval of 0.2
+seconds just to see if they were steady and they are:
 
-> common.rc: retrying test device mount with external set
-> [   74.782247] XFS (vdb): bad magic number
-> [   74.784895] ffff8800170e7000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-> [   74.790201] ffff8800170e7010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-> [   74.795466] ffff8800170e7020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-> [   74.800759] ffff8800170e7030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-> [   74.806031] XFS (vdb): Internal error xfs_sb_read_verify at line 730 of file /c/kernel-tests/src/stable/fs/xfs/xfs_mount.c.  Caller 0xffffffff81309514
+#
+<---------reads---------><---------writes---------><--------averages-------->
+Pct
+#Time         Name       KBytes Merged  IOs Size  KBytes Merged  IOs Size
+ RWSize  QLen  Wait SvcTim Util
+10:19:50.601 sdc1             0      0    0    0     768      0    3  256
+  256     0     0      0    0
+10:19:50.801 sdc1             0      0    0    0   23296      0   91  256
+  256     1     0      0   19
+10:19:51.001 sdc1             0      0    0    0   32256      0  126  256
+  256     1     0      0   14
+10:19:51.201 sdc1             0      0    0    0   29696      0  116  256
+  256     1     0      0   19
+10:19:51.401 sdc1             0      0    0    0   30464      0  119  256
+  256     1     0      0    4
+10:19:51.601 sdc1             0      0    0    0   32768      0  128  256
+  256     1     0      0   14
 
-It still isn't an XFS filesystem.... :/
+but back to the problem at hand and that's the question why is this
+happening?
 
-This looks like user error, not a bug.
+To restate what's going on, I have a very simple script that I'm
+duplicating what openstack swift is doing, namely to create a file with
+mkstmp and than running an falloc against it.  The files are being created
+with a size of zero but it seems that xfs is generating a ton of logging
+activity.  I had read your posted back in 2011 about speculative
+preallocation and can't help but wonder if that's what hitting me here.  I
+also saw where system memory can come into play and this box has 192GB and
+12 hyperthreaded cores.
 
-Cheers,
+I also tried one more run without falloc, this is creating 10000 1K files,
+which should be about 10MB and it looks like it's still doing 140MB of I/O
+which still feels like a lot but at least it's less than the
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+#
+<---------reads---------><---------writes---------><--------averages-------->
+Pct
+#Time     Name       KBytes Merged  IOs Size  KBytes Merged  IOs Size
+ RWSize  QLen  Wait SvcTim Util
+10:29:20 sdc1             0      0    0    0   89608      0  351  255
+255     1     0      0   11
+10:29:21 sdc1             0      0    0    0   55296      0  216  256
+256     1     0      0    5
+
+and to repeat the full run with falloc:
+
+# DISK STATISTICS (/sec)
+#
+<---------reads---------><---------writes---------><--------averages-------->
+Pct
+#Time     Name       KBytes Merged  IOs Size  KBytes Merged  IOs Size
+ RWSize  QLen  Wait SvcTim Util
+10:30:50 sdc1             0      0    0    0   56064      0  219  256
+256     1     0      0    2
+10:30:51 sdc1             0      0    0    0  409720    148 1622  253
+252     1     0      0   26
+10:30:52 sdc1             0      0    0    0  453240    144 1796  252
+252     1     0      0   36
+10:30:53 sdc1             0      0    0    0  441768    298 1800  245
+245     1     0      0   37
+10:30:54 sdc1             0      0    0    0  455576    144 1813  251
+251     1     0      0   25
+10:30:55 sdc1             0      0    0    0  453532    145 1805  251
+251     1     0      0   35
+10:30:56 sdc1             0      0    0    0  307352    145 1233  249
+249     1     0      0   17
+10:30:57 sdc1             0      0    0    0       0      0    0    0
+0     0     0      0    0
+
+If there is anything more I can provide I'll be happy to do so.  Actually I
+should point out I can easily generate graphs and if you'd like to see some
+examples I can provide those too.  Also, if there is anything I can report
+from /proc/fs/xfs I can relatively easily do that as well and display it
+side by side with the disk I/O.
+
+-mark
+
+
+On Fri, Jun 14, 2013 at 10:04 PM, Dave Chinner <david@fromorbit.com> wrote:
+
+> On Fri, Jun 14, 2013 at 09:55:17PM -0400, Mark Seger wrote:
+> > I'm doing 1 second samples and the rates are very steady.  The reason I
+> > ended up at this level of testing was I had done a sustained test for 2
+> > minutes at about 5MB/sec and was seeing over 500MB/sec going to the disk,
+> > again sampling at 1-second intervals.  I'd be happy to provide detailed
+> > output and can even sample more frequently if you like.
+>
+> Where are you getting your IO throughput numbers from?
+>
+> How do they compare to, say, the output of `iostat -d -x -m 1`?
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
+>
+
+--047d7bf0f41a82362604df2eea16
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr">Basically everything do it with collectl, a tool I wrote a=
+nd opensourced almost 10 years ago. =A0it&#39;s numbers are very accurate -=
+ I&#39;ve compared with iostat on numerous occasions whenever I might have =
+had doubts and they always agree. =A0Since both tools get their data from t=
+he same place, /proc/diskstats, it&#39;s hard for them not to agree AND its=
+ numbers also agree with /proc/fs/xfs.<div>
+<div><br></div></div><div style>Here&#39;s an example of comparing the two =
+on a short run, leaving off the -m since collectl reports its output in KB.=
+</div><div style><br></div><div style><div><font face=3D"courier new, monos=
+pace">Device: =A0 =A0 =A0 =A0 rrqm/s =A0 wrqm/s =A0 =A0 r/s =A0 =A0 w/s =A0=
+ =A0rkB/s =A0 =A0wkB/s avgrq-sz avgqu-sz =A0 await r_await w_await =A0svctm=
+ =A0%util</font></div>
+<div><font face=3D"courier new, monospace">sdc =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
+0.00 =A0 =A0 0.00 =A0 =A00.00 =A0494.00 =A0 =A0 0.00 126464.00 =A0 512.00 =
+=A0 =A0 0.11 =A0 =A00.22 =A0 =A00.00 =A0 =A00.22 =A0 0.22 =A011.00</font></=
+div><div><font face=3D"courier new, monospace"><br>
+</font></div><div><div><font face=3D"courier new, monospace"># =A0 =A0 =A0 =
+=A0 =A0 =A0 =A0 =A0 =A0 &lt;---------reads---------&gt;&lt;---------writes-=
+--------&gt;&lt;--------averages--------&gt; Pct</font></div><div><font fac=
+e=3D"courier new, monospace">#Time =A0 =A0 Name =A0 =A0 =A0 KBytes Merged =
+=A0IOs Size =A0KBytes Merged =A0IOs Size =A0RWSize =A0QLen =A0Wait SvcTim U=
+til</font></div>
+<div><font face=3D"courier new, monospace">10:18:32 sdc1 =A0 =A0 =A0 =A0 =
+=A0 =A0 0 =A0 =A0 =A00 =A0 =A00 =A0 =A00 =A0127488 =A0 =A0 =A00 =A0498 =A02=
+56 =A0 =A0 256 =A0 =A0 1 =A0 =A0 0 =A0 =A0 =A00 =A0 =A07</font></div><div><=
+font face=3D"courier new, monospace">10:18:33 sdc1 =A0 =A0 =A0 =A0 =A0 =A0 =
+0 =A0 =A0 =A00 =A0 =A00 =A0 =A00 =A0118784 =A0 =A0 =A00 =A0464 =A0256 =A0 =
+=A0 256 =A0 =A0 1 =A0 =A0 0 =A0 =A0 =A00 =A0 =A04</font><br>
+</div></div><div><br></div><div style>for grins I also ran a set of numbers=
+ at a monitoring interval of 0.2 seconds just to see if they were steady an=
+d they are:</div><div style><br></div><div style><div><font face=3D"courier=
+ new, monospace"># =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 &lt;--------=
+-reads---------&gt;&lt;---------writes---------&gt;&lt;--------averages----=
+----&gt; Pct</font></div>
+<div><font face=3D"courier new, monospace">#Time =A0 =A0 =A0 =A0 Name =A0 =
+=A0 =A0 KBytes Merged =A0IOs Size =A0KBytes Merged =A0IOs Size =A0RWSize =
+=A0QLen =A0Wait SvcTim Util</font></div><div><font face=3D"courier new, mon=
+ospace">10:19:50.601 sdc1 =A0 =A0 =A0 =A0 =A0 =A0 0 =A0 =A0 =A00 =A0 =A00 =
+=A0 =A00 =A0 =A0 768 =A0 =A0 =A00 =A0 =A03 =A0256 =A0 =A0 256 =A0 =A0 0 =A0=
+ =A0 0 =A0 =A0 =A00 =A0 =A00<br>
+</font></div><div><font face=3D"courier new, monospace">10:19:50.801 sdc1 =
+=A0 =A0 =A0 =A0 =A0 =A0 0 =A0 =A0 =A00 =A0 =A00 =A0 =A00 =A0 23296 =A0 =A0 =
+=A00 =A0 91 =A0256 =A0 =A0 256 =A0 =A0 1 =A0 =A0 0 =A0 =A0 =A00 =A0 19</fon=
+t></div><div><font face=3D"courier new, monospace">10:19:51.001 sdc1 =A0 =
+=A0 =A0 =A0 =A0 =A0 0 =A0 =A0 =A00 =A0 =A00 =A0 =A00 =A0 32256 =A0 =A0 =A00=
+ =A0126 =A0256 =A0 =A0 256 =A0 =A0 1 =A0 =A0 0 =A0 =A0 =A00 =A0 14</font></=
+div>
+<div><font face=3D"courier new, monospace">10:19:51.201 sdc1 =A0 =A0 =A0 =
+=A0 =A0 =A0 0 =A0 =A0 =A00 =A0 =A00 =A0 =A00 =A0 29696 =A0 =A0 =A00 =A0116 =
+=A0256 =A0 =A0 256 =A0 =A0 1 =A0 =A0 0 =A0 =A0 =A00 =A0 19</font></div><div=
+><font face=3D"courier new, monospace">10:19:51.401 sdc1 =A0 =A0 =A0 =A0 =
+=A0 =A0 0 =A0 =A0 =A00 =A0 =A00 =A0 =A00 =A0 30464 =A0 =A0 =A00 =A0119 =A02=
+56 =A0 =A0 256 =A0 =A0 1 =A0 =A0 0 =A0 =A0 =A00 =A0 =A04</font></div>
+<div><font face=3D"courier new, monospace">10:19:51.601 sdc1 =A0 =A0 =A0 =
+=A0 =A0 =A0 0 =A0 =A0 =A00 =A0 =A00 =A0 =A00 =A0 32768 =A0 =A0 =A00 =A0128 =
+=A0256 =A0 =A0 256 =A0 =A0 1 =A0 =A0 0 =A0 =A0 =A00 =A0 14</font></div><div=
+><br></div><div style>but back to the problem at hand and that&#39;s the qu=
+estion why is this happening?</div>
+<div><br></div><div style>To restate what&#39;s going on, I have a very sim=
+ple script that I&#39;m duplicating what openstack swift is doing, namely t=
+o create a file with mkstmp and than running an falloc against it. =A0The f=
+iles are being created with a size of zero but it seems that xfs is generat=
+ing a ton of logging activity. =A0I had read your posted back in 2011 about=
+ speculative preallocation and can&#39;t help but wonder if that&#39;s what=
+ hitting me here. =A0I also saw where system memory can come into play and =
+this box has 192GB and 12 hyperthreaded cores.</div>
+<div style><br></div><div style>I also tried one more run without falloc, t=
+his is creating 10000 1K files, which should be about 10MB and it looks lik=
+e it&#39;s still doing 140MB of I/O which still feels like a lot but at lea=
+st it&#39;s less than the=A0</div>
+<div><br></div><div><div><font face=3D"courier new, monospace"># =A0 =A0 =
+=A0 =A0 =A0 =A0 =A0 =A0 =A0 &lt;---------reads---------&gt;&lt;---------wri=
+tes---------&gt;&lt;--------averages--------&gt; Pct</font></div><div><font=
+ face=3D"courier new, monospace">#Time =A0 =A0 Name =A0 =A0 =A0 KBytes Merg=
+ed =A0IOs Size =A0KBytes Merged =A0IOs Size =A0RWSize =A0QLen =A0Wait SvcTi=
+m Util</font></div>
+<div><font face=3D"courier new, monospace">10:29:20 sdc1 =A0 =A0 =A0 =A0 =
+=A0 =A0 0 =A0 =A0 =A00 =A0 =A00 =A0 =A00 =A0 89608 =A0 =A0 =A00 =A0351 =A02=
+55 =A0 =A0 255 =A0 =A0 1 =A0 =A0 0 =A0 =A0 =A00 =A0 11</font></div><div><fo=
+nt face=3D"courier new, monospace">10:29:21 sdc1 =A0 =A0 =A0 =A0 =A0 =A0 0 =
+=A0 =A0 =A00 =A0 =A00 =A0 =A00 =A0 55296 =A0 =A0 =A00 =A0216 =A0256 =A0 =A0=
+ 256 =A0 =A0 1 =A0 =A0 0 =A0 =A0 =A00 =A0 =A05</font></div>
+</div><div><br></div><div style>and to repeat the full run with falloc:</di=
+v><div style><br></div><div style><div><font face=3D"courier new, monospace=
+"># DISK STATISTICS (/sec)</font></div><div><font face=3D"courier new, mono=
+space"># =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 &lt;---------reads---------&gt=
+;&lt;---------writes---------&gt;&lt;--------averages--------&gt; Pct</font=
+></div>
+<div><font face=3D"courier new, monospace">#Time =A0 =A0 Name =A0 =A0 =A0 K=
+Bytes Merged =A0IOs Size =A0KBytes Merged =A0IOs Size =A0RWSize =A0QLen =A0=
+Wait SvcTim Util</font></div><div><font face=3D"courier new, monospace">10:=
+30:50 sdc1 =A0 =A0 =A0 =A0 =A0 =A0 0 =A0 =A0 =A00 =A0 =A00 =A0 =A00 =A0 560=
+64 =A0 =A0 =A00 =A0219 =A0256 =A0 =A0 256 =A0 =A0 1 =A0 =A0 0 =A0 =A0 =A00 =
+=A0 =A02</font></div>
+<div><font face=3D"courier new, monospace">10:30:51 sdc1 =A0 =A0 =A0 =A0 =
+=A0 =A0 0 =A0 =A0 =A00 =A0 =A00 =A0 =A00 =A0409720 =A0 =A0148 1622 =A0253 =
+=A0 =A0 252 =A0 =A0 1 =A0 =A0 0 =A0 =A0 =A00 =A0 26</font></div><div><font =
+face=3D"courier new, monospace">10:30:52 sdc1 =A0 =A0 =A0 =A0 =A0 =A0 0 =A0=
+ =A0 =A00 =A0 =A00 =A0 =A00 =A0453240 =A0 =A0144 1796 =A0252 =A0 =A0 252 =
+=A0 =A0 1 =A0 =A0 0 =A0 =A0 =A00 =A0 36</font></div>
+<div><font face=3D"courier new, monospace">10:30:53 sdc1 =A0 =A0 =A0 =A0 =
+=A0 =A0 0 =A0 =A0 =A00 =A0 =A00 =A0 =A00 =A0441768 =A0 =A0298 1800 =A0245 =
+=A0 =A0 245 =A0 =A0 1 =A0 =A0 0 =A0 =A0 =A00 =A0 37</font></div><div><font =
+face=3D"courier new, monospace">10:30:54 sdc1 =A0 =A0 =A0 =A0 =A0 =A0 0 =A0=
+ =A0 =A00 =A0 =A00 =A0 =A00 =A0455576 =A0 =A0144 1813 =A0251 =A0 =A0 251 =
+=A0 =A0 1 =A0 =A0 0 =A0 =A0 =A00 =A0 25</font></div>
+<div><font face=3D"courier new, monospace">10:30:55 sdc1 =A0 =A0 =A0 =A0 =
+=A0 =A0 0 =A0 =A0 =A00 =A0 =A00 =A0 =A00 =A0453532 =A0 =A0145 1805 =A0251 =
+=A0 =A0 251 =A0 =A0 1 =A0 =A0 0 =A0 =A0 =A00 =A0 35</font></div><div><font =
+face=3D"courier new, monospace">10:30:56 sdc1 =A0 =A0 =A0 =A0 =A0 =A0 0 =A0=
+ =A0 =A00 =A0 =A00 =A0 =A00 =A0307352 =A0 =A0145 1233 =A0249 =A0 =A0 249 =
+=A0 =A0 1 =A0 =A0 0 =A0 =A0 =A00 =A0 17</font></div>
+<div><font face=3D"courier new, monospace">10:30:57 sdc1 =A0 =A0 =A0 =A0 =
+=A0 =A0 0 =A0 =A0 =A00 =A0 =A00 =A0 =A00 =A0 =A0 =A0 0 =A0 =A0 =A00 =A0 =A0=
+0 =A0 =A00 =A0 =A0 =A0 0 =A0 =A0 0 =A0 =A0 0 =A0 =A0 =A00 =A0 =A00</font></=
+div><div><br></div><div style>If there is anything more I can provide I&#39=
+;ll be happy to do so. =A0Actually I should point out I can easily generate=
+ graphs and if you&#39;d like to see some examples I can provide those too.=
+ =A0Also, if there is anything I can report from /proc/fs/xfs I can relativ=
+ely easily do that as well and display it side by side with the disk I/O.</=
+div>
+<div style><br></div><div style>-mark</div></div></div></div></div><div cla=
+ss=3D"gmail_extra"><br><br><div class=3D"gmail_quote">On Fri, Jun 14, 2013 =
+at 10:04 PM, Dave Chinner <span dir=3D"ltr">&lt;<a href=3D"mailto:david@fro=
+morbit.com" target=3D"_blank">david@fromorbit.com</a>&gt;</span> wrote:<br>
+<blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
+x #ccc solid;padding-left:1ex"><div class=3D"im">On Fri, Jun 14, 2013 at 09=
+:55:17PM -0400, Mark Seger wrote:<br>
+&gt; I&#39;m doing 1 second samples and the rates are very steady. =A0The r=
+eason I<br>
+&gt; ended up at this level of testing was I had done a sustained test for =
+2<br>
+&gt; minutes at about 5MB/sec and was seeing over 500MB/sec going to the di=
+sk,<br>
+&gt; again sampling at 1-second intervals. =A0I&#39;d be happy to provide d=
+etailed<br>
+&gt; output and can even sample more frequently if you like.<br>
+<br>
+</div>Where are you getting your IO throughput numbers from?<br>
+<br>
+How do they compare to, say, the output of `iostat -d -x -m 1`?<br>
+<br>
+Cheers,<br>
+<br>
+Dave.<br>
+<span class=3D"HOEnZb"><font color=3D"#888888">--<br>
+Dave Chinner<br>
+<a href=3D"mailto:david@fromorbit.com">david@fromorbit.com</a><br>
+</font></span></blockquote></div><br></div>
+
+--047d7bf0f41a82362604df2eea16--
+
+
+--===============2342674766651925377==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============2342674766651925377==--
