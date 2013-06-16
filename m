@@ -1,31 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5A1137F37
-	for <xfs@oss.sgi.com>; Sun, 16 Jun 2013 07:59:05 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id EA1DCAC004
-	for <xfs@oss.sgi.com>; Sun, 16 Jun 2013 05:59:01 -0700 (PDT)
-Received: from mail-qe0-f53.google.com (mail-qe0-f53.google.com
-	[209.85.128.53]) by cuda.sgi.com with ESMTP id TH3GGa4MkmxLJL4c
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 16 Jun 2013 05:58:59 -0700 (PDT)
-Received: by mail-qe0-f53.google.com with SMTP id 1so1166488qee.26
-	for <xfs@oss.sgi.com>; Sun, 16 Jun 2013 05:58:59 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 2E3B87F37
+	for <xfs@oss.sgi.com>; Sun, 16 Jun 2013 08:27:20 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A2C33AC001
+	for <xfs@oss.sgi.com>; Sun, 16 Jun 2013 06:27:16 -0700 (PDT)
+Received: from mail.itpas.no ([85.19.192.5]) by cuda.sgi.com with ESMTP id
+	rOZCeS66pb4926Gl for <xfs@oss.sgi.com>;
+	Sun, 16 Jun 2013 06:27:13 -0700 (PDT)
+Message-ID: <51BDBD2B.70003@itpas.no>
+Date: Sun, 16 Jun 2013 15:27:07 +0200
+From: =?ISO-8859-1?Q?Torbj=F8rn_Skagestad?= <torbjorn@itpas.no>
 MIME-Version: 1.0
-In-Reply-To: <20130616001130.GE29338@dastard>
-References: <CAC2B=ZFP_Fg34aFpk857stgB7MGcrYs9tybRS-ttw1CXNeU41Q@mail.gmail.com>
-	<91017249.1356192.1371248207334.JavaMail.root@redhat.com>
-	<CAC2B=ZHYV6d-1PO_=-jXsQidZnYPHVwcVAaQh2mxJt=5K03AEA@mail.gmail.com>
-	<504625587.1365681.1371255450937.JavaMail.root@redhat.com>
-	<CAC2B=ZF+eMyNLPQmhA_onDPEUqgNfcgCdZVvobNH9pofvioN7Q@mail.gmail.com>
-	<20130615020414.GB29338@dastard>
-	<CAC2B=ZEUkd+ADnQLUKj9S-3rdo2=93WbW0tbLbwwHUvkh6v7Rw@mail.gmail.com>
-	<CAC2B=ZGgr5WPWOEehHDHKekM8yHgQ3QS4HMzM8+j217AfEoPyQ@mail.gmail.com>
-	<20130616001130.GE29338@dastard>
-Date: Sun, 16 Jun 2013 08:58:58 -0400
-Message-ID: <CAC2B=ZFZskLnp5baVJK+R1xrpOfTkr1QXpA9jyHvxfk5Wd4yDg@mail.gmail.com>
-Subject: Re: definitions for /proc/fs/xfs/stat
-From: Mark Seger <mjseger@gmail.com>
+Subject: Re: Kernel bug when mounting xfs on dm-crypt + md-raid6 using 3.10-rc5
+References: <51B9C28F.2020703@skagestad.org> <51B9C4C9.5000803@sandeen.net>
+	<51B9C943.4030900@skagestad.org>
+In-Reply-To: <51B9C943.4030900@skagestad.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,269 +24,201 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============4882438547025343741=="
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Nathan Scott <nathans@redhat.com>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
---===============4882438547025343741==
-Content-Type: multipart/alternative; boundary=047d7bf0f41a1e980604df450b8b
+On 06/13/2013 03:29 PM, Torbj=F8rn wrote:
+> On 06/13/2013 03:10 PM, Eric Sandeen wrote:
+>> On 6/13/13 8:01 AM, Torbj=F8rn wrote:
+>>> Hi,
+>>>
+>>> I have a 8 drive md-raid6 + dm-crypt with xfs on top.
+>>> When trying to mount using 3.10-rc5 (ubuntu mainline ppa) I get the =
 
---047d7bf0f41a1e980604df450b8b
-Content-Type: text/plain; charset=ISO-8859-1
+>>> following kernel bug:
+>>>
+>>> [ 1017.056091] SGI XFS with ACLs, security attributes, realtime, =
 
-ok, I have a simple reproducer.  try out the following, noting you'll
-obviously have to change the directory pointed to by dname:
+>>> large block/inode numbers, no debug enabled
+>>> [ 1017.057607] XFS (dm-11): Mounting Filesystem
+>>> [ 1017.195409] ------------[ cut here ]------------
+>>> [ 1017.195881] Kernel BUG at ffffffff81485fb2 [verbose debug info =
 
-libc=ctypes.CDLL(ctypes.util.find_library('c'), use_errno=True)
-falloc=getattr(libc, 'fallocate')
+>>> unavailable]
+>> Hm that's not so helpful :(  So we don't have thread info or
+>> line number information.
+>>
+>>> [ 1017.196603] invalid opcode: 0000 [#1] SMP
+>>> [ 1017.197050] Modules linked in: xfs vhost_net macvtap macvlan =
 
-fb#!/usr/bin/python -u
+>>> ip6table_filter ip6_tables ebtable_nat ebtables ipt_MASQUERADE =
 
-import os
-import sys
-import time
-import ctypes
-import ctypes.util
-from tempfile import mkstemp
+>>> ipt_REJECT xt_CHECKSUM sch_prio bridge stp llc xt_state =
 
-dname = '/srv/node/disk0/mjs'
-fname = 'foo'
-fsize = 1024
-nfiles = 1000
+>>> iptable_filter dm_crypt xt_CLASSIFY xt_tcpudp xt_DSCP iptable_mangle =
 
-body = ' ' * fsize
+>>> iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 nf_nat =
 
-time0 = time.time()
-for i in range(nfiles):
-    file_name = '%s/%s-%s' % (dname, fname, i)
-    fd, tmppath = mkstemp(dir=dname)
-    falloc(fd, 1, 0, fsize)
-    os.rename(tmppath, file_name)
+>>> nf_conntrack ip_tables x_tables intel_powerclamp kvm_intel kvm =
 
-elapsed = time.time() - time0
-tbytes = fsize * nfiles
-rate = tbytes/elapsed/1024/1024
+>>> psmouse serio_raw microcode ppdev lpc_ich mac_hid parport_pc =
 
-print "DName: %s" % dname
-print "Bytes: %d" % (tbytes/1024/1024)
-print "Time:  %.2f secs" % elapsed
-print "Rate:  %.2f/sec" % rate
+>>> w83627ehf hwmon_vid coretemp nfsd lp nfs_acl auth_rpcgss nfs parport =
 
-when I run it I see this:
+>>> fscache lockd sunrpc btrfs zlib_deflate libcrc32c raid1 raid0 =
 
-segerm@az1-sw-object-0006:~$ sudo ./falloc.py
-DName: /srv/node/disk0/mjs
-Bytes: 9
-Time:  5.84 secs
-Rate:  1.67/sec
+>>> multipath linear raid456 async_pq async_xor xor async_memcpy =
 
-and while running collectl I see this:
+>>> async_raid6_recov raid6_pq async_tx raid10 hid_generic usbhid hid =
 
-#<----CPU[HYPER]-----><----------Disks-----------><----------Network---------->
-#cpu sys inter  ctxsw KBRead  Reads KBWrit Writes   KBIn  PktIn  KBOut
- PktOut
-   0   0   110    113      0      0      0      0      0      5      0
-  3
-   1   0  1576   2874      0      0 170240    665      0      3      0
-  2
-   4   3  2248   6623      0      0 406585   1596      0      1      0
-  1
-   4   3  2145   7680      0      0 473600   1850      0      1      0
-  1
-   2   1  2200   7406      0      0 456633   1875      0      2      0
-  1
-   4   3  3696   7401      0      0 454606   1823      0      1      0
-  1
-   3   2  3877   7354      0      0 453537   1806      0      1      0
-  1
-   1   0  1610   2764      0      0 163793    684      0      3      0
-  3
+>>> ast ttm crc32_pclmul drm_kms_helper ghash_clmulni_intel drm =
 
-This is the same behavior I'm seeing on swift.  10K 1KB files X 4kb minimal
-block size still comes out to a lot less than the multiple GB of writes
-being reported.  Actually since these whole thing only takes a few seconds
-and I know a single disk can't write that fast maybe it's just a bug in the
-way the kernel is reported allocated preallocated blocks and nothing to do
-with XFS?  Or iis xfs responsible for the stats?
+>>> aesni_intel ablk_helper cryptd lrw gf128mul glue_helper e1000e =
 
-If I remove the fallocate call I see the expected amount of disk traffic.
+>>> mpt2sas i2c_algo_bit ptp sysimgblt sysfillrect pps_core ahci =
 
--mark
+>>> aes_x86_64 syscopyarea scsi_transport_sas libahci raid_class video
+>>> [ 1017.206695] CPU: 1 PID: 486 Comm: md0_raid6 Not tainted =
 
+>>> 3.10.0-031000rc5-generic #201306082135
+>>> [ 1017.207603] Hardware name: To be filled by O.E.M. To be filled by =
 
+>>> O.E.M./P8B-X series, BIOS 2107 05/04/2012
+>>> [ 1017.208681] task: ffff88040e509770 ti: ffff88040de2a000 task.ti: =
 
-On Sat, Jun 15, 2013 at 8:11 PM, Dave Chinner <david@fromorbit.com> wrote:
+>>> ffff88040de2a000
+>>> [ 1017.209498] RIP: 0010:[<ffffffff81485fb2>] [<ffffffff81485fb2>] =
 
-> On Sat, Jun 15, 2013 at 12:22:35PM -0400, Mark Seger wrote:
-> > I was thinking a little color commentary might be helpful from a
-> > perspective of what the functionally is that's driving the need for
-> > fallocate.  I think I mentioned somewhere in this thread that the
-> > application is OpenStack Swift, which is  a highly scalable cloud object
-> > store.
+>>> scsi_setup_fs_cmnd.part.32+0x82/0x90
+>> so it crashed in scsi, and nothing in the stack is from xfs.
+>>
+>> Barring weird interactions, I think you need to look elsewhere for =
+
+>> the bug;
+>> this doesn't look like an xfs problem to me.
+>>
+>> Actually,
+>> https://lkml.org/lkml/2013/6/12/440 looks relevant, which references
+>> https://lkml.org/lkml/2013/5/19/75
+>>
+>> Guessing this is an md bug.
+Just for the archives: The patch at https://lkml.org/lkml/2013/5/19/75 =
+
+fixed the issue. It was definitely an md bug. The patch was part of 3.10-rc6
+Thanks.
+>>
+>> -Eric
+>>
+>>> [ 1017.210467] RSP: 0018:ffff88040de2bb68  EFLAGS: 00010046
+>>> [ 1017.211021] RAX: 0000000000000000 RBX: ffff8804106d4800 RCX: =
+
+>>> 0000000000000002
+>>> [ 1017.211772] RDX: 0000000000001000 RSI: ffff8803d3b89028 RDI: =
+
+>>> ffff8804106d4800
+>>> [ 1017.212521] RBP: ffff88040de2bb78 R08: ffff8803d3b88f30 R09: =
+
+>>> ffff9ef774422900
+>>> [ 1017.213300] R10: 0000000018422880 R11: 00000000ffffffff R12: =
+
+>>> ffff8803d3b89028
+>>> [ 1017.214054] R13: 0000000000000001 R14: ffff8804106d4800 R15: =
+
+>>> ffff88041032a800
+>>> [ 1017.214802] FS:  0000000000000000(0000) GS:ffff88042fc40000(0000) =
+
+>>> knlGS:0000000000000000
+>>> [ 1017.215691] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+>>> [ 1017.216287] CR2: 00007f9eaa5a4000 CR3: 0000000001c0c000 CR4: =
+
+>>> 00000000001427e0
+>>> [ 1017.217069] DR0: 0000000000000000 DR1: 0000000000000000 DR2: =
+
+>>> 0000000000000000
+>>> [ 1017.217819] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: =
+
+>>> 0000000000000400
+>>> [ 1017.218568] Stack:
+>>> [ 1017.218769]  ffff8804106d4800 ffff8803d3b89028 ffff88040de2bb98 =
+
+>>> ffffffff81485fef
+>>> [ 1017.219577]  ffff8803d3b89028 ffff8804106ac100 ffff88040de2bc08 =
+
+>>> ffffffff81496c0f
+>>> [ 1017.220379]  ffff88040de2bbd8 ffffffff81328aa5 ffff880400001000 =
+
+>>> 0000000018422880
+>>> [ 1017.221176] Call Trace:
+>>> [ 1017.221415]  [<ffffffff81485fef>] scsi_setup_fs_cmnd+0x2f/0x40
+>>> [ 1017.222024]  [<ffffffff81496c0f>] sd_prep_fn+0xff/0xb00
+>>> [ 1017.222567]  [<ffffffff81328aa5>] ? =
+
+>>> deadline_remove_request.isra.3+0x55/0x90
+>>> [ 1017.223336]  [<ffffffff81310d0e>] blk_peek_request+0xfe/0x270
+>>> [ 1017.223953]  [<ffffffff8148588f>] scsi_request_fn+0x4f/0x430
+>>> [ 1017.224546]  [<ffffffff8130b757>] __blk_run_queue+0x37/0x50
+>>> [ 1017.225145]  [<ffffffff8130d9fd>] queue_unplugged+0x3d/0xc0
+>>> [ 1017.225723]  [<ffffffff81311203>] blk_flush_plug_list+0x183/0x210
+>>> [ 1017.226360]  [<ffffffff813112a8>] blk_finish_plug+0x18/0x50
+>>> [ 1017.226943]  [<ffffffffa0148497>] raid5d+0x1b7/0x1d0 [raid456]
+>>> [ 1017.227548]  [<ffffffff8153b66d>] md_thread+0x11d/0x170
+>>> [ 1017.228090]  [<ffffffff8106c070>] ? add_wait_queue+0x60/0x60
+>>> [ 1017.228681]  [<ffffffff8153b550>] ? md_rdev_init+0x110/0x110
+>>> [ 1017.229274]  [<ffffffff8106b8b0>] kthread+0xc0/0xd0
+>>> [ 1017.229795]  [<ffffffff8106b7f0>] ? flush_kthread_worker+0xb0/0xb0
+>>> [ 1017.230468]  [<ffffffff816d545c>] ret_from_fork+0x7c/0xb0
+>>> [ 1017.231048]  [<ffffffff8106b7f0>] ? flush_kthread_worker+0xb0/0xb0
+>>> [ 1017.231719] Code: fd ff ff 5b 41 5c 5d c3 48 8b 00 48 85 c0 74 b7 =
+
+>>> 48 8b 40 48 48 85 c0 74 ae ff d0 85 c0 74 a8 eb e2 b8 02 00 00 00 0f =
+
+>>> 1f 00 eb d8 <0f> 0b 66 66 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 =
+
+>>> 00 55 48
+>>> [ 1017.234403] RIP  [<ffffffff81485fb2>] =
+
+>>> scsi_setup_fs_cmnd.part.32+0x82/0x90
+>>> [ 1017.235121]  RSP <ffff88040de2bb68>
+>>> [ 1017.482522] ---[ end trace fa18c0d8cd90bd2f ]---
+>>>
+>>> 3.10-rc4 has the same issue. I have not tried any earlier 3.10 kernels
+>>> The system mounts fine using 3.9.5 (also ubuntu ppa)
+>>>
+>>> If I can provide any other info to help, please let me know.
+>>>
+>>> -- =
+
+>>> Torbj=F8rn
+>>>
+>>> _______________________________________________
+>>> xfs mailing list
+>>> xfs@oss.sgi.com
+>>> http://oss.sgi.com/mailman/listinfo/xfs
+>>>
+> Hi,
 >
-> I'm familiar with it and the problems it causes filesystems. What
-> application am I talking about here, for example?
->
-> http://oss.sgi.com/pipermail/xfs/2013-June/027159.html
->
-> Basically, Swift is trying to emulate Direct IO because python
-> does't support Direct IO. Hence Swift is hacking around that problem
-> and causing secondary issues that would never have occurred if
-> Direct IO was used in the first place.
->
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
->
+> Thanks for the insight Eric.
+> I'll compile a kernel with proper debug info, and see if linux-raid =
 
---047d7bf0f41a1e980604df450b8b
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr">ok, I have a simple reproducer. =A0try out the following, =
-noting you&#39;ll obviously have to change the directory pointed to by dnam=
-e:<div><br></div><div><div>libc=3Dctypes.CDLL(ctypes.util.find_library(&#39=
-;c&#39;), use_errno=3DTrue)<br>
-</div><div>falloc=3Dgetattr(libc, &#39;fallocate&#39;)</div><div><br></div>=
-<div>fb<span style=3D"font-family:&#39;courier new&#39;,monospace">#!/usr/b=
-in/python -u</span></div><div><font face=3D"courier new, monospace"><br></f=
-ont></div>
-<div><font face=3D"courier new, monospace">import os</font></div><div><font=
- face=3D"courier new, monospace">import sys</font></div><div><font face=3D"=
-courier new, monospace">import time</font></div><div><font face=3D"courier =
-new, monospace">import ctypes</font></div>
-<div><font face=3D"courier new, monospace">import ctypes.util</font></div><=
-div><font face=3D"courier new, monospace">from tempfile import mkstemp</fon=
-t></div><div><font face=3D"courier new, monospace"><br></font></div><div><f=
-ont face=3D"courier new, monospace">dname =3D &#39;/srv/node/disk0/mjs&#39;=
-</font></div>
-<div><font face=3D"courier new, monospace">fname =3D &#39;foo&#39;</font></=
-div><div><font face=3D"courier new, monospace">fsize =3D 1024</font></div><=
-div><font face=3D"courier new, monospace">nfiles =3D 1000</font></div><div>=
-<font face=3D"courier new, monospace"><br>
-</font></div><div><font face=3D"courier new, monospace">body =3D &#39; &#39=
-; * fsize</font></div><div><font face=3D"courier new, monospace"><br></font=
-></div><div><font face=3D"courier new, monospace">time0 =3D time.time()</fo=
-nt></div>
-<div><font face=3D"courier new, monospace">for i in range(nfiles):</font></=
-div><div><font face=3D"courier new, monospace">=A0 =A0 file_name =3D &#39;%=
-s/%s-%s&#39; % (dname, fname, i)</font></div><div><font face=3D"courier new=
-, monospace">=A0 =A0 fd, tmppath =3D mkstemp(dir=3Ddname)</font></div>
-<div><font face=3D"courier new, monospace">=A0 =A0 falloc(fd, 1, 0, fsize)<=
-/font></div><div><font face=3D"courier new, monospace">=A0 =A0 os.rename(tm=
-ppath, file_name)</font></div><div><font face=3D"courier new, monospace"><b=
-r></font></div>
-<div><font face=3D"courier new, monospace">elapsed =3D time.time() - time0<=
-/font></div><div><font face=3D"courier new, monospace">tbytes =3D fsize * n=
-files</font></div><div><font face=3D"courier new, monospace">rate =3D tbyte=
-s/elapsed/1024/1024</font></div>
-<div><font face=3D"courier new, monospace"><br></font></div><div><font face=
-=3D"courier new, monospace">print &quot;DName: %s&quot; % dname</font></div=
-><div><font face=3D"courier new, monospace">print &quot;Bytes: %d&quot; % (=
-tbytes/1024/1024)</font></div>
-<div><font face=3D"courier new, monospace">print &quot;Time: =A0%.2f secs&q=
-uot; % elapsed</font></div><div><font face=3D"courier new, monospace">print=
- &quot;Rate: =A0%.2f/sec&quot; % rate</font></div></div><div><br></div><div=
- style>
-when I run it I see this:</div><div style><br></div><div style><div><font f=
-ace=3D"courier new, monospace">segerm@az1-sw-object-0006:~$ sudo ./falloc.p=
-y</font></div><div><font face=3D"courier new, monospace">DName: /srv/node/d=
-isk0/mjs</font></div>
-<div><font face=3D"courier new, monospace">Bytes: 9</font></div><div><font =
-face=3D"courier new, monospace">Time: =A05.84 secs</font></div><div><font f=
-ace=3D"courier new, monospace">Rate: =A01.67/sec</font></div><div><br></div=
-><div style>
-and while running collectl I see this:</div><div style><br></div><div style=
-><div><font face=3D"courier new, monospace">#&lt;----CPU[HYPER]-----&gt;&lt=
-;----------Disks-----------&gt;&lt;----------Network----------&gt;</font></=
-div>
-<div><font face=3D"courier new, monospace">#cpu sys inter =A0ctxsw KBRead =
-=A0Reads KBWrit Writes =A0 KBIn =A0PktIn =A0KBOut =A0PktOut</font></div><di=
-v><font face=3D"courier new, monospace">=A0 =A00 =A0 0 =A0 110 =A0 =A0113 =
-=A0 =A0 =A00 =A0 =A0 =A00 =A0 =A0 =A00 =A0 =A0 =A00 =A0 =A0 =A00 =A0 =A0 =
-=A05 =A0 =A0 =A00 =A0 =A0 =A0 3<br>
-</font></div><div><font face=3D"courier new, monospace">=A0 =A01 =A0 0 =A01=
-576 =A0 2874 =A0 =A0 =A00 =A0 =A0 =A00 170240 =A0 =A0665 =A0 =A0 =A00 =A0 =
-=A0 =A03 =A0 =A0 =A00 =A0 =A0 =A0 2</font></div><div><font face=3D"courier =
-new, monospace">=A0 =A04 =A0 3 =A02248 =A0 6623 =A0 =A0 =A00 =A0 =A0 =A00 4=
-06585 =A0 1596 =A0 =A0 =A00 =A0 =A0 =A01 =A0 =A0 =A00 =A0 =A0 =A0 1</font><=
-/div>
-<div><font face=3D"courier new, monospace">=A0 =A04 =A0 3 =A02145 =A0 7680 =
-=A0 =A0 =A00 =A0 =A0 =A00 473600 =A0 1850 =A0 =A0 =A00 =A0 =A0 =A01 =A0 =A0=
- =A00 =A0 =A0 =A0 1</font></div><div><font face=3D"courier new, monospace">=
-=A0 =A02 =A0 1 =A02200 =A0 7406 =A0 =A0 =A00 =A0 =A0 =A00 456633 =A0 1875 =
-=A0 =A0 =A00 =A0 =A0 =A02 =A0 =A0 =A00 =A0 =A0 =A0 1</font></div>
-<div><font face=3D"courier new, monospace">=A0 =A04 =A0 3 =A03696 =A0 7401 =
-=A0 =A0 =A00 =A0 =A0 =A00 454606 =A0 1823 =A0 =A0 =A00 =A0 =A0 =A01 =A0 =A0=
- =A00 =A0 =A0 =A0 1</font></div><div><font face=3D"courier new, monospace">=
-=A0 =A03 =A0 2 =A03877 =A0 7354 =A0 =A0 =A00 =A0 =A0 =A00 453537 =A0 1806 =
-=A0 =A0 =A00 =A0 =A0 =A01 =A0 =A0 =A00 =A0 =A0 =A0 1</font></div>
-<div><font face=3D"courier new, monospace">=A0 =A01 =A0 0 =A01610 =A0 2764 =
-=A0 =A0 =A00 =A0 =A0 =A00 163793 =A0 =A0684 =A0 =A0 =A00 =A0 =A0 =A03 =A0 =
-=A0 =A00 =A0 =A0 =A0 3<br></font></div><div><br></div><div style>This is th=
-e same behavior I&#39;m seeing on swift. =A010K 1KB files X 4kb minimal blo=
-ck size still comes out to a lot less than the multiple GB of writes being =
-reported. =A0Actually since these whole thing only takes a few seconds and =
-I know a single disk can&#39;t write that fast maybe it&#39;s just a bug in=
- the way the kernel is reported allocated preallocated blocks and nothing t=
-o do with XFS? =A0Or iis xfs responsible for the stats?</div>
-<div style><br></div><div style>If I remove the fallocate call I see the ex=
-pected amount of disk traffic.</div><div style><br></div><div style>-mark</=
-div><div><br></div></div></div></div><div class=3D"gmail_extra"><br><br><di=
-v class=3D"gmail_quote">
-On Sat, Jun 15, 2013 at 8:11 PM, Dave Chinner <span dir=3D"ltr">&lt;<a href=
-=3D"mailto:david@fromorbit.com" target=3D"_blank">david@fromorbit.com</a>&g=
-t;</span> wrote:<br><blockquote class=3D"gmail_quote" style=3D"margin:0 0 0=
- .8ex;border-left:1px #ccc solid;padding-left:1ex">
-<div class=3D"im">On Sat, Jun 15, 2013 at 12:22:35PM -0400, Mark Seger wrot=
-e:<br>
-&gt; I was thinking a little color commentary might be helpful from a<br>
-&gt; perspective of what the functionally is that&#39;s driving the need fo=
-r<br>
-&gt; fallocate. =A0I think I mentioned somewhere in this thread that the<br=
+> can make any use of it.
 >
-&gt; application is OpenStack Swift, which is =A0a highly scalable cloud ob=
-ject<br>
-&gt; store.<br>
-<br>
-</div>I&#39;m familiar with it and the problems it causes filesystems. What=
-<br>
-application am I talking about here, for example?<br>
-<br>
-<a href=3D"http://oss.sgi.com/pipermail/xfs/2013-June/027159.html" target=
-=3D"_blank">http://oss.sgi.com/pipermail/xfs/2013-June/027159.html</a><br>
-<br>
-Basically, Swift is trying to emulate Direct IO because python<br>
-does&#39;t support Direct IO. Hence Swift is hacking around that problem<br=
+> -- =
+
+> Torbj=F8rn
 >
-and causing secondary issues that would never have occurred if<br>
-Direct IO was used in the first place.<br>
-<div class=3D"HOEnZb"><div class=3D"h5"><br>
-Cheers,<br>
-<br>
-Dave.<br>
---<br>
-Dave Chinner<br>
-<a href=3D"mailto:david@fromorbit.com">david@fromorbit.com</a><br>
-</div></div></blockquote></div><br></div>
-
---047d7bf0f41a1e980604df450b8b--
-
-
---===============4882438547025343741==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+>
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+--
+Torbj=F8rn
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============4882438547025343741==--
