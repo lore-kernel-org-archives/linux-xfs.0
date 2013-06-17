@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 7E7C77F3F
-	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 11:05:20 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 74B468F8050
-	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 09:05:20 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id zqH2bQEh6MEtcGTP (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 17 Jun 2013 09:05:16 -0700 (PDT)
-Date: Mon, 17 Jun 2013 09:05:15 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 15/27] xfs: reshuffle dir2 definitions around for userspace
-Message-ID: <20130617160515.GC26043@infradead.org>
+	by oss.sgi.com (Postfix) with ESMTP id 3714F29DF8
+	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 13:14:16 -0500 (CDT)
+Date: Mon, 17 Jun 2013 13:14:11 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 18/27] xfs: split out xfs inode operations into
+	separate file
+Message-ID: <20130617181411.GE20932@sgi.com>
 References: <1371032567-21772-1-git-send-email-david@fromorbit.com>
-	<1371032567-21772-16-git-send-email-david@fromorbit.com>
+	<1371032567-21772-19-git-send-email-david@fromorbit.com>
+	<20130612140519.GB28988@infradead.org>
+	<20130613011414.GB29338@dastard> <20130613080009.GL29338@dastard>
+	<20130617155644.GA26043@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1371032567-21772-16-git-send-email-david@fromorbit.com>
+In-Reply-To: <20130617155644.GA26043@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,23 +27,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Wed, Jun 12, 2013 at 08:22:35PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Many of the definitions within xfs_dir2_priv.h are needed in
-> userspace outside libxfs. Definitions within xfs_dir2_priv.h are
-> wholly contained within libxfs, so we need to shuffle some of the
-> definitions around to keep consistency across files shared between
-> user and kernel space.
+Hey Christoph,
 
-I created the xfs_dir2_format.h header so that it would be self
-contained.  Despite not mentioning it in the description this patch
-also moves typedefs out of xfs_dir2_format.h which is something I'd
-rather avoid.  Where in userspace would we need these defintions but
-can't include xfs_dir2_format.h?
+On Mon, Jun 17, 2013 at 08:56:44AM -0700, Christoph Hellwig wrote:
+> On Thu, Jun 13, 2013 at 06:00:09PM +1000, Dave Chinner wrote:
+> > So what I really think needs to happen here first is similar to the
+> > dir2 header file re-org. That is, a header file to define the
+> > format, and a header file to define the in-kernel structures and
+> > APIs....
+> 
+> Yes, I think we need to do this rather sooner than later.  In fact
+> I'd feeling we need to tackle the whole header mess first before
+> splitting the .c files.  Making sure the on-disk format is in one
+> or just a few headers is the most important bit of that.
+> 
+> These days I'm actually of the opinion that we probably should be
+> even more drastic about cutting the number of headers.  For the
+> on disk format a xfs_format.h for all the regular on disk format and
+> maybe and xfs_log_format.h should be more than enough.
+
+I like the idea of having the entire on-disk format in just a few files.  It
+would be a nice clean up.  I don't know if splitting the .c files needs to wait
+on it though.
+
+> But back to the _ops.c naming.  I really hate it and the best counter
+> proposals I can come up with is to add a _common postfix to every file
+> intended to be shared with userspace.
+
+I don't understand what you don't like about the _ops.c naming... 
+
+> Using a directly also would make
+> sense, but for some reason Kbuild always had problems with modules built
+> from multiple directories and I'm more than glad that we finally managed
+> to get rid of the subdirectories.
+
+but I really like the libxfs subdirectory idea.  Any idea if the Kbuild issues
+are sorted out?
+
+-Ben
 
 _______________________________________________
 xfs mailing list
