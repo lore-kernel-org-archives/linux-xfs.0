@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 442F429DF8
-	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 16:53:54 -0500 (CDT)
-Date: Mon, 17 Jun 2013 16:53:53 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B771129DF8
+	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 16:58:06 -0500 (CDT)
+Date: Mon, 17 Jun 2013 16:58:05 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] xfs: return FIEMAP_EXTENT_UNKNOWN for delayed
-	allocation extent
-Message-ID: <20130617215353.GF20932@sgi.com>
-References: <51B08D71.7090404@oracle.com>
+Subject: Re: [PATCH] xfs: Remove redundant error variable from
+	xfs_growfs_data_private()
+Message-ID: <20130617215805.GH20932@sgi.com>
+References: <51924F2D.8030706@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <51B08D71.7090404@oracle.com>
+In-Reply-To: <51924F2D.8030706@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,25 +24,19 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Jeff Liu <jeff.liu@oracle.com>
-Cc: xfs@oss.sgi.com
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Hey Jeff,
-
-On Thu, Jun 06, 2013 at 06:24:01AM -0700, Jeff Liu wrote:
+On Tue, May 14, 2013 at 10:50:21PM +0800, Jeff Liu wrote:
 > From: Jie Liu <jeff.liu@oracle.com>
 > 
-> For FIEMAP ioctl(2), if an extent is in delayed allocation
-> state, we need to return the FIEMAP_EXTENT_UNKNOWN flag except
-> the FIEMAP_EXTENT_DELALLOC because its data location is unknown.
+> Commit eab4e633 "xfs: uncached buffer reads need to return an error".
+> 
+> Remove redundant error variable, using the function level error variable
+> to store bp->b_error instead.
 > 
 > Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 
-Looks fine.  Is there an email thread I can reference?
-
 Reviewed-by: Ben Myers <bpm@sgi.com>
-
-Thanks,
-	Ben
 
 _______________________________________________
 xfs mailing list
