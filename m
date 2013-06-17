@@ -1,15 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DCFF929DF8
-	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 13:37:50 -0500 (CDT)
-Date: Mon, 17 Jun 2013 13:37:50 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: XFS (vdb): Corruption detected. Unmount and run xfs_repair
-Message-ID: <20130617183750.GI32736@sgi.com>
-References: <20130615023620.GA23586@localhost> <20130615030928.GC29338@dastard>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C3B1C29DF8
+	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 14:28:11 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 780BBAC001
+	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 12:28:08 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id x8O7AXBcgskRpyYq for
+	<xfs@oss.sgi.com>; Mon, 17 Jun 2013 12:28:04 -0700 (PDT)
+Message-ID: <51BF6447.9060608@redhat.com>
+Date: Mon, 17 Jun 2013 15:32:23 -0400
+From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130615030928.GC29338@dastard>
+Subject: Re: [PATCH 27/27] xfs: fix issues that cause userspace warnings
+References: <1371032567-21772-1-git-send-email-david@fromorbit.com>
+	<1371032567-21772-28-git-send-email-david@fromorbit.com>
+In-Reply-To: <1371032567-21772-28-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,42 +28,61 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Fengguang Wu <fengguang.wu@intel.com>
-Cc: linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.cz>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Hey Fengguang,
-
-On Sat, Jun 15, 2013 at 01:09:28PM +1000, Dave Chinner wrote:
-> [cc xfs@oss.sgi.com, where XFS bug reports should go]
+On 06/12/2013 06:22 AM, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> On Sat, Jun 15, 2013 at 10:36:20AM +0800, Fengguang Wu wrote:
-> > [   74.570969] XFS (vdb): bad magic number
-> > [   74.573837] ffff8800170ed000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-				     X  F  S  B
-
-That's the magic it's looking for...
-
-> > [   74.579266] ffff8800170ed010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-> > [   74.584581] ffff8800170ed020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-> > [   74.590036] ffff8800170ed030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-> > [   74.595386] XFS (vdb): Internal error xfs_sb_read_verify at line 730 of file /c/kernel-tests/src/stable/fs/xfs/xfs_mount.c.  Caller 0xffffffff81309514
-> .....
-> > [   74.692206] XFS (vdb): Corruption detected. Unmount and run xfs_repair
-> > [   74.696000] XFS (vdb): SB validate failed with error 22.
+> Some of the code shared with userspace causes compilation warnings
+> from things turned off in the kernel code, such as differences in
+> variable signedness. Fix those issues.
 > 
-> It's obviously not an XFS filesystem you are asking the kernel to
-> mount, so it's perfectly valid to throw a corruption error at you.
-> What it has actually thrown is EWRONGFS, but because you've asked
-> the kernel specifically to mount the device as an XFS filesystem,
-> the kernel is explicitly telling you that it's a corrupt
-> filesystem... :)
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_attr_remote.c |    8 ++++----
+>  fs/xfs/xfs_bmap.c        |    3 ---
+>  fs/xfs/xfs_da_btree.c    |    6 +++---
+>  fs/xfs/xfs_dir2_node.c   |    2 ++
+>  fs/xfs/xfs_ialloc.c      |    2 +-
+>  fs/xfs/xfs_rtalloc.c     |    4 ++--
+>  6 files changed, 12 insertions(+), 13 deletions(-)
+> 
+...
+>  
+> diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
+> index 319d9e4..9831eff 100644
+> --- a/fs/xfs/xfs_ialloc.c
+> +++ b/fs/xfs/xfs_ialloc.c
+> @@ -1342,7 +1342,7 @@ xfs_imap(
+>  	xfs_agblock_t	cluster_agbno;	/* first block in inode cluster */
+>  	int		error;	/* error code */
+>  	int		offset;	/* index of inode in its buffer */
+> -	int		offset_agbno;	/* blks from chunk start to inode */
+> +	xfs_agino_t	offset_agbno;	/* blks from chunk start to inode */
 
-We did have an issue in this area in 3.7 which fixed in commit aeb4f20a that
-made 3.8.  We were returning EFSCORRUPTED instead of EWRONGFS.  Maybe that's
-not your kernel.
+xfs_agblock_t ?
 
-Regards,
-	Ben
+Brian
+
+>  	ASSERT(ino != NULLFSINO);
+>  
+> diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+> index 98dc670..c9a9a42 100644
+> --- a/fs/xfs/xfs_rtalloc.c
+> +++ b/fs/xfs/xfs_rtalloc.c
+> @@ -736,8 +736,8 @@ xfs_rtallocate_range(
+>  {
+>  	xfs_rtblock_t	end;		/* end of the allocated extent */
+>  	int		error;		/* error value */
+> -	xfs_rtblock_t	postblock;	/* first block allocated > end */
+> -	xfs_rtblock_t	preblock;	/* first block allocated < start */
+> +	xfs_rtblock_t	postblock = 0;	/* first block allocated > end */
+> +	xfs_rtblock_t	preblock = 0;	/* first block allocated < start */
+>  
+>  	end = start + len - 1;
+>  	/*
+> 
 
 _______________________________________________
 xfs mailing list
