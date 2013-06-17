@@ -1,34 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 14BAD29DF8
-	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 15:28:24 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id F33418F8037
-	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 13:28:20 -0700 (PDT)
-Received: from mail-wg0-f48.google.com (mail-wg0-f48.google.com
-	[74.125.82.48]) by cuda.sgi.com with ESMTP id 9U8udE5GI6osUG5G
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 17 Jun 2013 13:28:20 -0700 (PDT)
-Received: by mail-wg0-f48.google.com with SMTP id f11so2793090wgh.27
-	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 13:28:19 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAC2B=ZGm4W=oFY+8sWAefhH79qK5N7yma4qQh_AQaOGiQDUWhw@mail.gmail.com>
-References: <CAC2B=ZFP_Fg34aFpk857stgB7MGcrYs9tybRS-ttw1CXNeU41Q@mail.gmail.com>
-	<20130615020414.GB29338@dastard>
-	<CAC2B=ZEUkd+ADnQLUKj9S-3rdo2=93WbW0tbLbwwHUvkh6v7Rw@mail.gmail.com>
-	<CAC2B=ZGgr5WPWOEehHDHKekM8yHgQ3QS4HMzM8+j217AfEoPyQ@mail.gmail.com>
-	<20130616001130.GE29338@dastard>
-	<CAC2B=ZFZskLnp5baVJK+R1xrpOfTkr1QXpA9jyHvxfk5Wd4yDg@mail.gmail.com>
-	<419435719.1662203.1371431489790.JavaMail.root@redhat.com>
-	<20130617024603.GJ29338@dastard>
-	<1597962722.1767244.1371447710942.JavaMail.root@redhat.com>
-	<CAC2B=ZENLd7hoP=U08hyb6xFw6ye0nL5MMW+iDnTXTcoKCYEvA@mail.gmail.com>
-	<20130617111347.GL29338@dastard>
-	<CAC2B=ZGm4W=oFY+8sWAefhH79qK5N7yma4qQh_AQaOGiQDUWhw@mail.gmail.com>
-Date: Mon, 17 Jun 2013 22:28:19 +0200
-Message-ID: <CAAxjCEwhwqFhPbJsJGYUCqwF5qc7iZpNJpELOkR-9NNuPzFxBw@mail.gmail.com>
-Subject: Re: definitions for /proc/fs/xfs/stat
-From: Stefan Ring <stefanrin@gmail.com>
+	by oss.sgi.com (Postfix) with ESMTP id 96BF429DF8
+	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 15:38:46 -0500 (CDT)
+Received: from eagdhcp-232-136.americas.sgi.com
+	(eagdhcp-232-136.americas.sgi.com [128.162.232.136])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 77B978F8054
+	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 13:38:46 -0700 (PDT)
+Received: from eagdhcp-232-136.americas.sgi.com (localhost [127.0.0.1])
+	by eagdhcp-232-136.americas.sgi.com (8.14.5/8.14.5) with ESMTP id
+	r5HKcl1F002988
+	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 15:38:47 -0500 (CDT)
+	(envelope-from tinguely@sgi.com)
+Message-Id: <20130617203503.472644581@sgi.com>
+Date: Mon, 17 Jun 2013 15:35:57 -0500
+From: Mark Tinguely <tinguely@sgi.com>
+Subject: [PATCH v4] xfs: fix the symbolic link assert in xfs_ifree
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,22 +23,157 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Seger <mjseger@gmail.com>
-Cc: Nathan Scott <nathans@redhat.com>, Linux fs XFS <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-> I asked around and people believe the cache is on the order of a few GB and
-> the test ran I was intentionally large enough to overshadow any cache
-> effects, running for about a minute and doing 100K 1K file creates.  The
-> disk write data was close to a sustained 475MB/sec and would have easily
-> filled the cache in the first handful of seconds which would have produced
-> enough backpressure to slow down the write rate which it never did.
+a
+Content-Disposition: inline; filename=v4-xfs-fix-assert-in-xfs_ifree.patch
 
-If a limited number of blocks gets written over and over, you won't
-ever fill the cache.
+Adding an extended attribute to a symbolic link can force that
+link to an remote extent. xfs_inactive() incorrectly assumes
+that any symbolic link small enough to be in the inode core
+is incore, resulting in the remote extent to not be removed.
+xfs_ifree() will assert on presence of this leaked remote extent.
+
+Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+---
+ v4:
+   changed pathlen to int.
+   print inode in hex
+   fixed the trace to be xfs_inactive_symlink in source and trace code.
+
+ fs/xfs/xfs_symlink.c  |   48 ++++++++++++++++++++++++++++++++++++++++++++++--
+ fs/xfs/xfs_symlink.h  |    2 +-
+ fs/xfs/xfs_trace.h    |    1 +
+ fs/xfs/xfs_vnodeops.c |   15 +++------------
+ 4 files changed, 51 insertions(+), 15 deletions(-)
+
+Index: b/fs/xfs/xfs_symlink.c
+===================================================================
+--- a/fs/xfs/xfs_symlink.c
++++ b/fs/xfs/xfs_symlink.c
+@@ -585,7 +585,7 @@ xfs_symlink(
+ /*
+  * Free a symlink that has blocks associated with it.
+  */
+-int
++STATIC int
+ xfs_inactive_symlink_rmt(
+ 	xfs_inode_t	*ip,
+ 	xfs_trans_t	**tpp)
+@@ -606,7 +606,7 @@ xfs_inactive_symlink_rmt(
+ 
+ 	tp = *tpp;
+ 	mp = ip->i_mount;
+-	ASSERT(ip->i_d.di_size > XFS_IFORK_DSIZE(ip));
++	ASSERT(ip->i_df.if_flags & XFS_IFEXTENTS);
+ 	/*
+ 	 * We're freeing a symlink that has some
+ 	 * blocks allocated to it.  Free the
+@@ -720,3 +720,47 @@ xfs_inactive_symlink_rmt(
+  error0:
+ 	return error;
+ }
++
++/*
++ * xfs_inactive_symlink - free a symlink
++ */
++int
++xfs_inactive_symlink(
++	struct xfs_inode	*ip,
++	struct xfs_trans	**tp)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++	int			pathlen;
++
++	trace_xfs_inactive_symlink(ip);
++
++	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
++
++	if (XFS_FORCED_SHUTDOWN(mp))
++		return XFS_ERROR(EIO);
++
++	/*
++	 * Zero length symlinks _can_ exist.
++	 */
++	pathlen = (int)ip->i_d.di_size;
++	if (!pathlen)
++		return 0;
++
++	if (pathlen < 0 || pathlen > MAXPATHLEN) {
++		xfs_alert(mp, "%s: inode (%llx) bad symlink length (%d)",
++			 __func__, (unsigned long long)ip->i_ino, pathlen);
++		ASSERT(0);
++		return XFS_ERROR(EFSCORRUPTED);
++	}
++
++	if (ip->i_df.if_flags & XFS_IFINLINE) {
++		if (ip->i_df.if_bytes > 0)
++			xfs_idata_realloc(ip, -(ip->i_df.if_bytes),
++					  XFS_DATA_FORK);
++		ASSERT(ip->i_df.if_bytes == 0);
++		return 0;
++	}
++
++	/* remove the remote symlink */
++	return xfs_inactive_symlink_rmt(ip, tp);
++}
+Index: b/fs/xfs/xfs_symlink.h
+===================================================================
+--- a/fs/xfs/xfs_symlink.h
++++ b/fs/xfs/xfs_symlink.h
+@@ -60,7 +60,7 @@ extern const struct xfs_buf_ops xfs_syml
+ int xfs_symlink(struct xfs_inode *dp, struct xfs_name *link_name,
+ 		const char *target_path, umode_t mode, struct xfs_inode **ipp);
+ int xfs_readlink(struct xfs_inode *ip, char *link);
+-int xfs_inactive_symlink_rmt(struct xfs_inode *ip, struct xfs_trans **tpp);
++int xfs_inactive_symlink(struct xfs_inode *ip, struct xfs_trans **tpp);
+ 
+ #endif /* __KERNEL__ */
+ #endif /* __XFS_SYMLINK_H */
+Index: b/fs/xfs/xfs_trace.h
+===================================================================
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -571,6 +571,7 @@ DEFINE_INODE_EVENT(xfs_iget_miss);
+ DEFINE_INODE_EVENT(xfs_getattr);
+ DEFINE_INODE_EVENT(xfs_setattr);
+ DEFINE_INODE_EVENT(xfs_readlink);
++DEFINE_INODE_EVENT(xfs_inactive_symlink);
+ DEFINE_INODE_EVENT(xfs_alloc_file_space);
+ DEFINE_INODE_EVENT(xfs_free_file_space);
+ DEFINE_INODE_EVENT(xfs_readdir);
+Index: b/fs/xfs/xfs_vnodeops.c
+===================================================================
+--- a/fs/xfs/xfs_vnodeops.c
++++ b/fs/xfs/xfs_vnodeops.c
+@@ -322,18 +322,9 @@ xfs_inactive(
+ 	xfs_trans_ijoin(tp, ip, 0);
+ 
+ 	if (S_ISLNK(ip->i_d.di_mode)) {
+-		/*
+-		 * Zero length symlinks _can_ exist.
+-		 */
+-		if (ip->i_d.di_size > XFS_IFORK_DSIZE(ip)) {
+-			error = xfs_inactive_symlink_rmt(ip, &tp);
+-			if (error)
+-				goto out_cancel;
+-		} else if (ip->i_df.if_bytes > 0) {
+-			xfs_idata_realloc(ip, -(ip->i_df.if_bytes),
+-					  XFS_DATA_FORK);
+-			ASSERT(ip->i_df.if_bytes == 0);
+-		}
++		error = xfs_inactive_symlink(ip, &tp);
++		if (error)
++			goto out_cancel;
+ 	} else if (truncate) {
+ 		ip->i_d.di_size = 0;
+ 		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+
 
 _______________________________________________
 xfs mailing list
