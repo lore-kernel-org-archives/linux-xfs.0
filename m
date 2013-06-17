@@ -1,20 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E60337F37
-	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 10:19:03 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 7C3D47F37
+	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 10:56:51 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8D4BCAC003
-	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 08:19:00 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 0K1JUDi7BXxo3ZLW for <xfs@oss.sgi.com>;
-	Mon, 17 Jun 2013 08:18:59 -0700 (PDT)
-Message-ID: <51BF28E3.6020102@sandeen.net>
-Date: Mon, 17 Jun 2013 10:18:59 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 64325304032
+	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 08:56:48 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id qK2A7jEk5oPl8o4Q (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 17 Jun 2013 08:56:46 -0700 (PDT)
+Date: Mon, 17 Jun 2013 08:56:44 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 18/27] xfs: split out xfs inode operations into separate
+	file
+Message-ID: <20130617155644.GA26043@infradead.org>
+References: <1371032567-21772-1-git-send-email-david@fromorbit.com>
+	<1371032567-21772-19-git-send-email-david@fromorbit.com>
+	<20130612140519.GB28988@infradead.org>
+	<20130613011414.GB29338@dastard> <20130613080009.GL29338@dastard>
 MIME-Version: 1.0
-Subject: Re: linux software raid5 on lvm: sunit/swidth required?
-References: <57FC0B2322184044812B39B9440D8AF662898079AA@MBX1.vi.corp>
-In-Reply-To: <57FC0B2322184044812B39B9440D8AF662898079AA@MBX1.vi.corp>
+Content-Disposition: inline
+In-Reply-To: <20130613080009.GL29338@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,41 +33,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Thomas Molszich <Thomas.Molszich@vanderlande.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On 6/17/13 10:06 AM, Thomas Molszich wrote:
-> Hello all,
-> 
->  
-> 
-> At present, does one still need to calculate and pass the sunit/swidth to mkfs.xfs or does xfs calculate
-> 
-> All this on its own?
-> 
-> Xfsprogs 3.1.7, linked against libblkid, kernel 3.2.48 (Ubuntu 12.04 LTS), 6x3000GB Hitachi 4k sectors
-> 
-> with 512b emulation, partitions and lvm 4k aligned already.
+On Thu, Jun 13, 2013 at 06:00:09PM +1000, Dave Chinner wrote:
+> So what I really think needs to happen here first is similar to the
+> dir2 header file re-org. That is, a header file to define the
+> format, and a header file to define the in-kernel structures and
+> APIs....
 
-You've not provided much info, but lvm does export stripe geometry if present, and mkfs.xfs will pick it up from lvm.
+Yes, I think we need to do this rather sooner than later.  In fact
+I'd feeling we need to tackle the whole header mess first before
+splitting the .c files.  Making sure the on-disk format is in one
+or just a few headers is the most important bit of that.
 
-run mkfs.xfs and it'll tell you what it used for stripe geometry if any, and you'll know if it's right.  :)
+These days I'm actually of the opinion that we probably should be
+even more drastic about cutting the number of headers.  For the
+on disk format a xfs_format.h for all the regular on disk format and
+maybe and xfs_log_format.h should be more than enough.
 
--Eric
- 
-> 
-> If manual calculation is still required, where can I read up on that?
-> 
->  
-> 
-> With kind regards
-> 
->  
-> 
-> Thomas Molszich
-> 
->  
-> 
+But back to the _ops.c naming.  I really hate it and the best counter
+proposals I can come up with is to add a _common postfix to every file
+intended to be shared with userspace.  Using a directly also would make
+sense, but for some reason Kbuild always had problems with modules built
+from multiple directories and I'm more than glad that we finally managed
+to get rid of the subdirectories.
 
 _______________________________________________
 xfs mailing list
