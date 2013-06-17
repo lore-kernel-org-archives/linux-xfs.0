@@ -1,30 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6A54B7F37
-	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 06:19:47 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0094AAC004
-	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 04:19:43 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	Xx0o3gYeF4i5f1GV for <xfs@oss.sgi.com>;
-	Mon, 17 Jun 2013 04:19:42 -0700 (PDT)
-Date: Mon, 17 Jun 2013 21:19:40 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: definitions for /proc/fs/xfs/stat
-Message-ID: <20130617111940.GM29338@dastard>
-References: <CAC2B=ZFP_Fg34aFpk857stgB7MGcrYs9tybRS-ttw1CXNeU41Q@mail.gmail.com>
-	<20130615020414.GB29338@dastard>
-	<CAC2B=ZEUkd+ADnQLUKj9S-3rdo2=93WbW0tbLbwwHUvkh6v7Rw@mail.gmail.com>
-	<CAC2B=ZGgr5WPWOEehHDHKekM8yHgQ3QS4HMzM8+j217AfEoPyQ@mail.gmail.com>
-	<20130616001130.GE29338@dastard>
-	<CAC2B=ZFZskLnp5baVJK+R1xrpOfTkr1QXpA9jyHvxfk5Wd4yDg@mail.gmail.com>
-	<419435719.1662203.1371431489790.JavaMail.root@redhat.com>
-	<20130617024603.GJ29338@dastard>
-	<1597962722.1767244.1371447710942.JavaMail.root@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 61F077F37
+	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 07:12:12 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0B056AC004
+	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 05:12:08 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id UMbl4kHElzNAkxXt for
+	<xfs@oss.sgi.com>; Mon, 17 Jun 2013 05:12:08 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r5HCC8nZ019893
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 08:12:08 -0400
+Message-ID: <51BEFE1D.3000604@redhat.com>
+Date: Mon, 17 Jun 2013 08:16:29 -0400
+From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1597962722.1767244.1371447710942.JavaMail.root@redhat.com>
+Subject: Re: [PATCH] xfs: fix sgid inheritance for subdirectories inheriting
+	default acls
+References: <1371238877-5722-1-git-send-email-cmaiolino@redhat.com>
+In-Reply-To: <1371238877-5722-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,57 +33,152 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Nathan Scott <nathans@redhat.com>
-Cc: Mark Seger <mjseger@gmail.com>, xfs@oss.sgi.com
+To: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On Mon, Jun 17, 2013 at 01:41:50AM -0400, Nathan Scott wrote:
-> Hey Dave,
+On 06/14/2013 03:41 PM, Carlos Maiolino wrote:
+> XFS removes sgid bits of subdirectories created under a directory containing a
+> default acl.
 > 
-> ----- Original Message -----
-> > ...
-> > Must be an old version of RHEL6, because 6.4 doesn't do any IO at
-> > all, same as upstream. This test workload is purely a metadata only
-> > workload (no data is written) and so it all gets gathered up by
-> > delayed logging.
+> When a default acl is set, it implies xfs to call xfs_setattr_nonsize() in its
+> code path. Such function is shared among mkdir and chmod system calls, and
+> does some checks unneeded by mkdir (calling inode_change_ok()). Such checks
+> remove sgid bit from the inode after it has been granted. So, this patch wraps
+> up these checks to be used only in chmod path.
 > 
-> *nod* - RHEL6.3.
+> Also, chmod should not remove sgid bit from an inode if this is a directory, so,
+> it adds a check if S_ISDIR is set in the inode mode, into xfs_setattr_nonsize()
 > 
-> > > I think it is still possible, FWIW.  One could use python ctypes (as in
-> > > Marks test program) and achieve a page-aligned POSIX memalign,
-> > 
-> > I wasn't aware you could get memalign() through python at all. I
-> > went looking for this exact solution a couple of month ago when
-> > these problems started to be reported and couldn't find anything
-> > ...
+> Done that, xfs_setattr_mode() doesn't need to re-check for group id and
+> capabilities permissions, this only implies in another try to remove sgid bit
+> from the directories. Such check is already done either on inode_change_ok() or
+> xfs_setattr_nonsize().
 > 
-> Yes, on reflection it doesn't jive too well with the way python wants
-> to do reads, in particular - os.read takes a file and a size, there's
-> no buffer exposed at the API level (for input).
+> This addresses SGI bug 280:
+> http://oss.sgi.com/bugzilla/show_bug.cgi?id=280
 > 
-> It would need to be a separate python module to the core set I guess
-> (with a C component), and a slightly different API - or at least some
-> additional APIs which can take in an aligned buffer, rather than just
-> allocating one each time - but I believe it's still feasible.
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> ---
 
-Oh, there were modules written to do this years ago. e.g this from
-2006:
+Hi Carlos,
 
-https://pypi.python.org/pypi/directio/1.0
+A couple comments, mostly aesthetic...
 
-There were even patches to provide a native interface in 2004, but
-they got shot down, like all the future enhancement requests that
-have happened since, mainly because the python maintainers don't
-beleive that Direct IO is necessary.
+>  fs/xfs/xfs_iops.c |   51 ++++++++++++++++++++++++++++++++++-----------------
+>  1 files changed, 34 insertions(+), 17 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index ca9ecaa..5c9c505 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -467,9 +467,6 @@ xfs_setattr_mode(
+>  	ASSERT(tp);
+>  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+>  
+> -	if (!in_group_p(inode->i_gid) && !capable(CAP_FSETID))
+> -		mode &= ~S_ISGID;
+> -
+>  	ip->i_d.di_mode &= S_IFMT;
+>  	ip->i_d.di_mode |= mode & ~S_IFMT;
+>  
+> @@ -477,23 +474,20 @@ xfs_setattr_mode(
+>  	inode->i_mode |= mode & ~S_IFMT;
+>  }
+>  
+> +/* Check inode permissions and filesystem errors
+> + *
+> + * Wrapper to some pre-checks needed while changing
+> + * inode attributes
+> + */
+>  int
+> -xfs_setattr_nonsize(
+> +xfs_setattr_setup(
+>  	struct xfs_inode	*ip,
+>  	struct iattr		*iattr,
+>  	int			flags)
+>  {
+>  	xfs_mount_t		*mp = ip->i_mount;
+>  	struct inode		*inode = VFS_I(ip);
+> -	int			mask = iattr->ia_valid;
+> -	xfs_trans_t		*tp;
+>  	int			error;
+> -	uid_t			uid = 0, iuid = 0;
+> -	gid_t			gid = 0, igid = 0;
+> -	struct xfs_dquot	*udqp = NULL, *gdqp = NULL;
+> -	struct xfs_dquot	*olddquot1 = NULL, *olddquot2 = NULL;
+> -
+> -	trace_xfs_setattr(ip);
+>  
+>  	if (mp->m_flags & XFS_MOUNT_RDONLY)
+>  		return XFS_ERROR(EROFS);
+> @@ -505,6 +499,27 @@ xfs_setattr_nonsize(
+>  	if (error)
+>  		return XFS_ERROR(error);
+>  
 
-I mean, Linus said Direct IO is for deranged monkeys, so nobody
-should ever use direct IO, right? ;)
+Is it safe to package up these other checks as well out of that inherit
+code path (i.e., the read-only and shutdown check)?
 
-Cheers,
+> +	return xfs_setattr_nonsize(ip, iattr, flags);
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+It seems a little confusing (IMO) for a _setup() function to go and do
+work by calling xfs_setattr_nonsize(). What about creating the helper
+check function, but calling it and xfs_attr_nonsize() from
+xfs_vn_setattr() (assuming _setup() doesn't return an error)?
+
+Brian
+
+> +}
+> +
+> +int
+> +xfs_setattr_nonsize(
+> +	struct xfs_inode	*ip,
+> +	struct iattr		*iattr,
+> +	int			flags)
+> +{
+> +	xfs_mount_t		*mp = ip->i_mount;
+> +	struct inode		*inode = VFS_I(ip);
+> +	int			mask = iattr->ia_valid;
+> +	xfs_trans_t		*tp;
+> +	int			error;
+> +	uid_t			uid = 0, iuid = 0;
+> +	gid_t			gid = 0, igid = 0;
+> +	struct xfs_dquot	*udqp = NULL, *gdqp = NULL;
+> +	struct xfs_dquot	*olddquot1 = NULL, *olddquot2 = NULL;
+> +
+> +	trace_xfs_setattr(ip);
+> +
+>  	ASSERT((mask & ATTR_SIZE) == 0);
+>  
+>  	/*
+> @@ -592,11 +607,13 @@ xfs_setattr_nonsize(
+>  		 * CAP_FSETID overrides the following restrictions:
+>  		 *
+>  		 * The set-user-ID and set-group-ID bits of a file will be
+> -		 * cleared upon successful return from chown()
+> +		 * cleared upon successful return from chown().
+> +		 * Of a directory, these bits should be kept.
+>  		 */
+> -		if ((ip->i_d.di_mode & (S_ISUID|S_ISGID)) &&
+> -		    !capable(CAP_FSETID))
+> -			ip->i_d.di_mode &= ~(S_ISUID|S_ISGID);
+> +		if (!S_ISDIR(inode->i_mode))
+> +			if ((ip->i_d.di_mode & (S_ISUID|S_ISGID)) &&
+> +			    !capable(CAP_FSETID))
+> +				ip->i_d.di_mode &= ~(S_ISUID|S_ISGID);
+>  
+>  		/*
+>  		 * Change the ownerships and register quota modifications
+> @@ -915,7 +932,7 @@ xfs_vn_setattr(
+>  {
+>  	if (iattr->ia_valid & ATTR_SIZE)
+>  		return -xfs_setattr_size(XFS_I(dentry->d_inode), iattr, 0);
+> -	return -xfs_setattr_nonsize(XFS_I(dentry->d_inode), iattr, 0);
+> +	return -xfs_setattr_setup(XFS_I(dentry->d_inode), iattr, 0);
+>  }
+>  
+>  STATIC int
+> 
 
 _______________________________________________
 xfs mailing list
