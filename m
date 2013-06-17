@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DE7C17F37
-	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 11:02:32 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D4D598F804B
-	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 09:02:29 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 7E7C77F3F
+	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 11:05:20 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 74B468F8050
+	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 09:05:20 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id iVZJktbC1bnNDu2g (version=TLSv1
+	by cuda.sgi.com with ESMTP id zqH2bQEh6MEtcGTP (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 17 Jun 2013 09:02:29 -0700 (PDT)
-Date: Mon, 17 Jun 2013 09:02:28 -0700
+	Mon, 17 Jun 2013 09:05:16 -0700 (PDT)
+Date: Mon, 17 Jun 2013 09:05:15 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 19/27] xfs: consolidate xfs_vnodeops.c into xfs_inode_ops.c
-Message-ID: <20130617160228.GB26043@infradead.org>
+Subject: Re: [PATCH 15/27] xfs: reshuffle dir2 definitions around for userspace
+Message-ID: <20130617160515.GC26043@infradead.org>
 References: <1371032567-21772-1-git-send-email-david@fromorbit.com>
-	<1371032567-21772-20-git-send-email-david@fromorbit.com>
-	<20130612135916.GA28988@infradead.org>
-	<20130613013907.GC29338@dastard>
+	<1371032567-21772-16-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130613013907.GC29338@dastard>
+In-Reply-To: <1371032567-21772-16-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,40 +31,22 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Thu, Jun 13, 2013 at 11:39:07AM +1000, Dave Chinner wrote:
-> i.e:
+On Wed, Jun 12, 2013 at 08:22:35PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> 	kernel only -> kernel only -> shared with libxfs
-> 
-> Once there's a clear boundary in the kernel code,
-> merging/simplifying stuff on either side of the boundary is easy to
-> do, but it's a secondary step. I'd consider this something for the
-> 3.12 cycle, not the upcoming 3.11 cycle.
+> Many of the definitions within xfs_dir2_priv.h are needed in
+> userspace outside libxfs. Definitions within xfs_dir2_priv.h are
+> wholly contained within libxfs, so we need to shuffle some of the
+> definitions around to keep consistency across files shared between
+> user and kernel space.
 
-Much better.
-
-Btw, especially in inode land we should probably share even less code
-with userspace.  Besides my old patches to kill the struct xfs_inode
-abuse in repair phase 7 there isn't too much use of it left.
-
-The db code uses inodes as temporary objects in the attrset code which
-looks everything but efficient, and the mkfs and repair code use it to
-create new files/directories.  Not quite sure bringing in all the kernel
-code there makes so much sense given that we have other infrastructure
-for a lot of these in userspace anyway.
-
-> FWIW, now that I have the shared files in almost perfect sync, it
-> makes it much easier to make the change in the kernel tree, take the
-> patch, apply a couple of sed filters to it and then apply it
-> directly to the xfsprogs tree. I only have to do the work once now,
-> and so it's much faster to restructure the code now.
-
-I'm very happy to see this as I'd been aiming at it for a while.
-
-Any chance you can add a script to pull in kernel changes automatically
-while you're at it?
+I created the xfs_dir2_format.h header so that it would be self
+contained.  Despite not mentioning it in the description this patch
+also moves typedefs out of xfs_dir2_format.h which is something I'd
+rather avoid.  Where in userspace would we need these defintions but
+can't include xfs_dir2_format.h?
 
 _______________________________________________
 xfs mailing list
