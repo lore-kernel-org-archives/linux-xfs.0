@@ -1,19 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5E1A57F37
-	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 09:53:58 -0500 (CDT)
-Date: Mon, 17 Jun 2013 09:53:57 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 1/3] xfs: don't shutdown log recovery on validation errors
-Message-ID: <20130617145357.GC32736@sgi.com>
-References: <20130613010441.GX20932@sgi.com> <20130613020827.GG29338@dastard>
-	<20130613220903.GA20932@sgi.com> <20130614001306.GM29338@dastard>
-	<20130614160940.GA32736@sgi.com> <51BB41AD.4050303@sandeen.net>
-	<20130614190850.GB20932@sgi.com> <51BB6C7C.6050300@sandeen.net>
-	<20130614194453.GC20932@sgi.com> <20130615005639.GZ29338@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id BF5D37F37
+	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 09:58:25 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0971BAC003
+	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 07:58:24 -0700 (PDT)
+Received: from mail-qe0-f47.google.com (mail-qe0-f47.google.com
+	[209.85.128.47]) by cuda.sgi.com with ESMTP id 5aPQ8tWQYexmRvs9
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 17 Jun 2013 07:58:23 -0700 (PDT)
+Received: by mail-qe0-f47.google.com with SMTP id 1so1710098qec.6
+	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 07:57:58 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130615005639.GZ29338@dastard>
+In-Reply-To: <20130617111347.GL29338@dastard>
+References: <CAC2B=ZFP_Fg34aFpk857stgB7MGcrYs9tybRS-ttw1CXNeU41Q@mail.gmail.com>
+	<20130615020414.GB29338@dastard>
+	<CAC2B=ZEUkd+ADnQLUKj9S-3rdo2=93WbW0tbLbwwHUvkh6v7Rw@mail.gmail.com>
+	<CAC2B=ZGgr5WPWOEehHDHKekM8yHgQ3QS4HMzM8+j217AfEoPyQ@mail.gmail.com>
+	<20130616001130.GE29338@dastard>
+	<CAC2B=ZFZskLnp5baVJK+R1xrpOfTkr1QXpA9jyHvxfk5Wd4yDg@mail.gmail.com>
+	<419435719.1662203.1371431489790.JavaMail.root@redhat.com>
+	<20130617024603.GJ29338@dastard>
+	<1597962722.1767244.1371447710942.JavaMail.root@redhat.com>
+	<CAC2B=ZENLd7hoP=U08hyb6xFw6ye0nL5MMW+iDnTXTcoKCYEvA@mail.gmail.com>
+	<20130617111347.GL29338@dastard>
+Date: Mon, 17 Jun 2013 10:57:58 -0400
+Message-ID: <CAC2B=ZGm4W=oFY+8sWAefhH79qK5N7yma4qQh_AQaOGiQDUWhw@mail.gmail.com>
+Subject: Re: definitions for /proc/fs/xfs/stat
+From: Mark Seger <mjseger@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,119 +36,73 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============8415301145236029324=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Dave Jones <davej@redhat.com>, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+Cc: Nathan Scott <nathans@redhat.com>, xfs@oss.sgi.com
 
-Hey Dave,
+--===============8415301145236029324==
+Content-Type: multipart/alternative; boundary=047d7b33d89285188304df5ad272
 
-On Sat, Jun 15, 2013 at 10:56:39AM +1000, Dave Chinner wrote:
-> On Fri, Jun 14, 2013 at 02:44:53PM -0500, Ben Myers wrote:
-> > Unfortunately log replay is broken.  The verifier has detected this and stopped
-> > replay.  Ideally the solution would be to fix log replay, but that is going to
-> > take some time.  So, in the near term we're just going to disable the verifier
-> > to allow replay to complete.
-> > 
-> > I'm suggesting that this disabling be done conditionally on CONFIG_XFS_DEBUG so
-> > that developers still have a chance at hitting the log replay problem, and a
-> > comment should be added explaining that we've disabled the verifier due to a
-> > specific bug as a temporary workaround and we'll re-enable the verifier once
-> > it's fixed.  I'll update the patch and repost.
-> > 
-> > Are you guys arguing that the log replay bug should not be fixed?
-> 
-> I'm not arguing that it should not be fixed,
-      
-Good.
+--047d7b33d89285188304df5ad272
+Content-Type: text/plain; charset=ISO-8859-1
 
-> I'm *stating* that it
-> *can't be fixed* for non-CRC filesystems. That is, the best we can
-> do is work around this deficiency in log recovery with some kind of
-> self-defusing warning....
+> How big is the write cache in your RAID array? If the log is the
+> only thing being written to, and it fits within the cache, then it
+> can easily push several hundred MB/s of write IO....
 
-I think you're mistaken here.  In order to prevent this from happening on
-non-crc filesystems we need only ensure that all of the buffer modifications in
-the log for a given buffer are played back onto the buffer before we write it
-out to disk.  My impression is that the final state of the buffer is always the
-correct one, so it's a matter of preventing any intermediate states from being
-written.
 
-> To fix it properly, you need to know the age of the object being
-> overwritten relative to the age of overwrite data. For non-CRC
-> filesystems we don't have that information in the metadata object
-> being overwritten.
+I asked around and people believe the cache is on the order of a few GB and
+the test ran I was intentionally large enough to overshadow any cache
+effects, running for about a minute and doing 100K 1K file creates.  The
+disk write data was close to a sustained 475MB/sec and would have easily
+filled the cache in the first handful of seconds which would have produced
+enough backpressure to slow down the write rate which it never did.
 
-Only if you take the tack that you are not going to write intermediate state
-into the buffer.  I agree this is one way to fix the problem, but I'm not sure
-that it's the only option.
+On a totally different topic, and if you like we can start a different
+thread on it, I'd be interested in adding some monitoring stats to collectl
+for xfs and could use some suggestions of what are the most important.
 
-> We can't even correctly identify the object being
-> overwritten.
+-mark
 
-Can you be more specific about what you mean there?
+--047d7b33d89285188304df5ad272
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-> So, it's simply not fixable in log recovery for non-CRC filesystems,
-> and the LSN stamped in every piece of metadata at writeback time for
-> CRC enabled filesystems is designed precisely to avoid this problem.
+<div dir=3D"ltr"><br><div class=3D"gmail_extra"><div class=3D"gmail_quote">=
+<blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
+x #ccc solid;padding-left:1ex">How big is the write cache in your RAID arra=
+y? If the log is the<br>
 
-Again, I'm not so sure that there aren't other ways to fix this, which I'm
-going to continue to look in to.  I think you're giving up a bit prematurely.
+only thing being written to, and it fits within the cache, then it<br>
+can easily push several hundred MB/s of write IO....</blockquote><div><br><=
+/div><div style>I asked around and people believe the cache is on the order=
+ of a few GB and the test ran I was intentionally large enough to overshado=
+w any cache effects, running for about a minute and doing 100K 1K file crea=
+tes. =A0The disk write data was close to a sustained 475MB/sec and would ha=
+ve easily filled the cache in the first handful of seconds which would have=
+ produced enough backpressure to slow down the write rate which it never di=
+d.</div>
+<div style><br></div><div style>On a totally different topic, and if you li=
+ke we can start a different thread on it, I&#39;d be interested in adding s=
+ome monitoring stats to collectl for xfs and could use some suggestions of =
+what are the most important.</div>
+<div style><br></div><div style>-mark</div><div style><br></div></div></div=
+></div>
 
-> Indeed, the LSN stamp is a far more effective method than what used
-> to be in the inode core to try to avoid the problem for unlogged
-> inode size updates to try to prevent log recovery from replaying
-> inode core updates over more recently written inodes - the
-> di_flushiter field.  Note the comment in xfs_flush_int():
-> 
->         /*
->          * bump the flush iteration count, used to detect flushes which
->          * postdate a log record during recovery. This is redundant as we now
->          * log every change and hence this can't happen. Still, it doesn't hurt.
->          */
->         ip->i_d.di_flushiter++;
-> 
-> And this in xlog_recover_inode_pass2():
-> 
->         /* Skip replay when the on disk inode is newer than the log one */
->         if (dicp->di_flushiter < be16_to_cpu(dip->di_flushiter)) {
+--047d7b33d89285188304df5ad272--
 
-Why is using the lsn more effective than the counter?  Seems like the counter
-would be adequate as is.
 
-> This recovery problem has been around forever, and it we cannot fix
-> log recovery with age information in the metadata on disk that
-> recovery is going overwrite. CRC enabled filesystems have that
-> information on disk, existing filesystems don't. Therefore, we can
-> only solve the recovery problem for CRC enabled filesystems...
-
-Nah, I think we can find another way.  I am also curious to look back at some
-older recovery code to see if this truly is a day one bug.
-
-> We could probably also avoid the problem by modifying the way we do
-> writeback from the AIL to limit it only to objects at the tail LSN,
-> but that has a horrific performance penalty associated with it for
-> many common workloads because of the way relogging works. And for a
-> problem that I've suspected has occurred maybe 5 times in 10 years,
-> modifying metadata writeback to avoid this problem is a bad tradeoff
-> to make for just about everyone...
-
-How would limiting writeback from the AIL to only structures at the tail
-resolve the issue of playback of intermediate states onto newer buffers during
-recovery?  I don't understand what you're getting at here.  Anyway, I agree
-that it would be better to try and avoid any massive performance impacts during
-regular operation.  A performance impact during recovery is less of a concern
-but should be avoided if possible.
-
-I think there may be some creative ways to resolve this problem for older
-filesystems which are worth looking into.
-
-Regards,
-Ben
+--===============8415301145236029324==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============8415301145236029324==--
