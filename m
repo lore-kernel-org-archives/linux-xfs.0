@@ -1,20 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3714F29DF8
-	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 13:14:16 -0500 (CDT)
-Date: Mon, 17 Jun 2013 13:14:11 -0500
+	by oss.sgi.com (Postfix) with ESMTP id DCFF929DF8
+	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 13:37:50 -0500 (CDT)
+Date: Mon, 17 Jun 2013 13:37:50 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 18/27] xfs: split out xfs inode operations into
-	separate file
-Message-ID: <20130617181411.GE20932@sgi.com>
-References: <1371032567-21772-1-git-send-email-david@fromorbit.com>
-	<1371032567-21772-19-git-send-email-david@fromorbit.com>
-	<20130612140519.GB28988@infradead.org>
-	<20130613011414.GB29338@dastard> <20130613080009.GL29338@dastard>
-	<20130617155644.GA26043@infradead.org>
+Subject: Re: XFS (vdb): Corruption detected. Unmount and run xfs_repair
+Message-ID: <20130617183750.GI32736@sgi.com>
+References: <20130615023620.GA23586@localhost> <20130615030928.GC29338@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130617155644.GA26043@infradead.org>
+In-Reply-To: <20130615030928.GC29338@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,47 +22,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Fengguang Wu <fengguang.wu@intel.com>
+Cc: linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.cz>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Hey Christoph,
+Hey Fengguang,
 
-On Mon, Jun 17, 2013 at 08:56:44AM -0700, Christoph Hellwig wrote:
-> On Thu, Jun 13, 2013 at 06:00:09PM +1000, Dave Chinner wrote:
-> > So what I really think needs to happen here first is similar to the
-> > dir2 header file re-org. That is, a header file to define the
-> > format, and a header file to define the in-kernel structures and
-> > APIs....
+On Sat, Jun 15, 2013 at 01:09:28PM +1000, Dave Chinner wrote:
+> [cc xfs@oss.sgi.com, where XFS bug reports should go]
 > 
-> Yes, I think we need to do this rather sooner than later.  In fact
-> I'd feeling we need to tackle the whole header mess first before
-> splitting the .c files.  Making sure the on-disk format is in one
-> or just a few headers is the most important bit of that.
+> On Sat, Jun 15, 2013 at 10:36:20AM +0800, Fengguang Wu wrote:
+> > [   74.570969] XFS (vdb): bad magic number
+> > [   74.573837] ffff8800170ed000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+				     X  F  S  B
+
+That's the magic it's looking for...
+
+> > [   74.579266] ffff8800170ed010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> > [   74.584581] ffff8800170ed020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> > [   74.590036] ffff8800170ed030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+> > [   74.595386] XFS (vdb): Internal error xfs_sb_read_verify at line 730 of file /c/kernel-tests/src/stable/fs/xfs/xfs_mount.c.  Caller 0xffffffff81309514
+> .....
+> > [   74.692206] XFS (vdb): Corruption detected. Unmount and run xfs_repair
+> > [   74.696000] XFS (vdb): SB validate failed with error 22.
 > 
-> These days I'm actually of the opinion that we probably should be
-> even more drastic about cutting the number of headers.  For the
-> on disk format a xfs_format.h for all the regular on disk format and
-> maybe and xfs_log_format.h should be more than enough.
+> It's obviously not an XFS filesystem you are asking the kernel to
+> mount, so it's perfectly valid to throw a corruption error at you.
+> What it has actually thrown is EWRONGFS, but because you've asked
+> the kernel specifically to mount the device as an XFS filesystem,
+> the kernel is explicitly telling you that it's a corrupt
+> filesystem... :)
 
-I like the idea of having the entire on-disk format in just a few files.  It
-would be a nice clean up.  I don't know if splitting the .c files needs to wait
-on it though.
+We did have an issue in this area in 3.7 which fixed in commit aeb4f20a that
+made 3.8.  We were returning EFSCORRUPTED instead of EWRONGFS.  Maybe that's
+not your kernel.
 
-> But back to the _ops.c naming.  I really hate it and the best counter
-> proposals I can come up with is to add a _common postfix to every file
-> intended to be shared with userspace.
-
-I don't understand what you don't like about the _ops.c naming... 
-
-> Using a directly also would make
-> sense, but for some reason Kbuild always had problems with modules built
-> from multiple directories and I'm more than glad that we finally managed
-> to get rid of the subdirectories.
-
-but I really like the libxfs subdirectory idea.  Any idea if the Kbuild issues
-are sorted out?
-
--Ben
+Regards,
+	Ben
 
 _______________________________________________
 xfs mailing list
