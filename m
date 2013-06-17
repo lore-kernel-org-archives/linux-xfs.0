@@ -1,20 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7511D29E07
-	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 15:38:49 -0500 (CDT)
-Received: from eagdhcp-232-136.americas.sgi.com
-	(eagdhcp-232-136.americas.sgi.com [128.162.232.136])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 642D6304039
-	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 13:38:46 -0700 (PDT)
-Received: from eagdhcp-232-136.americas.sgi.com (localhost [127.0.0.1])
-	by eagdhcp-232-136.americas.sgi.com (8.14.5/8.14.5) with ESMTP id
-	r5HKclor002984
-	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 15:38:47 -0500 (CDT)
-	(envelope-from tinguely@sgi.com)
-Message-Id: <20130617203513.700537361@sgi.com>
-Date: Mon, 17 Jun 2013 20:35:05 -0500
-From: Mark Tinguely <tinguely@sgi.com>
-Subject: [PATCH v2] xfstest: ensure small symlink is removed
+	by oss.sgi.com (Postfix) with ESMTP id 442F429DF8
+	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 16:53:54 -0500 (CDT)
+Date: Mon, 17 Jun 2013 16:53:53 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH] xfs: return FIEMAP_EXTENT_UNKNOWN for delayed
+	allocation extent
+Message-ID: <20130617215353.GF20932@sgi.com>
+References: <51B08D71.7090404@oracle.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <51B08D71.7090404@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,208 +19,30 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: xfs@oss.sgi.com
 
-a
-Content-Disposition: inline; filename=xfstest-ensure-small-symlink-is-removed.patch
+Hey Jeff,
 
-Tests the XFS symlinks that are small enough to be in the
-inode, but were move to a remote symlink due to an extended
-attribute were correctly removed.
+On Thu, Jun 06, 2013 at 06:24:01AM -0700, Jeff Liu wrote:
+> From: Jie Liu <jeff.liu@oracle.com>
+> 
+> For FIEMAP ioctl(2), if an extent is in delayed allocation
+> state, we need to return the FIEMAP_EXTENT_UNKNOWN flag except
+> the FIEMAP_EXTENT_DELALLOC because its data location is unknown.
+> 
+> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 
-Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+Looks fine.  Is there an email thread I can reference?
 
----
-v2
-   change loop variable. added quick group.
+Reviewed-by: Ben Myers <bpm@sgi.com>
 
-   kept it xfs specific and using xfs_db so the failure is detected
-   for non-debug kernels.
-
- tests/xfs/298     |   91 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/298.out |   63 +++++++++++++++++++++++++++++++++++++
- tests/xfs/group   |    1 
- 3 files changed, 155 insertions(+)
-
-Index: b/tests/xfs/298
-===================================================================
---- /dev/null
-+++ b/tests/xfs/298
-@@ -0,0 +1,91 @@
-+#! /bin/bash
-+# FS QA Test No. 298
-+#
-+# Test that inline symlinks are removed from the inode when an extended
-+# attributes forces it into being remote symlink.
-+# Warning: this test will ASSERT on unpatched DEBUG XFS.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2013 SGI.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+
-+# Modify as appropriate. This is a XFS specific bug. xfs_db also limits
-+# this test to xfs
-+_supported_fs xfs
-+_supported_os Linux
-+
-+_require_scratch
-+
-+rm -f $seqres.full
-+_scratch_mkfs_xfs >/dev/null 2>&1
-+
-+SYMLINK_FILE="$SCRATCH_MNT/symlink"
-+SYMLINK=""
-+SYMLINK_ADD="0123456789ABCDEF01234567890ABCDEF"
-+
-+# test from 32 to MAXPATHLEN sized symlink. This should make sure that
-+# 256-1024 byte version 2 and 3 inodes are covered.
-+SIZE=32
-+while [ $SIZE -lt 1024 ];do
-+	_scratch_mount >/dev/null 2>&1
-+	cd $SCRATCH_MNT
-+	echo "Testing symlink size $SIZE"
-+	SYMLINK="${SYMLINK}${SYMLINK_ADD}"
-+	ln -s $SYMLINK $SYMLINK_FILE > /dev/null 2>&1
-+
-+	inode=`ls -li $SYMLINK_FILE | awk '{print $1}'`
-+# add the extended attributes
-+	attr  -Rs 1234567890ab $SYMLINK_FILE < /dev/null > /dev/null 2>&1
-+	attr  -Rs 1234567890ac $SYMLINK_FILE < /dev/null > /dev/null 2>&1
-+	attr  -Rs 1234567890ad $SYMLINK_FILE < /dev/null > /dev/null 2>&1
-+# remove the extended attributes
-+	attr  -Rr 1234567890ab $SYMLINK_FILE > /dev/null 2>&1
-+	attr  -Rr 1234567890ac $SYMLINK_FILE > /dev/null 2>&1
-+	attr  -Rr 1234567890ad $SYMLINK_FILE > /dev/null 2>&1
-+# remove the symlink - make sure ifree removes the remote symlink.
-+	rm $SYMLINK_FILE
-+# umount and check the number of extents on the inode. Should be 0.
-+	cd
-+	_scratch_unmount >/dev/null 2>&1
-+	$XFS_DB_PROG  -c "inode $inode" -c "p core.nextents" $SCRATCH_DEV
-+
-+	let SIZE=$SIZE+32
-+done
-+
-+status=0
-+exit
-Index: b/tests/xfs/298.out
-===================================================================
---- /dev/null
-+++ b/tests/xfs/298.out
-@@ -0,0 +1,63 @@
-+QA output created by 298
-+Testing symlink size 32
-+core.nextents = 0
-+Testing symlink size 64
-+core.nextents = 0
-+Testing symlink size 96
-+core.nextents = 0
-+Testing symlink size 128
-+core.nextents = 0
-+Testing symlink size 160
-+core.nextents = 0
-+Testing symlink size 192
-+core.nextents = 0
-+Testing symlink size 224
-+core.nextents = 0
-+Testing symlink size 256
-+core.nextents = 0
-+Testing symlink size 288
-+core.nextents = 0
-+Testing symlink size 320
-+core.nextents = 0
-+Testing symlink size 352
-+core.nextents = 0
-+Testing symlink size 384
-+core.nextents = 0
-+Testing symlink size 416
-+core.nextents = 0
-+Testing symlink size 448
-+core.nextents = 0
-+Testing symlink size 480
-+core.nextents = 0
-+Testing symlink size 512
-+core.nextents = 0
-+Testing symlink size 544
-+core.nextents = 0
-+Testing symlink size 576
-+core.nextents = 0
-+Testing symlink size 608
-+core.nextents = 0
-+Testing symlink size 640
-+core.nextents = 0
-+Testing symlink size 672
-+core.nextents = 0
-+Testing symlink size 704
-+core.nextents = 0
-+Testing symlink size 736
-+core.nextents = 0
-+Testing symlink size 768
-+core.nextents = 0
-+Testing symlink size 800
-+core.nextents = 0
-+Testing symlink size 832
-+core.nextents = 0
-+Testing symlink size 864
-+core.nextents = 0
-+Testing symlink size 896
-+core.nextents = 0
-+Testing symlink size 928
-+core.nextents = 0
-+Testing symlink size 960
-+core.nextents = 0
-+Testing symlink size 992
-+core.nextents = 0
-Index: b/tests/xfs/group
-===================================================================
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -177,3 +177,4 @@
- 295 auto logprint quick
- 296 dump auto quick
- 297 auto freeze
-+298 auto attr symlink quick
-
+Thanks,
+	Ben
 
 _______________________________________________
 xfs mailing list
