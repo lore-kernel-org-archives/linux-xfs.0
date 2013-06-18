@@ -1,26 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id F0FFA7CBF
-	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 16:12:07 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id AAA687CBF
+	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 16:12:09 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D46058F8037
-	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 14:12:04 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 2FEE7AC008
+	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 14:12:06 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	AZqtRJvjDYeQZ4Ur for <xfs@oss.sgi.com>;
-	Tue, 18 Jun 2013 14:12:03 -0700 (PDT)
-Date: Wed, 19 Jun 2013 06:55:23 +1000
+	4IHdbOraFrENYwVD for <xfs@oss.sgi.com>;
+	Tue, 18 Jun 2013 14:12:04 -0700 (PDT)
+Date: Wed, 19 Jun 2013 06:40:11 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 19/27] xfs: consolidate xfs_vnodeops.c into xfs_inode_ops.c
-Message-ID: <20130618205523.GV29338@dastard>
+Subject: Re: [PATCH 18/27] xfs: split out xfs inode operations into separate
+	file
+Message-ID: <20130618204011.GU29338@dastard>
 References: <1371032567-21772-1-git-send-email-david@fromorbit.com>
-	<1371032567-21772-20-git-send-email-david@fromorbit.com>
-	<20130612135916.GA28988@infradead.org>
-	<20130613013907.GC29338@dastard>
-	<20130617160228.GB26043@infradead.org>
+	<1371032567-21772-19-git-send-email-david@fromorbit.com>
+	<20130612140519.GB28988@infradead.org>
+	<20130613011414.GB29338@dastard> <20130613080009.GL29338@dastard>
+	<20130617155644.GA26043@infradead.org>
+	<20130617181411.GE20932@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130617160228.GB26043@infradead.org>
+In-Reply-To: <20130617181411.GE20932@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,65 +35,63 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Mon, Jun 17, 2013 at 09:02:28AM -0700, Christoph Hellwig wrote:
-> On Thu, Jun 13, 2013 at 11:39:07AM +1000, Dave Chinner wrote:
-> > i.e:
+On Mon, Jun 17, 2013 at 01:14:11PM -0500, Ben Myers wrote:
+> Hey Christoph,
+> 
+> On Mon, Jun 17, 2013 at 08:56:44AM -0700, Christoph Hellwig wrote:
+> > On Thu, Jun 13, 2013 at 06:00:09PM +1000, Dave Chinner wrote:
+> > > So what I really think needs to happen here first is similar to the
+> > > dir2 header file re-org. That is, a header file to define the
+> > > format, and a header file to define the in-kernel structures and
+> > > APIs....
 > > 
-> > 	kernel only -> kernel only -> shared with libxfs
+> > Yes, I think we need to do this rather sooner than later.  In fact
+> > I'd feeling we need to tackle the whole header mess first before
+> > splitting the .c files.  Making sure the on-disk format is in one
+> > or just a few headers is the most important bit of that.
 > > 
-> > Once there's a clear boundary in the kernel code,
-> > merging/simplifying stuff on either side of the boundary is easy to
-> > do, but it's a secondary step. I'd consider this something for the
-> > 3.12 cycle, not the upcoming 3.11 cycle.
+> > These days I'm actually of the opinion that we probably should be
+> > even more drastic about cutting the number of headers.  For the
+> > on disk format a xfs_format.h for all the regular on disk format and
+> > maybe and xfs_log_format.h should be more than enough.
 > 
-> Much better.
+> I like the idea of having the entire on-disk format in just a few files.  It
+> would be a nice clean up.  I don't know if splitting the .c files needs to wait
+> on it though.
+
+I've got patches that separate out all shared user/kernel header
+information now. They QA'd OK overnight, so I'll post them in a
+short while. There's no more __KERNEL__ definitions in the code
+after the patch set... 
+
+> > But back to the _ops.c naming.  I really hate it and the best counter
+> > proposals I can come up with is to add a _common postfix to every file
+> > intended to be shared with userspace.
 > 
-> Btw, especially in inode land we should probably share even less code
-> with userspace.  Besides my old patches to kill the struct xfs_inode
-> abuse in repair phase 7 there isn't too much use of it left.
+> I don't understand what you don't like about the _ops.c naming... 
 
-Yup - we only need to shared the format defintions, the buffer
-operations and the inode fork macros. That's explicity all that is
-shared after my current patchset.
+I can make xfs_inode_ops.[ch] go away as xfs_inode.[ch] is no longer
+shared with userspace and contain kernel-only functionality. I
+didn't go as far as moving everything back into xfs_inode.[ch]
+because we want to merge some of it with xfs_iops.c, some with
+xfs_ialloc.c, etc...
 
-FWIW, my current patchset does this to the xfsprogs/include
-directory:
-
-43 files changed, 1541 insertions(+), 3527 deletions(-)
-
-So that will give you an idea of how much __KERNEL__ crap there
-is...
-
-> The db code uses inodes as temporary objects in the attrset code which
-> looks everything but efficient, and the mkfs and repair code use it to
-> create new files/directories.  Not quite sure bringing in all the kernel
-> code there makes so much sense given that we have other infrastructure
-> for a lot of these in userspace anyway.
-
-There's plenty that can be done there, but I think the direction we
-need to take db in is to be closer to libxfs than it's own special
-little snowflake. We need to do this for the IO subsystem to add CRC
-validation/calculation support, so re-using anything that libxfs
-already provides seems sane to me...
-
-> > FWIW, now that I have the shared files in almost perfect sync, it
-> > makes it much easier to make the change in the kernel tree, take the
-> > patch, apply a couple of sed filters to it and then apply it
-> > directly to the xfsprogs tree. I only have to do the work once now,
-> > and so it's much faster to restructure the code now.
+> > Using a directly also would make
+> > sense, but for some reason Kbuild always had problems with modules built
+> > from multiple directories and I'm more than glad that we finally managed
+> > to get rid of the subdirectories.
 > 
-> I'm very happy to see this as I'd been aiming at it for a while.
-> 
-> Any chance you can add a script to pull in kernel changes automatically
-> while you're at it?
+> but I really like the libxfs subdirectory idea.  Any idea if the Kbuild issues
+> are sorted out?
 
-It's not quite there yet, but getting close. I'm not sure we can get
-to automating it without having the same libxfs/ structure in the
-kernel code - it's not straight forward to identify which hunks of a
-patch are relevant to userspace...
+No idea - I don't know the issue is.
+
+However, if the issue has been fixed (or could be easily solved)
+then it seems like there is a rough agreement on moving towards a
+common shared libxfs base?
 
 Cheers,
 
