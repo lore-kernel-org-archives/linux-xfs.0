@@ -1,23 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6118629E09
-	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 17:44:11 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 34C41304039
-	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 15:44:08 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	MQ0fTNjkWHQr2rOd for <xfs@oss.sgi.com>;
-	Tue, 18 Jun 2013 15:44:06 -0700 (PDT)
-Date: Wed, 19 Jun 2013 08:43:51 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: fix sgid inheritance for subdirectories inheriting
-	default acls [V2]
-Message-ID: <20130618224351.GB29338@dastard>
-References: <1371569536-5779-1-git-send-email-cmaiolino@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 0103F29E09
+	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 17:57:07 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E63F1304032
+	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 15:57:06 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id 1t53PY9B497ltEQf (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 18 Jun 2013 15:57:02 -0700 (PDT)
+Received: from acsinet22.oracle.com (acsinet22.oracle.com [141.146.126.238])
+	by aserp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
+	ESMTP id r5IMv1hc031794
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 22:57:02 GMT
+Received: from aserz7022.oracle.com (aserz7022.oracle.com [141.146.126.231])
+	by acsinet22.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	r5IMv1sC007191
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 22:57:01 GMT
+Received: from abhmt106.oracle.com (abhmt106.oracle.com [141.146.116.58])
+	by aserz7022.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	r5IMv0fw007184 for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 22:57:00 GMT
+Message-ID: <51C0E5BC.6060809@oracle.com>
+Date: Tue, 18 Jun 2013 17:57:00 -0500
+From: Dave Kleikamp <dave.kleikamp@oracle.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1371569536-5779-1-git-send-email-cmaiolino@redhat.com>
+Subject: [PATCH] xfstests: aio-stress is calling pthread_join incorrectly
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,101 +39,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Carlos Maiolino <cmaiolino@redhat.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Jun 18, 2013 at 12:32:16PM -0300, Carlos Maiolino wrote:
-> XFS removes sgid bits of subdirectories under a directory containing a default
-> acl.
-> 
-> When a default acl is set, it implies xfs to call xfs_setattr_nonsize() in its
-> code path. Such function is shared among mkdir and chmod system calls, and
-> does some checks unneeded by mkdir (calling inode_change_ok()). Such checks
-> remove sgid bit from the inode after it has been granted.
-> 
-> With this patch, we extend the meaning of XFS_ATTR_NOACL flag to avoid these
-> checks when acls are being inherited (thanks hch).
-> 
-> Also, xfs_setattr_mode, doesn't need to re-check for group id and capabilities
-> permissions, this only implies in another try to remove sgid bit from the
-> directories. Such check is already done either on inode_change_ok() or
-> xfs_setattr_nonsize().
-> 
-> Changelog:
-> 
-> V2: Extends the meaning of XFS_ATTR_NOACL instead of wrap the tests into another
->     function
-> 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> ---
->  fs/xfs/xfs_iops.c |   27 ++++++++++++++-------------
->  1 files changed, 14 insertions(+), 13 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index ca9ecaa..3547d89 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -467,9 +467,6 @@ xfs_setattr_mode(
->  	ASSERT(tp);
->  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
->  
-> -	if (!in_group_p(inode->i_gid) && !capable(CAP_FSETID))
-> -		mode &= ~S_ISGID;
-> -
->  	ip->i_d.di_mode &= S_IFMT;
->  	ip->i_d.di_mode |= mode & ~S_IFMT;
->  
-> @@ -495,15 +492,18 @@ xfs_setattr_nonsize(
->  
->  	trace_xfs_setattr(ip);
->  
-> -	if (mp->m_flags & XFS_MOUNT_RDONLY)
-> -		return XFS_ERROR(EROFS);
-> +	/* If acls are being inherited, we already have this checked */
-> +	if (!(flags & XFS_ATTR_NOACL)) {
-> +		if (mp->m_flags & XFS_MOUNT_RDONLY)
-> +			return XFS_ERROR(EROFS);
->  
-> -	if (XFS_FORCED_SHUTDOWN(mp))
-> -		return XFS_ERROR(EIO);
-> +		if (XFS_FORCED_SHUTDOWN(mp))
-> +			return XFS_ERROR(EIO);
+The retval parameter to pthread_join() is a pointer to a pointer.
+aio-stress is passing in a pointer to an int. This can result in a bus
+error on sparc64 when the pointer is not aligned on a 64-bit boundary.
+Since the return value is not used, it is simplest to pass a NULL
+pointer instead.
 
-I'd leave the RO and shutdown checks outside the NOACL branch...
+This has been fixed in the LTP source:
+https://github.com/linux-test-project/ltp/commit/981d33aad3b33c4625b88990fbf2fad5470d47e0
 
->  
-> -	error = -inode_change_ok(inode, iattr);
-> -	if (error)
-> -		return XFS_ERROR(error);
-> +		error = -inode_change_ok(inode, iattr);
-> +		if (error)
-> +			return XFS_ERROR(error);
-> +	}
->  
->  	ASSERT((mask & ATTR_SIZE) == 0);
->  
-> @@ -594,9 +594,10 @@ xfs_setattr_nonsize(
->  		 * The set-user-ID and set-group-ID bits of a file will be
->  		 * cleared upon successful return from chown()
->  		 */
-> -		if ((ip->i_d.di_mode & (S_ISUID|S_ISGID)) &&
-> -		    !capable(CAP_FSETID))
-> -			ip->i_d.di_mode &= ~(S_ISUID|S_ISGID);
-> +		if (!S_ISDIR(inode->i_mode))
-> +			if ((ip->i_d.di_mode & (S_ISUID|S_ISGID)) &&
-> +			    !capable(CAP_FSETID))
-> +				ip->i_d.di_mode &= ~(S_ISUID|S_ISGID);
+Signed-off-by: Dave Kleikamp <dave.kleikamp@oracle.com>
+---
 
-I'm not sure I understand why this is part of this patch - the ACL
-path does not enter this code branch (ATTR_UID/GID) so it doesn't
-affect ACL inheritence. So this is some other behavioural change?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff -up xfstests/ltp/aio-stress.c.orig xfstests/ltp/aio-stress.c
+--- xfstests/ltp/aio-stress.c.orig	2013-06-03 11:53:49.000000000 -0700
++++ xfstests/ltp/aio-stress.c	2013-06-18 15:04:35.593859720 -0700
+@@ -1210,7 +1210,6 @@ typedef void * (*start_routine)(void *);
+ int run_workers(struct thread_info *t, int num_threads)
+ {
+     int ret;
+-    int thread_ret;
+     int i;
+ 
+     for(i = 0 ; i < num_threads ; i++) {
+@@ -1221,7 +1220,7 @@ int run_workers(struct thread_info *t, i
+ 	}
+     }
+     for(i = 0 ; i < num_threads ; i++) {
+-        ret = pthread_join(t[i].tid, (void *)&thread_ret);
++        ret = pthread_join(t[i].tid, NULL);
+         if (ret) {
+ 	    perror("pthread_join");
+ 	    exit(1);
 
 _______________________________________________
 xfs mailing list
