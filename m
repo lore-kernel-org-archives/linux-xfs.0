@@ -1,18 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3473029DF8
-	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 21:26:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 08E2D8F804C
-	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 19:26:03 -0700 (PDT)
-Message-ID: <51BFC536.6030909@oracle.com>
-Date: Tue, 18 Jun 2013 10:25:58 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: return FIEMAP_EXTENT_UNKNOWN for delayed allocation
-	extent
-References: <51B08D71.7090404@oracle.com> <20130617215353.GF20932@sgi.com>
-In-Reply-To: <20130617215353.GF20932@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id 658A129DF8
+	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 22:41:06 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5465F8F8035
+	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 20:41:03 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	X2c3TpcTBEFgHLM8 for <xfs@oss.sgi.com>;
+	Mon, 17 Jun 2013 20:41:01 -0700 (PDT)
+Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1Uomms-00084U-5E
+	for xfs@oss.sgi.com; Tue, 18 Jun 2013 13:40:54 +1000
+Received: from dave by disappointment with local (Exim 4.80)
+	(envelope-from <dave@disappointment.disaster>) id 1Uomms-00046l-0y
+	for xfs@oss.sgi.com; Tue, 18 Jun 2013 13:40:54 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] xfsprogs: fix make deb
+Date: Tue, 18 Jun 2013 13:40:53 +1000
+Message-Id: <1371526854-15761-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,49 +27,52 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Hi Ben,
-On 06/18/2013 05:53 AM, Ben Myers wrote:
+From: Dave Chinner <dchinner@redhat.com>
 
-> Hey Jeff,
-> 
-> On Thu, Jun 06, 2013 at 06:24:01AM -0700, Jeff Liu wrote:
->> From: Jie Liu <jeff.liu@oracle.com>
->>
->> For FIEMAP ioctl(2), if an extent is in delayed allocation
->> state, we need to return the FIEMAP_EXTENT_UNKNOWN flag except
->> the FIEMAP_EXTENT_DELALLOC because its data location is unknown.
->>
->> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
-> 
-> Looks fine.  Is there an email thread I can reference?
+Commit 48212a30 ("xfsprogs: update 'make deb' to use tarball) fixed
+a bunch of problems with making the source tarball for releases.
+However, it broke the debian package builds in a way I hadn't
+noticed until I rewrote my CI system build script.
 
-I can't found an email thread to verify that, but according to
-the specification of fiemap interface in kernel doc:
-Documentation/filesystems/fiemap.txt
+I noticed that the CI system wasn't building from a pristine
+workarea, and instead was just updating the old workarea and running
+'make deb'. I added a 'make realclean' to remove all previous state
+from the workarea, and then 'make deb' started failing with errors
+building the tarball because po/xfsprogs.pot didn't have a build
+rule
 
-* FIEMAP_EXTENT_UNKNOWN
-The location of this extent is currently unknown. This may indicate
-the data is stored on an inaccessible volume or that no storage has
-been allocated for the file yet.
+The above commit removed the pre-build of the translations target,
+and instead made the translation build target a dependency of
+building the the tarball. Hence the lack of a build rule of the
+translations causes the source tarball build to fail.
 
-* FIEMAP_EXTENT_DELALLOC
-  - This will also set FIEMAP_EXTENT_UNKNOWN. 
-    ^^^^^ <-- so the unknown flags should be set as well.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ Makefile |    2 ++
+ 1 file changed, 2 insertions(+)
 
-Delayed allocation - while there is data for this extent, its
-physical location has not been allocated yet.
-
-Also, Btrfs did it.
-
-Thanks,
--Jeff
+diff --git a/Makefile b/Makefile
+index b73bb57..f56aebd 100644
+--- a/Makefile
++++ b/Makefile
+@@ -135,6 +135,8 @@ deb: include/builddefs include/platform_defs.h
+ ifeq ($(HAVE_BUILDDEFS), no)
+ 	$(Q)$(MAKE) $(MAKEOPTS) -C . $@
+ else
++	# need to build translations before the source tarball
++	$(Q)$(MAKE) $(MAKEOPTS) -C po
+ 	$(Q)$(MAKE) $(MAKEOPTS) $(SRCDIR)
+ 	$(Q)cd $(SRCDIR) && dpkg-buildpackage
+ endif
+-- 
+1.7.10.4
 
 _______________________________________________
 xfs mailing list
