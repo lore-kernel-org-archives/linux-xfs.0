@@ -1,37 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6AEC329E09
-	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 18:19:10 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 59865304039
-	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 16:19:10 -0700 (PDT)
-Received: from e9.ny.us.ibm.com (e9.ny.us.ibm.com [32.97.182.139]) by
-	cuda.sgi.com with ESMTP id VA7kNbtekHJR0OgM (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 18 Jun 2013 16:19:09 -0700 (PDT)
-Received: from /spool/local
-	by e9.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
-	Violators will be prosecuted
-	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
-	Tue, 18 Jun 2013 19:19:09 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id CDF5E6E803F
-	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 19:19:02 -0400 (EDT)
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	r5INIaNc333552 for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 19:18:36 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
-	r5INIapZ017360 for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 20:18:36 -0300
-Subject: Re: deadlock with &log->l_cilp->xc_ctx_lock semaphone
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-In-Reply-To: <20130522234129.GN29466@dastard>
-References: <1369264363.10223.2994.camel@chandra-dt.ibm.com>
-	<20130522234129.GN29466@dastard>
-Date: Tue, 18 Jun 2013 18:18:35 -0500
-Message-ID: <1371597515.22504.51.camel@chandra-dt.ibm.com>
-Mime-Version: 1.0
-Reply-To: sekharan@us.ibm.com
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 6E02229E09
+	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 18:34:35 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0F71EAC005
+	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 16:34:31 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	saCtYACQpfExjTcG for <xfs@oss.sgi.com>;
+	Tue, 18 Jun 2013 16:34:29 -0700 (PDT)
+Date: Wed, 19 Jun 2013 09:34:26 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: WANTED: xfstests results in different architectures
+Message-ID: <20130618233426.GD29338@dastard>
+References: <1371596399.22504.38.camel@chandra-dt.ibm.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1371596399.22504.38.camel@chandra-dt.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -44,78 +29,90 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Chandra Seetharaman <sekharan@us.ibm.com>
 Cc: XFS mailing list <xfs@oss.sgi.com>
 
-On Thu, 2013-05-23 at 09:41 +1000, Dave Chinner wrote:
-> On Wed, May 22, 2013 at 06:12:43PM -0500, Chandra Seetharaman wrote:
-> > Hello,
-> > 
-> > While testing and rearranging my pquota/gquota code, I stumbled on a
-> > xfs_shutdown() during a mount. But the mount just hung.
-> > 
-> > I debugged and found that it is in a code path where
-> > &log->l_cilp->xc_ctx_lock is first acquired in read mode and some levels
-> > down the same semaphore is being acquired in write mode causing a
-> > deadlock.
-> > 
-> > This is the stack:
-> > xfs_log_commit_cil -> acquires &log->l_cilp->xc_ctx_lock in read mode
-> >   xlog_print_tic_res
-> >     xfs_force_shutdown
-> >       xfs_log_force_umount
-> >         xlog_cil_force
-> >           xlog_cil_force_lsn
-> >             xlog_cil_push_foreground
-> >               xlog_cil_push - tries to acquire same semaphore in write mode
+On Tue, Jun 18, 2013 at 05:59:59PM -0500, Chandra Seetharaman wrote:
+> Hello All,
 > 
-> Which means you had a transaction reservation overrun. Is it
-> reproducable? iDo you have the output from xlog_print_tic_res()?
-> Because:
+> Couple of weeks backs we had a discussion in xfs meeting to collect
+> xfstests results. I volunteered to collect xfstests results from
+> different architectures and upload to XFS.org.
 > 
-> > xfs_trans_commit+0x79/0x270 [xfs]  
-> > xfs_qm_write_sb_changes+0x61/0x90 [xfs]
-> > xfs_qm_mount_quotas+0x82/0x180 [xfs]
-> > xfs_mountfs+0x5f6/0x6b0 [xfs]
-> 
-> This transaction only modifies the superblock, and it has a buffer
-> reservation for a superblock sized buffer, and hence should never
-> overrun.
-> 
-> IOWs, I'm ifar more concerned about the fact there was a
-> transaction overrun than they was a hang in the path that handles
-> the overrun. The fact this hang has been there since 2.6.35 tells
-> you how rare transactions overruns are....
-> 
-> FWIW, the fix for the hang is to make xlog_print_tic_res() return an
-> error and have the caller handle the shutdown.
+> I can run and get the results for x86_64 and ppc64. If anyone has other
+> architectures that they can run the tests on and provide me the results,
+> I will filter them an upload to XFS.org.
 
-Dave,
+How are you going to filter and display them on xfs.org? Should the
+scripts to do this be part of xfstests?
 
-There are few ways this can be done, but each of them seem to change the
-code behavior. Wanted to get your opinion on which is the correct way.
+FWIW, without a database of results that users can use to filter the
+test results themselves, it will become unmanageable very quickly...
 
-(1) - don't shutdown in xlog_print_tic_res();
-    - upon return from xlog_print_tic_res(), do a up_read, and shutdown
-    - at the end of fucntion, up_read only if we haven't done it already
-  Behavior change: The protection offered by the semaphore is not 
-      available to the code block from shutdown to end of function
-(2) - don't shoudown in xlog_print_tic_res()
-    - upon return just set a flag
-    - at the end of function, after up_read, do shutdown
-  Behavior change: Shutdown is delayed to a later point.
+BTW, from my notes from the 2012 LSFMM XFs get-together, there are
+these line items related to exactly this:
 
-I prefer (2) since (1) drops the protection. But, do not know the
-ramifications of delaying the shutdown. Can you comment ?
+----
+       - Public repository of test results so we can better track failures
+                - Look into resurrecting old ASG xfstests results
+                  repository and web iquery interface (Ben)
+                - host on oss.sgi.com.
+                - script to run xfstests and produce publishable output (Ben)
+----
 
-Regards,
+Ben, did you ever start to look into this?
 
-Chandra
-> 
-> Cheers,
-> 
-> Dave.
+> Here is what I think would be of value to provide along with the results
+> (others, please feel free to add more to the list for the results to be
+> more useful)
+>     - Architecture of the system
 
+	- base distro (e.g. /etc/release).
+
+>     - Configuration - memory size and number of procs
+
+I think that all the info that we ask people to report in bug
+reports would be a good start....
+
+>     - Filesystem sizes
+
+More useful is the MKFS_OPTIONS and MOUNT_OPTIONS used to run the
+tests, as that tells us how much non-default test coverage we are
+getting. i.e. default testing or something different.
+
+>     - Commit ID of the kernel
+
+Not useful for kernels built with local, non-public changes, which
+is generally 100% of the kernels and userspace packages I test
+with.
+
+>     - which git tree (XFS git tree or Linus's)
+>     - xfsprogs version (or commit ID if from the git tree)
+
+Same as for the kernel - base version is probably all that is useful
+here.
+
+You'd probably also want to capture the console output indicating
+test runtimes and why certain tests weren't run.
+
+If you create a pristine $RESULTS_DIR and output all the information
+you want to gather into it, then it will be trivial for users to
+send information onwards. Providing a command line parameter that
+generates a unique results directory and then packages the results
+up into a tarball would be a great start. We'd then have a single
+file that can be sent up a central point with all the test results
+available. We could even do all the filtering/processing before
+upload.
+
+IOWs, the idea behind $RESULTS_DIR is to make this sort of scripted
+test result gathering simple to do....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
