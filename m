@@ -1,28 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5B48D29DF8
-	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 19:13:40 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3A82C8F8049
-	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 17:13:37 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id MWDC8cBJLmFP1EZ3 for
-	<xfs@oss.sgi.com>; Mon, 17 Jun 2013 17:13:36 -0700 (PDT)
-Message-ID: <51BFA62A.5040900@gmail.com>
-Date: Tue, 18 Jun 2013 10:13:30 +1000
-From: Mark Goodwin <goodwinos@gmail.com>
-MIME-Version: 1.0
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id E104529DF8
+	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 19:15:50 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6EE4AAC003
+	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 17:15:47 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	kUEoH9DxLZQBDVmc for <xfs@oss.sgi.com>;
+	Mon, 17 Jun 2013 17:15:45 -0700 (PDT)
+Date: Tue, 18 Jun 2013 10:15:40 +1000
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: definitions for /proc/fs/xfs/stat
-References: <CAC2B=ZFP_Fg34aFpk857stgB7MGcrYs9tybRS-ttw1CXNeU41Q@mail.gmail.com>
-	<504625587.1365681.1371255450937.JavaMail.root@redhat.com>
-	<CAC2B=ZF+eMyNLPQmhA_onDPEUqgNfcgCdZVvobNH9pofvioN7Q@mail.gmail.com>
-	<20130615020414.GB29338@dastard>
-	<CAC2B=ZEUkd+ADnQLUKj9S-3rdo2=93WbW0tbLbwwHUvkh6v7Rw@mail.gmail.com>
-	<CAC2B=ZGgr5WPWOEehHDHKekM8yHgQ3QS4HMzM8+j217AfEoPyQ@mail.gmail.com>
+Message-ID: <20130618001540.GL29376@dastard>
+References: <CAC2B=ZGgr5WPWOEehHDHKekM8yHgQ3QS4HMzM8+j217AfEoPyQ@mail.gmail.com>
 	<20130616001130.GE29338@dastard>
 	<CAC2B=ZFZskLnp5baVJK+R1xrpOfTkr1QXpA9jyHvxfk5Wd4yDg@mail.gmail.com>
 	<419435719.1662203.1371431489790.JavaMail.root@redhat.com>
-In-Reply-To: <419435719.1662203.1371431489790.JavaMail.root@redhat.com>
+	<20130617024603.GJ29338@dastard>
+	<1597962722.1767244.1371447710942.JavaMail.root@redhat.com>
+	<CAC2B=ZENLd7hoP=U08hyb6xFw6ye0nL5MMW+iDnTXTcoKCYEvA@mail.gmail.com>
+	<20130617111347.GL29338@dastard>
+	<CAC2B=ZGm4W=oFY+8sWAefhH79qK5N7yma4qQh_AQaOGiQDUWhw@mail.gmail.com>
+	<CAAxjCEwhwqFhPbJsJGYUCqwF5qc7iZpNJpELOkR-9NNuPzFxBw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <CAAxjCEwhwqFhPbJsJGYUCqwF5qc7iZpNJpELOkR-9NNuPzFxBw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,34 +34,35 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Seger <mjseger@gmail.com>
-Cc: Nathan Scott <nathans@redhat.com>, xfs@oss.sgi.com
+To: Stefan Ring <stefanrin@gmail.com>
+Cc: Nathan Scott <nathans@redhat.com>, Mark Seger <mjseger@gmail.com>, Linux fs XFS <xfs@oss.sgi.com>
 
-On 06/17/2013 11:11 AM, Nathan Scott wrote:
->> ok, I have a simple reproducer.  try out the following, noting you'll
->> obviously have to change the directory pointed to by dname:
->>
->> libc=ctypes.CDLL(ctypes.util.find_library('c'), use_errno=True)
->> falloc=getattr(libc, 'fallocate')
->>
->
-> This is using the glibc fallocate wrapper - I have vague memories of an
-> old libc which used to do per-page buffered writes providing a poor-mans
-> implementation of fallocate, maybe somehow that older version/behaviour
-> is being triggered.
+On Mon, Jun 17, 2013 at 10:28:19PM +0200, Stefan Ring wrote:
+> > I asked around and people believe the cache is on the order of a few GB and
+> > the test ran I was intentionally large enough to overshadow any cache
+> > effects, running for about a minute and doing 100K 1K file creates.  The
+> > disk write data was close to a sustained 475MB/sec and would have easily
+> > filled the cache in the first handful of seconds which would have produced
+> > enough backpressure to slow down the write rate which it never did.
+> 
+> If a limited number of blocks gets written over and over, you won't
+> ever fill the cache.
 
-Python probably tipped you into a posix_fallocate() bog hole - it writes
-one byte to every block in the range offset .. offset+len as the portable
-(but poor-man's) implementation of fallocate(). This combined with your
-controller cache could explain the unexpected i/o.
+Right, and the XFS log is circular and about 1GB in size on the
+filesystem under test, so should fit completely in cache. Hence
+speeds faster than a physical disk are acheivable if the log stays
+resident in the cache....
 
-See glibc:sysdeps/posix/posix_fallocate.c
+Cheers,
 
--- Mark
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
