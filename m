@@ -1,28 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id AAA687CBF
-	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 16:12:09 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2FEE7AC008
-	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 14:12:06 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 672CB7CBF
+	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 16:13:00 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 49F7C8F8049
+	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 14:13:00 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	4IHdbOraFrENYwVD for <xfs@oss.sgi.com>;
-	Tue, 18 Jun 2013 14:12:04 -0700 (PDT)
-Date: Wed, 19 Jun 2013 06:40:11 +1000
+	yVWObkBa6LhLZ6Ds for <xfs@oss.sgi.com>;
+	Tue, 18 Jun 2013 14:12:58 -0700 (PDT)
+Date: Wed, 19 Jun 2013 07:12:57 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 18/27] xfs: split out xfs inode operations into separate
-	file
-Message-ID: <20130618204011.GU29338@dastard>
+Subject: Re: [PATCH 15/27] xfs: reshuffle dir2 definitions around for userspace
+Message-ID: <20130618211256.GW29338@dastard>
 References: <1371032567-21772-1-git-send-email-david@fromorbit.com>
-	<1371032567-21772-19-git-send-email-david@fromorbit.com>
-	<20130612140519.GB28988@infradead.org>
-	<20130613011414.GB29338@dastard> <20130613080009.GL29338@dastard>
-	<20130617155644.GA26043@infradead.org>
-	<20130617181411.GE20932@sgi.com>
+	<1371032567-21772-16-git-send-email-david@fromorbit.com>
+	<20130617160515.GC26043@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130617181411.GE20932@sgi.com>
+In-Reply-To: <20130617160515.GC26043@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,63 +31,45 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Mon, Jun 17, 2013 at 01:14:11PM -0500, Ben Myers wrote:
-> Hey Christoph,
-> 
-> On Mon, Jun 17, 2013 at 08:56:44AM -0700, Christoph Hellwig wrote:
-> > On Thu, Jun 13, 2013 at 06:00:09PM +1000, Dave Chinner wrote:
-> > > So what I really think needs to happen here first is similar to the
-> > > dir2 header file re-org. That is, a header file to define the
-> > > format, and a header file to define the in-kernel structures and
-> > > APIs....
+On Mon, Jun 17, 2013 at 09:05:15AM -0700, Christoph Hellwig wrote:
+> On Wed, Jun 12, 2013 at 08:22:35PM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > Yes, I think we need to do this rather sooner than later.  In fact
-> > I'd feeling we need to tackle the whole header mess first before
-> > splitting the .c files.  Making sure the on-disk format is in one
-> > or just a few headers is the most important bit of that.
-> > 
-> > These days I'm actually of the opinion that we probably should be
-> > even more drastic about cutting the number of headers.  For the
-> > on disk format a xfs_format.h for all the regular on disk format and
-> > maybe and xfs_log_format.h should be more than enough.
+> > Many of the definitions within xfs_dir2_priv.h are needed in
+> > userspace outside libxfs. Definitions within xfs_dir2_priv.h are
+> > wholly contained within libxfs, so we need to shuffle some of the
+> > definitions around to keep consistency across files shared between
+> > user and kernel space.
 > 
-> I like the idea of having the entire on-disk format in just a few files.  It
-> would be a nice clean up.  I don't know if splitting the .c files needs to wait
-> on it though.
+> I created the xfs_dir2_format.h header so that it would be self
+> contained.  Despite not mentioning it in the description this patch
+> also moves typedefs out of xfs_dir2_format.h which is something I'd
+> rather avoid.  Where in userspace would we need these defintions but
+> can't include xfs_dir2_format.h?
 
-I've got patches that separate out all shared user/kernel header
-information now. They QA'd OK overnight, so I'll post them in a
-short while. There's no more __KERNEL__ definitions in the code
-after the patch set... 
+They are needed by the declarations of the public dir2 functions
+used by userspace. i.e. they aren't just on-disk format definitions
+- they are API definitions as well.
 
-> > But back to the _ops.c naming.  I really hate it and the best counter
-> > proposals I can come up with is to add a _common postfix to every file
-> > intended to be shared with userspace.
-> 
-> I don't understand what you don't like about the _ops.c naming... 
+This was one of the problems I had with the previous libxfs/kernel
+sync - converting all the userspace code to use xfs_dir2_format.h.
+I had no idea exactly how you intended to structure the usrespace
+code, and so I was really flying blind.
 
-I can make xfs_inode_ops.[ch] go away as xfs_inode.[ch] is no longer
-shared with userspace and contain kernel-only functionality. I
-didn't go as far as moving everything back into xfs_inode.[ch]
-because we want to merge some of it with xfs_iops.c, some with
-xfs_ialloc.c, etc...
+The separation of dir2.h/format.h/priv.h is fine from the kernel
+side, but I found that a significant number of functions declared in
+xfs_dir2_priv.h are actually public functions in userspace and so
+need to be in xfs_dir2.h, not xfs_dir2_priv.h. And then that
+requires the definitions from xfs_fir2_format.h for the function
+prototypes in xfs_dir2.h....
 
-> > Using a directly also would make
-> > sense, but for some reason Kbuild always had problems with modules built
-> > from multiple directories and I'm more than glad that we finally managed
-> > to get rid of the subdirectories.
-> 
-> but I really like the libxfs subdirectory idea.  Any idea if the Kbuild issues
-> are sorted out?
-
-No idea - I don't know the issue is.
-
-However, if the issue has been fixed (or could be easily solved)
-then it seems like there is a rough agreement on moving towards a
-common shared libxfs base?
+Having just done all the other __KERNEL__ changes, I see this
+dir2 change in a different light now. I can probably rework the
+userspace includes to include xfs_dir2_format.h before xfs_dir2.h
+and hence remove the need to modify xfs_dir2_format.h...
 
 Cheers,
 
