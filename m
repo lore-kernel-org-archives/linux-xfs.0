@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 658A129DF8
-	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 22:41:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5465F8F8035
-	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 20:41:03 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 43C8129DF8
+	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 23:49:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E3201AC003
+	for <xfs@oss.sgi.com>; Mon, 17 Jun 2013 21:49:36 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	X2c3TpcTBEFgHLM8 for <xfs@oss.sgi.com>;
-	Mon, 17 Jun 2013 20:41:01 -0700 (PDT)
-Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1Uomms-00084U-5E
-	for xfs@oss.sgi.com; Tue, 18 Jun 2013 13:40:54 +1000
-Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1Uomms-00046l-0y
-	for xfs@oss.sgi.com; Tue, 18 Jun 2013 13:40:54 +1000
+	kc76ARd5iSmUGn9u for <xfs@oss.sgi.com>;
+	Mon, 17 Jun 2013 21:49:34 -0700 (PDT)
+Date: Tue, 18 Jun 2013 14:49:31 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfsprogs: fix make deb
-Date: Tue, 18 Jun 2013 13:40:53 +1000
-Message-Id: <1371526854-15761-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH] xfs: fix sgid inheritance for subdirectories inheriting
+	default acls
+Message-ID: <20130618044931.GQ29338@dastard>
+References: <1371238877-5722-1-git-send-email-cmaiolino@redhat.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1371238877-5722-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,52 +26,114 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+On Fri, Jun 14, 2013 at 04:41:17PM -0300, Carlos Maiolino wrote:
+> XFS removes sgid bits of subdirectories created under a directory containing a
+> default acl.
+> 
+> When a default acl is set, it implies xfs to call xfs_setattr_nonsize() in its
+> code path. Such function is shared among mkdir and chmod system calls, and
+> does some checks unneeded by mkdir (calling inode_change_ok()). Such checks
+> remove sgid bit from the inode after it has been granted. So, this patch wraps
+> up these checks to be used only in chmod path.
+> 
+> Also, chmod should not remove sgid bit from an inode if this is a directory, so,
+> it adds a check if S_ISDIR is set in the inode mode, into xfs_setattr_nonsize()
+> 
+> Done that, xfs_setattr_mode() doesn't need to re-check for group id and
+> capabilities permissions, this only implies in another try to remove sgid bit
+> from the directories. Such check is already done either on inode_change_ok() or
+> xfs_setattr_nonsize().
+> 
+> This addresses SGI bug 280:
+> http://oss.sgi.com/bugzilla/show_bug.cgi?id=280
 
-Commit 48212a30 ("xfsprogs: update 'make deb' to use tarball) fixed
-a bunch of problems with making the source tarball for releases.
-However, it broke the debian package builds in a way I hadn't
-noticed until I rewrote my CI system build script.
+I guess that shows how urgent fixing this behaviour is ;)
 
-I noticed that the CI system wasn't building from a pristine
-workarea, and instead was just updating the old workarea and running
-'make deb'. I added a 'make realclean' to remove all previous state
-from the workarea, and then 'make deb' started failing with errors
-building the tarball because po/xfsprogs.pot didn't have a build
-rule
+> 
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> ---
+>  fs/xfs/xfs_iops.c |   51 ++++++++++++++++++++++++++++++++++-----------------
+>  1 files changed, 34 insertions(+), 17 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index ca9ecaa..5c9c505 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -467,9 +467,6 @@ xfs_setattr_mode(
+>  	ASSERT(tp);
+>  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+>  
+> -	if (!in_group_p(inode->i_gid) && !capable(CAP_FSETID))
+> -		mode &= ~S_ISGID;
+> -
+>  	ip->i_d.di_mode &= S_IFMT;
+>  	ip->i_d.di_mode |= mode & ~S_IFMT;
+>  
+> @@ -477,23 +474,20 @@ xfs_setattr_mode(
+>  	inode->i_mode |= mode & ~S_IFMT;
+>  }
+>  
+> +/* Check inode permissions and filesystem errors
+> + *
+> + * Wrapper to some pre-checks needed while changing
+> + * inode attributes
+> + */
+>  int
+> -xfs_setattr_nonsize(
+> +xfs_setattr_setup(
 
-The above commit removed the pre-build of the translations target,
-and instead made the translation build target a dependency of
-building the the tarball. Hence the lack of a build rule of the
-translations causes the source tarball build to fail.
+The change looks fine from a functional POV, but that is a bit of a
+strange name and structure. :/
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- Makefile |    2 ++
- 1 file changed, 2 insertions(+)
+What the fix introduces is a 3rd setattr code paths:
 
-diff --git a/Makefile b/Makefile
-index b73bb57..f56aebd 100644
---- a/Makefile
-+++ b/Makefile
-@@ -135,6 +135,8 @@ deb: include/builddefs include/platform_defs.h
- ifeq ($(HAVE_BUILDDEFS), no)
- 	$(Q)$(MAKE) $(MAKEOPTS) -C . $@
- else
-+	# need to build translations before the source tarball
-+	$(Q)$(MAKE) $(MAKEOPTS) -C po
- 	$(Q)$(MAKE) $(MAKEOPTS) $(SRCDIR)
- 	$(Q)cd $(SRCDIR) && dpkg-buildpackage
- endif
+	1. xfs_setattr_size();
+	2. xfs_setattr_nonsize();
+
+and the new one:
+
+	3. xfs_setattr_nonsize_nomodecheck();
+
+It's obvious that xfs_setattr_nonsize() is just
+xfs_setattr_nonsize_nomodecheck() with a couple of extra checks, and
+so the structure should probably be:
+
+	xfs_setattr_nonsize_nomodecheck()
+	{
+		do the changes
+	}
+
+	xfs_setattr_nonsize()
+	{
+		inode_change_ok()
+
+		return xfs_setattr_nonsize_nomodecheck()
+	}
+
+	xfs_set_mode()
+	{
+		setup iattr
+		return xfs_setattr_nonsize_nomodecheck()
+	}
+
+
+That way the code is pretty clear that the normal setattr path does
+checks on the way in, while the ACL code does not need to do them.
+i.e the code documents itself as being intentional behaviour...
+
+Cheers,
+
+Dave.
 -- 
-1.7.10.4
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
