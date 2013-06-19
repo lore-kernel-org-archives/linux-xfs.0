@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CD48A29E12
-	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 23:52:57 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 79558AC002
+	by oss.sgi.com (Postfix) with ESMTP id 6ACE929E56
+	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 23:52:58 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D1829AC008
 	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 21:52:57 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	evQBzEEo3Mltyg8k for <xfs@oss.sgi.com>;
-	Tue, 18 Jun 2013 21:52:55 -0700 (PDT)
-Received: from [192.168.1.1] (helo=disappointment)
-	by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UpAO1-000311-UO
-	for xfs@oss.sgi.com; Wed, 19 Jun 2013 14:52:49 +1000
+	OQan80QUSMKzpVXC for <xfs@oss.sgi.com>;
+	Tue, 18 Jun 2013 21:52:56 -0700 (PDT)
+Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1UpAO2-00031M-I2
+	for xfs@oss.sgi.com; Wed, 19 Jun 2013 14:52:50 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UpANr-00007f-N2
-	for xfs@oss.sgi.com; Wed, 19 Jun 2013 14:52:39 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1UpANs-00007o-7O
+	for xfs@oss.sgi.com; Wed, 19 Jun 2013 14:52:40 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 52/60] xfs: introduce xfs_rtalloc_defs.h
-Date: Wed, 19 Jun 2013 14:51:00 +1000
-Message-Id: <1371617468-32559-53-git-send-email-david@fromorbit.com>
+Subject: [PATCH 54/60] xfs: Introduce tr_fsyncts to m_reservation
+Date: Wed, 19 Jun 2013 14:51:02 +1000
+Message-Id: <1371617468-32559-55-git-send-email-david@fromorbit.com>
 In-Reply-To: <1371617468-32559-1-git-send-email-david@fromorbit.com>
 References: <1371617468-32559-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -37,171 +36,55 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Jie Liu <jeff.liu@oracle.com>
 
-There are quite a few realtime device definitions shared with
-userspace. Move them from xfs_rtalloc.h to xfs_rt_alloc_defs.h
-so we don't need to share xfs_rtalloc.h with userspace anymore.
+A preparation step.
 
-This removes the final __KERNEL__ region from the XFS kernel
-codebase. Yay!
+For now fsync_ts transaction use the pre-calculated log reservation
+size of tr_swrite.
+This patch introduce a new item tr_fsyncts to mp->m_reservations
+structure so that we can fetch the log reservation value for it
+in a same manner to others.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 ---
- fs/xfs/xfs_rtalloc.h      |   55 +++--------------------------------
- fs/xfs/xfs_rtalloc_defs.h |   70 +++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 74 insertions(+), 51 deletions(-)
- create mode 100644 fs/xfs/xfs_rtalloc_defs.h
+ fs/xfs/xfs_trans_resv.c |    1 +
+ fs/xfs/xfs_trans_resv.h |    3 ++-
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_rtalloc.h b/fs/xfs/xfs_rtalloc.h
-index f7f3a35..f9d569a 100644
---- a/fs/xfs/xfs_rtalloc.h
-+++ b/fs/xfs/xfs_rtalloc.h
-@@ -18,57 +18,12 @@
- #ifndef __XFS_RTALLOC_H__
- #define	__XFS_RTALLOC_H__
+diff --git a/fs/xfs/xfs_trans_resv.c b/fs/xfs/xfs_trans_resv.c
+index 7d841c8..e46791a 100644
+--- a/fs/xfs/xfs_trans_resv.c
++++ b/fs/xfs/xfs_trans_resv.c
+@@ -763,6 +763,7 @@ xfs_trans_resv_calc(
+ 	resp->tr_ichange.tr_logres = xfs_calc_ichange_reservation(mp);
+ 	resp->tr_growdata.tr_logres = xfs_calc_growdata_reservation(mp);
+ 	resp->tr_swrite.tr_logres = xfs_calc_swrite_reservation(mp);
++	resp->tr_fsyncts.tr_logres = xfs_calc_swrite_reservation(mp);
+ 	resp->tr_writeid.tr_logres = xfs_calc_writeid_reservation(mp);
+ 	resp->tr_attrsetrt.tr_logres = xfs_calc_attrsetrt_reservation(mp);
+ 	resp->tr_clearagi.tr_logres = xfs_calc_clear_agi_bucket_reservation(mp);
+diff --git a/fs/xfs/xfs_trans_resv.h b/fs/xfs/xfs_trans_resv.h
+index e5e32c7..785128f 100644
+--- a/fs/xfs/xfs_trans_resv.h
++++ b/fs/xfs/xfs_trans_resv.h
+@@ -60,6 +60,7 @@ struct xfs_trans_resv {
+ 	struct xfs_trans_res	tr_qm_quotaoff;	/* turn quota off */
+ 	struct xfs_trans_res	tr_qm_equotaoff;/* end of turn quota off */
+ 	struct xfs_trans_res	tr_sb;		/* modify superblock */
++	struct xfs_trans_res	tr_fsyncts;	/* update timestamps on fsync */
+ };
  
--struct xfs_mount;
--struct xfs_trans;
--
--/* Min and max rt extent sizes, specified in bytes */
--#define	XFS_MAX_RTEXTSIZE	(1024 * 1024 * 1024)	/* 1GB */
--#define	XFS_DFL_RTEXTSIZE	(64 * 1024)	        /* 64kB */
--#define	XFS_MIN_RTEXTSIZE	(4 * 1024)		/* 4kB */
--
--/*
-- * Constants for bit manipulations.
-- */
--#define	XFS_NBBYLOG	3		/* log2(NBBY) */
--#define	XFS_WORDLOG	2		/* log2(sizeof(xfs_rtword_t)) */
--#define	XFS_NBWORDLOG	(XFS_NBBYLOG + XFS_WORDLOG)
--#define	XFS_NBWORD	(1 << XFS_NBWORDLOG)
--#define	XFS_WORDMASK	((1 << XFS_WORDLOG) - 1)
--
--#define	XFS_BLOCKSIZE(mp)	((mp)->m_sb.sb_blocksize)
--#define	XFS_BLOCKMASK(mp)	((mp)->m_blockmask)
--#define	XFS_BLOCKWSIZE(mp)	((mp)->m_blockwsize)
--#define	XFS_BLOCKWMASK(mp)	((mp)->m_blockwmask)
--
--/*
-- * Summary and bit manipulation macros.
-- */
--#define	XFS_SUMOFFS(mp,ls,bb)	((int)((ls) * (mp)->m_sb.sb_rbmblocks + (bb)))
--#define	XFS_SUMOFFSTOBLOCK(mp,s)	\
--	(((s) * (uint)sizeof(xfs_suminfo_t)) >> (mp)->m_sb.sb_blocklog)
--#define	XFS_SUMPTR(mp,bp,so)	\
--	((xfs_suminfo_t *)((bp)->b_addr + \
--		(((so) * (uint)sizeof(xfs_suminfo_t)) & XFS_BLOCKMASK(mp))))
--
--#define	XFS_BITTOBLOCK(mp,bi)	((bi) >> (mp)->m_blkbit_log)
--#define	XFS_BLOCKTOBIT(mp,bb)	((bb) << (mp)->m_blkbit_log)
--#define	XFS_BITTOWORD(mp,bi)	\
--	((int)(((bi) >> XFS_NBWORDLOG) & XFS_BLOCKWMASK(mp)))
--
--#define	XFS_RTMIN(a,b)	((a) < (b) ? (a) : (b))
--#define	XFS_RTMAX(a,b)	((a) > (b) ? (a) : (b))
-+#include "xfs_rtalloc_defs.h"
- 
--#define	XFS_RTLOBIT(w)	xfs_lowbit32(w)
--#define	XFS_RTHIBIT(w)	xfs_highbit32(w)
--
--#if XFS_BIG_BLKNOS
--#define	XFS_RTBLOCKLOG(b)	xfs_highbit64(b)
--#else
--#define	XFS_RTBLOCKLOG(b)	xfs_highbit32(b)
--#endif
-+/* kernel only definitions and functions */
- 
--
--#ifdef __KERNEL__
-+struct xfs_mount;
-+struct xfs_trans;
- 
- #ifdef CONFIG_XFS_RT
  /*
-@@ -161,6 +116,4 @@ xfs_rtmount_init(
- # define xfs_rtunmount_inodes(m)
- #endif	/* CONFIG_XFS_RT */
- 
--#endif	/* __KERNEL__ */
--
- #endif	/* __XFS_RTALLOC_H__ */
-diff --git a/fs/xfs/xfs_rtalloc_defs.h b/fs/xfs/xfs_rtalloc_defs.h
-new file mode 100644
-index 0000000..42afb1b
---- /dev/null
-+++ b/fs/xfs/xfs_rtalloc_defs.h
-@@ -0,0 +1,70 @@
-+/*
-+ * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
-+ * All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+#ifndef __XFS_RTALLOC_DEFS_H__
-+#define	__XFS_RTALLOC_DEFS_H__
-+
-+/* definitions shared with userspace */
-+
-+/* Min and max rt extent sizes, specified in bytes */
-+#define	XFS_MAX_RTEXTSIZE	(1024 * 1024 * 1024)	/* 1GB */
-+#define	XFS_DFL_RTEXTSIZE	(64 * 1024)	        /* 64kB */
-+#define	XFS_MIN_RTEXTSIZE	(4 * 1024)		/* 4kB */
-+
-+/*
-+ * Constants for bit manipulations.
-+ */
-+#define	XFS_NBBYLOG	3		/* log2(NBBY) */
-+#define	XFS_WORDLOG	2		/* log2(sizeof(xfs_rtword_t)) */
-+#define	XFS_NBWORDLOG	(XFS_NBBYLOG + XFS_WORDLOG)
-+#define	XFS_NBWORD	(1 << XFS_NBWORDLOG)
-+#define	XFS_WORDMASK	((1 << XFS_WORDLOG) - 1)
-+
-+#define	XFS_BLOCKSIZE(mp)	((mp)->m_sb.sb_blocksize)
-+#define	XFS_BLOCKMASK(mp)	((mp)->m_blockmask)
-+#define	XFS_BLOCKWSIZE(mp)	((mp)->m_blockwsize)
-+#define	XFS_BLOCKWMASK(mp)	((mp)->m_blockwmask)
-+
-+/*
-+ * Summary and bit manipulation macros.
-+ */
-+#define	XFS_SUMOFFS(mp,ls,bb)	((int)((ls) * (mp)->m_sb.sb_rbmblocks + (bb)))
-+#define	XFS_SUMOFFSTOBLOCK(mp,s)	\
-+	(((s) * (uint)sizeof(xfs_suminfo_t)) >> (mp)->m_sb.sb_blocklog)
-+#define	XFS_SUMPTR(mp,bp,so)	\
-+	((xfs_suminfo_t *)((bp)->b_addr + \
-+		(((so) * (uint)sizeof(xfs_suminfo_t)) & XFS_BLOCKMASK(mp))))
-+
-+#define	XFS_BITTOBLOCK(mp,bi)	((bi) >> (mp)->m_blkbit_log)
-+#define	XFS_BLOCKTOBIT(mp,bb)	((bb) << (mp)->m_blkbit_log)
-+#define	XFS_BITTOWORD(mp,bi)	\
-+	((int)(((bi) >> XFS_NBWORDLOG) & XFS_BLOCKWMASK(mp)))
-+
-+#define	XFS_RTMIN(a,b)	((a) < (b) ? (a) : (b))
-+#define	XFS_RTMAX(a,b)	((a) > (b) ? (a) : (b))
-+
-+#define	XFS_RTLOBIT(w)	xfs_lowbit32(w)
-+#define	XFS_RTHIBIT(w)	xfs_highbit32(w)
-+
-+#if XFS_BIG_BLKNOS
-+#define	XFS_RTBLOCKLOG(b)	xfs_highbit64(b)
-+#else
-+#define	XFS_RTBLOCKLOG(b)	xfs_highbit32(b)
-+#endif
-+
-+
-+#endif	/* __XFS_RTALLOC_DEFS_H__ */
+@@ -107,7 +108,7 @@ struct xfs_trans_resv {
+  * Logging the inode timestamps on an fsync -- same as SWRITE
+  * as long as SWRITE logs the entire inode core
+  */
+-#define XFS_FSYNC_TS_LOG_RES(mp) ((mp)->m_resv.tr_swrite.tr_logres)
++#define XFS_FSYNC_TS_LOG_RES(mp) ((mp)->m_resv.tr_fsyncts.tr_logres)
+ #define XFS_WRITEID_LOG_RES(mp)	 ((mp)->m_resv.tr_swrite.tr_logres)
+ #define XFS_ADDAFORK_LOG_RES(mp) ((mp)->m_resv.tr_addafork.tr_logres)
+ #define XFS_ATTRSETM_LOG_RES(mp) ((mp)->m_resv.tr_attrsetm.tr_logres)
 -- 
 1.7.10.4
 
