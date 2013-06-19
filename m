@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 63BFD7F76
-	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 04:40:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3D401304032
-	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 02:40:29 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id 64LqLS9dZ8kixKQi (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 19 Jun 2013 02:40:28 -0700 (PDT)
-Date: Wed, 19 Jun 2013 02:40:28 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 29/60] xfs: consolidate xfs_utils.c
-Message-ID: <20130619094028.GA19573@infradead.org>
-References: <1371617468-32559-1-git-send-email-david@fromorbit.com>
-	<1371617468-32559-30-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 56E067CBF
+	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 07:55:47 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 44AEC8F8054
+	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 05:55:44 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id FGvEIPsUcRvgJUzT for
+	<xfs@oss.sgi.com>; Wed, 19 Jun 2013 05:55:43 -0700 (PDT)
+Message-ID: <51C1AB4E.5030708@redhat.com>
+Date: Wed, 19 Jun 2013 08:59:58 -0400
+From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1371617468-32559-30-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 04/60] xfs: don't use speculative prealloc for small files
+References: <1371617468-32559-1-git-send-email-david@fromorbit.com>
+	<1371617468-32559-5-git-send-email-david@fromorbit.com>
+In-Reply-To: <1371617468-32559-5-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,35 +31,94 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-> +/*
-> + * Allocates a new inode from disk and return a pointer to the
-> + * incore copy. This routine will internally commit the current
-> + * transaction and allocate a new one if the Space Manager needed
-> + * to do an allocation to replenish the inode free-list.
-> + *
-> + * This routine is designed to be called from xfs_create and
-> + * xfs_create_dir.
+On 06/19/2013 12:50 AM, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Dedicated small file workloads have been seeing significant free
+> space fragmentation causing premature inode allocation failure
+> when large inode sizes are in use. A particular test case showed
+> that a workload that runs to a real ENOSPC on 256 byte inodes would
+> fail inode allocation with ENOSPC about about 80% full with 512 byte
+> inodes, and at about 50% full with 1024 byte inodes.
+> 
+> The same workload, when run with -o allocsize=4096 on 1024 byte
+> inodes would run to being 100% full before giving ENOSPC. That is,
+> no freespace fragmentation at all.
+> 
+> The issue was caused by the specific IO pattern the application had
+> - the framework it was using did not support direct IO, and so it
+> was emulating it by using fadvise(DONT_NEED). The result was that
+> the data was getting written back before the speculative prealloc
+> had been trimmed from memory by the close(), and so small single
+> block files were being allocated with 2 blocks, and then having one
+> truncated away. The result was lots of small 4k free space extents,
+> and hence each new 8k allocation would take another 8k from
+> contiguous free space and turn it into 4k of allocated space and 4k
+> of free space.
+> 
+> Hence inode allocation, which requires contiguous, aligned
+> allocation of 16k (256 byte inodes), 32k (512 byte inodes) or 64k
+> (1024 byte inodes) can fail to find sufficiently large freespace and
+> hence fail while there is still lots of free space available.
+> 
+> There's a simple fix for this, and one that has precendence in the
+> allocator code already - don't do speculative allocation unless the
+> size of the file is larger than a certain size. In this case, that
+> size is the minimum default preallocation size:
+> mp->m_writeio_blocks. And to keep with the concept of being nice to
+> people when the files are still relatively small, cap the prealloc
+> to mp->m_writeio_blocks until the file goes over a stripe unit is
+> size, at which point we'll fall back to the current behaviour based
+> on the last extent size.
+> 
+> This will effectively turn off speculative prealloc for very small
+> files, keep preallocation low for small files, and behave as it
+> currently does for any file larger than a stripe unit. This
+> completely avoids the freespace fragmentation problem this
+> particular IO pattern was causing.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
 
-xfs_create_dir is long gone.  I suspect it's best to just kill that
-sentence.
+Looks good.
 
-> +/*
-> + * Decrement the link count on an inode & log the change.
-> + * If this causes the link count to go to zero, initiate the
-> + * logging activity required to truncate a file.
-> + */
-> +int				/* error */
-> +xfs_droplink(
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Can be static now.
-
-> +/*
-> + * Increment the link count on an inode & log the change.
-> + */
-> +int
-> +xfs_bumplink(
-
-Same here.
+>  fs/xfs/xfs_iomap.c |   13 +++++++++++++
+>  1 file changed, 13 insertions(+)
+> 
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index 8f8aaee..6a70964 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -284,6 +284,15 @@ xfs_iomap_eof_want_preallocate(
+>  		return 0;
+>  
+>  	/*
+> +	 * If the file is smaller than the minimum prealloc and we are using
+> +	 * dynamic preallocation, don't do any preallocation at all as it is
+> +	 * likely this is the only write to the file that is going to be done.
+> +	 */
+> +	if (!(mp->m_flags & XFS_MOUNT_DFLT_IOSIZE) &&
+> +	    XFS_ISIZE(ip) < XFS_FSB_TO_B(mp, mp->m_writeio_blocks))
+> +		return 0;
+> +
+> +	/*
+>  	 * If there are any real blocks past eof, then don't
+>  	 * do any speculative allocation.
+>  	 */
+> @@ -345,6 +354,10 @@ xfs_iomap_eof_prealloc_initial_size(
+>  	if (mp->m_flags & XFS_MOUNT_DFLT_IOSIZE)
+>  		return 0;
+>  
+> +	/* If the file is small, then use the minimum prealloc */
+> +	if (XFS_ISIZE(ip) < XFS_FSB_TO_B(mp, mp->m_dalign))
+> +		return 0;
+> +
+>  	/*
+>  	 * As we write multiple pages, the offset will always align to the
+>  	 * start of a page and hence point to a hole at EOF. i.e. if the size is
+> 
 
 _______________________________________________
 xfs mailing list
