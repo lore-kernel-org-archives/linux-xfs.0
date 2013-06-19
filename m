@@ -1,26 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 686037FB1
+	by oss.sgi.com (Postfix) with ESMTP id E85CE7FB2
 	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 00:36:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0940DAC005
-	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 22:36:29 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 83D49AC009
+	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 22:36:27 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	FVHt2CoZH3C7GXEq for <xfs@oss.sgi.com>;
-	Tue, 18 Jun 2013 22:36:28 -0700 (PDT)
+	naB0nCepJGNVUGTl for <xfs@oss.sgi.com>;
+	Tue, 18 Jun 2013 22:36:25 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UpB49-0003AI-99
-	for xfs@oss.sgi.com; Wed, 19 Jun 2013 15:36:21 +1000
+	(envelope-from <dave@fromorbit.com>) id 1UpB44-0003AH-6l
+	for xfs@oss.sgi.com; Wed, 19 Jun 2013 15:36:16 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UpB44-0000DU-3G
+	(envelope-from <dave@disappointment.disaster>) id 1UpB44-0000DR-22
 	for xfs@oss.sgi.com; Wed, 19 Jun 2013 15:36:16 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 01/50] xfsprogs: introduce xfs_icreate.h
-Date: Wed, 19 Jun 2013 15:35:24 +1000
-Message-Id: <1371620173-712-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1371620173-712-1-git-send-email-david@fromorbit.com>
-References: <1371620173-712-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 00/50] xfsprogs: patch queue for crc-dev
+Date: Wed, 19 Jun 2013 15:35:23 +1000
+Message-Id: <1371620173-712-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,139 +34,90 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi folks,
 
-Bring the new inode create item definitions across from kernel space
-for xfs_logprint to be able to parse.
+This is the latest patchset for the crc-dev branch of xfsprogs.
+It follows up on the last series of 22 patches to get libxf sin sync
+with the kernel code but adding all the changes from the kernel size
+to remove __KERNEL__ from the code. Hence there's a fair bit more
+code churn in the patch set, but overall the diffstat is a
+significant reduction in code in libxfs. Like the kernel side
+patchset, there is a lot of new files that are shared with the
+kernel, and the diffstat reflects that:
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- include/Makefile           |    2 +-
- include/xfs_icreate_item.h |   52 ++++++++++++++++++++++++++++++++++++++++++++
- include/xfs_log.h          |    3 ++-
- include/xfs_trans.h        |    7 ++++--
- 4 files changed, 60 insertions(+), 4 deletions(-)
+90 files changed, 3573 insertions(+), 4863 deletions(-)
+ rename include/{xfs_buf_item.h => xfs_buf_item_format.h} (62%)
+ delete mode 100644 include/xfs_dfrag.h
+ create mode 100644 include/xfs_dquot_format.h
+ rename include/{xfs_extfree_item.h => xfs_extfree_item_format.h} (69%)
  create mode 100644 include/xfs_icreate_item.h
+ create mode 100644 include/xfs_icreate_item_format.h
+ delete mode 100644 include/xfs_inode.h
+ create mode 100644 include/xfs_inode_buf.h
+ create mode 100644 include/xfs_inode_fork.h
+ rename include/{xfs_inode_item.h => xfs_inode_item_format.h} (61%)
+ delete mode 100644 include/xfs_log.h
+ create mode 100644 include/xfs_log_format.h
+ delete mode 100644 include/xfs_log_priv.h
+ delete mode 100644 include/xfs_mount.h
+ delete mode 100644 include/xfs_quota.h
+ create mode 100644 include/xfs_quota_defs.h
+ delete mode 100644 include/xfs_rtalloc.h
+ create mode 100644 include/xfs_rtalloc_defs.h
+ delete mode 100644 include/xfs_symlink.h
+ create mode 100644 include/xfs_symlink_remote.h
+ delete mode 100644 include/xfs_trans.h
+ create mode 100644 include/xfs_trans_format.h
+ create mode 100644 include/xfs_trans_resv.h
+ create mode 100644 libxfs/xfs_inode_buf.c
+ rename libxfs/{xfs_inode.c => xfs_inode_fork.c} (82%)
+ create mode 100644 libxfs/xfs_log_rlimit.c
+ rename libxfs/{xfs_mount.c => xfs_sb.c} (94%)
+ rename libxfs/{xfs_symlink.c => xfs_symlink_remote.c} (68%)
+ rename libxfs/{xfs_trans.c => xfs_trans_resv.c} (67%)
 
-diff --git a/include/Makefile b/include/Makefile
-index 92161bd..ba2c80d 100644
---- a/include/Makefile
-+++ b/include/Makefile
-@@ -26,7 +26,7 @@ QAHFILES = libxfs.h libxlog.h \
- 	xfs_btree_trace.h xfs_buf_item.h xfs_cksum.h xfs_da_btree.h \
- 	xfs_dinode.h xfs_dir2.h xfs_dir2_format.h \
- 	xfs_extfree_item.h xfs_ialloc.h xfs_ialloc_btree.h \
--	xfs_inode.h xfs_inode_item.h xfs_inum.h \
-+	xfs_icreate_item.h xfs_inode.h xfs_inode_item.h xfs_inum.h \
- 	xfs_log.h xfs_log_priv.h xfs_log_recover.h xfs_metadump.h \
- 	xfs_mount.h xfs_quota.h xfs_rtalloc.h xfs_sb.h xfs_symlink.h \
- 	xfs_trace.h xfs_trans.h xfs_trans_space.h xfs_dfrag.h
-diff --git a/include/xfs_icreate_item.h b/include/xfs_icreate_item.h
-new file mode 100644
-index 0000000..88ba8aa
---- /dev/null
-+++ b/include/xfs_icreate_item.h
-@@ -0,0 +1,52 @@
-+/*
-+ * Copyright (c) 2008-2010, Dave Chinner
-+ * All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+#ifndef XFS_ICREATE_ITEM_H
-+#define XFS_ICREATE_ITEM_H	1
-+
-+/*
-+ * on disk log item structure
-+ *
-+ * Log recovery assumes the first two entries are the type and size and they fit
-+ * in 32 bits. Also in host order (ugh) so they have to be 32 bit aligned so
-+ * decoding can be done correctly.
-+ */
-+struct xfs_icreate_log {
-+	__uint16_t	icl_type;	/* type of log format structure */
-+	__uint16_t	icl_size;	/* size of log format structure */
-+	__be32		icl_ag;		/* ag being allocated in */
-+	__be32		icl_agbno;	/* start block of inode range */
-+	__be32		icl_count;	/* number of inodes to initialise */
-+	__be32		icl_isize;	/* size of inodes */
-+	__be32		icl_length;	/* length of extent to initialise */
-+	__be32		icl_gen;	/* inode generation number to use */
-+};
-+
-+/* in memory log item structure */
-+struct xfs_icreate_item {
-+	struct xfs_log_item	ic_item;
-+	struct xfs_icreate_log	ic_format;
-+};
-+
-+extern kmem_zone_t *xfs_icreate_zone;	/* inode create item zone */
-+
-+void xfs_icreate_log(struct xfs_trans *tp, xfs_agnumber_t agno,
-+			xfs_agblock_t agbno, unsigned int count,
-+			unsigned int inode_size, xfs_agblock_t length,
-+			unsigned int generation);
-+
-+#endif	/* XFS_ICREATE_ITEM_H */
-diff --git a/include/xfs_log.h b/include/xfs_log.h
-index 5caee96..70cc014 100644
---- a/include/xfs_log.h
-+++ b/include/xfs_log.h
-@@ -88,7 +88,8 @@ static inline xfs_lsn_t	_lsn_cmp(xfs_lsn_t lsn1, xfs_lsn_t lsn2)
- #define XLOG_REG_TYPE_UNMOUNT		17
- #define XLOG_REG_TYPE_COMMIT		18
- #define XLOG_REG_TYPE_TRANSHDR		19
--#define XLOG_REG_TYPE_MAX		19
-+#define XLOG_REG_TYPE_ICREATE		20
-+#define XLOG_REG_TYPE_MAX		20
- 
- typedef struct xfs_log_iovec {
- 	void		*i_addr;	/* beginning address of region */
-diff --git a/include/xfs_trans.h b/include/xfs_trans.h
-index acf1381..36a0026 100644
---- a/include/xfs_trans.h
-+++ b/include/xfs_trans.h
-@@ -48,6 +48,7 @@ typedef struct xfs_trans_header {
- #define	XFS_LI_BUF		0x123c	/* v2 bufs, variable sized inode bufs */
- #define	XFS_LI_DQUOT		0x123d
- #define	XFS_LI_QUOTAOFF		0x123e
-+#define	XFS_LI_ICREATE		0x123f
- 
- #define XFS_LI_TYPE_DESC \
- 	{ XFS_LI_EFI,		"XFS_LI_EFI" }, \
-@@ -56,7 +57,8 @@ typedef struct xfs_trans_header {
- 	{ XFS_LI_INODE,		"XFS_LI_INODE" }, \
- 	{ XFS_LI_BUF,		"XFS_LI_BUF" }, \
- 	{ XFS_LI_DQUOT,		"XFS_LI_DQUOT" }, \
--	{ XFS_LI_QUOTAOFF,	"XFS_LI_QUOTAOFF" }
-+	{ XFS_LI_QUOTAOFF,	"XFS_LI_QUOTAOFF" }, \
-+	{ XFS_LI_ICREATE,	"XFS_LI_ICREATE" }
- 
- /*
-  * Transaction types.  Used to distinguish types of buffers.
-@@ -107,7 +109,8 @@ typedef struct xfs_trans_header {
- #define	XFS_TRANS_SWAPEXT		40
- #define	XFS_TRANS_SB_COUNT		41
- #define	XFS_TRANS_CHECKPOINT		42
--#define	XFS_TRANS_TYPE_MAX		42
-+#define	XFS_TRANS_ICREATE		43
-+#define	XFS_TRANS_TYPE_MAX		43
- /* new transaction types need to be reflected in xfs_logprint(8) */
- 
- #define XFS_TRANS_TYPES \
--- 
-1.7.10.4
+Overall, it's a significant reduction in the amount of code, and it
+cleans up quite a bit of the nasty header file dependency issues as
+the majority of the new shared header files are not dependent on
+each other. Having header files like xfs_mount.h, xfs_trans.h,
+xfs_log.h and xfs_log_priv.h no longer present in userspace makes a
+big difference to the clarity of the libxfs header files...
+
+The only other major addition to the series is Jeff Liu's
+log reservation calculation patchset, which allows mkfs to calculate
+the minmum log size based on log reservation sizes rather than
+transaction reservation sizes. This causes a significant increase in
+the default size of the log for small filesystems - many xfstests now
+fail because the default log size doesn't fit inside a 16MB
+AG anymore. Hence mkfs will need some further tweaking here to avoid
+those failures. xfs/216 gives a pretty good overview of the
+difference in default sizes:
+
+ QA output created by 216
+-fssize=1g log      =internal log           bsize=4096   blocks=2560, version=2
+-fssize=2g log      =internal log           bsize=4096   blocks=2560, version=2
+-fssize=4g log      =internal log           bsize=4096   blocks=2560, version=2
+-fssize=8g log      =internal log           bsize=4096   blocks=2560, version=2
+-fssize=16g log      =internal log           bsize=4096   blocks=2560, version=2
+-fssize=32g log      =internal log           bsize=4096   blocks=4096, version=2
++fssize=1g log      =internal log           bsize=4096   blocks=4896, version=2
++fssize=2g log      =internal log           bsize=4096   blocks=4896, version=2
++fssize=4g log      =internal log           bsize=4096   blocks=4896, version=2
++fssize=8g log      =internal log           bsize=4096   blocks=4896, version=2
++fssize=16g log      =internal log           bsize=4096   blocks=4896, version=2
++fssize=32g log      =internal log           bsize=4096   blocks=4896, version=2
+ fssize=64g log      =internal log           bsize=4096   blocks=8192, version=2
+
+Which indicate worst case log reservation is roughly 2x larger than
+the worst case transaction reservation for small filesystems. I'm
+surprised that we haven't had more problems with this in the past
+than we have...
+
+Thoughts, comments, flames?
+
+Cheers,
+
+Dave.
 
 _______________________________________________
 xfs mailing list
