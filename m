@@ -1,18 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E17247F3F
-	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 17:49:20 -0500 (CDT)
-Date: Wed, 19 Jun 2013 17:49:16 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: [RFC PATCH 3/3] xfstests: upload test results
-Message-ID: <20130619224916.GW20932@sgi.com>
-References: <1371596399.22504.38.camel@chandra-dt.ibm.com>
-	<20130618233426.GD29338@dastard>
-	<1371675639.22504.63.camel@chandra-dt.ibm.com>
-	<20130619223750.GT20932@sgi.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 3D4F27CBF
+	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 17:54:38 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 2A982304039
+	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 15:54:38 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	olQXsmHD0oT0PHV9 for <xfs@oss.sgi.com>;
+	Wed, 19 Jun 2013 15:54:36 -0700 (PDT)
+Date: Thu, 20 Jun 2013 08:54:04 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 00/60] xfs: patch queue for 3.11
+Message-ID: <20130619225404.GJ29338@dastard>
+References: <1371617468-32559-1-git-send-email-david@fromorbit.com>
+	<20130619143537.GN20932@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130619223750.GT20932@sgi.com>
+In-Reply-To: <20130619143537.GN20932@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,147 +30,56 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Chandra Seetharaman <sekharan@us.ibm.com>
-Cc: XFS mailing list <xfs@oss.sgi.com>
+To: Ben Myers <bpm@sgi.com>
+Cc: xfs@oss.sgi.com
 
-Set the ARCHIVE_URL environment variable to upload test results to a
-central location:
+On Wed, Jun 19, 2013 at 09:35:37AM -0500, Ben Myers wrote:
+> Dave,
+> 
+> On Wed, Jun 19, 2013 at 02:50:08PM +1000, Dave Chinner wrote:
+> > This is my patch queue for 3.11 as it stands right now.
+> 
+> Getting all of this in for 3.11 does not strike me as being
+> realistic.
 
-export ARCHIVE_URL=ftp://anonymous:joe_at_xyz.com@ftp.xyz.com/xfstests/results
+Why not? We've done more complex changes in the past...
 
----
- check     |   14 ++++++++++++++
- common.rc |   24 ++++++++++++++++++++++++
- 2 files changed, 38 insertions(+)
+> You need to think about how this can be split up.
 
-Index: xfstests/check
-===================================================================
---- xfstests.orig/check
-+++ xfstests/check
-@@ -28,6 +28,7 @@ n_bad=0
- bad=""
- notrun=""
- interrupt=true
-+start_time=`date "+%s"`
- diff="diff -u"
- showme=false
- have_test_arg=false
-@@ -312,6 +313,7 @@ END	{ if (NR > 0) {
- 	}' \
- 	    | sort -n >$tmp.out
- 	    mv $tmp.out $check.time
-+	    _archive $check.time $start_time
- 	fi
- 
- 	echo "" >>/tmp/check.log
-@@ -343,6 +345,7 @@ END	{ if (NR > 0) {
- 	fi
- 	needwrap=false
-         cat /tmp/check.log >> $check.log
-+	_archive /tmp/check.log $start_time
- 	rm -f /tmp/check.log
-     fi
- 
-@@ -368,6 +371,7 @@ rm -f $check.full
- 
- _full_source_details > /tmp/check.desc
- cat /tmp/check.desc
-+_archive /tmp/check.desc $start_time
- 
- # print out our test configuration
- echo "FSTYP         -- `_full_fstyp_details`"
-@@ -453,6 +457,8 @@ do
- 	rm -f core $seqres.notrun
- 
- 	start=`_wallclock`
-+	echo "$seq $start" > $tmp.start
-+	_archive $tmp.start $start_time
- 	$timestamp && echo -n "	["`date "+%T"`"]"
- 	[ ! -x $seq ] && chmod u+x $seq # ensure we can run it
- 	$LOGGER_PROG "run xfstest $seqnum"
-@@ -460,6 +466,8 @@ do
- 	sts=$?
- 	$timestamp && _timestamp
- 	stop=`_wallclock`
-+	echo "$seq $stop" > $tmp.stop
-+	_archive $tmp.stop $start_time
- 
- 	_fix_malloc <$tmp.rawout >$tmp.out
- 	rm -f $tmp.rawout
-@@ -468,6 +476,7 @@ do
- 	then
- 	    echo -n " [dumped core]"
- 	    mv core $RESULT_BASE/$seqnum.core
-+	    _archive $RESULT_BASE/$seqnum.core $start_time
- 	    err=true
- 	fi
- 
-@@ -476,6 +485,7 @@ do
- 	    $timestamp || echo -n " [not run] "
- 	    $timestamp && echo " [not run]" && echo -n "	$seqnum -- "
- 	    cat $seqres.notrun
-+            _archive $seqres.notrun $start_time
- 	    notrun="$notrun $seqnum"
- 	else
- 	    if [ $sts -ne 0 ]
-@@ -501,6 +511,8 @@ do
- 		else
- 		    echo " - output mismatch (see $seqres.out.bad)"
- 		    mv $tmp.out $seqres.out.bad
-+		    _archive $seqres.out $start_time
-+		    _archive $seqres.out.bad $start_time
- 		    $diff $seq.out $seqres.out.bad | {
- 		        if test "$DIFF_LENGTH" -le 0; then
- 				cat
-@@ -515,7 +527,7 @@ do
- 		fi
- 	    fi
- 	fi
--
-+        rm -f $tmp.$seq.start $tmp.seq.stop
-     fi
- 
-     # come here for each test, except when $showme is true
-Index: xfstests/common/rc
-===================================================================
---- xfstests.orig/common/rc
-+++ xfstests/common/rc
-@@ -1738,6 +1738,27 @@ _full_platform_details()
-      echo "$os/$platform $host $kernel"
- }
- 
-+_archive()
-+{
-+    if [ -z "$ARCHIVE_URL" ]; then
-+        return;
-+    fi
-+
-+    file=$1
-+    subdir=$2
-+    args=$3
-+
-+    if [ ! -e $file ]; then
-+        _fail "archive: $file does not exist"
-+    fi
-+
-+    desc=$(cat /proc/version | awk '{print $3}')
-+
-+    url=$ARCHIVE_URL/`hostname -f`/$desc/$subdir
-+    curl $args --ftp-create-dirs --silent --upload-file \
-+         $file $url/`basename $file`
-+}
-+
- _full_source_details()
- {
-     if [ -z $SRCDIRS ]; then
-@@ -1775,6 +1796,7 @@ _full_source_details()
-                 echo -e "\t\tmd5sum:\t\t$md5_checksum"
-                 echo -e "\t\tX-Patchwork-Id:\t${patchworkid##* }"
-                 echo -e "\t\tMessage-Id:\t${messageid##* }"
-+                _archive $dir/patches/$p $start_time/$dir/patches
-             done
-         fi
-     done
+Sure - the first 27 patches at the necessary ones for 3.11.
+
+> I
+> see that you have rebased Jeff's log size validation patch set
+> after your rearrangement.  I'd rather you'd taken Jeff's series
+> first and then made your changes.  Now we can't pull in Jeff's
+> work without pulling in a bunch of rearrangement that hasn't been
+> fully discussed.
+
+Sure, but Jeff's work hadn't been reviewed or QA'd by anyone else,
+so what's the problem? If the Maintainers had their job that a month
+ago when Jeff posted the patches, then this wouldn't be an issue as
+my patchset would now be based on top of it.
+
+You're welcome to go review, test and integrate Jeff's patchset
+before mine - I'll just have to rebase my patchset.
+
+> You have also crowded out Chandra's quota work.  We had an
+> agreement with him to go for 3.11 with that work which you have broken.
+
+You're blaming me for the fact the Maintainers haven't reviewed and
+integrated Chandra's latest quota patchset that was posted 6 weeks
+ago?
+
+Feel free to get Chandra to repost the patchset and review and
+integrate it before taking any of my changes. I'll just rebase my
+patchset on top of whatever ends up in the XFS tree....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
