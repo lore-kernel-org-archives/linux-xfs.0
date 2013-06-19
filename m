@@ -1,28 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4AB8B7CBF
-	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 18:02:20 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id DE7197CBF
+	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 18:33:51 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D2B60AC005
-	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 16:02:16 -0700 (PDT)
-Received: from mx3-phx2.redhat.com (mx3-phx2.redhat.com [209.132.183.24]) by
-	cuda.sgi.com with ESMTP id rGtKsSZBdwkBRFPl for
-	<xfs@oss.sgi.com>; Wed, 19 Jun 2013 16:02:15 -0700 (PDT)
-Date: Wed, 19 Jun 2013 19:02:13 -0400 (EDT)
-From: Nathan Scott <nathans@redhat.com>
-Message-ID: <1040361622.4508678.1371682933909.JavaMail.root@redhat.com>
-In-Reply-To: <CAC2B=ZGm4W=oFY+8sWAefhH79qK5N7yma4qQh_AQaOGiQDUWhw@mail.gmail.com>
-References: <CAC2B=ZFP_Fg34aFpk857stgB7MGcrYs9tybRS-ttw1CXNeU41Q@mail.gmail.com>
-	<CAC2B=ZFZskLnp5baVJK+R1xrpOfTkr1QXpA9jyHvxfk5Wd4yDg@mail.gmail.com>
-	<419435719.1662203.1371431489790.JavaMail.root@redhat.com>
-	<20130617024603.GJ29338@dastard>
-	<1597962722.1767244.1371447710942.JavaMail.root@redhat.com>
-	<CAC2B=ZENLd7hoP=U08hyb6xFw6ye0nL5MMW+iDnTXTcoKCYEvA@mail.gmail.com>
-	<20130617111347.GL29338@dastard>
-	<CAC2B=ZGm4W=oFY+8sWAefhH79qK5N7yma4qQh_AQaOGiQDUWhw@mail.gmail.com>
-Subject: Useful stats (was Re: definitions for /proc/fs/xfs/stat)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8C114AC007
+	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 16:33:51 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	8S5ERf5qoUEL6FaV for <xfs@oss.sgi.com>;
+	Wed, 19 Jun 2013 16:33:50 -0700 (PDT)
+Date: Thu, 20 Jun 2013 09:33:47 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 00/60] xfs: patch queue for 3.11
+Message-ID: <20130619233347.GK29338@dastard>
+References: <1371617468-32559-1-git-send-email-david@fromorbit.com>
+	<20130619143537.GN20932@sgi.com>
+	<20130619144441.GA14834@infradead.org>
+	<51C1C622.7050704@redhat.com> <20130619154709.GO20932@sgi.com>
 MIME-Version: 1.0
-Reply-To: Nathan Scott <nathans@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <20130619154709.GO20932@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,48 +32,79 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Seger <mjseger@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: Ric Wheeler <rwheeler@redhat.com>, xfs@oss.sgi.com
 
-Hi Mark,
+On Wed, Jun 19, 2013 at 10:47:09AM -0500, Ben Myers wrote:
+> Hey Ric,
+> 
+> On Wed, Jun 19, 2013 at 10:54:26AM -0400, Ric Wheeler wrote:
+> > On 06/19/2013 10:44 AM, Christoph Hellwig wrote:
+> > >On Wed, Jun 19, 2013 at 09:35:37AM -0500, Ben Myers wrote:
+> > >>>On Wed, Jun 19, 2013 at 02:50:08PM +1000, Dave Chinner wrote:
+> > >>>> >This is my patch queue for 3.11 as it stands right now.
+> > >>>
+> > >>>Getting all of this in for 3.11 does not strike me as being realistic.  You
+> > >>>need to think about how this can be split up.  I see that you have rebased
+> > >>>Jeff's log size validation patch set after your rearrangement.  I'd rather
+> > >>>you'd taken Jeff's series first and then made your changes.  Now we can't pull
+> > >>>in Jeff's work without pulling in a bunch of rearrangement that hasn't been
+> > >>>fully discussed.  You have also crowded out Chandra's quota work.  We had an
+> > >>>agreement with him to go for 3.11 with that work which you have broken.
+> >
+> > >I think 3.11 is a realistic target for all the code movearound, but
+> > >maybe not as part of the normal pull request for -rc1.  If we make sure
+> > >it's really moving code around and not changing it I think a sending a
+> > >second pull request to Linus saying this is just code movearounds we
+> > >wanted to do when the churn causes least problems with actual code work
+> > >he should be fine with it.
+> > 
+> > Just to chime in here, we have a lot of resources focused on testing
+> > these XFS updates both internally with our QA team and with a range
+> > of other RH partners.
+> 
+> This isn't about the size of your QA team or the number of other RH partners.
+> 
+> We had an agreement with Chandra to work toward getting his quota work in 3.11
+> and it appears that Dave has crowded him out with a rearrangement of code which
+> we had no agreement would go into 3.11.
 
------ Original Message -----
-> ...
-> On a totally different topic, and if you like we can start a different
-> thread on it, I'd be interested in adding some monitoring stats to collectl
-> for xfs and could use some suggestions of what are the most important.
+What I posted is what I'm *proposing* for 3.11. You can't have an
+agreement with first having a proposal....
 
-Did you receive any other feedback on this (offlist perhaps)?  I was kinda
-hoping someone else would chime in, but can share our experiences with PCP
-if it helps.
+> Further, Dave has taken Jeff's log
+> size validation series hostage by rebasing it on top of this rearrangement of
+> code.
 
-We provide options to record all xfs.* metrics & an alternative to record
-just the core I/O stats (so log I/O and the file read/write metrics).  With
-PCP one can record any subset at any rate, so those are just convenience /
-default suggestions.
+Ben, I think you're being a little melodramatic here. I asked Jeff
+if it was OK to rebase his patchset, and he said that was fine:
 
-In terms of recording in collectl, not sure what the requirements/parameters
-are for you but I'd suggest recording all the data (in save-to-disk mode),
-and IIRC you've got brief/verbose reporting modes - I'd focus on the log,
-file I/O and buffer I/O stats when being "brief", and expand out to showing
-in-core inode/dquot stats, ail/transaction stats, dir/attr operation stats.
-You might consider another very-verbose kinda view with all of the various
-btree stats, but that may be going too far.
+http://oss.sgi.com/pipermail/xfs/2013-June/027270.html
 
-Note that these are all aggregate statistics, there has been on-and-off
-discussion for many years about adding some per-filesystem XFS stats, but
-to date that has not happened - perhaps someday it will, so keep that in
-mind for collectl too I guess.
+You don't have to take my rebase of Jeff's patches - you're welcome
+to take them direct from Jeff, but then I'll have to send reviews
+asking for changes to problems I found when integrating it so that's
+going to delay any integration you can do of that series. Please let
+Jeff and myself know what you want to do here...
 
-Also, be aware there is a separate file for quota metrics, for hysterical
-raisins (/proc/fs/xfs/xqmstat).
+> If there is a strategic reason that RH needs to have the kernel/libxfs code
+> rearranged and separated in 3.11 I would have liked to have heard about it
+> before now.  I'm all for getting this work done, but not at the expense of
+> crowding out other XFS contributors.
 
-HTH.
+You are making a mountain out of a molehill. I had an itch, and I
+scratched it. Simple as that. It is only a couple of days work.
 
-cheers.
+If you think it's too much for 3.11, then just say so and leave it
+at that. I'll move it to my for-3.12 queue and you won't see it
+again until after 3.11-rc1 is released...
 
---
-Nathan
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
