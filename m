@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E74047FB7
-	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 00:37:16 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E31B18F8037
-	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 22:37:16 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 2A0187FE7
+	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 00:37:19 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 17C7B304039
+	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 22:37:19 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	p1amCXzNtWW75pua for <xfs@oss.sgi.com>;
-	Tue, 18 Jun 2013 22:37:15 -0700 (PDT)
+	o6TOwGxXKsAFVGkz for <xfs@oss.sgi.com>;
+	Tue, 18 Jun 2013 22:37:16 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UpB4y-0003DA-Sf
+	(envelope-from <dave@fromorbit.com>) id 1UpB4y-0003DE-Us
 	for xfs@oss.sgi.com; Wed, 19 Jun 2013 15:37:12 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UpB4o-0000Gh-OY
+	(envelope-from <dave@disappointment.disaster>) id 1UpB4o-0000Gu-Rj
 	for xfs@oss.sgi.com; Wed, 19 Jun 2013 15:37:02 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 41/50] xfs: make struct xfs_perag kernel only
-Date: Wed, 19 Jun 2013 15:36:04 +1000
-Message-Id: <1371620173-712-42-git-send-email-david@fromorbit.com>
+Subject: [PATCH 44/50] xfs: introduce xfs_rtalloc_defs.h
+Date: Wed, 19 Jun 2013 15:36:07 +1000
+Message-Id: <1371620173-712-45-git-send-email-david@fromorbit.com>
 In-Reply-To: <1371620173-712-1-git-send-email-david@fromorbit.com>
 References: <1371620173-712-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,124 +38,298 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The struct xfs_perag has many kernel-only definitions in it,
-requiring a __KERNEL__ guard so userspace can use it to. Move it to
-xfs_mount.h so that it it kernel-only, and let userspace redefine
-it's own version of the structure containing only what it needs.
-This gets rid of another __KERNEL__ check in the XFS header files.
+There are quite a few realtime device definitions shared with
+userspace. Move them from xfs_rtalloc.h to xfs_rt_alloc_defs.h
+so we don't need to share xfs_rtalloc.h with userspace anymore.
+
+This removes the final __KERNEL__ region from the XFS kernel
+codebase. Yay!
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/libxfs.h |   31 +++++++++++++++++++++++++++++++
- include/xfs_ag.h |   53 -----------------------------------------------------
- 2 files changed, 31 insertions(+), 53 deletions(-)
+ include/Makefile           |    3 +-
+ include/libxfs.h           |    2 +-
+ include/xfs_rtalloc.h      |  166 --------------------------------------------
+ include/xfs_rtalloc_defs.h |   70 +++++++++++++++++++
+ 4 files changed, 73 insertions(+), 168 deletions(-)
+ delete mode 100644 include/xfs_rtalloc.h
+ create mode 100644 include/xfs_rtalloc_defs.h
 
+diff --git a/include/Makefile b/include/Makefile
+index 006506b..98ffffb 100644
+--- a/include/Makefile
++++ b/include/Makefile
+@@ -40,7 +40,8 @@ QAHFILES = libxfs.h libxlog.h \
+ 	xfs_metadump.h \
+ 	xfs_quota_defs.h \
+ 	xfs_dquot_format.h \
+-	xfs_rtalloc.h xfs_sb.h \
++	xfs_rtalloc_defs.h \
++	xfs_sb.h \
+ 	xfs_symlink_remote.h \
+ 	xfs_trace.h \
+ 	xfs_trans_format.h \
 diff --git a/include/libxfs.h b/include/libxfs.h
-index c09ccad..4fb1762 100644
+index b1ba154..e4805c1 100644
 --- a/include/libxfs.h
 +++ b/include/libxfs.h
-@@ -217,6 +217,37 @@ typedef struct xfs_mount {
- 	xfs_dablk_t		m_dirfreeblk;	/* blockno of dirfreeindex v2 */
- } xfs_mount_t;
+@@ -667,7 +667,7 @@ extern int		libxfs_nproc(void);
+ extern unsigned long	libxfs_physmem(void);	/* in kilobytes */
  
-+/*
-+ * Per-ag incore structure, copies of information in agf and agi,
-+ * to improve the performance of allocation group selection.
-+ */
-+typedef struct xfs_perag {
-+	struct xfs_mount *pag_mount;	/* owner filesystem */
-+	xfs_agnumber_t	pag_agno;	/* AG this structure belongs to */
-+	atomic_t	pag_ref;	/* perag reference count */
-+	char		pagf_init;	/* this agf's entry is initialized */
-+	char		pagi_init;	/* this agi's entry is initialized */
-+	char		pagf_metadata;	/* the agf is preferred to be metadata */
-+	char		pagi_inodeok;	/* The agi is ok for inodes */
-+	__uint8_t	pagf_levels[XFS_BTNUM_AGF];
-+					/* # of levels in bno & cnt btree */
-+	__uint32_t	pagf_flcount;	/* count of blocks in freelist */
-+	xfs_extlen_t	pagf_freeblks;	/* total free blocks */
-+	xfs_extlen_t	pagf_longest;	/* longest free space */
-+	__uint32_t	pagf_btreeblks;	/* # of blocks held in AGF btrees */
-+	xfs_agino_t	pagi_freecount;	/* number of free inodes */
-+	xfs_agino_t	pagi_count;	/* number of allocated inodes */
-+
-+	/*
-+	 * Inode allocation search lookup optimisation.
-+	 * If the pagino matches, the search for new inodes
-+	 * doesn't need to search the near ones again straight away
-+	 */
-+	xfs_agino_t	pagl_pagino;
-+	xfs_agino_t	pagl_leftrec;
-+	xfs_agino_t	pagl_rightrec;
-+	int		pagb_count;	/* pagb slots in use */
-+} xfs_perag_t;
+ #include <xfs/xfs_ialloc.h>
+-#include <xfs/xfs_rtalloc.h>
++#include <xfs/xfs_rtalloc_defs.h>
  
- #define LIBXFS_MOUNT_ROOTINOS		0x0001
- #define LIBXFS_MOUNT_DEBUGGER		0x0002
-diff --git a/include/xfs_ag.h b/include/xfs_ag.h
-index 317aa86..1cb740a 100644
---- a/include/xfs_ag.h
-+++ b/include/xfs_ag.h
-@@ -227,59 +227,6 @@ typedef struct xfs_agfl {
- } xfs_agfl_t;
- 
- /*
-- * Per-ag incore structure, copies of information in agf and agi,
-- * to improve the performance of allocation group selection.
+ #include <xfs/xfs_attr_leaf.h>
+ #include <xfs/xfs_attr_remote.h>
+diff --git a/include/xfs_rtalloc.h b/include/xfs_rtalloc.h
+deleted file mode 100644
+index f7f3a35..0000000
+--- a/include/xfs_rtalloc.h
++++ /dev/null
+@@ -1,166 +0,0 @@
+-/*
+- * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it would be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write the Free Software Foundation,
+- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 - */
--#define XFS_PAGB_NUM_SLOTS	128
+-#ifndef __XFS_RTALLOC_H__
+-#define	__XFS_RTALLOC_H__
 -
--typedef struct xfs_perag {
--	struct xfs_mount *pag_mount;	/* owner filesystem */
--	xfs_agnumber_t	pag_agno;	/* AG this structure belongs to */
--	atomic_t	pag_ref;	/* perag reference count */
--	char		pagf_init;	/* this agf's entry is initialized */
--	char		pagi_init;	/* this agi's entry is initialized */
--	char		pagf_metadata;	/* the agf is preferred to be metadata */
--	char		pagi_inodeok;	/* The agi is ok for inodes */
--	__uint8_t	pagf_levels[XFS_BTNUM_AGF];
--					/* # of levels in bno & cnt btree */
--	__uint32_t	pagf_flcount;	/* count of blocks in freelist */
--	xfs_extlen_t	pagf_freeblks;	/* total free blocks */
--	xfs_extlen_t	pagf_longest;	/* longest free space */
--	__uint32_t	pagf_btreeblks;	/* # of blocks held in AGF btrees */
--	xfs_agino_t	pagi_freecount;	/* number of free inodes */
--	xfs_agino_t	pagi_count;	/* number of allocated inodes */
+-struct xfs_mount;
+-struct xfs_trans;
 -
--	/*
--	 * Inode allocation search lookup optimisation.
--	 * If the pagino matches, the search for new inodes
--	 * doesn't need to search the near ones again straight away
--	 */
--	xfs_agino_t	pagl_pagino;
--	xfs_agino_t	pagl_leftrec;
--	xfs_agino_t	pagl_rightrec;
--#ifdef __KERNEL__
--	spinlock_t	pagb_lock;	/* lock for pagb_tree */
--	struct rb_root	pagb_tree;	/* ordered tree of busy extents */
--
--	atomic_t        pagf_fstrms;    /* # of filestreams active in this AG */
--
--	spinlock_t	pag_ici_lock;	/* incore inode cache lock */
--	struct radix_tree_root pag_ici_root;	/* incore inode cache root */
--	int		pag_ici_reclaimable;	/* reclaimable inodes */
--	struct mutex	pag_ici_reclaim_lock;	/* serialisation point */
--	unsigned long	pag_ici_reclaim_cursor;	/* reclaim restart point */
--
--	/* buffer cache index */
--	spinlock_t	pag_buf_lock;	/* lock for pag_buf_tree */
--	struct rb_root	pag_buf_tree;	/* ordered tree of active buffers */
--
--	/* for rcu-safe freeing */
--	struct rcu_head	rcu_head;
--#endif
--	int		pagb_count;	/* pagb slots in use */
--} xfs_perag_t;
+-/* Min and max rt extent sizes, specified in bytes */
+-#define	XFS_MAX_RTEXTSIZE	(1024 * 1024 * 1024)	/* 1GB */
+-#define	XFS_DFL_RTEXTSIZE	(64 * 1024)	        /* 64kB */
+-#define	XFS_MIN_RTEXTSIZE	(4 * 1024)		/* 4kB */
 -
 -/*
-  * tags for inode radix tree
-  */
- #define XFS_ICI_NO_TAG		(-1)	/* special flag for an untagged lookup
+- * Constants for bit manipulations.
+- */
+-#define	XFS_NBBYLOG	3		/* log2(NBBY) */
+-#define	XFS_WORDLOG	2		/* log2(sizeof(xfs_rtword_t)) */
+-#define	XFS_NBWORDLOG	(XFS_NBBYLOG + XFS_WORDLOG)
+-#define	XFS_NBWORD	(1 << XFS_NBWORDLOG)
+-#define	XFS_WORDMASK	((1 << XFS_WORDLOG) - 1)
+-
+-#define	XFS_BLOCKSIZE(mp)	((mp)->m_sb.sb_blocksize)
+-#define	XFS_BLOCKMASK(mp)	((mp)->m_blockmask)
+-#define	XFS_BLOCKWSIZE(mp)	((mp)->m_blockwsize)
+-#define	XFS_BLOCKWMASK(mp)	((mp)->m_blockwmask)
+-
+-/*
+- * Summary and bit manipulation macros.
+- */
+-#define	XFS_SUMOFFS(mp,ls,bb)	((int)((ls) * (mp)->m_sb.sb_rbmblocks + (bb)))
+-#define	XFS_SUMOFFSTOBLOCK(mp,s)	\
+-	(((s) * (uint)sizeof(xfs_suminfo_t)) >> (mp)->m_sb.sb_blocklog)
+-#define	XFS_SUMPTR(mp,bp,so)	\
+-	((xfs_suminfo_t *)((bp)->b_addr + \
+-		(((so) * (uint)sizeof(xfs_suminfo_t)) & XFS_BLOCKMASK(mp))))
+-
+-#define	XFS_BITTOBLOCK(mp,bi)	((bi) >> (mp)->m_blkbit_log)
+-#define	XFS_BLOCKTOBIT(mp,bb)	((bb) << (mp)->m_blkbit_log)
+-#define	XFS_BITTOWORD(mp,bi)	\
+-	((int)(((bi) >> XFS_NBWORDLOG) & XFS_BLOCKWMASK(mp)))
+-
+-#define	XFS_RTMIN(a,b)	((a) < (b) ? (a) : (b))
+-#define	XFS_RTMAX(a,b)	((a) > (b) ? (a) : (b))
+-
+-#define	XFS_RTLOBIT(w)	xfs_lowbit32(w)
+-#define	XFS_RTHIBIT(w)	xfs_highbit32(w)
+-
+-#if XFS_BIG_BLKNOS
+-#define	XFS_RTBLOCKLOG(b)	xfs_highbit64(b)
+-#else
+-#define	XFS_RTBLOCKLOG(b)	xfs_highbit32(b)
+-#endif
+-
+-
+-#ifdef __KERNEL__
+-
+-#ifdef CONFIG_XFS_RT
+-/*
+- * Function prototypes for exported functions.
+- */
+-
+-/*
+- * Allocate an extent in the realtime subvolume, with the usual allocation
+- * parameters.  The length units are all in realtime extents, as is the
+- * result block number.
+- */
+-int					/* error */
+-xfs_rtallocate_extent(
+-	struct xfs_trans	*tp,	/* transaction pointer */
+-	xfs_rtblock_t		bno,	/* starting block number to allocate */
+-	xfs_extlen_t		minlen,	/* minimum length to allocate */
+-	xfs_extlen_t		maxlen,	/* maximum length to allocate */
+-	xfs_extlen_t		*len,	/* out: actual length allocated */
+-	xfs_alloctype_t		type,	/* allocation type XFS_ALLOCTYPE... */
+-	int			wasdel,	/* was a delayed allocation extent */
+-	xfs_extlen_t		prod,	/* extent product factor */
+-	xfs_rtblock_t		*rtblock); /* out: start block allocated */
+-
+-/*
+- * Free an extent in the realtime subvolume.  Length is expressed in
+- * realtime extents, as is the block number.
+- */
+-int					/* error */
+-xfs_rtfree_extent(
+-	struct xfs_trans	*tp,	/* transaction pointer */
+-	xfs_rtblock_t		bno,	/* starting block number to free */
+-	xfs_extlen_t		len);	/* length of extent freed */
+-
+-/*
+- * Initialize realtime fields in the mount structure.
+- */
+-int					/* error */
+-xfs_rtmount_init(
+-	struct xfs_mount	*mp);	/* file system mount structure */
+-void
+-xfs_rtunmount_inodes(
+-	struct xfs_mount	*mp);
+-
+-/*
+- * Get the bitmap and summary inodes into the mount structure
+- * at mount time.
+- */
+-int					/* error */
+-xfs_rtmount_inodes(
+-	struct xfs_mount	*mp);	/* file system mount structure */
+-
+-/*
+- * Pick an extent for allocation at the start of a new realtime file.
+- * Use the sequence number stored in the atime field of the bitmap inode.
+- * Translate this to a fraction of the rtextents, and return the product
+- * of rtextents and the fraction.
+- * The fraction sequence is 0, 1/2, 1/4, 3/4, 1/8, ..., 7/8, 1/16, ...
+- */
+-int					/* error */
+-xfs_rtpick_extent(
+-	struct xfs_mount	*mp,	/* file system mount point */
+-	struct xfs_trans	*tp,	/* transaction pointer */
+-	xfs_extlen_t		len,	/* allocation length (rtextents) */
+-	xfs_rtblock_t		*pick);	/* result rt extent */
+-
+-/*
+- * Grow the realtime area of the filesystem.
+- */
+-int
+-xfs_growfs_rt(
+-	struct xfs_mount	*mp,	/* file system mount structure */
+-	xfs_growfs_rt_t		*in);	/* user supplied growfs struct */
+-
+-#else
+-# define xfs_rtallocate_extent(t,b,min,max,l,a,f,p,rb)  (ENOSYS)
+-# define xfs_rtfree_extent(t,b,l)                       (ENOSYS)
+-# define xfs_rtpick_extent(m,t,l,rb)                    (ENOSYS)
+-# define xfs_growfs_rt(mp,in)                           (ENOSYS)
+-static inline int		/* error */
+-xfs_rtmount_init(
+-	xfs_mount_t	*mp)	/* file system mount structure */
+-{
+-	if (mp->m_sb.sb_rblocks == 0)
+-		return 0;
+-
+-	xfs_warn(mp, "Not built with CONFIG_XFS_RT");
+-	return ENOSYS;
+-}
+-# define xfs_rtmount_inodes(m)  (((mp)->m_sb.sb_rblocks == 0)? 0 : (ENOSYS))
+-# define xfs_rtunmount_inodes(m)
+-#endif	/* CONFIG_XFS_RT */
+-
+-#endif	/* __KERNEL__ */
+-
+-#endif	/* __XFS_RTALLOC_H__ */
+diff --git a/include/xfs_rtalloc_defs.h b/include/xfs_rtalloc_defs.h
+new file mode 100644
+index 0000000..42afb1b
+--- /dev/null
++++ b/include/xfs_rtalloc_defs.h
+@@ -0,0 +1,70 @@
++/*
++ * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++#ifndef __XFS_RTALLOC_DEFS_H__
++#define	__XFS_RTALLOC_DEFS_H__
++
++/* definitions shared with userspace */
++
++/* Min and max rt extent sizes, specified in bytes */
++#define	XFS_MAX_RTEXTSIZE	(1024 * 1024 * 1024)	/* 1GB */
++#define	XFS_DFL_RTEXTSIZE	(64 * 1024)	        /* 64kB */
++#define	XFS_MIN_RTEXTSIZE	(4 * 1024)		/* 4kB */
++
++/*
++ * Constants for bit manipulations.
++ */
++#define	XFS_NBBYLOG	3		/* log2(NBBY) */
++#define	XFS_WORDLOG	2		/* log2(sizeof(xfs_rtword_t)) */
++#define	XFS_NBWORDLOG	(XFS_NBBYLOG + XFS_WORDLOG)
++#define	XFS_NBWORD	(1 << XFS_NBWORDLOG)
++#define	XFS_WORDMASK	((1 << XFS_WORDLOG) - 1)
++
++#define	XFS_BLOCKSIZE(mp)	((mp)->m_sb.sb_blocksize)
++#define	XFS_BLOCKMASK(mp)	((mp)->m_blockmask)
++#define	XFS_BLOCKWSIZE(mp)	((mp)->m_blockwsize)
++#define	XFS_BLOCKWMASK(mp)	((mp)->m_blockwmask)
++
++/*
++ * Summary and bit manipulation macros.
++ */
++#define	XFS_SUMOFFS(mp,ls,bb)	((int)((ls) * (mp)->m_sb.sb_rbmblocks + (bb)))
++#define	XFS_SUMOFFSTOBLOCK(mp,s)	\
++	(((s) * (uint)sizeof(xfs_suminfo_t)) >> (mp)->m_sb.sb_blocklog)
++#define	XFS_SUMPTR(mp,bp,so)	\
++	((xfs_suminfo_t *)((bp)->b_addr + \
++		(((so) * (uint)sizeof(xfs_suminfo_t)) & XFS_BLOCKMASK(mp))))
++
++#define	XFS_BITTOBLOCK(mp,bi)	((bi) >> (mp)->m_blkbit_log)
++#define	XFS_BLOCKTOBIT(mp,bb)	((bb) << (mp)->m_blkbit_log)
++#define	XFS_BITTOWORD(mp,bi)	\
++	((int)(((bi) >> XFS_NBWORDLOG) & XFS_BLOCKWMASK(mp)))
++
++#define	XFS_RTMIN(a,b)	((a) < (b) ? (a) : (b))
++#define	XFS_RTMAX(a,b)	((a) > (b) ? (a) : (b))
++
++#define	XFS_RTLOBIT(w)	xfs_lowbit32(w)
++#define	XFS_RTHIBIT(w)	xfs_highbit32(w)
++
++#if XFS_BIG_BLKNOS
++#define	XFS_RTBLOCKLOG(b)	xfs_highbit64(b)
++#else
++#define	XFS_RTBLOCKLOG(b)	xfs_highbit32(b)
++#endif
++
++
++#endif	/* __XFS_RTALLOC_DEFS_H__ */
 -- 
 1.7.10.4
 
