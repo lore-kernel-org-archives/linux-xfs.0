@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1166429E13
-	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 23:51:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 0C33A304039
-	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 21:51:18 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 6198729E13
+	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 23:51:25 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5D02D8F8033
+	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 21:51:25 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	VebsC1wu543zDh39 for <xfs@oss.sgi.com>;
-	Tue, 18 Jun 2013 21:51:17 -0700 (PDT)
+	w2HFBsYLKsdyub50 for <xfs@oss.sgi.com>;
+	Tue, 18 Jun 2013 21:51:23 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UpAMW-0002xx-4W
-	for xfs@oss.sgi.com; Wed, 19 Jun 2013 14:51:16 +1000
+	(envelope-from <dave@fromorbit.com>) id 1UpAMb-0002y1-8I
+	for xfs@oss.sgi.com; Wed, 19 Jun 2013 14:51:21 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UpAMQ-0008VC-WD
+	(envelope-from <dave@disappointment.disaster>) id 1UpAMR-0008VU-5P
 	for xfs@oss.sgi.com; Wed, 19 Jun 2013 14:51:11 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 00/60] xfs: patch queue for 3.11
-Date: Wed, 19 Jun 2013 14:50:08 +1000
-Message-Id: <1371617468-32559-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 04/60] xfs: don't use speculative prealloc for small files
+Date: Wed, 19 Jun 2013 14:50:12 +1000
+Message-Id: <1371617468-32559-5-git-send-email-david@fromorbit.com>
+In-Reply-To: <1371617468-32559-1-git-send-email-david@fromorbit.com>
+References: <1371617468-32559-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,113 +36,89 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hi Folks,
+From: Dave Chinner <dchinner@redhat.com>
 
-This is my patch queue for 3.11 as it stands right now.
+Dedicated small file workloads have been seeing significant free
+space fragmentation causing premature inode allocation failure
+when large inode sizes are in use. A particular test case showed
+that a workload that runs to a real ENOSPC on 256 byte inodes would
+fail inode allocation with ENOSPC about about 80% full with 512 byte
+inodes, and at about 50% full with 1024 byte inodes.
 
-The first 27 patches have been posted previously, and I've addressed
-these comments directly:
+The same workload, when run with -o allocsize=4096 on 1024 byte
+inodes would run to being 100% full before giving ENOSPC. That is,
+no freespace fragmentation at all.
 
-	- non-debug static function prblems (Brian)
-	- agblock_t in xfs-ialloc.c (Brian)
-	- xfs-dir2_format.h changes reverted, now included before
-	  xfs_dir2.h (Christoph)
-	- rename xfs_aops_punch_delalloc_range() (Christoph)
+The issue was caused by the specific IO pattern the application had
+- the framework it was using did not support direct IO, and so it
+was emulating it by using fadvise(DONT_NEED). The result was that
+the data was getting written back before the speculative prealloc
+had been trimmed from memory by the close(), and so small single
+block files were being allocated with 2 blocks, and then having one
+truncated away. The result was lots of small 4k free space extents,
+and hence each new 8k allocation would take another 8k from
+contiguous free space and turn it into 4k of allocated space and 4k
+of free space.
 
-The next set of patches then build on this and implement the first
-part of where the discussions went - the removal of __KERNEL__ from
-all the XFS code. This generally takes the form of:
+Hence inode allocation, which requires contiguous, aligned
+allocation of 16k (256 byte inodes), 32k (512 byte inodes) or 64k
+(1024 byte inodes) can fail to find sufficiently large freespace and
+hence fail while there is still lots of free space available.
 
-	- split on-disk format definitions into a separate header
-	- include the header in the original it came from
-	- share the new header file with userspace
-	- repeat until all definitions are split out and the only
-	  thing is left in the orignal header is #includes and
-	  ifdef __KERNEL__ sections.
-	- remove the ifdef __KERNEL__, as this header file is no
-	  longer shared with userspace.
+There's a simple fix for this, and one that has precendence in the
+allocator code already - don't do speculative allocation unless the
+size of the file is larger than a certain size. In this case, that
+size is the minimum default preallocation size:
+mp->m_writeio_blocks. And to keep with the concept of being nice to
+people when the files are still relatively small, cap the prealloc
+to mp->m_writeio_blocks until the file goes over a stripe unit is
+size, at which point we'll fall back to the current behaviour based
+on the last extent size.
 
-The same process is done for the .c files, resulting in .c files
-that contain only kernel code or only code shared with libxfs in
-userspace.
+This will effectively turn off speculative prealloc for very small
+files, keep preallocation low for small files, and behave as it
+currently does for any file larger than a stripe unit. This
+completely avoids the freespace fragmentation problem this
+particular IO pattern was causing.
 
-This has resulted in some less than optimal code locality, mostly to
-do with xfs_inode_ops.c. The code is kernel only, and it's in that
-file because it all related to inode operatianos. However, some are
-internal core operations, some are interfaces that the VFS inode
-operations just wrap around, and some are related more closely to
-inode allocation than anything else. Hence more thought and effort
-needs to be put into factoring and merging this kernel code back
-into the most appropriate places, and that is work for a future
-release.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_iomap.c |   13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-The final part of the patchset is a rebase of Jeff Liu's log size
-validation patch set. This calculates the minimum size of the log
-that we should have to guarantee that we don't end up with
-transactions being too large for the log. This is an issue because
-mkfs currently doesn't take into account the log stripe unit padding
-that is necessary when calculating the log size, and this can drive
-the size of transaction over the maximum size the log can safely
-support.
-
-This code will warn on existing filesystems at mount time if the log
-is smaller than the minimum safe size, and for CRC enabled
-filesystems it will abort immediately as it is expected that you are
-using a mkfs binary that has this problem fixed.
-
-Overall, there is a lot of code movement in the patch set. The tail
-of the diffstat looks like:
-
- 113 files changed, 14734 insertions(+), 13221 deletions(-)
- create mode 100644 fs/xfs/xfs_attr_inactive.c
- create mode 100644 fs/xfs/xfs_attr_list.c
- create mode 100644 fs/xfs/xfs_bmap_util.c
- create mode 100644 fs/xfs/xfs_bmap_util.h
- create mode 100644 fs/xfs/xfs_buf_item_format.h
- delete mode 100644 fs/xfs/xfs_dfrag.c
- delete mode 100644 fs/xfs/xfs_dfrag.h
- create mode 100644 fs/xfs/xfs_dir2_readdir.c
- create mode 100644 fs/xfs/xfs_dquot_format.h
- create mode 100644 fs/xfs/xfs_extent_ops.c
- rename fs/xfs/{xfs_utils.h => xfs_extent_ops.h} (55%)
- create mode 100644 fs/xfs/xfs_extfree_item_format.h
- create mode 100644 fs/xfs/xfs_icreate_item.c
- create mode 100644 fs/xfs/xfs_icreate_item.h
- create mode 100644 fs/xfs/xfs_icreate_item_format.h
- create mode 100644 fs/xfs/xfs_inode_buf.c
- create mode 100644 fs/xfs/xfs_inode_buf.h
- create mode 100644 fs/xfs/xfs_inode_fork.c
- create mode 100644 fs/xfs/xfs_inode_fork.h
- create mode 100644 fs/xfs/xfs_inode_item_format.h
- create mode 100644 fs/xfs/xfs_inode_ops.c
- create mode 100644 fs/xfs/xfs_inode_ops.h
- create mode 100644 fs/xfs/xfs_log_format.h
- create mode 100644 fs/xfs/xfs_log_rlimit.c
- create mode 100644 fs/xfs/xfs_quota_defs.h
- delete mode 100644 fs/xfs/xfs_rename.c
- create mode 100644 fs/xfs/xfs_rtalloc_defs.h
- create mode 100644 fs/xfs/xfs_sb.c
- create mode 100644 fs/xfs/xfs_symlink_remote.c
- create mode 100644 fs/xfs/xfs_symlink_remote.h
- create mode 100644 fs/xfs/xfs_trans_format.h
- create mode 100644 fs/xfs/xfs_trans_resv.c
- create mode 100644 fs/xfs/xfs_trans_resv.h
- delete mode 100644 fs/xfs/xfs_utils.c
- delete mode 100644 fs/xfs/xfs_vnodeops.c
- delete mode 100644 fs/xfs/xfs_vnodeops.h
-
-Which should give you an idea of the number of new files that have
-been added to split out shared userspace code, and hence an idea
-of how much ofthe diffstat is just moving stuff around. FWIW, this
-kills about 2000 lines of __KERNEL__ code in header files that is
-currently exported to userspace. You can see why I'm thinking a
-kernel fs/xfs/libxfs subdir might be a good idea. :)
-
-Comments, flames, etc all welcome.
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 8f8aaee..6a70964 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -284,6 +284,15 @@ xfs_iomap_eof_want_preallocate(
+ 		return 0;
+ 
+ 	/*
++	 * If the file is smaller than the minimum prealloc and we are using
++	 * dynamic preallocation, don't do any preallocation at all as it is
++	 * likely this is the only write to the file that is going to be done.
++	 */
++	if (!(mp->m_flags & XFS_MOUNT_DFLT_IOSIZE) &&
++	    XFS_ISIZE(ip) < XFS_FSB_TO_B(mp, mp->m_writeio_blocks))
++		return 0;
++
++	/*
+ 	 * If there are any real blocks past eof, then don't
+ 	 * do any speculative allocation.
+ 	 */
+@@ -345,6 +354,10 @@ xfs_iomap_eof_prealloc_initial_size(
+ 	if (mp->m_flags & XFS_MOUNT_DFLT_IOSIZE)
+ 		return 0;
+ 
++	/* If the file is small, then use the minimum prealloc */
++	if (XFS_ISIZE(ip) < XFS_FSB_TO_B(mp, mp->m_dalign))
++		return 0;
++
+ 	/*
+ 	 * As we write multiple pages, the offset will always align to the
+ 	 * start of a page and hence point to a hole at EOF. i.e. if the size is
+-- 
+1.7.10.4
 
 _______________________________________________
 xfs mailing list
