@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8743629E13
-	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 23:51:26 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 14471AC002
-	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 21:51:25 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 3EE1729E18
+	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 23:51:27 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 30D3E304039
+	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 21:51:27 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	fi21UvQdeRWkwnVq for <xfs@oss.sgi.com>;
-	Tue, 18 Jun 2013 21:51:23 -0700 (PDT)
+	aYwH11tsqxGQt46k for <xfs@oss.sgi.com>;
+	Tue, 18 Jun 2013 21:51:25 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UpAMb-0002yJ-CF
+	(envelope-from <dave@fromorbit.com>) id 1UpAMb-0002yL-DG
 	for xfs@oss.sgi.com; Wed, 19 Jun 2013 14:51:21 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UpAMR-0008Vi-8D
-	for xfs@oss.sgi.com; Wed, 19 Jun 2013 14:51:11 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1UpAMb-0008Vn-97
+	for xfs@oss.sgi.com; Wed, 19 Jun 2013 14:51:21 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 07/60] xfs: Introduce ordered log vector support
-Date: Wed, 19 Jun 2013 14:50:15 +1000
-Message-Id: <1371617468-32559-8-git-send-email-david@fromorbit.com>
+Subject: [PATCH 08/60] xfs: Introduce an ordered buffer item
+Date: Wed, 19 Jun 2013 14:50:16 +1000
+Message-Id: <1371617468-32559-9-git-send-email-david@fromorbit.com>
 In-Reply-To: <1371617468-32559-1-git-send-email-david@fromorbit.com>
 References: <1371617468-32559-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -36,282 +36,327 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+If we have a buffer that we have modified but we do not wish to
+physically log in a transaction (e.g. we've logged a logical
+change), we still need to ensure that transactional integrity is
+maintained. Hence we must not move the tail of the log past the
+transaction that the buffer is associated with before the buffer is
+written to disk.
 
-And "ordered log vector" is a log vector that is used for
-tracking a log item through the CIL and into the AIL as part of the
-log checkpointing. These ordered log vectors are special in that
-they are not written to to journal in any way, and are not accounted
-to the checkpoint being written.
+This means these special buffers still need to be included in the
+transaction and added to the AIL just like a normal buffer, but we
+do not want the modifications to the buffer written into the
+transaction. IOWs, what we want is an "ordered buffer" that
+maintains the same transactional life cycle as a physically logged
+buffer, just without the transcribing of the modifications to the
+log.
 
-The reason for this behaviour is to allow operations to attach items
-to transactions and have them follow the normal transactional
-lifecycle without actually having to write them to the journal. This
-allows logging of items that track high level logical changes and
-writing them to the log, while the physical items being modified
-pass through into the AIL and pin the tail of the log (and therefore
-the logical item in the log) until all the modified items are
-physically written to disk.
+Hence we need to flag the buffer as an "ordered buffer" to avoid
+including it in vector size calculations or formatting during the
+transaction. Once the transaction is committed, the buffer appears
+for all intents to be the same as a physically logged buffer as it
+transitions through the log and AIL.
 
-IOWs, it allows us to write metadata without physically logging
-every individual change but still maintain the full transactional
-integrity guarantees we currently have w.r.t. crash recovery.
+Relogging will also work just fine for such an ordered buffer - the
+logical transaction will be replayed before the subsequent
+modifications that relog the buffer, so everything will be
+reconstructed correctly by recovery.
 
-This change modifies some of the CIL item insertion loops, as
-ordered log vectors introduce some new constraints as they don't
-track any data. One advantage of this change is that it combines
-two log vector chain walks into a single pass, so there is less
-overhead in the transaction commit pass as well. It also kills some
-unused code in the log vector walk loop when committing the CIL.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/xfs_log.c     |   21 +++++++++++---
- fs/xfs/xfs_log.h     |    2 ++
- fs/xfs/xfs_log_cil.c |   75 ++++++++++++++++++++++++++++++++++----------------
- 3 files changed, 70 insertions(+), 28 deletions(-)
+ fs/xfs/xfs_buf_item.c  |   75 +++++++++++++++++++++++++++++++-----------------
+ fs/xfs/xfs_buf_item.h  |    4 ++-
+ fs/xfs/xfs_trace.h     |    4 +++
+ fs/xfs/xfs_trans.h     |    1 +
+ fs/xfs/xfs_trans_buf.c |   34 ++++++++++++++++++++--
+ 5 files changed, 87 insertions(+), 31 deletions(-)
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index b345a7c..db08d34 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -1963,6 +1963,10 @@ xlog_write_calc_vec_length(
- 		headers++;
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index 4ec4317..61f6876 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -140,6 +140,16 @@ xfs_buf_item_size(
  
- 	for (lv = log_vector; lv; lv = lv->lv_next) {
-+		/* we don't write ordered log vectors */
-+		if (lv->lv_buf_len == XFS_LOG_VEC_ORDERED)
-+			continue;
-+
- 		headers += lv->lv_niovecs;
+ 	ASSERT(bip->bli_flags & XFS_BLI_LOGGED);
  
- 		for (i = 0; i < lv->lv_niovecs; i++) {
-@@ -2216,7 +2220,7 @@ xlog_write(
- 	index = 0;
- 	lv = log_vector;
- 	vecp = lv->lv_iovecp;
--	while (lv && index < lv->lv_niovecs) {
-+	while (lv && (!lv->lv_niovecs || index < lv->lv_niovecs)) {
- 		void		*ptr;
- 		int		log_offset;
- 
-@@ -2236,13 +2240,21 @@ xlog_write(
- 		 * This loop writes out as many regions as can fit in the amount
- 		 * of space which was allocated by xlog_state_get_iclog_space().
- 		 */
--		while (lv && index < lv->lv_niovecs) {
--			struct xfs_log_iovec	*reg = &vecp[index];
-+		while (lv && (!lv->lv_niovecs || index < lv->lv_niovecs)) {
-+			struct xfs_log_iovec	*reg;
- 			struct xlog_op_header	*ophdr;
- 			int			start_rec_copy;
- 			int			copy_len;
- 			int			copy_off;
-+			bool			ordered = false;
-+
-+			/* ordered log vectors have no regions to write */
-+			if (lv->lv_buf_len == XFS_LOG_VEC_ORDERED) {
-+				ordered = true;
-+				goto next_lv;
-+			}
- 
-+			reg = &vecp[index];
- 			ASSERT(reg->i_len % sizeof(__int32_t) == 0);
- 			ASSERT((unsigned long)ptr % sizeof(__int32_t) == 0);
- 
-@@ -2302,12 +2314,13 @@ xlog_write(
- 				break;
- 
- 			if (++index == lv->lv_niovecs) {
-+next_lv:
- 				lv = lv->lv_next;
- 				index = 0;
- 				if (lv)
- 					vecp = lv->lv_iovecp;
- 			}
--			if (record_cnt == 0) {
-+			if (record_cnt == 0 && ordered == false) {
- 				if (!lv)
- 					return 0;
- 				break;
-diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
-index 5caee96..b20918c 100644
---- a/fs/xfs/xfs_log.h
-+++ b/fs/xfs/xfs_log.h
-@@ -105,6 +105,8 @@ struct xfs_log_vec {
- 	int			lv_buf_len;	/* size of formatted buffer */
- };
- 
-+#define XFS_LOG_VEC_ORDERED	(-1)
-+
- /*
-  * Structure used to pass callback function and the function's argument
-  * to the log manager.
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index d0833b5..02b9cf3 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -127,6 +127,7 @@ xlog_cil_prepare_log_vecs(
- 		int	index;
- 		int	len = 0;
- 		uint	niovecs;
-+		bool	ordered = false;
- 
- 		/* Skip items which aren't dirty in this transaction. */
- 		if (!(lidp->lid_flags & XFS_LID_DIRTY))
-@@ -137,14 +138,30 @@ xlog_cil_prepare_log_vecs(
- 		if (!niovecs)
- 			continue;
- 
++	if (bip->bli_flags & XFS_BLI_ORDERED) {
 +		/*
-+		 * Ordered items need to be tracked but we do not wish to write
-+		 * them. We need a logvec to track the object, but we do not
-+		 * need an iovec or buffer to be allocated for copying data.
++		 * The buffer has been logged just to order it.
++		 * It is not being included in the transaction
++		 * commit, so no vectors are used at all.
 +		 */
-+		if (niovecs == XFS_LOG_VEC_ORDERED) {
-+			ordered = true;
-+			niovecs = 0;
-+		}
-+
- 		new_lv = kmem_zalloc(sizeof(*new_lv) +
- 				niovecs * sizeof(struct xfs_log_iovec),
- 				KM_SLEEP|KM_NOFS);
- 
-+		new_lv->lv_item = lidp->lid_item;
-+		new_lv->lv_niovecs = niovecs;
-+		if (ordered) {
-+			/* track as an ordered logvec */
-+			new_lv->lv_buf_len = XFS_LOG_VEC_ORDERED;
-+			goto next;
-+		}
-+
- 		/* The allocated iovec region lies beyond the log vector. */
- 		new_lv->lv_iovecp = (struct xfs_log_iovec *)&new_lv[1];
--		new_lv->lv_niovecs = niovecs;
--		new_lv->lv_item = lidp->lid_item;
- 
- 		/* build the vector array and calculate it's length */
- 		IOP_FORMAT(new_lv->lv_item, new_lv->lv_iovecp);
-@@ -165,6 +182,7 @@ xlog_cil_prepare_log_vecs(
- 		}
- 		ASSERT(ptr == new_lv->lv_buf + new_lv->lv_buf_len);
- 
-+next:
- 		if (!ret_lv)
- 			ret_lv = new_lv;
- 		else
-@@ -191,8 +209,18 @@ xfs_cil_prepare_item(
- 
- 	if (old) {
- 		/* existing lv on log item, space used is a delta */
--		ASSERT(!list_empty(&lv->lv_item->li_cil));
--		ASSERT(old->lv_buf && old->lv_buf_len && old->lv_niovecs);
-+		ASSERT((old->lv_buf && old->lv_buf_len && old->lv_niovecs) ||
-+			old->lv_buf_len == XFS_LOG_VEC_ORDERED);
-+
-+		/*
-+		 * If the new item is ordered, keep the old one that is already
-+		 * tracking dirty or ordered regions
-+		 */
-+		if (lv->lv_buf_len == XFS_LOG_VEC_ORDERED) {
-+			ASSERT(!lv->lv_buf);
-+			kmem_free(lv);
-+			return;
-+		}
- 
- 		*len += lv->lv_buf_len - old->lv_buf_len;
- 		*diff_iovecs += lv->lv_niovecs - old->lv_niovecs;
-@@ -201,10 +229,11 @@ xfs_cil_prepare_item(
- 	} else {
- 		/* new lv, must pin the log item */
- 		ASSERT(!lv->lv_item->li_lv);
--		ASSERT(list_empty(&lv->lv_item->li_cil));
- 
--		*len += lv->lv_buf_len;
--		*diff_iovecs += lv->lv_niovecs;
-+		if (lv->lv_buf_len != XFS_LOG_VEC_ORDERED) {
-+			*len += lv->lv_buf_len;
-+			*diff_iovecs += lv->lv_niovecs;
-+		}
- 		IOP_PIN(lv->lv_item);
- 
- 	}
-@@ -259,18 +288,24 @@ xlog_cil_insert_items(
- 	 * We can do this safely because the context can't checkpoint until we
- 	 * are done so it doesn't matter exactly how we update the CIL.
- 	 */
--	for (lv = log_vector; lv; lv = lv->lv_next)
--		xfs_cil_prepare_item(log, lv, &len, &diff_iovecs);
--
--	/* account for space used by new iovec headers  */
--	len += diff_iovecs * sizeof(xlog_op_header_t);
--
- 	spin_lock(&cil->xc_cil_lock);
-+	for (lv = log_vector; lv; ) {
-+		struct xfs_log_vec *next = lv->lv_next;
- 
--	/* move the items to the tail of the CIL */
--	for (lv = log_vector; lv; lv = lv->lv_next)
-+		ASSERT(lv->lv_item->li_lv || list_empty(&lv->lv_item->li_cil));
-+		lv->lv_next = NULL;
-+
-+		/*
-+		 * xfs_cil_prepare_item() may free the lv, so move the item on
-+		 * the CIL first.
-+		 */
- 		list_move_tail(&lv->lv_item->li_cil, &cil->xc_cil);
-+		xfs_cil_prepare_item(log, lv, &len, &diff_iovecs);
-+		lv = next;
++		trace_xfs_buf_item_size_ordered(bip);
++		return XFS_LOG_VEC_ORDERED;
 +	}
- 
-+	/* account for space used by new iovec headers  */
-+	len += diff_iovecs * sizeof(xlog_op_header_t);
- 	ctx->nvecs += diff_iovecs;
- 
++
  	/*
-@@ -381,9 +416,7 @@ xlog_cil_push(
- 	struct xfs_cil_ctx	*new_ctx;
- 	struct xlog_in_core	*commit_iclog;
- 	struct xlog_ticket	*tic;
--	int			num_lv;
- 	int			num_iovecs;
--	int			len;
- 	int			error = 0;
- 	struct xfs_trans_header thdr;
- 	struct xfs_log_iovec	lhdr;
-@@ -428,12 +461,9 @@ xlog_cil_push(
- 	 * side which is currently locked out by the flush lock.
- 	 */
- 	lv = NULL;
--	num_lv = 0;
- 	num_iovecs = 0;
--	len = 0;
- 	while (!list_empty(&cil->xc_cil)) {
- 		struct xfs_log_item	*item;
--		int			i;
- 
- 		item = list_first_entry(&cil->xc_cil,
- 					struct xfs_log_item, li_cil);
-@@ -444,11 +474,7 @@ xlog_cil_push(
- 			lv->lv_next = item->li_lv;
- 		lv = item->li_lv;
- 		item->li_lv = NULL;
--
--		num_lv++;
- 		num_iovecs += lv->lv_niovecs;
--		for (i = 0; i < lv->lv_niovecs; i++)
--			len += lv->lv_iovecp[i].i_len;
+ 	 * the vector count is based on the number of buffer vectors we have
+ 	 * dirty bits in. This will only be greater than one when we have a
+@@ -212,6 +222,7 @@ xfs_buf_item_format_segment(
+ 		goto out;
  	}
  
++
  	/*
-@@ -701,6 +727,7 @@ xfs_log_commit_cil(
- 	if (commit_lsn)
- 		*commit_lsn = log->l_cilp->xc_ctx->sequence;
+ 	 * Fill in an iovec for each set of contiguous chunks.
+ 	 */
+@@ -311,6 +322,16 @@ xfs_buf_item_format(
+ 		bip->bli_flags &= ~XFS_BLI_INODE_BUF;
+ 	}
  
-+	/* xlog_cil_insert_items() destroys log_vector list */
- 	xlog_cil_insert_items(log, log_vector, tp->t_ticket);
++	if ((bip->bli_flags & (XFS_BLI_ORDERED|XFS_BLI_STALE)) ==
++							XFS_BLI_ORDERED) {
++		/*
++		 * The buffer has been logged just to order it.  It is not being
++		 * included in the transaction commit, so don't format it.
++		 */
++		trace_xfs_buf_item_format_ordered(bip);
++		return;
++	}
++
+ 	for (i = 0; i < bip->bli_format_count; i++) {
+ 		vecp = xfs_buf_item_format_segment(bip, vecp, offset,
+ 						&bip->bli_formats[i]);
+@@ -340,6 +361,7 @@ xfs_buf_item_pin(
  
- 	/* check we didn't blow the reservation */
+ 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
+ 	ASSERT((bip->bli_flags & XFS_BLI_LOGGED) ||
++	       (bip->bli_flags & XFS_BLI_ORDERED) ||
+ 	       (bip->bli_flags & XFS_BLI_STALE));
+ 
+ 	trace_xfs_buf_item_pin(bip);
+@@ -512,8 +534,9 @@ xfs_buf_item_unlock(
+ {
+ 	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
+ 	struct xfs_buf		*bp = bip->bli_buf;
+-	int			aborted, clean, i;
+-	uint			hold;
++	bool			clean;
++	bool			aborted;
++	int			flags;
+ 
+ 	/* Clear the buffer's association with this transaction. */
+ 	bp->b_transp = NULL;
+@@ -524,23 +547,21 @@ xfs_buf_item_unlock(
+ 	 * (cancelled) buffers at unpin time, but we'll never go through the
+ 	 * pin/unpin cycle if we abort inside commit.
+ 	 */
+-	aborted = (lip->li_flags & XFS_LI_ABORTED) != 0;
+-
++	aborted = (lip->li_flags & XFS_LI_ABORTED) ? true : false;
+ 	/*
+-	 * Before possibly freeing the buf item, determine if we should
+-	 * release the buffer at the end of this routine.
++	 * Before possibly freeing the buf item, copy the per-transaction state
++	 * so we can reference it safely later after clearing it from the
++	 * buffer log item.
+ 	 */
+-	hold = bip->bli_flags & XFS_BLI_HOLD;
+-
+-	/* Clear the per transaction state. */
+-	bip->bli_flags &= ~(XFS_BLI_LOGGED | XFS_BLI_HOLD);
++	flags = bip->bli_flags;
++	bip->bli_flags &= ~(XFS_BLI_LOGGED | XFS_BLI_HOLD | XFS_BLI_ORDERED);
+ 
+ 	/*
+ 	 * If the buf item is marked stale, then don't do anything.  We'll
+ 	 * unlock the buffer and free the buf item when the buffer is unpinned
+ 	 * for the last time.
+ 	 */
+-	if (bip->bli_flags & XFS_BLI_STALE) {
++	if (flags & XFS_BLI_STALE) {
+ 		trace_xfs_buf_item_unlock_stale(bip);
+ 		ASSERT(bip->__bli_format.blf_flags & XFS_BLF_CANCEL);
+ 		if (!aborted) {
+@@ -557,13 +578,19 @@ xfs_buf_item_unlock(
+ 	 * be the only reference to the buf item, so we free it anyway
+ 	 * regardless of whether it is dirty or not. A dirty abort implies a
+ 	 * shutdown, anyway.
++	 *
++	 * Ordered buffers are dirty but may have no recorded changes, so ensure
++	 * we only release clean items here.
+ 	 */
+-	clean = 1;
+-	for (i = 0; i < bip->bli_format_count; i++) {
+-		if (!xfs_bitmap_empty(bip->bli_formats[i].blf_data_map,
+-			     bip->bli_formats[i].blf_map_size)) {
+-			clean = 0;
+-			break;
++	clean = (flags & XFS_BLI_DIRTY) ? false : true;
++	if (clean) {
++		int i;
++		for (i = 0; i < bip->bli_format_count; i++) {
++			if (!xfs_bitmap_empty(bip->bli_formats[i].blf_data_map,
++				     bip->bli_formats[i].blf_map_size)) {
++				clean = false;
++				break;
++			}
+ 		}
+ 	}
+ 	if (clean)
+@@ -576,7 +603,7 @@ xfs_buf_item_unlock(
+ 	} else
+ 		atomic_dec(&bip->bli_refcount);
+ 
+-	if (!hold)
++	if (!(flags & XFS_BLI_HOLD))
+ 		xfs_buf_relse(bp);
+ }
+ 
+@@ -842,12 +869,6 @@ xfs_buf_item_log(
+ 	struct xfs_buf		*bp = bip->bli_buf;
+ 
+ 	/*
+-	 * Mark the item as having some dirty data for
+-	 * quick reference in xfs_buf_item_dirty.
+-	 */
+-	bip->bli_flags |= XFS_BLI_DIRTY;
+-
+-	/*
+ 	 * walk each buffer segment and mark them dirty appropriately.
+ 	 */
+ 	start = 0;
+@@ -873,7 +894,7 @@ xfs_buf_item_log(
+ 
+ 
+ /*
+- * Return 1 if the buffer has some data that has been logged (at any
++ * Return 1 if the buffer has been logged or ordered in a transaction (at any
+  * point, not just the current transaction) and 0 if not.
+  */
+ uint
+@@ -907,11 +928,11 @@ void
+ xfs_buf_item_relse(
+ 	xfs_buf_t	*bp)
+ {
+-	xfs_buf_log_item_t	*bip;
++	xfs_buf_log_item_t	*bip = bp->b_fspriv;
+ 
+ 	trace_xfs_buf_item_relse(bp, _RET_IP_);
++	ASSERT(!(bip->bli_item.li_flags & XFS_LI_IN_AIL));
+ 
+-	bip = bp->b_fspriv;
+ 	bp->b_fspriv = bip->bli_item.li_bio_list;
+ 	if (bp->b_fspriv == NULL)
+ 		bp->b_iodone = NULL;
+diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
+index 2573d2a..0f1c247 100644
+--- a/fs/xfs/xfs_buf_item.h
++++ b/fs/xfs/xfs_buf_item.h
+@@ -120,6 +120,7 @@ xfs_blft_from_flags(struct xfs_buf_log_format *blf)
+ #define	XFS_BLI_INODE_ALLOC_BUF	0x10
+ #define XFS_BLI_STALE_INODE	0x20
+ #define	XFS_BLI_INODE_BUF	0x40
++#define	XFS_BLI_ORDERED		0x80
+ 
+ #define XFS_BLI_FLAGS \
+ 	{ XFS_BLI_HOLD,		"HOLD" }, \
+@@ -128,7 +129,8 @@ xfs_blft_from_flags(struct xfs_buf_log_format *blf)
+ 	{ XFS_BLI_LOGGED,	"LOGGED" }, \
+ 	{ XFS_BLI_INODE_ALLOC_BUF, "INODE_ALLOC" }, \
+ 	{ XFS_BLI_STALE_INODE,	"STALE_INODE" }, \
+-	{ XFS_BLI_INODE_BUF,	"INODE_BUF" }
++	{ XFS_BLI_INODE_BUF,	"INODE_BUF" }, \
++	{ XFS_BLI_ORDERED,	"ORDERED" }
+ 
+ 
+ #ifdef __KERNEL__
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index aa4db33..34422b6 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -486,9 +486,12 @@ DEFINE_EVENT(xfs_buf_item_class, name, \
+ 	TP_PROTO(struct xfs_buf_log_item *bip), \
+ 	TP_ARGS(bip))
+ DEFINE_BUF_ITEM_EVENT(xfs_buf_item_size);
++DEFINE_BUF_ITEM_EVENT(xfs_buf_item_size_ordered);
+ DEFINE_BUF_ITEM_EVENT(xfs_buf_item_size_stale);
+ DEFINE_BUF_ITEM_EVENT(xfs_buf_item_format);
++DEFINE_BUF_ITEM_EVENT(xfs_buf_item_format_ordered);
+ DEFINE_BUF_ITEM_EVENT(xfs_buf_item_format_stale);
++DEFINE_BUF_ITEM_EVENT(xfs_buf_item_ordered);
+ DEFINE_BUF_ITEM_EVENT(xfs_buf_item_pin);
+ DEFINE_BUF_ITEM_EVENT(xfs_buf_item_unpin);
+ DEFINE_BUF_ITEM_EVENT(xfs_buf_item_unpin_stale);
+@@ -508,6 +511,7 @@ DEFINE_BUF_ITEM_EVENT(xfs_trans_bjoin);
+ DEFINE_BUF_ITEM_EVENT(xfs_trans_bhold);
+ DEFINE_BUF_ITEM_EVENT(xfs_trans_bhold_release);
+ DEFINE_BUF_ITEM_EVENT(xfs_trans_binval);
++DEFINE_BUF_ITEM_EVENT(xfs_trans_buf_ordered);
+ 
+ DECLARE_EVENT_CLASS(xfs_lock_class,
+ 	TP_PROTO(struct xfs_inode *ip, unsigned lock_flags,
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index a44dba5..850fe78 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -503,6 +503,7 @@ void		xfs_trans_bhold_release(xfs_trans_t *, struct xfs_buf *);
+ void		xfs_trans_binval(xfs_trans_t *, struct xfs_buf *);
+ void		xfs_trans_inode_buf(xfs_trans_t *, struct xfs_buf *);
+ void		xfs_trans_stale_inode_buf(xfs_trans_t *, struct xfs_buf *);
++void		xfs_trans_ordered_buf(xfs_trans_t *, struct xfs_buf *);
+ void		xfs_trans_dquot_buf(xfs_trans_t *, struct xfs_buf *, uint);
+ void		xfs_trans_inode_alloc_buf(xfs_trans_t *, struct xfs_buf *);
+ void		xfs_trans_ichgtime(struct xfs_trans *, struct xfs_inode *, int);
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index 73a5fa4..aa5a04b 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -397,7 +397,6 @@ shutdown_abort:
+ 	return XFS_ERROR(EIO);
+ }
+ 
+-
+ /*
+  * Release the buffer bp which was previously acquired with one of the
+  * xfs_trans_... buffer allocation routines if the buffer has not
+@@ -603,8 +602,14 @@ xfs_trans_log_buf(xfs_trans_t	*tp,
+ 
+ 	tp->t_flags |= XFS_TRANS_DIRTY;
+ 	bip->bli_item.li_desc->lid_flags |= XFS_LID_DIRTY;
+-	bip->bli_flags |= XFS_BLI_LOGGED;
+-	xfs_buf_item_log(bip, first, last);
++
++	/*
++	 * If we have an ordered buffer we are not logging any dirty range but
++	 * it still needs to be marked dirty and that it has been logged.
++	 */
++	bip->bli_flags |= XFS_BLI_DIRTY | XFS_BLI_LOGGED;
++	if (!(bip->bli_flags & XFS_BLI_ORDERED))
++		xfs_buf_item_log(bip, first, last);
+ }
+ 
+ 
+@@ -757,6 +762,29 @@ xfs_trans_inode_alloc_buf(
+ }
+ 
+ /*
++ * Mark the buffer as ordered for this transaction. This means
++ * that the contents of the buffer are not recorded in the transaction
++ * but it is tracked in the AIL as though it was. This allows us
++ * to record logical changes in transactions rather than the physical
++ * changes we make to the buffer without changing writeback ordering
++ * constraints of metadata buffers.
++ */
++void
++xfs_trans_ordered_buf(
++	struct xfs_trans	*tp,
++	struct xfs_buf		*bp)
++{
++	struct xfs_buf_log_item	*bip = bp->b_fspriv;
++
++	ASSERT(bp->b_transp == tp);
++	ASSERT(bip != NULL);
++	ASSERT(atomic_read(&bip->bli_refcount) > 0);
++
++	bip->bli_flags |= XFS_BLI_ORDERED;
++	trace_xfs_buf_item_ordered(bip);
++}
++
++/*
+  * Set the type of the buffer for log recovery so that it can correctly identify
+  * and hence attach the correct buffer ops to the buffer after replay.
+  */
 -- 
 1.7.10.4
 
