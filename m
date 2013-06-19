@@ -1,38 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id EE02C7CBF
-	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 16:00:46 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 1B7257CBF
+	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 16:34:37 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D6C098F8033
-	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 14:00:46 -0700 (PDT)
-Received: from e9.ny.us.ibm.com (e9.ny.us.ibm.com [32.97.182.139]) by
-	cuda.sgi.com with ESMTP id hd9JwtcgM5Cu4FvF (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 19 Jun 2013 14:00:45 -0700 (PDT)
-Received: from /spool/local
-	by e9.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
-	Violators will be prosecuted
-	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
-	Wed, 19 Jun 2013 17:00:43 -0400
-Received: from d01relay06.pok.ibm.com (d01relay06.pok.ibm.com [9.56.227.116])
-	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id 2AF9FC9005E
-	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 17:00:40 -0400 (EDT)
-Received: from d01av05.pok.ibm.com (d01av05.pok.ibm.com [9.56.224.195])
-	by d01relay06.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	r5JL0fva44367954
-	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 17:00:41 -0400
-Received: from d01av05.pok.ibm.com (loopback [127.0.0.1])
-	by d01av05.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
-	r5JL0ex1005336 for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 17:00:40 -0400
-Subject: Re: WANTED: xfstests results in different architectures
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-In-Reply-To: <20130618233426.GD29338@dastard>
-References: <1371596399.22504.38.camel@chandra-dt.ibm.com>
-	<20130618233426.GD29338@dastard>
-Date: Wed, 19 Jun 2013 16:00:39 -0500
-Message-ID: <1371675639.22504.63.camel@chandra-dt.ibm.com>
-Mime-Version: 1.0
-Reply-To: sekharan@us.ibm.com
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 9C96DAC001
+	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 14:34:33 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	21Y8AGjErJzAizfD for <xfs@oss.sgi.com>;
+	Wed, 19 Jun 2013 14:34:31 -0700 (PDT)
+Date: Thu, 20 Jun 2013 07:34:17 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 00/60] xfs: patch queue for 3.11
+Message-ID: <20130619213417.GI29338@dastard>
+References: <1371617468-32559-1-git-send-email-david@fromorbit.com>
+	<20130619091538.GA359@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20130619091538.GA359@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -45,105 +30,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: XFS mailing list <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Wed, 2013-06-19 at 09:34 +1000, Dave Chinner wrote:
+On Wed, Jun 19, 2013 at 02:15:38AM -0700, Christoph Hellwig wrote:
+> Hi Dave,
+> 
+> I like this version a lot better from a quick glance.
+> 
+> A few more comments:
+> 
+>  - do we really want all that many separate _format.h headers?
+>    I'd be really tempted to say we have just a single xfs_format.h
+>    header, which should declare everything.  It's still not all that
+>    large, and it would be a really good start to ease our include mess.
 
+I don't see any problem with doing that, though I would like to keep
+some of it separate - the dir2 stuff is complex enough that I would
+like to keep it separate, but stuff like all the log item format
+headers can be aggregated.
 
-Hi Dave,
-> On Tue, Jun 18, 2013 at 05:59:59PM -0500, Chandra Seetharaman wrote:
-> > Hello All,
-> > 
-> > Couple of weeks backs we had a discussion in xfs meeting to collect
-> > xfstests results. I volunteered to collect xfstests results from
-> > different architectures and upload to XFS.org.
-> > 
-> > I can run and get the results for x86_64 and ppc64. If anyone has other
-> > architectures that they can run the tests on and provide me the results,
-> > I will filter them an upload to XFS.org.
-> 
-> How are you going to filter and display them on xfs.org? Should the
-> scripts to do this be part of xfstests?
+How about we end up with xfs_log_format.h for the log and log item
+formats, xfs_da_format.h for all the dir2/da/attr format definitions,
+and xfs_format.h for everything else?
 
-I wasn't thinking of very elaborate filtering of all the results
-submitted by all variants of kernel/xfsprogs. 
+>  - xfs_extent_ops.c still has that odd _ops.c name I hate because it
+>    tends to imply it's an implementation of some ops vector.  How about
+>    xfs_alloc_util.c to go with the other _util name you added?
 
-My thinking was very simple:
- - get test results based on publicly available git tree commit IDs
- - show the commit ID, and the failures seen in a specific arch.
- 
-This would help when anybody runs xfstests and sees a failure with any
-newer code, they would know if it is a regression or already seen.
+Yup, sounds reasonable. sed can sort that one out.
 
-But, looks like there is more elaborate work in progress. I will sync up
-with Ben and Phil to see how to help.
-> 
-> FWIW, without a database of results that users can use to filter the
-> test results themselves, it will become unmanageable very quickly...
-> 
-> BTW, from my notes from the 2012 LSFMM XFs get-together, there are
-> these line items related to exactly this:
-> 
-> ----
->        - Public repository of test results so we can better track failures
->                 - Look into resurrecting old ASG xfstests results
->                   repository and web iquery interface (Ben)
->                 - host on oss.sgi.com.
->                 - script to run xfstests and produce publishable output (Ben)
-> ----
-> 
-> Ben, did you ever start to look into this?
-> 
-> > Here is what I think would be of value to provide along with the results
-> > (others, please feel free to add more to the list for the results to be
-> > more useful)
-> >     - Architecture of the system
-> 
-> 	- base distro (e.g. /etc/release).
-> 
-> >     - Configuration - memory size and number of procs
-> 
-> I think that all the info that we ask people to report in bug
-> reports would be a good start....
-> 
-> >     - Filesystem sizes
-> 
-> More useful is the MKFS_OPTIONS and MOUNT_OPTIONS used to run the
-> tests, as that tells us how much non-default test coverage we are
-> getting. i.e. default testing or something different.
-> 
-> >     - Commit ID of the kernel
-> 
-> Not useful for kernels built with local, non-public changes, which
-> is generally 100% of the kernels and userspace packages I test
-> with.
-> 
-> >     - which git tree (XFS git tree or Linus's)
-> >     - xfsprogs version (or commit ID if from the git tree)
-> 
-> Same as for the kernel - base version is probably all that is useful
-> here.
-> 
-> You'd probably also want to capture the console output indicating
-> test runtimes and why certain tests weren't run.
-> 
-> If you create a pristine $RESULTS_DIR and output all the information
-> you want to gather into it, then it will be trivial for users to
-> send information onwards. Providing a command line parameter that
-> generates a unique results directory and then packages the results
-> up into a tarball would be a great start. We'd then have a single
-> file that can be sent up a central point with all the test results
-> available. We could even do all the filtering/processing before
-> upload.
-> 
-> IOWs, the idea behind $RESULTS_DIR is to make this sort of scripted
-> test result gathering simple to do....
-> 
-> Cheers,
-> 
-> Dave.
+>  - any chance to reorder the inode.c split so that stuff doesn't get
+>    move around multiple times?
 
+I was waiting for that question - I have been considering doing that
+but I've been putting it off because it is a fair bit of shuffling
+that I'd have to do from scratch. Sounds like another vote for :redo
+it"...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
