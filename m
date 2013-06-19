@@ -1,11 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2E1B87F37
-	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 17:46:19 -0500 (CDT)
-Date: Wed, 19 Jun 2013 17:46:15 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id E17247F3F
+	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 17:49:20 -0500 (CDT)
+Date: Wed, 19 Jun 2013 17:49:16 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: [RFC PATCH 2/3] xfstests: use an intermediate check.log file
-Message-ID: <20130619224615.GV20932@sgi.com>
+Subject: [RFC PATCH 3/3] xfstests: upload test results
+Message-ID: <20130619224916.GW20932@sgi.com>
 References: <1371596399.22504.38.camel@chandra-dt.ibm.com>
 	<20130618233426.GD29338@dastard>
 	<1371675639.22504.63.camel@chandra-dt.ibm.com>
@@ -28,65 +28,144 @@ Sender: xfs-bounces@oss.sgi.com
 To: Chandra Seetharaman <sekharan@us.ibm.com>
 Cc: XFS mailing list <xfs@oss.sgi.com>
 
-Use an intermediate check.log file for each test run so that it can be
-uploaded to a central location by a subsequent patch in this series.
-The intermediate file is appended to $RESULTS_DIR/check.log a the end of
-each run.
+Set the ARCHIVE_URL environment variable to upload test results to a
+central location:
 
-Signed-off-by: Ben Myers <bpm@sgi.com>
+export ARCHIVE_URL=ftp://anonymous:joe_at_xyz.com@ftp.xyz.com/xfstests/results
 
 ---
- check |   21 ++++++++++++---------
- 1 file changed, 12 insertions(+), 9 deletions(-)
+ check     |   14 ++++++++++++++
+ common.rc |   24 ++++++++++++++++++++++++
+ 2 files changed, 38 insertions(+)
 
-Index: xfstests.new2/check
+Index: xfstests/check
 ===================================================================
---- xfstests.new2.orig/check
-+++ xfstests.new2/check
-@@ -314,11 +314,11 @@ END	{ if (NR > 0) {
+--- xfstests.orig/check
++++ xfstests/check
+@@ -28,6 +28,7 @@ n_bad=0
+ bad=""
+ notrun=""
+ interrupt=true
++start_time=`date "+%s"`
+ diff="diff -u"
+ showme=false
+ have_test_arg=false
+@@ -312,6 +313,7 @@ END	{ if (NR > 0) {
+ 	}' \
+ 	    | sort -n >$tmp.out
  	    mv $tmp.out $check.time
++	    _archive $check.time $start_time
  	fi
  
--	echo "" >>$check.log
--	date >>$check.log
--	cat /tmp/check.desc >>$check.log
--	echo $list | fmt | sed -e 's/^/    /' -e "s;$SRC_DIR/;;g" >>$check.log
--	$interrupt && echo "Interrupted!" >>$check.log
-+	echo "" >>/tmp/check.log
-+	date >>/tmp/check.log
-+	cat /tmp/check.desc >>/tmp/check.log
-+	echo $list | fmt | sed -e 's/^/    /' -e "s;$SRC_DIR/;;g" >>/tmp/check.log
-+	$interrupt && echo "Interrupted!" >>/tmp/check.log
-         
-         if [ ! -z "$n_try" -a $n_try != 0 ]
- 	then
-@@ -328,20 +328,22 @@ END	{ if (NR > 0) {
- 	if [ ! -z "$notrun" ]
- 	then
- 	    echo "Not run:$notrun"
--	    echo "Not run:$notrun" >>$check.log
-+	    echo "Not run:$notrun" >>/tmp/check.log
- 	fi
- 
-         if [ ! -z "$n_bad" -a $n_bad != 0 ]
- 	then
- 	    echo "Failures:$bad"
- 	    echo "Failed $n_bad of $n_try tests"
--	    echo "Failures:$bad" | fmt >>$check.log
--	    echo "Failed $n_bad of $n_try tests" >>$check.log
-+	    echo "Failures:$bad" | fmt >>/tmp/check.log
-+	    echo "Failed $n_bad of $n_try tests" >>/tmp/check.log
- 	else
- 	    echo "Passed all $n_try tests"
--	    echo "Passed all $n_try tests" >>$check.log
-+	    echo "Passed all $n_try tests" >>/tmp/check.log
+ 	echo "" >>/tmp/check.log
+@@ -343,6 +345,7 @@ END	{ if (NR > 0) {
  	fi
  	needwrap=false
-+        cat /tmp/check.log >> $check.log
-+	rm -f /tmp/check.log
+         cat /tmp/check.log >> $check.log
++	_archive /tmp/check.log $start_time
+ 	rm -f /tmp/check.log
      fi
  
-     rm -f /tmp/*.rawout /tmp/*.out /tmp/*.err /tmp/*.time
+@@ -368,6 +371,7 @@ rm -f $check.full
+ 
+ _full_source_details > /tmp/check.desc
+ cat /tmp/check.desc
++_archive /tmp/check.desc $start_time
+ 
+ # print out our test configuration
+ echo "FSTYP         -- `_full_fstyp_details`"
+@@ -453,6 +457,8 @@ do
+ 	rm -f core $seqres.notrun
+ 
+ 	start=`_wallclock`
++	echo "$seq $start" > $tmp.start
++	_archive $tmp.start $start_time
+ 	$timestamp && echo -n "	["`date "+%T"`"]"
+ 	[ ! -x $seq ] && chmod u+x $seq # ensure we can run it
+ 	$LOGGER_PROG "run xfstest $seqnum"
+@@ -460,6 +466,8 @@ do
+ 	sts=$?
+ 	$timestamp && _timestamp
+ 	stop=`_wallclock`
++	echo "$seq $stop" > $tmp.stop
++	_archive $tmp.stop $start_time
+ 
+ 	_fix_malloc <$tmp.rawout >$tmp.out
+ 	rm -f $tmp.rawout
+@@ -468,6 +476,7 @@ do
+ 	then
+ 	    echo -n " [dumped core]"
+ 	    mv core $RESULT_BASE/$seqnum.core
++	    _archive $RESULT_BASE/$seqnum.core $start_time
+ 	    err=true
+ 	fi
+ 
+@@ -476,6 +485,7 @@ do
+ 	    $timestamp || echo -n " [not run] "
+ 	    $timestamp && echo " [not run]" && echo -n "	$seqnum -- "
+ 	    cat $seqres.notrun
++            _archive $seqres.notrun $start_time
+ 	    notrun="$notrun $seqnum"
+ 	else
+ 	    if [ $sts -ne 0 ]
+@@ -501,6 +511,8 @@ do
+ 		else
+ 		    echo " - output mismatch (see $seqres.out.bad)"
+ 		    mv $tmp.out $seqres.out.bad
++		    _archive $seqres.out $start_time
++		    _archive $seqres.out.bad $start_time
+ 		    $diff $seq.out $seqres.out.bad | {
+ 		        if test "$DIFF_LENGTH" -le 0; then
+ 				cat
+@@ -515,7 +527,7 @@ do
+ 		fi
+ 	    fi
+ 	fi
+-
++        rm -f $tmp.$seq.start $tmp.seq.stop
+     fi
+ 
+     # come here for each test, except when $showme is true
+Index: xfstests/common/rc
+===================================================================
+--- xfstests.orig/common/rc
++++ xfstests/common/rc
+@@ -1738,6 +1738,27 @@ _full_platform_details()
+      echo "$os/$platform $host $kernel"
+ }
+ 
++_archive()
++{
++    if [ -z "$ARCHIVE_URL" ]; then
++        return;
++    fi
++
++    file=$1
++    subdir=$2
++    args=$3
++
++    if [ ! -e $file ]; then
++        _fail "archive: $file does not exist"
++    fi
++
++    desc=$(cat /proc/version | awk '{print $3}')
++
++    url=$ARCHIVE_URL/`hostname -f`/$desc/$subdir
++    curl $args --ftp-create-dirs --silent --upload-file \
++         $file $url/`basename $file`
++}
++
+ _full_source_details()
+ {
+     if [ -z $SRCDIRS ]; then
+@@ -1775,6 +1796,7 @@ _full_source_details()
+                 echo -e "\t\tmd5sum:\t\t$md5_checksum"
+                 echo -e "\t\tX-Patchwork-Id:\t${patchworkid##* }"
+                 echo -e "\t\tMessage-Id:\t${messageid##* }"
++                _archive $dir/patches/$p $start_time/$dir/patches
+             done
+         fi
+     done
 
 _______________________________________________
 xfs mailing list
