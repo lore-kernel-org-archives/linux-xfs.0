@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, master,
+Subject: [XFS updates] XFS development tree branch, for-next,
 	updated. v3.10-rc1-39-g2fb8b50
-Message-Id: <20130619194936.813997F37@oss.sgi.com>
-Date: Wed, 19 Jun 2013 14:49:36 -0500 (CDT)
+Message-Id: <20130619194945.C2C6C7F51@oss.sgi.com>
+Date: Wed, 19 Jun 2013 14:49:45 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,7 +23,7 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, master has been updated
+The branch, for-next has been updated
   2fb8b50 xfs: Remove two dead transaction log reservaion macros
   635c4d0 xfs: return FIEMAP_EXTENT_UNKNOWN for delayed allocation extent
   725eb1e xfs: fix the symbolic link assert in xfs_ifree
