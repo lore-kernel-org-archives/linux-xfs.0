@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 10AA329E12
-	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 23:51:54 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 9553729E12
+	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 23:51:56 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 0B5028F8035
-	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 21:51:53 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 82D4C304039
+	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 21:51:56 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	C6aETpJg3A0HOgIv for <xfs@oss.sgi.com>;
-	Tue, 18 Jun 2013 21:51:49 -0700 (PDT)
-Received: from [192.168.1.1] (helo=disappointment)
-	by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UpAN0-0002yl-Ji
+	8QdCC2zzZ8fqDZuP for <xfs@oss.sgi.com>;
+	Tue, 18 Jun 2013 21:51:52 -0700 (PDT)
+Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1UpAN0-0002z7-Tp
 	for xfs@oss.sgi.com; Wed, 19 Jun 2013 14:51:46 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UpAMq-0008WI-HX
-	for xfs@oss.sgi.com; Wed, 19 Jun 2013 14:51:36 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1UpAN0-000057-QN
+	for xfs@oss.sgi.com; Wed, 19 Jun 2013 14:51:46 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 14/60] xfs: move getdents code into it's own file
-Date: Wed, 19 Jun 2013 14:50:22 +1000
-Message-Id: <1371617468-32559-15-git-send-email-david@fromorbit.com>
+Subject: [PATCH 20/60] xfs: move xfs_getbmap to xfs_extent_ops.c
+Date: Wed, 19 Jun 2013 14:50:28 +1000
+Message-Id: <1371617468-32559-21-git-send-email-david@fromorbit.com>
 In-Reply-To: <1371617468-32559-1-git-send-email-david@fromorbit.com>
 References: <1371617468-32559-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,1413 +38,667 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The directory readdir code isno used by userspace, but it is
-intermingled with files that are shared with userspace. This makes
-it difficult to compare the differences between the userspac eand
-kernel files are the userspace files don't have the getdents code in
-them. Move all the kernel getdents code to a separate file to bring
-the shared content between userspace and kernel files closer
-together.
+While xfs_getbmap() walks the extent tree and formats it for
+userspace, it's not really a core function of the block mapping API.
+It is a user of the interface, and one that is kernel only
+functionality. xfs_bmap.c is shared with libxfs, so to minimise the
+differences between userspace and kernel files, move the getbmap
+functionality to xfs_extent_ops.c. This provides a nice separation
+between the core functionality and implementation of kernel
+interfaces.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/Makefile           |    1 +
- fs/xfs/xfs_dir2.c         |   34 ---
- fs/xfs/xfs_dir2_block.c   |  100 +------
- fs/xfs/xfs_dir2_leaf.c    |  391 ---------------------------
- fs/xfs/xfs_dir2_priv.h    |    8 +-
- fs/xfs/xfs_dir2_readdir.c |  660 +++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_dir2_sf.c      |   99 -------
- 7 files changed, 664 insertions(+), 629 deletions(-)
- create mode 100644 fs/xfs/xfs_dir2_readdir.c
+ fs/xfs/xfs_bmap.c       |  281 ----------------------------------------------
+ fs/xfs/xfs_bmap.h       |    5 -
+ fs/xfs/xfs_extent_ops.c |  283 +++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_extent_ops.h |    6 +
+ fs/xfs/xfs_iops.c       |    1 +
+ 5 files changed, 290 insertions(+), 286 deletions(-)
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 4a45080..f396fe9 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -30,6 +30,7 @@ xfs-y				+= xfs_aops.o \
- 				   xfs_bit.o \
- 				   xfs_buf.o \
- 				   xfs_dfrag.o \
-+				   xfs_dir2_readdir.o \
- 				   xfs_discard.o \
- 				   xfs_error.o \
- 				   xfs_export.o \
-diff --git a/fs/xfs/xfs_dir2.c b/fs/xfs/xfs_dir2.c
-index b26a50f..431be44 100644
---- a/fs/xfs/xfs_dir2.c
-+++ b/fs/xfs/xfs_dir2.c
-@@ -363,40 +363,6 @@ xfs_dir_removename(
+diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
+index 533c786..181e7b6 100644
+--- a/fs/xfs/xfs_bmap.c
++++ b/fs/xfs/xfs_bmap.c
+@@ -5791,287 +5791,6 @@ error0:
  }
  
  /*
-- * Read a directory.
+- * returns 1 for success, 0 if we failed to map the extent.
 - */
--int
--xfs_readdir(
--	xfs_inode_t	*dp,
--	void		*dirent,
--	size_t		bufsize,
--	xfs_off_t	*offset,
--	filldir_t	filldir)
--{
--	int		rval;		/* return value */
--	int		v;		/* type-checking value */
--
--	trace_xfs_readdir(dp);
--
--	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
--		return XFS_ERROR(EIO);
--
--	ASSERT(S_ISDIR(dp->i_d.di_mode));
--	XFS_STATS_INC(xs_dir_getdents);
--
--	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
--		rval = xfs_dir2_sf_getdents(dp, dirent, offset, filldir);
--	else if ((rval = xfs_dir2_isblock(NULL, dp, &v)))
--		;
--	else if (v)
--		rval = xfs_dir2_block_getdents(dp, dirent, offset, filldir);
--	else
--		rval = xfs_dir2_leaf_getdents(dp, dirent, bufsize, offset,
--					      filldir);
--	return rval;
--}
--
--/*
-  * Replace the inode number of a directory entry.
-  */
- int
-diff --git a/fs/xfs/xfs_dir2_block.c b/fs/xfs/xfs_dir2_block.c
-index 53b9aa2..5e84000 100644
---- a/fs/xfs/xfs_dir2_block.c
-+++ b/fs/xfs/xfs_dir2_block.c
-@@ -126,7 +126,7 @@ const struct xfs_buf_ops xfs_dir3_block_buf_ops = {
- 	.verify_write = xfs_dir3_block_write_verify,
- };
- 
--static int
-+int
- xfs_dir3_block_read(
- 	struct xfs_trans	*tp,
- 	struct xfs_inode	*dp,
-@@ -565,104 +565,6 @@ xfs_dir2_block_addname(
- }
- 
- /*
-- * Readdir for block directories.
-- */
--int						/* error */
--xfs_dir2_block_getdents(
--	xfs_inode_t		*dp,		/* incore inode */
--	void			*dirent,
--	xfs_off_t		*offset,
--	filldir_t		filldir)
--{
--	xfs_dir2_data_hdr_t	*hdr;		/* block header */
--	struct xfs_buf		*bp;		/* buffer for block */
--	xfs_dir2_block_tail_t	*btp;		/* block tail */
--	xfs_dir2_data_entry_t	*dep;		/* block data entry */
--	xfs_dir2_data_unused_t	*dup;		/* block unused entry */
--	char			*endptr;	/* end of the data entries */
--	int			error;		/* error return value */
--	xfs_mount_t		*mp;		/* filesystem mount point */
--	char			*ptr;		/* current data entry */
--	int			wantoff;	/* starting block offset */
--	xfs_off_t		cook;
--
--	mp = dp->i_mount;
--	/*
--	 * If the block number in the offset is out of range, we're done.
--	 */
--	if (xfs_dir2_dataptr_to_db(mp, *offset) > mp->m_dirdatablk)
--		return 0;
--
--	error = xfs_dir3_block_read(NULL, dp, &bp);
--	if (error)
--		return error;
--
--	/*
--	 * Extract the byte offset we start at from the seek pointer.
--	 * We'll skip entries before this.
--	 */
--	wantoff = xfs_dir2_dataptr_to_off(mp, *offset);
--	hdr = bp->b_addr;
--	xfs_dir3_data_check(dp, bp);
--	/*
--	 * Set up values for the loop.
--	 */
--	btp = xfs_dir2_block_tail_p(mp, hdr);
--	ptr = (char *)xfs_dir3_data_entry_p(hdr);
--	endptr = (char *)xfs_dir2_block_leaf_p(btp);
--
--	/*
--	 * Loop over the data portion of the block.
--	 * Each object is a real entry (dep) or an unused one (dup).
--	 */
--	while (ptr < endptr) {
--		dup = (xfs_dir2_data_unused_t *)ptr;
--		/*
--		 * Unused, skip it.
--		 */
--		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
--			ptr += be16_to_cpu(dup->length);
--			continue;
--		}
--
--		dep = (xfs_dir2_data_entry_t *)ptr;
--
--		/*
--		 * Bump pointer for the next iteration.
--		 */
--		ptr += xfs_dir2_data_entsize(dep->namelen);
--		/*
--		 * The entry is before the desired starting point, skip it.
--		 */
--		if ((char *)dep - (char *)hdr < wantoff)
--			continue;
--
--		cook = xfs_dir2_db_off_to_dataptr(mp, mp->m_dirdatablk,
--					    (char *)dep - (char *)hdr);
--
--		/*
--		 * If it didn't fit, set the final offset to here & return.
--		 */
--		if (filldir(dirent, (char *)dep->name, dep->namelen,
--			    cook & 0x7fffffff, be64_to_cpu(dep->inumber),
--			    DT_UNKNOWN)) {
--			*offset = cook & 0x7fffffff;
--			xfs_trans_brelse(NULL, bp);
--			return 0;
--		}
--	}
--
--	/*
--	 * Reached the end of the block.
--	 * Set the offset to a non-existent block 1 and return.
--	 */
--	*offset = xfs_dir2_db_off_to_dataptr(mp, mp->m_dirdatablk + 1, 0) &
--			0x7fffffff;
--	xfs_trans_brelse(NULL, bp);
--	return 0;
--}
--
--/*
-  * Log leaf entries from the block.
-  */
- static void
-diff --git a/fs/xfs/xfs_dir2_leaf.c b/fs/xfs/xfs_dir2_leaf.c
-index bb22aac..e1aed21 100644
---- a/fs/xfs/xfs_dir2_leaf.c
-+++ b/fs/xfs/xfs_dir2_leaf.c
-@@ -1083,397 +1083,6 @@ xfs_dir3_leaf_compact_x1(
- 	*highstalep = highstale;
- }
- 
--struct xfs_dir2_leaf_map_info {
--	xfs_extlen_t	map_blocks;	/* number of fsbs in map */
--	xfs_dablk_t	map_off;	/* last mapped file offset */
--	int		map_size;	/* total entries in *map */
--	int		map_valid;	/* valid entries in *map */
--	int		nmap;		/* mappings to ask xfs_bmapi */
--	xfs_dir2_db_t	curdb;		/* db for current block */
--	int		ra_current;	/* number of read-ahead blks */
--	int		ra_index;	/* *map index for read-ahead */
--	int		ra_offset;	/* map entry offset for ra */
--	int		ra_want;	/* readahead count wanted */
--	struct xfs_bmbt_irec map[];	/* map vector for blocks */
--};
--
 -STATIC int
--xfs_dir2_leaf_readbuf(
--	struct xfs_inode	*dp,
--	size_t			bufsize,
--	struct xfs_dir2_leaf_map_info *mip,
--	xfs_dir2_off_t		*curoff,
--	struct xfs_buf		**bpp)
+-xfs_getbmapx_fix_eof_hole(
+-	xfs_inode_t		*ip,		/* xfs incore inode pointer */
+-	struct getbmapx		*out,		/* output structure */
+-	int			prealloced,	/* this is a file with
+-						 * preallocated data space */
+-	__int64_t		end,		/* last block requested */
+-	xfs_fsblock_t		startblock)
 -{
--	struct xfs_mount	*mp = dp->i_mount;
--	struct xfs_buf		*bp = *bpp;
--	struct xfs_bmbt_irec	*map = mip->map;
--	struct blk_plug		plug;
--	int			error = 0;
--	int			length;
--	int			i;
--	int			j;
+-	__int64_t		fixlen;
+-	xfs_mount_t		*mp;		/* file system mount point */
+-	xfs_ifork_t		*ifp;		/* inode fork pointer */
+-	xfs_extnum_t		lastx;		/* last extent pointer */
+-	xfs_fileoff_t		fileblock;
 -
--	/*
--	 * If we have a buffer, we need to release it and
--	 * take it out of the mapping.
--	 */
+-	if (startblock == HOLESTARTBLOCK) {
+-		mp = ip->i_mount;
+-		out->bmv_block = -1;
+-		fixlen = XFS_FSB_TO_BB(mp, XFS_B_TO_FSB(mp, XFS_ISIZE(ip)));
+-		fixlen -= out->bmv_offset;
+-		if (prealloced && out->bmv_offset + out->bmv_length == end) {
+-			/* Came to hole at EOF. Trim it. */
+-			if (fixlen <= 0)
+-				return 0;
+-			out->bmv_length = fixlen;
+-		}
+-	} else {
+-		if (startblock == DELAYSTARTBLOCK)
+-			out->bmv_block = -2;
+-		else
+-			out->bmv_block = xfs_fsb_to_db(ip, startblock);
+-		fileblock = XFS_BB_TO_FSB(ip->i_mount, out->bmv_offset);
+-		ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
+-		if (xfs_iext_bno_to_ext(ifp, fileblock, &lastx) &&
+-		   (lastx == (ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t))-1))
+-			out->bmv_oflags |= BMV_OF_LAST;
+-	}
 -
--	if (bp) {
--		xfs_trans_brelse(NULL, bp);
--		bp = NULL;
--		mip->map_blocks -= mp->m_dirblkfsbs;
--		/*
--		 * Loop to get rid of the extents for the
--		 * directory block.
--		 */
--		for (i = mp->m_dirblkfsbs; i > 0; ) {
--			j = min_t(int, map->br_blockcount, i);
--			map->br_blockcount -= j;
--			map->br_startblock += j;
--			map->br_startoff += j;
--			/*
--			 * If mapping is done, pitch it from
--			 * the table.
--			 */
--			if (!map->br_blockcount && --mip->map_valid)
--				memmove(&map[0], &map[1],
--					sizeof(map[0]) * mip->map_valid);
--			i -= j;
+-	return 1;
+-}
+-
+-/*
+- * Get inode's extents as described in bmv, and format for output.
+- * Calls formatter to fill the user's buffer until all extents
+- * are mapped, until the passed-in bmv->bmv_count slots have
+- * been filled, or until the formatter short-circuits the loop,
+- * if it is tracking filled-in extents on its own.
+- */
+-int						/* error code */
+-xfs_getbmap(
+-	xfs_inode_t		*ip,
+-	struct getbmapx		*bmv,		/* user bmap structure */
+-	xfs_bmap_format_t	formatter,	/* format to user */
+-	void			*arg)		/* formatter arg */
+-{
+-	__int64_t		bmvend;		/* last block requested */
+-	int			error = 0;	/* return value */
+-	__int64_t		fixlen;		/* length for -1 case */
+-	int			i;		/* extent number */
+-	int			lock;		/* lock state */
+-	xfs_bmbt_irec_t		*map;		/* buffer for user's data */
+-	xfs_mount_t		*mp;		/* file system mount point */
+-	int			nex;		/* # of user extents can do */
+-	int			nexleft;	/* # of user extents left */
+-	int			subnex;		/* # of bmapi's can do */
+-	int			nmap;		/* number of map entries */
+-	struct getbmapx		*out;		/* output structure */
+-	int			whichfork;	/* data or attr fork */
+-	int			prealloced;	/* this is a file with
+-						 * preallocated data space */
+-	int			iflags;		/* interface flags */
+-	int			bmapi_flags;	/* flags for xfs_bmapi */
+-	int			cur_ext = 0;
+-
+-	mp = ip->i_mount;
+-	iflags = bmv->bmv_iflags;
+-	whichfork = iflags & BMV_IF_ATTRFORK ? XFS_ATTR_FORK : XFS_DATA_FORK;
+-
+-	if (whichfork == XFS_ATTR_FORK) {
+-		if (XFS_IFORK_Q(ip)) {
+-			if (ip->i_d.di_aformat != XFS_DINODE_FMT_EXTENTS &&
+-			    ip->i_d.di_aformat != XFS_DINODE_FMT_BTREE &&
+-			    ip->i_d.di_aformat != XFS_DINODE_FMT_LOCAL)
+-				return XFS_ERROR(EINVAL);
+-		} else if (unlikely(
+-			   ip->i_d.di_aformat != 0 &&
+-			   ip->i_d.di_aformat != XFS_DINODE_FMT_EXTENTS)) {
+-			XFS_ERROR_REPORT("xfs_getbmap", XFS_ERRLEVEL_LOW,
+-					 ip->i_mount);
+-			return XFS_ERROR(EFSCORRUPTED);
+-		}
+-
+-		prealloced = 0;
+-		fixlen = 1LL << 32;
+-	} else {
+-		if (ip->i_d.di_format != XFS_DINODE_FMT_EXTENTS &&
+-		    ip->i_d.di_format != XFS_DINODE_FMT_BTREE &&
+-		    ip->i_d.di_format != XFS_DINODE_FMT_LOCAL)
+-			return XFS_ERROR(EINVAL);
+-
+-		if (xfs_get_extsz_hint(ip) ||
+-		    ip->i_d.di_flags & (XFS_DIFLAG_PREALLOC|XFS_DIFLAG_APPEND)){
+-			prealloced = 1;
+-			fixlen = mp->m_super->s_maxbytes;
+-		} else {
+-			prealloced = 0;
+-			fixlen = XFS_ISIZE(ip);
 -		}
 -	}
 -
--	/*
--	 * Recalculate the readahead blocks wanted.
--	 */
--	mip->ra_want = howmany(bufsize + mp->m_dirblksize,
--			       mp->m_sb.sb_blocksize) - 1;
--	ASSERT(mip->ra_want >= 0);
+-	if (bmv->bmv_length == -1) {
+-		fixlen = XFS_FSB_TO_BB(mp, XFS_B_TO_FSB(mp, fixlen));
+-		bmv->bmv_length =
+-			max_t(__int64_t, fixlen - bmv->bmv_offset, 0);
+-	} else if (bmv->bmv_length == 0) {
+-		bmv->bmv_entries = 0;
+-		return 0;
+-	} else if (bmv->bmv_length < 0) {
+-		return XFS_ERROR(EINVAL);
+-	}
+-
+-	nex = bmv->bmv_count - 1;
+-	if (nex <= 0)
+-		return XFS_ERROR(EINVAL);
+-	bmvend = bmv->bmv_offset + bmv->bmv_length;
+-
+-
+-	if (bmv->bmv_count > ULONG_MAX / sizeof(struct getbmapx))
+-		return XFS_ERROR(ENOMEM);
+-	out = kmem_zalloc(bmv->bmv_count * sizeof(struct getbmapx), KM_MAYFAIL);
+-	if (!out) {
+-		out = kmem_zalloc_large(bmv->bmv_count *
+-					sizeof(struct getbmapx));
+-		if (!out)
+-			return XFS_ERROR(ENOMEM);
+-	}
+-
+-	xfs_ilock(ip, XFS_IOLOCK_SHARED);
+-	if (whichfork == XFS_DATA_FORK && !(iflags & BMV_IF_DELALLOC)) {
+-		if (ip->i_delayed_blks || XFS_ISIZE(ip) > ip->i_d.di_size) {
+-			error = -filemap_write_and_wait(VFS_I(ip)->i_mapping);
+-			if (error)
+-				goto out_unlock_iolock;
+-		}
+-		/*
+-		 * even after flushing the inode, there can still be delalloc
+-		 * blocks on the inode beyond EOF due to speculative
+-		 * preallocation. These are not removed until the release
+-		 * function is called or the inode is inactivated. Hence we
+-		 * cannot assert here that ip->i_delayed_blks == 0.
+-		 */
+-	}
+-
+-	lock = xfs_ilock_map_shared(ip);
 -
 -	/*
--	 * If we don't have as many as we want, and we haven't
--	 * run out of data blocks, get some more mappings.
+-	 * Don't let nex be bigger than the number of extents
+-	 * we can have assuming alternating holes and real extents.
 -	 */
--	if (1 + mip->ra_want > mip->map_blocks &&
--	    mip->map_off < xfs_dir2_byte_to_da(mp, XFS_DIR2_LEAF_OFFSET)) {
--		/*
--		 * Get more bmaps, fill in after the ones
--		 * we already have in the table.
--		 */
--		mip->nmap = mip->map_size - mip->map_valid;
--		error = xfs_bmapi_read(dp, mip->map_off,
--				xfs_dir2_byte_to_da(mp, XFS_DIR2_LEAF_OFFSET) -
--								mip->map_off,
--				&map[mip->map_valid], &mip->nmap, 0);
+-	if (nex > XFS_IFORK_NEXTENTS(ip, whichfork) * 2 + 1)
+-		nex = XFS_IFORK_NEXTENTS(ip, whichfork) * 2 + 1;
 -
--		/*
--		 * Don't know if we should ignore this or try to return an
--		 * error.  The trouble with returning errors is that readdir
--		 * will just stop without actually passing the error through.
--		 */
+-	bmapi_flags = xfs_bmapi_aflag(whichfork);
+-	if (!(iflags & BMV_IF_PREALLOC))
+-		bmapi_flags |= XFS_BMAPI_IGSTATE;
+-
+-	/*
+-	 * Allocate enough space to handle "subnex" maps at a time.
+-	 */
+-	error = ENOMEM;
+-	subnex = 16;
+-	map = kmem_alloc(subnex * sizeof(*map), KM_MAYFAIL | KM_NOFS);
+-	if (!map)
+-		goto out_unlock_ilock;
+-
+-	bmv->bmv_entries = 0;
+-
+-	if (XFS_IFORK_NEXTENTS(ip, whichfork) == 0 &&
+-	    (whichfork == XFS_ATTR_FORK || !(iflags & BMV_IF_DELALLOC))) {
+-		error = 0;
+-		goto out_free_map;
+-	}
+-
+-	nexleft = nex;
+-
+-	do {
+-		nmap = (nexleft > subnex) ? subnex : nexleft;
+-		error = xfs_bmapi_read(ip, XFS_BB_TO_FSBT(mp, bmv->bmv_offset),
+-				       XFS_BB_TO_FSB(mp, bmv->bmv_length),
+-				       map, &nmap, bmapi_flags);
 -		if (error)
--			goto out;	/* XXX */
+-			goto out_free_map;
+-		ASSERT(nmap <= subnex);
 -
--		/*
--		 * If we got all the mappings we asked for, set the final map
--		 * offset based on the last bmap value received.  Otherwise,
--		 * we've reached the end.
--		 */
--		if (mip->nmap == mip->map_size - mip->map_valid) {
--			i = mip->map_valid + mip->nmap - 1;
--			mip->map_off = map[i].br_startoff + map[i].br_blockcount;
--		} else
--			mip->map_off = xfs_dir2_byte_to_da(mp,
--							XFS_DIR2_LEAF_OFFSET);
--
--		/*
--		 * Look for holes in the mapping, and eliminate them.  Count up
--		 * the valid blocks.
--		 */
--		for (i = mip->map_valid; i < mip->map_valid + mip->nmap; ) {
--			if (map[i].br_startblock == HOLESTARTBLOCK) {
--				mip->nmap--;
--				length = mip->map_valid + mip->nmap - i;
--				if (length)
--					memmove(&map[i], &map[i + 1],
--						sizeof(map[i]) * length);
--			} else {
--				mip->map_blocks += map[i].br_blockcount;
--				i++;
--			}
--		}
--		mip->map_valid += mip->nmap;
--	}
--
--	/*
--	 * No valid mappings, so no more data blocks.
--	 */
--	if (!mip->map_valid) {
--		*curoff = xfs_dir2_da_to_byte(mp, mip->map_off);
--		goto out;
--	}
--
--	/*
--	 * Read the directory block starting at the first mapping.
--	 */
--	mip->curdb = xfs_dir2_da_to_db(mp, map->br_startoff);
--	error = xfs_dir3_data_read(NULL, dp, map->br_startoff,
--			map->br_blockcount >= mp->m_dirblkfsbs ?
--			    XFS_FSB_TO_DADDR(mp, map->br_startblock) : -1, &bp);
--
--	/*
--	 * Should just skip over the data block instead of giving up.
--	 */
--	if (error)
--		goto out;	/* XXX */
--
--	/*
--	 * Adjust the current amount of read-ahead: we just read a block that
--	 * was previously ra.
--	 */
--	if (mip->ra_current)
--		mip->ra_current -= mp->m_dirblkfsbs;
--
--	/*
--	 * Do we need more readahead?
--	 */
--	blk_start_plug(&plug);
--	for (mip->ra_index = mip->ra_offset = i = 0;
--	     mip->ra_want > mip->ra_current && i < mip->map_blocks;
--	     i += mp->m_dirblkfsbs) {
--		ASSERT(mip->ra_index < mip->map_valid);
--		/*
--		 * Read-ahead a contiguous directory block.
--		 */
--		if (i > mip->ra_current &&
--		    map[mip->ra_index].br_blockcount >= mp->m_dirblkfsbs) {
--			xfs_dir3_data_readahead(NULL, dp,
--				map[mip->ra_index].br_startoff + mip->ra_offset,
--				XFS_FSB_TO_DADDR(mp,
--					map[mip->ra_index].br_startblock +
--							mip->ra_offset));
--			mip->ra_current = i;
--		}
--
--		/*
--		 * Read-ahead a non-contiguous directory block.  This doesn't
--		 * use our mapping, but this is a very rare case.
--		 */
--		else if (i > mip->ra_current) {
--			xfs_dir3_data_readahead(NULL, dp,
--					map[mip->ra_index].br_startoff +
--							mip->ra_offset, -1);
--			mip->ra_current = i;
--		}
--
--		/*
--		 * Advance offset through the mapping table.
--		 */
--		for (j = 0; j < mp->m_dirblkfsbs; j++) {
--			/*
--			 * The rest of this extent but not more than a dir
--			 * block.
--			 */
--			length = min_t(int, mp->m_dirblkfsbs,
--					map[mip->ra_index].br_blockcount -
--							mip->ra_offset);
--			j += length;
--			mip->ra_offset += length;
+-		for (i = 0; i < nmap && nexleft && bmv->bmv_length; i++) {
+-			out[cur_ext].bmv_oflags = 0;
+-			if (map[i].br_state == XFS_EXT_UNWRITTEN)
+-				out[cur_ext].bmv_oflags |= BMV_OF_PREALLOC;
+-			else if (map[i].br_startblock == DELAYSTARTBLOCK)
+-				out[cur_ext].bmv_oflags |= BMV_OF_DELALLOC;
+-			out[cur_ext].bmv_offset =
+-				XFS_FSB_TO_BB(mp, map[i].br_startoff);
+-			out[cur_ext].bmv_length =
+-				XFS_FSB_TO_BB(mp, map[i].br_blockcount);
+-			out[cur_ext].bmv_unused1 = 0;
+-			out[cur_ext].bmv_unused2 = 0;
 -
 -			/*
--			 * Advance to the next mapping if this one is used up.
+-			 * delayed allocation extents that start beyond EOF can
+-			 * occur due to speculative EOF allocation when the
+-			 * delalloc extent is larger than the largest freespace
+-			 * extent at conversion time. These extents cannot be
+-			 * converted by data writeback, so can exist here even
+-			 * if we are not supposed to be finding delalloc
+-			 * extents.
 -			 */
--			if (mip->ra_offset == map[mip->ra_index].br_blockcount) {
--				mip->ra_offset = 0;
--				mip->ra_index++;
--			}
--		}
--	}
--	blk_finish_plug(&plug);
+-			if (map[i].br_startblock == DELAYSTARTBLOCK &&
+-			    map[i].br_startoff <= XFS_B_TO_FSB(mp, XFS_ISIZE(ip)))
+-				ASSERT((iflags & BMV_IF_DELALLOC) != 0);
 -
--out:
--	*bpp = bp;
+-                        if (map[i].br_startblock == HOLESTARTBLOCK &&
+-			    whichfork == XFS_ATTR_FORK) {
+-				/* came to the end of attribute fork */
+-				out[cur_ext].bmv_oflags |= BMV_OF_LAST;
+-				goto out_free_map;
+-			}
+-
+-			if (!xfs_getbmapx_fix_eof_hole(ip, &out[cur_ext],
+-					prealloced, bmvend,
+-					map[i].br_startblock))
+-				goto out_free_map;
+-
+-			bmv->bmv_offset =
+-				out[cur_ext].bmv_offset +
+-				out[cur_ext].bmv_length;
+-			bmv->bmv_length =
+-				max_t(__int64_t, 0, bmvend - bmv->bmv_offset);
+-
+-			/*
+-			 * In case we don't want to return the hole,
+-			 * don't increase cur_ext so that we can reuse
+-			 * it in the next loop.
+-			 */
+-			if ((iflags & BMV_IF_NO_HOLES) &&
+-			    map[i].br_startblock == HOLESTARTBLOCK) {
+-				memset(&out[cur_ext], 0, sizeof(out[cur_ext]));
+-				continue;
+-			}
+-
+-			nexleft--;
+-			bmv->bmv_entries++;
+-			cur_ext++;
+-		}
+-	} while (nmap && nexleft && bmv->bmv_length);
+-
+- out_free_map:
+-	kmem_free(map);
+- out_unlock_ilock:
+-	xfs_iunlock_map_shared(ip, lock);
+- out_unlock_iolock:
+-	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
+-
+-	for (i = 0; i < cur_ext; i++) {
+-		int full = 0;	/* user array is full */
+-
+-		/* format results & advance arg */
+-		error = formatter(&arg, &out[i], &full);
+-		if (error || full)
+-			break;
+-	}
+-
+-	if (is_vmalloc_addr(out))
+-		kmem_free_large(out);
+-	else
+-		kmem_free(out);
 -	return error;
 -}
 -
 -/*
-- * Getdents (readdir) for leaf and node directories.
-- * This reads the data blocks only, so is the same for both forms.
-- */
--int						/* error */
--xfs_dir2_leaf_getdents(
--	xfs_inode_t		*dp,		/* incore directory inode */
--	void			*dirent,
--	size_t			bufsize,
--	xfs_off_t		*offset,
--	filldir_t		filldir)
--{
--	struct xfs_buf		*bp = NULL;	/* data block buffer */
--	xfs_dir2_data_hdr_t	*hdr;		/* data block header */
--	xfs_dir2_data_entry_t	*dep;		/* data entry */
--	xfs_dir2_data_unused_t	*dup;		/* unused entry */
--	int			error = 0;	/* error return value */
--	int			length;		/* temporary length value */
--	xfs_mount_t		*mp;		/* filesystem mount point */
--	int			byteoff;	/* offset in current block */
--	xfs_dir2_off_t		curoff;		/* current overall offset */
--	xfs_dir2_off_t		newoff;		/* new curoff after new blk */
--	char			*ptr = NULL;	/* pointer to current data */
--	struct xfs_dir2_leaf_map_info *map_info;
--
--	/*
--	 * If the offset is at or past the largest allowed value,
--	 * give up right away.
--	 */
--	if (*offset >= XFS_DIR2_MAX_DATAPTR)
--		return 0;
--
--	mp = dp->i_mount;
--
--	/*
--	 * Set up to bmap a number of blocks based on the caller's
--	 * buffer size, the directory block size, and the filesystem
--	 * block size.
--	 */
--	length = howmany(bufsize + mp->m_dirblksize,
--				     mp->m_sb.sb_blocksize);
--	map_info = kmem_zalloc(offsetof(struct xfs_dir2_leaf_map_info, map) +
--				(length * sizeof(struct xfs_bmbt_irec)),
--			       KM_SLEEP | KM_NOFS);
--	map_info->map_size = length;
--
--	/*
--	 * Inside the loop we keep the main offset value as a byte offset
--	 * in the directory file.
--	 */
--	curoff = xfs_dir2_dataptr_to_byte(mp, *offset);
--
--	/*
--	 * Force this conversion through db so we truncate the offset
--	 * down to get the start of the data block.
--	 */
--	map_info->map_off = xfs_dir2_db_to_da(mp,
--					      xfs_dir2_byte_to_db(mp, curoff));
--
--	/*
--	 * Loop over directory entries until we reach the end offset.
--	 * Get more blocks and readahead as necessary.
--	 */
--	while (curoff < XFS_DIR2_LEAF_OFFSET) {
--		/*
--		 * If we have no buffer, or we're off the end of the
--		 * current buffer, need to get another one.
--		 */
--		if (!bp || ptr >= (char *)bp->b_addr + mp->m_dirblksize) {
--
--			error = xfs_dir2_leaf_readbuf(dp, bufsize, map_info,
--						      &curoff, &bp);
--			if (error || !map_info->map_valid)
--				break;
--
--			/*
--			 * Having done a read, we need to set a new offset.
--			 */
--			newoff = xfs_dir2_db_off_to_byte(mp, map_info->curdb, 0);
--			/*
--			 * Start of the current block.
--			 */
--			if (curoff < newoff)
--				curoff = newoff;
--			/*
--			 * Make sure we're in the right block.
--			 */
--			else if (curoff > newoff)
--				ASSERT(xfs_dir2_byte_to_db(mp, curoff) ==
--				       map_info->curdb);
--			hdr = bp->b_addr;
--			xfs_dir3_data_check(dp, bp);
--			/*
--			 * Find our position in the block.
--			 */
--			ptr = (char *)xfs_dir3_data_entry_p(hdr);
--			byteoff = xfs_dir2_byte_to_off(mp, curoff);
--			/*
--			 * Skip past the header.
--			 */
--			if (byteoff == 0)
--				curoff += xfs_dir3_data_entry_offset(hdr);
--			/*
--			 * Skip past entries until we reach our offset.
--			 */
--			else {
--				while ((char *)ptr - (char *)hdr < byteoff) {
--					dup = (xfs_dir2_data_unused_t *)ptr;
--
--					if (be16_to_cpu(dup->freetag)
--						  == XFS_DIR2_DATA_FREE_TAG) {
--
--						length = be16_to_cpu(dup->length);
--						ptr += length;
--						continue;
--					}
--					dep = (xfs_dir2_data_entry_t *)ptr;
--					length =
--					   xfs_dir2_data_entsize(dep->namelen);
--					ptr += length;
--				}
--				/*
--				 * Now set our real offset.
--				 */
--				curoff =
--					xfs_dir2_db_off_to_byte(mp,
--					    xfs_dir2_byte_to_db(mp, curoff),
--					    (char *)ptr - (char *)hdr);
--				if (ptr >= (char *)hdr + mp->m_dirblksize) {
--					continue;
--				}
--			}
--		}
--		/*
--		 * We have a pointer to an entry.
--		 * Is it a live one?
--		 */
--		dup = (xfs_dir2_data_unused_t *)ptr;
--		/*
--		 * No, it's unused, skip over it.
--		 */
--		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
--			length = be16_to_cpu(dup->length);
--			ptr += length;
--			curoff += length;
--			continue;
--		}
--
--		dep = (xfs_dir2_data_entry_t *)ptr;
--		length = xfs_dir2_data_entsize(dep->namelen);
--
--		if (filldir(dirent, (char *)dep->name, dep->namelen,
--			    xfs_dir2_byte_to_dataptr(mp, curoff) & 0x7fffffff,
--			    be64_to_cpu(dep->inumber), DT_UNKNOWN))
--			break;
--
--		/*
--		 * Advance to next entry in the block.
--		 */
--		ptr += length;
--		curoff += length;
--		/* bufsize may have just been a guess; don't go negative */
--		bufsize = bufsize > length ? bufsize - length : 0;
--	}
--
--	/*
--	 * All done.  Set output offset value to current offset.
--	 */
--	if (curoff > xfs_dir2_dataptr_to_byte(mp, XFS_DIR2_MAX_DATAPTR))
--		*offset = XFS_DIR2_MAX_DATAPTR & 0x7fffffff;
--	else
--		*offset = xfs_dir2_byte_to_dataptr(mp, curoff) & 0x7fffffff;
--	kmem_free(map_info);
--	if (bp)
--		xfs_trans_brelse(NULL, bp);
--	return error;
--}
--
+  * dead simple method of punching delalyed allocation blocks from a range in
+  * the inode. Walks a block at a time so will be slow, but is only executed in
+  * rare error cases so the overhead is not critical. This will alays punch out
+diff --git a/fs/xfs/xfs_bmap.h b/fs/xfs/xfs_bmap.h
+index 1cf1292..cbcaf00 100644
+--- a/fs/xfs/xfs_bmap.h
++++ b/fs/xfs/xfs_bmap.h
+@@ -18,7 +18,6 @@
+ #ifndef __XFS_BMAP_H__
+ #define	__XFS_BMAP_H__
+ 
+-struct getbmap;
+ struct xfs_bmbt_irec;
+ struct xfs_ifork;
+ struct xfs_inode;
+@@ -206,13 +205,9 @@ int	xfs_check_nostate_extents(struct xfs_ifork *ifp, xfs_extnum_t idx,
+ uint	xfs_default_attroffset(struct xfs_inode *ip);
+ 
+ #ifdef __KERNEL__
+-/* bmap to userspace formatter - copy to user & advance pointer */
+-typedef int (*xfs_bmap_format_t)(void **, struct getbmapx *, int *);
+ 
+ int	xfs_bmap_finish(struct xfs_trans **tp, struct xfs_bmap_free *flist,
+ 		int *committed);
+-int	xfs_getbmap(struct xfs_inode *ip, struct getbmapx *bmv,
+-		xfs_bmap_format_t formatter, void *arg);
+ int	xfs_bmap_eof(struct xfs_inode *ip, xfs_fileoff_t endoff,
+ 		int whichfork, int *eof);
+ int	xfs_bmap_count_blocks(struct xfs_trans *tp, struct xfs_inode *ip,
+diff --git a/fs/xfs/xfs_extent_ops.c b/fs/xfs/xfs_extent_ops.c
+index 5590d23..a2f136c 100644
+--- a/fs/xfs/xfs_extent_ops.c
++++ b/fs/xfs/xfs_extent_ops.c
+@@ -49,6 +49,7 @@
+ #include "xfs_filestream.h"
+ #include "xfs_trace.h"
+ #include "xfs_icache.h"
++#include "xfs_extent_ops.h"
+ 
  
  /*
-  * Log the bests entries indicated from a leaf1 block.
-diff --git a/fs/xfs/xfs_dir2_priv.h b/fs/xfs/xfs_dir2_priv.h
-index 7cf573c..72ff8d7 100644
---- a/fs/xfs/xfs_dir2_priv.h
-+++ b/fs/xfs/xfs_dir2_priv.h
-@@ -32,9 +32,9 @@ extern int xfs_dir_cilookup_result(struct xfs_da_args *args,
- /* xfs_dir2_block.c */
- extern const struct xfs_buf_ops xfs_dir3_block_buf_ops;
- 
-+extern int xfs_dir3_block_read(struct xfs_trans *tp, struct xfs_inode *dp,
-+			       struct xfs_buf **bpp);
- extern int xfs_dir2_block_addname(struct xfs_da_args *args);
--extern int xfs_dir2_block_getdents(struct xfs_inode *dp, void *dirent,
--		xfs_off_t *offset, filldir_t filldir);
- extern int xfs_dir2_block_lookup(struct xfs_da_args *args);
- extern int xfs_dir2_block_removename(struct xfs_da_args *args);
- extern int xfs_dir2_block_replace(struct xfs_da_args *args);
-@@ -91,8 +91,6 @@ extern void xfs_dir3_leaf_compact(struct xfs_da_args *args,
- extern void xfs_dir3_leaf_compact_x1(struct xfs_dir3_icleaf_hdr *leafhdr,
- 		struct xfs_dir2_leaf_entry *ents, int *indexp,
- 		int *lowstalep, int *highstalep, int *lowlogp, int *highlogp);
--extern int xfs_dir2_leaf_getdents(struct xfs_inode *dp, void *dirent,
--		size_t bufsize, xfs_off_t *offset, filldir_t filldir);
- extern int xfs_dir3_leaf_get_buf(struct xfs_da_args *args, xfs_dir2_db_t bno,
- 		struct xfs_buf **bpp, __uint16_t magic);
- extern void xfs_dir3_leaf_log_ents(struct xfs_trans *tp, struct xfs_buf *bp,
-@@ -153,8 +151,6 @@ extern int xfs_dir2_block_to_sf(struct xfs_da_args *args, struct xfs_buf *bp,
- 		int size, xfs_dir2_sf_hdr_t *sfhp);
- extern int xfs_dir2_sf_addname(struct xfs_da_args *args);
- extern int xfs_dir2_sf_create(struct xfs_da_args *args, xfs_ino_t pino);
--extern int xfs_dir2_sf_getdents(struct xfs_inode *dp, void *dirent,
--		xfs_off_t *offset, filldir_t filldir);
- extern int xfs_dir2_sf_lookup(struct xfs_da_args *args);
- extern int xfs_dir2_sf_removename(struct xfs_da_args *args);
- extern int xfs_dir2_sf_replace(struct xfs_da_args *args);
-diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-new file mode 100644
-index 0000000..af17c00
---- /dev/null
-+++ b/fs/xfs/xfs_dir2_readdir.c
-@@ -0,0 +1,660 @@
-+/*
-+ * Copyright (c) 2000-2005 Silicon Graphics, Inc.
-+ * Copyright (c) 2013 Red Hat, Inc.
-+ * All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_types.h"
-+#include "xfs_bit.h"
-+#include "xfs_log.h"
-+#include "xfs_trans.h"
-+#include "xfs_sb.h"
-+#include "xfs_ag.h"
-+#include "xfs_mount.h"
-+#include "xfs_da_btree.h"
-+#include "xfs_bmap_btree.h"
-+#include "xfs_dinode.h"
-+#include "xfs_inode.h"
-+#include "xfs_dir2_format.h"
-+#include "xfs_dir2_priv.h"
-+#include "xfs_error.h"
-+#include "xfs_trace.h"
-+#include "xfs_bmap.h"
-+
-+STATIC int
-+xfs_dir2_sf_getdents(
-+	xfs_inode_t		*dp,		/* incore directory inode */
-+	void			*dirent,
-+	xfs_off_t		*offset,
-+	filldir_t		filldir)
-+{
-+	int			i;		/* shortform entry number */
-+	xfs_mount_t		*mp;		/* filesystem mount point */
-+	xfs_dir2_dataptr_t	off;		/* current entry's offset */
-+	xfs_dir2_sf_entry_t	*sfep;		/* shortform directory entry */
-+	xfs_dir2_sf_hdr_t	*sfp;		/* shortform structure */
-+	xfs_dir2_dataptr_t	dot_offset;
-+	xfs_dir2_dataptr_t	dotdot_offset;
-+	xfs_ino_t		ino;
-+
-+	mp = dp->i_mount;
-+
-+	ASSERT(dp->i_df.if_flags & XFS_IFINLINE);
-+	/*
-+	 * Give up if the directory is way too short.
-+	 */
-+	if (dp->i_d.di_size < offsetof(xfs_dir2_sf_hdr_t, parent)) {
-+		ASSERT(XFS_FORCED_SHUTDOWN(mp));
-+		return XFS_ERROR(EIO);
-+	}
-+
-+	ASSERT(dp->i_df.if_bytes == dp->i_d.di_size);
-+	ASSERT(dp->i_df.if_u1.if_data != NULL);
-+
-+	sfp = (xfs_dir2_sf_hdr_t *)dp->i_df.if_u1.if_data;
-+
-+	ASSERT(dp->i_d.di_size >= xfs_dir2_sf_hdr_size(sfp->i8count));
-+
-+	/*
-+	 * If the block number in the offset is out of range, we're done.
-+	 */
-+	if (xfs_dir2_dataptr_to_db(mp, *offset) > mp->m_dirdatablk)
-+		return 0;
-+
-+	/*
-+	 * Precalculate offsets for . and .. as we will always need them.
-+	 *
-+	 * XXX(hch): the second argument is sometimes 0 and sometimes
-+	 * mp->m_dirdatablk.
-+	 */
-+	dot_offset = xfs_dir2_db_off_to_dataptr(mp, mp->m_dirdatablk,
-+					     XFS_DIR3_DATA_DOT_OFFSET(mp));
-+	dotdot_offset = xfs_dir2_db_off_to_dataptr(mp, mp->m_dirdatablk,
-+						XFS_DIR3_DATA_DOTDOT_OFFSET(mp));
-+
-+	/*
-+	 * Put . entry unless we're starting past it.
-+	 */
-+	if (*offset <= dot_offset) {
-+		if (filldir(dirent, ".", 1, dot_offset & 0x7fffffff, dp->i_ino, DT_DIR)) {
-+			*offset = dot_offset & 0x7fffffff;
-+			return 0;
-+		}
-+	}
-+
-+	/*
-+	 * Put .. entry unless we're starting past it.
-+	 */
-+	if (*offset <= dotdot_offset) {
-+		ino = xfs_dir2_sf_get_parent_ino(sfp);
-+		if (filldir(dirent, "..", 2, dotdot_offset & 0x7fffffff, ino, DT_DIR)) {
-+			*offset = dotdot_offset & 0x7fffffff;
-+			return 0;
-+		}
-+	}
-+
-+	/*
-+	 * Loop while there are more entries and put'ing works.
-+	 */
-+	sfep = xfs_dir2_sf_firstentry(sfp);
-+	for (i = 0; i < sfp->count; i++) {
-+		off = xfs_dir2_db_off_to_dataptr(mp, mp->m_dirdatablk,
-+				xfs_dir2_sf_get_offset(sfep));
-+
-+		if (*offset > off) {
-+			sfep = xfs_dir2_sf_nextentry(sfp, sfep);
-+			continue;
-+		}
-+
-+		ino = xfs_dir2_sfe_get_ino(sfp, sfep);
-+		if (filldir(dirent, (char *)sfep->name, sfep->namelen,
-+			    off & 0x7fffffff, ino, DT_UNKNOWN)) {
-+			*offset = off & 0x7fffffff;
-+			return 0;
-+		}
-+		sfep = xfs_dir2_sf_nextentry(sfp, sfep);
-+	}
-+
-+	*offset = xfs_dir2_db_off_to_dataptr(mp, mp->m_dirdatablk + 1, 0) &
-+			0x7fffffff;
-+	return 0;
-+}
-+
-+
-+/*
-+ * Readdir for block directories.
-+ */
-+STATIC int
-+xfs_dir2_block_getdents(
-+	xfs_inode_t		*dp,		/* incore inode */
-+	void			*dirent,
-+	xfs_off_t		*offset,
-+	filldir_t		filldir)
-+{
-+	xfs_dir2_data_hdr_t	*hdr;		/* block header */
-+	struct xfs_buf		*bp;		/* buffer for block */
-+	xfs_dir2_block_tail_t	*btp;		/* block tail */
-+	xfs_dir2_data_entry_t	*dep;		/* block data entry */
-+	xfs_dir2_data_unused_t	*dup;		/* block unused entry */
-+	char			*endptr;	/* end of the data entries */
-+	int			error;		/* error return value */
-+	xfs_mount_t		*mp;		/* filesystem mount point */
-+	char			*ptr;		/* current data entry */
-+	int			wantoff;	/* starting block offset */
-+	xfs_off_t		cook;
-+
-+	mp = dp->i_mount;
-+	/*
-+	 * If the block number in the offset is out of range, we're done.
-+	 */
-+	if (xfs_dir2_dataptr_to_db(mp, *offset) > mp->m_dirdatablk)
-+		return 0;
-+
-+	error = xfs_dir3_block_read(NULL, dp, &bp);
-+	if (error)
-+		return error;
-+
-+	/*
-+	 * Extract the byte offset we start at from the seek pointer.
-+	 * We'll skip entries before this.
-+	 */
-+	wantoff = xfs_dir2_dataptr_to_off(mp, *offset);
-+	hdr = bp->b_addr;
-+	xfs_dir3_data_check(dp, bp);
-+	/*
-+	 * Set up values for the loop.
-+	 */
-+	btp = xfs_dir2_block_tail_p(mp, hdr);
-+	ptr = (char *)xfs_dir3_data_entry_p(hdr);
-+	endptr = (char *)xfs_dir2_block_leaf_p(btp);
-+
-+	/*
-+	 * Loop over the data portion of the block.
-+	 * Each object is a real entry (dep) or an unused one (dup).
-+	 */
-+	while (ptr < endptr) {
-+		dup = (xfs_dir2_data_unused_t *)ptr;
-+		/*
-+		 * Unused, skip it.
-+		 */
-+		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
-+			ptr += be16_to_cpu(dup->length);
-+			continue;
-+		}
-+
-+		dep = (xfs_dir2_data_entry_t *)ptr;
-+
-+		/*
-+		 * Bump pointer for the next iteration.
-+		 */
-+		ptr += xfs_dir2_data_entsize(dep->namelen);
-+		/*
-+		 * The entry is before the desired starting point, skip it.
-+		 */
-+		if ((char *)dep - (char *)hdr < wantoff)
-+			continue;
-+
-+		cook = xfs_dir2_db_off_to_dataptr(mp, mp->m_dirdatablk,
-+					    (char *)dep - (char *)hdr);
-+
-+		/*
-+		 * If it didn't fit, set the final offset to here & return.
-+		 */
-+		if (filldir(dirent, (char *)dep->name, dep->namelen,
-+			    cook & 0x7fffffff, be64_to_cpu(dep->inumber),
-+			    DT_UNKNOWN)) {
-+			*offset = cook & 0x7fffffff;
-+			xfs_trans_brelse(NULL, bp);
-+			return 0;
-+		}
-+	}
-+
-+	/*
-+	 * Reached the end of the block.
-+	 * Set the offset to a non-existent block 1 and return.
-+	 */
-+	*offset = xfs_dir2_db_off_to_dataptr(mp, mp->m_dirdatablk + 1, 0) &
-+			0x7fffffff;
-+	xfs_trans_brelse(NULL, bp);
-+	return 0;
-+}
-+
-+struct xfs_dir2_leaf_map_info {
-+	xfs_extlen_t	map_blocks;	/* number of fsbs in map */
-+	xfs_dablk_t	map_off;	/* last mapped file offset */
-+	int		map_size;	/* total entries in *map */
-+	int		map_valid;	/* valid entries in *map */
-+	int		nmap;		/* mappings to ask xfs_bmapi */
-+	xfs_dir2_db_t	curdb;		/* db for current block */
-+	int		ra_current;	/* number of read-ahead blks */
-+	int		ra_index;	/* *map index for read-ahead */
-+	int		ra_offset;	/* map entry offset for ra */
-+	int		ra_want;	/* readahead count wanted */
-+	struct xfs_bmbt_irec map[];	/* map vector for blocks */
-+};
-+
-+STATIC int
-+xfs_dir2_leaf_readbuf(
-+	struct xfs_inode	*dp,
-+	size_t			bufsize,
-+	struct xfs_dir2_leaf_map_info *mip,
-+	xfs_dir2_off_t		*curoff,
-+	struct xfs_buf		**bpp)
-+{
-+	struct xfs_mount	*mp = dp->i_mount;
-+	struct xfs_buf		*bp = *bpp;
-+	struct xfs_bmbt_irec	*map = mip->map;
-+	struct blk_plug		plug;
-+	int			error = 0;
-+	int			length;
-+	int			i;
-+	int			j;
-+
-+	/*
-+	 * If we have a buffer, we need to release it and
-+	 * take it out of the mapping.
-+	 */
-+
-+	if (bp) {
-+		xfs_trans_brelse(NULL, bp);
-+		bp = NULL;
-+		mip->map_blocks -= mp->m_dirblkfsbs;
-+		/*
-+		 * Loop to get rid of the extents for the
-+		 * directory block.
-+		 */
-+		for (i = mp->m_dirblkfsbs; i > 0; ) {
-+			j = min_t(int, map->br_blockcount, i);
-+			map->br_blockcount -= j;
-+			map->br_startblock += j;
-+			map->br_startoff += j;
-+			/*
-+			 * If mapping is done, pitch it from
-+			 * the table.
-+			 */
-+			if (!map->br_blockcount && --mip->map_valid)
-+				memmove(&map[0], &map[1],
-+					sizeof(map[0]) * mip->map_valid);
-+			i -= j;
-+		}
-+	}
-+
-+	/*
-+	 * Recalculate the readahead blocks wanted.
-+	 */
-+	mip->ra_want = howmany(bufsize + mp->m_dirblksize,
-+			       mp->m_sb.sb_blocksize) - 1;
-+	ASSERT(mip->ra_want >= 0);
-+
-+	/*
-+	 * If we don't have as many as we want, and we haven't
-+	 * run out of data blocks, get some more mappings.
-+	 */
-+	if (1 + mip->ra_want > mip->map_blocks &&
-+	    mip->map_off < xfs_dir2_byte_to_da(mp, XFS_DIR2_LEAF_OFFSET)) {
-+		/*
-+		 * Get more bmaps, fill in after the ones
-+		 * we already have in the table.
-+		 */
-+		mip->nmap = mip->map_size - mip->map_valid;
-+		error = xfs_bmapi_read(dp, mip->map_off,
-+				xfs_dir2_byte_to_da(mp, XFS_DIR2_LEAF_OFFSET) -
-+								mip->map_off,
-+				&map[mip->map_valid], &mip->nmap, 0);
-+
-+		/*
-+		 * Don't know if we should ignore this or try to return an
-+		 * error.  The trouble with returning errors is that readdir
-+		 * will just stop without actually passing the error through.
-+		 */
-+		if (error)
-+			goto out;	/* XXX */
-+
-+		/*
-+		 * If we got all the mappings we asked for, set the final map
-+		 * offset based on the last bmap value received.  Otherwise,
-+		 * we've reached the end.
-+		 */
-+		if (mip->nmap == mip->map_size - mip->map_valid) {
-+			i = mip->map_valid + mip->nmap - 1;
-+			mip->map_off = map[i].br_startoff + map[i].br_blockcount;
-+		} else
-+			mip->map_off = xfs_dir2_byte_to_da(mp,
-+							XFS_DIR2_LEAF_OFFSET);
-+
-+		/*
-+		 * Look for holes in the mapping, and eliminate them.  Count up
-+		 * the valid blocks.
-+		 */
-+		for (i = mip->map_valid; i < mip->map_valid + mip->nmap; ) {
-+			if (map[i].br_startblock == HOLESTARTBLOCK) {
-+				mip->nmap--;
-+				length = mip->map_valid + mip->nmap - i;
-+				if (length)
-+					memmove(&map[i], &map[i + 1],
-+						sizeof(map[i]) * length);
-+			} else {
-+				mip->map_blocks += map[i].br_blockcount;
-+				i++;
-+			}
-+		}
-+		mip->map_valid += mip->nmap;
-+	}
-+
-+	/*
-+	 * No valid mappings, so no more data blocks.
-+	 */
-+	if (!mip->map_valid) {
-+		*curoff = xfs_dir2_da_to_byte(mp, mip->map_off);
-+		goto out;
-+	}
-+
-+	/*
-+	 * Read the directory block starting at the first mapping.
-+	 */
-+	mip->curdb = xfs_dir2_da_to_db(mp, map->br_startoff);
-+	error = xfs_dir3_data_read(NULL, dp, map->br_startoff,
-+			map->br_blockcount >= mp->m_dirblkfsbs ?
-+			    XFS_FSB_TO_DADDR(mp, map->br_startblock) : -1, &bp);
-+
-+	/*
-+	 * Should just skip over the data block instead of giving up.
-+	 */
-+	if (error)
-+		goto out;	/* XXX */
-+
-+	/*
-+	 * Adjust the current amount of read-ahead: we just read a block that
-+	 * was previously ra.
-+	 */
-+	if (mip->ra_current)
-+		mip->ra_current -= mp->m_dirblkfsbs;
-+
-+	/*
-+	 * Do we need more readahead?
-+	 */
-+	blk_start_plug(&plug);
-+	for (mip->ra_index = mip->ra_offset = i = 0;
-+	     mip->ra_want > mip->ra_current && i < mip->map_blocks;
-+	     i += mp->m_dirblkfsbs) {
-+		ASSERT(mip->ra_index < mip->map_valid);
-+		/*
-+		 * Read-ahead a contiguous directory block.
-+		 */
-+		if (i > mip->ra_current &&
-+		    map[mip->ra_index].br_blockcount >= mp->m_dirblkfsbs) {
-+			xfs_dir3_data_readahead(NULL, dp,
-+				map[mip->ra_index].br_startoff + mip->ra_offset,
-+				XFS_FSB_TO_DADDR(mp,
-+					map[mip->ra_index].br_startblock +
-+							mip->ra_offset));
-+			mip->ra_current = i;
-+		}
-+
-+		/*
-+		 * Read-ahead a non-contiguous directory block.  This doesn't
-+		 * use our mapping, but this is a very rare case.
-+		 */
-+		else if (i > mip->ra_current) {
-+			xfs_dir3_data_readahead(NULL, dp,
-+					map[mip->ra_index].br_startoff +
-+							mip->ra_offset, -1);
-+			mip->ra_current = i;
-+		}
-+
-+		/*
-+		 * Advance offset through the mapping table.
-+		 */
-+		for (j = 0; j < mp->m_dirblkfsbs; j++) {
-+			/*
-+			 * The rest of this extent but not more than a dir
-+			 * block.
-+			 */
-+			length = min_t(int, mp->m_dirblkfsbs,
-+					map[mip->ra_index].br_blockcount -
-+							mip->ra_offset);
-+			j += length;
-+			mip->ra_offset += length;
-+
-+			/*
-+			 * Advance to the next mapping if this one is used up.
-+			 */
-+			if (mip->ra_offset == map[mip->ra_index].br_blockcount) {
-+				mip->ra_offset = 0;
-+				mip->ra_index++;
-+			}
-+		}
-+	}
-+	blk_finish_plug(&plug);
-+
-+out:
-+	*bpp = bp;
-+	return error;
-+}
-+
-+/*
-+ * Getdents (readdir) for leaf and node directories.
-+ * This reads the data blocks only, so is the same for both forms.
-+ */
-+STATIC int
-+xfs_dir2_leaf_getdents(
-+	xfs_inode_t		*dp,		/* incore directory inode */
-+	void			*dirent,
-+	size_t			bufsize,
-+	xfs_off_t		*offset,
-+	filldir_t		filldir)
-+{
-+	struct xfs_buf		*bp = NULL;	/* data block buffer */
-+	xfs_dir2_data_hdr_t	*hdr;		/* data block header */
-+	xfs_dir2_data_entry_t	*dep;		/* data entry */
-+	xfs_dir2_data_unused_t	*dup;		/* unused entry */
-+	int			error = 0;	/* error return value */
-+	int			length;		/* temporary length value */
-+	xfs_mount_t		*mp;		/* filesystem mount point */
-+	int			byteoff;	/* offset in current block */
-+	xfs_dir2_off_t		curoff;		/* current overall offset */
-+	xfs_dir2_off_t		newoff;		/* new curoff after new blk */
-+	char			*ptr = NULL;	/* pointer to current data */
-+	struct xfs_dir2_leaf_map_info *map_info;
-+
-+	/*
-+	 * If the offset is at or past the largest allowed value,
-+	 * give up right away.
-+	 */
-+	if (*offset >= XFS_DIR2_MAX_DATAPTR)
-+		return 0;
-+
-+	mp = dp->i_mount;
-+
-+	/*
-+	 * Set up to bmap a number of blocks based on the caller's
-+	 * buffer size, the directory block size, and the filesystem
-+	 * block size.
-+	 */
-+	length = howmany(bufsize + mp->m_dirblksize,
-+				     mp->m_sb.sb_blocksize);
-+	map_info = kmem_zalloc(offsetof(struct xfs_dir2_leaf_map_info, map) +
-+				(length * sizeof(struct xfs_bmbt_irec)),
-+			       KM_SLEEP | KM_NOFS);
-+	map_info->map_size = length;
-+
-+	/*
-+	 * Inside the loop we keep the main offset value as a byte offset
-+	 * in the directory file.
-+	 */
-+	curoff = xfs_dir2_dataptr_to_byte(mp, *offset);
-+
-+	/*
-+	 * Force this conversion through db so we truncate the offset
-+	 * down to get the start of the data block.
-+	 */
-+	map_info->map_off = xfs_dir2_db_to_da(mp,
-+					      xfs_dir2_byte_to_db(mp, curoff));
-+
-+	/*
-+	 * Loop over directory entries until we reach the end offset.
-+	 * Get more blocks and readahead as necessary.
-+	 */
-+	while (curoff < XFS_DIR2_LEAF_OFFSET) {
-+		/*
-+		 * If we have no buffer, or we're off the end of the
-+		 * current buffer, need to get another one.
-+		 */
-+		if (!bp || ptr >= (char *)bp->b_addr + mp->m_dirblksize) {
-+
-+			error = xfs_dir2_leaf_readbuf(dp, bufsize, map_info,
-+						      &curoff, &bp);
-+			if (error || !map_info->map_valid)
-+				break;
-+
-+			/*
-+			 * Having done a read, we need to set a new offset.
-+			 */
-+			newoff = xfs_dir2_db_off_to_byte(mp, map_info->curdb, 0);
-+			/*
-+			 * Start of the current block.
-+			 */
-+			if (curoff < newoff)
-+				curoff = newoff;
-+			/*
-+			 * Make sure we're in the right block.
-+			 */
-+			else if (curoff > newoff)
-+				ASSERT(xfs_dir2_byte_to_db(mp, curoff) ==
-+				       map_info->curdb);
-+			hdr = bp->b_addr;
-+			xfs_dir3_data_check(dp, bp);
-+			/*
-+			 * Find our position in the block.
-+			 */
-+			ptr = (char *)xfs_dir3_data_entry_p(hdr);
-+			byteoff = xfs_dir2_byte_to_off(mp, curoff);
-+			/*
-+			 * Skip past the header.
-+			 */
-+			if (byteoff == 0)
-+				curoff += xfs_dir3_data_entry_offset(hdr);
-+			/*
-+			 * Skip past entries until we reach our offset.
-+			 */
-+			else {
-+				while ((char *)ptr - (char *)hdr < byteoff) {
-+					dup = (xfs_dir2_data_unused_t *)ptr;
-+
-+					if (be16_to_cpu(dup->freetag)
-+						  == XFS_DIR2_DATA_FREE_TAG) {
-+
-+						length = be16_to_cpu(dup->length);
-+						ptr += length;
-+						continue;
-+					}
-+					dep = (xfs_dir2_data_entry_t *)ptr;
-+					length =
-+					   xfs_dir2_data_entsize(dep->namelen);
-+					ptr += length;
-+				}
-+				/*
-+				 * Now set our real offset.
-+				 */
-+				curoff =
-+					xfs_dir2_db_off_to_byte(mp,
-+					    xfs_dir2_byte_to_db(mp, curoff),
-+					    (char *)ptr - (char *)hdr);
-+				if (ptr >= (char *)hdr + mp->m_dirblksize) {
-+					continue;
-+				}
-+			}
-+		}
-+		/*
-+		 * We have a pointer to an entry.
-+		 * Is it a live one?
-+		 */
-+		dup = (xfs_dir2_data_unused_t *)ptr;
-+		/*
-+		 * No, it's unused, skip over it.
-+		 */
-+		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
-+			length = be16_to_cpu(dup->length);
-+			ptr += length;
-+			curoff += length;
-+			continue;
-+		}
-+
-+		dep = (xfs_dir2_data_entry_t *)ptr;
-+		length = xfs_dir2_data_entsize(dep->namelen);
-+
-+		if (filldir(dirent, (char *)dep->name, dep->namelen,
-+			    xfs_dir2_byte_to_dataptr(mp, curoff) & 0x7fffffff,
-+			    be64_to_cpu(dep->inumber), DT_UNKNOWN))
-+			break;
-+
-+		/*
-+		 * Advance to next entry in the block.
-+		 */
-+		ptr += length;
-+		curoff += length;
-+		/* bufsize may have just been a guess; don't go negative */
-+		bufsize = bufsize > length ? bufsize - length : 0;
-+	}
-+
-+	/*
-+	 * All done.  Set output offset value to current offset.
-+	 */
-+	if (curoff > xfs_dir2_dataptr_to_byte(mp, XFS_DIR2_MAX_DATAPTR))
-+		*offset = XFS_DIR2_MAX_DATAPTR & 0x7fffffff;
-+	else
-+		*offset = xfs_dir2_byte_to_dataptr(mp, curoff) & 0x7fffffff;
-+	kmem_free(map_info);
-+	if (bp)
-+		xfs_trans_brelse(NULL, bp);
-+	return error;
-+}
-+
-+/*
-+ * Read a directory.
-+ */
-+int
-+xfs_readdir(
-+	xfs_inode_t	*dp,
-+	void		*dirent,
-+	size_t		bufsize,
-+	xfs_off_t	*offset,
-+	filldir_t	filldir)
-+{
-+	int		rval;		/* return value */
-+	int		v;		/* type-checking value */
-+
-+	trace_xfs_readdir(dp);
-+
-+	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
-+		return XFS_ERROR(EIO);
-+
-+	ASSERT(S_ISDIR(dp->i_d.di_mode));
-+	XFS_STATS_INC(xs_dir_getdents);
-+
-+	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
-+		rval = xfs_dir2_sf_getdents(dp, dirent, offset, filldir);
-+	else if ((rval = xfs_dir2_isblock(NULL, dp, &v)))
-+		;
-+	else if (v)
-+		rval = xfs_dir2_block_getdents(dp, dirent, offset, filldir);
-+	else
-+		rval = xfs_dir2_leaf_getdents(dp, dirent, bufsize, offset,
-+					      filldir);
-+	return rval;
-+}
-+
-diff --git a/fs/xfs/xfs_dir2_sf.c b/fs/xfs/xfs_dir2_sf.c
-index 6157424..f24ce90 100644
---- a/fs/xfs/xfs_dir2_sf.c
-+++ b/fs/xfs/xfs_dir2_sf.c
-@@ -765,105 +765,6 @@ xfs_dir2_sf_create(
- 	return 0;
+@@ -770,3 +771,285 @@ xfs_change_file_space(
+ 		xfs_trans_set_sync(tp);
+ 	return xfs_trans_commit(tp, 0);
  }
++
++/*
++ * returns 1 for success, 0 if we failed to map the extent.
++ */
++STATIC int
++xfs_getbmapx_fix_eof_hole(
++	xfs_inode_t		*ip,		/* xfs incore inode pointer */
++	struct getbmapx		*out,		/* output structure */
++	int			prealloced,	/* this is a file with
++						 * preallocated data space */
++	__int64_t		end,		/* last block requested */
++	xfs_fsblock_t		startblock)
++{
++	__int64_t		fixlen;
++	xfs_mount_t		*mp;		/* file system mount point */
++	xfs_ifork_t		*ifp;		/* inode fork pointer */
++	xfs_extnum_t		lastx;		/* last extent pointer */
++	xfs_fileoff_t		fileblock;
++
++	if (startblock == HOLESTARTBLOCK) {
++		mp = ip->i_mount;
++		out->bmv_block = -1;
++		fixlen = XFS_FSB_TO_BB(mp, XFS_B_TO_FSB(mp, XFS_ISIZE(ip)));
++		fixlen -= out->bmv_offset;
++		if (prealloced && out->bmv_offset + out->bmv_length == end) {
++			/* Came to hole at EOF. Trim it. */
++			if (fixlen <= 0)
++				return 0;
++			out->bmv_length = fixlen;
++		}
++	} else {
++		if (startblock == DELAYSTARTBLOCK)
++			out->bmv_block = -2;
++		else
++			out->bmv_block = xfs_fsb_to_db(ip, startblock);
++		fileblock = XFS_BB_TO_FSB(ip->i_mount, out->bmv_offset);
++		ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
++		if (xfs_iext_bno_to_ext(ifp, fileblock, &lastx) &&
++		   (lastx == (ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t))-1))
++			out->bmv_oflags |= BMV_OF_LAST;
++	}
++
++	return 1;
++}
++
++/*
++ * Get inode's extents as described in bmv, and format for output.
++ * Calls formatter to fill the user's buffer until all extents
++ * are mapped, until the passed-in bmv->bmv_count slots have
++ * been filled, or until the formatter short-circuits the loop,
++ * if it is tracking filled-in extents on its own.
++ */
++int						/* error code */
++xfs_getbmap(
++	xfs_inode_t		*ip,
++	struct getbmapx		*bmv,		/* user bmap structure */
++	xfs_bmap_format_t	formatter,	/* format to user */
++	void			*arg)		/* formatter arg */
++{
++	__int64_t		bmvend;		/* last block requested */
++	int			error = 0;	/* return value */
++	__int64_t		fixlen;		/* length for -1 case */
++	int			i;		/* extent number */
++	int			lock;		/* lock state */
++	xfs_bmbt_irec_t		*map;		/* buffer for user's data */
++	xfs_mount_t		*mp;		/* file system mount point */
++	int			nex;		/* # of user extents can do */
++	int			nexleft;	/* # of user extents left */
++	int			subnex;		/* # of bmapi's can do */
++	int			nmap;		/* number of map entries */
++	struct getbmapx		*out;		/* output structure */
++	int			whichfork;	/* data or attr fork */
++	int			prealloced;	/* this is a file with
++						 * preallocated data space */
++	int			iflags;		/* interface flags */
++	int			bmapi_flags;	/* flags for xfs_bmapi */
++	int			cur_ext = 0;
++
++	mp = ip->i_mount;
++	iflags = bmv->bmv_iflags;
++	whichfork = iflags & BMV_IF_ATTRFORK ? XFS_ATTR_FORK : XFS_DATA_FORK;
++
++	if (whichfork == XFS_ATTR_FORK) {
++		if (XFS_IFORK_Q(ip)) {
++			if (ip->i_d.di_aformat != XFS_DINODE_FMT_EXTENTS &&
++			    ip->i_d.di_aformat != XFS_DINODE_FMT_BTREE &&
++			    ip->i_d.di_aformat != XFS_DINODE_FMT_LOCAL)
++				return XFS_ERROR(EINVAL);
++		} else if (unlikely(
++			   ip->i_d.di_aformat != 0 &&
++			   ip->i_d.di_aformat != XFS_DINODE_FMT_EXTENTS)) {
++			XFS_ERROR_REPORT("xfs_getbmap", XFS_ERRLEVEL_LOW,
++					 ip->i_mount);
++			return XFS_ERROR(EFSCORRUPTED);
++		}
++
++		prealloced = 0;
++		fixlen = 1LL << 32;
++	} else {
++		if (ip->i_d.di_format != XFS_DINODE_FMT_EXTENTS &&
++		    ip->i_d.di_format != XFS_DINODE_FMT_BTREE &&
++		    ip->i_d.di_format != XFS_DINODE_FMT_LOCAL)
++			return XFS_ERROR(EINVAL);
++
++		if (xfs_get_extsz_hint(ip) ||
++		    ip->i_d.di_flags & (XFS_DIFLAG_PREALLOC|XFS_DIFLAG_APPEND)){
++			prealloced = 1;
++			fixlen = mp->m_super->s_maxbytes;
++		} else {
++			prealloced = 0;
++			fixlen = XFS_ISIZE(ip);
++		}
++	}
++
++	if (bmv->bmv_length == -1) {
++		fixlen = XFS_FSB_TO_BB(mp, XFS_B_TO_FSB(mp, fixlen));
++		bmv->bmv_length =
++			max_t(__int64_t, fixlen - bmv->bmv_offset, 0);
++	} else if (bmv->bmv_length == 0) {
++		bmv->bmv_entries = 0;
++		return 0;
++	} else if (bmv->bmv_length < 0) {
++		return XFS_ERROR(EINVAL);
++	}
++
++	nex = bmv->bmv_count - 1;
++	if (nex <= 0)
++		return XFS_ERROR(EINVAL);
++	bmvend = bmv->bmv_offset + bmv->bmv_length;
++
++
++	if (bmv->bmv_count > ULONG_MAX / sizeof(struct getbmapx))
++		return XFS_ERROR(ENOMEM);
++	out = kmem_zalloc(bmv->bmv_count * sizeof(struct getbmapx), KM_MAYFAIL);
++	if (!out) {
++		out = kmem_zalloc_large(bmv->bmv_count *
++					sizeof(struct getbmapx));
++		if (!out)
++			return XFS_ERROR(ENOMEM);
++	}
++
++	xfs_ilock(ip, XFS_IOLOCK_SHARED);
++	if (whichfork == XFS_DATA_FORK && !(iflags & BMV_IF_DELALLOC)) {
++		if (ip->i_delayed_blks || XFS_ISIZE(ip) > ip->i_d.di_size) {
++			error = -filemap_write_and_wait(VFS_I(ip)->i_mapping);
++			if (error)
++				goto out_unlock_iolock;
++		}
++		/*
++		 * even after flushing the inode, there can still be delalloc
++		 * blocks on the inode beyond EOF due to speculative
++		 * preallocation. These are not removed until the release
++		 * function is called or the inode is inactivated. Hence we
++		 * cannot assert here that ip->i_delayed_blks == 0.
++		 */
++	}
++
++	lock = xfs_ilock_map_shared(ip);
++
++	/*
++	 * Don't let nex be bigger than the number of extents
++	 * we can have assuming alternating holes and real extents.
++	 */
++	if (nex > XFS_IFORK_NEXTENTS(ip, whichfork) * 2 + 1)
++		nex = XFS_IFORK_NEXTENTS(ip, whichfork) * 2 + 1;
++
++	bmapi_flags = xfs_bmapi_aflag(whichfork);
++	if (!(iflags & BMV_IF_PREALLOC))
++		bmapi_flags |= XFS_BMAPI_IGSTATE;
++
++	/*
++	 * Allocate enough space to handle "subnex" maps at a time.
++	 */
++	error = ENOMEM;
++	subnex = 16;
++	map = kmem_alloc(subnex * sizeof(*map), KM_MAYFAIL | KM_NOFS);
++	if (!map)
++		goto out_unlock_ilock;
++
++	bmv->bmv_entries = 0;
++
++	if (XFS_IFORK_NEXTENTS(ip, whichfork) == 0 &&
++	    (whichfork == XFS_ATTR_FORK || !(iflags & BMV_IF_DELALLOC))) {
++		error = 0;
++		goto out_free_map;
++	}
++
++	nexleft = nex;
++
++	do {
++		nmap = (nexleft > subnex) ? subnex : nexleft;
++		error = xfs_bmapi_read(ip, XFS_BB_TO_FSBT(mp, bmv->bmv_offset),
++				       XFS_BB_TO_FSB(mp, bmv->bmv_length),
++				       map, &nmap, bmapi_flags);
++		if (error)
++			goto out_free_map;
++		ASSERT(nmap <= subnex);
++
++		for (i = 0; i < nmap && nexleft && bmv->bmv_length; i++) {
++			out[cur_ext].bmv_oflags = 0;
++			if (map[i].br_state == XFS_EXT_UNWRITTEN)
++				out[cur_ext].bmv_oflags |= BMV_OF_PREALLOC;
++			else if (map[i].br_startblock == DELAYSTARTBLOCK)
++				out[cur_ext].bmv_oflags |= BMV_OF_DELALLOC;
++			out[cur_ext].bmv_offset =
++				XFS_FSB_TO_BB(mp, map[i].br_startoff);
++			out[cur_ext].bmv_length =
++				XFS_FSB_TO_BB(mp, map[i].br_blockcount);
++			out[cur_ext].bmv_unused1 = 0;
++			out[cur_ext].bmv_unused2 = 0;
++
++			/*
++			 * delayed allocation extents that start beyond EOF can
++			 * occur due to speculative EOF allocation when the
++			 * delalloc extent is larger than the largest freespace
++			 * extent at conversion time. These extents cannot be
++			 * converted by data writeback, so can exist here even
++			 * if we are not supposed to be finding delalloc
++			 * extents.
++			 */
++			if (map[i].br_startblock == DELAYSTARTBLOCK &&
++			    map[i].br_startoff <= XFS_B_TO_FSB(mp, XFS_ISIZE(ip)))
++				ASSERT((iflags & BMV_IF_DELALLOC) != 0);
++
++                        if (map[i].br_startblock == HOLESTARTBLOCK &&
++			    whichfork == XFS_ATTR_FORK) {
++				/* came to the end of attribute fork */
++				out[cur_ext].bmv_oflags |= BMV_OF_LAST;
++				goto out_free_map;
++			}
++
++			if (!xfs_getbmapx_fix_eof_hole(ip, &out[cur_ext],
++					prealloced, bmvend,
++					map[i].br_startblock))
++				goto out_free_map;
++
++			bmv->bmv_offset =
++				out[cur_ext].bmv_offset +
++				out[cur_ext].bmv_length;
++			bmv->bmv_length =
++				max_t(__int64_t, 0, bmvend - bmv->bmv_offset);
++
++			/*
++			 * In case we don't want to return the hole,
++			 * don't increase cur_ext so that we can reuse
++			 * it in the next loop.
++			 */
++			if ((iflags & BMV_IF_NO_HOLES) &&
++			    map[i].br_startblock == HOLESTARTBLOCK) {
++				memset(&out[cur_ext], 0, sizeof(out[cur_ext]));
++				continue;
++			}
++
++			nexleft--;
++			bmv->bmv_entries++;
++			cur_ext++;
++		}
++	} while (nmap && nexleft && bmv->bmv_length);
++
++ out_free_map:
++	kmem_free(map);
++ out_unlock_ilock:
++	xfs_iunlock_map_shared(ip, lock);
++ out_unlock_iolock:
++	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
++
++	for (i = 0; i < cur_ext; i++) {
++		int full = 0;	/* user array is full */
++
++		/* format results & advance arg */
++		error = formatter(&arg, &out[i], &full);
++		if (error || full)
++			break;
++	}
++
++	if (is_vmalloc_addr(out))
++		kmem_free_large(out);
++	else
++		kmem_free(out);
++	return error;
++}
++
+diff --git a/fs/xfs/xfs_extent_ops.h b/fs/xfs/xfs_extent_ops.h
+index a737640..550a37d 100644
+--- a/fs/xfs/xfs_extent_ops.h
++++ b/fs/xfs/xfs_extent_ops.h
+@@ -21,4 +21,10 @@
+ int xfs_change_file_space(struct xfs_inode *ip, int cmd,
+ 		xfs_flock64_t *bf, xfs_off_t offset, int attr_flags);
  
--int						/* error */
--xfs_dir2_sf_getdents(
--	xfs_inode_t		*dp,		/* incore directory inode */
--	void			*dirent,
--	xfs_off_t		*offset,
--	filldir_t		filldir)
--{
--	int			i;		/* shortform entry number */
--	xfs_mount_t		*mp;		/* filesystem mount point */
--	xfs_dir2_dataptr_t	off;		/* current entry's offset */
--	xfs_dir2_sf_entry_t	*sfep;		/* shortform directory entry */
--	xfs_dir2_sf_hdr_t	*sfp;		/* shortform structure */
--	xfs_dir2_dataptr_t	dot_offset;
--	xfs_dir2_dataptr_t	dotdot_offset;
--	xfs_ino_t		ino;
--
--	mp = dp->i_mount;
--
--	ASSERT(dp->i_df.if_flags & XFS_IFINLINE);
--	/*
--	 * Give up if the directory is way too short.
--	 */
--	if (dp->i_d.di_size < offsetof(xfs_dir2_sf_hdr_t, parent)) {
--		ASSERT(XFS_FORCED_SHUTDOWN(mp));
--		return XFS_ERROR(EIO);
--	}
--
--	ASSERT(dp->i_df.if_bytes == dp->i_d.di_size);
--	ASSERT(dp->i_df.if_u1.if_data != NULL);
--
--	sfp = (xfs_dir2_sf_hdr_t *)dp->i_df.if_u1.if_data;
--
--	ASSERT(dp->i_d.di_size >= xfs_dir2_sf_hdr_size(sfp->i8count));
--
--	/*
--	 * If the block number in the offset is out of range, we're done.
--	 */
--	if (xfs_dir2_dataptr_to_db(mp, *offset) > mp->m_dirdatablk)
--		return 0;
--
--	/*
--	 * Precalculate offsets for . and .. as we will always need them.
--	 *
--	 * XXX(hch): the second argument is sometimes 0 and sometimes
--	 * mp->m_dirdatablk.
--	 */
--	dot_offset = xfs_dir2_db_off_to_dataptr(mp, mp->m_dirdatablk,
--					     XFS_DIR3_DATA_DOT_OFFSET(mp));
--	dotdot_offset = xfs_dir2_db_off_to_dataptr(mp, mp->m_dirdatablk,
--						XFS_DIR3_DATA_DOTDOT_OFFSET(mp));
--
--	/*
--	 * Put . entry unless we're starting past it.
--	 */
--	if (*offset <= dot_offset) {
--		if (filldir(dirent, ".", 1, dot_offset & 0x7fffffff, dp->i_ino, DT_DIR)) {
--			*offset = dot_offset & 0x7fffffff;
--			return 0;
--		}
--	}
--
--	/*
--	 * Put .. entry unless we're starting past it.
--	 */
--	if (*offset <= dotdot_offset) {
--		ino = xfs_dir2_sf_get_parent_ino(sfp);
--		if (filldir(dirent, "..", 2, dotdot_offset & 0x7fffffff, ino, DT_DIR)) {
--			*offset = dotdot_offset & 0x7fffffff;
--			return 0;
--		}
--	}
--
--	/*
--	 * Loop while there are more entries and put'ing works.
--	 */
--	sfep = xfs_dir2_sf_firstentry(sfp);
--	for (i = 0; i < sfp->count; i++) {
--		off = xfs_dir2_db_off_to_dataptr(mp, mp->m_dirdatablk,
--				xfs_dir2_sf_get_offset(sfep));
--
--		if (*offset > off) {
--			sfep = xfs_dir2_sf_nextentry(sfp, sfep);
--			continue;
--		}
--
--		ino = xfs_dir2_sfe_get_ino(sfp, sfep);
--		if (filldir(dirent, (char *)sfep->name, sfep->namelen,
--			    off & 0x7fffffff, ino, DT_UNKNOWN)) {
--			*offset = off & 0x7fffffff;
--			return 0;
--		}
--		sfep = xfs_dir2_sf_nextentry(sfp, sfep);
--	}
--
--	*offset = xfs_dir2_db_off_to_dataptr(mp, mp->m_dirdatablk + 1, 0) &
--			0x7fffffff;
--	return 0;
--}
--
- /*
-  * Lookup an entry in a shortform directory.
-  * Returns EEXIST if found, ENOENT if not found.
++/* bmap to userspace formatter - copy to user & advance pointer */
++typedef int (*xfs_bmap_format_t)(void **, struct getbmapx *, int *);
++
++int	xfs_getbmap(struct xfs_inode *ip, struct getbmapx *bmv,
++		xfs_bmap_format_t formatter, void *arg);
++
+ #endif /* _XFS_EXTENT_OPS_H */
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 7f44efa..99775a2 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -39,6 +39,7 @@
+ #include "xfs_trace.h"
+ #include "xfs_icache.h"
+ #include "xfs_symlink.h"
++#include "xfs_extent_ops.h"
+ 
+ #include <linux/capability.h>
+ #include <linux/xattr.h>
 -- 
 1.7.10.4
 
