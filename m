@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id E85CE7FB2
-	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 00:36:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 83D49AC009
-	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 22:36:27 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id AB9417FB1
+	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 00:36:31 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 4ACB6AC005
+	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 22:36:31 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	naB0nCepJGNVUGTl for <xfs@oss.sgi.com>;
-	Tue, 18 Jun 2013 22:36:25 -0700 (PDT)
+	p3j1cxAd05GUUBm9 for <xfs@oss.sgi.com>;
+	Tue, 18 Jun 2013 22:36:29 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UpB44-0003AH-6l
-	for xfs@oss.sgi.com; Wed, 19 Jun 2013 15:36:16 +1000
+	(envelope-from <dave@fromorbit.com>) id 1UpB49-0003AQ-CA
+	for xfs@oss.sgi.com; Wed, 19 Jun 2013 15:36:21 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UpB44-0000DR-22
+	(envelope-from <dave@disappointment.disaster>) id 1UpB44-0000Dn-8S
 	for xfs@oss.sgi.com; Wed, 19 Jun 2013 15:36:16 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 00/50] xfsprogs: patch queue for crc-dev
-Date: Wed, 19 Jun 2013 15:35:23 +1000
-Message-Id: <1371620173-712-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 05/50] libxfs: move the transaction reservation structures
+Date: Wed, 19 Jun 2013 15:35:28 +1000
+Message-Id: <1371620173-712-6-git-send-email-david@fromorbit.com>
+In-Reply-To: <1371620173-712-1-git-send-email-david@fromorbit.com>
+References: <1371620173-712-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,90 +36,148 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hi folks,
+From: Dave Chinner <dchinner@redhat.com>
 
-This is the latest patchset for the crc-dev branch of xfsprogs.
-It follows up on the last series of 22 patches to get libxf sin sync
-with the kernel code but adding all the changes from the kernel size
-to remove __KERNEL__ from the code. Hence there's a fair bit more
-code churn in the patch set, but overall the diffstat is a
-significant reduction in code in libxfs. Like the kernel side
-patchset, there is a lot of new files that are shared with the
-kernel, and the diffstat reflects that:
+To prepare for getting rid of xfs_mount.h, we need to move the
+definition of the struct for pre-calculated transaction reservations
+out of xfs_mount.h. Move it to xfs_trans.h along with all the other
+transaction reservation definitions.
 
-90 files changed, 3573 insertions(+), 4863 deletions(-)
- rename include/{xfs_buf_item.h => xfs_buf_item_format.h} (62%)
- delete mode 100644 include/xfs_dfrag.h
- create mode 100644 include/xfs_dquot_format.h
- rename include/{xfs_extfree_item.h => xfs_extfree_item_format.h} (69%)
- create mode 100644 include/xfs_icreate_item.h
- create mode 100644 include/xfs_icreate_item_format.h
- delete mode 100644 include/xfs_inode.h
- create mode 100644 include/xfs_inode_buf.h
- create mode 100644 include/xfs_inode_fork.h
- rename include/{xfs_inode_item.h => xfs_inode_item_format.h} (61%)
- delete mode 100644 include/xfs_log.h
- create mode 100644 include/xfs_log_format.h
- delete mode 100644 include/xfs_log_priv.h
- delete mode 100644 include/xfs_mount.h
- delete mode 100644 include/xfs_quota.h
- create mode 100644 include/xfs_quota_defs.h
- delete mode 100644 include/xfs_rtalloc.h
- create mode 100644 include/xfs_rtalloc_defs.h
- delete mode 100644 include/xfs_symlink.h
- create mode 100644 include/xfs_symlink_remote.h
- delete mode 100644 include/xfs_trans.h
- create mode 100644 include/xfs_trans_format.h
- create mode 100644 include/xfs_trans_resv.h
- create mode 100644 libxfs/xfs_inode_buf.c
- rename libxfs/{xfs_inode.c => xfs_inode_fork.c} (82%)
- create mode 100644 libxfs/xfs_log_rlimit.c
- rename libxfs/{xfs_mount.c => xfs_sb.c} (94%)
- rename libxfs/{xfs_symlink.c => xfs_symlink_remote.c} (68%)
- rename libxfs/{xfs_trans.c => xfs_trans_resv.c} (67%)
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ include/libxfs.h    |    5 ++---
+ include/xfs_mount.h |   30 ------------------------------
+ include/xfs_trans.h |   30 ++++++++++++++++++++++++++++++
+ mkfs/maxtrres.c     |    2 +-
+ 4 files changed, 33 insertions(+), 34 deletions(-)
 
-Overall, it's a significant reduction in the amount of code, and it
-cleans up quite a bit of the nasty header file dependency issues as
-the majority of the new shared header files are not dependent on
-each other. Having header files like xfs_mount.h, xfs_trans.h,
-xfs_log.h and xfs_log_priv.h no longer present in userspace makes a
-big difference to the clarity of the libxfs header files...
-
-The only other major addition to the series is Jeff Liu's
-log reservation calculation patchset, which allows mkfs to calculate
-the minmum log size based on log reservation sizes rather than
-transaction reservation sizes. This causes a significant increase in
-the default size of the log for small filesystems - many xfstests now
-fail because the default log size doesn't fit inside a 16MB
-AG anymore. Hence mkfs will need some further tweaking here to avoid
-those failures. xfs/216 gives a pretty good overview of the
-difference in default sizes:
-
- QA output created by 216
--fssize=1g log      =internal log           bsize=4096   blocks=2560, version=2
--fssize=2g log      =internal log           bsize=4096   blocks=2560, version=2
--fssize=4g log      =internal log           bsize=4096   blocks=2560, version=2
--fssize=8g log      =internal log           bsize=4096   blocks=2560, version=2
--fssize=16g log      =internal log           bsize=4096   blocks=2560, version=2
--fssize=32g log      =internal log           bsize=4096   blocks=4096, version=2
-+fssize=1g log      =internal log           bsize=4096   blocks=4896, version=2
-+fssize=2g log      =internal log           bsize=4096   blocks=4896, version=2
-+fssize=4g log      =internal log           bsize=4096   blocks=4896, version=2
-+fssize=8g log      =internal log           bsize=4096   blocks=4896, version=2
-+fssize=16g log      =internal log           bsize=4096   blocks=4896, version=2
-+fssize=32g log      =internal log           bsize=4096   blocks=4896, version=2
- fssize=64g log      =internal log           bsize=4096   blocks=8192, version=2
-
-Which indicate worst case log reservation is roughly 2x larger than
-the worst case transaction reservation for small filesystems. I'm
-surprised that we haven't had more problems with this in the past
-than we have...
-
-Thoughts, comments, flames?
-
-Cheers,
-
-Dave.
+diff --git a/include/libxfs.h b/include/libxfs.h
+index 900b115..9ab9604 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -58,6 +58,7 @@
+ #include <xfs/xfs_trace.h>
+ #include <xfs/xfs_symlink.h>
+ #include <xfs/xfs_icreate_item.h>
++#include <xfs/xfs_trans.h>
+ 
+ #ifndef ARRAY_SIZE
+ #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+@@ -202,7 +203,7 @@ typedef struct xfs_mount {
+ 	int			m_ialloc_blks;	/* blocks in inode allocation */
+ 	int			m_litino;	/* size of inode union area */
+ 	int			m_inoalign_mask;/* mask sb_inoalignmt if used */
+-	xfs_trans_reservations_t m_reservations;/* precomputed res values */
++	struct xfs_trans_reservations m_reservations;/* precomputed res values */
+ 	__uint64_t		m_maxicount;	/* maximum inode count */
+ 	int			m_dalign;	/* stripe unit */
+ 	int			m_swidth;	/* stripe width */
+@@ -436,8 +437,6 @@ typedef struct xfs_buf_log_item {
+ 	xfs_buf_log_format_t	bli_format;	/* in-log header */
+ } xfs_buf_log_item_t;
+ 
+-#include <xfs/xfs_trans.h>
+-
+ typedef struct xfs_trans {
+ 	unsigned int	t_type;			/* transaction type */
+ 	unsigned int	t_log_res;		/* amt of log space resvd */
+diff --git a/include/xfs_mount.h b/include/xfs_mount.h
+index e609b5f..ce0adfb 100644
+--- a/include/xfs_mount.h
++++ b/include/xfs_mount.h
+@@ -18,36 +18,6 @@
+ #ifndef __XFS_MOUNT_H__
+ #define	__XFS_MOUNT_H__
+ 
+-typedef struct xfs_trans_reservations {
+-	uint	tr_write;	/* extent alloc trans */
+-	uint	tr_itruncate;	/* truncate trans */
+-	uint	tr_rename;	/* rename trans */
+-	uint	tr_link;	/* link trans */
+-	uint	tr_remove;	/* unlink trans */
+-	uint	tr_symlink;	/* symlink trans */
+-	uint	tr_create;	/* create trans */
+-	uint	tr_mkdir;	/* mkdir trans */
+-	uint	tr_ifree;	/* inode free trans */
+-	uint	tr_ichange;	/* inode update trans */
+-	uint	tr_growdata;	/* fs data section grow trans */
+-	uint	tr_swrite;	/* sync write inode trans */
+-	uint	tr_addafork;	/* cvt inode to attributed trans */
+-	uint	tr_writeid;	/* write setuid/setgid file */
+-	uint	tr_attrinval;	/* attr fork buffer invalidation */
+-	uint	tr_attrsetm;    /* set/create an attribute at mount time */
+-	uint	tr_attrsetrt;   /* set/create an attribute at runtime */
+-	uint	tr_attrrm;	/* remove an attribute */
+-	uint	tr_clearagi;	/* clear bad agi unlinked ino bucket */
+-	uint	tr_growrtalloc;	/* grow realtime allocations */
+-	uint	tr_growrtzero;	/* grow realtime zeroing */
+-	uint	tr_growrtfree;	/* grow realtime freeing */
+-	uint	tr_qm_sbchange;	/* change quota flags */
+-	uint	tr_qm_setqlim;	/* adjust quota limits */
+-	uint	tr_qm_dqalloc;	/* allocate quota on disk */
+-	uint	tr_qm_quotaoff;	/* turn quota off */
+-	uint	tr_qm_equotaoff;/* end of turn quota off */
+-	uint	tr_sb;		/* modify superblock */
+-} xfs_trans_reservations_t;
+ 
+ #ifndef __KERNEL__
+ 
+diff --git a/include/xfs_trans.h b/include/xfs_trans.h
+index 36a0026..78074f3 100644
+--- a/include/xfs_trans.h
++++ b/include/xfs_trans.h
+@@ -209,6 +209,36 @@ struct xfs_log_item_desc {
+ #define	XFS_TRANS_SB_REXTENTS		0x00001000
+ #define	XFS_TRANS_SB_REXTSLOG		0x00002000
+ 
++struct xfs_trans_reservations {
++	uint	tr_write;	/* extent alloc trans */
++	uint	tr_itruncate;	/* truncate trans */
++	uint	tr_rename;	/* rename trans */
++	uint	tr_link;	/* link trans */
++	uint	tr_remove;	/* unlink trans */
++	uint	tr_symlink;	/* symlink trans */
++	uint	tr_create;	/* create trans */
++	uint	tr_mkdir;	/* mkdir trans */
++	uint	tr_ifree;	/* inode free trans */
++	uint	tr_ichange;	/* inode update trans */
++	uint	tr_growdata;	/* fs data section grow trans */
++	uint	tr_swrite;	/* sync write inode trans */
++	uint	tr_addafork;	/* cvt inode to attributed trans */
++	uint	tr_writeid;	/* write setuid/setgid file */
++	uint	tr_attrinval;	/* attr fork buffer invalidation */
++	uint	tr_attrsetm;    /* set/create an attribute at mount time */
++	uint	tr_attrsetrt;   /* set/create an attribute at runtime */
++	uint	tr_attrrm;	/* remove an attribute */
++	uint	tr_clearagi;	/* clear bad agi unlinked ino bucket */
++	uint	tr_growrtalloc;	/* grow realtime allocations */
++	uint	tr_growrtzero;	/* grow realtime zeroing */
++	uint	tr_growrtfree;	/* grow realtime freeing */
++	uint	tr_qm_sbchange;	/* change quota flags */
++	uint	tr_qm_setqlim;	/* adjust quota limits */
++	uint	tr_qm_dqalloc;	/* allocate quota on disk */
++	uint	tr_qm_quotaoff;	/* turn quota off */
++	uint	tr_qm_equotaoff;/* end of turn quota off */
++	uint	tr_sb;		/* modify superblock */
++};
+ 
+ /*
+  * Per-extent log reservation for the allocation btree changes
+diff --git a/mkfs/maxtrres.c b/mkfs/maxtrres.c
+index d571d77..373e582 100644
+--- a/mkfs/maxtrres.c
++++ b/mkfs/maxtrres.c
+@@ -56,7 +56,7 @@ max_trans_res_by_mount(
+ {
+ 	uint				*p;
+ 	int				rval;
+-	xfs_trans_reservations_t	*tr = &mp->m_reservations;
++	struct xfs_trans_reservations	*tr = &mp->m_reservations;
+ 
+ 	for (rval = 0, p = (uint *)tr; p < (uint *)(tr + 1); p++) {
+ 		if ((int)*p > rval)
+-- 
+1.7.10.4
 
 _______________________________________________
 xfs mailing list
