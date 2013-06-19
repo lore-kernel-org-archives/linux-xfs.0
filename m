@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A8FA87FCB
-	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 00:36:43 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 9658C7FC9
+	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 00:36:42 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 794B1304039
-	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 22:36:43 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5BB0A304039
+	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 22:36:42 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	aVRV9kbARG2ISQY8 for <xfs@oss.sgi.com>;
-	Tue, 18 Jun 2013 22:36:41 -0700 (PDT)
-Received: from [192.168.1.1] (helo=disappointment)
-	by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UpB4O-0003Av-Ms
-	for xfs@oss.sgi.com; Wed, 19 Jun 2013 15:36:36 +1000
-Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UpB4E-0000EV-KD
+	XWpQSQz7rZCfQuV1 for <xfs@oss.sgi.com>;
+	Tue, 18 Jun 2013 22:36:39 -0700 (PDT)
+Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1UpB4E-0003AT-Cs
 	for xfs@oss.sgi.com; Wed, 19 Jun 2013 15:36:26 +1000
+Received: from dave by disappointment with local (Exim 4.80)
+	(envelope-from <dave@disappointment.disaster>) id 1UpB44-0000Ds-9W
+	for xfs@oss.sgi.com; Wed, 19 Jun 2013 15:36:16 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 14/50] libxfs: move transaction code to trans.c
-Date: Wed, 19 Jun 2013 15:35:37 +1000
-Message-Id: <1371620173-712-15-git-send-email-david@fromorbit.com>
+Subject: [PATCH 06/50] xfsprogs: remove xfs_mount.h
+Date: Wed, 19 Jun 2013 15:35:29 +1000
+Message-Id: <1371620173-712-7-git-send-email-david@fromorbit.com>
 In-Reply-To: <1371620173-712-1-git-send-email-david@fromorbit.com>
 References: <1371620173-712-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,232 +38,70 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-There is very little code left in xfs_trans.c. So little it is not
-worthtrying to share this file with kernel space any more. Move the
-code to libxfs/trans.c, and remove libxfs/xfs_trans.c.
+It is no longer used by anything in userspace, so we don't need it
+anymore. Remove it.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/xfs_trans.h |    3 --
- libxfs/Makefile     |    2 +-
- libxfs/trans.c      |  118 +++++++++++++++++++++++++++++++++++++++++++
- libxfs/xfs.h        |    6 +++
- libxfs/xfs_trans.c  |  139 ---------------------------------------------------
- 5 files changed, 125 insertions(+), 143 deletions(-)
- delete mode 100644 libxfs/xfs_trans.c
+ include/Makefile    |    2 +-
+ include/libxfs.h    |    7 +-
+ include/xfs_mount.h |  356 ---------------------------------------------------
+ 3 files changed, 6 insertions(+), 359 deletions(-)
+ delete mode 100644 include/xfs_mount.h
 
-diff --git a/include/xfs_trans.h b/include/xfs_trans.h
-index 45d0ff2..21cafaa 100644
---- a/include/xfs_trans.h
-+++ b/include/xfs_trans.h
-@@ -459,7 +459,4 @@ extern kmem_zone_t	*xfs_log_item_desc_zone;
+diff --git a/include/Makefile b/include/Makefile
+index ba2c80d..a69df5b 100644
+--- a/include/Makefile
++++ b/include/Makefile
+@@ -28,7 +28,7 @@ QAHFILES = libxfs.h libxlog.h \
+ 	xfs_extfree_item.h xfs_ialloc.h xfs_ialloc_btree.h \
+ 	xfs_icreate_item.h xfs_inode.h xfs_inode_item.h xfs_inum.h \
+ 	xfs_log.h xfs_log_priv.h xfs_log_recover.h xfs_metadump.h \
+-	xfs_mount.h xfs_quota.h xfs_rtalloc.h xfs_sb.h xfs_symlink.h \
++	xfs_quota.h xfs_rtalloc.h xfs_sb.h xfs_symlink.h \
+ 	xfs_trace.h xfs_trans.h xfs_trans_space.h xfs_dfrag.h
  
- #endif	/* __KERNEL__ */
+ HFILES = handle.h jdm.h xqm.h xfs.h xfs_fs.h xfs_types.h
+diff --git a/include/libxfs.h b/include/libxfs.h
+index 9ab9604..ee69cac 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -41,7 +41,6 @@
+ #include <xfs/xfs_sb.h>
+ #include <xfs/xfs_ag.h>
+ #include <xfs/xfs_dir2.h>
+-#include <xfs/xfs_mount.h>
+ #include <xfs/xfs_da_btree.h>
+ #include <xfs/xfs_bmap_btree.h>
+ #include <xfs/xfs_alloc_btree.h>
+@@ -600,6 +599,10 @@ extern void	libxfs_fs_cmn_err(int, struct xfs_mount *, char *, ...);
+ extern void cmn_err(int, char *, ...);
+ enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE_WARN, CE_ALERT, CE_PANIC };
  
--void		xfs_trans_init(struct xfs_mount *);
--int		xfs_trans_roll(struct xfs_trans **, struct xfs_inode *);
--
- #endif	/* __XFS_TRANS_H__ */
-diff --git a/libxfs/Makefile b/libxfs/Makefile
-index c4836ab..ec47b2a 100644
---- a/libxfs/Makefile
-+++ b/libxfs/Makefile
-@@ -16,7 +16,7 @@ CFILES = cache.c init.c kmem.c logitem.c radix-tree.c rdwr.c trans.c util.c \
- 	xfs_ialloc_btree.c xfs_bmap_btree.c xfs_da_btree.c \
- 	xfs_dir2.c xfs_dir2_leaf.c xfs_attr_leaf.c xfs_dir2_block.c \
- 	xfs_dir2_node.c xfs_dir2_data.c xfs_dir2_sf.c xfs_bmap.c \
--	xfs_sb.c xfs_rtalloc.c xfs_trans.c xfs_attr.c xfs_attr_remote.c \
-+	xfs_sb.c xfs_rtalloc.c xfs_attr.c xfs_attr_remote.c \
- 	crc32.c xfs_symlink.c xfs_trans_resv.c
++#define xfs_daddr_to_agno(mp,d) \
++	((xfs_agnumber_t)(XFS_BB_TO_FSBT(mp, d) / (mp)->m_sb.sb_agblocks))
++#define xfs_daddr_to_agbno(mp,d) \
++	((xfs_agblock_t)(XFS_BB_TO_FSBT(mp, d) % (mp)->m_sb.sb_agblocks))
  
- CFILES += $(PKG_PLATFORM).c
-diff --git a/libxfs/trans.c b/libxfs/trans.c
-index 97220e7..754f827 100644
---- a/libxfs/trans.c
-+++ b/libxfs/trans.c
-@@ -1,5 +1,6 @@
- /*
-  * Copyright (c) 2000-2001,2005-2006 Silicon Graphics, Inc.
-+ * Copyright (C) 2010 Red Hat, Inc.
-  * All Rights Reserved.
-  *
-  * This program is free software; you can redistribute it and/or
-@@ -22,6 +23,123 @@
-  * Simple transaction interface
-  */
+ #define LIBXFS_BBTOOFF64(bbs)	(((xfs_off_t)(bbs)) << BBSHIFT)
+ extern int		libxfs_nproc(void);
+@@ -686,7 +689,7 @@ void	xfs_dinode_from_disk(struct xfs_icdinode *,
+ #define libxfs_idata_realloc		xfs_idata_realloc
+ #define libxfs_idestroy_fork		xfs_idestroy_fork
  
-+kmem_zone_t	*xfs_log_item_desc_zone;
-+
-+/*
-+ * Initialize the precomputed transaction reservation values
-+ * in the mount structure.
-+ */
-+void
-+libxfs_trans_init(
-+	struct xfs_mount	*mp)
-+{
-+	xfs_trans_resv_calc(mp, &mp->m_reservations);
-+}
-+
-+/*
-+ * Add the given log item to the transaction's list of log items.
-+ *
-+ * The log item will now point to its new descriptor with its li_desc field.
-+ */
-+void
-+libxfs_trans_add_item(
-+	struct xfs_trans	*tp,
-+	struct xfs_log_item	*lip)
-+{
-+	struct xfs_log_item_desc *lidp;
-+
-+	ASSERT(lip->li_mountp == tp->t_mountp);
-+	ASSERT(lip->li_ailp == tp->t_mountp->m_ail);
-+
-+	lidp = calloc(sizeof(struct xfs_log_item_desc), 1);
-+	if (!lidp) {
-+		fprintf(stderr, _("%s: lidp calloc failed (%d bytes): %s\n"),
-+			progname, (int)sizeof(struct xfs_log_item_desc),
-+			strerror(errno));
-+		exit(1);
-+	}
-+
-+	lidp->lid_item = lip;
-+	lidp->lid_flags = 0;
-+	list_add_tail(&lidp->lid_trans, &tp->t_items);
-+
-+	lip->li_desc = lidp;
-+}
-+
-+/*
-+ * Unlink and free the given descriptor.
-+ */
-+void
-+libxfs_trans_del_item(
-+	struct xfs_log_item	*lip)
-+{
-+	list_del_init(&lip->li_desc->lid_trans);
-+	free(lip->li_desc);
-+	lip->li_desc = NULL;
-+}
-+
-+/*
-+ * Roll from one trans in the sequence of PERMANENT transactions to
-+ * the next: permanent transactions are only flushed out when
-+ * committed with XFS_TRANS_RELEASE_LOG_RES, but we still want as soon
-+ * as possible to let chunks of it go to the log. So we commit the
-+ * chunk we've been working on and get a new transaction to continue.
-+ */
-+int
-+libxfs_trans_roll(
-+	struct xfs_trans	**tpp,
-+	struct xfs_inode	*dp)
-+{
-+	struct xfs_trans	*trans;
-+	unsigned int		logres, count;
-+	int			error;
-+
-+	/*
-+	 * Ensure that the inode is always logged.
-+	 */
-+	trans = *tpp;
-+	xfs_trans_log_inode(trans, dp, XFS_ILOG_CORE);
-+
-+	/*
-+	 * Copy the critical parameters from one trans to the next.
-+	 */
-+	logres = trans->t_log_res;
-+	count = trans->t_log_count;
-+	*tpp = xfs_trans_dup(trans);
-+
-+	/*
-+	 * Commit the current transaction.
-+	 * If this commit failed, then it'd just unlock those items that
-+	 * are not marked ihold. That also means that a filesystem shutdown
-+	 * is in progress. The caller takes the responsibility to cancel
-+	 * the duplicate transaction that gets returned.
-+	 */
-+	error = xfs_trans_commit(trans, 0);
-+	if (error)
-+		return (error);
-+
-+	trans = *tpp;
-+
-+	/*
-+	 * Reserve space in the log for th next transaction.
-+	 * This also pushes items in the "AIL", the list of logged items,
-+	 * out to disk if they are taking up space at the tail of the log
-+	 * that we want to use.  This requires that either nothing be locked
-+	 * across this call, or that anything that is locked be logged in
-+	 * the prior and the next transactions.
-+	 */
-+	error = xfs_trans_reserve(trans, 0, logres, 0,
-+				  XFS_TRANS_PERM_LOG_RES, count);
-+	/*
-+	 *  Ensure that the inode is in the new transaction and locked.
-+	 */
-+	if (error)
-+		return error;
-+
-+	xfs_trans_ijoin(trans, dp, 0);
-+	return 0;
-+}
-+
- xfs_trans_t *
- libxfs_trans_alloc(
- 	xfs_mount_t	*mp,
-diff --git a/libxfs/xfs.h b/libxfs/xfs.h
-index efb246a..8391dc8 100644
---- a/libxfs/xfs.h
-+++ b/libxfs/xfs.h
-@@ -233,12 +233,14 @@ roundup_pow_of_two(uint v)
- #define xfs_mod_incore_sb		libxfs_mod_incore_sb
- 
- #define xfs_trans_alloc			libxfs_trans_alloc
-+#define xfs_trans_add_item		libxfs_trans_add_item
- #define xfs_trans_bhold			libxfs_trans_bhold
- #define xfs_trans_binval		libxfs_trans_binval
- #define xfs_trans_bjoin			libxfs_trans_bjoin
- #define xfs_trans_brelse		libxfs_trans_brelse
- #define xfs_trans_commit		libxfs_trans_commit
- #define xfs_trans_cancel		libxfs_trans_cancel
-+#define xfs_trans_del_item		libxfs_trans_del_item
- #define xfs_trans_dup			libxfs_trans_dup
- #define xfs_trans_get_buf		libxfs_trans_get_buf
- #define xfs_trans_getsb			libxfs_trans_getsb
-@@ -246,12 +248,14 @@ roundup_pow_of_two(uint v)
- #define xfs_trans_ihold			libxfs_trans_ihold
- #define xfs_trans_ijoin			libxfs_trans_ijoin
- #define xfs_trans_ijoin_ref		libxfs_trans_ijoin_ref
-+#define xfs_trans_init			libxfs_trans_init
- #define xfs_trans_inode_alloc_buf	libxfs_trans_inode_alloc_buf
- #define xfs_trans_log_buf		libxfs_trans_log_buf
- #define xfs_trans_log_inode		libxfs_trans_log_inode
- #define xfs_trans_mod_sb		libxfs_trans_mod_sb
- #define xfs_trans_read_buf		libxfs_trans_read_buf
- #define xfs_trans_read_buf_map		libxfs_trans_read_buf_map
-+#define xfs_trans_roll			libxfs_trans_roll
- #define xfs_trans_get_buf_map		libxfs_trans_get_buf_map
- #define xfs_trans_reserve		libxfs_trans_reserve
- 
-@@ -368,6 +372,8 @@ void xfs_mount_common(xfs_mount_t *, xfs_sb_t *);
- /*
-  * logitem.c and trans.c prototypes
-  */
-+void xfs_trans_init(struct xfs_mount *);
-+int xfs_trans_roll(struct xfs_trans **, struct xfs_inode *);
- 
- /* xfs_trans_item.c */
- void xfs_trans_add_item(struct xfs_trans *, struct xfs_log_item *);
-diff --git a/libxfs/xfs_trans.c b/libxfs/xfs_trans.c
+-/* xfs_mount.h */
++/* xfs_sb.h */
+ #define libxfs_mod_sb			xfs_mod_sb
+ #define libxfs_sb_from_disk		xfs_sb_from_disk
+ #define libxfs_sb_to_disk		xfs_sb_to_disk
+diff --git a/include/xfs_mount.h b/include/xfs_mount.h
 deleted file mode 100644
-index 2daf545..0000000
---- a/libxfs/xfs_trans.c
+index ce0adfb..0000000
+--- a/include/xfs_mount.h
 +++ /dev/null
-@@ -1,139 +0,0 @@
+@@ -1,356 +0,0 @@
 -/*
-- * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
-- * Copyright (C) 2010 Red Hat, Inc.
+- * Copyright (c) 2000-2005 Silicon Graphics, Inc.
 - * All Rights Reserved.
 - *
 - * This program is free software; you can redistribute it and/or
@@ -280,127 +117,345 @@ index 2daf545..0000000
 - * along with this program; if not, write the Free Software Foundation,
 - * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 - */
+-#ifndef __XFS_MOUNT_H__
+-#define	__XFS_MOUNT_H__
 -
--#include <xfs.h>
 -
--kmem_zone_t	*xfs_trans_zone;
--kmem_zone_t	*xfs_log_item_desc_zone;
+-#ifndef __KERNEL__
+-
+-#define xfs_daddr_to_agno(mp,d) \
+-	((xfs_agnumber_t)(XFS_BB_TO_FSBT(mp, d) / (mp)->m_sb.sb_agblocks))
+-#define xfs_daddr_to_agbno(mp,d) \
+-	((xfs_agblock_t)(XFS_BB_TO_FSBT(mp, d) % (mp)->m_sb.sb_agblocks))
+-
+-#else /* __KERNEL__ */
+-
+-struct xlog;
+-struct xfs_inode;
+-struct xfs_mru_cache;
+-struct xfs_nameops;
+-struct xfs_ail;
+-struct xfs_quotainfo;
+-
+-#ifdef HAVE_PERCPU_SB
 -
 -/*
-- * Initialize the precomputed transaction reservation values
-- * in the mount structure.
+- * Valid per-cpu incore superblock counters. Note that if you add new counters,
+- * you may need to define new counter disabled bit field descriptors as there
+- * are more possible fields in the superblock that can fit in a bitfield on a
+- * 32 bit platform. The XFS_SBS_* values for the current current counters just
+- * fit.
 - */
--void
--xfs_trans_init(
--	struct xfs_mount	*mp)
--{
--	xfs_trans_resv_calc(mp, &mp->m_reservations);
--}
+-typedef struct xfs_icsb_cnts {
+-	uint64_t	icsb_fdblocks;
+-	uint64_t	icsb_ifree;
+-	uint64_t	icsb_icount;
+-	unsigned long	icsb_flags;
+-} xfs_icsb_cnts_t;
+-
+-#define XFS_ICSB_FLAG_LOCK	(1 << 0)	/* counter lock bit */
+-
+-#define XFS_ICSB_LAZY_COUNT	(1 << 1)	/* accuracy not needed */
+-
+-extern int	xfs_icsb_init_counters(struct xfs_mount *);
+-extern void	xfs_icsb_reinit_counters(struct xfs_mount *);
+-extern void	xfs_icsb_destroy_counters(struct xfs_mount *);
+-extern void	xfs_icsb_sync_counters(struct xfs_mount *, int);
+-extern void	xfs_icsb_sync_counters_locked(struct xfs_mount *, int);
+-extern int	xfs_icsb_modify_counters(struct xfs_mount *, xfs_sb_field_t,
+-						int64_t, int);
+-
+-#else
+-#define xfs_icsb_init_counters(mp)		(0)
+-#define xfs_icsb_destroy_counters(mp)		do { } while (0)
+-#define xfs_icsb_reinit_counters(mp)		do { } while (0)
+-#define xfs_icsb_sync_counters(mp, flags)	do { } while (0)
+-#define xfs_icsb_sync_counters_locked(mp, flags) do { } while (0)
+-#define xfs_icsb_modify_counters(mp, field, delta, rsvd) \
+-	xfs_mod_incore_sb(mp, field, delta, rsvd)
+-#endif
+-
+-/* dynamic preallocation free space thresholds, 5% down to 1% */
+-enum {
+-	XFS_LOWSP_1_PCNT = 0,
+-	XFS_LOWSP_2_PCNT,
+-	XFS_LOWSP_3_PCNT,
+-	XFS_LOWSP_4_PCNT,
+-	XFS_LOWSP_5_PCNT,
+-	XFS_LOWSP_MAX,
+-};
+-
+-typedef struct xfs_mount {
+-	struct super_block	*m_super;
+-	xfs_tid_t		m_tid;		/* next unused tid for fs */
+-	struct xfs_ail		*m_ail;		/* fs active log item list */
+-	xfs_sb_t		m_sb;		/* copy of fs superblock */
+-	spinlock_t		m_sb_lock;	/* sb counter lock */
+-	struct xfs_buf		*m_sb_bp;	/* buffer for superblock */
+-	char			*m_fsname;	/* filesystem name */
+-	int			m_fsname_len;	/* strlen of fs name */
+-	char			*m_rtname;	/* realtime device name */
+-	char			*m_logname;	/* external log device name */
+-	int			m_bsize;	/* fs logical block size */
+-	xfs_agnumber_t		m_agfrotor;	/* last ag where space found */
+-	xfs_agnumber_t		m_agirotor;	/* last ag dir inode alloced */
+-	spinlock_t		m_agirotor_lock;/* .. and lock protecting it */
+-	xfs_agnumber_t		m_maxagi;	/* highest inode alloc group */
+-	uint			m_readio_log;	/* min read size log bytes */
+-	uint			m_readio_blocks; /* min read size blocks */
+-	uint			m_writeio_log;	/* min write size log bytes */
+-	uint			m_writeio_blocks; /* min write size blocks */
+-	struct xlog		*m_log;		/* log specific stuff */
+-	int			m_logbufs;	/* number of log buffers */
+-	int			m_logbsize;	/* size of each log buffer */
+-	uint			m_rsumlevels;	/* rt summary levels */
+-	uint			m_rsumsize;	/* size of rt summary, bytes */
+-	struct xfs_inode	*m_rbmip;	/* pointer to bitmap inode */
+-	struct xfs_inode	*m_rsumip;	/* pointer to summary inode */
+-	struct xfs_inode	*m_rootip;	/* pointer to root directory */
+-	struct xfs_quotainfo	*m_quotainfo;	/* disk quota information */
+-	xfs_buftarg_t		*m_ddev_targp;	/* saves taking the address */
+-	xfs_buftarg_t		*m_logdev_targp;/* ptr to log device */
+-	xfs_buftarg_t		*m_rtdev_targp;	/* ptr to rt device */
+-	__uint8_t		m_blkbit_log;	/* blocklog + NBBY */
+-	__uint8_t		m_blkbb_log;	/* blocklog - BBSHIFT */
+-	__uint8_t		m_agno_log;	/* log #ag's */
+-	__uint8_t		m_agino_log;	/* #bits for agino in inum */
+-	__uint16_t		m_inode_cluster_size;/* min inode buf size */
+-	uint			m_blockmask;	/* sb_blocksize-1 */
+-	uint			m_blockwsize;	/* sb_blocksize in words */
+-	uint			m_blockwmask;	/* blockwsize-1 */
+-	uint			m_alloc_mxr[2];	/* max alloc btree records */
+-	uint			m_alloc_mnr[2];	/* min alloc btree records */
+-	uint			m_bmap_dmxr[2];	/* max bmap btree records */
+-	uint			m_bmap_dmnr[2];	/* min bmap btree records */
+-	uint			m_inobt_mxr[2];	/* max inobt btree records */
+-	uint			m_inobt_mnr[2];	/* min inobt btree records */
+-	uint			m_ag_maxlevels;	/* XFS_AG_MAXLEVELS */
+-	uint			m_bm_maxlevels[2]; /* XFS_BM_MAXLEVELS */
+-	uint			m_in_maxlevels;	/* max inobt btree levels. */
+-	struct radix_tree_root	m_perag_tree;	/* per-ag accounting info */
+-	spinlock_t		m_perag_lock;	/* lock for m_perag_tree */
+-	struct mutex		m_growlock;	/* growfs mutex */
+-	int			m_fixedfsid[2];	/* unchanged for life of FS */
+-	uint			m_dmevmask;	/* DMI events for this FS */
+-	__uint64_t		m_flags;	/* global mount flags */
+-	uint			m_dir_node_ents; /* #entries in a dir danode */
+-	uint			m_attr_node_ents; /* #entries in attr danode */
+-	int			m_ialloc_inos;	/* inodes in inode allocation */
+-	int			m_ialloc_blks;	/* blocks in inode allocation */
+-	int			m_inoalign_mask;/* mask sb_inoalignmt if used */
+-	uint			m_qflags;	/* quota status flags */
+-	xfs_trans_reservations_t m_reservations;/* precomputed res values */
+-	__uint64_t		m_maxicount;	/* maximum inode count */
+-	__uint64_t		m_resblks;	/* total reserved blocks */
+-	__uint64_t		m_resblks_avail;/* available reserved blocks */
+-	__uint64_t		m_resblks_save;	/* reserved blks @ remount,ro */
+-	int			m_dalign;	/* stripe unit */
+-	int			m_swidth;	/* stripe width */
+-	int			m_sinoalign;	/* stripe unit inode alignment */
+-	int			m_attr_magicpct;/* 37% of the blocksize */
+-	int			m_dir_magicpct;	/* 37% of the dir blocksize */
+-	__uint8_t		m_sectbb_log;	/* sectlog - BBSHIFT */
+-	const struct xfs_nameops *m_dirnameops;	/* vector of dir name ops */
+-	int			m_dirblksize;	/* directory block sz--bytes */
+-	int			m_dirblkfsbs;	/* directory block sz--fsbs */
+-	xfs_dablk_t		m_dirdatablk;	/* blockno of dir data v2 */
+-	xfs_dablk_t		m_dirleafblk;	/* blockno of dir non-data v2 */
+-	xfs_dablk_t		m_dirfreeblk;	/* blockno of dirfreeindex v2 */
+-	uint			m_chsize;	/* size of next field */
+-	struct xfs_chash	*m_chash;	/* fs private inode per-cluster
+-						 * hash table */
+-	atomic_t		m_active_trans;	/* number trans frozen */
+-#ifdef HAVE_PERCPU_SB
+-	xfs_icsb_cnts_t __percpu *m_sb_cnts;	/* per-cpu superblock counters */
+-	unsigned long		m_icsb_counters; /* disabled per-cpu counters */
+-	struct notifier_block	m_icsb_notifier; /* hotplug cpu notifier */
+-	struct mutex		m_icsb_mutex;	/* balancer sync lock */
+-#endif
+-	struct xfs_mru_cache	*m_filestream;  /* per-mount filestream data */
+-	struct delayed_work	m_reclaim_work;	/* background inode reclaim */
+-	struct delayed_work	m_eofblocks_work; /* background eof blocks
+-						     trimming */
+-	__int64_t		m_update_flags;	/* sb flags we need to update
+-						   on the next remount,rw */
+-	int64_t			m_low_space[XFS_LOWSP_MAX];
+-						/* low free space thresholds */
+-
+-	struct workqueue_struct	*m_data_workqueue;
+-	struct workqueue_struct	*m_unwritten_workqueue;
+-	struct workqueue_struct	*m_cil_workqueue;
+-	struct workqueue_struct	*m_reclaim_workqueue;
+-	struct workqueue_struct	*m_log_workqueue;
+-	struct workqueue_struct *m_eofblocks_workqueue;
+-} xfs_mount_t;
 -
 -/*
-- * Add the given log item to the transaction's list of log items.
+- * Flags for m_flags.
+- */
+-#define XFS_MOUNT_WSYNC		(1ULL << 0)	/* for nfs - all metadata ops
+-						   must be synchronous except
+-						   for space allocations */
+-#define XFS_MOUNT_WAS_CLEAN	(1ULL << 3)
+-#define XFS_MOUNT_FS_SHUTDOWN	(1ULL << 4)	/* atomic stop of all filesystem
+-						   operations, typically for
+-						   disk errors in metadata */
+-#define XFS_MOUNT_DISCARD	(1ULL << 5)	/* discard unused blocks */
+-#define XFS_MOUNT_RETERR	(1ULL << 6)     /* return alignment errors to
+-						   user */
+-#define XFS_MOUNT_NOALIGN	(1ULL << 7)	/* turn off stripe alignment
+-						   allocations */
+-#define XFS_MOUNT_ATTR2		(1ULL << 8)	/* allow use of attr2 format */
+-#define XFS_MOUNT_GRPID		(1ULL << 9)	/* group-ID assigned from directory */
+-#define XFS_MOUNT_NORECOVERY	(1ULL << 10)	/* no recovery - dirty fs */
+-#define XFS_MOUNT_DFLT_IOSIZE	(1ULL << 12)	/* set default i/o size */
+-#define XFS_MOUNT_32BITINODES	(1ULL << 14)	/* do not create inodes above
+-						 * 32 bits in size */
+-#define XFS_MOUNT_SMALL_INUMS	(1ULL << 15)	/* users wants 32bit inodes */
+-#define XFS_MOUNT_NOUUID	(1ULL << 16)	/* ignore uuid during mount */
+-#define XFS_MOUNT_BARRIER	(1ULL << 17)
+-#define XFS_MOUNT_IKEEP		(1ULL << 18)	/* keep empty inode clusters*/
+-#define XFS_MOUNT_SWALLOC	(1ULL << 19)	/* turn on stripe width
+-						 * allocation */
+-#define XFS_MOUNT_RDONLY	(1ULL << 20)	/* read-only fs */
+-#define XFS_MOUNT_DIRSYNC	(1ULL << 21)	/* synchronous directory ops */
+-#define XFS_MOUNT_COMPAT_IOSIZE	(1ULL << 22)	/* don't report large preferred
+-						 * I/O size in stat() */
+-#define XFS_MOUNT_FILESTREAMS	(1ULL << 24)	/* enable the filestreams
+-						   allocator */
+-#define XFS_MOUNT_NOATTR2	(1ULL << 25)	/* disable use of attr2 format */
+-
+-
+-/*
+- * Default minimum read and write sizes.
+- */
+-#define XFS_READIO_LOG_LARGE	16
+-#define XFS_WRITEIO_LOG_LARGE	16
+-
+-/*
+- * Max and min values for mount-option defined I/O
+- * preallocation sizes.
+- */
+-#define XFS_MAX_IO_LOG		30	/* 1G */
+-#define XFS_MIN_IO_LOG		PAGE_SHIFT
+-
+-/*
+- * Synchronous read and write sizes.  This should be
+- * better for NFSv2 wsync filesystems.
+- */
+-#define	XFS_WSYNC_READIO_LOG	15	/* 32k */
+-#define	XFS_WSYNC_WRITEIO_LOG	14	/* 16k */
+-
+-/*
+- * Allow large block sizes to be reported to userspace programs if the
+- * "largeio" mount option is used.
 - *
-- * The log item will now point to its new descriptor with its li_desc field.
+- * If compatibility mode is specified, simply return the basic unit of caching
+- * so that we don't get inefficient read/modify/write I/O from user apps.
+- * Otherwise....
+- *
+- * If the underlying volume is a stripe, then return the stripe width in bytes
+- * as the recommended I/O size. It is not a stripe and we've set a default
+- * buffered I/O size, return that, otherwise return the compat default.
 - */
--void
--xfs_trans_add_item(
--	struct xfs_trans	*tp,
--	struct xfs_log_item	*lip)
+-static inline unsigned long
+-xfs_preferred_iosize(xfs_mount_t *mp)
 -{
--	struct xfs_log_item_desc *lidp;
--
--	ASSERT(lip->li_mountp == tp->t_mountp);
--	ASSERT(lip->li_ailp == tp->t_mountp->m_ail);
--
--	lidp = kmem_zone_zalloc(xfs_log_item_desc_zone, KM_SLEEP | KM_NOFS);
--
--	lidp->lid_item = lip;
--	lidp->lid_flags = 0;
--	list_add_tail(&lidp->lid_trans, &tp->t_items);
--
--	lip->li_desc = lidp;
+-	if (mp->m_flags & XFS_MOUNT_COMPAT_IOSIZE)
+-		return PAGE_CACHE_SIZE;
+-	return (mp->m_swidth ?
+-		(mp->m_swidth << mp->m_sb.sb_blocklog) :
+-		((mp->m_flags & XFS_MOUNT_DFLT_IOSIZE) ?
+-			(1 << (int)MAX(mp->m_readio_log, mp->m_writeio_log)) :
+-			PAGE_CACHE_SIZE));
 -}
 -
--STATIC void
--xfs_trans_free_item_desc(
--	struct xfs_log_item_desc *lidp)
+-#define XFS_LAST_UNMOUNT_WAS_CLEAN(mp)	\
+-				((mp)->m_flags & XFS_MOUNT_WAS_CLEAN)
+-#define XFS_FORCED_SHUTDOWN(mp)	((mp)->m_flags & XFS_MOUNT_FS_SHUTDOWN)
+-void xfs_do_force_shutdown(struct xfs_mount *mp, int flags, char *fname,
+-		int lnnum);
+-#define xfs_force_shutdown(m,f)	\
+-	xfs_do_force_shutdown(m, f, __FILE__, __LINE__)
+-
+-#define SHUTDOWN_META_IO_ERROR	0x0001	/* write attempt to metadata failed */
+-#define SHUTDOWN_LOG_IO_ERROR	0x0002	/* write attempt to the log failed */
+-#define SHUTDOWN_FORCE_UMOUNT	0x0004	/* shutdown from a forced unmount */
+-#define SHUTDOWN_CORRUPT_INCORE	0x0008	/* corrupt in-memory data structures */
+-#define SHUTDOWN_REMOTE_REQ	0x0010	/* shutdown came from remote cell */
+-#define SHUTDOWN_DEVICE_REQ	0x0020	/* failed all paths to the device */
+-
+-/*
+- * Flags for xfs_mountfs
+- */
+-#define XFS_MFSI_QUIET		0x40	/* Be silent if mount errors found */
+-
+-static inline xfs_agnumber_t
+-xfs_daddr_to_agno(struct xfs_mount *mp, xfs_daddr_t d)
 -{
--	list_del_init(&lidp->lid_trans);
--	kmem_zone_free(xfs_log_item_desc_zone, lidp);
+-	xfs_daddr_t ld = XFS_BB_TO_FSBT(mp, d);
+-	do_div(ld, mp->m_sb.sb_agblocks);
+-	return (xfs_agnumber_t) ld;
+-}
+-
+-static inline xfs_agblock_t
+-xfs_daddr_to_agbno(struct xfs_mount *mp, xfs_daddr_t d)
+-{
+-	xfs_daddr_t ld = XFS_BB_TO_FSBT(mp, d);
+-	return (xfs_agblock_t) do_div(ld, mp->m_sb.sb_agblocks);
 -}
 -
 -/*
-- * Unlink and free the given descriptor.
+- * Per-cpu superblock locking functions
 - */
--void
--xfs_trans_del_item(
--	struct xfs_log_item	*lip)
+-#ifdef HAVE_PERCPU_SB
+-static inline void
+-xfs_icsb_lock(xfs_mount_t *mp)
 -{
--	xfs_trans_free_item_desc(lip->li_desc);
--	lip->li_desc = NULL;
+-	mutex_lock(&mp->m_icsb_mutex);
 -}
+-
+-static inline void
+-xfs_icsb_unlock(xfs_mount_t *mp)
+-{
+-	mutex_unlock(&mp->m_icsb_mutex);
+-}
+-#else
+-#define xfs_icsb_lock(mp)
+-#define xfs_icsb_unlock(mp)
+-#endif
 -
 -/*
-- * Roll from one trans in the sequence of PERMANENT transactions to
-- * the next: permanent transactions are only flushed out when
-- * committed with XFS_TRANS_RELEASE_LOG_RES, but we still want as soon
-- * as possible to let chunks of it go to the log. So we commit the
-- * chunk we've been working on and get a new transaction to continue.
+- * This structure is for use by the xfs_mod_incore_sb_batch() routine.
+- * xfs_growfs can specify a few fields which are more than int limit
 - */
--int
--xfs_trans_roll(
--	struct xfs_trans	**tpp,
--	struct xfs_inode	*dp)
--{
--	struct xfs_trans	*trans;
--	unsigned int		logres, count;
--	int			error;
+-typedef struct xfs_mod_sb {
+-	xfs_sb_field_t	msb_field;	/* Field to modify, see below */
+-	int64_t		msb_delta;	/* Change to make to specified field */
+-} xfs_mod_sb_t;
 -
--	/*
--	 * Ensure that the inode is always logged.
--	 */
--	trans = *tpp;
--	xfs_trans_log_inode(trans, dp, XFS_ILOG_CORE);
+-extern int	xfs_log_sbcount(xfs_mount_t *);
+-extern __uint64_t xfs_default_resblks(xfs_mount_t *mp);
+-extern int	xfs_mountfs(xfs_mount_t *mp);
 -
--	/*
--	 * Copy the critical parameters from one trans to the next.
--	 */
--	logres = trans->t_log_res;
--	count = trans->t_log_count;
--	*tpp = xfs_trans_dup(trans);
+-extern void	xfs_unmountfs(xfs_mount_t *);
+-extern int	xfs_mod_incore_sb(xfs_mount_t *, xfs_sb_field_t, int64_t, int);
+-extern int	xfs_mod_incore_sb_batch(xfs_mount_t *, xfs_mod_sb_t *,
+-			uint, int);
+-extern int	xfs_mount_log_sb(xfs_mount_t *, __int64_t);
+-extern struct xfs_buf *xfs_getsb(xfs_mount_t *, int);
+-extern int	xfs_readsb(xfs_mount_t *, int);
+-extern void	xfs_freesb(xfs_mount_t *);
+-extern int	xfs_fs_writable(xfs_mount_t *);
+-extern int	xfs_sb_validate_fsb_count(struct xfs_sb *, __uint64_t);
 -
--	/*
--	 * Commit the current transaction.
--	 * If this commit failed, then it'd just unlock those items that
--	 * are not marked ihold. That also means that a filesystem shutdown
--	 * is in progress. The caller takes the responsibility to cancel
--	 * the duplicate transaction that gets returned.
--	 */
--	error = xfs_trans_commit(trans, 0);
--	if (error)
--		return (error);
+-extern int	xfs_dev_is_read_only(struct xfs_mount *, char *);
 -
--	trans = *tpp;
+-extern void	xfs_set_low_space_thresholds(struct xfs_mount *);
 -
--	/*
--	 * Reserve space in the log for th next transaction.
--	 * This also pushes items in the "AIL", the list of logged items,
--	 * out to disk if they are taking up space at the tail of the log
--	 * that we want to use.  This requires that either nothing be locked
--	 * across this call, or that anything that is locked be logged in
--	 * the prior and the next transactions.
--	 */
--	error = xfs_trans_reserve(trans, 0, logres, 0,
--				  XFS_TRANS_PERM_LOG_RES, count);
--	/*
--	 *  Ensure that the inode is in the new transaction and locked.
--	 */
--	if (error)
--		return error;
+-#endif	/* __KERNEL__ */
 -
--	xfs_trans_ijoin(trans, dp, 0);
--	return 0;
--}
+-#endif	/* __XFS_MOUNT_H__ */
 -- 
 1.7.10.4
 
