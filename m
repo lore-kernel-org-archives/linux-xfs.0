@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id AD8DB7FC8
-	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 00:36:46 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A8D8F304043
-	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 22:36:46 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 273447FD6
+	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 00:36:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 098EB8F8033
+	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 22:36:48 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	RwiEfcQryrz7YYSD for <xfs@oss.sgi.com>;
+	RCLttTXXZj6v5pcb for <xfs@oss.sgi.com>;
 	Tue, 18 Jun 2013 22:36:45 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UpB4U-0003BZ-92
+	(envelope-from <dave@fromorbit.com>) id 1UpB4U-0003Bb-G5
 	for xfs@oss.sgi.com; Wed, 19 Jun 2013 15:36:42 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UpB4U-0000Fd-5X
+	(envelope-from <dave@disappointment.disaster>) id 1UpB4U-0000Fl-7p
 	for xfs@oss.sgi.com; Wed, 19 Jun 2013 15:36:42 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 29/50] xfs: move swap extent code to xfs_extent_ops
-Date: Wed, 19 Jun 2013 15:35:52 +1000
-Message-Id: <1371620173-712-30-git-send-email-david@fromorbit.com>
+Subject: [PATCH 31/50] xfs: separate dquot on disk format definitions out of
+	xfs_quota.h
+Date: Wed, 19 Jun 2013 15:35:54 +1000
+Message-Id: <1371620173-712-32-git-send-email-david@fromorbit.com>
 In-Reply-To: <1371620173-712-1-git-send-email-david@fromorbit.com>
 References: <1371620173-712-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,131 +39,325 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Swapping extents is clearly an extent operaiton, and it is not
-shared with userspace. Move the code to xfs_extent_ops.[ch], and
-the userspace ioctl structure definition to xfs_fs.h where most of
-the other ioctl structure definitions are. The means xfs_dfrag.h is
-no longer needed in userspace.
+The on disk format definitions of the on-disk dquot, log formats and
+quota off log formats are all intertwined with other definitions for
+quotas. Separate them out into their own header file so they can
+easily be shared with userspace.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fsr/xfs_fsr.c       |    1 -
- include/Makefile    |    2 +-
- include/xfs_dfrag.h |   53 ---------------------------------------------------
- include/xfs_fs.h    |   15 +++++++++++++++
- 4 files changed, 16 insertions(+), 55 deletions(-)
- delete mode 100644 include/xfs_dfrag.h
+ include/Makefile           |    4 +-
+ include/libxfs.h           |    1 +
+ include/xfs_dquot_format.h |  132 ++++++++++++++++++++++++++++++++++++++++++++
+ include/xfs_quota.h        |  112 -------------------------------------
+ 4 files changed, 136 insertions(+), 113 deletions(-)
+ create mode 100644 include/xfs_dquot_format.h
 
-diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
-index 7e518c1..7596834 100644
---- a/fsr/xfs_fsr.c
-+++ b/fsr/xfs_fsr.c
-@@ -20,7 +20,6 @@
- #include <xfs/xfs.h>
- #include <xfs/xfs_types.h>
- #include <xfs/jdm.h>
--#include <xfs/xfs_dfrag.h>
- #include <xfs/xfs_bmap_btree.h>
- #include <xfs/xfs_dinode.h>
- #include <xfs/xfs_attr_sf.h>
 diff --git a/include/Makefile b/include/Makefile
-index 1920190..b713884 100644
+index 2bd7fbe..144e9dc 100644
 --- a/include/Makefile
 +++ b/include/Makefile
-@@ -33,7 +33,7 @@ QAHFILES = libxfs.h libxlog.h \
+@@ -36,7 +36,9 @@ QAHFILES = libxfs.h libxlog.h \
+ 	xfs_inode_item_format.h \
  	xfs_inum.h \
  	xfs_log.h xfs_log_priv.h xfs_log_recover.h xfs_metadump.h \
- 	xfs_quota.h xfs_rtalloc.h xfs_sb.h xfs_symlink.h \
--	xfs_trace.h xfs_trans.h xfs_trans_resv.h xfs_trans_space.h xfs_dfrag.h
-+	xfs_trace.h xfs_trans.h xfs_trans_resv.h xfs_trans_space.h
+-	xfs_quota.h xfs_rtalloc.h xfs_sb.h xfs_symlink.h \
++	xfs_quota.h \
++	xfs_dquot_format.h \
++	xfs_rtalloc.h xfs_sb.h xfs_symlink.h \
+ 	xfs_trace.h xfs_trans.h xfs_trans_resv.h xfs_trans_space.h
  
  HFILES = handle.h jdm.h xqm.h xfs.h xfs_fs.h xfs_types.h
- HFILES += $(PKG_PLATFORM).h
-diff --git a/include/xfs_dfrag.h b/include/xfs_dfrag.h
-deleted file mode 100644
-index 20bdd93..0000000
---- a/include/xfs_dfrag.h
-+++ /dev/null
-@@ -1,53 +0,0 @@
--/*
-- * Copyright (c) 2000,2005 Silicon Graphics, Inc.
-- * All Rights Reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it would be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write the Free Software Foundation,
-- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-- */
--#ifndef __XFS_DFRAG_H__
--#define	__XFS_DFRAG_H__
--
--/*
-- * Structure passed to xfs_swapext
-- */
--
--typedef struct xfs_swapext
--{
--	__int64_t	sx_version;	/* version */
--	__int64_t	sx_fdtarget;	/* fd of target file */
--	__int64_t	sx_fdtmp;	/* fd of tmp file */
--	xfs_off_t	sx_offset;	/* offset into file */
--	xfs_off_t	sx_length;	/* leng from offset */
--	char		sx_pad[16];	/* pad space, unused */
--	xfs_bstat_t	sx_stat;	/* stat of target b4 copy */
--} xfs_swapext_t;
--
--/*
-- * Version flag
-- */
--#define XFS_SX_VERSION		0
--
--#ifdef __KERNEL__
--/*
-- * Prototypes for visible xfs_dfrag.c routines.
-- */
--
--/*
-- * Syscall interface for xfs_swapext
-- */
--int	xfs_swapext(struct xfs_swapext *sx);
--
--#endif	/* __KERNEL__ */
--
--#endif	/* __XFS_DFRAG_H__ */
-diff --git a/include/xfs_fs.h b/include/xfs_fs.h
-index 68c2e18..74b24b2 100644
---- a/include/xfs_fs.h
-+++ b/include/xfs_fs.h
-@@ -461,6 +461,21 @@ typedef struct xfs_handle {
- 				 + (handle).ha_fid.fid_len)
+diff --git a/include/libxfs.h b/include/libxfs.h
+index 5e78378..6448bc9 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -412,6 +412,7 @@ extern void	libxfs_iomove (xfs_buf_t *, uint, int, void *, int);
  
- /*
-+ * Structure passed to XFS_IOC_SWAPEXT
+ 
+ #include <xfs/xfs_quota.h>
++#include <xfs/xfs_dquot_format.h>
+ #include <xfs/xfs_trans_space.h>
+ #include <xfs/xfs_log.h>
+ #include <xfs/xfs_log_priv.h>
+diff --git a/include/xfs_dquot_format.h b/include/xfs_dquot_format.h
+new file mode 100644
+index 0000000..f34615b
+--- /dev/null
++++ b/include/xfs_dquot_format.h
+@@ -0,0 +1,132 @@
++/*
++ * Copyright (c) 2000-2005 Silicon Graphics, Inc.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 + */
-+typedef struct xfs_swapext
-+{
-+	__int64_t	sx_version;	/* version */
-+#define XFS_SX_VERSION		0
-+	__int64_t	sx_fdtarget;	/* fd of target file */
-+	__int64_t	sx_fdtmp;	/* fd of tmp file */
-+	xfs_off_t	sx_offset;	/* offset into file */
-+	xfs_off_t	sx_length;	/* leng from offset */
-+	char		sx_pad[16];	/* pad space, unused */
-+	xfs_bstat_t	sx_stat;	/* stat of target b4 copy */
-+} xfs_swapext_t;
++#ifndef __XFS_DQUOT_FORMAT_H__
++#define __XFS_DQUOT_FORMAT_H__
 +
 +/*
-  * Flags for going down operation
++ * The ondisk form of a dquot structure.
++ */
++#define XFS_DQUOT_MAGIC		0x4451		/* 'DQ' */
++#define XFS_DQUOT_VERSION	(u_int8_t)0x01	/* latest version number */
++
++/*
++ * uid_t and gid_t are hard-coded to 32 bits in the inode.
++ * Hence, an 'id' in a dquot is 32 bits..
++ */
++typedef __uint32_t	xfs_dqid_t;
++
++/*
++ * This is the main portion of the on-disk representation of quota
++ * information for a user. This is the q_core of the xfs_dquot_t that
++ * is kept in kernel memory. We pad this with some more expansion room
++ * to construct the on disk structure.
++ */
++typedef struct	xfs_disk_dquot {
++	__be16		d_magic;	/* dquot magic = XFS_DQUOT_MAGIC */
++	__u8		d_version;	/* dquot version */
++	__u8		d_flags;	/* XFS_DQ_USER/PROJ/GROUP */
++	__be32		d_id;		/* user,project,group id */
++	__be64		d_blk_hardlimit;/* absolute limit on disk blks */
++	__be64		d_blk_softlimit;/* preferred limit on disk blks */
++	__be64		d_ino_hardlimit;/* maximum # allocated inodes */
++	__be64		d_ino_softlimit;/* preferred inode limit */
++	__be64		d_bcount;	/* disk blocks owned by the user */
++	__be64		d_icount;	/* inodes owned by the user */
++	__be32		d_itimer;	/* zero if within inode limits if not,
++					   this is when we refuse service */
++	__be32		d_btimer;	/* similar to above; for disk blocks */
++	__be16		d_iwarns;	/* warnings issued wrt num inodes */
++	__be16		d_bwarns;	/* warnings issued wrt disk blocks */
++	__be32		d_pad0;		/* 64 bit align */
++	__be64		d_rtb_hardlimit;/* absolute limit on realtime blks */
++	__be64		d_rtb_softlimit;/* preferred limit on RT disk blks */
++	__be64		d_rtbcount;	/* realtime blocks owned */
++	__be32		d_rtbtimer;	/* similar to above; for RT disk blocks */
++	__be16		d_rtbwarns;	/* warnings issued wrt RT disk blocks */
++	__be16		d_pad;
++} xfs_disk_dquot_t;
++
++/*
++ * This is what goes on disk. This is separated from the xfs_disk_dquot because
++ * carrying the unnecessary padding would be a waste of memory.
++ */
++typedef struct xfs_dqblk {
++	xfs_disk_dquot_t  dd_diskdq;	/* portion that lives incore as well */
++	char		  dd_fill[4];	/* filling for posterity */
++
++	/*
++	 * These two are only present on filesystems with the CRC bits set.
++	 */
++	__be32		  dd_crc;	/* checksum */
++	__be64		  dd_lsn;	/* last modification in log */
++	uuid_t		  dd_uuid;	/* location information */
++} xfs_dqblk_t;
++
++#define XFS_DQUOT_CRC_OFF	offsetof(struct xfs_dqblk, dd_crc)
++
++/*
++ * These are the structures used to lay out dquots and quotaoff
++ * records on the log. Quite similar to those of inodes.
++ */
++
++/*
++ * log format struct for dquots.
++ * The first two fields must be the type and size fitting into
++ * 32 bits : log_recovery code assumes that.
++ */
++typedef struct xfs_dq_logformat {
++	__uint16_t		qlf_type;      /* dquot log item type */
++	__uint16_t		qlf_size;      /* size of this item */
++	xfs_dqid_t		qlf_id;	       /* usr/grp/proj id : 32 bits */
++	__int64_t		qlf_blkno;     /* blkno of dquot buffer */
++	__int32_t		qlf_len;       /* len of dquot buffer */
++	__uint32_t		qlf_boffset;   /* off of dquot in buffer */
++} xfs_dq_logformat_t;
++
++/*
++ * log format struct for QUOTAOFF records.
++ * The first two fields must be the type and size fitting into
++ * 32 bits : log_recovery code assumes that.
++ * We write two LI_QUOTAOFF logitems per quotaoff, the last one keeps a pointer
++ * to the first and ensures that the first logitem is taken out of the AIL
++ * only when the last one is securely committed.
++ */
++typedef struct xfs_qoff_logformat {
++	unsigned short		qf_type;	/* quotaoff log item type */
++	unsigned short		qf_size;	/* size of this item */
++	unsigned int		qf_flags;	/* USR and/or GRP */
++	char			qf_pad[12];	/* padding for future */
++} xfs_qoff_logformat_t;
++
++/*
++ * Disk quotas status in m_qflags, sb_qflags and xfs_qoff_logformat. 16 bits.
++ */
++#define XFS_UQUOTA_ACCT	0x0001  /* user quota accounting ON */
++#define XFS_UQUOTA_ENFD	0x0002  /* user quota limits enforced */
++#define XFS_UQUOTA_CHKD	0x0004  /* quotacheck run on usr quotas */
++#define XFS_PQUOTA_ACCT	0x0008  /* project quota accounting ON */
++#define XFS_OQUOTA_ENFD	0x0010  /* other (grp/prj) quota limits enforced */
++#define XFS_OQUOTA_CHKD	0x0020  /* quotacheck run on other (grp/prj) quotas */
++#define XFS_GQUOTA_ACCT	0x0040  /* group quota accounting ON */
++
++#define XFS_ALL_QUOTA_ACCT	\
++		(XFS_UQUOTA_ACCT | XFS_GQUOTA_ACCT | XFS_PQUOTA_ACCT)
++#define XFS_ALL_QUOTA_ENFD	(XFS_UQUOTA_ENFD | XFS_OQUOTA_ENFD)
++#define XFS_ALL_QUOTA_CHKD	(XFS_UQUOTA_CHKD | XFS_OQUOTA_CHKD)
++
++#endif /* __XFS_DQUOT_FORMAT_H__ */
+diff --git a/include/xfs_quota.h b/include/xfs_quota.h
+index c38068f..ec80623 100644
+--- a/include/xfs_quota.h
++++ b/include/xfs_quota.h
+@@ -21,18 +21,6 @@
+ struct xfs_trans;
+ 
+ /*
+- * The ondisk form of a dquot structure.
+- */
+-#define XFS_DQUOT_MAGIC		0x4451		/* 'DQ' */
+-#define XFS_DQUOT_VERSION	(u_int8_t)0x01	/* latest version number */
+-
+-/*
+- * uid_t and gid_t are hard-coded to 32 bits in the inode.
+- * Hence, an 'id' in a dquot is 32 bits..
+- */
+-typedef __uint32_t	xfs_dqid_t;
+-
+-/*
+  * Even though users may not have quota limits occupying all 64-bits,
+  * they may need 64-bit accounting. Hence, 64-bit quota-counters,
+  * and quota-limits. This is a waste in the common case, but hey ...
+@@ -41,55 +29,6 @@ typedef __uint64_t	xfs_qcnt_t;
+ typedef __uint16_t	xfs_qwarncnt_t;
+ 
+ /*
+- * This is the main portion of the on-disk representation of quota
+- * information for a user. This is the q_core of the xfs_dquot_t that
+- * is kept in kernel memory. We pad this with some more expansion room
+- * to construct the on disk structure.
+- */
+-typedef struct	xfs_disk_dquot {
+-	__be16		d_magic;	/* dquot magic = XFS_DQUOT_MAGIC */
+-	__u8		d_version;	/* dquot version */
+-	__u8		d_flags;	/* XFS_DQ_USER/PROJ/GROUP */
+-	__be32		d_id;		/* user,project,group id */
+-	__be64		d_blk_hardlimit;/* absolute limit on disk blks */
+-	__be64		d_blk_softlimit;/* preferred limit on disk blks */
+-	__be64		d_ino_hardlimit;/* maximum # allocated inodes */
+-	__be64		d_ino_softlimit;/* preferred inode limit */
+-	__be64		d_bcount;	/* disk blocks owned by the user */
+-	__be64		d_icount;	/* inodes owned by the user */
+-	__be32		d_itimer;	/* zero if within inode limits if not,
+-					   this is when we refuse service */
+-	__be32		d_btimer;	/* similar to above; for disk blocks */
+-	__be16		d_iwarns;	/* warnings issued wrt num inodes */
+-	__be16		d_bwarns;	/* warnings issued wrt disk blocks */
+-	__be32		d_pad0;		/* 64 bit align */
+-	__be64		d_rtb_hardlimit;/* absolute limit on realtime blks */
+-	__be64		d_rtb_softlimit;/* preferred limit on RT disk blks */
+-	__be64		d_rtbcount;	/* realtime blocks owned */
+-	__be32		d_rtbtimer;	/* similar to above; for RT disk blocks */
+-	__be16		d_rtbwarns;	/* warnings issued wrt RT disk blocks */
+-	__be16		d_pad;
+-} xfs_disk_dquot_t;
+-
+-/*
+- * This is what goes on disk. This is separated from the xfs_disk_dquot because
+- * carrying the unnecessary padding would be a waste of memory.
+- */
+-typedef struct xfs_dqblk {
+-	xfs_disk_dquot_t  dd_diskdq;	/* portion that lives incore as well */
+-	char		  dd_fill[4];	/* filling for posterity */
+-
+-	/*
+-	 * These two are only present on filesystems with the CRC bits set.
+-	 */
+-	__be32		  dd_crc;	/* checksum */
+-	__be64		  dd_lsn;	/* last modification in log */
+-	uuid_t		  dd_uuid;	/* location information */
+-} xfs_dqblk_t;
+-
+-#define XFS_DQUOT_CRC_OFF	offsetof(struct xfs_dqblk, dd_crc)
+-
+-/*
+  * flags for q_flags field in the dquot.
   */
- #define XFS_FSOP_GOING_FLAGS_DEFAULT		0x0	/* going down */
+ #define XFS_DQ_USER		0x0001		/* a user quota */
+@@ -113,60 +52,9 @@ typedef struct xfs_dqblk {
+  */
+ #define XFS_DQUOT_LOGRES(mp)	(sizeof(xfs_disk_dquot_t) * 3)
+ 
+-
+-/*
+- * These are the structures used to lay out dquots and quotaoff
+- * records on the log. Quite similar to those of inodes.
+- */
+-
+-/*
+- * log format struct for dquots.
+- * The first two fields must be the type and size fitting into
+- * 32 bits : log_recovery code assumes that.
+- */
+-typedef struct xfs_dq_logformat {
+-	__uint16_t		qlf_type;      /* dquot log item type */
+-	__uint16_t		qlf_size;      /* size of this item */
+-	xfs_dqid_t		qlf_id;	       /* usr/grp/proj id : 32 bits */
+-	__int64_t		qlf_blkno;     /* blkno of dquot buffer */
+-	__int32_t		qlf_len;       /* len of dquot buffer */
+-	__uint32_t		qlf_boffset;   /* off of dquot in buffer */
+-} xfs_dq_logformat_t;
+-
+-/*
+- * log format struct for QUOTAOFF records.
+- * The first two fields must be the type and size fitting into
+- * 32 bits : log_recovery code assumes that.
+- * We write two LI_QUOTAOFF logitems per quotaoff, the last one keeps a pointer
+- * to the first and ensures that the first logitem is taken out of the AIL
+- * only when the last one is securely committed.
+- */
+-typedef struct xfs_qoff_logformat {
+-	unsigned short		qf_type;	/* quotaoff log item type */
+-	unsigned short		qf_size;	/* size of this item */
+-	unsigned int		qf_flags;	/* USR and/or GRP */
+-	char			qf_pad[12];	/* padding for future */
+-} xfs_qoff_logformat_t;
+-
+-
+-/*
+- * Disk quotas status in m_qflags, and also sb_qflags. 16 bits.
+- */
+-#define XFS_UQUOTA_ACCT	0x0001  /* user quota accounting ON */
+-#define XFS_UQUOTA_ENFD	0x0002  /* user quota limits enforced */
+-#define XFS_UQUOTA_CHKD	0x0004  /* quotacheck run on usr quotas */
+-#define XFS_PQUOTA_ACCT	0x0008  /* project quota accounting ON */
+-#define XFS_OQUOTA_ENFD	0x0010  /* other (grp/prj) quota limits enforced */
+-#define XFS_OQUOTA_CHKD	0x0020  /* quotacheck run on other (grp/prj) quotas */
+-#define XFS_GQUOTA_ACCT	0x0040  /* group quota accounting ON */
+-
+ /*
+  * Quota Accounting/Enforcement flags
+  */
+-#define XFS_ALL_QUOTA_ACCT	\
+-		(XFS_UQUOTA_ACCT | XFS_GQUOTA_ACCT | XFS_PQUOTA_ACCT)
+-#define XFS_ALL_QUOTA_ENFD	(XFS_UQUOTA_ENFD | XFS_OQUOTA_ENFD)
+-#define XFS_ALL_QUOTA_CHKD	(XFS_UQUOTA_CHKD | XFS_OQUOTA_CHKD)
+ 
+ #define XFS_IS_QUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_ALL_QUOTA_ACCT)
+ #define XFS_IS_UQUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_UQUOTA_ACCT)
 -- 
 1.7.10.4
 
