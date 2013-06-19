@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2CC5F29E20
-	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 23:53:49 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2774B304043
-	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 21:53:49 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B92BF29E73
+	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 23:53:50 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 55DCDAC002
+	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 21:53:50 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	cnbsAjX1dZiZqyoW for <xfs@oss.sgi.com>;
-	Tue, 18 Jun 2013 21:53:47 -0700 (PDT)
-Received: from [192.168.1.1] (helo=disappointment)
-	by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UpAON-00031m-Al
-	for xfs@oss.sgi.com; Wed, 19 Jun 2013 14:53:11 +1000
-Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UpAOD-00008L-8i
+	MdkuBTFMG1iJ8OzI for <xfs@oss.sgi.com>;
+	Tue, 18 Jun 2013 21:53:48 -0700 (PDT)
+Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1UpAOD-00031k-AJ
 	for xfs@oss.sgi.com; Wed, 19 Jun 2013 14:53:01 +1000
+Received: from dave by disappointment with local (Exim 4.80)
+	(envelope-from <dave@disappointment.disaster>) id 1UpAOC-00008C-Nj
+	for xfs@oss.sgi.com; Wed, 19 Jun 2013 14:53:00 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 60/60] xfs: Validate log space at mount time
-Date: Wed, 19 Jun 2013 14:51:08 +1000
-Message-Id: <1371617468-32559-61-git-send-email-david@fromorbit.com>
+Subject: [PATCH 58/60] xfs: Refactor xfs_ticket_alloc() to extract a new helper
+Date: Wed, 19 Jun 2013 14:51:06 +1000
+Message-Id: <1371617468-32559-59-git-send-email-david@fromorbit.com>
 In-Reply-To: <1371617468-32559-1-git-send-email-david@fromorbit.com>
 References: <1371617468-32559-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,87 +38,128 @@ To: xfs@oss.sgi.com
 
 From: Jie Liu <jeff.liu@oracle.com>
 
-Validate log space during log mount stage, the underlying function
-will drop a warning message via syslog in critical level if the log
-space is too small or too large.
+Refactor xlog_ticket_alloc() to extract a new helper, i.e.
+xfs_log_calc_unit_res().
 
-[ dchinner: For CRC enable filesystems, abort the mounting of the
-filesystem as mkfs should never make a log too small for the given
-filesystem configuration. ]
+This helper would be used to calculate the total log reservation
+size by adding extra log operation/transation headers for a new
+log ticket.
 
 Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_log.c |   49 ++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 48 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_log.c        |   60 ++++++++++++++++++++++++++++++-----------------
+ fs/xfs/xfs_log_format.h |    4 ++++
+ 2 files changed, 42 insertions(+), 22 deletions(-)
 
 diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index e1f9c72..6c6e307 100644
+index db08d34..e1f9c72 100644
 --- a/fs/xfs/xfs_log.c
 +++ b/fs/xfs/xfs_log.c
-@@ -614,7 +614,9 @@ xfs_log_mount(
- 	xfs_daddr_t	blk_offset,
- 	int		num_bblks)
- {
--	int		error;
-+	int		error = 0;
-+	int		min_logfsbs;
-+	int		max_logfsbs;
+@@ -3390,24 +3390,17 @@ xfs_log_ticket_get(
+ }
  
- 	if (!(mp->m_flags & XFS_MOUNT_NORECOVERY))
- 		xfs_notice(mp, "Mounting Filesystem");
-@@ -631,6 +633,51 @@ xfs_log_mount(
- 	}
+ /*
+- * Allocate and initialise a new log ticket.
++ * Figure out the total log space unit (in bytes) that would be
++ * required for a log ticket.
+  */
+-struct xlog_ticket *
+-xlog_ticket_alloc(
+-	struct xlog	*log,
+-	int		unit_bytes,
+-	int		cnt,
+-	char		client,
+-	bool		permanent,
+-	xfs_km_flags_t	alloc_flags)
++int
++xfs_log_calc_unit_res(
++	struct xfs_mount	*mp,
++	int			unit_bytes)
+ {
+-	struct xlog_ticket *tic;
+-	uint		num_headers;
+-	int		iclog_space;
+-
+-	tic = kmem_zone_zalloc(xfs_log_ticket_zone, alloc_flags);
+-	if (!tic)
+-		return NULL;
++	struct xlog		*log = mp->m_log;
++	int			iclog_space;
++	uint			num_headers;
  
  	/*
-+	 * Validate the given log space and drop a critical message via syslog
-+	 * if the log size is too small that would lead to some unexpected
-+	 * situations in transaction log space reservation stage.
-+	 *
-+	 * Note: we can't just reject the mount if the validation fails.  This
-+	 * would mean that people would have to downgrade their kernel just to
-+	 * remedy the situation as there is no way to grow the log (short of
-+	 * black magic surgery with xfs_db).
-+	 *
-+	 * We can, however, reject mounts for CRC format filesystems, as the
-+	 * mkfs binary being used to make the filesystem should never create a
-+	 * filesystem with a log that is too small.
-+	 */
-+	min_logfsbs = xfs_log_calc_minimum_size(mp);
-+	max_logfsbs = XFS_BB_TO_FSB(mp, XFS_MAX_LOG_BLOCKS);
+ 	 * Permanent reservations have up to 'cnt'-1 active log operations
+@@ -3482,20 +3475,43 @@ xlog_ticket_alloc(
+ 	unit_bytes += log->l_iclog_hsize;
+ 
+ 	/* for roundoff padding for transaction data and one for commit record */
+-	if (xfs_sb_version_haslogv2(&log->l_mp->m_sb) &&
+-	    log->l_mp->m_sb.sb_logsunit > 1) {
++	if (xfs_sb_version_haslogv2(&mp->m_sb) && mp->m_sb.sb_logsunit > 1) {
+ 		/* log su roundoff */
+-		unit_bytes += 2*log->l_mp->m_sb.sb_logsunit;
++		unit_bytes += 2 * mp->m_sb.sb_logsunit;
+ 	} else {
+ 		/* BB roundoff */
+-		unit_bytes += 2*BBSIZE;
++		unit_bytes += 2 * BBSIZE;
+         }
+ 
++	return unit_bytes;
++}
 +
-+	if (mp->m_sb.sb_logblocks < min_logfsbs) {
-+		xfs_warn(mp,
-+		"Log size %d blocks too small, minimum size is %d blocks",
-+			 mp->m_sb.sb_logblocks, min_logfsbs);
-+		error = EINVAL;
-+	} else if (mp->m_sb.sb_logblocks > max_logfsbs) {
-+		xfs_warn(mp,
-+		"Log size %d blocks too large, maximum size is %d blocks",
-+			 mp->m_sb.sb_logblocks, max_logfsbs);
-+		error = EINVAL;
-+	} else if (XFS_FSB_TO_B(mp, mp->m_sb.sb_logblocks) > XFS_MAX_LOG_BYTES) {
-+		xfs_warn(mp,
-+		"log size %lld bytes too large, maximum size is %lld bytes",
-+			 XFS_FSB_TO_B(mp, mp->m_sb.sb_logblocks),
-+			 XFS_MAX_LOG_BYTES);
-+		error = EINVAL;
-+	}
-+	if (error) {
-+		if (xfs_sb_version_hascrc(&mp->m_sb)) {
-+			xfs_crit(mp, "AAIEEE! Log failed size checks. Abort!");
-+			ASSERT(0);
-+			goto out_free_log;
-+		}
-+		xfs_crit(mp,
-+"Log size out of supported range. Continuing onwards, but if log hangs are\n"
-+"experienced then please report this message in the bug report.");
-+	}
++/*
++ * Allocate and initialise a new log ticket.
++ */
++struct xlog_ticket *
++xlog_ticket_alloc(
++	struct xlog		*log,
++	int			unit_bytes,
++	int			cnt,
++	char			client,
++	bool			permanent,
++	xfs_km_flags_t		alloc_flags)
++{
++	struct xlog_ticket	*tic;
++	int			unit_res;
 +
-+	/*
- 	 * Initialize the AIL now we have a log.
- 	 */
- 	error = xfs_trans_ail_init(mp);
++	tic = kmem_zone_zalloc(xfs_log_ticket_zone, alloc_flags);
++	if (!tic)
++		return NULL;
++
++	unit_res = xfs_log_calc_unit_res(log->l_mp, unit_bytes);
++
+ 	atomic_set(&tic->t_ref, 1);
+ 	tic->t_task		= current;
+ 	INIT_LIST_HEAD(&tic->t_queue);
+-	tic->t_unit_res		= unit_bytes;
+-	tic->t_curr_res		= unit_bytes;
++	tic->t_unit_res		= unit_res;
++	tic->t_curr_res		= unit_res;
+ 	tic->t_cnt		= cnt;
+ 	tic->t_ocnt		= cnt;
+ 	tic->t_tid		= prandom_u32();
+diff --git a/fs/xfs/xfs_log_format.h b/fs/xfs/xfs_log_format.h
+index 9f9aeb6..37a7ff9 100644
+--- a/fs/xfs/xfs_log_format.h
++++ b/fs/xfs/xfs_log_format.h
+@@ -18,6 +18,8 @@
+ #ifndef	__XFS_LOG_FORMAT_H__
+ #define __XFS_LOG_FORMAT_H__
+ 
++struct xfs_mount;
++
+ typedef __uint32_t xlog_tid_t;
+ 
+ #define XLOG_MIN_ICLOGS		2
+@@ -175,4 +177,6 @@ typedef struct xfs_log_iovec {
+ 	uint		i_type;		/* type of region */
+ } xfs_log_iovec_t;
+ 
++int	xfs_log_calc_unit_res(struct xfs_mount *mp, int unit_bytes);
++
+ #endif /* __XFS_LOG_FORMAT_H__ */
 -- 
 1.7.10.4
 
