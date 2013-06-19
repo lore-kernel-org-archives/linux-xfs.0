@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5FEA27FB0
+	by oss.sgi.com (Postfix) with ESMTP id 686037FB1
 	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 00:36:30 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0BF04AC008
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0940DAC005
 	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 22:36:29 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	GDhETondd8dmtki4 for <xfs@oss.sgi.com>;
+	FVHt2CoZH3C7GXEq for <xfs@oss.sgi.com>;
 	Tue, 18 Jun 2013 22:36:28 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UpB44-0003AK-9p
-	for xfs@oss.sgi.com; Wed, 19 Jun 2013 15:36:16 +1000
+	(envelope-from <dave@fromorbit.com>) id 1UpB49-0003AI-99
+	for xfs@oss.sgi.com; Wed, 19 Jun 2013 15:36:21 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UpB44-0000Dd-66
+	(envelope-from <dave@disappointment.disaster>) id 1UpB44-0000DU-3G
 	for xfs@oss.sgi.com; Wed, 19 Jun 2013 15:36:16 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 03/50] xfsprogs: teach logprint about icreate transaction
-Date: Wed, 19 Jun 2013 15:35:26 +1000
-Message-Id: <1371620173-712-4-git-send-email-david@fromorbit.com>
+Subject: [PATCH 01/50] xfsprogs: introduce xfs_icreate.h
+Date: Wed, 19 Jun 2013 15:35:24 +1000
+Message-Id: <1371620173-712-2-git-send-email-david@fromorbit.com>
 In-Reply-To: <1371620173-712-1-git-send-email-david@fromorbit.com>
 References: <1371620173-712-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,132 +38,135 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
+Bring the new inode create item definitions across from kernel space
+for xfs_logprint to be able to parse.
+
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/libxlog.h        |    1 +
- logprint/log_misc.c      |   36 ++++++++++++++++++++++++++++++++++++
- logprint/log_print_all.c |   21 +++++++++++++++++++++
- 3 files changed, 58 insertions(+)
+ include/Makefile           |    2 +-
+ include/xfs_icreate_item.h |   52 ++++++++++++++++++++++++++++++++++++++++++++
+ include/xfs_log.h          |    3 ++-
+ include/xfs_trans.h        |    7 ++++--
+ 4 files changed, 60 insertions(+), 4 deletions(-)
+ create mode 100644 include/xfs_icreate_item.h
 
-diff --git a/include/libxlog.h b/include/libxlog.h
-index bd71bfe..ff711e9 100644
---- a/include/libxlog.h
-+++ b/include/libxlog.h
-@@ -51,6 +51,7 @@ struct xlog {
- #include <xfs/xfs_buf_item.h>
- #include <xfs/xfs_inode_item.h>
- #include <xfs/xfs_extfree_item.h>
-+#include <xfs/xfs_icreate_item.h>
+diff --git a/include/Makefile b/include/Makefile
+index 92161bd..ba2c80d 100644
+--- a/include/Makefile
++++ b/include/Makefile
+@@ -26,7 +26,7 @@ QAHFILES = libxfs.h libxlog.h \
+ 	xfs_btree_trace.h xfs_buf_item.h xfs_cksum.h xfs_da_btree.h \
+ 	xfs_dinode.h xfs_dir2.h xfs_dir2_format.h \
+ 	xfs_extfree_item.h xfs_ialloc.h xfs_ialloc_btree.h \
+-	xfs_inode.h xfs_inode_item.h xfs_inum.h \
++	xfs_icreate_item.h xfs_inode.h xfs_inode_item.h xfs_inum.h \
+ 	xfs_log.h xfs_log_priv.h xfs_log_recover.h xfs_metadump.h \
+ 	xfs_mount.h xfs_quota.h xfs_rtalloc.h xfs_sb.h xfs_symlink.h \
+ 	xfs_trace.h xfs_trans.h xfs_trans_space.h xfs_dfrag.h
+diff --git a/include/xfs_icreate_item.h b/include/xfs_icreate_item.h
+new file mode 100644
+index 0000000..88ba8aa
+--- /dev/null
++++ b/include/xfs_icreate_item.h
+@@ -0,0 +1,52 @@
++/*
++ * Copyright (c) 2008-2010, Dave Chinner
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++#ifndef XFS_ICREATE_ITEM_H
++#define XFS_ICREATE_ITEM_H	1
++
++/*
++ * on disk log item structure
++ *
++ * Log recovery assumes the first two entries are the type and size and they fit
++ * in 32 bits. Also in host order (ugh) so they have to be 32 bit aligned so
++ * decoding can be done correctly.
++ */
++struct xfs_icreate_log {
++	__uint16_t	icl_type;	/* type of log format structure */
++	__uint16_t	icl_size;	/* size of log format structure */
++	__be32		icl_ag;		/* ag being allocated in */
++	__be32		icl_agbno;	/* start block of inode range */
++	__be32		icl_count;	/* number of inodes to initialise */
++	__be32		icl_isize;	/* size of inodes */
++	__be32		icl_length;	/* length of extent to initialise */
++	__be32		icl_gen;	/* inode generation number to use */
++};
++
++/* in memory log item structure */
++struct xfs_icreate_item {
++	struct xfs_log_item	ic_item;
++	struct xfs_icreate_log	ic_format;
++};
++
++extern kmem_zone_t *xfs_icreate_zone;	/* inode create item zone */
++
++void xfs_icreate_log(struct xfs_trans *tp, xfs_agnumber_t agno,
++			xfs_agblock_t agbno, unsigned int count,
++			unsigned int inode_size, xfs_agblock_t length,
++			unsigned int generation);
++
++#endif	/* XFS_ICREATE_ITEM_H */
+diff --git a/include/xfs_log.h b/include/xfs_log.h
+index 5caee96..70cc014 100644
+--- a/include/xfs_log.h
++++ b/include/xfs_log.h
+@@ -88,7 +88,8 @@ static inline xfs_lsn_t	_lsn_cmp(xfs_lsn_t lsn1, xfs_lsn_t lsn2)
+ #define XLOG_REG_TYPE_UNMOUNT		17
+ #define XLOG_REG_TYPE_COMMIT		18
+ #define XLOG_REG_TYPE_TRANSHDR		19
+-#define XLOG_REG_TYPE_MAX		19
++#define XLOG_REG_TYPE_ICREATE		20
++#define XLOG_REG_TYPE_MAX		20
  
- typedef union {
- 	xlog_rec_header_t       hic_header;
-diff --git a/logprint/log_misc.c b/logprint/log_misc.c
-index 7012208..9526ec4 100644
---- a/logprint/log_misc.c
-+++ b/logprint/log_misc.c
-@@ -70,6 +70,7 @@ char *trans_type[] = {
- 	"SWAPEXT",
- 	"SB_COUNT",
- 	"CHECKPOINT",
-+	"ICREATE",
- };
+ typedef struct xfs_log_iovec {
+ 	void		*i_addr;	/* beginning address of region */
+diff --git a/include/xfs_trans.h b/include/xfs_trans.h
+index acf1381..36a0026 100644
+--- a/include/xfs_trans.h
++++ b/include/xfs_trans.h
+@@ -48,6 +48,7 @@ typedef struct xfs_trans_header {
+ #define	XFS_LI_BUF		0x123c	/* v2 bufs, variable sized inode bufs */
+ #define	XFS_LI_DQUOT		0x123d
+ #define	XFS_LI_QUOTAOFF		0x123e
++#define	XFS_LI_ICREATE		0x123f
  
- typedef struct xlog_split_item {
-@@ -792,6 +793,35 @@ xlog_print_trans_dquot(xfs_caddr_t *ptr, int len, int *i, int num_ops)
- }	/* xlog_print_trans_dquot */
+ #define XFS_LI_TYPE_DESC \
+ 	{ XFS_LI_EFI,		"XFS_LI_EFI" }, \
+@@ -56,7 +57,8 @@ typedef struct xfs_trans_header {
+ 	{ XFS_LI_INODE,		"XFS_LI_INODE" }, \
+ 	{ XFS_LI_BUF,		"XFS_LI_BUF" }, \
+ 	{ XFS_LI_DQUOT,		"XFS_LI_DQUOT" }, \
+-	{ XFS_LI_QUOTAOFF,	"XFS_LI_QUOTAOFF" }
++	{ XFS_LI_QUOTAOFF,	"XFS_LI_QUOTAOFF" }, \
++	{ XFS_LI_ICREATE,	"XFS_LI_ICREATE" }
  
+ /*
+  * Transaction types.  Used to distinguish types of buffers.
+@@ -107,7 +109,8 @@ typedef struct xfs_trans_header {
+ #define	XFS_TRANS_SWAPEXT		40
+ #define	XFS_TRANS_SB_COUNT		41
+ #define	XFS_TRANS_CHECKPOINT		42
+-#define	XFS_TRANS_TYPE_MAX		42
++#define	XFS_TRANS_ICREATE		43
++#define	XFS_TRANS_TYPE_MAX		43
+ /* new transaction types need to be reflected in xfs_logprint(8) */
  
-+STATIC int
-+xlog_print_trans_icreate(
-+	xfs_caddr_t	*ptr,
-+	int		len,
-+	int		*i,
-+	int		num_ops)
-+{
-+	struct xfs_icreate_log	icl_buf = {0};
-+	struct xfs_icreate_log	*icl;
-+
-+	memmove(&icl_buf, *ptr, MIN(sizeof(struct xfs_icreate_log), len));
-+	icl = &icl_buf;
-+	(*i)++;
-+	*ptr += len;
-+
-+	/* handle complete header only */
-+	if (len != sizeof(struct xfs_icreate_log)) {
-+		printf(_("ICR: split header, not printing\n"));
-+		return 1; /* to skip leftover in next region */
-+	}
-+
-+	printf(_("ICR:  #ag: %d  agbno: 0x%x  len: %d\n"
-+		 "      cnt: %d  isize: %d    gen: 0x%x\n"),
-+		be32_to_cpu(icl->icl_ag), be32_to_cpu(icl->icl_agbno),
-+		be32_to_cpu(icl->icl_length), be32_to_cpu(icl->icl_count),
-+		be32_to_cpu(icl->icl_isize), be32_to_cpu(icl->icl_gen));
-+	return 0;
-+}
-+
- /******************************************************************************
-  *
-  *		Log print routines
-@@ -974,6 +1004,12 @@ xlog_print_record(int			  fd,
- 					&i, num_ops);
- 			break;
- 		    }
-+		    case XFS_LI_ICREATE: {
-+			skip = xlog_print_trans_icreate(&ptr,
-+					be32_to_cpu(op_head->oh_len),
-+					&i, num_ops);
-+			break;
-+		    }
- 		    case XFS_LI_INODE: {
- 			skip = xlog_print_trans_inode(&ptr,
- 					be32_to_cpu(op_head->oh_len),
-diff --git a/logprint/log_print_all.c b/logprint/log_print_all.c
-index 4626186..7f87016 100644
---- a/logprint/log_print_all.c
-+++ b/logprint/log_print_all.c
-@@ -435,6 +435,21 @@ xlog_recover_print_efi(
- 	free(f);
- }
- 
-+STATIC void
-+xlog_recover_print_icreate(
-+	struct xlog_recover_item	*item)
-+{
-+	struct xfs_icreate_log	*icl;
-+
-+	icl = (struct xfs_icreate_log *)item->ri_buf[0].i_addr;
-+
-+	printf(_("	ICR:  #ag: %d  agbno: 0x%x  len: %d\n"
-+		 "	      cnt: %d  isize: %d    gen: 0x%x\n"),
-+		be32_to_cpu(icl->icl_ag), be32_to_cpu(icl->icl_agbno),
-+		be32_to_cpu(icl->icl_length), be32_to_cpu(icl->icl_count),
-+		be32_to_cpu(icl->icl_isize), be32_to_cpu(icl->icl_gen));
-+}
-+
- void
- xlog_recover_print_logitem(
- 	xlog_recover_item_t	*item)
-@@ -443,6 +458,9 @@ xlog_recover_print_logitem(
- 	case XFS_LI_BUF:
- 		xlog_recover_print_buffer(item);
- 		break;
-+	case XFS_LI_ICREATE:
-+		xlog_recover_print_icreate(item);
-+		break;
- 	case XFS_LI_INODE:
- 		xlog_recover_print_inode(item);
- 		break;
-@@ -474,6 +492,9 @@ xlog_recover_print_item(
- 	case XFS_LI_BUF:
- 		printf("BUF");
- 		break;
-+	case XFS_LI_ICREATE:
-+		printf("ICR");
-+		break;
- 	case XFS_LI_INODE:
- 		printf("INO");
- 		break;
+ #define XFS_TRANS_TYPES \
 -- 
 1.7.10.4
 
