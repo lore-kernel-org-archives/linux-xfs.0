@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9DDD47FFB
-	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 00:37:06 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 678A97FC8
+	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 00:37:02 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8A5B6304039
-	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 22:37:06 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id DA9CFAC009
+	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 22:37:01 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	dB3s5WWZfaZdB5Br for <xfs@oss.sgi.com>;
-	Tue, 18 Jun 2013 22:37:05 -0700 (PDT)
-Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UpB4o-0003Cf-NY
-	for xfs@oss.sgi.com; Wed, 19 Jun 2013 15:37:02 +1000
+	8uPe3YP4DemPViwS for <xfs@oss.sgi.com>;
+	Tue, 18 Jun 2013 22:36:58 -0700 (PDT)
+Received: from [192.168.1.1] (helo=disappointment)
+	by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1UpB4e-0003BU-2f
+	for xfs@oss.sgi.com; Wed, 19 Jun 2013 15:36:52 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UpB4o-0000GM-If
-	for xfs@oss.sgi.com; Wed, 19 Jun 2013 15:37:02 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1UpB4T-0000FI-WD
+	for xfs@oss.sgi.com; Wed, 19 Jun 2013 15:36:42 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 37/50] xfs: remove __KERNEL__ check from xfs_dir2_leaf.c
-Date: Wed, 19 Jun 2013 15:36:00 +1000
-Message-Id: <1371620173-712-38-git-send-email-david@fromorbit.com>
+Subject: [PATCH 24/50] xfs: split out inode log item format definition
+Date: Wed, 19 Jun 2013 15:35:47 +1000
+Message-Id: <1371620173-712-25-git-send-email-david@fromorbit.com>
 In-Reply-To: <1371620173-712-1-git-send-email-david@fromorbit.com>
 References: <1371620173-712-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,33 +39,522 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-It's actually an ifndef section, which means it is only included in
-userspace. however, it's deep within the libxfs code, so it's
-unlikely that the condition checked in userspace can actually occur
-(search an empty leaf) through the libxfs interfaces. i.e. if it can
-happen in usrspace, it can happen in the kernel, so remove it from
-userspace too....
+Th elog item format definitions are shared with userspace. split the
+out of header files that contain kernel only defintions to make it
+simple to shared them.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- libxfs/xfs_dir2_leaf.c |    4 ----
- 1 file changed, 4 deletions(-)
+ include/Makefile                |    2 +-
+ include/libxfs.h                |    2 +-
+ include/libxlog.h               |    2 +-
+ include/xfs_inode.h             |   63 +------------
+ include/xfs_inode_item.h        |  170 ---------------------------------
+ include/xfs_inode_item_format.h |  198 +++++++++++++++++++++++++++++++++++++++
+ 6 files changed, 202 insertions(+), 235 deletions(-)
+ delete mode 100644 include/xfs_inode_item.h
+ create mode 100644 include/xfs_inode_item_format.h
 
-diff --git a/libxfs/xfs_dir2_leaf.c b/libxfs/xfs_dir2_leaf.c
-index 8c20b9e..55b7d05 100644
---- a/libxfs/xfs_dir2_leaf.c
-+++ b/libxfs/xfs_dir2_leaf.c
-@@ -1568,10 +1568,6 @@ xfs_dir2_leaf_search_hash(
- 	ents = xfs_dir3_leaf_ents_p(leaf);
- 	xfs_dir3_leaf_hdr_from_disk(&leafhdr, leaf);
+diff --git a/include/Makefile b/include/Makefile
+index 674ee06..6ff2749 100644
+--- a/include/Makefile
++++ b/include/Makefile
+@@ -26,7 +26,7 @@ QAHFILES = libxfs.h libxlog.h \
+ 	xfs_btree_trace.h xfs_buf_item.h xfs_cksum.h xfs_da_btree.h \
+ 	xfs_dinode.h xfs_dir2.h xfs_dir2_format.h \
+ 	xfs_extfree_item.h xfs_ialloc.h xfs_ialloc_btree.h \
+-	xfs_icreate_item.h xfs_inode.h xfs_inode_item.h xfs_inum.h \
++	xfs_icreate_item.h xfs_inode.h xfs_inode_item_format.h xfs_inum.h \
+ 	xfs_log.h xfs_log_priv.h xfs_log_recover.h xfs_metadump.h \
+ 	xfs_quota.h xfs_rtalloc.h xfs_sb.h xfs_symlink.h \
+ 	xfs_trace.h xfs_trans.h xfs_trans_resv.h xfs_trans_space.h xfs_dfrag.h
+diff --git a/include/libxfs.h b/include/libxfs.h
+index defaab5..0c0291b 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -48,7 +48,7 @@
+ #include <xfs/xfs_dinode.h>
+ #include <xfs/xfs_inode.h>
+ #include <xfs/xfs_buf_item.h>
+-#include <xfs/xfs_inode_item.h>
++#include <xfs/xfs_inode_item_format.h>
+ #include <xfs/xfs_alloc.h>
+ #include <xfs/xfs_btree.h>
+ #include <xfs/xfs_btree_trace.h>
+diff --git a/include/libxlog.h b/include/libxlog.h
+index ff711e9..e003b30 100644
+--- a/include/libxlog.h
++++ b/include/libxlog.h
+@@ -49,7 +49,7 @@ struct xlog {
  
--#ifndef __KERNEL__
--	if (!leafhdr.count)
--		return 0;
--#endif
- 	/*
- 	 * Note, the table cannot be empty, so we have to go through the loop.
- 	 * Binary search the leaf entries looking for our hash value.
+ #include <xfs/xfs_log_recover.h>
+ #include <xfs/xfs_buf_item.h>
+-#include <xfs/xfs_inode_item.h>
++#include <xfs/xfs_inode_item_format.h>
+ #include <xfs/xfs_extfree_item.h>
+ #include <xfs/xfs_icreate_item.h>
+ 
+diff --git a/include/xfs_inode.h b/include/xfs_inode.h
+index 739a975..60d55de 100644
+--- a/include/xfs_inode.h
++++ b/include/xfs_inode.h
+@@ -115,67 +115,7 @@ struct xfs_imap {
+  * chain off the mount structure by xfs_sync calls.
+  */
+ 
+-typedef struct xfs_ictimestamp {
+-	__int32_t	t_sec;		/* timestamp seconds */
+-	__int32_t	t_nsec;		/* timestamp nanoseconds */
+-} xfs_ictimestamp_t;
+-
+-/*
+- * NOTE:  This structure must be kept identical to struct xfs_dinode
+- * 	  in xfs_dinode.h except for the endianness annotations.
+- */
+-typedef struct xfs_icdinode {
+-	__uint16_t	di_magic;	/* inode magic # = XFS_DINODE_MAGIC */
+-	__uint16_t	di_mode;	/* mode and type of file */
+-	__int8_t	di_version;	/* inode version */
+-	__int8_t	di_format;	/* format of di_c data */
+-	__uint16_t	di_onlink;	/* old number of links to file */
+-	__uint32_t	di_uid;		/* owner's user id */
+-	__uint32_t	di_gid;		/* owner's group id */
+-	__uint32_t	di_nlink;	/* number of links to file */
+-	__uint16_t	di_projid_lo;	/* lower part of owner's project id */
+-	__uint16_t	di_projid_hi;	/* higher part of owner's project id */
+-	__uint8_t	di_pad[6];	/* unused, zeroed space */
+-	__uint16_t	di_flushiter;	/* incremented on flush */
+-	xfs_ictimestamp_t di_atime;	/* time last accessed */
+-	xfs_ictimestamp_t di_mtime;	/* time last modified */
+-	xfs_ictimestamp_t di_ctime;	/* time created/inode modified */
+-	xfs_fsize_t	di_size;	/* number of bytes in file */
+-	xfs_drfsbno_t	di_nblocks;	/* # of direct & btree blocks used */
+-	xfs_extlen_t	di_extsize;	/* basic/minimum extent size for file */
+-	xfs_extnum_t	di_nextents;	/* number of extents in data fork */
+-	xfs_aextnum_t	di_anextents;	/* number of extents in attribute fork*/
+-	__uint8_t	di_forkoff;	/* attr fork offs, <<3 for 64b align */
+-	__int8_t	di_aformat;	/* format of attr fork's data */
+-	__uint32_t	di_dmevmask;	/* DMIG event mask */
+-	__uint16_t	di_dmstate;	/* DMIG state info */
+-	__uint16_t	di_flags;	/* random flags, XFS_DIFLAG_... */
+-	__uint32_t	di_gen;		/* generation number */
+-
+-	/* di_next_unlinked is the only non-core field in the old dinode */
+-	xfs_agino_t	di_next_unlinked;/* agi unlinked list ptr */
+-
+-	/* start of the extended dinode, writable fields */
+-	__uint32_t	di_crc;		/* CRC of the inode */
+-	__uint64_t	di_changecount;	/* number of attribute changes */
+-	xfs_lsn_t	di_lsn;		/* flush sequence */
+-	__uint64_t	di_flags2;	/* more random flags */
+-	__uint8_t	di_pad2[16];	/* more padding for future expansion */
+-
+-	/* fields only written to during inode creation */
+-	xfs_ictimestamp_t di_crtime;	/* time created */
+-	xfs_ino_t	di_ino;		/* inode number */
+-	uuid_t		di_uuid;	/* UUID of the filesystem */
+-
+-	/* structure must be padded to 64 bit alignment */
+-} xfs_icdinode_t;
+-
+-static inline uint xfs_icdinode_size(int version)
+-{
+-	if (version == 3)
+-		return sizeof(struct xfs_icdinode);
+-	return offsetof(struct xfs_icdinode, di_next_unlinked);
+-}
++#include "xfs_inode_item_format.h"
+ 
+ /*
+  * Flags for xfs_ichgtime().
+@@ -300,7 +240,6 @@ void		xfs_inobp_check(struct xfs_mount *, struct xfs_buf *);
+ 
+ extern struct kmem_zone	*xfs_ifork_zone;
+ extern struct kmem_zone	*xfs_inode_zone;
+-extern struct kmem_zone	*xfs_ili_zone;
+ extern const struct xfs_buf_ops xfs_inode_buf_ops;
+ 
+ #endif	/* __XFS_INODE_H__ */
+diff --git a/include/xfs_inode_item.h b/include/xfs_inode_item.h
+deleted file mode 100644
+index 779812f..0000000
+--- a/include/xfs_inode_item.h
++++ /dev/null
+@@ -1,170 +0,0 @@
+-/*
+- * Copyright (c) 2000,2005 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it would be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write the Free Software Foundation,
+- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- */
+-#ifndef	__XFS_INODE_ITEM_H__
+-#define	__XFS_INODE_ITEM_H__
+-
+-/*
+- * This is the structure used to lay out an inode log item in the
+- * log.  The size of the inline data/extents/b-tree root to be logged
+- * (if any) is indicated in the ilf_dsize field.  Changes to this structure
+- * must be added on to the end.
+- */
+-typedef struct xfs_inode_log_format {
+-	__uint16_t		ilf_type;	/* inode log item type */
+-	__uint16_t		ilf_size;	/* size of this item */
+-	__uint32_t		ilf_fields;	/* flags for fields logged */
+-	__uint16_t		ilf_asize;	/* size of attr d/ext/root */
+-	__uint16_t		ilf_dsize;	/* size of data/ext/root */
+-	__uint64_t		ilf_ino;	/* inode number */
+-	union {
+-		__uint32_t	ilfu_rdev;	/* rdev value for dev inode*/
+-		uuid_t		ilfu_uuid;	/* mount point value */
+-	} ilf_u;
+-	__int64_t		ilf_blkno;	/* blkno of inode buffer */
+-	__int32_t		ilf_len;	/* len of inode buffer */
+-	__int32_t		ilf_boffset;	/* off of inode in buffer */
+-} xfs_inode_log_format_t;
+-
+-typedef struct xfs_inode_log_format_32 {
+-	__uint16_t		ilf_type;	/* inode log item type */
+-	__uint16_t		ilf_size;	/* size of this item */
+-	__uint32_t		ilf_fields;	/* flags for fields logged */
+-	__uint16_t		ilf_asize;	/* size of attr d/ext/root */
+-	__uint16_t		ilf_dsize;	/* size of data/ext/root */
+-	__uint64_t		ilf_ino;	/* inode number */
+-	union {
+-		__uint32_t	ilfu_rdev;	/* rdev value for dev inode*/
+-		uuid_t		ilfu_uuid;	/* mount point value */
+-	} ilf_u;
+-	__int64_t		ilf_blkno;	/* blkno of inode buffer */
+-	__int32_t		ilf_len;	/* len of inode buffer */
+-	__int32_t		ilf_boffset;	/* off of inode in buffer */
+-} __attribute__((packed)) xfs_inode_log_format_32_t;
+-
+-typedef struct xfs_inode_log_format_64 {
+-	__uint16_t		ilf_type;	/* inode log item type */
+-	__uint16_t		ilf_size;	/* size of this item */
+-	__uint32_t		ilf_fields;	/* flags for fields logged */
+-	__uint16_t		ilf_asize;	/* size of attr d/ext/root */
+-	__uint16_t		ilf_dsize;	/* size of data/ext/root */
+-	__uint32_t		ilf_pad;	/* pad for 64 bit boundary */
+-	__uint64_t		ilf_ino;	/* inode number */
+-	union {
+-		__uint32_t	ilfu_rdev;	/* rdev value for dev inode*/
+-		uuid_t		ilfu_uuid;	/* mount point value */
+-	} ilf_u;
+-	__int64_t		ilf_blkno;	/* blkno of inode buffer */
+-	__int32_t		ilf_len;	/* len of inode buffer */
+-	__int32_t		ilf_boffset;	/* off of inode in buffer */
+-} xfs_inode_log_format_64_t;
+-
+-/*
+- * Flags for xfs_trans_log_inode flags field.
+- */
+-#define	XFS_ILOG_CORE	0x001	/* log standard inode fields */
+-#define	XFS_ILOG_DDATA	0x002	/* log i_df.if_data */
+-#define	XFS_ILOG_DEXT	0x004	/* log i_df.if_extents */
+-#define	XFS_ILOG_DBROOT	0x008	/* log i_df.i_broot */
+-#define	XFS_ILOG_DEV	0x010	/* log the dev field */
+-#define	XFS_ILOG_UUID	0x020	/* log the uuid field */
+-#define	XFS_ILOG_ADATA	0x040	/* log i_af.if_data */
+-#define	XFS_ILOG_AEXT	0x080	/* log i_af.if_extents */
+-#define	XFS_ILOG_ABROOT	0x100	/* log i_af.i_broot */
+-
+-
+-/*
+- * The timestamps are dirty, but not necessarily anything else in the inode
+- * core.  Unlike the other fields above this one must never make it to disk
+- * in the ilf_fields of the inode_log_format, but is purely store in-memory in
+- * ili_fields in the inode_log_item.
+- */
+-#define XFS_ILOG_TIMESTAMP	0x4000
+-
+-#define	XFS_ILOG_NONCORE	(XFS_ILOG_DDATA | XFS_ILOG_DEXT | \
+-				 XFS_ILOG_DBROOT | XFS_ILOG_DEV | \
+-				 XFS_ILOG_UUID | XFS_ILOG_ADATA | \
+-				 XFS_ILOG_AEXT | XFS_ILOG_ABROOT)
+-
+-#define	XFS_ILOG_DFORK		(XFS_ILOG_DDATA | XFS_ILOG_DEXT | \
+-				 XFS_ILOG_DBROOT)
+-
+-#define	XFS_ILOG_AFORK		(XFS_ILOG_ADATA | XFS_ILOG_AEXT | \
+-				 XFS_ILOG_ABROOT)
+-
+-#define	XFS_ILOG_ALL		(XFS_ILOG_CORE | XFS_ILOG_DDATA | \
+-				 XFS_ILOG_DEXT | XFS_ILOG_DBROOT | \
+-				 XFS_ILOG_DEV | XFS_ILOG_UUID | \
+-				 XFS_ILOG_ADATA | XFS_ILOG_AEXT | \
+-				 XFS_ILOG_ABROOT | XFS_ILOG_TIMESTAMP)
+-
+-static inline int xfs_ilog_fbroot(int w)
+-{
+-	return (w == XFS_DATA_FORK ? XFS_ILOG_DBROOT : XFS_ILOG_ABROOT);
+-}
+-
+-static inline int xfs_ilog_fext(int w)
+-{
+-	return (w == XFS_DATA_FORK ? XFS_ILOG_DEXT : XFS_ILOG_AEXT);
+-}
+-
+-static inline int xfs_ilog_fdata(int w)
+-{
+-	return (w == XFS_DATA_FORK ? XFS_ILOG_DDATA : XFS_ILOG_ADATA);
+-}
+-
+-#ifdef __KERNEL__
+-
+-struct xfs_buf;
+-struct xfs_bmbt_rec;
+-struct xfs_inode;
+-struct xfs_mount;
+-
+-
+-typedef struct xfs_inode_log_item {
+-	xfs_log_item_t		ili_item;	   /* common portion */
+-	struct xfs_inode	*ili_inode;	   /* inode ptr */
+-	xfs_lsn_t		ili_flush_lsn;	   /* lsn at last flush */
+-	xfs_lsn_t		ili_last_lsn;	   /* lsn at last transaction */
+-	unsigned short		ili_lock_flags;	   /* lock flags */
+-	unsigned short		ili_logged;	   /* flushed logged data */
+-	unsigned int		ili_last_fields;   /* fields when flushed */
+-	unsigned int		ili_fields;	   /* fields to be logged */
+-	struct xfs_bmbt_rec	*ili_extents_buf;  /* array of logged
+-						      data exts */
+-	struct xfs_bmbt_rec	*ili_aextents_buf; /* array of logged
+-						      attr exts */
+-	xfs_inode_log_format_t	ili_format;	   /* logged structure */
+-} xfs_inode_log_item_t;
+-
+-
+-static inline int xfs_inode_clean(xfs_inode_t *ip)
+-{
+-	return !ip->i_itemp || !(ip->i_itemp->ili_fields & XFS_ILOG_ALL);
+-}
+-
+-extern void xfs_inode_item_init(struct xfs_inode *, struct xfs_mount *);
+-extern void xfs_inode_item_destroy(struct xfs_inode *);
+-extern void xfs_iflush_done(struct xfs_buf *, struct xfs_log_item *);
+-extern void xfs_istale_done(struct xfs_buf *, struct xfs_log_item *);
+-extern void xfs_iflush_abort(struct xfs_inode *, bool);
+-extern int xfs_inode_item_format_convert(xfs_log_iovec_t *,
+-					 xfs_inode_log_format_t *);
+-
+-#endif	/* __KERNEL__ */
+-
+-#endif	/* __XFS_INODE_ITEM_H__ */
+diff --git a/include/xfs_inode_item_format.h b/include/xfs_inode_item_format.h
+new file mode 100644
+index 0000000..835121d
+--- /dev/null
++++ b/include/xfs_inode_item_format.h
+@@ -0,0 +1,198 @@
++/*
++ * Copyright (c) 2000,2005 Silicon Graphics, Inc.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++#ifndef	__XFS_INODE_ITEM_FORMAT_H__
++#define	__XFS_INODE_ITEM_FORMAT_H__
++
++/*
++ * This is the structure used to lay out an inode log item in the
++ * log.  The size of the inline data/extents/b-tree root to be logged
++ * (if any) is indicated in the ilf_dsize field.  Changes to this structure
++ * must be added on to the end.
++ */
++typedef struct xfs_inode_log_format {
++	__uint16_t		ilf_type;	/* inode log item type */
++	__uint16_t		ilf_size;	/* size of this item */
++	__uint32_t		ilf_fields;	/* flags for fields logged */
++	__uint16_t		ilf_asize;	/* size of attr d/ext/root */
++	__uint16_t		ilf_dsize;	/* size of data/ext/root */
++	__uint64_t		ilf_ino;	/* inode number */
++	union {
++		__uint32_t	ilfu_rdev;	/* rdev value for dev inode*/
++		uuid_t		ilfu_uuid;	/* mount point value */
++	} ilf_u;
++	__int64_t		ilf_blkno;	/* blkno of inode buffer */
++	__int32_t		ilf_len;	/* len of inode buffer */
++	__int32_t		ilf_boffset;	/* off of inode in buffer */
++} xfs_inode_log_format_t;
++
++typedef struct xfs_inode_log_format_32 {
++	__uint16_t		ilf_type;	/* inode log item type */
++	__uint16_t		ilf_size;	/* size of this item */
++	__uint32_t		ilf_fields;	/* flags for fields logged */
++	__uint16_t		ilf_asize;	/* size of attr d/ext/root */
++	__uint16_t		ilf_dsize;	/* size of data/ext/root */
++	__uint64_t		ilf_ino;	/* inode number */
++	union {
++		__uint32_t	ilfu_rdev;	/* rdev value for dev inode*/
++		uuid_t		ilfu_uuid;	/* mount point value */
++	} ilf_u;
++	__int64_t		ilf_blkno;	/* blkno of inode buffer */
++	__int32_t		ilf_len;	/* len of inode buffer */
++	__int32_t		ilf_boffset;	/* off of inode in buffer */
++} __attribute__((packed)) xfs_inode_log_format_32_t;
++
++typedef struct xfs_inode_log_format_64 {
++	__uint16_t		ilf_type;	/* inode log item type */
++	__uint16_t		ilf_size;	/* size of this item */
++	__uint32_t		ilf_fields;	/* flags for fields logged */
++	__uint16_t		ilf_asize;	/* size of attr d/ext/root */
++	__uint16_t		ilf_dsize;	/* size of data/ext/root */
++	__uint32_t		ilf_pad;	/* pad for 64 bit boundary */
++	__uint64_t		ilf_ino;	/* inode number */
++	union {
++		__uint32_t	ilfu_rdev;	/* rdev value for dev inode*/
++		uuid_t		ilfu_uuid;	/* mount point value */
++	} ilf_u;
++	__int64_t		ilf_blkno;	/* blkno of inode buffer */
++	__int32_t		ilf_len;	/* len of inode buffer */
++	__int32_t		ilf_boffset;	/* off of inode in buffer */
++} xfs_inode_log_format_64_t;
++
++/*
++ * Flags for xfs_trans_log_inode flags field.
++ */
++#define	XFS_ILOG_CORE	0x001	/* log standard inode fields */
++#define	XFS_ILOG_DDATA	0x002	/* log i_df.if_data */
++#define	XFS_ILOG_DEXT	0x004	/* log i_df.if_extents */
++#define	XFS_ILOG_DBROOT	0x008	/* log i_df.i_broot */
++#define	XFS_ILOG_DEV	0x010	/* log the dev field */
++#define	XFS_ILOG_UUID	0x020	/* log the uuid field */
++#define	XFS_ILOG_ADATA	0x040	/* log i_af.if_data */
++#define	XFS_ILOG_AEXT	0x080	/* log i_af.if_extents */
++#define	XFS_ILOG_ABROOT	0x100	/* log i_af.i_broot */
++
++
++/*
++ * The timestamps are dirty, but not necessarily anything else in the inode
++ * core.  Unlike the other fields above this one must never make it to disk
++ * in the ilf_fields of the inode_log_format, but is purely store in-memory in
++ * ili_fields in the inode_log_item.
++ */
++#define XFS_ILOG_TIMESTAMP	0x4000
++
++#define	XFS_ILOG_NONCORE	(XFS_ILOG_DDATA | XFS_ILOG_DEXT | \
++				 XFS_ILOG_DBROOT | XFS_ILOG_DEV | \
++				 XFS_ILOG_UUID | XFS_ILOG_ADATA | \
++				 XFS_ILOG_AEXT | XFS_ILOG_ABROOT)
++
++#define	XFS_ILOG_DFORK		(XFS_ILOG_DDATA | XFS_ILOG_DEXT | \
++				 XFS_ILOG_DBROOT)
++
++#define	XFS_ILOG_AFORK		(XFS_ILOG_ADATA | XFS_ILOG_AEXT | \
++				 XFS_ILOG_ABROOT)
++
++#define	XFS_ILOG_ALL		(XFS_ILOG_CORE | XFS_ILOG_DDATA | \
++				 XFS_ILOG_DEXT | XFS_ILOG_DBROOT | \
++				 XFS_ILOG_DEV | XFS_ILOG_UUID | \
++				 XFS_ILOG_ADATA | XFS_ILOG_AEXT | \
++				 XFS_ILOG_ABROOT | XFS_ILOG_TIMESTAMP)
++
++static inline int xfs_ilog_fbroot(int w)
++{
++	return (w == XFS_DATA_FORK ? XFS_ILOG_DBROOT : XFS_ILOG_ABROOT);
++}
++
++static inline int xfs_ilog_fext(int w)
++{
++	return (w == XFS_DATA_FORK ? XFS_ILOG_DEXT : XFS_ILOG_AEXT);
++}
++
++static inline int xfs_ilog_fdata(int w)
++{
++	return (w == XFS_DATA_FORK ? XFS_ILOG_DDATA : XFS_ILOG_ADATA);
++}
++
++/*
++ * Incore version of the on-disk inode core structures. We log this directly
++ * into the journal in host CPU format (for better or worse)i and as such
++ * directly mirrors the xfs_dinode structure as it must contain all the same
++ * information.
++ */
++typedef struct xfs_ictimestamp {
++	__int32_t	t_sec;		/* timestamp seconds */
++	__int32_t	t_nsec;		/* timestamp nanoseconds */
++} xfs_ictimestamp_t;
++
++/*
++ * NOTE:  This structure must be kept identical to struct xfs_dinode
++ *	  in xfs_dinode.h except for the endianness annotations.
++ */
++typedef struct xfs_icdinode {
++	__uint16_t	di_magic;	/* inode magic # = XFS_DINODE_MAGIC */
++	__uint16_t	di_mode;	/* mode and type of file */
++	__int8_t	di_version;	/* inode version */
++	__int8_t	di_format;	/* format of di_c data */
++	__uint16_t	di_onlink;	/* old number of links to file */
++	__uint32_t	di_uid;		/* owner's user id */
++	__uint32_t	di_gid;		/* owner's group id */
++	__uint32_t	di_nlink;	/* number of links to file */
++	__uint16_t	di_projid_lo;	/* lower part of owner's project id */
++	__uint16_t	di_projid_hi;	/* higher part of owner's project id */
++	__uint8_t	di_pad[6];	/* unused, zeroed space */
++	__uint16_t	di_flushiter;	/* incremented on flush */
++	xfs_ictimestamp_t di_atime;	/* time last accessed */
++	xfs_ictimestamp_t di_mtime;	/* time last modified */
++	xfs_ictimestamp_t di_ctime;	/* time created/inode modified */
++	xfs_fsize_t	di_size;	/* number of bytes in file */
++	xfs_drfsbno_t	di_nblocks;	/* # of direct & btree blocks used */
++	xfs_extlen_t	di_extsize;	/* basic/minimum extent size for file */
++	xfs_extnum_t	di_nextents;	/* number of extents in data fork */
++	xfs_aextnum_t	di_anextents;	/* number of extents in attribute fork*/
++	__uint8_t	di_forkoff;	/* attr fork offs, <<3 for 64b align */
++	__int8_t	di_aformat;	/* format of attr fork's data */
++	__uint32_t	di_dmevmask;	/* DMIG event mask */
++	__uint16_t	di_dmstate;	/* DMIG state info */
++	__uint16_t	di_flags;	/* random flags, XFS_DIFLAG_... */
++	__uint32_t	di_gen;		/* generation number */
++
++	/* di_next_unlinked is the only non-core field in the old dinode */
++	xfs_agino_t	di_next_unlinked;/* agi unlinked list ptr */
++
++	/* start of the extended dinode, writable fields */
++	__uint32_t	di_crc;		/* CRC of the inode */
++	__uint64_t	di_changecount;	/* number of attribute changes */
++	xfs_lsn_t	di_lsn;		/* flush sequence */
++	__uint64_t	di_flags2;	/* more random flags */
++	__uint8_t	di_pad2[16];	/* more padding for future expansion */
++
++	/* fields only written to during inode creation */
++	xfs_ictimestamp_t di_crtime;	/* time created */
++	xfs_ino_t	di_ino;		/* inode number */
++	uuid_t		di_uuid;	/* UUID of the filesystem */
++
++	/* structure must be padded to 64 bit alignment */
++} xfs_icdinode_t;
++
++static inline uint xfs_icdinode_size(int version)
++{
++	if (version == 3)
++		return sizeof(struct xfs_icdinode);
++	return offsetof(struct xfs_icdinode, di_next_unlinked);
++}
++
++#endif	/* __XFS_INODE_ITEM_FORMAT_H__ */
 -- 
 1.7.10.4
 
