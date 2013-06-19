@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C85858003
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 1470E7FFE
 	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 00:37:07 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B67E18F8033
-	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 22:37:07 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id B43F8AC002
+	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 22:37:06 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	2UqIcbRUc99wYSGF for <xfs@oss.sgi.com>;
-	Tue, 18 Jun 2013 22:37:06 -0700 (PDT)
+	VHitb1AanZZ079xB for <xfs@oss.sgi.com>;
+	Tue, 18 Jun 2013 22:37:04 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UpB4o-0003Cj-R7
-	for xfs@oss.sgi.com; Wed, 19 Jun 2013 15:37:02 +1000
+	(envelope-from <dave@fromorbit.com>) id 1UpB4Z-0003Ba-NC
+	for xfs@oss.sgi.com; Wed, 19 Jun 2013 15:36:47 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UpB4o-0000Gd-NV
-	for xfs@oss.sgi.com; Wed, 19 Jun 2013 15:37:02 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1UpB4U-0000Fh-6V
+	for xfs@oss.sgi.com; Wed, 19 Jun 2013 15:36:42 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 40/50] xfs: move kernel specific type definitions to xfs.h
-Date: Wed, 19 Jun 2013 15:36:03 +1000
-Message-Id: <1371620173-712-41-git-send-email-david@fromorbit.com>
+Subject: [PATCH 30/50] xfs: split out inode log item format definition
+Date: Wed, 19 Jun 2013 15:35:53 +1000
+Message-Id: <1371620173-712-31-git-send-email-david@fromorbit.com>
 In-Reply-To: <1371620173-712-1-git-send-email-david@fromorbit.com>
 References: <1371620173-712-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,63 +38,330 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-xfs_types.h is shared with userspace, so having kernel specific
-types defined in it is problematic. Move all the kernel specific
-defines to xfs_linux.h so we can remove the __KERNEL__ guards from
-xfs_types.h
+The EFI/EFD item format definitions are shared with userspace. Split
+the out of header files that contain kernel only defintions to make
+it simple to shared them.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/xfs_types.h |   36 ------------------------------------
- 1 file changed, 36 deletions(-)
+ include/Makefile                  |    8 +-
+ include/libxlog.h                 |    2 +-
+ include/xfs_extfree_item.h        |  165 -------------------------------------
+ include/xfs_extfree_item_format.h |  101 +++++++++++++++++++++++
+ 4 files changed, 108 insertions(+), 168 deletions(-)
+ delete mode 100644 include/xfs_extfree_item.h
+ create mode 100644 include/xfs_extfree_item_format.h
 
-diff --git a/include/xfs_types.h b/include/xfs_types.h
-index dd6bf71..b4a7d5f 100644
---- a/include/xfs_types.h
-+++ b/include/xfs_types.h
-@@ -18,42 +18,6 @@
- #ifndef __XFS_TYPES_H__
- #define	__XFS_TYPES_H__
+diff --git a/include/Makefile b/include/Makefile
+index b713884..2bd7fbe 100644
+--- a/include/Makefile
++++ b/include/Makefile
+@@ -24,8 +24,12 @@ QAHFILES = libxfs.h libxlog.h \
+ 	xfs_ag.h xfs_alloc.h xfs_alloc_btree.h xfs_arch.h xfs_attr_leaf.h \
+ 	xfs_attr_sf.h xfs_bit.h xfs_bmap.h xfs_bmap_btree.h xfs_btree.h \
+ 	xfs_btree_trace.h xfs_buf_item_format.h xfs_cksum.h xfs_da_btree.h \
+-	xfs_dinode.h xfs_dir2.h xfs_dir2_format.h \
+-	xfs_extfree_item.h xfs_ialloc.h xfs_ialloc_btree.h \
++	xfs_dinode.h \
++	xfs_dir2.h \
++	xfs_dir2_format.h \
++	xfs_extfree_item_format.h \
++	xfs_ialloc.h \
++	xfs_ialloc_btree.h \
+ 	xfs_icreate_item.h \
+ 	xfs_inode_buf.h \
+ 	xfs_inode_fork.h \
+diff --git a/include/libxlog.h b/include/libxlog.h
+index 9227a3a..9570ae1 100644
+--- a/include/libxlog.h
++++ b/include/libxlog.h
+@@ -50,7 +50,7 @@ struct xlog {
+ #include <xfs/xfs_log_recover.h>
+ #include <xfs/xfs_buf_item_format.h>
+ #include <xfs/xfs_inode_item_format.h>
+-#include <xfs/xfs_extfree_item.h>
++#include <xfs/xfs_extfree_item_format.h>
+ #include <xfs/xfs_icreate_item.h>
  
+ typedef union {
+diff --git a/include/xfs_extfree_item.h b/include/xfs_extfree_item.h
+deleted file mode 100644
+index 4322224..0000000
+--- a/include/xfs_extfree_item.h
++++ /dev/null
+@@ -1,165 +0,0 @@
+-/*
+- * Copyright (c) 2000,2005 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it would be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write the Free Software Foundation,
+- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- */
+-#ifndef	__XFS_EXTFREE_ITEM_H__
+-#define	__XFS_EXTFREE_ITEM_H__
+-
+-struct xfs_mount;
+-struct kmem_zone;
+-
+-typedef struct xfs_extent {
+-	xfs_dfsbno_t	ext_start;
+-	xfs_extlen_t	ext_len;
+-} xfs_extent_t;
+-
+-/*
+- * Since an xfs_extent_t has types (start:64, len: 32)
+- * there are different alignments on 32 bit and 64 bit kernels.
+- * So we provide the different variants for use by a
+- * conversion routine.
+- */
+-
+-typedef struct xfs_extent_32 {
+-	__uint64_t	ext_start;
+-	__uint32_t	ext_len;
+-} __attribute__((packed)) xfs_extent_32_t;
+-
+-typedef struct xfs_extent_64 {
+-	__uint64_t	ext_start;
+-	__uint32_t	ext_len;
+-	__uint32_t	ext_pad;
+-} xfs_extent_64_t;
+-
+-/*
+- * This is the structure used to lay out an efi log item in the
+- * log.  The efi_extents field is a variable size array whose
+- * size is given by efi_nextents.
+- */
+-typedef struct xfs_efi_log_format {
+-	__uint16_t		efi_type;	/* efi log item type */
+-	__uint16_t		efi_size;	/* size of this item */
+-	__uint32_t		efi_nextents;	/* # extents to free */
+-	__uint64_t		efi_id;		/* efi identifier */
+-	xfs_extent_t		efi_extents[1];	/* array of extents to free */
+-} xfs_efi_log_format_t;
+-
+-typedef struct xfs_efi_log_format_32 {
+-	__uint16_t		efi_type;	/* efi log item type */
+-	__uint16_t		efi_size;	/* size of this item */
+-	__uint32_t		efi_nextents;	/* # extents to free */
+-	__uint64_t		efi_id;		/* efi identifier */
+-	xfs_extent_32_t		efi_extents[1];	/* array of extents to free */
+-} __attribute__((packed)) xfs_efi_log_format_32_t;
+-
+-typedef struct xfs_efi_log_format_64 {
+-	__uint16_t		efi_type;	/* efi log item type */
+-	__uint16_t		efi_size;	/* size of this item */
+-	__uint32_t		efi_nextents;	/* # extents to free */
+-	__uint64_t		efi_id;		/* efi identifier */
+-	xfs_extent_64_t		efi_extents[1];	/* array of extents to free */
+-} xfs_efi_log_format_64_t;
+-
+-/*
+- * This is the structure used to lay out an efd log item in the
+- * log.  The efd_extents array is a variable size array whose
+- * size is given by efd_nextents;
+- */
+-typedef struct xfs_efd_log_format {
+-	__uint16_t		efd_type;	/* efd log item type */
+-	__uint16_t		efd_size;	/* size of this item */
+-	__uint32_t		efd_nextents;	/* # of extents freed */
+-	__uint64_t		efd_efi_id;	/* id of corresponding efi */
+-	xfs_extent_t		efd_extents[1];	/* array of extents freed */
+-} xfs_efd_log_format_t;
+-
+-typedef struct xfs_efd_log_format_32 {
+-	__uint16_t		efd_type;	/* efd log item type */
+-	__uint16_t		efd_size;	/* size of this item */
+-	__uint32_t		efd_nextents;	/* # of extents freed */
+-	__uint64_t		efd_efi_id;	/* id of corresponding efi */
+-	xfs_extent_32_t		efd_extents[1];	/* array of extents freed */
+-} __attribute__((packed)) xfs_efd_log_format_32_t;
+-
+-typedef struct xfs_efd_log_format_64 {
+-	__uint16_t		efd_type;	/* efd log item type */
+-	__uint16_t		efd_size;	/* size of this item */
+-	__uint32_t		efd_nextents;	/* # of extents freed */
+-	__uint64_t		efd_efi_id;	/* id of corresponding efi */
+-	xfs_extent_64_t		efd_extents[1];	/* array of extents freed */
+-} xfs_efd_log_format_64_t;
+-
+-
 -#ifdef __KERNEL__
 -
 -/*
-- * Additional type declarations for XFS
+- * Max number of extents in fast allocation path.
 - */
--typedef signed char		__int8_t;
--typedef unsigned char		__uint8_t;
--typedef signed short int	__int16_t;
--typedef unsigned short int	__uint16_t;
--typedef signed int		__int32_t;
--typedef unsigned int		__uint32_t;
--typedef signed long long int	__int64_t;
--typedef unsigned long long int	__uint64_t;
+-#define	XFS_EFI_MAX_FAST_EXTENTS	16
 -
--typedef __uint32_t		inst_t;		/* an instruction */
+-/*
+- * Define EFI flag bits. Manipulated by set/clear/test_bit operators.
+- */
+-#define	XFS_EFI_RECOVERED	1
 -
--typedef __s64			xfs_off_t;	/* <file offset> type */
--typedef unsigned long long	xfs_ino_t;	/* <inode> type */
--typedef __s64			xfs_daddr_t;	/* <disk address> type */
--typedef char *			xfs_caddr_t;	/* <core address> type */
--typedef __u32			xfs_dev_t;
--typedef __u32			xfs_nlink_t;
+-/*
+- * This is the "extent free intention" log item.  It is used to log the fact
+- * that some extents need to be free.  It is used in conjunction with the
+- * "extent free done" log item described below.
+- *
+- * The EFI is reference counted so that it is not freed prior to both the EFI
+- * and EFD being committed and unpinned. This ensures that when the last
+- * reference goes away the EFI will always be in the AIL as it has been
+- * unpinned, regardless of whether the EFD is processed before or after the EFI.
+- */
+-typedef struct xfs_efi_log_item {
+-	xfs_log_item_t		efi_item;
+-	atomic_t		efi_refcount;
+-	atomic_t		efi_next_extent;
+-	unsigned long		efi_flags;	/* misc flags */
+-	xfs_efi_log_format_t	efi_format;
+-} xfs_efi_log_item_t;
 -
--/* __psint_t is the same size as a pointer */
--#if (BITS_PER_LONG == 32)
--typedef __int32_t __psint_t;
--typedef __uint32_t __psunsigned_t;
--#elif (BITS_PER_LONG == 64)
--typedef __int64_t __psint_t;
--typedef __uint64_t __psunsigned_t;
--#else
--#error BITS_PER_LONG must be 32 or 64
--#endif
+-/*
+- * This is the "extent free done" log item.  It is used to log
+- * the fact that some extents earlier mentioned in an efi item
+- * have been freed.
+- */
+-typedef struct xfs_efd_log_item {
+-	xfs_log_item_t		efd_item;
+-	xfs_efi_log_item_t	*efd_efip;
+-	uint			efd_next_extent;
+-	xfs_efd_log_format_t	efd_format;
+-} xfs_efd_log_item_t;
+-
+-/*
+- * Max number of extents in fast allocation path.
+- */
+-#define	XFS_EFD_MAX_FAST_EXTENTS	16
+-
+-extern struct kmem_zone	*xfs_efi_zone;
+-extern struct kmem_zone	*xfs_efd_zone;
+-
+-xfs_efi_log_item_t	*xfs_efi_init(struct xfs_mount *, uint);
+-xfs_efd_log_item_t	*xfs_efd_init(struct xfs_mount *, xfs_efi_log_item_t *,
+-				      uint);
+-int			xfs_efi_copy_format(xfs_log_iovec_t *buf,
+-					    xfs_efi_log_format_t *dst_efi_fmt);
+-void			xfs_efi_item_free(xfs_efi_log_item_t *);
 -
 -#endif	/* __KERNEL__ */
 -
- typedef __uint32_t	prid_t;		/* project ID */
- 
- typedef __uint32_t	xfs_agblock_t;	/* blockno in alloc. group */
+-#endif	/* __XFS_EXTFREE_ITEM_H__ */
+diff --git a/include/xfs_extfree_item_format.h b/include/xfs_extfree_item_format.h
+new file mode 100644
+index 0000000..ddd1fbb
+--- /dev/null
++++ b/include/xfs_extfree_item_format.h
+@@ -0,0 +1,101 @@
++/*
++ * Copyright (c) 2000,2005 Silicon Graphics, Inc.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++#ifndef	__XFS_EXTFREE_ITEM_FORMAT_H__
++#define	__XFS_EXTFREE_ITEM_FORMAT_H__
++
++typedef struct xfs_extent {
++	xfs_dfsbno_t	ext_start;
++	xfs_extlen_t	ext_len;
++} xfs_extent_t;
++
++/*
++ * Since an xfs_extent_t has types (start:64, len: 32)
++ * there are different alignments on 32 bit and 64 bit kernels.
++ * So we provide the different variants for use by a
++ * conversion routine.
++ */
++typedef struct xfs_extent_32 {
++	__uint64_t	ext_start;
++	__uint32_t	ext_len;
++} __attribute__((packed)) xfs_extent_32_t;
++
++typedef struct xfs_extent_64 {
++	__uint64_t	ext_start;
++	__uint32_t	ext_len;
++	__uint32_t	ext_pad;
++} xfs_extent_64_t;
++
++/*
++ * This is the structure used to lay out an efi log item in the
++ * log.  The efi_extents field is a variable size array whose
++ * size is given by efi_nextents.
++ */
++typedef struct xfs_efi_log_format {
++	__uint16_t		efi_type;	/* efi log item type */
++	__uint16_t		efi_size;	/* size of this item */
++	__uint32_t		efi_nextents;	/* # extents to free */
++	__uint64_t		efi_id;		/* efi identifier */
++	xfs_extent_t		efi_extents[1];	/* array of extents to free */
++} xfs_efi_log_format_t;
++
++typedef struct xfs_efi_log_format_32 {
++	__uint16_t		efi_type;	/* efi log item type */
++	__uint16_t		efi_size;	/* size of this item */
++	__uint32_t		efi_nextents;	/* # extents to free */
++	__uint64_t		efi_id;		/* efi identifier */
++	xfs_extent_32_t		efi_extents[1];	/* array of extents to free */
++} __attribute__((packed)) xfs_efi_log_format_32_t;
++
++typedef struct xfs_efi_log_format_64 {
++	__uint16_t		efi_type;	/* efi log item type */
++	__uint16_t		efi_size;	/* size of this item */
++	__uint32_t		efi_nextents;	/* # extents to free */
++	__uint64_t		efi_id;		/* efi identifier */
++	xfs_extent_64_t		efi_extents[1];	/* array of extents to free */
++} xfs_efi_log_format_64_t;
++
++/*
++ * This is the structure used to lay out an efd log item in the
++ * log.  The efd_extents array is a variable size array whose
++ * size is given by efd_nextents;
++ */
++typedef struct xfs_efd_log_format {
++	__uint16_t		efd_type;	/* efd log item type */
++	__uint16_t		efd_size;	/* size of this item */
++	__uint32_t		efd_nextents;	/* # of extents freed */
++	__uint64_t		efd_efi_id;	/* id of corresponding efi */
++	xfs_extent_t		efd_extents[1];	/* array of extents freed */
++} xfs_efd_log_format_t;
++
++typedef struct xfs_efd_log_format_32 {
++	__uint16_t		efd_type;	/* efd log item type */
++	__uint16_t		efd_size;	/* size of this item */
++	__uint32_t		efd_nextents;	/* # of extents freed */
++	__uint64_t		efd_efi_id;	/* id of corresponding efi */
++	xfs_extent_32_t		efd_extents[1];	/* array of extents freed */
++} __attribute__((packed)) xfs_efd_log_format_32_t;
++
++typedef struct xfs_efd_log_format_64 {
++	__uint16_t		efd_type;	/* efd log item type */
++	__uint16_t		efd_size;	/* size of this item */
++	__uint32_t		efd_nextents;	/* # of extents freed */
++	__uint64_t		efd_efi_id;	/* id of corresponding efi */
++	xfs_extent_64_t		efd_extents[1];	/* array of extents freed */
++} xfs_efd_log_format_64_t;
++
++#endif	/* __XFS_EXTFREE_ITEM_FORMAT_H__ */
 -- 
 1.7.10.4
 
