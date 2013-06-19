@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6EA1E7FB1
-	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 00:36:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6A9EC8F8033
-	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 22:36:45 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 23DFE7FB2
+	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 00:36:46 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1FDB68F8033
+	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 22:36:46 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	OQD5RH9qQo4Fg8qF for <xfs@oss.sgi.com>;
+	u8mhQ9POWwGlA0ai for <xfs@oss.sgi.com>;
 	Tue, 18 Jun 2013 22:36:43 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UpB4E-0003Ay-RB
-	for xfs@oss.sgi.com; Wed, 19 Jun 2013 15:36:26 +1000
+	(envelope-from <dave@fromorbit.com>) id 1UpB4U-0003BS-12
+	for xfs@oss.sgi.com; Wed, 19 Jun 2013 15:36:42 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UpB4E-0000Eg-NH
-	for xfs@oss.sgi.com; Wed, 19 Jun 2013 15:36:26 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1UpB4T-0000F9-U4
+	for xfs@oss.sgi.com; Wed, 19 Jun 2013 15:36:41 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 16/50] libxfs: sync xfs_da_btree.c
-Date: Wed, 19 Jun 2013 15:35:39 +1000
-Message-Id: <1371620173-712-17-git-send-email-david@fromorbit.com>
+Subject: [PATCH 22/50] libxfs: fix compile warnings
+Date: Wed, 19 Jun 2013 15:35:45 +1000
+Message-Id: <1371620173-712-23-git-send-email-david@fromorbit.com>
 In-Reply-To: <1371620173-712-1-git-send-email-david@fromorbit.com>
 References: <1371620173-712-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,156 +38,287 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Some variables we renamed in the kernel code, and there are a few
-other minor differences. Fix them up.
+Some of the code shared with userspace causes compilation warnings
+from things turned off in the kernel code, such as differences in
+variable signedness. Fix those issues.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- libxfs/xfs_da_btree.c |   63 ++++++++++++++++++++++++++-----------------------
- 1 file changed, 33 insertions(+), 30 deletions(-)
+ copy/xfs_copy.c          |   12 ++++++++++--
+ db/bmroot.c              |    6 +++---
+ libxfs/xfs.h             |    8 +++++++-
+ libxfs/xfs_attr_remote.c |    8 ++++----
+ libxfs/xfs_bmap.c        |    3 ---
+ libxfs/xfs_da_btree.c    |    6 +++---
+ libxfs/xfs_dir2_node.c   |    2 ++
+ libxfs/xfs_ialloc.c      |    2 +-
+ libxfs/xfs_rtalloc.c     |    4 ++--
+ repair/attr_repair.c     |    2 ++
+ repair/incore_ino.c      |    2 ++
+ repair/scan.c            |    1 +
+ 12 files changed, 37 insertions(+), 19 deletions(-)
 
+diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
+index 39517da..bb37279 100644
+--- a/copy/xfs_copy.c
++++ b/copy/xfs_copy.c
+@@ -434,6 +434,10 @@ read_ag_header(int fd, xfs_agnumber_t agno, wbuf *buf, ag_header_t *ag,
+ 	off = XFS_AG_DADDR(mp, agno, XFS_SB_DADDR);
+ 	buf->position = (xfs_off_t) off * (xfs_off_t) BBSIZE;
+ 	length = buf->length = first_agbno * blocksize;
++	if (length == 0) {
++		do_log(_("ag header buffer invalid!\n"));
++		exit(1);
++	}
+ 
+ 	/* handle alignment stuff */
+ 
+@@ -449,7 +453,6 @@ read_ag_header(int fd, xfs_agnumber_t agno, wbuf *buf, ag_header_t *ag,
+ 	if (buf->length % buf->min_io_size != 0)
+ 		buf->length = roundup(buf->length, buf->min_io_size);
+ 
+-	ASSERT(length != 0);
+ 	read_wbuf(fd, buf, mp);
+ 	ASSERT(buf->length >= length);
+ 
+@@ -936,7 +939,12 @@ main(int argc, char **argv)
+ 		for (;;) {
+ 			/* none of this touches the w_buf buffer */
+ 
+-			ASSERT(current_level < btree_levels);
++			if (current_level >= btree_levels) {
++				do_log(
++			_("Error: current level %d >= btree levels %d\n"),
++					current_level, btree_levels);
++				exit(1);
++			}
+ 
+ 			current_level++;
+ 
+diff --git a/db/bmroot.c b/db/bmroot.c
+index 3e18917..12b129e 100644
+--- a/db/bmroot.c
++++ b/db/bmroot.c
+@@ -91,13 +91,13 @@ bmroota_key_offset(
+ 	int			idx)
+ {
+ 	xfs_bmdr_block_t	*block;
+-	/* REFERENCED */
+-	xfs_dinode_t		*dip;
++#ifdef DEBUG
++	xfs_dinode_t		*dip = obj;
++#endif
+ 	xfs_bmdr_key_t		*kp;
+ 
+ 	ASSERT(bitoffs(startoff) == 0);
+ 	ASSERT(obj == iocur_top->data);
+-	dip = obj;
+ 	block = (xfs_bmdr_block_t *)((char *)obj + byteize(startoff));
+ 	ASSERT(XFS_DFORK_Q(dip) && (char *)block == XFS_DFORK_APTR(dip));
+ 	ASSERT(be16_to_cpu(block->bb_level) > 0);
+diff --git a/libxfs/xfs.h b/libxfs/xfs.h
+index 8391dc8..acf5895 100644
+--- a/libxfs/xfs.h
++++ b/libxfs/xfs.h
+@@ -191,7 +191,9 @@ roundup_pow_of_two(uint v)
+ /* avoid gcc warning */
+ #define xfs_incore(bt,blkno,len,lockit)	({		\
+ 	typeof(blkno) __foo = (blkno);			\
++	typeof(len) __bar = (len);			\
+ 	(blkno) = __foo;				\
++	(len) = __bar; /* no set-but-unused warning */	\
+ 	NULL;						\
+ })
+ #define xfs_buf_relse(bp)		libxfs_putbuf(bp)
+@@ -265,7 +267,11 @@ roundup_pow_of_two(uint v)
+ #define	xfs_trans_agblocks_delta(tp, d)
+ #define	xfs_trans_agflist_delta(tp, d)
+ #define	xfs_trans_agbtree_delta(tp, d)
+-#define xfs_trans_buf_set_type(tp, bp, t)
++#define xfs_trans_buf_set_type(tp, bp, t)	({	\
++	int __t = (t);					\
++	__t = __t; /* no set-but-unused warning */	\
++})
++
+ #define xfs_trans_buf_copy_type(dbp, sbp)
+ 
+ #define xfs_buf_readahead(a,b,c,ops)		((void) 0)	/* no readahead */
+diff --git a/libxfs/xfs_attr_remote.c b/libxfs/xfs_attr_remote.c
+index 0b2ca8c..59bb12d 100644
+--- a/libxfs/xfs_attr_remote.c
++++ b/libxfs/xfs_attr_remote.c
+@@ -214,7 +214,7 @@ xfs_attr_rmtval_copyout(
+ 	xfs_ino_t	ino,
+ 	int		*offset,
+ 	int		*valuelen,
+-	char		**dst)
++	__uint8_t	**dst)
+ {
+ 	char		*src = bp->b_addr;
+ 	xfs_daddr_t	bno = bp->b_bn;
+@@ -261,7 +261,7 @@ xfs_attr_rmtval_copyin(
+ 	xfs_ino_t	ino,
+ 	int		*offset,
+ 	int		*valuelen,
+-	char		**src)
++	__uint8_t	**src)
+ {
+ 	char		*dst = bp->b_addr;
+ 	xfs_daddr_t	bno = bp->b_bn;
+@@ -314,7 +314,7 @@ xfs_attr_rmtval_get(
+ 	struct xfs_mount	*mp = args->dp->i_mount;
+ 	struct xfs_buf		*bp;
+ 	xfs_dablk_t		lblkno = args->rmtblkno;
+-	char			*dst = args->value;
++	__uint8_t		*dst = args->value;
+ 	int			valuelen = args->valuelen;
+ 	int			nmap;
+ 	int			error;
+@@ -378,7 +378,7 @@ xfs_attr_rmtval_set(
+ 	struct xfs_bmbt_irec	map;
+ 	xfs_dablk_t		lblkno;
+ 	xfs_fileoff_t		lfileoff = 0;
+-	char			*src = args->value;
++	__uint8_t		*src = args->value;
+ 	int			blkcnt;
+ 	int			valuelen;
+ 	int			nmap;
+diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
+index 1c0939b..ce72b87 100644
+--- a/libxfs/xfs_bmap.c
++++ b/libxfs/xfs_bmap.c
+@@ -4426,12 +4426,9 @@ xfs_bmapi_allocate(
+ 	struct xfs_ifork	*ifp = XFS_IFORK_PTR(bma->ip, whichfork);
+ 	int			tmp_logflags = 0;
+ 	int			error;
+-	int			rt;
+ 
+ 	ASSERT(bma->length > 0);
+ 
+-	rt = (whichfork == XFS_DATA_FORK) && XFS_IS_REALTIME_INODE(bma->ip);
+-
+ 	/*
+ 	 * For the wasdelay case, we could also just allocate the stuff asked
+ 	 * for in this bmap call but that wouldn't be as good.
 diff --git a/libxfs/xfs_da_btree.c b/libxfs/xfs_da_btree.c
-index e83a3ad..d7798af 100644
+index d7798af..b7b6705 100644
 --- a/libxfs/xfs_da_btree.c
 +++ b/libxfs/xfs_da_btree.c
-@@ -480,8 +480,10 @@ xfs_da3_split(
- 	 * There might be three blocks involved if a double split occurred,
- 	 * and the original block 0 could be at any position in the list.
- 	 *
--	 * Note: the info structures being modified here for both v2 and v3 da
--	 * headers, so we can do this linkage just using the v2 structures.
-+	 * Note: the magic numbers and sibling pointers are in the same
-+	 * physical place for both v2 and v3 headers (by design). Hence it
-+	 * doesn't matter which version of the xfs_da_intnode structure we use
-+	 * here as the result will be the same using either structure.
- 	 */
- 	node = oldblk->bp->b_addr;
- 	if (node->hdr.info.forw) {
-@@ -820,7 +822,7 @@ xfs_da3_node_rebalance(
- 		 */
- 		nodehdr2.count += count;
- 		tmp = count * (uint)sizeof(xfs_da_node_entry_t);
--		btree_s = &btree1[nodehdr1.count- count];
-+		btree_s = &btree1[nodehdr1.count - count];
- 		btree_d = &btree2[0];
- 		memcpy(btree_d, btree_s, tmp);
- 		nodehdr1.count -= count;
-@@ -1380,10 +1382,10 @@ xfs_da3_node_unbalance(
+@@ -376,7 +376,7 @@ xfs_da3_split(
+ 	struct xfs_da_intnode	*node;
+ 	struct xfs_buf		*bp;
+ 	int			max;
+-	int			action;
++	int			action = 0;
+ 	int			error;
+ 	int			i;
+ 
+@@ -2431,9 +2431,9 @@ static int
+ xfs_buf_map_from_irec(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_buf_map	**mapp,
+-	unsigned int		*nmaps,
++	int			*nmaps,
+ 	struct xfs_bmbt_irec	*irecs,
+-	unsigned int		nirecs)
++	int			nirecs)
  {
- 	struct xfs_da_intnode	*drop_node;
- 	struct xfs_da_intnode	*save_node;
--	struct xfs_da_node_entry *dbtree;
--	struct xfs_da_node_entry *sbtree;
--	struct xfs_da3_icnode_hdr dhdr;
--	struct xfs_da3_icnode_hdr shdr;
-+	struct xfs_da_node_entry *drop_btree;
-+	struct xfs_da_node_entry *save_btree;
-+	struct xfs_da3_icnode_hdr drop_hdr;
-+	struct xfs_da3_icnode_hdr save_hdr;
- 	struct xfs_trans	*tp;
- 	int			sindex;
- 	int			tmp;
-@@ -1392,43 +1394,44 @@ xfs_da3_node_unbalance(
+ 	struct xfs_buf_map	*map;
+ 	int			i;
+diff --git a/libxfs/xfs_dir2_node.c b/libxfs/xfs_dir2_node.c
+index 222f08c..d2bd249 100644
+--- a/libxfs/xfs_dir2_node.c
++++ b/libxfs/xfs_dir2_node.c
+@@ -295,11 +295,13 @@ xfs_dir2_free_log_header(
+ 	struct xfs_trans	*tp,
+ 	struct xfs_buf		*bp)
+ {
++#ifdef DEBUG
+ 	xfs_dir2_free_t		*free;		/* freespace structure */
  
- 	drop_node = drop_blk->bp->b_addr;
- 	save_node = save_blk->bp->b_addr;
--	xfs_da3_node_hdr_from_disk(&dhdr, drop_node);
--	xfs_da3_node_hdr_from_disk(&shdr, save_node);
--	dbtree = xfs_da3_node_tree_p(drop_node);
--	sbtree = xfs_da3_node_tree_p(save_node);
-+	xfs_da3_node_hdr_from_disk(&drop_hdr, drop_node);
-+	xfs_da3_node_hdr_from_disk(&save_hdr, save_node);
-+	drop_btree = xfs_da3_node_tree_p(drop_node);
-+	save_btree = xfs_da3_node_tree_p(save_node);
- 	tp = state->args->trans;
- 
- 	/*
- 	 * If the dying block has lower hashvals, then move all the
- 	 * elements in the remaining block up to make a hole.
- 	 */
--	if ((be32_to_cpu(dbtree[0].hashval) < be32_to_cpu(sbtree[ 0 ].hashval)) ||
--	    (be32_to_cpu(dbtree[dhdr.count - 1].hashval) <
--				be32_to_cpu(sbtree[shdr.count - 1].hashval))) {
-+	if ((be32_to_cpu(drop_btree[0].hashval) <
-+			be32_to_cpu(save_btree[0].hashval)) ||
-+	    (be32_to_cpu(drop_btree[drop_hdr.count - 1].hashval) <
-+			be32_to_cpu(save_btree[save_hdr.count - 1].hashval))) {
- 		/* XXX: check this - is memmove dst correct? */
--		tmp = shdr.count * (uint)sizeof(xfs_da_node_entry_t);
--		memmove(&sbtree[dhdr.count], &sbtree[0], tmp);
-+		tmp = save_hdr.count * sizeof(xfs_da_node_entry_t);
-+		memmove(&save_btree[drop_hdr.count], &save_btree[0], tmp);
- 
- 		sindex = 0;
- 		xfs_trans_log_buf(tp, save_blk->bp,
--			XFS_DA_LOGRANGE(save_node, &sbtree[0],
--				(shdr.count + dhdr.count) *
-+			XFS_DA_LOGRANGE(save_node, &save_btree[0],
-+				(save_hdr.count + drop_hdr.count) *
- 						sizeof(xfs_da_node_entry_t)));
- 	} else {
--		sindex = shdr.count;
-+		sindex = save_hdr.count;
- 		xfs_trans_log_buf(tp, save_blk->bp,
--			XFS_DA_LOGRANGE(save_node, &sbtree[sindex],
--				dhdr.count * sizeof(xfs_da_node_entry_t)));
-+			XFS_DA_LOGRANGE(save_node, &save_btree[sindex],
-+				drop_hdr.count * sizeof(xfs_da_node_entry_t)));
- 	}
- 
- 	/*
- 	 * Move all the B-tree elements from drop_blk to save_blk.
- 	 */
--	tmp = dhdr.count * (uint)sizeof(xfs_da_node_entry_t);
--	memcpy(&sbtree[sindex], &dbtree[0], tmp);
--	shdr.count += dhdr.count;
-+	tmp = drop_hdr.count * (uint)sizeof(xfs_da_node_entry_t);
-+	memcpy(&save_btree[sindex], &drop_btree[0], tmp);
-+	save_hdr.count += drop_hdr.count;
- 
--	xfs_da3_node_hdr_to_disk(save_node, &shdr);
-+	xfs_da3_node_hdr_to_disk(save_node, &save_hdr);
- 	xfs_trans_log_buf(tp, save_blk->bp,
- 		XFS_DA_LOGRANGE(save_node, &save_node->hdr,
- 				xfs_da3_node_hdr_size(save_node)));
-@@ -1436,7 +1439,7 @@ xfs_da3_node_unbalance(
- 	/*
- 	 * Save the last hashval in the remaining block for upward propagation.
- 	 */
--	save_blk->hashval = be32_to_cpu(sbtree[shdr.count - 1].hashval);
-+	save_blk->hashval = be32_to_cpu(save_btree[save_hdr.count - 1].hashval);
+ 	free = bp->b_addr;
+ 	ASSERT(free->hdr.magic == cpu_to_be32(XFS_DIR2_FREE_MAGIC) ||
+ 	       free->hdr.magic == cpu_to_be32(XFS_DIR3_FREE_MAGIC));
++#endif
+ 	xfs_trans_log_buf(tp, bp, 0, xfs_dir3_free_hdr_size(tp->t_mountp) - 1);
  }
  
- /*========================================================================
-@@ -2201,8 +2204,6 @@ xfs_da3_swap_lastblock(
- 	} else {
- 		struct xfs_da3_icnode_hdr deadhdr;
+diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
+index bbdaf3f..4794d4a 100644
+--- a/libxfs/xfs_ialloc.c
++++ b/libxfs/xfs_ialloc.c
+@@ -1320,7 +1320,7 @@ xfs_imap(
+ 	xfs_agblock_t	cluster_agbno;	/* first block in inode cluster */
+ 	int		error;	/* error code */
+ 	int		offset;	/* index of inode in its buffer */
+-	int		offset_agbno;	/* blks from chunk start to inode */
++	xfs_agblock_t	offset_agbno;	/* blks from chunk start to inode */
  
--		ASSERT(dead_info->magic == cpu_to_be16(XFS_DA_NODE_MAGIC) ||
--		       dead_info->magic == cpu_to_be16(XFS_DA3_NODE_MAGIC));
- 		dead_node = (xfs_da_intnode_t *)dead_info;
- 		xfs_da3_node_hdr_from_disk(&deadhdr, dead_node);
- 		btree = xfs_da3_node_tree_p(dead_node);
-@@ -2441,7 +2442,8 @@ xfs_buf_map_from_irec(
- 	ASSERT(nirecs >= 1);
+ 	ASSERT(ino != NULLFSINO);
  
- 	if (nirecs > 1) {
--		map = kmem_zalloc(nirecs * sizeof(struct xfs_buf_map), KM_SLEEP);
-+		map = kmem_zalloc(nirecs * sizeof(struct xfs_buf_map),
-+				  KM_SLEEP | KM_NOFS);
- 		if (!map)
- 			return ENOMEM;
- 		*mapp = map;
-@@ -2497,7 +2499,8 @@ xfs_dabuf_map(
- 		 * Optimize the one-block case.
- 		 */
- 		if (nfsb != 1)
--			irecs = kmem_zalloc(sizeof(irec) * nfsb, KM_SLEEP);
-+			irecs = kmem_zalloc(sizeof(irec) * nfsb,
-+					    KM_SLEEP | KM_NOFS);
+diff --git a/libxfs/xfs_rtalloc.c b/libxfs/xfs_rtalloc.c
+index 1de85fd..9797db7 100644
+--- a/libxfs/xfs_rtalloc.c
++++ b/libxfs/xfs_rtalloc.c
+@@ -431,8 +431,8 @@ xfs_rtfree_range(
+ {
+ 	xfs_rtblock_t	end;		/* end of the freed extent */
+ 	int		error;		/* error value */
+-	xfs_rtblock_t	postblock;	/* first block freed > end */
+-	xfs_rtblock_t	preblock;	/* first block freed < start */
++	xfs_rtblock_t	postblock = 0;	/* first block freed > end */
++	xfs_rtblock_t	preblock = 0;	/* first block freed < start */
  
- 		nirecs = nfsb;
- 		error = xfs_bmapi_read(dp, (xfs_fileoff_t)bno, nfsb, irecs,
+ 	end = start + len - 1;
+ 	/*
+diff --git a/repair/attr_repair.c b/repair/attr_repair.c
+index d42b85f..ba85fd9 100644
+--- a/repair/attr_repair.c
++++ b/repair/attr_repair.c
+@@ -1631,9 +1631,11 @@ process_attributes(
+ {
+ 	int		err;
+ 	__u8		aformat = dip->di_aformat;
++#ifdef DEBUG
+ 	xfs_attr_shortform_t *asf;
+ 
+ 	asf = (xfs_attr_shortform_t *) XFS_DFORK_APTR(dip);
++#endif
+ 
+ 	if (aformat == XFS_DINODE_FMT_LOCAL) {
+ 		ASSERT(be16_to_cpu(asf->hdr.totsize) <=
+diff --git a/repair/incore_ino.c b/repair/incore_ino.c
+index 2a40727..158cf3a 100644
+--- a/repair/incore_ino.c
++++ b/repair/incore_ino.c
+@@ -167,6 +167,7 @@ __uint32_t num_inode_references(struct ino_tree_node *irec, int ino_offset)
+ 	default:
+ 		ASSERT(0);
+ 	}
++	return 0;
+ }
+ 
+ void set_inode_disk_nlinks(struct ino_tree_node *irec, int ino_offset,
+@@ -207,6 +208,7 @@ __uint32_t get_inode_disk_nlinks(struct ino_tree_node *irec, int ino_offset)
+ 	default:
+ 		ASSERT(0);
+ 	}
++	return 0;
+ }
+ 
+ /*
+diff --git a/repair/scan.c b/repair/scan.c
+index d58d55a..e76ce47 100644
+--- a/repair/scan.c
++++ b/repair/scan.c
+@@ -520,6 +520,7 @@ scan_allocbt(
+ 		name = "cnt";
+ 		break;
+ 	default:
++		name = "(unknown)";
+ 		assert(0);
+ 		break;
+ 	}
 -- 
 1.7.10.4
 
