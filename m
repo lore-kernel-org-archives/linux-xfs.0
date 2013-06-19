@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 50D2E29E31
-	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 23:51:34 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D2814AC002
-	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 21:51:33 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id E25EA29E2D
+	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 23:51:35 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 7EC33AC002
+	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 21:51:35 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	DHRzzwxLwEAjxiMo for <xfs@oss.sgi.com>;
-	Tue, 18 Jun 2013 21:51:32 -0700 (PDT)
+	6j0KLWw20GjbByaV for <xfs@oss.sgi.com>;
+	Tue, 18 Jun 2013 21:51:33 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UpAMb-0002y5-AO
-	for xfs@oss.sgi.com; Wed, 19 Jun 2013 14:51:21 +1000
+	(envelope-from <dave@fromorbit.com>) id 1UpAMg-0002yY-Fe
+	for xfs@oss.sgi.com; Wed, 19 Jun 2013 14:51:26 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UpAMR-0008Vd-7E
-	for xfs@oss.sgi.com; Wed, 19 Jun 2013 14:51:11 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1UpAMg-0008Vy-BZ
+	for xfs@oss.sgi.com; Wed, 19 Jun 2013 14:51:26 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 06/60] xfs: xfs_ifree doesn't need to modify the inode buffer
-Date: Wed, 19 Jun 2013 14:50:14 +1000
-Message-Id: <1371617468-32559-7-git-send-email-david@fromorbit.com>
+Subject: [PATCH 10/60] xfs: Inode create transaction reservations
+Date: Wed, 19 Jun 2013 14:50:18 +1000
+Message-Id: <1371617468-32559-11-git-send-email-david@fromorbit.com>
 In-Reply-To: <1371617468-32559-1-git-send-email-david@fromorbit.com>
 References: <1371617468-32559-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -36,85 +36,179 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Define the log and space transaction sizes. Factor the current
+create log reservation macro into the two logical halves and reuse
+one half for the new icreate transactions. The icreate transaction
+is transparent to all the high level create code - the
+pre-calculated reservations will correctly set the reservations
+dependent on whether the filesystem supports the icreate
+transaction.
 
-Long ago, bulkstat used to read inodes directly fromteh backing
-buffer for speed. This had the unfortunate problem of being cache
-incoherent with unlinks, and so xfs_ifree() had to mark the inode
-as free directly in the backing buffer. bulkstat was changed some
-time ago to use inode cache coherent lookups, and so will never see
-unlinked inodes in it's lookups. Hence xfs_ifree() does not need to
-touch the inode backing buffer anymore.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Dave Chinner <david@fromorbit.com>
 ---
- fs/xfs/xfs_inode.c |   32 ++++----------------------------
- 1 file changed, 4 insertions(+), 28 deletions(-)
+ fs/xfs/xfs_trans.c |  118 ++++++++++++++++++++++++++++++++++------------------
+ 1 file changed, 77 insertions(+), 41 deletions(-)
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index d1f76da..9ecfe1e 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2048,8 +2048,6 @@ xfs_ifree(
- 	int			error;
- 	int			delete;
- 	xfs_ino_t		first_ino;
--	xfs_dinode_t    	*dip;
--	xfs_buf_t       	*ibp;
- 
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
- 	ASSERT(ip->i_d.di_nlink == 0);
-@@ -2062,14 +2060,13 @@ xfs_ifree(
- 	 * Pull the on-disk inode from the AGI unlinked list.
- 	 */
- 	error = xfs_iunlink_remove(tp, ip);
--	if (error != 0) {
-+	if (error)
- 		return error;
--	}
- 
- 	error = xfs_difree(tp, ip->i_ino, flist, &delete, &first_ino);
--	if (error != 0) {
-+	if (error)
- 		return error;
--	}
-+
- 	ip->i_d.di_mode = 0;		/* mark incore inode as free */
- 	ip->i_d.di_flags = 0;
- 	ip->i_d.di_dmevmask = 0;
-@@ -2081,31 +2078,10 @@ xfs_ifree(
- 	 * by reincarnations of this inode.
- 	 */
- 	ip->i_d.di_gen++;
--
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 
--	error = xfs_imap_to_bp(ip->i_mount, tp, &ip->i_imap, &dip, &ibp,
--			       0, 0);
--	if (error)
--		return error;
--
--        /*
--	* Clear the on-disk di_mode. This is to prevent xfs_bulkstat
--	* from picking up this inode when it is reclaimed (its incore state
--	* initialzed but not flushed to disk yet). The in-core di_mode is
--	* already cleared  and a corresponding transaction logged.
--	* The hack here just synchronizes the in-core to on-disk
--	* di_mode value in advance before the actual inode sync to disk.
--	* This is OK because the inode is already unlinked and would never
--	* change its di_mode again for this inode generation.
--	* This is a temporary hack that would require a proper fix
--	* in the future.
--	*/
--	dip->di_mode = 0;
--
--	if (delete) {
-+	if (delete)
- 		error = xfs_ifree_cluster(ip, tp, first_ino);
--	}
- 
- 	return error;
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index 2fd7c1f..35a2299 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -234,71 +234,93 @@ xfs_calc_remove_reservation(
  }
+ 
+ /*
+- * For symlink we can modify:
++ * For create, break it in to the two cases that the transaction
++ * covers. We start with the modify case - allocation done by modification
++ * of the state of existing inodes - and the allocation case.
++ */
++
++/*
++ * For create we can modify:
+  *    the parent directory inode: inode size
+  *    the new inode: inode size
+- *    the inode btree entry: 1 block
++ *    the inode btree entry: block size
++ *    the superblock for the nlink flag: sector size
+  *    the directory btree: (max depth + v2) * dir block size
+  *    the directory inode's bmap btree: (max depth + v2) * block size
+- *    the blocks for the symlink: 1 kB
+- * Or in the first xact we allocate some inodes giving:
++ */
++STATIC uint
++xfs_calc_create_resv_modify(
++	struct xfs_mount	*mp)
++{
++	return xfs_calc_buf_res(2, mp->m_sb.sb_inodesize) +
++		xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
++		(uint)XFS_FSB_TO_B(mp, 1) +
++		xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp), XFS_FSB_TO_B(mp, 1));
++}
++
++/*
++ * For create we can allocate some inodes giving:
+  *    the agi and agf of the ag getting the new inodes: 2 * sectorsize
++ *    the superblock for the nlink flag: sector size
+  *    the inode blocks allocated: XFS_IALLOC_BLOCKS * blocksize
+  *    the inode btree: max depth * blocksize
+- *    the allocation btrees: 2 trees * (2 * max depth - 1) * block size
++ *    the allocation btrees: 2 trees * (max depth - 1) * block size
+  */
+ STATIC uint
+-xfs_calc_symlink_reservation(
++xfs_calc_create_resv_alloc(
++	struct xfs_mount	*mp)
++{
++	return xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
++		mp->m_sb.sb_sectsize +
++		xfs_calc_buf_res(XFS_IALLOC_BLOCKS(mp), XFS_FSB_TO_B(mp, 1)) +
++		xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1)) +
++		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
++				 XFS_FSB_TO_B(mp, 1));
++}
++
++STATIC uint
++__xfs_calc_create_reservation(
+ 	struct xfs_mount	*mp)
+ {
+ 	return XFS_DQUOT_LOGRES(mp) +
+-		MAX((xfs_calc_buf_res(2, mp->m_sb.sb_inodesize) +
+-		     xfs_calc_buf_res(1, XFS_FSB_TO_B(mp, 1)) +
+-		     xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp),
+-				      XFS_FSB_TO_B(mp, 1)) +
+-		     xfs_calc_buf_res(1, 1024)),
+-		    (xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
+-		     xfs_calc_buf_res(XFS_IALLOC_BLOCKS(mp),
+-				      XFS_FSB_TO_B(mp, 1)) +
+-		     xfs_calc_buf_res(mp->m_in_maxlevels,
+-				      XFS_FSB_TO_B(mp, 1)) +
+-		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
+-				      XFS_FSB_TO_B(mp, 1))));
++		MAX(xfs_calc_create_resv_alloc(mp),
++		    xfs_calc_create_resv_modify(mp));
+ }
+ 
+ /*
+- * For create we can modify:
+- *    the parent directory inode: inode size
+- *    the new inode: inode size
+- *    the inode btree entry: block size
+- *    the superblock for the nlink flag: sector size
+- *    the directory btree: (max depth + v2) * dir block size
+- *    the directory inode's bmap btree: (max depth + v2) * block size
+- * Or in the first xact we allocate some inodes giving:
++ * For icreate we can allocate some inodes giving:
+  *    the agi and agf of the ag getting the new inodes: 2 * sectorsize
+  *    the superblock for the nlink flag: sector size
+- *    the inode blocks allocated: XFS_IALLOC_BLOCKS * blocksize
+  *    the inode btree: max depth * blocksize
+  *    the allocation btrees: 2 trees * (max depth - 1) * block size
+  */
+ STATIC uint
+-xfs_calc_create_reservation(
++xfs_calc_icreate_resv_alloc(
+ 	struct xfs_mount	*mp)
+ {
++	return xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
++		mp->m_sb.sb_sectsize +
++		xfs_calc_buf_res(mp->m_in_maxlevels, XFS_FSB_TO_B(mp, 1)) +
++		xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
++				 XFS_FSB_TO_B(mp, 1));
++}
++
++STATIC uint
++xfs_calc_icreate_reservation(xfs_mount_t *mp)
++{
+ 	return XFS_DQUOT_LOGRES(mp) +
+-		MAX((xfs_calc_buf_res(2, mp->m_sb.sb_inodesize) +
+-		     xfs_calc_buf_res(1, mp->m_sb.sb_sectsize) +
+-		     (uint)XFS_FSB_TO_B(mp, 1) +
+-		     xfs_calc_buf_res(XFS_DIROP_LOG_COUNT(mp),
+-				      XFS_FSB_TO_B(mp, 1))),
+-		    (xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
+-		     mp->m_sb.sb_sectsize +
+-		     xfs_calc_buf_res(XFS_IALLOC_BLOCKS(mp),
+-				      XFS_FSB_TO_B(mp, 1)) +
+-		     xfs_calc_buf_res(mp->m_in_maxlevels,
+-				      XFS_FSB_TO_B(mp, 1)) +
+-		     xfs_calc_buf_res(XFS_ALLOCFREE_LOG_COUNT(mp, 1),
+-				      XFS_FSB_TO_B(mp, 1))));
++		MAX(xfs_calc_icreate_resv_alloc(mp),
++		    xfs_calc_create_resv_modify(mp));
++}
++
++STATIC uint
++xfs_calc_create_reservation(
++	struct xfs_mount	*mp)
++{
++	if (xfs_sb_version_hascrc(&mp->m_sb))
++		return xfs_calc_icreate_reservation(mp);
++	return __xfs_calc_create_reservation(mp);
++
+ }
+ 
+ /*
+@@ -311,6 +333,20 @@ xfs_calc_mkdir_reservation(
+ 	return xfs_calc_create_reservation(mp);
+ }
+ 
++
++/*
++ * Making a new symplink is the same as creating a new file, but
++ * with the added blocks for remote symlink data which can be up to 1kB in
++ * length (MAXPATHLEN).
++ */
++STATIC uint
++xfs_calc_symlink_reservation(
++	struct xfs_mount	*mp)
++{
++	return xfs_calc_create_reservation(mp) +
++	       xfs_calc_buf_res(1, MAXPATHLEN);
++}
++
+ /*
+  * In freeing an inode we can modify:
+  *    the inode being freed: inode size
 -- 
 1.7.10.4
 
