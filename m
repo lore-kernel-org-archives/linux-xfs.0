@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1470E7FFE
-	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 00:37:07 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B43F8AC002
-	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 22:37:06 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id DBDB4800B
+	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 00:37:08 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D78788F8033
+	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 22:37:08 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	VHitb1AanZZ079xB for <xfs@oss.sgi.com>;
-	Tue, 18 Jun 2013 22:37:04 -0700 (PDT)
+	imBtEkmEx8VznKL2 for <xfs@oss.sgi.com>;
+	Tue, 18 Jun 2013 22:37:06 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UpB4Z-0003Ba-NC
-	for xfs@oss.sgi.com; Wed, 19 Jun 2013 15:36:47 +1000
+	(envelope-from <dave@fromorbit.com>) id 1UpB4o-0003Co-TG
+	for xfs@oss.sgi.com; Wed, 19 Jun 2013 15:37:02 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UpB4U-0000Fh-6V
-	for xfs@oss.sgi.com; Wed, 19 Jun 2013 15:36:42 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1UpB4o-0000Gm-Pc
+	for xfs@oss.sgi.com; Wed, 19 Jun 2013 15:37:02 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 30/50] xfs: split out inode log item format definition
-Date: Wed, 19 Jun 2013 15:35:53 +1000
-Message-Id: <1371620173-712-31-git-send-email-david@fromorbit.com>
+Subject: [PATCH 42/50] xfs: create xfs_bmap_util.[ch]
+Date: Wed, 19 Jun 2013 15:36:05 +1000
+Message-Id: <1371620173-712-43-git-send-email-david@fromorbit.com>
 In-Reply-To: <1371620173-712-1-git-send-email-david@fromorbit.com>
 References: <1371620173-712-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,330 +38,445 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The EFI/EFD item format definitions are shared with userspace. Split
-the out of header files that contain kernel only defintions to make
-it simple to shared them.
+There is a bunch of code in xfs_bmap.c that is kernel specific and
+not shared with userspace. to minimise the difference between the
+kernel and userspace code, shift this unshared code to
+xfs_bmap_util.c, and the declarations to xfs_bmap_util.h.
+
+The biggest issue here is xfs_bmap_finish() - userspce has it's own
+definition of this function, and so we need to move it out of
+xfs_bmap.[ch]. This means several other files need to include
+xfs_bmap_util.c as well.
+
+It also introduces and interesting dance for the stack switching
+code in xfs_bmapi_allocate(). The stack switching/workqueue code is
+actually moved to xfs_bmap_util.c, so that userspace can simply use
+a #define in a header file to connect the dots without needing to
+know about the stack switch code at all.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/Makefile                  |    8 +-
- include/libxlog.h                 |    2 +-
- include/xfs_extfree_item.h        |  165 -------------------------------------
- include/xfs_extfree_item_format.h |  101 +++++++++++++++++++++++
- 4 files changed, 108 insertions(+), 168 deletions(-)
- delete mode 100644 include/xfs_extfree_item.h
- create mode 100644 include/xfs_extfree_item_format.h
+ include/xfs_bmap.h |   50 ------------
+ libxfs/xfs.h       |   34 ++++++++
+ libxfs/xfs_bmap.c  |  222 +++-------------------------------------------------
+ 3 files changed, 43 insertions(+), 263 deletions(-)
 
-diff --git a/include/Makefile b/include/Makefile
-index b713884..2bd7fbe 100644
---- a/include/Makefile
-+++ b/include/Makefile
-@@ -24,8 +24,12 @@ QAHFILES = libxfs.h libxlog.h \
- 	xfs_ag.h xfs_alloc.h xfs_alloc_btree.h xfs_arch.h xfs_attr_leaf.h \
- 	xfs_attr_sf.h xfs_bit.h xfs_bmap.h xfs_bmap_btree.h xfs_btree.h \
- 	xfs_btree_trace.h xfs_buf_item_format.h xfs_cksum.h xfs_da_btree.h \
--	xfs_dinode.h xfs_dir2.h xfs_dir2_format.h \
--	xfs_extfree_item.h xfs_ialloc.h xfs_ialloc_btree.h \
-+	xfs_dinode.h \
-+	xfs_dir2.h \
-+	xfs_dir2_format.h \
-+	xfs_extfree_item_format.h \
-+	xfs_ialloc.h \
-+	xfs_ialloc_btree.h \
- 	xfs_icreate_item.h \
- 	xfs_inode_buf.h \
- 	xfs_inode_fork.h \
-diff --git a/include/libxlog.h b/include/libxlog.h
-index 9227a3a..9570ae1 100644
---- a/include/libxlog.h
-+++ b/include/libxlog.h
-@@ -50,7 +50,7 @@ struct xlog {
- #include <xfs/xfs_log_recover.h>
- #include <xfs/xfs_buf_item_format.h>
- #include <xfs/xfs_inode_item_format.h>
--#include <xfs/xfs_extfree_item.h>
-+#include <xfs/xfs_extfree_item_format.h>
- #include <xfs/xfs_icreate_item.h>
+diff --git a/include/xfs_bmap.h b/include/xfs_bmap.h
+index a2e50c6..a64d6f7 100644
+--- a/include/xfs_bmap.h
++++ b/include/xfs_bmap.h
+@@ -107,43 +107,6 @@ static inline void xfs_bmap_init(xfs_bmap_free_t *flp, xfs_fsblock_t *fbp)
+ }
  
- typedef union {
-diff --git a/include/xfs_extfree_item.h b/include/xfs_extfree_item.h
-deleted file mode 100644
-index 4322224..0000000
---- a/include/xfs_extfree_item.h
-+++ /dev/null
-@@ -1,165 +0,0 @@
--/*
-- * Copyright (c) 2000,2005 Silicon Graphics, Inc.
-- * All Rights Reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it would be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write the Free Software Foundation,
-- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ /*
+- * Argument structure for xfs_bmap_alloc.
 - */
--#ifndef	__XFS_EXTFREE_ITEM_H__
--#define	__XFS_EXTFREE_ITEM_H__
+-typedef struct xfs_bmalloca {
+-	xfs_fsblock_t		*firstblock; /* i/o first block allocated */
+-	struct xfs_bmap_free	*flist;	/* bmap freelist */
+-	struct xfs_trans	*tp;	/* transaction pointer */
+-	struct xfs_inode	*ip;	/* incore inode pointer */
+-	struct xfs_bmbt_irec	prev;	/* extent before the new one */
+-	struct xfs_bmbt_irec	got;	/* extent after, or delayed */
 -
--struct xfs_mount;
--struct kmem_zone;
+-	xfs_fileoff_t		offset;	/* offset in file filling in */
+-	xfs_extlen_t		length;	/* i/o length asked/allocated */
+-	xfs_fsblock_t		blkno;	/* starting block of new extent */
 -
--typedef struct xfs_extent {
--	xfs_dfsbno_t	ext_start;
--	xfs_extlen_t	ext_len;
--} xfs_extent_t;
+-	struct xfs_btree_cur	*cur;	/* btree cursor */
+-	xfs_extnum_t		idx;	/* current extent index */
+-	int			nallocs;/* number of extents alloc'd */
+-	int			logflags;/* flags for transaction logging */
 -
--/*
-- * Since an xfs_extent_t has types (start:64, len: 32)
-- * there are different alignments on 32 bit and 64 bit kernels.
-- * So we provide the different variants for use by a
-- * conversion routine.
-- */
--
--typedef struct xfs_extent_32 {
--	__uint64_t	ext_start;
--	__uint32_t	ext_len;
--} __attribute__((packed)) xfs_extent_32_t;
--
--typedef struct xfs_extent_64 {
--	__uint64_t	ext_start;
--	__uint32_t	ext_len;
--	__uint32_t	ext_pad;
--} xfs_extent_64_t;
+-	xfs_extlen_t		total;	/* total blocks needed for xaction */
+-	xfs_extlen_t		minlen;	/* minimum allocation size (blocks) */
+-	xfs_extlen_t		minleft; /* amount must be left after alloc */
+-	char			eof;	/* set if allocating past last extent */
+-	char			wasdel;	/* replacing a delayed allocation */
+-	char			userdata;/* set if is user data */
+-	char			aeof;	/* allocated space at eof */
+-	char			conv;	/* overwriting unwritten extents */
+-	char			stack_switch;
+-	int			flags;
+-#ifdef __KERNEL__
+-	struct completion	*done;
+-	struct work_struct	work;
+-	int			result;
+-#endif /* __KERNEL__ */
+-} xfs_bmalloca_t;
 -
 -/*
-- * This is the structure used to lay out an efi log item in the
-- * log.  The efi_extents field is a variable size array whose
-- * size is given by efi_nextents.
-- */
--typedef struct xfs_efi_log_format {
--	__uint16_t		efi_type;	/* efi log item type */
--	__uint16_t		efi_size;	/* size of this item */
--	__uint32_t		efi_nextents;	/* # extents to free */
--	__uint64_t		efi_id;		/* efi identifier */
--	xfs_extent_t		efi_extents[1];	/* array of extents to free */
--} xfs_efi_log_format_t;
--
--typedef struct xfs_efi_log_format_32 {
--	__uint16_t		efi_type;	/* efi log item type */
--	__uint16_t		efi_size;	/* size of this item */
--	__uint32_t		efi_nextents;	/* # extents to free */
--	__uint64_t		efi_id;		/* efi identifier */
--	xfs_extent_32_t		efi_extents[1];	/* array of extents to free */
--} __attribute__((packed)) xfs_efi_log_format_32_t;
--
--typedef struct xfs_efi_log_format_64 {
--	__uint16_t		efi_type;	/* efi log item type */
--	__uint16_t		efi_size;	/* size of this item */
--	__uint32_t		efi_nextents;	/* # extents to free */
--	__uint64_t		efi_id;		/* efi identifier */
--	xfs_extent_64_t		efi_extents[1];	/* array of extents to free */
--} xfs_efi_log_format_64_t;
--
--/*
-- * This is the structure used to lay out an efd log item in the
-- * log.  The efd_extents array is a variable size array whose
-- * size is given by efd_nextents;
-- */
--typedef struct xfs_efd_log_format {
--	__uint16_t		efd_type;	/* efd log item type */
--	__uint16_t		efd_size;	/* size of this item */
--	__uint32_t		efd_nextents;	/* # of extents freed */
--	__uint64_t		efd_efi_id;	/* id of corresponding efi */
--	xfs_extent_t		efd_extents[1];	/* array of extents freed */
--} xfs_efd_log_format_t;
--
--typedef struct xfs_efd_log_format_32 {
--	__uint16_t		efd_type;	/* efd log item type */
--	__uint16_t		efd_size;	/* size of this item */
--	__uint32_t		efd_nextents;	/* # of extents freed */
--	__uint64_t		efd_efi_id;	/* id of corresponding efi */
--	xfs_extent_32_t		efd_extents[1];	/* array of extents freed */
--} __attribute__((packed)) xfs_efd_log_format_32_t;
--
--typedef struct xfs_efd_log_format_64 {
--	__uint16_t		efd_type;	/* efd log item type */
--	__uint16_t		efd_size;	/* size of this item */
--	__uint32_t		efd_nextents;	/* # of extents freed */
--	__uint64_t		efd_efi_id;	/* id of corresponding efi */
--	xfs_extent_64_t		efd_extents[1];	/* array of extents freed */
--} xfs_efd_log_format_64_t;
--
--
+  * Flags for xfs_bmap_add_extent*.
+  */
+ #define BMAP_LEFT_CONTIG	(1 << 0)
+@@ -206,17 +169,4 @@ int	xfs_check_nostate_extents(struct xfs_ifork *ifp, xfs_extnum_t idx,
+ 		xfs_extnum_t num);
+ uint	xfs_default_attroffset(struct xfs_inode *ip);
+ 
 -#ifdef __KERNEL__
 -
--/*
-- * Max number of extents in fast allocation path.
-- */
--#define	XFS_EFI_MAX_FAST_EXTENTS	16
+-int	xfs_bmap_finish(struct xfs_trans **tp, struct xfs_bmap_free *flist,
+-		int *committed);
+-int	xfs_bmap_eof(struct xfs_inode *ip, xfs_fileoff_t endoff,
+-		int whichfork, int *eof);
+-int	xfs_bmap_count_blocks(struct xfs_trans *tp, struct xfs_inode *ip,
+-		int whichfork, int *count);
 -
--/*
-- * Define EFI flag bits. Manipulated by set/clear/test_bit operators.
-- */
--#define	XFS_EFI_RECOVERED	1
--
--/*
-- * This is the "extent free intention" log item.  It is used to log the fact
-- * that some extents need to be free.  It is used in conjunction with the
-- * "extent free done" log item described below.
-- *
-- * The EFI is reference counted so that it is not freed prior to both the EFI
-- * and EFD being committed and unpinned. This ensures that when the last
-- * reference goes away the EFI will always be in the AIL as it has been
-- * unpinned, regardless of whether the EFD is processed before or after the EFI.
-- */
--typedef struct xfs_efi_log_item {
--	xfs_log_item_t		efi_item;
--	atomic_t		efi_refcount;
--	atomic_t		efi_next_extent;
--	unsigned long		efi_flags;	/* misc flags */
--	xfs_efi_log_format_t	efi_format;
--} xfs_efi_log_item_t;
--
--/*
-- * This is the "extent free done" log item.  It is used to log
-- * the fact that some extents earlier mentioned in an efi item
-- * have been freed.
-- */
--typedef struct xfs_efd_log_item {
--	xfs_log_item_t		efd_item;
--	xfs_efi_log_item_t	*efd_efip;
--	uint			efd_next_extent;
--	xfs_efd_log_format_t	efd_format;
--} xfs_efd_log_item_t;
--
--/*
-- * Max number of extents in fast allocation path.
-- */
--#define	XFS_EFD_MAX_FAST_EXTENTS	16
--
--extern struct kmem_zone	*xfs_efi_zone;
--extern struct kmem_zone	*xfs_efd_zone;
--
--xfs_efi_log_item_t	*xfs_efi_init(struct xfs_mount *, uint);
--xfs_efd_log_item_t	*xfs_efd_init(struct xfs_mount *, xfs_efi_log_item_t *,
--				      uint);
--int			xfs_efi_copy_format(xfs_log_iovec_t *buf,
--					    xfs_efi_log_format_t *dst_efi_fmt);
--void			xfs_efi_item_free(xfs_efi_log_item_t *);
+-xfs_daddr_t xfs_fsb_to_db(struct xfs_inode *ip, xfs_fsblock_t fsb);
 -
 -#endif	/* __KERNEL__ */
 -
--#endif	/* __XFS_EXTFREE_ITEM_H__ */
-diff --git a/include/xfs_extfree_item_format.h b/include/xfs_extfree_item_format.h
-new file mode 100644
-index 0000000..ddd1fbb
---- /dev/null
-+++ b/include/xfs_extfree_item_format.h
-@@ -0,0 +1,101 @@
+ #endif	/* __XFS_BMAP_H__ */
+diff --git a/libxfs/xfs.h b/libxfs/xfs.h
+index 0113b50..276fc25 100644
+--- a/libxfs/xfs.h
++++ b/libxfs/xfs.h
+@@ -51,6 +51,40 @@
+ typedef __uint32_t		uint_t;
+ typedef __uint32_t		inst_t;		/* an instruction */
+ 
 +/*
-+ * Copyright (c) 2000,2005 Silicon Graphics, Inc.
-+ * All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ * Argument structure for xfs_bmap_alloc.
 + */
-+#ifndef	__XFS_EXTFREE_ITEM_FORMAT_H__
-+#define	__XFS_EXTFREE_ITEM_FORMAT_H__
++typedef struct xfs_bmalloca {
++	xfs_fsblock_t		*firstblock; /* i/o first block allocated */
++	struct xfs_bmap_free    *flist;	/* bmap freelist */
++	struct xfs_trans        *tp;	/* transaction pointer */
++	struct xfs_inode        *ip;	/* incore inode pointer */
++	struct xfs_bmbt_irec    prev;	/* extent before the new one */
++	struct xfs_bmbt_irec    got;	/* extent after, or delayed */
 +
-+typedef struct xfs_extent {
-+	xfs_dfsbno_t	ext_start;
-+	xfs_extlen_t	ext_len;
-+} xfs_extent_t;
++	xfs_fileoff_t		offset;	/* offset in file filling in */
++	xfs_extlen_t		length;	/* i/o length asked/allocated */
++	xfs_fsblock_t		blkno;	/* starting block of new extent */
 +
-+/*
-+ * Since an xfs_extent_t has types (start:64, len: 32)
-+ * there are different alignments on 32 bit and 64 bit kernels.
-+ * So we provide the different variants for use by a
-+ * conversion routine.
-+ */
-+typedef struct xfs_extent_32 {
-+	__uint64_t	ext_start;
-+	__uint32_t	ext_len;
-+} __attribute__((packed)) xfs_extent_32_t;
++	struct xfs_btree_cur    *cur;	/* btree cursor */
++	xfs_extnum_t		idx;	/* current extent index */
++	int			nallocs;/* number of extents alloc'd */
++	int			logflags;/* flags for transaction logging */
 +
-+typedef struct xfs_extent_64 {
-+	__uint64_t	ext_start;
-+	__uint32_t	ext_len;
-+	__uint32_t	ext_pad;
-+} xfs_extent_64_t;
++	xfs_extlen_t		total;	/* total blocks needed for xaction */
++	xfs_extlen_t		minlen;	/* minimum allocation size (blocks) */
++	xfs_extlen_t		minleft; /* amount must be left after alloc */
++	char			eof;	/* set if allocating past last extent */
++	char			wasdel;	/* replacing a delayed allocation */
++	char			userdata;/* set if is user data */
++	char			aeof;	/* allocated space at eof */
++	char			conv;	/* overwriting unwritten extents */
++	char			stack_switch;
++	int			flags;
++} xfs_bmalloca_t;
 +
-+/*
-+ * This is the structure used to lay out an efi log item in the
-+ * log.  The efi_extents field is a variable size array whose
-+ * size is given by efi_nextents.
-+ */
-+typedef struct xfs_efi_log_format {
-+	__uint16_t		efi_type;	/* efi log item type */
-+	__uint16_t		efi_size;	/* size of this item */
-+	__uint32_t		efi_nextents;	/* # extents to free */
-+	__uint64_t		efi_id;		/* efi identifier */
-+	xfs_extent_t		efi_extents[1];	/* array of extents to free */
-+} xfs_efi_log_format_t;
++#define xfs_bmapi_allocate		__xfs_bmapi_allocate
 +
-+typedef struct xfs_efi_log_format_32 {
-+	__uint16_t		efi_type;	/* efi log item type */
-+	__uint16_t		efi_size;	/* size of this item */
-+	__uint32_t		efi_nextents;	/* # extents to free */
-+	__uint64_t		efi_id;		/* efi identifier */
-+	xfs_extent_32_t		efi_extents[1];	/* array of extents to free */
-+} __attribute__((packed)) xfs_efi_log_format_32_t;
-+
-+typedef struct xfs_efi_log_format_64 {
-+	__uint16_t		efi_type;	/* efi log item type */
-+	__uint16_t		efi_size;	/* size of this item */
-+	__uint32_t		efi_nextents;	/* # extents to free */
-+	__uint64_t		efi_id;		/* efi identifier */
-+	xfs_extent_64_t		efi_extents[1];	/* array of extents to free */
-+} xfs_efi_log_format_64_t;
-+
-+/*
-+ * This is the structure used to lay out an efd log item in the
-+ * log.  The efd_extents array is a variable size array whose
-+ * size is given by efd_nextents;
-+ */
-+typedef struct xfs_efd_log_format {
-+	__uint16_t		efd_type;	/* efd log item type */
-+	__uint16_t		efd_size;	/* size of this item */
-+	__uint32_t		efd_nextents;	/* # of extents freed */
-+	__uint64_t		efd_efi_id;	/* id of corresponding efi */
-+	xfs_extent_t		efd_extents[1];	/* array of extents freed */
-+} xfs_efd_log_format_t;
-+
-+typedef struct xfs_efd_log_format_32 {
-+	__uint16_t		efd_type;	/* efd log item type */
-+	__uint16_t		efd_size;	/* size of this item */
-+	__uint32_t		efd_nextents;	/* # of extents freed */
-+	__uint64_t		efd_efi_id;	/* id of corresponding efi */
-+	xfs_extent_32_t		efd_extents[1];	/* array of extents freed */
-+} __attribute__((packed)) xfs_efd_log_format_32_t;
-+
-+typedef struct xfs_efd_log_format_64 {
-+	__uint16_t		efd_type;	/* efd log item type */
-+	__uint16_t		efd_size;	/* size of this item */
-+	__uint32_t		efd_nextents;	/* # of extents freed */
-+	__uint64_t		efd_efi_id;	/* id of corresponding efi */
-+	xfs_extent_64_t		efd_extents[1];	/* array of extents freed */
-+} xfs_efd_log_format_64_t;
-+
-+#endif	/* __XFS_EXTFREE_ITEM_FORMAT_H__ */
+ #ifndef EWRONGFS
+ #define EWRONGFS	EINVAL
+ #endif
+diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
+index ce72b87..eeaea94 100644
+--- a/libxfs/xfs_bmap.c
++++ b/libxfs/xfs_bmap.c
+@@ -74,19 +74,6 @@ xfs_bmap_compute_maxlevels(
+ 	mp->m_bm_maxlevels[whichfork] = level;
+ }
+ 
+-/*
+- * Convert the given file system block to a disk block.  We have to treat it
+- * differently based on whether the file is a real time file or not, because the
+- * bmap code does.
+- */
+-xfs_daddr_t
+-xfs_fsb_to_db(struct xfs_inode *ip, xfs_fsblock_t fsb)
+-{
+-	return (XFS_IS_REALTIME_INODE(ip) ? \
+-		 (xfs_daddr_t)XFS_FSB_TO_BB((ip)->i_mount, (fsb)) : \
+-		 XFS_FSB_TO_DADDR((ip)->i_mount, (fsb)));
+-}
+-
+ STATIC int				/* error */
+ xfs_bmbt_lookup_eq(
+ 	struct xfs_btree_cur	*cur,
+@@ -229,173 +216,6 @@ xfs_bmap_forkoff_reset(
+ }
+ 
+ /*
+- * Extent tree block counting routines.
+- */
+-
+-/*
+- * Count leaf blocks given a range of extent records.
+- */
+-STATIC void
+-xfs_bmap_count_leaves(
+-	xfs_ifork_t		*ifp,
+-	xfs_extnum_t		idx,
+-	int			numrecs,
+-	int			*count)
+-{
+-	int		b;
+-
+-	for (b = 0; b < numrecs; b++) {
+-		xfs_bmbt_rec_host_t *frp = xfs_iext_get_ext(ifp, idx + b);
+-		*count += xfs_bmbt_get_blockcount(frp);
+-	}
+-}
+-
+-/*
+- * Count leaf blocks given a range of extent records originally
+- * in btree format.
+- */
+-STATIC void
+-xfs_bmap_disk_count_leaves(
+-	struct xfs_mount	*mp,
+-	struct xfs_btree_block	*block,
+-	int			numrecs,
+-	int			*count)
+-{
+-	int		b;
+-	xfs_bmbt_rec_t	*frp;
+-
+-	for (b = 1; b <= numrecs; b++) {
+-		frp = XFS_BMBT_REC_ADDR(mp, block, b);
+-		*count += xfs_bmbt_disk_get_blockcount(frp);
+-	}
+-}
+-
+-/*
+- * Recursively walks each level of a btree
+- * to count total fsblocks is use.
+- */
+-STATIC int                                     /* error */
+-xfs_bmap_count_tree(
+-	xfs_mount_t     *mp,            /* file system mount point */
+-	xfs_trans_t     *tp,            /* transaction pointer */
+-	xfs_ifork_t	*ifp,		/* inode fork pointer */
+-	xfs_fsblock_t   blockno,	/* file system block number */
+-	int             levelin,	/* level in btree */
+-	int		*count)		/* Count of blocks */
+-{
+-	int			error;
+-	xfs_buf_t		*bp, *nbp;
+-	int			level = levelin;
+-	__be64			*pp;
+-	xfs_fsblock_t           bno = blockno;
+-	xfs_fsblock_t		nextbno;
+-	struct xfs_btree_block	*block, *nextblock;
+-	int			numrecs;
+-
+-	error = xfs_btree_read_bufl(mp, tp, bno, 0, &bp, XFS_BMAP_BTREE_REF,
+-						&xfs_bmbt_buf_ops);
+-	if (error)
+-		return error;
+-	*count += 1;
+-	block = XFS_BUF_TO_BLOCK(bp);
+-
+-	if (--level) {
+-		/* Not at node above leaves, count this level of nodes */
+-		nextbno = be64_to_cpu(block->bb_u.l.bb_rightsib);
+-		while (nextbno != NULLFSBLOCK) {
+-			error = xfs_btree_read_bufl(mp, tp, nextbno, 0, &nbp,
+-						XFS_BMAP_BTREE_REF,
+-						&xfs_bmbt_buf_ops);
+-			if (error)
+-				return error;
+-			*count += 1;
+-			nextblock = XFS_BUF_TO_BLOCK(nbp);
+-			nextbno = be64_to_cpu(nextblock->bb_u.l.bb_rightsib);
+-			xfs_trans_brelse(tp, nbp);
+-		}
+-
+-		/* Dive to the next level */
+-		pp = XFS_BMBT_PTR_ADDR(mp, block, 1, mp->m_bmap_dmxr[1]);
+-		bno = be64_to_cpu(*pp);
+-		if (unlikely((error =
+-		     xfs_bmap_count_tree(mp, tp, ifp, bno, level, count)) < 0)) {
+-			xfs_trans_brelse(tp, bp);
+-			XFS_ERROR_REPORT("xfs_bmap_count_tree(1)",
+-					 XFS_ERRLEVEL_LOW, mp);
+-			return XFS_ERROR(EFSCORRUPTED);
+-		}
+-		xfs_trans_brelse(tp, bp);
+-	} else {
+-		/* count all level 1 nodes and their leaves */
+-		for (;;) {
+-			nextbno = be64_to_cpu(block->bb_u.l.bb_rightsib);
+-			numrecs = be16_to_cpu(block->bb_numrecs);
+-			xfs_bmap_disk_count_leaves(mp, block, numrecs, count);
+-			xfs_trans_brelse(tp, bp);
+-			if (nextbno == NULLFSBLOCK)
+-				break;
+-			bno = nextbno;
+-			error = xfs_btree_read_bufl(mp, tp, bno, 0, &bp,
+-						XFS_BMAP_BTREE_REF,
+-						&xfs_bmbt_buf_ops);
+-			if (error)
+-				return error;
+-			*count += 1;
+-			block = XFS_BUF_TO_BLOCK(bp);
+-		}
+-	}
+-	return 0;
+-}
+-
+-/*
+- * Count fsblocks of the given fork.
+- */
+-int						/* error */
+-xfs_bmap_count_blocks(
+-	xfs_trans_t		*tp,		/* transaction pointer */
+-	xfs_inode_t		*ip,		/* incore inode */
+-	int			whichfork,	/* data or attr fork */
+-	int			*count)		/* out: count of blocks */
+-{
+-	struct xfs_btree_block	*block;	/* current btree block */
+-	xfs_fsblock_t		bno;	/* block # of "block" */
+-	xfs_ifork_t		*ifp;	/* fork structure */
+-	int			level;	/* btree level, for checking */
+-	xfs_mount_t		*mp;	/* file system mount structure */
+-	__be64			*pp;	/* pointer to block address */
+-
+-	bno = NULLFSBLOCK;
+-	mp = ip->i_mount;
+-	ifp = XFS_IFORK_PTR(ip, whichfork);
+-	if ( XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS ) {
+-		xfs_bmap_count_leaves(ifp, 0,
+-			ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t),
+-			count);
+-		return 0;
+-	}
+-
+-	/*
+-	 * Root level must use BMAP_BROOT_PTR_ADDR macro to get ptr out.
+-	 */
+-	block = ifp->if_broot;
+-	level = be16_to_cpu(block->bb_level);
+-	ASSERT(level > 0);
+-	pp = XFS_BMAP_BROOT_PTR_ADDR(mp, block, 1, ifp->if_broot_bytes);
+-	bno = be64_to_cpu(*pp);
+-	ASSERT(bno != NULLDFSBNO);
+-	ASSERT(XFS_FSB_TO_AGNO(mp, bno) < mp->m_sb.sb_agcount);
+-	ASSERT(XFS_FSB_TO_AGBNO(mp, bno) < mp->m_sb.sb_agblocks);
+-
+-	if (unlikely(xfs_bmap_count_tree(mp, tp, ifp, bno, level, count) < 0)) {
+-		XFS_ERROR_REPORT("xfs_bmap_count_blocks(2)", XFS_ERRLEVEL_LOW,
+-				 mp);
+-		return XFS_ERROR(EFSCORRUPTED);
+-	}
+-
+-	return 0;
+-}
+-
+-/*
+  * Debug/sanity checking code
+  */
+ 
+@@ -803,7 +623,6 @@ xfs_bmap_del_free(
+ 	kmem_zone_free(xfs_bmap_free_item_zone, free);
+ }
+ 
+-
+ /*
+  * Free up any items left in the list.
+  */
+@@ -1028,8 +847,8 @@ xfs_bmap_extents_to_btree(
+ 	 * Do all this logging at the end so that
+ 	 * the root is at the right level.
+ 	 */
+-	xfs_btree_log_recs(cur, abp, 1, be16_to_cpu(ablock->bb_numrecs));
+ 	xfs_btree_log_block(cur, abp, XFS_BB_ALL_BITS);
++	xfs_btree_log_recs(cur, abp, 1, be16_to_cpu(ablock->bb_numrecs));
+ 	ASSERT(*curp == NULL);
+ 	*curp = cur;
+ 	*logflagsp = XFS_ILOG_CORE | xfs_ilog_fbroot(whichfork);
+@@ -1744,7 +1563,7 @@ xfs_bmap_last_before(
+ 	return 0;
+ }
+ 
+-STATIC int
++int
+ xfs_bmap_last_extent(
+ 	struct xfs_trans	*tp,
+ 	struct xfs_inode	*ip,
+@@ -1808,29 +1627,6 @@ xfs_bmap_isaeof(
+ }
+ 
+ /*
+- * Check if the endoff is outside the last extent. If so the caller will grow
+- * the allocation to a stripe unit boundary.  All offsets are considered outside
+- * the end of file for an empty fork, so 1 is returned in *eof in that case.
+- */
+-int
+-xfs_bmap_eof(
+-	struct xfs_inode	*ip,
+-	xfs_fileoff_t		endoff,
+-	int			whichfork,
+-	int			*eof)
+-{
+-	struct xfs_bmbt_irec	rec;
+-	int			error;
+-
+-	error = xfs_bmap_last_extent(NULL, ip, whichfork, &rec, eof);
+-	if (error || *eof)
+-		return error;
+-
+-	*eof = endoff >= rec.br_startoff + rec.br_blockcount;
+-	return 0;
+-}
+-
+-/*
+  * Returns the file-relative block number of the first block past eof in
+  * the file.  This is not based on i_size, it is based on the extent records.
+  * Returns 0 for local files, as they do not have extent records.
+@@ -3369,7 +3165,7 @@ done:
+ /*
+  * Adjust the size of the new extent based on di_extsize and rt extsize.
+  */
+-STATIC int
++int
+ xfs_bmap_extsize_align(
+ 	xfs_mount_t	*mp,
+ 	xfs_bmbt_irec_t	*gotp,		/* next extent pointer */
+@@ -3531,9 +3327,9 @@ xfs_bmap_extsize_align(
+ 
+ #define XFS_ALLOC_GAP_UNITS	4
+ 
+-STATIC void
++void
+ xfs_bmap_adjacent(
+-	xfs_bmalloca_t	*ap)		/* bmap alloc argument struct */
++	struct xfs_bmalloca	*ap)	/* bmap alloc argument struct */
+ {
+ 	xfs_fsblock_t	adjust;		/* adjustment to block numbers */
+ 	xfs_agnumber_t	fb_agno;	/* ag number of ap->firstblock */
+@@ -3796,7 +3592,7 @@ xfs_bmap_btalloc_nullfb(
+ 
+ STATIC int
+ xfs_bmap_btalloc(
+-	xfs_bmalloca_t	*ap)		/* bmap alloc argument struct */
++	struct xfs_bmalloca	*ap)	/* bmap alloc argument struct */
+ {
+ 	xfs_mount_t	*mp;		/* mount point structure */
+ 	xfs_alloctype_t	atype = 0;	/* type for allocation routines */
+@@ -4028,7 +3824,7 @@ xfs_bmap_btalloc(
+  */
+ STATIC int
+ xfs_bmap_alloc(
+-	xfs_bmalloca_t	*ap)		/* bmap alloc argument struct */
++	struct xfs_bmalloca	*ap)	/* bmap alloc argument struct */
+ {
+ 	if (XFS_IS_REALTIME_INODE(ap->ip) && ap->userdata)
+ 		return xfs_bmap_rtalloc(ap);
+@@ -4416,8 +4212,8 @@ xfs_bmapi_delay(
+ }
+ 
+ 
+-STATIC int
+-xfs_bmapi_allocate(
++int
++__xfs_bmapi_allocate(
+ 	struct xfs_bmalloca	*bma)
+ {
+ 	struct xfs_mount	*mp = bma->ip->i_mount;
 -- 
 1.7.10.4
 
