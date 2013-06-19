@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DB9FB29E1B
-	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 23:51:39 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D50F88F8035
-	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 21:51:39 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id E10A129E1B
+	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 23:51:42 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8BBF2AC002
+	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 21:51:42 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	u6yq0bIFjPb6mRPF for <xfs@oss.sgi.com>;
-	Tue, 18 Jun 2013 21:51:38 -0700 (PDT)
+	okx332GkvDrocbTO for <xfs@oss.sgi.com>;
+	Tue, 18 Jun 2013 21:51:39 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UpAMq-0002yj-IU
+	(envelope-from <dave@fromorbit.com>) id 1UpAMq-0002ys-OX
 	for xfs@oss.sgi.com; Wed, 19 Jun 2013 14:51:36 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UpAMg-0008W7-ES
-	for xfs@oss.sgi.com; Wed, 19 Jun 2013 14:51:26 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1UpAMq-0008WV-L4
+	for xfs@oss.sgi.com; Wed, 19 Jun 2013 14:51:36 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 12/60] xfs: Use inode create transaction
-Date: Wed, 19 Jun 2013 14:50:20 +1000
-Message-Id: <1371617468-32559-13-git-send-email-david@fromorbit.com>
+Subject: [PATCH 17/60] xfs: split out attribute fork truncation code into
+	separate file
+Date: Wed, 19 Jun 2013 14:50:25 +1000
+Message-Id: <1371617468-32559-18-git-send-email-david@fromorbit.com>
 In-Reply-To: <1371617468-32559-1-git-send-email-david@fromorbit.com>
 References: <1371617468-32559-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -36,120 +37,924 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Replace the use of buffer based logging of inode initialisation,
-uses the new logical form to describe the range to be initialised
-in recovery. We continue to "log" the inode buffers to push them
-into the AIL and ensure that the inode create transaction is not
-removed from the log before the inode buffers are written to disk.
+From: Dave Chinner <dchinner@redhat.com>
 
-Update the transaction identifier and reservations to match the
-changed implementation.
+The attribute inactivation code is not used by userspace, so like
+the attribute listing, split it out into a separate file to minimise
+the differences between the filesystem shared with libxfs in
+userspace.
 
-Signed-off-by: Dave Chinner <david@fromorbit.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_buf_item.c |   12 ++++++++++--
- fs/xfs/xfs_ialloc.c   |   32 +++++++++++++++++++++++---------
- 2 files changed, 33 insertions(+), 11 deletions(-)
+ fs/xfs/Makefile            |    1 +
+ fs/xfs/xfs_attr.c          |   71 -------
+ fs/xfs/xfs_attr_inactive.c |  453 ++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_attr_leaf.c     |  341 ---------------------------------
+ 4 files changed, 454 insertions(+), 412 deletions(-)
+ create mode 100644 fs/xfs/xfs_attr_inactive.c
 
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 61f6876..bfc4e0c 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -310,13 +310,21 @@ xfs_buf_item_format(
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index 4670207..6f33414 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -27,6 +27,7 @@ xfs-y				+= xfs_trace.o
  
- 	/*
- 	 * If it is an inode buffer, transfer the in-memory state to the
--	 * format flags and clear the in-memory state. We do not transfer
-+	 * format flags and clear the in-memory state.
-+	 *
-+	 * For buffer based inode allocation, we do not transfer
- 	 * this state if the inode buffer allocation has not yet been committed
- 	 * to the log as setting the XFS_BLI_INODE_BUF flag will prevent
- 	 * correct replay of the inode allocation.
-+	 *
-+	 * For icreate item based inode allocation, the buffers aren't written
-+	 * to the journal during allocation, and hence we should always tag the
-+	 * buffer as an inode buffer so that the correct unlinked list replay
-+	 * occurs during recovery.
- 	 */
- 	if (bip->bli_flags & XFS_BLI_INODE_BUF) {
--		if (!((bip->bli_flags & XFS_BLI_INODE_ALLOC_BUF) &&
-+		if (xfs_sb_version_hascrc(&lip->li_mountp->m_sb) ||
-+		    !((bip->bli_flags & XFS_BLI_INODE_ALLOC_BUF) &&
- 		      xfs_log_item_in_current_chkpt(lip)))
- 			bip->__bli_format.blf_flags |= XFS_BLF_INODE_BUF;
- 		bip->bli_flags &= ~XFS_BLI_INODE_BUF;
-diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
-index d5ef81a..319d9e4 100644
---- a/fs/xfs/xfs_ialloc.c
-+++ b/fs/xfs/xfs_ialloc.c
-@@ -38,6 +38,7 @@
- #include "xfs_bmap.h"
- #include "xfs_cksum.h"
- #include "xfs_buf_item.h"
-+#include "xfs_icreate_item.h"
+ # highlevel code
+ xfs-y				+= xfs_aops.o \
++				   xfs_attr_inactive.o \
+ 				   xfs_attr_list.o \
+ 				   xfs_bit.o \
+ 				   xfs_buf.o \
+diff --git a/fs/xfs/xfs_attr.c b/fs/xfs/xfs_attr.c
+index 75a168c..10c18ff 100644
+--- a/fs/xfs/xfs_attr.c
++++ b/fs/xfs/xfs_attr.c
+@@ -609,77 +609,6 @@ xfs_attr_remove(
+ 	return xfs_attr_remove_int(dp, &xname, flags);
+ }
  
+-int								/* error */
+-xfs_attr_inactive(xfs_inode_t *dp)
+-{
+-	xfs_trans_t *trans;
+-	xfs_mount_t *mp;
+-	int error;
+-
+-	mp = dp->i_mount;
+-	ASSERT(! XFS_NOT_DQATTACHED(mp, dp));
+-
+-	xfs_ilock(dp, XFS_ILOCK_SHARED);
+-	if (!xfs_inode_hasattr(dp) ||
+-	    dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
+-		xfs_iunlock(dp, XFS_ILOCK_SHARED);
+-		return 0;
+-	}
+-	xfs_iunlock(dp, XFS_ILOCK_SHARED);
+-
+-	/*
+-	 * Start our first transaction of the day.
+-	 *
+-	 * All future transactions during this code must be "chained" off
+-	 * this one via the trans_dup() call.  All transactions will contain
+-	 * the inode, and the inode will always be marked with trans_ihold().
+-	 * Since the inode will be locked in all transactions, we must log
+-	 * the inode in every transaction to let it float upward through
+-	 * the log.
+-	 */
+-	trans = xfs_trans_alloc(mp, XFS_TRANS_ATTRINVAL);
+-	if ((error = xfs_trans_reserve(trans, 0, XFS_ATTRINVAL_LOG_RES(mp), 0,
+-				      XFS_TRANS_PERM_LOG_RES,
+-				      XFS_ATTRINVAL_LOG_COUNT))) {
+-		xfs_trans_cancel(trans, 0);
+-		return(error);
+-	}
+-	xfs_ilock(dp, XFS_ILOCK_EXCL);
+-
+-	/*
+-	 * No need to make quota reservations here. We expect to release some
+-	 * blocks, not allocate, in the common case.
+-	 */
+-	xfs_trans_ijoin(trans, dp, 0);
+-
+-	/*
+-	 * Decide on what work routines to call based on the inode size.
+-	 */
+-	if (!xfs_inode_hasattr(dp) ||
+-	    dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
+-		error = 0;
+-		goto out;
+-	}
+-	error = xfs_attr3_root_inactive(&trans, dp);
+-	if (error)
+-		goto out;
+-
+-	error = xfs_itruncate_extents(&trans, dp, XFS_ATTR_FORK, 0);
+-	if (error)
+-		goto out;
+-
+-	error = xfs_trans_commit(trans, XFS_TRANS_RELEASE_LOG_RES);
+-	xfs_iunlock(dp, XFS_ILOCK_EXCL);
+-
+-	return(error);
+-
+-out:
+-	xfs_trans_cancel(trans, XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_ABORT);
+-	xfs_iunlock(dp, XFS_ILOCK_EXCL);
+-	return(error);
+-}
+-
+-
  
- /*
-@@ -155,7 +156,7 @@ xfs_check_agi_freecount(
-  * than logging them (which in a transaction context puts them into the AIL
-  * for writeback rather than the xfsbufd queue).
-  */
--STATIC int
-+int
- xfs_ialloc_inode_init(
- 	struct xfs_mount	*mp,
- 	struct xfs_trans	*tp,
-@@ -212,6 +213,18 @@ xfs_ialloc_inode_init(
- 		version = 3;
- 		ino = XFS_AGINO_TO_INO(mp, agno,
- 				       XFS_OFFBNO_TO_AGINO(mp, agbno, 0));
+ /*========================================================================
+  * External routines when attribute list is inside the inode
+diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
+new file mode 100644
+index 0000000..0d344ed
+--- /dev/null
++++ b/fs/xfs/xfs_attr_inactive.c
+@@ -0,0 +1,453 @@
++/*
++ * Copyright (c) 2000-2005 Silicon Graphics, Inc.
++ * Copyright (c) 2013 Red Hat, Inc.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_types.h"
++#include "xfs_bit.h"
++#include "xfs_log.h"
++#include "xfs_trans.h"
++#include "xfs_sb.h"
++#include "xfs_ag.h"
++#include "xfs_mount.h"
++#include "xfs_da_btree.h"
++#include "xfs_bmap_btree.h"
++#include "xfs_alloc_btree.h"
++#include "xfs_ialloc_btree.h"
++#include "xfs_alloc.h"
++#include "xfs_btree.h"
++#include "xfs_attr_remote.h"
++#include "xfs_dinode.h"
++#include "xfs_inode.h"
++#include "xfs_inode_item.h"
++#include "xfs_bmap.h"
++#include "xfs_attr.h"
++#include "xfs_attr_leaf.h"
++#include "xfs_error.h"
++#include "xfs_quota.h"
++#include "xfs_trace.h"
++
++/*
++ * Look at all the extents for this logical region,
++ * invalidate any buffers that are incore/in transactions.
++ */
++STATIC int
++xfs_attr3_leaf_freextent(
++	struct xfs_trans	**trans,
++	struct xfs_inode	*dp,
++	xfs_dablk_t		blkno,
++	int			blkcnt)
++{
++	struct xfs_bmbt_irec	map;
++	struct xfs_buf		*bp;
++	xfs_dablk_t		tblkno;
++	xfs_daddr_t		dblkno;
++	int			tblkcnt;
++	int			dblkcnt;
++	int			nmap;
++	int			error;
++
++	/*
++	 * Roll through the "value", invalidating the attribute value's
++	 * blocks.
++	 */
++	tblkno = blkno;
++	tblkcnt = blkcnt;
++	while (tblkcnt > 0) {
++		/*
++		 * Try to remember where we decided to put the value.
++		 */
++		nmap = 1;
++		error = xfs_bmapi_read(dp, (xfs_fileoff_t)tblkno, tblkcnt,
++				       &map, &nmap, XFS_BMAPI_ATTRFORK);
++		if (error) {
++			return(error);
++		}
++		ASSERT(nmap == 1);
++		ASSERT(map.br_startblock != DELAYSTARTBLOCK);
 +
 +		/*
-+		 * log the initialisation that is about to take place as an
-+		 * logical operation. This means the transaction does not
-+		 * need to log the physical changes to the inode buffers as log
-+		 * recovery will know what initialisation is actually needed.
-+		 * Hence we only need to log the buffers as "ordered" buffers so
-+		 * they track in the AIL as if they were physically logged.
++		 * If it's a hole, these are already unmapped
++		 * so there's nothing to invalidate.
 +		 */
-+		if (tp)
-+			xfs_icreate_log(tp, agno, agbno, XFS_IALLOC_INODES(mp),
-+					mp->m_sb.sb_inodesize, length, gen);
- 	} else if (xfs_sb_version_hasnlink(&mp->m_sb))
- 		version = 2;
- 	else
-@@ -227,13 +240,8 @@ xfs_ialloc_inode_init(
- 					 XBF_UNMAPPED);
- 		if (!fbuf)
- 			return ENOMEM;
--		/*
--		 * Initialize all inodes in this buffer and then log them.
--		 *
--		 * XXX: It would be much better if we had just one transaction
--		 *	to log a whole cluster of inodes instead of all the
--		 *	individual transactions causing a lot of log traffic.
--		 */
++		if (map.br_startblock != HOLESTARTBLOCK) {
 +
-+		/* Initialize the inode buffers and log them appropriately. */
- 		fbuf->b_ops = &xfs_inode_buf_ops;
- 		xfs_buf_zero(fbuf, 0, BBTOB(fbuf->b_length));
- 		for (i = 0; i < ninodes; i++) {
-@@ -269,7 +277,13 @@ xfs_ialloc_inode_init(
- 			 */
- 			xfs_trans_inode_alloc_buf(tp, fbuf);
- 			if (version == 3) {
--				/* need to log the entire buffer */
-+				/*
-+				 * Mark the buffer as ordered so that they are
-+				 * not physically logged in the transaction but
-+				 * still tracked in the AIL as part of the
-+				 * transaction and pin the log appropriately.
-+				 */
-+				xfs_trans_ordered_buf(tp, fbuf);
- 				xfs_trans_log_buf(tp, fbuf, 0,
- 						  BBTOB(fbuf->b_length) - 1);
- 			}
++			dblkno = XFS_FSB_TO_DADDR(dp->i_mount,
++						  map.br_startblock);
++			dblkcnt = XFS_FSB_TO_BB(dp->i_mount,
++						map.br_blockcount);
++			bp = xfs_trans_get_buf(*trans,
++					dp->i_mount->m_ddev_targp,
++					dblkno, dblkcnt, 0);
++			if (!bp)
++				return ENOMEM;
++			xfs_trans_binval(*trans, bp);
++			/*
++			 * Roll to next transaction.
++			 */
++			error = xfs_trans_roll(trans, dp);
++			if (error)
++				return (error);
++		}
++
++		tblkno += map.br_blockcount;
++		tblkcnt -= map.br_blockcount;
++	}
++
++	return(0);
++}
++
++/*
++ * Invalidate all of the "remote" value regions pointed to by a particular
++ * leaf block.
++ * Note that we must release the lock on the buffer so that we are not
++ * caught holding something that the logging code wants to flush to disk.
++ */
++STATIC int
++xfs_attr3_leaf_inactive(
++	struct xfs_trans	**trans,
++	struct xfs_inode	*dp,
++	struct xfs_buf		*bp)
++{
++	struct xfs_attr_leafblock *leaf;
++	struct xfs_attr3_icleaf_hdr ichdr;
++	struct xfs_attr_leaf_entry *entry;
++	struct xfs_attr_leaf_name_remote *name_rmt;
++	struct xfs_attr_inactive_list *list;
++	struct xfs_attr_inactive_list *lp;
++	int			error;
++	int			count;
++	int			size;
++	int			tmp;
++	int			i;
++
++	leaf = bp->b_addr;
++	xfs_attr3_leaf_hdr_from_disk(&ichdr, leaf);
++
++	/*
++	 * Count the number of "remote" value extents.
++	 */
++	count = 0;
++	entry = xfs_attr3_leaf_entryp(leaf);
++	for (i = 0; i < ichdr.count; entry++, i++) {
++		if (be16_to_cpu(entry->nameidx) &&
++		    ((entry->flags & XFS_ATTR_LOCAL) == 0)) {
++			name_rmt = xfs_attr3_leaf_name_remote(leaf, i);
++			if (name_rmt->valueblk)
++				count++;
++		}
++	}
++
++	/*
++	 * If there are no "remote" values, we're done.
++	 */
++	if (count == 0) {
++		xfs_trans_brelse(*trans, bp);
++		return 0;
++	}
++
++	/*
++	 * Allocate storage for a list of all the "remote" value extents.
++	 */
++	size = count * sizeof(xfs_attr_inactive_list_t);
++	list = kmem_alloc(size, KM_SLEEP);
++
++	/*
++	 * Identify each of the "remote" value extents.
++	 */
++	lp = list;
++	entry = xfs_attr3_leaf_entryp(leaf);
++	for (i = 0; i < ichdr.count; entry++, i++) {
++		if (be16_to_cpu(entry->nameidx) &&
++		    ((entry->flags & XFS_ATTR_LOCAL) == 0)) {
++			name_rmt = xfs_attr3_leaf_name_remote(leaf, i);
++			if (name_rmt->valueblk) {
++				lp->valueblk = be32_to_cpu(name_rmt->valueblk);
++				lp->valuelen = xfs_attr3_rmt_blocks(dp->i_mount,
++						    be32_to_cpu(name_rmt->valuelen));
++				lp++;
++			}
++		}
++	}
++	xfs_trans_brelse(*trans, bp);	/* unlock for trans. in freextent() */
++
++	/*
++	 * Invalidate each of the "remote" value extents.
++	 */
++	error = 0;
++	for (lp = list, i = 0; i < count; i++, lp++) {
++		tmp = xfs_attr3_leaf_freextent(trans, dp,
++				lp->valueblk, lp->valuelen);
++
++		if (error == 0)
++			error = tmp;	/* save only the 1st errno */
++	}
++
++	kmem_free(list);
++	return error;
++}
++
++/*
++ * Recurse (gasp!) through the attribute nodes until we find leaves.
++ * We're doing a depth-first traversal in order to invalidate everything.
++ */
++STATIC int
++xfs_attr3_node_inactive(
++	struct xfs_trans **trans,
++	struct xfs_inode *dp,
++	struct xfs_buf	*bp,
++	int		level)
++{
++	xfs_da_blkinfo_t *info;
++	xfs_da_intnode_t *node;
++	xfs_dablk_t child_fsb;
++	xfs_daddr_t parent_blkno, child_blkno;
++	int error, i;
++	struct xfs_buf *child_bp;
++	struct xfs_da_node_entry *btree;
++	struct xfs_da3_icnode_hdr ichdr;
++
++	/*
++	 * Since this code is recursive (gasp!) we must protect ourselves.
++	 */
++	if (level > XFS_DA_NODE_MAXDEPTH) {
++		xfs_trans_brelse(*trans, bp);	/* no locks for later trans */
++		return XFS_ERROR(EIO);
++	}
++
++	node = bp->b_addr;
++	xfs_da3_node_hdr_from_disk(&ichdr, node);
++	parent_blkno = bp->b_bn;
++	if (!ichdr.count) {
++		xfs_trans_brelse(*trans, bp);
++		return 0;
++	}
++	btree = xfs_da3_node_tree_p(node);
++	child_fsb = be32_to_cpu(btree[0].before);
++	xfs_trans_brelse(*trans, bp);	/* no locks for later trans */
++
++	/*
++	 * If this is the node level just above the leaves, simply loop
++	 * over the leaves removing all of them.  If this is higher up
++	 * in the tree, recurse downward.
++	 */
++	for (i = 0; i < ichdr.count; i++) {
++		/*
++		 * Read the subsidiary block to see what we have to work with.
++		 * Don't do this in a transaction.  This is a depth-first
++		 * traversal of the tree so we may deal with many blocks
++		 * before we come back to this one.
++		 */
++		error = xfs_da3_node_read(*trans, dp, child_fsb, -2, &child_bp,
++						XFS_ATTR_FORK);
++		if (error)
++			return(error);
++		if (child_bp) {
++						/* save for re-read later */
++			child_blkno = XFS_BUF_ADDR(child_bp);
++
++			/*
++			 * Invalidate the subtree, however we have to.
++			 */
++			info = child_bp->b_addr;
++			switch (info->magic) {
++			case cpu_to_be16(XFS_DA_NODE_MAGIC):
++			case cpu_to_be16(XFS_DA3_NODE_MAGIC):
++				error = xfs_attr3_node_inactive(trans, dp,
++							child_bp, level + 1);
++				break;
++			case cpu_to_be16(XFS_ATTR_LEAF_MAGIC):
++			case cpu_to_be16(XFS_ATTR3_LEAF_MAGIC):
++				error = xfs_attr3_leaf_inactive(trans, dp,
++							child_bp);
++				break;
++			default:
++				error = XFS_ERROR(EIO);
++				xfs_trans_brelse(*trans, child_bp);
++				break;
++			}
++			if (error)
++				return error;
++
++			/*
++			 * Remove the subsidiary block from the cache
++			 * and from the log.
++			 */
++			error = xfs_da_get_buf(*trans, dp, 0, child_blkno,
++				&child_bp, XFS_ATTR_FORK);
++			if (error)
++				return error;
++			xfs_trans_binval(*trans, child_bp);
++		}
++
++		/*
++		 * If we're not done, re-read the parent to get the next
++		 * child block number.
++		 */
++		if (i + 1 < ichdr.count) {
++			error = xfs_da3_node_read(*trans, dp, 0, parent_blkno,
++						 &bp, XFS_ATTR_FORK);
++			if (error)
++				return error;
++			child_fsb = be32_to_cpu(btree[i + 1].before);
++			xfs_trans_brelse(*trans, bp);
++		}
++		/*
++		 * Atomically commit the whole invalidate stuff.
++		 */
++		error = xfs_trans_roll(trans, dp);
++		if (error)
++			return  error;
++	}
++
++	return 0;
++}
++
++/*
++ * Indiscriminately delete the entire attribute fork
++ *
++ * Recurse (gasp!) through the attribute nodes until we find leaves.
++ * We're doing a depth-first traversal in order to invalidate everything.
++ */
++int
++xfs_attr3_root_inactive(
++	struct xfs_trans	**trans,
++	struct xfs_inode	*dp)
++{
++	struct xfs_da_blkinfo	*info;
++	struct xfs_buf		*bp;
++	xfs_daddr_t		blkno;
++	int			error;
++
++	/*
++	 * Read block 0 to see what we have to work with.
++	 * We only get here if we have extents, since we remove
++	 * the extents in reverse order the extent containing
++	 * block 0 must still be there.
++	 */
++	error = xfs_da3_node_read(*trans, dp, 0, -1, &bp, XFS_ATTR_FORK);
++	if (error)
++		return error;
++	blkno = bp->b_bn;
++
++	/*
++	 * Invalidate the tree, even if the "tree" is only a single leaf block.
++	 * This is a depth-first traversal!
++	 */
++	info = bp->b_addr;
++	switch (info->magic) {
++	case cpu_to_be16(XFS_DA_NODE_MAGIC):
++	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
++		error = xfs_attr3_node_inactive(trans, dp, bp, 1);
++		break;
++	case cpu_to_be16(XFS_ATTR_LEAF_MAGIC):
++	case cpu_to_be16(XFS_ATTR3_LEAF_MAGIC):
++		error = xfs_attr3_leaf_inactive(trans, dp, bp);
++		break;
++	default:
++		error = XFS_ERROR(EIO);
++		xfs_trans_brelse(*trans, bp);
++		break;
++	}
++	if (error)
++		return error;
++
++	/*
++	 * Invalidate the incore copy of the root block.
++	 */
++	error = xfs_da_get_buf(*trans, dp, 0, blkno, &bp, XFS_ATTR_FORK);
++	if (error)
++		return error;
++	xfs_trans_binval(*trans, bp);	/* remove from cache */
++	/*
++	 * Commit the invalidate and start the next transaction.
++	 */
++	error = xfs_trans_roll(trans, dp);
++
++	return error;
++}
++
++int
++xfs_attr_inactive(xfs_inode_t *dp)
++{
++	xfs_trans_t *trans;
++	xfs_mount_t *mp;
++	int error;
++
++	mp = dp->i_mount;
++	ASSERT(! XFS_NOT_DQATTACHED(mp, dp));
++
++	xfs_ilock(dp, XFS_ILOCK_SHARED);
++	if (!xfs_inode_hasattr(dp) ||
++	    dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
++		xfs_iunlock(dp, XFS_ILOCK_SHARED);
++		return 0;
++	}
++	xfs_iunlock(dp, XFS_ILOCK_SHARED);
++
++	/*
++	 * Start our first transaction of the day.
++	 *
++	 * All future transactions during this code must be "chained" off
++	 * this one via the trans_dup() call.  All transactions will contain
++	 * the inode, and the inode will always be marked with trans_ihold().
++	 * Since the inode will be locked in all transactions, we must log
++	 * the inode in every transaction to let it float upward through
++	 * the log.
++	 */
++	trans = xfs_trans_alloc(mp, XFS_TRANS_ATTRINVAL);
++	if ((error = xfs_trans_reserve(trans, 0, XFS_ATTRINVAL_LOG_RES(mp), 0,
++				      XFS_TRANS_PERM_LOG_RES,
++				      XFS_ATTRINVAL_LOG_COUNT))) {
++		xfs_trans_cancel(trans, 0);
++		return(error);
++	}
++	xfs_ilock(dp, XFS_ILOCK_EXCL);
++
++	/*
++	 * No need to make quota reservations here. We expect to release some
++	 * blocks, not allocate, in the common case.
++	 */
++	xfs_trans_ijoin(trans, dp, 0);
++
++	/*
++	 * Decide on what work routines to call based on the inode size.
++	 */
++	if (!xfs_inode_hasattr(dp) ||
++	    dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
++		error = 0;
++		goto out;
++	}
++	error = xfs_attr3_root_inactive(&trans, dp);
++	if (error)
++		goto out;
++
++	error = xfs_itruncate_extents(&trans, dp, XFS_ATTR_FORK, 0);
++	if (error)
++		goto out;
++
++	error = xfs_trans_commit(trans, XFS_TRANS_RELEASE_LOG_RES);
++	xfs_iunlock(dp, XFS_ILOCK_EXCL);
++
++	return(error);
++
++out:
++	xfs_trans_cancel(trans, XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_ABORT);
++	xfs_iunlock(dp, XFS_ILOCK_EXCL);
++	return(error);
++}
+diff --git a/fs/xfs/xfs_attr_leaf.c b/fs/xfs/xfs_attr_leaf.c
+index ba13857..791ade2 100644
+--- a/fs/xfs/xfs_attr_leaf.c
++++ b/fs/xfs/xfs_attr_leaf.c
+@@ -2712,344 +2712,3 @@ xfs_attr3_leaf_flipflags(
+ 	return error;
+ }
+ 
+-/*========================================================================
+- * Indiscriminately delete the entire attribute fork
+- *========================================================================*/
+-
+-/*
+- * Recurse (gasp!) through the attribute nodes until we find leaves.
+- * We're doing a depth-first traversal in order to invalidate everything.
+- */
+-int
+-xfs_attr3_root_inactive(
+-	struct xfs_trans	**trans,
+-	struct xfs_inode	*dp)
+-{
+-	struct xfs_da_blkinfo	*info;
+-	struct xfs_buf		*bp;
+-	xfs_daddr_t		blkno;
+-	int			error;
+-
+-	/*
+-	 * Read block 0 to see what we have to work with.
+-	 * We only get here if we have extents, since we remove
+-	 * the extents in reverse order the extent containing
+-	 * block 0 must still be there.
+-	 */
+-	error = xfs_da3_node_read(*trans, dp, 0, -1, &bp, XFS_ATTR_FORK);
+-	if (error)
+-		return error;
+-	blkno = bp->b_bn;
+-
+-	/*
+-	 * Invalidate the tree, even if the "tree" is only a single leaf block.
+-	 * This is a depth-first traversal!
+-	 */
+-	info = bp->b_addr;
+-	switch (info->magic) {
+-	case cpu_to_be16(XFS_DA_NODE_MAGIC):
+-	case cpu_to_be16(XFS_DA3_NODE_MAGIC):
+-		error = xfs_attr3_node_inactive(trans, dp, bp, 1);
+-		break;
+-	case cpu_to_be16(XFS_ATTR_LEAF_MAGIC):
+-	case cpu_to_be16(XFS_ATTR3_LEAF_MAGIC):
+-		error = xfs_attr3_leaf_inactive(trans, dp, bp);
+-		break;
+-	default:
+-		error = XFS_ERROR(EIO);
+-		xfs_trans_brelse(*trans, bp);
+-		break;
+-	}
+-	if (error)
+-		return error;
+-
+-	/*
+-	 * Invalidate the incore copy of the root block.
+-	 */
+-	error = xfs_da_get_buf(*trans, dp, 0, blkno, &bp, XFS_ATTR_FORK);
+-	if (error)
+-		return error;
+-	xfs_trans_binval(*trans, bp);	/* remove from cache */
+-	/*
+-	 * Commit the invalidate and start the next transaction.
+-	 */
+-	error = xfs_trans_roll(trans, dp);
+-
+-	return error;
+-}
+-
+-/*
+- * Recurse (gasp!) through the attribute nodes until we find leaves.
+- * We're doing a depth-first traversal in order to invalidate everything.
+- */
+-STATIC int
+-xfs_attr3_node_inactive(
+-	struct xfs_trans **trans,
+-	struct xfs_inode *dp,
+-	struct xfs_buf	*bp,
+-	int		level)
+-{
+-	xfs_da_blkinfo_t *info;
+-	xfs_da_intnode_t *node;
+-	xfs_dablk_t child_fsb;
+-	xfs_daddr_t parent_blkno, child_blkno;
+-	int error, i;
+-	struct xfs_buf *child_bp;
+-	struct xfs_da_node_entry *btree;
+-	struct xfs_da3_icnode_hdr ichdr;
+-
+-	/*
+-	 * Since this code is recursive (gasp!) we must protect ourselves.
+-	 */
+-	if (level > XFS_DA_NODE_MAXDEPTH) {
+-		xfs_trans_brelse(*trans, bp);	/* no locks for later trans */
+-		return XFS_ERROR(EIO);
+-	}
+-
+-	node = bp->b_addr;
+-	xfs_da3_node_hdr_from_disk(&ichdr, node);
+-	parent_blkno = bp->b_bn;
+-	if (!ichdr.count) {
+-		xfs_trans_brelse(*trans, bp);
+-		return 0;
+-	}
+-	btree = xfs_da3_node_tree_p(node);
+-	child_fsb = be32_to_cpu(btree[0].before);
+-	xfs_trans_brelse(*trans, bp);	/* no locks for later trans */
+-
+-	/*
+-	 * If this is the node level just above the leaves, simply loop
+-	 * over the leaves removing all of them.  If this is higher up
+-	 * in the tree, recurse downward.
+-	 */
+-	for (i = 0; i < ichdr.count; i++) {
+-		/*
+-		 * Read the subsidiary block to see what we have to work with.
+-		 * Don't do this in a transaction.  This is a depth-first
+-		 * traversal of the tree so we may deal with many blocks
+-		 * before we come back to this one.
+-		 */
+-		error = xfs_da3_node_read(*trans, dp, child_fsb, -2, &child_bp,
+-						XFS_ATTR_FORK);
+-		if (error)
+-			return(error);
+-		if (child_bp) {
+-						/* save for re-read later */
+-			child_blkno = XFS_BUF_ADDR(child_bp);
+-
+-			/*
+-			 * Invalidate the subtree, however we have to.
+-			 */
+-			info = child_bp->b_addr;
+-			switch (info->magic) {
+-			case cpu_to_be16(XFS_DA_NODE_MAGIC):
+-			case cpu_to_be16(XFS_DA3_NODE_MAGIC):
+-				error = xfs_attr3_node_inactive(trans, dp,
+-							child_bp, level + 1);
+-				break;
+-			case cpu_to_be16(XFS_ATTR_LEAF_MAGIC):
+-			case cpu_to_be16(XFS_ATTR3_LEAF_MAGIC):
+-				error = xfs_attr3_leaf_inactive(trans, dp,
+-							child_bp);
+-				break;
+-			default:
+-				error = XFS_ERROR(EIO);
+-				xfs_trans_brelse(*trans, child_bp);
+-				break;
+-			}
+-			if (error)
+-				return error;
+-
+-			/*
+-			 * Remove the subsidiary block from the cache
+-			 * and from the log.
+-			 */
+-			error = xfs_da_get_buf(*trans, dp, 0, child_blkno,
+-				&child_bp, XFS_ATTR_FORK);
+-			if (error)
+-				return error;
+-			xfs_trans_binval(*trans, child_bp);
+-		}
+-
+-		/*
+-		 * If we're not done, re-read the parent to get the next
+-		 * child block number.
+-		 */
+-		if (i + 1 < ichdr.count) {
+-			error = xfs_da3_node_read(*trans, dp, 0, parent_blkno,
+-						 &bp, XFS_ATTR_FORK);
+-			if (error)
+-				return error;
+-			child_fsb = be32_to_cpu(btree[i + 1].before);
+-			xfs_trans_brelse(*trans, bp);
+-		}
+-		/*
+-		 * Atomically commit the whole invalidate stuff.
+-		 */
+-		error = xfs_trans_roll(trans, dp);
+-		if (error)
+-			return  error;
+-	}
+-
+-	return 0;
+-}
+-
+-/*
+- * Invalidate all of the "remote" value regions pointed to by a particular
+- * leaf block.
+- * Note that we must release the lock on the buffer so that we are not
+- * caught holding something that the logging code wants to flush to disk.
+- */
+-STATIC int
+-xfs_attr3_leaf_inactive(
+-	struct xfs_trans	**trans,
+-	struct xfs_inode	*dp,
+-	struct xfs_buf		*bp)
+-{
+-	struct xfs_attr_leafblock *leaf;
+-	struct xfs_attr3_icleaf_hdr ichdr;
+-	struct xfs_attr_leaf_entry *entry;
+-	struct xfs_attr_leaf_name_remote *name_rmt;
+-	struct xfs_attr_inactive_list *list;
+-	struct xfs_attr_inactive_list *lp;
+-	int			error;
+-	int			count;
+-	int			size;
+-	int			tmp;
+-	int			i;
+-
+-	leaf = bp->b_addr;
+-	xfs_attr3_leaf_hdr_from_disk(&ichdr, leaf);
+-
+-	/*
+-	 * Count the number of "remote" value extents.
+-	 */
+-	count = 0;
+-	entry = xfs_attr3_leaf_entryp(leaf);
+-	for (i = 0; i < ichdr.count; entry++, i++) {
+-		if (be16_to_cpu(entry->nameidx) &&
+-		    ((entry->flags & XFS_ATTR_LOCAL) == 0)) {
+-			name_rmt = xfs_attr3_leaf_name_remote(leaf, i);
+-			if (name_rmt->valueblk)
+-				count++;
+-		}
+-	}
+-
+-	/*
+-	 * If there are no "remote" values, we're done.
+-	 */
+-	if (count == 0) {
+-		xfs_trans_brelse(*trans, bp);
+-		return 0;
+-	}
+-
+-	/*
+-	 * Allocate storage for a list of all the "remote" value extents.
+-	 */
+-	size = count * sizeof(xfs_attr_inactive_list_t);
+-	list = kmem_alloc(size, KM_SLEEP);
+-
+-	/*
+-	 * Identify each of the "remote" value extents.
+-	 */
+-	lp = list;
+-	entry = xfs_attr3_leaf_entryp(leaf);
+-	for (i = 0; i < ichdr.count; entry++, i++) {
+-		if (be16_to_cpu(entry->nameidx) &&
+-		    ((entry->flags & XFS_ATTR_LOCAL) == 0)) {
+-			name_rmt = xfs_attr3_leaf_name_remote(leaf, i);
+-			if (name_rmt->valueblk) {
+-				lp->valueblk = be32_to_cpu(name_rmt->valueblk);
+-				lp->valuelen = xfs_attr3_rmt_blocks(dp->i_mount,
+-						    be32_to_cpu(name_rmt->valuelen));
+-				lp++;
+-			}
+-		}
+-	}
+-	xfs_trans_brelse(*trans, bp);	/* unlock for trans. in freextent() */
+-
+-	/*
+-	 * Invalidate each of the "remote" value extents.
+-	 */
+-	error = 0;
+-	for (lp = list, i = 0; i < count; i++, lp++) {
+-		tmp = xfs_attr3_leaf_freextent(trans, dp,
+-				lp->valueblk, lp->valuelen);
+-
+-		if (error == 0)
+-			error = tmp;	/* save only the 1st errno */
+-	}
+-
+-	kmem_free(list);
+-	return error;
+-}
+-
+-/*
+- * Look at all the extents for this logical region,
+- * invalidate any buffers that are incore/in transactions.
+- */
+-STATIC int
+-xfs_attr3_leaf_freextent(
+-	struct xfs_trans	**trans,
+-	struct xfs_inode	*dp,
+-	xfs_dablk_t		blkno,
+-	int			blkcnt)
+-{
+-	struct xfs_bmbt_irec	map;
+-	struct xfs_buf		*bp;
+-	xfs_dablk_t		tblkno;
+-	xfs_daddr_t		dblkno;
+-	int			tblkcnt;
+-	int			dblkcnt;
+-	int			nmap;
+-	int			error;
+-
+-	/*
+-	 * Roll through the "value", invalidating the attribute value's
+-	 * blocks.
+-	 */
+-	tblkno = blkno;
+-	tblkcnt = blkcnt;
+-	while (tblkcnt > 0) {
+-		/*
+-		 * Try to remember where we decided to put the value.
+-		 */
+-		nmap = 1;
+-		error = xfs_bmapi_read(dp, (xfs_fileoff_t)tblkno, tblkcnt,
+-				       &map, &nmap, XFS_BMAPI_ATTRFORK);
+-		if (error) {
+-			return(error);
+-		}
+-		ASSERT(nmap == 1);
+-		ASSERT(map.br_startblock != DELAYSTARTBLOCK);
+-
+-		/*
+-		 * If it's a hole, these are already unmapped
+-		 * so there's nothing to invalidate.
+-		 */
+-		if (map.br_startblock != HOLESTARTBLOCK) {
+-
+-			dblkno = XFS_FSB_TO_DADDR(dp->i_mount,
+-						  map.br_startblock);
+-			dblkcnt = XFS_FSB_TO_BB(dp->i_mount,
+-						map.br_blockcount);
+-			bp = xfs_trans_get_buf(*trans,
+-					dp->i_mount->m_ddev_targp,
+-					dblkno, dblkcnt, 0);
+-			if (!bp)
+-				return ENOMEM;
+-			xfs_trans_binval(*trans, bp);
+-			/*
+-			 * Roll to next transaction.
+-			 */
+-			error = xfs_trans_roll(trans, dp);
+-			if (error)
+-				return (error);
+-		}
+-
+-		tblkno += map.br_blockcount;
+-		tblkcnt -= map.br_blockcount;
+-	}
+-
+-	return(0);
+-}
 -- 
 1.7.10.4
 
