@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2C40F7F76
-	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 04:15:44 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 63BFD7F76
+	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 04:40:29 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 006B1304039
-	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 02:15:43 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3D401304032
+	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 02:40:29 -0700 (PDT)
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id 3tRfftGtDiStqBvJ (version=TLSv1
+	by cuda.sgi.com with ESMTP id 64LqLS9dZ8kixKQi (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 19 Jun 2013 02:15:41 -0700 (PDT)
-Date: Wed, 19 Jun 2013 02:15:38 -0700
+	Wed, 19 Jun 2013 02:40:28 -0700 (PDT)
+Date: Wed, 19 Jun 2013 02:40:28 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 00/60] xfs: patch queue for 3.11
-Message-ID: <20130619091538.GA359@infradead.org>
+Subject: Re: [PATCH 29/60] xfs: consolidate xfs_utils.c
+Message-ID: <20130619094028.GA19573@infradead.org>
 References: <1371617468-32559-1-git-send-email-david@fromorbit.com>
+	<1371617468-32559-30-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1371617468-32559-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1371617468-32559-30-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,21 +33,35 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-Hi Dave,
+> +/*
+> + * Allocates a new inode from disk and return a pointer to the
+> + * incore copy. This routine will internally commit the current
+> + * transaction and allocate a new one if the Space Manager needed
+> + * to do an allocation to replenish the inode free-list.
+> + *
+> + * This routine is designed to be called from xfs_create and
+> + * xfs_create_dir.
 
-I like this version a lot better from a quick glance.
+xfs_create_dir is long gone.  I suspect it's best to just kill that
+sentence.
 
-A few more comments:
+> +/*
+> + * Decrement the link count on an inode & log the change.
+> + * If this causes the link count to go to zero, initiate the
+> + * logging activity required to truncate a file.
+> + */
+> +int				/* error */
+> +xfs_droplink(
 
- - do we really want all that many separate _format.h headers?
-   I'd be really tempted to say we have just a single xfs_format.h
-   header, which should declare everything.  It's still not all that
-   large, and it would be a really good start to ease our include mess.
- - xfs_extent_ops.c still has that odd _ops.c name I hate because it
-   tends to imply it's an implementation of some ops vector.  How about
-   xfs_alloc_util.c to go with the other _util name you added?
- - any chance to reorder the inode.c split so that stuff doesn't get
-   move around multiple times?
+Can be static now.
+
+> +/*
+> + * Increment the link count on an inode & log the change.
+> + */
+> +int
+> +xfs_bumplink(
+
+Same here.
 
 _______________________________________________
 xfs mailing list
