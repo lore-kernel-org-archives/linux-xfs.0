@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1B7257CBF
-	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 16:34:37 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9C96DAC001
-	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 14:34:33 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	21Y8AGjErJzAizfD for <xfs@oss.sgi.com>;
-	Wed, 19 Jun 2013 14:34:31 -0700 (PDT)
-Date: Thu, 20 Jun 2013 07:34:17 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 00/60] xfs: patch queue for 3.11
-Message-ID: <20130619213417.GI29338@dastard>
-References: <1371617468-32559-1-git-send-email-david@fromorbit.com>
-	<20130619091538.GA359@infradead.org>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 9EC1C7CBF
+	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 16:51:46 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6E5C28F8039
+	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 14:51:46 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id fo30WDBuTXfIBCT9 for <xfs@oss.sgi.com>;
+	Wed, 19 Jun 2013 14:51:44 -0700 (PDT)
+Message-ID: <51C227ED.5010108@sandeen.net>
+Date: Wed, 19 Jun 2013 16:51:41 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130619091538.GA359@infradead.org>
+Subject: Re: [PATCH] xfs: check on-disk (not incore) btree root size in dfrag.c
+References: <4F7225BA.40200@redhat.com>
+In-Reply-To: <4F7225BA.40200@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,50 +27,99 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Wed, Jun 19, 2013 at 02:15:38AM -0700, Christoph Hellwig wrote:
-> Hi Dave,
+On 3/27/12 3:40 PM, Eric Sandeen wrote:
+> xfs_swap_extents_check_format() contains checks to make sure that
+> original and the temporary files during defrag are compatible;
+> Gabriel VLASIU ran into a case where xfs_fsr returned EINVAL
+> because the tests found the btree root to be of size 120,
+> while the fork offset was only 104; IOW, they overlapped.
 > 
-> I like this version a lot better from a quick glance.
+> However, this is just due to an error in the
+> xfs_swap_extents_check_format() tests, because it is checking
+> the in-memory btree root size against the on-disk fork offset.
+> We should be checking the on-disk sizes in both cases.
 > 
-> A few more comments:
+> This patch adds a new macro to calculate this size, and uses
+> it in the tests.
 > 
->  - do we really want all that many separate _format.h headers?
->    I'd be really tempted to say we have just a single xfs_format.h
->    header, which should declare everything.  It's still not all that
->    large, and it would be a really good start to ease our include mess.
+> With this change, the filesystem image provided by Gabriel
+> allows for proper file degragmentation.
 
-I don't see any problem with doing that, though I would like to keep
-some of it separate - the dir2 stuff is complex enough that I would
-like to keep it separate, but stuff like all the log item format
-headers can be aggregated.
+I think this and the followup patch 2/1 got lost.
 
-How about we end up with xfs_log_format.h for the log and log item
-formats, xfs_da_format.h for all the dir2/da/attr format definitions,
-and xfs_format.h for everything else?
+Ben, any idea?
 
->  - xfs_extent_ops.c still has that odd _ops.c name I hate because it
->    tends to imply it's an implementation of some ops vector.  How about
->    xfs_alloc_util.c to go with the other _util name you added?
+Thanks,
 
-Yup, sounds reasonable. sed can sort that one out.
+-Eric
 
->  - any chance to reorder the inode.c split so that stuff doesn't get
->    move around multiple times?
-
-I was waiting for that question - I have been considering doing that
-but I've been putting it off because it is a fair bit of shuffling
-that I'd have to do from scratch. Sounds like another vote for :redo
-it"...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> Reported-by: Gabriel VLASIU <gabriel@vlasiu.net>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> diff --git a/fs/xfs/xfs_bmap_btree.h b/fs/xfs/xfs_bmap_btree.h
+> index 0e66c4e..d9eeb64 100644
+> --- a/fs/xfs/xfs_bmap_btree.h
+> +++ b/fs/xfs/xfs_bmap_btree.h
+> @@ -189,12 +189,14 @@ typedef __be64 xfs_bmbt_ptr_t, xfs_bmdr_ptr_t;
+>  #define XFS_BMAP_BROOT_SPACE_CALC(nrecs) \
+>  	(int)(XFS_BTREE_LBLOCK_LEN + \
+>  	       ((nrecs) * (sizeof(xfs_bmbt_key_t) + sizeof(xfs_bmbt_ptr_t))))
+> -
+>  #define XFS_BMAP_BROOT_SPACE(bb) \
+>  	(XFS_BMAP_BROOT_SPACE_CALC(be16_to_cpu((bb)->bb_numrecs)))
+> +
+>  #define XFS_BMDR_SPACE_CALC(nrecs) \
+>  	(int)(sizeof(xfs_bmdr_block_t) + \
+>  	       ((nrecs) * (sizeof(xfs_bmbt_key_t) + sizeof(xfs_bmbt_ptr_t))))
+> +#define XFS_BMAP_BMDR_SPACE(bb) \
+> +	(XFS_BMDR_SPACE_CALC(be16_to_cpu((bb)->bb_numrecs)))
+>  
+>  /*
+>   * Maximum number of bmap btree levels.
+> diff --git a/fs/xfs/xfs_dfrag.c b/fs/xfs/xfs_dfrag.c
+> index dd974a5..2707d86 100644
+> --- a/fs/xfs/xfs_dfrag.c
+> +++ b/fs/xfs/xfs_dfrag.c
+> @@ -26,6 +26,9 @@
+>  #include "xfs_ag.h"
+>  #include "xfs_mount.h"
+>  #include "xfs_bmap_btree.h"
+> +#include "xfs_alloc_btree.h"
+> +#include "xfs_ialloc_btree.h"
+> +#include "xfs_btree.h"
+>  #include "xfs_dinode.h"
+>  #include "xfs_inode.h"
+>  #include "xfs_inode_item.h"
+> @@ -184,7 +187,7 @@ xfs_swap_extents_check_format(
+>  	 */
+>  	if (tip->i_d.di_format == XFS_DINODE_FMT_BTREE) {
+>  		if (XFS_IFORK_BOFF(ip) &&
+> -		    tip->i_df.if_broot_bytes > XFS_IFORK_BOFF(ip))
+> +		    XFS_BMAP_BMDR_SPACE(tip->i_df.if_broot) > XFS_IFORK_BOFF(ip))
+>  			return EINVAL;
+>  		if (XFS_IFORK_NEXTENTS(tip, XFS_DATA_FORK) <=
+>  		    XFS_IFORK_MAXEXT(ip, XFS_DATA_FORK))
+> @@ -194,9 +197,8 @@ xfs_swap_extents_check_format(
+>  	/* Reciprocal target->temp btree format checks */
+>  	if (ip->i_d.di_format == XFS_DINODE_FMT_BTREE) {
+>  		if (XFS_IFORK_BOFF(tip) &&
+> -		    ip->i_df.if_broot_bytes > XFS_IFORK_BOFF(tip))
+> +		    XFS_BMAP_BMDR_SPACE(ip->i_df.if_broot) > XFS_IFORK_BOFF(tip))
+>  			return EINVAL;
+> -
+>  		if (XFS_IFORK_NEXTENTS(ip, XFS_DATA_FORK) <=
+>  		    XFS_IFORK_MAXEXT(tip, XFS_DATA_FORK))
+>  			return EINVAL;
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
