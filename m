@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id BCF3C29E86
-	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 23:52:49 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 90EE629E4E
+	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 23:52:54 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B65D8304039
-	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 21:52:49 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 893E38F8033
+	for <xfs@oss.sgi.com>; Tue, 18 Jun 2013 21:52:54 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	HHJ3dlFjkYG0IexX for <xfs@oss.sgi.com>;
-	Tue, 18 Jun 2013 21:52:46 -0700 (PDT)
+	0vdDZzLYuQfF9LJt for <xfs@oss.sgi.com>;
+	Tue, 18 Jun 2013 21:52:52 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1UpANf-00030D-RV
-	for xfs@oss.sgi.com; Wed, 19 Jun 2013 14:52:27 +1000
+	(envelope-from <dave@fromorbit.com>) id 1UpAO1-000317-0h
+	for xfs@oss.sgi.com; Wed, 19 Jun 2013 14:52:49 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1UpANf-00006P-O0
-	for xfs@oss.sgi.com; Wed, 19 Jun 2013 14:52:27 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1UpANq-00007I-Iq
+	for xfs@oss.sgi.com; Wed, 19 Jun 2013 14:52:38 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 36/60] xfs: move swap extent code to xfs_extent_ops
-Date: Wed, 19 Jun 2013 14:50:44 +1000
-Message-Id: <1371617468-32559-37-git-send-email-david@fromorbit.com>
+Subject: [PATCH 47/60] xfs: separate out log format definitions
+Date: Wed, 19 Jun 2013 14:50:55 +1000
+Message-Id: <1371617468-32559-48-git-send-email-david@fromorbit.com>
 In-Reply-To: <1371617468-32559-1-git-send-email-david@fromorbit.com>
 References: <1371617468-32559-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,1052 +38,526 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Swapping extents is clearly an extent operaiton, and it is not
-shared with userspace. Move the code to xfs_extent_ops.[ch], and
-the userspace ioctl structure definition to xfs_fs.h where most of
-the other ioctl structure definitions are. The means xfs_dfrag.h is
-no longer needed in userspace.
+The on-disk format definitions for the log are spread randoms
+through a couple of header files. Consolidate it all in a single
+file that can be shared easily with userspace. This means that
+xfs_log.h and xfs_log_priv.h no longer need to be shared with
+userspace.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/Makefile         |    1 -
- fs/xfs/xfs_dfrag.c      |  456 -----------------------------------------------
- fs/xfs/xfs_dfrag.h      |   53 ------
- fs/xfs/xfs_extent_ops.c |  416 ++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_extent_ops.h |    2 +
- fs/xfs/xfs_fs.h         |   15 ++
- fs/xfs/xfs_ioctl.c      |    1 -
- fs/xfs/xfs_ioctl32.c    |    2 +-
- 8 files changed, 434 insertions(+), 512 deletions(-)
- delete mode 100644 fs/xfs/xfs_dfrag.c
- delete mode 100644 fs/xfs/xfs_dfrag.h
+ fs/xfs/xfs_log.h         |   89 ++++++-----------------
+ fs/xfs/xfs_log_format.h  |  178 ++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_log_priv.h    |  146 ++-----------------------------------
+ fs/xfs/xfs_log_recover.c |    2 +
+ 4 files changed, 207 insertions(+), 208 deletions(-)
+ create mode 100644 fs/xfs/xfs_log_format.h
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index d545286..347d27c 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -31,7 +31,6 @@ xfs-y				+= xfs_aops.o \
- 				   xfs_attr_list.o \
- 				   xfs_bit.o \
- 				   xfs_buf.o \
--				   xfs_dfrag.o \
- 				   xfs_dir2_readdir.o \
- 				   xfs_discard.o \
- 				   xfs_error.o \
-diff --git a/fs/xfs/xfs_dfrag.c b/fs/xfs/xfs_dfrag.c
-deleted file mode 100644
-index a76356a..0000000
---- a/fs/xfs/xfs_dfrag.c
-+++ /dev/null
-@@ -1,456 +0,0 @@
+diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
+index fb630e4..e63d9e1 100644
+--- a/fs/xfs/xfs_log.h
++++ b/fs/xfs/xfs_log.h
+@@ -18,14 +18,29 @@
+ #ifndef	__XFS_LOG_H__
+ #define __XFS_LOG_H__
+ 
+-/* get lsn fields */
+-#define CYCLE_LSN(lsn) ((uint)((lsn)>>32))
+-#define BLOCK_LSN(lsn) ((uint)(lsn))
++#include "xfs_log_format.h"
+ 
+-/* this is used in a spot where we might otherwise double-endian-flip */
+-#define CYCLE_LSN_DISK(lsn) (((__be32 *)&(lsn))[0])
++struct xfs_log_vec {
++	struct xfs_log_vec	*lv_next;	/* next lv in build list */
++	int			lv_niovecs;	/* number of iovecs in lv */
++	struct xfs_log_iovec	*lv_iovecp;	/* iovec array */
++	struct xfs_log_item	*lv_item;	/* owner */
++	char			*lv_buf;	/* formatted buffer */
++	int			lv_buf_len;	/* size of formatted buffer */
++};
++
++#define XFS_LOG_VEC_ORDERED	(-1)
++
++/*
++ * Structure used to pass callback function and the function's argument
++ * to the log manager.
++ */
++typedef struct xfs_log_callback {
++	struct xfs_log_callback	*cb_next;
++	void			(*cb_func)(void *, int);
++	void			*cb_arg;
++} xfs_log_callback_t;
+ 
+-#ifdef __KERNEL__
+ /*
+  * By comparing each component, we don't have to worry about extra
+  * endian issues in treating two 32 bit numbers as one 64 bit number
+@@ -59,67 +74,6 @@ static inline xfs_lsn_t	_lsn_cmp(xfs_lsn_t lsn1, xfs_lsn_t lsn2)
+  */
+ #define XFS_LOG_SYNC		0x1
+ 
+-#endif	/* __KERNEL__ */
+-
+-
+-/* Log Clients */
+-#define XFS_TRANSACTION		0x69
+-#define XFS_VOLUME		0x2
+-#define XFS_LOG			0xaa
+-
+-
+-/* Region types for iovec's i_type */
+-#define XLOG_REG_TYPE_BFORMAT		1
+-#define XLOG_REG_TYPE_BCHUNK		2
+-#define XLOG_REG_TYPE_EFI_FORMAT	3
+-#define XLOG_REG_TYPE_EFD_FORMAT	4
+-#define XLOG_REG_TYPE_IFORMAT		5
+-#define XLOG_REG_TYPE_ICORE		6
+-#define XLOG_REG_TYPE_IEXT		7
+-#define XLOG_REG_TYPE_IBROOT		8
+-#define XLOG_REG_TYPE_ILOCAL		9
+-#define XLOG_REG_TYPE_IATTR_EXT		10
+-#define XLOG_REG_TYPE_IATTR_BROOT	11
+-#define XLOG_REG_TYPE_IATTR_LOCAL	12
+-#define XLOG_REG_TYPE_QFORMAT		13
+-#define XLOG_REG_TYPE_DQUOT		14
+-#define XLOG_REG_TYPE_QUOTAOFF		15
+-#define XLOG_REG_TYPE_LRHEADER		16
+-#define XLOG_REG_TYPE_UNMOUNT		17
+-#define XLOG_REG_TYPE_COMMIT		18
+-#define XLOG_REG_TYPE_TRANSHDR		19
+-#define XLOG_REG_TYPE_ICREATE		20
+-#define XLOG_REG_TYPE_MAX		20
+-
+-typedef struct xfs_log_iovec {
+-	void		*i_addr;	/* beginning address of region */
+-	int		i_len;		/* length in bytes of region */
+-	uint		i_type;		/* type of region */
+-} xfs_log_iovec_t;
+-
+-struct xfs_log_vec {
+-	struct xfs_log_vec	*lv_next;	/* next lv in build list */
+-	int			lv_niovecs;	/* number of iovecs in lv */
+-	struct xfs_log_iovec	*lv_iovecp;	/* iovec array */
+-	struct xfs_log_item	*lv_item;	/* owner */
+-	char			*lv_buf;	/* formatted buffer */
+-	int			lv_buf_len;	/* size of formatted buffer */
+-};
+-
+-#define XFS_LOG_VEC_ORDERED	(-1)
+-
 -/*
-- * Copyright (c) 2000-2006 Silicon Graphics, Inc.
-- * All Rights Reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it would be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write the Free Software Foundation,
-- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- * Structure used to pass callback function and the function's argument
+- * to the log manager.
 - */
--#include "xfs.h"
--#include "xfs_fs.h"
--#include "xfs_types.h"
--#include "xfs_log.h"
--#include "xfs_trans.h"
--#include "xfs_sb.h"
--#include "xfs_ag.h"
--#include "xfs_mount.h"
--#include "xfs_bmap_btree.h"
--#include "xfs_dinode.h"
--#include "xfs_inode.h"
--#include "xfs_inode_item.h"
--#include "xfs_bmap.h"
--#include "xfs_itable.h"
--#include "xfs_dfrag.h"
--#include "xfs_error.h"
--#include "xfs_trace.h"
+-typedef struct xfs_log_callback {
+-	struct xfs_log_callback	*cb_next;
+-	void			(*cb_func)(void *, int);
+-	void			*cb_arg;
+-} xfs_log_callback_t;
 -
 -
--static int xfs_swap_extents(
--	xfs_inode_t	*ip,	/* target inode */
--	xfs_inode_t	*tip,	/* tmp inode */
--	xfs_swapext_t	*sxp);
+-#ifdef __KERNEL__
+ /* Log manager interfaces */
+ struct xfs_mount;
+ struct xlog_in_core;
+@@ -188,5 +142,4 @@ void	xfs_log_work_queue(struct xfs_mount *mp);
+ void	xfs_log_worker(struct work_struct *work);
+ void	xfs_log_quiesce(struct xfs_mount *mp);
+ 
+-#endif
+ #endif	/* __XFS_LOG_H__ */
+diff --git a/fs/xfs/xfs_log_format.h b/fs/xfs/xfs_log_format.h
+new file mode 100644
+index 0000000..9f9aeb6
+--- /dev/null
++++ b/fs/xfs/xfs_log_format.h
+@@ -0,0 +1,178 @@
++/*
++ * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++#ifndef	__XFS_LOG_FORMAT_H__
++#define __XFS_LOG_FORMAT_H__
++
++typedef __uint32_t xlog_tid_t;
++
++#define XLOG_MIN_ICLOGS		2
++#define XLOG_MAX_ICLOGS		8
++#define XLOG_HEADER_MAGIC_NUM	0xFEEDbabe	/* Invalid cycle number */
++#define XLOG_VERSION_1		1
++#define XLOG_VERSION_2		2		/* Large IClogs, Log sunit */
++#define XLOG_VERSION_OKBITS	(XLOG_VERSION_1 | XLOG_VERSION_2)
++#define XLOG_MIN_RECORD_BSIZE	(16*1024)	/* eventually 32k */
++#define XLOG_BIG_RECORD_BSIZE	(32*1024)	/* 32k buffers */
++#define XLOG_MAX_RECORD_BSIZE	(256*1024)
++#define XLOG_HEADER_CYCLE_SIZE	(32*1024)	/* cycle data in header */
++#define XLOG_MIN_RECORD_BSHIFT	14		/* 16384 == 1 << 14 */
++#define XLOG_BIG_RECORD_BSHIFT	15		/* 32k == 1 << 15 */
++#define XLOG_MAX_RECORD_BSHIFT	18		/* 256k == 1 << 18 */
++#define XLOG_BTOLSUNIT(log, b)  (((b)+(log)->l_mp->m_sb.sb_logsunit-1) / \
++                                 (log)->l_mp->m_sb.sb_logsunit)
++#define XLOG_LSUNITTOB(log, su) ((su) * (log)->l_mp->m_sb.sb_logsunit)
++
++#define XLOG_HEADER_SIZE	512
++
++#define XLOG_REC_SHIFT(log) \
++	BTOBB(1 << (xfs_sb_version_haslogv2(&log->l_mp->m_sb) ? \
++	 XLOG_MAX_RECORD_BSHIFT : XLOG_BIG_RECORD_BSHIFT))
++#define XLOG_TOTAL_REC_SHIFT(log) \
++	BTOBB(XLOG_MAX_ICLOGS << (xfs_sb_version_haslogv2(&log->l_mp->m_sb) ? \
++	 XLOG_MAX_RECORD_BSHIFT : XLOG_BIG_RECORD_BSHIFT))
++
++/* get lsn fields */
++#define CYCLE_LSN(lsn) ((uint)((lsn)>>32))
++#define BLOCK_LSN(lsn) ((uint)(lsn))
++
++/* this is used in a spot where we might otherwise double-endian-flip */
++#define CYCLE_LSN_DISK(lsn) (((__be32 *)&(lsn))[0])
++
++static inline xfs_lsn_t xlog_assign_lsn(uint cycle, uint block)
++{
++	return ((xfs_lsn_t)cycle << 32) | block;
++}
++
++static inline uint xlog_get_cycle(char *ptr)
++{
++	if (be32_to_cpu(*(__be32 *)ptr) == XLOG_HEADER_MAGIC_NUM)
++		return be32_to_cpu(*((__be32 *)ptr + 1));
++	else
++		return be32_to_cpu(*(__be32 *)ptr);
++}
++
++/* Log Clients */
++#define XFS_TRANSACTION		0x69
++#define XFS_VOLUME		0x2
++#define XFS_LOG			0xaa
++
++#define XLOG_UNMOUNT_TYPE	0x556e	/* Un for Unmount */
++
++/* Region types for iovec's i_type */
++#define XLOG_REG_TYPE_BFORMAT		1
++#define XLOG_REG_TYPE_BCHUNK		2
++#define XLOG_REG_TYPE_EFI_FORMAT	3
++#define XLOG_REG_TYPE_EFD_FORMAT	4
++#define XLOG_REG_TYPE_IFORMAT		5
++#define XLOG_REG_TYPE_ICORE		6
++#define XLOG_REG_TYPE_IEXT		7
++#define XLOG_REG_TYPE_IBROOT		8
++#define XLOG_REG_TYPE_ILOCAL		9
++#define XLOG_REG_TYPE_IATTR_EXT		10
++#define XLOG_REG_TYPE_IATTR_BROOT	11
++#define XLOG_REG_TYPE_IATTR_LOCAL	12
++#define XLOG_REG_TYPE_QFORMAT		13
++#define XLOG_REG_TYPE_DQUOT		14
++#define XLOG_REG_TYPE_QUOTAOFF		15
++#define XLOG_REG_TYPE_LRHEADER		16
++#define XLOG_REG_TYPE_UNMOUNT		17
++#define XLOG_REG_TYPE_COMMIT		18
++#define XLOG_REG_TYPE_TRANSHDR		19
++#define XLOG_REG_TYPE_ICREATE		20
++#define XLOG_REG_TYPE_MAX		20
++
++/*
++ * Flags to log operation header
++ *
++ * The first write of a new transaction will be preceded with a start
++ * record, XLOG_START_TRANS.  Once a transaction is committed, a commit
++ * record is written, XLOG_COMMIT_TRANS.  If a single region can not fit into
++ * the remainder of the current active in-core log, it is split up into
++ * multiple regions.  Each partial region will be marked with a
++ * XLOG_CONTINUE_TRANS until the last one, which gets marked with XLOG_END_TRANS.
++ *
++ */
++#define XLOG_START_TRANS	0x01	/* Start a new transaction */
++#define XLOG_COMMIT_TRANS	0x02	/* Commit this transaction */
++#define XLOG_CONTINUE_TRANS	0x04	/* Cont this trans into new region */
++#define XLOG_WAS_CONT_TRANS	0x08	/* Cont this trans into new region */
++#define XLOG_END_TRANS		0x10	/* End a continued transaction */
++#define XLOG_UNMOUNT_TRANS	0x20	/* Unmount a filesystem transaction */
++
++
++typedef struct xlog_op_header {
++	__be32	   oh_tid;	/* transaction id of operation	:  4 b */
++	__be32	   oh_len;	/* bytes in data region		:  4 b */
++	__u8	   oh_clientid;	/* who sent me this		:  1 b */
++	__u8	   oh_flags;	/*				:  1 b */
++	__u16	   oh_res2;	/* 32 bit align			:  2 b */
++} xlog_op_header_t;
++
++
++/* valid values for h_fmt */
++#define XLOG_FMT_UNKNOWN  0
++#define XLOG_FMT_LINUX_LE 1
++#define XLOG_FMT_LINUX_BE 2
++#define XLOG_FMT_IRIX_BE  3
++
++/* our fmt */
++#ifdef XFS_NATIVE_HOST
++#define XLOG_FMT XLOG_FMT_LINUX_BE
++#else
++#define XLOG_FMT XLOG_FMT_LINUX_LE
++#endif
++
++typedef struct xlog_rec_header {
++	__be32	  h_magicno;	/* log record (LR) identifier		:  4 */
++	__be32	  h_cycle;	/* write cycle of log			:  4 */
++	__be32	  h_version;	/* LR version				:  4 */
++	__be32	  h_len;	/* len in bytes; should be 64-bit aligned: 4 */
++	__be64	  h_lsn;	/* lsn of this LR			:  8 */
++	__be64	  h_tail_lsn;	/* lsn of 1st LR w/ buffers not committed: 8 */
++	__le32	  h_crc;	/* crc of log record                    :  4 */
++	__be32	  h_prev_block; /* block number to previous LR		:  4 */
++	__be32	  h_num_logops;	/* number of log operations in this LR	:  4 */
++	__be32	  h_cycle_data[XLOG_HEADER_CYCLE_SIZE / BBSIZE];
++	/* new fields */
++	__be32    h_fmt;        /* format of log record                 :  4 */
++	uuid_t	  h_fs_uuid;    /* uuid of FS                           : 16 */
++	__be32	  h_size;	/* iclog size				:  4 */
++} xlog_rec_header_t;
++
++typedef struct xlog_rec_ext_header {
++	__be32	  xh_cycle;	/* write cycle of log			: 4 */
++	__be32	  xh_cycle_data[XLOG_HEADER_CYCLE_SIZE / BBSIZE]; /*	: 256 */
++} xlog_rec_ext_header_t;
++
++/*
++ * Quite misnamed, because this union lays out the actual on-disk log buffer.
++ */
++typedef union xlog_in_core2 {
++	xlog_rec_header_t	hic_header;
++	xlog_rec_ext_header_t	hic_xheader;
++	char			hic_sector[XLOG_HEADER_SIZE];
++} xlog_in_core_2_t;
++
++/* not an on-disk structure, but needed by log recovery in userspace */
++typedef struct xfs_log_iovec {
++	void		*i_addr;	/* beginning address of region */
++	int		i_len;		/* length in bytes of region */
++	uint		i_type;		/* type of region */
++} xfs_log_iovec_t;
++
++#endif /* __XFS_LOG_FORMAT_H__ */
+diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+index b9ea262..edd0964 100644
+--- a/fs/xfs/xfs_log_priv.h
++++ b/fs/xfs/xfs_log_priv.h
+@@ -24,51 +24,13 @@ struct xlog_ticket;
+ struct xfs_mount;
+ 
+ /*
+- * Macros, structures, prototypes for internal log manager use.
++ * Flags for log structure
+  */
 -
--/*
-- * ioctl interface for swapext
-- */
--int
--xfs_swapext(
--	xfs_swapext_t	*sxp)
+-#define XLOG_MIN_ICLOGS		2
+-#define XLOG_MAX_ICLOGS		8
+-#define XLOG_HEADER_MAGIC_NUM	0xFEEDbabe	/* Invalid cycle number */
+-#define XLOG_VERSION_1		1
+-#define XLOG_VERSION_2		2		/* Large IClogs, Log sunit */
+-#define XLOG_VERSION_OKBITS	(XLOG_VERSION_1 | XLOG_VERSION_2)
+-#define XLOG_MIN_RECORD_BSIZE	(16*1024)	/* eventually 32k */
+-#define XLOG_BIG_RECORD_BSIZE	(32*1024)	/* 32k buffers */
+-#define XLOG_MAX_RECORD_BSIZE	(256*1024)
+-#define XLOG_HEADER_CYCLE_SIZE	(32*1024)	/* cycle data in header */
+-#define XLOG_MIN_RECORD_BSHIFT	14		/* 16384 == 1 << 14 */
+-#define XLOG_BIG_RECORD_BSHIFT	15		/* 32k == 1 << 15 */
+-#define XLOG_MAX_RECORD_BSHIFT	18		/* 256k == 1 << 18 */
+-#define XLOG_BTOLSUNIT(log, b)  (((b)+(log)->l_mp->m_sb.sb_logsunit-1) / \
+-                                 (log)->l_mp->m_sb.sb_logsunit)
+-#define XLOG_LSUNITTOB(log, su) ((su) * (log)->l_mp->m_sb.sb_logsunit)
+-
+-#define XLOG_HEADER_SIZE	512
+-
+-#define XLOG_REC_SHIFT(log) \
+-	BTOBB(1 << (xfs_sb_version_haslogv2(&log->l_mp->m_sb) ? \
+-	 XLOG_MAX_RECORD_BSHIFT : XLOG_BIG_RECORD_BSHIFT))
+-#define XLOG_TOTAL_REC_SHIFT(log) \
+-	BTOBB(XLOG_MAX_ICLOGS << (xfs_sb_version_haslogv2(&log->l_mp->m_sb) ? \
+-	 XLOG_MAX_RECORD_BSHIFT : XLOG_BIG_RECORD_BSHIFT))
+-
+-static inline xfs_lsn_t xlog_assign_lsn(uint cycle, uint block)
 -{
--	xfs_inode_t     *ip, *tip;
--	struct fd	f, tmp;
--	int		error = 0;
--
--	/* Pull information for the target fd */
--	f = fdget((int)sxp->sx_fdtarget);
--	if (!f.file) {
--		error = XFS_ERROR(EINVAL);
--		goto out;
--	}
--
--	if (!(f.file->f_mode & FMODE_WRITE) ||
--	    !(f.file->f_mode & FMODE_READ) ||
--	    (f.file->f_flags & O_APPEND)) {
--		error = XFS_ERROR(EBADF);
--		goto out_put_file;
--	}
--
--	tmp = fdget((int)sxp->sx_fdtmp);
--	if (!tmp.file) {
--		error = XFS_ERROR(EINVAL);
--		goto out_put_file;
--	}
--
--	if (!(tmp.file->f_mode & FMODE_WRITE) ||
--	    !(tmp.file->f_mode & FMODE_READ) ||
--	    (tmp.file->f_flags & O_APPEND)) {
--		error = XFS_ERROR(EBADF);
--		goto out_put_tmp_file;
--	}
--
--	if (IS_SWAPFILE(file_inode(f.file)) ||
--	    IS_SWAPFILE(file_inode(tmp.file))) {
--		error = XFS_ERROR(EINVAL);
--		goto out_put_tmp_file;
--	}
--
--	ip = XFS_I(file_inode(f.file));
--	tip = XFS_I(file_inode(tmp.file));
--
--	if (ip->i_mount != tip->i_mount) {
--		error = XFS_ERROR(EINVAL);
--		goto out_put_tmp_file;
--	}
--
--	if (ip->i_ino == tip->i_ino) {
--		error = XFS_ERROR(EINVAL);
--		goto out_put_tmp_file;
--	}
--
--	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) {
--		error = XFS_ERROR(EIO);
--		goto out_put_tmp_file;
--	}
--
--	error = xfs_swap_extents(ip, tip, sxp);
--
-- out_put_tmp_file:
--	fdput(tmp);
-- out_put_file:
--	fdput(f);
-- out:
--	return error;
+-	return ((xfs_lsn_t)cycle << 32) | block;
 -}
 -
--/*
-- * We need to check that the format of the data fork in the temporary inode is
-- * valid for the target inode before doing the swap. This is not a problem with
-- * attr1 because of the fixed fork offset, but attr2 has a dynamically sized
-- * data fork depending on the space the attribute fork is taking so we can get
-- * invalid formats on the target inode.
-- *
-- * E.g. target has space for 7 extents in extent format, temp inode only has
-- * space for 6.  If we defragment down to 7 extents, then the tmp format is a
-- * btree, but when swapped it needs to be in extent format. Hence we can't just
-- * blindly swap data forks on attr2 filesystems.
-- *
-- * Note that we check the swap in both directions so that we don't end up with
-- * a corrupt temporary inode, either.
-- *
-- * Note that fixing the way xfs_fsr sets up the attribute fork in the source
-- * inode will prevent this situation from occurring, so all we do here is
-- * reject and log the attempt. basically we are putting the responsibility on
-- * userspace to get this right.
-- */
--static int
--xfs_swap_extents_check_format(
--	xfs_inode_t	*ip,	/* target inode */
--	xfs_inode_t	*tip)	/* tmp inode */
+-static inline uint xlog_get_cycle(char *ptr)
 -{
--
--	/* Should never get a local format */
--	if (ip->i_d.di_format == XFS_DINODE_FMT_LOCAL ||
--	    tip->i_d.di_format == XFS_DINODE_FMT_LOCAL)
--		return EINVAL;
--
--	/*
--	 * if the target inode has less extents that then temporary inode then
--	 * why did userspace call us?
--	 */
--	if (ip->i_d.di_nextents < tip->i_d.di_nextents)
--		return EINVAL;
--
--	/*
--	 * if the target inode is in extent form and the temp inode is in btree
--	 * form then we will end up with the target inode in the wrong format
--	 * as we already know there are less extents in the temp inode.
--	 */
--	if (ip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
--	    tip->i_d.di_format == XFS_DINODE_FMT_BTREE)
--		return EINVAL;
--
--	/* Check temp in extent form to max in target */
--	if (tip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
--	    XFS_IFORK_NEXTENTS(tip, XFS_DATA_FORK) >
--			XFS_IFORK_MAXEXT(ip, XFS_DATA_FORK))
--		return EINVAL;
--
--	/* Check target in extent form to max in temp */
--	if (ip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
--	    XFS_IFORK_NEXTENTS(ip, XFS_DATA_FORK) >
--			XFS_IFORK_MAXEXT(tip, XFS_DATA_FORK))
--		return EINVAL;
--
--	/*
--	 * If we are in a btree format, check that the temp root block will fit
--	 * in the target and that it has enough extents to be in btree format
--	 * in the target.
--	 *
--	 * Note that we have to be careful to allow btree->extent conversions
--	 * (a common defrag case) which will occur when the temp inode is in
--	 * extent format...
--	 */
--	if (tip->i_d.di_format == XFS_DINODE_FMT_BTREE) {
--		if (XFS_IFORK_BOFF(ip) &&
--		    tip->i_df.if_broot_bytes > XFS_IFORK_BOFF(ip))
--			return EINVAL;
--		if (XFS_IFORK_NEXTENTS(tip, XFS_DATA_FORK) <=
--		    XFS_IFORK_MAXEXT(ip, XFS_DATA_FORK))
--			return EINVAL;
--	}
--
--	/* Reciprocal target->temp btree format checks */
--	if (ip->i_d.di_format == XFS_DINODE_FMT_BTREE) {
--		if (XFS_IFORK_BOFF(tip) &&
--		    ip->i_df.if_broot_bytes > XFS_IFORK_BOFF(tip))
--			return EINVAL;
--
--		if (XFS_IFORK_NEXTENTS(ip, XFS_DATA_FORK) <=
--		    XFS_IFORK_MAXEXT(tip, XFS_DATA_FORK))
--			return EINVAL;
--	}
--
--	return 0;
+-	if (be32_to_cpu(*(__be32 *)ptr) == XLOG_HEADER_MAGIC_NUM)
+-		return be32_to_cpu(*((__be32 *)ptr + 1));
+-	else
+-		return be32_to_cpu(*(__be32 *)ptr);
 -}
 -
--static int
--xfs_swap_extents(
--	xfs_inode_t	*ip,	/* target inode */
--	xfs_inode_t	*tip,	/* tmp inode */
--	xfs_swapext_t	*sxp)
--{
--	xfs_mount_t	*mp = ip->i_mount;
--	xfs_trans_t	*tp;
--	xfs_bstat_t	*sbp = &sxp->sx_stat;
--	xfs_ifork_t	*tempifp, *ifp, *tifp;
--	int		src_log_flags, target_log_flags;
--	int		error = 0;
--	int		aforkblks = 0;
--	int		taforkblks = 0;
--	__uint64_t	tmp;
+-#define BLK_AVG(blk1, blk2)	((blk1+blk2) >> 1)
 -
--	/*
--	 * We have no way of updating owner information in the BMBT blocks for
--	 * each inode on CRC enabled filesystems, so to avoid corrupting the
--	 * this metadata we simply don't allow extent swaps to occur.
--	 */
--	if (xfs_sb_version_hascrc(&mp->m_sb))
--		return XFS_ERROR(EINVAL);
--
--	tempifp = kmem_alloc(sizeof(xfs_ifork_t), KM_MAYFAIL);
--	if (!tempifp) {
--		error = XFS_ERROR(ENOMEM);
--		goto out;
--	}
--
--	/*
--	 * we have to do two separate lock calls here to keep lockdep
--	 * happy. If we try to get all the locks in one call, lock will
--	 * report false positives when we drop the ILOCK and regain them
--	 * below.
--	 */
--	xfs_lock_two_inodes(ip, tip, XFS_IOLOCK_EXCL);
--	xfs_lock_two_inodes(ip, tip, XFS_ILOCK_EXCL);
--
--	/* Verify that both files have the same format */
--	if ((ip->i_d.di_mode & S_IFMT) != (tip->i_d.di_mode & S_IFMT)) {
--		error = XFS_ERROR(EINVAL);
--		goto out_unlock;
--	}
--
--	/* Verify both files are either real-time or non-realtime */
--	if (XFS_IS_REALTIME_INODE(ip) != XFS_IS_REALTIME_INODE(tip)) {
--		error = XFS_ERROR(EINVAL);
--		goto out_unlock;
--	}
--
--	error = -filemap_write_and_wait(VFS_I(tip)->i_mapping);
--	if (error)
--		goto out_unlock;
--	truncate_pagecache_range(VFS_I(tip), 0, -1);
--
--	/* Verify O_DIRECT for ftmp */
--	if (VN_CACHED(VFS_I(tip)) != 0) {
--		error = XFS_ERROR(EINVAL);
--		goto out_unlock;
--	}
--
--	/* Verify all data are being swapped */
--	if (sxp->sx_offset != 0 ||
--	    sxp->sx_length != ip->i_d.di_size ||
--	    sxp->sx_length != tip->i_d.di_size) {
--		error = XFS_ERROR(EFAULT);
--		goto out_unlock;
--	}
--
--	trace_xfs_swap_extent_before(ip, 0);
--	trace_xfs_swap_extent_before(tip, 1);
--
--	/* check inode formats now that data is flushed */
--	error = xfs_swap_extents_check_format(ip, tip);
--	if (error) {
--		xfs_notice(mp,
--		    "%s: inode 0x%llx format is incompatible for exchanging.",
--				__func__, ip->i_ino);
--		goto out_unlock;
--	}
--
--	/*
--	 * Compare the current change & modify times with that
--	 * passed in.  If they differ, we abort this swap.
--	 * This is the mechanism used to ensure the calling
--	 * process that the file was not changed out from
--	 * under it.
--	 */
--	if ((sbp->bs_ctime.tv_sec != VFS_I(ip)->i_ctime.tv_sec) ||
--	    (sbp->bs_ctime.tv_nsec != VFS_I(ip)->i_ctime.tv_nsec) ||
--	    (sbp->bs_mtime.tv_sec != VFS_I(ip)->i_mtime.tv_sec) ||
--	    (sbp->bs_mtime.tv_nsec != VFS_I(ip)->i_mtime.tv_nsec)) {
--		error = XFS_ERROR(EBUSY);
--		goto out_unlock;
--	}
--
--	/* We need to fail if the file is memory mapped.  Once we have tossed
--	 * all existing pages, the page fault will have no option
--	 * but to go to the filesystem for pages. By making the page fault call
--	 * vop_read (or write in the case of autogrow) they block on the iolock
--	 * until we have switched the extents.
--	 */
--	if (VN_MAPPED(VFS_I(ip))) {
--		error = XFS_ERROR(EBUSY);
--		goto out_unlock;
--	}
--
--	xfs_iunlock(ip, XFS_ILOCK_EXCL);
--	xfs_iunlock(tip, XFS_ILOCK_EXCL);
--
--	/*
--	 * There is a race condition here since we gave up the
--	 * ilock.  However, the data fork will not change since
--	 * we have the iolock (locked for truncation too) so we
--	 * are safe.  We don't really care if non-io related
--	 * fields change.
--	 */
--	truncate_pagecache_range(VFS_I(ip), 0, -1);
--
--	tp = xfs_trans_alloc(mp, XFS_TRANS_SWAPEXT);
--	if ((error = xfs_trans_reserve(tp, 0,
--				     XFS_ICHANGE_LOG_RES(mp), 0,
--				     0, 0))) {
--		xfs_iunlock(ip,  XFS_IOLOCK_EXCL);
--		xfs_iunlock(tip, XFS_IOLOCK_EXCL);
--		xfs_trans_cancel(tp, 0);
--		goto out;
--	}
--	xfs_lock_two_inodes(ip, tip, XFS_ILOCK_EXCL);
--
--	/*
--	 * Count the number of extended attribute blocks
--	 */
--	if ( ((XFS_IFORK_Q(ip) != 0) && (ip->i_d.di_anextents > 0)) &&
--	     (ip->i_d.di_aformat != XFS_DINODE_FMT_LOCAL)) {
--		error = xfs_bmap_count_blocks(tp, ip, XFS_ATTR_FORK, &aforkblks);
--		if (error)
--			goto out_trans_cancel;
--	}
--	if ( ((XFS_IFORK_Q(tip) != 0) && (tip->i_d.di_anextents > 0)) &&
--	     (tip->i_d.di_aformat != XFS_DINODE_FMT_LOCAL)) {
--		error = xfs_bmap_count_blocks(tp, tip, XFS_ATTR_FORK,
--			&taforkblks);
--		if (error)
--			goto out_trans_cancel;
--	}
--
--	/*
--	 * Swap the data forks of the inodes
--	 */
--	ifp = &ip->i_df;
--	tifp = &tip->i_df;
--	*tempifp = *ifp;	/* struct copy */
--	*ifp = *tifp;		/* struct copy */
--	*tifp = *tempifp;	/* struct copy */
--
--	/*
--	 * Fix the on-disk inode values
--	 */
--	tmp = (__uint64_t)ip->i_d.di_nblocks;
--	ip->i_d.di_nblocks = tip->i_d.di_nblocks - taforkblks + aforkblks;
--	tip->i_d.di_nblocks = tmp + taforkblks - aforkblks;
--
--	tmp = (__uint64_t) ip->i_d.di_nextents;
--	ip->i_d.di_nextents = tip->i_d.di_nextents;
--	tip->i_d.di_nextents = tmp;
--
--	tmp = (__uint64_t) ip->i_d.di_format;
--	ip->i_d.di_format = tip->i_d.di_format;
--	tip->i_d.di_format = tmp;
--
--	/*
--	 * The extents in the source inode could still contain speculative
--	 * preallocation beyond EOF (e.g. the file is open but not modified
--	 * while defrag is in progress). In that case, we need to copy over the
--	 * number of delalloc blocks the data fork in the source inode is
--	 * tracking beyond EOF so that when the fork is truncated away when the
--	 * temporary inode is unlinked we don't underrun the i_delayed_blks
--	 * counter on that inode.
--	 */
--	ASSERT(tip->i_delayed_blks == 0);
--	tip->i_delayed_blks = ip->i_delayed_blks;
--	ip->i_delayed_blks = 0;
--
--	src_log_flags = XFS_ILOG_CORE;
--	switch (ip->i_d.di_format) {
--	case XFS_DINODE_FMT_EXTENTS:
--		/* If the extents fit in the inode, fix the
--		 * pointer.  Otherwise it's already NULL or
--		 * pointing to the extent.
--		 */
--		if (ip->i_d.di_nextents <= XFS_INLINE_EXTS) {
--			ifp->if_u1.if_extents =
--				ifp->if_u2.if_inline_ext;
--		}
--		src_log_flags |= XFS_ILOG_DEXT;
--		break;
--	case XFS_DINODE_FMT_BTREE:
--		src_log_flags |= XFS_ILOG_DBROOT;
--		break;
--	}
--
--	target_log_flags = XFS_ILOG_CORE;
--	switch (tip->i_d.di_format) {
--	case XFS_DINODE_FMT_EXTENTS:
--		/* If the extents fit in the inode, fix the
--		 * pointer.  Otherwise it's already NULL or
--		 * pointing to the extent.
--		 */
--		if (tip->i_d.di_nextents <= XFS_INLINE_EXTS) {
--			tifp->if_u1.if_extents =
--				tifp->if_u2.if_inline_ext;
--		}
--		target_log_flags |= XFS_ILOG_DEXT;
--		break;
--	case XFS_DINODE_FMT_BTREE:
--		target_log_flags |= XFS_ILOG_DBROOT;
--		break;
--	}
--
--
--	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
--	xfs_trans_ijoin(tp, tip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
--
--	xfs_trans_log_inode(tp, ip,  src_log_flags);
--	xfs_trans_log_inode(tp, tip, target_log_flags);
--
--	/*
--	 * If this is a synchronous mount, make sure that the
--	 * transaction goes to disk before returning to the user.
--	 */
--	if (mp->m_flags & XFS_MOUNT_WSYNC)
--		xfs_trans_set_sync(tp);
--
--	error = xfs_trans_commit(tp, 0);
--
--	trace_xfs_swap_extent_after(ip, 0);
--	trace_xfs_swap_extent_after(tip, 1);
--out:
--	kmem_free(tempifp);
--	return error;
--
--out_unlock:
--	xfs_iunlock(ip,  XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
--	xfs_iunlock(tip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
--	goto out;
--
--out_trans_cancel:
--	xfs_trans_cancel(tp, 0);
--	goto out_unlock;
--}
-diff --git a/fs/xfs/xfs_dfrag.h b/fs/xfs/xfs_dfrag.h
-deleted file mode 100644
-index 20bdd93..0000000
---- a/fs/xfs/xfs_dfrag.h
-+++ /dev/null
-@@ -1,53 +0,0 @@
--/*
-- * Copyright (c) 2000,2005 Silicon Graphics, Inc.
-- * All Rights Reserved.
+-#ifdef __KERNEL__
++#define XLOG_ACTIVE_RECOVERY	0x2	/* in the middle of recovery */
++#define	XLOG_RECOVERY_NEEDED	0x4	/* log was recovered */
++#define XLOG_IO_ERROR		0x8	/* log hit an I/O error, and being
++					   shutdown */
++#define XLOG_TAIL_WARN		0x10	/* log tail verify warning issued */
+ 
+ /*
+  * get client id from packed copy.
+@@ -101,28 +63,8 @@ static inline uint xlog_get_client_id(__be32 i)
+ #define XLOG_STATE_IOERROR   0x0080 /* IO error happened in sync'ing log */
+ #define XLOG_STATE_ALL	     0x7FFF /* All possible valid flags */
+ #define XLOG_STATE_NOTUSED   0x8000 /* This IC log not being used */
+-#endif	/* __KERNEL__ */
+ 
+ /*
+- * Flags to log operation header
 - *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License as
-- * published by the Free Software Foundation.
+- * The first write of a new transaction will be preceded with a start
+- * record, XLOG_START_TRANS.  Once a transaction is committed, a commit
+- * record is written, XLOG_COMMIT_TRANS.  If a single region can not fit into
+- * the remainder of the current active in-core log, it is split up into
+- * multiple regions.  Each partial region will be marked with a
+- * XLOG_CONTINUE_TRANS until the last one, which gets marked with XLOG_END_TRANS.
 - *
-- * This program is distributed in the hope that it would be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write the Free Software Foundation,
-- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 - */
--#ifndef __XFS_DFRAG_H__
--#define	__XFS_DFRAG_H__
--
--/*
-- * Structure passed to xfs_swapext
-- */
--
--typedef struct xfs_swapext
--{
--	__int64_t	sx_version;	/* version */
--	__int64_t	sx_fdtarget;	/* fd of target file */
--	__int64_t	sx_fdtmp;	/* fd of tmp file */
--	xfs_off_t	sx_offset;	/* offset into file */
--	xfs_off_t	sx_length;	/* leng from offset */
--	char		sx_pad[16];	/* pad space, unused */
--	xfs_bstat_t	sx_stat;	/* stat of target b4 copy */
--} xfs_swapext_t;
--
--/*
-- * Version flag
-- */
--#define XFS_SX_VERSION		0
+-#define XLOG_START_TRANS	0x01	/* Start a new transaction */
+-#define XLOG_COMMIT_TRANS	0x02	/* Commit this transaction */
+-#define XLOG_CONTINUE_TRANS	0x04	/* Cont this trans into new region */
+-#define XLOG_WAS_CONT_TRANS	0x08	/* Cont this trans into new region */
+-#define XLOG_END_TRANS		0x10	/* End a continued transaction */
+-#define XLOG_UNMOUNT_TRANS	0x20	/* Unmount a filesystem transaction */
 -
 -#ifdef __KERNEL__
 -/*
-- * Prototypes for visible xfs_dfrag.c routines.
-- */
--
--/*
-- * Syscall interface for xfs_swapext
-- */
--int	xfs_swapext(struct xfs_swapext *sx);
--
+  * Flags to log ticket
+  */
+ #define XLOG_TIC_INITED		0x1	/* has been initialized */
+@@ -132,22 +74,6 @@ static inline uint xlog_get_client_id(__be32 i)
+ 	{ XLOG_TIC_INITED,	"XLOG_TIC_INITED" }, \
+ 	{ XLOG_TIC_PERM_RESERV,	"XLOG_TIC_PERM_RESERV" }
+ 
 -#endif	/* __KERNEL__ */
 -
--#endif	/* __XFS_DFRAG_H__ */
-diff --git a/fs/xfs/xfs_extent_ops.c b/fs/xfs/xfs_extent_ops.c
-index 527af72..170b10b 100644
---- a/fs/xfs/xfs_extent_ops.c
-+++ b/fs/xfs/xfs_extent_ops.c
-@@ -1052,3 +1052,419 @@ xfs_getbmap(
- 	return error;
- }
- 
-+/*
-+ * We need to check that the format of the data fork in the temporary inode is
-+ * valid for the target inode before doing the swap. This is not a problem with
-+ * attr1 because of the fixed fork offset, but attr2 has a dynamically sized
-+ * data fork depending on the space the attribute fork is taking so we can get
-+ * invalid formats on the target inode.
-+ *
-+ * E.g. target has space for 7 extents in extent format, temp inode only has
-+ * space for 6.  If we defragment down to 7 extents, then the tmp format is a
-+ * btree, but when swapped it needs to be in extent format. Hence we can't just
-+ * blindly swap data forks on attr2 filesystems.
-+ *
-+ * Note that we check the swap in both directions so that we don't end up with
-+ * a corrupt temporary inode, either.
-+ *
-+ * Note that fixing the way xfs_fsr sets up the attribute fork in the source
-+ * inode will prevent this situation from occurring, so all we do here is
-+ * reject and log the attempt. basically we are putting the responsibility on
-+ * userspace to get this right.
-+ */
-+static int
-+xfs_swap_extents_check_format(
-+	xfs_inode_t	*ip,	/* target inode */
-+	xfs_inode_t	*tip)	/* tmp inode */
-+{
-+
-+	/* Should never get a local format */
-+	if (ip->i_d.di_format == XFS_DINODE_FMT_LOCAL ||
-+	    tip->i_d.di_format == XFS_DINODE_FMT_LOCAL)
-+		return EINVAL;
-+
-+	/*
-+	 * if the target inode has less extents that then temporary inode then
-+	 * why did userspace call us?
-+	 */
-+	if (ip->i_d.di_nextents < tip->i_d.di_nextents)
-+		return EINVAL;
-+
-+	/*
-+	 * if the target inode is in extent form and the temp inode is in btree
-+	 * form then we will end up with the target inode in the wrong format
-+	 * as we already know there are less extents in the temp inode.
-+	 */
-+	if (ip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
-+	    tip->i_d.di_format == XFS_DINODE_FMT_BTREE)
-+		return EINVAL;
-+
-+	/* Check temp in extent form to max in target */
-+	if (tip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
-+	    XFS_IFORK_NEXTENTS(tip, XFS_DATA_FORK) >
-+			XFS_IFORK_MAXEXT(ip, XFS_DATA_FORK))
-+		return EINVAL;
-+
-+	/* Check target in extent form to max in temp */
-+	if (ip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
-+	    XFS_IFORK_NEXTENTS(ip, XFS_DATA_FORK) >
-+			XFS_IFORK_MAXEXT(tip, XFS_DATA_FORK))
-+		return EINVAL;
-+
-+	/*
-+	 * If we are in a btree format, check that the temp root block will fit
-+	 * in the target and that it has enough extents to be in btree format
-+	 * in the target.
-+	 *
-+	 * Note that we have to be careful to allow btree->extent conversions
-+	 * (a common defrag case) which will occur when the temp inode is in
-+	 * extent format...
-+	 */
-+	if (tip->i_d.di_format == XFS_DINODE_FMT_BTREE) {
-+		if (XFS_IFORK_BOFF(ip) &&
-+		    tip->i_df.if_broot_bytes > XFS_IFORK_BOFF(ip))
-+			return EINVAL;
-+		if (XFS_IFORK_NEXTENTS(tip, XFS_DATA_FORK) <=
-+		    XFS_IFORK_MAXEXT(ip, XFS_DATA_FORK))
-+			return EINVAL;
-+	}
-+
-+	/* Reciprocal target->temp btree format checks */
-+	if (ip->i_d.di_format == XFS_DINODE_FMT_BTREE) {
-+		if (XFS_IFORK_BOFF(tip) &&
-+		    ip->i_df.if_broot_bytes > XFS_IFORK_BOFF(tip))
-+			return EINVAL;
-+
-+		if (XFS_IFORK_NEXTENTS(ip, XFS_DATA_FORK) <=
-+		    XFS_IFORK_MAXEXT(tip, XFS_DATA_FORK))
-+			return EINVAL;
-+	}
-+
-+	return 0;
-+}
-+
-+static int
-+xfs_swap_extents(
-+	xfs_inode_t	*ip,	/* target inode */
-+	xfs_inode_t	*tip,	/* tmp inode */
-+	xfs_swapext_t	*sxp)
-+{
-+	xfs_mount_t	*mp = ip->i_mount;
-+	xfs_trans_t	*tp;
-+	xfs_bstat_t	*sbp = &sxp->sx_stat;
-+	xfs_ifork_t	*tempifp, *ifp, *tifp;
-+	int		src_log_flags, target_log_flags;
-+	int		error = 0;
-+	int		aforkblks = 0;
-+	int		taforkblks = 0;
-+	__uint64_t	tmp;
-+
-+	/*
-+	 * We have no way of updating owner information in the BMBT blocks for
-+	 * each inode on CRC enabled filesystems, so to avoid corrupting the
-+	 * this metadata we simply don't allow extent swaps to occur.
-+	 */
-+	if (xfs_sb_version_hascrc(&mp->m_sb))
-+		return XFS_ERROR(EINVAL);
-+
-+	tempifp = kmem_alloc(sizeof(xfs_ifork_t), KM_MAYFAIL);
-+	if (!tempifp) {
-+		error = XFS_ERROR(ENOMEM);
-+		goto out;
-+	}
-+
-+	/*
-+	 * we have to do two separate lock calls here to keep lockdep
-+	 * happy. If we try to get all the locks in one call, lock will
-+	 * report false positives when we drop the ILOCK and regain them
-+	 * below.
-+	 */
-+	xfs_lock_two_inodes(ip, tip, XFS_IOLOCK_EXCL);
-+	xfs_lock_two_inodes(ip, tip, XFS_ILOCK_EXCL);
-+
-+	/* Verify that both files have the same format */
-+	if ((ip->i_d.di_mode & S_IFMT) != (tip->i_d.di_mode & S_IFMT)) {
-+		error = XFS_ERROR(EINVAL);
-+		goto out_unlock;
-+	}
-+
-+	/* Verify both files are either real-time or non-realtime */
-+	if (XFS_IS_REALTIME_INODE(ip) != XFS_IS_REALTIME_INODE(tip)) {
-+		error = XFS_ERROR(EINVAL);
-+		goto out_unlock;
-+	}
-+
-+	error = -filemap_write_and_wait(VFS_I(tip)->i_mapping);
-+	if (error)
-+		goto out_unlock;
-+	truncate_pagecache_range(VFS_I(tip), 0, -1);
-+
-+	/* Verify O_DIRECT for ftmp */
-+	if (VN_CACHED(VFS_I(tip)) != 0) {
-+		error = XFS_ERROR(EINVAL);
-+		goto out_unlock;
-+	}
-+
-+	/* Verify all data are being swapped */
-+	if (sxp->sx_offset != 0 ||
-+	    sxp->sx_length != ip->i_d.di_size ||
-+	    sxp->sx_length != tip->i_d.di_size) {
-+		error = XFS_ERROR(EFAULT);
-+		goto out_unlock;
-+	}
-+
-+	trace_xfs_swap_extent_before(ip, 0);
-+	trace_xfs_swap_extent_before(tip, 1);
-+
-+	/* check inode formats now that data is flushed */
-+	error = xfs_swap_extents_check_format(ip, tip);
-+	if (error) {
-+		xfs_notice(mp,
-+		    "%s: inode 0x%llx format is incompatible for exchanging.",
-+				__func__, ip->i_ino);
-+		goto out_unlock;
-+	}
-+
-+	/*
-+	 * Compare the current change & modify times with that
-+	 * passed in.  If they differ, we abort this swap.
-+	 * This is the mechanism used to ensure the calling
-+	 * process that the file was not changed out from
-+	 * under it.
-+	 */
-+	if ((sbp->bs_ctime.tv_sec != VFS_I(ip)->i_ctime.tv_sec) ||
-+	    (sbp->bs_ctime.tv_nsec != VFS_I(ip)->i_ctime.tv_nsec) ||
-+	    (sbp->bs_mtime.tv_sec != VFS_I(ip)->i_mtime.tv_sec) ||
-+	    (sbp->bs_mtime.tv_nsec != VFS_I(ip)->i_mtime.tv_nsec)) {
-+		error = XFS_ERROR(EBUSY);
-+		goto out_unlock;
-+	}
-+
-+	/* We need to fail if the file is memory mapped.  Once we have tossed
-+	 * all existing pages, the page fault will have no option
-+	 * but to go to the filesystem for pages. By making the page fault call
-+	 * vop_read (or write in the case of autogrow) they block on the iolock
-+	 * until we have switched the extents.
-+	 */
-+	if (VN_MAPPED(VFS_I(ip))) {
-+		error = XFS_ERROR(EBUSY);
-+		goto out_unlock;
-+	}
-+
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+	xfs_iunlock(tip, XFS_ILOCK_EXCL);
-+
-+	/*
-+	 * There is a race condition here since we gave up the
-+	 * ilock.  However, the data fork will not change since
-+	 * we have the iolock (locked for truncation too) so we
-+	 * are safe.  We don't really care if non-io related
-+	 * fields change.
-+	 */
-+	truncate_pagecache_range(VFS_I(ip), 0, -1);
-+
-+	tp = xfs_trans_alloc(mp, XFS_TRANS_SWAPEXT);
-+	if ((error = xfs_trans_reserve(tp, 0,
-+				     XFS_ICHANGE_LOG_RES(mp), 0,
-+				     0, 0))) {
-+		xfs_iunlock(ip,  XFS_IOLOCK_EXCL);
-+		xfs_iunlock(tip, XFS_IOLOCK_EXCL);
-+		xfs_trans_cancel(tp, 0);
-+		goto out;
-+	}
-+	xfs_lock_two_inodes(ip, tip, XFS_ILOCK_EXCL);
-+
-+	/*
-+	 * Count the number of extended attribute blocks
-+	 */
-+	if ( ((XFS_IFORK_Q(ip) != 0) && (ip->i_d.di_anextents > 0)) &&
-+	     (ip->i_d.di_aformat != XFS_DINODE_FMT_LOCAL)) {
-+		error = xfs_bmap_count_blocks(tp, ip, XFS_ATTR_FORK, &aforkblks);
-+		if (error)
-+			goto out_trans_cancel;
-+	}
-+	if ( ((XFS_IFORK_Q(tip) != 0) && (tip->i_d.di_anextents > 0)) &&
-+	     (tip->i_d.di_aformat != XFS_DINODE_FMT_LOCAL)) {
-+		error = xfs_bmap_count_blocks(tp, tip, XFS_ATTR_FORK,
-+			&taforkblks);
-+		if (error)
-+			goto out_trans_cancel;
-+	}
-+
-+	/*
-+	 * Swap the data forks of the inodes
-+	 */
-+	ifp = &ip->i_df;
-+	tifp = &tip->i_df;
-+	*tempifp = *ifp;	/* struct copy */
-+	*ifp = *tifp;		/* struct copy */
-+	*tifp = *tempifp;	/* struct copy */
-+
-+	/*
-+	 * Fix the on-disk inode values
-+	 */
-+	tmp = (__uint64_t)ip->i_d.di_nblocks;
-+	ip->i_d.di_nblocks = tip->i_d.di_nblocks - taforkblks + aforkblks;
-+	tip->i_d.di_nblocks = tmp + taforkblks - aforkblks;
-+
-+	tmp = (__uint64_t) ip->i_d.di_nextents;
-+	ip->i_d.di_nextents = tip->i_d.di_nextents;
-+	tip->i_d.di_nextents = tmp;
-+
-+	tmp = (__uint64_t) ip->i_d.di_format;
-+	ip->i_d.di_format = tip->i_d.di_format;
-+	tip->i_d.di_format = tmp;
-+
-+	/*
-+	 * The extents in the source inode could still contain speculative
-+	 * preallocation beyond EOF (e.g. the file is open but not modified
-+	 * while defrag is in progress). In that case, we need to copy over the
-+	 * number of delalloc blocks the data fork in the source inode is
-+	 * tracking beyond EOF so that when the fork is truncated away when the
-+	 * temporary inode is unlinked we don't underrun the i_delayed_blks
-+	 * counter on that inode.
-+	 */
-+	ASSERT(tip->i_delayed_blks == 0);
-+	tip->i_delayed_blks = ip->i_delayed_blks;
-+	ip->i_delayed_blks = 0;
-+
-+	src_log_flags = XFS_ILOG_CORE;
-+	switch (ip->i_d.di_format) {
-+	case XFS_DINODE_FMT_EXTENTS:
-+		/* If the extents fit in the inode, fix the
-+		 * pointer.  Otherwise it's already NULL or
-+		 * pointing to the extent.
-+		 */
-+		if (ip->i_d.di_nextents <= XFS_INLINE_EXTS) {
-+			ifp->if_u1.if_extents =
-+				ifp->if_u2.if_inline_ext;
-+		}
-+		src_log_flags |= XFS_ILOG_DEXT;
-+		break;
-+	case XFS_DINODE_FMT_BTREE:
-+		src_log_flags |= XFS_ILOG_DBROOT;
-+		break;
-+	}
-+
-+	target_log_flags = XFS_ILOG_CORE;
-+	switch (tip->i_d.di_format) {
-+	case XFS_DINODE_FMT_EXTENTS:
-+		/* If the extents fit in the inode, fix the
-+		 * pointer.  Otherwise it's already NULL or
-+		 * pointing to the extent.
-+		 */
-+		if (tip->i_d.di_nextents <= XFS_INLINE_EXTS) {
-+			tifp->if_u1.if_extents =
-+				tifp->if_u2.if_inline_ext;
-+		}
-+		target_log_flags |= XFS_ILOG_DEXT;
-+		break;
-+	case XFS_DINODE_FMT_BTREE:
-+		target_log_flags |= XFS_ILOG_DBROOT;
-+		break;
-+	}
-+
-+
-+	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
-+	xfs_trans_ijoin(tp, tip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
-+
-+	xfs_trans_log_inode(tp, ip,  src_log_flags);
-+	xfs_trans_log_inode(tp, tip, target_log_flags);
-+
-+	/*
-+	 * If this is a synchronous mount, make sure that the
-+	 * transaction goes to disk before returning to the user.
-+	 */
-+	if (mp->m_flags & XFS_MOUNT_WSYNC)
-+		xfs_trans_set_sync(tp);
-+
-+	error = xfs_trans_commit(tp, 0);
-+
-+	trace_xfs_swap_extent_after(ip, 0);
-+	trace_xfs_swap_extent_after(tip, 1);
-+out:
-+	kmem_free(tempifp);
-+	return error;
-+
-+out_unlock:
-+	xfs_iunlock(ip,  XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
-+	xfs_iunlock(tip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
-+	goto out;
-+
-+out_trans_cancel:
-+	xfs_trans_cancel(tp, 0);
-+	goto out_unlock;
-+}
-+
-+/*
-+ * ioctl interface for swapext
-+ */
-+int
-+xfs_swapext(
-+	xfs_swapext_t	*sxp)
-+{
-+	xfs_inode_t     *ip, *tip;
-+	struct fd	f, tmp;
-+	int		error = 0;
-+
-+	/* Pull information for the target fd */
-+	f = fdget((int)sxp->sx_fdtarget);
-+	if (!f.file) {
-+		error = XFS_ERROR(EINVAL);
-+		goto out;
-+	}
-+
-+	if (!(f.file->f_mode & FMODE_WRITE) ||
-+	    !(f.file->f_mode & FMODE_READ) ||
-+	    (f.file->f_flags & O_APPEND)) {
-+		error = XFS_ERROR(EBADF);
-+		goto out_put_file;
-+	}
-+
-+	tmp = fdget((int)sxp->sx_fdtmp);
-+	if (!tmp.file) {
-+		error = XFS_ERROR(EINVAL);
-+		goto out_put_file;
-+	}
-+
-+	if (!(tmp.file->f_mode & FMODE_WRITE) ||
-+	    !(tmp.file->f_mode & FMODE_READ) ||
-+	    (tmp.file->f_flags & O_APPEND)) {
-+		error = XFS_ERROR(EBADF);
-+		goto out_put_tmp_file;
-+	}
-+
-+	if (IS_SWAPFILE(file_inode(f.file)) ||
-+	    IS_SWAPFILE(file_inode(tmp.file))) {
-+		error = XFS_ERROR(EINVAL);
-+		goto out_put_tmp_file;
-+	}
-+
-+	ip = XFS_I(file_inode(f.file));
-+	tip = XFS_I(file_inode(tmp.file));
-+
-+	if (ip->i_mount != tip->i_mount) {
-+		error = XFS_ERROR(EINVAL);
-+		goto out_put_tmp_file;
-+	}
-+
-+	if (ip->i_ino == tip->i_ino) {
-+		error = XFS_ERROR(EINVAL);
-+		goto out_put_tmp_file;
-+	}
-+
-+	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) {
-+		error = XFS_ERROR(EIO);
-+		goto out_put_tmp_file;
-+	}
-+
-+	error = xfs_swap_extents(ip, tip, sxp);
-+
-+ out_put_tmp_file:
-+	fdput(tmp);
-+ out_put_file:
-+	fdput(f);
-+ out:
-+	return error;
-+}
-+
-diff --git a/fs/xfs/xfs_extent_ops.h b/fs/xfs/xfs_extent_ops.h
-index 550a37d..e579ec8 100644
---- a/fs/xfs/xfs_extent_ops.h
-+++ b/fs/xfs/xfs_extent_ops.h
-@@ -27,4 +27,6 @@ typedef int (*xfs_bmap_format_t)(void **, struct getbmapx *, int *);
- int	xfs_getbmap(struct xfs_inode *ip, struct getbmapx *bmv,
- 		xfs_bmap_format_t formatter, void *arg);
- 
-+int	xfs_swapext(struct xfs_swapext *sx);
-+
- #endif /* _XFS_EXTENT_OPS_H */
-diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
-index 68c2e18..74b24b2 100644
---- a/fs/xfs/xfs_fs.h
-+++ b/fs/xfs/xfs_fs.h
-@@ -461,6 +461,21 @@ typedef struct xfs_handle {
- 				 + (handle).ha_fid.fid_len)
- 
+-#define XLOG_UNMOUNT_TYPE	0x556e	/* Un for Unmount */
+-
+-/*
+- * Flags for log structure
+- */
+-#define XLOG_ACTIVE_RECOVERY	0x2	/* in the middle of recovery */
+-#define	XLOG_RECOVERY_NEEDED	0x4	/* log was recovered */
+-#define XLOG_IO_ERROR		0x8	/* log hit an I/O error, and being
+-					   shutdown */
+-#define XLOG_TAIL_WARN		0x10	/* log tail verify warning issued */
+-
+-typedef __uint32_t xlog_tid_t;
+-
+-#ifdef __KERNEL__
  /*
-+ * Structure passed to XFS_IOC_SWAPEXT
-+ */
-+typedef struct xfs_swapext
-+{
-+	__int64_t	sx_version;	/* version */
-+#define XFS_SX_VERSION		0
-+	__int64_t	sx_fdtarget;	/* fd of target file */
-+	__int64_t	sx_fdtmp;	/* fd of tmp file */
-+	xfs_off_t	sx_offset;	/* offset into file */
-+	xfs_off_t	sx_length;	/* leng from offset */
-+	char		sx_pad[16];	/* pad space, unused */
-+	xfs_bstat_t	sx_stat;	/* stat of target b4 copy */
-+} xfs_swapext_t;
-+
-+/*
-  * Flags for going down operation
-  */
- #define XFS_FSOP_GOING_FLAGS_DEFAULT		0x0	/* going down */
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 964a6dd..6ddab0e 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -33,7 +33,6 @@
- #include "xfs_attr.h"
- #include "xfs_bmap.h"
- #include "xfs_buf_item.h"
--#include "xfs_dfrag.h"
- #include "xfs_fsops.h"
- #include "xfs_discard.h"
- #include "xfs_quota.h"
-diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-index 55a3072..e82f890 100644
---- a/fs/xfs/xfs_ioctl32.c
-+++ b/fs/xfs/xfs_ioctl32.c
-@@ -33,7 +33,6 @@
- #include "xfs_inode.h"
- #include "xfs_itable.h"
- #include "xfs_error.h"
--#include "xfs_dfrag.h"
- #include "xfs_fsops.h"
- #include "xfs_alloc.h"
- #include "xfs_rtalloc.h"
-@@ -41,6 +40,7 @@
- #include "xfs_ioctl.h"
- #include "xfs_ioctl32.h"
- #include "xfs_trace.h"
-+#include "xfs_extent_ops.h"
+  * Below are states for covering allocation transactions.
+  * By covering, we mean changing the h_tail_lsn in the last on-disk
+@@ -223,7 +149,6 @@ typedef __uint32_t xlog_tid_t;
  
- #define  _NATIVE_IOC(cmd, type) \
- 	  _IOC(_IOC_DIR(cmd), _IOC_TYPE(cmd), _IOC_NR(cmd), sizeof(type))
+ #define XLOG_COVER_OPS		5
+ 
+-
+ /* Ticket reservation region accounting */ 
+ #define XLOG_TIC_LEN_MAX	15
+ 
+@@ -258,64 +183,6 @@ typedef struct xlog_ticket {
+ 	xlog_res_t	   t_res_arr[XLOG_TIC_LEN_MAX];  /* array of res : 8 * 15 */ 
+ } xlog_ticket_t;
+ 
+-#endif
+-
+-
+-typedef struct xlog_op_header {
+-	__be32	   oh_tid;	/* transaction id of operation	:  4 b */
+-	__be32	   oh_len;	/* bytes in data region		:  4 b */
+-	__u8	   oh_clientid;	/* who sent me this		:  1 b */
+-	__u8	   oh_flags;	/*				:  1 b */
+-	__u16	   oh_res2;	/* 32 bit align			:  2 b */
+-} xlog_op_header_t;
+-
+-
+-/* valid values for h_fmt */
+-#define XLOG_FMT_UNKNOWN  0
+-#define XLOG_FMT_LINUX_LE 1
+-#define XLOG_FMT_LINUX_BE 2
+-#define XLOG_FMT_IRIX_BE  3
+-
+-/* our fmt */
+-#ifdef XFS_NATIVE_HOST
+-#define XLOG_FMT XLOG_FMT_LINUX_BE
+-#else
+-#define XLOG_FMT XLOG_FMT_LINUX_LE
+-#endif
+-
+-typedef struct xlog_rec_header {
+-	__be32	  h_magicno;	/* log record (LR) identifier		:  4 */
+-	__be32	  h_cycle;	/* write cycle of log			:  4 */
+-	__be32	  h_version;	/* LR version				:  4 */
+-	__be32	  h_len;	/* len in bytes; should be 64-bit aligned: 4 */
+-	__be64	  h_lsn;	/* lsn of this LR			:  8 */
+-	__be64	  h_tail_lsn;	/* lsn of 1st LR w/ buffers not committed: 8 */
+-	__le32	  h_crc;	/* crc of log record                    :  4 */
+-	__be32	  h_prev_block; /* block number to previous LR		:  4 */
+-	__be32	  h_num_logops;	/* number of log operations in this LR	:  4 */
+-	__be32	  h_cycle_data[XLOG_HEADER_CYCLE_SIZE / BBSIZE];
+-	/* new fields */
+-	__be32    h_fmt;        /* format of log record                 :  4 */
+-	uuid_t	  h_fs_uuid;    /* uuid of FS                           : 16 */
+-	__be32	  h_size;	/* iclog size				:  4 */
+-} xlog_rec_header_t;
+-
+-typedef struct xlog_rec_ext_header {
+-	__be32	  xh_cycle;	/* write cycle of log			: 4 */
+-	__be32	  xh_cycle_data[XLOG_HEADER_CYCLE_SIZE / BBSIZE]; /*	: 256 */
+-} xlog_rec_ext_header_t;
+-
+-#ifdef __KERNEL__
+-
+-/*
+- * Quite misnamed, because this union lays out the actual on-disk log buffer.
+- */
+-typedef union xlog_in_core2 {
+-	xlog_rec_header_t	hic_header;
+-	xlog_rec_ext_header_t	hic_xheader;
+-	char			hic_sector[XLOG_HEADER_SIZE];
+-} xlog_in_core_2_t;
+-
+ /*
+  * - A log record header is 512 bytes.  There is plenty of room to grow the
+  *	xlog_rec_header_t into the reserved space.
+@@ -686,6 +553,5 @@ static inline void xlog_wait(wait_queue_head_t *wq, spinlock_t *lock)
+ 	schedule();
+ 	remove_wait_queue(wq, &wait);
+ }
+-#endif	/* __KERNEL__ */
+ 
+ #endif	/* __XFS_LOG_PRIV_H__ */
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 8a810fe..f840cb9 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -54,6 +54,8 @@
+ #include "xfs_attr_leaf.h"
+ #include "xfs_attr_remote.h"
+ 
++#define BLK_AVG(blk1, blk2)	((blk1+blk2) >> 1)
++
+ STATIC int
+ xlog_find_zeroed(
+ 	struct xlog	*,
 -- 
 1.7.10.4
 
