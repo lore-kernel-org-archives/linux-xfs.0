@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id DE7197CBF
-	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 18:33:51 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8C114AC007
-	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 16:33:51 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 06A7F7CBF
+	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 18:40:28 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 868C0AC007
+	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 16:40:27 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	8S5ERf5qoUEL6FaV for <xfs@oss.sgi.com>;
-	Wed, 19 Jun 2013 16:33:50 -0700 (PDT)
-Date: Thu, 20 Jun 2013 09:33:47 +1000
+	whYdWNZlr3XxltJU for <xfs@oss.sgi.com>;
+	Wed, 19 Jun 2013 16:40:25 -0700 (PDT)
+Date: Thu, 20 Jun 2013 09:39:51 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 00/60] xfs: patch queue for 3.11
-Message-ID: <20130619233347.GK29338@dastard>
-References: <1371617468-32559-1-git-send-email-david@fromorbit.com>
-	<20130619143537.GN20932@sgi.com>
-	<20130619144441.GA14834@infradead.org>
-	<51C1C622.7050704@redhat.com> <20130619154709.GO20932@sgi.com>
+Subject: Re: [PATCH] xfs: fix sgid inheritance for subdirectories inheriting
+	default acls [V2]
+Message-ID: <20130619233951.GL29338@dastard>
+References: <1371569536-5779-1-git-send-email-cmaiolino@redhat.com>
+	<20130618224351.GB29338@dastard>
+	<20130619132921.GA5200@andromeda.usersys.redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130619154709.GO20932@sgi.com>
+In-Reply-To: <20130619132921.GA5200@andromeda.usersys.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,72 +32,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Ric Wheeler <rwheeler@redhat.com>, xfs@oss.sgi.com
+To: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, Jun 19, 2013 at 10:47:09AM -0500, Ben Myers wrote:
-> Hey Ric,
+On Wed, Jun 19, 2013 at 10:29:22AM -0300, Carlos Maiolino wrote:
+> Hi Dave,
 > 
-> On Wed, Jun 19, 2013 at 10:54:26AM -0400, Ric Wheeler wrote:
-> > On 06/19/2013 10:44 AM, Christoph Hellwig wrote:
-> > >On Wed, Jun 19, 2013 at 09:35:37AM -0500, Ben Myers wrote:
-> > >>>On Wed, Jun 19, 2013 at 02:50:08PM +1000, Dave Chinner wrote:
-> > >>>> >This is my patch queue for 3.11 as it stands right now.
-> > >>>
-> > >>>Getting all of this in for 3.11 does not strike me as being realistic.  You
-> > >>>need to think about how this can be split up.  I see that you have rebased
-> > >>>Jeff's log size validation patch set after your rearrangement.  I'd rather
-> > >>>you'd taken Jeff's series first and then made your changes.  Now we can't pull
-> > >>>in Jeff's work without pulling in a bunch of rearrangement that hasn't been
-> > >>>fully discussed.  You have also crowded out Chandra's quota work.  We had an
-> > >>>agreement with him to go for 3.11 with that work which you have broken.
-> >
-> > >I think 3.11 is a realistic target for all the code movearound, but
-> > >maybe not as part of the normal pull request for -rc1.  If we make sure
-> > >it's really moving code around and not changing it I think a sending a
-> > >second pull request to Linus saying this is just code movearounds we
-> > >wanted to do when the churn causes least problems with actual code work
-> > >he should be fine with it.
+> > > @@ -594,9 +594,10 @@ xfs_setattr_nonsize(
+> > >  		 * The set-user-ID and set-group-ID bits of a file will be
+> > >  		 * cleared upon successful return from chown()
+> > >  		 */
+> > > -		if ((ip->i_d.di_mode & (S_ISUID|S_ISGID)) &&
+> > > -		    !capable(CAP_FSETID))
+> > > -			ip->i_d.di_mode &= ~(S_ISUID|S_ISGID);
+> > > +		if (!S_ISDIR(inode->i_mode))
+> > > +			if ((ip->i_d.di_mode & (S_ISUID|S_ISGID)) &&
+> > > +			    !capable(CAP_FSETID))
+> > > +				ip->i_d.di_mode &= ~(S_ISUID|S_ISGID);
 > > 
-> > Just to chime in here, we have a lot of resources focused on testing
-> > these XFS updates both internally with our QA team and with a range
-> > of other RH partners.
+> > I'm not sure I understand why this is part of this patch - the ACL
+> > path does not enter this code branch (ATTR_UID/GID) so it doesn't
+> > affect ACL inheritence. So this is some other behavioural change?
+> > 
+> My apologies to have not commented it.
 > 
-> This isn't about the size of your QA team or the number of other RH partners.
-> 
-> We had an agreement with Chandra to work toward getting his quota work in 3.11
-> and it appears that Dave has crowded him out with a rearrangement of code which
-> we had no agreement would go into 3.11.
+> During my code surfing to understand the problem, and what places we revoked
+> sgid, I found this one, and, based on chmod specifications, we should keep sgid
+> on the directory while chmoding it, unless the user explicitly ask for sgid
+> removal, otherwise, if chmoding a file, we remove sgid if this isn't specified
+> in the new mode. So, I've added a check here to ensure the inode isn't a dir
+> before remove the sgid bit.
 
-What I posted is what I'm *proposing* for 3.11. You can't have an
-agreement with first having a proposal....
+Does notify_change() or inode_change_ok() handle this appropriately?
+i.e. do we even need that code there?
 
-> Further, Dave has taken Jeff's log
-> size validation series hostage by rebasing it on top of this rearrangement of
-> code.
+> Should I remove it from the patch?
 
-Ben, I think you're being a little melodramatic here. I asked Jeff
-if it was OK to rebase his patchset, and he said that was fine:
-
-http://oss.sgi.com/pipermail/xfs/2013-June/027270.html
-
-You don't have to take my rebase of Jeff's patches - you're welcome
-to take them direct from Jeff, but then I'll have to send reviews
-asking for changes to problems I found when integrating it so that's
-going to delay any integration you can do of that series. Please let
-Jeff and myself know what you want to do here...
-
-> If there is a strategic reason that RH needs to have the kernel/libxfs code
-> rearranged and separated in 3.11 I would have liked to have heard about it
-> before now.  I'm all for getting this work done, but not at the expense of
-> crowding out other XFS contributors.
-
-You are making a mountain out of a molehill. I had an itch, and I
-scratched it. Simple as that. It is only a couple of days work.
-
-If you think it's too much for 3.11, then just say so and leave it
-at that. I'll move it to my for-3.12 queue and you won't see it
-again until after 3.11-rc1 is released...
+It's unrelated to the ACL problem, so put it in a separate patch
+with it's own commit description ;)
 
 Cheers,
 
