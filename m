@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B42807F37
-	for <xfs@oss.sgi.com>; Thu, 20 Jun 2013 12:39:08 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 529C8AC003
-	for <xfs@oss.sgi.com>; Thu, 20 Jun 2013 10:39:05 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id 2JylotAxmbmI64uf (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 20 Jun 2013 10:38:58 -0700 (PDT)
-Date: Thu, 20 Jun 2013 13:39:03 -0400
-From: Dwight Engen <dwight.engen@oracle.com>
-Subject: Re: [PATCH] userns: Convert xfs to use kuid/kgid where appropriate
-Message-ID: <20130620133903.5193d3ee@oracle.com>
-In-Reply-To: <51C31F48.9070503@redhat.com>
-References: <20130619110948.0bfafa2b@oracle.com>
-	<20130620001341.GM29338@dastard>
-	<20130620095410.1917d235@oracle.com> <51C31F48.9070503@redhat.com>
-Mime-Version: 1.0
+	by oss.sgi.com (Postfix) with ESMTP id 454A47F37
+	for <xfs@oss.sgi.com>; Thu, 20 Jun 2013 16:06:21 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C5112AC001
+	for <xfs@oss.sgi.com>; Thu, 20 Jun 2013 14:06:17 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	YuYcuzq42UEIYU8j for <xfs@oss.sgi.com>;
+	Thu, 20 Jun 2013 14:06:12 -0700 (PDT)
+Date: Fri, 21 Jun 2013 07:06:09 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: deadlock with &log->l_cilp->xc_ctx_lock semaphone
+Message-ID: <20130620210609.GR29376@dastard>
+References: <1369264363.10223.2994.camel@chandra-dt.ibm.com>
+	<20130522234129.GN29466@dastard>
+	<1371597515.22504.51.camel@chandra-dt.ibm.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1371597515.22504.51.camel@chandra-dt.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,116 +31,99 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: "Eric W. Biederman" <ebiederm@gmail.com>, xfs@oss.sgi.com
+To: Chandra Seetharaman <sekharan@us.ibm.com>
+Cc: XFS mailing list <xfs@oss.sgi.com>
 
-On Thu, 20 Jun 2013 11:27:04 -0400
-Brian Foster <bfoster@redhat.com> wrote:
-
-> On 06/20/2013 09:54 AM, Dwight Engen wrote:
-> > On Thu, 20 Jun 2013 10:13:41 +1000
-> > Dave Chinner <david@fromorbit.com> wrote:
+On Tue, Jun 18, 2013 at 06:18:35PM -0500, Chandra Seetharaman wrote:
+> On Thu, 2013-05-23 at 09:41 +1000, Dave Chinner wrote:
+> > On Wed, May 22, 2013 at 06:12:43PM -0500, Chandra Seetharaman wrote:
+> > > Hello,
+> > > 
+> > > While testing and rearranging my pquota/gquota code, I stumbled on a
+> > > xfs_shutdown() during a mount. But the mount just hung.
+> > > 
+> > > I debugged and found that it is in a code path where
+> > > &log->l_cilp->xc_ctx_lock is first acquired in read mode and some levels
+> > > down the same semaphore is being acquired in write mode causing a
+> > > deadlock.
+> > > 
+> > > This is the stack:
+> > > xfs_log_commit_cil -> acquires &log->l_cilp->xc_ctx_lock in read mode
+> > >   xlog_print_tic_res
+> > >     xfs_force_shutdown
+> > >       xfs_log_force_umount
+> > >         xlog_cil_force
+> > >           xlog_cil_force_lsn
+> > >             xlog_cil_push_foreground
+> > >               xlog_cil_push - tries to acquire same semaphore in write mode
 > > 
-> >> On Wed, Jun 19, 2013 at 11:09:48AM -0400, Dwight Engen wrote:
-> >>> Use uint32 from init_user_ns for xfs internal uid/gid
-> >>> representation in acl, xfs_icdinode. Conversion of kuid/gid is
-> >>> done at the vfs boundary, other user visible xfs specific
-> >>> interfaces (bulkstat, eofblocks filter) expect uint32
-> >>> init_user_ns uid/gid values.
-> >>
-> >> It's minimal, but I'm not sure it's complete. I'll comment on that
-> >> in response to Eric's comments...
-> >>
-> >>> Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
-> >> ....
-> >>> --- a/fs/xfs/xfs_fs.h
-> >>> +++ b/fs/xfs/xfs_fs.h
-> >>> @@ -347,8 +347,8 @@ typedef struct xfs_error_injection {
-> >>>  struct xfs_eofblocks {
-> >>>  	__u32		eof_version;
-> >>>  	__u32		eof_flags;
-> >>> -	uid_t		eof_uid;
-> >>> -	gid_t		eof_gid;
-> >>> +	__u32		eof_uid;
-> >>> +	__u32		eof_gid;
-> >>>  	prid_t		eof_prid;
-> >>>  	__u32		pad32;
-> >>>  	__u64		eof_min_file_size;
-> >>
-> >> The patch doesn't do namespace conversion of these uid/gids, but
-> >> I'm not sure it should...
+> > Which means you had a transaction reservation overrun. Is it
+> > reproducable? iDo you have the output from xlog_print_tic_res()?
+> > Because:
 > > 
-> > The ids are only advisory, if the caller doesn't specify
-> > XFS_EOF_FLAGS_?ID blocks from any inode in the fs can be reclaimed
-> > regardless of id. Because of this, I think at a minimum we should
-> > change XFS_IOC_FREE_EOFBLOCKS to require capable(CAP_SYS_ADMIN),
-> > which somewhat implies init_user_ns based ids.
+> > > xfs_trans_commit+0x79/0x270 [xfs]  
+> > > xfs_qm_write_sb_changes+0x61/0x90 [xfs]
+> > > xfs_qm_mount_quotas+0x82/0x180 [xfs]
+> > > xfs_mountfs+0x5f6/0x6b0 [xfs]
 > > 
-> > To make this really userns aware, I think we could:
-> >   - leave the fields as uid_t
-> >   - make XFS_IOC_FREE_EOFBLOCKS require nsown_capable(CAP_SYS_ADMIN)
-> >   - check kuid_has_mapping(current_user_ns()) for each
-> >     inode. This would be a change in behavior when called
-> >     from !init_user_ns, limiting the scope of inodes the ioctl could
-> >     affect.
-> >   - change xfs_inode_match_id() to use uid_eq(VFS_I(ip)->i_uid,
-> >     make_kuid(current_user_ns(), eofb->eof_uid))
+> > This transaction only modifies the superblock, and it has a buffer
+> > reservation for a superblock sized buffer, and hence should never
+> > overrun.
 > > 
-> > Does that sound reasonable?
+> > IOWs, I'm ifar more concerned about the fact there was a
+> > transaction overrun than they was a hang in the path that handles
+> > the overrun. The fact this hang has been there since 2.6.35 tells
+> > you how rare transactions overruns are....
 > > 
+> > FWIW, the fix for the hang is to make xlog_print_tic_res() return an
+> > error and have the caller handle the shutdown.
 > 
-> Hi Dwight,
+> Dave,
 > 
-> If I understand correctly, the proposition is to turn
-> XFS_EOF_FREE_EOFBLOCKS into administrator only functionality and run
-> ns conversions on the inode uid/gid and associated eofb values for
-> the ID filtering functionality.
+> There are few ways this can be done, but each of them seem to change the
+> code behavior. Wanted to get your opinion on which is the correct way.
+> 
+> (1) - don't shutdown in xlog_print_tic_res();
+>     - upon return from xlog_print_tic_res(), do a up_read, and shutdown
+>     - at the end of fucntion, up_read only if we haven't done it already
+>   Behavior change: The protection offered by the semaphore is not 
+>       available to the code block from shutdown to end of function
 
-Hi Brian, yeah that was the proposal :) I think there are really two
-issues here. One is that the uid_t/gid_t may come from a userns so we
-should be aware of that. Currently the ids passed in are used for
-*filtering* so a malicious user can't do anything more than they
-already can by not passing ids at all, but we should fix this so only
-the intended files are affected. Second is that currently the ioctl
-allows an unprivileged user to affect another user (as Eric pointed
-out):
+We don't want to do the rest of the work in the function if the
+ticket check fails, so:
 
-> I am little dubious about XFS_IOC_FREE_EOFBLOCKS allowing any
-> user to affect any other user.  Your changes just seem to make
-> it guaranteed that when called from a user namespace the wrong
-> user will be affected.
+> (2) - don't shoudown in xlog_print_tic_res()
+>     - upon return just set a flag
+>     - at the end of function, after up_read, do shutdown
+>   Behavior change: Shutdown is delayed to a later point.
 
-I don't think the nsown_capability() I proposed is enough to take care
-of this. Do you agree that if the caller is going to affect other
-users, they should be CAP_SYS_ADMIN (or maybe CAP_FOWNER) in
-init_user_ns?
+A behaviour change is fine because we don't care about races here.
 
-> The latter sounds reasonable to me, though I'm not so sure about the
-> CAP_SYS_ADMIN bit. For example, I think we'd expect a regular user to
-> be able to run an eofblocks scan against files covered under his
-> quota.
->
-> Perhaps the right thing to do here is to restrict global (and project
-> quota?) scans to CAP_SYS_ADMIN and uid/gid based scans to processes
-> with the appropriate permissions (i.e., CAP_SYS_ADMIN, matching
-> uid/gid or CAP_FOWNER). Thoughts?
+> I prefer (2) since (1) drops the protection. But, do not know the
+> ramifications of delaying the shutdown. Can you comment ?
 
-That sounds good to me. Maybe for a regular user the appropriate
-permission check (at the top of xfs_inode_free_eofblocks()) could be
-something like:
+Basically, I think you can have xlog_print_tic_res() return
+EFSCORRUPTED to the xfs_log_commit_cil(), then have it drop the
+lock and return that error to xfs_trans_commit() immediately.
 
-	if (!capable(CAP_SYS_ADMIN) &&
-	    !uid_eq(VFS_I(ip)->i_uid, current_fsuid()) &&
-	    !in_group_p(VFS_I(ip)->i_gid))
-		return 0;
+However, xfs_trans_commit() only catches the ENOMEM error, but that
+was a temporary situation to handle the allocation error from
+xfs_log_commit_cil() specially. Since we've removed the old old
+logging code, this is the only error that can be returned so the
+shutdown on error doesn't need to be specific to ENOMEM. hence if
+you convert this to just a plain if (error) check, the shutdown will
+happen from xfs_trans_commit() and the deadlock won't occur.
 
-This has the drawback that the caller won't know if they supplied a
-uid/gid in eofblocks that won't actually get cleared, so maybe we
-want to validate a uid/gid in eofblocks after its copy_from_user()ed
-in instead? Also, I'm not sure if this is the same as "under his quota"
-and how it plays with project quotas.
+FWIW, to be on the safe side, I'd move the ticket check to after we
+attach the busy extents to the CIL so that we can be certain that
+the error path in xfs_trans_commit() does the right thing with them.
 
-> Brian
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
