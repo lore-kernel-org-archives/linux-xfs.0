@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 824877CBF
-	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 23:51:43 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 9224C7F37
+	for <xfs@oss.sgi.com>; Thu, 20 Jun 2013 04:18:00 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 69F1A304032
-	for <xfs@oss.sgi.com>; Wed, 19 Jun 2013 21:51:40 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	kZNEaworMOEH4ENz for <xfs@oss.sgi.com>;
-	Wed, 19 Jun 2013 21:51:38 -0700 (PDT)
-Date: Thu, 20 Jun 2013 14:51:35 +1000
-From: Dave Chinner <david@fromorbit.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6DA06304053
+	for <xfs@oss.sgi.com>; Thu, 20 Jun 2013 02:18:00 -0700 (PDT)
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
+	by cuda.sgi.com with ESMTP id BB18IzjE9ykv6lo8 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 20 Jun 2013 02:17:57 -0700 (PDT)
+Date: Thu, 20 Jun 2013 02:17:53 -0700
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCH 00/60] xfs: patch queue for 3.11
-Message-ID: <20130620045135.GP29376@dastard>
+Message-ID: <20130620091753.GA13353@infradead.org>
 References: <1371617468-32559-1-git-send-email-david@fromorbit.com>
-	<20130619143537.GN20932@sgi.com> <20130619225404.GJ29338@dastard>
+	<20130619091538.GA359@infradead.org>
+	<20130619213417.GI29338@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130619225404.GJ29338@dastard>
+In-Reply-To: <20130619213417.GI29338@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,41 +31,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Thu, Jun 20, 2013 at 08:54:04AM +1000, Dave Chinner wrote:
-> On Wed, Jun 19, 2013 at 09:35:37AM -0500, Ben Myers wrote:
-> > Dave,
-> > 
-> > On Wed, Jun 19, 2013 at 02:50:08PM +1000, Dave Chinner wrote:
-> > > This is my patch queue for 3.11 as it stands right now.
-> > 
-> > Getting all of this in for 3.11 does not strike me as being
-> > realistic.
+On Thu, Jun 20, 2013 at 07:34:17AM +1000, Dave Chinner wrote:
+> I don't see any problem with doing that, though I would like to keep
+> some of it separate - the dir2 stuff is complex enough that I would
+> like to keep it separate, but stuff like all the log item format
+> headers can be aggregated.
 > 
-> Why not? We've done more complex changes in the past...
+> How about we end up with xfs_log_format.h for the log and log item
+> formats, xfs_da_format.h for all the dir2/da/attr format definitions,
+> and xfs_format.h for everything else?
+
+Sounds reasonable.
+
+> >  - any chance to reorder the inode.c split so that stuff doesn't get
+> >    move around multiple times?
 > 
-> > You need to think about how this can be split up.
-> 
-> Sure - the first 27 patches at the necessary ones for 3.11.
+> I was waiting for that question - I have been considering doing that
+> but I've been putting it off because it is a fair bit of shuffling
+> that I'd have to do from scratch. Sounds like another vote for :redo
+> it"...
 
-Actaully if you really concerned about how little time you have left
-before the next merge window opens, then just concentrate on the
-first 13 patches (i.e. up to the local format fork extent handling
-change for xfs_write_bmapi).
-
-I'm about to rework the series based on the
-log_format/da_format/format split that I suggested in reponse to
-Christoph's comments and also to avoid creating xfs_inode_ops.[ch].
-If I get that done this afternoon, I'll repost it all for you....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Maybe wait for the discussion about having the trans stuff and the
+separate project quotas to go in before this, as it would mean another
+big redo..
 
 _______________________________________________
 xfs mailing list
