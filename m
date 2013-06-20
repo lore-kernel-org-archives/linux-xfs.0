@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2B2E47F37
-	for <xfs@oss.sgi.com>; Thu, 20 Jun 2013 17:46:24 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 257088F8037
-	for <xfs@oss.sgi.com>; Thu, 20 Jun 2013 15:46:21 -0700 (PDT)
-Received: from out02.mta.xmission.com (out02.mta.xmission.com [166.70.13.232])
-	by cuda.sgi.com with ESMTP id d6NM3VVl7RDf9zgZ (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 20 Jun 2013 15:46:19 -0700 (PDT)
-From: ebiederm@xmission.com (Eric W. Biederman)
-References: <20130619110948.0bfafa2b@oracle.com>
-	<20130620001341.GM29338@dastard> <20130620095410.1917d235@oracle.com>
-	<51C31F48.9070503@redhat.com> <20130620133903.5193d3ee@oracle.com>
-	<51C35410.2040109@redhat.com>
-Date: Thu, 20 Jun 2013 15:45:43 -0700
-In-Reply-To: <51C35410.2040109@redhat.com> (Brian Foster's message of "Thu, 20
-	Jun 2013 15:12:16 -0400")
-Message-ID: <87ip18o0yw.fsf@xmission.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 6AF737F3F
+	for <xfs@oss.sgi.com>; Thu, 20 Jun 2013 18:05:47 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 38EB4304039
+	for <xfs@oss.sgi.com>; Thu, 20 Jun 2013 16:05:47 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	zLnJzLTj22NuVoRk for <xfs@oss.sgi.com>;
+	Thu, 20 Jun 2013 16:05:45 -0700 (PDT)
+Date: Fri, 21 Jun 2013 09:05:34 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 39/48] mkfs.xfs: validate options for CRCs up front.
+Message-ID: <20130620230534.GV29376@dastard>
+References: <1370564771-4929-1-git-send-email-david@fromorbit.com>
+	<1370564771-4929-40-git-send-email-david@fromorbit.com>
+	<20130620211747.GB7800@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] userns: Convert xfs to use kuid/kgid where appropriate
+Content-Disposition: inline
+In-Reply-To: <20130620211747.GB7800@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,119 +31,120 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: "Eric W. Biederman" <ebiederm@gmail.com>, Dwight Engen <dwight.engen@oracle.com>, xfs@oss.sgi.com
+To: Geoffrey Wehrman <gwehrman@sgi.com>
+Cc: xfs@oss.sgi.com
 
-Brian Foster <bfoster@redhat.com> writes:
-
-> On 06/20/2013 01:39 PM, Dwight Engen wrote:
->> On Thu, 20 Jun 2013 11:27:04 -0400
->> Brian Foster <bfoster@redhat.com> wrote:
->> 
->>> On 06/20/2013 09:54 AM, Dwight Engen wrote:
->>>> On Thu, 20 Jun 2013 10:13:41 +1000
->>>> Dave Chinner <david@fromorbit.com> wrote:
->>>>
->>>>> On Wed, Jun 19, 2013 at 11:09:48AM -0400, Dwight Engen wrote:
+On Thu, Jun 20, 2013 at 04:17:47PM -0500, Geoffrey Wehrman wrote:
+> On Fri, Jun 07, 2013 at 10:26:02AM +1000, Dave Chinner wrote:
+> | From: Dave Chinner <dchinner@redhat.com>
+> | 
+> | With CRC enabled filesystems, certain options are now not optional
+> | and so are always enabled. Validate these options up front and
+> | abort if options are specified that cannot be set.
+> | 
+> | Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> | ---
+> |  mkfs/xfs_mkfs.c |   61 ++++++++++++++++++++++++++++++++++++++++++++++++++-----
+> |  1 file changed, 56 insertions(+), 5 deletions(-)
+> | 
+> | diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> | index 291bab4..9987dde 100644
+> | --- a/mkfs/xfs_mkfs.c
+> | +++ b/mkfs/xfs_mkfs.c
 > ...
->>>
->>> Hi Dwight,
->>>
->>> If I understand correctly, the proposition is to turn
->>> XFS_EOF_FREE_EOFBLOCKS into administrator only functionality and run
->>> ns conversions on the inode uid/gid and associated eofb values for
->>> the ID filtering functionality.
->> 
->> Hi Brian, yeah that was the proposal :) I think there are really two
->> issues here. One is that the uid_t/gid_t may come from a userns so we
->> should be aware of that. Currently the ids passed in are used for
->> *filtering* so a malicious user can't do anything more than they
->> already can by not passing ids at all, but we should fix this so only
->> the intended files are affected. Second is that currently the ioctl
->> allows an unprivileged user to affect another user (as Eric pointed
->> out):
->> 
->>> I am little dubious about XFS_IOC_FREE_EOFBLOCKS allowing any
->>> user to affect any other user.  Your changes just seem to make
->>> it guaranteed that when called from a user namespace the wrong
->>> user will be affected.
->> 
->> I don't think the nsown_capability() I proposed is enough to take care
->> of this. Do you agree that if the caller is going to affect other
->> users, they should be CAP_SYS_ADMIN (or maybe CAP_FOWNER) in
->> init_user_ns?
->> 
->
-> Yeah, that's what I was getting at below by restricting "global" scans
-> to admin privilege.
->
->>> The latter sounds reasonable to me, though I'm not so sure about the
->>> CAP_SYS_ADMIN bit. For example, I think we'd expect a regular user to
->>> be able to run an eofblocks scan against files covered under his
->>> quota.
->>>
->>> Perhaps the right thing to do here is to restrict global (and project
->>> quota?) scans to CAP_SYS_ADMIN and uid/gid based scans to processes
->>> with the appropriate permissions (i.e., CAP_SYS_ADMIN, matching
->>> uid/gid or CAP_FOWNER). Thoughts?
->> 
->> That sounds good to me. Maybe for a regular user the appropriate
->> permission check (at the top of xfs_inode_free_eofblocks()) could be
->> something like:
->> 
->
-> I think the various capability/permission checks should be in the ioctl
-> code. xfs_icache_free_eofblocks() and below are internal interfaces
-> where these checks are probably not relevant. I actually have code lying
-> around that creates an internal structure for that code, similar but
-> separate from the xfs_eofblocks structure.
->
->> 	if (!capable(CAP_SYS_ADMIN) &&
->> 	    !uid_eq(VFS_I(ip)->i_uid, current_fsuid()) &&
->> 	    !in_group_p(VFS_I(ip)->i_gid))
->> 		return 0;
->> 
+> | @@ -1754,6 +1754,57 @@ _("block size %d cannot be smaller than logical sector size %d\n"),
+> |  		logversion = 2;
+> |  	}
+> |  
+> | +	/*
+> | +	 * Now we have blocks and sector sizes set up, check parameters that are
+> | +	 * no longer optional for CRC enabled filesystems.  Catch them up front
+> | +	 * here before doing anything else.
+> | +	 */
+> | +	if (crcs_enabled) {
+> | +		/* minimum inode size is 512 bytes, ipflag checked later */
+> | +		if ((isflag || ilflag) && inodelog < XFS_DINODE_DFL_CRC_LOG) {
+> | +			fprintf(stderr,
+> | +_("Minimum inode size for CRCs is %d bytes\n"),
+> | +				1 << XFS_DINODE_DFL_CRC_LOG);
+> | +			usage();
+> | +		}
+> 
+> I am not satisfied with the explanation for not allowing 256 byte inodes
+> with CRCs, and I am requesting that this limitation not be implemented.
+> I have no issue with making the default inode size 512 bytes, but
+> removing the option for 256 byte inodes is an issue, especially with the
+> initial implementation.  Making the minimum inode size 256 is fine.
+
+As I said on the call, it makes no sense to support 256 byte inodes
+for CRC enabled filesystems for either a performance or a support
+point of view. For the purpose of this discussion on the list, I'll
+redo the calculations from first principles as the inode core size
+has grown since these checks were originally done way back in 2008-
+2009 so everyone can see why it doesn't make sense.
+
+To start with, the inode core size for version 1/2 inodes (i.e.
+without CRCs) is 100 bytes (including the di_next_unlinked field).
+With the 8 byte alignment rounding that the forks need, that gives
+us a literal area size of 152 bytes.
+
+Back in 2008-2009, the new v3 inode format did not have all the self
+describing metadata, and so the core size increased to about 140
+bytes. This left roughly 112 bytes of literal space available.
+
+With the addition of the extra self describing metadata, the new v3
+inode has grown to it's current size of 176 bytes, bring the literal
+area down to 80 bytes.  That's smaller than I realised it was....
+
+The minimum physical inode fork sizes are defined in xfs_types.h:
+
+/*
+ * Min numbers of data/attr fork btree root pointers.
+ */
+#define MINDBTPTRS      3
+#define MINABTPTRS      2
+
+And their sizes are defined in xfs_bmap_btree.h:
+
+#define XFS_BMDR_SPACE_CALC(nrecs) \
+        (int)(sizeof(xfs_bmdr_block_t) + \
+               ((nrecs) * (sizeof(xfs_bmbt_key_t) + sizeof(xfs_bmbt_ptr_t))))
+
+So:
+	minimum data fork size = XFS_BMDR_SPACE_CALC(3)
+			       = 4 + 3 * (8 + 8)
+			       = 52 bytes
 
 
-> This is a little confusing (and pardon me, I'm a bit new to the
-> namespace work). 
+	minimum attr fork size = XFS_BMDR_SPACE_CALC(2)
+			       = 36 bytes
 
-Depending I think if we had a per inode check I would just use
-inode_owner_or_capable().
+And when we align these to 8 byte, we have minimum sizes of 56 bytes
+and 40 bytes for the data and attr forks respectively. That means we
+need at least 96 bytes of literal space available in the inode
 
-That said I think it makes sense to figure out what the permission
-checks should be without taking the user namespace into account first.
-Generalizing and relaxing them in safe ways from that point is not too
-difficult.
+So, we have:
+			literal space
+		required		available
+inode size			v2	old v3	final v3
+256		  96		156	112	  80
+512		  96		408	368	 336
 
-> What might be a bit more clear is to do the capability
-> checks against the EOFBLOCKS command flags in xfs_file_ioctl() and
-> return an appropriate error if permission is not granted for the
-> requested type of scan (i.e., a regular user doing a global or non-id
-> matching scan). Then restrict the changes in xfs_icache_free_eofblocks()
-> to just dealing with the namespace conversions.
+And so for the final v3 inode format there is only be 80 bytes of
+literal space available, which is not enough to fit minimally sized
+data and attr forks simultaneously with a 256 byte inode size. i.e.
+it's not a physically valid configuration.
 
-> This would still allow use cases such as the pending code I have that
-> invokes an eofblocks scan on write() failure due to EDQUOT/ENOSPC in the
-> case of project or user/group quotas. I suspect adding the namespace
-> conversion stuff wouldn't break the typical user/group quota case, but
-> we'd still require the ability to run a project quota scan from a
-> particular user context. I think the combined check you have above would
-> break that.
+IOWs, there's nothing to debate - 256 byte inodes in v3 format is
+not physically possible with the current on-disk format
+definitions...
 
-The general solution is to capture the credentials (struct cred) of the
-write and perform the security checks against a passed in cred instead
-of current_cred().
+Cheers,
 
-I have a question about the project quota.  Is it intended that any
-user can set an project quota on any file?  Unless I am misreading
-xfs_ioctl_setattr that is what it allows.
-
-My narrow focus concern on this is that if the user is in a user
-namespace these ids need to be mapped before we look at them or else
-we will do the wrong thing.
-
-Eric
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
