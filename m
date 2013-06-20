@@ -1,15 +1,39 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 663BF7F54
-	for <xfs@oss.sgi.com>; Thu, 20 Jun 2013 14:31:29 -0500 (CDT)
-Message-ID: <51C35891.7000501@sgi.com>
-Date: Thu, 20 Jun 2013 14:31:29 -0500
-From: Mark Tinguely <tinguely@sgi.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH 04/60] xfs: don't use speculative prealloc for small files
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id E7AC07F54
+	for <xfs@oss.sgi.com>; Thu, 20 Jun 2013 14:32:10 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 88ED8AC001
+	for <xfs@oss.sgi.com>; Thu, 20 Jun 2013 12:32:10 -0700 (PDT)
+Received: from e39.co.us.ibm.com (e39.co.us.ibm.com [32.97.110.160]) by
+	cuda.sgi.com with ESMTP id G4kQLyvdLyUsANLl (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 20 Jun 2013 12:32:09 -0700 (PDT)
+Received: from /spool/local
+	by e39.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	Violators will be prosecuted
+	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
+	Thu, 20 Jun 2013 13:32:09 -0600
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id 17F80C90046
+	for <xfs@oss.sgi.com>; Thu, 20 Jun 2013 15:31:54 -0400 (EDT)
+Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	r5KJVpjx297250 for <xfs@oss.sgi.com>; Thu, 20 Jun 2013 15:31:51 -0400
+Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
+	by d01av01.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
+	r5KJVlh6022278 for <xfs@oss.sgi.com>; Thu, 20 Jun 2013 15:31:48 -0400
+Subject: Re: [PATCH 00/60] xfs: patch queue for 3.11
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+In-Reply-To: <20130620191433.GY32736@sgi.com>
 References: <1371617468-32559-1-git-send-email-david@fromorbit.com>
-	<1371617468-32559-5-git-send-email-david@fromorbit.com>
-In-Reply-To: <1371617468-32559-5-git-send-email-david@fromorbit.com>
+	<20130619143537.GN20932@sgi.com>	<20130619144441.GA14834@infradead.org>
+	<51C1C622.7050704@redhat.com> <20130619154709.GO20932@sgi.com>
+	<20130619233347.GK29338@dastard>  <20130620191433.GY32736@sgi.com>
+Date: Thu, 20 Jun 2013 14:31:44 -0500
+Message-ID: <1371756704.22504.65.camel@chandra-dt.ibm.com>
+Mime-Version: 1.0
+Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,65 +42,104 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: Ric Wheeler <rwheeler@redhat.com>, xfs@oss.sgi.com
 
-On 06/18/13 23:50, Dave Chinner wrote:
-> From: Dave Chinner<dchinner@redhat.com>
->
-> Dedicated small file workloads have been seeing significant free
-> space fragmentation causing premature inode allocation failure
-> when large inode sizes are in use. A particular test case showed
-> that a workload that runs to a real ENOSPC on 256 byte inodes would
-> fail inode allocation with ENOSPC about about 80% full with 512 byte
-> inodes, and at about 50% full with 1024 byte inodes.
->
-> The same workload, when run with -o allocsize=4096 on 1024 byte
-> inodes would run to being 100% full before giving ENOSPC. That is,
-> no freespace fragmentation at all.
->
-> The issue was caused by the specific IO pattern the application had
-> - the framework it was using did not support direct IO, and so it
-> was emulating it by using fadvise(DONT_NEED). The result was that
-> the data was getting written back before the speculative prealloc
-> had been trimmed from memory by the close(), and so small single
-> block files were being allocated with 2 blocks, and then having one
-> truncated away. The result was lots of small 4k free space extents,
-> and hence each new 8k allocation would take another 8k from
-> contiguous free space and turn it into 4k of allocated space and 4k
-> of free space.
->
-> Hence inode allocation, which requires contiguous, aligned
-> allocation of 16k (256 byte inodes), 32k (512 byte inodes) or 64k
-> (1024 byte inodes) can fail to find sufficiently large freespace and
-> hence fail while there is still lots of free space available.
->
-> There's a simple fix for this, and one that has precendence in the
-> allocator code already - don't do speculative allocation unless the
-> size of the file is larger than a certain size. In this case, that
-> size is the minimum default preallocation size:
-> mp->m_writeio_blocks. And to keep with the concept of being nice to
-> people when the files are still relatively small, cap the prealloc
-> to mp->m_writeio_blocks until the file goes over a stripe unit is
-> size, at which point we'll fall back to the current behaviour based
-> on the last extent size.
->
-> This will effectively turn off speculative prealloc for very small
-> files, keep preallocation low for small files, and behave as it
-> currently does for any file larger than a stripe unit. This
-> completely avoids the freespace fragmentation problem this
-> particular IO pattern was causing.
->
-> Signed-off-by: Dave Chinner<dchinner@redhat.com>
-> ---
+On Thu, 2013-06-20 at 14:14 -0500, Ben Myers wrote:
+> Hey Dave,
+> 
+> On Thu, Jun 20, 2013 at 09:33:47AM +1000, Dave Chinner wrote:
+> > On Wed, Jun 19, 2013 at 10:47:09AM -0500, Ben Myers wrote:
+> > > On Wed, Jun 19, 2013 at 10:54:26AM -0400, Ric Wheeler wrote:
+> > > > On 06/19/2013 10:44 AM, Christoph Hellwig wrote:
+> > > > >On Wed, Jun 19, 2013 at 09:35:37AM -0500, Ben Myers wrote:
+> > > > >>>On Wed, Jun 19, 2013 at 02:50:08PM +1000, Dave Chinner wrote:
+> > > > >>>> >This is my patch queue for 3.11 as it stands right now.
+> > > > >>>
+> > > > >>>Getting all of this in for 3.11 does not strike me as being realistic.  You
+> > > > >>>need to think about how this can be split up.  I see that you have rebased
+> > > > >>>Jeff's log size validation patch set after your rearrangement.  I'd rather
+> > > > >>>you'd taken Jeff's series first and then made your changes.  Now we can't pull
+> > > > >>>in Jeff's work without pulling in a bunch of rearrangement that hasn't been
+> > > > >>>fully discussed.  You have also crowded out Chandra's quota work.  We had an
+> > > > >>>agreement with him to go for 3.11 with that work which you have broken.
+> > > >
+> > > > >I think 3.11 is a realistic target for all the code movearound, but
+> > > > >maybe not as part of the normal pull request for -rc1.  If we make sure
+> > > > >it's really moving code around and not changing it I think a sending a
+> > > > >second pull request to Linus saying this is just code movearounds we
+> > > > >wanted to do when the churn causes least problems with actual code work
+> > > > >he should be fine with it.
+> > > > 
+> > > > Just to chime in here, we have a lot of resources focused on testing
+> > > > these XFS updates both internally with our QA team and with a range
+> > > > of other RH partners.
+> > > 
+> > > This isn't about the size of your QA team or the number of other RH partners.
+> > > 
+> > > We had an agreement with Chandra to work toward getting his quota work in 3.11
+> > > and it appears that Dave has crowded him out with a rearrangement of code which
+> > > we had no agreement would go into 3.11.
+> > 
+> > What I posted is what I'm *proposing* for 3.11. You can't have an
+> > agreement with first having a proposal....
+> > 
+> > > Further, Dave has taken Jeff's log
+> > > size validation series hostage by rebasing it on top of this rearrangement of
+> > > code.
+> > 
+> > Ben, I think you're being a little melodramatic here. I asked Jeff
+> > if it was OK to rebase his patchset, and he said that was fine:
+> > 
+> > http://oss.sgi.com/pipermail/xfs/2013-June/027270.html
+> > 
+> > You don't have to take my rebase of Jeff's patches - you're welcome
+> > to take them direct from Jeff, but then I'll have to send reviews
+> > asking for changes to problems I found when integrating it so that's
+> > going to delay any integration you can do of that series. Please let
+> > Jeff and myself know what you want to do here...
+> > 
+> > > If there is a strategic reason that RH needs to have the kernel/libxfs code
+> > > rearranged and separated in 3.11 I would have liked to have heard about it
+> > > before now.  I'm all for getting this work done, but not at the expense of
+> > > crowding out other XFS contributors.
+> > 
+> > You are making a mountain out of a molehill. I had an itch, and I
+> > scratched it. Simple as that. It is only a couple of days work.
+> 
+> You jumped the queue in front of the other cars.  I'm asking you not to do
+> that, even if one of the drivers was kind enough to let you in.
+> 
+> > If you think it's too much for 3.11, then just say so and leave it at that.
+> > I'll move it to my for-3.12 queue and you won't see it again until after
+> > 3.11-rc1 is released...
+> 
+> Lets see where Chandra is at with his quota work.  If he has already rebased on
+> top of your series I don't see a good reason to rearrange things now.  If he
 
-I agree with Brian, it looks good.
+No, I haven't rebased on top of Dave's patches. I will post my patchset
+by EOD today.
 
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+> hasn't, I'd like focus on getting his code merged before pulling in your
+> rearrangement.  Now that you've rebased Jeff's work, I don't see much point in
+> redoing that, so maybe that will have to wait for the rearrangement to get
+> merged.
+> 
+> For now we'll focus on the first 13 patches.
+> 
+> Thanks,
+> Ben
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
+
 
 _______________________________________________
 xfs mailing list
