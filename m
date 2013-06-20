@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 454A47F37
-	for <xfs@oss.sgi.com>; Thu, 20 Jun 2013 16:06:21 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 7C4C77F37
+	for <xfs@oss.sgi.com>; Thu, 20 Jun 2013 16:10:46 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C5112AC001
-	for <xfs@oss.sgi.com>; Thu, 20 Jun 2013 14:06:17 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 757EE304051
+	for <xfs@oss.sgi.com>; Thu, 20 Jun 2013 14:10:43 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	YuYcuzq42UEIYU8j for <xfs@oss.sgi.com>;
-	Thu, 20 Jun 2013 14:06:12 -0700 (PDT)
-Date: Fri, 21 Jun 2013 07:06:09 +1000
+	jAlUj9WBo6SfcFWJ for <xfs@oss.sgi.com>;
+	Thu, 20 Jun 2013 14:10:41 -0700 (PDT)
+Date: Fri, 21 Jun 2013 07:10:39 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: deadlock with &log->l_cilp->xc_ctx_lock semaphone
-Message-ID: <20130620210609.GR29376@dastard>
-References: <1369264363.10223.2994.camel@chandra-dt.ibm.com>
-	<20130522234129.GN29466@dastard>
-	<1371597515.22504.51.camel@chandra-dt.ibm.com>
+Subject: Re: [PATCH] userns: Convert xfs to use kuid/kgid where appropriate
+Message-ID: <20130620211039.GS29376@dastard>
+References: <20130619110948.0bfafa2b@oracle.com> <8761x9x2i5.fsf@xmission.com>
+	<20130620014133.GN29338@dastard>
+	<20130620095419.0976a3a3@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1371597515.22504.51.camel@chandra-dt.ibm.com>
+In-Reply-To: <20130620095419.0976a3a3@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,92 +31,56 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Chandra Seetharaman <sekharan@us.ibm.com>
-Cc: XFS mailing list <xfs@oss.sgi.com>
+To: Dwight Engen <dwight.engen@oracle.com>
+Cc: "Eric W. Biederman" <ebiederm@gmail.com>, xfs@oss.sgi.com
 
-On Tue, Jun 18, 2013 at 06:18:35PM -0500, Chandra Seetharaman wrote:
-> On Thu, 2013-05-23 at 09:41 +1000, Dave Chinner wrote:
-> > On Wed, May 22, 2013 at 06:12:43PM -0500, Chandra Seetharaman wrote:
-> > > Hello,
-> > > 
-> > > While testing and rearranging my pquota/gquota code, I stumbled on a
-> > > xfs_shutdown() during a mount. But the mount just hung.
-> > > 
-> > > I debugged and found that it is in a code path where
-> > > &log->l_cilp->xc_ctx_lock is first acquired in read mode and some levels
-> > > down the same semaphore is being acquired in write mode causing a
-> > > deadlock.
-> > > 
-> > > This is the stack:
-> > > xfs_log_commit_cil -> acquires &log->l_cilp->xc_ctx_lock in read mode
-> > >   xlog_print_tic_res
-> > >     xfs_force_shutdown
-> > >       xfs_log_force_umount
-> > >         xlog_cil_force
-> > >           xlog_cil_force_lsn
-> > >             xlog_cil_push_foreground
-> > >               xlog_cil_push - tries to acquire same semaphore in write mode
-> > 
-> > Which means you had a transaction reservation overrun. Is it
-> > reproducable? iDo you have the output from xlog_print_tic_res()?
-> > Because:
-> > 
-> > > xfs_trans_commit+0x79/0x270 [xfs]  
-> > > xfs_qm_write_sb_changes+0x61/0x90 [xfs]
-> > > xfs_qm_mount_quotas+0x82/0x180 [xfs]
-> > > xfs_mountfs+0x5f6/0x6b0 [xfs]
-> > 
-> > This transaction only modifies the superblock, and it has a buffer
-> > reservation for a superblock sized buffer, and hence should never
-> > overrun.
-> > 
-> > IOWs, I'm ifar more concerned about the fact there was a
-> > transaction overrun than they was a hang in the path that handles
-> > the overrun. The fact this hang has been there since 2.6.35 tells
-> > you how rare transactions overruns are....
-> > 
-> > FWIW, the fix for the hang is to make xlog_print_tic_res() return an
-> > error and have the caller handle the shutdown.
+On Thu, Jun 20, 2013 at 09:54:19AM -0400, Dwight Engen wrote:
+> On Thu, 20 Jun 2013 11:41:33 +1000
+> Dave Chinner <david@fromorbit.com> wrote:
 > 
-> Dave,
+> > On Wed, Jun 19, 2013 at 01:35:30PM -0700, Eric W. Biederman wrote:
+> > > 
+> > > I am copying my gmail address so I have a chance of seeing replies
+> > > from Dave Chiner.  So far the only way I have been able to read his
+> > > replies has been to read mailling lists.  Which has not be
+> > > conductive to having this code discussed properly.  Hopefully
+> > > copying my gmail address will allow us to have a reasonable and
+> > > timely conversation.
+> > > 
+> > > 
+> > > Dwight Engen <dwight.engen@oracle.com> writes:
+> > > 
+> > > > Use uint32 from init_user_ns for xfs internal uid/gid
+> > > > representation in acl, xfs_icdinode. 
+> > > 
+> > > From my review of the code earlier that just isn't safe.  It allows
+> > > all kinds of things to slip through.
+> > 
+> > Such as?
 > 
-> There are few ways this can be done, but each of them seem to change the
-> code behavior. Wanted to get your opinion on which is the correct way.
+> Maybe saying "at the vfs boundary" is misleading, I guess I don't see
+> how this is all that different from what you did in the other
+> filesystems. Using ext4 as the example the conversions are done between:
+>  struct inode <-> struct ext4_inode
+>  struct posix_acl <-> ext4_acle_entry
 > 
-> (1) - don't shutdown in xlog_print_tic_res();
->     - upon return from xlog_print_tic_res(), do a up_read, and shutdown
->     - at the end of fucntion, up_read only if we haven't done it already
->   Behavior change: The protection offered by the semaphore is not 
->       available to the code block from shutdown to end of function
+> which in xfs is analogous to
+>  struct inode <-> struct xfs_icdinode
+>  struct posix acl <-> struct xfs_acl_entry
+> 
+> which is where I did the conversions.
 
-We don't want to do the rest of the work in the function if the
-ticket check fails, so:
+Yup, that's where they should occur for XFS.
 
-> (2) - don't shoudown in xlog_print_tic_res()
->     - upon return just set a flag
->     - at the end of function, after up_read, do shutdown
->   Behavior change: Shutdown is delayed to a later point.
+> > The kuid_t/kgid_t is actually pushed down this far - it's in the
+> > struct inode - the code currently uses the on-disk XFS uid/gid,
+> > not the struct inode's kuid_t/kgid_t. That's easily fixable.
+> 
+> Yep, I'll go through the code and switch to the inode where possible.
 
-A behaviour change is fine because we don't care about races here.
-
-> I prefer (2) since (1) drops the protection. But, do not know the
-> ramifications of delaying the shutdown. Can you comment ?
-
-Basically, I think you can have xlog_print_tic_res() return
-EFSCORRUPTED to the xfs_log_commit_cil(), then have it drop the
-lock and return that error to xfs_trans_commit() immediately.
-
-However, xfs_trans_commit() only catches the ENOMEM error, but that
-was a temporary situation to handle the allocation error from
-xfs_log_commit_cil() specially. Since we've removed the old old
-logging code, this is the only error that can be returned so the
-shutdown on error doesn't need to be specific to ENOMEM. hence if
-you convert this to just a plain if (error) check, the shutdown will
-happen from xfs_trans_commit() and the deadlock won't occur.
-
-FWIW, to be on the safe side, I'd move the ticket check to after we
-attach the busy extents to the CIL so that we can be certain that
-the error path in xfs_trans_commit() does the right thing with them.
+Cool. We'll need to be careful, though - there are some code paths
+that XFS inodes can pass through where the VFS(ip) hasn't been
+initialised. Let me worry about this during review, though ;)
 
 Cheers,
 
