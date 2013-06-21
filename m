@@ -1,32 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C7ACC7F37
-	for <xfs@oss.sgi.com>; Fri, 21 Jun 2013 08:39:05 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 55759AC003
-	for <xfs@oss.sgi.com>; Fri, 21 Jun 2013 06:39:05 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id zQAB3ZDwQXOZswv7 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 21 Jun 2013 06:39:04 -0700 (PDT)
-Received: from ucsinet21.oracle.com (ucsinet21.oracle.com [156.151.31.93])
-	by userp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
-	ESMTP id r5LDWj2l005053
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Fri, 21 Jun 2013 13:32:46 GMT
-Received: from aserz7021.oracle.com (aserz7021.oracle.com [141.146.126.230])
-	by ucsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r5LDd26b027938
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 21 Jun 2013 13:39:02 GMT
-Received: from abhmt106.oracle.com (abhmt106.oracle.com [141.146.116.58])
-	by aserz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r5LDd2wZ019320 for <xfs@oss.sgi.com>; Fri, 21 Jun 2013 13:39:02 GMT
-Message-ID: <51C4577B.2080208@oracle.com>
-Date: Fri, 21 Jun 2013 21:39:07 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 168BD7F37
+	for <xfs@oss.sgi.com>; Fri, 21 Jun 2013 08:44:06 -0500 (CDT)
+Date: Fri, 21 Jun 2013 08:44:02 -0500
+From: Geoffrey Wehrman <gwehrman@sgi.com>
+Subject: Re: [PATCH 39/48] mkfs.xfs: validate options for CRCs up front.
+Message-ID: <20130621134401.GA18807@sgi.com>
+References: <1370564771-4929-1-git-send-email-david@fromorbit.com>
+	<1370564771-4929-40-git-send-email-david@fromorbit.com>
+	<20130620211747.GB7800@sgi.com> <20130620230534.GV29376@dastard>
 MIME-Version: 1.0
-Subject: [PATCH] xfs: Remove dead function prototype xfs_sync_inode_grab()
+Content-Disposition: inline
+In-Reply-To: <20130620230534.GV29376@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,32 +24,61 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-rom: Jie Liu <jeff.liu@oracle.com>
+On Fri, Jun 21, 2013 at 09:05:34AM +1000, Dave Chinner wrote:
+| On Thu, Jun 20, 2013 at 04:17:47PM -0500, Geoffrey Wehrman wrote:
+| > On Fri, Jun 07, 2013 at 10:26:02AM +1000, Dave Chinner wrote:
+| > | From: Dave Chinner <dchinner@redhat.com>
+| > | 
+| > | With CRC enabled filesystems, certain options are now not optional
+| > | and so are always enabled. Validate these options up front and
+| > | abort if options are specified that cannot be set.
+| > | 
+| > | Signed-off-by: Dave Chinner <dchinner@redhat.com>
+| > | ---
+| > |  mkfs/xfs_mkfs.c |   61 ++++++++++++++++++++++++++++++++++++++++++++++++++-----
+| > |  1 file changed, 56 insertions(+), 5 deletions(-)
+| > | 
+| > | diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+| > | index 291bab4..9987dde 100644
+| > | --- a/mkfs/xfs_mkfs.c
+| > | +++ b/mkfs/xfs_mkfs.c
+| > ...
+| > | @@ -1754,6 +1754,57 @@ _("block size %d cannot be smaller than logical sector size %d\n"),
+| > |  		logversion = 2;
+| > |  	}
+| > |  
+| > | +	/*
+| > | +	 * Now we have blocks and sector sizes set up, check parameters that are
+| > | +	 * no longer optional for CRC enabled filesystems.  Catch them up front
+| > | +	 * here before doing anything else.
+| > | +	 */
+| > | +	if (crcs_enabled) {
+| > | +		/* minimum inode size is 512 bytes, ipflag checked later */
+| > | +		if ((isflag || ilflag) && inodelog < XFS_DINODE_DFL_CRC_LOG) {
+| > | +			fprintf(stderr,
+| > | +_("Minimum inode size for CRCs is %d bytes\n"),
+| > | +				1 << XFS_DINODE_DFL_CRC_LOG);
+| > | +			usage();
+| > | +		}
+| > 
+| > I am not satisfied with the explanation for not allowing 256 byte inodes
+| > with CRCs, and I am requesting that this limitation not be implemented.
+| > I have no issue with making the default inode size 512 bytes, but
+| > removing the option for 256 byte inodes is an issue, especially with the
+| > initial implementation.  Making the minimum inode size 256 is fine.
+| 
+| IOWs, there's nothing to debate - 256 byte inodes in v3 format is
+| not physically possible with the current on-disk format
+| definitions...
 
-Remove dead function prototype xfs_sync_inode_grab() from
-xfs_icache.h.
+I should have done the math.  I didn't realize how bloated v4 inodes are.
 
-Signed-off-by: Jie Liu <jeff.liu@oracle.com>
----
- fs/xfs/xfs_icache.h |    1 -
- 1 file changed, 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
-index e0f138c..a01afbb 100644
---- a/fs/xfs/xfs_icache.h
-+++ b/fs/xfs/xfs_icache.h
-@@ -40,7 +40,6 @@ void xfs_inode_clear_eofblocks_tag(struct xfs_inode *ip);
- int xfs_icache_free_eofblocks(struct xfs_mount *, struct xfs_eofblocks *);
- void xfs_eofblocks_worker(struct work_struct *);
- 
--int xfs_sync_inode_grab(struct xfs_inode *ip);
- int xfs_inode_ag_iterator(struct xfs_mount *mp,
- 	int (*execute)(struct xfs_inode *ip, struct xfs_perag *pag,
- 		int flags, void *args),
 -- 
-1.7.9.5
+Geoffrey Wehrman  651-683-5496  gwehrman@sgi.com
 
 _______________________________________________
 xfs mailing list
