@@ -1,33 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C9ADF7F37
-	for <xfs@oss.sgi.com>; Fri, 21 Jun 2013 07:33:31 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 60221AC003
-	for <xfs@oss.sgi.com>; Fri, 21 Jun 2013 05:33:28 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 6F4177F37
+	for <xfs@oss.sgi.com>; Fri, 21 Jun 2013 08:28:01 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 11928AC005
+	for <xfs@oss.sgi.com>; Fri, 21 Jun 2013 06:27:58 -0700 (PDT)
 Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id CG50NKYIACeFG61X (version=TLSv1
+	cuda.sgi.com with ESMTP id 9FYADozjzAUQFgTi (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 21 Jun 2013 05:33:27 -0700 (PDT)
-Received: from ucsinet21.oracle.com (ucsinet21.oracle.com [156.151.31.93])
+	Fri, 21 Jun 2013 06:27:57 -0700 (PDT)
+Received: from acsinet22.oracle.com (acsinet22.oracle.com [141.146.126.238])
 	by userp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
-	ESMTP id r5LCR8vR030893
+	ESMTP id r5LDLcuq025031
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Fri, 21 Jun 2013 12:27:09 GMT
-Received: from userz7022.oracle.com (userz7022.oracle.com [156.151.31.86])
-	by ucsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r5LCXP54017744
+	for <xfs@oss.sgi.com>; Fri, 21 Jun 2013 13:21:39 GMT
+Received: from aserz7021.oracle.com (aserz7021.oracle.com [141.146.126.230])
+	by acsinet22.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	r5LDRtLv001114
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 21 Jun 2013 12:33:25 GMT
-Received: from abhmt113.oracle.com (abhmt113.oracle.com [141.146.116.65])
-	by userz7022.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r5LCXP7c013693 for <xfs@oss.sgi.com>; Fri, 21 Jun 2013 12:33:25 GMT
-Message-ID: <51C44819.6070003@oracle.com>
-Date: Fri, 21 Jun 2013 20:33:29 +0800
+	for <xfs@oss.sgi.com>; Fri, 21 Jun 2013 13:27:55 GMT
+Received: from abhmt118.oracle.com (abhmt118.oracle.com [141.146.116.70])
+	by aserz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	r5LDRtoZ024156 for <xfs@oss.sgi.com>; Fri, 21 Jun 2013 13:27:55 GMT
+Message-ID: <51C454DE.2010008@oracle.com>
+Date: Fri, 21 Jun 2013 21:27:58 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfs: Remove the left function variable from
-	xfs_ialloc_get_rec()
+Subject: [PATCH] xfs: lseek SEEK_DATA/SEEK_HOLE consolidation
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -44,43 +43,74 @@ To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
 From: Jie Liu <jeff.liu@oracle.com>
 
-This patch clean out the left function variable as it is
-useless to xfs_ialloc_get_rec().
+Consolidate lseek(2) SEEK_DATA/SEEK_HOLE according to the
+implementation of VFS lseek_execute():
+- if end up with a negative offset, return EINVAL if file
+  is not huge.
+- if end up with an offset larger than s_maxbytes, return
+  EINVAL as well.
+- reset file version to 0 if end up with an offset that is
+  not equal to the current file offset.
 
-Signed-off-by: jeff <jeff@kdev.(none)>
+Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+
 ---
- fs/xfs/xfs_ialloc.c |    7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ fs/xfs/xfs_file.c |   26 ++++++++++++++++++++++++--
+ 1 file changed, 24 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
-index c8f5ae1..4345c53 100644
---- a/fs/xfs/xfs_ialloc.c
-+++ b/fs/xfs/xfs_ialloc.c
-@@ -615,8 +615,7 @@ xfs_ialloc_get_rec(
- 	struct xfs_btree_cur	*cur,
- 	xfs_agino_t		agino,
- 	xfs_inobt_rec_incore_t	*rec,
--	int			*done,
--	int			left)
-+	int			*done)
- {
- 	int                     error;
- 	int			i;
-@@ -724,12 +723,12 @@ xfs_dialloc_ag(
- 		    pag->pagl_leftrec != NULLAGINO &&
- 		    pag->pagl_rightrec != NULLAGINO) {
- 			error = xfs_ialloc_get_rec(tcur, pag->pagl_leftrec,
--						   &trec, &doneleft, 1);
-+						   &trec, &doneleft);
- 			if (error)
- 				goto error1;
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index a5f2042..dc42751 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -1270,8 +1270,19 @@ xfs_seek_data(
+ 	}
  
- 			error = xfs_ialloc_get_rec(cur, pag->pagl_rightrec,
--						   &rec, &doneright, 0);
-+						   &rec, &doneright);
- 			if (error)
- 				goto error1;
- 		} else {
+ out:
+-	if (offset != file->f_pos)
++	if (offset < 0 && !(file->f_mode & FMODE_UNSIGNED_OFFSET)) {
++		error = EINVAL;
++		goto out_unlock;
++	}
++	if (offset > inode->i_sb->s_maxbytes) {
++		error = EINVAL;
++		goto out_unlock;
++	}
++
++	if (offset != file->f_pos) {
+ 		file->f_pos = offset;
++		file->f_version = 0;
++	}
+ 
+ out_unlock:
+ 	xfs_iunlock_map_shared(ip, lock);
+@@ -1372,6 +1383,15 @@ xfs_seek_hole(
+ 	}
+ 
+ out:
++	if (offset < 0 && !(file->f_mode & FMODE_UNSIGNED_OFFSET)) {
++		error = EINVAL;
++		goto out_unlock;
++	}
++	if (offset > inode->i_sb->s_maxbytes) {
++		error = EINVAL;
++		goto out_unlock;
++	}
++
+ 	/*
+ 	 * At this point, we must have found a hole.  However, the returned
+ 	 * offset may be bigger than the file size as it may be aligned to
+@@ -1379,8 +1399,10 @@ out:
+ 	 * situation in particular.
+ 	 */
+ 	offset = min_t(loff_t, offset, isize);
+-	if (offset != file->f_pos)
++	if (offset != file->f_pos) {
+ 		file->f_pos = offset;
++		file->f_version = 0;
++	}
+ 
+ out_unlock:
+ 	xfs_iunlock_map_shared(ip, lock);
 -- 
 1.7.9.5
 
