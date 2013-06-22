@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C20917F37
-	for <xfs@oss.sgi.com>; Sat, 22 Jun 2013 10:49:47 -0500 (CDT)
-Message-ID: <51C5C798.7090701@sgi.com>
-Date: Sat, 22 Jun 2013 10:49:44 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 560CB7F37
+	for <xfs@oss.sgi.com>; Sat, 22 Jun 2013 12:26:45 -0500 (CDT)
+Message-ID: <51C5DE52.7040108@sgi.com>
+Date: Sat, 22 Jun 2013 12:26:42 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 09/60] xfs: Inode create log items
+Subject: Re: [PATCH 07/60] xfs: Introduce ordered log vector support
 References: <1371617468-32559-1-git-send-email-david@fromorbit.com>
-	<1371617468-32559-10-git-send-email-david@fromorbit.com>
-In-Reply-To: <1371617468-32559-10-git-send-email-david@fromorbit.com>
+	<1371617468-32559-8-git-send-email-david@fromorbit.com>
+In-Reply-To: <1371617468-32559-8-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,36 +26,59 @@ To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
 On 06/18/13 23:50, Dave Chinner wrote:
-> +/*
-> + * on disk log item structure
-> + *
-> + * Log recovery assumes the first two entries are the type and size and they fit
-> + * in 32 bits. Also in host order (ugh) so they have to be 32 bit aligned so
-> + * decoding can be done correctly.
-> + */
-> +struct xfs_icreate_log {
-> +	__uint16_t	icl_type;	/* type of log format structure */
-> +	__uint16_t	icl_size;	/* size of log format structure */
-> +	__be32		icl_ag;		/* ag being allocated in */
-> +	__be32		icl_agbno;	/* start block of inode range */
-> +	__be32		icl_count;	/* number of inodes to initialise */
-> +	__be32		icl_isize;	/* size of inodes */
-> +	__be32		icl_length;	/* length of extent to initialise */
-> +	__be32		icl_gen;	/* inode generation number to use */
-> +};
-> +
-> +/* in memory log item structure */
-> +struct xfs_icreate_item {
-> +	struct xfs_log_item	ic_item;
-> +	struct xfs_icreate_log	ic_format;
-> +};
-> +
+> From: Dave Chinner<dchinner@redhat.com>
+>
+> And "ordered log vector" is a log vector that is used for
+> tracking a log item through the CIL and into the AIL as part of the
+> log checkpointing. These ordered log vectors are special in that
+> they are not written to to journal in any way, and are not accounted
+> to the checkpoint being written.
+>
+> The reason for this behaviour is to allow operations to attach items
+> to transactions and have them follow the normal transactional
+> lifecycle without actually having to write them to the journal. This
+> allows logging of items that track high level logical changes and
+> writing them to the log, while the physical items being modified
+> pass through into the AIL and pin the tail of the log (and therefore
+> the logical item in the log) until all the modified items are
+> physically written to disk.
+>
+> IOWs, it allows us to write metadata without physically logging
+> every individual change but still maintain the full transactional
+> integrity guarantees we currently have w.r.t. crash recovery.
+>
+> This change modifies some of the CIL item insertion loops, as
+> ordered log vectors introduce some new constraints as they don't
+> track any data. One advantage of this change is that it combines
+> two log vector chain walks into a single pass, so there is less
+> overhead in the transaction commit pass as well. It also kills some
+> unused code in the log vector walk loop when committing the CIL.
+>
+> Signed-off-by: Dave Chinner<dchinner@redhat.com>
+> ---
+>   fs/xfs/xfs_log.c     |   21 +++++++++++---
+>   fs/xfs/xfs_log.h     |    2 ++
+>   fs/xfs/xfs_log_cil.c |   75 ++++++++++++++++++++++++++++++++++----------------
+>   3 files changed, 70 insertions(+), 28 deletions(-)
+>
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
 
-Just a nit: I assume the name was getting a bit long, but having _format 
-in the name tells the structure purpose. I know, I know, the 
-xfs_icreate_item uses format in the "ic_format" variable name.
+...
+
+> @@ -2236,13 +2240,21 @@ xlog_write(
+>   		 * This loop writes out as many regions as can fit in the amount
+>   		 * of space which was allocated by xlog_state_get_iclog_space().
+>   		 */
+> -		while (lv&&  index<  lv->lv_niovecs) {
+> -			struct xfs_log_iovec	*reg =&vecp[index];
+> +		while (lv&&  (!lv->lv_niovecs || index<  lv->lv_niovecs)) {
+
+
+Be paranoid and make sure the log vector with no vectors owner is really 
+a "ordered" entry?
 
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+
 
 _______________________________________________
 xfs mailing list
