@@ -1,24 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 985CC7F4E
-	for <xfs@oss.sgi.com>; Sat, 22 Jun 2013 02:58:17 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 689F2304051
-	for <xfs@oss.sgi.com>; Sat, 22 Jun 2013 00:58:17 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id 6MSeoVTaFjxTWD3Q
-	for <xfs@oss.sgi.com>; Sat, 22 Jun 2013 00:58:16 -0700 (PDT)
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id 177CD6C177
-	for <xfs@oss.sgi.com>; Sat, 22 Jun 2013 02:58:16 -0500 (CDT)
-Message-ID: <51C55918.1030004@hardwarefreak.com>
-Date: Sat, 22 Jun 2013 02:58:16 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
-MIME-Version: 1.0
-Subject: Re: LVM + XFS + external log + snapshots
-References: <022467CC-8EB2-41E9-8AF6-46F781882F6B@gmail.com>
-In-Reply-To: <022467CC-8EB2-41E9-8AF6-46F781882F6B@gmail.com>
-Reply-To: stan@hardwarefreak.com
+	by oss.sgi.com (Postfix) with ESMTP id 057757F37
+	for <xfs@oss.sgi.com>; Sat, 22 Jun 2013 00:30:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E870A304039
+	for <xfs@oss.sgi.com>; Fri, 21 Jun 2013 22:30:36 -0700 (PDT)
+Received: from mail-gh0-f181.google.com (mail-gh0-f181.google.com
+	[209.85.160.181]) by cuda.sgi.com with ESMTP id
+	e9RMCWhXoxkxRIDf (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 21 Jun 2013 22:30:36 -0700 (PDT)
+Received: by mail-gh0-f181.google.com with SMTP id z12so2479590ghb.12
+	for <xfs@oss.sgi.com>; Fri, 21 Jun 2013 22:30:35 -0700 (PDT)
+Received: from [192.168.1.74] (75-63-29-182.lightspeed.irvnca.sbcglobal.net.
+	[75.63.29.182]) by mx.google.com with ESMTPSA id
+	u69sm13904931yhf.23.2013.06.21.22.30.33 for <xfs@oss.sgi.com>
+	(version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
+	Fri, 21 Jun 2013 22:30:34 -0700 (PDT)
+From: aurfalien <aurfalien@gmail.com>
+Subject: LVM + XFS + external log + snapshots
+Date: Fri, 21 Jun 2013 22:30:31 -0700
+Message-Id: <022467CC-8EB2-41E9-8AF6-46F781882F6B@gmail.com>
+Mime-Version: 1.0 (Apple Message framework v1085)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,51 +34,59 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-Sorry for err aurfalien, first reply didn't make the list.
+Hi all,
 
-On 6/22/2013 12:30 AM, aurfalien wrote:
-> Hi all,
-> 
-> So I have an XFS file system within LVM  which has an external log.
+So I have an XFS file system within LVM  which has an external log.
 
-Migrate to internal logs as snaps are easy.  Since delaylog (2.6.39+)
-external logs are generally no longer needed, provide little to no
-advantage as log bandwidth drops dramatically.  If RHEL or CentOS that's
-6.2 or later.
+My mount option in FSTAB is;
 
-...
-> lvcreate -L250G -s -n datasnapshot /dev/vg_spock_data/lv_data
-> 
-> But when i try to mount the file system;
+/dev/vg_spock_data/lv_data	/data	xfs	logdev=/dev/sdc1,nobarrier,logbufs=8,noatime,nodiratime	1 1
 
-For now, to get past this current problem, you must snapshot both the
-filesystem and the log, during the same freeze.  You're currently
-cloning the Lone Ranger without cloning Tonto.  Ain't gonna work.  And
-it looks like the log device doesn't reside on LVM, so you're outta
-luck, can't snap it.
+All is well no issues and very fast.
 
-> logdev=/dev/sdc1
+Now I'd like to snapshot this bad boy and then run rsnapshot to create a few days backup.
 
+A snapshot volume is created w/o issue;
 
-> Am I doing something wrong or is this not possible?
+lvcreate -L250G -s -n datasnapshot /dev/vg_spock_data/lv_data
 
-Your first error was putting the log on raw storage instead of an LV.
-If your kernel is new enough to support delaylog, then your 2nd error
-was using an external log.  External logs were once useful for high
-metadata workloads, but since delaylog they are largely no longer needed.
+But when i try to mount the file system;
 
-xfsdump the filesytem, mkfs.xfs with an internal log, then xfsrestore.
+mount /dev/vg_spock_data/datasnapshot /snapshot -o nouuid,ro
 
-Alternatively you could keep the external log:  Remount the live XFS
-using an alternate location for the log.  Put an LV on sdc1.  Then
-remount again using this new LV as the log location.  Then you can snap
-both XFS and the log, and mount the snap with the matching log.
+I get this;
 
--- 
-Stan
+mount: wrong fs type, bad option, bad superblock on /dev/mapper/vg_anette_data-datasnapshot,
+      missing codepage or helper program, or other error
+      In some cases useful info is found in syslog - try
+      dmesg | tail  or so
 
+The command dmesg shows;
+
+XFS (dm-3): filesystem is marked as having an external log; specify logdev on the mount command line.
+XFS (dm-3): SB validate failed
+
+So I then use this mount option;
+
+mount /dev/vg_anette_data/datasnapshot /snapshot -o logdev=/dev/sdc1,nouuid,ro
+
+But get this error;
+
+mount: /dev/mapper/vg_spock_data-datasnapshot already mounted or /snapshot busy
+
+And the command dmesg shows;
+
+XFS (dm-3): Invalid device [/dev/sdc1], error=-16
+
+Am I doing something wrong or is this not possible?
+
+I prefer being in error, I often am anyways.
+
+Thanks in advance,
+
+- aurf
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
