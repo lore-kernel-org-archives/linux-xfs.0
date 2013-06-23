@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6877F7F37
-	for <xfs@oss.sgi.com>; Sun, 23 Jun 2013 17:51:06 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 654727F37
+	for <xfs@oss.sgi.com>; Sun, 23 Jun 2013 17:55:50 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id ED2D7AC001
-	for <xfs@oss.sgi.com>; Sun, 23 Jun 2013 15:51:02 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 42836304032
+	for <xfs@oss.sgi.com>; Sun, 23 Jun 2013 15:55:50 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	vSsNIDhxTCOXZC3I for <xfs@oss.sgi.com>;
-	Sun, 23 Jun 2013 15:50:58 -0700 (PDT)
-Date: Mon, 24 Jun 2013 08:50:53 +1000
+	HL8fYRRbpG6uSTB3 for <xfs@oss.sgi.com>;
+	Sun, 23 Jun 2013 15:55:48 -0700 (PDT)
+Date: Mon, 24 Jun 2013 08:55:46 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: group for tests that are dangerous for verifiers?
-Message-ID: <20130623225053.GA29376@dastard>
-References: <51C341E1.8000302@sgi.com>
- <51C49F5A.3020907@sandeen.net>
+Subject: Re: LVM + XFS + external log + snapshots
+Message-ID: <20130623225546.GB29376@dastard>
+References: <022467CC-8EB2-41E9-8AF6-46F781882F6B@gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <51C49F5A.3020907@sandeen.net>
+In-Reply-To: <022467CC-8EB2-41E9-8AF6-46F781882F6B@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,43 +29,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Mark Tinguely <tinguely@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: aurfalien <aurfalien@gmail.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, Jun 21, 2013 at 01:45:46PM -0500, Eric Sandeen wrote:
-> On 6/20/13 12:54 PM, Mark Tinguely wrote:
-> > Do we need a xfstest verifier dangerous group?
-> > 
-> > xfstest 111 purposely damages inodes. In hindsight it make sense
-> > that it asserts when running with verifiers.
+On Fri, Jun 21, 2013 at 10:30:31PM -0700, aurfalien wrote:
+> Hi all,
 > 
-> But it only asserts on a debug kernel... 
-
-Right, and it has done so for years - blaming verifiers for
-triggering the assert failure is simply shooting the messenger.
-
-> This isn't the only place where corruption could ASSERT on debug;
-> see xlog_recover_add_to_trans() for example.
+> So I have an XFS file system within LVM  which has an external log.
 > 
-> But if the test intentionally corrupts it and that leads to
-> an ASSERT that does seem problematic for anyone testing w/ debug
-> enabled.
+> My mount option in FSTAB is;
+> 
+> /dev/vg_spock_data/lv_data	/data	xfs	logdev=/dev/sdc1,nobarrier,logbufs=8,noatime,nodiratime	1 1
+> 
+> All is well no issues and very fast.
+> 
+> Now I'd like to snapshot this bad boy and then run rsnapshot to create a few days backup.
 
-Yup, it runs src/itrash.c which corrupts every inode it can find.
+You need to snapshot the log device as well.
 
-That's the reason this test is not part of the auto group - it's
-a test that will cause the system to stop. We've got other tests
-that are not part of the auto group for exactly the same reason -
-they cause some kind of terminal failure and so aren't candidates
-for regression testing.
+But that is problematic in that you need to snapshot it at the same
+time you snapshot the data volume. Hence yo'd have to do:
 
-> I guess I'd vote for removing the ASSERT unless there's
-> some reason it should be there - Dave?
+# xfs_freeze -f <filesystem>
+# <snapshot data volume>
+# <snapshot log volume>
+# xfs_freeze -u <filesystem>
 
-I'm fine with it being removed - we catch the failure just fine. If
-that then makes 111 work as a regression test (i.e. doesn't trigger
-the bad-inode bulkstat loop it was designed to test) then perhaps we
-can consider making that part of the auto group, too...
+And now you can mount the snapshot with:
+
+# mount /dev/vg_spock_data/datasnapshot /snapshot -o nouuid,ro,logdev=/dev/vg_spock_log/logsnapshot
+
+If you can't snapshot the log device, then you can't snapshot the
+filesystem. Yet another reason for using internal logs...
 
 Cheers,
 
