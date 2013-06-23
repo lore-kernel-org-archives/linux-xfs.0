@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4827F7F37
-	for <xfs@oss.sgi.com>; Sun, 23 Jun 2013 18:15:03 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 376C37F37
+	for <xfs@oss.sgi.com>; Sun, 23 Jun 2013 18:24:42 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D99ECAC002
-	for <xfs@oss.sgi.com>; Sun, 23 Jun 2013 16:14:59 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	JDW57fnZaHvTS7mz for <xfs@oss.sgi.com>;
-	Sun, 23 Jun 2013 16:14:58 -0700 (PDT)
-Date: Mon, 24 Jun 2013 09:14:57 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: Remove dead function prototype xfs_sync_inode_grab()
-Message-ID: <20130623231457.GE29376@dastard>
-References: <51C4577B.2080208@oracle.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id F32F38F8035
+	for <xfs@oss.sgi.com>; Sun, 23 Jun 2013 16:24:41 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id WtUMc46vmuuwlR2X for <xfs@oss.sgi.com>;
+	Sun, 23 Jun 2013 16:24:40 -0700 (PDT)
+Message-ID: <51C783B7.2040502@sandeen.net>
+Date: Sun, 23 Jun 2013 18:24:39 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <51C4577B.2080208@oracle.com>
+Subject: Re: LVM + XFS + external log + snapshots
+References: <022467CC-8EB2-41E9-8AF6-46F781882F6B@gmail.com>
+	<20130623225546.GB29376@dastard>
+In-Reply-To: <20130623225546.GB29376@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,41 +28,58 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com, aurfalien <aurfalien@gmail.com>
 
-On Fri, Jun 21, 2013 at 09:39:07PM +0800, Jeff Liu wrote:
-> rom: Jie Liu <jeff.liu@oracle.com>
-
-From?
-
+On 6/23/13 5:55 PM, Dave Chinner wrote:
+> On Fri, Jun 21, 2013 at 10:30:31PM -0700, aurfalien wrote:
+>> Hi all,
+>>
+>> So I have an XFS file system within LVM  which has an external log.
+>>
+>> My mount option in FSTAB is;
+>>
+>> /dev/vg_spock_data/lv_data	/data	xfs	logdev=/dev/sdc1,nobarrier,logbufs=8,noatime,nodiratime	1 1
+>>
+>> All is well no issues and very fast.
+>>
+>> Now I'd like to snapshot this bad boy and then run rsnapshot to create a few days backup.
 > 
-> Remove dead function prototype xfs_sync_inode_grab() from
-> xfs_icache.h.
+> You need to snapshot the log device as well.
 > 
-> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
-> ---
->  fs/xfs/xfs_icache.h |    1 -
->  1 file changed, 1 deletion(-)
+> But that is problematic in that you need to snapshot it at the same
+> time you snapshot the data volume. Hence yo'd have to do:
 > 
-> diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
-> index e0f138c..a01afbb 100644
-> --- a/fs/xfs/xfs_icache.h
-> +++ b/fs/xfs/xfs_icache.h
-> @@ -40,7 +40,6 @@ void xfs_inode_clear_eofblocks_tag(struct xfs_inode *ip);
->  int xfs_icache_free_eofblocks(struct xfs_mount *, struct xfs_eofblocks *);
->  void xfs_eofblocks_worker(struct work_struct *);
->  
-> -int xfs_sync_inode_grab(struct xfs_inode *ip);
->  int xfs_inode_ag_iterator(struct xfs_mount *mp,
->  	int (*execute)(struct xfs_inode *ip, struct xfs_perag *pag,
->  		int flags, void *args),
+> # xfs_freeze -f <filesystem>
+> # <snapshot data volume>
+> # <snapshot log volume>
+> # xfs_freeze -u <filesystem>
+> 
+> And now you can mount the snapshot with:
+> 
+> # mount /dev/vg_spock_data/datasnapshot /snapshot -o nouuid,ro,logdev=/dev/vg_spock_log/logsnapshot
+> 
+> If you can't snapshot the log device, then you can't snapshot the
+> filesystem. Yet another reason for using internal logs...
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Hm, given that freezing the fs makes the log (almost) completely clean, I wonder
+if he could mount with /dev/zero (or a loopback 0-filled file) to get at the snapshot,
+especially since it's being mounted RO.
 
--- 
-Dave Chinner
-david@fromorbit.com
+Should be safe & consistent, no?
+
+i.e.
+
+truncate --size=2g logfile (or however big it needs to be)
+losetup /dev/loop0 logfile
+mount /dev/vg_anette_data/datasnapshot /snapshot -o logdev=/dev/loop0,nouuid,ro
+
+-Eric
+
+> Cheers,
+> 
+> Dave.
+> 
 
 _______________________________________________
 xfs mailing list
