@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8E3F27F37
-	for <xfs@oss.sgi.com>; Sun, 23 Jun 2013 22:33:59 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 699B7304032
-	for <xfs@oss.sgi.com>; Sun, 23 Jun 2013 20:33:59 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id otbdPEEgBs3rFPAB (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 23 Jun 2013 20:33:58 -0700 (PDT)
-Message-ID: <51C7BE28.3050107@oracle.com>
-Date: Mon, 24 Jun 2013 11:34:00 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 1CFBF7F37
+	for <xfs@oss.sgi.com>; Mon, 24 Jun 2013 00:32:04 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0A5778F8037
+	for <xfs@oss.sgi.com>; Sun, 23 Jun 2013 22:32:03 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	A2qOKNeyEKb60VhD for <xfs@oss.sgi.com>;
+	Sun, 23 Jun 2013 22:31:59 -0700 (PDT)
+Date: Mon, 24 Jun 2013 15:31:54 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v9 1/6] xfs: Move code around and remove typedefs
+Message-ID: <20130624053154.GL29376@dastard>
+References: <1372042107-27332-1-git-send-email-sekharan@us.ibm.com>
+	<1372042107-27332-2-git-send-email-sekharan@us.ibm.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: Remove dead function prototype xfs_sync_inode_grab()
-References: <51C4577B.2080208@oracle.com> <20130623231457.GE29376@dastard>
-In-Reply-To: <20130623231457.GE29376@dastard>
+Content-Disposition: inline
+In-Reply-To: <1372042107-27332-2-git-send-email-sekharan@us.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,47 +30,92 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Chandra Seetharaman <sekharan@us.ibm.com>
+Cc: xfs@oss.sgi.com
 
-On 06/24/2013 07:14 AM, Dave Chinner wrote:
-
-> On Fri, Jun 21, 2013 at 09:39:07PM +0800, Jeff Liu wrote:
->> rom: Jie Liu <jeff.liu@oracle.com>
+On Sun, Jun 23, 2013 at 09:48:22PM -0500, Chandra Seetharaman wrote:
+> Removed some typedefs, defined new functions, made some code clean up all in
+> preparation of the series.
 > 
-> From?
+> No functional changes.
 
-Ah, will repost it as well.
+This does a lot of different stuff. Can you separate out the actual
+factoring changes (e.g. xfs_is_quota_inode() and xfs_dquot_tree())
+into separate patches, and the same with the struct xfs_dquot_acct
+as it changes both logic and structure...
 
-Thanks,
--Jeff
+> diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
+> index 5d16a6e..4b330f2 100644
+> --- a/fs/xfs/xfs_qm.h
+> +++ b/fs/xfs/xfs_qm.h
+> @@ -42,57 +42,89 @@ extern struct kmem_zone	*xfs_qm_dqtrxzone;
+>   * The mount structure keeps a pointer to this.
+>   */
+>  typedef struct xfs_quotainfo {
+> -	struct radix_tree_root qi_uquota_tree;
+> -	struct radix_tree_root qi_gquota_tree;
+> -	struct mutex qi_tree_lock;
+> -	xfs_inode_t	*qi_uquotaip;	 /* user quota inode */
+> -	xfs_inode_t	*qi_gquotaip;	 /* group quota inode */
+> -	struct list_head qi_lru_list;
+> -	struct mutex	 qi_lru_lock;
+> -	int		 qi_lru_count;
+> -	int		 qi_dquots;
+> -	time_t		 qi_btimelimit;	 /* limit for blks timer */
+> -	time_t		 qi_itimelimit;	 /* limit for inodes timer */
+> -	time_t		 qi_rtbtimelimit;/* limit for rt blks timer */
+> -	xfs_qwarncnt_t	 qi_bwarnlimit;	 /* limit for blks warnings */
+> -	xfs_qwarncnt_t	 qi_iwarnlimit;	 /* limit for inodes warnings */
+> -	xfs_qwarncnt_t	 qi_rtbwarnlimit;/* limit for rt blks warnings */
+> -	struct mutex	 qi_quotaofflock;/* to serialize quotaoff */
+> -	xfs_filblks_t	 qi_dqchunklen;	 /* # BBs in a chunk of dqs */
+> -	uint		 qi_dqperchunk;	 /* # ondisk dqs in above chunk */
+> -	xfs_qcnt_t	 qi_bhardlimit;	 /* default data blk hard limit */
+> -	xfs_qcnt_t	 qi_bsoftlimit;	 /* default data blk soft limit */
+> -	xfs_qcnt_t	 qi_ihardlimit;	 /* default inode count hard limit */
+> -	xfs_qcnt_t	 qi_isoftlimit;	 /* default inode count soft limit */
+> -	xfs_qcnt_t	 qi_rtbhardlimit;/* default realtime blk hard limit */
+> -	xfs_qcnt_t	 qi_rtbsoftlimit;/* default realtime blk soft limit */
+> -	struct shrinker  qi_shrinker;
+> +	struct radix_tree_root	qi_uquota_tree;
+> +	struct radix_tree_root	qi_gquota_tree;
+> +	struct mutex		qi_tree_lock;
+> +	struct xfs_inode	*qi_uquotaip;	 /* user quota inode */
+> +	struct xfs_inode	*qi_gquotaip;	 /* group quota inode */
+> +	struct list_head	qi_lru_list;
+> +	struct mutex		qi_lru_lock;
+> +	int		qi_lru_count;
+> +	int		qi_dquots;
+> +	time_t		qi_btimelimit;	 /* limit for blks timer */
+> +	time_t		qi_itimelimit;	 /* limit for inodes timer */
+> +	time_t		qi_rtbtimelimit;/* limit for rt blks timer */
+> +	xfs_qwarncnt_t	qi_bwarnlimit;	 /* limit for blks warnings */
+> +	xfs_qwarncnt_t	qi_iwarnlimit;	 /* limit for inodes warnings */
+> +	xfs_qwarncnt_t	qi_rtbwarnlimit;/* limit for rt blks warnings */
+> +	struct mutex	qi_quotaofflock;/* to serialize quotaoff */
+> +	xfs_filblks_t	qi_dqchunklen;	 /* # BBs in a chunk of dqs */
+> +	uint		qi_dqperchunk;	 /* # ondisk dqs in above chunk */
+> +	xfs_qcnt_t	qi_bhardlimit;	 /* default data blk hard limit */
+> +	xfs_qcnt_t	qi_bsoftlimit;	 /* default data blk soft limit */
+> +	xfs_qcnt_t	qi_ihardlimit;	 /* default inode count hard limit */
+> +	xfs_qcnt_t	qi_isoftlimit;	 /* default inode count soft limit */
+> +	xfs_qcnt_t	qi_rtbhardlimit;/* default realtime blk hard limit */
+> +	xfs_qcnt_t	qi_rtbsoftlimit;/* default realtime blk soft limit */
+> +	struct shrinker	qi_shrinker;
+>  } xfs_quotainfo_t;
 
-> 
->>
->> Remove dead function prototype xfs_sync_inode_grab() from
->> xfs_icache.h.
->>
->> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
->> ---
->>  fs/xfs/xfs_icache.h |    1 -
->>  1 file changed, 1 deletion(-)
->>
->> diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
->> index e0f138c..a01afbb 100644
->> --- a/fs/xfs/xfs_icache.h
->> +++ b/fs/xfs/xfs_icache.h
->> @@ -40,7 +40,6 @@ void xfs_inode_clear_eofblocks_tag(struct xfs_inode *ip);
->>  int xfs_icache_free_eofblocks(struct xfs_mount *, struct xfs_eofblocks *);
->>  void xfs_eofblocks_worker(struct work_struct *);
->>  
->> -int xfs_sync_inode_grab(struct xfs_inode *ip);
->>  int xfs_inode_ag_iterator(struct xfs_mount *mp,
->>  	int (*execute)(struct xfs_inode *ip, struct xfs_perag *pag,
->>  		int flags, void *args),
-> 
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> 
+I don't see much point in random whitespace cleanups like this. If
+you are going to change them, at least clean it up properly, so all
+variables are aligned, and all the comments are aligned as well. In
+most cases, the comments are redundant because the variable names
+are very descriptive and so probably could be removed....
 
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
