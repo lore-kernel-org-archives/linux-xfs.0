@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 76C4E7F37
-	for <xfs@oss.sgi.com>; Tue, 25 Jun 2013 15:27:52 -0500 (CDT)
-Date: Tue, 25 Jun 2013 15:27:49 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 067557F37
+	for <xfs@oss.sgi.com>; Tue, 25 Jun 2013 15:47:10 -0500 (CDT)
+Date: Tue, 25 Jun 2013 15:47:09 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 3/6] xfstests: xfs/253 doesn't use seqres correctly
-Message-ID: <20130625202749.GD20932@sgi.com>
-References: <1370610398-14630-1-git-send-email-david@fromorbit.com>
-	<1370610398-14630-4-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH] xfstests: fsync-tester: fix pwrite() return check and
+	disable direct for test 19
+Message-ID: <20130625204709.GE20932@sgi.com>
+References: <1370999583-16725-1-git-send-email-jbacik@fusionio.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1370610398-14630-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1370999583-16725-1-git-send-email-jbacik@fusionio.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,19 +23,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Josef Bacik <jbacik@fusionio.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, Jun 07, 2013 at 11:06:35PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Tue, Jun 11, 2013 at 09:13:03PM -0400, Josef Bacik wrote:
+> Test 19 in direct mode was failing on xfs because it was not actually doing the
+> write because the writes were not sectorsize aligned.  This test is to test
+> btrfs's inline extent fsync()ing so the writes won't be sectorsize aligned, and
+> inline extents will fall back to buffered anyway so direct mode is meaningless
+> for this test.  So just check if we are test 19 and disable direct mode so we
+> don't have to change the golden output.  Also change test_five() to compare
+> against a ssize_t instead of a size_t since apparently comparing against size_t
+> makes it cast the return value of pwrite() to size_t which screws up the error
+> case, so instead of seeing the pwrite() error on xfs which would have explained
+> this all it appeared as if it was succeeding and screwing up the fsync(), which
+> unfortunately wasted a bit of Daves time.  This patch should fix all this up.
+> Thanks,
 > 
-> It was missed when converting all the tests as it was using
-> ${seq}.full and none of the regexes matched it. Fix it up to direct
-> the output to the correct place.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-
-Reviewed-by: Ben Myers <bpm@sgi.com>
+> Signed-off-by: Josef Bacik <jbacik@fusionio.com>
 
 Applied.
 
