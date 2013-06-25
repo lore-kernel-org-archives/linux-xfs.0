@@ -1,16 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 594D97F37
-	for <xfs@oss.sgi.com>; Tue, 25 Jun 2013 16:14:53 -0500 (CDT)
-Date: Tue, 25 Jun 2013 16:14:49 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 90D277F37
+	for <xfs@oss.sgi.com>; Tue, 25 Jun 2013 17:01:49 -0500 (CDT)
+Date: Tue, 25 Jun 2013 17:01:23 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] xfsprogs: replace umode_t with xfs_mode_t
-Message-ID: <20130625211449.GF20932@sgi.com>
-References: <51BA219B.4070503@gmail.com> <20130614023758.GT29338@dastard>
-	<51BB6028.1080602@gmail.com>
+Subject: Re: [PATCH] xfsprogs: fix make deb
+Message-ID: <20130625220123.GG20932@sgi.com>
+References: <1371526854-15761-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <51BB6028.1080602@gmail.com>
+In-Reply-To: <1371526854-15761-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,24 +22,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Michael L. Semon" <mlsemon35@gmail.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-> From: "Michael L. Semon" <mlsemon35@gmail.com>
-> Date: Fri, 14 Jun 2013 03:00:34 -0400
-> Subject: [PATCH] xfsprogs: define umode_t for build if not defined already
+On Tue, Jun 18, 2013 at 01:40:53PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> umode_t has not been exported to the kernel private headers since
-> around kernel 3.2.0-rc7.  Add a check for umode_t and define it
-> if it has not been defined already.
+> Commit 48212a30 ("xfsprogs: update 'make deb' to use tarball) fixed
+> a bunch of problems with making the source tarball for releases.
+> However, it broke the debian package builds in a way I hadn't
+> noticed until I rewrote my CI system build script.
 > 
-> Signed-off-by: Michael L. Semon <mlsemon35@gmail.com>
+> I noticed that the CI system wasn't building from a pristine
+> workarea, and instead was just updating the old workarea and running
+> 'make deb'. I added a 'make realclean' to remove all previous state
+> from the workarea, and then 'make deb' started failing with errors
+> building the tarball because po/xfsprogs.pot didn't have a build
+> rule
+> 
+> The above commit removed the pre-build of the translations target,
+> and instead made the translation build target a dependency of
+> building the the tarball. Hence the lack of a build rule of the
+> translations causes the source tarball build to fail.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Looks ok to me.
+My systems seem not to be having this problem.  They seem to be building
+xfsprogs.pot due to the dependancy through SRCDIR->SRCTAR->SRCTARINC.  Can you
+post the error?
 
-Reviewed-by: Ben Myers <bpm@sgi.com>
-
-Applied..
+-Ben
 
 _______________________________________________
 xfs mailing list
