@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 24A867F37
-	for <xfs@oss.sgi.com>; Tue, 25 Jun 2013 19:59:39 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 052FB304043
-	for <xfs@oss.sgi.com>; Tue, 25 Jun 2013 17:59:35 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id D93277F3F
+	for <xfs@oss.sgi.com>; Tue, 25 Jun 2013 20:10:27 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B947430405F
+	for <xfs@oss.sgi.com>; Tue, 25 Jun 2013 18:10:24 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	TBXRAVNsch7eKZz2 for <xfs@oss.sgi.com>;
-	Tue, 25 Jun 2013 17:59:34 -0700 (PDT)
-Date: Wed, 26 Jun 2013 10:59:06 +1000
+	sriDGvLXeUF7EztJ for <xfs@oss.sgi.com>;
+	Tue, 25 Jun 2013 18:10:23 -0700 (PDT)
+Date: Wed, 26 Jun 2013 11:09:31 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfstests: .gitignore: add fsync-tester
-Message-ID: <20130626005906.GZ29376@dastard>
-References: <20130625153435.7a4eb981@oracle.com>
+Subject: Re: [PATCH] xfstests: 313,314: user namespace uid/gids in inode, ACL
+Message-ID: <20130626010931.GA29376@dastard>
+References: <20130625153443.08142635@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130625153435.7a4eb981@oracle.com>
+In-Reply-To: <20130625153443.08142635@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,31 +32,26 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dwight Engen <dwight.engen@oracle.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Jun 25, 2013 at 03:34:35PM -0400, Dwight Engen wrote:
-> Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
-> ---
->  .gitignore | 1 +
->  1 file changed, 1 insertion(+)
+On Tue, Jun 25, 2013 at 03:34:43PM -0400, Dwight Engen wrote:
+> These tests verify that the uid/gids in an inode and in ACLs get translated
+> from/to a user namespace to/from disk correctly.
 > 
-> diff --git a/.gitignore b/.gitignore
-> index 0bd48c3..5aa68c3 100644
-> --- a/.gitignore
-> +++ b/.gitignore
-> @@ -47,6 +47,7 @@
->  /src/fs_perms
->  /src/fstest
->  /src/ftrunc
-> +/src/fsync-tester
->  /src/genhashnames
->  /src/getdevicesize
->  /src/getpagesize
-> -- 
-> 1.8.1.4
+> I had to use getfacl instead of the chacl -l because I need numeric uids
+> to make the output consistent.
+> 
+> A new program nsexec was added to facilitate creating/entering a user
+> namespace for testing. The orignal source for the program is
+> https://lwn.net/Articles/539940. I added the -s option to become "root"
+> in the user namespace.
+> 
+> Tested against btrfs, ext4, and xfs with my proposed user namespace changes.
 
-Looks good.
+Can you split it out into a patch per test? It's easier to review
+that way...
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Cheers,
 
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
