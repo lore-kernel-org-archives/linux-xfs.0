@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8D1F97F37
-	for <xfs@oss.sgi.com>; Tue, 25 Jun 2013 19:50:34 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 770BC8F8037
-	for <xfs@oss.sgi.com>; Tue, 25 Jun 2013 17:50:34 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 24A867F37
+	for <xfs@oss.sgi.com>; Tue, 25 Jun 2013 19:59:39 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 052FB304043
+	for <xfs@oss.sgi.com>; Tue, 25 Jun 2013 17:59:35 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	DTmySx9WH6GmZlUs for <xfs@oss.sgi.com>;
-	Tue, 25 Jun 2013 17:50:33 -0700 (PDT)
-Date: Wed, 26 Jun 2013 10:50:29 +1000
+	TBXRAVNsch7eKZz2 for <xfs@oss.sgi.com>;
+	Tue, 25 Jun 2013 17:59:34 -0700 (PDT)
+Date: Wed, 26 Jun 2013 10:59:06 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfstests: fix README, FSTYP options
-Message-ID: <20130626005029.GY29376@dastard>
-References: <20130625153423.513e4074@oracle.com>
+Subject: Re: [PATCH] xfstests: .gitignore: add fsync-tester
+Message-ID: <20130626005906.GZ29376@dastard>
+References: <20130625153435.7a4eb981@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130625153423.513e4074@oracle.com>
+In-Reply-To: <20130625153435.7a4eb981@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,20 +32,31 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dwight Engen <dwight.engen@oracle.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Jun 25, 2013 at 03:34:23PM -0400, Dwight Engen wrote:
-> commit cbcc88fb changed test selection to use shell globs, so fixup the
-> examples given in the README file.
+On Tue, Jun 25, 2013 at 03:34:35PM -0400, Dwight Engen wrote:
+> Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
+> ---
+>  .gitignore | 1 +
+>  1 file changed, 1 insertion(+)
 > 
-> add options for FSTYPs supported by _scratch_mkfs().
+> diff --git a/.gitignore b/.gitignore
+> index 0bd48c3..5aa68c3 100644
+> --- a/.gitignore
+> +++ b/.gitignore
+> @@ -47,6 +47,7 @@
+>  /src/fs_perms
+>  /src/fstest
+>  /src/ftrunc
+> +/src/fsync-tester
+>  /src/genhashnames
+>  /src/getdevicesize
+>  /src/getpagesize
+> -- 
+> 1.8.1.4
 
-To tell the truth, I'd prefer to get rid of the -xfs/-udf/... etc
-options rather than propoagate them further. We autodetect the FSTYP
-just fine on Linux via blkid probing of $TEST_DEV. Hence in reality,
-the only CLI option we need is for NFS...
+Looks good.
 
-Cheers,
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
