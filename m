@@ -1,23 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6F6A57F37
-	for <xfs@oss.sgi.com>; Wed, 26 Jun 2013 10:49:33 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4C28030404E
-	for <xfs@oss.sgi.com>; Wed, 26 Jun 2013 08:49:33 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 800187F50
+	for <xfs@oss.sgi.com>; Wed, 26 Jun 2013 10:50:18 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 2BDA2AC003
+	for <xfs@oss.sgi.com>; Wed, 26 Jun 2013 08:50:15 -0700 (PDT)
 Received: from dkim2.fusionio.com (dkim2.fusionio.com [66.114.96.54]) by
-	cuda.sgi.com with ESMTP id OeLHiQeTcS2cH9oB (version=TLSv1
+	cuda.sgi.com with ESMTP id RSmnwIOSlNHbmFfY (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 26 Jun 2013 08:49:31 -0700 (PDT)
+	Wed, 26 Jun 2013 08:50:14 -0700 (PDT)
 Received: from mx2.fusionio.com (unknown [10.101.1.160])
-	by dkim2.fusionio.com (Postfix) with ESMTP id 63D939A0320
-	for <xfs@oss.sgi.com>; Wed, 26 Jun 2013 09:49:31 -0600 (MDT)
+	by dkim2.fusionio.com (Postfix) with ESMTP id D6C0B9A0320
+	for <xfs@oss.sgi.com>; Wed, 26 Jun 2013 09:50:13 -0600 (MDT)
+Date: Wed, 26 Jun 2013 11:50:11 -0400
 From: Josef Bacik <jbacik@fusionio.com>
-Subject: [PATCH] xfstests: check if the scratch dev pool is mounted in
-	_require_scratch
-Date: Wed, 26 Jun 2013 11:49:28 -0400
-Message-ID: <1372261768-1795-1-git-send-email-jbacik@fusionio.com>
+Subject: Re: [BULK]  Re: [PATCH] xfstests: unmount scratch mnt in test 307
+Message-ID: <20130626155011.GN4288@localhost.localdomain>
+References: <1367611895-6852-1-git-send-email-jbacik@fusionio.com>
+	<51841AC5.3090309@redhat.com> <20130503232721.GA19978@dastard>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20130503232721.GA19978@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,63 +33,84 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, linux-btrfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, Josef Bacik <JBacik@fusionio.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-If you use the SCRATCH_DEV_POOL for btrfs you will end up with the command line
-like this
+On Fri, May 03, 2013 at 07:27:21PM -0400, Dave Chinner wrote:
+> On Fri, May 03, 2013 at 03:15:01PM -0500, Eric Sandeen wrote:
+> > On 5/3/13 3:11 PM, Josef Bacik wrote:
+> > > So if you have a mount command that doesn't use /etc/mtab then it will spit out
+> > > a different device for the mounted device.  So say we have
+> > > 
+> > > SCRATCH_DEV_POOL="/dev/sda /dev/sdb /dev/sdc"
+> > > 
+> > > we will turn this into
+> > > 
+> > > SCRATCH_DEV="/dev/sda"
+> > > SCRATCH_DEV_POOL="/dev/sdb /dev/sdc"
+> > > 
+> > > and then when you mkfs this you do _scratch_mkfs $SCRATCH_DEV_POOL which turns
+> > > into this
+> > > 
+> > > mkfs.btrfs /dev/sdb /dev/sdc /dev/sda
+> > > 
+> > > becuase we do
+> > > 
+> > > mkfs $* $SCRATCH_DEV
+> > > 
+> > > Then btrfs will always show the lowest devid in /proc/mounts to maintain
+> > > consistency, so even though we do mount /dev/sda $SCRATCH_MNT, you will see
+> > > /dev/sdb as the mounted device in /proc/mounts.  So then say the next test wants
+> > > to just use $SCRATCH_DEV, it will do _require_scratchdev which will check to see
+> > > if $SCRATCH_DEV is mounted, which it will look like it is not because
+> > > /proc/mounts shows /dev/sdb instead of /dev/sda, and so it won't umount
+> > > $SCRATCH_MNT, and then that test will fail because we can't mkfs the device
+> > > because it is busy.  I reproduced this on a box that doesn't use /etc/mtab by
+> > > doing
+> > > 
+> > > ./check btrfs/307 generic/015
+> > > 
+> > > and 015 would fail.  With this patch it passes now.  Thanks,
+> > > 
+> > > Signed-off-by: Josef Bacik <jbacik@fusionio.com>
+> > > ---
+> > >  tests/btrfs/307 |    1 +
+> > >  1 files changed, 1 insertions(+), 0 deletions(-)
+> > > 
+> > > diff --git a/tests/btrfs/307 b/tests/btrfs/307
+> > > index 87314c6..15157b3 100644
+> > > --- a/tests/btrfs/307
+> > > +++ b/tests/btrfs/307
+> > > @@ -35,6 +35,7 @@ _cleanup()
+> > >  {
+> > >      cd /
+> > >      rm -f $tmp.*
+> > > +    umount $SCRATCH_MNT
+> > >  }
+> > >  
+> > >  # get standard environment, filters and checks
+> > > 
+> > 
+> > This seems fine for this particular test.
+> > 
+> > Is it really a hard requirement that each test unmount SCRATCH_[DEV|MNT] if it used it?
+> > If so, fine... the README does indicate this.
+> > 
+> > But I wonder if we can make it a little more foolproof by updating _require_scratch
+> > to handle this situation more gracefully?
+> 
+> It already tries to unmount $SCRATCH_DEV, and will through an error
+> if it's not mounted on $SCRATCH_MNT. I guess the opposite checks are
+> necessary in this case i.e. check that SCRATCH_MNT is not mounted,
+> and through an error if it's not SCRATCH_DEV that is mounted
+> there...
+> 
 
-mkfs.btrfs $SCRATCH_DEV_POOL $SCRATCH_DEV
+Just realized this never went in and I had forgotten to address y'alls comments,
+so I've sent another patch that accomplishes what you asked for and fixes my
+problem.  Thanks,
 
-and btrfs does this thing where it makes the lowest valued device id show up in
-/proc/mounts no matter which device you specify at the mount command.  So in
-this case mount will show the first device in $SCRATCH_DEV_POOL instead of
-$SCRATCH_DEV, so anybody who wants to just use the scratch mnt with the scratch
-dev will fail to work because we never unmount the scratch mount.  Fix this by
-checking to see if the scratch dev pool is mounted at scratch mnt and unmount it
-so we can run our test.  This fixes the issue I was seeing by running
-
-./check btrfs/307 generic/015
-
-Thanks,
-
-Signed-off-by: Josef Bacik <jbacik@fusionio.com>
----
- common/rc |   13 +++++++++++++
- 1 files changed, 13 insertions(+), 0 deletions(-)
-
-diff --git a/common/rc b/common/rc
-index ad7cbc9..7e03400 100644
---- a/common/rc
-+++ b/common/rc
-@@ -938,6 +938,8 @@ _supported_os()
- #
- _require_scratch()
- {
-+    local i
-+
-     case "$FSTYP" in
- 	nfs*)
- 		 echo $SCRATCH_DEV | grep -q ":" > /dev/null 2>&1
-@@ -978,6 +980,17 @@ _require_scratch()
-             exit 1
-         fi
-     fi
-+
-+    # we may have a scratch dev pool specified, so make sure it's been unmounted
-+    # from the scratch mount
-+    for i in $SCRATCH_DEV_POOL; do
-+        if _mount | grep $i | grep -q $SCRATCH_MNT; then
-+            if ! $UMOUNT_PROG $i; then
-+                echo "failed to umount $i - aborting"
-+                exit 1
-+            fi
-+        fi
-+    done
- }
- 
- # this test needs a logdev
--- 
-1.7.7.6
+Josef
 
 _______________________________________________
 xfs mailing list
