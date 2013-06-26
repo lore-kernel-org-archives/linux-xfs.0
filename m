@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D09677F51
-	for <xfs@oss.sgi.com>; Wed, 26 Jun 2013 11:29:13 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 685DBAC003
-	for <xfs@oss.sgi.com>; Wed, 26 Jun 2013 09:29:13 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id ozEzZXn3FkDwnVLj (version=TLSv1
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id CD7EE7F51
+	for <xfs@oss.sgi.com>; Wed, 26 Jun 2013 11:30:56 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id AD4A78F8040
+	for <xfs@oss.sgi.com>; Wed, 26 Jun 2013 09:30:53 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id Wks7ymIdzOHjddGF (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 26 Jun 2013 09:29:12 -0700 (PDT)
-Date: Wed, 26 Jun 2013 12:29:03 -0400
+	Wed, 26 Jun 2013 09:30:52 -0700 (PDT)
+Date: Wed, 26 Jun 2013 12:30:44 -0400
 From: Dwight Engen <dwight.engen@oracle.com>
-Subject: Re: [PATCH] xfstests: fix README, FSTYP options
-Message-ID: <20130626122903.7420203b@oracle.com>
-In-Reply-To: <20130626005029.GY29376@dastard>
-References: <20130625153423.513e4074@oracle.com>
-	<20130626005029.GY29376@dastard>
+Subject: Re: [PATCH] xfstests: 313,314: user namespace uid/gids in inode, ACL
+Message-ID: <20130626123044.2fc6ee53@oracle.com>
+In-Reply-To: <20130626010931.GA29376@dastard>
+References: <20130625153443.08142635@oracle.com>
+	<20130626010931.GA29376@dastard>
 Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -32,22 +32,28 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, 26 Jun 2013 10:50:29 +1000
+On Wed, 26 Jun 2013 11:09:31 +1000
 Dave Chinner <david@fromorbit.com> wrote:
 
-> On Tue, Jun 25, 2013 at 03:34:23PM -0400, Dwight Engen wrote:
-> > commit cbcc88fb changed test selection to use shell globs, so fixup
-> > the examples given in the README file.
+> On Tue, Jun 25, 2013 at 03:34:43PM -0400, Dwight Engen wrote:
+> > These tests verify that the uid/gids in an inode and in ACLs get
+> > translated from/to a user namespace to/from disk correctly.
 > > 
-> > add options for FSTYPs supported by _scratch_mkfs().
+> > I had to use getfacl instead of the chacl -l because I need numeric
+> > uids to make the output consistent.
+> > 
+> > A new program nsexec was added to facilitate creating/entering a
+> > user namespace for testing. The orignal source for the program is
+> > https://lwn.net/Articles/539940. I added the -s option to become
+> > "root" in the user namespace.
+> > 
+> > Tested against btrfs, ext4, and xfs with my proposed user namespace
+> > changes.
 > 
-> To tell the truth, I'd prefer to get rid of the -xfs/-udf/... etc
-> options rather than propoagate them further. We autodetect the FSTYP
-> just fine on Linux via blkid probing of $TEST_DEV. Hence in reality,
-> the only CLI option we need is for NFS...
+> Can you split it out into a patch per test? It's easier to review
+> that way...
 
-Yep, I realized there was autodetection (nice!) later. I'll resubmit
-with only NFS in the list.
+Sure, I'll split out adding the nsexec program separately as well.
 
 > Cheers,
 > 
