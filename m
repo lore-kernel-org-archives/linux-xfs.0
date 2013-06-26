@@ -1,16 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2DB657F3F
-	for <xfs@oss.sgi.com>; Wed, 26 Jun 2013 11:23:00 -0500 (CDT)
-Date: Wed, 26 Jun 2013 11:22:56 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] xfstests: aio-stress is calling pthread_join incorrectly
-Message-ID: <20130626162256.GI20932@sgi.com>
-References: <51C0E5BC.6060809@oracle.com>
- <20130618231314.GC29338@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130618231314.GC29338@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id D09677F51
+	for <xfs@oss.sgi.com>; Wed, 26 Jun 2013 11:29:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 685DBAC003
+	for <xfs@oss.sgi.com>; Wed, 26 Jun 2013 09:29:13 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id ozEzZXn3FkDwnVLj (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 26 Jun 2013 09:29:12 -0700 (PDT)
+Date: Wed, 26 Jun 2013 12:29:03 -0400
+From: Dwight Engen <dwight.engen@oracle.com>
+Subject: Re: [PATCH] xfstests: fix README, FSTYP options
+Message-ID: <20130626122903.7420203b@oracle.com>
+In-Reply-To: <20130626005029.GY29376@dastard>
+References: <20130625153423.513e4074@oracle.com>
+	<20130626005029.GY29376@dastard>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,26 +30,28 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Dave Kleikamp <dave.kleikamp@oracle.com>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Wed, Jun 19, 2013 at 09:13:14AM +1000, Dave Chinner wrote:
-> On Tue, Jun 18, 2013 at 05:57:00PM -0500, Dave Kleikamp wrote:
-> > The retval parameter to pthread_join() is a pointer to a pointer.
-> > aio-stress is passing in a pointer to an int. This can result in a bus
-> > error on sparc64 when the pointer is not aligned on a 64-bit boundary.
-> > Since the return value is not used, it is simplest to pass a NULL
-> > pointer instead.
-> > 
-> > This has been fixed in the LTP source:
-> > https://github.com/linux-test-project/ltp/commit/981d33aad3b33c4625b88990fbf2fad5470d47e0
-> > 
-> > Signed-off-by: Dave Kleikamp <dave.kleikamp@oracle.com>
-> 
-> Looks good. Thanks, Shaggy.
-> 
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+On Wed, 26 Jun 2013 10:50:29 +1000
+Dave Chinner <david@fromorbit.com> wrote:
 
-Applied.
+> On Tue, Jun 25, 2013 at 03:34:23PM -0400, Dwight Engen wrote:
+> > commit cbcc88fb changed test selection to use shell globs, so fixup
+> > the examples given in the README file.
+> > 
+> > add options for FSTYPs supported by _scratch_mkfs().
+> 
+> To tell the truth, I'd prefer to get rid of the -xfs/-udf/... etc
+> options rather than propoagate them further. We autodetect the FSTYP
+> just fine on Linux via blkid probing of $TEST_DEV. Hence in reality,
+> the only CLI option we need is for NFS...
+
+Yep, I realized there was autodetection (nice!) later. I'll resubmit
+with only NFS in the list.
+
+> Cheers,
+> 
+> Dave.
 
 _______________________________________________
 xfs mailing list
