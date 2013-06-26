@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, master,
+Subject: [XFS updates] XFS development tree branch, for-next,
 	updated. v3.10-rc1-43-g80a4049
-Message-Id: <20130626174438.549547F52@oss.sgi.com>
-Date: Wed, 26 Jun 2013 12:44:38 -0500 (CDT)
+Message-Id: <20130626174451.035137F59@oss.sgi.com>
+Date: Wed, 26 Jun 2013 12:44:50 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,7 +23,7 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, master has been updated
+The branch, for-next has been updated
   80a4049 xfs: Remove dead function prototype xfs_sync_inode_grab()
   43df2ee xfs: Remove the left function variable from xfs_ialloc_get_rec()
   427d9fe xfs: check on-disk (not incore) btree root size in dfrag.c
