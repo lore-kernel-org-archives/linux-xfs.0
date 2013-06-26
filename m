@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id EC8FB7F4E
-	for <xfs@oss.sgi.com>; Tue, 25 Jun 2013 21:41:41 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B5CCA8F8049
-	for <xfs@oss.sgi.com>; Tue, 25 Jun 2013 19:41:38 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id DCCAD7F51
+	for <xfs@oss.sgi.com>; Tue, 25 Jun 2013 23:06:05 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BD02F30405F
+	for <xfs@oss.sgi.com>; Tue, 25 Jun 2013 21:06:05 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	uJ3dJ5BmXyy2TTmU for <xfs@oss.sgi.com>;
-	Tue, 25 Jun 2013 19:41:36 -0700 (PDT)
-Date: Wed, 26 Jun 2013 12:41:33 +1000
+	ERNSoCDxc52MElEh for <xfs@oss.sgi.com>;
+	Tue, 25 Jun 2013 21:06:00 -0700 (PDT)
+Date: Wed, 26 Jun 2013 14:05:18 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfsprogs: fix make deb
-Message-ID: <20130626024133.GF29376@dastard>
-References: <1371526854-15761-1-git-send-email-david@fromorbit.com>
-	<20130625220123.GG20932@sgi.com>
+Subject: Re: [PATCH 59/60] xfs: Add xfs_log_rlimit.c
+Message-ID: <20130626040518.GG29376@dastard>
+References: <1371617468-32559-1-git-send-email-david@fromorbit.com>
+	<1371617468-32559-60-git-send-email-david@fromorbit.com>
+	<51C8B984.3090400@sgi.com> <20130624222708.GV29338@dastard>
+	<51C9A3EF.70005@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130625220123.GG20932@sgi.com>
+In-Reply-To: <51C9A3EF.70005@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,212 +32,226 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
+To: Mark Tinguely <tinguely@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Jun 25, 2013 at 05:01:23PM -0500, Ben Myers wrote:
-> On Tue, Jun 18, 2013 at 01:40:53PM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Commit 48212a30 ("xfsprogs: update 'make deb' to use tarball) fixed
-> > a bunch of problems with making the source tarball for releases.
-> > However, it broke the debian package builds in a way I hadn't
-> > noticed until I rewrote my CI system build script.
-> > 
-> > I noticed that the CI system wasn't building from a pristine
-> > workarea, and instead was just updating the old workarea and running
-> > 'make deb'. I added a 'make realclean' to remove all previous state
-> > from the workarea, and then 'make deb' started failing with errors
-> > building the tarball because po/xfsprogs.pot didn't have a build
-> > rule
-> > 
-> > The above commit removed the pre-build of the translations target,
-> > and instead made the translation build target a dependency of
-> > building the the tarball. Hence the lack of a build rule of the
-> > translations causes the source tarball build to fail.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+On Tue, Jun 25, 2013 at 09:06:39AM -0500, Mark Tinguely wrote:
+> On 06/24/13 17:27, Dave Chinner wrote:
+> >On Mon, Jun 24, 2013 at 04:26:28PM -0500, Mark Tinguely wrote:
+> >>On 06/18/13 23:51, Dave Chinner wrote:
+> >>>+	 * 2) If the lsunit option is specified, a transaction requires 2 LSU
+> >>>+	 *    for the reservation because there are two log writes that can
+> >>>+	 *    require padding - the transaction data and the commit record which
+> >>>+	 *    are written separately and both can require padding to the LSU.
+> >>>+	 *    Consider that we can have an active CIL reservation holding 2*LSU,
+> >>>+	 *    but the CIL is not over a push threshold, in this case, if we
+> >>>+	 *    don't have enough log space for at one new transaction, which
+> >>>+	 *    includes another 2*LSU in the reservation, we will run into dead
+> >>>+	 *    loop situation in log space grant procedure. i.e.
+> >>>+	 *    xlog_grant_head_wait().
+> >>>+	 *
+> >>>+	 *    Hence the log size needs to be able to contain two maximally sized
+> >>>+	 *    and padded transactions, which is (2 * (2 * LSU + maxlres)).
+> >>>+	 *
+> >>
+> >>Any thoughts on how we can separate the 2 * log stripe unit from the
+> >>reservation.
+> >
+> >You can't. The reservation, by definition, is the worse case log
+> >space usage for the transaction. Therefore, it has to take into
+> >account the LSU padding that may be necessary if this transaction is
+> >committed by itself to the log (e.g. wsync operation)
 > 
-> My systems seem not to be having this problem.  They seem to be building
-> xfsprogs.pot due to the dependancy through SRCDIR->SRCTAR->SRCTARINC.  Can you
-> post the error?
+> I am thinking we should separate the extra 2*LSU allocated space
+> from the individual pieces of the transaction
 
-It works on a single threaded build because there is implicit build
-ordering as only a single subdirectory is built at a time, and the
-po/xfsprogs.pot is built before it is required as a dependency.
+Why? How are you going to prevent log space deadlocks if we don't
+reserve that space for each individual transaction in a permanent
+transaction reservation?
 
-If I do:
+> (caused by
+> xfs_trans_rolls and xfs_bmap_finish) and associate it with the
+> transaction. Sync writes are for the transaction anyway and not the
+> pieces.
 
-$ git clean -f -d
-$ make realclean
-$ make deb
+Every transaction commit that is executed can require LSU padding
+because it could be the transaction the CIL steals the required LSU
+reservation from.  When CIL flushes occur - and hence when the LSU
+padding needs to be stolen from a transaction commit - is not under
+the control of the currently executing transaction. 
 
-The build works. If I parallelise the build, the dependency is no
-longer satisfied because make parallelises across directories that
-have no defined build dependencies. So if I do:
+> It is the multiplication of the (2*LSU) by each piece of the
+> transaction that is the killer.
+> A mkdir will have 1.5MB of log reserved space just for the possible
+> LSU padding.
 
-$ git clean -f -d
-$ make realclean
-$ make -j8 deb
-libtoolize -c `libtoolize -n -i >/dev/null 2>/dev/null && echo -i` -f
-libtoolize: putting auxiliary files in AC_CONFIG_AUX_DIR, `.'.
-libtoolize: copying file `./config.guess'
-libtoolize: copying file `./config.sub'
-libtoolize: copying file `./install-sh'
-libtoolize: copying file `./ltmain.sh'
-libtoolize: putting macros in AC_CONFIG_MACRO_DIR, `m4'.
-libtoolize: copying file `m4/libtool.m4'
-libtoolize: copying file `m4/ltoptions.m4'
-libtoolize: copying file `m4/ltsugar.m4'
-libtoolize: copying file `m4/ltversion.m4'
-libtoolize: copying file `m4/lt~obsolete.m4'
-libtoolize: Consider adding `-I m4' to ACLOCAL_AMFLAGS in Makefile.am.
-cp include/install-sh .
-aclocal -I m4
-autoconf
-./configure $LOCAL_CONFIGURE_OPTIONS
-checking build system type... x86_64-unknown-linux-gnu
-checking host system type... x86_64-unknown-linux-gnu
-checking how to print strings... printf
-checking for gcc... gcc
-checking whether the C compiler works... yes
-checking for C compiler default output file name... a.out
-checking for suffix of executables... 
-checking whether we are cross compiling... no
-checking for suffix of object files... o
-checking whether we are using the GNU C compiler... yes
-checking whether gcc accepts -g... yes
-checking for gcc option to accept ISO C89... none needed
-checking for a sed that does not truncate output... /bin/sed
-checking for grep that handles long lines and -e... /bin/grep
-checking for egrep... /bin/grep -E
-checking for fgrep... /bin/grep -F
-checking for ld used by gcc... /usr/bin/ld
-checking if the linker (/usr/bin/ld) is GNU ld... yes
-checking for BSD- or MS-compatible name lister (nm)... /usr/bin/nm -B
-checking the name lister (/usr/bin/nm -B) interface... BSD nm
-checking whether ln -s works... yes
-checking the maximum length of command line arguments... 3458764513820540925
-checking whether the shell understands some XSI constructs... yes
-checking whether the shell understands "+="... yes
-checking how to convert x86_64-unknown-linux-gnu file names to x86_64-unknown-linux-gnu format... func_convert_file_noop
-checking how to convert x86_64-unknown-linux-gnu file names to toolchain format... func_convert_file_noop
-checking for /usr/bin/ld option to reload object files... -r
-checking for objdump... objdump
-checking how to recognize dependent libraries... pass_all
-checking for dlltool... no
-checking how to associate runtime and link libraries... printf %s\n
-checking for ar... ar
-checking for archiver @FILE support... @
-checking for strip... strip
-checking for ranlib... ranlib
-checking for gawk... gawk
-checking command to parse /usr/bin/nm -B output from gcc object... ok
-checking for sysroot... no
-checking for mt... mt
-checking if mt is a manifest tool... no
-checking how to run the C preprocessor... gcc -E
-checking for ANSI C header files... yes
-checking for sys/types.h... yes
-checking for sys/stat.h... yes
-checking for stdlib.h... yes
-checking for string.h... yes
-checking for memory.h... yes
-checking for strings.h... yes
-checking for inttypes.h... yes
-checking for stdint.h... yes
-checking for unistd.h... yes
-checking for dlfcn.h... yes
-checking for objdir... .libs
-checking if gcc supports -fno-rtti -fno-exceptions... no
-checking for gcc option to produce PIC... -fPIC -DPIC
-checking if gcc PIC flag -fPIC -DPIC works... yes
-checking if gcc static flag -static works... yes
-checking if gcc supports -c -o file.o... yes
-checking if gcc supports -c -o file.o... (cached) yes
-checking whether the gcc linker (/usr/bin/ld -m elf_x86_64) supports shared libraries... yes
-checking whether -lc should be explicitly linked in... no
-checking dynamic linker characteristics... GNU/Linux ld.so
-checking how to hardcode library paths into programs... immediate
-checking whether stripping libraries is possible... yes
-checking if libtool supports shared libraries... yes
-checking whether to build shared libraries... yes
-checking whether to build static libraries... yes
-checking for gcc... (cached) gcc
-checking whether we are using the GNU C compiler... (cached) yes
-checking whether gcc accepts -g... (cached) yes
-checking for gcc option to accept ISO C89... (cached) none needed
-checking for gcc... (cached) gcc
-checking whether we are using the GNU C compiler... (cached) yes
-checking whether gcc accepts -g... (cached) yes
-checking for gcc option to accept ISO C89... (cached) none needed
-checking for gmake... no
-checking for make... /usr/bin/make
-checking for tar... /bin/tar
-checking for gzip... /bin/gzip
-checking whether gcc -MM is supported... yes
-checking for sort... /usr/bin/sort
-checking whether ln -s works... yes
-checking for msgfmt... /usr/bin/msgfmt
-checking for msgmerge... /usr/bin/msgmerge
-checking for xgettext... /usr/bin/xgettext
-checking for rpm... /usr/bin/rpm
-checking for rpmbuild... /usr/bin/rpmbuild
-checking aio.h usability... yes
-checking aio.h presence... yes
-checking for aio.h... yes
-checking for lio_listio... no
-checking for lio_listio in -lrt... yes
-checking uuid.h usability... no
-checking uuid.h presence... no
-checking for uuid.h... no
-checking sys/uuid.h usability... no
-checking sys/uuid.h presence... no
-checking for sys/uuid.h... no
-checking uuid/uuid.h usability... yes
-checking uuid/uuid.h presence... yes
-checking for uuid/uuid.h... yes
-checking for uuid_compare... no
-checking for uuid_compare in -luuid... yes
-checking pthread.h usability... yes
-checking pthread.h presence... yes
-checking for pthread.h... yes
-checking for pthread_mutex_init in -lpthread... yes
-checking for fadvise ... yes
-checking for madvise ... yes
-checking for mincore ... yes
-checking for sendfile ... yes
-checking for getmntent ... yes
-checking for getmntinfo ... no
-checking for fallocate... yes
-checking for fiemap... yes
-checking for preadv... yes
-checking for sync_file_range... yes
-checking for library containing blkid_probe_all... -lblkid
-checking for blkid_probe_get_topology... yes
-checking size of long... 8
-checking size of char *... 8
-checking for __psint_t ... no
-checking for __psunsigned_t ... no
-checking for __u32 ... yes
-configure: creating ./config.status
-config.status: creating include/builddefs
-config.status: creating include/platform_defs.h
-config.status: executing libtool commands
-make[2]: *** No rule to make target `po/xfsprogs.pot', needed by `xfsprogs-3.1.11.tar.gz'.  Stop.
-make[2]: *** Waiting for unfinished jobs....
-Building include
-.....
-$
+A killer for what, exactly? This is the current status quo, and I
+don't see people having performance problems related to it....
 
-The build fails because it tries to do a parallel build of something
-has a dependency on po/xfsprogs.pot before it has been built. And
-because po/xfsprogs.pot has no individual build rule, make cannot
-built it to fulfill the parallel build dependency and so fails.
+> The cil can steal the left over current ticket space and the global
+> LSU space.
 
-IOWs, building the srctar is dependent on first *compiling* the
-translations, but there is no explicit rule that actually defines
-that build dependency.
+The space is avilable only if the current transaction _unit
+reservation_ has it reserved. Hence every unit reservation needs
+that space to be reserved.
+
+I'm not saying this is optimal - it is an architectural requirement
+that the log has always had and therefore *necessary*.
+
+> >>The added extended attribute calls for parent inode pointers
+> >>(especially xfs_rename() where it could add up to one and remove up
+> >>to two attributes) is causing a huge multiplication cnt for
+> >>reservation.
+> >
+> >So you are adding a attribute reservations to
+> >create/mkdir/rename/link transaction reservations? That doesn't seem
+> >like a good idea, and it's contrary to the direction we want to head
+> >with the transaction subsystem.  Can you post your patches so we
+> >some some context to the question you are asking?
+> >
+> >FWIW, the intended method of linking multiple independent
+> >transactions together for parent pointers into an atomic commit is
+> >this:
+> >
+> >http://xfs.org/index.php/Improving_Metadata_Performance_By_Reducing_Journal_Overhead#Atomic_Multi-Transaction_Operations
+> >
+> >While the text is somewhat out of date (talks about rolling
+> >transactions and being able to replace them), it predated the
+> >delayed logging implementation and hence doesn't take into account
+> >the obvious, simple extension that can be made to the CIL to
+> >implement this. i.e.  being able to hold the current CIL context
+> >open for a number of transactions to take place before releasing it
+> >again.
+> >
+> >The point of doing this is still relevant, however:
+> >
+> >"This may also allow us to split some of the large compound
+> >transactions into smaller, more self contained transactions. This
+> >would reduce reservation pressure on log space in the common case
+> >where all the corner cases in the transactions are not taken."
+> >
+> >IOWs, rather than building new, large "aggregation" transactions, we
+> >should be adding infrastructure to the CIL to allow atomic
+> >transaction aggregation techniques to be used and then just using
+> >the existing transaction infrastructure to implement operations such
+> >as "create with ACL"....
+> 
+> I will have to think on this. I don't see how the allocation of log
+> space for a new transaction while holding locks is a good thing.
+
+Who said anything about requiring new locks? :) 
+
+The initial implementation I was thinking of is basically a
+reference counter and a method for delaying CIL pushes until the
+reference count drops to zero.
+
+Indeed, if we push the aggregated space reservations up into this
+aggregated transaction, the individual transactions can just pull
+out of the space we already know is available to use. IOWs, it's
+relatively trivial to do in a way that leaves open many avenues for
+later optimisation....
+
+> >FYI, we need this for all the operations that add attributes at
+> >create time, such as default ACLs and DMAPI/DMF attributes....
+> >
+> >>Those multiplications would be killers on 256KiB log
+> >>stripe units.
+> >
+> >Numbers, please?
+> >
+> >Cheers,
+> >
+> >Dave.
+> 
+> /*
+>  * Various log count values.
+>  */
+> #define XFS_DEFAULT_LOG_COUNT           1
+> #define XFS_DEFAULT_PERM_LOG_COUNT      2
+> #define XFS_ITRUNCATE_LOG_COUNT         2
+> #define XFS_INACTIVE_LOG_COUNT          2
+> #define XFS_CREATE_LOG_COUNT            2
+> #define XFS_MKDIR_LOG_COUNT             3
+> #define XFS_SYMLINK_LOG_COUNT           3
+> #define XFS_REMOVE_LOG_COUNT            2
+> #define XFS_LINK_LOG_COUNT              2
+> #define XFS_RENAME_LOG_COUNT            2
+> #define XFS_WRITE_LOG_COUNT             2
+> #define XFS_ADDAFORK_LOG_COUNT          2
+> #define XFS_ATTRINVAL_LOG_COUNT         1
+> #define XFS_ATTRSET_LOG_COUNT           3
+> #define XFS_ATTRRM_LOG_COUNT            3
+> 
+> Even if you are creative, the multipliers add up quickly.
+> xfs_rename will do the directory ops. possibly a attibset and up to
+> 2 attrrm and we have to hold the src and target inodes locks over
+> all the operations.
+
+We don't have to hold them locked across the entire operation
+because the VFS is holding them locked so nothing else can do a
+namespace operation which we are modifying them. 
+
+Anyway, you're worried about multiplying out the existing
+reservations, but that's really not that big of a deal - it's just
+log space, and we've got lots of that to use, and we have plenty of
+avenues to optimise usage in future..
+
+e.g.  mkdir is a compound transaction that is really 2 different
+operations. The first is physical inode allocation, then second is
+allocating a free inode. the first only happens for 1 in every 64
+free inode allocations (rarer if we are also removing inodes, too).
+So most of the time we are reserving far more space in the log that
+we actually need to allocate an inode.
+
+The actual unit reservation for the create is the maximum of the two
+individual component reservations times the number of commits that
+will be required, and the total is the unit reservation times the
+number of commits needed. So for a create transaction, it's an
+overestimation of the worst case.
+
+Is that a problem? No. Can it be improved? Yes - see the comments
+about splitting out physical inode chunk allocation into the
+background here:
+
+http://xfs.org/index.php/Improving_inode_Caching#Contiguous_Inode_Allocation
+
+And suddenly we end up with mkdir/create/etc only requiring a single
+transaction reservation. There goes one of your 2*LSU paddings...
+
+What about attributes? The triple-stage transaction is only required
+when -replacing- an existing attribute. The first adds the new
+attribute, the second flips the complete/incomplete flags, and the
+third removes the old attributes. Just adding a new attribute only
+requires a single transaction and most attributes are never
+overwritten, so again we are almost always reserving far too much
+space for such an operation.
+
+Can we optimise this? Yes, we can. Let's disaggregate it - if we are
+replacing attribute content without changing the size or name, then
+we could just add a new transaction that logs a direct overwrite.
+That's a *tiny* transaction. If we are replacing an attribute of the
+same size with a new name, then it's a little more complex as we
+have to manipulate the hash index entries, but that is still a
+single, simple transaction. If we are adding, knowing we aren't
+doing a replacment, then that is a single transaction, too.
+
+Start to see how this greatly reduces the overall operational
+transaction reservations? We can build bigger and more complex
+transactions as part of the process, but optimisation of the
+reservations comes from separation into smaller, more fine-grained
+transactions and reservations.
+
+Keep in mind that from this perspective, I'm quite happy for an
+initial parent pointer implementation to start with gigantic
+create+attr/rename+attr transaction reservations. I'm also happy for
+it to take us 2-3 years to optimise/disaggegate the transactions to
+reduce the overhead to be smaller and more efficient.
+
+I don't expect the initial implementation to be perfect or even
+optimal - attempting to make it so puts us right into prematuve
+optimisation territory. Make parent pointers robust first, then we
+can worry about where we can optimise reservations down to the
+smallest possible subset.
 
 Cheers,
 
