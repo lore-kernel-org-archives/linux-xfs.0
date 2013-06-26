@@ -1,13 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 792117F4E
-	for <xfs@oss.sgi.com>; Wed, 26 Jun 2013 14:16:38 -0500 (CDT)
-Date: Wed, 26 Jun 2013 14:16:35 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: XFS status update for May 2013
-Message-ID: <20130626191635.GT32736@sgi.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 4FE787F4E
+	for <xfs@oss.sgi.com>; Wed, 26 Jun 2013 14:18:11 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 30D198F804B
+	for <xfs@oss.sgi.com>; Wed, 26 Jun 2013 12:18:08 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id lvSIHWbW4vPV5SxB for
+	<xfs@oss.sgi.com>; Wed, 26 Jun 2013 12:18:07 -0700 (PDT)
+Date: Wed, 26 Jun 2013 12:18:04 -0700
+From: Zach Brown <zab@redhat.com>
+Subject: Re: [PATCH] xfstests: check if the scratch dev pool is mounted in
+	_require_scratch
+Message-ID: <20130626191804.GA20692@lenny.home.zabbo.net>
+References: <1372261768-1795-1-git-send-email-jbacik@fusionio.com>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <1372261768-1795-1-git-send-email-jbacik@fusionio.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,25 +29,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Josef Bacik <jbacik@fusionio.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-May saw the merge of the XFS development tree for Linux 3.10 into
-mainline as well as a number of fixes after the initial merge.
+> $SCRATCH_DEV, so anybody who wants to just use the scratch mnt with the scratch
+> dev will fail to work because we never unmount the scratch mount.
 
-Linux 3.10 will be an exciting release for XFS as this release includes
-an experimental feature, CRC protection for on-disk metadata structures.
-In order to create a CRC enabled filesystem, build the crc-dev branch of
-xfsprogs located at git://oss.sgi.com/xfs/cmds/xfsprogs.git and mkfs.
+Yeah, this is annoying.
 
-We also saw the release of xfsprogs-3.1.11 and xfsdump-3.1.3.  xfsprogs
-includes a numerous fixes for xfs_repair, xfs_metadump, mkfs, and
-xfs_db.  xfsdump has fixes for a backward compatability problem with
-dumps created with 3.1.2, and a fix for a segfault in xfsrestore.
+> Fix this by
+> checking to see if the scratch dev pool is mounted at scratch mnt and unmount it
+> so we can run our test.  This fixes the issue I was seeing by running
 
-Other work that was posted in May includes a series of fixes for log
-space validation, a revision of a patchset to allow project and group
-quotas to be used simultaneously, and a number of new tests for
-xfstests.
+But this fix seems bonkers.  Can we have _scratch_unmount unmount the
+mountpoint instead of the device?  That's what Eric suggested when I
+whined about this a while ago.
+
+- z
+
+index fe6bbfc..481486a 100644
+--- a/common/rc
++++ b/common/rc
+@@ -280,7 +280,7 @@ _scratch_mount()
+ 
+ _scratch_unmount()
+ {
+-    $UMOUNT_PROG $SCRATCH_DEV
++    $UMOUNT_PROG $SCRATCH_MNT
+ }
+ 
+ _scratch_remount()
 
 _______________________________________________
 xfs mailing list
