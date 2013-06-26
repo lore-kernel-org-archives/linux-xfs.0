@@ -1,9 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, for-next,
-	updated. v3.10-rc1-43-g80a4049
-Message-Id: <20130626174451.035137F59@oss.sgi.com>
-Date: Wed, 26 Jun 2013 12:44:50 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 792117F4E
+	for <xfs@oss.sgi.com>; Wed, 26 Jun 2013 14:16:38 -0500 (CDT)
+Date: Wed, 26 Jun 2013 14:16:35 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: XFS status update for May 2013
+Message-ID: <20130626191635.GT32736@sgi.com>
+MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -12,122 +16,29 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
 
-This is an automated email from the git hooks/post-receive script. It was
-generated because a ref change was pushed to the repository containing
-the project "XFS development tree".
+May saw the merge of the XFS development tree for Linux 3.10 into
+mainline as well as a number of fixes after the initial merge.
 
-The branch, for-next has been updated
-  80a4049 xfs: Remove dead function prototype xfs_sync_inode_grab()
-  43df2ee xfs: Remove the left function variable from xfs_ialloc_get_rec()
-  427d9fe xfs: check on-disk (not incore) btree root size in dfrag.c
-  39a45d8 xfs: Remove XFS_MOUNT_RETERR
-      from  2fb8b5027dbde32a45edf5f3d7ee082be9261d93 (commit)
+Linux 3.10 will be an exciting release for XFS as this release includes
+an experimental feature, CRC protection for on-disk metadata structures.
+In order to create a CRC enabled filesystem, build the crc-dev branch of
+xfsprogs located at git://oss.sgi.com/xfs/cmds/xfsprogs.git and mkfs.
 
-Those revisions listed above that are new to this repository have
-not appeared on any other notification email; so we list those
-revisions in full, below.
+We also saw the release of xfsprogs-3.1.11 and xfsdump-3.1.3.  xfsprogs
+includes a numerous fixes for xfs_repair, xfs_metadump, mkfs, and
+xfs_db.  xfsdump has fixes for a backward compatability problem with
+dumps created with 3.1.2, and a fix for a segfault in xfsrestore.
 
-- Log -----------------------------------------------------------------
-commit 80a4049813a2ae0977d8e5db78e711c7f21c420b
-Author: Jie Liu <jeff.liu@oracle.com>
-Date:   Mon Jun 24 13:38:34 2013 +0800
-
-    xfs: Remove dead function prototype xfs_sync_inode_grab()
-    
-    Remove dead function prototype xfs_sync_inode_grab()
-    from xfs_icache.h.
-    
-    Signed-off-by: Jie Liu <jeff.liu@oracle.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Ben Myers <bpm@sgi.com>
-
-commit 43df2ee659d3d854d17686f8f38fc1071b25774b
-Author: Jie Liu <jeff.liu@oracle.com>
-Date:   Mon Jun 24 13:37:23 2013 +0800
-
-    xfs: Remove the left function variable from xfs_ialloc_get_rec()
-    
-    This patch clean out the left function variable as it is
-    useless to xfs_ialloc_get_rec().
-    
-    Signed-off-by: Jie Liu <jeff.liu@oracle.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Ben Myers <bpm@sgi.com>
-
-commit 427d9fe233ccec3a293be4bcf07f9bac12463a99
-Author: Eric Sandeen <sandeen@redhat.com>
-Date:   Tue Mar 27 15:40:26 2012 -0500
-
-    xfs: check on-disk (not incore) btree root size in dfrag.c
-    
-    xfs_swap_extents_check_format() contains checks to make sure that
-    original and the temporary files during defrag are compatible;
-    Gabriel VLASIU ran into a case where xfs_fsr returned EINVAL
-    because the tests found the btree root to be of size 120,
-    while the fork offset was only 104; IOW, they overlapped.
-    
-    However, this is just due to an error in the
-    xfs_swap_extents_check_format() tests, because it is checking
-    the in-memory btree root size against the on-disk fork offset.
-    We should be checking the on-disk sizes in both cases.
-    
-    This patch adds a new macro to calculate this size, and uses
-    it in the tests.
-    
-    With this change, the filesystem image provided by Gabriel
-    allows for proper file degragmentation.
-    
-    Reported-by: Gabriel VLASIU <gabriel@vlasiu.net>
-    Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-    Reviewed-by: Dave Chinner <dchinner@redhat.com>
-    Signed-off-by: Ben Myers <bpm@sgi.com>
-
-commit 39a45d8463d98ea57347b871641136be64b216a9
-Author: Jie Liu <jeff.liu@oracle.com>
-Date:   Thu May 2 19:27:47 2013 +0800
-
-    xfs: Remove XFS_MOUNT_RETERR
-    
-    XFS_MOUNT_RETERR is going to be set at xfs_parseargs() if
-    mp->m_dalign is enabled, so any time we enter "if (mp->m_dalign)"
-    branch in xfs_update_alignment(), XFS_MOUNT_RETERR is set and so
-    we always be emitting a warning and returning an error.
-    
-    Hence, we can remove it and get rid of a couple of redundant
-    check up against it at xfs_upate_alignment().
-    
-    Thanks Dave Chinner for the suggestions of simplify the code
-    in xfs_parseargs().
-    
-    Signed-off-by: Jie Liu <jeff.liu@oracle.com>
-    Cc: Dave Chinner <dchinner@redhat.com>
-    Cc: Mark Tinguely <tinguely@sgi.com>
-    Reviewed-by: Mark Tinguely <tinguely@sgi.com>
-    Signed-off-by: Ben Myers <bpm@sgi.com>
-
------------------------------------------------------------------------
-
-Summary of changes:
- fs/xfs/xfs_bmap_btree.h |  2 ++
- fs/xfs/xfs_dfrag.c      |  8 +++++---
- fs/xfs/xfs_ialloc.c     |  7 +++----
- fs/xfs/xfs_icache.h     |  1 -
- fs/xfs/xfs_mount.c      | 37 +++++++++++--------------------------
- fs/xfs/xfs_mount.h      |  2 --
- fs/xfs/xfs_super.c      | 11 +++--------
- 7 files changed, 24 insertions(+), 44 deletions(-)
-
-
-hooks/post-receive
--- 
-XFS development tree
+Other work that was posted in May includes a series of fixes for log
+space validation, a revision of a patchset to allow project and group
+quotas to be used simultaneously, and a number of new tests for
+xfstests.
 
 _______________________________________________
 xfs mailing list
