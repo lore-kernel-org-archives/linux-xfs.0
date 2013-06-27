@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 50D107F60
-	for <xfs@oss.sgi.com>; Wed, 26 Jun 2013 18:56:41 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D44C0AC001
-	for <xfs@oss.sgi.com>; Wed, 26 Jun 2013 16:56:37 -0700 (PDT)
-Received: from mail-pb0-f47.google.com (mail-pb0-f47.google.com
-	[209.85.160.47]) by cuda.sgi.com with ESMTP id tu75AOdqOTZZIfVt
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 26 Jun 2013 16:56:36 -0700 (PDT)
-Received: by mail-pb0-f47.google.com with SMTP id rr13so102203pbb.34
-	for <xfs@oss.sgi.com>; Wed, 26 Jun 2013 16:56:36 -0700 (PDT)
-Received: from briankrusicw.logan.tv ([64.17.255.138])
-	by mx.google.com with ESMTPSA id z19sm747143paf.12.2013.06.26.16.56.34
-	for <xfs@oss.sgi.com>
-	(version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
-	Wed, 26 Jun 2013 16:56:35 -0700 (PDT)
-From: aurfalien <aurfalien@gmail.com>
-Subject: sizing log - is there a too big?
-Date: Wed, 26 Jun 2013 16:56:31 -0700
-Message-Id: <55C24454-59E9-4285-9A4C-C4BD24EDBEEC@gmail.com>
-Mime-Version: 1.0 (Apple Message framework v1085)
+	by oss.sgi.com (Postfix) with ESMTP id BCB9A7F66
+	for <xfs@oss.sgi.com>; Wed, 26 Jun 2013 20:48:19 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5529EAC001
+	for <xfs@oss.sgi.com>; Wed, 26 Jun 2013 18:48:15 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	IAF7IvZW25GeaPGK for <xfs@oss.sgi.com>;
+	Wed, 26 Jun 2013 18:48:14 -0700 (PDT)
+Date: Thu, 27 Jun 2013 11:48:10 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: sizing log - is there a too big?
+Message-ID: <20130627014810.GA29790@dastard>
+References: <55C24454-59E9-4285-9A4C-C4BD24EDBEEC@gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <55C24454-59E9-4285-9A4C-C4BD24EDBEEC@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,21 +29,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: aurfalien <aurfalien@gmail.com>
+Cc: xfs@oss.sgi.com
 
-Hi all,
+On Wed, Jun 26, 2013 at 04:56:31PM -0700, aurfalien wrote:
+> Hi all,
+> 
+> Wondering if my log being just under 2GB is a bad idea.
+> 
+> Noticing flush-253:2/kcopyd which is my XFS file system getting
+> really high load avg and wait times via top).
 
-Wondering if my log being just under 2GB is a bad idea.
+What has the log size got to do with something that is happening at
+the block layer? What's your storage config?
 
-Noticing flush-253:2/kcopyd which is my XFS file system getting really high load avg and wait times via top).
+> Doing a simple rsync over NFS and after a bit, the system gets to a load of 24.... yikes...
 
-Doing a simple rsync over NFS and after a bit, the system gets to a load of 24.... yikes...
+Let me guess - 24 nfsds blocked waiting for kcopyd to do it's stuff?
 
-Upon killing the rsync, I am seeing loads going down to sub 1 after about 10 min.  I have repeated this to verify 10 min.
+Load average going up when the NFS server is busy generally means
+your IO subsystem is heavily loaded - it's not uncommon to see large
+NFS servers that are extremely busy sustain load averages over a
+100 (or even 1000) for hours/days on end....
 
-- aurf
+> Upon killing the rsync, I am seeing loads going down to sub 1
+> after about 10 min.  I have repeated this to verify 10 min.
 
+Sure. Processes blocked on IO contribute to the load average. Kill
+the IO load, and the load average will return to nothing in 10-15
+minutes.
 
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
