@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DC17E7F3F
-	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 10:32:31 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C5D3B8F804B
-	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 08:32:31 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id JknJh9T4XsoE2JZm for
-	<xfs@oss.sgi.com>; Thu, 27 Jun 2013 08:32:30 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r5RFWUOA011808
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 11:32:30 -0400
-From: Eryu Guan <eguan@redhat.com>
-Subject: [PATCH v3] xfstests generic/313: test ctime and mtime are updated on
-	truncate and ftruncate
-Date: Thu, 27 Jun 2013 23:32:10 +0800
-Message-Id: <1372347130-24325-1-git-send-email-eguan@redhat.com>
-In-Reply-To: <20130625174952.GB20932@sgi.com>
-References: <20130625174952.GB20932@sgi.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 214287F52
+	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 10:58:11 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 02329304051
+	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 08:58:10 -0700 (PDT)
+Received: from mail-gh0-f180.google.com (mail-gh0-f180.google.com
+	[209.85.160.180]) by cuda.sgi.com with ESMTP id
+	p6RaHGZXx1suI6XX (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 27 Jun 2013 08:58:10 -0700 (PDT)
+Received: by mail-gh0-f180.google.com with SMTP id f18so364906ghb.11
+	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 08:58:09 -0700 (PDT)
+Subject: Re: sizing log - is there a too big?
+Mime-Version: 1.0 (Apple Message framework v1085)
+From: aurfalien <aurfalien@gmail.com>
+In-Reply-To: <20130627014810.GA29790@dastard>
+Date: Thu, 27 Jun 2013 08:58:06 -0700
+Message-Id: <73A9FC1C-854D-4C23-B560-FEEF64A3001B@gmail.com>
+References: <55C24454-59E9-4285-9A4C-C4BD24EDBEEC@gmail.com>
+	<20130627014810.GA29790@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,256 +28,59 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Eryu Guan <eguan@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Regression test for commit:
-3972f26 btrfs: update timestamps on truncate()
 
-Reviewed-by: Ben Myers <bpm@sgi.com>
-Signed-off-by: Eryu Guan <eguan@redhat.com>
----
-v2->v3: add src/t_truncate_cmtime to .gitignore
-v1->v2: rebase on top of master
+On Jun 26, 2013, at 6:48 PM, Dave Chinner wrote:
 
- .gitignore              |   1 +
- src/Makefile            |   2 +-
- src/t_truncate_cmtime.c | 110 ++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/313       |  55 ++++++++++++++++++++++++
- tests/generic/313.out   |   2 +
- tests/generic/group     |   1 +
- 6 files changed, 170 insertions(+), 1 deletion(-)
- create mode 100644 src/t_truncate_cmtime.c
- create mode 100755 tests/generic/313
- create mode 100644 tests/generic/313.out
+> On Wed, Jun 26, 2013 at 04:56:31PM -0700, aurfalien wrote:
+>> Hi all,
+>> 
+>> Wondering if my log being just under 2GB is a bad idea.
+>> 
+>> Noticing flush-253:2/kcopyd which is my XFS file system getting
+>> really high load avg and wait times via top).
+> 
+> What has the log size got to do with something that is happening at
+> the block layer? What's your storage config?
+> 
+>> Doing a simple rsync over NFS and after a bit, the system gets to a load of 24.... yikes...
+> 
+> Let me guess - 24 nfsds blocked waiting for kcopyd to do it's stuff?
+> 
+> Load average going up when the NFS server is busy generally means
+> your IO subsystem is heavily loaded - it's not uncommon to see large
+> NFS servers that are extremely busy sustain load averages over a
+> 100 (or even 1000) for hours/days on end....
+> 
+>> Upon killing the rsync, I am seeing loads going down to sub 1
+>> after about 10 min.  I have repeated this to verify 10 min.
+> 
+> Sure. Processes blocked on IO contribute to the load average. Kill
+> the IO load, and the load average will return to nothing in 10-15
+> minutes.
 
-diff --git a/.gitignore b/.gitignore
-index ad7afbc..11594aa 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -85,6 +85,7 @@
- /src/t_mmap_writev
- /src/t_mtab
- /src/t_stripealign
-+/src/t_truncate_cmtime
- /src/testx
- /src/trunc
- /src/truncfile
-diff --git a/src/Makefile b/src/Makefile
-index c18ffc9..cc679e8 100644
---- a/src/Makefile
-+++ b/src/Makefile
-@@ -11,7 +11,7 @@ TARGETS = dirstress fill fill2 getpagesize holes lstat64 \
- 	devzero feature alloc fault fstest t_access_root \
- 	godown resvtest writemod makeextents itrash rename \
- 	multi_open_unlink dmiperf unwritten_sync genhashnames t_holes \
--	t_mmap_writev
-+	t_mmap_writev t_truncate_cmtime
- 
- LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
- 	preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
-diff --git a/src/t_truncate_cmtime.c b/src/t_truncate_cmtime.c
-new file mode 100644
-index 0000000..b08ca44
---- /dev/null
-+++ b/src/t_truncate_cmtime.c
-@@ -0,0 +1,110 @@
-+/*
-+ * Test ctime and mtime are updated on truncate(2) and ftruncate(2)
-+ *
-+ * Copyright (c) 2013 Red Hat, Inc.  All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+
-+#include <sys/stat.h>
-+#include <sys/types.h>
-+#include <fcntl.h>
-+#include <stdio.h>
-+#include <stdlib.h>
-+#include <unistd.h>
-+
-+#define TEST_MSG "this is a test string"
-+
-+int do_test(const char *file, int is_ftrunc)
-+{
-+	int ret;
-+	int fd;
-+	struct stat statbuf1;
-+	struct stat statbuf2;
-+
-+	ret = 0;
-+	fd = open(file, O_RDWR | O_CREAT | O_TRUNC, 0644);
-+	if (fd == -1) {
-+		perror("open(2) failed");
-+		exit(EXIT_FAILURE);
-+	}
-+
-+	ret = write(fd, TEST_MSG, sizeof(TEST_MSG));
-+	if (ret == -1) {
-+		perror("write(2) failed");
-+		exit(EXIT_FAILURE);
-+	}
-+
-+	/* Get timestamps before [f]truncate(2) */
-+	ret = fstat(fd, &statbuf1);
-+	if (ret == -1) {
-+		perror("fstat(2) failed");
-+		exit(EXIT_FAILURE);
-+	}
-+
-+	sleep(1);
-+	if (is_ftrunc) {
-+		ret = ftruncate(fd, 0);
-+		if (ret == -1) {
-+			perror("ftruncate(2) failed");
-+			exit(EXIT_FAILURE);
-+		}
-+	} else {
-+		ret = truncate(file, 0);
-+		if (ret == -1) {
-+			perror("truncate(2) failed");
-+			exit(EXIT_FAILURE);
-+		}
-+	}
-+
-+	/* Get timestamps after [f]truncate(2) */
-+	ret = fstat(fd, &statbuf2);
-+	if (ret == -1) {
-+		perror("fstat(2) failed");
-+		exit(EXIT_FAILURE);
-+	}
-+
-+	/* Check whether timestamps got updated */
-+	if (statbuf1.st_ctime == statbuf2.st_ctime) {
-+		fprintf(stderr, "ctime not updated after %s\n",
-+			is_ftrunc ? "ftruncate" : "truncate");
-+		ret++;
-+	}
-+	if (statbuf1.st_mtime == statbuf2.st_mtime) {
-+		fprintf(stderr, "mtime not updated after %s\n",
-+			is_ftrunc ? "ftruncate" : "truncate");
-+		ret++;
-+	}
-+
-+	close(fd);
-+	return ret;
-+}
-+
-+int main(int argc, char *argv[])
-+{
-+	int ret;
-+	char *testfile;
-+
-+	ret = 0;
-+	if (argc != 2) {
-+		fprintf(stderr, "Usage: %s <filename>\n", argv[0]);
-+		exit(EXIT_FAILURE);
-+	}
-+	testfile = argv[1];
-+
-+	ret = do_test(testfile, 0);
-+	ret += do_test(testfile, 1);
-+
-+	exit(ret);
-+}
-diff --git a/tests/generic/313 b/tests/generic/313
-new file mode 100755
-index 0000000..1237ded
---- /dev/null
-+++ b/tests/generic/313
-@@ -0,0 +1,55 @@
-+#! /bin/bash
-+# FS QA Test No. 313
-+#
-+# Check ctime and mtime are updated on truncate(2) and ftruncate(2)
-+#
-+# Regression test for commit:
-+# 3972f26 btrfs: update timestamps on truncate()
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2013 Red Hat, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+testfile=$TEST_DIR/testfile.$seq
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -f $testfile
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os IRIX Linux
-+
-+echo "Silence is golden"
-+
-+$here/src/t_truncate_cmtime $testfile 2>&1
-+
-+status=0
-+exit
-diff --git a/tests/generic/313.out b/tests/generic/313.out
-new file mode 100644
-index 0000000..2684669
---- /dev/null
-+++ b/tests/generic/313.out
-@@ -0,0 +1,2 @@
-+QA output created by 313
-+Silence is golden
-diff --git a/tests/generic/group b/tests/generic/group
-index bd443c1..2a399fa 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -115,3 +115,4 @@
- 310 auto
- 311 auto metadata log
- 312 auto quick prealloc enospc
-+313 auto quick
--- 
-1.8.3.1
 
+Not so fast my fine feathered friend.
+
+Same work load, same hardware.
+
+Only diff is;
+
+External log, its 2GB
+And its Centos 6.4 which was previously 5.9.
+Its 16 drives in a hw raid 6, but 2 are for the mirrored journal and 1 for hot spare so 13 spindles.  Before it was 14 spindles in raid 6 and 2 hot spare.
+
+I did power cycle it late last night and will more closely observe today.
+
+Very odd.
+
+- aurf
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
