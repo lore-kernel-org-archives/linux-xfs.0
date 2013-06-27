@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D6F4A7F78
-	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 01:05:26 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8102CAC00A
-	for <xfs@oss.sgi.com>; Wed, 26 Jun 2013 23:05:26 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 568747F8C
+	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 01:05:27 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 41FFE30405F
+	for <xfs@oss.sgi.com>; Wed, 26 Jun 2013 23:05:27 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	ya77s36KuREjNAE9 for <xfs@oss.sgi.com>;
-	Wed, 26 Jun 2013 23:05:24 -0700 (PDT)
+	wi8P3HMAYNExiDjC for <xfs@oss.sgi.com>;
+	Wed, 26 Jun 2013 23:05:25 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1Us5Kb-0008Hd-Rz
+	(envelope-from <dave@fromorbit.com>) id 1Us5Kb-0008Hf-UM
 	for xfs@oss.sgi.com; Thu, 27 Jun 2013 16:05:21 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1Us5KR-00028c-OA
+	(envelope-from <dave@disappointment.disaster>) id 1Us5KR-00028p-RJ
 	for xfs@oss.sgi.com; Thu, 27 Jun 2013 16:05:11 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 12/15] xfs: Use inode create transaction
-Date: Thu, 27 Jun 2013 16:04:56 +1000
-Message-Id: <1372313099-8121-13-git-send-email-david@fromorbit.com>
+Subject: [PATCH 15/15] xfs: implement inode change count
+Date: Thu, 27 Jun 2013 16:04:59 +1000
+Message-Id: <1372313099-8121-16-git-send-email-david@fromorbit.com>
 In-Reply-To: <1372313099-8121-1-git-send-email-david@fromorbit.com>
 References: <1372313099-8121-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -36,121 +36,61 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Replace the use of buffer based logging of inode initialisation,
-uses the new logical form to describe the range to be initialised
-in recovery. We continue to "log" the inode buffers to push them
-into the AIL and ensure that the inode create transaction is not
-removed from the log before the inode buffers are written to disk.
+From: Dave Chinner <dchinner@redhat.com>
 
-Update the transaction identifier and reservations to match the
-changed implementation.
+For CRC enabled filesystems, add support for the monotonic inode
+version change counter that is needed by protocols like NFSv4 for
+determining if the inode has changed in any way at all between two
+unrelated operations on the inode.
 
-Signed-off-by: Dave Chinner <david@fromorbit.com>
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+This bumps the change count the first time an inode is dirtied in a
+transaction. Since all modifications to the inode are logged, this
+will catch all changes that are made to the inode, including
+timestamp updates that occur during data writes.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_buf_item.c |   12 ++++++++++--
- fs/xfs/xfs_ialloc.c   |   32 +++++++++++++++++++++++---------
- 2 files changed, 33 insertions(+), 11 deletions(-)
+ fs/xfs/xfs_super.c       |    4 ++++
+ fs/xfs/xfs_trans_inode.c |   11 +++++++++++
+ 2 files changed, 15 insertions(+)
 
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 61f6876..bfc4e0c 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -310,13 +310,21 @@ xfs_buf_item_format(
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index f59e27f..a1587f9 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1482,6 +1482,10 @@ xfs_fs_fill_super(
+ 	sb->s_time_gran = 1;
+ 	set_posix_acl_flag(sb);
  
- 	/*
- 	 * If it is an inode buffer, transfer the in-memory state to the
--	 * format flags and clear the in-memory state. We do not transfer
-+	 * format flags and clear the in-memory state.
-+	 *
-+	 * For buffer based inode allocation, we do not transfer
- 	 * this state if the inode buffer allocation has not yet been committed
- 	 * to the log as setting the XFS_BLI_INODE_BUF flag will prevent
- 	 * correct replay of the inode allocation.
-+	 *
-+	 * For icreate item based inode allocation, the buffers aren't written
-+	 * to the journal during allocation, and hence we should always tag the
-+	 * buffer as an inode buffer so that the correct unlinked list replay
-+	 * occurs during recovery.
- 	 */
- 	if (bip->bli_flags & XFS_BLI_INODE_BUF) {
--		if (!((bip->bli_flags & XFS_BLI_INODE_ALLOC_BUF) &&
-+		if (xfs_sb_version_hascrc(&lip->li_mountp->m_sb) ||
-+		    !((bip->bli_flags & XFS_BLI_INODE_ALLOC_BUF) &&
- 		      xfs_log_item_in_current_chkpt(lip)))
- 			bip->__bli_format.blf_flags |= XFS_BLF_INODE_BUF;
- 		bip->bli_flags &= ~XFS_BLI_INODE_BUF;
-diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
-index d5ef81a..319d9e4 100644
---- a/fs/xfs/xfs_ialloc.c
-+++ b/fs/xfs/xfs_ialloc.c
-@@ -38,6 +38,7 @@
- #include "xfs_bmap.h"
- #include "xfs_cksum.h"
- #include "xfs_buf_item.h"
-+#include "xfs_icreate_item.h"
- 
- 
- /*
-@@ -155,7 +156,7 @@ xfs_check_agi_freecount(
-  * than logging them (which in a transaction context puts them into the AIL
-  * for writeback rather than the xfsbufd queue).
-  */
--STATIC int
-+int
- xfs_ialloc_inode_init(
- 	struct xfs_mount	*mp,
- 	struct xfs_trans	*tp,
-@@ -212,6 +213,18 @@ xfs_ialloc_inode_init(
- 		version = 3;
- 		ino = XFS_AGINO_TO_INO(mp, agno,
- 				       XFS_OFFBNO_TO_AGINO(mp, agbno, 0));
++	/* version 5 superblocks support inode version counters. */
++	if (XFS_SB_VERSION_NUM(&mp->m_sb) == XFS_SB_VERSION_5)
++		sb->s_flags |= MS_I_VERSION;
 +
-+		/*
-+		 * log the initialisation that is about to take place as an
-+		 * logical operation. This means the transaction does not
-+		 * need to log the physical changes to the inode buffers as log
-+		 * recovery will know what initialisation is actually needed.
-+		 * Hence we only need to log the buffers as "ordered" buffers so
-+		 * they track in the AIL as if they were physically logged.
-+		 */
-+		if (tp)
-+			xfs_icreate_log(tp, agno, agbno, XFS_IALLOC_INODES(mp),
-+					mp->m_sb.sb_inodesize, length, gen);
- 	} else if (xfs_sb_version_hasnlink(&mp->m_sb))
- 		version = 2;
- 	else
-@@ -227,13 +240,8 @@ xfs_ialloc_inode_init(
- 					 XBF_UNMAPPED);
- 		if (!fbuf)
- 			return ENOMEM;
--		/*
--		 * Initialize all inodes in this buffer and then log them.
--		 *
--		 * XXX: It would be much better if we had just one transaction
--		 *	to log a whole cluster of inodes instead of all the
--		 *	individual transactions causing a lot of log traffic.
--		 */
+ 	error = xfs_mountfs(mp);
+ 	if (error)
+ 		goto out_filestream_unmount;
+diff --git a/fs/xfs/xfs_trans_inode.c b/fs/xfs/xfs_trans_inode.c
+index ac6d567..53dfe46 100644
+--- a/fs/xfs/xfs_trans_inode.c
++++ b/fs/xfs/xfs_trans_inode.c
+@@ -112,6 +112,17 @@ xfs_trans_log_inode(
+ 	ASSERT(ip->i_itemp != NULL);
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+ 
++	/*
++	 * First time we log the inode in a transaction, bump the inode change
++	 * counter if it is configured for this to occur.
++	 */
++	if (!(ip->i_itemp->ili_item.li_desc->lid_flags & XFS_LID_DIRTY) &&
++	    IS_I_VERSION(VFS_I(ip))) {
++		inode_inc_iversion(VFS_I(ip));
++		ip->i_d.di_changecount = VFS_I(ip)->i_version;
++		flags |= XFS_ILOG_CORE;
++	}
 +
-+		/* Initialize the inode buffers and log them appropriately. */
- 		fbuf->b_ops = &xfs_inode_buf_ops;
- 		xfs_buf_zero(fbuf, 0, BBTOB(fbuf->b_length));
- 		for (i = 0; i < ninodes; i++) {
-@@ -269,7 +277,13 @@ xfs_ialloc_inode_init(
- 			 */
- 			xfs_trans_inode_alloc_buf(tp, fbuf);
- 			if (version == 3) {
--				/* need to log the entire buffer */
-+				/*
-+				 * Mark the buffer as ordered so that they are
-+				 * not physically logged in the transaction but
-+				 * still tracked in the AIL as part of the
-+				 * transaction and pin the log appropriately.
-+				 */
-+				xfs_trans_ordered_buf(tp, fbuf);
- 				xfs_trans_log_buf(tp, fbuf, 0,
- 						  BBTOB(fbuf->b_length) - 1);
- 			}
+ 	tp->t_flags |= XFS_TRANS_DIRTY;
+ 	ip->i_itemp->ili_item.li_desc->lid_flags |= XFS_LID_DIRTY;
+ 
 -- 
 1.7.10.4
 
