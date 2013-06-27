@@ -1,35 +1,34 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 7134C7F63
-	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 17:25:36 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5051D7F69
+	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 17:25:38 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D8028AC001
-	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 15:25:35 -0700 (PDT)
-Received: from e36.co.us.ibm.com (e36.co.us.ibm.com [32.97.110.154]) by
-	cuda.sgi.com with ESMTP id vUJH3lhZZ3MntLLE (version=TLSv1
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3F9288F8049
+	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 15:25:38 -0700 (PDT)
+Received: from e35.co.us.ibm.com (e35.co.us.ibm.com [32.97.110.153]) by
+	cuda.sgi.com with ESMTP id OcM5Hm8R7ikKmOBL (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 27 Jun 2013 15:25:34 -0700 (PDT)
+	Thu, 27 Jun 2013 15:25:37 -0700 (PDT)
 Received: from /spool/local
-	by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
 	Violators will be prosecuted
 	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
-	Thu, 27 Jun 2013 16:25:34 -0600
-Received: from d03relay05.boulder.ibm.com (d03relay05.boulder.ibm.com
-	[9.17.195.107])
-	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id 87C9819D8042
-	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 16:25:21 -0600 (MDT)
+	Thu, 27 Jun 2013 16:25:36 -0600
+Received: from d03relay03.boulder.ibm.com (d03relay03.boulder.ibm.com
+	[9.17.195.228])
+	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id BF8233E4004E
+	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 16:25:13 -0600 (MDT)
 Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay05.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	r5RMPUWA148160 for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 16:25:30 -0600
+	by d03relay03.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	r5RMPXms156940 for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 16:25:33 -0600
 Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
 	by d03av02.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
-	id r5RMPUfu018865
-	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 16:25:30 -0600
+	id r5RMPXsf019082
+	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 16:25:33 -0600
 From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: [PATCH v10 07/11] xfs: Remove incore use of XFS_OQUOTA_ENFD and
-	XFS_OQUOTA_CHKD
-Date: Thu, 27 Jun 2013 17:25:10 -0500
-Message-Id: <1372371914-11370-8-git-send-email-sekharan@us.ibm.com>
+Subject: [PATCH v10 09/11] xfs: Start using pquotaino from the superblock.
+Date: Thu, 27 Jun 2013 17:25:12 -0500
+Message-Id: <1372371914-11370-10-git-send-email-sekharan@us.ibm.com>
 In-Reply-To: <1372371914-11370-1-git-send-email-sekharan@us.ibm.com>
 References: <1372371914-11370-1-git-send-email-sekharan@us.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -48,406 +47,369 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Chandra Seetharaman <sekharan@us.ibm.com>
 
-Remove all incore use of XFS_OQUOTA_ENFD and XFS_OQUOTA_CHKD. Instead,
-start using XFS_GQUOTA_.* XFS_PQUOTA_.* counterparts for GQUOTA and
-PQUOTA respectively.
+Start using pquotino and define a macro to check if the
+superblock has pquotino.
 
-On-disk copy still uses XFS_OQUOTA_ENFD and XFS_OQUOTA_CHKD.
-
-Read and write of the superblock does the conversion from *OQUOTA*
-to *[PG]QUOTA*.
+Keep backward compatibilty by alowing mount of older superblock
+with no separate pquota inode.
 
 Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
 ---
- fs/xfs/xfs_mount.c       |   51 ++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_qm.c          |    9 +++++--
- fs/xfs/xfs_qm_syscalls.c |   43 ++++++++++++++++++++------------------
- fs/xfs/xfs_quota.h       |   47 ++++++++++++++++++++++++++----------------
- fs/xfs/xfs_quotaops.c    |    6 +++-
- fs/xfs/xfs_super.c       |   16 +++++++-------
- fs/xfs/xfs_trans_dquot.c |    4 +-
- 7 files changed, 123 insertions(+), 53 deletions(-)
+ fs/xfs/xfs_fsops.c             |    3 +-
+ fs/xfs/xfs_mount.c             |   44 ++++++++++++++++++++++++++++++++++-----
+ fs/xfs/xfs_qm.c                |   29 ++++++++++++++++----------
+ fs/xfs/xfs_qm_syscalls.c       |   24 +++++++++++++++++++--
+ fs/xfs/xfs_quota.h             |    8 -------
+ fs/xfs/xfs_sb.h                |   16 +++++++++++++-
+ fs/xfs/xfs_super.c             |   14 +++++++-----
+ include/uapi/linux/dqblk_xfs.h |    1 +
+ 8 files changed, 103 insertions(+), 36 deletions(-)
 
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 614eb0c..3bf05f4 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -501,7 +501,8 @@ xfs_growfs_data_private(
+ 				error, agno);
+ 			break;
+ 		}
+-		xfs_sb_to_disk(XFS_BUF_TO_SBP(bp), &mp->m_sb, XFS_SB_ALL_BITS);
++		xfs_sb_to_disk(XFS_BUF_TO_SBP(bp), &mp->m_sb,
++				xfs_sb_all_bits(&mp->m_sb));
+ 
+ 		/*
+ 		 * If we get an error writing out the alternate superblocks,
 diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 2978bb4..2b0ba35 100644
+index 2b0ba35..27c5833 100644
 --- a/fs/xfs/xfs_mount.c
 +++ b/fs/xfs/xfs_mount.c
-@@ -336,6 +336,14 @@ xfs_mount_validate_sb(
+@@ -336,12 +336,17 @@ xfs_mount_validate_sb(
  		return XFS_ERROR(EWRONGFS);
  	}
  
-+	if ((sbp->sb_qflags & (XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD)) &&
-+			(sbp->sb_qflags & (XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD |
-+				XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD))) {
-+		xfs_notice(mp,
-+"Super block has XFS_OQUOTA bits along with XFS_PQUOTA and/or XFS_GQUOTA bits.\n");
-+		return XFS_ERROR(EFSCORRUPTED);
-+	}
-+
+-	if ((sbp->sb_qflags & (XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD)) &&
+-			(sbp->sb_qflags & (XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD |
+-				XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD))) {
+-		xfs_notice(mp,
+-"Super block has XFS_OQUOTA bits along with XFS_PQUOTA and/or XFS_GQUOTA bits.\n");
+-		return XFS_ERROR(EFSCORRUPTED);
++	if (xfs_sb_version_has_pquota(sbp)) {
++		if (sbp->sb_qflags & (XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD)) {
++			xfs_notice(mp,
++			   "Version 5 of Super block has XFS_OQUOTA bits.\n");
++			return XFS_ERROR(EFSCORRUPTED);
++		}
++	} else if (sbp->sb_qflags & (XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD |
++				XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD)) {
++			xfs_notice(mp,
++"Superblock earlier than Version 5 has XFS_[PQ]UOTA_{ENFD|CHKD} bits.\n");
++			return XFS_ERROR(EFSCORRUPTED);
+ 	}
+ 
  	/*
- 	 * Version 5 superblock feature mask validation. Reject combinations the
- 	 * kernel cannot support up front before checking anything else. For
-@@ -561,6 +569,18 @@ out_unwind:
- 	return error;
- }
+@@ -572,6 +577,10 @@ out_unwind:
+ static void
+ xfs_sb_quota_from_disk(struct xfs_sb *sbp)
+ {
++
++	if (xfs_sb_version_has_pquota(sbp))
++		return;
++
+ 	if (sbp->sb_qflags & XFS_OQUOTA_ENFD)
+ 		sbp->sb_qflags |= (sbp->sb_qflags & XFS_PQUOTA_ACCT) ?
+ 					XFS_PQUOTA_ENFD : XFS_GQUOTA_ENFD;
+@@ -650,6 +659,13 @@ xfs_sb_quota_to_disk(
+ {
+ 	__uint16_t	qflags = from->sb_qflags;
  
-+static void
-+xfs_sb_quota_from_disk(struct xfs_sb *sbp)
-+{
-+	if (sbp->sb_qflags & XFS_OQUOTA_ENFD)
-+		sbp->sb_qflags |= (sbp->sb_qflags & XFS_PQUOTA_ACCT) ?
-+					XFS_PQUOTA_ENFD : XFS_GQUOTA_ENFD;
-+	if (sbp->sb_qflags & XFS_OQUOTA_CHKD)
-+		sbp->sb_qflags |= (sbp->sb_qflags & XFS_PQUOTA_ACCT) ?
-+					XFS_PQUOTA_CHKD : XFS_GQUOTA_CHKD;
-+	sbp->sb_qflags &= ~(XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD);
-+}
++	/*
++	 * We need to do these manipilations only if we are working
++	 * with an older version of on-disk superblock.
++	 */
++	if (xfs_sb_version_has_pquota(from))
++		return;
 +
- void
- xfs_sb_from_disk(
- 	struct xfs_sb	*to,
-@@ -622,6 +642,35 @@ xfs_sb_from_disk(
- 	to->sb_lsn = be64_to_cpu(from->sb_lsn);
- }
- 
-+static inline void
-+xfs_sb_quota_to_disk(
-+	xfs_dsb_t	*to,
-+	xfs_sb_t	*from,
-+	__int64_t	*fields)
-+{
-+	__uint16_t	qflags = from->sb_qflags;
-+
-+	if (*fields & XFS_SB_QFLAGS) {
-+		/*
-+		 * The in-core version of sb_qflags do not have
-+		 * XFS_OQUOTA_* flags, whereas the on-disk version
-+		 * does.  So, convert incore XFS_{PG}QUOTA_* flags
-+		 * to on-disk XFS_OQUOTA_* flags.
-+		 */
-+		qflags &= ~(XFS_PQUOTA_ENFD | XFS_PQUOTA_CHKD |
-+				XFS_GQUOTA_ENFD | XFS_GQUOTA_CHKD);
-+
-+		if (from->sb_qflags &
-+				(XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD))
-+			qflags |= XFS_OQUOTA_ENFD;
-+		if (from->sb_qflags &
-+				(XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD))
-+			qflags |= XFS_OQUOTA_CHKD;
-+		to->sb_qflags = cpu_to_be16(qflags);
-+		*fields &= ~XFS_SB_QFLAGS;
+ 	if (*fields & XFS_SB_QFLAGS) {
+ 		/*
+ 		 * The in-core version of sb_qflags do not have
+@@ -669,6 +685,10 @@ xfs_sb_quota_to_disk(
+ 		to->sb_qflags = cpu_to_be16(qflags);
+ 		*fields &= ~XFS_SB_QFLAGS;
+ 	}
++	if (*fields & XFS_SB_PQUOTINO) {
++		to->sb_gquotino = cpu_to_be64(from->sb_pquotino);
++		*fields &= ~XFS_SB_PQUOTINO;
 +	}
-+}
-+
- /*
-  * Copy in core superblock to ondisk one.
-  *
-@@ -643,6 +692,7 @@ xfs_sb_to_disk(
- 	if (!fields)
- 		return;
+ }
  
-+	xfs_sb_quota_to_disk(to, from, &fields);
- 	while (fields) {
- 		f = (xfs_sb_field_t)xfs_lowbit64((__uint64_t)fields);
- 		first = xfs_sb_info[f].offset;
-@@ -835,6 +885,7 @@ reread:
+ /*
+@@ -885,6 +905,18 @@ reread:
  	 */
  	xfs_sb_from_disk(&mp->m_sb, XFS_BUF_TO_SBP(bp));
  
-+	xfs_sb_quota_from_disk(&mp->m_sb);
++	if (!xfs_sb_version_has_pquota(&mp->m_sb) && (XFS_IS_PQUOTA_ON(mp))) {
++		/*
++		 * On disk superblock only has sb_gquotino, and incore
++		 * superblock has both sb_gquotino and sb_pquotino.
++		 * But, only one them is supported at any point of time.
++		 * So, if PQUOTA is set in disk superblock, copy over
++		 * sb_gquotino to sb_pquotino.
++		 */
++		mp->m_sb.sb_pquotino = mp->m_sb.sb_gquotino;
++		mp->m_sb.sb_gquotino = NULLFSINO;
++	}
++
+ 	xfs_sb_quota_from_disk(&mp->m_sb);
  	/*
  	 * We must be able to do sector-sized and sector-aligned IO.
- 	 */
 diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index cf09aa8..7a3e007 100644
+index 42055ca..473f4dd 100644
 --- a/fs/xfs/xfs_qm.c
 +++ b/fs/xfs/xfs_qm.c
-@@ -299,8 +299,10 @@ xfs_qm_mount_quotas(
- 	 */
- 	if (!XFS_IS_UQUOTA_ON(mp))
- 		mp->m_qflags &= ~XFS_UQUOTA_CHKD;
--	if (!(XFS_IS_GQUOTA_ON(mp) || XFS_IS_PQUOTA_ON(mp)))
--		mp->m_qflags &= ~XFS_OQUOTA_CHKD;
-+	if (!XFS_IS_GQUOTA_ON(mp))
-+		mp->m_qflags &= ~XFS_GQUOTA_CHKD;
-+	if (!XFS_IS_PQUOTA_ON(mp))
-+		mp->m_qflags &= ~XFS_PQUOTA_CHKD;
+@@ -857,22 +857,21 @@ xfs_qm_qino_alloc(
+ 	spin_lock(&mp->m_sb_lock);
+ 	if (flags & XFS_QMOPT_SBVERSION) {
+ 		ASSERT(!xfs_sb_version_hasquota(&mp->m_sb));
+-		ASSERT((sbfields & (XFS_SB_VERSIONNUM | XFS_SB_UQUOTINO |
+-				   XFS_SB_GQUOTINO | XFS_SB_QFLAGS)) ==
+-		       (XFS_SB_VERSIONNUM | XFS_SB_UQUOTINO |
+-			XFS_SB_GQUOTINO | XFS_SB_QFLAGS));
  
-  write_changes:
- 	/*
-@@ -1297,7 +1299,8 @@ xfs_qm_quotacheck(
- 					 &buffer_list);
- 		if (error)
- 			goto error_return;
--		flags |= XFS_OQUOTA_CHKD;
-+		flags |= XFS_IS_GQUOTA_ON(mp) ?
-+					XFS_GQUOTA_CHKD : XFS_PQUOTA_CHKD;
+ 		xfs_sb_version_addquota(&mp->m_sb);
+ 		mp->m_sb.sb_uquotino = NULLFSINO;
+ 		mp->m_sb.sb_gquotino = NULLFSINO;
++		mp->m_sb.sb_pquotino = NULLFSINO;
+ 
+ 		/* qflags will get updated _after_ quotacheck */
+ 		mp->m_sb.sb_qflags = 0;
+ 	}
+ 	if (flags & XFS_QMOPT_UQUOTA)
+ 		mp->m_sb.sb_uquotino = (*ip)->i_ino;
+-	else
++	else if (flags & XFS_QMOPT_GQUOTA)
+ 		mp->m_sb.sb_gquotino = (*ip)->i_ino;
++	else
++		mp->m_sb.sb_pquotino = (*ip)->i_ino;
+ 	spin_unlock(&mp->m_sb_lock);
+ 	xfs_mod_sb(tp, sbfields);
+ 
+@@ -1482,11 +1481,10 @@ xfs_qm_init_quotainos(
+ 			if (error)
+ 				goto error_rele;
+ 		}
+-		/* XXX: Use gquotino for now */
+ 		if (XFS_IS_PQUOTA_ON(mp) &&
+-		    mp->m_sb.sb_gquotino != NULLFSINO) {
+-			ASSERT(mp->m_sb.sb_gquotino > 0);
+-			error = xfs_iget(mp, NULL, mp->m_sb.sb_gquotino,
++		    mp->m_sb.sb_pquotino != NULLFSINO) {
++			ASSERT(mp->m_sb.sb_pquotino > 0);
++			error = xfs_iget(mp, NULL, mp->m_sb.sb_pquotino,
+ 					     0, 0, &pip);
+ 			if (error)
+ 				goto error_rele;
+@@ -1495,6 +1493,8 @@ xfs_qm_init_quotainos(
+ 		flags |= XFS_QMOPT_SBVERSION;
+ 		sbflags |= (XFS_SB_VERSIONNUM | XFS_SB_UQUOTINO |
+ 			    XFS_SB_GQUOTINO | XFS_SB_QFLAGS);
++		if (xfs_sb_version_has_pquota(&mp->m_sb))
++			sbflags |= XFS_SB_PQUOTINO;
  	}
  
- 	do {
+ 	/*
+@@ -1522,9 +1522,16 @@ xfs_qm_init_quotainos(
+ 		flags &= ~XFS_QMOPT_SBVERSION;
+ 	}
+ 	if (XFS_IS_PQUOTA_ON(mp) && pip == NULL) {
+-		/* XXX: Use XFS_SB_GQUOTINO for now */
++		if (!xfs_sb_version_has_pquota(&mp->m_sb))
++			/*
++			 * If our superblock is an earlier version, we can
++			 * use either XFS_SB_GQUOTINO or XFS_SB_PQUOTINO
++			 * but not both. Clear XFS_SB_GQUOTINO as it might
++			 * be set above.
++			 */
++			sbflags &= ~XFS_SB_GQUOTINO;
+ 		error = xfs_qm_qino_alloc(mp, &pip,
+-					  sbflags | XFS_SB_GQUOTINO,
++					  sbflags | XFS_SB_PQUOTINO,
+ 					  flags | XFS_QMOPT_PQUOTA);
+ 		if (error)
+ 			goto error_rele;
 diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-index b03b2ab..a08801a 100644
+index b936383..f42b585 100644
 --- a/fs/xfs/xfs_qm_syscalls.c
 +++ b/fs/xfs/xfs_qm_syscalls.c
-@@ -117,11 +117,11 @@ xfs_qm_scall_quotaoff(
- 	}
- 	if (flags & XFS_GQUOTA_ACCT) {
- 		dqtype |= XFS_QMOPT_GQUOTA;
--		flags |= (XFS_OQUOTA_CHKD | XFS_OQUOTA_ENFD);
-+		flags |= (XFS_GQUOTA_CHKD | XFS_GQUOTA_ENFD);
- 		inactivate_flags |= XFS_GQUOTA_ACTIVE;
- 	} else if (flags & XFS_PQUOTA_ACCT) {
- 		dqtype |= XFS_QMOPT_PQUOTA;
--		flags |= (XFS_OQUOTA_CHKD | XFS_OQUOTA_ENFD);
-+		flags |= (XFS_PQUOTA_CHKD | XFS_PQUOTA_ENFD);
- 		inactivate_flags |= XFS_PQUOTA_ACTIVE;
- 	}
- 
-@@ -335,14 +335,14 @@ xfs_qm_scall_quotaon(
- 	 * quota acct on ondisk without m_qflags' knowing.
+@@ -201,8 +201,7 @@ xfs_qm_scall_quotaoff(
+ 	/*
+ 	 * If quotas is completely disabled, close shop.
  	 */
- 	if (((flags & XFS_UQUOTA_ACCT) == 0 &&
--	    (mp->m_sb.sb_qflags & XFS_UQUOTA_ACCT) == 0 &&
--	    (flags & XFS_UQUOTA_ENFD))
--	    ||
-+	     (mp->m_sb.sb_qflags & XFS_UQUOTA_ACCT) == 0 &&
-+	     (flags & XFS_UQUOTA_ENFD)) ||
-+	    ((flags & XFS_GQUOTA_ACCT) == 0 &&
-+	     (mp->m_sb.sb_qflags & XFS_GQUOTA_ACCT) == 0 &&
-+	     (flags & XFS_GQUOTA_ENFD)) ||
- 	    ((flags & XFS_PQUOTA_ACCT) == 0 &&
--	    (mp->m_sb.sb_qflags & XFS_PQUOTA_ACCT) == 0 &&
--	    (flags & XFS_GQUOTA_ACCT) == 0 &&
--	    (mp->m_sb.sb_qflags & XFS_GQUOTA_ACCT) == 0 &&
--	    (flags & XFS_OQUOTA_ENFD))) {
-+	     (mp->m_sb.sb_qflags & XFS_PQUOTA_ACCT) == 0 &&
-+	     (flags & XFS_PQUOTA_ENFD))) {
- 		xfs_debug(mp,
- 			"%s: Can't enforce without acct, flags=%x sbflags=%x\n",
- 			__func__, flags, mp->m_sb.sb_qflags);
-@@ -776,9 +776,12 @@ xfs_qm_scall_getquota(
- 	 * gets turned off. No need to confuse the user level code,
- 	 * so return zeroes in that case.
- 	 */
--	if ((!XFS_IS_UQUOTA_ENFORCED(mp) && dqp->q_core.d_flags == XFS_DQ_USER) ||
--	    (!XFS_IS_OQUOTA_ENFORCED(mp) &&
--			(dqp->q_core.d_flags & (XFS_DQ_PROJ | XFS_DQ_GROUP)))) {
-+	if ((!XFS_IS_UQUOTA_ENFORCED(mp) &&
-+	     dqp->q_core.d_flags == XFS_DQ_USER) ||
-+	    (!XFS_IS_GQUOTA_ENFORCED(mp) &&
-+	     dqp->q_core.d_flags == XFS_DQ_GROUP) ||
-+	    (!XFS_IS_PQUOTA_ENFORCED(mp) &&
-+	     dqp->q_core.d_flags == XFS_DQ_PROJ)) {
- 		dst->d_btimer = 0;
- 		dst->d_itimer = 0;
- 		dst->d_rtbtimer = 0;
-@@ -786,8 +789,8 @@ xfs_qm_scall_getquota(
+-	if (((flags & XFS_MOUNT_QUOTA_ALL) == XFS_MOUNT_QUOTA_SET1) ||
+-	    ((flags & XFS_MOUNT_QUOTA_ALL) == XFS_MOUNT_QUOTA_SET2)) {
++	if ((flags & XFS_MOUNT_QUOTA_ALL) == XFS_MOUNT_QUOTA_ALL) {
+ 		mutex_unlock(&q->qi_quotaofflock);
+ 		xfs_qm_destroy_quotainfo(mp);
+ 		return (0);
+@@ -297,8 +296,10 @@ xfs_qm_scall_trunc_qfiles(
  
- #ifdef DEBUG
- 	if (((XFS_IS_UQUOTA_ENFORCED(mp) && dst->d_flags == FS_USER_QUOTA) ||
--	     (XFS_IS_OQUOTA_ENFORCED(mp) &&
--			(dst->d_flags & (FS_PROJ_QUOTA | FS_GROUP_QUOTA)))) &&
-+	     (XFS_IS_GQUOTA_ENFORCED(mp) && dst->d_flags == FS_GROUP_QUOTA) ||
-+	     (XFS_IS_PQUOTA_ENFORCED(mp) && dst->d_flags == FS_PROJ_QUOTA)) &&
- 	    dst->d_id != 0) {
- 		if ((dst->d_bcount > dst->d_blk_softlimit) &&
- 		    (dst->d_blk_softlimit > 0)) {
-@@ -833,16 +836,16 @@ xfs_qm_export_flags(
- 	uflags = 0;
- 	if (flags & XFS_UQUOTA_ACCT)
- 		uflags |= FS_QUOTA_UDQ_ACCT;
--	if (flags & XFS_PQUOTA_ACCT)
--		uflags |= FS_QUOTA_PDQ_ACCT;
- 	if (flags & XFS_GQUOTA_ACCT)
- 		uflags |= FS_QUOTA_GDQ_ACCT;
-+	if (flags & XFS_PQUOTA_ACCT)
-+		uflags |= FS_QUOTA_PDQ_ACCT;
- 	if (flags & XFS_UQUOTA_ENFD)
- 		uflags |= FS_QUOTA_UDQ_ENFD;
--	if (flags & (XFS_OQUOTA_ENFD)) {
--		uflags |= (flags & XFS_GQUOTA_ACCT) ?
--			FS_QUOTA_GDQ_ENFD : FS_QUOTA_PDQ_ENFD;
--	}
-+	if (flags & XFS_GQUOTA_ENFD)
-+		uflags |= FS_QUOTA_GDQ_ENFD;
-+	if (flags & XFS_PQUOTA_ENFD)
-+		uflags |= FS_QUOTA_PDQ_ENFD;
- 	return (uflags);
+ 	if (flags & XFS_DQ_USER)
+ 		error = xfs_qm_scall_trunc_qfile(mp, mp->m_sb.sb_uquotino);
+-	if (flags & (XFS_DQ_GROUP|XFS_DQ_PROJ))
++	if (flags & XFS_DQ_GROUP)
+ 		error2 = xfs_qm_scall_trunc_qfile(mp, mp->m_sb.sb_gquotino);
++	if (flags & XFS_DQ_PROJ)
++		error2 = xfs_qm_scall_trunc_qfile(mp, mp->m_sb.sb_pquotino);
+ 
+ 	return error ? error : error2;
  }
+@@ -414,8 +415,10 @@ xfs_qm_scall_getqstat(
+ 	struct xfs_quotainfo	*q = mp->m_quotainfo;
+ 	struct xfs_inode	*uip = NULL;
+ 	struct xfs_inode	*gip = NULL;
++	struct xfs_inode	*pip = NULL;
+ 	bool                    tempuqip = false;
+ 	bool                    tempgqip = false;
++	bool                    temppqip = false;
  
+ 	memset(out, 0, sizeof(fs_quota_stat_t));
+ 
+@@ -423,6 +426,7 @@ xfs_qm_scall_getqstat(
+ 	if (!xfs_sb_version_hasquota(&mp->m_sb)) {
+ 		out->qs_uquota.qfs_ino = NULLFSINO;
+ 		out->qs_gquota.qfs_ino = NULLFSINO;
++		out->qs_pquota.qfs_ino = NULLFSINO;
+ 		return (0);
+ 	}
+ 	out->qs_flags = (__uint16_t) xfs_qm_export_flags(mp->m_qflags &
+@@ -431,10 +435,13 @@ xfs_qm_scall_getqstat(
+ 	out->qs_pad = 0;
+ 	out->qs_uquota.qfs_ino = mp->m_sb.sb_uquotino;
+ 	out->qs_gquota.qfs_ino = mp->m_sb.sb_gquotino;
++	if (&out->qs_gquota != &out->qs_pquota)
++		out->qs_pquota.qfs_ino = mp->m_sb.sb_pquotino;
+ 
+ 	if (q) {
+ 		uip = q->qi_uquotaip;
+ 		gip = q->qi_gquotaip;
++		pip = q->qi_pquotaip;
+ 	}
+ 	if (!uip && mp->m_sb.sb_uquotino != NULLFSINO) {
+ 		if (xfs_iget(mp, NULL, mp->m_sb.sb_uquotino,
+@@ -446,6 +453,11 @@ xfs_qm_scall_getqstat(
+ 					0, 0, &gip) == 0)
+ 			tempgqip = true;
+ 	}
++	if (!pip && mp->m_sb.sb_pquotino != NULLFSINO) {
++		if (xfs_iget(mp, NULL, mp->m_sb.sb_pquotino,
++					0, 0, &pip) == 0)
++			temppqip = true;
++	}
+ 	if (uip) {
+ 		out->qs_uquota.qfs_nblks = uip->i_d.di_nblocks;
+ 		out->qs_uquota.qfs_nextents = uip->i_d.di_nextents;
+@@ -458,6 +470,12 @@ xfs_qm_scall_getqstat(
+ 		if (tempgqip)
+ 			IRELE(gip);
+ 	}
++	if (pip) {
++		out->qs_pquota.qfs_nblks = pip->i_d.di_nblocks;
++		out->qs_pquota.qfs_nextents = pip->i_d.di_nextents;
++		if (temppqip)
++			IRELE(pip);
++	}
+ 	if (q) {
+ 		out->qs_incoredqs = q->qi_dquots;
+ 		out->qs_btimelimit = q->qi_btimelimit;
 diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
-index c38068f..c3483ba 100644
+index 5faf654..eae93d1 100644
 --- a/fs/xfs/xfs_quota.h
 +++ b/fs/xfs/xfs_quota.h
-@@ -161,30 +161,42 @@ typedef struct xfs_qoff_logformat {
- #define XFS_GQUOTA_ACCT	0x0040  /* group quota accounting ON */
- 
- /*
-+ * Conversion to and from the combined OQUOTA flag (if necessary)
-+ * is done only in xfs_sb_qflags_to_disk() and xfs_sb_qflags_from_disk()
-+ */
-+#define XFS_GQUOTA_ENFD	0x0080  /* group quota limits enforced */
-+#define XFS_GQUOTA_CHKD	0x0100  /* quotacheck run on group quotas */
-+#define XFS_PQUOTA_ENFD	0x0200  /* project quota limits enforced */
-+#define XFS_PQUOTA_CHKD	0x0400  /* quotacheck run on project quotas */
-+
-+/*
-  * Quota Accounting/Enforcement flags
-  */
- #define XFS_ALL_QUOTA_ACCT	\
- 		(XFS_UQUOTA_ACCT | XFS_GQUOTA_ACCT | XFS_PQUOTA_ACCT)
--#define XFS_ALL_QUOTA_ENFD	(XFS_UQUOTA_ENFD | XFS_OQUOTA_ENFD)
--#define XFS_ALL_QUOTA_CHKD	(XFS_UQUOTA_CHKD | XFS_OQUOTA_CHKD)
-+#define XFS_ALL_QUOTA_ENFD	\
-+		(XFS_UQUOTA_ENFD | XFS_GQUOTA_ENFD | XFS_PQUOTA_ENFD)
-+#define XFS_ALL_QUOTA_CHKD	\
-+		(XFS_UQUOTA_CHKD | XFS_GQUOTA_CHKD | XFS_PQUOTA_CHKD)
- 
- #define XFS_IS_QUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_ALL_QUOTA_ACCT)
- #define XFS_IS_UQUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_UQUOTA_ACCT)
- #define XFS_IS_PQUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_PQUOTA_ACCT)
- #define XFS_IS_GQUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_GQUOTA_ACCT)
- #define XFS_IS_UQUOTA_ENFORCED(mp)	((mp)->m_qflags & XFS_UQUOTA_ENFD)
--#define XFS_IS_OQUOTA_ENFORCED(mp)	((mp)->m_qflags & XFS_OQUOTA_ENFD)
-+#define XFS_IS_GQUOTA_ENFORCED(mp)	((mp)->m_qflags & XFS_GQUOTA_ENFD)
-+#define XFS_IS_PQUOTA_ENFORCED(mp)	((mp)->m_qflags & XFS_PQUOTA_ENFD)
- 
- /*
-  * Incore only flags for quotaoff - these bits get cleared when quota(s)
-  * are in the process of getting turned off. These flags are in m_qflags but
-  * never in sb_qflags.
-  */
--#define XFS_UQUOTA_ACTIVE	0x0100  /* uquotas are being turned off */
--#define XFS_PQUOTA_ACTIVE	0x0200  /* pquotas are being turned off */
--#define XFS_GQUOTA_ACTIVE	0x0400  /* gquotas are being turned off */
-+#define XFS_UQUOTA_ACTIVE	0x1000  /* uquotas are being turned off */
-+#define XFS_GQUOTA_ACTIVE	0x2000  /* gquotas are being turned off */
-+#define XFS_PQUOTA_ACTIVE	0x4000  /* pquotas are being turned off */
- #define XFS_ALL_QUOTA_ACTIVE	\
--	(XFS_UQUOTA_ACTIVE | XFS_PQUOTA_ACTIVE | XFS_GQUOTA_ACTIVE)
-+	(XFS_UQUOTA_ACTIVE | XFS_GQUOTA_ACTIVE | XFS_PQUOTA_ACTIVE)
- 
- /*
-  * Checking XFS_IS_*QUOTA_ON() while holding any inode lock guarantees
-@@ -268,24 +280,23 @@ typedef struct xfs_qoff_logformat {
- 	((XFS_IS_UQUOTA_ON(mp) && \
- 		(mp->m_sb.sb_qflags & XFS_UQUOTA_CHKD) == 0) || \
- 	 (XFS_IS_GQUOTA_ON(mp) && \
--		((mp->m_sb.sb_qflags & XFS_OQUOTA_CHKD) == 0 || \
--		 (mp->m_sb.sb_qflags & XFS_PQUOTA_ACCT))) || \
-+		(mp->m_sb.sb_qflags & XFS_GQUOTA_CHKD) == 0) || \
+@@ -284,14 +284,6 @@ typedef struct xfs_qoff_logformat {
  	 (XFS_IS_PQUOTA_ON(mp) && \
--		((mp->m_sb.sb_qflags & XFS_OQUOTA_CHKD) == 0 || \
--		 (mp->m_sb.sb_qflags & XFS_GQUOTA_ACCT))))
-+		(mp->m_sb.sb_qflags & XFS_PQUOTA_CHKD) == 0))
+ 		(mp->m_sb.sb_qflags & XFS_PQUOTA_CHKD) == 0))
  
- #define XFS_MOUNT_QUOTA_SET1	(XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD|\
--				 XFS_UQUOTA_CHKD|XFS_PQUOTA_ACCT|\
--				 XFS_OQUOTA_ENFD|XFS_OQUOTA_CHKD)
-+				 XFS_UQUOTA_CHKD|XFS_GQUOTA_ACCT|\
-+				 XFS_GQUOTA_ENFD|XFS_GQUOTA_CHKD)
- 
- #define XFS_MOUNT_QUOTA_SET2	(XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD|\
+-#define XFS_MOUNT_QUOTA_SET1	(XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD|\
 -				 XFS_UQUOTA_CHKD|XFS_GQUOTA_ACCT|\
--				 XFS_OQUOTA_ENFD|XFS_OQUOTA_CHKD)
-+				 XFS_UQUOTA_CHKD|XFS_PQUOTA_ACCT|\
-+				 XFS_PQUOTA_ENFD|XFS_PQUOTA_CHKD)
- 
- #define XFS_MOUNT_QUOTA_ALL	(XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD|\
+-				 XFS_GQUOTA_ENFD|XFS_GQUOTA_CHKD)
+-
+-#define XFS_MOUNT_QUOTA_SET2	(XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD|\
 -				 XFS_UQUOTA_CHKD|XFS_PQUOTA_ACCT|\
--				 XFS_OQUOTA_ENFD|XFS_OQUOTA_CHKD|\
--				 XFS_GQUOTA_ACCT)
-+				 XFS_UQUOTA_CHKD|XFS_GQUOTA_ACCT|\
-+				 XFS_GQUOTA_ENFD|XFS_GQUOTA_CHKD|\
-+				 XFS_PQUOTA_ACCT|XFS_PQUOTA_ENFD|\
-+				 XFS_PQUOTA_CHKD)
- 
+-				 XFS_PQUOTA_ENFD|XFS_PQUOTA_CHKD)
+-
+ #define XFS_MOUNT_QUOTA_ALL	(XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD|\
+ 				 XFS_UQUOTA_CHKD|XFS_GQUOTA_ACCT|\
+ 				 XFS_GQUOTA_ENFD|XFS_GQUOTA_CHKD|\
+diff --git a/fs/xfs/xfs_sb.h b/fs/xfs/xfs_sb.h
+index 78f9e70..d1d2407 100644
+--- a/fs/xfs/xfs_sb.h
++++ b/fs/xfs/xfs_sb.h
+@@ -621,7 +621,21 @@ xfs_sb_has_incompat_log_feature(
+ static inline bool
+ xfs_is_quota_inode(struct xfs_sb *sbp, xfs_ino_t ino)
+ {
+-	return (ino == sbp->sb_uquotino || ino == sbp->sb_gquotino);
++	return (ino == sbp->sb_uquotino ||
++		ino == sbp->sb_gquotino ||
++		ino == sbp->sb_pquotino);
++}
++
++static inline int xfs_sb_version_has_pquota(xfs_sb_t *sbp)
++{
++	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5;
++}
++
++static inline __int64_t xfs_sb_all_bits(xfs_sb_t *sbp)
++{
++	if (xfs_sb_version_has_pquota(sbp))
++		return XFS_SB_ALL_BITS;
++	return XFS_SB_ALL_BITS & ~XFS_SB_PQUOTINO;
+ }
  
  /*
-diff --git a/fs/xfs/xfs_quotaops.c b/fs/xfs/xfs_quotaops.c
-index 71926d6..20e30f9 100644
---- a/fs/xfs/xfs_quotaops.c
-+++ b/fs/xfs/xfs_quotaops.c
-@@ -75,8 +75,10 @@ xfs_fs_set_xstate(
- 		flags |= XFS_GQUOTA_ACCT;
- 	if (uflags & FS_QUOTA_UDQ_ENFD)
- 		flags |= XFS_UQUOTA_ENFD;
--	if (uflags & (FS_QUOTA_PDQ_ENFD|FS_QUOTA_GDQ_ENFD))
--		flags |= XFS_OQUOTA_ENFD;
-+	if (uflags & FS_QUOTA_GDQ_ENFD)
-+		flags |= XFS_GQUOTA_ENFD;
-+	if (uflags & FS_QUOTA_PDQ_ENFD)
-+		flags |= XFS_PQUOTA_ENFD;
- 
- 	switch (op) {
- 	case Q_XQUOTAON:
 diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 1492409..19663c7 100644
+index 19663c7..992044f 100644
 --- a/fs/xfs/xfs_super.c
 +++ b/fs/xfs/xfs_super.c
-@@ -359,17 +359,17 @@ xfs_parseargs(
- 		} else if (!strcmp(this_char, MNTOPT_PQUOTA) ||
- 			   !strcmp(this_char, MNTOPT_PRJQUOTA)) {
- 			mp->m_qflags |= (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE |
--					 XFS_OQUOTA_ENFD);
-+					 XFS_PQUOTA_ENFD);
- 		} else if (!strcmp(this_char, MNTOPT_PQUOTANOENF)) {
- 			mp->m_qflags |= (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE);
--			mp->m_qflags &= ~XFS_OQUOTA_ENFD;
-+			mp->m_qflags &= ~XFS_PQUOTA_ENFD;
- 		} else if (!strcmp(this_char, MNTOPT_GQUOTA) ||
- 			   !strcmp(this_char, MNTOPT_GRPQUOTA)) {
- 			mp->m_qflags |= (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE |
--					 XFS_OQUOTA_ENFD);
-+					 XFS_GQUOTA_ENFD);
- 		} else if (!strcmp(this_char, MNTOPT_GQUOTANOENF)) {
- 			mp->m_qflags |= (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE);
--			mp->m_qflags &= ~XFS_OQUOTA_ENFD;
-+			mp->m_qflags &= ~XFS_GQUOTA_ENFD;
- 		} else if (!strcmp(this_char, MNTOPT_DELAYLOG)) {
- 			xfs_warn(mp,
- 	"delaylog is the default now, option is deprecated.");
-@@ -558,12 +558,12 @@ xfs_showargs(
- 	/* Either project or group quotas can be active, not both */
+@@ -420,12 +420,6 @@ xfs_parseargs(
+ 	}
+ #endif
  
- 	if (mp->m_qflags & XFS_PQUOTA_ACCT) {
--		if (mp->m_qflags & XFS_OQUOTA_ENFD)
-+		if (mp->m_qflags & XFS_PQUOTA_ENFD)
- 			seq_puts(m, "," MNTOPT_PRJQUOTA);
- 		else
- 			seq_puts(m, "," MNTOPT_PQUOTANOENF);
- 	} else if (mp->m_qflags & XFS_GQUOTA_ACCT) {
--		if (mp->m_qflags & XFS_OQUOTA_ENFD)
-+		if (mp->m_qflags & XFS_GQUOTA_ENFD)
- 			seq_puts(m, "," MNTOPT_GRPQUOTA);
- 		else
- 			seq_puts(m, "," MNTOPT_GQUOTANOENF);
-@@ -1131,8 +1131,8 @@ xfs_fs_statfs(
- 	spin_unlock(&mp->m_sb_lock);
+-	if ((mp->m_qflags & (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE)) &&
+-	    (mp->m_qflags & (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE))) {
+-		xfs_warn(mp, "cannot mount with both project and group quota");
+-		return EINVAL;
+-	}
+-
+ 	if ((dsunit && !dswidth) || (!dsunit && dswidth)) {
+ 		xfs_warn(mp, "sunit and swidth must be specified together");
+ 		return EINVAL;
+@@ -1395,6 +1389,14 @@ xfs_finish_flags(
+ 		return XFS_ERROR(EROFS);
+ 	}
  
- 	if ((ip->i_d.di_flags & XFS_DIFLAG_PROJINHERIT) &&
--	    ((mp->m_qflags & (XFS_PQUOTA_ACCT|XFS_OQUOTA_ENFD))) ==
--			      (XFS_PQUOTA_ACCT|XFS_OQUOTA_ENFD))
-+	    ((mp->m_qflags & (XFS_PQUOTA_ACCT|XFS_PQUOTA_ENFD))) ==
-+			      (XFS_PQUOTA_ACCT|XFS_PQUOTA_ENFD))
- 		xfs_qm_statvfs(ip, statp);
++	if ((mp->m_qflags & (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE)) &&
++	    (mp->m_qflags & (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE)) &&
++	    !xfs_sb_version_has_pquota(&mp->m_sb)) {
++		xfs_warn(mp,
++		  "Super block does not support project and group quota together");
++		return XFS_ERROR(EINVAL);
++	}
++
  	return 0;
  }
-diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
-index 7ea7485..3ba64d5 100644
---- a/fs/xfs/xfs_trans_dquot.c
-+++ b/fs/xfs/xfs_trans_dquot.c
-@@ -632,8 +632,8 @@ xfs_trans_dqresv(
- 	if ((flags & XFS_QMOPT_FORCE_RES) == 0 &&
- 	    dqp->q_core.d_id &&
- 	    ((XFS_IS_UQUOTA_ENFORCED(dqp->q_mount) && XFS_QM_ISUDQ(dqp)) ||
--	     (XFS_IS_OQUOTA_ENFORCED(dqp->q_mount) &&
--	      (XFS_QM_ISPDQ(dqp) || XFS_QM_ISGDQ(dqp))))) {
-+	     (XFS_IS_GQUOTA_ENFORCED(dqp->q_mount) && XFS_QM_ISGDQ(dqp)) ||
-+	     (XFS_IS_PQUOTA_ENFORCED(dqp->q_mount) && XFS_QM_ISPDQ(dqp)))) {
- 		if (nblks > 0) {
- 			/*
- 			 * dquot is locked already. See if we'd go over the
+ 
+diff --git a/include/uapi/linux/dqblk_xfs.h b/include/uapi/linux/dqblk_xfs.h
+index 8655280..f17e3bb 100644
+--- a/include/uapi/linux/dqblk_xfs.h
++++ b/include/uapi/linux/dqblk_xfs.h
+@@ -155,6 +155,7 @@ typedef struct fs_quota_stat {
+ 	__s8		qs_pad;		/* unused */
+ 	fs_qfilestat_t	qs_uquota;	/* user quota storage information */
+ 	fs_qfilestat_t	qs_gquota;	/* group quota storage information */
++#define qs_pquota	qs_gquota
+ 	__u32		qs_incoredqs;	/* number of dquots incore */
+ 	__s32		qs_btimelimit;  /* limit for blks timer */	
+ 	__s32		qs_itimelimit;  /* limit for inodes timer */	
 -- 
 1.7.1
 
