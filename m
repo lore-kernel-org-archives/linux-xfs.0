@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 214287F52
-	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 10:58:11 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 02329304051
-	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 08:58:10 -0700 (PDT)
-Received: from mail-gh0-f180.google.com (mail-gh0-f180.google.com
-	[209.85.160.180]) by cuda.sgi.com with ESMTP id
-	p6RaHGZXx1suI6XX (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 27 Jun 2013 08:58:10 -0700 (PDT)
-Received: by mail-gh0-f180.google.com with SMTP id f18so364906ghb.11
-	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 08:58:09 -0700 (PDT)
-Subject: Re: sizing log - is there a too big?
-Mime-Version: 1.0 (Apple Message framework v1085)
-From: aurfalien <aurfalien@gmail.com>
-In-Reply-To: <20130627014810.GA29790@dastard>
-Date: Thu, 27 Jun 2013 08:58:06 -0700
-Message-Id: <73A9FC1C-854D-4C23-B560-FEEF64A3001B@gmail.com>
-References: <55C24454-59E9-4285-9A4C-C4BD24EDBEEC@gmail.com>
-	<20130627014810.GA29790@dastard>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id A46B17F5A
+	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 11:03:52 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 2609AAC00A
+	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 09:03:49 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id PTljiVXH4nr3uyUO (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 27 Jun 2013 09:03:47 -0700 (PDT)
+Date: Thu, 27 Jun 2013 12:03:40 -0400
+From: Dwight Engen <dwight.engen@oracle.com>
+Subject: [PATCH 3/3] xfstests 314: user namespace uid/gids in an ACL
+Message-ID: <20130627120340.20e494ad@oracle.com>
+In-Reply-To: <20130626010931.GA29376@dastard>
+References: <20130625153443.08142635@oracle.com>
+	<20130626010931.GA29376@dastard>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,52 +32,218 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
+Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
+---
+ common/attr           |  14 +++++++
+ tests/generic/314     | 102 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/314.out |  51 +++++++++++++++++++++++++
+ tests/generic/group   |   1 +
+ 4 files changed, 168 insertions(+)
+ create mode 100644 tests/generic/314
+ create mode 100644 tests/generic/314.out
 
-On Jun 26, 2013, at 6:48 PM, Dave Chinner wrote:
+diff --git a/common/attr b/common/attr
+index e5070bf..4a3ac9e 100644
+--- a/common/attr
++++ b/common/attr
+@@ -54,6 +54,20 @@ _acl_filter_id()
+        -e "s/ $acl3 / id3 /"
+ }
+ 
++_getfacl_filter_id()
++{
++    sed \
++       -e "s/user:$acl1/user:id1/" \
++       -e "s/user:$acl2/user:id2/" \
++       -e "s/user:$acl3/user:id3/" \
++       -e "s/group:$acl1/group:id1/" \
++       -e "s/group:$acl2/group:id2/" \
++       -e "s/group:$acl3/group:id3/" \
++       -e "s/: $acl1/: id1/" \
++       -e "s/: $acl2/: id2/" \
++       -e "s/: $acl3/: id3/"
++}
++
+ # filtered ls
+ #
+ _acl_ls()
+diff --git a/tests/generic/314 b/tests/generic/314
+new file mode 100644
+index 0000000..fc0b722
+--- /dev/null
++++ b/tests/generic/314
+@@ -0,0 +1,102 @@
++#! /bin/bash
++# FS QA Test No. 314
++#
++# Check get/set ACLs to/from disk with a user namespace. A new file
++# will be created and ACLs set on it from both inside a userns and
++# from init_user_ns. We check that the ACL is is correct from both
++# inside the userns and also from init_user_ns. We will then unmount
++# and remount the file system and check the ACL from both inside the
++# userns and from init_user_ns to show that the correct uid/gid in
++# the ACL was flushed and brought back from disk.
++#
++#-----------------------------------------------------------------------
++# Copyright (C) 2013 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++
++_cleanup()
++{
++    cd /
++    umount $SCRATCH_DEV >/dev/null 2>&1
++}
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/attr
++
++nsexec=$here/src/nsexec
++file=$SCRATCH_MNT/file1
++
++# real QA test starts here
++_supported_fs generic
++# only Linux supports user namespace
++_supported_os Linux
++
++[ -x $nsexec ] || _notrun "$nsexec executable not found"
++
++rm -f $seqres.full
++
++_require_scratch
++_need_to_be_root
++_acl_setup_ids
++_require_acls
++
++_print_getfacls()
++{
++    echo "From init_user_ns"
++    getfacl -n $file 2>/dev/null | _getfacl_filter_id | sed -e "s!$SCRATCH_MNT!\$SCRATCH_MNT!"
++
++    echo "From user_ns"
++    $nsexec -U -M "0 $acl1 1000" -G "0 $acl2 1000" getfacl -n $file  2>/dev/null | _getfacl_filter_id | sed -e "s!$SCRATCH_MNT!\$SCRATCH_MNT!"
++}
++
++umount $SCRATCH_DEV >/dev/null 2>&1
++echo "*** MKFS ***" >>$seqres.full
++echo ""             >>$seqres.full
++_scratch_mkfs       >>$seqres.full 2>&1 || _fail "mkfs failed"
++_scratch_mount      >>$seqres.full 2>&1 || _fail "mount failed"
++
++touch $file
++chown $acl1.$acl1 $file
++
++# set acls from init_user_ns, to be checked from inside the userns
++setfacl -n -m u:$acl2:rw,g:$acl2:r $file
++# set acls from inside userns, to be checked from init_user_ns
++$nsexec -s -U -M "0 $acl1 1000" -G "0 $acl2 1000" setfacl -n -m u:root:rx,g:root:x $file
++
++_print_getfacls
++
++echo "*** Remounting ***"
++echo ""
++sync
++umount $SCRATCH_MNT >>$seqres.full 2>&1
++_scratch_mount      >>$seqres.full 2>&1 || _fail "mount failed"
++
++_print_getfacls
++
++umount $SCRATCH_DEV >/dev/null 2>&1
++status=0
++exit
+diff --git a/tests/generic/314.out b/tests/generic/314.out
+new file mode 100644
+index 0000000..b88354c
+--- /dev/null
++++ b/tests/generic/314.out
+@@ -0,0 +1,51 @@
++QA output created by 314
++From init_user_ns
++# file: mnt/xfs-scratch/file1
++# owner: id1
++# group: id1
++user::rw-
++user:id1:r-x	#effective:r--
++user:id2:rw-	#effective:r--
++group::r--
++group:id2:--x	#effective:---
++mask::r--
++other::r--
++
++From user_ns
++# file: mnt/xfs-scratch/file1
++# owner: 0
++# group: 65534
++user::rw-
++user:0:r-x	#effective:r--
++user:1:rw-	#effective:r--
++group::r--
++group:0:--x	#effective:---
++mask::r--
++other::r--
++
++*** Remounting ***
++
++From init_user_ns
++# file: mnt/xfs-scratch/file1
++# owner: id1
++# group: id1
++user::rw-
++user:id1:r-x	#effective:r--
++user:id2:rw-	#effective:r--
++group::r--
++group:id2:--x	#effective:---
++mask::r--
++other::r--
++
++From user_ns
++# file: mnt/xfs-scratch/file1
++# owner: 0
++# group: 65534
++user::rw-
++user:0:r-x	#effective:r--
++user:1:rw-	#effective:r--
++group::r--
++group:0:--x	#effective:---
++mask::r--
++other::r--
++
+diff --git a/tests/generic/group b/tests/generic/group
+index 5c2b4d7..ead1cb1 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -116,3 +116,4 @@
+ 311 auto metadata log
+ 312 auto quick prealloc enospc
+ 313 auto metadata quick
++314 acl attr auto quick
+-- 
+1.8.1.4
 
-> On Wed, Jun 26, 2013 at 04:56:31PM -0700, aurfalien wrote:
->> Hi all,
->> 
->> Wondering if my log being just under 2GB is a bad idea.
->> 
->> Noticing flush-253:2/kcopyd which is my XFS file system getting
->> really high load avg and wait times via top).
-> 
-> What has the log size got to do with something that is happening at
-> the block layer? What's your storage config?
-> 
->> Doing a simple rsync over NFS and after a bit, the system gets to a load of 24.... yikes...
-> 
-> Let me guess - 24 nfsds blocked waiting for kcopyd to do it's stuff?
-> 
-> Load average going up when the NFS server is busy generally means
-> your IO subsystem is heavily loaded - it's not uncommon to see large
-> NFS servers that are extremely busy sustain load averages over a
-> 100 (or even 1000) for hours/days on end....
-> 
->> Upon killing the rsync, I am seeing loads going down to sub 1
->> after about 10 min.  I have repeated this to verify 10 min.
-> 
-> Sure. Processes blocked on IO contribute to the load average. Kill
-> the IO load, and the load average will return to nothing in 10-15
-> minutes.
-
-
-Not so fast my fine feathered friend.
-
-Same work load, same hardware.
-
-Only diff is;
-
-External log, its 2GB
-And its Centos 6.4 which was previously 5.9.
-Its 16 drives in a hw raid 6, but 2 are for the mirrored journal and 1 for hot spare so 13 spindles.  Before it was 14 spindles in raid 6 and 2 hot spare.
-
-I did power cycle it late last night and will more closely observe today.
-
-Very odd.
-
-- aurf
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
