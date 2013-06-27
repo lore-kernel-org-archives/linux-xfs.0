@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 568747F8C
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E36BA7F90
 	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 01:05:27 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 41FFE30405F
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id AB5228F8064
 	for <xfs@oss.sgi.com>; Wed, 26 Jun 2013 23:05:27 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	wi8P3HMAYNExiDjC for <xfs@oss.sgi.com>;
+	Df0xajPGyA62bkid for <xfs@oss.sgi.com>;
 	Wed, 26 Jun 2013 23:05:25 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1Us5Kb-0008Hf-UM
+	(envelope-from <dave@fromorbit.com>) id 1Us5Kb-0008He-TC
 	for xfs@oss.sgi.com; Thu, 27 Jun 2013 16:05:21 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1Us5KR-00028p-RJ
+	(envelope-from <dave@disappointment.disaster>) id 1Us5KR-00028l-QM
 	for xfs@oss.sgi.com; Thu, 27 Jun 2013 16:05:11 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 15/15] xfs: implement inode change count
-Date: Thu, 27 Jun 2013 16:04:59 +1000
-Message-Id: <1372313099-8121-16-git-send-email-david@fromorbit.com>
+Subject: [PATCH 14/15] xfs: dquot log reservations are too small
+Date: Thu, 27 Jun 2013 16:04:58 +1000
+Message-Id: <1372313099-8121-15-git-send-email-david@fromorbit.com>
 In-Reply-To: <1372313099-8121-1-git-send-email-david@fromorbit.com>
 References: <1372313099-8121-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,59 +38,113 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-For CRC enabled filesystems, add support for the monotonic inode
-version change counter that is needed by protocols like NFSv4 for
-determining if the inode has changed in any way at all between two
-unrelated operations on the inode.
+During review of the separate project quota inode patches, it bcame
+obvious that the dquot log reservation calculation underestimated
+the number dquots that can be modified in a transaction. This has
+it's roots way back in the Irix quota implementation.
 
-This bumps the change count the first time an inode is dirtied in a
-transaction. Since all modifications to the inode are logged, this
-will catch all changes that are made to the inode, including
-timestamp updates that occur during data writes.
+That is, when quotas were first implemented in XFS, it only
+supported user and project quotas as Irix did not have group quotas.
+Hence the worst case operation involving dquot modification was
+calculated to involve 2 user dquots and 1 project dquot or 1 user
+dequot and 2 project dquots. i.e. 3 dquots. This was determined back
+in 1996, and has remained unchanged ever since.
+
+However, back in 2001, the Linux XFS port dropped all support for
+project quota and implmented group quotas over the top. This was
+effectively done with a search-and-replace of project with group,
+and as such the log reservation was not changed. However, with the
+advent of group quotas, chmod and rename now could modify more than
+3 dquots in a single transaction - both could modify 4 dquots. Hence
+this log reservation has been wrong for a long time.
+
+In 2005, project quotas were reintroduced into Linux, but they were
+implemented to be mutually exclusive to group quotas, and so this
+didn't add any new changes to the dquot log reservation. hence when
+project quotas were in use, everything was still fine, just like
+in the Irix days.
+
+Now, with the addition of the separate project quota inode, group
+and project quotas are no longer mutually exclusive, and hence
+operations can now modify three dquots per inode where previously it
+was only two. The worst case here is the rename transaction, which
+can allocate/free space on two different directory inodes, and if
+they have different uid/gid/prid configurations and are world
+writeable, then rename can actually modify 6 different dquots now.
+
+Further, the dquot log reservation doesn't take into account the
+space used by the dquot log format structure that preceeds the dquot
+that is logged, and hence further underestimates the worst case
+log space required by dquots during a transaction.
+
+Hence the worst case log reservation needs to be increased from 3 to
+6, and it needs to take into account a log format header for each of
+those dquots.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_super.c       |    4 ++++
- fs/xfs/xfs_trans_inode.c |   11 +++++++++++
- 2 files changed, 15 insertions(+)
+ fs/xfs/xfs_quota.h       |   26 ++++++++++++++++++++++----
+ fs/xfs/xfs_trans_dquot.c |    9 ++++-----
+ 2 files changed, 26 insertions(+), 9 deletions(-)
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index f59e27f..a1587f9 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1482,6 +1482,10 @@ xfs_fs_fill_super(
- 	sb->s_time_gran = 1;
- 	set_posix_acl_flag(sb);
+diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
+index c38068f..aa4ec5a 100644
+--- a/fs/xfs/xfs_quota.h
++++ b/fs/xfs/xfs_quota.h
+@@ -108,11 +108,29 @@ typedef struct xfs_dqblk {
+ 	{ XFS_DQ_FREEING,	"FREEING" }
  
-+	/* version 5 superblocks support inode version counters. */
-+	if (XFS_SB_VERSION_NUM(&mp->m_sb) == XFS_SB_VERSION_5)
-+		sb->s_flags |= MS_I_VERSION;
-+
- 	error = xfs_mountfs(mp);
- 	if (error)
- 		goto out_filestream_unmount;
-diff --git a/fs/xfs/xfs_trans_inode.c b/fs/xfs/xfs_trans_inode.c
-index ac6d567..53dfe46 100644
---- a/fs/xfs/xfs_trans_inode.c
-+++ b/fs/xfs/xfs_trans_inode.c
-@@ -112,6 +112,17 @@ xfs_trans_log_inode(
- 	ASSERT(ip->i_itemp != NULL);
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+ /*
+- * In the worst case, when both user and group quotas are on,
+- * we can have a max of three dquots changing in a single transaction.
++ * We have the possibility of all three quota types being active at once,
++ * and hence free space modification requires modify all three current dquots in
++ * a single transaction.  For this case, we need to have a reservation of at
++ * least 3 dquots.
++ *
++ * However, a chmod operation can change both UID and GID in the one
++ * transaction, resulting in requiring {old, new} x {uid, gid} dquots to be
++ * modified. This means we need to reserve space for at least 4 dquots are the
++ * worst case reservation.
++ *
++ * And in the worst case, there's a rename operation that can be modifying up to
++ * 4 inodes with dquots attached to them. In reality, the only inodes that can
++ * have their dquots modified are the source and destination directory inodes
++ * due to directory name creation and removal. That can require space allocation
++ * and/or freeing on both directory inodes, and hence all three dquots on each
++ * inode can be modified. And if the directories are world writeable, all the
++ * dquots can be unique and so 6 dquots can be modified....
++ *
++ * And, of course, we also need to take into account the dquot log format item
++ * used to describe each dquot.
+  */
+-#define XFS_DQUOT_LOGRES(mp)	(sizeof(xfs_disk_dquot_t) * 3)
+-
++#define XFS_DQUOT_LOGRES(mp)	\
++	((sizeof(struct xfs_dq_logformat) + sizeof(struct xfs_disk_dquot)) * 6)
  
-+	/*
-+	 * First time we log the inode in a transaction, bump the inode change
-+	 * counter if it is configured for this to occur.
-+	 */
-+	if (!(ip->i_itemp->ili_item.li_desc->lid_flags & XFS_LID_DIRTY) &&
-+	    IS_I_VERSION(VFS_I(ip))) {
-+		inode_inc_iversion(VFS_I(ip));
-+		ip->i_d.di_changecount = VFS_I(ip)->i_version;
-+		flags |= XFS_ILOG_CORE;
-+	}
-+
- 	tp->t_flags |= XFS_TRANS_DIRTY;
- 	ip->i_itemp->ili_item.li_desc->lid_flags |= XFS_LID_DIRTY;
+ /*
+  * These are the structures used to lay out dquots and quotaoff
+diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
+index fec75d0..076cc25 100644
+--- a/fs/xfs/xfs_trans_dquot.c
++++ b/fs/xfs/xfs_trans_dquot.c
+@@ -292,11 +292,10 @@ xfs_trans_mod_dquot(
  
+ 
+ /*
+- * Given an array of dqtrx structures, lock all the dquots associated
+- * and join them to the transaction, provided they have been modified.
+- * We know that the highest number of dquots (of one type - usr OR grp),
+- * involved in a transaction is 2 and that both usr and grp combined - 3.
+- * So, we don't attempt to make this very generic.
++ * Given an array of dqtrx structures, lock all the dquots associated and join
++ * them to the transaction, provided they have been modified.  We know that the
++ * highest number of dquots of one type - usr, grp OR prj - involved in a
++ * transaction is 2 so we don't need to make this very generic.
+  */
+ STATIC void
+ xfs_trans_dqlockedjoin(
 -- 
 1.7.10.4
 
