@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E36BA7F90
-	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 01:05:27 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 5F5E57F9A
+	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 01:05:29 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id AB5228F8064
-	for <xfs@oss.sgi.com>; Wed, 26 Jun 2013 23:05:27 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1F664304051
+	for <xfs@oss.sgi.com>; Wed, 26 Jun 2013 23:05:29 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	Df0xajPGyA62bkid for <xfs@oss.sgi.com>;
-	Wed, 26 Jun 2013 23:05:25 -0700 (PDT)
+	AcB8sBMv9ChaUAa8 for <xfs@oss.sgi.com>;
+	Wed, 26 Jun 2013 23:05:27 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1Us5Kb-0008He-TC
-	for xfs@oss.sgi.com; Thu, 27 Jun 2013 16:05:21 +1000
+	(envelope-from <dave@fromorbit.com>) id 1Us5KW-0008HF-M9
+	for xfs@oss.sgi.com; Thu, 27 Jun 2013 16:05:16 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1Us5KR-00028l-QM
+	(envelope-from <dave@disappointment.disaster>) id 1Us5KR-00028D-Hp
 	for xfs@oss.sgi.com; Thu, 27 Jun 2013 16:05:11 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 14/15] xfs: dquot log reservations are too small
-Date: Thu, 27 Jun 2013 16:04:58 +1000
-Message-Id: <1372313099-8121-15-git-send-email-david@fromorbit.com>
+Subject: [PATCH 07/15] xfs: Introduce ordered log vector support
+Date: Thu, 27 Jun 2013 16:04:51 +1000
+Message-Id: <1372313099-8121-8-git-send-email-david@fromorbit.com>
 In-Reply-To: <1372313099-8121-1-git-send-email-david@fromorbit.com>
 References: <1372313099-8121-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,113 +38,282 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-During review of the separate project quota inode patches, it bcame
-obvious that the dquot log reservation calculation underestimated
-the number dquots that can be modified in a transaction. This has
-it's roots way back in the Irix quota implementation.
+And "ordered log vector" is a log vector that is used for
+tracking a log item through the CIL and into the AIL as part of the
+log checkpointing. These ordered log vectors are special in that
+they are not written to to journal in any way, and are not accounted
+to the checkpoint being written.
 
-That is, when quotas were first implemented in XFS, it only
-supported user and project quotas as Irix did not have group quotas.
-Hence the worst case operation involving dquot modification was
-calculated to involve 2 user dquots and 1 project dquot or 1 user
-dequot and 2 project dquots. i.e. 3 dquots. This was determined back
-in 1996, and has remained unchanged ever since.
+The reason for this behaviour is to allow operations to attach items
+to transactions and have them follow the normal transactional
+lifecycle without actually having to write them to the journal. This
+allows logging of items that track high level logical changes and
+writing them to the log, while the physical items being modified
+pass through into the AIL and pin the tail of the log (and therefore
+the logical item in the log) until all the modified items are
+physically written to disk.
 
-However, back in 2001, the Linux XFS port dropped all support for
-project quota and implmented group quotas over the top. This was
-effectively done with a search-and-replace of project with group,
-and as such the log reservation was not changed. However, with the
-advent of group quotas, chmod and rename now could modify more than
-3 dquots in a single transaction - both could modify 4 dquots. Hence
-this log reservation has been wrong for a long time.
+IOWs, it allows us to write metadata without physically logging
+every individual change but still maintain the full transactional
+integrity guarantees we currently have w.r.t. crash recovery.
 
-In 2005, project quotas were reintroduced into Linux, but they were
-implemented to be mutually exclusive to group quotas, and so this
-didn't add any new changes to the dquot log reservation. hence when
-project quotas were in use, everything was still fine, just like
-in the Irix days.
-
-Now, with the addition of the separate project quota inode, group
-and project quotas are no longer mutually exclusive, and hence
-operations can now modify three dquots per inode where previously it
-was only two. The worst case here is the rename transaction, which
-can allocate/free space on two different directory inodes, and if
-they have different uid/gid/prid configurations and are world
-writeable, then rename can actually modify 6 different dquots now.
-
-Further, the dquot log reservation doesn't take into account the
-space used by the dquot log format structure that preceeds the dquot
-that is logged, and hence further underestimates the worst case
-log space required by dquots during a transaction.
-
-Hence the worst case log reservation needs to be increased from 3 to
-6, and it needs to take into account a log format header for each of
-those dquots.
+This change modifies some of the CIL item insertion loops, as
+ordered log vectors introduce some new constraints as they don't
+track any data. One advantage of this change is that it combines
+two log vector chain walks into a single pass, so there is less
+overhead in the transaction commit pass as well. It also kills some
+unused code in the log vector walk loop when committing the CIL.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 ---
- fs/xfs/xfs_quota.h       |   26 ++++++++++++++++++++++----
- fs/xfs/xfs_trans_dquot.c |    9 ++++-----
- 2 files changed, 26 insertions(+), 9 deletions(-)
+ fs/xfs/xfs_log.c     |   22 ++++++++++++---
+ fs/xfs/xfs_log.h     |    2 ++
+ fs/xfs/xfs_log_cil.c |   75 ++++++++++++++++++++++++++++++++++----------------
+ 3 files changed, 71 insertions(+), 28 deletions(-)
 
-diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
-index c38068f..aa4ec5a 100644
---- a/fs/xfs/xfs_quota.h
-+++ b/fs/xfs/xfs_quota.h
-@@ -108,11 +108,29 @@ typedef struct xfs_dqblk {
- 	{ XFS_DQ_FREEING,	"FREEING" }
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index b345a7c..d852a2b 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -1963,6 +1963,10 @@ xlog_write_calc_vec_length(
+ 		headers++;
  
+ 	for (lv = log_vector; lv; lv = lv->lv_next) {
++		/* we don't write ordered log vectors */
++		if (lv->lv_buf_len == XFS_LOG_VEC_ORDERED)
++			continue;
++
+ 		headers += lv->lv_niovecs;
+ 
+ 		for (i = 0; i < lv->lv_niovecs; i++) {
+@@ -2216,7 +2220,7 @@ xlog_write(
+ 	index = 0;
+ 	lv = log_vector;
+ 	vecp = lv->lv_iovecp;
+-	while (lv && index < lv->lv_niovecs) {
++	while (lv && (!lv->lv_niovecs || index < lv->lv_niovecs)) {
+ 		void		*ptr;
+ 		int		log_offset;
+ 
+@@ -2236,13 +2240,22 @@ xlog_write(
+ 		 * This loop writes out as many regions as can fit in the amount
+ 		 * of space which was allocated by xlog_state_get_iclog_space().
+ 		 */
+-		while (lv && index < lv->lv_niovecs) {
+-			struct xfs_log_iovec	*reg = &vecp[index];
++		while (lv && (!lv->lv_niovecs || index < lv->lv_niovecs)) {
++			struct xfs_log_iovec	*reg;
+ 			struct xlog_op_header	*ophdr;
+ 			int			start_rec_copy;
+ 			int			copy_len;
+ 			int			copy_off;
++			bool			ordered = false;
++
++			/* ordered log vectors have no regions to write */
++			if (lv->lv_buf_len == XFS_LOG_VEC_ORDERED) {
++				ASSERT(lv->lv_niovecs == 0);
++				ordered = true;
++				goto next_lv;
++			}
+ 
++			reg = &vecp[index];
+ 			ASSERT(reg->i_len % sizeof(__int32_t) == 0);
+ 			ASSERT((unsigned long)ptr % sizeof(__int32_t) == 0);
+ 
+@@ -2302,12 +2315,13 @@ xlog_write(
+ 				break;
+ 
+ 			if (++index == lv->lv_niovecs) {
++next_lv:
+ 				lv = lv->lv_next;
+ 				index = 0;
+ 				if (lv)
+ 					vecp = lv->lv_iovecp;
+ 			}
+-			if (record_cnt == 0) {
++			if (record_cnt == 0 && ordered == false) {
+ 				if (!lv)
+ 					return 0;
+ 				break;
+diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
+index 5caee96..b20918c 100644
+--- a/fs/xfs/xfs_log.h
++++ b/fs/xfs/xfs_log.h
+@@ -105,6 +105,8 @@ struct xfs_log_vec {
+ 	int			lv_buf_len;	/* size of formatted buffer */
+ };
+ 
++#define XFS_LOG_VEC_ORDERED	(-1)
++
  /*
-- * In the worst case, when both user and group quotas are on,
-- * we can have a max of three dquots changing in a single transaction.
-+ * We have the possibility of all three quota types being active at once,
-+ * and hence free space modification requires modify all three current dquots in
-+ * a single transaction.  For this case, we need to have a reservation of at
-+ * least 3 dquots.
-+ *
-+ * However, a chmod operation can change both UID and GID in the one
-+ * transaction, resulting in requiring {old, new} x {uid, gid} dquots to be
-+ * modified. This means we need to reserve space for at least 4 dquots are the
-+ * worst case reservation.
-+ *
-+ * And in the worst case, there's a rename operation that can be modifying up to
-+ * 4 inodes with dquots attached to them. In reality, the only inodes that can
-+ * have their dquots modified are the source and destination directory inodes
-+ * due to directory name creation and removal. That can require space allocation
-+ * and/or freeing on both directory inodes, and hence all three dquots on each
-+ * inode can be modified. And if the directories are world writeable, all the
-+ * dquots can be unique and so 6 dquots can be modified....
-+ *
-+ * And, of course, we also need to take into account the dquot log format item
-+ * used to describe each dquot.
-  */
--#define XFS_DQUOT_LOGRES(mp)	(sizeof(xfs_disk_dquot_t) * 3)
+  * Structure used to pass callback function and the function's argument
+  * to the log manager.
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index d0833b5..02b9cf3 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -127,6 +127,7 @@ xlog_cil_prepare_log_vecs(
+ 		int	index;
+ 		int	len = 0;
+ 		uint	niovecs;
++		bool	ordered = false;
+ 
+ 		/* Skip items which aren't dirty in this transaction. */
+ 		if (!(lidp->lid_flags & XFS_LID_DIRTY))
+@@ -137,14 +138,30 @@ xlog_cil_prepare_log_vecs(
+ 		if (!niovecs)
+ 			continue;
+ 
++		/*
++		 * Ordered items need to be tracked but we do not wish to write
++		 * them. We need a logvec to track the object, but we do not
++		 * need an iovec or buffer to be allocated for copying data.
++		 */
++		if (niovecs == XFS_LOG_VEC_ORDERED) {
++			ordered = true;
++			niovecs = 0;
++		}
++
+ 		new_lv = kmem_zalloc(sizeof(*new_lv) +
+ 				niovecs * sizeof(struct xfs_log_iovec),
+ 				KM_SLEEP|KM_NOFS);
+ 
++		new_lv->lv_item = lidp->lid_item;
++		new_lv->lv_niovecs = niovecs;
++		if (ordered) {
++			/* track as an ordered logvec */
++			new_lv->lv_buf_len = XFS_LOG_VEC_ORDERED;
++			goto next;
++		}
++
+ 		/* The allocated iovec region lies beyond the log vector. */
+ 		new_lv->lv_iovecp = (struct xfs_log_iovec *)&new_lv[1];
+-		new_lv->lv_niovecs = niovecs;
+-		new_lv->lv_item = lidp->lid_item;
+ 
+ 		/* build the vector array and calculate it's length */
+ 		IOP_FORMAT(new_lv->lv_item, new_lv->lv_iovecp);
+@@ -165,6 +182,7 @@ xlog_cil_prepare_log_vecs(
+ 		}
+ 		ASSERT(ptr == new_lv->lv_buf + new_lv->lv_buf_len);
+ 
++next:
+ 		if (!ret_lv)
+ 			ret_lv = new_lv;
+ 		else
+@@ -191,8 +209,18 @@ xfs_cil_prepare_item(
+ 
+ 	if (old) {
+ 		/* existing lv on log item, space used is a delta */
+-		ASSERT(!list_empty(&lv->lv_item->li_cil));
+-		ASSERT(old->lv_buf && old->lv_buf_len && old->lv_niovecs);
++		ASSERT((old->lv_buf && old->lv_buf_len && old->lv_niovecs) ||
++			old->lv_buf_len == XFS_LOG_VEC_ORDERED);
++
++		/*
++		 * If the new item is ordered, keep the old one that is already
++		 * tracking dirty or ordered regions
++		 */
++		if (lv->lv_buf_len == XFS_LOG_VEC_ORDERED) {
++			ASSERT(!lv->lv_buf);
++			kmem_free(lv);
++			return;
++		}
+ 
+ 		*len += lv->lv_buf_len - old->lv_buf_len;
+ 		*diff_iovecs += lv->lv_niovecs - old->lv_niovecs;
+@@ -201,10 +229,11 @@ xfs_cil_prepare_item(
+ 	} else {
+ 		/* new lv, must pin the log item */
+ 		ASSERT(!lv->lv_item->li_lv);
+-		ASSERT(list_empty(&lv->lv_item->li_cil));
+ 
+-		*len += lv->lv_buf_len;
+-		*diff_iovecs += lv->lv_niovecs;
++		if (lv->lv_buf_len != XFS_LOG_VEC_ORDERED) {
++			*len += lv->lv_buf_len;
++			*diff_iovecs += lv->lv_niovecs;
++		}
+ 		IOP_PIN(lv->lv_item);
+ 
+ 	}
+@@ -259,18 +288,24 @@ xlog_cil_insert_items(
+ 	 * We can do this safely because the context can't checkpoint until we
+ 	 * are done so it doesn't matter exactly how we update the CIL.
+ 	 */
+-	for (lv = log_vector; lv; lv = lv->lv_next)
+-		xfs_cil_prepare_item(log, lv, &len, &diff_iovecs);
 -
-+#define XFS_DQUOT_LOGRES(mp)	\
-+	((sizeof(struct xfs_dq_logformat) + sizeof(struct xfs_disk_dquot)) * 6)
+-	/* account for space used by new iovec headers  */
+-	len += diff_iovecs * sizeof(xlog_op_header_t);
+-
+ 	spin_lock(&cil->xc_cil_lock);
++	for (lv = log_vector; lv; ) {
++		struct xfs_log_vec *next = lv->lv_next;
  
- /*
-  * These are the structures used to lay out dquots and quotaoff
-diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
-index fec75d0..076cc25 100644
---- a/fs/xfs/xfs_trans_dquot.c
-+++ b/fs/xfs/xfs_trans_dquot.c
-@@ -292,11 +292,10 @@ xfs_trans_mod_dquot(
+-	/* move the items to the tail of the CIL */
+-	for (lv = log_vector; lv; lv = lv->lv_next)
++		ASSERT(lv->lv_item->li_lv || list_empty(&lv->lv_item->li_cil));
++		lv->lv_next = NULL;
++
++		/*
++		 * xfs_cil_prepare_item() may free the lv, so move the item on
++		 * the CIL first.
++		 */
+ 		list_move_tail(&lv->lv_item->li_cil, &cil->xc_cil);
++		xfs_cil_prepare_item(log, lv, &len, &diff_iovecs);
++		lv = next;
++	}
  
++	/* account for space used by new iovec headers  */
++	len += diff_iovecs * sizeof(xlog_op_header_t);
+ 	ctx->nvecs += diff_iovecs;
  
- /*
-- * Given an array of dqtrx structures, lock all the dquots associated
-- * and join them to the transaction, provided they have been modified.
-- * We know that the highest number of dquots (of one type - usr OR grp),
-- * involved in a transaction is 2 and that both usr and grp combined - 3.
-- * So, we don't attempt to make this very generic.
-+ * Given an array of dqtrx structures, lock all the dquots associated and join
-+ * them to the transaction, provided they have been modified.  We know that the
-+ * highest number of dquots of one type - usr, grp OR prj - involved in a
-+ * transaction is 2 so we don't need to make this very generic.
-  */
- STATIC void
- xfs_trans_dqlockedjoin(
+ 	/*
+@@ -381,9 +416,7 @@ xlog_cil_push(
+ 	struct xfs_cil_ctx	*new_ctx;
+ 	struct xlog_in_core	*commit_iclog;
+ 	struct xlog_ticket	*tic;
+-	int			num_lv;
+ 	int			num_iovecs;
+-	int			len;
+ 	int			error = 0;
+ 	struct xfs_trans_header thdr;
+ 	struct xfs_log_iovec	lhdr;
+@@ -428,12 +461,9 @@ xlog_cil_push(
+ 	 * side which is currently locked out by the flush lock.
+ 	 */
+ 	lv = NULL;
+-	num_lv = 0;
+ 	num_iovecs = 0;
+-	len = 0;
+ 	while (!list_empty(&cil->xc_cil)) {
+ 		struct xfs_log_item	*item;
+-		int			i;
+ 
+ 		item = list_first_entry(&cil->xc_cil,
+ 					struct xfs_log_item, li_cil);
+@@ -444,11 +474,7 @@ xlog_cil_push(
+ 			lv->lv_next = item->li_lv;
+ 		lv = item->li_lv;
+ 		item->li_lv = NULL;
+-
+-		num_lv++;
+ 		num_iovecs += lv->lv_niovecs;
+-		for (i = 0; i < lv->lv_niovecs; i++)
+-			len += lv->lv_iovecp[i].i_len;
+ 	}
+ 
+ 	/*
+@@ -701,6 +727,7 @@ xfs_log_commit_cil(
+ 	if (commit_lsn)
+ 		*commit_lsn = log->l_cilp->xc_ctx->sequence;
+ 
++	/* xlog_cil_insert_items() destroys log_vector list */
+ 	xlog_cil_insert_items(log, log_vector, tp->t_ticket);
+ 
+ 	/* check we didn't blow the reservation */
 -- 
 1.7.10.4
 
