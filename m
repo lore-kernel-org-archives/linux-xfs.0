@@ -1,25 +1,36 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B2E137F3F
-	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 15:58:01 -0500 (CDT)
-Date: Thu, 27 Jun 2013 15:57:58 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH v2 RFC] userns: Convert xfs to use kuid/kgid where
-	appropriate
-Message-ID: <20130627205758.GQ20932@sgi.com>
-References: <20130619110948.0bfafa2b@oracle.com>
-	<20130620001341.GM29338@dastard>
-	<20130620095410.1917d235@oracle.com>
-	<20130620220311.GT29376@dastard>
-	<20130621111420.5592707e@oracle.com>
-	<20130624003316.GH29376@dastard>
-	<20130624091035.6274800f@oracle.com>
-	<20130626020924.GD29376@dastard>
-	<20130626173017.5100327a@oracle.com>
-	<20130626224410.GB28426@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130626224410.GB28426@dastard>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 9B5E87F52
+	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 17:25:28 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 382BCAC001
+	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 15:25:28 -0700 (PDT)
+Received: from e35.co.us.ibm.com (e35.co.us.ibm.com [32.97.110.153]) by
+	cuda.sgi.com with ESMTP id AiOV8dTvTbdCqK0Z (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 27 Jun 2013 15:25:27 -0700 (PDT)
+Received: from /spool/local
+	by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	Violators will be prosecuted
+	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
+	Thu, 27 Jun 2013 16:25:26 -0600
+Received: from d03relay01.boulder.ibm.com (d03relay01.boulder.ibm.com
+	[9.17.195.226])
+	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id D9B401FF001D
+	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 16:20:08 -0600 (MDT)
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay01.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	r5RMPO7P160768 for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 16:25:24 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id r5RMPOtN018490
+	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 16:25:24 -0600
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: [PATCH v10 02/11] xfs: Replace macro XFS_DQUOT_TREE with a function
+Date: Thu, 27 Jun 2013 17:25:05 -0500
+Message-Id: <1372371914-11370-3-git-send-email-sekharan@us.ibm.com>
+In-Reply-To: <1372371914-11370-1-git-send-email-sekharan@us.ibm.com>
+References: <1372371914-11370-1-git-send-email-sekharan@us.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,70 +39,103 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Eric W. Biederman" <ebiederm@gmail.com>, Brian Foster <bfoster@redhat.com>, Serge Hallyn <serge.hallyn@ubuntu.com>, Dwight Engen <dwight.engen@oracle.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Chandra Seetharaman <sekharan@us.ibm.com>
 
-Hey,
+In preparation for combined pquota/gquota support, for the sake
+of readability, change the macro to an inline function.
 
-On Thu, Jun 27, 2013 at 08:44:10AM +1000, Dave Chinner wrote:
-> On Wed, Jun 26, 2013 at 05:30:17PM -0400, Dwight Engen wrote:
-> > On Wed, 26 Jun 2013 12:09:24 +1000
-> > Dave Chinner <david@fromorbit.com> wrote:
-> > > On Mon, Jun 24, 2013 at 09:10:35AM -0400, Dwight Engen wrote:
-> > > > Should we just require that callers of bulkstat
-> > > > be in init_user_ns? Thoughts?
-> > > 
-> > > This is one of the reasons why I want Eric to give us some idea of
-> > > how this is supposed to work - exactly how is backup and restore
-> > > supposed to be managed on a shared filesystem that is segmented up
-> > > into multiple namespace containers? We can talk about the
-> > > implementation all we like, but none of us have a clue to the policy
-> > > decisions that users will make that we need to support. Until we
-> > > have a clear idea on what policies we are supposed to be supporting,
-> > > the implementation will be ambiguous and compromised.
-> > > 
-> > > e.g. If users are responsible for it, then bulkstat needs to filter
-> > > based on the current namespace. If management is responsible (i.e.
-> > > init_user_ns does backup/restore of ns-specific subtrees), then
-> > > bulkstat cannot filter and needs to reject calls from outside the
-> > > init_user_ns().
-> > 
-> > Maybe we can have bulkstat always filter based on if the caller
-> > kuid_has_mapping(current_user_ns(), inode->i_uid)? That way a caller
-> > from init_user_ns can see them all, but callers from inside a userns
-> > will get a subset of inodes returned?
-> 
-> We could do that, though it means bulkstat is going to be a *lot
-> slower* when called from within a user namespace environment. A
-> namespace might only have a few thousand files for backup, yet the
-> underlying filesystem might have tens of millions of inodes in it.
-> The bulkstat call now has to walk all of the inodes just to find the
-> few thousand that match the filter. And multiply that by the number
-> of namespaces all doing backups at 3am in the morning and you start
-> to get an idea of the scope of the problem....
+Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+---
+ fs/xfs/xfs_dquot.c |    2 +-
+ fs/xfs/xfs_qm.c    |    6 +++---
+ fs/xfs/xfs_qm.h    |   22 ++++++++++++++++------
+ 3 files changed, 20 insertions(+), 10 deletions(-)
 
-Ugh.  That really doesn't map well onto bulkstat.  If we wanted bulkstat to
-work well with namespaces, we might have to teach the filesystem a bit more
-about them in order to create the required indices per namespace.  While a
-filter might get the job done in a pinch, wouldn't you really rather have an
-inobt?  ;)
-
-To build that inobt you'd have to know whether a given directory was the root
-of a new namespace.  Maybe implementable as some kind of flag, 'everything
-below this dir is part of its own namespace, put it in this inobt'.  And then
-you'd have to have a way for bulkstat to know to look there, e.g. if the caller
-is not in init_user_ns and if the initial inode had the flag, use the inobt on
-that initial inode for bulkstat instead of the regular inobts.  Crazy.  Could
-be done.
-
-Initially, requiring bulkstat callers to be in init_user_ns is ok.  It just
-doesn't suit everyone's needs..
-
--Ben
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index 044e97a..09af322 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -804,7 +804,7 @@ xfs_qm_dqget(
+ 	xfs_dquot_t	**O_dqpp) /* OUT : locked incore dquot */
+ {
+ 	struct xfs_quotainfo	*qi = mp->m_quotainfo;
+-	struct radix_tree_root *tree = XFS_DQUOT_TREE(qi, type);
++	struct radix_tree_root *tree = xfs_dquot_tree(qi, type);
+ 	struct xfs_dquot	*dqp;
+ 	int			error;
+ 
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 28a5e8a..8e707d3 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -70,7 +70,7 @@ xfs_qm_dquot_walk(
+ 	void			*data)
+ {
+ 	struct xfs_quotainfo	*qi = mp->m_quotainfo;
+-	struct radix_tree_root	*tree = XFS_DQUOT_TREE(qi, type);
++	struct radix_tree_root	*tree = xfs_dquot_tree(qi, type);
+ 	uint32_t		next_index;
+ 	int			last_error = 0;
+ 	int			skipped;
+@@ -189,7 +189,7 @@ xfs_qm_dqpurge(
+ 	xfs_dqfunlock(dqp);
+ 	xfs_dqunlock(dqp);
+ 
+-	radix_tree_delete(XFS_DQUOT_TREE(qi, dqp->q_core.d_flags),
++	radix_tree_delete(xfs_dquot_tree(qi, dqp->q_core.d_flags),
+ 			  be32_to_cpu(dqp->q_core.d_id));
+ 	qi->qi_dquots--;
+ 
+@@ -1471,7 +1471,7 @@ xfs_qm_dqfree_one(
+ 	struct xfs_quotainfo	*qi = mp->m_quotainfo;
+ 
+ 	mutex_lock(&qi->qi_tree_lock);
+-	radix_tree_delete(XFS_DQUOT_TREE(qi, dqp->q_core.d_flags),
++	radix_tree_delete(xfs_dquot_tree(qi, dqp->q_core.d_flags),
+ 			  be32_to_cpu(dqp->q_core.d_id));
+ 
+ 	qi->qi_dquots--;
+diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
+index 5d16a6e..96568c2 100644
+--- a/fs/xfs/xfs_qm.h
++++ b/fs/xfs/xfs_qm.h
+@@ -69,12 +69,22 @@ typedef struct xfs_quotainfo {
+ 	struct shrinker  qi_shrinker;
+ } xfs_quotainfo_t;
+ 
+-#define XFS_DQUOT_TREE(qi, type) \
+-	((type & XFS_DQ_USER) ? \
+-	 &((qi)->qi_uquota_tree) : \
+-	 &((qi)->qi_gquota_tree))
+-
+-
++static inline struct radix_tree_root *
++xfs_dquot_tree(
++	struct xfs_quotainfo	*qi,
++	int			type)
++{
++	switch (type) {
++	case XFS_DQ_USER:
++		return &qi->qi_uquota_tree;
++	case XFS_DQ_GROUP:
++	case XFS_DQ_PROJ:
++		return &qi->qi_gquota_tree;
++	default:
++		ASSERT(0);
++	}
++	return NULL;
++}
+ extern int	xfs_qm_calc_dquots_per_chunk(struct xfs_mount *mp,
+ 					     unsigned int nbblks);
+ extern void	xfs_trans_mod_dquot(xfs_trans_t *, xfs_dquot_t *, uint, long);
+-- 
+1.7.1
 
 _______________________________________________
 xfs mailing list
