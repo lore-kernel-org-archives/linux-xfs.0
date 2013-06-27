@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, master,
+Subject: [XFS updates] XFS development tree branch, for-next,
 	updated. v3.10-rc1-54-gddf6ad0
-Message-Id: <20130627194537.574397F4E@oss.sgi.com>
-Date: Thu, 27 Jun 2013 14:45:36 -0500 (CDT)
+Message-Id: <20130627194548.D06707F53@oss.sgi.com>
+Date: Thu, 27 Jun 2013 14:45:48 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,7 +23,7 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, master has been updated
+The branch, for-next has been updated
   ddf6ad0 xfs: Use inode create transaction
   28c8e41 xfs: Inode create item recovery
   b8402b4 xfs: Inode create transaction reservations
