@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4F3597F74
+	by oss.sgi.com (Postfix) with ESMTP id A57E67F78
 	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 01:05:13 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3B0C98F8049
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3E3C48F804B
 	for <xfs@oss.sgi.com>; Wed, 26 Jun 2013 23:05:10 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	ZCDPDeyNSB9xYqS4 for <xfs@oss.sgi.com>;
+	Xe6vIB2qeCn1CSHR for <xfs@oss.sgi.com>;
 	Wed, 26 Jun 2013 23:05:08 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1Us5KH-0008Gu-Jr
+	(envelope-from <dave@fromorbit.com>) id 1Us5KH-0008Gm-Fx
 	for xfs@oss.sgi.com; Thu, 27 Jun 2013 16:05:01 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1Us5KH-000288-Gz
+	(envelope-from <dave@disappointment.disaster>) id 1Us5KH-00027p-Cx
 	for xfs@oss.sgi.com; Thu, 27 Jun 2013 16:05:01 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 06/15] xfs: xfs_ifree doesn't need to modify the inode buffer
-Date: Thu, 27 Jun 2013 16:04:50 +1000
-Message-Id: <1372313099-8121-7-git-send-email-david@fromorbit.com>
+Subject: [PATCH 02/15] xfs: add pluging for bulkstat readahead
+Date: Thu, 27 Jun 2013 16:04:46 +1000
+Message-Id: <1372313099-8121-3-git-send-email-david@fromorbit.com>
 In-Reply-To: <1372313099-8121-1-git-send-email-david@fromorbit.com>
 References: <1372313099-8121-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,84 +38,55 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Long ago, bulkstat used to read inodes directly fromteh backing
-buffer for speed. This had the unfortunate problem of being cache
-incoherent with unlinks, and so xfs_ifree() had to mark the inode
-as free directly in the backing buffer. bulkstat was changed some
-time ago to use inode cache coherent lookups, and so will never see
-unlinked inodes in it's lookups. Hence xfs_ifree() does not need to
-touch the inode backing buffer anymore.
+I was running some tests on bulkstat on CRC enabled filesystems when
+I noticed that all the IO being issued was 8k in size, regardless of
+the fact taht we are issuing sequential 8k buffers for inodes
+clusters. The IO size shoul dbe 16k for 256 byte inodes, and 32k for
+512 byte inodes, but this wasn't happening.
+
+blktrace showed that there was an explict plug and unplug happening
+around each readahead IO from _xfs_buf_ioapply, and the unplug was
+causing the IO to be issued immediately. Hence no opportunity was
+being given to the elevator to merge adjacent readahead requests and
+dispatch them as a single IO.
+
+Add plugging around the inode chunk readahead dispatch loop tin
+bulkstat to ensure that we don't unplug the queue between adjacent
+inode buffer readahead IOs and so we get fewer, larger IO requests
+hitting the storage subsystemi for bulkstat.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 ---
- fs/xfs/xfs_inode.c |   32 ++++----------------------------
- 1 file changed, 4 insertions(+), 28 deletions(-)
+ fs/xfs/xfs_itable.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index d1f76da..9ecfe1e 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2048,8 +2048,6 @@ xfs_ifree(
- 	int			error;
- 	int			delete;
- 	xfs_ino_t		first_ino;
--	xfs_dinode_t    	*dip;
--	xfs_buf_t       	*ibp;
- 
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
- 	ASSERT(ip->i_d.di_nlink == 0);
-@@ -2062,14 +2060,13 @@ xfs_ifree(
- 	 * Pull the on-disk inode from the AGI unlinked list.
- 	 */
- 	error = xfs_iunlink_remove(tp, ip);
--	if (error != 0) {
-+	if (error)
- 		return error;
--	}
- 
- 	error = xfs_difree(tp, ip->i_ino, flist, &delete, &first_ino);
--	if (error != 0) {
-+	if (error)
- 		return error;
--	}
-+
- 	ip->i_d.di_mode = 0;		/* mark incore inode as free */
- 	ip->i_d.di_flags = 0;
- 	ip->i_d.di_dmevmask = 0;
-@@ -2081,31 +2078,10 @@ xfs_ifree(
- 	 * by reincarnations of this inode.
- 	 */
- 	ip->i_d.di_gen++;
--
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 
--	error = xfs_imap_to_bp(ip->i_mount, tp, &ip->i_imap, &dip, &ibp,
--			       0, 0);
--	if (error)
--		return error;
--
--        /*
--	* Clear the on-disk di_mode. This is to prevent xfs_bulkstat
--	* from picking up this inode when it is reclaimed (its incore state
--	* initialzed but not flushed to disk yet). The in-core di_mode is
--	* already cleared  and a corresponding transaction logged.
--	* The hack here just synchronizes the in-core to on-disk
--	* di_mode value in advance before the actual inode sync to disk.
--	* This is OK because the inode is already unlinked and would never
--	* change its di_mode again for this inode generation.
--	* This is a temporary hack that would require a proper fix
--	* in the future.
--	*/
--	dip->di_mode = 0;
--
--	if (delete) {
-+	if (delete)
- 		error = xfs_ifree_cluster(ip, tp, first_ino);
--	}
- 
- 	return error;
- }
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+index 2ea7d40..06d004d 100644
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -383,11 +383,13 @@ xfs_bulkstat(
+ 			 * Also start read-ahead now for this chunk.
+ 			 */
+ 			if (r.ir_freecount < XFS_INODES_PER_CHUNK) {
++				struct blk_plug	plug;
+ 				/*
+ 				 * Loop over all clusters in the next chunk.
+ 				 * Do a readahead if there are any allocated
+ 				 * inodes in that cluster.
+ 				 */
++				blk_start_plug(&plug);
+ 				agbno = XFS_AGINO_TO_AGBNO(mp, r.ir_startino);
+ 				for (chunkidx = 0;
+ 				     chunkidx < XFS_INODES_PER_CHUNK;
+@@ -399,6 +401,7 @@ xfs_bulkstat(
+ 							agbno, nbcluster,
+ 							&xfs_inode_buf_ops);
+ 				}
++				blk_finish_plug(&plug);
+ 				irbp->ir_startino = r.ir_startino;
+ 				irbp->ir_freecount = r.ir_freecount;
+ 				irbp->ir_free = r.ir_free;
 -- 
 1.7.10.4
 
