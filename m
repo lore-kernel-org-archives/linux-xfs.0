@@ -1,21 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5992D7F7D
-	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 02:26:44 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 216FD8F8037
-	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 00:26:41 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id zlKllQmccOI9I3fd (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 27 Jun 2013 00:26:39 -0700 (PDT)
-Message-ID: <51CBEA31.1020302@oracle.com>
-Date: Thu, 27 Jun 2013 15:30:57 +0800
-From: Anand Jain <Anand.Jain@oracle.com>
+	by oss.sgi.com (Postfix) with ESMTP id 4C9817F3F
+	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 08:02:19 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 275BA8F804B
+	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 06:02:15 -0700 (PDT)
+Received: from youngberry.canonical.com (youngberry.canonical.com
+	[91.189.89.112]) by cuda.sgi.com with ESMTP id iK7WMFh8w3SwTPQl
+	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 06:02:14 -0700 (PDT)
+Date: Thu, 27 Jun 2013 08:02:05 -0500
+From: Serge Hallyn <serge.hallyn@ubuntu.com>
+Subject: Re: [PATCH v2 RFC] userns: Convert xfs to use kuid/kgid where
+	appropriate
+Message-ID: <20130627130205.GA4003@sergelap>
+References: <20130619110948.0bfafa2b@oracle.com>
+	<20130620001341.GM29338@dastard>
+	<20130620095410.1917d235@oracle.com>
+	<20130620220311.GT29376@dastard>
+	<20130621111420.5592707e@oracle.com>
+	<20130624003316.GH29376@dastard>
+	<20130624091035.6274800f@oracle.com>
+	<20130626020924.GD29376@dastard>
+	<20130626173017.5100327a@oracle.com>
+	<20130626224410.GB28426@dastard>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: fix SCRATCH_DEV_POOL mount/umount issues
-References: <1372298261-16801-1-git-send-email-jbacik@fusionio.com>
-In-Reply-To: <1372298261-16801-1-git-send-email-jbacik@fusionio.com>
+Content-Disposition: inline
+In-Reply-To: <20130626224410.GB28426@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,100 +34,51 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Josef Bacik <jbacik@fusionio.com>
-Cc: sandeen@redhat.com, zab@redhat.com, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Eric W. Biederman" <ebiederm@gmail.com>, Brian Foster <bfoster@redhat.com>, Dwight Engen <dwight.engen@oracle.com>, xfs@oss.sgi.com
 
+Quoting Dave Chinner (david@fromorbit.com):
+> On Wed, Jun 26, 2013 at 05:30:17PM -0400, Dwight Engen wrote:
+> > On Wed, 26 Jun 2013 12:09:24 +1000
+> > Dave Chinner <david@fromorbit.com> wrote:
+> > > > We do need to decide on the di_uid that comes back from bulkstat.
+> > > > Right now it is returning on disk (== init_user_ns) uids. It looks
+> > > > to me like xfsrestore is using the normal vfs routines (chown,
 
+I might not be helpful here, (as despite having used xfs for years
+I've not used these features) but feel like I should try based on
+what I see in the manpages.  Here is my understanding:
 
-On 06/27/2013 09:57 AM, Josef Bacik wrote:
-> If you use the SCRATCH_DEV_POOL for btrfs you will end up with the command line
-> like this
->
-> mkfs.btrfs $SCRATCH_DEV_POOL $SCRATCH_DEV
+Assume you're a task in a child userns, where you have host uids
+100000-110000 mapped to container uids 0-10000,
 
-> and btrfs does this thing where it makes the lowest valued device id show up in
-> /proc/mounts no matter which device you specify at the mount command.  So in
-> this case mount will show the first device in $SCRATCH_DEV_POOL instead of
-> $SCRATCH_DEV,
+1. bulkstat is an xfs_ioctl command, right?  It should return the mapped
+uids (0-10000).
 
-  The first item in the SCRATCH_DEV_POOL is assigned to SCRATCH_DEV.
-  The remaining will be used where more than one disk is needed.
+2. xfsdump should store the uids as seen in the caller's namespace.  If
+xfsdump is done from the container, the dump should show uids 0-10000.
 
-> so anybody who wants to just use the scratch mnt with the scratch
-> dev will fail to work because we never unmount the scratch mount.
+3. xfsrestore should use be run from the desired namespace.  If you did
+xfsdump from the host ns, you should then xfsrestore from the host ns.
+Then inside the container those uids (100000-110000) will be mapped
+to your uids (0-10000).
 
+4. If you xfsdump in this container, then xfsrestore in another
+container where you have 200000-210000 mapped to 0-10000, the dump
+image will have uids 0-10000.  The restored image will have container
+uids 0-10000, while on the underlying host media it will be uids
+200000-210000.
 
->  Fix this by
-> checking to see if the scratch dev pool is mounted at scratch mnt and unmount it
-> so we can run our test.  Also fix scratch_unmount to call umount $SCRATCH_MNT
-> instead of unmount $SCRATCH_DEV so it doesn't screw up with tests that use
-> $SCRATCH_DEV_POOL.  This fixes the issue I was seeing by running
->
-> ./check btrfs/307 generic/015
->
-> Thanks,
->
-> Signed-off-by: Josef Bacik <jbacik@fusionio.com>
-> ---
->   common/rc |   19 ++++++++++++++++++-
->   1 files changed, 18 insertions(+), 1 deletions(-)
->
-> diff --git a/common/rc b/common/rc
-> index ad7cbc9..6e3ad65 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -280,7 +280,7 @@ _scratch_mount()
->
->   _scratch_unmount()
->   {
-> -    $UMOUNT_PROG $SCRATCH_DEV
-> +    $UMOUNT_PROG $SCRATCH_MNT
->   }
+5. If you xfsdump in this container then xfsrestore on the host, then
+the host uids 0-10000 will be used on the underlying media.  The
+container would be unable to read this files as the uids do not map
+into the container.
 
-  This will fix the above problem for the reason mentioned.
-
->   _scratch_remount()
-> @@ -938,6 +938,8 @@ _supported_os()
->   #
->   _require_scratch()
->   {
-> +    local i
-> +
->       case "$FSTYP" in
->   	nfs*)
->   		 echo $SCRATCH_DEV | grep -q ":" > /dev/null 2>&1
-> @@ -978,6 +980,21 @@ _require_scratch()
->               exit 1
->           fi
->       fi
-> +
-> +    # we may have a scratch dev pool specified, so make sure it's been unmounted
-> +    # from the scratch mount
-> +    for i in $SCRATCH_DEV_POOL; do
-> +        if _mount | grep -q $i; then
-> +            if ! _mount | grep $i | grep -q $SCRATCH_MNT; then
-> +                echo "\$SCRATCH_DEV_POOL is mounted but not on \$SCRATCH_MNT - aborting"
-> +                exit 1
-> +            fi
-> +            if ! $UMOUNT_PROG $i; then
-> +                echo "failed to umount $i - aborting"
-> +                exit 1
-> +            fi
-> +        fi
-> +    done
->   }
-
-   This looks some additional checks beyond the fix for above problem.
-   Or did I miss something ? Further _is_mounted() can be used here.
-
-
-
-Thanks
-Anand
+-serge
 
 _______________________________________________
 xfs mailing list
