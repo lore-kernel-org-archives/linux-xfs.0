@@ -1,35 +1,34 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8B7187F60
-	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 17:25:33 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 146E6AC001
-	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 15:25:33 -0700 (PDT)
-Received: from e34.co.us.ibm.com (e34.co.us.ibm.com [32.97.110.152]) by
-	cuda.sgi.com with ESMTP id Jo9Ca4OkR6Cpt03i (version=TLSv1
+	by oss.sgi.com (Postfix) with ESMTP id 9C6CA7F69
+	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 17:25:36 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id EAB2EAC007
+	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 15:25:35 -0700 (PDT)
+Received: from e39.co.us.ibm.com (e39.co.us.ibm.com [32.97.110.160]) by
+	cuda.sgi.com with ESMTP id C4HTYfnrRIEF6CvY (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 27 Jun 2013 15:25:32 -0700 (PDT)
+	Thu, 27 Jun 2013 15:25:34 -0700 (PDT)
 Received: from /spool/local
-	by e34.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	by e39.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
 	Violators will be prosecuted
 	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
-	Thu, 27 Jun 2013 16:25:31 -0600
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com
-	[9.17.195.106])
-	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id 975DC1FF001B
-	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 16:20:12 -0600 (MDT)
+	Thu, 27 Jun 2013 16:25:34 -0600
+Received: from d03relay05.boulder.ibm.com (d03relay05.boulder.ibm.com
+	[9.17.195.107])
+	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id 5C8E51FF001E
+	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 16:20:14 -0600 (MDT)
 Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	r5RMPS7g358652 for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 16:25:28 -0600
+	by d03relay05.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	r5RMPQOZ120224 for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 16:25:28 -0600
 Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
 	by d03av02.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
-	id r5RMPSsG018696
-	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 16:25:28 -0600
+	id r5RMPPIt018544
+	for <xfs@oss.sgi.com>; Thu, 27 Jun 2013 16:25:26 -0600
 From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: [PATCH v10 05/11] xfs: Do some whitespace cleanup in the data
-	structure xfs_quotainfo
-Date: Thu, 27 Jun 2013 17:25:08 -0500
-Message-Id: <1372371914-11370-6-git-send-email-sekharan@us.ibm.com>
+Subject: [PATCH v10 03/11] xfs: Replace macro XFS_DQ_TO_QIP with a function
+Date: Thu, 27 Jun 2013 17:25:06 -0500
+Message-Id: <1372371914-11370-4-git-send-email-sekharan@us.ibm.com>
 In-Reply-To: <1372371914-11370-1-git-send-email-sekharan@us.ibm.com>
 References: <1372371914-11370-1-git-send-email-sekharan@us.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -48,75 +47,71 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Chandra Seetharaman <sekharan@us.ibm.com>
 
-In preparation for combined pquota/gquota support, do some
-whitespace cleanups.
+In preparation for combined pquota/gquota support, for the sake
+of readability, change the macro to an inline function.
 
 Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
 ---
- fs/xfs/xfs_qm.h |   50 +++++++++++++++++++++++++-------------------------
- 1 files changed, 25 insertions(+), 25 deletions(-)
+ fs/xfs/xfs_dquot.c |    2 +-
+ fs/xfs/xfs_dquot.h |    4 ----
+ fs/xfs/xfs_qm.h    |   16 ++++++++++++++++
+ 3 files changed, 17 insertions(+), 5 deletions(-)
 
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index 09af322..7d184de 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -573,7 +573,7 @@ xfs_qm_dqtobp(
+ 	xfs_bmbt_irec_t map;
+ 	int		nmaps = 1, error;
+ 	xfs_buf_t	*bp;
+-	xfs_inode_t	*quotip = XFS_DQ_TO_QIP(dqp);
++	struct xfs_inode	*quotip = xfs_dq_to_quota_inode(dqp);
+ 	xfs_mount_t	*mp = dqp->q_mount;
+ 	xfs_dqid_t	id = be32_to_cpu(dqp->q_core.d_id);
+ 	xfs_trans_t	*tp = (tpp ? *tpp : NULL);
+diff --git a/fs/xfs/xfs_dquot.h b/fs/xfs/xfs_dquot.h
+index 4f0ebfc..b596626 100644
+--- a/fs/xfs/xfs_dquot.h
++++ b/fs/xfs/xfs_dquot.h
+@@ -143,10 +143,6 @@ static inline xfs_dquot_t *xfs_inode_dquot(struct xfs_inode *ip, int type)
+ #define XFS_QM_ISUDQ(dqp)	((dqp)->dq_flags & XFS_DQ_USER)
+ #define XFS_QM_ISPDQ(dqp)	((dqp)->dq_flags & XFS_DQ_PROJ)
+ #define XFS_QM_ISGDQ(dqp)	((dqp)->dq_flags & XFS_DQ_GROUP)
+-#define XFS_DQ_TO_QINF(dqp)	((dqp)->q_mount->m_quotainfo)
+-#define XFS_DQ_TO_QIP(dqp)	(XFS_QM_ISUDQ(dqp) ? \
+-				 XFS_DQ_TO_QINF(dqp)->qi_uquotaip : \
+-				 XFS_DQ_TO_QINF(dqp)->qi_gquotaip)
+ 
+ extern int		xfs_qm_dqread(struct xfs_mount *, xfs_dqid_t, uint,
+ 					uint, struct xfs_dquot	**);
 diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
-index 978bbb1..d6d71f0 100644
+index 96568c2..051e43a 100644
 --- a/fs/xfs/xfs_qm.h
 +++ b/fs/xfs/xfs_qm.h
-@@ -42,31 +42,31 @@ extern struct kmem_zone	*xfs_qm_dqtrxzone;
-  * The mount structure keeps a pointer to this.
-  */
- typedef struct xfs_quotainfo {
--	struct radix_tree_root qi_uquota_tree;
--	struct radix_tree_root qi_gquota_tree;
--	struct mutex qi_tree_lock;
--	xfs_inode_t	*qi_uquotaip;	 /* user quota inode */
--	xfs_inode_t	*qi_gquotaip;	 /* group quota inode */
--	struct list_head qi_lru_list;
--	struct mutex	 qi_lru_lock;
--	int		 qi_lru_count;
--	int		 qi_dquots;
--	time_t		 qi_btimelimit;	 /* limit for blks timer */
--	time_t		 qi_itimelimit;	 /* limit for inodes timer */
--	time_t		 qi_rtbtimelimit;/* limit for rt blks timer */
--	xfs_qwarncnt_t	 qi_bwarnlimit;	 /* limit for blks warnings */
--	xfs_qwarncnt_t	 qi_iwarnlimit;	 /* limit for inodes warnings */
--	xfs_qwarncnt_t	 qi_rtbwarnlimit;/* limit for rt blks warnings */
--	struct mutex	 qi_quotaofflock;/* to serialize quotaoff */
--	xfs_filblks_t	 qi_dqchunklen;	 /* # BBs in a chunk of dqs */
--	uint		 qi_dqperchunk;	 /* # ondisk dqs in above chunk */
--	xfs_qcnt_t	 qi_bhardlimit;	 /* default data blk hard limit */
--	xfs_qcnt_t	 qi_bsoftlimit;	 /* default data blk soft limit */
--	xfs_qcnt_t	 qi_ihardlimit;	 /* default inode count hard limit */
--	xfs_qcnt_t	 qi_isoftlimit;	 /* default inode count soft limit */
--	xfs_qcnt_t	 qi_rtbhardlimit;/* default realtime blk hard limit */
--	xfs_qcnt_t	 qi_rtbsoftlimit;/* default realtime blk soft limit */
--	struct shrinker  qi_shrinker;
-+	struct radix_tree_root	qi_uquota_tree;
-+	struct radix_tree_root	qi_gquota_tree;
-+	struct mutex		qi_tree_lock;
-+	struct xfs_inode	*qi_uquotaip;
-+	struct xfs_inode	*qi_gquotaip;
-+	struct list_head	qi_lru_list;
-+	struct mutex		qi_lru_lock;
-+	int			qi_lru_count;
-+	int			qi_dquots;
-+	time_t			qi_btimelimit;
-+	time_t			qi_itimelimit;
-+	time_t			qi_rtbtimelimit;
-+	xfs_qwarncnt_t		qi_bwarnlimit;
-+	xfs_qwarncnt_t		qi_iwarnlimit;
-+	xfs_qwarncnt_t		qi_rtbwarnlimit;
-+	struct mutex		qi_quotaofflock;/* to serialize quotaoff */
-+	xfs_filblks_t		qi_dqchunklen;	/* #BBs in a chunk of dqs */
-+	uint			qi_dqperchunk;	/* #ondisk dqs in above chunk */
-+	xfs_qcnt_t		qi_bhardlimit;
-+	xfs_qcnt_t		qi_bsoftlimit;
-+	xfs_qcnt_t		qi_ihardlimit;
-+	xfs_qcnt_t		qi_isoftlimit;
-+	xfs_qcnt_t		qi_rtbhardlimit;
-+	xfs_qcnt_t		qi_rtbsoftlimit;
-+	struct shrinker		qi_shrinker;
- } xfs_quotainfo_t;
- 
- static inline struct radix_tree_root *
+@@ -85,6 +85,22 @@ xfs_dquot_tree(
+ 	}
+ 	return NULL;
+ }
++
++static inline struct xfs_inode *
++xfs_dq_to_quota_inode(struct xfs_dquot *dqp)
++{
++	switch (dqp->dq_flags & XFS_DQ_ALLTYPES) {
++	case XFS_DQ_USER:
++		return dqp->q_mount->m_quotainfo->qi_uquotaip;
++	case XFS_DQ_GROUP:
++	case XFS_DQ_PROJ:
++		return dqp->q_mount->m_quotainfo->qi_gquotaip;
++	default:
++		ASSERT(0);
++	}
++	return NULL;
++}
++
+ extern int	xfs_qm_calc_dquots_per_chunk(struct xfs_mount *mp,
+ 					     unsigned int nbblks);
+ extern void	xfs_trans_mod_dquot(xfs_trans_t *, xfs_dquot_t *, uint, long);
 -- 
 1.7.1
 
