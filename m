@@ -1,17 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9D79B7F6B
-	for <xfs@oss.sgi.com>; Fri, 28 Jun 2013 14:06:04 -0500 (CDT)
-Date: Fri, 28 Jun 2013 14:06:01 -0500
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id BF7827F6D
+	for <xfs@oss.sgi.com>; Fri, 28 Jun 2013 14:24:23 -0500 (CDT)
+Date: Fri, 28 Jun 2013 14:24:20 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH v10 06/11] xfs: Change xfs_dquot_acct to be a
-	2-dimensional array
-Message-ID: <20130628190601.GA20932@sgi.com>
-References: <1372371914-11370-1-git-send-email-sekharan@us.ibm.com>
-	<1372371914-11370-7-git-send-email-sekharan@us.ibm.com>
+Subject: Re: [PATCH 1/3] xfs: don't shutdown log recovery on validation errors
+Message-ID: <20130628192420.GB20932@sgi.com>
+References: <20130613220903.GA20932@sgi.com> <20130614001306.GM29338@dastard>
+	<20130614160940.GA32736@sgi.com> <51BB41AD.4050303@sandeen.net>
+	<20130614190850.GB20932@sgi.com> <51BB6C7C.6050300@sandeen.net>
+	<20130614194453.GC20932@sgi.com> <51BB74F0.7040406@sandeen.net>
+	<20130614202223.GD20932@sgi.com>
+	<20130628185406.GB27157@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1372371914-11370-7-git-send-email-sekharan@us.ibm.com>
+In-Reply-To: <20130628185406.GB27157@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,18 +27,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Chandra Seetharaman <sekharan@us.ibm.com>
-Cc: xfs@oss.sgi.com
+To: Dave Jones <davej@redhat.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Linus Torvalds <torvalds@linux-foundation.org>, xfs@oss.sgi.com
 
-On Thu, Jun 27, 2013 at 05:25:09PM -0500, Chandra Seetharaman wrote:
-> In preparation for combined pquota/gquota support, for the sake
-> of readability, change xfs_dquot_acct to be a 2-dimensional array.
+Hi Dave,
+
+On Fri, Jun 28, 2013 at 02:54:06PM -0400, Dave Jones wrote:
+> On Fri, Jun 14, 2013 at 03:22:23PM -0500, Ben Myers wrote:
 > 
-> Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+>  > > > Are you guys arguing that the log replay bug should not be fixed?
+>  > > 
+>  > > Speaking for myself, I'm not arguing that, not at all.
+>  > > (not that I know how to fix it, either)
+>  > 
+>  > ...until log replay is fixed.  Hell.  I'll just pull it in as-is.
+>  > 
+>  > Reviewed-by: Ben Myers <bpm@sgi.com>
+> 
+> Is this on its way to Linus ? Given it's a regression over 3.9, it probably should be.
 
-Looks good.
+This one was in my pull request for -rc6.  Looks like Linus merged it here:
 
-Reviewed-by: Ben Myers <bpm@sgi.com>
+http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=d58c6ff0b779c5adae2a8596fde69cb45f2a5d68
+
+We still need to propose this one for -stable, IIRC.
+
+Thanks,
+	Ben
 
 _______________________________________________
 xfs mailing list
