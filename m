@@ -1,19 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0C40E7F61
-	for <xfs@oss.sgi.com>; Fri, 28 Jun 2013 13:31:05 -0500 (CDT)
-Date: Fri, 28 Jun 2013 13:31:04 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH v10 05/11] xfs: Do some whitespace cleanup in the data
-	structure xfs_quotainfo
-Message-ID: <20130628183104.GY20932@sgi.com>
-References: <1372371914-11370-1-git-send-email-sekharan@us.ibm.com>
-	<1372371914-11370-6-git-send-email-sekharan@us.ibm.com>
-	<20130628163058.GW20932@sgi.com>
-	<1372443273.8341.207.camel@chandra-dt.ibm.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E5B3B7F66
+	for <xfs@oss.sgi.com>; Fri, 28 Jun 2013 13:53:35 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BA617304067
+	for <xfs@oss.sgi.com>; Fri, 28 Jun 2013 11:53:32 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 56oembU4DrLNyXqM for
+	<xfs@oss.sgi.com>; Fri, 28 Jun 2013 11:53:32 -0700 (PDT)
+Message-ID: <51CDDAF0.7060501@redhat.com>
+Date: Fri, 28 Jun 2013 14:50:24 -0400
+From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1372443273.8341.207.camel@chandra-dt.ibm.com>
+Subject: Re: [PATCH 6/6] ioctl eofblocks: require non-privileged users to
+	specify uid/gid match
+References: <20130619110948.0bfafa2b@oracle.com>
+	<20130620001341.GM29338@dastard>
+	<20130620095410.1917d235@oracle.com>
+	<20130620220311.GT29376@dastard>
+	<20130621111420.5592707e@oracle.com>
+	<20130624003316.GH29376@dastard>
+	<20130624091035.6274800f@oracle.com>
+	<20130626020924.GD29376@dastard>
+	<20130628111138.68d0b486@oracle.com>
+In-Reply-To: <20130628111138.68d0b486@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,58 +36,77 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Chandra Seetharaman <sekharan@us.ibm.com>
-Cc: xfs@oss.sgi.com
+To: Dwight Engen <dwight.engen@oracle.com>
+Cc: "Eric W. Biederman" <ebiederm@gmail.com>, Serge Hallyn <serge.hallyn@ubuntu.com>, xfs@oss.sgi.com
 
-Hey Chandra,
-
-On Fri, Jun 28, 2013 at 01:14:33PM -0500, Chandra Seetharaman wrote:
-> On Fri, 2013-06-28 at 11:30 -0500, Ben Myers wrote:
-> > Hey Chandra,
-> > 
-> > On Thu, Jun 27, 2013 at 05:25:08PM -0500, Chandra Seetharaman wrote:
-> > > In preparation for combined pquota/gquota support, do some
-> > > whitespace cleanups.
-> > > 
-> > > Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-> > 
-> > Wow.  Putting this in a patch by itself really puts it into stark
-> > relief.
-> > 
-> > If we pull this in we're representing that some tabs and the alignment
-> > of the fields is more valuable than the comments?  I'm fairly certain I
+On 06/28/2013 11:11 AM, Dwight Engen wrote:
+> Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
+> ---
+>  fs/xfs/xfs_ioctl.c | 17 +++++++++++++++++
+>  1 file changed, 17 insertions(+)
 > 
-> 
-> If you put it that way, it does sound not correct, and I would agree
-> with you too :). 
-> 
-> But, IMO, it has to be more subjective than that. The comments removed,
-> IMO, add no additional value (the field name conveys the same
-> information). You can see that I left alone the comments that provide
-> some value.
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 487dca5..123314e 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -1655,6 +1655,23 @@ xfs_file_ioctl(
+>  		if (error)
+>  			return -XFS_ERROR(error);
+>  
+> +		/* non-privileged users should not be able to trim blocks on
+> +		 * objects they cannot write to, so require them to specify
+> +		 * either their own uid, or a group they are a member of
+> +		 */
+> +		if (!capable(CAP_SYS_ADMIN)) {
+> +			if (!(eofb.eof_flags & (XFS_EOF_FLAGS_UID | XFS_EOF_FLAGS_GID)))
+> +				return -XFS_ERROR(EPERM);
+> +
+> +			if ((eofb.eof_flags & XFS_EOF_FLAGS_UID) &&
+> +			    !uid_eq(current_fsuid(), keofb.eof_uid))
+> +				return -XFS_ERROR(EPERM);
+> +
+> +			if ((eofb.eof_flags & XFS_EOF_FLAGS_GID) &&
+> +			    !in_group_p(keofb.eof_gid))
+> +				return -XFS_ERROR(EPERM);
+> +		}
+> +
 
-I did notice that you kept some of the comments.  However, I am finding some of
-the removed ones to be useful too.  I think if you try to look at this
-structure with the eyes of a newbie the comments do help you.  e.g.
-di_btimelimit doesn't carry much meaning for me out of context, and the comment
-is helping me, at least.  Not everyone is quite so moronic as me, though.  ;)
+This looks reasonable to me.
 
-> > don't agree that's the case...
-> > 
-> > I'm sorry for your trouble, but I think I should pass on this one.  Do
-> > you agree?
-> > 
+In thinking more about the other aspect of group management (and I admit
+I'm still waffling about this), it seems like we could go in a couple
+directions:
+
+- Now that we have a separate internal only eofblocks control, be more
+flexible and provide an internal only flag (valid only for UID/GID
+scans) to instruct the scan to do specific file permission checking
+against the inodes. This would be set by xfs_file_ioctl() and do the
+write permission enforcement for userspace originated scans. This would
+also allow the future EDQUOT work to leave out said flag and do a group
+wide scan regardless of the specific permissions of the calling context
+(i.e., when the system decides all inodes under a group quota must be
+trimmed).
+
+The downsides here are the behavior might be a bit unclear and we'd have
+to fork off the flags bits in a manner that's clear and maintainable. I
+suppose one could also argue this is overkill for somewhat of a
+secondary operation.
+
+- Go the other direction, be less flexible and simply not allow
+!capable(CAP_SYS_ADMIN) group scans just as we started doing for project
+quotas. This is obviously very simple, but then we disallow regular
+users from trimming groups of inodes they should full well have
+permission to trim.
+
+I think I'm leaning towards the former approach if it can be implemented
+cleanly. Thoughts or ideas?
+
+Brian
+
+>  		error = xfs_icache_free_eofblocks(mp, &keofb);
+>  		return -error;
+>  	}
 > 
-> In effect, the code does look better (than I found it :) at the cost of
-> removal of redundant comments.
-> 
-> If you still don't want to include, I would accept your decision.
-
-Thanks.  I really would prefer to keep them.  FWIW, the rest of your patch set
-doesn't appear to be adversely affected by doing so.
-
-Regards,
-	Ben
 
 _______________________________________________
 xfs mailing list
