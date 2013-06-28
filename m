@@ -1,40 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A87AB7F3F
-	for <xfs@oss.sgi.com>; Fri, 28 Jun 2013 11:08:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 46788AC002
-	for <xfs@oss.sgi.com>; Fri, 28 Jun 2013 09:08:08 -0700 (PDT)
-Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150]) by
-	cuda.sgi.com with ESMTP id NQvWkApNPvfnb1H8 (version=TLSv1
+	by oss.sgi.com (Postfix) with ESMTP id 934087F3F
+	for <xfs@oss.sgi.com>; Fri, 28 Jun 2013 11:16:27 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0DAD0AC007
+	for <xfs@oss.sgi.com>; Fri, 28 Jun 2013 09:16:26 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id ySAdgHf5WBMJVVEk (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 28 Jun 2013 09:08:08 -0700 (PDT)
-Received: from /spool/local
-	by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
-	Violators will be prosecuted
-	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
-	Fri, 28 Jun 2013 10:08:07 -0600
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com
-	[9.17.195.227])
-	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id EFA633E40030
-	for <xfs@oss.sgi.com>; Fri, 28 Jun 2013 10:07:45 -0600 (MDT)
-Received: from d03av05.boulder.ibm.com (d03av05.boulder.ibm.com [9.17.195.85])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP
-	id r5SG83ID099028
-	for <xfs@oss.sgi.com>; Fri, 28 Jun 2013 10:08:03 -0600
-Received: from d03av05.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av05.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
-	id r5SG80I2019754
-	for <xfs@oss.sgi.com>; Fri, 28 Jun 2013 10:08:01 -0600
-Subject: Re: [PATCH 15/15] xfs: implement inode change count
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-In-Reply-To: <1372313099-8121-16-git-send-email-david@fromorbit.com>
-References: <1372313099-8121-1-git-send-email-david@fromorbit.com>
-	<1372313099-8121-16-git-send-email-david@fromorbit.com>
-Date: Fri, 28 Jun 2013 11:07:11 -0500
-Message-ID: <1372435631.8341.114.camel@chandra-dt.ibm.com>
+	Fri, 28 Jun 2013 09:16:25 -0700 (PDT)
+Date: Fri, 28 Jun 2013 12:16:21 -0400
+From: Dwight Engen <dwight.engen@oracle.com>
+Subject: Re: [PATCH v2 RFC] userns: Convert xfs to use kuid/kgid where
+	appropriate
+Message-ID: <20130628121621.6a6b6046@oracle.com>
+In-Reply-To: <20130628152552.GB26841@sergelap>
+References: <20130620095410.1917d235@oracle.com>
+	<20130620220311.GT29376@dastard>
+	<20130621111420.5592707e@oracle.com>
+	<20130624003316.GH29376@dastard>
+	<20130624091035.6274800f@oracle.com>
+	<20130626020924.GD29376@dastard>
+	<20130626173017.5100327a@oracle.com>
+	<20130626224410.GB28426@dastard> <20130627130205.GA4003@sergelap>
+	<20130628015401.GG32195@dastard> <20130628152552.GB26841@sergelap>
 Mime-Version: 1.0
-Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -47,69 +37,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Serge Hallyn <serge.hallyn@ubuntu.com>
+Cc: "Eric W. Biederman" <ebiederm@gmail.com>, Brian Foster <bfoster@redhat.com>, "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>, xfs@oss.sgi.com
 
-On Thu, 2013-06-27 at 16:04 +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> For CRC enabled filesystems, add support for the monotonic inode
-> version change counter that is needed by protocols like NFSv4 for
-> determining if the inode has changed in any way at all between two
-> unrelated operations on the inode.
-> 
-> This bumps the change count the first time an inode is dirtied in a
-> transaction. Since all modifications to the inode are logged, this
-> will catch all changes that are made to the inode, including
-> timestamp updates that occur during data writes.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+On Fri, 28 Jun 2013 10:25:52 -0500
+Serge Hallyn <serge.hallyn@ubuntu.com> wrote:
 
-Reviewed-by: Chandra Seetharaman <sekharan@us.ibm.com>
+> Quoting Dave Chinner (david@fromorbit.com):
+> > On Thu, Jun 27, 2013 at 08:02:05AM -0500, Serge Hallyn wrote:
+> > > Quoting Dave Chinner (david@fromorbit.com):
+> > > > On Wed, Jun 26, 2013 at 05:30:17PM -0400, Dwight Engen wrote:
+> > > > > On Wed, 26 Jun 2013 12:09:24 +1000
+> > > > > Dave Chinner <david@fromorbit.com> wrote:
+> > > > > > > We do need to decide on the di_uid that comes back from
+> > > > > > > bulkstat. Right now it is returning on disk (==
+> > > > > > > init_user_ns) uids. It looks to me like xfsrestore is
+> > > > > > > using the normal vfs routines (chown,
+> > > 
+> > > I might not be helpful here, (as despite having used xfs for years
+> > > I've not used these features) but feel like I should try based on
+> > > what I see in the manpages.  Here is my understanding:
+> > > 
+> > > Assume you're a task in a child userns, where you have host uids
+> > > 100000-110000 mapped to container uids 0-10000,
+> > > 
+> > > 1. bulkstat is an xfs_ioctl command, right?  It should return the
+> > > mapped uids (0-10000).
+> > > 
+> > > 2. xfsdump should store the uids as seen in the caller's
+> > > namespace.  If xfsdump is done from the container, the dump
+> > > should show uids 0-10000.
+> > 
+> > So when run from within a namespace, it should filter and return
+> > only inodes that match the uids/gids mapped into the namespace?
+> 
+> I would think they should all be returned, with uid/gid being -1.
 
-> ---
->  fs/xfs/xfs_super.c       |    4 ++++
->  fs/xfs/xfs_trans_inode.c |   11 +++++++++++
->  2 files changed, 15 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index f59e27f..a1587f9 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1482,6 +1482,10 @@ xfs_fs_fill_super(
->  	sb->s_time_gran = 1;
->  	set_posix_acl_flag(sb);
-> 
-> +	/* version 5 superblocks support inode version counters. */
-> +	if (XFS_SB_VERSION_NUM(&mp->m_sb) == XFS_SB_VERSION_5)
-> +		sb->s_flags |= MS_I_VERSION;
-> +
->  	error = xfs_mountfs(mp);
->  	if (error)
->  		goto out_filestream_unmount;
-> diff --git a/fs/xfs/xfs_trans_inode.c b/fs/xfs/xfs_trans_inode.c
-> index ac6d567..53dfe46 100644
-> --- a/fs/xfs/xfs_trans_inode.c
-> +++ b/fs/xfs/xfs_trans_inode.c
-> @@ -112,6 +112,17 @@ xfs_trans_log_inode(
->  	ASSERT(ip->i_itemp != NULL);
->  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-> 
-> +	/*
-> +	 * First time we log the inode in a transaction, bump the inode change
-> +	 * counter if it is configured for this to occur.
-> +	 */
-> +	if (!(ip->i_itemp->ili_item.li_desc->lid_flags & XFS_LID_DIRTY) &&
-> +	    IS_I_VERSION(VFS_I(ip))) {
-> +		inode_inc_iversion(VFS_I(ip));
-> +		ip->i_d.di_changecount = VFS_I(ip)->i_version;
-> +		flags |= XFS_ILOG_CORE;
-> +	}
-> +
->  	tp->t_flags |= XFS_TRANS_DIRTY;
->  	ip->i_itemp->ili_item.li_desc->lid_flags |= XFS_LID_DIRTY;
-> 
-
+I agree, so I think bulkstat should return the uids with
+from_kuid_munged(current_user_ns(), VFS_I(ip)), so it returns the
+same values that stat(2) would. This would mean callers in
+init_user_ns see the same values they do today. Callers inside
+a userns will see mapped values, but note that they have to be
+CAP_SYS_ADMIN in init_user_ns, which I wouldn't expect to normally be
+the case.
 
 _______________________________________________
 xfs mailing list
