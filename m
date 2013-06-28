@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9C8A97F3F
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C5E2B7F4E
 	for <xfs@oss.sgi.com>; Fri, 28 Jun 2013 08:23:56 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7E1C68F804B
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A7905304066
 	for <xfs@oss.sgi.com>; Fri, 28 Jun 2013 06:23:53 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id I2oFBc3jihCQUoGB for
+	cuda.sgi.com with ESMTP id SCGHLiYHoFBYa8C8 for
 	<xfs@oss.sgi.com>; Fri, 28 Jun 2013 06:23:52 -0700 (PDT)
 Received: from int-mx12.intmail.prod.int.phx2.redhat.com
 	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r5SDNo8T013564
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r5SDNqlO020836
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Fri, 28 Jun 2013 09:23:51 -0400
+	for <xfs@oss.sgi.com>; Fri, 28 Jun 2013 09:23:52 -0400
 From: Lukas Czerner <lczerner@redhat.com>
-Subject: [PATCH 1/3] xfstests: Run all tests when nothing is specified
-Date: Fri, 28 Jun 2013 15:23:43 +0200
-Message-Id: <1372425825-19252-1-git-send-email-lczerner@redhat.com>
+Subject: [PATCH 2/3] xfstests: Refactor code for obtaining test list
+Date: Fri, 28 Jun 2013 15:23:44 +0200
+Message-Id: <1372425825-19252-2-git-send-email-lczerner@redhat.com>
+In-Reply-To: <1372425825-19252-1-git-send-email-lczerner@redhat.com>
+References: <1372425825-19252-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,56 +35,151 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Lukas Czerner <lczerner@redhat.com>
 
-Currently when no tests or test groups is specified xfstests will
-silently test nothing. Interestingly enough when test groups to exclude
-is specified the rest of the tests will be run.
-
-This commit changes that to run all possible tests (for a given file
-system) when no specific tests has been specified. This matches the old
-xfstests behaviour.
+Put the code for obtaining the list of test into one place which makes
+things more readable. It will also allow us to re-init the list in the
+future if we need it.
 
 Signed-off-by: Lukas Czerner <lczerner@redhat.com>
 ---
- check | 6 +++---
- group | 5 -----
- 2 files changed, 3 insertions(+), 8 deletions(-)
- delete mode 100644 group
+ check | 97 ++++++++++++++++++++++++++++++++++++-------------------------------
+ 1 file changed, 52 insertions(+), 45 deletions(-)
 
 diff --git a/check b/check
-index ff8fbcf..71b179b 100755
+index 71b179b..1fded37 100755
 --- a/check
 +++ b/check
-@@ -115,7 +115,7 @@ get_all_tests()
- 	for d in $SRC_GROUPS $FSTYP; do
- 		ls $SRC_DIR/$d/* | \
- 			grep -v "\..*" | \
--			grep -v group >> $tmp.list 2>/dev/null
-+			grep -v "group\|Makefile" >> $tmp.list 2>/dev/null
- 	done
+@@ -154,45 +154,70 @@ _timestamp()
+     echo -n " [$now]"
  }
  
-@@ -263,8 +263,8 @@ elif $have_test_arg; then
- 	# had test numbers, but none in group file ... do nothing
- 	touch $tmp.list
- else
--	# no test numbers, do everything from group file
--	sed -n -e '/^[0-9][0-9][0-9]*/s/[ 	].*//p' <group >$tmp.list
-+	# no test numbers, do everything
-+	get_all_tests
+-# Process command arguments first.
+-while [ $# -gt 0 ]; do
+-	case "$1" in
+-	-\? | -h | --help) usage ;;
+-
+-	-udf)	FSTYP=udf ;;
+-	-xfs)	FSTYP=xfs ;;
+-	-nfs)	FSTYP=nfs ;;
++_prepare_test_list()
++{
++	# Tests specified on the command line
++	if [ -s $tmp.arglist ]; then
++		cat $tmp.arglist > $tmp.list
++	else
++		touch $tmp.list
++	fi
+ 
+-	-g)	group=$2 ; shift ;
+-		group_list=$(get_group_list $group)
+-		if [ -z "$group_list" ]; then
++	# Specified groups to include
++	for group in $GROUP_LIST; do
++		list=$(get_group_list $group)
++		if [ -z "$list" ]; then
+ 		    echo "Group \"$group\" is empty or not defined?"
+ 		    exit 1
+ 		fi
+ 
+-		[ ! -s $tmp.list ] && touch $tmp.list
+-		for t in $group_list; do
++		for t in $list; do
+ 			grep -s "^$t\$" $tmp.list >/dev/null || \
+ 							echo "$t" >>$tmp.list
+ 		done
++	done
+ 
+-		;;
+-
+-	-x)	xgroup=$2 ; shift ;
+-
+-		# Note: behaviour is dependent on command line ordering of
+-		# -g and -x parameters. If there are no preceding -g commands,
+-		# this works on all tests, otherwise just the tests specified by
+-		# the early -g inclusions.
+-		[ ! -s $tmp.list ] && get_all_tests
++	if [ ! $have_test_arg ] && [ -z "$GROUP_LIST" ]; then
++		# no test numbers, do everything
++		get_all_tests
++	fi
+ 
+-		group_list=$(get_group_list $xgroup)
+-		if [ -z "$group_list" ]; then
++	# Specified groups to exclude
++	for xgroup in $XGROUP_LIST; do
++		list=$(get_group_list $xgroup)
++		if [ -z "$list" ]; then
+ 		    echo "Group \"$xgroup\" is empty or not defined?"
+ 		    exit 1
+ 		fi
+ 
+-		trim_test_list $group_list
++		trim_test_list $list
++	done
++
++	# sort the list of tests into numeric order
++	list=`sort -n $tmp.list | uniq`
++	rm -f $tmp.list $tmp.tmp $tmp.grep
++
++	if $randomize
++	then
++	    list=`echo $list | awk -f randomize.awk`
++	fi
++}
++
++# Process command arguments first.
++while [ $# -gt 0 ]; do
++	case "$1" in
++	-\? | -h | --help) usage ;;
++
++	-udf)	FSTYP=udf ;;
++	-xfs)	FSTYP=xfs ;;
++	-nfs)	FSTYP=nfs ;;
++
++	-g)	group=$2 ; shift ;
++		GROUP_LIST="$GROUP_LIST $group"
++		;;
++
++	-x)	xgroup=$2 ; shift ;
++		XGROUP_LIST="$XGROUP_LIST $xgroup"
+ 		;;
+ 
+ 	-X)	xfile=$2; shift ;
+@@ -244,7 +269,7 @@ if $have_test_arg; then
+ 
+ 			if egrep "^$test_name" $group_file >/dev/null ; then
+ 				# in group file ... OK
+-				echo $SRC_DIR/$1 >>$tmp.list
++				echo $SRC_DIR/$1 >>$tmp.arglist
+ 			else
+ 				# oops
+ 				echo "$1 - unknown test, ignored"
+@@ -256,25 +281,7 @@ if $have_test_arg; then
+ 	done
  fi
  
- # sort the list of tests into numeric order
-diff --git a/group b/group
-deleted file mode 100644
-index 4e01f0c..0000000
---- a/group
-+++ /dev/null
-@@ -1,5 +0,0 @@
--# QA groups control file
--# Defines test groups and nominal group owners
--# - do not start group names with a digit
--# - comment line before each group is "new" description
--#
+-if [ -s $tmp.list ]; then
+-    # found some valid test numbers ... this is good
+-    :
+-elif $have_test_arg; then
+-	# had test numbers, but none in group file ... do nothing
+-	touch $tmp.list
+-else
+-	# no test numbers, do everything
+-	get_all_tests
+-fi
+-
+-# sort the list of tests into numeric order
+-list=`sort -n $tmp.list`
+-rm -f $tmp.list $tmp.tmp $tmp.grep
+-
+-if $randomize
+-then
+-    list=`echo $list | awk -f randomize.awk`
+-fi
++_prepare_test_list
+ 
+ # we need common/rc
+ if ! . ./common/rc
 -- 
 1.8.2.1
 
