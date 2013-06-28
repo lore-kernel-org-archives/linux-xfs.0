@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id EDD3F7F56
-	for <xfs@oss.sgi.com>; Fri, 28 Jun 2013 10:11:20 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CB14B30407E
-	for <xfs@oss.sgi.com>; Fri, 28 Jun 2013 08:11:17 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 060DC7F56
+	for <xfs@oss.sgi.com>; Fri, 28 Jun 2013 10:11:27 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A6936AC007
+	for <xfs@oss.sgi.com>; Fri, 28 Jun 2013 08:11:23 -0700 (PDT)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id KWRMqb5pA0gHjDro (version=TLSv1
+	cuda.sgi.com with ESMTP id H5XW3ojRmiW0IbEV (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 28 Jun 2013 08:11:16 -0700 (PDT)
-Date: Fri, 28 Jun 2013 11:11:13 -0400
+	Fri, 28 Jun 2013 08:11:22 -0700 (PDT)
+Date: Fri, 28 Jun 2013 11:11:19 -0400
 From: Dwight Engen <dwight.engen@oracle.com>
-Subject: [PATCH 2/6] convert kuid_t to/from uid_t in ACLs
-Message-ID: <20130628111113.14cada4e@oracle.com>
+Subject: [PATCH 3/6] ioctl: check for capabilities in the current user
+	namespace
+Message-ID: <20130628111119.1ac60310@oracle.com>
 In-Reply-To: <20130626020924.GD29376@dastard>
 References: <20130619110948.0bfafa2b@oracle.com>
 	<20130620001341.GM29338@dastard>
@@ -38,66 +39,39 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: Brian Foster <bfoster@redhat.com>, Serge Hallyn <serge.hallyn@ubuntu.com>, "Eric W. Biederman" <ebiederm@gmail.com>, xfs@oss.sgi.com
 
-Change permission check for setting ACL to use inode_owner_or_capable()
-which will additionally allow a CAP_FOWNER user in a user namespace to
-be able to set an ACL on an inode covered by the user namespace mapping.
+Use inode_capable() to check if SUID|SGID bits should be cleared to match
+similar check in inode_change_ok().
+
+The check for CAP_LINUX_IMMUTABLE was not modified since all other file
+systems also check against init_user_ns rather than current_user_ns.
 
 Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
 ---
- fs/xfs/xfs_acl.c | 20 ++++++++++++++++----
- 1 file changed, 16 insertions(+), 4 deletions(-)
+ fs/xfs/xfs_ioctl.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
-index 306d883..11a91d6 100644
---- a/fs/xfs/xfs_acl.c
-+++ b/fs/xfs/xfs_acl.c
-@@ -68,14 +68,15 @@ xfs_acl_from_disk(
- 
- 		switch (acl_e->e_tag) {
- 		case ACL_USER:
-+			acl_e->e_uid = xfs_uid_to_kuid(be32_to_cpu(ace->ae_id));
-+			break;
- 		case ACL_GROUP:
--			acl_e->e_id = be32_to_cpu(ace->ae_id);
-+			acl_e->e_gid = xfs_gid_to_kgid(be32_to_cpu(ace->ae_id));
- 			break;
- 		case ACL_USER_OBJ:
- 		case ACL_GROUP_OBJ:
- 		case ACL_MASK:
- 		case ACL_OTHER:
--			acl_e->e_id = ACL_UNDEFINED_ID;
- 			break;
- 		default:
- 			goto fail;
-@@ -101,7 +102,18 @@ xfs_acl_to_disk(struct xfs_acl *aclp, const struct posix_acl *acl)
- 		acl_e = &acl->a_entries[i];
- 
- 		ace->ae_tag = cpu_to_be32(acl_e->e_tag);
--		ace->ae_id = cpu_to_be32(acl_e->e_id);
-+		switch (acl_e->e_tag) {
-+		case ACL_USER:
-+			ace->ae_id = cpu_to_be32(xfs_kuid_to_uid(acl_e->e_uid));
-+			break;
-+		case ACL_GROUP:
-+			ace->ae_id = cpu_to_be32(xfs_kgid_to_gid(acl_e->e_gid));
-+			break;
-+		default:
-+			ace->ae_id = cpu_to_be32(ACL_UNDEFINED_ID);
-+			break;
-+		}
-+
- 		ace->ae_perm = cpu_to_be16(acl_e->e_perm);
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 5e99968..bedf510 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -981,7 +981,7 @@ xfs_ioctl_setattr(
+ 	 * to the file owner ID, except in cases where the
+ 	 * CAP_FSETID capability is applicable.
+ 	 */
+-	if (current_fsuid() != ip->i_d.di_uid && !capable(CAP_FOWNER)) {
++	if (!inode_owner_or_capable(VFS_I(ip))) {
+ 		code = XFS_ERROR(EPERM);
+ 		goto error_return;
  	}
- }
-@@ -360,7 +372,7 @@ xfs_xattr_acl_set(struct dentry *dentry, const char *name,
- 		return -EINVAL;
- 	if (type == ACL_TYPE_DEFAULT && !S_ISDIR(inode->i_mode))
- 		return value ? -EACCES : 0;
--	if ((current_fsuid() != inode->i_uid) && !capable(CAP_FOWNER))
-+	if (!inode_owner_or_capable(inode))
- 		return -EPERM;
+@@ -1103,7 +1103,7 @@ xfs_ioctl_setattr(
+ 		 * cleared upon successful return from chown()
+ 		 */
+ 		if ((ip->i_d.di_mode & (S_ISUID|S_ISGID)) &&
+-		    !capable(CAP_FSETID))
++		    !inode_capable(VFS_I(ip), CAP_FSETID))
+ 			ip->i_d.di_mode &= ~(S_ISUID|S_ISGID);
  
- 	if (!value)
+ 		/*
 -- 
 1.8.1.4
 
