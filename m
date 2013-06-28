@@ -1,28 +1,41 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E3F2A7F5D
-	for <xfs@oss.sgi.com>; Fri, 28 Jun 2013 13:12:48 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id BBD6A7F5D
+	for <xfs@oss.sgi.com>; Fri, 28 Jun 2013 13:15:00 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B8AE98F8037
-	for <xfs@oss.sgi.com>; Fri, 28 Jun 2013 11:12:45 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id gAeiURdsSsbEzpmb for
-	<xfs@oss.sgi.com>; Fri, 28 Jun 2013 11:12:41 -0700 (PDT)
-Message-ID: <51CDD15E.5070006@redhat.com>
-Date: Fri, 28 Jun 2013 14:09:34 -0400
-From: Brian Foster <bfoster@redhat.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH 5/6] create internal eofblocks structure with kuid_t types
-References: <20130619110948.0bfafa2b@oracle.com>
-	<20130620001341.GM29338@dastard>
-	<20130620095410.1917d235@oracle.com>
-	<20130620220311.GT29376@dastard>
-	<20130621111420.5592707e@oracle.com>
-	<20130624003316.GH29376@dastard>
-	<20130624091035.6274800f@oracle.com>
-	<20130626020924.GD29376@dastard>
-	<20130628111131.3ad961e9@oracle.com>
-In-Reply-To: <20130628111131.3ad961e9@oracle.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 53C99AC001
+	for <xfs@oss.sgi.com>; Fri, 28 Jun 2013 11:15:00 -0700 (PDT)
+Received: from e39.co.us.ibm.com (e39.co.us.ibm.com [32.97.110.160]) by
+	cuda.sgi.com with ESMTP id y14pCmzpHN87BEng (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 28 Jun 2013 11:14:59 -0700 (PDT)
+Received: from /spool/local
+	by e39.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	Violators will be prosecuted
+	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
+	Fri, 28 Jun 2013 12:14:59 -0600
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com
+	[9.17.195.227])
+	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id 84D6B1FF0022
+	for <xfs@oss.sgi.com>; Fri, 28 Jun 2013 12:09:41 -0600 (MDT)
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	r5SIEYcX128950 for <xfs@oss.sgi.com>; Fri, 28 Jun 2013 12:14:54 -0600
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id r5SIEYIP001103
+	for <xfs@oss.sgi.com>; Fri, 28 Jun 2013 12:14:34 -0600
+Subject: Re: [PATCH v10 05/11] xfs: Do some whitespace cleanup in the data
+	structure xfs_quotainfo
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+In-Reply-To: <20130628163058.GW20932@sgi.com>
+References: <1372371914-11370-1-git-send-email-sekharan@us.ibm.com>
+	<1372371914-11370-6-git-send-email-sekharan@us.ibm.com>
+	<20130628163058.GW20932@sgi.com>
+Date: Fri, 28 Jun 2013 13:14:33 -0500
+Message-ID: <1372443273.8341.207.camel@chandra-dt.ibm.com>
+Mime-Version: 1.0
+Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,128 +48,53 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dwight Engen <dwight.engen@oracle.com>
-Cc: "Eric W. Biederman" <ebiederm@gmail.com>, Serge Hallyn <serge.hallyn@ubuntu.com>, xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On 06/28/2013 11:11 AM, Dwight Engen wrote:
-> Have eofblocks ioctl convert uid_t to kuid_t into internal structure.
-> Update internal filter matching to compare ids with kuid_t types.
+On Fri, 2013-06-28 at 11:30 -0500, Ben Myers wrote:
+> Hey Chandra,
 > 
-> Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
-> ---
->  fs/xfs/xfs_fs.h     |  2 +-
->  fs/xfs/xfs_icache.c |  6 +++---
->  fs/xfs/xfs_ioctl.c  | 34 ++++++++++++++++++++++++++++++++--
->  fs/xfs/xfs_linux.h  |  8 ++++++++
->  4 files changed, 44 insertions(+), 6 deletions(-)
+> On Thu, Jun 27, 2013 at 05:25:08PM -0500, Chandra Seetharaman wrote:
+> > In preparation for combined pquota/gquota support, do some
+> > whitespace cleanups.
+> > 
+> > Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
 > 
-...
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index bedf510..487dca5 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -1328,6 +1328,31 @@ xfs_ioc_getbmapx(
->  	return 0;
->  }
->  
-> +STATIC int
-> +xfs_fs_eofblocks_to_internal(
-> +	struct xfs_fs_eofblocks		*src,
-> +	struct xfs_eofblocks		*dst)
-> +{
-> +	dst->eof_flags = src->eof_flags;
-> +	dst->eof_prid = src->eof_prid;
-> +	dst->eof_min_file_size = src->eof_min_file_size;
-> +
-> +	if (src->eof_flags & XFS_EOF_FLAGS_UID) {
-> +		dst->eof_uid = make_kuid(current_user_ns(), src->eof_uid);
-> +		if (!uid_valid(dst->eof_uid))
-> +			return XFS_ERROR(EINVAL);
-> +	}
-> +
-> +	if (src->eof_flags & XFS_EOF_FLAGS_GID) {
-> +		dst->eof_gid = make_kgid(current_user_ns(), src->eof_gid);
-> +		if (!gid_valid(dst->eof_gid))
-> +			return XFS_ERROR(EINVAL);
-> +	}
-> +
-> +	return 0;
-> +}
-
-Is there any harm in removing the policy from this function, storing a
-potentially invalid kuid's in the xfs_eofblocks and letting the caller
-determine whether an error should be returned? IOW, this function becomes:
-
-inline void
-xfs_fs_eofblocks_to_internal(
-	struct xfs_fs_eofblocks		*src,
-	struct xfs_eofblocks		*dst)
-{
-	dst->eof_flags = src->eof_flags;
-	dst->eof_prid = src->eof_prid;
-	dst->eof_min_file_size = src->eof_min_file_size;
-	dst->eof_uid = make_kuid(current_user_ns(), src->eof_uid);
-	dst->eof_gid = make_kgid(current_user_ns(), src->eof_gid);
-}
-
-... and xfs_file_ioctl() can check the XFS_EOF_FLAGS_UID/GID flags and
-validity of the value to determine whether an error should be returned.
-
-Also, I suspect xfs_icache.h might be a better home for this function.
-
-> +
-> +
->  /*
->   * Note: some of the ioctl's return positive numbers as a
->   * byte count indicating success, such as readlink_by_handle.
-> @@ -1610,7 +1635,8 @@ xfs_file_ioctl(
->  		return -error;
->  
->  	case XFS_IOC_FREE_EOFBLOCKS: {
-> -		struct xfs_eofblocks eofb;
-> +		struct xfs_fs_eofblocks eofb;
-> +		struct xfs_eofblocks keofb;
->  
->  		if (copy_from_user(&eofb, arg, sizeof(eofb)))
->  			return -XFS_ERROR(EFAULT);
-> @@ -1625,7 +1651,11 @@ xfs_file_ioctl(
->  		    memchr_inv(eofb.pad64, 0, sizeof(eofb.pad64)))
->  			return -XFS_ERROR(EINVAL);
->  
-> -		error = xfs_icache_free_eofblocks(mp, &eofb);
-> +		error = xfs_fs_eofblocks_to_internal(&eofb, &keofb);
-> +		if (error)
-> +			return -XFS_ERROR(error);
-> +
-> +		error = xfs_icache_free_eofblocks(mp, &keofb);
->  		return -error;
->  	}
->  
-> diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-> index 761e4c0..3c2f403 100644
-> --- a/fs/xfs/xfs_linux.h
-> +++ b/fs/xfs/xfs_linux.h
-> @@ -185,6 +185,14 @@ static inline kgid_t xfs_gid_to_kgid(__uint32_t gid)
->  	return make_kgid(&init_user_ns, gid);
->  }
->  
-> +struct xfs_eofblocks {
-> +	__u32		eof_flags;
-> +	kuid_t		eof_uid;
-> +	kgid_t		eof_gid;
-> +	prid_t		eof_prid;
-> +	__u64		eof_min_file_size;
-> +};
-> +
-
-xfs_icache.h?
-
-Brian
-
->  /*
->   * Various platform dependent calls that don't fit anywhere else
->   */
+> Wow.  Putting this in a patch by itself really puts it into stark
+> relief.
 > 
+> If we pull this in we're representing that some tabs and the alignment
+> of the fields is more valuable than the comments?  I'm fairly certain I
+
+
+If you put it that way, it does sound not correct, and I would agree
+with you too :). 
+
+But, IMO, it has to be more subjective than that. The comments removed,
+IMO, add no additional value (the field name conveys the same
+information). You can see that I left alone the comments that provide
+some value.
+
+> don't agree that's the case...
+> 
+> I'm sorry for your trouble, but I think I should pass on this one.  Do
+> you agree?
+> 
+
+In effect, the code does look better (than I found it :) at the cost of
+removal of redundant comments.
+
+If you still don't want to include, I would accept your decision.
+
+> Thanks,
+> 	Ben
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
+
 
 _______________________________________________
 xfs mailing list
