@@ -1,18 +1,40 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3FC157F3F
-	for <xfs@oss.sgi.com>; Fri, 28 Jun 2013 10:39:51 -0500 (CDT)
-Date: Fri, 28 Jun 2013 10:39:50 -0500
-From: Geoffrey Wehrman <gwehrman@sgi.com>
-Subject: Re: [PATCH 01/15] xfs: update mount options documentation
-Message-ID: <20130628153950.GA9164@sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id A87AB7F3F
+	for <xfs@oss.sgi.com>; Fri, 28 Jun 2013 11:08:12 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 46788AC002
+	for <xfs@oss.sgi.com>; Fri, 28 Jun 2013 09:08:08 -0700 (PDT)
+Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150]) by
+	cuda.sgi.com with ESMTP id NQvWkApNPvfnb1H8 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 28 Jun 2013 09:08:08 -0700 (PDT)
+Received: from /spool/local
+	by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	Violators will be prosecuted
+	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
+	Fri, 28 Jun 2013 10:08:07 -0600
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com
+	[9.17.195.227])
+	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id EFA633E40030
+	for <xfs@oss.sgi.com>; Fri, 28 Jun 2013 10:07:45 -0600 (MDT)
+Received: from d03av05.boulder.ibm.com (d03av05.boulder.ibm.com [9.17.195.85])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP
+	id r5SG83ID099028
+	for <xfs@oss.sgi.com>; Fri, 28 Jun 2013 10:08:03 -0600
+Received: from d03av05.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av05.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id r5SG80I2019754
+	for <xfs@oss.sgi.com>; Fri, 28 Jun 2013 10:08:01 -0600
+Subject: Re: [PATCH 15/15] xfs: implement inode change count
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+In-Reply-To: <1372313099-8121-16-git-send-email-david@fromorbit.com>
 References: <1372313099-8121-1-git-send-email-david@fromorbit.com>
-	<1372313099-8121-2-git-send-email-david@fromorbit.com>
-	<20130627144814.GM20932@sgi.com> <20130627190831.GN20932@sgi.com>
-	<20130628020912.GI32195@dastard> <20130628023204.GJ32195@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130628023204.GJ32195@dastard>
+	<1372313099-8121-16-git-send-email-david@fromorbit.com>
+Date: Fri, 28 Jun 2013 11:07:11 -0500
+Message-ID: <1372435631.8341.114.camel@chandra-dt.ibm.com>
+Mime-Version: 1.0
+Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,70 +48,68 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Fri, Jun 28, 2013 at 12:32:04PM +1000, Dave Chinner wrote:
-| On Fri, Jun 28, 2013 at 12:09:12PM +1000, Dave Chinner wrote:
-| > Mount options are perfectly fine to be removed - they've been given
-| > deprecated warnings for quite some time now (the most recent is the
-| > delaylog which has been doing that since 3.1 IIRC). So they are all
-| > fine to actually remove - 12 months warning is usually considered
-| > sufficient.
+On Thu, 2013-06-27 at 16:04 +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> For CRC enabled filesystems, add support for the monotonic inode
+> version change counter that is needed by protocols like NFSv4 for
+> determining if the inode has changed in any way at all between two
+> unrelated operations on the inode.
+> 
+> This bumps the change count the first time an inode is dirtied in a
+> transaction. Since all modifications to the inode are logged, this
+> will catch all changes that are made to the inode, including
+> timestamp updates that occur during data writes.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-I hardly consider 12 years to be sufficient.  I have no problem with
-deprecating and disabling mount options so that they are ineffective,
-but removing them so that an administrator gets an error when upgrading
-his system is irresponsible product management, especially when it
-requires almost no effort to keep the deprecated, disabled interface.
+Reviewed-by: Chandra Seetharaman <sekharan@us.ibm.com>
 
-You move to newer kernels much faster than most people.  Doesn't Red Hat
-still support Red Hat 5?  How old is that kernel?  One of the reasons I
-and others dread upgrading systems is because there are always
-interfaces that change, always data conversions that have to be run,
-always new processes to learn.  I realize that XFS is still an evolving
-filesystem, by historically one of its greatest achievements has been
-that of backward compatibility.  When XFS was ported from IRIX to Linux,
-the same filesystem could be used without any conversion.  Why force a
-user to modify his fstab just because he has upgraded his kernel?
+> ---
+>  fs/xfs/xfs_super.c       |    4 ++++
+>  fs/xfs/xfs_trans_inode.c |   11 +++++++++++
+>  2 files changed, 15 insertions(+)
+> 
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index f59e27f..a1587f9 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1482,6 +1482,10 @@ xfs_fs_fill_super(
+>  	sb->s_time_gran = 1;
+>  	set_posix_acl_flag(sb);
+> 
+> +	/* version 5 superblocks support inode version counters. */
+> +	if (XFS_SB_VERSION_NUM(&mp->m_sb) == XFS_SB_VERSION_5)
+> +		sb->s_flags |= MS_I_VERSION;
+> +
+>  	error = xfs_mountfs(mp);
+>  	if (error)
+>  		goto out_filestream_unmount;
+> diff --git a/fs/xfs/xfs_trans_inode.c b/fs/xfs/xfs_trans_inode.c
+> index ac6d567..53dfe46 100644
+> --- a/fs/xfs/xfs_trans_inode.c
+> +++ b/fs/xfs/xfs_trans_inode.c
+> @@ -112,6 +112,17 @@ xfs_trans_log_inode(
+>  	ASSERT(ip->i_itemp != NULL);
+>  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+> 
+> +	/*
+> +	 * First time we log the inode in a transaction, bump the inode change
+> +	 * counter if it is configured for this to occur.
+> +	 */
+> +	if (!(ip->i_itemp->ili_item.li_desc->lid_flags & XFS_LID_DIRTY) &&
+> +	    IS_I_VERSION(VFS_I(ip))) {
+> +		inode_inc_iversion(VFS_I(ip));
+> +		ip->i_d.di_changecount = VFS_I(ip)->i_version;
+> +		flags |= XFS_ILOG_CORE;
+> +	}
+> +
+>  	tp->t_flags |= XFS_TRANS_DIRTY;
+>  	ip->i_itemp->ili_item.li_desc->lid_flags |= XFS_LID_DIRTY;
+> 
 
-| > As to the sysctls - they haven't had any effect since 3.5 when the
-| > xfsbufd was removed, so it's time to mark them deprecated so we can
-| > remove them in a year's time. That gives anyone using them
-| > (including distros) plenty of time to fix whatever is using them
-| > before they get removed.
-| > 
-| > > I'm thinking of the 3.3 glusterfs and 3.8 pulseaudio reakeage.  And I would
-| > > really like to have a nice holiday weekend. ;)
-| > 
-| > I think you're being overly paranoid here - I'm simply following the
-| > normal deprecation protocol here....
-| 
-| Documenation/ABI/README:
-| 
-| We have four different levels of ABI stability, as shown by the four
-| different subdirectories in this location.  Interfaces may change levels
-| of stability according to the rules described below.
-| ....
-|  obsolete/
-|          This directory documents interfaces that are still remaining in
-| 	 the kernel, but are marked to be removed at some later point in
-| 	 time.  The description of the interface will document the reason
-| 	 why it is obsolete and when it can be expected to be removed.
-
-
-| I think you'll find that what I done follows this policy. If you
-| really want, I'll move them to Documenation/ABI/obsolete.  And, of
-| course, if removing them proves to be a problem, as Eric said we can
-| always reinstate them or remove the deprecation notices.
-
-It is great that Linux has a documented life cycle for kernel to userspace
-interfaces.  These are guidelines for the minimum requirements.  Move the
-mount options to obsolete.  I have no problems with making mount options
-obsolete.  Remove them and people will make a big fuss.
-
-
--- 
-Geoffrey Wehrman  651-683-5496  gwehrman@sgi.com
 
 _______________________________________________
 xfs mailing list
