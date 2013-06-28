@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, master,
+Subject: [XFS updates] XFS development tree branch, for-next,
 	updated. v3.10-rc1-61-g83e782e
-Message-Id: <20130628225107.5831F7F94@oss.sgi.com>
-Date: Fri, 28 Jun 2013 17:51:07 -0500 (CDT)
+Message-Id: <20130628225118.450DE7F9C@oss.sgi.com>
+Date: Fri, 28 Jun 2013 17:51:18 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,7 +23,7 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, master has been updated
+The branch, for-next has been updated
   83e782e xfs: Remove incore use of XFS_OQUOTA_ENFD and XFS_OQUOTA_CHKD
   0e6436d xfs: Change xfs_dquot_acct to be a 2-dimensional array
   113a568 xfs: Code cleanup and removal of some typedef usage
