@@ -1,31 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 20F407FA0
-	for <xfs@oss.sgi.com>; Fri, 28 Jun 2013 18:22:48 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 13E2C7FA0
+	for <xfs@oss.sgi.com>; Fri, 28 Jun 2013 21:38:22 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 00D89304067
-	for <xfs@oss.sgi.com>; Fri, 28 Jun 2013 16:22:44 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id VBOxEEcaRZguo6Pn (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 28 Jun 2013 16:22:43 -0700 (PDT)
-Date: Fri, 28 Jun 2013 19:22:38 -0400
-From: Dwight Engen <dwight.engen@oracle.com>
-Subject: Re: [PATCH 6/6] ioctl eofblocks: require non-privileged users to
-	specify uid/gid match
-Message-ID: <20130628192238.7d8bc38c@oracle.com>
-In-Reply-To: <51CE0281.4040403@redhat.com>
-References: <20130619110948.0bfafa2b@oracle.com>
-	<20130620001341.GM29338@dastard>
-	<20130620095410.1917d235@oracle.com>
-	<20130620220311.GT29376@dastard>
-	<20130621111420.5592707e@oracle.com>
-	<20130624003316.GH29376@dastard>
-	<20130624091035.6274800f@oracle.com>
-	<20130626020924.GD29376@dastard>
-	<20130628111138.68d0b486@oracle.com> <51CDDAF0.7060501@redhat.com>
-	<20130628162825.4fb7e4ed@oracle.com> <51CE0281.4040403@redhat.com>
-Mime-Version: 1.0
+	by relay1.corp.sgi.com (Postfix) with ESMTP id F203D8F8049
+	for <xfs@oss.sgi.com>; Fri, 28 Jun 2013 19:38:18 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	KGPShhzIdtqdjZHE for <xfs@oss.sgi.com>;
+	Fri, 28 Jun 2013 19:38:17 -0700 (PDT)
+Date: Sat, 29 Jun 2013 12:38:04 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 01/15] xfs: update mount options documentation
+Message-ID: <20130629023804.GE9047@dastard>
+References: <1372313099-8121-1-git-send-email-david@fromorbit.com>
+	<1372313099-8121-2-git-send-email-david@fromorbit.com>
+	<20130627144814.GM20932@sgi.com> <20130627190831.GN20932@sgi.com>
+	<20130628020912.GI32195@dastard> <20130628023204.GJ32195@dastard>
+	<20130628193959.GC20932@sgi.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20130628193959.GC20932@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,128 +33,99 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: "Eric W. Biederman" <ebiederm@gmail.com>, Serge Hallyn <serge.hallyn@ubuntu.com>, xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, 28 Jun 2013 17:39:13 -0400
-Brian Foster <bfoster@redhat.com> wrote:
+On Fri, Jun 28, 2013 at 02:39:59PM -0500, Ben Myers wrote:
+> Hey Dave,
+> 
+> On Fri, Jun 28, 2013 at 12:32:04PM +1000, Dave Chinner wrote:
+> > On Fri, Jun 28, 2013 at 12:09:12PM +1000, Dave Chinner wrote:
+> > > On Thu, Jun 27, 2013 at 02:08:31PM -0500, Ben Myers wrote:
+> > > > Hey Dave,
+> > > > 
+> > > > On Thu, Jun 27, 2013 at 09:48:14AM -0500, Ben Myers wrote:
+> > > > > On Thu, Jun 27, 2013 at 04:04:45PM +1000, Dave Chinner wrote:
+> > > > > > From: Dave Chinner <dchinner@redhat.com>
+> > > > > > 
+> > > > > > Because it's horribly out of date.
+> > > > > > 
+> > > > > > And mark various deprecated options as deprecated and give them a
+> > > > > > removal date.
+> > > > > > 
+> > > > > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > > > > > Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+> > > > > 
+> > > > > Regarding removal of these mount options and sysctls:  initially these all look
+> > > > > pretty reasonable but we need to be very careful here.  I've read some
+> > > > > discussions on lkml that seem to suggest that such interfaces which have been
+> > > > > exported to userspace shouldn't be removed at all.  Not that I want to keep
+> > > > > around a bunch of worn out interfaces...
+> > > > > 
+> > > > > Applied.
+> > > > 
+> > > > On second thought... Not pushed.
+> > > > 
+> > > > I'm going to hold off on pushing this one to oss for now because I'm just not
+> > > > comfortable with it yet.  I can pull this in sans the removal notices if you
+> > > > want.  Lets discuss whether the removal of deprecated mount options and sysctls
+> > > > is acceptable before announcing an intention to remove them.  I'm trending no,
+> > > > but I can be flexible if this really is ok.
+> > > 
+> > > Mount options are perfectly fine to be removed - they've been given
+> > > deprecated warnings for quite some time now (the most recent is the
+> > > delaylog which has been doing that since 3.1 IIRC). So they are all
+> > > fine to actually remove - 12 months warning is usually considered
+> > > sufficient.
+> > > 
+> > > As to the sysctls - they haven't had any effect since 3.5 when the
+> > > xfsbufd was removed, so it's time to mark them deprecated so we can
+> > > remove them in a year's time. That gives anyone using them
+> > > (including distros) plenty of time to fix whatever is using them
+> > > before they get removed.
+> > > 
+> > > > I'm thinking of the 3.3 glusterfs and 3.8 pulseaudio reakeage.  And I would
+> > > > really like to have a nice holiday weekend. ;)
+> > > 
+> > > I think you're being overly paranoid here - I'm simply following the
+> > > normal deprecation protocol here....
+> > 
+> > Documenation/ABI/README:
+> > 
+> > We have four different levels of ABI stability, as shown by the four
+> > different subdirectories in this location.  Interfaces may chang levels
+> > of stability according to the rules described below.
+> > ....
+> >  obsolete/
+> >          This directory documents interfaces that are still remaining in
+> > 	 the kernel, but are marked to be removed at some later point in
+> > 	 time.  The description of the interface will document the reason
+> > 	 why it is obsolete and when it can be expected to be removed.
+> > 
+> > I think you'll find that what I done follows this policy.
+> 
+> Thanks.  That's exactly the sort of doc I am looking for.  I'll check it out.
+> I really just want to make sure that we're not going to be breaking userspace
+> by removing these...
+> 
+> > If you really want, I'll move them to Documenation/ABI/obsolete.  And, of
+> > course, if removing them proves to be a problem, as Eric said we can always
+> > reinstate them or remove the deprecation notices.
+> 
+> I forgot to mention that noatime seems to be missing now.  Was that intentional?
 
-> On 06/28/2013 04:28 PM, Dwight Engen wrote:
-> > On Fri, 28 Jun 2013 14:50:24 -0400
-> > Brian Foster <bfoster@redhat.com> wrote:
-> > 
-> >> On 06/28/2013 11:11 AM, Dwight Engen wrote:
-> >>> Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
-> >>> ---
-> ...
-> >>
-> >> In thinking more about the other aspect of group management (and I
-> >> admit I'm still waffling about this), it seems like we could go in
-> >> a couple directions:
-> >>
-> >> - Now that we have a separate internal only eofblocks control, be
-> >> more flexible and provide an internal only flag (valid only for
-> >> UID/GID scans) to instruct the scan to do specific file permission
-> >> checking against the inodes. This would be set by xfs_file_ioctl()
-> >> and do the write permission enforcement for userspace originated
-> >> scans. This would also allow the future EDQUOT work to leave out
-> >> said flag and do a group wide scan regardless of the specific
-> >> permissions of the calling context (i.e., when the system decides
-> >> all inodes under a group quota must be trimmed).
-> > 
-> > I haven't seen your EDQUOT change, but your description made me
-> > wonder: Are you going to kick off a scan for the type of quota
-> > exhausted? Otherwise could a user abuse this by overrunning his
-> > user quota in order to cause group inodes (that he may not have
-> > write to) to be reclaimed?
-> > 
-> 
-> Yes, you could describe it that way. The current behavior is a global
-> inode flush followed by an ENOSPC/EDQUOT error, so I'm not sure we're
-> exposing much by attempting an eofblocks scan before running out of
-> space. It's a fairly minor optimization in the failure path.
-> 
-> Another way to look at it might be that the users/inodes have never
-> really reserved the extra space that's being trimmed here, so the
-> filesystem has every right to take it away if it deems it better to
-> put to use elsewhere (i.e., to put off an ENOSPC related failure).
-> 
-> > At any rate, yeah the only way I see to get the permissions checks
-> > right is to set a flag up in ioctl because the checks need to be per
-> > inode. I think you would like to avoid having the checks that low in
-> > xfs_icache, but I don't see a way around that.
-> > 
-> 
-> That's the reasoning behind the extra internal only flag. It's not
-> having the check that I'm against so much as the idea that this layer
-> of code should be unconditionally bound by the current userspace
-> context. But it might be reasonable to add control flags to
-> effectively make that so (i.e., XFS_EOF_FLAGS_ENFORCE_PERMS).
+Yes - it's not an XFS mount option - it's handled by the VFS and
+documented as a common mount option for all filesystems just like
+nodiratime, relatime, strictatime, sync, dirsync, nosuid, noexec,
+etc. IOWs, there's no need to document it as an XFS specific mount
+option....
 
-Right, clearly you've got a use case where it shouldn't be limited
-while the ioctl caller could ensure the flag is on.
+Cheers,
 
-> >> The downsides here are the behavior might be a bit unclear and we'd
-> >> have to fork off the flags bits in a manner that's clear and
-> >> maintainable. I suppose one could also argue this is overkill for
-> >> somewhat of a secondary operation.
-> >>
-> >> - Go the other direction, be less flexible and simply not allow
-> >> !capable(CAP_SYS_ADMIN) group scans just as we started doing for
-> >> project quotas. This is obviously very simple, but then we disallow
-> >> regular users from trimming groups of inodes they should full well
-> >> have permission to trim.
-> > 
-> > What about uid == self scans? Would we not allow those as well? The
-> > check may be simpler than a group check but still would need to be
-> > per inode, and thus still need the flags of option 1.
-> > 
-> 
-> I'm not following. Aren't we already enforcing this appropriately with
-> your current patch? My comments were intended to be taken as in
-> addition to this patch. i.e., with regard to your comments in the
-> commit log here:
-> 
-> http://oss.sgi.com/archives/xfs/2013-06/msg00785.html
-
-Ahh yes, the code there should be fine since it requires
-XFS_EOF_FLAGS_UID and that uid == self to be given. I misunderstood
-your "less flexible" above to be in-lieu of the checks in that patch and
-it was only mentioning group scans so that is why I was wondering
-if you meant to throw out uid scans as well.
-
-> >> I think I'm leaning towards the former approach if it can be
-> >> implemented cleanly. Thoughts or ideas?
-> > 
-> > Well the former is certainly more functional and allows the
-> > trimming to be under the users control. How useful is that though
-> > once it happens automatically with your EDQUOT changes? If we only
-> > allowed the ioctl to trigger global scans, we wouldn't need a
-> > conversion function nor separate structure, but I don't know the
-> > use cases for uid/gid specific scans from userspace so its hard for
-> > me to judge the tradeoffs.
-> > 
-> 
-> To be honest, there aren't any real users of the eofblocks command
-> from userspace that I'm aware of at the moment. I added it originally
-> for a poc quota implementation I was working on for gluster, but the
-> primary use case for the scanning mechanism is to allow background
-> clean up of files such that post-eof speculative preallocation
-> doesn't hang around for too long.
-
-... and there are likely to be scenarios where waiting for the timer
-would be too long?
- 
-> > Maybe this permission stuff should be a separate change since it
-> > isn't really related to user namespace stuff? I just happened to be
-> > in the vicinity and am happy to help :)
-> > 
-> 
-> Sounds reasonable to me. :)
-
-If you want me to code up either option, let me know.
- 
-> Brian
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
