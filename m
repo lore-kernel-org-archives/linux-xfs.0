@@ -1,32 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 88A1B7F56
-	for <xfs@oss.sgi.com>; Mon,  1 Jul 2013 05:37:14 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 4E7A07F53
+	for <xfs@oss.sgi.com>; Mon,  1 Jul 2013 07:17:14 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 780F4304032
-	for <xfs@oss.sgi.com>; Mon,  1 Jul 2013 03:37:11 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id JHiODFeG9JhbAS7Z (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 01 Jul 2013 03:37:10 -0700 (PDT)
-Received: from ucsinet22.oracle.com (ucsinet22.oracle.com [156.151.31.94])
-	by userp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
-	ESMTP id r61AUnba007196
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Mon, 1 Jul 2013 10:30:50 GMT
-Received: from userz7022.oracle.com (userz7022.oracle.com [156.151.31.86])
-	by ucsinet22.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r61Ab8vG017479
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Mon, 1 Jul 2013 10:37:09 GMT
-Received: from abhmt104.oracle.com (abhmt104.oracle.com [141.146.116.56])
-	by userz7022.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r61Ab8gh017470 for <xfs@oss.sgi.com>; Mon, 1 Jul 2013 10:37:08 GMT
-Message-ID: <51D15BDF.9000805@oracle.com>
-Date: Mon, 01 Jul 2013 18:37:19 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D0419AC008
+	for <xfs@oss.sgi.com>; Mon,  1 Jul 2013 05:17:10 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 3C2FZOgs7lBtBEVl for
+	<xfs@oss.sgi.com>; Mon, 01 Jul 2013 05:17:09 -0700 (PDT)
+Message-ID: <51D17457.7090001@redhat.com>
+Date: Mon, 01 Jul 2013 08:21:43 -0400
+From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfstests: clean up remake related matters from README
+Subject: Re: [PATCH 6/6] ioctl eofblocks: require non-privileged users to
+	specify uid/gid match
+References: <20130619110948.0bfafa2b@oracle.com>
+	<20130620001341.GM29338@dastard>
+	<20130620095410.1917d235@oracle.com>
+	<20130620220311.GT29376@dastard>
+	<20130621111420.5592707e@oracle.com>
+	<20130624003316.GH29376@dastard>
+	<20130624091035.6274800f@oracle.com>
+	<20130626020924.GD29376@dastard>
+	<20130628111138.68d0b486@oracle.com> <51CDDAF0.7060501@redhat.com>
+	<20130628162825.4fb7e4ed@oracle.com> <51CE0281.4040403@redhat.com>
+	<20130628192238.7d8bc38c@oracle.com>
+In-Reply-To: <20130628192238.7d8bc38c@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,38 +38,53 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Dwight Engen <dwight.engen@oracle.com>
+Cc: "Eric W. Biederman" <ebiederm@gmail.com>, Serge Hallyn <serge.hallyn@ubuntu.com>, xfs@oss.sgi.com
 
-From: Jie Liu <jeff.liu@oracle.com>
+On 06/28/2013 07:22 PM, Dwight Engen wrote:
+> On Fri, 28 Jun 2013 17:39:13 -0400
+> Brian Foster <bfoster@redhat.com> wrote:
+> 
+>> On 06/28/2013 04:28 PM, Dwight Engen wrote:
+>>> On Fri, 28 Jun 2013 14:50:24 -0400
+>>> Brian Foster <bfoster@redhat.com> wrote:
+>>>
+>>>> On 06/28/2013 11:11 AM, Dwight Engen wrote:
+...
+>>
+>> To be honest, there aren't any real users of the eofblocks command
+>> from userspace that I'm aware of at the moment. I added it originally
+>> for a poc quota implementation I was working on for gluster, but the
+>> primary use case for the scanning mechanism is to allow background
+>> clean up of files such that post-eof speculative preallocation
+>> doesn't hang around for too long.
+> 
+> ... and there are likely to be scenarios where waiting for the timer
+> would be too long?
+>  
 
-Cleanup 'remake' related matters from the README file as the
-remake utility has already been removed by:
+Well one can adjust the timer via the /proc file if necessary. Our use
+case was along the lines of ensuring prealloc was cleared up at certain
+points where we wanted to track space usage (using a cluster of XFS
+project quotas to represent a higher level quota), iirc. It's been a
+while since I've looked at that code... ;)
 
-commit 609d17c4eb911891fae3c0081c2cd1caa613c0de
+>>> Maybe this permission stuff should be a separate change since it
+>>> isn't really related to user namespace stuff? I just happened to be
+>>> in the vicinity and am happy to help :)
+>>>
+>>
+>> Sounds reasonable to me. :)
+> 
+> If you want me to code up either option, let me know.
+>  
 
-	xfstests: remove remake script
+Feel free to. :) I agree that it's separate from the userns work.
+I'll put it on my todo list if you don't get around to it.
 
-Signed-off-by: Jie Liu <jeff.liu@oracle.com>
----
- README |    3 ---
- 1 file changed, 3 deletions(-)
+Brian
 
-diff --git a/README b/README
-index d4d4f31..b264a07 100644
---- a/README
-+++ b/README
-@@ -203,9 +203,6 @@ Verified output:
-     - variable directory contents
-     - imprecise numbers, especially sizes and times
- 
--    Use the "remake" script to recreate the verified output for one
--    or more tests.
--
- Pass/failure:
- 
-     The script "check" may be used to run one or more tests.
--- 
-1.7.9.5
+>> Brian
 
 _______________________________________________
 xfs mailing list
