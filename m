@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id F404F7F4E
-	for <xfs@oss.sgi.com>; Mon,  1 Jul 2013 03:36:46 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E3E7630404E
-	for <xfs@oss.sgi.com>; Mon,  1 Jul 2013 01:36:43 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id EIrq4N3r30F3itPu for
-	<xfs@oss.sgi.com>; Mon, 01 Jul 2013 01:36:43 -0700 (PDT)
-Date: Mon, 1 Jul 2013 10:36:37 +0200 (CEST)
-From: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>
+	by oss.sgi.com (Postfix) with ESMTP id 95FA77F4E
+	for <xfs@oss.sgi.com>; Mon,  1 Jul 2013 04:13:44 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 76E79304032
+	for <xfs@oss.sgi.com>; Mon,  1 Jul 2013 02:13:41 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	eyphTr2gFskCbbKa for <xfs@oss.sgi.com>;
+	Mon, 01 Jul 2013 02:13:39 -0700 (PDT)
+Date: Mon, 1 Jul 2013 19:12:56 +1000
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH 3/3 v2] xfstests: Add support for sections in config file
-In-Reply-To: <20130701014944.GD27780@dastard>
-Message-ID: <alpine.LFD.2.00.1307011022300.2542@localhost.localdomain>
+Message-ID: <20130701091256.GB4072@dastard>
 References: <1372426320-19902-1-git-send-email-lczerner@redhat.com>
 	<1372426320-19902-3-git-send-email-lczerner@redhat.com>
 	<20130701014944.GD27780@dastard>
+	<alpine.LFD.2.00.1307011022300.2542@localhost.localdomain>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <alpine.LFD.2.00.1307011022300.2542@localhost.localdomain>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,144 +28,60 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: =?utf-8?B?THVrw6HFoQ==?= Czerner <lczerner@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, 1 Jul 2013, Dave Chinner wrote:
-
-> Date: Mon, 1 Jul 2013 11:49:44 +1000
-> From: Dave Chinner <david@fromorbit.com>
-> To: Lukas Czerner <lczerner@redhat.com>
-> Cc: xfs@oss.sgi.com
-> Subject: Re: [PATCH 3/3 v2] xfstests: Add support for sections in config file
-> 
-> On Fri, Jun 28, 2013 at 03:32:00PM +0200, Lukas Czerner wrote:
-> > This patch add support for sections in the config file. Each section can
-> > contain configuration options in the format
-> > 
-> > OPTION=value
-> > 
-> > when one section is processed xfstests will proceed to next section
-> > until all secitons are processed, or an error occur.
-> > 
-> > The name of the section can consist of alphanumeric characters + '_',
-> > nothing else is allowed. Name of the section is also used to create
-> > results subdirectory for each section. After all the sections are
-> > processed summary of all runs is printed out.
-> > 
-> > If the config file does not contain sections, or we're not using config
-> > file at all, nothing is changed and xfstests will work the same way as
-> > it used to.
-> > 
-> > This is very useful for testing file system with different options. Here
-> > is an example of the config file with sections:
-> > 
-> > [ext4_4k_block_size]
-> > TEST_DEV=/dev/sda
-> > TEST_DIR=/mnt/test
-> > SCRATCH_DEV=/dev/sdb
-> > SCRATCH_MNT=/mnt/test1
-> > MKFS_OPTIONS="-q -F -b4096"
-> > FSTYP=ext4
-> > 
-> > [ext4_1k_block_size]
-> > MKFS_OPTIONS="-q -F -b1024"
-> > 
-> > [ext4_nojournal]
-> > MKFS_OPTIONS="-q -F -b4096 -O ^has_journal"
-> > 
-> > [ext4_discard_ssd]
-> > MKFS_OPTIONS="-q -F -b4096"
-> > TEST_DEV=/dev/sdc
-> > SCRATCH_DEV=/dev/sdd
-> > MOUNT_OPTIONS="-o discard"
-> > 
-> > Note that once the variable is set it remains set across the sections, so
-> > you do not have to specify all the options in all sections. However one
-> > have to make sure that unwanted options are not set from previous
-> > sections.
-> 
-> I like the idea, but a lot of this needs to be in the (missing)
-> patch 0 description for the series. YOu also need to describe how
-> these get invoked, what the output looks like, etc because right now
-> I can't work it out from this...
-
-Fair enough, I should probably describe it in the README as well.
-
-> 
-> > Signed-off-by: Lukas Czerner <lczerner@redhat.com>
-> > ---
-> >  check         | 371 +++++++++++++++++++++++++++++++++-------------------------
-> >  common/config | 126 ++++++++++++--------
-> >  common/rc     |  63 +++++-----
-> >  3 files changed, 326 insertions(+), 234 deletions(-)
-> 
-> This patch probably needs to be broken up, too. A substantial part
-> of it is indentation changes, which probably should be split into 2
-> parts - factor code into function, then wrap loop around function.
-> The change to the summary information should be done as a separate
-> patch, too. I suspect many of the common/config changes coul dbe
-> split up, too.
-
-Ok, I'll see how can I split it up. Btw, indentation in xfstests is
-a mess, because sometimes we're using spaces and sometimes tabs. Is
-there any preference ? (I would definitely prefer tabs)
-
-> 
-> The changing of the $RESULT_BASE should probably also
-> bein a separate patch, because this is something that we'll need to
-> discuss as it changes the structure of the output....
-
-I am not sure it should be separate from this patch because the new
-structure will only be used if the new config format (with sections)
-is used.
-
-> 
-> Oh, and why make a distinction between no sections and
-> $OPTIONS_HAVE_SECTIONS in the config file? Surely no sections is
-> just the same as having 1 section....
-
-Yes, but it's much "nicer" to check boolean option than checking
-what is the name of the first section. Really this is just a
-workaround, because I did not want to change result structure and
-output if one is not using the new config format. It could be done
-so that when there are no sections we'll always use "default" section,
-not sure what would people prefer.
-
-> 
-> > +parse_config_section() {
-> > +	SECTION=$1
-> > +	if ! $OPTIONS_HAVE_SECTIONS; then
-> > +		return 0
-> > +	fi
-> > +	eval `sed -e 's/[[:space:]]*\=[[:space:]]*/=/g' \
-> > +		-e 's/#.*$//' \
-> > +		-e 's/[[:space:]]*$//' \
-> > +		-e 's/^[[:space:]]*//' \
-> > +		-e "s/^\(.*\)=\([^\"']*\)$/export \1=\"\2\"/" \
-> > +		< $HOST_OPTIONS \
-> > +		| sed -n -e "/^\[$SECTION\]/,/^\s*\[/{/^[^;].*\=.*/p;}"`
-> > +}
-> 
-> And line noise like this needs comments explaining the format and
-> what it is doing. ;)
-
-Sure I'll add some comments.
-
-Thanks!
--Lukas
-
-> 
-> Cheers,
-> 
-> Dave.
-> 
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gTW9uLCBKdWwgMDEsIDIwMTMgYXQgMTA6MzY6MzdBTSArMDIwMCwgTHVrw6HFoSBDemVybmVy
+IHdyb3RlOgo+IE9uIE1vbiwgMSBKdWwgMjAxMywgRGF2ZSBDaGlubmVyIHdyb3RlOgo+ID4gPiBT
+aWduZWQtb2ZmLWJ5OiBMdWthcyBDemVybmVyIDxsY3plcm5lckByZWRoYXQuY29tPgo+ID4gPiAt
+LS0KPiA+ID4gIGNoZWNrICAgICAgICAgfCAzNzEgKysrKysrKysrKysrKysrKysrKysrKysrKysr
+KysrKysrLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQo+ID4gPiAgY29tbW9uL2NvbmZpZyB8IDEy
+NiArKysrKysrKysrKystLS0tLS0tLQo+ID4gPiAgY29tbW9uL3JjICAgICB8ICA2MyArKysrKy0t
+LS0tCj4gPiA+ICAzIGZpbGVzIGNoYW5nZWQsIDMyNiBpbnNlcnRpb25zKCspLCAyMzQgZGVsZXRp
+b25zKC0pCj4gPiAKPiA+IFRoaXMgcGF0Y2ggcHJvYmFibHkgbmVlZHMgdG8gYmUgYnJva2VuIHVw
+LCB0b28uIEEgc3Vic3RhbnRpYWwgcGFydAo+ID4gb2YgaXQgaXMgaW5kZW50YXRpb24gY2hhbmdl
+cywgd2hpY2ggcHJvYmFibHkgc2hvdWxkIGJlIHNwbGl0IGludG8gMgo+ID4gcGFydHMgLSBmYWN0
+b3IgY29kZSBpbnRvIGZ1bmN0aW9uLCB0aGVuIHdyYXAgbG9vcCBhcm91bmQgZnVuY3Rpb24uCj4g
+PiBUaGUgY2hhbmdlIHRvIHRoZSBzdW1tYXJ5IGluZm9ybWF0aW9uIHNob3VsZCBiZSBkb25lIGFz
+IGEgc2VwYXJhdGUKPiA+IHBhdGNoLCB0b28uIEkgc3VzcGVjdCBtYW55IG9mIHRoZSBjb21tb24v
+Y29uZmlnIGNoYW5nZXMgY291bCBkYmUKPiA+IHNwbGl0IHVwLCB0b28uCj4gCj4gT2ssIEknbGwg
+c2VlIGhvdyBjYW4gSSBzcGxpdCBpdCB1cC4gQnR3LCBpbmRlbnRhdGlvbiBpbiB4ZnN0ZXN0cyBp
+cwo+IGEgbWVzcywgYmVjYXVzZSBzb21ldGltZXMgd2UncmUgdXNpbmcgc3BhY2VzIGFuZCBzb21l
+dGltZXMgdGFicy4gSXMKPiB0aGVyZSBhbnkgcHJlZmVyZW5jZSA/IChJIHdvdWxkIGRlZmluaXRl
+bHkgcHJlZmVyIHRhYnMpCgpUYWJzLgoKPiA+IFRoZSBjaGFuZ2luZyBvZiB0aGUgJFJFU1VMVF9C
+QVNFIHNob3VsZCBwcm9iYWJseSBhbHNvCj4gPiBiZWluIGEgc2VwYXJhdGUgcGF0Y2gsIGJlY2F1
+c2UgdGhpcyBpcyBzb21ldGhpbmcgdGhhdCB3ZSdsbCBuZWVkIHRvCj4gPiBkaXNjdXNzIGFzIGl0
+IGNoYW5nZXMgdGhlIHN0cnVjdHVyZSBvZiB0aGUgb3V0cHV0Li4uLgo+IAo+IEkgYW0gbm90IHN1
+cmUgaXQgc2hvdWxkIGJlIHNlcGFyYXRlIGZyb20gdGhpcyBwYXRjaCBiZWNhdXNlIHRoZSBuZXcK
+PiBzdHJ1Y3R1cmUgd2lsbCBvbmx5IGJlIHVzZWQgaWYgdGhlIG5ldyBjb25maWcgZm9ybWF0ICh3
+aXRoIHNlY3Rpb25zKQo+IGlzIHVzZWQuCgpXaGljaCBpcyBhIGJpdCBjb25mdXNpbmcsIGVzcGVj
+aWFsbHkgYXMgYSBzZXBhcmF0ZSByZXN1bHQgZGlyZWN0b3J5Cm1pZ2h0IGJlIGRlc2lyZWQgZm9y
+IHRoZSBvdXRwdXQgb2YgZWFjaCBzZWN0aW9uIC0gc2F5IEkgd2FudCB0byBrZWVwCmFsbCB0aGUg
+ImNvbmZpZyBBIiByZXN1bHRzIHRvZ2V0aGVyLCBidXQgc3BlYXJhdGUgdG8gYWxsIHRoZSAiY29u
+ZmlnCkIiIHJlc3VsdHMuIFBsYWNpbmcgdGhlbSBhbGwgdW5kZXIgdGhlIHNhbWUgJFJFU1VMVF9C
+QVNFIGlzbid0IGlkZWFsCmF0IHRoYXQgcG9pbnQuLi4uCgpJT1dzLCBJIHN1c3BlY3QgdGhhdCAk
+UkVTVUxUX0JBU0Ugc2hvdWxkIGJlIGFibGUgdG8gYmUgZGVmaW5lZCBpbgp0aGUgc2VjdGlvbiBj
+b25maWcgc28gdGhhdCB5b3UgY2FuIHJlZGlyZWN0IHJlc3VsdHMgdGhhdCB3YXkuCgo+ID4gT2gs
+IGFuZCB3aHkgbWFrZSBhIGRpc3RpbmN0aW9uIGJldHdlZW4gbm8gc2VjdGlvbnMgYW5kCj4gPiAk
+T1BUSU9OU19IQVZFX1NFQ1RJT05TIGluIHRoZSBjb25maWcgZmlsZT8gU3VyZWx5IG5vIHNlY3Rp
+b25zIGlzCj4gPiBqdXN0IHRoZSBzYW1lIGFzIGhhdmluZyAxIHNlY3Rpb24uLi4uCj4gCj4gWWVz
+LCBidXQgaXQncyBtdWNoICJuaWNlciIgdG8gY2hlY2sgYm9vbGVhbiBvcHRpb24gdGhhbiBjaGVj
+a2luZwo+IHdoYXQgaXMgdGhlIG5hbWUgb2YgdGhlIGZpcnN0IHNlY3Rpb24uIFJlYWxseSB0aGlz
+IGlzIGp1c3QgYQo+IHdvcmthcm91bmQsIGJlY2F1c2UgSSBkaWQgbm90IHdhbnQgdG8gY2hhbmdl
+IHJlc3VsdCBzdHJ1Y3R1cmUgYW5kCj4gb3V0cHV0IGlmIG9uZSBpcyBub3QgdXNpbmcgdGhlIG5l
+dyBjb25maWcgZm9ybWF0LgoKVGhhdCdzIGFub3RoZXIgcmVhc29uIHdoeSBJIHRoaW5rIHRoYXQg
+d2Ugc2hvdWxkIGJlIGFibGUgdG8gaGF2ZSBhCnBlci1zZWN0aW9uIFJFU1VMVFNfQkFTRSAtIHRo
+YXQgd2F5IHRoZSBjb2RlIGRvZXNuJ3QgY2FyZSBob3cKUkVTVUxUU19CQVNFIGlzIGRlZmluZWQg
+b3Igd2hlcmUgaXQgcG9pbnRzIHRvIC0gdGhlIG91dHB1dCBvZgp4ZnN0ZXN0cyBpcyAqYWx3YXlz
+KiB0aGUgc2FtZS4gVGhhdCBpcywgYWZ0ZXIgYWxsLCB3aHkgJFJFU1VMVFNfQkFTRQp3YXMgaW50
+cm9kdWNlZCBpbiB0aGUgZmlyc3QgcGxhY2UuCgo+IEl0IGNvdWxkIGJlIGRvbmUKPiBzbyB0aGF0
+IHdoZW4gdGhlcmUgYXJlIG5vIHNlY3Rpb25zIHdlJ2xsIGFsd2F5cyB1c2UgImRlZmF1bHQiIHNl
+Y3Rpb24sCj4gbm90IHN1cmUgd2hhdCB3b3VsZCBwZW9wbGUgcHJlZmVyLgoKRXhhY3RseSB3aHkg
+aXQgbmVlZHMgZGlzY3Vzc2lvbiA7KQoKQ2hlZXJzLAoKRGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpk
+YXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNn
+aS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
