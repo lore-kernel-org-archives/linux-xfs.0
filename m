@@ -1,31 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4E7A07F53
-	for <xfs@oss.sgi.com>; Mon,  1 Jul 2013 07:17:14 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 017C67F55
+	for <xfs@oss.sgi.com>; Mon,  1 Jul 2013 08:51:29 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D0419AC008
-	for <xfs@oss.sgi.com>; Mon,  1 Jul 2013 05:17:10 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 3C2FZOgs7lBtBEVl for
-	<xfs@oss.sgi.com>; Mon, 01 Jul 2013 05:17:09 -0700 (PDT)
-Message-ID: <51D17457.7090001@redhat.com>
-Date: Mon, 01 Jul 2013 08:21:43 -0400
-From: Brian Foster <bfoster@redhat.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 761CFAC00A
+	for <xfs@oss.sgi.com>; Mon,  1 Jul 2013 06:51:25 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id abAoYDqDLFf7dzFo (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 01 Jul 2013 06:51:24 -0700 (PDT)
+Received: from acsinet21.oracle.com (acsinet21.oracle.com [141.146.126.237])
+	by userp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
+	ESMTP id r61Dj2k4019765
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Mon, 1 Jul 2013 13:45:03 GMT
+Received: from aserz7021.oracle.com (aserz7021.oracle.com [141.146.126.230])
+	by acsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	r61DpLrI018157
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Mon, 1 Jul 2013 13:51:22 GMT
+Received: from abhmt120.oracle.com (abhmt120.oracle.com [141.146.116.72])
+	by aserz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	r61DpL3d018149 for <xfs@oss.sgi.com>; Mon, 1 Jul 2013 13:51:21 GMT
+Message-ID: <51D18964.2030708@oracle.com>
+Date: Mon, 01 Jul 2013 21:51:32 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 6/6] ioctl eofblocks: require non-privileged users to
-	specify uid/gid match
-References: <20130619110948.0bfafa2b@oracle.com>
-	<20130620001341.GM29338@dastard>
-	<20130620095410.1917d235@oracle.com>
-	<20130620220311.GT29376@dastard>
-	<20130621111420.5592707e@oracle.com>
-	<20130624003316.GH29376@dastard>
-	<20130624091035.6274800f@oracle.com>
-	<20130626020924.GD29376@dastard>
-	<20130628111138.68d0b486@oracle.com> <51CDDAF0.7060501@redhat.com>
-	<20130628162825.4fb7e4ed@oracle.com> <51CE0281.4040403@redhat.com>
-	<20130628192238.7d8bc38c@oracle.com>
-In-Reply-To: <20130628192238.7d8bc38c@oracle.com>
+Subject: [PATCH] xfs: clean up unused codes at xfs_bulkstat()
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,53 +39,89 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dwight Engen <dwight.engen@oracle.com>
-Cc: "Eric W. Biederman" <ebiederm@gmail.com>, Serge Hallyn <serge.hallyn@ubuntu.com>, xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 06/28/2013 07:22 PM, Dwight Engen wrote:
-> On Fri, 28 Jun 2013 17:39:13 -0400
-> Brian Foster <bfoster@redhat.com> wrote:
-> 
->> On 06/28/2013 04:28 PM, Dwight Engen wrote:
->>> On Fri, 28 Jun 2013 14:50:24 -0400
->>> Brian Foster <bfoster@redhat.com> wrote:
->>>
->>>> On 06/28/2013 11:11 AM, Dwight Engen wrote:
-...
->>
->> To be honest, there aren't any real users of the eofblocks command
->> from userspace that I'm aware of at the moment. I added it originally
->> for a poc quota implementation I was working on for gluster, but the
->> primary use case for the scanning mechanism is to allow background
->> clean up of files such that post-eof speculative preallocation
->> doesn't hang around for too long.
-> 
-> ... and there are likely to be scenarios where waiting for the timer
-> would be too long?
->  
+From: Jie Liu <jeff.liu@oracle.com>
 
-Well one can adjust the timer via the /proc file if necessary. Our use
-case was along the lines of ensuring prealloc was cleared up at certain
-points where we wanted to track space usage (using a cluster of XFS
-project quotas to represent a higher level quota), iirc. It's been a
-while since I've looked at that code... ;)
+There are some unused codes at xfs_bulkstat():
 
->>> Maybe this permission stuff should be a separate change since it
->>> isn't really related to user namespace stuff? I just happened to be
->>> in the vicinity and am happy to help :)
->>>
->>
->> Sounds reasonable to me. :)
-> 
-> If you want me to code up either option, let me know.
->  
+- Variable bp is defined to point to the on-disk inode cluster
+  buffer, but it proved to be of no practical help.
 
-Feel free to. :) I agree that it's separate from the userns work.
-I'll put it on my todo list if you don't get around to it.
+- We process the chunks of good inodes which were fetched by iterating
+  btree records from an AG.  When processing inodes from each chunk,
+  the code recomputing agbno if run into the first inode of a cluster,
+  however, the agbno is not being used thereafter.
 
-Brian
+This patch tries to clean up those things.
 
->> Brian
+Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+
+---
+ fs/xfs/xfs_itable.c |   28 +---------------------------
+ 1 file changed, 1 insertion(+), 27 deletions(-)
+
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -221,7 +221,6 @@ xfs_bulkstat(
+ 	char			__user *ubufp;	/* pointer into user's buffer */
+ 	int			ubelem;	/* spaces used in user's buffer */
+ 	int			ubused;	/* bytes used by formatter */
+-	xfs_buf_t		*bp;	/* ptr to on-disk inode cluster buf */
+ 
+ 	/*
+ 	 * Get the last inode value, see if there's nothing to do.
+@@ -263,7 +262,6 @@ xfs_bulkstat(
+ 	rval = 0;
+ 	while (XFS_BULKSTAT_UBLEFT(ubleft) && agno < mp->m_sb.sb_agcount) {
+ 		cond_resched();
+-		bp = NULL;
+ 		error = xfs_ialloc_read_agi(mp, NULL, agno, &agbp);
+ 		if (error) {
+ 			/*
+@@ -433,27 +431,7 @@ xfs_bulkstat(
+ 				irbp->ir_freecount < XFS_INODES_PER_CHUNK;
+ 			     chunkidx++, clustidx++, agino++) {
+ 				ASSERT(chunkidx < XFS_INODES_PER_CHUNK);
+-				/*
+-				 * Recompute agbno if this is the
+-				 * first inode of the cluster.
+-				 *
+-				 * Careful with clustidx.   There can be
+-				 * multiple clusters per chunk, a single
+-				 * cluster per chunk or a cluster that has
+-				 * inodes represented from several different
+-				 * chunks (if blocksize is large).
+-				 *
+-				 * Because of this, the starting clustidx is
+-				 * initialized to zero in this loop but must
+-				 * later be reset after reading in the cluster
+-				 * buffer.
+-				 */
+-				if ((chunkidx & (nicluster - 1)) == 0) {
+-					agbno = XFS_AGINO_TO_AGBNO(mp,
+-							irbp->ir_startino) +
+-						((chunkidx & nimask) >>
+-						 mp->m_sb.sb_inopblog);
+-				}
++
+ 				ino = XFS_AGINO_TO_INO(mp, agno, agino);
+ 				/*
+ 				 * Skip if this inode is free.
+@@ -499,10 +477,6 @@ xfs_bulkstat(
+ 
+ 			cond_resched();
+ 		}
+-
+-		if (bp)
+-			xfs_buf_relse(bp);
+-
+ 		/*
+ 		 * Set up for the next loop iteration.
+ 		 */
+-- 
+1.7.9.5
 
 _______________________________________________
 xfs mailing list
