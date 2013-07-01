@@ -1,19 +1,40 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8DC687F55
-	for <xfs@oss.sgi.com>; Mon,  1 Jul 2013 10:20:43 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id D44C67F55
+	for <xfs@oss.sgi.com>; Mon,  1 Jul 2013 10:50:46 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 39D06AC007
-	for <xfs@oss.sgi.com>; Mon,  1 Jul 2013 08:20:40 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id 6tIPI810JVZJXRuy (version=TLSv1
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A0C668F8037
+	for <xfs@oss.sgi.com>; Mon,  1 Jul 2013 08:50:46 -0700 (PDT)
+Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150]) by
+	cuda.sgi.com with ESMTP id c517jjZMn1QNVidk (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 01 Jul 2013 08:20:39 -0700 (PDT)
-Message-ID: <51D19DF9.2080007@oracle.com>
-Date: Mon, 01 Jul 2013 17:19:21 +0200
-From: Koen De Wit <koen.de.wit@oracle.com>
-MIME-Version: 1.0
-Subject: [PATCH v2] xfstests: btrfs/316: cross-subvolume sparse copy
+	Mon, 01 Jul 2013 08:50:45 -0700 (PDT)
+Received: from /spool/local
+	by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	Violators will be prosecuted
+	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
+	Mon, 1 Jul 2013 09:50:44 -0600
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com
+	[9.17.195.227])
+	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id B792419D8043
+	for <xfs@oss.sgi.com>; Mon,  1 Jul 2013 09:50:33 -0600 (MDT)
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	r61FoVgX140866 for <xfs@oss.sgi.com>; Mon, 1 Jul 2013 09:50:40 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id r61FoU2N012008
+	for <xfs@oss.sgi.com>; Mon, 1 Jul 2013 09:50:30 -0600
+Subject: Re: [PATCH v9 4/6] xfs: Start using pquotaino from the superblock.
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+In-Reply-To: <20130625063135.GU29376@dastard>
+References: <1372042107-27332-1-git-send-email-sekharan@us.ibm.com>
+	<1372042107-27332-5-git-send-email-sekharan@us.ibm.com>
+	<20130625063135.GU29376@dastard>
+Date: Mon, 01 Jul 2013 10:50:30 -0500
+Message-ID: <1372693830.9777.4.camel@chandra-dt.ibm.com>
+Mime-Version: 1.0
+Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,228 +43,211 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, linux-btrfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-This testscript creates reflinks to files on different subvolumes, 
-overwrites the original files and reflinks, and moves reflinked files 
-between subvolumes.
+Hi Dave,
 
-Originally submitted as testcase 302, changes are made based on comments 
-from Eric: http://oss.sgi.com/archives/xfs/2013-03/msg00231.html
-Two new common/rc functions used in this script (_require_cp_reflink and 
-_verify_reflink) have been submitted recently: 
-http://oss.sgi.com/archives/xfs/2013-05/msg00745.html
-Thanks to Eric Sandeen and Dave Chinner for the reviews.
+I sent this email on 6/25 (just before my reply on 5/6 w.r.t adding the
+test to xfstests). Since I didn't get any response from you on this and
+got reply on the other one, I concluded that you accepted my
+justification/clarification.
 
-Signed-off-by: Koen De Wit <koen.de.wit@oracle.com>
----
-  tests/btrfs/316     |  130 
-+++++++++++++++++++++++++++++++++++++++++++++++++++
-  tests/btrfs/316.out |   39 +++++++++++++++
-  tests/btrfs/group   |    1 +
-  3 files changed, 170 insertions(+), 0 deletions(-)
-  create mode 100755 tests/btrfs/316
-  create mode 100644 tests/btrfs/316.out
+I just looked at the archives and do not see my original email :(... but
+is intact in my sent folder!!
 
-diff --git a/tests/btrfs/316 b/tests/btrfs/316
-new file mode 100755
-index 0000000..7c9c368
---- /dev/null
-+++ b/tests/btrfs/316
-@@ -0,0 +1,130 @@
-+#! /bin/bash
-+# FS QA Test No. btrfs/316
-+#
-+# Testing cross-subvolume sparse copy on btrfs
-+#    - Create two subvolumes, mount one of them
-+#    - Create a file on each (sub/root)volume,
-+#      reflink them on the other volumes
-+#    - Change one original and two reflinked files
-+#    - Move reflinked files between subvolumes
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2013, Oracle and/or its affiliates.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+seq=`basename $0`
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    umount $SCRATCH_MNT
-+    rm -rf $TESTDIR1
-+    rm -rf $TESTDIR2
-+    btrfs subvolume delete $SUBVOL1 >> $seqres.full
-+    btrfs subvolume delete $SUBVOL2 >> $seqres.full
-+    cd /
-+    rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_fs btrfs
-+_supported_os Linux
-+
-+_require_scratch
-+_require_cp_reflink
-+
-+_checksum_files() {
-+    for F in file1 file2 file3
-+    do
-+        for D in $TESTDIR1 $SCRATCH_MNT $SUBVOL2
-+        do
-+            md5sum $D/$F | _filter_test_dir | _filter_scratch
-+        done
-+    done
-+}
-+
-+TESTDIR1=$TEST_DIR/test-$seq-1
-+TESTDIR2=$TEST_DIR/test-$seq-2
-+SUBVOL1=$TEST_DIR/subvol-$seq-1
-+SUBVOL2=$TEST_DIR/subvol-$seq-2
-+
-+_scratch_unmount 2>/dev/null
-+rm -rf $seqres.full
-+rm -rf $TESTDIR1 $TESTDIR2
-+btrfs subvol delete $SUBVOL1 >/dev/null 2>&1
-+btrfs subvol delete $SUBVOL2 >/dev/null 2>&1
-+
-+mkdir $TESTDIR1
-+mkdir $TESTDIR2
-+btrfs subvolume create $SUBVOL1 >> $seqres.full
-+btrfs subvolume create $SUBVOL2 >> $seqres.full
-+_mount -t btrfs -o subvol=subvol-$seq-1 $TEST_DEV $SCRATCH_MNT
-+
-+echo "Create initial files"
-+# TESTDIR1/file1 is very small and will be inlined
-+$XFS_IO_PROG -f -c 'pwrite -S 0x61 0 10' $TESTDIR1/file1 >> $seqres.full
-+$XFS_IO_PROG -f -c 'pwrite -S 0x62 0 13000' $SCRATCH_MNT/file2 >> 
-$seqres.full
-+$XFS_IO_PROG -f -c 'pwrite -S 0x63 0 17000' $SUBVOL2/file3 >> $seqres.full
-+
-+echo "Create reflinks to the initial files on other subvolumes"
-+cp --reflink $TESTDIR1/file1 $SUBVOL1
-+cp --reflink $TESTDIR1/file1 $SUBVOL2
-+cp --reflink $SUBVOL1/file2 $TESTDIR1/
-+cp --reflink $SUBVOL1/file2 $SUBVOL2
-+cp --reflink $SUBVOL2/file3 $TESTDIR1/
-+cp --reflink $SUBVOL2/file3 $SUBVOL1
-+
-+echo "Verify the reflinks"
-+_verify_reflink $SCRATCH_MNT/file2 $TESTDIR1/file2
-+_verify_reflink $SCRATCH_MNT/file2 $SUBVOL2/file2
-+_verify_reflink $SUBVOL2/file3 $TESTDIR1/file3
-+_verify_reflink $SUBVOL2/file3 $SCRATCH_MNT/file3
-+echo "Verify the file contents:"
-+_checksum_files
-+
-+echo -e "---\nOverwrite some files with new content"
-+$XFS_IO_PROG -c 'pwrite -S 0x64 0 20' $TESTDIR1/file1 >> $seqres.full
-+$XFS_IO_PROG -c 'pwrite -S 0x66 0 21000' $SUBVOL2/file2 >> $seqres.full
-+$XFS_IO_PROG -c 'pwrite -S 0x65 5000 5000' $SCRATCH_MNT/file3 >> 
-$seqres.full
-+
-+echo "Verify that non-overwritten reflinks still have the same data blocks"
-+_verify_reflink $TESTDIR1/file2 $SCRATCH_MNT/file2
-+_verify_reflink $TESTDIR1/file3 $SUBVOL2/file3
-+echo "Verify the file contents:"
-+_checksum_files
-+
-+echo -e "---\nShuffle files between directories"
-+mv $TESTDIR1/file* $TESTDIR2
-+mv $SCRATCH_MNT/file* $TESTDIR1/
-+mv $SUBVOL2/file* $SCRATCH_MNT/
-+mv $TESTDIR2/file* $SUBVOL2/
-+
-+# No _verify_reflink here as data is copied when moving files between 
-subvols
-+echo "Verify the file contents:"
-+_checksum_files
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/btrfs/316.out b/tests/btrfs/316.out
-new file mode 100644
-index 0000000..fbfa550
---- /dev/null
-+++ b/tests/btrfs/316.out
-@@ -0,0 +1,39 @@
-+QA output created by 316
-+Create initial files
-+Create reflinks to the initial files on other subvolumes
-+Verify the reflinks
-+Verify the file contents:
-+e09c80c42fda55f9d992e59ca6b3307d  TEST_DIR/test-302-1/file1
-+e09c80c42fda55f9d992e59ca6b3307d  SCRATCH_MNT/file1
-+e09c80c42fda55f9d992e59ca6b3307d  TEST_DIR/subvol-302-2/file1
-+d7402b46310fbbfbc5e466b1dccb043b  TEST_DIR/test-302-1/file2
-+d7402b46310fbbfbc5e466b1dccb043b  SCRATCH_MNT/file2
-+d7402b46310fbbfbc5e466b1dccb043b  TEST_DIR/subvol-302-2/file2
-+5a95800e4c04b11117aa4e4de057721f  TEST_DIR/test-302-1/file3
-+5a95800e4c04b11117aa4e4de057721f  SCRATCH_MNT/file3
-+5a95800e4c04b11117aa4e4de057721f  TEST_DIR/subvol-302-2/file3
-+---
-+Overwrite some files with new content
-+Verify that non-overwritten reflinks still have the same data blocks
-+Verify the file contents:
-+00d620f69f30327f0f8946b95c12de44  TEST_DIR/test-302-1/file1
-+e09c80c42fda55f9d992e59ca6b3307d  SCRATCH_MNT/file1
-+e09c80c42fda55f9d992e59ca6b3307d  TEST_DIR/subvol-302-2/file1
-+d7402b46310fbbfbc5e466b1dccb043b  TEST_DIR/test-302-1/file2
-+d7402b46310fbbfbc5e466b1dccb043b  SCRATCH_MNT/file2
-+917619ae44b38bb9968af261c3c45440  TEST_DIR/subvol-302-2/file2
-+5a95800e4c04b11117aa4e4de057721f  TEST_DIR/test-302-1/file3
-+b9f275cd638cb784c9e61def94c622a8  SCRATCH_MNT/file3
-+5a95800e4c04b11117aa4e4de057721f  TEST_DIR/subvol-302-2/file3
-+---
-+Shuffle files between directories
-+Verify the file contents:
-+e09c80c42fda55f9d992e59ca6b3307d  TEST_DIR/test-302-1/file1
-+e09c80c42fda55f9d992e59ca6b3307d  SCRATCH_MNT/file1
-+00d620f69f30327f0f8946b95c12de44  TEST_DIR/subvol-302-2/file1
-+d7402b46310fbbfbc5e466b1dccb043b  TEST_DIR/test-302-1/file2
-+917619ae44b38bb9968af261c3c45440  SCRATCH_MNT/file2
-+d7402b46310fbbfbc5e466b1dccb043b  TEST_DIR/subvol-302-2/file2
-+b9f275cd638cb784c9e61def94c622a8  TEST_DIR/test-302-1/file3
-+5a95800e4c04b11117aa4e4de057721f  SCRATCH_MNT/file3
-+5a95800e4c04b11117aa4e4de057721f  TEST_DIR/subvol-302-2/file3
-diff --git a/tests/btrfs/group b/tests/btrfs/group
-index bc6c256..a6d8de1 100644
---- a/tests/btrfs/group
-+++ b/tests/btrfs/group
-@@ -9,3 +9,4 @@
-  276 auto rw metadata
-  284 auto
-  307 auto quick
-+316 auto quick
--- 
-1.7.2.5
+Please see if my justification below is valid.
+
+Chandra
+
+On Tue, 2013-06-25 at 16:31 +1000, Dave Chinner wrote:
+> On Sun, Jun 23, 2013 at 09:48:25PM -0500, Chandra Seetharaman wrote:
+> > Start using pquotino and define a macro to check if the
+> > superblock has pquotino.
+> > 
+> > Keep backward compatibilty by alowing mount of older superblock
+> > with no separate pquota inode.
+> > 
+> > Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+> > ---
+> >  fs/xfs/xfs_fsops.c             |    3 +-
+> >  fs/xfs/xfs_mount.c             |   51 +++++++++++++++++++++++++++++++--------
+> >  fs/xfs/xfs_qm.c                |   22 +++++++++--------
+> >  fs/xfs/xfs_qm_syscalls.c       |   24 ++++++++++++++++--
+> >  fs/xfs/xfs_quota.h             |    8 ------
+> >  fs/xfs/xfs_sb.h                |   16 +++++++++++-
+> >  fs/xfs/xfs_super.c             |   14 ++++++----
+> >  include/uapi/linux/dqblk_xfs.h |    1 +
+> >  8 files changed, 99 insertions(+), 40 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> > index 614eb0c..3bf05f4 100644
+> > --- a/fs/xfs/xfs_fsops.c
+> > +++ b/fs/xfs/xfs_fsops.c
+> > @@ -501,7 +501,8 @@ xfs_growfs_data_private(
+> >  				error, agno);
+> >  			break;
+> >  		}
+> > -		xfs_sb_to_disk(XFS_BUF_TO_SBP(bp), &mp->m_sb, XFS_SB_ALL_BITS);
+> > +		xfs_sb_to_disk(XFS_BUF_TO_SBP(bp), &mp->m_sb,
+> > +				xfs_sb_all_bits(&mp->m_sb));
+> 
+> I think you could still pass XFS_SB_ALL_BITS to xfs_sb_to_disk(),
+> and do the XFS_SB_PQUOTINO filtering inside xfs_sb_quota_to_disk().
+> 
+> Actually xfs_sb_all_bits() is only used here, and it seems to me
+> that it is not necessary as we do a pquota support check inside
+> xfs_sb_to_disk() and can handle this in that place...
+
+Yes, this is the only place that uses XFS_SB_ALL_BITS, and the purpose
+is to copy over the superblock to secondary.
+
+The change I made ensures that the caller does what is correct. i.e if
+it is copying an earlier version of superblock, it does not try to copy
+the pquotino, and if it uses the newer version of superblock it copies
+over the pquotino.
+
+At some point (in my internal tree) I did have the way you suggested.
+But, doing it that way looked like a band-aid/hack, and felt this is the
+right way to do it (since the caller should provide appropriate
+information to the function).
+> 
+> >  
+> >  		/*
+> >  		 * If we get an error writing out the alternate superblocks,
+> > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> > index e2e14cb..bb7b23e 100644
+> > --- a/fs/xfs/xfs_mount.c
+> > +++ b/fs/xfs/xfs_mount.c
+> > @@ -336,12 +336,17 @@ xfs_mount_validate_sb(
+> >  		return XFS_ERROR(EWRONGFS);
+> >  	}
+> >  
+> > -	if ((sbp->sb_qflags & (XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD)) &&
+> > -			(sbp->sb_qflags & (XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD |
+> > -				XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD))) {
+> > -		xfs_notice(mp,
+> > -"Super block has XFS_OQUOTA bits along with XFS_PQUOTA and/or XFS_GQUOTA bits.\n");
+> > -		return XFS_ERROR(EFSCORRUPTED);
+> > +	if (xfs_sb_version_has_pquota(sbp)) {
+> > +		if (sbp->sb_qflags & (XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD)) {
+> > +			xfs_notice(mp,
+> > +			   "Version 5 of Super block has XFS_OQUOTA bits.\n");
+> > +			return XFS_ERROR(EFSCORRUPTED);
+> > +		}
+> > +	} else if (sbp->sb_qflags & (XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD |
+> > +				XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD)) {
+> > +			xfs_notice(mp,
+> > +"Superblock earlier than Version 5 has XFS_[PQ]UOTA_{ENFD|CHKD} bits.\n");
+> > +			return XFS_ERROR(EFSCORRUPTED);
+> 
+> [ xfs_alert() for those, I think. ]
+
+will do.
+
+> 
+> > @@ -638,6 +643,13 @@ xfs_handle_quota_to_disk(
+> >  {
+> >  	__uint16_t	qflags = from->sb_qflags;
+> >  
+> > +	/*
+> > +	 * We need to do these manipilations only if we are working
+> > +	 * with an older version of on-disk superblock.
+> > +	 */
+> > +	if (xfs_sb_version_has_pquota(from))
+> > +		return;
+> > +
+> >  	if (*fields & XFS_SB_QFLAGS) {
+> >  		/*
+> >  		 * The in-core version of sb_qflags do not have
+> 
+> xfs_sb_all_bits() does:
+> 
+> 	if (xfs_sb_version_has_pquota(sbp))
+> 		return XFS_SB_ALL_BITS;
+> 	return XFS_SB_ALL_BITS & ~XFS_SB_PQUOTINO;
+> 
+> which means that we enter xfs_handle_quota_to_disk() with
+> XFS_SB_ALL_BITS intact for the pquota case, but without it in the
+> non-pquota case. Hence if we don't have pquota set, we continue
+> onwards and....
+> 
+> > @@ -657,6 +669,10 @@ xfs_handle_quota_to_disk(
+> >  		to->sb_qflags = cpu_to_be16(qflags);
+> >  		*fields &= ~XFS_SB_QFLAGS;
+> >  	}
+> > +	if (*fields & XFS_SB_PQUOTINO) {
+> > +		to->sb_gquotino = cpu_to_be64(from->sb_pquotino);
+> > +		*fields &= ~XFS_SB_PQUOTINO;
+> > +	}
+> 
+> We will never do this because we've already cleared XFS_SB_PQUOTINO
+> before we entered xfs_sb_to_disk(). That doesn't seem right to me... 
+
+Yes, if we are using a version of superblock where pquotino should not
+be used, we do not want to get into this block.
+
+If we are using PQUOTA in the superblock, that inode information will be
+in gquotino and will be converted over appropriately in
+xfs_sb_to_disk().
+
+> 
+> > @@ -1524,8 +1524,10 @@ xfs_qm_init_quotainos(
+> >  		flags &= ~XFS_QMOPT_SBVERSION;
+> >  	}
+> >  	if (XFS_IS_PQUOTA_ON(mp) && pip == NULL) {
+> > +		if (!xfs_sb_version_has_pquota(&mp->m_sb))
+> > +			sbflags &= ~XFS_SB_GQUOTINO;
+> 
+> That's taken me a while to work out - it needs a comment explaining
+> why XFS_SB_GQUOTINO is being cleared here.
+
+will do.
+> 
+> >  		error = xfs_qm_qino_alloc(mp, &pip,
+> > -					  sbflags | XFS_SB_GQUOTINO,
+> > +					  sbflags | XFS_SB_PQUOTINO,
+> >  					  flags | XFS_QMOPT_PQUOTA);
+> >  		if (error)
+> >  			goto error_rele;
+> > diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+> > index ed7cd55..d664a2d 100644
+> > --- a/fs/xfs/xfs_qm_syscalls.c
+> > +++ b/fs/xfs/xfs_qm_syscalls.c
+> > @@ -201,8 +201,7 @@ xfs_qm_scall_quotaoff(
+> >  	/*
+> >  	 * If quotas is completely disabled, close shop.
+> >  	 */
+> > -	if (((flags & XFS_MOUNT_QUOTA_ALL) == XFS_MOUNT_QUOTA_SET1) ||
+> > -	    ((flags & XFS_MOUNT_QUOTA_ALL) == XFS_MOUNT_QUOTA_SET2)) {
+> > +	if ((flags & XFS_MOUNT_QUOTA_ALL) == XFS_MOUNT_QUOTA_ALL) {
+> >  		mutex_unlock(&q->qi_quotaofflock);
+> >  		xfs_qm_destroy_quotainfo(mp);
+> >  		return (0);
+> 
+> This makes the assumption that userspace passes all three quota
+> types into the kernel in a single quota off call as the only way to
+> turn quotas off completely. What happens if they are turned off one
+> at a time? Shouldn't we detect when no more quotas are actually
+> enabled and then do this?
+
+Yes, I agree that there is a difference in behavior if the user turns
+off quota one-by-one Vs turns off all quota at once. But, the behavior
+difference is not seen by the user space.  And, I did not make the
+change :)
+
+I just included project quota into the fold.
+
+> 
+> Cheers,
+> 
+> Dave.
+
+
 
 _______________________________________________
 xfs mailing list
