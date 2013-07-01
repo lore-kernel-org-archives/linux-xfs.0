@@ -1,40 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B1C4C7F55
-	for <xfs@oss.sgi.com>; Mon,  1 Jul 2013 12:59:38 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 741A530405F
-	for <xfs@oss.sgi.com>; Mon,  1 Jul 2013 10:59:38 -0700 (PDT)
-Received: from e37.co.us.ibm.com (e37.co.us.ibm.com [32.97.110.158]) by
-	cuda.sgi.com with ESMTP id wtCZWLRfiu9wNXXA (version=TLSv1
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5F2667F55
+	for <xfs@oss.sgi.com>; Mon,  1 Jul 2013 15:38:23 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 491F98F8037
+	for <xfs@oss.sgi.com>; Mon,  1 Jul 2013 13:38:23 -0700 (PDT)
+Received: from dkim1.fusionio.com (dkim1.fusionio.com [66.114.96.53]) by
+	cuda.sgi.com with ESMTP id KjYG45oMeEGfWrCz (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 01 Jul 2013 10:59:34 -0700 (PDT)
-Received: from /spool/local
-	by e37.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
-	Violators will be prosecuted
-	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
-	Mon, 1 Jul 2013 11:59:31 -0600
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com
-	[9.17.195.106])
-	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id 8D14119D8041
-	for <xfs@oss.sgi.com>; Mon,  1 Jul 2013 11:59:18 -0600 (MDT)
-Received: from d03av06.boulder.ibm.com (d03av06.boulder.ibm.com [9.17.195.245])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	r61HxShb323438 for <xfs@oss.sgi.com>; Mon, 1 Jul 2013 11:59:28 -0600
-Received: from d03av06.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av06.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
-	id r61I1w7q026853
-	for <xfs@oss.sgi.com>; Mon, 1 Jul 2013 12:01:58 -0600
-Subject: Re: [PATCH v10 09/11] xfs: Start using pquotaino from the superblock.
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-In-Reply-To: <20130701020634.GE27780@dastard>
-References: <1372371914-11370-1-git-send-email-sekharan@us.ibm.com>
-	<1372371914-11370-10-git-send-email-sekharan@us.ibm.com>
-	<20130701020634.GE27780@dastard>
-Date: Mon, 01 Jul 2013 12:59:27 -0500
-Message-ID: <1372701567.9777.164.camel@chandra-dt.ibm.com>
-Mime-Version: 1.0
-Reply-To: sekharan@us.ibm.com
+	Mon, 01 Jul 2013 13:38:21 -0700 (PDT)
+Received: from mx2.fusionio.com (unknown [10.101.1.160])
+	by dkim1.fusionio.com (Postfix) with ESMTP id 4BEE07C0427
+	for <xfs@oss.sgi.com>; Mon,  1 Jul 2013 14:38:21 -0600 (MDT)
+Date: Mon, 1 Jul 2013 16:38:18 -0400
+From: Josef Bacik <jbacik@fusionio.com>
+Subject: Re: [PATCH v2] xfstests: btrfs/316: cross-subvolume sparse copy
+Message-ID: <20130701203818.GH4288@localhost.localdomain>
+References: <51D19DF9.2080007@oracle.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <51D19DF9.2080007@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -47,56 +32,154 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Koen De Wit <koen.de.wit@oracle.com>
+Cc: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Mon, 2013-07-01 at 12:06 +1000, Dave Chinner wrote:
-> On Thu, Jun 27, 2013 at 05:25:12PM -0500, Chandra Seetharaman wrote:
-> > Start using pquotino and define a macro to check if the
-> > superblock has pquotino.
-> > 
-> > Keep backward compatibilty by alowing mount of older superblock
-> > with no separate pquota inode.
-> > 
-> > Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+On Mon, Jul 01, 2013 at 05:19:21PM +0200, Koen De Wit wrote:
+> This testscript creates reflinks to files on different subvolumes,
+> overwrites the original files and reflinks, and moves reflinked files
+> between subvolumes.
 > 
-> This is unchanged from the previous version, so all of my review
-> comments from here:
+> Originally submitted as testcase 302, changes are made based on comments
+> from Eric: http://oss.sgi.com/archives/xfs/2013-03/msg00231.html
+> Two new common/rc functions used in this script (_require_cp_reflink and
+> _verify_reflink) have been submitted recently:
+> http://oss.sgi.com/archives/xfs/2013-05/msg00745.html
+> Thanks to Eric Sandeen and Dave Chinner for the reviews.
 > 
-> http://oss.sgi.com/pipermail/xfs/2013-June/027637.html
+> Signed-off-by: Koen De Wit <koen.de.wit@oracle.com>
+> ---
+>  tests/btrfs/316     |  130
+> +++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/btrfs/316.out |   39 +++++++++++++++
+>  tests/btrfs/group   |    1 +
+>  3 files changed, 170 insertions(+), 0 deletions(-)
+>  create mode 100755 tests/btrfs/316
+>  create mode 100644 tests/btrfs/316.out
 > 
-> are still unaddressed.
+> diff --git a/tests/btrfs/316 b/tests/btrfs/316
+> new file mode 100755
+> index 0000000..7c9c368
+> --- /dev/null
+> +++ b/tests/btrfs/316
+> @@ -0,0 +1,130 @@
+> +#! /bin/bash
+> +# FS QA Test No. btrfs/316
+> +#
+> +# Testing cross-subvolume sparse copy on btrfs
+> +#    - Create two subvolumes, mount one of them
+> +#    - Create a file on each (sub/root)volume,
+> +#      reflink them on the other volumes
+> +#    - Change one original and two reflinked files
+> +#    - Move reflinked files between subvolumes
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2013, Oracle and/or its affiliates.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +
+> +seq=`basename $0`
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1    # failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +    umount $SCRATCH_MNT
+> +    rm -rf $TESTDIR1
+> +    rm -rf $TESTDIR2
+> +    btrfs subvolume delete $SUBVOL1 >> $seqres.full
+> +    btrfs subvolume delete $SUBVOL2 >> $seqres.full
+> +    cd /
+> +    rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +
+> +# real QA test starts here
+> +_supported_fs btrfs
+> +_supported_os Linux
+> +
+> +_require_scratch
+> +_require_cp_reflink
+> +
+> +_checksum_files() {
+> +    for F in file1 file2 file3
+> +    do
+> +        for D in $TESTDIR1 $SCRATCH_MNT $SUBVOL2
+> +        do
+> +            md5sum $D/$F | _filter_test_dir | _filter_scratch
+> +        done
+> +    done
+> +}
+> +
+> +TESTDIR1=$TEST_DIR/test-$seq-1
+> +TESTDIR2=$TEST_DIR/test-$seq-2
+> +SUBVOL1=$TEST_DIR/subvol-$seq-1
+> +SUBVOL2=$TEST_DIR/subvol-$seq-2
+> +
+> +_scratch_unmount 2>/dev/null
+> +rm -rf $seqres.full
+> +rm -rf $TESTDIR1 $TESTDIR2
+> +btrfs subvol delete $SUBVOL1 >/dev/null 2>&1
+> +btrfs subvol delete $SUBVOL2 >/dev/null 2>&1
+> +
+> +mkdir $TESTDIR1
+> +mkdir $TESTDIR2
+> +btrfs subvolume create $SUBVOL1 >> $seqres.full
+> +btrfs subvolume create $SUBVOL2 >> $seqres.full
+> +_mount -t btrfs -o subvol=subvol-$seq-1 $TEST_DEV $SCRATCH_MNT
+> +
+> +echo "Create initial files"
+> +# TESTDIR1/file1 is very small and will be inlined
+> +$XFS_IO_PROG -f -c 'pwrite -S 0x61 0 10' $TESTDIR1/file1 >> $seqres.full
+> +$XFS_IO_PROG -f -c 'pwrite -S 0x62 0 13000' $SCRATCH_MNT/file2 >>
+> $seqres.full
+> +$XFS_IO_PROG -f -c 'pwrite -S 0x63 0 17000' $SUBVOL2/file3 >> $seqres.full
+> +
+> +echo "Create reflinks to the initial files on other subvolumes"
+> +cp --reflink $TESTDIR1/file1 $SUBVOL1
+> +cp --reflink $TESTDIR1/file1 $SUBVOL2
+> +cp --reflink $SUBVOL1/file2 $TESTDIR1/
+> +cp --reflink $SUBVOL1/file2 $SUBVOL2
+> +cp --reflink $SUBVOL2/file3 $TESTDIR1/
+> +cp --reflink $SUBVOL2/file3 $SUBVOL1
+> +
+> +echo "Verify the reflinks"
+> +_verify_reflink $SCRATCH_MNT/file2 $TESTDIR1/file2
+> +_verify_reflink $SCRATCH_MNT/file2 $SUBVOL2/file2
+> +_verify_reflink $SUBVOL2/file3 $TESTDIR1/file3
+> +_verify_reflink $SUBVOL2/file3 $SCRATCH_MNT/file3
+> +echo "Verify the file contents:"
+> +_checksum_files
+> +
+> +echo -e "---\nOverwrite some files with new content"
+> +$XFS_IO_PROG -c 'pwrite -S 0x64 0 20' $TESTDIR1/file1 >> $seqres.full
+> +$XFS_IO_PROG -c 'pwrite -S 0x66 0 21000' $SUBVOL2/file2 >> $seqres.full
+> +$XFS_IO_PROG -c 'pwrite -S 0x65 5000 5000' $SCRATCH_MNT/file3 >>
+> $seqres.full
 
-See the other email I sent on this context.
-> 
-> Also:
-> 
-> > @@ -885,6 +905,18 @@ reread:
-> >  	 */
-> >  	xfs_sb_from_disk(&mp->m_sb, XFS_BUF_TO_SBP(bp));
-> >  
-> > +	if (!xfs_sb_version_has_pquota(&mp->m_sb) && (XFS_IS_PQUOTA_ON(mp))) {
-> > +		/*
-> > +		 * On disk superblock only has sb_gquotino, and incore
-> > +		 * superblock has both sb_gquotino and sb_pquotino.
-> > +		 * But, only one them is supported at any point of time.
-> > +		 * So, if PQUOTA is set in disk superblock, copy over
-> > +		 * sb_gquotino to sb_pquotino.
-> > +		 */
-> > +		mp->m_sb.sb_pquotino = mp->m_sb.sb_gquotino;
-> > +		mp->m_sb.sb_gquotino = NULLFSINO;
-> > +	}
-> > +
-> >  	xfs_sb_quota_from_disk(&mp->m_sb);
-> 
-> This code should be inside xfs_sb_quota_from_disk()....
 
-will move.
-> 
-> Cheers,
-> 
-> Dave.
+Line wrapped here ^^, patch won't apply cleanly.  Thanks,
 
+Josef
 
 _______________________________________________
 xfs mailing list
