@@ -1,25 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 95FA77F4E
-	for <xfs@oss.sgi.com>; Mon,  1 Jul 2013 04:13:44 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 76E79304032
-	for <xfs@oss.sgi.com>; Mon,  1 Jul 2013 02:13:41 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	eyphTr2gFskCbbKa for <xfs@oss.sgi.com>;
-	Mon, 01 Jul 2013 02:13:39 -0700 (PDT)
-Date: Mon, 1 Jul 2013 19:12:56 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/3 v2] xfstests: Add support for sections in config file
-Message-ID: <20130701091256.GB4072@dastard>
-References: <1372426320-19902-1-git-send-email-lczerner@redhat.com>
-	<1372426320-19902-3-git-send-email-lczerner@redhat.com>
-	<20130701014944.GD27780@dastard>
-	<alpine.LFD.2.00.1307011022300.2542@localhost.localdomain>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id D30B97F56
+	for <xfs@oss.sgi.com>; Mon,  1 Jul 2013 05:29:26 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C27818F8037
+	for <xfs@oss.sgi.com>; Mon,  1 Jul 2013 03:29:23 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id vOKOCVFzpC787DER (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 01 Jul 2013 03:29:19 -0700 (PDT)
+Received: from acsinet21.oracle.com (acsinet21.oracle.com [141.146.126.237])
+	by aserp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
+	ESMTP id r61ATIfG028225
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Mon, 1 Jul 2013 10:29:19 GMT
+Received: from userz7021.oracle.com (userz7021.oracle.com [156.151.31.85])
+	by acsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	r61ATHFI000864
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Mon, 1 Jul 2013 10:29:18 GMT
+Received: from abhmt113.oracle.com (abhmt113.oracle.com [141.146.116.65])
+	by userz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	r61ATH62017737 for <xfs@oss.sgi.com>; Mon, 1 Jul 2013 10:29:17 GMT
+Message-ID: <51D159FF.401@oracle.com>
+Date: Mon, 01 Jul 2013 18:29:19 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <alpine.LFD.2.00.1307011022300.2542@localhost.localdomain>
+Subject: [PATCH] xfstests: generic/315, verify preallocated disk space is
+	released per truncate
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,60 +36,140 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: =?utf-8?B?THVrw6HFoQ==?= Czerner <lczerner@redhat.com>
-Cc: xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-T24gTW9uLCBKdWwgMDEsIDIwMTMgYXQgMTA6MzY6MzdBTSArMDIwMCwgTHVrw6HFoSBDemVybmVy
-IHdyb3RlOgo+IE9uIE1vbiwgMSBKdWwgMjAxMywgRGF2ZSBDaGlubmVyIHdyb3RlOgo+ID4gPiBT
-aWduZWQtb2ZmLWJ5OiBMdWthcyBDemVybmVyIDxsY3plcm5lckByZWRoYXQuY29tPgo+ID4gPiAt
-LS0KPiA+ID4gIGNoZWNrICAgICAgICAgfCAzNzEgKysrKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKysrLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQo+ID4gPiAgY29tbW9uL2NvbmZpZyB8IDEy
-NiArKysrKysrKysrKystLS0tLS0tLQo+ID4gPiAgY29tbW9uL3JjICAgICB8ICA2MyArKysrKy0t
-LS0tCj4gPiA+ICAzIGZpbGVzIGNoYW5nZWQsIDMyNiBpbnNlcnRpb25zKCspLCAyMzQgZGVsZXRp
-b25zKC0pCj4gPiAKPiA+IFRoaXMgcGF0Y2ggcHJvYmFibHkgbmVlZHMgdG8gYmUgYnJva2VuIHVw
-LCB0b28uIEEgc3Vic3RhbnRpYWwgcGFydAo+ID4gb2YgaXQgaXMgaW5kZW50YXRpb24gY2hhbmdl
-cywgd2hpY2ggcHJvYmFibHkgc2hvdWxkIGJlIHNwbGl0IGludG8gMgo+ID4gcGFydHMgLSBmYWN0
-b3IgY29kZSBpbnRvIGZ1bmN0aW9uLCB0aGVuIHdyYXAgbG9vcCBhcm91bmQgZnVuY3Rpb24uCj4g
-PiBUaGUgY2hhbmdlIHRvIHRoZSBzdW1tYXJ5IGluZm9ybWF0aW9uIHNob3VsZCBiZSBkb25lIGFz
-IGEgc2VwYXJhdGUKPiA+IHBhdGNoLCB0b28uIEkgc3VzcGVjdCBtYW55IG9mIHRoZSBjb21tb24v
-Y29uZmlnIGNoYW5nZXMgY291bCBkYmUKPiA+IHNwbGl0IHVwLCB0b28uCj4gCj4gT2ssIEknbGwg
-c2VlIGhvdyBjYW4gSSBzcGxpdCBpdCB1cC4gQnR3LCBpbmRlbnRhdGlvbiBpbiB4ZnN0ZXN0cyBp
-cwo+IGEgbWVzcywgYmVjYXVzZSBzb21ldGltZXMgd2UncmUgdXNpbmcgc3BhY2VzIGFuZCBzb21l
-dGltZXMgdGFicy4gSXMKPiB0aGVyZSBhbnkgcHJlZmVyZW5jZSA/IChJIHdvdWxkIGRlZmluaXRl
-bHkgcHJlZmVyIHRhYnMpCgpUYWJzLgoKPiA+IFRoZSBjaGFuZ2luZyBvZiB0aGUgJFJFU1VMVF9C
-QVNFIHNob3VsZCBwcm9iYWJseSBhbHNvCj4gPiBiZWluIGEgc2VwYXJhdGUgcGF0Y2gsIGJlY2F1
-c2UgdGhpcyBpcyBzb21ldGhpbmcgdGhhdCB3ZSdsbCBuZWVkIHRvCj4gPiBkaXNjdXNzIGFzIGl0
-IGNoYW5nZXMgdGhlIHN0cnVjdHVyZSBvZiB0aGUgb3V0cHV0Li4uLgo+IAo+IEkgYW0gbm90IHN1
-cmUgaXQgc2hvdWxkIGJlIHNlcGFyYXRlIGZyb20gdGhpcyBwYXRjaCBiZWNhdXNlIHRoZSBuZXcK
-PiBzdHJ1Y3R1cmUgd2lsbCBvbmx5IGJlIHVzZWQgaWYgdGhlIG5ldyBjb25maWcgZm9ybWF0ICh3
-aXRoIHNlY3Rpb25zKQo+IGlzIHVzZWQuCgpXaGljaCBpcyBhIGJpdCBjb25mdXNpbmcsIGVzcGVj
-aWFsbHkgYXMgYSBzZXBhcmF0ZSByZXN1bHQgZGlyZWN0b3J5Cm1pZ2h0IGJlIGRlc2lyZWQgZm9y
-IHRoZSBvdXRwdXQgb2YgZWFjaCBzZWN0aW9uIC0gc2F5IEkgd2FudCB0byBrZWVwCmFsbCB0aGUg
-ImNvbmZpZyBBIiByZXN1bHRzIHRvZ2V0aGVyLCBidXQgc3BlYXJhdGUgdG8gYWxsIHRoZSAiY29u
-ZmlnCkIiIHJlc3VsdHMuIFBsYWNpbmcgdGhlbSBhbGwgdW5kZXIgdGhlIHNhbWUgJFJFU1VMVF9C
-QVNFIGlzbid0IGlkZWFsCmF0IHRoYXQgcG9pbnQuLi4uCgpJT1dzLCBJIHN1c3BlY3QgdGhhdCAk
-UkVTVUxUX0JBU0Ugc2hvdWxkIGJlIGFibGUgdG8gYmUgZGVmaW5lZCBpbgp0aGUgc2VjdGlvbiBj
-b25maWcgc28gdGhhdCB5b3UgY2FuIHJlZGlyZWN0IHJlc3VsdHMgdGhhdCB3YXkuCgo+ID4gT2gs
-IGFuZCB3aHkgbWFrZSBhIGRpc3RpbmN0aW9uIGJldHdlZW4gbm8gc2VjdGlvbnMgYW5kCj4gPiAk
-T1BUSU9OU19IQVZFX1NFQ1RJT05TIGluIHRoZSBjb25maWcgZmlsZT8gU3VyZWx5IG5vIHNlY3Rp
-b25zIGlzCj4gPiBqdXN0IHRoZSBzYW1lIGFzIGhhdmluZyAxIHNlY3Rpb24uLi4uCj4gCj4gWWVz
-LCBidXQgaXQncyBtdWNoICJuaWNlciIgdG8gY2hlY2sgYm9vbGVhbiBvcHRpb24gdGhhbiBjaGVj
-a2luZwo+IHdoYXQgaXMgdGhlIG5hbWUgb2YgdGhlIGZpcnN0IHNlY3Rpb24uIFJlYWxseSB0aGlz
-IGlzIGp1c3QgYQo+IHdvcmthcm91bmQsIGJlY2F1c2UgSSBkaWQgbm90IHdhbnQgdG8gY2hhbmdl
-IHJlc3VsdCBzdHJ1Y3R1cmUgYW5kCj4gb3V0cHV0IGlmIG9uZSBpcyBub3QgdXNpbmcgdGhlIG5l
-dyBjb25maWcgZm9ybWF0LgoKVGhhdCdzIGFub3RoZXIgcmVhc29uIHdoeSBJIHRoaW5rIHRoYXQg
-d2Ugc2hvdWxkIGJlIGFibGUgdG8gaGF2ZSBhCnBlci1zZWN0aW9uIFJFU1VMVFNfQkFTRSAtIHRo
-YXQgd2F5IHRoZSBjb2RlIGRvZXNuJ3QgY2FyZSBob3cKUkVTVUxUU19CQVNFIGlzIGRlZmluZWQg
-b3Igd2hlcmUgaXQgcG9pbnRzIHRvIC0gdGhlIG91dHB1dCBvZgp4ZnN0ZXN0cyBpcyAqYWx3YXlz
-KiB0aGUgc2FtZS4gVGhhdCBpcywgYWZ0ZXIgYWxsLCB3aHkgJFJFU1VMVFNfQkFTRQp3YXMgaW50
-cm9kdWNlZCBpbiB0aGUgZmlyc3QgcGxhY2UuCgo+IEl0IGNvdWxkIGJlIGRvbmUKPiBzbyB0aGF0
-IHdoZW4gdGhlcmUgYXJlIG5vIHNlY3Rpb25zIHdlJ2xsIGFsd2F5cyB1c2UgImRlZmF1bHQiIHNl
-Y3Rpb24sCj4gbm90IHN1cmUgd2hhdCB3b3VsZCBwZW9wbGUgcHJlZmVyLgoKRXhhY3RseSB3aHkg
-aXQgbmVlZHMgZGlzY3Vzc2lvbiA7KQoKQ2hlZXJzLAoKRGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpk
-YXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNn
-aS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+From: Jie Liu <jeff.liu@oracle.com>
+
+Introduce generic test 315 to verify if the disk space is
+released after truncating a preallocated file back to the
+old smaller size.  Before Linux-3.10, Btrfs/OCFS2 test
+failed in this case.
+
+The test file is fallocated with FALLOC_FL_KEEP_SIZE option.
+
+Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+---
+ tests/generic/315     |   79 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/315.out |    2 ++
+ tests/generic/group   |    1 +
+ 3 files changed, 82 insertions(+)
+ mode change 100644 => 100755 tests/generic/311
+ create mode 100755 tests/generic/315
+ create mode 100644 tests/generic/315.out
+
+diff --git a/tests/generic/311 b/tests/generic/311
+old mode 100644
+new mode 100755
+diff --git a/tests/generic/315 b/tests/generic/315
+new file mode 100755
+index 0000000..7cfc40d
+--- /dev/null
++++ b/tests/generic/315
+@@ -0,0 +1,79 @@
++#! /bin/bash
++# FS QA Test No. 315
++#
++# fallocate/truncate tests with FALLOC_FL_KEEP_SIZE option.
++# Verify if the disk space is released after truncating a file back
++# to the old smaller size.  Before Linux 3.10, Btrfs/OCFS2 are test
++# failed in this case.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2013 Oracle, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=0	# success is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# real QA test starts here
++
++# Modify as appropriate.
++_supported_fs generic
++_supported_os Linux
++
++rm -f $seqres.full
++
++echo "Slience is golden"
++
++# Check the current avaliable disk space on $TEST_DIR.
++# 1024KiB at least
++avail_begin=`df -P $TEST_DIR | awk 'END {print $4}'`
++[ "$avail_begin" -ge 1024 ] || _notrun "Test device is too small ($avail_begin KiB)"
++
++# Preallocate half size of the available disk space to a file
++# starts from offset 0 with FALLOC_FL_KEEP_SIZE option on the
++# test file system.
++fallocate -n -o 0 -l $(($avail_begin/2)) $TEST_DIR/testfile.$seq >>$seqres.full 2>&1
++
++# Verify the file size, it should keep unchanged as 0 in this case
++fsize=`ls -l $TEST_DIR/testfile.$seq | awk '{print $5}'`
++[ "$fsize" -eq 0 ] || _fail "File size is changed to ($fsize Bytes)"
++
++# Truncate the file size back to 0
++truncate -s 0 $TEST_DIR/testfile.$seq
++sync
++
++# Preallocated disk space should be released
++avail_done=`df -P $TEST_DIR | awk 'END {print $4}'`
++[ "$avail_done" -eq "$avail_begin" ] || _fail "Available disk space ($avail_done KiB)"
++
++# success, all done
++exit
+diff --git a/tests/generic/315.out b/tests/generic/315.out
+new file mode 100644
+index 0000000..8414add
+--- /dev/null
++++ b/tests/generic/315.out
+@@ -0,0 +1,2 @@
++QA output created by 315
++Slience is golden
+diff --git a/tests/generic/group b/tests/generic/group
+index bd443c1..30889bd 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -115,3 +115,4 @@
+ 310 auto
+ 311 auto metadata log
+ 312 auto quick prealloc enospc
++315 auto quick rw prealloc
+-- 
+1.7.9.5
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
