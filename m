@@ -1,40 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D44C67F55
-	for <xfs@oss.sgi.com>; Mon,  1 Jul 2013 10:50:46 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A0C668F8037
-	for <xfs@oss.sgi.com>; Mon,  1 Jul 2013 08:50:46 -0700 (PDT)
-Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150]) by
-	cuda.sgi.com with ESMTP id c517jjZMn1QNVidk (version=TLSv1
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 72A447F55
+	for <xfs@oss.sgi.com>; Mon,  1 Jul 2013 11:00:06 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E7301AC003
+	for <xfs@oss.sgi.com>; Mon,  1 Jul 2013 09:00:05 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id x8rm0uJmMzKELZ8P (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 01 Jul 2013 08:50:45 -0700 (PDT)
-Received: from /spool/local
-	by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
-	Violators will be prosecuted
-	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
-	Mon, 1 Jul 2013 09:50:44 -0600
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com
-	[9.17.195.227])
-	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id B792419D8043
-	for <xfs@oss.sgi.com>; Mon,  1 Jul 2013 09:50:33 -0600 (MDT)
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	r61FoVgX140866 for <xfs@oss.sgi.com>; Mon, 1 Jul 2013 09:50:40 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
-	id r61FoU2N012008
-	for <xfs@oss.sgi.com>; Mon, 1 Jul 2013 09:50:30 -0600
-Subject: Re: [PATCH v9 4/6] xfs: Start using pquotaino from the superblock.
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-In-Reply-To: <20130625063135.GU29376@dastard>
-References: <1372042107-27332-1-git-send-email-sekharan@us.ibm.com>
-	<1372042107-27332-5-git-send-email-sekharan@us.ibm.com>
-	<20130625063135.GU29376@dastard>
-Date: Mon, 01 Jul 2013 10:50:30 -0500
-Message-ID: <1372693830.9777.4.camel@chandra-dt.ibm.com>
-Mime-Version: 1.0
-Reply-To: sekharan@us.ibm.com
+	Mon, 01 Jul 2013 09:00:01 -0700 (PDT)
+Message-ID: <51D1A734.3000805@oracle.com>
+Date: Mon, 01 Jul 2013 17:58:44 +0200
+From: Koen De Wit <koen.de.wit@oracle.com>
+MIME-Version: 1.0
+Subject: [PATCH v2] xfstests: btrfs/311: sparse copy between different
+	filesystems/mountpoints
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -43,211 +23,193 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>, xfs@oss.sgi.com, linux-btrfs@vger.kernel.org
 
-Hi Dave,
+Thanks Eric for reviewing and improving testcases btrfs/306, 309, 310 
+and 311 !
 
-I sent this email on 6/25 (just before my reply on 5/6 w.r.t adding the
-test to xfstests). Since I didn't get any response from you on this and
-got reply on the other one, I concluded that you accepted my
-justification/clarification.
+I had just one comment: on line 70 the output was redirected to 
+$seqres.fll instead of $seqres.full. Corrected patch below.
 
-I just looked at the archives and do not see my original email :(... but
-is intact in my sent folder!!
+# Check if creating a sparse copy ("reflink") of a file on btrfs
+# expectedly fails when it's done between different filesystems or
+# different mount points of the same filesystem.
+#
+# For both situations, these actions are executed:
+#    - Copy a file with the reflink=auto option.
+#      A normal copy should be created.
+#    - Copy a file with the reflink=always option. Should result in error,
+#      no file should be created.
 
-Please see if my justification below is valid.
+[sandeen: mostly cosmetic changes]
 
-Chandra
+Originally submitted as:
+xfstests: 301: sparse copy between different filesystems/mountpoints on 
+btrfs
 
-On Tue, 2013-06-25 at 16:31 +1000, Dave Chinner wrote:
-> On Sun, Jun 23, 2013 at 09:48:25PM -0500, Chandra Seetharaman wrote:
-> > Start using pquotino and define a macro to check if the
-> > superblock has pquotino.
-> > 
-> > Keep backward compatibilty by alowing mount of older superblock
-> > with no separate pquota inode.
-> > 
-> > Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-> > ---
-> >  fs/xfs/xfs_fsops.c             |    3 +-
-> >  fs/xfs/xfs_mount.c             |   51 +++++++++++++++++++++++++++++++--------
-> >  fs/xfs/xfs_qm.c                |   22 +++++++++--------
-> >  fs/xfs/xfs_qm_syscalls.c       |   24 ++++++++++++++++--
-> >  fs/xfs/xfs_quota.h             |    8 ------
-> >  fs/xfs/xfs_sb.h                |   16 +++++++++++-
-> >  fs/xfs/xfs_super.c             |   14 ++++++----
-> >  include/uapi/linux/dqblk_xfs.h |    1 +
-> >  8 files changed, 99 insertions(+), 40 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-> > index 614eb0c..3bf05f4 100644
-> > --- a/fs/xfs/xfs_fsops.c
-> > +++ b/fs/xfs/xfs_fsops.c
-> > @@ -501,7 +501,8 @@ xfs_growfs_data_private(
-> >  				error, agno);
-> >  			break;
-> >  		}
-> > -		xfs_sb_to_disk(XFS_BUF_TO_SBP(bp), &mp->m_sb, XFS_SB_ALL_BITS);
-> > +		xfs_sb_to_disk(XFS_BUF_TO_SBP(bp), &mp->m_sb,
-> > +				xfs_sb_all_bits(&mp->m_sb));
-> 
-> I think you could still pass XFS_SB_ALL_BITS to xfs_sb_to_disk(),
-> and do the XFS_SB_PQUOTINO filtering inside xfs_sb_quota_to_disk().
-> 
-> Actually xfs_sb_all_bits() is only used here, and it seems to me
-> that it is not necessary as we do a pquota support check inside
-> xfs_sb_to_disk() and can handle this in that place...
+Signed-off-by: Koen De Wit <koen.de.wit@xxxxxxxxxx>
+Signed-off-by: Eric Sandeen <sandeen@xxxxxxxxxx>
+---
+  tests/btrfs/311     |  107 
++++++++++++++++++++++++++++++++++++++++++++++++++++
+  tests/btrfs/311.out |   15 +++++++
+  tests/btrfs/group   |    4 ++
+  3 files changed, 126 insertions(+), 0 deletions(-)
+  create mode 100755 tests/btrfs/311
+  create mode 100644 tests/btrfs/311.out
 
-Yes, this is the only place that uses XFS_SB_ALL_BITS, and the purpose
-is to copy over the superblock to secondary.
-
-The change I made ensures that the caller does what is correct. i.e if
-it is copying an earlier version of superblock, it does not try to copy
-the pquotino, and if it uses the newer version of superblock it copies
-over the pquotino.
-
-At some point (in my internal tree) I did have the way you suggested.
-But, doing it that way looked like a band-aid/hack, and felt this is the
-right way to do it (since the caller should provide appropriate
-information to the function).
-> 
-> >  
-> >  		/*
-> >  		 * If we get an error writing out the alternate superblocks,
-> > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> > index e2e14cb..bb7b23e 100644
-> > --- a/fs/xfs/xfs_mount.c
-> > +++ b/fs/xfs/xfs_mount.c
-> > @@ -336,12 +336,17 @@ xfs_mount_validate_sb(
-> >  		return XFS_ERROR(EWRONGFS);
-> >  	}
-> >  
-> > -	if ((sbp->sb_qflags & (XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD)) &&
-> > -			(sbp->sb_qflags & (XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD |
-> > -				XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD))) {
-> > -		xfs_notice(mp,
-> > -"Super block has XFS_OQUOTA bits along with XFS_PQUOTA and/or XFS_GQUOTA bits.\n");
-> > -		return XFS_ERROR(EFSCORRUPTED);
-> > +	if (xfs_sb_version_has_pquota(sbp)) {
-> > +		if (sbp->sb_qflags & (XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD)) {
-> > +			xfs_notice(mp,
-> > +			   "Version 5 of Super block has XFS_OQUOTA bits.\n");
-> > +			return XFS_ERROR(EFSCORRUPTED);
-> > +		}
-> > +	} else if (sbp->sb_qflags & (XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD |
-> > +				XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD)) {
-> > +			xfs_notice(mp,
-> > +"Superblock earlier than Version 5 has XFS_[PQ]UOTA_{ENFD|CHKD} bits.\n");
-> > +			return XFS_ERROR(EFSCORRUPTED);
-> 
-> [ xfs_alert() for those, I think. ]
-
-will do.
-
-> 
-> > @@ -638,6 +643,13 @@ xfs_handle_quota_to_disk(
-> >  {
-> >  	__uint16_t	qflags = from->sb_qflags;
-> >  
-> > +	/*
-> > +	 * We need to do these manipilations only if we are working
-> > +	 * with an older version of on-disk superblock.
-> > +	 */
-> > +	if (xfs_sb_version_has_pquota(from))
-> > +		return;
-> > +
-> >  	if (*fields & XFS_SB_QFLAGS) {
-> >  		/*
-> >  		 * The in-core version of sb_qflags do not have
-> 
-> xfs_sb_all_bits() does:
-> 
-> 	if (xfs_sb_version_has_pquota(sbp))
-> 		return XFS_SB_ALL_BITS;
-> 	return XFS_SB_ALL_BITS & ~XFS_SB_PQUOTINO;
-> 
-> which means that we enter xfs_handle_quota_to_disk() with
-> XFS_SB_ALL_BITS intact for the pquota case, but without it in the
-> non-pquota case. Hence if we don't have pquota set, we continue
-> onwards and....
-> 
-> > @@ -657,6 +669,10 @@ xfs_handle_quota_to_disk(
-> >  		to->sb_qflags = cpu_to_be16(qflags);
-> >  		*fields &= ~XFS_SB_QFLAGS;
-> >  	}
-> > +	if (*fields & XFS_SB_PQUOTINO) {
-> > +		to->sb_gquotino = cpu_to_be64(from->sb_pquotino);
-> > +		*fields &= ~XFS_SB_PQUOTINO;
-> > +	}
-> 
-> We will never do this because we've already cleared XFS_SB_PQUOTINO
-> before we entered xfs_sb_to_disk(). That doesn't seem right to me... 
-
-Yes, if we are using a version of superblock where pquotino should not
-be used, we do not want to get into this block.
-
-If we are using PQUOTA in the superblock, that inode information will be
-in gquotino and will be converted over appropriately in
-xfs_sb_to_disk().
-
-> 
-> > @@ -1524,8 +1524,10 @@ xfs_qm_init_quotainos(
-> >  		flags &= ~XFS_QMOPT_SBVERSION;
-> >  	}
-> >  	if (XFS_IS_PQUOTA_ON(mp) && pip == NULL) {
-> > +		if (!xfs_sb_version_has_pquota(&mp->m_sb))
-> > +			sbflags &= ~XFS_SB_GQUOTINO;
-> 
-> That's taken me a while to work out - it needs a comment explaining
-> why XFS_SB_GQUOTINO is being cleared here.
-
-will do.
-> 
-> >  		error = xfs_qm_qino_alloc(mp, &pip,
-> > -					  sbflags | XFS_SB_GQUOTINO,
-> > +					  sbflags | XFS_SB_PQUOTINO,
-> >  					  flags | XFS_QMOPT_PQUOTA);
-> >  		if (error)
-> >  			goto error_rele;
-> > diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-> > index ed7cd55..d664a2d 100644
-> > --- a/fs/xfs/xfs_qm_syscalls.c
-> > +++ b/fs/xfs/xfs_qm_syscalls.c
-> > @@ -201,8 +201,7 @@ xfs_qm_scall_quotaoff(
-> >  	/*
-> >  	 * If quotas is completely disabled, close shop.
-> >  	 */
-> > -	if (((flags & XFS_MOUNT_QUOTA_ALL) == XFS_MOUNT_QUOTA_SET1) ||
-> > -	    ((flags & XFS_MOUNT_QUOTA_ALL) == XFS_MOUNT_QUOTA_SET2)) {
-> > +	if ((flags & XFS_MOUNT_QUOTA_ALL) == XFS_MOUNT_QUOTA_ALL) {
-> >  		mutex_unlock(&q->qi_quotaofflock);
-> >  		xfs_qm_destroy_quotainfo(mp);
-> >  		return (0);
-> 
-> This makes the assumption that userspace passes all three quota
-> types into the kernel in a single quota off call as the only way to
-> turn quotas off completely. What happens if they are turned off one
-> at a time? Shouldn't we detect when no more quotas are actually
-> enabled and then do this?
-
-Yes, I agree that there is a difference in behavior if the user turns
-off quota one-by-one Vs turns off all quota at once. But, the behavior
-difference is not seen by the user space.  And, I did not make the
-change :)
-
-I just included project quota into the fold.
-
-> 
-> Cheers,
-> 
-> Dave.
-
-
+diff --git a/tests/btrfs/311 b/tests/btrfs/311
+new file mode 100755
+index 0000000..56ebd58
+--- /dev/null
++++ b/tests/btrfs/311
+@@ -0,0 +1,107 @@
++#! /bin/bash
++# FS QA Test No. 311
++#
++# Check if creating a sparse copy ("reflink") of a file on btrfs
++# expectedly fails when it's done between different filesystems or
++# different mount points of the same filesystem.
++#
++# For both situations, these actions are executed:
++#    - Copy a file with the reflink=auto option.
++#      A normal copy should be created.
++#    - Copy a file with the reflink=always option. Should result in error,
++#      no file should be created.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2013, Oracle and/or its affiliates.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++
++seq=`basename $0`
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1    # failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    umount $SCRATCH_MNT &>/dev/null
++    cd /
++    rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# real QA test starts here
++_supported_fs btrfs
++_supported_os Linux
++
++_require_scratch
++_require_cp_reflink
++
++SOURCE_DIR=$TEST_DIR/test-$seq
++CROSS_DEV_DIR=$SCRATCH_MNT/test-$seq
++# mount point & target for twice-mounted device
++TEST_DIR2=$TEST_DIR/mount2
++DUAL_MOUNT_DIR=$SCRATCH_MNT/test-bis-$seq
++
++rm -rf $SOURCE_DIR
++mkdir $SOURCE_DIR
++
++rm -f $seqres.full
++
++_scratch_mkfs
++$XFS_IO_PROG -f -c 'pwrite -S 0x61 0 9000' $SOURCE_DIR/original \
++ >> $seqres.full
++
++_filter_testdirs()
++{
++    _filter_test_dir | _filter_scratch
++}
++
++_create_reflinks_to()
++{
++    # auto reflink, should fall back to non-reflink
++    rm -rf $1; mkdir $1
++    echo "reflink=auto:"
++    cp --reflink=auto $SOURCE_DIR/original $1/copy
++    md5sum $SOURCE_DIR/original | _filter_testdirs
++    md5sum $1/copy | _filter_testdirs
++
++    # always reflink, should fail outright
++    rm -rf $1; mkdir $1
++    echo "reflink=always:"
++    cp --reflink=always $SOURCE_DIR/original $1/copyfail 2>&1 | 
+_filter_testdirs
++
++    # The failed target actually gets created by cp:
++    ls $1/copyfail | _filter_testdirs
++}
++
++echo "test reflinks across different devices"
++_scratch_mount
++_create_reflinks_to $CROSS_DEV_DIR
++_scratch_unmount
++
++echo "test reflinks across different mountpoints of same device"
++mount $TEST_DEV $SCRATCH_MNT || _fail "Couldn't double-mount $TEST_DEV"
++_create_reflinks_to $DUAL_MOUNT_DIR
++umount $SCRATCH_MNT
++
++# success, all done
++status=0
++exit
+diff --git a/tests/btrfs/311.out b/tests/btrfs/311.out
+new file mode 100644
+index 0000000..210727b
+--- /dev/null
++++ b/tests/btrfs/311.out
+@@ -0,0 +1,15 @@
++QA output created by 311
++test reflinks across different devices
++reflink=auto:
++42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-311/original
++42d69d1a6d333a7ebdf64792a555e392  SCRATCH_MNT/test-311/copy
++reflink=always:
++cp: failed to clone `SCRATCH_MNT/test-311/copyfail': Invalid 
+cross-device link
++SCRATCH_MNT/test-311/copyfail
++test reflinks across different mountpoints of same device
++reflink=auto:
++42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-311/original
++42d69d1a6d333a7ebdf64792a555e392  SCRATCH_MNT/test-bis-311/copy
++reflink=always:
++cp: failed to clone `SCRATCH_MNT/test-bis-311/copyfail': Invalid 
+cross-device link
++SCRATCH_MNT/test-bis-311/copyfail
+diff --git a/tests/btrfs/group b/tests/btrfs/group
+index bc6c256..c897118 100644
+--- a/tests/btrfs/group
++++ b/tests/btrfs/group
+@@ -12,3 +12,4 @@
+  308 auto quick reflink
+  309 auto quick reflink
+  310 auto quick reflink
++311 auto quick reflink
+-- 
+1.7.2.5
 
 _______________________________________________
 xfs mailing list
