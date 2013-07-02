@@ -1,17 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id ACB667F5E
-	for <xfs@oss.sgi.com>; Tue,  2 Jul 2013 11:23:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9BFD2304087
-	for <xfs@oss.sgi.com>; Tue,  2 Jul 2013 09:23:45 -0700 (PDT)
-Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
-	cuda.sgi.com with ESMTP id WhixNGgiUq0mCCR3 for
-	<xfs@oss.sgi.com>; Tue, 02 Jul 2013 09:23:43 -0700 (PDT)
-From: Yann Droneaud <ydroneaud@opteya.com>
-Subject: [PATCH] MAINTAINERS: xfs@oss.sgi.com is a list
-Date: Tue,  2 Jul 2013 17:00:47 +0200
-Message-Id: <1372777248-4114-1-git-send-email-ydroneaud@opteya.com>
+	by oss.sgi.com (Postfix) with ESMTP id 905A67F69
+	for <xfs@oss.sgi.com>; Tue,  2 Jul 2013 14:17:25 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 7E35930408C
+	for <xfs@oss.sgi.com>; Tue,  2 Jul 2013 12:17:25 -0700 (PDT)
+Received: from dkim2.fusionio.com (dkim2.fusionio.com [66.114.96.54]) by
+	cuda.sgi.com with ESMTP id NMLmqYEGOTq31l4O (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 02 Jul 2013 12:17:21 -0700 (PDT)
+Received: from mx2.fusionio.com (unknown [10.101.1.160])
+	by dkim2.fusionio.com (Postfix) with ESMTP id 2005B9A06AA
+	for <xfs@oss.sgi.com>; Tue,  2 Jul 2013 13:17:21 -0600 (MDT)
+From: Josef Bacik <jbacik@fusionio.com>
+Subject: [PATCH] xfstests: make the scratch device for generic/256 slightly
+	larger
+Date: Tue, 2 Jul 2013 15:17:18 -0400
+Message-ID: <1372792638-23957-1-git-send-email-jbacik@fusionio.com>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,44 +26,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
-Cc: Yann Droneaud <ydroneaud@opteya.com>
+To: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-This patch changes type of xfs@oss.sgi.com
+This is similar to a previous fix I sent.  1 gig makes us do mixed file block
+groups for btrfs, so these enospc tests will usually fail because we don't have
+space for metadata, which is the case for this test.  So jack the size up to
+1.5gig so that btrfs can do its normal thing and pass the test.  Thanks,
 
-The output of ./scripts/get_maintainer.pl is
-modified to report xfs@oss.sgi.com as a list:
-
- Ben Myers <bpm@sgi.com> (supporter:XFS FILESYSTEM)
- Alex Elder <elder@kernel.org> (supporter:XFS FILESYSTEM)
--xfs@oss.sgi.com (supporter:XFS FILESYSTEM)
-+xfs@oss.sgi.com (open list:XFS FILESYSTEM)
- linux-kernel@vger.kernel.org (open list)
-
-Signed-off-by: Yann Droneaud <ydroneaud@opteya.com>
+Signed-off-by: Josef Bacik <jbacik@fusionio.com>
 ---
- MAINTAINERS | 1 -
- 1 file changed, 1 deletion(-)
+ tests/generic/256 |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index ad7e322..7b6ab51 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -9139,7 +9139,6 @@ XFS FILESYSTEM
- P:	Silicon Graphics Inc
- M:	Ben Myers <bpm@sgi.com>
- M:	Alex Elder <elder@kernel.org>
--M:	xfs@oss.sgi.com
- L:	xfs@oss.sgi.com
- W:	http://oss.sgi.com/projects/xfs
- T:	git git://oss.sgi.com/xfs/xfs.git
+diff --git a/tests/generic/256 b/tests/generic/256
+index 4a53da8..cfe7237 100755
+--- a/tests/generic/256
++++ b/tests/generic/256
+@@ -165,7 +165,7 @@ _test_full_fs_punch()
+ 
+ # Make a small file system to fill
+ umount $SCRATCH_DEV &> /dev/null
+-_scratch_mkfs_sized $(( 1024 * 1024 * 1024 )) &> /dev/null
++_scratch_mkfs_sized $(( 1536 * 1024 * 1024 )) &> /dev/null
+ _scratch_mount
+ # Test must be able to write files with non-root permissions
+ chmod 777 $SCRATCH_MNT
 -- 
-1.8.3.1
+1.7.7.6
 
 _______________________________________________
 xfs mailing list
