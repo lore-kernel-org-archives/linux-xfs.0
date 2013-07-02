@@ -1,21 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B83D07F53
-	for <xfs@oss.sgi.com>; Tue,  2 Jul 2013 09:28:41 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 55703AC005
-	for <xfs@oss.sgi.com>; Tue,  2 Jul 2013 07:28:38 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id 0Tb6B0wYdxL7rAMt (version=TLSv1
+	by oss.sgi.com (Postfix) with ESMTP id 407537F54
+	for <xfs@oss.sgi.com>; Tue,  2 Jul 2013 16:47:16 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id CF4C0AC007
+	for <xfs@oss.sgi.com>; Tue,  2 Jul 2013 14:47:12 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id H0OdYSziN5tXUQwF (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 02 Jul 2013 07:28:37 -0700 (PDT)
-Message-ID: <51D2E33B.1080402@oracle.com>
-Date: Tue, 02 Jul 2013 16:27:07 +0200
+	Tue, 02 Jul 2013 14:47:11 -0700 (PDT)
+Received: from acsinet21.oracle.com (acsinet21.oracle.com [141.146.126.237])
+	by userp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
+	ESMTP id r62Len0W032623
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Tue, 2 Jul 2013 21:40:50 GMT
+Received: from userz7022.oracle.com (userz7022.oracle.com [156.151.31.86])
+	by acsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	r62Ll8mQ018107
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Tue, 2 Jul 2013 21:47:09 GMT
+Received: from abhmt108.oracle.com (abhmt108.oracle.com [141.146.116.60])
+	by userz7022.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	r62Ll8js005704 for <xfs@oss.sgi.com>; Tue, 2 Jul 2013 21:47:08 GMT
 From: Koen De Wit <koen.de.wit@oracle.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH v3] xfstests: btrfs/316: cross-subvolume sparse copy
-References: <51D29D17.3050000@oracle.com> <20130702101539.GC14996@dastard>
-In-Reply-To: <20130702101539.GC14996@dastard>
+Subject: [PATCH] xfstests: fix _mount_ops_filter() to support $TEST_DIR
+	containing -o
+Date: Tue,  2 Jul 2013 23:44:57 +0200
+Message-Id: <1372801497-3941-1-git-send-email-koen.de.wit@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,79 +35,48 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Koen De Wit <koen.de.wit@oracle.com>
 
-Dave,
+If multiple mount options are given with multiple -o parameters,
+_mount_ops_filter concatenates them by replacing all -o's with a comma
+(except for the first -o).
 
-Thanks for the review. I will clean up the commit message and do a full mail-to-myself-and-test-patch round trip to avoid errors like the wrong test numbers in the golden output. I'm sorry for this.
+If $TEST_DIR contains "-o" (e.g. /mnt/test-os/) you get errors like this:
 
-About cutting out file names from the output. I did this in the first version of the patch:
+   # ./check generic/002
+     mount: mount point /mnt/test,s/ does not exist
+     common/rc: retrying test device mount with external set
+     mount: mount point /mnt/test,s/ does not exist
+     common/rc: could not mount /dev/sdc3 on /mnt/test-os/
 
-       md5sum $TESTDIR1/$F | $AWK_PROG 'END {print $1}'
+Fix it by only replacing -o's that are preceded by at least one space.
 
-but Eric Sandeen suggested to include them in order to provide more context in the output. (See http://oss.sgi.com/archives/xfs/2013-03/msg00231.html and http://oss.sgi.com/archives/xfs/2013-03/msg00220.html) That sounds like a good idea to me, it makes debugging failures easier. Whose opinion should I follow?
+Signed-off-by: Koen De Wit <koen.de.wit@oracle.com>
+---
+ common/rc |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Koen.
-
-
-On 07/02/2013 12:15 PM, Dave Chinner wrote:
-
-> On Tue, Jul 02, 2013 at 11:27:51AM +0200, Koen De Wit wrote:
->> This testscript creates reflinks to files on different subvolumes, overwrites the original files and reflinks, and moves reflinked files between subvolumes.
->>
->> Originally submitted as testcase 302, changes are made based on comments from Eric: http://oss.sgi.com/archives/xfs/2013-03/msg00231.html
->> Two new common/rc functions used in this script (_require_cp_reflink and _verify_reflink) have been submitted recently: http://oss.sgi.com/archives/xfs/2013-05/msg00745.html
->> Thanks to Eric Sandeen and Dave Chinner for the reviews.
->>
->> Version 3: fixing wrapped patch.
-> 
-> Needs a proper commit message - wrap it at 72 columns,  change log
-> should be placed below the --- devider, not be part of hte commit
-> message.
-> 
-> Test numbers do not need to be unique across all test directories,
-> just unique within the tests/btrfs directory.
-> 
->> +
->> +_checksum_files() {
->> +    for F in file1 file2 file3
->> +    do
->> +        for D in $TESTDIR1 $SCRATCH_MNT $SUBVOL2
->> +        do
->> +            md5sum $D/$F | _filter_test_dir | _filter_scratch
-> 
-> Just cut the file name out. No need for filtering at that point...
-> 
->> +        done
->> +    done
->> +}
->> +
->> +TESTDIR1=$TEST_DIR/test-$seq-1
->> +TESTDIR2=$TEST_DIR/test-$seq-2
->> +SUBVOL1=$TEST_DIR/subvol-$seq-1
->> +SUBVOL2=$TEST_DIR/subvol-$seq-2
-> 
-> ....-316-.....
-> 
->> +Verify the file contents:
->> +e09c80c42fda55f9d992e59ca6b3307d  TEST_DIR/test-302-1/file1
-> 
-> which means the golden output is broken, despite the filtering
-> 
-> You should test your patches before posting ;)
-> 
-> FWIW, this is why you should simply cut the filename completely out
-> like we do elsewhere....
-> 
-> Cheers,
-> 
-> Dave.
-
+diff --git a/common/rc b/common/rc
+index fe6bbfc..2a3c040 100644
+--- a/common/rc
++++ b/common/rc
+@@ -260,7 +260,7 @@ _mount_ops_filter()
+     # the sed script replaces all -o's (except the first) with a comma
+     # not required for linux, but won't hurt
+     
+-    echo $params | sed -e 's/[[:space:]]*-o[[:space:]]*/UnIqUe/1; s/[[:space:]]*-o[[:space:]]*/,/g; s/UnIqUe/ -o /1' \
++    echo $params | sed -e 's/[[:space:]]\+-o[[:space:]]*/UnIqUe/1; s/[[:space:]]\+-o[[:space:]]*/,/g; s/UnIqUe/ -o /1' \
+         | sed -e 's/dmapi/dmi/' \
+         | $PERL_PROG -ne "s#mtpt=[^,|^\n|^\s]*#mtpt=$FS_ESCAPED\1\2#; print;"
+ 
+-- 
+1.7.2.5
 
 _______________________________________________
 xfs mailing list
