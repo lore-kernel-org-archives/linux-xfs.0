@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id AB4DE7F53
-	for <xfs@oss.sgi.com>; Tue,  2 Jul 2013 04:34:49 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8B9FC3040BD
-	for <xfs@oss.sgi.com>; Tue,  2 Jul 2013 02:34:46 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id 5QefN08S4Ys1GSxs (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 02 Jul 2013 02:34:45 -0700 (PDT)
-Message-ID: <51D29E67.5020204@oracle.com>
-Date: Tue, 02 Jul 2013 11:33:27 +0200
-From: Koen De Wit <koen.de.wit@oracle.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E21A37F53
+	for <xfs@oss.sgi.com>; Tue,  2 Jul 2013 05:15:49 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D04978F80CF
+	for <xfs@oss.sgi.com>; Tue,  2 Jul 2013 03:15:46 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	cwbbWs4NgSdEBZ6H for <xfs@oss.sgi.com>;
+	Tue, 02 Jul 2013 03:15:44 -0700 (PDT)
+Date: Tue, 2 Jul 2013 20:15:40 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v3] xfstests: btrfs/316: cross-subvolume sparse copy
+Message-ID: <20130702101539.GC14996@dastard>
+References: <51D29D17.3050000@oracle.com>
 MIME-Version: 1.0
-Subject: [PATCH v3] xfstests: btrfs/311: sparse copy between
-	different	filesystems/mountpoints
+Content-Disposition: inline
+In-Reply-To: <51D29D17.3050000@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,184 +29,62 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>, xfs@oss.sgi.com, linux-btrfs@vger.kernel.org
+To: Koen De Wit <koen.de.wit@oracle.com>
+Cc: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-Thanks Eric for reviewing and improving testcases btrfs/306, 309, 310 and 311 !
+On Tue, Jul 02, 2013 at 11:27:51AM +0200, Koen De Wit wrote:
+> This testscript creates reflinks to files on different subvolumes, overwrites the original files and reflinks, and moves reflinked files between subvolumes.
+> 
+> Originally submitted as testcase 302, changes are made based on comments from Eric: http://oss.sgi.com/archives/xfs/2013-03/msg00231.html
+> Two new common/rc functions used in this script (_require_cp_reflink and _verify_reflink) have been submitted recently: http://oss.sgi.com/archives/xfs/2013-05/msg00745.html
+> Thanks to Eric Sandeen and Dave Chinner for the reviews.
+> 
+> Version 3: fixing wrapped patch.
 
-I had just one comment: on line 70 the output was redirected to $seqres.fll instead of $seqres.full. Corrected patch below.
+Needs a proper commit message - wrap it at 72 columns,  change log
+should be placed below the --- devider, not be part of hte commit
+message.
 
-# Check if creating a sparse copy ("reflink") of a file on btrfs
-# expectedly fails when it's done between different filesystems or
-# different mount points of the same filesystem.
-#
-# For both situations, these actions are executed:
-#    - Copy a file with the reflink=auto option.
-#      A normal copy should be created.
-#    - Copy a file with the reflink=always option. Should result in error,
-#      no file should be created.
+Test numbers do not need to be unique across all test directories,
+just unique within the tests/btrfs directory.
 
-[sandeen: mostly cosmetic changes]
+> +
+> +_checksum_files() {
+> +    for F in file1 file2 file3
+> +    do
+> +        for D in $TESTDIR1 $SCRATCH_MNT $SUBVOL2
+> +        do
+> +            md5sum $D/$F | _filter_test_dir | _filter_scratch
 
-Originally submitted as:
-xfstests: 301: sparse copy between different filesystems/mountpoints on btrfs
+Just cut the file name out. No need for filtering at that point...
 
-Version 3: fixing wrapped patch.
+> +        done
+> +    done
+> +}
+> +
+> +TESTDIR1=$TEST_DIR/test-$seq-1
+> +TESTDIR2=$TEST_DIR/test-$seq-2
+> +SUBVOL1=$TEST_DIR/subvol-$seq-1
+> +SUBVOL2=$TEST_DIR/subvol-$seq-2
 
-Signed-off-by: Koen De Wit <koen.de.wit@xxxxxxxxxx>
-Signed-off-by: Eric Sandeen <sandeen@xxxxxxxxxx>
----
- tests/btrfs/311     |  107 +++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/btrfs/311.out |   15 +++++++
- tests/btrfs/group   |    4 ++
- 3 files changed, 126 insertions(+), 0 deletions(-)
- create mode 100755 tests/btrfs/311
- create mode 100644 tests/btrfs/311.out
+....-316-.....
 
-diff --git a/tests/btrfs/311 b/tests/btrfs/311
-new file mode 100755
-index 0000000..56ebd58
---- /dev/null
-+++ b/tests/btrfs/311
-@@ -0,0 +1,107 @@
-+#! /bin/bash
-+# FS QA Test No. 311
-+#
-+# Check if creating a sparse copy ("reflink") of a file on btrfs
-+# expectedly fails when it's done between different filesystems or
-+# different mount points of the same filesystem.
-+#
-+# For both situations, these actions are executed:
-+#    - Copy a file with the reflink=auto option.
-+#      A normal copy should be created.
-+#    - Copy a file with the reflink=always option. Should result in error,
-+#      no file should be created.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2013, Oracle and/or its affiliates.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+seq=`basename $0`
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    umount $SCRATCH_MNT &>/dev/null
-+    cd /
-+    rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_fs btrfs
-+_supported_os Linux
-+
-+_require_scratch
-+_require_cp_reflink
-+
-+SOURCE_DIR=$TEST_DIR/test-$seq
-+CROSS_DEV_DIR=$SCRATCH_MNT/test-$seq
-+# mount point & target for twice-mounted device
-+TEST_DIR2=$TEST_DIR/mount2
-+DUAL_MOUNT_DIR=$SCRATCH_MNT/test-bis-$seq
-+
-+rm -rf $SOURCE_DIR
-+mkdir $SOURCE_DIR
-+
-+rm -f $seqres.full
-+
-+_scratch_mkfs
-+$XFS_IO_PROG -f -c 'pwrite -S 0x61 0 9000' $SOURCE_DIR/original \
-+ >> $seqres.full
-+
-+_filter_testdirs()
-+{
-+    _filter_test_dir | _filter_scratch
-+}
-+
-+_create_reflinks_to()
-+{
-+    # auto reflink, should fall back to non-reflink
-+    rm -rf $1; mkdir $1
-+    echo "reflink=auto:"
-+    cp --reflink=auto $SOURCE_DIR/original $1/copy
-+    md5sum $SOURCE_DIR/original | _filter_testdirs
-+    md5sum $1/copy | _filter_testdirs
-+
-+    # always reflink, should fail outright
-+    rm -rf $1; mkdir $1
-+    echo "reflink=always:"
-+    cp --reflink=always $SOURCE_DIR/original $1/copyfail 2>&1 | _filter_testdirs
-+
-+    # The failed target actually gets created by cp:
-+    ls $1/copyfail | _filter_testdirs
-+}
-+
-+echo "test reflinks across different devices"
-+_scratch_mount
-+_create_reflinks_to $CROSS_DEV_DIR
-+_scratch_unmount
-+
-+echo "test reflinks across different mountpoints of same device"
-+mount $TEST_DEV $SCRATCH_MNT || _fail "Couldn't double-mount $TEST_DEV"
-+_create_reflinks_to $DUAL_MOUNT_DIR
-+umount $SCRATCH_MNT
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/btrfs/311.out b/tests/btrfs/311.out
-new file mode 100644
-index 0000000..210727b
---- /dev/null
-+++ b/tests/btrfs/311.out
-@@ -0,0 +1,15 @@
-+QA output created by 311
-+test reflinks across different devices
-+reflink=auto:
-+42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-311/original
-+42d69d1a6d333a7ebdf64792a555e392  SCRATCH_MNT/test-311/copy
-+reflink=always:
-+cp: failed to clone `SCRATCH_MNT/test-311/copyfail': Invalid cross-device link
-+SCRATCH_MNT/test-311/copyfail
-+test reflinks across different mountpoints of same device
-+reflink=auto:
-+42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-311/original
-+42d69d1a6d333a7ebdf64792a555e392  SCRATCH_MNT/test-bis-311/copy
-+reflink=always:
-+cp: failed to clone `SCRATCH_MNT/test-bis-311/copyfail': Invalid cross-device link
-+SCRATCH_MNT/test-bis-311/copyfail
-diff --git a/tests/btrfs/group b/tests/btrfs/group
-index bc6c256..c897118 100644
---- a/tests/btrfs/group
-+++ b/tests/btrfs/group
-@@ -12,3 +12,4 @@
- 308 auto quick reflink
- 309 auto quick reflink
- 310 auto quick reflink
-+311 auto quick reflink
+> +Verify the file contents:
+> +e09c80c42fda55f9d992e59ca6b3307d  TEST_DIR/test-302-1/file1
+
+which means the golden output is broken, despite the filtering
+
+You should test your patches before posting ;)
+
+FWIW, this is why you should simply cut the filename completely out
+like we do elsewhere....
+
+Cheers,
+
+Dave.
 -- 
-1.7.2.5 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
