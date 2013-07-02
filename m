@@ -1,21 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 238B67F58
-	for <xfs@oss.sgi.com>; Tue,  2 Jul 2013 10:51:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1285D8F8089
-	for <xfs@oss.sgi.com>; Tue,  2 Jul 2013 08:51:26 -0700 (PDT)
-Received: from mx3-phx2.redhat.com (mx3-phx2.redhat.com [209.132.183.24]) by
-	cuda.sgi.com with ESMTP id q7jtGTfzFEzGHfx8 for
-	<xfs@oss.sgi.com>; Tue, 02 Jul 2013 08:51:25 -0700 (PDT)
-Subject: Re: [PATCH v3] xfstests: btrfs/316: cross-subvolume sparse copy
-References: <51D29D17.3050000@oracle.com> <20130702101539.GC14996@dastard>
-	<51D2E33B.1080402@oracle.com>
-From: Eric Sandeen <esandeen@redhat.com>
-MIME-Version: 1.0
-In-Reply-To: <51D2E33B.1080402@oracle.com>
-Message-Id: <6B93E4A6-D1C9-4170-8E1C-B94D24F601BB@redhat.com>
-Date: Tue, 2 Jul 2013 11:51:21 -0400 (EDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D84637F60
+	for <xfs@oss.sgi.com>; Tue,  2 Jul 2013 11:40:14 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 724AEAC012
+	for <xfs@oss.sgi.com>; Tue,  2 Jul 2013 09:40:11 -0700 (PDT)
+Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
+	cuda.sgi.com with ESMTP id hRWnT3LN6fAqaPkN for
+	<xfs@oss.sgi.com>; Tue, 02 Jul 2013 09:40:08 -0700 (PDT)
+From: Yann Droneaud <ydroneaud@opteya.com>
+Subject: [PATCH 00/13] Getting rid of get_unused_fd()
+Date: Tue,  2 Jul 2013 18:39:24 +0200
+Message-Id: <cover.1372777600.git.ydroneaud@opteya.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,86 +20,100 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Koen De Wit <koen.de.wit@oracle.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: linux-kernel@vger.kernel.org, linux-ia64@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, cbe-oss-dev@lists.ozlabs.org, linux-rdma@vger.kernel.org, devel@driverdev.osuosl.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, linux-sctp@vger.kernel.org, netdev@vger.kernel.org, Eric Paris <eparis@redhat.com>, Peter Zijlstra <a.p.zijlstra@chello.nl>, Paul Mackerras <paulus@samba.org>, Ingo Molnar <mingo@redhat.com>, Arnaldo Carvalho de Melo <acme@ghostprotocols.net>
+Cc: Yann Droneaud <ydroneaud@opteya.com>
 
-On Jul 2, 2013, at 10:28 AM, Koen De Wit <koen.de.wit@oracle.com> wrote:
+Hi,
 
-> Dave,
-> 
-> Thanks for the review. I will clean up the commit message and do a full mail-to-myself-and-test-patch round trip to avoid errors like the wrong test numbers in the golden output. I'm sorry for this.
-> 
-> About cutting out file names from the output. I did this in the first version of the patch:
-> 
->       md5sum $TESTDIR1/$F | $AWK_PROG 'END {print $1}'
-> 
-> but Eric Sandeen suggested to include them in order to provide more context in the output. (See http://oss.sgi.com/archives/xfs/2013-03/msg00231.html and http://oss.sgi.com/archives/xfs/2013-03/msg00220.html) That sounds like a good idea to me, it makes debugging failures easier. Whose opinion should I follow?
-> 
-Heh sorry.  IMHO maybe a middle ground; not bare md5sum but show only the base name?  In the end up to you; it seems Dave and I have different opinions on this.  :)
+Macro get_unused_fd() is a shortcut to call function get_unused_fd_flags(),
+to allocate a file descriptor.
 
-Eric
+The macro use 0 as flags, so the file descriptor is created
+without O_CLOEXEC flag.
 
-> Koen.
-> 
-> 
-> On 07/02/2013 12:15 PM, Dave Chinner wrote:
-> 
->> On Tue, Jul 02, 2013 at 11:27:51AM +0200, Koen De Wit wrote:
->>> This testscript creates reflinks to files on different subvolumes, overwrites the original files and reflinks, and moves reflinked files between subvolumes.
->>> 
->>> Originally submitted as testcase 302, changes are made based on comments from Eric: http://oss.sgi.com/archives/xfs/2013-03/msg00231.html
->>> Two new common/rc functions used in this script (_require_cp_reflink and _verify_reflink) have been submitted recently: http://oss.sgi.com/archives/xfs/2013-05/msg00745.html
->>> Thanks to Eric Sandeen and Dave Chinner for the reviews.
->>> 
->>> Version 3: fixing wrapped patch.
->> 
->> Needs a proper commit message - wrap it at 72 columns,  change log
->> should be placed below the --- devider, not be part of hte commit
->> message.
->> 
->> Test numbers do not need to be unique across all test directories,
->> just unique within the tests/btrfs directory.
->> 
->>> +
->>> +_checksum_files() {
->>> +    for F in file1 file2 file3
->>> +    do
->>> +        for D in $TESTDIR1 $SCRATCH_MNT $SUBVOL2
->>> +        do
->>> +            md5sum $D/$F | _filter_test_dir | _filter_scratch
->> 
->> Just cut the file name out. No need for filtering at that point...
->> 
->>> +        done
->>> +    done
->>> +}
->>> +
->>> +TESTDIR1=$TEST_DIR/test-$seq-1
->>> +TESTDIR2=$TEST_DIR/test-$seq-2
->>> +SUBVOL1=$TEST_DIR/subvol-$seq-1
->>> +SUBVOL2=$TEST_DIR/subvol-$seq-2
->> 
->> ....-316-.....
->> 
->>> +Verify the file contents:
->>> +e09c80c42fda55f9d992e59ca6b3307d  TEST_DIR/test-302-1/file1
->> 
->> which means the golden output is broken, despite the filtering
->> 
->> You should test your patches before posting ;)
->> 
->> FWIW, this is why you should simply cut the filename completely out
->> like we do elsewhere....
->> 
->> Cheers,
->> 
->> Dave.
-> 
-> 
+This can be seen as an unsafe default eg. in most case O_CLOEXEC
+must be used to not leak file descriptor across exec().
+
+Newer kernel code should use anon_inode_getfd() or get_unused_fd_flags()
+with flags provided by userspace. If flags cannot be given by userspace,
+O_CLOEXEC must be the default flag.
+
+Using O_CLOEXEC by default allows userspace to choose, without race,
+if the file descriptor is going to be inherited across exec().
+
+They are two ways to achieve this:
+
+- makes get_unused_fd() use O_CLOEXEC by default
+
+  It's difficult to get it right: every code using of get_unused_fd()
+  must take this change into account and be fixed as soon as
+  macro get_unused_fd() do the switch. Non updated code will have
+  unexpected behavor and it's likely going to break API contract.
+
+- remove get_unused_fd()
+
+  It's going to break some out of tree, not yet upstream kernel code,
+  but it's easy to notice and fix. Anyway, newer code should use
+  anon_inode_getfd() or get_unused_fd_flags().
+
+The latter option was choosen to ensure no unexpected behavor
+for out of tree, not yet upstream code. Removing the macro is the safest
+choice: it's better to break build than trying to make get_unused_fd()
+use O_CLOEXEC by default and get all user of get_unused_fd() update.
+
+Additionnaly, removing the macro is not going to break modules ABI.
+
+In linux-next tag 20130702, they're currently:
+
+- 15 calls to get_unused_fd_flags()
+     not counting get_unused_fd() and anon_inode_getfd()
+- 14 calls to get_unused_fd()
+- 11 calls to anon_inode_getfd()
+
+The following patchset try to convert all calls to get_unused_fd()
+to get_unused_fd_flags(0) before removing get_unused_fd() macro.
+
+Without get_unused_fd() macro, more subsystems are likely to use
+anon_inode_getfd() and be teached to provide an API that let userspace
+choose the opening flags of the file descriptor.
+
+Yann Droneaud (13):
+  ia64: use get_unused_fd_flags(0) instead of get_unused_fd()
+  ppc/cell: use get_unused_fd_flags(0) instead of get_unused_fd()
+  infiniband: use get_unused_fd_flags(0) instead of get_unused_fd()
+  android/sw_sync: use get_unused_fd_flags(0) instead of get_unused_fd()
+  android/sync: use get_unused_fd_flags(0) instead of get_unused_fd()
+  vfio: use get_unused_fd_flags(0) instead of get_unused_fd()
+  binfmt_misc: use get_unused_fd_flags(0) instead of get_unused_fd()
+  file: use get_unused_fd_flags(0) instead of get_unused_fd()
+  fanotify: use get_unused_fd_flags(0) instead of get_unused_fd()
+  xfs: use get_unused_fd_flags(0) instead of get_unused_fd()
+  events: use get_unused_fd_flags(0) instead of get_unused_fd()
+  sctp: use get_unused_fd_flags(0) instead of get_unused_fd()
+  file: remove get_unused_fd()
+
+ arch/ia64/kernel/perfmon.c                | 2 +-
+ arch/powerpc/platforms/cell/spufs/inode.c | 4 ++--
+ drivers/infiniband/core/uverbs_cmd.c      | 4 ++--
+ drivers/staging/android/sw_sync.c         | 2 +-
+ drivers/staging/android/sync.c            | 2 +-
+ drivers/vfio/vfio.c                       | 2 +-
+ fs/binfmt_misc.c                          | 2 +-
+ fs/file.c                                 | 2 +-
+ fs/notify/fanotify/fanotify_user.c        | 2 +-
+ fs/xfs/xfs_ioctl.c                        | 2 +-
+ include/linux/file.h                      | 1 -
+ kernel/events/core.c                      | 2 +-
+ net/sctp/socket.c                         | 2 +-
+ 13 files changed, 14 insertions(+), 15 deletions(-)
+
+-- 
+1.8.3.1
 
 _______________________________________________
 xfs mailing list
