@@ -1,19 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1B15B7F92
-	for <xfs@oss.sgi.com>; Wed,  3 Jul 2013 05:07:46 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E04033040BA
-	for <xfs@oss.sgi.com>; Wed,  3 Jul 2013 03:07:42 -0700 (PDT)
-Received: from mx-out.ocsa-data.net (mx-out.ocsa-data.net [194.36.166.37]) by
-	cuda.sgi.com with ESMTP id kI4Kay0qY41B3DUO (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 03 Jul 2013 03:07:41 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 333C47F92
+	for <xfs@oss.sgi.com>; Wed,  3 Jul 2013 05:17:31 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A6487AC007
+	for <xfs@oss.sgi.com>; Wed,  3 Jul 2013 03:17:30 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	Wx4MWf44hZDfGE38 for <xfs@oss.sgi.com>;
+	Wed, 03 Jul 2013 03:17:28 -0700 (PDT)
+Date: Wed, 3 Jul 2013 20:17:24 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v3] xfstests: btrfs/316: cross-subvolume sparse copy
+Message-ID: <20130703101724.GO14996@dastard>
+References: <51D29D17.3050000@oracle.com> <20130702101539.GC14996@dastard>
+	<51D2E33B.1080402@oracle.com>
+	<6B93E4A6-D1C9-4170-8E1C-B94D24F601BB@redhat.com>
+	<20130703063724.GK14996@dastard> <51D3F6CC.2040709@oracle.com>
 MIME-Version: 1.0
-Date: Wed, 03 Jul 2013 12:07:40 +0200
-From: Yann Droneaud <ydroneaud@opteya.com>
-Subject: Re: [PATCH] MAINTAINERS: xfs@oss.sgi.com is a list
-Message-ID: <ea519baa117add8c12bbe65f77708a4d@meuh.org>
+Content-Disposition: inline
+In-Reply-To: <51D3F6CC.2040709@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,55 +28,76 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: ydroneaud@opteya.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Koen De Wit <koen.de.wit@oracle.com>
+Cc: Eric Sandeen <esandeen@redhat.com>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-TGUgMDMuMDcuMjAxMyAxMTo1MCwgRGF2ZSBDaGlubmVyIGEgw6ljcml0wqA6Cj4gT24gV2VkLCBK
-dWwgMDMsIDIwMTMgYXQgMTE6MzY6MzlBTSArMDIwMCwgWWFubiBEcm9uZWF1ZCB3cm90ZToKPj4g
-TGUgMDMuMDcuMjAxMyAxMToyNCwgRGF2ZSBDaGlubmVyIGEgw6ljcml0wqA6Cj4+ID5PbiBXZWQs
-IEp1bCAwMywgMjAxMyBhdCAxMDoxNDo0MUFNICswMjAwLCBZYW5uIERyb25lYXVkIHdyb3RlOgo+
-PiA+PkxlIDAzLjA3LjIwMTMgMDg6NDAsIERhdmUgQ2hpbm5lciBhIMOpY3JpdMKgOgo+PiA+Pj5P
-biBUdWUsIEp1bCAwMiwgMjAxMyBhdCAwNTowMDo0N1BNICswMjAwLCBZYW5uIERyb25lYXVkIHdy
-b3RlOgo+PiA+Pj4+VGhpcyBwYXRjaCBjaGFuZ2VzIHR5cGUgb2YgeGZzQG9zcy5zZ2kuY29tCj4+
-ID4+Pj4KPj4gPj4+PlRoZSBvdXRwdXQgb2YgLi9zY3JpcHRzL2dldF9tYWludGFpbmVyLnBsIGlz
-Cj4+ID4+Pj5tb2RpZmllZCB0byByZXBvcnQgeGZzQG9zcy5zZ2kuY29tIGFzIGEgbGlzdDoKPj4g
-Pj4+Cj4+ID4+PldoYXQncyB0aGUgcHJvYmxlbSB3aXRoIHRoYXQ/IEFsbCBYRlMgcGF0Y2hlcyBh
-bmQgcHJvYmxlbQo+PiA+Pj5yZXBvcnRzIHNob3VsZCBiZSBzZW50IHRvIHRoZSB4ZnNAb3NzLnNn
-aS5jb20gbGlzdC4gVGhlcmUgYXJlIGZhcgo+PiA+Pj5tb3JlIHBlb3BsZSB0aGFuIGp1c3QgdGhl
-IG1haW50YWluZXIgdGhhdCBjYW4gdHJpYWdlIHByb2JsZW1zLAo+PiA+Pj5hbnN3ZXIgcXVlc3Rp
-b25zIGFuZCByZXZpZXcgcGF0Y2hlcy4uLgo+PiA+Pj4KPj4gPj4KPj4gPj5JdCB3YXMganVzdCBk
-aXN0dXJiaW5nOiBJIHdhcyBsb29raW5nIGZvciBhIGxpc3QgZm9yIFhGUwo+PiA+PmFuZCBmb3Vu
-ZCBvbmx5IG1haW50YWluZXJzLgo+PiA+Cj4+ID5UaGF0J3Mgd2hhdCB0aGU6Cj4+ID4KPj4gPkw6
-ICAgICAgeGZzQG9zcy5zZ2kuY29tCj4+ID4KPj4gPmVudHJ5IGlzLCB5ZXM/Cj4+ID4KPj4gCj4+
-IEluIHRoZSBvdXRwdXQgb2YgLi9zY3JpcHRzL2dldF9tYWludGFpbmVyLnBsOgo+PiAKPj4gQmVu
-IE15ZXJzIDxicG1Ac2dpLmNvbT4gKHN1cHBvcnRlcjpYRlMgRklMRVNZU1RFTSkKPj4gQWxleCBF
-bGRlciA8ZWxkZXJAa2VybmVsLm9yZz4gKHN1cHBvcnRlcjpYRlMgRklMRVNZU1RFTSkKPj4geGZz
-QG9zcy5zZ2kuY29tIChzdXBwb3J0ZXI6WEZTIEZJTEVTWVNURU0pCj4+IGxpbnV4LWtlcm5lbEB2
-Z2VyLmtlcm5lbC5vcmcgKG9wZW4gbGlzdCkKPiAKPiBZb3UncmUgc21hcnRlciB0aGFuIGEgZHVt
-YiBzY3JpcHQuIElmIHRoZSBpbmZvcm1hdGlvbiB0aGF0IHRoZQo+IHNjcmlwdCBwYXJzZXMgaXMg
-Y29ycmVjdCBhbmQgdGhlIGR1bWIgc2NyaXB0IGRvZXNuJ3QgZ2l2ZSB5b3UgdGhlCj4gcmlnaHQg
-aW5mb3JtYXRpb24sIHRoZW4gd2hhdCBuZWVkcyBmaXhpbmc/Cj4gCgpBbmQgd2hhdCBhYm91dDoK
-CiAgIElmIHlvdSBhcmUgdGhlIG9ubHkgb25lWypdIHRvIGFidXNlIC4vc2NyaXB0cy9nZXRfbWFp
-bnRhaW5lci5wbCwKICAgdGhlbiB3aGF0IG5lZWRzIGZpeGluZyA/CgpbKl0gSSBoYXZlIGZvdW5k
-IHRocmVlIG90aGVyIGV4YW1wbGVzIG9mIGR1cGxpY2F0aW5nIG1haWxpbmcgbGlzdCBhcyAKbWFp
-bnRhaW5lcjoKCiQgc2VkIC1uICdzL15MOltbOnNwYWNlOl1dKi8vcCcgTUFJTlRBSU5FUlMgfCBz
-b3J0IHwgdW5pcSA+IEwKJCBzZWQgLW4gJ3MvXk06W1s6c3BhY2U6XV0qLy9wJyBNQUlOVEFJTkVS
-UyB8IHNvcnQgfCB1bmlxID4gTQokIGNvbW0gLTEyIEwgTQpjZXBoLWRldmVsQHZnZXIua2VybmVs
-Lm9yZwpkbS1kZXZlbEByZWRoYXQuY29tCnhmc0Bvc3Muc2dpLmNvbQoKSSd2ZSBzZW50IGEgcGF0
-Y2ggZm9yIHhmc0Bvc3Muc2dpLmNvbSBhbmQgZG0tZGV2ZWxAcmVkaGF0LmNvbSwKaW4gbXkgZmly
-c3QgcGFzcyBJJ3ZlIG1pc3NlZCBjZXBoLWRldmVsQHZnZXIua2VybmVsLm9yZwoKPiBTZXJpb3Vz
-bHksIGFsbCB5b3UgYXJlIHByb3ZpbmcgaXMgdGhlIG9sZCBhZGFnZSB0aGF0Cj4gc2NyaXB0cy9n
-ZXRfbWFpbnRhaW5lci5wbCBzaG91bGQgYmUgY29uc2lkZXJlZCBoYXJtZnVsIGJlY2F1c2UKPiBw
-ZW9wbGUgdXNlIGl0IHdpdGhvdXQgZmlyc3QgZW5nYWdpbmcgdGhlaXIgYnJhaW4uCgpKdXN0IHRo
-aW5raW5nIGFib3V0IHRoZSB3aG9sZSBwaWN0dXJlLgpJbiB0aGlzIGNhc2UgLi9zY3JpcHRzL2dl
-dF9tYWludGFpbmVyLnBsIGlzIGdvaW5nIHRvIGJlIHJpZ2h0IG1vc3Qgb2YgCnRpbWUKZXhjZXB0
-IGZvciAzIHN1YnN5c3RlbXMgb24gYWJvdXQgMTE2MC4gU28gaGF2aW5nIHRoZSBzYW1lIGFkZHJl
-c3MgZm9yIAptYWludGFpbmVyCmFuZCBsaXN0IGlzIGEgcmF0aGVyIHVuY29tbW9uIGNhc2UuIFdo
-aWNoIGNvdWxkIGJlIG1pc2xlYWRpbmcgZm9yIG1vc3QuCgpSZWdhcmRzLgoKLS0gCllhbm4gRHJv
-bmVhdWQKT1BURVlBCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20v
-bWFpbG1hbi9saXN0aW5mby94ZnMK
+On Wed, Jul 03, 2013 at 12:02:52PM +0200, Koen De Wit wrote:
+> On 07/03/2013 08:37 AM, Dave Chinner wrote:
+> 
+> > On Tue, Jul 02, 2013 at 11:51:21AM -0400, Eric Sandeen wrote:
+> >> On Jul 2, 2013, at 10:28 AM, Koen De Wit <koen.de.wit@oracle.com>
+> >> wrote:
+> >>
+> >>> Dave,
+> >>>
+> >>> Thanks for the review. I will clean up the commit message and do
+> >>> a full mail-to-myself-and-test-patch round trip to avoid errors
+> >>> like the wrong test numbers in the golden output. I'm sorry for
+> >>> this.
+> >>>
+> >>> About cutting out file names from the output. I did this in the
+> >>> first version of the patch:
+> >>>
+> >>>       md5sum $TESTDIR1/$F | $AWK_PROG 'END {print $1}'
+> >>>
+> >>> but Eric Sandeen suggested to include them in order to provide
+> >>> more context in the output. (See
+> >>> http://oss.sgi.com/archives/xfs/2013-03/msg00231.html and
+> >>> http://oss.sgi.com/archives/xfs/2013-03/msg00220.html) That
+> >>> sounds like a good idea to me, it makes debugging failures
+> >>> easier. Whose opinion should I follow?
+> >>>
+> >> Heh sorry.  IMHO maybe a middle ground; not bare md5sum but show
+> >> only the base name?  In the end up to you; it seems Dave and I
+> >> have different opinions on this.  :)
+> > 
+> > I was just going by current xfstests convention. i.e, in common/rc:
+> > 
+> > # Prints the md5 checksum of a given file
+> > _md5_checksum()
+> > {
+> >         md5sum $1 | cut -d ' ' -f1
+> > }
+> > 
+> > Which is used by all the hole punch tests and generic/311.
+> 
+> 
+> That's true, but these tests generate other context information in the
+> output. They don't just print a bunch of checksums.
+
+Sure, but it's pretty trivial to work out which sum in output
+belongs to which file in this test - there's only a handful of them.
+
+>    (...)
+>    file1:
+>    00d620f69f30327f0f8946b95c12de44
+>    e09c80c42fda55f9d992e59ca6b3307d
+>    e09c80c42fda55f9d992e59ca6b3307d
+
+That's fine.
+
+Cheers,
+
+Dave,
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
