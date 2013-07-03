@@ -1,19 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 749287F98
-	for <xfs@oss.sgi.com>; Wed,  3 Jul 2013 08:11:52 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 46D438F8064
-	for <xfs@oss.sgi.com>; Wed,  3 Jul 2013 06:11:49 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id BlIjMExvzaclCpoo (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 03 Jul 2013 06:11:44 -0700 (PDT)
-From: Koen De Wit <koen.de.wit@oracle.com>
-Subject: [PATCH v4] xfstests: btrfs/311: sparse copy between different
-	filesystems/mountpoints
-Date: Wed,  3 Jul 2013 15:10:07 +0200
-Message-Id: <1372857007-6520-1-git-send-email-koen.de.wit@oracle.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 70F8E7F62
+	for <xfs@oss.sgi.com>; Wed,  3 Jul 2013 09:00:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3A800304089
+	for <xfs@oss.sgi.com>; Wed,  3 Jul 2013 07:00:13 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id oDfOFX7aeDtABuQy for <xfs@oss.sgi.com>;
+	Wed, 03 Jul 2013 07:00:11 -0700 (PDT)
+Received: from relay1.suse.de (unknown [195.135.220.254])
+	by mx2.suse.de (Postfix) with ESMTP id 505B3A50DE
+	for <xfs@oss.sgi.com>; Wed,  3 Jul 2013 16:00:11 +0200 (CEST)
+From: David Sterba <dsterba@suse.cz>
+Subject: [PATCH] xfstests: skip generic/192 if noatime is set
+Date: Wed,  3 Jul 2013 16:00:05 +0200
+Message-Id: <1372860005-1016-1-git-send-email-dsterba@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,181 +28,55 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, linux-btrfs@vger.kernel.org
-Cc: Koen De Wit <koen.de.wit@oracle.com>
+To: xfs@oss.sgi.com
+Cc: David Sterba <dsterba@suse.cz>
 
-Check if creating a sparse copy ("reflink") of a file on btrfs
-expectedly fails when it's done between different filesystems or
-different mount points of the same filesystem.
+Test generic/192 fails if noatime is set
 
-For both situations, these actions are executed:
-   - Copy a file with the reflink=auto option.
-     A normal copy should be created.
-   - Copy a file with the reflink=always option. Should result in error,
-     no file should be created.
+generic/192
+    -delta1 - access time after sleep in-core: 40
+    -delta2 - access time after sleep on-disk: 40
+    +delta1 - access time after sleep in-core: 0
+    +delta2 - access time after sleep on-disk: 0
 
-[sandeen: mostly cosmetic changes]
+but it's pointless to test atime effects with noatime.
 
-Signed-off-by: Koen De Wit <koen.de.wit@xxxxxxxxxx>
-Signed-off-by: Eric Sandeen <sandeen@xxxxxxxxxx>
+Signed-off-by: David Sterba <dsterba@suse.cz>
 ---
-Changelog:
-v3 -> v4: Cleaning up commit message
-v2 -> v3: replacing "$seqres.fll" by "$seqres.full"
-v1 -> v2: (sandeen) mostly cosmetic changes, renamed 301 -> 311
+ tests/generic/192 | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
- tests/btrfs/311     |  107 +++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/btrfs/311.out |   15 +++++++
- tests/btrfs/group   |    4 ++
- 3 files changed, 126 insertions(+), 0 deletions(-)
- create mode 100755 tests/btrfs/311
- create mode 100644 tests/btrfs/311.out
-
-diff --git a/tests/btrfs/311 b/tests/btrfs/311
-new file mode 100755
-index 0000000..56ebd58
---- /dev/null
-+++ b/tests/btrfs/311
-@@ -0,0 +1,107 @@
-+#! /bin/bash
-+# FS QA Test No. 311
-+#
-+# Check if creating a sparse copy ("reflink") of a file on btrfs
-+# expectedly fails when it's done between different filesystems or
-+# different mount points of the same filesystem.
-+#
-+# For both situations, these actions are executed:
-+#    - Copy a file with the reflink=auto option.
-+#      A normal copy should be created.
-+#    - Copy a file with the reflink=always option. Should result in error,
-+#      no file should be created.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2013, Oracle and/or its affiliates.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+
-+seq=`basename $0`
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    umount $SCRATCH_MNT &>/dev/null
-+    cd /
-+    rm -f $tmp.*
+diff --git a/tests/generic/192 b/tests/generic/192
+index a40c121..2b4e41c 100755
+--- a/tests/generic/192
++++ b/tests/generic/192
+@@ -38,6 +38,13 @@ _access_time()
+ 	stat --format=%X $1
+ }
+ 
++is_noatime_set() {
++	case "$MOUNT_OPTIONS" in
++		*noatime*) return 0;;
++	esac
++	return 1
 +}
 +
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
+ # get standard environment, filters and checks
+ . ./common/rc
+ . ./common/filter
+@@ -52,6 +59,10 @@ _supported_os Linux
+ #delay=45
+ delay=40
+ 
++if is_noatime_set; then
++	_notrun "this test makes no sense with noatime"
++fi
 +
-+# real QA test starts here
-+_supported_fs btrfs
-+_supported_os Linux
-+
-+_require_scratch
-+_require_cp_reflink
-+
-+SOURCE_DIR=$TEST_DIR/test-$seq
-+CROSS_DEV_DIR=$SCRATCH_MNT/test-$seq
-+# mount point & target for twice-mounted device
-+TEST_DIR2=$TEST_DIR/mount2
-+DUAL_MOUNT_DIR=$SCRATCH_MNT/test-bis-$seq
-+
-+rm -rf $SOURCE_DIR
-+mkdir $SOURCE_DIR
-+
-+rm -f $seqres.full
-+
-+_scratch_mkfs
-+$XFS_IO_PROG -f -c 'pwrite -S 0x61 0 9000' $SOURCE_DIR/original \
-+ >> $seqres.full
-+
-+_filter_testdirs()
-+{
-+    _filter_test_dir | _filter_scratch
-+}
-+
-+_create_reflinks_to()
-+{
-+    # auto reflink, should fall back to non-reflink
-+    rm -rf $1; mkdir $1
-+    echo "reflink=auto:"
-+    cp --reflink=auto $SOURCE_DIR/original $1/copy
-+    md5sum $SOURCE_DIR/original | _filter_testdirs
-+    md5sum $1/copy | _filter_testdirs
-+
-+    # always reflink, should fail outright
-+    rm -rf $1; mkdir $1
-+    echo "reflink=always:"
-+    cp --reflink=always $SOURCE_DIR/original $1/copyfail 2>&1 | _filter_testdirs
-+
-+    # The failed target actually gets created by cp:
-+    ls $1/copyfail | _filter_testdirs
-+}
-+
-+echo "test reflinks across different devices"
-+_scratch_mount
-+_create_reflinks_to $CROSS_DEV_DIR
-+_scratch_unmount
-+
-+echo "test reflinks across different mountpoints of same device"
-+mount $TEST_DEV $SCRATCH_MNT || _fail "Couldn't double-mount $TEST_DEV"
-+_create_reflinks_to $DUAL_MOUNT_DIR
-+umount $SCRATCH_MNT
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/btrfs/311.out b/tests/btrfs/311.out
-new file mode 100644
-index 0000000..210727b
---- /dev/null
-+++ b/tests/btrfs/311.out
-@@ -0,0 +1,15 @@
-+QA output created by 311
-+test reflinks across different devices
-+reflink=auto:
-+42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-311/original
-+42d69d1a6d333a7ebdf64792a555e392  SCRATCH_MNT/test-311/copy
-+reflink=always:
-+cp: failed to clone `SCRATCH_MNT/test-311/copyfail': Invalid cross-device link
-+SCRATCH_MNT/test-311/copyfail
-+test reflinks across different mountpoints of same device
-+reflink=auto:
-+42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-311/original
-+42d69d1a6d333a7ebdf64792a555e392  SCRATCH_MNT/test-bis-311/copy
-+reflink=always:
-+cp: failed to clone `SCRATCH_MNT/test-bis-311/copyfail': Invalid cross-device link
-+SCRATCH_MNT/test-bis-311/copyfail
-diff --git a/tests/btrfs/group b/tests/btrfs/group
-index bc6c256..c897118 100644
---- a/tests/btrfs/group
-+++ b/tests/btrfs/group
-@@ -12,3 +12,4 @@
- 308 auto quick reflink
- 309 auto quick reflink
- 310 auto quick reflink
-+311 auto quick reflink
---
-1.7.2.5 
+ testfile=$TEST_DIR/testfile
+ rm -f $testfile
+ rm -f $seqres.full
+-- 
+1.8.2
 
 _______________________________________________
 xfs mailing list
