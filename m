@@ -1,19 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8014D7F85
-	for <xfs@oss.sgi.com>; Wed,  3 Jul 2013 04:46:34 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id BBE207F88
+	for <xfs@oss.sgi.com>; Wed,  3 Jul 2013 04:50:57 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 08531AC00E
-	for <xfs@oss.sgi.com>; Wed,  3 Jul 2013 02:46:33 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id T4sQHcKaK7pbdKAN (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 03 Jul 2013 02:46:32 -0700 (PDT)
-From: Liu Bo <bo.li.liu@oracle.com>
-Subject: [PATCH] Xfstests/btrfs/308: add snapshot-aware defrag for partial
-	extents testcases
-Date: Wed,  3 Jul 2013 17:46:20 +0800
-Message-Id: <1372844780-31845-1-git-send-email-bo.li.liu@oracle.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 445E1AC005
+	for <xfs@oss.sgi.com>; Wed,  3 Jul 2013 02:50:57 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	4tKZ64GIq4xr8bxi for <xfs@oss.sgi.com>;
+	Wed, 03 Jul 2013 02:50:55 -0700 (PDT)
+Date: Wed, 3 Jul 2013 19:50:50 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] MAINTAINERS: xfs@oss.sgi.com is a list
+Message-ID: <20130703095050.GN14996@dastard>
+References: <1372777248-4114-1-git-send-email-ydroneaud@opteya.com>
+	<20130703064026.GL14996@dastard>
+	<c229feab100a72240128ef81297680a1@meuh.org>
+	<20130703092406.GM14996@dastard>
+	<5e9d66217e0fa968863177d73dd492b1@meuh.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <5e9d66217e0fa968863177d73dd492b1@meuh.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,143 +29,63 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-btrfs@vger.kernel.org
-Cc: xfs@oss.sgi.com
+To: Yann Droneaud <ydroneaud@opteya.com>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-This is to test whether snapshot-aware defrag can work well on partial extents.
+On Wed, Jul 03, 2013 at 11:36:39AM +0200, Yann Droneaud wrote:
+> Le 03.07.2013 11:24, Dave Chinner a =E9crit=A0:
+> >On Wed, Jul 03, 2013 at 10:14:41AM +0200, Yann Droneaud wrote:
+> >>Le 03.07.2013 08:40, Dave Chinner a =E9crit=A0:
+> >>>On Tue, Jul 02, 2013 at 05:00:47PM +0200, Yann Droneaud wrote:
+> >>>>This patch changes type of xfs@oss.sgi.com
+> >>>>
+> >>>>The output of ./scripts/get_maintainer.pl is
+> >>>>modified to report xfs@oss.sgi.com as a list:
+> >>>
+> >>>What's the problem with that? All XFS patches and problem
+> >>>reports should be sent to the xfs@oss.sgi.com list. There are far
+> >>>more people than just the maintainer that can triage problems,
+> >>>answer questions and review patches...
+> >>>
+> >>
+> >>It was just disturbing: I was looking for a list for XFS
+> >>and found only maintainers.
+> >
+> >That's what the:
+> >
+> >L:      xfs@oss.sgi.com
+> >
+> >entry is, yes?
+> >
+> =
 
-Signed-off-by: Liu Bo <bo.li.liu@oracle.com>
----
- tests/btrfs/308     |   93 +++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/btrfs/308.out |    2 +
- tests/btrfs/group   |    1 +
- 3 files changed, 96 insertions(+), 0 deletions(-)
- create mode 100755 tests/btrfs/308
- create mode 100644 tests/btrfs/308.out
+> In the output of ./scripts/get_maintainer.pl:
+> =
 
-diff --git a/tests/btrfs/308 b/tests/btrfs/308
-new file mode 100755
-index 0000000..b3dd39c
---- /dev/null
-+++ b/tests/btrfs/308
-@@ -0,0 +1,93 @@
-+#! /bin/bash
-+# BTRFS QA Test No. 308
-+#
-+# Test if snapshot-aware defrag can work well on partial extents, ie.
-+# extent_offset is not zero.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2013 Oracle.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+
-+# Modify as appropriate.
-+_supported_fs generic
-+_supported_os Linux
-+_require_scratch
-+_require_command "/usr/sbin/filefrag"
-+
-+rm -f $seqres.full
-+
-+_scratch_mkfs > /dev/null 2>&1
-+_scratch_mount
-+
-+subvol=$SCRATCH_MNT/subvol
-+
-+$BTRFS_UTIL_PROG subvolume create $subvol >> $seqres.full
-+
-+for i in `seq 5 -1 1`
-+do
-+	dd if=/dev/zero of=$subvol/foobar bs=6k count=1 seek=$i conv=notrunc oflag=dsync 2>> $seqres.full
-+done
-+
-+sync
-+for i in `seq 2 -1 1`
-+do
-+	$BTRFS_UTIL_PROG subvolume snapshot $subvol $SCRATCH_MNT/snap-$i >> $seqres.full
-+done
-+
-+$BTRFS_UTIL_PROG filesystem defrag $subvol/foobar && sync
-+
-+num_extent_orig=`filefrag $subvol/foobar | awk -F ' ' '{print $2}'`
-+num_extent_snap1=`filefrag $SCRATCH_MNT/snap-1/foobar | awk -F ' ' '{print $2}'`
-+num_extent_snap2=`filefrag $SCRATCH_MNT/snap-2/foobar | awk -F ' ' '{print $2}'`
-+
-+echo "$num_extent_orig $num_extent_snap1 $num_extent_snap2" >> $seqres.full
-+
-+# if error
-+if [ "x$num_extent_snap1" != "x$num_extent_orig" -o "x$num_extent_snap2" != "x$num_extent_orig" ]; then
-+	echo "number of extents mis-match!"
-+	exit
-+fi
-+
-+# optional stuff if your test has verbose output to help resolve problems
-+#echo
-+#echo "If failure, check $seqres.full (this) and $seqres.full.ok (reference)"
-+
-+# success, all done
-+echo "done"
-+status=0
-+exit
-diff --git a/tests/btrfs/308.out b/tests/btrfs/308.out
-new file mode 100644
-index 0000000..1f3de82
---- /dev/null
-+++ b/tests/btrfs/308.out
-@@ -0,0 +1,2 @@
-+QA output created by 308
-+done
-diff --git a/tests/btrfs/group b/tests/btrfs/group
-index bc6c256..666054b 100644
---- a/tests/btrfs/group
-+++ b/tests/btrfs/group
-@@ -9,3 +9,4 @@
- 276 auto rw metadata
- 284 auto
- 307 auto quick
-+308 auto quick
--- 
-1.7.7
+> Ben Myers <bpm@sgi.com> (supporter:XFS FILESYSTEM)
+> Alex Elder <elder@kernel.org> (supporter:XFS FILESYSTEM)
+> xfs@oss.sgi.com (supporter:XFS FILESYSTEM)
+> linux-kernel@vger.kernel.org (open list)
+
+You're smarter than a dumb script. If the information that the
+script parses is correct and the dumb script doesn't give you the
+right information, then what needs fixing?
+
+Seriously, all you are proving is the old adage that
+scripts/get_maintainer.pl should be considered harmful because
+people use it without first engaging their brain.
+
+Cheers,
+
+Dave.
+-- =
+
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
