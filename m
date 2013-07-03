@@ -1,24 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E601E7F85
-	for <xfs@oss.sgi.com>; Wed,  3 Jul 2013 04:36:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D3BEF8F8073
-	for <xfs@oss.sgi.com>; Wed,  3 Jul 2013 02:36:42 -0700 (PDT)
-Received: from mx-out.ocsa-data.net (mx-out.ocsa-data.net [194.36.166.37]) by
-	cuda.sgi.com with ESMTP id NWfLHLTAywWIdhIg (version=TLSv1
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 8014D7F85
+	for <xfs@oss.sgi.com>; Wed,  3 Jul 2013 04:46:34 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 08531AC00E
+	for <xfs@oss.sgi.com>; Wed,  3 Jul 2013 02:46:33 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id T4sQHcKaK7pbdKAN (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 03 Jul 2013 02:36:41 -0700 (PDT)
-MIME-Version: 1.0
-Date: Wed, 03 Jul 2013 11:36:39 +0200
-From: Yann Droneaud <ydroneaud@opteya.com>
-Subject: Re: [PATCH] MAINTAINERS: xfs@oss.sgi.com is a list
-In-Reply-To: <20130703092406.GM14996@dastard>
-References: <1372777248-4114-1-git-send-email-ydroneaud@opteya.com>
-	<20130703064026.GL14996@dastard>
-	<c229feab100a72240128ef81297680a1@meuh.org>
-	<20130703092406.GM14996@dastard>
-Message-ID: <5e9d66217e0fa968863177d73dd492b1@meuh.org>
+	Wed, 03 Jul 2013 02:46:32 -0700 (PDT)
+From: Liu Bo <bo.li.liu@oracle.com>
+Subject: [PATCH] Xfstests/btrfs/308: add snapshot-aware defrag for partial
+	extents testcases
+Date: Wed,  3 Jul 2013 17:46:20 +0800
+Message-Id: <1372844780-31845-1-git-send-email-bo.li.liu@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,34 +22,145 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: ydroneaud@opteya.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: linux-btrfs@vger.kernel.org
+Cc: xfs@oss.sgi.com
 
-TGUgMDMuMDcuMjAxMyAxMToyNCwgRGF2ZSBDaGlubmVyIGEgw6ljcml0wqA6Cj4gT24gV2VkLCBK
-dWwgMDMsIDIwMTMgYXQgMTA6MTQ6NDFBTSArMDIwMCwgWWFubiBEcm9uZWF1ZCB3cm90ZToKPj4g
-TGUgMDMuMDcuMjAxMyAwODo0MCwgRGF2ZSBDaGlubmVyIGEgw6ljcml0wqA6Cj4+ID5PbiBUdWUs
-IEp1bCAwMiwgMjAxMyBhdCAwNTowMDo0N1BNICswMjAwLCBZYW5uIERyb25lYXVkIHdyb3RlOgo+
-PiA+PlRoaXMgcGF0Y2ggY2hhbmdlcyB0eXBlIG9mIHhmc0Bvc3Muc2dpLmNvbQo+PiA+Pgo+PiA+
-PlRoZSBvdXRwdXQgb2YgLi9zY3JpcHRzL2dldF9tYWludGFpbmVyLnBsIGlzCj4+ID4+bW9kaWZp
-ZWQgdG8gcmVwb3J0IHhmc0Bvc3Muc2dpLmNvbSBhcyBhIGxpc3Q6Cj4+ID4KPj4gPldoYXQncyB0
-aGUgcHJvYmxlbSB3aXRoIHRoYXQ/IEFsbCBYRlMgcGF0Y2hlcyBhbmQgcHJvYmxlbQo+PiA+cmVw
-b3J0cyBzaG91bGQgYmUgc2VudCB0byB0aGUgeGZzQG9zcy5zZ2kuY29tIGxpc3QuIFRoZXJlIGFy
-ZSBmYXIKPj4gPm1vcmUgcGVvcGxlIHRoYW4ganVzdCB0aGUgbWFpbnRhaW5lciB0aGF0IGNhbiB0
-cmlhZ2UgcHJvYmxlbXMsCj4+ID5hbnN3ZXIgcXVlc3Rpb25zIGFuZCByZXZpZXcgcGF0Y2hlcy4u
-Lgo+PiA+Cj4+IAo+PiBJdCB3YXMganVzdCBkaXN0dXJiaW5nOiBJIHdhcyBsb29raW5nIGZvciBh
-IGxpc3QgZm9yIFhGUwo+PiBhbmQgZm91bmQgb25seSBtYWludGFpbmVycy4KPiAKPiBUaGF0J3Mg
-d2hhdCB0aGU6Cj4gCj4gTDogICAgICB4ZnNAb3NzLnNnaS5jb20KPiAKPiBlbnRyeSBpcywgeWVz
-Pwo+IAoKSW4gdGhlIG91dHB1dCBvZiAuL3NjcmlwdHMvZ2V0X21haW50YWluZXIucGw6CgpCZW4g
-TXllcnMgPGJwbUBzZ2kuY29tPiAoc3VwcG9ydGVyOlhGUyBGSUxFU1lTVEVNKQpBbGV4IEVsZGVy
-IDxlbGRlckBrZXJuZWwub3JnPiAoc3VwcG9ydGVyOlhGUyBGSUxFU1lTVEVNKQp4ZnNAb3NzLnNn
-aS5jb20gKHN1cHBvcnRlcjpYRlMgRklMRVNZU1RFTSkKbGludXgta2VybmVsQHZnZXIua2VybmVs
-Lm9yZyAob3BlbiBsaXN0KQoKW0lmIGhhdmluZyB0aGUgbWFpbGluZyBsaXN0IGxpc3RlZCBhcyB0
-aGUgbWFpbnRhaW5lci9zdXBwb3J0ZXIgaXMgCmNvcnJlY3QsCiAgY291bGQgLi9zY3JpcHRzL2dl
-dF9tYWludGFpbmVyLnBsIGFsc28gcmVwb3J0IHRoZSBtYWlsaW5nIGxpc3QgYXMgYSAKbGlzdCA/
-XQoKUmVnYXJkcy4KCi0tIApZYW5uIERyb25lYXVkCk9QVEVZQQoKX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNn
-aS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+This is to test whether snapshot-aware defrag can work well on partial extents.
+
+Signed-off-by: Liu Bo <bo.li.liu@oracle.com>
+---
+ tests/btrfs/308     |   93 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/btrfs/308.out |    2 +
+ tests/btrfs/group   |    1 +
+ 3 files changed, 96 insertions(+), 0 deletions(-)
+ create mode 100755 tests/btrfs/308
+ create mode 100644 tests/btrfs/308.out
+
+diff --git a/tests/btrfs/308 b/tests/btrfs/308
+new file mode 100755
+index 0000000..b3dd39c
+--- /dev/null
++++ b/tests/btrfs/308
+@@ -0,0 +1,93 @@
++#! /bin/bash
++# BTRFS QA Test No. 308
++#
++# Test if snapshot-aware defrag can work well on partial extents, ie.
++# extent_offset is not zero.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2013 Oracle.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# real QA test starts here
++
++# Modify as appropriate.
++_supported_fs generic
++_supported_os Linux
++_require_scratch
++_require_command "/usr/sbin/filefrag"
++
++rm -f $seqres.full
++
++_scratch_mkfs > /dev/null 2>&1
++_scratch_mount
++
++subvol=$SCRATCH_MNT/subvol
++
++$BTRFS_UTIL_PROG subvolume create $subvol >> $seqres.full
++
++for i in `seq 5 -1 1`
++do
++	dd if=/dev/zero of=$subvol/foobar bs=6k count=1 seek=$i conv=notrunc oflag=dsync 2>> $seqres.full
++done
++
++sync
++for i in `seq 2 -1 1`
++do
++	$BTRFS_UTIL_PROG subvolume snapshot $subvol $SCRATCH_MNT/snap-$i >> $seqres.full
++done
++
++$BTRFS_UTIL_PROG filesystem defrag $subvol/foobar && sync
++
++num_extent_orig=`filefrag $subvol/foobar | awk -F ' ' '{print $2}'`
++num_extent_snap1=`filefrag $SCRATCH_MNT/snap-1/foobar | awk -F ' ' '{print $2}'`
++num_extent_snap2=`filefrag $SCRATCH_MNT/snap-2/foobar | awk -F ' ' '{print $2}'`
++
++echo "$num_extent_orig $num_extent_snap1 $num_extent_snap2" >> $seqres.full
++
++# if error
++if [ "x$num_extent_snap1" != "x$num_extent_orig" -o "x$num_extent_snap2" != "x$num_extent_orig" ]; then
++	echo "number of extents mis-match!"
++	exit
++fi
++
++# optional stuff if your test has verbose output to help resolve problems
++#echo
++#echo "If failure, check $seqres.full (this) and $seqres.full.ok (reference)"
++
++# success, all done
++echo "done"
++status=0
++exit
+diff --git a/tests/btrfs/308.out b/tests/btrfs/308.out
+new file mode 100644
+index 0000000..1f3de82
+--- /dev/null
++++ b/tests/btrfs/308.out
+@@ -0,0 +1,2 @@
++QA output created by 308
++done
+diff --git a/tests/btrfs/group b/tests/btrfs/group
+index bc6c256..666054b 100644
+--- a/tests/btrfs/group
++++ b/tests/btrfs/group
+@@ -9,3 +9,4 @@
+ 276 auto rw metadata
+ 284 auto
+ 307 auto quick
++308 auto quick
+-- 
+1.7.7
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
