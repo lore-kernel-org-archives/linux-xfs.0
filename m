@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id CE69B7F4E
-	for <xfs@oss.sgi.com>; Wed,  3 Jul 2013 07:06:08 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id BD55330406B
-	for <xfs@oss.sgi.com>; Wed,  3 Jul 2013 05:06:08 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 749287F98
+	for <xfs@oss.sgi.com>; Wed,  3 Jul 2013 08:11:52 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 46D438F8064
+	for <xfs@oss.sgi.com>; Wed,  3 Jul 2013 06:11:49 -0700 (PDT)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id gVEI2OfPV8ZEh7jZ (version=TLSv1
+	cuda.sgi.com with ESMTP id BlIjMExvzaclCpoo (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 03 Jul 2013 05:06:07 -0700 (PDT)
+	Wed, 03 Jul 2013 06:11:44 -0700 (PDT)
 From: Koen De Wit <koen.de.wit@oracle.com>
-Subject: [PATCH v4] xfstests: btrfs/316: cross-subvolume sparse copy
-Date: Wed,  3 Jul 2013 14:04:09 +0200
-Message-Id: <1372853049-5773-1-git-send-email-koen.de.wit@oracle.com>
+Subject: [PATCH v4] xfstests: btrfs/311: sparse copy between different
+	filesystems/mountpoints
+Date: Wed,  3 Jul 2013 15:10:07 +0200
+Message-Id: <1372857007-6520-1-git-send-email-koen.de.wit@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,45 +30,51 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com, linux-btrfs@vger.kernel.org
 Cc: Koen De Wit <koen.de.wit@oracle.com>
 
-This testscript creates reflinks to files on different subvolumes,
-overwrites the original files and reflinks, and moves reflinked files
-between subvolumes.
+Check if creating a sparse copy ("reflink") of a file on btrfs
+expectedly fails when it's done between different filesystems or
+different mount points of the same filesystem.
 
-Signed-off-by: Koen De Wit <koen.de.wit@oracle.com>
+For both situations, these actions are executed:
+   - Copy a file with the reflink=auto option.
+     A normal copy should be created.
+   - Copy a file with the reflink=always option. Should result in error,
+     no file should be created.
+
+[sandeen: mostly cosmetic changes]
+
+Signed-off-by: Koen De Wit <koen.de.wit@xxxxxxxxxx>
+Signed-off-by: Eric Sandeen <sandeen@xxxxxxxxxx>
 ---
-Two new common/rc functions used in this script (_require_cp_reflink and
-_verify_reflink) have been submitted recently:
-http://oss.sgi.com/archives/xfs/2013-05/msg00745.html
-
 Changelog:
-v3 -> v4: Cleaning up commit message, cutting out filenames from output
-          when printing md5sums, adding to group "reflink"
-v2 -> v3: Fixing wrapped patch
-v1 -> v2: Renamed 302 -> 316, changes made based on comments from Eric
-          Sandeen: http://oss.sgi.com/archives/xfs/2013-03/msg00231.html
+v3 -> v4: Cleaning up commit message
+v2 -> v3: replacing "$seqres.fll" by "$seqres.full"
+v1 -> v2: (sandeen) mostly cosmetic changes, renamed 301 -> 311
 
- tests/btrfs/316     |  131 ++++++++++++++++++++++++++++++++++++++++++++++++
- tests/btrfs/316.out |   48 +++++++++++++++++++
- tests/btrfs/group   |    1 +
- 3 files changed, 180 insertions(+), 0 deletions(-)
- create mode 100755 tests/btrfs/316
- create mode 100644 tests/btrfs/316.out
+ tests/btrfs/311     |  107 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/btrfs/311.out |   15 +++++++
+ tests/btrfs/group   |    4 ++
+ 3 files changed, 126 insertions(+), 0 deletions(-)
+ create mode 100755 tests/btrfs/311
+ create mode 100644 tests/btrfs/311.out
 
-diff --git a/tests/btrfs/316 b/tests/btrfs/316
+diff --git a/tests/btrfs/311 b/tests/btrfs/311
 new file mode 100755
-index 0000000..321832a
+index 0000000..56ebd58
 --- /dev/null
-+++ b/tests/btrfs/316
-@@ -0,0 +1,131 @@
++++ b/tests/btrfs/311
+@@ -0,0 +1,107 @@
 +#! /bin/bash
-+# FS QA Test No. btrfs/316
++# FS QA Test No. 311
 +#
-+# Testing cross-subvolume sparse copy on btrfs
-+#    - Create two subvolumes, mount one of them
-+#    - Create a file on each (sub/root)volume,
-+#      reflink them on the other volumes
-+#    - Change one original and two reflinked files
-+#    - Move reflinked files between subvolumes
++# Check if creating a sparse copy ("reflink") of a file on btrfs
++# expectedly fails when it's done between different filesystems or
++# different mount points of the same filesystem.
++#
++# For both situations, these actions are executed:
++#    - Copy a file with the reflink=auto option.
++#      A normal copy should be created.
++#    - Copy a file with the reflink=always option. Should result in error,
++#      no file should be created.
 +#
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2013, Oracle and/or its affiliates.  All Rights Reserved.
@@ -96,11 +103,7 @@ index 0000000..321832a
 +
 +_cleanup()
 +{
-+    umount $SCRATCH_MNT
-+    rm -rf $TESTDIR1
-+    rm -rf $TESTDIR2
-+    btrfs subvolume delete $SUBVOL1 >> $seqres.full
-+    btrfs subvolume delete $SUBVOL2 >> $seqres.full
++    umount $SCRATCH_MNT &>/dev/null
 +    cd /
 +    rm -f $tmp.*
 +}
@@ -116,145 +119,89 @@ index 0000000..321832a
 +_require_scratch
 +_require_cp_reflink
 +
-+_checksum_files() {
-+    for F in file1 file2 file3
-+    do
-+        echo "$F:"
-+        for D in $TESTDIR1 $SCRATCH_MNT $SUBVOL2
-+        do
-+            _md5_checksum $D/$F
-+        done
-+    done
++SOURCE_DIR=$TEST_DIR/test-$seq
++CROSS_DEV_DIR=$SCRATCH_MNT/test-$seq
++# mount point & target for twice-mounted device
++TEST_DIR2=$TEST_DIR/mount2
++DUAL_MOUNT_DIR=$SCRATCH_MNT/test-bis-$seq
++
++rm -rf $SOURCE_DIR
++mkdir $SOURCE_DIR
++
++rm -f $seqres.full
++
++_scratch_mkfs
++$XFS_IO_PROG -f -c 'pwrite -S 0x61 0 9000' $SOURCE_DIR/original \
++ >> $seqres.full
++
++_filter_testdirs()
++{
++    _filter_test_dir | _filter_scratch
 +}
 +
-+TESTDIR1=$TEST_DIR/test-$seq-1
-+TESTDIR2=$TEST_DIR/test-$seq-2
-+SUBVOL1=$TEST_DIR/subvol-$seq-1
-+SUBVOL2=$TEST_DIR/subvol-$seq-2
++_create_reflinks_to()
++{
++    # auto reflink, should fall back to non-reflink
++    rm -rf $1; mkdir $1
++    echo "reflink=auto:"
++    cp --reflink=auto $SOURCE_DIR/original $1/copy
++    md5sum $SOURCE_DIR/original | _filter_testdirs
++    md5sum $1/copy | _filter_testdirs
 +
-+_scratch_unmount 2>/dev/null
-+rm -rf $seqres.full
-+rm -rf $TESTDIR1 $TESTDIR2
-+btrfs subvol delete $SUBVOL1 >/dev/null 2>&1
-+btrfs subvol delete $SUBVOL2 >/dev/null 2>&1
++    # always reflink, should fail outright
++    rm -rf $1; mkdir $1
++    echo "reflink=always:"
++    cp --reflink=always $SOURCE_DIR/original $1/copyfail 2>&1 | _filter_testdirs
 +
-+mkdir $TESTDIR1
-+mkdir $TESTDIR2
-+btrfs subvolume create $SUBVOL1 >> $seqres.full
-+btrfs subvolume create $SUBVOL2 >> $seqres.full
-+_mount -t btrfs -o subvol=subvol-$seq-1 $TEST_DEV $SCRATCH_MNT
++    # The failed target actually gets created by cp:
++    ls $1/copyfail | _filter_testdirs
++}
 +
-+echo "Create initial files"
-+# TESTDIR1/file1 is very small and will be inlined
-+$XFS_IO_PROG -f -c 'pwrite -S 0x61 0 10' $TESTDIR1/file1 >> $seqres.full
-+$XFS_IO_PROG -f -c 'pwrite -S 0x62 0 13000' $SCRATCH_MNT/file2 >> $seqres.full
-+$XFS_IO_PROG -f -c 'pwrite -S 0x63 0 17000' $SUBVOL2/file3 >> $seqres.full
++echo "test reflinks across different devices"
++_scratch_mount
++_create_reflinks_to $CROSS_DEV_DIR
++_scratch_unmount
 +
-+echo "Create reflinks to the initial files on other subvolumes"
-+cp --reflink $TESTDIR1/file1 $SUBVOL1
-+cp --reflink $TESTDIR1/file1 $SUBVOL2
-+cp --reflink $SUBVOL1/file2 $TESTDIR1/
-+cp --reflink $SUBVOL1/file2 $SUBVOL2
-+cp --reflink $SUBVOL2/file3 $TESTDIR1/
-+cp --reflink $SUBVOL2/file3 $SUBVOL1
-+
-+echo "Verify the reflinks"
-+_verify_reflink $SCRATCH_MNT/file2 $TESTDIR1/file2
-+_verify_reflink $SCRATCH_MNT/file2 $SUBVOL2/file2
-+_verify_reflink $SUBVOL2/file3 $TESTDIR1/file3
-+_verify_reflink $SUBVOL2/file3 $SCRATCH_MNT/file3
-+echo "Verify the file contents:"
-+_checksum_files
-+
-+echo -e "---\nOverwrite some files with new content"
-+$XFS_IO_PROG -c 'pwrite -S 0x64 0 20' $TESTDIR1/file1 >> $seqres.full
-+$XFS_IO_PROG -c 'pwrite -S 0x66 0 21000' $SUBVOL2/file2 >> $seqres.full
-+$XFS_IO_PROG -c 'pwrite -S 0x65 5000 5000' $SCRATCH_MNT/file3 >> $seqres.full
-+
-+echo "Verify that non-overwritten reflinks still have the same data blocks"
-+_verify_reflink $TESTDIR1/file2 $SCRATCH_MNT/file2
-+_verify_reflink $TESTDIR1/file3 $SUBVOL2/file3
-+echo "Verify the file contents:"
-+_checksum_files
-+
-+echo -e "---\nShuffle files between directories"
-+mv $TESTDIR1/file* $TESTDIR2
-+mv $SCRATCH_MNT/file* $TESTDIR1/
-+mv $SUBVOL2/file* $SCRATCH_MNT/
-+mv $TESTDIR2/file* $SUBVOL2/
-+
-+# No _verify_reflink here as data is copied when moving files between subvols
-+echo "Verify the file contents:"
-+_checksum_files
++echo "test reflinks across different mountpoints of same device"
++mount $TEST_DEV $SCRATCH_MNT || _fail "Couldn't double-mount $TEST_DEV"
++_create_reflinks_to $DUAL_MOUNT_DIR
++umount $SCRATCH_MNT
 +
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/btrfs/316.out b/tests/btrfs/316.out
+diff --git a/tests/btrfs/311.out b/tests/btrfs/311.out
 new file mode 100644
-index 0000000..ad3d01f
+index 0000000..210727b
 --- /dev/null
-+++ b/tests/btrfs/316.out
-@@ -0,0 +1,48 @@
-+QA output created by 316
-+Create initial files
-+Create reflinks to the initial files on other subvolumes
-+Verify the reflinks
-+Verify the file contents:
-+file1:
-+e09c80c42fda55f9d992e59ca6b3307d
-+e09c80c42fda55f9d992e59ca6b3307d
-+e09c80c42fda55f9d992e59ca6b3307d
-+file2:
-+d7402b46310fbbfbc5e466b1dccb043b
-+d7402b46310fbbfbc5e466b1dccb043b
-+d7402b46310fbbfbc5e466b1dccb043b
-+file3:
-+5a95800e4c04b11117aa4e4de057721f
-+5a95800e4c04b11117aa4e4de057721f
-+5a95800e4c04b11117aa4e4de057721f
-+---
-+Overwrite some files with new content
-+Verify that non-overwritten reflinks still have the same data blocks
-+Verify the file contents:
-+file1:
-+00d620f69f30327f0f8946b95c12de44
-+e09c80c42fda55f9d992e59ca6b3307d
-+e09c80c42fda55f9d992e59ca6b3307d
-+file2:
-+d7402b46310fbbfbc5e466b1dccb043b
-+d7402b46310fbbfbc5e466b1dccb043b
-+917619ae44b38bb9968af261c3c45440
-+file3:
-+5a95800e4c04b11117aa4e4de057721f
-+b9f275cd638cb784c9e61def94c622a8
-+5a95800e4c04b11117aa4e4de057721f
-+---
-+Shuffle files between directories
-+Verify the file contents:
-+file1:
-+e09c80c42fda55f9d992e59ca6b3307d
-+e09c80c42fda55f9d992e59ca6b3307d
-+00d620f69f30327f0f8946b95c12de44
-+file2:
-+d7402b46310fbbfbc5e466b1dccb043b
-+917619ae44b38bb9968af261c3c45440
-+d7402b46310fbbfbc5e466b1dccb043b
-+file3:
-+b9f275cd638cb784c9e61def94c622a8
-+5a95800e4c04b11117aa4e4de057721f
-+5a95800e4c04b11117aa4e4de057721f
++++ b/tests/btrfs/311.out
+@@ -0,0 +1,15 @@
++QA output created by 311
++test reflinks across different devices
++reflink=auto:
++42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-311/original
++42d69d1a6d333a7ebdf64792a555e392  SCRATCH_MNT/test-311/copy
++reflink=always:
++cp: failed to clone `SCRATCH_MNT/test-311/copyfail': Invalid cross-device link
++SCRATCH_MNT/test-311/copyfail
++test reflinks across different mountpoints of same device
++reflink=auto:
++42d69d1a6d333a7ebdf64792a555e392  TEST_DIR/test-311/original
++42d69d1a6d333a7ebdf64792a555e392  SCRATCH_MNT/test-bis-311/copy
++reflink=always:
++cp: failed to clone `SCRATCH_MNT/test-bis-311/copyfail': Invalid cross-device link
++SCRATCH_MNT/test-bis-311/copyfail
 diff --git a/tests/btrfs/group b/tests/btrfs/group
-index bc6c256..a6d8de1 100644
+index bc6c256..c897118 100644
 --- a/tests/btrfs/group
 +++ b/tests/btrfs/group
-@@ -9,3 +9,4 @@
- 276 auto rw metadata
- 284 auto
- 307 auto quick
-+316 auto quick reflink
--- 
-1.7.2.5
+@@ -12,3 +12,4 @@
+ 308 auto quick reflink
+ 309 auto quick reflink
+ 310 auto quick reflink
++311 auto quick reflink
+--
+1.7.2.5 
 
 _______________________________________________
 xfs mailing list
