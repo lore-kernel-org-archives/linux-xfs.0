@@ -1,24 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id AE39A7F37
-	for <xfs@oss.sgi.com>; Mon,  8 Jul 2013 10:38:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 586B9AC009
-	for <xfs@oss.sgi.com>; Mon,  8 Jul 2013 08:38:12 -0700 (PDT)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id uKDCw6uatnIrMHVU for <xfs@oss.sgi.com>;
-	Mon, 08 Jul 2013 08:38:10 -0700 (PDT)
-Date: Mon, 8 Jul 2013 17:38:07 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: Some baseline tests on new hardware (was Re: [PATCH] xfs:
-	optimise CIL insertion during transaction commit [RFC])
-Message-ID: <20130708153807.GC12743@quack.suse.cz>
-References: <1372657476-9241-1-git-send-email-david@fromorbit.com>
-	<20130708124453.GC3438@dastard>
-	<20130708135953.GF5988@quack.suse.cz> <51DAD943.6050703@gmail.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 5AF527F37
+	for <xfs@oss.sgi.com>; Mon,  8 Jul 2013 13:01:50 -0500 (CDT)
+Date: Mon, 8 Jul 2013 13:01:46 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH] xfstests: use xfs_io fiemap instead of filefrag V2
+Message-ID: <20130708180146.GG20932@sgi.com>
+References: <1372083696-10402-1-git-send-email-jbacik@fusionio.com>
+	<20130626021943.GE29376@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <51DAD943.6050703@gmail.com>
+In-Reply-To: <20130626021943.GE29376@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,42 +23,58 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Marco Stornelli <marco.stornelli@gmail.com>
-Cc: linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
+To: Josef Bacik <jbacik@fusionio.com>
+Cc: sandeen@redhat.com, xfs@oss.sgi.com
 
-On Mon 08-07-13 17:22:43, Marco Stornelli wrote:
-> Il 08/07/2013 15:59, Jan Kara ha scritto:
-> >On Mon 08-07-13 22:44:53, Dave Chinner wrote:
-> ><snipped some nice XFS results ;)>
-> >>So, lets look at ext4 vs btrfs vs XFS at 16-way (this is on the
-> >>3.10-cil kernel I've been testing XFS on):
-> >>
-> >>	    create		 walk		unlink
-> >>	 time(s)   rate		time(s)		time(s)
-> >>xfs	  222	266k+-32k	  170		  295
-> >>ext4	  978	 54k+- 2k	  325		 2053
-> >>btrfs	 1223	 47k+- 8k	  366		12000(*)
-> >>
-> >>(*) Estimate based on a removal rate of 18.5 minutes for the first
-> >>4.8 million inodes.
-> >>
-> >>Basically, neither btrfs or ext4 have any concurrency scaling to
-> >>demonstrate, and unlinks on btrfs a just plain woeful.
-> >   Thanks for posting the numbers. There isn't anyone seriously testing ext4
-> >SMP scalability AFAIK so it's not surprising it sucks.
+On Wed, Jun 26, 2013 at 12:19:43PM +1000, Dave Chinner wrote:
+> On Mon, Jun 24, 2013 at 10:21:36AM -0400, Josef Bacik wrote:
+> > Btrfs has always failed shared/218 because of the way we allocate extents on
+> > disk.  The last part of 218 writes contiguously holey from the start of the file
+> > forward, which for btrfs means we get 16 extents but they are physically
+> > contigous.  filefrag -v shows all 16 extents, but prints out that there is 1
+> > extent, because they are physically contiguous.  This isn't quite right and
+> > makes the test fail.  So instead of using filefrag use xfs_io -c fiemap which
+> > will print the whole map and then get the count from there.  With this patch
+> > btrfs now passes the test, I also verified that ext4 and xfs still pass this
+> > test.  Thanks,
+> > 
+> > Signed-off-by: Josef Bacik <jbacik@fusionio.com>
+> > ---
+> > V1->V2: change _require_defrag to check for xfs_io having fiemap support as per
+> > Eric's suggestion.
+> > 
+> >  common/defrag |    6 +++---
+> >  1 files changed, 3 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/common/defrag b/common/defrag
+> > index f04fd42..a4bc976 100644
+> > --- a/common/defrag
+> > +++ b/common/defrag
+> > @@ -38,13 +38,13 @@ _require_defrag()
+> >      esac
+> >  
+> >      _require_command $DEFRAG_PROG
+> > -    _require_command $FILEFRAG_PROG
+> > +    _require_xfs_io_fiemap
+> >  }
+> >  
+> >  _extent_count()
+> >  {
+> > -	$FILEFRAG_PROG $1 | awk '{print $2}'
+> > -	$FILEFRAG_PROG -v $1  >> $seqres.full 2>&1
+> > +	$XFS_IO_PROG -c "fiemap" $1 | tail -n +2 | grep -v hole | wc -l
+> > +	$XFS_IO_PROG -c "fiemap" $1  >> $seqres.full 2>&1
 > 
-> Funny, if I well remember Google guys switched android from yaffs2
-> to ext4 due to its superiority on SMP :)
-  Well, there's SMP and SMP. Ext4 is perfectly OK for desktop kind of SMP -
-that's what lots of people use. When we speak of heavy IO load with 16 CPUs
-on enterprise grade storage so that CPU (and not IO) bottlenecks are actually
-visible, that's not so easily available and so we don't have serious
-performance work in that direction...
+> Looks good, but you can do that with a single fiemap execution:
+> 
+> 	$XFS_IO_PROG -c "fiemap" $1 | tee -a $seqres.full |\
+> 				    | tail -n +2 | grep -v hole | wc -l
+> 
+> Still good either way
+> 
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-								Honza
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+Applied.
 
 _______________________________________________
 xfs mailing list
