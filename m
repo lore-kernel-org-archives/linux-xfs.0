@@ -1,24 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9CADD7F62
-	for <xfs@oss.sgi.com>; Mon,  8 Jul 2013 18:42:46 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 00AA77F62
+	for <xfs@oss.sgi.com>; Mon,  8 Jul 2013 18:45:23 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 199EEAC005
-	for <xfs@oss.sgi.com>; Mon,  8 Jul 2013 16:42:43 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	YJw8Ll7Lk9Ax8naO for <xfs@oss.sgi.com>;
-	Mon, 08 Jul 2013 16:42:41 -0700 (PDT)
-Date: Tue, 9 Jul 2013 09:42:35 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] Subject: [PATCH] xfs: fix sgid inheritance for
-	subdirectories inheriting default acls [V3]
-Message-ID: <20130708234235.GD3438@dastard>
-References: <1371836753-3327-1-git-send-email-cmaiolino@redhat.com>
-	<20130708211121.GI20932@sgi.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130708211121.GI20932@sgi.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 81AC0AC001
+	for <xfs@oss.sgi.com>; Mon,  8 Jul 2013 16:45:23 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id iCGpiQtR9Fsvjj2G for
+	<xfs@oss.sgi.com>; Mon, 08 Jul 2013 16:45:22 -0700 (PDT)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r68NjLuS025667
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Mon, 8 Jul 2013 19:45:22 -0400
+Received: from andromeda.usersys.redhat.com.com (ovpn-113-117.phx2.redhat.com
+	[10.3.113.117])
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id r68NjK8e012711
+	for <xfs@oss.sgi.com>; Mon, 8 Jul 2013 19:45:21 -0400
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [PATCH] mkfs: add missing noalign suboption information
+Date: Mon,  8 Jul 2013 20:45:10 -0300
+Message-Id: <1373327110-5533-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,105 +30,40 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Carlos Maiolino <cmaiolino@redhat.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Jul 08, 2013 at 04:11:21PM -0500, Ben Myers wrote:
-> On Fri, Jun 21, 2013 at 02:45:53PM -0300, Carlos Maiolino wrote:
-> > XFS removes sgid bits of subdirectories under a directory containing a default
-> > acl.
-> > 
-> > When a default acl is set, it implies xfs to call xfs_setattr_nonsize() in its
-> > code path. Such function is shared among mkdir and chmod system calls, and
-> > does some checks unneeded by mkdir (calling inode_change_ok()). Such checks
-> > remove sgid bit from the inode after it has been granted.
-> > 
-> > With this patch, we extend the meaning of XFS_ATTR_NOACL flag to avoid these
-> > checks when acls are being inherited (thanks hch).
-> > 
-> > Also, xfs_setattr_mode, doesn't need to re-check for group id and capabilities
-> > permissions, this only implies in another try to remove sgid bit from the
-> > directories. Such check is already done either on inode_change_ok() or
-> > xfs_setattr_nonsize().
-> > 
-> > Changelog:
-> > 
-> > V2: Extends the meaning of XFS_ATTR_NOACL instead of wrap the tests into another
-> >     function
-> > 
-> > V3: Remove S_ISDIR check in xfs_setattr_nonsize() from the patch
-> > 
-> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> >  
-> > -	if (mp->m_flags & XFS_MOUNT_RDONLY)
-> > -		return XFS_ERROR(EROFS);
-> > +	/* If acls are being inherited, we already have this checked */
-> > +	if (!(flags & XFS_ATTR_NOACL)) {
-> > +		if (mp->m_flags & XFS_MOUNT_RDONLY)
-> > +			return XFS_ERROR(EROFS);
-> >  
-> > -	if (XFS_FORCED_SHUTDOWN(mp))
-> > -		return XFS_ERROR(EIO);
-> > +		if (XFS_FORCED_SHUTDOWN(mp))
-> > +			return XFS_ERROR(EIO);
-> >  
-> > -	error = -inode_change_ok(inode, iattr);
-> > -	if (error)
-> > -		return XFS_ERROR(error);
-> > +		error = -inode_change_ok(inode, iattr);
-> > +		if (error)
-> > +			return XFS_ERROR(error);
-> > +	}
-> 
-> I'm not so sure about this change yet.  Looks like the two relevant callers are:
-> 
-> .set - xattr_handler
->   xfs_xattr_acl_set
->     xfs_set_mode
->       xfs_setattr_nonsize(..., XFS_ATTR_NOACL);
-> 
-> and
-> 
-> xfs_vn_mknod
->   xfs_inherit_acl
->     xfs_set_mode
->       xfs_setattr_nonsize(..., XFS_ATTR_NOACL);
-> 
-> I suggest moving the forced shutdown and readonly checks outside of the
-> XFS_ATTR_NOACL conditional.  I'm not seeing those checks in xfs_attr_acl_set or
-> xfs_vn_mknod and it won't hurt to be careful.
+Adds to the mkfs man page, information about noalign mkfs option which is
+missing until now.
 
-In both cases, the read-only checks are done at much higher layers
-and so we don't ever get to xfs_setattr_nonsize() through these
-paths with a read-only filesystem. Shutdown doesn't really matter -
-the transaction commit will fail if the filesystem is shut down...
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+---
+ man/man8/mkfs.xfs.8 | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-> It also seems like inode_change_ok might have some other checks that are
-> necessary to determine whether it is ok to update the mode and ctime here.  A
-> call to inode_owner_or_capable as is done in inode_change_ok would cover this
-> possibility.
-
-The inode permission checks are already done by xfs_xattr_acl_set():
-
-	if ((current_fsuid() != inode->i_uid) && !capable(CAP_FOWNER))
-		return -EPERM;
-
-and in the case of xfs_inherit_acl() the user has just created the
-file so they - by definition - have permission to inherit the ACL
-and modify the mode of the inode they just created.
-
-So there is no need for changes to inode_change_ok() here.
-
-Cheers,
-
-Dave.
+diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
+index 04c19b4..2435814 100644
+--- a/man/man8/mkfs.xfs.8
++++ b/man/man8/mkfs.xfs.8
+@@ -244,6 +244,12 @@ will automatically query the logical volume for appropriate
+ and
+ .B swidth
+ values.
++.TP
++.BI noalign
++This option is used to bypass data alignment configuration. In rare
++circunstances, data alignment might decrease performance, for such cases,
++use this option to avoid data alignment, this will set stripe unit and
++stripe width to 0.
+ .RE
+ .TP
+ .B \-f
 -- 
-Dave Chinner
-david@fromorbit.com
+1.8.1.4
 
 _______________________________________________
 xfs mailing list
