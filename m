@@ -1,16 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C2E157F37
-	for <xfs@oss.sgi.com>; Mon,  8 Jul 2013 16:11:25 -0500 (CDT)
-Date: Mon, 8 Jul 2013 16:11:21 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 580B37F52
+	for <xfs@oss.sgi.com>; Mon,  8 Jul 2013 17:41:34 -0500 (CDT)
+Date: Mon, 8 Jul 2013 17:41:33 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] Subject: [PATCH] xfs: fix sgid inheritance for
-	subdirectories inheriting default acls [V3]
-Message-ID: <20130708211121.GI20932@sgi.com>
-References: <1371836753-3327-1-git-send-email-cmaiolino@redhat.com>
+Subject: Re: [PATCH 10/13] xfs: use get_unused_fd_flags(0) instead of
+	get_unused_fd()
+Message-ID: <20130708224133.GA23250@sgi.com>
+References: <cover.1372777600.git.ydroneaud@opteya.com>
+	<8d21b76c621dbfc59b2dbbfc933f96170835304d.1372777600.git.ydroneaud@opteya.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1371836753-3327-1-git-send-email-cmaiolino@redhat.com>
+In-Reply-To: <8d21b76c621dbfc59b2dbbfc933f96170835304d.1372777600.git.ydroneaud@opteya.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,109 +24,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Carlos Maiolino <cmaiolino@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Yann Droneaud <ydroneaud@opteya.com>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Fri, Jun 21, 2013 at 02:45:53PM -0300, Carlos Maiolino wrote:
-> XFS removes sgid bits of subdirectories under a directory containing a default
-> acl.
+On Tue, Jul 02, 2013 at 06:39:34PM +0200, Yann Droneaud wrote:
+> Macro get_unused_fd() is used to allocate a file descriptor with
+> default flags. Those default flags (0) can be "unsafe":
+> O_CLOEXEC must be used by default to not leak file descriptor
+> across exec().
 > 
-> When a default acl is set, it implies xfs to call xfs_setattr_nonsize() in its
-> code path. Such function is shared among mkdir and chmod system calls, and
-> does some checks unneeded by mkdir (calling inode_change_ok()). Such checks
-> remove sgid bit from the inode after it has been granted.
+> Instead of macro get_unused_fd(), functions anon_inode_getfd()
+> or get_unused_fd_flags() should be used with flags given by userspace.
+> If not possible, flags should be set to O_CLOEXEC to provide userspace
+> with a default safe behavor.
 > 
-> With this patch, we extend the meaning of XFS_ATTR_NOACL flag to avoid these
-> checks when acls are being inherited (thanks hch).
+> In a further patch, get_unused_fd() will be removed so that
+> new code start using anon_inode_getfd() or get_unused_fd_flags()
+> with correct flags.
 > 
-> Also, xfs_setattr_mode, doesn't need to re-check for group id and capabilities
-> permissions, this only implies in another try to remove sgid bit from the
-> directories. Such check is already done either on inode_change_ok() or
-> xfs_setattr_nonsize().
+> This patch replaces calls to get_unused_fd() with equivalent call to
+> get_unused_fd_flags(0) to preserve current behavor for existing code.
 > 
-> Changelog:
+> The hard coded flag value (0) should be reviewed on a per-subsystem basis,
+> and, if possible, set to O_CLOEXEC.
 > 
-> V2: Extends the meaning of XFS_ATTR_NOACL instead of wrap the tests into another
->     function
-> 
-> V3: Remove S_ISDIR check in xfs_setattr_nonsize() from the patch
-> 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> Signed-off-by: Yann Droneaud <ydroneaud@opteya.com>
+>
 > ---
->  fs/xfs/xfs_iops.c | 20 ++++++++++----------
->  1 file changed, 10 insertions(+), 10 deletions(-)
+>  fs/xfs/xfs_ioctl.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index ca9ecaa..2e5aca8 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -467,9 +467,6 @@ xfs_setattr_mode(
->  	ASSERT(tp);
->  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 5e99968..dc5b659 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -248,7 +248,7 @@ xfs_open_by_handle(
+>  		goto out_dput;
+>  	}
 >  
-> -	if (!in_group_p(inode->i_gid) && !capable(CAP_FSETID))
-> -		mode &= ~S_ISGID;
-> -
+> -	fd = get_unused_fd();
+> +	fd = get_unused_fd_flags(0);
 
-inode_change_ok has had the check for whether to clear S_ISGID since the
-initial import of Linus's tree, and it is called when ATTR_MODE is set there,
-just as in xfs_setattr_nonsize, and xfs_setattr_size.  That aspect of this
-looks ok to me.
+O_CLOEXEC should be fine in this case.
 
->  	ip->i_d.di_mode &= S_IFMT;
->  	ip->i_d.di_mode |= mode & ~S_IFMT;
->  
-> @@ -495,15 +492,18 @@ xfs_setattr_nonsize(
->  
->  	trace_xfs_setattr(ip);
->  
-> -	if (mp->m_flags & XFS_MOUNT_RDONLY)
-> -		return XFS_ERROR(EROFS);
-> +	/* If acls are being inherited, we already have this checked */
-> +	if (!(flags & XFS_ATTR_NOACL)) {
-> +		if (mp->m_flags & XFS_MOUNT_RDONLY)
-> +			return XFS_ERROR(EROFS);
->  
-> -	if (XFS_FORCED_SHUTDOWN(mp))
-> -		return XFS_ERROR(EIO);
-> +		if (XFS_FORCED_SHUTDOWN(mp))
-> +			return XFS_ERROR(EIO);
->  
-> -	error = -inode_change_ok(inode, iattr);
-> -	if (error)
-> -		return XFS_ERROR(error);
-> +		error = -inode_change_ok(inode, iattr);
-> +		if (error)
-> +			return XFS_ERROR(error);
-> +	}
-
-I'm not so sure about this change yet.  Looks like the two relevant callers are:
-
-.set - xattr_handler
-  xfs_xattr_acl_set
-    xfs_set_mode
-      xfs_setattr_nonsize(..., XFS_ATTR_NOACL);
-
-and
-
-xfs_vn_mknod
-  xfs_inherit_acl
-    xfs_set_mode
-      xfs_setattr_nonsize(..., XFS_ATTR_NOACL);
-
-I suggest moving the forced shutdown and readonly checks outside of the
-XFS_ATTR_NOACL conditional.  I'm not seeing those checks in xfs_attr_acl_set or
-xfs_vn_mknod and it won't hurt to be careful.
-
-It also seems like inode_change_ok might have some other checks that are
-necessary to determine whether it is ok to update the mode and ctime here.  A
-call to inode_owner_or_capable as is done in inode_change_ok would cover this
-possibility.
-
-Other than those two suggestions this looks pretty good to me.
-
-Regards,
-	Ben
+Reviewed-by: Ben Myers <bpm@sgi.com>
 
 _______________________________________________
 xfs mailing list
