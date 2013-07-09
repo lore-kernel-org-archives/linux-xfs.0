@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A34B829E09
-	for <xfs@oss.sgi.com>; Tue,  9 Jul 2013 16:04:10 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0F1B4AC001
-	for <xfs@oss.sgi.com>; Tue,  9 Jul 2013 14:04:09 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 6CC9529E13
+	for <xfs@oss.sgi.com>; Tue,  9 Jul 2013 16:04:14 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5EA2830407F
+	for <xfs@oss.sgi.com>; Tue,  9 Jul 2013 14:04:11 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	s1dH4zKGF2CKJFKv for <xfs@oss.sgi.com>;
+	n9ZuUZeiDdYOzXZA for <xfs@oss.sgi.com>;
 	Tue, 09 Jul 2013 14:04:06 -0700 (PDT)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/3] xfs: remove local fork format handling from
-	xfs_bmapi_write()
-Date: Wed, 10 Jul 2013 07:04:00 +1000
-Message-Id: <1373403841-16612-3-git-send-email-david@fromorbit.com>
+Subject: [PATCH 3/3] xfs: dquot log reservations are too small
+Date: Wed, 10 Jul 2013 07:04:01 +1000
+Message-Id: <1373403841-16612-4-git-send-email-david@fromorbit.com>
 In-Reply-To: <1373403841-16612-1-git-send-email-david@fromorbit.com>
 References: <1373403841-16612-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,383 +33,114 @@ Cc: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The conversion from local format to extent format requires
-interpretation of the data in the fork being converted, so it cannot
-be done in a generic way. It is up to the caller to convert the fork
-format to extent format before calling into xfs_bmapi_write() so
-format conversion can be done correctly.
+During review of the separate project quota inode patches, it became
+obvious that the dquot log reservation calculation underestimated
+the number dquots that can be modified in a transaction. This has
+it's roots way back in the Irix quota implementation.
 
-The code in xfs_bmapi_write() to convert the format is used
-implicitly by the attribute and directory code, but they
-specifically zero the fork size so that the conversion does not do
-any allocation or manipulation. Move this conversion into the
-shortform to leaf functions for the dir/attr code so the conversions
-are explicitly controlled by all callers.
+That is, when quotas were first implemented in XFS, it only
+supported user and project quotas as Irix did not have group quotas.
+Hence the worst case operation involving dquot modification was
+calculated to involve 2 user dquots and 1 project dquot or 1 user
+dequot and 2 project dquots. i.e. 3 dquots. This was determined back
+in 1996, and has remained unchanged ever since.
 
-Now we can remove the conversion code in xfs_bmapi_write.
+However, back in 2001, the Linux XFS port dropped all support for
+project quota and implmented group quotas over the top. This was
+effectively done with a search-and-replace of project with group,
+and as such the log reservation was not changed. However, with the
+advent of group quotas, chmod and rename now could modify more than
+3 dquots in a single transaction - both could modify 4 dquots. Hence
+this log reservation has been wrong for a long time.
+
+In 2005, project quota support was reintroduced into Linux, but it
+was implemented to be mutually exclusive to group quotas and so this
+didn't add any new changes to the dquot log reservation. Hence when
+project quotas were in use (rather than group quotas) the log
+reservation was again valid, just like in the Irix days.
+
+Now, with the addition of the separate project quota inode, group
+and project quotas are no longer mutually exclusive, and hence
+operations can now modify three dquots per inode where previously it
+was only two. The worst case here is the rename transaction, which
+can allocate/free space on two different directory inodes, and if
+they have different uid/gid/prid configurations and are world
+writeable, then rename can actually modify 6 different dquots now.
+
+Further, the dquot log reservation doesn't take into account the
+space used by the dquot log format structure that precedes the dquot
+that is logged, and hence further underestimates the worst case
+log space required by dquots during a transaction. This has been
+missing since the first commit in 1996.
+
+Hence the worst case log reservation needs to be increased from 3 to
+6, and it needs to take into account a log format header for each of
+those dquots.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 ---
- fs/xfs/xfs_attr_leaf.c  |   2 +
- fs/xfs/xfs_bmap.c       | 199 ++++++++++++++++++++----------------------------
- fs/xfs/xfs_bmap.h       |   1 +
- fs/xfs/xfs_dir2_block.c |  20 +++--
- 4 files changed, 98 insertions(+), 124 deletions(-)
+ fs/xfs/xfs_quota.h       | 25 +++++++++++++++++++++----
+ fs/xfs/xfs_trans_dquot.c |  9 ++++-----
+ 2 files changed, 25 insertions(+), 9 deletions(-)
 
-diff --git a/fs/xfs/xfs_attr_leaf.c b/fs/xfs/xfs_attr_leaf.c
-index 31d3cd1..b800fbc 100644
---- a/fs/xfs/xfs_attr_leaf.c
-+++ b/fs/xfs/xfs_attr_leaf.c
-@@ -690,6 +690,8 @@ xfs_attr_shortform_to_leaf(xfs_da_args_t *args)
- 	sf = (xfs_attr_shortform_t *)tmpbuffer;
+diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
+index c3483ba..40d508b 100644
+--- a/fs/xfs/xfs_quota.h
++++ b/fs/xfs/xfs_quota.h
+@@ -108,11 +108,28 @@ typedef struct xfs_dqblk {
+ 	{ XFS_DQ_FREEING,	"FREEING" }
  
- 	xfs_idata_realloc(dp, -size, XFS_ATTR_FORK);
-+	xfs_bmap_local_to_extents_empty(dp, XFS_ATTR_FORK);
-+
- 	bp = NULL;
- 	error = xfs_da_grow_inode(args, &blkno);
- 	if (error) {
-diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-index 8904284..05c698c 100644
---- a/fs/xfs/xfs_bmap.c
-+++ b/fs/xfs/xfs_bmap.c
-@@ -1161,6 +1161,24 @@ xfs_bmap_extents_to_btree(
-  * since the file data needs to get logged so things will stay consistent.
-  * (The bmap-level manipulations are ok, though).
+ /*
+- * In the worst case, when both user and group quotas are on,
+- * we can have a max of three dquots changing in a single transaction.
++ * We have the possibility of all three quota types being active at once, and
++ * hence free space modification requires modification of all three current
++ * dquots in a single transaction. For this case we need to have a reservation
++ * of at least 3 dquots.
++ *
++ * However, a chmod operation can change both UID and GID in a single
++ * transaction, resulting in requiring {old, new} x {uid, gid} dquots to be
++ * modified. Hence for this case we need to reserve space for at least 4 dquots.
++ *
++ * And in the worst case, there's a rename operation that can be modifying up to
++ * 4 inodes with dquots attached to them. In reality, the only inodes that can
++ * have their dquots modified are the source and destination directory inodes
++ * due to directory name creation and removal. That can require space allocation
++ * and/or freeing on both directory inodes, and hence all three dquots on each
++ * inode can be modified. And if the directories are world writeable, all the
++ * dquots can be unique and so 6 dquots can be modified....
++ *
++ * And, of course, we also need to take into account the dquot log format item
++ * used to describe each dquot.
   */
-+void
-+xfs_bmap_local_to_extents_empty(
-+	struct xfs_inode	*ip,
-+	int			whichfork)
-+{
-+	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
-+
-+	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_LOCAL);
-+	ASSERT(ifp->if_bytes == 0);
-+	ASSERT(XFS_IFORK_NEXTENTS(ip, whichfork) == 0);
-+
-+	xfs_bmap_forkoff_reset(ip->i_mount, ip, whichfork);
-+	ifp->if_flags &= ~XFS_IFINLINE;
-+	ifp->if_flags |= XFS_IFEXTENTS;
-+	XFS_IFORK_FMT_SET(ip, whichfork, XFS_DINODE_FMT_EXTENTS);
-+}
-+
-+
- STATIC int				/* error */
- xfs_bmap_local_to_extents(
- 	xfs_trans_t	*tp,		/* transaction pointer */
-@@ -1174,9 +1192,12 @@ xfs_bmap_local_to_extents(
- 				   struct xfs_inode *ip,
- 				   struct xfs_ifork *ifp))
- {
--	int		error;		/* error return value */
-+	int		error = 0;
- 	int		flags;		/* logging flags returned */
- 	xfs_ifork_t	*ifp;		/* inode fork pointer */
-+	xfs_alloc_arg_t	args;		/* allocation arguments */
-+	xfs_buf_t	*bp;		/* buffer for extent block */
-+	xfs_bmbt_rec_host_t *ep;	/* extent record pointer */
- 
- 	/*
- 	 * We don't want to deal with the case of keeping inode data inline yet.
-@@ -1185,68 +1206,65 @@ xfs_bmap_local_to_extents(
- 	ASSERT(!(S_ISREG(ip->i_d.di_mode) && whichfork == XFS_DATA_FORK));
- 	ifp = XFS_IFORK_PTR(ip, whichfork);
- 	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_LOCAL);
-+
-+	if (!ifp->if_bytes) {
-+		xfs_bmap_local_to_extents_empty(ip, whichfork);
-+		flags = XFS_ILOG_CORE;
-+		goto done;
-+	}
-+
- 	flags = 0;
- 	error = 0;
--	if (ifp->if_bytes) {
--		xfs_alloc_arg_t	args;	/* allocation arguments */
--		xfs_buf_t	*bp;	/* buffer for extent block */
--		xfs_bmbt_rec_host_t *ep;/* extent record pointer */
+-#define XFS_DQUOT_LOGRES(mp)	(sizeof(xfs_disk_dquot_t) * 3)
 -
--		ASSERT((ifp->if_flags &
--			(XFS_IFINLINE|XFS_IFEXTENTS|XFS_IFEXTIREC)) == XFS_IFINLINE);
--		memset(&args, 0, sizeof(args));
--		args.tp = tp;
--		args.mp = ip->i_mount;
--		args.firstblock = *firstblock;
--		/*
--		 * Allocate a block.  We know we need only one, since the
--		 * file currently fits in an inode.
--		 */
--		if (*firstblock == NULLFSBLOCK) {
--			args.fsbno = XFS_INO_TO_FSB(args.mp, ip->i_ino);
--			args.type = XFS_ALLOCTYPE_START_BNO;
--		} else {
--			args.fsbno = *firstblock;
--			args.type = XFS_ALLOCTYPE_NEAR_BNO;
--		}
--		args.total = total;
--		args.minlen = args.maxlen = args.prod = 1;
--		error = xfs_alloc_vextent(&args);
--		if (error)
--			goto done;
--
--		/* Can't fail, the space was reserved. */
--		ASSERT(args.fsbno != NULLFSBLOCK);
--		ASSERT(args.len == 1);
--		*firstblock = args.fsbno;
--		bp = xfs_btree_get_bufl(args.mp, tp, args.fsbno, 0);
--
--		/* initialise the block and copy the data */
--		init_fn(tp, bp, ip, ifp);
--
--		/* account for the change in fork size and log everything */
--		xfs_trans_log_buf(tp, bp, 0, ifp->if_bytes - 1);
--		xfs_bmap_forkoff_reset(args.mp, ip, whichfork);
--		xfs_idata_realloc(ip, -ifp->if_bytes, whichfork);
--		xfs_iext_add(ifp, 0, 1);
--		ep = xfs_iext_get_ext(ifp, 0);
--		xfs_bmbt_set_allf(ep, 0, args.fsbno, 1, XFS_EXT_NORM);
--		trace_xfs_bmap_post_update(ip, 0,
--				whichfork == XFS_ATTR_FORK ? BMAP_ATTRFORK : 0,
--				_THIS_IP_);
--		XFS_IFORK_NEXT_SET(ip, whichfork, 1);
--		ip->i_d.di_nblocks = 1;
--		xfs_trans_mod_dquot_byino(tp, ip,
--			XFS_TRANS_DQ_BCOUNT, 1L);
--		flags |= xfs_ilog_fext(whichfork);
-+	ASSERT((ifp->if_flags & (XFS_IFINLINE|XFS_IFEXTENTS|XFS_IFEXTIREC)) ==
-+								XFS_IFINLINE);
-+	memset(&args, 0, sizeof(args));
-+	args.tp = tp;
-+	args.mp = ip->i_mount;
-+	args.firstblock = *firstblock;
-+	/*
-+	 * Allocate a block.  We know we need only one, since the
-+	 * file currently fits in an inode.
-+	 */
-+	if (*firstblock == NULLFSBLOCK) {
-+		args.fsbno = XFS_INO_TO_FSB(args.mp, ip->i_ino);
-+		args.type = XFS_ALLOCTYPE_START_BNO;
- 	} else {
--		ASSERT(XFS_IFORK_NEXTENTS(ip, whichfork) == 0);
--		xfs_bmap_forkoff_reset(ip->i_mount, ip, whichfork);
-+		args.fsbno = *firstblock;
-+		args.type = XFS_ALLOCTYPE_NEAR_BNO;
- 	}
--	ifp->if_flags &= ~XFS_IFINLINE;
--	ifp->if_flags |= XFS_IFEXTENTS;
--	XFS_IFORK_FMT_SET(ip, whichfork, XFS_DINODE_FMT_EXTENTS);
-+	args.total = total;
-+	args.minlen = args.maxlen = args.prod = 1;
-+	error = xfs_alloc_vextent(&args);
-+	if (error)
-+		goto done;
-+
-+	/* Can't fail, the space was reserved. */
-+	ASSERT(args.fsbno != NULLFSBLOCK);
-+	ASSERT(args.len == 1);
-+	*firstblock = args.fsbno;
-+	bp = xfs_btree_get_bufl(args.mp, tp, args.fsbno, 0);
-+
-+	/* initialise the block and copy the data */
-+	init_fn(tp, bp, ip, ifp);
-+
-+	/* account for the change in fork size and log everything */
-+	xfs_trans_log_buf(tp, bp, 0, ifp->if_bytes - 1);
-+	xfs_idata_realloc(ip, -ifp->if_bytes, whichfork);
-+	xfs_bmap_local_to_extents_empty(ip, whichfork);
- 	flags |= XFS_ILOG_CORE;
-+
-+	xfs_iext_add(ifp, 0, 1);
-+	ep = xfs_iext_get_ext(ifp, 0);
-+	xfs_bmbt_set_allf(ep, 0, args.fsbno, 1, XFS_EXT_NORM);
-+	trace_xfs_bmap_post_update(ip, 0,
-+			whichfork == XFS_ATTR_FORK ? BMAP_ATTRFORK : 0,
-+			_THIS_IP_);
-+	XFS_IFORK_NEXT_SET(ip, whichfork, 1);
-+	ip->i_d.di_nblocks = 1;
-+	xfs_trans_mod_dquot_byino(tp, ip,
-+		XFS_TRANS_DQ_BCOUNT, 1L);
-+	flags |= xfs_ilog_fext(whichfork);
-+
- done:
- 	*logflagsp = flags;
- 	return error;
-@@ -1323,25 +1341,6 @@ xfs_bmap_add_attrfork_extents(
- }
++#define XFS_DQUOT_LOGRES(mp)	\
++	((sizeof(struct xfs_dq_logformat) + sizeof(struct xfs_disk_dquot)) * 6)
  
  /*
-- * Block initialisation function for local to extent format conversion.
-- *
-- * This shouldn't actually be called by anyone, so make sure debug kernels cause
-- * a noticable failure.
-- */
--STATIC void
--xfs_bmap_local_to_extents_init_fn(
--	struct xfs_trans	*tp,
--	struct xfs_buf		*bp,
--	struct xfs_inode	*ip,
--	struct xfs_ifork	*ifp)
--{
--	ASSERT(0);
--	bp->b_ops = &xfs_bmbt_buf_ops;
--	memcpy(bp->b_addr, ifp->if_u1.if_data, ifp->if_bytes);
--	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_BTREE_BUF);
--}
--
--/*
-  * Called from xfs_bmap_add_attrfork to handle local format files. Each
-  * different data fork content type needs a different callout to do the
-  * conversion. Some are basic and only require special block initialisation
-@@ -1381,9 +1380,9 @@ xfs_bmap_add_attrfork_local(
- 						 flags, XFS_DATA_FORK,
- 						 xfs_symlink_local_to_remote);
+  * These are the structures used to lay out dquots and quotaoff
+diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
+index 3ba64d5..db041a5 100644
+--- a/fs/xfs/xfs_trans_dquot.c
++++ b/fs/xfs/xfs_trans_dquot.c
+@@ -291,11 +291,10 @@ xfs_trans_mod_dquot(
  
--	return xfs_bmap_local_to_extents(tp, ip, firstblock, 1, flags,
--					 XFS_DATA_FORK,
--					 xfs_bmap_local_to_extents_init_fn);
-+	/* should only be called for types that support local format data */
-+	ASSERT(0);
-+	return EFSCORRUPTED;
- }
  
  /*
-@@ -4907,20 +4906,19 @@ xfs_bmapi_write(
- 	orig_mval = mval;
- 	orig_nmap = *nmap;
- #endif
-+	whichfork = (flags & XFS_BMAPI_ATTRFORK) ?
-+		XFS_ATTR_FORK : XFS_DATA_FORK;
- 
- 	ASSERT(*nmap >= 1);
- 	ASSERT(*nmap <= XFS_BMAP_MAX_NMAP);
- 	ASSERT(!(flags & XFS_BMAPI_IGSTATE));
- 	ASSERT(tp != NULL);
- 	ASSERT(len > 0);
--
--	whichfork = (flags & XFS_BMAPI_ATTRFORK) ?
--		XFS_ATTR_FORK : XFS_DATA_FORK;
-+	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL);
- 
- 	if (unlikely(XFS_TEST_ERROR(
- 	    (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS &&
--	     XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE &&
--	     XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL),
-+	     XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE),
- 	     mp, XFS_ERRTAG_BMAPIFORMAT, XFS_RANDOM_BMAPIFORMAT))) {
- 		XFS_ERROR_REPORT("xfs_bmapi_write", XFS_ERRLEVEL_LOW, mp);
- 		return XFS_ERROR(EFSCORRUPTED);
-@@ -4933,37 +4931,6 @@ xfs_bmapi_write(
- 
- 	XFS_STATS_INC(xs_blk_mapw);
- 
--	if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_LOCAL) {
--		/*
--		 * XXX (dgc): This assumes we are only called for inodes that
--		 * contain content neutral data in local format. Anything that
--		 * contains caller-specific data in local format that needs
--		 * transformation to move to a block format needs to do the
--		 * conversion to extent format itself.
--		 *
--		 * Directory data forks and attribute forks handle this
--		 * themselves, but with the addition of metadata verifiers every
--		 * data fork in local format now contains caller specific data
--		 * and as such conversion through this function is likely to be
--		 * broken.
--		 *
--		 * The only likely user of this branch is for remote symlinks,
--		 * but we cannot overwrite the data fork contents of the symlink
--		 * (EEXIST occurs higher up the stack) and so it will never go
--		 * from local format to extent format here. Hence I don't think
--		 * this branch is ever executed intentionally and we should
--		 * consider removing it and asserting that xfs_bmapi_write()
--		 * cannot be called directly on local format forks. i.e. callers
--		 * are completely responsible for local to extent format
--		 * conversion, not xfs_bmapi_write().
--		 */
--		error = xfs_bmap_local_to_extents(tp, ip, firstblock, total,
--					&bma.logflags, whichfork,
--					xfs_bmap_local_to_extents_init_fn);
--		if (error)
--			goto error0;
--	}
--
- 	if (*firstblock == NULLFSBLOCK) {
- 		if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_BTREE)
- 			bma.minleft = be16_to_cpu(ifp->if_broot->bb_level) + 1;
-diff --git a/fs/xfs/xfs_bmap.h b/fs/xfs/xfs_bmap.h
-index 5f469c3..1cf1292 100644
---- a/fs/xfs/xfs_bmap.h
-+++ b/fs/xfs/xfs_bmap.h
-@@ -172,6 +172,7 @@ void	xfs_bmap_trace_exlist(struct xfs_inode *ip, xfs_extnum_t cnt,
- #endif
- 
- int	xfs_bmap_add_attrfork(struct xfs_inode *ip, int size, int rsvd);
-+void	xfs_bmap_local_to_extents_empty(struct xfs_inode *ip, int whichfork);
- void	xfs_bmap_add_free(xfs_fsblock_t bno, xfs_filblks_t len,
- 		struct xfs_bmap_free *flist, struct xfs_mount *mp);
- void	xfs_bmap_cancel(struct xfs_bmap_free *flist);
-diff --git a/fs/xfs/xfs_dir2_block.c b/fs/xfs/xfs_dir2_block.c
-index e59f5fc..53b9aa2 100644
---- a/fs/xfs/xfs_dir2_block.c
-+++ b/fs/xfs/xfs_dir2_block.c
-@@ -29,6 +29,7 @@
- #include "xfs_dinode.h"
- #include "xfs_inode.h"
- #include "xfs_inode_item.h"
-+#include "xfs_bmap.h"
- #include "xfs_buf_item.h"
- #include "xfs_dir2.h"
- #include "xfs_dir2_format.h"
-@@ -1167,13 +1168,15 @@ xfs_dir2_sf_to_block(
- 	__be16			*tagp;		/* end of data entry */
- 	xfs_trans_t		*tp;		/* transaction pointer */
- 	struct xfs_name		name;
-+	struct xfs_ifork	*ifp;
- 
- 	trace_xfs_dir2_sf_to_block(args);
- 
- 	dp = args->dp;
- 	tp = args->trans;
- 	mp = dp->i_mount;
--	ASSERT(dp->i_df.if_flags & XFS_IFINLINE);
-+	ifp = XFS_IFORK_PTR(dp, XFS_DATA_FORK);
-+	ASSERT(ifp->if_flags & XFS_IFINLINE);
- 	/*
- 	 * Bomb out if the shortform directory is way too short.
- 	 */
-@@ -1182,22 +1185,23 @@ xfs_dir2_sf_to_block(
- 		return XFS_ERROR(EIO);
- 	}
- 
--	oldsfp = (xfs_dir2_sf_hdr_t *)dp->i_df.if_u1.if_data;
-+	oldsfp = (xfs_dir2_sf_hdr_t *)ifp->if_u1.if_data;
- 
--	ASSERT(dp->i_df.if_bytes == dp->i_d.di_size);
--	ASSERT(dp->i_df.if_u1.if_data != NULL);
-+	ASSERT(ifp->if_bytes == dp->i_d.di_size);
-+	ASSERT(ifp->if_u1.if_data != NULL);
- 	ASSERT(dp->i_d.di_size >= xfs_dir2_sf_hdr_size(oldsfp->i8count));
-+	ASSERT(dp->i_d.di_nextents == 0);
- 
- 	/*
- 	 * Copy the directory into a temporary buffer.
- 	 * Then pitch the incore inode data so we can make extents.
- 	 */
--	sfp = kmem_alloc(dp->i_df.if_bytes, KM_SLEEP);
--	memcpy(sfp, oldsfp, dp->i_df.if_bytes);
-+	sfp = kmem_alloc(ifp->if_bytes, KM_SLEEP);
-+	memcpy(sfp, oldsfp, ifp->if_bytes);
- 
--	xfs_idata_realloc(dp, -dp->i_df.if_bytes, XFS_DATA_FORK);
-+	xfs_idata_realloc(dp, -ifp->if_bytes, XFS_DATA_FORK);
-+	xfs_bmap_local_to_extents_empty(dp, XFS_DATA_FORK);
- 	dp->i_d.di_size = 0;
--	xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
- 
- 	/*
- 	 * Add block 0 to the inode.
+- * Given an array of dqtrx structures, lock all the dquots associated
+- * and join them to the transaction, provided they have been modified.
+- * We know that the highest number of dquots (of one type - usr OR grp),
+- * involved in a transaction is 2 and that both usr and grp combined - 3.
+- * So, we don't attempt to make this very generic.
++ * Given an array of dqtrx structures, lock all the dquots associated and join
++ * them to the transaction, provided they have been modified.  We know that the
++ * highest number of dquots of one type - usr, grp OR prj - involved in a
++ * transaction is 2 so we don't need to make this very generic.
+  */
+ STATIC void
+ xfs_trans_dqlockedjoin(
 -- 
 1.8.3.2
 
