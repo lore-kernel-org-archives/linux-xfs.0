@@ -1,21 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 387FD7F4E
-	for <xfs@oss.sgi.com>; Tue,  9 Jul 2013 11:26:22 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 0D4768F8066
-	for <xfs@oss.sgi.com>; Tue,  9 Jul 2013 09:26:21 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id JLNQeYnvENNlsTam for <xfs@oss.sgi.com>;
-	Tue, 09 Jul 2013 09:26:21 -0700 (PDT)
-Message-ID: <51DC39AC.4090003@sandeen.net>
-Date: Tue, 09 Jul 2013 11:26:20 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 9D4447F51
+	for <xfs@oss.sgi.com>; Tue,  9 Jul 2013 12:06:13 -0500 (CDT)
+Date: Tue, 9 Jul 2013 12:06:08 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH] Subject: [PATCH] xfs: fix sgid inheritance for
+	subdirectories inheriting default acls [V3]
+Message-ID: <20130709170608.GR20932@sgi.com>
+References: <1371836753-3327-1-git-send-email-cmaiolino@redhat.com>
+	<20130708211121.GI20932@sgi.com> <20130708234235.GD3438@dastard>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: check on-disk (not incore) btree root size in dfrag.c
-References: <4F7225BA.40200@redhat.com> <51C227ED.5010108@sandeen.net>
-	<20130620170929.GY20932@sgi.com>
-In-Reply-To: <20130620170929.GY20932@sgi.com>
+Content-Disposition: inline
+In-Reply-To: <20130708234235.GD3438@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,40 +24,104 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Carlos Maiolino <cmaiolino@redhat.com>, xfs@oss.sgi.com
 
-On 6/20/13 12:09 PM, Ben Myers wrote:
-> On Wed, Jun 19, 2013 at 04:51:41PM -0500, Eric Sandeen wrote:
->> On 3/27/12 3:40 PM, Eric Sandeen wrote:
->>> xfs_swap_extents_check_format() contains checks to make sure that
->>> original and the temporary files during defrag are compatible;
->>> Gabriel VLASIU ran into a case where xfs_fsr returned EINVAL
->>> because the tests found the btree root to be of size 120,
->>> while the fork offset was only 104; IOW, they overlapped.
->>>
->>> However, this is just due to an error in the
->>> xfs_swap_extents_check_format() tests, because it is checking
->>> the in-memory btree root size against the on-disk fork offset.
->>> We should be checking the on-disk sizes in both cases.
->>>
->>> This patch adds a new macro to calculate this size, and uses
->>> it in the tests.
->>>
->>> With this change, the filesystem image provided by Gabriel
->>> allows for proper file degragmentation.
->>
->> I think this and the followup patch 2/1 got lost.
->>
->> Ben, any idea?
+On Tue, Jul 09, 2013 at 09:42:35AM +1000, Dave Chinner wrote:
+> On Mon, Jul 08, 2013 at 04:11:21PM -0500, Ben Myers wrote:
+> > On Fri, Jun 21, 2013 at 02:45:53PM -0300, Carlos Maiolino wrote:
+> > > XFS removes sgid bits of subdirectories under a directory containing a default
+> > > acl.
+> > > 
+> > > When a default acl is set, it implies xfs to call xfs_setattr_nonsize() in its
+> > > code path. Such function is shared among mkdir and chmod system calls, and
+> > > does some checks unneeded by mkdir (calling inode_change_ok()). Such checks
+> > > remove sgid bit from the inode after it has been granted.
+> > > 
+> > > With this patch, we extend the meaning of XFS_ATTR_NOACL flag to avoid these
+> > > checks when acls are being inherited (thanks hch).
+> > > 
+> > > Also, xfs_setattr_mode, doesn't need to re-check for group id and capabilities
+> > > permissions, this only implies in another try to remove sgid bit from the
+> > > directories. Such check is already done either on inode_change_ok() or
+> > > xfs_setattr_nonsize().
+> > > 
+> > > Changelog:
+> > > 
+> > > V2: Extends the meaning of XFS_ATTR_NOACL instead of wrap the tests into another
+> > >     function
+> > > 
+> > > V3: Remove S_ISDIR check in xfs_setattr_nonsize() from the patch
+> > > 
+> > > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> > >  
+> > > -	if (mp->m_flags & XFS_MOUNT_RDONLY)
+> > > -		return XFS_ERROR(EROFS);
+> > > +	/* If acls are being inherited, we already have this checked */
+> > > +	if (!(flags & XFS_ATTR_NOACL)) {
+> > > +		if (mp->m_flags & XFS_MOUNT_RDONLY)
+> > > +			return XFS_ERROR(EROFS);
+> > >  
+> > > -	if (XFS_FORCED_SHUTDOWN(mp))
+> > > -		return XFS_ERROR(EIO);
+> > > +		if (XFS_FORCED_SHUTDOWN(mp))
+> > > +			return XFS_ERROR(EIO);
+> > >  
+> > > -	error = -inode_change_ok(inode, iattr);
+> > > -	if (error)
+> > > -		return XFS_ERROR(error);
+> > > +		error = -inode_change_ok(inode, iattr);
+> > > +		if (error)
+> > > +			return XFS_ERROR(error);
+> > > +	}
+> > 
+> > I'm not so sure about this change yet.  Looks like the two relevant callers are:
+> > 
+> > .set - xattr_handler
+> >   xfs_xattr_acl_set
+> >     xfs_set_mode
+> >       xfs_setattr_nonsize(..., XFS_ATTR_NOACL);
+> > 
+> > and
+> > 
+> > xfs_vn_mknod
+> >   xfs_inherit_acl
+> >     xfs_set_mode
+> >       xfs_setattr_nonsize(..., XFS_ATTR_NOACL);
+> > 
+> > I suggest moving the forced shutdown and readonly checks outside of the
+> > XFS_ATTR_NOACL conditional.  I'm not seeing those checks in xfs_attr_acl_set or
+> > xfs_vn_mknod and it won't hurt to be careful.
 > 
-> Yeah.  Sorry Eric.
+> In both cases, the read-only checks are done at much higher layers
+> and so we don't ever get to xfs_setattr_nonsize() through these
+> paths with a read-only filesystem. Shutdown doesn't really matter -
+> the transaction commit will fail if the filesystem is shut down...
+> 
+> > It also seems like inode_change_ok might have some other checks that are
+> > necessary to determine whether it is ok to update the mode and ctime here.  A
+> > call to inode_owner_or_capable as is done in inode_change_ok would cover this
+> > possibility.
+> 
+> The inode permission checks are already done by xfs_xattr_acl_set():
+> 
+> 	if ((current_fsuid() != inode->i_uid) && !capable(CAP_FOWNER))
+> 		return -EPERM;
+> 
+> and in the case of xfs_inherit_acl() the user has just created the
+> file so they - by definition - have permission to inherit the ACL
+> and modify the mode of the inode they just created.
+> 
+> So there is no need for changes to inode_change_ok() here.
 
-I see the first patch is now merged.  Can you please also merge the
-2nd patch?  It is also reviewed already.
+Carlos, if you agree with Dave's assessment consider this 
+
+Reviewed-by: Ben Myers <bpm@sgi.com>
+
+let me know what you think and I'll pull it in.
 
 Thanks,
--Eric
+	Ben
 
 _______________________________________________
 xfs mailing list
