@@ -1,16 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 85F1129E13
-	for <xfs@oss.sgi.com>; Tue,  9 Jul 2013 16:37:04 -0500 (CDT)
-Date: Tue, 9 Jul 2013 16:37:03 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 1/3] xfs: update mount options documentation
-Message-ID: <20130709213703.GW20932@sgi.com>
-References: <1373403841-16612-1-git-send-email-david@fromorbit.com>
-	<1373403841-16612-2-git-send-email-david@fromorbit.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1373403841-16612-2-git-send-email-david@fromorbit.com>
+From: xfs@oss.sgi.com
+Subject: [XFS updates] XFS development tree branch, master,
+	updated. for-linus-v3.11-rc1-6-gb0a9dab
+Message-Id: <20130709215245.A4D0629E1E@oss.sgi.com>
+Date: Tue,  9 Jul 2013 16:52:45 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,371 +12,121 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, Jul 10, 2013 at 07:03:59AM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Because it's horribly out of date.
-> 
-> And mark various deprecated options as deprecated and give them a
-> removal date.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> Reviewed-by: Mark Tinguely <tinguely@sgi.com>
-> ---
->  Documentation/filesystems/xfs.txt | 317 +++++++++++++++++++++++++-------------
->  1 file changed, 209 insertions(+), 108 deletions(-)
-> 
-> diff --git a/Documentation/filesystems/xfs.txt b/Documentation/filesystems/xfs.txt
-> index 83577f0..12525b1 100644
-> --- a/Documentation/filesystems/xfs.txt
-> +++ b/Documentation/filesystems/xfs.txt
-> @@ -18,6 +18,8 @@ Mount Options
->  =============
->  
->  When mounting an XFS filesystem, the following options are accepted.
-> +For boolean mount options, the names with the (*) suffix is the
-> +default behaviour.
->  
->    allocsize=size
->  	Sets the buffered I/O end-of-file preallocation size when
-> @@ -25,97 +27,128 @@ When mounting an XFS filesystem, the following options are accepted.
->  	Valid values for this option are page size (typically 4KiB)
->  	through to 1GiB, inclusive, in power-of-2 increments.
->  
-> -  attr2/noattr2
-> -	The options enable/disable (default is disabled for backward
-> -	compatibility on-disk) an "opportunistic" improvement to be
-> -	made in the way inline extended attributes are stored on-disk.
-> -	When the new form is used for the first time (by setting or
-> -	removing extended attributes) the on-disk superblock feature
-> -	bit field will be updated to reflect this format being in use.
-> +	The default behaviour is for dynamic end-of-file
-> +	preallocation size, which uses a set of heuristics to
-> +	optimise the preallocation size based on the current
-> +	allocation patterns within the file and the access patterns
-> +	to the file. Specifying a fixed allocsize value turns off
-> +	the dynamic behaviour.
-> +
-> +  attr2
-> +  noattr2
-> +	The options enable/disable an "opportunistic" improvement to
-> +	be made in the way inline extended attributes are stored
-> +	on-disk.  When the new form is used for the first time when
-> +	attr2 is selected (either when setting or removing extended
-> +	attributes) the on-disk superblock feature bit field will be
-> +	updated to reflect this format being in use.
-> +
-> +	The default behaviour is determined by the on-disk feature
-> +	bit indicating that attr2 behaviour is active. If either
-> +	mount option it set, then that becomes the new default used
-> +	by the filesystem.
->  
->  	CRC enabled filesystems always use the attr2 format, and so
->  	will reject the noattr2 mount option if it is set.
->  
-> -  barrier
-> -	Enables the use of block layer write barriers for writes into
-> -	the journal and unwritten extent conversion.  This allows for
-> -	drive level write caching to be enabled, for devices that
-> -	support write barriers.
-> +  barrier (*)
-> +  nobarrier
-> +	Enables/disables the use of block layer write barriers for
-> +	writes into the journal and for data integrity operations.
-> +	This allows for drive level write caching to be enabled, for
-> +	devices that support write barriers.
->  
->    discard
-> -	Issue command to let the block device reclaim space freed by the
-> -	filesystem.  This is useful for SSD devices, thinly provisioned
-> -	LUNs and virtual machine images, but may have a performance
-> -	impact.
-> -
-> -  dmapi
-> -	Enable the DMAPI (Data Management API) event callouts.
-> -	Use with the "mtpt" option.
-> -
-> -  grpid/bsdgroups and nogrpid/sysvgroups
-> -	These options define what group ID a newly created file gets.
-> -	When grpid is set, it takes the group ID of the directory in
-> -	which it is created; otherwise (the default) it takes the fsgid
-> -	of the current process, unless the directory has the setgid bit
-> -	set, in which case it takes the gid from the parent directory,
-> -	and also gets the setgid bit set if it is a directory itself.
-> -
-> -  ihashsize=value
-> -	In memory inode hashes have been removed, so this option has
-> -	no function as of August 2007. Option is deprecated.
-> -
-> -  ikeep/noikeep
-> -	When ikeep is specified, XFS does not delete empty inode clusters
-> -	and keeps them around on disk. ikeep is the traditional XFS
-> -	behaviour. When noikeep is specified, empty inode clusters
-> -	are returned to the free space pool. The default is noikeep for
-> -	non-DMAPI mounts, while ikeep is the default when DMAPI is in use.
-> -
-> -  inode64
-> -	Indicates that XFS is allowed to create inodes at any location
-> -	in the filesystem, including those which will result in inode
-> -	numbers occupying more than 32 bits of significance.  This is
-> -	the default allocation option. Applications which do not handle
-> -	inode numbers bigger than 32 bits, should use inode32 option.
-> +  nodiscard (*)
-> +	Enable/disable the issuing of commands to let the block
-> +	device reclaim space freed by the filesystem.  This is
-> +	useful for SSD devices, thinly provisioned LUNs and virtual
-> +	machine images, but may have a performance impact.
-> +
-> +	Note: It is currently recommended that you use the fstrim
-> +	application to discard unused blocks rather than the discard
-> +	mount option because the performance impact of this option
-> +	is quite severe.
-> +
-> +  grpid/bsdgroups
-> +  nogrpid/sysvgroups (*)
-> +	These options define what group ID a newly created file
-> +	gets.  When grpid is set, it takes the group ID of the
-> +	directory in which it is created; otherwise it takes the
-> +	fsgid of the current process, unless the directory has the
-> +	setgid bit set, in which case it takes the gid from the
-> +	parent directory, and also gets the setgid bit set if it is
-> +	a directory itself.
-> +
-> +  filestreams
-> +	Make the data allocator use the filestreams allocation mode
-> +	across the entire filesystem rather than just on directories
-> +	configured to use it.
-> +
-> +  ikeep
-> +  noikeep (*)
-> +	When ikeep is specified, XFS does not delete empty inode
-> +	clusters and keeps them around on disk.  When noikeep is
-> +	specified, empty inode clusters are returned to the free
-> +	space pool.
->  
->    inode32
-> -	Indicates that XFS is limited to create inodes at locations which
-> -	will not result in inode numbers with more than 32 bits of
-> -	significance. This is provided for backwards compatibility, since
-> -	64 bits inode numbers might cause problems for some applications
-> -	that cannot handle large inode numbers.
-> -
-> -  largeio/nolargeio
-> +  inode64 (*)
-> +	When inode32 is specified, it indicates that XFS limits
-> +	inode creation to locations which will not result in inode
-> +	numbers with more than 32 bits of significance.
-> +
-> +	When inode64 is specified, it indicates that XFS is allowed
-> +	to create inodes at any location in the filesystem,
-> +	including those which will result in inode numbers occupying
-> +	more than 32 bits of significance. 
-> +
-> +	inode32 is provided for backwards compatibility with older
-> +	systems and applications, since 64 bits inode numbers might
-> +	cause problems for some applications that cannot handle
-> +	large inode numbers.  If applications are in use which do
-> +	not handle inode numbers bigger than 32 bits, the inode32
-> +	option should be specified.
-> +
-> +
-> +  largeio
-> +  nolargeio (*)
->  	If "nolargeio" is specified, the optimal I/O reported in
-> -	st_blksize by stat(2) will be as small as possible to allow user
-> -	applications to avoid inefficient read/modify/write I/O.
-> -	If "largeio" specified, a filesystem that has a "swidth" specified
-> -	will return the "swidth" value (in bytes) in st_blksize. If the
-> -	filesystem does not have a "swidth" specified but does specify
-> -	an "allocsize" then "allocsize" (in bytes) will be returned
-> -	instead.
-> -	If neither of these two options are specified, then filesystem
-> -	will behave as if "nolargeio" was specified.
-> +	st_blksize by stat(2) will be as small as possible to allow
-> +	user applications to avoid inefficient read/modify/write
-> +	I/O.  This is typically the page size of the machine, as
-> +	this is the granularity of the page cache.
-> +
-> +	If "largeio" specified, a filesystem that was created with a
-> +	"swidth" specified will return the "swidth" value (in bytes)
-> +	in st_blksize. If the filesystem does not have a "swidth"
-> +	specified but does specify an "allocsize" then "allocsize"
-> +	(in bytes) will be returned instead. Otherwise the behaviour
-> +	is the same as if "nolargeio" was specified.
->  
->    logbufs=value
-> -	Set the number of in-memory log buffers.  Valid numbers range
-> -	from 2-8 inclusive.
-> -	The default value is 8 buffers for filesystems with a
-> -	blocksize of 64KiB, 4 buffers for filesystems with a blocksize
-> -	of 32KiB, 3 buffers for filesystems with a blocksize of 16KiB
-> -	and 2 buffers for all other configurations.  Increasing the
-> -	number of buffers may increase performance on some workloads
-> -	at the cost of the memory used for the additional log buffers
-> -	and their associated control structures.
-> +	Set the number of in-memory log buffers.  Valid numbers
-> +	range from 2-8 inclusive.
-> +
-> +	The default value is 8 buffers.
-> +
-> +	If the memory cost of 8 log buffers is too high on small
-> +	systems, then it may be reduced at some cost to performance
-> +	on metadata intensive workloads. The logbsize option below
-> +	controls the size of each buffer and so is also relevent to
-> +	this case.
->  
->    logbsize=value
-> -	Set the size of each in-memory log buffer.
-> -	Size may be specified in bytes, or in kilobytes with a "k" suffix.
-> -	Valid sizes for version 1 and version 2 logs are 16384 (16k) and
-> -	32768 (32k).  Valid sizes for version 2 logs also include
-> -	65536 (64k), 131072 (128k) and 262144 (256k).
-> -	The default value for machines with more than 32MiB of memory
-> -	is 32768, machines with less memory use 16384 by default.
-> +	Set the size of each in-memory log buffer.  The size may be
-> +	specified in bytes, or in kilobytes with a "k" suffix.
-> +	Valid sizes for version 1 and version 2 logs are 16384 (16k)
-> +	and 32768 (32k).  Valid sizes for version 2 logs also
-> +	include 65536 (64k), 131072 (128k) and 262144 (256k). The
-> +	logbsize must be an integer multiple of the log
-> +	stripe unit configured at mkfs time.
-> +
-> +	The default value for for version 1 logs is 32768, while the
-> +	default value for version 2 logs is MAX(32768, log_sunit).
->  
->    logdev=device and rtdev=device
->  	Use an external log (metadata journal) and/or real-time device.
-> @@ -124,16 +157,11 @@ When mounting an XFS filesystem, the following options are accepted.
->  	optional, and the log section can be separate from the data
->  	section or contained within it.
->  
-> -  mtpt=mountpoint
-> -	Use with the "dmapi" option.  The value specified here will be
-> -	included in the DMAPI mount event, and should be the path of
-> -	the actual mountpoint that is used.
-> -
->    noalign
-> -	Data allocations will not be aligned at stripe unit boundaries.
-> -
-> -  noatime
-> -	Access timestamps are not updated when a file is read.
-> +	Data allocations will not be aligned at stripe unit
-> +	boundaries. This is only relevant to filesystems created
-> +	with non-zero data alignment parameters (sunit, swidth) by
-> +	mkfs.
->  
->    norecovery
->  	The filesystem will be mounted without running log recovery.
-> @@ -144,8 +172,14 @@ When mounting an XFS filesystem, the following options are accepted.
->  	the mount will fail.
->  
->    nouuid
-> -	Don't check for double mounted file systems using the file system uuid.
-> -	This is useful to mount LVM snapshot volumes.
-> +	Don't check for double mounted file systems using the file
-> +	system uuid.  This is useful to mount LVM snapshot volumes,
-> +	and often used in combination with "norecovery" for mounting
-> +	read-only snapshots.
-> +
-> +  noquota
-> +	Forcibly turns off all quota accounting and enforcement
-> +	within the filesystem.
->  
->    uquota/usrquota/uqnoenforce/quota
->  	User disk quota accounting enabled, and limits (optionally)
-> @@ -160,24 +194,64 @@ When mounting an XFS filesystem, the following options are accepted.
->  	enforced.  Refer to xfs_quota(8) for further details.
->  
->    sunit=value and swidth=value
-> -	Used to specify the stripe unit and width for a RAID device or
-> -	a stripe volume.  "value" must be specified in 512-byte block
-> -	units.
-> -	If this option is not specified and the filesystem was made on
-> -	a stripe volume or the stripe width or unit were specified for
-> -	the RAID device at mkfs time, then the mount system call will
-> -	restore the value from the superblock.  For filesystems that
-> -	are made directly on RAID devices, these options can be used
-> -	to override the information in the superblock if the underlying
-> -	disk layout changes after the filesystem has been created.
-> -	The "swidth" option is required if the "sunit" option has been
-> -	specified, and must be a multiple of the "sunit" value.
-> +	Used to specify the stripe unit and width for a RAID device
-> +	or a stripe volume.  "value" must be specified in 512-byte
-> +	block units. These options are only relevant to filesystems
-> +	that were created with non-zero data alignment parameters.
-> +
-> +	The sunit and swidth parameters specified must be compatible
-> +	with the existing filesystem alignment characteristics.  In
-> +	general, that means the only valid changes to sunit are
-> +	increasing it by a power-of-2 multiple. Valid swidth values
-> +	are any integer multiple of a valid sunit value.
-> +
-> +	Typically the only time these mount options are necessary if
-> +	after an underlying RAID device has had it's geometry
-> +	modified, such as adding a new disk to a RAID5 lun and
-> +	reshaping it.
->  
->    swalloc
->  	Data allocations will be rounded up to stripe width boundaries
->  	when the current end of file is being extended and the file
->  	size is larger than the stripe width size.
->  
-> +  wsync
-> +	When specified, all filesystem namespace operations are
-> +	executed synchronously. This ensures that when the namespace
-> +	operation (create, unlink, etc) completes, the change to the
-> +	namespace is on stable storage. This is useful in HA setups
-> +	where failover must not result in clients seeing
-> +	inconsistent namespace presentation during or after a
-> +	failover event.
-> +
-> +
-> +Deprecated Mount Options
-> +========================
-> +
-> +  delaylog/nodelaylog
-> +	Delayed logging is the only logging method that XFS supports
-> +	now, so these mount options are now ignored.
-> +
-> +	Due for removal in 3.12.
-> +
-> +  ihashsize=value
-> +	In memory inode hashes have been removed, so this option has
-> +	no function as of August 2007. Option is deprecated.
-> +
-> +	Due for removal in 3.12.
-> +
-> +  irixsgid
-> +	This behaviour is now controlled by a sysctl, so the mount
-> +	option is ignored.
-> +
-> +	Due for removal in 3.12.
-> +
-> +  osyncisdsync
-> +  osyncisosync
-> +	O_SYNC and O_DSYNC are fully supported, so there is no need
-> +	for these options any more.
-> +
-> +	Due for removal in 3.12.
+This is an automated email from the git hooks/post-receive script. It was
+generated because a ref change was pushed to the repository containing
+the project "XFS development tree".
 
-I finally read through Documentation/ABI/README, and I agree this all seems
-fairly reasonable with respect to that doc.
+The branch, master has been updated
+  b0a9dab xfs: dquot log reservations are too small
+  f3508bc xfs: remove local fork format handling from xfs_bmapi_write()
+      from  862a62937e76a91da218c1ee4dceb7b0700fed67 (commit)
 
-I do agree that it would be good to add these into the
-Documentation/ABI/obsolete directory.  The only other concern that I have is
-that the doc is saying that they want two years notice.  3.12 might be a little
-short for that timeframe.  Anyway we can cross that bridge when we come to it.
+Those revisions listed above that are new to this repository have
+not appeared on any other notification email; so we list those
+revisions in full, below.
 
-Applied.
+- Log -----------------------------------------------------------------
+commit b0a9dab78aee2a479d7c226e6939d553967e4024
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed Jul 10 07:04:01 2013 +1000
 
--Ben
+    xfs: dquot log reservations are too small
+    
+    During review of the separate project quota inode patches, it became
+    obvious that the dquot log reservation calculation underestimated
+    the number dquots that can be modified in a transaction. This has
+    it's roots way back in the Irix quota implementation.
+    
+    That is, when quotas were first implemented in XFS, it only
+    supported user and project quotas as Irix did not have group quotas.
+    Hence the worst case operation involving dquot modification was
+    calculated to involve 2 user dquots and 1 project dquot or 1 user
+    dequot and 2 project dquots. i.e. 3 dquots. This was determined back
+    in 1996, and has remained unchanged ever since.
+    
+    However, back in 2001, the Linux XFS port dropped all support for
+    project quota and implmented group quotas over the top. This was
+    effectively done with a search-and-replace of project with group,
+    and as such the log reservation was not changed. However, with the
+    advent of group quotas, chmod and rename now could modify more than
+    3 dquots in a single transaction - both could modify 4 dquots. Hence
+    this log reservation has been wrong for a long time.
+    
+    In 2005, project quota support was reintroduced into Linux, but it
+    was implemented to be mutually exclusive to group quotas and so this
+    didn't add any new changes to the dquot log reservation. Hence when
+    project quotas were in use (rather than group quotas) the log
+    reservation was again valid, just like in the Irix days.
+    
+    Now, with the addition of the separate project quota inode, group
+    and project quotas are no longer mutually exclusive, and hence
+    operations can now modify three dquots per inode where previously it
+    was only two. The worst case here is the rename transaction, which
+    can allocate/free space on two different directory inodes, and if
+    they have different uid/gid/prid configurations and are world
+    writeable, then rename can actually modify 6 different dquots now.
+    
+    Further, the dquot log reservation doesn't take into account the
+    space used by the dquot log format structure that precedes the dquot
+    that is logged, and hence further underestimates the worst case
+    log space required by dquots during a transaction. This has been
+    missing since the first commit in 1996.
+    
+    Hence the worst case log reservation needs to be increased from 3 to
+    6, and it needs to take into account a log format header for each of
+    those dquots.
+    
+    Signed-off-by: Dave Chinner <dchinner@redhat.com>
+    Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+    Signed-off-by: Ben Myers <bpm@sgi.com>
+
+commit f3508bcddf8fae6ebd21000d708cf09e7e77a963
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Wed Jul 10 07:04:00 2013 +1000
+
+    xfs: remove local fork format handling from xfs_bmapi_write()
+    
+    The conversion from local format to extent format requires
+    interpretation of the data in the fork being converted, so it cannot
+    be done in a generic way. It is up to the caller to convert the fork
+    format to extent format before calling into xfs_bmapi_write() so
+    format conversion can be done correctly.
+    
+    The code in xfs_bmapi_write() to convert the format is used
+    implicitly by the attribute and directory code, but they
+    specifically zero the fork size so that the conversion does not do
+    any allocation or manipulation. Move this conversion into the
+    shortform to leaf functions for the dir/attr code so the conversions
+    are explicitly controlled by all callers.
+    
+    Now we can remove the conversion code in xfs_bmapi_write.
+    
+    Signed-off-by: Dave Chinner <dchinner@redhat.com>
+    Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+    Signed-off-by: Ben Myers <bpm@sgi.com>
+
+-----------------------------------------------------------------------
+
+Summary of changes:
+ fs/xfs/xfs_attr_leaf.c   |   2 +
+ fs/xfs/xfs_bmap.c        | 199 ++++++++++++++++++++---------------------------
+ fs/xfs/xfs_bmap.h        |   1 +
+ fs/xfs/xfs_dir2_block.c  |  20 +++--
+ fs/xfs/xfs_quota.h       |  25 +++++-
+ fs/xfs/xfs_trans_dquot.c |   9 +--
+ 6 files changed, 123 insertions(+), 133 deletions(-)
+
+
+hooks/post-receive
+-- 
+XFS development tree
 
 _______________________________________________
 xfs mailing list
