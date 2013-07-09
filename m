@@ -1,17 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9D4447F51
-	for <xfs@oss.sgi.com>; Tue,  9 Jul 2013 12:06:13 -0500 (CDT)
-Date: Tue, 9 Jul 2013 12:06:08 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] Subject: [PATCH] xfs: fix sgid inheritance for
-	subdirectories inheriting default acls [V3]
-Message-ID: <20130709170608.GR20932@sgi.com>
-References: <1371836753-3327-1-git-send-email-cmaiolino@redhat.com>
-	<20130708211121.GI20932@sgi.com> <20130708234235.GD3438@dastard>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 0A4977F55
+	for <xfs@oss.sgi.com>; Tue,  9 Jul 2013 13:02:15 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id F07CB8F8068
+	for <xfs@oss.sgi.com>; Tue,  9 Jul 2013 11:02:11 -0700 (PDT)
+Received: from mail-la0-f49.google.com (mail-la0-f49.google.com
+	[209.85.215.49]) by cuda.sgi.com with ESMTP id XkA76XO5KVPHPAJ7
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 09 Jul 2013 11:02:10 -0700 (PDT)
+Received: by mail-la0-f49.google.com with SMTP id ea20so4920421lab.22
+	for <xfs@oss.sgi.com>; Tue, 09 Jul 2013 11:02:09 -0700 (PDT)
+Date: Tue, 9 Jul 2013 22:02:05 +0400
+From: Glauber Costa <glommer@gmail.com>
+Subject: Re: [PATCH] [MMOTM] xfs: fix dquot isolation hang
+Message-ID: <20130709180203.GD9188@localhost.localdomain>
+References: <1373265261-30314-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130708234235.GD3438@dastard>
+In-Reply-To: <1373265261-30314-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,103 +32,63 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Carlos Maiolino <cmaiolino@redhat.com>, xfs@oss.sgi.com
+Cc: glommer@openvz.org, linux-mm@kvack.org, mhocko@suze.cz, linux-fsdevel@vger.kernel.org, akpm@linux-foundation.org, xfs@oss.sgi.com
 
-On Tue, Jul 09, 2013 at 09:42:35AM +1000, Dave Chinner wrote:
-> On Mon, Jul 08, 2013 at 04:11:21PM -0500, Ben Myers wrote:
-> > On Fri, Jun 21, 2013 at 02:45:53PM -0300, Carlos Maiolino wrote:
-> > > XFS removes sgid bits of subdirectories under a directory containing a default
-> > > acl.
-> > > 
-> > > When a default acl is set, it implies xfs to call xfs_setattr_nonsize() in its
-> > > code path. Such function is shared among mkdir and chmod system calls, and
-> > > does some checks unneeded by mkdir (calling inode_change_ok()). Such checks
-> > > remove sgid bit from the inode after it has been granted.
-> > > 
-> > > With this patch, we extend the meaning of XFS_ATTR_NOACL flag to avoid these
-> > > checks when acls are being inherited (thanks hch).
-> > > 
-> > > Also, xfs_setattr_mode, doesn't need to re-check for group id and capabilities
-> > > permissions, this only implies in another try to remove sgid bit from the
-> > > directories. Such check is already done either on inode_change_ok() or
-> > > xfs_setattr_nonsize().
-> > > 
-> > > Changelog:
-> > > 
-> > > V2: Extends the meaning of XFS_ATTR_NOACL instead of wrap the tests into another
-> > >     function
-> > > 
-> > > V3: Remove S_ISDIR check in xfs_setattr_nonsize() from the patch
-> > > 
-> > > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> > >  
-> > > -	if (mp->m_flags & XFS_MOUNT_RDONLY)
-> > > -		return XFS_ERROR(EROFS);
-> > > +	/* If acls are being inherited, we already have this checked */
-> > > +	if (!(flags & XFS_ATTR_NOACL)) {
-> > > +		if (mp->m_flags & XFS_MOUNT_RDONLY)
-> > > +			return XFS_ERROR(EROFS);
-> > >  
-> > > -	if (XFS_FORCED_SHUTDOWN(mp))
-> > > -		return XFS_ERROR(EIO);
-> > > +		if (XFS_FORCED_SHUTDOWN(mp))
-> > > +			return XFS_ERROR(EIO);
-> > >  
-> > > -	error = -inode_change_ok(inode, iattr);
-> > > -	if (error)
-> > > -		return XFS_ERROR(error);
-> > > +		error = -inode_change_ok(inode, iattr);
-> > > +		if (error)
-> > > +			return XFS_ERROR(error);
-> > > +	}
-> > 
-> > I'm not so sure about this change yet.  Looks like the two relevant callers are:
-> > 
-> > .set - xattr_handler
-> >   xfs_xattr_acl_set
-> >     xfs_set_mode
-> >       xfs_setattr_nonsize(..., XFS_ATTR_NOACL);
-> > 
-> > and
-> > 
-> > xfs_vn_mknod
-> >   xfs_inherit_acl
-> >     xfs_set_mode
-> >       xfs_setattr_nonsize(..., XFS_ATTR_NOACL);
-> > 
-> > I suggest moving the forced shutdown and readonly checks outside of the
-> > XFS_ATTR_NOACL conditional.  I'm not seeing those checks in xfs_attr_acl_set or
-> > xfs_vn_mknod and it won't hurt to be careful.
-> 
-> In both cases, the read-only checks are done at much higher layers
-> and so we don't ever get to xfs_setattr_nonsize() through these
-> paths with a read-only filesystem. Shutdown doesn't really matter -
-> the transaction commit will fail if the filesystem is shut down...
-> 
-> > It also seems like inode_change_ok might have some other checks that are
-> > necessary to determine whether it is ok to update the mode and ctime here.  A
-> > call to inode_owner_or_capable as is done in inode_change_ok would cover this
-> > possibility.
-> 
-> The inode permission checks are already done by xfs_xattr_acl_set():
-> 
-> 	if ((current_fsuid() != inode->i_uid) && !capable(CAP_FOWNER))
-> 		return -EPERM;
-> 
-> and in the case of xfs_inherit_acl() the user has just created the
-> file so they - by definition - have permission to inherit the ACL
-> and modify the mode of the inode they just created.
-> 
-> So there is no need for changes to inode_change_ok() here.
+Michal and Andrew, here is the patch
 
-Carlos, if you agree with Dave's assessment consider this 
-
-Reviewed-by: Ben Myers <bpm@sgi.com>
-
-let me know what you think and I'll pull it in.
-
-Thanks,
-	Ben
+On Mon, Jul 08, 2013 at 04:34:21PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> The new LRU list isolation code in xfs_qm_dquot_isolate() isn't
+> completely up to date.  Firstly, it needs conversion to return enum
+> lru_status values, not raw numbers. Secondly - most importantly - it
+> fails to unlock the dquot and relock the LRU in the LRU_RETRY path.
+> This leads to deadlocks in xfstests generic/232. Fix them.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_qm.c | 10 ++++++----
+>  1 file changed, 6 insertions(+), 4 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> index 46743cf..a10a720 100644
+> --- a/fs/xfs/xfs_qm.c
+> +++ b/fs/xfs/xfs_qm.c
+> @@ -659,7 +659,7 @@ xfs_qm_dquot_isolate(
+>  		trace_xfs_dqreclaim_want(dqp);
+>  		list_del_init(&dqp->q_lru);
+>  		XFS_STATS_DEC(xs_qm_dquot_unused);
+> -		return 0;
+> +		return LRU_REMOVED;
+>  	}
+>  
+>  	/*
+> @@ -705,17 +705,19 @@ xfs_qm_dquot_isolate(
+>  	XFS_STATS_DEC(xs_qm_dquot_unused);
+>  	trace_xfs_dqreclaim_done(dqp);
+>  	XFS_STATS_INC(xs_qm_dqreclaims);
+> -	return 0;
+> +	return LRU_REMOVED;
+>  
+>  out_miss_busy:
+>  	trace_xfs_dqreclaim_busy(dqp);
+>  	XFS_STATS_INC(xs_qm_dqreclaim_misses);
+> -	return 2;
+> +	return LRU_SKIP;
+>  
+>  out_unlock_dirty:
+>  	trace_xfs_dqreclaim_busy(dqp);
+>  	XFS_STATS_INC(xs_qm_dqreclaim_misses);
+> -	return 3;
+> +	xfs_dqunlock(dqp);
+> +	spin_lock(lru_lock);
+> +	return LRU_RETRY;
+>  }
+>  
+>  static unsigned long
+> -- 
+> 1.8.3.2
+> 
 
 _______________________________________________
 xfs mailing list
