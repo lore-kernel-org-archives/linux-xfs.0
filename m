@@ -1,24 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0A4977F55
-	for <xfs@oss.sgi.com>; Tue,  9 Jul 2013 13:02:15 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id F07CB8F8068
-	for <xfs@oss.sgi.com>; Tue,  9 Jul 2013 11:02:11 -0700 (PDT)
-Received: from mail-la0-f49.google.com (mail-la0-f49.google.com
-	[209.85.215.49]) by cuda.sgi.com with ESMTP id XkA76XO5KVPHPAJ7
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 09 Jul 2013 11:02:10 -0700 (PDT)
-Received: by mail-la0-f49.google.com with SMTP id ea20so4920421lab.22
-	for <xfs@oss.sgi.com>; Tue, 09 Jul 2013 11:02:09 -0700 (PDT)
-Date: Tue, 9 Jul 2013 22:02:05 +0400
-From: Glauber Costa <glommer@gmail.com>
-Subject: Re: [PATCH] [MMOTM] xfs: fix dquot isolation hang
-Message-ID: <20130709180203.GD9188@localhost.localdomain>
-References: <1373265261-30314-1-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 3B1B47F58
+	for <xfs@oss.sgi.com>; Tue,  9 Jul 2013 13:22:11 -0500 (CDT)
+Date: Tue, 9 Jul 2013 13:22:07 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH] xfs: check on-disk (not incore) btree root size in dfrag.c
+Message-ID: <20130709182206.GS20932@sgi.com>
+References: <4F7225BA.40200@redhat.com> <51C227ED.5010108@sandeen.net>
+	<20130620170929.GY20932@sgi.com> <51DC39AC.4090003@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1373265261-30314-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <51DC39AC.4090003@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,64 +23,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: glommer@openvz.org, linux-mm@kvack.org, mhocko@suze.cz, linux-fsdevel@vger.kernel.org, akpm@linux-foundation.org, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-Michal and Andrew, here is the patch
+On Tue, Jul 09, 2013 at 11:26:20AM -0500, Eric Sandeen wrote:
+> On 6/20/13 12:09 PM, Ben Myers wrote:
+> > On Wed, Jun 19, 2013 at 04:51:41PM -0500, Eric Sandeen wrote:
+> >> On 3/27/12 3:40 PM, Eric Sandeen wrote:
+> >>> xfs_swap_extents_check_format() contains checks to make sure that
+> >>> original and the temporary files during defrag are compatible;
+> >>> Gabriel VLASIU ran into a case where xfs_fsr returned EINVAL
+> >>> because the tests found the btree root to be of size 120,
+> >>> while the fork offset was only 104; IOW, they overlapped.
+> >>>
+> >>> However, this is just due to an error in the
+> >>> xfs_swap_extents_check_format() tests, because it is checking
+> >>> the in-memory btree root size against the on-disk fork offset.
+> >>> We should be checking the on-disk sizes in both cases.
+> >>>
+> >>> This patch adds a new macro to calculate this size, and uses
+> >>> it in the tests.
+> >>>
+> >>> With this change, the filesystem image provided by Gabriel
+> >>> allows for proper file degragmentation.
+> >>
+> >> I think this and the followup patch 2/1 got lost.
+> >>
+> >> Ben, any idea?
+> > 
+> > Yeah.  Sorry Eric.
+> 
+> I see the first patch is now merged.  Can you please also merge the
+> 2nd patch?  It is also reviewed already.
 
-On Mon, Jul 08, 2013 at 04:34:21PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> The new LRU list isolation code in xfs_qm_dquot_isolate() isn't
-> completely up to date.  Firstly, it needs conversion to return enum
-> lru_status values, not raw numbers. Secondly - most importantly - it
-> fails to unlock the dquot and relock the LRU in the LRU_RETRY path.
-> This leads to deadlocks in xfstests generic/232. Fix them.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_qm.c | 10 ++++++----
->  1 file changed, 6 insertions(+), 4 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-> index 46743cf..a10a720 100644
-> --- a/fs/xfs/xfs_qm.c
-> +++ b/fs/xfs/xfs_qm.c
-> @@ -659,7 +659,7 @@ xfs_qm_dquot_isolate(
->  		trace_xfs_dqreclaim_want(dqp);
->  		list_del_init(&dqp->q_lru);
->  		XFS_STATS_DEC(xs_qm_dquot_unused);
-> -		return 0;
-> +		return LRU_REMOVED;
->  	}
->  
->  	/*
-> @@ -705,17 +705,19 @@ xfs_qm_dquot_isolate(
->  	XFS_STATS_DEC(xs_qm_dquot_unused);
->  	trace_xfs_dqreclaim_done(dqp);
->  	XFS_STATS_INC(xs_qm_dqreclaims);
-> -	return 0;
-> +	return LRU_REMOVED;
->  
->  out_miss_busy:
->  	trace_xfs_dqreclaim_busy(dqp);
->  	XFS_STATS_INC(xs_qm_dqreclaim_misses);
-> -	return 2;
-> +	return LRU_SKIP;
->  
->  out_unlock_dirty:
->  	trace_xfs_dqreclaim_busy(dqp);
->  	XFS_STATS_INC(xs_qm_dqreclaim_misses);
-> -	return 3;
-> +	xfs_dqunlock(dqp);
-> +	spin_lock(lru_lock);
-> +	return LRU_RETRY;
->  }
->  
->  static unsigned long
-> -- 
-> 1.8.3.2
-> 
+Patch still looks good in light of the crc work.  Applied.
+
+Reviewed-by: Ben Myers <bpm@sgi.com>
 
 _______________________________________________
 xfs mailing list
