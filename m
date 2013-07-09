@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E25397F5F
-	for <xfs@oss.sgi.com>; Tue,  9 Jul 2013 15:42:34 -0500 (CDT)
-Date: Tue, 9 Jul 2013 15:42:34 -0500
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B486F29DF8
+	for <xfs@oss.sgi.com>; Tue,  9 Jul 2013 15:53:21 -0500 (CDT)
+Date: Tue, 9 Jul 2013 15:53:21 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 14/15] xfs: dquot log reservations are too small
-Message-ID: <20130709204234.GU32736@sgi.com>
-References: <1372313099-8121-1-git-send-email-david@fromorbit.com>
-	<1372313099-8121-15-git-send-email-david@fromorbit.com>
-	<1372439902.8341.155.camel@chandra-dt.ibm.com>
-	<20130629024205.GF9047@dastard> <20130709193128.GT20932@sgi.com>
-	<20130709203931.GJ3438@dastard>
+Subject: Re: [PATCH 10/13] xfs: use get_unused_fd_flags(0) instead of
+	get_unused_fd()
+Message-ID: <20130709205321.GV20932@sgi.com>
+References: <cover.1372777600.git.ydroneaud@opteya.com>
+	<8d21b76c621dbfc59b2dbbfc933f96170835304d.1372777600.git.ydroneaud@opteya.com>
+	<20130708224133.GA23250@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130709203931.GJ3438@dastard>
+In-Reply-To: <20130708224133.GA23250@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,25 +25,60 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Chandra Seetharaman <sekharan@us.ibm.com>, xfs@oss.sgi.com
+To: Yann Droneaud <ydroneaud@opteya.com>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Wed, Jul 10, 2013 at 06:39:31AM +1000, Dave Chinner wrote:
-> On Tue, Jul 09, 2013 at 02:31:28PM -0500, Ben Myers wrote:
-> > Hey Dave,
+Yann,
+
+On Mon, Jul 08, 2013 at 05:41:33PM -0500, Ben Myers wrote:
+> On Tue, Jul 02, 2013 at 06:39:34PM +0200, Yann Droneaud wrote:
+> > Macro get_unused_fd() is used to allocate a file descriptor with
+> > default flags. Those default flags (0) can be "unsafe":
+> > O_CLOEXEC must be used by default to not leak file descriptor
+> > across exec().
 > > 
-> > On Sat, Jun 29, 2013 at 12:42:05PM +1000, Dave Chinner wrote:
-> > > I'll fix up the various typos and clarify the comments as you've
-> > > suggested.
+> > Instead of macro get_unused_fd(), functions anon_inode_getfd()
+> > or get_unused_fd_flags() should be used with flags given by userspace.
+> > If not possible, flags should be set to O_CLOEXEC to provide userspace
+> > with a default safe behavor.
 > > 
-> > Are you still planning on reposting this one for 3.11?
+> > In a further patch, get_unused_fd() will be removed so that
+> > new code start using anon_inode_getfd() or get_unused_fd_flags()
+> > with correct flags.
+> > 
+> > This patch replaces calls to get_unused_fd() with equivalent call to
+> > get_unused_fd_flags(0) to preserve current behavor for existing code.
+> > 
+> > The hard coded flag value (0) should be reviewed on a per-subsystem basis,
+> > and, if possible, set to O_CLOEXEC.
+> > 
+> > Signed-off-by: Yann Droneaud <ydroneaud@opteya.com>
+> >
+> > ---
+> >  fs/xfs/xfs_ioctl.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> > index 5e99968..dc5b659 100644
+> > --- a/fs/xfs/xfs_ioctl.c
+> > +++ b/fs/xfs/xfs_ioctl.c
+> > @@ -248,7 +248,7 @@ xfs_open_by_handle(
+> >  		goto out_dput;
+> >  	}
+> >  
+> > -	fd = get_unused_fd();
+> > +	fd = get_unused_fd_flags(0);
 > 
-> Yes. I was waiting for you to push out an updated tree so I could
-> rebase everything I have before reposting....
+> O_CLOEXEC should be fine in this case.
+> 
+> Reviewed-by: Ben Myers <bpm@sgi.com>
 
-Oh.  Well it's out there.  ;)
+Applied at git://oss.sgi.com/xfs/xfs.git.  Looks like I was wrong about
+O_CLOEXEC being ok here.  There may be applications which open_by_handle then
+fork/exec and expect to still be able to use that file descriptor.
 
--Ben
+Thanks,
+Ben
 
 _______________________________________________
 xfs mailing list
