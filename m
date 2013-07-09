@@ -1,19 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1A38A7F62
-	for <xfs@oss.sgi.com>; Tue,  9 Jul 2013 15:39:10 -0500 (CDT)
-Received: from eagdhcp-232-133.americas.sgi.com
-	(eagdhcp-232-133.americas.sgi.com [128.162.232.133])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 032FD30408C
-	for <xfs@oss.sgi.com>; Tue,  9 Jul 2013 13:39:09 -0700 (PDT)
-Message-ID: <51DC74EE.5010608@sgi.com>
-Date: Tue, 09 Jul 2013 15:39:10 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 6B6117F62
+	for <xfs@oss.sgi.com>; Tue,  9 Jul 2013 15:39:41 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4F5D58F8066
+	for <xfs@oss.sgi.com>; Tue,  9 Jul 2013 13:39:38 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	O97lbGMXgHxEXfvt for <xfs@oss.sgi.com>;
+	Tue, 09 Jul 2013 13:39:36 -0700 (PDT)
+Date: Wed, 10 Jul 2013 06:39:31 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 14/15] xfs: dquot log reservations are too small
+Message-ID: <20130709203931.GJ3438@dastard>
+References: <1372313099-8121-1-git-send-email-david@fromorbit.com>
+	<1372313099-8121-15-git-send-email-david@fromorbit.com>
+	<1372439902.8341.155.camel@chandra-dt.ibm.com>
+	<20130629024205.GF9047@dastard> <20130709193128.GT20932@sgi.com>
 MIME-Version: 1.0
-Subject: Fwd: Re: [PATCH 13/15] xfs: remove local fork format handling from
-	xfs_bmapi_write()
-References: <51CCF071.9000304@sgi.com>
-In-Reply-To: <51CCF071.9000304@sgi.com>
+Content-Disposition: inline
+In-Reply-To: <20130709193128.GT20932@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,47 +28,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Ben Myers <bpm@sgi.com>
+Cc: Chandra Seetharaman <sekharan@us.ibm.com>, xfs@oss.sgi.com
 
-Sorry, I did not add the mailing list.
+On Tue, Jul 09, 2013 at 02:31:28PM -0500, Ben Myers wrote:
+> Hey Dave,
+> 
+> On Sat, Jun 29, 2013 at 12:42:05PM +1000, Dave Chinner wrote:
+> > I'll fix up the various typos and clarify the comments as you've
+> > suggested.
+> 
+> Are you still planning on reposting this one for 3.11?
 
---Mark.
+Yes. I was waiting for you to push out an updated tree so I could
+rebase everything I have before reposting....
 
--------- Original Message --------
-Subject: Re: [PATCH 13/15] xfs: remove local fork format handling from 
-xfs_bmapi_write()
-Date: Thu, 27 Jun 2013 21:09:53 -0500
-From: Mark Tinguely <tinguely@sgi.com>
-To: Dave Chinner <david@fromorbit.com>
+Cheers,
 
-On 06/27/13 01:04, Dave Chinner wrote:
-> From: Dave Chinner<dchinner@redhat.com>
->
-> The conversion from local format to extent format requires
-> interpretation of the data in the fork being converted, so it cannot
-> be done in a generic way. It is up to the caller to convert the fork
-> format to extent format before calling into xfs_bmapi_write() so
-> format conversion can be done correctly.
->
-> The code in xfs_bmapi_write() to convert the format is used
-> implicitly by the attribute and directory code, but they
-> specifically zero the fork size so that the conversion does not do
-> any allocation or manipulation. Move this conversion into the
-> shortform to leaf functions for the dir/attr code so the conversions
-> are explicitly controlled by all callers.
->
-> Now we can remove the conversion code in xfs_bmapi_write.
->
-> Signed-off-by: Dave Chinner<dchinner@redhat.com>
-> ---
-
-Looks good.
-
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
