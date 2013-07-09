@@ -1,16 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3B1B47F58
-	for <xfs@oss.sgi.com>; Tue,  9 Jul 2013 13:22:11 -0500 (CDT)
-Date: Tue, 9 Jul 2013 13:22:07 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] xfs: check on-disk (not incore) btree root size in dfrag.c
-Message-ID: <20130709182206.GS20932@sgi.com>
-References: <4F7225BA.40200@redhat.com> <51C227ED.5010108@sandeen.net>
-	<20130620170929.GY20932@sgi.com> <51DC39AC.4090003@sandeen.net>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 10CD07F5A
+	for <xfs@oss.sgi.com>; Tue,  9 Jul 2013 14:07:37 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id E8022304082
+	for <xfs@oss.sgi.com>; Tue,  9 Jul 2013 12:07:33 -0700 (PDT)
+Received: from dkim1.fusionio.com (dkim1.fusionio.com [66.114.96.53]) by
+	cuda.sgi.com with ESMTP id 46josX8AUpd6D66C (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 09 Jul 2013 12:07:30 -0700 (PDT)
+Received: from mx1.fusionio.com (unknown [10.101.1.160])
+	by dkim1.fusionio.com (Postfix) with ESMTP id C1FED7C0417
+	for <xfs@oss.sgi.com>; Tue,  9 Jul 2013 13:07:29 -0600 (MDT)
+From: Josef Bacik <jbacik@fusionio.com>
+Subject: [PATCH] xfstests: exit out if _scratch_mount fails
+Date: Tue, 9 Jul 2013 15:07:27 -0400
+Message-ID: <1373396847-7975-1-git-send-email-jbacik@fusionio.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <51DC39AC.4090003@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,42 +29,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com, linxu-btrfs@vger.kernel.org
 
-On Tue, Jul 09, 2013 at 11:26:20AM -0500, Eric Sandeen wrote:
-> On 6/20/13 12:09 PM, Ben Myers wrote:
-> > On Wed, Jun 19, 2013 at 04:51:41PM -0500, Eric Sandeen wrote:
-> >> On 3/27/12 3:40 PM, Eric Sandeen wrote:
-> >>> xfs_swap_extents_check_format() contains checks to make sure that
-> >>> original and the temporary files during defrag are compatible;
-> >>> Gabriel VLASIU ran into a case where xfs_fsr returned EINVAL
-> >>> because the tests found the btree root to be of size 120,
-> >>> while the fork offset was only 104; IOW, they overlapped.
-> >>>
-> >>> However, this is just due to an error in the
-> >>> xfs_swap_extents_check_format() tests, because it is checking
-> >>> the in-memory btree root size against the on-disk fork offset.
-> >>> We should be checking the on-disk sizes in both cases.
-> >>>
-> >>> This patch adds a new macro to calculate this size, and uses
-> >>> it in the tests.
-> >>>
-> >>> With this change, the filesystem image provided by Gabriel
-> >>> allows for proper file degragmentation.
-> >>
-> >> I think this and the followup patch 2/1 got lost.
-> >>
-> >> Ben, any idea?
-> > 
-> > Yeah.  Sorry Eric.
-> 
-> I see the first patch is now merged.  Can you please also merge the
-> 2nd patch?  It is also reviewed already.
+I test some of the different mkfs options for btrfs, one set doesn't work
+properly with small file systems, so the fs won't mount.  This is fine from a
+btrfs point of view, but tests that fail to mount the scratch fs will run
+anyway, so if it's a "fill the fs" sort of test this will wreak havoc.  To fix
+this just error out of _scratch_mount fails.  Thanks,
 
-Patch still looks good in light of the crc work.  Applied.
+Signed-off-by: Josef Bacik <jbacik@fusionio.com>
+---
+ common/rc |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-Reviewed-by: Ben Myers <bpm@sgi.com>
+diff --git a/common/rc b/common/rc
+index 4de1329..f11699f 100644
+--- a/common/rc
++++ b/common/rc
+@@ -276,6 +276,10 @@ _scratch_mount_options()
+ _scratch_mount()
+ {
+     _mount -t $FSTYP `_scratch_mount_options $*`
++    if [ $? -ne 0 ]; then
++	echo "mount failed"
++	exit 1
++    fi
+ }
+ 
+ _scratch_unmount()
+-- 
+1.7.7.6
 
 _______________________________________________
 xfs mailing list
