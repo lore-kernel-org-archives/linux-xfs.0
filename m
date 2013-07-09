@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, master,
+Subject: [XFS updates] XFS development tree branch, for-next,
 	updated. for-linus-v3.11-rc1-6-gb0a9dab
-Message-Id: <20130709215245.A4D0629E1E@oss.sgi.com>
-Date: Tue,  9 Jul 2013 16:52:45 -0500 (CDT)
+Message-Id: <20130709215255.79F1529E22@oss.sgi.com>
+Date: Tue,  9 Jul 2013 16:52:54 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,7 +23,7 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, master has been updated
+The branch, for-next has been updated
   b0a9dab xfs: dquot log reservations are too small
   f3508bc xfs: remove local fork format handling from xfs_bmapi_write()
       from  862a62937e76a91da218c1ee4dceb7b0700fed67 (commit)
