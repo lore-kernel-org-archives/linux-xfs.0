@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1BB187F82
-	for <xfs@oss.sgi.com>; Mon,  8 Jul 2013 19:56:24 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9C7C1AC003
-	for <xfs@oss.sgi.com>; Mon,  8 Jul 2013 17:56:22 -0700 (PDT)
-Received: from imap.thunk.org (li9-11.members.linode.com [67.18.176.11]) by
-	cuda.sgi.com with ESMTP id 3XSlFUZUXytMusjl (version=TLSv1
-	cipher=AES128-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 08 Jul 2013 17:56:21 -0700 (PDT)
-Date: Mon, 8 Jul 2013 20:56:13 -0400
-From: Theodore Ts'o <tytso@mit.edu>
-Subject: Re: Some baseline tests on new hardware (was Re: [PATCH] xfs:
-	optimise CIL insertion during transaction commit [RFC])
-Message-ID: <20130709005613.GA6000@thunk.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 751627F50
+	for <xfs@oss.sgi.com>; Mon,  8 Jul 2013 20:15:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 561F8304066
+	for <xfs@oss.sgi.com>; Mon,  8 Jul 2013 18:15:37 -0700 (PDT)
+Received: from dkim2.fusionio.com (dkim2.fusionio.com [66.114.96.54]) by
+	cuda.sgi.com with ESMTP id buMTt2iSSct3AUTZ (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 08 Jul 2013 18:15:36 -0700 (PDT)
+Received: from mx1.fusionio.com (unknown [10.101.1.160])
+	by dkim2.fusionio.com (Postfix) with ESMTP id 91ECF9A069A
+	for <xfs@oss.sgi.com>; Mon,  8 Jul 2013 19:15:35 -0600 (MDT)
+MIME-Version: 1.0
+From: Chris Mason <chris.mason@fusionio.com>
+In-Reply-To: <20130708124453.GC3438@dastard>
 References: <1372657476-9241-1-git-send-email-david@fromorbit.com>
 	<20130708124453.GC3438@dastard>
-	<20130708135953.GF5988@quack.suse.cz> <51DAD943.6050703@gmail.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <51DAD943.6050703@gmail.com>
+Message-ID: <20130709011533.3855.97802@localhost.localdomain>
+Subject: Re: Some baseline tests on new hardware (was Re: [PATCH] xfs:
+	optimise CIL insertion during transaction commit [RFC])
+Date: Mon, 8 Jul 2013 21:15:33 -0400
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,24 +33,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Marco Stornelli <marco.stornelli@gmail.com>
-Cc: linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
+Cc: linux-fsdevel@vger.kernel.org
 
-On Mon, Jul 08, 2013 at 05:22:43PM +0200, Marco Stornelli wrote:
+Quoting Dave Chinner (2013-07-08 08:44:53)
+> [cc fsdevel because after all the XFS stuff I did a some testing on
+> mmotm w.r.t per-node LRU lock contention avoidance, and also some
+> scalability tests against ext4 and btrfs for comparison on some new
+> hardware. That bit ain't pretty. ]
 > 
-> Funny, if I well remember Google guys switched android from yaffs2
-> to ext4 due to its superiority on SMP :)
+> And, well, the less said about btrfs unlinks the better:
+> 
+> +  37.14%  [kernel]  [k] _raw_spin_unlock_irqrestore
+> +  33.18%  [kernel]  [k] __write_lock_failed
+> +  17.96%  [kernel]  [k] __read_lock_failed
+> +   1.35%  [kernel]  [k] _raw_spin_unlock_irq
+> +   0.82%  [kernel]  [k] __do_softirq
+> +   0.53%  [kernel]  [k] btrfs_tree_lock
+> +   0.41%  [kernel]  [k] btrfs_tree_read_lock
+> +   0.41%  [kernel]  [k] do_raw_read_lock
+> +   0.39%  [kernel]  [k] do_raw_write_lock
+> +   0.38%  [kernel]  [k] btrfs_clear_lock_blocking_rw
+> +   0.37%  [kernel]  [k] free_extent_buffer
+> +   0.36%  [kernel]  [k] btrfs_tree_read_unlock
+> +   0.32%  [kernel]  [k] do_raw_write_unlock
+> 
 
-The bigger reason why was because raw NAND flash doesn't really make
-sense any more; especially as the feature size of flash cells has
-shrunk and with the introduction of MLC and TLC, you really need to
-use hardware assist to make flash sufficiently reliable.  Modern flash
-storage uses dynamic adjustment of voltage levels as the flash cells
-age, and error correcting codes to compensate for flash reliability
-challenges.  This means accessing flash using eMMC, SATA, SAS, etc.,
-and that rules out YAFFS2.
+Hi Dave,
 
-						- Ted
+Thanks for doing these runs.  At least on Btrfs the best way to resolve
+the tree locking today is to break things up into more subvolumes.  I've
+got another run at the root lock contention in the queue after I get
+the skiplists in place in a few other parts of the Btrfs code.
+
+-chris
 
 _______________________________________________
 xfs mailing list
