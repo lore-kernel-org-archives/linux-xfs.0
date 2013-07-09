@@ -1,13 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E84A67F62
-	for <xfs@oss.sgi.com>; Tue,  9 Jul 2013 15:00:25 -0500 (CDT)
-Date: Tue, 9 Jul 2013 15:00:25 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C42977F66
+	for <xfs@oss.sgi.com>; Tue,  9 Jul 2013 15:37:24 -0500 (CDT)
+Date: Tue, 9 Jul 2013 15:37:20 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: XFS queue for 3.11-rc1
-Message-ID: <20130709200025.GT32736@sgi.com>
+Subject: Re: [PATCH] xfs: clean up unused codes at xfs_bulkstat()
+Message-ID: <20130709203720.GU20932@sgi.com>
+References: <51D18964.2030708@oracle.com>
+ <20130702103046.GD14996@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <20130702103046.GD14996@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,39 +23,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>, Dave Chinner <david@fromorbit.com>, Jeff Liu <jeff.liu@oracle.com>, Chandra Seetharaman <sekharan@us.ibm.com>, Carlos Maiolino <cmaiolino@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Hi,
+On Tue, Jul 02, 2013 at 08:30:46PM +1000, Dave Chinner wrote:
+> On Mon, Jul 01, 2013 at 09:51:32PM +0800, Jeff Liu wrote:
+> > From: Jie Liu <jeff.liu@oracle.com>
+> > 
+> > There are some unused codes at xfs_bulkstat():
+> > 
+> > - Variable bp is defined to point to the on-disk inode cluster
+> >   buffer, but it proved to be of no practical help.
+> > 
+> > - We process the chunks of good inodes which were fetched by iterating
+> >   btree records from an AG.  When processing inodes from each chunk,
+> >   the code recomputing agbno if run into the first inode of a cluster,
+> >   however, the agbno is not being used thereafter.
+> > 
+> > This patch tries to clean up those things.
+> > 
+> > Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+> 
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-Here is what I currently have left on the queue for 3.11-rc1:
-
-Eric:
-- xfs: use XFS_BMAP_BMDR_SPACE vs. XFS_BROOT_SIZE_ADJ
-
-Dave:
-- [PATCH 01/15] xfs: update mount options documentation
-- [PATCH 13/15] xfs: remove local fork format handling from xfs_bmapi_write()
-- [PATCH 14/15] xfs: dquot log reservations are too small
-
-Chandra:
-- [PATCH v10 08/11] xfs: Add pquota fields where gquota is used.
-- [PATCH v10 09/11] xfs: Start using pquotaino from the superblock.
-- [PATCH v10 10/11] quota: Add proper versioning support to fs_quota_stat
-- [PATCH v10 11/11] xfs: Use new qs_pquota field in fs_quota_stat for Q_XGETQSTAT
-
-Jeff:
-- [PATCH] xfs: clean up unused codes at xfs_bulkstat()
-
-Carlos:
-- [PATCH] xfs: fix sgid inheritance for subdirectories inheriting default acls [V3]
-
-Some of these are ready to go and some still need review.  Maybe we can
-still get them in.  If I'm missing any please give a shout.  I'd like to do
-another pull request on Thursday or Friday.
-
-Thanks,
-	Ben
+Applied.
 
 _______________________________________________
 xfs mailing list
