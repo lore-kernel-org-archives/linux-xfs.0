@@ -1,20 +1,44 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 71B6329E15
-	for <xfs@oss.sgi.com>; Tue,  9 Jul 2013 16:04:14 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5423B304077
-	for <xfs@oss.sgi.com>; Tue,  9 Jul 2013 14:04:11 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	SW8nouPeyqbc2rMN for <xfs@oss.sgi.com>;
-	Tue, 09 Jul 2013 14:04:08 -0700 (PDT)
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/3] xfs: update mount options documentation
-Date: Wed, 10 Jul 2013 07:03:59 +1000
-Message-Id: <1373403841-16612-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1373403841-16612-1-git-send-email-david@fromorbit.com>
-References: <1373403841-16612-1-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 970B829E0C
+	for <xfs@oss.sgi.com>; Tue,  9 Jul 2013 16:07:33 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3B323AC003
+	for <xfs@oss.sgi.com>; Tue,  9 Jul 2013 14:07:33 -0700 (PDT)
+Received: from e33.co.us.ibm.com (e33.co.us.ibm.com [32.97.110.151]) by
+	cuda.sgi.com with ESMTP id qdca5aFPI52rn3hb (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 09 Jul 2013 14:07:31 -0700 (PDT)
+Received: from /spool/local
+	by e33.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	Violators will be prosecuted
+	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
+	Tue, 9 Jul 2013 21:06:40 -0000
+Received: from d03relay01.boulder.ibm.com (d03relay01.boulder.ibm.com
+	[9.17.195.226])
+	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id 6913119D8042
+	for <xfs@oss.sgi.com>; Tue,  9 Jul 2013 15:06:26 -0600 (MDT)
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by d03relay01.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	r69L6RBa102440 for <xfs@oss.sgi.com>; Tue, 9 Jul 2013 15:06:28 -0600
+Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id r69L6RiG000516
+	for <xfs@oss.sgi.com>; Tue, 9 Jul 2013 15:06:27 -0600
+Subject: Re: [PATCH v9 4/6] xfs: Start using pquotaino from the superblock.
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+In-Reply-To: <20130709012137.GF3438@dastard>
+References: <1372042107-27332-1-git-send-email-sekharan@us.ibm.com>
+	<1372042107-27332-5-git-send-email-sekharan@us.ibm.com>
+	<20130625063135.GU29376@dastard>
+	<1372693830.9777.4.camel@chandra-dt.ibm.com>
+	<20130704011208.GR14996@dastard>
+	<1373325630.9777.286.camel@chandra-dt.ibm.com>
+	<20130709012137.GF3438@dastard>
+Date: Tue, 09 Jul 2013 16:06:26 -0500
+Message-ID: <1373403986.6020.12.camel@chandra-dt.ibm.com>
+Mime-Version: 1.0
+Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,424 +47,255 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: bpm@sgi.com
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+On Tue, 2013-07-09 at 11:21 +1000, Dave Chinner wrote:
+> On Mon, Jul 08, 2013 at 06:20:30PM -0500, Chandra Seetharaman wrote:
+> > On Thu, 2013-07-04 at 11:12 +1000, Dave Chinner wrote:
+> > > On Mon, Jul 01, 2013 at 10:50:30AM -0500, Chandra Seetharaman wrote:
+> > > > Hi Dave,
+> > > > 
+> > > > I sent this email on 6/25 (just before my reply on 5/6 w.r.t adding the
+> > > > test to xfstests). Since I didn't get any response from you on this and
+> > > > got reply on the other one, I concluded that you accepted my
+> > > > justification/clarification.
+> > > > 
+> > > > I just looked at the archives and do not see my original email :(... but
+> > > > is intact in my sent folder!!
+> > > > 
+> > > > Please see if my justification below is valid.
+> > > > 
+> > > > Chandra
+> > > > 
+> > > > On Tue, 2013-06-25 at 16:31 +1000, Dave Chinner wrote:
+> > > > > On Sun, Jun 23, 2013 at 09:48:25PM -0500, Chandra Seetharaman wrote:
+> > > > > > Start using pquotino and define a macro to check if the
+> > > > > > superblock has pquotino.
+> > > > > > 
+> > > > > > Keep backward compatibilty by alowing mount of older superblock
+> > > > > > with no separate pquota inode.
+> > > > > > 
+> > > > > > Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+> > > > > > ---
+> > > > > >  fs/xfs/xfs_fsops.c             |    3 +-
+> > > > > >  fs/xfs/xfs_mount.c             |   51 +++++++++++++++++++++++++++++++--------
+> > > > > >  fs/xfs/xfs_qm.c                |   22 +++++++++--------
+> > > > > >  fs/xfs/xfs_qm_syscalls.c       |   24 ++++++++++++++++--
+> > > > > >  fs/xfs/xfs_quota.h             |    8 ------
+> > > > > >  fs/xfs/xfs_sb.h                |   16 +++++++++++-
+> > > > > >  fs/xfs/xfs_super.c             |   14 ++++++----
+> > > > > >  include/uapi/linux/dqblk_xfs.h |    1 +
+> > > > > >  8 files changed, 99 insertions(+), 40 deletions(-)
+> > > > > > 
+> > > > > > diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> > > > > > index 614eb0c..3bf05f4 100644
+> > > > > > --- a/fs/xfs/xfs_fsops.c
+> > > > > > +++ b/fs/xfs/xfs_fsops.c
+> > > > > > @@ -501,7 +501,8 @@ xfs_growfs_data_private(
+> > > > > >  				error, agno);
+> > > > > >  			break;
+> > > > > >  		}
+> > > > > > -		xfs_sb_to_disk(XFS_BUF_TO_SBP(bp), &mp->m_sb, XFS_SB_ALL_BITS);
+> > > > > > +		xfs_sb_to_disk(XFS_BUF_TO_SBP(bp), &mp->m_sb,
+> > > > > > +				xfs_sb_all_bits(&mp->m_sb));
+> > > > > 
+> > > > > I think you could still pass XFS_SB_ALL_BITS to xfs_sb_to_disk(),
+> > > > > and do the XFS_SB_PQUOTINO filtering inside xfs_sb_quota_to_disk().
+> > > > > 
+> > > > > Actually xfs_sb_all_bits() is only used here, and it seems to me
+> > > > > that it is not necessary as we do a pquota support check inside
+> > > > > xfs_sb_to_disk() and can handle this in that place...
+> > > > 
+> > > > Yes, this is the only place that uses XFS_SB_ALL_BITS, and the purpose
+> > > > is to copy over the superblock to secondary.
+> > > > 
+> > > > The change I made ensures that the caller does what is correct. i.e if
+> > > > it is copying an earlier version of superblock, it does not try to copy
+> > > > the pquotino, and if it uses the newer version of superblock it copies
+> > > > over the pquotino.
+> > > 
+> > > The caller does not need to know anything about how the quota bits
+> > > are encoded in the superblock.
+> > 
+> > Caller doesn't need to know about quota bits, that is why I encapsulated
+> > it into the function xfs_sb_all_bits().
+> 
+> Requiring a function at the caller site to filter bits out is saying
+> "the caller needs to know it has to filter certain options out".
+> 
+> What happens if we add a new piece of optional functionality that is
+> conditional for superblock writeback? So sometimes we need to filter
+> only PQUOTINO_BIT, sometimes we nee dto filter  FOO_BIT, sometimes
+> we need to filter BAR_BIT, and so on?
+> 
+> What you are proposing effectively sets us down the path of having
+> to do this in future:
+> 
+> 	if (xfs_sb_version_hasfoo)
+> 		xfs_sb_to_disk(XFS_SB_FOO_BIT)
+> 	if (xfs_sb_version_hasbar)
+> 		xfs_sb_to_disk(XFS_SB_BAR_BIT)
+> 	xfs_sb_to_disk((XFS_SB_ALL_BITS & ~(XFS_SB_FOO_BIT|XFS_SB_BAR_BIT)));
+> 
+> All this needs to be handled in xfs_sb_to_disk().
+> 
+> > > That's the reason for encapsulating such on-disk format conversion
+> > > inside xfs_sb_to/from_disk(). Same with all the mount flags and so on
+> > > - the differences between what the code uses and what is on disk is
+> > > all encapsulated inside xfs_sb_quota_to/from_disk.
+> > 
+> > Encapsulation in xfs_sb_to_disk() is not enough for this situation. If
+> > both PQUOTINO and GQUOTINO is set for version 4 of the superblock,
+> > xfs_sb_to_disk will not be able to know if it has to treat PQUOTINO as
+> > valid or GQUOTINO as valid.
+> 
+> The contents of from->sb_qflags tells you which one is valid.
+> Indeed, you have to look at from->sb_qflags to set the OQUOTA flags
+> correctly in to->sb_qflags, so I don't see why you can't use
+> from->sb_qflags to determine which of G/PQUOTINO needs to copied
+> across to to->sb_gquotino....
+> 
 
-Because it's horribly out of date.
+Ok. That is a good option. So, this is what I am thinking that I will
+add before the PQUOTINO check in xfs_sb_quota_to_disk():
 
-And mark various deprecated options as deprecated and give them a
-removal date.
+        if ((*fields & XFS_SB_PQUOTINO) && (*fields & XFS_SB_GQUOTINO)) {
+                /*
+                 * PQUOTINO and GQUOTINO cannot be used together in versions
+                 * earlier than version 5 of superblock. If used, use sb_flags
+                 * to resolve which one should be set.
+                 */
+                if (from->sb_qflags & XFS_PQUOTA_ACCT)
+                        *fields &= ~XFS_SB_GQUOTINO;
+                else
+                        *fields &= ~XFS_SB_PQUOTINO;
+        }
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
----
- Documentation/filesystems/xfs.txt | 317 +++++++++++++++++++++++++-------------
- 1 file changed, 209 insertions(+), 108 deletions(-)
 
-diff --git a/Documentation/filesystems/xfs.txt b/Documentation/filesystems/xfs.txt
-index 83577f0..12525b1 100644
---- a/Documentation/filesystems/xfs.txt
-+++ b/Documentation/filesystems/xfs.txt
-@@ -18,6 +18,8 @@ Mount Options
- =============
- 
- When mounting an XFS filesystem, the following options are accepted.
-+For boolean mount options, the names with the (*) suffix is the
-+default behaviour.
- 
-   allocsize=size
- 	Sets the buffered I/O end-of-file preallocation size when
-@@ -25,97 +27,128 @@ When mounting an XFS filesystem, the following options are accepted.
- 	Valid values for this option are page size (typically 4KiB)
- 	through to 1GiB, inclusive, in power-of-2 increments.
- 
--  attr2/noattr2
--	The options enable/disable (default is disabled for backward
--	compatibility on-disk) an "opportunistic" improvement to be
--	made in the way inline extended attributes are stored on-disk.
--	When the new form is used for the first time (by setting or
--	removing extended attributes) the on-disk superblock feature
--	bit field will be updated to reflect this format being in use.
-+	The default behaviour is for dynamic end-of-file
-+	preallocation size, which uses a set of heuristics to
-+	optimise the preallocation size based on the current
-+	allocation patterns within the file and the access patterns
-+	to the file. Specifying a fixed allocsize value turns off
-+	the dynamic behaviour.
-+
-+  attr2
-+  noattr2
-+	The options enable/disable an "opportunistic" improvement to
-+	be made in the way inline extended attributes are stored
-+	on-disk.  When the new form is used for the first time when
-+	attr2 is selected (either when setting or removing extended
-+	attributes) the on-disk superblock feature bit field will be
-+	updated to reflect this format being in use.
-+
-+	The default behaviour is determined by the on-disk feature
-+	bit indicating that attr2 behaviour is active. If either
-+	mount option it set, then that becomes the new default used
-+	by the filesystem.
- 
- 	CRC enabled filesystems always use the attr2 format, and so
- 	will reject the noattr2 mount option if it is set.
- 
--  barrier
--	Enables the use of block layer write barriers for writes into
--	the journal and unwritten extent conversion.  This allows for
--	drive level write caching to be enabled, for devices that
--	support write barriers.
-+  barrier (*)
-+  nobarrier
-+	Enables/disables the use of block layer write barriers for
-+	writes into the journal and for data integrity operations.
-+	This allows for drive level write caching to be enabled, for
-+	devices that support write barriers.
- 
-   discard
--	Issue command to let the block device reclaim space freed by the
--	filesystem.  This is useful for SSD devices, thinly provisioned
--	LUNs and virtual machine images, but may have a performance
--	impact.
--
--  dmapi
--	Enable the DMAPI (Data Management API) event callouts.
--	Use with the "mtpt" option.
--
--  grpid/bsdgroups and nogrpid/sysvgroups
--	These options define what group ID a newly created file gets.
--	When grpid is set, it takes the group ID of the directory in
--	which it is created; otherwise (the default) it takes the fsgid
--	of the current process, unless the directory has the setgid bit
--	set, in which case it takes the gid from the parent directory,
--	and also gets the setgid bit set if it is a directory itself.
--
--  ihashsize=value
--	In memory inode hashes have been removed, so this option has
--	no function as of August 2007. Option is deprecated.
--
--  ikeep/noikeep
--	When ikeep is specified, XFS does not delete empty inode clusters
--	and keeps them around on disk. ikeep is the traditional XFS
--	behaviour. When noikeep is specified, empty inode clusters
--	are returned to the free space pool. The default is noikeep for
--	non-DMAPI mounts, while ikeep is the default when DMAPI is in use.
--
--  inode64
--	Indicates that XFS is allowed to create inodes at any location
--	in the filesystem, including those which will result in inode
--	numbers occupying more than 32 bits of significance.  This is
--	the default allocation option. Applications which do not handle
--	inode numbers bigger than 32 bits, should use inode32 option.
-+  nodiscard (*)
-+	Enable/disable the issuing of commands to let the block
-+	device reclaim space freed by the filesystem.  This is
-+	useful for SSD devices, thinly provisioned LUNs and virtual
-+	machine images, but may have a performance impact.
-+
-+	Note: It is currently recommended that you use the fstrim
-+	application to discard unused blocks rather than the discard
-+	mount option because the performance impact of this option
-+	is quite severe.
-+
-+  grpid/bsdgroups
-+  nogrpid/sysvgroups (*)
-+	These options define what group ID a newly created file
-+	gets.  When grpid is set, it takes the group ID of the
-+	directory in which it is created; otherwise it takes the
-+	fsgid of the current process, unless the directory has the
-+	setgid bit set, in which case it takes the gid from the
-+	parent directory, and also gets the setgid bit set if it is
-+	a directory itself.
-+
-+  filestreams
-+	Make the data allocator use the filestreams allocation mode
-+	across the entire filesystem rather than just on directories
-+	configured to use it.
-+
-+  ikeep
-+  noikeep (*)
-+	When ikeep is specified, XFS does not delete empty inode
-+	clusters and keeps them around on disk.  When noikeep is
-+	specified, empty inode clusters are returned to the free
-+	space pool.
- 
-   inode32
--	Indicates that XFS is limited to create inodes at locations which
--	will not result in inode numbers with more than 32 bits of
--	significance. This is provided for backwards compatibility, since
--	64 bits inode numbers might cause problems for some applications
--	that cannot handle large inode numbers.
--
--  largeio/nolargeio
-+  inode64 (*)
-+	When inode32 is specified, it indicates that XFS limits
-+	inode creation to locations which will not result in inode
-+	numbers with more than 32 bits of significance.
-+
-+	When inode64 is specified, it indicates that XFS is allowed
-+	to create inodes at any location in the filesystem,
-+	including those which will result in inode numbers occupying
-+	more than 32 bits of significance. 
-+
-+	inode32 is provided for backwards compatibility with older
-+	systems and applications, since 64 bits inode numbers might
-+	cause problems for some applications that cannot handle
-+	large inode numbers.  If applications are in use which do
-+	not handle inode numbers bigger than 32 bits, the inode32
-+	option should be specified.
-+
-+
-+  largeio
-+  nolargeio (*)
- 	If "nolargeio" is specified, the optimal I/O reported in
--	st_blksize by stat(2) will be as small as possible to allow user
--	applications to avoid inefficient read/modify/write I/O.
--	If "largeio" specified, a filesystem that has a "swidth" specified
--	will return the "swidth" value (in bytes) in st_blksize. If the
--	filesystem does not have a "swidth" specified but does specify
--	an "allocsize" then "allocsize" (in bytes) will be returned
--	instead.
--	If neither of these two options are specified, then filesystem
--	will behave as if "nolargeio" was specified.
-+	st_blksize by stat(2) will be as small as possible to allow
-+	user applications to avoid inefficient read/modify/write
-+	I/O.  This is typically the page size of the machine, as
-+	this is the granularity of the page cache.
-+
-+	If "largeio" specified, a filesystem that was created with a
-+	"swidth" specified will return the "swidth" value (in bytes)
-+	in st_blksize. If the filesystem does not have a "swidth"
-+	specified but does specify an "allocsize" then "allocsize"
-+	(in bytes) will be returned instead. Otherwise the behaviour
-+	is the same as if "nolargeio" was specified.
- 
-   logbufs=value
--	Set the number of in-memory log buffers.  Valid numbers range
--	from 2-8 inclusive.
--	The default value is 8 buffers for filesystems with a
--	blocksize of 64KiB, 4 buffers for filesystems with a blocksize
--	of 32KiB, 3 buffers for filesystems with a blocksize of 16KiB
--	and 2 buffers for all other configurations.  Increasing the
--	number of buffers may increase performance on some workloads
--	at the cost of the memory used for the additional log buffers
--	and their associated control structures.
-+	Set the number of in-memory log buffers.  Valid numbers
-+	range from 2-8 inclusive.
-+
-+	The default value is 8 buffers.
-+
-+	If the memory cost of 8 log buffers is too high on small
-+	systems, then it may be reduced at some cost to performance
-+	on metadata intensive workloads. The logbsize option below
-+	controls the size of each buffer and so is also relevent to
-+	this case.
- 
-   logbsize=value
--	Set the size of each in-memory log buffer.
--	Size may be specified in bytes, or in kilobytes with a "k" suffix.
--	Valid sizes for version 1 and version 2 logs are 16384 (16k) and
--	32768 (32k).  Valid sizes for version 2 logs also include
--	65536 (64k), 131072 (128k) and 262144 (256k).
--	The default value for machines with more than 32MiB of memory
--	is 32768, machines with less memory use 16384 by default.
-+	Set the size of each in-memory log buffer.  The size may be
-+	specified in bytes, or in kilobytes with a "k" suffix.
-+	Valid sizes for version 1 and version 2 logs are 16384 (16k)
-+	and 32768 (32k).  Valid sizes for version 2 logs also
-+	include 65536 (64k), 131072 (128k) and 262144 (256k). The
-+	logbsize must be an integer multiple of the log
-+	stripe unit configured at mkfs time.
-+
-+	The default value for for version 1 logs is 32768, while the
-+	default value for version 2 logs is MAX(32768, log_sunit).
- 
-   logdev=device and rtdev=device
- 	Use an external log (metadata journal) and/or real-time device.
-@@ -124,16 +157,11 @@ When mounting an XFS filesystem, the following options are accepted.
- 	optional, and the log section can be separate from the data
- 	section or contained within it.
- 
--  mtpt=mountpoint
--	Use with the "dmapi" option.  The value specified here will be
--	included in the DMAPI mount event, and should be the path of
--	the actual mountpoint that is used.
--
-   noalign
--	Data allocations will not be aligned at stripe unit boundaries.
--
--  noatime
--	Access timestamps are not updated when a file is read.
-+	Data allocations will not be aligned at stripe unit
-+	boundaries. This is only relevant to filesystems created
-+	with non-zero data alignment parameters (sunit, swidth) by
-+	mkfs.
- 
-   norecovery
- 	The filesystem will be mounted without running log recovery.
-@@ -144,8 +172,14 @@ When mounting an XFS filesystem, the following options are accepted.
- 	the mount will fail.
- 
-   nouuid
--	Don't check for double mounted file systems using the file system uuid.
--	This is useful to mount LVM snapshot volumes.
-+	Don't check for double mounted file systems using the file
-+	system uuid.  This is useful to mount LVM snapshot volumes,
-+	and often used in combination with "norecovery" for mounting
-+	read-only snapshots.
-+
-+  noquota
-+	Forcibly turns off all quota accounting and enforcement
-+	within the filesystem.
- 
-   uquota/usrquota/uqnoenforce/quota
- 	User disk quota accounting enabled, and limits (optionally)
-@@ -160,24 +194,64 @@ When mounting an XFS filesystem, the following options are accepted.
- 	enforced.  Refer to xfs_quota(8) for further details.
- 
-   sunit=value and swidth=value
--	Used to specify the stripe unit and width for a RAID device or
--	a stripe volume.  "value" must be specified in 512-byte block
--	units.
--	If this option is not specified and the filesystem was made on
--	a stripe volume or the stripe width or unit were specified for
--	the RAID device at mkfs time, then the mount system call will
--	restore the value from the superblock.  For filesystems that
--	are made directly on RAID devices, these options can be used
--	to override the information in the superblock if the underlying
--	disk layout changes after the filesystem has been created.
--	The "swidth" option is required if the "sunit" option has been
--	specified, and must be a multiple of the "sunit" value.
-+	Used to specify the stripe unit and width for a RAID device
-+	or a stripe volume.  "value" must be specified in 512-byte
-+	block units. These options are only relevant to filesystems
-+	that were created with non-zero data alignment parameters.
-+
-+	The sunit and swidth parameters specified must be compatible
-+	with the existing filesystem alignment characteristics.  In
-+	general, that means the only valid changes to sunit are
-+	increasing it by a power-of-2 multiple. Valid swidth values
-+	are any integer multiple of a valid sunit value.
-+
-+	Typically the only time these mount options are necessary if
-+	after an underlying RAID device has had it's geometry
-+	modified, such as adding a new disk to a RAID5 lun and
-+	reshaping it.
- 
-   swalloc
- 	Data allocations will be rounded up to stripe width boundaries
- 	when the current end of file is being extended and the file
- 	size is larger than the stripe width size.
- 
-+  wsync
-+	When specified, all filesystem namespace operations are
-+	executed synchronously. This ensures that when the namespace
-+	operation (create, unlink, etc) completes, the change to the
-+	namespace is on stable storage. This is useful in HA setups
-+	where failover must not result in clients seeing
-+	inconsistent namespace presentation during or after a
-+	failover event.
-+
-+
-+Deprecated Mount Options
-+========================
-+
-+  delaylog/nodelaylog
-+	Delayed logging is the only logging method that XFS supports
-+	now, so these mount options are now ignored.
-+
-+	Due for removal in 3.12.
-+
-+  ihashsize=value
-+	In memory inode hashes have been removed, so this option has
-+	no function as of August 2007. Option is deprecated.
-+
-+	Due for removal in 3.12.
-+
-+  irixsgid
-+	This behaviour is now controlled by a sysctl, so the mount
-+	option is ignored.
-+
-+	Due for removal in 3.12.
-+
-+  osyncisdsync
-+  osyncisosync
-+	O_SYNC and O_DSYNC are fully supported, so there is no need
-+	for these options any more.
-+
-+	Due for removal in 3.12.
- 
- sysctls
- =======
-@@ -189,15 +263,20 @@ The following sysctls are available for the XFS filesystem:
- 	in /proc/fs/xfs/stat.  It then immediately resets to "0".
- 
-   fs.xfs.xfssyncd_centisecs	(Min: 100  Default: 3000  Max: 720000)
--  	The interval at which the xfssyncd thread flushes metadata
--  	out to disk.  This thread will flush log activity out, and
--  	do some processing on unlinked inodes.
-+	The interval at which the filesystem flushes metadata
-+	out to disk and runs internal cache cleanup routines.
- 
--  fs.xfs.xfsbufd_centisecs	(Min: 50  Default: 100	Max: 3000)
--	The interval at which xfsbufd scans the dirty metadata buffers list.
-+  fs.xfs.filestream_centisecs	(Min: 1  Default: 3000  Max: 360000)
-+	The interval at which the filesystem ages filestreams cache
-+	references and returns timed-out AGs back to the free stream
-+	pool.
- 
--  fs.xfs.age_buffer_centisecs	(Min: 100  Default: 1500  Max: 720000)
--	The age at which xfsbufd flushes dirty metadata buffers to disk.
-+  fs.xfs.speculative_prealloc_lifetime
-+		(Units: seconds   Min: 1  Default: 300  Max: 86400)
-+	The interval at which the background scanning for inodes
-+	with unused speculative preallocation runs. The scan
-+	removes unused preallocation from clean inodes and releases
-+	the unused space back to the free pool.
- 
-   fs.xfs.error_level		(Min: 0  Default: 3  Max: 11)
- 	A volume knob for error reporting when internal errors occur.
-@@ -254,9 +333,31 @@ The following sysctls are available for the XFS filesystem:
- 	by the xfs_io(8) chattr command on a directory to be
- 	inherited by files in that directory.
- 
-+  fs.xfs.inherit_nodefrag	(Min: 0  Default: 1  Max: 1)
-+	Setting this to "1" will cause the "nodefrag" flag set
-+	by the xfs_io(8) chattr command on a directory to be
-+	inherited by files in that directory.
-+
-   fs.xfs.rotorstep		(Min: 1  Default: 1  Max: 256)
- 	In "inode32" allocation mode, this option determines how many
- 	files the allocator attempts to allocate in the same allocation
- 	group before moving to the next allocation group.  The intent
- 	is to control the rate at which the allocator moves between
- 	allocation groups when allocating extents for new files.
-+
-+Deprecated Sysctls
-+==================
-+
-+  fs.xfs.xfsbufd_centisecs	(Min: 50  Default: 100	Max: 3000)
-+	Dirty metadata is now tracked by the log subsystem and
-+	flushing is driven by log space and idling demands. The
-+	xfsbufd no longer exists, so this syctl does nothing.
-+
-+	Due for removal in 3.14.
-+
-+  fs.xfs.age_buffer_centisecs	(Min: 100  Default: 1500  Max: 720000)
-+	Dirty metadata is now tracked by the log subsystem and
-+	flushing is driven by log space and idling demands. The
-+	xfsbufd no longer exists, so this syctl does nothing.
-+
-+	Due for removal in 3.14.
--- 
-1.8.3.2
+> > > > > >  	/*
+> > > > > >  	 * If quotas is completely disabled, close shop.
+> > > > > >  	 */
+> > > > > > -	if (((flags & XFS_MOUNT_QUOTA_ALL) == XFS_MOUNT_QUOTA_SET1) ||
+> > > > > > -	    ((flags & XFS_MOUNT_QUOTA_ALL) == XFS_MOUNT_QUOTA_SET2)) {
+> > > > > > +	if ((flags & XFS_MOUNT_QUOTA_ALL) == XFS_MOUNT_QUOTA_ALL) {
+> > > > > >  		mutex_unlock(&q->qi_quotaofflock);
+> > > > > >  		xfs_qm_destroy_quotainfo(mp);
+> > > > > >  		return (0);
+> > > > > 
+> > > > > This makes the assumption that userspace passes all three quota
+> > > > > types into the kernel in a single quota off call as the only way to
+> > > > > turn quotas off completely. What happens if they are turned off one
+> > > > > at a time? Shouldn't we detect when no more quotas are actually
+> > > > > enabled and then do this?
+> > > > 
+> > > > Yes, I agree that there is a difference in behavior if the user turns
+> > > > off quota one-by-one Vs turns off all quota at once. But, the behavior
+> > > > difference is not seen by the user space.  And, I did not make the
+> > > > change :)
+> > > > 
+> > > > I just included project quota into the fold.
+> > > 
+> > > Sure, but my point still stands - if userspace currently expects
+> > > quota to be turned off by turning of user+group quota at the same
+> > > time, or user+project quota at the same time, then this will no
+> > > longer turn quotas off even if u/g or u/p were the only quotas
+> > > enabled. It's an unexpected change of behaviour, especially for
+> > > filesystems that don't support the separate pquota inode...
+> > 
+> > IIUC, user space will not see any difference in behavior even if this
+> > specific code block is not present in this function. Whatever is being
+> > done in xfs_qm_destroy_quotainfo() is done by the code just below the
+> > above block in xfs_qm_scall_quotaoff(). Only additional thing
+> > xfs_qm_destroy_quotainfo() does is to clean up all other in-kernel data
+> > structures associated with quota for this mount point.
+> > 
+> > The behavior was that if _all_ the quotas are turned off at the same
+> > time, clean up all in-kernel data structures associated with quota. If
+> > the quotas were turned off one at a time, leave the in-kernel stuff even
+> > when the last quota is turned off.
+> > 
+> > I maintained the same behavior.
+> 
+> That's where I disagree. You kept the same /line of reasoning/ as the
+> original code, not the same behaviour. What I'm saying is that
+> the line of reasoning is wrong to begin with, and hence keeping it
+> is not the right thing to do.
+> 
+> Indeed, code archeology shows this line of reasoning is zero-day
+> Irix behaviour:
+> 
+> http://oss.sgi.com/cgi-bin/gitweb.cgi?p=archive/xfs-import.git;a=blob;f=fs/xfs/xfs_qm_syscalls.c;hb=0d5ad8383061fbc0a9804fbb98218750000fe032
+> 
+>  730         /*      
+>  731          * If quotas is completely disabled, close shop.
+>  732          */
+>  733         if ((flags & XFS_MOUNT_QUOTA_ALL) == XFS_MOUNT_QUOTA_ALL) {
+>  734                 mutex_unlock(&mp->QI_QOFFLOCK);
+>  735                 xfs_qm_destroy_quotainfo(mp);   
+>  736                 return (0);
+>  737         }
+> 
+> Hmmm, looks kind of familiar, doesn't it? But what's the caller
+> context?
+> 
+>  155              case Q_QUOTAOFF:
+>  156                 /*  */
+>  157                 flags = addr? 
+>  158                         xfs_qm_import_flags((uint *)addr) : 
+>  159                         XFS_ALL_QUOTA_ACCT_ENFD;
+>  160                 error = xfs_qm_scall_quotaoff(mp, flags);
+>  161  
+> 
+> And from xfs_dquot.h:
+> 
+>   95 #define XFS_ALL_QUOTA_ACCT_ENFD (XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD|\
+>   96				      XFS_PQUOTA_ACCT|XFS_PQUOTA_ENFD)
+> 
+> If no parameter was passed, the default behaviour is to turn off
+> all quotas. IOWs, this logic made sense Irix, but the linux case has no
+> such default behaviour - it only passes what userspace says to turn
+> off.
+> 
+> And that's exactly my point - these semantics made sense for Irix all
+> those years ago, but they simply don't make sense now. Hence while
+> we are touching this code we should fix it up.  i.e. if we've turned
+> off all the quotas, clean up properly.
+
+In effect, you are asking me to fix a problem that existed when xfs was
+ported to Linux.
+
+Sure, will do it.
+
+I will send a separate patch to fix the problem and change my patch
+accordingly.
+> 
+> > I understand your point that _all_ mean u/g or u/p in older version of
+> > superblock. But, the difference in behavior is not drastic and is not
+> > seen by the user space at all.
+> > 
+> > If still unconvinced, is this the code you want to see there ?
+> > 
+> > if (((flags & XFS_MOUNT_QUOTA_ALL) == XFS_MOUNT_QUOTA_ALL) &&
+> >          	xfs_sb_version_has_pquota(&mp->sb)) ||
+> >         ((flags & XFS_MOUNT_QUOTA_ALL) == XFS_MOUNT_QUOTA_SET1) ||  
+> >         ((flags & XFS_MOUNT_QUOTA_ALL) == XFS_MOUNT_QUOTA_SET2)) {
+> > :
+> > :
+> > }
+> 
+> No. If, as a result of turning off quotas, there are no active
+> quotas then turn off the quota subsystem.  mp->m_qflags will tell us
+> exactly what quota is still running when we get to this point...
+> 
+> Cheers,
+> 
+> Dave.
+
 
 _______________________________________________
 xfs mailing list
