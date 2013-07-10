@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id A6F6D7F5D
-	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 05:01:04 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 1CB097F3F
+	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 08:14:10 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 94FC230407A
-	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 03:01:01 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0FD018F8035
+	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 06:14:07 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id uBxwIqhdOIWVN4lL (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 10 Jul 2013 06:14:06 -0700 (PDT)
+Message-ID: <51DD5E26.7020709@oracle.com>
+Date: Wed, 10 Jul 2013 21:14:14 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Date: Wed, 10 Jul 2013 12:00:57 +0200
-From: Yann Droneaud <ydroneaud@opteya.com>
-Subject: Re: [PATCH 10/13] xfs: use =?UTF-8?Q?get=5Funused=5Ffd=5Fflags=28?=
-	=?UTF-8?Q?=30=29=20instead=20of=20get=5Funused=5Ffd=28=29?=
-In-Reply-To: <20130709205321.GV20932@sgi.com>
-References: <cover.1372777600.git.ydroneaud@opteya.com>
-	<8d21b76c621dbfc59b2dbbfc933f96170835304d.1372777600.git.ydroneaud@opteya.com>
-	<20130708224133.GA23250@sgi.com> <20130709205321.GV20932@sgi.com>
-Message-ID: <70a3a6971c3127226563e9538ae53bec@meuh.org>
+Subject: Re: [PATCH] xfs: fix s_max_bytes to MAX_LFS_FILESIZE if needed
+References: <5167E160.3020800@oracle.com> <51DCFF04.9070606@oracle.com>
+	<20130710064855.GQ3438@dastard>
+In-Reply-To: <20130710064855.GQ3438@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,40 +25,86 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: ydroneaud@opteya.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Michael L. Semon" <mlsemon35@gmail.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-SGksCgpMZSAwOS4wNy4yMDEzIDIyOjUzLCBCZW4gTXllcnMgYSDDqWNyaXTCoDoKPiBPbiBNb24s
-IEp1bCAwOCwgMjAxMyBhdCAwNTo0MTozM1BNIC0wNTAwLCBCZW4gTXllcnMgd3JvdGU6Cj4+IE9u
-IFR1ZSwgSnVsIDAyLCAyMDEzIGF0IDA2OjM5OjM0UE0gKzAyMDAsIFlhbm4gRHJvbmVhdWQgd3Jv
-dGU6Cgo+PiA+IGRpZmYgLS1naXQgYS9mcy94ZnMveGZzX2lvY3RsLmMgYi9mcy94ZnMveGZzX2lv
-Y3RsLmMKPj4gPiBpbmRleCA1ZTk5OTY4Li5kYzViNjU5IDEwMDY0NAo+PiA+IC0tLSBhL2ZzL3hm
-cy94ZnNfaW9jdGwuYwo+PiA+ICsrKyBiL2ZzL3hmcy94ZnNfaW9jdGwuYwo+PiA+IEBAIC0yNDgs
-NyArMjQ4LDcgQEAgeGZzX29wZW5fYnlfaGFuZGxlKAo+PiA+ICAJCWdvdG8gb3V0X2RwdXQ7Cj4+
-ID4gIAl9Cj4+ID4KPj4gPiAtCWZkID0gZ2V0X3VudXNlZF9mZCgpOwo+PiA+ICsJZmQgPSBnZXRf
-dW51c2VkX2ZkX2ZsYWdzKDApOwo+PiAKPj4gT19DTE9FWEVDIHNob3VsZCBiZSBmaW5lIGluIHRo
-aXMgY2FzZS4KPj4gCj4+IFJldmlld2VkLWJ5OiBCZW4gTXllcnMgPGJwbUBzZ2kuY29tPgo+IAo+
-IEFwcGxpZWQgYXQgZ2l0Oi8vb3NzLnNnaS5jb20veGZzL3hmcy5naXQuICBMb29rcyBsaWtlIEkg
-d2FzIHdyb25nIGFib3V0Cj4gT19DTE9FWEVDIGJlaW5nIG9rIGhlcmUuICBUaGVyZSBtYXkgYmUg
-YXBwbGljYXRpb25zIHdoaWNoIAo+IG9wZW5fYnlfaGFuZGxlIHRoZW4KPiBmb3JrL2V4ZWMgYW5k
-IGV4cGVjdCB0byBzdGlsbCBiZSBhYmxlIHRvIHVzZSB0aGF0IGZpbGUgZGVzY3JpcHRvci4KPiAK
-Ck9LLCBpdCdzIHZlcnkgaW1wb3J0YW50IHRvIG5vdCBjYXVzZSByZWdyZXNzaW9uIGhlcmUuCgpG
-b3IgdGhlIHJlY29yZCwgeGZzX29wZW5fYnlfaGFuZGxlKCkgaXMgbm90IHJlbGF0ZWQgdG8gCm9w
-ZW5fYnlfaGFuZGxlX2F0KCkgc3lzY2FsbC4KCkl0J3MgYW4gaW9jdGwgKFhGU19JT0NfT1BFTl9C
-WV9IQU5ETEUpIHdoaWNoIGlzIHVzZWQgYnkgeGZzcHJvZ3MncyAKbGliaGFuZGxlCmluIGZ1bmN0
-aW9ucyBvcGVuX2J5X2ZzaGFuZGxlKCkgYW5kIG9wZW5fYnlfaGFuZGxlKCkuCgpodHRwOi8vc291
-cmNlcy5kZWJpYW4ubmV0L3NyYy94ZnNwcm9ncy8zLjEuOS9saWJoYW5kbGUvaGFuZGxlLmM/aGw9
-Mjg0I0wyODQKaHR0cDovL3NvdXJjZXMuZGViaWFuLm5ldC9zcmMveGZzcHJvZ3MvMy4xLjkvbGli
-aGFuZGxlL2hhbmRsZS5jP2hsPTMwOCNMMzA4CgpBY2NvcmRpbmcgdG8gY29kZXNlYXJjaC5kZWJp
-YW4ub3JnLCBsaWJoYW5kbGUncyBvcGVuX2J5X2hhbmRsZSgpIGlzIG9ubHkgCnVzZWQKYnkgeGZz
-ZHVtcAoKaHR0cDovL3NvdXJjZXMuZGViaWFuLm5ldC9zcmMveGZzZHVtcC8zLjEuMS9yZXN0b3Jl
-L3RyZWUuYz9obD0yNTM0I0wyNTM0CgpTbyB0aGVyZSdzIG5vIG1hbnkgKmtub3duKiB1c2VycyBv
-ZiB0aGlzIGZlYXR1cmVzIC4uLiBidXQgaXQncyBtb3JlIAppbXBvcnRhbnQKbm90IHRvIGJyZWFr
-ICp1bmtub3duKiB1c2VycyBvZiBpdC4KCkJUVywgdGhhbmtzIGZvciB0aGUgcmV2aWV3IGFuZCBh
-cHBseWluZy4KClJlZ2FyZHMuCgotLSAKWWFubiBEcm9uZWF1ZApPUFRFWUEKCl9fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZz
-QG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+Hi Dave,
+
+Thanks for the quick response.
+
+On 07/10/2013 02:48 PM, Dave Chinner wrote:
+
+> On Wed, Jul 10, 2013 at 02:28:20PM +0800, Jeff Liu wrote:
+>> Could anyone help to review this patch?
+> 
+> Sorry, I missed it.
+> 
+>>> On 32-bit machine, the s_maxbytes is larger than the MAX_LFS_FILESIZE limits if CONFIG_LBDAF is
+>>> not enabled.  Hence it's possible to create a huge file via buffered-IO write with a given offset
+>>> beyond this limitation. e.g.
+>>>
+>>> # block_size=4096
+>>> # offset=$(((2**32 - 1) * $block_size))
+>>> # xfs_io -f -c "pwrite $offset $block_size" /storage/test_file
+>>>
+>>> In this case, xfs_io will hang at the page writeback stage soon since the given offset would
+>>> cause an overflow at xfs_vm_writepage():
+>>>
+>>> end_index = offset >> PAGE_CACHE_SHIFT;
+>>> last_index = (offset - 1) >> PAGE_CACHE_SHIFT;
+>>> if (page->index >= end_index) {
+>>>                 unsigned offset_into_page = offset & (PAGE_CACHE_SIZE - 1);
+>>>
+>>>                 /*
+>>>                  * Just skip the page if it is fully outside i_size, e.g. due
+>>>                  * to a truncate operation that is in progress.
+>>>                  */
+>>>                 if (page->index >= end_index + 1 || offset_into_page == 0) {
+>>> 		^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>>>                         unlock_page(page);
+>>>                         return 0;
+>>>                 }
+>>> end_index is unsigned long so that the max value is '2^32-1 = 4294967295', and it
+>>> would be evaluated to the max value with the given offset(when writing the page offset
+>>> up to s_max_bytes) for above test case.  As a result, (page->index >= end_index + 1) is
+>>> ok as (end_index + 1) is overflowed to ZERO.
+>>>
+>>> Actually, create a file as above on 32-bit machine should be failed with EFBIG error returned
+>>> because there has strict check up at generic_write_checks() against the given offset with a
+>>> *correct* s_max_bytes.
+>>>
+>>> This patch fix the s_max_bytes to MAX_LFS_FILESIZE if the pre-calculated value is greater
+>>> than it.
+> 
+> Isn't MAX_LFS_FILESIZE defined on 32 bit systems to 8TB and the
+> problem here is that we are overflowing at 16TB? If so, that means
+> addin gthis patch will potentially cause problems with existing
+> working setups that have (sparse) files larger than 8TB on 32 bit
+> systems.
+
+Yes, but maybe I should say end_index is wrapped to zero rather than
+overflow in this situation.
+
+> 
+> So, can't we simply subtract PAGE_CACHE_SIZE from the offset
+> being returned to avoid this overflow?
+
+It seems that this change does not works to me because page->index is
+greater than end_index in most cases for large files.
+IOWs, what I mentioned in comment log is incorrect and it misled you.
+
+I worked out another patch, it looks works for this test but I need to
+run some extra tests before posting.
+
+Thanks,
+-Jeff
+
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
