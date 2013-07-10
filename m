@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 197C17F3F
-	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 16:52:22 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id EDED830408F
-	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 14:52:18 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id CCD507F3F
+	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 16:54:54 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B68498F8081
+	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 14:54:54 -0700 (PDT)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id QF6LEGdnasrn2ieu for <xfs@oss.sgi.com>;
-	Wed, 10 Jul 2013 14:52:17 -0700 (PDT)
-Date: Wed, 10 Jul 2013 23:52:14 +0200
+	with ESMTP id GcwLfYi5kG84UjYY for <xfs@oss.sgi.com>;
+	Wed, 10 Jul 2013 14:54:53 -0700 (PDT)
+Date: Wed, 10 Jul 2013 23:54:51 +0200
 From: Jan Kara <jack@suse.cz>
 Subject: Re: [PATCH v10 10/11] quota: Add proper versioning support to
 	fs_quota_stat
-Message-ID: <20130710215214.GA1641@quack.suse.cz>
+Message-ID: <20130710215451.GB1641@quack.suse.cz>
 References: <1372371914-11370-1-git-send-email-sekharan@us.ibm.com>
 	<1372371914-11370-11-git-send-email-sekharan@us.ibm.com>
 	<20130710155538.GY20932@sgi.com>
 	<20130710162602.GB32444@quack.suse.cz>
-	<20130710184704.GZ32736@sgi.com>
+	<1373489390.6020.30.camel@chandra-dt.ibm.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130710184704.GZ32736@sgi.com>
+In-Reply-To: <1373489390.6020.30.camel@chandra-dt.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,46 +33,16 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: swhiteho@redhat.com, Jan Kara <jack@suse.cz>, Chandra Seetharaman <sekharan@us.ibm.com>, xfs@oss.sgi.com
+To: Chandra Seetharaman <sekharan@us.ibm.com>
+Cc: Ben Myers <bpm@sgi.com>, Jan Kara <jack@suse.cz>, swhiteho@redhat.com, xfs@oss.sgi.com
 
-On Wed 10-07-13 13:47:04, Ben Myers wrote:
-> Hey Jan,
-> 
-> On Wed, Jul 10, 2013 at 06:26:02PM +0200, Jan Kara wrote:
+On Wed 10-07-13 15:49:50, Chandra Seetharaman wrote:
+> On Wed, 2013-07-10 at 18:26 +0200, Jan Kara wrote:
 > > On Wed 10-07-13 10:55:38, Ben Myers wrote:
 > > > Hey Chandra,
-> > > 
-> > > On Thu, Jun 27, 2013 at 05:25:13PM -0500, Chandra Seetharaman wrote:
-> > > > Added appropriate pads and code for backward compatibility.
-> > > > 
-> > > > Copied over the old version as it is different from the newer padded
-> > > > version.
-> > > > 
-> > > > New callers of the system call have to set the version of the data
-> > > > structure being passed, and kernel will fill as much data as requested.
-> > > > 
-> > > > Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-> > > 
-> > > I think we also need to
-> > > 
-> > > Cc: Jan Kara <jack@suse.cz>
-> >   Thanks for CC.
-> > 
-> > > > diff --git a/fs/gfs2/quota.c b/fs/gfs2/quota.c
-> > > > index c7c840e..ca0dccd 100644
-> > > > --- a/fs/gfs2/quota.c
-> > > > +++ b/fs/gfs2/quota.c
-> > > > @@ -1443,9 +1443,6 @@ static int gfs2_quota_get_xstate(struct super_block *sb,
-> > > >  {
-> > > >  	struct gfs2_sbd *sdp = sb->s_fs_info;
-> > > >  
-> > > > -	memset(fqs, 0, sizeof(struct fs_quota_stat));
-> > > > -	fqs->qs_version = FS_QSTAT_VERSION;
-> > > > -
-> > > >  	switch (sdp->sd_args.ar_quota) {
-> > > >  	case GFS2_QUOTA_ON:
-> > > >  		fqs->qs_flags |= (FS_QUOTA_UDQ_ENFD | FS_QUOTA_GDQ_ENFD);
+> 
+> <snip>
+> 
 > > > > diff --git a/fs/quota/quota.c b/fs/quota/quota.c
 > > > > index c7314f1..ae6526e 100644
 > > > > --- a/fs/quota/quota.c
@@ -109,21 +79,19 @@ On Wed 10-07-13 13:47:04, Ben Myers wrote:
 > > rely on the contents of qs_version field. That's ABI (and even API)
 > > breakage.
 > 
-> Looks like you are correct to me.  Seems that qs_version number was never
-> checked until this patch.
+> Agree, it is a API breakage.
 > 
-> > Unless I'm missing something, the only clean way is to use new quotactl
-> > value for the interface with version field used for input as well.
+> Will fix it by adding a new quotactl value as you suggest. 
+> Does 
 > 
-> If I understand... it would be something like this?
+> #define Q_XGETQSTAT2     XQM_CMD(8)
 > 
-> #define Q_XGETQSTATV     XQM_CMD(8)
-   Yes.
-
-> Or Q_XGETQSTAT2?
-  I don't really care but the first name looks a bit better.
+> sound good ?
+  Ben's Q_XGETQSTATV name looked a bit better to me but I don't really
+care. Whatever works for you...
 
 								Honza
+
 -- 
 Jan Kara <jack@suse.cz>
 SUSE Labs, CR
