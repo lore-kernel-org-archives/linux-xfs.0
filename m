@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, master,
+Subject: [XFS updates] XFS development tree branch, for-next,
 	updated. for-linus-v3.11-rc1-7-g42c49d7
-Message-Id: <20130710153805.724777F4E@oss.sgi.com>
-Date: Wed, 10 Jul 2013 10:38:05 -0500 (CDT)
+Message-Id: <20130710153820.B50BA7F53@oss.sgi.com>
+Date: Wed, 10 Jul 2013 10:38:20 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,7 +23,7 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, master has been updated
+The branch, for-next has been updated
   42c49d7 xfs: fix sgid inheritance for subdirectories inheriting default acls [V3]
       from  b0a9dab78aee2a479d7c226e6939d553967e4024 (commit)
 
