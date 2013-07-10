@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B55DA7F66
-	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 09:00:55 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 56C5C7F58
+	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 09:00:54 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A83E88F8049
-	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 07:00:55 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id D0C98AC008
+	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 07:00:50 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id CyoKDaR5eV8VSqYb for
-	<xfs@oss.sgi.com>; Wed, 10 Jul 2013 07:00:53 -0700 (PDT)
+	cuda.sgi.com with ESMTP id dFfxq77wlEORFCEO for
+	<xfs@oss.sgi.com>; Wed, 10 Jul 2013 07:00:49 -0700 (PDT)
 Received: from int-mx11.intmail.prod.int.phx2.redhat.com
 	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r6AE0pDt010783
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r6AE0mYB021450
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 10:00:52 -0400
+	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 10:00:48 -0400
 From: Lukas Czerner <lczerner@redhat.com>
-Subject: [PATCH 06/10] xfstests: Allow to specify RESULT_BASE directory
-Date: Wed, 10 Jul 2013 16:00:35 +0200
-Message-Id: <1373464839-31535-7-git-send-email-lczerner@redhat.com>
+Subject: [PATCH 03/10] xfstests: Refactor code for obtaining test list
+Date: Wed, 10 Jul 2013 16:00:32 +0200
+Message-Id: <1373464839-31535-4-git-send-email-lczerner@redhat.com>
 In-Reply-To: <1373464839-31535-1-git-send-email-lczerner@redhat.com>
 References: <1373464839-31535-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,44 +35,149 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Lukas Czerner <lczerner@redhat.com>
 
-This commit adds the possibility to specify RESULT_BASE directory from
-the config file, or with environment variable. The default remains the
-same "$here/results/".
+Put the code for obtaining the list of test into one place which makes
+things more readable. It will also allow us to re-init the list in the
+future if we need it.
 
 Signed-off-by: Lukas Czerner <lczerner@redhat.com>
 ---
- check         | 1 -
- common/config | 5 +++++
- 2 files changed, 5 insertions(+), 1 deletion(-)
+ check | 99 ++++++++++++++++++++++++++++++++++++-------------------------------
+ 1 file changed, 53 insertions(+), 46 deletions(-)
 
 diff --git a/check b/check
-index 2c003ae..1f41336 100755
+index 71b179b..2c003ae 100755
 --- a/check
 +++ b/check
-@@ -66,7 +66,6 @@ export FSTYP
- SUPPORTED_TESTS="[0-9][0-9][0-9] [0-9][0-9][0-9][0-9]"
- SRC_GROUPS="generic shared"
- export SRC_DIR="tests"
--export RESULT_BASE=${RESULT_BASE:="$here/results"}
+@@ -154,6 +154,55 @@ _timestamp()
+     echo -n " [$now]"
+ }
  
- usage()
- {
-diff --git a/common/config b/common/config
-index 34c99e1..39dd469 100644
---- a/common/config
-+++ b/common/config
-@@ -230,6 +230,11 @@ if [ -f "$HOST_OPTIONS" ]; then
- fi
- 
- get_next_config() {
-+	# set default RESULT_BASE
-+	if [ -z "$RESULT_BASE" ]; then
-+		export RESULT_BASE="$here/results/"
++_prepare_test_list()
++{
++	# Tests specified on the command line
++	if [ -s $tmp.arglist ]; then
++		cat $tmp.arglist > $tmp.list
++	else
++		touch $tmp.list
 +	fi
 +
- 	#  Mandatory Config values.
- 	MC=""
- 	[ -z "$EMAIL" ]          && MC="$MC EMAIL"
++	# Specified groups to include
++	for group in $GROUP_LIST; do
++		list=$(get_group_list $group)
++		if [ -z "$list" ]; then
++			echo "Group \"$group\" is empty or not defined?"
++			exit 1
++		fi
++
++		for t in $list; do
++			grep -s "^$t\$" $tmp.list >/dev/null || \
++							echo "$t" >>$tmp.list
++		done
++	done
++
++	if ! $have_test_arg && [ -z "$GROUP_LIST" ]; then
++		# no test numbers, do everything
++		get_all_tests
++	fi
++
++	# Specified groups to exclude
++	for xgroup in $XGROUP_LIST; do
++		list=$(get_group_list $xgroup)
++		if [ -z "$list" ]; then
++			echo "Group \"$xgroup\" is empty or not defined?"
++			exit 1
++		fi
++
++		trim_test_list $list
++	done
++
++	# sort the list of tests into numeric order
++	list=`sort -n $tmp.list | uniq`
++	rm -f $tmp.list $tmp.tmp $tmp.grep
++
++	if $randomize
++	then
++		list=`echo $list | awk -f randomize.awk`
++	fi
++}
++
+ # Process command arguments first.
+ while [ $# -gt 0 ]; do
+ 	case "$1" in
+@@ -164,35 +213,11 @@ while [ $# -gt 0 ]; do
+ 	-nfs)	FSTYP=nfs ;;
+ 
+ 	-g)	group=$2 ; shift ;
+-		group_list=$(get_group_list $group)
+-		if [ -z "$group_list" ]; then
+-		    echo "Group \"$group\" is empty or not defined?"
+-		    exit 1
+-		fi
+-
+-		[ ! -s $tmp.list ] && touch $tmp.list
+-		for t in $group_list; do
+-			grep -s "^$t\$" $tmp.list >/dev/null || \
+-							echo "$t" >>$tmp.list
+-		done
+-
++		GROUP_LIST="$GROUP_LIST $group"
+ 		;;
+ 
+ 	-x)	xgroup=$2 ; shift ;
+-
+-		# Note: behaviour is dependent on command line ordering of
+-		# -g and -x parameters. If there are no preceding -g commands,
+-		# this works on all tests, otherwise just the tests specified by
+-		# the early -g inclusions.
+-		[ ! -s $tmp.list ] && get_all_tests
+-
+-		group_list=$(get_group_list $xgroup)
+-		if [ -z "$group_list" ]; then
+-		    echo "Group \"$xgroup\" is empty or not defined?"
+-		    exit 1
+-		fi
+-
+-		trim_test_list $group_list
++		XGROUP_LIST="$XGROUP_LIST $xgroup"
+ 		;;
+ 
+ 	-X)	xfile=$2; shift ;
+@@ -244,7 +269,7 @@ if $have_test_arg; then
+ 
+ 			if egrep "^$test_name" $group_file >/dev/null ; then
+ 				# in group file ... OK
+-				echo $SRC_DIR/$1 >>$tmp.list
++				echo $SRC_DIR/$1 >>$tmp.arglist
+ 			else
+ 				# oops
+ 				echo "$1 - unknown test, ignored"
+@@ -256,25 +281,7 @@ if $have_test_arg; then
+ 	done
+ fi
+ 
+-if [ -s $tmp.list ]; then
+-    # found some valid test numbers ... this is good
+-    :
+-elif $have_test_arg; then
+-	# had test numbers, but none in group file ... do nothing
+-	touch $tmp.list
+-else
+-	# no test numbers, do everything
+-	get_all_tests
+-fi
+-
+-# sort the list of tests into numeric order
+-list=`sort -n $tmp.list`
+-rm -f $tmp.list $tmp.tmp $tmp.grep
+-
+-if $randomize
+-then
+-    list=`echo $list | awk -f randomize.awk`
+-fi
++_prepare_test_list
+ 
+ # we need common/rc
+ if ! . ./common/rc
 -- 
 1.8.3.1
 
