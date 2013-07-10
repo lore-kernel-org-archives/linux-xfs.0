@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 1CB097F3F
-	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 08:14:10 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 123237F3F
+	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 08:23:11 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 0FD018F8035
-	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 06:14:07 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id uBxwIqhdOIWVN4lL (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 10 Jul 2013 06:14:06 -0700 (PDT)
-Message-ID: <51DD5E26.7020709@oracle.com>
-Date: Wed, 10 Jul 2013 21:14:14 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 0488F8F8039
+	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 06:23:10 -0700 (PDT)
+Date: Wed, 10 Jul 2013 10:22:58 -0300
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH] Subject: [PATCH] xfs: fix sgid inheritance for
+	subdirectories inheriting default acls [V3]
+Message-ID: <20130710132257.GE11948@andromeda.usersys.redhat.com>
+References: <1371836753-3327-1-git-send-email-cmaiolino@redhat.com>
+	<20130708211121.GI20932@sgi.com> <20130708234235.GD3438@dastard>
+	<20130709170608.GR20932@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: fix s_max_bytes to MAX_LFS_FILESIZE if needed
-References: <5167E160.3020800@oracle.com> <51DCFF04.9070606@oracle.com>
-	<20130710064855.GQ3438@dastard>
-In-Reply-To: <20130710064855.GQ3438@dastard>
+Content-Disposition: inline
+In-Reply-To: <20130709170608.GR20932@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,80 +28,118 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Michael L. Semon" <mlsemon35@gmail.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Ben Myers <bpm@sgi.com>
+Cc: xfs@oss.sgi.com
 
-Hi Dave,
-
-Thanks for the quick response.
-
-On 07/10/2013 02:48 PM, Dave Chinner wrote:
-
-> On Wed, Jul 10, 2013 at 02:28:20PM +0800, Jeff Liu wrote:
->> Could anyone help to review this patch?
+On Tue, Jul 09, 2013 at 12:06:08PM -0500, Ben Myers wrote:
+> On Tue, Jul 09, 2013 at 09:42:35AM +1000, Dave Chinner wrote:
+> > On Mon, Jul 08, 2013 at 04:11:21PM -0500, Ben Myers wrote:
+> > > On Fri, Jun 21, 2013 at 02:45:53PM -0300, Carlos Maiolino wrote:
+> > > > XFS removes sgid bits of subdirectories under a directory containing a default
+> > > > acl.
+> > > > 
+> > > > When a default acl is set, it implies xfs to call xfs_setattr_nonsize() in its
+> > > > code path. Such function is shared among mkdir and chmod system calls, and
+> > > > does some checks unneeded by mkdir (calling inode_change_ok()). Such checks
+> > > > remove sgid bit from the inode after it has been granted.
+> > > > 
+> > > > With this patch, we extend the meaning of XFS_ATTR_NOACL flag to avoid these
+> > > > checks when acls are being inherited (thanks hch).
+> > > > 
+> > > > Also, xfs_setattr_mode, doesn't need to re-check for group id and capabilities
+> > > > permissions, this only implies in another try to remove sgid bit from the
+> > > > directories. Such check is already done either on inode_change_ok() or
+> > > > xfs_setattr_nonsize().
+> > > > 
+> > > > Changelog:
+> > > > 
+> > > > V2: Extends the meaning of XFS_ATTR_NOACL instead of wrap the tests into another
+> > > >     function
+> > > > 
+> > > > V3: Remove S_ISDIR check in xfs_setattr_nonsize() from the patch
+> > > > 
+> > > > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> > > >  
+> > > > -	if (mp->m_flags & XFS_MOUNT_RDONLY)
+> > > > -		return XFS_ERROR(EROFS);
+> > > > +	/* If acls are being inherited, we already have this checked */
+> > > > +	if (!(flags & XFS_ATTR_NOACL)) {
+> > > > +		if (mp->m_flags & XFS_MOUNT_RDONLY)
+> > > > +			return XFS_ERROR(EROFS);
+> > > >  
+> > > > -	if (XFS_FORCED_SHUTDOWN(mp))
+> > > > -		return XFS_ERROR(EIO);
+> > > > +		if (XFS_FORCED_SHUTDOWN(mp))
+> > > > +			return XFS_ERROR(EIO);
+> > > >  
+> > > > -	error = -inode_change_ok(inode, iattr);
+> > > > -	if (error)
+> > > > -		return XFS_ERROR(error);
+> > > > +		error = -inode_change_ok(inode, iattr);
+> > > > +		if (error)
+> > > > +			return XFS_ERROR(error);
+> > > > +	}
+> > > 
+> > > I'm not so sure about this change yet.  Looks like the two relevant callers are:
+> > > 
+> > > .set - xattr_handler
+> > >   xfs_xattr_acl_set
+> > >     xfs_set_mode
+> > >       xfs_setattr_nonsize(..., XFS_ATTR_NOACL);
+> > > 
+> > > and
+> > > 
+> > > xfs_vn_mknod
+> > >   xfs_inherit_acl
+> > >     xfs_set_mode
+> > >       xfs_setattr_nonsize(..., XFS_ATTR_NOACL);
+> > > 
+> > > I suggest moving the forced shutdown and readonly checks outside of the
+> > > XFS_ATTR_NOACL conditional.  I'm not seeing those checks in xfs_attr_acl_set or
+> > > xfs_vn_mknod and it won't hurt to be careful.
+> > 
+> > In both cases, the read-only checks are done at much higher layers
+> > and so we don't ever get to xfs_setattr_nonsize() through these
+> > paths with a read-only filesystem. Shutdown doesn't really matter -
+> > the transaction commit will fail if the filesystem is shut down...
+> > 
+> > > It also seems like inode_change_ok might have some other checks that are
+> > > necessary to determine whether it is ok to update the mode and ctime here.  A
+> > > call to inode_owner_or_capable as is done in inode_change_ok would cover this
+> > > possibility.
+> > 
+> > The inode permission checks are already done by xfs_xattr_acl_set():
+> > 
+> > 	if ((current_fsuid() != inode->i_uid) && !capable(CAP_FOWNER))
+> > 		return -EPERM;
+> > 
+> > and in the case of xfs_inherit_acl() the user has just created the
+> > file so they - by definition - have permission to inherit the ACL
+> > and modify the mode of the inode they just created.
+> > 
+> > So there is no need for changes to inode_change_ok() here.
 > 
-> Sorry, I missed it.
+> Carlos, if you agree with Dave's assessment consider this 
 > 
->>> On 32-bit machine, the s_maxbytes is larger than the MAX_LFS_FILESIZE limits if CONFIG_LBDAF is
->>> not enabled.  Hence it's possible to create a huge file via buffered-IO write with a given offset
->>> beyond this limitation. e.g.
->>>
->>> # block_size=4096
->>> # offset=$(((2**32 - 1) * $block_size))
->>> # xfs_io -f -c "pwrite $offset $block_size" /storage/test_file
->>>
->>> In this case, xfs_io will hang at the page writeback stage soon since the given offset would
->>> cause an overflow at xfs_vm_writepage():
->>>
->>> end_index = offset >> PAGE_CACHE_SHIFT;
->>> last_index = (offset - 1) >> PAGE_CACHE_SHIFT;
->>> if (page->index >= end_index) {
->>>                 unsigned offset_into_page = offset & (PAGE_CACHE_SIZE - 1);
->>>
->>>                 /*
->>>                  * Just skip the page if it is fully outside i_size, e.g. due
->>>                  * to a truncate operation that is in progress.
->>>                  */
->>>                 if (page->index >= end_index + 1 || offset_into_page == 0) {
->>> 		^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->>>                         unlock_page(page);
->>>                         return 0;
->>>                 }
->>> end_index is unsigned long so that the max value is '2^32-1 = 4294967295', and it
->>> would be evaluated to the max value with the given offset(when writing the page offset
->>> up to s_max_bytes) for above test case.  As a result, (page->index >= end_index + 1) is
->>> ok as (end_index + 1) is overflowed to ZERO.
->>>
->>> Actually, create a file as above on 32-bit machine should be failed with EFBIG error returned
->>> because there has strict check up at generic_write_checks() against the given offset with a
->>> *correct* s_max_bytes.
->>>
->>> This patch fix the s_max_bytes to MAX_LFS_FILESIZE if the pre-calculated value is greater
->>> than it.
+> Reviewed-by: Ben Myers <bpm@sgi.com>
 > 
-> Isn't MAX_LFS_FILESIZE defined on 32 bit systems to 8TB and the
-> problem here is that we are overflowing at 16TB? If so, that means
-> addin gthis patch will potentially cause problems with existing
-> working setups that have (sparse) files larger than 8TB on 32 bit
-> systems.
-
-Yes, but maybe I should say end_index is wrapped to zero rather than
-overflow in this situation.
-
+> let me know what you think and I'll pull it in.
 > 
-> So, can't we simply subtract PAGE_CACHE_SIZE from the offset
-> being returned to avoid this overflow?
+> Thanks,
+> 	Ben
+> 
+Hi Ben,
 
-It seems that this change does not works to me because page->index is
-greater than end_index in most cases for large files.
-IOWs, what I mentioned in comment log is incorrect and it misled you.
+Yes, I agree with Dave's statements, I removed the unneeded checks, because they
+were done at higher layers.
 
-I worked out another patch, it looks works for this test but I need to
-run some extra tests before posting.
+please, feel free to pull it in, my apologies to have not answered it on IRC, it
+was holiday here and I just saw your message late this morning.
 
-Thanks,
--Jeff
+Cheers,
 
+-- 
+Carlos
 
 _______________________________________________
 xfs mailing list
