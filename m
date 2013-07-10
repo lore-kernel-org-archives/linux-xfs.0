@@ -1,27 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0ABE97F3F
-	for <xfs@oss.sgi.com>; Tue,  9 Jul 2013 22:42:27 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id F0D378F8040
-	for <xfs@oss.sgi.com>; Tue,  9 Jul 2013 20:42:26 -0700 (PDT)
-Received: from mail-ob0-f171.google.com (mail-ob0-f171.google.com
-	[209.85.214.171]) by cuda.sgi.com with ESMTP id
-	N2RNmWhVBK09ywB1 (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 09 Jul 2013 20:42:22 -0700 (PDT)
-Received: by mail-ob0-f171.google.com with SMTP id dn14so7998711obc.30
-	for <xfs@oss.sgi.com>; Tue, 09 Jul 2013 20:42:22 -0700 (PDT)
-Subject: Re: inode64 and Firefox - update
-Mime-Version: 1.0 (Apple Message framework v1085)
-From: aurfalien <aurfalien@gmail.com>
-In-Reply-To: <51DC1FB4.7010108@hardwarefreak.com>
-Date: Tue, 9 Jul 2013 20:42:18 -0700
-Message-Id: <8DDD97E6-C0CD-43B8-89D5-F1F196F1F094@gmail.com>
-References: <EA658AFF-6AEC-41D1-BA40-4103BEF7FD5E@gmail.com>
-	<51DC1600.7080906@sandeen.net>
-	<C7F53623-AA6A-4FD2-90A6-52BBA6562D10@gmail.com>
-	<51DC198C.70106@sandeen.net> <51DC1FB4.7010108@hardwarefreak.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 820387F37
+	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 01:28:19 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id F292CAC005
+	for <xfs@oss.sgi.com>; Tue,  9 Jul 2013 23:28:15 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id JLcdO7cbreoy2D7a (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 09 Jul 2013 23:28:11 -0700 (PDT)
+Message-ID: <51DCFF04.9070606@oracle.com>
+Date: Wed, 10 Jul 2013 14:28:20 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH] xfs: fix s_max_bytes to MAX_LFS_FILESIZE if needed
+References: <5167E160.3020800@oracle.com>
+In-Reply-To: <5167E160.3020800@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,50 +28,87 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: stan@hardwarefreak.com
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+Cc: "Michael L. Semon" <mlsemon35@gmail.com>
 
+Could anyone help to review this patch?
 
-On Jul 9, 2013, at 7:35 AM, Stan Hoeppner wrote:
+Thanks,
+-Jeff
+On 04/12/2013 06:26 PM, Jeff Liu wrote:
 
-> On 7/9/2013 9:09 AM, Eric Sandeen wrote:
->> On 7/9/13 9:08 AM, aurfalien wrote:
->>> 
->>> On Jul 9, 2013, at 6:54 AM, Eric Sandeen wrote:
->>> 
->>>> On 7/9/13 8:37 AM, aurfalien wrote:
->>>>> Before I dig deeper, wondering if any one has issues running Firefox v22 from an XFS file system mounted using inode64 option?
->>>> 
->>>> I've not tried it, but first question - 32-bit or 64-bit firefox?
->>> 
->>> Its 32 bit FF.  Thunderbird also has issues.  Too bad :(
->> 
->> Ok, below was for 64-bit, even!
->> 
->> I'd file a bug w/ them, it can't be that hard to fix.  Modern filesystems have 64 bit inodes, they should handle it!
->> 
->> -Eric
->> 
->>> Stuck in the stone age.  Got a 24TB fs functioning as a home dir for ~100 pplz that I would like to modernize.
+> From: Jie Liu <jeff.liu@oracle.com>
 > 
-> Is XFS being mounted via NFS or Samba?  Do your server and client
-> versions of these support 64 bit inodes?  If these are 32 bit Windows
-> clients I think it's pretty certain they don't/can't handle 64 bit
-> inodes.  Thus this may not be strictly a FF/TB problem.  We need more
-> information.
+> On 32-bit machine, the s_maxbytes is larger than the MAX_LFS_FILESIZE limits if CONFIG_LBDAF is
+> not enabled.  Hence it's possible to create a huge file via buffered-IO write with a given offset
+> beyond this limitation. e.g.
 > 
-> -- 
-> Stan
+> # block_size=4096
+> # offset=$(((2**32 - 1) * $block_size))
+> # xfs_io -f -c "pwrite $offset $block_size" /storage/test_file
+> 
+> In this case, xfs_io will hang at the page writeback stage soon since the given offset would
+> cause an overflow at xfs_vm_writepage():
+> 
+> end_index = offset >> PAGE_CACHE_SHIFT;
+> last_index = (offset - 1) >> PAGE_CACHE_SHIFT;
+> if (page->index >= end_index) {
+>                 unsigned offset_into_page = offset & (PAGE_CACHE_SIZE - 1);
+> 
+>                 /*
+>                  * Just skip the page if it is fully outside i_size, e.g. due
+>                  * to a truncate operation that is in progress.
+>                  */
+>                 if (page->index >= end_index + 1 || offset_into_page == 0) {
+> 		^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>                         unlock_page(page);
+>                         return 0;
+>                 }
+> end_index is unsigned long so that the max value is '2^32-1 = 4294967295', and it
+> would be evaluated to the max value with the given offset(when writing the page offset
+> up to s_max_bytes) for above test case.  As a result, (page->index >= end_index + 1) is
+> ok as (end_index + 1) is overflowed to ZERO.
+> 
+> Actually, create a file as above on 32-bit machine should be failed with EFBIG error returned
+> because there has strict check up at generic_write_checks() against the given offset with a
+> *correct* s_max_bytes.
+> 
+> This patch fix the s_max_bytes to MAX_LFS_FILESIZE if the pre-calculated value is greater
+> than it.
+> 
+> Reported-by: Michael L. Semon <mlsemon35@gmail.com>
+> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+> 
+> ---
+>  fs/xfs/xfs_super.c |    6 +++++-
+>  1 file changed, 5 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index ea341ce..0644d61 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -585,6 +585,7 @@ xfs_max_file_offset(
+>  {
+>  	unsigned int		pagefactor = 1;
+>  	unsigned int		bitshift = BITS_PER_LONG - 1;
+> +	__uint64_t		offset;
+>  
+>  	/* Figure out maximum filesize, on Linux this can depend on
+>  	 * the filesystem blocksize (on 32 bit platforms).
+> @@ -610,7 +611,10 @@ xfs_max_file_offset(
+>  # endif
+>  #endif
+>  
+> -	return (((__uint64_t)pagefactor) << bitshift) - 1;
+> +	offset = (((__uint64_t)pagefactor) << bitshift) - 1;
+> +
+> +	/* Check against VM & VFS exposed limits */
+> +	return (offset > MAX_LFS_FILESIZE) ? MAX_LFS_FILESIZE : offset;
+>  }
+>  
+>  xfs_agnumber_t
 
-UPDATE
 
-Latest 64 bit Firefox/Thunderflop work just fine via inode64.
-
-Testing other apps but so far so good.
-
-Some plugins may be an issue but those may as well be local.
-
-- aurf
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
