@@ -1,19 +1,41 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E31637F3F
-	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 13:47:04 -0500 (CDT)
-Date: Wed, 10 Jul 2013 13:47:04 -0500
-From: Ben Myers <bpm@sgi.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 4BD2E7F3F
+	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 15:50:33 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3A1118F8071
+	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 13:50:30 -0700 (PDT)
+Received: from e39.co.us.ibm.com (e39.co.us.ibm.com [32.97.110.160]) by
+	cuda.sgi.com with ESMTP id 8wDQ2OlqHdlzicEH (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 10 Jul 2013 13:50:29 -0700 (PDT)
+Received: from /spool/local
+	by e39.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	Violators will be prosecuted
+	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
+	Wed, 10 Jul 2013 14:49:58 -0600
+Received: from d03relay05.boulder.ibm.com (d03relay05.boulder.ibm.com
+	[9.17.195.107])
+	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id 968D11FF001B
+	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 14:44:36 -0600 (MDT)
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
+	by d03relay05.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	r6AKnpWx141570 for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 14:49:52 -0600
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id r6AKnp0Y023652
+	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 14:49:51 -0600
 Subject: Re: [PATCH v10 10/11] quota: Add proper versioning support to
 	fs_quota_stat
-Message-ID: <20130710184704.GZ32736@sgi.com>
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+In-Reply-To: <20130710162602.GB32444@quack.suse.cz>
 References: <1372371914-11370-1-git-send-email-sekharan@us.ibm.com>
 	<1372371914-11370-11-git-send-email-sekharan@us.ibm.com>
-	<20130710155538.GY20932@sgi.com>
-	<20130710162602.GB32444@quack.suse.cz>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130710162602.GB32444@quack.suse.cz>
+	<20130710155538.GY20932@sgi.com> <20130710162602.GB32444@quack.suse.cz>
+Date: Wed, 10 Jul 2013 15:49:50 -0500
+Message-ID: <1373489390.6020.30.camel@chandra-dt.ibm.com>
+Mime-Version: 1.0
+Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,44 +49,14 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Jan Kara <jack@suse.cz>
-Cc: swhiteho@redhat.com, Chandra Seetharaman <sekharan@us.ibm.com>, xfs@oss.sgi.com
+Cc: Ben Myers <bpm@sgi.com>, swhiteho@redhat.com, xfs@oss.sgi.com
 
-Hey Jan,
-
-On Wed, Jul 10, 2013 at 06:26:02PM +0200, Jan Kara wrote:
+On Wed, 2013-07-10 at 18:26 +0200, Jan Kara wrote:
 > On Wed 10-07-13 10:55:38, Ben Myers wrote:
 > > Hey Chandra,
-> > 
-> > On Thu, Jun 27, 2013 at 05:25:13PM -0500, Chandra Seetharaman wrote:
-> > > Added appropriate pads and code for backward compatibility.
-> > > 
-> > > Copied over the old version as it is different from the newer padded
-> > > version.
-> > > 
-> > > New callers of the system call have to set the version of the data
-> > > structure being passed, and kernel will fill as much data as requested.
-> > > 
-> > > Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-> > 
-> > I think we also need to
-> > 
-> > Cc: Jan Kara <jack@suse.cz>
->   Thanks for CC.
-> 
-> > > diff --git a/fs/gfs2/quota.c b/fs/gfs2/quota.c
-> > > index c7c840e..ca0dccd 100644
-> > > --- a/fs/gfs2/quota.c
-> > > +++ b/fs/gfs2/quota.c
-> > > @@ -1443,9 +1443,6 @@ static int gfs2_quota_get_xstate(struct super_block *sb,
-> > >  {
-> > >  	struct gfs2_sbd *sdp = sb->s_fs_info;
-> > >  
-> > > -	memset(fqs, 0, sizeof(struct fs_quota_stat));
-> > > -	fqs->qs_version = FS_QSTAT_VERSION;
-> > > -
-> > >  	switch (sdp->sd_args.ar_quota) {
-> > >  	case GFS2_QUOTA_ON:
-> > >  		fqs->qs_flags |= (FS_QUOTA_UDQ_ENFD | FS_QUOTA_GDQ_ENFD);
+
+<snip>
+
 > > > diff --git a/fs/quota/quota.c b/fs/quota/quota.c
 > > > index c7314f1..ae6526e 100644
 > > > --- a/fs/quota/quota.c
@@ -101,20 +93,21 @@ On Wed, Jul 10, 2013 at 06:26:02PM +0200, Jan Kara wrote:
 > rely on the contents of qs_version field. That's ABI (and even API)
 > breakage.
 
-Looks like you are correct to me.  Seems that qs_version number was never
-checked until this patch.
+Agree, it is a API breakage.
 
+Will fix it by adding a new quotactl value as you suggest. 
+Does 
+
+#define Q_XGETQSTAT2     XQM_CMD(8)
+
+sound good ?
+> 
 > Unless I'm missing something, the only clean way is to use new quotactl
 > value for the interface with version field used for input as well.
+> 
+> 								Honza
+> 
 
-If I understand... it would be something like this?
-
-#define Q_XGETQSTATV     XQM_CMD(8)
-
-Or Q_XGETQSTAT2?
-
-Thanks,
-	Ben
 
 _______________________________________________
 xfs mailing list
