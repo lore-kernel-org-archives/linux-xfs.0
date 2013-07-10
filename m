@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B6A357F56
-	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 04:06:39 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 3049BAC005
-	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 02:06:38 -0700 (PDT)
-Received: from mail.ud10.udmedia.de (ud10.udmedia.de [194.117.254.50]) by
-	cuda.sgi.com with ESMTP id wfxmNUxasWFAcvqU (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 10 Jul 2013 02:06:36 -0700 (PDT)
-Date: Wed, 10 Jul 2013 11:06:34 +0200
-From: Markus Trippelsdorf <markus@trippelsdorf.de>
-Subject: Corruption of root fs during git bisect of drm system hang
-Message-ID: <20130710090634.GA356@x4>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A6F6D7F5D
+	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 05:01:04 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 94FC230407A
+	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 03:01:01 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
+Date: Wed, 10 Jul 2013 12:00:57 +0200
+From: Yann Droneaud <ydroneaud@opteya.com>
+Subject: Re: [PATCH 10/13] xfs: use =?UTF-8?Q?get=5Funused=5Ffd=5Fflags=28?=
+	=?UTF-8?Q?=30=29=20instead=20of=20get=5Funused=5Ffd=28=29?=
+In-Reply-To: <20130709205321.GV20932@sgi.com>
+References: <cover.1372777600.git.ydroneaud@opteya.com>
+	<8d21b76c621dbfc59b2dbbfc933f96170835304d.1372777600.git.ydroneaud@opteya.com>
+	<20130708224133.GA23250@sgi.com> <20130709205321.GV20932@sgi.com>
+Message-ID: <70a3a6971c3127226563e9538ae53bec@meuh.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,102 +23,40 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: ydroneaud@opteya.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-While bisecting a system hang, caused by the drm gpu subsystem, my root fs got
-corrupted:
-
- # xfs_repair /dev/sdc2
-Phase 1 - find and verify superblock...
-Phase 2 - using internal log
-        - zero log...
-        - scan filesystem freespace and inode maps...
-agi unlinked bucket 6 is 682886 in ag 3 (inode=101346182)
-agi unlinked bucket 7 is 11335 in ag 3 (inode=100674631)
-agi unlinked bucket 10 is 682890 in ag 3 (inode=101346186)
-agi unlinked bucket 21 is 981 in ag 3 (inode=100664277)
-agi unlinked bucket 23 is 5704343 in ag 3 (inode=106367639)
-agi unlinked bucket 29 is 211421 in ag 3 (inode=100874717)
-agi unlinked bucket 31 is 7681375 in ag 3 (inode=108344671)
-agi unlinked bucket 34 is 3480162 in ag 3 (inode=104143458)
-agi unlinked bucket 40 is 211432 in ag 3 (inode=100874728)
-agi unlinked bucket 41 is 2704937 in ag 3 (inode=103368233)
-agi unlinked bucket 45 is 594669 in ag 3 (inode=101257965)
-agi unlinked bucket 62 is 11902 in ag 3 (inode=100675198)
-        - found root inode chunk
-Phase 3 - for each AG...
-        - scan and clear agi unlinked lists...
-        - process known inodes and perform inode discovery...
-        - agno = 0
-        - agno = 1
-        - agno = 2
-7f560b7fe700: Badness in key lookup (length)
-bp=(bno 46883808, len 16384 bytes) key=(bno 46883808, len 8192 bytes)
-7f560b7fe700: Badness in key lookup (length)
-bp=(bno 46888976, len 16384 bytes) key=(bno 46888976, len 8192 bytes)
-7f560b7fe700: Badness in key lookup (length)
-bp=(bno 46889264, len 16384 bytes) key=(bno 46889264, len 8192 bytes)
-7f560b7fe700: Badness in key lookup (length)
-bp=(bno 46989024, len 16384 bytes) key=(bno 46989024, len 8192 bytes)
-7f560b7fe700: Badness in key lookup (length)
-bp=(bno 47180640, len 16384 bytes) key=(bno 47180640, len 8192 bytes)
-7f560b7fe700: Badness in key lookup (length)
-bp=(bno 47224768, len 16384 bytes) key=(bno 47224768, len 8192 bytes)
-7f560b7fe700: Badness in key lookup (length)
-bp=(bno 48235776, len 16384 bytes) key=(bno 48235776, len 8192 bytes)
-7f560b7fe700: Badness in key lookup (length)                                                                                                  
-bp=(bno 48623392, len 16384 bytes) key=(bno 48623392, len 8192 bytes)                                                                         
-7f560b7fe700: Badness in key lookup (length)                                                                                                  
-bp=(bno 49735472, len 16384 bytes) key=(bno 49735472, len 8192 bytes)                                                                         
-7f560b7fe700: Badness in key lookup (length)                                                                                                  
-bp=(bno 50723984, len 16384 bytes) key=(bno 50723984, len 8192 bytes)                                                                         
-        - agno = 3                                                                                                                            
-        - process newly discovered inodes...                                                                                                  
-Phase 4 - check for duplicate blocks...                                                                                                       
-        - setting up duplicate extent list...                                                                                                 
-        - check for inodes claiming duplicate blocks...                                                                                       
-        - agno = 0                                                                                                                            
-        - agno = 1                                                                                                                            
-        - agno = 2                                                                                                                            
-        - agno = 3                                                                                                                            
-Phase 5 - rebuild AG headers and trees...                                                                                                     
-        - reset superblock...                                                                                                                 
-Phase 6 - check inode connectivity...                                                                                                         
-        - resetting contents of realtime bitmap and summary inodes                                                                            
-        - traversing filesystem ...                                                                                                           
-        - traversal finished ...                                                                                                              
-        - moving disconnected inodes to lost+found ...                                                                                        
-disconnected inode 100664277, moving to lost+found                                                                                            
-disconnected inode 100674631, moving to lost+found                                                                                            
-disconnected inode 100675198, moving to lost+found                                                                                            
-disconnected inode 100874717, moving to lost+found                                                                                            
-disconnected inode 100874728, moving to lost+found                                                                                            
-disconnected inode 101257965, moving to lost+found                                                                                            
-disconnected inode 101346182, moving to lost+found                                                                                            
-disconnected inode 101346186, moving to lost+found                                                                                            
-disconnected inode 103368233, moving to lost+found                                                                                            
-disconnected inode 104143458, moving to lost+found                                                                                            
-disconnected inode 106367639, moving to lost+found                                                                                            
-disconnected inode 108344671, moving to lost+found                                                                                            
-Phase 7 - verify and correct link counts...                                                                                                   
-cache_purge: shake on cache 0x12a6030 left 1 nodes!?                                                                                          
-done
-
-This happend twice in the last few days and thus appears to be reproducible.
-
-My root fs lives on a small SSD:
-
-/dev/root on / type xfs (rw,relatime,attr2,inode64,logbsize=256k,noquota)
-/dev/root      xfs        30G   15G   16G  50% /
-
--- 
-Markus
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+SGksCgpMZSAwOS4wNy4yMDEzIDIyOjUzLCBCZW4gTXllcnMgYSDDqWNyaXTCoDoKPiBPbiBNb24s
+IEp1bCAwOCwgMjAxMyBhdCAwNTo0MTozM1BNIC0wNTAwLCBCZW4gTXllcnMgd3JvdGU6Cj4+IE9u
+IFR1ZSwgSnVsIDAyLCAyMDEzIGF0IDA2OjM5OjM0UE0gKzAyMDAsIFlhbm4gRHJvbmVhdWQgd3Jv
+dGU6Cgo+PiA+IGRpZmYgLS1naXQgYS9mcy94ZnMveGZzX2lvY3RsLmMgYi9mcy94ZnMveGZzX2lv
+Y3RsLmMKPj4gPiBpbmRleCA1ZTk5OTY4Li5kYzViNjU5IDEwMDY0NAo+PiA+IC0tLSBhL2ZzL3hm
+cy94ZnNfaW9jdGwuYwo+PiA+ICsrKyBiL2ZzL3hmcy94ZnNfaW9jdGwuYwo+PiA+IEBAIC0yNDgs
+NyArMjQ4LDcgQEAgeGZzX29wZW5fYnlfaGFuZGxlKAo+PiA+ICAJCWdvdG8gb3V0X2RwdXQ7Cj4+
+ID4gIAl9Cj4+ID4KPj4gPiAtCWZkID0gZ2V0X3VudXNlZF9mZCgpOwo+PiA+ICsJZmQgPSBnZXRf
+dW51c2VkX2ZkX2ZsYWdzKDApOwo+PiAKPj4gT19DTE9FWEVDIHNob3VsZCBiZSBmaW5lIGluIHRo
+aXMgY2FzZS4KPj4gCj4+IFJldmlld2VkLWJ5OiBCZW4gTXllcnMgPGJwbUBzZ2kuY29tPgo+IAo+
+IEFwcGxpZWQgYXQgZ2l0Oi8vb3NzLnNnaS5jb20veGZzL3hmcy5naXQuICBMb29rcyBsaWtlIEkg
+d2FzIHdyb25nIGFib3V0Cj4gT19DTE9FWEVDIGJlaW5nIG9rIGhlcmUuICBUaGVyZSBtYXkgYmUg
+YXBwbGljYXRpb25zIHdoaWNoIAo+IG9wZW5fYnlfaGFuZGxlIHRoZW4KPiBmb3JrL2V4ZWMgYW5k
+IGV4cGVjdCB0byBzdGlsbCBiZSBhYmxlIHRvIHVzZSB0aGF0IGZpbGUgZGVzY3JpcHRvci4KPiAK
+Ck9LLCBpdCdzIHZlcnkgaW1wb3J0YW50IHRvIG5vdCBjYXVzZSByZWdyZXNzaW9uIGhlcmUuCgpG
+b3IgdGhlIHJlY29yZCwgeGZzX29wZW5fYnlfaGFuZGxlKCkgaXMgbm90IHJlbGF0ZWQgdG8gCm9w
+ZW5fYnlfaGFuZGxlX2F0KCkgc3lzY2FsbC4KCkl0J3MgYW4gaW9jdGwgKFhGU19JT0NfT1BFTl9C
+WV9IQU5ETEUpIHdoaWNoIGlzIHVzZWQgYnkgeGZzcHJvZ3MncyAKbGliaGFuZGxlCmluIGZ1bmN0
+aW9ucyBvcGVuX2J5X2ZzaGFuZGxlKCkgYW5kIG9wZW5fYnlfaGFuZGxlKCkuCgpodHRwOi8vc291
+cmNlcy5kZWJpYW4ubmV0L3NyYy94ZnNwcm9ncy8zLjEuOS9saWJoYW5kbGUvaGFuZGxlLmM/aGw9
+Mjg0I0wyODQKaHR0cDovL3NvdXJjZXMuZGViaWFuLm5ldC9zcmMveGZzcHJvZ3MvMy4xLjkvbGli
+aGFuZGxlL2hhbmRsZS5jP2hsPTMwOCNMMzA4CgpBY2NvcmRpbmcgdG8gY29kZXNlYXJjaC5kZWJp
+YW4ub3JnLCBsaWJoYW5kbGUncyBvcGVuX2J5X2hhbmRsZSgpIGlzIG9ubHkgCnVzZWQKYnkgeGZz
+ZHVtcAoKaHR0cDovL3NvdXJjZXMuZGViaWFuLm5ldC9zcmMveGZzZHVtcC8zLjEuMS9yZXN0b3Jl
+L3RyZWUuYz9obD0yNTM0I0wyNTM0CgpTbyB0aGVyZSdzIG5vIG1hbnkgKmtub3duKiB1c2VycyBv
+ZiB0aGlzIGZlYXR1cmVzIC4uLiBidXQgaXQncyBtb3JlIAppbXBvcnRhbnQKbm90IHRvIGJyZWFr
+ICp1bmtub3duKiB1c2VycyBvZiBpdC4KCkJUVywgdGhhbmtzIGZvciB0aGUgcmV2aWV3IGFuZCBh
+cHBseWluZy4KClJlZ2FyZHMuCgotLSAKWWFubiBEcm9uZWF1ZApPUFRFWUEKCl9fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZz
+QG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
