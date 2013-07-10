@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6B8147F3F
-	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 08:29:55 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5B44A8F8033
-	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 06:29:55 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id CEF087F3F
+	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 09:00:47 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A07BB304066
+	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 07:00:47 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id ZG6jMLR6I5eWquEP for
-	<xfs@oss.sgi.com>; Wed, 10 Jul 2013 06:29:54 -0700 (PDT)
-Date: Wed, 10 Jul 2013 10:29:46 -0300
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH] mkfs: add missing noalign suboption information
-Message-ID: <20130710132946.GF11948@andromeda.usersys.redhat.com>
-References: <1373327110-5533-1-git-send-email-cmaiolino@redhat.com>
-	<51DB52E1.8030508@sandeen.net>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <51DB52E1.8030508@sandeen.net>
+	cuda.sgi.com with ESMTP id RGh1jS0EbX7EV9fY for
+	<xfs@oss.sgi.com>; Wed, 10 Jul 2013 07:00:46 -0700 (PDT)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r6AE0jnR022363
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 10:00:46 -0400
+From: Lukas Czerner <lczerner@redhat.com>
+Subject: [PATCH 01/10] xfstests: Run all tests when nothing is specified
+Date: Wed, 10 Jul 2013 16:00:30 +0200
+Message-Id: <1373464839-31535-2-git-send-email-lczerner@redhat.com>
+In-Reply-To: <1373464839-31535-1-git-send-email-lczerner@redhat.com>
+References: <1373464839-31535-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,70 +27,66 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Lukas Czerner <lczerner@redhat.com>
 
-On Mon, Jul 08, 2013 at 07:01:37PM -0500, Eric Sandeen wrote:
-> On 7/8/13 6:45 PM, Carlos Maiolino wrote:
-> > Adds to the mkfs man page, information about noalign mkfs option which is
-> > missing until now.
-> > 
-> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> > ---
-> >  man/man8/mkfs.xfs.8 | 6 ++++++
-> >  1 file changed, 6 insertions(+)
-> > 
-> > diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
-> > index 04c19b4..2435814 100644
-> > --- a/man/man8/mkfs.xfs.8
-> > +++ b/man/man8/mkfs.xfs.8
-> > @@ -244,6 +244,12 @@ will automatically query the logical volume for appropriate
-> >  and
-> >  .B swidth
-> >  values.
-> > +.TP
-> > +.BI noalign
-> > +This option is used to bypass data alignment configuration. In rare
-> > +circunstances, data alignment might decrease performance, for such cases,
-> > +use this option to avoid data alignment, this will set stripe unit and
-> > +stripe width to 0.
-> 
-> Thanks for this, Carlos.
-> 
-> I think it might be better to just state plainly that it overrides automatic
-> stripe unit detection, and leave the tuning / performance parts out.
-> Most of the manpage today is more "what" than "why."
-> 
-> So maybe simply:
-> 
-> +This option disables automatic stripe geometry detection, and creates
-> +the filesystem without stripe geometry even if the underlying storage
-> +device reports this information.
-> 
-> FWIW, there is a 'noalign' option for the realtime subvolume
-> as well, and that should probably get documented too.
-> 
+Currently when no tests or test groups is specified xfstests will
+silently test nothing. Interestingly enough when test groups to exclude
+is specified the rest of the tests will be run.
 
-Agreed, going to change and re-send it.
+This commit changes that to run all possible tests (for a given file
+system) when no specific tests has been specified. This matches the old
+xfstests behaviour.
 
-> -Eric
-> 
-> >  .RE
-> >  .TP
-> >  .B \-f
-> > 
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Signed-off-by: Lukas Czerner <lczerner@redhat.com>
+---
+ check | 6 +++---
+ group | 5 -----
+ 2 files changed, 3 insertions(+), 8 deletions(-)
+ delete mode 100644 group
 
+diff --git a/check b/check
+index ff8fbcf..71b179b 100755
+--- a/check
++++ b/check
+@@ -115,7 +115,7 @@ get_all_tests()
+ 	for d in $SRC_GROUPS $FSTYP; do
+ 		ls $SRC_DIR/$d/* | \
+ 			grep -v "\..*" | \
+-			grep -v group >> $tmp.list 2>/dev/null
++			grep -v "group\|Makefile" >> $tmp.list 2>/dev/null
+ 	done
+ }
+ 
+@@ -263,8 +263,8 @@ elif $have_test_arg; then
+ 	# had test numbers, but none in group file ... do nothing
+ 	touch $tmp.list
+ else
+-	# no test numbers, do everything from group file
+-	sed -n -e '/^[0-9][0-9][0-9]*/s/[ 	].*//p' <group >$tmp.list
++	# no test numbers, do everything
++	get_all_tests
+ fi
+ 
+ # sort the list of tests into numeric order
+diff --git a/group b/group
+deleted file mode 100644
+index 4e01f0c..0000000
+--- a/group
++++ /dev/null
+@@ -1,5 +0,0 @@
+-# QA groups control file
+-# Defines test groups and nominal group owners
+-# - do not start group names with a digit
+-# - comment line before each group is "new" description
+-#
 -- 
-Carlos
+1.8.3.1
 
 _______________________________________________
 xfs mailing list
