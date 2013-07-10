@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DB0207F53
-	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 01:49:05 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B6A357F56
+	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 04:06:39 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CBE3D8F8052
-	for <xfs@oss.sgi.com>; Tue,  9 Jul 2013 23:49:02 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	ke1VtkDJzGr9wrdM for <xfs@oss.sgi.com>;
-	Tue, 09 Jul 2013 23:49:01 -0700 (PDT)
-Date: Wed, 10 Jul 2013 16:48:55 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: fix s_max_bytes to MAX_LFS_FILESIZE if needed
-Message-ID: <20130710064855.GQ3438@dastard>
-References: <5167E160.3020800@oracle.com>
- <51DCFF04.9070606@oracle.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3049BAC005
+	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 02:06:38 -0700 (PDT)
+Received: from mail.ud10.udmedia.de (ud10.udmedia.de [194.117.254.50]) by
+	cuda.sgi.com with ESMTP id wfxmNUxasWFAcvqU (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 10 Jul 2013 02:06:36 -0700 (PDT)
+Date: Wed, 10 Jul 2013 11:06:34 +0200
+From: Markus Trippelsdorf <markus@trippelsdorf.de>
+Subject: Corruption of root fs during git bisect of drm system hang
+Message-ID: <20130710090634.GA356@x4>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <51DCFF04.9070606@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,66 +27,96 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
-Cc: "Michael L. Semon" <mlsemon35@gmail.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Wed, Jul 10, 2013 at 02:28:20PM +0800, Jeff Liu wrote:
-> Could anyone help to review this patch?
+While bisecting a system hang, caused by the drm gpu subsystem, my root fs got
+corrupted:
 
-Sorry, I missed it.
+ # xfs_repair /dev/sdc2
+Phase 1 - find and verify superblock...
+Phase 2 - using internal log
+        - zero log...
+        - scan filesystem freespace and inode maps...
+agi unlinked bucket 6 is 682886 in ag 3 (inode=101346182)
+agi unlinked bucket 7 is 11335 in ag 3 (inode=100674631)
+agi unlinked bucket 10 is 682890 in ag 3 (inode=101346186)
+agi unlinked bucket 21 is 981 in ag 3 (inode=100664277)
+agi unlinked bucket 23 is 5704343 in ag 3 (inode=106367639)
+agi unlinked bucket 29 is 211421 in ag 3 (inode=100874717)
+agi unlinked bucket 31 is 7681375 in ag 3 (inode=108344671)
+agi unlinked bucket 34 is 3480162 in ag 3 (inode=104143458)
+agi unlinked bucket 40 is 211432 in ag 3 (inode=100874728)
+agi unlinked bucket 41 is 2704937 in ag 3 (inode=103368233)
+agi unlinked bucket 45 is 594669 in ag 3 (inode=101257965)
+agi unlinked bucket 62 is 11902 in ag 3 (inode=100675198)
+        - found root inode chunk
+Phase 3 - for each AG...
+        - scan and clear agi unlinked lists...
+        - process known inodes and perform inode discovery...
+        - agno = 0
+        - agno = 1
+        - agno = 2
+7f560b7fe700: Badness in key lookup (length)
+bp=(bno 46883808, len 16384 bytes) key=(bno 46883808, len 8192 bytes)
+7f560b7fe700: Badness in key lookup (length)
+bp=(bno 46888976, len 16384 bytes) key=(bno 46888976, len 8192 bytes)
+7f560b7fe700: Badness in key lookup (length)
+bp=(bno 46889264, len 16384 bytes) key=(bno 46889264, len 8192 bytes)
+7f560b7fe700: Badness in key lookup (length)
+bp=(bno 46989024, len 16384 bytes) key=(bno 46989024, len 8192 bytes)
+7f560b7fe700: Badness in key lookup (length)
+bp=(bno 47180640, len 16384 bytes) key=(bno 47180640, len 8192 bytes)
+7f560b7fe700: Badness in key lookup (length)
+bp=(bno 47224768, len 16384 bytes) key=(bno 47224768, len 8192 bytes)
+7f560b7fe700: Badness in key lookup (length)
+bp=(bno 48235776, len 16384 bytes) key=(bno 48235776, len 8192 bytes)
+7f560b7fe700: Badness in key lookup (length)                                                                                                  
+bp=(bno 48623392, len 16384 bytes) key=(bno 48623392, len 8192 bytes)                                                                         
+7f560b7fe700: Badness in key lookup (length)                                                                                                  
+bp=(bno 49735472, len 16384 bytes) key=(bno 49735472, len 8192 bytes)                                                                         
+7f560b7fe700: Badness in key lookup (length)                                                                                                  
+bp=(bno 50723984, len 16384 bytes) key=(bno 50723984, len 8192 bytes)                                                                         
+        - agno = 3                                                                                                                            
+        - process newly discovered inodes...                                                                                                  
+Phase 4 - check for duplicate blocks...                                                                                                       
+        - setting up duplicate extent list...                                                                                                 
+        - check for inodes claiming duplicate blocks...                                                                                       
+        - agno = 0                                                                                                                            
+        - agno = 1                                                                                                                            
+        - agno = 2                                                                                                                            
+        - agno = 3                                                                                                                            
+Phase 5 - rebuild AG headers and trees...                                                                                                     
+        - reset superblock...                                                                                                                 
+Phase 6 - check inode connectivity...                                                                                                         
+        - resetting contents of realtime bitmap and summary inodes                                                                            
+        - traversing filesystem ...                                                                                                           
+        - traversal finished ...                                                                                                              
+        - moving disconnected inodes to lost+found ...                                                                                        
+disconnected inode 100664277, moving to lost+found                                                                                            
+disconnected inode 100674631, moving to lost+found                                                                                            
+disconnected inode 100675198, moving to lost+found                                                                                            
+disconnected inode 100874717, moving to lost+found                                                                                            
+disconnected inode 100874728, moving to lost+found                                                                                            
+disconnected inode 101257965, moving to lost+found                                                                                            
+disconnected inode 101346182, moving to lost+found                                                                                            
+disconnected inode 101346186, moving to lost+found                                                                                            
+disconnected inode 103368233, moving to lost+found                                                                                            
+disconnected inode 104143458, moving to lost+found                                                                                            
+disconnected inode 106367639, moving to lost+found                                                                                            
+disconnected inode 108344671, moving to lost+found                                                                                            
+Phase 7 - verify and correct link counts...                                                                                                   
+cache_purge: shake on cache 0x12a6030 left 1 nodes!?                                                                                          
+done
 
-> > On 32-bit machine, the s_maxbytes is larger than the MAX_LFS_FILESIZE limits if CONFIG_LBDAF is
-> > not enabled.  Hence it's possible to create a huge file via buffered-IO write with a given offset
-> > beyond this limitation. e.g.
-> > 
-> > # block_size=4096
-> > # offset=$(((2**32 - 1) * $block_size))
-> > # xfs_io -f -c "pwrite $offset $block_size" /storage/test_file
-> > 
-> > In this case, xfs_io will hang at the page writeback stage soon since the given offset would
-> > cause an overflow at xfs_vm_writepage():
-> > 
-> > end_index = offset >> PAGE_CACHE_SHIFT;
-> > last_index = (offset - 1) >> PAGE_CACHE_SHIFT;
-> > if (page->index >= end_index) {
-> >                 unsigned offset_into_page = offset & (PAGE_CACHE_SIZE - 1);
-> > 
-> >                 /*
-> >                  * Just skip the page if it is fully outside i_size, e.g. due
-> >                  * to a truncate operation that is in progress.
-> >                  */
-> >                 if (page->index >= end_index + 1 || offset_into_page == 0) {
-> > 		^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> >                         unlock_page(page);
-> >                         return 0;
-> >                 }
-> > end_index is unsigned long so that the max value is '2^32-1 = 4294967295', and it
-> > would be evaluated to the max value with the given offset(when writing the page offset
-> > up to s_max_bytes) for above test case.  As a result, (page->index >= end_index + 1) is
-> > ok as (end_index + 1) is overflowed to ZERO.
-> > 
-> > Actually, create a file as above on 32-bit machine should be failed with EFBIG error returned
-> > because there has strict check up at generic_write_checks() against the given offset with a
-> > *correct* s_max_bytes.
-> > 
-> > This patch fix the s_max_bytes to MAX_LFS_FILESIZE if the pre-calculated value is greater
-> > than it.
+This happend twice in the last few days and thus appears to be reproducible.
 
-Isn't MAX_LFS_FILESIZE defined on 32 bit systems to 8TB and the
-problem here is that we are overflowing at 16TB? If so, that means
-addin gthis patch will potentially cause problems with existing
-working setups that have (sparse) files larger than 8TB on 32 bit
-systems.
+My root fs lives on a small SSD:
 
-So, can't we simply subtract PAGE_CACHE_SIZE from the offset
-being returned to avoid this overflow?
+/dev/root on / type xfs (rw,relatime,attr2,inode64,logbsize=256k,noquota)
+/dev/root      xfs        30G   15G   16G  50% /
 
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Markus
 
 _______________________________________________
 xfs mailing list
