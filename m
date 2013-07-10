@@ -1,40 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 171287F3F
-	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 16:46:46 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 052278F8040
-	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 14:46:43 -0700 (PDT)
-Received: from e36.co.us.ibm.com (e36.co.us.ibm.com [32.97.110.154]) by
-	cuda.sgi.com with ESMTP id L8ElPvXTVZr95Tw4 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 10 Jul 2013 14:46:42 -0700 (PDT)
-Received: from /spool/local
-	by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
-	Violators will be prosecuted
-	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
-	Wed, 10 Jul 2013 15:46:41 -0600
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com
-	[9.17.195.227])
-	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id A2D0D1FF002E
-	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 15:41:20 -0600 (MDT)
-Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	r6ALkdiw159054 for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 15:46:39 -0600
-Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av04.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
-	id r6ALkdhW017547
-	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 15:46:39 -0600
-Subject: Re: [PATCH v10 08/11] xfs: Add pquota fields where gquota is used.
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-In-Reply-To: <20130710213907.GZ20932@sgi.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 197C17F3F
+	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 16:52:22 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id EDED830408F
+	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 14:52:18 -0700 (PDT)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id QF6LEGdnasrn2ieu for <xfs@oss.sgi.com>;
+	Wed, 10 Jul 2013 14:52:17 -0700 (PDT)
+Date: Wed, 10 Jul 2013 23:52:14 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v10 10/11] quota: Add proper versioning support to
+	fs_quota_stat
+Message-ID: <20130710215214.GA1641@quack.suse.cz>
 References: <1372371914-11370-1-git-send-email-sekharan@us.ibm.com>
-	<1372371914-11370-9-git-send-email-sekharan@us.ibm.com>
-	<20130710213907.GZ20932@sgi.com>
-Date: Wed, 10 Jul 2013 16:46:38 -0500
-Message-ID: <1373492798.6020.34.camel@chandra-dt.ibm.com>
-Mime-Version: 1.0
-Reply-To: sekharan@us.ibm.com
+	<1372371914-11370-11-git-send-email-sekharan@us.ibm.com>
+	<20130710155538.GY20932@sgi.com>
+	<20130710162602.GB32444@quack.suse.cz>
+	<20130710184704.GZ32736@sgi.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20130710184704.GZ32736@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -48,163 +34,99 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Ben Myers <bpm@sgi.com>
-Cc: xfs@oss.sgi.com
+Cc: swhiteho@redhat.com, Jan Kara <jack@suse.cz>, Chandra Seetharaman <sekharan@us.ibm.com>, xfs@oss.sgi.com
 
-I am rolling up a new set with changes based on David's comments and
-Jan's comments.
-
-Will address your comments too.
-On Wed, 2013-07-10 at 16:39 -0500, Ben Myers wrote:
-> Hi Chandra,
+On Wed 10-07-13 13:47:04, Ben Myers wrote:
+> Hey Jan,
 > 
-> On Thu, Jun 27, 2013 at 05:25:11PM -0500, Chandra Seetharaman wrote:
-> > Add project quota changes to all the places where group quota field
-> > is used:
-> >    * add separate project quota members into various structures
-> >    * split project quota and group quotas so that instead of overriding
-> >      the group quota members incore, the new project quota members are
-> >      used instead
-> >    * get rid of usage of the OQUOTA flag incore, in favor of separate
-> >    * group and project quota flags.
-> 
->      ^ * is extra?
-
-will fix
-> 
-> >    * add a project dquot argument to various functions.
+> On Wed, Jul 10, 2013 at 06:26:02PM +0200, Jan Kara wrote:
+> > On Wed 10-07-13 10:55:38, Ben Myers wrote:
+> > > Hey Chandra,
+> > > 
+> > > On Thu, Jun 27, 2013 at 05:25:13PM -0500, Chandra Seetharaman wrote:
+> > > > Added appropriate pads and code for backward compatibility.
+> > > > 
+> > > > Copied over the old version as it is different from the newer padded
+> > > > version.
+> > > > 
+> > > > New callers of the system call have to set the version of the data
+> > > > structure being passed, and kernel will fill as much data as requested.
+> > > > 
+> > > > Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+> > > 
+> > > I think we also need to
+> > > 
+> > > Cc: Jan Kara <jack@suse.cz>
+> >   Thanks for CC.
 > > 
-> > Not using the pquotino field from superblock yet.
-> > 
-> > Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+> > > > diff --git a/fs/gfs2/quota.c b/fs/gfs2/quota.c
+> > > > index c7c840e..ca0dccd 100644
+> > > > --- a/fs/gfs2/quota.c
+> > > > +++ b/fs/gfs2/quota.c
+> > > > @@ -1443,9 +1443,6 @@ static int gfs2_quota_get_xstate(struct super_block *sb,
+> > > >  {
+> > > >  	struct gfs2_sbd *sdp = sb->s_fs_info;
+> > > >  
+> > > > -	memset(fqs, 0, sizeof(struct fs_quota_stat));
+> > > > -	fqs->qs_version = FS_QSTAT_VERSION;
+> > > > -
+> > > >  	switch (sdp->sd_args.ar_quota) {
+> > > >  	case GFS2_QUOTA_ON:
+> > > >  		fqs->qs_flags |= (FS_QUOTA_UDQ_ENFD | FS_QUOTA_GDQ_ENFD);
+> > > > diff --git a/fs/quota/quota.c b/fs/quota/quota.c
+> > > > index c7314f1..ae6526e 100644
+> > > > --- a/fs/quota/quota.c
+> > > > +++ b/fs/quota/quota.c
+> > > > @@ -207,12 +207,57 @@ static int quota_setxstate(struct super_block *sb, int cmd, void __user *addr)
+> > > >  static int quota_getxstate(struct super_block *sb, void __user *addr)
+> > > >  {
+> > > >  	struct fs_quota_stat fqs;
+> > > > -	int ret;
+> > > > +	struct fs_quota_stat_v1 fqs_v1;
+> > > > +	int ret, size;
+> > > > +	void *fqsp;
+> > > >  
+> > > >  	if (!sb->s_qcop->get_xstate)
+> > > >  		return -ENOSYS;
+> > > > +
+> > > > +	memset(&fqs, 0, sizeof(struct fs_quota_stat));
+> > > > +	if (copy_from_user(&fqs, addr, 1)) /* just get the version */
+> > > > +		return -EFAULT;
+> > > > +
+> > > > +	switch (fqs.qs_version) {
+> > > > +	case FS_QSTAT_VERSION_2:
+> > > > +		size = FS_QSTAT_V2_SIZE;
+> > > > +		break;
+> > > > +	default:
+> > > > +		fqs.qs_version = FS_QSTAT_VERSION;
+> > > > +		/* fallthrough */
+> > > > +	case FS_QSTAT_VERSION:
+> > > > +		size = FS_QSTAT_V1_SIZE;
+> > > > +		break;
+> > > > +	}
+> >   Guys, you cannot really do this. If anyone is using getxstate() with
+> > uninitialized buffer (which is fine so far), you cannot suddently start to
+> > rely on the contents of qs_version field. That's ABI (and even API)
+> > breakage.
 > 
-> Patch looks good to me.
+> Looks like you are correct to me.  Seems that qs_version number was never
+> checked until this patch.
 > 
-> Reviewed-by: Ben Myers <bpm@sgi.com>
+> > Unless I'm missing something, the only clean way is to use new quotactl
+> > value for the interface with version field used for input as well.
 > 
-> I had just a few tiny nits and questions I found in review.  If you were not
-> already planning to repost I suggest you ignore them.  ;)
+> If I understand... it would be something like this?
 > 
-> Regards,
-> 	Ben
-> 
-> > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> > index 5e99968..71a8bc5 100644
-> > --- a/fs/xfs/xfs_ioctl.c
-> > +++ b/fs/xfs/xfs_ioctl.c
-> > @@ -928,7 +928,7 @@ xfs_ioctl_setattr(
-> >  	struct xfs_trans	*tp;
-> >  	unsigned int		lock_flags = 0;
-> >  	struct xfs_dquot	*udqp = NULL;
-> > -	struct xfs_dquot	*gdqp = NULL;
-> > +	struct xfs_dquot	*pdqp = NULL;
-> >  	struct xfs_dquot	*olddquot = NULL;
-> >  	int			code;
-> >  
-> > @@ -957,7 +957,7 @@ xfs_ioctl_setattr(
-> >  	if (XFS_IS_QUOTA_ON(mp) && (mask & FSX_PROJID)) {
-> >  		code = xfs_qm_vop_dqalloc(ip, ip->i_d.di_uid,
-> >  					 ip->i_d.di_gid, fa->fsx_projid,
-> > -					 XFS_QMOPT_PQUOTA, &udqp, &gdqp);
-> > +					 XFS_QMOPT_PQUOTA, &udqp, NULL, &pdqp);
-> >  		if (code)
-> >  			return code;
-> >  	}
-> > @@ -994,8 +994,8 @@ xfs_ioctl_setattr(
-> >  		    XFS_IS_PQUOTA_ON(mp) &&
-> >  		    xfs_get_projid(ip) != fa->fsx_projid) {
-> >  			ASSERT(tp);
-> > -			code = xfs_qm_vop_chown_reserve(tp, ip, udqp, gdqp,
-> > -						capable(CAP_FOWNER) ?
-> > +			code = xfs_qm_vop_chown_reserve(tp, ip, udqp, NULL,
-> > +						pdqp, capable(CAP_FOWNER) ?
-> >  						XFS_QMOPT_FORCE_RES : 0);
-> >  			if (code)	/* out of quota */
-> >  				goto error_return;
-> > @@ -1113,7 +1113,7 @@ xfs_ioctl_setattr(
-> >  		if (xfs_get_projid(ip) != fa->fsx_projid) {
-> >  			if (XFS_IS_QUOTA_RUNNING(mp) && XFS_IS_PQUOTA_ON(mp)) {
-> >  				olddquot = xfs_qm_vop_chown(tp, ip,
-> > -							&ip->i_gdquot, gdqp);
-> > +							&ip->i_pdquot, pdqp);
-> >  			}
-> >  			xfs_set_projid(ip, fa->fsx_projid);
-> >  
-> > @@ -1160,13 +1160,13 @@ xfs_ioctl_setattr(
-> >  	 */
-> >  	xfs_qm_dqrele(olddquot);
-> >  	xfs_qm_dqrele(udqp);
-> > -	xfs_qm_dqrele(gdqp);
-> > +	xfs_qm_dqrele(pdqp);
-> >  
-> >  	return code;
-> >  
-> >   error_return:
-> >  	xfs_qm_dqrele(udqp);
-> > -	xfs_qm_dqrele(gdqp);
-> > +	xfs_qm_dqrele(pdqp);
-> >  	xfs_trans_cancel(tp, 0);
-> >  	if (lock_flags)
-> >  		xfs_iunlock(ip, lock_flags);
-> 
-> Here in xfs_ioctl_setattr, I'm not clear on why we're messing with the user
-> dquot at all.  Could it be removed entirely?  A change in project id doesn't
-> effect user quota, right?
-> 
-> Maybe that's an idea for a separate patch.
+> #define Q_XGETQSTATV     XQM_CMD(8)
+   Yes.
 
-I will look into that after these get in :)
-> 
-> >  STATIC void
-> > -xfs_qm_dqattach_grouphint(
-> > -	xfs_dquot_t	*udq,
-> > -	xfs_dquot_t	*gdq)
-> > +xfs_qm_dqattach_hint(
-> > +	struct xfs_inode	*ip,
-> > +	int			type)
-> >  {
-> > -	xfs_dquot_t	*tmp;
-> > +	struct xfs_dquot **dqhint;
-> 
-> Maybe clearer as dqhintp.
-> 
-sure.
-> > +	struct xfs_dquot *dqp;
-> > +	struct xfs_dquot *udq = ip->i_udquot;
-> >  
-> >  	xfs_dqlock(udq);
-> >  
-> > -	tmp = udq->q_gdquot;
-> > -	if (tmp) {
-> > -		if (tmp == gdq)
-> 
-> If I understand this xfs_qm_dqattach_hint correctly, this might be nice:
-> 
-> 	ASSERT(type == XFS_DQ_GROUP || type == XFS_DQ_PROJ);
+> Or Q_XGETQSTAT2?
+  I don't really care but the first name looks a bit better.
 
-will do.
-
-> 
-> > diff --git a/fs/xfs/xfs_qm_bhv.c b/fs/xfs/xfs_qm_bhv.c
-> > index 2d02eac..72a4fdd 100644
-> > --- a/fs/xfs/xfs_qm_bhv.c
-> > +++ b/fs/xfs/xfs_qm_bhv.c
-> > @@ -115,7 +115,7 @@ xfs_qm_newmount(
-> >  	     (pquotaondisk && !XFS_IS_PQUOTA_ON(mp)) ||
-> >  	    (!pquotaondisk &&  XFS_IS_PQUOTA_ON(mp)) ||
-> >  	     (gquotaondisk && !XFS_IS_GQUOTA_ON(mp)) ||
-> > -	    (!gquotaondisk &&  XFS_IS_OQUOTA_ON(mp)))  &&
-> > +	    (!gquotaondisk &&  XFS_IS_GQUOTA_ON(mp)))  &&
-> 
-> These are not in the usual user/group/project order, and so are some other
-> checks in this function.  Could be cleaned up.  Maybe a different patch too.
-> 
-I thought I fixed all of them around. Will fix this too.
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
-
+								Honza
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
