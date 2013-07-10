@@ -1,20 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 19B677F51
-	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 10:26:15 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CB62A8F8049
-	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 08:26:11 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id xUfsoPiZTIfed7o3 for <xfs@oss.sgi.com>;
-	Wed, 10 Jul 2013 08:26:10 -0700 (PDT)
-Message-ID: <51DD7D13.1050200@sandeen.net>
-Date: Wed, 10 Jul 2013 10:26:11 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH v2] mkfs: add missing noalign suboption information
-References: <1373469280-12617-1-git-send-email-cmaiolino@redhat.com>
-In-Reply-To: <1373469280-12617-1-git-send-email-cmaiolino@redhat.com>
+From: xfs@oss.sgi.com
+Subject: [XFS updates] XFS development tree branch, master,
+	updated. for-linus-v3.11-rc1-7-g42c49d7
+Message-Id: <20130710153805.724777F4E@oss.sgi.com>
+Date: Wed, 10 Jul 2013 10:38:05 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,69 +12,69 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Carlos Maiolino <cmaiolino@redhat.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 7/10/13 10:14 AM, Carlos Maiolino wrote:
-> Adds to the mkfs man page, information about noalign mkfs option which is
-> missing until now.
-> 
-> Changelog:
-> 
-> 	V2:
-> 	   -rephase noalign data-section option
-> 	   -add noalign realtime device option
-> 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> ---
->  man/man8/mkfs.xfs.8 | 9 +++++++++
->  1 file changed, 9 insertions(+)
-> 
-> diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
-> index 04c19b4..61122f0 100644
-> --- a/man/man8/mkfs.xfs.8
-> +++ b/man/man8/mkfs.xfs.8
-> @@ -244,6 +244,11 @@ will automatically query the logical volume for appropriate
->  and
->  .B swidth
->  values.
-> +.TP
-> +.BI noalign
-> +This option disables automatic geometry detection and creates the filesystem
-> +without stripe geometry alignment even if the underlying storage device provides
-> +this information.
->  .RE
->  .TP
->  .B \-f
-> @@ -695,6 +700,10 @@ This is used to specify the size of the real-time section.
->  This suboption is only needed if the real-time section of the
->  filesystem should occupy less space than the size of the partition
->  or logical volume containing the section.
-> +.TP
-> +.BI noalign
-> +This option disables stripe size detection, enforcing a realtime device with no
-> +stripe geometry.
+This is an automated email from the git hooks/post-receive script. It was
+generated because a ref change was pushed to the repository containing
+the project "XFS development tree".
 
-It's ok, but why change the wording vs. the data section?  i.e. I'd do:
+The branch, master has been updated
+  42c49d7 xfs: fix sgid inheritance for subdirectories inheriting default acls [V3]
+      from  b0a9dab78aee2a479d7c226e6939d553967e4024 (commit)
 
-> +This option disables automatic geometry detection and creates the realtime subvolume
-> +without stripe geometry alignment even if the underlying storage device provides
-> +this information.
+Those revisions listed above that are new to this repository have
+not appeared on any other notification email; so we list those
+revisions in full, below.
 
-But *shrug* it's not that big a deal.
+- Log -----------------------------------------------------------------
+commit 42c49d7f249c2487f36d3314753d5d8ebcee8249
+Author: Carlos Maiolino <cmaiolino@redhat.com>
+Date:   Fri Jun 21 14:45:53 2013 -0300
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>, or you can send V3 (or whatever) :)
+    xfs: fix sgid inheritance for subdirectories inheriting default acls [V3]
+    
+    XFS removes sgid bits of subdirectories under a directory containing a default
+    acl.
+    
+    When a default acl is set, it implies xfs to call xfs_setattr_nonsize() in its
+    code path. Such function is shared among mkdir and chmod system calls, and
+    does some checks unneeded by mkdir (calling inode_change_ok()). Such checks
+    remove sgid bit from the inode after it has been granted.
+    
+    With this patch, we extend the meaning of XFS_ATTR_NOACL flag to avoid these
+    checks when acls are being inherited (thanks hch).
+    
+    Also, xfs_setattr_mode, doesn't need to re-check for group id and capabilities
+    permissions, this only implies in another try to remove sgid bit from the
+    directories. Such check is already done either on inode_change_ok() or
+    xfs_setattr_nonsize().
+    
+    Changelog:
+    
+    V2: Extends the meaning of XFS_ATTR_NOACL instead of wrap the tests into another
+        function
+    
+    V3: Remove S_ISDIR check in xfs_setattr_nonsize() from the patch
+    
+    Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+    Reviewed-by: Ben Myers <bpm@sgi.com>
+    Signed-off-by: Ben Myers <bpm@sgi.com>
 
--Eric
+-----------------------------------------------------------------------
 
->  .RE
->  .TP
->  .BI \-s " sector_size"
-> 
+Summary of changes:
+ fs/xfs/xfs_iops.c | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
+
+
+hooks/post-receive
+-- 
+XFS development tree
 
 _______________________________________________
 xfs mailing list
