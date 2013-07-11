@@ -1,34 +1,34 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3C1087F62
-	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 00:01:01 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D8E61AC002
-	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 22:01:00 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 07BED7F6F
+	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 00:01:11 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id EB7C58F8040
+	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 22:01:07 -0700 (PDT)
 Received: from e37.co.us.ibm.com (e37.co.us.ibm.com [32.97.110.158]) by
-	cuda.sgi.com with ESMTP id VUDZzhIPNX3NgFCA (version=TLSv1
+	cuda.sgi.com with ESMTP id zI7lr2AvpgUfO0GP (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 10 Jul 2013 22:00:59 -0700 (PDT)
+	Wed, 10 Jul 2013 22:01:06 -0700 (PDT)
 Received: from /spool/local
 	by e37.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
 	Violators will be prosecuted
 	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
-	Wed, 10 Jul 2013 23:00:58 -0600
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com
-	[9.17.195.227])
-	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id F319119D804E
-	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 23:00:45 -0600 (MDT)
+	Wed, 10 Jul 2013 23:01:06 -0600
+Received: from d03relay01.boulder.ibm.com (d03relay01.boulder.ibm.com
+	[9.17.195.226])
+	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id E588919D8036
+	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 23:00:53 -0600 (MDT)
 Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	r6B50uU1125862 for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 23:00:56 -0600
+	by d03relay01.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	r6B513EQ032336 for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 23:01:03 -0600
 Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
 	by d03av02.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
-	id r6B50tB2005470
-	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 23:00:55 -0600
+	id r6B512Ad006201
+	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 23:01:02 -0600
 From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: [PATCH v11 2/4] xfs: Start using pquotaino from the superblock.
-Date: Thu, 11 Jul 2013 00:00:41 -0500
-Message-Id: <1373518843-1492-3-git-send-email-sekharan@us.ibm.com>
+Subject: [PATCH v11 3/4] xfs: Add proper versioning support to fs_quota_stat
+Date: Thu, 11 Jul 2013 00:00:42 -0500
+Message-Id: <1373518843-1492-4-git-send-email-sekharan@us.ibm.com>
 In-Reply-To: <1373518843-1492-1-git-send-email-sekharan@us.ibm.com>
 References: <1373518843-1492-1-git-send-email-sekharan@us.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -45,359 +45,254 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: Chandra Seetharaman <sekharan@us.ibm.com>
+Cc: jack@suse.cz, Chandra Seetharaman <sekharan@us.ibm.com>, swhiteho@redhat.com
 
-Start using pquotino and define a macro to check if the
-superblock has pquotino.
+Added appropriate pads and code for backward compatibility.
 
-Keep backward compatibilty by alowing mount of older superblock
-with no separate pquota inode.
+Copied over the old version as it is different from the newer padded
+version.
+
+New callers of the system call have to set the version of the data
+structure being passed, and kernel will fill as much data as requested.
 
 Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
 ---
- fs/xfs/xfs_mount.c             |   62 ++++++++++++++++++++++++++++++++++-----
- fs/xfs/xfs_qm.c                |   28 +++++++++--------
- fs/xfs/xfs_qm_syscalls.c       |   21 +++++++++++++-
- fs/xfs/xfs_sb.h                |    9 +++++-
- fs/xfs/xfs_super.c             |   19 ++++++------
- include/uapi/linux/dqblk_xfs.h |    1 +
- 6 files changed, 108 insertions(+), 32 deletions(-)
+ fs/gfs2/quota.c                |    3 --
+ fs/quota/quota.c               |   67 +++++++++++++++++++++++++++++++++++++--
+ fs/xfs/xfs_qm_syscalls.c       |    4 --
+ include/uapi/linux/dqblk_xfs.h |   60 +++++++++++++++++++++++++++++++----
+ 4 files changed, 116 insertions(+), 18 deletions(-)
 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 2b0ba35..b8a633b 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -336,12 +336,17 @@ xfs_mount_validate_sb(
- 		return XFS_ERROR(EWRONGFS);
- 	}
+diff --git a/fs/gfs2/quota.c b/fs/gfs2/quota.c
+index c7c840e..ca0dccd 100644
+--- a/fs/gfs2/quota.c
++++ b/fs/gfs2/quota.c
+@@ -1443,9 +1443,6 @@ static int gfs2_quota_get_xstate(struct super_block *sb,
+ {
+ 	struct gfs2_sbd *sdp = sb->s_fs_info;
  
--	if ((sbp->sb_qflags & (XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD)) &&
--			(sbp->sb_qflags & (XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD |
--				XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD))) {
--		xfs_notice(mp,
--"Super block has XFS_OQUOTA bits along with XFS_PQUOTA and/or XFS_GQUOTA bits.\n");
--		return XFS_ERROR(EFSCORRUPTED);
-+	if (xfs_sb_version_has_pquota(sbp)) {
-+		if (sbp->sb_qflags & (XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD)) {
-+			xfs_notice(mp,
-+			   "Version 5 of Super block has XFS_OQUOTA bits.\n");
-+			return XFS_ERROR(EFSCORRUPTED);
-+		}
-+	} else if (sbp->sb_qflags & (XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD |
-+				XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD)) {
-+			xfs_notice(mp,
-+"Superblock earlier than Version 5 has XFS_[PQ]UOTA_{ENFD|CHKD} bits.\n");
-+			return XFS_ERROR(EFSCORRUPTED);
- 	}
- 
- 	/*
-@@ -570,8 +575,13 @@ out_unwind:
+-	memset(fqs, 0, sizeof(struct fs_quota_stat));
+-	fqs->qs_version = FS_QSTAT_VERSION;
+-
+ 	switch (sdp->sd_args.ar_quota) {
+ 	case GFS2_QUOTA_ON:
+ 		fqs->qs_flags |= (FS_QUOTA_UDQ_ENFD | FS_QUOTA_GDQ_ENFD);
+diff --git a/fs/quota/quota.c b/fs/quota/quota.c
+index c7314f1..ac5dd3a 100644
+--- a/fs/quota/quota.c
++++ b/fs/quota/quota.c
+@@ -204,15 +204,72 @@ static int quota_setxstate(struct super_block *sb, int cmd, void __user *addr)
+ 	return sb->s_qcop->set_xstate(sb, flags, cmd);
  }
  
- static void
--xfs_sb_quota_from_disk(struct xfs_sb *sbp)
-+xfs_sb_quota_from_disk(struct xfs_mount *mp)
+-static int quota_getxstate(struct super_block *sb, void __user *addr)
++static int quota_getxstate(struct super_block *sb, void __user *addr,
++			   bool older_version)
  {
-+	struct xfs_sb *sbp = &mp->m_sb;
+ 	struct fs_quota_stat fqs;
+-	int ret;
++	struct fs_quota_stat_v1 fqs_v1;
++	int ret, size;
++	void *fqsp;
+ 
+ 	if (!sb->s_qcop->get_xstate)
+ 		return -ENOSYS;
 +
-+	if (xfs_sb_version_has_pquota(sbp))
-+		return;
++	memset(&fqs, 0, sizeof(struct fs_quota_stat));
 +
- 	if (sbp->sb_qflags & XFS_OQUOTA_ENFD)
- 		sbp->sb_qflags |= (sbp->sb_qflags & XFS_PQUOTA_ACCT) ?
- 					XFS_PQUOTA_ENFD : XFS_GQUOTA_ENFD;
-@@ -579,6 +589,18 @@ xfs_sb_quota_from_disk(struct xfs_sb *sbp)
- 		sbp->sb_qflags |= (sbp->sb_qflags & XFS_PQUOTA_ACCT) ?
- 					XFS_PQUOTA_CHKD : XFS_GQUOTA_CHKD;
- 	sbp->sb_qflags &= ~(XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD);
++	if (older_version) {
++		fqs.qs_version = FS_QSTAT_VERSION;
++		size = FS_QSTAT_V1_SIZE;
++	} else {
++		if (copy_from_user(&fqs, addr, 1)) /* just get the version */
++			return -EFAULT;
 +
-+	if (!xfs_sb_version_has_pquota(sbp) && (XFS_IS_PQUOTA_ON(mp))) {
 +		/*
-+		 * On disk superblock only has sb_gquotino, and incore
-+		 * superblock has both sb_gquotino and sb_pquotino.
-+		 * But, only one them is supported at any point of time.
-+		 * So, if PQUOTA is set in disk superblock, copy over
-+		 * sb_gquotino to sb_pquotino.
++		 * For forward compatibility. Check against all supported
++		 * versions, and if the version provided is not supported
++		 * by the kernel, set to the highest version supported.
++		 * For now only FS_QSTAT_VERSION_2 is supported.
 +		 */
-+		mp->m_sb.sb_pquotino = mp->m_sb.sb_gquotino;
-+		mp->m_sb.sb_gquotino = NULLFSINO;
-+	}
- }
- 
- void
-@@ -650,6 +672,13 @@ xfs_sb_quota_to_disk(
- {
- 	__uint16_t	qflags = from->sb_qflags;
- 
-+	/*
-+	 * We need to do these manipilations only if we are working
-+	 * with an older version of on-disk superblock.
-+	 */
-+	if (xfs_sb_version_has_pquota(from))
-+		return;
++		if (fqs.qs_version != FS_QSTAT_VERSION_2)
++			fqs.qs_version = FS_QSTAT_VERSION_2;
 +
- 	if (*fields & XFS_SB_QFLAGS) {
- 		/*
- 		 * The in-core version of sb_qflags do not have
-@@ -669,6 +698,23 @@ xfs_sb_quota_to_disk(
- 		to->sb_qflags = cpu_to_be16(qflags);
- 		*fields &= ~XFS_SB_QFLAGS;
- 	}
-+
-+	if (*fields & XFS_SB_PQUOTINO && *fields & XFS_SB_GQUOTINO) {
 +		/*
-+		 * PQUOTINO and GQUOTINO cannot be used together in versions
-+		 * of superblock that do not have pquotino. If used, use
-+		 * sb_flags to resolve which one should be set.
-+		*/
-+		if (from->sb_qflags & XFS_PQUOTA_ACCT)
-+			*fields &= ~XFS_SB_GQUOTINO;
-+		else
-+			*fields &= ~XFS_SB_PQUOTINO;
++		 * size need to be set based on the version, if
++		 * different versions need different size.
++		 * For now only version 2 exists, so just set size
++		 * to FS_QSTAT_V2_SIZE.
++		 */
++		size = FS_QSTAT_V2_SIZE;
 +	}
 +
-+	if (*fields & XFS_SB_PQUOTINO) {
-+		to->sb_gquotino = cpu_to_be64(from->sb_pquotino);
-+		*fields &= ~XFS_SB_PQUOTINO;
-+	}
+ 	ret = sb->s_qcop->get_xstate(sb, &fqs);
+-	if (!ret && copy_to_user(addr, &fqs, sizeof(fqs)))
++	if (ret)
++		return ret;
++
++	if (fqs.qs_version == FS_QSTAT_VERSION) {
++		fqs_v1.qs_version = fqs.qs_version;
++		fqs_v1.qs_flags = fqs.qs_flags;
++		fqs_v1.qs_pad = 0;
++
++		fqs_v1.qs_uquota.qfs_ino = fqs.qs_uquota.qfs_ino;
++		fqs_v1.qs_uquota.qfs_nblks = fqs.qs_uquota.qfs_nblks;
++		fqs_v1.qs_uquota.qfs_nextents = fqs.qs_uquota.qfs_nextents;
++
++		fqs_v1.qs_gquota.qfs_ino = fqs.qs_gquota.qfs_ino;
++		fqs_v1.qs_gquota.qfs_nblks = fqs.qs_gquota.qfs_nblks;
++		fqs_v1.qs_gquota.qfs_nextents = fqs.qs_gquota.qfs_nextents;
++
++		fqs_v1.qs_incoredqs = fqs.qs_incoredqs;
++		fqs_v1.qs_btimelimit = fqs.qs_btimelimit;
++		fqs_v1.qs_itimelimit = fqs.qs_itimelimit;
++		fqs_v1.qs_rtbtimelimit = fqs.qs_rtbtimelimit;
++		fqs_v1.qs_bwarnlimit = fqs.qs_bwarnlimit;
++		fqs_v1.qs_iwarnlimit = fqs.qs_iwarnlimit;
++		fqsp = &fqs_v1;
++	} else
++		fqsp = &fqs;
++
++	if (copy_to_user(addr, fqsp, size))
+ 		return -EFAULT;
+ 	return ret;
  }
- 
- /*
-@@ -885,7 +931,7 @@ reread:
- 	 */
- 	xfs_sb_from_disk(&mp->m_sb, XFS_BUF_TO_SBP(bp));
- 
--	xfs_sb_quota_from_disk(&mp->m_sb);
-+	xfs_sb_quota_from_disk(mp);
- 	/*
- 	 * We must be able to do sector-sized and sector-aligned IO.
- 	 */
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index d320794..ba12dc4 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -860,21 +860,24 @@ xfs_qm_qino_alloc(
- 	if (flags & XFS_QMOPT_SBVERSION) {
- 		ASSERT(!xfs_sb_version_hasquota(&mp->m_sb));
- 		ASSERT((sbfields & (XFS_SB_VERSIONNUM | XFS_SB_UQUOTINO |
--				   XFS_SB_GQUOTINO | XFS_SB_QFLAGS)) ==
--		       (XFS_SB_VERSIONNUM | XFS_SB_UQUOTINO |
--			XFS_SB_GQUOTINO | XFS_SB_QFLAGS));
-+			XFS_SB_GQUOTINO | XFS_SB_PQUOTINO | XFS_SB_QFLAGS)) ==
-+				(XFS_SB_VERSIONNUM | XFS_SB_UQUOTINO |
-+                        XFS_SB_GQUOTINO | XFS_SB_PQUOTINO | XFS_SB_QFLAGS));
- 
- 		xfs_sb_version_addquota(&mp->m_sb);
- 		mp->m_sb.sb_uquotino = NULLFSINO;
- 		mp->m_sb.sb_gquotino = NULLFSINO;
-+		mp->m_sb.sb_pquotino = NULLFSINO;
- 
--		/* qflags will get updated _after_ quotacheck */
--		mp->m_sb.sb_qflags = 0;
-+		/* qflags will get updated fully _after_ quotacheck */
-+		mp->m_sb.sb_qflags = mp->m_qflags & XFS_ALL_QUOTA_ACCT;
- 	}
- 	if (flags & XFS_QMOPT_UQUOTA)
- 		mp->m_sb.sb_uquotino = (*ip)->i_ino;
--	else
-+	else if (flags & XFS_QMOPT_GQUOTA)
- 		mp->m_sb.sb_gquotino = (*ip)->i_ino;
-+	else
-+		mp->m_sb.sb_pquotino = (*ip)->i_ino;
- 	spin_unlock(&mp->m_sb_lock);
- 	xfs_mod_sb(tp, sbfields);
- 
-@@ -1484,11 +1487,10 @@ xfs_qm_init_quotainos(
- 			if (error)
- 				goto error_rele;
- 		}
--		/* XXX: Use gquotino for now */
- 		if (XFS_IS_PQUOTA_ON(mp) &&
--		    mp->m_sb.sb_gquotino != NULLFSINO) {
--			ASSERT(mp->m_sb.sb_gquotino > 0);
--			error = xfs_iget(mp, NULL, mp->m_sb.sb_gquotino,
-+		    mp->m_sb.sb_pquotino != NULLFSINO) {
-+			ASSERT(mp->m_sb.sb_pquotino > 0);
-+			error = xfs_iget(mp, NULL, mp->m_sb.sb_pquotino,
- 					     0, 0, &pip);
- 			if (error)
- 				goto error_rele;
-@@ -1496,7 +1498,8 @@ xfs_qm_init_quotainos(
- 	} else {
- 		flags |= XFS_QMOPT_SBVERSION;
- 		sbflags |= (XFS_SB_VERSIONNUM | XFS_SB_UQUOTINO |
--			    XFS_SB_GQUOTINO | XFS_SB_QFLAGS);
-+			    XFS_SB_GQUOTINO | XFS_SB_PQUOTINO |
-+			    XFS_SB_QFLAGS);
- 	}
- 
- 	/*
-@@ -1524,9 +1527,8 @@ xfs_qm_init_quotainos(
- 		flags &= ~XFS_QMOPT_SBVERSION;
- 	}
- 	if (XFS_IS_PQUOTA_ON(mp) && pip == NULL) {
--		/* XXX: Use XFS_SB_GQUOTINO for now */
- 		error = xfs_qm_qino_alloc(mp, &pip,
--					  sbflags | XFS_SB_GQUOTINO,
-+					  sbflags | XFS_SB_PQUOTINO,
- 					  flags | XFS_QMOPT_PQUOTA);
- 		if (error)
- 			goto error_rele;
+@@ -292,7 +349,9 @@ static int do_quotactl(struct super_block *sb, int type, int cmd, qid_t id,
+ 	case Q_XQUOTARM:
+ 		return quota_setxstate(sb, cmd, addr);
+ 	case Q_XGETQSTAT:
+-		return quota_getxstate(sb, addr);
++		return quota_getxstate(sb, addr, 1);
++	case Q_XGETQSTATV:
++		return quota_getxstate(sb, addr, 0);
+ 	case Q_XSETQLIM:
+ 		return quota_setxquota(sb, type, id, addr);
+ 	case Q_XGETQUOTA:
 diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-index e4f8b2d..132e811 100644
+index 132e811..02411a7 100644
 --- a/fs/xfs/xfs_qm_syscalls.c
 +++ b/fs/xfs/xfs_qm_syscalls.c
-@@ -296,8 +296,10 @@ xfs_qm_scall_trunc_qfiles(
- 
- 	if (flags & XFS_DQ_USER)
- 		error = xfs_qm_scall_trunc_qfile(mp, mp->m_sb.sb_uquotino);
--	if (flags & (XFS_DQ_GROUP|XFS_DQ_PROJ))
-+	if (flags & XFS_DQ_GROUP)
- 		error2 = xfs_qm_scall_trunc_qfile(mp, mp->m_sb.sb_gquotino);
-+	if (flags & XFS_DQ_PROJ)
-+		error2 = xfs_qm_scall_trunc_qfile(mp, mp->m_sb.sb_pquotino);
- 
- 	return error ? error : error2;
- }
-@@ -413,8 +415,10 @@ xfs_qm_scall_getqstat(
- 	struct xfs_quotainfo	*q = mp->m_quotainfo;
- 	struct xfs_inode	*uip = NULL;
- 	struct xfs_inode	*gip = NULL;
-+	struct xfs_inode	*pip = NULL;
- 	bool                    tempuqip = false;
+@@ -420,9 +420,6 @@ xfs_qm_scall_getqstat(
  	bool                    tempgqip = false;
-+	bool                    temppqip = false;
+ 	bool                    temppqip = false;
  
- 	memset(out, 0, sizeof(fs_quota_stat_t));
- 
-@@ -422,6 +426,7 @@ xfs_qm_scall_getqstat(
+-	memset(out, 0, sizeof(fs_quota_stat_t));
+-
+-	out->qs_version = FS_QSTAT_VERSION;
  	if (!xfs_sb_version_hasquota(&mp->m_sb)) {
  		out->qs_uquota.qfs_ino = NULLFSINO;
  		out->qs_gquota.qfs_ino = NULLFSINO;
-+		out->qs_pquota.qfs_ino = NULLFSINO;
- 		return (0);
- 	}
+@@ -432,7 +429,6 @@ xfs_qm_scall_getqstat(
  	out->qs_flags = (__uint16_t) xfs_qm_export_flags(mp->m_qflags &
-@@ -430,10 +435,13 @@ xfs_qm_scall_getqstat(
- 	out->qs_pad = 0;
+ 							(XFS_ALL_QUOTA_ACCT|
+ 							 XFS_ALL_QUOTA_ENFD));
+-	out->qs_pad = 0;
  	out->qs_uquota.qfs_ino = mp->m_sb.sb_uquotino;
  	out->qs_gquota.qfs_ino = mp->m_sb.sb_gquotino;
-+	if (&out->qs_gquota != &out->qs_pquota)
-+		out->qs_pquota.qfs_ino = mp->m_sb.sb_pquotino;
- 
- 	if (q) {
- 		uip = q->qi_uquotaip;
- 		gip = q->qi_gquotaip;
-+		pip = q->qi_pquotaip;
- 	}
- 	if (!uip && mp->m_sb.sb_uquotino != NULLFSINO) {
- 		if (xfs_iget(mp, NULL, mp->m_sb.sb_uquotino,
-@@ -445,6 +453,11 @@ xfs_qm_scall_getqstat(
- 					0, 0, &gip) == 0)
- 			tempgqip = true;
- 	}
-+	if (!pip && mp->m_sb.sb_pquotino != NULLFSINO) {
-+		if (xfs_iget(mp, NULL, mp->m_sb.sb_pquotino,
-+					0, 0, &pip) == 0)
-+			temppqip = true;
-+	}
- 	if (uip) {
- 		out->qs_uquota.qfs_nblks = uip->i_d.di_nblocks;
- 		out->qs_uquota.qfs_nextents = uip->i_d.di_nextents;
-@@ -457,6 +470,12 @@ xfs_qm_scall_getqstat(
- 		if (tempgqip)
- 			IRELE(gip);
- 	}
-+	if (pip) {
-+		out->qs_pquota.qfs_nblks = pip->i_d.di_nblocks;
-+		out->qs_pquota.qfs_nextents = pip->i_d.di_nextents;
-+		if (temppqip)
-+			IRELE(pip);
-+	}
- 	if (q) {
- 		out->qs_incoredqs = q->qi_dquots;
- 		out->qs_btimelimit = q->qi_btimelimit;
-diff --git a/fs/xfs/xfs_sb.h b/fs/xfs/xfs_sb.h
-index 78f9e70..d372fdf 100644
---- a/fs/xfs/xfs_sb.h
-+++ b/fs/xfs/xfs_sb.h
-@@ -621,7 +621,14 @@ xfs_sb_has_incompat_log_feature(
- static inline bool
- xfs_is_quota_inode(struct xfs_sb *sbp, xfs_ino_t ino)
- {
--	return (ino == sbp->sb_uquotino || ino == sbp->sb_gquotino);
-+	return (ino == sbp->sb_uquotino ||
-+		ino == sbp->sb_gquotino ||
-+		ino == sbp->sb_pquotino);
-+}
-+
-+static inline int xfs_sb_version_has_pquota(xfs_sb_t *sbp)
-+{
-+	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5;
- }
- 
- /*
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 1d68ffc..5ade637 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -421,12 +421,6 @@ xfs_parseargs(
- 	}
- #endif
- 
--	if ((mp->m_qflags & (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE)) &&
--	    (mp->m_qflags & (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE))) {
--		xfs_warn(mp, "cannot mount with both project and group quota");
--		return EINVAL;
--	}
--
- 	if ((dsunit && !dswidth) || (!dsunit && dswidth)) {
- 		xfs_warn(mp, "sunit and swidth must be specified together");
- 		return EINVAL;
-@@ -556,14 +550,13 @@ xfs_showargs(
- 	else if (mp->m_qflags & XFS_UQUOTA_ACCT)
- 		seq_puts(m, "," MNTOPT_UQUOTANOENF);
- 
--	/* Either project or group quotas can be active, not both */
--
- 	if (mp->m_qflags & XFS_PQUOTA_ACCT) {
- 		if (mp->m_qflags & XFS_PQUOTA_ENFD)
- 			seq_puts(m, "," MNTOPT_PRJQUOTA);
- 		else
- 			seq_puts(m, "," MNTOPT_PQUOTANOENF);
--	} else if (mp->m_qflags & XFS_GQUOTA_ACCT) {
-+	}
-+	if (mp->m_qflags & XFS_GQUOTA_ACCT) {
- 		if (mp->m_qflags & XFS_GQUOTA_ENFD)
- 			seq_puts(m, "," MNTOPT_GRPQUOTA);
- 		else
-@@ -1396,6 +1389,14 @@ xfs_finish_flags(
- 		return XFS_ERROR(EROFS);
- 	}
- 
-+	if ((mp->m_qflags & (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE)) &&
-+	    (mp->m_qflags & (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE)) &&
-+	    !xfs_sb_version_has_pquota(&mp->m_sb)) {
-+		xfs_warn(mp,
-+		  "Super block does not support project and group quota together");
-+		return XFS_ERROR(EINVAL);
-+	}
-+
- 	return 0;
- }
- 
+ 	if (&out->qs_gquota != &out->qs_pquota)
 diff --git a/include/uapi/linux/dqblk_xfs.h b/include/uapi/linux/dqblk_xfs.h
-index 8655280..f17e3bb 100644
+index f17e3bb..f02336b 100644
 --- a/include/uapi/linux/dqblk_xfs.h
 +++ b/include/uapi/linux/dqblk_xfs.h
-@@ -155,6 +155,7 @@ typedef struct fs_quota_stat {
+@@ -38,6 +38,7 @@
+ #define Q_XGETQSTAT	XQM_CMD(5)	/* get quota subsystem status */
+ #define Q_XQUOTARM	XQM_CMD(6)	/* free disk space used by dquots */
+ #define Q_XQUOTASYNC	XQM_CMD(7)	/* delalloc flush, updates dquots */
++#define Q_XGETQSTATV	XQM_CMD(8)	/* newer version of get quota */
+ 
+ /*
+  * fs_disk_quota structure:
+@@ -47,6 +48,7 @@
+  * 512 bytes.
+  */
+ #define FS_DQUOT_VERSION	1	/* fs_disk_quota.d_version */
++
+ typedef struct fs_disk_quota {
+ 	__s8		d_version;	/* version of this structure */
+ 	__s8		d_flags;	/* FS_{USER,PROJ,GROUP}_QUOTA */
+@@ -137,31 +139,75 @@ typedef struct fs_disk_quota {
+  * Provides a centralized way to get meta information about the quota subsystem.
+  * eg. space taken up for user and group quotas, number of dquots currently
+  * incore.
++ * With version FS_QSTAT_VERSION, user space can send in an uninitialized
++ * buffer and data will be filled by the kernel.
++ * Starting FS_QSTAT_VERSION_2, to be used with Q_XGETQSTATV, user space
++ * caller should set qs_version to the appropriate version of the
++ * fs_quota_stat data structure they are providing. On return, user
++ * space should check qs_version and use appropriate fields supported by
++ * that version.
+  */
+ #define FS_QSTAT_VERSION	1	/* fs_quota_stat.qs_version */
++#define FS_QSTAT_VERSION_2	2	/* new field qs_pquota; realignment */
+ 
+ /*
+  * Some basic information about 'quota files'.
+  */
+-typedef struct fs_qfilestat {
++struct fs_qfilestat_v1 {
+ 	__u64		qfs_ino;	/* inode number */
+ 	__u64		qfs_nblks;	/* number of BBs 512-byte-blks */
+ 	__u32		qfs_nextents;	/* number of extents */
+-} fs_qfilestat_t;
++};
+ 
+-typedef struct fs_quota_stat {
++struct fs_quota_stat_v1 {
+ 	__s8		qs_version;	/* version number for future changes */
+ 	__u16		qs_flags;	/* FS_QUOTA_{U,P,G}DQ_{ACCT,ENFD} */
  	__s8		qs_pad;		/* unused */
- 	fs_qfilestat_t	qs_uquota;	/* user quota storage information */
- 	fs_qfilestat_t	qs_gquota;	/* group quota storage information */
-+#define qs_pquota	qs_gquota
+-	fs_qfilestat_t	qs_uquota;	/* user quota storage information */
+-	fs_qfilestat_t	qs_gquota;	/* group quota storage information */
+-#define qs_pquota	qs_gquota
++	struct fs_qfilestat_v1	qs_uquota;	/* user quota information */
++	struct fs_qfilestat_v1	qs_gquota;	/* group quota information */
  	__u32		qs_incoredqs;	/* number of dquots incore */
  	__s32		qs_btimelimit;  /* limit for blks timer */	
  	__s32		qs_itimelimit;  /* limit for inodes timer */	
+ 	__s32		qs_rtbtimelimit;/* limit for rt blks timer */	
+ 	__u16		qs_bwarnlimit;	/* limit for num warnings */
+ 	__u16		qs_iwarnlimit;	/* limit for num warnings */
+-} fs_quota_stat_t;
++};
++
++/*
++ * Some basic information about 'quota files'. Version 2.
++ */
++struct fs_qfilestat {
++	__u64		qfs_ino;	/* inode number */
++	__u64		qfs_nblks;	/* number of BBs 512-byte-blks */
++	__u32		qfs_nextents;	/* number of extents */
++	__u32		qfs_pad;	/* pad for 8-byte alignment */
++};
++
++struct fs_quota_stat {
++	__s8			qs_version;	/* version for future changes */
++	__u8			qs_pad1;	/* pad for 16bit alignment */
++	__u16			qs_flags;	/* FS_QUOTA_.* flags */
++	__u32			qs_incoredqs;	/* number of dquots incore */
++	struct fs_qfilestat	qs_uquota;	/* user quota information */
++	struct fs_qfilestat	qs_gquota;	/* group quota information */
++	struct fs_qfilestat	qs_pquota;	/* project quota information */
++	__s32			qs_btimelimit;  /* limit for blks timer */
++	__s32			qs_itimelimit;  /* limit for inodes timer */
++	__s32			qs_rtbtimelimit;/* limit for rt blks timer */
++	__u16			qs_bwarnlimit;	/* limit for num warnings */
++	__u16			qs_iwarnlimit;	/* limit for num warnings */
++	__u64			qs_pad2[8];	/* for future proofing */
++};
++
++/*
++ * Since Version 1 did not have padding at appropriate places,
++ * a new data structure has been defined for the older version to
++ * provide backward compatibility.
++ * Future extentions of this data structure won't require new
++ * data structure definitions as the current one can be extended
++ * with the logic and padding in place now.
++ */
++#define FS_QSTAT_V1_SIZE	(sizeof(struct fs_quota_stat_v1))
++#define FS_QSTAT_V2_SIZE	(sizeof(struct fs_quota_stat))
+ 
+ #endif	/* _LINUX_DQBLK_XFS_H */
 -- 
 1.7.1
 
