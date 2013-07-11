@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8F6BC7F59
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E5E8D7F5D
 	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 05:38:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D55C0AC002
-	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 03:38:15 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BAD32304081
+	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 03:38:19 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id omoI4sHQJ7JHIKsD for
-	<xfs@oss.sgi.com>; Thu, 11 Jul 2013 03:38:14 -0700 (PDT)
+	cuda.sgi.com with ESMTP id Ru7I5RXeiM4LJBtz for
+	<xfs@oss.sgi.com>; Thu, 11 Jul 2013 03:38:18 -0700 (PDT)
 Received: from int-mx09.intmail.prod.int.phx2.redhat.com
 	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r6BAcE7k028954
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r6BAcISD028966
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 06:38:14 -0400
+	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 06:38:18 -0400
 From: Lukas Czerner <lczerner@redhat.com>
-Subject: [PATCH 02/10 v2] xfstests: Export all important variables in
-	common/config
-Date: Thu, 11 Jul 2013 12:37:57 +0200
-Message-Id: <1373539085-8577-3-git-send-email-lczerner@redhat.com>
+Subject: [PATCH 06/10 v2] xfstests: Allow to specify RESULT_BASE directory
+Date: Thu, 11 Jul 2013 12:38:01 +0200
+Message-Id: <1373539085-8577-7-git-send-email-lczerner@redhat.com>
 In-Reply-To: <1373539085-8577-1-git-send-email-lczerner@redhat.com>
 References: <1373539085-8577-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -36,47 +35,44 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: lczerner@redhat.com
 
-Currently we do not export some of the important variables in
-common/config. Fix this.
+This commit adds the possibility to specify RESULT_BASE directory from
+the config file, or with environment variable. The default remains the
+same "$here/results/".
 
 Signed-off-by: Lukas Czerner <lczerner@redhat.com>
 ---
- common/config | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+ check         | 1 -
+ common/config | 5 +++++
+ 2 files changed, 5 insertions(+), 1 deletion(-)
 
+diff --git a/check b/check
+index dc972d7..428eba1 100755
+--- a/check
++++ b/check
+@@ -66,7 +66,6 @@ export FSTYP
+ SUPPORTED_TESTS="[0-9][0-9][0-9] [0-9][0-9][0-9][0-9]"
+ SRC_GROUPS="generic shared"
+ export SRC_DIR="tests"
+-export RESULT_BASE=${RESULT_BASE:="$here/results"}
+ 
+ usage()
+ {
 diff --git a/common/config b/common/config
-index 67c1498..1679acf 100644
+index 34c99e1..39dd469 100644
 --- a/common/config
 +++ b/common/config
-@@ -56,19 +56,19 @@ export LANG=C
- [ -d /usr/freeware/bin ] && PATH=$PATH:/usr/freeware/bin
- PATH=".:$PATH"
+@@ -230,6 +230,11 @@ if [ -f "$HOST_OPTIONS" ]; then
+ fi
  
--HOST=`hostname -s`
--HOSTOS=`uname -s`
--[ "$HOSTOS" = "IRIX64" ] && HOSTOS="IRIX"
-+export HOST=`hostname -s`
-+export HOSTOS=`uname -s`
-+[ "$HOSTOS" = "IRIX64" ] && export HOSTOS="IRIX"
- 
--MODULAR=0               # using XFS as a module or not
--BOOT="/boot"            # install target for kernels
-+export MODULAR=0               # using XFS as a module or not
-+export BOOT="/boot"            # install target for kernels
- export EXTRA=${EXTRA:=xfs-qa}
- 
- # general parameters (mainly for auto-qa)
--SOAK_PROC=3             # -p option to fsstress
--SOAK_STRESS=10000       # -n option to fsstress
--SOAK_PASSES=-1          # count of repetitions of fsstress (while soaking)
--EMAIL=root@localhost    # where auto-qa will send its status messages
-+export SOAK_PROC=3             # -p option to fsstress
-+export SOAK_STRESS=10000       # -n option to fsstress
-+export SOAK_PASSES=-1          # count of repetitions of fsstress (while soaking)
-+export EMAIL=root@localhost    # where auto-qa will send its status messages
- export HOST_OPTIONS=${HOST_OPTIONS:=local.config}
- export CHECK_OPTIONS=${CHECK_OPTIONS:="-g auto"}
- export BENCH_PASSES=${BENCH_PASSES:=5}
+ get_next_config() {
++	# set default RESULT_BASE
++	if [ -z "$RESULT_BASE" ]; then
++		export RESULT_BASE="$here/results/"
++	fi
++
+ 	#  Mandatory Config values.
+ 	MC=""
+ 	[ -z "$EMAIL" ]          && MC="$MC EMAIL"
 -- 
 1.8.3.1
 
