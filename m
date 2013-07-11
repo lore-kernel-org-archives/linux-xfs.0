@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9553D7F54
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id C80F97F3F
 	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 05:38:17 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E49C2AC002
-	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 03:38:16 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A551D8F8039
+	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 03:38:17 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id AZAkYBNGIJlV2Xni for
-	<xfs@oss.sgi.com>; Thu, 11 Jul 2013 03:38:15 -0700 (PDT)
+	cuda.sgi.com with ESMTP id bjvCmpm3dAMTVbGu for
+	<xfs@oss.sgi.com>; Thu, 11 Jul 2013 03:38:16 -0700 (PDT)
 Received: from int-mx09.intmail.prod.int.phx2.redhat.com
 	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r6BAcFo2031018
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r6BAcGAV031025
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 06:38:15 -0400
+	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 06:38:16 -0400
 From: Lukas Czerner <lczerner@redhat.com>
-Subject: [PATCH 03/10 v2] xfstests: Refactor code for obtaining test list
-Date: Thu, 11 Jul 2013 12:37:58 +0200
-Message-Id: <1373539085-8577-4-git-send-email-lczerner@redhat.com>
+Subject: [PATCH 04/10 v2] xfstests: Allow to recheck options in common/rc
+Date: Thu, 11 Jul 2013 12:37:59 +0200
+Message-Id: <1373539085-8577-5-git-send-email-lczerner@redhat.com>
 In-Reply-To: <1373539085-8577-1-git-send-email-lczerner@redhat.com>
 References: <1373539085-8577-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,150 +35,104 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: lczerner@redhat.com
 
-Put the code for obtaining the list of test into one place which makes
-things more readable. It will also allow us to re-init the list in the
-future if we need it.
+Move configuration checks into separate function to allow us to recheck
+the options without the need to reinclude the whole source file which is
+ugly. We still run the check on include.
 
 Signed-off-by: Lukas Czerner <lczerner@redhat.com>
 ---
- check | 100 ++++++++++++++++++++++++++++++++++++------------------------------
- 1 file changed, 54 insertions(+), 46 deletions(-)
+ common/rc | 74 ++++++++++++++++++++++++++++++++-------------------------------
+ 1 file changed, 38 insertions(+), 36 deletions(-)
 
-diff --git a/check b/check
-index 71b179b..dc972d7 100755
---- a/check
-+++ b/check
-@@ -154,6 +154,56 @@ _timestamp()
-     echo -n " [$now]"
+diff --git a/common/rc b/common/rc
+index fe6bbfc..0dd30a3 100644
+--- a/common/rc
++++ b/common/rc
+@@ -2131,46 +2131,48 @@ run_check()
+ 	"$@" >> $seqres.full 2>&1 || _fail "failed: '$@'"
  }
  
-+_prepare_test_list()
-+{
-+	unset list
-+	# Tests specified on the command line
-+	if [ -s $tmp.arglist ]; then
-+		cat $tmp.arglist > $tmp.list
-+	else
-+		touch $tmp.list
-+	fi
-+
-+	# Specified groups to include
-+	for group in $GROUP_LIST; do
-+		list=$(get_group_list $group)
-+		if [ -z "$list" ]; then
-+			echo "Group \"$group\" is empty or not defined?"
-+			exit 1
-+		fi
-+
-+		for t in $list; do
-+			grep -s "^$t\$" $tmp.list >/dev/null || \
-+							echo "$t" >>$tmp.list
-+		done
-+	done
-+
-+	if ! $have_test_arg && [ -z "$GROUP_LIST" ]; then
-+		# no test numbers, do everything
-+		get_all_tests
-+	fi
-+
-+	# Specified groups to exclude
-+	for xgroup in $XGROUP_LIST; do
-+		list=$(get_group_list $xgroup)
-+		if [ -z "$list" ]; then
-+			echo "Group \"$xgroup\" is empty or not defined?"
-+			exit 1
-+		fi
-+
-+		trim_test_list $list
-+	done
-+
-+	# sort the list of tests into numeric order
-+	list=`sort -n $tmp.list | uniq`
-+	rm -f $tmp.list $tmp.tmp $tmp.grep
-+
-+	if $randomize
-+	then
-+		list=`echo $list | awk -f randomize.awk`
-+	fi
-+}
-+
- # Process command arguments first.
- while [ $# -gt 0 ]; do
- 	case "$1" in
-@@ -164,35 +214,11 @@ while [ $# -gt 0 ]; do
- 	-nfs)	FSTYP=nfs ;;
- 
- 	-g)	group=$2 ; shift ;
--		group_list=$(get_group_list $group)
--		if [ -z "$group_list" ]; then
--		    echo "Group \"$group\" is empty or not defined?"
--		    exit 1
--		fi
+-################################################################################
 -
--		[ ! -s $tmp.list ] && touch $tmp.list
--		for t in $group_list; do
--			grep -s "^$t\$" $tmp.list >/dev/null || \
--							echo "$t" >>$tmp.list
--		done
--
-+		GROUP_LIST="$GROUP_LIST $group"
- 		;;
- 
- 	-x)	xgroup=$2 ; shift ;
--
--		# Note: behaviour is dependent on command line ordering of
--		# -g and -x parameters. If there are no preceding -g commands,
--		# this works on all tests, otherwise just the tests specified by
--		# the early -g inclusions.
--		[ ! -s $tmp.list ] && get_all_tests
--
--		group_list=$(get_group_list $xgroup)
--		if [ -z "$group_list" ]; then
--		    echo "Group \"$xgroup\" is empty or not defined?"
--		    exit 1
--		fi
--
--		trim_test_list $group_list
-+		XGROUP_LIST="$XGROUP_LIST $xgroup"
- 		;;
- 
- 	-X)	xfile=$2; shift ;
-@@ -244,7 +270,7 @@ if $have_test_arg; then
- 
- 			if egrep "^$test_name" $group_file >/dev/null ; then
- 				# in group file ... OK
--				echo $SRC_DIR/$1 >>$tmp.list
-+				echo $SRC_DIR/$1 >>$tmp.arglist
- 			else
- 				# oops
- 				echo "$1 - unknown test, ignored"
-@@ -256,25 +282,7 @@ if $have_test_arg; then
- 	done
- fi
- 
--if [ -s $tmp.list ]; then
--    # found some valid test numbers ... this is good
--    :
--elif $have_test_arg; then
--	# had test numbers, but none in group file ... do nothing
--	touch $tmp.list
--else
--	# no test numbers, do everything
--	get_all_tests
--fi
--
--# sort the list of tests into numeric order
--list=`sort -n $tmp.list`
--rm -f $tmp.list $tmp.tmp $tmp.grep
--
--if $randomize
+-if [ "$iam" != new ]
 -then
--    list=`echo $list | awk -f randomize.awk`
--fi
-+_prepare_test_list
+-    # make some further configuration checks here
+-
+-    if [ "$TEST_DEV" = ""  ]
+-    then
+-        echo "common/rc: Error: \$TEST_DEV is not set"
+-        exit 1
+-    fi
+-
+-    # if $TEST_DEV is not mounted, mount it now as XFS
+-    if [ -z "`_fs_type $TEST_DEV`" ]
+-    then
+-        # $TEST_DEV is not mounted
+-        if ! _test_mount
+-        then
+-            echo "common/rc: retrying test device mount with external set"
+-            [ "$USE_EXTERNAL" != "yes" ] && export USE_EXTERNAL=yes
+-            if ! _test_mount
+-            then
+-                echo "common/rc: could not mount $TEST_DEV on $TEST_DIR"
+-                exit 1
+-            fi
+-        fi
+-    fi
++init_rc()
++{
++	if [ "$iam" == new ]
++	then
++		return
++	fi
++	# make some further configuration checks here
++	if [ "$TEST_DEV" = ""  ]
++	then
++		echo "common/rc: Error: \$TEST_DEV is not set"
++		exit 1
++	fi
  
- # we need common/rc
- if ! . ./common/rc
+-    if [ "`_fs_type $TEST_DEV`" != "$FSTYP" ]
+-    then
+-        echo "common/rc: Error: \$TEST_DEV ($TEST_DEV) is not a MOUNTED $FSTYP filesystem"
+-        $DF_PROG $TEST_DEV
+-        exit 1
+-    fi
++	# if $TEST_DEV is not mounted, mount it now as XFS
++	if [ -z "`_fs_type $TEST_DEV`" ]
++	then
++		# $TEST_DEV is not mounted
++		if ! _test_mount
++		then
++			echo "common/rc: retrying test device mount with external set"
++			[ "$USE_EXTERNAL" != "yes" ] && export USE_EXTERNAL=yes
++			if ! _test_mount
++			then
++				echo "common/rc: could not mount $TEST_DEV on $TEST_DIR"
++				exit 1
++			fi
++		fi
++	fi
+ 
+-    # Figure out if we need to add -F ("foreign", deprecated) option to xfs_io
+-    xfs_io -c stat $TEST_DIR 2>&1 | grep -q "is not on an XFS filesystem" && \
++	if [ "`_fs_type $TEST_DEV`" != "$FSTYP" ]
++	then
++		echo "common/rc: Error: \$TEST_DEV ($TEST_DEV) is not a MOUNTED $FSTYP filesystem"
++		$DF_PROG $TEST_DEV
++		exit 1
++	fi
++	# Figure out if we need to add -F ("foreign", deprecated) option to xfs_io
++	xfs_io -c stat $TEST_DIR 2>&1 | grep -q "is not on an XFS filesystem" && \
+ 	export XFS_IO_PROG="$XFS_IO_PROG -F"
++}
+ 
+-fi
++init_rc
+ 
++################################################################################
+ # make sure this script returns success
+ /bin/true
 -- 
 1.8.3.1
 
