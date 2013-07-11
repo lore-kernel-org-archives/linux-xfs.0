@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id BB49C7F37
-	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 02:52:27 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 9E7B57F8D
+	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 02:55:46 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6E0F98F80D4
-	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 00:52:24 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	UPpl6XKw2zDOqG6Q for <xfs@oss.sgi.com>;
-	Thu, 11 Jul 2013 00:52:22 -0700 (PDT)
-Date: Thu, 11 Jul 2013 17:52:08 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v11 2/4] xfs: Start using pquotaino from the superblock.
-Message-ID: <20130711075208.GB3438@dastard>
-References: <1373518843-1492-1-git-send-email-sekharan@us.ibm.com>
-	<1373518843-1492-3-git-send-email-sekharan@us.ibm.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1373518843-1492-3-git-send-email-sekharan@us.ibm.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6434E304113
+	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 00:55:43 -0700 (PDT)
+Subject: Re: [PATCH v10 10/11] quota: Add proper versioning support to
+	fs_quota_stat
+From: Steven Whitehouse <swhiteho@redhat.com>
+In-Reply-To: <1373516161.4555.10.camel@chandra-laptop.ibm.com>
+References: <1372371914-11370-1-git-send-email-sekharan@us.ibm.com>
+	<1372371914-11370-11-git-send-email-sekharan@us.ibm.com>
+	<20130710155538.GY20932@sgi.com> <20130710162602.GB32444@quack.suse.cz>
+	<1373489390.6020.30.camel@chandra-dt.ibm.com>
+	<20130711014501.GY3438@dastard>
+	<1373516161.4555.10.camel@chandra-laptop.ibm.com>
+Date: Thu, 11 Jul 2013 08:51:20 +0100
+Message-ID: <1373529080.2721.0.camel@menhir>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,214 +30,99 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Chandra Seetharaman <sekharan@us.ibm.com>
-Cc: xfs@oss.sgi.com
+To: sekharan@us.ibm.com
+Cc: Jan Kara <jack@suse.cz>, Ben Myers <bpm@sgi.com>, adas@redhat.com, xfs@oss.sgi.com
 
-On Thu, Jul 11, 2013 at 12:00:41AM -0500, Chandra Seetharaman wrote:
-> Start using pquotino and define a macro to check if the
-> superblock has pquotino.
+Hi,
+
+Copying in Abhi, since he is the quota expert on the GFS2 side,
+
+Steve.
+
+On Wed, 2013-07-10 at 23:16 -0500, Chandra Seetharaman wrote:
+> On Thu, 2013-07-11 at 11:45 +1000, Dave Chinner wrote:
+> > On Wed, Jul 10, 2013 at 03:49:50PM -0500, Chandra Seetharaman wrote:
+> > > On Wed, 2013-07-10 at 18:26 +0200, Jan Kara wrote:
+> > > > On Wed 10-07-13 10:55:38, Ben Myers wrote:
+> > > > > Hey Chandra,
+> > > 
+> > > <snip>
+> > > 
+> > > > > > diff --git a/fs/quota/quota.c b/fs/quota/quota.c
+> > > > > > index c7314f1..ae6526e 100644
+> > > > > > --- a/fs/quota/quota.c
+> > > > > > +++ b/fs/quota/quota.c
+> > > > > > @@ -207,12 +207,57 @@ static int quota_setxstate(struct super_block *sb, int cmd, void __user *addr)
+> > > > > >  static int quota_getxstate(struct super_block *sb, void __user *addr)
+> > > > > >  {
+> > > > > >  	struct fs_quota_stat fqs;
+> > > > > > -	int ret;
+> > > > > > +	struct fs_quota_stat_v1 fqs_v1;
+> > > > > > +	int ret, size;
+> > > > > > +	void *fqsp;
+> > > > > >  
+> > > > > >  	if (!sb->s_qcop->get_xstate)
+> > > > > >  		return -ENOSYS;
+> > > > > > +
+> > > > > > +	memset(&fqs, 0, sizeof(struct fs_quota_stat));
+> > > > > > +	if (copy_from_user(&fqs, addr, 1)) /* just get the version */
+> > > > > > +		return -EFAULT;
+> > > > > > +
+> > > > > > +	switch (fqs.qs_version) {
+> > > > > > +	case FS_QSTAT_VERSION_2:
+> > > > > > +		size = FS_QSTAT_V2_SIZE;
+> > > > > > +		break;
+> > > > > > +	default:
+> > > > > > +		fqs.qs_version = FS_QSTAT_VERSION;
+> > > > > > +		/* fallthrough */
+> > > > > > +	case FS_QSTAT_VERSION:
+> > > > > > +		size = FS_QSTAT_V1_SIZE;
+> > > > > > +		break;
+> > > > > > +	}
+> > > >   Guys, you cannot really do this. If anyone is using getxstate() with
+> > > > uninitialized buffer (which is fine so far), you cannot suddently start to
+> > > > rely on the contents of qs_version field. That's ABI (and even API)
+> > > > breakage.
+> > > 
+> > > Agree, it is a API breakage.
+> > > 
+> > > Will fix it by adding a new quotactl value as you suggest. 
+> > 
+> > Please enforce the version number as being valid so we don't
+> > need to add another new interface if we need to change this
+> > structure again. :)
 > 
-> Keep backward compatibilty by alowing mount of older superblock
-> with no separate pquota inode.
+> Yes, I am keeping the lower level interface same as before.
 > 
-> Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-> ---
->  fs/xfs/xfs_mount.c             |   62 ++++++++++++++++++++++++++++++++++-----
->  fs/xfs/xfs_qm.c                |   28 +++++++++--------
->  fs/xfs/xfs_qm_syscalls.c       |   21 +++++++++++++-
->  fs/xfs/xfs_sb.h                |    9 +++++-
->  fs/xfs/xfs_super.c             |   19 ++++++------
->  include/uapi/linux/dqblk_xfs.h |    1 +
->  6 files changed, 108 insertions(+), 32 deletions(-)
+> > 
+> > FWIW, we're now going to need a new xfs_quota changes to go along
+> > with this - it will need to use the new interface by default, and
+> > fall back to the existing interface if it gets an error saying the
+> > command does not exist.  We can't actually test the new interface
+> > until we have xfs_quota patches that use it.
 > 
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index 2b0ba35..b8a633b 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -336,12 +336,17 @@ xfs_mount_validate_sb(
->  		return XFS_ERROR(EWRONGFS);
->  	}
->  
-> -	if ((sbp->sb_qflags & (XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD)) &&
-> -			(sbp->sb_qflags & (XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD |
-> -				XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD))) {
-> -		xfs_notice(mp,
-> -"Super block has XFS_OQUOTA bits along with XFS_PQUOTA and/or XFS_GQUOTA bits.\n");
-> -		return XFS_ERROR(EFSCORRUPTED);
-> +	if (xfs_sb_version_has_pquota(sbp)) {
-> +		if (sbp->sb_qflags & (XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD)) {
-> +			xfs_notice(mp,
-> +			   "Version 5 of Super block has XFS_OQUOTA bits.\n");
-> +			return XFS_ERROR(EFSCORRUPTED);
-> +		}
-> +	} else if (sbp->sb_qflags & (XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD |
-> +				XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD)) {
-> +			xfs_notice(mp,
-> +"Superblock earlier than Version 5 has XFS_[PQ]UOTA_{ENFD|CHKD} bits.\n");
-> +			return XFS_ERROR(EFSCORRUPTED);
->  	}
+> The lower level interface doesn't change. It will remain the same. I
+> will send the code soon.
+> 
+> > 
+> > And to play Devil's advocate: it is way too late in the merge cycle
+> > to make these sorts of ABI changes to a patch and test/review them
+> > adequately.
+> 
+> There is no ABI issues even in the earlier version, it was an API
+> breakage. And with Jan's suggestion even that API breakage is being
+> fixed. There is no change in API or ABI. We are just adding a new
+> interface.
+> 
+> Old code and old binary will work as before.
+> 
+> > 
+> > Cheers,
+> > 
+> > Dave.
+> 
+> 
 
-Can you move this to after we've checked the 5 superblock feature
-masks for whether the kernel supports the various features the
-superblock defines - feature support checks need to come before
-checking superblock fields for validity....
-
-> @@ -570,8 +575,13 @@ out_unwind:
->  }
->  
->  static void
-> -xfs_sb_quota_from_disk(struct xfs_sb *sbp)
-> +xfs_sb_quota_from_disk(struct xfs_mount *mp)
->  {
-> +	struct xfs_sb *sbp = &mp->m_sb;
-> +
-> +	if (xfs_sb_version_has_pquota(sbp))
-> +		return;
-> +
->  	if (sbp->sb_qflags & XFS_OQUOTA_ENFD)
->  		sbp->sb_qflags |= (sbp->sb_qflags & XFS_PQUOTA_ACCT) ?
->  					XFS_PQUOTA_ENFD : XFS_GQUOTA_ENFD;
-> @@ -579,6 +589,18 @@ xfs_sb_quota_from_disk(struct xfs_sb *sbp)
->  		sbp->sb_qflags |= (sbp->sb_qflags & XFS_PQUOTA_ACCT) ?
->  					XFS_PQUOTA_CHKD : XFS_GQUOTA_CHKD;
->  	sbp->sb_qflags &= ~(XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD);
-> +
-> +	if (!xfs_sb_version_has_pquota(sbp) && (XFS_IS_PQUOTA_ON(mp))) {
-> +		/*
-> +		 * On disk superblock only has sb_gquotino, and incore
-> +		 * superblock has both sb_gquotino and sb_pquotino.
-> +		 * But, only one them is supported at any point of time.
-> +		 * So, if PQUOTA is set in disk superblock, copy over
-> +		 * sb_gquotino to sb_pquotino.
-> +		 */
-> +		mp->m_sb.sb_pquotino = mp->m_sb.sb_gquotino;
-> +		mp->m_sb.sb_gquotino = NULLFSINO;
-> +	}
->  }
-
-Why is this using mp rather than sbp? Indeed, this should be passed
-the superblock as a parameter (as per the previous version of the
-code) as the superblock we are writing into is determined by the
-caller. e.g. what if we want to do this conversion in
-xfs_sb_verify() and are using the on-stack struct xfs_sb?
-
-Also, why should a mount option determine how we interpret the
-on-disk format? i.e. the XFS_IS_PQUOTA_ON() check? The superblock
-itself describes which quota the sb_gquotino contains (i.e. what is
-in from->sb_qflags) and that alone determines which field the
-on-disk inode gets copied into.
-
-If the mount options then don't line up with what is in the
-superblock, then the quota mount checks will handle that
-appropriately.
-
->  
->  void
-> @@ -650,6 +672,13 @@ xfs_sb_quota_to_disk(
->  {
->  	__uint16_t	qflags = from->sb_qflags;
->  
-> +	/*
-> +	 * We need to do these manipilations only if we are working
-> +	 * with an older version of on-disk superblock.
-> +	 */
-> +	if (xfs_sb_version_has_pquota(from))
-> +		return;
-> +
->  	if (*fields & XFS_SB_QFLAGS) {
->  		/*
->  		 * The in-core version of sb_qflags do not have
-> @@ -669,6 +698,23 @@ xfs_sb_quota_to_disk(
->  		to->sb_qflags = cpu_to_be16(qflags);
->  		*fields &= ~XFS_SB_QFLAGS;
->  	}
-> +
-> +	if (*fields & XFS_SB_PQUOTINO && *fields & XFS_SB_GQUOTINO) {
-
-gcc will throw warnings on that code. The normal way of checking
-multiple flag fields is:
-
-	if ((*fields & (XFS_SB_PQUOTINO|XFS_SB_GQUOTINO)) ==
-		       (XFS_SB_PQUOTINO|XFS_SB_GQUOTINO)) {
-
-> +		/*
-> +		 * PQUOTINO and GQUOTINO cannot be used together in versions
-> +		 * of superblock that do not have pquotino. If used, use
-> +		 * sb_flags to resolve which one should be set.
-> +		*/
-> +		if (from->sb_qflags & XFS_PQUOTA_ACCT)
-> +			*fields &= ~XFS_SB_GQUOTINO;
-> +		else
-> +			*fields &= ~XFS_SB_PQUOTINO;
-> +	}
-> +
-> +	if (*fields & XFS_SB_PQUOTINO) {
-> +		to->sb_gquotino = cpu_to_be64(from->sb_pquotino);
-> +		*fields &= ~XFS_SB_PQUOTINO;
-> +	}
-
-Better yet:
-
-	/*
-	 * GQUOTINO and PQUOTINO cannot be used together in versions
-	 * of superblock that do not have pquotino. from->sb_flags
-	 * tells us which quota is active and should be copied to
-	 * disk.
-	 */
-	if ((*fields & XFS_SB_GQUOTINO) && (from->sb_qflags & XFS_GQUOTA_ACCT))
-		to->sb_gquotino = cpu_to_be64(from->sb_gquotino);
-	else if ((*fields & XFS_SB_PQUOTINO) && (from->sb_qflags & XFS_PQUOTA_ACCT))
-		to->sb_gquotino = cpu_to_be64(from->sb_pquotino);
-
-	*fields &= ~(XFS_SB_PQUOTINO | XFS_SB_GQUOTINO);
-
->  }
->  
->  /*
-> @@ -885,7 +931,7 @@ reread:
->  	 */
->  	xfs_sb_from_disk(&mp->m_sb, XFS_BUF_TO_SBP(bp));
->  
-> -	xfs_sb_quota_from_disk(&mp->m_sb);
-> +	xfs_sb_quota_from_disk(mp);
-
-As I commented above, we need to pass the superblock separately.
-
-> diff --git a/fs/xfs/xfs_sb.h b/fs/xfs/xfs_sb.h
-> index 78f9e70..d372fdf 100644
-> --- a/fs/xfs/xfs_sb.h
-> +++ b/fs/xfs/xfs_sb.h
-> @@ -621,7 +621,14 @@ xfs_sb_has_incompat_log_feature(
->  static inline bool
->  xfs_is_quota_inode(struct xfs_sb *sbp, xfs_ino_t ino)
->  {
-> -	return (ino == sbp->sb_uquotino || ino == sbp->sb_gquotino);
-> +	return (ino == sbp->sb_uquotino ||
-> +		ino == sbp->sb_gquotino ||
-> +		ino == sbp->sb_pquotino);
-> +}
-
-Can you move this function down below the comment in xfs_sb.h that
-says:
-
-/*
- * end of superblock version macros
- */
-
-> +
-> +static inline int xfs_sb_version_has_pquota(xfs_sb_t *sbp)
-> +{
-> +	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5;
->  }
-
-And leave this above it?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
