@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7C78F7F54
-	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 05:38:22 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6549B304081
-	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 03:38:22 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id B44567F62
+	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 05:38:23 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6399D30407E
+	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 03:38:23 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id S3Jx3p22M88Ik4g4 for
-	<xfs@oss.sgi.com>; Thu, 11 Jul 2013 03:38:21 -0700 (PDT)
+	cuda.sgi.com with ESMTP id EfqXimoYOXb0TQx2 for
+	<xfs@oss.sgi.com>; Thu, 11 Jul 2013 03:38:22 -0700 (PDT)
 Received: from int-mx09.intmail.prod.int.phx2.redhat.com
 	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r6BAcLoN027033
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r6BAcMMr027039
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 06:38:21 -0400
+	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 06:38:22 -0400
 From: Lukas Czerner <lczerner@redhat.com>
-Subject: [PATCH 08/10 v2] xfstests: Add support for sections in config file
-Date: Thu, 11 Jul 2013 12:38:03 +0200
-Message-Id: <1373539085-8577-9-git-send-email-lczerner@redhat.com>
+Subject: [PATCH 09/10 v2] xfstests: Allow to recreate TEST_DEV
+Date: Thu, 11 Jul 2013 12:38:04 +0200
+Message-Id: <1373539085-8577-10-git-send-email-lczerner@redhat.com>
 In-Reply-To: <1373539085-8577-1-git-send-email-lczerner@redhat.com>
 References: <1373539085-8577-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,351 +35,372 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: lczerner@redhat.com
 
-This patch add support for sections in the config file. Each section can
-contain configuration options in the format
+Add config option RECREATE_TEST_DEV to allow to recreate file system on
+the TEST_DEV device. Permitted values are true and false.
 
-OPTION=value
+If RECREATE_TEST_DEV is set to true the TEST_DEV device will be
+unmounted and FSTYP file system will be created on it. Afterwards it
+will be mounted to TEST_DIR again with the default, or specified mount
+options.
 
-when one section is processed xfstests will proceed to next section
-until all secitons are processed, or an error occur.
-
-The name of the section can consist of alphanumeric characters + '_',
-nothing else is allowed. Name of the section is also used to create
-results subdirectory for each section. After all the sections are
-processed summary of all runs is printed out.
-
-If the config file does not contain sections, or we're not using config
-file at all, nothing is changed and xfstests will work the same way as
-it used to.
-
-This is very useful for testing file system with different options. Here
-is an example of the config file with sections:
-
-[ext4_4k_block_size]
-TEST_DEV=/dev/sda
-TEST_DIR=/mnt/test
-SCRATCH_DEV=/dev/sdb
-SCRATCH_MNT=/mnt/test1
-MKFS_OPTIONS="-q -F -b4096"
-FSTYP=ext4
-
-[ext4_1k_block_size]
-MKFS_OPTIONS="-q -F -b1024"
-
-[ext4_nojournal]
-MKFS_OPTIONS="-q -F -b4096 -O ^has_journal"
-
-[ext4_discard_ssd]
-MKFS_OPTIONS="-q -F -b4096"
-TEST_DEV=/dev/sdc
-SCRATCH_DEV=/dev/sdd
-MOUNT_OPTIONS="-o discard"
-
-Note that once the variable is set it remains set across the sections, so
-you do not have to specify all the options in all sections. However one
-have to make sure that unwanted options are not set from previous
-sections.
+Also recreate the file system if FSTYP differs from the previous
+section.
 
 Signed-off-by: Lukas Czerner <lczerner@redhat.com>
 ---
- README.config-sections | 50 ++++++++++++++++++++++++++++++++++
- check                  | 73 +++++++++++++++++++++++++++++++++++++++++---------
- common/config          | 49 +++++++++++++++++++++++++++++++--
- 3 files changed, 158 insertions(+), 14 deletions(-)
- create mode 100644 README.config-sections
+ README.config-sections |  43 ++++++++++++++++----
+ check                  |  33 ++++++++++++---
+ common/config          | 106 +++++++++++++++++++++++++++++++++++++++++++++++++
+ common/rc              |  26 +++++++++---
+ 4 files changed, 189 insertions(+), 19 deletions(-)
 
 diff --git a/README.config-sections b/README.config-sections
-new file mode 100644
-index 0000000..6d88a6f
---- /dev/null
+index 6d88a6f..4d60272 100644
+--- a/README.config-sections
 +++ b/README.config-sections
-@@ -0,0 +1,50 @@
-+Configuration file with sections
-+================================
+@@ -5,16 +5,20 @@ Configuration file with sections is useful for running xfstests on multiple
+ file systems, or multiple file system setups in a single run without any
+ help of external scripts.
+ 
 +
-+Configuration file with sections is useful for running xfstests on multiple
-+file systems, or multiple file system setups in a single run without any
-+help of external scripts.
++Syntax
++------
 +
-+Syntax for defining a section is the following:
+ Syntax for defining a section is the following:
+ 
+-[section_name]
++	[section_name]
+ 
+ Section name should consist of alphanumeric characters and '_'. Anything
+ else is forbidden and the section will not be recognised.
+ 
+ Each section in the configuration file should contain options in the format
+ 
+-OPTION=value
++	OPTION=value
+ 
+ 'OPTION' must not contain any white space characters. 'value' can contain
+ any character you want with one simple limitation - characters ' and " can
+@@ -24,9 +28,31 @@ Note that options are carried between sections so the same options does not
+ have to be specified in each and every sections. However caution should be
+ exercised not to leave unwanted options set from previous sections.
+ 
 +
-+[section_name]
++Results
++-------
 +
-+Section name should consist of alphanumeric characters and '_'. Anything
-+else is forbidden and the section will not be recognised.
+ For every section xfstests will run with specified options and will produce
+ separate results in the '$RESULT_BASE/$section_name' directory.
+ 
 +
-+Each section in the configuration file should contain options in the format
++Multiple file systems
++---------------------
 +
-+OPTION=value
++Having different file systems in different config sections is allowed. When
++FSTYP differs in the following section the FSTYP file system will be created
++automatically before running the test.
 +
-+'OPTION' must not contain any white space characters. 'value' can contain
-+any character you want with one simple limitation - characters ' and " can
-+only appear at the start and end of the 'value', however it is not required.
++Note that if MOUNT_OPTIONS, MKFS_OPTIONS, or FSCK_OPTIONS are not directly
++specified in the section it will be reset to the default for a given file
++system.
 +
-+Note that options are carried between sections so the same options does not
-+have to be specified in each and every sections. However caution should be
-+exercised not to leave unwanted options set from previous sections.
++You can also force the file system recreation by specifying RECREATE_TEST_DEV.
 +
-+For every section xfstests will run with specified options and will produce
-+separate results in the '$RESULT_BASE/$section_name' directory.
 +
-+Here is an example of config file with sections:
++Example
++-------
 +
-+[ext4_4k_block_size]
-+TEST_DEV=/dev/sda
-+TEST_DIR=/mnt/test
-+SCRATCH_DEV=/dev/sdb
-+SCRATCH_MNT=/mnt/test1
-+MKFS_OPTIONS="-q -F -b4096"
-+FSTYP=ext4
+ Here is an example of config file with sections:
+ 
+ [ext4_4k_block_size]
+@@ -36,6 +62,7 @@ SCRATCH_DEV=/dev/sdb
+ SCRATCH_MNT=/mnt/test1
+ MKFS_OPTIONS="-q -F -b4096"
+ FSTYP=ext4
++RESULT_BASE="`pwd`/results/`date +%d%m%y_%H%M%S`"
+ 
+ [ext4_1k_block_size]
+ MKFS_OPTIONS="-q -F -b1024"
+@@ -43,8 +70,10 @@ MKFS_OPTIONS="-q -F -b1024"
+ [ext4_nojournal]
+ MKFS_OPTIONS="-q -F -b4096 -O ^has_journal"
+ 
+-[ext4_discard_ssd]
+-MKFS_OPTIONS="-q -F -b4096"
+-TEST_DEV=/dev/sdc
+-SCRATCH_DEV=/dev/sdd
+-MOUNT_OPTIONS="-o discard"
++[xfs_filesystem]
++MKFS_OPTIONS="-f"
++FSTYP=xfs
 +
-+[ext4_1k_block_size]
-+MKFS_OPTIONS="-q -F -b1024"
-+
-+[ext4_nojournal]
-+MKFS_OPTIONS="-q -F -b4096 -O ^has_journal"
-+
-+[ext4_discard_ssd]
-+MKFS_OPTIONS="-q -F -b4096"
-+TEST_DEV=/dev/sdc
-+SCRATCH_DEV=/dev/sdd
-+MOUNT_OPTIONS="-o discard"
++[ext3_filesystem]
++FSTYP=ext3
++MOUNT_OPTIONS="-o noatime"
 diff --git a/check b/check
-index 677650c..1df7a37 100755
+index 1df7a37..5775276 100755
 --- a/check
 +++ b/check
-@@ -22,9 +22,11 @@
- tmp=/tmp/$$
- status=0
- needwrap=true
-+needsum=true
- n_try=0
- try=""
- n_bad=0
-+sum_bad=0
- bad=""
- notrun=""
- interrupt=true
-@@ -296,7 +298,12 @@ then
-     exit 1
+@@ -283,8 +283,6 @@ if $have_test_arg; then
+ 	done
  fi
  
--# Ok, time to start running...
-+_wipe_counters()
-+{
-+	n_try="0"
-+	n_bad="0"
-+	unset try notrun bad
-+}
- 
- _wrapup()
- {
-@@ -325,16 +332,20 @@ END	{ if (NR > 0) {
- 	date >>$check.log
- 	echo $list | fmt | sed -e 's/^/    /' -e "s;$SRC_DIR/;;g" >>$check.log
- 	$interrupt && echo "Interrupted!" >>$check.log
--        
-+
-+	echo "SECTION       -- $section" >>$tmp.summary
-+	echo "=========================" >>$tmp.summary
-         if [ ! -z "$n_try" -a $n_try != 0 ]
- 	then
- 	    echo "Ran:$try"
-+	    echo "Ran:$try" >>$tmp.summary
- 	fi
- 
- 	if [ ! -z "$notrun" ]
- 	then
- 	    echo "Not run:$notrun"
- 	    echo "Not run:$notrun" >>$check.log
-+	    echo "Not run:$notrun" >>$tmp.summary
- 	fi
- 
-         if [ ! -z "$n_bad" -a $n_bad != 0 ]
-@@ -343,20 +354,48 @@ END	{ if (NR > 0) {
- 	    echo "Failed $n_bad of $n_try tests"
- 	    echo "Failures:$bad" | fmt >>$check.log
- 	    echo "Failed $n_bad of $n_try tests" >>$check.log
-+	    echo "Failures:$bad" >>$tmp.summary
-+	    echo "Failed $n_bad of $n_try tests" >>$tmp.summary
- 	else
- 	    echo "Passed all $n_try tests"
- 	    echo "Passed all $n_try tests" >>$check.log
-+	    echo "Passed all $n_try tests" >>$tmp.summary
- 	fi
-+	echo "" >>$tmp.summary
- 	needwrap=false
-     fi
- 
-+    sum_bad=`expr $sum_bad + $n_bad`
-+    _wipe_counters
-     rm -f /tmp/*.rawout /tmp/*.out /tmp/*.err /tmp/*.time
--    rm -f $tmp.*
-+    if ! $OPTIONS_HAVE_SECTIONS; then
-+        rm -f $tmp.*
-+    fi
+-_prepare_test_list
+-
+ # we need common/rc
+ if ! . ./common/rc
+ then
+@@ -386,6 +384,8 @@ _summary()
+ 	rm -f $tmp.*
  }
  
--trap "_wrapup; exit \$status" 0 1 2 3 15
-+_summary()
-+{
-+	_wrapup
-+	if $showme; then
-+		:
-+	elif $needsum; then
-+		count=`wc -L $tmp.summary | cut -f1 -d" "`
-+		cat $tmp.summary
-+		needsum=false
-+	fi
-+	rm -f $tmp.*
-+}
++_prepare_test_list
 +
-+if $OPTIONS_HAVE_SECTIONS; then
-+	trap "_summary; exit \$status" 0 1 2 3 15
-+else
-+	trap "_wrapup; exit \$status" 0 1 2 3 15
-+fi
-+
-+for section in $HOST_OPTIONS_SECTIONS; do
-+	get_next_config $section
-+	init_rc
+ if $OPTIONS_HAVE_SECTIONS; then
+ 	trap "_summary; exit \$status" 0 1 2 3 15
+ else
+@@ -393,8 +393,8 @@ else
+ fi
  
--if true; then
+ for section in $HOST_OPTIONS_SECTIONS; do
++	OLD_FSTYP=$FSTYP
+ 	get_next_config $section
+-	init_rc
+ 
  	mkdir -p $RESULT_BASE
  	if [ ! -d $RESULT_BASE ]; then
- 		echo "failed to create results directory $RESULTS_BASE"
-@@ -366,12 +405,15 @@ if true; then
- 	seq="check"
- 	check="$RESULT_BASE/check"
+@@ -402,6 +402,30 @@ for section in $HOST_OPTIONS_SECTIONS; do
+ 		exit 1;
+ 	fi
  
--# don't leave old full output behind on a clean run
-+	# don't leave old full output behind on a clean run
- 	rm -f $check.full
- 
- 	[ -f $check.time ] || touch $check.time
- 
--# print out our test configuration
-+	# print out our test configuration
 +	if $OPTIONS_HAVE_SECTIONS; then
 +		echo "SECTION       -- $section"
 +	fi
++
++	if $RECREATE_TEST_DEV || [ "$OLD_FSTYP" != "$FSTYP" ]; then
++		echo "RECREATING    -- $FSTYP on $TEST_DEV"
++		_umount_or_remount_ro $TEST_DEV 2>&1> /dev/null
++		if ! _test_mkfs >$tmp.err 2>&1
++		then
++			echo "our local _test_mkfs routine ..."
++			cat $tmp.err
++			echo "check: failed to mkfs \$TEST_DEV using specified options"
++			exit 1
++		fi
++		out=`_mount_or_remount_rw "$MOUNT_OPTIONS" $TEST_DEV $TEST_DIR`
++		if [ $? -ne 1 ]; then
++			echo $out
++			exit 1
++		fi
++		_prepare_test_list
++	fi
++
++	init_rc
++
+ 	seq="check"
+ 	check="$RESULT_BASE/check"
+ 
+@@ -411,9 +435,6 @@ for section in $HOST_OPTIONS_SECTIONS; do
+ 	[ -f $check.time ] || touch $check.time
+ 
+ 	# print out our test configuration
+-	if $OPTIONS_HAVE_SECTIONS; then
+-		echo "SECTION       -- $section"
+-	fi
  	echo "FSTYP         -- `_full_fstyp_details`"
  	echo "PLATFORM      -- `_full_platform_details`"
  	if [ ! -z "$SCRATCH_DEV" ]; then
-@@ -379,7 +421,7 @@ if true; then
- 		echo "MOUNT_OPTIONS -- `_scratch_mount_options`"
- 	fi
- 	echo
--
-+	needwrap=true
- 
- 	if [ ! -z "$SCRATCH_DEV" ]; then
- 		umount $SCRATCH_DEV 2>/dev/null
-@@ -419,9 +461,14 @@ if true; then
- 		# Similarly, the result directory needs to replace the tests/
- 		# part of the test location.
- 		group=`dirname $seq`
--		export RESULT_DIR=`echo $group | sed -e "s;$SRC_DIR;$RESULT_BASE;"`
-+		if $OPTIONS_HAVE_SECTIONS; then
-+			export RESULT_DIR=`echo $group | sed -e "s;$SRC_DIR;${RESULT_BASE}/$section;"`
-+			seqres="$RESULT_BASE/$section/$seqnum"
-+		else
-+			export RESULT_DIR=`echo $group | sed -e "s;$SRC_DIR;$RESULT_BASE;"`
-+			seqres="$RESULT_BASE/$seqnum"
-+		fi
- 		mkdir -p $RESULT_DIR
--		seqres="$RESULT_BASE/$seqnum"
- 
- 		echo -n "$seqnum"
- 
-@@ -535,8 +582,10 @@ if true; then
- 
- 		 seq="after_$seqnum"
- 	done
--fi
-+	_wrapup
-+	echo
-+done
- 
- interrupt=false
--status=`expr $n_bad`
-+status=`expr $sum_bad`
- exit
 diff --git a/common/config b/common/config
-index 39dd469..8011ec4 100644
+index 8011ec4..a0b650b 100644
 --- a/common/config
 +++ b/common/config
-@@ -221,15 +221,57 @@ known_hosts()
- 	[ -f $HOST_CONFIG_DIR/$HOST.config ] && export HOST_OPTIONS=$HOST_CONFIG_DIR/$HOST.config
+@@ -82,6 +82,8 @@ export PWD=`pwd`
+ export MALLOCLIB=${MALLOCLIB:=/usr/lib/libefence.a}
+ export LOCAL_CONFIGURE_OPTIONS=${LOCAL_CONFIGURE_OPTIONS:=--enable-readline=yes}
+ 
++export RECREATE_TEST_DEV=false
++
+ # $1 = prog to look for, $2* = default pathnames if not found in $PATH
+ set_prog_path()
+ {
+@@ -212,6 +214,91 @@ case "$HOSTOS" in
+         ;;
+ esac
+ 
++_mount_opts()
++{
++	# SELinux adds extra xattrs which can mess up our expected output.
++	# So, mount with a context, and they won't be created
++	# # nfs_t is a "liberal" context so we can use it.
++	if [ -x /usr/sbin/selinuxenabled ] && /usr/sbin/selinuxenabled; then
++		SELINUX_MOUNT_OPTIONS="-o context=system_u:object_r:nfs_t:s0"
++		export SELINUX_MOUNT_OPTIONS
++	fi
++
++	case $FSTYP in
++	xfs)
++		export MOUNT_OPTIONS=$XFS_MOUNT_OPTIONS
++		;;
++	udf)
++		export MOUNT_OPTIONS=$UDF_MOUNT_OPTIONS
++		;;
++	nfs)
++		export MOUNT_OPTIONS=$NFS_MOUNT_OPTIONS
++		;;
++	ext2|ext3|ext4|ext4dev)
++		# acls & xattrs aren't turned on by default on ext$FOO
++		export MOUNT_OPTIONS="-o acl,user_xattr $EXT_MOUNT_OPTIONS"
++		;;
++	reiserfs)
++		# acls & xattrs aren't turned on by default on reiserfs
++		export MOUNT_OPTIONS="-o acl,user_xattr $REISERFS_MOUNT_OPTIONS"
++		;;
++	gfs2)
++		# acls aren't turned on by default on gfs2
++		export MOUNT_OPTIONS="-o acl $GFS2_MOUNT_OPTIONS"
++		;;
++	*)
++		;;
++	esac
++}
++
++_mkfs_opts()
++{
++	case $FSTYP in
++	xfs)
++		export MKFS_OPTIONS=$XFS_MKFS_OPTIONS
++		;;
++	udf)
++		[ ! -z "$udf_fsize" ] && \
++			UDF_MKFS_OPTIONS="$UDF_MKFS_OPTIONS -s $udf_fsize"
++		export MKFS_OPTIONS=$UDF_MKFS_OPTIONS
++		;;
++	nfs)
++		export MKFS_OPTIONS=$NFS_MKFS_OPTIONS
++		;;
++	reiserfs)
++		export MKFS_OPTIONS="$REISERFS_MKFS_OPTIONS -q"
++		;;
++	gfs2)
++		export MKFS_OPTIONS="$GFS2_MKFS_OPTIONS -O -p lock_nolock"
++		;;
++	jfs)
++		export MKFS_OPTIONS="$JFS_MKFS_OPTIONS -q"
++		;;
++	*)
++		;;
++	esac
++}
++
++_fsck_opts()
++{
++	case $FSTYP in
++	ext2|ext3|ext4|ext4dev)
++		export FSCK_OPTIONS="-nf"
++		;;
++	reiserfs)
++		export FSCK_OPTIONS="--yes"
++		;;
++	*)
++		export FSCK_OPTIONS="-n"
++		;;
++	esac
++}
++
++[ -z "$FSTYP" ] && export FSTYP=xfs
++[ -z "$MOUNT_OPTIONS" ] && _mount_opts
++[ -z "$MKFS_OPTIONS" ] && _mkfs_opts
++[ -z "$FSCK_OPTIONS" ] && _fsck_opts
++
+ known_hosts()
+ {
+ 	[ "$HOST_CONFIG_DIR" ] || HOST_CONFIG_DIR=`pwd`/configs
+@@ -270,8 +357,27 @@ parse_config_section() {
  }
  
-+# Returns a list of sections in config file
-+# Each section starts with the section name in the format
-+# [section_name1]. Only alphanumeric characters and '_' is allowed
-+# in the section name otherwise the section will not be resognised.
-+# Section name must be contained between square brackets.
-+get_config_sections() {
-+	sed -n -e "s/^\[\([[:alnum:]_]*\)\]/\1/p" < $1
-+}
-+
- if [ ! -f "$HOST_OPTIONS" ]; then
- 	known_hosts
- fi
- 
-+export HOST_OPTIONS_SECTIONS="-no-sections-"
-+export OPTIONS_HAVE_SECTIONS=false
- if [ -f "$HOST_OPTIONS" ]; then
--	. $HOST_OPTIONS
-+	export HOST_OPTIONS_SECTIONS=`get_config_sections $HOST_OPTIONS`
-+	if [ -z "$HOST_OPTIONS_SECTIONS" ]; then
-+		. $HOST_OPTIONS
-+		export HOST_OPTIONS_SECTIONS="-no-sections-"
-+	else
-+		export OPTIONS_HAVE_SECTIONS=true
-+	fi
- fi
- 
-+# Parse config section options. This function will parse all the configuration
-+# within a single section which name is passed as an argument. For section
-+# name format see comments in get_config_sections().
-+# Empty lines and everything after '#' will be ignored.
-+# Configuration options should be defined in the format
-+#
-+# CONFIG_OPTION=value
-+#
-+# This 'CONFIG_OPTION' variable and will be exported as an environment variable.
-+parse_config_section() {
-+	SECTION=$1
-+	if ! $OPTIONS_HAVE_SECTIONS; then
-+		return 0
-+	fi
-+	eval `sed -e 's/[[:space:]]*\=[[:space:]]*/=/g' \
-+		-e 's/#.*$//' \
-+		-e 's/[[:space:]]*$//' \
-+		-e 's/^[[:space:]]*//' \
-+		-e "s/^\(.*\)=\"\?'\?\([^\"']*\)\"\?'\?$/export \1=\"\2\"/" \
-+		< $HOST_OPTIONS \
-+		| sed -n -e "/^\[$SECTION\]/,/^\s*\[/{/^[^#].*\=.*/p;}"`
-+}
-+
  get_next_config() {
-+	parse_config_section $1
++	local OLD_FSTYP=$FSTYP
++	local OLD_MOUNT_OPTIONS=$MOUNT_OPTIONS
++	local OLD_MKFS_OPTIONS=$MKFS_OPTIONS
++	local OLD_FSCK_OPTIONS=$FSCK_OPTIONS
++
++	unset MOUNT_OPTIONS
++	unset MKFS_OPTIONS
++	unset FSCK_OPTIONS
++
+ 	parse_config_section $1
+ 
++	if [ -n "$OLD_FSTYP" ] && [ $OLD_FSTYP != $FSTYP ]; then
++		[ -z "$MOUNT_OPTIONS" ] && _mount_opts
++		[ -z "$MKFS_OPTIONS" ] && _mkfs_opts
++		[ -z "$FSCK_OPTIONS" ] && _fsck_opts
++	else
++		[ -z "$MOUNT_OPTIONS" ] && export MOUNT_OPTIONS=$OLD_MOUNT_OPTIONS
++		[ -z "$MKFS_OPTIONS" ] && export MKFS_OPTIONS=$OLD_MKFS_OPTIONS
++		[ -z "$FSCK_OPTIONS" ] && export FSCK_OPTIONS=$OLD_FSCK_OPTIONS
++	fi
 +
  	# set default RESULT_BASE
  	if [ -z "$RESULT_BASE" ]; then
  		export RESULT_BASE="$here/results/"
-@@ -282,7 +324,10 @@ get_next_config() {
- 	fi
+diff --git a/common/rc b/common/rc
+index 0dd30a3..10116a6 100644
+--- a/common/rc
++++ b/common/rc
+@@ -152,12 +152,6 @@ _fsck_opts()
+     esac
  }
  
--get_next_config
-+if [ -z "$CONFIG_INCLUDED" ]; then
-+	get_next_config `echo $HOST_OPTIONS_SECTIONS | cut -f1 -d" "`
-+	export CONFIG_INCLUDED=true
-+fi
+-[ -z "$FSTYP" ] && FSTYP=xfs
+-[ -z "$MOUNT_OPTIONS" ] && _mount_opts
+-[ -z "$MKFS_OPTIONS" ] && _mkfs_opts
+-[ -z "$FSCK_OPTIONS" ] && _fsck_opts
+-
+-
+ # we need common/config
+ if [ "$iam" != "check" ]
+ then
+@@ -490,6 +484,7 @@ _setup_large_ext4_fs()
+ 	fi
+ 	return 0
+ }
++
+ _scratch_mkfs_ext4()
+ {
+ 	local tmp_dir=/tmp/
+@@ -518,6 +513,24 @@ _scratch_mkfs_ext4()
+ 	return $mkfs_status
+ }
  
- # make sure this script returns success
- /bin/true
++_test_mkfs()
++{
++    case $FSTYP in
++    nfs*)
++	# do nothing for nfs
++	;;
++    udf)
++        $MKFS_UDF_PROG $MKFS_OPTIONS $* $TEST_DEV > /dev/null
++	;;
++    btrfs)
++        $MKFS_BTRFS_PROG $MKFS_OPTIONS $* $TEST_DEV > /dev/null
++	;;
++    *)
++	yes | $MKFS_PROG -t $FSTYP -- $MKFS_OPTIONS $* $TEST_DEV
++	;;
++    esac
++}
++
+ _scratch_mkfs()
+ {
+     case $FSTYP in
+@@ -919,6 +932,7 @@ _supported_fs()
+     _notrun "not suitable for this filesystem type: $FSTYP"
+ }
+ 
++
+ # tests whether $FSTYP is one of the supported OSes for a test
+ #
+ _supported_os()
 -- 
 1.8.3.1
 
