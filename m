@@ -1,9 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, for-next,
-	updated. for-linus-v3.11-rc1-9-gc31ad43
-Message-Id: <20130711215153.E26667F53@oss.sgi.com>
-Date: Thu, 11 Jul 2013 16:51:53 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id C25787F37
+	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 18:01:24 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8EBE8304062
+	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 16:01:21 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id lxmkdkHkmwlfOh7Z
+	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 16:01:20 -0700 (PDT)
+Message-ID: <51DF3942.4050506@hardwarefreak.com>
+Date: Thu, 11 Jul 2013 18:01:22 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
+MIME-Version: 1.0
+Subject: Re: Corruption of root fs during git bisect of drm system hang
+References: <20130710090634.GA356@x4> <20130711003122.GR3438@dastard>
+	<20130711033621.GB362@x4> <20130711035827.GA3438@dastard>
+	<51DE30BC.1050905@hardwarefreak.com> <20130711090755.GA363@x4>
+	<20130711112826.GA363@x4> <51DF1463.1070603@hardwarefreak.com>
+	<20130711204033.GA355@x4>
+In-Reply-To: <20130711204033.GA355@x4>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -12,60 +28,63 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Markus Trippelsdorf <markus@trippelsdorf.de>
+Cc: xfs@oss.sgi.com
 
-This is an automated email from the git hooks/post-receive script. It was
-generated because a ref change was pushed to the repository containing
-the project "XFS development tree".
+On 7/11/2013 3:40 PM, Markus Trippelsdorf wrote:
+> On 2013.07.11 at 15:24 -0500, Stan Hoeppner wrote:
+>> On 7/11/2013 6:28 AM, Markus Trippelsdorf wrote:
+>> ...
+>>>> Looking at the source:
+>>>> http://api.kde.org/4.10-api/kdelibs-apidocs/kdecore/html/ksavefile_8cpp_source.html#l00219
+>>>> it appears that one can set an environment variable KDE_EXTRA_FSYNC to
+>>>> address this issue.
+>>>>
+>>>> However in my case it doesn't help. Even with KDE_EXTRA_FSYNC=1 I still
+>>>> loose my KDE settings in case of a crash. So the whole fsync thing might
+>>>> be a red herring.
+>>>
+>>> It turned out that the KDE_EXTRA_FSYNC variable doesn't affect KDE
+>>> config file handling at all.
+>>> So I've added an fsync in kconfigini.cpp (KConfigIniBackend::writeConfig)
+>>> and now I don't loose my settings anymore during kernel crash testing.
+>>>
+>>> That is until xfs eats my KDE config files (kwinrulesr in this case):
+>>
+>> Adding fsync in kconfigini.cpp apparently doesn't force fsync for all
+>> KDE file operations.  You also have some Open Office files getting hosed
+>> due to lack of fsync.  XFS is not the cause of these problems.
+>>
+>> The problem is that all of this desktop code was developed atop EXT3
+>> which flushed to disk every 5 seconds.  This made programmers sloppy as
+>> they didn't have to fsync to make sure data hit disk.  This problem has
+>> been covered extensively by many, including Eric in other posts on his
+>> blog.  There's a really simple way to test this:  mount with sync.
+>> Report results after the next crash.  If no files are corrupted then
+>> you've verified the problem lay squarely on the shoulders of these
+>> desktop developers who have abdicated their responsibility to make sure
+>> their file changes hit the disk, instead of relying on a broken
+>> filesystem do it for them.
+>>
+>> Worth noting, using EXT4 without the EXT3 flush emulation enabled will
+>> yield similar file corruption upon a crash.
+> 
+> I'm not so sure.  Of course a journaled filesystem is not a database
+> replacement, but wouldn't it be easier to address this issue in xfs
+> directly instead of hoping in vain that application developers will
+> fix their code someday?
 
-The branch, for-next has been updated
-  c31ad43 xfs: Fix the logic check for all quotas being turned off
-      from  92f8ff73f18672b03ec8b92197cdddf2b5de7ea0 (commit)
+Apparently you missed the O_PONIES debate some 4 years ago.  Take a
+guess as to what happens to XFS performance if it is modified to "fix"
+this app dev broken file on crash problem.  Hint:  a bunch of previously
+asynchronous operations must now to be forced to be synchronous.
 
-Those revisions listed above that are new to this repository have
-not appeared on any other notification email; so we list those
-revisions in full, below.
-
-- Log -----------------------------------------------------------------
-commit c31ad439e8d111bf911c9cc80619cebde411a44d
-Author: Chandra Seetharaman <sekharan@us.ibm.com>
-Date:   Wed Jul 10 18:00:36 2013 -0500
-
-    xfs: Fix the logic check for all quotas being turned off
-    
-    During the review of seperate pquota inode patches, David noticed
-    that the test to detect all quotas being turned off was
-    incorrect, and hence the block was not freeing all the quota
-    information.
-    
-    The check made sense in Irix, but in Linux, quota is turned off
-    one at a time, which makes the test invalid for Linux.
-    
-    This problem existed since XFS was ported to Linux.
-    
-    David suggested to fix the problem by detecting when all quotas are
-    turned off by checking m_qflags.
-    
-    Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-    Reviewed-by: Ben Myers <bpm@sgi.com>
-    Signed-off-by: Ben Myers <bpm@sgi.com>
-
------------------------------------------------------------------------
-
-Summary of changes:
- fs/xfs/xfs_qm_syscalls.c | 5 ++---
- fs/xfs/xfs_quota.h       | 8 --------
- 2 files changed, 2 insertions(+), 11 deletions(-)
-
-
-hooks/post-receive
 -- 
-XFS development tree
+Stan
 
 _______________________________________________
 xfs mailing list
