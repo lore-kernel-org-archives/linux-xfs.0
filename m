@@ -1,27 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 02D917F3F
-	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 20:45:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A77168F8037
-	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 18:45:06 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	BuHwwVdHhDzpVqju for <xfs@oss.sgi.com>;
-	Wed, 10 Jul 2013 18:45:04 -0700 (PDT)
-Date: Thu, 11 Jul 2013 11:45:01 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v10 10/11] quota: Add proper versioning support to
-	fs_quota_stat
-Message-ID: <20130711014501.GY3438@dastard>
-References: <1372371914-11370-1-git-send-email-sekharan@us.ibm.com>
-	<1372371914-11370-11-git-send-email-sekharan@us.ibm.com>
-	<20130710155538.GY20932@sgi.com>
-	<20130710162602.GB32444@quack.suse.cz>
-	<1373489390.6020.30.camel@chandra-dt.ibm.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 40B2D7F50
+	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 22:36:28 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 30180304059
+	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 20:36:24 -0700 (PDT)
+Received: from mail.ud10.udmedia.de (ud10.udmedia.de [194.117.254.50]) by
+	cuda.sgi.com with ESMTP id NFPlGzHFq4MyhQfF (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 10 Jul 2013 20:36:23 -0700 (PDT)
+Date: Thu, 11 Jul 2013 05:36:21 +0200
+From: Markus Trippelsdorf <markus@trippelsdorf.de>
+Subject: Re: Corruption of root fs during git bisect of drm system hang
+Message-ID: <20130711033621.GB362@x4>
+References: <20130710090634.GA356@x4>
+ <20130711003122.GR3438@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1373489390.6020.30.camel@chandra-dt.ibm.com>
+In-Reply-To: <20130711003122.GR3438@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,76 +30,53 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Chandra Seetharaman <sekharan@us.ibm.com>
-Cc: Ben Myers <bpm@sgi.com>, Jan Kara <jack@suse.cz>, swhiteho@redhat.com, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, Jul 10, 2013 at 03:49:50PM -0500, Chandra Seetharaman wrote:
-> On Wed, 2013-07-10 at 18:26 +0200, Jan Kara wrote:
-> > On Wed 10-07-13 10:55:38, Ben Myers wrote:
-> > > Hey Chandra,
+On 2013.07.11 at 10:31 +1000, Dave Chinner wrote:
+> On Wed, Jul 10, 2013 at 11:06:34AM +0200, Markus Trippelsdorf wrote:
+> > While bisecting a system hang, caused by the drm gpu subsystem, my root fs got
+> > corrupted:
 > 
-> <snip>
+> I don't see any corruption being repaired....
 > 
-> > > > diff --git a/fs/quota/quota.c b/fs/quota/quota.c
-> > > > index c7314f1..ae6526e 100644
-> > > > --- a/fs/quota/quota.c
-> > > > +++ b/fs/quota/quota.c
-> > > > @@ -207,12 +207,57 @@ static int quota_setxstate(struct super_block *sb, int cmd, void __user *addr)
-> > > >  static int quota_getxstate(struct super_block *sb, void __user *addr)
-> > > >  {
-> > > >  	struct fs_quota_stat fqs;
-> > > > -	int ret;
-> > > > +	struct fs_quota_stat_v1 fqs_v1;
-> > > > +	int ret, size;
-> > > > +	void *fqsp;
-> > > >  
-> > > >  	if (!sb->s_qcop->get_xstate)
-> > > >  		return -ENOSYS;
-> > > > +
-> > > > +	memset(&fqs, 0, sizeof(struct fs_quota_stat));
-> > > > +	if (copy_from_user(&fqs, addr, 1)) /* just get the version */
-> > > > +		return -EFAULT;
-> > > > +
-> > > > +	switch (fqs.qs_version) {
-> > > > +	case FS_QSTAT_VERSION_2:
-> > > > +		size = FS_QSTAT_V2_SIZE;
-> > > > +		break;
-> > > > +	default:
-> > > > +		fqs.qs_version = FS_QSTAT_VERSION;
-> > > > +		/* fallthrough */
-> > > > +	case FS_QSTAT_VERSION:
-> > > > +		size = FS_QSTAT_V1_SIZE;
-> > > > +		break;
-> > > > +	}
-> >   Guys, you cannot really do this. If anyone is using getxstate() with
-> > uninitialized buffer (which is fine so far), you cannot suddently start to
-> > rely on the contents of qs_version field. That's ABI (and even API)
-> > breakage.
+> > 
+> >  # xfs_repair /dev/sdc2
+> > Phase 1 - find and verify superblock...
+> > Phase 2 - using internal log
+> >         - zero log...
+> >         - scan filesystem freespace and inode maps...
+> > agi unlinked bucket 6 is 682886 in ag 3 (inode=101346182)
+> > agi unlinked bucket 7 is 11335 in ag 3 (inode=100674631)
+> > agi unlinked bucket 10 is 682890 in ag 3 (inode=101346186)
+> > agi unlinked bucket 21 is 981 in ag 3 (inode=100664277)
+> > agi unlinked bucket 23 is 5704343 in ag 3 (inode=106367639)
+> > agi unlinked bucket 29 is 211421 in ag 3 (inode=100874717)
+> > agi unlinked bucket 31 is 7681375 in ag 3 (inode=108344671)
+> > agi unlinked bucket 34 is 3480162 in ag 3 (inode=104143458)
+> > agi unlinked bucket 40 is 211432 in ag 3 (inode=100874728)
+> > agi unlinked bucket 41 is 2704937 in ag 3 (inode=103368233)
+> > agi unlinked bucket 45 is 594669 in ag 3 (inode=101257965)
+> > agi unlinked bucket 62 is 11902 in ag 3 (inode=100675198)
 > 
-> Agree, it is a API breakage.
+> That's a filesystem that has unlinked inodes on the unlinked list.
+> They get cleaned up during log replay. All the other "errors" are
+> related to cleaning these up....
 > 
-> Will fix it by adding a new quotactl value as you suggest. 
+> So what is making you think there is a corruption? What's the error
+> being reported when you are using the filesystem? i.e. what's the
+> entire process you go through before you get to finding this
+> problem?
 
-Please enforce the version number as being valid so we don't
-need to add another new interface if we need to change this
-structure again. :)
+I was loosing my KDE settings bit by bit with every reboot during the
+bisection. First my window-rules disappeared, then my desktop background
+changed to default, then my taskbar moved from top to the bottom, etc.
+In the end I had to restore all my .files from backup. 
+And please note that xfs_repair unlinked the inodes _after_ the
+filesystem has been mounted and unmounted normally. 
 
-FWIW, we're now going to need a new xfs_quota changes to go along
-with this - it will need to use the new interface by default, and
-fall back to the existing interface if it gets an error saying the
-command does not exist.  We can't actually test the new interface
-until we have xfs_quota patches that use it.
-
-And to play Devil's advocate: it is way too late in the merge cycle
-to make these sorts of ABI changes to a patch and test/review them
-adequately.
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Markus
 
 _______________________________________________
 xfs mailing list
