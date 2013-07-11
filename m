@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0354F7F3F
-	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 13:53:40 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id D32F8304051
-	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 11:53:39 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id hOCQv1GXD1OpcDgt for <xfs@oss.sgi.com>;
-	Thu, 11 Jul 2013 11:53:38 -0700 (PDT)
-Message-ID: <51DEFF30.10104@sandeen.net>
-Date: Thu, 11 Jul 2013 13:53:36 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 724FD7F3F
+	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 15:24:05 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id F1ABFAC006
+	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 13:24:01 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id JqMs4vfMSbmWKMql
+	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 13:24:01 -0700 (PDT)
+Message-ID: <51DF1463.1070603@hardwarefreak.com>
+Date: Thu, 11 Jul 2013 15:24:03 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH V2] xfstests: generic/313, test sgid inheritance on subdirs
-References: <51A68175.9020202@redhat.com> <51A7B03E.2080909@sandeen.net>
-	<20130612192320.GA12955@andromeda.usersys.redhat.com>
-	<20130708215151.GK20932@sgi.com>
-	<20130711175315.GB10711@andromeda.usersys.redhat.com>
-	<20130711182829.GC10711@andromeda.usersys.redhat.com>
-	<51DEFABC.8020104@sandeen.net>
-In-Reply-To: <51DEFABC.8020104@sandeen.net>
+Subject: Re: Corruption of root fs during git bisect of drm system hang
+References: <20130710090634.GA356@x4> <20130711003122.GR3438@dastard>
+	<20130711033621.GB362@x4> <20130711035827.GA3438@dastard>
+	<51DE30BC.1050905@hardwarefreak.com> <20130711090755.GA363@x4>
+	<20130711112826.GA363@x4>
+In-Reply-To: <20130711112826.GA363@x4>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,43 +31,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Carlos Maiolino <cmaiolino@redhat.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, Ben Myers <bpm@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: Markus Trippelsdorf <markus@trippelsdorf.de>
+Cc: xfs@oss.sgi.com
 
-On 7/11/13 1:34 PM, Eric Sandeen wrote:
-> On 7/11/13 1:28 PM, Carlos Maiolino wrote:
-
+On 7/11/2013 6:28 AM, Markus Trippelsdorf wrote:
 ...
-
->> Just a matter of information:
+>> Looking at the source:
+>> http://api.kde.org/4.10-api/kdelibs-apidocs/kdecore/html/ksavefile_8cpp_source.html#l00219
+>> it appears that one can set an environment variable KDE_EXTRA_FSYNC to
+>> address this issue.
 >>
->> From coreutils:
->>
->> commit b3677e5e383103bf1764b2c8a9329b1c17934b24
->> Author: Jim Meyering <meyering@redhat.com>
->> Date:   Wed Apr 2 22:26:45 2008 +0200
->>
->>     ls: use '.' (not +) as SELinux-only alt. access flag in ls -l output
->>
->>
->>
->> So, this test is selinux dependent, it will provide different outputs whether
->> the system has selinux enabled or not.
->>
->> Since the test itself creates their own directories, checking if the selinux is
->> enabled or not and checking the proper output depending on selinux activity
->> should avoid false positives on this test. I.e. if the selinux is enabled, the
->> `ls -l` output will print the 'dot' at the end of the permissions, otherwise,
->> nothing will be printed and Eric's test will pass without problem.
+>> However in my case it doesn't help. Even with KDE_EXTRA_FSYNC=1 I still
+>> loose my KDE settings in case of a crash. So the whole fsync thing might
+>> be a red herring.
 > 
-> Hm, I thought we always mounted with a global selinux context, and therefore
-> wouldn't get these differences (i.e. no on-disk selinux attrs should be created)
+> It turned out that the KDE_EXTRA_FSYNC variable doesn't affect KDE
+> config file handling at all.
+> So I've added an fsync in kconfigini.cpp (KConfigIniBackend::writeConfig)
+> and now I don't loose my settings anymore during kernel crash testing.
+> 
+> That is until xfs eats my KDE config files (kwinrulesr in this case):
 
+Adding fsync in kconfigini.cpp apparently doesn't force fsync for all
+KDE file operations.  You also have some Open Office files getting hosed
+due to lack of fsync.  XFS is not the cause of these problems.
 
-Ok, somehow it really is mounted w/o the context when the test executes.
-I'm not sure why yet, but fixing that *should* fix the problem, I think.
+The problem is that all of this desktop code was developed atop EXT3
+which flushed to disk every 5 seconds.  This made programmers sloppy as
+they didn't have to fsync to make sure data hit disk.  This problem has
+been covered extensively by many, including Eric in other posts on his
+blog.  There's a really simple way to test this:  mount with sync.
+Report results after the next crash.  If no files are corrupted then
+you've verified the problem lay squarely on the shoulders of these
+desktop developers who have abdicated their responsibility to make sure
+their file changes hit the disk, instead of relying on a broken
+filesystem do it for them.
 
--Eric
+Worth noting, using EXT4 without the EXT3 flush emulation enabled will
+yield similar file corruption upon a crash.
+
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
