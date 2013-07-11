@@ -1,37 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 665837F3F
-	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 18:00:42 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 525F48F8035
-	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 16:00:42 -0700 (PDT)
-Received: from e39.co.us.ibm.com (e39.co.us.ibm.com [32.97.110.160]) by
-	cuda.sgi.com with ESMTP id hjhcF0wBV8gN5ndg (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 10 Jul 2013 16:00:41 -0700 (PDT)
-Received: from /spool/local
-	by e39.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
-	Violators will be prosecuted
-	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
-	Wed, 10 Jul 2013 17:00:41 -0600
-Received: from d01relay03.pok.ibm.com (d01relay03.pok.ibm.com [9.56.227.235])
-	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id 5DAA238C804D
-	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 19:00:37 -0400 (EDT)
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay03.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	r6AN0cTL373284 for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 19:00:38 -0400
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
-	r6AN0bWZ019036 for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 19:00:37 -0400
-Received: from [9.41.106.170] (chandra-dt.austin.ibm.com [9.41.106.170])
-	by d01av04.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVin) with ESMTP id
-	r6AN0b7H019017 for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 19:00:37 -0400
-Subject: [PATCH] xfs: Fix the logic check for all quotas being turned off
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Date: Wed, 10 Jul 2013 18:00:36 -0500
-Message-ID: <1373497236.6020.36.camel@chandra-dt.ibm.com>
-Mime-Version: 1.0
-Reply-To: sekharan@us.ibm.com
+	by oss.sgi.com (Postfix) with ESMTP id AFD2E7F3F
+	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 19:31:33 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 9AB738F8035
+	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 17:31:30 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	SQ60tVUGNa89CQwF for <xfs@oss.sgi.com>;
+	Wed, 10 Jul 2013 17:31:29 -0700 (PDT)
+Date: Thu, 11 Jul 2013 10:31:22 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Corruption of root fs during git bisect of drm system hang
+Message-ID: <20130711003122.GR3438@dastard>
+References: <20130710090634.GA356@x4>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20130710090634.GA356@x4>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -44,68 +29,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: XFS mailing list <xfs@oss.sgi.com>
+To: Markus Trippelsdorf <markus@trippelsdorf.de>
+Cc: xfs@oss.sgi.com
 
+On Wed, Jul 10, 2013 at 11:06:34AM +0200, Markus Trippelsdorf wrote:
+> While bisecting a system hang, caused by the drm gpu subsystem, my root fs got
+> corrupted:
 
-During the review of seperate pquota inode patches, David noticed
-that the test to detect all quotas being turned off was
-incorrect, and hence the block was not freeing all the quota
-information.
+I don't see any corruption being repaired....
 
-The check made sense in Irix, but in Linux, quota is turned off
-one at a time, which makes the test invalid for Linux.
+> 
+>  # xfs_repair /dev/sdc2
+> Phase 1 - find and verify superblock...
+> Phase 2 - using internal log
+>         - zero log...
+>         - scan filesystem freespace and inode maps...
+> agi unlinked bucket 6 is 682886 in ag 3 (inode=101346182)
+> agi unlinked bucket 7 is 11335 in ag 3 (inode=100674631)
+> agi unlinked bucket 10 is 682890 in ag 3 (inode=101346186)
+> agi unlinked bucket 21 is 981 in ag 3 (inode=100664277)
+> agi unlinked bucket 23 is 5704343 in ag 3 (inode=106367639)
+> agi unlinked bucket 29 is 211421 in ag 3 (inode=100874717)
+> agi unlinked bucket 31 is 7681375 in ag 3 (inode=108344671)
+> agi unlinked bucket 34 is 3480162 in ag 3 (inode=104143458)
+> agi unlinked bucket 40 is 211432 in ag 3 (inode=100874728)
+> agi unlinked bucket 41 is 2704937 in ag 3 (inode=103368233)
+> agi unlinked bucket 45 is 594669 in ag 3 (inode=101257965)
+> agi unlinked bucket 62 is 11902 in ag 3 (inode=100675198)
 
-This problem existed since XFS was ported to Linux.
+That's a filesystem that has unlinked inodes on the unlinked list.
+They get cleaned up during log replay. All the other "errors" are
+related to cleaning these up....
 
-David suggested to fix the problem by detecting when all quotas are
-turned off by checking m_qflags.
+So what is making you think there is a corruption? What's the error
+being reported when you are using the filesystem? i.e. what's the
+entire process you go through before you get to finding this
+problem?
 
-Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
----
- fs/xfs/xfs_qm_syscalls.c |    5 ++---
- fs/xfs/xfs_quota.h       |    8 --------
- 2 files changed, 2 insertions(+), 11 deletions(-)
+Cheers,
 
-diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-index a08801a..09a45af 100644
---- a/fs/xfs/xfs_qm_syscalls.c
-+++ b/fs/xfs/xfs_qm_syscalls.c
-@@ -198,10 +198,9 @@ xfs_qm_scall_quotaoff(
- 	}
- 
- 	/*
--	 * If quotas is completely disabled, close shop.
-+	 * If all quotas are completely turned off, close shop.
- 	 */
--	if (((flags & XFS_MOUNT_QUOTA_ALL) == XFS_MOUNT_QUOTA_SET1) ||
--	    ((flags & XFS_MOUNT_QUOTA_ALL) == XFS_MOUNT_QUOTA_SET2)) {
-+	if (mp->m_qflags == 0) {
- 		mutex_unlock(&q->qi_quotaofflock);
- 		xfs_qm_destroy_quotainfo(mp);
- 		return (0);
-diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
-index 40d508b..69e3edf 100644
---- a/fs/xfs/xfs_quota.h
-+++ b/fs/xfs/xfs_quota.h
-@@ -301,14 +301,6 @@ typedef struct xfs_qoff_logformat {
- 	 (XFS_IS_PQUOTA_ON(mp) && \
- 		(mp->m_sb.sb_qflags & XFS_PQUOTA_CHKD) == 0))
- 
--#define XFS_MOUNT_QUOTA_SET1	(XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD|\
--				 XFS_UQUOTA_CHKD|XFS_GQUOTA_ACCT|\
--				 XFS_GQUOTA_ENFD|XFS_GQUOTA_CHKD)
--
--#define XFS_MOUNT_QUOTA_SET2	(XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD|\
--				 XFS_UQUOTA_CHKD|XFS_PQUOTA_ACCT|\
--				 XFS_PQUOTA_ENFD|XFS_PQUOTA_CHKD)
--
- #define XFS_MOUNT_QUOTA_ALL	(XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD|\
- 				 XFS_UQUOTA_CHKD|XFS_GQUOTA_ACCT|\
- 				 XFS_GQUOTA_ENFD|XFS_GQUOTA_CHKD|\
+Dave.
 -- 
-1.7.1
-
-
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
