@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C80F97F3F
-	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 05:38:17 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 1145B7F54
+	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 05:38:19 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A551D8F8039
-	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 03:38:17 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id EEAE5304081
+	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 03:38:18 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id bjvCmpm3dAMTVbGu for
-	<xfs@oss.sgi.com>; Thu, 11 Jul 2013 03:38:16 -0700 (PDT)
+	cuda.sgi.com with ESMTP id f7S53qjNHONgD21N for
+	<xfs@oss.sgi.com>; Thu, 11 Jul 2013 03:38:18 -0700 (PDT)
 Received: from int-mx09.intmail.prod.int.phx2.redhat.com
 	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r6BAcGAV031025
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r6BAcHmx027019
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 06:38:16 -0400
+	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 06:38:17 -0400
 From: Lukas Czerner <lczerner@redhat.com>
-Subject: [PATCH 04/10 v2] xfstests: Allow to recheck options in common/rc
-Date: Thu, 11 Jul 2013 12:37:59 +0200
-Message-Id: <1373539085-8577-5-git-send-email-lczerner@redhat.com>
+Subject: [PATCH 05/10 v2] xfstests: Allow to re-read configuration
+Date: Thu, 11 Jul 2013 12:38:00 +0200
+Message-Id: <1373539085-8577-6-git-send-email-lczerner@redhat.com>
 In-Reply-To: <1373539085-8577-1-git-send-email-lczerner@redhat.com>
 References: <1373539085-8577-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,102 +35,138 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: lczerner@redhat.com
 
-Move configuration checks into separate function to allow us to recheck
-the options without the need to reinclude the whole source file which is
-ugly. We still run the check on include.
+Move configuration initialization into a function so we can re-read it
+without the need to reinclude the common/config file which would be
+ugly. This is in preparation for adding support for sections into config
+files.
 
 Signed-off-by: Lukas Czerner <lczerner@redhat.com>
 ---
- common/rc | 74 ++++++++++++++++++++++++++++++++-------------------------------
- 1 file changed, 38 insertions(+), 36 deletions(-)
+ common/config | 104 +++++++++++++++++++++++++++++++---------------------------
+ 1 file changed, 55 insertions(+), 49 deletions(-)
 
-diff --git a/common/rc b/common/rc
-index fe6bbfc..0dd30a3 100644
---- a/common/rc
-+++ b/common/rc
-@@ -2131,46 +2131,48 @@ run_check()
- 	"$@" >> $seqres.full 2>&1 || _fail "failed: '$@'"
+diff --git a/common/config b/common/config
+index 1679acf..34c99e1 100644
+--- a/common/config
++++ b/common/config
+@@ -214,64 +214,70 @@ esac
+ 
+ known_hosts()
+ {
+-  [ "$HOST_CONFIG_DIR" ] || HOST_CONFIG_DIR=`pwd`/configs
+-
+-  [ -f /etc/xfsqa.config ]             && . /etc/xfsqa.config
+-  [ -f $HOST_CONFIG_DIR/$HOST ]        && . $HOST_CONFIG_DIR/$HOST
+-  [ -f $HOST_CONFIG_DIR/$HOST.config ] && . $HOST_CONFIG_DIR/$HOST.config
+-
+-  #  Mandatory Config values.
+-  MC=""
+-  [ -z "$EMAIL" ]          && MC="$MC EMAIL"
+-  [ -z "$TEST_DIR" ]       && MC="$MC TEST_DIR"
+-  [ -z "$TEST_DEV" ]       && MC="$MC TEST_DEV"
+-
+-  if [ -n "$MC" ]; then
+-    echo "Warning: need to define parameters for host $HOST"
+-    echo "       or set variables:"
+-    echo "       $MC"
+-    exit 1
+-  fi
++	[ "$HOST_CONFIG_DIR" ] || HOST_CONFIG_DIR=`pwd`/configs
++
++	[ -f /etc/xfsqa.config ]             && export HOST_OPTIONS=/etc/xfsqa.config
++	[ -f $HOST_CONFIG_DIR/$HOST ]        && export HOST_OPTIONS=$HOST_CONFIG_DIR/$HOST
++	[ -f $HOST_CONFIG_DIR/$HOST.config ] && export HOST_OPTIONS=$HOST_CONFIG_DIR/$HOST.config
  }
  
--################################################################################
--
--if [ "$iam" != new ]
--then
--    # make some further configuration checks here
--
--    if [ "$TEST_DEV" = ""  ]
--    then
--        echo "common/rc: Error: \$TEST_DEV is not set"
--        exit 1
--    fi
--
--    # if $TEST_DEV is not mounted, mount it now as XFS
--    if [ -z "`_fs_type $TEST_DEV`" ]
--    then
--        # $TEST_DEV is not mounted
--        if ! _test_mount
--        then
--            echo "common/rc: retrying test device mount with external set"
--            [ "$USE_EXTERNAL" != "yes" ] && export USE_EXTERNAL=yes
--            if ! _test_mount
--            then
--                echo "common/rc: could not mount $TEST_DEV on $TEST_DIR"
--                exit 1
--            fi
--        fi
--    fi
-+init_rc()
-+{
-+	if [ "$iam" == new ]
-+	then
-+		return
-+	fi
-+	# make some further configuration checks here
-+	if [ "$TEST_DEV" = ""  ]
-+	then
-+		echo "common/rc: Error: \$TEST_DEV is not set"
-+		exit 1
-+	fi
+-if [ -f "$HOST_OPTIONS" ]; then
+-    . "$HOST_OPTIONS"
+-else
+-    known_hosts
++if [ ! -f "$HOST_OPTIONS" ]; then
++	known_hosts
+ fi
  
--    if [ "`_fs_type $TEST_DEV`" != "$FSTYP" ]
--    then
--        echo "common/rc: Error: \$TEST_DEV ($TEST_DEV) is not a MOUNTED $FSTYP filesystem"
--        $DF_PROG $TEST_DEV
--        exit 1
--    fi
-+	# if $TEST_DEV is not mounted, mount it now as XFS
-+	if [ -z "`_fs_type $TEST_DEV`" ]
-+	then
-+		# $TEST_DEV is not mounted
-+		if ! _test_mount
-+		then
-+			echo "common/rc: retrying test device mount with external set"
-+			[ "$USE_EXTERNAL" != "yes" ] && export USE_EXTERNAL=yes
-+			if ! _test_mount
-+			then
-+				echo "common/rc: could not mount $TEST_DEV on $TEST_DIR"
-+				exit 1
-+			fi
-+		fi
-+	fi
+-echo $TEST_DEV | grep -q ":" > /dev/null 2>&1
+-if [ ! -b "$TEST_DEV" -a "$?" != "0" ]; then
+-    echo "common/config: Error: \$TEST_DEV ($TEST_DEV) is not a block device or a NFS filesystem"
+-    exit 1
++if [ -f "$HOST_OPTIONS" ]; then
++	. $HOST_OPTIONS
+ fi
  
--    # Figure out if we need to add -F ("foreign", deprecated) option to xfs_io
--    xfs_io -c stat $TEST_DIR 2>&1 | grep -q "is not on an XFS filesystem" && \
-+	if [ "`_fs_type $TEST_DEV`" != "$FSTYP" ]
-+	then
-+		echo "common/rc: Error: \$TEST_DEV ($TEST_DEV) is not a MOUNTED $FSTYP filesystem"
-+		$DF_PROG $TEST_DEV
-+		exit 1
-+	fi
-+	# Figure out if we need to add -F ("foreign", deprecated) option to xfs_io
-+	xfs_io -c stat $TEST_DIR 2>&1 | grep -q "is not on an XFS filesystem" && \
- 	export XFS_IO_PROG="$XFS_IO_PROG -F"
-+}
- 
+-if [ ! -d "$TEST_DIR" ]; then
+-    echo "common/config: Error: \$TEST_DIR ($TEST_DIR) is not a directory"
+-    exit 1
 -fi
-+init_rc
++get_next_config() {
++	#  Mandatory Config values.
++	MC=""
++	[ -z "$EMAIL" ]          && MC="$MC EMAIL"
++	[ -z "$TEST_DIR" ]       && MC="$MC TEST_DIR"
++	[ -z "$TEST_DEV" ]       && MC="$MC TEST_DEV"
++
++	if [ -n "$MC" ]; then
++		echo "Warning: need to define parameters for host $HOST"
++		echo "       or set variables:"
++		echo "       $MC"
++		exit 1
++	fi
  
-+################################################################################
+-# a btrfs tester will set only SCRATCH_DEV_POOL, we will put first of its dev
+-# to SCRATCH_DEV and rest to SCRATCH_DEV_POOL to maintain the backward compatibility
+-if [ ! -z "$SCRATCH_DEV_POOL" ]; then
+-    if [ ! -z "$SCRATCH_DEV" ]; then
+-        echo "common/config: Error: \$SCRATCH_DEV should be unset when \$SCRATCH_DEV_POOL is set"
+-        exit 1
+-    fi
+-    SCRATCH_DEV=`echo $SCRATCH_DEV_POOL | awk '{print $1}'`
+-    SCRATCH_DEV_POOL=`echo $SCRATCH_DEV_POOL | awk '{ ORS=" "; for (i = 2; i <= NF; i++) print $i}'`
+-fi
++	echo $TEST_DEV | grep -q ":" > /dev/null 2>&1
++	if [ ! -b "$TEST_DEV" -a "$?" != "0" ]; then
++		echo "common/config: Error: \$TEST_DEV ($TEST_DEV) is not a block device or a NFS filesystem"
++		exit 1
++	fi
+ 
+-echo $SCRATCH_DEV | grep -q ":" > /dev/null 2>&1
+-if [ ! -z "$SCRATCH_DEV" -a ! -b "$SCRATCH_DEV" -a "$?" != "0" ]; then
+-    echo "common/config: Error: \$SCRATCH_DEV ($SCRATCH_DEV) is not a block device or a NFS filesystem"
+-    exit 1
+-fi
++	if [ ! -d "$TEST_DIR" ]; then
++		echo "common/config: Error: \$TEST_DIR ($TEST_DIR) is not a directory"
++		exit 1
++	fi
+ 
+-if [ ! -z "$SCRATCH_MNT" -a ! -d "$SCRATCH_MNT" ]; then
+-    echo "common/config: Error: \$SCRATCH_MNT ($SCRATCH_MNT) is not a directory"
+-    exit 1
+-fi
++	# a btrfs tester will set only SCRATCH_DEV_POOL, we will put first of its dev
++	# to SCRATCH_DEV and rest to SCRATCH_DEV_POOL to maintain the backward compatibility
++	if [ ! -z "$SCRATCH_DEV_POOL" ]; then
++		if [ ! -z "$SCRATCH_DEV" ]; then
++			echo "common/config: Error: \$SCRATCH_DEV should be unset when \$SCRATCH_DEV_POOL is set"
++			exit 1
++		fi
++		SCRATCH_DEV=`echo $SCRATCH_DEV_POOL | awk '{print $1}'`
++		SCRATCH_DEV_POOL=`echo $SCRATCH_DEV_POOL | awk '{ ORS=" "; for (i = 2; i <= NF; i++) print $i}'`
++	fi
++
++	echo $SCRATCH_DEV | grep -q ":" > /dev/null 2>&1
++	if [ ! -z "$SCRATCH_DEV" -a ! -b "$SCRATCH_DEV" -a "$?" != "0" ]; then
++		echo "common/config: Error: \$SCRATCH_DEV ($SCRATCH_DEV) is not a block device or a NFS filesystem"
++		exit 1
++	fi
++
++	if [ ! -z "$SCRATCH_MNT" -a ! -d "$SCRATCH_MNT" ]; then
++		echo "common/config: Error: \$SCRATCH_MNT ($SCRATCH_MNT) is not a directory"
++		exit 1
++	fi
++}
++
++get_next_config
+ 
  # make sure this script returns success
  /bin/true
 -- 
