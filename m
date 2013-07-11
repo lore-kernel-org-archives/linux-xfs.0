@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DF4997F52
-	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 03:08:49 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id E6E5F7F50
+	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 04:08:02 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9AFD730406B
-	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 01:08:49 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 70zGBVwIvTRDcQDJ for
-	<xfs@oss.sgi.com>; Thu, 11 Jul 2013 01:08:44 -0700 (PDT)
-Subject: Re: [PATCH v11 3/4] xfs: Add proper versioning support to
-	fs_quota_stat
-From: Steven Whitehouse <swhiteho@redhat.com>
-In-Reply-To: <20130711080537.GC3438@dastard>
-References: <1373518843-1492-1-git-send-email-sekharan@us.ibm.com>
-	<1373518843-1492-4-git-send-email-sekharan@us.ibm.com>
-	<20130711080537.GC3438@dastard>
-Date: Thu, 11 Jul 2013 09:05:04 +0100
-Message-ID: <1373529904.2721.5.camel@menhir>
-Mime-Version: 1.0
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 67E61AC003
+	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 02:07:59 -0700 (PDT)
+Received: from mail.ud10.udmedia.de (ud10.udmedia.de [194.117.254.50]) by
+	cuda.sgi.com with ESMTP id pknbsIlTBArJCC1a (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 11 Jul 2013 02:07:57 -0700 (PDT)
+Date: Thu, 11 Jul 2013 11:07:55 +0200
+From: Markus Trippelsdorf <markus@trippelsdorf.de>
+Subject: Re: Corruption of root fs during git bisect of drm system hang
+Message-ID: <20130711090755.GA363@x4>
+References: <20130710090634.GA356@x4> <20130711003122.GR3438@dastard>
+	<20130711033621.GB362@x4> <20130711035827.GA3438@dastard>
+	<51DE30BC.1050905@hardwarefreak.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <51DE30BC.1050905@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,157 +27,157 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: adas@redhat.com, jack@suse.cz, Chandra Seetharaman <sekharan@us.ibm.com>, xfs@oss.sgi.com
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: xfs@oss.sgi.com
 
-Hi,
-
-Please keep Abhi cc'd on this thread. Thanks,
-
-Steve.
-
-On Thu, 2013-07-11 at 18:05 +1000, Dave Chinner wrote:
-> On Thu, Jul 11, 2013 at 12:00:42AM -0500, Chandra Seetharaman wrote:
-> > Added appropriate pads and code for backward compatibility.
-> > 
-> > Copied over the old version as it is different from the newer padded
-> > version.
-> > 
-> > New callers of the system call have to set the version of the data
-> > structure being passed, and kernel will fill as much data as requested.
-> > 
-> > Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-> > ---
-> >  fs/gfs2/quota.c                |    3 --
-> >  fs/quota/quota.c               |   67 +++++++++++++++++++++++++++++++++++++--
-> >  fs/xfs/xfs_qm_syscalls.c       |    4 --
-> >  include/uapi/linux/dqblk_xfs.h |   60 +++++++++++++++++++++++++++++++----
-> >  4 files changed, 116 insertions(+), 18 deletions(-)
-> > 
-> > diff --git a/fs/gfs2/quota.c b/fs/gfs2/quota.c
-> > index c7c840e..ca0dccd 100644
-> > --- a/fs/gfs2/quota.c
-> > +++ b/fs/gfs2/quota.c
-> > @@ -1443,9 +1443,6 @@ static int gfs2_quota_get_xstate(struct super_block *sb,
-> >  {
-> >  	struct gfs2_sbd *sdp = sb->s_fs_info;
-> >  
-> > -	memset(fqs, 0, sizeof(struct fs_quota_stat));
-> > -	fqs->qs_version = FS_QSTAT_VERSION;
-> > -
-> >  	switch (sdp->sd_args.ar_quota) {
-> >  	case GFS2_QUOTA_ON:
-> >  		fqs->qs_flags |= (FS_QUOTA_UDQ_ENFD | FS_QUOTA_GDQ_ENFD);
-> > diff --git a/fs/quota/quota.c b/fs/quota/quota.c
-> > index c7314f1..ac5dd3a 100644
-> > --- a/fs/quota/quota.c
-> > +++ b/fs/quota/quota.c
-> > @@ -204,15 +204,72 @@ static int quota_setxstate(struct super_block *sb, int cmd, void __user *addr)
-> >  	return sb->s_qcop->set_xstate(sb, flags, cmd);
-> >  }
-> >  
-> > -static int quota_getxstate(struct super_block *sb, void __user *addr)
-> > +static int quota_getxstate(struct super_block *sb, void __user *addr,
-> > +			   bool older_version)
-> 
-> I'd suggest that the two API calls should be handled by separate
-> functions so there are no overlapping, dependent branches in the
-> code.
-> 
-> >  {
-> >  	struct fs_quota_stat fqs;
-> > -	int ret;
-> > +	struct fs_quota_stat_v1 fqs_v1;
-> > +	int ret, size;
-> > +	void *fqsp;
-> >  
-> >  	if (!sb->s_qcop->get_xstate)
-> >  		return -ENOSYS;
-> 
-> I'd also suggest that a sb->s_qcop->get_xstatev vector is added
-> so that filesystems keep the separate as well.
-> 
-> And that means we don't need to play the fs_quota_stat and
-> conversion-to-fs_quota_stat_v1 games. i.e. the existing
-> quota_getxstate() remains and uses the existing struct
-> fs_quota_stat, and the new Q_XGETQSTATV calls quota_getxstatev() and
-> uses the newly defined struct fs_quota_statv and ->get_xstatev()
-> call....
-> 
-> > @@ -137,31 +139,75 @@ typedef struct fs_disk_quota {
-> >   * Provides a centralized way to get meta information about the quota subsystem.
-> >   * eg. space taken up for user and group quotas, number of dquots currently
-> >   * incore.
-> > + * With version FS_QSTAT_VERSION, user space can send in an uninitialized
-> > + * buffer and data will be filled by the kernel.
-> > + * Starting FS_QSTAT_VERSION_2, to be used with Q_XGETQSTATV, user space
-> > + * caller should set qs_version to the appropriate version of the
-> > + * fs_quota_stat data structure they are providing. On return, user
-> > + * space should check qs_version and use appropriate fields supported by
-> > + * that version.
-> >   */
-> >  #define FS_QSTAT_VERSION	1	/* fs_quota_stat.qs_version */
-> > +#define FS_QSTAT_VERSION_2	2	/* new field qs_pquota; realignment */
-> 
-> As per above, this reasoning and logic is all invalid now because we
-> aren't trying to maintain compatibility between users of the same
-> quotactl.
-> 
-> We are using a new quotactl, so we do not need to overload the
-> existing structure or versions.
-> 
-> > +/*
-> > + * Some basic information about 'quota files'. Version 2.
-> > + */
-> > +struct fs_qfilestat {
-> > +	__u64		qfs_ino;	/* inode number */
-> > +	__u64		qfs_nblks;	/* number of BBs 512-byte-blks */
-> > +	__u32		qfs_nextents;	/* number of extents */
-> > +	__u32		qfs_pad;	/* pad for 8-byte alignment */
-> > +};
-> > +
-> > +struct fs_quota_stat {
-> > +	__s8			qs_version;	/* version for future changes */
-> > +	__u8			qs_pad1;	/* pad for 16bit alignment */
-> > +	__u16			qs_flags;	/* FS_QUOTA_.* flags */
-> > +	__u32			qs_incoredqs;	/* number of dquots incore */
-> > +	struct fs_qfilestat	qs_uquota;	/* user quota information */
-> > +	struct fs_qfilestat	qs_gquota;	/* group quota information */
-> > +	struct fs_qfilestat	qs_pquota;	/* project quota information */
-> > +	__s32			qs_btimelimit;  /* limit for blks timer */
-> > +	__s32			qs_itimelimit;  /* limit for inodes timer */
-> > +	__s32			qs_rtbtimelimit;/* limit for rt blks timer */
-> > +	__u16			qs_bwarnlimit;	/* limit for num warnings */
-> > +	__u16			qs_iwarnlimit;	/* limit for num warnings */
-> > +	__u64			qs_pad2[8];	/* for future proofing */
-> > +};
-> 
-> these are what become fs_quota_statv and fs_qfilestatv structures
-> for the new quotactl.
-> 
-> > +/*
-> > + * Since Version 1 did not have padding at appropriate places,
-> > + * a new data structure has been defined for the older version to
-> > + * provide backward compatibility.
-> > + * Future extentions of this data structure won't require new
-> > + * data structure definitions as the current one can be extended
-> > + * with the logic and padding in place now.
-> > + */
-> > +#define FS_QSTAT_V1_SIZE	(sizeof(struct fs_quota_stat_v1))
-> > +#define FS_QSTAT_V2_SIZE	(sizeof(struct fs_quota_stat))
-> 
-> And these can go away completely.
-> 
-> Cheers,
-> 
-> Dave.
-
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gMjAxMy4wNy4xMCBhdCAyMzoxMiAtMDUwMCwgU3RhbiBIb2VwcG5lciB3cm90ZToKPiBPbiA3
+LzEwLzIwMTMgMTA6NTggUE0sIERhdmUgQ2hpbm5lciB3cm90ZToKPiA+IE9uIFRodSwgSnVsIDEx
+LCAyMDEzIGF0IDA1OjM2OjIxQU0gKzAyMDAsIE1hcmt1cyBUcmlwcGVsc2RvcmYgd3JvdGU6Cj4g
+Cj4gPj4gSSB3YXMgbG9vc2luZyBteSBLREUgc2V0dGluZ3MgYml0IGJ5IGJpdCB3aXRoIGV2ZXJ5
+IHJlYm9vdCBkdXJpbmcgdGhlCj4gPj4gYmlzZWN0aW9uLiBGaXJzdCBteSB3aW5kb3ctcnVsZXMg
+ZGlzYXBwZWFyZWQsIHRoZW4gbXkgZGVza3RvcCBiYWNrZ3JvdW5kCj4gPj4gY2hhbmdlZCB0byBk
+ZWZhdWx0LCB0aGVuIG15IHRhc2tiYXIgbW92ZWQgZnJvbSB0b3AgdG8gdGhlIGJvdHRvbSwgZXRj
+Lgo+ID4+IEluIHRoZSBlbmQgSSBoYWQgdG8gcmVzdG9yZSBhbGwgbXkgLmZpbGVzIGZyb20gYmFj
+a3VwLiAKPiA+IAo+ID4gVGhhdCdzIG5vdCBmaWxlc3lzdGVtIGNvcnJ1cHRpb24uIFRoYXQgc291
+bmRzIG1vcmUgbGlrZSBzb21lb25lIG5vdAo+ID4gdXNpbmcgZnN5bmMgaW4gdGhlIGFwcm9wcmlh
+dGUgcGxhY2Ugd2hlbiBvdmVyd3JpdGluZyBhIGZpbGUuLi4uCj4gCj4gRnJvbSBTYW5kZWVuJ3Mg
+YmxvZywgTWFyY2ggMjAwOToKPiAKPiAiSSBkdW5ubyBob3cgdG8gcmVzb2x2ZSB0aGlzIHJpZ2h0
+IG5vdy4gIEkgdGFsa2VkIHRvIHNvbWUgbmljZSBLREUgZm9sa3MKPiBvbiBpcmM7IHRoZXkgYmFz
+aWNhbGx5IHdhbnQgYXRvbWljIHdyaXRlcywgZWl0aGVyIHlvdSBnZXQgeW91ciBvbGQgZmlsZQo+
+IG9yIHlvdXIgbmV3IGZpbGUgcG9zdC1jcmFzaDsgYW5kIHRlbXBmaWxlL3N5bmMvcmVuYW1lIGRv
+ZXMgdGhpcyDigJMgYnV0Cj4gdGhlIGZzeW5jIGh1cnRzIG9uIDc4JSBvZiB0aGUgTGludXggZmls
+ZXN5c3RlbXMgb3V0IHRoZXJlLiAgU28gdGhlaXIKPiBLU2F2ZUZpbGUgY2xhc3MgZG9lc27igJl0
+IGZzeW5jLiAgU28gd2hhdCB0byBkbywgd2hhdCB0byBkby4uIgo+IAo+IFRoYXQncyA0IHllYXJz
+IGFnby4gIElzIGl0IHBvc3NpYmxlIHRoZSBLREUgZGV2cyBhcmUgc3RpbGwgbm90IHVzaW5nCj4g
+ZnN5bmM/ICBTdXJlIHNlZW1zIGxpa2VseSBnaXZlbiBNYXJrdXMnIHByb2JsZW0uCgpMb29raW5n
+IGF0IHRoZSBzb3VyY2U6Cmh0dHA6Ly9hcGkua2RlLm9yZy80LjEwLWFwaS9rZGVsaWJzLWFwaWRv
+Y3Mva2RlY29yZS9odG1sL2tzYXZlZmlsZV84Y3BwX3NvdXJjZS5odG1sI2wwMDIxOQppdCBhcHBl
+YXJzIHRoYXQgb25lIGNhbiBzZXQgYW4gZW52aXJvbm1lbnQgdmFyaWFibGUgS0RFX0VYVFJBX0ZT
+WU5DIHRvCmFkZHJlc3MgdGhpcyBpc3N1ZS4KCkhvd2V2ZXIgaW4gbXkgY2FzZSBpdCBkb2Vzbid0
+IGhlbHAuIEV2ZW4gd2l0aCBLREVfRVhUUkFfRlNZTkM9MSBJIHN0aWxsCmxvb3NlIG15IEtERSBz
+ZXR0aW5ncyBpbiBjYXNlIG9mIGEgY3Jhc2guIFNvIHRoZSB3aG9sZSBmc3luYyB0aGluZyBtaWdo
+dApiZSBhIHJlZCBoZXJyaW5nLgoKV2hhdCdzIG1vcmUgdGhpcyB0aW1lIEkgZW5kZW5kIHVwIHdp
+dGggdW5kZWxldGFibGUgZmlsZXMgaW4gL3RtcCAoZm9yCmV4YW1wbGUgLlgwLWxvY2spIGFmdGVy
+IHRoZSBjcmFzaDoKCigvZGV2L3NkYiB3YXMgbW91bnRlZCBhbmQgdW5tb3VudGVkIG5vcm1hbGx5
+IGJlZm9yZSBJIHJhbiB4ZnNfcmVwYWlyKQoKdEB1YnVudDp+IyB4ZnNfcmVwYWlyIC9kZXYvc2Ri
+ClBoYXNlIDEgLSBmaW5kIGFuZCB2ZXJpZnkgc3VwZXJibG9jay4uLgpQaGFzZSAyIC0gdXNpbmcg
+aW50ZXJuYWwgbG9nCiAgICAgICAgLSB6ZXJvIGxvZy4uLgogICAgICAgIC0gc2NhbiBmaWxlc3lz
+dGVtIGZyZWVzcGFjZSBhbmQgaW5vZGUgbWFwcy4uLgphZ2kgdW5saW5rZWQgYnVja2V0IDAgaXMg
+NjgzNDM1MDA4IGluIGFnIDIgKGlub2RlPTQ5Nzg0MDIzMDQpCmFnaSB1bmxpbmtlZCBidWNrZXQg
+MSBpcyA2ODM0MzUwMDkgaW4gYWcgMiAoaW5vZGU9NDk3ODQwMjMwNSkKICAgICAgICAtIGZvdW5k
+IHJvb3QgaW5vZGUgY2h1bmsKUGhhc2UgMyAtIGZvciBlYWNoIEFHLi4uCiAgICAgICAgLSBzY2Fu
+IGFuZCBjbGVhciBhZ2kgdW5saW5rZWQgbGlzdHMuLi4KICAgICAgICAtIHByb2Nlc3Mga25vd24g
+aW5vZGVzIGFuZCBwZXJmb3JtIGlub2RlIGRpc2NvdmVyeS4uLgogICAgICAgIC0gYWdubyA9IDAK
+aW1hcCBjbGFpbXMgYSBmcmVlIGlub2RlIDE4OTcxNzcgaXMgaW4gdXNlLCBjb3JyZWN0aW5nIGlt
+YXAgYW5kIGNsZWFyaW5nIGlub2RlCmNsZWFyZWQgaW5vZGUgMTg5NzE3NwppbWFwIGNsYWltcyBh
+IGZyZWUgaW5vZGUgMTg5NzE3OSBpcyBpbiB1c2UsIGNvcnJlY3RpbmcgaW1hcCBhbmQgY2xlYXJp
+bmcgaW5vZGUKY2xlYXJlZCBpbm9kZSAxODk3MTc5CmltYXAgY2xhaW1zIGEgZnJlZSBpbm9kZSAx
+ODk3MTgwIGlzIGluIHVzZSwgY29ycmVjdGluZyBpbWFwIGFuZCBjbGVhcmluZyBpbm9kZQpjbGVh
+cmVkIGlub2RlIDE4OTcxODAKaW1hcCBjbGFpbXMgYSBmcmVlIGlub2RlIDE4OTcxODEgaXMgaW4g
+dXNlLCBjb3JyZWN0aW5nIGltYXAgYW5kIGNsZWFyaW5nIGlub2RlCmNsZWFyZWQgaW5vZGUgMTg5
+NzE4MQogICAgICAgIC0gYWdubyA9IDEKaW1hcCBjbGFpbXMgYSBmcmVlIGlub2RlIDIxNTIzMjE3
+ODcgaXMgaW4gdXNlLCBjb3JyZWN0aW5nIGltYXAgYW5kIGNsZWFyaW5nIGlub2RlCmNsZWFyZWQg
+aW5vZGUgMjE1MjMyMTc4NwppbWFwIGNsYWltcyBhIGZyZWUgaW5vZGUgMjE1MjMyMTc4OSBpcyBp
+biB1c2UsIGNvcnJlY3RpbmcgaW1hcCBhbmQgY2xlYXJpbmcgaW5vZGUKY2xlYXJlZCBpbm9kZSAy
+MTUyMzIxNzg5CmltYXAgY2xhaW1zIGEgZnJlZSBpbm9kZSAyMTUyMzIxNzkwIGlzIGluIHVzZSwg
+Y29ycmVjdGluZyBpbWFwIGFuZCBjbGVhcmluZyBpbm9kZQpjbGVhcmVkIGlub2RlIDIxNTIzMjE3
+OTAKaW1hcCBjbGFpbXMgYSBmcmVlIGlub2RlIDIxNTIzMjE3OTIgaXMgaW4gdXNlLCBjb3JyZWN0
+aW5nIGltYXAgYW5kIGNsZWFyaW5nIGlub2RlCmNsZWFyZWQgaW5vZGUgMjE1MjMyMTc5Mgo3Zjhm
+ZGJkZTA3MDA6IEJhZG5lc3MgaW4ga2V5IGxvb2t1cCAobGVuZ3RoKQpicD0oYm5vIDE4MDY4NTYw
+OTYsIGxlbiAxNjM4NCBieXRlcykga2V5PShibm8gMTgwNjg1NjA5NiwgbGVuIDgxOTIgYnl0ZXMp
+CmltYXAgY2xhaW1zIGEgZnJlZSBpbm9kZSAyNTQ3ODAzOTIyIGlzIGluIHVzZSwgY29ycmVjdGlu
+ZyBpbWFwIGFuZCBjbGVhcmluZyBpbm9kZQpjbGVhcmVkIGlub2RlIDI1NDc4MDM5MjIKICAgICAg
+ICAtIGFnbm8gPSAyCmltYXAgY2xhaW1zIGEgZnJlZSBpbm9kZSA0Mjk3ODI4OTkyIGlzIGluIHVz
+ZSwgY29ycmVjdGluZyBpbWFwIGFuZCBjbGVhcmluZyBpbm9kZQpjbGVhcmVkIGlub2RlIDQyOTc4
+Mjg5OTIKaW1hcCBjbGFpbXMgYSBmcmVlIGlub2RlIDQyOTc4Mjg5OTYgaXMgaW4gdXNlLCBjb3Jy
+ZWN0aW5nIGltYXAgYW5kIGNsZWFyaW5nIGlub2RlCmNsZWFyZWQgaW5vZGUgNDI5NzgyODk5Ngpp
+bWFwIGNsYWltcyBhIGZyZWUgaW5vZGUgNDI5ODAxNjkyMSBpcyBpbiB1c2UsIGNvcnJlY3Rpbmcg
+aW1hcCBhbmQgY2xlYXJpbmcgaW5vZGUKY2xlYXJlZCBpbm9kZSA0Mjk4MDE2OTIxCmltYXAgY2xh
+aW1zIGEgZnJlZSBpbm9kZSA0Mjk5MjE1OTIzIGlzIGluIHVzZSwgY29ycmVjdGluZyBpbWFwIGFu
+ZCBjbGVhcmluZyBpbm9kZQpjbGVhcmVkIGlub2RlIDQyOTkyMTU5MjMKaW1hcCBjbGFpbXMgYSBm
+cmVlIGlub2RlIDQyOTkyNDkzNTUgaXMgaW4gdXNlLCBjb3JyZWN0aW5nIGltYXAgYW5kIGNsZWFy
+aW5nIGlub2RlCmNsZWFyZWQgaW5vZGUgNDI5OTI0OTM1NQppbWFwIGNsYWltcyBhIGZyZWUgaW5v
+ZGUgNDI5OTI0OTM1NiBpcyBpbiB1c2UsIGNvcnJlY3RpbmcgaW1hcCBhbmQgY2xlYXJpbmcgaW5v
+ZGUKY2xlYXJlZCBpbm9kZSA0Mjk5MjQ5MzU2CmltYXAgY2xhaW1zIGEgZnJlZSBpbm9kZSA0NDI1
+NDc4MzgyIGlzIGluIHVzZSwgY29ycmVjdGluZyBpbWFwIGFuZCBjbGVhcmluZyBpbm9kZQpjbGVh
+cmVkIGlub2RlIDQ0MjU0NzgzODIKaW1hcCBjbGFpbXMgYSBmcmVlIGlub2RlIDQ0MjU4NDMzMjUg
+aXMgaW4gdXNlLCBjb3JyZWN0aW5nIGltYXAgYW5kIGNsZWFyaW5nIGlub2RlCmNsZWFyZWQgaW5v
+ZGUgNDQyNTg0MzMyNQppbWFwIGNsYWltcyBhIGZyZWUgaW5vZGUgNDQyNTg0MzMyNyBpcyBpbiB1
+c2UsIGNvcnJlY3RpbmcgaW1hcCBhbmQgY2xlYXJpbmcgaW5vZGUKY2xlYXJlZCBpbm9kZSA0NDI1
+ODQzMzI3CiAgICAgICAgLSBhZ25vID0gMwppbWFwIGNsYWltcyBhIGZyZWUgaW5vZGUgNjQ0Mjcx
+OTU5NSBpcyBpbiB1c2UsIGNvcnJlY3RpbmcgaW1hcCBhbmQgY2xlYXJpbmcgaW5vZGUKY2xlYXJl
+ZCBpbm9kZSA2NDQyNzE5NTk1CmltYXAgY2xhaW1zIGEgZnJlZSBpbm9kZSA2NDQzMTAyMDgyIGlz
+IGluIHVzZSwgY29ycmVjdGluZyBpbWFwIGFuZCBjbGVhcmluZyBpbm9kZQpjbGVhcmVkIGlub2Rl
+IDY0NDMxMDIwODIKaW1hcCBjbGFpbXMgYSBmcmVlIGlub2RlIDY0NDMxMDIwODMgaXMgaW4gdXNl
+LCBjb3JyZWN0aW5nIGltYXAgYW5kIGNsZWFyaW5nIGlub2RlCmNsZWFyZWQgaW5vZGUgNjQ0MzEw
+MjA4MwppbWFwIGNsYWltcyBhIGZyZWUgaW5vZGUgNjQ0MzEwMjA5MyBpcyBpbiB1c2UsIGNvcnJl
+Y3RpbmcgaW1hcCBhbmQgY2xlYXJpbmcgaW5vZGUKY2xlYXJlZCBpbm9kZSA2NDQzMTAyMDkzCmlt
+YXAgY2xhaW1zIGEgZnJlZSBpbm9kZSA2NDQzMTAyMTA1IGlzIGluIHVzZSwgY29ycmVjdGluZyBp
+bWFwIGFuZCBjbGVhcmluZyBpbm9kZQpjbGVhcmVkIGlub2RlIDY0NDMxMDIxMDUKaW1hcCBjbGFp
+bXMgYSBmcmVlIGlub2RlIDY0NDMxMDIxMDYgaXMgaW4gdXNlLCBjb3JyZWN0aW5nIGltYXAgYW5k
+IGNsZWFyaW5nIGlub2RlCmNsZWFyZWQgaW5vZGUgNjQ0MzEwMjEwNgogICAgICAgIC0gcHJvY2Vz
+cyBuZXdseSBkaXNjb3ZlcmVkIGlub2Rlcy4uLgpQaGFzZSA0IC0gY2hlY2sgZm9yIGR1cGxpY2F0
+ZSBibG9ja3MuLi4KICAgICAgICAtIHNldHRpbmcgdXAgZHVwbGljYXRlIGV4dGVudCBsaXN0Li4u
+CiAgICAgICAgLSBjaGVjayBmb3IgaW5vZGVzIGNsYWltaW5nIGR1cGxpY2F0ZSBibG9ja3MuLi4K
+ICAgICAgICAtIGFnbm8gPSAwCiAgICAgICAgLSBhZ25vID0gMwogICAgICAgIC0gYWdubyA9IDIK
+ICAgICAgICAtIGFnbm8gPSAxCmVudHJ5ICJmY3Jvbi5waWQiIGF0IGJsb2NrIDAgb2Zmc2V0IDE0
+NDggaW4gZGlyZWN0b3J5IGlub2RlIDQyOTc4MjkwNTkgcmVmZXJlbmNlcyBmcmVlIGlub2RlIDQy
+OTc4Mjg5OTIKICAgICAgICBjbGVhcmluZyBpbm9kZSBudW1iZXIgaW4gZW50cnkgYXQgb2Zmc2V0
+IDE0NDguLi4KZW50cnkgImZjcm9uLmZpZm8iIGF0IGJsb2NrIDAgb2Zmc2V0IDE0NzIgaW4gZGly
+ZWN0b3J5IGlub2RlIDQyOTc4MjkwNTkgcmVmZXJlbmNlcyBmcmVlIGlub2RlIDQyOTc4Mjg5OTYK
+ICAgICAgICBjbGVhcmluZyBpbm9kZSBudW1iZXIgaW4gZW50cnkgYXQgb2Zmc2V0IDE0NzIuLi4K
+ZW50cnkgInN5c2xvZy1uZy5waWQiIGF0IGJsb2NrIDAgb2Zmc2V0IDE0OTYgaW4gZGlyZWN0b3J5
+IGlub2RlIDQyOTc4MjkwNTkgcmVmZXJlbmNlcyBmcmVlIGlub2RlIDQ0MjU4NDMzMjUKICAgICAg
+ICBjbGVhcmluZyBpbm9kZSBudW1iZXIgaW4gZW50cnkgYXQgb2Zmc2V0IDE0OTYuLi4KZW50cnkg
+InNxdWlkLnBpZCIgYXQgYmxvY2sgMCBvZmZzZXQgMTU0NCBpbiBkaXJlY3RvcnkgaW5vZGUgNDI5
+NzgyOTA1OSByZWZlcmVuY2VzIGZyZWUgaW5vZGUgNDQyNTg0MzMyNwogICAgICAgIGNsZWFyaW5n
+IGlub2RlIG51bWJlciBpbiBlbnRyeSBhdCBvZmZzZXQgMTU0NC4uLgplbnRyeSAiS1NNc2VydmVy
+X18wIiBpbiBzaG9ydGZvcm0gZGlyZWN0b3J5IDE4OTcxNzUgcmVmZXJlbmNlcyBmcmVlIGlub2Rl
+IDQzOTM5OTAKanVua2luZyBlbnRyeSAiS1NNc2VydmVyX18wIiBpbiBkaXJlY3RvcnkgaW5vZGUg
+MTg5NzE3NQplbnRyeSAic3lzbG9nLW5nLnBlcnNpc3QiIGluIHNob3J0Zm9ybSBkaXJlY3Rvcnkg
+NjQ1NTA0NTg5MCByZWZlcmVuY2VzIGZyZWUgaW5vZGUgNjQ0MjcxOTU5NQpqdW5raW5nIGVudHJ5
+ICJzeXNsb2ctbmcucGVyc2lzdCIgaW4gZGlyZWN0b3J5IGlub2RlIDY0NTUwNDU4OTAKY29ycmVj
+dGVkIGk4IGNvdW50IGluIGRpcmVjdG9yeSA2NDU1MDQ1ODkwLCB3YXMgNSwgbm93IDQKZW50cnkg
+ImJsa2lkLnRhYiIgaW4gc2hvcnRmb3JtIGRpcmVjdG9yeSAyNTI2NDUyOTQ1IHJlZmVyZW5jZXMg
+ZnJlZSBpbm9kZSAyNTQ3ODAzOTIzCmp1bmtpbmcgZW50cnkgImJsa2lkLnRhYiIgaW4gZGlyZWN0
+b3J5IGlub2RlIDI1MjY0NTI5NDUKZW50cnkgIndhdGNoIiBpbiBzaG9ydGZvcm0gZGlyZWN0b3J5
+IDI1MjY0NTI5NDcgcmVmZXJlbmNlcyBmcmVlIGlub2RlIDE4OTcxNzcKanVua2luZyBlbnRyeSAi
+d2F0Y2giIGluIGRpcmVjdG9yeSBpbm9kZSAyNTI2NDUyOTQ3CmVudHJ5ICIrcGNpOjAwMDA6MDA6
+MDAuMCIgYXQgYmxvY2sgMCBvZmZzZXQgMjA1NiBpbiBkaXJlY3RvcnkgaW5vZGUgNjgxNDg1MDY3
+OSByZWZlcmVuY2VzIGZyZWUgaW5vZGUgNjQ0MzEwMjA4MgogICAgICAgIGNsZWFyaW5nIGlub2Rl
+IG51bWJlciBpbiBlbnRyeSBhdCBvZmZzZXQgMjA1Ni4uLgplbnRyeSAiK3BjaTowMDAwOjAwOjA2
+LjAiIGF0IGJsb2NrIDAgb2Zmc2V0IDIyMDAgaW4gZGlyZWN0b3J5IGlub2RlIDY4MTQ4NTA2Nzkg
+cmVmZXJlbmNlcyBmcmVlIGlub2RlIDY0NDMxMDIxMDUKICAgICAgICBjbGVhcmluZyBpbm9kZSBu
+dW1iZXIgaW4gZW50cnkgYXQgb2Zmc2V0IDIyMDAuLi4KZW50cnkgIitwY2k6MDAwMDowMDoxMS4w
+IiBhdCBibG9jayAwIG9mZnNldCAyMjcyIGluIGRpcmVjdG9yeSBpbm9kZSA2ODE0ODUwNjc5IHJl
+ZmVyZW5jZXMgZnJlZSBpbm9kZSA2NDQzMTAyMDkzCiAgICAgICAgY2xlYXJpbmcgaW5vZGUgbnVt
+YmVyIGluIGVudHJ5IGF0IG9mZnNldCAyMjcyLi4uCmVudHJ5ICIrcGNpOjAwMDA6MDA6MTIuMSIg
+YXQgYmxvY2sgMCBvZmZzZXQgMjQxNiBpbiBkaXJlY3RvcnkgaW5vZGUgNjgxNDg1MDY3OSByZWZl
+cmVuY2VzIGZyZWUgaW5vZGUgNjQ0MzEwMjA4MwogICAgICAgIGNsZWFyaW5nIGlub2RlIG51bWJl
+ciBpbiBlbnRyeSBhdCBvZmZzZXQgMjQxNi4uLgplbnRyeSAiK3BjaTowMDAwOjAwOjEzLjIiIGF0
+IGJsb2NrIDAgb2Zmc2V0IDI3MDQgaW4gZGlyZWN0b3J5IGlub2RlIDY4MTQ4NTA2NzkgcmVmZXJl
+bmNlcyBmcmVlIGlub2RlIDY0NDMxMDIxMDYKICAgICAgICBjbGVhcmluZyBpbm9kZSBudW1iZXIg
+aW4gZW50cnkgYXQgb2Zmc2V0IDI3MDQuLi4KZW50cnkgIjMwMyIgaW4gc2hvcnRmb3JtIGRpcmVj
+dG9yeSAyNjg0MDc1ODQyIHJlZmVyZW5jZXMgZnJlZSBpbm9kZSAyMTUyMzIxNzkwCmp1bmtpbmcg
+ZW50cnkgIjMwMyIgaW4gZGlyZWN0b3J5IGlub2RlIDI2ODQwNzU4NDIKZW50cnkgIi5YMC1sb2Nr
+IiBhdCBibG9jayAwIG9mZnNldCAxMjAgaW4gZGlyZWN0b3J5IGlub2RlIDI2ODQwNzU4NzggcmVm
+ZXJlbmNlcyBmcmVlIGlub2RlIDIxNTIzMjE3ODcKICAgICAgICBjbGVhcmluZyBpbm9kZSBudW1i
+ZXIgaW4gZW50cnkgYXQgb2Zmc2V0IDEyMC4uLgplbnRyeSAib3JiaXQtbWFya3VzIiBhdCBibG9j
+ayAwIG9mZnNldCAyMjQgaW4gZGlyZWN0b3J5IGlub2RlIDI2ODQwNzU4NzggcmVmZXJlbmNlcyBm
+cmVlIGlub2RlIDQyOTkyNDkzNTUKICAgICAgICBjbGVhcmluZyBpbm9kZSBudW1iZXIgaW4gZW50
+cnkgYXQgb2Zmc2V0IDIyNC4uLgplbnRyeSAiT1NMX1BJUEVfMTAwMF9TaW5nbGVPZmZpY2VJUENf
+YjljNDVlYjBjNDRjY2JkMTJlYTI3YWExYjA0MzkxOWYiIGF0IGJsb2NrIDAgb2Zmc2V0IDI0OCBp
+biBkaXJlY3RvcnkgaW5vZGUgMjY4NDA3NTg3OCByZWZlcmVuY2VzIGZyZWUgaW5vZGUgMjE1MjMy
+MTc5MgogICAgICAgIGNsZWFyaW5nIGlub2RlIG51bWJlciBpbiBlbnRyeSBhdCBvZmZzZXQgMjQ4
+Li4uClBoYXNlIDUgLSByZWJ1aWxkIEFHIGhlYWRlcnMgYW5kIHRyZWVzLi4uCiAgICAgICAgLSBy
+ZXNldCBzdXBlcmJsb2NrLi4uClBoYXNlIDYgLSBjaGVjayBpbm9kZSBjb25uZWN0aXZpdHkuLi4K
+ICAgICAgICAtIHJlc2V0dGluZyBjb250ZW50cyBvZiByZWFsdGltZSBiaXRtYXAgYW5kIHN1bW1h
+cnkgaW5vZGVzCiAgICAgICAgLSB0cmF2ZXJzaW5nIGZpbGVzeXN0ZW0gLi4uCmVudHJ5ICJxdWV1
+ZS5iaW4iIGluIGRpcmVjdG9yeSBpbm9kZSAyNTI2NDUyOTQ3IHJlZmVyZW5jZXMgYWxyZWFkeSBj
+b25uZWN0ZWQgaW5vZGUgMjE1MjMyMTc5NC4KCi0tIApNYXJrdXMKCl9fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5z
+Z2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
