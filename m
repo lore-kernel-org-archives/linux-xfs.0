@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, master,
+Subject: [XFS updates] XFS development tree branch, for-next,
 	updated. for-linus-v3.11-rc1-8-g92f8ff7
-Message-Id: <20130711205455.C5E037F4E@oss.sgi.com>
-Date: Thu, 11 Jul 2013 15:54:55 -0500 (CDT)
+Message-Id: <20130711205533.C9B077F52@oss.sgi.com>
+Date: Thu, 11 Jul 2013 15:55:33 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,7 +23,7 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, master has been updated
+The branch, for-next has been updated
   92f8ff7 xfs: Add pquota fields where gquota is used.
       from  42c49d7f249c2487f36d3314753d5d8ebcee8249 (commit)
 
