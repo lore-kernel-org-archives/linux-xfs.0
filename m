@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id BC5877F3F
-	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 05:38:16 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 65328304081
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 9553D7F54
+	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 05:38:17 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E49C2AC002
 	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 03:38:16 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id YdHwZM7fZI1nO8S0 for
-	<xfs@oss.sgi.com>; Thu, 11 Jul 2013 03:38:12 -0700 (PDT)
+	cuda.sgi.com with ESMTP id AZAkYBNGIJlV2Xni for
+	<xfs@oss.sgi.com>; Thu, 11 Jul 2013 03:38:15 -0700 (PDT)
 Received: from int-mx09.intmail.prod.int.phx2.redhat.com
 	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r6BAcCtN015006
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r6BAcFo2031018
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 06:38:12 -0400
+	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 06:38:15 -0400
 From: Lukas Czerner <lczerner@redhat.com>
-Subject: [RFC][PATCH 00/10 v2] xfstests: Add support for config section
-Date: Thu, 11 Jul 2013 12:37:55 +0200
-Message-Id: <1373539085-8577-1-git-send-email-lczerner@redhat.com>
+Subject: [PATCH 03/10 v2] xfstests: Refactor code for obtaining test list
+Date: Thu, 11 Jul 2013 12:37:58 +0200
+Message-Id: <1373539085-8577-4-git-send-email-lczerner@redhat.com>
+In-Reply-To: <1373539085-8577-1-git-send-email-lczerner@redhat.com>
+References: <1373539085-8577-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,103 +35,152 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: lczerner@redhat.com
 
-This patch set adds support for sections in the configuration file
-while maintaining unchanged behaviour when no sections are present in the
-configuration file, or no configuration file is provided.
+Put the code for obtaining the list of test into one place which makes
+things more readable. It will also allow us to re-init the list in the
+future if we need it.
 
-V2: Recreate test list when FSTYP changed between sections
+Signed-off-by: Lukas Czerner <lczerner@redhat.com>
+---
+ check | 100 ++++++++++++++++++++++++++++++++++++------------------------------
+ 1 file changed, 54 insertions(+), 46 deletions(-)
 
-
-Explanation, syntax and example follows.
-
-
-Configuration file with sections
-================================
-
-Configuration file with sections is useful for running xfstests on multiple
-file systems, or multiple file system setups in a single run without any
-help of external scripts.
-
-
-Syntax
-------
-
-Syntax for defining a section is the following:
-
-	[section_name]
-
-Section name should consist of alphanumeric characters and '_'. Anything
-else is forbidden and the section will not be recognised.
-
-Each section in the configuration file should contain options in the format
-
-	OPTION=value
-
-'OPTION' must not contain any white space characters. 'value' can contain
-any character you want with one simple limitation - characters ' and " can
-only appear at the start and end of the 'value', however it is not required.
-
-Note that options are carried between sections so the same options does not
-have to be specified in each and every sections. However caution should be
-exercised not to leave unwanted options set from previous sections.
-
-
-Results
--------
-
-For every section xfstests will run with specified options and will produce
-separate results in the '$RESULT_BASE/$section_name' directory.
-
-
-Different mount options
------------------------
-
-Specifying different mount options in difference config sections is allowed.
-When MOUNT_OPTIONS differs in the following section TEST_DEV will be remounted
-with new MOUNT_OPTIONS automatically before running the test.
-
-
-Multiple file systems
----------------------
-
-Having different file systems in different config sections is allowed. When
-FSTYP differs in the following section the FSTYP file system will be created
-automatically before running the test.
-
-Note that if MOUNT_OPTIONS, MKFS_OPTIONS, or FSCK_OPTIONS are not directly
-specified in the section it will be reset to the default for a given file
-system.
-
-You can also force the file system recreation by specifying RECREATE_TEST_DEV.
-
-
-Example
--------
-
-Here is an example of config file with sections:
-
-[ext4_4k_block_size]
-TEST_DEV=/dev/sda
-TEST_DIR=/mnt/test
-SCRATCH_DEV=/dev/sdb
-SCRATCH_MNT=/mnt/test1
-MKFS_OPTIONS="-q -F -b4096"
-FSTYP=ext4
-RESULT_BASE="`pwd`/results/`date +%d%m%y_%H%M%S`"
-
-[ext4_1k_block_size]
-MKFS_OPTIONS="-q -F -b1024"
-
-[ext4_nojournal]
-MKFS_OPTIONS="-q -F -b4096 -O ^has_journal"
-
-[xfs_filesystem]
-MKFS_OPTIONS="-f"
-FSTYP=xfs
-
-[ext3_filesystem]
-FSTYP=ext3
-MOUNT_OPTIONS="-o noatime"
+diff --git a/check b/check
+index 71b179b..dc972d7 100755
+--- a/check
++++ b/check
+@@ -154,6 +154,56 @@ _timestamp()
+     echo -n " [$now]"
+ }
+ 
++_prepare_test_list()
++{
++	unset list
++	# Tests specified on the command line
++	if [ -s $tmp.arglist ]; then
++		cat $tmp.arglist > $tmp.list
++	else
++		touch $tmp.list
++	fi
++
++	# Specified groups to include
++	for group in $GROUP_LIST; do
++		list=$(get_group_list $group)
++		if [ -z "$list" ]; then
++			echo "Group \"$group\" is empty or not defined?"
++			exit 1
++		fi
++
++		for t in $list; do
++			grep -s "^$t\$" $tmp.list >/dev/null || \
++							echo "$t" >>$tmp.list
++		done
++	done
++
++	if ! $have_test_arg && [ -z "$GROUP_LIST" ]; then
++		# no test numbers, do everything
++		get_all_tests
++	fi
++
++	# Specified groups to exclude
++	for xgroup in $XGROUP_LIST; do
++		list=$(get_group_list $xgroup)
++		if [ -z "$list" ]; then
++			echo "Group \"$xgroup\" is empty or not defined?"
++			exit 1
++		fi
++
++		trim_test_list $list
++	done
++
++	# sort the list of tests into numeric order
++	list=`sort -n $tmp.list | uniq`
++	rm -f $tmp.list $tmp.tmp $tmp.grep
++
++	if $randomize
++	then
++		list=`echo $list | awk -f randomize.awk`
++	fi
++}
++
+ # Process command arguments first.
+ while [ $# -gt 0 ]; do
+ 	case "$1" in
+@@ -164,35 +214,11 @@ while [ $# -gt 0 ]; do
+ 	-nfs)	FSTYP=nfs ;;
+ 
+ 	-g)	group=$2 ; shift ;
+-		group_list=$(get_group_list $group)
+-		if [ -z "$group_list" ]; then
+-		    echo "Group \"$group\" is empty or not defined?"
+-		    exit 1
+-		fi
+-
+-		[ ! -s $tmp.list ] && touch $tmp.list
+-		for t in $group_list; do
+-			grep -s "^$t\$" $tmp.list >/dev/null || \
+-							echo "$t" >>$tmp.list
+-		done
+-
++		GROUP_LIST="$GROUP_LIST $group"
+ 		;;
+ 
+ 	-x)	xgroup=$2 ; shift ;
+-
+-		# Note: behaviour is dependent on command line ordering of
+-		# -g and -x parameters. If there are no preceding -g commands,
+-		# this works on all tests, otherwise just the tests specified by
+-		# the early -g inclusions.
+-		[ ! -s $tmp.list ] && get_all_tests
+-
+-		group_list=$(get_group_list $xgroup)
+-		if [ -z "$group_list" ]; then
+-		    echo "Group \"$xgroup\" is empty or not defined?"
+-		    exit 1
+-		fi
+-
+-		trim_test_list $group_list
++		XGROUP_LIST="$XGROUP_LIST $xgroup"
+ 		;;
+ 
+ 	-X)	xfile=$2; shift ;
+@@ -244,7 +270,7 @@ if $have_test_arg; then
+ 
+ 			if egrep "^$test_name" $group_file >/dev/null ; then
+ 				# in group file ... OK
+-				echo $SRC_DIR/$1 >>$tmp.list
++				echo $SRC_DIR/$1 >>$tmp.arglist
+ 			else
+ 				# oops
+ 				echo "$1 - unknown test, ignored"
+@@ -256,25 +282,7 @@ if $have_test_arg; then
+ 	done
+ fi
+ 
+-if [ -s $tmp.list ]; then
+-    # found some valid test numbers ... this is good
+-    :
+-elif $have_test_arg; then
+-	# had test numbers, but none in group file ... do nothing
+-	touch $tmp.list
+-else
+-	# no test numbers, do everything
+-	get_all_tests
+-fi
+-
+-# sort the list of tests into numeric order
+-list=`sort -n $tmp.list`
+-rm -f $tmp.list $tmp.tmp $tmp.grep
+-
+-if $randomize
+-then
+-    list=`echo $list | awk -f randomize.awk`
+-fi
++_prepare_test_list
+ 
+ # we need common/rc
+ if ! . ./common/rc
+-- 
+1.8.3.1
 
 _______________________________________________
 xfs mailing list
