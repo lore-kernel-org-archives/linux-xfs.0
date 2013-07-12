@@ -1,11 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id ACCD67F51
-	for <xfs@oss.sgi.com>; Fri, 12 Jul 2013 14:08:44 -0500 (CDT)
-Subject: [GIT PULL] XFS update (#2) for 3.11-rc1
-Message-Id: <20130712190837.A5C0B500B4B@whiskey.americas.sgi.com>
-Date: Fri, 12 Jul 2013 14:08:37 -0500 (CDT)
-From: bpm@sgi.com (Ben Myers)
+	by oss.sgi.com (Postfix) with ESMTP id 7366E7F4E
+	for <xfs@oss.sgi.com>; Fri, 12 Jul 2013 13:51:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1E900AC002
+	for <xfs@oss.sgi.com>; Fri, 12 Jul 2013 11:51:37 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id UC5QWPhjHkW68v2u for
+	<xfs@oss.sgi.com>; Fri, 12 Jul 2013 11:51:36 -0700 (PDT)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r6CIpahM023410
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Fri, 12 Jul 2013 14:51:36 -0400
+Message-ID: <51E05037.5000207@redhat.com>
+Date: Fri, 12 Jul 2013 13:51:35 -0500
+From: Eric Sandeen <sandeen@redhat.com>
+MIME-Version: 1.0
+Subject: [PATCH V3] xfstests: generic/314, test sgid inheritance on subdirs
+References: <51A68175.9020202@redhat.com> <51A7B03E.2080909@sandeen.net>
+In-Reply-To: <51A7B03E.2080909@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -14,102 +28,128 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: Carlos Maiolino <cmaiolino@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-Hi Linus,
+On XFS this test fails today due to some over-eager
+SGID removal in xfs core code; ext4 & btrfs pass.
+Document it in a test, will send xfs patch in a bit.
 
-   Please pull a few more XFS updates for 3.11-rc1.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-   Here are a fix for xfs_fsr, a cleanup in bulkstat, a cleanup in
-   xfs_open_by_handle, updated mount options documentation, a cleanup in
-   xfs_bmapi_write, a fix for the size of dquot log reservations, a fix
-   for sgid inheritance when acls are in use, a fix for cleaning up
-   quotainfo structures, and some more of the work which allows group
-   and project quotas to be used together.
+p.s.  I'm going to just flaunt my ignorance and say:
+I've never understood acls well.  I'm hoping someone who does
+can help me write a better changelog, because this one
+is no good at all!
 
-   We had a few more in this last quota category that we might have
-   liked to get in, but it looks there are still a few items that need
-   to be addressed.
+V2: add missing source of "attr" file for _require_acls
 
-Thanks,
-       Ben
+V3: use _ls_l to filter out the selinux "." - thanks to Carlos!
+    renumber to 314 to make the merge easier
 
-The following changes since commit 83e782e1a1cc0159888e58e14dfc8f3289663338:
+diff --git a/tests/generic/314 b/tests/generic/314
+new file mode 100755
+index 0000000..3dee609
+--- /dev/null
++++ b/tests/generic/314
+@@ -0,0 +1,68 @@
++#! /bin/bash
++# FS QA Test No. 314
++#
++# Test SGID inheritance on subdirectories
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2013 Red Hat, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/attr
++
++# real QA test starts here
++_supported_fs generic
++_require_acls
++_require_user
++_need_to_be_root
++
++rm -rf $TEST_DIR/$seq-dir
++
++# Make dir owned by qa user, and an unrelated group:
++mkdir $TEST_DIR/$seq-dir
++chown $qa_user:12345 $TEST_DIR/$seq-dir
++
++# Make parent dir sgid
++chmod 2775 $TEST_DIR/$seq-dir
++
++# Make subdirs before & after acl set
++su $qa_user -c "mkdir $TEST_DIR/$seq-dir/subdir"
++su $qa_user -c "setfacl -m u:$qa_user:rwx,d:u:$qa_user:rwx $TEST_DIR/$seq-dir"
++su $qa_user -c "mkdir $TEST_DIR/$seq-dir/subdir2"
++
++# Both subdirs should have inherited sgid
++_ls_l $TEST_DIR/$seq-dir/ | _filter_test_dir | awk '{print $1,$NF}'
++
++status=0
++exit
+diff --git a/tests/generic/314.out b/tests/generic/314.out
+new file mode 100644
+index 0000000..326a929
+--- /dev/null
++++ b/tests/generic/314.out
+@@ -0,0 +1,3 @@
++QA output created by 314
++drwxr-sr-x. TEST_DIR/314-dir/subdir
++drwxrwsr-x+ TEST_DIR/314-dir/subdir2
+diff --git a/tests/generic/group b/tests/generic/group
+index bd443c1..d5ec8d5 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -115,3 +115,4 @@
+ 310 auto
+ 311 auto metadata log
+ 312 auto quick prealloc enospc
++314 auto quick acl
 
-  xfs: Remove incore use of XFS_OQUOTA_ENFD and XFS_OQUOTA_CHKD (2013-06-28 17:39:22 -0500)
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
 
-are available in the git repository at:
-
-  git://oss.sgi.com/xfs/xfs.git tags/for-linus-v3.11-rc1-2
-
-for you to fetch changes up to c31ad439e8d111bf911c9cc80619cebde411a44d:
-
-  xfs: Fix the logic check for all quotas being turned off (2013-07-11 16:49:10 -0500)
-
-----------------------------------------------------------------
-xfs: update (#2) for 3.11-rc1
-
-- fix for xfs_fsr returning -EINVAL
-- cleanup in xfs_bulkstat
-- cleanup in xfs_open_by_handle
-- update mount options documentation
-- clean up local format handling in xfs_bmapi_write
-- fix dquot log reservations which were too small
-- fix sgid inheritance for subdirectories when default acls are in use
-- add project quota fields to various structures
-- fix teardown of quotainfo structures when quotas are turned off
-
-----------------------------------------------------------------
-Carlos Maiolino (1):
-      xfs: fix sgid inheritance for subdirectories inheriting default acls [V3]
-
-Chandra Seetharaman (2):
-      xfs: Add pquota fields where gquota is used.
-      xfs: Fix the logic check for all quotas being turned off
-
-Dave Chinner (3):
-      xfs: update mount options documentation
-      xfs: remove local fork format handling from xfs_bmapi_write()
-      xfs: dquot log reservations are too small
-
-Eric Sandeen (1):
-      xfs: use XFS_BMAP_BMDR_SPACE vs. XFS_BROOT_SIZE_ADJ
-
-Jie Liu (1):
-      xfs: clean up unused codes at xfs_bulkstat()
-
-Yann Droneaud (1):
-      xfs: use get_unused_fd_flags(0) instead of get_unused_fd()
-
- Documentation/filesystems/xfs.txt | 317 +++++++++++++++++++++++++-------------
- fs/xfs/xfs_attr_leaf.c            |   2 +
- fs/xfs/xfs_bmap.c                 | 199 ++++++++++--------------
- fs/xfs/xfs_bmap.h                 |   1 +
- fs/xfs/xfs_dinode.h               |   3 -
- fs/xfs/xfs_dir2_block.c           |  20 ++-
- fs/xfs/xfs_dquot.c                |  15 +-
- fs/xfs/xfs_dquot.h                |   7 +-
- fs/xfs/xfs_icache.c               |   1 +
- fs/xfs/xfs_inode.c                |  14 +-
- fs/xfs/xfs_inode.h                |   1 +
- fs/xfs/xfs_ioctl.c                |  16 +-
- fs/xfs/xfs_iops.c                 |  24 +--
- fs/xfs/xfs_itable.c               |  28 +---
- fs/xfs/xfs_qm.c                   | 243 ++++++++++++++++++++---------
- fs/xfs/xfs_qm.h                   |  20 ++-
- fs/xfs/xfs_qm_bhv.c               |  10 +-
- fs/xfs/xfs_qm_syscalls.c          |  24 ++-
- fs/xfs/xfs_quota.h                |  65 ++++----
- fs/xfs/xfs_symlink.c              |  10 +-
- fs/xfs/xfs_trans_dquot.c          |  35 +++--
- fs/xfs/xfs_vnodeops.c             |  13 +-
- 22 files changed, 644 insertions(+), 424 deletions(-)
 
 _______________________________________________
 xfs mailing list
