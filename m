@@ -1,20 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 51BE67F37
-	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 21:39:40 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3C50D30404E
-	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 19:39:40 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id z4K6TouYFpkpw3O0 for
-	<xfs@oss.sgi.com>; Thu, 11 Jul 2013 19:39:39 -0700 (PDT)
-Date: Thu, 11 Jul 2013 22:39:30 -0400
-From: Dave Jones <davej@redhat.com>
-Subject: XFS: Assertion failed: xfs_dir2_sf_lookup(args) == ENOENT, file:
-	fs/xfs/xfs_dir2_sf.c, line: 358
-Message-ID: <20130712023930.GA6473@redhat.com>
-MIME-Version: 1.0
-Content-Disposition: inline
+	by oss.sgi.com (Postfix) with ESMTP id 0A6C77F51
+	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 22:16:05 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id EC589304032
+	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 20:16:01 -0700 (PDT)
+Received: from members.tip.net.au (haggis.pcug.org.au [203.10.76.10]) by
+	cuda.sgi.com with ESMTP id 36kIclyWbUxsBfPX for
+	<xfs@oss.sgi.com>; Thu, 11 Jul 2013 20:15:57 -0700 (PDT)
+Date: Fri, 12 Jul 2013 13:15:46 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: linux-next: manual merge of the akpm tree with the xfs tree
+Message-Id: <20130712131546.61d05ef97d33d58a28c728db@canb.auug.org.au>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,62 +21,92 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============5558456188828386839=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Linux Kernel <linux-kernel@vger.kernel.org>
-Cc: xfs@oss.sgi.com
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Chandra Seetharaman <sekharan@us.ibm.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, linux-next@vger.kernel.org, Glauber Costa <glommer@openvz.org>
 
-Just saw this during boot after an unclean shutdown. It hung afterwards.
+--===============5558456188828386839==
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA256";
+ boundary="Signature=_Fri__12_Jul_2013_13_15_46_+1000_+ZSBWRLm1HQHWOJT"
 
-[   97.162665] XFS: Assertion failed: xfs_dir2_sf_lookup(args) == ENOENT, file: fs/xfs/xfs_dir2_sf.c, line: 358
-[   97.164646] ------------[ cut here ]------------
-[   97.165312] kernel BUG at fs/xfs/xfs_message.c:108!
-[   97.165986] invalid opcode: 0000 [#1] PREEMPT SMP DEBUG_PAGEALLOC
-[   97.166947] Modules linked in: snd_hda_codec_realtek pcspkr usb_debug snd_hda_intel snd_hda_codec snd_hwdep snd_seq snd_seq_device snd_pcm e1000e ptp snd_page_alloc pps_core snd_timer snd soundcore xfs libcrc32c
-[   97.170782] CPU: 3 PID: 341 Comm: rpcbind Not tainted 3.10.0+ #49
-[   97.173684] task: ffff880235d14a40 ti: ffff880235dae000 task.ti: ffff880235dae000
-[   97.173701] RIP: 0010:[<ffffffffa002a362>]  [<ffffffffa002a362>] assfail+0x22/0x30 [xfs]
-[   97.173702] RSP: 0018:ffff880235dafa98  EFLAGS: 00010296
-[   97.173703] RAX: 0000000000000060 RBX: ffff880235dafb20 RCX: 0000000000000006
-[   97.173703] RDX: 00000000000031e0 RSI: ffff880235d152a0 RDI: ffff880235d14a40
-[   97.173704] RBP: ffff880235dafa98 R08: 0000000000000002 R09: 0000000000000000
-[   97.173704] R10: 0000000000000001 R11: 0000000000000001 R12: ffff880235e54000
-[   97.173705] R13: 0000000000035e92 R14: ffff880235dafc88 R15: ffff880235dafc28
-[   97.173706] FS:  00007fa6aac79840(0000) GS:ffff880244e00000(0000) knlGS:0000000000000000
-[   97.173706] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[   97.173707] CR2: 00007fffb1905f18 CR3: 0000000235ce5000 CR4: 00000000001407e0
-[   97.173707] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-[   97.173708] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-[   97.173708] Stack:
-[   97.173712]  ffff880235dafb00 ffffffffa0076953 ffffe8ffffc066a0 ffff880240e04ca8
-[   97.173713]  0000000000000250 0000000000000020 ffff88023d05af40 ffff880235dafb20
-[   97.173715]  ffff880235a14a40 ffff880235e54000 0000000000035e92 ffff880235dafc88
-[   97.173715] Call Trace:
-[   97.173730]  [<ffffffffa0076953>] xfs_dir2_sf_addname+0x43/0x760 [xfs]
-[   97.173743]  [<ffffffffa0067cfc>] xfs_dir_createname+0x15c/0x1b0 [xfs]
-[   97.173754]  [<ffffffffa002f2dc>] xfs_create+0x4cc/0x710 [xfs]
-[   97.173764]  [<ffffffffa00278ca>] xfs_vn_mknod+0x9a/0x1c0 [xfs]
-[   97.173773]  [<ffffffffa0027a03>] xfs_vn_create+0x13/0x20 [xfs]
-[   97.173776]  [<ffffffff811d100d>] vfs_create+0x9d/0x100
-[   97.173778]  [<ffffffff811d1995>] do_last+0x925/0xe00
-[   97.173780]  [<ffffffff811d1f2e>] path_openat+0xbe/0x6f0
-[   97.173783]  [<ffffffff8109e33f>] ? local_clock+0x3f/0x50
-[   97.173785]  [<ffffffff811e1b5f>] ? __alloc_fd+0xaf/0x200
-[   97.173787]  [<ffffffff811d2c3a>] do_filp_open+0x3a/0x90
-[   97.173789]  [<ffffffff811e1b5f>] ? __alloc_fd+0xaf/0x200
-[   97.173790]  [<ffffffff811c0ddb>] do_sys_open+0x10b/0x200
-[   97.173792]  [<ffffffff81010578>] ? syscall_trace_enter+0x18/0x290
-[   97.173794]  [<ffffffff811c0eee>] SyS_open+0x1e/0x20
-[   97.173796]  [<ffffffff81717c14>] tracesys+0xdd/0xe2
-[   97.173813] Code: 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 55 48 89 f1 41 89 d0 48 89 e5 48 89 fa 48 c7 c6 a8 98 0b a0 31 ff 31 c0 e8 ce fb ff ff <0f> 0b 66 66 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 55 48 
+--Signature=_Fri__12_Jul_2013_13_15_46_+1000_+ZSBWRLm1HQHWOJT
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-This trace repeated a few times, then the same assertion was triggered from sys_renameat.
+Hi Andrew,
 
-	Dave
+Today's linux-next merge of the akpm tree got a conflict in
+fs/xfs/xfs_qm.h between commit 92f8ff73f186 ("xfs: Add pquota fields
+where gquota is used") from the xfs tree and commit  "xfs: convert dquot
+cache lru to list_lru" from the akpm tree.
+
+I fixed it up (see below) and can carry the fix as necessary (no action
+is required).
+
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+
+diff --cc fs/xfs/xfs_qm.h
+index 579d6a0,cf2ad1f..0000000
+--- a/fs/xfs/xfs_qm.h
++++ b/fs/xfs/xfs_qm.h
+@@@ -44,14 -44,10 +44,12 @@@ extern struct kmem_zone	*xfs_qm_dqtrxzo
+  typedef struct xfs_quotainfo {
+  	struct radix_tree_root qi_uquota_tree;
+  	struct radix_tree_root qi_gquota_tree;
+ +	struct radix_tree_root qi_pquota_tree;
+  	struct mutex qi_tree_lock;
+ -	xfs_inode_t	*qi_uquotaip;	 /* user quota inode */
+ -	xfs_inode_t	*qi_gquotaip;	 /* group quota inode */
+ +	struct xfs_inode	*qi_uquotaip;	/* user quota inode */
+ +	struct xfs_inode	*qi_gquotaip;	/* group quota inode */
+ +	struct xfs_inode	*qi_pquotaip;	/* project quota inode */
+- 	struct list_head qi_lru_list;
+- 	struct mutex	 qi_lru_lock;
+- 	int		 qi_lru_count;
++ 	struct list_lru	 qi_lru;
+  	int		 qi_dquots;
+  	time_t		 qi_btimelimit;	 /* limit for blks timer */
+  	time_t		 qi_itimelimit;	 /* limit for inodes timer */
+
+--Signature=_Fri__12_Jul_2013_13_15_46_+1000_+ZSBWRLm1HQHWOJT
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.20 (GNU/Linux)
+
+iQIcBAEBCAAGBQJR33TnAAoJEECxmPOUX5FEdj4P/3q79Hko10rAF8RPkZ310xDm
+gH2yFo7ncjndKq0y74dqTQGSY08UpwAZPSCT7QaLrpTvHzEz/eKRytnQO7HrpePZ
+EiqPc3JeHX+i+XN5+jXSFRtNGHLg2hI8QsHoRzWaMKsfYk0/C9wgHgQKWdAwAsdW
+g65RVvePnAhDr8ZTC+YGVSWOhUuBlBoYdSODs9IX9qAzjGP5IBWvVuQOdekBq0QS
+Ij6497vO87UtQLf0NXECHQ8oSXXDsR3asjQElv0Rk11I5mEvVgwAZ5JCovPBHT1g
+XqXgQjh6TiVqQiKxdPVomUTxOHHw4gTJTxuiu9laul4a2zlzGy3EYhJU32ERvSqf
+osXMQJMKCTIYyagHfvGTPtM1Xemy+9tLvgK1rv9osHy6JmWo6zz/apWvoST/EvIC
+qJU6oS/CYEVUe94PhiFK5MOkvxnZX8qgOOnGTLqlFR4Y1MJwGQQueClSIZeH8b0N
+5NtE6Vs4U8koBDAWwYawye6NFcRG6z+XzO2cFXmS2WQVTceQlauheKYUUvvZoNLz
+4VaA/LB7WBmoSH5WBQ733xQJ2VrBVtq0RhhOkpr9IslmIvvSfQB5HA6pu7lAgbOF
+XINRIbI2DO5xNvFnAnDrOIl59wnfvaR5pjEqTx3UtuWjnYHllqEMF7x/jSdWV6KO
+cpqRxrHpyHgwplUpJ061
+=yhcL
+-----END PGP SIGNATURE-----
+
+--Signature=_Fri__12_Jul_2013_13_15_46_+1000_+ZSBWRLm1HQHWOJT--
+
+
+--===============5558456188828386839==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============5558456188828386839==--
