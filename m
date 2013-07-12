@@ -1,26 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5CB5A7F37
-	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 21:38:20 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 51BE67F37
+	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 21:39:40 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 4AB0D8F8035
-	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 19:38:17 -0700 (PDT)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	mnUDnmeZyJSGr9ox for <xfs@oss.sgi.com>;
-	Thu, 11 Jul 2013 19:38:15 -0700 (PDT)
-Date: Fri, 12 Jul 2013 12:38:12 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Corruption of root fs during git bisect of drm system hang
-Message-ID: <20130712023812.GB5228@dastard>
-References: <20130710090634.GA356@x4> <20130711003122.GR3438@dastard>
-	<20130711033621.GB362@x4> <20130711035827.GA3438@dastard>
-	<51DE30BC.1050905@hardwarefreak.com> <20130711090755.GA363@x4>
-	<20130711112826.GA363@x4> <51DF1463.1070603@hardwarefreak.com>
-	<20130711204033.GA355@x4>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3C50D30404E
+	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 19:39:40 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id z4K6TouYFpkpw3O0 for
+	<xfs@oss.sgi.com>; Thu, 11 Jul 2013 19:39:39 -0700 (PDT)
+Date: Thu, 11 Jul 2013 22:39:30 -0400
+From: Dave Jones <davej@redhat.com>
+Subject: XFS: Assertion failed: xfs_dir2_sf_lookup(args) == ENOENT, file:
+	fs/xfs/xfs_dir2_sf.c, line: 358
+Message-ID: <20130712023930.GA6473@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130711204033.GA355@x4>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,99 +27,56 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Markus Trippelsdorf <markus@trippelsdorf.de>
-Cc: Stan Hoeppner <stan@hardwarefreak.com>, xfs@oss.sgi.com
+To: Linux Kernel <linux-kernel@vger.kernel.org>
+Cc: xfs@oss.sgi.com
 
-On Thu, Jul 11, 2013 at 10:40:33PM +0200, Markus Trippelsdorf wrote:
-> On 2013.07.11 at 15:24 -0500, Stan Hoeppner wrote:
-> > On 7/11/2013 6:28 AM, Markus Trippelsdorf wrote:
-> > ...
-> > >> Looking at the source:
-> > >> http://api.kde.org/4.10-api/kdelibs-apidocs/kdecore/html/ksavefile_8cpp_source.html#l00219
-> > >> it appears that one can set an environment variable KDE_EXTRA_FSYNC to
-> > >> address this issue.
-> > >>
-> > >> However in my case it doesn't help. Even with KDE_EXTRA_FSYNC=1 I still
-> > >> loose my KDE settings in case of a crash. So the whole fsync thing might
-> > >> be a red herring.
-> > > 
-> > > It turned out that the KDE_EXTRA_FSYNC variable doesn't affect KDE
-> > > config file handling at all.
-> > > So I've added an fsync in kconfigini.cpp (KConfigIniBackend::writeConfig)
-> > > and now I don't loose my settings anymore during kernel crash testing.
-> > > 
-> > > That is until xfs eats my KDE config files (kwinrulesr in this case):
-> > 
-> > Adding fsync in kconfigini.cpp apparently doesn't force fsync for all
-> > KDE file operations.  You also have some Open Office files getting hosed
-> > due to lack of fsync.  XFS is not the cause of these problems.
-> >
-> > The problem is that all of this desktop code was developed atop EXT3
-> > which flushed to disk every 5 seconds.  This made programmers sloppy as
-> > they didn't have to fsync to make sure data hit disk.  This problem has
-> > been covered extensively by many, including Eric in other posts on his
-> > blog.  There's a really simple way to test this:  mount with sync.
-> > Report results after the next crash.  If no files are corrupted then
-> > you've verified the problem lay squarely on the shoulders of these
-> > desktop developers who have abdicated their responsibility to make sure
-> > their file changes hit the disk, instead of relying on a broken
-> > filesystem do it for them.
-> > 
-> > Worth noting, using EXT4 without the EXT3 flush emulation enabled will
-> > yield similar file corruption upon a crash.
-> 
-> I'm not so sure. Of course a journaled filesystem is not a database
-> replacement, but wouldn't it be easier to address this issue in xfs
-> directly instead of hoping in vain that application developers will
-> fix their code someday?
+Just saw this during boot after an unclean shutdown. It hung afterwards.
 
-The problem is that there is a small minority of vocal users who
-complain loudly and vigorously that something is slow when
-application developers use proper caution and ensure files are
-safely written using fsync. Those users yell and scream that they
-care more about speed than they do about losing their config
-settings on a crash, and demand the problem be fixed. Hence we end
-up with special environment variables that nobody knows about that
-try to provide some measure of data integrity. As you've found out,
-it's not sufficient.
+[   97.162665] XFS: Assertion failed: xfs_dir2_sf_lookup(args) == ENOENT, file: fs/xfs/xfs_dir2_sf.c, line: 358
+[   97.164646] ------------[ cut here ]------------
+[   97.165312] kernel BUG at fs/xfs/xfs_message.c:108!
+[   97.165986] invalid opcode: 0000 [#1] PREEMPT SMP DEBUG_PAGEALLOC
+[   97.166947] Modules linked in: snd_hda_codec_realtek pcspkr usb_debug snd_hda_intel snd_hda_codec snd_hwdep snd_seq snd_seq_device snd_pcm e1000e ptp snd_page_alloc pps_core snd_timer snd soundcore xfs libcrc32c
+[   97.170782] CPU: 3 PID: 341 Comm: rpcbind Not tainted 3.10.0+ #49
+[   97.173684] task: ffff880235d14a40 ti: ffff880235dae000 task.ti: ffff880235dae000
+[   97.173701] RIP: 0010:[<ffffffffa002a362>]  [<ffffffffa002a362>] assfail+0x22/0x30 [xfs]
+[   97.173702] RSP: 0018:ffff880235dafa98  EFLAGS: 00010296
+[   97.173703] RAX: 0000000000000060 RBX: ffff880235dafb20 RCX: 0000000000000006
+[   97.173703] RDX: 00000000000031e0 RSI: ffff880235d152a0 RDI: ffff880235d14a40
+[   97.173704] RBP: ffff880235dafa98 R08: 0000000000000002 R09: 0000000000000000
+[   97.173704] R10: 0000000000000001 R11: 0000000000000001 R12: ffff880235e54000
+[   97.173705] R13: 0000000000035e92 R14: ffff880235dafc88 R15: ffff880235dafc28
+[   97.173706] FS:  00007fa6aac79840(0000) GS:ffff880244e00000(0000) knlGS:0000000000000000
+[   97.173706] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   97.173707] CR2: 00007fffb1905f18 CR3: 0000000235ce5000 CR4: 00000000001407e0
+[   97.173707] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[   97.173708] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[   97.173708] Stack:
+[   97.173712]  ffff880235dafb00 ffffffffa0076953 ffffe8ffffc066a0 ffff880240e04ca8
+[   97.173713]  0000000000000250 0000000000000020 ffff88023d05af40 ffff880235dafb20
+[   97.173715]  ffff880235a14a40 ffff880235e54000 0000000000035e92 ffff880235dafc88
+[   97.173715] Call Trace:
+[   97.173730]  [<ffffffffa0076953>] xfs_dir2_sf_addname+0x43/0x760 [xfs]
+[   97.173743]  [<ffffffffa0067cfc>] xfs_dir_createname+0x15c/0x1b0 [xfs]
+[   97.173754]  [<ffffffffa002f2dc>] xfs_create+0x4cc/0x710 [xfs]
+[   97.173764]  [<ffffffffa00278ca>] xfs_vn_mknod+0x9a/0x1c0 [xfs]
+[   97.173773]  [<ffffffffa0027a03>] xfs_vn_create+0x13/0x20 [xfs]
+[   97.173776]  [<ffffffff811d100d>] vfs_create+0x9d/0x100
+[   97.173778]  [<ffffffff811d1995>] do_last+0x925/0xe00
+[   97.173780]  [<ffffffff811d1f2e>] path_openat+0xbe/0x6f0
+[   97.173783]  [<ffffffff8109e33f>] ? local_clock+0x3f/0x50
+[   97.173785]  [<ffffffff811e1b5f>] ? __alloc_fd+0xaf/0x200
+[   97.173787]  [<ffffffff811d2c3a>] do_filp_open+0x3a/0x90
+[   97.173789]  [<ffffffff811e1b5f>] ? __alloc_fd+0xaf/0x200
+[   97.173790]  [<ffffffff811c0ddb>] do_sys_open+0x10b/0x200
+[   97.173792]  [<ffffffff81010578>] ? syscall_trace_enter+0x18/0x290
+[   97.173794]  [<ffffffff811c0eee>] SyS_open+0x1e/0x20
+[   97.173796]  [<ffffffff81717c14>] tracesys+0xdd/0xe2
+[   97.173813] Code: 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 55 48 89 f1 41 89 d0 48 89 e5 48 89 fa 48 c7 c6 a8 98 0b a0 31 ff 31 c0 e8 ce fb ff ff <0f> 0b 66 66 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 55 48 
 
-It's not up to the filesystem to enforce a "you must do everything
-safely" policy. The filesystem provides mechanisms for users and
-developers to decide if they want to be fast or safe. Unfortunately
-for us, while XFS is pretty fast even when running in "safe" mode,
-other filesystems aren't, and that's where the problem lies.
+This trace repeated a few times, then the same assertion was triggered from sys_renameat.
 
-If you want everything to be safe, mount the filesystem with -o
-sync. But it will be slow. The only way to be fast and safe is for
-applications to Do The Right Thing - no hacks in the filesystem can
-provide both fast and safe with compromising either fast or safe in
-some manner for someone.
-
-It's unfortunate that after several years of educating people to use
-fsync when data integrity is important that we are seeing a
-significant back-slide to trying to avoid fsync again. it appeared
-recently on the ext4 list, when a gnome developer said they turned
-off fsync because users were complaining, trying to rely on a side
-effect of ext4 data=ordered mode for integrity and they failed and
-users started reporting that they were losing files on crashes....
-
-This is an application layer problem, not a filesystem layer problem.
-The filesystems can provide mechanisms to try to help minimise the
-impact of requiring data integrity operations, but we haven't been
-able to get any significant set of userspace developers to agree on
-a sane set of functionality that filesystems can provide over and
-above what POSIX already gives them.
-
-And besides, a filesystem can't fix the problems of applications
-that use fsync to write inconsequential data that doesn't need
-persistence across crashs. Thats clearly an application problem....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+	Dave
 
 _______________________________________________
 xfs mailing list
