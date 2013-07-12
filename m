@@ -1,18 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 394F07F37
-	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 21:17:38 -0500 (CDT)
-Date: Thu, 11 Jul 2013 21:17:34 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH v11 2/4] xfs: Start using pquotaino from the superblock.
-Message-ID: <20130712021734.GA32736@sgi.com>
-References: <1373518843-1492-1-git-send-email-sekharan@us.ibm.com>
-	<1373518843-1492-3-git-send-email-sekharan@us.ibm.com>
-	<20130711211610.GC20932@sgi.com>
-	<1373591398.20769.9.camel@chandra-dt.ibm.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 4BFC77F51
+	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 21:17:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 228D4304039
+	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 19:17:48 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	huBUEcv3An8dXS2E for <xfs@oss.sgi.com>;
+	Thu, 11 Jul 2013 19:17:46 -0700 (PDT)
+Date: Fri, 12 Jul 2013 12:17:37 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Corruption of root fs during git bisect of drm system hang
+Message-ID: <20130712021737.GA5228@dastard>
+References: <20130710090634.GA356@x4> <20130711003122.GR3438@dastard>
+	<20130711033621.GB362@x4> <20130711035827.GA3438@dastard>
+	<51DE30BC.1050905@hardwarefreak.com> <20130711090755.GA363@x4>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1373591398.20769.9.camel@chandra-dt.ibm.com>
+In-Reply-To: <20130711090755.GA363@x4>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,83 +27,56 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Chandra Seetharaman <sekharan@us.ibm.com>
-Cc: xfs@oss.sgi.com
+To: Markus Trippelsdorf <markus@trippelsdorf.de>
+Cc: Stan Hoeppner <stan@hardwarefreak.com>, xfs@oss.sgi.com
 
-Hey Chandra,
-
-On Thu, Jul 11, 2013 at 08:09:58PM -0500, Chandra Seetharaman wrote:
-> On Thu, 2013-07-11 at 16:16 -0500, Ben Myers wrote:
-> > Hey Chandra,
-> > 
-> > On Thu, Jul 11, 2013 at 12:00:41AM -0500, Chandra Seetharaman wrote:
-> > > Start using pquotino and define a macro to check if the
-> > > superblock has pquotino.
-> > > 
-> > > Keep backward compatibilty by alowing mount of older superblock
-> > > with no separate pquota inode.
-> > > 
-> > > Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-> > 
-> > Here are a few notes from my review.
-> > 
-> > > +		if (sbp->sb_qflags & (XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD)) {
-> > > +			xfs_notice(mp,
-> > > +			   "Version 5 of Super block has XFS_OQUOTA bits.\n");
-> > > +			return XFS_ERROR(EFSCORRUPTED);
-> > > +		}
-> > 
-> > If I'm reading that right... Now if you had a v5 super block with oquota
-> > bits it will become unmountable.  Could that happen if you were using
-> > crcs and quotas with a 3.10 kernel and then upgrade?
-> 
-> yes. My thinking is that v5 (with crc) is still experimental and not
-> supported yet. Not true ?
-
-Right.  v5 superblock is still experimental.
-
-> Previously this was being fixed without failing. But, Dave suggested
-> that this certainly would be an inconsistent state and hence need to be
-> failed. I agreed and changed the code.
-
-Sounds fine.  I just wanted to make sure we're all aware of this possibility.
-
-> The problem you stated can be fixed by adding functionality to
-> xfs_repair. 
-
-Maybe a workaround for those users would be to shut of quotas before upgrading,
-      and then turn them back on after?
-
-> > 
-> > >  		xfs_sb_version_addquota(&mp->m_sb);
-> > >  		mp->m_sb.sb_uquotino = NULLFSINO;
-> > >  		mp->m_sb.sb_gquotino = NULLFSINO;
-> > > +		mp->m_sb.sb_pquotino = NULLFSINO;
-> > >  
-> > > -		/* qflags will get updated _after_ quotacheck */
-> > > -		mp->m_sb.sb_qflags = 0;
-> > > +		/* qflags will get updated fully _after_ quotacheck */
-> > > +		mp->m_sb.sb_qflags = mp->m_qflags & XFS_ALL_QUOTA_ACCT;
-> > 
-> > I didn't quite catch why you changed from 0 to ALL_QUOTA_ACCT here, will
-> > take another look.
-> 
-> We wanted to move all (well, almost all :) the logic of managing
-> PQUOTINO/GQUOTINO in older superblock in just the two functions
-> xfs_sb_quota_to/from_disk(). In order to do that I had to use sb_qflags
-> (you can see that in xfs_sb_quota_to_disk()). So, we have to have
-> sb_qflags valid before we try to write these fields to the disk. Hence
-> this change.
-
-Oh, that explains it.  Thanks.
-
--Ben
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVGh1LCBKdWwgMTEsIDIwMTMgYXQgMTE6MDc6NTVBTSArMDIwMCwgTWFya3VzIFRyaXBwZWxz
+ZG9yZiB3cm90ZToKPiBPbiAyMDEzLjA3LjEwIGF0IDIzOjEyIC0wNTAwLCBTdGFuIEhvZXBwbmVy
+IHdyb3RlOgo+ID4gT24gNy8xMC8yMDEzIDEwOjU4IFBNLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4g
+PiA+IE9uIFRodSwgSnVsIDExLCAyMDEzIGF0IDA1OjM2OjIxQU0gKzAyMDAsIE1hcmt1cyBUcmlw
+cGVsc2RvcmYgd3JvdGU6Cj4gPiAKPiA+ID4+IEkgd2FzIGxvb3NpbmcgbXkgS0RFIHNldHRpbmdz
+IGJpdCBieSBiaXQgd2l0aCBldmVyeSByZWJvb3QgZHVyaW5nIHRoZQo+ID4gPj4gYmlzZWN0aW9u
+LiBGaXJzdCBteSB3aW5kb3ctcnVsZXMgZGlzYXBwZWFyZWQsIHRoZW4gbXkgZGVza3RvcCBiYWNr
+Z3JvdW5kCj4gPiA+PiBjaGFuZ2VkIHRvIGRlZmF1bHQsIHRoZW4gbXkgdGFza2JhciBtb3ZlZCBm
+cm9tIHRvcCB0byB0aGUgYm90dG9tLCBldGMuCj4gPiA+PiBJbiB0aGUgZW5kIEkgaGFkIHRvIHJl
+c3RvcmUgYWxsIG15IC5maWxlcyBmcm9tIGJhY2t1cC4gCj4gPiA+IAo+ID4gPiBUaGF0J3Mgbm90
+IGZpbGVzeXN0ZW0gY29ycnVwdGlvbi4gVGhhdCBzb3VuZHMgbW9yZSBsaWtlIHNvbWVvbmUgbm90
+Cj4gPiA+IHVzaW5nIGZzeW5jIGluIHRoZSBhcHJvcHJpYXRlIHBsYWNlIHdoZW4gb3ZlcndyaXRp
+bmcgYSBmaWxlLi4uLgo+ID4gCj4gPiBGcm9tIFNhbmRlZW4ncyBibG9nLCBNYXJjaCAyMDA5Ogo+
+ID4gCj4gPiAiSSBkdW5ubyBob3cgdG8gcmVzb2x2ZSB0aGlzIHJpZ2h0IG5vdy4gIEkgdGFsa2Vk
+IHRvIHNvbWUgbmljZSBLREUgZm9sa3MKPiA+IG9uIGlyYzsgdGhleSBiYXNpY2FsbHkgd2FudCBh
+dG9taWMgd3JpdGVzLCBlaXRoZXIgeW91IGdldCB5b3VyIG9sZCBmaWxlCj4gPiBvciB5b3VyIG5l
+dyBmaWxlIHBvc3QtY3Jhc2g7IGFuZCB0ZW1wZmlsZS9zeW5jL3JlbmFtZSBkb2VzIHRoaXMg4oCT
+IGJ1dAo+ID4gdGhlIGZzeW5jIGh1cnRzIG9uIDc4JSBvZiB0aGUgTGludXggZmlsZXN5c3RlbXMg
+b3V0IHRoZXJlLiAgU28gdGhlaXIKPiA+IEtTYXZlRmlsZSBjbGFzcyBkb2VzbuKAmXQgZnN5bmMu
+ICBTbyB3aGF0IHRvIGRvLCB3aGF0IHRvIGRvLi4iCj4gPiAKPiA+IFRoYXQncyA0IHllYXJzIGFn
+by4gIElzIGl0IHBvc3NpYmxlIHRoZSBLREUgZGV2cyBhcmUgc3RpbGwgbm90IHVzaW5nCj4gPiBm
+c3luYz8gIFN1cmUgc2VlbXMgbGlrZWx5IGdpdmVuIE1hcmt1cycgcHJvYmxlbS4KPiAKPiBMb29r
+aW5nIGF0IHRoZSBzb3VyY2U6Cj4gaHR0cDovL2FwaS5rZGUub3JnLzQuMTAtYXBpL2tkZWxpYnMt
+YXBpZG9jcy9rZGVjb3JlL2h0bWwva3NhdmVmaWxlXzhjcHBfc291cmNlLmh0bWwjbDAwMjE5Cj4g
+aXQgYXBwZWFycyB0aGF0IG9uZSBjYW4gc2V0IGFuIGVudmlyb25tZW50IHZhcmlhYmxlIEtERV9F
+WFRSQV9GU1lOQyB0bwo+IGFkZHJlc3MgdGhpcyBpc3N1ZS4KPiAKPiBIb3dldmVyIGluIG15IGNh
+c2UgaXQgZG9lc24ndCBoZWxwLiBFdmVuIHdpdGggS0RFX0VYVFJBX0ZTWU5DPTEgSSBzdGlsbAo+
+IGxvb3NlIG15IEtERSBzZXR0aW5ncyBpbiBjYXNlIG9mIGEgY3Jhc2guIFNvIHRoZSB3aG9sZSBm
+c3luYyB0aGluZyBtaWdodAo+IGJlIGEgcmVkIGhlcnJpbmcuCj4gCj4gV2hhdCdzIG1vcmUgdGhp
+cyB0aW1lIEkgZW5kZW5kIHVwIHdpdGggdW5kZWxldGFibGUgZmlsZXMgaW4gL3RtcCAoZm9yCj4g
+ZXhhbXBsZSAuWDAtbG9jaykgYWZ0ZXIgdGhlIGNyYXNoOgo+IAo+ICgvZGV2L3NkYiB3YXMgbW91
+bnRlZCBhbmQgdW5tb3VudGVkIG5vcm1hbGx5IGJlZm9yZSBJIHJhbiB4ZnNfcmVwYWlyKQo+IAo+
+IHRAdWJ1bnQ6fiMgeGZzX3JlcGFpciAvZGV2L3NkYgo+IFBoYXNlIDEgLSBmaW5kIGFuZCB2ZXJp
+Znkgc3VwZXJibG9jay4uLgo+IFBoYXNlIDIgLSB1c2luZyBpbnRlcm5hbCBsb2cKPiAgICAgICAg
+IC0gemVybyBsb2cuLi4KPiAgICAgICAgIC0gc2NhbiBmaWxlc3lzdGVtIGZyZWVzcGFjZSBhbmQg
+aW5vZGUgbWFwcy4uLgo+IGFnaSB1bmxpbmtlZCBidWNrZXQgMCBpcyA2ODM0MzUwMDggaW4gYWcg
+MiAoaW5vZGU9NDk3ODQwMjMwNCkKPiBhZ2kgdW5saW5rZWQgYnVja2V0IDEgaXMgNjgzNDM1MDA5
+IGluIGFnIDIgKGlub2RlPTQ5Nzg0MDIzMDUpCj4gICAgICAgICAtIGZvdW5kIHJvb3QgaW5vZGUg
+Y2h1bmsKCkFnYWluLCB0aGVzZSBhcmUgc2lnbnMgdGhhdCBsb2cgcmVjb3ZlcnkgaGFzIG5vdCBj
+b21wbGV0ZWQKc3VjY2Vzc2Z1bGx5IG9yIHRoYXQgZm9yIHNvbWUgcmVhc29uIGl0IHRob3VnaHQg
+dGhlIGxvZyB3YXMgY2xlYW4uCkNhbiB5b3UgcGxlYXNlIHBvc3QgdGhlIGRtZXNnIG91dHB1dCBh
+ZnRlciB0aGUgY3Jhc2ggd2hlbiB5b3UgZ28KdGhyb3VnaCB0aGUgbW91bnQvdW5tb3VudCBwcm9j
+ZXNzIGJlZm9yZSB5b3UgcnVuIHhmc19yZXBhaXI/CgpDaGVlcnMsCgpEYXZlLgotLSAKRGF2ZSBD
+aGlubmVyCmRhdmlkQGZyb21vcmJpdC5jb20KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6
+Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
