@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4BFC77F51
-	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 21:17:48 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5CB5A7F37
+	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 21:38:20 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 228D4304039
-	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 19:17:48 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4AB0D8F8035
+	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 19:38:17 -0700 (PDT)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	huBUEcv3An8dXS2E for <xfs@oss.sgi.com>;
-	Thu, 11 Jul 2013 19:17:46 -0700 (PDT)
-Date: Fri, 12 Jul 2013 12:17:37 +1000
+	mnUDnmeZyJSGr9ox for <xfs@oss.sgi.com>;
+	Thu, 11 Jul 2013 19:38:15 -0700 (PDT)
+Date: Fri, 12 Jul 2013 12:38:12 +1000
 From: Dave Chinner <david@fromorbit.com>
 Subject: Re: Corruption of root fs during git bisect of drm system hang
-Message-ID: <20130712021737.GA5228@dastard>
+Message-ID: <20130712023812.GB5228@dastard>
 References: <20130710090634.GA356@x4> <20130711003122.GR3438@dastard>
 	<20130711033621.GB362@x4> <20130711035827.GA3438@dastard>
 	<51DE30BC.1050905@hardwarefreak.com> <20130711090755.GA363@x4>
+	<20130711112826.GA363@x4> <51DF1463.1070603@hardwarefreak.com>
+	<20130711204033.GA355@x4>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130711090755.GA363@x4>
+In-Reply-To: <20130711204033.GA355@x4>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,56 +29,105 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Markus Trippelsdorf <markus@trippelsdorf.de>
 Cc: Stan Hoeppner <stan@hardwarefreak.com>, xfs@oss.sgi.com
 
-T24gVGh1LCBKdWwgMTEsIDIwMTMgYXQgMTE6MDc6NTVBTSArMDIwMCwgTWFya3VzIFRyaXBwZWxz
-ZG9yZiB3cm90ZToKPiBPbiAyMDEzLjA3LjEwIGF0IDIzOjEyIC0wNTAwLCBTdGFuIEhvZXBwbmVy
-IHdyb3RlOgo+ID4gT24gNy8xMC8yMDEzIDEwOjU4IFBNLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4g
-PiA+IE9uIFRodSwgSnVsIDExLCAyMDEzIGF0IDA1OjM2OjIxQU0gKzAyMDAsIE1hcmt1cyBUcmlw
-cGVsc2RvcmYgd3JvdGU6Cj4gPiAKPiA+ID4+IEkgd2FzIGxvb3NpbmcgbXkgS0RFIHNldHRpbmdz
-IGJpdCBieSBiaXQgd2l0aCBldmVyeSByZWJvb3QgZHVyaW5nIHRoZQo+ID4gPj4gYmlzZWN0aW9u
-LiBGaXJzdCBteSB3aW5kb3ctcnVsZXMgZGlzYXBwZWFyZWQsIHRoZW4gbXkgZGVza3RvcCBiYWNr
-Z3JvdW5kCj4gPiA+PiBjaGFuZ2VkIHRvIGRlZmF1bHQsIHRoZW4gbXkgdGFza2JhciBtb3ZlZCBm
-cm9tIHRvcCB0byB0aGUgYm90dG9tLCBldGMuCj4gPiA+PiBJbiB0aGUgZW5kIEkgaGFkIHRvIHJl
-c3RvcmUgYWxsIG15IC5maWxlcyBmcm9tIGJhY2t1cC4gCj4gPiA+IAo+ID4gPiBUaGF0J3Mgbm90
-IGZpbGVzeXN0ZW0gY29ycnVwdGlvbi4gVGhhdCBzb3VuZHMgbW9yZSBsaWtlIHNvbWVvbmUgbm90
-Cj4gPiA+IHVzaW5nIGZzeW5jIGluIHRoZSBhcHJvcHJpYXRlIHBsYWNlIHdoZW4gb3ZlcndyaXRp
-bmcgYSBmaWxlLi4uLgo+ID4gCj4gPiBGcm9tIFNhbmRlZW4ncyBibG9nLCBNYXJjaCAyMDA5Ogo+
-ID4gCj4gPiAiSSBkdW5ubyBob3cgdG8gcmVzb2x2ZSB0aGlzIHJpZ2h0IG5vdy4gIEkgdGFsa2Vk
-IHRvIHNvbWUgbmljZSBLREUgZm9sa3MKPiA+IG9uIGlyYzsgdGhleSBiYXNpY2FsbHkgd2FudCBh
-dG9taWMgd3JpdGVzLCBlaXRoZXIgeW91IGdldCB5b3VyIG9sZCBmaWxlCj4gPiBvciB5b3VyIG5l
-dyBmaWxlIHBvc3QtY3Jhc2g7IGFuZCB0ZW1wZmlsZS9zeW5jL3JlbmFtZSBkb2VzIHRoaXMg4oCT
-IGJ1dAo+ID4gdGhlIGZzeW5jIGh1cnRzIG9uIDc4JSBvZiB0aGUgTGludXggZmlsZXN5c3RlbXMg
-b3V0IHRoZXJlLiAgU28gdGhlaXIKPiA+IEtTYXZlRmlsZSBjbGFzcyBkb2VzbuKAmXQgZnN5bmMu
-ICBTbyB3aGF0IHRvIGRvLCB3aGF0IHRvIGRvLi4iCj4gPiAKPiA+IFRoYXQncyA0IHllYXJzIGFn
-by4gIElzIGl0IHBvc3NpYmxlIHRoZSBLREUgZGV2cyBhcmUgc3RpbGwgbm90IHVzaW5nCj4gPiBm
-c3luYz8gIFN1cmUgc2VlbXMgbGlrZWx5IGdpdmVuIE1hcmt1cycgcHJvYmxlbS4KPiAKPiBMb29r
-aW5nIGF0IHRoZSBzb3VyY2U6Cj4gaHR0cDovL2FwaS5rZGUub3JnLzQuMTAtYXBpL2tkZWxpYnMt
-YXBpZG9jcy9rZGVjb3JlL2h0bWwva3NhdmVmaWxlXzhjcHBfc291cmNlLmh0bWwjbDAwMjE5Cj4g
-aXQgYXBwZWFycyB0aGF0IG9uZSBjYW4gc2V0IGFuIGVudmlyb25tZW50IHZhcmlhYmxlIEtERV9F
-WFRSQV9GU1lOQyB0bwo+IGFkZHJlc3MgdGhpcyBpc3N1ZS4KPiAKPiBIb3dldmVyIGluIG15IGNh
-c2UgaXQgZG9lc24ndCBoZWxwLiBFdmVuIHdpdGggS0RFX0VYVFJBX0ZTWU5DPTEgSSBzdGlsbAo+
-IGxvb3NlIG15IEtERSBzZXR0aW5ncyBpbiBjYXNlIG9mIGEgY3Jhc2guIFNvIHRoZSB3aG9sZSBm
-c3luYyB0aGluZyBtaWdodAo+IGJlIGEgcmVkIGhlcnJpbmcuCj4gCj4gV2hhdCdzIG1vcmUgdGhp
-cyB0aW1lIEkgZW5kZW5kIHVwIHdpdGggdW5kZWxldGFibGUgZmlsZXMgaW4gL3RtcCAoZm9yCj4g
-ZXhhbXBsZSAuWDAtbG9jaykgYWZ0ZXIgdGhlIGNyYXNoOgo+IAo+ICgvZGV2L3NkYiB3YXMgbW91
-bnRlZCBhbmQgdW5tb3VudGVkIG5vcm1hbGx5IGJlZm9yZSBJIHJhbiB4ZnNfcmVwYWlyKQo+IAo+
-IHRAdWJ1bnQ6fiMgeGZzX3JlcGFpciAvZGV2L3NkYgo+IFBoYXNlIDEgLSBmaW5kIGFuZCB2ZXJp
-Znkgc3VwZXJibG9jay4uLgo+IFBoYXNlIDIgLSB1c2luZyBpbnRlcm5hbCBsb2cKPiAgICAgICAg
-IC0gemVybyBsb2cuLi4KPiAgICAgICAgIC0gc2NhbiBmaWxlc3lzdGVtIGZyZWVzcGFjZSBhbmQg
-aW5vZGUgbWFwcy4uLgo+IGFnaSB1bmxpbmtlZCBidWNrZXQgMCBpcyA2ODM0MzUwMDggaW4gYWcg
-MiAoaW5vZGU9NDk3ODQwMjMwNCkKPiBhZ2kgdW5saW5rZWQgYnVja2V0IDEgaXMgNjgzNDM1MDA5
-IGluIGFnIDIgKGlub2RlPTQ5Nzg0MDIzMDUpCj4gICAgICAgICAtIGZvdW5kIHJvb3QgaW5vZGUg
-Y2h1bmsKCkFnYWluLCB0aGVzZSBhcmUgc2lnbnMgdGhhdCBsb2cgcmVjb3ZlcnkgaGFzIG5vdCBj
-b21wbGV0ZWQKc3VjY2Vzc2Z1bGx5IG9yIHRoYXQgZm9yIHNvbWUgcmVhc29uIGl0IHRob3VnaHQg
-dGhlIGxvZyB3YXMgY2xlYW4uCkNhbiB5b3UgcGxlYXNlIHBvc3QgdGhlIGRtZXNnIG91dHB1dCBh
-ZnRlciB0aGUgY3Jhc2ggd2hlbiB5b3UgZ28KdGhyb3VnaCB0aGUgbW91bnQvdW5tb3VudCBwcm9j
-ZXNzIGJlZm9yZSB5b3UgcnVuIHhmc19yZXBhaXI/CgpDaGVlcnMsCgpEYXZlLgotLSAKRGF2ZSBD
-aGlubmVyCmRhdmlkQGZyb21vcmJpdC5jb20KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6
-Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On Thu, Jul 11, 2013 at 10:40:33PM +0200, Markus Trippelsdorf wrote:
+> On 2013.07.11 at 15:24 -0500, Stan Hoeppner wrote:
+> > On 7/11/2013 6:28 AM, Markus Trippelsdorf wrote:
+> > ...
+> > >> Looking at the source:
+> > >> http://api.kde.org/4.10-api/kdelibs-apidocs/kdecore/html/ksavefile_8cpp_source.html#l00219
+> > >> it appears that one can set an environment variable KDE_EXTRA_FSYNC to
+> > >> address this issue.
+> > >>
+> > >> However in my case it doesn't help. Even with KDE_EXTRA_FSYNC=1 I still
+> > >> loose my KDE settings in case of a crash. So the whole fsync thing might
+> > >> be a red herring.
+> > > 
+> > > It turned out that the KDE_EXTRA_FSYNC variable doesn't affect KDE
+> > > config file handling at all.
+> > > So I've added an fsync in kconfigini.cpp (KConfigIniBackend::writeConfig)
+> > > and now I don't loose my settings anymore during kernel crash testing.
+> > > 
+> > > That is until xfs eats my KDE config files (kwinrulesr in this case):
+> > 
+> > Adding fsync in kconfigini.cpp apparently doesn't force fsync for all
+> > KDE file operations.  You also have some Open Office files getting hosed
+> > due to lack of fsync.  XFS is not the cause of these problems.
+> >
+> > The problem is that all of this desktop code was developed atop EXT3
+> > which flushed to disk every 5 seconds.  This made programmers sloppy as
+> > they didn't have to fsync to make sure data hit disk.  This problem has
+> > been covered extensively by many, including Eric in other posts on his
+> > blog.  There's a really simple way to test this:  mount with sync.
+> > Report results after the next crash.  If no files are corrupted then
+> > you've verified the problem lay squarely on the shoulders of these
+> > desktop developers who have abdicated their responsibility to make sure
+> > their file changes hit the disk, instead of relying on a broken
+> > filesystem do it for them.
+> > 
+> > Worth noting, using EXT4 without the EXT3 flush emulation enabled will
+> > yield similar file corruption upon a crash.
+> 
+> I'm not so sure. Of course a journaled filesystem is not a database
+> replacement, but wouldn't it be easier to address this issue in xfs
+> directly instead of hoping in vain that application developers will
+> fix their code someday?
+
+The problem is that there is a small minority of vocal users who
+complain loudly and vigorously that something is slow when
+application developers use proper caution and ensure files are
+safely written using fsync. Those users yell and scream that they
+care more about speed than they do about losing their config
+settings on a crash, and demand the problem be fixed. Hence we end
+up with special environment variables that nobody knows about that
+try to provide some measure of data integrity. As you've found out,
+it's not sufficient.
+
+It's not up to the filesystem to enforce a "you must do everything
+safely" policy. The filesystem provides mechanisms for users and
+developers to decide if they want to be fast or safe. Unfortunately
+for us, while XFS is pretty fast even when running in "safe" mode,
+other filesystems aren't, and that's where the problem lies.
+
+If you want everything to be safe, mount the filesystem with -o
+sync. But it will be slow. The only way to be fast and safe is for
+applications to Do The Right Thing - no hacks in the filesystem can
+provide both fast and safe with compromising either fast or safe in
+some manner for someone.
+
+It's unfortunate that after several years of educating people to use
+fsync when data integrity is important that we are seeing a
+significant back-slide to trying to avoid fsync again. it appeared
+recently on the ext4 list, when a gnome developer said they turned
+off fsync because users were complaining, trying to rely on a side
+effect of ext4 data=ordered mode for integrity and they failed and
+users started reporting that they were losing files on crashes....
+
+This is an application layer problem, not a filesystem layer problem.
+The filesystems can provide mechanisms to try to help minimise the
+impact of requiring data integrity operations, but we haven't been
+able to get any significant set of userspace developers to agree on
+a sane set of functionality that filesystems can provide over and
+above what POSIX already gives them.
+
+And besides, a filesystem can't fix the problems of applications
+that use fsync to write inconsequential data that doesn't need
+persistence across crashs. Thats clearly an application problem....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
