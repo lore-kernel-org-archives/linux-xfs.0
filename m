@@ -1,27 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7B3F57F37
-	for <xfs@oss.sgi.com>; Sun, 14 Jul 2013 11:56:19 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5A8C4304043
-	for <xfs@oss.sgi.com>; Sun, 14 Jul 2013 09:56:16 -0700 (PDT)
-Received: from mail-ob0-f175.google.com (mail-ob0-f175.google.com
-	[209.85.214.175]) by cuda.sgi.com with ESMTP id
-	jlhByAc4fNzI9JAF (version=TLSv1 cipher=RC4-SHA bits=128
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 2E96A7F37
+	for <xfs@oss.sgi.com>; Sun, 14 Jul 2013 12:14:24 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1C5B68F8039
+	for <xfs@oss.sgi.com>; Sun, 14 Jul 2013 10:14:21 -0700 (PDT)
+Received: from mail-ob0-f176.google.com (mail-ob0-f176.google.com
+	[209.85.214.176]) by cuda.sgi.com with ESMTP id
+	x0bM4kH7N4kEPr60 (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 14 Jul 2013 09:56:15 -0700 (PDT)
-Received: by mail-ob0-f175.google.com with SMTP id xn12so13260703obc.34
-	for <xfs@oss.sgi.com>; Sun, 14 Jul 2013 09:56:14 -0700 (PDT)
+	Sun, 14 Jul 2013 10:14:19 -0700 (PDT)
+Received: by mail-ob0-f176.google.com with SMTP id v19so12908203obq.7
+	for <xfs@oss.sgi.com>; Sun, 14 Jul 2013 10:14:19 -0700 (PDT)
 Subject: Re: specify agsize?
 Mime-Version: 1.0 (Apple Message framework v1085)
 From: aurfalien <aurfalien@gmail.com>
-In-Reply-To: <51E24E03.8010609@hardwarefreak.com>
-Date: Sun, 14 Jul 2013 09:56:10 -0700
-Message-Id: <D72E66F5-374F-46A5-B964-7B3AE97DC0F8@gmail.com>
+In-Reply-To: <51E2CE83.9080003@sandeen.net>
+Date: Sun, 14 Jul 2013 10:14:15 -0700
+Message-Id: <24AC7E60-49D1-4D6E-8B6F-531C46CDCF53@gmail.com>
 References: <6A14EB72-A699-47AF-937D-D6DA1CF12ACB@gmail.com>
 	<51E2092D.7090409@sandeen.net>
 	<9AB8D1D3-29D7-4C43-A624-37024CA4EFD9@gmail.com>
-	<51E24E03.8010609@hardwarefreak.com>
+	<51E2CE83.9080003@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,16 +34,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: stan@hardwarefreak.com
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
 
-On Jul 14, 2013, at 12:06 AM, Stan Hoeppner wrote:
+On Jul 14, 2013, at 9:14 AM, Eric Sandeen wrote:
 
-> On 7/13/2013 11:20 PM, aurfalien wrote:
-> ...
+> On 7/13/13 11:20 PM, aurfalien wrote:
+>> 
+>> On Jul 13, 2013, at 7:13 PM, Eric Sandeen wrote:
+>> 
+>>> On 7/13/13 7:11 PM, aurfalien wrote:
+>>>> Hello again,
+>>>> 
+>>>> I have a Raid 6 x16 disk array with 128k stripe size and a 512 byte block size.
+>>>> 
+>>>> So I do;
+>>>> 
 >>>> mkfs.xfs -f -l size=512m -d su=128k,sw=14 /dev/mapper/vg_doofus_data-lv_data
-> ...
+>>>> 
+>>>> And I get;
+>>>> 
 >>>> meta-data=/dev/mapper/vg_doofus_data-lv_data isize=256    agcount=32, agsize=209428640 blks
 >>>>        =                       sectsz=512   attr=2, projid32bit=0
 >>>> data     =                       bsize=4096   blocks=6701716480, imaxpct=5
@@ -52,66 +63,97 @@ On Jul 14, 2013, at 12:06 AM, Stan Hoeppner wrote:
 >>>> log      =internal log           bsize=4096   blocks=131072, version=2
 >>>>        =                       sectsz=512   sunit=32 blks, lazy-count=1
 >>>> realtime =none                   extsz=4096   blocks=0, rtextents=0
-> ...
->> Autodesk has this software called Flame which requires very very fast local storage using XFS.  
+>>>> 
+>>>> 
+>>>> All is fine but I was recently made aware of tweaking agsize.
+>>> 
+>>> Made aware by what?  For what reason?
+>> 
+>> Autodesk has this software called Flame which requires very very fast
+>> local storage using XFS. They have an entire write up on how to calc
+>> proper agsize for optimal performance.
 > 
-> If "Flame" does any random writes then you probably shouldn't be using
-> RAID6.
+> http://wikihelp.autodesk.com/Creative_Finishing/enu/2012/Help/05_Installation_Guides/Installation_and_Configuration_Guide_for_Linux_Workstations/0118-Advanced118/0194-Manually194/0199-Creating199
 > 
->> They have an entire write up on how to calc proper agsize for optimal performance.
+> I guess?
 > 
-> I think you're confused.  Maximum agsize is 1TB.  Making your AGs
-> smaller than that won't decrease application performance, so it's
-> literally impossible to tune agsize to increase performance.  agcount on
-> the other hand can potentially have an effect if the application is
-> sufficiently threaded.  But agcount doesn't mean anything in isolation.
-> It's tied directly to the characteristics of the RAID level and
-> hardware.  For example, mkfs.xfs gave you 32 AGs for this 14 spindle
-> array.  One could make 32 AGs on a single 4TB SATA disk and the
-> performance difference between the two will be radically different.
+> That's quite a procedure!  And I have to say, a slightly strange one at first glance.
 > 
-> ...
+> It'd be nice if they said what they were trying to accomplish rather than just giving you a long recipe.
+
+
+Sorry to double reply to the same thread.
+
+But the volume in question (regarding the Autodesk article) is used for very fast playback of image files.  So realtime performance for files of 2048x1556 resolution.  These files are being touched/retouched throughout the day by the person driving the Flame.
+
+The fragmentation on these systems on a heavy day, meaning one were they are running at 98% full is about 5% on avg.  On any given day, the systems are about 80% full.
+
+> In the end, I think they are trying to create 128AGs and maybe work around some mkfs corner case or other.
+> 
+>> I never mess with agsize but it is require  when creating the XFS
+>> file system for use with Flame.  I realize its tailored for there
+>> apps particular IO characteristics, so I'm curious about it.
+> 
+> In general more AGs allow more concurrency for some operations;
+> it also will generally change how/where files in multiple directories get
+> allocated.
+> 
+>>>> So I would like to mess around and iozone any diffs between the above
+>>>> agcount of 32 and whatever agcount changes I may do.
+>>> 
+>>> Unless iozone is your machine's normal workload, that will probably prove to be uninteresting.
+>> 
 >> Well, it will give me a base line comparison of non tweaked agsize vs tweaked agsize.
 > 
-> No, it won't.  See above.
+> Not necessarily, see above; I'm not sure what iozone invocation would
+> show any effects from more or fewer AGs.  Anyway, iozone != flame, not
+> by a long shot! :)
 > 
+>>>> I didn't see any mention of agsize/agcount on the XFS FAQ and would
+>>>> like to know, based on the above, why does XFS think I have 32
+>>>> allocation groups with the corresponding size?
+>>> 
+>>> It doesn't think so, it _knows_ so, because it made them itself.  ;)
+>> 
 >> Yea but based on what?
+>> 
+>> Why 32 at there current size?
 > 
-> Based on the fact that your XFS is ~26TB.
+> see calc_default_ag_geometry()
 > 
-> mkfs.xfs could have given you 26 AGs of ~1TB each.  But it chose to give
-> you 32 AGs of ~815GB each.  Whether you run bonnie, iozone, or your
-> Flame application, you won't be able to measure a meaningful difference,
-> if any difference, between 26 and 32 AGs.
+> Since you are in multidisk mode (you have stripe geometry) it uses more AGs for more AGs since it knows you have more spindles:
 > 
-> ...
+>        } else if (dblocks > GIGABYTES(512, blocklog))
+>                shift = 5;
+> 
+> 2^5 = 32
+> 
+> If you hadn't been in multidisk mode you would have gotten 25 AGs due to the max AG size of 1T.
+> 
+>>>> And are these optimal
+>>>> numbers?
+>>> 
+>>> How high is up?
+>>> 
+>>> Here's the appropriate faq entry:
+>>> 
+>>> http://xfs.org/index.php/XFS_FAQ#Q:_I_want_to_tune_my_XFS_filesystems_for_.3Csomething.3E
+>> 
 >> Problem is I run Centos so the line;
 >> 
 >> "As of kernel 3.2.12, the default i/o scheduler, CFQ, will defeat much of the parallelization in XFS. "
 >> 
 >> ... doesn't really apply.
 > 
-> This makes no sense.  What doesn't apply?
-
-Well, I had assumed it meant Linux kernel version 3.2.12, were as CentOS is at whatever RHEL is at being 2.6.32.
-
-At any rate, based on what I'm getting from you all, is that leave the agcount alone as agsize will max at 1TB and agcount will adjust depending on volume size.
-
-This volume will encounter a lot of random IO so 32 AGs will suffice at any rate.  Un sure if increasing it to Autodesks 128 will really help my env.  I'm assuming they want a lot of parallelism which again doesn't apply in my case.. 
-
-> You can change to noop or deadline with a single echo command in a
-> startup script:
+> Well, my point was that your original question, "are these optimal numbers?" included absolutely no context of your workload, so the best answer is yes - the default mkfs behavior is optimal for a generic, unspecified workload.
 > 
-> echo noop > /sys/block/sdX/queue/scheduler
+> I don't have access to Autodesk Flame so I really don't know how it behaves or what an optimal tuning might be.
 > 
-> where sdX is the name of your RAID device.
+> Anyway, I think the calc_default_ag_geometry() info above answered your original question of "why does XFS think I have 32 allocation groups with the corresponding size?" - that's simply the default mkfs algorithm when in multidisk mode, for a disk of this size.
 > 
-> -- 
-> Stan
-> 
+> -Eric
 > 
 
-- aurf
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
