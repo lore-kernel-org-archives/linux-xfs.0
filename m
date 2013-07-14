@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9789A7F50
-	for <xfs@oss.sgi.com>; Sun, 14 Jul 2013 11:15:06 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D5D017F50
+	for <xfs@oss.sgi.com>; Sun, 14 Jul 2013 11:16:32 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6830F8F8035
-	for <xfs@oss.sgi.com>; Sun, 14 Jul 2013 09:15:03 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 7CC1CAC002
+	for <xfs@oss.sgi.com>; Sun, 14 Jul 2013 09:16:32 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id Puqj5yua05Cgn8cW for <xfs@oss.sgi.com>;
-	Sun, 14 Jul 2013 09:15:01 -0700 (PDT)
-Message-ID: <51E2CE83.9080003@sandeen.net>
-Date: Sun, 14 Jul 2013 11:14:59 -0500
+	ESMTP id tU3YEoqCJNtY0l6G for <xfs@oss.sgi.com>;
+	Sun, 14 Jul 2013 09:16:31 -0700 (PDT)
+Message-ID: <51E2CEDE.5000304@sandeen.net>
+Date: Sun, 14 Jul 2013 11:16:30 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: specify agsize?
-References: <6A14EB72-A699-47AF-937D-D6DA1CF12ACB@gmail.com>
-	<51E2092D.7090409@sandeen.net>
-	<9AB8D1D3-29D7-4C43-A624-37024CA4EFD9@gmail.com>
-In-Reply-To: <9AB8D1D3-29D7-4C43-A624-37024CA4EFD9@gmail.com>
+Subject: Re: [PATCH V4] xfstests: generic/314, test sgid inheritance on subdirs
+References: <1373658373-8988-1-git-send-email-cmaiolino@redhat.com>
+In-Reply-To: <1373658373-8988-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,114 +27,130 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: aurfalien <aurfalien@gmail.com>
+To: Carlos Maiolino <cmaiolino@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On 7/13/13 11:20 PM, aurfalien wrote:
+On 7/12/13 2:46 PM, Carlos Maiolino wrote:
+> Tests if subdirectories created on the filesystem will properly inherit sgid bit
+> when this is set on the parent directory, once the process has the properly
+> permissions to create a subdirectory, this, should inherit parent's sgid bit if
+> this is set and irix_sgid_inherit sysctl is disabled.
 > 
-> On Jul 13, 2013, at 7:13 PM, Eric Sandeen wrote:
+> V2: add missing source of "attr" file for _require_acls
 > 
->> On 7/13/13 7:11 PM, aurfalien wrote:
->>> Hello again,
->>>
->>> I have a Raid 6 x16 disk array with 128k stripe size and a 512 byte block size.
->>>
->>> So I do;
->>>
->>> mkfs.xfs -f -l size=512m -d su=128k,sw=14 /dev/mapper/vg_doofus_data-lv_data
->>>
->>> And I get;
->>>
->>> meta-data=/dev/mapper/vg_doofus_data-lv_data isize=256    agcount=32, agsize=209428640 blks
->>>         =                       sectsz=512   attr=2, projid32bit=0
->>> data     =                       bsize=4096   blocks=6701716480, imaxpct=5
->>>         =                       sunit=32     swidth=448 blks
->>> naming   =version 2              bsize=4096   ascii-ci=0
->>> log      =internal log           bsize=4096   blocks=131072, version=2
->>>         =                       sectsz=512   sunit=32 blks, lazy-count=1
->>> realtime =none                   extsz=4096   blocks=0, rtextents=0
->>>
->>>
->>> All is fine but I was recently made aware of tweaking agsize.
->>
->> Made aware by what?  For what reason?
+> V3: use _ls_l to filter out the selinux "."
+>     renumber to 314 to make the merge easier
 > 
-> Autodesk has this software called Flame which requires very very fast
-> local storage using XFS. They have an entire write up on how to calc
-> proper agsize for optimal performance.
+> V4: fix 314.out to the correct output
 
-http://wikihelp.autodesk.com/Creative_Finishing/enu/2012/Help/05_Installation_Guides/Installation_and_Configuration_Guide_for_Linux_Workstations/0118-Advanced118/0194-Manually194/0199-Creating199
+Heh, thanks Carlos.  Friday wasn't my best day.
 
-I guess?
-
-That's quite a procedure!  And I have to say, a slightly strange one at first glance.
-
-It'd be nice if they said what they were trying to accomplish rather than just giving you a long recipe.
-
-In the end, I think they are trying to create 128AGs and maybe work around some mkfs corner case or other.
-
-> I never mess with agsize but it is require  when creating the XFS
-> file system for use with Flame.  I realize its tailored for there
-> apps particular IO characteristics, so I'm curious about it.
-
-In general more AGs allow more concurrency for some operations;
-it also will generally change how/where files in multiple directories get
-allocated.
-
->>> So I would like to mess around and iozone any diffs between the above
->>> agcount of 32 and whatever agcount changes I may do.
->>
->> Unless iozone is your machine's normal workload, that will probably prove to be uninteresting.
+> Thanks to Sandeen who have written this patch
 > 
-> Well, it will give me a base line comparison of non tweaked agsize vs tweaked agsize.
-
-Not necessarily, see above; I'm not sure what iozone invocation would
-show any effects from more or fewer AGs.  Anyway, iozone != flame, not
-by a long shot! :)
-
->>> I didn't see any mention of agsize/agcount on the XFS FAQ and would
->>> like to know, based on the above, why does XFS think I have 32
->>> allocation groups with the corresponding size?
->>
->> It doesn't think so, it _knows_ so, because it made them itself.  ;)
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> ---
+>  tests/generic/314     |   68 +++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/314.out |    4 +++
+>  tests/generic/group   |    1 +
+>  3 files changed, 73 insertions(+), 0 deletions(-)
+>  create mode 100755 tests/generic/314
+>  create mode 100644 tests/generic/314.out
 > 
-> Yea but based on what?
+> diff --git a/tests/generic/314 b/tests/generic/314
+> new file mode 100755
+> index 0000000..2d34ea8
+> --- /dev/null
+> +++ b/tests/generic/314
+> @@ -0,0 +1,68 @@
+> +#! /bin/bash
+> +# FS QA Test No. 314
+> +#
+> +# Test SGID inheritance on subdirectories
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2013 Red Hat, Inc.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +#
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1       # failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +    cd /
+> +    rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +. ./common/attr
+> +
+> +# real QA test starts here
+> +_supported_fs generic
+> +_require_acls
+> +_require_user
+> +_need_to_be_root
+> +
+> +rm -rf $TEST_DIR/$seq-dir
+> +
+> +# Make dir owned by qa user, and an unrelated group:
+> +mkdir $TEST_DIR/$seq-dir
+> +chown $qa_user:12345 $TEST_DIR/$seq-dir
+> +
+> +# Make parent dir sgid
+> +chmod 2775 $TEST_DIR/$seq-dir
+> +
+> +# Make subdirs before & after acl set
+> +su $qa_user -c "mkdir $TEST_DIR/$seq-dir/subdir"
+> +su $qa_user -c "setfacl -m u:$qa_user:rwx,d:u:$qa_user:rwx $TEST_DIR/$seq-dir"
+> +su $qa_user -c "mkdir $TEST_DIR/$seq-dir/subdir2"
+> +
+> +# Both subdirs should have inherited sgid
+> +_ls_l $TEST_DIR/$seq-dir/ | _filter_test_dir | awk '{print $1,$NF}'
+> +
+> +status=0
+> +exit
+> diff --git a/tests/generic/314.out b/tests/generic/314.out
+> new file mode 100644
+> index 0000000..180be80
+> --- /dev/null
+> +++ b/tests/generic/314.out
+> @@ -0,0 +1,4 @@
+> +QA output created by 314
+> +total 4
+> +drwxr-sr-x subdir
+> +drwxrwsr-x+ subdir2
+> diff --git a/tests/generic/group b/tests/generic/group
+> index bd443c1..7c0ea25 100644
+> --- a/tests/generic/group
+> +++ b/tests/generic/group
+> @@ -115,3 +115,4 @@
+>  310 auto
+>  311 auto metadata log
+>  312 auto quick prealloc enospc
+> +314 auto quick acl
 > 
-> Why 32 at there current size?
-
-see calc_default_ag_geometry()
-
-Since you are in multidisk mode (you have stripe geometry) it uses more AGs for more AGs since it knows you have more spindles:
-
-        } else if (dblocks > GIGABYTES(512, blocklog))
-                shift = 5;
-
-2^5 = 32
-
-If you hadn't been in multidisk mode you would have gotten 25 AGs due to the max AG size of 1T.
-
->>> And are these optimal
->>> numbers?
->>
->> How high is up?
->>
->> Here's the appropriate faq entry:
->>
->> http://xfs.org/index.php/XFS_FAQ#Q:_I_want_to_tune_my_XFS_filesystems_for_.3Csomething.3E
-> 
-> Problem is I run Centos so the line;
-> 
-> "As of kernel 3.2.12, the default i/o scheduler, CFQ, will defeat much of the parallelization in XFS. "
-> 
-> ... doesn't really apply.
-
-Well, my point was that your original question, "are these optimal numbers?" included absolutely no context of your workload, so the best answer is yes - the default mkfs behavior is optimal for a generic, unspecified workload.
-
-I don't have access to Autodesk Flame so I really don't know how it behaves or what an optimal tuning might be.
-
-Anyway, I think the calc_default_ag_geometry() info above answered your original question of "why does XFS think I have 32 allocation groups with the corresponding size?" - that's simply the default mkfs algorithm when in multidisk mode, for a disk of this size.
-
--Eric
 
 _______________________________________________
 xfs mailing list
