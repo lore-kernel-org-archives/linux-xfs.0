@@ -1,20 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D45ED7F37
-	for <xfs@oss.sgi.com>; Sun, 14 Jul 2013 10:51:49 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 04E497F51
+	for <xfs@oss.sgi.com>; Sun, 14 Jul 2013 10:51:54 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4CDFCAC003
-	for <xfs@oss.sgi.com>; Sun, 14 Jul 2013 08:51:49 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id WBFYYrXtoZBkCBDm for <xfs@oss.sgi.com>;
-	Sun, 14 Jul 2013 08:51:47 -0700 (PDT)
-Message-ID: <51E2C912.8080305@sandeen.net>
-Date: Sun, 14 Jul 2013 10:51:46 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 748F7AC003
+	for <xfs@oss.sgi.com>; Sun, 14 Jul 2013 08:51:53 -0700 (PDT)
+Received: from benjamin.baylink.com (rrcs-24-129-180-187.se.biz.rr.com
+	[24.129.180.187]) by cuda.sgi.com with ESMTP id
+	jmsjo97ftGsT3WQN for <xfs@oss.sgi.com>;
+	Sun, 14 Jul 2013 08:51:51 -0700 (PDT)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by benjamin.baylink.com (Postfix) with ESMTP id DB00C1F003F5
+	for <xfs@oss.sgi.com>; Sun, 14 Jul 2013 11:51:50 -0400 (EDT)
+Received: from benjamin.baylink.com ([127.0.0.1])
+	by localhost (benjamin.baylink.com [127.0.0.1]) (amavisd-new,
+	port 10024) with ESMTP id 6wbDr3o8pAso for <xfs@oss.sgi.com>;
+	Sun, 14 Jul 2013 11:51:40 -0400 (EDT)
+Received: from benjamin.baylink.com (benjamin.baylink.com [192.168.253.10])
+	by benjamin.baylink.com (Postfix) with ESMTP id 4F8DA1F001DF
+	for <xfs@oss.sgi.com>; Sun, 14 Jul 2013 11:51:40 -0400 (EDT)
+Date: Sun, 14 Jul 2013 11:51:40 -0400 (EDT)
+From: Jay Ashworth <jra@baylink.com>
+Message-ID: <22762971.1368.1373817100242.JavaMail.root@benjamin.baylink.com>
+In-Reply-To: <trinity-f93ee630-12d7-49a7-a5ac-9038d9cfa0b0-1373789144486@3capp-webde-bs29>
+Subject: Re: XFS errors on 3TB HDD that is identified of size 2TB only
 MIME-Version: 1.0
-Subject: Re: XFS filesystem triggering assert in _repair 3.1.11
-References: <10640767.1356.1373750975524.JavaMail.root@benjamin.baylink.com>
-In-Reply-To: <10640767.1356.1373750975524.JavaMail.root@benjamin.baylink.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,106 +37,105 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jay Ashworth <jra@baylink.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 7/13/13 4:29 PM, Jay Ashworth wrote:
-...
+----- Original Message -----
+> From: "Thomas Schneider" <c.monty@web.de>
 
-> That's where I am right now: the drive was throwing a kernel oops if I 
-> mounted it, 
-
-That shouldn't happen, for starters - was this on the older 2.6.37 kernel?
-
-> and xfs_repair would just lock up.  I had to do a -L on
-> it
-
-ok, so much for debugging the oops ...
-
-> after which it would mount and unmount cleanly, and xfs_repair runs 
-> and finds problems, but then fails an assert at the end and dies.
+> On my new HDD WD30EZRX I created a GPT partition table and formatted
+> it with XFS.
+> Then I put some data (approx. 2.4TB) on that new partition.
 > 
-> Here's that entire repair run:
+> However, after restarting the system the disk is identified of size
+> 2TB only.
+> knoppix@Microknoppix:~$ sudo fdisk -l
+
+Stop!  Wait a minute!  Stop it, boy!
+
+(Sorry; Meat Loaf flashback.  :-)
+
+You're looking at that partition table with fdisk, *which doesn't understand
+GPT partition tables*; it's amazing it didn't complain louder.
+
+You need to check it with parted, or something else that speaks GPT; the rest
+your these here is invalid, being based on your assumption that there really is 
+a problem... which there probably isn't.
+
+If not with parted, how did you create the GPT partition in the first place?
+
+Cheers,
+-- jra
+
+> Disk /dev/sda: 2000.4 GB, 2000421444608 bytes
+> 255 heads, 63 sectors/track, 243204 cylinders, total 3907073134
+> sectors
+> Units = sectors of 1 * 512 = 512 bytes
+> Sector size (logical/physical): 512 bytes / 4096 bytes
+> I/O size (minimum/optimal): 4096 bytes / 4096 bytes
 > 
-> =============================================================
-> plaintain:/var/log/mythtv # xfs_repair /dev/sdc2
-> Phase 1 - find and verify superblock...
-> Not enough RAM available for repair to enable prefetching.
-
-...
-
-> entry "1011_20130509205900.mpg" at block 13 offset 4016 in directory inode 1073789184 references free inode 1137017084
->         clearing inode number in entry at offset 4016...
-> bad back (left) sibling pointer (saw 16140901064495857663 should be NULL (0))
-                                       ^^^ 0xDFFFFFFFFFFFFFFF i.e. -2
-
-#define HOLESTARTBLOCK  ((xfs_fsblock_t)-2LL) ?
-
->         in inode 1115989006 (data fork) bmap btree block 107963248
-> xfs_repair: dinode.c:2136: process_inode_data_fork: Assertion `err == 0' failed.
-
-This means we were in the check_dups path, and one of the process_*() functions
-failed.  Due to that "bad back (left) sibling pointer ..."
-
-If I had time to work on this, I'd ask for an xfs_metadump image of
-the filesystem to be able to reproduce it and look further into the problem...
-
-It might shed some light on things to use xfs_db to look at inode 1115989006
-
-# xfs_db /dev/sdc2
-xfs_db> inode 1115989006
-xfs_db> p
-
-for starters.
-
-looking at bmap btree block 107963248 might also be interesting; like this
-I think but I'm rusty:
-
-xfs_db> fsblock 107963248
-xfs_db> type bmapbt
-xfs_db> p
-
-> Aborted
-> =============================================================
+> Checking the HDD with tool gdisk, I get this output for option "i"
+> (show detailed information [...]):
+> Command (? for help): i
+> Using 1
+> Partition GUID code: 0FC63DAF-8483-4772-8E79-3D69D8477DE4 (Linux
+> filesystem)
+> Partition unique GUID: 37786D32-C98F-4624-9440-94F79BE79793
+> First sector: 2048 (at 1024.0 KiB)
+> Last sector: 5860533134 (at 2.7 TiB)
+> Partition size: 5860531087 sectors (2.7 TiB)
+> Attribute flags: 0000000000000000
+> Partition name: 'Linux filesystem'
 > 
-> This is xfs_repair 3.1.11, from xfsprogs 3.1.11 from tarball, compiled on
-> the machine in question, which is a 32-bit OS with 512MB of ram (the
-> mobo, an old MSI KT6V, pukes if we try to put more ram on it for some
-> reason).  I have run memtest+ on the ram and multiple passes come
-> back clean as a whistle; the SATA controller is a SiI 3114, which we
-> had to buy to talk to the 3TB drives; boot is from the VT6420 on the
-> motherboard and a dedicated 40G Samsung.
+> Using option "v" (verify disk) I get this output:
+> Expert command (? for help): v
 > 
-> I have done some work on this repair booted from a Suse 12.1 rescue disk 
-> with a 3.7 kernel, on the theory that the XFS drivers in the kernel
-> might help; I found that mounting and unmounting in between multiple
-> repair runs made me have to do less of them -- though I'm sure more
-> than two dirty runs before one sees a clean one ought to be Right Out
-> anyway.
-
-Eek, so you thrashed about, in other words. ;)
-
-> I've seen suggestions on the mailing list archives and other places
-> that (some) assertion fails were for things fixed in earlier tools
-> releases, but that one's not helping me...
-
-well, not always true, esp. in userspace.
-
-> I have space to move this data off and remake the filesystem,
-> if I can get it to mount reliably and stay that way long enough.
-
-you can always mount it & copy as much as possible until you hit
-corruption.  But until repair succeeds you'll have corruption lurking
-that you'll hit which will probably cause the fs to shut down (gracefully,
-in theory).
-
--Eric
-
-> Any assistance cheerfully appreciated.  :-)
+> Caution: The CRC for the backup partition table is invalid. This table
+> may
+> be corrupt. This program will automatically create a new backup
+> partition
+> table when you save your partitions.
 > 
-> Cheers,
-> -- jra
+> Problem: The secondary header's self-pointer indicates that it doesn't
+> reside
+> at the end of the disk. If you've added a disk to a RAID array, use
+> the 'e'
+> option on the experts' menu to adjust the secondary header's and
+> partition
+> table's locations.
 > 
+> Problem: Disk is too small to hold all the data!
+> (Disk size is 3907073134 sectors, needs to be 5860533168 sectors.)
+> The 'e' option on the experts' menu may fix this problem.
+> 
+> Problem: partition 1 is too big for the disk.
+> 
+> Identified 4 problems!
+> 
+> My understanding of the issue is:
+> 1. The HDD is not identified correctly by the mainboard/Bios with 3TB.
+> This is confirmed by the hardware vendor of my mainboard "Gigabyte
+> P35-DS4", means the limit is 2.2TB
+> 2. The partition is too small to keep data of size 2.4TB
+> 
+> How can I recover the data?
+> Should I simply create a new partition table either with gdisk or
+> parted?
+> Can I make a low-level copy using dd starting from sector 2048 until
+> the end to another HDD WD30EZRX (that I have available) and then mount
+> that partition?
+> Or are there any other options?
+> 
+> THX
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+
+-- 
+Jay R. Ashworth                  Baylink                       jra@baylink.com
+Designer                     The Things I Think                       RFC 2100
+Ashworth & Associates     http://baylink.pitas.com         2000 Land Rover DII
+St Petersburg FL USA               #natog                      +1 727 647 1274
 
 _______________________________________________
 xfs mailing list
