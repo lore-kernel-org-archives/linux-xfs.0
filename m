@@ -1,22 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 410B77F37
-	for <xfs@oss.sgi.com>; Sun, 14 Jul 2013 21:29:08 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A9AE9AC001
-	for <xfs@oss.sgi.com>; Sun, 14 Jul 2013 19:29:04 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	ceFuTdwAWSNwf8H8 for <xfs@oss.sgi.com>;
-	Sun, 14 Jul 2013 19:29:00 -0700 (PDT)
-Date: Mon, 15 Jul 2013 12:28:41 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Corruption of root fs during git bisect of drm system hang
-Message-ID: <20130715022841.GH5228@dastard>
+	by oss.sgi.com (Postfix) with ESMTP id 063567F37
+	for <xfs@oss.sgi.com>; Sun, 14 Jul 2013 23:41:18 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 86C0BAC004
+	for <xfs@oss.sgi.com>; Sun, 14 Jul 2013 21:41:17 -0700 (PDT)
+Received: from benjamin.baylink.com (rrcs-24-129-180-187.se.biz.rr.com
+	[24.129.180.187]) by cuda.sgi.com with ESMTP id
+	6FCtyKJuaienFZAE for <xfs@oss.sgi.com>;
+	Sun, 14 Jul 2013 21:41:15 -0700 (PDT)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by benjamin.baylink.com (Postfix) with ESMTP id 4E7F71F00575
+	for <xfs@oss.sgi.com>; Mon, 15 Jul 2013 00:41:15 -0400 (EDT)
+Received: from benjamin.baylink.com ([127.0.0.1])
+	by localhost (benjamin.baylink.com [127.0.0.1]) (amavisd-new,
+	port 10024) with ESMTP id 0Z8trqiGhO+N for <xfs@oss.sgi.com>;
+	Mon, 15 Jul 2013 00:41:11 -0400 (EDT)
+Received: from benjamin.baylink.com (benjamin.baylink.com [192.168.253.10])
+	by benjamin.baylink.com (Postfix) with ESMTP id 1080D1F0057C
+	for <xfs@oss.sgi.com>; Mon, 15 Jul 2013 00:41:11 -0400 (EDT)
+Date: Mon, 15 Jul 2013 00:41:11 -0400 (EDT)
+From: Jay Ashworth <jra@baylink.com>
+Message-ID: <20537712.1400.1373863270994.JavaMail.root@benjamin.baylink.com>
+In-Reply-To: <20130715000748.GD5228@dastard>
+Subject: Re: XFS filesystem triggering assert in _repair 3.1.11
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130713090523.GA362@x4>
- <20130712070721.GA359@x4>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,103 +33,41 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Markus Trippelsdorf <markus@trippelsdorf.de>
-Cc: Stan Hoeppner <stan@hardwarefreak.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-T24gRnJpLCBKdWwgMTIsIDIwMTMgYXQgMDk6MDc6MjFBTSArMDIwMCwgTWFya3VzIFRyaXBwZWxz
-ZG9yZiB3cm90ZToKPiBPbiAyMDEzLjA3LjEyIGF0IDEyOjE3ICsxMDAwLCBEYXZlIENoaW5uZXIg
-d3JvdGU6Cj4gPiBPbiBUaHUsIEp1bCAxMSwgMjAxMyBhdCAxMTowNzo1NUFNICswMjAwLCBNYXJr
-dXMgVHJpcHBlbHNkb3JmIHdyb3RlOgo+ID4gPiBPbiAyMDEzLjA3LjEwIGF0IDIzOjEyIC0wNTAw
-LCBTdGFuIEhvZXBwbmVyIHdyb3RlOgo+ID4gPiA+IE9uIDcvMTAvMjAxMyAxMDo1OCBQTSwgRGF2
-ZSBDaGlubmVyIHdyb3RlOgo+ID4gPiA+ID4gT24gVGh1LCBKdWwgMTEsIDIwMTMgYXQgMDU6MzY6
-MjFBTSArMDIwMCwgTWFya3VzIFRyaXBwZWxzZG9yZiB3cm90ZToKPiA+ID4gPiAKPiA+ID4gPiA+
-PiBJIHdhcyBsb29zaW5nIG15IEtERSBzZXR0aW5ncyBiaXQgYnkgYml0IHdpdGggZXZlcnkgcmVi
-b290IGR1cmluZyB0aGUKPiA+ID4gPiA+PiBiaXNlY3Rpb24uIEZpcnN0IG15IHdpbmRvdy1ydWxl
-cyBkaXNhcHBlYXJlZCwgdGhlbiBteSBkZXNrdG9wIGJhY2tncm91bmQKPiA+ID4gPiA+PiBjaGFu
-Z2VkIHRvIGRlZmF1bHQsIHRoZW4gbXkgdGFza2JhciBtb3ZlZCBmcm9tIHRvcCB0byB0aGUgYm90
-dG9tLCBldGMuCj4gPiA+ID4gPj4gSW4gdGhlIGVuZCBJIGhhZCB0byByZXN0b3JlIGFsbCBteSAu
-ZmlsZXMgZnJvbSBiYWNrdXAuIAo+ID4gPiA+ID4gCj4gPiA+ID4gPiBUaGF0J3Mgbm90IGZpbGVz
-eXN0ZW0gY29ycnVwdGlvbi4gVGhhdCBzb3VuZHMgbW9yZSBsaWtlIHNvbWVvbmUgbm90Cj4gPiA+
-ID4gPiB1c2luZyBmc3luYyBpbiB0aGUgYXByb3ByaWF0ZSBwbGFjZSB3aGVuIG92ZXJ3cml0aW5n
-IGEgZmlsZS4uLi4KPiA+ID4gPiAKPiA+ID4gPiBGcm9tIFNhbmRlZW4ncyBibG9nLCBNYXJjaCAy
-MDA5Ogo+ID4gPiA+IAo+ID4gPiA+ICJJIGR1bm5vIGhvdyB0byByZXNvbHZlIHRoaXMgcmlnaHQg
-bm93LiAgSSB0YWxrZWQgdG8gc29tZSBuaWNlIEtERSBmb2xrcwo+ID4gPiA+IG9uIGlyYzsgdGhl
-eSBiYXNpY2FsbHkgd2FudCBhdG9taWMgd3JpdGVzLCBlaXRoZXIgeW91IGdldCB5b3VyIG9sZCBm
-aWxlCj4gPiA+ID4gb3IgeW91ciBuZXcgZmlsZSBwb3N0LWNyYXNoOyBhbmQgdGVtcGZpbGUvc3lu
-Yy9yZW5hbWUgZG9lcyB0aGlzIOKAkyBidXQKPiA+ID4gPiB0aGUgZnN5bmMgaHVydHMgb24gNzgl
-IG9mIHRoZSBMaW51eCBmaWxlc3lzdGVtcyBvdXQgdGhlcmUuICBTbyB0aGVpcgo+ID4gPiA+IEtT
-YXZlRmlsZSBjbGFzcyBkb2VzbuKAmXQgZnN5bmMuICBTbyB3aGF0IHRvIGRvLCB3aGF0IHRvIGRv
-Li4iCj4gPiA+ID4gCj4gPiA+ID4gVGhhdCdzIDQgeWVhcnMgYWdvLiAgSXMgaXQgcG9zc2libGUg
-dGhlIEtERSBkZXZzIGFyZSBzdGlsbCBub3QgdXNpbmcKPiA+ID4gPiBmc3luYz8gIFN1cmUgc2Vl
-bXMgbGlrZWx5IGdpdmVuIE1hcmt1cycgcHJvYmxlbS4KPiA+ID4gCj4gPiA+IExvb2tpbmcgYXQg
-dGhlIHNvdXJjZToKPiA+ID4gaHR0cDovL2FwaS5rZGUub3JnLzQuMTAtYXBpL2tkZWxpYnMtYXBp
-ZG9jcy9rZGVjb3JlL2h0bWwva3NhdmVmaWxlXzhjcHBfc291cmNlLmh0bWwjbDAwMjE5Cj4gPiA+
-IGl0IGFwcGVhcnMgdGhhdCBvbmUgY2FuIHNldCBhbiBlbnZpcm9ubWVudCB2YXJpYWJsZSBLREVf
-RVhUUkFfRlNZTkMgdG8KPiA+ID4gYWRkcmVzcyB0aGlzIGlzc3VlLgo+ID4gPiAKPiA+ID4gSG93
-ZXZlciBpbiBteSBjYXNlIGl0IGRvZXNuJ3QgaGVscC4gRXZlbiB3aXRoIEtERV9FWFRSQV9GU1lO
-Qz0xIEkgc3RpbGwKPiA+ID4gbG9vc2UgbXkgS0RFIHNldHRpbmdzIGluIGNhc2Ugb2YgYSBjcmFz
-aC4gU28gdGhlIHdob2xlIGZzeW5jIHRoaW5nIG1pZ2h0Cj4gPiA+IGJlIGEgcmVkIGhlcnJpbmcu
-Cj4gPiA+IAo+ID4gPiBXaGF0J3MgbW9yZSB0aGlzIHRpbWUgSSBlbmRlbmQgdXAgd2l0aCB1bmRl
-bGV0YWJsZSBmaWxlcyBpbiAvdG1wIChmb3IKPiA+ID4gZXhhbXBsZSAuWDAtbG9jaykgYWZ0ZXIg
-dGhlIGNyYXNoOgo+ID4gPiAKPiA+ID4gKC9kZXYvc2RiIHdhcyBtb3VudGVkIGFuZCB1bm1vdW50
-ZWQgbm9ybWFsbHkgYmVmb3JlIEkgcmFuIHhmc19yZXBhaXIpCj4gPiA+IAo+ID4gPiB0QHVidW50
-On4jIHhmc19yZXBhaXIgL2Rldi9zZGIKPiA+ID4gUGhhc2UgMSAtIGZpbmQgYW5kIHZlcmlmeSBz
-dXBlcmJsb2NrLi4uCj4gPiA+IFBoYXNlIDIgLSB1c2luZyBpbnRlcm5hbCBsb2cKPiA+ID4gICAg
-ICAgICAtIHplcm8gbG9nLi4uCj4gPiA+ICAgICAgICAgLSBzY2FuIGZpbGVzeXN0ZW0gZnJlZXNw
-YWNlIGFuZCBpbm9kZSBtYXBzLi4uCj4gPiA+IGFnaSB1bmxpbmtlZCBidWNrZXQgMCBpcyA2ODM0
-MzUwMDggaW4gYWcgMiAoaW5vZGU9NDk3ODQwMjMwNCkKPiA+ID4gYWdpIHVubGlua2VkIGJ1Y2tl
-dCAxIGlzIDY4MzQzNTAwOSBpbiBhZyAyIChpbm9kZT00OTc4NDAyMzA1KQo+ID4gPiAgICAgICAg
-IC0gZm91bmQgcm9vdCBpbm9kZSBjaHVuawo+ID4gCj4gPiBBZ2FpbiwgdGhlc2UgYXJlIHNpZ25z
-IHRoYXQgbG9nIHJlY292ZXJ5IGhhcyBub3QgY29tcGxldGVkCj4gPiBzdWNjZXNzZnVsbHkgb3Ig
-dGhhdCBmb3Igc29tZSByZWFzb24gaXQgdGhvdWdodCB0aGUgbG9nIHdhcyBjbGVhbi4KPiA+IENh
-biB5b3UgcGxlYXNlIHBvc3QgdGhlIGRtZXNnIG91dHB1dCBhZnRlciB0aGUgY3Jhc2ggd2hlbiB5
-b3UgZ28KPiA+IHRocm91Z2ggdGhlIG1vdW50L3VubW91bnQgcHJvY2VzcyBiZWZvcmUgeW91IHJ1
-biB4ZnNfcmVwYWlyPwo+IAo+IFN1cmUuCj4gRmlyc3QgYm9vdCBhZnRlciBjcmFzaDoKPiAgWEZT
-IChzZGIyKTogTW91bnRpbmcgRmlsZXN5c3RlbQo+ICBYRlMgKHNkYjIpOiBTdGFydGluZyByZWNv
-dmVyeSAobG9nZGV2OiBpbnRlcm5hbCkKPiAgWEZTIChzZGIyKTogRW5kaW5nIHJlY292ZXJ5IChs
-b2dkZXY6IGludGVybmFsKQo+IAo+IFNlY29uZCBib290IGFmdGVyIGNyYXNoOgo+ICBYRlMgKHNk
-YjIpOiBNb3VudGluZyBGaWxlc3lzdGVtCj4gIFhGUyAoc2RiMik6IEVuZGluZyBjbGVhbiBtb3Vu
-dCAKPiAKPiBJIHRoZW4gYm9vdCBVYnVudHUgZnJvbSBhbm90aGVyIGRpc2MgdG8gcnVuIHhmc19y
-ZXBhaXIuCgpUaGF0J3Mgd2hhdCBzaG91bCBkaGF2ZSBiZWVuIGluIHRoZSBpbml0aWFsIGRlc2Ny
-aXB0aW9uIG9mIHlvdXIKcHJvYmxlbS4KCj4gQW5kIGxvb2tpbmcgdGhyb3VnaCBteSBsb2dzIEkg
-c2VlIHRoaXMgV0FSTklORzoKPiAKPiAtLS0tLS0tLS0tLS1bIGN1dCBoZXJlIF0tLS0tLS0tLS0t
-LS0KPiBXQVJOSU5HOiBDUFU6IDAgUElEOiA0MzkgYXQgZnMvaW5vZGUuYzoyODAgZHJvcF9ubGlu
-aysweDMzLzB4NDAoKQo+IENQVTogMCBQSUQ6IDQzOSBDb21tOiBnY29uZmQtMiBOb3QgdGFpbnRl
-ZCAzLjEwLjAtMDg5ODItZzZkMTI4ZTEtZGlydHkgIzQyCj4gSGFyZHdhcmUgbmFtZTogU3lzdGVt
-IG1hbnVmYWN0dXJlciBTeXN0ZW0gUHJvZHVjdCBOYW1lL000QTc4VC1FLCBCSU9TIDM1MDMgICAg
-MDQvMTMvMjAxMQo+ICAwMDAwMDAwMDAwMDAwMDA5IGZmZmZmZmZmODE1N2QwMzAgMDAwMDAwMDAw
-MDAwMDAwMCBmZmZmZmZmZjgxMDYwNzg4Cj4gIGZmZmY4ODAxZjg2MDhjYzggZmZmZjg4MDIwNTk5
-ODIzMCBmZmZmODgwMWY3YmVkZTU4IDAwMDAwMDAwMDAwMDAwMDAKPiAgZmZmZjg4MDFmODYwODNj
-MCBmZmZmZmZmZjgxMTBjZTkzIGZmZmY4ODAxZjg2MDhiNDAgZmZmZmZmZmY4MTFiNzEwNAo+IENh
-bGwgVHJhY2U6Cj4gIFs8ZmZmZmZmZmY4MTU3ZDAzMD5dID8gZHVtcF9zdGFjaysweDQxLzB4NTEK
-PiAgWzxmZmZmZmZmZjgxMDYwNzg4Pl0gPyB3YXJuX3Nsb3dwYXRoX2NvbW1vbisweDY4LzB4ODAK
-PiAgWzxmZmZmZmZmZjgxMTBjZTkzPl0gPyBkcm9wX25saW5rKzB4MzMvMHg0MAo+ICBbPGZmZmZm
-ZmZmODExYjcxMDQ+XSA/IHhmc19kcm9wbGluaysweDI0LzB4NjAKPiAgWzxmZmZmZmZmZjgxMWI4
-NGVkPl0gPyB4ZnNfcmVtb3ZlKzB4MjRkLzB4MzgwCj4gIFs8ZmZmZmZmZmY4MTFiMTY1Nz5dID8g
-eGZzX3ZuX3VubGluaysweDM3LzB4ODAKPiAgWzxmZmZmZmZmZjgxMTA0MTRlPl0gPyB2ZnNfdW5s
-aW5rKzB4NmUvMHhlMAo+ICBbPGZmZmZmZmZmODExMDQzMmE+XSA/IGRvX3VubGlua2F0KzB4MTZh
-LzB4MjIwCj4gIFs8ZmZmZmZmZmY4MTBmNGZhOT5dID8gU3lTX2ZhY2Nlc3NhdCsweDE0OS8weDIw
-MAo+ICBbPGZmZmZmZmZmODE1ODMyOTI+XSA/IHN5c3RlbV9jYWxsX2Zhc3RwYXRoKzB4MTYvMHgx
-YgoKV2hlbiBkaWQgdGhhdCBvY2N1cj8gQmVmb3JlIHRoZSBjcmFzaCwgYWZ0ZXIgdGhlIGZpcnN0
-L3NlY29uZCBtb3VudD8KYWZ0ZXIgeW91IHJhbiByZXBhaXI/Cgo+IFNvbWUgZnVydGhlciBvYnNl
-cnZhdGlvbnM6Cj4gCj4gV2hlbiBJIGJvb3QgMy4yLjAgYWZ0ZXIgdGhlIGNyYXNoIGxvZyByZWNv
-dmVyeSB3b3JrcyBmaW5lLgo+IAo+IFdoZW4gSSBib290IDMuOS4wIGFmdGVyIHRoZSBjcmFzaCBJ
-IGdldCB0aGUgZm9sbG93aW5nOgo+IAo+IFsgICAgMi4zMzI5ODldIFhGUyAoc2RjMik6IE1vdW50
-aW5nIEZpbGVzeXN0ZW0KPiBbICAgIDIuNDA2MjA2XSBYRlMgKHNkYzIpOiBTdGFydGluZyByZWNv
-dmVyeSAobG9nZGV2OiBpbnRlcm5hbCkKPiBbICAgIDIuNDE4MTQ3XSBYRlMgKHNkYzIpOiBsb2cg
-cmVjb3JkIENSQyBtaXNtYXRjaDogZm91bmQgMHhkYmNhZWY0OCwgZXhwZWN0ZWQgMHg2OWU3OTM0
-ZS4KCkp1c3QgaW5mb3JtYXRpb25hbCAtIGluZGljYXRpbmcgdGhhdCB0aGUgbG9nIHJlY29yZHMg
-ZG9uJ3QgaGF2ZQp2YWxpZCBDUkNzIGluIHRoZW0gYmVjYXVzZSAzLjIgZGlkbid0IGNhbGN1bGF0
-ZSB0aGVtLiBJZiB5b3UgYXJlCmdldHRpbmcgdGhlbSB3aGVuIGFmdGVyIGEgY3Jhc2ggb24gYSAz
-LjkrIGtlcm5lbCwgdGhlbiB0aGVyZSdzIGEKcHJvYmxlbSB3cml0aW5nIHRvIHRoZSBsb2cuLi4u
-Cgo+IFdoZW4gSSBib290IHRoZSBjdXJyZW50IExpbnVzIHRyZWUgYWZ0ZXIgdGhlIGNyYXNoIGxv
-ZyByZWNvdmVyeSBmYWlscyBzaWxlbnRseS4KCmRtZXNnIG91dHB1dCwgcGxlYXNlLiBJbmRlZWQs
-IHdoYXQgZG9lcyAiZmFpbHMgc2lsZW50bHkiIG1lYW4/IHRoZQpmaWxlc3lzdGVtIGRvZXNuJ3Qg
-bW91bnQgYnV0IG5vIGVycm9yIGlzIGdpdmVuPwoKQ2hlZXJzLAoKRGF2ZS4KLS0gCkRhdmUgQ2hp
-bm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8v
-b3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+----- Original Message -----
+> From: "Dave Chinner" <david@fromorbit.com>
+
+> > > xfs_db> type bmapbt
+> >
+> > Well, the manpage says that's a type, but my xfs_db, v 3.1.11, says
+> > it's not. Huh?
+> 
+> bmapbtd. "d" mens data fork. bmapbta is for the attribute fork....
+
+Oddly, the manpage I was looking at listed just the one, without the suffixes.
+
+> > I hate power supplies.
+> 
+> I'd be spending a few dollars to get a new one ;)
+
+The old one was a $100 Antec 650 that lasted nearly 7 solid years; I'm
+not feeling too badly about it.  It's been replaced by a Corsair; we'll see
+how that plays in Peoria.
+
+Cheers,
+-- jra
+-- 
+Jay R. Ashworth                  Baylink                       jra@baylink.com
+Designer                     The Things I Think                       RFC 2100
+Ashworth & Associates     http://baylink.pitas.com         2000 Land Rover DII
+St Petersburg FL USA               #natog                      +1 727 647 1274
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
