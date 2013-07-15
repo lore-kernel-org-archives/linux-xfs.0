@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, master,
+Subject: [XFS updates] XFS development tree branch, for-next,
 	updated. for-linus-v3.11-rc1-2-12113-gad81f05
-Message-Id: <20130715224010.A15327F3F@oss.sgi.com>
-Date: Mon, 15 Jul 2013 17:40:08 -0500 (CDT)
+Message-Id: <20130715224032.32DD27F52@oss.sgi.com>
+Date: Mon, 15 Jul 2013 17:40:29 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,7 +23,7 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, master has been updated
+The branch, for-next has been updated
   239dab4 Merge tag 'for-linus-v3.11-rc1-2' of git://oss.sgi.com/xfs/xfs
   da89bd2 Merge tag 'for-linus-v3.11-rc1' of git://oss.sgi.com/xfs/xfs
   790eac5 Merge branch 'for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/viro/vfs
