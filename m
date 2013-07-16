@@ -1,19 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 383887F37
-	for <xfs@oss.sgi.com>; Tue, 16 Jul 2013 14:33:38 -0500 (CDT)
-Date: Tue, 16 Jul 2013 14:33:32 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: splice vs execve lockdep trace.
-Message-ID: <20130716193332.GB3572@sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id DE86C7F37
+	for <xfs@oss.sgi.com>; Tue, 16 Jul 2013 15:18:11 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 5CF7CAC001
+	for <xfs@oss.sgi.com>; Tue, 16 Jul 2013 13:18:08 -0700 (PDT)
+Received: from mail-vc0-f174.google.com (mail-vc0-f174.google.com
+	[209.85.220.174]) by cuda.sgi.com with ESMTP id
+	DI2GZY3nUnEjKREL (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 16 Jul 2013 13:18:06 -0700 (PDT)
+Received: by mail-vc0-f174.google.com with SMTP id kw10so799970vcb.19
+	for <xfs@oss.sgi.com>; Tue, 16 Jul 2013 13:18:06 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20130716193332.GB3572@sgi.com>
 References: <20130716015305.GB30569@redhat.com>
 	<CA+55aFyLbqJp0-=7=HOF9sKGOHwsa7A7-V76b8tbsnra8Z2=-w@mail.gmail.com>
 	<20130716023847.GA31481@redhat.com>
 	<CA+55aFxiGXht8+Dox=C2ezYYf1yMaLAzMYr40j=+peP8j5Ha6w@mail.gmail.com>
-	<20130716060351.GE11674@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130716060351.GE11674@dastard>
+	<20130716060351.GE11674@dastard> <20130716193332.GB3572@sgi.com>
+Date: Tue, 16 Jul 2013 13:18:06 -0700
+Message-ID: <CA+55aFzTBUKStdZu1GhKoiYc2knybhiaUFr2By98QYew_STE=A@mail.gmail.com>
+Subject: Re: splice vs execve lockdep trace.
+From: Linus Torvalds <torvalds@linux-foundation.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,98 +35,64 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Peter Zijlstra <peterz@infradead.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Oleg Nesterov <oleg@redhat.com>, xfs@oss.sgi.com, Alexander Viro <viro@zeniv.linux.org.uk>, Dave Jones <davej@redhat.com>
+To: Ben Myers <bpm@sgi.com>
+Cc: Peter Zijlstra <peterz@infradead.org>, Oleg Nesterov <oleg@redhat.com>, Linux Kernel <linux-kernel@vger.kernel.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Dave Jones <davej@redhat.com>, xfs@oss.sgi.com
 
-Hi Dave, Linus,
+On Tue, Jul 16, 2013 at 12:33 PM, Ben Myers <bpm@sgi.com> wrote:
+>> >
+>> > And looking more at that, I'm actually starting to think this is an
+>> > XFS locking problem. XFS really should not call back to splice while
+>> > holding the inode lock.
 
-On Tue, Jul 16, 2013 at 04:03:51PM +1000, Dave Chinner wrote:
-> On Mon, Jul 15, 2013 at 08:25:14PM -0700, Linus Torvalds wrote:
-> > On Mon, Jul 15, 2013 at 7:38 PM, Dave Jones <davej@redhat.com> wrote:
-> > >
-> > >   The recent trinity changes shouldn't have really made
-> > > any notable difference here.
-> > 
-> > Hmm. I'm not aware pf anything that has changed in this area since
-> > 3.10 - neither in execve, xfs or in splice. Not even since 3.9.
-> 
-> It's been there for years.....
-> 
-> > The "pipe -> cred_guard_mutex" lock chain is pretty direct, and can be
-> > clearly attributed to splicing into /proc. Now, whether that is a
-> > *good* idea or not is clearly debatable, and I do think that maybe we
-> > should just not splice to/from proc files, but that doesn't seem to be
-> > new, and I don't think it's necessarily *broken* per se, it's just
-> > that splicing into /proc seems somewhat unnecessary, and various proc
-> > files do end up taking locks that can be "interesting".
-> 
-> But this is a new way of triggering the inversion, however....
-> 
-> > At the other end of the spectrum, the "cred_guard_mutex -> FS locks"
-> > thing from execve() is also pretty clear, and probably not fixable or
-> > necessarily something we'd even want to fix.
-> > 
-> > But the "FS locks -> pipe" part is a bit questionable. Honestly, I'd
-> > be much happier if XFS used generic_file_splice_read/write().
-> >
-> > And looking more at that, I'm actually starting to think this is an
-> > XFS locking problem. XFS really should not call back to splice while
-> > holding the inode lock.
+.. that was misleading, normally "inode lock" would be i_lock, but
+here I meant the XFS-specific i_iolock.
 
-CPU0				CPU1				CPU2
-----				----				----
-lock(&sig->cred_guard_mutex);
-				lock(&pipe->mutex/1);
-								lock(&(&ip->io_lock)->mr_lock);
-lock(&(&ip->io_lock)->mr_lock);
-				lock(&sig->cred_guard_mutex);
-								lock(&pipe->mutex/1);
+But you clearly picked up on it:
 
-CPU0 is do_execve_common, which called prepare_bprm_creds which takes the
-cred_guard_mutex, and it is held across the call to xfs_file_aio_read, which
-takes the iolock.
+> CPU0                            CPU1                            CPU2
+> ----                            ----                            ----
+> lock(&sig->cred_guard_mutex);
+>                                 lock(&pipe->mutex/1);
+>                                                                 lock(&(&ip->io_lock)->mr_lock);
+> lock(&(&ip->io_lock)->mr_lock);
+>                                 lock(&sig->cred_guard_mutex);
+>                                                                 lock(&pipe->mutex/1);
 
-CPU1 is the /proc related codepath, where splice_from_pipe has held the
-pipe_lock across the call to __splice_from_pipe, where proc_pid_attr_write is
-eventually called and goes takes the cred_guard_mutex.
+Yup.
 
-CPU2 is xfs_file_splice_write, which takes the iolock and holds it across the
-call to generic_file_splice_write, which takes the pipe_mutex.
+> I agree that fixing this in XFS seems to be the most reasonable plan,
+> and Dave's approach looks ok to me.  Seems like patch 1 should go
+> through Al's tree, but we'll also need to commit it to the xfs tree
+> prerequisite to patch 2.
 
-Yeah, I'll buy that.
+Btw, is there some reason why XFS couldn't just use
+generic_file_splice_read() directly?
 
-> > But that XFS code doesn't seem new either. Is XFS a new thing for you
-> > to test with?
-> 
-> I posted patches to fix this i_mutex/i_iolock inversion a couple of
-> years ago (july 2011):
-> 
-> https://lkml.org/lkml/2011/7/18/4
-> 
-> And V2 was posted here and reviewed (aug 2011):
-> 
-> http://xfs.9218.n7.nabble.com/PATCH-0-2-splice-i-mutex-vs-splice-write-deadlock-V2-tt4072.html#none
-> 
-> It didn't get picked up by with a VFS tree, so sat moldering until
-> somebody else reported it (Nov 2012) and it reposted it again, only
-> to have it ignored again:
-> 
-> http://oss.sgi.com/archives/xfs/2012-11/msg00671.html
-> 
-> And I recently discussed it again with Al w.r.t. filesystem freeze
-> problems he was looking at, and I was waiting for that to settle
-> down before I posted the fixes again....
+I'm not arguing against Dave's patches, since the splice_write case
+would seem to want them regardless, but I'm not even seeing why XFS
+couldn't just avoid the locking for the splice_read case entirely..And
+the generic file-splice read function does all that read-ahead stuff
+and should actually be better for performance. And because it does it
+from the page cache, it can avoid the locking issues (because it gets
+the splice pipe lock later, just holding on to the page references).
 
-I agree that fixing this in XFS seems to be the most reasonable plan,
-and Dave's approach looks ok to me.  Seems like patch 1 should go
-through Al's tree, but we'll also need to commit it to the xfs tree
-prerequisite to patch 2.
+And splice has mmap semantics - the whole point of splice is about
+moving pages around, after all - so I *think* your current
+"xfs_rw_ilock(ip, XFS_IOLOCK_SHARED);" is actually over-serialization.
+The pages will be shared by the pipe buffers anyway, so splicing by
+definition doesn't imply full data serialization (because the reading
+of the data itself will happen much later).
 
-Dave, I'm sorry for my part in letting these moulder.  I'll be happy to
-review them once you have reposted.
+So the per-page serialization done by readpage() should already be
+sufficient, no?
 
-Thanks,
-Ben
+I dunno. Maybe there's something I'm missing. XFS does seem to wrap
+all the other generic functions in that lock too, but since mmap() etc
+clearly have to be able to get things one page at a time (without any
+wrapping at higher layers), I'm just wondering whether splice_read
+might not be able to avoid it.
+
+                     Linus
 
 _______________________________________________
 xfs mailing list
