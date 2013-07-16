@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8672229DF8
-	for <xfs@oss.sgi.com>; Tue, 16 Jul 2013 01:04:22 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 02B91AC001
-	for <xfs@oss.sgi.com>; Mon, 15 Jul 2013 23:04:18 -0700 (PDT)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	a9ctSX7v9nTGejPM for <xfs@oss.sgi.com>;
-	Mon, 15 Jul 2013 23:04:16 -0700 (PDT)
-Date: Tue, 16 Jul 2013 16:03:51 +1000
-From: Dave Chinner <david@fromorbit.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 3AC137F37
+	for <xfs@oss.sgi.com>; Tue, 16 Jul 2013 01:16:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 096FF8F8033
+	for <xfs@oss.sgi.com>; Mon, 15 Jul 2013 23:16:09 -0700 (PDT)
+Date: Tue, 16 Jul 2013 07:16:02 +0100
+From: Al Viro <viro@ZenIV.linux.org.uk>
 Subject: Re: splice vs execve lockdep trace.
-Message-ID: <20130716060351.GE11674@dastard>
+Message-ID: <20130716061601.GM4165@ZenIV.linux.org.uk>
 References: <20130716015305.GB30569@redhat.com>
 	<CA+55aFyLbqJp0-=7=HOF9sKGOHwsa7A7-V76b8tbsnra8Z2=-w@mail.gmail.com>
 	<20130716023847.GA31481@redhat.com>
 	<CA+55aFxiGXht8+Dox=C2ezYYf1yMaLAzMYr40j=+peP8j5Ha6w@mail.gmail.com>
+	<20130716060351.GE11674@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CA+55aFxiGXht8+Dox=C2ezYYf1yMaLAzMYr40j=+peP8j5Ha6w@mail.gmail.com>
+In-Reply-To: <20130716060351.GE11674@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,69 +29,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Peter Zijlstra <peterz@infradead.org>, Oleg Nesterov <oleg@redhat.com>, Linux Kernel <linux-kernel@vger.kernel.org>, Ben Myers <bpm@sgi.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Dave Jones <davej@redhat.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Peter Zijlstra <peterz@infradead.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Oleg Nesterov <oleg@redhat.com>, Ben Myers <bpm@sgi.com>, Dave Jones <davej@redhat.com>, xfs@oss.sgi.com, Linus Torvalds <torvalds@linux-foundation.org>
 
-On Mon, Jul 15, 2013 at 08:25:14PM -0700, Linus Torvalds wrote:
-> On Mon, Jul 15, 2013 at 7:38 PM, Dave Jones <davej@redhat.com> wrote:
-> >
-> >   The recent trinity changes shouldn't have really made
-> > any notable difference here.
+On Tue, Jul 16, 2013 at 04:03:51PM +1000, Dave Chinner wrote:
+
+> I posted patches to fix this i_mutex/i_iolock inversion a couple of
+> years ago (july 2011):
 > 
-> Hmm. I'm not aware pf anything that has changed in this area since
-> 3.10 - neither in execve, xfs or in splice. Not even since 3.9.
-
-It's been there for years.....
-
-> The "pipe -> cred_guard_mutex" lock chain is pretty direct, and can be
-> clearly attributed to splicing into /proc. Now, whether that is a
-> *good* idea or not is clearly debatable, and I do think that maybe we
-> should just not splice to/from proc files, but that doesn't seem to be
-> new, and I don't think it's necessarily *broken* per se, it's just
-> that splicing into /proc seems somewhat unnecessary, and various proc
-> files do end up taking locks that can be "interesting".
-
-But this is a new way of triggering the inversion, however....
-
-> At the other end of the spectrum, the "cred_guard_mutex -> FS locks"
-> thing from execve() is also pretty clear, and probably not fixable or
-> necessarily something we'd even want to fix.
+> https://lkml.org/lkml/2011/7/18/4
 > 
-> But the "FS locks -> pipe" part is a bit questionable. Honestly, I'd
-> be much happier if XFS used generic_file_splice_read/write().
->
-> And looking more at that, I'm actually starting to think this is an
-> XFS locking problem. XFS really should not call back to splice while
-> holding the inode lock.
+> And V2 was posted here and reviewed (aug 2011):
 > 
-> But that XFS code doesn't seem new either. Is XFS a new thing for you
-> to test with?
+> http://xfs.9218.n7.nabble.com/PATCH-0-2-splice-i-mutex-vs-splice-write-deadlock-V2-tt4072.html#none
 
-I posted patches to fix this i_mutex/i_iolock inversion a couple of
-years ago (july 2011):
-
-https://lkml.org/lkml/2011/7/18/4
-
-And V2 was posted here and reviewed (aug 2011):
-
-http://xfs.9218.n7.nabble.com/PATCH-0-2-splice-i-mutex-vs-splice-write-deadlock-V2-tt4072.html#none
-
-It didn't get picked up by with a VFS tree, so sat moldering until
-somebody else reported it (Nov 2012) and it reposted it again, only
-to have it ignored again:
-
-http://oss.sgi.com/archives/xfs/2012-11/msg00671.html
-
-And I recently discussed it again with Al w.r.t. filesystem freeze
-problems he was looking at, and I was waiting for that to settle
-down before I posted the fixes again....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Unless I'm misreading the patch, you end up doing file_remove_suid()
+without holding i_mutex at all...
 
 _______________________________________________
 xfs mailing list
