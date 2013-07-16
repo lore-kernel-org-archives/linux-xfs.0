@@ -1,37 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0729C7F7E
-	for <xfs@oss.sgi.com>; Thu, 11 Jul 2013 00:01:22 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B566A8F8037
-	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 22:01:21 -0700 (PDT)
-Received: from e31.co.us.ibm.com (e31.co.us.ibm.com [32.97.110.149]) by
-	cuda.sgi.com with ESMTP id leC3Qzy3a29sJ1EU (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 10 Jul 2013 22:01:20 -0700 (PDT)
-Received: from /spool/local
-	by e31.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
-	Violators will be prosecuted
-	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
-	Wed, 10 Jul 2013 23:01:20 -0600
-Received: from d03relay05.boulder.ibm.com (d03relay05.boulder.ibm.com
-	[9.17.195.107])
-	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id C3A2919D8041
-	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 23:01:07 -0600 (MDT)
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay05.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	r6B51Apv087080 for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 23:01:10 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
-	id r6B5170h006767
-	for <xfs@oss.sgi.com>; Wed, 10 Jul 2013 23:01:08 -0600
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: [PATCH v11 4/4] xfs: Use new qs_pquota field in fs_quota_stat for
-	Q_XGETQSTATV
-Date: Thu, 11 Jul 2013 00:00:43 -0500
-Message-Id: <1373518843-1492-5-git-send-email-sekharan@us.ibm.com>
-In-Reply-To: <1373518843-1492-1-git-send-email-sekharan@us.ibm.com>
-References: <1373518843-1492-1-git-send-email-sekharan@us.ibm.com>
+	by oss.sgi.com (Postfix) with ESMTP id 3BD967F37
+	for <xfs@oss.sgi.com>; Tue, 16 Jul 2013 01:41:40 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 172158F8039
+	for <xfs@oss.sgi.com>; Mon, 15 Jul 2013 23:41:40 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	NwpD52FX1pZSzsON for <xfs@oss.sgi.com>;
+	Mon, 15 Jul 2013 23:41:38 -0700 (PDT)
+Date: Tue, 16 Jul 2013 16:41:04 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: splice vs execve lockdep trace.
+Message-ID: <20130716064104.GF11674@dastard>
+References: <20130716015305.GB30569@redhat.com>
+	<CA+55aFyLbqJp0-=7=HOF9sKGOHwsa7A7-V76b8tbsnra8Z2=-w@mail.gmail.com>
+	<20130716023847.GA31481@redhat.com>
+	<CA+55aFxiGXht8+Dox=C2ezYYf1yMaLAzMYr40j=+peP8j5Ha6w@mail.gmail.com>
+	<20130716060351.GE11674@dastard>
+	<20130716061601.GM4165@ZenIV.linux.org.uk>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20130716061601.GM4165@ZenIV.linux.org.uk>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,103 +30,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Chandra Seetharaman <sekharan@us.ibm.com>
+To: Al Viro <viro@ZenIV.linux.org.uk>
+Cc: Peter Zijlstra <peterz@infradead.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Oleg Nesterov <oleg@redhat.com>, Ben Myers <bpm@sgi.com>, Dave Jones <davej@redhat.com>, xfs@oss.sgi.com, Linus Torvalds <torvalds@linux-foundation.org>
 
-For the Q_XGETQSTATV quota command, if the new version of fs_quota_stat
-data structure is used, fill the project quota information.
+On Tue, Jul 16, 2013 at 07:16:02AM +0100, Al Viro wrote:
+> On Tue, Jul 16, 2013 at 04:03:51PM +1000, Dave Chinner wrote:
+> 
+> > I posted patches to fix this i_mutex/i_iolock inversion a couple of
+> > years ago (july 2011):
+> > 
+> > https://lkml.org/lkml/2011/7/18/4
+> > 
+> > And V2 was posted here and reviewed (aug 2011):
+> > 
+> > http://xfs.9218.n7.nabble.com/PATCH-0-2-splice-i-mutex-vs-splice-write-deadlock-V2-tt4072.html#none
+> 
+> Unless I'm misreading the patch, you end up doing file_remove_suid()
+> without holding i_mutex at all...
 
-Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
----
- fs/xfs/xfs_qm_syscalls.c |   38 ++++++++++++++++++++++++++------------
- 1 files changed, 26 insertions(+), 12 deletions(-)
+We've been calling file_remove_suid() since at least 2010 without
+i_mutex held through the direct IO write path....
 
-diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-index 02411a7..2154129 100644
---- a/fs/xfs/xfs_qm_syscalls.c
-+++ b/fs/xfs/xfs_qm_syscalls.c
-@@ -406,6 +406,14 @@ xfs_qm_scall_quotaon(
- 
- /*
-  * Return quota status information, such as uquota-off, enforcements, etc.
-+ *
-+ * We support two different versions of the fs_quota_stat structure
-+ * here. If the version is FS_QSTAT_VERSION, then there is no
-+ * separate project quota fields, and so we write project quota
-+ * information into the group quota fields. With FS_QSTAT_VERSION_2,
-+ * there is a separate project quota field so we can use that
-+ * instead to pass both group and project quota back to user space.
-+ *
-  */
- int
- xfs_qm_scall_getqstat(
-@@ -420,19 +428,15 @@ xfs_qm_scall_getqstat(
- 	bool                    tempgqip = false;
- 	bool                    temppqip = false;
- 
--	if (!xfs_sb_version_hasquota(&mp->m_sb)) {
--		out->qs_uquota.qfs_ino = NULLFSINO;
--		out->qs_gquota.qfs_ino = NULLFSINO;
--		out->qs_pquota.qfs_ino = NULLFSINO;
--		return (0);
--	}
-+	out->qs_uquota.qfs_ino = NULLFSINO;
-+	out->qs_gquota.qfs_ino = NULLFSINO;
-+	out->qs_pquota.qfs_ino = NULLFSINO;
-+	if (!xfs_sb_version_hasquota(&mp->m_sb))
-+		return 0;
-+
- 	out->qs_flags = (__uint16_t) xfs_qm_export_flags(mp->m_qflags &
- 							(XFS_ALL_QUOTA_ACCT|
- 							 XFS_ALL_QUOTA_ENFD));
--	out->qs_uquota.qfs_ino = mp->m_sb.sb_uquotino;
--	out->qs_gquota.qfs_ino = mp->m_sb.sb_gquotino;
--	if (&out->qs_gquota != &out->qs_pquota)
--		out->qs_pquota.qfs_ino = mp->m_sb.sb_pquotino;
- 
- 	if (q) {
- 		uip = q->qi_uquotaip;
-@@ -454,21 +458,31 @@ xfs_qm_scall_getqstat(
- 					0, 0, &pip) == 0)
- 			temppqip = true;
- 	}
-+
- 	if (uip) {
-+		out->qs_uquota.qfs_ino = mp->m_sb.sb_uquotino;
- 		out->qs_uquota.qfs_nblks = uip->i_d.di_nblocks;
- 		out->qs_uquota.qfs_nextents = uip->i_d.di_nextents;
- 		if (tempuqip)
- 			IRELE(uip);
- 	}
- 	if (gip) {
-+		out->qs_gquota.qfs_ino = mp->m_sb.sb_gquotino;
- 		out->qs_gquota.qfs_nblks = gip->i_d.di_nblocks;
- 		out->qs_gquota.qfs_nextents = gip->i_d.di_nextents;
- 		if (tempgqip)
- 			IRELE(gip);
- 	}
- 	if (pip) {
--		out->qs_pquota.qfs_nblks = pip->i_d.di_nblocks;
--		out->qs_pquota.qfs_nextents = pip->i_d.di_nextents;
-+		if (out->qs_version >= FS_QSTAT_VERSION_2) {
-+			out->qs_pquota.qfs_ino = mp->m_sb.sb_pquotino;
-+			out->qs_pquota.qfs_nblks = pip->i_d.di_nblocks;
-+			out->qs_pquota.qfs_nextents = pip->i_d.di_nextents;
-+		} else {
-+			out->qs_gquota.qfs_ino = mp->m_sb.sb_pquotino;
-+			out->qs_gquota.qfs_nblks = pip->i_d.di_nblocks;
-+			out->qs_gquota.qfs_nextents = pip->i_d.di_nextents;
-+		}
- 		if (temppqip)
- 			IRELE(pip);
- 	}
+Cheers,
+
+Dave.
 -- 
-1.7.1
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
