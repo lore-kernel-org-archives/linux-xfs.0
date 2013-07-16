@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 381E37F37
-	for <xfs@oss.sgi.com>; Mon, 15 Jul 2013 19:24:35 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 26A548F8039
-	for <xfs@oss.sgi.com>; Mon, 15 Jul 2013 17:24:31 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	qN2bK8m1ZSWQPBlC for <xfs@oss.sgi.com>;
-	Mon, 15 Jul 2013 17:24:27 -0700 (PDT)
-Date: Tue, 16 Jul 2013 10:23:52 +1000
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 4F3DD7F37
+	for <xfs@oss.sgi.com>; Mon, 15 Jul 2013 19:27:31 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3087530404E
+	for <xfs@oss.sgi.com>; Mon, 15 Jul 2013 17:27:28 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	bvE0iOSax7h3B5C9 for <xfs@oss.sgi.com>;
+	Mon, 15 Jul 2013 17:27:26 -0700 (PDT)
+Date: Tue, 16 Jul 2013 10:27:03 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: Initialize all quota inodes to be NULLFSINO
-Message-ID: <20130716002352.GA3920@dastard>
-References: <1373593665.20769.10.camel@chandra-dt.ibm.com>
-	<20130713021349.GH3438@dastard>
-	<1373928885.20769.42.camel@chandra-dt.ibm.com>
+Subject: Re: XFS: Assertion failed: xfs_dir2_sf_lookup(args) == ENOENT, file:
+	fs/xfs/xfs_dir2_sf.c, line: 358
+Message-ID: <20130716002703.GB3920@dastard>
+References: <20130712023930.GA6473@redhat.com> <20130713020030.GG3438@dastard>
+	<20130715195800.GD1706@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1373928885.20769.42.camel@chandra-dt.ibm.com>
+In-Reply-To: <20130715195800.GD1706@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,67 +31,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Chandra Seetharaman <sekharan@us.ibm.com>
-Cc: XFS mailing list <xfs@oss.sgi.com>
+To: Dave Jones <davej@redhat.com>, Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-On Mon, Jul 15, 2013 at 05:54:45PM -0500, Chandra Seetharaman wrote:
-> On Sat, 2013-07-13 at 12:13 +1000, Dave Chinner wrote:
-> > On Thu, Jul 11, 2013 at 08:47:45PM -0500, Chandra Seetharaman wrote:
-> > > 
-> > > mkfs doesn't initialize the quota inodes to NULLFSINO as it
-> > > does for the other internal inodes. This leads to check for two
-> > > values (0 and NULLFSINO) to make sure if a quota inode is
-> > > valid.
-> > > 
-> > > Solve that problem by initializing the values to NULLFSINO
-> > > if they are 0.
-> > > 
-> > > Note that these values are not written back to on-disk
-> > > superblock unless some quota is enabled on the filesystem.
-> > > 
-> > > Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-> > > ---
-> > >  fs/xfs/xfs_mount.c |   12 ++++++++++++
-> > >  1 files changed, 12 insertions(+), 0 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> > > index 2b0ba35..8b95933 100644
-> > > --- a/fs/xfs/xfs_mount.c
-> > > +++ b/fs/xfs/xfs_mount.c
-> > > @@ -572,6 +572,18 @@ out_unwind:
-> > >  static void
-> > >  xfs_sb_quota_from_disk(struct xfs_sb *sbp)
-> > >  {
-> > > +	/*
-> > > +	 * older mkfs doesn't initialize quota inodes to NULLFSINO,
-> > > +	 * which leads to two values for a quota inode to be invalid:
-> > > +	 * 0 and NULLFSINO. Fix it.
-> > > +	 */
-> > > +	if (sbp->sb_uquotino == 0)
-> > > +		sbp->sb_uquotino = NULLFSINO;
-> > > +	if (sbp->sb_gquotino == 0)
-> > > +		sbp->sb_gquotino = NULLFSINO;
-> > > +	if (sbp->sb_pquotino == 0)
-> > > +		sbp->sb_pquotino = NULLFSINO;
-> > 
-> > There coment needs to point out that this is changing the in-memory
-> > superblock value right here, so we don't need to make changing
-> > sb_pquotino dependent on the superblock having support for this
-> > feature.
+On Mon, Jul 15, 2013 at 03:58:00PM -0400, Dave Jones wrote:
+> On Sat, Jul 13, 2013 at 12:00:30PM +1000, Dave Chinner wrote:
+>  
+>  > > [   97.162665] XFS: Assertion failed: xfs_dir2_sf_lookup(args) == ENOENT, file: fs/xfs/xfs_dir2_sf.c, line: 358
+>  > ....
+>  > 
+>  > So, it's not clear what has caused this yet. Is it reproducable?
 > 
-> But, we are not just changing just for sb_pquotino, right ?
+> Just hit it again on the same machine.
+> 
+>  > would be good to get a trace of lookup vs addname events from XFS,
+>  > too (i.e. all the xfs_dir* and xfs_da* events) so we can see if the
+>  > correct lookups were done prior to the failing addname operation...
+>  
+> <- xfs tracing noob. Got a recipe I can cut-n-paste ?
+> Or a patch if that's necessary..
 
-Sure, but those other two fields are always present in the
-superblock...
+Just use your usual method of pulling tracepoints out of the kernel,
+be it with perf or (my preferred method) trace-cmd:
 
-> Since we are changing all the fields independent of superblock
-> supporting sb_pquotino, I thought the comment should be generic.
+# trace-cmd record -e xfs_dir\* -e xfs_da\* <command that dies>
+....
+# trace-cmd report > trace.report.out
 
-So why is it safe to modify this when sb_pquotino isn't valid in the
-superblock (i.e. v4 superblock) and the only valid on-disk value for
-an unused section of the superblock is zero?
-
-That's what the comment needs to explain.
+The trace.report.out file is what I'd like to see. The report file
+could be large, so compressing it might be an idea...
 
 Cheers,
 
