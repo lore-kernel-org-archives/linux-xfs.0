@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DBFEF7F3F
-	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 21:25:04 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 1E8C07F4E
+	for <xfs@oss.sgi.com>; Tue, 16 Jul 2013 10:02:58 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id C95368F8039
-	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 19:25:01 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	Ysyd5ESAIHtBy6YS for <xfs@oss.sgi.com>;
-	Wed, 17 Jul 2013 19:24:56 -0700 (PDT)
-Date: Thu, 18 Jul 2013 12:24:51 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: Fix a deadlock in xfs_log_commit_cil() code path
-Message-ID: <20130718022451.GM11674@dastard>
-References: <1373928754.20769.41.camel@chandra-dt.ibm.com>
-	<20130716005455.GC3920@dastard>
-	<1374096775.8941.3.camel@chandra-dt.ibm.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 9FB60AC009
+	for <xfs@oss.sgi.com>; Tue, 16 Jul 2013 08:02:54 -0700 (PDT)
+Date: Tue, 16 Jul 2013 11:02:17 -0400
+From: Dave Jones <davej@redhat.com>
+Subject: Re: splice vs execve lockdep trace.
+Message-ID: <20130716150217.GA825@redhat.com>
+References: <20130716015305.GB30569@redhat.com>
+	<CA+55aFyLbqJp0-=7=HOF9sKGOHwsa7A7-V76b8tbsnra8Z2=-w@mail.gmail.com>
+	<20130716023847.GA31481@redhat.com>
+	<CA+55aFxiGXht8+Dox=C2ezYYf1yMaLAzMYr40j=+peP8j5Ha6w@mail.gmail.com>
+	<alpine.DEB.2.02.1307160956370.15153@pianoman.cluster.toy>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1374096775.8941.3.camel@chandra-dt.ibm.com>
+In-Reply-To: <alpine.DEB.2.02.1307160956370.15153@pianoman.cluster.toy>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,115 +29,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Chandra Seetharaman <sekharan@us.ibm.com>
-Cc: XFS mailing list <xfs@oss.sgi.com>
+To: Vince Weaver <vince@deater.net>
+Cc: Peter Zijlstra <peterz@infradead.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Oleg Nesterov <oleg@redhat.com>, Ben Myers <bpm@sgi.com>, Alexander Viro <viro@zeniv.linux.org.uk>, xfs@oss.sgi.com, Linus Torvalds <torvalds@linux-foundation.org>
 
-On Wed, Jul 17, 2013 at 04:32:55PM -0500, Chandra Seetharaman wrote:
-> On Tue, 2013-07-16 at 10:54 +1000, Dave Chinner wrote:
-> > On Mon, Jul 15, 2013 at 05:52:34PM -0500, Chandra Seetharaman wrote:
-> > > While testing and rearranging my pquota/gquota code, I stumbled
-> > > on a xfs_shutdown() during a mount. But the mount just hung.
-> > > 
-> > > I debugged and found that there is a deadlock involving
-> > > &log->l_cilp->xc_ctx_lock.
-> > > 
-> > > It is in a code path where &log->l_cilp->xc_ctx_lock is first
-> > > acquired in read mode and some levels down the same semaphore
-> > > is being acquired in write mode causing a deadlock.
-> > > 
-> > > This is the stack:
-> > > xfs_log_commit_cil -> acquires &log->l_cilp->xc_ctx_lock in read mode
-> > >   xlog_print_tic_res
-> > >     xfs_force_shutdown
-> > >       xfs_log_force_umount
-> > >         xlog_cil_force
-> > >           xlog_cil_force_lsn
-> > >             xlog_cil_push_foreground
-> > >               xlog_cil_push - tries to acquire same semaphore in write mode
-> > > 
-> > > This patch fixes the deadlock by not calling xfs_force_shutdown() while
-> > > holding the semaphore, instead calling it after dropping teh semaphore.
-> > > 
-> > > Thanks to Dave for suggesting this solution.
-> > > 
-> > > Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-> > > 
-> > > ---
-> > >  fs/xfs/xfs_log.c      |    6 +++---
-> > >  fs/xfs/xfs_log_cil.c  |   10 ++++++----
-> > >  fs/xfs/xfs_log_priv.h |    2 +-
-> > >  fs/xfs/xfs_trans.c    |    2 +-
-> > >  4 files changed, 11 insertions(+), 9 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> > > index d852a2b..b9fa2da 100644
-> > > --- a/fs/xfs/xfs_log.c
-> > > +++ b/fs/xfs/xfs_log.c
-> > > @@ -1837,7 +1837,7 @@ xlog_state_finish_copy(
-> > >   * print out info relating to regions written which consume
-> > >   * the reservation
-> > >   */
-> > > -void
-> > > +int
-> > >  xlog_print_tic_res(
-> > >  	struct xfs_mount	*mp,
-> > >  	struct xlog_ticket	*ticket)
-> > > @@ -1941,7 +1941,7 @@ xlog_print_tic_res(
-> > >  
-> > >  	xfs_alert_tag(mp, XFS_PTAG_LOGRES,
-> > >  		"xlog_write: reservation ran out. Need to up reservation");
-> > > -	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-> > > +	return EFSCORRUPTED;
-> > 
-> > Note the "SHUTDOWN_CORRUPT_INCORE" reason given here....
-> > 
-> > > diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> > > index 35a2299..d96022f 100644
-> > > --- a/fs/xfs/xfs_trans.c
-> > > +++ b/fs/xfs/xfs_trans.c
-> > > @@ -1547,7 +1547,7 @@ xfs_trans_commit(
-> > >  	xfs_trans_apply_dquot_deltas(tp);
-> > >  
-> > >  	error = xfs_log_commit_cil(mp, tp, &commit_lsn, flags);
-> > > -	if (error == ENOMEM) {
-> > > +	if (error) {
-> > >  		xfs_force_shutdown(mp, SHUTDOWN_LOG_IO_ERROR);
-> > 
-> > Which is different to the reason given here. The shutdown reason
-> > should be maintained for this particular error....
-> 
-> I see.
+On Tue, Jul 16, 2013 at 09:59:35AM -0400, Vince Weaver wrote:
+ > On Mon, 15 Jul 2013, Linus Torvalds wrote:
+ > 
+ > > On Mon, Jul 15, 2013 at 7:38 PM, Dave Jones <davej@redhat.com> wrote:
+ > > 
+ > > > Interestingly, the 'soft lockups' I was
+ > > > seeing all the time on that box seem to have gone into hiding.
+ > > 
+ > > Honestly, I'm somewhat inclined to blame the whole perf situation, and
+ > > saying that we hopefully got that fixed. In between the silly do_div()
+ > > buglets and all the indications that the time was spent in nmi
+ > > handlers, I'd be willing to just ignore them as false positives
+ > > brought on by the whole switch to the perf irq..
+ > 
+ > Did the perf soft lockups go away with 3.11-rc1?
+ > 
+ > 734df5ab549ca44f40de0f07af1c8803856dfb18 finally got committed,
+ > and it fixes a major long-standing perf-related NMI soft lockup bug I 
+ > found when fuzzing.
 
-What I mean is that the code in xfs_trans_commit() should do
-something like:
+That could be it. I never got around to trying that commit standalone
+when you first pointed it out.
 
-	if (error) {
-		int reason = SHUTDOWN_LOG_IO_ERROR;
-		if (error == EFSCORRUPTED)
-			reason = SHUTDOWN_CORRUPT_INCORE;
-		xfs_force_shutdown(mp, reason);
-		....
-	}
+thanks,
 
-> 
-> Is it ok if the error reason is not propagated to the xlog_write() code
-> path ?
-
-No - if we get a transaction overflow, we need to trigger a
-shutdown. That means the error needs to be caught by the
-xlog_write() path an the filesystem shut down.
-
-Looking at it more deeply, you could probably just change the
-shutdown in xlog_print_tic_res() to use SHUTDOWN_LOG_IO_ERROR and
-the problem is solved as the shutdown won't try to force the
-log. i.e. this whole problem will go away with that one line fix...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+	Dave
 
 _______________________________________________
 xfs mailing list
