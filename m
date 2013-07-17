@@ -1,21 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 00C027F3F
-	for <xfs@oss.sgi.com>; Tue, 16 Jul 2013 23:54:11 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B7A078F8039
-	for <xfs@oss.sgi.com>; Tue, 16 Jul 2013 21:54:11 -0700 (PDT)
-Received: from mail-ve0-f176.google.com (mail-ve0-f176.google.com
-	[209.85.128.176]) by cuda.sgi.com with ESMTP id
-	A5oau7716Q98EYOg (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 16 Jul 2013 21:54:10 -0700 (PDT)
-Received: by mail-ve0-f176.google.com with SMTP id c13so1135280vea.7
-	for <xfs@oss.sgi.com>; Tue, 16 Jul 2013 21:54:09 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20130717040616.GI11674@dastard>
-References: <20130716015305.GB30569@redhat.com>
-	<CA+55aFyLbqJp0-=7=HOF9sKGOHwsa7A7-V76b8tbsnra8Z2=-w@mail.gmail.com>
+	by oss.sgi.com (Postfix) with ESMTP id 82EE57F3F
+	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 00:51:09 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 635568F8039
+	for <xfs@oss.sgi.com>; Tue, 16 Jul 2013 22:51:09 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	Pumbu1El4qB5VmZB for <xfs@oss.sgi.com>;
+	Tue, 16 Jul 2013 22:51:07 -0700 (PDT)
+Date: Wed, 17 Jul 2013 15:51:03 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: splice vs execve lockdep trace.
+Message-ID: <20130717055103.GK11674@dastard>
+References: <CA+55aFyLbqJp0-=7=HOF9sKGOHwsa7A7-V76b8tbsnra8Z2=-w@mail.gmail.com>
 	<20130716023847.GA31481@redhat.com>
 	<CA+55aFxiGXht8+Dox=C2ezYYf1yMaLAzMYr40j=+peP8j5Ha6w@mail.gmail.com>
 	<20130716060351.GE11674@dastard> <20130716193332.GB3572@sgi.com>
@@ -23,10 +21,10 @@ References: <20130716015305.GB30569@redhat.com>
 	<20130716204335.GH11674@dastard>
 	<CA+55aFwHMQd-VDeTDh-gm3jyj+5+FSoAHOeU47mwU-mKtEj9RQ@mail.gmail.com>
 	<20130717040616.GI11674@dastard>
-Date: Tue, 16 Jul 2013 21:54:09 -0700
-Message-ID: <CA+55aFz5xw9Qi9Q6mwoCSud5eQh5u-QZ-xrY+TqgZPoKOgn6ew@mail.gmail.com>
-Subject: Re: splice vs execve lockdep trace.
-From: Linus Torvalds <torvalds@linux-foundation.org>
+	<CA+55aFz5xw9Qi9Q6mwoCSud5eQh5u-QZ-xrY+TqgZPoKOgn6ew@mail.gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <CA+55aFz5xw9Qi9Q6mwoCSud5eQh5u-QZ-xrY+TqgZPoKOgn6ew@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,50 +37,83 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
 Cc: Peter Zijlstra <peterz@infradead.org>, Oleg Nesterov <oleg@redhat.com>, Linux Kernel <linux-kernel@vger.kernel.org>, Ben Myers <bpm@sgi.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Dave Jones <davej@redhat.com>, xfs@oss.sgi.com
 
-On Tue, Jul 16, 2013 at 9:06 PM, Dave Chinner <david@fromorbit.com> wrote:
->
-> Right, and that's one of the biggest problems page based IO has - we
-> can't serialise it against other IO and other page cache
-> manipulation functions like hole punching. What happens when a
-> splice read or mmap page fault races with a hole punch? You get
-> stale data being left in the page cache because we can't serialise
-> the page read with the page cache invalidation and underlying extent
-> removal.
+On Tue, Jul 16, 2013 at 09:54:09PM -0700, Linus Torvalds wrote:
+> On Tue, Jul 16, 2013 at 9:06 PM, Dave Chinner <david@fromorbit.com> wrote:
+> >
+> > Right, and that's one of the biggest problems page based IO has - we
+> > can't serialise it against other IO and other page cache
+> > manipulation functions like hole punching. What happens when a
+> > splice read or mmap page fault races with a hole punch? You get
+> > stale data being left in the page cache because we can't serialise
+> > the page read with the page cache invalidation and underlying extent
+> > removal.
+> 
+> But Dave, that's *good*.
+> 
+> You call it "stale data".
+> 
+> I call it "the data was valid at some point".
 
-But Dave, that's *good*.
+Yes, that's true.
 
-You call it "stale data".
+But When i say "stale data" I mean that the data being returned
+might not have originally belonged to the underlying file you are
+reading.
 
-I call it "the data was valid at some point".
+> This is what "splice()" is fundamentally all about.
+> 
+> Think of it this way: even if you are 100% serialized during the
+> "splice()" operation, what do you think happens afterwards?
 
-This is what "splice()" is fundamentally all about.
+Same as for read(2) - I don't care. Indeed, the locking is not to
+protect what splice does "afterwards". It's for IO serialisation,
+not page cache serialisation.
 
-Think of it this way: even if you are 100% serialized during the
-"splice()" operation, what do you think happens afterwards?
+For example, splice read races with hole punch - after the page is
+invalidated, but before the blocks are punched out. So we get a
+new page, a mapping from the inode, get_blocks() returns valid disk
+mapping, we start an IO. it gets blocked in the elevator. Maybe it's
+been throttled because the process has used it's blkio quota.
+Whatever - the IO gets stuck on the dispatch queue.
 
-Seriously, think it through.
+Meanwhile, the holepunch runs the transaction to free the disk
+blocks, and then something else reallocates those blocks - maybe
+even the filesystem for new metadata. That then gets dispatched to
+disk. We now have two IOs pending for the same disk blocks....
 
-That data is in a kernel buffer - the pipe. The fact that it was
-serialized at the time of the original splice() doesn't make _one_
-whit of a difference, because after the splice is over, the data still
-sits around in that pipe buffer, and you're no longer serializing it.
-Somebody else truncating the file or punching a hole in the file DOES
-NOT MATTER. It's too late.
+What that means is that what the splice read returns is undefined.
+It *might* be the original data that belonged to the file, in which
+case we are good to go, but if the write wins the IO race then the
+splice read could return someone else's data or even filesystem
+metadata - that's what "stale data" means. Any way you look at it,
+that's a bad thing....
 
-In other words, trying to "protect" against that kind of race is stupid.
+> Seriously, think it through.
 
-You're missing the big picture because you're concentrating on the
-details. Look beyond what happens inside XFS, and think about the
-higher-level meaning of splice() itself.
+I have ;)
 
-So the only guarantee splice *should* give is entirely per-page. If
-you think it gives any other serialization, you're fundamentally
-wrong, because it *cannot*. See?
+> That data is in a kernel buffer - the pipe. The fact that it was
+> serialized at the time of the original splice() doesn't make _one_
+> whit of a difference, because after the splice is over, the data still
+> sits around in that pipe buffer, and you're no longer serializing it.
+> Somebody else truncating the file or punching a hole in the file DOES
+> NOT MATTER. It's too late.
 
-                     Linus
+Yes, I agree that once we have a page with valid data in it, we
+don't need serialisation for splice. Again, I'll stress that he
+serialisation is not for splice page cache manipulations but for
+the IO that splice may issue to initialise the pages it them
+manipulates....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
