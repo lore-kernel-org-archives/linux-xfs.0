@@ -1,32 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E5E1E29E19
-	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 10:47:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C5AF430408C
-	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 08:47:45 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id QVRE49sWddf3CevC (version=TLSv1
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 25ED829E1D
+	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 10:47:53 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A9237AC01B
+	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 08:47:52 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id zOEyPpTLlKLBvXgv (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 17 Jul 2013 08:47:44 -0700 (PDT)
-Received: from ucsinet22.oracle.com (ucsinet22.oracle.com [156.151.31.94])
-	by userp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
-	ESMTP id r6HFlh9L028218
+	Wed, 17 Jul 2013 08:47:51 -0700 (PDT)
+Received: from acsinet22.oracle.com (acsinet22.oracle.com [141.146.126.238])
+	by aserp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
+	ESMTP id r6HFloqJ025640
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 15:47:44 GMT
-Received: from userz7021.oracle.com (userz7021.oracle.com [156.151.31.85])
-	by ucsinet22.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r6HFlhKa002222
+	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 15:47:51 GMT
+Received: from aserz7022.oracle.com (aserz7022.oracle.com [141.146.126.231])
+	by acsinet22.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	r6HFlnHh014384
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 15:47:43 GMT
-Received: from abhmt112.oracle.com (abhmt112.oracle.com [141.146.116.64])
-	by userz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r6HFlgPf001913 for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 15:47:42 GMT
-Date: Wed, 17 Jul 2013 11:47:40 -0400
+	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 15:47:50 GMT
+Received: from abhmt107.oracle.com (abhmt107.oracle.com [141.146.116.59])
+	by aserz7022.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	r6HFlmwX014375 for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 15:47:48 GMT
+Date: Wed, 17 Jul 2013 11:47:46 -0400
 From: Dwight Engen <dwight.engen@oracle.com>
-Subject: [PATCH v4 5/7] xfs: create internal eofblocks structure with kuid_t
-	types
-Message-ID: <20130717114740.77f7bcee@oracle.com>
+Subject: [PATCH v4 6/7] xfs: check that eofblocks ioctl caller can write
+	matched inodes
+Message-ID: <20130717114746.4e133042@oracle.com>
 Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -42,126 +42,53 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Have eofblocks ioctl convert uid_t to kuid_t into internal structure.
-Update internal filter matching to compare ids with kuid_t types.
-
 Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
 ---
- fs/xfs/xfs_fs.h     |  2 +-
- fs/xfs/xfs_icache.c |  6 +++---
- fs/xfs/xfs_icache.h | 20 ++++++++++++++++++++
- fs/xfs/xfs_ioctl.c  | 15 +++++++++++++--
- 4 files changed, 37 insertions(+), 6 deletions(-)
+ fs/xfs/xfs_fs.h     | 1 +
+ fs/xfs/xfs_icache.c | 4 ++++
+ fs/xfs/xfs_ioctl.c  | 2 ++
+ 3 files changed, 7 insertions(+)
 
 diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
-index d046955..7eb4a5e 100644
+index 7eb4a5e..aee4b12 100644
 --- a/fs/xfs/xfs_fs.h
 +++ b/fs/xfs/xfs_fs.h
-@@ -344,7 +344,7 @@ typedef struct xfs_error_injection {
-  * Speculative preallocation trimming.
-  */
- #define XFS_EOFBLOCKS_VERSION		1
--struct xfs_eofblocks {
-+struct xfs_fs_eofblocks {
- 	__u32		eof_version;
- 	__u32		eof_flags;
- 	uid_t		eof_uid;
+@@ -361,6 +361,7 @@ struct xfs_fs_eofblocks {
+ #define XFS_EOF_FLAGS_GID		(1 << 2) /* filter by gid */
+ #define XFS_EOF_FLAGS_PRID		(1 << 3) /* filter by project id */
+ #define XFS_EOF_FLAGS_MINFILESIZE	(1 << 4) /* filter by min file size */
++#define XFS_EOF_FLAGS_PERM_CHECK	(1 << 5) /* check can write inode */
+ #define XFS_EOF_FLAGS_VALID	\
+ 	(XFS_EOF_FLAGS_SYNC |	\
+ 	 XFS_EOF_FLAGS_UID |	\
 diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 3f90e1c..d873ab9e 100644
+index d873ab9e..728283a 100644
 --- a/fs/xfs/xfs_icache.c
 +++ b/fs/xfs/xfs_icache.c
-@@ -619,7 +619,7 @@ restart:
+@@ -1247,6 +1247,10 @@ xfs_inode_free_eofblocks(
+ 		if (!xfs_inode_match_id(ip, eofb))
+ 			return 0;
  
- /*
-  * Background scanning to trim post-EOF preallocated space. This is queued
-- * based on the 'background_prealloc_discard_period' tunable (5m by default).
-+ * based on the 'speculative_prealloc_lifetime' tunable (5m by default).
-  */
- STATIC void
- xfs_queue_eofblocks(
-@@ -1204,11 +1204,11 @@ xfs_inode_match_id(
- 	struct xfs_eofblocks	*eofb)
- {
- 	if (eofb->eof_flags & XFS_EOF_FLAGS_UID &&
--	    ip->i_d.di_uid != eofb->eof_uid)
-+	    !uid_eq(VFS_I(ip)->i_uid, eofb->eof_uid))
- 		return 0;
- 
- 	if (eofb->eof_flags & XFS_EOF_FLAGS_GID &&
--	    ip->i_d.di_gid != eofb->eof_gid)
-+	    !gid_eq(VFS_I(ip)->i_gid, eofb->eof_gid))
- 		return 0;
- 
- 	if (eofb->eof_flags & XFS_EOF_FLAGS_PRID &&
-diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
-index a01afbb..6cce1e3 100644
---- a/fs/xfs/xfs_icache.h
-+++ b/fs/xfs/xfs_icache.h
-@@ -21,6 +21,14 @@
- struct xfs_mount;
- struct xfs_perag;
- 
-+struct xfs_eofblocks {
-+	__u32		eof_flags;
-+	kuid_t		eof_uid;
-+	kgid_t		eof_gid;
-+	prid_t		eof_prid;
-+	__u64		eof_min_file_size;
-+};
++		if (eofb->eof_flags & XFS_EOF_FLAGS_PERM_CHECK &&
++		    inode_permission(VFS_I(ip), MAY_WRITE))
++			return 0;
 +
- #define SYNC_WAIT		0x0001	/* wait for i/o to complete */
- #define SYNC_TRYLOCK		0x0002  /* only try to lock inodes */
- 
-@@ -49,4 +57,16 @@ int xfs_inode_ag_iterator_tag(struct xfs_mount *mp,
- 		int flags, void *args),
- 	int flags, void *args, int tag);
- 
-+static inline void
-+xfs_fs_eofblocks_to_internal(
-+	struct xfs_fs_eofblocks		*src,
-+	struct xfs_eofblocks		*dst)
-+{
-+	dst->eof_flags = src->eof_flags;
-+	dst->eof_prid = src->eof_prid;
-+	dst->eof_min_file_size = src->eof_min_file_size;
-+	dst->eof_uid = make_kuid(current_user_ns(), src->eof_uid);
-+	dst->eof_gid = make_kgid(current_user_ns(), src->eof_gid);
-+}
-+
- #endif
+ 		/* skip the inode if the file size is too small */
+ 		if (eofb->eof_flags & XFS_EOF_FLAGS_MINFILESIZE &&
+ 		    XFS_ISIZE(ip) < eofb->eof_min_file_size)
 diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 8edc780..abbbdcf 100644
+index abbbdcf..e63e359 100644
 --- a/fs/xfs/xfs_ioctl.c
 +++ b/fs/xfs/xfs_ioctl.c
-@@ -1610,7 +1610,8 @@ xfs_file_ioctl(
- 		return -error;
+@@ -1636,6 +1636,8 @@ xfs_file_ioctl(
+ 		    !gid_valid(keofb.eof_gid))
+ 			return XFS_ERROR(EINVAL);
  
- 	case XFS_IOC_FREE_EOFBLOCKS: {
--		struct xfs_eofblocks eofb;
-+		struct xfs_fs_eofblocks eofb;
-+		struct xfs_eofblocks keofb;
- 
- 		if (copy_from_user(&eofb, arg, sizeof(eofb)))
- 			return -XFS_ERROR(EFAULT);
-@@ -1625,7 +1626,17 @@ xfs_file_ioctl(
- 		    memchr_inv(eofb.pad64, 0, sizeof(eofb.pad64)))
- 			return -XFS_ERROR(EINVAL);
- 
--		error = xfs_icache_free_eofblocks(mp, &eofb);
-+		xfs_fs_eofblocks_to_internal(&eofb, &keofb);
++		keofb.eof_flags |= XFS_EOF_FLAGS_PERM_CHECK;
 +
-+		if (keofb.eof_flags & XFS_EOF_FLAGS_UID &&
-+		    !uid_valid(keofb.eof_uid))
-+			return XFS_ERROR(EINVAL);
-+
-+		if (keofb.eof_flags & XFS_EOF_FLAGS_GID &&
-+		    !gid_valid(keofb.eof_gid))
-+			return XFS_ERROR(EINVAL);
-+
-+		error = xfs_icache_free_eofblocks(mp, &keofb);
+ 		error = xfs_icache_free_eofblocks(mp, &keofb);
  		return -error;
  	}
- 
 -- 
 1.8.1.4
 
