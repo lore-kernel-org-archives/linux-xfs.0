@@ -1,32 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 7D2E129E1F
-	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 10:47:57 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5C2478F807A
-	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 08:47:57 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id jxYc8BGuoPjRQFyV (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 17 Jul 2013 08:47:56 -0700 (PDT)
-Received: from ucsinet21.oracle.com (ucsinet21.oracle.com [156.151.31.93])
-	by aserp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
-	ESMTP id r6HFlsBA025717
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 15:47:55 GMT
-Received: from aserz7022.oracle.com (aserz7022.oracle.com [141.146.126.231])
-	by ucsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r6HFlrvt002478
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 15:47:54 GMT
-Received: from abhmt107.oracle.com (abhmt107.oracle.com [141.146.116.59])
-	by aserz7022.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r6HFlrdV014680 for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 15:47:53 GMT
-Date: Wed, 17 Jul 2013 11:47:51 -0400
-From: Dwight Engen <dwight.engen@oracle.com>
-Subject: [PATCH v4 7/7] enable building user namespace with xfs
-Message-ID: <20130717114751.3b3a2196@oracle.com>
-Mime-Version: 1.0
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 076737F3F
+	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 18:40:54 -0500 (CDT)
+Date: Wed, 17 Jul 2013 18:40:49 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: splice vs execve lockdep trace.
+Message-ID: <20130717234049.GC3572@sgi.com>
+References: <CA+55aFxiGXht8+Dox=C2ezYYf1yMaLAzMYr40j=+peP8j5Ha6w@mail.gmail.com>
+	<20130716060351.GE11674@dastard> <20130716193332.GB3572@sgi.com>
+	<CA+55aFzTBUKStdZu1GhKoiYc2knybhiaUFr2By98QYew_STE=A@mail.gmail.com>
+	<20130716204335.GH11674@dastard>
+	<CA+55aFwHMQd-VDeTDh-gm3jyj+5+FSoAHOeU47mwU-mKtEj9RQ@mail.gmail.com>
+	<20130717040616.GI11674@dastard>
+	<CA+55aFz5xw9Qi9Q6mwoCSud5eQh5u-QZ-xrY+TqgZPoKOgn6ew@mail.gmail.com>
+	<20130717055103.GK11674@dastard>
+	<CA+55aFxdqzMY5VJoYaLmL=+=f2s1cbHHV-TjC3=taXpF-xov1w@mail.gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <CA+55aFxdqzMY5VJoYaLmL=+=f2s1cbHHV-TjC3=taXpF-xov1w@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,50 +30,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Peter Zijlstra <peterz@infradead.org>, Oleg Nesterov <oleg@redhat.com>, Linux Kernel <linux-kernel@vger.kernel.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Dave Jones <davej@redhat.com>, xfs@oss.sgi.com
 
-Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
----
- init/Kconfig | 15 +--------------
- 1 file changed, 1 insertion(+), 14 deletions(-)
+Linus,
 
-diff --git a/init/Kconfig b/init/Kconfig
-index 247084b..a380f12 100644
---- a/init/Kconfig
-+++ b/init/Kconfig
-@@ -1106,7 +1106,6 @@ config IPC_NS
- 
- config USER_NS
- 	bool "User namespace"
--	depends on UIDGID_CONVERTED
- 	select UIDGID_STRICT_TYPE_CHECKS
- 
- 	default n
-@@ -1140,21 +1139,9 @@ config NET_NS
- 
- endif # NAMESPACES
- 
--config UIDGID_CONVERTED
--	# True if all of the selected software conmponents are known
--	# to have uid_t and gid_t converted to kuid_t and kgid_t
--	# where appropriate and are otherwise safe to use with
--	# the user namespace.
--	bool
--	default y
--
--	# Filesystems
--	depends on XFS_FS = n
--
- config UIDGID_STRICT_TYPE_CHECKS
- 	bool "Require conversions between uid/gids and their internal representation"
--	depends on UIDGID_CONVERTED
--	default n
-+	default y
- 	help
- 	 While the nececessary conversions are being added to all subsystems this option allows
- 	 the code to continue to build for unconverted subsystems.
--- 
-1.8.1.4
+On Wed, Jul 17, 2013 at 09:03:11AM -0700, Linus Torvalds wrote:
+> On Tue, Jul 16, 2013 at 10:51 PM, Dave Chinner <david@fromorbit.com> wrote:
+> >
+> > But When i say "stale data" I mean that the data being returned
+> > might not have originally belonged to the underlying file you are
+> > reading.
+> 
+> We're still talking at cross purposes then.
+> 
+> How the hell do you handle mmap() and page faulting?
+
+__xfs_get_blocks serializes access to the block map with the i_lock on the
+xfs_inode.  This appears to be racy with respect to hole punching.
+
+> Because if you return *that* kind of stale data, than you're horribly
+> horribly buggy. And you cannot *possibly* blame
+> generic_file_splice_read() on that.
+
+Seems to me we'd need to hold the page lock on every page in the hole to
+provide exclusion with splice read and mmap faults, then remove the extents,
+and finally truncate the pages away.  I think at that point the reads could be
+done without the iolock.  Or, is there a different lock that could do the trick?
+
+Thanks,
+	Ben
 
 _______________________________________________
 xfs mailing list
