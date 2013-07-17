@@ -1,36 +1,38 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6171C7F3F
-	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 16:33:14 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 6674C7F3F
+	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 16:42:16 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 49A638F8049
-	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 14:33:10 -0700 (PDT)
-Received: from e8.ny.us.ibm.com (e8.ny.us.ibm.com [32.97.182.138]) by
-	cuda.sgi.com with ESMTP id ffRDlwpoK7YmKw8M (version=TLSv1
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 497BE30404E
+	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 14:42:16 -0700 (PDT)
+Received: from e7.ny.us.ibm.com (e7.ny.us.ibm.com [32.97.182.137]) by
+	cuda.sgi.com with ESMTP id 7Rc7SC1SfCwK3BQu (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 17 Jul 2013 14:33:09 -0700 (PDT)
+	Wed, 17 Jul 2013 14:42:15 -0700 (PDT)
 Received: from /spool/local
-	by e8.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	by e7.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
 	Violators will be prosecuted
 	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
-	Wed, 17 Jul 2013 22:33:08 +0100
-Received: from d01relay07.pok.ibm.com (d01relay07.pok.ibm.com [9.56.227.147])
-	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id BF49538C8039
-	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 17:33:04 -0400 (EDT)
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by d01relay07.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	r6HLWuTV25428162
-	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 17:32:58 -0400
-Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
-	by d01av01.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
-	r6HLWu50010338 for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 17:32:56 -0400
-Subject: Re: [PATCH] xfs: Fix a deadlock in xfs_log_commit_cil() code path
+	Wed, 17 Jul 2013 17:42:14 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 8FF936E8028
+	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 17:42:07 -0400 (EDT)
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	r6HLgBDX099756 for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 17:42:12 -0400
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id r6HLgBTu012640
+	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 15:42:11 -0600
+Subject: Re: [PATCH] xfs: Initialize all quota inodes to be NULLFSINO
 From: Chandra Seetharaman <sekharan@us.ibm.com>
-In-Reply-To: <20130716005455.GC3920@dastard>
-References: <1373928754.20769.41.camel@chandra-dt.ibm.com>
-	<20130716005455.GC3920@dastard>
-Date: Wed, 17 Jul 2013 16:32:55 -0500
-Message-ID: <1374096775.8941.3.camel@chandra-dt.ibm.com>
+In-Reply-To: <20130716002352.GA3920@dastard>
+References: <1373593665.20769.10.camel@chandra-dt.ibm.com>
+	<20130713021349.GH3438@dastard>
+	<1373928885.20769.42.camel@chandra-dt.ibm.com>
+	<20130716002352.GA3920@dastard>
+Date: Wed, 17 Jul 2013 16:42:10 -0500
+Message-ID: <1374097330.8941.12.camel@chandra-dt.ibm.com>
 Mime-Version: 1.0
 Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -48,85 +50,81 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: XFS mailing list <xfs@oss.sgi.com>
 
-On Tue, 2013-07-16 at 10:54 +1000, Dave Chinner wrote:
-> On Mon, Jul 15, 2013 at 05:52:34PM -0500, Chandra Seetharaman wrote:
-> > While testing and rearranging my pquota/gquota code, I stumbled
-> > on a xfs_shutdown() during a mount. But the mount just hung.
+On Tue, 2013-07-16 at 10:23 +1000, Dave Chinner wrote:
+> On Mon, Jul 15, 2013 at 05:54:45PM -0500, Chandra Seetharaman wrote:
+> > On Sat, 2013-07-13 at 12:13 +1000, Dave Chinner wrote:
+> > > On Thu, Jul 11, 2013 at 08:47:45PM -0500, Chandra Seetharaman wrote:
+> > > > 
+> > > > mkfs doesn't initialize the quota inodes to NULLFSINO as it
+> > > > does for the other internal inodes. This leads to check for two
+> > > > values (0 and NULLFSINO) to make sure if a quota inode is
+> > > > valid.
+> > > > 
+> > > > Solve that problem by initializing the values to NULLFSINO
+> > > > if they are 0.
+> > > > 
+> > > > Note that these values are not written back to on-disk
+> > > > superblock unless some quota is enabled on the filesystem.
+> > > > 
+> > > > Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+> > > > ---
+> > > >  fs/xfs/xfs_mount.c |   12 ++++++++++++
+> > > >  1 files changed, 12 insertions(+), 0 deletions(-)
+> > > > 
+> > > > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> > > > index 2b0ba35..8b95933 100644
+> > > > --- a/fs/xfs/xfs_mount.c
+> > > > +++ b/fs/xfs/xfs_mount.c
+> > > > @@ -572,6 +572,18 @@ out_unwind:
+> > > >  static void
+> > > >  xfs_sb_quota_from_disk(struct xfs_sb *sbp)
+> > > >  {
+> > > > +	/*
+> > > > +	 * older mkfs doesn't initialize quota inodes to NULLFSINO,
+> > > > +	 * which leads to two values for a quota inode to be invalid:
+> > > > +	 * 0 and NULLFSINO. Fix it.
+> > > > +	 */
+> > > > +	if (sbp->sb_uquotino == 0)
+> > > > +		sbp->sb_uquotino = NULLFSINO;
+> > > > +	if (sbp->sb_gquotino == 0)
+> > > > +		sbp->sb_gquotino = NULLFSINO;
+> > > > +	if (sbp->sb_pquotino == 0)
+> > > > +		sbp->sb_pquotino = NULLFSINO;
+> > > 
+> > > There coment needs to point out that this is changing the in-memory
+> > > superblock value right here, so we don't need to make changing
+> > > sb_pquotino dependent on the superblock having support for this
+> > > feature.
 > > 
-> > I debugged and found that there is a deadlock involving
-> > &log->l_cilp->xc_ctx_lock.
-> > 
-> > It is in a code path where &log->l_cilp->xc_ctx_lock is first
-> > acquired in read mode and some levels down the same semaphore
-> > is being acquired in write mode causing a deadlock.
-> > 
-> > This is the stack:
-> > xfs_log_commit_cil -> acquires &log->l_cilp->xc_ctx_lock in read mode
-> >   xlog_print_tic_res
-> >     xfs_force_shutdown
-> >       xfs_log_force_umount
-> >         xlog_cil_force
-> >           xlog_cil_force_lsn
-> >             xlog_cil_push_foreground
-> >               xlog_cil_push - tries to acquire same semaphore in write mode
-> > 
-> > This patch fixes the deadlock by not calling xfs_force_shutdown() while
-> > holding the semaphore, instead calling it after dropping teh semaphore.
-> > 
-> > Thanks to Dave for suggesting this solution.
-> > 
-> > Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-> > 
-> > ---
-> >  fs/xfs/xfs_log.c      |    6 +++---
-> >  fs/xfs/xfs_log_cil.c  |   10 ++++++----
-> >  fs/xfs/xfs_log_priv.h |    2 +-
-> >  fs/xfs/xfs_trans.c    |    2 +-
-> >  4 files changed, 11 insertions(+), 9 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> > index d852a2b..b9fa2da 100644
-> > --- a/fs/xfs/xfs_log.c
-> > +++ b/fs/xfs/xfs_log.c
-> > @@ -1837,7 +1837,7 @@ xlog_state_finish_copy(
-> >   * print out info relating to regions written which consume
-> >   * the reservation
-> >   */
-> > -void
-> > +int
-> >  xlog_print_tic_res(
-> >  	struct xfs_mount	*mp,
-> >  	struct xlog_ticket	*ticket)
-> > @@ -1941,7 +1941,7 @@ xlog_print_tic_res(
-> >  
-> >  	xfs_alert_tag(mp, XFS_PTAG_LOGRES,
-> >  		"xlog_write: reservation ran out. Need to up reservation");
-> > -	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-> > +	return EFSCORRUPTED;
+> > But, we are not just changing just for sb_pquotino, right ?
 > 
-> Note the "SHUTDOWN_CORRUPT_INCORE" reason given here....
+> Sure, but those other two fields are always present in the
+> superblock...
 > 
-> > diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> > index 35a2299..d96022f 100644
-> > --- a/fs/xfs/xfs_trans.c
-> > +++ b/fs/xfs/xfs_trans.c
-> > @@ -1547,7 +1547,7 @@ xfs_trans_commit(
-> >  	xfs_trans_apply_dquot_deltas(tp);
-> >  
-> >  	error = xfs_log_commit_cil(mp, tp, &commit_lsn, flags);
-> > -	if (error == ENOMEM) {
-> > +	if (error) {
-> >  		xfs_force_shutdown(mp, SHUTDOWN_LOG_IO_ERROR);
+> > Since we are changing all the fields independent of superblock
+> > supporting sb_pquotino, I thought the comment should be generic.
 > 
-> Which is different to the reason given here. The shutdown reason
-> should be maintained for this particular error....
+> So why is it safe to modify this when sb_pquotino isn't valid in the
+> superblock (i.e. v4 superblock) and the only valid on-disk value for
+> an unused section of the superblock is zero?
+> 
+> That's what the comment needs to explain.
 
-I see.
+How about this:
 
-Is it ok if the error reason is not propagated to the xlog_write() code
-path ?
+/*
+ * older mkfs doesn't initialize quota inodes to NULLFSINO
+ * This leads to in-core values having two different values
+ * for a quota inode to be invalid: 0 and NULLFSINO.
+ * Change it to a single value NULLFSINO.
+ *
+ * Note that this change affect only the in-core values. 
+ * These values are not written back to disk unless any
+ * quota information is written to the disk. Even in that
+ * case, sb_pquotino field is not written to disk unless
+ * the superblock supports pquotino.
+ */
 
-> 
 > Cheers,
 > 
 > Dave.
