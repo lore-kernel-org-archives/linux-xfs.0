@@ -1,33 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 741257F3F
-	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 11:03:18 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1ED91AC01D
-	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 09:03:15 -0700 (PDT)
-Received: from mail-ve0-f170.google.com (mail-ve0-f170.google.com
-	[209.85.128.170]) by cuda.sgi.com with ESMTP id
-	QemOAECs3znCD7jZ (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 17 Jul 2013 09:03:12 -0700 (PDT)
-Received: by mail-ve0-f170.google.com with SMTP id 14so1655190vea.29
-	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 09:03:11 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20130717055103.GK11674@dastard>
-References: <CA+55aFyLbqJp0-=7=HOF9sKGOHwsa7A7-V76b8tbsnra8Z2=-w@mail.gmail.com>
-	<20130716023847.GA31481@redhat.com>
-	<CA+55aFxiGXht8+Dox=C2ezYYf1yMaLAzMYr40j=+peP8j5Ha6w@mail.gmail.com>
-	<20130716060351.GE11674@dastard> <20130716193332.GB3572@sgi.com>
-	<CA+55aFzTBUKStdZu1GhKoiYc2knybhiaUFr2By98QYew_STE=A@mail.gmail.com>
-	<20130716204335.GH11674@dastard>
-	<CA+55aFwHMQd-VDeTDh-gm3jyj+5+FSoAHOeU47mwU-mKtEj9RQ@mail.gmail.com>
-	<20130717040616.GI11674@dastard>
-	<CA+55aFz5xw9Qi9Q6mwoCSud5eQh5u-QZ-xrY+TqgZPoKOgn6ew@mail.gmail.com>
-	<20130717055103.GK11674@dastard>
-Date: Wed, 17 Jul 2013 09:03:11 -0700
-Message-ID: <CA+55aFxdqzMY5VJoYaLmL=+=f2s1cbHHV-TjC3=taXpF-xov1w@mail.gmail.com>
-Subject: Re: splice vs execve lockdep trace.
-From: Linus Torvalds <torvalds@linux-foundation.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 3BC337F3F
+	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 10:47:26 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 29E8E304084
+	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 08:47:23 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id 7jPEBvei60eNRHik (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 17 Jul 2013 08:47:21 -0700 (PDT)
+Received: from ucsinet21.oracle.com (ucsinet21.oracle.com [156.151.31.93])
+	by aserp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
+	ESMTP id r6HFlIgx025093
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 15:47:19 GMT
+Received: from userz7022.oracle.com (userz7022.oracle.com [156.151.31.86])
+	by ucsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	r6HFlHHL000066
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 15:47:18 GMT
+Received: from abhmt102.oracle.com (abhmt102.oracle.com [141.146.116.54])
+	by userz7022.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	r6HFlHEA000838 for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 15:47:17 GMT
+Date: Wed, 17 Jul 2013 11:47:14 -0400
+From: Dwight Engen <dwight.engen@oracle.com>
+Subject: [PATCH v4 1/7] xfs: create wrappers for converting kuid_t to/from
+	uid_t
+Message-ID: <20130717114714.256c828d@oracle.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,24 +40,52 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Peter Zijlstra <peterz@infradead.org>, Oleg Nesterov <oleg@redhat.com>, Linux Kernel <linux-kernel@vger.kernel.org>, Ben Myers <bpm@sgi.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Dave Jones <davej@redhat.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Jul 16, 2013 at 10:51 PM, Dave Chinner <david@fromorbit.com> wrote:
->
-> But When i say "stale data" I mean that the data being returned
-> might not have originally belonged to the underlying file you are
-> reading.
+Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
+---
+ fs/xfs/xfs_linux.h | 26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
 
-We're still talking at cross purposes then.
-
-How the hell do you handle mmap() and page faulting?
-
-Because if you return *that* kind of stale data, than you're horribly
-horribly buggy. And you cannot *possibly* blame
-generic_file_splice_read() on that.
-
-                  Linus
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index 800f896..761e4c0 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -159,6 +159,32 @@
+ #define MAX(a,b)	(max(a,b))
+ #define howmany(x, y)	(((x)+((y)-1))/(y))
+ 
++/* Kernel uid/gid conversion. These are used to convert to/from the on disk
++ * uid_t/gid_t types to the kuid_t/kgid_t types that the kernel uses internally.
++ * The conversion here is type only, the value will remain the same since we
++ * are converting to the init_user_ns. The uid is later mapped to a particular
++ * user namespace value when crossing the kernel/user boundary.
++ */
++static inline __uint32_t xfs_kuid_to_uid(kuid_t uid)
++{
++	return from_kuid(&init_user_ns, uid);
++}
++
++static inline kuid_t xfs_uid_to_kuid(__uint32_t uid)
++{
++	return make_kuid(&init_user_ns, uid);
++}
++
++static inline __uint32_t xfs_kgid_to_gid(kgid_t gid)
++{
++	return from_kgid(&init_user_ns, gid);
++}
++
++static inline kgid_t xfs_gid_to_kgid(__uint32_t gid)
++{
++	return make_kgid(&init_user_ns, gid);
++}
++
+ /*
+  * Various platform dependent calls that don't fit anywhere else
+  */
+-- 
+1.8.1.4
 
 _______________________________________________
 xfs mailing list
