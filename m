@@ -1,32 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 25ED829E1D
-	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 10:47:53 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A9237AC01B
-	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 08:47:52 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 7D2E129E1F
+	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 10:47:57 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 5C2478F807A
+	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 08:47:57 -0700 (PDT)
 Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id zOEyPpTLlKLBvXgv (version=TLSv1
+	cuda.sgi.com with ESMTP id jxYc8BGuoPjRQFyV (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 17 Jul 2013 08:47:51 -0700 (PDT)
-Received: from acsinet22.oracle.com (acsinet22.oracle.com [141.146.126.238])
+	Wed, 17 Jul 2013 08:47:56 -0700 (PDT)
+Received: from ucsinet21.oracle.com (ucsinet21.oracle.com [156.151.31.93])
 	by aserp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
-	ESMTP id r6HFloqJ025640
+	ESMTP id r6HFlsBA025717
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 15:47:51 GMT
+	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 15:47:55 GMT
 Received: from aserz7022.oracle.com (aserz7022.oracle.com [141.146.126.231])
-	by acsinet22.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r6HFlnHh014384
+	by ucsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	r6HFlrvt002478
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 15:47:50 GMT
+	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 15:47:54 GMT
 Received: from abhmt107.oracle.com (abhmt107.oracle.com [141.146.116.59])
 	by aserz7022.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r6HFlmwX014375 for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 15:47:48 GMT
-Date: Wed, 17 Jul 2013 11:47:46 -0400
+	r6HFlrdV014680 for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 15:47:53 GMT
+Date: Wed, 17 Jul 2013 11:47:51 -0400
 From: Dwight Engen <dwight.engen@oracle.com>
-Subject: [PATCH v4 6/7] xfs: check that eofblocks ioctl caller can write
-	matched inodes
-Message-ID: <20130717114746.4e133042@oracle.com>
+Subject: [PATCH v4 7/7] enable building user namespace with xfs
+Message-ID: <20130717114751.3b3a2196@oracle.com>
 Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -44,51 +43,44 @@ To: xfs@oss.sgi.com
 
 Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
 ---
- fs/xfs/xfs_fs.h     | 1 +
- fs/xfs/xfs_icache.c | 4 ++++
- fs/xfs/xfs_ioctl.c  | 2 ++
- 3 files changed, 7 insertions(+)
+ init/Kconfig | 15 +--------------
+ 1 file changed, 1 insertion(+), 14 deletions(-)
 
-diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
-index 7eb4a5e..aee4b12 100644
---- a/fs/xfs/xfs_fs.h
-+++ b/fs/xfs/xfs_fs.h
-@@ -361,6 +361,7 @@ struct xfs_fs_eofblocks {
- #define XFS_EOF_FLAGS_GID		(1 << 2) /* filter by gid */
- #define XFS_EOF_FLAGS_PRID		(1 << 3) /* filter by project id */
- #define XFS_EOF_FLAGS_MINFILESIZE	(1 << 4) /* filter by min file size */
-+#define XFS_EOF_FLAGS_PERM_CHECK	(1 << 5) /* check can write inode */
- #define XFS_EOF_FLAGS_VALID	\
- 	(XFS_EOF_FLAGS_SYNC |	\
- 	 XFS_EOF_FLAGS_UID |	\
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index d873ab9e..728283a 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1247,6 +1247,10 @@ xfs_inode_free_eofblocks(
- 		if (!xfs_inode_match_id(ip, eofb))
- 			return 0;
+diff --git a/init/Kconfig b/init/Kconfig
+index 247084b..a380f12 100644
+--- a/init/Kconfig
++++ b/init/Kconfig
+@@ -1106,7 +1106,6 @@ config IPC_NS
  
-+		if (eofb->eof_flags & XFS_EOF_FLAGS_PERM_CHECK &&
-+		    inode_permission(VFS_I(ip), MAY_WRITE))
-+			return 0;
-+
- 		/* skip the inode if the file size is too small */
- 		if (eofb->eof_flags & XFS_EOF_FLAGS_MINFILESIZE &&
- 		    XFS_ISIZE(ip) < eofb->eof_min_file_size)
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index abbbdcf..e63e359 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1636,6 +1636,8 @@ xfs_file_ioctl(
- 		    !gid_valid(keofb.eof_gid))
- 			return XFS_ERROR(EINVAL);
+ config USER_NS
+ 	bool "User namespace"
+-	depends on UIDGID_CONVERTED
+ 	select UIDGID_STRICT_TYPE_CHECKS
  
-+		keofb.eof_flags |= XFS_EOF_FLAGS_PERM_CHECK;
-+
- 		error = xfs_icache_free_eofblocks(mp, &keofb);
- 		return -error;
- 	}
+ 	default n
+@@ -1140,21 +1139,9 @@ config NET_NS
+ 
+ endif # NAMESPACES
+ 
+-config UIDGID_CONVERTED
+-	# True if all of the selected software conmponents are known
+-	# to have uid_t and gid_t converted to kuid_t and kgid_t
+-	# where appropriate and are otherwise safe to use with
+-	# the user namespace.
+-	bool
+-	default y
+-
+-	# Filesystems
+-	depends on XFS_FS = n
+-
+ config UIDGID_STRICT_TYPE_CHECKS
+ 	bool "Require conversions between uid/gids and their internal representation"
+-	depends on UIDGID_CONVERTED
+-	default n
++	default y
+ 	help
+ 	 While the nececessary conversions are being added to all subsystems this option allows
+ 	 the code to continue to build for unconverted subsystems.
 -- 
 1.8.1.4
 
