@@ -1,40 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 6674C7F3F
-	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 16:42:16 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 497BE30404E
-	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 14:42:16 -0700 (PDT)
-Received: from e7.ny.us.ibm.com (e7.ny.us.ibm.com [32.97.182.137]) by
-	cuda.sgi.com with ESMTP id 7Rc7SC1SfCwK3BQu (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 17 Jul 2013 14:42:15 -0700 (PDT)
-Received: from /spool/local
-	by e7.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
-	Violators will be prosecuted
-	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
-	Wed, 17 Jul 2013 17:42:14 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 8FF936E8028
-	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 17:42:07 -0400 (EDT)
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	r6HLgBDX099756 for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 17:42:12 -0400
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
-	id r6HLgBTu012640
-	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 15:42:11 -0600
-Subject: Re: [PATCH] xfs: Initialize all quota inodes to be NULLFSINO
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-In-Reply-To: <20130716002352.GA3920@dastard>
-References: <1373593665.20769.10.camel@chandra-dt.ibm.com>
-	<20130713021349.GH3438@dastard>
-	<1373928885.20769.42.camel@chandra-dt.ibm.com>
-	<20130716002352.GA3920@dastard>
-Date: Wed, 17 Jul 2013 16:42:10 -0500
-Message-ID: <1374097330.8941.12.camel@chandra-dt.ibm.com>
-Mime-Version: 1.0
-Reply-To: sekharan@us.ibm.com
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id F223C7F3F
+	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 22:18:05 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8DEF8AC005
+	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 20:18:02 -0700 (PDT)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	CqRnPJVIVLha8ySH for <xfs@oss.sgi.com>;
+	Wed, 17 Jul 2013 20:18:01 -0700 (PDT)
+Date: Thu, 18 Jul 2013 13:17:59 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: splice vs execve lockdep trace.
+Message-ID: <20130718031759.GN11674@dastard>
+References: <CA+55aFxiGXht8+Dox=C2ezYYf1yMaLAzMYr40j=+peP8j5Ha6w@mail.gmail.com>
+	<20130716060351.GE11674@dastard> <20130716193332.GB3572@sgi.com>
+	<CA+55aFzTBUKStdZu1GhKoiYc2knybhiaUFr2By98QYew_STE=A@mail.gmail.com>
+	<20130716204335.GH11674@dastard>
+	<CA+55aFwHMQd-VDeTDh-gm3jyj+5+FSoAHOeU47mwU-mKtEj9RQ@mail.gmail.com>
+	<20130717040616.GI11674@dastard>
+	<CA+55aFz5xw9Qi9Q6mwoCSud5eQh5u-QZ-xrY+TqgZPoKOgn6ew@mail.gmail.com>
+	<20130717055103.GK11674@dastard>
+	<CA+55aFxdqzMY5VJoYaLmL=+=f2s1cbHHV-TjC3=taXpF-xov1w@mail.gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <CA+55aFxdqzMY5VJoYaLmL=+=f2s1cbHHV-TjC3=taXpF-xov1w@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -47,88 +37,74 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: XFS mailing list <xfs@oss.sgi.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Peter Zijlstra <peterz@infradead.org>, Oleg Nesterov <oleg@redhat.com>, Linux Kernel <linux-kernel@vger.kernel.org>, Ben Myers <bpm@sgi.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Dave Jones <davej@redhat.com>, xfs@oss.sgi.com
 
-On Tue, 2013-07-16 at 10:23 +1000, Dave Chinner wrote:
-> On Mon, Jul 15, 2013 at 05:54:45PM -0500, Chandra Seetharaman wrote:
-> > On Sat, 2013-07-13 at 12:13 +1000, Dave Chinner wrote:
-> > > On Thu, Jul 11, 2013 at 08:47:45PM -0500, Chandra Seetharaman wrote:
-> > > > 
-> > > > mkfs doesn't initialize the quota inodes to NULLFSINO as it
-> > > > does for the other internal inodes. This leads to check for two
-> > > > values (0 and NULLFSINO) to make sure if a quota inode is
-> > > > valid.
-> > > > 
-> > > > Solve that problem by initializing the values to NULLFSINO
-> > > > if they are 0.
-> > > > 
-> > > > Note that these values are not written back to on-disk
-> > > > superblock unless some quota is enabled on the filesystem.
-> > > > 
-> > > > Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-> > > > ---
-> > > >  fs/xfs/xfs_mount.c |   12 ++++++++++++
-> > > >  1 files changed, 12 insertions(+), 0 deletions(-)
-> > > > 
-> > > > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> > > > index 2b0ba35..8b95933 100644
-> > > > --- a/fs/xfs/xfs_mount.c
-> > > > +++ b/fs/xfs/xfs_mount.c
-> > > > @@ -572,6 +572,18 @@ out_unwind:
-> > > >  static void
-> > > >  xfs_sb_quota_from_disk(struct xfs_sb *sbp)
-> > > >  {
-> > > > +	/*
-> > > > +	 * older mkfs doesn't initialize quota inodes to NULLFSINO,
-> > > > +	 * which leads to two values for a quota inode to be invalid:
-> > > > +	 * 0 and NULLFSINO. Fix it.
-> > > > +	 */
-> > > > +	if (sbp->sb_uquotino == 0)
-> > > > +		sbp->sb_uquotino = NULLFSINO;
-> > > > +	if (sbp->sb_gquotino == 0)
-> > > > +		sbp->sb_gquotino = NULLFSINO;
-> > > > +	if (sbp->sb_pquotino == 0)
-> > > > +		sbp->sb_pquotino = NULLFSINO;
-> > > 
-> > > There coment needs to point out that this is changing the in-memory
-> > > superblock value right here, so we don't need to make changing
-> > > sb_pquotino dependent on the superblock having support for this
-> > > feature.
-> > 
-> > But, we are not just changing just for sb_pquotino, right ?
+On Wed, Jul 17, 2013 at 09:03:11AM -0700, Linus Torvalds wrote:
+> On Tue, Jul 16, 2013 at 10:51 PM, Dave Chinner <david@fromorbit.com> wrote:
+> >
+> > But When i say "stale data" I mean that the data being returned
+> > might not have originally belonged to the underlying file you are
+> > reading.
 > 
-> Sure, but those other two fields are always present in the
-> superblock...
+> We're still talking at cross purposes then.
 > 
-> > Since we are changing all the fields independent of superblock
-> > supporting sb_pquotino, I thought the comment should be generic.
-> 
-> So why is it safe to modify this when sb_pquotino isn't valid in the
-> superblock (i.e. v4 superblock) and the only valid on-disk value for
-> an unused section of the superblock is zero?
-> 
-> That's what the comment needs to explain.
+> How the hell do you handle mmap() and page faulting?
 
-How about this:
+We cross our fingers and hope. Always have. Races are rare as
+historically there have been only a handful of applications that do
+the necessary operations to trigger them. However, with holepunch
+now a generic fallocate() operation....
 
-/*
- * older mkfs doesn't initialize quota inodes to NULLFSINO
- * This leads to in-core values having two different values
- * for a quota inode to be invalid: 0 and NULLFSINO.
- * Change it to a single value NULLFSINO.
- *
- * Note that this change affect only the in-core values. 
- * These values are not written back to disk unless any
- * quota information is written to the disk. Even in that
- * case, sb_pquotino field is not written to disk unless
- * the superblock supports pquotino.
- */
+> Because if you return *that* kind of stale data, than you're horribly
+> horribly buggy. And you cannot *possibly* blame
+> generic_file_splice_read() on that.
 
-> Cheers,
-> 
-> Dave.
+Right, it's horribly buggy and I'm not blaming
+generic_file_splice_read().
 
+I'm saying that the page cache architecture does not providing
+mechanisms to avoid the problem. i.e. that we can't synchronise
+multi-page operations against a single page operation that only uses
+the page lock for serialisation without some form of filesystem
+specific locking. And that the i_mutex/i_iolock/mmap_sem inversion
+problems essentially prevent us from beign able to fix it in a
+filesystem specific manner.
+
+We've hacked around this read vs invalidation race condition for
+truncate() by putting ordered operations in place to avoid
+refaulting after invalidation by read operations. i.e. truncate was
+optimised to avoid extra locking, but now the realisation is that
+truncate is just a degenerate case of hole punching and that hole
+punching cannot make use of the same "beyond EOF" optimisations to
+avoid race conditions with other IO.
+
+We (XFS developers) have known about this for years, but we've
+always been told when it's been raised that it's "just a wacky XFS
+problem".  Now that other filesystems are actually implementing the
+same functionality that XFS has had since day zero, they are also
+seeing the same architectural deficiencies in the generic code. i.e.
+they are not actually "whacky XFS problems".  That's why we were
+talking about a range-locking solution to this problem at LSF/MM
+this year - to find a generic solution to the issue...
+
+FWIW, this problem is not just associated with splice reads - it's a
+problem for the direct IO code, too. The direct IO layer has lots of
+hacky invalidation code that tries to work around the fact that
+mmap() page faults cannot be synchronised against direct IO in
+progress. Hence it invalidates caches before and after direct IO is
+done in the hope that we don't have a page fault that races and
+leaves us with out-of-date data being exposed to userspace via mmap.
+Indeed, we have a regression test that demonstrates how this often
+fails - xfstests:generic/263 uses fsx with direct IO and mmap on the
+same file and will fail with data corruption on XFS.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
