@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A8F037F4E
-	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 06:09:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 381D5AC00A
-	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 04:09:39 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id AD4B87F4E
+	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 06:13:11 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9D5DE304051
+	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 04:13:11 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	6HLBzMXBSdcSbsaB for <xfs@oss.sgi.com>;
-	Thu, 18 Jul 2013 04:09:37 -0700 (PDT)
-Date: Thu, 18 Jul 2013 21:09:31 +1000
+	VHG2o0CaooYGxGCR for <xfs@oss.sgi.com>;
+	Thu, 18 Jul 2013 04:13:09 -0700 (PDT)
+Date: Thu, 18 Jul 2013 21:13:06 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [regression 3.11-rc1] unmount hanging purging quotas
-Message-ID: <20130718110931.GA13468@dastard>
+Subject: Re: xfs_growfs: XFS_IOC_FSGROWFSDATA xfsctl failed: Structure needs
+	cleaning
+Message-ID: <20130718111306.GB13468@dastard>
+References: <20130718110437.GA8090@EIS>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <20130718110437.GA8090@EIS>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,45 +30,74 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Chandra Seetharaman <sekharan@us.ibm.com>
+To: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+Cc: xfs@oss.sgi.com
 
-Hi Chandra,
+On Thu, Jul 18, 2013 at 01:04:37PM +0200, Andreas Klauer wrote:
+> Hi,
+> 
+> having some problems growing XFS, using Linux 3.10.1 x86_64, xfsprogs 3.1.11.
+> 
+> The filesystem is on LVM, and I made the volume larger. I did this several 
+> times before and it never causes any issue.
+> 
+> This time, trying to grow the filesystem failed and it seemed corrupt. 
+> xfs_repair restored its original size somehow (even though shrinking is 
+> not supposed to be possible?). Unfortunately I did not save the output 
+> of the commands the first time around, but the issue is reproducable 
+> in its current state.
+> 
+> If anyone could tell me what I'm doing wrong?
+> 
+> # mount
+> > /dev/mapper/lvm-xfs on /mnt/xfs type xfs (rw)
+> 
+> # df -h
+> > /dev/mapper/lvm-xfs          2.0T  1.9T  102G  95% /mnt/xfs
+> 
+> # blockdev --getsize64 /dev/lvm/xfs
+> > 2306397437952
+> 
+> # xfs_info /mnt/xfs
+> > meta-data=/dev/mapper/lvm-xfs    isize=256    agcount=16, agsize=32768000 blks
+> >          =                       sectsz=4096  attr=2
+> > data     =                       bsize=4096   blocks=524288000, imaxpct=25
+> >          =                       sunit=0      swidth=0 blks
+> > naming   =version 2              bsize=4096   ascii-ci=0
+> > log      =internal               bsize=4096   blocks=32768, version=2
+> >          =                       sectsz=4096  sunit=1 blks, lazy-count=1
+> > realtime =none                   extsz=4096   blocks=0, rtextents=0
+> 
+> # xfs_growfs /mnt/xfs
+> > meta-data=/dev/mapper/lvm-xfs    isize=256    agcount=16, agsize=32768000 blks
+> >          =                       sectsz=4096  attr=2
+> > data     =                       bsize=4096   blocks=524288000, imaxpct=25
+> >          =                       sunit=0      swidth=0 blks
+> > naming   =version 2              bsize=4096   ascii-ci=0
+> > log      =internal               bsize=4096   blocks=32768, version=2
+> >          =                       sectsz=4096  sunit=1 blks, lazy-count=1
+> > realtime =none                   extsz=4096   blocks=0, rtextents=0
+> > xfs_growfs: XFS_IOC_FSGROWFSDATA xfsctl failed: Structure needs cleaning
+> > data blocks changed from 524288000 to 563085312
 
-I'm seeing xfs/050 hanging on a current oss-xfs master tree during
-unmount getting stuck purging dquots. it basically loops there
-forever. Have you seen anything like this recently?
+What's in dmesg?
 
-# echo w > /proc/sysrq-trigger 
-[ 5179.063824] SysRq : Show Blocked State
-[ 5179.064895]   task                        PC stack   pid father
-[ 5179.066459] umount          D ffff88007fd13280  5592 27782  26800 0x00000000
-[ 5179.067478]  ffff88007b747b98 0000000000000046 ffff8800524e4500 ffff88007b747fd8
-[ 5179.067478]  ffff88007b747fd8 ffff88007b747fd8 ffff88007c83dc00 ffff8800524e4500
-[ 5179.067478]  ffff88007b747b88 ffff88007b747bd0 ffff88007c858000 0000000100129cb6
-[ 5179.067478] Call Trace:
-[ 5179.067478]  [<ffffffff81c53319>] schedule+0x29/0x70
-[ 5179.067478]  [<ffffffff81c4fa3b>] schedule_timeout+0x10b/0x1f0
-[ 5179.067478]  [<ffffffff8109a1e0>] ? usleep_range+0x50/0x50
-[ 5179.067478]  [<ffffffff814d8c20>] ? xfs_qm_need_dqattach+0x80/0x80
-[ 5179.067478]  [<ffffffff81c4fb3e>] schedule_timeout_uninterruptible+0x1e/0x20
-[ 5179.067478]  [<ffffffff814d911b>] xfs_qm_dquot_walk+0x19b/0x1b0
-[ 5179.067478]  [<ffffffff81c54934>] ? _raw_spin_lock_irqsave+0x24/0x30
-[ 5179.067478]  [<ffffffff8174c3ad>] ? do_raw_spin_unlock+0x5d/0xb0
-[ 5179.067478]  [<ffffffff810a77e4>] ? flush_work+0x34/0x160
-[ 5179.067478]  [<ffffffff8109b354>] ? del_timer+0x54/0x70
-[ 5179.067478]  [<ffffffff810a9461>] ? try_to_grab_pending+0xd1/0x190
-[ 5179.067478]  [<ffffffff814d9170>] xfs_qm_dqpurge_all+0x40/0x90
-[ 5179.067478]  [<ffffffff814d9d65>] xfs_qm_unmount+0x25/0x40
-[ 5179.067478]  [<ffffffff8147065c>] xfs_unmountfs+0x7c/0x120
-[ 5179.067478]  [<ffffffff814735c5>] xfs_fs_put_super+0x25/0x60
-[ 5179.067478]  [<ffffffff81191aa1>] generic_shutdown_super+0x61/0xf0
-[ 5179.067478]  [<ffffffff81191b60>] kill_block_super+0x30/0x80
-[ 5179.067478]  [<ffffffff81191fdd>] deactivate_locked_super+0x4d/0x80
-[ 5179.067478]  [<ffffffff81192b8e>] deactivate_super+0x4e/0x70
-[ 5179.067478]  [<ffffffff811adaf1>] mntput_no_expire+0x101/0x160
-[ 5179.067478]  [<ffffffff811aec9c>] SyS_umount+0x9c/0x3a0
-[ 5179.067478]  [<ffffffff81c5d419>] system_call_fastpath+0x16/0x1b
+> > Phase 2 - using internal log
+> >         - zero log...
+> >         - scan filesystem freespace and inode maps...
+> > primary/secondary superblock 4 conflict - AG superblock geometry info conflicts with filesystem geometry
+> > reset bad sb for ag 4
+> > primary/secondary superblock 2 conflict - AG superblock geometry info conflicts with filesystem geometry
+> > reset bad sb for ag 2
+> > primary/secondary superblock 1 conflict - AG superblock geometry info conflicts with filesystem geometry
+> > reset bad sb for ag 1
+> > primary/secondary superblock 3 conflict - AG superblock geometry info conflicts with filesystem geometry
+> > reset bad sb for ag 3
+> > sb_icount 0, counted 8704
+> > sb_ifree 0, counted 854
+> > sb_fdblocks 0, counted 26540703
+
+So it looks like it got to AG 5 and failed for some reason....
 
 Cheers,
 
