@@ -1,36 +1,39 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4E55B7F3F
-	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 11:33:56 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 420DD30405F
-	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 09:33:53 -0700 (PDT)
-Received: from e9.ny.us.ibm.com (e9.ny.us.ibm.com [32.97.182.139]) by
-	cuda.sgi.com with ESMTP id EZVgFeNrtkPv5Mgk (version=TLSv1
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 96CCC7F4E
+	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 14:55:17 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 58A998F8040
+	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 12:55:13 -0700 (PDT)
+Received: from e37.co.us.ibm.com (e37.co.us.ibm.com [32.97.110.158]) by
+	cuda.sgi.com with ESMTP id drTtfcHKRKYhCv3c (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 18 Jul 2013 09:33:49 -0700 (PDT)
+	Thu, 18 Jul 2013 12:55:12 -0700 (PDT)
 Received: from /spool/local
-	by e9.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	by e37.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
 	Violators will be prosecuted
 	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
-	Thu, 18 Jul 2013 12:33:48 -0400
-Received: from d01relay06.pok.ibm.com (d01relay06.pok.ibm.com [9.56.227.116])
-	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 531496E804B
-	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 12:33:41 -0400 (EDT)
-Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
-	by d01relay06.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	r6IGXjoP39452780
-	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 12:33:46 -0400
-Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av01.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
-	id r6IGXLcU010269
-	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 10:33:21 -0600
-Subject: Re: [regression 3.11-rc1] unmount hanging purging quotas
+	Thu, 18 Jul 2013 13:55:12 -0600
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com
+	[9.17.195.106])
+	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id 449EB19D806C
+	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 13:54:45 -0600 (MDT)
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	r6IJsmUV348564 for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 13:54:49 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id r6IJsknW007339
+	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 13:54:46 -0600
+Subject: Re: [PATCH] xfs: Fix a deadlock in xfs_log_commit_cil() code path
 From: Chandra Seetharaman <sekharan@us.ibm.com>
-In-Reply-To: <20130718110931.GA13468@dastard>
-References: <20130718110931.GA13468@dastard>
-Date: Thu, 18 Jul 2013 11:33:20 -0500
-Message-ID: <1374165200.8941.187.camel@chandra-dt.ibm.com>
+In-Reply-To: <20130718022451.GM11674@dastard>
+References: <1373928754.20769.41.camel@chandra-dt.ibm.com>
+	<20130716005455.GC3920@dastard>
+	<1374096775.8941.3.camel@chandra-dt.ibm.com>
+	<20130718022451.GM11674@dastard>
+Date: Thu, 18 Jul 2013 14:54:45 -0500
+Message-ID: <1374177285.8941.477.camel@chandra-dt.ibm.com>
 Mime-Version: 1.0
 Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -46,73 +49,123 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+Cc: XFS mailing list <xfs@oss.sgi.com>
 
-On Thu, 2013-07-18 at 21:09 +1000, Dave Chinner wrote:
-
-Hi Dave,
-
-I am not able to reproduce the problem with both oss-master and
-linus-master. I ran xfs/050 in a loop for 100 times with both the
-kernels, and they ran fine.
-
-Now I am running the whole suite.
-
-top of oss-master(git://oss.sgi.com/xfs/xfs):
----
-commit ad81f0545ef01ea651886dddac4bef6cec930092
-Author: Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Sun Jul 14 15:18:27 2013 -0700
-
-    Linux 3.11-rc1
------
-
-top of
-linus-master(git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git)
----
-commit 61f98b0fca802d7e0191072606519e2230a6226d
-Merge: c0d15cc b2781e1
-Author: Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Wed Jul 17 13:43:55 2013 -0700
----
-
-Chandra
-> Hi Chandra,
+On Thu, 2013-07-18 at 12:24 +1000, Dave Chinner wrote:
+> On Wed, Jul 17, 2013 at 04:32:55PM -0500, Chandra Seetharaman wrote:
+> > On Tue, 2013-07-16 at 10:54 +1000, Dave Chinner wrote:
+> > > On Mon, Jul 15, 2013 at 05:52:34PM -0500, Chandra Seetharaman wrote:
+> > > > While testing and rearranging my pquota/gquota code, I stumbled
+> > > > on a xfs_shutdown() during a mount. But the mount just hung.
+> > > > 
+> > > > I debugged and found that there is a deadlock involving
+> > > > &log->l_cilp->xc_ctx_lock.
+> > > > 
+> > > > It is in a code path where &log->l_cilp->xc_ctx_lock is first
+> > > > acquired in read mode and some levels down the same semaphore
+> > > > is being acquired in write mode causing a deadlock.
+> > > > 
+> > > > This is the stack:
+> > > > xfs_log_commit_cil -> acquires &log->l_cilp->xc_ctx_lock in read mode
+> > > >   xlog_print_tic_res
+> > > >     xfs_force_shutdown
+> > > >       xfs_log_force_umount
+> > > >         xlog_cil_force
+> > > >           xlog_cil_force_lsn
+> > > >             xlog_cil_push_foreground
+> > > >               xlog_cil_push - tries to acquire same semaphore in write mode
+> > > > 
+> > > > This patch fixes the deadlock by not calling xfs_force_shutdown() while
+> > > > holding the semaphore, instead calling it after dropping teh semaphore.
+> > > > 
+> > > > Thanks to Dave for suggesting this solution.
+> > > > 
+> > > > Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+> > > > 
+> > > > ---
+> > > >  fs/xfs/xfs_log.c      |    6 +++---
+> > > >  fs/xfs/xfs_log_cil.c  |   10 ++++++----
+> > > >  fs/xfs/xfs_log_priv.h |    2 +-
+> > > >  fs/xfs/xfs_trans.c    |    2 +-
+> > > >  4 files changed, 11 insertions(+), 9 deletions(-)
+> > > > 
+> > > > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> > > > index d852a2b..b9fa2da 100644
+> > > > --- a/fs/xfs/xfs_log.c
+> > > > +++ b/fs/xfs/xfs_log.c
+> > > > @@ -1837,7 +1837,7 @@ xlog_state_finish_copy(
+> > > >   * print out info relating to regions written which consume
+> > > >   * the reservation
+> > > >   */
+> > > > -void
+> > > > +int
+> > > >  xlog_print_tic_res(
+> > > >  	struct xfs_mount	*mp,
+> > > >  	struct xlog_ticket	*ticket)
+> > > > @@ -1941,7 +1941,7 @@ xlog_print_tic_res(
+> > > >  
+> > > >  	xfs_alert_tag(mp, XFS_PTAG_LOGRES,
+> > > >  		"xlog_write: reservation ran out. Need to up reservation");
+> > > > -	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+> > > > +	return EFSCORRUPTED;
+> > > 
+> > > Note the "SHUTDOWN_CORRUPT_INCORE" reason given here....
+> > > 
+> > > > diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> > > > index 35a2299..d96022f 100644
+> > > > --- a/fs/xfs/xfs_trans.c
+> > > > +++ b/fs/xfs/xfs_trans.c
+> > > > @@ -1547,7 +1547,7 @@ xfs_trans_commit(
+> > > >  	xfs_trans_apply_dquot_deltas(tp);
+> > > >  
+> > > >  	error = xfs_log_commit_cil(mp, tp, &commit_lsn, flags);
+> > > > -	if (error == ENOMEM) {
+> > > > +	if (error) {
+> > > >  		xfs_force_shutdown(mp, SHUTDOWN_LOG_IO_ERROR);
+> > > 
+> > > Which is different to the reason given here. The shutdown reason
+> > > should be maintained for this particular error....
+> > 
+> > I see.
 > 
-> I'm seeing xfs/050 hanging on a current oss-xfs master tree during
-> unmount getting stuck purging dquots. it basically loops there
-> forever. Have you seen anything like this recently?
+> What I mean is that the code in xfs_trans_commit() should do
+> something like:
 > 
-> # echo w > /proc/sysrq-trigger 
-> [ 5179.063824] SysRq : Show Blocked State
-> [ 5179.064895]   task                        PC stack   pid father
-> [ 5179.066459] umount          D ffff88007fd13280  5592 27782  26800 0x00000000
-> [ 5179.067478]  ffff88007b747b98 0000000000000046 ffff8800524e4500 ffff88007b747fd8
-> [ 5179.067478]  ffff88007b747fd8 ffff88007b747fd8 ffff88007c83dc00 ffff8800524e4500
-> [ 5179.067478]  ffff88007b747b88 ffff88007b747bd0 ffff88007c858000 0000000100129cb6
-> [ 5179.067478] Call Trace:
-> [ 5179.067478]  [<ffffffff81c53319>] schedule+0x29/0x70
-> [ 5179.067478]  [<ffffffff81c4fa3b>] schedule_timeout+0x10b/0x1f0
-> [ 5179.067478]  [<ffffffff8109a1e0>] ? usleep_range+0x50/0x50
-> [ 5179.067478]  [<ffffffff814d8c20>] ? xfs_qm_need_dqattach+0x80/0x80
-> [ 5179.067478]  [<ffffffff81c4fb3e>] schedule_timeout_uninterruptible+0x1e/0x20
-> [ 5179.067478]  [<ffffffff814d911b>] xfs_qm_dquot_walk+0x19b/0x1b0
-> [ 5179.067478]  [<ffffffff81c54934>] ? _raw_spin_lock_irqsave+0x24/0x30
-> [ 5179.067478]  [<ffffffff8174c3ad>] ? do_raw_spin_unlock+0x5d/0xb0
-> [ 5179.067478]  [<ffffffff810a77e4>] ? flush_work+0x34/0x160
-> [ 5179.067478]  [<ffffffff8109b354>] ? del_timer+0x54/0x70
-> [ 5179.067478]  [<ffffffff810a9461>] ? try_to_grab_pending+0xd1/0x190
-> [ 5179.067478]  [<ffffffff814d9170>] xfs_qm_dqpurge_all+0x40/0x90
-> [ 5179.067478]  [<ffffffff814d9d65>] xfs_qm_unmount+0x25/0x40
-> [ 5179.067478]  [<ffffffff8147065c>] xfs_unmountfs+0x7c/0x120
-> [ 5179.067478]  [<ffffffff814735c5>] xfs_fs_put_super+0x25/0x60
-> [ 5179.067478]  [<ffffffff81191aa1>] generic_shutdown_super+0x61/0xf0
-> [ 5179.067478]  [<ffffffff81191b60>] kill_block_super+0x30/0x80
-> [ 5179.067478]  [<ffffffff81191fdd>] deactivate_locked_super+0x4d/0x80
-> [ 5179.067478]  [<ffffffff81192b8e>] deactivate_super+0x4e/0x70
-> [ 5179.067478]  [<ffffffff811adaf1>] mntput_no_expire+0x101/0x160
-> [ 5179.067478]  [<ffffffff811aec9c>] SyS_umount+0x9c/0x3a0
-> [ 5179.067478]  [<ffffffff81c5d419>] system_call_fastpath+0x16/0x1b
+> 	if (error) {
+> 		int reason = SHUTDOWN_LOG_IO_ERROR;
+> 		if (error == EFSCORRUPTED)
+> 			reason = SHUTDOWN_CORRUPT_INCORE;
+> 		xfs_force_shutdown(mp, reason);
+> 		....
+> 	}
+> 
+> > 
+> > Is it ok if the error reason is not propagated to the xlog_write() code
+> > path ?
+> 
+> No - if we get a transaction overflow, we need to trigger a
+> shutdown. That means the error needs to be caught by the
+> xlog_write() path an the filesystem shut down.
+> 
+> Looking at it more deeply, you could probably just change the
+> shutdown in xlog_print_tic_res() to use SHUTDOWN_LOG_IO_ERROR and
+> the problem is solved as the shutdown won't try to force the
+> log. i.e. this whole problem will go away with that one line fix...
+
+I am confused.
+
+In the previous response you mentioned that we have to propagate the
+reason as-is in xfs_trans_commit() path. But, the new suggestion you are
+making will change the behavior of all paths and they will not enter
+xfs_log_force_umount().
+
+Besides, IIUC, XFS_MOUNT_FS_SHUTDOWN is set only in
+xfs_log_force_umount(), so the very first time we enter
+xlog_print_tic_res(), even with SHUTDOWN_LOG_IO_ERROR we will call
+xfs_log_force_umount() when can lead to the deadlock we are trying to
+avoid.
+
+  
 > 
 > Cheers,
 > 
