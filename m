@@ -1,24 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 061697F4E
-	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 06:04:44 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id EA4B9304051
-	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 04:04:40 -0700 (PDT)
-Received: from smtprelay05.ispgateway.de (smtprelay05.ispgateway.de
-	[80.67.31.100]) by cuda.sgi.com with ESMTP id DdylbEjWq1isv07l
-	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 18 Jul 2013 04:04:39 -0700 (PDT)
-Received: from [217.229.2.200] (helo=localhost)
-	by smtprelay05.ispgateway.de with esmtpsa (TLSv1:AES128-SHA:128)
-	(Exim 4.68) (envelope-from <Andreas.Klauer@metamorpher.de>)
-	id 1Uzm0j-0001fW-FK
-	for xfs@oss.sgi.com; Thu, 18 Jul 2013 13:04:37 +0200
-Date: Thu, 18 Jul 2013 13:04:37 +0200
-From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
-Subject: xfs_growfs: XFS_IOC_FSGROWFSDATA xfsctl failed: Structure needs
-	cleaning
-Message-ID: <20130718110437.GA8090@EIS>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id A8F037F4E
+	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 06:09:43 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 381D5AC00A
+	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 04:09:39 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	6HLBzMXBSdcSbsaB for <xfs@oss.sgi.com>;
+	Thu, 18 Jul 2013 04:09:37 -0700 (PDT)
+Date: Thu, 18 Jul 2013 21:09:31 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [regression 3.11-rc1] unmount hanging purging quotas
+Message-ID: <20130718110931.GA13468@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,163 +28,51 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: Chandra Seetharaman <sekharan@us.ibm.com>
 
-Hi,
+Hi Chandra,
 
-having some problems growing XFS, using Linux 3.10.1 x86_64, xfsprogs 3.1.11.
+I'm seeing xfs/050 hanging on a current oss-xfs master tree during
+unmount getting stuck purging dquots. it basically loops there
+forever. Have you seen anything like this recently?
 
-The filesystem is on LVM, and I made the volume larger. I did this several 
-times before and it never causes any issue.
+# echo w > /proc/sysrq-trigger 
+[ 5179.063824] SysRq : Show Blocked State
+[ 5179.064895]   task                        PC stack   pid father
+[ 5179.066459] umount          D ffff88007fd13280  5592 27782  26800 0x00000000
+[ 5179.067478]  ffff88007b747b98 0000000000000046 ffff8800524e4500 ffff88007b747fd8
+[ 5179.067478]  ffff88007b747fd8 ffff88007b747fd8 ffff88007c83dc00 ffff8800524e4500
+[ 5179.067478]  ffff88007b747b88 ffff88007b747bd0 ffff88007c858000 0000000100129cb6
+[ 5179.067478] Call Trace:
+[ 5179.067478]  [<ffffffff81c53319>] schedule+0x29/0x70
+[ 5179.067478]  [<ffffffff81c4fa3b>] schedule_timeout+0x10b/0x1f0
+[ 5179.067478]  [<ffffffff8109a1e0>] ? usleep_range+0x50/0x50
+[ 5179.067478]  [<ffffffff814d8c20>] ? xfs_qm_need_dqattach+0x80/0x80
+[ 5179.067478]  [<ffffffff81c4fb3e>] schedule_timeout_uninterruptible+0x1e/0x20
+[ 5179.067478]  [<ffffffff814d911b>] xfs_qm_dquot_walk+0x19b/0x1b0
+[ 5179.067478]  [<ffffffff81c54934>] ? _raw_spin_lock_irqsave+0x24/0x30
+[ 5179.067478]  [<ffffffff8174c3ad>] ? do_raw_spin_unlock+0x5d/0xb0
+[ 5179.067478]  [<ffffffff810a77e4>] ? flush_work+0x34/0x160
+[ 5179.067478]  [<ffffffff8109b354>] ? del_timer+0x54/0x70
+[ 5179.067478]  [<ffffffff810a9461>] ? try_to_grab_pending+0xd1/0x190
+[ 5179.067478]  [<ffffffff814d9170>] xfs_qm_dqpurge_all+0x40/0x90
+[ 5179.067478]  [<ffffffff814d9d65>] xfs_qm_unmount+0x25/0x40
+[ 5179.067478]  [<ffffffff8147065c>] xfs_unmountfs+0x7c/0x120
+[ 5179.067478]  [<ffffffff814735c5>] xfs_fs_put_super+0x25/0x60
+[ 5179.067478]  [<ffffffff81191aa1>] generic_shutdown_super+0x61/0xf0
+[ 5179.067478]  [<ffffffff81191b60>] kill_block_super+0x30/0x80
+[ 5179.067478]  [<ffffffff81191fdd>] deactivate_locked_super+0x4d/0x80
+[ 5179.067478]  [<ffffffff81192b8e>] deactivate_super+0x4e/0x70
+[ 5179.067478]  [<ffffffff811adaf1>] mntput_no_expire+0x101/0x160
+[ 5179.067478]  [<ffffffff811aec9c>] SyS_umount+0x9c/0x3a0
+[ 5179.067478]  [<ffffffff81c5d419>] system_call_fastpath+0x16/0x1b
 
-This time, trying to grow the filesystem failed and it seemed corrupt. 
-xfs_repair restored its original size somehow (even though shrinking is 
-not supposed to be possible?). Unfortunately I did not save the output 
-of the commands the first time around, but the issue is reproducable 
-in its current state.
+Cheers,
 
-If anyone could tell me what I'm doing wrong?
-
-# mount
-> /dev/mapper/lvm-xfs on /mnt/xfs type xfs (rw)
-
-# df -h
-> /dev/mapper/lvm-xfs          2.0T  1.9T  102G  95% /mnt/xfs
-
-# blockdev --getsize64 /dev/lvm/xfs
-> 2306397437952
-
-# xfs_info /mnt/xfs
-> meta-data=/dev/mapper/lvm-xfs    isize=256    agcount=16, agsize=32768000 blks
->          =                       sectsz=4096  attr=2
-> data     =                       bsize=4096   blocks=524288000, imaxpct=25
->          =                       sunit=0      swidth=0 blks
-> naming   =version 2              bsize=4096   ascii-ci=0
-> log      =internal               bsize=4096   blocks=32768, version=2
->          =                       sectsz=4096  sunit=1 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
-
-# xfs_growfs /mnt/xfs
-> meta-data=/dev/mapper/lvm-xfs    isize=256    agcount=16, agsize=32768000 blks
->          =                       sectsz=4096  attr=2
-> data     =                       bsize=4096   blocks=524288000, imaxpct=25
->          =                       sunit=0      swidth=0 blks
-> naming   =version 2              bsize=4096   ascii-ci=0
-> log      =internal               bsize=4096   blocks=32768, version=2
->          =                       sectsz=4096  sunit=1 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
-> xfs_growfs: XFS_IOC_FSGROWFSDATA xfsctl failed: Structure needs cleaning
-> data blocks changed from 524288000 to 563085312
-
-# umount /mnt/xfs
-# mount /dev/lvm/xfs /mnt/xfs
-
-# df -h
-> /dev/mapper/lvm-xfs          2.1T  1.9T  250G  89% /mnt/xfs
-
-# xfs_info /mnt/xfs
-> meta-data=/dev/mapper/lvm-xfs    isize=256    agcount=18, agsize=32768000 blks
->          =                       sectsz=4096  attr=2
-> data     =                       bsize=4096   blocks=563085312, imaxpct=25
->          =                       sunit=0      swidth=0 blks
-> naming   =version 2              bsize=4096   ascii-ci=0
-> log      =internal               bsize=4096   blocks=32768, version=2
->          =                       sectsz=4096  sunit=1 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
-
-# umount /mnt/xfs
-
-# xfs_repair -v /dev/lvm/xfs
-> Phase 1 - find and verify superblock...
-> writing modified primary superblock
-> Phase 2 - using internal log
->         - zero log...
->         - scan filesystem freespace and inode maps...
-> primary/secondary superblock 4 conflict - AG superblock geometry info conflicts with filesystem geometry
-> reset bad sb for ag 4
-> primary/secondary superblock 2 conflict - AG superblock geometry info conflicts with filesystem geometry
-> reset bad sb for ag 2
-> primary/secondary superblock 1 conflict - AG superblock geometry info conflicts with filesystem geometry
-> reset bad sb for ag 1
-> primary/secondary superblock 3 conflict - AG superblock geometry info conflicts with filesystem geometry
-> reset bad sb for ag 3
-> sb_icount 0, counted 8704
-> sb_ifree 0, counted 854
-> sb_fdblocks 0, counted 26540703
->         - found root inode chunk
-> Phase 3 - for each AG...
->         - scan and clear agi unlinked lists...
->         - process known inodes and perform inode discovery...
->         - agno = 0
->         - agno = 1
->         - agno = 2
->         - agno = 3
->         - agno = 4
->         - agno = 5
->         - agno = 6
->         - agno = 7
->         - agno = 8
->         - agno = 9
->         - agno = 10
->         - agno = 11
->         - agno = 12
->         - agno = 13
->         - agno = 14
->         - agno = 15
->         - process newly discovered inodes...
-> Phase 4 - check for duplicate blocks...
->         - setting up duplicate extent list...
->         - check for inodes claiming duplicate blocks...
->         - agno = 0
->         - agno = 1
->         - agno = 2
->         - agno = 3
->         - agno = 4
->         - agno = 5
->         - agno = 6
->         - agno = 7
->         - agno = 8
->         - agno = 9
->         - agno = 10
->         - agno = 11
->         - agno = 12
->         - agno = 13
->         - agno = 14
->         - agno = 15
-> Phase 5 - rebuild AG headers and trees...
->         - reset superblock...
-> Phase 6 - check inode connectivity...
->         - resetting contents of realtime bitmap and summary inodes
->         - traversing filesystem ...
->         - traversal finished ...
->         - moving disconnected inodes to lost+found ...
-> Phase 7 - verify and correct link counts...
-> done
-
-# mount /dev/lvm/xfs /mnt/xfs
-
-# df -h
-> /dev/mapper/lvm-xfs          2.0T  1.9T  102G  95% /mnt/xfs
-
-# xfs_growfs /mnt/xfs
-> meta-data=/dev/mapper/lvm-xfs    isize=256    agcount=16, agsize=32768000 blks
->          =                       sectsz=4096  attr=2
-> data     =                       bsize=4096   blocks=524288000, imaxpct=25
->          =                       sunit=0      swidth=0 blks
-> naming   =version 2              bsize=4096   ascii-ci=0
-> log      =internal               bsize=4096   blocks=32768, version=2
->          =                       sectsz=4096  sunit=1 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
-> xfs_growfs: XFS_IOC_FSGROWFSDATA xfsctl failed: Structure needs cleaning
-> data blocks changed from 524288000 to 563085312
- 
-Back to square one and rinse and repeat.
-
-1) What does "XFS_IOC_FSGROWFSDATA xfsctl failed: Structure needs cleaning" mean?
-
-2) Should I reformat or any way to repair/grow properly?   
-
-Thanks
-Andreas Klauer
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
