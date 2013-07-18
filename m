@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3B1737F3F
-	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 22:43:25 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 061697F4E
+	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 06:04:44 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 2866A8F8049
-	for <xfs@oss.sgi.com>; Wed, 17 Jul 2013 20:43:25 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	B9wG1Gf4PWcrckU0 for <xfs@oss.sgi.com>;
-	Wed, 17 Jul 2013 20:43:23 -0700 (PDT)
-Date: Thu, 18 Jul 2013 13:43:21 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: Initialize all quota inodes to be NULLFSINO
-Message-ID: <20130718034321.GP11674@dastard>
-References: <1373593665.20769.10.camel@chandra-dt.ibm.com>
-	<20130713021349.GH3438@dastard>
-	<1373928885.20769.42.camel@chandra-dt.ibm.com>
-	<20130716002352.GA3920@dastard>
-	<1374097330.8941.12.camel@chandra-dt.ibm.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id EA4B9304051
+	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 04:04:40 -0700 (PDT)
+Received: from smtprelay05.ispgateway.de (smtprelay05.ispgateway.de
+	[80.67.31.100]) by cuda.sgi.com with ESMTP id DdylbEjWq1isv07l
+	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 18 Jul 2013 04:04:39 -0700 (PDT)
+Received: from [217.229.2.200] (helo=localhost)
+	by smtprelay05.ispgateway.de with esmtpsa (TLSv1:AES128-SHA:128)
+	(Exim 4.68) (envelope-from <Andreas.Klauer@metamorpher.de>)
+	id 1Uzm0j-0001fW-FK
+	for xfs@oss.sgi.com; Thu, 18 Jul 2013 13:04:37 +0200
+Date: Thu, 18 Jul 2013 13:04:37 +0200
+From: Andreas Klauer <Andreas.Klauer@metamorpher.de>
+Subject: xfs_growfs: XFS_IOC_FSGROWFSDATA xfsctl failed: Structure needs
+	cleaning
+Message-ID: <20130718110437.GA8090@EIS>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1374097330.8941.12.camel@chandra-dt.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,93 +33,164 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Chandra Seetharaman <sekharan@us.ibm.com>
-Cc: XFS mailing list <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Wed, Jul 17, 2013 at 04:42:10PM -0500, Chandra Seetharaman wrote:
-> On Tue, 2013-07-16 at 10:23 +1000, Dave Chinner wrote:
-> > On Mon, Jul 15, 2013 at 05:54:45PM -0500, Chandra Seetharaman wrote:
-> > > On Sat, 2013-07-13 at 12:13 +1000, Dave Chinner wrote:
-> > > > On Thu, Jul 11, 2013 at 08:47:45PM -0500, Chandra Seetharaman wrote:
-> > > > > 
-> > > > > mkfs doesn't initialize the quota inodes to NULLFSINO as it
-> > > > > does for the other internal inodes. This leads to check for two
-> > > > > values (0 and NULLFSINO) to make sure if a quota inode is
-> > > > > valid.
-> > > > > 
-> > > > > Solve that problem by initializing the values to NULLFSINO
-> > > > > if they are 0.
-> > > > > 
-> > > > > Note that these values are not written back to on-disk
-> > > > > superblock unless some quota is enabled on the filesystem.
-> > > > > 
-> > > > > Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-> > > > > ---
-> > > > >  fs/xfs/xfs_mount.c |   12 ++++++++++++
-> > > > >  1 files changed, 12 insertions(+), 0 deletions(-)
-> > > > > 
-> > > > > diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> > > > > index 2b0ba35..8b95933 100644
-> > > > > --- a/fs/xfs/xfs_mount.c
-> > > > > +++ b/fs/xfs/xfs_mount.c
-> > > > > @@ -572,6 +572,18 @@ out_unwind:
-> > > > >  static void
-> > > > >  xfs_sb_quota_from_disk(struct xfs_sb *sbp)
-> > > > >  {
-> > > > > +	/*
-> > > > > +	 * older mkfs doesn't initialize quota inodes to NULLFSINO,
-> > > > > +	 * which leads to two values for a quota inode to be invalid:
-> > > > > +	 * 0 and NULLFSINO. Fix it.
-> > > > > +	 */
-> > > > > +	if (sbp->sb_uquotino == 0)
-> > > > > +		sbp->sb_uquotino = NULLFSINO;
-> > > > > +	if (sbp->sb_gquotino == 0)
-> > > > > +		sbp->sb_gquotino = NULLFSINO;
-> > > > > +	if (sbp->sb_pquotino == 0)
-> > > > > +		sbp->sb_pquotino = NULLFSINO;
-> > > > 
-> > > > There coment needs to point out that this is changing the in-memory
-> > > > superblock value right here, so we don't need to make changing
-> > > > sb_pquotino dependent on the superblock having support for this
-> > > > feature.
-> > > 
-> > > But, we are not just changing just for sb_pquotino, right ?
-> > 
-> > Sure, but those other two fields are always present in the
-> > superblock...
-> > 
-> > > Since we are changing all the fields independent of superblock
-> > > supporting sb_pquotino, I thought the comment should be generic.
-> > 
-> > So why is it safe to modify this when sb_pquotino isn't valid in the
-> > superblock (i.e. v4 superblock) and the only valid on-disk value for
-> > an unused section of the superblock is zero?
-> > 
-> > That's what the comment needs to explain.
-> 
-> How about this:
-> 
-> /*
->  * older mkfs doesn't initialize quota inodes to NULLFSINO
->  * This leads to in-core values having two different values
->  * for a quota inode to be invalid: 0 and NULLFSINO.
->  * Change it to a single value NULLFSINO.
->  *
->  * Note that this change affect only the in-core values. 
->  * These values are not written back to disk unless any
->  * quota information is written to the disk. Even in that
->  * case, sb_pquotino field is not written to disk unless
->  * the superblock supports pquotino.
->  */
+Hi,
 
-Nice explanation. Expand it out to 80 columns and it's golden :)
+having some problems growing XFS, using Linux 3.10.1 x86_64, xfsprogs 3.1.11.
 
-Cheers,
+The filesystem is on LVM, and I made the volume larger. I did this several 
+times before and it never causes any issue.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+This time, trying to grow the filesystem failed and it seemed corrupt. 
+xfs_repair restored its original size somehow (even though shrinking is 
+not supposed to be possible?). Unfortunately I did not save the output 
+of the commands the first time around, but the issue is reproducable 
+in its current state.
+
+If anyone could tell me what I'm doing wrong?
+
+# mount
+> /dev/mapper/lvm-xfs on /mnt/xfs type xfs (rw)
+
+# df -h
+> /dev/mapper/lvm-xfs          2.0T  1.9T  102G  95% /mnt/xfs
+
+# blockdev --getsize64 /dev/lvm/xfs
+> 2306397437952
+
+# xfs_info /mnt/xfs
+> meta-data=/dev/mapper/lvm-xfs    isize=256    agcount=16, agsize=32768000 blks
+>          =                       sectsz=4096  attr=2
+> data     =                       bsize=4096   blocks=524288000, imaxpct=25
+>          =                       sunit=0      swidth=0 blks
+> naming   =version 2              bsize=4096   ascii-ci=0
+> log      =internal               bsize=4096   blocks=32768, version=2
+>          =                       sectsz=4096  sunit=1 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+# xfs_growfs /mnt/xfs
+> meta-data=/dev/mapper/lvm-xfs    isize=256    agcount=16, agsize=32768000 blks
+>          =                       sectsz=4096  attr=2
+> data     =                       bsize=4096   blocks=524288000, imaxpct=25
+>          =                       sunit=0      swidth=0 blks
+> naming   =version 2              bsize=4096   ascii-ci=0
+> log      =internal               bsize=4096   blocks=32768, version=2
+>          =                       sectsz=4096  sunit=1 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> xfs_growfs: XFS_IOC_FSGROWFSDATA xfsctl failed: Structure needs cleaning
+> data blocks changed from 524288000 to 563085312
+
+# umount /mnt/xfs
+# mount /dev/lvm/xfs /mnt/xfs
+
+# df -h
+> /dev/mapper/lvm-xfs          2.1T  1.9T  250G  89% /mnt/xfs
+
+# xfs_info /mnt/xfs
+> meta-data=/dev/mapper/lvm-xfs    isize=256    agcount=18, agsize=32768000 blks
+>          =                       sectsz=4096  attr=2
+> data     =                       bsize=4096   blocks=563085312, imaxpct=25
+>          =                       sunit=0      swidth=0 blks
+> naming   =version 2              bsize=4096   ascii-ci=0
+> log      =internal               bsize=4096   blocks=32768, version=2
+>          =                       sectsz=4096  sunit=1 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+# umount /mnt/xfs
+
+# xfs_repair -v /dev/lvm/xfs
+> Phase 1 - find and verify superblock...
+> writing modified primary superblock
+> Phase 2 - using internal log
+>         - zero log...
+>         - scan filesystem freespace and inode maps...
+> primary/secondary superblock 4 conflict - AG superblock geometry info conflicts with filesystem geometry
+> reset bad sb for ag 4
+> primary/secondary superblock 2 conflict - AG superblock geometry info conflicts with filesystem geometry
+> reset bad sb for ag 2
+> primary/secondary superblock 1 conflict - AG superblock geometry info conflicts with filesystem geometry
+> reset bad sb for ag 1
+> primary/secondary superblock 3 conflict - AG superblock geometry info conflicts with filesystem geometry
+> reset bad sb for ag 3
+> sb_icount 0, counted 8704
+> sb_ifree 0, counted 854
+> sb_fdblocks 0, counted 26540703
+>         - found root inode chunk
+> Phase 3 - for each AG...
+>         - scan and clear agi unlinked lists...
+>         - process known inodes and perform inode discovery...
+>         - agno = 0
+>         - agno = 1
+>         - agno = 2
+>         - agno = 3
+>         - agno = 4
+>         - agno = 5
+>         - agno = 6
+>         - agno = 7
+>         - agno = 8
+>         - agno = 9
+>         - agno = 10
+>         - agno = 11
+>         - agno = 12
+>         - agno = 13
+>         - agno = 14
+>         - agno = 15
+>         - process newly discovered inodes...
+> Phase 4 - check for duplicate blocks...
+>         - setting up duplicate extent list...
+>         - check for inodes claiming duplicate blocks...
+>         - agno = 0
+>         - agno = 1
+>         - agno = 2
+>         - agno = 3
+>         - agno = 4
+>         - agno = 5
+>         - agno = 6
+>         - agno = 7
+>         - agno = 8
+>         - agno = 9
+>         - agno = 10
+>         - agno = 11
+>         - agno = 12
+>         - agno = 13
+>         - agno = 14
+>         - agno = 15
+> Phase 5 - rebuild AG headers and trees...
+>         - reset superblock...
+> Phase 6 - check inode connectivity...
+>         - resetting contents of realtime bitmap and summary inodes
+>         - traversing filesystem ...
+>         - traversal finished ...
+>         - moving disconnected inodes to lost+found ...
+> Phase 7 - verify and correct link counts...
+> done
+
+# mount /dev/lvm/xfs /mnt/xfs
+
+# df -h
+> /dev/mapper/lvm-xfs          2.0T  1.9T  102G  95% /mnt/xfs
+
+# xfs_growfs /mnt/xfs
+> meta-data=/dev/mapper/lvm-xfs    isize=256    agcount=16, agsize=32768000 blks
+>          =                       sectsz=4096  attr=2
+> data     =                       bsize=4096   blocks=524288000, imaxpct=25
+>          =                       sunit=0      swidth=0 blks
+> naming   =version 2              bsize=4096   ascii-ci=0
+> log      =internal               bsize=4096   blocks=32768, version=2
+>          =                       sectsz=4096  sunit=1 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> xfs_growfs: XFS_IOC_FSGROWFSDATA xfsctl failed: Structure needs cleaning
+> data blocks changed from 524288000 to 563085312
+ 
+Back to square one and rinse and repeat.
+
+1) What does "XFS_IOC_FSGROWFSDATA xfsctl failed: Structure needs cleaning" mean?
+
+2) Should I reformat or any way to repair/grow properly?   
+
+Thanks
+Andreas Klauer
 
 _______________________________________________
 xfs mailing list
