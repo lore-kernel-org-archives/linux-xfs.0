@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 038B37FC0
-	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 01:25:58 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id BD7158F8033
-	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 23:25:57 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 896DB7FC1
+	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 01:25:59 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id EB4408F8035
+	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 23:25:58 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	ykZ7TToY7w1iMhCt for <xfs@oss.sgi.com>;
-	Thu, 18 Jul 2013 23:25:55 -0700 (PDT)
+	TKAhGVYWMpcBVuW7 for <xfs@oss.sgi.com>;
+	Thu, 18 Jul 2013 23:25:56 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1V0483-00048a-Gv
+	(envelope-from <dave@fromorbit.com>) id 1V0483-00048y-Ek
 	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:25:23 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1V0483-00020l-F5
+	(envelope-from <dave@disappointment.disaster>) id 1V0483-000203-CB
 	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:25:23 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 46/49] xfs: Combine CIL insert and prepare passes
-Date: Fri, 19 Jul 2013 16:25:17 +1000
-Message-Id: <1374215120-7271-47-git-send-email-david@fromorbit.com>
+Subject: [PATCH 41/49] xfs: Add xfs_log_rlimit.c
+Date: Fri, 19 Jul 2013 16:25:12 +1000
+Message-Id: <1374215120-7271-42-git-send-email-david@fromorbit.com>
 In-Reply-To: <1374215120-7271-1-git-send-email-david@fromorbit.com>
 References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -37,385 +37,226 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Jie Liu <jeff.liu@oracle.com>
 
-Now that all the log item preparation and formatting is done under
-the CIL lock, we can get rid of the intermediate log vector chain
-used to track items to be inserted into the CIL.
+Add source files for xfs_log_rlimit.c The new file is used for log
+size calculations and validation shared with userspace.
 
-We can already find all the items to be committed from the
-transaction handle, so as long as we attach the log vectors to the
-item before we insert the items into the CIL, we don't need to
-create a log vector chain to pass around.
+[dchinner: xfs_log_calc_max_attrsetm_res() does not modify the
+tr_attrsetm reservation, just calculates the maximum. ]
 
-This means we can move all the item insertion code into and optimise
-it into a pair of simple passes across all the items in the
-transaction. The first pass does the formatting and accounting, the
-second inserts them all into the CIL.
+[dchinner: rework loop in xfs_log_get_max_trans_res() ]
 
-We keep this two pass split so that we can separate the CIL
-insertion - which must be done under the CIL spinlock - from the
-formatting. We could insert each item into the CIL with a single
-pass, but that massively increases the number of times we have to
-grab the CIL spinlock. It is much more efficient (and hence
-scalable) to do a batch operation and insert all objects in a single
-lock grab.
-
+Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_log_cil.c | 225 ++++++++++++++++++++++-----------------------------
- 1 file changed, 97 insertions(+), 128 deletions(-)
+ fs/xfs/Makefile         |   1 +
+ fs/xfs/xfs_log_format.h |   7 ++-
+ fs/xfs/xfs_log_rlimit.c | 145 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 152 insertions(+), 1 deletion(-)
+ create mode 100644 fs/xfs/xfs_log_rlimit.c
 
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 76ae7d8..391cb011 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -110,6 +110,52 @@ xlog_cil_lv_item_format(
- }
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index d6ccf57..0719e4d 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -79,6 +79,7 @@ xfs-y				+= xfs_alloc.o \
+ 				   xfs_inode_fork.o \
+ 				   xfs_inode_buf.o \
+ 				   xfs_log_recover.o \
++				   xfs_log_rlimit.o \
+ 				   xfs_sb.o \
+ 				   xfs_symlink_remote.o \
+ 				   xfs_trans_resv.o
+diff --git a/fs/xfs/xfs_log_format.h b/fs/xfs/xfs_log_format.h
+index cc08f59..a49ab2c 100644
+--- a/fs/xfs/xfs_log_format.h
++++ b/fs/xfs/xfs_log_format.h
+@@ -19,6 +19,7 @@
+ #define __XFS_LOG_FORMAT_H__
+ 
+ struct xfs_mount;
++struct xfs_trans_res;
  
  /*
-+ * Prepare the log item for insertion into the CIL. Calculate the difference in
-+ * log space and vectors it will consume, and if it is a new item pin it as
-+ * well.
+  * On-disk Log Format definitions.
+@@ -51,6 +52,9 @@ typedef __uint32_t xlog_tid_t;
+ 
+ #define XLOG_HEADER_SIZE	512
+ 
++/* Minimum number of transactions that must fit in the log (defined by mkfs) */
++#define XFS_MIN_LOG_FACTOR	3
++
+ #define XLOG_REC_SHIFT(log) \
+ 	BTOBB(1 << (xfs_sb_version_haslogv2(&log->l_mp->m_sb) ? \
+ 	 XLOG_MAX_RECORD_BSHIFT : XLOG_BIG_RECORD_BSHIFT))
+@@ -135,7 +139,6 @@ typedef struct xlog_op_header {
+ 	__u16	   oh_res2;	/* 32 bit align			:  2 b */
+ } xlog_op_header_t;
+ 
+-
+ /* valid values for h_fmt */
+ #define XLOG_FMT_UNKNOWN  0
+ #define XLOG_FMT_LINUX_LE 1
+@@ -837,5 +840,7 @@ struct xfs_icreate_log {
+ };
+ 
+ int	xfs_log_calc_unit_res(struct xfs_mount *mp, int unit_bytes);
++int	xfs_log_calc_minimum_size(struct xfs_mount *);
++
+ 
+ #endif /* __XFS_LOG_FORMAT_H__ */
+diff --git a/fs/xfs/xfs_log_rlimit.c b/fs/xfs/xfs_log_rlimit.c
+new file mode 100644
+index 0000000..e3f4b4e
+--- /dev/null
++++ b/fs/xfs/xfs_log_rlimit.c
+@@ -0,0 +1,145 @@
++/*
++ * Copyright (c) 2013 Jie Liu.
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 + */
-+STATIC void
-+xfs_cil_prepare_item(
-+	struct xlog		*log,
-+	struct xfs_log_vec	*lv,
-+	struct xfs_log_vec	*old_lv,
-+	int			*diff_len,
-+	int			*diff_iovecs)
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_log.h"
++#include "xfs_trans.h"
++#include "xfs_ag.h"
++#include "xfs_sb.h"
++#include "xfs_mount.h"
++#include "xfs_trans_space.h"
++#include "xfs_bmap_btree.h"
++#include "xfs_inode.h"
++#include "xfs_da_btree.h"
++#include "xfs_attr_leaf.h"
++
++/*
++ * Calculate the maximum length in bytes that would be required for a local
++ * attribute value as large attributes out of line are not logged.
++ */
++STATIC int
++xfs_log_calc_max_attrsetm_res(
++	struct xfs_mount	*mp)
 +{
-+	if (!old_lv) {
-+		/* new lv, must pin the log item */
-+		ASSERT(!lv->lv_item->li_lv);
++	int			size;
++	int			nblks;
 +
-+		if (lv->lv_buf_len != XFS_LOG_VEC_ORDERED) {
-+			*diff_len += lv->lv_buf_len;
-+			*diff_iovecs += lv->lv_niovecs;
-+		}
-+		lv->lv_item->li_ops->iop_pin(lv->lv_item);
++	size = xfs_attr_leaf_entsize_local_max(mp->m_sb.sb_blocksize) -
++	       MAXNAMELEN - 1;
++	nblks = XFS_DAENTER_SPACE_RES(mp, XFS_ATTR_FORK);
++	nblks += XFS_B_TO_FSB(mp, size);
++	nblks += XFS_NEXTENTADD_SPACE_RES(mp, size, XFS_ATTR_FORK);
 +
-+	} else {
-+		/* existing lv on log item, space used is a delta */
-+		ASSERT(old_lv->lv_buf_len != lv->lv_buf_len ||
-+		       old_lv->lv_niovecs != lv->lv_niovecs);
-+		ASSERT(lv->lv_buf_len != XFS_LOG_VEC_ORDERED);
-+
-+		*diff_len += lv->lv_buf_len - old_lv->lv_buf_len;
-+		*diff_iovecs += lv->lv_niovecs - old_lv->lv_niovecs;
-+	}
-+
-+	/* attach new log vector to log item */
-+	lv->lv_item->li_lv = lv;
-+
-+	/*
-+	 * If this is the first time the item is being committed to the
-+	 * CIL, store the sequence number on the log item so we can
-+	 * tell in future commits whether this is the first checkpoint
-+	 * the item is being committed into.
-+	 */
-+	if (!lv->lv_item->li_seq)
-+		lv->lv_item->li_seq = log->l_cilp->xc_ctx->sequence;
++	return  M_RES(mp)->tr_attrsetm.tr_logres +
++		M_RES(mp)->tr_attrsetrt.tr_logres * nblks;
 +}
 +
 +/*
-  * Format log item into a flat buffers
-  *
-  * For delayed logging, we need to hold a formatted buffer containing all the
-@@ -135,24 +181,26 @@ xlog_cil_lv_item_format(
-  * format the regions into the iclog as though they are being formatted
-  * directly out of the objects themselves.
-  */
--static struct xfs_log_vec *
--xlog_cil_prepare_log_vecs(
--	struct xfs_trans	*tp)
-+static void
-+xlog_cil_insert_format_items(
-+	struct xlog		*log,
-+	struct xfs_trans	*tp,
-+	int			*diff_len,
-+	int			*diff_iovecs)
- {
- 	struct xfs_log_item_desc *lidp;
--	struct xfs_log_vec	*prev_lv = NULL;
--	struct xfs_log_vec	*ret_lv = NULL;
- 
- 
- 	/* Bail out if we didn't find a log item.  */
- 	if (list_empty(&tp->t_items)) {
- 		ASSERT(0);
--		return NULL;
-+		return;
- 	}
- 
- 	list_for_each_entry(lidp, &tp->t_items, lid_trans) {
- 		struct xfs_log_item *lip = lidp->lid_item;
- 		struct xfs_log_vec *lv;
-+		struct xfs_log_vec *old_lv;
- 		int	niovecs = 0;
- 		int	nbytes = 0;
- 		int	buf_size;
-@@ -191,14 +239,17 @@ xlog_cil_prepare_log_vecs(
- 			lv->lv_next = NULL;
- 
- 			if (ordered)
--				goto insert;
-+				continue;
- 
- 			/* Ensure the lv is set up according to ->iop_size */
-+			*diff_iovecs += niovecs - lv->lv_niovecs;
-+			*diff_len += nbytes - lv->lv_buf_len;
++ * Iterate over the log space reservation table to figure out and return
++ * the maximum one in terms of the pre-calculated values which were done
++ * at mount time.
++ */
++STATIC void
++xfs_log_get_max_trans_res(
++	struct xfs_mount	*mp,
++	struct xfs_trans_res	*max_resp)
++{
++	struct xfs_trans_res	*resp;
++	struct xfs_trans_res	*end_resp;
++	int			log_space = 0;
++	int			attr_space;
 +
- 			lv->lv_niovecs = niovecs;
- 			lv->lv_buf = (char *)lv + buf_size - nbytes;
- 			lv->lv_buf_len = nbytes;
- 			xlog_cil_lv_item_format(lip, lv);
--			goto insert;
-+			continue;
- 		}
- 
- 		/* allocate new data chunk */
-@@ -222,74 +273,13 @@ xlog_cil_prepare_log_vecs(
- 
- 		xlog_cil_lv_item_format(lip, lv);
- insert:
--		if (!ret_lv)
--			ret_lv = lv;
--		else
--			prev_lv->lv_next = lv;
--		prev_lv = lv;
--	}
--
--	return ret_lv;
--}
--
--/*
-- * Prepare the log item for insertion into the CIL. Calculate the difference in
-- * log space and vectors it will consume, and if it is a new item pin it as
-- * well.
-- */
--STATIC void
--xfs_cil_prepare_item(
--	struct xlog		*log,
--	struct xfs_log_vec	*lv,
--	int			*len,
--	int			*diff_iovecs)
--{
--	struct xfs_log_vec	*old = lv->lv_item->li_lv;
-+		/* update new CIL space usage */
-+		old_lv = lip->li_lv;
-+		xfs_cil_prepare_item(log, lv, old_lv, diff_len, diff_iovecs);
- 
--	if (!old) {
--		/* new lv, must pin the log item */
--		ASSERT(!lv->lv_item->li_lv);
--
--		if (lv->lv_buf_len != XFS_LOG_VEC_ORDERED) {
--			*len += lv->lv_buf_len;
--			*diff_iovecs += lv->lv_niovecs;
--		}
--		lv->lv_item->li_ops->iop_pin(lv->lv_item);
--
--	} else if (old != lv) {
--		/* existing lv on log item, space used is a delta */
--		ASSERT((old->lv_buf && old->lv_buf_len && old->lv_niovecs) ||
--			old->lv_buf_len == XFS_LOG_VEC_ORDERED);
--
--		/*
--		 * If the new item is ordered, keep the old one that is already
--		 * tracking dirty or ordered regions
--		 */
--		if (lv->lv_buf_len == XFS_LOG_VEC_ORDERED) {
--			ASSERT(!lv->lv_buf);
--			kmem_free(lv);
--			return;
--		}
--
--		*len += lv->lv_buf_len - old->lv_buf_len;
--		*diff_iovecs += lv->lv_niovecs - old->lv_niovecs;
--		kmem_free(old);
--	} else {
--		/* re-used lv */
--		/* XXX: can't account for len/diff_iovecs yet */
-+		/* free old lv */
-+		kmem_free(old_lv);
- 	}
--
--	/* attach new log vector to log item */
--	lv->lv_item->li_lv = lv;
--
--	/*
--	 * If this is the first time the item is being committed to the
--	 * CIL, store the sequence number on the log item so we can
--	 * tell in future commits whether this is the first checkpoint
--	 * the item is being committed into.
--	 */
--	if (!lv->lv_item->li_seq)
--		lv->lv_item->li_seq = log->l_cilp->xc_ctx->sequence;
- }
- 
- /*
-@@ -302,53 +292,47 @@ xfs_cil_prepare_item(
- static void
- xlog_cil_insert_items(
- 	struct xlog		*log,
--	struct xfs_log_vec	*log_vector,
--	struct xlog_ticket	*ticket)
-+	struct xfs_trans	*tp)
- {
- 	struct xfs_cil		*cil = log->l_cilp;
- 	struct xfs_cil_ctx	*ctx = cil->xc_ctx;
--	struct xfs_log_vec	*lv;
-+	struct xfs_log_item_desc *lidp;
- 	int			len = 0;
- 	int			diff_iovecs = 0;
- 	int			iclog_space;
- 
--	ASSERT(log_vector);
-+	ASSERT(tp);
- 
- 	/*
--	 * Do all the accounting aggregation and switching of log vectors
--	 * around in a separate loop to the insertion of items into the CIL.
--	 * Then we can do a separate loop to update the CIL within a single
--	 * lock/unlock pair. This reduces the number of round trips on the CIL
--	 * lock from O(nr_logvectors) to O(1) and greatly reduces the overall
--	 * hold time for the transaction commit.
--	 *
--	 * If this is the first time the item is being placed into the CIL in
--	 * this context, pin it so it can't be written to disk until the CIL is
--	 * flushed to the iclog and the iclog written to disk.
--	 *
- 	 * We can do this safely because the context can't checkpoint until we
- 	 * are done so it doesn't matter exactly how we update the CIL.
- 	 */
-+	xlog_cil_insert_format_items(log, tp, &len, &diff_iovecs);
++	attr_space = xfs_log_calc_max_attrsetm_res(mp);
++
++	resp = (struct xfs_trans_res *)M_RES(mp);
++	end_resp = (struct xfs_trans_res *)(M_RES(mp) + 1);
++	for (; resp < end_resp; resp++) {
++		int		tmp = resp->tr_logcount > 1 ?
++				      resp->tr_logres * resp->tr_logcount :
++				      resp->tr_logres;
++		if (log_space < tmp) {
++			log_space = tmp;
++			*max_resp = *resp;		/* struct copy */
++		}
++	}
++
++	if (attr_space > log_space) {
++		*max_resp = M_RES(mp)->tr_attrsetm;	/* struct copy */
++		max_resp->tr_logres = attr_space;
++	}
++}
++
++/*
++ * Calculate the minimum valid log size for the given superblock configuration.
++ * Used to calculate the minimum log size at mkfs time, and to determine if
++ * the log is large enough or not at mount time. Returns the minimum size in
++ * filesystem block size units.
++ */
++int
++xfs_log_calc_minimum_size(
++	struct xfs_mount	*mp)
++{
++	struct xfs_trans_res	tres = {0};
++	int			max_logres;
++	int			min_logblks = 0;
++	int			lsunit = 0;
++
++	xfs_log_get_max_trans_res(mp, &tres);
++
++	max_logres = xfs_log_calc_unit_res(mp, tres.tr_logres);
++	if (tres.tr_logcount > 1)
++		max_logres *= tres.tr_logcount;
++
++	if (xfs_sb_version_haslogv2(&mp->m_sb) && mp->m_sb.sb_logsunit > 1)
++		lsunit = BTOBB(mp->m_sb.sb_logsunit);
 +
 +	/*
-+	 * Now (re-)position everything modified at the tail of the CIL.
-+	 * We do this here so we only need to take the CIL lock once during
-+	 * the transaction commit.
++	 * Two factors should be taken into account for calculating the minimum
++	 * log space.
++	 * 1) The fundamental limitation is that no single transaction can be
++	 *    larger than half size of the log.
++	 *
++	 *    From mkfs.xfs, this is considered by the XFS_MIN_LOG_FACTOR
++	 *    define, which is set to 3. That means we can definitely fit
++	 *    maximally sized 2 transactions in the log. We'll use this same
++	 *    value here.
++	 *
++	 * 2) If the lsunit option is specified, a transaction requires 2 LSU
++	 *    for the reservation because there are two log writes that can
++	 *    require padding - the transaction data and the commit record which
++	 *    are written separately and both can require padding to the LSU.
++	 *    Consider that we can have an active CIL reservation holding 2*LSU,
++	 *    but the CIL is not over a push threshold, in this case, if we
++	 *    don't have enough log space for at one new transaction, which
++	 *    includes another 2*LSU in the reservation, we will run into dead
++	 *    loop situation in log space grant procedure. i.e.
++	 *    xlog_grant_head_wait().
++	 *
++	 *    Hence the log size needs to be able to contain two maximally sized
++	 *    and padded transactions, which is (2 * (2 * LSU + maxlres)).
++	 *
++	 * Also, the log size should be a multiple of the log stripe unit, round
++	 * it up to lsunit boundary if lsunit is specified.
 +	 */
- 	spin_lock(&cil->xc_cil_lock);
--	for (lv = log_vector; lv; ) {
--		struct xfs_log_vec *next = lv->lv_next;
-+	list_for_each_entry(lidp, &tp->t_items, lid_trans) {
-+		struct xfs_log_item	*lip = lidp->lid_item;
- 
--		ASSERT(lv->lv_item->li_lv || list_empty(&lv->lv_item->li_cil));
--		lv->lv_next = NULL;
-+		/* Skip items which aren't dirty in this transaction. */
-+		if (!(lidp->lid_flags & XFS_LID_DIRTY))
-+			continue;
- 
--		/*
--		 * xfs_cil_prepare_item() may free the lv, so move the item on
--		 * the CIL first.
--		 */
--		list_move_tail(&lv->lv_item->li_cil, &cil->xc_cil);
--		xfs_cil_prepare_item(log, lv, &len, &diff_iovecs);
--		lv = next;
-+		list_move_tail(&lip->li_cil, &cil->xc_cil);
- 	}
- 
- 	/* account for space used by new iovec headers  */
- 	len += diff_iovecs * sizeof(xlog_op_header_t);
- 	ctx->nvecs += diff_iovecs;
- 
-+	/* attach the transaction to the CIL if it has any busy extents */
-+	if (!list_empty(&tp->t_busy))
-+		list_splice_init(&tp->t_busy, &ctx->busy_extents);
-+
- 	/*
- 	 * Now transfer enough transaction reservation to the context ticket
- 	 * for the checkpoint. The context ticket is special - the unit
-@@ -357,10 +341,8 @@ xlog_cil_insert_items(
- 	 * during the transaction commit.
- 	 */
- 	if (ctx->ticket->t_curr_res == 0) {
--		/* first commit in checkpoint, steal the header reservation */
--		ASSERT(ticket->t_curr_res >= ctx->ticket->t_unit_res + len);
- 		ctx->ticket->t_curr_res = ctx->ticket->t_unit_res;
--		ticket->t_curr_res -= ctx->ticket->t_unit_res;
-+		tp->t_ticket->t_curr_res -= ctx->ticket->t_unit_res;
- 	}
- 
- 	/* do we need space for more log record headers? */
-@@ -374,10 +356,10 @@ xlog_cil_insert_items(
- 		hdrs *= log->l_iclog_hsize + sizeof(struct xlog_op_header);
- 		ctx->ticket->t_unit_res += hdrs;
- 		ctx->ticket->t_curr_res += hdrs;
--		ticket->t_curr_res -= hdrs;
--		ASSERT(ticket->t_curr_res >= len);
-+		tp->t_ticket->t_curr_res -= hdrs;
-+		ASSERT(tp->t_ticket->t_curr_res >= len);
- 	}
--	ticket->t_curr_res -= len;
-+	tp->t_ticket->t_curr_res -= len;
- 	ctx->space_used += len;
- 
- 	spin_unlock(&cil->xc_cil_lock);
-@@ -746,38 +728,25 @@ xfs_log_commit_cil(
- 	int			flags)
- {
- 	struct xlog		*log = mp->m_log;
-+	struct xfs_cil		*cil = log->l_cilp;
- 	int			log_flags = 0;
--	struct xfs_log_vec	*log_vector;
- 
- 	if (flags & XFS_TRANS_RELEASE_LOG_RES)
- 		log_flags = XFS_LOG_REL_PERM_RESERV;
- 
- 	/* lock out background commit */
--	down_read(&log->l_cilp->xc_ctx_lock);
-+	down_read(&cil->xc_ctx_lock);
- 
--	log_vector = xlog_cil_prepare_log_vecs(tp);
--	if (!log_vector)
--		return ENOMEM;
--
--	if (commit_lsn)
--		*commit_lsn = log->l_cilp->xc_ctx->sequence;
--
--	/* xlog_cil_insert_items() destroys log_vector list */
--	xlog_cil_insert_items(log, log_vector, tp->t_ticket);
-+	xlog_cil_insert_items(log, tp);
- 
- 	/* check we didn't blow the reservation */
- 	if (tp->t_ticket->t_curr_res < 0)
--		xlog_print_tic_res(log->l_mp, tp->t_ticket);
-+		xlog_print_tic_res(mp, tp->t_ticket);
- 
--	/* attach the transaction to the CIL if it has any busy extents */
--	if (!list_empty(&tp->t_busy)) {
--		spin_lock(&log->l_cilp->xc_cil_lock);
--		list_splice_init(&tp->t_busy,
--					&log->l_cilp->xc_ctx->busy_extents);
--		spin_unlock(&log->l_cilp->xc_cil_lock);
--	}
-+	tp->t_commit_lsn = cil->xc_ctx->sequence;
-+	if (commit_lsn)
-+		*commit_lsn = tp->t_commit_lsn;
- 
--	tp->t_commit_lsn = *commit_lsn;
- 	xfs_log_done(mp, tp->t_ticket, NULL, log_flags);
- 	xfs_trans_unreserve_and_mod_sb(tp);
- 
-@@ -792,11 +761,11 @@ xfs_log_commit_cil(
- 	 * the log items. This affects (at least) processing of stale buffers,
- 	 * inodes and EFIs.
- 	 */
--	xfs_trans_free_items(tp, *commit_lsn, 0);
-+	xfs_trans_free_items(tp, tp->t_commit_lsn, 0);
- 
- 	xlog_cil_push_background(log);
- 
--	up_read(&log->l_cilp->xc_ctx_lock);
-+	up_read(&cil->xc_ctx_lock);
- 	return 0;
- }
- 
++	if (lsunit)
++		min_logblks = roundup(BTOBB(max_logres), lsunit) + 2 * lsunit;
++	else
++		min_logblks = BTOBB(max_logres);
++	min_logblks *= XFS_MIN_LOG_FACTOR;
++	return XFS_BB_TO_FSB(mp, min_logblks);
++}
 -- 
 1.8.3.2
 
