@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id DCB858069
-	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 01:45:49 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C3225304039
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 92F5C8071
+	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 01:45:50 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 068C5AC010
 	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 23:45:49 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	brDocbnjb5303TbM for <xfs@oss.sgi.com>;
+	wJgoBFdsrQXJzAUW for <xfs@oss.sgi.com>;
 	Thu, 18 Jul 2013 23:45:47 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1V04RS-0004Id-UN
+	(envelope-from <dave@fromorbit.com>) id 1V04RT-0004Iy-2x
 	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:45:27 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1V04RS-0002KZ-TL
-	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:45:26 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1V04RT-0002L8-1p
+	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:45:27 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 19/49] xfs: split out inode log item format definition
-Date: Fri, 19 Jul 2013 16:44:54 +1000
-Message-Id: <1374216324-8781-20-git-send-email-david@fromorbit.com>
+Subject: [PATCH 26/49] libxfs: move transaction code to trans.c
+Date: Fri, 19 Jul 2013 16:45:01 +1000
+Message-Id: <1374216324-8781-27-git-send-email-david@fromorbit.com>
 In-Reply-To: <1374216324-8781-1-git-send-email-david@fromorbit.com>
 References: <1374216324-8781-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,53 +39,218 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The EFI/EFD item format definitions are shared with userspace. Split
-the out of header files that contain kernel only defintions to make
-it simple to shared them.
+There is very little code left in xfs_trans.c. So little it is not
+worthtrying to share this file with kernel space any more. Move the
+code to libxfs/trans.c, and remove libxfs/xfs_trans.c.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/Makefile           |   3 +-
- include/libxlog.h          |   1 -
- include/xfs_extfree_item.h | 161 ---------------------------------------------
- include/xfs_log_format.h   |  83 +++++++++++++++++++++++
- 4 files changed, 85 insertions(+), 163 deletions(-)
- delete mode 100644 include/xfs_extfree_item.h
+ libxfs/Makefile    |   1 -
+ libxfs/trans.c     | 118 +++++++++++++++++++++++++++++++++++++++++++++
+ libxfs/xfs.h       |   6 +++
+ libxfs/xfs_trans.c | 139 -----------------------------------------------------
+ 4 files changed, 124 insertions(+), 140 deletions(-)
+ delete mode 100644 libxfs/xfs_trans.c
 
-diff --git a/include/Makefile b/include/Makefile
-index f5c50b7..ad2ac46 100644
---- a/include/Makefile
-+++ b/include/Makefile
-@@ -27,7 +27,8 @@ QAHFILES = libxfs.h libxlog.h \
- 	xfs_cksum.h \
- 	xfs_da_btree.h \
- 	xfs_dinode.h xfs_dir2.h xfs_dir2_format.h \
--	xfs_extfree_item.h xfs_ialloc.h xfs_ialloc_btree.h \
-+	xfs_ialloc.h \
-+	xfs_ialloc_btree.h \
- 	xfs_icreate_item.h \
- 	xfs_inode.h \
- 	xfs_inum.h \
-diff --git a/include/libxlog.h b/include/libxlog.h
-index 08f5dbb..ee23212 100644
---- a/include/libxlog.h
-+++ b/include/libxlog.h
-@@ -48,7 +48,6 @@ struct xlog {
- };
+diff --git a/libxfs/Makefile b/libxfs/Makefile
+index b19ff6c..64b5979 100644
+--- a/libxfs/Makefile
++++ b/libxfs/Makefile
+@@ -19,7 +19,6 @@ CFILES = cache.c init.c kmem.c logitem.c radix-tree.c rdwr.c trans.c util.c \
+ 	xfs_mount.c xfs_rtalloc.c xfs_attr.c xfs_attr_remote.c \
+ 	crc32.c \
+ 	xfs_symlink.c \
+-	xfs_trans.c \
+ 	xfs_trans_resv.c
  
- #include <xfs/xfs_log_recover.h>
--#include <xfs/xfs_extfree_item.h>
- #include <xfs/xfs_icreate_item.h>
- 
+ CFILES += $(PKG_PLATFORM).c
+diff --git a/libxfs/trans.c b/libxfs/trans.c
+index 645952c..d0a91b1 100644
+--- a/libxfs/trans.c
++++ b/libxfs/trans.c
+@@ -1,5 +1,6 @@
  /*
-diff --git a/include/xfs_extfree_item.h b/include/xfs_extfree_item.h
+  * Copyright (c) 2000-2001,2005-2006 Silicon Graphics, Inc.
++ * Copyright (C) 2010 Red Hat, Inc.
+  * All Rights Reserved.
+  *
+  * This program is free software; you can redistribute it and/or
+@@ -22,6 +23,123 @@
+  * Simple transaction interface
+  */
+ 
++kmem_zone_t	*xfs_log_item_desc_zone;
++
++/*
++ * Initialize the precomputed transaction reservation values
++ * in the mount structure.
++ */
++void
++libxfs_trans_init(
++	struct xfs_mount	*mp)
++{
++	xfs_trans_resv_calc(mp, &mp->m_reservations);
++}
++
++/*
++ * Add the given log item to the transaction's list of log items.
++ *
++ * The log item will now point to its new descriptor with its li_desc field.
++ */
++void
++libxfs_trans_add_item(
++	struct xfs_trans	*tp,
++	struct xfs_log_item	*lip)
++{
++	struct xfs_log_item_desc *lidp;
++
++	ASSERT(lip->li_mountp == tp->t_mountp);
++	ASSERT(lip->li_ailp == tp->t_mountp->m_ail);
++
++	lidp = calloc(sizeof(struct xfs_log_item_desc), 1);
++	if (!lidp) {
++		fprintf(stderr, _("%s: lidp calloc failed (%d bytes): %s\n"),
++			progname, (int)sizeof(struct xfs_log_item_desc),
++			strerror(errno));
++		exit(1);
++	}
++
++	lidp->lid_item = lip;
++	lidp->lid_flags = 0;
++	list_add_tail(&lidp->lid_trans, &tp->t_items);
++
++	lip->li_desc = lidp;
++}
++
++/*
++ * Unlink and free the given descriptor.
++ */
++void
++libxfs_trans_del_item(
++	struct xfs_log_item	*lip)
++{
++	list_del_init(&lip->li_desc->lid_trans);
++	free(lip->li_desc);
++	lip->li_desc = NULL;
++}
++
++/*
++ * Roll from one trans in the sequence of PERMANENT transactions to
++ * the next: permanent transactions are only flushed out when
++ * committed with XFS_TRANS_RELEASE_LOG_RES, but we still want as soon
++ * as possible to let chunks of it go to the log. So we commit the
++ * chunk we've been working on and get a new transaction to continue.
++ */
++int
++libxfs_trans_roll(
++	struct xfs_trans	**tpp,
++	struct xfs_inode	*dp)
++{
++	struct xfs_trans	*trans;
++	unsigned int		logres, count;
++	int			error;
++
++	/*
++	 * Ensure that the inode is always logged.
++	 */
++	trans = *tpp;
++	xfs_trans_log_inode(trans, dp, XFS_ILOG_CORE);
++
++	/*
++	 * Copy the critical parameters from one trans to the next.
++	 */
++	logres = trans->t_log_res;
++	count = trans->t_log_count;
++	*tpp = xfs_trans_dup(trans);
++
++	/*
++	 * Commit the current transaction.
++	 * If this commit failed, then it'd just unlock those items that
++	 * are not marked ihold. That also means that a filesystem shutdown
++	 * is in progress. The caller takes the responsibility to cancel
++	 * the duplicate transaction that gets returned.
++	 */
++	error = xfs_trans_commit(trans, 0);
++	if (error)
++		return (error);
++
++	trans = *tpp;
++
++	/*
++	 * Reserve space in the log for th next transaction.
++	 * This also pushes items in the "AIL", the list of logged items,
++	 * out to disk if they are taking up space at the tail of the log
++	 * that we want to use.  This requires that either nothing be locked
++	 * across this call, or that anything that is locked be logged in
++	 * the prior and the next transactions.
++	 */
++	error = xfs_trans_reserve(trans, 0, logres, 0,
++				  XFS_TRANS_PERM_LOG_RES, count);
++	/*
++	 *  Ensure that the inode is in the new transaction and locked.
++	 */
++	if (error)
++		return error;
++
++	xfs_trans_ijoin(trans, dp, 0);
++	return 0;
++}
++
+ xfs_trans_t *
+ libxfs_trans_alloc(
+ 	xfs_mount_t	*mp,
+diff --git a/libxfs/xfs.h b/libxfs/xfs.h
+index 66fca85..7149c09 100644
+--- a/libxfs/xfs.h
++++ b/libxfs/xfs.h
+@@ -235,12 +235,14 @@ roundup_pow_of_two(uint v)
+ #define xfs_mod_incore_sb		libxfs_mod_incore_sb
+ 
+ #define xfs_trans_alloc			libxfs_trans_alloc
++#define xfs_trans_add_item		libxfs_trans_add_item
+ #define xfs_trans_bhold			libxfs_trans_bhold
+ #define xfs_trans_binval		libxfs_trans_binval
+ #define xfs_trans_bjoin			libxfs_trans_bjoin
+ #define xfs_trans_brelse		libxfs_trans_brelse
+ #define xfs_trans_commit		libxfs_trans_commit
+ #define xfs_trans_cancel		libxfs_trans_cancel
++#define xfs_trans_del_item		libxfs_trans_del_item
+ #define xfs_trans_dup			libxfs_trans_dup
+ #define xfs_trans_get_buf		libxfs_trans_get_buf
+ #define xfs_trans_getsb			libxfs_trans_getsb
+@@ -248,12 +250,14 @@ roundup_pow_of_two(uint v)
+ #define xfs_trans_ihold			libxfs_trans_ihold
+ #define xfs_trans_ijoin			libxfs_trans_ijoin
+ #define xfs_trans_ijoin_ref		libxfs_trans_ijoin_ref
++#define xfs_trans_init			libxfs_trans_init
+ #define xfs_trans_inode_alloc_buf	libxfs_trans_inode_alloc_buf
+ #define xfs_trans_log_buf		libxfs_trans_log_buf
+ #define xfs_trans_log_inode		libxfs_trans_log_inode
+ #define xfs_trans_mod_sb		libxfs_trans_mod_sb
+ #define xfs_trans_read_buf		libxfs_trans_read_buf
+ #define xfs_trans_read_buf_map		libxfs_trans_read_buf_map
++#define xfs_trans_roll			libxfs_trans_roll
+ #define xfs_trans_get_buf_map		libxfs_trans_get_buf_map
+ #define xfs_trans_reserve		libxfs_trans_reserve
+ 
+@@ -373,6 +377,8 @@ void xfs_mount_common(xfs_mount_t *, xfs_sb_t *);
+ /*
+  * logitem.c and trans.c prototypes
+  */
++void xfs_trans_init(struct xfs_mount *);
++int xfs_trans_roll(struct xfs_trans **, struct xfs_inode *);
+ 
+ /* xfs_trans_item.c */
+ void xfs_trans_add_item(struct xfs_trans *, struct xfs_log_item *);
+diff --git a/libxfs/xfs_trans.c b/libxfs/xfs_trans.c
 deleted file mode 100644
-index 375f68e..0000000
---- a/include/xfs_extfree_item.h
+index 2daf545..0000000
+--- a/libxfs/xfs_trans.c
 +++ /dev/null
-@@ -1,161 +0,0 @@
+@@ -1,139 +0,0 @@
 -/*
-- * Copyright (c) 2000,2005 Silicon Graphics, Inc.
+- * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
+- * Copyright (C) 2010 Red Hat, Inc.
 - * All Rights Reserved.
 - *
 - * This program is free software; you can redistribute it and/or
@@ -101,242 +266,127 @@ index 375f68e..0000000
 - * along with this program; if not, write the Free Software Foundation,
 - * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 - */
--#ifndef	__XFS_EXTFREE_ITEM_H__
--#define	__XFS_EXTFREE_ITEM_H__
 -
--struct xfs_mount;
--struct kmem_zone;
+-#include <xfs.h>
 -
--typedef struct xfs_extent {
--	xfs_dfsbno_t	ext_start;
--	xfs_extlen_t	ext_len;
--} xfs_extent_t;
+-kmem_zone_t	*xfs_trans_zone;
+-kmem_zone_t	*xfs_log_item_desc_zone;
 -
 -/*
-- * Since an xfs_extent_t has types (start:64, len: 32)
-- * there are different alignments on 32 bit and 64 bit kernels.
-- * So we provide the different variants for use by a
-- * conversion routine.
+- * Initialize the precomputed transaction reservation values
+- * in the mount structure.
 - */
--
--typedef struct xfs_extent_32 {
--	__uint64_t	ext_start;
--	__uint32_t	ext_len;
--} __attribute__((packed)) xfs_extent_32_t;
--
--typedef struct xfs_extent_64 {
--	__uint64_t	ext_start;
--	__uint32_t	ext_len;
--	__uint32_t	ext_pad;
--} xfs_extent_64_t;
+-void
+-xfs_trans_init(
+-	struct xfs_mount	*mp)
+-{
+-	xfs_trans_resv_calc(mp, &mp->m_reservations);
+-}
 -
 -/*
-- * This is the structure used to lay out an efi log item in the
-- * log.  The efi_extents field is a variable size array whose
-- * size is given by efi_nextents.
+- * Add the given log item to the transaction's list of log items.
+- *
+- * The log item will now point to its new descriptor with its li_desc field.
 - */
--typedef struct xfs_efi_log_format {
--	__uint16_t		efi_type;	/* efi log item type */
--	__uint16_t		efi_size;	/* size of this item */
--	__uint32_t		efi_nextents;	/* # extents to free */
--	__uint64_t		efi_id;		/* efi identifier */
--	xfs_extent_t		efi_extents[1];	/* array of extents to free */
--} xfs_efi_log_format_t;
+-void
+-xfs_trans_add_item(
+-	struct xfs_trans	*tp,
+-	struct xfs_log_item	*lip)
+-{
+-	struct xfs_log_item_desc *lidp;
 -
--typedef struct xfs_efi_log_format_32 {
--	__uint16_t		efi_type;	/* efi log item type */
--	__uint16_t		efi_size;	/* size of this item */
--	__uint32_t		efi_nextents;	/* # extents to free */
--	__uint64_t		efi_id;		/* efi identifier */
--	xfs_extent_32_t		efi_extents[1];	/* array of extents to free */
--} __attribute__((packed)) xfs_efi_log_format_32_t;
+-	ASSERT(lip->li_mountp == tp->t_mountp);
+-	ASSERT(lip->li_ailp == tp->t_mountp->m_ail);
 -
--typedef struct xfs_efi_log_format_64 {
--	__uint16_t		efi_type;	/* efi log item type */
--	__uint16_t		efi_size;	/* size of this item */
--	__uint32_t		efi_nextents;	/* # extents to free */
--	__uint64_t		efi_id;		/* efi identifier */
--	xfs_extent_64_t		efi_extents[1];	/* array of extents to free */
--} xfs_efi_log_format_64_t;
+-	lidp = kmem_zone_zalloc(xfs_log_item_desc_zone, KM_SLEEP | KM_NOFS);
+-
+-	lidp->lid_item = lip;
+-	lidp->lid_flags = 0;
+-	list_add_tail(&lidp->lid_trans, &tp->t_items);
+-
+-	lip->li_desc = lidp;
+-}
+-
+-STATIC void
+-xfs_trans_free_item_desc(
+-	struct xfs_log_item_desc *lidp)
+-{
+-	list_del_init(&lidp->lid_trans);
+-	kmem_zone_free(xfs_log_item_desc_zone, lidp);
+-}
 -
 -/*
-- * This is the structure used to lay out an efd log item in the
-- * log.  The efd_extents array is a variable size array whose
-- * size is given by efd_nextents;
+- * Unlink and free the given descriptor.
 - */
--typedef struct xfs_efd_log_format {
--	__uint16_t		efd_type;	/* efd log item type */
--	__uint16_t		efd_size;	/* size of this item */
--	__uint32_t		efd_nextents;	/* # of extents freed */
--	__uint64_t		efd_efi_id;	/* id of corresponding efi */
--	xfs_extent_t		efd_extents[1];	/* array of extents freed */
--} xfs_efd_log_format_t;
--
--typedef struct xfs_efd_log_format_32 {
--	__uint16_t		efd_type;	/* efd log item type */
--	__uint16_t		efd_size;	/* size of this item */
--	__uint32_t		efd_nextents;	/* # of extents freed */
--	__uint64_t		efd_efi_id;	/* id of corresponding efi */
--	xfs_extent_32_t		efd_extents[1];	/* array of extents freed */
--} __attribute__((packed)) xfs_efd_log_format_32_t;
--
--typedef struct xfs_efd_log_format_64 {
--	__uint16_t		efd_type;	/* efd log item type */
--	__uint16_t		efd_size;	/* size of this item */
--	__uint32_t		efd_nextents;	/* # of extents freed */
--	__uint64_t		efd_efi_id;	/* id of corresponding efi */
--	xfs_extent_64_t		efd_extents[1];	/* array of extents freed */
--} xfs_efd_log_format_64_t;
--
--
--#ifdef __KERNEL__
+-void
+-xfs_trans_del_item(
+-	struct xfs_log_item	*lip)
+-{
+-	xfs_trans_free_item_desc(lip->li_desc);
+-	lip->li_desc = NULL;
+-}
 -
 -/*
-- * Max number of extents in fast allocation path.
+- * Roll from one trans in the sequence of PERMANENT transactions to
+- * the next: permanent transactions are only flushed out when
+- * committed with XFS_TRANS_RELEASE_LOG_RES, but we still want as soon
+- * as possible to let chunks of it go to the log. So we commit the
+- * chunk we've been working on and get a new transaction to continue.
 - */
--#define	XFS_EFI_MAX_FAST_EXTENTS	16
+-int
+-xfs_trans_roll(
+-	struct xfs_trans	**tpp,
+-	struct xfs_inode	*dp)
+-{
+-	struct xfs_trans	*trans;
+-	unsigned int		logres, count;
+-	int			error;
 -
--/*
-- * Define EFI flag bits. Manipulated by set/clear/test_bit operators.
-- */
--#define	XFS_EFI_RECOVERED	1
--#define	XFS_EFI_COMMITTED	2
+-	/*
+-	 * Ensure that the inode is always logged.
+-	 */
+-	trans = *tpp;
+-	xfs_trans_log_inode(trans, dp, XFS_ILOG_CORE);
 -
--/*
-- * This is the "extent free intention" log item.  It is used
-- * to log the fact that some extents need to be free.  It is
-- * used in conjunction with the "extent free done" log item
-- * described below.
-- */
--typedef struct xfs_efi_log_item {
--	xfs_log_item_t		efi_item;
--	atomic_t		efi_next_extent;
--	unsigned long		efi_flags;	/* misc flags */
--	xfs_efi_log_format_t	efi_format;
--} xfs_efi_log_item_t;
+-	/*
+-	 * Copy the critical parameters from one trans to the next.
+-	 */
+-	logres = trans->t_log_res;
+-	count = trans->t_log_count;
+-	*tpp = xfs_trans_dup(trans);
 -
--/*
-- * This is the "extent free done" log item.  It is used to log
-- * the fact that some extents earlier mentioned in an efi item
-- * have been freed.
-- */
--typedef struct xfs_efd_log_item {
--	xfs_log_item_t		efd_item;
--	xfs_efi_log_item_t	*efd_efip;
--	uint			efd_next_extent;
--	xfs_efd_log_format_t	efd_format;
--} xfs_efd_log_item_t;
+-	/*
+-	 * Commit the current transaction.
+-	 * If this commit failed, then it'd just unlock those items that
+-	 * are not marked ihold. That also means that a filesystem shutdown
+-	 * is in progress. The caller takes the responsibility to cancel
+-	 * the duplicate transaction that gets returned.
+-	 */
+-	error = xfs_trans_commit(trans, 0);
+-	if (error)
+-		return (error);
 -
--/*
-- * Max number of extents in fast allocation path.
-- */
--#define	XFS_EFD_MAX_FAST_EXTENTS	16
+-	trans = *tpp;
 -
--extern struct kmem_zone	*xfs_efi_zone;
--extern struct kmem_zone	*xfs_efd_zone;
+-	/*
+-	 * Reserve space in the log for th next transaction.
+-	 * This also pushes items in the "AIL", the list of logged items,
+-	 * out to disk if they are taking up space at the tail of the log
+-	 * that we want to use.  This requires that either nothing be locked
+-	 * across this call, or that anything that is locked be logged in
+-	 * the prior and the next transactions.
+-	 */
+-	error = xfs_trans_reserve(trans, 0, logres, 0,
+-				  XFS_TRANS_PERM_LOG_RES, count);
+-	/*
+-	 *  Ensure that the inode is in the new transaction and locked.
+-	 */
+-	if (error)
+-		return error;
 -
--xfs_efi_log_item_t	*xfs_efi_init(struct xfs_mount *, uint);
--xfs_efd_log_item_t	*xfs_efd_init(struct xfs_mount *, xfs_efi_log_item_t *,
--				      uint);
--int			xfs_efi_copy_format(xfs_log_iovec_t *buf,
--					    xfs_efi_log_format_t *dst_efi_fmt);
--void			xfs_efi_item_free(xfs_efi_log_item_t *);
--
--#endif	/* __KERNEL__ */
--
--#endif	/* __XFS_EXTFREE_ITEM_H__ */
-diff --git a/include/xfs_log_format.h b/include/xfs_log_format.h
-index 77a6024..d1e93d3 100644
---- a/include/xfs_log_format.h
-+++ b/include/xfs_log_format.h
-@@ -461,4 +461,87 @@ xfs_blft_from_flags(struct xfs_buf_log_format *blf)
- 	return (blf->blf_flags & XFS_BLFT_MASK) >> XFS_BLFT_SHIFT;
- }
- 
-+/*
-+ * EFI/EFD log format definitions
-+ */
-+typedef struct xfs_extent {
-+	xfs_dfsbno_t	ext_start;
-+	xfs_extlen_t	ext_len;
-+} xfs_extent_t;
-+
-+/*
-+ * Since an xfs_extent_t has types (start:64, len: 32)
-+ * there are different alignments on 32 bit and 64 bit kernels.
-+ * So we provide the different variants for use by a
-+ * conversion routine.
-+ */
-+typedef struct xfs_extent_32 {
-+	__uint64_t	ext_start;
-+	__uint32_t	ext_len;
-+} __attribute__((packed)) xfs_extent_32_t;
-+
-+typedef struct xfs_extent_64 {
-+	__uint64_t	ext_start;
-+	__uint32_t	ext_len;
-+	__uint32_t	ext_pad;
-+} xfs_extent_64_t;
-+
-+/*
-+ * This is the structure used to lay out an efi log item in the
-+ * log.  The efi_extents field is a variable size array whose
-+ * size is given by efi_nextents.
-+ */
-+typedef struct xfs_efi_log_format {
-+	__uint16_t		efi_type;	/* efi log item type */
-+	__uint16_t		efi_size;	/* size of this item */
-+	__uint32_t		efi_nextents;	/* # extents to free */
-+	__uint64_t		efi_id;		/* efi identifier */
-+	xfs_extent_t		efi_extents[1];	/* array of extents to free */
-+} xfs_efi_log_format_t;
-+
-+typedef struct xfs_efi_log_format_32 {
-+	__uint16_t		efi_type;	/* efi log item type */
-+	__uint16_t		efi_size;	/* size of this item */
-+	__uint32_t		efi_nextents;	/* # extents to free */
-+	__uint64_t		efi_id;		/* efi identifier */
-+	xfs_extent_32_t		efi_extents[1];	/* array of extents to free */
-+} __attribute__((packed)) xfs_efi_log_format_32_t;
-+
-+typedef struct xfs_efi_log_format_64 {
-+	__uint16_t		efi_type;	/* efi log item type */
-+	__uint16_t		efi_size;	/* size of this item */
-+	__uint32_t		efi_nextents;	/* # extents to free */
-+	__uint64_t		efi_id;		/* efi identifier */
-+	xfs_extent_64_t		efi_extents[1];	/* array of extents to free */
-+} xfs_efi_log_format_64_t;
-+
-+/*
-+ * This is the structure used to lay out an efd log item in the
-+ * log.  The efd_extents array is a variable size array whose
-+ * size is given by efd_nextents;
-+ */
-+typedef struct xfs_efd_log_format {
-+	__uint16_t		efd_type;	/* efd log item type */
-+	__uint16_t		efd_size;	/* size of this item */
-+	__uint32_t		efd_nextents;	/* # of extents freed */
-+	__uint64_t		efd_efi_id;	/* id of corresponding efi */
-+	xfs_extent_t		efd_extents[1];	/* array of extents freed */
-+} xfs_efd_log_format_t;
-+
-+typedef struct xfs_efd_log_format_32 {
-+	__uint16_t		efd_type;	/* efd log item type */
-+	__uint16_t		efd_size;	/* size of this item */
-+	__uint32_t		efd_nextents;	/* # of extents freed */
-+	__uint64_t		efd_efi_id;	/* id of corresponding efi */
-+	xfs_extent_32_t		efd_extents[1];	/* array of extents freed */
-+} __attribute__((packed)) xfs_efd_log_format_32_t;
-+
-+typedef struct xfs_efd_log_format_64 {
-+	__uint16_t		efd_type;	/* efd log item type */
-+	__uint16_t		efd_size;	/* size of this item */
-+	__uint32_t		efd_nextents;	/* # of extents freed */
-+	__uint64_t		efd_efi_id;	/* id of corresponding efi */
-+	xfs_extent_64_t		efd_extents[1];	/* array of extents freed */
-+} xfs_efd_log_format_64_t;
-+
- #endif /* __XFS_LOG_FORMAT_H__ */
+-	xfs_trans_ijoin(trans, dp, 0);
+-	return 0;
+-}
 -- 
 1.8.3.2
 
