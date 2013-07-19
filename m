@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 542727F7E
+	by oss.sgi.com (Postfix) with ESMTP id 8487D7F81
 	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 01:25:38 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D992EAC00E
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 00DA4AC010
 	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 23:25:37 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	HrYS4p5ylQR9KxV6 for <xfs@oss.sgi.com>;
-	Thu, 18 Jul 2013 23:25:35 -0700 (PDT)
+	gibpsffAnGfxrcAb for <xfs@oss.sgi.com>;
+	Thu, 18 Jul 2013 23:25:36 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1V0482-00047w-I6
-	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:25:22 +1000
+	(envelope-from <dave@fromorbit.com>) id 1V0483-00048G-En
+	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:25:23 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1V0482-0001wp-H2
-	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:25:22 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1V0483-0001zw-Bb
+	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:25:23 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 03/49] xfs: split out buf log item format definitions
-Date: Fri, 19 Jul 2013 16:24:34 +1000
-Message-Id: <1374215120-7271-4-git-send-email-david@fromorbit.com>
+Subject: [PATCH 40/49] xfs: Refactor xfs_ticket_alloc() to extract a new helper
+Date: Fri, 19 Jul 2013 16:25:11 +1000
+Message-Id: <1374215120-7271-41-git-send-email-david@fromorbit.com>
 In-Reply-To: <1374215120-7271-1-git-send-email-david@fromorbit.com>
 References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -37,243 +37,128 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Jie Liu <jeff.liu@oracle.com>
 
+Refactor xlog_ticket_alloc() to extract a new helper, i.e.
+xfs_log_calc_unit_res().
+
+This helper would be used to calculate the total log reservation
+size by adding extra log operation/transation headers for a new
+log ticket.
+
+Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_buf_item.h   | 100 ++----------------------------------------------
- fs/xfs/xfs_log_format.h |  97 ++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 100 insertions(+), 97 deletions(-)
+ fs/xfs/xfs_log.c        | 60 +++++++++++++++++++++++++++++++------------------
+ fs/xfs/xfs_log_format.h |  4 ++++
+ 2 files changed, 42 insertions(+), 22 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
-index 0f1c247..db63710 100644
---- a/fs/xfs/xfs_buf_item.h
-+++ b/fs/xfs/xfs_buf_item.h
-@@ -18,101 +18,9 @@
- #ifndef	__XFS_BUF_ITEM_H__
- #define	__XFS_BUF_ITEM_H__
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index d852a2b..b02415b 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -3391,24 +3391,17 @@ xfs_log_ticket_get(
+ }
  
--extern kmem_zone_t	*xfs_buf_item_zone;
+ /*
+- * Allocate and initialise a new log ticket.
++ * Figure out the total log space unit (in bytes) that would be
++ * required for a log ticket.
+  */
+-struct xlog_ticket *
+-xlog_ticket_alloc(
+-	struct xlog	*log,
+-	int		unit_bytes,
+-	int		cnt,
+-	char		client,
+-	bool		permanent,
+-	xfs_km_flags_t	alloc_flags)
++int
++xfs_log_calc_unit_res(
++	struct xfs_mount	*mp,
++	int			unit_bytes)
+ {
+-	struct xlog_ticket *tic;
+-	uint		num_headers;
+-	int		iclog_space;
 -
--/*
-- * This flag indicates that the buffer contains on disk inodes
-- * and requires special recovery handling.
-- */
--#define	XFS_BLF_INODE_BUF	(1<<0)
--/*
-- * This flag indicates that the buffer should not be replayed
-- * during recovery because its blocks are being freed.
-- */
--#define	XFS_BLF_CANCEL		(1<<1)
--
--/*
-- * This flag indicates that the buffer contains on disk
-- * user or group dquots and may require special recovery handling.
-- */
--#define	XFS_BLF_UDQUOT_BUF	(1<<2)
--#define XFS_BLF_PDQUOT_BUF	(1<<3)
--#define	XFS_BLF_GDQUOT_BUF	(1<<4)
--
--#define	XFS_BLF_CHUNK		128
--#define	XFS_BLF_SHIFT		7
--#define	BIT_TO_WORD_SHIFT	5
--#define	NBWORD			(NBBY * sizeof(unsigned int))
--
--/*
-- * This is the structure used to lay out a buf log item in the
-- * log.  The data map describes which 128 byte chunks of the buffer
-- * have been logged.
-- */
--#define XFS_BLF_DATAMAP_SIZE	((XFS_MAX_BLOCKSIZE / XFS_BLF_CHUNK) / NBWORD)
-+/* kernel only definitions */
+-	tic = kmem_zone_zalloc(xfs_log_ticket_zone, alloc_flags);
+-	if (!tic)
+-		return NULL;
++	struct xlog		*log = mp->m_log;
++	int			iclog_space;
++	uint			num_headers;
  
--typedef struct xfs_buf_log_format {
--	unsigned short	blf_type;	/* buf log item type indicator */
--	unsigned short	blf_size;	/* size of this item */
--	ushort		blf_flags;	/* misc state */
--	ushort		blf_len;	/* number of blocks in this buf */
--	__int64_t	blf_blkno;	/* starting blkno of this buf */
--	unsigned int	blf_map_size;	/* used size of data bitmap in words */
--	unsigned int	blf_data_map[XFS_BLF_DATAMAP_SIZE]; /* dirty bitmap */
--} xfs_buf_log_format_t;
--
--/*
-- * All buffers now need to tell recovery where the magic number
-- * is so that it can verify and calculate the CRCs on the buffer correctly
-- * once the changes have been replayed into the buffer.
-- *
-- * The type value is held in the upper 5 bits of the blf_flags field, which is
-- * an unsigned 16 bit field. Hence we need to shift it 11 bits up and down.
-- */
--#define XFS_BLFT_BITS	5
--#define XFS_BLFT_SHIFT	11
--#define XFS_BLFT_MASK	(((1 << XFS_BLFT_BITS) - 1) << XFS_BLFT_SHIFT)
--
--enum xfs_blft {
--	XFS_BLFT_UNKNOWN_BUF = 0,
--	XFS_BLFT_UDQUOT_BUF,
--	XFS_BLFT_PDQUOT_BUF,
--	XFS_BLFT_GDQUOT_BUF,
--	XFS_BLFT_BTREE_BUF,
--	XFS_BLFT_AGF_BUF,
--	XFS_BLFT_AGFL_BUF,
--	XFS_BLFT_AGI_BUF,
--	XFS_BLFT_DINO_BUF,
--	XFS_BLFT_SYMLINK_BUF,
--	XFS_BLFT_DIR_BLOCK_BUF,
--	XFS_BLFT_DIR_DATA_BUF,
--	XFS_BLFT_DIR_FREE_BUF,
--	XFS_BLFT_DIR_LEAF1_BUF,
--	XFS_BLFT_DIR_LEAFN_BUF,
--	XFS_BLFT_DA_NODE_BUF,
--	XFS_BLFT_ATTR_LEAF_BUF,
--	XFS_BLFT_ATTR_RMT_BUF,
--	XFS_BLFT_SB_BUF,
--	XFS_BLFT_MAX_BUF = (1 << XFS_BLFT_BITS),
--};
--
--static inline void
--xfs_blft_to_flags(struct xfs_buf_log_format *blf, enum xfs_blft type)
--{
--	ASSERT(type > XFS_BLFT_UNKNOWN_BUF && type < XFS_BLFT_MAX_BUF);
--	blf->blf_flags &= ~XFS_BLFT_MASK;
--	blf->blf_flags |= ((type << XFS_BLFT_SHIFT) & XFS_BLFT_MASK);
--}
--
--static inline __uint16_t
--xfs_blft_from_flags(struct xfs_buf_log_format *blf)
--{
--	return (blf->blf_flags & XFS_BLFT_MASK) >> XFS_BLFT_SHIFT;
--}
--
--/*
-- * buf log item flags
-- */
-+/* buf log item flags */
- #define	XFS_BLI_HOLD		0x01
- #define	XFS_BLI_DIRTY		0x02
- #define	XFS_BLI_STALE		0x04
-@@ -133,8 +41,6 @@ xfs_blft_from_flags(struct xfs_buf_log_format *blf)
- 	{ XFS_BLI_ORDERED,	"ORDERED" }
+ 	/*
+ 	 * Permanent reservations have up to 'cnt'-1 active log operations
+@@ -3483,20 +3476,43 @@ xlog_ticket_alloc(
+ 	unit_bytes += log->l_iclog_hsize;
  
+ 	/* for roundoff padding for transaction data and one for commit record */
+-	if (xfs_sb_version_haslogv2(&log->l_mp->m_sb) &&
+-	    log->l_mp->m_sb.sb_logsunit > 1) {
++	if (xfs_sb_version_haslogv2(&mp->m_sb) && mp->m_sb.sb_logsunit > 1) {
+ 		/* log su roundoff */
+-		unit_bytes += 2*log->l_mp->m_sb.sb_logsunit;
++		unit_bytes += 2 * mp->m_sb.sb_logsunit;
+ 	} else {
+ 		/* BB roundoff */
+-		unit_bytes += 2*BBSIZE;
++		unit_bytes += 2 * BBSIZE;
+         }
  
--#ifdef __KERNEL__
--
- struct xfs_buf;
- struct xfs_mount;
- struct xfs_buf_log_item;
-@@ -169,6 +75,6 @@ void	xfs_trans_buf_set_type(struct xfs_trans *, struct xfs_buf *,
- 			       enum xfs_blft);
- void	xfs_trans_buf_copy_type(struct xfs_buf *dst_bp, struct xfs_buf *src_bp);
- 
--#endif	/* __KERNEL__ */
-+extern kmem_zone_t	*xfs_buf_item_zone;
- 
- #endif	/* __XFS_BUF_ITEM_H__ */
++	return unit_bytes;
++}
++
++/*
++ * Allocate and initialise a new log ticket.
++ */
++struct xlog_ticket *
++xlog_ticket_alloc(
++	struct xlog		*log,
++	int			unit_bytes,
++	int			cnt,
++	char			client,
++	bool			permanent,
++	xfs_km_flags_t		alloc_flags)
++{
++	struct xlog_ticket	*tic;
++	int			unit_res;
++
++	tic = kmem_zone_zalloc(xfs_log_ticket_zone, alloc_flags);
++	if (!tic)
++		return NULL;
++
++	unit_res = xfs_log_calc_unit_res(log->l_mp, unit_bytes);
++
+ 	atomic_set(&tic->t_ref, 1);
+ 	tic->t_task		= current;
+ 	INIT_LIST_HEAD(&tic->t_queue);
+-	tic->t_unit_res		= unit_bytes;
+-	tic->t_curr_res		= unit_bytes;
++	tic->t_unit_res		= unit_res;
++	tic->t_curr_res		= unit_res;
+ 	tic->t_cnt		= cnt;
+ 	tic->t_ocnt		= cnt;
+ 	tic->t_tid		= prandom_u32();
 diff --git a/fs/xfs/xfs_log_format.h b/fs/xfs/xfs_log_format.h
-index fd46a7f..77a6024 100644
+index 198381e..cc08f59 100644
 --- a/fs/xfs/xfs_log_format.h
 +++ b/fs/xfs/xfs_log_format.h
-@@ -364,4 +364,101 @@ static inline uint xfs_icdinode_size(int version)
- 		return sizeof(struct xfs_icdinode);
- 	return offsetof(struct xfs_icdinode, di_next_unlinked);
- }
+@@ -18,6 +18,8 @@
+ #ifndef	__XFS_LOG_FORMAT_H__
+ #define __XFS_LOG_FORMAT_H__
+ 
++struct xfs_mount;
 +
-+/*
-+ * Buffer Log Format defintions
-+ *
-+ * These are the physical dirty bitmap defintions for the log format structure.
-+ */
-+#define	XFS_BLF_CHUNK		128
-+#define	XFS_BLF_SHIFT		7
-+#define	BIT_TO_WORD_SHIFT	5
-+#define	NBWORD			(NBBY * sizeof(unsigned int))
-+
-+/*
-+ * This flag indicates that the buffer contains on disk inodes
-+ * and requires special recovery handling.
-+ */
-+#define	XFS_BLF_INODE_BUF	(1<<0)
-+
-+/*
-+ * This flag indicates that the buffer should not be replayed
-+ * during recovery because its blocks are being freed.
-+ */
-+#define	XFS_BLF_CANCEL		(1<<1)
-+
-+/*
-+ * This flag indicates that the buffer contains on disk
-+ * user or group dquots and may require special recovery handling.
-+ */
-+#define	XFS_BLF_UDQUOT_BUF	(1<<2)
-+#define XFS_BLF_PDQUOT_BUF	(1<<3)
-+#define	XFS_BLF_GDQUOT_BUF	(1<<4)
-+
-+/*
-+ * This is the structure used to lay out a buf log item in the
-+ * log.  The data map describes which 128 byte chunks of the buffer
-+ * have been logged.
-+ */
-+#define XFS_BLF_DATAMAP_SIZE	((XFS_MAX_BLOCKSIZE / XFS_BLF_CHUNK) / NBWORD)
-+
-+typedef struct xfs_buf_log_format {
-+	unsigned short	blf_type;	/* buf log item type indicator */
-+	unsigned short	blf_size;	/* size of this item */
-+	ushort		blf_flags;	/* misc state */
-+	ushort		blf_len;	/* number of blocks in this buf */
-+	__int64_t	blf_blkno;	/* starting blkno of this buf */
-+	unsigned int	blf_map_size;	/* used size of data bitmap in words */
-+	unsigned int	blf_data_map[XFS_BLF_DATAMAP_SIZE]; /* dirty bitmap */
-+} xfs_buf_log_format_t;
-+
-+/*
-+ * All buffers now need to tell recovery where the magic number
-+ * is so that it can verify and calculate the CRCs on the buffer correctly
-+ * once the changes have been replayed into the buffer.
-+ *
-+ * The type value is held in the upper 5 bits of the blf_flags field, which is
-+ * an unsigned 16 bit field. Hence we need to shift it 11 bits up and down.
-+ */
-+#define XFS_BLFT_BITS	5
-+#define XFS_BLFT_SHIFT	11
-+#define XFS_BLFT_MASK	(((1 << XFS_BLFT_BITS) - 1) << XFS_BLFT_SHIFT)
-+
-+enum xfs_blft {
-+	XFS_BLFT_UNKNOWN_BUF = 0,
-+	XFS_BLFT_UDQUOT_BUF,
-+	XFS_BLFT_PDQUOT_BUF,
-+	XFS_BLFT_GDQUOT_BUF,
-+	XFS_BLFT_BTREE_BUF,
-+	XFS_BLFT_AGF_BUF,
-+	XFS_BLFT_AGFL_BUF,
-+	XFS_BLFT_AGI_BUF,
-+	XFS_BLFT_DINO_BUF,
-+	XFS_BLFT_SYMLINK_BUF,
-+	XFS_BLFT_DIR_BLOCK_BUF,
-+	XFS_BLFT_DIR_DATA_BUF,
-+	XFS_BLFT_DIR_FREE_BUF,
-+	XFS_BLFT_DIR_LEAF1_BUF,
-+	XFS_BLFT_DIR_LEAFN_BUF,
-+	XFS_BLFT_DA_NODE_BUF,
-+	XFS_BLFT_ATTR_LEAF_BUF,
-+	XFS_BLFT_ATTR_RMT_BUF,
-+	XFS_BLFT_SB_BUF,
-+	XFS_BLFT_MAX_BUF = (1 << XFS_BLFT_BITS),
-+};
-+
-+static inline void
-+xfs_blft_to_flags(struct xfs_buf_log_format *blf, enum xfs_blft type)
-+{
-+	ASSERT(type > XFS_BLFT_UNKNOWN_BUF && type < XFS_BLFT_MAX_BUF);
-+	blf->blf_flags &= ~XFS_BLFT_MASK;
-+	blf->blf_flags |= ((type << XFS_BLFT_SHIFT) & XFS_BLFT_MASK);
-+}
-+
-+static inline __uint16_t
-+xfs_blft_from_flags(struct xfs_buf_log_format *blf)
-+{
-+	return (blf->blf_flags & XFS_BLFT_MASK) >> XFS_BLFT_SHIFT;
-+}
+ /*
+  * On-disk Log Format definitions.
+  *
+@@ -834,4 +836,6 @@ struct xfs_icreate_log {
+ 	__be32		icl_gen;	/* inode generation number to use */
+ };
+ 
++int	xfs_log_calc_unit_res(struct xfs_mount *mp, int unit_bytes);
 +
  #endif /* __XFS_LOG_FORMAT_H__ */
 -- 
