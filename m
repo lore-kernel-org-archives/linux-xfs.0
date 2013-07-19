@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 043597F76
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id BB1EB7F77
 	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 01:25:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id DAA278F8033
-	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 23:25:42 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 664ECAC010
+	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 23:25:43 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	f6ye9ABkMKBQdsOU for <xfs@oss.sgi.com>;
-	Thu, 18 Jul 2013 23:25:40 -0700 (PDT)
+	xuYEmFtp9he8V4Ar for <xfs@oss.sgi.com>;
+	Thu, 18 Jul 2013 23:25:41 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1V0482-00048H-Sk
-	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:25:23 +1000
+	(envelope-from <dave@fromorbit.com>) id 1V0482-00048D-Qp
+	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:25:22 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1V0482-0001y9-Rm
+	(envelope-from <dave@disappointment.disaster>) id 1V0482-0001xu-Pu
 	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:25:22 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 19/49] xfs: split out the remote symlink handling
-Date: Fri, 19 Jul 2013 16:24:50 +1000
-Message-Id: <1374215120-7271-20-git-send-email-david@fromorbit.com>
+Subject: [PATCH 16/49] xfs: reshuffle dir2 definitions around for userspace
+Date: Fri, 19 Jul 2013 16:24:47 +1000
+Message-Id: <1374215120-7271-17-git-send-email-david@fromorbit.com>
 In-Reply-To: <1374215120-7271-1-git-send-email-david@fromorbit.com>
 References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,555 +39,516 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The remote symlink format definition and manipulation needs to be
-shared with userspace, but the in-kernel interfaces do not. Split
-the remote symlink format handling out into xfs_symlink_remote.[ch]
-fo it can easily be shared with userspace.
+Many of the definitions within xfs_dir2_priv.h are needed in
+userspace outside libxfs. Definitions within xfs_dir2_priv.h are
+wholly contained within libxfs, so we need to shuffle some of the
+definitions around to keep consistency across files shared between
+user and kernel space.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/Makefile             |   3 +-
- fs/xfs/xfs_format.h         |  42 ++++++++++
- fs/xfs/xfs_symlink.c        | 172 --------------------------------------
- fs/xfs/xfs_symlink.h        |  42 +---------
- fs/xfs/xfs_symlink_remote.c | 199 ++++++++++++++++++++++++++++++++++++++++++++
- 5 files changed, 244 insertions(+), 214 deletions(-)
- create mode 100644 fs/xfs/xfs_symlink_remote.c
+ fs/xfs/xfs_bmap.c         |  3 ++-
+ fs/xfs/xfs_da_btree.c     |  2 +-
+ fs/xfs/xfs_dir2.c         |  2 +-
+ fs/xfs/xfs_dir2.h         | 51 +++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_dir2_block.c   |  2 +-
+ fs/xfs/xfs_dir2_data.c    |  6 ++----
+ fs/xfs/xfs_dir2_leaf.c    |  1 +
+ fs/xfs/xfs_dir2_node.c    |  1 +
+ fs/xfs/xfs_dir2_priv.h    | 31 ----------------------------
+ fs/xfs/xfs_dir2_readdir.c |  1 +
+ fs/xfs/xfs_dir2_sf.c      |  6 +++---
+ fs/xfs/xfs_export.c       |  4 +++-
+ fs/xfs/xfs_file.c         |  2 +-
+ fs/xfs/xfs_icreate_item.c | 12 -----------
+ fs/xfs/xfs_log_recover.c  |  2 +-
+ fs/xfs/xfs_mount.c        |  4 +++-
+ fs/xfs/xfs_rename.c       |  3 ++-
+ fs/xfs/xfs_rtalloc.c      |  1 -
+ fs/xfs/xfs_super.c        |  3 ++-
+ fs/xfs/xfs_symlink.c      |  3 ++-
+ fs/xfs/xfs_utils.c        |  4 +++-
+ fs/xfs/xfs_vnodeops.c     |  3 ++-
+ 22 files changed, 83 insertions(+), 64 deletions(-)
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index a73af1c..20b1d94 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -50,6 +50,7 @@ xfs-y				+= xfs_aops.o \
- 				   xfs_mru_cache.o \
- 				   xfs_rename.o \
- 				   xfs_super.o \
-+				   xfs_symlink.o \
- 				   xfs_trans.o \
- 				   xfs_utils.o \
- 				   xfs_vnodeops.o \
-@@ -81,7 +82,7 @@ xfs-y				+= xfs_alloc.o \
- 				   xfs_inode_buf.o \
- 				   xfs_log_recover.o \
- 				   xfs_mount.o \
--				   xfs_symlink.o \
-+				   xfs_symlink_remote.o \
- 				   xfs_trans_resv.o
- 
- # low-level transaction/log code
-diff --git a/fs/xfs/xfs_format.h b/fs/xfs/xfs_format.h
-index 6205374..35c08ff 100644
---- a/fs/xfs/xfs_format.h
-+++ b/fs/xfs/xfs_format.h
-@@ -27,6 +27,12 @@
-  * xfs_log_format.h. Everything else goes here.
-  */
- 
-+struct xfs_mount;
-+struct xfs_trans;
-+struct xfs_inode;
-+struct xfs_buf;
-+struct xfs_ifork;
-+
- /*
-  * RealTime Device format definitions
-  */
-@@ -123,5 +129,41 @@ typedef struct xfs_dqblk {
- 
- #define XFS_DQUOT_CRC_OFF	offsetof(struct xfs_dqblk, dd_crc)
- 
-+/*
-+ * Remote symlink format and access functions.
-+ */
-+#define XFS_SYMLINK_MAGIC	0x58534c4d	/* XSLM */
-+
-+struct xfs_dsymlink_hdr {
-+	__be32	sl_magic;
-+	__be32	sl_offset;
-+	__be32	sl_bytes;
-+	__be32	sl_crc;
-+	uuid_t	sl_uuid;
-+	__be64	sl_owner;
-+	__be64	sl_blkno;
-+	__be64	sl_lsn;
-+};
-+
-+/*
-+ * The maximum pathlen is 1024 bytes. Since the minimum file system
-+ * blocksize is 512 bytes, we can get a max of 3 extents back from
-+ * bmapi when crc headers are taken into account.
-+ */
-+#define XFS_SYMLINK_MAPS 3
-+
-+#define XFS_SYMLINK_BUF_SPACE(mp, bufsize)	\
-+	((bufsize) - (xfs_sb_version_hascrc(&(mp)->m_sb) ? \
-+			sizeof(struct xfs_dsymlink_hdr) : 0))
-+
-+int xfs_symlink_blocks(struct xfs_mount *mp, int pathlen);
-+int xfs_symlink_hdr_set(struct xfs_mount *mp, xfs_ino_t ino, uint32_t offset,
-+			uint32_t size, struct xfs_buf *bp);
-+bool xfs_symlink_hdr_ok(struct xfs_mount *mp, xfs_ino_t ino, uint32_t offset,
-+			uint32_t size, struct xfs_buf *bp);
-+void xfs_symlink_local_to_remote(struct xfs_trans *tp, struct xfs_buf *bp,
-+				 struct xfs_inode *ip, struct xfs_ifork *ifp);
-+
-+extern const struct xfs_buf_ops xfs_symlink_buf_ops;
- 
- #endif /* __XFS_FORMAT_H__ */
-diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-index dd7c099..18f24de 100644
---- a/fs/xfs/xfs_symlink.c
-+++ b/fs/xfs/xfs_symlink.c
-@@ -32,8 +32,6 @@
+diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
+index 0343b44..72a2eea 100644
+--- a/fs/xfs/xfs_bmap.c
++++ b/fs/xfs/xfs_bmap.c
+@@ -24,9 +24,10 @@
+ #include "xfs_trans.h"
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+-#include "xfs_dir2.h"
+ #include "xfs_mount.h"
+ #include "xfs_da_btree.h"
++#include "xfs_dir2_format.h"
++#include "xfs_dir2.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_alloc_btree.h"
  #include "xfs_ialloc_btree.h"
+diff --git a/fs/xfs/xfs_da_btree.c b/fs/xfs/xfs_da_btree.c
+index 0b8b2a1..8bbd7ef 100644
+--- a/fs/xfs/xfs_da_btree.c
++++ b/fs/xfs/xfs_da_btree.c
+@@ -27,8 +27,8 @@
+ #include "xfs_mount.h"
+ #include "xfs_da_btree.h"
+ #include "xfs_bmap_btree.h"
+-#include "xfs_dir2.h"
+ #include "xfs_dir2_format.h"
++#include "xfs_dir2.h"
+ #include "xfs_dir2_priv.h"
  #include "xfs_dinode.h"
  #include "xfs_inode.h"
--#include "xfs_inode_item.h"
--#include "xfs_itable.h"
- #include "xfs_ialloc.h"
- #include "xfs_alloc.h"
+diff --git a/fs/xfs/xfs_dir2.c b/fs/xfs/xfs_dir2.c
+index 431be44..c3263a5 100644
+--- a/fs/xfs/xfs_dir2.c
++++ b/fs/xfs/xfs_dir2.c
+@@ -31,8 +31,8 @@
+ #include "xfs_inode.h"
+ #include "xfs_inode_item.h"
  #include "xfs_bmap.h"
-@@ -41,178 +39,8 @@
- #include "xfs_quota.h"
- #include "xfs_utils.h"
- #include "xfs_trans_space.h"
--#include "xfs_log_priv.h"
+-#include "xfs_dir2.h"
+ #include "xfs_dir2_format.h"
++#include "xfs_dir2.h"
+ #include "xfs_dir2_priv.h"
+ #include "xfs_error.h"
+ #include "xfs_vnodeops.h"
+diff --git a/fs/xfs/xfs_dir2.h b/fs/xfs/xfs_dir2.h
+index e937d99..7ef6b0f 100644
+--- a/fs/xfs/xfs_dir2.h
++++ b/fs/xfs/xfs_dir2.h
+@@ -23,6 +23,11 @@ struct xfs_da_args;
+ struct xfs_inode;
+ struct xfs_mount;
+ struct xfs_trans;
++struct xfs_dir2_sf_hdr;
++struct xfs_dir2_sf_entry;
++struct xfs_dir2_data_hdr;
++struct xfs_dir2_data_entry;
++struct xfs_dir2_data_unused;
+ 
+ extern struct xfs_name	xfs_name_dotdot;
+ 
+@@ -57,4 +62,50 @@ extern int xfs_dir_canenter(struct xfs_trans *tp, struct xfs_inode *dp,
+  */
+ extern int xfs_dir2_sf_to_block(struct xfs_da_args *args);
+ 
++/*
++ * Direct call on directory open, before entering the readdir code.
++ */
++extern int xfs_dir3_data_readahead(struct xfs_trans *tp, struct xfs_inode *dp,
++		xfs_dablk_t bno, xfs_daddr_t mapped_bno);
++
++/*
++ * Interface routines used by userspace utilities
++ */
++extern xfs_ino_t xfs_dir2_sf_get_parent_ino(struct xfs_dir2_sf_hdr *sfp);
++extern void xfs_dir2_sf_put_parent_ino(struct xfs_dir2_sf_hdr *sfp,
++		xfs_ino_t ino);
++extern xfs_ino_t xfs_dir2_sfe_get_ino(struct xfs_dir2_sf_hdr *sfp,
++		struct xfs_dir2_sf_entry *sfep);
++extern void xfs_dir2_sfe_put_ino( struct xfs_dir2_sf_hdr *,
++		struct xfs_dir2_sf_entry *sfep, xfs_ino_t ino);
++
++extern int xfs_dir2_isblock(struct xfs_trans *tp, struct xfs_inode *dp, int *r);
++extern int xfs_dir2_isleaf(struct xfs_trans *tp, struct xfs_inode *dp, int *r);
++extern int xfs_dir2_shrink_inode(struct xfs_da_args *args, xfs_dir2_db_t db,
++				struct xfs_buf *bp);
++
++extern void xfs_dir2_data_freescan(struct xfs_mount *mp,
++		struct xfs_dir2_data_hdr *hdr, int *loghead);
++extern void xfs_dir2_data_log_entry(struct xfs_trans *tp, struct xfs_buf *bp,
++		struct xfs_dir2_data_entry *dep);
++extern void xfs_dir2_data_log_header(struct xfs_trans *tp,
++		struct xfs_buf *bp);
++extern void xfs_dir2_data_log_unused(struct xfs_trans *tp, struct xfs_buf *bp,
++		struct xfs_dir2_data_unused *dup);
++extern void xfs_dir2_data_make_free(struct xfs_trans *tp, struct xfs_buf *bp,
++		xfs_dir2_data_aoff_t offset, xfs_dir2_data_aoff_t len,
++		int *needlogp, int *needscanp);
++extern void xfs_dir2_data_use_free(struct xfs_trans *tp, struct xfs_buf *bp,
++		struct xfs_dir2_data_unused *dup, xfs_dir2_data_aoff_t offset,
++		xfs_dir2_data_aoff_t len, int *needlogp, int *needscanp);
++
++extern struct xfs_dir2_data_free *xfs_dir2_data_freefind(
++		struct xfs_dir2_data_hdr *hdr, struct xfs_dir2_data_unused *dup);
++
++extern const struct xfs_buf_ops xfs_dir3_block_buf_ops;
++extern const struct xfs_buf_ops xfs_dir3_leafn_buf_ops;
++extern const struct xfs_buf_ops xfs_dir3_leaf1_buf_ops;
++extern const struct xfs_buf_ops xfs_dir3_free_buf_ops;
++extern const struct xfs_buf_ops xfs_dir3_data_buf_ops;
++
+ #endif	/* __XFS_DIR2_H__ */
+diff --git a/fs/xfs/xfs_dir2_block.c b/fs/xfs/xfs_dir2_block.c
+index 5e84000..becd69f 100644
+--- a/fs/xfs/xfs_dir2_block.c
++++ b/fs/xfs/xfs_dir2_block.c
+@@ -31,8 +31,8 @@
+ #include "xfs_inode_item.h"
+ #include "xfs_bmap.h"
+ #include "xfs_buf_item.h"
+-#include "xfs_dir2.h"
+ #include "xfs_dir2_format.h"
++#include "xfs_dir2.h"
+ #include "xfs_dir2_priv.h"
+ #include "xfs_error.h"
  #include "xfs_trace.h"
- #include "xfs_symlink.h"
--#include "xfs_cksum.h"
--#include "xfs_buf_item.h"
+diff --git a/fs/xfs/xfs_dir2_data.c b/fs/xfs/xfs_dir2_data.c
+index c293023..4e1917d 100644
+--- a/fs/xfs/xfs_dir2_data.c
++++ b/fs/xfs/xfs_dir2_data.c
+@@ -29,14 +29,12 @@
+ #include "xfs_dinode.h"
+ #include "xfs_inode.h"
+ #include "xfs_dir2_format.h"
++#include "xfs_dir2.h"
+ #include "xfs_dir2_priv.h"
+ #include "xfs_error.h"
+ #include "xfs_buf_item.h"
+ #include "xfs_cksum.h"
+ 
+-STATIC xfs_dir2_data_free_t *
+-xfs_dir2_data_freefind(xfs_dir2_data_hdr_t *hdr, xfs_dir2_data_unused_t *dup);
 -
+ /*
+  * Check the consistency of the data block.
+  * The input can also be a block-format directory.
+@@ -325,7 +323,7 @@ xfs_dir3_data_readahead(
+  * Given a data block and an unused entry from that block,
+  * return the bestfree entry if any that corresponds to it.
+  */
+-STATIC xfs_dir2_data_free_t *
++xfs_dir2_data_free_t *
+ xfs_dir2_data_freefind(
+ 	xfs_dir2_data_hdr_t	*hdr,		/* data block */
+ 	xfs_dir2_data_unused_t	*dup)		/* data unused entry */
+diff --git a/fs/xfs/xfs_dir2_leaf.c b/fs/xfs/xfs_dir2_leaf.c
+index e1386aa..5505edb 100644
+--- a/fs/xfs/xfs_dir2_leaf.c
++++ b/fs/xfs/xfs_dir2_leaf.c
+@@ -31,6 +31,7 @@
+ #include "xfs_inode.h"
+ #include "xfs_bmap.h"
+ #include "xfs_dir2_format.h"
++#include "xfs_dir2.h"
+ #include "xfs_dir2_priv.h"
+ #include "xfs_error.h"
+ #include "xfs_trace.h"
+diff --git a/fs/xfs/xfs_dir2_node.c b/fs/xfs/xfs_dir2_node.c
+index 2226a00..b4bd9b6 100644
+--- a/fs/xfs/xfs_dir2_node.c
++++ b/fs/xfs/xfs_dir2_node.c
+@@ -30,6 +30,7 @@
+ #include "xfs_inode.h"
+ #include "xfs_bmap.h"
+ #include "xfs_dir2_format.h"
++#include "xfs_dir2.h"
+ #include "xfs_dir2_priv.h"
+ #include "xfs_error.h"
+ #include "xfs_trace.h"
+diff --git a/fs/xfs/xfs_dir2_priv.h b/fs/xfs/xfs_dir2_priv.h
+index 72ff8d7..807eb65 100644
+--- a/fs/xfs/xfs_dir2_priv.h
++++ b/fs/xfs/xfs_dir2_priv.h
+@@ -20,18 +20,12 @@
+ 
+ /* xfs_dir2.c */
+ extern int xfs_dir_ino_validate(struct xfs_mount *mp, xfs_ino_t ino);
+-extern int xfs_dir2_isblock(struct xfs_trans *tp, struct xfs_inode *dp, int *r);
+-extern int xfs_dir2_isleaf(struct xfs_trans *tp, struct xfs_inode *dp, int *r);
+ extern int xfs_dir2_grow_inode(struct xfs_da_args *args, int space,
+ 				xfs_dir2_db_t *dbp);
+-extern int xfs_dir2_shrink_inode(struct xfs_da_args *args, xfs_dir2_db_t db,
+-				struct xfs_buf *bp);
+ extern int xfs_dir_cilookup_result(struct xfs_da_args *args,
+ 				const unsigned char *name, int len);
+ 
+ /* xfs_dir2_block.c */
+-extern const struct xfs_buf_ops xfs_dir3_block_buf_ops;
 -
--/*
-- * Each contiguous block has a header, so it is not just a simple pathlen
-- * to FSB conversion.
-- */
--int
--xfs_symlink_blocks(
--	struct xfs_mount *mp,
--	int		pathlen)
--{
--	int buflen = XFS_SYMLINK_BUF_SPACE(mp, mp->m_sb.sb_blocksize);
+ extern int xfs_dir3_block_read(struct xfs_trans *tp, struct xfs_inode *dp,
+ 			       struct xfs_buf **bpp);
+ extern int xfs_dir2_block_addname(struct xfs_da_args *args);
+@@ -48,39 +42,17 @@ extern int xfs_dir2_leaf_to_block(struct xfs_da_args *args,
+ #define	xfs_dir3_data_check(dp,bp)
+ #endif
+ 
+-extern const struct xfs_buf_ops xfs_dir3_data_buf_ops;
+-extern const struct xfs_buf_ops xfs_dir3_free_buf_ops;
 -
--	return (pathlen + buflen - 1) / buflen;
--}
+ extern int __xfs_dir3_data_check(struct xfs_inode *dp, struct xfs_buf *bp);
+ extern int xfs_dir3_data_read(struct xfs_trans *tp, struct xfs_inode *dp,
+ 		xfs_dablk_t bno, xfs_daddr_t mapped_bno, struct xfs_buf **bpp);
+-extern int xfs_dir3_data_readahead(struct xfs_trans *tp, struct xfs_inode *dp,
+-		xfs_dablk_t bno, xfs_daddr_t mapped_bno);
+ 
+ extern struct xfs_dir2_data_free *
+ xfs_dir2_data_freeinsert(struct xfs_dir2_data_hdr *hdr,
+ 		struct xfs_dir2_data_unused *dup, int *loghead);
+-extern void xfs_dir2_data_freescan(struct xfs_mount *mp,
+-		struct xfs_dir2_data_hdr *hdr, int *loghead);
+ extern int xfs_dir3_data_init(struct xfs_da_args *args, xfs_dir2_db_t blkno,
+ 		struct xfs_buf **bpp);
+-extern void xfs_dir2_data_log_entry(struct xfs_trans *tp, struct xfs_buf *bp,
+-		struct xfs_dir2_data_entry *dep);
+-extern void xfs_dir2_data_log_header(struct xfs_trans *tp,
+-		struct xfs_buf *bp);
+-extern void xfs_dir2_data_log_unused(struct xfs_trans *tp, struct xfs_buf *bp,
+-		struct xfs_dir2_data_unused *dup);
+-extern void xfs_dir2_data_make_free(struct xfs_trans *tp, struct xfs_buf *bp,
+-		xfs_dir2_data_aoff_t offset, xfs_dir2_data_aoff_t len,
+-		int *needlogp, int *needscanp);
+-extern void xfs_dir2_data_use_free(struct xfs_trans *tp, struct xfs_buf *bp,
+-		struct xfs_dir2_data_unused *dup, xfs_dir2_data_aoff_t offset,
+-		xfs_dir2_data_aoff_t len, int *needlogp, int *needscanp);
+ 
+ /* xfs_dir2_leaf.c */
+-extern const struct xfs_buf_ops xfs_dir3_leaf1_buf_ops;
+-extern const struct xfs_buf_ops xfs_dir3_leafn_buf_ops;
 -
--static int
--xfs_symlink_hdr_set(
--	struct xfs_mount	*mp,
--	xfs_ino_t		ino,
--	uint32_t		offset,
--	uint32_t		size,
--	struct xfs_buf		*bp)
--{
--	struct xfs_dsymlink_hdr	*dsl = bp->b_addr;
--
--	if (!xfs_sb_version_hascrc(&mp->m_sb))
--		return 0;
--
--	dsl->sl_magic = cpu_to_be32(XFS_SYMLINK_MAGIC);
--	dsl->sl_offset = cpu_to_be32(offset);
--	dsl->sl_bytes = cpu_to_be32(size);
--	uuid_copy(&dsl->sl_uuid, &mp->m_sb.sb_uuid);
--	dsl->sl_owner = cpu_to_be64(ino);
--	dsl->sl_blkno = cpu_to_be64(bp->b_bn);
--	bp->b_ops = &xfs_symlink_buf_ops;
--
--	return sizeof(struct xfs_dsymlink_hdr);
--}
--
--/*
-- * Checking of the symlink header is split into two parts. the verifier does
-- * CRC, location and bounds checking, the unpacking function checks the path
-- * parameters and owner.
-- */
--bool
--xfs_symlink_hdr_ok(
--	struct xfs_mount	*mp,
--	xfs_ino_t		ino,
--	uint32_t		offset,
--	uint32_t		size,
--	struct xfs_buf		*bp)
--{
--	struct xfs_dsymlink_hdr *dsl = bp->b_addr;
--
--	if (offset != be32_to_cpu(dsl->sl_offset))
--		return false;
--	if (size != be32_to_cpu(dsl->sl_bytes))
--		return false;
--	if (ino != be64_to_cpu(dsl->sl_owner))
--		return false;
--
--	/* ok */
--	return true;
--}
--
--static bool
--xfs_symlink_verify(
--	struct xfs_buf		*bp)
--{
--	struct xfs_mount	*mp = bp->b_target->bt_mount;
--	struct xfs_dsymlink_hdr	*dsl = bp->b_addr;
--
--	if (!xfs_sb_version_hascrc(&mp->m_sb))
--		return false;
--	if (dsl->sl_magic != cpu_to_be32(XFS_SYMLINK_MAGIC))
--		return false;
--	if (!uuid_equal(&dsl->sl_uuid, &mp->m_sb.sb_uuid))
--		return false;
--	if (bp->b_bn != be64_to_cpu(dsl->sl_blkno))
--		return false;
--	if (be32_to_cpu(dsl->sl_offset) +
--				be32_to_cpu(dsl->sl_bytes) >= MAXPATHLEN)
--		return false;
--	if (dsl->sl_owner == 0)
--		return false;
--
--	return true;
--}
--
+ extern int xfs_dir3_leafn_read(struct xfs_trans *tp, struct xfs_inode *dp,
+ 		xfs_dablk_t fbno, xfs_daddr_t mappedbno, struct xfs_buf **bpp);
+ extern int xfs_dir2_block_to_leaf(struct xfs_da_args *args,
+@@ -142,9 +114,6 @@ extern int xfs_dir2_free_read(struct xfs_trans *tp, struct xfs_inode *dp,
+ 		xfs_dablk_t fbno, struct xfs_buf **bpp);
+ 
+ /* xfs_dir2_sf.c */
+-extern xfs_ino_t xfs_dir2_sf_get_parent_ino(struct xfs_dir2_sf_hdr *sfp);
+-extern xfs_ino_t xfs_dir2_sfe_get_ino(struct xfs_dir2_sf_hdr *sfp,
+-		struct xfs_dir2_sf_entry *sfep);
+ extern int xfs_dir2_block_sfsize(struct xfs_inode *dp,
+ 		struct xfs_dir2_data_hdr *block, struct xfs_dir2_sf_hdr *sfhp);
+ extern int xfs_dir2_block_to_sf(struct xfs_da_args *args, struct xfs_buf *bp,
+diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
+index fd3829a..e6211a7 100644
+--- a/fs/xfs/xfs_dir2_readdir.c
++++ b/fs/xfs/xfs_dir2_readdir.c
+@@ -30,6 +30,7 @@
+ #include "xfs_dinode.h"
+ #include "xfs_inode.h"
+ #include "xfs_dir2_format.h"
++#include "xfs_dir2.h"
+ #include "xfs_dir2_priv.h"
+ #include "xfs_error.h"
+ #include "xfs_trace.h"
+diff --git a/fs/xfs/xfs_dir2_sf.c b/fs/xfs/xfs_dir2_sf.c
+index f24ce90..65b65c5 100644
+--- a/fs/xfs/xfs_dir2_sf.c
++++ b/fs/xfs/xfs_dir2_sf.c
+@@ -29,8 +29,8 @@
+ #include "xfs_inode.h"
+ #include "xfs_inode_item.h"
+ #include "xfs_error.h"
+-#include "xfs_dir2.h"
+ #include "xfs_dir2_format.h"
++#include "xfs_dir2.h"
+ #include "xfs_dir2_priv.h"
+ #include "xfs_trace.h"
+ 
+@@ -95,7 +95,7 @@ xfs_dir2_sf_get_parent_ino(
+ 	return xfs_dir2_sf_get_ino(hdr, &hdr->parent);
+ }
+ 
 -static void
--xfs_symlink_read_verify(
--	struct xfs_buf	*bp)
--{
--	struct xfs_mount *mp = bp->b_target->bt_mount;
--
--	/* no verification of non-crc buffers */
--	if (!xfs_sb_version_hascrc(&mp->m_sb))
--		return;
--
--	if (!xfs_verify_cksum(bp->b_addr, BBTOB(bp->b_length),
--				  offsetof(struct xfs_dsymlink_hdr, sl_crc)) ||
--	    !xfs_symlink_verify(bp)) {
--		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
--		xfs_buf_ioerror(bp, EFSCORRUPTED);
--	}
--}
--
--static void
--xfs_symlink_write_verify(
--	struct xfs_buf	*bp)
--{
--	struct xfs_mount *mp = bp->b_target->bt_mount;
--	struct xfs_buf_log_item	*bip = bp->b_fspriv;
--
--	/* no verification of non-crc buffers */
--	if (!xfs_sb_version_hascrc(&mp->m_sb))
--		return;
--
--	if (!xfs_symlink_verify(bp)) {
--		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
--		xfs_buf_ioerror(bp, EFSCORRUPTED);
--		return;
--	}
--
--	if (bip) {
--		struct xfs_dsymlink_hdr *dsl = bp->b_addr;
--		dsl->sl_lsn = cpu_to_be64(bip->bli_item.li_lsn);
--	}
--	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length),
--			 offsetof(struct xfs_dsymlink_hdr, sl_crc));
--}
--
--const struct xfs_buf_ops xfs_symlink_buf_ops = {
--	.verify_read = xfs_symlink_read_verify,
--	.verify_write = xfs_symlink_write_verify,
--};
--
--void
--xfs_symlink_local_to_remote(
--	struct xfs_trans	*tp,
--	struct xfs_buf		*bp,
--	struct xfs_inode	*ip,
--	struct xfs_ifork	*ifp)
--{
--	struct xfs_mount	*mp = ip->i_mount;
--	char			*buf;
--
--	if (!xfs_sb_version_hascrc(&mp->m_sb)) {
--		bp->b_ops = NULL;
--		memcpy(bp->b_addr, ifp->if_u1.if_data, ifp->if_bytes);
--		return;
--	}
--
--	/*
--	 * As this symlink fits in an inode literal area, it must also fit in
--	 * the smallest buffer the filesystem supports.
--	 */
--	ASSERT(BBTOB(bp->b_length) >=
--			ifp->if_bytes + sizeof(struct xfs_dsymlink_hdr));
--
--	bp->b_ops = &xfs_symlink_buf_ops;
--
--	buf = bp->b_addr;
--	buf += xfs_symlink_hdr_set(mp, ip->i_ino, 0, ifp->if_bytes, bp);
--	memcpy(buf, ifp->if_u1.if_data, ifp->if_bytes);
--}
- 
- /* ----- Kernel only functions below ----- */
- STATIC int
-diff --git a/fs/xfs/xfs_symlink.h b/fs/xfs/xfs_symlink.h
-index c8e3a02..99338ba 100644
---- a/fs/xfs/xfs_symlink.h
-+++ b/fs/xfs/xfs_symlink.h
-@@ -17,51 +17,11 @@
- #ifndef __XFS_SYMLINK_H
- #define __XFS_SYMLINK_H 1
- 
--struct xfs_mount;
--struct xfs_trans;
--struct xfs_inode;
--struct xfs_buf;
--struct xfs_ifork;
--struct xfs_name;
--
--#define XFS_SYMLINK_MAGIC	0x58534c4d	/* XSLM */
--
--struct xfs_dsymlink_hdr {
--	__be32	sl_magic;
--	__be32	sl_offset;
--	__be32	sl_bytes;
--	__be32	sl_crc;
--	uuid_t	sl_uuid;
--	__be64	sl_owner;
--	__be64	sl_blkno;
--	__be64	sl_lsn;
--};
--
--/*
-- * The maximum pathlen is 1024 bytes. Since the minimum file system
-- * blocksize is 512 bytes, we can get a max of 3 extents back from
-- * bmapi when crc headers are taken into account.
-- */
--#define XFS_SYMLINK_MAPS 3
--
--#define XFS_SYMLINK_BUF_SPACE(mp, bufsize)	\
--	((bufsize) - (xfs_sb_version_hascrc(&(mp)->m_sb) ? \
--			sizeof(struct xfs_dsymlink_hdr) : 0))
--
--int xfs_symlink_blocks(struct xfs_mount *mp, int pathlen);
--bool xfs_symlink_hdr_ok(struct xfs_mount *mp, xfs_ino_t ino, uint32_t offset,
--			uint32_t size, struct xfs_buf *bp);
--void xfs_symlink_local_to_remote(struct xfs_trans *tp, struct xfs_buf *bp,
--				 struct xfs_inode *ip, struct xfs_ifork *ifp);
--
--extern const struct xfs_buf_ops xfs_symlink_buf_ops;
--
--#ifdef __KERNEL__
-+/* Kernel only symlink defintions */
- 
- int xfs_symlink(struct xfs_inode *dp, struct xfs_name *link_name,
- 		const char *target_path, umode_t mode, struct xfs_inode **ipp);
- int xfs_readlink(struct xfs_inode *ip, char *link);
- int xfs_inactive_symlink(struct xfs_inode *ip, struct xfs_trans **tpp);
- 
--#endif /* __KERNEL__ */
- #endif /* __XFS_SYMLINK_H */
-diff --git a/fs/xfs/xfs_symlink_remote.c b/fs/xfs/xfs_symlink_remote.c
-new file mode 100644
-index 0000000..a318524
---- /dev/null
-+++ b/fs/xfs/xfs_symlink_remote.c
-@@ -0,0 +1,199 @@
-+/*
-+ * Copyright (c) 2000-2006 Silicon Graphics, Inc.
-+ * Copyright (c) 2012-2013 Red Hat, Inc.
-+ * All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_format.h"
-+#include "xfs_log.h"
-+#include "xfs_trans.h"
-+#include "xfs_sb.h"
-+#include "xfs_mount.h"
-+#include "xfs_bmap_btree.h"
-+#include "xfs_inode.h"
-+#include "xfs_error.h"
-+#include "xfs_trace.h"
-+#include "xfs_symlink.h"
-+#include "xfs_cksum.h"
-+#include "xfs_buf_item.h"
-+
-+
-+/*
-+ * Each contiguous block has a header, so it is not just a simple pathlen
-+ * to FSB conversion.
-+ */
-+int
-+xfs_symlink_blocks(
-+	struct xfs_mount *mp,
-+	int		pathlen)
-+{
-+	int buflen = XFS_SYMLINK_BUF_SPACE(mp, mp->m_sb.sb_blocksize);
-+
-+	return (pathlen + buflen - 1) / buflen;
-+}
-+
-+int
-+xfs_symlink_hdr_set(
-+	struct xfs_mount	*mp,
-+	xfs_ino_t		ino,
-+	uint32_t		offset,
-+	uint32_t		size,
-+	struct xfs_buf		*bp)
-+{
-+	struct xfs_dsymlink_hdr	*dsl = bp->b_addr;
-+
-+	if (!xfs_sb_version_hascrc(&mp->m_sb))
-+		return 0;
-+
-+	dsl->sl_magic = cpu_to_be32(XFS_SYMLINK_MAGIC);
-+	dsl->sl_offset = cpu_to_be32(offset);
-+	dsl->sl_bytes = cpu_to_be32(size);
-+	uuid_copy(&dsl->sl_uuid, &mp->m_sb.sb_uuid);
-+	dsl->sl_owner = cpu_to_be64(ino);
-+	dsl->sl_blkno = cpu_to_be64(bp->b_bn);
-+	bp->b_ops = &xfs_symlink_buf_ops;
-+
-+	return sizeof(struct xfs_dsymlink_hdr);
-+}
-+
-+/*
-+ * Checking of the symlink header is split into two parts. the verifier does
-+ * CRC, location and bounds checking, the unpacking function checks the path
-+ * parameters and owner.
-+ */
-+bool
-+xfs_symlink_hdr_ok(
-+	struct xfs_mount	*mp,
-+	xfs_ino_t		ino,
-+	uint32_t		offset,
-+	uint32_t		size,
-+	struct xfs_buf		*bp)
-+{
-+	struct xfs_dsymlink_hdr *dsl = bp->b_addr;
-+
-+	if (offset != be32_to_cpu(dsl->sl_offset))
-+		return false;
-+	if (size != be32_to_cpu(dsl->sl_bytes))
-+		return false;
-+	if (ino != be64_to_cpu(dsl->sl_owner))
-+		return false;
-+
-+	/* ok */
-+	return true;
-+}
-+
-+static bool
-+xfs_symlink_verify(
-+	struct xfs_buf		*bp)
-+{
-+	struct xfs_mount	*mp = bp->b_target->bt_mount;
-+	struct xfs_dsymlink_hdr	*dsl = bp->b_addr;
-+
-+	if (!xfs_sb_version_hascrc(&mp->m_sb))
-+		return false;
-+	if (dsl->sl_magic != cpu_to_be32(XFS_SYMLINK_MAGIC))
-+		return false;
-+	if (!uuid_equal(&dsl->sl_uuid, &mp->m_sb.sb_uuid))
-+		return false;
-+	if (bp->b_bn != be64_to_cpu(dsl->sl_blkno))
-+		return false;
-+	if (be32_to_cpu(dsl->sl_offset) +
-+				be32_to_cpu(dsl->sl_bytes) >= MAXPATHLEN)
-+		return false;
-+	if (dsl->sl_owner == 0)
-+		return false;
-+
-+	return true;
-+}
-+
-+static void
-+xfs_symlink_read_verify(
-+	struct xfs_buf	*bp)
-+{
-+	struct xfs_mount *mp = bp->b_target->bt_mount;
-+
-+	/* no verification of non-crc buffers */
-+	if (!xfs_sb_version_hascrc(&mp->m_sb))
-+		return;
-+
-+	if (!xfs_verify_cksum(bp->b_addr, BBTOB(bp->b_length),
-+				  offsetof(struct xfs_dsymlink_hdr, sl_crc)) ||
-+	    !xfs_symlink_verify(bp)) {
-+		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
-+		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+	}
-+}
-+
-+static void
-+xfs_symlink_write_verify(
-+	struct xfs_buf	*bp)
-+{
-+	struct xfs_mount *mp = bp->b_target->bt_mount;
-+	struct xfs_buf_log_item	*bip = bp->b_fspriv;
-+
-+	/* no verification of non-crc buffers */
-+	if (!xfs_sb_version_hascrc(&mp->m_sb))
-+		return;
-+
-+	if (!xfs_symlink_verify(bp)) {
-+		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
-+		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+		return;
-+	}
-+
-+	if (bip) {
-+		struct xfs_dsymlink_hdr *dsl = bp->b_addr;
-+		dsl->sl_lsn = cpu_to_be64(bip->bli_item.li_lsn);
-+	}
-+	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length),
-+			 offsetof(struct xfs_dsymlink_hdr, sl_crc));
-+}
-+
-+const struct xfs_buf_ops xfs_symlink_buf_ops = {
-+	.verify_read = xfs_symlink_read_verify,
-+	.verify_write = xfs_symlink_write_verify,
-+};
-+
 +void
-+xfs_symlink_local_to_remote(
-+	struct xfs_trans	*tp,
-+	struct xfs_buf		*bp,
-+	struct xfs_inode	*ip,
-+	struct xfs_ifork	*ifp)
-+{
-+	struct xfs_mount	*mp = ip->i_mount;
-+	char			*buf;
-+
-+	if (!xfs_sb_version_hascrc(&mp->m_sb)) {
-+		bp->b_ops = NULL;
-+		memcpy(bp->b_addr, ifp->if_u1.if_data, ifp->if_bytes);
-+		return;
-+	}
-+
-+	/*
-+	 * As this symlink fits in an inode literal area, it must also fit in
-+	 * the smallest buffer the filesystem supports.
-+	 */
-+	ASSERT(BBTOB(bp->b_length) >=
-+			ifp->if_bytes + sizeof(struct xfs_dsymlink_hdr));
-+
-+	bp->b_ops = &xfs_symlink_buf_ops;
-+
-+	buf = bp->b_addr;
-+	buf += xfs_symlink_hdr_set(mp, ip->i_ino, 0, ifp->if_bytes, bp);
-+	memcpy(buf, ifp->if_u1.if_data, ifp->if_bytes);
-+}
+ xfs_dir2_sf_put_parent_ino(
+ 	struct xfs_dir2_sf_hdr	*hdr,
+ 	xfs_ino_t		ino)
+@@ -123,7 +123,7 @@ xfs_dir2_sfe_get_ino(
+ 	return xfs_dir2_sf_get_ino(hdr, xfs_dir2_sfe_inop(sfep));
+ }
+ 
+-static void
++void
+ xfs_dir2_sfe_put_ino(
+ 	struct xfs_dir2_sf_hdr	*hdr,
+ 	struct xfs_dir2_sf_entry *sfep,
+diff --git a/fs/xfs/xfs_export.c b/fs/xfs/xfs_export.c
+index c585bc6..29c880f 100644
+--- a/fs/xfs/xfs_export.c
++++ b/fs/xfs/xfs_export.c
+@@ -21,8 +21,10 @@
+ #include "xfs_trans.h"
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+-#include "xfs_dir2.h"
+ #include "xfs_mount.h"
++#include "xfs_da_btree.h"
++#include "xfs_dir2_format.h"
++#include "xfs_dir2.h"
+ #include "xfs_export.h"
+ #include "xfs_vnodeops.h"
+ #include "xfs_bmap_btree.h"
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index de3dc98..1ba3c79 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -32,7 +32,7 @@
+ #include "xfs_vnodeops.h"
+ #include "xfs_da_btree.h"
+ #include "xfs_dir2_format.h"
+-#include "xfs_dir2_priv.h"
++#include "xfs_dir2.h"
+ #include "xfs_ioctl.h"
+ #include "xfs_trace.h"
+ 
+diff --git a/fs/xfs/xfs_icreate_item.c b/fs/xfs/xfs_icreate_item.c
+index 7716a4e..441a78a 100644
+--- a/fs/xfs/xfs_icreate_item.c
++++ b/fs/xfs/xfs_icreate_item.c
+@@ -20,23 +20,11 @@
+ #include "xfs_types.h"
+ #include "xfs_bit.h"
+ #include "xfs_log.h"
+-#include "xfs_inum.h"
+ #include "xfs_trans.h"
+-#include "xfs_buf_item.h"
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+-#include "xfs_dir2.h"
+ #include "xfs_mount.h"
+ #include "xfs_trans_priv.h"
+-#include "xfs_bmap_btree.h"
+-#include "xfs_alloc_btree.h"
+-#include "xfs_ialloc_btree.h"
+-#include "xfs_attr_sf.h"
+-#include "xfs_dinode.h"
+-#include "xfs_inode.h"
+-#include "xfs_inode_item.h"
+-#include "xfs_btree.h"
+-#include "xfs_ialloc.h"
+ #include "xfs_error.h"
+ #include "xfs_icreate_item.h"
+ 
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 8763452..fabcc84 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -51,7 +51,7 @@
+ #include "xfs_symlink.h"
+ #include "xfs_da_btree.h"
+ #include "xfs_dir2_format.h"
+-#include "xfs_dir2_priv.h"
++#include "xfs_dir2.h"
+ #include "xfs_attr_leaf.h"
+ #include "xfs_attr_remote.h"
+ 
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 2231498..5c7272f 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -25,8 +25,10 @@
+ #include "xfs_trans_priv.h"
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+-#include "xfs_dir2.h"
+ #include "xfs_mount.h"
++#include "xfs_da_btree.h"
++#include "xfs_dir2_format.h"
++#include "xfs_dir2.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_alloc_btree.h"
+ #include "xfs_ialloc_btree.h"
+diff --git a/fs/xfs/xfs_rename.c b/fs/xfs/xfs_rename.c
+index 0c1f8ef..4715c7f 100644
+--- a/fs/xfs/xfs_rename.c
++++ b/fs/xfs/xfs_rename.c
+@@ -22,9 +22,10 @@
+ #include "xfs_trans.h"
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+-#include "xfs_dir2.h"
+ #include "xfs_mount.h"
+ #include "xfs_da_btree.h"
++#include "xfs_dir2_format.h"
++#include "xfs_dir2.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_dinode.h"
+ #include "xfs_inode.h"
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index 5d900ec..bb4f7a1 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -23,7 +23,6 @@
+ #include "xfs_trans.h"
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+-#include "xfs_dir2.h"
+ #include "xfs_mount.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_dinode.h"
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 146e2c2..7d57560 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -23,7 +23,6 @@
+ #include "xfs_trans.h"
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+-#include "xfs_dir2.h"
+ #include "xfs_alloc.h"
+ #include "xfs_quota.h"
+ #include "xfs_mount.h"
+@@ -47,6 +46,8 @@
+ #include "xfs_trans_priv.h"
+ #include "xfs_filestream.h"
+ #include "xfs_da_btree.h"
++#include "xfs_dir2_format.h"
++#include "xfs_dir2.h"
+ #include "xfs_extfree_item.h"
+ #include "xfs_mru_cache.h"
+ #include "xfs_inode_item.h"
+diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+index 80d550c..dd7c099 100644
+--- a/fs/xfs/xfs_symlink.c
++++ b/fs/xfs/xfs_symlink.c
+@@ -24,9 +24,10 @@
+ #include "xfs_trans.h"
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+-#include "xfs_dir2.h"
+ #include "xfs_mount.h"
+ #include "xfs_da_btree.h"
++#include "xfs_dir2_format.h"
++#include "xfs_dir2.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_ialloc_btree.h"
+ #include "xfs_dinode.h"
+diff --git a/fs/xfs/xfs_utils.c b/fs/xfs/xfs_utils.c
+index 58386fa..fde7d22 100644
+--- a/fs/xfs/xfs_utils.c
++++ b/fs/xfs/xfs_utils.c
+@@ -22,8 +22,10 @@
+ #include "xfs_trans.h"
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+-#include "xfs_dir2.h"
+ #include "xfs_mount.h"
++#include "xfs_da_btree.h"
++#include "xfs_dir2_format.h"
++#include "xfs_dir2.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_dinode.h"
+ #include "xfs_inode.h"
+diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+index c2d96cd..221e2e3 100644
+--- a/fs/xfs/xfs_vnodeops.c
++++ b/fs/xfs/xfs_vnodeops.c
+@@ -25,9 +25,10 @@
+ #include "xfs_trans.h"
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+-#include "xfs_dir2.h"
+ #include "xfs_mount.h"
+ #include "xfs_da_btree.h"
++#include "xfs_dir2_format.h"
++#include "xfs_dir2.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_ialloc_btree.h"
+ #include "xfs_dinode.h"
 -- 
 1.8.3.2
 
