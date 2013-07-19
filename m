@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 9FA1C7F53
-	for <linux-xfs@oss.sgi.com>; Fri, 19 Jul 2013 15:20:58 -0500 (CDT)
-Date: Fri, 19 Jul 2013 15:20:55 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 5CDFA7F53
+	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 15:26:29 -0500 (CDT)
+Date: Fri, 19 Jul 2013 15:26:25 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] xfs_metadump: manpage fix regarding frozen fs
-Message-ID: <20130719202055.GH3572@sgi.com>
-References: <51E4AD14.7080904@redhat.com>
+Subject: Re: [PATCH v2] mkfs: add missing noalign suboption information
+Message-ID: <20130719202625.GI3572@sgi.com>
+References: <1373469280-12617-1-git-send-email-cmaiolino@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <51E4AD14.7080904@redhat.com>
+In-Reply-To: <1373469280-12617-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,28 +22,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: "'linux-xfs@oss.sgi.com'" <linux-xfs@oss.sgi.com>
+To: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: xfs@oss.sgi.com
 
-Hey Eric,
-
-On Mon, Jul 15, 2013 at 09:16:52PM -0500, Eric Sandeen wrote:
-> The xfs_metadump manpage states that metadump works
-> on a frozen filesystem; it does not.  In fact, there is
-> no way to detect a frozen filesystem, so we can't make it
-> work, either.
+On Wed, Jul 10, 2013 at 12:14:40PM -0300, Carlos Maiolino wrote:
+> Adds to the mkfs man page, information about noalign mkfs option which is
+> missing until now.
 > 
-> So just remove this from the manpage; unmounted or RO
-> mounted is what is enforced by xfs_metadump.
+> Changelog:
 > 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> 	V2:
+> 	   -rephase noalign data-section option
+> 	   -add noalign realtime device option
+> 
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-I gave this a try and it *seemed* to work fine on a frozen filesystem.
-Can you provide a bit of detail about why xfs_metadump doesn't work on
-frozen filesystems?  What am I missing?
-
-Thanks,
-	Ben
+Applied.
 
 _______________________________________________
 xfs mailing list
