@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 05B1B7F8B
-	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 01:25:42 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C96B9304043
-	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 23:25:41 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 043597F76
+	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 01:25:43 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id DAA278F8033
+	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 23:25:42 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	d5gEnocwvZOhWC8R for <xfs@oss.sgi.com>;
-	Thu, 18 Jul 2013 23:25:39 -0700 (PDT)
+	f6ye9ABkMKBQdsOU for <xfs@oss.sgi.com>;
+	Thu, 18 Jul 2013 23:25:40 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1V0483-00048H-Ed
+	(envelope-from <dave@fromorbit.com>) id 1V0482-00048H-Sk
 	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:25:23 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1V0483-00020D-DJ
-	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:25:23 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1V0482-0001y9-Rm
+	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:25:22 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 43/49] xfs: return log item size in IOP_SIZE
-Date: Fri, 19 Jul 2013 16:25:14 +1000
-Message-Id: <1374215120-7271-44-git-send-email-david@fromorbit.com>
+Subject: [PATCH 19/49] xfs: split out the remote symlink handling
+Date: Fri, 19 Jul 2013 16:24:50 +1000
+Message-Id: <1374215120-7271-20-git-send-email-david@fromorbit.com>
 In-Reply-To: <1374215120-7271-1-git-send-email-david@fromorbit.com>
 References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,503 +39,555 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-To begin optimising the CIL commit process, we need to have IOP_SIZE
-return both the number of vectors and the size of the data pointed
-to by the vectors. This enables us to calculate the size ofthe
-memory allocation needed before the formatting step and reduces the
-number of memory allocations per item by one.
-
-WhIle there, kill the IOP_SIZE macro.
+The remote symlink format definition and manipulation needs to be
+shared with userspace, but the in-kernel interfaces do not. Split
+the remote symlink format handling out into xfs_symlink_remote.[ch]
+fo it can easily be shared with userspace.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_buf_item.c     | 52 ++++++++++++++++++++++++++++------------------
- fs/xfs/xfs_dquot_item.c   | 22 ++++++++++++--------
- fs/xfs/xfs_extfree_item.c | 50 ++++++++++++++++++++++++++++----------------
- fs/xfs/xfs_icreate_item.c |  9 +++++---
- fs/xfs/xfs_inode_item.c   | 53 +++++++++++++++++++++++++++++++----------------
- fs/xfs/xfs_log_cil.c      | 10 ++++++---
- fs/xfs/xfs_trans.h        |  3 +--
- 7 files changed, 126 insertions(+), 73 deletions(-)
+ fs/xfs/Makefile             |   3 +-
+ fs/xfs/xfs_format.h         |  42 ++++++++++
+ fs/xfs/xfs_symlink.c        | 172 --------------------------------------
+ fs/xfs/xfs_symlink.h        |  42 +---------
+ fs/xfs/xfs_symlink_remote.c | 199 ++++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 244 insertions(+), 214 deletions(-)
+ create mode 100644 fs/xfs/xfs_symlink_remote.c
 
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index bfc4e0c..9358504 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -39,6 +39,14 @@ static inline struct xfs_buf_log_item *BUF_ITEM(struct xfs_log_item *lip)
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index a73af1c..20b1d94 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -50,6 +50,7 @@ xfs-y				+= xfs_aops.o \
+ 				   xfs_mru_cache.o \
+ 				   xfs_rename.o \
+ 				   xfs_super.o \
++				   xfs_symlink.o \
+ 				   xfs_trans.o \
+ 				   xfs_utils.o \
+ 				   xfs_vnodeops.o \
+@@ -81,7 +82,7 @@ xfs-y				+= xfs_alloc.o \
+ 				   xfs_inode_buf.o \
+ 				   xfs_log_recover.o \
+ 				   xfs_mount.o \
+-				   xfs_symlink.o \
++				   xfs_symlink_remote.o \
+ 				   xfs_trans_resv.o
  
- STATIC void	xfs_buf_do_callbacks(struct xfs_buf *bp);
+ # low-level transaction/log code
+diff --git a/fs/xfs/xfs_format.h b/fs/xfs/xfs_format.h
+index 6205374..35c08ff 100644
+--- a/fs/xfs/xfs_format.h
++++ b/fs/xfs/xfs_format.h
+@@ -27,6 +27,12 @@
+  * xfs_log_format.h. Everything else goes here.
+  */
  
-+static inline int
-+xfs_buf_log_format_size(
-+	struct xfs_buf_log_format *blfp)
-+{
-+	return offsetof(struct xfs_buf_log_format, blf_data_map) +
-+			(blfp->blf_map_size * sizeof(blfp->blf_data_map[0]));
-+}
++struct xfs_mount;
++struct xfs_trans;
++struct xfs_inode;
++struct xfs_buf;
++struct xfs_ifork;
 +
  /*
-  * This returns the number of log iovecs needed to log the
-  * given buf log item.
-@@ -49,25 +57,27 @@ STATIC void	xfs_buf_do_callbacks(struct xfs_buf *bp);
-  *
-  * If the XFS_BLI_STALE flag has been set, then log nothing.
+  * RealTime Device format definitions
   */
--STATIC uint
-+STATIC void
- xfs_buf_item_size_segment(
- 	struct xfs_buf_log_item	*bip,
--	struct xfs_buf_log_format *blfp)
-+	struct xfs_buf_log_format *blfp,
-+	int			*nvecs,
-+	int			*nbytes)
- {
- 	struct xfs_buf		*bp = bip->bli_buf;
--	uint			nvecs;
- 	int			next_bit;
- 	int			last_bit;
+@@ -123,5 +129,41 @@ typedef struct xfs_dqblk {
  
- 	last_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size, 0);
- 	if (last_bit == -1)
+ #define XFS_DQUOT_CRC_OFF	offsetof(struct xfs_dqblk, dd_crc)
+ 
++/*
++ * Remote symlink format and access functions.
++ */
++#define XFS_SYMLINK_MAGIC	0x58534c4d	/* XSLM */
++
++struct xfs_dsymlink_hdr {
++	__be32	sl_magic;
++	__be32	sl_offset;
++	__be32	sl_bytes;
++	__be32	sl_crc;
++	uuid_t	sl_uuid;
++	__be64	sl_owner;
++	__be64	sl_blkno;
++	__be64	sl_lsn;
++};
++
++/*
++ * The maximum pathlen is 1024 bytes. Since the minimum file system
++ * blocksize is 512 bytes, we can get a max of 3 extents back from
++ * bmapi when crc headers are taken into account.
++ */
++#define XFS_SYMLINK_MAPS 3
++
++#define XFS_SYMLINK_BUF_SPACE(mp, bufsize)	\
++	((bufsize) - (xfs_sb_version_hascrc(&(mp)->m_sb) ? \
++			sizeof(struct xfs_dsymlink_hdr) : 0))
++
++int xfs_symlink_blocks(struct xfs_mount *mp, int pathlen);
++int xfs_symlink_hdr_set(struct xfs_mount *mp, xfs_ino_t ino, uint32_t offset,
++			uint32_t size, struct xfs_buf *bp);
++bool xfs_symlink_hdr_ok(struct xfs_mount *mp, xfs_ino_t ino, uint32_t offset,
++			uint32_t size, struct xfs_buf *bp);
++void xfs_symlink_local_to_remote(struct xfs_trans *tp, struct xfs_buf *bp,
++				 struct xfs_inode *ip, struct xfs_ifork *ifp);
++
++extern const struct xfs_buf_ops xfs_symlink_buf_ops;
+ 
+ #endif /* __XFS_FORMAT_H__ */
+diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+index dd7c099..18f24de 100644
+--- a/fs/xfs/xfs_symlink.c
++++ b/fs/xfs/xfs_symlink.c
+@@ -32,8 +32,6 @@
+ #include "xfs_ialloc_btree.h"
+ #include "xfs_dinode.h"
+ #include "xfs_inode.h"
+-#include "xfs_inode_item.h"
+-#include "xfs_itable.h"
+ #include "xfs_ialloc.h"
+ #include "xfs_alloc.h"
+ #include "xfs_bmap.h"
+@@ -41,178 +39,8 @@
+ #include "xfs_quota.h"
+ #include "xfs_utils.h"
+ #include "xfs_trans_space.h"
+-#include "xfs_log_priv.h"
+ #include "xfs_trace.h"
+ #include "xfs_symlink.h"
+-#include "xfs_cksum.h"
+-#include "xfs_buf_item.h"
+-
+-
+-/*
+- * Each contiguous block has a header, so it is not just a simple pathlen
+- * to FSB conversion.
+- */
+-int
+-xfs_symlink_blocks(
+-	struct xfs_mount *mp,
+-	int		pathlen)
+-{
+-	int buflen = XFS_SYMLINK_BUF_SPACE(mp, mp->m_sb.sb_blocksize);
+-
+-	return (pathlen + buflen - 1) / buflen;
+-}
+-
+-static int
+-xfs_symlink_hdr_set(
+-	struct xfs_mount	*mp,
+-	xfs_ino_t		ino,
+-	uint32_t		offset,
+-	uint32_t		size,
+-	struct xfs_buf		*bp)
+-{
+-	struct xfs_dsymlink_hdr	*dsl = bp->b_addr;
+-
+-	if (!xfs_sb_version_hascrc(&mp->m_sb))
 -		return 0;
-+		return;
- 
- 	/*
- 	 * initial count for a dirty buffer is 2 vectors - the format structure
- 	 * and the first dirty region.
- 	 */
--	nvecs = 2;
-+	*nvecs += 2;
-+	*nbytes += xfs_buf_log_format_size(blfp) + XFS_BLF_CHUNK;
- 
- 	while (last_bit != -1) {
- 		/*
-@@ -87,18 +97,17 @@ xfs_buf_item_size_segment(
- 			break;
- 		} else if (next_bit != last_bit + 1) {
- 			last_bit = next_bit;
--			nvecs++;
-+			(*nvecs)++;
- 		} else if (xfs_buf_offset(bp, next_bit * XFS_BLF_CHUNK) !=
- 			   (xfs_buf_offset(bp, last_bit * XFS_BLF_CHUNK) +
- 			    XFS_BLF_CHUNK)) {
- 			last_bit = next_bit;
--			nvecs++;
-+			(*nvecs)++;
- 		} else {
- 			last_bit++;
- 		}
-+		*nbytes += XFS_BLF_CHUNK;
- 	}
 -
--	return nvecs;
- }
- 
- /*
-@@ -118,12 +127,13 @@ xfs_buf_item_size_segment(
-  * If the XFS_BLI_STALE flag has been set, then log nothing but the buf log
-  * format structures.
-  */
--STATIC uint
-+STATIC void
- xfs_buf_item_size(
--	struct xfs_log_item	*lip)
-+	struct xfs_log_item	*lip,
-+	int			*nvecs,
-+	int			*nbytes)
- {
- 	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
--	uint			nvecs;
- 	int			i;
- 
- 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
-@@ -135,7 +145,11 @@ xfs_buf_item_size(
- 		 */
- 		trace_xfs_buf_item_size_stale(bip);
- 		ASSERT(bip->__bli_format.blf_flags & XFS_BLF_CANCEL);
--		return bip->bli_format_count;
-+		*nvecs += bip->bli_format_count;
-+		for (i = 0; i < bip->bli_format_count; i++) {
-+			*nbytes += xfs_buf_log_format_size(&bip->bli_formats[i]);
-+		}
-+		return;
- 	}
- 
- 	ASSERT(bip->bli_flags & XFS_BLI_LOGGED);
-@@ -147,7 +161,8 @@ xfs_buf_item_size(
- 		 * commit, so no vectors are used at all.
- 		 */
- 		trace_xfs_buf_item_size_ordered(bip);
--		return XFS_LOG_VEC_ORDERED;
-+		*nvecs = XFS_LOG_VEC_ORDERED;
-+		return;
- 	}
- 
- 	/*
-@@ -159,13 +174,11 @@ xfs_buf_item_size(
- 	 * count for the extra buf log format structure that will need to be
- 	 * written.
- 	 */
--	nvecs = 0;
- 	for (i = 0; i < bip->bli_format_count; i++) {
--		nvecs += xfs_buf_item_size_segment(bip, &bip->bli_formats[i]);
-+		xfs_buf_item_size_segment(bip, &bip->bli_formats[i],
-+					  nvecs, nbytes);
- 	}
+-	dsl->sl_magic = cpu_to_be32(XFS_SYMLINK_MAGIC);
+-	dsl->sl_offset = cpu_to_be32(offset);
+-	dsl->sl_bytes = cpu_to_be32(size);
+-	uuid_copy(&dsl->sl_uuid, &mp->m_sb.sb_uuid);
+-	dsl->sl_owner = cpu_to_be64(ino);
+-	dsl->sl_blkno = cpu_to_be64(bp->b_bn);
+-	bp->b_ops = &xfs_symlink_buf_ops;
 -
- 	trace_xfs_buf_item_size(bip);
--	return nvecs;
- }
- 
- static struct xfs_log_iovec *
-@@ -192,8 +205,7 @@ xfs_buf_item_format_segment(
- 	 * the actual size of the dirty bitmap rather than the size of the in
- 	 * memory structure.
- 	 */
--	base_size = offsetof(struct xfs_buf_log_format, blf_data_map) +
--			(blfp->blf_map_size * sizeof(blfp->blf_data_map[0]));
-+	base_size = xfs_buf_log_format_size(blfp);
- 
- 	nvecs = 0;
- 	first_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size, 0);
-diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
-index f07a436..60c6e1f 100644
---- a/fs/xfs/xfs_dquot_item.c
-+++ b/fs/xfs/xfs_dquot_item.c
-@@ -44,14 +44,15 @@ static inline struct xfs_dq_logitem *DQUOT_ITEM(struct xfs_log_item *lip)
- /*
-  * returns the number of iovecs needed to log the given dquot item.
-  */
--STATIC uint
-+STATIC void
- xfs_qm_dquot_logitem_size(
--	struct xfs_log_item	*lip)
-+	struct xfs_log_item	*lip,
-+	int			*nvecs,
-+	int			*nbytes)
- {
+-	return sizeof(struct xfs_dsymlink_hdr);
+-}
+-
+-/*
+- * Checking of the symlink header is split into two parts. the verifier does
+- * CRC, location and bounds checking, the unpacking function checks the path
+- * parameters and owner.
+- */
+-bool
+-xfs_symlink_hdr_ok(
+-	struct xfs_mount	*mp,
+-	xfs_ino_t		ino,
+-	uint32_t		offset,
+-	uint32_t		size,
+-	struct xfs_buf		*bp)
+-{
+-	struct xfs_dsymlink_hdr *dsl = bp->b_addr;
+-
+-	if (offset != be32_to_cpu(dsl->sl_offset))
+-		return false;
+-	if (size != be32_to_cpu(dsl->sl_bytes))
+-		return false;
+-	if (ino != be64_to_cpu(dsl->sl_owner))
+-		return false;
+-
+-	/* ok */
+-	return true;
+-}
+-
+-static bool
+-xfs_symlink_verify(
+-	struct xfs_buf		*bp)
+-{
+-	struct xfs_mount	*mp = bp->b_target->bt_mount;
+-	struct xfs_dsymlink_hdr	*dsl = bp->b_addr;
+-
+-	if (!xfs_sb_version_hascrc(&mp->m_sb))
+-		return false;
+-	if (dsl->sl_magic != cpu_to_be32(XFS_SYMLINK_MAGIC))
+-		return false;
+-	if (!uuid_equal(&dsl->sl_uuid, &mp->m_sb.sb_uuid))
+-		return false;
+-	if (bp->b_bn != be64_to_cpu(dsl->sl_blkno))
+-		return false;
+-	if (be32_to_cpu(dsl->sl_offset) +
+-				be32_to_cpu(dsl->sl_bytes) >= MAXPATHLEN)
+-		return false;
+-	if (dsl->sl_owner == 0)
+-		return false;
+-
+-	return true;
+-}
+-
+-static void
+-xfs_symlink_read_verify(
+-	struct xfs_buf	*bp)
+-{
+-	struct xfs_mount *mp = bp->b_target->bt_mount;
+-
+-	/* no verification of non-crc buffers */
+-	if (!xfs_sb_version_hascrc(&mp->m_sb))
+-		return;
+-
+-	if (!xfs_verify_cksum(bp->b_addr, BBTOB(bp->b_length),
+-				  offsetof(struct xfs_dsymlink_hdr, sl_crc)) ||
+-	    !xfs_symlink_verify(bp)) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+-		xfs_buf_ioerror(bp, EFSCORRUPTED);
+-	}
+-}
+-
+-static void
+-xfs_symlink_write_verify(
+-	struct xfs_buf	*bp)
+-{
+-	struct xfs_mount *mp = bp->b_target->bt_mount;
+-	struct xfs_buf_log_item	*bip = bp->b_fspriv;
+-
+-	/* no verification of non-crc buffers */
+-	if (!xfs_sb_version_hascrc(&mp->m_sb))
+-		return;
+-
+-	if (!xfs_symlink_verify(bp)) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+-		xfs_buf_ioerror(bp, EFSCORRUPTED);
+-		return;
+-	}
+-
+-	if (bip) {
+-		struct xfs_dsymlink_hdr *dsl = bp->b_addr;
+-		dsl->sl_lsn = cpu_to_be64(bip->bli_item.li_lsn);
+-	}
+-	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length),
+-			 offsetof(struct xfs_dsymlink_hdr, sl_crc));
+-}
+-
+-const struct xfs_buf_ops xfs_symlink_buf_ops = {
+-	.verify_read = xfs_symlink_read_verify,
+-	.verify_write = xfs_symlink_write_verify,
+-};
+-
+-void
+-xfs_symlink_local_to_remote(
+-	struct xfs_trans	*tp,
+-	struct xfs_buf		*bp,
+-	struct xfs_inode	*ip,
+-	struct xfs_ifork	*ifp)
+-{
+-	struct xfs_mount	*mp = ip->i_mount;
+-	char			*buf;
+-
+-	if (!xfs_sb_version_hascrc(&mp->m_sb)) {
+-		bp->b_ops = NULL;
+-		memcpy(bp->b_addr, ifp->if_u1.if_data, ifp->if_bytes);
+-		return;
+-	}
+-
 -	/*
--	 * we need only two iovecs, one for the format, one for the real thing
+-	 * As this symlink fits in an inode literal area, it must also fit in
+-	 * the smallest buffer the filesystem supports.
 -	 */
--	return 2;
-+	*nvecs += 2;
-+	*nbytes += sizeof(struct xfs_dq_logformat) +
-+		   sizeof(struct xfs_disk_dquot);
- }
+-	ASSERT(BBTOB(bp->b_length) >=
+-			ifp->if_bytes + sizeof(struct xfs_dsymlink_hdr));
+-
+-	bp->b_ops = &xfs_symlink_buf_ops;
+-
+-	buf = bp->b_addr;
+-	buf += xfs_symlink_hdr_set(mp, ip->i_ino, 0, ifp->if_bytes, bp);
+-	memcpy(buf, ifp->if_u1.if_data, ifp->if_bytes);
+-}
  
- /*
-@@ -286,11 +287,14 @@ static inline struct xfs_qoff_logitem *QOFF_ITEM(struct xfs_log_item *lip)
-  * We only need 1 iovec for an quotaoff item.  It just logs the
-  * quotaoff_log_format structure.
-  */
--STATIC uint
-+STATIC void
- xfs_qm_qoff_logitem_size(
--	struct xfs_log_item	*lip)
-+	struct xfs_log_item	*lip,
-+	int			*nvecs,
-+	int			*nbytes)
- {
--	return 1;
-+	*nvecs += 1;
-+	*nbytes += sizeof(struct xfs_qoff_logitem);
- }
+ /* ----- Kernel only functions below ----- */
+ STATIC int
+diff --git a/fs/xfs/xfs_symlink.h b/fs/xfs/xfs_symlink.h
+index c8e3a02..99338ba 100644
+--- a/fs/xfs/xfs_symlink.h
++++ b/fs/xfs/xfs_symlink.h
+@@ -17,51 +17,11 @@
+ #ifndef __XFS_SYMLINK_H
+ #define __XFS_SYMLINK_H 1
  
- /*
-diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-index 452920a..dc53e8f 100644
---- a/fs/xfs/xfs_extfree_item.c
-+++ b/fs/xfs/xfs_extfree_item.c
-@@ -73,11 +73,22 @@ __xfs_efi_release(
-  * We only need 1 iovec for an efi item.  It just logs the efi_log_format
-  * structure.
-  */
--STATIC uint
-+static inline int
-+xfs_efi_item_sizeof(
-+	struct xfs_efi_log_item *efip)
+-struct xfs_mount;
+-struct xfs_trans;
+-struct xfs_inode;
+-struct xfs_buf;
+-struct xfs_ifork;
+-struct xfs_name;
+-
+-#define XFS_SYMLINK_MAGIC	0x58534c4d	/* XSLM */
+-
+-struct xfs_dsymlink_hdr {
+-	__be32	sl_magic;
+-	__be32	sl_offset;
+-	__be32	sl_bytes;
+-	__be32	sl_crc;
+-	uuid_t	sl_uuid;
+-	__be64	sl_owner;
+-	__be64	sl_blkno;
+-	__be64	sl_lsn;
+-};
+-
+-/*
+- * The maximum pathlen is 1024 bytes. Since the minimum file system
+- * blocksize is 512 bytes, we can get a max of 3 extents back from
+- * bmapi when crc headers are taken into account.
+- */
+-#define XFS_SYMLINK_MAPS 3
+-
+-#define XFS_SYMLINK_BUF_SPACE(mp, bufsize)	\
+-	((bufsize) - (xfs_sb_version_hascrc(&(mp)->m_sb) ? \
+-			sizeof(struct xfs_dsymlink_hdr) : 0))
+-
+-int xfs_symlink_blocks(struct xfs_mount *mp, int pathlen);
+-bool xfs_symlink_hdr_ok(struct xfs_mount *mp, xfs_ino_t ino, uint32_t offset,
+-			uint32_t size, struct xfs_buf *bp);
+-void xfs_symlink_local_to_remote(struct xfs_trans *tp, struct xfs_buf *bp,
+-				 struct xfs_inode *ip, struct xfs_ifork *ifp);
+-
+-extern const struct xfs_buf_ops xfs_symlink_buf_ops;
+-
+-#ifdef __KERNEL__
++/* Kernel only symlink defintions */
+ 
+ int xfs_symlink(struct xfs_inode *dp, struct xfs_name *link_name,
+ 		const char *target_path, umode_t mode, struct xfs_inode **ipp);
+ int xfs_readlink(struct xfs_inode *ip, char *link);
+ int xfs_inactive_symlink(struct xfs_inode *ip, struct xfs_trans **tpp);
+ 
+-#endif /* __KERNEL__ */
+ #endif /* __XFS_SYMLINK_H */
+diff --git a/fs/xfs/xfs_symlink_remote.c b/fs/xfs/xfs_symlink_remote.c
+new file mode 100644
+index 0000000..a318524
+--- /dev/null
++++ b/fs/xfs/xfs_symlink_remote.c
+@@ -0,0 +1,199 @@
++/*
++ * Copyright (c) 2000-2006 Silicon Graphics, Inc.
++ * Copyright (c) 2012-2013 Red Hat, Inc.
++ * All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_format.h"
++#include "xfs_log.h"
++#include "xfs_trans.h"
++#include "xfs_sb.h"
++#include "xfs_mount.h"
++#include "xfs_bmap_btree.h"
++#include "xfs_inode.h"
++#include "xfs_error.h"
++#include "xfs_trace.h"
++#include "xfs_symlink.h"
++#include "xfs_cksum.h"
++#include "xfs_buf_item.h"
++
++
++/*
++ * Each contiguous block has a header, so it is not just a simple pathlen
++ * to FSB conversion.
++ */
++int
++xfs_symlink_blocks(
++	struct xfs_mount *mp,
++	int		pathlen)
 +{
-+	return sizeof(struct xfs_efi_log_format) +
-+	       (efip->efi_format.efi_nextents - 1) * sizeof(xfs_extent_t);
++	int buflen = XFS_SYMLINK_BUF_SPACE(mp, mp->m_sb.sb_blocksize);
++
++	return (pathlen + buflen - 1) / buflen;
 +}
 +
-+STATIC void
- xfs_efi_item_size(
--	struct xfs_log_item	*lip)
-+	struct xfs_log_item	*lip,
-+	int			*nvecs,
-+	int			*nbytes)
- {
--	return 1;
-+	*nvecs += 1;
-+	*nbytes += xfs_efi_item_sizeof(EFI_ITEM(lip));
- }
- 
- /*
-@@ -93,21 +104,17 @@ xfs_efi_item_format(
- 	struct xfs_log_iovec	*log_vector)
- {
- 	struct xfs_efi_log_item	*efip = EFI_ITEM(lip);
--	uint			size;
- 
- 	ASSERT(atomic_read(&efip->efi_next_extent) ==
- 				efip->efi_format.efi_nextents);
- 
- 	efip->efi_format.efi_type = XFS_LI_EFI;
--
--	size = sizeof(xfs_efi_log_format_t);
--	size += (efip->efi_format.efi_nextents - 1) * sizeof(xfs_extent_t);
- 	efip->efi_format.efi_size = 1;
- 
- 	log_vector->i_addr = &efip->efi_format;
--	log_vector->i_len = size;
-+	log_vector->i_len = xfs_efi_item_sizeof(efip);
- 	log_vector->i_type = XLOG_REG_TYPE_EFI_FORMAT;
--	ASSERT(size >= sizeof(xfs_efi_log_format_t));
-+	ASSERT(log_vector->i_len >= sizeof(xfs_efi_log_format_t));
- }
- 
- 
-@@ -333,11 +340,22 @@ xfs_efd_item_free(struct xfs_efd_log_item *efdp)
-  * We only need 1 iovec for an efd item.  It just logs the efd_log_format
-  * structure.
-  */
--STATIC uint
-+static inline int
-+xfs_efd_item_sizeof(
-+	struct xfs_efd_log_item *efdp)
++int
++xfs_symlink_hdr_set(
++	struct xfs_mount	*mp,
++	xfs_ino_t		ino,
++	uint32_t		offset,
++	uint32_t		size,
++	struct xfs_buf		*bp)
 +{
-+	return sizeof(xfs_efd_log_format_t) +
-+	       (efdp->efd_format.efd_nextents - 1) * sizeof(xfs_extent_t);
++	struct xfs_dsymlink_hdr	*dsl = bp->b_addr;
++
++	if (!xfs_sb_version_hascrc(&mp->m_sb))
++		return 0;
++
++	dsl->sl_magic = cpu_to_be32(XFS_SYMLINK_MAGIC);
++	dsl->sl_offset = cpu_to_be32(offset);
++	dsl->sl_bytes = cpu_to_be32(size);
++	uuid_copy(&dsl->sl_uuid, &mp->m_sb.sb_uuid);
++	dsl->sl_owner = cpu_to_be64(ino);
++	dsl->sl_blkno = cpu_to_be64(bp->b_bn);
++	bp->b_ops = &xfs_symlink_buf_ops;
++
++	return sizeof(struct xfs_dsymlink_hdr);
 +}
 +
-+STATIC void
- xfs_efd_item_size(
--	struct xfs_log_item	*lip)
-+	struct xfs_log_item	*lip,
-+	int			*nvecs,
-+	int			*nbytes)
- {
--	return 1;
-+	*nvecs += 1;
-+	*nbytes += xfs_efd_item_sizeof(EFD_ITEM(lip));
- }
- 
- /*
-@@ -353,20 +371,16 @@ xfs_efd_item_format(
- 	struct xfs_log_iovec	*log_vector)
- {
- 	struct xfs_efd_log_item	*efdp = EFD_ITEM(lip);
--	uint			size;
- 
- 	ASSERT(efdp->efd_next_extent == efdp->efd_format.efd_nextents);
- 
- 	efdp->efd_format.efd_type = XFS_LI_EFD;
--
--	size = sizeof(xfs_efd_log_format_t);
--	size += (efdp->efd_format.efd_nextents - 1) * sizeof(xfs_extent_t);
- 	efdp->efd_format.efd_size = 1;
- 
- 	log_vector->i_addr = &efdp->efd_format;
--	log_vector->i_len = size;
-+	log_vector->i_len = xfs_efd_item_sizeof(efdp);
- 	log_vector->i_type = XLOG_REG_TYPE_EFD_FORMAT;
--	ASSERT(size >= sizeof(xfs_efd_log_format_t));
-+	ASSERT(log_vector->i_len >= sizeof(xfs_efd_log_format_t));
- }
- 
- /*
-diff --git a/fs/xfs/xfs_icreate_item.c b/fs/xfs/xfs_icreate_item.c
-index 441a78a..5a5a593 100644
---- a/fs/xfs/xfs_icreate_item.c
-+++ b/fs/xfs/xfs_icreate_item.c
-@@ -40,11 +40,14 @@ static inline struct xfs_icreate_item *ICR_ITEM(struct xfs_log_item *lip)
-  *
-  * We only need one iovec for the icreate log structure.
-  */
--STATIC uint
-+STATIC void
- xfs_icreate_item_size(
--	struct xfs_log_item	*lip)
-+	struct xfs_log_item	*lip,
-+	int			*nvecs,
-+	int			*nbytes)
- {
--	return 1;
-+	*nvecs += 1;
-+	*nbytes += sizeof(struct xfs_icreate_log);
- }
- 
- /*
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index f76ff52..3780811 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -47,32 +47,44 @@ static inline struct xfs_inode_log_item *INODE_ITEM(struct xfs_log_item *lip)
-  * inode core, and possibly one for the inode data/extents/b-tree root
-  * and one for the inode attribute data/extents/b-tree root.
-  */
--STATIC uint
-+STATIC void
- xfs_inode_item_size(
--	struct xfs_log_item	*lip)
-+	struct xfs_log_item	*lip,
-+	int			*nvecs,
-+	int			*nbytes)
- {
- 	struct xfs_inode_log_item *iip = INODE_ITEM(lip);
- 	struct xfs_inode	*ip = iip->ili_inode;
--	uint			nvecs = 2;
++/*
++ * Checking of the symlink header is split into two parts. the verifier does
++ * CRC, location and bounds checking, the unpacking function checks the path
++ * parameters and owner.
++ */
++bool
++xfs_symlink_hdr_ok(
++	struct xfs_mount	*mp,
++	xfs_ino_t		ino,
++	uint32_t		offset,
++	uint32_t		size,
++	struct xfs_buf		*bp)
++{
++	struct xfs_dsymlink_hdr *dsl = bp->b_addr;
 +
-+	*nvecs += 2;
-+	*nbytes += sizeof(struct xfs_inode_log_format) +
-+		   xfs_icdinode_size(ip->i_d.di_version);
- 
- 	switch (ip->i_d.di_format) {
- 	case XFS_DINODE_FMT_EXTENTS:
- 		if ((iip->ili_fields & XFS_ILOG_DEXT) &&
- 		    ip->i_d.di_nextents > 0 &&
--		    ip->i_df.if_bytes > 0)
--			nvecs++;
-+		    ip->i_df.if_bytes > 0) {
-+			/* worst case, doesn't subtract delalloc extents */
-+			*nbytes += XFS_IFORK_DSIZE(ip);
-+			*nvecs += 1;
-+		}
- 		break;
- 
- 	case XFS_DINODE_FMT_BTREE:
- 		if ((iip->ili_fields & XFS_ILOG_DBROOT) &&
--		    ip->i_df.if_broot_bytes > 0)
--			nvecs++;
-+		    ip->i_df.if_broot_bytes > 0) {
-+			*nbytes += ip->i_df.if_broot_bytes;
-+			*nvecs += 1;
-+		}
- 		break;
- 
- 	case XFS_DINODE_FMT_LOCAL:
- 		if ((iip->ili_fields & XFS_ILOG_DDATA) &&
--		    ip->i_df.if_bytes > 0)
--			nvecs++;
-+		    ip->i_df.if_bytes > 0) {
-+			*nbytes += roundup(ip->i_df.if_bytes, 4);
-+			*nvecs += 1;
-+		}
- 		break;
- 
- 	case XFS_DINODE_FMT_DEV:
-@@ -85,7 +97,7 @@ xfs_inode_item_size(
- 	}
- 
- 	if (!XFS_IFORK_Q(ip))
--		return nvecs;
++	if (offset != be32_to_cpu(dsl->sl_offset))
++		return false;
++	if (size != be32_to_cpu(dsl->sl_bytes))
++		return false;
++	if (ino != be64_to_cpu(dsl->sl_owner))
++		return false;
++
++	/* ok */
++	return true;
++}
++
++static bool
++xfs_symlink_verify(
++	struct xfs_buf		*bp)
++{
++	struct xfs_mount	*mp = bp->b_target->bt_mount;
++	struct xfs_dsymlink_hdr	*dsl = bp->b_addr;
++
++	if (!xfs_sb_version_hascrc(&mp->m_sb))
++		return false;
++	if (dsl->sl_magic != cpu_to_be32(XFS_SYMLINK_MAGIC))
++		return false;
++	if (!uuid_equal(&dsl->sl_uuid, &mp->m_sb.sb_uuid))
++		return false;
++	if (bp->b_bn != be64_to_cpu(dsl->sl_blkno))
++		return false;
++	if (be32_to_cpu(dsl->sl_offset) +
++				be32_to_cpu(dsl->sl_bytes) >= MAXPATHLEN)
++		return false;
++	if (dsl->sl_owner == 0)
++		return false;
++
++	return true;
++}
++
++static void
++xfs_symlink_read_verify(
++	struct xfs_buf	*bp)
++{
++	struct xfs_mount *mp = bp->b_target->bt_mount;
++
++	/* no verification of non-crc buffers */
++	if (!xfs_sb_version_hascrc(&mp->m_sb))
 +		return;
- 
- 
- 	/*
-@@ -95,28 +107,33 @@ xfs_inode_item_size(
- 	case XFS_DINODE_FMT_EXTENTS:
- 		if ((iip->ili_fields & XFS_ILOG_AEXT) &&
- 		    ip->i_d.di_anextents > 0 &&
--		    ip->i_afp->if_bytes > 0)
--			nvecs++;
-+		    ip->i_afp->if_bytes > 0) {
-+			/* worst case, doesn't subtract unused space */
-+			*nbytes += XFS_IFORK_ASIZE(ip);
-+			*nvecs += 1;
-+		}
- 		break;
- 
- 	case XFS_DINODE_FMT_BTREE:
- 		if ((iip->ili_fields & XFS_ILOG_ABROOT) &&
--		    ip->i_afp->if_broot_bytes > 0)
--			nvecs++;
-+		    ip->i_afp->if_broot_bytes > 0) {
-+			*nbytes += ip->i_afp->if_broot_bytes;
-+			*nvecs += 1;
-+		}
- 		break;
- 
- 	case XFS_DINODE_FMT_LOCAL:
- 		if ((iip->ili_fields & XFS_ILOG_ADATA) &&
--		    ip->i_afp->if_bytes > 0)
--			nvecs++;
-+		    ip->i_afp->if_bytes > 0) {
-+			*nbytes += roundup(ip->i_afp->if_bytes, 4);
-+			*nvecs += 1;
-+		}
- 		break;
- 
- 	default:
- 		ASSERT(0);
- 		break;
- 	}
--
--	return nvecs;
- }
- 
- /*
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 02b9cf3..4e10872 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -122,19 +122,23 @@ xlog_cil_prepare_log_vecs(
- 	}
- 
- 	list_for_each_entry(lidp, &tp->t_items, lid_trans) {
-+		struct xfs_log_item *lip = lidp->lid_item;
- 		struct xfs_log_vec *new_lv;
- 		void	*ptr;
- 		int	index;
- 		int	len = 0;
--		uint	niovecs;
-+		uint	niovecs = 0;
-+		uint	nbytes = 0;
- 		bool	ordered = false;
- 
- 		/* Skip items which aren't dirty in this transaction. */
- 		if (!(lidp->lid_flags & XFS_LID_DIRTY))
- 			continue;
- 
-+		/* get number of vecs and size of data to be stored */
-+		lip->li_ops->iop_size(lip, &niovecs, &nbytes);
 +
- 		/* Skip items that do not have any vectors for writing */
--		niovecs = IOP_SIZE(lidp->lid_item);
- 		if (!niovecs)
- 			continue;
- 
-@@ -152,7 +156,7 @@ xlog_cil_prepare_log_vecs(
- 				niovecs * sizeof(struct xfs_log_iovec),
- 				KM_SLEEP|KM_NOFS);
- 
--		new_lv->lv_item = lidp->lid_item;
-+		new_lv->lv_item = lip;
- 		new_lv->lv_niovecs = niovecs;
- 		if (ordered) {
- 			/* track as an ordered logvec */
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 7eb81cc..97144ec 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -67,7 +67,7 @@ typedef struct xfs_log_item {
- 	{ XFS_LI_ABORTED,	"ABORTED" }
- 
- struct xfs_item_ops {
--	uint (*iop_size)(xfs_log_item_t *);
-+	void (*iop_size)(xfs_log_item_t *, int *, int *);
- 	void (*iop_format)(xfs_log_item_t *, struct xfs_log_iovec *);
- 	void (*iop_pin)(xfs_log_item_t *);
- 	void (*iop_unpin)(xfs_log_item_t *, int remove);
-@@ -77,7 +77,6 @@ struct xfs_item_ops {
- 	void (*iop_committing)(xfs_log_item_t *, xfs_lsn_t);
- };
- 
--#define IOP_SIZE(ip)		(*(ip)->li_ops->iop_size)(ip)
- #define IOP_FORMAT(ip,vp)	(*(ip)->li_ops->iop_format)(ip, vp)
- #define IOP_PIN(ip)		(*(ip)->li_ops->iop_pin)(ip)
- #define IOP_UNPIN(ip, remove)	(*(ip)->li_ops->iop_unpin)(ip, remove)
++	if (!xfs_verify_cksum(bp->b_addr, BBTOB(bp->b_length),
++				  offsetof(struct xfs_dsymlink_hdr, sl_crc)) ||
++	    !xfs_symlink_verify(bp)) {
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
++		xfs_buf_ioerror(bp, EFSCORRUPTED);
++	}
++}
++
++static void
++xfs_symlink_write_verify(
++	struct xfs_buf	*bp)
++{
++	struct xfs_mount *mp = bp->b_target->bt_mount;
++	struct xfs_buf_log_item	*bip = bp->b_fspriv;
++
++	/* no verification of non-crc buffers */
++	if (!xfs_sb_version_hascrc(&mp->m_sb))
++		return;
++
++	if (!xfs_symlink_verify(bp)) {
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
++		xfs_buf_ioerror(bp, EFSCORRUPTED);
++		return;
++	}
++
++	if (bip) {
++		struct xfs_dsymlink_hdr *dsl = bp->b_addr;
++		dsl->sl_lsn = cpu_to_be64(bip->bli_item.li_lsn);
++	}
++	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length),
++			 offsetof(struct xfs_dsymlink_hdr, sl_crc));
++}
++
++const struct xfs_buf_ops xfs_symlink_buf_ops = {
++	.verify_read = xfs_symlink_read_verify,
++	.verify_write = xfs_symlink_write_verify,
++};
++
++void
++xfs_symlink_local_to_remote(
++	struct xfs_trans	*tp,
++	struct xfs_buf		*bp,
++	struct xfs_inode	*ip,
++	struct xfs_ifork	*ifp)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++	char			*buf;
++
++	if (!xfs_sb_version_hascrc(&mp->m_sb)) {
++		bp->b_ops = NULL;
++		memcpy(bp->b_addr, ifp->if_u1.if_data, ifp->if_bytes);
++		return;
++	}
++
++	/*
++	 * As this symlink fits in an inode literal area, it must also fit in
++	 * the smallest buffer the filesystem supports.
++	 */
++	ASSERT(BBTOB(bp->b_length) >=
++			ifp->if_bytes + sizeof(struct xfs_dsymlink_hdr));
++
++	bp->b_ops = &xfs_symlink_buf_ops;
++
++	buf = bp->b_addr;
++	buf += xfs_symlink_hdr_set(mp, ip->i_ino, 0, ifp->if_bytes, bp);
++	memcpy(buf, ifp->if_u1.if_data, ifp->if_bytes);
++}
 -- 
 1.8.3.2
 
