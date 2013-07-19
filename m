@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C4FDA800C
-	for <linux-xfs@oss.sgi.com>; Fri, 19 Jul 2013 03:52:56 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 0304C7F82
+	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 07:22:44 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A5D6C8F8033
-	for <linux-xfs@oss.sgi.com>; Fri, 19 Jul 2013 01:52:53 -0700 (PDT)
-Received: from Ishtar.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
-	cuda.sgi.com with ESMTP id hETRPCOAy7Kn7FQm (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for
-	<linux-xfs@oss.sgi.com>; Fri, 19 Jul 2013 01:52:52 -0700 (PDT)
-Received: from [192.168.4.12] (Athenae [192.168.4.12])
-	by Ishtar.tlinx.org (8.14.7/8.14.4/SuSE Linux 0.8) with ESMTP id
-	r6J8qnuY078817
-	for <linux-xfs@oss.sgi.com>; Fri, 19 Jul 2013 01:52:51 -0700
-Message-ID: <51E8FE5F.8030107@tlinx.org>
-Date: Fri, 19 Jul 2013 01:52:47 -0700
-From: Linda Walsh <xfs@tlinx.org>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 7B567AC006
+	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 05:22:40 -0700 (PDT)
+Received: from mail.ud10.udmedia.de (ud10.udmedia.de [194.117.254.50]) by
+	cuda.sgi.com with ESMTP id BqSfDI9DjI9q0ZYz (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 19 Jul 2013 05:22:37 -0700 (PDT)
+Date: Fri, 19 Jul 2013 14:22:35 +0200
+From: Markus Trippelsdorf <markus@trippelsdorf.de>
+Subject: [Bisected] Corruption of root fs during git bisect of drm system hang
+Message-ID: <20130719122235.GA360@x4>
+References: <20130713090523.GA362@x4> <20130712070721.GA359@x4>
+	<20130715022841.GH5228@dastard> <20130715064734.GA361@x4>
 MIME-Version: 1.0
-Subject: choice of 'namespace' for ACL's 
+Content-Disposition: inline
+In-Reply-To: <20130715064734.GA361@x4>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,43 +26,131 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Linux-Xfs <linux-xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Ben Myers <bpm@sgi.com>, Mark Tinguely <tinguely@sgi.com>, Stan Hoeppner <stan@hardwarefreak.com>, xfs@oss.sgi.com
 
-CgoKSSB3YXMgbG9va2luZyBhdCB0aGUgYXR0ciBhbmQgaXQgbGVmdCBtZSBhIGJpdCBwdXp6bGVk
-LgoKKDEpIE9mIG1pbm9yIGNvbnNpZGVyYXRpb24sIHdhcyB0aGUgc3RhdGVtZW50IGFib3V0ICd2
-YWx1ZXMgY2FuIGJlIHVwCnRvIDY0S0InLi4uICBCdXQgdGhlcmUgaXMgbm8gbWVudGlvbiBvZiBo
-b3cgbWFueSBuYW1lcyBjYW4gYmUgcHJlc2VudApvciBpZiB0aGVyZSBpcyBhIGN1bXVsYXRpdmUg
-bWF4aW11bSBvbiB0aGUgbmFtZXMgb3Igb24gdGhlIGRhdGEuICBJIHRob3VnaHQKSSByZW1lbWJl
-cmVkIHRoZXJlIHdhcywgYnV0IGFsbCBJIGZvdW5kIHdhcyBsaW1pdHMgb24gc2luZ2xlIGRhdHVt
-cy4KCigyKSBBIG1vcmUgY29uZnVzaW5nIGlzc3VlIHdhcyB0aGUgYml0IGRlc2NyaWJpbmcgWEZT
-IGFzIGhhdmluZyAyCmRpc2pvaW50IGF0dHJpYgpuYW1lc3BhY2VzLCBidXQgbGF0ZXIgdGhlIHNl
-bGVjdG9ycyBmb3IgdGhlIG5hbWVzIHNwYWNlcyBhcmUgZ2l2ZW4gYXMKW25vbmVdID0gdXNlciwg
-W1JdID0gcm9vdCwgYW5kIFtTXSA9IFNlY3VyaXR5IC0tIG1ha2luZyBpdCBzb3VuZCBsaWtlIDMK
-ZGlzam9pbnQKbmFtZXNwYWNlcy4gIFNvLCBob3cgbWFueSBhdHRyaWIgbmFtZXNwYWNlcyBhcmUg
-dGhlaXIsIDIgb3IgMz8KCigzKSBBZGRpbmcgYSBiaXQgbW9yZSB0byBwaXF1ZSBteSBjdXJpb3Np
-dHksIEkgbm90aWNlZCB0aGF0CmZpbGUgQUNMJ3Mgd2VyZSBpbiB0aGUgcm9vdC1uYW1lc3BhY2Us
-IG5vdCB0aGUgc2VjdXJpdHkgYXR0cmlidXRlIG5hbWVzcGFjZS4KV291bGRuJ3QgaXQgbWFrZSBt
-b3JlIHNlbnNlIGlmIGFjY2VzcyBjb250cm9sIHdhcyBjb25zaWRlcmVkIGEgc2VjdXJpdHkKYXR0
-cmliPwoKCkFub3RoZXIgcG9pbnQgb2YgY29uZnVzaW9uIHdhcyBvbiB0aGUgYXR0cmliIG1hbnBh
-Z2Ugd2hlcmUgaXQgc2F5czoKQ0FWRUFUUwogICAgICAgVGhlIGxpc3Qgb3B0aW9uIHByZXNlbnQg
-aW4gdGhlIElSSVggdmVyc2lvbiBvZiB0aGlzIGNvbW1hbmQgaXMKbm90IHN1cOKAkAogICAgICAg
-cG9ydGVkLiAgZ2V0ZmF0dHIgcHJvdmlkZXMgYSBtZWNoYW5pc20gdG8gcmV0cmlldmUgYWxsIG9m
-IHRoZQphdHRyaWJ1dGUKICAgICAgIG5hbWVzLgoKKDQpIFdoYXQgZG9lcyB0aGF0IG1lYW4/ICBp
-LmUuOgoKd2hlbiBJIHVzZSBhdHRyIC1sOgoKPiBhdHRyIC1sIG9wZW5zc2gtNi4xcDEtaHBuMTN2
-MTQuZGlmZi5negpBdHRyaWJ1dGUgIkRPU0FUVFJJQiIgaGFzIGEgNTYgYnl0ZSB2YWx1ZSBmb3Ig
-b3BlbnNzaC02LjFwMS1ocG4xM3YxNC5kaWZmLmd6CkF0dHJpYnV0ZSAiU0FNQkFfUEFJIiBoYXMg
-YSAyNSBieXRlIHZhbHVlIGZvciBvcGVuc3NoLTYuMXAxLWhwbjEzdjE0LmRpZmYuZ3oKCm9yIGFk
-ZGludCB0aGUgLXEgc3dpdGNoIHdpdGggLWw6Cgo+IGF0dHIgLXFsIG9wZW5zc2gtNi4xcDEtaHBu
-MTN2MTQuZGlmZi5negpET1NBVFRSSUIKU0FNQkFfUEFJCi0tLQpEb2VzICJub3Qgc3VwcG9ydGVk
-IiBtZWFuIHRoYXQgaXQgaXMgd29ya2luZyBieSBhY2NpZGVudCBhbmQgbWF5IGJlCnJlbW92ZWQg
-ICAuLi4gYmVjYXVzZS4uLi5bX19fX19fX19fPz8/X19fX19fXT8gCgpnZXRmYXR0ciBpcyBzdWdn
-ZXN0ZWQgYXMgYSByZXBsYWNlbWVudCwgYnV0Cig1KSBob3cgY2FuIGl0IGJlIHVzZWQgdG8gbGlz
-dCB0aGUgbGVuZ3Rocz8gIGFuZAooNikgaG93IGNhbiBpdCBiZSB1c2VkIHRvIGxpc3QgdGhlIFNl
-Y3VyaXR5IG9yIFJvb3QgbmFtZXNwYWNlcz8KClNvcnJ5IGZvciBhbGwgdGhlIFEncywgYnV0IGl0
-IHNlZW1lZCBsaWtlIHRoZXJlIHdlcmUgc29tZSBtaXNzaW5nIHBpZWNlcy4uLgoKCgpfX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0
-Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On 2013.07.15 at 08:47 +0200, Markus Trippelsdorf wrote:
+> On 2013.07.15 at 12:28 +1000, Dave Chinner wrote:
+> > On Fri, Jul 12, 2013 at 09:07:21AM +0200, Markus Trippelsdorf wrote:
+> > > On 2013.07.12 at 12:17 +1000, Dave Chinner wrote:
+> > > > On Thu, Jul 11, 2013 at 11:07:55AM +0200, Markus Trippelsdorf wrote:
+> > > > > On 2013.07.10 at 23:12 -0500, Stan Hoeppner wrote:
+> > > > > > On 7/10/2013 10:58 PM, Dave Chinner wrote:
+> > > > > > > On Thu, Jul 11, 2013 at 05:36:21AM +0200, Markus Trippelsdorf wrote:
+> > > > > > 
+> > > > > > >> I was loosing my KDE settings bit by bit with every reboot during the
+> > > > > > >> bisection. First my window-rules disappeared, then my desktop background
+> > > > > > >> changed to default, then my taskbar moved from top to the bottom, etc.
+> > > > > > >> In the end I had to restore all my .files from backup. 
+> > > > > > > 
+> > > > > > > That's not filesystem corruption. That sounds more like someone not
+> > > > > > > using fsync in the apropriate place when overwriting a file....
+> > > > > > 
+> > > > > t@ubunt:~# xfs_repair /dev/sdb
+> > > > > Phase 1 - find and verify superblock...
+> > > > > Phase 2 - using internal log
+> > > > >         - zero log...
+> > > > >         - scan filesystem freespace and inode maps...
+> > > > > agi unlinked bucket 0 is 683435008 in ag 2 (inode=4978402304)
+> > > > > agi unlinked bucket 1 is 683435009 in ag 2 (inode=4978402305)
+> > > > >         - found root inode chunk
+> > > > 
+> > > > Again, these are signs that log recovery has not completed
+> > > > successfully or that for some reason it thought the log was clean.
+> > > > Can you please post the dmesg output after the crash when you go
+> > > > through the mount/unmount process before you run xfs_repair?
+> > > 
+> > > Sure.
+> > > First boot after crash:
+> > >  XFS (sdb2): Mounting Filesystem
+> > >  XFS (sdb2): Starting recovery (logdev: internal)
+> > >  XFS (sdb2): Ending recovery (logdev: internal)
+> > > 
+> > > Second boot after crash:
+> > >  XFS (sdb2): Mounting Filesystem
+> > >  XFS (sdb2): Ending clean mount 
+> > > 
+> > > I then boot Ubuntu from another disc to run xfs_repair.
+> > 
+> > That's what shoul dhave been in the initial description of your
+> > problem.
+> > 
+> > > And looking through my logs I see this WARNING:
+> > > 
+> > > ------------[ cut here ]------------
+> > > WARNING: CPU: 0 PID: 439 at fs/inode.c:280 drop_nlink+0x33/0x40()
+> > > CPU: 0 PID: 439 Comm: gconfd-2 Not tainted 3.10.0-08982-g6d128e1-dirty #42
+> > > Hardware name: System manufacturer System Product Name/M4A78T-E, BIOS 3503    04/13/2011
+> > >  0000000000000009 ffffffff8157d030 0000000000000000 ffffffff81060788
+> > >  ffff8801f8608cc8 ffff880205998230 ffff8801f7bede58 0000000000000000
+> > >  ffff8801f86083c0 ffffffff8110ce93 ffff8801f8608b40 ffffffff811b7104
+> > > Call Trace:
+> > >  [<ffffffff8157d030>] ? dump_stack+0x41/0x51
+> > >  [<ffffffff81060788>] ? warn_slowpath_common+0x68/0x80
+> > >  [<ffffffff8110ce93>] ? drop_nlink+0x33/0x40
+> > >  [<ffffffff811b7104>] ? xfs_droplink+0x24/0x60
+> > >  [<ffffffff811b84ed>] ? xfs_remove+0x24d/0x380
+> > >  [<ffffffff811b1657>] ? xfs_vn_unlink+0x37/0x80
+> > >  [<ffffffff8110414e>] ? vfs_unlink+0x6e/0xe0
+> > >  [<ffffffff8110432a>] ? do_unlinkat+0x16a/0x220
+> > >  [<ffffffff810f4fa9>] ? SyS_faccessat+0x149/0x200
+> > >  [<ffffffff81583292>] ? system_call_fastpath+0x16/0x1b
+> > 
+> > When did that occur? Before the crash, after the first/second mount?
+> > after you ran repair?
+> 
+> After the first mount.
+> 
+> > > Some further observations:
+> > > 
+> > > When I boot 3.2.0 after the crash log recovery works fine.
+> > > 
+> > > When I boot 3.9.0 after the crash I get the following:
+> > > 
+> > > [    2.332989] XFS (sdc2): Mounting Filesystem
+> > > [    2.406206] XFS (sdc2): Starting recovery (logdev: internal)
+> > > [    2.418147] XFS (sdc2): log record CRC mismatch: found 0xdbcaef48, expected 0x69e7934e.
+> > 
+> > Just informational - indicating that the log records don't have
+> > valid CRCs in them because 3.2 didn't calculate them. If you are
+> > getting them when after a crash on a 3.9+ kernel, then there's a
+> > problem writing to the log....
+> 
+> The crash always occurred on the current Linus tree kernel...
+> 
+> > > When I boot the current Linus tree after the crash log recovery fails silently.
+> > 
+> > dmesg output, please. Indeed, what does "fails silently" mean? the
+> > filesystem doesn't mount but no error is given?
+> 
+> Again, there is no dmesg output. XFS tells me that it's "Ending recovery
+> (logdev: internal)" without any errors, when indeed it didn't recover
+> the log at all. It then mounts the filesystem normally (rw) in this
+> unclean state. That's when the WARNING I postend above happend.
+
+I've bisected this issue to the following commit:
+
+ commit cca9f93a52d2ead50b5da59ca83d5f469ee4be5f
+ Author: Dave Chinner <dchinner@redhat.com>
+ Date:   Thu Jun 27 16:04:49 2013 +1000
+
+     xfs: don't do IO when creating an new inode
+         
+Reverting this commit on top of the Linus tree "solves" all problems for
+me. IOW I no longer loose my KDE and LibreOffice config files during a
+crash. Log recovery now works fine and xfs_repair shows no issues.
+
+So users of 3.11.0-rc1 beware. Only run this version if you have
+up-to-date backups handy.
+
+-- 
+Markus
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
