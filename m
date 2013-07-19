@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E868E7F6B
-	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 01:25:40 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 05B1B7F8B
+	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 01:25:42 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id A317C8F8033
-	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 23:25:40 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C96B9304043
+	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 23:25:41 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	tzpWoj7PmiKpHAhQ for <xfs@oss.sgi.com>;
-	Thu, 18 Jul 2013 23:25:37 -0700 (PDT)
+	d5gEnocwvZOhWC8R for <xfs@oss.sgi.com>;
+	Thu, 18 Jul 2013 23:25:39 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1V0483-00048a-2D
+	(envelope-from <dave@fromorbit.com>) id 1V0483-00048H-Ed
 	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:25:23 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1V0483-0001yi-1B
+	(envelope-from <dave@disappointment.disaster>) id 1V0483-00020D-DJ
 	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:25:23 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 26/49] xfs: consolidate xfs_utils.c
-Date: Fri, 19 Jul 2013 16:24:57 +1000
-Message-Id: <1374215120-7271-27-git-send-email-david@fromorbit.com>
+Subject: [PATCH 43/49] xfs: return log item size in IOP_SIZE
+Date: Fri, 19 Jul 2013 16:25:14 +1000
+Message-Id: <1374215120-7271-44-git-send-email-david@fromorbit.com>
 In-Reply-To: <1374215120-7271-1-git-send-email-david@fromorbit.com>
 References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,859 +39,503 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-There are a few small helper functions in xfs_util, all related to
-xfs_inode modifications. Move them all to xfs_inode.c so all
-xfs_inode operations are consiolidated in the one place.
+To begin optimising the CIL commit process, we need to have IOP_SIZE
+return both the number of vectors and the size of the data pointed
+to by the vectors. This enables us to calculate the size ofthe
+memory allocation needed before the formatting step and reduces the
+number of memory allocations per item by one.
+
+WhIle there, kill the IOP_SIZE macro.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/Makefile          |   1 -
- fs/xfs/xfs_error.c       |   1 -
- fs/xfs/xfs_filestream.c  |   1 -
- fs/xfs/xfs_inode.c       | 279 ++++++++++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_inode.h       |   7 ++
- fs/xfs/xfs_ioctl.c       |   1 -
- fs/xfs/xfs_iomap.c       |   1 -
- fs/xfs/xfs_iops.c        |   1 -
- fs/xfs/xfs_log_recover.c |   1 -
- fs/xfs/xfs_mount.c       |   1 -
- fs/xfs/xfs_qm.c          |   1 -
- fs/xfs/xfs_qm_syscalls.c |   1 -
- fs/xfs/xfs_rtalloc.c     |   1 -
- fs/xfs/xfs_super.c       |   1 -
- fs/xfs/xfs_symlink.c     |   1 -
- fs/xfs/xfs_utils.c       | 316 -----------------------------------------------
- fs/xfs/xfs_utils.h       |  27 ----
- 17 files changed, 285 insertions(+), 357 deletions(-)
- delete mode 100644 fs/xfs/xfs_utils.c
- delete mode 100644 fs/xfs/xfs_utils.h
+ fs/xfs/xfs_buf_item.c     | 52 ++++++++++++++++++++++++++++------------------
+ fs/xfs/xfs_dquot_item.c   | 22 ++++++++++++--------
+ fs/xfs/xfs_extfree_item.c | 50 ++++++++++++++++++++++++++++----------------
+ fs/xfs/xfs_icreate_item.c |  9 +++++---
+ fs/xfs/xfs_inode_item.c   | 53 +++++++++++++++++++++++++++++++----------------
+ fs/xfs/xfs_log_cil.c      | 10 ++++++---
+ fs/xfs/xfs_trans.h        |  3 +--
+ 7 files changed, 126 insertions(+), 73 deletions(-)
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index e5a0758..201c61d 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -53,7 +53,6 @@ xfs-y				+= xfs_aops.o \
- 				   xfs_super.o \
- 				   xfs_symlink.o \
- 				   xfs_trans.o \
--				   xfs_utils.o \
- 				   xfs_xattr.o \
- 				   kmem.o \
- 				   uuid.o
-diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-index 35d3f5b..1123d93f 100644
---- a/fs/xfs/xfs_error.c
-+++ b/fs/xfs/xfs_error.c
-@@ -26,7 +26,6 @@
- #include "xfs_bmap_btree.h"
- #include "xfs_dinode.h"
- #include "xfs_inode.h"
--#include "xfs_utils.h"
- #include "xfs_error.h"
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index bfc4e0c..9358504 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -39,6 +39,14 @@ static inline struct xfs_buf_log_item *BUF_ITEM(struct xfs_log_item *lip)
  
- #ifdef DEBUG
-diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
-index d0e8890..ce78e65 100644
---- a/fs/xfs/xfs_filestream.c
-+++ b/fs/xfs/xfs_filestream.c
-@@ -28,7 +28,6 @@
- #include "xfs_bmap.h"
- #include "xfs_bmap_util.h"
- #include "xfs_alloc.h"
--#include "xfs_utils.h"
- #include "xfs_mru_cache.h"
- #include "xfs_filestream.h"
- #include "xfs_trace.h"
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 29d41c4..9db5be7 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -46,7 +46,6 @@
- #include "xfs_bmap.h"
- #include "xfs_bmap_util.h"
- #include "xfs_error.h"
--#include "xfs_utils.h"
- #include "xfs_quota.h"
- #include "xfs_filestream.h"
- #include "xfs_cksum.h"
-@@ -862,6 +861,284 @@ xfs_ialloc(
- 	return 0;
+ STATIC void	xfs_buf_do_callbacks(struct xfs_buf *bp);
+ 
++static inline int
++xfs_buf_log_format_size(
++	struct xfs_buf_log_format *blfp)
++{
++	return offsetof(struct xfs_buf_log_format, blf_data_map) +
++			(blfp->blf_map_size * sizeof(blfp->blf_data_map[0]));
++}
++
+ /*
+  * This returns the number of log iovecs needed to log the
+  * given buf log item.
+@@ -49,25 +57,27 @@ STATIC void	xfs_buf_do_callbacks(struct xfs_buf *bp);
+  *
+  * If the XFS_BLI_STALE flag has been set, then log nothing.
+  */
+-STATIC uint
++STATIC void
+ xfs_buf_item_size_segment(
+ 	struct xfs_buf_log_item	*bip,
+-	struct xfs_buf_log_format *blfp)
++	struct xfs_buf_log_format *blfp,
++	int			*nvecs,
++	int			*nbytes)
+ {
+ 	struct xfs_buf		*bp = bip->bli_buf;
+-	uint			nvecs;
+ 	int			next_bit;
+ 	int			last_bit;
+ 
+ 	last_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size, 0);
+ 	if (last_bit == -1)
+-		return 0;
++		return;
+ 
+ 	/*
+ 	 * initial count for a dirty buffer is 2 vectors - the format structure
+ 	 * and the first dirty region.
+ 	 */
+-	nvecs = 2;
++	*nvecs += 2;
++	*nbytes += xfs_buf_log_format_size(blfp) + XFS_BLF_CHUNK;
+ 
+ 	while (last_bit != -1) {
+ 		/*
+@@ -87,18 +97,17 @@ xfs_buf_item_size_segment(
+ 			break;
+ 		} else if (next_bit != last_bit + 1) {
+ 			last_bit = next_bit;
+-			nvecs++;
++			(*nvecs)++;
+ 		} else if (xfs_buf_offset(bp, next_bit * XFS_BLF_CHUNK) !=
+ 			   (xfs_buf_offset(bp, last_bit * XFS_BLF_CHUNK) +
+ 			    XFS_BLF_CHUNK)) {
+ 			last_bit = next_bit;
+-			nvecs++;
++			(*nvecs)++;
+ 		} else {
+ 			last_bit++;
+ 		}
++		*nbytes += XFS_BLF_CHUNK;
+ 	}
+-
+-	return nvecs;
  }
  
-+/*
-+ * Allocates a new inode from disk and return a pointer to the
-+ * incore copy. This routine will internally commit the current
-+ * transaction and allocate a new one if the Space Manager needed
-+ * to do an allocation to replenish the inode free-list.
-+ *
-+ * This routine is designed to be called from xfs_create and
-+ * xfs_create_dir.
-+ *
-+ */
-+int
-+xfs_dir_ialloc(
-+	xfs_trans_t	**tpp,		/* input: current transaction;
-+					   output: may be a new transaction. */
-+	xfs_inode_t	*dp,		/* directory within whose allocate
-+					   the inode. */
-+	umode_t		mode,
-+	xfs_nlink_t	nlink,
-+	xfs_dev_t	rdev,
-+	prid_t		prid,		/* project id */
-+	int		okalloc,	/* ok to allocate new space */
-+	xfs_inode_t	**ipp,		/* pointer to inode; it will be
-+					   locked. */
-+	int		*committed)
-+
-+{
-+	xfs_trans_t	*tp;
-+	xfs_trans_t	*ntp;
-+	xfs_inode_t	*ip;
-+	xfs_buf_t	*ialloc_context = NULL;
-+	int		code;
-+	uint		log_res;
-+	uint		log_count;
-+	void		*dqinfo;
-+	uint		tflags;
-+
-+	tp = *tpp;
-+	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
-+
-+	/*
-+	 * xfs_ialloc will return a pointer to an incore inode if
-+	 * the Space Manager has an available inode on the free
-+	 * list. Otherwise, it will do an allocation and replenish
-+	 * the freelist.  Since we can only do one allocation per
-+	 * transaction without deadlocks, we will need to commit the
-+	 * current transaction and start a new one.  We will then
-+	 * need to call xfs_ialloc again to get the inode.
-+	 *
-+	 * If xfs_ialloc did an allocation to replenish the freelist,
-+	 * it returns the bp containing the head of the freelist as
-+	 * ialloc_context. We will hold a lock on it across the
-+	 * transaction commit so that no other process can steal
-+	 * the inode(s) that we've just allocated.
-+	 */
-+	code = xfs_ialloc(tp, dp, mode, nlink, rdev, prid, okalloc,
-+			  &ialloc_context, &ip);
-+
-+	/*
-+	 * Return an error if we were unable to allocate a new inode.
-+	 * This should only happen if we run out of space on disk or
-+	 * encounter a disk error.
-+	 */
-+	if (code) {
-+		*ipp = NULL;
-+		return code;
-+	}
-+	if (!ialloc_context && !ip) {
-+		*ipp = NULL;
-+		return XFS_ERROR(ENOSPC);
-+	}
-+
-+	/*
-+	 * If the AGI buffer is non-NULL, then we were unable to get an
-+	 * inode in one operation.  We need to commit the current
-+	 * transaction and call xfs_ialloc() again.  It is guaranteed
-+	 * to succeed the second time.
-+	 */
-+	if (ialloc_context) {
-+		/*
-+		 * Normally, xfs_trans_commit releases all the locks.
-+		 * We call bhold to hang on to the ialloc_context across
-+		 * the commit.  Holding this buffer prevents any other
-+		 * processes from doing any allocations in this
-+		 * allocation group.
-+		 */
-+		xfs_trans_bhold(tp, ialloc_context);
-+		/*
-+		 * Save the log reservation so we can use
-+		 * them in the next transaction.
-+		 */
-+		log_res = xfs_trans_get_log_res(tp);
-+		log_count = xfs_trans_get_log_count(tp);
-+
-+		/*
-+		 * We want the quota changes to be associated with the next
-+		 * transaction, NOT this one. So, detach the dqinfo from this
-+		 * and attach it to the next transaction.
-+		 */
-+		dqinfo = NULL;
-+		tflags = 0;
-+		if (tp->t_dqinfo) {
-+			dqinfo = (void *)tp->t_dqinfo;
-+			tp->t_dqinfo = NULL;
-+			tflags = tp->t_flags & XFS_TRANS_DQ_DIRTY;
-+			tp->t_flags &= ~(XFS_TRANS_DQ_DIRTY);
-+		}
-+
-+		ntp = xfs_trans_dup(tp);
-+		code = xfs_trans_commit(tp, 0);
-+		tp = ntp;
-+		if (committed != NULL) {
-+			*committed = 1;
-+		}
-+		/*
-+		 * If we get an error during the commit processing,
-+		 * release the buffer that is still held and return
-+		 * to the caller.
-+		 */
-+		if (code) {
-+			xfs_buf_relse(ialloc_context);
-+			if (dqinfo) {
-+				tp->t_dqinfo = dqinfo;
-+				xfs_trans_free_dqinfo(tp);
-+			}
-+			*tpp = ntp;
-+			*ipp = NULL;
-+			return code;
-+		}
-+
-+		/*
-+		 * transaction commit worked ok so we can drop the extra ticket
-+		 * reference that we gained in xfs_trans_dup()
-+		 */
-+		xfs_log_ticket_put(tp->t_ticket);
-+		code = xfs_trans_reserve(tp, 0, log_res, 0,
-+					 XFS_TRANS_PERM_LOG_RES, log_count);
-+		/*
-+		 * Re-attach the quota info that we detached from prev trx.
-+		 */
-+		if (dqinfo) {
-+			tp->t_dqinfo = dqinfo;
-+			tp->t_flags |= tflags;
-+		}
-+
-+		if (code) {
-+			xfs_buf_relse(ialloc_context);
-+			*tpp = ntp;
-+			*ipp = NULL;
-+			return code;
-+		}
-+		xfs_trans_bjoin(tp, ialloc_context);
-+
-+		/*
-+		 * Call ialloc again. Since we've locked out all
-+		 * other allocations in this allocation group,
-+		 * this call should always succeed.
-+		 */
-+		code = xfs_ialloc(tp, dp, mode, nlink, rdev, prid,
-+				  okalloc, &ialloc_context, &ip);
-+
-+		/*
-+		 * If we get an error at this point, return to the caller
-+		 * so that the current transaction can be aborted.
-+		 */
-+		if (code) {
-+			*tpp = tp;
-+			*ipp = NULL;
-+			return code;
-+		}
-+		ASSERT(!ialloc_context && ip);
-+
-+	} else {
-+		if (committed != NULL)
-+			*committed = 0;
-+	}
-+
-+	*ipp = ip;
-+	*tpp = tp;
-+
-+	return 0;
-+}
-+
-+/*
-+ * Decrement the link count on an inode & log the change.
-+ * If this causes the link count to go to zero, initiate the
-+ * logging activity required to truncate a file.
-+ */
-+int				/* error */
-+xfs_droplink(
-+	xfs_trans_t *tp,
-+	xfs_inode_t *ip)
-+{
-+	int	error;
-+
-+	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
-+
-+	ASSERT (ip->i_d.di_nlink > 0);
-+	ip->i_d.di_nlink--;
-+	drop_nlink(VFS_I(ip));
-+	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+
-+	error = 0;
-+	if (ip->i_d.di_nlink == 0) {
-+		/*
-+		 * We're dropping the last link to this file.
-+		 * Move the on-disk inode to the AGI unlinked list.
-+		 * From xfs_inactive() we will pull the inode from
-+		 * the list and free it.
-+		 */
-+		error = xfs_iunlink(tp, ip);
-+	}
-+	return error;
-+}
-+
-+/*
-+ * This gets called when the inode's version needs to be changed from 1 to 2.
-+ * Currently this happens when the nlink field overflows the old 16-bit value
-+ * or when chproj is called to change the project for the first time.
-+ * As a side effect the superblock version will also get rev'd
-+ * to contain the NLINK bit.
-+ */
-+void
-+xfs_bump_ino_vers2(
-+	xfs_trans_t	*tp,
-+	xfs_inode_t	*ip)
-+{
-+	xfs_mount_t	*mp;
-+
-+	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-+	ASSERT(ip->i_d.di_version == 1);
-+
-+	ip->i_d.di_version = 2;
-+	ip->i_d.di_onlink = 0;
-+	memset(&(ip->i_d.di_pad[0]), 0, sizeof(ip->i_d.di_pad));
-+	mp = tp->t_mountp;
-+	if (!xfs_sb_version_hasnlink(&mp->m_sb)) {
-+		spin_lock(&mp->m_sb_lock);
-+		if (!xfs_sb_version_hasnlink(&mp->m_sb)) {
-+			xfs_sb_version_addnlink(&mp->m_sb);
-+			spin_unlock(&mp->m_sb_lock);
-+			xfs_mod_sb(tp, XFS_SB_VERSIONNUM);
-+		} else {
-+			spin_unlock(&mp->m_sb_lock);
-+		}
-+	}
-+	/* Caller must log the inode */
-+}
-+
-+/*
-+ * Increment the link count on an inode & log the change.
-+ */
-+int
-+xfs_bumplink(
-+	xfs_trans_t *tp,
-+	xfs_inode_t *ip)
-+{
-+	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
-+
-+	ASSERT(ip->i_d.di_nlink > 0);
-+	ip->i_d.di_nlink++;
-+	inc_nlink(VFS_I(ip));
-+	if ((ip->i_d.di_version == 1) &&
-+	    (ip->i_d.di_nlink > XFS_MAXLINK_1)) {
-+		/*
-+		 * The inode has increased its number of links beyond
-+		 * what can fit in an old format inode.  It now needs
-+		 * to be converted to a version 2 inode with a 32 bit
-+		 * link count.  If this is the first inode in the file
-+		 * system to do this, then we need to bump the superblock
-+		 * version number as well.
-+		 */
-+		xfs_bump_ino_vers2(tp, ip);
-+	}
-+
-+	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+	return 0;
-+}
-+
- int
- xfs_create(
- 	xfs_inode_t		*dp,
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 2a63470..4a91358 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -360,6 +360,13 @@ void		xfs_lock_two_inodes(xfs_inode_t *, xfs_inode_t *, uint);
+ /*
+@@ -118,12 +127,13 @@ xfs_buf_item_size_segment(
+  * If the XFS_BLI_STALE flag has been set, then log nothing but the buf log
+  * format structures.
+  */
+-STATIC uint
++STATIC void
+ xfs_buf_item_size(
+-	struct xfs_log_item	*lip)
++	struct xfs_log_item	*lip,
++	int			*nvecs,
++	int			*nbytes)
+ {
+ 	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
+-	uint			nvecs;
+ 	int			i;
  
- xfs_extlen_t	xfs_get_extsz_hint(struct xfs_inode *ip);
+ 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
+@@ -135,7 +145,11 @@ xfs_buf_item_size(
+ 		 */
+ 		trace_xfs_buf_item_size_stale(bip);
+ 		ASSERT(bip->__bli_format.blf_flags & XFS_BLF_CANCEL);
+-		return bip->bli_format_count;
++		*nvecs += bip->bli_format_count;
++		for (i = 0; i < bip->bli_format_count; i++) {
++			*nbytes += xfs_buf_log_format_size(&bip->bli_formats[i]);
++		}
++		return;
+ 	}
  
-+int		xfs_dir_ialloc(struct xfs_trans **, struct xfs_inode *, umode_t,
-+			       xfs_nlink_t, xfs_dev_t, prid_t, int,
-+			       struct xfs_inode **, int *);
-+int		xfs_droplink(struct xfs_trans *, struct xfs_inode *);
-+int		xfs_bumplink(struct xfs_trans *, struct xfs_inode *);
-+void		xfs_bump_ino_vers2(struct xfs_trans *, struct xfs_inode *);
+ 	ASSERT(bip->bli_flags & XFS_BLI_LOGGED);
+@@ -147,7 +161,8 @@ xfs_buf_item_size(
+ 		 * commit, so no vectors are used at all.
+ 		 */
+ 		trace_xfs_buf_item_size_ordered(bip);
+-		return XFS_LOG_VEC_ORDERED;
++		*nvecs = XFS_LOG_VEC_ORDERED;
++		return;
+ 	}
+ 
+ 	/*
+@@ -159,13 +174,11 @@ xfs_buf_item_size(
+ 	 * count for the extra buf log format structure that will need to be
+ 	 * written.
+ 	 */
+-	nvecs = 0;
+ 	for (i = 0; i < bip->bli_format_count; i++) {
+-		nvecs += xfs_buf_item_size_segment(bip, &bip->bli_formats[i]);
++		xfs_buf_item_size_segment(bip, &bip->bli_formats[i],
++					  nvecs, nbytes);
+ 	}
+-
+ 	trace_xfs_buf_item_size(bip);
+-	return nvecs;
+ }
+ 
+ static struct xfs_log_iovec *
+@@ -192,8 +205,7 @@ xfs_buf_item_format_segment(
+ 	 * the actual size of the dirty bitmap rather than the size of the in
+ 	 * memory structure.
+ 	 */
+-	base_size = offsetof(struct xfs_buf_log_format, blf_data_map) +
+-			(blfp->blf_map_size * sizeof(blfp->blf_data_map[0]));
++	base_size = xfs_buf_log_format_size(blfp);
+ 
+ 	nvecs = 0;
+ 	first_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size, 0);
+diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
+index f07a436..60c6e1f 100644
+--- a/fs/xfs/xfs_dquot_item.c
++++ b/fs/xfs/xfs_dquot_item.c
+@@ -44,14 +44,15 @@ static inline struct xfs_dq_logitem *DQUOT_ITEM(struct xfs_log_item *lip)
+ /*
+  * returns the number of iovecs needed to log the given dquot item.
+  */
+-STATIC uint
++STATIC void
+ xfs_qm_dquot_logitem_size(
+-	struct xfs_log_item	*lip)
++	struct xfs_log_item	*lip,
++	int			*nvecs,
++	int			*nbytes)
+ {
+-	/*
+-	 * we need only two iovecs, one for the format, one for the real thing
+-	 */
+-	return 2;
++	*nvecs += 2;
++	*nbytes += sizeof(struct xfs_dq_logformat) +
++		   sizeof(struct xfs_disk_dquot);
+ }
+ 
+ /*
+@@ -286,11 +287,14 @@ static inline struct xfs_qoff_logitem *QOFF_ITEM(struct xfs_log_item *lip)
+  * We only need 1 iovec for an quotaoff item.  It just logs the
+  * quotaoff_log_format structure.
+  */
+-STATIC uint
++STATIC void
+ xfs_qm_qoff_logitem_size(
+-	struct xfs_log_item	*lip)
++	struct xfs_log_item	*lip,
++	int			*nvecs,
++	int			*nbytes)
+ {
+-	return 1;
++	*nvecs += 1;
++	*nbytes += sizeof(struct xfs_qoff_logitem);
+ }
+ 
+ /*
+diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
+index 452920a..dc53e8f 100644
+--- a/fs/xfs/xfs_extfree_item.c
++++ b/fs/xfs/xfs_extfree_item.c
+@@ -73,11 +73,22 @@ __xfs_efi_release(
+  * We only need 1 iovec for an efi item.  It just logs the efi_log_format
+  * structure.
+  */
+-STATIC uint
++static inline int
++xfs_efi_item_sizeof(
++	struct xfs_efi_log_item *efip)
++{
++	return sizeof(struct xfs_efi_log_format) +
++	       (efip->efi_format.efi_nextents - 1) * sizeof(xfs_extent_t);
++}
 +
- /* from xfs_file.c */
- int		xfs_zero_eof(struct xfs_inode *, xfs_off_t, xfs_fsize_t);
- int		xfs_iozero(struct xfs_inode *, loff_t, size_t);
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index ce636bf..557c7b8 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -35,7 +35,6 @@
- #include "xfs_bmap.h"
- #include "xfs_bmap_util.h"
- #include "xfs_buf_item.h"
--#include "xfs_utils.h"
- #include "xfs_dfrag.h"
- #include "xfs_fsops.h"
- #include "xfs_discard.h"
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index b04a60f..cf8f744 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -40,7 +40,6 @@
- #include "xfs_attr.h"
- #include "xfs_buf_item.h"
- #include "xfs_trans_space.h"
--#include "xfs_utils.h"
- #include "xfs_iomap.h"
- #include "xfs_trace.h"
- #include "xfs_icache.h"
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index e0cefd4..24be68d 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -36,7 +36,6 @@
- #include "xfs_itable.h"
- #include "xfs_attr.h"
- #include "xfs_buf_item.h"
--#include "xfs_utils.h"
- #include "xfs_inode_item.h"
- #include "xfs_trace.h"
- #include "xfs_icache.h"
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index fabcc84..0771fa3 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -41,7 +41,6 @@
- #include "xfs_extfree_item.h"
- #include "xfs_trans_priv.h"
- #include "xfs_quota.h"
--#include "xfs_utils.h"
- #include "xfs_cksum.h"
- #include "xfs_trace.h"
- #include "xfs_icache.h"
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index c0eafbe..7a02d66 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -42,7 +42,6 @@
- #include "xfs_error.h"
- #include "xfs_quota.h"
- #include "xfs_fsops.h"
--#include "xfs_utils.h"
- #include "xfs_trace.h"
- #include "xfs_icache.h"
- #include "xfs_cksum.h"
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index e14d53a..6432ebb 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -38,7 +38,6 @@
- #include "xfs_attr.h"
- #include "xfs_buf_item.h"
- #include "xfs_trans_space.h"
--#include "xfs_utils.h"
- #include "xfs_qm.h"
- #include "xfs_trace.h"
- #include "xfs_icache.h"
-diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-index 3521c8b..40b06b5 100644
---- a/fs/xfs/xfs_qm_syscalls.c
-+++ b/fs/xfs/xfs_qm_syscalls.c
-@@ -38,7 +38,6 @@
- #include "xfs_error.h"
- #include "xfs_attr.h"
- #include "xfs_buf_item.h"
--#include "xfs_utils.h"
- #include "xfs_qm.h"
- #include "xfs_trace.h"
- #include "xfs_icache.h"
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 7a445e6..4822806 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -35,7 +35,6 @@
- #include "xfs_error.h"
- #include "xfs_inode_item.h"
- #include "xfs_trans_space.h"
--#include "xfs_utils.h"
- #include "xfs_trace.h"
- #include "xfs_buf.h"
- #include "xfs_icache.h"
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 980ecab..1a4fc1c 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -40,7 +40,6 @@
- #include "xfs_fsops.h"
- #include "xfs_attr.h"
- #include "xfs_buf_item.h"
--#include "xfs_utils.h"
- #include "xfs_log_priv.h"
- #include "xfs_trans_priv.h"
- #include "xfs_filestream.h"
-diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-index 1ce2756..e6facbf 100644
---- a/fs/xfs/xfs_symlink.c
-+++ b/fs/xfs/xfs_symlink.c
-@@ -38,7 +38,6 @@
- #include "xfs_bmap_util.h"
- #include "xfs_error.h"
- #include "xfs_quota.h"
--#include "xfs_utils.h"
- #include "xfs_trans_space.h"
- #include "xfs_trace.h"
- #include "xfs_symlink.h"
-diff --git a/fs/xfs/xfs_utils.c b/fs/xfs/xfs_utils.c
-deleted file mode 100644
-index fde7d22..0000000
---- a/fs/xfs/xfs_utils.c
-+++ /dev/null
-@@ -1,316 +0,0 @@
--/*
-- * Copyright (c) 2000-2002,2005 Silicon Graphics, Inc.
-- * All Rights Reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it would be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write the Free Software Foundation,
-- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-- */
--#include "xfs.h"
--#include "xfs_fs.h"
--#include "xfs_format.h"
--#include "xfs_log.h"
--#include "xfs_trans.h"
--#include "xfs_sb.h"
--#include "xfs_ag.h"
--#include "xfs_mount.h"
--#include "xfs_da_btree.h"
--#include "xfs_dir2_format.h"
--#include "xfs_dir2.h"
--#include "xfs_bmap_btree.h"
--#include "xfs_dinode.h"
--#include "xfs_inode.h"
--#include "xfs_inode_item.h"
--#include "xfs_bmap.h"
--#include "xfs_error.h"
--#include "xfs_quota.h"
--#include "xfs_itable.h"
--#include "xfs_utils.h"
++STATIC void
+ xfs_efi_item_size(
+-	struct xfs_log_item	*lip)
++	struct xfs_log_item	*lip,
++	int			*nvecs,
++	int			*nbytes)
+ {
+-	return 1;
++	*nvecs += 1;
++	*nbytes += xfs_efi_item_sizeof(EFI_ITEM(lip));
+ }
+ 
+ /*
+@@ -93,21 +104,17 @@ xfs_efi_item_format(
+ 	struct xfs_log_iovec	*log_vector)
+ {
+ 	struct xfs_efi_log_item	*efip = EFI_ITEM(lip);
+-	uint			size;
+ 
+ 	ASSERT(atomic_read(&efip->efi_next_extent) ==
+ 				efip->efi_format.efi_nextents);
+ 
+ 	efip->efi_format.efi_type = XFS_LI_EFI;
 -
+-	size = sizeof(xfs_efi_log_format_t);
+-	size += (efip->efi_format.efi_nextents - 1) * sizeof(xfs_extent_t);
+ 	efip->efi_format.efi_size = 1;
+ 
+ 	log_vector->i_addr = &efip->efi_format;
+-	log_vector->i_len = size;
++	log_vector->i_len = xfs_efi_item_sizeof(efip);
+ 	log_vector->i_type = XLOG_REG_TYPE_EFI_FORMAT;
+-	ASSERT(size >= sizeof(xfs_efi_log_format_t));
++	ASSERT(log_vector->i_len >= sizeof(xfs_efi_log_format_t));
+ }
+ 
+ 
+@@ -333,11 +340,22 @@ xfs_efd_item_free(struct xfs_efd_log_item *efdp)
+  * We only need 1 iovec for an efd item.  It just logs the efd_log_format
+  * structure.
+  */
+-STATIC uint
++static inline int
++xfs_efd_item_sizeof(
++	struct xfs_efd_log_item *efdp)
++{
++	return sizeof(xfs_efd_log_format_t) +
++	       (efdp->efd_format.efd_nextents - 1) * sizeof(xfs_extent_t);
++}
++
++STATIC void
+ xfs_efd_item_size(
+-	struct xfs_log_item	*lip)
++	struct xfs_log_item	*lip,
++	int			*nvecs,
++	int			*nbytes)
+ {
+-	return 1;
++	*nvecs += 1;
++	*nbytes += xfs_efd_item_sizeof(EFD_ITEM(lip));
+ }
+ 
+ /*
+@@ -353,20 +371,16 @@ xfs_efd_item_format(
+ 	struct xfs_log_iovec	*log_vector)
+ {
+ 	struct xfs_efd_log_item	*efdp = EFD_ITEM(lip);
+-	uint			size;
+ 
+ 	ASSERT(efdp->efd_next_extent == efdp->efd_format.efd_nextents);
+ 
+ 	efdp->efd_format.efd_type = XFS_LI_EFD;
 -
--/*
-- * Allocates a new inode from disk and return a pointer to the
-- * incore copy. This routine will internally commit the current
-- * transaction and allocate a new one if the Space Manager needed
-- * to do an allocation to replenish the inode free-list.
-- *
-- * This routine is designed to be called from xfs_create and
-- * xfs_create_dir.
-- *
-- */
--int
--xfs_dir_ialloc(
--	xfs_trans_t	**tpp,		/* input: current transaction;
--					   output: may be a new transaction. */
--	xfs_inode_t	*dp,		/* directory within whose allocate
--					   the inode. */
--	umode_t		mode,
--	xfs_nlink_t	nlink,
--	xfs_dev_t	rdev,
--	prid_t		prid,		/* project id */
--	int		okalloc,	/* ok to allocate new space */
--	xfs_inode_t	**ipp,		/* pointer to inode; it will be
--					   locked. */
--	int		*committed)
+-	size = sizeof(xfs_efd_log_format_t);
+-	size += (efdp->efd_format.efd_nextents - 1) * sizeof(xfs_extent_t);
+ 	efdp->efd_format.efd_size = 1;
+ 
+ 	log_vector->i_addr = &efdp->efd_format;
+-	log_vector->i_len = size;
++	log_vector->i_len = xfs_efd_item_sizeof(efdp);
+ 	log_vector->i_type = XLOG_REG_TYPE_EFD_FORMAT;
+-	ASSERT(size >= sizeof(xfs_efd_log_format_t));
++	ASSERT(log_vector->i_len >= sizeof(xfs_efd_log_format_t));
+ }
+ 
+ /*
+diff --git a/fs/xfs/xfs_icreate_item.c b/fs/xfs/xfs_icreate_item.c
+index 441a78a..5a5a593 100644
+--- a/fs/xfs/xfs_icreate_item.c
++++ b/fs/xfs/xfs_icreate_item.c
+@@ -40,11 +40,14 @@ static inline struct xfs_icreate_item *ICR_ITEM(struct xfs_log_item *lip)
+  *
+  * We only need one iovec for the icreate log structure.
+  */
+-STATIC uint
++STATIC void
+ xfs_icreate_item_size(
+-	struct xfs_log_item	*lip)
++	struct xfs_log_item	*lip,
++	int			*nvecs,
++	int			*nbytes)
+ {
+-	return 1;
++	*nvecs += 1;
++	*nbytes += sizeof(struct xfs_icreate_log);
+ }
+ 
+ /*
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index f76ff52..3780811 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -47,32 +47,44 @@ static inline struct xfs_inode_log_item *INODE_ITEM(struct xfs_log_item *lip)
+  * inode core, and possibly one for the inode data/extents/b-tree root
+  * and one for the inode attribute data/extents/b-tree root.
+  */
+-STATIC uint
++STATIC void
+ xfs_inode_item_size(
+-	struct xfs_log_item	*lip)
++	struct xfs_log_item	*lip,
++	int			*nvecs,
++	int			*nbytes)
+ {
+ 	struct xfs_inode_log_item *iip = INODE_ITEM(lip);
+ 	struct xfs_inode	*ip = iip->ili_inode;
+-	uint			nvecs = 2;
++
++	*nvecs += 2;
++	*nbytes += sizeof(struct xfs_inode_log_format) +
++		   xfs_icdinode_size(ip->i_d.di_version);
+ 
+ 	switch (ip->i_d.di_format) {
+ 	case XFS_DINODE_FMT_EXTENTS:
+ 		if ((iip->ili_fields & XFS_ILOG_DEXT) &&
+ 		    ip->i_d.di_nextents > 0 &&
+-		    ip->i_df.if_bytes > 0)
+-			nvecs++;
++		    ip->i_df.if_bytes > 0) {
++			/* worst case, doesn't subtract delalloc extents */
++			*nbytes += XFS_IFORK_DSIZE(ip);
++			*nvecs += 1;
++		}
+ 		break;
+ 
+ 	case XFS_DINODE_FMT_BTREE:
+ 		if ((iip->ili_fields & XFS_ILOG_DBROOT) &&
+-		    ip->i_df.if_broot_bytes > 0)
+-			nvecs++;
++		    ip->i_df.if_broot_bytes > 0) {
++			*nbytes += ip->i_df.if_broot_bytes;
++			*nvecs += 1;
++		}
+ 		break;
+ 
+ 	case XFS_DINODE_FMT_LOCAL:
+ 		if ((iip->ili_fields & XFS_ILOG_DDATA) &&
+-		    ip->i_df.if_bytes > 0)
+-			nvecs++;
++		    ip->i_df.if_bytes > 0) {
++			*nbytes += roundup(ip->i_df.if_bytes, 4);
++			*nvecs += 1;
++		}
+ 		break;
+ 
+ 	case XFS_DINODE_FMT_DEV:
+@@ -85,7 +97,7 @@ xfs_inode_item_size(
+ 	}
+ 
+ 	if (!XFS_IFORK_Q(ip))
+-		return nvecs;
++		return;
+ 
+ 
+ 	/*
+@@ -95,28 +107,33 @@ xfs_inode_item_size(
+ 	case XFS_DINODE_FMT_EXTENTS:
+ 		if ((iip->ili_fields & XFS_ILOG_AEXT) &&
+ 		    ip->i_d.di_anextents > 0 &&
+-		    ip->i_afp->if_bytes > 0)
+-			nvecs++;
++		    ip->i_afp->if_bytes > 0) {
++			/* worst case, doesn't subtract unused space */
++			*nbytes += XFS_IFORK_ASIZE(ip);
++			*nvecs += 1;
++		}
+ 		break;
+ 
+ 	case XFS_DINODE_FMT_BTREE:
+ 		if ((iip->ili_fields & XFS_ILOG_ABROOT) &&
+-		    ip->i_afp->if_broot_bytes > 0)
+-			nvecs++;
++		    ip->i_afp->if_broot_bytes > 0) {
++			*nbytes += ip->i_afp->if_broot_bytes;
++			*nvecs += 1;
++		}
+ 		break;
+ 
+ 	case XFS_DINODE_FMT_LOCAL:
+ 		if ((iip->ili_fields & XFS_ILOG_ADATA) &&
+-		    ip->i_afp->if_bytes > 0)
+-			nvecs++;
++		    ip->i_afp->if_bytes > 0) {
++			*nbytes += roundup(ip->i_afp->if_bytes, 4);
++			*nvecs += 1;
++		}
+ 		break;
+ 
+ 	default:
+ 		ASSERT(0);
+ 		break;
+ 	}
 -
--{
--	xfs_trans_t	*tp;
--	xfs_trans_t	*ntp;
--	xfs_inode_t	*ip;
--	xfs_buf_t	*ialloc_context = NULL;
--	int		code;
--	uint		log_res;
--	uint		log_count;
--	void		*dqinfo;
--	uint		tflags;
--
--	tp = *tpp;
--	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
--
--	/*
--	 * xfs_ialloc will return a pointer to an incore inode if
--	 * the Space Manager has an available inode on the free
--	 * list. Otherwise, it will do an allocation and replenish
--	 * the freelist.  Since we can only do one allocation per
--	 * transaction without deadlocks, we will need to commit the
--	 * current transaction and start a new one.  We will then
--	 * need to call xfs_ialloc again to get the inode.
--	 *
--	 * If xfs_ialloc did an allocation to replenish the freelist,
--	 * it returns the bp containing the head of the freelist as
--	 * ialloc_context. We will hold a lock on it across the
--	 * transaction commit so that no other process can steal
--	 * the inode(s) that we've just allocated.
--	 */
--	code = xfs_ialloc(tp, dp, mode, nlink, rdev, prid, okalloc,
--			  &ialloc_context, &ip);
--
--	/*
--	 * Return an error if we were unable to allocate a new inode.
--	 * This should only happen if we run out of space on disk or
--	 * encounter a disk error.
--	 */
--	if (code) {
--		*ipp = NULL;
--		return code;
--	}
--	if (!ialloc_context && !ip) {
--		*ipp = NULL;
--		return XFS_ERROR(ENOSPC);
--	}
--
--	/*
--	 * If the AGI buffer is non-NULL, then we were unable to get an
--	 * inode in one operation.  We need to commit the current
--	 * transaction and call xfs_ialloc() again.  It is guaranteed
--	 * to succeed the second time.
--	 */
--	if (ialloc_context) {
--		/*
--		 * Normally, xfs_trans_commit releases all the locks.
--		 * We call bhold to hang on to the ialloc_context across
--		 * the commit.  Holding this buffer prevents any other
--		 * processes from doing any allocations in this
--		 * allocation group.
--		 */
--		xfs_trans_bhold(tp, ialloc_context);
--		/*
--		 * Save the log reservation so we can use
--		 * them in the next transaction.
--		 */
--		log_res = xfs_trans_get_log_res(tp);
--		log_count = xfs_trans_get_log_count(tp);
--
--		/*
--		 * We want the quota changes to be associated with the next
--		 * transaction, NOT this one. So, detach the dqinfo from this
--		 * and attach it to the next transaction.
--		 */
--		dqinfo = NULL;
--		tflags = 0;
--		if (tp->t_dqinfo) {
--			dqinfo = (void *)tp->t_dqinfo;
--			tp->t_dqinfo = NULL;
--			tflags = tp->t_flags & XFS_TRANS_DQ_DIRTY;
--			tp->t_flags &= ~(XFS_TRANS_DQ_DIRTY);
--		}
--
--		ntp = xfs_trans_dup(tp);
--		code = xfs_trans_commit(tp, 0);
--		tp = ntp;
--		if (committed != NULL) {
--			*committed = 1;
--		}
--		/*
--		 * If we get an error during the commit processing,
--		 * release the buffer that is still held and return
--		 * to the caller.
--		 */
--		if (code) {
--			xfs_buf_relse(ialloc_context);
--			if (dqinfo) {
--				tp->t_dqinfo = dqinfo;
--				xfs_trans_free_dqinfo(tp);
--			}
--			*tpp = ntp;
--			*ipp = NULL;
--			return code;
--		}
--
--		/*
--		 * transaction commit worked ok so we can drop the extra ticket
--		 * reference that we gained in xfs_trans_dup()
--		 */
--		xfs_log_ticket_put(tp->t_ticket);
--		code = xfs_trans_reserve(tp, 0, log_res, 0,
--					 XFS_TRANS_PERM_LOG_RES, log_count);
--		/*
--		 * Re-attach the quota info that we detached from prev trx.
--		 */
--		if (dqinfo) {
--			tp->t_dqinfo = dqinfo;
--			tp->t_flags |= tflags;
--		}
--
--		if (code) {
--			xfs_buf_relse(ialloc_context);
--			*tpp = ntp;
--			*ipp = NULL;
--			return code;
--		}
--		xfs_trans_bjoin(tp, ialloc_context);
--
--		/*
--		 * Call ialloc again. Since we've locked out all
--		 * other allocations in this allocation group,
--		 * this call should always succeed.
--		 */
--		code = xfs_ialloc(tp, dp, mode, nlink, rdev, prid,
--				  okalloc, &ialloc_context, &ip);
--
--		/*
--		 * If we get an error at this point, return to the caller
--		 * so that the current transaction can be aborted.
--		 */
--		if (code) {
--			*tpp = tp;
--			*ipp = NULL;
--			return code;
--		}
--		ASSERT(!ialloc_context && ip);
--
--	} else {
--		if (committed != NULL)
--			*committed = 0;
--	}
--
--	*ipp = ip;
--	*tpp = tp;
--
--	return 0;
--}
--
--/*
-- * Decrement the link count on an inode & log the change.
-- * If this causes the link count to go to zero, initiate the
-- * logging activity required to truncate a file.
-- */
--int				/* error */
--xfs_droplink(
--	xfs_trans_t *tp,
--	xfs_inode_t *ip)
--{
--	int	error;
--
--	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
--
--	ASSERT (ip->i_d.di_nlink > 0);
--	ip->i_d.di_nlink--;
--	drop_nlink(VFS_I(ip));
--	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
--
--	error = 0;
--	if (ip->i_d.di_nlink == 0) {
--		/*
--		 * We're dropping the last link to this file.
--		 * Move the on-disk inode to the AGI unlinked list.
--		 * From xfs_inactive() we will pull the inode from
--		 * the list and free it.
--		 */
--		error = xfs_iunlink(tp, ip);
--	}
--	return error;
--}
--
--/*
-- * This gets called when the inode's version needs to be changed from 1 to 2.
-- * Currently this happens when the nlink field overflows the old 16-bit value
-- * or when chproj is called to change the project for the first time.
-- * As a side effect the superblock version will also get rev'd
-- * to contain the NLINK bit.
-- */
--void
--xfs_bump_ino_vers2(
--	xfs_trans_t	*tp,
--	xfs_inode_t	*ip)
--{
--	xfs_mount_t	*mp;
--
--	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
--	ASSERT(ip->i_d.di_version == 1);
--
--	ip->i_d.di_version = 2;
--	ip->i_d.di_onlink = 0;
--	memset(&(ip->i_d.di_pad[0]), 0, sizeof(ip->i_d.di_pad));
--	mp = tp->t_mountp;
--	if (!xfs_sb_version_hasnlink(&mp->m_sb)) {
--		spin_lock(&mp->m_sb_lock);
--		if (!xfs_sb_version_hasnlink(&mp->m_sb)) {
--			xfs_sb_version_addnlink(&mp->m_sb);
--			spin_unlock(&mp->m_sb_lock);
--			xfs_mod_sb(tp, XFS_SB_VERSIONNUM);
--		} else {
--			spin_unlock(&mp->m_sb_lock);
--		}
--	}
--	/* Caller must log the inode */
--}
--
--/*
-- * Increment the link count on an inode & log the change.
-- */
--int
--xfs_bumplink(
--	xfs_trans_t *tp,
--	xfs_inode_t *ip)
--{
--	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
--
--	ASSERT(ip->i_d.di_nlink > 0);
--	ip->i_d.di_nlink++;
--	inc_nlink(VFS_I(ip));
--	if ((ip->i_d.di_version == 1) &&
--	    (ip->i_d.di_nlink > XFS_MAXLINK_1)) {
--		/*
--		 * The inode has increased its number of links beyond
--		 * what can fit in an old format inode.  It now needs
--		 * to be converted to a version 2 inode with a 32 bit
--		 * link count.  If this is the first inode in the file
--		 * system to do this, then we need to bump the superblock
--		 * version number as well.
--		 */
--		xfs_bump_ino_vers2(tp, ip);
--	}
--
--	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
--	return 0;
--}
-diff --git a/fs/xfs/xfs_utils.h b/fs/xfs/xfs_utils.h
-deleted file mode 100644
-index 5eeab46..0000000
---- a/fs/xfs/xfs_utils.h
-+++ /dev/null
-@@ -1,27 +0,0 @@
--/*
-- * Copyright (c) 2000-2002,2005 Silicon Graphics, Inc.
-- * All Rights Reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it would be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write the Free Software Foundation,
-- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-- */
--#ifndef __XFS_UTILS_H__
--#define __XFS_UTILS_H__
--
--extern int xfs_dir_ialloc(xfs_trans_t **, xfs_inode_t *, umode_t, xfs_nlink_t,
--				xfs_dev_t, prid_t, int, xfs_inode_t **, int *);
--extern int xfs_droplink(xfs_trans_t *, xfs_inode_t *);
--extern int xfs_bumplink(xfs_trans_t *, xfs_inode_t *);
--extern void xfs_bump_ino_vers2(xfs_trans_t *, xfs_inode_t *);
--
--#endif	/* __XFS_UTILS_H__ */
+-	return nvecs;
+ }
+ 
+ /*
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index 02b9cf3..4e10872 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -122,19 +122,23 @@ xlog_cil_prepare_log_vecs(
+ 	}
+ 
+ 	list_for_each_entry(lidp, &tp->t_items, lid_trans) {
++		struct xfs_log_item *lip = lidp->lid_item;
+ 		struct xfs_log_vec *new_lv;
+ 		void	*ptr;
+ 		int	index;
+ 		int	len = 0;
+-		uint	niovecs;
++		uint	niovecs = 0;
++		uint	nbytes = 0;
+ 		bool	ordered = false;
+ 
+ 		/* Skip items which aren't dirty in this transaction. */
+ 		if (!(lidp->lid_flags & XFS_LID_DIRTY))
+ 			continue;
+ 
++		/* get number of vecs and size of data to be stored */
++		lip->li_ops->iop_size(lip, &niovecs, &nbytes);
++
+ 		/* Skip items that do not have any vectors for writing */
+-		niovecs = IOP_SIZE(lidp->lid_item);
+ 		if (!niovecs)
+ 			continue;
+ 
+@@ -152,7 +156,7 @@ xlog_cil_prepare_log_vecs(
+ 				niovecs * sizeof(struct xfs_log_iovec),
+ 				KM_SLEEP|KM_NOFS);
+ 
+-		new_lv->lv_item = lidp->lid_item;
++		new_lv->lv_item = lip;
+ 		new_lv->lv_niovecs = niovecs;
+ 		if (ordered) {
+ 			/* track as an ordered logvec */
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index 7eb81cc..97144ec 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -67,7 +67,7 @@ typedef struct xfs_log_item {
+ 	{ XFS_LI_ABORTED,	"ABORTED" }
+ 
+ struct xfs_item_ops {
+-	uint (*iop_size)(xfs_log_item_t *);
++	void (*iop_size)(xfs_log_item_t *, int *, int *);
+ 	void (*iop_format)(xfs_log_item_t *, struct xfs_log_iovec *);
+ 	void (*iop_pin)(xfs_log_item_t *);
+ 	void (*iop_unpin)(xfs_log_item_t *, int remove);
+@@ -77,7 +77,6 @@ struct xfs_item_ops {
+ 	void (*iop_committing)(xfs_log_item_t *, xfs_lsn_t);
+ };
+ 
+-#define IOP_SIZE(ip)		(*(ip)->li_ops->iop_size)(ip)
+ #define IOP_FORMAT(ip,vp)	(*(ip)->li_ops->iop_format)(ip, vp)
+ #define IOP_PIN(ip)		(*(ip)->li_ops->iop_pin)(ip)
+ #define IOP_UNPIN(ip, remove)	(*(ip)->li_ops->iop_unpin)(ip, remove)
 -- 
 1.8.3.2
 
