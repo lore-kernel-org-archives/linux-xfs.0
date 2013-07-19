@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id BB1EB7F77
+	by oss.sgi.com (Postfix) with ESMTP id D1CF07F8D
 	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 01:25:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 664ECAC010
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 442B1AC00E
 	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 23:25:43 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	xuYEmFtp9he8V4Ar for <xfs@oss.sgi.com>;
-	Thu, 18 Jul 2013 23:25:41 -0700 (PDT)
+	Khaj6KGeKTFaaR19 for <xfs@oss.sgi.com>;
+	Thu, 18 Jul 2013 23:25:39 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1V0482-00048D-Qp
-	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:25:22 +1000
+	(envelope-from <dave@fromorbit.com>) id 1V0483-00048J-Ky
+	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:25:23 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1V0482-0001xu-Pu
-	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:25:22 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1V0483-0001zR-78
+	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:25:23 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 16/49] xfs: reshuffle dir2 definitions around for userspace
-Date: Fri, 19 Jul 2013 16:24:47 +1000
-Message-Id: <1374215120-7271-17-git-send-email-david@fromorbit.com>
+Subject: [PATCH 35/49] xfs: Introduce a new structure to hold transaction
+	reservation items
+Date: Fri, 19 Jul 2013 16:25:06 +1000
+Message-Id: <1374215120-7271-36-git-send-email-david@fromorbit.com>
 In-Reply-To: <1374215120-7271-1-git-send-email-david@fromorbit.com>
 References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -37,518 +38,327 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Jie Liu <jeff.liu@oracle.com>
 
-Many of the definitions within xfs_dir2_priv.h are needed in
-userspace outside libxfs. Definitions within xfs_dir2_priv.h are
-wholly contained within libxfs, so we need to shuffle some of the
-definitions around to keep consistency across files shared between
-user and kernel space.
+Introduce a new structure xfs_trans_res to hold transaction
+reservation item info per log ticket.
 
+We also need to improve xfs_trans_resv_calc() by initializing the
+log count as well as log flags for permanent log reservation.
+
+Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_bmap.c         |  3 ++-
- fs/xfs/xfs_da_btree.c     |  2 +-
- fs/xfs/xfs_dir2.c         |  2 +-
- fs/xfs/xfs_dir2.h         | 51 +++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_dir2_block.c   |  2 +-
- fs/xfs/xfs_dir2_data.c    |  6 ++----
- fs/xfs/xfs_dir2_leaf.c    |  1 +
- fs/xfs/xfs_dir2_node.c    |  1 +
- fs/xfs/xfs_dir2_priv.h    | 31 ----------------------------
- fs/xfs/xfs_dir2_readdir.c |  1 +
- fs/xfs/xfs_dir2_sf.c      |  6 +++---
- fs/xfs/xfs_export.c       |  4 +++-
- fs/xfs/xfs_file.c         |  2 +-
- fs/xfs/xfs_icreate_item.c | 12 -----------
- fs/xfs/xfs_log_recover.c  |  2 +-
- fs/xfs/xfs_mount.c        |  4 +++-
- fs/xfs/xfs_rename.c       |  3 ++-
- fs/xfs/xfs_rtalloc.c      |  1 -
- fs/xfs/xfs_super.c        |  3 ++-
- fs/xfs/xfs_symlink.c      |  3 ++-
- fs/xfs/xfs_utils.c        |  4 +++-
- fs/xfs/xfs_vnodeops.c     |  3 ++-
- 22 files changed, 83 insertions(+), 64 deletions(-)
+ fs/xfs/xfs_mount.h      |   2 +-
+ fs/xfs/xfs_trans.c      |   2 +-
+ fs/xfs/xfs_trans_resv.c | 121 +++++++++++++++++++++++++++++++++++-----------
+ fs/xfs/xfs_trans_resv.h | 125 ++++++++++++++++++++++++++----------------------
+ 4 files changed, 163 insertions(+), 87 deletions(-)
 
-diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-index 0343b44..72a2eea 100644
---- a/fs/xfs/xfs_bmap.c
-+++ b/fs/xfs/xfs_bmap.c
-@@ -24,9 +24,10 @@
- #include "xfs_trans.h"
- #include "xfs_sb.h"
- #include "xfs_ag.h"
--#include "xfs_dir2.h"
- #include "xfs_mount.h"
- #include "xfs_da_btree.h"
-+#include "xfs_dir2_format.h"
-+#include "xfs_dir2.h"
- #include "xfs_bmap_btree.h"
- #include "xfs_alloc_btree.h"
- #include "xfs_ialloc_btree.h"
-diff --git a/fs/xfs/xfs_da_btree.c b/fs/xfs/xfs_da_btree.c
-index 0b8b2a1..8bbd7ef 100644
---- a/fs/xfs/xfs_da_btree.c
-+++ b/fs/xfs/xfs_da_btree.c
-@@ -27,8 +27,8 @@
- #include "xfs_mount.h"
- #include "xfs_da_btree.h"
- #include "xfs_bmap_btree.h"
--#include "xfs_dir2.h"
- #include "xfs_dir2_format.h"
-+#include "xfs_dir2.h"
- #include "xfs_dir2_priv.h"
- #include "xfs_dinode.h"
- #include "xfs_inode.h"
-diff --git a/fs/xfs/xfs_dir2.c b/fs/xfs/xfs_dir2.c
-index 431be44..c3263a5 100644
---- a/fs/xfs/xfs_dir2.c
-+++ b/fs/xfs/xfs_dir2.c
-@@ -31,8 +31,8 @@
- #include "xfs_inode.h"
- #include "xfs_inode_item.h"
- #include "xfs_bmap.h"
--#include "xfs_dir2.h"
- #include "xfs_dir2_format.h"
-+#include "xfs_dir2.h"
- #include "xfs_dir2_priv.h"
- #include "xfs_error.h"
- #include "xfs_vnodeops.h"
-diff --git a/fs/xfs/xfs_dir2.h b/fs/xfs/xfs_dir2.h
-index e937d99..7ef6b0f 100644
---- a/fs/xfs/xfs_dir2.h
-+++ b/fs/xfs/xfs_dir2.h
-@@ -23,6 +23,11 @@ struct xfs_da_args;
- struct xfs_inode;
- struct xfs_mount;
- struct xfs_trans;
-+struct xfs_dir2_sf_hdr;
-+struct xfs_dir2_sf_entry;
-+struct xfs_dir2_data_hdr;
-+struct xfs_dir2_data_entry;
-+struct xfs_dir2_data_unused;
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 829035f6..1fa0584 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -136,7 +136,7 @@ typedef struct xfs_mount {
+ 	int			m_ialloc_blks;	/* blocks in inode allocation */
+ 	int			m_inoalign_mask;/* mask sb_inoalignmt if used */
+ 	uint			m_qflags;	/* quota status flags */
+-	struct xfs_trans_resv	m_reservations;	/* precomputed res values */
++	struct xfs_trans_resv	m_resv;		/* precomputed res values */
+ 	__uint64_t		m_maxicount;	/* maximum inode count */
+ 	__uint64_t		m_resblks;	/* total reserved blocks */
+ 	__uint64_t		m_resblks_avail;/* available reserved blocks */
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index cc824eff..e0f93f9 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -56,7 +56,7 @@ void
+ xfs_trans_init(
+ 	struct xfs_mount	*mp)
+ {
+-	xfs_trans_resv_calc(mp, &mp->m_reservations);
++	xfs_trans_resv_calc(mp, &mp->m_resv);
+ }
  
- extern struct xfs_name	xfs_name_dotdot;
- 
-@@ -57,4 +62,50 @@ extern int xfs_dir_canenter(struct xfs_trans *tp, struct xfs_inode *dp,
-  */
- extern int xfs_dir2_sf_to_block(struct xfs_da_args *args);
- 
-+/*
-+ * Direct call on directory open, before entering the readdir code.
-+ */
-+extern int xfs_dir3_data_readahead(struct xfs_trans *tp, struct xfs_inode *dp,
-+		xfs_dablk_t bno, xfs_daddr_t mapped_bno);
-+
-+/*
-+ * Interface routines used by userspace utilities
-+ */
-+extern xfs_ino_t xfs_dir2_sf_get_parent_ino(struct xfs_dir2_sf_hdr *sfp);
-+extern void xfs_dir2_sf_put_parent_ino(struct xfs_dir2_sf_hdr *sfp,
-+		xfs_ino_t ino);
-+extern xfs_ino_t xfs_dir2_sfe_get_ino(struct xfs_dir2_sf_hdr *sfp,
-+		struct xfs_dir2_sf_entry *sfep);
-+extern void xfs_dir2_sfe_put_ino( struct xfs_dir2_sf_hdr *,
-+		struct xfs_dir2_sf_entry *sfep, xfs_ino_t ino);
-+
-+extern int xfs_dir2_isblock(struct xfs_trans *tp, struct xfs_inode *dp, int *r);
-+extern int xfs_dir2_isleaf(struct xfs_trans *tp, struct xfs_inode *dp, int *r);
-+extern int xfs_dir2_shrink_inode(struct xfs_da_args *args, xfs_dir2_db_t db,
-+				struct xfs_buf *bp);
-+
-+extern void xfs_dir2_data_freescan(struct xfs_mount *mp,
-+		struct xfs_dir2_data_hdr *hdr, int *loghead);
-+extern void xfs_dir2_data_log_entry(struct xfs_trans *tp, struct xfs_buf *bp,
-+		struct xfs_dir2_data_entry *dep);
-+extern void xfs_dir2_data_log_header(struct xfs_trans *tp,
-+		struct xfs_buf *bp);
-+extern void xfs_dir2_data_log_unused(struct xfs_trans *tp, struct xfs_buf *bp,
-+		struct xfs_dir2_data_unused *dup);
-+extern void xfs_dir2_data_make_free(struct xfs_trans *tp, struct xfs_buf *bp,
-+		xfs_dir2_data_aoff_t offset, xfs_dir2_data_aoff_t len,
-+		int *needlogp, int *needscanp);
-+extern void xfs_dir2_data_use_free(struct xfs_trans *tp, struct xfs_buf *bp,
-+		struct xfs_dir2_data_unused *dup, xfs_dir2_data_aoff_t offset,
-+		xfs_dir2_data_aoff_t len, int *needlogp, int *needscanp);
-+
-+extern struct xfs_dir2_data_free *xfs_dir2_data_freefind(
-+		struct xfs_dir2_data_hdr *hdr, struct xfs_dir2_data_unused *dup);
-+
-+extern const struct xfs_buf_ops xfs_dir3_block_buf_ops;
-+extern const struct xfs_buf_ops xfs_dir3_leafn_buf_ops;
-+extern const struct xfs_buf_ops xfs_dir3_leaf1_buf_ops;
-+extern const struct xfs_buf_ops xfs_dir3_free_buf_ops;
-+extern const struct xfs_buf_ops xfs_dir3_data_buf_ops;
-+
- #endif	/* __XFS_DIR2_H__ */
-diff --git a/fs/xfs/xfs_dir2_block.c b/fs/xfs/xfs_dir2_block.c
-index 5e84000..becd69f 100644
---- a/fs/xfs/xfs_dir2_block.c
-+++ b/fs/xfs/xfs_dir2_block.c
-@@ -31,8 +31,8 @@
- #include "xfs_inode_item.h"
- #include "xfs_bmap.h"
- #include "xfs_buf_item.h"
--#include "xfs_dir2.h"
- #include "xfs_dir2_format.h"
-+#include "xfs_dir2.h"
- #include "xfs_dir2_priv.h"
- #include "xfs_error.h"
- #include "xfs_trace.h"
-diff --git a/fs/xfs/xfs_dir2_data.c b/fs/xfs/xfs_dir2_data.c
-index c293023..4e1917d 100644
---- a/fs/xfs/xfs_dir2_data.c
-+++ b/fs/xfs/xfs_dir2_data.c
-@@ -29,14 +29,12 @@
- #include "xfs_dinode.h"
- #include "xfs_inode.h"
- #include "xfs_dir2_format.h"
-+#include "xfs_dir2.h"
- #include "xfs_dir2_priv.h"
- #include "xfs_error.h"
- #include "xfs_buf_item.h"
- #include "xfs_cksum.h"
- 
--STATIC xfs_dir2_data_free_t *
--xfs_dir2_data_freefind(xfs_dir2_data_hdr_t *hdr, xfs_dir2_data_unused_t *dup);
--
  /*
-  * Check the consistency of the data block.
-  * The input can also be a block-format directory.
-@@ -325,7 +323,7 @@ xfs_dir3_data_readahead(
-  * Given a data block and an unused entry from that block,
-  * return the bestfree entry if any that corresponds to it.
+diff --git a/fs/xfs/xfs_trans_resv.c b/fs/xfs/xfs_trans_resv.c
+index ed6446e..3761481 100644
+--- a/fs/xfs/xfs_trans_resv.c
++++ b/fs/xfs/xfs_trans_resv.c
+@@ -671,32 +671,97 @@ xfs_trans_resv_calc(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_trans_resv	*resp)
+ {
+-	resp->tr_write = xfs_calc_write_reservation(mp);
+-	resp->tr_itruncate = xfs_calc_itruncate_reservation(mp);
+-	resp->tr_rename = xfs_calc_rename_reservation(mp);
+-	resp->tr_link = xfs_calc_link_reservation(mp);
+-	resp->tr_remove = xfs_calc_remove_reservation(mp);
+-	resp->tr_symlink = xfs_calc_symlink_reservation(mp);
+-	resp->tr_create = xfs_calc_create_reservation(mp);
+-	resp->tr_mkdir = xfs_calc_mkdir_reservation(mp);
+-	resp->tr_ifree = xfs_calc_ifree_reservation(mp);
+-	resp->tr_ichange = xfs_calc_ichange_reservation(mp);
+-	resp->tr_growdata = xfs_calc_growdata_reservation(mp);
+-	resp->tr_swrite = xfs_calc_swrite_reservation(mp);
+-	resp->tr_writeid = xfs_calc_writeid_reservation(mp);
+-	resp->tr_addafork = xfs_calc_addafork_reservation(mp);
+-	resp->tr_attrinval = xfs_calc_attrinval_reservation(mp);
+-	resp->tr_attrsetm = xfs_calc_attrsetm_reservation(mp);
+-	resp->tr_attrsetrt = xfs_calc_attrsetrt_reservation(mp);
+-	resp->tr_attrrm = xfs_calc_attrrm_reservation(mp);
+-	resp->tr_clearagi = xfs_calc_clear_agi_bucket_reservation(mp);
+-	resp->tr_growrtalloc = xfs_calc_growrtalloc_reservation(mp);
+-	resp->tr_growrtzero = xfs_calc_growrtzero_reservation(mp);
+-	resp->tr_growrtfree = xfs_calc_growrtfree_reservation(mp);
+-	resp->tr_qm_sbchange = xfs_calc_qm_sbchange_reservation(mp);
+-	resp->tr_qm_setqlim = xfs_calc_qm_setqlim_reservation(mp);
+-	resp->tr_qm_dqalloc = xfs_calc_qm_dqalloc_reservation(mp);
+-	resp->tr_qm_quotaoff = xfs_calc_qm_quotaoff_reservation(mp);
+-	resp->tr_qm_equotaoff = xfs_calc_qm_quotaoff_end_reservation(mp);
+-	resp->tr_sb = xfs_calc_sb_reservation(mp);
++	/*
++	 * The following transactions are logged in physical format and
++	 * require a permanent reservation on space.
++	 */
++	resp->tr_write.tr_logres = xfs_calc_write_reservation(mp);
++	resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
++	resp->tr_write.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++
++	resp->tr_itruncate.tr_logres = xfs_calc_itruncate_reservation(mp);
++	resp->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
++	resp->tr_itruncate.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++
++	resp->tr_rename.tr_logres = xfs_calc_rename_reservation(mp);
++	resp->tr_rename.tr_logcount = XFS_RENAME_LOG_COUNT;
++	resp->tr_rename.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++
++	resp->tr_link.tr_logres = xfs_calc_link_reservation(mp);
++	resp->tr_link.tr_logcount = XFS_LINK_LOG_COUNT;
++	resp->tr_link.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++
++	resp->tr_remove.tr_logres = xfs_calc_remove_reservation(mp);
++	resp->tr_remove.tr_logcount = XFS_REMOVE_LOG_COUNT;
++	resp->tr_remove.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++
++	resp->tr_symlink.tr_logres = xfs_calc_symlink_reservation(mp);
++	resp->tr_symlink.tr_logcount = XFS_SYMLINK_LOG_COUNT;
++	resp->tr_symlink.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++
++	resp->tr_create.tr_logres = xfs_calc_create_reservation(mp);
++	resp->tr_create.tr_logcount = XFS_CREATE_LOG_COUNT;
++	resp->tr_create.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++
++	resp->tr_mkdir.tr_logres = xfs_calc_mkdir_reservation(mp);
++	resp->tr_mkdir.tr_logcount = XFS_MKDIR_LOG_COUNT;
++	resp->tr_mkdir.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++
++	resp->tr_ifree.tr_logres = xfs_calc_ifree_reservation(mp);
++	resp->tr_ifree.tr_logcount = XFS_INACTIVE_LOG_COUNT;
++	resp->tr_ifree.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++
++	resp->tr_addafork.tr_logres = xfs_calc_addafork_reservation(mp);
++	resp->tr_addafork.tr_logcount = XFS_ADDAFORK_LOG_COUNT;
++	resp->tr_addafork.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++
++	resp->tr_attrinval.tr_logres = xfs_calc_attrinval_reservation(mp);
++	resp->tr_attrinval.tr_logcount = XFS_ATTRINVAL_LOG_COUNT;
++	resp->tr_attrinval.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++
++	resp->tr_attrsetm.tr_logres = xfs_calc_attrsetm_reservation(mp);
++	resp->tr_attrsetm.tr_logcount = XFS_ATTRSET_LOG_COUNT;
++	resp->tr_attrsetm.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++
++	resp->tr_attrrm.tr_logres = xfs_calc_attrrm_reservation(mp);
++	resp->tr_attrrm.tr_logcount = XFS_ATTRRM_LOG_COUNT;
++	resp->tr_attrrm.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++
++	resp->tr_growrtalloc.tr_logres = xfs_calc_growrtalloc_reservation(mp);
++	resp->tr_growrtalloc.tr_logcount = XFS_DEFAULT_PERM_LOG_COUNT;
++	resp->tr_growrtalloc.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++
++	resp->tr_qm_dqalloc.tr_logres = xfs_calc_qm_dqalloc_reservation(mp);
++	resp->tr_qm_dqalloc.tr_logcount = XFS_WRITE_LOG_COUNT;
++	resp->tr_qm_dqalloc.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++
++	/*
++	 * The following transactions are logged in logical format with
++	 * a default log count.
++	 */
++	resp->tr_qm_sbchange.tr_logres = xfs_calc_qm_sbchange_reservation(mp);
++	resp->tr_qm_sbchange.tr_logcount = XFS_DEFAULT_LOG_COUNT;
++
++	resp->tr_qm_setqlim.tr_logres = xfs_calc_qm_setqlim_reservation(mp);
++	resp->tr_qm_setqlim.tr_logcount = XFS_DEFAULT_LOG_COUNT;
++
++	resp->tr_qm_quotaoff.tr_logres = xfs_calc_qm_quotaoff_reservation(mp);
++	resp->tr_qm_quotaoff.tr_logcount = XFS_DEFAULT_LOG_COUNT;
++
++	resp->tr_qm_equotaoff.tr_logres =
++		xfs_calc_qm_quotaoff_end_reservation(mp);
++	resp->tr_qm_equotaoff.tr_logcount = XFS_DEFAULT_LOG_COUNT;
++
++	resp->tr_sb.tr_logres = xfs_calc_sb_reservation(mp);
++	resp->tr_sb.tr_logcount = XFS_DEFAULT_LOG_COUNT;
++
++	/* The following transaction are logged in logical format */
++	resp->tr_ichange.tr_logres = xfs_calc_ichange_reservation(mp);
++	resp->tr_growdata.tr_logres = xfs_calc_growdata_reservation(mp);
++	resp->tr_swrite.tr_logres = xfs_calc_swrite_reservation(mp);
++	resp->tr_writeid.tr_logres = xfs_calc_writeid_reservation(mp);
++	resp->tr_attrsetrt.tr_logres = xfs_calc_attrsetrt_reservation(mp);
++	resp->tr_clearagi.tr_logres = xfs_calc_clear_agi_bucket_reservation(mp);
++	resp->tr_growrtzero.tr_logres = xfs_calc_growrtzero_reservation(mp);
++	resp->tr_growrtfree.tr_logres = xfs_calc_growrtfree_reservation(mp);
+ }
+diff --git a/fs/xfs/xfs_trans_resv.h b/fs/xfs/xfs_trans_resv.h
+index cc8260e..0aac1fa 100644
+--- a/fs/xfs/xfs_trans_resv.h
++++ b/fs/xfs/xfs_trans_resv.h
+@@ -23,35 +23,45 @@ struct xfs_mount;
+ /*
+  * structure for maintaining pre-calculated transaction reservations.
   */
--STATIC xfs_dir2_data_free_t *
-+xfs_dir2_data_free_t *
- xfs_dir2_data_freefind(
- 	xfs_dir2_data_hdr_t	*hdr,		/* data block */
- 	xfs_dir2_data_unused_t	*dup)		/* data unused entry */
-diff --git a/fs/xfs/xfs_dir2_leaf.c b/fs/xfs/xfs_dir2_leaf.c
-index e1386aa..5505edb 100644
---- a/fs/xfs/xfs_dir2_leaf.c
-+++ b/fs/xfs/xfs_dir2_leaf.c
-@@ -31,6 +31,7 @@
- #include "xfs_inode.h"
- #include "xfs_bmap.h"
- #include "xfs_dir2_format.h"
-+#include "xfs_dir2.h"
- #include "xfs_dir2_priv.h"
- #include "xfs_error.h"
- #include "xfs_trace.h"
-diff --git a/fs/xfs/xfs_dir2_node.c b/fs/xfs/xfs_dir2_node.c
-index 2226a00..b4bd9b6 100644
---- a/fs/xfs/xfs_dir2_node.c
-+++ b/fs/xfs/xfs_dir2_node.c
-@@ -30,6 +30,7 @@
- #include "xfs_inode.h"
- #include "xfs_bmap.h"
- #include "xfs_dir2_format.h"
-+#include "xfs_dir2.h"
- #include "xfs_dir2_priv.h"
- #include "xfs_error.h"
- #include "xfs_trace.h"
-diff --git a/fs/xfs/xfs_dir2_priv.h b/fs/xfs/xfs_dir2_priv.h
-index 72ff8d7..807eb65 100644
---- a/fs/xfs/xfs_dir2_priv.h
-+++ b/fs/xfs/xfs_dir2_priv.h
-@@ -20,18 +20,12 @@
++struct xfs_trans_res {
++	uint	tr_logres;	/* log space unit in bytes per log ticket */
++	int	tr_logcount;	/* number of log operations per log ticket */
++	int	tr_logflags;	/* log flags, currently only used for indicating
++				 * a reservation request is permanent or not */
++};
++
+ struct xfs_trans_resv {
+-	uint	tr_write;	/* extent alloc trans */
+-	uint	tr_itruncate;	/* truncate trans */
+-	uint	tr_rename;	/* rename trans */
+-	uint	tr_link;	/* link trans */
+-	uint	tr_remove;	/* unlink trans */
+-	uint	tr_symlink;	/* symlink trans */
+-	uint	tr_create;	/* create trans */
+-	uint	tr_mkdir;	/* mkdir trans */
+-	uint	tr_ifree;	/* inode free trans */
+-	uint	tr_ichange;	/* inode update trans */
+-	uint	tr_growdata;	/* fs data section grow trans */
+-	uint	tr_swrite;	/* sync write inode trans */
+-	uint	tr_addafork;	/* cvt inode to attributed trans */
+-	uint	tr_writeid;	/* write setuid/setgid file */
+-	uint	tr_attrinval;	/* attr fork buffer invalidation */
+-	uint	tr_attrsetm;	/* set/create an attribute at mount time */
+-	uint	tr_attrsetrt;	/* set/create an attribute at runtime */
+-	uint	tr_attrrm;	/* remove an attribute */
+-	uint	tr_clearagi;	/* clear bad agi unlinked ino bucket */
+-	uint	tr_growrtalloc;	/* grow realtime allocations */
+-	uint	tr_growrtzero;	/* grow realtime zeroing */
+-	uint	tr_growrtfree;	/* grow realtime freeing */
+-	uint	tr_qm_sbchange;	/* change quota flags */
+-	uint	tr_qm_setqlim;	/* adjust quota limits */
+-	uint	tr_qm_dqalloc;	/* allocate quota on disk */
+-	uint	tr_qm_quotaoff;	/* turn quota off */
+-	uint	tr_qm_equotaoff;/* end of turn quota off */
+-	uint	tr_sb;		/* modify superblock */
++	struct xfs_trans_res	tr_write;	/* extent alloc trans */
++	struct xfs_trans_res	tr_itruncate;	/* truncate trans */
++	struct xfs_trans_res	tr_rename;	/* rename trans */
++	struct xfs_trans_res	tr_link;	/* link trans */
++	struct xfs_trans_res	tr_remove;	/* unlink trans */
++	struct xfs_trans_res	tr_symlink;	/* symlink trans */
++	struct xfs_trans_res	tr_create;	/* create trans */
++	struct xfs_trans_res	tr_mkdir;	/* mkdir trans */
++	struct xfs_trans_res	tr_ifree;	/* inode free trans */
++	struct xfs_trans_res	tr_ichange;	/* inode update trans */
++	struct xfs_trans_res	tr_growdata;	/* fs data section grow trans */
++	struct xfs_trans_res	tr_swrite;	/* sync write inode trans */
++	struct xfs_trans_res	tr_addafork;	/* add inode attr fork trans */
++	struct xfs_trans_res	tr_writeid;	/* write setuid/setgid file */
++	struct xfs_trans_res	tr_attrinval;	/* attr fork buffer
++						 * invalidation */
++	struct xfs_trans_res	tr_attrsetm;	/* set/create an attribute at
++						 * mount time */
++	struct xfs_trans_res	tr_attrsetrt;	/* set/create an attribute at
++						 * runtime */
++	struct xfs_trans_res	tr_attrrm;	/* remove an attribute */
++	struct xfs_trans_res	tr_clearagi;	/* clear agi unlinked bucket */
++	struct xfs_trans_res	tr_growrtalloc;	/* grow realtime allocations */
++	struct xfs_trans_res	tr_growrtzero;	/* grow realtime zeroing */
++	struct xfs_trans_res	tr_growrtfree;	/* grow realtime freeing */
++	struct xfs_trans_res	tr_qm_sbchange;	/* change quota flags */
++	struct xfs_trans_res	tr_qm_setqlim;	/* adjust quota limits */
++	struct xfs_trans_res	tr_qm_dqalloc;	/* allocate quota on disk */
++	struct xfs_trans_res	tr_qm_quotaoff;	/* turn quota off */
++	struct xfs_trans_res	tr_qm_equotaoff;/* end of turn quota off */
++	struct xfs_trans_res	tr_sb;		/* modify superblock */
+ };
  
- /* xfs_dir2.c */
- extern int xfs_dir_ino_validate(struct xfs_mount *mp, xfs_ino_t ino);
--extern int xfs_dir2_isblock(struct xfs_trans *tp, struct xfs_inode *dp, int *r);
--extern int xfs_dir2_isleaf(struct xfs_trans *tp, struct xfs_inode *dp, int *r);
- extern int xfs_dir2_grow_inode(struct xfs_da_args *args, int space,
- 				xfs_dir2_db_t *dbp);
--extern int xfs_dir2_shrink_inode(struct xfs_da_args *args, xfs_dir2_db_t db,
--				struct xfs_buf *bp);
- extern int xfs_dir_cilookup_result(struct xfs_da_args *args,
- 				const unsigned char *name, int len);
+ /*
+@@ -79,39 +89,40 @@ struct xfs_trans_resv {
+ 	 XFS_DAENTER_BMAPS(mp, XFS_DATA_FORK) + 1)
  
- /* xfs_dir2_block.c */
--extern const struct xfs_buf_ops xfs_dir3_block_buf_ops;
--
- extern int xfs_dir3_block_read(struct xfs_trans *tp, struct xfs_inode *dp,
- 			       struct xfs_buf **bpp);
- extern int xfs_dir2_block_addname(struct xfs_da_args *args);
-@@ -48,39 +42,17 @@ extern int xfs_dir2_leaf_to_block(struct xfs_da_args *args,
- #define	xfs_dir3_data_check(dp,bp)
- #endif
  
--extern const struct xfs_buf_ops xfs_dir3_data_buf_ops;
--extern const struct xfs_buf_ops xfs_dir3_free_buf_ops;
--
- extern int __xfs_dir3_data_check(struct xfs_inode *dp, struct xfs_buf *bp);
- extern int xfs_dir3_data_read(struct xfs_trans *tp, struct xfs_inode *dp,
- 		xfs_dablk_t bno, xfs_daddr_t mapped_bno, struct xfs_buf **bpp);
--extern int xfs_dir3_data_readahead(struct xfs_trans *tp, struct xfs_inode *dp,
--		xfs_dablk_t bno, xfs_daddr_t mapped_bno);
+-#define	XFS_WRITE_LOG_RES(mp)	((mp)->m_reservations.tr_write)
+-#define	XFS_ITRUNCATE_LOG_RES(mp)   ((mp)->m_reservations.tr_itruncate)
+-#define	XFS_RENAME_LOG_RES(mp)	((mp)->m_reservations.tr_rename)
+-#define	XFS_LINK_LOG_RES(mp)	((mp)->m_reservations.tr_link)
+-#define	XFS_REMOVE_LOG_RES(mp)	((mp)->m_reservations.tr_remove)
+-#define	XFS_SYMLINK_LOG_RES(mp)	((mp)->m_reservations.tr_symlink)
+-#define	XFS_CREATE_LOG_RES(mp)	((mp)->m_reservations.tr_create)
+-#define	XFS_MKDIR_LOG_RES(mp)	((mp)->m_reservations.tr_mkdir)
+-#define	XFS_IFREE_LOG_RES(mp)	((mp)->m_reservations.tr_ifree)
+-#define	XFS_ICHANGE_LOG_RES(mp)	((mp)->m_reservations.tr_ichange)
+-#define	XFS_GROWDATA_LOG_RES(mp)    ((mp)->m_reservations.tr_growdata)
+-#define	XFS_GROWRTALLOC_LOG_RES(mp)	((mp)->m_reservations.tr_growrtalloc)
+-#define	XFS_GROWRTZERO_LOG_RES(mp)	((mp)->m_reservations.tr_growrtzero)
+-#define	XFS_GROWRTFREE_LOG_RES(mp)	((mp)->m_reservations.tr_growrtfree)
+-#define	XFS_SWRITE_LOG_RES(mp)	((mp)->m_reservations.tr_swrite)
++#define XFS_WRITE_LOG_RES(mp)	((mp)->m_resv.tr_write.tr_logres)
++#define XFS_RENAME_LOG_RES(mp)	((mp)->m_resv.tr_rename.tr_logres)
++#define XFS_LINK_LOG_RES(mp)	((mp)->m_resv.tr_link.tr_logres)
++#define XFS_REMOVE_LOG_RES(mp)	((mp)->m_resv.tr_remove.tr_logres)
++#define XFS_SYMLINK_LOG_RES(mp)	((mp)->m_resv.tr_symlink.tr_logres)
++#define XFS_CREATE_LOG_RES(mp)	((mp)->m_resv.tr_create.tr_logres)
++#define XFS_MKDIR_LOG_RES(mp)	((mp)->m_resv.tr_mkdir.tr_logres)
++#define XFS_IFREE_LOG_RES(mp)	((mp)->m_resv.tr_ifree.tr_logres)
++#define XFS_SWRITE_LOG_RES(mp)	((mp)->m_resv.tr_swrite.tr_logres)
++#define XFS_ICHANGE_LOG_RES(mp)	((mp)->m_resv.tr_ichange.tr_logres)
++#define XFS_GROWDATA_LOG_RES(mp)  ((mp)->m_resv.tr_growdata.tr_logres)
++#define XFS_ITRUNCATE_LOG_RES(mp) ((mp)->m_resv.tr_itruncate.tr_logres)
++#define XFS_GROWRTZERO_LOG_RES(mp) ((mp)->m_resv.tr_growrtzero.tr_logres)
++#define XFS_GROWRTFREE_LOG_RES(mp) ((mp)->m_resv.tr_growrtfree.tr_logres)
++#define XFS_GROWRTALLOC_LOG_RES(mp) ((mp)->m_resv.tr_growrtalloc.tr_logres)
++
+ /*
+  * Logging the inode timestamps on an fsync -- same as SWRITE
+  * as long as SWRITE logs the entire inode core
+  */
+-#define XFS_FSYNC_TS_LOG_RES(mp)        ((mp)->m_reservations.tr_swrite)
+-#define	XFS_WRITEID_LOG_RES(mp)		((mp)->m_reservations.tr_swrite)
+-#define	XFS_ADDAFORK_LOG_RES(mp)	((mp)->m_reservations.tr_addafork)
+-#define	XFS_ATTRINVAL_LOG_RES(mp)	((mp)->m_reservations.tr_attrinval)
+-#define	XFS_ATTRSETM_LOG_RES(mp)	((mp)->m_reservations.tr_attrsetm)
+-#define	XFS_ATTRSETRT_LOG_RES(mp)	((mp)->m_reservations.tr_attrsetrt)
+-#define	XFS_ATTRRM_LOG_RES(mp)		((mp)->m_reservations.tr_attrrm)
+-#define	XFS_CLEAR_AGI_BUCKET_LOG_RES(mp)  ((mp)->m_reservations.tr_clearagi)
+-#define XFS_QM_SBCHANGE_LOG_RES(mp)	((mp)->m_reservations.tr_qm_sbchange)
+-#define XFS_QM_SETQLIM_LOG_RES(mp)	((mp)->m_reservations.tr_qm_setqlim)
+-#define XFS_QM_DQALLOC_LOG_RES(mp)	((mp)->m_reservations.tr_qm_dqalloc)
+-#define XFS_QM_QUOTAOFF_LOG_RES(mp)	((mp)->m_reservations.tr_qm_quotaoff)
+-#define XFS_QM_QUOTAOFF_END_LOG_RES(mp)	((mp)->m_reservations.tr_qm_equotaoff)
+-#define XFS_SB_LOG_RES(mp)		((mp)->m_reservations.tr_sb)
++#define XFS_FSYNC_TS_LOG_RES(mp) ((mp)->m_resv.tr_swrite.tr_logres)
++#define XFS_WRITEID_LOG_RES(mp)	 ((mp)->m_resv.tr_swrite.tr_logres)
++#define XFS_ADDAFORK_LOG_RES(mp) ((mp)->m_resv.tr_addafork.tr_logres)
++#define XFS_ATTRSETM_LOG_RES(mp) ((mp)->m_resv.tr_attrsetm.tr_logres)
++#define XFS_ATTRINVAL_LOG_RES(mp) ((mp)->m_resv.tr_attrinval.tr_logres)
++#define XFS_ATTRSETRT_LOG_RES(mp) ((mp)->m_resv.tr_attrsetrt.tr_logres)
++#define XFS_ATTRRM_LOG_RES(mp)	  ((mp)->m_resv.tr_attrrm.tr_logres)
++#define XFS_SB_LOG_RES(mp)	  ((mp)->m_resv.tr_sb.tr_logres)
++#define XFS_QM_SETQLIM_LOG_RES(mp) ((mp)->m_resv.tr_qm_setqlim.tr_logres)
++#define XFS_QM_DQALLOC_LOG_RES(mp) ((mp)->m_resv.tr_qm_dqalloc.tr_logres)
++#define XFS_QM_SBCHANGE_LOG_RES(mp) ((mp)->m_resv.tr_qm_sbchange.tr_logres)
++#define XFS_QM_QUOTAOFF_LOG_RES(mp) ((mp)->m_resv.tr_qm_quotaoff.tr_logres)
++#define XFS_QM_QUOTAOFF_END_LOG_RES(mp) ((mp)->m_resv.tr_qm_equotaoff.tr_logres)
++#define XFS_CLEAR_AGI_BUCKET_LOG_RES(mp) ((mp)->m_resv.tr_clearagi.tr_logres)
  
- extern struct xfs_dir2_data_free *
- xfs_dir2_data_freeinsert(struct xfs_dir2_data_hdr *hdr,
- 		struct xfs_dir2_data_unused *dup, int *loghead);
--extern void xfs_dir2_data_freescan(struct xfs_mount *mp,
--		struct xfs_dir2_data_hdr *hdr, int *loghead);
- extern int xfs_dir3_data_init(struct xfs_da_args *args, xfs_dir2_db_t blkno,
- 		struct xfs_buf **bpp);
--extern void xfs_dir2_data_log_entry(struct xfs_trans *tp, struct xfs_buf *bp,
--		struct xfs_dir2_data_entry *dep);
--extern void xfs_dir2_data_log_header(struct xfs_trans *tp,
--		struct xfs_buf *bp);
--extern void xfs_dir2_data_log_unused(struct xfs_trans *tp, struct xfs_buf *bp,
--		struct xfs_dir2_data_unused *dup);
--extern void xfs_dir2_data_make_free(struct xfs_trans *tp, struct xfs_buf *bp,
--		xfs_dir2_data_aoff_t offset, xfs_dir2_data_aoff_t len,
--		int *needlogp, int *needscanp);
--extern void xfs_dir2_data_use_free(struct xfs_trans *tp, struct xfs_buf *bp,
--		struct xfs_dir2_data_unused *dup, xfs_dir2_data_aoff_t offset,
--		xfs_dir2_data_aoff_t len, int *needlogp, int *needscanp);
- 
- /* xfs_dir2_leaf.c */
--extern const struct xfs_buf_ops xfs_dir3_leaf1_buf_ops;
--extern const struct xfs_buf_ops xfs_dir3_leafn_buf_ops;
--
- extern int xfs_dir3_leafn_read(struct xfs_trans *tp, struct xfs_inode *dp,
- 		xfs_dablk_t fbno, xfs_daddr_t mappedbno, struct xfs_buf **bpp);
- extern int xfs_dir2_block_to_leaf(struct xfs_da_args *args,
-@@ -142,9 +114,6 @@ extern int xfs_dir2_free_read(struct xfs_trans *tp, struct xfs_inode *dp,
- 		xfs_dablk_t fbno, struct xfs_buf **bpp);
- 
- /* xfs_dir2_sf.c */
--extern xfs_ino_t xfs_dir2_sf_get_parent_ino(struct xfs_dir2_sf_hdr *sfp);
--extern xfs_ino_t xfs_dir2_sfe_get_ino(struct xfs_dir2_sf_hdr *sfp,
--		struct xfs_dir2_sf_entry *sfep);
- extern int xfs_dir2_block_sfsize(struct xfs_inode *dp,
- 		struct xfs_dir2_data_hdr *block, struct xfs_dir2_sf_hdr *sfhp);
- extern int xfs_dir2_block_to_sf(struct xfs_da_args *args, struct xfs_buf *bp,
-diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-index fd3829a..e6211a7 100644
---- a/fs/xfs/xfs_dir2_readdir.c
-+++ b/fs/xfs/xfs_dir2_readdir.c
-@@ -30,6 +30,7 @@
- #include "xfs_dinode.h"
- #include "xfs_inode.h"
- #include "xfs_dir2_format.h"
-+#include "xfs_dir2.h"
- #include "xfs_dir2_priv.h"
- #include "xfs_error.h"
- #include "xfs_trace.h"
-diff --git a/fs/xfs/xfs_dir2_sf.c b/fs/xfs/xfs_dir2_sf.c
-index f24ce90..65b65c5 100644
---- a/fs/xfs/xfs_dir2_sf.c
-+++ b/fs/xfs/xfs_dir2_sf.c
-@@ -29,8 +29,8 @@
- #include "xfs_inode.h"
- #include "xfs_inode_item.h"
- #include "xfs_error.h"
--#include "xfs_dir2.h"
- #include "xfs_dir2_format.h"
-+#include "xfs_dir2.h"
- #include "xfs_dir2_priv.h"
- #include "xfs_trace.h"
- 
-@@ -95,7 +95,7 @@ xfs_dir2_sf_get_parent_ino(
- 	return xfs_dir2_sf_get_ino(hdr, &hdr->parent);
- }
- 
--static void
-+void
- xfs_dir2_sf_put_parent_ino(
- 	struct xfs_dir2_sf_hdr	*hdr,
- 	xfs_ino_t		ino)
-@@ -123,7 +123,7 @@ xfs_dir2_sfe_get_ino(
- 	return xfs_dir2_sf_get_ino(hdr, xfs_dir2_sfe_inop(sfep));
- }
- 
--static void
-+void
- xfs_dir2_sfe_put_ino(
- 	struct xfs_dir2_sf_hdr	*hdr,
- 	struct xfs_dir2_sf_entry *sfep,
-diff --git a/fs/xfs/xfs_export.c b/fs/xfs/xfs_export.c
-index c585bc6..29c880f 100644
---- a/fs/xfs/xfs_export.c
-+++ b/fs/xfs/xfs_export.c
-@@ -21,8 +21,10 @@
- #include "xfs_trans.h"
- #include "xfs_sb.h"
- #include "xfs_ag.h"
--#include "xfs_dir2.h"
- #include "xfs_mount.h"
-+#include "xfs_da_btree.h"
-+#include "xfs_dir2_format.h"
-+#include "xfs_dir2.h"
- #include "xfs_export.h"
- #include "xfs_vnodeops.h"
- #include "xfs_bmap_btree.h"
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index de3dc98..1ba3c79 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -32,7 +32,7 @@
- #include "xfs_vnodeops.h"
- #include "xfs_da_btree.h"
- #include "xfs_dir2_format.h"
--#include "xfs_dir2_priv.h"
-+#include "xfs_dir2.h"
- #include "xfs_ioctl.h"
- #include "xfs_trace.h"
- 
-diff --git a/fs/xfs/xfs_icreate_item.c b/fs/xfs/xfs_icreate_item.c
-index 7716a4e..441a78a 100644
---- a/fs/xfs/xfs_icreate_item.c
-+++ b/fs/xfs/xfs_icreate_item.c
-@@ -20,23 +20,11 @@
- #include "xfs_types.h"
- #include "xfs_bit.h"
- #include "xfs_log.h"
--#include "xfs_inum.h"
- #include "xfs_trans.h"
--#include "xfs_buf_item.h"
- #include "xfs_sb.h"
- #include "xfs_ag.h"
--#include "xfs_dir2.h"
- #include "xfs_mount.h"
- #include "xfs_trans_priv.h"
--#include "xfs_bmap_btree.h"
--#include "xfs_alloc_btree.h"
--#include "xfs_ialloc_btree.h"
--#include "xfs_attr_sf.h"
--#include "xfs_dinode.h"
--#include "xfs_inode.h"
--#include "xfs_inode_item.h"
--#include "xfs_btree.h"
--#include "xfs_ialloc.h"
- #include "xfs_error.h"
- #include "xfs_icreate_item.h"
- 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 8763452..fabcc84 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -51,7 +51,7 @@
- #include "xfs_symlink.h"
- #include "xfs_da_btree.h"
- #include "xfs_dir2_format.h"
--#include "xfs_dir2_priv.h"
-+#include "xfs_dir2.h"
- #include "xfs_attr_leaf.h"
- #include "xfs_attr_remote.h"
- 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 2231498..5c7272f 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -25,8 +25,10 @@
- #include "xfs_trans_priv.h"
- #include "xfs_sb.h"
- #include "xfs_ag.h"
--#include "xfs_dir2.h"
- #include "xfs_mount.h"
-+#include "xfs_da_btree.h"
-+#include "xfs_dir2_format.h"
-+#include "xfs_dir2.h"
- #include "xfs_bmap_btree.h"
- #include "xfs_alloc_btree.h"
- #include "xfs_ialloc_btree.h"
-diff --git a/fs/xfs/xfs_rename.c b/fs/xfs/xfs_rename.c
-index 0c1f8ef..4715c7f 100644
---- a/fs/xfs/xfs_rename.c
-+++ b/fs/xfs/xfs_rename.c
-@@ -22,9 +22,10 @@
- #include "xfs_trans.h"
- #include "xfs_sb.h"
- #include "xfs_ag.h"
--#include "xfs_dir2.h"
- #include "xfs_mount.h"
- #include "xfs_da_btree.h"
-+#include "xfs_dir2_format.h"
-+#include "xfs_dir2.h"
- #include "xfs_bmap_btree.h"
- #include "xfs_dinode.h"
- #include "xfs_inode.h"
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 5d900ec..bb4f7a1 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -23,7 +23,6 @@
- #include "xfs_trans.h"
- #include "xfs_sb.h"
- #include "xfs_ag.h"
--#include "xfs_dir2.h"
- #include "xfs_mount.h"
- #include "xfs_bmap_btree.h"
- #include "xfs_dinode.h"
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 146e2c2..7d57560 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -23,7 +23,6 @@
- #include "xfs_trans.h"
- #include "xfs_sb.h"
- #include "xfs_ag.h"
--#include "xfs_dir2.h"
- #include "xfs_alloc.h"
- #include "xfs_quota.h"
- #include "xfs_mount.h"
-@@ -47,6 +46,8 @@
- #include "xfs_trans_priv.h"
- #include "xfs_filestream.h"
- #include "xfs_da_btree.h"
-+#include "xfs_dir2_format.h"
-+#include "xfs_dir2.h"
- #include "xfs_extfree_item.h"
- #include "xfs_mru_cache.h"
- #include "xfs_inode_item.h"
-diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-index 80d550c..dd7c099 100644
---- a/fs/xfs/xfs_symlink.c
-+++ b/fs/xfs/xfs_symlink.c
-@@ -24,9 +24,10 @@
- #include "xfs_trans.h"
- #include "xfs_sb.h"
- #include "xfs_ag.h"
--#include "xfs_dir2.h"
- #include "xfs_mount.h"
- #include "xfs_da_btree.h"
-+#include "xfs_dir2_format.h"
-+#include "xfs_dir2.h"
- #include "xfs_bmap_btree.h"
- #include "xfs_ialloc_btree.h"
- #include "xfs_dinode.h"
-diff --git a/fs/xfs/xfs_utils.c b/fs/xfs/xfs_utils.c
-index 58386fa..fde7d22 100644
---- a/fs/xfs/xfs_utils.c
-+++ b/fs/xfs/xfs_utils.c
-@@ -22,8 +22,10 @@
- #include "xfs_trans.h"
- #include "xfs_sb.h"
- #include "xfs_ag.h"
--#include "xfs_dir2.h"
- #include "xfs_mount.h"
-+#include "xfs_da_btree.h"
-+#include "xfs_dir2_format.h"
-+#include "xfs_dir2.h"
- #include "xfs_bmap_btree.h"
- #include "xfs_dinode.h"
- #include "xfs_inode.h"
-diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-index c2d96cd..221e2e3 100644
---- a/fs/xfs/xfs_vnodeops.c
-+++ b/fs/xfs/xfs_vnodeops.c
-@@ -25,9 +25,10 @@
- #include "xfs_trans.h"
- #include "xfs_sb.h"
- #include "xfs_ag.h"
--#include "xfs_dir2.h"
- #include "xfs_mount.h"
- #include "xfs_da_btree.h"
-+#include "xfs_dir2_format.h"
-+#include "xfs_dir2.h"
- #include "xfs_bmap_btree.h"
- #include "xfs_ialloc_btree.h"
- #include "xfs_dinode.h"
+ /*
+  * Various log count values.
 -- 
 1.8.3.2
 
