@@ -1,27 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id BB6877FC0
-	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 01:45:33 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 9D7928F8035
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 997C78014
+	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 01:45:34 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id F19E5AC001
 	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 23:45:33 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	E39ZhlQmTW8aQDqt for <xfs@oss.sgi.com>;
+	sPXm3TmfMmG38MgG for <xfs@oss.sgi.com>;
 	Thu, 18 Jul 2013 23:45:31 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1V04RS-0004I4-JD
+	(envelope-from <dave@fromorbit.com>) id 1V04RS-0004I3-Ib
 	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:45:26 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1V04RS-0002J7-IH
+	(envelope-from <dave@disappointment.disaster>) id 1V04RS-0002J4-HQ
 	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:45:26 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 01/49] xfsprogs: introduce xfs_icreate.h
-Date: Fri, 19 Jul 2013 16:44:36 +1000
-Message-Id: <1374216324-8781-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1374216324-8781-1-git-send-email-david@fromorbit.com>
-References: <1374216324-8781-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 00/49] xfsprogs: patches for crc-dev branch
+Date: Fri, 19 Jul 2013 16:44:35 +1000
+Message-Id: <1374216324-8781-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,139 +35,165 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi folks,
 
-Bring the new inode create item definitions across from kernel space
-for xfs_logprint to be able to parse.
+This series is the matching patch series to my for-3.12 kernel
+series posted here:
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- include/Makefile           |  2 +-
- include/xfs_icreate_item.h | 52 ++++++++++++++++++++++++++++++++++++++++++++++
- include/xfs_log.h          |  3 ++-
- include/xfs_trans.h        |  7 +++++--
- 4 files changed, 60 insertions(+), 4 deletions(-)
- create mode 100644 include/xfs_icreate_item.h
+http://oss.sgi.com/pipermail/xfs/2013-July/028207.html
 
-diff --git a/include/Makefile b/include/Makefile
-index 92161bd..ba2c80d 100644
---- a/include/Makefile
-+++ b/include/Makefile
-@@ -26,7 +26,7 @@ QAHFILES = libxfs.h libxlog.h \
- 	xfs_btree_trace.h xfs_buf_item.h xfs_cksum.h xfs_da_btree.h \
- 	xfs_dinode.h xfs_dir2.h xfs_dir2_format.h \
- 	xfs_extfree_item.h xfs_ialloc.h xfs_ialloc_btree.h \
--	xfs_inode.h xfs_inode_item.h xfs_inum.h \
-+	xfs_icreate_item.h xfs_inode.h xfs_inode_item.h xfs_inum.h \
- 	xfs_log.h xfs_log_priv.h xfs_log_recover.h xfs_metadump.h \
- 	xfs_mount.h xfs_quota.h xfs_rtalloc.h xfs_sb.h xfs_symlink.h \
- 	xfs_trace.h xfs_trans.h xfs_trans_space.h xfs_dfrag.h
-diff --git a/include/xfs_icreate_item.h b/include/xfs_icreate_item.h
-new file mode 100644
-index 0000000..88ba8aa
---- /dev/null
-+++ b/include/xfs_icreate_item.h
-@@ -0,0 +1,52 @@
-+/*
-+ * Copyright (c) 2008-2010, Dave Chinner
-+ * All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+#ifndef XFS_ICREATE_ITEM_H
-+#define XFS_ICREATE_ITEM_H	1
-+
-+/*
-+ * on disk log item structure
-+ *
-+ * Log recovery assumes the first two entries are the type and size and they fit
-+ * in 32 bits. Also in host order (ugh) so they have to be 32 bit aligned so
-+ * decoding can be done correctly.
-+ */
-+struct xfs_icreate_log {
-+	__uint16_t	icl_type;	/* type of log format structure */
-+	__uint16_t	icl_size;	/* size of log format structure */
-+	__be32		icl_ag;		/* ag being allocated in */
-+	__be32		icl_agbno;	/* start block of inode range */
-+	__be32		icl_count;	/* number of inodes to initialise */
-+	__be32		icl_isize;	/* size of inodes */
-+	__be32		icl_length;	/* length of extent to initialise */
-+	__be32		icl_gen;	/* inode generation number to use */
-+};
-+
-+/* in memory log item structure */
-+struct xfs_icreate_item {
-+	struct xfs_log_item	ic_item;
-+	struct xfs_icreate_log	ic_format;
-+};
-+
-+extern kmem_zone_t *xfs_icreate_zone;	/* inode create item zone */
-+
-+void xfs_icreate_log(struct xfs_trans *tp, xfs_agnumber_t agno,
-+			xfs_agblock_t agbno, unsigned int count,
-+			unsigned int inode_size, xfs_agblock_t length,
-+			unsigned int generation);
-+
-+#endif	/* XFS_ICREATE_ITEM_H */
-diff --git a/include/xfs_log.h b/include/xfs_log.h
-index 5caee96..70cc014 100644
---- a/include/xfs_log.h
-+++ b/include/xfs_log.h
-@@ -88,7 +88,8 @@ static inline xfs_lsn_t	_lsn_cmp(xfs_lsn_t lsn1, xfs_lsn_t lsn2)
- #define XLOG_REG_TYPE_UNMOUNT		17
- #define XLOG_REG_TYPE_COMMIT		18
- #define XLOG_REG_TYPE_TRANSHDR		19
--#define XLOG_REG_TYPE_MAX		19
-+#define XLOG_REG_TYPE_ICREATE		20
-+#define XLOG_REG_TYPE_MAX		20
- 
- typedef struct xfs_log_iovec {
- 	void		*i_addr;	/* beginning address of region */
-diff --git a/include/xfs_trans.h b/include/xfs_trans.h
-index acf1381..36a0026 100644
---- a/include/xfs_trans.h
-+++ b/include/xfs_trans.h
-@@ -48,6 +48,7 @@ typedef struct xfs_trans_header {
- #define	XFS_LI_BUF		0x123c	/* v2 bufs, variable sized inode bufs */
- #define	XFS_LI_DQUOT		0x123d
- #define	XFS_LI_QUOTAOFF		0x123e
-+#define	XFS_LI_ICREATE		0x123f
- 
- #define XFS_LI_TYPE_DESC \
- 	{ XFS_LI_EFI,		"XFS_LI_EFI" }, \
-@@ -56,7 +57,8 @@ typedef struct xfs_trans_header {
- 	{ XFS_LI_INODE,		"XFS_LI_INODE" }, \
- 	{ XFS_LI_BUF,		"XFS_LI_BUF" }, \
- 	{ XFS_LI_DQUOT,		"XFS_LI_DQUOT" }, \
--	{ XFS_LI_QUOTAOFF,	"XFS_LI_QUOTAOFF" }
-+	{ XFS_LI_QUOTAOFF,	"XFS_LI_QUOTAOFF" }, \
-+	{ XFS_LI_ICREATE,	"XFS_LI_ICREATE" }
- 
- /*
-  * Transaction types.  Used to distinguish types of buffers.
-@@ -107,7 +109,8 @@ typedef struct xfs_trans_header {
- #define	XFS_TRANS_SWAPEXT		40
- #define	XFS_TRANS_SB_COUNT		41
- #define	XFS_TRANS_CHECKPOINT		42
--#define	XFS_TRANS_TYPE_MAX		42
-+#define	XFS_TRANS_ICREATE		43
-+#define	XFS_TRANS_TYPE_MAX		43
- /* new transaction types need to be reflected in xfs_logprint(8) */
- 
- #define XFS_TRANS_TYPES \
--- 
-1.8.3.2
+The first 3 patches add icreate transaction support to xfs_logprint.
+
+The next 37 patches update the libxfs code to match the kernel code
+in the above patch set - many of the transformations are identical,
+and they bring the code bases mostly into synchronisation.
+
+The next 6 patches introduce jeff Liu's transaciton reservation
+patchset and integrate it into mkfs to ensure that mkfs.xfs doesn't
+create logs that are too small. This version has the "default log
+size larger than the AG size so mkfs fails" problems fixed, so all
+the xfstests regressions it caused are gone.
+
+THe last 3 patches introduce dirent filetype support into libxfs,
+mkfs and xfs_db. xfs_repair can handle the new dirent structures
+just fine, but it doesn't yet have code to validate that the
+filetype in the dirent matches the inode it points to.
+
+Anyway, this applies to a current crc-dev branch, and should compile
+cleanly without warnings. If you do get warnings, let me know,
+because I'm getting ready to a -Werror to the build so that it
+breaks whenever someone introduces a compile time warning....
+
+Comments, thoughts, flames?
+
+Cheers,
+
+Dave.
+
+$ git diff --stat -C -M --summary --minimal cdc4cb9..
+ copy/xfs_copy.c                                |  12 +-
+ db/bmroot.c                                    |   6 +-
+ db/check.c                                     |  12 +-
+ db/dir2.c                                      |  51 +-
+ db/dir2.h                                      |   1 +
+ db/dir2sf.c                                    |  61 ++-
+ db/dir2sf.h                                    |   3 +
+ db/field.c                                     |   7 +
+ db/field.h                                     |   3 +
+ db/inode.c                                     |  23 +-
+ db/metadump.c                                  |  10 +-
+ fsr/xfs_fsr.c                                  |   1 -
+ include/Makefile                               |  24 +-
+ include/libxfs.h                               |  98 +++-
+ include/libxlog.h                              |  13 -
+ include/platform_defs.h.in                     |   5 +
+ include/swab.h                                 |   6 +-
+ include/xfs_ag.h                               |  55 +-
+ include/xfs_alloc_btree.h                      |   3 +-
+ include/xfs_attr_leaf.h                        |   1 +
+ include/xfs_attr_remote.h                      |  28 +-
+ include/xfs_bmap.h                             |  54 +-
+ include/xfs_bmap_btree.h                       |   5 +-
+ include/xfs_btree.h                            |   3 +-
+ include/xfs_buf_item.h                         | 172 ------
+ include/xfs_da_btree.h                         |   1 +
+ include/xfs_dfrag.h                            |  53 --
+ include/xfs_dinode.h                           |   3 -
+ include/xfs_dir2.h                             |  20 +-
+ include/xfs_dir2_format.h                      | 208 +++++--
+ include/xfs_extfree_item.h                     | 161 ------
+ include/xfs_format.h                           | 169 ++++++
+ include/xfs_fs.h                               |  41 +-
+ include/xfs_ialloc.h                           |   8 +
+ include/xfs_ialloc_btree.h                     |   3 +-
+ include/xfs_inode.h                            | 631 ----------------------
+ include/xfs_inode_buf.h                        |  52 ++
+ include/xfs_inode_fork.h                       | 171 ++++++
+ include/xfs_inode_item.h                       | 170 ------
+ include/xfs_log.h                              | 189 -------
+ include/xfs_log_format.h                       | 773 +++++++++++++++++++++++++++
+ include/xfs_log_priv.h                         | 692 ------------------------
+ include/xfs_mount.h                            | 403 --------------
+ include/xfs_quota.h                            | 393 --------------
+ include/xfs_quota_defs.h                       | 157 ++++++
+ include/xfs_rtalloc.h                          | 166 ------
+ include/xfs_sb.h                               |  58 +-
+ include/xfs_symlink.h                          |  45 --
+ include/xfs_trace.h                            |   1 +
+ include/xfs_trans.h                            | 224 +-------
+ include/xfs_trans_resv.h                       | 116 ++++
+ include/xfs_types.h                            |  59 +-
+ io/init.h                                      |   3 -
+ libxfs/Makefile                                |  34 +-
+ libxfs/init.c                                  |   5 +-
+ libxfs/rdwr.c                                  |   3 -
+ libxfs/trans.c                                 | 130 ++++-
+ libxfs/util.c                                  | 122 ++++-
+ libxfs/xfs.h                                   |  62 ++-
+ libxfs/xfs_alloc.c                             |  37 +-
+ libxfs/xfs_alloc_btree.c                       |  23 +-
+ libxfs/xfs_attr.c                              |  39 +-
+ libxfs/xfs_attr_leaf.c                         |   9 +-
+ libxfs/xfs_attr_remote.c                       |   8 +-
+ libxfs/xfs_bmap.c                              | 438 ++++-----------
+ libxfs/xfs_bmap_btree.c                        |  14 +-
+ libxfs/xfs_btree.c                             |  10 +
+ libxfs/xfs_da_btree.c                          |  69 +--
+ libxfs/xfs_dir2.c                              |  50 +-
+ libxfs/xfs_dir2_block.c                        |  44 +-
+ libxfs/xfs_dir2_data.c                         |  39 +-
+ libxfs/xfs_dir2_leaf.c                         |  17 +-
+ libxfs/xfs_dir2_node.c                         |  43 +-
+ libxfs/xfs_dir2_priv.h                         |  44 +-
+ libxfs/xfs_dir2_sf.c                           | 141 +++--
+ libxfs/xfs_ialloc.c                            | 271 ++++++++--
+ libxfs/xfs_ialloc_btree.c                      |  16 +-
+ libxfs/xfs_inode_buf.c                         | 408 ++++++++++++++
+ libxfs/{xfs_inode.c => xfs_inode_fork.c}       | 425 +--------------
+ libxfs/xfs_log_rlimit.c                        | 135 +++++
+ libxfs/xfs_rtalloc.c                           |   6 +-
+ libxfs/{xfs_mount.c => xfs_sb.c}               | 118 +++-
+ libxfs/{xfs_symlink.c => xfs_symlink_remote.c} |  52 +-
+ libxfs/{xfs_trans.c => xfs_trans_resv.c}       | 379 +++++++------
+ libxlog/xfs_log_recover.c                      |   3 +
+ logprint/log_misc.c                            |  94 +++-
+ logprint/log_print_all.c                       |  21 +
+ mkfs/maxtrres.c                                |  58 +-
+ mkfs/proto.c                                   |  24 +-
+ mkfs/xfs_mkfs.c                                | 107 ++--
+ mkfs/xfs_mkfs.h                                |   4 +-
+ repair/attr_repair.c                           |   2 +
+ repair/dir2.c                                  |  37 +-
+ repair/dir2.h                                  |   1 +
+ repair/incore_ino.c                            |   2 +
+ repair/phase5.c                                |   3 +-
+ repair/phase6.c                                | 111 ++--
+ repair/phase7.c                                |   7 +-
+ repair/scan.c                                  |   1 +
+ 99 files changed, 4251 insertions(+), 5042 deletions(-)
+ delete mode 100644 include/xfs_buf_item.h
+ delete mode 100644 include/xfs_dfrag.h
+ delete mode 100644 include/xfs_extfree_item.h
+ create mode 100644 include/xfs_format.h
+ delete mode 100644 include/xfs_inode.h
+ create mode 100644 include/xfs_inode_buf.h
+ create mode 100644 include/xfs_inode_fork.h
+ delete mode 100644 include/xfs_inode_item.h
+ delete mode 100644 include/xfs_log.h
+ create mode 100644 include/xfs_log_format.h
+ delete mode 100644 include/xfs_log_priv.h
+ delete mode 100644 include/xfs_mount.h
+ delete mode 100644 include/xfs_quota.h
+ create mode 100644 include/xfs_quota_defs.h
+ delete mode 100644 include/xfs_rtalloc.h
+ delete mode 100644 include/xfs_symlink.h
+ create mode 100644 include/xfs_trans_resv.h
+ create mode 100644 libxfs/xfs_inode_buf.c
+ rename libxfs/{xfs_inode.c => xfs_inode_fork.c} (82%)
+ create mode 100644 libxfs/xfs_log_rlimit.c
+ rename libxfs/{xfs_mount.c => xfs_sb.c} (87%)
+ rename libxfs/{xfs_symlink.c => xfs_symlink_remote.c} (68%)
+ rename libxfs/{xfs_trans.c => xfs_trans_resv.c} (67%)
 
 _______________________________________________
 xfs mailing list
