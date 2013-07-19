@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8C6157F6F
-	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 01:26:02 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 5194D8F8033
-	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 23:26:02 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 0A41D7FC7
+	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 01:26:04 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id EF525304043
+	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 23:26:03 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	qV0KVCYjufmFhW4D for <xfs@oss.sgi.com>;
-	Thu, 18 Jul 2013 23:26:00 -0700 (PDT)
+	WhZiyvgACLCMXM4m for <xfs@oss.sgi.com>;
+	Thu, 18 Jul 2013 23:26:02 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1V0482-000480-Kn
-	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:25:22 +1000
+	(envelope-from <dave@fromorbit.com>) id 1V0483-00048U-Hj
+	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:25:23 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1V0482-0001xA-Jt
-	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:25:22 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1V0483-00020u-FP
+	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:25:23 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 07/49] xfs: split out on-disk transaction definitions
-Date: Fri, 19 Jul 2013 16:24:38 +1000
-Message-Id: <1374215120-7271-8-git-send-email-david@fromorbit.com>
+Subject: [PATCH 47/49] xfs: split the CIL lock
+Date: Fri, 19 Jul 2013 16:25:18 +1000
+Message-Id: <1374215120-7271-48-git-send-email-david@fromorbit.com>
 In-Reply-To: <1374215120-7271-1-git-send-email-david@fromorbit.com>
 References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,484 +39,199 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-There's a bunch of definitions in xfs_trans.h that define on-disk
-formats - transaction headers taht get written into the log, log
-item type definitions, etc. Split out everything into a separate
-file so that all which remains in xfs_trans.h are kernel only
-definitions.
-
-Also, remove the duplicate magic number definitions for
-XFS_TRANS_HEADER_MAGIC...
+The xc_cil_lock is used for two purposes - to protect the CIL
+itself, and to protect the push/commit state and lists. These are
+two logically separate structures and operations, so can have their
+own locks. This means that pushing on the CIL and the commit wait
+ordering won't contend for a lock with other transactions that are
+completing concurrently. As the CIL insertion is the hottest path
+throught eh CIL, this is a big win.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_log_format.h | 206 ++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_trans.c      |   4 +-
- fs/xfs/xfs_trans.h      | 205 -----------------------------------------------
- 3 files changed, 208 insertions(+), 207 deletions(-)
+ fs/xfs/xfs_log_cil.c  | 41 +++++++++++++++++++++--------------------
+ fs/xfs/xfs_log_priv.h |  9 ++++++---
+ 2 files changed, 27 insertions(+), 23 deletions(-)
 
-diff --git a/fs/xfs/xfs_log_format.h b/fs/xfs/xfs_log_format.h
-index 02639c7..faf3f43 100644
---- a/fs/xfs/xfs_log_format.h
-+++ b/fs/xfs/xfs_log_format.h
-@@ -187,6 +187,212 @@ typedef struct xfs_log_iovec {
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index 391cb011..ecc2402 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -398,9 +398,9 @@ xlog_cil_committed(
+ 	xfs_extent_busy_clear(mp, &ctx->busy_extents,
+ 			     (mp->m_flags & XFS_MOUNT_DISCARD) && !abort);
  
+-	spin_lock(&ctx->cil->xc_cil_lock);
++	spin_lock(&ctx->cil->xc_push_lock);
+ 	list_del(&ctx->committing);
+-	spin_unlock(&ctx->cil->xc_cil_lock);
++	spin_unlock(&ctx->cil->xc_push_lock);
  
- /*
-+ * Transaction Header definitions.
-+ *
-+ * This is the structure written in the log at the head of every transaction. It
-+ * identifies the type and id of the transaction, and contains the number of
-+ * items logged by the transaction so we know how many to expect during
-+ * recovery.
-+ *
-+ * Do not change the below structure without redoing the code in
-+ * xlog_recover_add_to_trans() and xlog_recover_add_to_cont_trans().
-+ */
-+typedef struct xfs_trans_header {
-+	uint		th_magic;		/* magic number */
-+	uint		th_type;		/* transaction type */
-+	__int32_t	th_tid;			/* transaction id (unused) */
-+	uint		th_num_items;		/* num items logged by trans */
-+} xfs_trans_header_t;
-+
-+#define	XFS_TRANS_HEADER_MAGIC	0x5452414e	/* TRAN */
-+
-+/*
-+ * Log item types.
-+ */
-+#define	XFS_LI_EFI		0x1236
-+#define	XFS_LI_EFD		0x1237
-+#define	XFS_LI_IUNLINK		0x1238
-+#define	XFS_LI_INODE		0x123b	/* aligned ino chunks, var-size ibufs */
-+#define	XFS_LI_BUF		0x123c	/* v2 bufs, variable sized inode bufs */
-+#define	XFS_LI_DQUOT		0x123d
-+#define	XFS_LI_QUOTAOFF		0x123e
-+#define	XFS_LI_ICREATE		0x123f
-+
-+#define XFS_LI_TYPE_DESC \
-+	{ XFS_LI_EFI,		"XFS_LI_EFI" }, \
-+	{ XFS_LI_EFD,		"XFS_LI_EFD" }, \
-+	{ XFS_LI_IUNLINK,	"XFS_LI_IUNLINK" }, \
-+	{ XFS_LI_INODE,		"XFS_LI_INODE" }, \
-+	{ XFS_LI_BUF,		"XFS_LI_BUF" }, \
-+	{ XFS_LI_DQUOT,		"XFS_LI_DQUOT" }, \
-+	{ XFS_LI_QUOTAOFF,	"XFS_LI_QUOTAOFF" }, \
-+	{ XFS_LI_ICREATE,	"XFS_LI_ICREATE" }
-+
-+/*
-+ * Transaction types.  Used to distinguish types of buffers.
-+ */
-+#define XFS_TRANS_SETATTR_NOT_SIZE	1
-+#define XFS_TRANS_SETATTR_SIZE		2
-+#define XFS_TRANS_INACTIVE		3
-+#define XFS_TRANS_CREATE		4
-+#define XFS_TRANS_CREATE_TRUNC		5
-+#define XFS_TRANS_TRUNCATE_FILE		6
-+#define XFS_TRANS_REMOVE		7
-+#define XFS_TRANS_LINK			8
-+#define XFS_TRANS_RENAME		9
-+#define XFS_TRANS_MKDIR			10
-+#define XFS_TRANS_RMDIR			11
-+#define XFS_TRANS_SYMLINK		12
-+#define XFS_TRANS_SET_DMATTRS		13
-+#define XFS_TRANS_GROWFS		14
-+#define XFS_TRANS_STRAT_WRITE		15
-+#define XFS_TRANS_DIOSTRAT		16
-+/* 17 was XFS_TRANS_WRITE_SYNC */
-+#define	XFS_TRANS_WRITEID		18
-+#define	XFS_TRANS_ADDAFORK		19
-+#define	XFS_TRANS_ATTRINVAL		20
-+#define	XFS_TRANS_ATRUNCATE		21
-+#define	XFS_TRANS_ATTR_SET		22
-+#define	XFS_TRANS_ATTR_RM		23
-+#define	XFS_TRANS_ATTR_FLAG		24
-+#define	XFS_TRANS_CLEAR_AGI_BUCKET	25
-+#define XFS_TRANS_QM_SBCHANGE		26
-+/*
-+ * Dummy entries since we use the transaction type to index into the
-+ * trans_type[] in xlog_recover_print_trans_head()
-+ */
-+#define XFS_TRANS_DUMMY1		27
-+#define XFS_TRANS_DUMMY2		28
-+#define XFS_TRANS_QM_QUOTAOFF		29
-+#define XFS_TRANS_QM_DQALLOC		30
-+#define XFS_TRANS_QM_SETQLIM		31
-+#define XFS_TRANS_QM_DQCLUSTER		32
-+#define XFS_TRANS_QM_QINOCREATE		33
-+#define XFS_TRANS_QM_QUOTAOFF_END	34
-+#define XFS_TRANS_SB_UNIT		35
-+#define XFS_TRANS_FSYNC_TS		36
-+#define	XFS_TRANS_GROWFSRT_ALLOC	37
-+#define	XFS_TRANS_GROWFSRT_ZERO		38
-+#define	XFS_TRANS_GROWFSRT_FREE		39
-+#define	XFS_TRANS_SWAPEXT		40
-+#define	XFS_TRANS_SB_COUNT		41
-+#define	XFS_TRANS_CHECKPOINT		42
-+#define	XFS_TRANS_ICREATE		43
-+#define	XFS_TRANS_TYPE_MAX		43
-+/* new transaction types need to be reflected in xfs_logprint(8) */
-+
-+#define XFS_TRANS_TYPES \
-+	{ XFS_TRANS_SETATTR_NOT_SIZE,	"SETATTR_NOT_SIZE" }, \
-+	{ XFS_TRANS_SETATTR_SIZE,	"SETATTR_SIZE" }, \
-+	{ XFS_TRANS_INACTIVE,		"INACTIVE" }, \
-+	{ XFS_TRANS_CREATE,		"CREATE" }, \
-+	{ XFS_TRANS_CREATE_TRUNC,	"CREATE_TRUNC" }, \
-+	{ XFS_TRANS_TRUNCATE_FILE,	"TRUNCATE_FILE" }, \
-+	{ XFS_TRANS_REMOVE,		"REMOVE" }, \
-+	{ XFS_TRANS_LINK,		"LINK" }, \
-+	{ XFS_TRANS_RENAME,		"RENAME" }, \
-+	{ XFS_TRANS_MKDIR,		"MKDIR" }, \
-+	{ XFS_TRANS_RMDIR,		"RMDIR" }, \
-+	{ XFS_TRANS_SYMLINK,		"SYMLINK" }, \
-+	{ XFS_TRANS_SET_DMATTRS,	"SET_DMATTRS" }, \
-+	{ XFS_TRANS_GROWFS,		"GROWFS" }, \
-+	{ XFS_TRANS_STRAT_WRITE,	"STRAT_WRITE" }, \
-+	{ XFS_TRANS_DIOSTRAT,		"DIOSTRAT" }, \
-+	{ XFS_TRANS_WRITEID,		"WRITEID" }, \
-+	{ XFS_TRANS_ADDAFORK,		"ADDAFORK" }, \
-+	{ XFS_TRANS_ATTRINVAL,		"ATTRINVAL" }, \
-+	{ XFS_TRANS_ATRUNCATE,		"ATRUNCATE" }, \
-+	{ XFS_TRANS_ATTR_SET,		"ATTR_SET" }, \
-+	{ XFS_TRANS_ATTR_RM,		"ATTR_RM" }, \
-+	{ XFS_TRANS_ATTR_FLAG,		"ATTR_FLAG" }, \
-+	{ XFS_TRANS_CLEAR_AGI_BUCKET,	"CLEAR_AGI_BUCKET" }, \
-+	{ XFS_TRANS_QM_SBCHANGE,	"QM_SBCHANGE" }, \
-+	{ XFS_TRANS_QM_QUOTAOFF,	"QM_QUOTAOFF" }, \
-+	{ XFS_TRANS_QM_DQALLOC,		"QM_DQALLOC" }, \
-+	{ XFS_TRANS_QM_SETQLIM,		"QM_SETQLIM" }, \
-+	{ XFS_TRANS_QM_DQCLUSTER,	"QM_DQCLUSTER" }, \
-+	{ XFS_TRANS_QM_QINOCREATE,	"QM_QINOCREATE" }, \
-+	{ XFS_TRANS_QM_QUOTAOFF_END,	"QM_QOFF_END" }, \
-+	{ XFS_TRANS_SB_UNIT,		"SB_UNIT" }, \
-+	{ XFS_TRANS_FSYNC_TS,		"FSYNC_TS" }, \
-+	{ XFS_TRANS_GROWFSRT_ALLOC,	"GROWFSRT_ALLOC" }, \
-+	{ XFS_TRANS_GROWFSRT_ZERO,	"GROWFSRT_ZERO" }, \
-+	{ XFS_TRANS_GROWFSRT_FREE,	"GROWFSRT_FREE" }, \
-+	{ XFS_TRANS_SWAPEXT,		"SWAPEXT" }, \
-+	{ XFS_TRANS_SB_COUNT,		"SB_COUNT" }, \
-+	{ XFS_TRANS_CHECKPOINT,		"CHECKPOINT" }, \
-+	{ XFS_TRANS_DUMMY1,		"DUMMY1" }, \
-+	{ XFS_TRANS_DUMMY2,		"DUMMY2" }, \
-+	{ XLOG_UNMOUNT_REC_TYPE,	"UNMOUNT" }
-+
-+/*
-+ * This structure is used to track log items associated with
-+ * a transaction.  It points to the log item and keeps some
-+ * flags to track the state of the log item.  It also tracks
-+ * the amount of space needed to log the item it describes
-+ * once we get to commit processing (see xfs_trans_commit()).
-+ */
-+struct xfs_log_item_desc {
-+	struct xfs_log_item	*lid_item;
-+	struct list_head	lid_trans;
-+	unsigned char		lid_flags;
-+};
-+
-+#define XFS_LID_DIRTY		0x1
-+
-+/*
-+ * Values for t_flags.
-+ */
-+#define	XFS_TRANS_DIRTY		0x01	/* something needs to be logged */
-+#define	XFS_TRANS_SB_DIRTY	0x02	/* superblock is modified */
-+#define	XFS_TRANS_PERM_LOG_RES	0x04	/* xact took a permanent log res */
-+#define	XFS_TRANS_SYNC		0x08	/* make commit synchronous */
-+#define XFS_TRANS_DQ_DIRTY	0x10	/* at least one dquot in trx dirty */
-+#define XFS_TRANS_RESERVE	0x20    /* OK to use reserved data blocks */
-+#define XFS_TRANS_FREEZE_PROT	0x40	/* Transaction has elevated writer
-+					   count in superblock */
-+
-+/*
-+ * Values for call flags parameter.
-+ */
-+#define	XFS_TRANS_RELEASE_LOG_RES	0x4
-+#define	XFS_TRANS_ABORT			0x8
-+
-+/*
-+ * Field values for xfs_trans_mod_sb.
-+ */
-+#define	XFS_TRANS_SB_ICOUNT		0x00000001
-+#define	XFS_TRANS_SB_IFREE		0x00000002
-+#define	XFS_TRANS_SB_FDBLOCKS		0x00000004
-+#define	XFS_TRANS_SB_RES_FDBLOCKS	0x00000008
-+#define	XFS_TRANS_SB_FREXTENTS		0x00000010
-+#define	XFS_TRANS_SB_RES_FREXTENTS	0x00000020
-+#define	XFS_TRANS_SB_DBLOCKS		0x00000040
-+#define	XFS_TRANS_SB_AGCOUNT		0x00000080
-+#define	XFS_TRANS_SB_IMAXPCT		0x00000100
-+#define	XFS_TRANS_SB_REXTSIZE		0x00000200
-+#define	XFS_TRANS_SB_RBMBLOCKS		0x00000400
-+#define	XFS_TRANS_SB_RBLOCKS		0x00000800
-+#define	XFS_TRANS_SB_REXTENTS		0x00001000
-+#define	XFS_TRANS_SB_REXTSLOG		0x00002000
-+
-+/*
-+ * Here we centralize the specification of XFS meta-data buffer
-+ * reference count values.  This determine how hard the buffer
-+ * cache tries to hold onto the buffer.
-+ */
-+#define	XFS_AGF_REF		4
-+#define	XFS_AGI_REF		4
-+#define	XFS_AGFL_REF		3
-+#define	XFS_INO_BTREE_REF	3
-+#define	XFS_ALLOC_BTREE_REF	2
-+#define	XFS_BMAP_BTREE_REF	2
-+#define	XFS_DIR_BTREE_REF	2
-+#define	XFS_INO_REF		2
-+#define	XFS_ATTR_BTREE_REF	1
-+#define	XFS_DQUOT_REF		1
-+
-+/*
-  * Inode Log Item Format definitions.
-  *
-  * This is the structure used to lay out an inode log item in the
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 1d2a061..9b70df3 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -744,7 +744,7 @@ _xfs_trans_alloc(
- 	atomic_inc(&mp->m_active_trans);
+ 	xlog_cil_free_logvec(ctx->lv_chain);
  
- 	tp = kmem_zone_zalloc(xfs_trans_zone, memflags);
--	tp->t_magic = XFS_TRANS_MAGIC;
-+	tp->t_magic = XFS_TRANS_HEADER_MAGIC;
- 	tp->t_type = type;
- 	tp->t_mountp = mp;
- 	INIT_LIST_HEAD(&tp->t_items);
-@@ -789,7 +789,7 @@ xfs_trans_dup(
- 	/*
- 	 * Initialize the new transaction structure.
+@@ -455,7 +455,7 @@ xlog_cil_push(
+ 	down_write(&cil->xc_ctx_lock);
+ 	ctx = cil->xc_ctx;
+ 
+-	spin_lock(&cil->xc_cil_lock);
++	spin_lock(&cil->xc_push_lock);
+ 	push_seq = cil->xc_push_seq;
+ 	ASSERT(push_seq <= ctx->sequence);
+ 
+@@ -466,10 +466,10 @@ xlog_cil_push(
  	 */
--	ntp->t_magic = XFS_TRANS_MAGIC;
-+	ntp->t_magic = XFS_TRANS_HEADER_MAGIC;
- 	ntp->t_type = tp->t_type;
- 	ntp->t_mountp = tp->t_mountp;
- 	INIT_LIST_HEAD(&ntp->t_items);
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 2b49463..ffaa584 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -21,195 +21,6 @@
- struct xfs_log_item;
+ 	if (list_empty(&cil->xc_cil)) {
+ 		cil->xc_push_seq = 0;
+-		spin_unlock(&cil->xc_cil_lock);
++		spin_unlock(&cil->xc_push_lock);
+ 		goto out_skip;
+ 	}
+-	spin_unlock(&cil->xc_cil_lock);
++	spin_unlock(&cil->xc_push_lock);
+ 
+ 
+ 	/* check for a previously pushed seqeunce */
+@@ -537,9 +537,9 @@ xlog_cil_push(
+ 	 * that higher sequences will wait for us to write out a commit record
+ 	 * before they do.
+ 	 */
+-	spin_lock(&cil->xc_cil_lock);
++	spin_lock(&cil->xc_push_lock);
+ 	list_add(&ctx->committing, &cil->xc_committing);
+-	spin_unlock(&cil->xc_cil_lock);
++	spin_unlock(&cil->xc_push_lock);
+ 	up_write(&cil->xc_ctx_lock);
+ 
+ 	/*
+@@ -574,7 +574,7 @@ xlog_cil_push(
+ 	 * order the commit records so replay will get them in the right order.
+ 	 */
+ restart:
+-	spin_lock(&cil->xc_cil_lock);
++	spin_lock(&cil->xc_push_lock);
+ 	list_for_each_entry(new_ctx, &cil->xc_committing, committing) {
+ 		/*
+ 		 * Higher sequences will wait for this one so skip them.
+@@ -587,11 +587,11 @@ restart:
+ 			 * It is still being pushed! Wait for the push to
+ 			 * complete, then start again from the beginning.
+ 			 */
+-			xlog_wait(&cil->xc_commit_wait, &cil->xc_cil_lock);
++			xlog_wait(&cil->xc_commit_wait, &cil->xc_push_lock);
+ 			goto restart;
+ 		}
+ 	}
+-	spin_unlock(&cil->xc_cil_lock);
++	spin_unlock(&cil->xc_push_lock);
+ 
+ 	/* xfs_log_done always frees the ticket on error. */
+ 	commit_lsn = xfs_log_done(log->l_mp, tic, &commit_iclog, 0);
+@@ -610,10 +610,10 @@ restart:
+ 	 * callbacks to the iclog we can assign the commit LSN to the context
+ 	 * and wake up anyone who is waiting for the commit to complete.
+ 	 */
+-	spin_lock(&cil->xc_cil_lock);
++	spin_lock(&cil->xc_push_lock);
+ 	ctx->commit_lsn = commit_lsn;
+ 	wake_up_all(&cil->xc_commit_wait);
+-	spin_unlock(&cil->xc_cil_lock);
++	spin_unlock(&cil->xc_push_lock);
+ 
+ 	/* release the hounds! */
+ 	return xfs_log_release_iclog(log->l_mp, commit_iclog);
+@@ -666,12 +666,12 @@ xlog_cil_push_background(
+ 	if (cil->xc_ctx->space_used < XLOG_CIL_SPACE_LIMIT(log))
+ 		return;
+ 
+-	spin_lock(&cil->xc_cil_lock);
++	spin_lock(&cil->xc_push_lock);
+ 	if (cil->xc_push_seq < cil->xc_current_sequence) {
+ 		cil->xc_push_seq = cil->xc_current_sequence;
+ 		queue_work(log->l_mp->m_cil_workqueue, &cil->xc_push_work);
+ 	}
+-	spin_unlock(&cil->xc_cil_lock);
++	spin_unlock(&cil->xc_push_lock);
+ 
+ }
+ 
+@@ -694,14 +694,14 @@ xlog_cil_push_foreground(
+ 	 * If the CIL is empty or we've already pushed the sequence then
+ 	 * there's no work we need to do.
+ 	 */
+-	spin_lock(&cil->xc_cil_lock);
++	spin_lock(&cil->xc_push_lock);
+ 	if (list_empty(&cil->xc_cil) || push_seq <= cil->xc_push_seq) {
+-		spin_unlock(&cil->xc_cil_lock);
++		spin_unlock(&cil->xc_push_lock);
+ 		return;
+ 	}
+ 
+ 	cil->xc_push_seq = push_seq;
+-	spin_unlock(&cil->xc_cil_lock);
++	spin_unlock(&cil->xc_push_lock);
+ 
+ 	/* do the push now */
+ 	xlog_cil_push(log);
+@@ -804,7 +804,7 @@ xlog_cil_force_lsn(
+ 	 * on commits for those as well.
+ 	 */
+ restart:
+-	spin_lock(&cil->xc_cil_lock);
++	spin_lock(&cil->xc_push_lock);
+ 	list_for_each_entry(ctx, &cil->xc_committing, committing) {
+ 		if (ctx->sequence > sequence)
+ 			continue;
+@@ -813,7 +813,7 @@ restart:
+ 			 * It is still being pushed! Wait for the push to
+ 			 * complete, then start again from the beginning.
+ 			 */
+-			xlog_wait(&cil->xc_commit_wait, &cil->xc_cil_lock);
++			xlog_wait(&cil->xc_commit_wait, &cil->xc_push_lock);
+ 			goto restart;
+ 		}
+ 		if (ctx->sequence != sequence)
+@@ -821,7 +821,7 @@ restart:
+ 		/* found it! */
+ 		commit_lsn = ctx->commit_lsn;
+ 	}
+-	spin_unlock(&cil->xc_cil_lock);
++	spin_unlock(&cil->xc_push_lock);
+ 	return commit_lsn;
+ }
+ 
+@@ -879,6 +879,7 @@ xlog_cil_init(
+ 	INIT_LIST_HEAD(&cil->xc_cil);
+ 	INIT_LIST_HEAD(&cil->xc_committing);
+ 	spin_lock_init(&cil->xc_cil_lock);
++	spin_lock_init(&cil->xc_push_lock);
+ 	init_rwsem(&cil->xc_ctx_lock);
+ 	init_waitqueue_head(&cil->xc_commit_wait);
+ 
+diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+index edd0964..136654b 100644
+--- a/fs/xfs/xfs_log_priv.h
++++ b/fs/xfs/xfs_log_priv.h
+@@ -278,14 +278,17 @@ struct xfs_cil {
+ 	struct xlog		*xc_log;
+ 	struct list_head	xc_cil;
+ 	spinlock_t		xc_cil_lock;
++
++	struct rw_semaphore	xc_ctx_lock ____cacheline_aligned_in_smp;
+ 	struct xfs_cil_ctx	*xc_ctx;
+-	struct rw_semaphore	xc_ctx_lock;
++
++	spinlock_t		xc_push_lock ____cacheline_aligned_in_smp;
++	xfs_lsn_t		xc_push_seq;
+ 	struct list_head	xc_committing;
+ 	wait_queue_head_t	xc_commit_wait;
+ 	xfs_lsn_t		xc_current_sequence;
+ 	struct work_struct	xc_push_work;
+-	xfs_lsn_t		xc_push_seq;
+-};
++} ____cacheline_aligned_in_smp;
  
  /*
-- * This is the structure written in the log at the head of
-- * every transaction. It identifies the type and id of the
-- * transaction, and contains the number of items logged by
-- * the transaction so we know how many to expect during recovery.
-- *
-- * Do not change the below structure without redoing the code in
-- * xlog_recover_add_to_trans() and xlog_recover_add_to_cont_trans().
-- */
--typedef struct xfs_trans_header {
--	uint		th_magic;		/* magic number */
--	uint		th_type;		/* transaction type */
--	__int32_t	th_tid;			/* transaction id (unused) */
--	uint		th_num_items;		/* num items logged by trans */
--} xfs_trans_header_t;
--
--#define	XFS_TRANS_HEADER_MAGIC	0x5452414e	/* TRAN */
--
--/*
-- * Log item types.
-- */
--#define	XFS_LI_EFI		0x1236
--#define	XFS_LI_EFD		0x1237
--#define	XFS_LI_IUNLINK		0x1238
--#define	XFS_LI_INODE		0x123b	/* aligned ino chunks, var-size ibufs */
--#define	XFS_LI_BUF		0x123c	/* v2 bufs, variable sized inode bufs */
--#define	XFS_LI_DQUOT		0x123d
--#define	XFS_LI_QUOTAOFF		0x123e
--#define	XFS_LI_ICREATE		0x123f
--
--#define XFS_LI_TYPE_DESC \
--	{ XFS_LI_EFI,		"XFS_LI_EFI" }, \
--	{ XFS_LI_EFD,		"XFS_LI_EFD" }, \
--	{ XFS_LI_IUNLINK,	"XFS_LI_IUNLINK" }, \
--	{ XFS_LI_INODE,		"XFS_LI_INODE" }, \
--	{ XFS_LI_BUF,		"XFS_LI_BUF" }, \
--	{ XFS_LI_DQUOT,		"XFS_LI_DQUOT" }, \
--	{ XFS_LI_QUOTAOFF,	"XFS_LI_QUOTAOFF" }
--
--/*
-- * Transaction types.  Used to distinguish types of buffers.
-- */
--#define XFS_TRANS_SETATTR_NOT_SIZE	1
--#define XFS_TRANS_SETATTR_SIZE		2
--#define XFS_TRANS_INACTIVE		3
--#define XFS_TRANS_CREATE		4
--#define XFS_TRANS_CREATE_TRUNC		5
--#define XFS_TRANS_TRUNCATE_FILE		6
--#define XFS_TRANS_REMOVE		7
--#define XFS_TRANS_LINK			8
--#define XFS_TRANS_RENAME		9
--#define XFS_TRANS_MKDIR			10
--#define XFS_TRANS_RMDIR			11
--#define XFS_TRANS_SYMLINK		12
--#define XFS_TRANS_SET_DMATTRS		13
--#define XFS_TRANS_GROWFS		14
--#define XFS_TRANS_STRAT_WRITE		15
--#define XFS_TRANS_DIOSTRAT		16
--/* 17 was XFS_TRANS_WRITE_SYNC */
--#define	XFS_TRANS_WRITEID		18
--#define	XFS_TRANS_ADDAFORK		19
--#define	XFS_TRANS_ATTRINVAL		20
--#define	XFS_TRANS_ATRUNCATE		21
--#define	XFS_TRANS_ATTR_SET		22
--#define	XFS_TRANS_ATTR_RM		23
--#define	XFS_TRANS_ATTR_FLAG		24
--#define	XFS_TRANS_CLEAR_AGI_BUCKET	25
--#define XFS_TRANS_QM_SBCHANGE		26
--/*
-- * Dummy entries since we use the transaction type to index into the
-- * trans_type[] in xlog_recover_print_trans_head()
-- */
--#define XFS_TRANS_DUMMY1		27
--#define XFS_TRANS_DUMMY2		28
--#define XFS_TRANS_QM_QUOTAOFF		29
--#define XFS_TRANS_QM_DQALLOC		30
--#define XFS_TRANS_QM_SETQLIM		31
--#define XFS_TRANS_QM_DQCLUSTER		32
--#define XFS_TRANS_QM_QINOCREATE		33
--#define XFS_TRANS_QM_QUOTAOFF_END	34
--#define XFS_TRANS_SB_UNIT		35
--#define XFS_TRANS_FSYNC_TS		36
--#define	XFS_TRANS_GROWFSRT_ALLOC	37
--#define	XFS_TRANS_GROWFSRT_ZERO		38
--#define	XFS_TRANS_GROWFSRT_FREE		39
--#define	XFS_TRANS_SWAPEXT		40
--#define	XFS_TRANS_SB_COUNT		41
--#define	XFS_TRANS_CHECKPOINT		42
--#define	XFS_TRANS_ICREATE		43
--#define	XFS_TRANS_TYPE_MAX		43
--/* new transaction types need to be reflected in xfs_logprint(8) */
--
--#define XFS_TRANS_TYPES \
--	{ XFS_TRANS_SETATTR_NOT_SIZE,	"SETATTR_NOT_SIZE" }, \
--	{ XFS_TRANS_SETATTR_SIZE,	"SETATTR_SIZE" }, \
--	{ XFS_TRANS_INACTIVE,		"INACTIVE" }, \
--	{ XFS_TRANS_CREATE,		"CREATE" }, \
--	{ XFS_TRANS_CREATE_TRUNC,	"CREATE_TRUNC" }, \
--	{ XFS_TRANS_TRUNCATE_FILE,	"TRUNCATE_FILE" }, \
--	{ XFS_TRANS_REMOVE,		"REMOVE" }, \
--	{ XFS_TRANS_LINK,		"LINK" }, \
--	{ XFS_TRANS_RENAME,		"RENAME" }, \
--	{ XFS_TRANS_MKDIR,		"MKDIR" }, \
--	{ XFS_TRANS_RMDIR,		"RMDIR" }, \
--	{ XFS_TRANS_SYMLINK,		"SYMLINK" }, \
--	{ XFS_TRANS_SET_DMATTRS,	"SET_DMATTRS" }, \
--	{ XFS_TRANS_GROWFS,		"GROWFS" }, \
--	{ XFS_TRANS_STRAT_WRITE,	"STRAT_WRITE" }, \
--	{ XFS_TRANS_DIOSTRAT,		"DIOSTRAT" }, \
--	{ XFS_TRANS_WRITEID,		"WRITEID" }, \
--	{ XFS_TRANS_ADDAFORK,		"ADDAFORK" }, \
--	{ XFS_TRANS_ATTRINVAL,		"ATTRINVAL" }, \
--	{ XFS_TRANS_ATRUNCATE,		"ATRUNCATE" }, \
--	{ XFS_TRANS_ATTR_SET,		"ATTR_SET" }, \
--	{ XFS_TRANS_ATTR_RM,		"ATTR_RM" }, \
--	{ XFS_TRANS_ATTR_FLAG,		"ATTR_FLAG" }, \
--	{ XFS_TRANS_CLEAR_AGI_BUCKET,	"CLEAR_AGI_BUCKET" }, \
--	{ XFS_TRANS_QM_SBCHANGE,	"QM_SBCHANGE" }, \
--	{ XFS_TRANS_QM_QUOTAOFF,	"QM_QUOTAOFF" }, \
--	{ XFS_TRANS_QM_DQALLOC,		"QM_DQALLOC" }, \
--	{ XFS_TRANS_QM_SETQLIM,		"QM_SETQLIM" }, \
--	{ XFS_TRANS_QM_DQCLUSTER,	"QM_DQCLUSTER" }, \
--	{ XFS_TRANS_QM_QINOCREATE,	"QM_QINOCREATE" }, \
--	{ XFS_TRANS_QM_QUOTAOFF_END,	"QM_QOFF_END" }, \
--	{ XFS_TRANS_SB_UNIT,		"SB_UNIT" }, \
--	{ XFS_TRANS_FSYNC_TS,		"FSYNC_TS" }, \
--	{ XFS_TRANS_GROWFSRT_ALLOC,	"GROWFSRT_ALLOC" }, \
--	{ XFS_TRANS_GROWFSRT_ZERO,	"GROWFSRT_ZERO" }, \
--	{ XFS_TRANS_GROWFSRT_FREE,	"GROWFSRT_FREE" }, \
--	{ XFS_TRANS_SWAPEXT,		"SWAPEXT" }, \
--	{ XFS_TRANS_SB_COUNT,		"SB_COUNT" }, \
--	{ XFS_TRANS_CHECKPOINT,		"CHECKPOINT" }, \
--	{ XFS_TRANS_DUMMY1,		"DUMMY1" }, \
--	{ XFS_TRANS_DUMMY2,		"DUMMY2" }, \
--	{ XLOG_UNMOUNT_REC_TYPE,	"UNMOUNT" }
--
--/*
-- * This structure is used to track log items associated with
-- * a transaction.  It points to the log item and keeps some
-- * flags to track the state of the log item.  It also tracks
-- * the amount of space needed to log the item it describes
-- * once we get to commit processing (see xfs_trans_commit()).
-- */
--struct xfs_log_item_desc {
--	struct xfs_log_item	*lid_item;
--	struct list_head	lid_trans;
--	unsigned char		lid_flags;
--};
--
--#define XFS_LID_DIRTY		0x1
--
--#define	XFS_TRANS_MAGIC		0x5452414E	/* 'TRAN' */
--/*
-- * Values for t_flags.
-- */
--#define	XFS_TRANS_DIRTY		0x01	/* something needs to be logged */
--#define	XFS_TRANS_SB_DIRTY	0x02	/* superblock is modified */
--#define	XFS_TRANS_PERM_LOG_RES	0x04	/* xact took a permanent log res */
--#define	XFS_TRANS_SYNC		0x08	/* make commit synchronous */
--#define XFS_TRANS_DQ_DIRTY	0x10	/* at least one dquot in trx dirty */
--#define XFS_TRANS_RESERVE	0x20    /* OK to use reserved data blocks */
--#define XFS_TRANS_FREEZE_PROT	0x40	/* Transaction has elevated writer
--					   count in superblock */
--
--/*
-- * Values for call flags parameter.
-- */
--#define	XFS_TRANS_RELEASE_LOG_RES	0x4
--#define	XFS_TRANS_ABORT			0x8
--
--/*
-- * Field values for xfs_trans_mod_sb.
-- */
--#define	XFS_TRANS_SB_ICOUNT		0x00000001
--#define	XFS_TRANS_SB_IFREE		0x00000002
--#define	XFS_TRANS_SB_FDBLOCKS		0x00000004
--#define	XFS_TRANS_SB_RES_FDBLOCKS	0x00000008
--#define	XFS_TRANS_SB_FREXTENTS		0x00000010
--#define	XFS_TRANS_SB_RES_FREXTENTS	0x00000020
--#define	XFS_TRANS_SB_DBLOCKS		0x00000040
--#define	XFS_TRANS_SB_AGCOUNT		0x00000080
--#define	XFS_TRANS_SB_IMAXPCT		0x00000100
--#define	XFS_TRANS_SB_REXTSIZE		0x00000200
--#define	XFS_TRANS_SB_RBMBLOCKS		0x00000400
--#define	XFS_TRANS_SB_RBLOCKS		0x00000800
--#define	XFS_TRANS_SB_REXTENTS		0x00001000
--#define	XFS_TRANS_SB_REXTSLOG		0x00002000
--
--
--/*
-  * Per-extent log reservation for the allocation btree changes
-  * involved in freeing or allocating an extent.
-  * 2 trees * (2 blocks/level * max depth - 1)
-@@ -282,22 +93,6 @@ struct xfs_log_item_desc {
- #define	XFS_ATTRSET_LOG_COUNT		3
- #define	XFS_ATTRRM_LOG_COUNT		3
- 
--/*
-- * Here we centralize the specification of XFS meta-data buffer
-- * reference count values.  This determine how hard the buffer
-- * cache tries to hold onto the buffer.
-- */
--#define	XFS_AGF_REF		4
--#define	XFS_AGI_REF		4
--#define	XFS_AGFL_REF		3
--#define	XFS_INO_BTREE_REF	3
--#define	XFS_ALLOC_BTREE_REF	2
--#define	XFS_BMAP_BTREE_REF	2
--#define	XFS_DIR_BTREE_REF	2
--#define	XFS_INO_REF		2
--#define	XFS_ATTR_BTREE_REF	1
--#define	XFS_DQUOT_REF		1
--
- #ifdef __KERNEL__
- 
- struct xfs_buf;
+  * The amount of log space we allow the CIL to aggregate is difficult to size.
 -- 
 1.8.3.2
 
