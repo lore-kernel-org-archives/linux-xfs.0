@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 56F21807D
-	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 01:45:51 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 44E8F304039
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 033118083
+	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 01:45:52 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 792D4AC001
 	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 23:45:51 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	wKwHtqD4XIQMjtuB for <xfs@oss.sgi.com>;
+	kaxAKLEshfdYO8Rd for <xfs@oss.sgi.com>;
 	Thu, 18 Jul 2013 23:45:49 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1V04RT-0004Ik-0t
+	(envelope-from <dave@fromorbit.com>) id 1V04RS-0004Ic-Tx
 	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:45:27 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1V04RS-0002Kt-W3
+	(envelope-from <dave@disappointment.disaster>) id 1V04RS-0002KU-Sm
 	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:45:26 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 23/49] xfs: introduce xfs_rtalloc_defs.h
-Date: Fri, 19 Jul 2013 16:44:58 +1000
-Message-Id: <1374216324-8781-24-git-send-email-david@fromorbit.com>
+Subject: [PATCH 18/49] xfs: split out buf log item format definitions
+Date: Fri, 19 Jul 2013 16:44:53 +1000
+Message-Id: <1374216324-8781-19-git-send-email-david@fromorbit.com>
 In-Reply-To: <1374216324-8781-1-git-send-email-david@fromorbit.com>
 References: <1374216324-8781-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,111 +39,75 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-There are quite a few realtime device definitions shared with
-userspace. Move them from xfs_rtalloc.h to xfs_rt_alloc_defs.h
-so we don't need to share xfs_rtalloc.h with userspace anymore.
-
-This removes the final __KERNEL__ region from the XFS kernel
-codebase. Yay!
-
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/Makefile      |   5 +-
- include/libxfs.h      |   1 -
- include/xfs_format.h  |  41 +++++++++++++
- include/xfs_rtalloc.h | 166 --------------------------------------------------
- include/xfs_types.h   |  10 +++
- 5 files changed, 55 insertions(+), 168 deletions(-)
- delete mode 100644 include/xfs_rtalloc.h
+ include/Makefile         |   4 +-
+ include/libxfs.h         |   6 +-
+ include/libxlog.h        |   1 -
+ include/xfs_buf_item.h   | 172 -----------------------------------------------
+ include/xfs_log_format.h |  97 ++++++++++++++++++++++++++
+ 5 files changed, 105 insertions(+), 175 deletions(-)
+ delete mode 100644 include/xfs_buf_item.h
 
 diff --git a/include/Makefile b/include/Makefile
-index ab71aad..3610726 100644
+index 722aef3..f5c50b7 100644
 --- a/include/Makefile
 +++ b/include/Makefile
-@@ -35,7 +35,10 @@ QAHFILES = libxfs.h libxlog.h \
- 	xfs_log_format.h \
- 	xfs_log_recover.h \
- 	xfs_metadump.h \
--	xfs_mount.h xfs_quota.h xfs_rtalloc.h xfs_sb.h xfs_symlink.h \
-+	xfs_mount.h \
-+	xfs_quota.h \
-+	xfs_sb.h \
-+	xfs_symlink.h \
- 	xfs_trace.h xfs_trans.h xfs_trans_space.h xfs_dfrag.h
- 
- HFILES = handle.h jdm.h xqm.h xfs.h xfs_fs.h xfs_types.h
+@@ -23,7 +23,9 @@ QAHFILES = libxfs.h libxlog.h \
+ 	swab.h \
+ 	xfs_ag.h xfs_alloc.h xfs_alloc_btree.h xfs_arch.h xfs_attr_leaf.h \
+ 	xfs_attr_sf.h xfs_bit.h xfs_bmap.h xfs_bmap_btree.h xfs_btree.h \
+-	xfs_btree_trace.h xfs_buf_item.h xfs_cksum.h xfs_da_btree.h \
++	xfs_btree_trace.h \
++	xfs_cksum.h \
++	xfs_da_btree.h \
+ 	xfs_dinode.h xfs_dir2.h xfs_dir2_format.h \
+ 	xfs_extfree_item.h xfs_ialloc.h xfs_ialloc_btree.h \
+ 	xfs_icreate_item.h \
 diff --git a/include/libxfs.h b/include/libxfs.h
-index bc90082..8c09b77 100644
+index c96857b..40e5e25 100644
 --- a/include/libxfs.h
 +++ b/include/libxfs.h
-@@ -614,7 +614,6 @@ extern int		libxfs_nproc(void);
- extern unsigned long	libxfs_physmem(void);	/* in kilobytes */
+@@ -52,7 +52,6 @@
+ #include <xfs/xfs_attr_sf.h>
+ #include <xfs/xfs_dinode.h>
+ #include <xfs/xfs_inode.h>
+-#include <xfs/xfs_buf_item.h>
+ #include <xfs/xfs_alloc.h>
+ #include <xfs/xfs_btree.h>
+ #include <xfs/xfs_btree_trace.h>
+@@ -438,6 +437,11 @@ typedef struct xfs_buf_log_item {
+ 	xfs_buf_log_format_t	bli_format;	/* in-log header */
+ } xfs_buf_log_item_t;
  
- #include <xfs/xfs_ialloc.h>
--#include <xfs/xfs_rtalloc.h>
++#define XFS_BLI_DIRTY			(1<<0)
++#define XFS_BLI_HOLD			(1<<1)
++#define XFS_BLI_STALE			(1<<2)
++#define XFS_BLI_INODE_ALLOC_BUF		(1<<3)
++
+ #include <xfs/xfs_trans.h>
  
- #include <xfs/xfs_attr_leaf.h>
- #include <xfs/xfs_attr_remote.h>
-diff --git a/include/xfs_format.h b/include/xfs_format.h
-index 2b4f166..6205374 100644
---- a/include/xfs_format.h
-+++ b/include/xfs_format.h
-@@ -28,6 +28,47 @@
-  */
+ typedef struct xfs_trans {
+diff --git a/include/libxlog.h b/include/libxlog.h
+index 301e3dd..08f5dbb 100644
+--- a/include/libxlog.h
++++ b/include/libxlog.h
+@@ -48,7 +48,6 @@ struct xlog {
+ };
  
- /*
-+ * RealTime Device format definitions
-+ */
-+
-+/* Min and max rt extent sizes, specified in bytes */
-+#define	XFS_MAX_RTEXTSIZE	(1024 * 1024 * 1024)	/* 1GB */
-+#define	XFS_DFL_RTEXTSIZE	(64 * 1024)	        /* 64kB */
-+#define	XFS_MIN_RTEXTSIZE	(4 * 1024)		/* 4kB */
-+
-+#define	XFS_BLOCKSIZE(mp)	((mp)->m_sb.sb_blocksize)
-+#define	XFS_BLOCKMASK(mp)	((mp)->m_blockmask)
-+#define	XFS_BLOCKWSIZE(mp)	((mp)->m_blockwsize)
-+#define	XFS_BLOCKWMASK(mp)	((mp)->m_blockwmask)
-+
-+/*
-+ * RT Summary and bit manipulation macros.
-+ */
-+#define	XFS_SUMOFFS(mp,ls,bb)	((int)((ls) * (mp)->m_sb.sb_rbmblocks + (bb)))
-+#define	XFS_SUMOFFSTOBLOCK(mp,s)	\
-+	(((s) * (uint)sizeof(xfs_suminfo_t)) >> (mp)->m_sb.sb_blocklog)
-+#define	XFS_SUMPTR(mp,bp,so)	\
-+	((xfs_suminfo_t *)((bp)->b_addr + \
-+		(((so) * (uint)sizeof(xfs_suminfo_t)) & XFS_BLOCKMASK(mp))))
-+
-+#define	XFS_BITTOBLOCK(mp,bi)	((bi) >> (mp)->m_blkbit_log)
-+#define	XFS_BLOCKTOBIT(mp,bb)	((bb) << (mp)->m_blkbit_log)
-+#define	XFS_BITTOWORD(mp,bi)	\
-+	((int)(((bi) >> XFS_NBWORDLOG) & XFS_BLOCKWMASK(mp)))
-+
-+#define	XFS_RTMIN(a,b)	((a) < (b) ? (a) : (b))
-+#define	XFS_RTMAX(a,b)	((a) > (b) ? (a) : (b))
-+
-+#define	XFS_RTLOBIT(w)	xfs_lowbit32(w)
-+#define	XFS_RTHIBIT(w)	xfs_highbit32(w)
-+
-+#if XFS_BIG_BLKNOS
-+#define	XFS_RTBLOCKLOG(b)	xfs_highbit64(b)
-+#else
-+#define	XFS_RTBLOCKLOG(b)	xfs_highbit32(b)
-+#endif
-+
-+/*
-  * Dquot and dquot block format definitions
-  */
- #define XFS_DQUOT_MAGIC		0x4451		/* 'DQ' */
-diff --git a/include/xfs_rtalloc.h b/include/xfs_rtalloc.h
+ #include <xfs/xfs_log_recover.h>
+-#include <xfs/xfs_buf_item.h>
+ #include <xfs/xfs_extfree_item.h>
+ #include <xfs/xfs_icreate_item.h>
+ 
+diff --git a/include/xfs_buf_item.h b/include/xfs_buf_item.h
 deleted file mode 100644
-index f7f3a35..0000000
---- a/include/xfs_rtalloc.h
+index 2573d2a..0000000
+--- a/include/xfs_buf_item.h
 +++ /dev/null
-@@ -1,166 +0,0 @@
+@@ -1,172 +0,0 @@
 -/*
-- * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
+- * Copyright (c) 2000-2001,2005 Silicon Graphics, Inc.
 - * All Rights Reserved.
 - *
 - * This program is free software; you can redistribute it and/or
@@ -159,174 +123,267 @@ index f7f3a35..0000000
 - * along with this program; if not, write the Free Software Foundation,
 - * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 - */
--#ifndef __XFS_RTALLOC_H__
--#define	__XFS_RTALLOC_H__
+-#ifndef	__XFS_BUF_ITEM_H__
+-#define	__XFS_BUF_ITEM_H__
 -
--struct xfs_mount;
--struct xfs_trans;
--
--/* Min and max rt extent sizes, specified in bytes */
--#define	XFS_MAX_RTEXTSIZE	(1024 * 1024 * 1024)	/* 1GB */
--#define	XFS_DFL_RTEXTSIZE	(64 * 1024)	        /* 64kB */
--#define	XFS_MIN_RTEXTSIZE	(4 * 1024)		/* 4kB */
+-extern kmem_zone_t	*xfs_buf_item_zone;
 -
 -/*
-- * Constants for bit manipulations.
+- * This flag indicates that the buffer contains on disk inodes
+- * and requires special recovery handling.
 - */
--#define	XFS_NBBYLOG	3		/* log2(NBBY) */
--#define	XFS_WORDLOG	2		/* log2(sizeof(xfs_rtword_t)) */
--#define	XFS_NBWORDLOG	(XFS_NBBYLOG + XFS_WORDLOG)
--#define	XFS_NBWORD	(1 << XFS_NBWORDLOG)
--#define	XFS_WORDMASK	((1 << XFS_WORDLOG) - 1)
--
--#define	XFS_BLOCKSIZE(mp)	((mp)->m_sb.sb_blocksize)
--#define	XFS_BLOCKMASK(mp)	((mp)->m_blockmask)
--#define	XFS_BLOCKWSIZE(mp)	((mp)->m_blockwsize)
--#define	XFS_BLOCKWMASK(mp)	((mp)->m_blockwmask)
+-#define	XFS_BLF_INODE_BUF	(1<<0)
+-/*
+- * This flag indicates that the buffer should not be replayed
+- * during recovery because its blocks are being freed.
+- */
+-#define	XFS_BLF_CANCEL		(1<<1)
 -
 -/*
-- * Summary and bit manipulation macros.
+- * This flag indicates that the buffer contains on disk
+- * user or group dquots and may require special recovery handling.
 - */
--#define	XFS_SUMOFFS(mp,ls,bb)	((int)((ls) * (mp)->m_sb.sb_rbmblocks + (bb)))
--#define	XFS_SUMOFFSTOBLOCK(mp,s)	\
--	(((s) * (uint)sizeof(xfs_suminfo_t)) >> (mp)->m_sb.sb_blocklog)
--#define	XFS_SUMPTR(mp,bp,so)	\
--	((xfs_suminfo_t *)((bp)->b_addr + \
--		(((so) * (uint)sizeof(xfs_suminfo_t)) & XFS_BLOCKMASK(mp))))
+-#define	XFS_BLF_UDQUOT_BUF	(1<<2)
+-#define XFS_BLF_PDQUOT_BUF	(1<<3)
+-#define	XFS_BLF_GDQUOT_BUF	(1<<4)
 -
--#define	XFS_BITTOBLOCK(mp,bi)	((bi) >> (mp)->m_blkbit_log)
--#define	XFS_BLOCKTOBIT(mp,bb)	((bb) << (mp)->m_blkbit_log)
--#define	XFS_BITTOWORD(mp,bi)	\
--	((int)(((bi) >> XFS_NBWORDLOG) & XFS_BLOCKWMASK(mp)))
+-#define	XFS_BLF_CHUNK		128
+-#define	XFS_BLF_SHIFT		7
+-#define	BIT_TO_WORD_SHIFT	5
+-#define	NBWORD			(NBBY * sizeof(unsigned int))
 -
--#define	XFS_RTMIN(a,b)	((a) < (b) ? (a) : (b))
--#define	XFS_RTMAX(a,b)	((a) > (b) ? (a) : (b))
+-/*
+- * This is the structure used to lay out a buf log item in the
+- * log.  The data map describes which 128 byte chunks of the buffer
+- * have been logged.
+- */
+-#define XFS_BLF_DATAMAP_SIZE	((XFS_MAX_BLOCKSIZE / XFS_BLF_CHUNK) / NBWORD)
 -
--#define	XFS_RTLOBIT(w)	xfs_lowbit32(w)
--#define	XFS_RTHIBIT(w)	xfs_highbit32(w)
+-typedef struct xfs_buf_log_format {
+-	unsigned short	blf_type;	/* buf log item type indicator */
+-	unsigned short	blf_size;	/* size of this item */
+-	ushort		blf_flags;	/* misc state */
+-	ushort		blf_len;	/* number of blocks in this buf */
+-	__int64_t	blf_blkno;	/* starting blkno of this buf */
+-	unsigned int	blf_map_size;	/* used size of data bitmap in words */
+-	unsigned int	blf_data_map[XFS_BLF_DATAMAP_SIZE]; /* dirty bitmap */
+-} xfs_buf_log_format_t;
 -
--#if XFS_BIG_BLKNOS
--#define	XFS_RTBLOCKLOG(b)	xfs_highbit64(b)
--#else
--#define	XFS_RTBLOCKLOG(b)	xfs_highbit32(b)
--#endif
+-/*
+- * All buffers now need to tell recovery where the magic number
+- * is so that it can verify and calculate the CRCs on the buffer correctly
+- * once the changes have been replayed into the buffer.
+- *
+- * The type value is held in the upper 5 bits of the blf_flags field, which is
+- * an unsigned 16 bit field. Hence we need to shift it 11 bits up and down.
+- */
+-#define XFS_BLFT_BITS	5
+-#define XFS_BLFT_SHIFT	11
+-#define XFS_BLFT_MASK	(((1 << XFS_BLFT_BITS) - 1) << XFS_BLFT_SHIFT)
+-
+-enum xfs_blft {
+-	XFS_BLFT_UNKNOWN_BUF = 0,
+-	XFS_BLFT_UDQUOT_BUF,
+-	XFS_BLFT_PDQUOT_BUF,
+-	XFS_BLFT_GDQUOT_BUF,
+-	XFS_BLFT_BTREE_BUF,
+-	XFS_BLFT_AGF_BUF,
+-	XFS_BLFT_AGFL_BUF,
+-	XFS_BLFT_AGI_BUF,
+-	XFS_BLFT_DINO_BUF,
+-	XFS_BLFT_SYMLINK_BUF,
+-	XFS_BLFT_DIR_BLOCK_BUF,
+-	XFS_BLFT_DIR_DATA_BUF,
+-	XFS_BLFT_DIR_FREE_BUF,
+-	XFS_BLFT_DIR_LEAF1_BUF,
+-	XFS_BLFT_DIR_LEAFN_BUF,
+-	XFS_BLFT_DA_NODE_BUF,
+-	XFS_BLFT_ATTR_LEAF_BUF,
+-	XFS_BLFT_ATTR_RMT_BUF,
+-	XFS_BLFT_SB_BUF,
+-	XFS_BLFT_MAX_BUF = (1 << XFS_BLFT_BITS),
+-};
+-
+-static inline void
+-xfs_blft_to_flags(struct xfs_buf_log_format *blf, enum xfs_blft type)
+-{
+-	ASSERT(type > XFS_BLFT_UNKNOWN_BUF && type < XFS_BLFT_MAX_BUF);
+-	blf->blf_flags &= ~XFS_BLFT_MASK;
+-	blf->blf_flags |= ((type << XFS_BLFT_SHIFT) & XFS_BLFT_MASK);
+-}
+-
+-static inline __uint16_t
+-xfs_blft_from_flags(struct xfs_buf_log_format *blf)
+-{
+-	return (blf->blf_flags & XFS_BLFT_MASK) >> XFS_BLFT_SHIFT;
+-}
+-
+-/*
+- * buf log item flags
+- */
+-#define	XFS_BLI_HOLD		0x01
+-#define	XFS_BLI_DIRTY		0x02
+-#define	XFS_BLI_STALE		0x04
+-#define	XFS_BLI_LOGGED		0x08
+-#define	XFS_BLI_INODE_ALLOC_BUF	0x10
+-#define XFS_BLI_STALE_INODE	0x20
+-#define	XFS_BLI_INODE_BUF	0x40
+-
+-#define XFS_BLI_FLAGS \
+-	{ XFS_BLI_HOLD,		"HOLD" }, \
+-	{ XFS_BLI_DIRTY,	"DIRTY" }, \
+-	{ XFS_BLI_STALE,	"STALE" }, \
+-	{ XFS_BLI_LOGGED,	"LOGGED" }, \
+-	{ XFS_BLI_INODE_ALLOC_BUF, "INODE_ALLOC" }, \
+-	{ XFS_BLI_STALE_INODE,	"STALE_INODE" }, \
+-	{ XFS_BLI_INODE_BUF,	"INODE_BUF" }
 -
 -
 -#ifdef __KERNEL__
 -
--#ifdef CONFIG_XFS_RT
--/*
-- * Function prototypes for exported functions.
-- */
+-struct xfs_buf;
+-struct xfs_mount;
+-struct xfs_buf_log_item;
 -
 -/*
-- * Allocate an extent in the realtime subvolume, with the usual allocation
-- * parameters.  The length units are all in realtime extents, as is the
-- * result block number.
+- * This is the in core log item structure used to track information
+- * needed to log buffers.  It tracks how many times the lock has been
+- * locked, and which 128 byte chunks of the buffer are dirty.
 - */
--int					/* error */
--xfs_rtallocate_extent(
--	struct xfs_trans	*tp,	/* transaction pointer */
--	xfs_rtblock_t		bno,	/* starting block number to allocate */
--	xfs_extlen_t		minlen,	/* minimum length to allocate */
--	xfs_extlen_t		maxlen,	/* maximum length to allocate */
--	xfs_extlen_t		*len,	/* out: actual length allocated */
--	xfs_alloctype_t		type,	/* allocation type XFS_ALLOCTYPE... */
--	int			wasdel,	/* was a delayed allocation extent */
--	xfs_extlen_t		prod,	/* extent product factor */
--	xfs_rtblock_t		*rtblock); /* out: start block allocated */
+-typedef struct xfs_buf_log_item {
+-	xfs_log_item_t		bli_item;	/* common item structure */
+-	struct xfs_buf		*bli_buf;	/* real buffer pointer */
+-	unsigned int		bli_flags;	/* misc flags */
+-	unsigned int		bli_recur;	/* lock recursion count */
+-	atomic_t		bli_refcount;	/* cnt of tp refs */
+-	int			bli_format_count;	/* count of headers */
+-	struct xfs_buf_log_format *bli_formats;	/* array of in-log header ptrs */
+-	struct xfs_buf_log_format __bli_format;	/* embedded in-log header */
+-} xfs_buf_log_item_t;
 -
--/*
-- * Free an extent in the realtime subvolume.  Length is expressed in
-- * realtime extents, as is the block number.
-- */
--int					/* error */
--xfs_rtfree_extent(
--	struct xfs_trans	*tp,	/* transaction pointer */
--	xfs_rtblock_t		bno,	/* starting block number to free */
--	xfs_extlen_t		len);	/* length of extent freed */
+-void	xfs_buf_item_init(struct xfs_buf *, struct xfs_mount *);
+-void	xfs_buf_item_relse(struct xfs_buf *);
+-void	xfs_buf_item_log(xfs_buf_log_item_t *, uint, uint);
+-uint	xfs_buf_item_dirty(xfs_buf_log_item_t *);
+-void	xfs_buf_attach_iodone(struct xfs_buf *,
+-			      void(*)(struct xfs_buf *, xfs_log_item_t *),
+-			      xfs_log_item_t *);
+-void	xfs_buf_iodone_callbacks(struct xfs_buf *);
+-void	xfs_buf_iodone(struct xfs_buf *, struct xfs_log_item *);
 -
--/*
-- * Initialize realtime fields in the mount structure.
-- */
--int					/* error */
--xfs_rtmount_init(
--	struct xfs_mount	*mp);	/* file system mount structure */
--void
--xfs_rtunmount_inodes(
--	struct xfs_mount	*mp);
--
--/*
-- * Get the bitmap and summary inodes into the mount structure
-- * at mount time.
-- */
--int					/* error */
--xfs_rtmount_inodes(
--	struct xfs_mount	*mp);	/* file system mount structure */
--
--/*
-- * Pick an extent for allocation at the start of a new realtime file.
-- * Use the sequence number stored in the atime field of the bitmap inode.
-- * Translate this to a fraction of the rtextents, and return the product
-- * of rtextents and the fraction.
-- * The fraction sequence is 0, 1/2, 1/4, 3/4, 1/8, ..., 7/8, 1/16, ...
-- */
--int					/* error */
--xfs_rtpick_extent(
--	struct xfs_mount	*mp,	/* file system mount point */
--	struct xfs_trans	*tp,	/* transaction pointer */
--	xfs_extlen_t		len,	/* allocation length (rtextents) */
--	xfs_rtblock_t		*pick);	/* result rt extent */
--
--/*
-- * Grow the realtime area of the filesystem.
-- */
--int
--xfs_growfs_rt(
--	struct xfs_mount	*mp,	/* file system mount structure */
--	xfs_growfs_rt_t		*in);	/* user supplied growfs struct */
--
--#else
--# define xfs_rtallocate_extent(t,b,min,max,l,a,f,p,rb)  (ENOSYS)
--# define xfs_rtfree_extent(t,b,l)                       (ENOSYS)
--# define xfs_rtpick_extent(m,t,l,rb)                    (ENOSYS)
--# define xfs_growfs_rt(mp,in)                           (ENOSYS)
--static inline int		/* error */
--xfs_rtmount_init(
--	xfs_mount_t	*mp)	/* file system mount structure */
--{
--	if (mp->m_sb.sb_rblocks == 0)
--		return 0;
--
--	xfs_warn(mp, "Not built with CONFIG_XFS_RT");
--	return ENOSYS;
--}
--# define xfs_rtmount_inodes(m)  (((mp)->m_sb.sb_rblocks == 0)? 0 : (ENOSYS))
--# define xfs_rtunmount_inodes(m)
--#endif	/* CONFIG_XFS_RT */
+-void	xfs_trans_buf_set_type(struct xfs_trans *, struct xfs_buf *,
+-			       enum xfs_blft);
+-void	xfs_trans_buf_copy_type(struct xfs_buf *dst_bp, struct xfs_buf *src_bp);
 -
 -#endif	/* __KERNEL__ */
 -
--#endif	/* __XFS_RTALLOC_H__ */
-diff --git a/include/xfs_types.h b/include/xfs_types.h
-index b144a8f..6ed6b26 100644
---- a/include/xfs_types.h
-+++ b/include/xfs_types.h
-@@ -184,4 +184,14 @@ struct xfs_name {
-  */
- typedef __uint32_t	xfs_dqid_t;
- 
+-#endif	/* __XFS_BUF_ITEM_H__ */
+diff --git a/include/xfs_log_format.h b/include/xfs_log_format.h
+index fd46a7f..77a6024 100644
+--- a/include/xfs_log_format.h
++++ b/include/xfs_log_format.h
+@@ -364,4 +364,101 @@ static inline uint xfs_icdinode_size(int version)
+ 		return sizeof(struct xfs_icdinode);
+ 	return offsetof(struct xfs_icdinode, di_next_unlinked);
+ }
++
 +/*
-+ * Constants for bit manipulations.
++ * Buffer Log Format defintions
++ *
++ * These are the physical dirty bitmap defintions for the log format structure.
 + */
-+#define	XFS_NBBYLOG	3		/* log2(NBBY) */
-+#define	XFS_WORDLOG	2		/* log2(sizeof(xfs_rtword_t)) */
-+#define	XFS_NBWORDLOG	(XFS_NBBYLOG + XFS_WORDLOG)
-+#define	XFS_NBWORD	(1 << XFS_NBWORDLOG)
-+#define	XFS_WORDMASK	((1 << XFS_WORDLOG) - 1)
++#define	XFS_BLF_CHUNK		128
++#define	XFS_BLF_SHIFT		7
++#define	BIT_TO_WORD_SHIFT	5
++#define	NBWORD			(NBBY * sizeof(unsigned int))
 +
++/*
++ * This flag indicates that the buffer contains on disk inodes
++ * and requires special recovery handling.
++ */
++#define	XFS_BLF_INODE_BUF	(1<<0)
 +
- #endif	/* __XFS_TYPES_H__ */
++/*
++ * This flag indicates that the buffer should not be replayed
++ * during recovery because its blocks are being freed.
++ */
++#define	XFS_BLF_CANCEL		(1<<1)
++
++/*
++ * This flag indicates that the buffer contains on disk
++ * user or group dquots and may require special recovery handling.
++ */
++#define	XFS_BLF_UDQUOT_BUF	(1<<2)
++#define XFS_BLF_PDQUOT_BUF	(1<<3)
++#define	XFS_BLF_GDQUOT_BUF	(1<<4)
++
++/*
++ * This is the structure used to lay out a buf log item in the
++ * log.  The data map describes which 128 byte chunks of the buffer
++ * have been logged.
++ */
++#define XFS_BLF_DATAMAP_SIZE	((XFS_MAX_BLOCKSIZE / XFS_BLF_CHUNK) / NBWORD)
++
++typedef struct xfs_buf_log_format {
++	unsigned short	blf_type;	/* buf log item type indicator */
++	unsigned short	blf_size;	/* size of this item */
++	ushort		blf_flags;	/* misc state */
++	ushort		blf_len;	/* number of blocks in this buf */
++	__int64_t	blf_blkno;	/* starting blkno of this buf */
++	unsigned int	blf_map_size;	/* used size of data bitmap in words */
++	unsigned int	blf_data_map[XFS_BLF_DATAMAP_SIZE]; /* dirty bitmap */
++} xfs_buf_log_format_t;
++
++/*
++ * All buffers now need to tell recovery where the magic number
++ * is so that it can verify and calculate the CRCs on the buffer correctly
++ * once the changes have been replayed into the buffer.
++ *
++ * The type value is held in the upper 5 bits of the blf_flags field, which is
++ * an unsigned 16 bit field. Hence we need to shift it 11 bits up and down.
++ */
++#define XFS_BLFT_BITS	5
++#define XFS_BLFT_SHIFT	11
++#define XFS_BLFT_MASK	(((1 << XFS_BLFT_BITS) - 1) << XFS_BLFT_SHIFT)
++
++enum xfs_blft {
++	XFS_BLFT_UNKNOWN_BUF = 0,
++	XFS_BLFT_UDQUOT_BUF,
++	XFS_BLFT_PDQUOT_BUF,
++	XFS_BLFT_GDQUOT_BUF,
++	XFS_BLFT_BTREE_BUF,
++	XFS_BLFT_AGF_BUF,
++	XFS_BLFT_AGFL_BUF,
++	XFS_BLFT_AGI_BUF,
++	XFS_BLFT_DINO_BUF,
++	XFS_BLFT_SYMLINK_BUF,
++	XFS_BLFT_DIR_BLOCK_BUF,
++	XFS_BLFT_DIR_DATA_BUF,
++	XFS_BLFT_DIR_FREE_BUF,
++	XFS_BLFT_DIR_LEAF1_BUF,
++	XFS_BLFT_DIR_LEAFN_BUF,
++	XFS_BLFT_DA_NODE_BUF,
++	XFS_BLFT_ATTR_LEAF_BUF,
++	XFS_BLFT_ATTR_RMT_BUF,
++	XFS_BLFT_SB_BUF,
++	XFS_BLFT_MAX_BUF = (1 << XFS_BLFT_BITS),
++};
++
++static inline void
++xfs_blft_to_flags(struct xfs_buf_log_format *blf, enum xfs_blft type)
++{
++	ASSERT(type > XFS_BLFT_UNKNOWN_BUF && type < XFS_BLFT_MAX_BUF);
++	blf->blf_flags &= ~XFS_BLFT_MASK;
++	blf->blf_flags |= ((type << XFS_BLFT_SHIFT) & XFS_BLFT_MASK);
++}
++
++static inline __uint16_t
++xfs_blft_from_flags(struct xfs_buf_log_format *blf)
++{
++	return (blf->blf_flags & XFS_BLFT_MASK) >> XFS_BLFT_SHIFT;
++}
++
+ #endif /* __XFS_LOG_FORMAT_H__ */
 -- 
 1.8.3.2
 
