@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id EF1417F6C
-	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 01:25:49 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E0F907FA7
+	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 01:25:52 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6F2B8AC010
-	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 23:25:49 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C2B348F8033
+	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 23:25:52 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	tekk3yZFYLixylH7 for <xfs@oss.sgi.com>;
-	Thu, 18 Jul 2013 23:25:45 -0700 (PDT)
+	zdcjYZRLs56AQWs6 for <xfs@oss.sgi.com>;
+	Thu, 18 Jul 2013 23:25:50 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1V0482-00048F-RZ
-	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:25:22 +1000
+	(envelope-from <dave@fromorbit.com>) id 1V0483-00048Y-1V
+	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:25:23 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1V0482-0001xz-Qb
-	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:25:22 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1V0483-0001yd-0V
+	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:25:23 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 17/49] xfs: split out attribute listing code into separate file
-Date: Fri, 19 Jul 2013 16:24:48 +1000
-Message-Id: <1374215120-7271-18-git-send-email-david@fromorbit.com>
+Subject: [PATCH 25/49] xfs: consolidate xfs_rename.c
+Date: Fri, 19 Jul 2013 16:24:56 +1000
+Message-Id: <1374215120-7271-26-git-send-email-david@fromorbit.com>
 In-Reply-To: <1374215120-7271-1-git-send-email-david@fromorbit.com>
 References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,1383 +39,708 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The attribute listing code is not used by userspace, so like the
-directory readdir code, split it out into a separate file to
-minimise the differences between the filesystem shared with libxfs
-in userspace.
+Move the rename code to xfs_inode.c to continue consolidating
+all the kernel xfs_inode operations in the one place.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/Makefile        |   1 +
- fs/xfs/xfs_attr.c      | 317 +-----------------------
- fs/xfs/xfs_attr.h      |   1 +
- fs/xfs/xfs_attr_leaf.c | 300 ----------------------
- fs/xfs/xfs_attr_list.c | 655 +++++++++++++++++++++++++++++++++++++++++++++++++
- 5 files changed, 658 insertions(+), 616 deletions(-)
- create mode 100644 fs/xfs/xfs_attr_list.c
+ fs/xfs/Makefile     |   1 -
+ fs/xfs/xfs_inode.c  | 308 +++++++++++++++++++++++++++++++++++++++++++++-
+ fs/xfs/xfs_rename.c | 347 ----------------------------------------------------
+ 3 files changed, 307 insertions(+), 349 deletions(-)
+ delete mode 100644 fs/xfs/xfs_rename.c
 
 diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index b6158af..94df3ec 100644
+index 8691dba..e5a0758 100644
 --- a/fs/xfs/Makefile
 +++ b/fs/xfs/Makefile
-@@ -27,6 +27,7 @@ xfs-y				+= xfs_trace.o
- 
- # highlevel code
- xfs-y				+= xfs_aops.o \
-+				   xfs_attr_list.o \
- 				   xfs_bit.o \
- 				   xfs_buf.o \
- 				   xfs_dfrag.o \
-diff --git a/fs/xfs/xfs_attr.c b/fs/xfs/xfs_attr.c
-index 0d92e21..e9fd5ac 100644
---- a/fs/xfs/xfs_attr.c
-+++ b/fs/xfs/xfs_attr.c
-@@ -63,7 +63,6 @@ STATIC int xfs_attr_shortform_addname(xfs_da_args_t *args);
- STATIC int xfs_attr_leaf_get(xfs_da_args_t *args);
- STATIC int xfs_attr_leaf_addname(xfs_da_args_t *args);
- STATIC int xfs_attr_leaf_removename(xfs_da_args_t *args);
--STATIC int xfs_attr_leaf_list(xfs_attr_list_context_t *context);
- 
- /*
-  * Internal routines when attribute list is more than one block.
-@@ -71,7 +70,6 @@ STATIC int xfs_attr_leaf_list(xfs_attr_list_context_t *context);
- STATIC int xfs_attr_node_get(xfs_da_args_t *args);
- STATIC int xfs_attr_node_addname(xfs_da_args_t *args);
- STATIC int xfs_attr_node_removename(xfs_da_args_t *args);
--STATIC int xfs_attr_node_list(xfs_attr_list_context_t *context);
- STATIC int xfs_attr_fillstate(xfs_da_state_t *state);
- STATIC int xfs_attr_refillstate(xfs_da_state_t *state);
- 
-@@ -91,7 +89,7 @@ xfs_attr_name_to_xname(
- 	return 0;
- }
- 
--STATIC int
-+int
- xfs_inode_hasattr(
- 	struct xfs_inode	*ip)
- {
-@@ -612,157 +610,6 @@ xfs_attr_remove(
- 	return xfs_attr_remove_int(dp, &xname, flags);
- }
- 
--int
--xfs_attr_list_int(xfs_attr_list_context_t *context)
--{
--	int error;
--	xfs_inode_t *dp = context->dp;
--
--	XFS_STATS_INC(xs_attr_list);
--
--	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
--		return EIO;
--
--	xfs_ilock(dp, XFS_ILOCK_SHARED);
--
--	/*
--	 * Decide on what work routines to call based on the inode size.
--	 */
--	if (!xfs_inode_hasattr(dp)) {
--		error = 0;
--	} else if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
--		error = xfs_attr_shortform_list(context);
--	} else if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
--		error = xfs_attr_leaf_list(context);
--	} else {
--		error = xfs_attr_node_list(context);
--	}
--
--	xfs_iunlock(dp, XFS_ILOCK_SHARED);
--
--	return error;
--}
--
--#define	ATTR_ENTBASESIZE		/* minimum bytes used by an attr */ \
--	(((struct attrlist_ent *) 0)->a_name - (char *) 0)
--#define	ATTR_ENTSIZE(namelen)		/* actual bytes used by an attr */ \
--	((ATTR_ENTBASESIZE + (namelen) + 1 + sizeof(u_int32_t)-1) \
--	 & ~(sizeof(u_int32_t)-1))
--
--/*
-- * Format an attribute and copy it out to the user's buffer.
-- * Take care to check values and protect against them changing later,
-- * we may be reading them directly out of a user buffer.
-- */
--/*ARGSUSED*/
--STATIC int
--xfs_attr_put_listent(
--	xfs_attr_list_context_t *context,
--	int		flags,
--	unsigned char	*name,
--	int		namelen,
--	int		valuelen,
--	unsigned char	*value)
--{
--	struct attrlist *alist = (struct attrlist *)context->alist;
--	attrlist_ent_t *aep;
--	int arraytop;
--
--	ASSERT(!(context->flags & ATTR_KERNOVAL));
--	ASSERT(context->count >= 0);
--	ASSERT(context->count < (ATTR_MAX_VALUELEN/8));
--	ASSERT(context->firstu >= sizeof(*alist));
--	ASSERT(context->firstu <= context->bufsize);
--
--	/*
--	 * Only list entries in the right namespace.
--	 */
--	if (((context->flags & ATTR_SECURE) == 0) !=
--	    ((flags & XFS_ATTR_SECURE) == 0))
--		return 0;
--	if (((context->flags & ATTR_ROOT) == 0) !=
--	    ((flags & XFS_ATTR_ROOT) == 0))
--		return 0;
--
--	arraytop = sizeof(*alist) +
--			context->count * sizeof(alist->al_offset[0]);
--	context->firstu -= ATTR_ENTSIZE(namelen);
--	if (context->firstu < arraytop) {
--		trace_xfs_attr_list_full(context);
--		alist->al_more = 1;
--		context->seen_enough = 1;
--		return 1;
--	}
--
--	aep = (attrlist_ent_t *)&context->alist[context->firstu];
--	aep->a_valuelen = valuelen;
--	memcpy(aep->a_name, name, namelen);
--	aep->a_name[namelen] = 0;
--	alist->al_offset[context->count++] = context->firstu;
--	alist->al_count = context->count;
--	trace_xfs_attr_list_add(context);
--	return 0;
--}
--
--/*
-- * Generate a list of extended attribute names and optionally
-- * also value lengths.  Positive return value follows the XFS
-- * convention of being an error, zero or negative return code
-- * is the length of the buffer returned (negated), indicating
-- * success.
-- */
--int
--xfs_attr_list(
--	xfs_inode_t	*dp,
--	char		*buffer,
--	int		bufsize,
--	int		flags,
--	attrlist_cursor_kern_t *cursor)
--{
--	xfs_attr_list_context_t context;
--	struct attrlist *alist;
--	int error;
--
--	/*
--	 * Validate the cursor.
--	 */
--	if (cursor->pad1 || cursor->pad2)
--		return(XFS_ERROR(EINVAL));
--	if ((cursor->initted == 0) &&
--	    (cursor->hashval || cursor->blkno || cursor->offset))
--		return XFS_ERROR(EINVAL);
--
--	/*
--	 * Check for a properly aligned buffer.
--	 */
--	if (((long)buffer) & (sizeof(int)-1))
--		return XFS_ERROR(EFAULT);
--	if (flags & ATTR_KERNOVAL)
--		bufsize = 0;
--
--	/*
--	 * Initialize the output buffer.
--	 */
--	memset(&context, 0, sizeof(context));
--	context.dp = dp;
--	context.cursor = cursor;
--	context.resynch = 1;
--	context.flags = flags;
--	context.alist = buffer;
--	context.bufsize = (bufsize & ~(sizeof(int)-1));  /* align */
--	context.firstu = context.bufsize;
--	context.put_listent = xfs_attr_put_listent;
--
--	alist = (struct attrlist *)context.alist;
--	alist->al_count = 0;
--	alist->al_more = 0;
--	alist->al_offset[0] = context.bufsize;
--
--	error = xfs_attr_list_int(&context);
--	ASSERT(error >= 0);
--	return error;
--}
--
- int								/* error */
- xfs_attr_inactive(xfs_inode_t *dp)
- {
-@@ -1167,28 +1014,6 @@ xfs_attr_leaf_get(xfs_da_args_t *args)
+@@ -50,7 +50,6 @@ xfs-y				+= xfs_aops.o \
+ 				   xfs_message.o \
+ 				   xfs_mount.o \
+ 				   xfs_mru_cache.o \
+-				   xfs_rename.o \
+ 				   xfs_super.o \
+ 				   xfs_symlink.o \
+ 				   xfs_trans.o \
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index aec7f15..29d41c4 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2267,6 +2267,313 @@ xfs_remove(
  	return error;
  }
  
--/*
-- * Copy out attribute entries for attr_list(), for leaf attribute lists.
-- */
--STATIC int
--xfs_attr_leaf_list(xfs_attr_list_context_t *context)
--{
--	int error;
--	struct xfs_buf *bp;
--
--	trace_xfs_attr_leaf_list(context);
--
--	context->cursor->blkno = 0;
--	error = xfs_attr3_leaf_read(NULL, context->dp, 0, -1, &bp);
--	if (error)
--		return XFS_ERROR(error);
--
--	error = xfs_attr3_leaf_list_int(bp, context);
--	xfs_trans_brelse(NULL, bp);
--	return XFS_ERROR(error);
--}
--
--
- /*========================================================================
-  * External routines when attribute list size > XFS_LBSIZE(mp).
-  *========================================================================*/
-@@ -1781,143 +1606,3 @@ xfs_attr_node_get(xfs_da_args_t *args)
- 	xfs_da_state_free(state);
- 	return(retval);
- }
--
--STATIC int							/* error */
--xfs_attr_node_list(xfs_attr_list_context_t *context)
--{
--	attrlist_cursor_kern_t *cursor;
--	xfs_attr_leafblock_t *leaf;
--	xfs_da_intnode_t *node;
--	struct xfs_attr3_icleaf_hdr leafhdr;
--	struct xfs_da3_icnode_hdr nodehdr;
--	struct xfs_da_node_entry *btree;
--	int error, i;
--	struct xfs_buf *bp;
--
--	trace_xfs_attr_node_list(context);
--
--	cursor = context->cursor;
--	cursor->initted = 1;
--
--	/*
--	 * Do all sorts of validation on the passed-in cursor structure.
--	 * If anything is amiss, ignore the cursor and look up the hashval
--	 * starting from the btree root.
--	 */
--	bp = NULL;
--	if (cursor->blkno > 0) {
--		error = xfs_da3_node_read(NULL, context->dp, cursor->blkno, -1,
--					      &bp, XFS_ATTR_FORK);
--		if ((error != 0) && (error != EFSCORRUPTED))
--			return(error);
--		if (bp) {
--			struct xfs_attr_leaf_entry *entries;
--
--			node = bp->b_addr;
--			switch (be16_to_cpu(node->hdr.info.magic)) {
--			case XFS_DA_NODE_MAGIC:
--			case XFS_DA3_NODE_MAGIC:
--				trace_xfs_attr_list_wrong_blk(context);
--				xfs_trans_brelse(NULL, bp);
--				bp = NULL;
--				break;
--			case XFS_ATTR_LEAF_MAGIC:
--			case XFS_ATTR3_LEAF_MAGIC:
--				leaf = bp->b_addr;
--				xfs_attr3_leaf_hdr_from_disk(&leafhdr, leaf);
--				entries = xfs_attr3_leaf_entryp(leaf);
--				if (cursor->hashval > be32_to_cpu(
--						entries[leafhdr.count - 1].hashval)) {
--					trace_xfs_attr_list_wrong_blk(context);
--					xfs_trans_brelse(NULL, bp);
--					bp = NULL;
--				} else if (cursor->hashval <= be32_to_cpu(
--						entries[0].hashval)) {
--					trace_xfs_attr_list_wrong_blk(context);
--					xfs_trans_brelse(NULL, bp);
--					bp = NULL;
--				}
--				break;
--			default:
--				trace_xfs_attr_list_wrong_blk(context);
--				xfs_trans_brelse(NULL, bp);
--				bp = NULL;
--			}
--		}
--	}
--
--	/*
--	 * We did not find what we expected given the cursor's contents,
--	 * so we start from the top and work down based on the hash value.
--	 * Note that start of node block is same as start of leaf block.
--	 */
--	if (bp == NULL) {
--		cursor->blkno = 0;
--		for (;;) {
--			__uint16_t magic;
--
--			error = xfs_da3_node_read(NULL, context->dp,
--						      cursor->blkno, -1, &bp,
--						      XFS_ATTR_FORK);
--			if (error)
--				return(error);
--			node = bp->b_addr;
--			magic = be16_to_cpu(node->hdr.info.magic);
--			if (magic == XFS_ATTR_LEAF_MAGIC ||
--			    magic == XFS_ATTR3_LEAF_MAGIC)
--				break;
--			if (magic != XFS_DA_NODE_MAGIC &&
--			    magic != XFS_DA3_NODE_MAGIC) {
--				XFS_CORRUPTION_ERROR("xfs_attr_node_list(3)",
--						     XFS_ERRLEVEL_LOW,
--						     context->dp->i_mount,
--						     node);
--				xfs_trans_brelse(NULL, bp);
--				return XFS_ERROR(EFSCORRUPTED);
--			}
--
--			xfs_da3_node_hdr_from_disk(&nodehdr, node);
--			btree = xfs_da3_node_tree_p(node);
--			for (i = 0; i < nodehdr.count; btree++, i++) {
--				if (cursor->hashval
--						<= be32_to_cpu(btree->hashval)) {
--					cursor->blkno = be32_to_cpu(btree->before);
--					trace_xfs_attr_list_node_descend(context,
--									 btree);
--					break;
--				}
--			}
--			if (i == nodehdr.count) {
--				xfs_trans_brelse(NULL, bp);
--				return 0;
--			}
--			xfs_trans_brelse(NULL, bp);
--		}
--	}
--	ASSERT(bp != NULL);
--
--	/*
--	 * Roll upward through the blocks, processing each leaf block in
--	 * order.  As long as there is space in the result buffer, keep
--	 * adding the information.
--	 */
--	for (;;) {
--		leaf = bp->b_addr;
--		error = xfs_attr3_leaf_list_int(bp, context);
--		if (error) {
--			xfs_trans_brelse(NULL, bp);
--			return error;
--		}
--		xfs_attr3_leaf_hdr_from_disk(&leafhdr, leaf);
--		if (context->seen_enough || leafhdr.forw == 0)
--			break;
--		cursor->blkno = leafhdr.forw;
--		xfs_trans_brelse(NULL, bp);
--		error = xfs_attr3_leaf_read(NULL, context->dp, cursor->blkno, -1,
--					   &bp);
--		if (error)
--			return error;
--	}
--	xfs_trans_brelse(NULL, bp);
--	return 0;
--}
-diff --git a/fs/xfs/xfs_attr.h b/fs/xfs/xfs_attr.h
-index de8dd58..cb604b5 100644
---- a/fs/xfs/xfs_attr.h
-+++ b/fs/xfs/xfs_attr.h
-@@ -141,5 +141,6 @@ typedef struct xfs_attr_list_context {
-  */
- int xfs_attr_inactive(struct xfs_inode *dp);
- int xfs_attr_list_int(struct xfs_attr_list_context *);
-+int xfs_inode_hasattr(struct xfs_inode *ip);
- 
- #endif	/* __XFS_ATTR_H__ */
-diff --git a/fs/xfs/xfs_attr_leaf.c b/fs/xfs/xfs_attr_leaf.c
-index e6497d0..90c033e 100644
---- a/fs/xfs/xfs_attr_leaf.c
-+++ b/fs/xfs/xfs_attr_leaf.c
-@@ -752,182 +752,6 @@ out:
- 	return(error);
- }
- 
--STATIC int
--xfs_attr_shortform_compare(const void *a, const void *b)
--{
--	xfs_attr_sf_sort_t *sa, *sb;
--
--	sa = (xfs_attr_sf_sort_t *)a;
--	sb = (xfs_attr_sf_sort_t *)b;
--	if (sa->hash < sb->hash) {
--		return(-1);
--	} else if (sa->hash > sb->hash) {
--		return(1);
--	} else {
--		return(sa->entno - sb->entno);
--	}
--}
--
--
--#define XFS_ISRESET_CURSOR(cursor) \
--	(!((cursor)->initted) && !((cursor)->hashval) && \
--	 !((cursor)->blkno) && !((cursor)->offset))
--/*
-- * Copy out entries of shortform attribute lists for attr_list().
-- * Shortform attribute lists are not stored in hashval sorted order.
-- * If the output buffer is not large enough to hold them all, then we
-- * we have to calculate each entries' hashvalue and sort them before
-- * we can begin returning them to the user.
-- */
--/*ARGSUSED*/
--int
--xfs_attr_shortform_list(xfs_attr_list_context_t *context)
--{
--	attrlist_cursor_kern_t *cursor;
--	xfs_attr_sf_sort_t *sbuf, *sbp;
--	xfs_attr_shortform_t *sf;
--	xfs_attr_sf_entry_t *sfe;
--	xfs_inode_t *dp;
--	int sbsize, nsbuf, count, i;
--	int error;
--
--	ASSERT(context != NULL);
--	dp = context->dp;
--	ASSERT(dp != NULL);
--	ASSERT(dp->i_afp != NULL);
--	sf = (xfs_attr_shortform_t *)dp->i_afp->if_u1.if_data;
--	ASSERT(sf != NULL);
--	if (!sf->hdr.count)
--		return(0);
--	cursor = context->cursor;
--	ASSERT(cursor != NULL);
--
--	trace_xfs_attr_list_sf(context);
--
--	/*
--	 * If the buffer is large enough and the cursor is at the start,
--	 * do not bother with sorting since we will return everything in
--	 * one buffer and another call using the cursor won't need to be
--	 * made.
--	 * Note the generous fudge factor of 16 overhead bytes per entry.
--	 * If bufsize is zero then put_listent must be a search function
--	 * and can just scan through what we have.
--	 */
--	if (context->bufsize == 0 ||
--	    (XFS_ISRESET_CURSOR(cursor) &&
--             (dp->i_afp->if_bytes + sf->hdr.count * 16) < context->bufsize)) {
--		for (i = 0, sfe = &sf->list[0]; i < sf->hdr.count; i++) {
--			error = context->put_listent(context,
--					   sfe->flags,
--					   sfe->nameval,
--					   (int)sfe->namelen,
--					   (int)sfe->valuelen,
--					   &sfe->nameval[sfe->namelen]);
--
--			/*
--			 * Either search callback finished early or
--			 * didn't fit it all in the buffer after all.
--			 */
--			if (context->seen_enough)
--				break;
--
--			if (error)
--				return error;
--			sfe = XFS_ATTR_SF_NEXTENTRY(sfe);
--		}
--		trace_xfs_attr_list_sf_all(context);
--		return(0);
--	}
--
--	/* do no more for a search callback */
--	if (context->bufsize == 0)
--		return 0;
--
--	/*
--	 * It didn't all fit, so we have to sort everything on hashval.
--	 */
--	sbsize = sf->hdr.count * sizeof(*sbuf);
--	sbp = sbuf = kmem_alloc(sbsize, KM_SLEEP | KM_NOFS);
--
--	/*
--	 * Scan the attribute list for the rest of the entries, storing
--	 * the relevant info from only those that match into a buffer.
--	 */
--	nsbuf = 0;
--	for (i = 0, sfe = &sf->list[0]; i < sf->hdr.count; i++) {
--		if (unlikely(
--		    ((char *)sfe < (char *)sf) ||
--		    ((char *)sfe >= ((char *)sf + dp->i_afp->if_bytes)))) {
--			XFS_CORRUPTION_ERROR("xfs_attr_shortform_list",
--					     XFS_ERRLEVEL_LOW,
--					     context->dp->i_mount, sfe);
--			kmem_free(sbuf);
--			return XFS_ERROR(EFSCORRUPTED);
--		}
--
--		sbp->entno = i;
--		sbp->hash = xfs_da_hashname(sfe->nameval, sfe->namelen);
--		sbp->name = sfe->nameval;
--		sbp->namelen = sfe->namelen;
--		/* These are bytes, and both on-disk, don't endian-flip */
--		sbp->valuelen = sfe->valuelen;
--		sbp->flags = sfe->flags;
--		sfe = XFS_ATTR_SF_NEXTENTRY(sfe);
--		sbp++;
--		nsbuf++;
--	}
--
--	/*
--	 * Sort the entries on hash then entno.
--	 */
--	xfs_sort(sbuf, nsbuf, sizeof(*sbuf), xfs_attr_shortform_compare);
--
--	/*
--	 * Re-find our place IN THE SORTED LIST.
--	 */
--	count = 0;
--	cursor->initted = 1;
--	cursor->blkno = 0;
--	for (sbp = sbuf, i = 0; i < nsbuf; i++, sbp++) {
--		if (sbp->hash == cursor->hashval) {
--			if (cursor->offset == count) {
--				break;
--			}
--			count++;
--		} else if (sbp->hash > cursor->hashval) {
--			break;
--		}
--	}
--	if (i == nsbuf) {
--		kmem_free(sbuf);
--		return(0);
--	}
--
--	/*
--	 * Loop putting entries into the user buffer.
--	 */
--	for ( ; i < nsbuf; i++, sbp++) {
--		if (cursor->hashval != sbp->hash) {
--			cursor->hashval = sbp->hash;
--			cursor->offset = 0;
--		}
--		error = context->put_listent(context,
--					sbp->flags,
--					sbp->name,
--					sbp->namelen,
--					sbp->valuelen,
--					&sbp->name[sbp->namelen]);
--		if (error)
--			return error;
--		if (context->seen_enough)
--			break;
--		cursor->offset++;
--	}
--
--	kmem_free(sbuf);
--	return(0);
--}
--
- /*
-  * Check a leaf attribute block to see if all the entries would fit into
-  * a shortform attribute list.
-@@ -2644,130 +2468,6 @@ xfs_attr_leaf_newentsize(int namelen, int valuelen, int blocksize, int *local)
- 	return size;
- }
- 
--/*
-- * Copy out attribute list entries for attr_list(), for leaf attribute lists.
-- */
--int
--xfs_attr3_leaf_list_int(
--	struct xfs_buf			*bp,
--	struct xfs_attr_list_context	*context)
--{
--	struct attrlist_cursor_kern	*cursor;
--	struct xfs_attr_leafblock	*leaf;
--	struct xfs_attr3_icleaf_hdr	ichdr;
--	struct xfs_attr_leaf_entry	*entries;
--	struct xfs_attr_leaf_entry	*entry;
--	int				retval;
--	int				i;
--
--	trace_xfs_attr_list_leaf(context);
--
--	leaf = bp->b_addr;
--	xfs_attr3_leaf_hdr_from_disk(&ichdr, leaf);
--	entries = xfs_attr3_leaf_entryp(leaf);
--
--	cursor = context->cursor;
--	cursor->initted = 1;
--
--	/*
--	 * Re-find our place in the leaf block if this is a new syscall.
--	 */
--	if (context->resynch) {
--		entry = &entries[0];
--		for (i = 0; i < ichdr.count; entry++, i++) {
--			if (be32_to_cpu(entry->hashval) == cursor->hashval) {
--				if (cursor->offset == context->dupcnt) {
--					context->dupcnt = 0;
--					break;
--				}
--				context->dupcnt++;
--			} else if (be32_to_cpu(entry->hashval) >
--					cursor->hashval) {
--				context->dupcnt = 0;
--				break;
--			}
--		}
--		if (i == ichdr.count) {
--			trace_xfs_attr_list_notfound(context);
--			return 0;
--		}
--	} else {
--		entry = &entries[0];
--		i = 0;
--	}
--	context->resynch = 0;
--
--	/*
--	 * We have found our place, start copying out the new attributes.
--	 */
--	retval = 0;
--	for (; i < ichdr.count; entry++, i++) {
--		if (be32_to_cpu(entry->hashval) != cursor->hashval) {
--			cursor->hashval = be32_to_cpu(entry->hashval);
--			cursor->offset = 0;
--		}
--
--		if (entry->flags & XFS_ATTR_INCOMPLETE)
--			continue;		/* skip incomplete entries */
--
--		if (entry->flags & XFS_ATTR_LOCAL) {
--			xfs_attr_leaf_name_local_t *name_loc =
--				xfs_attr3_leaf_name_local(leaf, i);
--
--			retval = context->put_listent(context,
--						entry->flags,
--						name_loc->nameval,
--						(int)name_loc->namelen,
--						be16_to_cpu(name_loc->valuelen),
--						&name_loc->nameval[name_loc->namelen]);
--			if (retval)
--				return retval;
--		} else {
--			xfs_attr_leaf_name_remote_t *name_rmt =
--				xfs_attr3_leaf_name_remote(leaf, i);
--
--			int valuelen = be32_to_cpu(name_rmt->valuelen);
--
--			if (context->put_value) {
--				xfs_da_args_t args;
--
--				memset((char *)&args, 0, sizeof(args));
--				args.dp = context->dp;
--				args.whichfork = XFS_ATTR_FORK;
--				args.valuelen = valuelen;
--				args.value = kmem_alloc(valuelen, KM_SLEEP | KM_NOFS);
--				args.rmtblkno = be32_to_cpu(name_rmt->valueblk);
--				args.rmtblkcnt = xfs_attr3_rmt_blocks(
--							args.dp->i_mount, valuelen);
--				retval = xfs_attr_rmtval_get(&args);
--				if (retval)
--					return retval;
--				retval = context->put_listent(context,
--						entry->flags,
--						name_rmt->name,
--						(int)name_rmt->namelen,
--						valuelen,
--						args.value);
--				kmem_free(args.value);
--			} else {
--				retval = context->put_listent(context,
--						entry->flags,
--						name_rmt->name,
--						(int)name_rmt->namelen,
--						valuelen,
--						NULL);
--			}
--			if (retval)
--				return retval;
--		}
--		if (context->seen_enough)
--			break;
--		cursor->offset++;
--	}
--	trace_xfs_attr_list_leaf_end(context);
--	return retval;
--}
--
- 
- /*========================================================================
-  * Manage the INCOMPLETE flag in a leaf entry
-diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
-new file mode 100644
-index 0000000..cbc80d4
---- /dev/null
-+++ b/fs/xfs/xfs_attr_list.c
-@@ -0,0 +1,655 @@
 +/*
-+ * Copyright (c) 2000-2005 Silicon Graphics, Inc.
-+ * Copyright (c) 2013 Red Hat, Inc.
-+ * All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ * Enter all inodes for a rename transaction into a sorted array.
 + */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_types.h"
-+#include "xfs_bit.h"
-+#include "xfs_log.h"
-+#include "xfs_trans.h"
-+#include "xfs_sb.h"
-+#include "xfs_ag.h"
-+#include "xfs_mount.h"
-+#include "xfs_da_btree.h"
-+#include "xfs_bmap_btree.h"
-+#include "xfs_alloc_btree.h"
-+#include "xfs_ialloc_btree.h"
-+#include "xfs_alloc.h"
-+#include "xfs_btree.h"
-+#include "xfs_attr_sf.h"
-+#include "xfs_attr_remote.h"
-+#include "xfs_dinode.h"
-+#include "xfs_inode.h"
-+#include "xfs_inode_item.h"
-+#include "xfs_bmap.h"
-+#include "xfs_attr.h"
-+#include "xfs_attr_leaf.h"
-+#include "xfs_error.h"
-+#include "xfs_trace.h"
-+#include "xfs_buf_item.h"
-+#include "xfs_cksum.h"
-+
-+STATIC int
-+xfs_attr_shortform_compare(const void *a, const void *b)
++STATIC void
++xfs_sort_for_rename(
++	xfs_inode_t	*dp1,	/* in: old (source) directory inode */
++	xfs_inode_t	*dp2,	/* in: new (target) directory inode */
++	xfs_inode_t	*ip1,	/* in: inode of old entry */
++	xfs_inode_t	*ip2,	/* in: inode of new entry, if it
++				   already exists, NULL otherwise. */
++	xfs_inode_t	**i_tab,/* out: array of inode returned, sorted */
++	int		*num_inodes)  /* out: number of inodes in array */
 +{
-+	xfs_attr_sf_sort_t *sa, *sb;
++	xfs_inode_t		*temp;
++	int			i, j;
 +
-+	sa = (xfs_attr_sf_sort_t *)a;
-+	sb = (xfs_attr_sf_sort_t *)b;
-+	if (sa->hash < sb->hash) {
-+		return(-1);
-+	} else if (sa->hash > sb->hash) {
-+		return(1);
++	/*
++	 * i_tab contains a list of pointers to inodes.  We initialize
++	 * the table here & we'll sort it.  We will then use it to
++	 * order the acquisition of the inode locks.
++	 *
++	 * Note that the table may contain duplicates.  e.g., dp1 == dp2.
++	 */
++	i_tab[0] = dp1;
++	i_tab[1] = dp2;
++	i_tab[2] = ip1;
++	if (ip2) {
++		*num_inodes = 4;
++		i_tab[3] = ip2;
 +	} else {
-+		return(sa->entno - sb->entno);
++		*num_inodes = 3;
++		i_tab[3] = NULL;
++	}
++
++	/*
++	 * Sort the elements via bubble sort.  (Remember, there are at
++	 * most 4 elements to sort, so this is adequate.)
++	 */
++	for (i = 0; i < *num_inodes; i++) {
++		for (j = 1; j < *num_inodes; j++) {
++			if (i_tab[j]->i_ino < i_tab[j-1]->i_ino) {
++				temp = i_tab[j];
++				i_tab[j] = i_tab[j-1];
++				i_tab[j-1] = temp;
++			}
++		}
 +	}
 +}
 +
-+#define XFS_ISRESET_CURSOR(cursor) \
-+	(!((cursor)->initted) && !((cursor)->hashval) && \
-+	 !((cursor)->blkno) && !((cursor)->offset))
 +/*
-+ * Copy out entries of shortform attribute lists for attr_list().
-+ * Shortform attribute lists are not stored in hashval sorted order.
-+ * If the output buffer is not large enough to hold them all, then we
-+ * we have to calculate each entries' hashvalue and sort them before
-+ * we can begin returning them to the user.
++ * xfs_rename
 + */
 +int
-+xfs_attr_shortform_list(xfs_attr_list_context_t *context)
++xfs_rename(
++	xfs_inode_t	*src_dp,
++	struct xfs_name	*src_name,
++	xfs_inode_t	*src_ip,
++	xfs_inode_t	*target_dp,
++	struct xfs_name	*target_name,
++	xfs_inode_t	*target_ip)
 +{
-+	attrlist_cursor_kern_t *cursor;
-+	xfs_attr_sf_sort_t *sbuf, *sbp;
-+	xfs_attr_shortform_t *sf;
-+	xfs_attr_sf_entry_t *sfe;
-+	xfs_inode_t *dp;
-+	int sbsize, nsbuf, count, i;
-+	int error;
++	xfs_trans_t	*tp = NULL;
++	xfs_mount_t	*mp = src_dp->i_mount;
++	int		new_parent;		/* moving to a new dir */
++	int		src_is_directory;	/* src_name is a directory */
++	int		error;
++	xfs_bmap_free_t free_list;
++	xfs_fsblock_t   first_block;
++	int		cancel_flags;
++	int		committed;
++	xfs_inode_t	*inodes[4];
++	int		spaceres;
++	int		num_inodes;
 +
-+	ASSERT(context != NULL);
-+	dp = context->dp;
-+	ASSERT(dp != NULL);
-+	ASSERT(dp->i_afp != NULL);
-+	sf = (xfs_attr_shortform_t *)dp->i_afp->if_u1.if_data;
-+	ASSERT(sf != NULL);
-+	if (!sf->hdr.count)
-+		return(0);
-+	cursor = context->cursor;
-+	ASSERT(cursor != NULL);
++	trace_xfs_rename(src_dp, target_dp, src_name, target_name);
 +
-+	trace_xfs_attr_list_sf(context);
++	new_parent = (src_dp != target_dp);
++	src_is_directory = S_ISDIR(src_ip->i_d.di_mode);
++
++	xfs_sort_for_rename(src_dp, target_dp, src_ip, target_ip,
++				inodes, &num_inodes);
++
++	xfs_bmap_init(&free_list, &first_block);
++	tp = xfs_trans_alloc(mp, XFS_TRANS_RENAME);
++	cancel_flags = XFS_TRANS_RELEASE_LOG_RES;
++	spaceres = XFS_RENAME_SPACE_RES(mp, target_name->len);
++	error = xfs_trans_reserve(tp, spaceres, XFS_RENAME_LOG_RES(mp), 0,
++			XFS_TRANS_PERM_LOG_RES, XFS_RENAME_LOG_COUNT);
++	if (error == ENOSPC) {
++		spaceres = 0;
++		error = xfs_trans_reserve(tp, 0, XFS_RENAME_LOG_RES(mp), 0,
++				XFS_TRANS_PERM_LOG_RES, XFS_RENAME_LOG_COUNT);
++	}
++	if (error) {
++		xfs_trans_cancel(tp, 0);
++		goto std_return;
++	}
 +
 +	/*
-+	 * If the buffer is large enough and the cursor is at the start,
-+	 * do not bother with sorting since we will return everything in
-+	 * one buffer and another call using the cursor won't need to be
-+	 * made.
-+	 * Note the generous fudge factor of 16 overhead bytes per entry.
-+	 * If bufsize is zero then put_listent must be a search function
-+	 * and can just scan through what we have.
++	 * Attach the dquots to the inodes
 +	 */
-+	if (context->bufsize == 0 ||
-+	    (XFS_ISRESET_CURSOR(cursor) &&
-+             (dp->i_afp->if_bytes + sf->hdr.count * 16) < context->bufsize)) {
-+		for (i = 0, sfe = &sf->list[0]; i < sf->hdr.count; i++) {
-+			error = context->put_listent(context,
-+					   sfe->flags,
-+					   sfe->nameval,
-+					   (int)sfe->namelen,
-+					   (int)sfe->valuelen,
-+					   &sfe->nameval[sfe->namelen]);
++	error = xfs_qm_vop_rename_dqattach(inodes);
++	if (error) {
++		xfs_trans_cancel(tp, cancel_flags);
++		goto std_return;
++	}
 +
++	/*
++	 * Lock all the participating inodes. Depending upon whether
++	 * the target_name exists in the target directory, and
++	 * whether the target directory is the same as the source
++	 * directory, we can lock from 2 to 4 inodes.
++	 */
++	xfs_lock_inodes(inodes, num_inodes, XFS_ILOCK_EXCL);
++
++	/*
++	 * Join all the inodes to the transaction. From this point on,
++	 * we can rely on either trans_commit or trans_cancel to unlock
++	 * them.
++	 */
++	xfs_trans_ijoin(tp, src_dp, XFS_ILOCK_EXCL);
++	if (new_parent)
++		xfs_trans_ijoin(tp, target_dp, XFS_ILOCK_EXCL);
++	xfs_trans_ijoin(tp, src_ip, XFS_ILOCK_EXCL);
++	if (target_ip)
++		xfs_trans_ijoin(tp, target_ip, XFS_ILOCK_EXCL);
++
++	/*
++	 * If we are using project inheritance, we only allow renames
++	 * into our tree when the project IDs are the same; else the
++	 * tree quota mechanism would be circumvented.
++	 */
++	if (unlikely((target_dp->i_d.di_flags & XFS_DIFLAG_PROJINHERIT) &&
++		     (xfs_get_projid(target_dp) != xfs_get_projid(src_ip)))) {
++		error = XFS_ERROR(EXDEV);
++		goto error_return;
++	}
++
++	/*
++	 * Set up the target.
++	 */
++	if (target_ip == NULL) {
++		/*
++		 * If there's no space reservation, check the entry will
++		 * fit before actually inserting it.
++		 */
++		error = xfs_dir_canenter(tp, target_dp, target_name, spaceres);
++		if (error)
++			goto error_return;
++		/*
++		 * If target does not exist and the rename crosses
++		 * directories, adjust the target directory link count
++		 * to account for the ".." reference from the new entry.
++		 */
++		error = xfs_dir_createname(tp, target_dp, target_name,
++						src_ip->i_ino, &first_block,
++						&free_list, spaceres);
++		if (error == ENOSPC)
++			goto error_return;
++		if (error)
++			goto abort_return;
++
++		xfs_trans_ichgtime(tp, target_dp,
++					XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
++
++		if (new_parent && src_is_directory) {
++			error = xfs_bumplink(tp, target_dp);
++			if (error)
++				goto abort_return;
++		}
++	} else { /* target_ip != NULL */
++		/*
++		 * If target exists and it's a directory, check that both
++		 * target and source are directories and that target can be
++		 * destroyed, or that neither is a directory.
++		 */
++		if (S_ISDIR(target_ip->i_d.di_mode)) {
 +			/*
-+			 * Either search callback finished early or
-+			 * didn't fit it all in the buffer after all.
++			 * Make sure target dir is empty.
 +			 */
-+			if (context->seen_enough)
-+				break;
-+
-+			if (error)
-+				return error;
-+			sfe = XFS_ATTR_SF_NEXTENTRY(sfe);
-+		}
-+		trace_xfs_attr_list_sf_all(context);
-+		return(0);
-+	}
-+
-+	/* do no more for a search callback */
-+	if (context->bufsize == 0)
-+		return 0;
-+
-+	/*
-+	 * It didn't all fit, so we have to sort everything on hashval.
-+	 */
-+	sbsize = sf->hdr.count * sizeof(*sbuf);
-+	sbp = sbuf = kmem_alloc(sbsize, KM_SLEEP | KM_NOFS);
-+
-+	/*
-+	 * Scan the attribute list for the rest of the entries, storing
-+	 * the relevant info from only those that match into a buffer.
-+	 */
-+	nsbuf = 0;
-+	for (i = 0, sfe = &sf->list[0]; i < sf->hdr.count; i++) {
-+		if (unlikely(
-+		    ((char *)sfe < (char *)sf) ||
-+		    ((char *)sfe >= ((char *)sf + dp->i_afp->if_bytes)))) {
-+			XFS_CORRUPTION_ERROR("xfs_attr_shortform_list",
-+					     XFS_ERRLEVEL_LOW,
-+					     context->dp->i_mount, sfe);
-+			kmem_free(sbuf);
-+			return XFS_ERROR(EFSCORRUPTED);
-+		}
-+
-+		sbp->entno = i;
-+		sbp->hash = xfs_da_hashname(sfe->nameval, sfe->namelen);
-+		sbp->name = sfe->nameval;
-+		sbp->namelen = sfe->namelen;
-+		/* These are bytes, and both on-disk, don't endian-flip */
-+		sbp->valuelen = sfe->valuelen;
-+		sbp->flags = sfe->flags;
-+		sfe = XFS_ATTR_SF_NEXTENTRY(sfe);
-+		sbp++;
-+		nsbuf++;
-+	}
-+
-+	/*
-+	 * Sort the entries on hash then entno.
-+	 */
-+	xfs_sort(sbuf, nsbuf, sizeof(*sbuf), xfs_attr_shortform_compare);
-+
-+	/*
-+	 * Re-find our place IN THE SORTED LIST.
-+	 */
-+	count = 0;
-+	cursor->initted = 1;
-+	cursor->blkno = 0;
-+	for (sbp = sbuf, i = 0; i < nsbuf; i++, sbp++) {
-+		if (sbp->hash == cursor->hashval) {
-+			if (cursor->offset == count) {
-+				break;
++			if (!(xfs_dir_isempty(target_ip)) ||
++			    (target_ip->i_d.di_nlink > 2)) {
++				error = XFS_ERROR(EEXIST);
++				goto error_return;
 +			}
-+			count++;
-+		} else if (sbp->hash > cursor->hashval) {
-+			break;
 +		}
-+	}
-+	if (i == nsbuf) {
-+		kmem_free(sbuf);
-+		return(0);
-+	}
 +
-+	/*
-+	 * Loop putting entries into the user buffer.
-+	 */
-+	for ( ; i < nsbuf; i++, sbp++) {
-+		if (cursor->hashval != sbp->hash) {
-+			cursor->hashval = sbp->hash;
-+			cursor->offset = 0;
-+		}
-+		error = context->put_listent(context,
-+					sbp->flags,
-+					sbp->name,
-+					sbp->namelen,
-+					sbp->valuelen,
-+					&sbp->name[sbp->namelen]);
++		/*
++		 * Link the source inode under the target name.
++		 * If the source inode is a directory and we are moving
++		 * it across directories, its ".." entry will be
++		 * inconsistent until we replace that down below.
++		 *
++		 * In case there is already an entry with the same
++		 * name at the destination directory, remove it first.
++		 */
++		error = xfs_dir_replace(tp, target_dp, target_name,
++					src_ip->i_ino,
++					&first_block, &free_list, spaceres);
 +		if (error)
-+			return error;
-+		if (context->seen_enough)
-+			break;
-+		cursor->offset++;
-+	}
++			goto abort_return;
 +
-+	kmem_free(sbuf);
-+	return(0);
-+}
++		xfs_trans_ichgtime(tp, target_dp,
++					XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
 +
-+STATIC int
-+xfs_attr_node_list(xfs_attr_list_context_t *context)
-+{
-+	attrlist_cursor_kern_t *cursor;
-+	xfs_attr_leafblock_t *leaf;
-+	xfs_da_intnode_t *node;
-+	struct xfs_attr3_icleaf_hdr leafhdr;
-+	struct xfs_da3_icnode_hdr nodehdr;
-+	struct xfs_da_node_entry *btree;
-+	int error, i;
-+	struct xfs_buf *bp;
-+
-+	trace_xfs_attr_node_list(context);
-+
-+	cursor = context->cursor;
-+	cursor->initted = 1;
-+
-+	/*
-+	 * Do all sorts of validation on the passed-in cursor structure.
-+	 * If anything is amiss, ignore the cursor and look up the hashval
-+	 * starting from the btree root.
-+	 */
-+	bp = NULL;
-+	if (cursor->blkno > 0) {
-+		error = xfs_da3_node_read(NULL, context->dp, cursor->blkno, -1,
-+					      &bp, XFS_ATTR_FORK);
-+		if ((error != 0) && (error != EFSCORRUPTED))
-+			return(error);
-+		if (bp) {
-+			struct xfs_attr_leaf_entry *entries;
-+
-+			node = bp->b_addr;
-+			switch (be16_to_cpu(node->hdr.info.magic)) {
-+			case XFS_DA_NODE_MAGIC:
-+			case XFS_DA3_NODE_MAGIC:
-+				trace_xfs_attr_list_wrong_blk(context);
-+				xfs_trans_brelse(NULL, bp);
-+				bp = NULL;
-+				break;
-+			case XFS_ATTR_LEAF_MAGIC:
-+			case XFS_ATTR3_LEAF_MAGIC:
-+				leaf = bp->b_addr;
-+				xfs_attr3_leaf_hdr_from_disk(&leafhdr, leaf);
-+				entries = xfs_attr3_leaf_entryp(leaf);
-+				if (cursor->hashval > be32_to_cpu(
-+						entries[leafhdr.count - 1].hashval)) {
-+					trace_xfs_attr_list_wrong_blk(context);
-+					xfs_trans_brelse(NULL, bp);
-+					bp = NULL;
-+				} else if (cursor->hashval <= be32_to_cpu(
-+						entries[0].hashval)) {
-+					trace_xfs_attr_list_wrong_blk(context);
-+					xfs_trans_brelse(NULL, bp);
-+					bp = NULL;
-+				}
-+				break;
-+			default:
-+				trace_xfs_attr_list_wrong_blk(context);
-+				xfs_trans_brelse(NULL, bp);
-+				bp = NULL;
-+			}
-+		}
-+	}
-+
-+	/*
-+	 * We did not find what we expected given the cursor's contents,
-+	 * so we start from the top and work down based on the hash value.
-+	 * Note that start of node block is same as start of leaf block.
-+	 */
-+	if (bp == NULL) {
-+		cursor->blkno = 0;
-+		for (;;) {
-+			__uint16_t magic;
-+
-+			error = xfs_da3_node_read(NULL, context->dp,
-+						      cursor->blkno, -1, &bp,
-+						      XFS_ATTR_FORK);
-+			if (error)
-+				return(error);
-+			node = bp->b_addr;
-+			magic = be16_to_cpu(node->hdr.info.magic);
-+			if (magic == XFS_ATTR_LEAF_MAGIC ||
-+			    magic == XFS_ATTR3_LEAF_MAGIC)
-+				break;
-+			if (magic != XFS_DA_NODE_MAGIC &&
-+			    magic != XFS_DA3_NODE_MAGIC) {
-+				XFS_CORRUPTION_ERROR("xfs_attr_node_list(3)",
-+						     XFS_ERRLEVEL_LOW,
-+						     context->dp->i_mount,
-+						     node);
-+				xfs_trans_brelse(NULL, bp);
-+				return XFS_ERROR(EFSCORRUPTED);
-+			}
-+
-+			xfs_da3_node_hdr_from_disk(&nodehdr, node);
-+			btree = xfs_da3_node_tree_p(node);
-+			for (i = 0; i < nodehdr.count; btree++, i++) {
-+				if (cursor->hashval
-+						<= be32_to_cpu(btree->hashval)) {
-+					cursor->blkno = be32_to_cpu(btree->before);
-+					trace_xfs_attr_list_node_descend(context,
-+									 btree);
-+					break;
-+				}
-+			}
-+			if (i == nodehdr.count) {
-+				xfs_trans_brelse(NULL, bp);
-+				return 0;
-+			}
-+			xfs_trans_brelse(NULL, bp);
-+		}
-+	}
-+	ASSERT(bp != NULL);
-+
-+	/*
-+	 * Roll upward through the blocks, processing each leaf block in
-+	 * order.  As long as there is space in the result buffer, keep
-+	 * adding the information.
-+	 */
-+	for (;;) {
-+		leaf = bp->b_addr;
-+		error = xfs_attr3_leaf_list_int(bp, context);
-+		if (error) {
-+			xfs_trans_brelse(NULL, bp);
-+			return error;
-+		}
-+		xfs_attr3_leaf_hdr_from_disk(&leafhdr, leaf);
-+		if (context->seen_enough || leafhdr.forw == 0)
-+			break;
-+		cursor->blkno = leafhdr.forw;
-+		xfs_trans_brelse(NULL, bp);
-+		error = xfs_attr3_leaf_read(NULL, context->dp, cursor->blkno, -1,
-+					   &bp);
++		/*
++		 * Decrement the link count on the target since the target
++		 * dir no longer points to it.
++		 */
++		error = xfs_droplink(tp, target_ip);
 +		if (error)
-+			return error;
-+	}
-+	xfs_trans_brelse(NULL, bp);
-+	return 0;
-+}
++			goto abort_return;
 +
-+/*
-+ * Copy out attribute list entries for attr_list(), for leaf attribute lists.
-+ */
-+int
-+xfs_attr3_leaf_list_int(
-+	struct xfs_buf			*bp,
-+	struct xfs_attr_list_context	*context)
-+{
-+	struct attrlist_cursor_kern	*cursor;
-+	struct xfs_attr_leafblock	*leaf;
-+	struct xfs_attr3_icleaf_hdr	ichdr;
-+	struct xfs_attr_leaf_entry	*entries;
-+	struct xfs_attr_leaf_entry	*entry;
-+	int				retval;
-+	int				i;
-+
-+	trace_xfs_attr_list_leaf(context);
-+
-+	leaf = bp->b_addr;
-+	xfs_attr3_leaf_hdr_from_disk(&ichdr, leaf);
-+	entries = xfs_attr3_leaf_entryp(leaf);
-+
-+	cursor = context->cursor;
-+	cursor->initted = 1;
++		if (src_is_directory) {
++			/*
++			 * Drop the link from the old "." entry.
++			 */
++			error = xfs_droplink(tp, target_ip);
++			if (error)
++				goto abort_return;
++		}
++	} /* target_ip != NULL */
 +
 +	/*
-+	 * Re-find our place in the leaf block if this is a new syscall.
++	 * Remove the source.
 +	 */
-+	if (context->resynch) {
-+		entry = &entries[0];
-+		for (i = 0; i < ichdr.count; entry++, i++) {
-+			if (be32_to_cpu(entry->hashval) == cursor->hashval) {
-+				if (cursor->offset == context->dupcnt) {
-+					context->dupcnt = 0;
-+					break;
-+				}
-+				context->dupcnt++;
-+			} else if (be32_to_cpu(entry->hashval) >
-+					cursor->hashval) {
-+				context->dupcnt = 0;
-+				break;
-+			}
-+		}
-+		if (i == ichdr.count) {
-+			trace_xfs_attr_list_notfound(context);
-+			return 0;
-+		}
-+	} else {
-+		entry = &entries[0];
-+		i = 0;
++	if (new_parent && src_is_directory) {
++		/*
++		 * Rewrite the ".." entry to point to the new
++		 * directory.
++		 */
++		error = xfs_dir_replace(tp, src_ip, &xfs_name_dotdot,
++					target_dp->i_ino,
++					&first_block, &free_list, spaceres);
++		ASSERT(error != EEXIST);
++		if (error)
++			goto abort_return;
 +	}
-+	context->resynch = 0;
 +
 +	/*
-+	 * We have found our place, start copying out the new attributes.
++	 * We always want to hit the ctime on the source inode.
++	 *
++	 * This isn't strictly required by the standards since the source
++	 * inode isn't really being changed, but old unix file systems did
++	 * it and some incremental backup programs won't work without it.
 +	 */
-+	retval = 0;
-+	for (; i < ichdr.count; entry++, i++) {
-+		if (be32_to_cpu(entry->hashval) != cursor->hashval) {
-+			cursor->hashval = be32_to_cpu(entry->hashval);
-+			cursor->offset = 0;
-+		}
++	xfs_trans_ichgtime(tp, src_ip, XFS_ICHGTIME_CHG);
++	xfs_trans_log_inode(tp, src_ip, XFS_ILOG_CORE);
 +
-+		if (entry->flags & XFS_ATTR_INCOMPLETE)
-+			continue;		/* skip incomplete entries */
++	/*
++	 * Adjust the link count on src_dp.  This is necessary when
++	 * renaming a directory, either within one parent when
++	 * the target existed, or across two parent directories.
++	 */
++	if (src_is_directory && (new_parent || target_ip != NULL)) {
 +
-+		if (entry->flags & XFS_ATTR_LOCAL) {
-+			xfs_attr_leaf_name_local_t *name_loc =
-+				xfs_attr3_leaf_name_local(leaf, i);
-+
-+			retval = context->put_listent(context,
-+						entry->flags,
-+						name_loc->nameval,
-+						(int)name_loc->namelen,
-+						be16_to_cpu(name_loc->valuelen),
-+						&name_loc->nameval[name_loc->namelen]);
-+			if (retval)
-+				return retval;
-+		} else {
-+			xfs_attr_leaf_name_remote_t *name_rmt =
-+				xfs_attr3_leaf_name_remote(leaf, i);
-+
-+			int valuelen = be32_to_cpu(name_rmt->valuelen);
-+
-+			if (context->put_value) {
-+				xfs_da_args_t args;
-+
-+				memset((char *)&args, 0, sizeof(args));
-+				args.dp = context->dp;
-+				args.whichfork = XFS_ATTR_FORK;
-+				args.valuelen = valuelen;
-+				args.value = kmem_alloc(valuelen, KM_SLEEP | KM_NOFS);
-+				args.rmtblkno = be32_to_cpu(name_rmt->valueblk);
-+				args.rmtblkcnt = xfs_attr3_rmt_blocks(
-+							args.dp->i_mount, valuelen);
-+				retval = xfs_attr_rmtval_get(&args);
-+				if (retval)
-+					return retval;
-+				retval = context->put_listent(context,
-+						entry->flags,
-+						name_rmt->name,
-+						(int)name_rmt->namelen,
-+						valuelen,
-+						args.value);
-+				kmem_free(args.value);
-+			} else {
-+				retval = context->put_listent(context,
-+						entry->flags,
-+						name_rmt->name,
-+						(int)name_rmt->namelen,
-+						valuelen,
-+						NULL);
-+			}
-+			if (retval)
-+				return retval;
-+		}
-+		if (context->seen_enough)
-+			break;
-+		cursor->offset++;
++		/*
++		 * Decrement link count on src_directory since the
++		 * entry that's moved no longer points to it.
++		 */
++		error = xfs_droplink(tp, src_dp);
++		if (error)
++			goto abort_return;
 +	}
-+	trace_xfs_attr_list_leaf_end(context);
-+	return retval;
-+}
 +
-+/*
-+ * Copy out attribute entries for attr_list(), for leaf attribute lists.
-+ */
-+STATIC int
-+xfs_attr_leaf_list(xfs_attr_list_context_t *context)
-+{
-+	int error;
-+	struct xfs_buf *bp;
-+
-+	trace_xfs_attr_leaf_list(context);
-+
-+	context->cursor->blkno = 0;
-+	error = xfs_attr3_leaf_read(NULL, context->dp, 0, -1, &bp);
++	error = xfs_dir_removename(tp, src_dp, src_name, src_ip->i_ino,
++					&first_block, &free_list, spaceres);
 +	if (error)
-+		return XFS_ERROR(error);
++		goto abort_return;
 +
-+	error = xfs_attr3_leaf_list_int(bp, context);
-+	xfs_trans_brelse(NULL, bp);
-+	return XFS_ERROR(error);
-+}
-+
-+int
-+xfs_attr_list_int(
-+	xfs_attr_list_context_t *context)
-+{
-+	int error;
-+	xfs_inode_t *dp = context->dp;
-+
-+	XFS_STATS_INC(xs_attr_list);
-+
-+	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
-+		return EIO;
-+
-+	xfs_ilock(dp, XFS_ILOCK_SHARED);
++	xfs_trans_ichgtime(tp, src_dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
++	xfs_trans_log_inode(tp, src_dp, XFS_ILOG_CORE);
++	if (new_parent)
++		xfs_trans_log_inode(tp, target_dp, XFS_ILOG_CORE);
 +
 +	/*
-+	 * Decide on what work routines to call based on the inode size.
++	 * If this is a synchronous mount, make sure that the
++	 * rename transaction goes to disk before returning to
++	 * the user.
 +	 */
-+	if (!xfs_inode_hasattr(dp)) {
-+		error = 0;
-+	} else if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
-+		error = xfs_attr_shortform_list(context);
-+	} else if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
-+		error = xfs_attr_leaf_list(context);
-+	} else {
-+		error = xfs_attr_node_list(context);
++	if (mp->m_flags & (XFS_MOUNT_WSYNC|XFS_MOUNT_DIRSYNC)) {
++		xfs_trans_set_sync(tp);
 +	}
 +
-+	xfs_iunlock(dp, XFS_ILOCK_SHARED);
++	error = xfs_bmap_finish(&tp, &free_list, &committed);
++	if (error) {
++		xfs_bmap_cancel(&free_list);
++		xfs_trans_cancel(tp, (XFS_TRANS_RELEASE_LOG_RES |
++				 XFS_TRANS_ABORT));
++		goto std_return;
++	}
 +
++	/*
++	 * trans_commit will unlock src_ip, target_ip & decrement
++	 * the vnode references.
++	 */
++	return xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
++
++ abort_return:
++	cancel_flags |= XFS_TRANS_ABORT;
++ error_return:
++	xfs_bmap_cancel(&free_list);
++	xfs_trans_cancel(tp, cancel_flags);
++ std_return:
 +	return error;
 +}
 +
-+#define	ATTR_ENTBASESIZE		/* minimum bytes used by an attr */ \
-+	(((struct attrlist_ent *) 0)->a_name - (char *) 0)
-+#define	ATTR_ENTSIZE(namelen)		/* actual bytes used by an attr */ \
-+	((ATTR_ENTBASESIZE + (namelen) + 1 + sizeof(u_int32_t)-1) \
-+	 & ~(sizeof(u_int32_t)-1))
-+
-+/*
-+ * Format an attribute and copy it out to the user's buffer.
-+ * Take care to check values and protect against them changing later,
-+ * we may be reading them directly out of a user buffer.
-+ */
-+STATIC int
-+xfs_attr_put_listent(
-+	xfs_attr_list_context_t *context,
-+	int		flags,
-+	unsigned char	*name,
-+	int		namelen,
-+	int		valuelen,
-+	unsigned char	*value)
-+{
-+	struct attrlist *alist = (struct attrlist *)context->alist;
-+	attrlist_ent_t *aep;
-+	int arraytop;
-+
-+	ASSERT(!(context->flags & ATTR_KERNOVAL));
-+	ASSERT(context->count >= 0);
-+	ASSERT(context->count < (ATTR_MAX_VALUELEN/8));
-+	ASSERT(context->firstu >= sizeof(*alist));
-+	ASSERT(context->firstu <= context->bufsize);
-+
-+	/*
-+	 * Only list entries in the right namespace.
-+	 */
-+	if (((context->flags & ATTR_SECURE) == 0) !=
-+	    ((flags & XFS_ATTR_SECURE) == 0))
-+		return 0;
-+	if (((context->flags & ATTR_ROOT) == 0) !=
-+	    ((flags & XFS_ATTR_ROOT) == 0))
-+		return 0;
-+
-+	arraytop = sizeof(*alist) +
-+			context->count * sizeof(alist->al_offset[0]);
-+	context->firstu -= ATTR_ENTSIZE(namelen);
-+	if (context->firstu < arraytop) {
-+		trace_xfs_attr_list_full(context);
-+		alist->al_more = 1;
-+		context->seen_enough = 1;
-+		return 1;
-+	}
-+
-+	aep = (attrlist_ent_t *)&context->alist[context->firstu];
-+	aep->a_valuelen = valuelen;
-+	memcpy(aep->a_name, name, namelen);
-+	aep->a_name[namelen] = 0;
-+	alist->al_offset[context->count++] = context->firstu;
-+	alist->al_count = context->count;
-+	trace_xfs_attr_list_add(context);
-+	return 0;
-+}
-+
-+/*
-+ * Generate a list of extended attribute names and optionally
-+ * also value lengths.  Positive return value follows the XFS
-+ * convention of being an error, zero or negative return code
-+ * is the length of the buffer returned (negated), indicating
-+ * success.
-+ */
-+int
-+xfs_attr_list(
-+	xfs_inode_t	*dp,
-+	char		*buffer,
-+	int		bufsize,
-+	int		flags,
-+	attrlist_cursor_kern_t *cursor)
-+{
-+	xfs_attr_list_context_t context;
-+	struct attrlist *alist;
-+	int error;
-+
-+	/*
-+	 * Validate the cursor.
-+	 */
-+	if (cursor->pad1 || cursor->pad2)
-+		return(XFS_ERROR(EINVAL));
-+	if ((cursor->initted == 0) &&
-+	    (cursor->hashval || cursor->blkno || cursor->offset))
-+		return XFS_ERROR(EINVAL);
-+
-+	/*
-+	 * Check for a properly aligned buffer.
-+	 */
-+	if (((long)buffer) & (sizeof(int)-1))
-+		return XFS_ERROR(EFAULT);
-+	if (flags & ATTR_KERNOVAL)
-+		bufsize = 0;
-+
-+	/*
-+	 * Initialize the output buffer.
-+	 */
-+	memset(&context, 0, sizeof(context));
-+	context.dp = dp;
-+	context.cursor = cursor;
-+	context.resynch = 1;
-+	context.flags = flags;
-+	context.alist = buffer;
-+	context.bufsize = (bufsize & ~(sizeof(int)-1));  /* align */
-+	context.firstu = context.bufsize;
-+	context.put_listent = xfs_attr_put_listent;
-+
-+	alist = (struct attrlist *)context.alist;
-+	alist->al_count = 0;
-+	alist->al_more = 0;
-+	alist->al_offset[0] = context.bufsize;
-+
-+	error = xfs_attr_list_int(&context);
-+	ASSERT(error >= 0);
-+	return error;
-+}
+ STATIC int
+ xfs_iflush_cluster(
+ 	xfs_inode_t	*ip,
+@@ -2523,7 +2830,6 @@ abort_out:
+ 	return error;
+ }
+ 
+-
+ STATIC int
+ xfs_iflush_int(
+ 	struct xfs_inode	*ip,
+diff --git a/fs/xfs/xfs_rename.c b/fs/xfs/xfs_rename.c
+deleted file mode 100644
+index c15c6c5..0000000
+--- a/fs/xfs/xfs_rename.c
++++ /dev/null
+@@ -1,347 +0,0 @@
+-/*
+- * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it would be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write the Free Software Foundation,
+- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- */
+-#include "xfs.h"
+-#include "xfs_fs.h"
+-#include "xfs_format.h"
+-#include "xfs_log.h"
+-#include "xfs_trans.h"
+-#include "xfs_sb.h"
+-#include "xfs_ag.h"
+-#include "xfs_mount.h"
+-#include "xfs_da_btree.h"
+-#include "xfs_dir2_format.h"
+-#include "xfs_dir2.h"
+-#include "xfs_bmap_btree.h"
+-#include "xfs_dinode.h"
+-#include "xfs_inode.h"
+-#include "xfs_inode_item.h"
+-#include "xfs_bmap.h"
+-#include "xfs_bmap_util.h"
+-#include "xfs_error.h"
+-#include "xfs_quota.h"
+-#include "xfs_utils.h"
+-#include "xfs_trans_space.h"
+-#include "xfs_trace.h"
+-
+-
+-/*
+- * Enter all inodes for a rename transaction into a sorted array.
+- */
+-STATIC void
+-xfs_sort_for_rename(
+-	xfs_inode_t	*dp1,	/* in: old (source) directory inode */
+-	xfs_inode_t	*dp2,	/* in: new (target) directory inode */
+-	xfs_inode_t	*ip1,	/* in: inode of old entry */
+-	xfs_inode_t	*ip2,	/* in: inode of new entry, if it
+-				   already exists, NULL otherwise. */
+-	xfs_inode_t	**i_tab,/* out: array of inode returned, sorted */
+-	int		*num_inodes)  /* out: number of inodes in array */
+-{
+-	xfs_inode_t		*temp;
+-	int			i, j;
+-
+-	/*
+-	 * i_tab contains a list of pointers to inodes.  We initialize
+-	 * the table here & we'll sort it.  We will then use it to
+-	 * order the acquisition of the inode locks.
+-	 *
+-	 * Note that the table may contain duplicates.  e.g., dp1 == dp2.
+-	 */
+-	i_tab[0] = dp1;
+-	i_tab[1] = dp2;
+-	i_tab[2] = ip1;
+-	if (ip2) {
+-		*num_inodes = 4;
+-		i_tab[3] = ip2;
+-	} else {
+-		*num_inodes = 3;
+-		i_tab[3] = NULL;
+-	}
+-
+-	/*
+-	 * Sort the elements via bubble sort.  (Remember, there are at
+-	 * most 4 elements to sort, so this is adequate.)
+-	 */
+-	for (i = 0; i < *num_inodes; i++) {
+-		for (j = 1; j < *num_inodes; j++) {
+-			if (i_tab[j]->i_ino < i_tab[j-1]->i_ino) {
+-				temp = i_tab[j];
+-				i_tab[j] = i_tab[j-1];
+-				i_tab[j-1] = temp;
+-			}
+-		}
+-	}
+-}
+-
+-/*
+- * xfs_rename
+- */
+-int
+-xfs_rename(
+-	xfs_inode_t	*src_dp,
+-	struct xfs_name	*src_name,
+-	xfs_inode_t	*src_ip,
+-	xfs_inode_t	*target_dp,
+-	struct xfs_name	*target_name,
+-	xfs_inode_t	*target_ip)
+-{
+-	xfs_trans_t	*tp = NULL;
+-	xfs_mount_t	*mp = src_dp->i_mount;
+-	int		new_parent;		/* moving to a new dir */
+-	int		src_is_directory;	/* src_name is a directory */
+-	int		error;
+-	xfs_bmap_free_t free_list;
+-	xfs_fsblock_t   first_block;
+-	int		cancel_flags;
+-	int		committed;
+-	xfs_inode_t	*inodes[4];
+-	int		spaceres;
+-	int		num_inodes;
+-
+-	trace_xfs_rename(src_dp, target_dp, src_name, target_name);
+-
+-	new_parent = (src_dp != target_dp);
+-	src_is_directory = S_ISDIR(src_ip->i_d.di_mode);
+-
+-	xfs_sort_for_rename(src_dp, target_dp, src_ip, target_ip,
+-				inodes, &num_inodes);
+-
+-	xfs_bmap_init(&free_list, &first_block);
+-	tp = xfs_trans_alloc(mp, XFS_TRANS_RENAME);
+-	cancel_flags = XFS_TRANS_RELEASE_LOG_RES;
+-	spaceres = XFS_RENAME_SPACE_RES(mp, target_name->len);
+-	error = xfs_trans_reserve(tp, spaceres, XFS_RENAME_LOG_RES(mp), 0,
+-			XFS_TRANS_PERM_LOG_RES, XFS_RENAME_LOG_COUNT);
+-	if (error == ENOSPC) {
+-		spaceres = 0;
+-		error = xfs_trans_reserve(tp, 0, XFS_RENAME_LOG_RES(mp), 0,
+-				XFS_TRANS_PERM_LOG_RES, XFS_RENAME_LOG_COUNT);
+-	}
+-	if (error) {
+-		xfs_trans_cancel(tp, 0);
+-		goto std_return;
+-	}
+-
+-	/*
+-	 * Attach the dquots to the inodes
+-	 */
+-	error = xfs_qm_vop_rename_dqattach(inodes);
+-	if (error) {
+-		xfs_trans_cancel(tp, cancel_flags);
+-		goto std_return;
+-	}
+-
+-	/*
+-	 * Lock all the participating inodes. Depending upon whether
+-	 * the target_name exists in the target directory, and
+-	 * whether the target directory is the same as the source
+-	 * directory, we can lock from 2 to 4 inodes.
+-	 */
+-	xfs_lock_inodes(inodes, num_inodes, XFS_ILOCK_EXCL);
+-
+-	/*
+-	 * Join all the inodes to the transaction. From this point on,
+-	 * we can rely on either trans_commit or trans_cancel to unlock
+-	 * them.
+-	 */
+-	xfs_trans_ijoin(tp, src_dp, XFS_ILOCK_EXCL);
+-	if (new_parent)
+-		xfs_trans_ijoin(tp, target_dp, XFS_ILOCK_EXCL);
+-	xfs_trans_ijoin(tp, src_ip, XFS_ILOCK_EXCL);
+-	if (target_ip)
+-		xfs_trans_ijoin(tp, target_ip, XFS_ILOCK_EXCL);
+-
+-	/*
+-	 * If we are using project inheritance, we only allow renames
+-	 * into our tree when the project IDs are the same; else the
+-	 * tree quota mechanism would be circumvented.
+-	 */
+-	if (unlikely((target_dp->i_d.di_flags & XFS_DIFLAG_PROJINHERIT) &&
+-		     (xfs_get_projid(target_dp) != xfs_get_projid(src_ip)))) {
+-		error = XFS_ERROR(EXDEV);
+-		goto error_return;
+-	}
+-
+-	/*
+-	 * Set up the target.
+-	 */
+-	if (target_ip == NULL) {
+-		/*
+-		 * If there's no space reservation, check the entry will
+-		 * fit before actually inserting it.
+-		 */
+-		error = xfs_dir_canenter(tp, target_dp, target_name, spaceres);
+-		if (error)
+-			goto error_return;
+-		/*
+-		 * If target does not exist and the rename crosses
+-		 * directories, adjust the target directory link count
+-		 * to account for the ".." reference from the new entry.
+-		 */
+-		error = xfs_dir_createname(tp, target_dp, target_name,
+-						src_ip->i_ino, &first_block,
+-						&free_list, spaceres);
+-		if (error == ENOSPC)
+-			goto error_return;
+-		if (error)
+-			goto abort_return;
+-
+-		xfs_trans_ichgtime(tp, target_dp,
+-					XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+-
+-		if (new_parent && src_is_directory) {
+-			error = xfs_bumplink(tp, target_dp);
+-			if (error)
+-				goto abort_return;
+-		}
+-	} else { /* target_ip != NULL */
+-		/*
+-		 * If target exists and it's a directory, check that both
+-		 * target and source are directories and that target can be
+-		 * destroyed, or that neither is a directory.
+-		 */
+-		if (S_ISDIR(target_ip->i_d.di_mode)) {
+-			/*
+-			 * Make sure target dir is empty.
+-			 */
+-			if (!(xfs_dir_isempty(target_ip)) ||
+-			    (target_ip->i_d.di_nlink > 2)) {
+-				error = XFS_ERROR(EEXIST);
+-				goto error_return;
+-			}
+-		}
+-
+-		/*
+-		 * Link the source inode under the target name.
+-		 * If the source inode is a directory and we are moving
+-		 * it across directories, its ".." entry will be
+-		 * inconsistent until we replace that down below.
+-		 *
+-		 * In case there is already an entry with the same
+-		 * name at the destination directory, remove it first.
+-		 */
+-		error = xfs_dir_replace(tp, target_dp, target_name,
+-					src_ip->i_ino,
+-					&first_block, &free_list, spaceres);
+-		if (error)
+-			goto abort_return;
+-
+-		xfs_trans_ichgtime(tp, target_dp,
+-					XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+-
+-		/*
+-		 * Decrement the link count on the target since the target
+-		 * dir no longer points to it.
+-		 */
+-		error = xfs_droplink(tp, target_ip);
+-		if (error)
+-			goto abort_return;
+-
+-		if (src_is_directory) {
+-			/*
+-			 * Drop the link from the old "." entry.
+-			 */
+-			error = xfs_droplink(tp, target_ip);
+-			if (error)
+-				goto abort_return;
+-		}
+-	} /* target_ip != NULL */
+-
+-	/*
+-	 * Remove the source.
+-	 */
+-	if (new_parent && src_is_directory) {
+-		/*
+-		 * Rewrite the ".." entry to point to the new
+-		 * directory.
+-		 */
+-		error = xfs_dir_replace(tp, src_ip, &xfs_name_dotdot,
+-					target_dp->i_ino,
+-					&first_block, &free_list, spaceres);
+-		ASSERT(error != EEXIST);
+-		if (error)
+-			goto abort_return;
+-	}
+-
+-	/*
+-	 * We always want to hit the ctime on the source inode.
+-	 *
+-	 * This isn't strictly required by the standards since the source
+-	 * inode isn't really being changed, but old unix file systems did
+-	 * it and some incremental backup programs won't work without it.
+-	 */
+-	xfs_trans_ichgtime(tp, src_ip, XFS_ICHGTIME_CHG);
+-	xfs_trans_log_inode(tp, src_ip, XFS_ILOG_CORE);
+-
+-	/*
+-	 * Adjust the link count on src_dp.  This is necessary when
+-	 * renaming a directory, either within one parent when
+-	 * the target existed, or across two parent directories.
+-	 */
+-	if (src_is_directory && (new_parent || target_ip != NULL)) {
+-
+-		/*
+-		 * Decrement link count on src_directory since the
+-		 * entry that's moved no longer points to it.
+-		 */
+-		error = xfs_droplink(tp, src_dp);
+-		if (error)
+-			goto abort_return;
+-	}
+-
+-	error = xfs_dir_removename(tp, src_dp, src_name, src_ip->i_ino,
+-					&first_block, &free_list, spaceres);
+-	if (error)
+-		goto abort_return;
+-
+-	xfs_trans_ichgtime(tp, src_dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+-	xfs_trans_log_inode(tp, src_dp, XFS_ILOG_CORE);
+-	if (new_parent)
+-		xfs_trans_log_inode(tp, target_dp, XFS_ILOG_CORE);
+-
+-	/*
+-	 * If this is a synchronous mount, make sure that the
+-	 * rename transaction goes to disk before returning to
+-	 * the user.
+-	 */
+-	if (mp->m_flags & (XFS_MOUNT_WSYNC|XFS_MOUNT_DIRSYNC)) {
+-		xfs_trans_set_sync(tp);
+-	}
+-
+-	error = xfs_bmap_finish(&tp, &free_list, &committed);
+-	if (error) {
+-		xfs_bmap_cancel(&free_list);
+-		xfs_trans_cancel(tp, (XFS_TRANS_RELEASE_LOG_RES |
+-				 XFS_TRANS_ABORT));
+-		goto std_return;
+-	}
+-
+-	/*
+-	 * trans_commit will unlock src_ip, target_ip & decrement
+-	 * the vnode references.
+-	 */
+-	return xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
+-
+- abort_return:
+-	cancel_flags |= XFS_TRANS_ABORT;
+- error_return:
+-	xfs_bmap_cancel(&free_list);
+-	xfs_trans_cancel(tp, cancel_flags);
+- std_return:
+-	return error;
+-}
 -- 
 1.8.3.2
 
