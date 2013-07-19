@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C9D957FB4
-	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 01:25:55 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id C19A27F89
+	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 01:25:53 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 67E918F8033
-	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 23:25:55 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6CB05AC00E
+	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 23:25:53 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	nIBkFiBeSUYwkr4e for <xfs@oss.sgi.com>;
-	Thu, 18 Jul 2013 23:25:50 -0700 (PDT)
+	ptklMkSBH9HJiQNs for <xfs@oss.sgi.com>;
+	Thu, 18 Jul 2013 23:25:44 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1V0482-00048N-UZ
+	(envelope-from <dave@fromorbit.com>) id 1V0483-00048W-0o
 	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:25:23 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1V0482-0001yJ-T5
+	(envelope-from <dave@disappointment.disaster>) id 1V0482-0001yZ-Vr
 	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:25:22 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 21/49] xfs: create xfs_bmap_util.[ch]
-Date: Fri, 19 Jul 2013 16:24:52 +1000
-Message-Id: <1374215120-7271-22-git-send-email-david@fromorbit.com>
+Subject: [PATCH 24/49] xfs: kill xfs_vnodeops.[ch]
+Date: Fri, 19 Jul 2013 16:24:55 +1000
+Message-Id: <1374215120-7271-25-git-send-email-david@fromorbit.com>
 In-Reply-To: <1374215120-7271-1-git-send-email-david@fromorbit.com>
 References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,2176 +39,4380 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-There is a bunch of code in xfs_bmap.c that is kernel specific and
-not shared with userspace. to minimise the difference between the
-kernel and userspace code, shift this unshared code to
-xfs_bmap_util.c, and the declarations to xfs_bmap_util.h.
+Now we have xfs_inode.c for holding kernel-only XFS inode
+operations, move all the inode operations from xfs_vnodeops.c to
+this new file as it holds another set of kernel-only inode
+operations. The name of this file traces back to the days of Irix
+and it's vnodes which we don't have anymore.
 
-The biggest issue here is xfs_bmap_finish() - userspce has it's own
-definition of this function, and so we need to move it out of
-xfs_bmap.[ch]. This means several other files need to include
-xfs_bmap_util.c as well.
+Essentially this move consolidates the inode locking functions
+and a bunch of XFS inode operations into the one file. Eventually
+the high level functions will be merged into the VFS interface
+functions in xfs_iops.c.
 
-It also introduces and interesting dance for the stack switching
-code in xfs_bmapi_allocate(). The stack switching/workqueue code is
-actually moved to xfs_bmap_util.c, so that userspace can simply use
-a #define in a header file to connect the dots without needing to
-know about the stack switch code at all.
+This leaves only internal preallocation, EOF block manipulation and
+hole punching functions in vnodeops.c. Move these to xfs_bmap_util.c
+where we are already consolidating various in-kernel physical extent
+manipulation and querying functions.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/Makefile          |   1 +
- fs/xfs/xfs_aops.c        |   1 +
- fs/xfs/xfs_attr.c        |   1 +
- fs/xfs/xfs_attr_remote.c |   1 +
- fs/xfs/xfs_bmap.c        | 804 +--------------------------------------------
- fs/xfs/xfs_bmap.h        |  56 ----
- fs/xfs/xfs_bmap_util.c   | 834 +++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_bmap_util.h   |  96 ++++++
- fs/xfs/xfs_dfrag.c       |   1 +
- fs/xfs/xfs_dquot.c       |   1 +
- fs/xfs/xfs_filestream.c  |   5 +-
- fs/xfs/xfs_inode.c       |   1 +
- fs/xfs/xfs_ioctl.c       |   1 +
- fs/xfs/xfs_iomap.c       |   1 +
- fs/xfs/xfs_iops.c        |   1 +
- fs/xfs/xfs_rename.c      |   1 +
- fs/xfs/xfs_rtalloc.c     |   1 +
- fs/xfs/xfs_symlink.c     |   1 +
- fs/xfs/xfs_trans_resv.c  |   1 +
- fs/xfs/xfs_vnodeops.c    |   1 +
- 20 files changed, 957 insertions(+), 853 deletions(-)
- create mode 100644 fs/xfs/xfs_bmap_util.c
- create mode 100644 fs/xfs/xfs_bmap_util.h
+ fs/xfs/Makefile        |    1 -
+ fs/xfs/xfs_acl.c       |    1 -
+ fs/xfs/xfs_aops.c      |    1 -
+ fs/xfs/xfs_attr.c      |    1 -
+ fs/xfs/xfs_attr.h      |    8 +
+ fs/xfs/xfs_bmap.c      |    1 -
+ fs/xfs/xfs_bmap_util.c |  861 ++++++++++++++++++++++
+ fs/xfs/xfs_bmap_util.h |   11 +
+ fs/xfs/xfs_dfrag.c     |    1 -
+ fs/xfs/xfs_dir2.c      |    1 -
+ fs/xfs/xfs_dir2.h      |    6 -
+ fs/xfs/xfs_dir2_priv.h |    6 +
+ fs/xfs/xfs_export.c    |    1 -
+ fs/xfs/xfs_file.c      |    3 +-
+ fs/xfs/xfs_icache.c    |    2 +-
+ fs/xfs/xfs_inode.c     | 1003 +++++++++++++++++++++++++-
+ fs/xfs/xfs_inode.h     |   23 +-
+ fs/xfs/xfs_inode_buf.h |    1 -
+ fs/xfs/xfs_ioctl.c     |   36 +-
+ fs/xfs/xfs_ioctl.h     |    6 +
+ fs/xfs/xfs_ioctl32.c   |    1 -
+ fs/xfs/xfs_iops.c      |    2 +-
+ fs/xfs/xfs_iops.h      |   13 +
+ fs/xfs/xfs_rename.c    |    1 -
+ fs/xfs/xfs_super.c     |    1 -
+ fs/xfs/xfs_vnodeops.c  | 1872 ------------------------------------------------
+ fs/xfs/xfs_vnodeops.h  |   55 --
+ fs/xfs/xfs_xattr.c     |    1 -
+ 28 files changed, 1930 insertions(+), 1990 deletions(-)
+ delete mode 100644 fs/xfs/xfs_vnodeops.c
+ delete mode 100644 fs/xfs/xfs_vnodeops.h
 
 diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index fb14461..dcd21b9 100644
+index dcd21b9..8691dba 100644
 --- a/fs/xfs/Makefile
 +++ b/fs/xfs/Makefile
-@@ -30,6 +30,7 @@ xfs-y				+= xfs_aops.o \
- 				   xfs_attr_inactive.o \
- 				   xfs_attr_list.o \
- 				   xfs_bit.o \
-+				   xfs_bmap_util.o \
- 				   xfs_buf.o \
- 				   xfs_dfrag.o \
- 				   xfs_dir2_readdir.o \
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 596ec71..bf1270f 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -31,6 +31,7 @@
- #include "xfs_vnodeops.h"
- #include "xfs_trace.h"
- #include "xfs_bmap.h"
-+#include "xfs_bmap_util.h"
- #include <linux/aio.h>
- #include <linux/gfp.h>
- #include <linux/mpage.h>
-diff --git a/fs/xfs/xfs_attr.c b/fs/xfs/xfs_attr.c
-index 6ab77e3..91acc38 100644
---- a/fs/xfs/xfs_attr.c
-+++ b/fs/xfs/xfs_attr.c
-@@ -33,6 +33,7 @@
- #include "xfs_alloc.h"
- #include "xfs_inode_item.h"
- #include "xfs_bmap.h"
-+#include "xfs_bmap_util.h"
+@@ -55,7 +55,6 @@ xfs-y				+= xfs_aops.o \
+ 				   xfs_symlink.o \
+ 				   xfs_trans.o \
+ 				   xfs_utils.o \
+-				   xfs_vnodeops.o \
+ 				   xfs_xattr.o \
+ 				   kmem.o \
+ 				   uuid.o
+diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
+index 150c670..0c4368a 100644
+--- a/fs/xfs/xfs_acl.c
++++ b/fs/xfs/xfs_acl.c
+@@ -22,7 +22,6 @@
  #include "xfs_attr.h"
- #include "xfs_attr_leaf.h"
- #include "xfs_attr_remote.h"
-diff --git a/fs/xfs/xfs_attr_remote.c b/fs/xfs/xfs_attr_remote.c
-index 39a59ea..13a0ed9 100644
---- a/fs/xfs/xfs_attr_remote.c
-+++ b/fs/xfs/xfs_attr_remote.c
-@@ -34,6 +34,7 @@
- #include "xfs_alloc.h"
- #include "xfs_inode_item.h"
- #include "xfs_bmap.h"
-+#include "xfs_bmap_util.h"
- #include "xfs_attr.h"
- #include "xfs_attr_leaf.h"
- #include "xfs_attr_remote.h"
-diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-index 72a2eea..1f09faf 100644
---- a/fs/xfs/xfs_bmap.c
-+++ b/fs/xfs/xfs_bmap.c
-@@ -40,6 +40,7 @@
- #include "xfs_extfree_item.h"
- #include "xfs_alloc.h"
- #include "xfs_bmap.h"
-+#include "xfs_bmap_util.h"
- #include "xfs_rtalloc.h"
- #include "xfs_error.h"
- #include "xfs_attr_leaf.h"
-@@ -109,19 +110,6 @@ xfs_bmap_compute_maxlevels(
- 	mp->m_bm_maxlevels[whichfork] = level;
- }
- 
--/*
-- * Convert the given file system block to a disk block.  We have to treat it
-- * differently based on whether the file is a real time file or not, because the
-- * bmap code does.
-- */
--xfs_daddr_t
--xfs_fsb_to_db(struct xfs_inode *ip, xfs_fsblock_t fsb)
--{
--	return (XFS_IS_REALTIME_INODE(ip) ? \
--		 (xfs_daddr_t)XFS_FSB_TO_BB((ip)->i_mount, (fsb)) : \
--		 XFS_FSB_TO_DADDR((ip)->i_mount, (fsb)));
--}
--
- STATIC int				/* error */
- xfs_bmbt_lookup_eq(
- 	struct xfs_btree_cur	*cur,
-@@ -264,173 +252,6 @@ xfs_bmap_forkoff_reset(
- }
- 
- /*
-- * Extent tree block counting routines.
-- */
--
--/*
-- * Count leaf blocks given a range of extent records.
-- */
--STATIC void
--xfs_bmap_count_leaves(
--	xfs_ifork_t		*ifp,
--	xfs_extnum_t		idx,
--	int			numrecs,
--	int			*count)
--{
--	int		b;
--
--	for (b = 0; b < numrecs; b++) {
--		xfs_bmbt_rec_host_t *frp = xfs_iext_get_ext(ifp, idx + b);
--		*count += xfs_bmbt_get_blockcount(frp);
--	}
--}
--
--/*
-- * Count leaf blocks given a range of extent records originally
-- * in btree format.
-- */
--STATIC void
--xfs_bmap_disk_count_leaves(
--	struct xfs_mount	*mp,
--	struct xfs_btree_block	*block,
--	int			numrecs,
--	int			*count)
--{
--	int		b;
--	xfs_bmbt_rec_t	*frp;
--
--	for (b = 1; b <= numrecs; b++) {
--		frp = XFS_BMBT_REC_ADDR(mp, block, b);
--		*count += xfs_bmbt_disk_get_blockcount(frp);
--	}
--}
--
--/*
-- * Recursively walks each level of a btree
-- * to count total fsblocks is use.
-- */
--STATIC int                                     /* error */
--xfs_bmap_count_tree(
--	xfs_mount_t     *mp,            /* file system mount point */
--	xfs_trans_t     *tp,            /* transaction pointer */
--	xfs_ifork_t	*ifp,		/* inode fork pointer */
--	xfs_fsblock_t   blockno,	/* file system block number */
--	int             levelin,	/* level in btree */
--	int		*count)		/* Count of blocks */
--{
--	int			error;
--	xfs_buf_t		*bp, *nbp;
--	int			level = levelin;
--	__be64			*pp;
--	xfs_fsblock_t           bno = blockno;
--	xfs_fsblock_t		nextbno;
--	struct xfs_btree_block	*block, *nextblock;
--	int			numrecs;
--
--	error = xfs_btree_read_bufl(mp, tp, bno, 0, &bp, XFS_BMAP_BTREE_REF,
--						&xfs_bmbt_buf_ops);
--	if (error)
--		return error;
--	*count += 1;
--	block = XFS_BUF_TO_BLOCK(bp);
--
--	if (--level) {
--		/* Not at node above leaves, count this level of nodes */
--		nextbno = be64_to_cpu(block->bb_u.l.bb_rightsib);
--		while (nextbno != NULLFSBLOCK) {
--			error = xfs_btree_read_bufl(mp, tp, nextbno, 0, &nbp,
--						XFS_BMAP_BTREE_REF,
--						&xfs_bmbt_buf_ops);
--			if (error)
--				return error;
--			*count += 1;
--			nextblock = XFS_BUF_TO_BLOCK(nbp);
--			nextbno = be64_to_cpu(nextblock->bb_u.l.bb_rightsib);
--			xfs_trans_brelse(tp, nbp);
--		}
--
--		/* Dive to the next level */
--		pp = XFS_BMBT_PTR_ADDR(mp, block, 1, mp->m_bmap_dmxr[1]);
--		bno = be64_to_cpu(*pp);
--		if (unlikely((error =
--		     xfs_bmap_count_tree(mp, tp, ifp, bno, level, count)) < 0)) {
--			xfs_trans_brelse(tp, bp);
--			XFS_ERROR_REPORT("xfs_bmap_count_tree(1)",
--					 XFS_ERRLEVEL_LOW, mp);
--			return XFS_ERROR(EFSCORRUPTED);
--		}
--		xfs_trans_brelse(tp, bp);
--	} else {
--		/* count all level 1 nodes and their leaves */
--		for (;;) {
--			nextbno = be64_to_cpu(block->bb_u.l.bb_rightsib);
--			numrecs = be16_to_cpu(block->bb_numrecs);
--			xfs_bmap_disk_count_leaves(mp, block, numrecs, count);
--			xfs_trans_brelse(tp, bp);
--			if (nextbno == NULLFSBLOCK)
--				break;
--			bno = nextbno;
--			error = xfs_btree_read_bufl(mp, tp, bno, 0, &bp,
--						XFS_BMAP_BTREE_REF,
--						&xfs_bmbt_buf_ops);
--			if (error)
--				return error;
--			*count += 1;
--			block = XFS_BUF_TO_BLOCK(bp);
--		}
--	}
--	return 0;
--}
--
--/*
-- * Count fsblocks of the given fork.
-- */
--int						/* error */
--xfs_bmap_count_blocks(
--	xfs_trans_t		*tp,		/* transaction pointer */
--	xfs_inode_t		*ip,		/* incore inode */
--	int			whichfork,	/* data or attr fork */
--	int			*count)		/* out: count of blocks */
--{
--	struct xfs_btree_block	*block;	/* current btree block */
--	xfs_fsblock_t		bno;	/* block # of "block" */
--	xfs_ifork_t		*ifp;	/* fork structure */
--	int			level;	/* btree level, for checking */
--	xfs_mount_t		*mp;	/* file system mount structure */
--	__be64			*pp;	/* pointer to block address */
--
--	bno = NULLFSBLOCK;
--	mp = ip->i_mount;
--	ifp = XFS_IFORK_PTR(ip, whichfork);
--	if ( XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS ) {
--		xfs_bmap_count_leaves(ifp, 0,
--			ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t),
--			count);
--		return 0;
--	}
--
--	/*
--	 * Root level must use BMAP_BROOT_PTR_ADDR macro to get ptr out.
--	 */
--	block = ifp->if_broot;
--	level = be16_to_cpu(block->bb_level);
--	ASSERT(level > 0);
--	pp = XFS_BMAP_BROOT_PTR_ADDR(mp, block, 1, ifp->if_broot_bytes);
--	bno = be64_to_cpu(*pp);
--	ASSERT(bno != NULLDFSBNO);
--	ASSERT(XFS_FSB_TO_AGNO(mp, bno) < mp->m_sb.sb_agcount);
--	ASSERT(XFS_FSB_TO_AGBNO(mp, bno) < mp->m_sb.sb_agblocks);
--
--	if (unlikely(xfs_bmap_count_tree(mp, tp, ifp, bno, level, count) < 0)) {
--		XFS_ERROR_REPORT("xfs_bmap_count_blocks(2)", XFS_ERRLEVEL_LOW,
--				 mp);
--		return XFS_ERROR(EFSCORRUPTED);
--	}
--
--	return 0;
--}
--
--/*
-  * Debug/sanity checking code
-  */
- 
-@@ -824,7 +645,7 @@ xfs_bmap_add_free(
-  * Remove the entry "free" from the free item list.  Prev points to the
-  * previous entry, unless "free" is the head of the list.
-  */
--STATIC void
-+void
- xfs_bmap_del_free(
- 	xfs_bmap_free_t		*flist,	/* free item list header */
- 	xfs_bmap_free_item_t	*prev,	/* previous item on list, if any */
-@@ -838,92 +659,6 @@ xfs_bmap_del_free(
- 	kmem_zone_free(xfs_bmap_free_item_zone, free);
- }
- 
--
--/*
-- * Routine to be called at transaction's end by xfs_bmapi, xfs_bunmapi
-- * caller.  Frees all the extents that need freeing, which must be done
-- * last due to locking considerations.  We never free any extents in
-- * the first transaction.
-- *
-- * Return 1 if the given transaction was committed and a new one
-- * started, and 0 otherwise in the committed parameter.
-- */
--int						/* error */
--xfs_bmap_finish(
--	xfs_trans_t		**tp,		/* transaction pointer addr */
--	xfs_bmap_free_t		*flist,		/* i/o: list extents to free */
--	int			*committed)	/* xact committed or not */
--{
--	xfs_efd_log_item_t	*efd;		/* extent free data */
--	xfs_efi_log_item_t	*efi;		/* extent free intention */
--	int			error;		/* error return value */
--	xfs_bmap_free_item_t	*free;		/* free extent item */
--	unsigned int		logres;		/* new log reservation */
--	unsigned int		logcount;	/* new log count */
--	xfs_mount_t		*mp;		/* filesystem mount structure */
--	xfs_bmap_free_item_t	*next;		/* next item on free list */
--	xfs_trans_t		*ntp;		/* new transaction pointer */
--
--	ASSERT((*tp)->t_flags & XFS_TRANS_PERM_LOG_RES);
--	if (flist->xbf_count == 0) {
--		*committed = 0;
--		return 0;
--	}
--	ntp = *tp;
--	efi = xfs_trans_get_efi(ntp, flist->xbf_count);
--	for (free = flist->xbf_first; free; free = free->xbfi_next)
--		xfs_trans_log_efi_extent(ntp, efi, free->xbfi_startblock,
--			free->xbfi_blockcount);
--	logres = ntp->t_log_res;
--	logcount = ntp->t_log_count;
--	ntp = xfs_trans_dup(*tp);
--	error = xfs_trans_commit(*tp, 0);
--	*tp = ntp;
--	*committed = 1;
--	/*
--	 * We have a new transaction, so we should return committed=1,
--	 * even though we're returning an error.
--	 */
--	if (error)
--		return error;
--
--	/*
--	 * transaction commit worked ok so we can drop the extra ticket
--	 * reference that we gained in xfs_trans_dup()
--	 */
--	xfs_log_ticket_put(ntp->t_ticket);
--
--	if ((error = xfs_trans_reserve(ntp, 0, logres, 0, XFS_TRANS_PERM_LOG_RES,
--			logcount)))
--		return error;
--	efd = xfs_trans_get_efd(ntp, efi, flist->xbf_count);
--	for (free = flist->xbf_first; free != NULL; free = next) {
--		next = free->xbfi_next;
--		if ((error = xfs_free_extent(ntp, free->xbfi_startblock,
--				free->xbfi_blockcount))) {
--			/*
--			 * The bmap free list will be cleaned up at a
--			 * higher level.  The EFI will be canceled when
--			 * this transaction is aborted.
--			 * Need to force shutdown here to make sure it
--			 * happens, since this transaction may not be
--			 * dirty yet.
--			 */
--			mp = ntp->t_mountp;
--			if (!XFS_FORCED_SHUTDOWN(mp))
--				xfs_force_shutdown(mp,
--						   (error == EFSCORRUPTED) ?
--						   SHUTDOWN_CORRUPT_INCORE :
--						   SHUTDOWN_META_IO_ERROR);
--			return error;
--		}
--		xfs_trans_log_efd_extent(ntp, efd, free->xbfi_startblock,
--			free->xbfi_blockcount);
--		xfs_bmap_del_free(flist, NULL, free);
--	}
--	return 0;
--}
--
- /*
-  * Free up any items left in the list.
-  */
-@@ -1864,7 +1599,7 @@ xfs_bmap_last_before(
- 	return 0;
- }
- 
--STATIC int
-+int
- xfs_bmap_last_extent(
- 	struct xfs_trans	*tp,
- 	struct xfs_inode	*ip,
-@@ -1928,29 +1663,6 @@ xfs_bmap_isaeof(
- }
- 
- /*
-- * Check if the endoff is outside the last extent. If so the caller will grow
-- * the allocation to a stripe unit boundary.  All offsets are considered outside
-- * the end of file for an empty fork, so 1 is returned in *eof in that case.
-- */
--int
--xfs_bmap_eof(
--	struct xfs_inode	*ip,
--	xfs_fileoff_t		endoff,
--	int			whichfork,
--	int			*eof)
--{
--	struct xfs_bmbt_irec	rec;
--	int			error;
--
--	error = xfs_bmap_last_extent(NULL, ip, whichfork, &rec, eof);
--	if (error || *eof)
--		return error;
--
--	*eof = endoff >= rec.br_startoff + rec.br_blockcount;
--	return 0;
--}
--
--/*
-  * Returns the file-relative block number of the first block past eof in
-  * the file.  This is not based on i_size, it is based on the extent records.
-  * Returns 0 for local files, as they do not have extent records.
-@@ -3489,7 +3201,7 @@ done:
- /*
-  * Adjust the size of the new extent based on di_extsize and rt extsize.
-  */
--STATIC int
-+int
- xfs_bmap_extsize_align(
- 	xfs_mount_t	*mp,
- 	xfs_bmbt_irec_t	*gotp,		/* next extent pointer */
-@@ -3651,9 +3363,9 @@ xfs_bmap_extsize_align(
- 
- #define XFS_ALLOC_GAP_UNITS	4
- 
--STATIC void
-+void
- xfs_bmap_adjacent(
--	xfs_bmalloca_t	*ap)		/* bmap alloc argument struct */
-+	struct xfs_bmalloca	*ap)	/* bmap alloc argument struct */
- {
- 	xfs_fsblock_t	adjust;		/* adjustment to block numbers */
- 	xfs_agnumber_t	fb_agno;	/* ag number of ap->firstblock */
-@@ -3800,109 +3512,6 @@ xfs_bmap_adjacent(
- }
- 
- STATIC int
--xfs_bmap_rtalloc(
--	xfs_bmalloca_t	*ap)		/* bmap alloc argument struct */
--{
--	xfs_alloctype_t	atype = 0;	/* type for allocation routines */
--	int		error;		/* error return value */
--	xfs_mount_t	*mp;		/* mount point structure */
--	xfs_extlen_t	prod = 0;	/* product factor for allocators */
--	xfs_extlen_t	ralen = 0;	/* realtime allocation length */
--	xfs_extlen_t	align;		/* minimum allocation alignment */
--	xfs_rtblock_t	rtb;
--
--	mp = ap->ip->i_mount;
--	align = xfs_get_extsz_hint(ap->ip);
--	prod = align / mp->m_sb.sb_rextsize;
--	error = xfs_bmap_extsize_align(mp, &ap->got, &ap->prev,
--					align, 1, ap->eof, 0,
--					ap->conv, &ap->offset, &ap->length);
--	if (error)
--		return error;
--	ASSERT(ap->length);
--	ASSERT(ap->length % mp->m_sb.sb_rextsize == 0);
--
--	/*
--	 * If the offset & length are not perfectly aligned
--	 * then kill prod, it will just get us in trouble.
--	 */
--	if (do_mod(ap->offset, align) || ap->length % align)
--		prod = 1;
--	/*
--	 * Set ralen to be the actual requested length in rtextents.
--	 */
--	ralen = ap->length / mp->m_sb.sb_rextsize;
--	/*
--	 * If the old value was close enough to MAXEXTLEN that
--	 * we rounded up to it, cut it back so it's valid again.
--	 * Note that if it's a really large request (bigger than
--	 * MAXEXTLEN), we don't hear about that number, and can't
--	 * adjust the starting point to match it.
--	 */
--	if (ralen * mp->m_sb.sb_rextsize >= MAXEXTLEN)
--		ralen = MAXEXTLEN / mp->m_sb.sb_rextsize;
--
--	/*
--	 * Lock out other modifications to the RT bitmap inode.
--	 */
--	xfs_ilock(mp->m_rbmip, XFS_ILOCK_EXCL);
--	xfs_trans_ijoin(ap->tp, mp->m_rbmip, XFS_ILOCK_EXCL);
--
--	/*
--	 * If it's an allocation to an empty file at offset 0,
--	 * pick an extent that will space things out in the rt area.
--	 */
--	if (ap->eof && ap->offset == 0) {
--		xfs_rtblock_t uninitialized_var(rtx); /* realtime extent no */
--
--		error = xfs_rtpick_extent(mp, ap->tp, ralen, &rtx);
--		if (error)
--			return error;
--		ap->blkno = rtx * mp->m_sb.sb_rextsize;
--	} else {
--		ap->blkno = 0;
--	}
--
--	xfs_bmap_adjacent(ap);
--
--	/*
--	 * Realtime allocation, done through xfs_rtallocate_extent.
--	 */
--	atype = ap->blkno == 0 ?  XFS_ALLOCTYPE_ANY_AG : XFS_ALLOCTYPE_NEAR_BNO;
--	do_div(ap->blkno, mp->m_sb.sb_rextsize);
--	rtb = ap->blkno;
--	ap->length = ralen;
--	if ((error = xfs_rtallocate_extent(ap->tp, ap->blkno, 1, ap->length,
--				&ralen, atype, ap->wasdel, prod, &rtb)))
--		return error;
--	if (rtb == NULLFSBLOCK && prod > 1 &&
--	    (error = xfs_rtallocate_extent(ap->tp, ap->blkno, 1,
--					   ap->length, &ralen, atype,
--					   ap->wasdel, 1, &rtb)))
--		return error;
--	ap->blkno = rtb;
--	if (ap->blkno != NULLFSBLOCK) {
--		ap->blkno *= mp->m_sb.sb_rextsize;
--		ralen *= mp->m_sb.sb_rextsize;
--		ap->length = ralen;
--		ap->ip->i_d.di_nblocks += ralen;
--		xfs_trans_log_inode(ap->tp, ap->ip, XFS_ILOG_CORE);
--		if (ap->wasdel)
--			ap->ip->i_delayed_blks -= ralen;
--		/*
--		 * Adjust the disk quota also. This was reserved
--		 * earlier.
--		 */
--		xfs_trans_mod_dquot_byino(ap->tp, ap->ip,
--			ap->wasdel ? XFS_TRANS_DQ_DELRTBCOUNT :
--					XFS_TRANS_DQ_RTBCOUNT, (long) ralen);
--	} else {
--		ap->length = 0;
--	}
--	return 0;
--}
--
--STATIC int
- xfs_bmap_btalloc_nullfb(
- 	struct xfs_bmalloca	*ap,
- 	struct xfs_alloc_arg	*args,
-@@ -4019,7 +3628,7 @@ xfs_bmap_btalloc_nullfb(
- 
- STATIC int
- xfs_bmap_btalloc(
--	xfs_bmalloca_t	*ap)		/* bmap alloc argument struct */
-+	struct xfs_bmalloca	*ap)	/* bmap alloc argument struct */
- {
- 	xfs_mount_t	*mp;		/* mount point structure */
- 	xfs_alloctype_t	atype = 0;	/* type for allocation routines */
-@@ -4251,7 +3860,7 @@ xfs_bmap_btalloc(
-  */
- STATIC int
- xfs_bmap_alloc(
--	xfs_bmalloca_t	*ap)		/* bmap alloc argument struct */
-+	struct xfs_bmalloca	*ap)	/* bmap alloc argument struct */
- {
- 	if (XFS_IS_REALTIME_INODE(ap->ip) && ap->userdata)
- 		return xfs_bmap_rtalloc(ap);
-@@ -4639,7 +4248,7 @@ xfs_bmapi_delay(
- }
- 
- 
--STATIC int
-+int
- __xfs_bmapi_allocate(
- 	struct xfs_bmalloca	*bma)
- {
-@@ -4757,45 +4366,6 @@ __xfs_bmapi_allocate(
- 	return 0;
- }
- 
--static void
--xfs_bmapi_allocate_worker(
--	struct work_struct	*work)
--{
--	struct xfs_bmalloca	*args = container_of(work,
--						struct xfs_bmalloca, work);
--	unsigned long		pflags;
--
--	/* we are in a transaction context here */
--	current_set_flags_nested(&pflags, PF_FSTRANS);
--
--	args->result = __xfs_bmapi_allocate(args);
--	complete(args->done);
--
--	current_restore_flags_nested(&pflags, PF_FSTRANS);
--}
--
--/*
-- * Some allocation requests often come in with little stack to work on. Push
-- * them off to a worker thread so there is lots of stack to use. Otherwise just
-- * call directly to avoid the context switch overhead here.
-- */
--int
--xfs_bmapi_allocate(
--	struct xfs_bmalloca	*args)
--{
--	DECLARE_COMPLETION_ONSTACK(done);
--
--	if (!args->stack_switch)
--		return __xfs_bmapi_allocate(args);
--
--
--	args->done = &done;
--	INIT_WORK_ONSTACK(&args->work, xfs_bmapi_allocate_worker);
--	queue_work(xfs_alloc_wq, &args->work);
--	wait_for_completion(&done);
--	return args->result;
--}
--
- STATIC int
- xfs_bmapi_convert_unwritten(
- 	struct xfs_bmalloca	*bma,
-@@ -5790,359 +5360,3 @@ error0:
- 	}
- 	return error;
- }
--
--/*
-- * returns 1 for success, 0 if we failed to map the extent.
-- */
--STATIC int
--xfs_getbmapx_fix_eof_hole(
--	xfs_inode_t		*ip,		/* xfs incore inode pointer */
--	struct getbmapx		*out,		/* output structure */
--	int			prealloced,	/* this is a file with
--						 * preallocated data space */
--	__int64_t		end,		/* last block requested */
--	xfs_fsblock_t		startblock)
--{
--	__int64_t		fixlen;
--	xfs_mount_t		*mp;		/* file system mount point */
--	xfs_ifork_t		*ifp;		/* inode fork pointer */
--	xfs_extnum_t		lastx;		/* last extent pointer */
--	xfs_fileoff_t		fileblock;
--
--	if (startblock == HOLESTARTBLOCK) {
--		mp = ip->i_mount;
--		out->bmv_block = -1;
--		fixlen = XFS_FSB_TO_BB(mp, XFS_B_TO_FSB(mp, XFS_ISIZE(ip)));
--		fixlen -= out->bmv_offset;
--		if (prealloced && out->bmv_offset + out->bmv_length == end) {
--			/* Came to hole at EOF. Trim it. */
--			if (fixlen <= 0)
--				return 0;
--			out->bmv_length = fixlen;
--		}
--	} else {
--		if (startblock == DELAYSTARTBLOCK)
--			out->bmv_block = -2;
--		else
--			out->bmv_block = xfs_fsb_to_db(ip, startblock);
--		fileblock = XFS_BB_TO_FSB(ip->i_mount, out->bmv_offset);
--		ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
--		if (xfs_iext_bno_to_ext(ifp, fileblock, &lastx) &&
--		   (lastx == (ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t))-1))
--			out->bmv_oflags |= BMV_OF_LAST;
--	}
--
--	return 1;
--}
--
--/*
-- * Get inode's extents as described in bmv, and format for output.
-- * Calls formatter to fill the user's buffer until all extents
-- * are mapped, until the passed-in bmv->bmv_count slots have
-- * been filled, or until the formatter short-circuits the loop,
-- * if it is tracking filled-in extents on its own.
-- */
--int						/* error code */
--xfs_getbmap(
--	xfs_inode_t		*ip,
--	struct getbmapx		*bmv,		/* user bmap structure */
--	xfs_bmap_format_t	formatter,	/* format to user */
--	void			*arg)		/* formatter arg */
--{
--	__int64_t		bmvend;		/* last block requested */
--	int			error = 0;	/* return value */
--	__int64_t		fixlen;		/* length for -1 case */
--	int			i;		/* extent number */
--	int			lock;		/* lock state */
--	xfs_bmbt_irec_t		*map;		/* buffer for user's data */
--	xfs_mount_t		*mp;		/* file system mount point */
--	int			nex;		/* # of user extents can do */
--	int			nexleft;	/* # of user extents left */
--	int			subnex;		/* # of bmapi's can do */
--	int			nmap;		/* number of map entries */
--	struct getbmapx		*out;		/* output structure */
--	int			whichfork;	/* data or attr fork */
--	int			prealloced;	/* this is a file with
--						 * preallocated data space */
--	int			iflags;		/* interface flags */
--	int			bmapi_flags;	/* flags for xfs_bmapi */
--	int			cur_ext = 0;
--
--	mp = ip->i_mount;
--	iflags = bmv->bmv_iflags;
--	whichfork = iflags & BMV_IF_ATTRFORK ? XFS_ATTR_FORK : XFS_DATA_FORK;
--
--	if (whichfork == XFS_ATTR_FORK) {
--		if (XFS_IFORK_Q(ip)) {
--			if (ip->i_d.di_aformat != XFS_DINODE_FMT_EXTENTS &&
--			    ip->i_d.di_aformat != XFS_DINODE_FMT_BTREE &&
--			    ip->i_d.di_aformat != XFS_DINODE_FMT_LOCAL)
--				return XFS_ERROR(EINVAL);
--		} else if (unlikely(
--			   ip->i_d.di_aformat != 0 &&
--			   ip->i_d.di_aformat != XFS_DINODE_FMT_EXTENTS)) {
--			XFS_ERROR_REPORT("xfs_getbmap", XFS_ERRLEVEL_LOW,
--					 ip->i_mount);
--			return XFS_ERROR(EFSCORRUPTED);
--		}
--
--		prealloced = 0;
--		fixlen = 1LL << 32;
--	} else {
--		if (ip->i_d.di_format != XFS_DINODE_FMT_EXTENTS &&
--		    ip->i_d.di_format != XFS_DINODE_FMT_BTREE &&
--		    ip->i_d.di_format != XFS_DINODE_FMT_LOCAL)
--			return XFS_ERROR(EINVAL);
--
--		if (xfs_get_extsz_hint(ip) ||
--		    ip->i_d.di_flags & (XFS_DIFLAG_PREALLOC|XFS_DIFLAG_APPEND)){
--			prealloced = 1;
--			fixlen = mp->m_super->s_maxbytes;
--		} else {
--			prealloced = 0;
--			fixlen = XFS_ISIZE(ip);
--		}
--	}
--
--	if (bmv->bmv_length == -1) {
--		fixlen = XFS_FSB_TO_BB(mp, XFS_B_TO_FSB(mp, fixlen));
--		bmv->bmv_length =
--			max_t(__int64_t, fixlen - bmv->bmv_offset, 0);
--	} else if (bmv->bmv_length == 0) {
--		bmv->bmv_entries = 0;
--		return 0;
--	} else if (bmv->bmv_length < 0) {
--		return XFS_ERROR(EINVAL);
--	}
--
--	nex = bmv->bmv_count - 1;
--	if (nex <= 0)
--		return XFS_ERROR(EINVAL);
--	bmvend = bmv->bmv_offset + bmv->bmv_length;
--
--
--	if (bmv->bmv_count > ULONG_MAX / sizeof(struct getbmapx))
--		return XFS_ERROR(ENOMEM);
--	out = kmem_zalloc(bmv->bmv_count * sizeof(struct getbmapx), KM_MAYFAIL);
--	if (!out) {
--		out = kmem_zalloc_large(bmv->bmv_count *
--					sizeof(struct getbmapx));
--		if (!out)
--			return XFS_ERROR(ENOMEM);
--	}
--
--	xfs_ilock(ip, XFS_IOLOCK_SHARED);
--	if (whichfork == XFS_DATA_FORK && !(iflags & BMV_IF_DELALLOC)) {
--		if (ip->i_delayed_blks || XFS_ISIZE(ip) > ip->i_d.di_size) {
--			error = -filemap_write_and_wait(VFS_I(ip)->i_mapping);
--			if (error)
--				goto out_unlock_iolock;
--		}
--		/*
--		 * even after flushing the inode, there can still be delalloc
--		 * blocks on the inode beyond EOF due to speculative
--		 * preallocation. These are not removed until the release
--		 * function is called or the inode is inactivated. Hence we
--		 * cannot assert here that ip->i_delayed_blks == 0.
--		 */
--	}
--
--	lock = xfs_ilock_map_shared(ip);
--
--	/*
--	 * Don't let nex be bigger than the number of extents
--	 * we can have assuming alternating holes and real extents.
--	 */
--	if (nex > XFS_IFORK_NEXTENTS(ip, whichfork) * 2 + 1)
--		nex = XFS_IFORK_NEXTENTS(ip, whichfork) * 2 + 1;
--
--	bmapi_flags = xfs_bmapi_aflag(whichfork);
--	if (!(iflags & BMV_IF_PREALLOC))
--		bmapi_flags |= XFS_BMAPI_IGSTATE;
--
--	/*
--	 * Allocate enough space to handle "subnex" maps at a time.
--	 */
--	error = ENOMEM;
--	subnex = 16;
--	map = kmem_alloc(subnex * sizeof(*map), KM_MAYFAIL | KM_NOFS);
--	if (!map)
--		goto out_unlock_ilock;
--
--	bmv->bmv_entries = 0;
--
--	if (XFS_IFORK_NEXTENTS(ip, whichfork) == 0 &&
--	    (whichfork == XFS_ATTR_FORK || !(iflags & BMV_IF_DELALLOC))) {
--		error = 0;
--		goto out_free_map;
--	}
--
--	nexleft = nex;
--
--	do {
--		nmap = (nexleft > subnex) ? subnex : nexleft;
--		error = xfs_bmapi_read(ip, XFS_BB_TO_FSBT(mp, bmv->bmv_offset),
--				       XFS_BB_TO_FSB(mp, bmv->bmv_length),
--				       map, &nmap, bmapi_flags);
--		if (error)
--			goto out_free_map;
--		ASSERT(nmap <= subnex);
--
--		for (i = 0; i < nmap && nexleft && bmv->bmv_length; i++) {
--			out[cur_ext].bmv_oflags = 0;
--			if (map[i].br_state == XFS_EXT_UNWRITTEN)
--				out[cur_ext].bmv_oflags |= BMV_OF_PREALLOC;
--			else if (map[i].br_startblock == DELAYSTARTBLOCK)
--				out[cur_ext].bmv_oflags |= BMV_OF_DELALLOC;
--			out[cur_ext].bmv_offset =
--				XFS_FSB_TO_BB(mp, map[i].br_startoff);
--			out[cur_ext].bmv_length =
--				XFS_FSB_TO_BB(mp, map[i].br_blockcount);
--			out[cur_ext].bmv_unused1 = 0;
--			out[cur_ext].bmv_unused2 = 0;
--
--			/*
--			 * delayed allocation extents that start beyond EOF can
--			 * occur due to speculative EOF allocation when the
--			 * delalloc extent is larger than the largest freespace
--			 * extent at conversion time. These extents cannot be
--			 * converted by data writeback, so can exist here even
--			 * if we are not supposed to be finding delalloc
--			 * extents.
--			 */
--			if (map[i].br_startblock == DELAYSTARTBLOCK &&
--			    map[i].br_startoff <= XFS_B_TO_FSB(mp, XFS_ISIZE(ip)))
--				ASSERT((iflags & BMV_IF_DELALLOC) != 0);
--
--                        if (map[i].br_startblock == HOLESTARTBLOCK &&
--			    whichfork == XFS_ATTR_FORK) {
--				/* came to the end of attribute fork */
--				out[cur_ext].bmv_oflags |= BMV_OF_LAST;
--				goto out_free_map;
--			}
--
--			if (!xfs_getbmapx_fix_eof_hole(ip, &out[cur_ext],
--					prealloced, bmvend,
--					map[i].br_startblock))
--				goto out_free_map;
--
--			bmv->bmv_offset =
--				out[cur_ext].bmv_offset +
--				out[cur_ext].bmv_length;
--			bmv->bmv_length =
--				max_t(__int64_t, 0, bmvend - bmv->bmv_offset);
--
--			/*
--			 * In case we don't want to return the hole,
--			 * don't increase cur_ext so that we can reuse
--			 * it in the next loop.
--			 */
--			if ((iflags & BMV_IF_NO_HOLES) &&
--			    map[i].br_startblock == HOLESTARTBLOCK) {
--				memset(&out[cur_ext], 0, sizeof(out[cur_ext]));
--				continue;
--			}
--
--			nexleft--;
--			bmv->bmv_entries++;
--			cur_ext++;
--		}
--	} while (nmap && nexleft && bmv->bmv_length);
--
-- out_free_map:
--	kmem_free(map);
-- out_unlock_ilock:
--	xfs_iunlock_map_shared(ip, lock);
-- out_unlock_iolock:
--	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
--
--	for (i = 0; i < cur_ext; i++) {
--		int full = 0;	/* user array is full */
--
--		/* format results & advance arg */
--		error = formatter(&arg, &out[i], &full);
--		if (error || full)
--			break;
--	}
--
--	if (is_vmalloc_addr(out))
--		kmem_free_large(out);
--	else
--		kmem_free(out);
--	return error;
--}
--
--/*
-- * dead simple method of punching delalyed allocation blocks from a range in
-- * the inode. Walks a block at a time so will be slow, but is only executed in
-- * rare error cases so the overhead is not critical. This will alays punch out
-- * both the start and end blocks, even if the ranges only partially overlap
-- * them, so it is up to the caller to ensure that partial blocks are not
-- * passed in.
-- */
--int
--xfs_bmap_punch_delalloc_range(
--	struct xfs_inode	*ip,
--	xfs_fileoff_t		start_fsb,
--	xfs_fileoff_t		length)
--{
--	xfs_fileoff_t		remaining = length;
--	int			error = 0;
--
--	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
--
--	do {
--		int		done;
--		xfs_bmbt_irec_t	imap;
--		int		nimaps = 1;
--		xfs_fsblock_t	firstblock;
--		xfs_bmap_free_t flist;
--
--		/*
--		 * Map the range first and check that it is a delalloc extent
--		 * before trying to unmap the range. Otherwise we will be
--		 * trying to remove a real extent (which requires a
--		 * transaction) or a hole, which is probably a bad idea...
--		 */
--		error = xfs_bmapi_read(ip, start_fsb, 1, &imap, &nimaps,
--				       XFS_BMAPI_ENTIRE);
--
--		if (error) {
--			/* something screwed, just bail */
--			if (!XFS_FORCED_SHUTDOWN(ip->i_mount)) {
--				xfs_alert(ip->i_mount,
--			"Failed delalloc mapping lookup ino %lld fsb %lld.",
--						ip->i_ino, start_fsb);
--			}
--			break;
--		}
--		if (!nimaps) {
--			/* nothing there */
--			goto next_block;
--		}
--		if (imap.br_startblock != DELAYSTARTBLOCK) {
--			/* been converted, ignore */
--			goto next_block;
--		}
--		WARN_ON(imap.br_blockcount == 0);
--
--		/*
--		 * Note: while we initialise the firstblock/flist pair, they
--		 * should never be used because blocks should never be
--		 * allocated or freed for a delalloc extent and hence we need
--		 * don't cancel or finish them after the xfs_bunmapi() call.
--		 */
--		xfs_bmap_init(&flist, &firstblock);
--		error = xfs_bunmapi(NULL, ip, start_fsb, 1, 0, 1, &firstblock,
--					&flist, &done);
--		if (error)
--			break;
--
--		ASSERT(!flist.xbf_count && !flist.xbf_first);
--next_block:
--		start_fsb++;
--		remaining--;
--	} while(remaining > 0);
--
--	return error;
--}
-diff --git a/fs/xfs/xfs_bmap.h b/fs/xfs/xfs_bmap.h
-index 314dca1..8b2fe97 100644
---- a/fs/xfs/xfs_bmap.h
-+++ b/fs/xfs/xfs_bmap.h
-@@ -108,43 +108,6 @@ static inline void xfs_bmap_init(xfs_bmap_free_t *flp, xfs_fsblock_t *fbp)
- }
- 
- /*
-- * Argument structure for xfs_bmap_alloc.
-- */
--typedef struct xfs_bmalloca {
--	xfs_fsblock_t		*firstblock; /* i/o first block allocated */
--	struct xfs_bmap_free	*flist;	/* bmap freelist */
--	struct xfs_trans	*tp;	/* transaction pointer */
--	struct xfs_inode	*ip;	/* incore inode pointer */
--	struct xfs_bmbt_irec	prev;	/* extent before the new one */
--	struct xfs_bmbt_irec	got;	/* extent after, or delayed */
--
--	xfs_fileoff_t		offset;	/* offset in file filling in */
--	xfs_extlen_t		length;	/* i/o length asked/allocated */
--	xfs_fsblock_t		blkno;	/* starting block of new extent */
--
--	struct xfs_btree_cur	*cur;	/* btree cursor */
--	xfs_extnum_t		idx;	/* current extent index */
--	int			nallocs;/* number of extents alloc'd */
--	int			logflags;/* flags for transaction logging */
--
--	xfs_extlen_t		total;	/* total blocks needed for xaction */
--	xfs_extlen_t		minlen;	/* minimum allocation size (blocks) */
--	xfs_extlen_t		minleft; /* amount must be left after alloc */
--	char			eof;	/* set if allocating past last extent */
--	char			wasdel;	/* replacing a delayed allocation */
--	char			userdata;/* set if is user data */
--	char			aeof;	/* allocated space at eof */
--	char			conv;	/* overwriting unwritten extents */
--	char			stack_switch;
--	int			flags;
--#ifdef __KERNEL__
--	struct completion	*done;
--	struct work_struct	work;
--	int			result;
--#endif /* __KERNEL__ */
--} xfs_bmalloca_t;
--
--/*
-  * Flags for xfs_bmap_add_extent*.
-  */
- #define BMAP_LEFT_CONTIG	(1 << 0)
-@@ -207,23 +170,4 @@ int	xfs_check_nostate_extents(struct xfs_ifork *ifp, xfs_extnum_t idx,
- 		xfs_extnum_t num);
- uint	xfs_default_attroffset(struct xfs_inode *ip);
- 
--#ifdef __KERNEL__
--/* bmap to userspace formatter - copy to user & advance pointer */
--typedef int (*xfs_bmap_format_t)(void **, struct getbmapx *, int *);
--
--int	xfs_bmap_finish(struct xfs_trans **tp, struct xfs_bmap_free *flist,
--		int *committed);
--int	xfs_getbmap(struct xfs_inode *ip, struct getbmapx *bmv,
--		xfs_bmap_format_t formatter, void *arg);
--int	xfs_bmap_eof(struct xfs_inode *ip, xfs_fileoff_t endoff,
--		int whichfork, int *eof);
--int	xfs_bmap_count_blocks(struct xfs_trans *tp, struct xfs_inode *ip,
--		int whichfork, int *count);
--int	xfs_bmap_punch_delalloc_range(struct xfs_inode *ip,
--		xfs_fileoff_t start_fsb, xfs_fileoff_t length);
--
--xfs_daddr_t xfs_fsb_to_db(struct xfs_inode *ip, xfs_fsblock_t fsb);
--
--#endif	/* __KERNEL__ */
--
- #endif	/* __XFS_BMAP_H__ */
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-new file mode 100644
-index 0000000..8e48ddf
---- /dev/null
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -0,0 +1,834 @@
-+/*
-+ * Copyright (c) 2000-2006 Silicon Graphics, Inc.
-+ * All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_format.h"
-+#include "xfs_bit.h"
-+#include "xfs_log.h"
-+#include "xfs_inum.h"
-+#include "xfs_trans.h"
-+#include "xfs_sb.h"
-+#include "xfs_ag.h"
-+#include "xfs_mount.h"
-+#include "xfs_da_btree.h"
-+#include "xfs_bmap_btree.h"
-+#include "xfs_alloc_btree.h"
-+#include "xfs_ialloc_btree.h"
-+#include "xfs_dinode.h"
-+#include "xfs_inode.h"
-+#include "xfs_btree.h"
-+#include "xfs_extfree_item.h"
-+#include "xfs_alloc.h"
-+#include "xfs_bmap.h"
-+#include "xfs_bmap_util.h"
-+#include "xfs_rtalloc.h"
-+#include "xfs_error.h"
-+#include "xfs_quota.h"
-+#include "xfs_trans_space.h"
-+#include "xfs_trace.h"
-+
-+/* Kernel only BMAP related definitions and functions */
-+
-+/*
-+ * Convert the given file system block to a disk block.  We have to treat it
-+ * differently based on whether the file is a real time file or not, because the
-+ * bmap code does.
-+ */
-+xfs_daddr_t
-+xfs_fsb_to_db(struct xfs_inode *ip, xfs_fsblock_t fsb)
-+{
-+	return (XFS_IS_REALTIME_INODE(ip) ? \
-+		 (xfs_daddr_t)XFS_FSB_TO_BB((ip)->i_mount, (fsb)) : \
-+		 XFS_FSB_TO_DADDR((ip)->i_mount, (fsb)));
-+}
-+
-+/*
-+ * Routine to be called at transaction's end by xfs_bmapi, xfs_bunmapi
-+ * caller.  Frees all the extents that need freeing, which must be done
-+ * last due to locking considerations.  We never free any extents in
-+ * the first transaction.
-+ *
-+ * Return 1 if the given transaction was committed and a new one
-+ * started, and 0 otherwise in the committed parameter.
-+ */
-+int						/* error */
-+xfs_bmap_finish(
-+	xfs_trans_t		**tp,		/* transaction pointer addr */
-+	xfs_bmap_free_t		*flist,		/* i/o: list extents to free */
-+	int			*committed)	/* xact committed or not */
-+{
-+	xfs_efd_log_item_t	*efd;		/* extent free data */
-+	xfs_efi_log_item_t	*efi;		/* extent free intention */
-+	int			error;		/* error return value */
-+	xfs_bmap_free_item_t	*free;		/* free extent item */
-+	unsigned int		logres;		/* new log reservation */
-+	unsigned int		logcount;	/* new log count */
-+	xfs_mount_t		*mp;		/* filesystem mount structure */
-+	xfs_bmap_free_item_t	*next;		/* next item on free list */
-+	xfs_trans_t		*ntp;		/* new transaction pointer */
-+
-+	ASSERT((*tp)->t_flags & XFS_TRANS_PERM_LOG_RES);
-+	if (flist->xbf_count == 0) {
-+		*committed = 0;
-+		return 0;
-+	}
-+	ntp = *tp;
-+	efi = xfs_trans_get_efi(ntp, flist->xbf_count);
-+	for (free = flist->xbf_first; free; free = free->xbfi_next)
-+		xfs_trans_log_efi_extent(ntp, efi, free->xbfi_startblock,
-+			free->xbfi_blockcount);
-+	logres = ntp->t_log_res;
-+	logcount = ntp->t_log_count;
-+	ntp = xfs_trans_dup(*tp);
-+	error = xfs_trans_commit(*tp, 0);
-+	*tp = ntp;
-+	*committed = 1;
-+	/*
-+	 * We have a new transaction, so we should return committed=1,
-+	 * even though we're returning an error.
-+	 */
-+	if (error)
-+		return error;
-+
-+	/*
-+	 * transaction commit worked ok so we can drop the extra ticket
-+	 * reference that we gained in xfs_trans_dup()
-+	 */
-+	xfs_log_ticket_put(ntp->t_ticket);
-+
-+	if ((error = xfs_trans_reserve(ntp, 0, logres, 0, XFS_TRANS_PERM_LOG_RES,
-+			logcount)))
-+		return error;
-+	efd = xfs_trans_get_efd(ntp, efi, flist->xbf_count);
-+	for (free = flist->xbf_first; free != NULL; free = next) {
-+		next = free->xbfi_next;
-+		if ((error = xfs_free_extent(ntp, free->xbfi_startblock,
-+				free->xbfi_blockcount))) {
-+			/*
-+			 * The bmap free list will be cleaned up at a
-+			 * higher level.  The EFI will be canceled when
-+			 * this transaction is aborted.
-+			 * Need to force shutdown here to make sure it
-+			 * happens, since this transaction may not be
-+			 * dirty yet.
-+			 */
-+			mp = ntp->t_mountp;
-+			if (!XFS_FORCED_SHUTDOWN(mp))
-+				xfs_force_shutdown(mp,
-+						   (error == EFSCORRUPTED) ?
-+						   SHUTDOWN_CORRUPT_INCORE :
-+						   SHUTDOWN_META_IO_ERROR);
-+			return error;
-+		}
-+		xfs_trans_log_efd_extent(ntp, efd, free->xbfi_startblock,
-+			free->xbfi_blockcount);
-+		xfs_bmap_del_free(flist, NULL, free);
-+	}
-+	return 0;
-+}
-+
-+int
-+xfs_bmap_rtalloc(
-+	struct xfs_bmalloca	*ap)	/* bmap alloc argument struct */
-+{
-+	xfs_alloctype_t	atype = 0;	/* type for allocation routines */
-+	int		error;		/* error return value */
-+	xfs_mount_t	*mp;		/* mount point structure */
-+	xfs_extlen_t	prod = 0;	/* product factor for allocators */
-+	xfs_extlen_t	ralen = 0;	/* realtime allocation length */
-+	xfs_extlen_t	align;		/* minimum allocation alignment */
-+	xfs_rtblock_t	rtb;
-+
-+	mp = ap->ip->i_mount;
-+	align = xfs_get_extsz_hint(ap->ip);
-+	prod = align / mp->m_sb.sb_rextsize;
-+	error = xfs_bmap_extsize_align(mp, &ap->got, &ap->prev,
-+					align, 1, ap->eof, 0,
-+					ap->conv, &ap->offset, &ap->length);
-+	if (error)
-+		return error;
-+	ASSERT(ap->length);
-+	ASSERT(ap->length % mp->m_sb.sb_rextsize == 0);
-+
-+	/*
-+	 * If the offset & length are not perfectly aligned
-+	 * then kill prod, it will just get us in trouble.
-+	 */
-+	if (do_mod(ap->offset, align) || ap->length % align)
-+		prod = 1;
-+	/*
-+	 * Set ralen to be the actual requested length in rtextents.
-+	 */
-+	ralen = ap->length / mp->m_sb.sb_rextsize;
-+	/*
-+	 * If the old value was close enough to MAXEXTLEN that
-+	 * we rounded up to it, cut it back so it's valid again.
-+	 * Note that if it's a really large request (bigger than
-+	 * MAXEXTLEN), we don't hear about that number, and can't
-+	 * adjust the starting point to match it.
-+	 */
-+	if (ralen * mp->m_sb.sb_rextsize >= MAXEXTLEN)
-+		ralen = MAXEXTLEN / mp->m_sb.sb_rextsize;
-+
-+	/*
-+	 * Lock out other modifications to the RT bitmap inode.
-+	 */
-+	xfs_ilock(mp->m_rbmip, XFS_ILOCK_EXCL);
-+	xfs_trans_ijoin(ap->tp, mp->m_rbmip, XFS_ILOCK_EXCL);
-+
-+	/*
-+	 * If it's an allocation to an empty file at offset 0,
-+	 * pick an extent that will space things out in the rt area.
-+	 */
-+	if (ap->eof && ap->offset == 0) {
-+		xfs_rtblock_t uninitialized_var(rtx); /* realtime extent no */
-+
-+		error = xfs_rtpick_extent(mp, ap->tp, ralen, &rtx);
-+		if (error)
-+			return error;
-+		ap->blkno = rtx * mp->m_sb.sb_rextsize;
-+	} else {
-+		ap->blkno = 0;
-+	}
-+
-+	xfs_bmap_adjacent(ap);
-+
-+	/*
-+	 * Realtime allocation, done through xfs_rtallocate_extent.
-+	 */
-+	atype = ap->blkno == 0 ?  XFS_ALLOCTYPE_ANY_AG : XFS_ALLOCTYPE_NEAR_BNO;
-+	do_div(ap->blkno, mp->m_sb.sb_rextsize);
-+	rtb = ap->blkno;
-+	ap->length = ralen;
-+	if ((error = xfs_rtallocate_extent(ap->tp, ap->blkno, 1, ap->length,
-+				&ralen, atype, ap->wasdel, prod, &rtb)))
-+		return error;
-+	if (rtb == NULLFSBLOCK && prod > 1 &&
-+	    (error = xfs_rtallocate_extent(ap->tp, ap->blkno, 1,
-+					   ap->length, &ralen, atype,
-+					   ap->wasdel, 1, &rtb)))
-+		return error;
-+	ap->blkno = rtb;
-+	if (ap->blkno != NULLFSBLOCK) {
-+		ap->blkno *= mp->m_sb.sb_rextsize;
-+		ralen *= mp->m_sb.sb_rextsize;
-+		ap->length = ralen;
-+		ap->ip->i_d.di_nblocks += ralen;
-+		xfs_trans_log_inode(ap->tp, ap->ip, XFS_ILOG_CORE);
-+		if (ap->wasdel)
-+			ap->ip->i_delayed_blks -= ralen;
-+		/*
-+		 * Adjust the disk quota also. This was reserved
-+		 * earlier.
-+		 */
-+		xfs_trans_mod_dquot_byino(ap->tp, ap->ip,
-+			ap->wasdel ? XFS_TRANS_DQ_DELRTBCOUNT :
-+					XFS_TRANS_DQ_RTBCOUNT, (long) ralen);
-+	} else {
-+		ap->length = 0;
-+	}
-+	return 0;
-+}
-+
-+/*
-+ * Stack switching interfaces for allocation
-+ */
-+static void
-+xfs_bmapi_allocate_worker(
-+	struct work_struct	*work)
-+{
-+	struct xfs_bmalloca	*args = container_of(work,
-+						struct xfs_bmalloca, work);
-+	unsigned long		pflags;
-+
-+	/* we are in a transaction context here */
-+	current_set_flags_nested(&pflags, PF_FSTRANS);
-+
-+	args->result = __xfs_bmapi_allocate(args);
-+	complete(args->done);
-+
-+	current_restore_flags_nested(&pflags, PF_FSTRANS);
-+}
-+
-+/*
-+ * Some allocation requests often come in with little stack to work on. Push
-+ * them off to a worker thread so there is lots of stack to use. Otherwise just
-+ * call directly to avoid the context switch overhead here.
-+ */
-+int
-+xfs_bmapi_allocate(
-+	struct xfs_bmalloca	*args)
-+{
-+	DECLARE_COMPLETION_ONSTACK(done);
-+
-+	if (!args->stack_switch)
-+		return __xfs_bmapi_allocate(args);
-+
-+
-+	args->done = &done;
-+	INIT_WORK_ONSTACK(&args->work, xfs_bmapi_allocate_worker);
-+	queue_work(xfs_alloc_wq, &args->work);
-+	wait_for_completion(&done);
-+	return args->result;
-+}
-+
-+/*
-+ * Check if the endoff is outside the last extent. If so the caller will grow
-+ * the allocation to a stripe unit boundary.  All offsets are considered outside
-+ * the end of file for an empty fork, so 1 is returned in *eof in that case.
-+ */
-+int
-+xfs_bmap_eof(
-+	struct xfs_inode	*ip,
-+	xfs_fileoff_t		endoff,
-+	int			whichfork,
-+	int			*eof)
-+{
-+	struct xfs_bmbt_irec	rec;
-+	int			error;
-+
-+	error = xfs_bmap_last_extent(NULL, ip, whichfork, &rec, eof);
-+	if (error || *eof)
-+		return error;
-+
-+	*eof = endoff >= rec.br_startoff + rec.br_blockcount;
-+	return 0;
-+}
-+
-+/*
-+ * Extent tree block counting routines.
-+ */
-+
-+/*
-+ * Count leaf blocks given a range of extent records.
-+ */
-+STATIC void
-+xfs_bmap_count_leaves(
-+	xfs_ifork_t		*ifp,
-+	xfs_extnum_t		idx,
-+	int			numrecs,
-+	int			*count)
-+{
-+	int		b;
-+
-+	for (b = 0; b < numrecs; b++) {
-+		xfs_bmbt_rec_host_t *frp = xfs_iext_get_ext(ifp, idx + b);
-+		*count += xfs_bmbt_get_blockcount(frp);
-+	}
-+}
-+
-+/*
-+ * Count leaf blocks given a range of extent records originally
-+ * in btree format.
-+ */
-+STATIC void
-+xfs_bmap_disk_count_leaves(
-+	struct xfs_mount	*mp,
-+	struct xfs_btree_block	*block,
-+	int			numrecs,
-+	int			*count)
-+{
-+	int		b;
-+	xfs_bmbt_rec_t	*frp;
-+
-+	for (b = 1; b <= numrecs; b++) {
-+		frp = XFS_BMBT_REC_ADDR(mp, block, b);
-+		*count += xfs_bmbt_disk_get_blockcount(frp);
-+	}
-+}
-+
-+/*
-+ * Recursively walks each level of a btree
-+ * to count total fsblocks is use.
-+ */
-+STATIC int                                     /* error */
-+xfs_bmap_count_tree(
-+	xfs_mount_t     *mp,            /* file system mount point */
-+	xfs_trans_t     *tp,            /* transaction pointer */
-+	xfs_ifork_t	*ifp,		/* inode fork pointer */
-+	xfs_fsblock_t   blockno,	/* file system block number */
-+	int             levelin,	/* level in btree */
-+	int		*count)		/* Count of blocks */
-+{
-+	int			error;
-+	xfs_buf_t		*bp, *nbp;
-+	int			level = levelin;
-+	__be64			*pp;
-+	xfs_fsblock_t           bno = blockno;
-+	xfs_fsblock_t		nextbno;
-+	struct xfs_btree_block	*block, *nextblock;
-+	int			numrecs;
-+
-+	error = xfs_btree_read_bufl(mp, tp, bno, 0, &bp, XFS_BMAP_BTREE_REF,
-+						&xfs_bmbt_buf_ops);
-+	if (error)
-+		return error;
-+	*count += 1;
-+	block = XFS_BUF_TO_BLOCK(bp);
-+
-+	if (--level) {
-+		/* Not at node above leaves, count this level of nodes */
-+		nextbno = be64_to_cpu(block->bb_u.l.bb_rightsib);
-+		while (nextbno != NULLFSBLOCK) {
-+			error = xfs_btree_read_bufl(mp, tp, nextbno, 0, &nbp,
-+						XFS_BMAP_BTREE_REF,
-+						&xfs_bmbt_buf_ops);
-+			if (error)
-+				return error;
-+			*count += 1;
-+			nextblock = XFS_BUF_TO_BLOCK(nbp);
-+			nextbno = be64_to_cpu(nextblock->bb_u.l.bb_rightsib);
-+			xfs_trans_brelse(tp, nbp);
-+		}
-+
-+		/* Dive to the next level */
-+		pp = XFS_BMBT_PTR_ADDR(mp, block, 1, mp->m_bmap_dmxr[1]);
-+		bno = be64_to_cpu(*pp);
-+		if (unlikely((error =
-+		     xfs_bmap_count_tree(mp, tp, ifp, bno, level, count)) < 0)) {
-+			xfs_trans_brelse(tp, bp);
-+			XFS_ERROR_REPORT("xfs_bmap_count_tree(1)",
-+					 XFS_ERRLEVEL_LOW, mp);
-+			return XFS_ERROR(EFSCORRUPTED);
-+		}
-+		xfs_trans_brelse(tp, bp);
-+	} else {
-+		/* count all level 1 nodes and their leaves */
-+		for (;;) {
-+			nextbno = be64_to_cpu(block->bb_u.l.bb_rightsib);
-+			numrecs = be16_to_cpu(block->bb_numrecs);
-+			xfs_bmap_disk_count_leaves(mp, block, numrecs, count);
-+			xfs_trans_brelse(tp, bp);
-+			if (nextbno == NULLFSBLOCK)
-+				break;
-+			bno = nextbno;
-+			error = xfs_btree_read_bufl(mp, tp, bno, 0, &bp,
-+						XFS_BMAP_BTREE_REF,
-+						&xfs_bmbt_buf_ops);
-+			if (error)
-+				return error;
-+			*count += 1;
-+			block = XFS_BUF_TO_BLOCK(bp);
-+		}
-+	}
-+	return 0;
-+}
-+
-+/*
-+ * Count fsblocks of the given fork.
-+ */
-+int						/* error */
-+xfs_bmap_count_blocks(
-+	xfs_trans_t		*tp,		/* transaction pointer */
-+	xfs_inode_t		*ip,		/* incore inode */
-+	int			whichfork,	/* data or attr fork */
-+	int			*count)		/* out: count of blocks */
-+{
-+	struct xfs_btree_block	*block;	/* current btree block */
-+	xfs_fsblock_t		bno;	/* block # of "block" */
-+	xfs_ifork_t		*ifp;	/* fork structure */
-+	int			level;	/* btree level, for checking */
-+	xfs_mount_t		*mp;	/* file system mount structure */
-+	__be64			*pp;	/* pointer to block address */
-+
-+	bno = NULLFSBLOCK;
-+	mp = ip->i_mount;
-+	ifp = XFS_IFORK_PTR(ip, whichfork);
-+	if ( XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS ) {
-+		xfs_bmap_count_leaves(ifp, 0,
-+			ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t),
-+			count);
-+		return 0;
-+	}
-+
-+	/*
-+	 * Root level must use BMAP_BROOT_PTR_ADDR macro to get ptr out.
-+	 */
-+	block = ifp->if_broot;
-+	level = be16_to_cpu(block->bb_level);
-+	ASSERT(level > 0);
-+	pp = XFS_BMAP_BROOT_PTR_ADDR(mp, block, 1, ifp->if_broot_bytes);
-+	bno = be64_to_cpu(*pp);
-+	ASSERT(bno != NULLDFSBNO);
-+	ASSERT(XFS_FSB_TO_AGNO(mp, bno) < mp->m_sb.sb_agcount);
-+	ASSERT(XFS_FSB_TO_AGBNO(mp, bno) < mp->m_sb.sb_agblocks);
-+
-+	if (unlikely(xfs_bmap_count_tree(mp, tp, ifp, bno, level, count) < 0)) {
-+		XFS_ERROR_REPORT("xfs_bmap_count_blocks(2)", XFS_ERRLEVEL_LOW,
-+				 mp);
-+		return XFS_ERROR(EFSCORRUPTED);
-+	}
-+
-+	return 0;
-+}
-+
-+/*
-+ * returns 1 for success, 0 if we failed to map the extent.
-+ */
-+STATIC int
-+xfs_getbmapx_fix_eof_hole(
-+	xfs_inode_t		*ip,		/* xfs incore inode pointer */
-+	struct getbmapx		*out,		/* output structure */
-+	int			prealloced,	/* this is a file with
-+						 * preallocated data space */
-+	__int64_t		end,		/* last block requested */
-+	xfs_fsblock_t		startblock)
-+{
-+	__int64_t		fixlen;
-+	xfs_mount_t		*mp;		/* file system mount point */
-+	xfs_ifork_t		*ifp;		/* inode fork pointer */
-+	xfs_extnum_t		lastx;		/* last extent pointer */
-+	xfs_fileoff_t		fileblock;
-+
-+	if (startblock == HOLESTARTBLOCK) {
-+		mp = ip->i_mount;
-+		out->bmv_block = -1;
-+		fixlen = XFS_FSB_TO_BB(mp, XFS_B_TO_FSB(mp, XFS_ISIZE(ip)));
-+		fixlen -= out->bmv_offset;
-+		if (prealloced && out->bmv_offset + out->bmv_length == end) {
-+			/* Came to hole at EOF. Trim it. */
-+			if (fixlen <= 0)
-+				return 0;
-+			out->bmv_length = fixlen;
-+		}
-+	} else {
-+		if (startblock == DELAYSTARTBLOCK)
-+			out->bmv_block = -2;
-+		else
-+			out->bmv_block = xfs_fsb_to_db(ip, startblock);
-+		fileblock = XFS_BB_TO_FSB(ip->i_mount, out->bmv_offset);
-+		ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-+		if (xfs_iext_bno_to_ext(ifp, fileblock, &lastx) &&
-+		   (lastx == (ifp->if_bytes / (uint)sizeof(xfs_bmbt_rec_t))-1))
-+			out->bmv_oflags |= BMV_OF_LAST;
-+	}
-+
-+	return 1;
-+}
-+
-+/*
-+ * Get inode's extents as described in bmv, and format for output.
-+ * Calls formatter to fill the user's buffer until all extents
-+ * are mapped, until the passed-in bmv->bmv_count slots have
-+ * been filled, or until the formatter short-circuits the loop,
-+ * if it is tracking filled-in extents on its own.
-+ */
-+int						/* error code */
-+xfs_getbmap(
-+	xfs_inode_t		*ip,
-+	struct getbmapx		*bmv,		/* user bmap structure */
-+	xfs_bmap_format_t	formatter,	/* format to user */
-+	void			*arg)		/* formatter arg */
-+{
-+	__int64_t		bmvend;		/* last block requested */
-+	int			error = 0;	/* return value */
-+	__int64_t		fixlen;		/* length for -1 case */
-+	int			i;		/* extent number */
-+	int			lock;		/* lock state */
-+	xfs_bmbt_irec_t		*map;		/* buffer for user's data */
-+	xfs_mount_t		*mp;		/* file system mount point */
-+	int			nex;		/* # of user extents can do */
-+	int			nexleft;	/* # of user extents left */
-+	int			subnex;		/* # of bmapi's can do */
-+	int			nmap;		/* number of map entries */
-+	struct getbmapx		*out;		/* output structure */
-+	int			whichfork;	/* data or attr fork */
-+	int			prealloced;	/* this is a file with
-+						 * preallocated data space */
-+	int			iflags;		/* interface flags */
-+	int			bmapi_flags;	/* flags for xfs_bmapi */
-+	int			cur_ext = 0;
-+
-+	mp = ip->i_mount;
-+	iflags = bmv->bmv_iflags;
-+	whichfork = iflags & BMV_IF_ATTRFORK ? XFS_ATTR_FORK : XFS_DATA_FORK;
-+
-+	if (whichfork == XFS_ATTR_FORK) {
-+		if (XFS_IFORK_Q(ip)) {
-+			if (ip->i_d.di_aformat != XFS_DINODE_FMT_EXTENTS &&
-+			    ip->i_d.di_aformat != XFS_DINODE_FMT_BTREE &&
-+			    ip->i_d.di_aformat != XFS_DINODE_FMT_LOCAL)
-+				return XFS_ERROR(EINVAL);
-+		} else if (unlikely(
-+			   ip->i_d.di_aformat != 0 &&
-+			   ip->i_d.di_aformat != XFS_DINODE_FMT_EXTENTS)) {
-+			XFS_ERROR_REPORT("xfs_getbmap", XFS_ERRLEVEL_LOW,
-+					 ip->i_mount);
-+			return XFS_ERROR(EFSCORRUPTED);
-+		}
-+
-+		prealloced = 0;
-+		fixlen = 1LL << 32;
-+	} else {
-+		if (ip->i_d.di_format != XFS_DINODE_FMT_EXTENTS &&
-+		    ip->i_d.di_format != XFS_DINODE_FMT_BTREE &&
-+		    ip->i_d.di_format != XFS_DINODE_FMT_LOCAL)
-+			return XFS_ERROR(EINVAL);
-+
-+		if (xfs_get_extsz_hint(ip) ||
-+		    ip->i_d.di_flags & (XFS_DIFLAG_PREALLOC|XFS_DIFLAG_APPEND)){
-+			prealloced = 1;
-+			fixlen = mp->m_super->s_maxbytes;
-+		} else {
-+			prealloced = 0;
-+			fixlen = XFS_ISIZE(ip);
-+		}
-+	}
-+
-+	if (bmv->bmv_length == -1) {
-+		fixlen = XFS_FSB_TO_BB(mp, XFS_B_TO_FSB(mp, fixlen));
-+		bmv->bmv_length =
-+			max_t(__int64_t, fixlen - bmv->bmv_offset, 0);
-+	} else if (bmv->bmv_length == 0) {
-+		bmv->bmv_entries = 0;
-+		return 0;
-+	} else if (bmv->bmv_length < 0) {
-+		return XFS_ERROR(EINVAL);
-+	}
-+
-+	nex = bmv->bmv_count - 1;
-+	if (nex <= 0)
-+		return XFS_ERROR(EINVAL);
-+	bmvend = bmv->bmv_offset + bmv->bmv_length;
-+
-+
-+	if (bmv->bmv_count > ULONG_MAX / sizeof(struct getbmapx))
-+		return XFS_ERROR(ENOMEM);
-+	out = kmem_zalloc(bmv->bmv_count * sizeof(struct getbmapx), KM_MAYFAIL);
-+	if (!out) {
-+		out = kmem_zalloc_large(bmv->bmv_count *
-+					sizeof(struct getbmapx));
-+		if (!out)
-+			return XFS_ERROR(ENOMEM);
-+	}
-+
-+	xfs_ilock(ip, XFS_IOLOCK_SHARED);
-+	if (whichfork == XFS_DATA_FORK && !(iflags & BMV_IF_DELALLOC)) {
-+		if (ip->i_delayed_blks || XFS_ISIZE(ip) > ip->i_d.di_size) {
-+			error = -filemap_write_and_wait(VFS_I(ip)->i_mapping);
-+			if (error)
-+				goto out_unlock_iolock;
-+		}
-+		/*
-+		 * even after flushing the inode, there can still be delalloc
-+		 * blocks on the inode beyond EOF due to speculative
-+		 * preallocation. These are not removed until the release
-+		 * function is called or the inode is inactivated. Hence we
-+		 * cannot assert here that ip->i_delayed_blks == 0.
-+		 */
-+	}
-+
-+	lock = xfs_ilock_map_shared(ip);
-+
-+	/*
-+	 * Don't let nex be bigger than the number of extents
-+	 * we can have assuming alternating holes and real extents.
-+	 */
-+	if (nex > XFS_IFORK_NEXTENTS(ip, whichfork) * 2 + 1)
-+		nex = XFS_IFORK_NEXTENTS(ip, whichfork) * 2 + 1;
-+
-+	bmapi_flags = xfs_bmapi_aflag(whichfork);
-+	if (!(iflags & BMV_IF_PREALLOC))
-+		bmapi_flags |= XFS_BMAPI_IGSTATE;
-+
-+	/*
-+	 * Allocate enough space to handle "subnex" maps at a time.
-+	 */
-+	error = ENOMEM;
-+	subnex = 16;
-+	map = kmem_alloc(subnex * sizeof(*map), KM_MAYFAIL | KM_NOFS);
-+	if (!map)
-+		goto out_unlock_ilock;
-+
-+	bmv->bmv_entries = 0;
-+
-+	if (XFS_IFORK_NEXTENTS(ip, whichfork) == 0 &&
-+	    (whichfork == XFS_ATTR_FORK || !(iflags & BMV_IF_DELALLOC))) {
-+		error = 0;
-+		goto out_free_map;
-+	}
-+
-+	nexleft = nex;
-+
-+	do {
-+		nmap = (nexleft > subnex) ? subnex : nexleft;
-+		error = xfs_bmapi_read(ip, XFS_BB_TO_FSBT(mp, bmv->bmv_offset),
-+				       XFS_BB_TO_FSB(mp, bmv->bmv_length),
-+				       map, &nmap, bmapi_flags);
-+		if (error)
-+			goto out_free_map;
-+		ASSERT(nmap <= subnex);
-+
-+		for (i = 0; i < nmap && nexleft && bmv->bmv_length; i++) {
-+			out[cur_ext].bmv_oflags = 0;
-+			if (map[i].br_state == XFS_EXT_UNWRITTEN)
-+				out[cur_ext].bmv_oflags |= BMV_OF_PREALLOC;
-+			else if (map[i].br_startblock == DELAYSTARTBLOCK)
-+				out[cur_ext].bmv_oflags |= BMV_OF_DELALLOC;
-+			out[cur_ext].bmv_offset =
-+				XFS_FSB_TO_BB(mp, map[i].br_startoff);
-+			out[cur_ext].bmv_length =
-+				XFS_FSB_TO_BB(mp, map[i].br_blockcount);
-+			out[cur_ext].bmv_unused1 = 0;
-+			out[cur_ext].bmv_unused2 = 0;
-+
-+			/*
-+			 * delayed allocation extents that start beyond EOF can
-+			 * occur due to speculative EOF allocation when the
-+			 * delalloc extent is larger than the largest freespace
-+			 * extent at conversion time. These extents cannot be
-+			 * converted by data writeback, so can exist here even
-+			 * if we are not supposed to be finding delalloc
-+			 * extents.
-+			 */
-+			if (map[i].br_startblock == DELAYSTARTBLOCK &&
-+			    map[i].br_startoff <= XFS_B_TO_FSB(mp, XFS_ISIZE(ip)))
-+				ASSERT((iflags & BMV_IF_DELALLOC) != 0);
-+
-+                        if (map[i].br_startblock == HOLESTARTBLOCK &&
-+			    whichfork == XFS_ATTR_FORK) {
-+				/* came to the end of attribute fork */
-+				out[cur_ext].bmv_oflags |= BMV_OF_LAST;
-+				goto out_free_map;
-+			}
-+
-+			if (!xfs_getbmapx_fix_eof_hole(ip, &out[cur_ext],
-+					prealloced, bmvend,
-+					map[i].br_startblock))
-+				goto out_free_map;
-+
-+			bmv->bmv_offset =
-+				out[cur_ext].bmv_offset +
-+				out[cur_ext].bmv_length;
-+			bmv->bmv_length =
-+				max_t(__int64_t, 0, bmvend - bmv->bmv_offset);
-+
-+			/*
-+			 * In case we don't want to return the hole,
-+			 * don't increase cur_ext so that we can reuse
-+			 * it in the next loop.
-+			 */
-+			if ((iflags & BMV_IF_NO_HOLES) &&
-+			    map[i].br_startblock == HOLESTARTBLOCK) {
-+				memset(&out[cur_ext], 0, sizeof(out[cur_ext]));
-+				continue;
-+			}
-+
-+			nexleft--;
-+			bmv->bmv_entries++;
-+			cur_ext++;
-+		}
-+	} while (nmap && nexleft && bmv->bmv_length);
-+
-+ out_free_map:
-+	kmem_free(map);
-+ out_unlock_ilock:
-+	xfs_iunlock_map_shared(ip, lock);
-+ out_unlock_iolock:
-+	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
-+
-+	for (i = 0; i < cur_ext; i++) {
-+		int full = 0;	/* user array is full */
-+
-+		/* format results & advance arg */
-+		error = formatter(&arg, &out[i], &full);
-+		if (error || full)
-+			break;
-+	}
-+
-+	if (is_vmalloc_addr(out))
-+		kmem_free_large(out);
-+	else
-+		kmem_free(out);
-+	return error;
-+}
-+
-+/*
-+ * dead simple method of punching delalyed allocation blocks from a range in
-+ * the inode. Walks a block at a time so will be slow, but is only executed in
-+ * rare error cases so the overhead is not critical. This will alays punch out
-+ * both the start and end blocks, even if the ranges only partially overlap
-+ * them, so it is up to the caller to ensure that partial blocks are not
-+ * passed in.
-+ */
-+int
-+xfs_bmap_punch_delalloc_range(
-+	struct xfs_inode	*ip,
-+	xfs_fileoff_t		start_fsb,
-+	xfs_fileoff_t		length)
-+{
-+	xfs_fileoff_t		remaining = length;
-+	int			error = 0;
-+
-+	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-+
-+	do {
-+		int		done;
-+		xfs_bmbt_irec_t	imap;
-+		int		nimaps = 1;
-+		xfs_fsblock_t	firstblock;
-+		xfs_bmap_free_t flist;
-+
-+		/*
-+		 * Map the range first and check that it is a delalloc extent
-+		 * before trying to unmap the range. Otherwise we will be
-+		 * trying to remove a real extent (which requires a
-+		 * transaction) or a hole, which is probably a bad idea...
-+		 */
-+		error = xfs_bmapi_read(ip, start_fsb, 1, &imap, &nimaps,
-+				       XFS_BMAPI_ENTIRE);
-+
-+		if (error) {
-+			/* something screwed, just bail */
-+			if (!XFS_FORCED_SHUTDOWN(ip->i_mount)) {
-+				xfs_alert(ip->i_mount,
-+			"Failed delalloc mapping lookup ino %lld fsb %lld.",
-+						ip->i_ino, start_fsb);
-+			}
-+			break;
-+		}
-+		if (!nimaps) {
-+			/* nothing there */
-+			goto next_block;
-+		}
-+		if (imap.br_startblock != DELAYSTARTBLOCK) {
-+			/* been converted, ignore */
-+			goto next_block;
-+		}
-+		WARN_ON(imap.br_blockcount == 0);
-+
-+		/*
-+		 * Note: while we initialise the firstblock/flist pair, they
-+		 * should never be used because blocks should never be
-+		 * allocated or freed for a delalloc extent and hence we need
-+		 * don't cancel or finish them after the xfs_bunmapi() call.
-+		 */
-+		xfs_bmap_init(&flist, &firstblock);
-+		error = xfs_bunmapi(NULL, ip, start_fsb, 1, 0, 1, &firstblock,
-+					&flist, &done);
-+		if (error)
-+			break;
-+
-+		ASSERT(!flist.xbf_count && !flist.xbf_first);
-+next_block:
-+		start_fsb++;
-+		remaining--;
-+	} while(remaining > 0);
-+
-+	return error;
-+}
-diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
-new file mode 100644
-index 0000000..004fe4b
---- /dev/null
-+++ b/fs/xfs/xfs_bmap_util.h
-@@ -0,0 +1,96 @@
-+/*
-+ * Copyright (c) 2000-2006 Silicon Graphics, Inc.
-+ * All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+#ifndef __XFS_BMAP_UTIL_H__
-+#define	__XFS_BMAP_UTIL_H__
-+
-+/* Kernel only BMAP related definitions and functions */
-+
-+struct xfs_bmbt_irec;
-+struct xfs_ifork;
-+struct xfs_inode;
-+struct xfs_mount;
-+struct xfs_trans;
-+
-+/*
-+ * Argument structure for xfs_bmap_alloc.
-+ */
-+struct xfs_bmalloca {
-+	xfs_fsblock_t		*firstblock; /* i/o first block allocated */
-+	struct xfs_bmap_free	*flist;	/* bmap freelist */
-+	struct xfs_trans	*tp;	/* transaction pointer */
-+	struct xfs_inode	*ip;	/* incore inode pointer */
-+	struct xfs_bmbt_irec	prev;	/* extent before the new one */
-+	struct xfs_bmbt_irec	got;	/* extent after, or delayed */
-+
-+	xfs_fileoff_t		offset;	/* offset in file filling in */
-+	xfs_extlen_t		length;	/* i/o length asked/allocated */
-+	xfs_fsblock_t		blkno;	/* starting block of new extent */
-+
-+	struct xfs_btree_cur	*cur;	/* btree cursor */
-+	xfs_extnum_t		idx;	/* current extent index */
-+	int			nallocs;/* number of extents alloc'd */
-+	int			logflags;/* flags for transaction logging */
-+
-+	xfs_extlen_t		total;	/* total blocks needed for xaction */
-+	xfs_extlen_t		minlen;	/* minimum allocation size (blocks) */
-+	xfs_extlen_t		minleft; /* amount must be left after alloc */
-+	char			eof;	/* set if allocating past last extent */
-+	char			wasdel;	/* replacing a delayed allocation */
-+	char			userdata;/* set if is user data */
-+	char			aeof;	/* allocated space at eof */
-+	char			conv;	/* overwriting unwritten extents */
-+	char			stack_switch;
-+	int			flags;
-+	struct completion	*done;
-+	struct work_struct	work;
-+	int			result;
-+};
-+
-+int	xfs_bmap_finish(struct xfs_trans **tp, struct xfs_bmap_free *flist,
-+			int *committed);
-+int	xfs_bmap_rtalloc(struct xfs_bmalloca *ap);
-+int	xfs_bmapi_allocate(struct xfs_bmalloca *args);
-+int	__xfs_bmapi_allocate(struct xfs_bmalloca *args);
-+int	xfs_bmap_eof(struct xfs_inode *ip, xfs_fileoff_t endoff,
-+		     int whichfork, int *eof);
-+int	xfs_bmap_count_blocks(struct xfs_trans *tp, struct xfs_inode *ip,
-+			      int whichfork, int *count);
-+int	xfs_bmap_punch_delalloc_range(struct xfs_inode *ip,
-+		xfs_fileoff_t start_fsb, xfs_fileoff_t length);
-+
-+/* bmap to userspace formatter - copy to user & advance pointer */
-+typedef int (*xfs_bmap_format_t)(void **, struct getbmapx *, int *);
-+int	xfs_getbmap(struct xfs_inode *ip, struct getbmapx *bmv,
-+		xfs_bmap_format_t formatter, void *arg);
-+
-+/* functions in xfs_bmap.c that are only needed by xfs_bmap_util.c */
-+void	xfs_bmap_del_free(struct xfs_bmap_free *flist,
-+			  struct xfs_bmap_free_item *prev,
-+			  struct xfs_bmap_free_item *free);
-+int	xfs_bmap_extsize_align(struct xfs_mount *mp, struct xfs_bmbt_irec *gotp,
-+			       struct xfs_bmbt_irec *prevp, xfs_extlen_t extsz,
-+			       int rt, int eof, int delay, int convert,
-+			       xfs_fileoff_t *offp, xfs_extlen_t *lenp);
-+void	xfs_bmap_adjacent(struct xfs_bmalloca *ap);
-+int	xfs_bmap_last_extent(struct xfs_trans *tp, struct xfs_inode *ip,
-+			     int whichfork, struct xfs_bmbt_irec *rec,
-+			     int *is_empty);
-+
-+xfs_daddr_t xfs_fsb_to_db(struct xfs_inode *ip, xfs_fsblock_t fsb);
-+
-+#endif	/* __XFS_BMAP_UTIL_H__ */
-diff --git a/fs/xfs/xfs_dfrag.c b/fs/xfs/xfs_dfrag.c
-index e36445c..815dace 100644
---- a/fs/xfs/xfs_dfrag.c
-+++ b/fs/xfs/xfs_dfrag.c
-@@ -31,6 +31,7 @@
- #include "xfs_inode.h"
- #include "xfs_inode_item.h"
- #include "xfs_bmap.h"
-+#include "xfs_bmap_util.h"
- #include "xfs_itable.h"
- #include "xfs_dfrag.h"
- #include "xfs_error.h"
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index 36e1cf3..e90e123 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -29,6 +29,7 @@
  #include "xfs_bmap_btree.h"
  #include "xfs_inode.h"
- #include "xfs_bmap.h"
-+#include "xfs_bmap_util.h"
- #include "xfs_rtalloc.h"
- #include "xfs_error.h"
- #include "xfs_itable.h"
-diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
-index 9eae097..d0e8890 100644
---- a/fs/xfs/xfs_filestream.c
-+++ b/fs/xfs/xfs_filestream.c
-@@ -26,6 +26,7 @@
+-#include "xfs_vnodeops.h"
  #include "xfs_sb.h"
  #include "xfs_mount.h"
+ #include "xfs_trace.h"
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index bf1270f..79d6b0a 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -28,7 +28,6 @@
+ #include "xfs_alloc.h"
+ #include "xfs_error.h"
+ #include "xfs_iomap.h"
+-#include "xfs_vnodeops.h"
+ #include "xfs_trace.h"
+ #include "xfs_bmap.h"
+ #include "xfs_bmap_util.h"
+diff --git a/fs/xfs/xfs_attr.c b/fs/xfs/xfs_attr.c
+index 91acc38..046cf3d 100644
+--- a/fs/xfs/xfs_attr.c
++++ b/fs/xfs/xfs_attr.c
+@@ -40,7 +40,6 @@
+ #include "xfs_error.h"
+ #include "xfs_quota.h"
+ #include "xfs_trans_space.h"
+-#include "xfs_vnodeops.h"
+ #include "xfs_trace.h"
+ 
+ /*
+diff --git a/fs/xfs/xfs_attr.h b/fs/xfs/xfs_attr.h
+index cb604b5..dd48245 100644
+--- a/fs/xfs/xfs_attr.h
++++ b/fs/xfs/xfs_attr.h
+@@ -142,5 +142,13 @@ typedef struct xfs_attr_list_context {
+ int xfs_attr_inactive(struct xfs_inode *dp);
+ int xfs_attr_list_int(struct xfs_attr_list_context *);
+ int xfs_inode_hasattr(struct xfs_inode *ip);
++int xfs_attr_get(struct xfs_inode *ip, const unsigned char *name,
++		 unsigned char *value, int *valuelenp, int flags);
++int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
++		 unsigned char *value, int valuelen, int flags);
++int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
++int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
++		  int flags, struct attrlist_cursor_kern *cursor);
++
+ 
+ #endif	/* __XFS_ATTR_H__ */
+diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
+index a9331a6..51e07e7 100644
+--- a/fs/xfs/xfs_bmap.c
++++ b/fs/xfs/xfs_bmap.c
+@@ -48,7 +48,6 @@
+ #include "xfs_trans_space.h"
+ #include "xfs_buf_item.h"
+ #include "xfs_filestream.h"
+-#include "xfs_vnodeops.h"
+ #include "xfs_trace.h"
+ #include "xfs_symlink.h"
+ 
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 8e48ddf..f557022 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1,5 +1,6 @@
+ /*
+  * Copyright (c) 2000-2006 Silicon Graphics, Inc.
++ * Copyright (c) 2012 Red Hat, Inc.
+  * All Rights Reserved.
+  *
+  * This program is free software; you can redistribute it and/or
+@@ -41,6 +42,7 @@
+ #include "xfs_quota.h"
+ #include "xfs_trans_space.h"
+ #include "xfs_trace.h"
++#include "xfs_icache.h"
+ 
+ /* Kernel only BMAP related definitions and functions */
+ 
+@@ -832,3 +834,862 @@ next_block:
+ 
+ 	return error;
+ }
++
++/*
++ * Test whether it is appropriate to check an inode for and free post EOF
++ * blocks. The 'force' parameter determines whether we should also consider
++ * regular files that are marked preallocated or append-only.
++ */
++bool
++xfs_can_free_eofblocks(struct xfs_inode *ip, bool force)
++{
++	/* prealloc/delalloc exists only on regular files */
++	if (!S_ISREG(ip->i_d.di_mode))
++		return false;
++
++	/*
++	 * Zero sized files with no cached pages and delalloc blocks will not
++	 * have speculative prealloc/delalloc blocks to remove.
++	 */
++	if (VFS_I(ip)->i_size == 0 &&
++	    VN_CACHED(VFS_I(ip)) == 0 &&
++	    ip->i_delayed_blks == 0)
++		return false;
++
++	/* If we haven't read in the extent list, then don't do it now. */
++	if (!(ip->i_df.if_flags & XFS_IFEXTENTS))
++		return false;
++
++	/*
++	 * Do not free real preallocated or append-only files unless the file
++	 * has delalloc blocks and we are forced to remove them.
++	 */
++	if (ip->i_d.di_flags & (XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND))
++		if (!force || ip->i_delayed_blks == 0)
++			return false;
++
++	return true;
++}
++
++/*
++ * This is called by xfs_inactive to free any blocks beyond eof
++ * when the link count isn't zero and by xfs_dm_punch_hole() when
++ * punching a hole to EOF.
++ */
++int
++xfs_free_eofblocks(
++	xfs_mount_t	*mp,
++	xfs_inode_t	*ip,
++	bool		need_iolock)
++{
++	xfs_trans_t	*tp;
++	int		error;
++	xfs_fileoff_t	end_fsb;
++	xfs_fileoff_t	last_fsb;
++	xfs_filblks_t	map_len;
++	int		nimaps;
++	xfs_bmbt_irec_t	imap;
++
++	/*
++	 * Figure out if there are any blocks beyond the end
++	 * of the file.  If not, then there is nothing to do.
++	 */
++	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)XFS_ISIZE(ip));
++	last_fsb = XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
++	if (last_fsb <= end_fsb)
++		return 0;
++	map_len = last_fsb - end_fsb;
++
++	nimaps = 1;
++	xfs_ilock(ip, XFS_ILOCK_SHARED);
++	error = xfs_bmapi_read(ip, end_fsb, map_len, &imap, &nimaps, 0);
++	xfs_iunlock(ip, XFS_ILOCK_SHARED);
++
++	if (!error && (nimaps != 0) &&
++	    (imap.br_startblock != HOLESTARTBLOCK ||
++	     ip->i_delayed_blks)) {
++		/*
++		 * Attach the dquots to the inode up front.
++		 */
++		error = xfs_qm_dqattach(ip, 0);
++		if (error)
++			return error;
++
++		/*
++		 * There are blocks after the end of file.
++		 * Free them up now by truncating the file to
++		 * its current size.
++		 */
++		tp = xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
++
++		if (need_iolock) {
++			if (!xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL)) {
++				xfs_trans_cancel(tp, 0);
++				return EAGAIN;
++			}
++		}
++
++		error = xfs_trans_reserve(tp, 0,
++					  XFS_ITRUNCATE_LOG_RES(mp),
++					  0, XFS_TRANS_PERM_LOG_RES,
++					  XFS_ITRUNCATE_LOG_COUNT);
++		if (error) {
++			ASSERT(XFS_FORCED_SHUTDOWN(mp));
++			xfs_trans_cancel(tp, 0);
++			if (need_iolock)
++				xfs_iunlock(ip, XFS_IOLOCK_EXCL);
++			return error;
++		}
++
++		xfs_ilock(ip, XFS_ILOCK_EXCL);
++		xfs_trans_ijoin(tp, ip, 0);
++
++		/*
++		 * Do not update the on-disk file size.  If we update the
++		 * on-disk file size and then the system crashes before the
++		 * contents of the file are flushed to disk then the files
++		 * may be full of holes (ie NULL files bug).
++		 */
++		error = xfs_itruncate_extents(&tp, ip, XFS_DATA_FORK,
++					      XFS_ISIZE(ip));
++		if (error) {
++			/*
++			 * If we get an error at this point we simply don't
++			 * bother truncating the file.
++			 */
++			xfs_trans_cancel(tp,
++					 (XFS_TRANS_RELEASE_LOG_RES |
++					  XFS_TRANS_ABORT));
++		} else {
++			error = xfs_trans_commit(tp,
++						XFS_TRANS_RELEASE_LOG_RES);
++			if (!error)
++				xfs_inode_clear_eofblocks_tag(ip);
++		}
++
++		xfs_iunlock(ip, XFS_ILOCK_EXCL);
++		if (need_iolock)
++			xfs_iunlock(ip, XFS_IOLOCK_EXCL);
++	}
++	return error;
++}
++
++/*
++ * xfs_alloc_file_space()
++ *      This routine allocates disk space for the given file.
++ *
++ *	If alloc_type == 0, this request is for an ALLOCSP type
++ *	request which will change the file size.  In this case, no
++ *	DMAPI event will be generated by the call.  A TRUNCATE event
++ *	will be generated later by xfs_setattr.
++ *
++ *	If alloc_type != 0, this request is for a RESVSP type
++ *	request, and a DMAPI DM_EVENT_WRITE will be generated if the
++ *	lower block boundary byte address is less than the file's
++ *	length.
++ *
++ * RETURNS:
++ *       0 on success
++ *      errno on error
++ *
++ */
++STATIC int
++xfs_alloc_file_space(
++	xfs_inode_t		*ip,
++	xfs_off_t		offset,
++	xfs_off_t		len,
++	int			alloc_type,
++	int			attr_flags)
++{
++	xfs_mount_t		*mp = ip->i_mount;
++	xfs_off_t		count;
++	xfs_filblks_t		allocated_fsb;
++	xfs_filblks_t		allocatesize_fsb;
++	xfs_extlen_t		extsz, temp;
++	xfs_fileoff_t		startoffset_fsb;
++	xfs_fsblock_t		firstfsb;
++	int			nimaps;
++	int			quota_flag;
++	int			rt;
++	xfs_trans_t		*tp;
++	xfs_bmbt_irec_t		imaps[1], *imapp;
++	xfs_bmap_free_t		free_list;
++	uint			qblocks, resblks, resrtextents;
++	int			committed;
++	int			error;
++
++	trace_xfs_alloc_file_space(ip);
++
++	if (XFS_FORCED_SHUTDOWN(mp))
++		return XFS_ERROR(EIO);
++
++	error = xfs_qm_dqattach(ip, 0);
++	if (error)
++		return error;
++
++	if (len <= 0)
++		return XFS_ERROR(EINVAL);
++
++	rt = XFS_IS_REALTIME_INODE(ip);
++	extsz = xfs_get_extsz_hint(ip);
++
++	count = len;
++	imapp = &imaps[0];
++	nimaps = 1;
++	startoffset_fsb	= XFS_B_TO_FSBT(mp, offset);
++	allocatesize_fsb = XFS_B_TO_FSB(mp, count);
++
++	/*
++	 * Allocate file space until done or until there is an error
++	 */
++	while (allocatesize_fsb && !error) {
++		xfs_fileoff_t	s, e;
++
++		/*
++		 * Determine space reservations for data/realtime.
++		 */
++		if (unlikely(extsz)) {
++			s = startoffset_fsb;
++			do_div(s, extsz);
++			s *= extsz;
++			e = startoffset_fsb + allocatesize_fsb;
++			if ((temp = do_mod(startoffset_fsb, extsz)))
++				e += temp;
++			if ((temp = do_mod(e, extsz)))
++				e += extsz - temp;
++		} else {
++			s = 0;
++			e = allocatesize_fsb;
++		}
++
++		/*
++		 * The transaction reservation is limited to a 32-bit block
++		 * count, hence we need to limit the number of blocks we are
++		 * trying to reserve to avoid an overflow. We can't allocate
++		 * more than @nimaps extents, and an extent is limited on disk
++		 * to MAXEXTLEN (21 bits), so use that to enforce the limit.
++		 */
++		resblks = min_t(xfs_fileoff_t, (e - s), (MAXEXTLEN * nimaps));
++		if (unlikely(rt)) {
++			resrtextents = qblocks = resblks;
++			resrtextents /= mp->m_sb.sb_rextsize;
++			resblks = XFS_DIOSTRAT_SPACE_RES(mp, 0);
++			quota_flag = XFS_QMOPT_RES_RTBLKS;
++		} else {
++			resrtextents = 0;
++			resblks = qblocks = XFS_DIOSTRAT_SPACE_RES(mp, resblks);
++			quota_flag = XFS_QMOPT_RES_REGBLKS;
++		}
++
++		/*
++		 * Allocate and setup the transaction.
++		 */
++		tp = xfs_trans_alloc(mp, XFS_TRANS_DIOSTRAT);
++		error = xfs_trans_reserve(tp, resblks,
++					  XFS_WRITE_LOG_RES(mp), resrtextents,
++					  XFS_TRANS_PERM_LOG_RES,
++					  XFS_WRITE_LOG_COUNT);
++		/*
++		 * Check for running out of space
++		 */
++		if (error) {
++			/*
++			 * Free the transaction structure.
++			 */
++			ASSERT(error == ENOSPC || XFS_FORCED_SHUTDOWN(mp));
++			xfs_trans_cancel(tp, 0);
++			break;
++		}
++		xfs_ilock(ip, XFS_ILOCK_EXCL);
++		error = xfs_trans_reserve_quota_nblks(tp, ip, qblocks,
++						      0, quota_flag);
++		if (error)
++			goto error1;
++
++		xfs_trans_ijoin(tp, ip, 0);
++
++		xfs_bmap_init(&free_list, &firstfsb);
++		error = xfs_bmapi_write(tp, ip, startoffset_fsb,
++					allocatesize_fsb, alloc_type, &firstfsb,
++					0, imapp, &nimaps, &free_list);
++		if (error) {
++			goto error0;
++		}
++
++		/*
++		 * Complete the transaction
++		 */
++		error = xfs_bmap_finish(&tp, &free_list, &committed);
++		if (error) {
++			goto error0;
++		}
++
++		error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
++		xfs_iunlock(ip, XFS_ILOCK_EXCL);
++		if (error) {
++			break;
++		}
++
++		allocated_fsb = imapp->br_blockcount;
++
++		if (nimaps == 0) {
++			error = XFS_ERROR(ENOSPC);
++			break;
++		}
++
++		startoffset_fsb += allocated_fsb;
++		allocatesize_fsb -= allocated_fsb;
++	}
++
++	return error;
++
++error0:	/* Cancel bmap, unlock inode, unreserve quota blocks, cancel trans */
++	xfs_bmap_cancel(&free_list);
++	xfs_trans_unreserve_quota_nblks(tp, ip, (long)qblocks, 0, quota_flag);
++
++error1:	/* Just cancel transaction */
++	xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES | XFS_TRANS_ABORT);
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	return error;
++}
++
++/*
++ * Zero file bytes between startoff and endoff inclusive.
++ * The iolock is held exclusive and no blocks are buffered.
++ *
++ * This function is used by xfs_free_file_space() to zero
++ * partial blocks when the range to free is not block aligned.
++ * When unreserving space with boundaries that are not block
++ * aligned we round up the start and round down the end
++ * boundaries and then use this function to zero the parts of
++ * the blocks that got dropped during the rounding.
++ */
++STATIC int
++xfs_zero_remaining_bytes(
++	xfs_inode_t		*ip,
++	xfs_off_t		startoff,
++	xfs_off_t		endoff)
++{
++	xfs_bmbt_irec_t		imap;
++	xfs_fileoff_t		offset_fsb;
++	xfs_off_t		lastoffset;
++	xfs_off_t		offset;
++	xfs_buf_t		*bp;
++	xfs_mount_t		*mp = ip->i_mount;
++	int			nimap;
++	int			error = 0;
++
++	/*
++	 * Avoid doing I/O beyond eof - it's not necessary
++	 * since nothing can read beyond eof.  The space will
++	 * be zeroed when the file is extended anyway.
++	 */
++	if (startoff >= XFS_ISIZE(ip))
++		return 0;
++
++	if (endoff > XFS_ISIZE(ip))
++		endoff = XFS_ISIZE(ip);
++
++	bp = xfs_buf_get_uncached(XFS_IS_REALTIME_INODE(ip) ?
++					mp->m_rtdev_targp : mp->m_ddev_targp,
++				  BTOBB(mp->m_sb.sb_blocksize), 0);
++	if (!bp)
++		return XFS_ERROR(ENOMEM);
++
++	xfs_buf_unlock(bp);
++
++	for (offset = startoff; offset <= endoff; offset = lastoffset + 1) {
++		offset_fsb = XFS_B_TO_FSBT(mp, offset);
++		nimap = 1;
++		error = xfs_bmapi_read(ip, offset_fsb, 1, &imap, &nimap, 0);
++		if (error || nimap < 1)
++			break;
++		ASSERT(imap.br_blockcount >= 1);
++		ASSERT(imap.br_startoff == offset_fsb);
++		lastoffset = XFS_FSB_TO_B(mp, imap.br_startoff + 1) - 1;
++		if (lastoffset > endoff)
++			lastoffset = endoff;
++		if (imap.br_startblock == HOLESTARTBLOCK)
++			continue;
++		ASSERT(imap.br_startblock != DELAYSTARTBLOCK);
++		if (imap.br_state == XFS_EXT_UNWRITTEN)
++			continue;
++		XFS_BUF_UNDONE(bp);
++		XFS_BUF_UNWRITE(bp);
++		XFS_BUF_READ(bp);
++		XFS_BUF_SET_ADDR(bp, xfs_fsb_to_db(ip, imap.br_startblock));
++		xfsbdstrat(mp, bp);
++		error = xfs_buf_iowait(bp);
++		if (error) {
++			xfs_buf_ioerror_alert(bp,
++					"xfs_zero_remaining_bytes(read)");
++			break;
++		}
++		memset(bp->b_addr +
++			(offset - XFS_FSB_TO_B(mp, imap.br_startoff)),
++		      0, lastoffset - offset + 1);
++		XFS_BUF_UNDONE(bp);
++		XFS_BUF_UNREAD(bp);
++		XFS_BUF_WRITE(bp);
++		xfsbdstrat(mp, bp);
++		error = xfs_buf_iowait(bp);
++		if (error) {
++			xfs_buf_ioerror_alert(bp,
++					"xfs_zero_remaining_bytes(write)");
++			break;
++		}
++	}
++	xfs_buf_free(bp);
++	return error;
++}
++
++/*
++ * xfs_free_file_space()
++ *      This routine frees disk space for the given file.
++ *
++ *	This routine is only called by xfs_change_file_space
++ *	for an UNRESVSP type call.
++ *
++ * RETURNS:
++ *       0 on success
++ *      errno on error
++ *
++ */
++STATIC int
++xfs_free_file_space(
++	xfs_inode_t		*ip,
++	xfs_off_t		offset,
++	xfs_off_t		len,
++	int			attr_flags)
++{
++	int			committed;
++	int			done;
++	xfs_fileoff_t		endoffset_fsb;
++	int			error;
++	xfs_fsblock_t		firstfsb;
++	xfs_bmap_free_t		free_list;
++	xfs_bmbt_irec_t		imap;
++	xfs_off_t		ioffset;
++	xfs_extlen_t		mod=0;
++	xfs_mount_t		*mp;
++	int			nimap;
++	uint			resblks;
++	xfs_off_t		rounding;
++	int			rt;
++	xfs_fileoff_t		startoffset_fsb;
++	xfs_trans_t		*tp;
++	int			need_iolock = 1;
++
++	mp = ip->i_mount;
++
++	trace_xfs_free_file_space(ip);
++
++	error = xfs_qm_dqattach(ip, 0);
++	if (error)
++		return error;
++
++	error = 0;
++	if (len <= 0)	/* if nothing being freed */
++		return error;
++	rt = XFS_IS_REALTIME_INODE(ip);
++	startoffset_fsb	= XFS_B_TO_FSB(mp, offset);
++	endoffset_fsb = XFS_B_TO_FSBT(mp, offset + len);
++
++	if (attr_flags & XFS_ATTR_NOLOCK)
++		need_iolock = 0;
++	if (need_iolock) {
++		xfs_ilock(ip, XFS_IOLOCK_EXCL);
++		/* wait for the completion of any pending DIOs */
++		inode_dio_wait(VFS_I(ip));
++	}
++
++	rounding = max_t(xfs_off_t, 1 << mp->m_sb.sb_blocklog, PAGE_CACHE_SIZE);
++	ioffset = offset & ~(rounding - 1);
++	error = -filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
++					      ioffset, -1);
++	if (error)
++		goto out_unlock_iolock;
++	truncate_pagecache_range(VFS_I(ip), ioffset, -1);
++
++	/*
++	 * Need to zero the stuff we're not freeing, on disk.
++	 * If it's a realtime file & can't use unwritten extents then we
++	 * actually need to zero the extent edges.  Otherwise xfs_bunmapi
++	 * will take care of it for us.
++	 */
++	if (rt && !xfs_sb_version_hasextflgbit(&mp->m_sb)) {
++		nimap = 1;
++		error = xfs_bmapi_read(ip, startoffset_fsb, 1,
++					&imap, &nimap, 0);
++		if (error)
++			goto out_unlock_iolock;
++		ASSERT(nimap == 0 || nimap == 1);
++		if (nimap && imap.br_startblock != HOLESTARTBLOCK) {
++			xfs_daddr_t	block;
++
++			ASSERT(imap.br_startblock != DELAYSTARTBLOCK);
++			block = imap.br_startblock;
++			mod = do_div(block, mp->m_sb.sb_rextsize);
++			if (mod)
++				startoffset_fsb += mp->m_sb.sb_rextsize - mod;
++		}
++		nimap = 1;
++		error = xfs_bmapi_read(ip, endoffset_fsb - 1, 1,
++					&imap, &nimap, 0);
++		if (error)
++			goto out_unlock_iolock;
++		ASSERT(nimap == 0 || nimap == 1);
++		if (nimap && imap.br_startblock != HOLESTARTBLOCK) {
++			ASSERT(imap.br_startblock != DELAYSTARTBLOCK);
++			mod++;
++			if (mod && (mod != mp->m_sb.sb_rextsize))
++				endoffset_fsb -= mod;
++		}
++	}
++	if ((done = (endoffset_fsb <= startoffset_fsb)))
++		/*
++		 * One contiguous piece to clear
++		 */
++		error = xfs_zero_remaining_bytes(ip, offset, offset + len - 1);
++	else {
++		/*
++		 * Some full blocks, possibly two pieces to clear
++		 */
++		if (offset < XFS_FSB_TO_B(mp, startoffset_fsb))
++			error = xfs_zero_remaining_bytes(ip, offset,
++				XFS_FSB_TO_B(mp, startoffset_fsb) - 1);
++		if (!error &&
++		    XFS_FSB_TO_B(mp, endoffset_fsb) < offset + len)
++			error = xfs_zero_remaining_bytes(ip,
++				XFS_FSB_TO_B(mp, endoffset_fsb),
++				offset + len - 1);
++	}
++
++	/*
++	 * free file space until done or until there is an error
++	 */
++	resblks = XFS_DIOSTRAT_SPACE_RES(mp, 0);
++	while (!error && !done) {
++
++		/*
++		 * allocate and setup the transaction. Allow this
++		 * transaction to dip into the reserve blocks to ensure
++		 * the freeing of the space succeeds at ENOSPC.
++		 */
++		tp = xfs_trans_alloc(mp, XFS_TRANS_DIOSTRAT);
++		tp->t_flags |= XFS_TRANS_RESERVE;
++		error = xfs_trans_reserve(tp,
++					  resblks,
++					  XFS_WRITE_LOG_RES(mp),
++					  0,
++					  XFS_TRANS_PERM_LOG_RES,
++					  XFS_WRITE_LOG_COUNT);
++
++		/*
++		 * check for running out of space
++		 */
++		if (error) {
++			/*
++			 * Free the transaction structure.
++			 */
++			ASSERT(error == ENOSPC || XFS_FORCED_SHUTDOWN(mp));
++			xfs_trans_cancel(tp, 0);
++			break;
++		}
++		xfs_ilock(ip, XFS_ILOCK_EXCL);
++		error = xfs_trans_reserve_quota(tp, mp,
++				ip->i_udquot, ip->i_gdquot, ip->i_pdquot,
++				resblks, 0, XFS_QMOPT_RES_REGBLKS);
++		if (error)
++			goto error1;
++
++		xfs_trans_ijoin(tp, ip, 0);
++
++		/*
++		 * issue the bunmapi() call to free the blocks
++		 */
++		xfs_bmap_init(&free_list, &firstfsb);
++		error = xfs_bunmapi(tp, ip, startoffset_fsb,
++				  endoffset_fsb - startoffset_fsb,
++				  0, 2, &firstfsb, &free_list, &done);
++		if (error) {
++			goto error0;
++		}
++
++		/*
++		 * complete the transaction
++		 */
++		error = xfs_bmap_finish(&tp, &free_list, &committed);
++		if (error) {
++			goto error0;
++		}
++
++		error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
++		xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	}
++
++ out_unlock_iolock:
++	if (need_iolock)
++		xfs_iunlock(ip, XFS_IOLOCK_EXCL);
++	return error;
++
++ error0:
++	xfs_bmap_cancel(&free_list);
++ error1:
++	xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES | XFS_TRANS_ABORT);
++	xfs_iunlock(ip, need_iolock ? (XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL) :
++		    XFS_ILOCK_EXCL);
++	return error;
++}
++
++
++STATIC int
++xfs_zero_file_space(
++	struct xfs_inode	*ip,
++	xfs_off_t		offset,
++	xfs_off_t		len,
++	int			attr_flags)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++	uint			granularity;
++	xfs_off_t		start_boundary;
++	xfs_off_t		end_boundary;
++	int			error;
++
++	granularity = max_t(uint, 1 << mp->m_sb.sb_blocklog, PAGE_CACHE_SIZE);
++
++	/*
++	 * Round the range of extents we are going to convert inwards.  If the
++	 * offset is aligned, then it doesn't get changed so we zero from the
++	 * start of the block offset points to.
++	 */
++	start_boundary = round_up(offset, granularity);
++	end_boundary = round_down(offset + len, granularity);
++
++	ASSERT(start_boundary >= offset);
++	ASSERT(end_boundary <= offset + len);
++
++	if (!(attr_flags & XFS_ATTR_NOLOCK))
++		xfs_ilock(ip, XFS_IOLOCK_EXCL);
++
++	if (start_boundary < end_boundary - 1) {
++		/* punch out the page cache over the conversion range */
++		truncate_pagecache_range(VFS_I(ip), start_boundary,
++					 end_boundary - 1);
++		/* convert the blocks */
++		error = xfs_alloc_file_space(ip, start_boundary,
++					end_boundary - start_boundary - 1,
++					XFS_BMAPI_PREALLOC | XFS_BMAPI_CONVERT,
++					attr_flags);
++		if (error)
++			goto out_unlock;
++
++		/* We've handled the interior of the range, now for the edges */
++		if (start_boundary != offset)
++			error = xfs_iozero(ip, offset, start_boundary - offset);
++		if (error)
++			goto out_unlock;
++
++		if (end_boundary != offset + len)
++			error = xfs_iozero(ip, end_boundary,
++					   offset + len - end_boundary);
++
++	} else {
++		/*
++		 * It's either a sub-granularity range or the range spanned lies
++		 * partially across two adjacent blocks.
++		 */
++		error = xfs_iozero(ip, offset, len);
++	}
++
++out_unlock:
++	if (!(attr_flags & XFS_ATTR_NOLOCK))
++		xfs_iunlock(ip, XFS_IOLOCK_EXCL);
++	return error;
++
++}
++
++/*
++ * xfs_change_file_space()
++ *      This routine allocates or frees disk space for the given file.
++ *      The user specified parameters are checked for alignment and size
++ *      limitations.
++ *
++ * RETURNS:
++ *       0 on success
++ *      errno on error
++ *
++ */
++int
++xfs_change_file_space(
++	xfs_inode_t	*ip,
++	int		cmd,
++	xfs_flock64_t	*bf,
++	xfs_off_t	offset,
++	int		attr_flags)
++{
++	xfs_mount_t	*mp = ip->i_mount;
++	int		clrprealloc;
++	int		error;
++	xfs_fsize_t	fsize;
++	int		setprealloc;
++	xfs_off_t	startoffset;
++	xfs_trans_t	*tp;
++	struct iattr	iattr;
++
++	if (!S_ISREG(ip->i_d.di_mode))
++		return XFS_ERROR(EINVAL);
++
++	switch (bf->l_whence) {
++	case 0: /*SEEK_SET*/
++		break;
++	case 1: /*SEEK_CUR*/
++		bf->l_start += offset;
++		break;
++	case 2: /*SEEK_END*/
++		bf->l_start += XFS_ISIZE(ip);
++		break;
++	default:
++		return XFS_ERROR(EINVAL);
++	}
++
++	/*
++	 * length of <= 0 for resv/unresv/zero is invalid.  length for
++	 * alloc/free is ignored completely and we have no idea what userspace
++	 * might have set it to, so set it to zero to allow range
++	 * checks to pass.
++	 */
++	switch (cmd) {
++	case XFS_IOC_ZERO_RANGE:
++	case XFS_IOC_RESVSP:
++	case XFS_IOC_RESVSP64:
++	case XFS_IOC_UNRESVSP:
++	case XFS_IOC_UNRESVSP64:
++		if (bf->l_len <= 0)
++			return XFS_ERROR(EINVAL);
++		break;
++	default:
++		bf->l_len = 0;
++		break;
++	}
++
++	if (bf->l_start < 0 ||
++	    bf->l_start > mp->m_super->s_maxbytes ||
++	    bf->l_start + bf->l_len < 0 ||
++	    bf->l_start + bf->l_len >= mp->m_super->s_maxbytes)
++		return XFS_ERROR(EINVAL);
++
++	bf->l_whence = 0;
++
++	startoffset = bf->l_start;
++	fsize = XFS_ISIZE(ip);
++
++	setprealloc = clrprealloc = 0;
++	switch (cmd) {
++	case XFS_IOC_ZERO_RANGE:
++		error = xfs_zero_file_space(ip, startoffset, bf->l_len,
++						attr_flags);
++		if (error)
++			return error;
++		setprealloc = 1;
++		break;
++
++	case XFS_IOC_RESVSP:
++	case XFS_IOC_RESVSP64:
++		error = xfs_alloc_file_space(ip, startoffset, bf->l_len,
++						XFS_BMAPI_PREALLOC, attr_flags);
++		if (error)
++			return error;
++		setprealloc = 1;
++		break;
++
++	case XFS_IOC_UNRESVSP:
++	case XFS_IOC_UNRESVSP64:
++		if ((error = xfs_free_file_space(ip, startoffset, bf->l_len,
++								attr_flags)))
++			return error;
++		break;
++
++	case XFS_IOC_ALLOCSP:
++	case XFS_IOC_ALLOCSP64:
++	case XFS_IOC_FREESP:
++	case XFS_IOC_FREESP64:
++		/*
++		 * These operations actually do IO when extending the file, but
++		 * the allocation is done seperately to the zeroing that is
++		 * done. This set of operations need to be serialised against
++		 * other IO operations, such as truncate and buffered IO. We
++		 * need to take the IOLOCK here to serialise the allocation and
++		 * zeroing IO to prevent other IOLOCK holders (e.g. getbmap,
++		 * truncate, direct IO) from racing against the transient
++		 * allocated but not written state we can have here.
++		 */
++		xfs_ilock(ip, XFS_IOLOCK_EXCL);
++		if (startoffset > fsize) {
++			error = xfs_alloc_file_space(ip, fsize,
++					startoffset - fsize, 0,
++					attr_flags | XFS_ATTR_NOLOCK);
++			if (error) {
++				xfs_iunlock(ip, XFS_IOLOCK_EXCL);
++				break;
++			}
++		}
++
++		iattr.ia_valid = ATTR_SIZE;
++		iattr.ia_size = startoffset;
++
++		error = xfs_setattr_size(ip, &iattr,
++					 attr_flags | XFS_ATTR_NOLOCK);
++		xfs_iunlock(ip, XFS_IOLOCK_EXCL);
++
++		if (error)
++			return error;
++
++		clrprealloc = 1;
++		break;
++
++	default:
++		ASSERT(0);
++		return XFS_ERROR(EINVAL);
++	}
++
++	/*
++	 * update the inode timestamp, mode, and prealloc flag bits
++	 */
++	tp = xfs_trans_alloc(mp, XFS_TRANS_WRITEID);
++
++	if ((error = xfs_trans_reserve(tp, 0, XFS_WRITEID_LOG_RES(mp),
++				      0, 0, 0))) {
++		/* ASSERT(0); */
++		xfs_trans_cancel(tp, 0);
++		return error;
++	}
++
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
++	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
++
++	if ((attr_flags & XFS_ATTR_DMI) == 0) {
++		ip->i_d.di_mode &= ~S_ISUID;
++
++		/*
++		 * Note that we don't have to worry about mandatory
++		 * file locking being disabled here because we only
++		 * clear the S_ISGID bit if the Group execute bit is
++		 * on, but if it was on then mandatory locking wouldn't
++		 * have been enabled.
++		 */
++		if (ip->i_d.di_mode & S_IXGRP)
++			ip->i_d.di_mode &= ~S_ISGID;
++
++		xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
++	}
++	if (setprealloc)
++		ip->i_d.di_flags |= XFS_DIFLAG_PREALLOC;
++	else if (clrprealloc)
++		ip->i_d.di_flags &= ~XFS_DIFLAG_PREALLOC;
++
++	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
++	if (attr_flags & XFS_ATTR_SYNC)
++		xfs_trans_set_sync(tp);
++	return xfs_trans_commit(tp, 0);
++}
+diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
+index 004fe4b..a6d2077 100644
+--- a/fs/xfs/xfs_bmap_util.h
++++ b/fs/xfs/xfs_bmap_util.h
+@@ -21,6 +21,7 @@
+ /* Kernel only BMAP related definitions and functions */
+ 
+ struct xfs_bmbt_irec;
++struct xfs_bmap_free_item;
+ struct xfs_ifork;
+ struct xfs_inode;
+ struct xfs_mount;
+@@ -91,6 +92,16 @@ int	xfs_bmap_last_extent(struct xfs_trans *tp, struct xfs_inode *ip,
+ 			     int whichfork, struct xfs_bmbt_irec *rec,
+ 			     int *is_empty);
+ 
++/* preallocation and hole punch interface */
++int	xfs_change_file_space(struct xfs_inode *ip, int cmd,
++			      xfs_flock64_t *bf, xfs_off_t offset,
++			      int attr_flags);
++
++/* EOF block manipulation functions */
++bool	xfs_can_free_eofblocks(struct xfs_inode *ip, bool force);
++int	xfs_free_eofblocks(struct xfs_mount *mp, struct xfs_inode *ip,
++			   bool need_iolock);
++
+ xfs_daddr_t xfs_fsb_to_db(struct xfs_inode *ip, xfs_fsblock_t fsb);
+ 
+ #endif	/* __XFS_BMAP_UTIL_H__ */
+diff --git a/fs/xfs/xfs_dfrag.c b/fs/xfs/xfs_dfrag.c
+index 815dace..b83d45f 100644
+--- a/fs/xfs/xfs_dfrag.c
++++ b/fs/xfs/xfs_dfrag.c
+@@ -35,7 +35,6 @@
+ #include "xfs_itable.h"
+ #include "xfs_dfrag.h"
+ #include "xfs_error.h"
+-#include "xfs_vnodeops.h"
+ #include "xfs_trace.h"
+ 
+ 
+diff --git a/fs/xfs/xfs_dir2.c b/fs/xfs/xfs_dir2.c
+index c3263a5..841933c 100644
+--- a/fs/xfs/xfs_dir2.c
++++ b/fs/xfs/xfs_dir2.c
+@@ -35,7 +35,6 @@
+ #include "xfs_dir2.h"
+ #include "xfs_dir2_priv.h"
+ #include "xfs_error.h"
+-#include "xfs_vnodeops.h"
+ #include "xfs_trace.h"
+ 
+ struct xfs_name xfs_name_dotdot = { (unsigned char *)"..", 2};
+diff --git a/fs/xfs/xfs_dir2.h b/fs/xfs/xfs_dir2.h
+index 7ef6b0f..7fe2b8f 100644
+--- a/fs/xfs/xfs_dir2.h
++++ b/fs/xfs/xfs_dir2.h
+@@ -63,12 +63,6 @@ extern int xfs_dir_canenter(struct xfs_trans *tp, struct xfs_inode *dp,
+ extern int xfs_dir2_sf_to_block(struct xfs_da_args *args);
+ 
+ /*
+- * Direct call on directory open, before entering the readdir code.
+- */
+-extern int xfs_dir3_data_readahead(struct xfs_trans *tp, struct xfs_inode *dp,
+-		xfs_dablk_t bno, xfs_daddr_t mapped_bno);
+-
+-/*
+  * Interface routines used by userspace utilities
+  */
+ extern xfs_ino_t xfs_dir2_sf_get_parent_ino(struct xfs_dir2_sf_hdr *sfp);
+diff --git a/fs/xfs/xfs_dir2_priv.h b/fs/xfs/xfs_dir2_priv.h
+index 807eb65..6d2a99c2 100644
+--- a/fs/xfs/xfs_dir2_priv.h
++++ b/fs/xfs/xfs_dir2_priv.h
+@@ -45,6 +45,8 @@ extern int xfs_dir2_leaf_to_block(struct xfs_da_args *args,
+ extern int __xfs_dir3_data_check(struct xfs_inode *dp, struct xfs_buf *bp);
+ extern int xfs_dir3_data_read(struct xfs_trans *tp, struct xfs_inode *dp,
+ 		xfs_dablk_t bno, xfs_daddr_t mapped_bno, struct xfs_buf **bpp);
++extern int xfs_dir3_data_readahead(struct xfs_trans *tp, struct xfs_inode *dp,
++		xfs_dablk_t bno, xfs_daddr_t mapped_bno);
+ 
+ extern struct xfs_dir2_data_free *
+ xfs_dir2_data_freeinsert(struct xfs_dir2_data_hdr *hdr,
+@@ -124,4 +126,8 @@ extern int xfs_dir2_sf_lookup(struct xfs_da_args *args);
+ extern int xfs_dir2_sf_removename(struct xfs_da_args *args);
+ extern int xfs_dir2_sf_replace(struct xfs_da_args *args);
+ 
++/* xfs_dir2_readdir.c */
++extern int xfs_readdir(struct xfs_inode *dp, struct dir_context *ctx,
++		       size_t bufsize);
++
+ #endif /* __XFS_DIR2_PRIV_H__ */
+diff --git a/fs/xfs/xfs_export.c b/fs/xfs/xfs_export.c
+index 29c880f..066df42 100644
+--- a/fs/xfs/xfs_export.c
++++ b/fs/xfs/xfs_export.c
+@@ -26,7 +26,6 @@
+ #include "xfs_dir2_format.h"
+ #include "xfs_dir2.h"
+ #include "xfs_export.h"
+-#include "xfs_vnodeops.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_inode.h"
+ #include "xfs_inode_item.h"
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 1ba3c79..4c749ab 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -28,11 +28,12 @@
+ #include "xfs_inode.h"
+ #include "xfs_inode_item.h"
  #include "xfs_bmap.h"
 +#include "xfs_bmap_util.h"
- #include "xfs_alloc.h"
- #include "xfs_utils.h"
- #include "xfs_mru_cache.h"
-@@ -668,8 +669,8 @@ exit:
-  */
- int
- xfs_filestream_new_ag(
--	xfs_bmalloca_t	*ap,
--	xfs_agnumber_t	*agp)
-+	struct xfs_bmalloca	*ap,
-+	xfs_agnumber_t		*agp)
- {
- 	int		flags, err;
- 	xfs_inode_t	*ip, *pip = NULL;
+ #include "xfs_error.h"
+-#include "xfs_vnodeops.h"
+ #include "xfs_da_btree.h"
+ #include "xfs_dir2_format.h"
+ #include "xfs_dir2.h"
++#include "xfs_dir2_priv.h"
+ #include "xfs_ioctl.h"
+ #include "xfs_trace.h"
+ 
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index d9a4167..2abc945 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -32,12 +32,12 @@
+ #include "xfs_dinode.h"
+ #include "xfs_error.h"
+ #include "xfs_filestream.h"
+-#include "xfs_vnodeops.h"
+ #include "xfs_inode_item.h"
+ #include "xfs_quota.h"
+ #include "xfs_trace.h"
+ #include "xfs_fsops.h"
+ #include "xfs_icache.h"
++#include "xfs_bmap_util.h"
+ 
+ #include <linux/kthread.h>
+ #include <linux/freezer.h>
 diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index cf35d86..3f82f56 100644
+index 3f82f56..aec7f15 100644
 --- a/fs/xfs/xfs_inode.c
 +++ b/fs/xfs/xfs_inode.c
-@@ -39,6 +39,7 @@
- #include "xfs_alloc.h"
- #include "xfs_ialloc.h"
- #include "xfs_bmap.h"
-+#include "xfs_bmap_util.h"
- #include "xfs_error.h"
- #include "xfs_utils.h"
- #include "xfs_quota.h"
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 3124efa..7c27538 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -33,6 +33,7 @@
- #include "xfs_error.h"
- #include "xfs_attr.h"
- #include "xfs_bmap.h"
-+#include "xfs_bmap_util.h"
- #include "xfs_buf_item.h"
- #include "xfs_utils.h"
- #include "xfs_dfrag.h"
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index e4577f8..b04a60f 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -33,6 +33,7 @@
- #include "xfs_inode_item.h"
- #include "xfs_btree.h"
- #include "xfs_bmap.h"
-+#include "xfs_bmap_util.h"
- #include "xfs_rtalloc.h"
- #include "xfs_error.h"
- #include "xfs_itable.h"
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index e441698..17b70f0 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -30,6 +30,7 @@
+@@ -23,14 +23,19 @@
+ #include "xfs_log.h"
+ #include "xfs_inum.h"
+ #include "xfs_trans.h"
++#include "xfs_trans_space.h"
+ #include "xfs_trans_priv.h"
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_mount.h"
++#include "xfs_da_btree.h"
++#include "xfs_dir2_format.h"
++#include "xfs_dir2.h"
+ #include "xfs_bmap_btree.h"
+ #include "xfs_alloc_btree.h"
+ #include "xfs_ialloc_btree.h"
+ #include "xfs_attr_sf.h"
++#include "xfs_attr.h"
  #include "xfs_dinode.h"
  #include "xfs_inode.h"
- #include "xfs_bmap.h"
-+#include "xfs_bmap_util.h"
- #include "xfs_rtalloc.h"
- #include "xfs_error.h"
+ #include "xfs_buf_item.h"
+@@ -44,10 +49,10 @@
+ #include "xfs_utils.h"
+ #include "xfs_quota.h"
+ #include "xfs_filestream.h"
+-#include "xfs_vnodeops.h"
+ #include "xfs_cksum.h"
+ #include "xfs_trace.h"
+ #include "xfs_icache.h"
++#include "xfs_symlink.h"
+ 
+ kmem_zone_t *xfs_inode_zone;
+ 
+@@ -307,6 +312,188 @@ xfs_isilocked(
+ }
+ #endif
+ 
++#ifdef DEBUG
++int xfs_locked_n;
++int xfs_small_retries;
++int xfs_middle_retries;
++int xfs_lots_retries;
++int xfs_lock_delays;
++#endif
++
++/*
++ * Bump the subclass so xfs_lock_inodes() acquires each lock with
++ * a different value
++ */
++static inline int
++xfs_lock_inumorder(int lock_mode, int subclass)
++{
++	if (lock_mode & (XFS_IOLOCK_SHARED|XFS_IOLOCK_EXCL))
++		lock_mode |= (subclass + XFS_LOCK_INUMORDER) << XFS_IOLOCK_SHIFT;
++	if (lock_mode & (XFS_ILOCK_SHARED|XFS_ILOCK_EXCL))
++		lock_mode |= (subclass + XFS_LOCK_INUMORDER) << XFS_ILOCK_SHIFT;
++
++	return lock_mode;
++}
++
++/*
++ * The following routine will lock n inodes in exclusive mode.
++ * We assume the caller calls us with the inodes in i_ino order.
++ *
++ * We need to detect deadlock where an inode that we lock
++ * is in the AIL and we start waiting for another inode that is locked
++ * by a thread in a long running transaction (such as truncate). This can
++ * result in deadlock since the long running trans might need to wait
++ * for the inode we just locked in order to push the tail and free space
++ * in the log.
++ */
++void
++xfs_lock_inodes(
++	xfs_inode_t	**ips,
++	int		inodes,
++	uint		lock_mode)
++{
++	int		attempts = 0, i, j, try_lock;
++	xfs_log_item_t	*lp;
++
++	ASSERT(ips && (inodes >= 2)); /* we need at least two */
++
++	try_lock = 0;
++	i = 0;
++
++again:
++	for (; i < inodes; i++) {
++		ASSERT(ips[i]);
++
++		if (i && (ips[i] == ips[i-1]))	/* Already locked */
++			continue;
++
++		/*
++		 * If try_lock is not set yet, make sure all locked inodes
++		 * are not in the AIL.
++		 * If any are, set try_lock to be used later.
++		 */
++
++		if (!try_lock) {
++			for (j = (i - 1); j >= 0 && !try_lock; j--) {
++				lp = (xfs_log_item_t *)ips[j]->i_itemp;
++				if (lp && (lp->li_flags & XFS_LI_IN_AIL)) {
++					try_lock++;
++				}
++			}
++		}
++
++		/*
++		 * If any of the previous locks we have locked is in the AIL,
++		 * we must TRY to get the second and subsequent locks. If
++		 * we can't get any, we must release all we have
++		 * and try again.
++		 */
++
++		if (try_lock) {
++			/* try_lock must be 0 if i is 0. */
++			/*
++			 * try_lock means we have an inode locked
++			 * that is in the AIL.
++			 */
++			ASSERT(i != 0);
++			if (!xfs_ilock_nowait(ips[i], xfs_lock_inumorder(lock_mode, i))) {
++				attempts++;
++
++				/*
++				 * Unlock all previous guys and try again.
++				 * xfs_iunlock will try to push the tail
++				 * if the inode is in the AIL.
++				 */
++
++				for(j = i - 1; j >= 0; j--) {
++
++					/*
++					 * Check to see if we've already
++					 * unlocked this one.
++					 * Not the first one going back,
++					 * and the inode ptr is the same.
++					 */
++					if ((j != (i - 1)) && ips[j] ==
++								ips[j+1])
++						continue;
++
++					xfs_iunlock(ips[j], lock_mode);
++				}
++
++				if ((attempts % 5) == 0) {
++					delay(1); /* Don't just spin the CPU */
++#ifdef DEBUG
++					xfs_lock_delays++;
++#endif
++				}
++				i = 0;
++				try_lock = 0;
++				goto again;
++			}
++		} else {
++			xfs_ilock(ips[i], xfs_lock_inumorder(lock_mode, i));
++		}
++	}
++
++#ifdef DEBUG
++	if (attempts) {
++		if (attempts < 5) xfs_small_retries++;
++		else if (attempts < 100) xfs_middle_retries++;
++		else xfs_lots_retries++;
++	} else {
++		xfs_locked_n++;
++	}
++#endif
++}
++
++/*
++ * xfs_lock_two_inodes() can only be used to lock one type of lock
++ * at a time - the iolock or the ilock, but not both at once. If
++ * we lock both at once, lockdep will report false positives saying
++ * we have violated locking orders.
++ */
++void
++xfs_lock_two_inodes(
++	xfs_inode_t		*ip0,
++	xfs_inode_t		*ip1,
++	uint			lock_mode)
++{
++	xfs_inode_t		*temp;
++	int			attempts = 0;
++	xfs_log_item_t		*lp;
++
++	if (lock_mode & (XFS_IOLOCK_SHARED|XFS_IOLOCK_EXCL))
++		ASSERT((lock_mode & (XFS_ILOCK_SHARED|XFS_ILOCK_EXCL)) == 0);
++	ASSERT(ip0->i_ino != ip1->i_ino);
++
++	if (ip0->i_ino > ip1->i_ino) {
++		temp = ip0;
++		ip0 = ip1;
++		ip1 = temp;
++	}
++
++ again:
++	xfs_ilock(ip0, xfs_lock_inumorder(lock_mode, 0));
++
++	/*
++	 * If the first lock we have locked is in the AIL, we must TRY to get
++	 * the second lock. If we can't get it, we must release the first one
++	 * and try again.
++	 */
++	lp = (xfs_log_item_t *)ip0->i_itemp;
++	if (lp && (lp->li_flags & XFS_LI_IN_AIL)) {
++		if (!xfs_ilock_nowait(ip1, xfs_lock_inumorder(lock_mode, 1))) {
++			xfs_iunlock(ip0, lock_mode);
++			if ((++attempts % 5) == 0)
++				delay(1); /* Don't just spin the CPU */
++			goto again;
++		}
++	} else {
++		xfs_ilock(ip1, xfs_lock_inumorder(lock_mode, 1));
++	}
++}
++
++
+ void
+ __xfs_iflock(
+ 	struct xfs_inode	*ip)
+@@ -382,6 +569,49 @@ xfs_dic2xflags(
+ }
+ 
+ /*
++ * Lookups up an inode from "name". If ci_name is not NULL, then a CI match
++ * is allowed, otherwise it has to be an exact match. If a CI match is found,
++ * ci_name->name will point to a the actual name (caller must free) or
++ * will be set to NULL if an exact match is found.
++ */
++int
++xfs_lookup(
++	xfs_inode_t		*dp,
++	struct xfs_name		*name,
++	xfs_inode_t		**ipp,
++	struct xfs_name		*ci_name)
++{
++	xfs_ino_t		inum;
++	int			error;
++	uint			lock_mode;
++
++	trace_xfs_lookup(dp, name);
++
++	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
++		return XFS_ERROR(EIO);
++
++	lock_mode = xfs_ilock_map_shared(dp);
++	error = xfs_dir_lookup(NULL, dp, name, &inum, ci_name);
++	xfs_iunlock_map_shared(dp, lock_mode);
++
++	if (error)
++		goto out;
++
++	error = xfs_iget(dp->i_mount, NULL, inum, 0, 0, ipp);
++	if (error)
++		goto out_free_name;
++
++	return 0;
++
++out_free_name:
++	if (ci_name)
++		kmem_free(ci_name->name);
++out:
++	*ipp = NULL;
++	return error;
++}
++
++/*
+  * Allocate an inode on disk and return a copy of its in-core version.
+  * The in-core inode is locked exclusively.  Set mode, nlink, and rdev
+  * appropriately within the inode.  The uid and gid for the inode are
+@@ -632,6 +862,307 @@ xfs_ialloc(
+ 	return 0;
+ }
+ 
++int
++xfs_create(
++	xfs_inode_t		*dp,
++	struct xfs_name		*name,
++	umode_t			mode,
++	xfs_dev_t		rdev,
++	xfs_inode_t		**ipp)
++{
++	int			is_dir = S_ISDIR(mode);
++	struct xfs_mount	*mp = dp->i_mount;
++	struct xfs_inode	*ip = NULL;
++	struct xfs_trans	*tp = NULL;
++	int			error;
++	xfs_bmap_free_t		free_list;
++	xfs_fsblock_t		first_block;
++	bool                    unlock_dp_on_error = false;
++	uint			cancel_flags;
++	int			committed;
++	prid_t			prid;
++	struct xfs_dquot	*udqp = NULL;
++	struct xfs_dquot	*gdqp = NULL;
++	struct xfs_dquot	*pdqp = NULL;
++	uint			resblks;
++	uint			log_res;
++	uint			log_count;
++
++	trace_xfs_create(dp, name);
++
++	if (XFS_FORCED_SHUTDOWN(mp))
++		return XFS_ERROR(EIO);
++
++	if (dp->i_d.di_flags & XFS_DIFLAG_PROJINHERIT)
++		prid = xfs_get_projid(dp);
++	else
++		prid = XFS_PROJID_DEFAULT;
++
++	/*
++	 * Make sure that we have allocated dquot(s) on disk.
++	 */
++	error = xfs_qm_vop_dqalloc(dp, current_fsuid(), current_fsgid(), prid,
++					XFS_QMOPT_QUOTALL | XFS_QMOPT_INHERIT,
++					&udqp, &gdqp, &pdqp);
++	if (error)
++		return error;
++
++	if (is_dir) {
++		rdev = 0;
++		resblks = XFS_MKDIR_SPACE_RES(mp, name->len);
++		log_res = XFS_MKDIR_LOG_RES(mp);
++		log_count = XFS_MKDIR_LOG_COUNT;
++		tp = xfs_trans_alloc(mp, XFS_TRANS_MKDIR);
++	} else {
++		resblks = XFS_CREATE_SPACE_RES(mp, name->len);
++		log_res = XFS_CREATE_LOG_RES(mp);
++		log_count = XFS_CREATE_LOG_COUNT;
++		tp = xfs_trans_alloc(mp, XFS_TRANS_CREATE);
++	}
++
++	cancel_flags = XFS_TRANS_RELEASE_LOG_RES;
++
++	/*
++	 * Initially assume that the file does not exist and
++	 * reserve the resources for that case.  If that is not
++	 * the case we'll drop the one we have and get a more
++	 * appropriate transaction later.
++	 */
++	error = xfs_trans_reserve(tp, resblks, log_res, 0,
++			XFS_TRANS_PERM_LOG_RES, log_count);
++	if (error == ENOSPC) {
++		/* flush outstanding delalloc blocks and retry */
++		xfs_flush_inodes(mp);
++		error = xfs_trans_reserve(tp, resblks, log_res, 0,
++				XFS_TRANS_PERM_LOG_RES, log_count);
++	}
++	if (error == ENOSPC) {
++		/* No space at all so try a "no-allocation" reservation */
++		resblks = 0;
++		error = xfs_trans_reserve(tp, 0, log_res, 0,
++				XFS_TRANS_PERM_LOG_RES, log_count);
++	}
++	if (error) {
++		cancel_flags = 0;
++		goto out_trans_cancel;
++	}
++
++	xfs_ilock(dp, XFS_ILOCK_EXCL | XFS_ILOCK_PARENT);
++	unlock_dp_on_error = true;
++
++	xfs_bmap_init(&free_list, &first_block);
++
++	/*
++	 * Reserve disk quota and the inode.
++	 */
++	error = xfs_trans_reserve_quota(tp, mp, udqp, gdqp,
++						pdqp, resblks, 1, 0);
++	if (error)
++		goto out_trans_cancel;
++
++	error = xfs_dir_canenter(tp, dp, name, resblks);
++	if (error)
++		goto out_trans_cancel;
++
++	/*
++	 * A newly created regular or special file just has one directory
++	 * entry pointing to them, but a directory also the "." entry
++	 * pointing to itself.
++	 */
++	error = xfs_dir_ialloc(&tp, dp, mode, is_dir ? 2 : 1, rdev,
++			       prid, resblks > 0, &ip, &committed);
++	if (error) {
++		if (error == ENOSPC)
++			goto out_trans_cancel;
++		goto out_trans_abort;
++	}
++
++	/*
++	 * Now we join the directory inode to the transaction.  We do not do it
++	 * earlier because xfs_dir_ialloc might commit the previous transaction
++	 * (and release all the locks).  An error from here on will result in
++	 * the transaction cancel unlocking dp so don't do it explicitly in the
++	 * error path.
++	 */
++	xfs_trans_ijoin(tp, dp, XFS_ILOCK_EXCL);
++	unlock_dp_on_error = false;
++
++	error = xfs_dir_createname(tp, dp, name, ip->i_ino,
++					&first_block, &free_list, resblks ?
++					resblks - XFS_IALLOC_SPACE_RES(mp) : 0);
++	if (error) {
++		ASSERT(error != ENOSPC);
++		goto out_trans_abort;
++	}
++	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
++	xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
++
++	if (is_dir) {
++		error = xfs_dir_init(tp, ip, dp);
++		if (error)
++			goto out_bmap_cancel;
++
++		error = xfs_bumplink(tp, dp);
++		if (error)
++			goto out_bmap_cancel;
++	}
++
++	/*
++	 * If this is a synchronous mount, make sure that the
++	 * create transaction goes to disk before returning to
++	 * the user.
++	 */
++	if (mp->m_flags & (XFS_MOUNT_WSYNC|XFS_MOUNT_DIRSYNC))
++		xfs_trans_set_sync(tp);
++
++	/*
++	 * Attach the dquot(s) to the inodes and modify them incore.
++	 * These ids of the inode couldn't have changed since the new
++	 * inode has been locked ever since it was created.
++	 */
++	xfs_qm_vop_create_dqattach(tp, ip, udqp, gdqp, pdqp);
++
++	error = xfs_bmap_finish(&tp, &free_list, &committed);
++	if (error)
++		goto out_bmap_cancel;
++
++	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
++	if (error)
++		goto out_release_inode;
++
++	xfs_qm_dqrele(udqp);
++	xfs_qm_dqrele(gdqp);
++
++	*ipp = ip;
++	return 0;
++
++ out_bmap_cancel:
++	xfs_bmap_cancel(&free_list);
++ out_trans_abort:
++	cancel_flags |= XFS_TRANS_ABORT;
++ out_trans_cancel:
++	xfs_trans_cancel(tp, cancel_flags);
++ out_release_inode:
++	/*
++	 * Wait until after the current transaction is aborted to
++	 * release the inode.  This prevents recursive transactions
++	 * and deadlocks from xfs_inactive.
++	 */
++	if (ip)
++		IRELE(ip);
++
++	xfs_qm_dqrele(udqp);
++	xfs_qm_dqrele(gdqp);
++	xfs_qm_dqrele(pdqp);
++
++	if (unlock_dp_on_error)
++		xfs_iunlock(dp, XFS_ILOCK_EXCL);
++	return error;
++}
++
++int
++xfs_link(
++	xfs_inode_t		*tdp,
++	xfs_inode_t		*sip,
++	struct xfs_name		*target_name)
++{
++	xfs_mount_t		*mp = tdp->i_mount;
++	xfs_trans_t		*tp;
++	int			error;
++	xfs_bmap_free_t         free_list;
++	xfs_fsblock_t           first_block;
++	int			cancel_flags;
++	int			committed;
++	int			resblks;
++
++	trace_xfs_link(tdp, target_name);
++
++	ASSERT(!S_ISDIR(sip->i_d.di_mode));
++
++	if (XFS_FORCED_SHUTDOWN(mp))
++		return XFS_ERROR(EIO);
++
++	error = xfs_qm_dqattach(sip, 0);
++	if (error)
++		goto std_return;
++
++	error = xfs_qm_dqattach(tdp, 0);
++	if (error)
++		goto std_return;
++
++	tp = xfs_trans_alloc(mp, XFS_TRANS_LINK);
++	cancel_flags = XFS_TRANS_RELEASE_LOG_RES;
++	resblks = XFS_LINK_SPACE_RES(mp, target_name->len);
++	error = xfs_trans_reserve(tp, resblks, XFS_LINK_LOG_RES(mp), 0,
++			XFS_TRANS_PERM_LOG_RES, XFS_LINK_LOG_COUNT);
++	if (error == ENOSPC) {
++		resblks = 0;
++		error = xfs_trans_reserve(tp, 0, XFS_LINK_LOG_RES(mp), 0,
++				XFS_TRANS_PERM_LOG_RES, XFS_LINK_LOG_COUNT);
++	}
++	if (error) {
++		cancel_flags = 0;
++		goto error_return;
++	}
++
++	xfs_lock_two_inodes(sip, tdp, XFS_ILOCK_EXCL);
++
++	xfs_trans_ijoin(tp, sip, XFS_ILOCK_EXCL);
++	xfs_trans_ijoin(tp, tdp, XFS_ILOCK_EXCL);
++
++	/*
++	 * If we are using project inheritance, we only allow hard link
++	 * creation in our tree when the project IDs are the same; else
++	 * the tree quota mechanism could be circumvented.
++	 */
++	if (unlikely((tdp->i_d.di_flags & XFS_DIFLAG_PROJINHERIT) &&
++		     (xfs_get_projid(tdp) != xfs_get_projid(sip)))) {
++		error = XFS_ERROR(EXDEV);
++		goto error_return;
++	}
++
++	error = xfs_dir_canenter(tp, tdp, target_name, resblks);
++	if (error)
++		goto error_return;
++
++	xfs_bmap_init(&free_list, &first_block);
++
++	error = xfs_dir_createname(tp, tdp, target_name, sip->i_ino,
++					&first_block, &free_list, resblks);
++	if (error)
++		goto abort_return;
++	xfs_trans_ichgtime(tp, tdp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
++	xfs_trans_log_inode(tp, tdp, XFS_ILOG_CORE);
++
++	error = xfs_bumplink(tp, sip);
++	if (error)
++		goto abort_return;
++
++	/*
++	 * If this is a synchronous mount, make sure that the
++	 * link transaction goes to disk before returning to
++	 * the user.
++	 */
++	if (mp->m_flags & (XFS_MOUNT_WSYNC|XFS_MOUNT_DIRSYNC)) {
++		xfs_trans_set_sync(tp);
++	}
++
++	error = xfs_bmap_finish (&tp, &free_list, &committed);
++	if (error) {
++		xfs_bmap_cancel(&free_list);
++		goto abort_return;
++	}
++
++	return xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
++
++ abort_return:
++	cancel_flags |= XFS_TRANS_ABORT;
++ error_return:
++	xfs_trans_cancel(tp, cancel_flags);
++ std_return:
++	return error;
++}
++
+ /*
+  * Free up the underlying blocks past new_size.  The new size must be smaller
+  * than the current size.  This routine can be used both for the attribute and
+@@ -771,6 +1302,276 @@ out_bmap_cancel:
+ 	goto out;
+ }
+ 
++int
++xfs_release(
++	xfs_inode_t	*ip)
++{
++	xfs_mount_t	*mp = ip->i_mount;
++	int		error;
++
++	if (!S_ISREG(ip->i_d.di_mode) || (ip->i_d.di_mode == 0))
++		return 0;
++
++	/* If this is a read-only mount, don't do this (would generate I/O) */
++	if (mp->m_flags & XFS_MOUNT_RDONLY)
++		return 0;
++
++	if (!XFS_FORCED_SHUTDOWN(mp)) {
++		int truncated;
++
++		/*
++		 * If we are using filestreams, and we have an unlinked
++		 * file that we are processing the last close on, then nothing
++		 * will be able to reopen and write to this file. Purge this
++		 * inode from the filestreams cache so that it doesn't delay
++		 * teardown of the inode.
++		 */
++		if ((ip->i_d.di_nlink == 0) && xfs_inode_is_filestream(ip))
++			xfs_filestream_deassociate(ip);
++
++		/*
++		 * If we previously truncated this file and removed old data
++		 * in the process, we want to initiate "early" writeout on
++		 * the last close.  This is an attempt to combat the notorious
++		 * NULL files problem which is particularly noticeable from a
++		 * truncate down, buffered (re-)write (delalloc), followed by
++		 * a crash.  What we are effectively doing here is
++		 * significantly reducing the time window where we'd otherwise
++		 * be exposed to that problem.
++		 */
++		truncated = xfs_iflags_test_and_clear(ip, XFS_ITRUNCATED);
++		if (truncated) {
++			xfs_iflags_clear(ip, XFS_IDIRTY_RELEASE);
++			if (VN_DIRTY(VFS_I(ip)) && ip->i_delayed_blks > 0) {
++				error = -filemap_flush(VFS_I(ip)->i_mapping);
++				if (error)
++					return error;
++			}
++		}
++	}
++
++	if (ip->i_d.di_nlink == 0)
++		return 0;
++
++	if (xfs_can_free_eofblocks(ip, false)) {
++
++		/*
++		 * If we can't get the iolock just skip truncating the blocks
++		 * past EOF because we could deadlock with the mmap_sem
++		 * otherwise.  We'll get another chance to drop them once the
++		 * last reference to the inode is dropped, so we'll never leak
++		 * blocks permanently.
++		 *
++		 * Further, check if the inode is being opened, written and
++		 * closed frequently and we have delayed allocation blocks
++		 * outstanding (e.g. streaming writes from the NFS server),
++		 * truncating the blocks past EOF will cause fragmentation to
++		 * occur.
++		 *
++		 * In this case don't do the truncation, either, but we have to
++		 * be careful how we detect this case. Blocks beyond EOF show
++		 * up as i_delayed_blks even when the inode is clean, so we
++		 * need to truncate them away first before checking for a dirty
++		 * release. Hence on the first dirty close we will still remove
++		 * the speculative allocation, but after that we will leave it
++		 * in place.
++		 */
++		if (xfs_iflags_test(ip, XFS_IDIRTY_RELEASE))
++			return 0;
++
++		error = xfs_free_eofblocks(mp, ip, true);
++		if (error && error != EAGAIN)
++			return error;
++
++		/* delalloc blocks after truncation means it really is dirty */
++		if (ip->i_delayed_blks)
++			xfs_iflags_set(ip, XFS_IDIRTY_RELEASE);
++	}
++	return 0;
++}
++
++/*
++ * xfs_inactive
++ *
++ * This is called when the vnode reference count for the vnode
++ * goes to zero.  If the file has been unlinked, then it must
++ * now be truncated.  Also, we clear all of the read-ahead state
++ * kept for the inode here since the file is now closed.
++ */
++int
++xfs_inactive(
++	xfs_inode_t	*ip)
++{
++	xfs_bmap_free_t	free_list;
++	xfs_fsblock_t	first_block;
++	int		committed;
++	xfs_trans_t	*tp;
++	xfs_mount_t	*mp;
++	int		error;
++	int		truncate = 0;
++
++	/*
++	 * If the inode is already free, then there can be nothing
++	 * to clean up here.
++	 */
++	if (ip->i_d.di_mode == 0 || is_bad_inode(VFS_I(ip))) {
++		ASSERT(ip->i_df.if_real_bytes == 0);
++		ASSERT(ip->i_df.if_broot_bytes == 0);
++		return VN_INACTIVE_CACHE;
++	}
++
++	mp = ip->i_mount;
++
++	error = 0;
++
++	/* If this is a read-only mount, don't do this (would generate I/O) */
++	if (mp->m_flags & XFS_MOUNT_RDONLY)
++		goto out;
++
++	if (ip->i_d.di_nlink != 0) {
++		/*
++		 * force is true because we are evicting an inode from the
++		 * cache. Post-eof blocks must be freed, lest we end up with
++		 * broken free space accounting.
++		 */
++		if (xfs_can_free_eofblocks(ip, true)) {
++			error = xfs_free_eofblocks(mp, ip, false);
++			if (error)
++				return VN_INACTIVE_CACHE;
++		}
++		goto out;
++	}
++
++	if (S_ISREG(ip->i_d.di_mode) &&
++	    (ip->i_d.di_size != 0 || XFS_ISIZE(ip) != 0 ||
++	     ip->i_d.di_nextents > 0 || ip->i_delayed_blks > 0))
++		truncate = 1;
++
++	error = xfs_qm_dqattach(ip, 0);
++	if (error)
++		return VN_INACTIVE_CACHE;
++
++	tp = xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
++	error = xfs_trans_reserve(tp, 0,
++			(truncate || S_ISLNK(ip->i_d.di_mode)) ?
++				XFS_ITRUNCATE_LOG_RES(mp) :
++				XFS_IFREE_LOG_RES(mp),
++			0,
++			XFS_TRANS_PERM_LOG_RES,
++			XFS_ITRUNCATE_LOG_COUNT);
++	if (error) {
++		ASSERT(XFS_FORCED_SHUTDOWN(mp));
++		xfs_trans_cancel(tp, 0);
++		return VN_INACTIVE_CACHE;
++	}
++
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
++	xfs_trans_ijoin(tp, ip, 0);
++
++	if (S_ISLNK(ip->i_d.di_mode)) {
++		error = xfs_inactive_symlink(ip, &tp);
++		if (error)
++			goto out_cancel;
++	} else if (truncate) {
++		ip->i_d.di_size = 0;
++		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
++
++		error = xfs_itruncate_extents(&tp, ip, XFS_DATA_FORK, 0);
++		if (error)
++			goto out_cancel;
++
++		ASSERT(ip->i_d.di_nextents == 0);
++	}
++
++	/*
++	 * If there are attributes associated with the file then blow them away
++	 * now.  The code calls a routine that recursively deconstructs the
++	 * attribute fork.  We need to just commit the current transaction
++	 * because we can't use it for xfs_attr_inactive().
++	 */
++	if (ip->i_d.di_anextents > 0) {
++		ASSERT(ip->i_d.di_forkoff != 0);
++
++		error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
++		if (error)
++			goto out_unlock;
++
++		xfs_iunlock(ip, XFS_ILOCK_EXCL);
++
++		error = xfs_attr_inactive(ip);
++		if (error)
++			goto out;
++
++		tp = xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
++		error = xfs_trans_reserve(tp, 0,
++					  XFS_IFREE_LOG_RES(mp),
++					  0, XFS_TRANS_PERM_LOG_RES,
++					  XFS_INACTIVE_LOG_COUNT);
++		if (error) {
++			xfs_trans_cancel(tp, 0);
++			goto out;
++		}
++
++		xfs_ilock(ip, XFS_ILOCK_EXCL);
++		xfs_trans_ijoin(tp, ip, 0);
++	}
++
++	if (ip->i_afp)
++		xfs_idestroy_fork(ip, XFS_ATTR_FORK);
++
++	ASSERT(ip->i_d.di_anextents == 0);
++
++	/*
++	 * Free the inode.
++	 */
++	xfs_bmap_init(&free_list, &first_block);
++	error = xfs_ifree(tp, ip, &free_list);
++	if (error) {
++		/*
++		 * If we fail to free the inode, shut down.  The cancel
++		 * might do that, we need to make sure.  Otherwise the
++		 * inode might be lost for a long time or forever.
++		 */
++		if (!XFS_FORCED_SHUTDOWN(mp)) {
++			xfs_notice(mp, "%s: xfs_ifree returned error %d",
++				__func__, error);
++			xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
++		}
++		xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_ABORT);
++	} else {
++		/*
++		 * Credit the quota account(s). The inode is gone.
++		 */
++		xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_ICOUNT, -1);
++
++		/*
++		 * Just ignore errors at this point.  There is nothing we can
++		 * do except to try to keep going. Make sure it's not a silent
++		 * error.
++		 */
++		error = xfs_bmap_finish(&tp,  &free_list, &committed);
++		if (error)
++			xfs_notice(mp, "%s: xfs_bmap_finish returned error %d",
++				__func__, error);
++		error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
++		if (error)
++			xfs_notice(mp, "%s: xfs_trans_commit returned error %d",
++				__func__, error);
++	}
++
++	/*
++	 * Release the dquots held by inode, if any.
++	 */
++	xfs_qm_dqdetach(ip);
++out_unlock:
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++out:
++	return VN_INACTIVE_CACHE;
++out_cancel:
++	xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES | XFS_TRANS_ABORT);
++	goto out_unlock;
++}
++
+ /*
+  * This is called when the inode's link count goes to 0.
+  * We place the on-disk inode on a list in the AGI.  It
+@@ -1302,6 +2103,170 @@ xfs_iunpin_wait(
+ 		__xfs_iunpin_wait(ip);
+ }
+ 
++int
++xfs_remove(
++	xfs_inode_t             *dp,
++	struct xfs_name		*name,
++	xfs_inode_t		*ip)
++{
++	xfs_mount_t		*mp = dp->i_mount;
++	xfs_trans_t             *tp = NULL;
++	int			is_dir = S_ISDIR(ip->i_d.di_mode);
++	int                     error = 0;
++	xfs_bmap_free_t         free_list;
++	xfs_fsblock_t           first_block;
++	int			cancel_flags;
++	int			committed;
++	int			link_zero;
++	uint			resblks;
++	uint			log_count;
++
++	trace_xfs_remove(dp, name);
++
++	if (XFS_FORCED_SHUTDOWN(mp))
++		return XFS_ERROR(EIO);
++
++	error = xfs_qm_dqattach(dp, 0);
++	if (error)
++		goto std_return;
++
++	error = xfs_qm_dqattach(ip, 0);
++	if (error)
++		goto std_return;
++
++	if (is_dir) {
++		tp = xfs_trans_alloc(mp, XFS_TRANS_RMDIR);
++		log_count = XFS_DEFAULT_LOG_COUNT;
++	} else {
++		tp = xfs_trans_alloc(mp, XFS_TRANS_REMOVE);
++		log_count = XFS_REMOVE_LOG_COUNT;
++	}
++	cancel_flags = XFS_TRANS_RELEASE_LOG_RES;
++
++	/*
++	 * We try to get the real space reservation first,
++	 * allowing for directory btree deletion(s) implying
++	 * possible bmap insert(s).  If we can't get the space
++	 * reservation then we use 0 instead, and avoid the bmap
++	 * btree insert(s) in the directory code by, if the bmap
++	 * insert tries to happen, instead trimming the LAST
++	 * block from the directory.
++	 */
++	resblks = XFS_REMOVE_SPACE_RES(mp);
++	error = xfs_trans_reserve(tp, resblks, XFS_REMOVE_LOG_RES(mp), 0,
++				  XFS_TRANS_PERM_LOG_RES, log_count);
++	if (error == ENOSPC) {
++		resblks = 0;
++		error = xfs_trans_reserve(tp, 0, XFS_REMOVE_LOG_RES(mp), 0,
++					  XFS_TRANS_PERM_LOG_RES, log_count);
++	}
++	if (error) {
++		ASSERT(error != ENOSPC);
++		cancel_flags = 0;
++		goto out_trans_cancel;
++	}
++
++	xfs_lock_two_inodes(dp, ip, XFS_ILOCK_EXCL);
++
++	xfs_trans_ijoin(tp, dp, XFS_ILOCK_EXCL);
++	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
++
++	/*
++	 * If we're removing a directory perform some additional validation.
++	 */
++	if (is_dir) {
++		ASSERT(ip->i_d.di_nlink >= 2);
++		if (ip->i_d.di_nlink != 2) {
++			error = XFS_ERROR(ENOTEMPTY);
++			goto out_trans_cancel;
++		}
++		if (!xfs_dir_isempty(ip)) {
++			error = XFS_ERROR(ENOTEMPTY);
++			goto out_trans_cancel;
++		}
++	}
++
++	xfs_bmap_init(&free_list, &first_block);
++	error = xfs_dir_removename(tp, dp, name, ip->i_ino,
++					&first_block, &free_list, resblks);
++	if (error) {
++		ASSERT(error != ENOENT);
++		goto out_bmap_cancel;
++	}
++	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
++
++	if (is_dir) {
++		/*
++		 * Drop the link from ip's "..".
++		 */
++		error = xfs_droplink(tp, dp);
++		if (error)
++			goto out_bmap_cancel;
++
++		/*
++		 * Drop the "." link from ip to self.
++		 */
++		error = xfs_droplink(tp, ip);
++		if (error)
++			goto out_bmap_cancel;
++	} else {
++		/*
++		 * When removing a non-directory we need to log the parent
++		 * inode here.  For a directory this is done implicitly
++		 * by the xfs_droplink call for the ".." entry.
++		 */
++		xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
++	}
++
++	/*
++	 * Drop the link from dp to ip.
++	 */
++	error = xfs_droplink(tp, ip);
++	if (error)
++		goto out_bmap_cancel;
++
++	/*
++	 * Determine if this is the last link while
++	 * we are in the transaction.
++	 */
++	link_zero = (ip->i_d.di_nlink == 0);
++
++	/*
++	 * If this is a synchronous mount, make sure that the
++	 * remove transaction goes to disk before returning to
++	 * the user.
++	 */
++	if (mp->m_flags & (XFS_MOUNT_WSYNC|XFS_MOUNT_DIRSYNC))
++		xfs_trans_set_sync(tp);
++
++	error = xfs_bmap_finish(&tp, &free_list, &committed);
++	if (error)
++		goto out_bmap_cancel;
++
++	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
++	if (error)
++		goto std_return;
++
++	/*
++	 * If we are using filestreams, kill the stream association.
++	 * If the file is still open it may get a new one but that
++	 * will get killed on last close in xfs_close() so we don't
++	 * have to worry about that.
++	 */
++	if (!is_dir && link_zero && xfs_inode_is_filestream(ip))
++		xfs_filestream_deassociate(ip);
++
++	return 0;
++
++ out_bmap_cancel:
++	xfs_bmap_cancel(&free_list);
++	cancel_flags |= XFS_TRANS_ABORT;
++ out_trans_cancel:
++	xfs_trans_cancel(tp, cancel_flags);
++ std_return:
++	return error;
++}
++
+ STATIC int
+ xfs_iflush_cluster(
+ 	xfs_inode_t	*ip,
+@@ -1740,39 +2705,3 @@ xfs_iflush_int(
+ corrupt_out:
+ 	return XFS_ERROR(EFSCORRUPTED);
+ }
+-
+-/*
+- * Test whether it is appropriate to check an inode for and free post EOF
+- * blocks. The 'force' parameter determines whether we should also consider
+- * regular files that are marked preallocated or append-only.
+- */
+-bool
+-xfs_can_free_eofblocks(struct xfs_inode *ip, bool force)
+-{
+-	/* prealloc/delalloc exists only on regular files */
+-	if (!S_ISREG(ip->i_d.di_mode))
+-		return false;
+-
+-	/*
+-	 * Zero sized files with no cached pages and delalloc blocks will not
+-	 * have speculative prealloc/delalloc blocks to remove.
+-	 */
+-	if (VFS_I(ip)->i_size == 0 &&
+-	    VN_CACHED(VFS_I(ip)) == 0 &&
+-	    ip->i_delayed_blks == 0)
+-		return false;
+-
+-	/* If we haven't read in the extent list, then don't do it now. */
+-	if (!(ip->i_df.if_flags & XFS_IFEXTENTS))
+-		return false;
+-
+-	/*
+-	 * Do not free real preallocated or append-only files unless the file
+-	 * has delalloc blocks and we are forced to remove them.
+-	 */
+-	if (ip->i_d.di_flags & (XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND))
+-		if (!force || ip->i_delayed_blks == 0)
+-			return false;
+-
+-	return true;
+-}
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 8f775ed..2a63470 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -315,9 +315,21 @@ static inline int xfs_isiflocked(struct xfs_inode *ip)
+ 	 ((pip)->i_d.di_mode & S_ISGID))
+ 
+ 
+-/*
+- * xfs_inode.c prototypes.
+- */
++int		xfs_release(struct xfs_inode *ip);
++int		xfs_inactive(struct xfs_inode *ip);
++int		xfs_lookup(struct xfs_inode *dp, struct xfs_name *name,
++			   struct xfs_inode **ipp, struct xfs_name *ci_name);
++int		xfs_create(struct xfs_inode *dp, struct xfs_name *name,
++			   umode_t mode, xfs_dev_t rdev, struct xfs_inode **ipp);
++int		xfs_remove(struct xfs_inode *dp, struct xfs_name *name,
++			   struct xfs_inode *ip);
++int		xfs_link(struct xfs_inode *tdp, struct xfs_inode *sip,
++			 struct xfs_name *target_name);
++int		xfs_rename(struct xfs_inode *src_dp, struct xfs_name *src_name,
++			   struct xfs_inode *src_ip, struct xfs_inode *target_dp,
++			   struct xfs_name *target_name,
++			   struct xfs_inode *target_ip);
++
+ void		xfs_ilock(xfs_inode_t *, uint);
+ int		xfs_ilock_nowait(xfs_inode_t *, uint);
+ void		xfs_iunlock(xfs_inode_t *, uint);
+@@ -348,6 +360,11 @@ void		xfs_lock_two_inodes(xfs_inode_t *, xfs_inode_t *, uint);
+ 
+ xfs_extlen_t	xfs_get_extsz_hint(struct xfs_inode *ip);
+ 
++/* from xfs_file.c */
++int		xfs_zero_eof(struct xfs_inode *, xfs_off_t, xfs_fsize_t);
++int		xfs_iozero(struct xfs_inode *, loff_t, size_t);
++
++
+ #define IHOLD(ip) \
+ do { \
+ 	ASSERT(atomic_read(&VFS_I(ip)->i_count) > 0) ; \
+diff --git a/fs/xfs/xfs_inode_buf.h b/fs/xfs/xfs_inode_buf.h
+index b5f1e22..aae9fc4 100644
+--- a/fs/xfs/xfs_inode_buf.h
++++ b/fs/xfs/xfs_inode_buf.h
+@@ -40,7 +40,6 @@ int		xfs_iread(struct xfs_mount *, struct xfs_trans *,
+ void		xfs_dinode_calc_crc(struct xfs_mount *, struct xfs_dinode *);
+ void		xfs_dinode_to_disk(struct xfs_dinode *,
+ 				   struct xfs_icdinode *);
+-bool		xfs_can_free_eofblocks(struct xfs_inode *, bool);
+ 
+ #if defined(DEBUG)
+ void		xfs_inobp_check(struct xfs_mount *, struct xfs_buf *);
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 7c27538..ce636bf 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -38,13 +38,13 @@
+ #include "xfs_utils.h"
+ #include "xfs_dfrag.h"
+ #include "xfs_fsops.h"
+-#include "xfs_vnodeops.h"
+ #include "xfs_discard.h"
+ #include "xfs_quota.h"
+ #include "xfs_inode_item.h"
+ #include "xfs_export.h"
+ #include "xfs_trace.h"
+ #include "xfs_icache.h"
++#include "xfs_symlink.h"
+ 
+ #include <linux/capability.h>
+ #include <linux/dcache.h>
+@@ -352,6 +352,40 @@ xfs_readlink_by_handle(
+ 	return error;
+ }
+ 
++int
++xfs_set_dmattrs(
++	xfs_inode_t     *ip,
++	u_int		evmask,
++	u_int16_t	state)
++{
++	xfs_mount_t	*mp = ip->i_mount;
++	xfs_trans_t	*tp;
++	int		error;
++
++	if (!capable(CAP_SYS_ADMIN))
++		return XFS_ERROR(EPERM);
++
++	if (XFS_FORCED_SHUTDOWN(mp))
++		return XFS_ERROR(EIO);
++
++	tp = xfs_trans_alloc(mp, XFS_TRANS_SET_DMATTRS);
++	error = xfs_trans_reserve(tp, 0, XFS_ICHANGE_LOG_RES (mp), 0, 0, 0);
++	if (error) {
++		xfs_trans_cancel(tp, 0);
++		return error;
++	}
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
++	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
++
++	ip->i_d.di_dmevmask = evmask;
++	ip->i_d.di_dmstate  = state;
++
++	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
++	error = xfs_trans_commit(tp, 0);
++
++	return error;
++}
++
+ STATIC int
+ xfs_fssetdm_by_handle(
+ 	struct file		*parfilp,
+diff --git a/fs/xfs/xfs_ioctl.h b/fs/xfs/xfs_ioctl.h
+index d56173b..1233dee 100644
+--- a/fs/xfs/xfs_ioctl.h
++++ b/fs/xfs/xfs_ioctl.h
+@@ -82,4 +82,10 @@ xfs_file_compat_ioctl(
+ 	unsigned int		cmd,
+ 	unsigned long		arg);
+ 
++extern int
++xfs_set_dmattrs(
++	struct xfs_inode	*ip,
++	u_int			evmask,
++	u_int16_t		state);
++
+ #endif
+diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+index c0c6625..55a3072 100644
+--- a/fs/xfs/xfs_ioctl32.c
++++ b/fs/xfs/xfs_ioctl32.c
+@@ -34,7 +34,6 @@
  #include "xfs_itable.h"
+ #include "xfs_error.h"
+ #include "xfs_dfrag.h"
+-#include "xfs_vnodeops.h"
+ #include "xfs_fsops.h"
+ #include "xfs_alloc.h"
+ #include "xfs_rtalloc.h"
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 17b70f0..e0cefd4 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -37,10 +37,10 @@
+ #include "xfs_attr.h"
+ #include "xfs_buf_item.h"
+ #include "xfs_utils.h"
+-#include "xfs_vnodeops.h"
+ #include "xfs_inode_item.h"
+ #include "xfs_trace.h"
+ #include "xfs_icache.h"
++#include "xfs_symlink.h"
+ 
+ #include <linux/capability.h>
+ #include <linux/xattr.h>
+diff --git a/fs/xfs/xfs_iops.h b/fs/xfs/xfs_iops.h
+index ef41c92..d81fb41 100644
+--- a/fs/xfs/xfs_iops.h
++++ b/fs/xfs/xfs_iops.h
+@@ -27,4 +27,17 @@ extern ssize_t xfs_vn_listxattr(struct dentry *, char *data, size_t size);
+ 
+ extern void xfs_setup_inode(struct xfs_inode *);
+ 
++/*
++ * Internal setattr interfaces.
++ */
++#define	XFS_ATTR_DMI		0x01	/* invocation from a DMI function */
++#define	XFS_ATTR_NONBLOCK	0x02	/* return EAGAIN if op would block */
++#define XFS_ATTR_NOLOCK		0x04	/* Don't grab any conflicting locks */
++#define XFS_ATTR_NOACL		0x08	/* Don't call xfs_acl_chmod */
++#define XFS_ATTR_SYNC		0x10	/* synchronous operation required */
++
++extern int xfs_setattr_nonsize(struct xfs_inode *ip, struct iattr *vap,
++			       int flags);
++extern int xfs_setattr_size(struct xfs_inode *ip, struct iattr *vap, int flags);
++
+ #endif /* __XFS_IOPS_H__ */
 diff --git a/fs/xfs/xfs_rename.c b/fs/xfs/xfs_rename.c
-index 4715c7f..68cb725 100644
+index 68cb725..c15c6c5 100644
 --- a/fs/xfs/xfs_rename.c
 +++ b/fs/xfs/xfs_rename.c
-@@ -31,6 +31,7 @@
- #include "xfs_inode.h"
- #include "xfs_inode_item.h"
- #include "xfs_bmap.h"
-+#include "xfs_bmap_util.h"
- #include "xfs_error.h"
+@@ -36,7 +36,6 @@
  #include "xfs_quota.h"
  #include "xfs_utils.h"
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index bb4f7a1..084caa8 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -29,6 +29,7 @@
- #include "xfs_inode.h"
- #include "xfs_alloc.h"
- #include "xfs_bmap.h"
-+#include "xfs_bmap_util.h"
- #include "xfs_rtalloc.h"
- #include "xfs_fsops.h"
- #include "xfs_error.h"
-diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-index 18f24de..1ce2756 100644
---- a/fs/xfs/xfs_symlink.c
-+++ b/fs/xfs/xfs_symlink.c
-@@ -35,6 +35,7 @@
- #include "xfs_ialloc.h"
- #include "xfs_alloc.h"
- #include "xfs_bmap.h"
-+#include "xfs_bmap_util.h"
- #include "xfs_error.h"
- #include "xfs_quota.h"
- #include "xfs_utils.h"
-diff --git a/fs/xfs/xfs_trans_resv.c b/fs/xfs/xfs_trans_resv.c
-index 5a1537e..ed6446e 100644
---- a/fs/xfs/xfs_trans_resv.c
-+++ b/fs/xfs/xfs_trans_resv.c
-@@ -37,6 +37,7 @@
- #include "xfs_alloc.h"
- #include "xfs_extent_busy.h"
- #include "xfs_bmap.h"
-+#include "xfs_bmap_util.h"
- #include "xfs_quota.h"
- #include "xfs_qm.h"
  #include "xfs_trans_space.h"
-diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-index 221e2e3..dc81a8d 100644
---- a/fs/xfs/xfs_vnodeops.c
-+++ b/fs/xfs/xfs_vnodeops.c
-@@ -38,6 +38,7 @@
- #include "xfs_ialloc.h"
- #include "xfs_alloc.h"
- #include "xfs_bmap.h"
-+#include "xfs_bmap_util.h"
- #include "xfs_acl.h"
+-#include "xfs_vnodeops.h"
+ #include "xfs_trace.h"
+ 
+ 
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 7d57560..980ecab 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -41,7 +41,6 @@
  #include "xfs_attr.h"
- #include "xfs_error.h"
+ #include "xfs_buf_item.h"
+ #include "xfs_utils.h"
+-#include "xfs_vnodeops.h"
+ #include "xfs_log_priv.h"
+ #include "xfs_trans_priv.h"
+ #include "xfs_filestream.h"
+diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+deleted file mode 100644
+index dc81a8d..0000000
+--- a/fs/xfs/xfs_vnodeops.c
++++ /dev/null
+@@ -1,1872 +0,0 @@
+-/*
+- * Copyright (c) 2000-2006 Silicon Graphics, Inc.
+- * Copyright (c) 2012 Red Hat, Inc.
+- * All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it would be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write the Free Software Foundation,
+- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- */
+-
+-#include "xfs.h"
+-#include "xfs_fs.h"
+-#include "xfs_format.h"
+-#include "xfs_bit.h"
+-#include "xfs_log.h"
+-#include "xfs_trans.h"
+-#include "xfs_sb.h"
+-#include "xfs_ag.h"
+-#include "xfs_mount.h"
+-#include "xfs_da_btree.h"
+-#include "xfs_dir2_format.h"
+-#include "xfs_dir2.h"
+-#include "xfs_bmap_btree.h"
+-#include "xfs_ialloc_btree.h"
+-#include "xfs_dinode.h"
+-#include "xfs_inode.h"
+-#include "xfs_inode_item.h"
+-#include "xfs_itable.h"
+-#include "xfs_ialloc.h"
+-#include "xfs_alloc.h"
+-#include "xfs_bmap.h"
+-#include "xfs_bmap_util.h"
+-#include "xfs_acl.h"
+-#include "xfs_attr.h"
+-#include "xfs_error.h"
+-#include "xfs_quota.h"
+-#include "xfs_utils.h"
+-#include "xfs_rtalloc.h"
+-#include "xfs_trans_space.h"
+-#include "xfs_log_priv.h"
+-#include "xfs_filestream.h"
+-#include "xfs_vnodeops.h"
+-#include "xfs_trace.h"
+-#include "xfs_icache.h"
+-#include "xfs_symlink.h"
+-
+-
+-/*
+- * This is called by xfs_inactive to free any blocks beyond eof
+- * when the link count isn't zero and by xfs_dm_punch_hole() when
+- * punching a hole to EOF.
+- */
+-int
+-xfs_free_eofblocks(
+-	xfs_mount_t	*mp,
+-	xfs_inode_t	*ip,
+-	bool		need_iolock)
+-{
+-	xfs_trans_t	*tp;
+-	int		error;
+-	xfs_fileoff_t	end_fsb;
+-	xfs_fileoff_t	last_fsb;
+-	xfs_filblks_t	map_len;
+-	int		nimaps;
+-	xfs_bmbt_irec_t	imap;
+-
+-	/*
+-	 * Figure out if there are any blocks beyond the end
+-	 * of the file.  If not, then there is nothing to do.
+-	 */
+-	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)XFS_ISIZE(ip));
+-	last_fsb = XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
+-	if (last_fsb <= end_fsb)
+-		return 0;
+-	map_len = last_fsb - end_fsb;
+-
+-	nimaps = 1;
+-	xfs_ilock(ip, XFS_ILOCK_SHARED);
+-	error = xfs_bmapi_read(ip, end_fsb, map_len, &imap, &nimaps, 0);
+-	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+-
+-	if (!error && (nimaps != 0) &&
+-	    (imap.br_startblock != HOLESTARTBLOCK ||
+-	     ip->i_delayed_blks)) {
+-		/*
+-		 * Attach the dquots to the inode up front.
+-		 */
+-		error = xfs_qm_dqattach(ip, 0);
+-		if (error)
+-			return error;
+-
+-		/*
+-		 * There are blocks after the end of file.
+-		 * Free them up now by truncating the file to
+-		 * its current size.
+-		 */
+-		tp = xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
+-
+-		if (need_iolock) {
+-			if (!xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL)) {
+-				xfs_trans_cancel(tp, 0);
+-				return EAGAIN;
+-			}
+-		}
+-
+-		error = xfs_trans_reserve(tp, 0,
+-					  XFS_ITRUNCATE_LOG_RES(mp),
+-					  0, XFS_TRANS_PERM_LOG_RES,
+-					  XFS_ITRUNCATE_LOG_COUNT);
+-		if (error) {
+-			ASSERT(XFS_FORCED_SHUTDOWN(mp));
+-			xfs_trans_cancel(tp, 0);
+-			if (need_iolock)
+-				xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+-			return error;
+-		}
+-
+-		xfs_ilock(ip, XFS_ILOCK_EXCL);
+-		xfs_trans_ijoin(tp, ip, 0);
+-
+-		/*
+-		 * Do not update the on-disk file size.  If we update the
+-		 * on-disk file size and then the system crashes before the
+-		 * contents of the file are flushed to disk then the files
+-		 * may be full of holes (ie NULL files bug).
+-		 */
+-		error = xfs_itruncate_extents(&tp, ip, XFS_DATA_FORK,
+-					      XFS_ISIZE(ip));
+-		if (error) {
+-			/*
+-			 * If we get an error at this point we simply don't
+-			 * bother truncating the file.
+-			 */
+-			xfs_trans_cancel(tp,
+-					 (XFS_TRANS_RELEASE_LOG_RES |
+-					  XFS_TRANS_ABORT));
+-		} else {
+-			error = xfs_trans_commit(tp,
+-						XFS_TRANS_RELEASE_LOG_RES);
+-			if (!error)
+-				xfs_inode_clear_eofblocks_tag(ip);
+-		}
+-
+-		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-		if (need_iolock)
+-			xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+-	}
+-	return error;
+-}
+-
+-int
+-xfs_release(
+-	xfs_inode_t	*ip)
+-{
+-	xfs_mount_t	*mp = ip->i_mount;
+-	int		error;
+-
+-	if (!S_ISREG(ip->i_d.di_mode) || (ip->i_d.di_mode == 0))
+-		return 0;
+-
+-	/* If this is a read-only mount, don't do this (would generate I/O) */
+-	if (mp->m_flags & XFS_MOUNT_RDONLY)
+-		return 0;
+-
+-	if (!XFS_FORCED_SHUTDOWN(mp)) {
+-		int truncated;
+-
+-		/*
+-		 * If we are using filestreams, and we have an unlinked
+-		 * file that we are processing the last close on, then nothing
+-		 * will be able to reopen and write to this file. Purge this
+-		 * inode from the filestreams cache so that it doesn't delay
+-		 * teardown of the inode.
+-		 */
+-		if ((ip->i_d.di_nlink == 0) && xfs_inode_is_filestream(ip))
+-			xfs_filestream_deassociate(ip);
+-
+-		/*
+-		 * If we previously truncated this file and removed old data
+-		 * in the process, we want to initiate "early" writeout on
+-		 * the last close.  This is an attempt to combat the notorious
+-		 * NULL files problem which is particularly noticeable from a
+-		 * truncate down, buffered (re-)write (delalloc), followed by
+-		 * a crash.  What we are effectively doing here is
+-		 * significantly reducing the time window where we'd otherwise
+-		 * be exposed to that problem.
+-		 */
+-		truncated = xfs_iflags_test_and_clear(ip, XFS_ITRUNCATED);
+-		if (truncated) {
+-			xfs_iflags_clear(ip, XFS_IDIRTY_RELEASE);
+-			if (VN_DIRTY(VFS_I(ip)) && ip->i_delayed_blks > 0) {
+-				error = -filemap_flush(VFS_I(ip)->i_mapping);
+-				if (error)
+-					return error;
+-			}
+-		}
+-	}
+-
+-	if (ip->i_d.di_nlink == 0)
+-		return 0;
+-
+-	if (xfs_can_free_eofblocks(ip, false)) {
+-
+-		/*
+-		 * If we can't get the iolock just skip truncating the blocks
+-		 * past EOF because we could deadlock with the mmap_sem
+-		 * otherwise.  We'll get another chance to drop them once the
+-		 * last reference to the inode is dropped, so we'll never leak
+-		 * blocks permanently.
+-		 *
+-		 * Further, check if the inode is being opened, written and
+-		 * closed frequently and we have delayed allocation blocks
+-		 * outstanding (e.g. streaming writes from the NFS server),
+-		 * truncating the blocks past EOF will cause fragmentation to
+-		 * occur.
+-		 *
+-		 * In this case don't do the truncation, either, but we have to
+-		 * be careful how we detect this case. Blocks beyond EOF show
+-		 * up as i_delayed_blks even when the inode is clean, so we
+-		 * need to truncate them away first before checking for a dirty
+-		 * release. Hence on the first dirty close we will still remove
+-		 * the speculative allocation, but after that we will leave it
+-		 * in place.
+-		 */
+-		if (xfs_iflags_test(ip, XFS_IDIRTY_RELEASE))
+-			return 0;
+-
+-		error = xfs_free_eofblocks(mp, ip, true);
+-		if (error && error != EAGAIN)
+-			return error;
+-
+-		/* delalloc blocks after truncation means it really is dirty */
+-		if (ip->i_delayed_blks)
+-			xfs_iflags_set(ip, XFS_IDIRTY_RELEASE);
+-	}
+-	return 0;
+-}
+-
+-/*
+- * xfs_inactive
+- *
+- * This is called when the vnode reference count for the vnode
+- * goes to zero.  If the file has been unlinked, then it must
+- * now be truncated.  Also, we clear all of the read-ahead state
+- * kept for the inode here since the file is now closed.
+- */
+-int
+-xfs_inactive(
+-	xfs_inode_t	*ip)
+-{
+-	xfs_bmap_free_t	free_list;
+-	xfs_fsblock_t	first_block;
+-	int		committed;
+-	xfs_trans_t	*tp;
+-	xfs_mount_t	*mp;
+-	int		error;
+-	int		truncate = 0;
+-
+-	/*
+-	 * If the inode is already free, then there can be nothing
+-	 * to clean up here.
+-	 */
+-	if (ip->i_d.di_mode == 0 || is_bad_inode(VFS_I(ip))) {
+-		ASSERT(ip->i_df.if_real_bytes == 0);
+-		ASSERT(ip->i_df.if_broot_bytes == 0);
+-		return VN_INACTIVE_CACHE;
+-	}
+-
+-	mp = ip->i_mount;
+-
+-	error = 0;
+-
+-	/* If this is a read-only mount, don't do this (would generate I/O) */
+-	if (mp->m_flags & XFS_MOUNT_RDONLY)
+-		goto out;
+-
+-	if (ip->i_d.di_nlink != 0) {
+-		/*
+-		 * force is true because we are evicting an inode from the
+-		 * cache. Post-eof blocks must be freed, lest we end up with
+-		 * broken free space accounting.
+-		 */
+-		if (xfs_can_free_eofblocks(ip, true)) {
+-			error = xfs_free_eofblocks(mp, ip, false);
+-			if (error)
+-				return VN_INACTIVE_CACHE;
+-		}
+-		goto out;
+-	}
+-
+-	if (S_ISREG(ip->i_d.di_mode) &&
+-	    (ip->i_d.di_size != 0 || XFS_ISIZE(ip) != 0 ||
+-	     ip->i_d.di_nextents > 0 || ip->i_delayed_blks > 0))
+-		truncate = 1;
+-
+-	error = xfs_qm_dqattach(ip, 0);
+-	if (error)
+-		return VN_INACTIVE_CACHE;
+-
+-	tp = xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
+-	error = xfs_trans_reserve(tp, 0,
+-			(truncate || S_ISLNK(ip->i_d.di_mode)) ?
+-				XFS_ITRUNCATE_LOG_RES(mp) :
+-				XFS_IFREE_LOG_RES(mp),
+-			0,
+-			XFS_TRANS_PERM_LOG_RES,
+-			XFS_ITRUNCATE_LOG_COUNT);
+-	if (error) {
+-		ASSERT(XFS_FORCED_SHUTDOWN(mp));
+-		xfs_trans_cancel(tp, 0);
+-		return VN_INACTIVE_CACHE;
+-	}
+-
+-	xfs_ilock(ip, XFS_ILOCK_EXCL);
+-	xfs_trans_ijoin(tp, ip, 0);
+-
+-	if (S_ISLNK(ip->i_d.di_mode)) {
+-		error = xfs_inactive_symlink(ip, &tp);
+-		if (error)
+-			goto out_cancel;
+-	} else if (truncate) {
+-		ip->i_d.di_size = 0;
+-		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+-
+-		error = xfs_itruncate_extents(&tp, ip, XFS_DATA_FORK, 0);
+-		if (error)
+-			goto out_cancel;
+-
+-		ASSERT(ip->i_d.di_nextents == 0);
+-	}
+-
+-	/*
+-	 * If there are attributes associated with the file then blow them away
+-	 * now.  The code calls a routine that recursively deconstructs the
+-	 * attribute fork.  We need to just commit the current transaction
+-	 * because we can't use it for xfs_attr_inactive().
+-	 */
+-	if (ip->i_d.di_anextents > 0) {
+-		ASSERT(ip->i_d.di_forkoff != 0);
+-
+-		error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
+-		if (error)
+-			goto out_unlock;
+-
+-		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-
+-		error = xfs_attr_inactive(ip);
+-		if (error)
+-			goto out;
+-
+-		tp = xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
+-		error = xfs_trans_reserve(tp, 0,
+-					  XFS_IFREE_LOG_RES(mp),
+-					  0, XFS_TRANS_PERM_LOG_RES,
+-					  XFS_INACTIVE_LOG_COUNT);
+-		if (error) {
+-			xfs_trans_cancel(tp, 0);
+-			goto out;
+-		}
+-
+-		xfs_ilock(ip, XFS_ILOCK_EXCL);
+-		xfs_trans_ijoin(tp, ip, 0);
+-	}
+-
+-	if (ip->i_afp)
+-		xfs_idestroy_fork(ip, XFS_ATTR_FORK);
+-
+-	ASSERT(ip->i_d.di_anextents == 0);
+-
+-	/*
+-	 * Free the inode.
+-	 */
+-	xfs_bmap_init(&free_list, &first_block);
+-	error = xfs_ifree(tp, ip, &free_list);
+-	if (error) {
+-		/*
+-		 * If we fail to free the inode, shut down.  The cancel
+-		 * might do that, we need to make sure.  Otherwise the
+-		 * inode might be lost for a long time or forever.
+-		 */
+-		if (!XFS_FORCED_SHUTDOWN(mp)) {
+-			xfs_notice(mp, "%s: xfs_ifree returned error %d",
+-				__func__, error);
+-			xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
+-		}
+-		xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_ABORT);
+-	} else {
+-		/*
+-		 * Credit the quota account(s). The inode is gone.
+-		 */
+-		xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_ICOUNT, -1);
+-
+-		/*
+-		 * Just ignore errors at this point.  There is nothing we can
+-		 * do except to try to keep going. Make sure it's not a silent
+-		 * error.
+-		 */
+-		error = xfs_bmap_finish(&tp,  &free_list, &committed);
+-		if (error)
+-			xfs_notice(mp, "%s: xfs_bmap_finish returned error %d",
+-				__func__, error);
+-		error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
+-		if (error)
+-			xfs_notice(mp, "%s: xfs_trans_commit returned error %d",
+-				__func__, error);
+-	}
+-
+-	/*
+-	 * Release the dquots held by inode, if any.
+-	 */
+-	xfs_qm_dqdetach(ip);
+-out_unlock:
+-	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-out:
+-	return VN_INACTIVE_CACHE;
+-out_cancel:
+-	xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES | XFS_TRANS_ABORT);
+-	goto out_unlock;
+-}
+-
+-/*
+- * Lookups up an inode from "name". If ci_name is not NULL, then a CI match
+- * is allowed, otherwise it has to be an exact match. If a CI match is found,
+- * ci_name->name will point to a the actual name (caller must free) or
+- * will be set to NULL if an exact match is found.
+- */
+-int
+-xfs_lookup(
+-	xfs_inode_t		*dp,
+-	struct xfs_name		*name,
+-	xfs_inode_t		**ipp,
+-	struct xfs_name		*ci_name)
+-{
+-	xfs_ino_t		inum;
+-	int			error;
+-	uint			lock_mode;
+-
+-	trace_xfs_lookup(dp, name);
+-
+-	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
+-		return XFS_ERROR(EIO);
+-
+-	lock_mode = xfs_ilock_map_shared(dp);
+-	error = xfs_dir_lookup(NULL, dp, name, &inum, ci_name);
+-	xfs_iunlock_map_shared(dp, lock_mode);
+-
+-	if (error)
+-		goto out;
+-
+-	error = xfs_iget(dp->i_mount, NULL, inum, 0, 0, ipp);
+-	if (error)
+-		goto out_free_name;
+-
+-	return 0;
+-
+-out_free_name:
+-	if (ci_name)
+-		kmem_free(ci_name->name);
+-out:
+-	*ipp = NULL;
+-	return error;
+-}
+-
+-int
+-xfs_create(
+-	xfs_inode_t		*dp,
+-	struct xfs_name		*name,
+-	umode_t			mode,
+-	xfs_dev_t		rdev,
+-	xfs_inode_t		**ipp)
+-{
+-	int			is_dir = S_ISDIR(mode);
+-	struct xfs_mount	*mp = dp->i_mount;
+-	struct xfs_inode	*ip = NULL;
+-	struct xfs_trans	*tp = NULL;
+-	int			error;
+-	xfs_bmap_free_t		free_list;
+-	xfs_fsblock_t		first_block;
+-	bool                    unlock_dp_on_error = false;
+-	uint			cancel_flags;
+-	int			committed;
+-	prid_t			prid;
+-	struct xfs_dquot	*udqp = NULL;
+-	struct xfs_dquot	*gdqp = NULL;
+-	struct xfs_dquot	*pdqp = NULL;
+-	uint			resblks;
+-	uint			log_res;
+-	uint			log_count;
+-
+-	trace_xfs_create(dp, name);
+-
+-	if (XFS_FORCED_SHUTDOWN(mp))
+-		return XFS_ERROR(EIO);
+-
+-	if (dp->i_d.di_flags & XFS_DIFLAG_PROJINHERIT)
+-		prid = xfs_get_projid(dp);
+-	else
+-		prid = XFS_PROJID_DEFAULT;
+-
+-	/*
+-	 * Make sure that we have allocated dquot(s) on disk.
+-	 */
+-	error = xfs_qm_vop_dqalloc(dp, current_fsuid(), current_fsgid(), prid,
+-					XFS_QMOPT_QUOTALL | XFS_QMOPT_INHERIT,
+-					&udqp, &gdqp, &pdqp);
+-	if (error)
+-		return error;
+-
+-	if (is_dir) {
+-		rdev = 0;
+-		resblks = XFS_MKDIR_SPACE_RES(mp, name->len);
+-		log_res = XFS_MKDIR_LOG_RES(mp);
+-		log_count = XFS_MKDIR_LOG_COUNT;
+-		tp = xfs_trans_alloc(mp, XFS_TRANS_MKDIR);
+-	} else {
+-		resblks = XFS_CREATE_SPACE_RES(mp, name->len);
+-		log_res = XFS_CREATE_LOG_RES(mp);
+-		log_count = XFS_CREATE_LOG_COUNT;
+-		tp = xfs_trans_alloc(mp, XFS_TRANS_CREATE);
+-	}
+-
+-	cancel_flags = XFS_TRANS_RELEASE_LOG_RES;
+-
+-	/*
+-	 * Initially assume that the file does not exist and
+-	 * reserve the resources for that case.  If that is not
+-	 * the case we'll drop the one we have and get a more
+-	 * appropriate transaction later.
+-	 */
+-	error = xfs_trans_reserve(tp, resblks, log_res, 0,
+-			XFS_TRANS_PERM_LOG_RES, log_count);
+-	if (error == ENOSPC) {
+-		/* flush outstanding delalloc blocks and retry */
+-		xfs_flush_inodes(mp);
+-		error = xfs_trans_reserve(tp, resblks, log_res, 0,
+-				XFS_TRANS_PERM_LOG_RES, log_count);
+-	}
+-	if (error == ENOSPC) {
+-		/* No space at all so try a "no-allocation" reservation */
+-		resblks = 0;
+-		error = xfs_trans_reserve(tp, 0, log_res, 0,
+-				XFS_TRANS_PERM_LOG_RES, log_count);
+-	}
+-	if (error) {
+-		cancel_flags = 0;
+-		goto out_trans_cancel;
+-	}
+-
+-	xfs_ilock(dp, XFS_ILOCK_EXCL | XFS_ILOCK_PARENT);
+-	unlock_dp_on_error = true;
+-
+-	xfs_bmap_init(&free_list, &first_block);
+-
+-	/*
+-	 * Reserve disk quota and the inode.
+-	 */
+-	error = xfs_trans_reserve_quota(tp, mp, udqp, gdqp,
+-						pdqp, resblks, 1, 0);
+-	if (error)
+-		goto out_trans_cancel;
+-
+-	error = xfs_dir_canenter(tp, dp, name, resblks);
+-	if (error)
+-		goto out_trans_cancel;
+-
+-	/*
+-	 * A newly created regular or special file just has one directory
+-	 * entry pointing to them, but a directory also the "." entry
+-	 * pointing to itself.
+-	 */
+-	error = xfs_dir_ialloc(&tp, dp, mode, is_dir ? 2 : 1, rdev,
+-			       prid, resblks > 0, &ip, &committed);
+-	if (error) {
+-		if (error == ENOSPC)
+-			goto out_trans_cancel;
+-		goto out_trans_abort;
+-	}
+-
+-	/*
+-	 * Now we join the directory inode to the transaction.  We do not do it
+-	 * earlier because xfs_dir_ialloc might commit the previous transaction
+-	 * (and release all the locks).  An error from here on will result in
+-	 * the transaction cancel unlocking dp so don't do it explicitly in the
+-	 * error path.
+-	 */
+-	xfs_trans_ijoin(tp, dp, XFS_ILOCK_EXCL);
+-	unlock_dp_on_error = false;
+-
+-	error = xfs_dir_createname(tp, dp, name, ip->i_ino,
+-					&first_block, &free_list, resblks ?
+-					resblks - XFS_IALLOC_SPACE_RES(mp) : 0);
+-	if (error) {
+-		ASSERT(error != ENOSPC);
+-		goto out_trans_abort;
+-	}
+-	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+-	xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
+-
+-	if (is_dir) {
+-		error = xfs_dir_init(tp, ip, dp);
+-		if (error)
+-			goto out_bmap_cancel;
+-
+-		error = xfs_bumplink(tp, dp);
+-		if (error)
+-			goto out_bmap_cancel;
+-	}
+-
+-	/*
+-	 * If this is a synchronous mount, make sure that the
+-	 * create transaction goes to disk before returning to
+-	 * the user.
+-	 */
+-	if (mp->m_flags & (XFS_MOUNT_WSYNC|XFS_MOUNT_DIRSYNC))
+-		xfs_trans_set_sync(tp);
+-
+-	/*
+-	 * Attach the dquot(s) to the inodes and modify them incore.
+-	 * These ids of the inode couldn't have changed since the new
+-	 * inode has been locked ever since it was created.
+-	 */
+-	xfs_qm_vop_create_dqattach(tp, ip, udqp, gdqp, pdqp);
+-
+-	error = xfs_bmap_finish(&tp, &free_list, &committed);
+-	if (error)
+-		goto out_bmap_cancel;
+-
+-	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
+-	if (error)
+-		goto out_release_inode;
+-
+-	xfs_qm_dqrele(udqp);
+-	xfs_qm_dqrele(gdqp);
+-	xfs_qm_dqrele(pdqp);
+-
+-	*ipp = ip;
+-	return 0;
+-
+- out_bmap_cancel:
+-	xfs_bmap_cancel(&free_list);
+- out_trans_abort:
+-	cancel_flags |= XFS_TRANS_ABORT;
+- out_trans_cancel:
+-	xfs_trans_cancel(tp, cancel_flags);
+- out_release_inode:
+-	/*
+-	 * Wait until after the current transaction is aborted to
+-	 * release the inode.  This prevents recursive transactions
+-	 * and deadlocks from xfs_inactive.
+-	 */
+-	if (ip)
+-		IRELE(ip);
+-
+-	xfs_qm_dqrele(udqp);
+-	xfs_qm_dqrele(gdqp);
+-	xfs_qm_dqrele(pdqp);
+-
+-	if (unlock_dp_on_error)
+-		xfs_iunlock(dp, XFS_ILOCK_EXCL);
+-	return error;
+-}
+-
+-#ifdef DEBUG
+-int xfs_locked_n;
+-int xfs_small_retries;
+-int xfs_middle_retries;
+-int xfs_lots_retries;
+-int xfs_lock_delays;
+-#endif
+-
+-/*
+- * Bump the subclass so xfs_lock_inodes() acquires each lock with
+- * a different value
+- */
+-static inline int
+-xfs_lock_inumorder(int lock_mode, int subclass)
+-{
+-	if (lock_mode & (XFS_IOLOCK_SHARED|XFS_IOLOCK_EXCL))
+-		lock_mode |= (subclass + XFS_LOCK_INUMORDER) << XFS_IOLOCK_SHIFT;
+-	if (lock_mode & (XFS_ILOCK_SHARED|XFS_ILOCK_EXCL))
+-		lock_mode |= (subclass + XFS_LOCK_INUMORDER) << XFS_ILOCK_SHIFT;
+-
+-	return lock_mode;
+-}
+-
+-/*
+- * The following routine will lock n inodes in exclusive mode.
+- * We assume the caller calls us with the inodes in i_ino order.
+- *
+- * We need to detect deadlock where an inode that we lock
+- * is in the AIL and we start waiting for another inode that is locked
+- * by a thread in a long running transaction (such as truncate). This can
+- * result in deadlock since the long running trans might need to wait
+- * for the inode we just locked in order to push the tail and free space
+- * in the log.
+- */
+-void
+-xfs_lock_inodes(
+-	xfs_inode_t	**ips,
+-	int		inodes,
+-	uint		lock_mode)
+-{
+-	int		attempts = 0, i, j, try_lock;
+-	xfs_log_item_t	*lp;
+-
+-	ASSERT(ips && (inodes >= 2)); /* we need at least two */
+-
+-	try_lock = 0;
+-	i = 0;
+-
+-again:
+-	for (; i < inodes; i++) {
+-		ASSERT(ips[i]);
+-
+-		if (i && (ips[i] == ips[i-1]))	/* Already locked */
+-			continue;
+-
+-		/*
+-		 * If try_lock is not set yet, make sure all locked inodes
+-		 * are not in the AIL.
+-		 * If any are, set try_lock to be used later.
+-		 */
+-
+-		if (!try_lock) {
+-			for (j = (i - 1); j >= 0 && !try_lock; j--) {
+-				lp = (xfs_log_item_t *)ips[j]->i_itemp;
+-				if (lp && (lp->li_flags & XFS_LI_IN_AIL)) {
+-					try_lock++;
+-				}
+-			}
+-		}
+-
+-		/*
+-		 * If any of the previous locks we have locked is in the AIL,
+-		 * we must TRY to get the second and subsequent locks. If
+-		 * we can't get any, we must release all we have
+-		 * and try again.
+-		 */
+-
+-		if (try_lock) {
+-			/* try_lock must be 0 if i is 0. */
+-			/*
+-			 * try_lock means we have an inode locked
+-			 * that is in the AIL.
+-			 */
+-			ASSERT(i != 0);
+-			if (!xfs_ilock_nowait(ips[i], xfs_lock_inumorder(lock_mode, i))) {
+-				attempts++;
+-
+-				/*
+-				 * Unlock all previous guys and try again.
+-				 * xfs_iunlock will try to push the tail
+-				 * if the inode is in the AIL.
+-				 */
+-
+-				for(j = i - 1; j >= 0; j--) {
+-
+-					/*
+-					 * Check to see if we've already
+-					 * unlocked this one.
+-					 * Not the first one going back,
+-					 * and the inode ptr is the same.
+-					 */
+-					if ((j != (i - 1)) && ips[j] ==
+-								ips[j+1])
+-						continue;
+-
+-					xfs_iunlock(ips[j], lock_mode);
+-				}
+-
+-				if ((attempts % 5) == 0) {
+-					delay(1); /* Don't just spin the CPU */
+-#ifdef DEBUG
+-					xfs_lock_delays++;
+-#endif
+-				}
+-				i = 0;
+-				try_lock = 0;
+-				goto again;
+-			}
+-		} else {
+-			xfs_ilock(ips[i], xfs_lock_inumorder(lock_mode, i));
+-		}
+-	}
+-
+-#ifdef DEBUG
+-	if (attempts) {
+-		if (attempts < 5) xfs_small_retries++;
+-		else if (attempts < 100) xfs_middle_retries++;
+-		else xfs_lots_retries++;
+-	} else {
+-		xfs_locked_n++;
+-	}
+-#endif
+-}
+-
+-/*
+- * xfs_lock_two_inodes() can only be used to lock one type of lock
+- * at a time - the iolock or the ilock, but not both at once. If
+- * we lock both at once, lockdep will report false positives saying
+- * we have violated locking orders.
+- */
+-void
+-xfs_lock_two_inodes(
+-	xfs_inode_t		*ip0,
+-	xfs_inode_t		*ip1,
+-	uint			lock_mode)
+-{
+-	xfs_inode_t		*temp;
+-	int			attempts = 0;
+-	xfs_log_item_t		*lp;
+-
+-	if (lock_mode & (XFS_IOLOCK_SHARED|XFS_IOLOCK_EXCL))
+-		ASSERT((lock_mode & (XFS_ILOCK_SHARED|XFS_ILOCK_EXCL)) == 0);
+-	ASSERT(ip0->i_ino != ip1->i_ino);
+-
+-	if (ip0->i_ino > ip1->i_ino) {
+-		temp = ip0;
+-		ip0 = ip1;
+-		ip1 = temp;
+-	}
+-
+- again:
+-	xfs_ilock(ip0, xfs_lock_inumorder(lock_mode, 0));
+-
+-	/*
+-	 * If the first lock we have locked is in the AIL, we must TRY to get
+-	 * the second lock. If we can't get it, we must release the first one
+-	 * and try again.
+-	 */
+-	lp = (xfs_log_item_t *)ip0->i_itemp;
+-	if (lp && (lp->li_flags & XFS_LI_IN_AIL)) {
+-		if (!xfs_ilock_nowait(ip1, xfs_lock_inumorder(lock_mode, 1))) {
+-			xfs_iunlock(ip0, lock_mode);
+-			if ((++attempts % 5) == 0)
+-				delay(1); /* Don't just spin the CPU */
+-			goto again;
+-		}
+-	} else {
+-		xfs_ilock(ip1, xfs_lock_inumorder(lock_mode, 1));
+-	}
+-}
+-
+-int
+-xfs_remove(
+-	xfs_inode_t             *dp,
+-	struct xfs_name		*name,
+-	xfs_inode_t		*ip)
+-{
+-	xfs_mount_t		*mp = dp->i_mount;
+-	xfs_trans_t             *tp = NULL;
+-	int			is_dir = S_ISDIR(ip->i_d.di_mode);
+-	int                     error = 0;
+-	xfs_bmap_free_t         free_list;
+-	xfs_fsblock_t           first_block;
+-	int			cancel_flags;
+-	int			committed;
+-	int			link_zero;
+-	uint			resblks;
+-	uint			log_count;
+-
+-	trace_xfs_remove(dp, name);
+-
+-	if (XFS_FORCED_SHUTDOWN(mp))
+-		return XFS_ERROR(EIO);
+-
+-	error = xfs_qm_dqattach(dp, 0);
+-	if (error)
+-		goto std_return;
+-
+-	error = xfs_qm_dqattach(ip, 0);
+-	if (error)
+-		goto std_return;
+-
+-	if (is_dir) {
+-		tp = xfs_trans_alloc(mp, XFS_TRANS_RMDIR);
+-		log_count = XFS_DEFAULT_LOG_COUNT;
+-	} else {
+-		tp = xfs_trans_alloc(mp, XFS_TRANS_REMOVE);
+-		log_count = XFS_REMOVE_LOG_COUNT;
+-	}
+-	cancel_flags = XFS_TRANS_RELEASE_LOG_RES;
+-
+-	/*
+-	 * We try to get the real space reservation first,
+-	 * allowing for directory btree deletion(s) implying
+-	 * possible bmap insert(s).  If we can't get the space
+-	 * reservation then we use 0 instead, and avoid the bmap
+-	 * btree insert(s) in the directory code by, if the bmap
+-	 * insert tries to happen, instead trimming the LAST
+-	 * block from the directory.
+-	 */
+-	resblks = XFS_REMOVE_SPACE_RES(mp);
+-	error = xfs_trans_reserve(tp, resblks, XFS_REMOVE_LOG_RES(mp), 0,
+-				  XFS_TRANS_PERM_LOG_RES, log_count);
+-	if (error == ENOSPC) {
+-		resblks = 0;
+-		error = xfs_trans_reserve(tp, 0, XFS_REMOVE_LOG_RES(mp), 0,
+-					  XFS_TRANS_PERM_LOG_RES, log_count);
+-	}
+-	if (error) {
+-		ASSERT(error != ENOSPC);
+-		cancel_flags = 0;
+-		goto out_trans_cancel;
+-	}
+-
+-	xfs_lock_two_inodes(dp, ip, XFS_ILOCK_EXCL);
+-
+-	xfs_trans_ijoin(tp, dp, XFS_ILOCK_EXCL);
+-	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+-
+-	/*
+-	 * If we're removing a directory perform some additional validation.
+-	 */
+-	if (is_dir) {
+-		ASSERT(ip->i_d.di_nlink >= 2);
+-		if (ip->i_d.di_nlink != 2) {
+-			error = XFS_ERROR(ENOTEMPTY);
+-			goto out_trans_cancel;
+-		}
+-		if (!xfs_dir_isempty(ip)) {
+-			error = XFS_ERROR(ENOTEMPTY);
+-			goto out_trans_cancel;
+-		}
+-	}
+-
+-	xfs_bmap_init(&free_list, &first_block);
+-	error = xfs_dir_removename(tp, dp, name, ip->i_ino,
+-					&first_block, &free_list, resblks);
+-	if (error) {
+-		ASSERT(error != ENOENT);
+-		goto out_bmap_cancel;
+-	}
+-	xfs_trans_ichgtime(tp, dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+-
+-	if (is_dir) {
+-		/*
+-		 * Drop the link from ip's "..".
+-		 */
+-		error = xfs_droplink(tp, dp);
+-		if (error)
+-			goto out_bmap_cancel;
+-
+-		/*
+-		 * Drop the "." link from ip to self.
+-		 */
+-		error = xfs_droplink(tp, ip);
+-		if (error)
+-			goto out_bmap_cancel;
+-	} else {
+-		/*
+-		 * When removing a non-directory we need to log the parent
+-		 * inode here.  For a directory this is done implicitly
+-		 * by the xfs_droplink call for the ".." entry.
+-		 */
+-		xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
+-	}
+-
+-	/*
+-	 * Drop the link from dp to ip.
+-	 */
+-	error = xfs_droplink(tp, ip);
+-	if (error)
+-		goto out_bmap_cancel;
+-
+-	/*
+-	 * Determine if this is the last link while
+-	 * we are in the transaction.
+-	 */
+-	link_zero = (ip->i_d.di_nlink == 0);
+-
+-	/*
+-	 * If this is a synchronous mount, make sure that the
+-	 * remove transaction goes to disk before returning to
+-	 * the user.
+-	 */
+-	if (mp->m_flags & (XFS_MOUNT_WSYNC|XFS_MOUNT_DIRSYNC))
+-		xfs_trans_set_sync(tp);
+-
+-	error = xfs_bmap_finish(&tp, &free_list, &committed);
+-	if (error)
+-		goto out_bmap_cancel;
+-
+-	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
+-	if (error)
+-		goto std_return;
+-
+-	/*
+-	 * If we are using filestreams, kill the stream association.
+-	 * If the file is still open it may get a new one but that
+-	 * will get killed on last close in xfs_close() so we don't
+-	 * have to worry about that.
+-	 */
+-	if (!is_dir && link_zero && xfs_inode_is_filestream(ip))
+-		xfs_filestream_deassociate(ip);
+-
+-	return 0;
+-
+- out_bmap_cancel:
+-	xfs_bmap_cancel(&free_list);
+-	cancel_flags |= XFS_TRANS_ABORT;
+- out_trans_cancel:
+-	xfs_trans_cancel(tp, cancel_flags);
+- std_return:
+-	return error;
+-}
+-
+-int
+-xfs_link(
+-	xfs_inode_t		*tdp,
+-	xfs_inode_t		*sip,
+-	struct xfs_name		*target_name)
+-{
+-	xfs_mount_t		*mp = tdp->i_mount;
+-	xfs_trans_t		*tp;
+-	int			error;
+-	xfs_bmap_free_t         free_list;
+-	xfs_fsblock_t           first_block;
+-	int			cancel_flags;
+-	int			committed;
+-	int			resblks;
+-
+-	trace_xfs_link(tdp, target_name);
+-
+-	ASSERT(!S_ISDIR(sip->i_d.di_mode));
+-
+-	if (XFS_FORCED_SHUTDOWN(mp))
+-		return XFS_ERROR(EIO);
+-
+-	error = xfs_qm_dqattach(sip, 0);
+-	if (error)
+-		goto std_return;
+-
+-	error = xfs_qm_dqattach(tdp, 0);
+-	if (error)
+-		goto std_return;
+-
+-	tp = xfs_trans_alloc(mp, XFS_TRANS_LINK);
+-	cancel_flags = XFS_TRANS_RELEASE_LOG_RES;
+-	resblks = XFS_LINK_SPACE_RES(mp, target_name->len);
+-	error = xfs_trans_reserve(tp, resblks, XFS_LINK_LOG_RES(mp), 0,
+-			XFS_TRANS_PERM_LOG_RES, XFS_LINK_LOG_COUNT);
+-	if (error == ENOSPC) {
+-		resblks = 0;
+-		error = xfs_trans_reserve(tp, 0, XFS_LINK_LOG_RES(mp), 0,
+-				XFS_TRANS_PERM_LOG_RES, XFS_LINK_LOG_COUNT);
+-	}
+-	if (error) {
+-		cancel_flags = 0;
+-		goto error_return;
+-	}
+-
+-	xfs_lock_two_inodes(sip, tdp, XFS_ILOCK_EXCL);
+-
+-	xfs_trans_ijoin(tp, sip, XFS_ILOCK_EXCL);
+-	xfs_trans_ijoin(tp, tdp, XFS_ILOCK_EXCL);
+-
+-	/*
+-	 * If we are using project inheritance, we only allow hard link
+-	 * creation in our tree when the project IDs are the same; else
+-	 * the tree quota mechanism could be circumvented.
+-	 */
+-	if (unlikely((tdp->i_d.di_flags & XFS_DIFLAG_PROJINHERIT) &&
+-		     (xfs_get_projid(tdp) != xfs_get_projid(sip)))) {
+-		error = XFS_ERROR(EXDEV);
+-		goto error_return;
+-	}
+-
+-	error = xfs_dir_canenter(tp, tdp, target_name, resblks);
+-	if (error)
+-		goto error_return;
+-
+-	xfs_bmap_init(&free_list, &first_block);
+-
+-	error = xfs_dir_createname(tp, tdp, target_name, sip->i_ino,
+-					&first_block, &free_list, resblks);
+-	if (error)
+-		goto abort_return;
+-	xfs_trans_ichgtime(tp, tdp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+-	xfs_trans_log_inode(tp, tdp, XFS_ILOG_CORE);
+-
+-	error = xfs_bumplink(tp, sip);
+-	if (error)
+-		goto abort_return;
+-
+-	/*
+-	 * If this is a synchronous mount, make sure that the
+-	 * link transaction goes to disk before returning to
+-	 * the user.
+-	 */
+-	if (mp->m_flags & (XFS_MOUNT_WSYNC|XFS_MOUNT_DIRSYNC)) {
+-		xfs_trans_set_sync(tp);
+-	}
+-
+-	error = xfs_bmap_finish (&tp, &free_list, &committed);
+-	if (error) {
+-		xfs_bmap_cancel(&free_list);
+-		goto abort_return;
+-	}
+-
+-	return xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
+-
+- abort_return:
+-	cancel_flags |= XFS_TRANS_ABORT;
+- error_return:
+-	xfs_trans_cancel(tp, cancel_flags);
+- std_return:
+-	return error;
+-}
+-
+-int
+-xfs_set_dmattrs(
+-	xfs_inode_t     *ip,
+-	u_int		evmask,
+-	u_int16_t	state)
+-{
+-	xfs_mount_t	*mp = ip->i_mount;
+-	xfs_trans_t	*tp;
+-	int		error;
+-
+-	if (!capable(CAP_SYS_ADMIN))
+-		return XFS_ERROR(EPERM);
+-
+-	if (XFS_FORCED_SHUTDOWN(mp))
+-		return XFS_ERROR(EIO);
+-
+-	tp = xfs_trans_alloc(mp, XFS_TRANS_SET_DMATTRS);
+-	error = xfs_trans_reserve(tp, 0, XFS_ICHANGE_LOG_RES (mp), 0, 0, 0);
+-	if (error) {
+-		xfs_trans_cancel(tp, 0);
+-		return error;
+-	}
+-	xfs_ilock(ip, XFS_ILOCK_EXCL);
+-	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+-
+-	ip->i_d.di_dmevmask = evmask;
+-	ip->i_d.di_dmstate  = state;
+-
+-	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+-	error = xfs_trans_commit(tp, 0);
+-
+-	return error;
+-}
+-
+-/*
+- * xfs_alloc_file_space()
+- *      This routine allocates disk space for the given file.
+- *
+- *	If alloc_type == 0, this request is for an ALLOCSP type
+- *	request which will change the file size.  In this case, no
+- *	DMAPI event will be generated by the call.  A TRUNCATE event
+- *	will be generated later by xfs_setattr.
+- *
+- *	If alloc_type != 0, this request is for a RESVSP type
+- *	request, and a DMAPI DM_EVENT_WRITE will be generated if the
+- *	lower block boundary byte address is less than the file's
+- *	length.
+- *
+- * RETURNS:
+- *       0 on success
+- *      errno on error
+- *
+- */
+-STATIC int
+-xfs_alloc_file_space(
+-	xfs_inode_t		*ip,
+-	xfs_off_t		offset,
+-	xfs_off_t		len,
+-	int			alloc_type,
+-	int			attr_flags)
+-{
+-	xfs_mount_t		*mp = ip->i_mount;
+-	xfs_off_t		count;
+-	xfs_filblks_t		allocated_fsb;
+-	xfs_filblks_t		allocatesize_fsb;
+-	xfs_extlen_t		extsz, temp;
+-	xfs_fileoff_t		startoffset_fsb;
+-	xfs_fsblock_t		firstfsb;
+-	int			nimaps;
+-	int			quota_flag;
+-	int			rt;
+-	xfs_trans_t		*tp;
+-	xfs_bmbt_irec_t		imaps[1], *imapp;
+-	xfs_bmap_free_t		free_list;
+-	uint			qblocks, resblks, resrtextents;
+-	int			committed;
+-	int			error;
+-
+-	trace_xfs_alloc_file_space(ip);
+-
+-	if (XFS_FORCED_SHUTDOWN(mp))
+-		return XFS_ERROR(EIO);
+-
+-	error = xfs_qm_dqattach(ip, 0);
+-	if (error)
+-		return error;
+-
+-	if (len <= 0)
+-		return XFS_ERROR(EINVAL);
+-
+-	rt = XFS_IS_REALTIME_INODE(ip);
+-	extsz = xfs_get_extsz_hint(ip);
+-
+-	count = len;
+-	imapp = &imaps[0];
+-	nimaps = 1;
+-	startoffset_fsb	= XFS_B_TO_FSBT(mp, offset);
+-	allocatesize_fsb = XFS_B_TO_FSB(mp, count);
+-
+-	/*
+-	 * Allocate file space until done or until there is an error
+-	 */
+-	while (allocatesize_fsb && !error) {
+-		xfs_fileoff_t	s, e;
+-
+-		/*
+-		 * Determine space reservations for data/realtime.
+-		 */
+-		if (unlikely(extsz)) {
+-			s = startoffset_fsb;
+-			do_div(s, extsz);
+-			s *= extsz;
+-			e = startoffset_fsb + allocatesize_fsb;
+-			if ((temp = do_mod(startoffset_fsb, extsz)))
+-				e += temp;
+-			if ((temp = do_mod(e, extsz)))
+-				e += extsz - temp;
+-		} else {
+-			s = 0;
+-			e = allocatesize_fsb;
+-		}
+-
+-		/*
+-		 * The transaction reservation is limited to a 32-bit block
+-		 * count, hence we need to limit the number of blocks we are
+-		 * trying to reserve to avoid an overflow. We can't allocate
+-		 * more than @nimaps extents, and an extent is limited on disk
+-		 * to MAXEXTLEN (21 bits), so use that to enforce the limit.
+-		 */
+-		resblks = min_t(xfs_fileoff_t, (e - s), (MAXEXTLEN * nimaps));
+-		if (unlikely(rt)) {
+-			resrtextents = qblocks = resblks;
+-			resrtextents /= mp->m_sb.sb_rextsize;
+-			resblks = XFS_DIOSTRAT_SPACE_RES(mp, 0);
+-			quota_flag = XFS_QMOPT_RES_RTBLKS;
+-		} else {
+-			resrtextents = 0;
+-			resblks = qblocks = XFS_DIOSTRAT_SPACE_RES(mp, resblks);
+-			quota_flag = XFS_QMOPT_RES_REGBLKS;
+-		}
+-
+-		/*
+-		 * Allocate and setup the transaction.
+-		 */
+-		tp = xfs_trans_alloc(mp, XFS_TRANS_DIOSTRAT);
+-		error = xfs_trans_reserve(tp, resblks,
+-					  XFS_WRITE_LOG_RES(mp), resrtextents,
+-					  XFS_TRANS_PERM_LOG_RES,
+-					  XFS_WRITE_LOG_COUNT);
+-		/*
+-		 * Check for running out of space
+-		 */
+-		if (error) {
+-			/*
+-			 * Free the transaction structure.
+-			 */
+-			ASSERT(error == ENOSPC || XFS_FORCED_SHUTDOWN(mp));
+-			xfs_trans_cancel(tp, 0);
+-			break;
+-		}
+-		xfs_ilock(ip, XFS_ILOCK_EXCL);
+-		error = xfs_trans_reserve_quota_nblks(tp, ip, qblocks,
+-						      0, quota_flag);
+-		if (error)
+-			goto error1;
+-
+-		xfs_trans_ijoin(tp, ip, 0);
+-
+-		xfs_bmap_init(&free_list, &firstfsb);
+-		error = xfs_bmapi_write(tp, ip, startoffset_fsb,
+-					allocatesize_fsb, alloc_type, &firstfsb,
+-					0, imapp, &nimaps, &free_list);
+-		if (error) {
+-			goto error0;
+-		}
+-
+-		/*
+-		 * Complete the transaction
+-		 */
+-		error = xfs_bmap_finish(&tp, &free_list, &committed);
+-		if (error) {
+-			goto error0;
+-		}
+-
+-		error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
+-		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-		if (error) {
+-			break;
+-		}
+-
+-		allocated_fsb = imapp->br_blockcount;
+-
+-		if (nimaps == 0) {
+-			error = XFS_ERROR(ENOSPC);
+-			break;
+-		}
+-
+-		startoffset_fsb += allocated_fsb;
+-		allocatesize_fsb -= allocated_fsb;
+-	}
+-
+-	return error;
+-
+-error0:	/* Cancel bmap, unlock inode, unreserve quota blocks, cancel trans */
+-	xfs_bmap_cancel(&free_list);
+-	xfs_trans_unreserve_quota_nblks(tp, ip, (long)qblocks, 0, quota_flag);
+-
+-error1:	/* Just cancel transaction */
+-	xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES | XFS_TRANS_ABORT);
+-	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-	return error;
+-}
+-
+-/*
+- * Zero file bytes between startoff and endoff inclusive.
+- * The iolock is held exclusive and no blocks are buffered.
+- *
+- * This function is used by xfs_free_file_space() to zero
+- * partial blocks when the range to free is not block aligned.
+- * When unreserving space with boundaries that are not block
+- * aligned we round up the start and round down the end
+- * boundaries and then use this function to zero the parts of
+- * the blocks that got dropped during the rounding.
+- */
+-STATIC int
+-xfs_zero_remaining_bytes(
+-	xfs_inode_t		*ip,
+-	xfs_off_t		startoff,
+-	xfs_off_t		endoff)
+-{
+-	xfs_bmbt_irec_t		imap;
+-	xfs_fileoff_t		offset_fsb;
+-	xfs_off_t		lastoffset;
+-	xfs_off_t		offset;
+-	xfs_buf_t		*bp;
+-	xfs_mount_t		*mp = ip->i_mount;
+-	int			nimap;
+-	int			error = 0;
+-
+-	/*
+-	 * Avoid doing I/O beyond eof - it's not necessary
+-	 * since nothing can read beyond eof.  The space will
+-	 * be zeroed when the file is extended anyway.
+-	 */
+-	if (startoff >= XFS_ISIZE(ip))
+-		return 0;
+-
+-	if (endoff > XFS_ISIZE(ip))
+-		endoff = XFS_ISIZE(ip);
+-
+-	bp = xfs_buf_get_uncached(XFS_IS_REALTIME_INODE(ip) ?
+-					mp->m_rtdev_targp : mp->m_ddev_targp,
+-				  BTOBB(mp->m_sb.sb_blocksize), 0);
+-	if (!bp)
+-		return XFS_ERROR(ENOMEM);
+-
+-	xfs_buf_unlock(bp);
+-
+-	for (offset = startoff; offset <= endoff; offset = lastoffset + 1) {
+-		offset_fsb = XFS_B_TO_FSBT(mp, offset);
+-		nimap = 1;
+-		error = xfs_bmapi_read(ip, offset_fsb, 1, &imap, &nimap, 0);
+-		if (error || nimap < 1)
+-			break;
+-		ASSERT(imap.br_blockcount >= 1);
+-		ASSERT(imap.br_startoff == offset_fsb);
+-		lastoffset = XFS_FSB_TO_B(mp, imap.br_startoff + 1) - 1;
+-		if (lastoffset > endoff)
+-			lastoffset = endoff;
+-		if (imap.br_startblock == HOLESTARTBLOCK)
+-			continue;
+-		ASSERT(imap.br_startblock != DELAYSTARTBLOCK);
+-		if (imap.br_state == XFS_EXT_UNWRITTEN)
+-			continue;
+-		XFS_BUF_UNDONE(bp);
+-		XFS_BUF_UNWRITE(bp);
+-		XFS_BUF_READ(bp);
+-		XFS_BUF_SET_ADDR(bp, xfs_fsb_to_db(ip, imap.br_startblock));
+-		xfsbdstrat(mp, bp);
+-		error = xfs_buf_iowait(bp);
+-		if (error) {
+-			xfs_buf_ioerror_alert(bp,
+-					"xfs_zero_remaining_bytes(read)");
+-			break;
+-		}
+-		memset(bp->b_addr +
+-			(offset - XFS_FSB_TO_B(mp, imap.br_startoff)),
+-		      0, lastoffset - offset + 1);
+-		XFS_BUF_UNDONE(bp);
+-		XFS_BUF_UNREAD(bp);
+-		XFS_BUF_WRITE(bp);
+-		xfsbdstrat(mp, bp);
+-		error = xfs_buf_iowait(bp);
+-		if (error) {
+-			xfs_buf_ioerror_alert(bp,
+-					"xfs_zero_remaining_bytes(write)");
+-			break;
+-		}
+-	}
+-	xfs_buf_free(bp);
+-	return error;
+-}
+-
+-/*
+- * xfs_free_file_space()
+- *      This routine frees disk space for the given file.
+- *
+- *	This routine is only called by xfs_change_file_space
+- *	for an UNRESVSP type call.
+- *
+- * RETURNS:
+- *       0 on success
+- *      errno on error
+- *
+- */
+-STATIC int
+-xfs_free_file_space(
+-	xfs_inode_t		*ip,
+-	xfs_off_t		offset,
+-	xfs_off_t		len,
+-	int			attr_flags)
+-{
+-	int			committed;
+-	int			done;
+-	xfs_fileoff_t		endoffset_fsb;
+-	int			error;
+-	xfs_fsblock_t		firstfsb;
+-	xfs_bmap_free_t		free_list;
+-	xfs_bmbt_irec_t		imap;
+-	xfs_off_t		ioffset;
+-	xfs_extlen_t		mod=0;
+-	xfs_mount_t		*mp;
+-	int			nimap;
+-	uint			resblks;
+-	xfs_off_t		rounding;
+-	int			rt;
+-	xfs_fileoff_t		startoffset_fsb;
+-	xfs_trans_t		*tp;
+-	int			need_iolock = 1;
+-
+-	mp = ip->i_mount;
+-
+-	trace_xfs_free_file_space(ip);
+-
+-	error = xfs_qm_dqattach(ip, 0);
+-	if (error)
+-		return error;
+-
+-	error = 0;
+-	if (len <= 0)	/* if nothing being freed */
+-		return error;
+-	rt = XFS_IS_REALTIME_INODE(ip);
+-	startoffset_fsb	= XFS_B_TO_FSB(mp, offset);
+-	endoffset_fsb = XFS_B_TO_FSBT(mp, offset + len);
+-
+-	if (attr_flags & XFS_ATTR_NOLOCK)
+-		need_iolock = 0;
+-	if (need_iolock) {
+-		xfs_ilock(ip, XFS_IOLOCK_EXCL);
+-		/* wait for the completion of any pending DIOs */
+-		inode_dio_wait(VFS_I(ip));
+-	}
+-
+-	rounding = max_t(xfs_off_t, 1 << mp->m_sb.sb_blocklog, PAGE_CACHE_SIZE);
+-	ioffset = offset & ~(rounding - 1);
+-	error = -filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
+-					      ioffset, -1);
+-	if (error)
+-		goto out_unlock_iolock;
+-	truncate_pagecache_range(VFS_I(ip), ioffset, -1);
+-
+-	/*
+-	 * Need to zero the stuff we're not freeing, on disk.
+-	 * If it's a realtime file & can't use unwritten extents then we
+-	 * actually need to zero the extent edges.  Otherwise xfs_bunmapi
+-	 * will take care of it for us.
+-	 */
+-	if (rt && !xfs_sb_version_hasextflgbit(&mp->m_sb)) {
+-		nimap = 1;
+-		error = xfs_bmapi_read(ip, startoffset_fsb, 1,
+-					&imap, &nimap, 0);
+-		if (error)
+-			goto out_unlock_iolock;
+-		ASSERT(nimap == 0 || nimap == 1);
+-		if (nimap && imap.br_startblock != HOLESTARTBLOCK) {
+-			xfs_daddr_t	block;
+-
+-			ASSERT(imap.br_startblock != DELAYSTARTBLOCK);
+-			block = imap.br_startblock;
+-			mod = do_div(block, mp->m_sb.sb_rextsize);
+-			if (mod)
+-				startoffset_fsb += mp->m_sb.sb_rextsize - mod;
+-		}
+-		nimap = 1;
+-		error = xfs_bmapi_read(ip, endoffset_fsb - 1, 1,
+-					&imap, &nimap, 0);
+-		if (error)
+-			goto out_unlock_iolock;
+-		ASSERT(nimap == 0 || nimap == 1);
+-		if (nimap && imap.br_startblock != HOLESTARTBLOCK) {
+-			ASSERT(imap.br_startblock != DELAYSTARTBLOCK);
+-			mod++;
+-			if (mod && (mod != mp->m_sb.sb_rextsize))
+-				endoffset_fsb -= mod;
+-		}
+-	}
+-	if ((done = (endoffset_fsb <= startoffset_fsb)))
+-		/*
+-		 * One contiguous piece to clear
+-		 */
+-		error = xfs_zero_remaining_bytes(ip, offset, offset + len - 1);
+-	else {
+-		/*
+-		 * Some full blocks, possibly two pieces to clear
+-		 */
+-		if (offset < XFS_FSB_TO_B(mp, startoffset_fsb))
+-			error = xfs_zero_remaining_bytes(ip, offset,
+-				XFS_FSB_TO_B(mp, startoffset_fsb) - 1);
+-		if (!error &&
+-		    XFS_FSB_TO_B(mp, endoffset_fsb) < offset + len)
+-			error = xfs_zero_remaining_bytes(ip,
+-				XFS_FSB_TO_B(mp, endoffset_fsb),
+-				offset + len - 1);
+-	}
+-
+-	/*
+-	 * free file space until done or until there is an error
+-	 */
+-	resblks = XFS_DIOSTRAT_SPACE_RES(mp, 0);
+-	while (!error && !done) {
+-
+-		/*
+-		 * allocate and setup the transaction. Allow this
+-		 * transaction to dip into the reserve blocks to ensure
+-		 * the freeing of the space succeeds at ENOSPC.
+-		 */
+-		tp = xfs_trans_alloc(mp, XFS_TRANS_DIOSTRAT);
+-		tp->t_flags |= XFS_TRANS_RESERVE;
+-		error = xfs_trans_reserve(tp,
+-					  resblks,
+-					  XFS_WRITE_LOG_RES(mp),
+-					  0,
+-					  XFS_TRANS_PERM_LOG_RES,
+-					  XFS_WRITE_LOG_COUNT);
+-
+-		/*
+-		 * check for running out of space
+-		 */
+-		if (error) {
+-			/*
+-			 * Free the transaction structure.
+-			 */
+-			ASSERT(error == ENOSPC || XFS_FORCED_SHUTDOWN(mp));
+-			xfs_trans_cancel(tp, 0);
+-			break;
+-		}
+-		xfs_ilock(ip, XFS_ILOCK_EXCL);
+-		error = xfs_trans_reserve_quota(tp, mp,
+-				ip->i_udquot, ip->i_gdquot, ip->i_pdquot,
+-				resblks, 0, XFS_QMOPT_RES_REGBLKS);
+-		if (error)
+-			goto error1;
+-
+-		xfs_trans_ijoin(tp, ip, 0);
+-
+-		/*
+-		 * issue the bunmapi() call to free the blocks
+-		 */
+-		xfs_bmap_init(&free_list, &firstfsb);
+-		error = xfs_bunmapi(tp, ip, startoffset_fsb,
+-				  endoffset_fsb - startoffset_fsb,
+-				  0, 2, &firstfsb, &free_list, &done);
+-		if (error) {
+-			goto error0;
+-		}
+-
+-		/*
+-		 * complete the transaction
+-		 */
+-		error = xfs_bmap_finish(&tp, &free_list, &committed);
+-		if (error) {
+-			goto error0;
+-		}
+-
+-		error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
+-		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-	}
+-
+- out_unlock_iolock:
+-	if (need_iolock)
+-		xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+-	return error;
+-
+- error0:
+-	xfs_bmap_cancel(&free_list);
+- error1:
+-	xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES | XFS_TRANS_ABORT);
+-	xfs_iunlock(ip, need_iolock ? (XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL) :
+-		    XFS_ILOCK_EXCL);
+-	return error;
+-}
+-
+-
+-STATIC int
+-xfs_zero_file_space(
+-	struct xfs_inode	*ip,
+-	xfs_off_t		offset,
+-	xfs_off_t		len,
+-	int			attr_flags)
+-{
+-	struct xfs_mount	*mp = ip->i_mount;
+-	uint			granularity;
+-	xfs_off_t		start_boundary;
+-	xfs_off_t		end_boundary;
+-	int			error;
+-
+-	granularity = max_t(uint, 1 << mp->m_sb.sb_blocklog, PAGE_CACHE_SIZE);
+-
+-	/*
+-	 * Round the range of extents we are going to convert inwards.  If the
+-	 * offset is aligned, then it doesn't get changed so we zero from the
+-	 * start of the block offset points to.
+-	 */
+-	start_boundary = round_up(offset, granularity);
+-	end_boundary = round_down(offset + len, granularity);
+-
+-	ASSERT(start_boundary >= offset);
+-	ASSERT(end_boundary <= offset + len);
+-
+-	if (!(attr_flags & XFS_ATTR_NOLOCK))
+-		xfs_ilock(ip, XFS_IOLOCK_EXCL);
+-
+-	if (start_boundary < end_boundary - 1) {
+-		/* punch out the page cache over the conversion range */
+-		truncate_pagecache_range(VFS_I(ip), start_boundary,
+-					 end_boundary - 1);
+-		/* convert the blocks */
+-		error = xfs_alloc_file_space(ip, start_boundary,
+-					end_boundary - start_boundary - 1,
+-					XFS_BMAPI_PREALLOC | XFS_BMAPI_CONVERT,
+-					attr_flags);
+-		if (error)
+-			goto out_unlock;
+-
+-		/* We've handled the interior of the range, now for the edges */
+-		if (start_boundary != offset)
+-			error = xfs_iozero(ip, offset, start_boundary - offset);
+-		if (error)
+-			goto out_unlock;
+-
+-		if (end_boundary != offset + len)
+-			error = xfs_iozero(ip, end_boundary,
+-					   offset + len - end_boundary);
+-
+-	} else {
+-		/*
+-		 * It's either a sub-granularity range or the range spanned lies
+-		 * partially across two adjacent blocks.
+-		 */
+-		error = xfs_iozero(ip, offset, len);
+-	}
+-
+-out_unlock:
+-	if (!(attr_flags & XFS_ATTR_NOLOCK))
+-		xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+-	return error;
+-
+-}
+-
+-/*
+- * xfs_change_file_space()
+- *      This routine allocates or frees disk space for the given file.
+- *      The user specified parameters are checked for alignment and size
+- *      limitations.
+- *
+- * RETURNS:
+- *       0 on success
+- *      errno on error
+- *
+- */
+-int
+-xfs_change_file_space(
+-	xfs_inode_t	*ip,
+-	int		cmd,
+-	xfs_flock64_t	*bf,
+-	xfs_off_t	offset,
+-	int		attr_flags)
+-{
+-	xfs_mount_t	*mp = ip->i_mount;
+-	int		clrprealloc;
+-	int		error;
+-	xfs_fsize_t	fsize;
+-	int		setprealloc;
+-	xfs_off_t	startoffset;
+-	xfs_trans_t	*tp;
+-	struct iattr	iattr;
+-
+-	if (!S_ISREG(ip->i_d.di_mode))
+-		return XFS_ERROR(EINVAL);
+-
+-	switch (bf->l_whence) {
+-	case 0: /*SEEK_SET*/
+-		break;
+-	case 1: /*SEEK_CUR*/
+-		bf->l_start += offset;
+-		break;
+-	case 2: /*SEEK_END*/
+-		bf->l_start += XFS_ISIZE(ip);
+-		break;
+-	default:
+-		return XFS_ERROR(EINVAL);
+-	}
+-
+-	/*
+-	 * length of <= 0 for resv/unresv/zero is invalid.  length for
+-	 * alloc/free is ignored completely and we have no idea what userspace
+-	 * might have set it to, so set it to zero to allow range
+-	 * checks to pass.
+-	 */
+-	switch (cmd) {
+-	case XFS_IOC_ZERO_RANGE:
+-	case XFS_IOC_RESVSP:
+-	case XFS_IOC_RESVSP64:
+-	case XFS_IOC_UNRESVSP:
+-	case XFS_IOC_UNRESVSP64:
+-		if (bf->l_len <= 0)
+-			return XFS_ERROR(EINVAL);
+-		break;
+-	default:
+-		bf->l_len = 0;
+-		break;
+-	}
+-
+-	if (bf->l_start < 0 ||
+-	    bf->l_start > mp->m_super->s_maxbytes ||
+-	    bf->l_start + bf->l_len < 0 ||
+-	    bf->l_start + bf->l_len >= mp->m_super->s_maxbytes)
+-		return XFS_ERROR(EINVAL);
+-
+-	bf->l_whence = 0;
+-
+-	startoffset = bf->l_start;
+-	fsize = XFS_ISIZE(ip);
+-
+-	setprealloc = clrprealloc = 0;
+-	switch (cmd) {
+-	case XFS_IOC_ZERO_RANGE:
+-		error = xfs_zero_file_space(ip, startoffset, bf->l_len,
+-						attr_flags);
+-		if (error)
+-			return error;
+-		setprealloc = 1;
+-		break;
+-
+-	case XFS_IOC_RESVSP:
+-	case XFS_IOC_RESVSP64:
+-		error = xfs_alloc_file_space(ip, startoffset, bf->l_len,
+-						XFS_BMAPI_PREALLOC, attr_flags);
+-		if (error)
+-			return error;
+-		setprealloc = 1;
+-		break;
+-
+-	case XFS_IOC_UNRESVSP:
+-	case XFS_IOC_UNRESVSP64:
+-		if ((error = xfs_free_file_space(ip, startoffset, bf->l_len,
+-								attr_flags)))
+-			return error;
+-		break;
+-
+-	case XFS_IOC_ALLOCSP:
+-	case XFS_IOC_ALLOCSP64:
+-	case XFS_IOC_FREESP:
+-	case XFS_IOC_FREESP64:
+-		/*
+-		 * These operations actually do IO when extending the file, but
+-		 * the allocation is done seperately to the zeroing that is
+-		 * done. This set of operations need to be serialised against
+-		 * other IO operations, such as truncate and buffered IO. We
+-		 * need to take the IOLOCK here to serialise the allocation and
+-		 * zeroing IO to prevent other IOLOCK holders (e.g. getbmap,
+-		 * truncate, direct IO) from racing against the transient
+-		 * allocated but not written state we can have here.
+-		 */
+-		xfs_ilock(ip, XFS_IOLOCK_EXCL);
+-		if (startoffset > fsize) {
+-			error = xfs_alloc_file_space(ip, fsize,
+-					startoffset - fsize, 0,
+-					attr_flags | XFS_ATTR_NOLOCK);
+-			if (error) {
+-				xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+-				break;
+-			}
+-		}
+-
+-		iattr.ia_valid = ATTR_SIZE;
+-		iattr.ia_size = startoffset;
+-
+-		error = xfs_setattr_size(ip, &iattr,
+-					 attr_flags | XFS_ATTR_NOLOCK);
+-		xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+-
+-		if (error)
+-			return error;
+-
+-		clrprealloc = 1;
+-		break;
+-
+-	default:
+-		ASSERT(0);
+-		return XFS_ERROR(EINVAL);
+-	}
+-
+-	/*
+-	 * update the inode timestamp, mode, and prealloc flag bits
+-	 */
+-	tp = xfs_trans_alloc(mp, XFS_TRANS_WRITEID);
+-
+-	if ((error = xfs_trans_reserve(tp, 0, XFS_WRITEID_LOG_RES(mp),
+-				      0, 0, 0))) {
+-		/* ASSERT(0); */
+-		xfs_trans_cancel(tp, 0);
+-		return error;
+-	}
+-
+-	xfs_ilock(ip, XFS_ILOCK_EXCL);
+-	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+-
+-	if ((attr_flags & XFS_ATTR_DMI) == 0) {
+-		ip->i_d.di_mode &= ~S_ISUID;
+-
+-		/*
+-		 * Note that we don't have to worry about mandatory
+-		 * file locking being disabled here because we only
+-		 * clear the S_ISGID bit if the Group execute bit is
+-		 * on, but if it was on then mandatory locking wouldn't
+-		 * have been enabled.
+-		 */
+-		if (ip->i_d.di_mode & S_IXGRP)
+-			ip->i_d.di_mode &= ~S_ISGID;
+-
+-		xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+-	}
+-	if (setprealloc)
+-		ip->i_d.di_flags |= XFS_DIFLAG_PREALLOC;
+-	else if (clrprealloc)
+-		ip->i_d.di_flags &= ~XFS_DIFLAG_PREALLOC;
+-
+-	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+-	if (attr_flags & XFS_ATTR_SYNC)
+-		xfs_trans_set_sync(tp);
+-	return xfs_trans_commit(tp, 0);
+-}
+diff --git a/fs/xfs/xfs_vnodeops.h b/fs/xfs/xfs_vnodeops.h
+deleted file mode 100644
+index 38c67c3..0000000
+--- a/fs/xfs/xfs_vnodeops.h
++++ /dev/null
+@@ -1,55 +0,0 @@
+-#ifndef _XFS_VNODEOPS_H
+-#define _XFS_VNODEOPS_H 1
+-
+-struct attrlist_cursor_kern;
+-struct file;
+-struct iattr;
+-struct inode;
+-struct iovec;
+-struct kiocb;
+-struct pipe_inode_info;
+-struct uio;
+-struct xfs_inode;
+-
+-
+-int xfs_setattr_nonsize(struct xfs_inode *ip, struct iattr *vap, int flags);
+-int xfs_setattr_size(struct xfs_inode *ip, struct iattr *vap, int flags);
+-#define	XFS_ATTR_DMI		0x01	/* invocation from a DMI function */
+-#define	XFS_ATTR_NONBLOCK	0x02	/* return EAGAIN if operation would block */
+-#define XFS_ATTR_NOLOCK		0x04	/* Don't grab any conflicting locks */
+-#define XFS_ATTR_NOACL		0x08	/* Don't call xfs_acl_chmod */
+-#define XFS_ATTR_SYNC		0x10	/* synchronous operation required */
+-
+-int xfs_readlink(struct xfs_inode *ip, char *link);
+-int xfs_release(struct xfs_inode *ip);
+-int xfs_inactive(struct xfs_inode *ip);
+-int xfs_lookup(struct xfs_inode *dp, struct xfs_name *name,
+-		struct xfs_inode **ipp, struct xfs_name *ci_name);
+-int xfs_create(struct xfs_inode *dp, struct xfs_name *name, umode_t mode,
+-		xfs_dev_t rdev, struct xfs_inode **ipp);
+-int xfs_remove(struct xfs_inode *dp, struct xfs_name *name,
+-		struct xfs_inode *ip);
+-int xfs_link(struct xfs_inode *tdp, struct xfs_inode *sip,
+-		struct xfs_name *target_name);
+-int xfs_readdir(struct xfs_inode *dp, struct dir_context *ctx, size_t bufsize);
+-int xfs_symlink(struct xfs_inode *dp, struct xfs_name *link_name,
+-		const char *target_path, umode_t mode, struct xfs_inode **ipp);
+-int xfs_set_dmattrs(struct xfs_inode *ip, u_int evmask, u_int16_t state);
+-int xfs_change_file_space(struct xfs_inode *ip, int cmd,
+-		xfs_flock64_t *bf, xfs_off_t offset, int attr_flags);
+-int xfs_rename(struct xfs_inode *src_dp, struct xfs_name *src_name,
+-		struct xfs_inode *src_ip, struct xfs_inode *target_dp,
+-		struct xfs_name *target_name, struct xfs_inode *target_ip);
+-int xfs_attr_get(struct xfs_inode *ip, const unsigned char *name,
+-		unsigned char *value, int *valuelenp, int flags);
+-int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
+-		unsigned char *value, int valuelen, int flags);
+-int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
+-int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
+-		int flags, struct attrlist_cursor_kern *cursor);
+-
+-int xfs_iozero(struct xfs_inode *, loff_t, size_t);
+-int xfs_zero_eof(struct xfs_inode *, xfs_off_t, xfs_fsize_t);
+-int xfs_free_eofblocks(struct xfs_mount *, struct xfs_inode *, bool);
+-
+-#endif /* _XFS_VNODEOPS_H */
+diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
+index b7311aa..e01f35e 100644
+--- a/fs/xfs/xfs_xattr.c
++++ b/fs/xfs/xfs_xattr.c
+@@ -24,7 +24,6 @@
+ #include "xfs_attr.h"
+ #include "xfs_attr_leaf.h"
+ #include "xfs_acl.h"
+-#include "xfs_vnodeops.h"
+ 
+ #include <linux/posix_acl_xattr.h>
+ #include <linux/xattr.h>
 -- 
 1.8.3.2
 
