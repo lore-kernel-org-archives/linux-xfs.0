@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2024280AE
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 6129B80B0
 	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 01:45:58 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A4071AC00E
-	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 23:45:57 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 43804304039
+	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 23:45:58 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	1kXvtzS47SsOEDAQ for <xfs@oss.sgi.com>;
-	Thu, 18 Jul 2013 23:45:55 -0700 (PDT)
+	X2W6td62pTqAabqc for <xfs@oss.sgi.com>;
+	Thu, 18 Jul 2013 23:45:56 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1V04RS-0004IP-Ql
+	(envelope-from <dave@fromorbit.com>) id 1V04RS-0004I7-LM
 	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:45:26 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1V04RS-0002K5-PR
+	(envelope-from <dave@disappointment.disaster>) id 1V04RS-0002JM-KP
 	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:45:26 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 13/49] libxfs: fix compile warnings
-Date: Fri, 19 Jul 2013 16:44:48 +1000
-Message-Id: <1374216324-8781-14-git-send-email-david@fromorbit.com>
+Subject: [PATCH 04/49] libxfs: fix directory/attribute format issues
+Date: Fri, 19 Jul 2013 16:44:39 +1000
+Message-Id: <1374216324-8781-5-git-send-email-david@fromorbit.com>
 In-Reply-To: <1374216324-8781-1-git-send-email-david@fromorbit.com>
 References: <1374216324-8781-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,287 +39,57 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Some of the code shared with userspace causes compilation warnings
-from things turned off in the kernel code, such as differences in
-variable signedness. Fix those issues.
+directory data headers and attr leaf headers need padding for 32 bit
+systems to correctly align the data sections on 64 bit boundaries.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- copy/xfs_copy.c          | 12 ++++++++++--
- db/bmroot.c              |  6 +++---
- libxfs/xfs.h             |  8 +++++++-
- libxfs/xfs_attr_remote.c |  8 ++++----
- libxfs/xfs_bmap.c        |  3 ---
- libxfs/xfs_da_btree.c    |  6 +++---
- libxfs/xfs_dir2_node.c   |  2 ++
- libxfs/xfs_ialloc.c      |  2 +-
- libxfs/xfs_rtalloc.c     |  4 ++--
- repair/attr_repair.c     |  2 ++
- repair/incore_ino.c      |  2 ++
- repair/scan.c            |  1 +
- 12 files changed, 37 insertions(+), 19 deletions(-)
+ include/xfs_attr_leaf.h   | 1 +
+ include/xfs_dir2_format.h | 5 +++--
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
-index 39517da..bb37279 100644
---- a/copy/xfs_copy.c
-+++ b/copy/xfs_copy.c
-@@ -434,6 +434,10 @@ read_ag_header(int fd, xfs_agnumber_t agno, wbuf *buf, ag_header_t *ag,
- 	off = XFS_AG_DADDR(mp, agno, XFS_SB_DADDR);
- 	buf->position = (xfs_off_t) off * (xfs_off_t) BBSIZE;
- 	length = buf->length = first_agbno * blocksize;
-+	if (length == 0) {
-+		do_log(_("ag header buffer invalid!\n"));
-+		exit(1);
-+	}
+diff --git a/include/xfs_attr_leaf.h b/include/xfs_attr_leaf.h
+index b3e93bb..c102213 100644
+--- a/include/xfs_attr_leaf.h
++++ b/include/xfs_attr_leaf.h
+@@ -128,6 +128,7 @@ struct xfs_attr3_leaf_hdr {
+ 	__u8			holes;
+ 	__u8			pad1;
+ 	struct xfs_attr_leaf_map freemap[XFS_ATTR_LEAF_MAPSIZE];
++	__be32			pad2;		/* 64 bit alignment */
+ };
  
- 	/* handle alignment stuff */
+ #define XFS_ATTR3_LEAF_CRC_OFF	(offsetof(struct xfs_attr3_leaf_hdr, info.crc))
+diff --git a/include/xfs_dir2_format.h b/include/xfs_dir2_format.h
+index 8c16bb0..4126e86 100644
+--- a/include/xfs_dir2_format.h
++++ b/include/xfs_dir2_format.h
+@@ -260,6 +260,7 @@ struct xfs_dir3_blk_hdr {
+ struct xfs_dir3_data_hdr {
+ 	struct xfs_dir3_blk_hdr	hdr;
+ 	xfs_dir2_data_free_t	best_free[XFS_DIR2_DATA_FD_COUNT];
++	__be32			pad;	/* 64 bit alignment */
+ };
  
-@@ -449,7 +453,6 @@ read_ag_header(int fd, xfs_agnumber_t agno, wbuf *buf, ag_header_t *ag,
- 	if (buf->length % buf->min_io_size != 0)
- 		buf->length = roundup(buf->length, buf->min_io_size);
+ #define XFS_DIR3_DATA_CRC_OFF  offsetof(struct xfs_dir3_data_hdr, hdr.crc)
+@@ -471,7 +472,7 @@ struct xfs_dir3_leaf_hdr {
+ 	struct xfs_da3_blkinfo	info;		/* header for da routines */
+ 	__be16			count;		/* count of entries */
+ 	__be16			stale;		/* count of stale entries */
+-	__be32			pad;
++	__be32			pad;		/* 64 bit alignment */
+ };
  
--	ASSERT(length != 0);
- 	read_wbuf(fd, buf, mp);
- 	ASSERT(buf->length >= length);
+ struct xfs_dir3_icleaf_hdr {
+@@ -712,7 +713,7 @@ struct xfs_dir3_free_hdr {
+ 	__be32			firstdb;	/* db of first entry */
+ 	__be32			nvalid;		/* count of valid entries */
+ 	__be32			nused;		/* count of used entries */
+-	__be32			pad;		/* 64 bit alignment. */
++	__be32			pad;		/* 64 bit alignment */
+ };
  
-@@ -936,7 +939,12 @@ main(int argc, char **argv)
- 		for (;;) {
- 			/* none of this touches the w_buf buffer */
- 
--			ASSERT(current_level < btree_levels);
-+			if (current_level >= btree_levels) {
-+				do_log(
-+			_("Error: current level %d >= btree levels %d\n"),
-+					current_level, btree_levels);
-+				exit(1);
-+			}
- 
- 			current_level++;
- 
-diff --git a/db/bmroot.c b/db/bmroot.c
-index 3e18917..12b129e 100644
---- a/db/bmroot.c
-+++ b/db/bmroot.c
-@@ -91,13 +91,13 @@ bmroota_key_offset(
- 	int			idx)
- {
- 	xfs_bmdr_block_t	*block;
--	/* REFERENCED */
--	xfs_dinode_t		*dip;
-+#ifdef DEBUG
-+	xfs_dinode_t		*dip = obj;
-+#endif
- 	xfs_bmdr_key_t		*kp;
- 
- 	ASSERT(bitoffs(startoff) == 0);
- 	ASSERT(obj == iocur_top->data);
--	dip = obj;
- 	block = (xfs_bmdr_block_t *)((char *)obj + byteize(startoff));
- 	ASSERT(XFS_DFORK_Q(dip) && (char *)block == XFS_DFORK_APTR(dip));
- 	ASSERT(be16_to_cpu(block->bb_level) > 0);
-diff --git a/libxfs/xfs.h b/libxfs/xfs.h
-index 3fd226c..c9d6a6d 100644
---- a/libxfs/xfs.h
-+++ b/libxfs/xfs.h
-@@ -189,7 +189,9 @@ roundup_pow_of_two(uint v)
- /* avoid gcc warning */
- #define xfs_incore(bt,blkno,len,lockit)	({		\
- 	typeof(blkno) __foo = (blkno);			\
-+	typeof(len) __bar = (len);			\
- 	(blkno) = __foo;				\
-+	(len) = __bar; /* no set-but-unused warning */	\
- 	NULL;						\
- })
- #define xfs_buf_relse(bp)		libxfs_putbuf(bp)
-@@ -259,7 +261,11 @@ roundup_pow_of_two(uint v)
- #define	xfs_trans_agblocks_delta(tp, d)
- #define	xfs_trans_agflist_delta(tp, d)
- #define	xfs_trans_agbtree_delta(tp, d)
--#define xfs_trans_buf_set_type(tp, bp, t)
-+#define xfs_trans_buf_set_type(tp, bp, t)	({	\
-+	int __t = (t);					\
-+	__t = __t; /* no set-but-unused warning */	\
-+})
-+
- #define xfs_trans_buf_copy_type(dbp, sbp)
- 
- #define xfs_buf_readahead(a,b,c,ops)		((void) 0)	/* no readahead */
-diff --git a/libxfs/xfs_attr_remote.c b/libxfs/xfs_attr_remote.c
-index 0b2ca8c..59bb12d 100644
---- a/libxfs/xfs_attr_remote.c
-+++ b/libxfs/xfs_attr_remote.c
-@@ -214,7 +214,7 @@ xfs_attr_rmtval_copyout(
- 	xfs_ino_t	ino,
- 	int		*offset,
- 	int		*valuelen,
--	char		**dst)
-+	__uint8_t	**dst)
- {
- 	char		*src = bp->b_addr;
- 	xfs_daddr_t	bno = bp->b_bn;
-@@ -261,7 +261,7 @@ xfs_attr_rmtval_copyin(
- 	xfs_ino_t	ino,
- 	int		*offset,
- 	int		*valuelen,
--	char		**src)
-+	__uint8_t	**src)
- {
- 	char		*dst = bp->b_addr;
- 	xfs_daddr_t	bno = bp->b_bn;
-@@ -314,7 +314,7 @@ xfs_attr_rmtval_get(
- 	struct xfs_mount	*mp = args->dp->i_mount;
- 	struct xfs_buf		*bp;
- 	xfs_dablk_t		lblkno = args->rmtblkno;
--	char			*dst = args->value;
-+	__uint8_t		*dst = args->value;
- 	int			valuelen = args->valuelen;
- 	int			nmap;
- 	int			error;
-@@ -378,7 +378,7 @@ xfs_attr_rmtval_set(
- 	struct xfs_bmbt_irec	map;
- 	xfs_dablk_t		lblkno;
- 	xfs_fileoff_t		lfileoff = 0;
--	char			*src = args->value;
-+	__uint8_t		*src = args->value;
- 	int			blkcnt;
- 	int			valuelen;
- 	int			nmap;
-diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-index 6664265..b7f798b 100644
---- a/libxfs/xfs_bmap.c
-+++ b/libxfs/xfs_bmap.c
-@@ -4437,12 +4437,9 @@ xfs_bmapi_allocate(
- 	struct xfs_ifork	*ifp = XFS_IFORK_PTR(bma->ip, whichfork);
- 	int			tmp_logflags = 0;
- 	int			error;
--	int			rt;
- 
- 	ASSERT(bma->length > 0);
- 
--	rt = (whichfork == XFS_DATA_FORK) && XFS_IS_REALTIME_INODE(bma->ip);
--
- 	/*
- 	 * For the wasdelay case, we could also just allocate the stuff asked
- 	 * for in this bmap call but that wouldn't be as good.
-diff --git a/libxfs/xfs_da_btree.c b/libxfs/xfs_da_btree.c
-index d7798af..b7b6705 100644
---- a/libxfs/xfs_da_btree.c
-+++ b/libxfs/xfs_da_btree.c
-@@ -376,7 +376,7 @@ xfs_da3_split(
- 	struct xfs_da_intnode	*node;
- 	struct xfs_buf		*bp;
- 	int			max;
--	int			action;
-+	int			action = 0;
- 	int			error;
- 	int			i;
- 
-@@ -2431,9 +2431,9 @@ static int
- xfs_buf_map_from_irec(
- 	struct xfs_mount	*mp,
- 	struct xfs_buf_map	**mapp,
--	unsigned int		*nmaps,
-+	int			*nmaps,
- 	struct xfs_bmbt_irec	*irecs,
--	unsigned int		nirecs)
-+	int			nirecs)
- {
- 	struct xfs_buf_map	*map;
- 	int			i;
-diff --git a/libxfs/xfs_dir2_node.c b/libxfs/xfs_dir2_node.c
-index 222f08c..d2bd249 100644
---- a/libxfs/xfs_dir2_node.c
-+++ b/libxfs/xfs_dir2_node.c
-@@ -295,11 +295,13 @@ xfs_dir2_free_log_header(
- 	struct xfs_trans	*tp,
- 	struct xfs_buf		*bp)
- {
-+#ifdef DEBUG
- 	xfs_dir2_free_t		*free;		/* freespace structure */
- 
- 	free = bp->b_addr;
- 	ASSERT(free->hdr.magic == cpu_to_be32(XFS_DIR2_FREE_MAGIC) ||
- 	       free->hdr.magic == cpu_to_be32(XFS_DIR3_FREE_MAGIC));
-+#endif
- 	xfs_trans_log_buf(tp, bp, 0, xfs_dir3_free_hdr_size(tp->t_mountp) - 1);
- }
- 
-diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
-index 98513fd..4683287 100644
---- a/libxfs/xfs_ialloc.c
-+++ b/libxfs/xfs_ialloc.c
-@@ -1319,7 +1319,7 @@ xfs_imap(
- 	xfs_agblock_t	cluster_agbno;	/* first block in inode cluster */
- 	int		error;	/* error code */
- 	int		offset;	/* index of inode in its buffer */
--	int		offset_agbno;	/* blks from chunk start to inode */
-+	xfs_agblock_t	offset_agbno;	/* blks from chunk start to inode */
- 
- 	ASSERT(ino != NULLFSINO);
- 
-diff --git a/libxfs/xfs_rtalloc.c b/libxfs/xfs_rtalloc.c
-index 1de85fd..9797db7 100644
---- a/libxfs/xfs_rtalloc.c
-+++ b/libxfs/xfs_rtalloc.c
-@@ -431,8 +431,8 @@ xfs_rtfree_range(
- {
- 	xfs_rtblock_t	end;		/* end of the freed extent */
- 	int		error;		/* error value */
--	xfs_rtblock_t	postblock;	/* first block freed > end */
--	xfs_rtblock_t	preblock;	/* first block freed < start */
-+	xfs_rtblock_t	postblock = 0;	/* first block freed > end */
-+	xfs_rtblock_t	preblock = 0;	/* first block freed < start */
- 
- 	end = start + len - 1;
- 	/*
-diff --git a/repair/attr_repair.c b/repair/attr_repair.c
-index d42b85f..ba85fd9 100644
---- a/repair/attr_repair.c
-+++ b/repair/attr_repair.c
-@@ -1631,9 +1631,11 @@ process_attributes(
- {
- 	int		err;
- 	__u8		aformat = dip->di_aformat;
-+#ifdef DEBUG
- 	xfs_attr_shortform_t *asf;
- 
- 	asf = (xfs_attr_shortform_t *) XFS_DFORK_APTR(dip);
-+#endif
- 
- 	if (aformat == XFS_DINODE_FMT_LOCAL) {
- 		ASSERT(be16_to_cpu(asf->hdr.totsize) <=
-diff --git a/repair/incore_ino.c b/repair/incore_ino.c
-index 2a40727..158cf3a 100644
---- a/repair/incore_ino.c
-+++ b/repair/incore_ino.c
-@@ -167,6 +167,7 @@ __uint32_t num_inode_references(struct ino_tree_node *irec, int ino_offset)
- 	default:
- 		ASSERT(0);
- 	}
-+	return 0;
- }
- 
- void set_inode_disk_nlinks(struct ino_tree_node *irec, int ino_offset,
-@@ -207,6 +208,7 @@ __uint32_t get_inode_disk_nlinks(struct ino_tree_node *irec, int ino_offset)
- 	default:
- 		ASSERT(0);
- 	}
-+	return 0;
- }
- 
- /*
-diff --git a/repair/scan.c b/repair/scan.c
-index d58d55a..e76ce47 100644
---- a/repair/scan.c
-+++ b/repair/scan.c
-@@ -520,6 +520,7 @@ scan_allocbt(
- 		name = "cnt";
- 		break;
- 	default:
-+		name = "(unknown)";
- 		assert(0);
- 		break;
- 	}
+ struct xfs_dir3_free {
 -- 
 1.8.3.2
 
