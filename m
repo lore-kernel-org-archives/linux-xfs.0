@@ -1,23 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6B3457F62
-	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 11:13:17 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 0E2DB7F62
+	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 11:32:24 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 48D958F8054
-	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 09:13:17 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id k0B1tJD61lSzOFzd (version=TLSv1
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E3DA28F8050
+	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 09:32:23 -0700 (PDT)
+Received: from mail.ud10.udmedia.de (ud10.udmedia.de [194.117.254.50]) by
+	cuda.sgi.com with ESMTP id FdC2Af2ya6odhLBM (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 19 Jul 2013 09:13:15 -0700 (PDT)
-Date: Fri, 19 Jul 2013 12:13:21 -0400
-From: Dwight Engen <dwight.engen@oracle.com>
-Subject: Re: [PATCH v4 6/7] xfs: check that eofblocks ioctl caller can write
-	matched inodes
-Message-ID: <20130719121321.5d78beeb@oracle.com>
-In-Reply-To: <20130719060221.GX11674@dastard>
-References: <20130717114746.4e133042@oracle.com>
-	<20130719060221.GX11674@dastard>
-Mime-Version: 1.0
+	Fri, 19 Jul 2013 09:32:22 -0700 (PDT)
+Date: Fri, 19 Jul 2013 18:32:20 +0200
+From: Markus Trippelsdorf <markus@trippelsdorf.de>
+Subject: Re: [Bisected] Corruption of root fs during git bisect of drm system
+	hang
+Message-ID: <20130719163220.GA363@x4>
+References: <20130713090523.GA362@x4> <20130712070721.GA359@x4>
+	<20130715022841.GH5228@dastard> <20130715064734.GA361@x4>
+	<20130719122235.GA360@x4>
+	<CAAxjCExBi-4Qgf6-=MBzdkzBmMtu=GTURu46DoD2CzpnF2dinw@mail.gmail.com>
+	<20130719125149.GB360@x4> <51E9630A.3070201@sandeen.net>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <51E9630A.3070201@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,108 +34,79 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Stefan Ring <stefanrin@gmail.com>, Ben Myers <bpm@sgi.com>, Mark Tinguely <tinguely@sgi.com>, Stan Hoeppner <stan@hardwarefreak.com>, Linux fs XFS <xfs@oss.sgi.com>
 
-On Fri, 19 Jul 2013 16:02:21 +1000
-Dave Chinner <david@fromorbit.com> wrote:
-
-> On Wed, Jul 17, 2013 at 11:47:46AM -0400, Dwight Engen wrote:
-> > Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
+On 2013.07.19 at 11:02 -0500, Eric Sandeen wrote:
+> On 7/19/13 7:51 AM, Markus Trippelsdorf wrote:
+> > On 2013.07.19 at 14:41 +0200, Stefan Ring wrote:
+> >>> I've bisected this issue to the following commit:
+> >>>
+> >>>  commit cca9f93a52d2ead50b5da59ca83d5f469ee4be5f
+> >>>  Author: Dave Chinner <dchinner@redhat.com>
+> >>>  Date:   Thu Jun 27 16:04:49 2013 +1000
+> >>>
+> >>>      xfs: don't do IO when creating an new inode
+> >>>
+> >>> Reverting this commit on top of the Linus tree "solves" all problems for
+> >>> me. IOW I no longer loose my KDE and LibreOffice config files during a
+> >>> crash. Log recovery now works fine and xfs_repair shows no issues.
+> >>>
+> >>> So users of 3.11.0-rc1 beware. Only run this version if you have
+> >>> up-to-date backups handy.
 > 
-> What's the reason for this patch?
+> Are you certain about that bisection point?  All that does is
+> say:  When we allocate a new inode, assign it a random generation
+> number, rather than reading it from disk & incrementing the
+> older generation number, AFAICS.  So it simply avoids a read IO.
 
-Its trying to ensure we only allow the XFS_IOC_FREE_EOFBLOCKS
-caller to affect the indoes they should be able to.
-http://oss.sgi.com/archives/xfs/2013-06/msg00955.html has a bit more
-background. This isn't really related to user namespaces per-se, so I
-guess it should be a separate patch, but since I modified the
-eofblocks structure I was trying to fix this as well.
+Yes, I'm sure. 
+As I wrote above I also double-checked by reverting the commit on top of
+the current Linus tree.
 
-> > ---
-> >  fs/xfs/xfs_fs.h     | 1 +
-> >  fs/xfs/xfs_icache.c | 4 ++++
-> >  fs/xfs/xfs_ioctl.c  | 2 ++
-> >  3 files changed, 7 insertions(+)
+> I wonder if simply changing IO patterns on the SSD changes how
+> it's doing caching & destaging <handwave>.
+
+No. The corruption also happens on my conventional (spinning) drives.
+
+> >> What I miss in this thread is a distinction between filesystem
+> >> corruption on the one hand and a few zeroed files on the other. The
+> >> latter may be a nuisance, but it is expected behavior, while the
+> >> former should never happen, period, if I'm not mistaken.
 > > 
-> > diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
-> > index 7eb4a5e..aee4b12 100644
-> > --- a/fs/xfs/xfs_fs.h
-> > +++ b/fs/xfs/xfs_fs.h
-> > @@ -361,6 +361,7 @@ struct xfs_fs_eofblocks {
-> >  #define XFS_EOF_FLAGS_GID		(1 << 2) /* filter by gid
-> > */ #define XFS_EOF_FLAGS_PRID		(1 << 3) /* filter by
-> > project id */ #define XFS_EOF_FLAGS_MINFILESIZE	(1 << 4) /*
-> > filter by min file size */ +#define XFS_EOF_FLAGS_PERM_CHECK
-> > (1 << 5) /* check can write inode */ #define
-> > XFS_EOF_FLAGS_VALID	\ (XFS_EOF_FLAGS_SYNC |	\
-> >  	 XFS_EOF_FLAGS_UID |	\
-> > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> > index d873ab9e..728283a 100644
-> > --- a/fs/xfs/xfs_icache.c
-> > +++ b/fs/xfs/xfs_icache.c
-> > @@ -1247,6 +1247,10 @@ xfs_inode_free_eofblocks(
-> >  		if (!xfs_inode_match_id(ip, eofb))
-> >  			return 0;
-> >  
-> > +		if (eofb->eof_flags & XFS_EOF_FLAGS_PERM_CHECK &&
-> > +		    inode_permission(VFS_I(ip), MAY_WRITE))
-> > +			return 0;
+> > Well, it is natural that fs developers at first try to blame userspace.
 > 
-> This assumes we are walking fully instantiated VFS inodes. That's
-> not necessarily true - we may be walking inodes that have already
-> been dropped from the VFS and are waiting for background reclaim to
-> clean them up. I suspect that this doesn't need to be done - we
-> normally stop background modification processes like this when we
-> convert the filesystem to read-only. I suspect the eof-blocks scan
-> code is missing that, and so it can potentially run on a RO
-> filesystem. That needs fixing similar to the way we stop and start
-> the periodic log work...
-
-So if there isn't a good way to check per-inode, maybe for now we
-should just restrict the ioctl caller to be capable(CAP_SYS_ADMIN)?
-
-> Also, gcc should throw warnings on that code (strange, it didn't
-> here on gcc-4.7) as it needs more parenthesis. i.e
-
-I don't think it needs them (& is higher precedence than &&), but I can
-add them for clarity if you like.
-
-> 		if ((eofb->eof_flags & XFS_EOF_FLAGS_PERM_CHECK) &&
+> I disagree with that, we just need to be clear about your scenarios,
+> and what integrity guarantees should apply.
 > 
-> >  		/* skip the inode if the file size is too small */
-> >  		if (eofb->eof_flags & XFS_EOF_FLAGS_MINFILESIZE &&
-> >  		    XFS_ISIZE(ip) < eofb->eof_min_file_size)
+> > Unfortunately it turned out that in this case there is filesystem
+> > corruption. (Fortunately this normally happens only very rarely on rc1
+> > kernels).
 > 
-> Oh, I see you are just copying other code. How did I miss that in a
-> past review? :( 
+> Corruption is when you get back data that you did not write,
+> or metadata which is inconsistent or unreadable even after a proper
+> log replay.
 > 
-> Hmmm - it looks like there's a bunch of them in xfs_inode_match_id()
-> as well, and you touched all those if() statements in a previous
-> patch. can you go back to the patch that touches
-> xfs_inode_match_id() and add the extra () there as well?
- 
-Yep, I'll update those too.
- 
-> > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> > index abbbdcf..e63e359 100644
-> > --- a/fs/xfs/xfs_ioctl.c
-> > +++ b/fs/xfs/xfs_ioctl.c
-> > @@ -1636,6 +1636,8 @@ xfs_file_ioctl(
-> >  		    !gid_valid(keofb.eof_gid))
-> >  			return XFS_ERROR(EINVAL);
-> >  
-> > +		keofb.eof_flags |= XFS_EOF_FLAGS_PERM_CHECK;
+> Corruption is _not_ unsynced, buffered data that was lost on a
+> crash or poweroff.
 > 
-> We should be checking for the fs being RO here and aborting if it
-> is.
+> But I might not have followed the thread properly, and I might
+> misunderstand your situation.
+> 
+> When you experience this lost file [data] scenario, was it after an
+> orderly reboot, or after a crash and/or system reset?
 
-inode_permission() would catch that but I agree there is no point
-waiting till then to find out.
+To reproduce this issue simply boot into your desktop and then hit
+sysrq-c and reboot. After log replay without error messages, the
+filesystem is in an inconsistent state and many small config files are
+lost. There are also undeletable files. You need to run xfs_repair
+manually to bring the filesystem back to normal.
 
-> Cheers,
-> 
-> Dave.
+When cca9f93a52d is reverted, you don't loose your config files and the
+filesystem is OK after log replay. xfs_repair reports no issues at all.
+
+-- 
+Markus
 
 _______________________________________________
 xfs mailing list
