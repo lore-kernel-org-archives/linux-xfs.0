@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 5687A8024
-	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 01:45:46 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 38E748F8033
-	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 23:45:46 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 2C5E28026
+	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 01:45:45 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 0E7BB304039
+	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 23:45:44 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	ONwtX8u0PDq92Qzk for <xfs@oss.sgi.com>;
-	Thu, 18 Jul 2013 23:45:42 -0700 (PDT)
+	QdITaGGbOKEt2lGk for <xfs@oss.sgi.com>;
+	Thu, 18 Jul 2013 23:45:40 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1V04RS-0004IW-SU
-	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:45:26 +1000
+	(envelope-from <dave@fromorbit.com>) id 1V04RT-0004JB-6u
+	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:45:27 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1V04RS-0002KK-RS
-	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:45:26 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1V04RT-0002LX-5j
+	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:45:27 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 16/49] xfs: separate out log format definitions
-Date: Fri, 19 Jul 2013 16:44:51 +1000
-Message-Id: <1374216324-8781-17-git-send-email-david@fromorbit.com>
+Subject: [PATCH 31/49] libxfs: switch over to xfs_sb.c and remove xfs_mount.c
+Date: Fri, 19 Jul 2013 16:45:06 +1000
+Message-Id: <1374216324-8781-32-git-send-email-david@fromorbit.com>
 In-Reply-To: <1374216324-8781-1-git-send-email-david@fromorbit.com>
 References: <1374216324-8781-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,89 +39,114 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The on-disk format definitions for the log are spread randoms
-through a couple of header files. Consolidate it all in a single
-file that can be shared easily with userspace. This means that
-xfs_log.h and xfs_log_priv.h no longer need to be shared with
-userspace.
+Now that the kernel code has split the superblock specific code out
+of xfs_mount.c, we don't need xfs_mount.c anymore. Copy in xfs_sb.c
+and remove xfs_mount.c
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/Makefile          |   4 +-
- include/libxfs.h          |   4 +-
- include/libxlog.h         |   6 -
- include/xfs_log.h         | 190 -------------
- include/xfs_log_format.h  | 178 ++++++++++++
- include/xfs_log_priv.h    | 692 ----------------------------------------------
- libxfs/rdwr.c             |   2 -
- libxlog/xfs_log_recover.c |   3 +
- 8 files changed, 186 insertions(+), 893 deletions(-)
- delete mode 100644 include/xfs_log.h
- create mode 100644 include/xfs_log_format.h
- delete mode 100644 include/xfs_log_priv.h
+ include/Makefile    |   1 -
+ include/libxfs.h    |  14 +-
+ include/libxlog.h   |   4 -
+ include/xfs_mount.h | 372 ---------------------------
+ include/xfs_sb.h    |  26 ++
+ include/xfs_trace.h |   1 +
+ libxfs/Makefile     |  10 +-
+ libxfs/init.c       |   2 +-
+ libxfs/xfs.h        |   1 +
+ libxfs/xfs_mount.c  | 627 ---------------------------------------------
+ libxfs/xfs_sb.c     | 721 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 11 files changed, 768 insertions(+), 1011 deletions(-)
+ delete mode 100644 include/xfs_mount.h
+ delete mode 100644 libxfs/xfs_mount.c
+ create mode 100644 libxfs/xfs_sb.c
 
 diff --git a/include/Makefile b/include/Makefile
-index ba2c80d..efa3275 100644
+index 70720e5..53821ee 100644
 --- a/include/Makefile
 +++ b/include/Makefile
-@@ -27,7 +27,9 @@ QAHFILES = libxfs.h libxlog.h \
- 	xfs_dinode.h xfs_dir2.h xfs_dir2_format.h \
- 	xfs_extfree_item.h xfs_ialloc.h xfs_ialloc_btree.h \
- 	xfs_icreate_item.h xfs_inode.h xfs_inode_item.h xfs_inum.h \
--	xfs_log.h xfs_log_priv.h xfs_log_recover.h xfs_metadump.h \
-+	xfs_log_format.h \
-+	xfs_log_recover.h \
-+	xfs_metadump.h \
- 	xfs_mount.h xfs_quota.h xfs_rtalloc.h xfs_sb.h xfs_symlink.h \
- 	xfs_trace.h xfs_trans.h xfs_trans_space.h xfs_dfrag.h
- 
+@@ -36,7 +36,6 @@ QAHFILES = libxfs.h libxlog.h \
+ 	xfs_log_format.h \
+ 	xfs_log_recover.h \
+ 	xfs_metadump.h \
+-	xfs_mount.h \
+ 	xfs_quota_defs.h \
+ 	xfs_sb.h \
+ 	xfs_trace.h \
 diff --git a/include/libxfs.h b/include/libxfs.h
-index e776211..c9918cd 100644
+index 37e9e15..b4d2657 100644
 --- a/include/libxfs.h
 +++ b/include/libxfs.h
-@@ -59,6 +59,8 @@
- #include <xfs/xfs_symlink.h>
- #include <xfs/xfs_icreate_item.h>
+@@ -47,7 +47,6 @@
+ #include <xfs/xfs_sb.h>
+ #include <xfs/xfs_ag.h>
+ #include <xfs/xfs_dir2.h>
+-#include <xfs/xfs_mount.h>
+ #include <xfs/xfs_da_btree.h>
+ #include <xfs/xfs_bmap_btree.h>
+ #include <xfs/xfs_alloc_btree.h>
+@@ -323,6 +322,11 @@ enum xfs_buf_flags_t {	/* b_flags bits */
+ #define xfs_buf_set_ref(bp,ref)		((void) 0)
+ #define xfs_buf_ioerror(bp,err)		(bp)->b_error = (err);
  
-+#include <xfs/xfs_log_format.h>
++#define xfs_daddr_to_agno(mp,d) \
++	((xfs_agnumber_t)(XFS_BB_TO_FSBT(mp, d) / (mp)->m_sb.sb_agblocks))
++#define xfs_daddr_to_agbno(mp,d) \
++	((xfs_agblock_t)(XFS_BB_TO_FSBT(mp, d) % (mp)->m_sb.sb_agblocks))
 +
- #ifndef ARRAY_SIZE
- #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
- #endif
-@@ -613,8 +615,6 @@ extern unsigned long	libxfs_physmem(void);	/* in kilobytes */
- #include <xfs/xfs_attr_remote.h>
- #include <xfs/xfs_quota.h>
- #include <xfs/xfs_trans_space.h>
--#include <xfs/xfs_log.h>
--#include <xfs/xfs_log_priv.h>
+ /* Buffer Cache Interfaces */
  
- #define XFS_INOBT_IS_FREE_DISK(rp,i)		\
- 			((be64_to_cpu((rp)->ir_free) & XFS_INOBT_MASK(i)) != 0)
+ extern struct cache	*libxfs_bcache;
+@@ -476,7 +480,6 @@ extern xfs_trans_t	*libxfs_trans_dup (xfs_trans_t *);
+ extern int	libxfs_trans_reserve (xfs_trans_t *, uint,uint,uint,uint,uint);
+ extern int	libxfs_trans_commit (xfs_trans_t *, uint);
+ extern void	libxfs_trans_cancel (xfs_trans_t *, int);
+-extern void	libxfs_mod_sb (xfs_trans_t *, __int64_t);
+ extern xfs_buf_t	*libxfs_trans_getsb (xfs_trans_t *, xfs_mount_t *, int);
+ 
+ extern int	libxfs_trans_iget (xfs_mount_t *, xfs_trans_t *, xfs_ino_t,
+@@ -704,7 +707,7 @@ void	xfs_dinode_from_disk(struct xfs_icdinode *,
+ #define libxfs_idata_realloc		xfs_idata_realloc
+ #define libxfs_idestroy_fork		xfs_idestroy_fork
+ 
+-/* xfs_mount.h */
++/* xfs_sb.h */
+ #define libxfs_mod_sb			xfs_mod_sb
+ #define libxfs_sb_from_disk		xfs_sb_from_disk
+ #define libxfs_sb_to_disk		xfs_sb_to_disk
+@@ -729,4 +732,9 @@ extern uint32_t crc32c_le(uint32_t crc, unsigned char const *p, size_t len);
+ 
+ #include <xfs/xfs_cksum.h>
+ 
++#define xfs_notice(mp,fmt,args...)		cmn_err(CE_NOTE,fmt, ## args)
++#define xfs_warn(mp,fmt,args...)		cmn_err(CE_WARN,fmt, ## args)
++#define xfs_alert(mp,fmt,args...)		cmn_err(CE_ALERT,fmt, ## args)
++#define xfs_hex_dump(d,n)		((void) 0)
++
+ #endif	/* __LIBXFS_H__ */
 diff --git a/include/libxlog.h b/include/libxlog.h
-index ff711e9..961c4b5 100644
+index e65b607..a61e437 100644
 --- a/include/libxlog.h
 +++ b/include/libxlog.h
-@@ -53,12 +53,6 @@ struct xlog {
- #include <xfs/xfs_extfree_item.h>
- #include <xfs/xfs_icreate_item.h>
+@@ -66,10 +66,6 @@ struct xlog {
+ #define XFS_MOUNT_WAS_CLEAN		0x1
+ #define unlikely(x)			(x)
  
--typedef union {
--	xlog_rec_header_t       hic_header;
--	xlog_rec_ext_header_t   hic_xheader;
--	char                    hic_sector[XLOG_HEADER_SIZE];
--} xlog_in_core_2_t;
+-#define xfs_warn(mp,fmt,args...)		cmn_err(CE_WARN,fmt, ## args)
+-#define xfs_alert(mp,fmt,args...)		cmn_err(CE_ALERT,fmt, ## args)
+-#define xfs_hex_dump(d,n)		((void) 0)
 -
- /*
-  * macros mapping kernel code to user code
-  */
-diff --git a/include/xfs_log.h b/include/xfs_log.h
+ extern void xlog_warn(char *fmt,...);
+ extern void xlog_exit(char *fmt,...);
+ extern void xlog_panic(char *fmt,...);
+diff --git a/include/xfs_mount.h b/include/xfs_mount.h
 deleted file mode 100644
-index 70cc014..0000000
---- a/include/xfs_log.h
+index 5410e9f..0000000
+--- a/include/xfs_mount.h
 +++ /dev/null
-@@ -1,190 +0,0 @@
+@@ -1,372 +0,0 @@
 -/*
-- * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
+- * Copyright (c) 2000-2005 Silicon Graphics, Inc.
 - * All Rights Reserved.
 - *
 - * This program is free software; you can redistribute it and/or
@@ -137,187 +162,1118 @@ index 70cc014..0000000
 - * along with this program; if not, write the Free Software Foundation,
 - * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 - */
--#ifndef	__XFS_LOG_H__
--#define __XFS_LOG_H__
+-#ifndef __XFS_MOUNT_H__
+-#define	__XFS_MOUNT_H__
 -
--/* get lsn fields */
--#define CYCLE_LSN(lsn) ((uint)((lsn)>>32))
--#define BLOCK_LSN(lsn) ((uint)(lsn))
+-#ifndef __KERNEL__
 -
--/* this is used in a spot where we might otherwise double-endian-flip */
--#define CYCLE_LSN_DISK(lsn) (((__be32 *)&(lsn))[0])
+-#define xfs_daddr_to_agno(mp,d) \
+-	((xfs_agnumber_t)(XFS_BB_TO_FSBT(mp, d) / (mp)->m_sb.sb_agblocks))
+-#define xfs_daddr_to_agbno(mp,d) \
+-	((xfs_agblock_t)(XFS_BB_TO_FSBT(mp, d) % (mp)->m_sb.sb_agblocks))
 -
--#ifdef __KERNEL__
+-#else /* __KERNEL__ */
+-
+-struct xlog;
+-struct xfs_inode;
+-struct xfs_mru_cache;
+-struct xfs_nameops;
+-struct xfs_ail;
+-struct xfs_quotainfo;
+-
+-#ifdef HAVE_PERCPU_SB
+-
 -/*
-- * By comparing each component, we don't have to worry about extra
-- * endian issues in treating two 32 bit numbers as one 64 bit number
+- * Valid per-cpu incore superblock counters. Note that if you add new counters,
+- * you may need to define new counter disabled bit field descriptors as there
+- * are more possible fields in the superblock that can fit in a bitfield on a
+- * 32 bit platform. The XFS_SBS_* values for the current current counters just
+- * fit.
 - */
--static inline xfs_lsn_t	_lsn_cmp(xfs_lsn_t lsn1, xfs_lsn_t lsn2)
--{
--	if (CYCLE_LSN(lsn1) != CYCLE_LSN(lsn2))
--		return (CYCLE_LSN(lsn1)<CYCLE_LSN(lsn2))? -999 : 999;
+-typedef struct xfs_icsb_cnts {
+-	uint64_t	icsb_fdblocks;
+-	uint64_t	icsb_ifree;
+-	uint64_t	icsb_icount;
+-	unsigned long	icsb_flags;
+-} xfs_icsb_cnts_t;
 -
--	if (BLOCK_LSN(lsn1) != BLOCK_LSN(lsn2))
--		return (BLOCK_LSN(lsn1)<BLOCK_LSN(lsn2))? -999 : 999;
+-#define XFS_ICSB_FLAG_LOCK	(1 << 0)	/* counter lock bit */
+-
+-#define XFS_ICSB_LAZY_COUNT	(1 << 1)	/* accuracy not needed */
+-
+-extern int	xfs_icsb_init_counters(struct xfs_mount *);
+-extern void	xfs_icsb_reinit_counters(struct xfs_mount *);
+-extern void	xfs_icsb_destroy_counters(struct xfs_mount *);
+-extern void	xfs_icsb_sync_counters(struct xfs_mount *, int);
+-extern void	xfs_icsb_sync_counters_locked(struct xfs_mount *, int);
+-extern int	xfs_icsb_modify_counters(struct xfs_mount *, xfs_sb_field_t,
+-						int64_t, int);
+-
+-#else
+-#define xfs_icsb_init_counters(mp)		(0)
+-#define xfs_icsb_destroy_counters(mp)		do { } while (0)
+-#define xfs_icsb_reinit_counters(mp)		do { } while (0)
+-#define xfs_icsb_sync_counters(mp, flags)	do { } while (0)
+-#define xfs_icsb_sync_counters_locked(mp, flags) do { } while (0)
+-#define xfs_icsb_modify_counters(mp, field, delta, rsvd) \
+-	xfs_mod_incore_sb(mp, field, delta, rsvd)
+-#endif
+-
+-/* dynamic preallocation free space thresholds, 5% down to 1% */
+-enum {
+-	XFS_LOWSP_1_PCNT = 0,
+-	XFS_LOWSP_2_PCNT,
+-	XFS_LOWSP_3_PCNT,
+-	XFS_LOWSP_4_PCNT,
+-	XFS_LOWSP_5_PCNT,
+-	XFS_LOWSP_MAX,
+-};
+-
+-typedef struct xfs_mount {
+-	struct super_block	*m_super;
+-	xfs_tid_t		m_tid;		/* next unused tid for fs */
+-	struct xfs_ail		*m_ail;		/* fs active log item list */
+-	xfs_sb_t		m_sb;		/* copy of fs superblock */
+-	spinlock_t		m_sb_lock;	/* sb counter lock */
+-	struct xfs_buf		*m_sb_bp;	/* buffer for superblock */
+-	char			*m_fsname;	/* filesystem name */
+-	int			m_fsname_len;	/* strlen of fs name */
+-	char			*m_rtname;	/* realtime device name */
+-	char			*m_logname;	/* external log device name */
+-	int			m_bsize;	/* fs logical block size */
+-	xfs_agnumber_t		m_agfrotor;	/* last ag where space found */
+-	xfs_agnumber_t		m_agirotor;	/* last ag dir inode alloced */
+-	spinlock_t		m_agirotor_lock;/* .. and lock protecting it */
+-	xfs_agnumber_t		m_maxagi;	/* highest inode alloc group */
+-	uint			m_readio_log;	/* min read size log bytes */
+-	uint			m_readio_blocks; /* min read size blocks */
+-	uint			m_writeio_log;	/* min write size log bytes */
+-	uint			m_writeio_blocks; /* min write size blocks */
+-	struct xlog		*m_log;		/* log specific stuff */
+-	int			m_logbufs;	/* number of log buffers */
+-	int			m_logbsize;	/* size of each log buffer */
+-	uint			m_rsumlevels;	/* rt summary levels */
+-	uint			m_rsumsize;	/* size of rt summary, bytes */
+-	struct xfs_inode	*m_rbmip;	/* pointer to bitmap inode */
+-	struct xfs_inode	*m_rsumip;	/* pointer to summary inode */
+-	struct xfs_inode	*m_rootip;	/* pointer to root directory */
+-	struct xfs_quotainfo	*m_quotainfo;	/* disk quota information */
+-	xfs_buftarg_t		*m_ddev_targp;	/* saves taking the address */
+-	xfs_buftarg_t		*m_logdev_targp;/* ptr to log device */
+-	xfs_buftarg_t		*m_rtdev_targp;	/* ptr to rt device */
+-	__uint8_t		m_blkbit_log;	/* blocklog + NBBY */
+-	__uint8_t		m_blkbb_log;	/* blocklog - BBSHIFT */
+-	__uint8_t		m_agno_log;	/* log #ag's */
+-	__uint8_t		m_agino_log;	/* #bits for agino in inum */
+-	__uint16_t		m_inode_cluster_size;/* min inode buf size */
+-	uint			m_blockmask;	/* sb_blocksize-1 */
+-	uint			m_blockwsize;	/* sb_blocksize in words */
+-	uint			m_blockwmask;	/* blockwsize-1 */
+-	uint			m_alloc_mxr[2];	/* max alloc btree records */
+-	uint			m_alloc_mnr[2];	/* min alloc btree records */
+-	uint			m_bmap_dmxr[2];	/* max bmap btree records */
+-	uint			m_bmap_dmnr[2];	/* min bmap btree records */
+-	uint			m_inobt_mxr[2];	/* max inobt btree records */
+-	uint			m_inobt_mnr[2];	/* min inobt btree records */
+-	uint			m_ag_maxlevels;	/* XFS_AG_MAXLEVELS */
+-	uint			m_bm_maxlevels[2]; /* XFS_BM_MAXLEVELS */
+-	uint			m_in_maxlevels;	/* max inobt btree levels. */
+-	struct radix_tree_root	m_perag_tree;	/* per-ag accounting info */
+-	spinlock_t		m_perag_lock;	/* lock for m_perag_tree */
+-	struct mutex		m_growlock;	/* growfs mutex */
+-	int			m_fixedfsid[2];	/* unchanged for life of FS */
+-	uint			m_dmevmask;	/* DMI events for this FS */
+-	__uint64_t		m_flags;	/* global mount flags */
+-	uint			m_dir_node_ents; /* #entries in a dir danode */
+-	uint			m_attr_node_ents; /* #entries in attr danode */
+-	int			m_ialloc_inos;	/* inodes in inode allocation */
+-	int			m_ialloc_blks;	/* blocks in inode allocation */
+-	int			m_inoalign_mask;/* mask sb_inoalignmt if used */
+-	uint			m_qflags;	/* quota status flags */
+-	struct xfs_trans_resv	m_reservations;	/* precomputed res values */
+-	__uint64_t		m_maxicount;	/* maximum inode count */
+-	__uint64_t		m_resblks;	/* total reserved blocks */
+-	__uint64_t		m_resblks_avail;/* available reserved blocks */
+-	__uint64_t		m_resblks_save;	/* reserved blks @ remount,ro */
+-	int			m_dalign;	/* stripe unit */
+-	int			m_swidth;	/* stripe width */
+-	int			m_sinoalign;	/* stripe unit inode alignment */
+-	int			m_attr_magicpct;/* 37% of the blocksize */
+-	int			m_dir_magicpct;	/* 37% of the dir blocksize */
+-	__uint8_t		m_sectbb_log;	/* sectlog - BBSHIFT */
+-	const struct xfs_nameops *m_dirnameops;	/* vector of dir name ops */
+-	int			m_dirblksize;	/* directory block sz--bytes */
+-	int			m_dirblkfsbs;	/* directory block sz--fsbs */
+-	xfs_dablk_t		m_dirdatablk;	/* blockno of dir data v2 */
+-	xfs_dablk_t		m_dirleafblk;	/* blockno of dir non-data v2 */
+-	xfs_dablk_t		m_dirfreeblk;	/* blockno of dirfreeindex v2 */
+-	uint			m_chsize;	/* size of next field */
+-	struct xfs_chash	*m_chash;	/* fs private inode per-cluster
+-						 * hash table */
+-	atomic_t		m_active_trans;	/* number trans frozen */
+-#ifdef HAVE_PERCPU_SB
+-	xfs_icsb_cnts_t __percpu *m_sb_cnts;	/* per-cpu superblock counters */
+-	unsigned long		m_icsb_counters; /* disabled per-cpu counters */
+-	struct notifier_block	m_icsb_notifier; /* hotplug cpu notifier */
+-	struct mutex		m_icsb_mutex;	/* balancer sync lock */
+-#endif
+-	struct xfs_mru_cache	*m_filestream;  /* per-mount filestream data */
+-	struct delayed_work	m_reclaim_work;	/* background inode reclaim */
+-	struct delayed_work	m_eofblocks_work; /* background eof blocks
+-						     trimming */
+-	__int64_t		m_update_flags;	/* sb flags we need to update
+-						   on the next remount,rw */
+-	int64_t			m_low_space[XFS_LOWSP_MAX];
+-						/* low free space thresholds */
+-
+-	struct workqueue_struct	*m_data_workqueue;
+-	struct workqueue_struct	*m_unwritten_workqueue;
+-	struct workqueue_struct	*m_cil_workqueue;
+-	struct workqueue_struct	*m_reclaim_workqueue;
+-	struct workqueue_struct	*m_log_workqueue;
+-	struct workqueue_struct *m_eofblocks_workqueue;
+-} xfs_mount_t;
+-
+-/*
+- * Flags for m_flags.
+- */
+-#define XFS_MOUNT_WSYNC		(1ULL << 0)	/* for nfs - all metadata ops
+-						   must be synchronous except
+-						   for space allocations */
+-#define XFS_MOUNT_WAS_CLEAN	(1ULL << 3)
+-#define XFS_MOUNT_FS_SHUTDOWN	(1ULL << 4)	/* atomic stop of all filesystem
+-						   operations, typically for
+-						   disk errors in metadata */
+-#define XFS_MOUNT_DISCARD	(1ULL << 5)	/* discard unused blocks */
+-#define XFS_MOUNT_RETERR	(1ULL << 6)     /* return alignment errors to
+-						   user */
+-#define XFS_MOUNT_NOALIGN	(1ULL << 7)	/* turn off stripe alignment
+-						   allocations */
+-#define XFS_MOUNT_ATTR2		(1ULL << 8)	/* allow use of attr2 format */
+-#define XFS_MOUNT_GRPID		(1ULL << 9)	/* group-ID assigned from directory */
+-#define XFS_MOUNT_NORECOVERY	(1ULL << 10)	/* no recovery - dirty fs */
+-#define XFS_MOUNT_DFLT_IOSIZE	(1ULL << 12)	/* set default i/o size */
+-#define XFS_MOUNT_32BITINODES	(1ULL << 14)	/* do not create inodes above
+-						 * 32 bits in size */
+-#define XFS_MOUNT_SMALL_INUMS	(1ULL << 15)	/* users wants 32bit inodes */
+-#define XFS_MOUNT_NOUUID	(1ULL << 16)	/* ignore uuid during mount */
+-#define XFS_MOUNT_BARRIER	(1ULL << 17)
+-#define XFS_MOUNT_IKEEP		(1ULL << 18)	/* keep empty inode clusters*/
+-#define XFS_MOUNT_SWALLOC	(1ULL << 19)	/* turn on stripe width
+-						 * allocation */
+-#define XFS_MOUNT_RDONLY	(1ULL << 20)	/* read-only fs */
+-#define XFS_MOUNT_DIRSYNC	(1ULL << 21)	/* synchronous directory ops */
+-#define XFS_MOUNT_COMPAT_IOSIZE	(1ULL << 22)	/* don't report large preferred
+-						 * I/O size in stat() */
+-#define XFS_MOUNT_FILESTREAMS	(1ULL << 24)	/* enable the filestreams
+-						   allocator */
+-#define XFS_MOUNT_NOATTR2	(1ULL << 25)	/* disable use of attr2 format */
+-
+-
+-/*
+- * Default minimum read and write sizes.
+- */
+-#define XFS_READIO_LOG_LARGE	16
+-#define XFS_WRITEIO_LOG_LARGE	16
+-
+-/*
+- * Max and min values for mount-option defined I/O
+- * preallocation sizes.
+- */
+-#define XFS_MAX_IO_LOG		30	/* 1G */
+-#define XFS_MIN_IO_LOG		PAGE_SHIFT
+-
+-/*
+- * Synchronous read and write sizes.  This should be
+- * better for NFSv2 wsync filesystems.
+- */
+-#define	XFS_WSYNC_READIO_LOG	15	/* 32k */
+-#define	XFS_WSYNC_WRITEIO_LOG	14	/* 16k */
+-
+-/*
+- * Allow large block sizes to be reported to userspace programs if the
+- * "largeio" mount option is used.
+- *
+- * If compatibility mode is specified, simply return the basic unit of caching
+- * so that we don't get inefficient read/modify/write I/O from user apps.
+- * Otherwise....
+- *
+- * If the underlying volume is a stripe, then return the stripe width in bytes
+- * as the recommended I/O size. It is not a stripe and we've set a default
+- * buffered I/O size, return that, otherwise return the compat default.
+- */
+-static inline unsigned long
+-xfs_preferred_iosize(xfs_mount_t *mp)
+-{
+-	if (mp->m_flags & XFS_MOUNT_COMPAT_IOSIZE)
+-		return PAGE_CACHE_SIZE;
+-	return (mp->m_swidth ?
+-		(mp->m_swidth << mp->m_sb.sb_blocklog) :
+-		((mp->m_flags & XFS_MOUNT_DFLT_IOSIZE) ?
+-			(1 << (int)MAX(mp->m_readio_log, mp->m_writeio_log)) :
+-			PAGE_CACHE_SIZE));
+-}
+-
+-#define XFS_LAST_UNMOUNT_WAS_CLEAN(mp)	\
+-				((mp)->m_flags & XFS_MOUNT_WAS_CLEAN)
+-#define XFS_FORCED_SHUTDOWN(mp)	((mp)->m_flags & XFS_MOUNT_FS_SHUTDOWN)
+-void xfs_do_force_shutdown(struct xfs_mount *mp, int flags, char *fname,
+-		int lnnum);
+-#define xfs_force_shutdown(m,f)	\
+-	xfs_do_force_shutdown(m, f, __FILE__, __LINE__)
+-
+-#define SHUTDOWN_META_IO_ERROR	0x0001	/* write attempt to metadata failed */
+-#define SHUTDOWN_LOG_IO_ERROR	0x0002	/* write attempt to the log failed */
+-#define SHUTDOWN_FORCE_UMOUNT	0x0004	/* shutdown from a forced unmount */
+-#define SHUTDOWN_CORRUPT_INCORE	0x0008	/* corrupt in-memory data structures */
+-#define SHUTDOWN_REMOTE_REQ	0x0010	/* shutdown came from remote cell */
+-#define SHUTDOWN_DEVICE_REQ	0x0020	/* failed all paths to the device */
+-
+-/*
+- * Flags for xfs_mountfs
+- */
+-#define XFS_MFSI_QUIET		0x40	/* Be silent if mount errors found */
+-
+-static inline xfs_agnumber_t
+-xfs_daddr_to_agno(struct xfs_mount *mp, xfs_daddr_t d)
+-{
+-	xfs_daddr_t ld = XFS_BB_TO_FSBT(mp, d);
+-	do_div(ld, mp->m_sb.sb_agblocks);
+-	return (xfs_agnumber_t) ld;
+-}
+-
+-static inline xfs_agblock_t
+-xfs_daddr_to_agbno(struct xfs_mount *mp, xfs_daddr_t d)
+-{
+-	xfs_daddr_t ld = XFS_BB_TO_FSBT(mp, d);
+-	return (xfs_agblock_t) do_div(ld, mp->m_sb.sb_agblocks);
+-}
+-
+-/*
+- * Per-cpu superblock locking functions
+- */
+-#ifdef HAVE_PERCPU_SB
+-static inline void
+-xfs_icsb_lock(xfs_mount_t *mp)
+-{
+-	mutex_lock(&mp->m_icsb_mutex);
+-}
+-
+-static inline void
+-xfs_icsb_unlock(xfs_mount_t *mp)
+-{
+-	mutex_unlock(&mp->m_icsb_mutex);
+-}
+-#else
+-#define xfs_icsb_lock(mp)
+-#define xfs_icsb_unlock(mp)
+-#endif
+-
+-/*
+- * This structure is for use by the xfs_mod_incore_sb_batch() routine.
+- * xfs_growfs can specify a few fields which are more than int limit
+- */
+-typedef struct xfs_mod_sb {
+-	xfs_sb_field_t	msb_field;	/* Field to modify, see below */
+-	int64_t		msb_delta;	/* Change to make to specified field */
+-} xfs_mod_sb_t;
+-
+-extern int	xfs_log_sbcount(xfs_mount_t *);
+-extern __uint64_t xfs_default_resblks(xfs_mount_t *mp);
+-extern int	xfs_mountfs(xfs_mount_t *mp);
+-
+-extern void	xfs_unmountfs(xfs_mount_t *);
+-extern int	xfs_mod_incore_sb(xfs_mount_t *, xfs_sb_field_t, int64_t, int);
+-extern int	xfs_mod_incore_sb_batch(xfs_mount_t *, xfs_mod_sb_t *,
+-			uint, int);
+-extern int	xfs_mount_log_sb(xfs_mount_t *, __int64_t);
+-extern struct xfs_buf *xfs_getsb(xfs_mount_t *, int);
+-extern int	xfs_readsb(xfs_mount_t *, int);
+-extern void	xfs_freesb(xfs_mount_t *);
+-extern int	xfs_fs_writable(xfs_mount_t *);
+-extern int	xfs_sb_validate_fsb_count(struct xfs_sb *, __uint64_t);
+-
+-extern int	xfs_dev_is_read_only(struct xfs_mount *, char *);
+-
+-extern void	xfs_set_low_space_thresholds(struct xfs_mount *);
+-
+-#endif	/* __KERNEL__ */
+-
+-/*
+- * perag get/put wrappers for ref counting
+- */
+-struct xfs_perag *xfs_perag_get(struct xfs_mount *mp, xfs_agnumber_t agno);
+-struct xfs_perag *xfs_perag_get_tag(struct xfs_mount *mp, xfs_agnumber_t agno,
+-					int tag);
+-void	xfs_perag_put(struct xfs_perag *pag);
+-
+-extern void	xfs_sb_calc_crc(struct xfs_buf	*);
+-extern void	xfs_mod_sb(struct xfs_trans *, __int64_t);
+-extern int	xfs_initialize_perag(struct xfs_mount *, xfs_agnumber_t,
+-					xfs_agnumber_t *);
+-extern void	xfs_sb_from_disk(struct xfs_sb *, struct xfs_dsb *);
+-extern void	xfs_sb_to_disk(struct xfs_dsb *, struct xfs_sb *, __int64_t);
+-
+-extern const struct xfs_buf_ops xfs_sb_buf_ops;
+-
+-#endif	/* __XFS_MOUNT_H__ */
+diff --git a/include/xfs_sb.h b/include/xfs_sb.h
+index 51db6f2..dea0373 100644
+--- a/include/xfs_sb.h
++++ b/include/xfs_sb.h
+@@ -26,6 +26,7 @@
+ 
+ struct xfs_buf;
+ struct xfs_mount;
++struct xfs_trans;
+ 
+ #define	XFS_SB_MAGIC		0x58465342	/* 'XFSB' */
+ #define	XFS_SB_VERSION_1	1		/* 5.3, 6.0.1, 6.1 */
+@@ -625,6 +626,12 @@ xfs_sb_has_incompat_log_feature(
+ 	return (sbp->sb_features_log_incompat & feature) != 0;
+ }
+ 
++static inline bool
++xfs_is_quota_inode(struct xfs_sb *sbp, xfs_ino_t ino)
++{
++	return (ino == sbp->sb_uquotino || ino == sbp->sb_gquotino);
++}
++
+ /*
+  * end of superblock version macros
+  */
+@@ -661,4 +668,23 @@ xfs_sb_has_incompat_log_feature(
+ #define XFS_B_TO_FSBT(mp,b)	(((__uint64_t)(b)) >> (mp)->m_sb.sb_blocklog)
+ #define XFS_B_FSB_OFFSET(mp,b)	((b) & (mp)->m_blockmask)
+ 
++/*
++ * perag get/put wrappers for ref counting
++ */
++extern struct xfs_perag *xfs_perag_get(struct xfs_mount *, xfs_agnumber_t);
++extern struct xfs_perag *xfs_perag_get_tag(struct xfs_mount *, xfs_agnumber_t,
++					   int tag);
++extern void	xfs_perag_put(struct xfs_perag *pag);
++extern int	xfs_initialize_perag_data(struct xfs_mount *, xfs_agnumber_t);
++
++extern void	xfs_sb_calc_crc(struct xfs_buf	*);
++extern void	xfs_mod_sb(struct xfs_trans *, __int64_t);
++extern void	xfs_sb_mount_common(struct xfs_mount *, struct xfs_sb *);
++extern void	xfs_sb_from_disk(struct xfs_sb *, struct xfs_dsb *);
++extern void	xfs_sb_to_disk(struct xfs_dsb *, struct xfs_sb *, __int64_t);
++extern void	xfs_sb_quota_from_disk(struct xfs_sb *sbp);
++
++extern const struct xfs_buf_ops xfs_sb_buf_ops;
++extern const struct xfs_buf_ops xfs_sb_quiet_buf_ops;
++
+ #endif	/* __XFS_SB_H__ */
+diff --git a/include/xfs_trace.h b/include/xfs_trace.h
+index 5f32097..1d2728e 100644
+--- a/include/xfs_trace.h
++++ b/include/xfs_trace.h
+@@ -162,6 +162,7 @@
+ 
+ /* set c = c to avoid unused var warnings */
+ #define trace_xfs_perag_get(a,b,c,d)	((c) = (c))
++#define trace_xfs_perag_get_tag(a,b,c,d) ((c) = (c))
+ #define trace_xfs_perag_put(a,b,c,d)	((c) = (c))
+ 
+ #endif /* __TRACE_H__ */
+diff --git a/libxfs/Makefile b/libxfs/Makefile
+index 6ba38f9..5608020 100644
+--- a/libxfs/Makefile
++++ b/libxfs/Makefile
+@@ -11,9 +11,13 @@ LT_REVISION = 0
+ LT_AGE = 0
+ 
+ HFILES = xfs.h init.h xfs_dir2_priv.h crc32defs.h crc32table.h
+-CFILES = cache.c init.c kmem.c logitem.c radix-tree.c rdwr.c trans.c util.c \
++CFILES = cache.c \
++	crc32.c \
++	init.c kmem.c logitem.c radix-tree.c rdwr.c trans.c util.c \
+ 	xfs_alloc.c \
+ 	xfs_alloc_btree.c \
++	xfs_attr.c \
++	xfs_attr_remote.c \
+ 	xfs_btree.c \
+ 	xfs_ialloc.c \
+ 	xfs_inode_buf.c \
+@@ -21,8 +25,8 @@ CFILES = cache.c init.c kmem.c logitem.c radix-tree.c rdwr.c trans.c util.c \
+ 	xfs_ialloc_btree.c xfs_bmap_btree.c xfs_da_btree.c \
+ 	xfs_dir2.c xfs_dir2_leaf.c xfs_attr_leaf.c xfs_dir2_block.c \
+ 	xfs_dir2_node.c xfs_dir2_data.c xfs_dir2_sf.c xfs_bmap.c \
+-	xfs_mount.c xfs_rtalloc.c xfs_attr.c xfs_attr_remote.c \
+-	crc32.c \
++	xfs_rtalloc.c \
++	xfs_sb.c \
+ 	xfs_symlink_remote.c \
+ 	xfs_trans_resv.c
+ 
+diff --git a/libxfs/init.c b/libxfs/init.c
+index 5c418bc..db7eeea 100644
+--- a/libxfs/init.c
++++ b/libxfs/init.c
+@@ -692,7 +692,7 @@ libxfs_mount(
+ 	INIT_RADIX_TREE(&mp->m_perag_tree, GFP_KERNEL);
+ 	sbp = &(mp->m_sb);
+ 
+-	xfs_mount_common(mp, sb);
++	xfs_sb_mount_common(mp, sb);
+ 
+ 	xfs_alloc_compute_maxlevels(mp);
+ 	xfs_bmap_compute_maxlevels(mp, XFS_DATA_FORK);
+diff --git a/libxfs/xfs.h b/libxfs/xfs.h
+index 1a01c61..0113b50 100644
+--- a/libxfs/xfs.h
++++ b/libxfs/xfs.h
+@@ -345,6 +345,7 @@ do { \
+ #define uuid_equal(s,d)		(platform_uuid_compare((s),(d)) == 0)
+ 
+ #define xfs_icreate_log(tp, agno, agbno, cnt, isize, len, gen) ((void) 0)
++#define xfs_sb_validate_fsb_count(sbp, nblks)		(0)
+ 
+ /*
+  * Prototypes for kernel static functions that are aren't in their
+diff --git a/libxfs/xfs_mount.c b/libxfs/xfs_mount.c
+deleted file mode 100644
+index db3785d..0000000
+--- a/libxfs/xfs_mount.c
++++ /dev/null
+@@ -1,627 +0,0 @@
+-/*
+- * Copyright (c) 2000-2005 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it would be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write the Free Software Foundation,
+- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- */
+-
+-#include <xfs.h>
+-
+-static const struct {
+-	short offset;
+-	short type;	/* 0 = integer
+-			 * 1 = binary / string (no translation)
+-			 */
+-} xfs_sb_info[] = {
+-    { offsetof(xfs_sb_t, sb_magicnum),   0 },
+-    { offsetof(xfs_sb_t, sb_blocksize),  0 },
+-    { offsetof(xfs_sb_t, sb_dblocks),    0 },
+-    { offsetof(xfs_sb_t, sb_rblocks),    0 },
+-    { offsetof(xfs_sb_t, sb_rextents),   0 },
+-    { offsetof(xfs_sb_t, sb_uuid),       1 },
+-    { offsetof(xfs_sb_t, sb_logstart),   0 },
+-    { offsetof(xfs_sb_t, sb_rootino),    0 },
+-    { offsetof(xfs_sb_t, sb_rbmino),     0 },
+-    { offsetof(xfs_sb_t, sb_rsumino),    0 },
+-    { offsetof(xfs_sb_t, sb_rextsize),   0 },
+-    { offsetof(xfs_sb_t, sb_agblocks),   0 },
+-    { offsetof(xfs_sb_t, sb_agcount),    0 },
+-    { offsetof(xfs_sb_t, sb_rbmblocks),  0 },
+-    { offsetof(xfs_sb_t, sb_logblocks),  0 },
+-    { offsetof(xfs_sb_t, sb_versionnum), 0 },
+-    { offsetof(xfs_sb_t, sb_sectsize),   0 },
+-    { offsetof(xfs_sb_t, sb_inodesize),  0 },
+-    { offsetof(xfs_sb_t, sb_inopblock),  0 },
+-    { offsetof(xfs_sb_t, sb_fname[0]),   1 },
+-    { offsetof(xfs_sb_t, sb_blocklog),   0 },
+-    { offsetof(xfs_sb_t, sb_sectlog),    0 },
+-    { offsetof(xfs_sb_t, sb_inodelog),   0 },
+-    { offsetof(xfs_sb_t, sb_inopblog),   0 },
+-    { offsetof(xfs_sb_t, sb_agblklog),   0 },
+-    { offsetof(xfs_sb_t, sb_rextslog),   0 },
+-    { offsetof(xfs_sb_t, sb_inprogress), 0 },
+-    { offsetof(xfs_sb_t, sb_imax_pct),   0 },
+-    { offsetof(xfs_sb_t, sb_icount),     0 },
+-    { offsetof(xfs_sb_t, sb_ifree),      0 },
+-    { offsetof(xfs_sb_t, sb_fdblocks),   0 },
+-    { offsetof(xfs_sb_t, sb_frextents),  0 },
+-    { offsetof(xfs_sb_t, sb_uquotino),   0 },
+-    { offsetof(xfs_sb_t, sb_gquotino),   0 },
+-    { offsetof(xfs_sb_t, sb_qflags),     0 },
+-    { offsetof(xfs_sb_t, sb_flags),      0 },
+-    { offsetof(xfs_sb_t, sb_shared_vn),  0 },
+-    { offsetof(xfs_sb_t, sb_inoalignmt), 0 },
+-    { offsetof(xfs_sb_t, sb_unit),	 0 },
+-    { offsetof(xfs_sb_t, sb_width),	 0 },
+-    { offsetof(xfs_sb_t, sb_dirblklog),	 0 },
+-    { offsetof(xfs_sb_t, sb_logsectlog), 0 },
+-    { offsetof(xfs_sb_t, sb_logsectsize),0 },
+-    { offsetof(xfs_sb_t, sb_logsunit),	 0 },
+-    { offsetof(xfs_sb_t, sb_features2),	 0 },
+-    { offsetof(xfs_sb_t, sb_bad_features2), 0 },
+-    { offsetof(xfs_sb_t, sb_features_compat), 0 },
+-    { offsetof(xfs_sb_t, sb_features_ro_compat), 0 },
+-    { offsetof(xfs_sb_t, sb_features_incompat), 0 },
+-    { offsetof(xfs_sb_t, sb_features_log_incompat), 0 },
+-    { offsetof(xfs_sb_t, sb_crc),	 0 },
+-    { offsetof(xfs_sb_t, sb_pad),	 0 },
+-    { offsetof(xfs_sb_t, sb_pquotino),	 0 },
+-    { offsetof(xfs_sb_t, sb_lsn),	 0 },
+-    { sizeof(xfs_sb_t),			 0 }
+-};
+-
+-/*
+- * Reference counting access wrappers to the perag structures.
+- * Because we never free per-ag structures, the only thing we
+- * have to protect against changes is the tree structure itself.
+- */
+-struct xfs_perag *
+-xfs_perag_get(struct xfs_mount *mp, xfs_agnumber_t agno)
+-{
+-	struct xfs_perag	*pag;
+-	int			ref = 0;
+-
+-	rcu_read_lock();
+-	pag = radix_tree_lookup(&mp->m_perag_tree, agno);
+-	if (pag) {
+-		ASSERT(atomic_read(&pag->pag_ref) >= 0);
+-		ref = atomic_inc_return(&pag->pag_ref);
+-	}
+-	rcu_read_unlock();
+-	trace_xfs_perag_get(mp, agno, ref, _RET_IP_);
+-	return pag;
+-}
+-
+-void
+-xfs_perag_put(struct xfs_perag *pag)
+-{
+-	int	ref;
+-
+-	ASSERT(atomic_read(&pag->pag_ref) > 0);
+-	ref = atomic_dec_return(&pag->pag_ref);
+-	trace_xfs_perag_put(pag->pag_mount, pag->pag_agno, ref, _RET_IP_);
+-}
+-
+-/*
+- * Check the validity of the SB found.
+- */
+-STATIC int
+-xfs_mount_validate_sb(
+-	xfs_mount_t	*mp,
+-	xfs_sb_t	*sbp,
+-	bool		check_inprogress,
+-	bool		check_version)
+-{
+-
+-	/*
+-	 * If the log device and data device have the
+-	 * same device number, the log is internal.
+-	 * Consequently, the sb_logstart should be non-zero.  If
+-	 * we have a zero sb_logstart in this case, we may be trying to mount
+-	 * a volume filesystem in a non-volume manner.
+-	 */
+-	if (sbp->sb_magicnum != XFS_SB_MAGIC) {
+-		xfs_warn(mp, "bad magic number");
+-		return XFS_ERROR(EWRONGFS);
+-	}
+-
+-
+-	if (!xfs_sb_good_version(sbp)) {
+-		xfs_warn(mp, "bad version");
+-		return XFS_ERROR(EWRONGFS);
+-	}
+-
+-	/*
+-	 * Version 5 superblock feature mask validation. Reject combinations the
+-	 * kernel cannot support up front before checking anything else.
+-	 */
+-	if (check_version && XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) {
+-		xfs_alert(mp,
+-"Version 5 superblock detected. xfsprogs has EXPERIMENTAL support enabled!\n"
+-"Use of these features is at your own risk!");
+-
+-		if (xfs_sb_has_compat_feature(sbp,
+-					XFS_SB_FEAT_COMPAT_UNKNOWN)) {
+-			xfs_warn(mp,
+-"Superblock has unknown compatible features (0x%x) enabled.\n"
+-"Using a more recent xfsprogs is recommended.",
+-				(sbp->sb_features_compat &
+-						XFS_SB_FEAT_COMPAT_UNKNOWN));
+-		}
+-
+-		if (xfs_sb_has_ro_compat_feature(sbp,
+-					XFS_SB_FEAT_RO_COMPAT_UNKNOWN)) {
+-			xfs_warn(mp,
+-"Superblock has unknown read-only compatible features (0x%x) enabled.\n"
+-"Using a more recent xfsprogs is recommended.",
+-				(sbp->sb_features_ro_compat &
+-						XFS_SB_FEAT_RO_COMPAT_UNKNOWN));
+-		}
+-		if (xfs_sb_has_incompat_feature(sbp,
+-					XFS_SB_FEAT_INCOMPAT_UNKNOWN)) {
+-			xfs_warn(mp,
+-"Superblock has unknown incompatible features (0x%x) enabled.\n"
+-"Filesystem can not be safely operated on by this xfsprogs installation",
+-				(sbp->sb_features_incompat &
+-						XFS_SB_FEAT_INCOMPAT_UNKNOWN));
+-			return XFS_ERROR(EINVAL);
+-		}
+-	}
+-
+-	if (unlikely(
+-	    sbp->sb_logstart == 0 && mp->m_logdev_targp == mp->m_ddev_targp)) {
+-		xfs_warn(mp,
+-		"filesystem is marked as having an external log; "
+-		"specify logdev on the mount command line.");
+-		return XFS_ERROR(EINVAL);
+-	}
+-
+-	if (unlikely(
+-	    sbp->sb_logstart != 0 && mp->m_logdev_targp != mp->m_ddev_targp)) {
+-		xfs_warn(mp,
+-		"filesystem is marked as having an internal log; "
+-		"do not specify logdev on the mount command line.");
+-		return XFS_ERROR(EINVAL);
+-	}
+-
+-	/*
+-	 * More sanity checking.  Most of these were stolen directly from
+-	 * xfs_repair.
+-	 */
+-	if (unlikely(
+-	    sbp->sb_agcount <= 0					||
+-	    sbp->sb_sectsize < XFS_MIN_SECTORSIZE			||
+-	    sbp->sb_sectsize > XFS_MAX_SECTORSIZE			||
+-	    sbp->sb_sectlog < XFS_MIN_SECTORSIZE_LOG			||
+-	    sbp->sb_sectlog > XFS_MAX_SECTORSIZE_LOG			||
+-	    sbp->sb_sectsize != (1 << sbp->sb_sectlog)			||
+-	    sbp->sb_blocksize < XFS_MIN_BLOCKSIZE			||
+-	    sbp->sb_blocksize > XFS_MAX_BLOCKSIZE			||
+-	    sbp->sb_blocklog < XFS_MIN_BLOCKSIZE_LOG			||
+-	    sbp->sb_blocklog > XFS_MAX_BLOCKSIZE_LOG			||
+-	    sbp->sb_blocksize != (1 << sbp->sb_blocklog)		||
+-	    sbp->sb_inodesize < XFS_DINODE_MIN_SIZE			||
+-	    sbp->sb_inodesize > XFS_DINODE_MAX_SIZE			||
+-	    sbp->sb_inodelog < XFS_DINODE_MIN_LOG			||
+-	    sbp->sb_inodelog > XFS_DINODE_MAX_LOG			||
+-	    sbp->sb_inodesize != (1 << sbp->sb_inodelog)		||
+-	    (sbp->sb_blocklog - sbp->sb_inodelog != sbp->sb_inopblog)	||
+-	    (sbp->sb_rextsize * sbp->sb_blocksize > XFS_MAX_RTEXTSIZE)	||
+-	    (sbp->sb_rextsize * sbp->sb_blocksize < XFS_MIN_RTEXTSIZE)	||
+-	    (sbp->sb_imax_pct > 100 /* zero sb_imax_pct is valid */)	||
+-	    sbp->sb_dblocks == 0					||
+-	    sbp->sb_dblocks > XFS_MAX_DBLOCKS(sbp)			||
+-	    sbp->sb_dblocks < XFS_MIN_DBLOCKS(sbp))) {
+-		XFS_CORRUPTION_ERROR("SB sanity check failed",
+-				XFS_ERRLEVEL_LOW, mp, sbp);
+-		return XFS_ERROR(EFSCORRUPTED);
+-	}
+-
+-	/*
+-	 * Currently only very few inode sizes are supported.
+-	 */
+-	switch (sbp->sb_inodesize) {
+-	case 256:
+-	case 512:
+-	case 1024:
+-	case 2048:
+-		break;
+-	default:
+-		xfs_warn(mp, "inode size of %d bytes not supported",
+-				sbp->sb_inodesize);
+-		return XFS_ERROR(ENOSYS);
+-	}
+-
+-	/*
+-	 * Version 1 directory format has never worked on Linux.
+-	 */
+-	if (unlikely(!xfs_sb_version_hasdirv2(sbp))) {
+-		xfs_warn(mp, "file system using version 1 directory format");
+-		return XFS_ERROR(ENOSYS);
+-	}
 -
 -	return 0;
 -}
 -
--#define	XFS_LSN_CMP(x,y) _lsn_cmp(x,y)
+-void
+-xfs_sb_from_disk(
+-	xfs_sb_t	*to,
+-	xfs_dsb_t	*from)
+-{
+-	to->sb_magicnum = be32_to_cpu(from->sb_magicnum);
+-	to->sb_blocksize = be32_to_cpu(from->sb_blocksize);
+-	to->sb_dblocks = be64_to_cpu(from->sb_dblocks);
+-	to->sb_rblocks = be64_to_cpu(from->sb_rblocks);
+-	to->sb_rextents = be64_to_cpu(from->sb_rextents);
+-	memcpy(&to->sb_uuid, &from->sb_uuid, sizeof(to->sb_uuid));
+-	to->sb_logstart = be64_to_cpu(from->sb_logstart);
+-	to->sb_rootino = be64_to_cpu(from->sb_rootino);
+-	to->sb_rbmino = be64_to_cpu(from->sb_rbmino);
+-	to->sb_rsumino = be64_to_cpu(from->sb_rsumino);
+-	to->sb_rextsize = be32_to_cpu(from->sb_rextsize);
+-	to->sb_agblocks = be32_to_cpu(from->sb_agblocks);
+-	to->sb_agcount = be32_to_cpu(from->sb_agcount);
+-	to->sb_rbmblocks = be32_to_cpu(from->sb_rbmblocks);
+-	to->sb_logblocks = be32_to_cpu(from->sb_logblocks);
+-	to->sb_versionnum = be16_to_cpu(from->sb_versionnum);
+-	to->sb_sectsize = be16_to_cpu(from->sb_sectsize);
+-	to->sb_inodesize = be16_to_cpu(from->sb_inodesize);
+-	to->sb_inopblock = be16_to_cpu(from->sb_inopblock);
+-	memcpy(&to->sb_fname, &from->sb_fname, sizeof(to->sb_fname));
+-	to->sb_blocklog = from->sb_blocklog;
+-	to->sb_sectlog = from->sb_sectlog;
+-	to->sb_inodelog = from->sb_inodelog;
+-	to->sb_inopblog = from->sb_inopblog;
+-	to->sb_agblklog = from->sb_agblklog;
+-	to->sb_rextslog = from->sb_rextslog;
+-	to->sb_inprogress = from->sb_inprogress;
+-	to->sb_imax_pct = from->sb_imax_pct;
+-	to->sb_icount = be64_to_cpu(from->sb_icount);
+-	to->sb_ifree = be64_to_cpu(from->sb_ifree);
+-	to->sb_fdblocks = be64_to_cpu(from->sb_fdblocks);
+-	to->sb_frextents = be64_to_cpu(from->sb_frextents);
+-	to->sb_uquotino = be64_to_cpu(from->sb_uquotino);
+-	to->sb_gquotino = be64_to_cpu(from->sb_gquotino);
+-	to->sb_qflags = be16_to_cpu(from->sb_qflags);
+-	to->sb_flags = from->sb_flags;
+-	to->sb_shared_vn = from->sb_shared_vn;
+-	to->sb_inoalignmt = be32_to_cpu(from->sb_inoalignmt);
+-	to->sb_unit = be32_to_cpu(from->sb_unit);
+-	to->sb_width = be32_to_cpu(from->sb_width);
+-	to->sb_dirblklog = from->sb_dirblklog;
+-	to->sb_logsectlog = from->sb_logsectlog;
+-	to->sb_logsectsize = be16_to_cpu(from->sb_logsectsize);
+-	to->sb_logsunit = be32_to_cpu(from->sb_logsunit);
+-	to->sb_features2 = be32_to_cpu(from->sb_features2);
+-	to->sb_bad_features2 = be32_to_cpu(from->sb_bad_features2);
+-	to->sb_features_compat = be32_to_cpu(from->sb_features_compat);
+-	to->sb_features_ro_compat = be32_to_cpu(from->sb_features_ro_compat);
+-	to->sb_features_incompat = be32_to_cpu(from->sb_features_incompat);
+-	to->sb_features_log_incompat =
+-				be32_to_cpu(from->sb_features_log_incompat);
+-	to->sb_pad = 0;
+-	to->sb_pquotino = be64_to_cpu(from->sb_pquotino);
+-	to->sb_lsn = be64_to_cpu(from->sb_lsn);
+-}
 -
 -/*
-- * Macros, structures, prototypes for interface to the log manager.
-- */
--
--/*
-- * Flags to xfs_log_done()
-- */
--#define XFS_LOG_REL_PERM_RESERV	0x1
--
--/*
-- * Flags to xfs_log_force()
+- * Copy in core superblock to ondisk one.
 - *
-- *	XFS_LOG_SYNC:	Synchronous force in-core log to disk
+- * The fields argument is mask of superblock fields to copy.
 - */
--#define XFS_LOG_SYNC		0x1
+-void
+-xfs_sb_to_disk(
+-	xfs_dsb_t	*to,
+-	xfs_sb_t	*from,
+-	__int64_t	fields)
+-{
+-	xfs_caddr_t	to_ptr = (xfs_caddr_t)to;
+-	xfs_caddr_t	from_ptr = (xfs_caddr_t)from;
+-	xfs_sb_field_t	f;
+-	int		first;
+-	int		size;
 -
--#endif	/* __KERNEL__ */
+-	ASSERT(fields);
+-	if (!fields)
+-		return;
+-
+-	while (fields) {
+-		f = (xfs_sb_field_t)xfs_lowbit64((__uint64_t)fields);
+-		first = xfs_sb_info[f].offset;
+-		size = xfs_sb_info[f + 1].offset - first;
+-
+-		ASSERT(xfs_sb_info[f].type == 0 || xfs_sb_info[f].type == 1);
+-
+-		if (size == 1 || xfs_sb_info[f].type == 1) {
+-			memcpy(to_ptr + first, from_ptr + first, size);
+-		} else {
+-			switch (size) {
+-			case 2:
+-				*(__be16 *)(to_ptr + first) =
+-					cpu_to_be16(*(__u16 *)(from_ptr + first));
+-				break;
+-			case 4:
+-				*(__be32 *)(to_ptr + first) =
+-					cpu_to_be32(*(__u32 *)(from_ptr + first));
+-				break;
+-			case 8:
+-				*(__be64 *)(to_ptr + first) =
+-					cpu_to_be64(*(__u64 *)(from_ptr + first));
+-				break;
+-			default:
+-				ASSERT(0);
+-			}
+-		}
+-
+-		fields &= ~(1LL << f);
+-	}
+-}
+-
+-static int
+-xfs_sb_verify(
+-	struct xfs_buf	*bp,
+-	bool		check_version)
+-{
+-	struct xfs_mount *mp = bp->b_target->bt_mount;
+-	struct xfs_sb	sb;
+-
+-	xfs_sb_from_disk(&sb, XFS_BUF_TO_SBP(bp));
+-
+-	/*
+-	 * Only check the in progress field for the primary superblock as
+-	 * mkfs.xfs doesn't clear it from secondary superblocks.
+-	 */
+-	return xfs_mount_validate_sb(mp, &sb, bp->b_bn == XFS_SB_DADDR,
+-				     check_version);
+-}
+-
+-/*
+- * If the superblock has the CRC feature bit set or the CRC field is non-null,
+- * check that the CRC is valid.  We check the CRC field is non-null because a
+- * single bit error could clear the feature bit and unused parts of the
+- * superblock are supposed to be zero. Hence a non-null crc field indicates that
+- * we've potentially lost a feature bit and we should check it anyway.
+- */
+-static void
+-xfs_sb_read_verify(
+-	struct xfs_buf	*bp)
+-{
+-	struct xfs_mount *mp = bp->b_target->bt_mount;
+-	struct xfs_dsb	*dsb = XFS_BUF_TO_SBP(bp);
+-	int		error;
+-
+-	/*
+-	 * open code the version check to avoid needing to convert the entire
+-	 * superblock from disk order just to check the version number
+-	 */
+-	if (dsb->sb_magicnum == cpu_to_be32(XFS_SB_MAGIC) &&
+-	    (((be16_to_cpu(dsb->sb_versionnum) & XFS_SB_VERSION_NUMBITS) ==
+-						XFS_SB_VERSION_5) ||
+-	     dsb->sb_crc != 0)) {
+-
+-		if (!xfs_verify_cksum(bp->b_addr, be16_to_cpu(dsb->sb_sectsize),
+-				      offsetof(struct xfs_sb, sb_crc))) {
+-			error = EFSCORRUPTED;
+-			goto out_error;
+-		}
+-	}
+-	error = xfs_sb_verify(bp, true);
+-
+-out_error:
+-	if (error) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+-		xfs_buf_ioerror(bp, error);
+-	}
+-}
+-
+-/*
+- * We may be probed for a filesystem match, so we may not want to emit
+- * messages when the superblock buffer is not actually an XFS superblock.
+- * If we find an XFS superblock, the run a normal, noisy mount because we are
+- * really going to mount it and want to know about errors.
+- */
+-static void
+-xfs_sb_quiet_read_verify(
+-	struct xfs_buf	*bp)
+-{
+-	struct xfs_dsb	*dsb = XFS_BUF_TO_SBP(bp);
 -
 -
--/* Log Clients */
--#define XFS_TRANSACTION		0x69
--#define XFS_VOLUME		0x2
--#define XFS_LOG			0xaa
+-	if (dsb->sb_magicnum == cpu_to_be32(XFS_SB_MAGIC)) {
+-		/* XFS filesystem, verify noisily! */
+-		xfs_sb_read_verify(bp);
+-		return;
+-	}
+-	/* quietly fail */
+-	xfs_buf_ioerror(bp, EWRONGFS);
+-}
 -
+-static void
+-xfs_sb_write_verify(
+-	struct xfs_buf		*bp)
+-{
+-	struct xfs_mount	*mp = bp->b_target->bt_mount;
+-	struct xfs_buf_log_item	*bip = bp->b_fspriv;
+-	int			error;
 -
--/* Region types for iovec's i_type */
--#define XLOG_REG_TYPE_BFORMAT		1
--#define XLOG_REG_TYPE_BCHUNK		2
--#define XLOG_REG_TYPE_EFI_FORMAT	3
--#define XLOG_REG_TYPE_EFD_FORMAT	4
--#define XLOG_REG_TYPE_IFORMAT		5
--#define XLOG_REG_TYPE_ICORE		6
--#define XLOG_REG_TYPE_IEXT		7
--#define XLOG_REG_TYPE_IBROOT		8
--#define XLOG_REG_TYPE_ILOCAL		9
--#define XLOG_REG_TYPE_IATTR_EXT		10
--#define XLOG_REG_TYPE_IATTR_BROOT	11
--#define XLOG_REG_TYPE_IATTR_LOCAL	12
--#define XLOG_REG_TYPE_QFORMAT		13
--#define XLOG_REG_TYPE_DQUOT		14
--#define XLOG_REG_TYPE_QUOTAOFF		15
--#define XLOG_REG_TYPE_LRHEADER		16
--#define XLOG_REG_TYPE_UNMOUNT		17
--#define XLOG_REG_TYPE_COMMIT		18
--#define XLOG_REG_TYPE_TRANSHDR		19
--#define XLOG_REG_TYPE_ICREATE		20
--#define XLOG_REG_TYPE_MAX		20
+-	error = xfs_sb_verify(bp, false);
+-	if (error) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+-		xfs_buf_ioerror(bp, error);
+-		return;
+-	}
 -
--typedef struct xfs_log_iovec {
--	void		*i_addr;	/* beginning address of region */
--	int		i_len;		/* length in bytes of region */
--	uint		i_type;		/* type of region */
--} xfs_log_iovec_t;
+-	if (!xfs_sb_version_hascrc(&mp->m_sb))
+-		return;
 -
--struct xfs_log_vec {
--	struct xfs_log_vec	*lv_next;	/* next lv in build list */
--	int			lv_niovecs;	/* number of iovecs in lv */
--	struct xfs_log_iovec	*lv_iovecp;	/* iovec array */
--	struct xfs_log_item	*lv_item;	/* owner */
--	char			*lv_buf;	/* formatted buffer */
--	int			lv_buf_len;	/* size of formatted buffer */
+-	if (bip)
+-		XFS_BUF_TO_SBP(bp)->sb_lsn = cpu_to_be64(bip->bli_item.li_lsn);
+-
+-	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length),
+-			 offsetof(struct xfs_sb, sb_crc));
+-}
+-
+-const struct xfs_buf_ops xfs_sb_buf_ops = {
+-	.verify_read = xfs_sb_read_verify,
+-	.verify_write = xfs_sb_write_verify,
+-};
+-
+-static const struct xfs_buf_ops xfs_sb_quiet_buf_ops = {
+-	.verify_read = xfs_sb_quiet_read_verify,
+-	.verify_write = xfs_sb_write_verify,
 -};
 -
 -/*
-- * Structure used to pass callback function and the function's argument
-- * to the log manager.
+- * xfs_mount_common
+- *
+- * Mount initialization code establishing various mount
+- * fields from the superblock associated with the given
+- * mount structure
+- *
+- * Note: this requires user-space public scope for libxfs_mount
 - */
--typedef struct xfs_log_callback {
--	struct xfs_log_callback	*cb_next;
--	void			(*cb_func)(void *, int);
--	void			*cb_arg;
--} xfs_log_callback_t;
+-void
+-xfs_mount_common(xfs_mount_t *mp, xfs_sb_t *sbp)
+-{
+-	mp->m_agfrotor = mp->m_agirotor = 0;
+-	spin_lock_init(&mp->m_agirotor_lock);
+-	mp->m_maxagi = mp->m_sb.sb_agcount;
+-	mp->m_blkbit_log = sbp->sb_blocklog + XFS_NBBYLOG;
+-	mp->m_blkbb_log = sbp->sb_blocklog - BBSHIFT;
+-	mp->m_sectbb_log = sbp->sb_sectlog - BBSHIFT;
+-	mp->m_agno_log = xfs_highbit32(sbp->sb_agcount - 1) + 1;
+-	mp->m_agino_log = sbp->sb_inopblog + sbp->sb_agblklog;
+-	mp->m_blockmask = sbp->sb_blocksize - 1;
+-	mp->m_blockwsize = sbp->sb_blocksize >> XFS_WORDLOG;
+-	mp->m_blockwmask = mp->m_blockwsize - 1;
 -
+-	mp->m_alloc_mxr[0] = xfs_allocbt_maxrecs(mp, sbp->sb_blocksize, 1);
+-	mp->m_alloc_mxr[1] = xfs_allocbt_maxrecs(mp, sbp->sb_blocksize, 0);
+-	mp->m_alloc_mnr[0] = mp->m_alloc_mxr[0] / 2;
+-	mp->m_alloc_mnr[1] = mp->m_alloc_mxr[1] / 2;
 -
--#ifdef __KERNEL__
--/* Log manager interfaces */
--struct xfs_mount;
--struct xlog_in_core;
--struct xlog_ticket;
--struct xfs_log_item;
--struct xfs_item_ops;
--struct xfs_trans;
+-	mp->m_inobt_mxr[0] = xfs_inobt_maxrecs(mp, sbp->sb_blocksize, 1);
+-	mp->m_inobt_mxr[1] = xfs_inobt_maxrecs(mp, sbp->sb_blocksize, 0);
+-	mp->m_inobt_mnr[0] = mp->m_inobt_mxr[0] / 2;
+-	mp->m_inobt_mnr[1] = mp->m_inobt_mxr[1] / 2;
 -
--void	xfs_log_item_init(struct xfs_mount	*mp,
--			struct xfs_log_item	*item,
--			int			type,
--			const struct xfs_item_ops *ops);
+-	mp->m_bmap_dmxr[0] = xfs_bmbt_maxrecs(mp, sbp->sb_blocksize, 1);
+-	mp->m_bmap_dmxr[1] = xfs_bmbt_maxrecs(mp, sbp->sb_blocksize, 0);
+-	mp->m_bmap_dmnr[0] = mp->m_bmap_dmxr[0] / 2;
+-	mp->m_bmap_dmnr[1] = mp->m_bmap_dmxr[1] / 2;
 -
--xfs_lsn_t xfs_log_done(struct xfs_mount *mp,
--		       struct xlog_ticket *ticket,
--		       struct xlog_in_core **iclog,
--		       uint		flags);
--int	  _xfs_log_force(struct xfs_mount *mp,
--			 uint		flags,
--			 int		*log_forced);
--void	  xfs_log_force(struct xfs_mount	*mp,
--			uint			flags);
--int	  _xfs_log_force_lsn(struct xfs_mount *mp,
--			     xfs_lsn_t		lsn,
--			     uint		flags,
--			     int		*log_forced);
--void	  xfs_log_force_lsn(struct xfs_mount	*mp,
--			    xfs_lsn_t		lsn,
--			    uint		flags);
--int	  xfs_log_mount(struct xfs_mount	*mp,
--			struct xfs_buftarg	*log_target,
--			xfs_daddr_t		start_block,
--			int		 	num_bblocks);
--int	  xfs_log_mount_finish(struct xfs_mount *mp);
--xfs_lsn_t xlog_assign_tail_lsn(struct xfs_mount *mp);
--xfs_lsn_t xlog_assign_tail_lsn_locked(struct xfs_mount *mp);
--void	  xfs_log_space_wake(struct xfs_mount *mp);
--int	  xfs_log_notify(struct xfs_mount	*mp,
--			 struct xlog_in_core	*iclog,
--			 xfs_log_callback_t	*callback_entry);
--int	  xfs_log_release_iclog(struct xfs_mount *mp,
--			 struct xlog_in_core	 *iclog);
--int	  xfs_log_reserve(struct xfs_mount *mp,
--			  int		   length,
--			  int		   count,
--			  struct xlog_ticket **ticket,
--			  __uint8_t	   clientid,
--			  bool		   permanent,
--			  uint		   t_type);
--int	  xfs_log_regrant(struct xfs_mount *mp, struct xlog_ticket *tic);
--int	  xfs_log_unmount_write(struct xfs_mount *mp);
--void      xfs_log_unmount(struct xfs_mount *mp);
--int	  xfs_log_force_umount(struct xfs_mount *mp, int logerror);
--int	  xfs_log_need_covered(struct xfs_mount *mp);
+-	mp->m_bsize = XFS_FSB_TO_BB(mp, 1);
+-	mp->m_ialloc_inos = (int)MAX((__uint16_t)XFS_INODES_PER_CHUNK,
+-					sbp->sb_inopblock);
+-	mp->m_ialloc_blks = mp->m_ialloc_inos >> sbp->sb_inopblog;
+-}
 -
--void	  xlog_iodone(struct xfs_buf *);
+-/*
+- * xfs_initialize_perag_data
+- *
+- * Read in each per-ag structure so we can count up the number of
+- * allocated inodes, free inodes and used filesystem blocks as this
+- * information is no longer persistent in the superblock. Once we have
+- * this information, write it into the in-core superblock structure.
+- *
+- * Note: this requires user-space public scope for libxfs_mount
+- */
+-int
+-xfs_initialize_perag_data(xfs_mount_t *mp, xfs_agnumber_t agcount)
+-{
+-	xfs_agnumber_t	index;
+-	xfs_perag_t	*pag;
+-	xfs_sb_t	*sbp = &mp->m_sb;
+-	uint64_t	ifree = 0;
+-	uint64_t	ialloc = 0;
+-	uint64_t	bfree = 0;
+-	uint64_t	bfreelst = 0;
+-	uint64_t	btree = 0;
+-	int		error;
 -
--struct xlog_ticket *xfs_log_ticket_get(struct xlog_ticket *ticket);
--void	  xfs_log_ticket_put(struct xlog_ticket *ticket);
+-	for (index = 0; index < agcount; index++) {
+-		/*
+-		 * read the agf, then the agi. This gets us
+-		 * all the information we need and populates the
+-		 * per-ag structures for us.
+-		 */
+-		error = xfs_alloc_pagf_init(mp, NULL, index, 0);
+-		if (error)
+-			return error;
 -
--int	xfs_log_commit_cil(struct xfs_mount *mp, struct xfs_trans *tp,
--				xfs_lsn_t *commit_lsn, int flags);
--bool	xfs_log_item_in_current_chkpt(struct xfs_log_item *lip);
+-		error = xfs_ialloc_pagi_init(mp, NULL, index);
+-		if (error)
+-			return error;
+-		pag = xfs_perag_get(mp, index);
+-		ifree += pag->pagi_freecount;
+-		ialloc += pag->pagi_count;
+-		bfree += pag->pagf_freeblks;
+-		bfreelst += pag->pagf_flcount;
+-		btree += pag->pagf_btreeblks;
+-		xfs_perag_put(pag);
+-	}
+-	/*
+-	 * Overwrite incore superblock counters with just-read data
+-	 */
+-	spin_lock(&mp->m_sb_lock);
+-	sbp->sb_ifree = ifree;
+-	sbp->sb_icount = ialloc;
+-	sbp->sb_fdblocks = bfree + bfreelst + btree;
+-	spin_unlock(&mp->m_sb_lock);
 -
--void	xfs_log_work_queue(struct xfs_mount *mp);
--void	xfs_log_worker(struct work_struct *work);
--void	xfs_log_quiesce(struct xfs_mount *mp);
+-	/* Fixup the per-cpu counters as well. */
+-	xfs_icsb_reinit_counters(mp);
 -
--#endif
--#endif	/* __XFS_LOG_H__ */
-diff --git a/include/xfs_log_format.h b/include/xfs_log_format.h
+-	return 0;
+-}
+-
+-/*
+- * xfs_mod_sb() can be used to copy arbitrary changes to the
+- * in-core superblock into the superblock buffer to be logged.
+- * It does not provide the higher level of locking that is
+- * needed to protect the in-core superblock from concurrent
+- * access.
+- */
+-void
+-xfs_mod_sb(xfs_trans_t *tp, __int64_t fields)
+-{
+-	xfs_buf_t	*bp;
+-	int		first;
+-	int		last;
+-	xfs_mount_t	*mp;
+-	xfs_sb_field_t	f;
+-
+-	ASSERT(fields);
+-	if (!fields)
+-		return;
+-	mp = tp->t_mountp;
+-	bp = xfs_trans_getsb(tp, mp, 0);
+-	first = sizeof(xfs_sb_t);
+-	last = 0;
+-
+-	/* translate/copy */
+-	xfs_sb_to_disk(XFS_BUF_TO_SBP(bp), &mp->m_sb, fields);
+-
+-	/* find modified range */
+-	f = (xfs_sb_field_t)xfs_highbit64((__uint64_t)fields);
+-	ASSERT((1LL << f) & XFS_SB_MOD_BITS);
+-	last = xfs_sb_info[f + 1].offset - 1;
+-
+-	f = (xfs_sb_field_t)xfs_lowbit64((__uint64_t)fields);
+-	ASSERT((1LL << f) & XFS_SB_MOD_BITS);
+-	first = xfs_sb_info[f].offset;
+-
+-	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_SB_BUF);
+-	xfs_trans_log_buf(tp, bp, first, last);
+-}
+diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
 new file mode 100644
-index 0000000..9f9aeb6
+index 0000000..869fb76
 --- /dev/null
-+++ b/include/xfs_log_format.h
-@@ -0,0 +1,178 @@
++++ b/libxfs/xfs_sb.c
+@@ -0,0 +1,721 @@
 +/*
-+ * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
++ * Copyright (c) 2000-2005 Silicon Graphics, Inc.
 + * All Rights Reserved.
 + *
 + * This program is free software; you can redistribute it and/or
@@ -333,899 +1289,710 @@ index 0000000..9f9aeb6
 + * along with this program; if not, write the Free Software Foundation,
 + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 + */
-+#ifndef	__XFS_LOG_FORMAT_H__
-+#define __XFS_LOG_FORMAT_H__
-+
-+typedef __uint32_t xlog_tid_t;
-+
-+#define XLOG_MIN_ICLOGS		2
-+#define XLOG_MAX_ICLOGS		8
-+#define XLOG_HEADER_MAGIC_NUM	0xFEEDbabe	/* Invalid cycle number */
-+#define XLOG_VERSION_1		1
-+#define XLOG_VERSION_2		2		/* Large IClogs, Log sunit */
-+#define XLOG_VERSION_OKBITS	(XLOG_VERSION_1 | XLOG_VERSION_2)
-+#define XLOG_MIN_RECORD_BSIZE	(16*1024)	/* eventually 32k */
-+#define XLOG_BIG_RECORD_BSIZE	(32*1024)	/* 32k buffers */
-+#define XLOG_MAX_RECORD_BSIZE	(256*1024)
-+#define XLOG_HEADER_CYCLE_SIZE	(32*1024)	/* cycle data in header */
-+#define XLOG_MIN_RECORD_BSHIFT	14		/* 16384 == 1 << 14 */
-+#define XLOG_BIG_RECORD_BSHIFT	15		/* 32k == 1 << 15 */
-+#define XLOG_MAX_RECORD_BSHIFT	18		/* 256k == 1 << 18 */
-+#define XLOG_BTOLSUNIT(log, b)  (((b)+(log)->l_mp->m_sb.sb_logsunit-1) / \
-+                                 (log)->l_mp->m_sb.sb_logsunit)
-+#define XLOG_LSUNITTOB(log, su) ((su) * (log)->l_mp->m_sb.sb_logsunit)
-+
-+#define XLOG_HEADER_SIZE	512
-+
-+#define XLOG_REC_SHIFT(log) \
-+	BTOBB(1 << (xfs_sb_version_haslogv2(&log->l_mp->m_sb) ? \
-+	 XLOG_MAX_RECORD_BSHIFT : XLOG_BIG_RECORD_BSHIFT))
-+#define XLOG_TOTAL_REC_SHIFT(log) \
-+	BTOBB(XLOG_MAX_ICLOGS << (xfs_sb_version_haslogv2(&log->l_mp->m_sb) ? \
-+	 XLOG_MAX_RECORD_BSHIFT : XLOG_BIG_RECORD_BSHIFT))
-+
-+/* get lsn fields */
-+#define CYCLE_LSN(lsn) ((uint)((lsn)>>32))
-+#define BLOCK_LSN(lsn) ((uint)(lsn))
-+
-+/* this is used in a spot where we might otherwise double-endian-flip */
-+#define CYCLE_LSN_DISK(lsn) (((__be32 *)&(lsn))[0])
-+
-+static inline xfs_lsn_t xlog_assign_lsn(uint cycle, uint block)
-+{
-+	return ((xfs_lsn_t)cycle << 32) | block;
-+}
-+
-+static inline uint xlog_get_cycle(char *ptr)
-+{
-+	if (be32_to_cpu(*(__be32 *)ptr) == XLOG_HEADER_MAGIC_NUM)
-+		return be32_to_cpu(*((__be32 *)ptr + 1));
-+	else
-+		return be32_to_cpu(*(__be32 *)ptr);
-+}
-+
-+/* Log Clients */
-+#define XFS_TRANSACTION		0x69
-+#define XFS_VOLUME		0x2
-+#define XFS_LOG			0xaa
-+
-+#define XLOG_UNMOUNT_TYPE	0x556e	/* Un for Unmount */
-+
-+/* Region types for iovec's i_type */
-+#define XLOG_REG_TYPE_BFORMAT		1
-+#define XLOG_REG_TYPE_BCHUNK		2
-+#define XLOG_REG_TYPE_EFI_FORMAT	3
-+#define XLOG_REG_TYPE_EFD_FORMAT	4
-+#define XLOG_REG_TYPE_IFORMAT		5
-+#define XLOG_REG_TYPE_ICORE		6
-+#define XLOG_REG_TYPE_IEXT		7
-+#define XLOG_REG_TYPE_IBROOT		8
-+#define XLOG_REG_TYPE_ILOCAL		9
-+#define XLOG_REG_TYPE_IATTR_EXT		10
-+#define XLOG_REG_TYPE_IATTR_BROOT	11
-+#define XLOG_REG_TYPE_IATTR_LOCAL	12
-+#define XLOG_REG_TYPE_QFORMAT		13
-+#define XLOG_REG_TYPE_DQUOT		14
-+#define XLOG_REG_TYPE_QUOTAOFF		15
-+#define XLOG_REG_TYPE_LRHEADER		16
-+#define XLOG_REG_TYPE_UNMOUNT		17
-+#define XLOG_REG_TYPE_COMMIT		18
-+#define XLOG_REG_TYPE_TRANSHDR		19
-+#define XLOG_REG_TYPE_ICREATE		20
-+#define XLOG_REG_TYPE_MAX		20
++#include <xfs.h>
 +
 +/*
-+ * Flags to log operation header
-+ *
-+ * The first write of a new transaction will be preceded with a start
-+ * record, XLOG_START_TRANS.  Once a transaction is committed, a commit
-+ * record is written, XLOG_COMMIT_TRANS.  If a single region can not fit into
-+ * the remainder of the current active in-core log, it is split up into
-+ * multiple regions.  Each partial region will be marked with a
-+ * XLOG_CONTINUE_TRANS until the last one, which gets marked with XLOG_END_TRANS.
-+ *
++ * Physical superblock buffer manipulations. Shared with libxfs in userspace.
 + */
-+#define XLOG_START_TRANS	0x01	/* Start a new transaction */
-+#define XLOG_COMMIT_TRANS	0x02	/* Commit this transaction */
-+#define XLOG_CONTINUE_TRANS	0x04	/* Cont this trans into new region */
-+#define XLOG_WAS_CONT_TRANS	0x08	/* Cont this trans into new region */
-+#define XLOG_END_TRANS		0x10	/* End a continued transaction */
-+#define XLOG_UNMOUNT_TRANS	0x20	/* Unmount a filesystem transaction */
 +
-+
-+typedef struct xlog_op_header {
-+	__be32	   oh_tid;	/* transaction id of operation	:  4 b */
-+	__be32	   oh_len;	/* bytes in data region		:  4 b */
-+	__u8	   oh_clientid;	/* who sent me this		:  1 b */
-+	__u8	   oh_flags;	/*				:  1 b */
-+	__u16	   oh_res2;	/* 32 bit align			:  2 b */
-+} xlog_op_header_t;
-+
-+
-+/* valid values for h_fmt */
-+#define XLOG_FMT_UNKNOWN  0
-+#define XLOG_FMT_LINUX_LE 1
-+#define XLOG_FMT_LINUX_BE 2
-+#define XLOG_FMT_IRIX_BE  3
-+
-+/* our fmt */
-+#ifdef XFS_NATIVE_HOST
-+#define XLOG_FMT XLOG_FMT_LINUX_BE
-+#else
-+#define XLOG_FMT XLOG_FMT_LINUX_LE
-+#endif
-+
-+typedef struct xlog_rec_header {
-+	__be32	  h_magicno;	/* log record (LR) identifier		:  4 */
-+	__be32	  h_cycle;	/* write cycle of log			:  4 */
-+	__be32	  h_version;	/* LR version				:  4 */
-+	__be32	  h_len;	/* len in bytes; should be 64-bit aligned: 4 */
-+	__be64	  h_lsn;	/* lsn of this LR			:  8 */
-+	__be64	  h_tail_lsn;	/* lsn of 1st LR w/ buffers not committed: 8 */
-+	__le32	  h_crc;	/* crc of log record                    :  4 */
-+	__be32	  h_prev_block; /* block number to previous LR		:  4 */
-+	__be32	  h_num_logops;	/* number of log operations in this LR	:  4 */
-+	__be32	  h_cycle_data[XLOG_HEADER_CYCLE_SIZE / BBSIZE];
-+	/* new fields */
-+	__be32    h_fmt;        /* format of log record                 :  4 */
-+	uuid_t	  h_fs_uuid;    /* uuid of FS                           : 16 */
-+	__be32	  h_size;	/* iclog size				:  4 */
-+} xlog_rec_header_t;
-+
-+typedef struct xlog_rec_ext_header {
-+	__be32	  xh_cycle;	/* write cycle of log			: 4 */
-+	__be32	  xh_cycle_data[XLOG_HEADER_CYCLE_SIZE / BBSIZE]; /*	: 256 */
-+} xlog_rec_ext_header_t;
++static const struct {
++	short offset;
++	short type;	/* 0 = integer
++			 * 1 = binary / string (no translation)
++			 */
++} xfs_sb_info[] = {
++    { offsetof(xfs_sb_t, sb_magicnum),   0 },
++    { offsetof(xfs_sb_t, sb_blocksize),  0 },
++    { offsetof(xfs_sb_t, sb_dblocks),    0 },
++    { offsetof(xfs_sb_t, sb_rblocks),    0 },
++    { offsetof(xfs_sb_t, sb_rextents),   0 },
++    { offsetof(xfs_sb_t, sb_uuid),       1 },
++    { offsetof(xfs_sb_t, sb_logstart),   0 },
++    { offsetof(xfs_sb_t, sb_rootino),    0 },
++    { offsetof(xfs_sb_t, sb_rbmino),     0 },
++    { offsetof(xfs_sb_t, sb_rsumino),    0 },
++    { offsetof(xfs_sb_t, sb_rextsize),   0 },
++    { offsetof(xfs_sb_t, sb_agblocks),   0 },
++    { offsetof(xfs_sb_t, sb_agcount),    0 },
++    { offsetof(xfs_sb_t, sb_rbmblocks),  0 },
++    { offsetof(xfs_sb_t, sb_logblocks),  0 },
++    { offsetof(xfs_sb_t, sb_versionnum), 0 },
++    { offsetof(xfs_sb_t, sb_sectsize),   0 },
++    { offsetof(xfs_sb_t, sb_inodesize),  0 },
++    { offsetof(xfs_sb_t, sb_inopblock),  0 },
++    { offsetof(xfs_sb_t, sb_fname[0]),   1 },
++    { offsetof(xfs_sb_t, sb_blocklog),   0 },
++    { offsetof(xfs_sb_t, sb_sectlog),    0 },
++    { offsetof(xfs_sb_t, sb_inodelog),   0 },
++    { offsetof(xfs_sb_t, sb_inopblog),   0 },
++    { offsetof(xfs_sb_t, sb_agblklog),   0 },
++    { offsetof(xfs_sb_t, sb_rextslog),   0 },
++    { offsetof(xfs_sb_t, sb_inprogress), 0 },
++    { offsetof(xfs_sb_t, sb_imax_pct),   0 },
++    { offsetof(xfs_sb_t, sb_icount),     0 },
++    { offsetof(xfs_sb_t, sb_ifree),      0 },
++    { offsetof(xfs_sb_t, sb_fdblocks),   0 },
++    { offsetof(xfs_sb_t, sb_frextents),  0 },
++    { offsetof(xfs_sb_t, sb_uquotino),   0 },
++    { offsetof(xfs_sb_t, sb_gquotino),   0 },
++    { offsetof(xfs_sb_t, sb_qflags),     0 },
++    { offsetof(xfs_sb_t, sb_flags),      0 },
++    { offsetof(xfs_sb_t, sb_shared_vn),  0 },
++    { offsetof(xfs_sb_t, sb_inoalignmt), 0 },
++    { offsetof(xfs_sb_t, sb_unit),	 0 },
++    { offsetof(xfs_sb_t, sb_width),	 0 },
++    { offsetof(xfs_sb_t, sb_dirblklog),	 0 },
++    { offsetof(xfs_sb_t, sb_logsectlog), 0 },
++    { offsetof(xfs_sb_t, sb_logsectsize),0 },
++    { offsetof(xfs_sb_t, sb_logsunit),	 0 },
++    { offsetof(xfs_sb_t, sb_features2),	 0 },
++    { offsetof(xfs_sb_t, sb_bad_features2), 0 },
++    { offsetof(xfs_sb_t, sb_features_compat), 0 },
++    { offsetof(xfs_sb_t, sb_features_ro_compat), 0 },
++    { offsetof(xfs_sb_t, sb_features_incompat), 0 },
++    { offsetof(xfs_sb_t, sb_features_log_incompat), 0 },
++    { offsetof(xfs_sb_t, sb_crc),	 0 },
++    { offsetof(xfs_sb_t, sb_pad),	 0 },
++    { offsetof(xfs_sb_t, sb_pquotino),	 0 },
++    { offsetof(xfs_sb_t, sb_lsn),	 0 },
++    { sizeof(xfs_sb_t),			 0 }
++};
 +
 +/*
-+ * Quite misnamed, because this union lays out the actual on-disk log buffer.
++ * Reference counting access wrappers to the perag structures.
++ * Because we never free per-ag structures, the only thing we
++ * have to protect against changes is the tree structure itself.
 + */
-+typedef union xlog_in_core2 {
-+	xlog_rec_header_t	hic_header;
-+	xlog_rec_ext_header_t	hic_xheader;
-+	char			hic_sector[XLOG_HEADER_SIZE];
-+} xlog_in_core_2_t;
++struct xfs_perag *
++xfs_perag_get(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno)
++{
++	struct xfs_perag	*pag;
++	int			ref = 0;
 +
-+/* not an on-disk structure, but needed by log recovery in userspace */
-+typedef struct xfs_log_iovec {
-+	void		*i_addr;	/* beginning address of region */
-+	int		i_len;		/* length in bytes of region */
-+	uint		i_type;		/* type of region */
-+} xfs_log_iovec_t;
++	rcu_read_lock();
++	pag = radix_tree_lookup(&mp->m_perag_tree, agno);
++	if (pag) {
++		ASSERT(atomic_read(&pag->pag_ref) >= 0);
++		ref = atomic_inc_return(&pag->pag_ref);
++	}
++	rcu_read_unlock();
++	trace_xfs_perag_get(mp, agno, ref, _RET_IP_);
++	return pag;
++}
 +
-+#endif /* __XFS_LOG_FORMAT_H__ */
-diff --git a/include/xfs_log_priv.h b/include/xfs_log_priv.h
-deleted file mode 100644
-index 16d8d12..0000000
---- a/include/xfs_log_priv.h
-+++ /dev/null
-@@ -1,692 +0,0 @@
--/*
-- * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
-- * All Rights Reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it would be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write the Free Software Foundation,
-- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-- */
--#ifndef	__XFS_LOG_PRIV_H__
--#define __XFS_LOG_PRIV_H__
--
--struct xfs_buf;
--struct xlog;
--struct xlog_ticket;
--struct xfs_mount;
--
--/*
-- * Macros, structures, prototypes for internal log manager use.
-- */
--
--#define XLOG_MIN_ICLOGS		2
--#define XLOG_MAX_ICLOGS		8
--#define XLOG_HEADER_MAGIC_NUM	0xFEEDbabe	/* Invalid cycle number */
--#define XLOG_VERSION_1		1
--#define XLOG_VERSION_2		2		/* Large IClogs, Log sunit */
--#define XLOG_VERSION_OKBITS	(XLOG_VERSION_1 | XLOG_VERSION_2)
--#define XLOG_MIN_RECORD_BSIZE	(16*1024)	/* eventually 32k */
--#define XLOG_BIG_RECORD_BSIZE	(32*1024)	/* 32k buffers */
--#define XLOG_MAX_RECORD_BSIZE	(256*1024)
--#define XLOG_HEADER_CYCLE_SIZE	(32*1024)	/* cycle data in header */
--#define XLOG_MIN_RECORD_BSHIFT	14		/* 16384 == 1 << 14 */
--#define XLOG_BIG_RECORD_BSHIFT	15		/* 32k == 1 << 15 */
--#define XLOG_MAX_RECORD_BSHIFT	18		/* 256k == 1 << 18 */
--#define XLOG_BTOLSUNIT(log, b)  (((b)+(log)->l_mp->m_sb.sb_logsunit-1) / \
--                                 (log)->l_mp->m_sb.sb_logsunit)
--#define XLOG_LSUNITTOB(log, su) ((su) * (log)->l_mp->m_sb.sb_logsunit)
--
--#define XLOG_HEADER_SIZE	512
--
--#define XLOG_REC_SHIFT(log) \
--	BTOBB(1 << (xfs_sb_version_haslogv2(&log->l_mp->m_sb) ? \
--	 XLOG_MAX_RECORD_BSHIFT : XLOG_BIG_RECORD_BSHIFT))
--#define XLOG_TOTAL_REC_SHIFT(log) \
--	BTOBB(XLOG_MAX_ICLOGS << (xfs_sb_version_haslogv2(&log->l_mp->m_sb) ? \
--	 XLOG_MAX_RECORD_BSHIFT : XLOG_BIG_RECORD_BSHIFT))
--
--static inline xfs_lsn_t xlog_assign_lsn(uint cycle, uint block)
--{
--	return ((xfs_lsn_t)cycle << 32) | block;
--}
--
--static inline uint xlog_get_cycle(char *ptr)
--{
--	if (be32_to_cpu(*(__be32 *)ptr) == XLOG_HEADER_MAGIC_NUM)
--		return be32_to_cpu(*((__be32 *)ptr + 1));
--	else
--		return be32_to_cpu(*(__be32 *)ptr);
--}
--
--#define BLK_AVG(blk1, blk2)	((blk1+blk2) >> 1)
--
--#ifdef __KERNEL__
--
--/*
-- * get client id from packed copy.
-- *
-- * this hack is here because the xlog_pack code copies four bytes
-- * of xlog_op_header containing the fields oh_clientid, oh_flags
-- * and oh_res2 into the packed copy.
-- *
-- * later on this four byte chunk is treated as an int and the
-- * client id is pulled out.
-- *
-- * this has endian issues, of course.
-- */
--static inline uint xlog_get_client_id(__be32 i)
--{
--	return be32_to_cpu(i) >> 24;
--}
--
--/*
-- * In core log state
-- */
--#define XLOG_STATE_ACTIVE    0x0001 /* Current IC log being written to */
--#define XLOG_STATE_WANT_SYNC 0x0002 /* Want to sync this iclog; no more writes */
--#define XLOG_STATE_SYNCING   0x0004 /* This IC log is syncing */
--#define XLOG_STATE_DONE_SYNC 0x0008 /* Done syncing to disk */
--#define XLOG_STATE_DO_CALLBACK \
--			     0x0010 /* Process callback functions */
--#define XLOG_STATE_CALLBACK  0x0020 /* Callback functions now */
--#define XLOG_STATE_DIRTY     0x0040 /* Dirty IC log, not ready for ACTIVE status*/
--#define XLOG_STATE_IOERROR   0x0080 /* IO error happened in sync'ing log */
--#define XLOG_STATE_ALL	     0x7FFF /* All possible valid flags */
--#define XLOG_STATE_NOTUSED   0x8000 /* This IC log not being used */
--#endif	/* __KERNEL__ */
--
--/*
-- * Flags to log operation header
-- *
-- * The first write of a new transaction will be preceded with a start
-- * record, XLOG_START_TRANS.  Once a transaction is committed, a commit
-- * record is written, XLOG_COMMIT_TRANS.  If a single region can not fit into
-- * the remainder of the current active in-core log, it is split up into
-- * multiple regions.  Each partial region will be marked with a
-- * XLOG_CONTINUE_TRANS until the last one, which gets marked with XLOG_END_TRANS.
-- *
-- */
--#define XLOG_START_TRANS	0x01	/* Start a new transaction */
--#define XLOG_COMMIT_TRANS	0x02	/* Commit this transaction */
--#define XLOG_CONTINUE_TRANS	0x04	/* Cont this trans into new region */
--#define XLOG_WAS_CONT_TRANS	0x08	/* Cont this trans into new region */
--#define XLOG_END_TRANS		0x10	/* End a continued transaction */
--#define XLOG_UNMOUNT_TRANS	0x20	/* Unmount a filesystem transaction */
--
--#ifdef __KERNEL__
--/*
-- * Flags to log ticket
-- */
--#define XLOG_TIC_INITED		0x1	/* has been initialized */
--#define XLOG_TIC_PERM_RESERV	0x2	/* permanent reservation */
--
--#define XLOG_TIC_FLAGS \
--	{ XLOG_TIC_INITED,	"XLOG_TIC_INITED" }, \
--	{ XLOG_TIC_PERM_RESERV,	"XLOG_TIC_PERM_RESERV" }
--
--#endif	/* __KERNEL__ */
--
--#define XLOG_UNMOUNT_TYPE	0x556e	/* Un for Unmount */
--
--/*
-- * Flags for log structure
-- */
--#define XLOG_ACTIVE_RECOVERY	0x2	/* in the middle of recovery */
--#define	XLOG_RECOVERY_NEEDED	0x4	/* log was recovered */
--#define XLOG_IO_ERROR		0x8	/* log hit an I/O error, and being
--					   shutdown */
--#define XLOG_TAIL_WARN		0x10	/* log tail verify warning issued */
--
--typedef __uint32_t xlog_tid_t;
--
--#ifdef __KERNEL__
--/*
-- * Below are states for covering allocation transactions.
-- * By covering, we mean changing the h_tail_lsn in the last on-disk
-- * log write such that no allocation transactions will be re-done during
-- * recovery after a system crash. Recovery starts at the last on-disk
-- * log write.
-- *
-- * These states are used to insert dummy log entries to cover
-- * space allocation transactions which can undo non-transactional changes
-- * after a crash. Writes to a file with space
-- * already allocated do not result in any transactions. Allocations
-- * might include space beyond the EOF. So if we just push the EOF a
-- * little, the last transaction for the file could contain the wrong
-- * size. If there is no file system activity, after an allocation
-- * transaction, and the system crashes, the allocation transaction
-- * will get replayed and the file will be truncated. This could
-- * be hours/days/... after the allocation occurred.
-- *
-- * The fix for this is to do two dummy transactions when the
-- * system is idle. We need two dummy transaction because the h_tail_lsn
-- * in the log record header needs to point beyond the last possible
-- * non-dummy transaction. The first dummy changes the h_tail_lsn to
-- * the first transaction before the dummy. The second dummy causes
-- * h_tail_lsn to point to the first dummy. Recovery starts at h_tail_lsn.
-- *
-- * These dummy transactions get committed when everything
-- * is idle (after there has been some activity).
-- *
-- * There are 5 states used to control this.
-- *
-- *  IDLE -- no logging has been done on the file system or
-- *		we are done covering previous transactions.
-- *  NEED -- logging has occurred and we need a dummy transaction
-- *		when the log becomes idle.
-- *  DONE -- we were in the NEED state and have committed a dummy
-- *		transaction.
-- *  NEED2 -- we detected that a dummy transaction has gone to the
-- *		on disk log with no other transactions.
-- *  DONE2 -- we committed a dummy transaction when in the NEED2 state.
-- *
-- * There are two places where we switch states:
-- *
-- * 1.) In xfs_sync, when we detect an idle log and are in NEED or NEED2.
-- *	We commit the dummy transaction and switch to DONE or DONE2,
-- *	respectively. In all other states, we don't do anything.
-- *
-- * 2.) When we finish writing the on-disk log (xlog_state_clean_log).
-- *
-- *	No matter what state we are in, if this isn't the dummy
-- *	transaction going out, the next state is NEED.
-- *	So, if we aren't in the DONE or DONE2 states, the next state
-- *	is NEED. We can't be finishing a write of the dummy record
-- *	unless it was committed and the state switched to DONE or DONE2.
-- *
-- *	If we are in the DONE state and this was a write of the
-- *		dummy transaction, we move to NEED2.
-- *
-- *	If we are in the DONE2 state and this was a write of the
-- *		dummy transaction, we move to IDLE.
-- *
-- *
-- * Writing only one dummy transaction can get appended to
-- * one file space allocation. When this happens, the log recovery
-- * code replays the space allocation and a file could be truncated.
-- * This is why we have the NEED2 and DONE2 states before going idle.
-- */
--
--#define XLOG_STATE_COVER_IDLE	0
--#define XLOG_STATE_COVER_NEED	1
--#define XLOG_STATE_COVER_DONE	2
--#define XLOG_STATE_COVER_NEED2	3
--#define XLOG_STATE_COVER_DONE2	4
--
--#define XLOG_COVER_OPS		5
--
--
--/* Ticket reservation region accounting */ 
--#define XLOG_TIC_LEN_MAX	15
--
--/*
-- * Reservation region
-- * As would be stored in xfs_log_iovec but without the i_addr which
-- * we don't care about.
-- */
--typedef struct xlog_res {
--	uint	r_len;	/* region length		:4 */
--	uint	r_type;	/* region's transaction type	:4 */
--} xlog_res_t;
--
--typedef struct xlog_ticket {
--	struct list_head   t_queue;	 /* reserve/write queue */
--	struct task_struct *t_task;	 /* task that owns this ticket */
--	xlog_tid_t	   t_tid;	 /* transaction identifier	 : 4  */
--	atomic_t	   t_ref;	 /* ticket reference count       : 4  */
--	int		   t_curr_res;	 /* current reservation in bytes : 4  */
--	int		   t_unit_res;	 /* unit reservation in bytes    : 4  */
--	char		   t_ocnt;	 /* original count		 : 1  */
--	char		   t_cnt;	 /* current count		 : 1  */
--	char		   t_clientid;	 /* who does this belong to;	 : 1  */
--	char		   t_flags;	 /* properties of reservation	 : 1  */
--	uint		   t_trans_type; /* transaction type             : 4  */
--
--        /* reservation array fields */
--	uint		   t_res_num;                    /* num in array : 4 */
--	uint		   t_res_num_ophdrs;		 /* num op hdrs  : 4 */
--	uint		   t_res_arr_sum;		 /* array sum    : 4 */
--	uint		   t_res_o_flow;		 /* sum overflow : 4 */
--	xlog_res_t	   t_res_arr[XLOG_TIC_LEN_MAX];  /* array of res : 8 * 15 */ 
--} xlog_ticket_t;
--
--#endif
--
--
--typedef struct xlog_op_header {
--	__be32	   oh_tid;	/* transaction id of operation	:  4 b */
--	__be32	   oh_len;	/* bytes in data region		:  4 b */
--	__u8	   oh_clientid;	/* who sent me this		:  1 b */
--	__u8	   oh_flags;	/*				:  1 b */
--	__u16	   oh_res2;	/* 32 bit align			:  2 b */
--} xlog_op_header_t;
--
--
--/* valid values for h_fmt */
--#define XLOG_FMT_UNKNOWN  0
--#define XLOG_FMT_LINUX_LE 1
--#define XLOG_FMT_LINUX_BE 2
--#define XLOG_FMT_IRIX_BE  3
--
--/* our fmt */
--#ifdef XFS_NATIVE_HOST
--#define XLOG_FMT XLOG_FMT_LINUX_BE
--#else
--#define XLOG_FMT XLOG_FMT_LINUX_LE
--#endif
--
--typedef struct xlog_rec_header {
--	__be32	  h_magicno;	/* log record (LR) identifier		:  4 */
--	__be32	  h_cycle;	/* write cycle of log			:  4 */
--	__be32	  h_version;	/* LR version				:  4 */
--	__be32	  h_len;	/* len in bytes; should be 64-bit aligned: 4 */
--	__be64	  h_lsn;	/* lsn of this LR			:  8 */
--	__be64	  h_tail_lsn;	/* lsn of 1st LR w/ buffers not committed: 8 */
--	__le32	  h_crc;	/* crc of log record                    :  4 */
--	__be32	  h_prev_block; /* block number to previous LR		:  4 */
--	__be32	  h_num_logops;	/* number of log operations in this LR	:  4 */
--	__be32	  h_cycle_data[XLOG_HEADER_CYCLE_SIZE / BBSIZE];
--	/* new fields */
--	__be32    h_fmt;        /* format of log record                 :  4 */
--	uuid_t	  h_fs_uuid;    /* uuid of FS                           : 16 */
--	__be32	  h_size;	/* iclog size				:  4 */
--} xlog_rec_header_t;
--
--typedef struct xlog_rec_ext_header {
--	__be32	  xh_cycle;	/* write cycle of log			: 4 */
--	__be32	  xh_cycle_data[XLOG_HEADER_CYCLE_SIZE / BBSIZE]; /*	: 256 */
--} xlog_rec_ext_header_t;
--
--#ifdef __KERNEL__
--
--/*
-- * Quite misnamed, because this union lays out the actual on-disk log buffer.
-- */
--typedef union xlog_in_core2 {
--	xlog_rec_header_t	hic_header;
--	xlog_rec_ext_header_t	hic_xheader;
--	char			hic_sector[XLOG_HEADER_SIZE];
--} xlog_in_core_2_t;
--
--/*
-- * - A log record header is 512 bytes.  There is plenty of room to grow the
-- *	xlog_rec_header_t into the reserved space.
-- * - ic_data follows, so a write to disk can start at the beginning of
-- *	the iclog.
-- * - ic_forcewait is used to implement synchronous forcing of the iclog to disk.
-- * - ic_next is the pointer to the next iclog in the ring.
-- * - ic_bp is a pointer to the buffer used to write this incore log to disk.
-- * - ic_log is a pointer back to the global log structure.
-- * - ic_callback is a linked list of callback function/argument pairs to be
-- *	called after an iclog finishes writing.
-- * - ic_size is the full size of the header plus data.
-- * - ic_offset is the current number of bytes written to in this iclog.
-- * - ic_refcnt is bumped when someone is writing to the log.
-- * - ic_state is the state of the iclog.
-- *
-- * Because of cacheline contention on large machines, we need to separate
-- * various resources onto different cachelines. To start with, make the
-- * structure cacheline aligned. The following fields can be contended on
-- * by independent processes:
-- *
-- *	- ic_callback_*
-- *	- ic_refcnt
-- *	- fields protected by the global l_icloglock
-- *
-- * so we need to ensure that these fields are located in separate cachelines.
-- * We'll put all the read-only and l_icloglock fields in the first cacheline,
-- * and move everything else out to subsequent cachelines.
-- */
--typedef struct xlog_in_core {
--	wait_queue_head_t	ic_force_wait;
--	wait_queue_head_t	ic_write_wait;
--	struct xlog_in_core	*ic_next;
--	struct xlog_in_core	*ic_prev;
--	struct xfs_buf		*ic_bp;
--	struct xlog		*ic_log;
--	int			ic_size;
--	int			ic_offset;
--	int			ic_bwritecnt;
--	unsigned short		ic_state;
--	char			*ic_datap;	/* pointer to iclog data */
--
--	/* Callback structures need their own cacheline */
--	spinlock_t		ic_callback_lock ____cacheline_aligned_in_smp;
--	xfs_log_callback_t	*ic_callback;
--	xfs_log_callback_t	**ic_callback_tail;
--
--	/* reference counts need their own cacheline */
--	atomic_t		ic_refcnt ____cacheline_aligned_in_smp;
--	xlog_in_core_2_t	*ic_data;
--#define ic_header	ic_data->hic_header
--} xlog_in_core_t;
--
--/*
-- * The CIL context is used to aggregate per-transaction details as well be
-- * passed to the iclog for checkpoint post-commit processing.  After being
-- * passed to the iclog, another context needs to be allocated for tracking the
-- * next set of transactions to be aggregated into a checkpoint.
-- */
--struct xfs_cil;
--
--struct xfs_cil_ctx {
--	struct xfs_cil		*cil;
--	xfs_lsn_t		sequence;	/* chkpt sequence # */
--	xfs_lsn_t		start_lsn;	/* first LSN of chkpt commit */
--	xfs_lsn_t		commit_lsn;	/* chkpt commit record lsn */
--	struct xlog_ticket	*ticket;	/* chkpt ticket */
--	int			nvecs;		/* number of regions */
--	int			space_used;	/* aggregate size of regions */
--	struct list_head	busy_extents;	/* busy extents in chkpt */
--	struct xfs_log_vec	*lv_chain;	/* logvecs being pushed */
--	xfs_log_callback_t	log_cb;		/* completion callback hook. */
--	struct list_head	committing;	/* ctx committing list */
--};
--
--/*
-- * Committed Item List structure
-- *
-- * This structure is used to track log items that have been committed but not
-- * yet written into the log. It is used only when the delayed logging mount
-- * option is enabled.
-- *
-- * This structure tracks the list of committing checkpoint contexts so
-- * we can avoid the problem of having to hold out new transactions during a
-- * flush until we have a the commit record LSN of the checkpoint. We can
-- * traverse the list of committing contexts in xlog_cil_push_lsn() to find a
-- * sequence match and extract the commit LSN directly from there. If the
-- * checkpoint is still in the process of committing, we can block waiting for
-- * the commit LSN to be determined as well. This should make synchronous
-- * operations almost as efficient as the old logging methods.
-- */
--struct xfs_cil {
--	struct xlog		*xc_log;
--	struct list_head	xc_cil;
--	spinlock_t		xc_cil_lock;
--	struct xfs_cil_ctx	*xc_ctx;
--	struct rw_semaphore	xc_ctx_lock;
--	struct list_head	xc_committing;
--	wait_queue_head_t	xc_commit_wait;
--	xfs_lsn_t		xc_current_sequence;
--	struct work_struct	xc_push_work;
--	xfs_lsn_t		xc_push_seq;
--};
--
--/*
-- * The amount of log space we allow the CIL to aggregate is difficult to size.
-- * Whatever we choose, we have to make sure we can get a reservation for the
-- * log space effectively, that it is large enough to capture sufficient
-- * relogging to reduce log buffer IO significantly, but it is not too large for
-- * the log or induces too much latency when writing out through the iclogs. We
-- * track both space consumed and the number of vectors in the checkpoint
-- * context, so we need to decide which to use for limiting.
-- *
-- * Every log buffer we write out during a push needs a header reserved, which
-- * is at least one sector and more for v2 logs. Hence we need a reservation of
-- * at least 512 bytes per 32k of log space just for the LR headers. That means
-- * 16KB of reservation per megabyte of delayed logging space we will consume,
-- * plus various headers.  The number of headers will vary based on the num of
-- * io vectors, so limiting on a specific number of vectors is going to result
-- * in transactions of varying size. IOWs, it is more consistent to track and
-- * limit space consumed in the log rather than by the number of objects being
-- * logged in order to prevent checkpoint ticket overruns.
-- *
-- * Further, use of static reservations through the log grant mechanism is
-- * problematic. It introduces a lot of complexity (e.g. reserve grant vs write
-- * grant) and a significant deadlock potential because regranting write space
-- * can block on log pushes. Hence if we have to regrant log space during a log
-- * push, we can deadlock.
-- *
-- * However, we can avoid this by use of a dynamic "reservation stealing"
-- * technique during transaction commit whereby unused reservation space in the
-- * transaction ticket is transferred to the CIL ctx commit ticket to cover the
-- * space needed by the checkpoint transaction. This means that we never need to
-- * specifically reserve space for the CIL checkpoint transaction, nor do we
-- * need to regrant space once the checkpoint completes. This also means the
-- * checkpoint transaction ticket is specific to the checkpoint context, rather
-- * than the CIL itself.
-- *
-- * With dynamic reservations, we can effectively make up arbitrary limits for
-- * the checkpoint size so long as they don't violate any other size rules.
-- * Recovery imposes a rule that no transaction exceed half the log, so we are
-- * limited by that.  Furthermore, the log transaction reservation subsystem
-- * tries to keep 25% of the log free, so we need to keep below that limit or we
-- * risk running out of free log space to start any new transactions.
-- *
-- * In order to keep background CIL push efficient, we will set a lower
-- * threshold at which background pushing is attempted without blocking current
-- * transaction commits.  A separate, higher bound defines when CIL pushes are
-- * enforced to ensure we stay within our maximum checkpoint size bounds.
-- * threshold, yet give us plenty of space for aggregation on large logs.
-- */
--#define XLOG_CIL_SPACE_LIMIT(log)	(log->l_logsize >> 3)
--#define XLOG_CIL_HARD_SPACE_LIMIT(log)	(3 * (log->l_logsize >> 4))
--
--/*
-- * ticket grant locks, queues and accounting have their own cachlines
-- * as these are quite hot and can be operated on concurrently.
-- */
--struct xlog_grant_head {
--	spinlock_t		lock ____cacheline_aligned_in_smp;
--	struct list_head	waiters;
--	atomic64_t		grant;
--};
--
--/*
-- * The reservation head lsn is not made up of a cycle number and block number.
-- * Instead, it uses a cycle number and byte number.  Logs don't expect to
-- * overflow 31 bits worth of byte offset, so using a byte number will mean
-- * that round off problems won't occur when releasing partial reservations.
-- */
--struct xlog {
--	/* The following fields don't need locking */
--	struct xfs_mount	*l_mp;	        /* mount point */
--	struct xfs_ail		*l_ailp;	/* AIL log is working with */
--	struct xfs_cil		*l_cilp;	/* CIL log is working with */
--	struct xfs_buf		*l_xbuf;        /* extra buffer for log
--						 * wrapping */
--	struct xfs_buftarg	*l_targ;        /* buftarg of log */
--	struct delayed_work	l_work;		/* background flush work */
--	uint			l_flags;
--	uint			l_quotaoffs_flag; /* XFS_DQ_*, for QUOTAOFFs */
--	struct list_head	*l_buf_cancel_table;
--	int			l_iclog_hsize;  /* size of iclog header */
--	int			l_iclog_heads;  /* # of iclog header sectors */
--	uint			l_sectBBsize;   /* sector size in BBs (2^n) */
--	int			l_iclog_size;	/* size of log in bytes */
--	int			l_iclog_size_log; /* log power size of log */
--	int			l_iclog_bufs;	/* number of iclog buffers */
--	xfs_daddr_t		l_logBBstart;   /* start block of log */
--	int			l_logsize;      /* size of log in bytes */
--	int			l_logBBsize;    /* size of log in BB chunks */
--
--	/* The following block of fields are changed while holding icloglock */
--	wait_queue_head_t	l_flush_wait ____cacheline_aligned_in_smp;
--						/* waiting for iclog flush */
--	int			l_covered_state;/* state of "covering disk
--						 * log entries" */
--	xlog_in_core_t		*l_iclog;       /* head log queue	*/
--	spinlock_t		l_icloglock;    /* grab to change iclog state */
--	int			l_curr_cycle;   /* Cycle number of log writes */
--	int			l_prev_cycle;   /* Cycle number before last
--						 * block increment */
--	int			l_curr_block;   /* current logical log block */
--	int			l_prev_block;   /* previous logical log block */
--
--	/*
--	 * l_last_sync_lsn and l_tail_lsn are atomics so they can be set and
--	 * read without needing to hold specific locks. To avoid operations
--	 * contending with other hot objects, place each of them on a separate
--	 * cacheline.
--	 */
--	/* lsn of last LR on disk */
--	atomic64_t		l_last_sync_lsn ____cacheline_aligned_in_smp;
--	/* lsn of 1st LR with unflushed * buffers */
--	atomic64_t		l_tail_lsn ____cacheline_aligned_in_smp;
--
--	struct xlog_grant_head	l_reserve_head;
--	struct xlog_grant_head	l_write_head;
--
--	/* The following field are used for debugging; need to hold icloglock */
--#ifdef DEBUG
--	char			*l_iclog_bak[XLOG_MAX_ICLOGS];
--#endif
--
--};
--
--#define XLOG_BUF_CANCEL_BUCKET(log, blkno) \
--	((log)->l_buf_cancel_table + ((__uint64_t)blkno % XLOG_BC_TABLE_SIZE))
--
--#define XLOG_FORCED_SHUTDOWN(log)	((log)->l_flags & XLOG_IO_ERROR)
--
--/* common routines */
--extern int
--xlog_recover(
--	struct xlog		*log);
--extern int
--xlog_recover_finish(
--	struct xlog		*log);
--
--extern __le32	 xlog_cksum(struct xlog *log, struct xlog_rec_header *rhead,
--			    char *dp, int size);
--
--extern kmem_zone_t *xfs_log_ticket_zone;
--struct xlog_ticket *
--xlog_ticket_alloc(
--	struct xlog	*log,
--	int		unit_bytes,
--	int		count,
--	char		client,
--	bool		permanent,
--	xfs_km_flags_t	alloc_flags);
--
--
--static inline void
--xlog_write_adv_cnt(void **ptr, int *len, int *off, size_t bytes)
--{
--	*ptr += bytes;
--	*len -= bytes;
--	*off += bytes;
--}
--
--void	xlog_print_tic_res(struct xfs_mount *mp, struct xlog_ticket *ticket);
--int
--xlog_write(
--	struct xlog		*log,
--	struct xfs_log_vec	*log_vector,
--	struct xlog_ticket	*tic,
--	xfs_lsn_t		*start_lsn,
--	struct xlog_in_core	**commit_iclog,
--	uint			flags);
--
--/*
-- * When we crack an atomic LSN, we sample it first so that the value will not
-- * change while we are cracking it into the component values. This means we
-- * will always get consistent component values to work from. This should always
-- * be used to sample and crack LSNs that are stored and updated in atomic
-- * variables.
-- */
--static inline void
--xlog_crack_atomic_lsn(atomic64_t *lsn, uint *cycle, uint *block)
--{
--	xfs_lsn_t val = atomic64_read(lsn);
--
--	*cycle = CYCLE_LSN(val);
--	*block = BLOCK_LSN(val);
--}
--
--/*
-- * Calculate and assign a value to an atomic LSN variable from component pieces.
-- */
--static inline void
--xlog_assign_atomic_lsn(atomic64_t *lsn, uint cycle, uint block)
--{
--	atomic64_set(lsn, xlog_assign_lsn(cycle, block));
--}
--
--/*
-- * When we crack the grant head, we sample it first so that the value will not
-- * change while we are cracking it into the component values. This means we
-- * will always get consistent component values to work from.
-- */
--static inline void
--xlog_crack_grant_head_val(int64_t val, int *cycle, int *space)
--{
--	*cycle = val >> 32;
--	*space = val & 0xffffffff;
--}
--
--static inline void
--xlog_crack_grant_head(atomic64_t *head, int *cycle, int *space)
--{
--	xlog_crack_grant_head_val(atomic64_read(head), cycle, space);
--}
--
--static inline int64_t
--xlog_assign_grant_head_val(int cycle, int space)
--{
--	return ((int64_t)cycle << 32) | space;
--}
--
--static inline void
--xlog_assign_grant_head(atomic64_t *head, int cycle, int space)
--{
--	atomic64_set(head, xlog_assign_grant_head_val(cycle, space));
--}
--
--/*
-- * Committed Item List interfaces
-- */
--int
--xlog_cil_init(struct xlog *log);
--void
--xlog_cil_init_post_recovery(struct xlog *log);
--void
--xlog_cil_destroy(struct xlog *log);
--
--/*
-- * CIL force routines
-- */
--xfs_lsn_t
--xlog_cil_force_lsn(
--	struct xlog *log,
--	xfs_lsn_t sequence);
--
--static inline void
--xlog_cil_force(struct xlog *log)
--{
--	xlog_cil_force_lsn(log, log->l_cilp->xc_current_sequence);
--}
--
--/*
-- * Unmount record type is used as a pseudo transaction type for the ticket.
-- * It's value must be outside the range of XFS_TRANS_* values.
-- */
--#define XLOG_UNMOUNT_REC_TYPE	(-1U)
--
--/*
-- * Wrapper function for waiting on a wait queue serialised against wakeups
-- * by a spinlock. This matches the semantics of all the wait queues used in the
-- * log code.
-- */
--static inline void xlog_wait(wait_queue_head_t *wq, spinlock_t *lock)
--{
--	DECLARE_WAITQUEUE(wait, current);
--
--	add_wait_queue_exclusive(wq, &wait);
--	__set_current_state(TASK_UNINTERRUPTIBLE);
--	spin_unlock(lock);
--	schedule();
--	remove_wait_queue(wq, &wait);
--}
--#endif	/* __KERNEL__ */
--
--#endif	/* __XFS_LOG_PRIV_H__ */
-diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index 93beb23..92a90f1 100644
---- a/libxfs/rdwr.c
-+++ b/libxfs/rdwr.c
-@@ -17,8 +17,6 @@
-  */
- 
- #include <xfs/libxfs.h>
--#include <xfs/xfs_log.h>
--#include <xfs/xfs_log_priv.h>
- #include "init.h"
- 
- #define BDSTRAT_SIZE	(256 * 1024)
-diff --git a/libxlog/xfs_log_recover.c b/libxlog/xfs_log_recover.c
-index 7f5a41c..13ca327 100644
---- a/libxlog/xfs_log_recover.c
-+++ b/libxlog/xfs_log_recover.c
-@@ -26,6 +26,7 @@
- 	(0); \
- })
- 
-+#define BLK_AVG(blk1, blk2)    ((blk1+blk2) >> 1)
- 
- /*
-  * Verify the given count of basic blocks is valid number of blocks
-@@ -1032,6 +1033,8 @@ xlog_recover_add_item(
- 	list_add_tail(&item->ri_list, head);
- }
- 
-+#define BLK_AVG(blk1, blk2)	((blk1+blk2) >> 1)
++/*
++ * search from @first to find the next perag with the given tag set.
++ */
++struct xfs_perag *
++xfs_perag_get_tag(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		first,
++	int			tag)
++{
++	struct xfs_perag	*pag;
++	int			found;
++	int			ref;
 +
- STATIC int
- xlog_recover_add_to_cont_trans(
- 	struct xlog		*log,
++	rcu_read_lock();
++	found = radix_tree_gang_lookup_tag(&mp->m_perag_tree,
++					(void **)&pag, first, 1, tag);
++	if (found <= 0) {
++		rcu_read_unlock();
++		return NULL;
++	}
++	ref = atomic_inc_return(&pag->pag_ref);
++	rcu_read_unlock();
++	trace_xfs_perag_get_tag(mp, pag->pag_agno, ref, _RET_IP_);
++	return pag;
++}
++
++void
++xfs_perag_put(
++	struct xfs_perag	*pag)
++{
++	int	ref;
++
++	ASSERT(atomic_read(&pag->pag_ref) > 0);
++	ref = atomic_dec_return(&pag->pag_ref);
++	trace_xfs_perag_put(pag->pag_mount, pag->pag_agno, ref, _RET_IP_);
++}
++
++/*
++ * Check the validity of the SB found.
++ */
++STATIC int
++xfs_mount_validate_sb(
++	xfs_mount_t	*mp,
++	xfs_sb_t	*sbp,
++	bool		check_inprogress,
++	bool		check_version)
++{
++
++	/*
++	 * If the log device and data device have the
++	 * same device number, the log is internal.
++	 * Consequently, the sb_logstart should be non-zero.  If
++	 * we have a zero sb_logstart in this case, we may be trying to mount
++	 * a volume filesystem in a non-volume manner.
++	 */
++	if (sbp->sb_magicnum != XFS_SB_MAGIC) {
++		xfs_warn(mp, "bad magic number");
++		return XFS_ERROR(EWRONGFS);
++	}
++
++
++	if (!xfs_sb_good_version(sbp)) {
++		xfs_warn(mp, "bad version");
++		return XFS_ERROR(EWRONGFS);
++	}
++
++	if ((sbp->sb_qflags & (XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD)) &&
++			(sbp->sb_qflags & (XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD |
++				XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD))) {
++		xfs_notice(mp,
++"Super block has XFS_OQUOTA bits along with XFS_PQUOTA and/or XFS_GQUOTA bits.\n");
++		return XFS_ERROR(EFSCORRUPTED);
++	}
++
++	/*
++	 * Version 5 superblock feature mask validation. Reject combinations the
++	 * kernel cannot support up front before checking anything else. For
++	 * write validation, we don't need to check feature masks.
++	 */
++	if (check_version && XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) {
++		xfs_alert(mp,
++"Version 5 superblock detected. xfsprogs has EXPERIMENTAL support enabled!\n"
++"Use of these features is at your own risk!");
++
++		if (xfs_sb_has_compat_feature(sbp,
++					XFS_SB_FEAT_COMPAT_UNKNOWN)) {
++			xfs_warn(mp,
++"Superblock has unknown compatible features (0x%x) enabled.\n"
++"Using a more recent xfsprogs is recommended.",
++				(sbp->sb_features_compat &
++						XFS_SB_FEAT_COMPAT_UNKNOWN));
++		}
++
++		if (xfs_sb_has_ro_compat_feature(sbp,
++					XFS_SB_FEAT_RO_COMPAT_UNKNOWN)) {
++			xfs_warn(mp,
++"Superblock has unknown read-only compatible features (0x%x) enabled.\n"
++"Using a more recent xfsprogs is recommended.",
++				(sbp->sb_features_ro_compat &
++						XFS_SB_FEAT_RO_COMPAT_UNKNOWN));
++		}
++		if (xfs_sb_has_incompat_feature(sbp,
++					XFS_SB_FEAT_INCOMPAT_UNKNOWN)) {
++			xfs_warn(mp,
++"Superblock has unknown incompatible features (0x%x) enabled.\n"
++"Filesystem can not be safely operated on by this xfsprogs installation",
++				(sbp->sb_features_incompat &
++						XFS_SB_FEAT_INCOMPAT_UNKNOWN));
++			return XFS_ERROR(EINVAL);
++		}
++	}
++
++	if (unlikely(
++	    sbp->sb_logstart == 0 && mp->m_logdev_targp == mp->m_ddev_targp)) {
++		xfs_warn(mp,
++		"filesystem is marked as having an external log; "
++		"specify logdev on the mount command line.");
++		return XFS_ERROR(EINVAL);
++	}
++
++	if (unlikely(
++	    sbp->sb_logstart != 0 && mp->m_logdev_targp != mp->m_ddev_targp)) {
++		xfs_warn(mp,
++		"filesystem is marked as having an internal log; "
++		"do not specify logdev on the mount command line.");
++		return XFS_ERROR(EINVAL);
++	}
++
++	/*
++	 * More sanity checking.  Most of these were stolen directly from
++	 * xfs_repair.
++	 */
++	if (unlikely(
++	    sbp->sb_agcount <= 0					||
++	    sbp->sb_sectsize < XFS_MIN_SECTORSIZE			||
++	    sbp->sb_sectsize > XFS_MAX_SECTORSIZE			||
++	    sbp->sb_sectlog < XFS_MIN_SECTORSIZE_LOG			||
++	    sbp->sb_sectlog > XFS_MAX_SECTORSIZE_LOG			||
++	    sbp->sb_sectsize != (1 << sbp->sb_sectlog)			||
++	    sbp->sb_blocksize < XFS_MIN_BLOCKSIZE			||
++	    sbp->sb_blocksize > XFS_MAX_BLOCKSIZE			||
++	    sbp->sb_blocklog < XFS_MIN_BLOCKSIZE_LOG			||
++	    sbp->sb_blocklog > XFS_MAX_BLOCKSIZE_LOG			||
++	    sbp->sb_blocksize != (1 << sbp->sb_blocklog)		||
++	    sbp->sb_inodesize < XFS_DINODE_MIN_SIZE			||
++	    sbp->sb_inodesize > XFS_DINODE_MAX_SIZE			||
++	    sbp->sb_inodelog < XFS_DINODE_MIN_LOG			||
++	    sbp->sb_inodelog > XFS_DINODE_MAX_LOG			||
++	    sbp->sb_inodesize != (1 << sbp->sb_inodelog)		||
++	    (sbp->sb_blocklog - sbp->sb_inodelog != sbp->sb_inopblog)	||
++	    (sbp->sb_rextsize * sbp->sb_blocksize > XFS_MAX_RTEXTSIZE)	||
++	    (sbp->sb_rextsize * sbp->sb_blocksize < XFS_MIN_RTEXTSIZE)	||
++	    (sbp->sb_imax_pct > 100 /* zero sb_imax_pct is valid */)	||
++	    sbp->sb_dblocks == 0					||
++	    sbp->sb_dblocks > XFS_MAX_DBLOCKS(sbp)			||
++	    sbp->sb_dblocks < XFS_MIN_DBLOCKS(sbp))) {
++		XFS_CORRUPTION_ERROR("SB sanity check failed",
++				XFS_ERRLEVEL_LOW, mp, sbp);
++		return XFS_ERROR(EFSCORRUPTED);
++	}
++
++	/*
++	 * Currently only very few inode sizes are supported.
++	 */
++	switch (sbp->sb_inodesize) {
++	case 256:
++	case 512:
++	case 1024:
++	case 2048:
++		break;
++	default:
++		xfs_warn(mp, "inode size of %d bytes not supported",
++				sbp->sb_inodesize);
++		return XFS_ERROR(ENOSYS);
++	}
++
++	if (xfs_sb_validate_fsb_count(sbp, sbp->sb_dblocks) ||
++	    xfs_sb_validate_fsb_count(sbp, sbp->sb_rblocks)) {
++		xfs_warn(mp,
++		"file system too large to be mounted on this system.");
++		return XFS_ERROR(EFBIG);
++	}
++
++	/*
++	 * Version 1 directory format has never worked on Linux.
++	 */
++	if (unlikely(!xfs_sb_version_hasdirv2(sbp))) {
++		xfs_warn(mp, "file system using version 1 directory format");
++		return XFS_ERROR(ENOSYS);
++	}
++
++	return 0;
++}
++
++void
++xfs_sb_quota_from_disk(
++	struct xfs_sb	*sbp)
++{
++	if (sbp->sb_qflags & XFS_OQUOTA_ENFD) {
++		sbp->sb_qflags |= (sbp->sb_qflags & XFS_PQUOTA_ACCT) ?
++					XFS_PQUOTA_ENFD : XFS_GQUOTA_ENFD;
++	}
++	if (sbp->sb_qflags & XFS_OQUOTA_CHKD) {
++		sbp->sb_qflags |= (sbp->sb_qflags & XFS_PQUOTA_ACCT) ?
++					XFS_PQUOTA_CHKD : XFS_GQUOTA_CHKD;
++	}
++	sbp->sb_qflags &= ~(XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD);
++}
++
++void
++xfs_sb_from_disk(
++	struct xfs_sb	*to,
++	xfs_dsb_t	*from)
++{
++	to->sb_magicnum = be32_to_cpu(from->sb_magicnum);
++	to->sb_blocksize = be32_to_cpu(from->sb_blocksize);
++	to->sb_dblocks = be64_to_cpu(from->sb_dblocks);
++	to->sb_rblocks = be64_to_cpu(from->sb_rblocks);
++	to->sb_rextents = be64_to_cpu(from->sb_rextents);
++	memcpy(&to->sb_uuid, &from->sb_uuid, sizeof(to->sb_uuid));
++	to->sb_logstart = be64_to_cpu(from->sb_logstart);
++	to->sb_rootino = be64_to_cpu(from->sb_rootino);
++	to->sb_rbmino = be64_to_cpu(from->sb_rbmino);
++	to->sb_rsumino = be64_to_cpu(from->sb_rsumino);
++	to->sb_rextsize = be32_to_cpu(from->sb_rextsize);
++	to->sb_agblocks = be32_to_cpu(from->sb_agblocks);
++	to->sb_agcount = be32_to_cpu(from->sb_agcount);
++	to->sb_rbmblocks = be32_to_cpu(from->sb_rbmblocks);
++	to->sb_logblocks = be32_to_cpu(from->sb_logblocks);
++	to->sb_versionnum = be16_to_cpu(from->sb_versionnum);
++	to->sb_sectsize = be16_to_cpu(from->sb_sectsize);
++	to->sb_inodesize = be16_to_cpu(from->sb_inodesize);
++	to->sb_inopblock = be16_to_cpu(from->sb_inopblock);
++	memcpy(&to->sb_fname, &from->sb_fname, sizeof(to->sb_fname));
++	to->sb_blocklog = from->sb_blocklog;
++	to->sb_sectlog = from->sb_sectlog;
++	to->sb_inodelog = from->sb_inodelog;
++	to->sb_inopblog = from->sb_inopblog;
++	to->sb_agblklog = from->sb_agblklog;
++	to->sb_rextslog = from->sb_rextslog;
++	to->sb_inprogress = from->sb_inprogress;
++	to->sb_imax_pct = from->sb_imax_pct;
++	to->sb_icount = be64_to_cpu(from->sb_icount);
++	to->sb_ifree = be64_to_cpu(from->sb_ifree);
++	to->sb_fdblocks = be64_to_cpu(from->sb_fdblocks);
++	to->sb_frextents = be64_to_cpu(from->sb_frextents);
++	to->sb_uquotino = be64_to_cpu(from->sb_uquotino);
++	to->sb_gquotino = be64_to_cpu(from->sb_gquotino);
++	to->sb_qflags = be16_to_cpu(from->sb_qflags);
++	to->sb_flags = from->sb_flags;
++	to->sb_shared_vn = from->sb_shared_vn;
++	to->sb_inoalignmt = be32_to_cpu(from->sb_inoalignmt);
++	to->sb_unit = be32_to_cpu(from->sb_unit);
++	to->sb_width = be32_to_cpu(from->sb_width);
++	to->sb_dirblklog = from->sb_dirblklog;
++	to->sb_logsectlog = from->sb_logsectlog;
++	to->sb_logsectsize = be16_to_cpu(from->sb_logsectsize);
++	to->sb_logsunit = be32_to_cpu(from->sb_logsunit);
++	to->sb_features2 = be32_to_cpu(from->sb_features2);
++	to->sb_bad_features2 = be32_to_cpu(from->sb_bad_features2);
++	to->sb_features_compat = be32_to_cpu(from->sb_features_compat);
++	to->sb_features_ro_compat = be32_to_cpu(from->sb_features_ro_compat);
++	to->sb_features_incompat = be32_to_cpu(from->sb_features_incompat);
++	to->sb_features_log_incompat =
++				be32_to_cpu(from->sb_features_log_incompat);
++	to->sb_pad = 0;
++	to->sb_pquotino = be64_to_cpu(from->sb_pquotino);
++	to->sb_lsn = be64_to_cpu(from->sb_lsn);
++}
++
++static void
++xfs_sb_quota_to_disk(
++	xfs_dsb_t	*to,
++	xfs_sb_t	*from,
++	__int64_t	*fields)
++{
++	__uint16_t	qflags = from->sb_qflags;
++
++	if (*fields & XFS_SB_QFLAGS) {
++		/*
++		 * The in-core version of sb_qflags do not have
++		 * XFS_OQUOTA_* flags, whereas the on-disk version
++		 * does.  So, convert incore XFS_{PG}QUOTA_* flags
++		 * to on-disk XFS_OQUOTA_* flags.
++		 */
++		qflags &= ~(XFS_PQUOTA_ENFD | XFS_PQUOTA_CHKD |
++				XFS_GQUOTA_ENFD | XFS_GQUOTA_CHKD);
++
++		if (from->sb_qflags &
++				(XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD))
++			qflags |= XFS_OQUOTA_ENFD;
++		if (from->sb_qflags &
++				(XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD))
++			qflags |= XFS_OQUOTA_CHKD;
++		to->sb_qflags = cpu_to_be16(qflags);
++		*fields &= ~XFS_SB_QFLAGS;
++	}
++}
++
++/*
++ * Copy in core superblock to ondisk one.
++ *
++ * The fields argument is mask of superblock fields to copy.
++ */
++void
++xfs_sb_to_disk(
++	xfs_dsb_t	*to,
++	xfs_sb_t	*from,
++	__int64_t	fields)
++{
++	xfs_caddr_t	to_ptr = (xfs_caddr_t)to;
++	xfs_caddr_t	from_ptr = (xfs_caddr_t)from;
++	xfs_sb_field_t	f;
++	int		first;
++	int		size;
++
++	ASSERT(fields);
++	if (!fields)
++		return;
++
++	xfs_sb_quota_to_disk(to, from, &fields);
++	while (fields) {
++		f = (xfs_sb_field_t)xfs_lowbit64((__uint64_t)fields);
++		first = xfs_sb_info[f].offset;
++		size = xfs_sb_info[f + 1].offset - first;
++
++		ASSERT(xfs_sb_info[f].type == 0 || xfs_sb_info[f].type == 1);
++
++		if (size == 1 || xfs_sb_info[f].type == 1) {
++			memcpy(to_ptr + first, from_ptr + first, size);
++		} else {
++			switch (size) {
++			case 2:
++				*(__be16 *)(to_ptr + first) =
++					cpu_to_be16(*(__u16 *)(from_ptr + first));
++				break;
++			case 4:
++				*(__be32 *)(to_ptr + first) =
++					cpu_to_be32(*(__u32 *)(from_ptr + first));
++				break;
++			case 8:
++				*(__be64 *)(to_ptr + first) =
++					cpu_to_be64(*(__u64 *)(from_ptr + first));
++				break;
++			default:
++				ASSERT(0);
++			}
++		}
++
++		fields &= ~(1LL << f);
++	}
++}
++
++static int
++xfs_sb_verify(
++	struct xfs_buf	*bp,
++	bool		check_version)
++{
++	struct xfs_mount *mp = bp->b_target->bt_mount;
++	struct xfs_sb	sb;
++
++	xfs_sb_from_disk(&sb, XFS_BUF_TO_SBP(bp));
++
++	/*
++	 * Only check the in progress field for the primary superblock as
++	 * mkfs.xfs doesn't clear it from secondary superblocks.
++	 */
++	return xfs_mount_validate_sb(mp, &sb, bp->b_bn == XFS_SB_DADDR,
++				     check_version);
++}
++
++/*
++ * If the superblock has the CRC feature bit set or the CRC field is non-null,
++ * check that the CRC is valid.  We check the CRC field is non-null because a
++ * single bit error could clear the feature bit and unused parts of the
++ * superblock are supposed to be zero. Hence a non-null crc field indicates that
++ * we've potentially lost a feature bit and we should check it anyway.
++ */
++static void
++xfs_sb_read_verify(
++	struct xfs_buf	*bp)
++{
++	struct xfs_mount *mp = bp->b_target->bt_mount;
++	struct xfs_dsb	*dsb = XFS_BUF_TO_SBP(bp);
++	int		error;
++
++	/*
++	 * open code the version check to avoid needing to convert the entire
++	 * superblock from disk order just to check the version number
++	 */
++	if (dsb->sb_magicnum == cpu_to_be32(XFS_SB_MAGIC) &&
++	    (((be16_to_cpu(dsb->sb_versionnum) & XFS_SB_VERSION_NUMBITS) ==
++						XFS_SB_VERSION_5) ||
++	     dsb->sb_crc != 0)) {
++
++		if (!xfs_verify_cksum(bp->b_addr, be16_to_cpu(dsb->sb_sectsize),
++				      offsetof(struct xfs_sb, sb_crc))) {
++			error = EFSCORRUPTED;
++			goto out_error;
++		}
++	}
++	error = xfs_sb_verify(bp, true);
++
++out_error:
++	if (error) {
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
++		xfs_buf_ioerror(bp, error);
++	}
++}
++
++/*
++ * We may be probed for a filesystem match, so we may not want to emit
++ * messages when the superblock buffer is not actually an XFS superblock.
++ * If we find an XFS superblock, the run a normal, noisy mount because we are
++ * really going to mount it and want to know about errors.
++ */
++static void
++xfs_sb_quiet_read_verify(
++	struct xfs_buf	*bp)
++{
++	struct xfs_dsb	*dsb = XFS_BUF_TO_SBP(bp);
++
++
++	if (dsb->sb_magicnum == cpu_to_be32(XFS_SB_MAGIC)) {
++		/* XFS filesystem, verify noisily! */
++		xfs_sb_read_verify(bp);
++		return;
++	}
++	/* quietly fail */
++	xfs_buf_ioerror(bp, EWRONGFS);
++}
++
++static void
++xfs_sb_write_verify(
++	struct xfs_buf		*bp)
++{
++	struct xfs_mount	*mp = bp->b_target->bt_mount;
++	struct xfs_buf_log_item	*bip = bp->b_fspriv;
++	int			error;
++
++	error = xfs_sb_verify(bp, false);
++	if (error) {
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
++		xfs_buf_ioerror(bp, error);
++		return;
++	}
++
++	if (!xfs_sb_version_hascrc(&mp->m_sb))
++		return;
++
++	if (bip)
++		XFS_BUF_TO_SBP(bp)->sb_lsn = cpu_to_be64(bip->bli_item.li_lsn);
++
++	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length),
++			 offsetof(struct xfs_sb, sb_crc));
++}
++
++const struct xfs_buf_ops xfs_sb_buf_ops = {
++	.verify_read = xfs_sb_read_verify,
++	.verify_write = xfs_sb_write_verify,
++};
++
++const struct xfs_buf_ops xfs_sb_quiet_buf_ops = {
++	.verify_read = xfs_sb_quiet_read_verify,
++	.verify_write = xfs_sb_write_verify,
++};
++
++/*
++ * xfs_mount_common
++ *
++ * Mount initialization code establishing various mount
++ * fields from the superblock associated with the given
++ * mount structure
++ */
++void
++xfs_sb_mount_common(
++	struct xfs_mount *mp,
++	struct xfs_sb	*sbp)
++{
++	mp->m_agfrotor = mp->m_agirotor = 0;
++	spin_lock_init(&mp->m_agirotor_lock);
++	mp->m_maxagi = mp->m_sb.sb_agcount;
++	mp->m_blkbit_log = sbp->sb_blocklog + XFS_NBBYLOG;
++	mp->m_blkbb_log = sbp->sb_blocklog - BBSHIFT;
++	mp->m_sectbb_log = sbp->sb_sectlog - BBSHIFT;
++	mp->m_agno_log = xfs_highbit32(sbp->sb_agcount - 1) + 1;
++	mp->m_agino_log = sbp->sb_inopblog + sbp->sb_agblklog;
++	mp->m_blockmask = sbp->sb_blocksize - 1;
++	mp->m_blockwsize = sbp->sb_blocksize >> XFS_WORDLOG;
++	mp->m_blockwmask = mp->m_blockwsize - 1;
++
++	mp->m_alloc_mxr[0] = xfs_allocbt_maxrecs(mp, sbp->sb_blocksize, 1);
++	mp->m_alloc_mxr[1] = xfs_allocbt_maxrecs(mp, sbp->sb_blocksize, 0);
++	mp->m_alloc_mnr[0] = mp->m_alloc_mxr[0] / 2;
++	mp->m_alloc_mnr[1] = mp->m_alloc_mxr[1] / 2;
++
++	mp->m_inobt_mxr[0] = xfs_inobt_maxrecs(mp, sbp->sb_blocksize, 1);
++	mp->m_inobt_mxr[1] = xfs_inobt_maxrecs(mp, sbp->sb_blocksize, 0);
++	mp->m_inobt_mnr[0] = mp->m_inobt_mxr[0] / 2;
++	mp->m_inobt_mnr[1] = mp->m_inobt_mxr[1] / 2;
++
++	mp->m_bmap_dmxr[0] = xfs_bmbt_maxrecs(mp, sbp->sb_blocksize, 1);
++	mp->m_bmap_dmxr[1] = xfs_bmbt_maxrecs(mp, sbp->sb_blocksize, 0);
++	mp->m_bmap_dmnr[0] = mp->m_bmap_dmxr[0] / 2;
++	mp->m_bmap_dmnr[1] = mp->m_bmap_dmxr[1] / 2;
++
++	mp->m_bsize = XFS_FSB_TO_BB(mp, 1);
++	mp->m_ialloc_inos = (int)MAX((__uint16_t)XFS_INODES_PER_CHUNK,
++					sbp->sb_inopblock);
++	mp->m_ialloc_blks = mp->m_ialloc_inos >> sbp->sb_inopblog;
++}
++
++/*
++ * xfs_initialize_perag_data
++ *
++ * Read in each per-ag structure so we can count up the number of
++ * allocated inodes, free inodes and used filesystem blocks as this
++ * information is no longer persistent in the superblock. Once we have
++ * this information, write it into the in-core superblock structure.
++ */
++int
++xfs_initialize_perag_data(
++	struct xfs_mount *mp,
++	xfs_agnumber_t	agcount)
++{
++	xfs_agnumber_t	index;
++	xfs_perag_t	*pag;
++	xfs_sb_t	*sbp = &mp->m_sb;
++	uint64_t	ifree = 0;
++	uint64_t	ialloc = 0;
++	uint64_t	bfree = 0;
++	uint64_t	bfreelst = 0;
++	uint64_t	btree = 0;
++	int		error;
++
++	for (index = 0; index < agcount; index++) {
++		/*
++		 * read the agf, then the agi. This gets us
++		 * all the information we need and populates the
++		 * per-ag structures for us.
++		 */
++		error = xfs_alloc_pagf_init(mp, NULL, index, 0);
++		if (error)
++			return error;
++
++		error = xfs_ialloc_pagi_init(mp, NULL, index);
++		if (error)
++			return error;
++		pag = xfs_perag_get(mp, index);
++		ifree += pag->pagi_freecount;
++		ialloc += pag->pagi_count;
++		bfree += pag->pagf_freeblks;
++		bfreelst += pag->pagf_flcount;
++		btree += pag->pagf_btreeblks;
++		xfs_perag_put(pag);
++	}
++	/*
++	 * Overwrite incore superblock counters with just-read data
++	 */
++	spin_lock(&mp->m_sb_lock);
++	sbp->sb_ifree = ifree;
++	sbp->sb_icount = ialloc;
++	sbp->sb_fdblocks = bfree + bfreelst + btree;
++	spin_unlock(&mp->m_sb_lock);
++
++	/* Fixup the per-cpu counters as well. */
++	xfs_icsb_reinit_counters(mp);
++
++	return 0;
++}
++
++/*
++ * xfs_mod_sb() can be used to copy arbitrary changes to the
++ * in-core superblock into the superblock buffer to be logged.
++ * It does not provide the higher level of locking that is
++ * needed to protect the in-core superblock from concurrent
++ * access.
++ */
++void
++xfs_mod_sb(xfs_trans_t *tp, __int64_t fields)
++{
++	xfs_buf_t	*bp;
++	int		first;
++	int		last;
++	xfs_mount_t	*mp;
++	xfs_sb_field_t	f;
++
++	ASSERT(fields);
++	if (!fields)
++		return;
++	mp = tp->t_mountp;
++	bp = xfs_trans_getsb(tp, mp, 0);
++	first = sizeof(xfs_sb_t);
++	last = 0;
++
++	/* translate/copy */
++
++	xfs_sb_to_disk(XFS_BUF_TO_SBP(bp), &mp->m_sb, fields);
++
++	/* find modified range */
++	f = (xfs_sb_field_t)xfs_highbit64((__uint64_t)fields);
++	ASSERT((1LL << f) & XFS_SB_MOD_BITS);
++	last = xfs_sb_info[f + 1].offset - 1;
++
++	f = (xfs_sb_field_t)xfs_lowbit64((__uint64_t)fields);
++	ASSERT((1LL << f) & XFS_SB_MOD_BITS);
++	first = xfs_sb_info[f].offset;
++
++	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_SB_BUF);
++	xfs_trans_log_buf(tp, bp, first, last);
++}
 -- 
 1.8.3.2
 
