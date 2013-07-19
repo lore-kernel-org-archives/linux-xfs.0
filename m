@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 4C6C58028
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 3F18D8019
 	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 01:45:40 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C0DF7AC00E
-	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 23:45:39 -0700 (PDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 2ECEC304039
+	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 23:45:40 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	Cx7W4cAYu9HyITyb for <xfs@oss.sgi.com>;
+	bXvkPc05hbKpVu6m for <xfs@oss.sgi.com>;
 	Thu, 18 Jul 2013 23:45:38 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1V04RT-0004JK-9b
+	(envelope-from <dave@fromorbit.com>) id 1V04RT-0004JY-Cr
 	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:45:27 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1V04RT-0002Lr-8W
+	(envelope-from <dave@disappointment.disaster>) id 1V04RT-0002MB-Av
 	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:45:27 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 35/49] xfs: move swap extent code to xfs_extent_ops
-Date: Fri, 19 Jul 2013 16:45:10 +1000
-Message-Id: <1374216324-8781-36-git-send-email-david@fromorbit.com>
+Subject: [PATCH 39/49] xfs: move kernel specific type definitions to xfs.h
+Date: Fri, 19 Jul 2013 16:45:14 +1000
+Message-Id: <1374216324-8781-40-git-send-email-david@fromorbit.com>
 In-Reply-To: <1374216324-8781-1-git-send-email-david@fromorbit.com>
 References: <1374216324-8781-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,132 +39,63 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Swapping extents is clearly an extent operaiton, and it is not
-shared with userspace. Move the code to xfs_extent_ops.[ch], and
-the userspace ioctl structure definition to xfs_fs.h where most of
-the other ioctl structure definitions are. The means xfs_dfrag.h is
-no longer needed in userspace.
+xfs_types.h is shared with userspace, so having kernel specific
+types defined in it is problematic. Move all the kernel specific
+defines to xfs_linux.h so we can remove the __KERNEL__ guards from
+xfs_types.h
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fsr/xfs_fsr.c       |  1 -
- include/Makefile    |  3 +--
- include/xfs_dfrag.h | 53 -----------------------------------------------------
- include/xfs_fs.h    | 15 +++++++++++++++
- 4 files changed, 16 insertions(+), 56 deletions(-)
- delete mode 100644 include/xfs_dfrag.h
+ include/xfs_types.h | 36 ------------------------------------
+ 1 file changed, 36 deletions(-)
 
-diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
-index 7e518c1..7596834 100644
---- a/fsr/xfs_fsr.c
-+++ b/fsr/xfs_fsr.c
-@@ -20,7 +20,6 @@
- #include <xfs/xfs.h>
- #include <xfs/xfs_types.h>
- #include <xfs/jdm.h>
--#include <xfs/xfs_dfrag.h>
- #include <xfs/xfs_bmap_btree.h>
- #include <xfs/xfs_dinode.h>
- #include <xfs/xfs_attr_sf.h>
-diff --git a/include/Makefile b/include/Makefile
-index 53821ee..5090900 100644
---- a/include/Makefile
-+++ b/include/Makefile
-@@ -41,8 +41,7 @@ QAHFILES = libxfs.h libxlog.h \
- 	xfs_trace.h \
- 	xfs_trans.h \
- 	xfs_trans_resv.h \
--	xfs_trans_space.h \
--	xfs_dfrag.h
-+	xfs_trans_space.h
+diff --git a/include/xfs_types.h b/include/xfs_types.h
+index 6ed6b26..ce44b18 100644
+--- a/include/xfs_types.h
++++ b/include/xfs_types.h
+@@ -18,42 +18,6 @@
+ #ifndef __XFS_TYPES_H__
+ #define	__XFS_TYPES_H__
  
- HFILES = handle.h jdm.h xqm.h xfs.h xfs_fs.h xfs_types.h
- HFILES += $(PKG_PLATFORM).h
-diff --git a/include/xfs_dfrag.h b/include/xfs_dfrag.h
-deleted file mode 100644
-index 20bdd93..0000000
---- a/include/xfs_dfrag.h
-+++ /dev/null
-@@ -1,53 +0,0 @@
--/*
-- * Copyright (c) 2000,2005 Silicon Graphics, Inc.
-- * All Rights Reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it would be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write the Free Software Foundation,
-- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-- */
--#ifndef __XFS_DFRAG_H__
--#define	__XFS_DFRAG_H__
--
--/*
-- * Structure passed to xfs_swapext
-- */
--
--typedef struct xfs_swapext
--{
--	__int64_t	sx_version;	/* version */
--	__int64_t	sx_fdtarget;	/* fd of target file */
--	__int64_t	sx_fdtmp;	/* fd of tmp file */
--	xfs_off_t	sx_offset;	/* offset into file */
--	xfs_off_t	sx_length;	/* leng from offset */
--	char		sx_pad[16];	/* pad space, unused */
--	xfs_bstat_t	sx_stat;	/* stat of target b4 copy */
--} xfs_swapext_t;
--
--/*
-- * Version flag
-- */
--#define XFS_SX_VERSION		0
--
 -#ifdef __KERNEL__
--/*
-- * Prototypes for visible xfs_dfrag.c routines.
-- */
 -
 -/*
-- * Syscall interface for xfs_swapext
+- * Additional type declarations for XFS
 - */
--int	xfs_swapext(struct xfs_swapext *sx);
+-typedef signed char		__int8_t;
+-typedef unsigned char		__uint8_t;
+-typedef signed short int	__int16_t;
+-typedef unsigned short int	__uint16_t;
+-typedef signed int		__int32_t;
+-typedef unsigned int		__uint32_t;
+-typedef signed long long int	__int64_t;
+-typedef unsigned long long int	__uint64_t;
+-
+-typedef __uint32_t		inst_t;		/* an instruction */
+-
+-typedef __s64			xfs_off_t;	/* <file offset> type */
+-typedef unsigned long long	xfs_ino_t;	/* <inode> type */
+-typedef __s64			xfs_daddr_t;	/* <disk address> type */
+-typedef char *			xfs_caddr_t;	/* <core address> type */
+-typedef __u32			xfs_dev_t;
+-typedef __u32			xfs_nlink_t;
+-
+-/* __psint_t is the same size as a pointer */
+-#if (BITS_PER_LONG == 32)
+-typedef __int32_t __psint_t;
+-typedef __uint32_t __psunsigned_t;
+-#elif (BITS_PER_LONG == 64)
+-typedef __int64_t __psint_t;
+-typedef __uint64_t __psunsigned_t;
+-#else
+-#error BITS_PER_LONG must be 32 or 64
+-#endif
 -
 -#endif	/* __KERNEL__ */
 -
--#endif	/* __XFS_DFRAG_H__ */
-diff --git a/include/xfs_fs.h b/include/xfs_fs.h
-index 68c2e18..74b24b2 100644
---- a/include/xfs_fs.h
-+++ b/include/xfs_fs.h
-@@ -461,6 +461,21 @@ typedef struct xfs_handle {
- 				 + (handle).ha_fid.fid_len)
+ typedef __uint32_t	prid_t;		/* project ID */
  
- /*
-+ * Structure passed to XFS_IOC_SWAPEXT
-+ */
-+typedef struct xfs_swapext
-+{
-+	__int64_t	sx_version;	/* version */
-+#define XFS_SX_VERSION		0
-+	__int64_t	sx_fdtarget;	/* fd of target file */
-+	__int64_t	sx_fdtmp;	/* fd of tmp file */
-+	xfs_off_t	sx_offset;	/* offset into file */
-+	xfs_off_t	sx_length;	/* leng from offset */
-+	char		sx_pad[16];	/* pad space, unused */
-+	xfs_bstat_t	sx_stat;	/* stat of target b4 copy */
-+} xfs_swapext_t;
-+
-+/*
-  * Flags for going down operation
-  */
- #define XFS_FSOP_GOING_FLAGS_DEFAULT		0x0	/* going down */
+ typedef __uint32_t	xfs_agblock_t;	/* blockno in alloc. group */
 -- 
 1.8.3.2
 
