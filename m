@@ -1,15 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 52A677F51
-	for <linux-xfs@oss.sgi.com>; Fri, 19 Jul 2013 17:39:20 -0500 (CDT)
-Date: Fri, 19 Jul 2013 17:39:16 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: choice of 'namespace' for ACL's
-Message-ID: <20130719223916.GV1681@sgi.com>
-References: <51E8FE5F.8030107@tlinx.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id D332A7F3F
+	for <linux-xfs@oss.sgi.com>; Fri, 19 Jul 2013 18:35:02 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C384D304062
+	for <linux-xfs@oss.sgi.com>; Fri, 19 Jul 2013 16:34:59 -0700 (PDT)
+Subject: Re: [PATCH] xfs_metadump: manpage fix regarding frozen fs
+References: <51E4AD14.7080904@redhat.com> <20130719202055.GH3572@sgi.com>
+From: Eric Sandeen <esandeen@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <51E8FE5F.8030107@tlinx.org>
+In-Reply-To: <20130719202055.GH3572@sgi.com>
+Message-Id: <87CEB35B-5931-49C9-8075-F44851F6E8ED@redhat.com>
+Date: Fri, 19 Jul 2013 19:34:57 -0400 (EDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,59 +20,41 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Linda Walsh <xfs@tlinx.org>
-Cc: Linux-Xfs <linux-xfs@oss.sgi.com>, acl-devel@nongnu.org
+To: Ben Myers <bpm@sgi.com>
+Cc: "linux-xfs@oss.sgi.com" <linux-xfs@oss.sgi.com>, Eric Sandeen <sandeen@redhat.com>
 
-SGV5IExpbmRhLAoKT24gRnJpLCBKdWwgMTksIDIwMTMgYXQgMDE6NTI6NDdBTSAtMDcwMCwgTGlu
-ZGEgV2Fsc2ggd3JvdGU6Cj4gSSB3YXMgbG9va2luZyBhdCB0aGUgYXR0ciBhbmQgaXQgbGVmdCBt
-ZSBhIGJpdCBwdXp6bGVkLgo+IAo+ICgxKSBPZiBtaW5vciBjb25zaWRlcmF0aW9uLCB3YXMgdGhl
-IHN0YXRlbWVudCBhYm91dCAndmFsdWVzIGNhbiBiZSB1cAo+IHRvIDY0S0InLi4uICBCdXQgdGhl
-cmUgaXMgbm8gbWVudGlvbiBvZiBob3cgbWFueSBuYW1lcyBjYW4gYmUgcHJlc2VudAo+IG9yIGlm
-IHRoZXJlIGlzIGEgY3VtdWxhdGl2ZSBtYXhpbXVtIG9uIHRoZSBuYW1lcyBvciBvbiB0aGUgZGF0
-YS4gIEkgdGhvdWdodAo+IEkgcmVtZW1iZXJlZCB0aGVyZSB3YXMsIGJ1dCBhbGwgSSBmb3VuZCB3
-YXMgbGltaXRzIG9uIHNpbmdsZSBkYXR1bXMuCgpJSVJDIHRoZXJlIGlzbid0IGFuIGFydGlmaWNp
-YWwgY2FwIG9uIHRoZSBudW1iZXIgb2YgZW50cmllcywgYW5kIHRoZSBhdHRyaWJ1dGUKY29kZSBp
-cyB1c2luZyBzaW1pbGFyIHN0cnVjdHVyZXMgYXMgZGlyZWN0b3JpZXMgYW5kIGJsb2NrIG1hcHMu
-ICBOb3JtYWxseSBkYXRhCmFyZSBpbmxpbmUgd2l0aCB0aGUgbmFtZXMsIGJ1dCB3aXRoIHJlbW90
-ZSBhdHRyaWJ1dGVzIHRoZSBsYXJnZSBvbmVzIHdpbGwgaGF2ZQp0aGUgZGF0YSBzdG9yZWQgZWxz
-ZXdoZXJlLi4gIFNvIHRoZSBhbnN3ZXIgaXMuLi4gbWFueT8KCj4gKDIpIEEgbW9yZSBjb25mdXNp
-bmcgaXNzdWUgd2FzIHRoZSBiaXQgZGVzY3JpYmluZyBYRlMgYXMgaGF2aW5nIDIKPiBkaXNqb2lu
-dCBhdHRyaWIKPiBuYW1lc3BhY2VzLCBidXQgbGF0ZXIgdGhlIHNlbGVjdG9ycyBmb3IgdGhlIG5h
-bWVzIHNwYWNlcyBhcmUgZ2l2ZW4gYXMKPiBbbm9uZV0gPSB1c2VyLCBbUl0gPSByb290LCBhbmQg
-W1NdID0gU2VjdXJpdHkgLS0gbWFraW5nIGl0IHNvdW5kIGxpa2UgMwo+IGRpc2pvaW50Cj4gbmFt
-ZXNwYWNlcy4gIFNvLCBob3cgbWFueSBhdHRyaWIgbmFtZXNwYWNlcyBhcmUgdGhlaXIsIDIgb3Ig
-Mz8KClRoZXJlIGFyZSB0aHJlZTogIHVzZXIsIHJvb3QvdHJ1c3RlZCwgYW5kIHNlY3VyaXR5LgoK
-PiAoMykgQWRkaW5nIGEgYml0IG1vcmUgdG8gcGlxdWUgbXkgY3VyaW9zaXR5LCBJIG5vdGljZWQg
-dGhhdAo+IGZpbGUgQUNMJ3Mgd2VyZSBpbiB0aGUgcm9vdC1uYW1lc3BhY2UsIG5vdCB0aGUgc2Vj
-dXJpdHkgYXR0cmlidXRlIG5hbWVzcGFjZS4KPiBXb3VsZG4ndCBpdCBtYWtlIG1vcmUgc2Vuc2Ug
-aWYgYWNjZXNzIGNvbnRyb2wgd2FzIGNvbnNpZGVyZWQgYSBzZWN1cml0eQo+IGF0dHJpYj8KClRo
-ZSBzZWN1cml0eSBuYW1lc3BhY2UgaXMgYmVpbmcgdXNlZCBieSBzZWxpbnV4LiAgSSdtIG5vdCBj
-bGVhciBvbiBhbGwgb2YgdGhlCmhpc3RvcnkgaG93IGl0IGNhbWUgdG8gYmUgdGhpcyB3YXkuLiAg
-TWF5YmUgc29tZW9uZSBjYW4gcGlwZSB1cCBhbmQgZXhwbGFpbgp0aGF0LgoKPiBBbm90aGVyIHBv
-aW50IG9mIGNvbmZ1c2lvbiB3YXMgb24gdGhlIGF0dHJpYiBtYW5wYWdlIHdoZXJlIGl0IHNheXM6
-Cj4gQ0FWRUFUUwo+ICAgICAgICBUaGUgbGlzdCBvcHRpb24gcHJlc2VudCBpbiB0aGUgSVJJWCB2
-ZXJzaW9uIG9mIHRoaXMgY29tbWFuZCBpcwo+IG5vdCBzdXDigJAKPiAgICAgICAgcG9ydGVkLiAg
-Z2V0ZmF0dHIgcHJvdmlkZXMgYSBtZWNoYW5pc20gdG8gcmV0cmlldmUgYWxsIG9mIHRoZQo+IGF0
-dHJpYnV0ZQo+ICAgICAgICBuYW1lcy4KPiAKPiAoNCkgV2hhdCBkb2VzIHRoYXQgbWVhbj8gIGku
-ZS46Cj4gCj4gd2hlbiBJIHVzZSBhdHRyIC1sOgo+IAo+ID4gYXR0ciAtbCBvcGVuc3NoLTYuMXAx
-LWhwbjEzdjE0LmRpZmYuZ3oKPiBBdHRyaWJ1dGUgIkRPU0FUVFJJQiIgaGFzIGEgNTYgYnl0ZSB2
-YWx1ZSBmb3Igb3BlbnNzaC02LjFwMS1ocG4xM3YxNC5kaWZmLmd6Cj4gQXR0cmlidXRlICJTQU1C
-QV9QQUkiIGhhcyBhIDI1IGJ5dGUgdmFsdWUgZm9yIG9wZW5zc2gtNi4xcDEtaHBuMTN2MTQuZGlm
-Zi5nego+IAo+IG9yIGFkZGludCB0aGUgLXEgc3dpdGNoIHdpdGggLWw6Cj4gCj4gPiBhdHRyIC1x
-bCBvcGVuc3NoLTYuMXAxLWhwbjEzdjE0LmRpZmYuZ3oKPiBET1NBVFRSSUIKPiBTQU1CQV9QQUkK
-Ckl0IHN1cmUgc2VlbXMgbGlrZSAnYXR0ciAtbCcgaXMgd29ya2luZyBmb3IgeW91LgoKPiAtLS0K
-PiBEb2VzICJub3Qgc3VwcG9ydGVkIiBtZWFuIHRoYXQgaXQgaXMgd29ya2luZyBieSBhY2NpZGVu
-dCBhbmQgbWF5IGJlCj4gcmVtb3ZlZCAgIC4uLiBiZWNhdXNlLi4uLltfX19fX19fX18/Pz9fX19f
-X19dPyAKCkl0IG1heSBiZSB0aGF0IHRoZSBtYW5wYWdlIGlzIG91dCBvZiBkYXRlPwoKPiBnZXRm
-YXR0ciBpcyBzdWdnZXN0ZWQgYXMgYSByZXBsYWNlbWVudCwgYnV0Cj4gKDUpIGhvdyBjYW4gaXQg
-YmUgdXNlZCB0byBsaXN0IHRoZSBsZW5ndGhzPyAgYW5kCj4gKDYpIGhvdyBjYW4gaXQgYmUgdXNl
-ZCB0byBsaXN0IHRoZSBTZWN1cml0eSBvciBSb290IG5hbWVzcGFjZXM/Cj4gCj4gU29ycnkgZm9y
-IGFsbCB0aGUgUSdzLCBidXQgaXQgc2VlbWVkIGxpa2UgdGhlcmUgd2VyZSBzb21lIG1pc3Npbmcg
-cGllY2VzLi4uCgpIbW0uICBNYXliZSB0cnkgb3ZlciBvbiBhY2wtZGV2ZWxAbm9uZ251Lm9yZz8K
-ClJlZ2FyZHMsCglCZW4KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNv
-bS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On Jul 19, 2013, at 3:20 PM, Ben Myers <bpm@sgi.com> wrote:
+
+> Hey Eric,
+> 
+> On Mon, Jul 15, 2013 at 09:16:52PM -0500, Eric Sandeen wrote:
+>> The xfs_metadump manpage states that metadump works
+>> on a frozen filesystem; it does not.  In fact, there is
+>> no way to detect a frozen filesystem, so we can't make it
+>> work, either.
+>> 
+>> So just remove this from the manpage; unmounted or RO
+>> mounted is what is enforced by xfs_metadump.
+>> 
+>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> 
+> I gave this a try and it *seemed* to work fine on a frozen filesystem.
+> Can you provide a bit of detail about why xfs_metadump doesn't work on
+> frozen filesystems?  What am I missing?
+> 
+
+Hum, when I tried it it didn't work.  I can retest, but AFAIK there is no way to detect a frozen fs in the first place, so how could it work?
+
+-Eric
+
+> Thanks,
+>    Ben
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
