@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2DD587F7E
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 770F57F93
 	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 01:25:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1EE028F8033
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 16E9DAC011
 	for <xfs@oss.sgi.com>; Thu, 18 Jul 2013 23:25:45 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	QkpS0UmCLV613kuE for <xfs@oss.sgi.com>;
+	ykrDHsdQdS7p4KTq for <xfs@oss.sgi.com>;
 	Thu, 18 Jul 2013 23:25:43 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1V0483-00048g-3O
+	(envelope-from <dave@fromorbit.com>) id 1V0482-00048U-W8
 	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:25:23 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1V0483-0001ys-2S
-	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:25:23 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1V0482-0001yT-Uz
+	for xfs@oss.sgi.com; Fri, 19 Jul 2013 16:25:22 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 28/49] xfs: don't special case shared superblock mounts
-Date: Fri, 19 Jul 2013 16:24:59 +1000
-Message-Id: <1374215120-7271-29-git-send-email-david@fromorbit.com>
+Subject: [PATCH 23/49] xfs: fix issues that cause userspace warnings
+Date: Fri, 19 Jul 2013 16:24:54 +1000
+Message-Id: <1374215120-7271-24-git-send-email-david@fromorbit.com>
 In-Reply-To: <1374215120-7271-1-git-send-email-david@fromorbit.com>
 References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -39,36 +39,148 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Neither kernel or userspace support shared read-only mounts, so
-don't beother special casing the support check to be different
-between kernel and userspace. The same check canbe used as neither
-like it...
+Some of the code shared with userspace causes compilation warnings
+from things turned off in the kernel code, such as differences in
+variable signedness. Fix those issues.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_sb.h | 7 -------
- 1 file changed, 7 deletions(-)
+ fs/xfs/xfs_attr_remote.c | 8 ++++----
+ fs/xfs/xfs_bmap.c        | 3 ---
+ fs/xfs/xfs_da_btree.c    | 6 +++---
+ fs/xfs/xfs_dir2_node.c   | 2 ++
+ fs/xfs/xfs_ialloc.c      | 2 +-
+ fs/xfs/xfs_rtalloc.c     | 4 ++--
+ 6 files changed, 12 insertions(+), 13 deletions(-)
 
-diff --git a/fs/xfs/xfs_sb.h b/fs/xfs/xfs_sb.h
-index dea0373..d6f3648 100644
---- a/fs/xfs/xfs_sb.h
-+++ b/fs/xfs/xfs_sb.h
-@@ -355,15 +355,8 @@ static inline int xfs_sb_good_version(xfs_sb_t *sbp)
- 		     (sbp->sb_features2 & ~XFS_SB_VERSION2_OKREALBITS)))
- 			return 0;
+diff --git a/fs/xfs/xfs_attr_remote.c b/fs/xfs/xfs_attr_remote.c
+index b42926a..712a502 100644
+--- a/fs/xfs/xfs_attr_remote.c
++++ b/fs/xfs/xfs_attr_remote.c
+@@ -239,7 +239,7 @@ xfs_attr_rmtval_copyout(
+ 	xfs_ino_t	ino,
+ 	int		*offset,
+ 	int		*valuelen,
+-	char		**dst)
++	__uint8_t	**dst)
+ {
+ 	char		*src = bp->b_addr;
+ 	xfs_daddr_t	bno = bp->b_bn;
+@@ -286,7 +286,7 @@ xfs_attr_rmtval_copyin(
+ 	xfs_ino_t	ino,
+ 	int		*offset,
+ 	int		*valuelen,
+-	char		**src)
++	__uint8_t	**src)
+ {
+ 	char		*dst = bp->b_addr;
+ 	xfs_daddr_t	bno = bp->b_bn;
+@@ -339,7 +339,7 @@ xfs_attr_rmtval_get(
+ 	struct xfs_mount	*mp = args->dp->i_mount;
+ 	struct xfs_buf		*bp;
+ 	xfs_dablk_t		lblkno = args->rmtblkno;
+-	char			*dst = args->value;
++	__uint8_t		*dst = args->value;
+ 	int			valuelen = args->valuelen;
+ 	int			nmap;
+ 	int			error;
+@@ -403,7 +403,7 @@ xfs_attr_rmtval_set(
+ 	struct xfs_bmbt_irec	map;
+ 	xfs_dablk_t		lblkno;
+ 	xfs_fileoff_t		lfileoff = 0;
+-	char			*src = args->value;
++	__uint8_t		*src = args->value;
+ 	int			blkcnt;
+ 	int			valuelen;
+ 	int			nmap;
+diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
+index 1f09faf..a9331a6 100644
+--- a/fs/xfs/xfs_bmap.c
++++ b/fs/xfs/xfs_bmap.c
+@@ -4258,12 +4258,9 @@ __xfs_bmapi_allocate(
+ 	struct xfs_ifork	*ifp = XFS_IFORK_PTR(bma->ip, whichfork);
+ 	int			tmp_logflags = 0;
+ 	int			error;
+-	int			rt;
  
--#ifdef __KERNEL__
- 		if (sbp->sb_shared_vn > XFS_SB_MAX_SHARED_VN)
- 			return 0;
--#else
--		if ((sbp->sb_versionnum & XFS_SB_VERSION_SHAREDBIT) &&
--		    sbp->sb_shared_vn > XFS_SB_MAX_SHARED_VN)
--			return 0;
--#endif
+ 	ASSERT(bma->length > 0);
+ 
+-	rt = (whichfork == XFS_DATA_FORK) && XFS_IS_REALTIME_INODE(bma->ip);
 -
- 		return 1;
- 	}
- 	if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5)
+ 	/*
+ 	 * For the wasdelay case, we could also just allocate the stuff asked
+ 	 * for in this bmap call but that wouldn't be as good.
+diff --git a/fs/xfs/xfs_da_btree.c b/fs/xfs/xfs_da_btree.c
+index 8bbd7ef..d4e59a4 100644
+--- a/fs/xfs/xfs_da_btree.c
++++ b/fs/xfs/xfs_da_btree.c
+@@ -399,7 +399,7 @@ xfs_da3_split(
+ 	struct xfs_da_intnode	*node;
+ 	struct xfs_buf		*bp;
+ 	int			max;
+-	int			action;
++	int			action = 0;
+ 	int			error;
+ 	int			i;
+ 
+@@ -2454,9 +2454,9 @@ static int
+ xfs_buf_map_from_irec(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_buf_map	**mapp,
+-	unsigned int		*nmaps,
++	int			*nmaps,
+ 	struct xfs_bmbt_irec	*irecs,
+-	unsigned int		nirecs)
++	int			nirecs)
+ {
+ 	struct xfs_buf_map	*map;
+ 	int			i;
+diff --git a/fs/xfs/xfs_dir2_node.c b/fs/xfs/xfs_dir2_node.c
+index b4bd9b6..18e287d 100644
+--- a/fs/xfs/xfs_dir2_node.c
++++ b/fs/xfs/xfs_dir2_node.c
+@@ -313,11 +313,13 @@ xfs_dir2_free_log_header(
+ 	struct xfs_trans	*tp,
+ 	struct xfs_buf		*bp)
+ {
++#ifdef DEBUG
+ 	xfs_dir2_free_t		*free;		/* freespace structure */
+ 
+ 	free = bp->b_addr;
+ 	ASSERT(free->hdr.magic == cpu_to_be32(XFS_DIR2_FREE_MAGIC) ||
+ 	       free->hdr.magic == cpu_to_be32(XFS_DIR3_FREE_MAGIC));
++#endif
+ 	xfs_trans_log_buf(tp, bp, 0, xfs_dir3_free_hdr_size(tp->t_mountp) - 1);
+ }
+ 
+diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
+index bd4e2a7..266024b 100644
+--- a/fs/xfs/xfs_ialloc.c
++++ b/fs/xfs/xfs_ialloc.c
+@@ -1342,7 +1342,7 @@ xfs_imap(
+ 	xfs_agblock_t	cluster_agbno;	/* first block in inode cluster */
+ 	int		error;	/* error code */
+ 	int		offset;	/* index of inode in its buffer */
+-	int		offset_agbno;	/* blks from chunk start to inode */
++	xfs_agblock_t	offset_agbno;	/* blks from chunk start to inode */
+ 
+ 	ASSERT(ino != NULLFSINO);
+ 
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index 084caa8..7a445e6 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -736,8 +736,8 @@ xfs_rtallocate_range(
+ {
+ 	xfs_rtblock_t	end;		/* end of the allocated extent */
+ 	int		error;		/* error value */
+-	xfs_rtblock_t	postblock;	/* first block allocated > end */
+-	xfs_rtblock_t	preblock;	/* first block allocated < start */
++	xfs_rtblock_t	postblock = 0;	/* first block allocated > end */
++	xfs_rtblock_t	preblock = 0;	/* first block allocated < start */
+ 
+ 	end = start + len - 1;
+ 	/*
 -- 
 1.8.3.2
 
