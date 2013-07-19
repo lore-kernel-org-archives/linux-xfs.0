@@ -1,16 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4640F7F58
-	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 14:02:24 -0500 (CDT)
-Date: Fri, 19 Jul 2013 14:02:20 -0500
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 37FB47F58
+	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 14:13:35 -0500 (CDT)
+Date: Fri, 19 Jul 2013 14:13:31 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH RESEND] xfs:  fix assertion failure in
-	xfs_vm_write_failed()
-Message-ID: <20130719190220.GF3572@sgi.com>
-References: <51E4D5F4.902@oracle.com>
+Subject: Re: [Bisected] Corruption of root fs during git bisect of drm
+	system hang
+Message-ID: <20130719191331.GG3572@sgi.com>
+References: <20130713090523.GA362@x4> <20130712070721.GA359@x4>
+	<20130715022841.GH5228@dastard> <20130715064734.GA361@x4>
+	<20130719122235.GA360@x4>
+	<CAAxjCExBi-4Qgf6-=MBzdkzBmMtu=GTURu46DoD2CzpnF2dinw@mail.gmail.com>
+	<20130719125149.GB360@x4> <51E9630A.3070201@sandeen.net>
+	<20130719163220.GA363@x4>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <51E4D5F4.902@oracle.com>
+In-Reply-To: <20130719163220.GA363@x4>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,76 +28,52 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Markus Trippelsdorf <markus@trippelsdorf.de>
+Cc: Stefan Ring <stefanrin@gmail.com>, Eric Sandeen <sandeen@sandeen.net>, Mark Tinguely <tinguely@sgi.com>, Stan Hoeppner <stan@hardwarefreak.com>, Linux fs XFS <xfs@oss.sgi.com>
 
-Jeff, 
+Hey Markus,
 
-On Tue, Jul 16, 2013 at 01:11:16PM +0800, Jeff Liu wrote:
-> From: Jie Liu <jeff.liu@oracle.com>
+On Fri, Jul 19, 2013 at 06:32:20PM +0200, Markus Trippelsdorf wrote:
+> On 2013.07.19 at 11:02 -0500, Eric Sandeen wrote:
+> > > Unfortunately it turned out that in this case there is filesystem
+> > > corruption. (Fortunately this normally happens only very rarely on rc1
+> > > kernels).
+> > 
+> > Corruption is when you get back data that you did not write,
+> > or metadata which is inconsistent or unreadable even after a proper
+> > log replay.
+> > 
+> > Corruption is _not_ unsynced, buffered data that was lost on a
+> > crash or poweroff.
+> > 
+> > But I might not have followed the thread properly, and I might
+> > misunderstand your situation.
+> > 
+> > When you experience this lost file [data] scenario, was it after an
+> > orderly reboot, or after a crash and/or system reset?
 > 
-> In xfs_vm_write_failed(), we evaluate the block_offset of pos with
-> PAGE_MASK which is an unsigned long.  That is fine on 64-bit platforms
-> regardless of whether the request pos is 32-bit or 64-bit.  However, on
-> 32-bit platforms the value is 0xfffff000 and so the high 32 bits in it
-> will be masked off with (pos & PAGE_MASK) for a 64-bit pos.
+> To reproduce this issue simply boot into your desktop and then hit
+> sysrq-c and reboot. After log replay without error messages, the
+> filesystem is in an inconsistent state and many small config files are
+> lost. There are also undeletable files. You need to run xfs_repair
+> manually to bring the filesystem back to normal.
 > 
-> As a result, the evaluated block_offset is incorrect which will cause
-> this failure ASSERT(block_offset + from == pos); and potentially pass
-> the wrong block to xfs_vm_kill_delalloc_range().
-> 
-> In this case, we can get a kernel panic if CONFIG_XFS_DEBUG is enabled:
-> 
-> XFS: Assertion failed: block_offset + from == pos, file: fs/xfs/xfs_aops.c, line: 1504
-> 
-> ------------[ cut here ]------------
->  kernel BUG at fs/xfs/xfs_message.c:100!
->  invalid opcode: 0000 [#1] SMP
->  ........
->  Pid: 4057, comm: mkfs.xfs Tainted: G           O 3.9.0-rc2 #1
->  EIP: 0060:[<f94a7e8b>] EFLAGS: 00010282 CPU: 0
->  EIP is at assfail+0x2b/0x30 [xfs]
->  EAX: 00000056 EBX: f6ef28a0 ECX: 00000007 EDX: f57d22a4
->  ESI: 1c2fb000 EDI: 00000000 EBP: ea6b5d30 ESP: ea6b5d1c
->  DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
->  CR0: 8005003b CR2: 094f3ff4 CR3: 2bcb4000 CR4: 000006f0
->  DR0: 00000000 DR1: 00000000 DR2: 00000000 DR3: 00000000
->  DR6: ffff0ff0 DR7: 00000400
->  Process mkfs.xfs (pid: 4057, ti=ea6b4000 task=ea5799e0 task.ti=ea6b4000)
->  Stack:
->  00000000 f9525c48 f951fa80 f951f96b 000005e4 ea6b5d7c f9494b34 c19b0ea2
->  00000066 f3d6c620 c19b0ea2 00000000 e9a91458 00001000 00000000 00000000
->  00000000 c15c7e89 00000000 1c2fb000 00000000 00000000 1c2fb000 00000080
->  Call Trace:
->  [<f9494b34>] xfs_vm_write_failed+0x74/0x1b0 [xfs]
->  [<c15c7e89>] ? printk+0x4d/0x4f
->  [<f9494d7d>] xfs_vm_write_begin+0x10d/0x170 [xfs]
->  [<c110a34c>] generic_file_buffered_write+0xdc/0x210
->  [<f949b669>] xfs_file_buffered_aio_write+0xf9/0x190 [xfs]
->  [<f949b7f3>] xfs_file_aio_write+0xf3/0x160 [xfs]
->  [<c115e504>] do_sync_write+0x94/0xd0
->  [<c115ed1f>] vfs_write+0x8f/0x160
->  [<c115e470>] ? wait_on_retry_sync_kiocb+0x50/0x50
->  [<c115f017>] sys_write+0x47/0x80
->  [<c15d860d>] sysenter_do_call+0x12/0x28
->  .............
->  EIP: [<f94a7e8b>] assfail+0x2b/0x30 [xfs] SS:ESP 0068:ea6b5d1c
->  ---[ end trace cdd9af4f4ecab42f ]---
->  Kernel panic - not syncing: Fatal exception
-> 
-> In order to avoid this, we can evaluate the block_offset of the start
-> of the page by using shifts rather than masks the mismatch problem.
-> 
-> Thanks Dave Chinner for help finding and fixing this bug.
-> 
-> Reported-by: Michael L. Semon <mlsemon35@gmail.com>
-> Reviewed-by: Dave Chinner <david@fromorbit.com>
-> Reviewed-by: Mark Tinguely <tinguely@sgi.com>
-> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+> When cca9f93a52d is reverted, you don't loose your config files and the
+> filesystem is OK after log replay. xfs_repair reports no issues at all.
 
-Applied.
+I'm a bit late to the party, but I wanted to give this a try.
 
-Thanks,
+On the machine I tried, I was not able to reproduce any corruption with a
+
+echo b > /proc/sysrq-trigger
+
+xfs_repair -n found no problems at all.  I'll try it on a few more.
+
+Could you post some of your latest xfs_repair output?  And, have you been able
+to reproduce this on more than one machine?  I may have missed that detail
+earlier in the thread.
+
+Thanks much,
 	Ben
 
 _______________________________________________
