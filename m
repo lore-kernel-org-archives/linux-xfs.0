@@ -1,27 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0E2DB7F62
-	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 11:32:24 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E3DA28F8050
-	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 09:32:23 -0700 (PDT)
-Received: from mail.ud10.udmedia.de (ud10.udmedia.de [194.117.254.50]) by
-	cuda.sgi.com with ESMTP id FdC2Af2ya6odhLBM (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 19 Jul 2013 09:32:22 -0700 (PDT)
-Date: Fri, 19 Jul 2013 18:32:20 +0200
-From: Markus Trippelsdorf <markus@trippelsdorf.de>
-Subject: Re: [Bisected] Corruption of root fs during git bisect of drm system
-	hang
-Message-ID: <20130719163220.GA363@x4>
-References: <20130713090523.GA362@x4> <20130712070721.GA359@x4>
-	<20130715022841.GH5228@dastard> <20130715064734.GA361@x4>
-	<20130719122235.GA360@x4>
-	<CAAxjCExBi-4Qgf6-=MBzdkzBmMtu=GTURu46DoD2CzpnF2dinw@mail.gmail.com>
-	<20130719125149.GB360@x4> <51E9630A.3070201@sandeen.net>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 4640F7F58
+	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 14:02:24 -0500 (CDT)
+Date: Fri, 19 Jul 2013 14:02:20 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH RESEND] xfs:  fix assertion failure in
+	xfs_vm_write_failed()
+Message-ID: <20130719190220.GF3572@sgi.com>
+References: <51E4D5F4.902@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <51E9630A.3070201@sandeen.net>
+In-Reply-To: <51E4D5F4.902@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,79 +23,77 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Stefan Ring <stefanrin@gmail.com>, Ben Myers <bpm@sgi.com>, Mark Tinguely <tinguely@sgi.com>, Stan Hoeppner <stan@hardwarefreak.com>, Linux fs XFS <xfs@oss.sgi.com>
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 2013.07.19 at 11:02 -0500, Eric Sandeen wrote:
-> On 7/19/13 7:51 AM, Markus Trippelsdorf wrote:
-> > On 2013.07.19 at 14:41 +0200, Stefan Ring wrote:
-> >>> I've bisected this issue to the following commit:
-> >>>
-> >>>  commit cca9f93a52d2ead50b5da59ca83d5f469ee4be5f
-> >>>  Author: Dave Chinner <dchinner@redhat.com>
-> >>>  Date:   Thu Jun 27 16:04:49 2013 +1000
-> >>>
-> >>>      xfs: don't do IO when creating an new inode
-> >>>
-> >>> Reverting this commit on top of the Linus tree "solves" all problems for
-> >>> me. IOW I no longer loose my KDE and LibreOffice config files during a
-> >>> crash. Log recovery now works fine and xfs_repair shows no issues.
-> >>>
-> >>> So users of 3.11.0-rc1 beware. Only run this version if you have
-> >>> up-to-date backups handy.
+Jeff, 
+
+On Tue, Jul 16, 2013 at 01:11:16PM +0800, Jeff Liu wrote:
+> From: Jie Liu <jeff.liu@oracle.com>
 > 
-> Are you certain about that bisection point?  All that does is
-> say:  When we allocate a new inode, assign it a random generation
-> number, rather than reading it from disk & incrementing the
-> older generation number, AFAICS.  So it simply avoids a read IO.
-
-Yes, I'm sure. 
-As I wrote above I also double-checked by reverting the commit on top of
-the current Linus tree.
-
-> I wonder if simply changing IO patterns on the SSD changes how
-> it's doing caching & destaging <handwave>.
-
-No. The corruption also happens on my conventional (spinning) drives.
-
-> >> What I miss in this thread is a distinction between filesystem
-> >> corruption on the one hand and a few zeroed files on the other. The
-> >> latter may be a nuisance, but it is expected behavior, while the
-> >> former should never happen, period, if I'm not mistaken.
-> > 
-> > Well, it is natural that fs developers at first try to blame userspace.
+> In xfs_vm_write_failed(), we evaluate the block_offset of pos with
+> PAGE_MASK which is an unsigned long.  That is fine on 64-bit platforms
+> regardless of whether the request pos is 32-bit or 64-bit.  However, on
+> 32-bit platforms the value is 0xfffff000 and so the high 32 bits in it
+> will be masked off with (pos & PAGE_MASK) for a 64-bit pos.
 > 
-> I disagree with that, we just need to be clear about your scenarios,
-> and what integrity guarantees should apply.
+> As a result, the evaluated block_offset is incorrect which will cause
+> this failure ASSERT(block_offset + from == pos); and potentially pass
+> the wrong block to xfs_vm_kill_delalloc_range().
 > 
-> > Unfortunately it turned out that in this case there is filesystem
-> > corruption. (Fortunately this normally happens only very rarely on rc1
-> > kernels).
+> In this case, we can get a kernel panic if CONFIG_XFS_DEBUG is enabled:
 > 
-> Corruption is when you get back data that you did not write,
-> or metadata which is inconsistent or unreadable even after a proper
-> log replay.
+> XFS: Assertion failed: block_offset + from == pos, file: fs/xfs/xfs_aops.c, line: 1504
 > 
-> Corruption is _not_ unsynced, buffered data that was lost on a
-> crash or poweroff.
+> ------------[ cut here ]------------
+>  kernel BUG at fs/xfs/xfs_message.c:100!
+>  invalid opcode: 0000 [#1] SMP
+>  ........
+>  Pid: 4057, comm: mkfs.xfs Tainted: G           O 3.9.0-rc2 #1
+>  EIP: 0060:[<f94a7e8b>] EFLAGS: 00010282 CPU: 0
+>  EIP is at assfail+0x2b/0x30 [xfs]
+>  EAX: 00000056 EBX: f6ef28a0 ECX: 00000007 EDX: f57d22a4
+>  ESI: 1c2fb000 EDI: 00000000 EBP: ea6b5d30 ESP: ea6b5d1c
+>  DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
+>  CR0: 8005003b CR2: 094f3ff4 CR3: 2bcb4000 CR4: 000006f0
+>  DR0: 00000000 DR1: 00000000 DR2: 00000000 DR3: 00000000
+>  DR6: ffff0ff0 DR7: 00000400
+>  Process mkfs.xfs (pid: 4057, ti=ea6b4000 task=ea5799e0 task.ti=ea6b4000)
+>  Stack:
+>  00000000 f9525c48 f951fa80 f951f96b 000005e4 ea6b5d7c f9494b34 c19b0ea2
+>  00000066 f3d6c620 c19b0ea2 00000000 e9a91458 00001000 00000000 00000000
+>  00000000 c15c7e89 00000000 1c2fb000 00000000 00000000 1c2fb000 00000080
+>  Call Trace:
+>  [<f9494b34>] xfs_vm_write_failed+0x74/0x1b0 [xfs]
+>  [<c15c7e89>] ? printk+0x4d/0x4f
+>  [<f9494d7d>] xfs_vm_write_begin+0x10d/0x170 [xfs]
+>  [<c110a34c>] generic_file_buffered_write+0xdc/0x210
+>  [<f949b669>] xfs_file_buffered_aio_write+0xf9/0x190 [xfs]
+>  [<f949b7f3>] xfs_file_aio_write+0xf3/0x160 [xfs]
+>  [<c115e504>] do_sync_write+0x94/0xd0
+>  [<c115ed1f>] vfs_write+0x8f/0x160
+>  [<c115e470>] ? wait_on_retry_sync_kiocb+0x50/0x50
+>  [<c115f017>] sys_write+0x47/0x80
+>  [<c15d860d>] sysenter_do_call+0x12/0x28
+>  .............
+>  EIP: [<f94a7e8b>] assfail+0x2b/0x30 [xfs] SS:ESP 0068:ea6b5d1c
+>  ---[ end trace cdd9af4f4ecab42f ]---
+>  Kernel panic - not syncing: Fatal exception
 > 
-> But I might not have followed the thread properly, and I might
-> misunderstand your situation.
+> In order to avoid this, we can evaluate the block_offset of the start
+> of the page by using shifts rather than masks the mismatch problem.
 > 
-> When you experience this lost file [data] scenario, was it after an
-> orderly reboot, or after a crash and/or system reset?
+> Thanks Dave Chinner for help finding and fixing this bug.
+> 
+> Reported-by: Michael L. Semon <mlsemon35@gmail.com>
+> Reviewed-by: Dave Chinner <david@fromorbit.com>
+> Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 
-To reproduce this issue simply boot into your desktop and then hit
-sysrq-c and reboot. After log replay without error messages, the
-filesystem is in an inconsistent state and many small config files are
-lost. There are also undeletable files. You need to run xfs_repair
-manually to bring the filesystem back to normal.
+Applied.
 
-When cca9f93a52d is reverted, you don't loose your config files and the
-filesystem is OK after log replay. xfs_repair reports no issues at all.
-
--- 
-Markus
+Thanks,
+	Ben
 
 _______________________________________________
 xfs mailing list
