@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id EB0637F83
-	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 07:51:52 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 8FD387F69
+	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 10:51:06 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 70035AC001
-	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 05:51:52 -0700 (PDT)
-Received: from mail.ud10.udmedia.de (ud10.udmedia.de [194.117.254.50]) by
-	cuda.sgi.com with ESMTP id bp3drXxVixqNwDJX (version=TLSv1
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 80B748F804C
+	for <xfs@oss.sgi.com>; Fri, 19 Jul 2013 08:51:03 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id JvNlCUQVPFdFhF22 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 19 Jul 2013 05:51:50 -0700 (PDT)
-Date: Fri, 19 Jul 2013 14:51:49 +0200
-From: Markus Trippelsdorf <markus@trippelsdorf.de>
-Subject: Re: [Bisected] Corruption of root fs during git bisect of drm system
-	hang
-Message-ID: <20130719125149.GB360@x4>
-References: <20130713090523.GA362@x4> <20130712070721.GA359@x4>
-	<20130715022841.GH5228@dastard> <20130715064734.GA361@x4>
-	<20130719122235.GA360@x4>
-	<CAAxjCExBi-4Qgf6-=MBzdkzBmMtu=GTURu46DoD2CzpnF2dinw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAAxjCExBi-4Qgf6-=MBzdkzBmMtu=GTURu46DoD2CzpnF2dinw@mail.gmail.com>
+	Fri, 19 Jul 2013 08:51:02 -0700 (PDT)
+Date: Fri, 19 Jul 2013 11:51:08 -0400
+From: Dwight Engen <dwight.engen@oracle.com>
+Subject: Re: [PATCH v4 5/7] xfs: create internal eofblocks structure with
+	kuid_t types
+Message-ID: <20130719115108.6c846a8c@oracle.com>
+In-Reply-To: <20130719054618.GW11674@dastard>
+References: <20130717114740.77f7bcee@oracle.com>
+	<20130719054618.GW11674@dastard>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,37 +30,88 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Stefan Ring <stefanrin@gmail.com>
-Cc: Ben Myers <bpm@sgi.com>, Mark Tinguely <tinguely@sgi.com>, Stan Hoeppner <stan@hardwarefreak.com>, Linux fs XFS <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On 2013.07.19 at 14:41 +0200, Stefan Ring wrote:
-> > I've bisected this issue to the following commit:
-> >
-> >  commit cca9f93a52d2ead50b5da59ca83d5f469ee4be5f
-> >  Author: Dave Chinner <dchinner@redhat.com>
-> >  Date:   Thu Jun 27 16:04:49 2013 +1000
-> >
-> >      xfs: don't do IO when creating an new inode
-> >
-> > Reverting this commit on top of the Linus tree "solves" all problems for
-> > me. IOW I no longer loose my KDE and LibreOffice config files during a
-> > crash. Log recovery now works fine and xfs_repair shows no issues.
-> >
-> > So users of 3.11.0-rc1 beware. Only run this version if you have
-> > up-to-date backups handy.
+On Fri, 19 Jul 2013 15:46:18 +1000
+Dave Chinner <david@fromorbit.com> wrote:
+
+> On Wed, Jul 17, 2013 at 11:47:40AM -0400, Dwight Engen wrote:
+> > Have eofblocks ioctl convert uid_t to kuid_t into internal
+> > structure. Update internal filter matching to compare ids with
+> > kuid_t types.
+> > 
+> > Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
+> ....
+> >  
+> > +static inline void
+> > +xfs_fs_eofblocks_to_internal(
+> > +	struct xfs_fs_eofblocks		*src,
+> > +	struct xfs_eofblocks		*dst)
 > 
-> What I miss in this thread is a distinction between filesystem
-> corruption on the one hand and a few zeroed files on the other. The
-> latter may be a nuisance, but it is expected behavior, while the
-> former should never happen, period, if I'm not mistaken.
+> I'd prefer that be named xfs_fs_eofblocks_from_user() to make it
+> clear that we don't trust the contents of src at all...
 
-Well, it is natural that fs developers at first try to blame userspace.
-Unfortunately it turned out that in this case there is filesystem
-corruption. (Fortunately this normally happens only very rarely on rc1
-kernels).
+Sure, I'll rename it.
+ 
+> > +{
+> > +	dst->eof_flags = src->eof_flags;
+> > +	dst->eof_prid = src->eof_prid;
+> > +	dst->eof_min_file_size = src->eof_min_file_size;
+> > +	dst->eof_uid = make_kuid(current_user_ns(), src->eof_uid);
+> > +	dst->eof_gid = make_kgid(current_user_ns(), src->eof_gid);
+> > +}
+> > +
+> >  #endif
+> > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> > index 8edc780..abbbdcf 100644
+> > --- a/fs/xfs/xfs_ioctl.c
+> > +++ b/fs/xfs/xfs_ioctl.c
+> > @@ -1610,7 +1610,8 @@ xfs_file_ioctl(
+> >  		return -error;
+> >  
+> >  	case XFS_IOC_FREE_EOFBLOCKS: {
+> > -		struct xfs_eofblocks eofb;
+> > +		struct xfs_fs_eofblocks eofb;
+> > +		struct xfs_eofblocks keofb;
+> >  
+> >  		if (copy_from_user(&eofb, arg, sizeof(eofb)))
+> >  			return -XFS_ERROR(EFAULT);
+> > @@ -1625,7 +1626,17 @@ xfs_file_ioctl(
+> >  		    memchr_inv(eofb.pad64, 0, sizeof(eofb.pad64)))
+> >  			return -XFS_ERROR(EINVAL);
+> >  
+> > -		error = xfs_icache_free_eofblocks(mp, &eofb);
+> > +		xfs_fs_eofblocks_to_internal(&eofb, &keofb);
+> > +
+> > +		if (keofb.eof_flags & XFS_EOF_FLAGS_UID &&
+> > +		    !uid_valid(keofb.eof_uid))
+> > +			return XFS_ERROR(EINVAL);
+> > +
+> > +		if (keofb.eof_flags & XFS_EOF_FLAGS_GID &&
+> > +		    !gid_valid(keofb.eof_gid))
+> > +			return XFS_ERROR(EINVAL);
+> 
+> And I think these two checks should be in
+> xfs_fs_eofblocks_from_user(), hence pushing all the conversion and
+> validation of the user-supplied parameters into the one function.
+> 
+> Also, we need to return negative errors from this function....
 
--- 
-Markus
+That is the way I originally had it in v3 but Brian had suggested
+(http://oss.sgi.com/archives/xfs/2013-06/msg00952.html) it might be
+better to move the policy out of the conversion function and put it in
+ioctl itself. I agree with you that makes sense to have it all together
+so I'm happy to put it back in xfs_fs_eofblocks_from_user().
+ 
+> > +		error = xfs_icache_free_eofblocks(mp, &keofb);
+> >  		return -error;
+> 
+> 		return -xfs_icache_free_eofblocks(mp, &keofb);
+> 
+> Cheers,
+> 
+> Dave.
 
 _______________________________________________
 xfs mailing list
