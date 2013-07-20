@@ -1,17 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D332A7F3F
-	for <linux-xfs@oss.sgi.com>; Fri, 19 Jul 2013 18:35:02 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 737F87F3F
+	for <xfs@oss.sgi.com>; Sat, 20 Jul 2013 03:45:00 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C384D304062
-	for <linux-xfs@oss.sgi.com>; Fri, 19 Jul 2013 16:34:59 -0700 (PDT)
-Subject: Re: [PATCH] xfs_metadump: manpage fix regarding frozen fs
-References: <51E4AD14.7080904@redhat.com> <20130719202055.GH3572@sgi.com>
-From: Eric Sandeen <esandeen@redhat.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id DFFD3AC003
+	for <xfs@oss.sgi.com>; Sat, 20 Jul 2013 01:44:56 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	tC4OWYCRC6zg7Gfj for <xfs@oss.sgi.com>;
+	Sat, 20 Jul 2013 01:44:55 -0700 (PDT)
+Date: Sat, 20 Jul 2013 13:18:40 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [Bisected] Corruption of root fs during git bisect of drm system
+	hang
+Message-ID: <20130720031840.GA11674@dastard>
+References: <20130713090523.GA362@x4> <20130712070721.GA359@x4>
+	<20130715022841.GH5228@dastard> <20130715064734.GA361@x4>
+	<20130719122235.GA360@x4> <51E9AB80.4000700@sgi.com>
 MIME-Version: 1.0
-In-Reply-To: <20130719202055.GH3572@sgi.com>
-Message-Id: <87CEB35B-5931-49C9-8075-F44851F6E8ED@redhat.com>
-Date: Fri, 19 Jul 2013 19:34:57 -0400 (EDT)
+Content-Disposition: inline
+In-Reply-To: <51E9AB80.4000700@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,35 +32,98 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: "linux-xfs@oss.sgi.com" <linux-xfs@oss.sgi.com>, Eric Sandeen <sandeen@redhat.com>
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: Ben Myers <bpm@sgi.com>, Stan Hoeppner <stan@hardwarefreak.com>, Markus Trippelsdorf <markus@trippelsdorf.de>, xfs@oss.sgi.com
 
-On Jul 19, 2013, at 3:20 PM, Ben Myers <bpm@sgi.com> wrote:
-
-> Hey Eric,
+On Fri, Jul 19, 2013 at 04:11:28PM -0500, Mark Tinguely wrote:
+> On 07/19/13 07:22, Markus Trippelsdorf wrote:
+> >
+> >I've bisected this issue to the following commit:
+> >
+> >  commit cca9f93a52d2ead50b5da59ca83d5f469ee4be5f
+> >  Author: Dave Chinner<dchinner@redhat.com>
+> >  Date:   Thu Jun 27 16:04:49 2013 +1000
+> >
+> >      xfs: don't do IO when creating an new inode
+> >
+> >Reverting this commit on top of the Linus tree "solves" all problems for
+> >me. IOW I no longer loose my KDE and LibreOffice config files during a
+> >crash. Log recovery now works fine and xfs_repair shows no issues.
+> >
+> >So users of 3.11.0-rc1 beware. Only run this version if you have
+> >up-to-date backups handy.
+> >
 > 
-> On Mon, Jul 15, 2013 at 09:16:52PM -0500, Eric Sandeen wrote:
->> The xfs_metadump manpage states that metadump works
->> on a frozen filesystem; it does not.  In fact, there is
->> no way to detect a frozen filesystem, so we can't make it
->> work, either.
->> 
->> So just remove this from the manpage; unmounted or RO
->> mounted is what is enforced by xfs_metadump.
->> 
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> I reviewed the above patch and liked it but, I think I recreated the
+> above mentioned problem with a simple script:
 > 
-> I gave this a try and it *seemed* to work fine on a frozen filesystem.
-> Can you provide a bit of detail about why xfs_metadump doesn't work on
-> frozen filesystems?  What am I missing?
+> cp /root/.bash_history /root/.lesshst /root/.pwclientrc
+> /root/.viminfo /root/.bash_profile  /root/.lesshst.YCJCDz
+> /root/.quiltrc /somexfsdir
+> sync
+> echo 'c' > /proc/sysrq-trigger
+> .... reboot, remount ...
+> cd /somexfsdir
+
+I've only reproduced the problem *once* with this method - the first
+time I tried. Then I mkfs'd the filesystem rather than repairing it
+and I haven't been able to reproduce it since.  So the problem is
+far more subtle that just copying some files, running sync and
+crashing the machine - there's some kind of initial or timing
+condition that we are missing that triggers it...
+
+The one interesting thing I noticed was that the generation number
+in the crash case was non-zero. That's an important piece of
+information, and:
+
+> # cat .bash_history
+> cat: .bash_history: No such file or directory
 > 
+> xfs_db> inode 131
+> xfs_db> p
+> core.magic = 0x494e
+> core.mode = 0
 
-Hum, when I tried it it didn't work.  I can retest, but AFAIK there is no way to detect a frozen fs in the first place, so how could it work?
+That's a "free" inode, and why XFS considers it invalid when the
+lookup sees it.
 
--Eric
+> core.gen = 3707503345
 
-> Thanks,
->    Ben
+You saw it as well, Mark.
+
+That means it has actually been allocated and written to disk at
+some point in time. That is, inodes allocated by mkfs in the root
+inode chunk have a generation number of zero. For this to have a
+non-zero generation number, it means that had to be written after
+allocation - either before the sync or during log recovery.
+
+Unfortunately, without the 'xfs_logprint -t -i <dev>' output from
+prior to mounting the filesystem which demonstrates te problem, I
+can't tell if the issue is a recovery problem or something that
+happened before the crash....
+
+> revert the above commit and the problem goes away.
+....
+> core.mode = 0100600
+
+Not an free inode...
+
+> core.gen = 0
+
+And, importantly, the generation number is zero, as would be
+expected for an inode in the root chunk.
+
+FWIW, if you can reproduce this on demand, Mark, is to see if
+mounting "-o ikeep" makes the problem go away as this optimisation
+is only used on filesystems that are configured to free inode
+chunks...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
