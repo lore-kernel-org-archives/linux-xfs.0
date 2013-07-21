@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7F8AA7F3F
-	for <xfs@oss.sgi.com>; Sun, 21 Jul 2013 01:23:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3B25E304059
-	for <xfs@oss.sgi.com>; Sat, 20 Jul 2013 23:23:43 -0700 (PDT)
-Received: from mail-gh0-f182.google.com (mail-gh0-f182.google.com
-	[209.85.160.182]) by cuda.sgi.com with ESMTP id
-	aOq5zZWQ2lqCUYon (version=TLSv1 cipher=RC4-SHA bits=128
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id D19E47F50
+	for <xfs@oss.sgi.com>; Sun, 21 Jul 2013 01:34:09 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 51683AC001
+	for <xfs@oss.sgi.com>; Sat, 20 Jul 2013 23:34:06 -0700 (PDT)
+Received: from mail-ye0-f181.google.com (mail-ye0-f181.google.com
+	[209.85.213.181]) by cuda.sgi.com with ESMTP id
+	MeMNLeRc2cOILNxx (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 20 Jul 2013 23:23:41 -0700 (PDT)
-Received: by mail-gh0-f182.google.com with SMTP id z15so1758629ghb.13
-	for <xfs@oss.sgi.com>; Sat, 20 Jul 2013 23:23:41 -0700 (PDT)
-Message-ID: <51EB7E6B.8080607@gmail.com>
-Date: Sun, 21 Jul 2013 02:23:39 -0400
+	Sat, 20 Jul 2013 23:34:05 -0700 (PDT)
+Received: by mail-ye0-f181.google.com with SMTP id g12so1795591yee.12
+	for <xfs@oss.sgi.com>; Sat, 20 Jul 2013 23:34:04 -0700 (PDT)
+Message-ID: <51EB80DB.80602@gmail.com>
+Date: Sun, 21 Jul 2013 02:34:03 -0400
 From: "Michael L. Semon" <mlsemon35@gmail.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 00/49] current patch queue for 3.12
-References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
-In-Reply-To: <1374215120-7271-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 00/49] xfsprogs: patches for crc-dev branch
+References: <1374216324-8781-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1374216324-8781-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,90 +34,55 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On 07/19/2013 02:24 AM, Dave Chinner wrote:
-> Hi folks,
-> 
-> The following mass of patches is my current patch queue I have
-> pending for the 3.12 cycle.
+On 07/19/2013 02:44 AM, Dave Chinner wrote:
 
-OK, it seems to be going okay:  The PC is still functioning, even on 
-a CRC-enabled / partition.  The `git am` session had these anomalies:
+> Comments, thoughts, flames?
 
-# Patch #5
+I was hoping that I could use this 3.12 patchset with a 3.11.0-rc 
+kernel, but the xfstests look like a disaster by going that way.  
+The combination of 3.12 XFS code and 3.12 xfsprogs seems to be 
+working well.  xfs_repair, mkfs.xfs, and xfs_logprint still seem 
+to work either way.
+
+The following patches had issues during the `git am` session:
+
+# Patch 11
+Applying: libxfs: sync xfs_ialloc.c to the kernel code
+/usr/src/xfs/xfsprogs/.git/rebase-apply/patch:226: trailing whitespace.
+		/* 
+warning: 1 line adds whitespace errors.
+
+# Patch 20
 Applying: xfs: separate dquot on disk format definitions out of xfs_quota.h
-/usr/src/kernel-git/linux/.git/rebase-apply/patch:138: trailing whitespace.
+/usr/src/xfs/xfsprogs/.git/rebase-apply/patch:64: trailing whitespace.
  * This header file defines all the on-disk format definitions for 
 warning: 1 line adds whitespace errors.
 
-# Patch #15
-Applying: xfs: move getdents code into it's own file
-/usr/src/kernel-git/linux/.git/rebase-apply/patch:1266: new blank line at EOF.
+# Patch 27
+Applying: xfs: move inode fork definitions to a new header file
+fatal: corrupt patch at line 2313
+Patch failed at 0001 xfs: move inode fork definitions to a new header file
+The copy of the patch that failed is found in:
+   /usr/src/xfs/xfsprogs/.git/rebase-apply/patch
+When you have resolved this problem, run "git am --resolved".
+If you prefer to skip this patch, run "git am --skip" instead.
+To restore the original branch and stop patching, run "git am --abort".
+
+# Deleted the blank line from the patch (Thunderbird save error?).
+# Patch 27 (Take 2)
+Applying: xfs: move inode fork definitions to a new header file
+
+# Patch 49
+Applying: xfsprogs: add dtype support to mkfs and db
+/usr/src/xfs/xfsprogs/.git/rebase-apply/patch:163: new blank line at EOF.
 +
 warning: 1 line adds whitespace errors.
 
-########
-There were build errors as well with gcc-4.8.1:
-
-  CC      fs/xfs/xfs_inode_fork.o
-fs/xfs/xfs_inode_fork.c:43:23: fatal error: xfs_utils.h: No such file or directory
- #include "xfs_utils.h"
-                       ^
-compilation terminated.
-make[2]: *** [fs/xfs/xfs_inode_fork.o] Error 1
-make[1]: *** [fs/xfs] Error 2
-make: *** [fs] Error 2
-# next try...
-  CC      fs/xfs/xfs_inode_fork.o
-fs/xfs/xfs_inode_fork.c:49:26: fatal error: xfs_vnodeops.h: No such file or directory
- #include "xfs_vnodeops.h"
-                          ^
-compilation terminated.
-make[2]: *** [fs/xfs/xfs_inode_fork.o] Error 1
-make[1]: *** [fs/xfs] Error 2
-make: *** [fs] Error 2
-
-########
-Hopefully, I didn't leave a patch out.  To get the code to build fully, 
-these patches were applied:
-
-diff --git a/fs/xfs/xfs_inode_fork.c b/fs/xfs/xfs_inode_fork.c
-index f06570b..123971b 100644
---- a/fs/xfs/xfs_inode_fork.c
-+++ b/fs/xfs/xfs_inode_fork.c
-@@ -40,10 +40,8 @@
- #include "xfs_ialloc.h"
- #include "xfs_bmap.h"
- #include "xfs_error.h"
--#include "xfs_utils.h"
- #include "xfs_quota.h"
- #include "xfs_filestream.h"
--#include "xfs_vnodeops.h"
- #include "xfs_cksum.h"
- #include "xfs_trace.h"
- #include "xfs_icache.h"
--- 
-1.8.3.2
-
-diff --git a/fs/xfs/xfs_log_rlimit.c b/fs/xfs/xfs_log_rlimit.c
-index e3f4b4e..9224296 100644
---- a/fs/xfs/xfs_log_rlimit.c
-+++ b/fs/xfs/xfs_log_rlimit.c
-@@ -137,7 +137,8 @@ xfs_log_calc_minimum_size(
- 	 * it up to lsunit boundary if lsunit is specified.
- 	 */
- 	if (lsunit)
--		min_logblks = roundup(BTOBB(max_logres), lsunit) + 2 * lsunit;
-+		min_logblks = roundup((int)BTOBB(max_logres), lsunit) 
-+			+ 2 * lsunit;
- 	else
- 		min_logblks = BTOBB(max_logres);
- 	min_logblks *= XFS_MIN_LOG_FACTOR;
--- 
-1.8.3.2
-
-That's about all, so far.  There's something going wrong with a 2k 
-non-CRC XFS filesystem that I should track before doing too much with 
-xfstests.  The initial results on a 32-bit Pentium 4 looked promising.
+In other words, everything works so far.  Again, on one PC, the xfstests 
+results are awful, with many xfs/* tests failing.  The results have yet 
+to be reviwed closely, though.  There's a chance that something in 
+xfstests didn't build against xfsprogs...unless all the hole punch and 
+dmapi tests really are having issues...not enough info yet...
 
 Thanks!
 
