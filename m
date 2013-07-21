@@ -1,18 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DD2547F51
-	for <xfs@oss.sgi.com>; Sat, 20 Jul 2013 12:21:50 -0500 (CDT)
-Message-ID: <51EAC72B.905@sgi.com>
-Date: Sat, 20 Jul 2013 12:21:47 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 7F8AA7F3F
+	for <xfs@oss.sgi.com>; Sun, 21 Jul 2013 01:23:43 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3B25E304059
+	for <xfs@oss.sgi.com>; Sat, 20 Jul 2013 23:23:43 -0700 (PDT)
+Received: from mail-gh0-f182.google.com (mail-gh0-f182.google.com
+	[209.85.160.182]) by cuda.sgi.com with ESMTP id
+	aOq5zZWQ2lqCUYon (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 20 Jul 2013 23:23:41 -0700 (PDT)
+Received: by mail-gh0-f182.google.com with SMTP id z15so1758629ghb.13
+	for <xfs@oss.sgi.com>; Sat, 20 Jul 2013 23:23:41 -0700 (PDT)
+Message-ID: <51EB7E6B.8080607@gmail.com>
+Date: Sun, 21 Jul 2013 02:23:39 -0400
+From: "Michael L. Semon" <mlsemon35@gmail.com>
 MIME-Version: 1.0
-Subject: Re: [Bisected] Corruption of root fs during git bisect of drm system
-	hang
-References: <20130713090523.GA362@x4> <20130712070721.GA359@x4>
-	<20130715022841.GH5228@dastard> <20130715064734.GA361@x4>
-	<20130719122235.GA360@x4> <51E9AB80.4000700@sgi.com>
-	<20130720031840.GA11674@dastard>
-In-Reply-To: <20130720031840.GA11674@dastard>
+Subject: Re: [PATCH 00/49] current patch queue for 3.12
+References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1374215120-7271-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,110 +27,101 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Ben Myers <bpm@sgi.com>, Stan Hoeppner <stan@hardwarefreak.com>, Markus Trippelsdorf <markus@trippelsdorf.de>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-On 07/19/13 22:18, Dave Chinner wrote:
-> On Fri, Jul 19, 2013 at 04:11:28PM -0500, Mark Tinguely wrote:
->> On 07/19/13 07:22, Markus Trippelsdorf wrote:
->>>
->>> I've bisected this issue to the following commit:
->>>
->>>   commit cca9f93a52d2ead50b5da59ca83d5f469ee4be5f
->>>   Author: Dave Chinner<dchinner@redhat.com>
->>>   Date:   Thu Jun 27 16:04:49 2013 +1000
->>>
->>>       xfs: don't do IO when creating an new inode
->>>
->>> Reverting this commit on top of the Linus tree "solves" all problems for
->>> me. IOW I no longer loose my KDE and LibreOffice config files during a
->>> crash. Log recovery now works fine and xfs_repair shows no issues.
->>>
->>> So users of 3.11.0-rc1 beware. Only run this version if you have
->>> up-to-date backups handy.
->>>
->>
->> I reviewed the above patch and liked it but, I think I recreated the
->> above mentioned problem with a simple script:
->>
->> cp /root/.bash_history /root/.lesshst /root/.pwclientrc
->> /root/.viminfo /root/.bash_profile  /root/.lesshst.YCJCDz
->> /root/.quiltrc /somexfsdir
->> sync
->> echo 'c'>  /proc/sysrq-trigger
->> .... reboot, remount ...
->> cd /somexfsdir
->
-> I've only reproduced the problem *once* with this method - the first
-> time I tried. Then I mkfs'd the filesystem rather than repairing it
-> and I haven't been able to reproduce it since.  So the problem is
-> far more subtle that just copying some files, running sync and
-> crashing the machine - there's some kind of initial or timing
-> condition that we are missing that triggers it...
->
-> The one interesting thing I noticed was that the generation number
-> in the crash case was non-zero. That's an important piece of
-> information, and:
->
->> # cat .bash_history
->> cat: .bash_history: No such file or directory
->>
->> xfs_db>  inode 131
->> xfs_db>  p
->> core.magic = 0x494e
->> core.mode = 0
->
-> That's a "free" inode, and why XFS considers it invalid when the
-> lookup sees it.
->
->> core.gen = 3707503345
->
-> You saw it as well, Mark.
->
-> That means it has actually been allocated and written to disk at
-> some point in time. That is, inodes allocated by mkfs in the root
-> inode chunk have a generation number of zero. For this to have a
-> non-zero generation number, it means that had to be written after
-> allocation - either before the sync or during log recovery.
->
-> Unfortunately, without the 'xfs_logprint -t -i<dev>' output from
-> prior to mounting the filesystem which demonstrates te problem, I
-> can't tell if the issue is a recovery problem or something that
-> happened before the crash....
->
->> revert the above commit and the problem goes away.
-> ....
->> core.mode = 0100600
->
-> Not an free inode...
->
->> core.gen = 0
->
-> And, importantly, the generation number is zero, as would be
-> expected for an inode in the root chunk.
->
-> FWIW, if you can reproduce this on demand, Mark, is to see if
-> mounting "-o ikeep" makes the problem go away as this optimisation
-> is only used on filesystems that are configured to free inode
-> chunks...
->
-> Cheers,
->
-> Dave.
+On 07/19/2013 02:24 AM, Dave Chinner wrote:
+> Hi folks,
+> 
+> The following mass of patches is my current patch queue I have
+> pending for the 3.12 cycle.
 
+OK, it seems to be going okay:  The PC is still functioning, even on 
+a CRC-enabled / partition.  The `git am` session had these anomalies:
 
-Yeah, I thought of the logprint and the ikeep afterwards.
+# Patch #5
+Applying: xfs: separate dquot on disk format definitions out of xfs_quota.h
+/usr/src/kernel-git/linux/.git/rebase-apply/patch:138: trailing whitespace.
+ * This header file defines all the on-disk format definitions for 
+warning: 1 line adds whitespace errors.
 
-I tried the script today and it did not reproduce the problem. The 
-logprint and the mounted filesystem was empty. I will rebuild the 
-sources to eliminate some patched kernel versions on that box and 
-experiment with the sync and the shooting of the kernel.
+# Patch #15
+Applying: xfs: move getdents code into it's own file
+/usr/src/kernel-git/linux/.git/rebase-apply/patch:1266: new blank line at EOF.
++
+warning: 1 line adds whitespace errors.
 
---Mark.
+########
+There were build errors as well with gcc-4.8.1:
+
+  CC      fs/xfs/xfs_inode_fork.o
+fs/xfs/xfs_inode_fork.c:43:23: fatal error: xfs_utils.h: No such file or directory
+ #include "xfs_utils.h"
+                       ^
+compilation terminated.
+make[2]: *** [fs/xfs/xfs_inode_fork.o] Error 1
+make[1]: *** [fs/xfs] Error 2
+make: *** [fs] Error 2
+# next try...
+  CC      fs/xfs/xfs_inode_fork.o
+fs/xfs/xfs_inode_fork.c:49:26: fatal error: xfs_vnodeops.h: No such file or directory
+ #include "xfs_vnodeops.h"
+                          ^
+compilation terminated.
+make[2]: *** [fs/xfs/xfs_inode_fork.o] Error 1
+make[1]: *** [fs/xfs] Error 2
+make: *** [fs] Error 2
+
+########
+Hopefully, I didn't leave a patch out.  To get the code to build fully, 
+these patches were applied:
+
+diff --git a/fs/xfs/xfs_inode_fork.c b/fs/xfs/xfs_inode_fork.c
+index f06570b..123971b 100644
+--- a/fs/xfs/xfs_inode_fork.c
++++ b/fs/xfs/xfs_inode_fork.c
+@@ -40,10 +40,8 @@
+ #include "xfs_ialloc.h"
+ #include "xfs_bmap.h"
+ #include "xfs_error.h"
+-#include "xfs_utils.h"
+ #include "xfs_quota.h"
+ #include "xfs_filestream.h"
+-#include "xfs_vnodeops.h"
+ #include "xfs_cksum.h"
+ #include "xfs_trace.h"
+ #include "xfs_icache.h"
+-- 
+1.8.3.2
+
+diff --git a/fs/xfs/xfs_log_rlimit.c b/fs/xfs/xfs_log_rlimit.c
+index e3f4b4e..9224296 100644
+--- a/fs/xfs/xfs_log_rlimit.c
++++ b/fs/xfs/xfs_log_rlimit.c
+@@ -137,7 +137,8 @@ xfs_log_calc_minimum_size(
+ 	 * it up to lsunit boundary if lsunit is specified.
+ 	 */
+ 	if (lsunit)
+-		min_logblks = roundup(BTOBB(max_logres), lsunit) + 2 * lsunit;
++		min_logblks = roundup((int)BTOBB(max_logres), lsunit) 
++			+ 2 * lsunit;
+ 	else
+ 		min_logblks = BTOBB(max_logres);
+ 	min_logblks *= XFS_MIN_LOG_FACTOR;
+-- 
+1.8.3.2
+
+That's about all, so far.  There's something going wrong with a 2k 
+non-CRC XFS filesystem that I should track before doing too much with 
+xfstests.  The initial results on a 32-bit Pentium 4 looked promising.
+
+Thanks!
+
+Michael
 
 _______________________________________________
 xfs mailing list
