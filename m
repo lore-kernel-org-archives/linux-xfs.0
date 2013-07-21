@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D19E47F50
-	for <xfs@oss.sgi.com>; Sun, 21 Jul 2013 01:34:09 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 51683AC001
-	for <xfs@oss.sgi.com>; Sat, 20 Jul 2013 23:34:06 -0700 (PDT)
-Received: from mail-ye0-f181.google.com (mail-ye0-f181.google.com
-	[209.85.213.181]) by cuda.sgi.com with ESMTP id
-	MeMNLeRc2cOILNxx (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 20 Jul 2013 23:34:05 -0700 (PDT)
-Received: by mail-ye0-f181.google.com with SMTP id g12so1795591yee.12
-	for <xfs@oss.sgi.com>; Sat, 20 Jul 2013 23:34:04 -0700 (PDT)
-Message-ID: <51EB80DB.80602@gmail.com>
-Date: Sun, 21 Jul 2013 02:34:03 -0400
-From: "Michael L. Semon" <mlsemon35@gmail.com>
+	by oss.sgi.com (Postfix) with ESMTP id 09C8629DF8
+	for <xfs@oss.sgi.com>; Sun, 21 Jul 2013 02:37:39 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 67CBDAC001
+	for <xfs@oss.sgi.com>; Sun, 21 Jul 2013 00:37:39 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	NVEhlurlyq8lGBh2 for <xfs@oss.sgi.com>;
+	Sun, 21 Jul 2013 00:37:37 -0700 (PDT)
+Date: Sun, 21 Jul 2013 17:37:32 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [Bisected] Corruption of root fs during git bisect of drm system
+	hang
+Message-ID: <20130721073732.GB11674@dastard>
+References: <20130713090523.GA362@x4> <20130712070721.GA359@x4>
+	<20130715022841.GH5228@dastard> <20130715064734.GA361@x4>
+	<20130719122235.GA360@x4> <51E9AB80.4000700@sgi.com>
+	<20130720031840.GA11674@dastard> <51EAC72B.905@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 00/49] xfsprogs: patches for crc-dev branch
-References: <1374216324-8781-1-git-send-email-david@fromorbit.com>
-In-Reply-To: <1374216324-8781-1-git-send-email-david@fromorbit.com>
+Content-Disposition: inline
+In-Reply-To: <51EAC72B.905@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,62 +33,111 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: Ben Myers <bpm@sgi.com>, Stan Hoeppner <stan@hardwarefreak.com>, Markus Trippelsdorf <markus@trippelsdorf.de>, xfs@oss.sgi.com
 
-On 07/19/2013 02:44 AM, Dave Chinner wrote:
+On Sat, Jul 20, 2013 at 12:21:47PM -0500, Mark Tinguely wrote:
+> On 07/19/13 22:18, Dave Chinner wrote:
+> >On Fri, Jul 19, 2013 at 04:11:28PM -0500, Mark Tinguely wrote:
+> >>On 07/19/13 07:22, Markus Trippelsdorf wrote:
+> >>>
+> >>>I've bisected this issue to the following commit:
+> >>>
+> >>>  commit cca9f93a52d2ead50b5da59ca83d5f469ee4be5f
+> >>>  Author: Dave Chinner<dchinner@redhat.com>
+> >>>  Date:   Thu Jun 27 16:04:49 2013 +1000
+> >>>
+> >>>      xfs: don't do IO when creating an new inode
+> >>>
+> >>>Reverting this commit on top of the Linus tree "solves" all problems for
+> >>>me. IOW I no longer loose my KDE and LibreOffice config files during a
+> >>>crash. Log recovery now works fine and xfs_repair shows no issues.
+....
+> >I've only reproduced the problem *once* with this method - the first
+> >time I tried. Then I mkfs'd the filesystem rather than repairing it
+> >and I haven't been able to reproduce it since.  So the problem is
+> >far more subtle that just copying some files, running sync and
+> >crashing the machine - there's some kind of initial or timing
+> >condition that we are missing that triggers it...
+> >
+> >The one interesting thing I noticed was that the generation number
+> >in the crash case was non-zero. That's an important piece of
+> >information, and:
+....
+> >That means it has actually been allocated and written to disk at
+> >some point in time. That is, inodes allocated by mkfs in the root
+> >inode chunk have a generation number of zero. For this to have a
+> >non-zero generation number, it means that had to be written after
+> >allocation - either before the sync or during log recovery.
+> >
+> >Unfortunately, without the 'xfs_logprint -t -i<dev>' output from
+> >prior to mounting the filesystem which demonstrates te problem, I
+> >can't tell if the issue is a recovery problem or something that
+> >happened before the crash....
+....
+> I tried the script today and it did not reproduce the problem. The
+> logprint and the mounted filesystem was empty. I will rebuild the
+> sources to eliminate some patched kernel versions on that box and
+> experiment with the sync and the shooting of the kernel.
 
-> Comments, thoughts, flames?
+No need - I've worked out yesterday how to reproduce it reliably and
+what the root cause of the problem is. My 'net connection was down
+yesterday, so I wasn't even sure if my emails would get out after
+queued them and left for an overnight trip....
 
-I was hoping that I could use this 3.12 patchset with a 3.11.0-rc 
-kernel, but the xfstests look like a disaster by going that way.  
-The combination of 3.12 XFS code and 3.12 xfsprogs seems to be 
-working well.  xfs_repair, mkfs.xfs, and xfs_logprint still seem 
-to work either way.
+Basically, the problem takes two iterations to trigger. Do this:
 
-The following patches had issues during the `git am` session:
+mkfs.xfs
+mount
+copy files
+umount
+mount
+remove files
+umount.
 
-# Patch 11
-Applying: libxfs: sync xfs_ialloc.c to the kernel code
-/usr/src/xfs/xfsprogs/.git/rebase-apply/patch:226: trailing whitespace.
-		/* 
-warning: 1 line adds whitespace errors.
+This gives files in the inode chunk mode = 0 and flushiter = 2. now
+run:
 
-# Patch 20
-Applying: xfs: separate dquot on disk format definitions out of xfs_quota.h
-/usr/src/xfs/xfsprogs/.git/rebase-apply/patch:64: trailing whitespace.
- * This header file defines all the on-disk format definitions for 
-warning: 1 line adds whitespace errors.
+mount
+copy files
+sync
+godown (*)
+umount
 
-# Patch 27
-Applying: xfs: move inode fork definitions to a new header file
-fatal: corrupt patch at line 2313
-Patch failed at 0001 xfs: move inode fork definitions to a new header file
-The copy of the patch that failed is found in:
-   /usr/src/xfs/xfsprogs/.git/rebase-apply/patch
-When you have resolved this problem, run "git am --resolved".
-If you prefer to skip this patch, run "git am --skip" instead.
-To restore the original branch and stop patching, run "git am --abort".
+(*) you don't need to crash the box to trip this problem.
 
-# Deleted the blank line from the patch (Thunderbird save error?).
-# Patch 27 (Take 2)
-Applying: xfs: move inode fork definitions to a new header file
+And when you run:
 
-# Patch 49
-Applying: xfsprogs: add dtype support to mkfs and db
-/usr/src/xfs/xfsprogs/.git/rebase-apply/patch:163: new blank line at EOF.
-+
-warning: 1 line adds whitespace errors.
+mount
+ls -l
 
-In other words, everything works so far.  Again, on one PC, the xfstests 
-results are awful, with many xfs/* tests failing.  The results have yet 
-to be reviwed closely, though.  There's a chance that something in 
-xfstests didn't build against xfsprogs...unless all the hole punch and 
-dmapi tests really are having issues...not enough info yet...
+The output of ls will have missing files.
 
-Thanks!
+The problem is log recovery sees the flushiter of the inodes being
+allocated as 0 (because that's what the patch that avoids reading
+the inodes during create sets it too), but the flushiter of the
+inode on disk is 2, and then log recovery says "inode on disk is
+more recent than the inode core being recovered, don't do recovery".
 
-Michael
+And that's all there is to it. di_flushiter is no longer necessary
+as we log all inode modifications now, but we left it there because
+we thought it was harmless:
+
+        /*
+         * bump the flush iteration count, used to detect flushes which
+         * postdate a log record during recovery. This is redundant as we now
+         * log every change and hence this can't happen. Still, it doesn't hurt.
+         */
+        ip->i_d.di_flushiter++;
+
+In this case, clearly it does hurt. :/
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
