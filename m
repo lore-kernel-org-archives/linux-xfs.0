@@ -1,16 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D5BDF7F37
-	for <xfs@oss.sgi.com>; Mon, 22 Jul 2013 08:05:34 -0500 (CDT)
-Message-ID: <51ED2E1E.5080407@sgi.com>
-Date: Mon, 22 Jul 2013 08:05:34 -0500
+	by oss.sgi.com (Postfix) with ESMTP id B1F227F37
+	for <xfs@oss.sgi.com>; Mon, 22 Jul 2013 08:22:39 -0500 (CDT)
+Message-ID: <51ED321F.7080402@sgi.com>
+Date: Mon, 22 Jul 2013 08:22:39 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 35/49] xfs: Introduce a new structure to hold transaction
-	reservation items
+Subject: Re: [PATCH 36/49] xfs: Introduce tr_fsyncts to m_reservation
 References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
-	<1374215120-7271-36-git-send-email-david@fromorbit.com>
-In-Reply-To: <1374215120-7271-36-git-send-email-david@fromorbit.com>
+	<1374215120-7271-37-git-send-email-david@fromorbit.com>
+In-Reply-To: <1374215120-7271-37-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,14 +28,15 @@ Cc: xfs@oss.sgi.com
 On 07/19/13 01:25, Dave Chinner wrote:
 > From: Jie Liu<jeff.liu@oracle.com>
 >
-> Introduce a new structure xfs_trans_res to hold transaction
-> reservation item info per log ticket.
+> A preparation step.
 >
-> We also need to improve xfs_trans_resv_calc() by initializing the
-> log count as well as log flags for permanent log reservation.
+> For now fsync_ts transaction use the pre-calculated log reservation
+> size of tr_swrite.
+> This patch introduce a new item tr_fsyncts to mp->m_reservations
+> structure so that we can fetch the log reservation value for it
+> in a same manner to others.
 >
 > Signed-off-by: Jie Liu<jeff.liu@oracle.com>
-> Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > ---
 
 Looks good.
