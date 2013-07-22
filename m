@@ -1,15 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 7DA137F37
-	for <xfs@oss.sgi.com>; Mon, 22 Jul 2013 13:53:46 -0500 (CDT)
-Date: Mon, 22 Jul 2013 13:53:43 -0500
+	by oss.sgi.com (Postfix) with ESMTP id B67F97F37
+	for <xfs@oss.sgi.com>; Mon, 22 Jul 2013 14:08:47 -0500 (CDT)
+Date: Mon, 22 Jul 2013 14:08:44 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] xfs: Fix a deadlock in xfs_log_commit_cil() code path
-Message-ID: <20130722185343.GB3111@sgi.com>
-References: <1374273098.8941.2075.camel@chandra-dt.ibm.com>
+Subject: Re: Subject: [PATCH v2] xfs: Initialize all quota inodes to be
+	NULLFSINO
+Message-ID: <20130722190844.GC3111@sgi.com>
+References: <1374273175.8941.2079.camel@chandra-dt.ibm.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1374273098.8941.2075.camel@chandra-dt.ibm.com>
+In-Reply-To: <1374273175.8941.2079.camel@chandra-dt.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,39 +26,23 @@ Sender: xfs-bounces@oss.sgi.com
 To: Chandra Seetharaman <sekharan@us.ibm.com>
 Cc: XFS mailing list <xfs@oss.sgi.com>
 
-On Fri, Jul 19, 2013 at 05:31:38PM -0500, Chandra Seetharaman wrote:
+On Fri, Jul 19, 2013 at 05:32:55PM -0500, Chandra Seetharaman wrote:
+> Change from previous version:
+>  - Added the additional comments that Dave wanted.
 > 
-> While testing and rearranging pquota/gquota code, I stumbled
-> on a xfs_shutdown() during a mount. But the mount just hung.
+> -------------
+> mkfs doesn't initialize the quota inodes to NULLFSINO as it does for the
+> other internal inodes. This leads to two in-core values (0 and NULLFSINO)
+> to be checked against, to make sure if a quota inode is valid.
 > 
-> Debugged and found that there is a deadlock involving
-> &log->l_cilp->xc_ctx_lock.
+> Solve that problem by initializing the in-core values of all quotaino
+> values to NULLFSINO if they are 0 in the disk.
 > 
-> It is in a code path where &log->l_cilp->xc_ctx_lock is first
-> acquired in read mode and some levels down the same semaphore
-> is being acquired in write mode causing a deadlock.
-> 
-> This is the stack:
-> xfs_log_commit_cil -> acquires &log->l_cilp->xc_ctx_lock in read mode
->   xlog_print_tic_res
->     xfs_force_shutdown
->       xfs_log_force_umount
->         xlog_cil_force
->           xlog_cil_force_lsn
->             xlog_cil_push_foreground
->               xlog_cil_push - tries to acquire same semaphore in write mode
-> 
-> This patch fixes the deadlock by changing the reason code for
-> xfs_force_shutdown in xlog_print_tic_res() to SHUTDOWN_LOG_IO_ERROR.
-> 
-> SHUTDOWN_LOG_IO_ERROR is the right reason code to be set since
-> we are in the log path.
-> 
-> Thanks to Dave for suggesting this solution.
+> Note that these values are not written back to on-disk superblock unless
+> some quota is enabled on the filesystem. Even in that case sb_pquotino is
+> written to disk only if the on-disk superblock supports pquotino
 > 
 > Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-
-Looks fine.
 
 Reviewed-by: Ben Myers <bpm@sgi.com>
 
