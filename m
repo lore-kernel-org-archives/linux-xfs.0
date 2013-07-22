@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B1F227F37
-	for <xfs@oss.sgi.com>; Mon, 22 Jul 2013 08:22:39 -0500 (CDT)
-Message-ID: <51ED321F.7080402@sgi.com>
-Date: Mon, 22 Jul 2013 08:22:39 -0500
+	by oss.sgi.com (Postfix) with ESMTP id E89777F37
+	for <xfs@oss.sgi.com>; Mon, 22 Jul 2013 08:23:21 -0500 (CDT)
+Message-ID: <51ED324A.30302@sgi.com>
+Date: Mon, 22 Jul 2013 08:23:22 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 36/49] xfs: Introduce tr_fsyncts to m_reservation
+Subject: Re: [PATCH 37/49] xfs: Make writeid transaction use tr_writeid
 References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
-	<1374215120-7271-37-git-send-email-david@fromorbit.com>
-In-Reply-To: <1374215120-7271-37-git-send-email-david@fromorbit.com>
+	<1374215120-7271-38-git-send-email-david@fromorbit.com>
+In-Reply-To: <1374215120-7271-38-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,15 +28,14 @@ Cc: xfs@oss.sgi.com
 On 07/19/13 01:25, Dave Chinner wrote:
 > From: Jie Liu<jeff.liu@oracle.com>
 >
-> A preparation step.
+> tr_writeid is defined at mp->m_resv structure, however, it does not
+> really being used when it should be..
 >
-> For now fsync_ts transaction use the pre-calculated log reservation
-> size of tr_swrite.
-> This patch introduce a new item tr_fsyncts to mp->m_reservations
-> structure so that we can fetch the log reservation value for it
-> in a same manner to others.
+> This patch changes it to tr_writeid to fetch the correct log
+> reservation size.
 >
 > Signed-off-by: Jie Liu<jeff.liu@oracle.com>
+> Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > ---
 
 Looks good.
