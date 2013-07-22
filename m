@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4D0CB7F4E
-	for <xfs@oss.sgi.com>; Mon, 22 Jul 2013 17:54:56 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1EA9C304039
-	for <xfs@oss.sgi.com>; Mon, 22 Jul 2013 15:54:53 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 166D47F4E
+	for <xfs@oss.sgi.com>; Mon, 22 Jul 2013 17:56:44 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 0101F304051
+	for <xfs@oss.sgi.com>; Mon, 22 Jul 2013 15:56:43 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	2vxy3yCROKbYtpw0 for <xfs@oss.sgi.com>;
-	Mon, 22 Jul 2013 15:54:51 -0700 (PDT)
-Date: Tue, 23 Jul 2013 08:54:45 +1000
+	YwIm5Sj6u2TCLJGi for <xfs@oss.sgi.com>;
+	Mon, 22 Jul 2013 15:56:42 -0700 (PDT)
+Date: Tue, 23 Jul 2013 08:56:40 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [Bisected] Corruption of root fs during git bisect of drm system
-	hang
-Message-ID: <20130722225445.GA19986@dastard>
-References: <20130713090523.GA362@x4> <20130712070721.GA359@x4>
-	<20130715022841.GH5228@dastard> <20130715064734.GA361@x4>
-	<20130719122235.GA360@x4> <20130720014836.GZ11674@dastard>
-	<20130722102223.GG11674@dastard> <20130722104743.GA361@x4>
+Subject: Re: [PATCH] xfs: di_flushiter considered harmful
+Message-ID: <20130722225640.GB19986@dastard>
+References: <1374488304-13044-1-git-send-email-david@fromorbit.com>
+	<20130722110732.GA365@x4>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130722104743.GA361@x4>
+In-Reply-To: <20130722110732.GA365@x4>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,59 +31,74 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Markus Trippelsdorf <markus@trippelsdorf.de>
-Cc: Ben Myers <bpm@sgi.com>, Mark Tinguely <tinguely@sgi.com>, Stan Hoeppner <stan@hardwarefreak.com>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Mon, Jul 22, 2013 at 12:47:43PM +0200, Markus Trippelsdorf wrote:
-> On 2013.07.22 at 20:22 +1000, Dave Chinner wrote:
-> > On Sat, Jul 20, 2013 at 11:48:36AM +1000, Dave Chinner wrote:
-> > > On Fri, Jul 19, 2013 at 02:22:35PM +0200, Markus Trippelsdorf wrote:
-> > > > On 2013.07.15 at 08:47 +0200, Markus Trippelsdorf wrote:
-> > > > I've bisected this issue to the following commit:
-> > > > 
-> > > >  commit cca9f93a52d2ead50b5da59ca83d5f469ee4be5f
-> > > >  Author: Dave Chinner <dchinner@redhat.com>
-> > > >  Date:   Thu Jun 27 16:04:49 2013 +1000
-> > > > 
-> > > >      xfs: don't do IO when creating an new inode
-> > > >          
-> > > > Reverting this commit on top of the Linus tree "solves" all problems for
-> > > > me. IOW I no longer loose my KDE and LibreOffice config files during a
-> > > > crash. Log recovery now works fine and xfs_repair shows no issues.
-> > > 
-> > > Thanks for bisecting this, Marcus.
-> > > 
-> > > I'll admit, right now it doesn't make a lot of sense to me - I don't
-> > > immediately see a connection between not reading an inode during the
-> > > create phase and unlinked list and directory corruption after a
-> > > crash. But now you've identified a change that might be the cause,
-> > > I have an avenue of investigation I can follow.
-> > > 
-> > > Indeed, in the time I've taken to write this mail I've thought of
-> > > 2-3 possible causes that I need to investigate....
+On Mon, Jul 22, 2013 at 01:07:32PM +0200, Markus Trippelsdorf wrote:
+> On 2013.07.22 at 20:18 +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > Hi Markus, can you test the patch I just posted to the list titled
-> > "xfs: di_flushiter considered harmful" and see if it fixes your
-> > problem? Archive link here:
+> > When we made all inode updates transactional, we no longer needed
+> > the log recovery detection for inodes being newer on disk than the
+> > transaction being replayed - it was redundant as replay of the log
+> > would always result in the latest version of the inode woul dbe on
+> > disk. It was redundant, but left in place because it wasn't
+> > considered to be a problem.
 > > 
-> > http://oss.sgi.com/pipermail/xfs/2013-July/028331.html
+> > However, with the new "don't read inodes on create" optimisation,
+> > flushiter has come back to bite us. Essentially, the optimisation
+> > made always initialises flushiter to zero in the create transaction,
+> > and so if we then crash and run recovery and the inode already on
+> > disk has a non-zero flushiter it will skip recovery of that inode.
+> > As a result, log recovery does the wrong thing and we end up with a
+> > corrupt filesystem.
+> > 
+> > Because we have to support old kernel to new kernl upgrades, we
+> > can't just get rid of the flushiter support in log recovery as we
+> > might be upgrading from a kernel that doesn't have fully transaction
+> > inode updates.  Unfortunately, for v4 superblocks there is no way to
+> > guarantee that log recovery knows about this fact.
+> > 
+> > We cannot add a new inode format flag to say it's a "special inode
+> > create" because it won't be understood by older kernels and so
+> > recovery could do the wrong thing on downgrade. We cannot specially
+> > detect the combination of zero mode/non-zero flushiter on disk to
+> > non-zero mode, zero flushiter in the log item during recovery
+> > because wrapping of the flushiter can result in false detection.
+> > 
+> > Hence that makes this "don't use flushiter" optimisation limited to
+> > a disk format that guarantees that we don't need it. And that means
+> > the only fix here is to limit the "no read IO on create"
+> > optimisation to version 5 superblocks....
 > 
-> Unfortunately no. I still get the same corruption with this patch
-> applied.
+> I think your patch misses the following part:
+> 
+> @@ -1054,17 +1056,15 @@ xfs_iread(
+>  
+>         /* shortcut IO on inode allocation if possible */
+>         if ((iget_flags & XFS_IGET_CREATE) &&
+> -           !(mp->m_flags & XFS_MOUNT_IKEEP)) {
+> +           !(mp->m_flags & XFS_MOUNT_IKEEP) &&
+> +           xfs_sb_version_hascrc(&mp->m_sb)) {
+>                 /* initialise the on-disk inode core */
+>                 memset(&ip->i_d, 0, sizeof(ip->i_d));
+>                 ip->i_d.di_magic = XFS_DINODE_MAGIC;
+>                 ip->i_d.di_gen = prandom_u32();
+> -               if (xfs_sb_version_hascrc(&mp->m_sb)) {
+> -                       ip->i_d.di_version = 3;
+> -                       ip->i_d.di_ino = ip->i_ino;
+> -                       uuid_copy(&ip->i_d.di_uuid, &mp->m_sb.sb_uuid);
+> -               } else
+> -                       ip->i_d.di_version = 2;
+> +               ip->i_d.di_version = 3;
+> +               ip->i_d.di_ino = ip->i_ino;
+> +               uuid_copy(&ip->i_d.di_uuid, &mp->m_sb.sb_uuid);
+>                 return 0;
+>         }
 
-Umm, really? can you please put together a simple reproducer then?
-Because it definitely fixes the problem that Mark reproduced...
-
-> (It's embarrassing to mention, but please add:
-> Reported-by: Markus Trippelsdorf <markus@trippelsdorf.de>
-> to the next iteration of this patch.
-> Thanks.)
-
-The reason I asked you to test it was so I could confirm that it was
-fixing the problem you've reported and so I could added reported-by
-and tested-by tags to it.
-
-Indeed, if it doesn't fix your problem, then it's not fixing the bug
-you reported, and so adding such tags is wrong.... ;)
+Sure, it's dead code so doesn't affect the behaviour of the patch.
+I'll update it, but I need you to reproduce the problem in a simple
+manner as Mark did with this patch in place so I can find out what
+the real problem you are seeing is....
 
 Cheers,
 
