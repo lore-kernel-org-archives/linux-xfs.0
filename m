@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, master,
+Subject: [XFS updates] XFS development tree branch, for-next,
 	updated. for-linus-v3.11-rc1-2-12117-gd892d58
-Message-Id: <20130722195336.2FB167F50@oss.sgi.com>
-Date: Mon, 22 Jul 2013 14:53:35 -0500 (CDT)
+Message-Id: <20130722195444.DDE177F3F@oss.sgi.com>
+Date: Mon, 22 Jul 2013 14:54:44 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,7 +23,7 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, master has been updated
+The branch, for-next has been updated
   d892d58 xfs: Start using pquotaino from the superblock.
   0102629 xfs: Initialize all quota inodes to be NULLFSINO
   297aa63 xfs: Fix a deadlock in xfs_log_commit_cil() code path
