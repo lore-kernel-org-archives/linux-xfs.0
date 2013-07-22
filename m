@@ -1,23 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 68E1F7F50
-	for <xfs@oss.sgi.com>; Mon, 22 Jul 2013 11:00:09 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 43B60304071
-	for <xfs@oss.sgi.com>; Mon, 22 Jul 2013 09:00:09 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id zDqY07Eg5McbBRhD (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 22 Jul 2013 09:00:06 -0700 (PDT)
-Date: Mon, 22 Jul 2013 12:00:07 -0400
-From: Dwight Engen <dwight.engen@oracle.com>
-Subject: Re: [PATCH v4 6/7] xfs: check that eofblocks ioctl caller can write
-	matched inodes
-Message-ID: <20130722120007.2a82cea5@oracle.com>
-In-Reply-To: <20130719060221.GX11674@dastard>
-References: <20130717114746.4e133042@oracle.com>
-	<20130719060221.GX11674@dastard>
-Mime-Version: 1.0
+	by oss.sgi.com (Postfix) with ESMTP id 712287F37
+	for <xfs@oss.sgi.com>; Mon, 22 Jul 2013 11:38:01 -0500 (CDT)
+Message-ID: <51ED5FE6.8060302@sgi.com>
+Date: Mon, 22 Jul 2013 11:37:58 -0500
+From: Mark Tinguely <tinguely@sgi.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH] xfs: di_flushiter considered harmful
+References: <1374488304-13044-1-git-send-email-david@fromorbit.com>
+	<20130722110732.GA365@x4> <51ED4471.7050708@sgi.com>
+	<20130722151542.GB365@x4>
+In-Reply-To: <20130722151542.GB365@x4>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,48 +19,78 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Markus Trippelsdorf <markus@trippelsdorf.de>
 Cc: xfs@oss.sgi.com
 
-On Fri, 19 Jul 2013 16:02:21 +1000
-Dave Chinner <david@fromorbit.com> wrote:
+On 07/22/13 10:15, Markus Trippelsdorf wrote:
+> On 2013.07.22 at 09:40 -0500, Mark Tinguely wrote:
+>> On 07/22/13 06:07, Markus Trippelsdorf wrote:
+>>> On 2013.07.22 at 20:18 +1000, Dave Chinner wrote:
+>>>> From: Dave Chinner<dchinner@redhat.com>
+>>>>
+>>>> When we made all inode updates transactional, we no longer needed
+>>>> the log recovery detection for inodes being newer on disk than the
+>>>> transaction being replayed - it was redundant as replay of the log
+>>>> would always result in the latest version of the inode woul dbe on
+>>>> disk. It was redundant, but left in place because it wasn't
+>>>> considered to be a problem.
+>>>>
+>>>> However, with the new "don't read inodes on create" optimisation,
+>>>> flushiter has come back to bite us. Essentially, the optimisation
+>>>> made always initialises flushiter to zero in the create transaction,
+>>>> and so if we then crash and run recovery and the inode already on
+>>>> disk has a non-zero flushiter it will skip recovery of that inode.
+>>>> As a result, log recovery does the wrong thing and we end up with a
+>>>> corrupt filesystem.
+>>>>
+>>>> Because we have to support old kernel to new kernl upgrades, we
+>>>> can't just get rid of the flushiter support in log recovery as we
+>>>> might be upgrading from a kernel that doesn't have fully transaction
+>>>> inode updates.  Unfortunately, for v4 superblocks there is no way to
+>>>> guarantee that log recovery knows about this fact.
+>>>>
+>>>> We cannot add a new inode format flag to say it's a "special inode
+>>>> create" because it won't be understood by older kernels and so
+>>>> recovery could do the wrong thing on downgrade. We cannot specially
+>>>> detect the combination of zero mode/non-zero flushiter on disk to
+>>>> non-zero mode, zero flushiter in the log item during recovery
+>>>> because wrapping of the flushiter can result in false detection.
+>>>>
+>>>> Hence that makes this "don't use flushiter" optimisation limited to
+>>>> a disk format that guarantees that we don't need it. And that means
+>>>> the only fix here is to limit the "no read IO on create"
+>>>> optimisation to version 5 superblocks....
+>>>
+>>> I think your patch misses the following part:
+>>>
+>>
+>>
+>> Dave's patch is limited to the new v5 (crc) superblock. The constraints
+>> that has to be dealt with are in the commit message as to why it is
+>> limited to the new v5 superblock.
+>>
+>> Going back to your 07/10/2013 message, your filesystem is:
+>>
+>> /dev/root on / type xfs  (rw,relatime,attr2,inode64,logbsize=256k,noquota)
+>>
+>> or the non-crc v4 superblock with inode 2 that is probably why it is
+>> still failing for you.
+>>
+>> It seems to me that since we cannot fix this for inode 1/2, then besides
+>> this patch we have to revert patch cca9f93a52d and make it inode 3+ /
+>> superblock 5+ (crc) dependent.
+>
+> Which is exactly what the hunk I've posted does.
+>
+> Here's the combined patch:
 
-[...]
-> > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> > index d873ab9e..728283a 100644
-> > --- a/fs/xfs/xfs_icache.c
-> > +++ b/fs/xfs/xfs_icache.c
-> > @@ -1247,6 +1247,10 @@ xfs_inode_free_eofblocks(
-> >  		if (!xfs_inode_match_id(ip, eofb))
-> >  			return 0;
-> >  
-> > +		if (eofb->eof_flags & XFS_EOF_FLAGS_PERM_CHECK &&
-> > +		    inode_permission(VFS_I(ip), MAY_WRITE))
-> > +			return 0;
-> 
-> This assumes we are walking fully instantiated VFS inodes. That's
-> not necessarily true - we may be walking inodes that have already
-> been dropped from the VFS and are waiting for background reclaim to
+Thank-you for the clarification.
 
-Hi Dave, in looking at this a bit I don't see how they can be dropped
-from the VFS since they are igrab()ed in the flow:
-
-xfs_icache_free_eofblocks
-  xfs_inode_ag_iterator_tag
-    xfs_inode_ag_walk
-      xfs_inode_ag_walk_grab
-        igrab
-
-and I don't see a way for xfs_inode_free_eofblocks() to be called other
-than the ag_walk flow.
-
-If there is a way to get into xfs_inode_free_eofblocks where we can't
-use VFS_I(ip) then it will be a problem for the new code in
-xfs_inode_match_id() as well.
+--Mark.
 
 _______________________________________________
 xfs mailing list
