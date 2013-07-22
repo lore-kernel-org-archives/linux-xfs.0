@@ -1,16 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D92747F37
-	for <xfs@oss.sgi.com>; Mon, 22 Jul 2013 16:44:53 -0500 (CDT)
-Date: Mon, 22 Jul 2013 16:44:49 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 02/48] logprint: fix wrapped log dump issue.
-Message-ID: <20130722214449.GG3111@sgi.com>
-References: <1370564771-4929-1-git-send-email-david@fromorbit.com>
-	<1370564771-4929-3-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 4D0CB7F4E
+	for <xfs@oss.sgi.com>; Mon, 22 Jul 2013 17:54:56 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 1EA9C304039
+	for <xfs@oss.sgi.com>; Mon, 22 Jul 2013 15:54:53 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	2vxy3yCROKbYtpw0 for <xfs@oss.sgi.com>;
+	Mon, 22 Jul 2013 15:54:51 -0700 (PDT)
+Date: Tue, 23 Jul 2013 08:54:45 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [Bisected] Corruption of root fs during git bisect of drm system
+	hang
+Message-ID: <20130722225445.GA19986@dastard>
+References: <20130713090523.GA362@x4> <20130712070721.GA359@x4>
+	<20130715022841.GH5228@dastard> <20130715064734.GA361@x4>
+	<20130719122235.GA360@x4> <20130720014836.GZ11674@dastard>
+	<20130722102223.GG11674@dastard> <20130722104743.GA361@x4>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1370564771-4929-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <20130722104743.GA361@x4>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,60 +33,67 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Markus Trippelsdorf <markus@trippelsdorf.de>
+Cc: Ben Myers <bpm@sgi.com>, Mark Tinguely <tinguely@sgi.com>, Stan Hoeppner <stan@hardwarefreak.com>, xfs@oss.sgi.com
 
-On Fri, Jun 07, 2013 at 10:25:25AM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Mon, Jul 22, 2013 at 12:47:43PM +0200, Markus Trippelsdorf wrote:
+> On 2013.07.22 at 20:22 +1000, Dave Chinner wrote:
+> > On Sat, Jul 20, 2013 at 11:48:36AM +1000, Dave Chinner wrote:
+> > > On Fri, Jul 19, 2013 at 02:22:35PM +0200, Markus Trippelsdorf wrote:
+> > > > On 2013.07.15 at 08:47 +0200, Markus Trippelsdorf wrote:
+> > > > I've bisected this issue to the following commit:
+> > > > 
+> > > >  commit cca9f93a52d2ead50b5da59ca83d5f469ee4be5f
+> > > >  Author: Dave Chinner <dchinner@redhat.com>
+> > > >  Date:   Thu Jun 27 16:04:49 2013 +1000
+> > > > 
+> > > >      xfs: don't do IO when creating an new inode
+> > > >          
+> > > > Reverting this commit on top of the Linus tree "solves" all problems for
+> > > > me. IOW I no longer loose my KDE and LibreOffice config files during a
+> > > > crash. Log recovery now works fine and xfs_repair shows no issues.
+> > > 
+> > > Thanks for bisecting this, Marcus.
+> > > 
+> > > I'll admit, right now it doesn't make a lot of sense to me - I don't
+> > > immediately see a connection between not reading an inode during the
+> > > create phase and unlinked list and directory corruption after a
+> > > crash. But now you've identified a change that might be the cause,
+> > > I have an avenue of investigation I can follow.
+> > > 
+> > > Indeed, in the time I've taken to write this mail I've thought of
+> > > 2-3 possible causes that I need to investigate....
+> > 
+> > Hi Markus, can you test the patch I just posted to the list titled
+> > "xfs: di_flushiter considered harmful" and see if it fixes your
+> > problem? Archive link here:
+> > 
+> > http://oss.sgi.com/pipermail/xfs/2013-July/028331.html
 > 
-> When running xfs/295 on a 512 byte block size filesystem, logprint
-> fails during checking with a "Bad log record header" error. This is
-> due to the fact that the log has wrapped and there is partial record
-> a the start of the log.
-> 
-> logprint doesn't check for this condition, and simply assumes that
-> the first block in the log contains a log header, and hence aborts
-> when this case occurs. So we now have a spurious test failure due to
-> logprint displaying how right this comment is:
-> 
-> /*
->  * This code is gross and needs to be rewritten.
->  */
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  logprint/log_misc.c |   49 ++++++++++++++++++++++++++++++++-----------------
->  1 file changed, 32 insertions(+), 17 deletions(-)
-> 
-> diff --git a/logprint/log_misc.c b/logprint/log_misc.c
-> index d08f900..334b6bf 100644
-> --- a/logprint/log_misc.c
-> +++ b/logprint/log_misc.c
-> @@ -833,7 +833,8 @@ xlog_print_record(int			  fd,
->  		 int			  *read_type,
->  		 xfs_caddr_t		  *partial_buf,
->  		 xlog_rec_header_t	  *rhead,
-> -		 xlog_rec_ext_header_t	  *xhdrs)
-> +		 xlog_rec_ext_header_t	  *xhdrs,
-> +		 int			  bad_hdr_warn)
->  {
->      xfs_caddr_t		buf, ptr;
->      int			read_len, skip;
-> @@ -1006,11 +1007,17 @@ xlog_print_record(int			  fd,
->  			break;
->  		    }
->  		    default: {
-> -			fprintf(stderr, _("%s: unknown log operation type (%x)\n"),
-> -				progname, *(unsigned short *)ptr);
-> -			if (print_exit) {
-> -				free(buf);
-> -				return BAD_HEADER;
-> +			if(bad_hdr_warn) {
-			  ^ Added a space.
+> Unfortunately no. I still get the same corruption with this patch
+> applied.
 
-Reviewed-by: Ben Myers <bpm@sgi.com>
+Umm, really? can you please put together a simple reproducer then?
+Because it definitely fixes the problem that Mark reproduced...
 
-Applied to the master branch.
+> (It's embarrassing to mention, but please add:
+> Reported-by: Markus Trippelsdorf <markus@trippelsdorf.de>
+> to the next iteration of this patch.
+> Thanks.)
+
+The reason I asked you to test it was so I could confirm that it was
+fixing the problem you've reported and so I could added reported-by
+and tested-by tags to it.
+
+Indeed, if it doesn't fix your problem, then it's not fixing the bug
+you reported, and so adding such tags is wrong.... ;)
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
