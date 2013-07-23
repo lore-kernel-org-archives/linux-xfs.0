@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 999607F3F
-	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 13:56:43 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 5C0827F5A
+	for <linux-xfs@oss.sgi.com>; Tue, 23 Jul 2013 13:56:45 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5CC25304062
-	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 11:56:43 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id EADDBAC00A
+	for <linux-xfs@oss.sgi.com>; Tue, 23 Jul 2013 11:56:44 -0700 (PDT)
 Received: from mail323.us3.mcdlv.net (mail323.us3.mcdlv.net [173.231.177.67])
-	by cuda.sgi.com with ESMTP id 5lHFlD76yveIc1nC for
-	<xfs@oss.sgi.com>; Tue, 23 Jul 2013 11:56:40 -0700 (PDT)
-Received: from (127.0.0.1) by mail323.us3.mcdlv.net id htr80q14i04m for
-	<xfs@oss.sgi.com>; Tue, 23 Jul 2013 18:45:40 +0000 (envelope-from
-	<bounce-mc.us7_18889475.80805-xfs=oss.sgi.com@mail323.us3.mcdlv.net>)
-Subject: =?utf-8?Q?Finally=20a=20site=20that=20has=20JUST=20MUSIC=20VIDEOS?=
-From: =?utf-8?Q?Music=20Video=20News?= <pr@thedailyrocker.com>
-Date: Tue, 23 Jul 2013 18:45:40 +0000
-Message-ID: <cff25387938a97b0fd838f92095f7364ac1.20130723185324@mail323.us3.mcdlv.net>
+	by cuda.sgi.com with ESMTP id 48Hd0qzYtDRC5GBX for
+	<linux-xfs@oss.sgi.com>; Tue, 23 Jul 2013 11:56:42 -0700 (PDT)
+Received: from (127.0.0.1) by mail323.us3.mcdlv.net id htr80u14i04i for
+	<linux-xfs@oss.sgi.com>;
+	Tue, 23 Jul 2013 18:47:57 +0000 (envelope-from
+	<bounce-mc.us7_18889475.80821-linux-xfs=oss.sgi.com@mail323.us3.mcdlv.net>)
+Subject: =?utf-8?Q?New=20Music=20Video=20Website?=
+From: =?utf-8?Q?The=20Daily=20Rocker?= <info@TheDailyRocker.com>
+Date: Tue, 23 Jul 2013 18:47:57 +0000
+Message-ID: <cff25387938a97b0fd838f9206e97603da8.20130723185541@mail323.us3.mcdlv.net>
 MIME-Version: 1.0
-Reply-To: =?utf-8?Q?Music=20Video=20News?= <pr@thedailyrocker.com>
+Reply-To: =?utf-8?Q?The=20Daily=20Rocker?= <info@TheDailyRocker.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,51 +26,97 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============2896630723948509984=="
+Content-Type: multipart/mixed; boundary="===============3611374187101772694=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: =?utf-8?Q??= <xfs@oss.sgi.com>
+To: =?utf-8?Q??= <linux-xfs@oss.sgi.com>
 
 This is a multi-part message in MIME format
 
---===============2896630723948509984==
-Content-Type: multipart/alternative; boundary="_----------=_MCPart_1741299820"
+--===============3611374187101772694==
+Content-Type: multipart/alternative; boundary="_----------=_MCPart_779735848"
 
 This is a multi-part message in MIME format
 
---_----------=_MCPart_1741299820
-Content-Type: text/plain; charset="us-ascii";
+--_----------=_MCPart_779735848
+Content-Type: text/plain; charset="utf-8"; format="fixed"
+Content-Transfer-Encoding: quoted-printable
 
 New music video site launches with thousands of stations and facebook chat
 
-View this email in your browser (http://us7.campaign-archive2.com/?u=cff25387938a97b0fd838f920&id=c749d5a658&e=95f7364ac1)
+View this email in your browser (http://us7.campaign-archive2.com/?u=3Dcff=
+25387938a97b0fd838f920&id=3D25ecb7fdee&e=3D6e97603da8)
+
+Use this area to offer a short preview of your email's content.
+
+View this email in your browser (http://us7.campaign-archive2.com/?u=3Dcff=
+25387938a97b0fd838f920&id=3D25ecb7fdee&e=3D6e97603da8)
 
 
 ** Finally A Music Video Site That Features JUST Music Videos Non-Stop
 ------------------------------------------------------------
 
 
-** No digging through crappy concert footage. No interviews or lame news segments interrupting the music. Just Music Videos. Everyday. Every genre. Dig it.
+** No digging through crappy concert footage. No interviews or lame news s=
+egments interrupting the music. Just Music Videos. Everyday. Every genre.=
+ Dig it.
 ------------------------------------------------------------
 
 http://www.thedailyrocker.com
 
-Los Angeles, CA - This morning, the new music video site The Daily Rocker whimsically launched with "Internet Killed The Video Star" kicking off a major site that features -
-* The ability to chat with facebook friends while watching music videos uninterrupted
-* Hours of daily music video programming, hand picked and compiled by real humans, not computers
-* The Daily Top Ten Music Videos based on charts, ticket sales, downloads and buzz
-* Daily Genre Stations for ROCK, RAP, POP, REGGE, PUNK, CHRISTIAN, ELECTRONIC, COUNTRY and several cross over formats (all genres in one station)
-* Task based stations to keep the user motivated while studying, cleaning the house or trying to make out with someone
-* Other sub-genres include music by era and a station devoted to female artists with bold voices
-* Thousands of Artist Stations that automatically send users from one like minded artist to the next, allowing them to watch videos all day while getting stuff done
-* New music videos added daily with constantly rotating playlists allow users to keep up with current music while hearing their favorite tunes
+Los Angeles, CA - This morning, the new music video site The Daily Rocker=
+ whimsically launched with "Internet Killed The Video Star" kicking off a=
+ major site that features -
+* The ability to chat with facebook friends while watching music videos un=
+interrupted
+* Hours of daily music video programming, hand picked and compiled by real=
+ humans, not computers
+* The Daily Top Ten Music Videos based on charts, ticket sales, downloads=
+ and buzz
+* Daily Genre Stations for ROCK, RAP, POP, REGGE, PUNK, CHRISTIAN, ELECTRO=
+NIC, COUNTRY and several cross over formats (all genres in one station)
+* Task based stations to keep the user motivated while studying, cleaning=
+ the house or trying to make out with someone
+* Other sub-genres include music by era and a station devoted to female ar=
+tists with bold voices
+* Thousands of Artist Stations that automatically send users from one like=
+ minded artist to the next, allowing them to watch videos all day while ge=
+tting stuff done
+* New music videos added daily with constantly rotating playlists allow us=
+ers to keep up with current music while hearing their favorite tunes
 
 
-============================================================
 
-** unsubscribe from this list (http://TheDailyRocker.us7.list-manage1.com/unsubscribe?u=cff25387938a97b0fd838f920&id=9052594378&e=95f7364ac1&c=c749d5a658)
-** update subscription preferences (http://TheDailyRocker.us7.list-manage.com/profile?u=cff25387938a97b0fd838f920&id=9052594378&e=95f7364ac1)
---_----------=_MCPart_1741299820
+** Designing Your Email
+------------------------------------------------------------
+
+
+** Creating an elegant email is simple
+------------------------------------------------------------
+
+Now that you=E2=80=99ve selected a template to work with, drag in content=
+ blocks to define the structure of your message. Don=E2=80=99t worry, you=
+ can always delete or rearrange blocks as needed. Then click =E2=80=9CDesi=
+gn=E2=80=9D to define fonts, colors, and styles.
+
+Need inspiration for your design? Here=E2=80=99s what other MailChimp user=
+s are doing. (http://inspiration.mailchimp.com)
+
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+
+** unsubscribe from this list (http://TheDailyRocker.us7.list-manage.com/u=
+nsubscribe?u=3Dcff25387938a97b0fd838f920&id=3D6847f0f686&e=3D6e97603da8&c=3D=
+25ecb7fdee)
+** update subscription preferences (http://TheDailyRocker.us7.list-manage2=
+=2Ecom/profile?u=3Dcff25387938a97b0fd838f920&id=3D6847f0f686&e=3D6e97603da8)
+** unsubscribe from this list (http://TheDailyRocker.us7.list-manage.com/u=
+nsubscribe?u=3Dcff25387938a97b0fd838f920&id=3D6847f0f686&e=3D6e97603da8&c=3D=
+25ecb7fdee)
+** update subscription preferences (http://TheDailyRocker.us7.list-manage2=
+=2Ecom/profile?u=3Dcff25387938a97b0fd838f920&id=3D6847f0f686&e=3D6e97603da8)
+--_----------=_MCPart_779735848
 Content-Type: text/html; charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
 
@@ -79,7 +126,7 @@ Content-Transfer-Encoding: quoted-printable
     <head>
         <meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3D=
 UTF-8">
-        <title>Finally a site that has JUST MUSIC VIDEOS</title>
+        <title>New Music Video Website</title>
 
         <!--[if gte mso 6]>
         <style>
@@ -541,7 +588,54 @@ olor: #606060;font-family: Helvetica;font-size: 11px;line-height: 125%;tex=
 t-align: left;">
 
                             <a href=3D"http://us7.campaign-archive2.com/?u=
-=3Dcff25387938a97b0fd838f920&id=3Dc749d5a658&e=3D95f7364ac1" target=3D"_blan=
+=3Dcff25387938a97b0fd838f920&id=3D25ecb7fdee&e=3D6e97603da8" target=3D"_blan=
+k" style=3D"color: #606060;font-weight: normal;text-decoration: underline;=
+word-wrap: break-word !important;">View this email in your browser</a>
+                        </td>
+                    </tr>
+                </tbody></table>
+
+            </td>
+        </tr>
+    </tbody>
+</table><table border=3D"0" cellpadding=3D"0" cellspacing=3D"0" width=3D"1=
+00%" class=3D"mcnTextBlock" style=3D"border-collapse: collapse;mso-table-l=
+space: 0pt;mso-table-rspace: 0pt;">
+    <tbody class=3D"mcnTextBlockOuter">
+        <tr>
+            <td valign=3D"top" class=3D"mcnTextBlockInner" style=3D"border=
+-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;">
+
+                <table align=3D"left" border=3D"0" cellpadding=3D"0" cells=
+pacing=3D"0" width=3D"366" class=3D"mcnTextContentContainer" style=3D"bord=
+er-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;">
+                    <tbody><tr>
+
+                        <td valign=3D"top" class=3D"mcnTextContent" style=
+=3D"padding-top: 9px;padding-left: 18px;padding-bottom: 9px;padding-right:=
+ 0;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;c=
+olor: #606060;font-family: Helvetica;font-size: 11px;line-height: 125%;tex=
+t-align: left;">
+
+                            Use this area to offer a short preview of your=
+ email's content.
+                        </td>
+                    </tr>
+                </tbody></table>
+
+                <table align=3D"right" border=3D"0" cellpadding=3D"0" cell=
+spacing=3D"0" width=3D"197" class=3D"mcnTextContentContainer" style=3D"bor=
+der-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;">
+                    <tbody><tr>
+
+                        <td valign=3D"top" class=3D"mcnTextContent" style=
+=3D"padding-top: 9px;padding-right: 18px;padding-bottom: 9px;padding-left:=
+ 0;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;c=
+olor: #606060;font-family: Helvetica;font-size: 11px;line-height: 125%;tex=
+t-align: left;">
+
+                            <a href=3D"http://us7.campaign-archive2.com/?u=
+=3Dcff25387938a97b0fd838f920&id=3D25ecb7fdee&e=3D6e97603da8" target=3D"_blan=
 k" style=3D"color: #606060;font-weight: normal;text-decoration: underline;=
 word-wrap: break-word !important;">View this email in your browser</a>
                         </td>
@@ -602,6 +696,34 @@ important;" class=3D"mcnImage">
                 </td>
             </tr>
     </tbody>
+</table><table border=3D"0" cellpadding=3D"0" cellspacing=3D"0" width=3D"1=
+00%" class=3D"mcnImageBlock" style=3D"border-collapse: collapse;mso-table-=
+lspace: 0pt;mso-table-rspace: 0pt;">
+    <tbody class=3D"mcnImageBlockOuter">
+            <tr>
+                <td valign=3D"top" style=3D"padding: 9px;border-collapse:=
+ collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;" class=3D"mcnImageB=
+lockInner">
+                    <table align=3D"left" width=3D"100%" border=3D"0" cell=
+padding=3D"0" cellspacing=3D"0" class=3D"mcnImageContentContainer" style=
+=3D"border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;=
+">
+                        <tbody><tr>
+                            <td class=3D"mcnImageContent" valign=3D"top" s=
+tyle=3D"padding-right: 9px;padding-left: 9px;padding-top: 0;padding-bottom=
+: 0;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;=
+">
+
+                                <table style=3D"width: 564px;border-collap=
+se: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;" class=3D"mcprev=
+iew-image-uploader"></table>
+
+                            </td>
+                        </tr>
+                    </tbody></table>
+                </td>
+            </tr>
+    </tbody>
 </table></td>
                                         </tr>
                                     </table>
@@ -654,8 +776,8 @@ egments interrupting the music. Just Music Videos. Everyday. Every genre.=
 <p style=3D"margin: 0px;padding: 4px 0px;color: #000000;font-family: Arial=
 , Helvetica, sans-serif;line-height: 15px;font-size: 15px;text-align: left=
 ;">
-=09<a href=3D"http://TheDailyRocker.us7.list-manage.com/track/click?u=3Dcf=
-f25387938a97b0fd838f920&id=3Deb408283b4&e=3D95f7364ac1" target=3D"_self"=
+=09<a href=3D"http://TheDailyRocker.us7.list-manage1.com/track/click?u=3Dc=
+ff25387938a97b0fd838f920&id=3Dd00c7729dd&e=3D6e97603da8" target=3D"_self"=
  style=3D"color: #6DC6DD;font-weight: normal;text-decoration: underline;wo=
 rd-wrap: break-word !important;">http://www.thedailyrocker.com</a><br>
 =09<br>
@@ -729,6 +851,50 @@ li>
             </td>
         </tr>
     </tbody>
+</table><table border=3D"0" cellpadding=3D"0" cellspacing=3D"0" width=3D"1=
+00%" class=3D"mcnTextBlock" style=3D"border-collapse: collapse;mso-table-l=
+space: 0pt;mso-table-rspace: 0pt;">
+    <tbody class=3D"mcnTextBlockOuter">
+        <tr>
+            <td valign=3D"top" class=3D"mcnTextBlockInner" style=3D"border=
+-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;">
+
+                <table align=3D"left" border=3D"0" cellpadding=3D"0" cells=
+pacing=3D"0" width=3D"600" class=3D"mcnTextContentContainer" style=3D"bord=
+er-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;">
+                    <tbody><tr>
+
+                        <td valign=3D"top" class=3D"mcnTextContent" style=
+=3D"padding-top: 9px;padding-right: 18px;padding-bottom: 9px;padding-left:=
+ 18px;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0p=
+t;color: #606060;font-family: Helvetica;font-size: 15px;line-height: 150%;=
+text-align: left;">
+
+                            <h1 style=3D"display: block;font-family: Helve=
+tica;font-size: 40px;font-style: normal;font-weight: bold;line-height: 125=
+%;letter-spacing: -1px;margin: 0;text-align: left;color: #606060 !importan=
+t;">Designing Your Email</h1><h3 style=3D"display: block;font-family: Helv=
+etica;font-size: 18px;font-style: normal;font-weight: bold;line-height: 12=
+5%;letter-spacing: -.5px;margin: 0;text-align: left;color: #606060 !import=
+ant;">Creating an elegant email is simple</h3><p style=3D"color: #606060;f=
+ont-family: Helvetica;font-size: 15px;line-height: 150%;text-align: left;"=
+>Now that you=E2=80=99ve selected a template to work with, drag in content=
+ blocks to define the structure of your message. Don=E2=80=99t worry, you=
+ can always delete or rearrange blocks as needed. Then click =E2=80=9CDesi=
+gn=E2=80=9D to define fonts, colors, and styles.</p><p style=3D"color: #60=
+6060;font-family: Helvetica;font-size: 15px;line-height: 150%;text-align:=
+ left;">Need inspiration for your design? <a href=3D"http://TheDailyRocker=
+=2Eus7.list-manage.com/track/click?u=3Dcff25387938a97b0fd838f920&id=3Deac020=
+8b20&e=3D6e97603da8" class=3D"mc-template-link" style=3D"color: #6DC6DD;f=
+ont-weight: normal;text-decoration: underline;word-wrap: break-word !impor=
+tant;">Here=E2=80=99s what other MailChimp users are doing.</a></p>
+                        </td>
+                    </tr>
+                </tbody></table>
+
+            </td>
+        </tr>
+    </tbody>
 </table></td>
                                         </tr>
                                     </table>
@@ -769,8 +935,7 @@ text-align: left;">
                             <em>Copyright =C2=A9 2013 The Daily Rocker, Al=
 l rights reserved.</em>
 <br>
-    You are receiving this email because you opted in to our music marketi=
-ng efforts
+    Thanks for keeping on the loop with The Daily Rocker
     <br>
     <br>
     <strong>Our mailing address is:</strong>
@@ -779,19 +944,72 @@ ng efforts
 v class=3D"adr"><div class=3D"street-address">Los Angeles</div><span class=
 =3D"locality">Los Angeles</span>, <span class=3D"region">CA</span>  <span=
  class=3D"postal-code">90014</span></div><br><a href=3D"http://TheDailyRoc=
-ker.us7.list-manage.com/vcard?u=3Dcff25387938a97b0fd838f920&id=3D905259437=
-8" class=3D"hcard-download">Add us to your address book</a></div>
+ker.us7.list-manage1.com/vcard?u=3Dcff25387938a97b0fd838f920&id=3D6847f0f6=
+86" class=3D"hcard-download">Add us to your address book</a></div>
     <br>
     <br>
-    <a href=3D"http://TheDailyRocker.us7.list-manage1.com/unsubscribe?u=3D=
-cff25387938a97b0fd838f920&id=3D9052594378&e=3D95f7364ac1&c=3Dc749d5a658" cla=
-ss=3D"utilityLink" style=3D"color: #606060;font-weight: normal;text-decora=
-tion: underline;word-wrap: break-word !important;">unsubscribe from this l=
-ist</a>&nbsp;&nbsp;&nbsp;
-    <a href=3D"http://TheDailyRocker.us7.list-manage.com/profile?u=3Dcff25=
-387938a97b0fd838f920&id=3D9052594378&e=3D95f7364ac1" class=3D"utilityLink" s=
-tyle=3D"color: #606060;font-weight: normal;text-decoration: underline;word=
--wrap: break-word !important;">update subscription preferences</a>&nbsp;
+    <a href=3D"http://TheDailyRocker.us7.list-manage.com/unsubscribe?u=3Dc=
+ff25387938a97b0fd838f920&id=3D6847f0f686&e=3D6e97603da8&c=3D25ecb7fdee" clas=
+s=3D"utilityLink" style=3D"color: #606060;font-weight: normal;text-decorat=
+ion: underline;word-wrap: break-word !important;">unsubscribe from this li=
+st</a>&nbsp;&nbsp;&nbsp;
+    <a href=3D"http://TheDailyRocker.us7.list-manage2.com/profile?u=3Dcff2=
+5387938a97b0fd838f920&id=3D6847f0f686&e=3D6e97603da8" class=3D"utilityLink"=
+ style=3D"color: #606060;font-weight: normal;text-decoration: underline;wo=
+rd-wrap: break-word !important;">update subscription preferences</a>&nbsp;
+    <br>
+    <br>
+                        </td>
+                    </tr>
+                </tbody></table>
+
+            </td>
+        </tr>
+    </tbody>
+</table><table border=3D"0" cellpadding=3D"0" cellspacing=3D"0" width=3D"1=
+00%" class=3D"mcnTextBlock" style=3D"border-collapse: collapse;mso-table-l=
+space: 0pt;mso-table-rspace: 0pt;">
+    <tbody class=3D"mcnTextBlockOuter">
+        <tr>
+            <td valign=3D"top" class=3D"mcnTextBlockInner" style=3D"border=
+-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;">
+
+                <table align=3D"left" border=3D"0" cellpadding=3D"0" cells=
+pacing=3D"0" width=3D"600" class=3D"mcnTextContentContainer" style=3D"bord=
+er-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0pt;">
+                    <tbody><tr>
+
+                        <td valign=3D"top" class=3D"mcnTextContent" style=
+=3D"padding-top: 9px;padding-right: 18px;padding-bottom: 9px;padding-left:=
+ 18px;border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rspace: 0p=
+t;color: #606060;font-family: Helvetica;font-size: 11px;line-height: 125%;=
+text-align: left;">
+
+                            <em>Copyright =C2=A9 2013 The Daily Rocker, Al=
+l rights reserved.</em>
+<br>
+    Thanks for keeping on the loop with The Daily Rocker
+    <br>
+    <br>
+    <strong>Our mailing address is:</strong>
+    <br>
+    <div class=3D"vcard"><span class=3D"org fn">The Daily Rocker</span><di=
+v class=3D"adr"><div class=3D"street-address">Los Angeles</div><span class=
+=3D"locality">Los Angeles</span>, <span class=3D"region">CA</span>  <span=
+ class=3D"postal-code">90014</span></div><br><a href=3D"http://TheDailyRoc=
+ker.us7.list-manage1.com/vcard?u=3Dcff25387938a97b0fd838f920&id=3D6847f0f6=
+86" class=3D"hcard-download">Add us to your address book</a></div>
+    <br>
+    <br>
+    <a href=3D"http://TheDailyRocker.us7.list-manage.com/unsubscribe?u=3Dc=
+ff25387938a97b0fd838f920&id=3D6847f0f686&e=3D6e97603da8&c=3D25ecb7fdee" clas=
+s=3D"utilityLink" style=3D"color: #606060;font-weight: normal;text-decorat=
+ion: underline;word-wrap: break-word !important;">unsubscribe from this li=
+st</a>&nbsp;&nbsp;&nbsp;
+    <a href=3D"http://TheDailyRocker.us7.list-manage2.com/profile?u=3Dcff2=
+5387938a97b0fd838f920&id=3D6847f0f686&e=3D6e97603da8" class=3D"utilityLink"=
+ style=3D"color: #606060;font-weight: normal;text-decoration: underline;wo=
+rd-wrap: break-word !important;">update subscription preferences</a>&nbsp;
     <br>
     <br>
                         </td>
@@ -814,13 +1032,13 @@ tyle=3D"color: #606060;font-weight: normal;text-decoration: underline;word=
             </table>
         </center>
     <img src=3D"http://TheDailyRocker.us7.list-manage.com/track/open.php?u=
-=3Dcff25387938a97b0fd838f920&id=3Dc749d5a658&e=3D95f7364ac1" height=3D"1"=
+=3Dcff25387938a97b0fd838f920&id=3D25ecb7fdee&e=3D6e97603da8" height=3D"1"=
  width=3D"1"></body>
 </html>
---_----------=_MCPart_1741299820--
+--_----------=_MCPart_779735848--
 
 
---===============2896630723948509984==
+--===============3611374187101772694==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -831,4 +1049,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============2896630723948509984==--
+--===============3611374187101772694==--
