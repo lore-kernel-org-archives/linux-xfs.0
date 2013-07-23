@@ -1,31 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id C160D7F4E
-	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 09:05:16 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 405CAAC008
-	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 07:05:13 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id D7EE97F3F
+	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 10:04:47 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 745C2AC005
+	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 08:04:44 -0700 (PDT)
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 3bx7buER9ESTMDaD for
-	<xfs@oss.sgi.com>; Tue, 23 Jul 2013 07:05:12 -0700 (PDT)
-Received: from int-mx01.intmail.prod.int.phx2.redhat.com
-	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r6NE5Bu9003499
+	cuda.sgi.com with ESMTP id ysNwYIX6xRu41dma for
+	<xfs@oss.sgi.com>; Tue, 23 Jul 2013 08:04:43 -0700 (PDT)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r6NF4gJd001874
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 10:05:11 -0400
-Received: from laptop.bfoster (vpn-63-213.rdu2.redhat.com [10.10.63.213])
-	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
-	id r6NE5AVp008351
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 10:05:11 -0400
-Message-ID: <51EE8CD6.9070004@redhat.com>
-Date: Tue, 23 Jul 2013 10:01:58 -0400
+	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 11:04:42 -0400
+Message-ID: <51EE9AC9.2050306@redhat.com>
+Date: Tue, 23 Jul 2013 11:01:29 -0400
 From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 04/49] xfs: split out inode log item format definition
-References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
-	<1374215120-7271-5-git-send-email-david@fromorbit.com>
-In-Reply-To: <1374215120-7271-5-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH] xfsprogs/io: add getdents command
+References: <1373567034-7534-1-git-send-email-bfoster@redhat.com>
+	<20130715183845.GS25414@lenny.home.zabbo.net>
+In-Reply-To: <20130715183845.GS25414@lenny.home.zabbo.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,223 +33,78 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Zach Brown <zab@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On 07/19/2013 02:24 AM, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On 07/15/2013 02:38 PM, Zach Brown wrote:
+>> +ifeq ($(PKG_PLATFORM),linux)
+>> +CFILES += getdents.c
+>> +endif
 > 
-> The EFI/EFD item format definitions are shared with userspace. Split
-> the out of header files that contain kernel only defintions to make
-> it simple to shared them.
+> I'd make a real test for getdents() rather than tying it to Linux.  Just
+> copy what's done for sync_file_range :). 
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Having a look back, I think a reason why I avoided this was I didn't
+have a libc interface for getdents. Perhaps there's still a way to test
+that, but I'm also wondering if this would be more broadly useful if I
+just converted it over to generic readdir(). Thoughts?
 
->  fs/xfs/xfs_extfree_item.h | 88 ++---------------------------------------------
->  fs/xfs/xfs_log_format.h   | 83 ++++++++++++++++++++++++++++++++++++++++++++
->  2 files changed, 85 insertions(+), 86 deletions(-)
+Brian
+
+>> +struct linux_dirent {
+>> +	unsigned long	d_ino;     /* Inode number */
+>> +	unsigned long	d_off;     /* Offset to next linux_dirent */
+>> +	unsigned short	d_reclen;  /* Length of this linux_dirent */
+>> +	char		d_name[];  /* Filename (null-terminated) */
+>> +};
 > 
-> diff --git a/fs/xfs/xfs_extfree_item.h b/fs/xfs/xfs_extfree_item.h
-> index 4322224..0ffbce3 100644
-> --- a/fs/xfs/xfs_extfree_item.h
-> +++ b/fs/xfs/xfs_extfree_item.h
-> @@ -18,93 +18,11 @@
->  #ifndef	__XFS_EXTFREE_ITEM_H__
->  #define	__XFS_EXTFREE_ITEM_H__
->  
-> +/* kernel only EFI/EFD definitions */
-> +
->  struct xfs_mount;
->  struct kmem_zone;
->  
-> -typedef struct xfs_extent {
-> -	xfs_dfsbno_t	ext_start;
-> -	xfs_extlen_t	ext_len;
-> -} xfs_extent_t;
-> -
-> -/*
-> - * Since an xfs_extent_t has types (start:64, len: 32)
-> - * there are different alignments on 32 bit and 64 bit kernels.
-> - * So we provide the different variants for use by a
-> - * conversion routine.
-> - */
-> -
-> -typedef struct xfs_extent_32 {
-> -	__uint64_t	ext_start;
-> -	__uint32_t	ext_len;
-> -} __attribute__((packed)) xfs_extent_32_t;
-> -
-> -typedef struct xfs_extent_64 {
-> -	__uint64_t	ext_start;
-> -	__uint32_t	ext_len;
-> -	__uint32_t	ext_pad;
-> -} xfs_extent_64_t;
-> -
-> -/*
-> - * This is the structure used to lay out an efi log item in the
-> - * log.  The efi_extents field is a variable size array whose
-> - * size is given by efi_nextents.
-> - */
-> -typedef struct xfs_efi_log_format {
-> -	__uint16_t		efi_type;	/* efi log item type */
-> -	__uint16_t		efi_size;	/* size of this item */
-> -	__uint32_t		efi_nextents;	/* # extents to free */
-> -	__uint64_t		efi_id;		/* efi identifier */
-> -	xfs_extent_t		efi_extents[1];	/* array of extents to free */
-> -} xfs_efi_log_format_t;
-> -
-> -typedef struct xfs_efi_log_format_32 {
-> -	__uint16_t		efi_type;	/* efi log item type */
-> -	__uint16_t		efi_size;	/* size of this item */
-> -	__uint32_t		efi_nextents;	/* # extents to free */
-> -	__uint64_t		efi_id;		/* efi identifier */
-> -	xfs_extent_32_t		efi_extents[1];	/* array of extents to free */
-> -} __attribute__((packed)) xfs_efi_log_format_32_t;
-> -
-> -typedef struct xfs_efi_log_format_64 {
-> -	__uint16_t		efi_type;	/* efi log item type */
-> -	__uint16_t		efi_size;	/* size of this item */
-> -	__uint32_t		efi_nextents;	/* # extents to free */
-> -	__uint64_t		efi_id;		/* efi identifier */
-> -	xfs_extent_64_t		efi_extents[1];	/* array of extents to free */
-> -} xfs_efi_log_format_64_t;
-> -
-> -/*
-> - * This is the structure used to lay out an efd log item in the
-> - * log.  The efd_extents array is a variable size array whose
-> - * size is given by efd_nextents;
-> - */
-> -typedef struct xfs_efd_log_format {
-> -	__uint16_t		efd_type;	/* efd log item type */
-> -	__uint16_t		efd_size;	/* size of this item */
-> -	__uint32_t		efd_nextents;	/* # of extents freed */
-> -	__uint64_t		efd_efi_id;	/* id of corresponding efi */
-> -	xfs_extent_t		efd_extents[1];	/* array of extents freed */
-> -} xfs_efd_log_format_t;
-> -
-> -typedef struct xfs_efd_log_format_32 {
-> -	__uint16_t		efd_type;	/* efd log item type */
-> -	__uint16_t		efd_size;	/* size of this item */
-> -	__uint32_t		efd_nextents;	/* # of extents freed */
-> -	__uint64_t		efd_efi_id;	/* id of corresponding efi */
-> -	xfs_extent_32_t		efd_extents[1];	/* array of extents freed */
-> -} __attribute__((packed)) xfs_efd_log_format_32_t;
-> -
-> -typedef struct xfs_efd_log_format_64 {
-> -	__uint16_t		efd_type;	/* efd log item type */
-> -	__uint16_t		efd_size;	/* size of this item */
-> -	__uint32_t		efd_nextents;	/* # of extents freed */
-> -	__uint64_t		efd_efi_id;	/* id of corresponding efi */
-> -	xfs_extent_64_t		efd_extents[1];	/* array of extents freed */
-> -} xfs_efd_log_format_64_t;
-> -
-> -
-> -#ifdef __KERNEL__
-> -
->  /*
->   * Max number of extents in fast allocation path.
->   */
-> @@ -160,6 +78,4 @@ int			xfs_efi_copy_format(xfs_log_iovec_t *buf,
->  					    xfs_efi_log_format_t *dst_efi_fmt);
->  void			xfs_efi_item_free(xfs_efi_log_item_t *);
->  
-> -#endif	/* __KERNEL__ */
-> -
->  #endif	/* __XFS_EXTFREE_ITEM_H__ */
-> diff --git a/fs/xfs/xfs_log_format.h b/fs/xfs/xfs_log_format.h
-> index 77a6024..d1e93d3 100644
-> --- a/fs/xfs/xfs_log_format.h
-> +++ b/fs/xfs/xfs_log_format.h
-> @@ -461,4 +461,87 @@ xfs_blft_from_flags(struct xfs_buf_log_format *blf)
->  	return (blf->blf_flags & XFS_BLFT_MASK) >> XFS_BLFT_SHIFT;
->  }
->  
-> +/*
-> + * EFI/EFD log format definitions
-> + */
-> +typedef struct xfs_extent {
-> +	xfs_dfsbno_t	ext_start;
-> +	xfs_extlen_t	ext_len;
-> +} xfs_extent_t;
-> +
-> +/*
-> + * Since an xfs_extent_t has types (start:64, len: 32)
-> + * there are different alignments on 32 bit and 64 bit kernels.
-> + * So we provide the different variants for use by a
-> + * conversion routine.
-> + */
-> +typedef struct xfs_extent_32 {
-> +	__uint64_t	ext_start;
-> +	__uint32_t	ext_len;
-> +} __attribute__((packed)) xfs_extent_32_t;
-> +
-> +typedef struct xfs_extent_64 {
-> +	__uint64_t	ext_start;
-> +	__uint32_t	ext_len;
-> +	__uint32_t	ext_pad;
-> +} xfs_extent_64_t;
-> +
-> +/*
-> + * This is the structure used to lay out an efi log item in the
-> + * log.  The efi_extents field is a variable size array whose
-> + * size is given by efi_nextents.
-> + */
-> +typedef struct xfs_efi_log_format {
-> +	__uint16_t		efi_type;	/* efi log item type */
-> +	__uint16_t		efi_size;	/* size of this item */
-> +	__uint32_t		efi_nextents;	/* # extents to free */
-> +	__uint64_t		efi_id;		/* efi identifier */
-> +	xfs_extent_t		efi_extents[1];	/* array of extents to free */
-> +} xfs_efi_log_format_t;
-> +
-> +typedef struct xfs_efi_log_format_32 {
-> +	__uint16_t		efi_type;	/* efi log item type */
-> +	__uint16_t		efi_size;	/* size of this item */
-> +	__uint32_t		efi_nextents;	/* # extents to free */
-> +	__uint64_t		efi_id;		/* efi identifier */
-> +	xfs_extent_32_t		efi_extents[1];	/* array of extents to free */
-> +} __attribute__((packed)) xfs_efi_log_format_32_t;
-> +
-> +typedef struct xfs_efi_log_format_64 {
-> +	__uint16_t		efi_type;	/* efi log item type */
-> +	__uint16_t		efi_size;	/* size of this item */
-> +	__uint32_t		efi_nextents;	/* # extents to free */
-> +	__uint64_t		efi_id;		/* efi identifier */
-> +	xfs_extent_64_t		efi_extents[1];	/* array of extents to free */
-> +} xfs_efi_log_format_64_t;
-> +
-> +/*
-> + * This is the structure used to lay out an efd log item in the
-> + * log.  The efd_extents array is a variable size array whose
-> + * size is given by efd_nextents;
-> + */
-> +typedef struct xfs_efd_log_format {
-> +	__uint16_t		efd_type;	/* efd log item type */
-> +	__uint16_t		efd_size;	/* size of this item */
-> +	__uint32_t		efd_nextents;	/* # of extents freed */
-> +	__uint64_t		efd_efi_id;	/* id of corresponding efi */
-> +	xfs_extent_t		efd_extents[1];	/* array of extents freed */
-> +} xfs_efd_log_format_t;
-> +
-> +typedef struct xfs_efd_log_format_32 {
-> +	__uint16_t		efd_type;	/* efd log item type */
-> +	__uint16_t		efd_size;	/* size of this item */
-> +	__uint32_t		efd_nextents;	/* # of extents freed */
-> +	__uint64_t		efd_efi_id;	/* id of corresponding efi */
-> +	xfs_extent_32_t		efd_extents[1];	/* array of extents freed */
-> +} __attribute__((packed)) xfs_efd_log_format_32_t;
-> +
-> +typedef struct xfs_efd_log_format_64 {
-> +	__uint16_t		efd_type;	/* efd log item type */
-> +	__uint16_t		efd_size;	/* size of this item */
-> +	__uint32_t		efd_nextents;	/* # of extents freed */
-> +	__uint64_t		efd_efi_id;	/* id of corresponding efi */
-> +	xfs_extent_64_t		efd_extents[1];	/* array of extents freed */
-> +} xfs_efd_log_format_64_t;
-> +
->  #endif /* __XFS_LOG_FORMAT_H__ */
+> If we're only going to use one syscall interface, I'd use getdents64().
+> 
+> struct linux_dirent64 {
+>         u64             d_ino;
+>         s64             d_off;
+>         unsigned short  d_reclen;
+>         unsigned char   d_type;
+>         char            d_name[0];
+> };      
+> 
+> But it could also be useful to see the native 'long' interface for 32bit
+> apps, though, say if you're trying to debug ext4 htree d_off values
+> which are magically truncated for 32bit compat tasks.
+> 
+>> +static void
+>> +dump_dir_buffer(
+>> +	struct linux_dirent *dirp,
+>> +	long long offset,
+>> +	long long length)
+>> +{
+>> +	while (length > 0) {
+>> +		printf("%08llx: 0x%lx (%s)\n",
+>> +			offset, dirp->d_ino, dirp->d_name);
+>> +
+>> +		offset = dirp->d_off;
+>> +		length -= dirp->d_reclen;
+>> +
+>> +		dirp = (struct linux_dirent *) ((char *) dirp + dirp->d_reclen);
+>> +	}
+>> +}
+> 
+> You could also print out d_type.  In getdents64() it's a proper struct
+> member, in the bad old 'long' interface it's hidden in padding after the
+> null in d_name.
+> 
+> It'd be nice to see d_off for the last entry.  btrfs, for example, sets
+> it to CRAZY and that can be good to know.  In the past it has caused
+> 32bit glibc to return -EOVERFLOW when reading entries from getdents64()
+> whose d_off overflowed 32bit off_t.
+> 
+> Interestingly, notice that with getdents() you don't know what the
+> offset of the first entry is.  You just know the offset that you started
+> reading from and the offset of the next entry.
+> 
+> - z
+> (*throws another bag of nickels in the readdir-design-disaster jar*)
 > 
 
 _______________________________________________
