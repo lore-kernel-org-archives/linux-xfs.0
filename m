@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5D49F7F5D
-	for <xfs@oss.sgi.com>; Mon, 22 Jul 2013 20:00:50 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id AF9957F5D
+	for <xfs@oss.sgi.com>; Mon, 22 Jul 2013 20:28:31 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id D0F72AC004
-	for <xfs@oss.sgi.com>; Mon, 22 Jul 2013 18:00:46 -0700 (PDT)
-Received: from mail-vb0-f46.google.com (mail-vb0-f46.google.com
-	[209.85.212.46]) by cuda.sgi.com with ESMTP id hKUXG0OXSRVeRRga
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 22 Jul 2013 18:00:42 -0700 (PDT)
-Received: by mail-vb0-f46.google.com with SMTP id w8so139066vbf.33
-	for <xfs@oss.sgi.com>; Mon, 22 Jul 2013 18:00:42 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3967DAC005
+	for <xfs@oss.sgi.com>; Mon, 22 Jul 2013 18:28:31 -0700 (PDT)
+Received: from mail.ud10.udmedia.de (ud10.udmedia.de [194.117.254.50]) by
+	cuda.sgi.com with ESMTP id 0hEYxEuZWdciEbjL (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 22 Jul 2013 18:28:29 -0700 (PDT)
+Date: Tue, 23 Jul 2013 03:28:27 +0200
+From: Markus Trippelsdorf <markus@trippelsdorf.de>
+Subject: Re: [PATCH] xfs: di_flushiter considered harmful
+Message-ID: <20130723012827.GA360@x4>
+References: <1374488304-13044-1-git-send-email-david@fromorbit.com>
+	<20130722110732.GA365@x4> <20130722225640.GB19986@dastard>
 MIME-Version: 1.0
-In-Reply-To: <20130722234352.GE19986@dastard>
-References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
-	<51EB7E6B.8080607@gmail.com> <20130722234352.GE19986@dastard>
-Date: Mon, 22 Jul 2013 21:00:41 -0400
-Message-ID: <CAJzLF9n=GeCpCiLkKc9jg4xf79TwYU+sPDa7xBhXfphCWmAa4w@mail.gmail.com>
-Subject: Re: [PATCH 00/49] current patch queue for 3.12
-From: "Michael L. Semon" <mlsemon35@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20130722225640.GB19986@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,87 +31,90 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Mon, Jul 22, 2013 at 7:43 PM, Dave Chinner <david@fromorbit.com> wrote:
-> On Sun, Jul 21, 2013 at 02:23:39AM -0400, Michael L. Semon wrote:
->> On 07/19/2013 02:24 AM, Dave Chinner wrote:
->> > Hi folks,
->> >
->> > The following mass of patches is my current patch queue I have
->> > pending for the 3.12 cycle.
->>
->> OK, it seems to be going okay:  The PC is still functioning, even on
->> a CRC-enabled / partition.  The `git am` session had these anomalies:
->>
->> # Patch #5
->> Applying: xfs: separate dquot on disk format definitions out of xfs_quota.h
->> /usr/src/kernel-git/linux/.git/rebase-apply/patch:138: trailing whitespace.
->>  * This header file defines all the on-disk format definitions for
->> warning: 1 line adds whitespace errors.
->>
->> # Patch #15
->> Applying: xfs: move getdents code into it's own file
->> /usr/src/kernel-git/linux/.git/rebase-apply/patch:1266: new blank line at EOF.
->> +
->> warning: 1 line adds whitespace errors.
->>
->> ########
->> There were build errors as well with gcc-4.8.1:
->>
->>   CC      fs/xfs/xfs_inode_fork.o
->> fs/xfs/xfs_inode_fork.c:43:23: fatal error: xfs_utils.h: No such file or directory
->>  #include "xfs_utils.h"
->>                        ^
->> compilation terminated.
->> make[2]: *** [fs/xfs/xfs_inode_fork.o] Error 1
->> make[1]: *** [fs/xfs] Error 2
->> make: *** [fs] Error 2
->> # next try...
->>   CC      fs/xfs/xfs_inode_fork.o
->> fs/xfs/xfs_inode_fork.c:49:26: fatal error: xfs_vnodeops.h: No such file or directory
->>  #include "xfs_vnodeops.h"
->
-> Ah, I thought I caught all of them. I use a rsync'd build tree, and
-> I don't use --delete because that removes all the object files.
-> Hence sometimes I end up with "stale files" that have been removed
-> from the source tree but don't get removed from the build tree and
-> so the build doesn't fail.
->
-> (I thought I added a "git clean -f -d" to my build script, but on
-> review, that only went into the userspace builds....)
+On 2013.07.23 at 08:56 +1000, Dave Chinner wrote:
+> On Mon, Jul 22, 2013 at 01:07:32PM +0200, Markus Trippelsdorf wrote:
+> > On 2013.07.22 at 20:18 +1000, Dave Chinner wrote:
+> > > From: Dave Chinner <dchinner@redhat.com>
+> > > 
+> > > When we made all inode updates transactional, we no longer needed
+> > > the log recovery detection for inodes being newer on disk than the
+> > > transaction being replayed - it was redundant as replay of the log
+> > > would always result in the latest version of the inode woul dbe on
+> > > disk. It was redundant, but left in place because it wasn't
+> > > considered to be a problem.
+> > > 
+> > > However, with the new "don't read inodes on create" optimisation,
+> > > flushiter has come back to bite us. Essentially, the optimisation
+> > > made always initialises flushiter to zero in the create transaction,
+> > > and so if we then crash and run recovery and the inode already on
+> > > disk has a non-zero flushiter it will skip recovery of that inode.
+> > > As a result, log recovery does the wrong thing and we end up with a
+> > > corrupt filesystem.
+> > > 
+> > > Because we have to support old kernel to new kernl upgrades, we
+> > > can't just get rid of the flushiter support in log recovery as we
+> > > might be upgrading from a kernel that doesn't have fully transaction
+> > > inode updates.  Unfortunately, for v4 superblocks there is no way to
+> > > guarantee that log recovery knows about this fact.
+> > > 
+> > > We cannot add a new inode format flag to say it's a "special inode
+> > > create" because it won't be understood by older kernels and so
+> > > recovery could do the wrong thing on downgrade. We cannot specially
+> > > detect the combination of zero mode/non-zero flushiter on disk to
+> > > non-zero mode, zero flushiter in the log item during recovery
+> > > because wrapping of the flushiter can result in false detection.
+> > > 
+> > > Hence that makes this "don't use flushiter" optimisation limited to
+> > > a disk format that guarantees that we don't need it. And that means
+> > > the only fix here is to limit the "no read IO on create"
+> > > optimisation to version 5 superblocks....
+> > 
+> > I think your patch misses the following part:
+> > 
+> > @@ -1054,17 +1056,15 @@ xfs_iread(
+> >  
+> >         /* shortcut IO on inode allocation if possible */
+> >         if ((iget_flags & XFS_IGET_CREATE) &&
+> > -           !(mp->m_flags & XFS_MOUNT_IKEEP)) {
+> > +           !(mp->m_flags & XFS_MOUNT_IKEEP) &&
+> > +           xfs_sb_version_hascrc(&mp->m_sb)) {
+> >                 /* initialise the on-disk inode core */
+> >                 memset(&ip->i_d, 0, sizeof(ip->i_d));
+> >                 ip->i_d.di_magic = XFS_DINODE_MAGIC;
+> >                 ip->i_d.di_gen = prandom_u32();
+> > -               if (xfs_sb_version_hascrc(&mp->m_sb)) {
+> > -                       ip->i_d.di_version = 3;
+> > -                       ip->i_d.di_ino = ip->i_ino;
+> > -                       uuid_copy(&ip->i_d.di_uuid, &mp->m_sb.sb_uuid);
+> > -               } else
+> > -                       ip->i_d.di_version = 2;
+> > +               ip->i_d.di_version = 3;
+> > +               ip->i_d.di_ino = ip->i_ino;
+> > +               uuid_copy(&ip->i_d.di_uuid, &mp->m_sb.sb_uuid);
+> >                 return 0;
+> >         }
+> 
+> Sure, it's dead code so doesn't affect the behaviour of the patch.
+> I'll update it, but I need you to reproduce the problem in a simple
+> manner as Mark did with this patch in place so I can find out what
+> the real problem you are seeing is....
 
-This was a breeze, anyway.  Good work!
+No. It's not dead code. Please look at the patch that you've posted.
+For v2 inodes (my case) it doesn't change anything at all and the issue
+you describe so eloquently still exists.
 
->> --- a/fs/xfs/xfs_log_rlimit.c
->> +++ b/fs/xfs/xfs_log_rlimit.c
->> @@ -137,7 +137,8 @@ xfs_log_calc_minimum_size(
->>        * it up to lsunit boundary if lsunit is specified.
->>        */
->>       if (lsunit)
->> -             min_logblks = roundup(BTOBB(max_logres), lsunit) + 2 * lsunit;
->> +             min_logblks = roundup((int)BTOBB(max_logres), lsunit)
->> +                     + 2 * lsunit;
->
-> Why did you need that one change?
+You wrote:
+ "And that means the only fix here is to limit the "no read IO on
+ create" to version 5 superblocks"."
 
-This fixes a build error with gcc-4.8.1 to do with the roundup()
-function and calling something like __divdi3.  The code compiles
-without the cast, but without the cast, one of the final kernel link
-stages fails.  include/linux/kernel.h from the kernel source mentioned
-something about it for gcc-3.3 needing a workaround.  I came up with a
-(const int) cast to kludge xfs_log_rlimit.c.  [Without the kernel
-comments, I wouldn't have found the answer on my own.]  Jeff reduced
-it to just (int), and it works, but I never got his final answer on
-whether it was the best solution.
+and this is exactly what the hunk above does. 
 
-Should somebody else come across the same issue with
-gcc-4.8.1--especially on something other than 32-bit x86--I'll push
-this idea with more confidence.
+Mark and I have tested it and it fixes the problem for both of us...
 
-Sorry for the omitted explanation!
-
-Michael
+-- 
+Markus
 
 _______________________________________________
 xfs mailing list
