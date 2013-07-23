@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 81EFC7F59
-	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 11:00:58 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0034AAC005
-	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 09:00:57 -0700 (PDT)
-Received: from mail139.atl21.rsgsv.net (mail139.atl21.rsgsv.net
-	[205.201.133.139]) by cuda.sgi.com with ESMTP id
-	jdnzNsFBOAzcDtMb for <xfs@oss.sgi.com>;
-	Tue, 23 Jul 2013 09:00:55 -0700 (PDT)
-Received: from (127.0.0.1) by mail139.atl21.rsgsv.net (PowerMTA(TM) v3.5r16)
-	id htqkbe1lgi4l for <xfs@oss.sgi.com>;
-	Tue, 23 Jul 2013 16:00:48 +0000 (envelope-from
-	<bounce-mc.us7_18889475.80213-xfs=oss.sgi.com@mail139.atl21.rsgsv.net>)
-Subject: =?utf-8?Q?New=20Streaming=20Music=20Video=20Site=20Features=201000=27s=20Of=20Non=2DStop=20Stations=20and=20FB=20chat?=
-From: =?utf-8?Q?The=20Daily=20Rocker?= <info@thedailyrocker.com>
-Date: Tue, 23 Jul 2013 16:00:48 +0000
-Message-ID: <cff25387938a97b0fd838f92095f7364ac1.20130723160036@mail139.atl21.rsgsv.net>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E65147F5D
+	for <linux-xfs@oss.sgi.com>; Tue, 23 Jul 2013 11:17:38 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D5D5D8F8037
+	for <linux-xfs@oss.sgi.com>; Tue, 23 Jul 2013 09:17:35 -0700 (PDT)
+Received: from mail24.atl11.rsgsv.net (mail24.atl11.rsgsv.net
+	[205.201.133.24]) by cuda.sgi.com with ESMTP id
+	R6ej6EPChCHH3UYb for <linux-xfs@oss.sgi.com>;
+	Tue, 23 Jul 2013 09:17:33 -0700 (PDT)
+Received: from (127.0.0.1) by mail24.atl11.rsgsv.net (PowerMTA(TM) v3.5r16) id
+	htqm9q1lgi05 for <linux-xfs@oss.sgi.com>;
+	Tue, 23 Jul 2013 16:17:31 +0000 (envelope-from
+	<bounce-mc.us7_18889475.80473-linux-xfs=oss.sgi.com@mail24.atl11.rsgsv.net>)
+Subject: =?utf-8?Q?Finally=20a=20site=20that=20has=20JUST=20MUSIC=20VIDEOS?=
+From: =?utf-8?Q?MUSIC=20TIPS?= <info@TheDailyRocker.com>
+Date: Tue, 23 Jul 2013 16:17:31 +0000
+Message-ID: <cff25387938a97b0fd838f9206e97603da8.20130723161720@mail24.atl11.rsgsv.net>
 MIME-Version: 1.0
-Reply-To: =?utf-8?Q?The=20Daily=20Rocker?= <info@thedailyrocker.com>
+Reply-To: =?utf-8?Q?MUSIC=20TIPS?= <info@TheDailyRocker.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,41 +27,40 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============7701150321723299787=="
+Content-Type: multipart/mixed; boundary="===============7781497876343615243=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: =?utf-8?Q??= <xfs@oss.sgi.com>
+To: =?utf-8?Q??= <linux-xfs@oss.sgi.com>
 
 This is a multi-part message in MIME format
 
---===============7701150321723299787==
-Content-Type: multipart/alternative; boundary="_----------=_MCPart_466918413"
+--===============7781497876343615243==
+Content-Type: multipart/alternative; boundary="_----------=_MCPart_2004772969"
 
 This is a multi-part message in MIME format
 
---_----------=_MCPart_466918413
+--_----------=_MCPart_2004772969
 Content-Type: text/plain; charset="utf-8"; format="fixed"
 Content-Transfer-Encoding: quoted-printable
 
 Use this area to offer a short preview of your email's content.
 
 View this email in your browser (http://us7.campaign-archive2.com/?u=3Dcff=
-25387938a97b0fd838f920&id=3Dd26a5b1e40&e=3D95f7364ac1)
+25387938a97b0fd838f920&id=3D2b48311924&e=3D6e97603da8)
 
 
-** New Music Video Site THE DAILY ROCKER Launches With Thousands Of Non-St=
-op Stations and Facebook Chat
+** Finally A Music Video Site That Features JUST Music Videos Non-Stop
 ------------------------------------------------------------
 
 
-** Hand picked programming and a wild edgy brand gives users a daily fix o=
-f music videos while letting them chat with their facebook friends.
+** No digging through crappy concert footage. No interviews or lame news s=
+egments interrupting the music. Just Music Videos. Everyday. Every genre.=
+ Dig it.
 ------------------------------------------------------------
 
-LOS ANGELES, CA - Miss the days of MTV, where you didn=E2=80=99t have to c=
-lick after every song? Wish you could choose a genre, kick back and chat w=
-ith FB friends as the music videos play all day long? Well, your prayers a=
-re now answered.
+Miss the days of MTV, where you didn=E2=80=99t have to click after every s=
+ong? Wish you could choose a genre, kick back and chat with FB friends as=
+ the music videos play all day long? Well, your prayers are now answered.
 
 Today The Daily Rocker launches with -
 * No digging through interviews and crappy concert footage. Just music vid=
@@ -86,6 +85,9 @@ interrupted
 
 
 Funny Fact:
+
+
+
 * The Daily Rocker's July 23rd launch opens with The Limousines "Internet=
  Killed The Video Star" as a not-so-subtle jab at MTV, who launched over t=
 wo decades ago and no longer shows regular music video programming.
@@ -94,12 +96,12 @@ wo decades ago and no longer shows regular music video programming.
 =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
 =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
 
-** unsubscribe from this list (http://TheDailyRocker.us7.list-manage.com/u=
-nsubscribe?u=3Dcff25387938a97b0fd838f920&id=3D9052594378&e=3D95f7364ac1&c=3D=
-d26a5b1e40)
+** unsubscribe from this list (http://TheDailyRocker.us7.list-manage2.com/=
+unsubscribe?u=3Dcff25387938a97b0fd838f920&id=3D6847f0f686&e=3D6e97603da8&c=
+=3D2b48311924)
 ** update subscription preferences (http://TheDailyRocker.us7.list-manage.=
-com/profile?u=3Dcff25387938a97b0fd838f920&id=3D9052594378&e=3D95f7364ac1)
---_----------=_MCPart_466918413
+com/profile?u=3Dcff25387938a97b0fd838f920&id=3D6847f0f686&e=3D6e97603da8)
+--_----------=_MCPart_2004772969
 Content-Type: text/html; charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
 
@@ -109,8 +111,7 @@ Content-Transfer-Encoding: quoted-printable
     <head>
         <meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3D=
 UTF-8">
-        <title>New Streaming Music Video Site Features 1000's Of Non-Stop=
- Stations and FB chat</title>
+        <title>Finally a site that has JUST MUSIC VIDEOS</title>
 
         <!--[if gte mso 6]>
         <style>
@@ -571,7 +572,7 @@ olor: #606060;font-family: Helvetica;font-size: 11px;line-height: 125%;tex=
 t-align: left;">
 
                             <a href=3D"http://us7.campaign-archive2.com/?u=
-=3Dcff25387938a97b0fd838f920&id=3Dd26a5b1e40&e=3D95f7364ac1" target=3D"_blan=
+=3Dcff25387938a97b0fd838f920&id=3D2b48311924&e=3D6e97603da8" target=3D"_blan=
 k" style=3D"color: #606060;font-weight: normal;text-decoration: underline;=
 word-wrap: break-word !important;">View this email in your browser</a>
                         </td>
@@ -673,24 +674,21 @@ text-align: left;">
 tica;font-size: 40px;font-style: normal;font-weight: bold;line-height: 125=
 %;letter-spacing: -1px;margin: 0;text-align: left;color: #606060 !importan=
 t;">
-=09New Music Video Site THE DAILY ROCKER Launches With Thousands Of Non-St=
-op Stations and Facebook Chat</h1>
+=09Finally A Music Video Site That Features JUST Music Videos Non-Stop</h1=
+>
 <h3 style=3D"display: block;font-family: Helvetica;font-size: 18px;font-st=
 yle: normal;font-weight: bold;line-height: 125%;letter-spacing: -.5px;marg=
 in: 0;text-align: left;color: #606060 !important;">
-=09<br>
-=09Hand picked programming and a wild edgy brand gives users a daily fix o=
-f music videos while letting them chat with their facebook friends. &nbsp;=
-&nbsp;</h3>
+=09No digging through crappy concert footage. No interviews or lame news s=
+egments interrupting the music. Just Music Videos. Everyday. Every genre.=
+ Dig it.</h3>
 <p style=3D"margin: 0px;padding: 4px 0px;color: #000000;font-family: Arial=
 , Helvetica, sans-serif;line-height: 15px;font-size: 15px;text-align: left=
 ;">
-=09<br>
-=09LOS ANGELES, CA - Miss the days of MTV, where you didn=E2=80=99t have t=
-o click after every song? Wish you could choose a genre, kick back and cha=
-t with FB friends as the music videos play all day long? Well, your prayer=
-s are now answered.<br>
-=09&nbsp;</p>
+=09Miss the days of MTV, where you didn=E2=80=99t have to click after ever=
+y song? Wish you could choose a genre, kick back and chat with FB friends=
+ as the music videos play all day long? Well, your prayers are now answere=
+d.</p>
 <p style=3D"margin: 0px;padding: 4px 0px;color: #000000;font-family: Arial=
 , Helvetica, sans-serif;line-height: 15px;font-size: 15px;text-align: left=
 ;">
@@ -699,60 +697,60 @@ s are now answered.<br>
  0px;list-style-type: none;color: #000000;font-family: Arial, Helvetica, s=
 ans-serif;line-height: 15px;">
 =09<li style=3D"margin: 0.5em 0px; padding: 0px 0px 0px 1em; border: 0px;=
- list-style-type: none; background-image: url(https://app.prweb.com/PRWeb/=
-images/bullet.gif); background-position: 0px 0.5em; background-repeat: no-=
-repeat no-repeat;">
+ list-style-type: none; background-image: url(http://www.prweb.com/images/=
+bullet.gif); background-position: 0px 0.5em; background-repeat: no-repeat=
+ no-repeat;">
 =09=09No digging through interviews and crappy concert footage. Just music=
  videos twenty four hours a day seven days a week.</li>
 =09<li style=3D"margin: 0.5em 0px; padding: 0px 0px 0px 1em; border: 0px;=
- list-style-type: none; background-image: url(https://app.prweb.com/PRWeb/=
-images/bullet.gif); background-position: 0px 0.5em; background-repeat: no-=
-repeat no-repeat;">
+ list-style-type: none; background-image: url(http://www.prweb.com/images/=
+bullet.gif); background-position: 0px 0.5em; background-repeat: no-repeat=
+ no-repeat;">
 =09=09Hours of daily music video programming, hand picked and compiled by=
  real humans, not computers</li>
 =09<li style=3D"margin: 0.5em 0px; padding: 0px 0px 0px 1em; border: 0px;=
- list-style-type: none; background-image: url(https://app.prweb.com/PRWeb/=
-images/bullet.gif); background-position: 0px 0.5em; background-repeat: no-=
-repeat no-repeat;">
+ list-style-type: none; background-image: url(http://www.prweb.com/images/=
+bullet.gif); background-position: 0px 0.5em; background-repeat: no-repeat=
+ no-repeat;">
 =09=09The Daily Top Ten Music Videos based on charts, ticket sales, downlo=
 ads and buzz</li>
 =09<li style=3D"margin: 0.5em 0px; padding: 0px 0px 0px 1em; border: 0px;=
- list-style-type: none; background-image: url(https://app.prweb.com/PRWeb/=
-images/bullet.gif); background-position: 0px 0.5em; background-repeat: no-=
-repeat no-repeat;">
+ list-style-type: none; background-image: url(http://www.prweb.com/images/=
+bullet.gif); background-position: 0px 0.5em; background-repeat: no-repeat=
+ no-repeat;">
 =09=09Daily Genre Stations for ROCK, RAP, POP, REGGE, PUNK, CHRISTIAN, ELE=
 CTRONIC, COUNTRY and several cross over formats (all genres in one station=
 )</li>
 =09<li style=3D"margin: 0.5em 0px; padding: 0px 0px 0px 1em; border: 0px;=
- list-style-type: none; background-image: url(https://app.prweb.com/PRWeb/=
-images/bullet.gif); background-position: 0px 0.5em; background-repeat: no-=
-repeat no-repeat;">
+ list-style-type: none; background-image: url(http://www.prweb.com/images/=
+bullet.gif); background-position: 0px 0.5em; background-repeat: no-repeat=
+ no-repeat;">
 =09=09Task based stations to keep the user motivated while studying, clean=
 ing the house or trying to make out with someone</li>
 =09<li style=3D"margin: 0.5em 0px; padding: 0px 0px 0px 1em; border: 0px;=
- list-style-type: none; background-image: url(https://app.prweb.com/PRWeb/=
-images/bullet.gif); background-position: 0px 0.5em; background-repeat: no-=
-repeat no-repeat;">
+ list-style-type: none; background-image: url(http://www.prweb.com/images/=
+bullet.gif); background-position: 0px 0.5em; background-repeat: no-repeat=
+ no-repeat;">
 =09=09Other sub-genres include music by era and a station devoted to femal=
 e artists with bold voices</li>
 =09<li style=3D"margin: 0.5em 0px; padding: 0px 0px 0px 1em; border: 0px;=
- list-style-type: none; background-image: url(https://app.prweb.com/PRWeb/=
-images/bullet.gif); background-position: 0px 0.5em; background-repeat: no-=
-repeat no-repeat;">
+ list-style-type: none; background-image: url(http://www.prweb.com/images/=
+bullet.gif); background-position: 0px 0.5em; background-repeat: no-repeat=
+ no-repeat;">
 =09=09Thousands of Artist Stations that automatically send users from one=
  like minded artist to the next, allowing them to watch videos all day whi=
 le getting stuff done</li>
 =09<li style=3D"margin: 0.5em 0px; padding: 0px 0px 0px 1em; border: 0px;=
- list-style-type: none; background-image: url(https://app.prweb.com/PRWeb/=
-images/bullet.gif); background-position: 0px 0.5em; background-repeat: no-=
-repeat no-repeat;">
+ list-style-type: none; background-image: url(http://www.prweb.com/images/=
+bullet.gif); background-position: 0px 0.5em; background-repeat: no-repeat=
+ no-repeat;">
 =09=09New music videos added daily with constantly rotating playlists allo=
 w users to keep up with current music while hearing their favorite tunes</=
 li>
 =09<li style=3D"margin: 0.5em 0px; padding: 0px 0px 0px 1em; border: 0px;=
- list-style-type: none; background-image: url(https://app.prweb.com/PRWeb/=
-images/bullet.gif); background-position: 0px 0.5em; background-repeat: no-=
-repeat no-repeat;">
+ list-style-type: none; background-image: url(http://www.prweb.com/images/=
+bullet.gif); background-position: 0px 0.5em; background-repeat: no-repeat=
+ no-repeat;">
 =09=09The ability to chat with facebook friends while watching music video=
 s uninterrupted</li>
 </ul>
@@ -763,14 +761,21 @@ s uninterrupted</li>
 <p style=3D"margin: 0px;padding: 4px 0px;color: #000000;font-family: Arial=
 , Helvetica, sans-serif;line-height: 15px;font-size: 15px;text-align: left=
 ;">
-=09<u>Funny Fact:</u></p>
+=09Funny Fact:</p>
+<p style=3D"margin: 0px;padding: 4px 0px;color: #000000;font-family: Arial=
+, Helvetica, sans-serif;line-height: 15px;font-size: 15px;text-align: left=
+;">
+=09&nbsp;</p>
+<p style=3D"color: #606060;font-family: Helvetica;font-size: 15px;line-hei=
+ght: 150%;text-align: left;">
+=09&nbsp;</p>
 <ul class=3D"releaseul" style=3D"margin: 0px 0px 1em;padding: 0px;border:=
  0px;list-style-type: none;color: #000000;font-family: Arial, Helvetica, s=
 ans-serif;line-height: 15px;">
 =09<li style=3D"margin: 0.5em 0px; padding: 0px 0px 0px 1em; border: 0px;=
- list-style-type: none; background-image: url(https://app.prweb.com/PRWeb/=
-images/bullet.gif); background-position: 0px 0.5em; background-repeat: no-=
-repeat no-repeat;">
+ list-style-type: none; background-image: url(http://www.prweb.com/images/=
+bullet.gif); background-position: 0px 0.5em; background-repeat: no-repeat=
+ no-repeat;">
 =09=09The Daily Rocker's July 23rd launch opens with The Limousines "Inter=
 net Killed The Video Star" as a not-so-subtle jab at MTV, who launched ove=
 r two decades ago and no longer shows regular music video programming.</li=
@@ -824,8 +829,7 @@ text-align: left;">
                             <em>Copyright =C2=A9 2013 The Daily Rocker, Al=
 l rights reserved.</em>
 <br>
-    You are receiving this email because you opted in to our music marketi=
-ng efforts
+    Thanks for keeping on the loop with The Daily Rocker
     <br>
     <br>
     <strong>Our mailing address is:</strong>
@@ -834,17 +838,17 @@ ng efforts
 v class=3D"adr"><div class=3D"street-address">Los Angeles</div><span class=
 =3D"locality">Los Angeles</span>, <span class=3D"region">CA</span>  <span=
  class=3D"postal-code">90014</span></div><br><a href=3D"http://TheDailyRoc=
-ker.us7.list-manage1.com/vcard?u=3Dcff25387938a97b0fd838f920&id=3D90525943=
-78" class=3D"hcard-download">Add us to your address book</a></div>
+ker.us7.list-manage.com/vcard?u=3Dcff25387938a97b0fd838f920&id=3D6847f0f68=
+6" class=3D"hcard-download">Add us to your address book</a></div>
     <br>
     <br>
-    <a href=3D"http://TheDailyRocker.us7.list-manage.com/unsubscribe?u=3Dc=
-ff25387938a97b0fd838f920&id=3D9052594378&e=3D95f7364ac1&c=3Dd26a5b1e40" clas=
-s=3D"utilityLink" style=3D"color: #606060;font-weight: normal;text-decorat=
-ion: underline;word-wrap: break-word !important;">unsubscribe from this li=
-st</a>&nbsp;&nbsp;&nbsp;
+    <a href=3D"http://TheDailyRocker.us7.list-manage2.com/unsubscribe?u=3D=
+cff25387938a97b0fd838f920&id=3D6847f0f686&e=3D6e97603da8&c=3D2b48311924" cla=
+ss=3D"utilityLink" style=3D"color: #606060;font-weight: normal;text-decora=
+tion: underline;word-wrap: break-word !important;">unsubscribe from this l=
+ist</a>&nbsp;&nbsp;&nbsp;
     <a href=3D"http://TheDailyRocker.us7.list-manage.com/profile?u=3Dcff25=
-387938a97b0fd838f920&id=3D9052594378&e=3D95f7364ac1" class=3D"utilityLink" s=
+387938a97b0fd838f920&id=3D6847f0f686&e=3D6e97603da8" class=3D"utilityLink" s=
 tyle=3D"color: #606060;font-weight: normal;text-decoration: underline;word=
 -wrap: break-word !important;">update subscription preferences</a>&nbsp;
     <br>
@@ -869,13 +873,13 @@ tyle=3D"color: #606060;font-weight: normal;text-decoration: underline;word=
             </table>
         </center>
     <img src=3D"http://TheDailyRocker.us7.list-manage.com/track/open.php?u=
-=3Dcff25387938a97b0fd838f920&id=3Dd26a5b1e40&e=3D95f7364ac1" height=3D"1"=
+=3Dcff25387938a97b0fd838f920&id=3D2b48311924&e=3D6e97603da8" height=3D"1"=
  width=3D"1"></body>
 </html>
---_----------=_MCPart_466918413--
+--_----------=_MCPart_2004772969--
 
 
---===============7701150321723299787==
+--===============7781497876343615243==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -886,4 +890,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============7701150321723299787==--
+--===============7781497876343615243==--
