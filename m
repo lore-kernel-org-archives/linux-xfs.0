@@ -1,24 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 94E627F51
-	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 05:43:05 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 823458F804C
-	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 03:43:02 -0700 (PDT)
-Received: from mail.ud10.udmedia.de (ud10.udmedia.de [194.117.254.50]) by
-	cuda.sgi.com with ESMTP id BykeraFhEerGWP1V (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 23 Jul 2013 03:43:00 -0700 (PDT)
-Date: Tue, 23 Jul 2013 12:42:59 +0200
-From: Markus Trippelsdorf <markus@trippelsdorf.de>
-Subject: [PATCH v2] xfs: di_flushiter considered harmful
-Message-ID: <20130723104259.GB360@x4>
-References: <1374488304-13044-1-git-send-email-david@fromorbit.com>
-	<20130722110732.GA365@x4> <51ED4471.7050708@sgi.com>
-	<20130722151542.GB365@x4> <51ED8C73.50306@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id 887D87F3F
+	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 09:03:55 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3E8478F8050
+	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 07:03:52 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 1cYs3PGlILNAt6RH for
+	<xfs@oss.sgi.com>; Tue, 23 Jul 2013 07:03:51 -0700 (PDT)
+Received: from int-mx01.intmail.prod.int.phx2.redhat.com
+	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r6NE3oFO010896
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 10:03:50 -0400
+Received: from laptop.bfoster (vpn-63-213.rdu2.redhat.com [10.10.63.213])
+	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
+	id r6NE3nEQ007868
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 10:03:49 -0400
+Message-ID: <51EE8C84.70507@redhat.com>
+Date: Tue, 23 Jul 2013 10:00:36 -0400
+From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <51ED8C73.50306@sgi.com>
+Subject: Re: [PATCH 01/49] xfs: separate out log format definitions
+References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
+	<1374215120-7271-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1374215120-7271-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,197 +38,535 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>, Dave Chinner <dchinner@redhat.com>
+To: xfs@oss.sgi.com
 
-On 2013.07.22 at 14:48 -0500, Mark Tinguely wrote:
-> On 07/22/13 10:15, Markus Trippelsdorf wrote:
-> > On 2013.07.22 at 09:40 -0500, Mark Tinguely wrote:
-> >> On 07/22/13 06:07, Markus Trippelsdorf wrote:
-> >>> On 2013.07.22 at 20:18 +1000, Dave Chinner wrote:
-> >> It seems to me that since we cannot fix this for inode 1/2, then besides
-> >> this patch we have to revert patch cca9f93a52d and make it inode 3+ /
-> >> superblock 5+ (crc) dependent.
-> >
-> > Which is exactly what the hunk I've posted does.
-> >
-> > Here's the combined patch:
+On 07/19/2013 02:24 AM, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Following Dave's instruction to recreate this problem, your patch works 
-> with an inode 2 and inode 3 (once I remembered to load the module before 
-> recovery). Dave's patch was successful on inode 3 - again after I 
-> remembered to load the module before recovery.
+> The on-disk format definitions for the log are spread randoms
+> through a couple of header files. Consolidate it all in a single
+> file that can be shared easily with userspace. This means that
+> xfs_log.h and xfs_log_priv.h no longer need to be shared with
+> userspace.
 > 
-> Whomever makes the formal patch, consider it reviewed-by me.
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
 
-To get this patch to Linus ASAP, here's the combined patch again. 
-Please apply.
-Thanks.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-From: Dave Chinner <dchinner@redhat.com>
-Date: Tue, 23 Jul 2013 12:06:08 +0200
-Subject: [PATCH v2] xfs: di_flushiter considered harmful
-
-When we made all inode updates transactional, we no longer needed
-the log recovery detection for inodes being newer on disk than the
-transaction being replayed - it was redundant as replay of the log
-would always result in the latest version of the inode being on
-disk. It was redundant, but left in place because it wasn't
-considered to be a problem.
-
-However, with the new "don't read inodes on create" optimisation,
-flushiter has come back to bite us. Essentially, the optimisation
-always initialises flushiter to zero in the create transaction,
-and so if we then crash and run recovery and the inode already on
-disk has a non-zero flushiter it will skip recovery of that inode.
-As a result, log recovery does the wrong thing and we end up with a
-corrupt filesystem.
-
-Because we have to support old kernel to new kernel upgrades, we
-can't just get rid of the flushiter support in log recovery as we
-might be upgrading from a kernel that doesn't have fully transaction
-inode updates.  Unfortunately, for v4 superblocks there is no way to
-guarantee that log recovery knows about this fact.
-
-We cannot add a new inode format flag to say it's a "special inode
-create" because it won't be understood by older kernels and so
-recovery could do the wrong thing on downgrade. We cannot specially
-detect the combination of zero mode/non-zero flushiter on disk to
-non-zero mode, zero flushiter in the log item during recovery
-because wrapping of the flushiter can result in false detection.
-
-Hence that makes this "don't use flushiter" optimisation limited to
-a disk format that guarantees that we don't need it. And that means
-the only fix here is to limit the "no read IO on create"
-optimisation to version 5 superblocks....
-
-Reported-by: Markus Trippelsdorf <markus@trippelsdorf.de>
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-[markus@trippelsdorf.de: take the shortcut IO on inode allocation only
-for version 5 superblocks] 
-Signed-off-by: Markus Trippelsdorf <markus@trippelsdorf.de>
----
- fs/xfs/xfs_dinode.h      |  3 +++
- fs/xfs/xfs_inode.c       | 30 ++++++++++++++++++------------
- fs/xfs/xfs_log_recover.c | 13 +++++++++++--
- 3 files changed, 32 insertions(+), 14 deletions(-)
-
-diff --git a/fs/xfs/xfs_dinode.h b/fs/xfs/xfs_dinode.h
-index 07d735a..e5869b5 100644
---- a/fs/xfs/xfs_dinode.h
-+++ b/fs/xfs/xfs_dinode.h
-@@ -39,6 +39,9 @@ typedef struct xfs_timestamp {
-  * There is a very similar struct icdinode in xfs_inode which matches the
-  * layout of the first 96 bytes of this structure, but is kept in native
-  * format instead of big endian.
-+ *
-+ * Note: di_flushiter is only used by v1/2 inodes - it's effectively a zeroed
-+ * padding field for v3 inodes.
-  */
- typedef struct xfs_dinode {
- 	__be16		di_magic;	/* inode magic # = XFS_DINODE_MAGIC */
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index b78481f..5d7e344 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -896,7 +896,6 @@ xfs_dinode_to_disk(
- 	to->di_projid_lo = cpu_to_be16(from->di_projid_lo);
- 	to->di_projid_hi = cpu_to_be16(from->di_projid_hi);
- 	memcpy(to->di_pad, from->di_pad, sizeof(to->di_pad));
--	to->di_flushiter = cpu_to_be16(from->di_flushiter);
- 	to->di_atime.t_sec = cpu_to_be32(from->di_atime.t_sec);
- 	to->di_atime.t_nsec = cpu_to_be32(from->di_atime.t_nsec);
- 	to->di_mtime.t_sec = cpu_to_be32(from->di_mtime.t_sec);
-@@ -924,6 +923,9 @@ xfs_dinode_to_disk(
- 		to->di_lsn = cpu_to_be64(from->di_lsn);
- 		memcpy(to->di_pad2, from->di_pad2, sizeof(to->di_pad2));
- 		uuid_copy(&to->di_uuid, &from->di_uuid);
-+		to->di_flushiter = 0;
-+	} else {
-+		to->di_flushiter = cpu_to_be16(from->di_flushiter);
- 	}
- }
- 
-@@ -1054,17 +1056,15 @@ xfs_iread(
- 
- 	/* shortcut IO on inode allocation if possible */
- 	if ((iget_flags & XFS_IGET_CREATE) &&
--	    !(mp->m_flags & XFS_MOUNT_IKEEP)) {
-+	    !(mp->m_flags & XFS_MOUNT_IKEEP) &&
-+	    xfs_sb_version_hascrc(&mp->m_sb)) {
- 		/* initialise the on-disk inode core */
- 		memset(&ip->i_d, 0, sizeof(ip->i_d));
- 		ip->i_d.di_magic = XFS_DINODE_MAGIC;
- 		ip->i_d.di_gen = prandom_u32();
--		if (xfs_sb_version_hascrc(&mp->m_sb)) {
--			ip->i_d.di_version = 3;
--			ip->i_d.di_ino = ip->i_ino;
--			uuid_copy(&ip->i_d.di_uuid, &mp->m_sb.sb_uuid);
--		} else
--			ip->i_d.di_version = 2;
-+		ip->i_d.di_version = 3;
-+		ip->i_d.di_ino = ip->i_ino;
-+		uuid_copy(&ip->i_d.di_uuid, &mp->m_sb.sb_uuid);
- 		return 0;
- 	}
- 
-@@ -2882,12 +2882,18 @@ xfs_iflush_int(
- 			__func__, ip->i_ino, ip->i_d.di_forkoff, ip);
- 		goto corrupt_out;
- 	}
-+
- 	/*
--	 * bump the flush iteration count, used to detect flushes which
--	 * postdate a log record during recovery. This is redundant as we now
--	 * log every change and hence this can't happen. Still, it doesn't hurt.
-+	 * Inode item log recovery for v1/v2 inodes are dependent on the
-+	 * di_flushiter count for correct sequencing. We bump the flush
-+	 * iteration count so we can detect flushes which postdate a log record
-+	 * during recovery. This is redundant as we now log every change and
-+	 * hence this can't happen but we need to still do it to ensure
-+	 * backwards compatibility with old kernels that predate logging all
-+	 * inode changes.
- 	 */
--	ip->i_d.di_flushiter++;
-+	if (ip->i_d.di_version < 3)
-+		ip->i_d.di_flushiter++;
- 
- 	/*
- 	 * Copy the dirty parts of the inode into the on-disk
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 6fcc910a..7681b19 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -2592,8 +2592,16 @@ xlog_recover_inode_pass2(
- 		goto error;
- 	}
- 
--	/* Skip replay when the on disk inode is newer than the log one */
--	if (dicp->di_flushiter < be16_to_cpu(dip->di_flushiter)) {
-+	/*
-+	 * di_flushiter is only valid for v1/2 inodes. All changes for v3 inodes
-+	 * are transactional and if ordering is necessary we can determine that
-+	 * more accurately by the LSN field in the V3 inode core. Don't trust
-+	 * the inode versions we might be changing them here - use the
-+	 * superblock flag to determine whether we need to look at di_flushiter
-+	 * to skip replay when the on disk inode is newer than the log one
-+	 */
-+	if (!xfs_sb_version_hascrc(&mp->m_sb) &&
-+	    dicp->di_flushiter < be16_to_cpu(dip->di_flushiter)) {
- 		/*
- 		 * Deal with the wrap case, DI_MAX_FLUSH is less
- 		 * than smaller numbers
-@@ -2608,6 +2616,7 @@ xlog_recover_inode_pass2(
- 			goto error;
- 		}
- 	}
-+
- 	/* Take the opportunity to reset the flush iteration count */
- 	dicp->di_flushiter = 0;
- 
--- 
-Markus
+>  fs/xfs/xfs_log.h         |  89 ++++++------------------
+>  fs/xfs/xfs_log_format.h  | 178 +++++++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_log_priv.h    | 146 ++------------------------------------
+>  fs/xfs/xfs_log_recover.c |   2 +
+>  4 files changed, 207 insertions(+), 208 deletions(-)
+>  create mode 100644 fs/xfs/xfs_log_format.h
+> 
+> diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
+> index fb630e4..e63d9e1 100644
+> --- a/fs/xfs/xfs_log.h
+> +++ b/fs/xfs/xfs_log.h
+> @@ -18,14 +18,29 @@
+>  #ifndef	__XFS_LOG_H__
+>  #define __XFS_LOG_H__
+>  
+> -/* get lsn fields */
+> -#define CYCLE_LSN(lsn) ((uint)((lsn)>>32))
+> -#define BLOCK_LSN(lsn) ((uint)(lsn))
+> +#include "xfs_log_format.h"
+>  
+> -/* this is used in a spot where we might otherwise double-endian-flip */
+> -#define CYCLE_LSN_DISK(lsn) (((__be32 *)&(lsn))[0])
+> +struct xfs_log_vec {
+> +	struct xfs_log_vec	*lv_next;	/* next lv in build list */
+> +	int			lv_niovecs;	/* number of iovecs in lv */
+> +	struct xfs_log_iovec	*lv_iovecp;	/* iovec array */
+> +	struct xfs_log_item	*lv_item;	/* owner */
+> +	char			*lv_buf;	/* formatted buffer */
+> +	int			lv_buf_len;	/* size of formatted buffer */
+> +};
+> +
+> +#define XFS_LOG_VEC_ORDERED	(-1)
+> +
+> +/*
+> + * Structure used to pass callback function and the function's argument
+> + * to the log manager.
+> + */
+> +typedef struct xfs_log_callback {
+> +	struct xfs_log_callback	*cb_next;
+> +	void			(*cb_func)(void *, int);
+> +	void			*cb_arg;
+> +} xfs_log_callback_t;
+>  
+> -#ifdef __KERNEL__
+>  /*
+>   * By comparing each component, we don't have to worry about extra
+>   * endian issues in treating two 32 bit numbers as one 64 bit number
+> @@ -59,67 +74,6 @@ static inline xfs_lsn_t	_lsn_cmp(xfs_lsn_t lsn1, xfs_lsn_t lsn2)
+>   */
+>  #define XFS_LOG_SYNC		0x1
+>  
+> -#endif	/* __KERNEL__ */
+> -
+> -
+> -/* Log Clients */
+> -#define XFS_TRANSACTION		0x69
+> -#define XFS_VOLUME		0x2
+> -#define XFS_LOG			0xaa
+> -
+> -
+> -/* Region types for iovec's i_type */
+> -#define XLOG_REG_TYPE_BFORMAT		1
+> -#define XLOG_REG_TYPE_BCHUNK		2
+> -#define XLOG_REG_TYPE_EFI_FORMAT	3
+> -#define XLOG_REG_TYPE_EFD_FORMAT	4
+> -#define XLOG_REG_TYPE_IFORMAT		5
+> -#define XLOG_REG_TYPE_ICORE		6
+> -#define XLOG_REG_TYPE_IEXT		7
+> -#define XLOG_REG_TYPE_IBROOT		8
+> -#define XLOG_REG_TYPE_ILOCAL		9
+> -#define XLOG_REG_TYPE_IATTR_EXT		10
+> -#define XLOG_REG_TYPE_IATTR_BROOT	11
+> -#define XLOG_REG_TYPE_IATTR_LOCAL	12
+> -#define XLOG_REG_TYPE_QFORMAT		13
+> -#define XLOG_REG_TYPE_DQUOT		14
+> -#define XLOG_REG_TYPE_QUOTAOFF		15
+> -#define XLOG_REG_TYPE_LRHEADER		16
+> -#define XLOG_REG_TYPE_UNMOUNT		17
+> -#define XLOG_REG_TYPE_COMMIT		18
+> -#define XLOG_REG_TYPE_TRANSHDR		19
+> -#define XLOG_REG_TYPE_ICREATE		20
+> -#define XLOG_REG_TYPE_MAX		20
+> -
+> -typedef struct xfs_log_iovec {
+> -	void		*i_addr;	/* beginning address of region */
+> -	int		i_len;		/* length in bytes of region */
+> -	uint		i_type;		/* type of region */
+> -} xfs_log_iovec_t;
+> -
+> -struct xfs_log_vec {
+> -	struct xfs_log_vec	*lv_next;	/* next lv in build list */
+> -	int			lv_niovecs;	/* number of iovecs in lv */
+> -	struct xfs_log_iovec	*lv_iovecp;	/* iovec array */
+> -	struct xfs_log_item	*lv_item;	/* owner */
+> -	char			*lv_buf;	/* formatted buffer */
+> -	int			lv_buf_len;	/* size of formatted buffer */
+> -};
+> -
+> -#define XFS_LOG_VEC_ORDERED	(-1)
+> -
+> -/*
+> - * Structure used to pass callback function and the function's argument
+> - * to the log manager.
+> - */
+> -typedef struct xfs_log_callback {
+> -	struct xfs_log_callback	*cb_next;
+> -	void			(*cb_func)(void *, int);
+> -	void			*cb_arg;
+> -} xfs_log_callback_t;
+> -
+> -
+> -#ifdef __KERNEL__
+>  /* Log manager interfaces */
+>  struct xfs_mount;
+>  struct xlog_in_core;
+> @@ -188,5 +142,4 @@ void	xfs_log_work_queue(struct xfs_mount *mp);
+>  void	xfs_log_worker(struct work_struct *work);
+>  void	xfs_log_quiesce(struct xfs_mount *mp);
+>  
+> -#endif
+>  #endif	/* __XFS_LOG_H__ */
+> diff --git a/fs/xfs/xfs_log_format.h b/fs/xfs/xfs_log_format.h
+> new file mode 100644
+> index 0000000..9f9aeb6
+> --- /dev/null
+> +++ b/fs/xfs/xfs_log_format.h
+> @@ -0,0 +1,178 @@
+> +/*
+> + * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
+> + * All Rights Reserved.
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of the GNU General Public License as
+> + * published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope that it would be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program; if not, write the Free Software Foundation,
+> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> + */
+> +#ifndef	__XFS_LOG_FORMAT_H__
+> +#define __XFS_LOG_FORMAT_H__
+> +
+> +typedef __uint32_t xlog_tid_t;
+> +
+> +#define XLOG_MIN_ICLOGS		2
+> +#define XLOG_MAX_ICLOGS		8
+> +#define XLOG_HEADER_MAGIC_NUM	0xFEEDbabe	/* Invalid cycle number */
+> +#define XLOG_VERSION_1		1
+> +#define XLOG_VERSION_2		2		/* Large IClogs, Log sunit */
+> +#define XLOG_VERSION_OKBITS	(XLOG_VERSION_1 | XLOG_VERSION_2)
+> +#define XLOG_MIN_RECORD_BSIZE	(16*1024)	/* eventually 32k */
+> +#define XLOG_BIG_RECORD_BSIZE	(32*1024)	/* 32k buffers */
+> +#define XLOG_MAX_RECORD_BSIZE	(256*1024)
+> +#define XLOG_HEADER_CYCLE_SIZE	(32*1024)	/* cycle data in header */
+> +#define XLOG_MIN_RECORD_BSHIFT	14		/* 16384 == 1 << 14 */
+> +#define XLOG_BIG_RECORD_BSHIFT	15		/* 32k == 1 << 15 */
+> +#define XLOG_MAX_RECORD_BSHIFT	18		/* 256k == 1 << 18 */
+> +#define XLOG_BTOLSUNIT(log, b)  (((b)+(log)->l_mp->m_sb.sb_logsunit-1) / \
+> +                                 (log)->l_mp->m_sb.sb_logsunit)
+> +#define XLOG_LSUNITTOB(log, su) ((su) * (log)->l_mp->m_sb.sb_logsunit)
+> +
+> +#define XLOG_HEADER_SIZE	512
+> +
+> +#define XLOG_REC_SHIFT(log) \
+> +	BTOBB(1 << (xfs_sb_version_haslogv2(&log->l_mp->m_sb) ? \
+> +	 XLOG_MAX_RECORD_BSHIFT : XLOG_BIG_RECORD_BSHIFT))
+> +#define XLOG_TOTAL_REC_SHIFT(log) \
+> +	BTOBB(XLOG_MAX_ICLOGS << (xfs_sb_version_haslogv2(&log->l_mp->m_sb) ? \
+> +	 XLOG_MAX_RECORD_BSHIFT : XLOG_BIG_RECORD_BSHIFT))
+> +
+> +/* get lsn fields */
+> +#define CYCLE_LSN(lsn) ((uint)((lsn)>>32))
+> +#define BLOCK_LSN(lsn) ((uint)(lsn))
+> +
+> +/* this is used in a spot where we might otherwise double-endian-flip */
+> +#define CYCLE_LSN_DISK(lsn) (((__be32 *)&(lsn))[0])
+> +
+> +static inline xfs_lsn_t xlog_assign_lsn(uint cycle, uint block)
+> +{
+> +	return ((xfs_lsn_t)cycle << 32) | block;
+> +}
+> +
+> +static inline uint xlog_get_cycle(char *ptr)
+> +{
+> +	if (be32_to_cpu(*(__be32 *)ptr) == XLOG_HEADER_MAGIC_NUM)
+> +		return be32_to_cpu(*((__be32 *)ptr + 1));
+> +	else
+> +		return be32_to_cpu(*(__be32 *)ptr);
+> +}
+> +
+> +/* Log Clients */
+> +#define XFS_TRANSACTION		0x69
+> +#define XFS_VOLUME		0x2
+> +#define XFS_LOG			0xaa
+> +
+> +#define XLOG_UNMOUNT_TYPE	0x556e	/* Un for Unmount */
+> +
+> +/* Region types for iovec's i_type */
+> +#define XLOG_REG_TYPE_BFORMAT		1
+> +#define XLOG_REG_TYPE_BCHUNK		2
+> +#define XLOG_REG_TYPE_EFI_FORMAT	3
+> +#define XLOG_REG_TYPE_EFD_FORMAT	4
+> +#define XLOG_REG_TYPE_IFORMAT		5
+> +#define XLOG_REG_TYPE_ICORE		6
+> +#define XLOG_REG_TYPE_IEXT		7
+> +#define XLOG_REG_TYPE_IBROOT		8
+> +#define XLOG_REG_TYPE_ILOCAL		9
+> +#define XLOG_REG_TYPE_IATTR_EXT		10
+> +#define XLOG_REG_TYPE_IATTR_BROOT	11
+> +#define XLOG_REG_TYPE_IATTR_LOCAL	12
+> +#define XLOG_REG_TYPE_QFORMAT		13
+> +#define XLOG_REG_TYPE_DQUOT		14
+> +#define XLOG_REG_TYPE_QUOTAOFF		15
+> +#define XLOG_REG_TYPE_LRHEADER		16
+> +#define XLOG_REG_TYPE_UNMOUNT		17
+> +#define XLOG_REG_TYPE_COMMIT		18
+> +#define XLOG_REG_TYPE_TRANSHDR		19
+> +#define XLOG_REG_TYPE_ICREATE		20
+> +#define XLOG_REG_TYPE_MAX		20
+> +
+> +/*
+> + * Flags to log operation header
+> + *
+> + * The first write of a new transaction will be preceded with a start
+> + * record, XLOG_START_TRANS.  Once a transaction is committed, a commit
+> + * record is written, XLOG_COMMIT_TRANS.  If a single region can not fit into
+> + * the remainder of the current active in-core log, it is split up into
+> + * multiple regions.  Each partial region will be marked with a
+> + * XLOG_CONTINUE_TRANS until the last one, which gets marked with XLOG_END_TRANS.
+> + *
+> + */
+> +#define XLOG_START_TRANS	0x01	/* Start a new transaction */
+> +#define XLOG_COMMIT_TRANS	0x02	/* Commit this transaction */
+> +#define XLOG_CONTINUE_TRANS	0x04	/* Cont this trans into new region */
+> +#define XLOG_WAS_CONT_TRANS	0x08	/* Cont this trans into new region */
+> +#define XLOG_END_TRANS		0x10	/* End a continued transaction */
+> +#define XLOG_UNMOUNT_TRANS	0x20	/* Unmount a filesystem transaction */
+> +
+> +
+> +typedef struct xlog_op_header {
+> +	__be32	   oh_tid;	/* transaction id of operation	:  4 b */
+> +	__be32	   oh_len;	/* bytes in data region		:  4 b */
+> +	__u8	   oh_clientid;	/* who sent me this		:  1 b */
+> +	__u8	   oh_flags;	/*				:  1 b */
+> +	__u16	   oh_res2;	/* 32 bit align			:  2 b */
+> +} xlog_op_header_t;
+> +
+> +
+> +/* valid values for h_fmt */
+> +#define XLOG_FMT_UNKNOWN  0
+> +#define XLOG_FMT_LINUX_LE 1
+> +#define XLOG_FMT_LINUX_BE 2
+> +#define XLOG_FMT_IRIX_BE  3
+> +
+> +/* our fmt */
+> +#ifdef XFS_NATIVE_HOST
+> +#define XLOG_FMT XLOG_FMT_LINUX_BE
+> +#else
+> +#define XLOG_FMT XLOG_FMT_LINUX_LE
+> +#endif
+> +
+> +typedef struct xlog_rec_header {
+> +	__be32	  h_magicno;	/* log record (LR) identifier		:  4 */
+> +	__be32	  h_cycle;	/* write cycle of log			:  4 */
+> +	__be32	  h_version;	/* LR version				:  4 */
+> +	__be32	  h_len;	/* len in bytes; should be 64-bit aligned: 4 */
+> +	__be64	  h_lsn;	/* lsn of this LR			:  8 */
+> +	__be64	  h_tail_lsn;	/* lsn of 1st LR w/ buffers not committed: 8 */
+> +	__le32	  h_crc;	/* crc of log record                    :  4 */
+> +	__be32	  h_prev_block; /* block number to previous LR		:  4 */
+> +	__be32	  h_num_logops;	/* number of log operations in this LR	:  4 */
+> +	__be32	  h_cycle_data[XLOG_HEADER_CYCLE_SIZE / BBSIZE];
+> +	/* new fields */
+> +	__be32    h_fmt;        /* format of log record                 :  4 */
+> +	uuid_t	  h_fs_uuid;    /* uuid of FS                           : 16 */
+> +	__be32	  h_size;	/* iclog size				:  4 */
+> +} xlog_rec_header_t;
+> +
+> +typedef struct xlog_rec_ext_header {
+> +	__be32	  xh_cycle;	/* write cycle of log			: 4 */
+> +	__be32	  xh_cycle_data[XLOG_HEADER_CYCLE_SIZE / BBSIZE]; /*	: 256 */
+> +} xlog_rec_ext_header_t;
+> +
+> +/*
+> + * Quite misnamed, because this union lays out the actual on-disk log buffer.
+> + */
+> +typedef union xlog_in_core2 {
+> +	xlog_rec_header_t	hic_header;
+> +	xlog_rec_ext_header_t	hic_xheader;
+> +	char			hic_sector[XLOG_HEADER_SIZE];
+> +} xlog_in_core_2_t;
+> +
+> +/* not an on-disk structure, but needed by log recovery in userspace */
+> +typedef struct xfs_log_iovec {
+> +	void		*i_addr;	/* beginning address of region */
+> +	int		i_len;		/* length in bytes of region */
+> +	uint		i_type;		/* type of region */
+> +} xfs_log_iovec_t;
+> +
+> +#endif /* __XFS_LOG_FORMAT_H__ */
+> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+> index b9ea262..edd0964 100644
+> --- a/fs/xfs/xfs_log_priv.h
+> +++ b/fs/xfs/xfs_log_priv.h
+> @@ -24,51 +24,13 @@ struct xlog_ticket;
+>  struct xfs_mount;
+>  
+>  /*
+> - * Macros, structures, prototypes for internal log manager use.
+> + * Flags for log structure
+>   */
+> -
+> -#define XLOG_MIN_ICLOGS		2
+> -#define XLOG_MAX_ICLOGS		8
+> -#define XLOG_HEADER_MAGIC_NUM	0xFEEDbabe	/* Invalid cycle number */
+> -#define XLOG_VERSION_1		1
+> -#define XLOG_VERSION_2		2		/* Large IClogs, Log sunit */
+> -#define XLOG_VERSION_OKBITS	(XLOG_VERSION_1 | XLOG_VERSION_2)
+> -#define XLOG_MIN_RECORD_BSIZE	(16*1024)	/* eventually 32k */
+> -#define XLOG_BIG_RECORD_BSIZE	(32*1024)	/* 32k buffers */
+> -#define XLOG_MAX_RECORD_BSIZE	(256*1024)
+> -#define XLOG_HEADER_CYCLE_SIZE	(32*1024)	/* cycle data in header */
+> -#define XLOG_MIN_RECORD_BSHIFT	14		/* 16384 == 1 << 14 */
+> -#define XLOG_BIG_RECORD_BSHIFT	15		/* 32k == 1 << 15 */
+> -#define XLOG_MAX_RECORD_BSHIFT	18		/* 256k == 1 << 18 */
+> -#define XLOG_BTOLSUNIT(log, b)  (((b)+(log)->l_mp->m_sb.sb_logsunit-1) / \
+> -                                 (log)->l_mp->m_sb.sb_logsunit)
+> -#define XLOG_LSUNITTOB(log, su) ((su) * (log)->l_mp->m_sb.sb_logsunit)
+> -
+> -#define XLOG_HEADER_SIZE	512
+> -
+> -#define XLOG_REC_SHIFT(log) \
+> -	BTOBB(1 << (xfs_sb_version_haslogv2(&log->l_mp->m_sb) ? \
+> -	 XLOG_MAX_RECORD_BSHIFT : XLOG_BIG_RECORD_BSHIFT))
+> -#define XLOG_TOTAL_REC_SHIFT(log) \
+> -	BTOBB(XLOG_MAX_ICLOGS << (xfs_sb_version_haslogv2(&log->l_mp->m_sb) ? \
+> -	 XLOG_MAX_RECORD_BSHIFT : XLOG_BIG_RECORD_BSHIFT))
+> -
+> -static inline xfs_lsn_t xlog_assign_lsn(uint cycle, uint block)
+> -{
+> -	return ((xfs_lsn_t)cycle << 32) | block;
+> -}
+> -
+> -static inline uint xlog_get_cycle(char *ptr)
+> -{
+> -	if (be32_to_cpu(*(__be32 *)ptr) == XLOG_HEADER_MAGIC_NUM)
+> -		return be32_to_cpu(*((__be32 *)ptr + 1));
+> -	else
+> -		return be32_to_cpu(*(__be32 *)ptr);
+> -}
+> -
+> -#define BLK_AVG(blk1, blk2)	((blk1+blk2) >> 1)
+> -
+> -#ifdef __KERNEL__
+> +#define XLOG_ACTIVE_RECOVERY	0x2	/* in the middle of recovery */
+> +#define	XLOG_RECOVERY_NEEDED	0x4	/* log was recovered */
+> +#define XLOG_IO_ERROR		0x8	/* log hit an I/O error, and being
+> +					   shutdown */
+> +#define XLOG_TAIL_WARN		0x10	/* log tail verify warning issued */
+>  
+>  /*
+>   * get client id from packed copy.
+> @@ -101,28 +63,8 @@ static inline uint xlog_get_client_id(__be32 i)
+>  #define XLOG_STATE_IOERROR   0x0080 /* IO error happened in sync'ing log */
+>  #define XLOG_STATE_ALL	     0x7FFF /* All possible valid flags */
+>  #define XLOG_STATE_NOTUSED   0x8000 /* This IC log not being used */
+> -#endif	/* __KERNEL__ */
+>  
+>  /*
+> - * Flags to log operation header
+> - *
+> - * The first write of a new transaction will be preceded with a start
+> - * record, XLOG_START_TRANS.  Once a transaction is committed, a commit
+> - * record is written, XLOG_COMMIT_TRANS.  If a single region can not fit into
+> - * the remainder of the current active in-core log, it is split up into
+> - * multiple regions.  Each partial region will be marked with a
+> - * XLOG_CONTINUE_TRANS until the last one, which gets marked with XLOG_END_TRANS.
+> - *
+> - */
+> -#define XLOG_START_TRANS	0x01	/* Start a new transaction */
+> -#define XLOG_COMMIT_TRANS	0x02	/* Commit this transaction */
+> -#define XLOG_CONTINUE_TRANS	0x04	/* Cont this trans into new region */
+> -#define XLOG_WAS_CONT_TRANS	0x08	/* Cont this trans into new region */
+> -#define XLOG_END_TRANS		0x10	/* End a continued transaction */
+> -#define XLOG_UNMOUNT_TRANS	0x20	/* Unmount a filesystem transaction */
+> -
+> -#ifdef __KERNEL__
+> -/*
+>   * Flags to log ticket
+>   */
+>  #define XLOG_TIC_INITED		0x1	/* has been initialized */
+> @@ -132,22 +74,6 @@ static inline uint xlog_get_client_id(__be32 i)
+>  	{ XLOG_TIC_INITED,	"XLOG_TIC_INITED" }, \
+>  	{ XLOG_TIC_PERM_RESERV,	"XLOG_TIC_PERM_RESERV" }
+>  
+> -#endif	/* __KERNEL__ */
+> -
+> -#define XLOG_UNMOUNT_TYPE	0x556e	/* Un for Unmount */
+> -
+> -/*
+> - * Flags for log structure
+> - */
+> -#define XLOG_ACTIVE_RECOVERY	0x2	/* in the middle of recovery */
+> -#define	XLOG_RECOVERY_NEEDED	0x4	/* log was recovered */
+> -#define XLOG_IO_ERROR		0x8	/* log hit an I/O error, and being
+> -					   shutdown */
+> -#define XLOG_TAIL_WARN		0x10	/* log tail verify warning issued */
+> -
+> -typedef __uint32_t xlog_tid_t;
+> -
+> -#ifdef __KERNEL__
+>  /*
+>   * Below are states for covering allocation transactions.
+>   * By covering, we mean changing the h_tail_lsn in the last on-disk
+> @@ -223,7 +149,6 @@ typedef __uint32_t xlog_tid_t;
+>  
+>  #define XLOG_COVER_OPS		5
+>  
+> -
+>  /* Ticket reservation region accounting */ 
+>  #define XLOG_TIC_LEN_MAX	15
+>  
+> @@ -258,64 +183,6 @@ typedef struct xlog_ticket {
+>  	xlog_res_t	   t_res_arr[XLOG_TIC_LEN_MAX];  /* array of res : 8 * 15 */ 
+>  } xlog_ticket_t;
+>  
+> -#endif
+> -
+> -
+> -typedef struct xlog_op_header {
+> -	__be32	   oh_tid;	/* transaction id of operation	:  4 b */
+> -	__be32	   oh_len;	/* bytes in data region		:  4 b */
+> -	__u8	   oh_clientid;	/* who sent me this		:  1 b */
+> -	__u8	   oh_flags;	/*				:  1 b */
+> -	__u16	   oh_res2;	/* 32 bit align			:  2 b */
+> -} xlog_op_header_t;
+> -
+> -
+> -/* valid values for h_fmt */
+> -#define XLOG_FMT_UNKNOWN  0
+> -#define XLOG_FMT_LINUX_LE 1
+> -#define XLOG_FMT_LINUX_BE 2
+> -#define XLOG_FMT_IRIX_BE  3
+> -
+> -/* our fmt */
+> -#ifdef XFS_NATIVE_HOST
+> -#define XLOG_FMT XLOG_FMT_LINUX_BE
+> -#else
+> -#define XLOG_FMT XLOG_FMT_LINUX_LE
+> -#endif
+> -
+> -typedef struct xlog_rec_header {
+> -	__be32	  h_magicno;	/* log record (LR) identifier		:  4 */
+> -	__be32	  h_cycle;	/* write cycle of log			:  4 */
+> -	__be32	  h_version;	/* LR version				:  4 */
+> -	__be32	  h_len;	/* len in bytes; should be 64-bit aligned: 4 */
+> -	__be64	  h_lsn;	/* lsn of this LR			:  8 */
+> -	__be64	  h_tail_lsn;	/* lsn of 1st LR w/ buffers not committed: 8 */
+> -	__le32	  h_crc;	/* crc of log record                    :  4 */
+> -	__be32	  h_prev_block; /* block number to previous LR		:  4 */
+> -	__be32	  h_num_logops;	/* number of log operations in this LR	:  4 */
+> -	__be32	  h_cycle_data[XLOG_HEADER_CYCLE_SIZE / BBSIZE];
+> -	/* new fields */
+> -	__be32    h_fmt;        /* format of log record                 :  4 */
+> -	uuid_t	  h_fs_uuid;    /* uuid of FS                           : 16 */
+> -	__be32	  h_size;	/* iclog size				:  4 */
+> -} xlog_rec_header_t;
+> -
+> -typedef struct xlog_rec_ext_header {
+> -	__be32	  xh_cycle;	/* write cycle of log			: 4 */
+> -	__be32	  xh_cycle_data[XLOG_HEADER_CYCLE_SIZE / BBSIZE]; /*	: 256 */
+> -} xlog_rec_ext_header_t;
+> -
+> -#ifdef __KERNEL__
+> -
+> -/*
+> - * Quite misnamed, because this union lays out the actual on-disk log buffer.
+> - */
+> -typedef union xlog_in_core2 {
+> -	xlog_rec_header_t	hic_header;
+> -	xlog_rec_ext_header_t	hic_xheader;
+> -	char			hic_sector[XLOG_HEADER_SIZE];
+> -} xlog_in_core_2_t;
+> -
+>  /*
+>   * - A log record header is 512 bytes.  There is plenty of room to grow the
+>   *	xlog_rec_header_t into the reserved space.
+> @@ -686,6 +553,5 @@ static inline void xlog_wait(wait_queue_head_t *wq, spinlock_t *lock)
+>  	schedule();
+>  	remove_wait_queue(wq, &wait);
+>  }
+> -#endif	/* __KERNEL__ */
+>  
+>  #endif	/* __XFS_LOG_PRIV_H__ */
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index 6fcc910a..27f2572 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -55,6 +55,8 @@
+>  #include "xfs_attr_leaf.h"
+>  #include "xfs_attr_remote.h"
+>  
+> +#define BLK_AVG(blk1, blk2)	((blk1+blk2) >> 1)
+> +
+>  STATIC int
+>  xlog_find_zeroed(
+>  	struct xlog	*,
+> 
 
 _______________________________________________
 xfs mailing list
