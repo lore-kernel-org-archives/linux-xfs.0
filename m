@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 921667F3F
-	for <linux-xfs@oss.sgi.com>; Tue, 23 Jul 2013 13:56:42 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 999607F3F
+	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 13:56:43 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 36FCFAC00A
-	for <linux-xfs@oss.sgi.com>; Tue, 23 Jul 2013 11:56:42 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 5CC25304062
+	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 11:56:43 -0700 (PDT)
 Received: from mail323.us3.mcdlv.net (mail323.us3.mcdlv.net [173.231.177.67])
-	by cuda.sgi.com with ESMTP id yKqh3yqcAJ7saDmA for
-	<linux-xfs@oss.sgi.com>; Tue, 23 Jul 2013 11:56:39 -0700 (PDT)
-Received: from (127.0.0.1) by mail323.us3.mcdlv.net id htr80o14i04k for
-	<linux-xfs@oss.sgi.com>;
-	Tue, 23 Jul 2013 18:45:40 +0000 (envelope-from
-	<bounce-mc.us7_18889475.80805-linux-xfs=oss.sgi.com@mail323.us3.mcdlv.net>)
+	by cuda.sgi.com with ESMTP id 5lHFlD76yveIc1nC for
+	<xfs@oss.sgi.com>; Tue, 23 Jul 2013 11:56:40 -0700 (PDT)
+Received: from (127.0.0.1) by mail323.us3.mcdlv.net id htr80q14i04m for
+	<xfs@oss.sgi.com>; Tue, 23 Jul 2013 18:45:40 +0000 (envelope-from
+	<bounce-mc.us7_18889475.80805-xfs=oss.sgi.com@mail323.us3.mcdlv.net>)
 Subject: =?utf-8?Q?Finally=20a=20site=20that=20has=20JUST=20MUSIC=20VIDEOS?=
 From: =?utf-8?Q?Music=20Video=20News?= <pr@thedailyrocker.com>
 Date: Tue, 23 Jul 2013 18:45:40 +0000
-Message-ID: <cff25387938a97b0fd838f9206e97603da8.20130723185324@mail323.us3.mcdlv.net>
+Message-ID: <cff25387938a97b0fd838f92095f7364ac1.20130723185324@mail323.us3.mcdlv.net>
 MIME-Version: 1.0
 Reply-To: =?utf-8?Q?Music=20Video=20News?= <pr@thedailyrocker.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -26,14 +25,14 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============8180844345102281136=="
+Content-Type: multipart/mixed; boundary="===============2896630723948509984=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: =?utf-8?Q??= <linux-xfs@oss.sgi.com>
+To: =?utf-8?Q??= <xfs@oss.sgi.com>
 
 This is a multi-part message in MIME format
 
---===============8180844345102281136==
+--===============2896630723948509984==
 Content-Type: multipart/alternative; boundary="_----------=_MCPart_1741299820"
 
 This is a multi-part message in MIME format
@@ -43,7 +42,7 @@ Content-Type: text/plain; charset="us-ascii";
 
 New music video site launches with thousands of stations and facebook chat
 
-View this email in your browser (http://us7.campaign-archive2.com/?u=cff25387938a97b0fd838f920&id=c749d5a658&e=6e97603da8)
+View this email in your browser (http://us7.campaign-archive2.com/?u=cff25387938a97b0fd838f920&id=c749d5a658&e=95f7364ac1)
 
 
 ** Finally A Music Video Site That Features JUST Music Videos Non-Stop
@@ -68,8 +67,8 @@ Los Angeles, CA - This morning, the new music video site The Daily Rocker whimsi
 
 ============================================================
 
-** unsubscribe from this list (http://TheDailyRocker.us7.list-manage1.com/unsubscribe?u=cff25387938a97b0fd838f920&id=9052594378&e=6e97603da8&c=c749d5a658)
-** update subscription preferences (http://TheDailyRocker.us7.list-manage.com/profile?u=cff25387938a97b0fd838f920&id=9052594378&e=6e97603da8)
+** unsubscribe from this list (http://TheDailyRocker.us7.list-manage1.com/unsubscribe?u=cff25387938a97b0fd838f920&id=9052594378&e=95f7364ac1&c=c749d5a658)
+** update subscription preferences (http://TheDailyRocker.us7.list-manage.com/profile?u=cff25387938a97b0fd838f920&id=9052594378&e=95f7364ac1)
 --_----------=_MCPart_1741299820
 Content-Type: text/html; charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
@@ -542,7 +541,7 @@ olor: #606060;font-family: Helvetica;font-size: 11px;line-height: 125%;tex=
 t-align: left;">
 
                             <a href=3D"http://us7.campaign-archive2.com/?u=
-=3Dcff25387938a97b0fd838f920&id=3Dc749d5a658&e=3D6e97603da8" target=3D"_blan=
+=3Dcff25387938a97b0fd838f920&id=3Dc749d5a658&e=3D95f7364ac1" target=3D"_blan=
 k" style=3D"color: #606060;font-weight: normal;text-decoration: underline;=
 word-wrap: break-word !important;">View this email in your browser</a>
                         </td>
@@ -656,7 +655,7 @@ egments interrupting the music. Just Music Videos. Everyday. Every genre.=
 , Helvetica, sans-serif;line-height: 15px;font-size: 15px;text-align: left=
 ;">
 =09<a href=3D"http://TheDailyRocker.us7.list-manage.com/track/click?u=3Dcf=
-f25387938a97b0fd838f920&id=3Deb408283b4&e=3D6e97603da8" target=3D"_self"=
+f25387938a97b0fd838f920&id=3Deb408283b4&e=3D95f7364ac1" target=3D"_self"=
  style=3D"color: #6DC6DD;font-weight: normal;text-decoration: underline;wo=
 rd-wrap: break-word !important;">http://www.thedailyrocker.com</a><br>
 =09<br>
@@ -785,12 +784,12 @@ ker.us7.list-manage.com/vcard?u=3Dcff25387938a97b0fd838f920&id=3D905259437=
     <br>
     <br>
     <a href=3D"http://TheDailyRocker.us7.list-manage1.com/unsubscribe?u=3D=
-cff25387938a97b0fd838f920&id=3D9052594378&e=3D6e97603da8&c=3Dc749d5a658" cla=
+cff25387938a97b0fd838f920&id=3D9052594378&e=3D95f7364ac1&c=3Dc749d5a658" cla=
 ss=3D"utilityLink" style=3D"color: #606060;font-weight: normal;text-decora=
 tion: underline;word-wrap: break-word !important;">unsubscribe from this l=
 ist</a>&nbsp;&nbsp;&nbsp;
     <a href=3D"http://TheDailyRocker.us7.list-manage.com/profile?u=3Dcff25=
-387938a97b0fd838f920&id=3D9052594378&e=3D6e97603da8" class=3D"utilityLink" s=
+387938a97b0fd838f920&id=3D9052594378&e=3D95f7364ac1" class=3D"utilityLink" s=
 tyle=3D"color: #606060;font-weight: normal;text-decoration: underline;word=
 -wrap: break-word !important;">update subscription preferences</a>&nbsp;
     <br>
@@ -815,13 +814,13 @@ tyle=3D"color: #606060;font-weight: normal;text-decoration: underline;word=
             </table>
         </center>
     <img src=3D"http://TheDailyRocker.us7.list-manage.com/track/open.php?u=
-=3Dcff25387938a97b0fd838f920&id=3Dc749d5a658&e=3D6e97603da8" height=3D"1"=
+=3Dcff25387938a97b0fd838f920&id=3Dc749d5a658&e=3D95f7364ac1" height=3D"1"=
  width=3D"1"></body>
 </html>
 --_----------=_MCPart_1741299820--
 
 
---===============8180844345102281136==
+--===============2896630723948509984==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -832,4 +831,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============8180844345102281136==--
+--===============2896630723948509984==--
