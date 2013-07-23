@@ -1,24 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 4EAB17F50
-	for <xfs@oss.sgi.com>; Mon, 22 Jul 2013 23:50:04 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 1DAC67F55
+	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 02:23:13 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3540130404E
-	for <xfs@oss.sgi.com>; Mon, 22 Jul 2013 21:50:04 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	0iJaFSZPmriw3xZG for <xfs@oss.sgi.com>;
-	Mon, 22 Jul 2013 21:50:02 -0700 (PDT)
-Date: Tue, 23 Jul 2013 14:49:59 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: di_flushiter considered harmful
-Message-ID: <20130723044959.GH19986@dastard>
-References: <1374488304-13044-1-git-send-email-david@fromorbit.com>
-	<20130722110732.GA365@x4> <20130722225640.GB19986@dastard>
-	<20130723012827.GA360@x4>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id F05468F8037
+	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 00:23:09 -0700 (PDT)
+Received: from emea01-am1-obe.outbound.protection.outlook.com
+	(mail-am1lp0011.outbound.protection.outlook.com
+	[213.199.154.11]) by cuda.sgi.com with ESMTP id
+	s9O9m3dSW15BqQD8 (version=TLSv1 cipher=AES128-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 23 Jul 2013 00:23:08 -0700 (PDT)
+Message-ID: <51EE2F54.80701@zynstra.com>
+Date: Tue, 23 Jul 2013 08:23:00 +0100
+From: James Dingwall <james.dingwall@zynstra.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130723012827.GA360@x4>
+Subject: Re: Cleancache support in XFS
+References: <51810CED.4080003@zynstra.com> <20130501162044.GN29359@sgi.com>
+	<20130501223022.GQ10481@dastard> <518222D3.3080109@zynstra.com>
+	<20130522192834.GD10617@phenom.dumpdata.com>
+	<519F1708.10603@zynstra.com>
+	<20130607170826.GA6925@phenom.dumpdata.com>
+	<51E8E834.6080509@zynstra.com>
+	<20130722154812.GC30300@phenom.dumpdata.com>
+In-Reply-To: <20130722154812.GC30300@phenom.dumpdata.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,95 +32,82 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Markus Trippelsdorf <markus@trippelsdorf.de>
-Cc: xfs@oss.sgi.com
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com
 
-On Tue, Jul 23, 2013 at 03:28:27AM +0200, Markus Trippelsdorf wrote:
-> On 2013.07.23 at 08:56 +1000, Dave Chinner wrote:
-> > On Mon, Jul 22, 2013 at 01:07:32PM +0200, Markus Trippelsdorf wrote:
-> > > On 2013.07.22 at 20:18 +1000, Dave Chinner wrote:
-> > > > From: Dave Chinner <dchinner@redhat.com>
-> > > > 
-> > > > When we made all inode updates transactional, we no longer needed
-> > > > the log recovery detection for inodes being newer on disk than the
-> > > > transaction being replayed - it was redundant as replay of the log
-> > > > would always result in the latest version of the inode woul dbe on
-> > > > disk. It was redundant, but left in place because it wasn't
-> > > > considered to be a problem.
-> > > > 
-> > > > However, with the new "don't read inodes on create" optimisation,
-> > > > flushiter has come back to bite us. Essentially, the optimisation
-> > > > made always initialises flushiter to zero in the create transaction,
-> > > > and so if we then crash and run recovery and the inode already on
-> > > > disk has a non-zero flushiter it will skip recovery of that inode.
-> > > > As a result, log recovery does the wrong thing and we end up with a
-> > > > corrupt filesystem.
-> > > > 
-> > > > Because we have to support old kernel to new kernl upgrades, we
-> > > > can't just get rid of the flushiter support in log recovery as we
-> > > > might be upgrading from a kernel that doesn't have fully transaction
-> > > > inode updates.  Unfortunately, for v4 superblocks there is no way to
-> > > > guarantee that log recovery knows about this fact.
-> > > > 
-> > > > We cannot add a new inode format flag to say it's a "special inode
-> > > > create" because it won't be understood by older kernels and so
-> > > > recovery could do the wrong thing on downgrade. We cannot specially
-> > > > detect the combination of zero mode/non-zero flushiter on disk to
-> > > > non-zero mode, zero flushiter in the log item during recovery
-> > > > because wrapping of the flushiter can result in false detection.
-> > > > 
-> > > > Hence that makes this "don't use flushiter" optimisation limited to
-> > > > a disk format that guarantees that we don't need it. And that means
-> > > > the only fix here is to limit the "no read IO on create"
-> > > > optimisation to version 5 superblocks....
-> > > 
-> > > I think your patch misses the following part:
-> > > 
-> > > @@ -1054,17 +1056,15 @@ xfs_iread(
-> > >  
-> > >         /* shortcut IO on inode allocation if possible */
-> > >         if ((iget_flags & XFS_IGET_CREATE) &&
-> > > -           !(mp->m_flags & XFS_MOUNT_IKEEP)) {
-> > > +           !(mp->m_flags & XFS_MOUNT_IKEEP) &&
-> > > +           xfs_sb_version_hascrc(&mp->m_sb)) {
-> > >                 /* initialise the on-disk inode core */
-> > >                 memset(&ip->i_d, 0, sizeof(ip->i_d));
-> > >                 ip->i_d.di_magic = XFS_DINODE_MAGIC;
-> > >                 ip->i_d.di_gen = prandom_u32();
-> > > -               if (xfs_sb_version_hascrc(&mp->m_sb)) {
-> > > -                       ip->i_d.di_version = 3;
-> > > -                       ip->i_d.di_ino = ip->i_ino;
-> > > -                       uuid_copy(&ip->i_d.di_uuid, &mp->m_sb.sb_uuid);
-> > > -               } else
-> > > -                       ip->i_d.di_version = 2;
-> > > +               ip->i_d.di_version = 3;
-> > > +               ip->i_d.di_ino = ip->i_ino;
-> > > +               uuid_copy(&ip->i_d.di_uuid, &mp->m_sb.sb_uuid);
-> > >                 return 0;
-> > >         }
-> > 
-> > Sure, it's dead code so doesn't affect the behaviour of the patch.
-> > I'll update it, but I need you to reproduce the problem in a simple
-> > manner as Mark did with this patch in place so I can find out what
-> > the real problem you are seeing is....
-> 
-> No. It's not dead code. Please look at the patch that you've posted.
+Konrad Rzeszutek Wilk wrote:
+> On Fri, Jul 19, 2013 at 08:18:12AM +0100, James Dingwall wrote:
+>> Konrad Rzeszutek Wilk wrote:
+>>> On Fri, May 24, 2013 at 08:30:16AM +0100, James Dingwall wrote:
+>>>> Konrad Rzeszutek Wilk wrote:
+>>>>> On Thu, May 02, 2013 at 09:24:51AM +0100, James Dingwall wrote:
+>>>>>> Dave Chinner wrote:
+>>>>>>> On Wed, May 01, 2013 at 11:20:44AM -0500, Ben Myers wrote:
+>>>>>>>> Hi James,
+>>>>> Hey folks,
+>>>>> I am walking through my vacation-emails-mbox.
+>>>>>
+>>>>>>>> On Wed, May 01, 2013 at 01:39:09PM +0100, James Dingwall wrote:
+>>>>>>>>> In reference to: http://oss.sgi.com/archives/xfs/2012-05/msg00046.html
+>>>>>>>>>
+>>>>>>>>> $ grep -r cleancache fs/xfs
+>>>>>>>>> on the 3.9 kernel source suggests that no patch was submitted to
+>>>>>>>>> enable cleancache for the XFS filesystem.  Since it was suggested
+>>>>>>>>> that this could be a one liner I've had a go and my first effort is
+>>>>>>>>> inline below.  While this seems to compile OK I have no experience
+>>>>>>>>> in filesystems so I would appreciate it if anyone can point out that
+>>>>>>>>> it is obviously wrong and likely to eat my data before I try booting
+>>>>>>>>> the kernel.
+>>>>>>>>>
+>>>>>>>>> If it seems a reasonable attempt what would be the best way to check
+>>>>>>>>> that it isn't doing nasty things?
+>>>>>>>> Hrm.. Looks like there is a doc in Documentation/vm/cleancache.txt which
+>>>>>>>> includes a list of attributes the filesystem needs to have to work properly
+>>>>>>>> with cleancache.
+>>>>>>> So, those points are:
+>>>>>> I had started to look at these too but I feel very out of my depth!
+>>>>>> I had similar conclusions to what Dave wrote but I don't think my
+>>>>>> thoughts should carry very much (any) weight.  Anyway I gambled and
+>>>>>> booted my xen domU with this patch and so far so good...  xen top
+>>>>>> shows that tmem is now being used where previously it wasn't.  I'll
+>>>>>> try running the xfstests at the weekend after a couple more days up
+>>>>>> time to see what happens.
+>>>>> And how did it go?
+>>>> I am running the patch I created on 3.9.3 on half of my xen guests
+>>>> now and have not noticed any stability or filesystem problems.  xl
+>>>> top with 'T' shows that the guests running with it are using
+>>>> ephemeral pages were those without do not.  I did do some runs with
+>>>> xfstests which had some failures but they were present with and
+>>>> without the patch.  The best I can really offer is that it works for
+>>>> me, ymmv.  The patch is available as commit
+>>>> c725011c4fc5d47e12d131f61bd91a58a40036b5 in
+>>>> https://github.com/JKDingwall/linux.git xfs-enable-cleancache or in
+>>>> the first message of this thread.
+>>> Hey James,
+>>>
+>>> I've run this patch on my local tree and it looks to work right. I am
+>>> saying "looks" as I am hitting some other issue that I believe are
+>>> unralted to the patch - but I need to figure them out before I can
+>>> comfortably say: "Yes, this looks right and works for me as well."
+>>>
+>>> Stay tuned.
+>> Just to add that I have also had no observable problems running this
+>> patch on 3.10.0 or 3.10.1.
+> Yup. And I tested it as well. In other words if you would like to add
+> Acked-by from me that would be super. Thanks!
+My patch is now available in https://github.com/JKDingwall/linux.git 
+xfs-enable-cleancache as commit id 
+6d50663e4ec88b7e1fd872b12ac310b1f4bb38c6.  I have rebased it on 3.10 
+with KRW's Acked-by and my Signed-off-by in the commit message.  Is it 
+reasonable for this to be considered for 3.12 or would further testing 
+be required?
 
-I was looking at the code in my tree. It appears that what I sent
-out is an incomplete version - the patch in my tree up to date
-and has a xfs_sb_version_hascrc() check around this entire set of
-code. I guess I missed a 'guilt refresh'...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+James
 
 _______________________________________________
 xfs mailing list
