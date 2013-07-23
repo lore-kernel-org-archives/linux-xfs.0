@@ -1,23 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0FF007F3F
-	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 16:31:02 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9166EAC008
-	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 14:31:01 -0700 (PDT)
-Received: from Ishtar.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
-	cuda.sgi.com with ESMTP id MHXYayH7v2itdmD2 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 23 Jul 2013 14:31:00 -0700 (PDT)
-Received: from [192.168.4.12] (Athenae [192.168.4.12])
-	by Ishtar.tlinx.org (8.14.7/8.14.4/SuSE Linux 0.8) with ESMTP id
-	r6NLUtHY089488 for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 14:30:58 -0700
-Message-ID: <51EEF60D.6080102@tlinx.org>
-Date: Tue, 23 Jul 2013 14:30:53 -0700
-From: Linda Walsh <xfs@tlinx.org>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 277537F3F
+	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 16:40:03 -0500 (CDT)
+Date: Tue, 23 Jul 2013 16:40:02 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: RFE: the manpage claims no limits on size of file extended
+	attributes; has this now true?
+Message-ID: <20130723214002.GM3111@sgi.com>
+References: <51EEF543.5020305@tlinx.org>
 MIME-Version: 1.0
-Subject: design mismatch(flaw): 2 utils old & new don't provide current
-	functionality nor all of needed...
+Content-Disposition: inline
+In-Reply-To: <51EEF543.5020305@tlinx.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,21 +23,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Linda Walsh <xfs@tlinx.org>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
+Hey Linda,
 
+On Tue, Jul 23, 2013 at 02:27:31PM -0700, Linda Walsh wrote:
+> Ok, lemme rephrase my questions...
+> 
+> The man page lists maximums for values at 64K, and names at 255
+> characters.  This implies these are the only limits one need worry about
+> -- i.e. there is no limit on the maximum number of 255 byte names nor is
+> there a limit on the sum of the values of attributes.
 
-The attrib command's "list" option is not considered supported, yet it
-works.  The alternative to the unsupported list command is using getfattr.
-However, getfattr doesn't support listing attributes and their lengths,
-nor does it support the Root and Security attribute spaces.  I.e. getfattr
-is inadequate to replace the unsupported attrib command.
+To the best of my knowledge:
 
-	Given the above, the attrib command should be reconsidered for
-support, or the getfattr command should be enhanced to provide the missing
-functionality (no major preference on my part), but as it is we have two
-utils that taken together, "do not support" functionality that is already
-present (as well as missing functionality).
+There is no limit on the maximum number of extended attribute names.
+
+There is no limit on the sum of the values of attributes.
+
+The limit is on the sum of the names and values of all of the attributes in a
+given inode.
+
+> Is it something like 2^60 bytes?
+
+Yeah, it's something big like that.
+
+> or some such limit that no one will ever hit?   Could
+> I store alternate soundtracks for movies in attribute fields, or
+> alternate scenes for movies?
+
+Yep, you could do that.  It's just that it would have to be done in 64k chunks.
+Some time ago there was some discussion of supporting multiple file streams
+which would not have the unfortunate 64k limitation, but nothing has come of
+it so far.
+
+Regards,
+	Ben
 
 _______________________________________________
 xfs mailing list
