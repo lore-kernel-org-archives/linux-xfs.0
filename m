@@ -1,18 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id BE3D27F4E
-	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 10:07:27 -0500 (CDT)
-Date: Tue, 23 Jul 2013 10:07:24 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH v2] xfs: di_flushiter considered harmful
-Message-ID: <20130723150724.GH3111@sgi.com>
-References: <1374488304-13044-1-git-send-email-david@fromorbit.com>
-	<20130722110732.GA365@x4> <51ED4471.7050708@sgi.com>
-	<20130722151542.GB365@x4> <51ED8C73.50306@sgi.com>
-	<20130723104259.GB360@x4>
+	by oss.sgi.com (Postfix) with ESMTP id 49E377F52
+	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 10:15:30 -0500 (CDT)
+Message-ID: <51EE9E11.8000508@sgi.com>
+Date: Tue, 23 Jul 2013 10:15:29 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130723104259.GB360@x4>
+Subject: Re: [PATCH 41/49] xfs: Add xfs_log_rlimit.c
+References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
+	<1374215120-7271-42-git-send-email-david@fromorbit.com>
+In-Reply-To: <1374215120-7271-42-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,45 +18,42 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Markus Trippelsdorf <markus@trippelsdorf.de>
-Cc: Dave Chinner <dchinner@redhat.com>, Mark Tinguely <tinguely@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Hi Markus,
+On 07/19/13 01:25, Dave Chinner wrote:
+> From: Jie Liu<jeff.liu@oracle.com>
+>
+> Add source files for xfs_log_rlimit.c The new file is used for log
+> size calculations and validation shared with userspace.
+>
+> [dchinner: xfs_log_calc_max_attrsetm_res() does not modify the
+> tr_attrsetm reservation, just calculates the maximum. ]
+>
+> [dchinner: rework loop in xfs_log_get_max_trans_res() ]
+>
+> Signed-off-by: Jie Liu<jeff.liu@oracle.com>
+> Signed-off-by: Dave Chinner<dchinner@redhat.com>
+> ---
 
-On Tue, Jul 23, 2013 at 12:42:59PM +0200, Markus Trippelsdorf wrote:
-> On 2013.07.22 at 14:48 -0500, Mark Tinguely wrote:
-> > On 07/22/13 10:15, Markus Trippelsdorf wrote:
-> > > On 2013.07.22 at 09:40 -0500, Mark Tinguely wrote:
-> > >> On 07/22/13 06:07, Markus Trippelsdorf wrote:
-> > >>> On 2013.07.22 at 20:18 +1000, Dave Chinner wrote:
-> > >> It seems to me that since we cannot fix this for inode 1/2, then besides
-> > >> this patch we have to revert patch cca9f93a52d and make it inode 3+ /
-> > >> superblock 5+ (crc) dependent.
-> > >
-> > > Which is exactly what the hunk I've posted does.
-> > >
-> > > Here's the combined patch:
-> > 
-> > Following Dave's instruction to recreate this problem, your patch works 
-> > with an inode 2 and inode 3 (once I remembered to load the module before 
-> > recovery). Dave's patch was successful on inode 3 - again after I 
-> > remembered to load the module before recovery.
-> > 
-> > Whomever makes the formal patch, consider it reviewed-by me.
-> 
-> To get this patch to Linus ASAP, here's the combined patch again. 
-> Please apply.
-> Thanks.
+> +	if (lsunit)
+> +		min_logblks = roundup(BTOBB(max_logres), lsunit) + 2 * lsunit;
+> +	else
+> +		min_logblks = BTOBB(max_logres);
 
-I'd prefer to have Dave take another look at the combined patch before pulling
-this in.  Even so, we shouldn't have any trouble getting this into -rc3.
+^^ The space is not really needed when using the below multiplier, but 
+add the 2 * BBSIZE size just to be consistent?
 
-Thanks,
-	Ben
+> +	min_logblks *= XFS_MIN_LOG_FACTOR;
+
+^^ okay, a 3 times multiplier of the max transaction and an additional 
+log stripe unit padding will more than make up for all my CIL/CTX concerns.
+
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
