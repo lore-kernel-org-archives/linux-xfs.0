@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 8D92C7F54
-	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 03:27:26 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 1C434AC001
-	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 01:27:22 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	tEukAqbJvkTAhg2j for <xfs@oss.sgi.com>;
-	Tue, 23 Jul 2013 01:27:21 -0700 (PDT)
-Date: Tue, 23 Jul 2013 18:27:00 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Cleancache support in XFS
-Message-ID: <20130723082700.GK19986@dastard>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 9EBAF7F54
+	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 03:53:17 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 70C8D8F8037
+	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 01:53:14 -0700 (PDT)
+Received: from emea01-am1-obe.outbound.protection.outlook.com
+	(mail-am1lp0014.outbound.protection.outlook.com
+	[213.199.154.14]) by cuda.sgi.com with ESMTP id
+	tcYzxcKoHmwXx9Ps (version=TLSv1 cipher=AES128-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 23 Jul 2013 01:53:12 -0700 (PDT)
+From: James Dingwall <james.dingwall@zynstra.com>
+Subject: RE: Cleancache support in XFS
+Date: Tue, 23 Jul 2013 08:53:08 +0000
+Message-ID: <c991a77c555c47b3ba3742d30dfde011@AMXPR03MB103.eurprd03.prod.outlook.com>
 References: <51810CED.4080003@zynstra.com> <20130501162044.GN29359@sgi.com>
 	<20130501223022.GQ10481@dastard> <518222D3.3080109@zynstra.com>
 	<20130522192834.GD10617@phenom.dumpdata.com>
@@ -20,10 +22,10 @@ References: <51810CED.4080003@zynstra.com> <20130501162044.GN29359@sgi.com>
 	<20130607170826.GA6925@phenom.dumpdata.com>
 	<51E8E834.6080509@zynstra.com>
 	<20130722154812.GC30300@phenom.dumpdata.com>
-	<51EE2F54.80701@zynstra.com>
+	<51EE2F54.80701@zynstra.com>,<20130723082700.GK19986@dastard>
+In-Reply-To: <20130723082700.GK19986@dastard>
+Content-Language: en-GB
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <51EE2F54.80701@zynstra.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,8 +38,15 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: James Dingwall <james.dingwall@zynstra.com>
-Cc: Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Ben Myers <bpm@sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+
+________________________________________
+From: Dave Chinner <david@fromorbit.com>
+Sent: 23 July 2013 09:27
+To: James Dingwall
+Cc: Konrad Rzeszutek Wilk; Ben Myers; xfs@oss.sgi.com
+Subject: Re: Cleancache support in XFS
 
 On Tue, Jul 23, 2013 at 08:23:00AM +0100, James Dingwall wrote:
 > Konrad Rzeszutek Wilk wrote:
@@ -109,12 +118,49 @@ On Tue, Jul 23, 2013 at 08:23:00AM +0100, James Dingwall wrote:
 
 I think that's sufficient. Send it to the list ;)
 
-Cheers,
+I hope that the inline version below will apply cleanly and the white space hasn't been corrupted.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Regards,
+James
+
+
+
+commit 6d50663e4ec88b7e1fd872b12ac310b1f4bb38c6
+Author: James Dingwall <james@dingwall.me.uk>
+Date:   Wed May 1 17:32:26 2013 +0100
+
+    fs/xfs: add cleancache support to the filesystem
+    
+    Enabling cleancache for xfs will allow files cached from an xfs filesystem to be stored in any available tmem pools.  This has been tested with Xen 4.2.2 where xl top shows usage of the
+    tmem pools where this is enabled in the guest's kernel.
+    
+    Signed-off-by: James Dingwall <james@dingwall.me.uk>
+    Acked-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 3033ba5..bcc1668 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -61,6 +61,7 @@
+ #include <linux/kthread.h>
+ #include <linux/freezer.h>
+ #include <linux/parser.h>
++#include <linux/cleancache.h>
+ 
+ static const struct super_operations xfs_super_operations;
+ static kmem_zone_t *xfs_ioend_zone;
+@@ -1500,6 +1501,8 @@ xfs_fs_fill_super(
+ 		goto out_unmount;
+ 	}
+ 
++	cleancache_init_fs(sb);
++
+ 	return 0;
+ 
+  out_filestream_unmount:
+
+
+
 
 _______________________________________________
 xfs mailing list
