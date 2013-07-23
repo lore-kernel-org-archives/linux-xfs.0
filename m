@@ -1,15 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B582D7F3F
-	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 16:21:25 -0500 (CDT)
-Message-ID: <51EEF3D4.2000201@sgi.com>
-Date: Tue, 23 Jul 2013 16:21:24 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 870BB7F3F
+	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 16:27:48 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6FA968F8040
+	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 14:27:48 -0700 (PDT)
+Received: from Ishtar.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
+	cuda.sgi.com with ESMTP id yCjfAHvljFX2owqB (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 23 Jul 2013 14:27:46 -0700 (PDT)
+Received: from [192.168.4.12] (Athenae [192.168.4.12])
+	by Ishtar.tlinx.org (8.14.7/8.14.4/SuSE Linux 0.8) with ESMTP id
+	r6NLRYvl088756 for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 14:27:36 -0700
+Message-ID: <51EEF543.5020305@tlinx.org>
+Date: Tue, 23 Jul 2013 14:27:31 -0700
+From: Linda Walsh <xfs@tlinx.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH 46/49] xfs: Combine CIL insert and prepare passes
-References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
-	<1374215120-7271-47-git-send-email-david@fromorbit.com>
-In-Reply-To: <1374215120-7271-47-git-send-email-david@fromorbit.com>
+Subject: RFE: the manpage claims no limits on size of file extended attributes;
+	has this now true?
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,60 +26,21 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-On 07/19/13 01:25, Dave Chinner wrote:
-> From: Dave Chinner<dchinner@redhat.com>
->
-> Now that all the log item preparation and formatting is done under
-> the CIL lock, we can get rid of the intermediate log vector chain
-> used to track items to be inserted into the CIL.
->
-> We can already find all the items to be committed from the
-> transaction handle, so as long as we attach the log vectors to the
-> item before we insert the items into the CIL, we don't need to
-> create a log vector chain to pass around.
->
-> This means we can move all the item insertion code into and optimise
-> it into a pair of simple passes across all the items in the
-> transaction. The first pass does the formatting and accounting, the
-> second inserts them all into the CIL.
->
-> We keep this two pass split so that we can separate the CIL
-> insertion - which must be done under the CIL spinlock - from the
-> formatting. We could insert each item into the CIL with a single
-> pass, but that massively increases the number of times we have to
-> grab the CIL spinlock. It is much more efficient (and hence
-> scalable) to do a batch operation and insert all objects in a single
-> lock grab.
->
-> Signed-off-by: Dave Chinner<dchinner@redhat.com>
+Ok, lemme rephrase my questions...
 
-...
-
-> @@ -357,10 +341,8 @@ xlog_cil_insert_items(
->   	 * during the transaction commit.
->   	 */
->   	if (ctx->ticket->t_curr_res == 0) {
-> -		/* first commit in checkpoint, steal the header reservation */
-> -		ASSERT(ticket->t_curr_res>= ctx->ticket->t_unit_res + len);
-
-^^ is the ctx ticket overflow caught somewhere else? ^^^^
-
->   		ctx->ticket->t_curr_res = ctx->ticket->t_unit_res;
-> -		ticket->t_curr_res -= ctx->ticket->t_unit_res;
-> +		tp->t_ticket->t_curr_res -= ctx->ticket->t_unit_res;
->   	}
->
-
-Thanks,
-
---Mark.
+The man page lists maximums for values at 64K, and names at 255
+characters.  This implies these are the only limits one need worry about
+-- i.e. there is no limit on the maximum number of 255 byte names nor is
+there a limit on the sum of the values of attributes.   Is it something
+like 2^60 bytes? or some such limit that no one will ever hit?   Could
+I store alternate soundtracks for movies in attribute fields, or
+alternate scenes for movies?
 
 _______________________________________________
 xfs mailing list
