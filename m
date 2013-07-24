@@ -1,16 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 70BCB7F3F
-	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 17:30:11 -0500 (CDT)
-Date: Tue, 23 Jul 2013 17:30:07 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 07/48] libxfs: add version 3 inode support
-Message-ID: <20130723223007.GN3111@sgi.com>
-References: <1370564771-4929-1-git-send-email-david@fromorbit.com>
-	<1370564771-4929-8-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 044577F3F
+	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 22:40:15 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E622F8F8035
+	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 20:40:11 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	QBKy0hr4ERjoyA3w for <xfs@oss.sgi.com>;
+	Tue, 23 Jul 2013 20:40:10 -0700 (PDT)
+Date: Wed, 24 Jul 2013 13:40:07 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v4 6/7] xfs: check that eofblocks ioctl caller can write
+	matched inodes
+Message-ID: <20130724034007.GN19986@dastard>
+References: <20130717114746.4e133042@oracle.com>
+	<20130719060221.GX11674@dastard>
+	<20130719121321.5d78beeb@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1370564771-4929-8-git-send-email-david@fromorbit.com>
+In-Reply-To: <20130719121321.5d78beeb@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,111 +32,97 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Dwight Engen <dwight.engen@oracle.com>
+Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
 
-Dave,
-
-On Fri, Jun 07, 2013 at 10:25:30AM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Fri, Jul 19, 2013 at 12:13:21PM -0400, Dwight Engen wrote:
+> On Fri, 19 Jul 2013 16:02:21 +1000
+> Dave Chinner <david@fromorbit.com> wrote:
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > On Wed, Jul 17, 2013 at 11:47:46AM -0400, Dwight Engen wrote:
+> > > Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
+> > 
+> > What's the reason for this patch?
 > 
-> Header from folded patch 'debug':
+> Its trying to ensure we only allow the XFS_IOC_FREE_EOFBLOCKS
+> caller to affect the indoes they should be able to.
+> http://oss.sgi.com/archives/xfs/2013-06/msg00955.html has a bit more
+> background. This isn't really related to user namespaces per-se, so I
+> guess it should be a separate patch, but since I modified the
+> eofblocks structure I was trying to fix this as well.
+
+background needs to be in the commit message.
+
 > 
-> xfs_quota: fix report command parsing
+> > > ---
+> > >  fs/xfs/xfs_fs.h     | 1 +
+> > >  fs/xfs/xfs_icache.c | 4 ++++
+> > >  fs/xfs/xfs_ioctl.c  | 2 ++
+> > >  3 files changed, 7 insertions(+)
+> > > 
+> > > diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
+> > > index 7eb4a5e..aee4b12 100644
+> > > --- a/fs/xfs/xfs_fs.h
+> > > +++ b/fs/xfs/xfs_fs.h
+> > > @@ -361,6 +361,7 @@ struct xfs_fs_eofblocks {
+> > >  #define XFS_EOF_FLAGS_GID		(1 << 2) /* filter by gid
+> > > */ #define XFS_EOF_FLAGS_PRID		(1 << 3) /* filter by
+> > > project id */ #define XFS_EOF_FLAGS_MINFILESIZE	(1 << 4) /*
+> > > filter by min file size */ +#define XFS_EOF_FLAGS_PERM_CHECK
+> > > (1 << 5) /* check can write inode */ #define
+> > > XFS_EOF_FLAGS_VALID	\ (XFS_EOF_FLAGS_SYNC |	\
+> > >  	 XFS_EOF_FLAGS_UID |	\
+> > > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> > > index d873ab9e..728283a 100644
+> > > --- a/fs/xfs/xfs_icache.c
+> > > +++ b/fs/xfs/xfs_icache.c
+> > > @@ -1247,6 +1247,10 @@ xfs_inode_free_eofblocks(
+> > >  		if (!xfs_inode_match_id(ip, eofb))
+> > >  			return 0;
+> > >  
+> > > +		if (eofb->eof_flags & XFS_EOF_FLAGS_PERM_CHECK &&
+> > > +		    inode_permission(VFS_I(ip), MAY_WRITE))
+> > > +			return 0;
+> > 
+> > This assumes we are walking fully instantiated VFS inodes. That's
+> > not necessarily true - we may be walking inodes that have already
+> > been dropped from the VFS and are waiting for background reclaim to
+> > clean them up. I suspect that this doesn't need to be done - we
+> > normally stop background modification processes like this when we
+> > convert the filesystem to read-only. I suspect the eof-blocks scan
+> > code is missing that, and so it can potentially run on a RO
+> > filesystem. That needs fixing similar to the way we stop and start
+> > the periodic log work...
 > 
+> So if there isn't a good way to check per-inode, maybe for now we
+> should just restrict the ioctl caller to be capable(CAP_SYS_ADMIN)?
+
+What, exactly, are you trying to check here?
+
+> > Also, gcc should throw warnings on that code (strange, it didn't
+> > here on gcc-4.7) as it needs more parenthesis. i.e
 > 
-> The report command line needs to be parsed as a whole not as
-> individual elements - report_f() is set up to do this correctly.
-> When treated as non-global command line, the report function is
-> called once for each command line arg, resulting in reports being
-> issued multiple times.
-> 
-> Set the command to be a global command so that it is only called
-> once.
->
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> I don't think it needs them (& is higher precedence than &&), but I can
+> add them for clarity if you like.
 
-This header looks like it came from an unrelated patch.
+I know what the precedence is, but code that looks like:
 
-Looks like this patch mostly corresponds to commit 93848a999cf.
-There is also:
+	(a & b && c & d && b & d && ..) 
 
-* changes to printing i4_count, i8_count, and size fields for shortform directories
-* changes to start filling in v3 inode specific fields
-* make logprint stop asserting on v3 inodes
-* add support for creating v3 realtime bitmap, realtime summary, and root_dir inodes
+needs time to verify that it is correct. Indeed, when I see the
+above, I think "was it supposed to be":
 
-There are a couple of issues below:
-  
-> diff --git a/libxfs/xfs_ialloc.c b/libxfs/xfs_ialloc.c
-> index feb4a4e..57fbae2 100644
-> --- a/libxfs/xfs_ialloc.c
-> +++ b/libxfs/xfs_ialloc.c
-> @@ -146,6 +146,7 @@ xfs_ialloc_inode_init(
->  	int			version;
->  	int			i, j;
->  	xfs_daddr_t		d;
-> +	xfs_ino_t		ino = 0;
->  
->  	/*
->  	 * Loop over the new block(s), filling in the inodes.
-> @@ -169,8 +170,18 @@ xfs_ialloc_inode_init(
->  	 * the new inode format, then use the new inode version.  Otherwise
->  	 * use the old version so that old kernels will continue to be
->  	 * able to use the file system.
-> +	 *
-> +	 * For v3 inodes, we also need to write the inode number into the inode,
-> +	 * so calculate the first inode number of the chunk here as
-> +	 * XFS_OFFBNO_TO_AGINO() only works on filesystem block boundaries, not
-> +	 * cluster boundaries and so cannot be used in the cluster buffer loop
-> +	 * below.
->  	 */
-> -	if (xfs_sb_version_hasnlink(&mp->m_sb))
-> +	if (xfs_sb_version_hascrc(&mp->m_sb)) {
-> +		version = 3;
-> +		ino = XFS_AGINO_TO_INO(mp, agno,
-> +				       XFS_OFFBNO_TO_AGINO(mp, agbno, 0));
-> +	} else if (xfs_sb_version_hasnlink(&mp->m_sb))
->  		version = 2;
->  	else
->  		version = 1;
-> @@ -196,13 +207,21 @@ xfs_ialloc_inode_init(
->  		xfs_buf_zero(fbuf, 0, ninodes << mp->m_sb.sb_inodelog);
+	(a && b && c && d && b & d && ..) 
 
-There is a section in commit 93848a999cf where the above line is
-modified to this:
+Parenthesis remove any ambiguity in intention here - they clearly
+separate intended logic from typos. Same goes for | vs ||....
 
-xfs_buf_zero(fbuf, 0, BBTOB(fbuf->b_length));
+Cheers,
 
-I suggest you pull that in here too.
-
-> diff --git a/libxfs/xfs_inode.c b/libxfs/xfs_inode.c
-> index f9f792c..d6513b9 100644
-> --- a/libxfs/xfs_inode.c
-> +++ b/libxfs/xfs_inode.c
-> @@ -572,6 +572,17 @@ xfs_dinode_from_disk(
->  	to->di_dmstate	= be16_to_cpu(from->di_dmstate);
->  	to->di_flags	= be16_to_cpu(from->di_flags);
->  	to->di_gen	= be32_to_cpu(from->di_gen);
-> +
-> +	if (to->di_version == 3) {
-> +		to->di_changecount = be64_to_cpu(from->di_changecount);
-> +		to->di_crtime.t_sec = be32_to_cpu(from->di_crtime.t_sec);
-> +		to->di_crtime.t_nsec = be32_to_cpu(from->di_crtime.t_nsec);
-> +		to->di_flags2 = be64_to_cpu(from->di_flags2);
-> +		to->di_ino = be64_to_cpu(from->di_ino);
-> +		to->di_lsn = be64_to_cpu(from->di_lsn);
-> +		memcpy(to->di_pad2, from->di_pad2, sizeof(to->di_pad2));
-> +		platform_uuid_copy(&to->di_uuid, &from->di_uuid);
-
-You added a #define for uuid_copy in an earlier patch.  I suggest you use it if
-you can.  There are several occurances.
-
-Other than that this looks fine.
-
--Ben
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
