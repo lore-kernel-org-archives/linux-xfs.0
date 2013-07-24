@@ -1,25 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0440F7F58
-	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 23:38:01 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E67DB304067
-	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 21:37:57 -0700 (PDT)
-Received: from Ishtar.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
-	cuda.sgi.com with ESMTP id G8NwhqF72HoKTWSY (version=TLSv1
+	by oss.sgi.com (Postfix) with ESMTP id E53937F5A
+	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 23:52:15 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id BF4BB304064
+	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 21:52:15 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id s5tjqvbjdEy8fUNQ (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 23 Jul 2013 21:37:55 -0700 (PDT)
-Received: from [192.168.4.12] (Athenae [192.168.4.12])
-	by Ishtar.tlinx.org (8.14.7/8.14.4/SuSE Linux 0.8) with ESMTP id
-	r6O4boGk043724 for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 21:37:52 -0700
-Message-ID: <51EF5A1B.6020005@tlinx.org>
-Date: Tue, 23 Jul 2013 21:37:47 -0700
-From: Linda Walsh <xfs@tlinx.org>
-MIME-Version: 1.0
-Subject: Re: BUG: ACL's are a security attribute. They belong in the Security
-	attrib space, not the Root-attrib space.
-References: <51EEF5C6.3050904@tlinx.org> <20130724040525.GQ19986@dastard>
-In-Reply-To: <20130724040525.GQ19986@dastard>
+	Tue, 23 Jul 2013 21:52:14 -0700 (PDT)
+Date: Wed, 24 Jul 2013 00:52:22 -0400
+From: Dwight Engen <dwight.engen@oracle.com>
+Subject: [PATCH v5 0/7] userns: Convert xfs to use kuid_t/kgid_t where
+	appropriate
+Message-ID: <20130724005222.2c687428@oracle.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,75 +27,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com, Dave Chinner <david@fromorbit.com>
+Cc: Serge Hallyn <serge.hallyn@ubuntu.com>, "Eric W. Biederman" <ebiederm@gmail.com>
 
+Hi All,
 
+This updated patchset is on top of ad81f054 of xfs git (3.11-rc1). The
+patches do not convert the id's returned from bulkstat, since bulkstat
+cannot be called from inside a userns right now anyway since the caller
+must be CAP_SYS_ADMIN in init_user_ns.
 
-Dave Chinner wrote:
-> On Tue, Jul 23, 2013 at 02:29:42PM -0700, Linda Walsh wrote:
-> > Currently there are 3 disjoint attribute spaces on files -- user, root and security.
-> >
-> > (there is a misprint in the manual that says there is 2, but later, it gives
-> > talks about using no switch giving the User attrib space, -R for Root attrib
-> > space, and -S for the Security attrib space).
->
-> You're confusing on-disk formats used to store attributes with
-> namepaces used to report and access them.  Linux has security,
-> system, trusted and user namespaces, while on disk XFS has "root",
-> "secure",  and "user" spaces.
->
-> i.e.
->
-> Linux attr    XFS on disk
-> system        root
-> security    secure
-> trusted        root
-> user        user
------
-    That makes the man page even more dated...
+Changes since v4 patchset (addressing Dave's comments):
+ - add parenthesis in if with binary and logical and (EOFBLOCKS flags)
+ - rename xfs_fs_eofblocks_to_internal -> xfs_fs_eofblocks_from_user and
+   move conversion validation into it
+ - fix negative error returns from XFS_IOC_FREE_EOFBLOCKS
+ - add check for read-only filesystem to XFS_IOC_FREE_EOFBLOCKS
 
-Why don't we copy your explanation into the manpage!  It's certainly
-more clear! ;-)
-
-
->
-> > Of these, the ACL's are being placed in the root, which might describe
-> > file types, or other OS related info, but not security attributes like ACL's.
-> > They should be in the Security attrib space (otherwise what is the point of a
-> > Security attribute space).
->
-> Posix ACLS are defined by the *kernel* to be in the "system"
-> namespace:
-----
-    Likely because the system namespace predates the secur[e/ity] namespace,
-which seems like it might have been the timeframe that part in the "attr" manpage,
-saying there were only 2 namespaces, was written?
-
->
-> #define POSIX_ACL_XATTR_ACCESS  "system.posix_acl_access"
-> #define POSIX_ACL_XATTR_DEFAULT "system.posix_acl_default"
->
-> IOWs, the Linux *kernel* doesn't consider ACLs to be part of the
-> security namespace, and so neither does XFS.
------
-    Well, of the kernel I can understand why ... and then it
-makes sense that XFS would have followed the kernel through its
-evolution...;-)
-
-So that still leaves the Q's about the -l (--list) function no longer
-being maitained, and the suggested alternates having no similar functionality
-nor any for the 'root' or 'secur' namespaces.
-
-Maybe not important, but sometimes linux security looks a bit like it is
-partaking of
-security through obscurity...or it could just be generally obscure engineer
-writing...;-)
-
-
-
-
-
-
+Changes since v3 patchset:
+ - export inode_capable() for building xfs as a module
+ - implement Brian's proposal for an internal flag to indicate to
+   xfs_inode_free_eofblocks() that it should do a permission check.
+   ioctl callers will always set this flag, which is simpler than
+   making them specify XFS_EOF_FLAGS_UID or XFS_EOF_FLAGS_GID,
+   internal callers can leave it unset so no permission checking is
+   done
+ - take Brian's suggestion on moving the policy from the conversion
+   function into the ioctl code, and moving stuff to xfs_icache.h
 
 _______________________________________________
 xfs mailing list
