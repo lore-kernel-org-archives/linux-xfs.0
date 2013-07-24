@@ -1,20 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0FB5F7F3F
-	for <xfs@oss.sgi.com>; Wed, 24 Jul 2013 09:31:07 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8FAE2AC009
-	for <xfs@oss.sgi.com>; Wed, 24 Jul 2013 07:31:06 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id oDhRdI0CJbngPxHg for
-	<xfs@oss.sgi.com>; Wed, 24 Jul 2013 07:31:02 -0700 (PDT)
-Message-ID: <51EFE45F.4000801@redhat.com>
-Date: Wed, 24 Jul 2013 10:27:43 -0400
-From: Brian Foster <bfoster@redhat.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH v5 6/7] xfs: add permission check to free eofblocks ioctl
-References: <20130724005301.0ed718d2@oracle.com>
-In-Reply-To: <20130724005301.0ed718d2@oracle.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 1D15A7F3F
+	for <xfs@oss.sgi.com>; Wed, 24 Jul 2013 10:07:49 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id F0F8F8F8059
+	for <xfs@oss.sgi.com>; Wed, 24 Jul 2013 08:07:45 -0700 (PDT)
+Received: from xp-ob.rzone.de (xp-ob.rzone.de [81.169.146.137]) by
+	cuda.sgi.com with ESMTP id CtENPWbKNIQX2VFZ (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 24 Jul 2013 08:07:44 -0700 (PDT)
+From: Jan Schmidt <list.xfs@jan-o-sch.net>
+Subject: [PATCH v2 0/2] xfstest btrfs/316: test send / receive (was: btrfs/314)
+Date: Wed, 24 Jul 2013 17:07:27 +0200
+Message-Id: <1374678449-21780-1-git-send-email-list.xfs@jan-o-sch.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,93 +21,48 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dwight Engen <dwight.engen@oracle.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: sbehrens@giantdisaster.de, linux-btrfs@vger.kernel.org
 
-On 07/24/2013 12:53 AM, Dwight Engen wrote:
-> We need to check that userspace callers can only truncate preallocated
-> blocks from files they have write access to to prevent them from prematurley
-> reclaiming blocks from another user. The internal reclaimer will not specify
-> the XFS_EOF_FLAGS_PERM_CHECK flag, but userspace callers should.
-> 
-> Add check for read-only filesystem to free eofblocks ioctl.
-> 
-> Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
-> ---
->  fs/xfs/xfs_fs.h     | 1 +
->  fs/xfs/xfs_icache.c | 4 ++++
->  fs/xfs/xfs_ioctl.c  | 4 ++++
->  3 files changed, 9 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
-> index 7eb4a5e..aee4b12 100644
-> --- a/fs/xfs/xfs_fs.h
-> +++ b/fs/xfs/xfs_fs.h
-> @@ -361,6 +361,7 @@ struct xfs_fs_eofblocks {
->  #define XFS_EOF_FLAGS_GID		(1 << 2) /* filter by gid */
->  #define XFS_EOF_FLAGS_PRID		(1 << 3) /* filter by project id */
->  #define XFS_EOF_FLAGS_MINFILESIZE	(1 << 4) /* filter by min file size */
-> +#define XFS_EOF_FLAGS_PERM_CHECK	(1 << 5) /* check can write inode */
->  #define XFS_EOF_FLAGS_VALID	\
->  	(XFS_EOF_FLAGS_SYNC |	\
->  	 XFS_EOF_FLAGS_UID |	\
+From: root <root@zarzz.(none)>
 
-We're not updating the VALID definition, which means the ioctl() would
-fail if the caller sets this flag. I find that a little confusing since
-we're effectively enforcing it. Given that the new flag would be
-exported, it might be a better idea to add it to the valid definition
-even though we don't require the caller to set it.
+These two patches add the announced tests for btrfs send / receive. As
+requested, the fssum tool is now included.
 
-An alternative might be to duplicate the set of flags in xfs_icache.h
-and not export this one at all, but I don't know it's really worth that.
+One drawback is that I'm unable to edit configure.ac or whatever needs
+to be modified in an autotools preferred way. Any hints appreciated,
+preferrably hints containing all the modifications required to introduce
+something like HAVE_SEEK_HOLE.
 
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index ed35584..823f2c0 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -1247,6 +1247,10 @@ xfs_inode_free_eofblocks(
->  		if (!xfs_inode_match_id(ip, eofb))
->  			return 0;
->  
-> +		if ((eofb->eof_flags & XFS_EOF_FLAGS_PERM_CHECK) &&
-> +		    inode_permission(VFS_I(ip), MAY_WRITE))
-> +			return 0;
-> +
->  		/* skip the inode if the file size is too small */
->  		if (eofb->eof_flags & XFS_EOF_FLAGS_MINFILESIZE &&
->  		    XFS_ISIZE(ip) < eofb->eof_min_file_size)
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index ecab261..c7cb632 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -1613,6 +1613,9 @@ xfs_file_ioctl(
->  		struct xfs_fs_eofblocks eofb;
->  		struct xfs_eofblocks keofb;
->  
-> +		if (IS_RDONLY(inode))
-> +			return -XFS_ERROR(EROFS);
-> +
->  		if (copy_from_user(&eofb, arg, sizeof(eofb)))
->  			return -XFS_ERROR(EFAULT);
->  
-> @@ -1630,6 +1633,7 @@ xfs_file_ioctl(
->  		if (error)
->  			return -error;
->  
-> +		keofb.eof_flags |= XFS_EOF_FLAGS_PERM_CHECK;
+I do not want to make modifications to fssum.c here, if that's
+absolutely required (because one /could/ get along using linux/fs.h,
+which is not the way I would like to go), I'd like to have that changed
+in the far-progs repository where fssum.c comes from as well.
 
-And perhaps this should also be in the new helper..?
+Jan Schmidt (2):
+  xfstests: add fssum tool
+  xfstests btrfs/316: test send / receive
 
-Brian
+ .gitignore          |    1 +
+ README              |    3 +
+ common/config       |    2 +
+ src/Makefile        |   11 +-
+ src/fssum.c         |  819 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/btrfs/316     |  113 +++++++
+ tests/btrfs/316.out |    4 +
+ tests/btrfs/group   |    1 +
+ 8 files changed, 953 insertions(+), 1 deletions(-)
+ create mode 100644 src/fssum.c
+ create mode 100755 tests/btrfs/316
+ create mode 100644 tests/btrfs/316.out
 
->  		return -xfs_icache_free_eofblocks(mp, &keofb);
->  	}
->  
-> 
+-- 
+1.7.2.5
 
 _______________________________________________
 xfs mailing list
