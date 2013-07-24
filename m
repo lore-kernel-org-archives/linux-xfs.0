@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6FE4E7F3F
-	for <xfs@oss.sgi.com>; Wed, 24 Jul 2013 18:07:16 -0500 (CDT)
-Date: Wed, 24 Jul 2013 18:07:12 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E33B47CBF
+	for <xfs@oss.sgi.com>; Wed, 24 Jul 2013 18:09:05 -0500 (CDT)
+Date: Wed, 24 Jul 2013 18:09:02 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] xfstests: make the scratch device for generic/256
-	slightly larger
-Message-ID: <20130724230712.GV3111@sgi.com>
-References: <1372792638-23957-1-git-send-email-jbacik@fusionio.com>
+Subject: Re: [PATCH] xfstests: fix _mount_ops_filter() to support $TEST_DIR
+	containing -o
+Message-ID: <20130724230902.GW3111@sgi.com>
+References: <1372801497-3941-1-git-send-email-koen.de.wit@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1372792638-23957-1-git-send-email-jbacik@fusionio.com>
+In-Reply-To: <1372801497-3941-1-git-send-email-koen.de.wit@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,18 +23,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Josef Bacik <jbacik@fusionio.com>
-Cc: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: Koen De Wit <koen.de.wit@oracle.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Jul 02, 2013 at 03:17:18PM -0400, Josef Bacik wrote:
-> This is similar to a previous fix I sent.  1 gig makes us do mixed file block
-> groups for btrfs, so these enospc tests will usually fail because we don't have
-> space for metadata, which is the case for this test.  So jack the size up to
-> 1.5gig so that btrfs can do its normal thing and pass the test.  Thanks,
+On Tue, Jul 02, 2013 at 11:44:57PM +0200, Koen De Wit wrote:
+> If multiple mount options are given with multiple -o parameters,
+> _mount_ops_filter concatenates them by replacing all -o's with a comma
+> (except for the first -o).
 > 
-> Signed-off-by: Josef Bacik <jbacik@fusionio.com>
-
-Looks fine to me.  
+> If $TEST_DIR contains "-o" (e.g. /mnt/test-os/) you get errors like this:
+> 
+>    # ./check generic/002
+>      mount: mount point /mnt/test,s/ does not exist
+>      common/rc: retrying test device mount with external set
+>      mount: mount point /mnt/test,s/ does not exist
+>      common/rc: could not mount /dev/sdc3 on /mnt/test-os/
+> 
+> Fix it by only replacing -o's that are preceded by at least one space.
+> 
+> Signed-off-by: Koen De Wit <koen.de.wit@oracle.com>
 
 Reviewed-by: Ben Myers <bpm@sgi.com>
 
