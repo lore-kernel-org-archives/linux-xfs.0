@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id B39A97F69
-	for <xfs@oss.sgi.com>; Wed, 24 Jul 2013 00:47:39 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id D0B647F6A
+	for <xfs@oss.sgi.com>; Wed, 24 Jul 2013 07:12:46 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 83D908F8035
-	for <xfs@oss.sgi.com>; Tue, 23 Jul 2013 22:47:36 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	dn2Nj3BEjm4GodZW for <xfs@oss.sgi.com>;
-	Tue, 23 Jul 2013 22:47:34 -0700 (PDT)
-Received: from disappointment.disaster.area ([192.168.1.110]
-	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1V1rv8-0000YO-F6
-	for xfs@oss.sgi.com; Wed, 24 Jul 2013 15:47:30 +1000
-Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1V1rv8-0001RU-E1
-	for xfs@oss.sgi.com; Wed, 24 Jul 2013 15:47:30 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs: di_flushiter considered harmful
-Date: Wed, 24 Jul 2013 15:47:30 +1000
-Message-Id: <1374644850-5512-1-git-send-email-david@fromorbit.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A757D304066
+	for <xfs@oss.sgi.com>; Wed, 24 Jul 2013 05:12:43 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id qCjZwvo8HerJwxtW for
+	<xfs@oss.sgi.com>; Wed, 24 Jul 2013 05:12:42 -0700 (PDT)
+Message-ID: <51EFC3F4.7040408@redhat.com>
+Date: Wed, 24 Jul 2013 08:09:24 -0400
+From: Brian Foster <bfoster@redhat.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH 05/49] xfs: separate dquot on disk format definitions
+	out of xfs_quota.h
+References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
+	<1374215120-7271-6-git-send-email-david@fromorbit.com>
+In-Reply-To: <1374215120-7271-6-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,174 +25,188 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+On 07/19/2013 02:24 AM, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> The on disk format definitions of the on-disk dquot, log formats and
+> quota off log formats are all intertwined with other definitions for
+> quotas. Separate them out into their own header file so they can
+> easily be shared with userspace.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+...
+> diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
+> index b14f42c..16bde32 100644
+> --- a/fs/xfs/xfs_quota.h
+> +++ b/fs/xfs/xfs_quota.h
+> @@ -21,18 +21,6 @@
+...
+> -
+> -/*
+> - * Conversion to and from the combined OQUOTA flag (if necessary)
+> - * is done only in xfs_sb_qflags_to_disk() and xfs_sb_qflags_from_disk()
+> - */
+> -#define XFS_GQUOTA_ENFD	0x0080  /* group quota limits enforced */
+> -#define XFS_GQUOTA_CHKD	0x0100  /* quotacheck run on group quotas */
+> -#define XFS_PQUOTA_ENFD	0x0200  /* project quota limits enforced */
+> -#define XFS_PQUOTA_CHKD	0x0400  /* quotacheck run on project quotas */
+> -
+> -/*
+> - * Quota Accounting/Enforcement flags
+> - */
 
-When we made all inode updates transactional, we no longer needed
-the log recovery detection for inodes being newer on disk than the
-transaction being replayed - it was redundant as replay of the log
-would always result in the latest version of the inode woul dbe on
-disk. It was redundant, but left in place because it wasn't
-considered to be a problem.
+A few minor whitespace diffs and the above comment was dropped. Looks
+fine to me:
 
-However, with the new "don't read inodes on create" optimisation,
-flushiter has come back to bite us. Essentially, the optimisation
-made always initialises flushiter to zero in the create transaction,
-and so if we then crash and run recovery and the inode already on
-disk has a non-zero flushiter it will skip recovery of that inode.
-As a result, log recovery does the wrong thing and we end up with a
-corrupt filesystem.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Because we have to support old kernel to new kernl upgrades, we
-can't just get rid of the flushiter support in log recovery as we
-might be upgrading from a kernel that doesn't have fully transaction
-inode updates.  Unfortunately, for v4 superblocks there is no way to
-guarantee that log recovery knows about this fact.
-
-We cannot add a new inode format flag to say it's a "special inode
-create" because it won't be understood by older kernels and so
-recovery could do the wrong thing on downgrade. We cannot specially
-detect the combination of zero mode/non-zero flushiter on disk to
-non-zero mode, zero flushiter in the log item during recovery
-because wrapping of the flushiter can result in false detection.
-
-Hence that makes this "don't use flushiter" optimisation limited to
-a disk format that guarantees that we don't need it. And that means
-the only fix here is to limit the "no read IO on create"
-optimisation to version 5 superblocks....
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_dinode.h      |  3 +++
- fs/xfs/xfs_inode.c       | 31 ++++++++++++++++++++++---------
- fs/xfs/xfs_log_recover.c | 13 +++++++++++--
- 3 files changed, 36 insertions(+), 11 deletions(-)
-
-diff --git a/fs/xfs/xfs_dinode.h b/fs/xfs/xfs_dinode.h
-index 07d735a..e5869b5 100644
---- a/fs/xfs/xfs_dinode.h
-+++ b/fs/xfs/xfs_dinode.h
-@@ -39,6 +39,9 @@ typedef struct xfs_timestamp {
-  * There is a very similar struct icdinode in xfs_inode which matches the
-  * layout of the first 96 bytes of this structure, but is kept in native
-  * format instead of big endian.
-+ *
-+ * Note: di_flushiter is only used by v1/2 inodes - it's effectively a zeroed
-+ * padding field for v3 inodes.
-  */
- typedef struct xfs_dinode {
- 	__be16		di_magic;	/* inode magic # = XFS_DINODE_MAGIC */
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index b78481f..bb262c2 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -896,7 +896,6 @@ xfs_dinode_to_disk(
- 	to->di_projid_lo = cpu_to_be16(from->di_projid_lo);
- 	to->di_projid_hi = cpu_to_be16(from->di_projid_hi);
- 	memcpy(to->di_pad, from->di_pad, sizeof(to->di_pad));
--	to->di_flushiter = cpu_to_be16(from->di_flushiter);
- 	to->di_atime.t_sec = cpu_to_be32(from->di_atime.t_sec);
- 	to->di_atime.t_nsec = cpu_to_be32(from->di_atime.t_nsec);
- 	to->di_mtime.t_sec = cpu_to_be32(from->di_mtime.t_sec);
-@@ -924,6 +923,9 @@ xfs_dinode_to_disk(
- 		to->di_lsn = cpu_to_be64(from->di_lsn);
- 		memcpy(to->di_pad2, from->di_pad2, sizeof(to->di_pad2));
- 		uuid_copy(&to->di_uuid, &from->di_uuid);
-+		to->di_flushiter = 0;
-+	} else {
-+		to->di_flushiter = cpu_to_be16(from->di_flushiter);
- 	}
- }
- 
-@@ -1029,10 +1031,14 @@ xfs_dinode_calc_crc(
- /*
-  * Read the disk inode attributes into the in-core inode structure.
-  *
-- * If we are initialising a new inode and we are not utilising the
-- * XFS_MOUNT_IKEEP inode cluster mode, we can simple build the new inode core
-- * with a random generation number. If we are keeping inodes around, we need to
-- * read the inode cluster to get the existing generation number off disk.
-+ * For version 5 superblocks, if we are initialising a new inode and we are not
-+ * utilising the XFS_MOUNT_IKEEP inode cluster mode, we can simple build the new
-+ * inode core with a random generation number. If we are keeping inodes around,
-+ * we need to read the inode cluster to get the existing generation number off
-+ * disk. Further, if we are using version 4 superblocks (i.e. v1/v2 inode
-+ * format) then log recovery is dependent on the di_flushiter field being
-+ * initialised from the current on-disk value and hence we must also read the
-+ * inode off disk.
-  */
- int
- xfs_iread(
-@@ -1054,6 +1060,7 @@ xfs_iread(
- 
- 	/* shortcut IO on inode allocation if possible */
- 	if ((iget_flags & XFS_IGET_CREATE) &&
-+	    xfs_sb_version_hascrc(&mp->m_sb) &&
- 	    !(mp->m_flags & XFS_MOUNT_IKEEP)) {
- 		/* initialise the on-disk inode core */
- 		memset(&ip->i_d, 0, sizeof(ip->i_d));
-@@ -2882,12 +2889,18 @@ xfs_iflush_int(
- 			__func__, ip->i_ino, ip->i_d.di_forkoff, ip);
- 		goto corrupt_out;
- 	}
-+
- 	/*
--	 * bump the flush iteration count, used to detect flushes which
--	 * postdate a log record during recovery. This is redundant as we now
--	 * log every change and hence this can't happen. Still, it doesn't hurt.
-+	 * Inode item log recovery for v1/v2 inodes are dependent on the
-+	 * di_flushiter count for correct sequencing. We bump the flush
-+	 * iteration count so we can detect flushes which postdate a log record
-+	 * during recovery. This is redundant as we now log every change and
-+	 * hence this can't happen but we need to still do it to ensure
-+	 * backwards compatibility with old kernels that predate logging all
-+	 * inode changes.
- 	 */
--	ip->i_d.di_flushiter++;
-+	if (ip->i_d.di_version < 3)
-+		ip->i_d.di_flushiter++;
- 
- 	/*
- 	 * Copy the dirty parts of the inode into the on-disk
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 6fcc910a..7681b19 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -2592,8 +2592,16 @@ xlog_recover_inode_pass2(
- 		goto error;
- 	}
- 
--	/* Skip replay when the on disk inode is newer than the log one */
--	if (dicp->di_flushiter < be16_to_cpu(dip->di_flushiter)) {
-+	/*
-+	 * di_flushiter is only valid for v1/2 inodes. All changes for v3 inodes
-+	 * are transactional and if ordering is necessary we can determine that
-+	 * more accurately by the LSN field in the V3 inode core. Don't trust
-+	 * the inode versions we might be changing them here - use the
-+	 * superblock flag to determine whether we need to look at di_flushiter
-+	 * to skip replay when the on disk inode is newer than the log one
-+	 */
-+	if (!xfs_sb_version_hascrc(&mp->m_sb) &&
-+	    dicp->di_flushiter < be16_to_cpu(dip->di_flushiter)) {
- 		/*
- 		 * Deal with the wrap case, DI_MAX_FLUSH is less
- 		 * than smaller numbers
-@@ -2608,6 +2616,7 @@ xlog_recover_inode_pass2(
- 			goto error;
- 		}
- 	}
-+
- 	/* Take the opportunity to reset the flush iteration count */
- 	dicp->di_flushiter = 0;
- 
--- 
-1.8.3.2
+> -#define XFS_ALL_QUOTA_ACCT	\
+> -		(XFS_UQUOTA_ACCT | XFS_GQUOTA_ACCT | XFS_PQUOTA_ACCT)
+> -#define XFS_ALL_QUOTA_ENFD	\
+> -		(XFS_UQUOTA_ENFD | XFS_GQUOTA_ENFD | XFS_PQUOTA_ENFD)
+> -#define XFS_ALL_QUOTA_CHKD	\
+> -		(XFS_UQUOTA_CHKD | XFS_GQUOTA_CHKD | XFS_PQUOTA_CHKD)
+> -
+>  #define XFS_IS_QUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_ALL_QUOTA_ACCT)
+>  #define XFS_IS_UQUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_UQUOTA_ACCT)
+>  #define XFS_IS_PQUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_PQUOTA_ACCT)
+> diff --git a/fs/xfs/xfs_quotaops.c b/fs/xfs/xfs_quotaops.c
+> index 20e30f9..acf5071 100644
+> --- a/fs/xfs/xfs_quotaops.c
+> +++ b/fs/xfs/xfs_quotaops.c
+> @@ -16,6 +16,7 @@
+>   * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+>   */
+>  #include "xfs.h"
+> +#include "xfs_format.h"
+>  #include "xfs_sb.h"
+>  #include "xfs_log.h"
+>  #include "xfs_ag.h"
+> diff --git a/fs/xfs/xfs_rename.c b/fs/xfs/xfs_rename.c
+> index 30ff5f4..0c1f8ef 100644
+> --- a/fs/xfs/xfs_rename.c
+> +++ b/fs/xfs/xfs_rename.c
+> @@ -17,7 +17,7 @@
+>   */
+>  #include "xfs.h"
+>  #include "xfs_fs.h"
+> -#include "xfs_types.h"
+> +#include "xfs_format.h"
+>  #include "xfs_log.h"
+>  #include "xfs_trans.h"
+>  #include "xfs_sb.h"
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 1d68ffc..146e2c2 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -17,6 +17,7 @@
+>   */
+>  
+>  #include "xfs.h"
+> +#include "xfs_format.h"
+>  #include "xfs_log.h"
+>  #include "xfs_inum.h"
+>  #include "xfs_trans.h"
+> diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+> index f4895b6..80d550c 100644
+> --- a/fs/xfs/xfs_symlink.c
+> +++ b/fs/xfs/xfs_symlink.c
+> @@ -18,7 +18,7 @@
+>   */
+>  #include "xfs.h"
+>  #include "xfs_fs.h"
+> -#include "xfs_types.h"
+> +#include "xfs_format.h"
+>  #include "xfs_bit.h"
+>  #include "xfs_log.h"
+>  #include "xfs_trans.h"
+> diff --git a/fs/xfs/xfs_trace.c b/fs/xfs/xfs_trace.c
+> index b6e3897..5d7b3e4 100644
+> --- a/fs/xfs/xfs_trace.c
+> +++ b/fs/xfs/xfs_trace.c
+> @@ -18,6 +18,7 @@
+>  #include "xfs.h"
+>  #include "xfs_fs.h"
+>  #include "xfs_types.h"
+> +#include "xfs_format.h"
+>  #include "xfs_log.h"
+>  #include "xfs_trans.h"
+>  #include "xfs_sb.h"
+> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> index 35a2299..1d2a061 100644
+> --- a/fs/xfs/xfs_trans.c
+> +++ b/fs/xfs/xfs_trans.c
+> @@ -18,7 +18,7 @@
+>   */
+>  #include "xfs.h"
+>  #include "xfs_fs.h"
+> -#include "xfs_types.h"
+> +#include "xfs_format.h"
+>  #include "xfs_log.h"
+>  #include "xfs_trans.h"
+>  #include "xfs_sb.h"
+> diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
+> index 61407a8..54ee3c5 100644
+> --- a/fs/xfs/xfs_trans_dquot.c
+> +++ b/fs/xfs/xfs_trans_dquot.c
+> @@ -17,6 +17,7 @@
+>   */
+>  #include "xfs.h"
+>  #include "xfs_fs.h"
+> +#include "xfs_format.h"
+>  #include "xfs_log.h"
+>  #include "xfs_trans.h"
+>  #include "xfs_sb.h"
+> diff --git a/fs/xfs/xfs_types.h b/fs/xfs/xfs_types.h
+> index 39c48ca..69074ac 100644
+> --- a/fs/xfs/xfs_types.h
+> +++ b/fs/xfs/xfs_types.h
+> @@ -177,4 +177,10 @@ struct xfs_name {
+>  	int			len;
+>  };
+>  
+> +/*
+> + * uid_t and gid_t are hard-coded to 32 bits in the inode.
+> + * Hence, an 'id' in a dquot is 32 bits..
+> + */
+> +typedef __uint32_t	xfs_dqid_t;
+> +
+>  #endif	/* __XFS_TYPES_H__ */
+> diff --git a/fs/xfs/xfs_utils.c b/fs/xfs/xfs_utils.c
+> index 0025c78..58386fa 100644
+> --- a/fs/xfs/xfs_utils.c
+> +++ b/fs/xfs/xfs_utils.c
+> @@ -17,7 +17,7 @@
+>   */
+>  #include "xfs.h"
+>  #include "xfs_fs.h"
+> -#include "xfs_types.h"
+> +#include "xfs_format.h"
+>  #include "xfs_log.h"
+>  #include "xfs_trans.h"
+>  #include "xfs_sb.h"
+> diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+> index dc730ac..c2d96cd 100644
+> --- a/fs/xfs/xfs_vnodeops.c
+> +++ b/fs/xfs/xfs_vnodeops.c
+> @@ -19,7 +19,7 @@
+>  
+>  #include "xfs.h"
+>  #include "xfs_fs.h"
+> -#include "xfs_types.h"
+> +#include "xfs_format.h"
+>  #include "xfs_bit.h"
+>  #include "xfs_log.h"
+>  #include "xfs_trans.h"
+> 
 
 _______________________________________________
 xfs mailing list
