@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 From: xfs@oss.sgi.com
-Subject: [XFS updates] XFS development tree branch, master,
+Subject: [XFS updates] XFS development tree branch, for-next,
 	updated. for-linus-v3.11-rc1-2-12118-ge60896d
-Message-Id: <20130724171702.A12A57F53@oss.sgi.com>
-Date: Wed, 24 Jul 2013 12:17:01 -0500 (CDT)
+Message-Id: <20130724171712.73E5C7F58@oss.sgi.com>
+Date: Wed, 24 Jul 2013 12:17:11 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,7 +23,7 @@ This is an automated email from the git hooks/post-receive script. It was
 generated because a ref change was pushed to the repository containing
 the project "XFS development tree".
 
-The branch, master has been updated
+The branch, for-next has been updated
   e60896d xfs: di_flushiter considered harmful
       from  d892d5864f020c44cfa4e23e9165112d8df91093 (commit)
 
