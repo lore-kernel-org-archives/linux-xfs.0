@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 0B71C7CBF
-	for <xfs@oss.sgi.com>; Wed, 24 Jul 2013 18:58:20 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 97548304077
-	for <xfs@oss.sgi.com>; Wed, 24 Jul 2013 16:58:20 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id DF3957CBF
+	for <xfs@oss.sgi.com>; Wed, 24 Jul 2013 19:21:16 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6C8EBAC002
+	for <xfs@oss.sgi.com>; Wed, 24 Jul 2013 17:21:13 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	IHJqicgNDhI0SHW2 for <xfs@oss.sgi.com>;
-	Wed, 24 Jul 2013 16:58:18 -0700 (PDT)
-Date: Thu, 25 Jul 2013 09:57:39 +1000
+	oHuuNLZrfAEECpYf for <xfs@oss.sgi.com>;
+	Wed, 24 Jul 2013 17:21:11 -0700 (PDT)
+Date: Thu, 25 Jul 2013 10:21:08 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfstests: 091, 240,
-	268 fix for xfs on 4k sector hard drive
-Message-ID: <20130724235739.GR19986@dastard>
-References: <20130724143208.34b77534@oracle.com>
+Subject: Re: [PATCH 44/49] xfs: Reduce allocations during CIL insertion
+Message-ID: <20130725002108.GA11222@dastard>
+References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
+	<1374215120-7271-45-git-send-email-david@fromorbit.com>
+	<51EEF26F.5040001@sgi.com> <51EEF949.9020104@gmail.com>
+	<51EFD68A.40400@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130724143208.34b77534@oracle.com>
+In-Reply-To: <51EFD68A.40400@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,39 +32,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dwight Engen <dwight.engen@oracle.com>
-Cc: xfs@oss.sgi.com
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: "Michael L. Semon" <mlsemon35@gmail.com>, xfs@oss.sgi.com
 
-On Wed, Jul 24, 2013 at 02:32:08PM -0400, Dwight Engen wrote:
-> Tests 091,240, and 268 are failing on my 4k sector hard disk. The dio writes
-> from fsx and aiodio_sparse2 are failing on xfs with EINVAL which is returned
-> from the check at the top of xfs_file_dio_aio_write().
+On Wed, Jul 24, 2013 at 08:28:42AM -0500, Mark Tinguely wrote:
+> If you could please redo the test and get the stack traces with
+> /proc/sysrq-trigger and if you kernel works with crash, a core dump.
+> For the stack trace, I mostly want to know if it has several
+> "xlog_grant_head_wait" entries in it, because ...
 > 
-> The fix is to use blockdev -getpbsz to get the physical sector size instead
-> of the logical sector size. This makes 091 and 268 work. 240 will not run
-> on a 4k drive since fs block size == device block size. Tested against
-> xfs,ext4, and btrfs.
+> ...I seemed to have triggered a couple log space reservation hangs
+> with fsstress one XFS partition and a mega-copy on another
+> partition, but will have to graft the new XFS tree onto a Linux 3.10
+> kernel to get crash (and one of my sata controllers) to work again.
 
-What's the logical sector size of the drive? If it's 4k, then
-blockdev --getss should be returning 4k. If it's not, then either
-the drive is reporting that it supports 512 bytes sectors when it
-doesn't (i.e. the drive is broken) or blockdev is returning the
-wrong information (i.e. blockdev is broken)....
+They are unrelated to this patchset.
 
-What does mkfs.xfs output on that device?
+Somewhere in the code there
+is a mismatch between what we reserve as the base requirement for an
+actual log write and what the CIL actually steals, and that is, most
+likely, what is leading to log hangs.
 
->  rm -f $TEST_DIR/aiodio_sparse
->  
-> -logical_block_size=`blockdev --getss $TEST_DEV`
-> +logical_block_size=`blockdev --getpbsz $TEST_DEV`
-
-FWIW, that doesn't make much sense - putting the physical block size
-into a variable named "logical_block_size".....
+This is demonstratable in the fact that generic/070 on 512 byte
+block size filesystems regularly hits a transaction reservation
+exhausted assert failure on transaction commit of the periodic log
+dummy transaction on my test rigs.
 
 Cheers,
 
 Dave.
-
 -- 
 Dave Chinner
 david@fromorbit.com
