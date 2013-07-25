@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1AEFF7CBF
-	for <xfs@oss.sgi.com>; Wed, 24 Jul 2013 23:11:24 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 194AC7CBF
+	for <xfs@oss.sgi.com>; Wed, 24 Jul 2013 23:15:47 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 07C64304039
-	for <xfs@oss.sgi.com>; Wed, 24 Jul 2013 21:11:21 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id EB36B8F8033
+	for <xfs@oss.sgi.com>; Wed, 24 Jul 2013 21:15:43 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	9yx9q2IXl0xCf15X for <xfs@oss.sgi.com>;
-	Wed, 24 Jul 2013 21:11:16 -0700 (PDT)
-Received: from dave by dastard with local (Exim 4.76)
-	(envelope-from <david@fromorbit.com>) id 1V2CtW-0003Mv-6Z
-	for xfs@oss.sgi.com; Thu, 25 Jul 2013 14:11:14 +1000
-Date: Thu, 25 Jul 2013 14:11:14 +1000
+	G6voSgvOxdnsF8Xm for <xfs@oss.sgi.com>;
+	Wed, 24 Jul 2013 21:15:42 -0700 (PDT)
+Date: Thu, 25 Jul 2013 14:15:38 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 42/49] xfs: Validate log space at mount time
-Message-ID: <20130725041114.GG13468@dastard>
-References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
-	<1374215120-7271-43-git-send-email-david@fromorbit.com>
+Subject: Re: XFS: Assertion failed: xfs_dir2_sf_lookup(args) == ENOENT, file:
+	fs/xfs/xfs_dir2_sf.c, line: 358
+Message-ID: <20130725041538.GH13468@dastard>
+References: <20130712023930.GA6473@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1374215120-7271-43-git-send-email-david@fromorbit.com>
+In-Reply-To: <20130712023930.GA6473@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,67 +30,17 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Jones <davej@redhat.com>, Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-On Fri, Jul 19, 2013 at 04:25:13PM +1000, Dave Chinner wrote:
-> From: Jie Liu <jeff.liu@oracle.com>
+On Thu, Jul 11, 2013 at 10:39:30PM -0400, Dave Jones wrote:
+> Just saw this during boot after an unclean shutdown. It hung afterwards.
 > 
-> Validate log space during log mount stage, the underlying function
-> will drop a warning message via syslog in critical level if the log
-> space is too small or too large.
-> 
-> [ dchinner: For CRC enable filesystems, abort the mounting of the
-> filesystem as mkfs should never make a log too small for the given
-> filesystem configuration. ]
-> 
-> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_log.c | 49 ++++++++++++++++++++++++++++++++++++++++++++++++-
->  1 file changed, 48 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index b02415b..64b1f01 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -614,7 +614,9 @@ xfs_log_mount(
->  	xfs_daddr_t	blk_offset,
->  	int		num_bblks)
->  {
-> -	int		error;
-> +	int		error = 0;
-> +	int		min_logfsbs;
-> +	int		max_logfsbs;
->  
->  	if (!(mp->m_flags & XFS_MOUNT_NORECOVERY))
->  		xfs_notice(mp, "Mounting Filesystem");
-> @@ -631,6 +633,51 @@ xfs_log_mount(
->  	}
->  
->  	/*
-> +	 * Validate the given log space and drop a critical message via syslog
-> +	 * if the log size is too small that would lead to some unexpected
-> +	 * situations in transaction log space reservation stage.
-> +	 *
-> +	 * Note: we can't just reject the mount if the validation fails.  This
-> +	 * would mean that people would have to downgrade their kernel just to
-> +	 * remedy the situation as there is no way to grow the log (short of
-> +	 * black magic surgery with xfs_db).
-> +	 *
-> +	 * We can, however, reject mounts for CRC format filesystems, as the
-> +	 * mkfs binary being used to make the filesystem should never create a
-> +	 * filesystem with a log that is too small.
-> +	 */
-> +	min_logfsbs = xfs_log_calc_minimum_size(mp);
-> +	max_logfsbs = XFS_BB_TO_FSB(mp, XFS_MAX_LOG_BLOCKS);
+> [   97.162665] XFS: Assertion failed: xfs_dir2_sf_lookup(args) == ENOENT, file: fs/xfs/xfs_dir2_sf.c, line: 358
+> [   97.164646] ------------[ cut here ]------------
 
-Actually, that's busted:
-
-XFS (vdc): Log size 521728 blocks too large, maximum size is 131072 blocks
-XFS (vdc): Log size out of supported range.  Continuing onwards, but if log hangs are
-experienced then please report this message in the bug report.
-
-I'll need to revisit this.
+I just reproduced this by chance. I know exactly what I was doing
+when it went bang, so I might be able to reduce it from scattergun
+blast testing to be able to reproduce it on demand.
 
 Cheers,
 
