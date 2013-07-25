@@ -1,32 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 9C69C7F37
-	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 03:23:14 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8A8B47F37
+	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 07:57:42 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 37A70AC002
-	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 01:23:11 -0700 (PDT)
-Received: from e8.ny.us.ibm.com (e8.ny.us.ibm.com [32.97.182.138]) by
-	cuda.sgi.com with ESMTP id bVTiYFKngqgOXWfH (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 25 Jul 2013 01:23:09 -0700 (PDT)
-Received: from /spool/local
-	by e8.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
-	Violators will be prosecuted
-	for <xfs@oss.sgi.com> from <zwu.kernel@gmail.com>;
-	Thu, 25 Jul 2013 09:23:08 +0100
-Received: from d01relay05.pok.ibm.com (d01relay05.pok.ibm.com [9.56.227.237])
-	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 04F1A6E803C
-	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 04:23:01 -0400 (EDT)
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay05.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	r6P8N5ub132158 for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 04:23:05 -0400
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
-	r6P8N5Uw007665 for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 04:23:05 -0400
-From: zwu.kernel@gmail.com
-Subject: [PATCH] xfs: introduce object readahead to log recovery
-Date: Thu, 25 Jul 2013 16:23:39 +0800
-Message-Id: <1374740619-29797-1-git-send-email-zwu.kernel@gmail.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3B9E330408E
+	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 05:57:42 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id vaz39OcJIRiimoDD for
+	<xfs@oss.sgi.com>; Thu, 25 Jul 2013 05:57:41 -0700 (PDT)
+Message-ID: <51F11FFE.4060300@redhat.com>
+Date: Thu, 25 Jul 2013 08:54:22 -0400
+From: Brian Foster <bfoster@redhat.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH 09/49] xfs: introduce xfs_quota_defs.h
+References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
+	<1374215120-7271-10-git-send-email-david@fromorbit.com>
+In-Reply-To: <1374215120-7271-10-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,218 +24,349 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: linux-fsdevel@vger.kernel.org, Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-From: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
+On 07/19/2013 02:24 AM, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> There are a lot of quota flag definitions that are shared by user
+> and kernel space. Move them all to xfs_quota_defs.h so we can
+> unshare xfs_quota.h and remove the __KERNEL__ regions from it.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
 
-  It can take a long time to run log recovery operation because it is
-single threaded and is bound by read latency. We can find that it took
-most of the time to wait for the read IO to occur, so if one object
-readahead is introduced to log recovery, it will obviously reduce the
-log recovery time.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-  In dirty log case as below:
-    data device: 0xfd10
-    log device: 0xfd10 daddr: 20480032 length: 20480
-
-    log tail: 7941 head: 11077 state: <DIRTY>
-
-This dirty ratio is about 15%. I am trying to do tests in larger scale
-and dirtier filesystem environment.
-
-Log recovery time stat:
-
-            w/o this patch        w/ this patch
-  real         0m1.051s             0m0.965s
-  sys          0m0.033s             0m0.035s
-
-  iowait       0m1.018s             0m0.930s
-
-Signed-off-by: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
----
- fs/xfs/xfs_log_recover.c | 131 +++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 127 insertions(+), 4 deletions(-)
-
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 6fcc910a..f07e5e0 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -3107,6 +3107,121 @@ xlog_recover_free_trans(
- 	kmem_free(trans);
- }
- 
-+STATIC void
-+xlog_recover_buffer_ra_pass2(
-+	struct xlog                     *log,
-+	struct xlog_recover_item        *item)
-+{
-+	xfs_buf_log_format_t	*buf_f = item->ri_buf[0].i_addr;
-+	xfs_mount_t		*mp = log->l_mp;
-+
-+	if (xlog_check_buffer_cancelled(log, buf_f->blf_blkno,
-+			buf_f->blf_len, buf_f->blf_flags)) {
-+		return;
-+	}
-+
-+	xfs_buf_readahead(mp->m_ddev_targp, buf_f->blf_blkno,
-+			buf_f->blf_len, NULL);
-+}
-+
-+STATIC void
-+xlog_recover_inode_ra_pass2(
-+	struct xlog                     *log,
-+	struct xlog_recover_item        *item)
-+{
-+	xfs_inode_log_format_t	*in_f;
-+	xfs_mount_t		*mp = log->l_mp;
-+	int			error;
-+	int			need_free = 0;
-+
-+	if (item->ri_buf[0].i_len == sizeof(xfs_inode_log_format_t)) {
-+		in_f = item->ri_buf[0].i_addr;
-+	} else {
-+		in_f = kmem_alloc(sizeof(xfs_inode_log_format_t), KM_SLEEP);
-+		need_free = 1;
-+		error = xfs_inode_item_format_convert(&item->ri_buf[0], in_f);
-+		if (error)
-+			goto error;
-+	}
-+
-+	if (xlog_check_buffer_cancelled(log, in_f->ilf_blkno,
-+					in_f->ilf_len, 0)) {
-+		goto error;
-+	}
-+
-+	xfs_buf_readahead(mp->m_ddev_targp, in_f->ilf_blkno,
-+			in_f->ilf_len, &xfs_inode_buf_ops);
-+
-+error:
-+	if (need_free)
-+		kmem_free(in_f);
-+}
-+
-+STATIC void
-+xlog_recover_dquot_ra_pass2(
-+	struct xlog			*log,
-+	struct xlog_recover_item	*item)
-+{
-+	xfs_mount_t		*mp = log->l_mp;
-+	xfs_buf_t		*bp;
-+	struct xfs_disk_dquot	*recddq;
-+	int			error;
-+	xfs_dq_logformat_t	*dq_f;
-+	uint			type;
-+
-+
-+	if (mp->m_qflags == 0)
-+		return;
-+
-+	recddq = item->ri_buf[1].i_addr;
-+	if (recddq == NULL)
-+		return;
-+	if (item->ri_buf[1].i_len < sizeof(xfs_disk_dquot_t))
-+		return;
-+
-+	type = recddq->d_flags & (XFS_DQ_USER | XFS_DQ_PROJ | XFS_DQ_GROUP);
-+	ASSERT(type);
-+	if (log->l_quotaoffs_flag & type)
-+		return;
-+
-+	dq_f = item->ri_buf[0].i_addr;
-+	ASSERT(dq_f);
-+	error = xfs_qm_dqcheck(mp, recddq, dq_f->qlf_id, 0, XFS_QMOPT_DOWARN,
-+			   "xlog_recover_dquot_ra_pass2 (log copy)");
-+	if (error)
-+		return;
-+	ASSERT(dq_f->qlf_len == 1);
-+
-+	error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp, dq_f->qlf_blkno,
-+				   XFS_FSB_TO_BB(mp, dq_f->qlf_len), 0, &bp,
-+				   NULL);
-+	if (!error)
-+		xfs_buf_relse(bp);
-+}
-+
-+STATIC void
-+xlog_recover_ra_pass2(
-+	struct xlog			*log,
-+	struct xlog_recover_item	*item)
-+{
-+	switch (ITEM_TYPE(item)) {
-+	case XFS_LI_BUF:
-+		xlog_recover_buffer_ra_pass2(log, item);
-+		break;
-+	case XFS_LI_INODE:
-+		xlog_recover_inode_ra_pass2(log, item);
-+		break;
-+	case XFS_LI_DQUOT:
-+		xlog_recover_dquot_ra_pass2(log, item);
-+		break;
-+	case XFS_LI_EFI:
-+	case XFS_LI_EFD:
-+	case XFS_LI_QUOTAOFF:
-+	default:
-+		break;
-+	}
-+}
-+
- STATIC int
- xlog_recover_commit_pass1(
- 	struct xlog			*log,
-@@ -3140,10 +3255,14 @@ xlog_recover_commit_pass2(
- 	struct xlog			*log,
- 	struct xlog_recover		*trans,
- 	struct list_head		*buffer_list,
--	struct xlog_recover_item	*item)
-+	struct xlog_recover_item	*item,
-+	struct xlog_recover_item	*next_item)
- {
- 	trace_xfs_log_recover_item_recover(log, trans, item, XLOG_RECOVER_PASS2);
- 
-+	if (next_item)
-+		xlog_recover_ra_pass2(log, next_item);
-+
- 	switch (ITEM_TYPE(item)) {
- 	case XFS_LI_BUF:
- 		return xlog_recover_buffer_pass2(log, buffer_list, item);
-@@ -3181,7 +3300,7 @@ xlog_recover_commit_trans(
- 	int			pass)
- {
- 	int			error = 0, error2;
--	xlog_recover_item_t	*item;
-+	xlog_recover_item_t	*item, *next_item, *temp_item;
- 	LIST_HEAD		(buffer_list);
- 
- 	hlist_del(&trans->r_list);
-@@ -3190,14 +3309,18 @@ xlog_recover_commit_trans(
- 	if (error)
- 		return error;
- 
--	list_for_each_entry(item, &trans->r_itemq, ri_list) {
-+	list_for_each_entry_safe(item, temp_item, &trans->r_itemq, ri_list) {
- 		switch (pass) {
- 		case XLOG_RECOVER_PASS1:
- 			error = xlog_recover_commit_pass1(log, trans, item);
- 			break;
- 		case XLOG_RECOVER_PASS2:
-+			if (&temp_item->ri_list != &trans->r_itemq)
-+				next_item = temp_item;
-+			else
-+				next_item = NULL;
- 			error = xlog_recover_commit_pass2(log, trans,
--							  &buffer_list, item);
-+					  &buffer_list, item, next_item);
- 			break;
- 		default:
- 			ASSERT(0);
--- 
-1.7.11.7
+>  fs/xfs/xfs_quota.h      | 134 +----------------------------------------
+>  fs/xfs/xfs_quota_defs.h | 157 ++++++++++++++++++++++++++++++++++++++++++++++++
+>  2 files changed, 160 insertions(+), 131 deletions(-)
+>  create mode 100644 fs/xfs/xfs_quota_defs.h
+> 
+> diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
+> index 16bde32..fc2fed6 100644
+> --- a/fs/xfs/xfs_quota.h
+> +++ b/fs/xfs/xfs_quota.h
+> @@ -18,141 +18,14 @@
+>  #ifndef __XFS_QUOTA_H__
+>  #define __XFS_QUOTA_H__
+>  
+> -struct xfs_trans;
+> +#include "xfs_quota_defs.h"
+>  
+>  /*
+> - * Even though users may not have quota limits occupying all 64-bits,
+> - * they may need 64-bit accounting. Hence, 64-bit quota-counters,
+> - * and quota-limits. This is a waste in the common case, but hey ...
+> + * Kernel only quota definitions and functions
+>   */
+> -typedef __uint64_t	xfs_qcnt_t;
+> -typedef __uint16_t	xfs_qwarncnt_t;
+> -
+> -/*
+> - * flags for q_flags field in the dquot.
+> - */
+> -#define XFS_DQ_USER		0x0001		/* a user quota */
+> -#define XFS_DQ_PROJ		0x0002		/* project quota */
+> -#define XFS_DQ_GROUP		0x0004		/* a group quota */
+> -#define XFS_DQ_DIRTY		0x0008		/* dquot is dirty */
+> -#define XFS_DQ_FREEING		0x0010		/* dquot is beeing torn down */
+> -
+> -#define XFS_DQ_ALLTYPES		(XFS_DQ_USER|XFS_DQ_PROJ|XFS_DQ_GROUP)
+>  
+> -#define XFS_DQ_FLAGS \
+> -	{ XFS_DQ_USER,		"USER" }, \
+> -	{ XFS_DQ_PROJ,		"PROJ" }, \
+> -	{ XFS_DQ_GROUP,		"GROUP" }, \
+> -	{ XFS_DQ_DIRTY,		"DIRTY" }, \
+> -	{ XFS_DQ_FREEING,	"FREEING" }
+> -
+> -/*
+> - * We have the possibility of all three quota types being active at once, and
+> - * hence free space modification requires modification of all three current
+> - * dquots in a single transaction. For this case we need to have a reservation
+> - * of at least 3 dquots.
+> - *
+> - * However, a chmod operation can change both UID and GID in a single
+> - * transaction, resulting in requiring {old, new} x {uid, gid} dquots to be
+> - * modified. Hence for this case we need to reserve space for at least 4 dquots.
+> - *
+> - * And in the worst case, there's a rename operation that can be modifying up to
+> - * 4 inodes with dquots attached to them. In reality, the only inodes that can
+> - * have their dquots modified are the source and destination directory inodes
+> - * due to directory name creation and removal. That can require space allocation
+> - * and/or freeing on both directory inodes, and hence all three dquots on each
+> - * inode can be modified. And if the directories are world writeable, all the
+> - * dquots can be unique and so 6 dquots can be modified....
+> - *
+> - * And, of course, we also need to take into account the dquot log format item
+> - * used to describe each dquot.
+> - */
+> -#define XFS_DQUOT_LOGRES(mp)	\
+> -	((sizeof(struct xfs_dq_logformat) + sizeof(struct xfs_disk_dquot)) * 6)
+> -
+> -#define XFS_IS_QUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_ALL_QUOTA_ACCT)
+> -#define XFS_IS_UQUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_UQUOTA_ACCT)
+> -#define XFS_IS_PQUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_PQUOTA_ACCT)
+> -#define XFS_IS_GQUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_GQUOTA_ACCT)
+> -#define XFS_IS_UQUOTA_ENFORCED(mp)	((mp)->m_qflags & XFS_UQUOTA_ENFD)
+> -#define XFS_IS_GQUOTA_ENFORCED(mp)	((mp)->m_qflags & XFS_GQUOTA_ENFD)
+> -#define XFS_IS_PQUOTA_ENFORCED(mp)	((mp)->m_qflags & XFS_PQUOTA_ENFD)
+> -
+> -/*
+> - * Incore only flags for quotaoff - these bits get cleared when quota(s)
+> - * are in the process of getting turned off. These flags are in m_qflags but
+> - * never in sb_qflags.
+> - */
+> -#define XFS_UQUOTA_ACTIVE	0x1000  /* uquotas are being turned off */
+> -#define XFS_GQUOTA_ACTIVE	0x2000  /* gquotas are being turned off */
+> -#define XFS_PQUOTA_ACTIVE	0x4000  /* pquotas are being turned off */
+> -#define XFS_ALL_QUOTA_ACTIVE	\
+> -	(XFS_UQUOTA_ACTIVE | XFS_GQUOTA_ACTIVE | XFS_PQUOTA_ACTIVE)
+> -
+> -/*
+> - * Checking XFS_IS_*QUOTA_ON() while holding any inode lock guarantees
+> - * quota will be not be switched off as long as that inode lock is held.
+> - */
+> -#define XFS_IS_QUOTA_ON(mp)	((mp)->m_qflags & (XFS_UQUOTA_ACTIVE | \
+> -						   XFS_GQUOTA_ACTIVE | \
+> -						   XFS_PQUOTA_ACTIVE))
+> -#define XFS_IS_OQUOTA_ON(mp)	((mp)->m_qflags & (XFS_GQUOTA_ACTIVE | \
+> -						   XFS_PQUOTA_ACTIVE))
+> -#define XFS_IS_UQUOTA_ON(mp)	((mp)->m_qflags & XFS_UQUOTA_ACTIVE)
+> -#define XFS_IS_GQUOTA_ON(mp)	((mp)->m_qflags & XFS_GQUOTA_ACTIVE)
+> -#define XFS_IS_PQUOTA_ON(mp)	((mp)->m_qflags & XFS_PQUOTA_ACTIVE)
+> -
+> -/*
+> - * Flags to tell various functions what to do. Not all of these are meaningful
+> - * to a single function. None of these XFS_QMOPT_* flags are meant to have
+> - * persistent values (ie. their values can and will change between versions)
+> - */
+> -#define XFS_QMOPT_DQALLOC	0x0000002 /* alloc dquot ondisk if needed */
+> -#define XFS_QMOPT_UQUOTA	0x0000004 /* user dquot requested */
+> -#define XFS_QMOPT_PQUOTA	0x0000008 /* project dquot requested */
+> -#define XFS_QMOPT_FORCE_RES	0x0000010 /* ignore quota limits */
+> -#define XFS_QMOPT_SBVERSION	0x0000040 /* change superblock version num */
+> -#define XFS_QMOPT_DOWARN        0x0000400 /* increase warning cnt if needed */
+> -#define XFS_QMOPT_DQREPAIR	0x0001000 /* repair dquot if damaged */
+> -#define XFS_QMOPT_GQUOTA	0x0002000 /* group dquot requested */
+> -#define XFS_QMOPT_ENOSPC	0x0004000 /* enospc instead of edquot (prj) */
+> -
+> -/*
+> - * flags to xfs_trans_mod_dquot to indicate which field needs to be
+> - * modified.
+> - */
+> -#define XFS_QMOPT_RES_REGBLKS	0x0010000
+> -#define XFS_QMOPT_RES_RTBLKS	0x0020000
+> -#define XFS_QMOPT_BCOUNT	0x0040000
+> -#define XFS_QMOPT_ICOUNT	0x0080000
+> -#define XFS_QMOPT_RTBCOUNT	0x0100000
+> -#define XFS_QMOPT_DELBCOUNT	0x0200000
+> -#define XFS_QMOPT_DELRTBCOUNT	0x0400000
+> -#define XFS_QMOPT_RES_INOS	0x0800000
+> -
+> -/*
+> - * flags for dqalloc.
+> - */
+> -#define XFS_QMOPT_INHERIT	0x1000000
+> -
+> -/*
+> - * flags to xfs_trans_mod_dquot.
+> - */
+> -#define XFS_TRANS_DQ_RES_BLKS	XFS_QMOPT_RES_REGBLKS
+> -#define XFS_TRANS_DQ_RES_RTBLKS	XFS_QMOPT_RES_RTBLKS
+> -#define XFS_TRANS_DQ_RES_INOS	XFS_QMOPT_RES_INOS
+> -#define XFS_TRANS_DQ_BCOUNT	XFS_QMOPT_BCOUNT
+> -#define XFS_TRANS_DQ_DELBCOUNT	XFS_QMOPT_DELBCOUNT
+> -#define XFS_TRANS_DQ_ICOUNT	XFS_QMOPT_ICOUNT
+> -#define XFS_TRANS_DQ_RTBCOUNT	XFS_QMOPT_RTBCOUNT
+> -#define XFS_TRANS_DQ_DELRTBCOUNT XFS_QMOPT_DELRTBCOUNT
+> -
+> -
+> -#define XFS_QMOPT_QUOTALL	\
+> -		(XFS_QMOPT_UQUOTA | XFS_QMOPT_PQUOTA | XFS_QMOPT_GQUOTA)
+> -#define XFS_QMOPT_RESBLK_MASK	(XFS_QMOPT_RES_REGBLKS | XFS_QMOPT_RES_RTBLKS)
+> +struct xfs_trans;
+>  
+> -#ifdef __KERNEL__
+>  /*
+>   * This check is done typically without holding the inode lock;
+>   * that may seem racy, but it is harmless in the context that it is used.
+> @@ -289,5 +162,4 @@ extern int xfs_mount_reset_sbqflags(struct xfs_mount *);
+>  
+>  extern const struct xfs_buf_ops xfs_dquot_buf_ops;
+>  
+> -#endif	/* __KERNEL__ */
+>  #endif	/* __XFS_QUOTA_H__ */
+> diff --git a/fs/xfs/xfs_quota_defs.h b/fs/xfs/xfs_quota_defs.h
+> new file mode 100644
+> index 0000000..e6b0d6e
+> --- /dev/null
+> +++ b/fs/xfs/xfs_quota_defs.h
+> @@ -0,0 +1,157 @@
+> +/*
+> + * Copyright (c) 2000-2005 Silicon Graphics, Inc.
+> + * All Rights Reserved.
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of the GNU General Public License as
+> + * published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope that it would be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program; if not, write the Free Software Foundation,
+> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> + */
+> +#ifndef __XFS_QUOTA_DEFS_H__
+> +#define __XFS_QUOTA_DEFS_H__
+> +
+> +/*
+> + * Quota definitions shared between user and kernel source trees.
+> + */
+> +
+> +/*
+> + * Even though users may not have quota limits occupying all 64-bits,
+> + * they may need 64-bit accounting. Hence, 64-bit quota-counters,
+> + * and quota-limits. This is a waste in the common case, but hey ...
+> + */
+> +typedef __uint64_t	xfs_qcnt_t;
+> +typedef __uint16_t	xfs_qwarncnt_t;
+> +
+> +/*
+> + * flags for q_flags field in the dquot.
+> + */
+> +#define XFS_DQ_USER		0x0001		/* a user quota */
+> +#define XFS_DQ_PROJ		0x0002		/* project quota */
+> +#define XFS_DQ_GROUP		0x0004		/* a group quota */
+> +#define XFS_DQ_DIRTY		0x0008		/* dquot is dirty */
+> +#define XFS_DQ_FREEING		0x0010		/* dquot is beeing torn down */
+> +
+> +#define XFS_DQ_ALLTYPES		(XFS_DQ_USER|XFS_DQ_PROJ|XFS_DQ_GROUP)
+> +
+> +#define XFS_DQ_FLAGS \
+> +	{ XFS_DQ_USER,		"USER" }, \
+> +	{ XFS_DQ_PROJ,		"PROJ" }, \
+> +	{ XFS_DQ_GROUP,		"GROUP" }, \
+> +	{ XFS_DQ_DIRTY,		"DIRTY" }, \
+> +	{ XFS_DQ_FREEING,	"FREEING" }
+> +
+> +/*
+> + * We have the possibility of all three quota types being active at once, and
+> + * hence free space modification requires modification of all three current
+> + * dquots in a single transaction. For this case we need to have a reservation
+> + * of at least 3 dquots.
+> + *
+> + * However, a chmod operation can change both UID and GID in a single
+> + * transaction, resulting in requiring {old, new} x {uid, gid} dquots to be
+> + * modified. Hence for this case we need to reserve space for at least 4 dquots.
+> + *
+> + * And in the worst case, there's a rename operation that can be modifying up to
+> + * 4 inodes with dquots attached to them. In reality, the only inodes that can
+> + * have their dquots modified are the source and destination directory inodes
+> + * due to directory name creation and removal. That can require space allocation
+> + * and/or freeing on both directory inodes, and hence all three dquots on each
+> + * inode can be modified. And if the directories are world writeable, all the
+> + * dquots can be unique and so 6 dquots can be modified....
+> + *
+> + * And, of course, we also need to take into account the dquot log format item
+> + * used to describe each dquot.
+> + */
+> +#define XFS_DQUOT_LOGRES(mp)	\
+> +	((sizeof(struct xfs_dq_logformat) + sizeof(struct xfs_disk_dquot)) * 6)
+> +
+> +#define XFS_IS_QUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_ALL_QUOTA_ACCT)
+> +#define XFS_IS_UQUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_UQUOTA_ACCT)
+> +#define XFS_IS_PQUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_PQUOTA_ACCT)
+> +#define XFS_IS_GQUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_GQUOTA_ACCT)
+> +#define XFS_IS_UQUOTA_ENFORCED(mp)	((mp)->m_qflags & XFS_UQUOTA_ENFD)
+> +#define XFS_IS_GQUOTA_ENFORCED(mp)	((mp)->m_qflags & XFS_GQUOTA_ENFD)
+> +#define XFS_IS_PQUOTA_ENFORCED(mp)	((mp)->m_qflags & XFS_PQUOTA_ENFD)
+> +
+> +/*
+> + * Incore only flags for quotaoff - these bits get cleared when quota(s)
+> + * are in the process of getting turned off. These flags are in m_qflags but
+> + * never in sb_qflags.
+> + */
+> +#define XFS_UQUOTA_ACTIVE	0x1000  /* uquotas are being turned off */
+> +#define XFS_GQUOTA_ACTIVE	0x2000  /* gquotas are being turned off */
+> +#define XFS_PQUOTA_ACTIVE	0x4000  /* pquotas are being turned off */
+> +#define XFS_ALL_QUOTA_ACTIVE	\
+> +	(XFS_UQUOTA_ACTIVE | XFS_GQUOTA_ACTIVE | XFS_PQUOTA_ACTIVE)
+> +
+> +/*
+> + * Checking XFS_IS_*QUOTA_ON() while holding any inode lock guarantees
+> + * quota will be not be switched off as long as that inode lock is held.
+> + */
+> +#define XFS_IS_QUOTA_ON(mp)	((mp)->m_qflags & (XFS_UQUOTA_ACTIVE | \
+> +						   XFS_GQUOTA_ACTIVE | \
+> +						   XFS_PQUOTA_ACTIVE))
+> +#define XFS_IS_OQUOTA_ON(mp)	((mp)->m_qflags & (XFS_GQUOTA_ACTIVE | \
+> +						   XFS_PQUOTA_ACTIVE))
+> +#define XFS_IS_UQUOTA_ON(mp)	((mp)->m_qflags & XFS_UQUOTA_ACTIVE)
+> +#define XFS_IS_GQUOTA_ON(mp)	((mp)->m_qflags & XFS_GQUOTA_ACTIVE)
+> +#define XFS_IS_PQUOTA_ON(mp)	((mp)->m_qflags & XFS_PQUOTA_ACTIVE)
+> +
+> +/*
+> + * Flags to tell various functions what to do. Not all of these are meaningful
+> + * to a single function. None of these XFS_QMOPT_* flags are meant to have
+> + * persistent values (ie. their values can and will change between versions)
+> + */
+> +#define XFS_QMOPT_DQALLOC	0x0000002 /* alloc dquot ondisk if needed */
+> +#define XFS_QMOPT_UQUOTA	0x0000004 /* user dquot requested */
+> +#define XFS_QMOPT_PQUOTA	0x0000008 /* project dquot requested */
+> +#define XFS_QMOPT_FORCE_RES	0x0000010 /* ignore quota limits */
+> +#define XFS_QMOPT_SBVERSION	0x0000040 /* change superblock version num */
+> +#define XFS_QMOPT_DOWARN        0x0000400 /* increase warning cnt if needed */
+> +#define XFS_QMOPT_DQREPAIR	0x0001000 /* repair dquot if damaged */
+> +#define XFS_QMOPT_GQUOTA	0x0002000 /* group dquot requested */
+> +#define XFS_QMOPT_ENOSPC	0x0004000 /* enospc instead of edquot (prj) */
+> +
+> +/*
+> + * flags to xfs_trans_mod_dquot to indicate which field needs to be
+> + * modified.
+> + */
+> +#define XFS_QMOPT_RES_REGBLKS	0x0010000
+> +#define XFS_QMOPT_RES_RTBLKS	0x0020000
+> +#define XFS_QMOPT_BCOUNT	0x0040000
+> +#define XFS_QMOPT_ICOUNT	0x0080000
+> +#define XFS_QMOPT_RTBCOUNT	0x0100000
+> +#define XFS_QMOPT_DELBCOUNT	0x0200000
+> +#define XFS_QMOPT_DELRTBCOUNT	0x0400000
+> +#define XFS_QMOPT_RES_INOS	0x0800000
+> +
+> +/*
+> + * flags for dqalloc.
+> + */
+> +#define XFS_QMOPT_INHERIT	0x1000000
+> +
+> +/*
+> + * flags to xfs_trans_mod_dquot.
+> + */
+> +#define XFS_TRANS_DQ_RES_BLKS	XFS_QMOPT_RES_REGBLKS
+> +#define XFS_TRANS_DQ_RES_RTBLKS	XFS_QMOPT_RES_RTBLKS
+> +#define XFS_TRANS_DQ_RES_INOS	XFS_QMOPT_RES_INOS
+> +#define XFS_TRANS_DQ_BCOUNT	XFS_QMOPT_BCOUNT
+> +#define XFS_TRANS_DQ_DELBCOUNT	XFS_QMOPT_DELBCOUNT
+> +#define XFS_TRANS_DQ_ICOUNT	XFS_QMOPT_ICOUNT
+> +#define XFS_TRANS_DQ_RTBCOUNT	XFS_QMOPT_RTBCOUNT
+> +#define XFS_TRANS_DQ_DELRTBCOUNT XFS_QMOPT_DELRTBCOUNT
+> +
+> +
+> +#define XFS_QMOPT_QUOTALL	\
+> +		(XFS_QMOPT_UQUOTA | XFS_QMOPT_PQUOTA | XFS_QMOPT_GQUOTA)
+> +#define XFS_QMOPT_RESBLK_MASK	(XFS_QMOPT_RES_REGBLKS | XFS_QMOPT_RES_RTBLKS)
+> +
+> +#endif	/* __XFS_QUOTA_H__ */
+> 
 
 _______________________________________________
 xfs mailing list
