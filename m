@@ -1,21 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D146F7CBF
-	for <xfs@oss.sgi.com>; Wed, 24 Jul 2013 20:10:04 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 1AEFF7CBF
+	for <xfs@oss.sgi.com>; Wed, 24 Jul 2013 23:11:24 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id ACCF48F8033
-	for <xfs@oss.sgi.com>; Wed, 24 Jul 2013 18:10:01 -0700 (PDT)
-Date: Thu, 25 Jul 2013 09:09:49 +0800
-From: Liu Bo <bo.li.liu@oracle.com>
-Subject: Re: [PATCH] Xfstests/btrfs/308: add snapshot-aware defrag for
-	partial extents testcases
-Message-ID: <20130725010949.GA5202@localhost.localdomain>
-References: <1372844780-31845-1-git-send-email-bo.li.liu@oracle.com>
-	<20130724232949.GX3111@sgi.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 07C64304039
+	for <xfs@oss.sgi.com>; Wed, 24 Jul 2013 21:11:21 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	9yx9q2IXl0xCf15X for <xfs@oss.sgi.com>;
+	Wed, 24 Jul 2013 21:11:16 -0700 (PDT)
+Received: from dave by dastard with local (Exim 4.76)
+	(envelope-from <david@fromorbit.com>) id 1V2CtW-0003Mv-6Z
+	for xfs@oss.sgi.com; Thu, 25 Jul 2013 14:11:14 +1000
+Date: Thu, 25 Jul 2013 14:11:14 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 42/49] xfs: Validate log space at mount time
+Message-ID: <20130725041114.GG13468@dastard>
+References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
+	<1374215120-7271-43-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130724232949.GX3111@sgi.com>
-Reply-To: bo.li.liu@oracle.com
+In-Reply-To: <1374215120-7271-43-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,88 +33,74 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, Jul 24, 2013 at 06:29:49PM -0500, Ben Myers wrote:
-> On Wed, Jul 03, 2013 at 05:46:20PM +0800, Liu Bo wrote:
-> > This is to test whether snapshot-aware defrag can work well on partial extents.
-> > 
-> > Signed-off-by: Liu Bo <bo.li.liu@oracle.com>
-> > ---
-> >  tests/btrfs/308     |   93 +++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/btrfs/308.out |    2 +
-> >  tests/btrfs/group   |    1 +
-> >  3 files changed, 96 insertions(+), 0 deletions(-)
-> >  create mode 100755 tests/btrfs/308
-> >  create mode 100644 tests/btrfs/308.out
-> > 
-> > diff --git a/tests/btrfs/308 b/tests/btrfs/308
-> > new file mode 100755
-> > index 0000000..b3dd39c
-> > --- /dev/null
-> > +++ b/tests/btrfs/308
-> > @@ -0,0 +1,93 @@
-> > +#! /bin/bash
-> > +# BTRFS QA Test No. 308
-> > +#
-> > +# Test if snapshot-aware defrag can work well on partial extents, ie.
-> > +# extent_offset is not zero.
-> > +#
-> > +#-----------------------------------------------------------------------
-> > +# Copyright (c) 2013 Oracle.  All Rights Reserved.
-> > +#
-> > +# This program is free software; you can redistribute it and/or
-> > +# modify it under the terms of the GNU General Public License as
-> > +# published by the Free Software Foundation.
-> > +#
-> > +# This program is distributed in the hope that it would be useful,
-> > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> > +# GNU General Public License for more details.
-> > +#
-> > +# You should have received a copy of the GNU General Public License
-> > +# along with this program; if not, write the Free Software Foundation,
-> > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> > +#-----------------------------------------------------------------------
-> > +#
-> > +
-> > +seq=`basename $0`
-> > +seqres=$RESULT_DIR/$seq
-> > +echo "QA output created by $seq"
-> > +
-> > +here=`pwd`
-> > +tmp=/tmp/$$
-> > +status=1	# failure is the default!
-> > +trap "_cleanup; exit \$status" 0 1 2 3 15
-> > +
-> > +_cleanup()
-> > +{
-> > +    cd /
-> > +    rm -f $tmp.*
-> > +}
-> > +
-> > +# get standard environment, filters and checks
-> > +. ./common/rc
-> > +. ./common/filter
-> > +
-> > +# real QA test starts here
-> > +
-> > +# Modify as appropriate.
-> > +_supported_fs generic
+On Fri, Jul 19, 2013 at 04:25:13PM +1000, Dave Chinner wrote:
+> From: Jie Liu <jeff.liu@oracle.com>
 > 
-> _supported_fs btrfs
+> Validate log space during log mount stage, the underlying function
+> will drop a warning message via syslog in critical level if the log
+> space is too small or too large.
 > 
-> Since this is btrfs specific, I think _supported_fs should be btrfs.
+> [ dchinner: For CRC enable filesystems, abort the mounting of the
+> filesystem as mkfs should never make a log too small for the given
+> filesystem configuration. ]
 > 
-> I didn't see anything obviously wrong with the rest of this, but I'd rather see
-> a review from a btrfs expert.
+> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_log.c | 49 ++++++++++++++++++++++++++++++++++++++++++++++++-
+>  1 file changed, 48 insertions(+), 1 deletion(-)
 > 
-> Reviewed-by: Ben Myers <bpm@sgi.com>
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index b02415b..64b1f01 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -614,7 +614,9 @@ xfs_log_mount(
+>  	xfs_daddr_t	blk_offset,
+>  	int		num_bblks)
+>  {
+> -	int		error;
+> +	int		error = 0;
+> +	int		min_logfsbs;
+> +	int		max_logfsbs;
+>  
+>  	if (!(mp->m_flags & XFS_MOUNT_NORECOVERY))
+>  		xfs_notice(mp, "Mounting Filesystem");
+> @@ -631,6 +633,51 @@ xfs_log_mount(
+>  	}
+>  
+>  	/*
+> +	 * Validate the given log space and drop a critical message via syslog
+> +	 * if the log size is too small that would lead to some unexpected
+> +	 * situations in transaction log space reservation stage.
+> +	 *
+> +	 * Note: we can't just reject the mount if the validation fails.  This
+> +	 * would mean that people would have to downgrade their kernel just to
+> +	 * remedy the situation as there is no way to grow the log (short of
+> +	 * black magic surgery with xfs_db).
+> +	 *
+> +	 * We can, however, reject mounts for CRC format filesystems, as the
+> +	 * mkfs binary being used to make the filesystem should never create a
+> +	 * filesystem with a log that is too small.
+> +	 */
+> +	min_logfsbs = xfs_log_calc_minimum_size(mp);
+> +	max_logfsbs = XFS_BB_TO_FSB(mp, XFS_MAX_LOG_BLOCKS);
 
-Oh yeah, it's right, I'll update it and resend, thanks.
+Actually, that's busted:
 
--liubo
+XFS (vdc): Log size 521728 blocks too large, maximum size is 131072 blocks
+XFS (vdc): Log size out of supported range.  Continuing onwards, but if log hangs are
+experienced then please report this message in the bug report.
+
+I'll need to revisit this.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
