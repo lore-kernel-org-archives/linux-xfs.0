@@ -1,21 +1,34 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 75C417F37
-	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 07:58:38 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 1D8097F37
+	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 08:59:49 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 013D4AC003
-	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 05:58:37 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Y7arFFVny9m4tesF for
-	<xfs@oss.sgi.com>; Thu, 25 Jul 2013 05:58:36 -0700 (PDT)
-Message-ID: <51F12037.6020406@redhat.com>
-Date: Thu, 25 Jul 2013 08:55:19 -0400
-From: Brian Foster <bfoster@redhat.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH 11/49] xfs: split out transaction reservation code
-References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
-	<1374215120-7271-12-git-send-email-david@fromorbit.com>
-In-Reply-To: <1374215120-7271-12-git-send-email-david@fromorbit.com>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 09F97304093
+	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 06:59:45 -0700 (PDT)
+Received: from e37.co.us.ibm.com (e37.co.us.ibm.com [32.97.110.158]) by
+	cuda.sgi.com with ESMTP id mQxkmJioXaGl0b1y (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 25 Jul 2013 06:59:44 -0700 (PDT)
+Received: from /spool/local
+	by e37.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	Violators will be prosecuted
+	for <xfs@oss.sgi.com> from <zwu.kernel@gmail.com>;
+	Thu, 25 Jul 2013 07:38:20 -0600
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com
+	[9.17.195.106])
+	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id 0F134C4000F
+	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 07:32:50 -0600 (MDT)
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	r6PDcBil347388 for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 07:38:11 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id r6PDcBtn005251
+	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 07:38:11 -0600
+From: zwu.kernel@gmail.com
+Subject: [PATCH] xfs: fix an assertion failure
+Date: Thu, 25 Jul 2013 21:38:44 +0800
+Message-Id: <1374759524-10061-1-git-send-email-zwu.kernel@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,251 +37,101 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: linux-fsdevel@vger.kernel.org, Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org
 
-On 07/19/2013 02:24 AM, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> The transaction reservation size calculations is used by both kernel
-> and userspace, but most of the transaction code in xfs_trans.c is
-> kernel specific. Split all the transaction reservation code out into
-> it's own files to make sharing with userspace simpler. This just
-> leaves kernel-only definitions in xfs_trans.h, so it doesn't need to
-> be shared with userspace anymore, either.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/Makefile         |   3 +-
->  fs/xfs/xfs_acl.c        |   1 +
->  fs/xfs/xfs_buf.c        |   1 +
->  fs/xfs/xfs_discard.c    |   4 +-
->  fs/xfs/xfs_mount.h      |  42 +--
->  fs/xfs/xfs_quotaops.c   |   3 +-
->  fs/xfs/xfs_trans.c      | 654 +-------------------------------------------
->  fs/xfs/xfs_trans.h      |  77 +-----
->  fs/xfs/xfs_trans_resv.c | 701 ++++++++++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/xfs_trans_resv.h | 137 ++++++++++
->  10 files changed, 851 insertions(+), 772 deletions(-)
->  create mode 100644 fs/xfs/xfs_trans_resv.c
->  create mode 100644 fs/xfs/xfs_trans_resv.h
-> 
-...
-> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> index 9b70df3..cc824eff 100644
-> --- a/fs/xfs/xfs_trans.c
-> +++ b/fs/xfs/xfs_trans.c
-> @@ -49,629 +49,6 @@ kmem_zone_t	*xfs_trans_zone;
->  kmem_zone_t	*xfs_log_item_desc_zone;
->  
-...
-> -/*
->   * Initialize the precomputed transaction reservation values
->   * in the mount structure.
->   */
-> @@ -679,36 +56,7 @@ void
->  xfs_trans_init(
->  	struct xfs_mount	*mp)
->  {
-> -	struct xfs_trans_reservations *resp = &mp->m_reservations;
-> -
-> -	resp->tr_write = xfs_calc_write_reservation(mp);
-> -	resp->tr_itruncate = xfs_calc_itruncate_reservation(mp);
-> -	resp->tr_rename = xfs_calc_rename_reservation(mp);
-> -	resp->tr_link = xfs_calc_link_reservation(mp);
-> -	resp->tr_remove = xfs_calc_remove_reservation(mp);
-> -	resp->tr_symlink = xfs_calc_symlink_reservation(mp);
-> -	resp->tr_create = xfs_calc_create_reservation(mp);
-> -	resp->tr_mkdir = xfs_calc_mkdir_reservation(mp);
-> -	resp->tr_ifree = xfs_calc_ifree_reservation(mp);
-> -	resp->tr_ichange = xfs_calc_ichange_reservation(mp);
-> -	resp->tr_growdata = xfs_calc_growdata_reservation(mp);
-> -	resp->tr_swrite = xfs_calc_swrite_reservation(mp);
-> -	resp->tr_writeid = xfs_calc_writeid_reservation(mp);
-> -	resp->tr_addafork = xfs_calc_addafork_reservation(mp);
-> -	resp->tr_attrinval = xfs_calc_attrinval_reservation(mp);
-> -	resp->tr_attrsetm = xfs_calc_attrsetm_reservation(mp);
-> -	resp->tr_attrsetrt = xfs_calc_attrsetrt_reservation(mp);
-> -	resp->tr_attrrm = xfs_calc_attrrm_reservation(mp);
-> -	resp->tr_clearagi = xfs_calc_clear_agi_bucket_reservation(mp);
-> -	resp->tr_growrtalloc = xfs_calc_growrtalloc_reservation(mp);
-> -	resp->tr_growrtzero = xfs_calc_growrtzero_reservation(mp);
-> -	resp->tr_growrtfree = xfs_calc_growrtfree_reservation(mp);
-> -	resp->tr_qm_sbchange = xfs_calc_qm_sbchange_reservation(mp);
-> -	resp->tr_qm_setqlim = xfs_calc_qm_setqlim_reservation(mp);
-> -	resp->tr_qm_dqalloc = xfs_calc_qm_dqalloc_reservation(mp);
-> -	resp->tr_qm_quotaoff = xfs_calc_qm_quotaoff_reservation(mp);
-> -	resp->tr_qm_equotaoff = xfs_calc_qm_quotaoff_end_reservation(mp);
-> -	resp->tr_sb = xfs_calc_sb_reservation(mp);
-> +	xfs_trans_resv_calc(mp, &mp->m_reservations);
->  }
->  
+From: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
 
-Reservation calculations pushed off into a helper, otherwise a clean move.
+  When running the compilebench, one assertion failure was found.
+This related line of code was introduced by commit 5f6bed76c0.
 
->  /*
-> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-...
-> diff --git a/fs/xfs/xfs_trans_resv.c b/fs/xfs/xfs_trans_resv.c
-...
-> diff --git a/fs/xfs/xfs_trans_resv.h b/fs/xfs/xfs_trans_resv.h
-> new file mode 100644
-> index 0000000..cc8260e
-> --- /dev/null
-> +++ b/fs/xfs/xfs_trans_resv.h
-> @@ -0,0 +1,137 @@
-> +/*
-> + * Copyright (c) 2000-2002,2005 Silicon Graphics, Inc.
-> + * All Rights Reserved.
-> + *
-> + * This program is free software; you can redistribute it and/or
-> + * modify it under the terms of the GNU General Public License as
-> + * published by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope that it would be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program; if not, write the Free Software Foundation,
-> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> + */
-> +#ifndef	__XFS_TRANS_RESV_H__
-> +#define	__XFS_TRANS_RESV_H__
-> +
-> +struct xfs_mount;
-> +
-> +/*
-> + * structure for maintaining pre-calculated transaction reservations.
-> + */
-> +struct xfs_trans_resv {
-> +	uint	tr_write;	/* extent alloc trans */
-> +	uint	tr_itruncate;	/* truncate trans */
-> +	uint	tr_rename;	/* rename trans */
-> +	uint	tr_link;	/* link trans */
-> +	uint	tr_remove;	/* unlink trans */
-> +	uint	tr_symlink;	/* symlink trans */
-> +	uint	tr_create;	/* create trans */
-> +	uint	tr_mkdir;	/* mkdir trans */
-> +	uint	tr_ifree;	/* inode free trans */
-> +	uint	tr_ichange;	/* inode update trans */
-> +	uint	tr_growdata;	/* fs data section grow trans */
-> +	uint	tr_swrite;	/* sync write inode trans */
-> +	uint	tr_addafork;	/* cvt inode to attributed trans */
-> +	uint	tr_writeid;	/* write setuid/setgid file */
-> +	uint	tr_attrinval;	/* attr fork buffer invalidation */
-> +	uint	tr_attrsetm;	/* set/create an attribute at mount time */
-> +	uint	tr_attrsetrt;	/* set/create an attribute at runtime */
-> +	uint	tr_attrrm;	/* remove an attribute */
-> +	uint	tr_clearagi;	/* clear bad agi unlinked ino bucket */
-> +	uint	tr_growrtalloc;	/* grow realtime allocations */
-> +	uint	tr_growrtzero;	/* grow realtime zeroing */
-> +	uint	tr_growrtfree;	/* grow realtime freeing */
-> +	uint	tr_qm_sbchange;	/* change quota flags */
-> +	uint	tr_qm_setqlim;	/* adjust quota limits */
-> +	uint	tr_qm_dqalloc;	/* allocate quota on disk */
-> +	uint	tr_qm_quotaoff;	/* turn quota off */
-> +	uint	tr_qm_equotaoff;/* end of turn quota off */
-> +	uint	tr_sb;		/* modify superblock */
-> +};
-> +
+commit 5f6bed76c0c85cb4d04885a5de00b629deee550b
+Author: Dave Chinner <david@fromorbit.com>
+Date:   Thu Jun 27 16:04:52 2013 +1000
 
-Structure name change, matches otherwise.
+    xfs: Introduce an ordered buffer item
 
-> +/*
-> + * Per-extent log reservation for the allocation btree changes
-> + * involved in freeing or allocating an extent.
-> + * 2 trees * (2 blocks/level * max depth - 1) * block size
-> + */
-> +#define	XFS_ALLOCFREE_LOG_RES(mp,nx) \
-> +	((nx) * (2 * XFS_FSB_TO_B((mp), 2 * XFS_AG_MAXLEVELS(mp) - 1)))
-> +#define	XFS_ALLOCFREE_LOG_COUNT(mp,nx) \
-> +	((nx) * (2 * (2 * XFS_AG_MAXLEVELS(mp) - 1)))
-> +
-> +/*
-> + * Per-directory log reservation for any directory change.
-> + * dir blocks: (1 btree block per level + data block + free block) * dblock size
-> + * bmap btree: (levels + 2) * max depth * block size
-> + * v2 directory blocks can be fragmented below the dirblksize down to the fsb
-> + * size, so account for that in the DAENTER macros.
-> + */
-> +#define	XFS_DIROP_LOG_RES(mp)	\
-> +	(XFS_FSB_TO_B(mp, XFS_DAENTER_BLOCKS(mp, XFS_DATA_FORK)) + \
-> +	 (XFS_FSB_TO_B(mp, XFS_DAENTER_BMAPS(mp, XFS_DATA_FORK) + 1)))
-> +#define	XFS_DIROP_LOG_COUNT(mp)	\
-> +	(XFS_DAENTER_BLOCKS(mp, XFS_DATA_FORK) + \
-> +	 XFS_DAENTER_BMAPS(mp, XFS_DATA_FORK) + 1)
-> +
-> +
+[  500.464036] XFS: Assertion failed: !(bip->bli_item.li_flags & XFS_LI_IN_AIL), file: fs/xfs/xfs_buf_item.c, line: 942
+[  500.465602] ------------[ cut here ]------------
+[  500.466258] kernel BUG at fs/xfs/xfs_message.c:108!
+[  500.466440] invalid opcode: 0000 [#1] SMP
+[  500.466440] Modules linked in:
+[  500.466440] CPU: 0 PID: 40 Comm: kworker/u2:1 Not tainted 3.11.0-rc2+ #955
+[  500.466440] Hardware name: Bochs Bochs, BIOS Bochs 01/01/2011
+[  500.466440] Workqueue: writeback bdi_writeback_workfn (flush-8:0)
+[  500.466440] task: ffff880292260000 ti: ffff880292250000 task.ti: ffff880292250000
+[  500.466440] RIP: 0010:[<ffffffff812dc6f2>]  [<ffffffff812dc6f2>] assfail+0x22/0x30
+[  500.466440] RSP: 0018:ffff8802922515f8  EFLAGS: 00010292
+[  500.466440] RAX: 0000000000000068 RBX: ffff880289b4a570 RCX: 0000000000000006
+[  500.466440] RDX: 0000000000000006 RSI: ffff880292260788 RDI: ffff880292260000
+[  500.466440] RBP: ffff8802922515f8 R08: 0000000000000000 R09: 0000000000000001
+[  500.466440] R10: 0000000000000000 R11: 0000000000000000 R12: ffff880291828000
+[  500.466440] R13: ffff880289b4a570 R14: ffffffff81342aeb R15: ffff88025f344220
+[  500.466440] FS:  0000000000000000(0000) GS:ffff88029fc00000(0000) knlGS:0000000000000000
+[  500.466440] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+[  500.466440] CR2: 0000000009b01008 CR3: 0000000291874000 CR4: 00000000000006f0
+[  500.466440] Stack:
+[  500.466440]  ffff880292251628 ffffffff813428df ffff880289b4a570 0000000000000002
+[  500.466440]  ffff880291828000 0000000000000001 ffff880292251668 ffffffff81342aeb
+[  500.466440]  0000000000000000 ffff880289b4a570 ffff8802762070a0 ffffffffffffffff
+[  500.466440] Call Trace:
+[  500.466440]  [<ffffffff813428df>] xfs_buf_item_relse+0x4f/0xd0
+[  500.466440]  [<ffffffff81342aeb>] xfs_buf_item_unlock+0x18b/0x1e0
+[  500.466440]  [<ffffffff8133ac3d>] xfs_trans_free_items+0x7d/0xb0
+[  500.466440]  [<ffffffff8133b35c>] xfs_trans_cancel+0x13c/0x1b0
+[  500.466440]  [<ffffffff812d8d89>] xfs_iomap_write_allocate+0x249/0x350
+[  500.466440]  [<ffffffff812c6af2>] xfs_map_blocks+0x2e2/0x350
+[  500.466440]  [<ffffffff812c7a76>] xfs_vm_writepage+0x236/0x5e0
+[  500.466440]  [<ffffffff8115174a>] __writepage+0x1a/0x50
+[  500.466440]  [<ffffffff81152065>] write_cache_pages+0x225/0x4a0
+[  500.466440]  [<ffffffff81151730>] ? mapping_tagged+0x20/0x20
+[  500.466440]  [<ffffffff812c5e45>] ? xfs_vm_writepages+0x35/0x70
+[  500.466440]  [<ffffffff8115232d>] generic_writepages+0x4d/0x70
+[  500.466440]  [<ffffffff812c5e60>] xfs_vm_writepages+0x50/0x70
+[  500.466440]  [<ffffffff81153cb1>] do_writepages+0x21/0x50
+[  500.466440]  [<ffffffff811d4050>] __writeback_single_inode+0x40/0x230
+[  500.466440]  [<ffffffff811d52b1>] writeback_sb_inodes+0x291/0x460
+[  500.466440]  [<ffffffff811d551f>] __writeback_inodes_wb+0x9f/0xd0
+[  500.466440]  [<ffffffff811d579b>] wb_writeback+0x24b/0x2e0
+[  500.466440]  [<ffffffff8115185a>] ? global_dirtyable_memory+0x1a/0x60
+[  500.466440]  [<ffffffff811d7386>] bdi_writeback_workfn+0x1d6/0x3d0
+[  500.466440]  [<ffffffff8107734b>] process_one_work+0x1eb/0x4f0
+[  500.466440]  [<ffffffff810772e9>] ? process_one_work+0x189/0x4f0
+[  500.466440]  [<ffffffff81077adb>] worker_thread+0x11b/0x370
+[  500.466440]  [<ffffffff810779c0>] ? rescuer_thread+0x330/0x330
+[  500.466440]  [<ffffffff8107ff8a>] kthread+0xea/0xf0
+[  500.466440]  [<ffffffff8107fea0>] ? flush_kthread_work+0x1b0/0x1b0
+[  500.466440]  [<ffffffff818b6c5c>] ret_from_fork+0x7c/0xb0
+[  500.466440]  [<ffffffff8107fea0>] ? flush_kthread_work+0x1b0/0x1b0
+[  500.466440] Code: 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 55 48 89 f1 41 89 d0 48 c7 c6 48 b7 c7 81 48 89 fa 31 c0 48 89 e5 31 ff e8 de fb ff ff <0f> 0b 66 66 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 55 48
+[  500.466440] RIP  [<ffffffff812dc6f2>] assfail+0x22/0x30
+[  500.466440]  RSP <ffff8802922515f8>
+[  500.510159] ---[ end trace 48b882d5f764ca11 ]---
 
-The XFS_*_LOG_RES() macros don't appear to be used anywhere..?
+Signed-off-by: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
+---
+ fs/xfs/xfs_buf_item.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-And other than some whitespace fixups, everything else seems to match:
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
-> +#define	XFS_WRITE_LOG_RES(mp)	((mp)->m_reservations.tr_write)
-> +#define	XFS_ITRUNCATE_LOG_RES(mp)   ((mp)->m_reservations.tr_itruncate)
-> +#define	XFS_RENAME_LOG_RES(mp)	((mp)->m_reservations.tr_rename)
-> +#define	XFS_LINK_LOG_RES(mp)	((mp)->m_reservations.tr_link)
-> +#define	XFS_REMOVE_LOG_RES(mp)	((mp)->m_reservations.tr_remove)
-> +#define	XFS_SYMLINK_LOG_RES(mp)	((mp)->m_reservations.tr_symlink)
-> +#define	XFS_CREATE_LOG_RES(mp)	((mp)->m_reservations.tr_create)
-> +#define	XFS_MKDIR_LOG_RES(mp)	((mp)->m_reservations.tr_mkdir)
-> +#define	XFS_IFREE_LOG_RES(mp)	((mp)->m_reservations.tr_ifree)
-> +#define	XFS_ICHANGE_LOG_RES(mp)	((mp)->m_reservations.tr_ichange)
-> +#define	XFS_GROWDATA_LOG_RES(mp)    ((mp)->m_reservations.tr_growdata)
-> +#define	XFS_GROWRTALLOC_LOG_RES(mp)	((mp)->m_reservations.tr_growrtalloc)
-> +#define	XFS_GROWRTZERO_LOG_RES(mp)	((mp)->m_reservations.tr_growrtzero)
-> +#define	XFS_GROWRTFREE_LOG_RES(mp)	((mp)->m_reservations.tr_growrtfree)
-> +#define	XFS_SWRITE_LOG_RES(mp)	((mp)->m_reservations.tr_swrite)
-> +/*
-> + * Logging the inode timestamps on an fsync -- same as SWRITE
-> + * as long as SWRITE logs the entire inode core
-> + */
-> +#define XFS_FSYNC_TS_LOG_RES(mp)        ((mp)->m_reservations.tr_swrite)
-> +#define	XFS_WRITEID_LOG_RES(mp)		((mp)->m_reservations.tr_swrite)
-> +#define	XFS_ADDAFORK_LOG_RES(mp)	((mp)->m_reservations.tr_addafork)
-> +#define	XFS_ATTRINVAL_LOG_RES(mp)	((mp)->m_reservations.tr_attrinval)
-> +#define	XFS_ATTRSETM_LOG_RES(mp)	((mp)->m_reservations.tr_attrsetm)
-> +#define	XFS_ATTRSETRT_LOG_RES(mp)	((mp)->m_reservations.tr_attrsetrt)
-> +#define	XFS_ATTRRM_LOG_RES(mp)		((mp)->m_reservations.tr_attrrm)
-> +#define	XFS_CLEAR_AGI_BUCKET_LOG_RES(mp)  ((mp)->m_reservations.tr_clearagi)
-> +#define XFS_QM_SBCHANGE_LOG_RES(mp)	((mp)->m_reservations.tr_qm_sbchange)
-> +#define XFS_QM_SETQLIM_LOG_RES(mp)	((mp)->m_reservations.tr_qm_setqlim)
-> +#define XFS_QM_DQALLOC_LOG_RES(mp)	((mp)->m_reservations.tr_qm_dqalloc)
-> +#define XFS_QM_QUOTAOFF_LOG_RES(mp)	((mp)->m_reservations.tr_qm_quotaoff)
-> +#define XFS_QM_QUOTAOFF_END_LOG_RES(mp)	((mp)->m_reservations.tr_qm_equotaoff)
-> +#define XFS_SB_LOG_RES(mp)		((mp)->m_reservations.tr_sb)
-> +
-> +/*
-> + * Various log count values.
-> + */
-> +#define	XFS_DEFAULT_LOG_COUNT		1
-> +#define	XFS_DEFAULT_PERM_LOG_COUNT	2
-> +#define	XFS_ITRUNCATE_LOG_COUNT		2
-> +#define XFS_INACTIVE_LOG_COUNT		2
-> +#define	XFS_CREATE_LOG_COUNT		2
-> +#define	XFS_MKDIR_LOG_COUNT		3
-> +#define	XFS_SYMLINK_LOG_COUNT		3
-> +#define	XFS_REMOVE_LOG_COUNT		2
-> +#define	XFS_LINK_LOG_COUNT		2
-> +#define	XFS_RENAME_LOG_COUNT		2
-> +#define	XFS_WRITE_LOG_COUNT		2
-> +#define	XFS_ADDAFORK_LOG_COUNT		2
-> +#define	XFS_ATTRINVAL_LOG_COUNT		1
-> +#define	XFS_ATTRSET_LOG_COUNT		3
-> +#define	XFS_ATTRRM_LOG_COUNT		3
-> +
-> +void xfs_trans_resv_calc(struct xfs_mount *mp, struct xfs_trans_resv *resp);
-> +
-> +#endif	/* __XFS_TRANS_RESV_H__ */
-> 
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index bfc4e0c..b4d42ae 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -939,7 +939,6 @@ xfs_buf_item_relse(
+ 	xfs_buf_log_item_t	*bip = bp->b_fspriv;
+ 
+ 	trace_xfs_buf_item_relse(bp, _RET_IP_);
+-	ASSERT(!(bip->bli_item.li_flags & XFS_LI_IN_AIL));
+ 
+ 	bp->b_fspriv = bip->bli_item.li_bio_list;
+ 	if (bp->b_fspriv == NULL)
+-- 
+1.7.11.7
 
 _______________________________________________
 xfs mailing list
