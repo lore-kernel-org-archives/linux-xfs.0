@@ -1,25 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id D40307F37
-	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 13:43:12 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id B5DBC8F8050
-	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 11:43:09 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id fCHAz2GAm82ggePt (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 25 Jul 2013 11:43:08 -0700 (PDT)
-Date: Thu, 25 Jul 2013 14:43:08 -0400
-From: Dwight Engen <dwight.engen@oracle.com>
-Subject: Re: [PATCH] xfstests: 091, 240, 268 fix for xfs on 4k sector hard
-	drive
-Message-ID: <20130725144308.4c4a5f79@oracle.com>
-In-Reply-To: <51F142E7.4050500@sandeen.net>
-References: <20130724143208.34b77534@oracle.com>
-	<20130724235739.GR19986@dastard>
-	<51F0AB56.7020705@hardwarefreak.com>
-	<20130725102754.7c564098@oracle.com> <51F142E7.4050500@sandeen.net>
-Mime-Version: 1.0
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id B92967F37
+	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 13:58:53 -0500 (CDT)
+Date: Thu, 25 Jul 2013 13:58:50 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 14/48] xfs: add CRCs to dir2/da node blocks
+Message-ID: <20130725185850.GB3111@sgi.com>
+References: <1370564771-4929-1-git-send-email-david@fromorbit.com>
+	<1370564771-4929-15-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1370564771-4929-15-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,65 +23,105 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Jeff Moyer <jmoyer@redhat.com>, stan@hardwarefreak.com, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, 25 Jul 2013 10:23:19 -0500
-Eric Sandeen <sandeen@sandeen.net> wrote:
-
-[...]
-> (You can probably mkfs w/ an explicit 512 sector size, and confirm
-> that 512-byte DIOs work again)
-
-Hi Eric, yep, confirmed that doing mkfs.xfs -b size=1024 (used 1024
-instead of 512 so that 240 would run) makes 091, 240, and 268 work
-without my changes.
-
-> bleah, perhaps that was a mistake - or perhaps we need to fix
-> kernelspace to prefer physical-size IOs, but allow logical-size if a
-> DIO requests it.
-
-ext4 and btrfs did work, so perhaps that is what they are doing, I
-have not looked yet.
-
-[... test 240]
-> >>>> -logical_block_size=`blockdev --getss $TEST_DEV`
-> >>>> +logical_block_size=`blockdev --getpbsz $TEST_DEV`
-> >>>
-> >>> FWIW, that doesn't make much sense - putting the physical block
-> >>> size into a variable named "logical_block_size".....
-> > 
-> > Yeah, that name wouldn't make much sense with this change. Its
-> > actually being used to compare to the fs block size and then its
-> > passed into aiodio_sparse2 as offset. 091 and 268 use the more
-> > generic name bsize, should I can change it to that?
+On Fri, Jun 07, 2013 at 10:25:37AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Well, that was put there with:
-> 
-> commit 2dbd21dc152d89715263990c881025f17c7b632e
-> Author: Jeff Moyer <jmoyer@redhat.com>
-> Date:   Fri Feb 11 15:20:02 2011 -0500
-> 
->     240: only run when the file system block size is larger than the
-> disk sector size 
->     This test really wants to test partial file-system block I/Os.
-> Thus, if the device has a 4K sector size, and the file system has a
-> 4K block size, there's really no point in running the test.  In the
-> attached patch, I check that the fs block size is larger than the
-> device's logical block size, which should cover a 4k device block
-> size with a 16k fs block size.
->     
->     I verified that the patched test does not run on my 4k sector
-> device with a 4k file system.  I also verified that it continues to
-> run on a 512 byte logical sector device with a 4k file system block
-> size. 
->     Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
->     Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-The name was added in this commit, and the message would lead me to
-believe that Jeff intended for the test to not run on a 4k physical
-sector disk with a 4k fs, so is the "logical_block_size" name a
-misnomer?
+Corresponds with commit f5ea110044f.
+
+Note we don't have xfs_attr_node_list, xfs_attr_root_inactive,
+xfs_attr_node_inactive in userspace.
+
+The check and repair changes look good.
+
+> @@ -299,8 +451,10 @@ xfs_da_split(xfs_da_state_t *state)
+>  	 * just got bumped because of the addition of a new root node.
+>  	 * There might be three blocks involved if a double split occurred,
+>  	 * and the original block 0 could be at any position in the list.
+> +	 *
+> +	 * Note: the info structures being modified here for both v2 and v3 da
+> +	 * headers, so we can do this linkage just using the v2 structures.
+
+The kernel code had additional comments here.  Probably this is synced up in a
+subsequent patch.
+
+>  STATIC void
+> -xfs_da_node_unbalance(xfs_da_state_t *state, xfs_da_state_blk_t *drop_blk,
+> -				     xfs_da_state_blk_t *save_blk)
+> +xfs_da3_node_unbalance(
+> +	struct xfs_da_state	*state,
+> +	struct xfs_da_state_blk	*drop_blk,
+> +	struct xfs_da_state_blk	*save_blk)
+>  {
+> -	xfs_da_intnode_t *drop_node, *save_node;
+> -	xfs_da_node_entry_t *btree;
+> -	int tmp;
+> -	xfs_trans_t *tp;
+> +	struct xfs_da_intnode	*drop_node;
+> +	struct xfs_da_intnode	*save_node;
+> +	struct xfs_da_node_entry *dbtree;
+> +	struct xfs_da_node_entry *sbtree;
+> +	struct xfs_da3_icnode_hdr dhdr;
+> +	struct xfs_da3_icnode_hdr shdr;
+
+drop and save are named differently in the kernel, probably another one resolved
+later in the series.
+
+> +	struct xfs_trans	*tp;
+> +	int			sindex;
+> +	int			tmp;
+>  
+>  	trace_xfs_da_node_unbalance(state->args);
+>  
+>  	drop_node = drop_blk->bp->b_addr;
+>  	save_node = save_blk->bp->b_addr;
+> -	ASSERT(drop_node->hdr.info.magic == cpu_to_be16(XFS_DA_NODE_MAGIC));
+> -	ASSERT(save_node->hdr.info.magic == cpu_to_be16(XFS_DA_NODE_MAGIC));
+> +	xfs_da3_node_hdr_from_disk(&dhdr, drop_node);
+> +	xfs_da3_node_hdr_from_disk(&shdr, save_node);
+> +	dbtree = xfs_da3_node_tree_p(drop_node);
+> +	sbtree = xfs_da3_node_tree_p(save_node);
+>  	tp = state->args->trans;
+>  
+>  	/*
+>  	 * If the dying block has lower hashvals, then move all the
+>  	 * elements in the remaining block up to make a hole.
+>  	 */
+> -	if ((be32_to_cpu(drop_node->btree[0].hashval) < be32_to_cpu(save_node->btree[ 0 ].hashval)) ||
+> -	    (be32_to_cpu(drop_node->btree[be16_to_cpu(drop_node->hdr.count)-1].hashval) <
+> -	     be32_to_cpu(save_node->btree[be16_to_cpu(save_node->hdr.count)-1].hashval)))
+> -	{
+> -		btree = &save_node->btree[be16_to_cpu(drop_node->hdr.count)];
+> -		tmp = be16_to_cpu(save_node->hdr.count) * (uint)sizeof(xfs_da_node_entry_t);
+> -		memmove(btree, &save_node->btree[0], tmp);
+> -		btree = &save_node->btree[0];
+> +	if ((be32_to_cpu(dbtree[0].hashval) < be32_to_cpu(sbtree[ 0 ].hashval)) ||
+> +	    (be32_to_cpu(dbtree[dhdr.count - 1].hashval) <
+> +				be32_to_cpu(sbtree[shdr.count - 1].hashval))) {
+> +		/* XXX: check this - is memmove dst correct? */
+> +		tmp = shdr.count * (uint)sizeof(xfs_da_node_entry_t);
+> +		memmove(&sbtree[dhdr.count], &sbtree[0], tmp);
+
+Mmm.  I don't remember how things came out regarding the question of this
+memmove.
+
+> @@ -1835,17 +2153,22 @@ xfs_da_swap_lastblock(
+>  		dead_level = 0;
+>  		dead_hash = be32_to_cpu(ents[leafhdr.count - 1].hashval);
+>  	} else {
+> -		ASSERT(dead_info->magic == cpu_to_be16(XFS_DA_NODE_MAGIC));
+> +		struct xfs_da3_icnode_hdr deadhdr;
+> +
+> +		ASSERT(dead_info->magic == cpu_to_be16(XFS_DA_NODE_MAGIC) ||
+> +		       dead_info->magic == cpu_to_be16(XFS_DA3_NODE_MAGIC));
+
+This assert was removed in the kernel.  Not sure if we want to keep it here...
+
+Reviewed-by: Ben Myers <bpm@sgi.com>
 
 _______________________________________________
 xfs mailing list
