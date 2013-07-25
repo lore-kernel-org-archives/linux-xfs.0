@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 44A917F37
-	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 12:15:13 -0500 (CDT)
-Date: Thu, 25 Jul 2013 12:15:09 -0500
+	by oss.sgi.com (Postfix) with ESMTP id 86EB37F37
+	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 12:28:50 -0500 (CDT)
+Date: Thu, 25 Jul 2013 12:28:49 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 03/48] libxfs: add crc format changes to generic btrees
-Message-ID: <20130725171509.GZ3111@sgi.com>
+Subject: Re: [PATCH 13/48] xfs: shortform directory offsets change for dir3
+	format
+Message-ID: <20130725172849.GA3111@sgi.com>
 References: <1370564771-4929-1-git-send-email-david@fromorbit.com>
-	<1370564771-4929-4-git-send-email-david@fromorbit.com>
-	<20130723182648.GI3111@sgi.com> <20130725004821.GC11222@dastard>
+	<1370564771-4929-14-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130725004821.GC11222@dastard>
+In-Reply-To: <1370564771-4929-14-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,42 +27,25 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-Dave,
-
-On Thu, Jul 25, 2013 at 10:48:21AM +1000, Dave Chinner wrote:
-> On Tue, Jul 23, 2013 at 01:26:48PM -0500, Ben Myers wrote:
-> > On Fri, Jun 07, 2013 at 10:25:26AM +1000, Dave Chinner wrote:
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > 
-> > This patch mostly corresponds to commit ee1a47ab0e, and in some areas it is
-> > equivalent but slightly different.  There are some other things in here too:
-> > 
-> > * Addition of XFS_BUF_DADDR_NULL
-> > * rename of b_blkno to b_bn in struct xfs_buf
-> > * rename of b_fsprivate to b_fspriv in struct xfs_buf
-> > * addition of uuid_copy and uuid_equal, and libuuid to build
-> > 
-> > It all looks fine to me, except as below:
+On Fri, Jun 07, 2013 at 10:25:36AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> I think you'll find they are fixed up in later patches in the
-> series.
+> Because the header size for the CRC enabled directory blocks is
+> larger, the offset of the first entry into a directory block is
+> different to the dir2 format. The shortform directory stores the
+> dirent's offset so that it doesn't change when moving from shortform
+> to block form and back again, and hence it needs to take into
+> account the different header sizes to maintain the correct offsets.
 > 
-> Indeed, I think it's a little late to asking for these patches to be
-> changed, considering that making significant changes to these first
-> few patches will mean that I have to rebase a 100 or so subsequent
-> patches.
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-You are mistaken...
- 
-> For issues that aren't fixed in later patches, I'll add new patches
-> to the end of the current series to fix them.
+corresponds to commit 6b2647a12a0
 
-...but I have no objection to taking this approach, so long as my
-concerns are addressed.
+xfs_dir2_sf_getdents which is changed in the kernel commit doesn't exist in userspace.
 
--Ben
+Looks good.
+
+Reviewed-by: Ben Myers <bpm@sgi.com>
 
 _______________________________________________
 xfs mailing list
