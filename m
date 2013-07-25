@@ -1,32 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 972E27F37
-	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 10:49:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 26631AC002
-	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 08:49:45 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id GxoJGfiBco4bVDhG (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 25 Jul 2013 08:49:43 -0700 (PDT)
-Received: from acsinet21.oracle.com (acsinet21.oracle.com [141.146.126.237])
-	by aserp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
-	ESMTP id r6PFng73007277
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 15:49:43 GMT
-Received: from userz7022.oracle.com (userz7022.oracle.com [156.151.31.86])
-	by acsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r6PFne3q017761
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 15:49:42 GMT
-Received: from abhmt107.oracle.com (abhmt107.oracle.com [141.146.116.59])
-	by userz7022.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r6PFnd3f020503 for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 15:49:39 GMT
-Date: Thu, 25 Jul 2013 11:49:51 -0400
-From: Dwight Engen <dwight.engen@oracle.com>
-Subject: [PATCH v6 7/7] enable building user namespace with xfs
-Message-ID: <20130725114951.55dac4c0@oracle.com>
-Mime-Version: 1.0
+	by oss.sgi.com (Postfix) with ESMTP id 911FA7F37
+	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 11:33:25 -0500 (CDT)
+Date: Thu, 25 Jul 2013 11:33:21 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 12/48] xfs: add CRC checking to dir2 leaf blocks
+Message-ID: <20130725163321.GY3111@sgi.com>
+References: <1370564771-4929-1-git-send-email-david@fromorbit.com>
+	<1370564771-4929-13-git-send-email-david@fromorbit.com>
+	<20130724230014.GU3111@sgi.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20130724230014.GU3111@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,50 +24,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
----
- init/Kconfig | 15 +--------------
- 1 file changed, 1 insertion(+), 14 deletions(-)
+On Wed, Jul 24, 2013 at 06:00:14PM -0500, Ben Myers wrote:
+> On Fri, Jun 07, 2013 at 10:25:35AM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > This addition follows the same pattern as the dir2 block CRCs.
+> > Seeing as both LEAF1 and LEAFN types need to changed at the same
+> > time, this is a pretty large amount of change. leaf block headers
+> > need to be abstracted away from the on-disk structures (struct
+> > xfs_dir3_icleaf_hdr), as do the base leaf entry locations.
+> > 
+> > This header abstract allows the in-core header and leaf entry
+> > location to be passed around instead of the leaf block itself. This
+> > saves a lot of converting individual variables from on-disk format
+> > to host format where they are used, so there's a good chance that
+> > the compiler will be able to produce much more optimal code as it's
+> > not having to byteswap variables all over the place.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> 
+> Looks good.  Note that xfs_dir3_leafn_read_verify and
+> xfs_dir3_leafn_write_verify are static in the kernel but not in userspace.  
+> 
+> Reviewed-by: Ben Myers <bpm@sgi.com>
 
-diff --git a/init/Kconfig b/init/Kconfig
-index 247084b..a380f12 100644
---- a/init/Kconfig
-+++ b/init/Kconfig
-@@ -1106,7 +1106,6 @@ config IPC_NS
- 
- config USER_NS
- 	bool "User namespace"
--	depends on UIDGID_CONVERTED
- 	select UIDGID_STRICT_TYPE_CHECKS
- 
- 	default n
-@@ -1140,21 +1139,9 @@ config NET_NS
- 
- endif # NAMESPACES
- 
--config UIDGID_CONVERTED
--	# True if all of the selected software conmponents are known
--	# to have uid_t and gid_t converted to kuid_t and kgid_t
--	# where appropriate and are otherwise safe to use with
--	# the user namespace.
--	bool
--	default y
--
--	# Filesystems
--	depends on XFS_FS = n
--
- config UIDGID_STRICT_TYPE_CHECKS
- 	bool "Require conversions between uid/gids and their internal representation"
--	depends on UIDGID_CONVERTED
--	default n
-+	default y
- 	help
- 	 While the nececessary conversions are being added to all subsystems this option allows
- 	 the code to continue to build for unconverted subsystems.
--- 
-1.8.1.4
+corresponds to commit 24df33b45ecf5.
 
 _______________________________________________
 xfs mailing list
