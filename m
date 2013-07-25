@@ -1,16 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B92967F37
-	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 13:58:53 -0500 (CDT)
-Date: Thu, 25 Jul 2013 13:58:50 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 14/48] xfs: add CRCs to dir2/da node blocks
-Message-ID: <20130725185850.GB3111@sgi.com>
-References: <1370564771-4929-1-git-send-email-david@fromorbit.com>
-	<1370564771-4929-15-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 4EC7C7F37
+	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 14:07:10 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3ED238F804B
+	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 12:07:07 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id Zc4pMzEXAbWquL5t for <xfs@oss.sgi.com>;
+	Thu, 25 Jul 2013 12:07:06 -0700 (PDT)
+Message-ID: <51F17758.2040908@sandeen.net>
+Date: Thu, 25 Jul 2013 14:07:04 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1370564771-4929-15-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH] xfstests: 091, 240, 268 fix for xfs on 4k sector hard
+	drive
+References: <20130724143208.34b77534@oracle.com>
+	<20130724235739.GR19986@dastard>
+	<51F0AB56.7020705@hardwarefreak.com>
+	<20130725102754.7c564098@oracle.com> <51F142E7.4050500@sandeen.net>
+	<20130725144308.4c4a5f79@oracle.com>
+In-Reply-To: <20130725144308.4c4a5f79@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,105 +32,85 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Dwight Engen <dwight.engen@oracle.com>
+Cc: Jeff Moyer <jmoyer@redhat.com>, stan@hardwarefreak.com, xfs@oss.sgi.com
 
-On Fri, Jun 07, 2013 at 10:25:37AM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On 7/25/13 1:43 PM, Dwight Engen wrote:
+> On Thu, 25 Jul 2013 10:23:19 -0500
+> Eric Sandeen <sandeen@sandeen.net> wrote:
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> [...]
+>> (You can probably mkfs w/ an explicit 512 sector size, and confirm
+>> that 512-byte DIOs work again)
+> 
+> Hi Eric, yep, confirmed that doing mkfs.xfs -b size=1024 (used 1024
+> instead of 512 so that 240 would run) makes 091, 240, and 268 work
+> without my changes.
 
-Corresponds with commit f5ea110044f.
+Ok; that's because a specified block size < physical sector size switches the
+"sector size" setting in the superblock back down to logical sector size.
 
-Note we don't have xfs_attr_node_list, xfs_attr_root_inactive,
-xfs_attr_node_inactive in userspace.
+-b 4096 -s 512 should make it work too.
 
-The check and repair changes look good.
+>> bleah, perhaps that was a mistake - or perhaps we need to fix
+>> kernelspace to prefer physical-size IOs, but allow logical-size if a
+>> DIO requests it.
+> 
+> ext4 and btrfs did work, so perhaps that is what they are doing, I
+> have not looked yet.
 
-> @@ -299,8 +451,10 @@ xfs_da_split(xfs_da_state_t *state)
->  	 * just got bumped because of the addition of a new root node.
->  	 * There might be three blocks involved if a double split occurred,
->  	 * and the original block 0 could be at any position in the list.
-> +	 *
-> +	 * Note: the info structures being modified here for both v2 and v3 da
-> +	 * headers, so we can do this linkage just using the v2 structures.
+well, they probably don't have this "sector size" notion
+throughout the code like we do.
 
-The kernel code had additional comments here.  Probably this is synced up in a
-subsequent patch.
+> [... test 240]
+>>>>>> -logical_block_size=`blockdev --getss $TEST_DEV`
+>>>>>> +logical_block_size=`blockdev --getpbsz $TEST_DEV`
+>>>>>
+>>>>> FWIW, that doesn't make much sense - putting the physical block
+>>>>> size into a variable named "logical_block_size".....
+>>>
+>>> Yeah, that name wouldn't make much sense with this change. Its
+>>> actually being used to compare to the fs block size and then its
+>>> passed into aiodio_sparse2 as offset. 091 and 268 use the more
+>>> generic name bsize, should I can change it to that?
+>>
+>> Well, that was put there with:
+>>
+>> commit 2dbd21dc152d89715263990c881025f17c7b632e
+>> Author: Jeff Moyer <jmoyer@redhat.com>
+>> Date:   Fri Feb 11 15:20:02 2011 -0500
+>>
+>>     240: only run when the file system block size is larger than the
+>> disk sector size 
+>>     This test really wants to test partial file-system block I/Os.
+>> Thus, if the device has a 4K sector size, and the file system has a
+>> 4K block size, there's really no point in running the test.  In the
+>> attached patch, I check that the fs block size is larger than the
+>> device's logical block size, which should cover a 4k device block
+>> size with a 16k fs block size.
+>>     
+>>     I verified that the patched test does not run on my 4k sector
+>> device with a 4k file system.  I also verified that it continues to
+>> run on a 512 byte logical sector device with a 4k file system block
+>> size. 
+>>     Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
+>>     Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> The name was added in this commit, and the message would lead me to
+> believe that Jeff intended for the test to not run on a 4k physical
+> sector disk with a 4k fs, so is the "logical_block_size" name a
+> misnomer?
 
->  STATIC void
-> -xfs_da_node_unbalance(xfs_da_state_t *state, xfs_da_state_blk_t *drop_blk,
-> -				     xfs_da_state_blk_t *save_blk)
-> +xfs_da3_node_unbalance(
-> +	struct xfs_da_state	*state,
-> +	struct xfs_da_state_blk	*drop_blk,
-> +	struct xfs_da_state_blk	*save_blk)
->  {
-> -	xfs_da_intnode_t *drop_node, *save_node;
-> -	xfs_da_node_entry_t *btree;
-> -	int tmp;
-> -	xfs_trans_t *tp;
-> +	struct xfs_da_intnode	*drop_node;
-> +	struct xfs_da_intnode	*save_node;
-> +	struct xfs_da_node_entry *dbtree;
-> +	struct xfs_da_node_entry *sbtree;
-> +	struct xfs_da3_icnode_hdr dhdr;
-> +	struct xfs_da3_icnode_hdr shdr;
+Well, it wants to be able to do sub-fs-block-sized direct IO.
 
-drop and save are named differently in the kernel, probably another one resolved
-later in the series.
+Jeff assumed that the DIO limitation would be logical block size,
+but the mkfs commit I referenced changed the limit to physical block
+size, which I think is a mistake, in retrospect.  At least for the
+buftarg sector sizes, we should probably set it to logical sector
+size, to allow smaller DIOs if requested.  Let me give that some
+thought.
 
-> +	struct xfs_trans	*tp;
-> +	int			sindex;
-> +	int			tmp;
->  
->  	trace_xfs_da_node_unbalance(state->args);
->  
->  	drop_node = drop_blk->bp->b_addr;
->  	save_node = save_blk->bp->b_addr;
-> -	ASSERT(drop_node->hdr.info.magic == cpu_to_be16(XFS_DA_NODE_MAGIC));
-> -	ASSERT(save_node->hdr.info.magic == cpu_to_be16(XFS_DA_NODE_MAGIC));
-> +	xfs_da3_node_hdr_from_disk(&dhdr, drop_node);
-> +	xfs_da3_node_hdr_from_disk(&shdr, save_node);
-> +	dbtree = xfs_da3_node_tree_p(drop_node);
-> +	sbtree = xfs_da3_node_tree_p(save_node);
->  	tp = state->args->trans;
->  
->  	/*
->  	 * If the dying block has lower hashvals, then move all the
->  	 * elements in the remaining block up to make a hole.
->  	 */
-> -	if ((be32_to_cpu(drop_node->btree[0].hashval) < be32_to_cpu(save_node->btree[ 0 ].hashval)) ||
-> -	    (be32_to_cpu(drop_node->btree[be16_to_cpu(drop_node->hdr.count)-1].hashval) <
-> -	     be32_to_cpu(save_node->btree[be16_to_cpu(save_node->hdr.count)-1].hashval)))
-> -	{
-> -		btree = &save_node->btree[be16_to_cpu(drop_node->hdr.count)];
-> -		tmp = be16_to_cpu(save_node->hdr.count) * (uint)sizeof(xfs_da_node_entry_t);
-> -		memmove(btree, &save_node->btree[0], tmp);
-> -		btree = &save_node->btree[0];
-> +	if ((be32_to_cpu(dbtree[0].hashval) < be32_to_cpu(sbtree[ 0 ].hashval)) ||
-> +	    (be32_to_cpu(dbtree[dhdr.count - 1].hashval) <
-> +				be32_to_cpu(sbtree[shdr.count - 1].hashval))) {
-> +		/* XXX: check this - is memmove dst correct? */
-> +		tmp = shdr.count * (uint)sizeof(xfs_da_node_entry_t);
-> +		memmove(&sbtree[dhdr.count], &sbtree[0], tmp);
-
-Mmm.  I don't remember how things came out regarding the question of this
-memmove.
-
-> @@ -1835,17 +2153,22 @@ xfs_da_swap_lastblock(
->  		dead_level = 0;
->  		dead_hash = be32_to_cpu(ents[leafhdr.count - 1].hashval);
->  	} else {
-> -		ASSERT(dead_info->magic == cpu_to_be16(XFS_DA_NODE_MAGIC));
-> +		struct xfs_da3_icnode_hdr deadhdr;
-> +
-> +		ASSERT(dead_info->magic == cpu_to_be16(XFS_DA_NODE_MAGIC) ||
-> +		       dead_info->magic == cpu_to_be16(XFS_DA3_NODE_MAGIC));
-
-This assert was removed in the kernel.  Not sure if we want to keep it here...
-
-Reviewed-by: Ben Myers <bpm@sgi.com>
+-Eric
 
 _______________________________________________
 xfs mailing list
