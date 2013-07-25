@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id CA4B27F37
-	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 14:53:28 -0500 (CDT)
-Date: Thu, 25 Jul 2013 14:53:25 -0500
+	by oss.sgi.com (Postfix) with ESMTP id 2091E7F37
+	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 15:27:10 -0500 (CDT)
+Date: Thu, 25 Jul 2013 15:27:06 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 15/48] xfs: add CRCs to attr leaf blocks
-Message-ID: <20130725195325.GC3111@sgi.com>
+Subject: Re: [PATCH 16/48] xfs: split remote attribute code out
+Message-ID: <20130725202706.GD3111@sgi.com>
 References: <1370564771-4929-1-git-send-email-david@fromorbit.com>
-	<1370564771-4929-16-git-send-email-david@fromorbit.com>
+	<1370564771-4929-17-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1370564771-4929-16-git-send-email-david@fromorbit.com>
+In-Reply-To: <1370564771-4929-17-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,66 +26,51 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, Jun 07, 2013 at 10:25:38AM +1000, Dave Chinner wrote:
+On Fri, Jun 07, 2013 at 10:25:39AM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
+> 
+> Adding CRC support to remote attributes adds a significant amount of
+> remote attribute specific code. Split the existing remote attribute
+> code out into it's own file so that all the relevant remote
+> attribute code is in a single, easy to find place.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-This one corresponds to commit 517c22207b04.
+Corresponds to commit 95920cd6ce1
 
-The xfs_db, metadump, and repair changes look good.
+> diff --git a/include/xfs_attr_remote.h b/include/xfs_attr_remote.h
+> new file mode 100644
+> index 0000000..b4be90e
+> --- /dev/null
+> +++ b/include/xfs_attr_remote.h
+> @@ -0,0 +1,31 @@
+> +/*
+> + * Copyright (c) 2013 Red Hat, Inc.
+> + *
+> + * This program is free software; you can redistribute it and/or modify it
+> + * under the terms of version 2.1 of the GNU Lesser General Public License
+> + * as published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope that it would be useful, but
+> + * WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+> + *
+> + * Further, this software is distributed without any warranty that it is
+> + * free of the rightful claim of any third person regarding infringement
+> + * or the like.  Any license provided herein, whether implied or
+> + * otherwise, applies only to this software file.  Patent licenses, if
+> + * any, provided herein do not apply to combinations of this program with
+> + * other software, or any other product whatsoever.
+> + *
+> + * You should have received a copy of the GNU Lesser General Public
+> + * License along with this program; if not, write the Free Software
+> + * Foundation, Inc., 59 Temple Place - Suite 330, Boston MA 02111-1307,
+> + * USA.
+> + */
 
-Note don't have xfs_attr_inactive, xfs_attr_leaf_list, xfs_attr_node_list,
-xfs_attr_node_inactive, xfs_attr_leaf_inactive, xfs_attr_leaf_freextent,
-xfs_attr_root_inactive, and xfs_attr_leaf_list_int in userspace.
+This gpl header is different than the one in the kernel.  Probably fixed later in the series.
 
-> @@ -854,24 +854,24 @@ xfs_attr_leaf_removename(xfs_da_args_t *args)
->  	 */
->  	dp = args->dp;
->  	args->blkno = 0;
-> -	error = xfs_attr_leaf_read(args->trans, args->dp, args->blkno, -1, &bp);
-> +	error = xfs_attr3_leaf_read(args->trans, args->dp, args->blkno, -1, &bp);
->  	if (error)
->  		return error;
->  
-> -	error = xfs_attr_leaf_lookup_int(bp, args);
-> +	error = xfs_attr3_leaf_lookup_int(bp, args);
->  	if (error == ENOATTR) {
->  		xfs_trans_brelse(args->trans, bp);
->  		return(error);
-
-In the kernel patch the parens are removed:
-
-	return error;
-
-Again, this is probably fixed in a subsequent patch.
-
->  STATIC int
-> -xfs_attr_leaf_add_work(
-> -	struct xfs_buf	*bp,
-> -	xfs_da_args_t	*args,
-> -	int		mapindex)
-> +xfs_attr3_leaf_add_work(
-> +	struct xfs_buf		*bp,
-> +	struct xfs_attr3_icleaf_hdr *ichdr,
-> +	struct xfs_da_args	*args,
-> +	int			mapindex)
->  {
-> -	xfs_attr_leafblock_t *leaf;
-> -	xfs_attr_leaf_hdr_t *hdr;
-> -	xfs_attr_leaf_entry_t *entry;
-> -	xfs_attr_leaf_name_local_t *name_loc;
-> -	xfs_attr_leaf_name_remote_t *name_rmt;
-> -	xfs_attr_leaf_map_t *map;
-> -	xfs_mount_t *mp;
-> -	int tmp, i;
-> +	struct xfs_attr_leafblock *leaf;
-> +	struct xfs_attr_leaf_entry *entry;
-> +	struct xfs_attr_leaf_name_local *name_loc;
-> +	struct xfs_attr_leaf_name_remote *name_rmt;
-> +	struct xfs_attr_leaf_map *map;
-
-The kernel commit removed map.  Probably fixed in a subsequent patch.
+Looks good.
 
 Reviewed-by: Ben Myers <bpm@sgi.com>
 
