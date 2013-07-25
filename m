@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 5BF477CBF
-	for <xfs@oss.sgi.com>; Wed, 24 Jul 2013 19:57:31 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 056A4AC003
-	for <xfs@oss.sgi.com>; Wed, 24 Jul 2013 17:57:30 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	jTcJGVwVQmrWKB6j for <xfs@oss.sgi.com>;
-	Wed, 24 Jul 2013 17:57:29 -0700 (PDT)
-Date: Thu, 25 Jul 2013 10:57:25 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 09/48] xfs: add CRC checks to block format directory blocks
-Message-ID: <20130725005725.GE11222@dastard>
-References: <1370564771-4929-1-git-send-email-david@fromorbit.com>
-	<1370564771-4929-10-git-send-email-david@fromorbit.com>
-	<20130724205358.GR3111@sgi.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id D146F7CBF
+	for <xfs@oss.sgi.com>; Wed, 24 Jul 2013 20:10:04 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id ACCF48F8033
+	for <xfs@oss.sgi.com>; Wed, 24 Jul 2013 18:10:01 -0700 (PDT)
+Date: Thu, 25 Jul 2013 09:09:49 +0800
+From: Liu Bo <bo.li.liu@oracle.com>
+Subject: Re: [PATCH] Xfstests/btrfs/308: add snapshot-aware defrag for
+	partial extents testcases
+Message-ID: <20130725010949.GA5202@localhost.localdomain>
+References: <1372844780-31845-1-git-send-email-bo.li.liu@oracle.com>
+	<20130724232949.GX3111@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130724205358.GR3111@sgi.com>
+In-Reply-To: <20130724232949.GX3111@sgi.com>
+Reply-To: bo.li.liu@oracle.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,83 +29,87 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Ben Myers <bpm@sgi.com>
-Cc: xfs@oss.sgi.com
+Cc: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Wed, Jul 24, 2013 at 03:53:58PM -0500, Ben Myers wrote:
-> On Fri, Jun 07, 2013 at 10:25:32AM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
+On Wed, Jul 24, 2013 at 06:29:49PM -0500, Ben Myers wrote:
+> On Wed, Jul 03, 2013 at 05:46:20PM +0800, Liu Bo wrote:
+> > This is to test whether snapshot-aware defrag can work well on partial extents.
 > > 
-> > Now that directory buffers are made from a single struct xfs_buf, we
-> > can add CRC calculation and checking callbacks. While there, add all
-> > the fields to the on disk structures for future functionality such
-> > as d_type support, uuids, block numbers, owner inode, etc.
-> > 
-> > To distinguish between the different on disk formats, change the
-> > magic numbers for the new format directory blocks.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> 
-> corresponds to commit f5f3d9b016
-> 
+> > Signed-off-by: Liu Bo <bo.li.liu@oracle.com>
 > > ---
-> >  include/xfs_dir2_format.h |  155 +++++++++++++++++++++++++++++++++++++++++--
-> >  libxfs/xfs_dir2_block.c   |  126 +++++++++++++++++++++++++----------
-> >  libxfs/xfs_dir2_data.c    |  160 ++++++++++++++++++++++++++++-----------------
-> >  libxfs/xfs_dir2_leaf.c    |    6 +-
-> >  libxfs/xfs_dir2_node.c    |    2 +-
-> >  libxfs/xfs_dir2_priv.h    |    4 +-
-> >  libxfs/xfs_dir2_sf.c      |    2 +-
-> >  7 files changed, 346 insertions(+), 109 deletions(-)
+> >  tests/btrfs/308     |   93 +++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  tests/btrfs/308.out |    2 +
+> >  tests/btrfs/group   |    1 +
+> >  3 files changed, 96 insertions(+), 0 deletions(-)
+> >  create mode 100755 tests/btrfs/308
+> >  create mode 100644 tests/btrfs/308.out
 > > 
-> > diff --git a/include/xfs_dir2_format.h b/include/xfs_dir2_format.h
-> > index f5c264a..da928c7 100644
-> > --- a/include/xfs_dir2_format.h
-> > +++ b/include/xfs_dir2_format.h
+> > diff --git a/tests/btrfs/308 b/tests/btrfs/308
+> > new file mode 100755
+> > index 0000000..b3dd39c
+> > --- /dev/null
+> > +++ b/tests/btrfs/308
+> > @@ -0,0 +1,93 @@
+> > +#! /bin/bash
+> > +# BTRFS QA Test No. 308
+> > +#
+> > +# Test if snapshot-aware defrag can work well on partial extents, ie.
+> > +# extent_offset is not zero.
+> > +#
+> > +#-----------------------------------------------------------------------
+> > +# Copyright (c) 2013 Oracle.  All Rights Reserved.
+> > +#
+> > +# This program is free software; you can redistribute it and/or
+> > +# modify it under the terms of the GNU General Public License as
+> > +# published by the Free Software Foundation.
+> > +#
+> > +# This program is distributed in the hope that it would be useful,
+> > +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > +# GNU General Public License for more details.
+> > +#
+> > +# You should have received a copy of the GNU General Public License
+> > +# along with this program; if not, write the Free Software Foundation,
+> > +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> > +#-----------------------------------------------------------------------
+> > +#
+> > +
+> > +seq=`basename $0`
+> > +seqres=$RESULT_DIR/$seq
+> > +echo "QA output created by $seq"
+> > +
+> > +here=`pwd`
+> > +tmp=/tmp/$$
+> > +status=1	# failure is the default!
+> > +trap "_cleanup; exit \$status" 0 1 2 3 15
+> > +
+> > +_cleanup()
+> > +{
+> > +    cd /
+> > +    rm -f $tmp.*
+> > +}
+> > +
+> > +# get standard environment, filters and checks
+> > +. ./common/rc
+> > +. ./common/filter
+> > +
+> > +# real QA test starts here
+> > +
+> > +# Modify as appropriate.
+> > +_supported_fs generic
 > 
-> ...
+> _supported_fs btrfs
 > 
-> > @@ -215,11 +247,43 @@ typedef struct xfs_dir2_data_free {
-> >   */
-> >  typedef struct xfs_dir2_data_hdr {
-> >  	__be32			magic;		/* XFS_DIR2_DATA_MAGIC or */
-> > -						/* XFS_DIR2_BLOCK_MAGIC */
-> > +	/* XFS_DIR2_BLOCK_MAGIC */
+> Since this is btrfs specific, I think _supported_fs should be btrfs.
 > 
-> This change to remove some tabs does not match the kernel code.  Suggest you
-> remove it.  Maybe you have done that in one of the syncs later.
-
-All this has been done in later syncs. I'd suggest that you need to
-check the current code, as what was committed to  the crc-dev branch
-didn't *exactly* match what was in the kernel code.
-
-Why do you think I spent so much time trying to unify them after
-this?
-
-
-> > +	bf = xfs_dir3_data_bestfree_p(hdr);
-> > +	p = (char *)xfs_dir3_data_entry_p(hdr);
-> >  
-> >  	switch (be32_to_cpu(hdr->magic)) {
-> >  	case XFS_DIR2_BLOCK_MAGIC:
-> > +	case XFS_DIR3_BLOCK_MAGIC:
-> 	    ^^^^^
+> I didn't see anything obviously wrong with the rest of this, but I'd rather see
+> a review from a btrfs expert.
 > 
-> In the kernel the endian flip is done here, not in the switch parens.
+> Reviewed-by: Ben Myers <bpm@sgi.com>
 
-See later patches. It's done that way here because the kernel method
-causes compilation failure. i.e. this patch:
+Oh yeah, it's right, I'll update it and resend, thanks.
 
-[PATCH 06/49] libxfs: fix byte swapping on constants
-
-modifies the xfsprogs infrastructure to allow the kernel method to
-be used in userspace, and it swaps all the libxfs code around.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+-liubo
 
 _______________________________________________
 xfs mailing list
