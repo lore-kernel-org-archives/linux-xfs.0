@@ -1,20 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 22AC27F37
-	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 12:52:07 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 120408F8035
-	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 10:52:04 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id BWejbwcKk2SRNvLl (version=TLSv1
+	by oss.sgi.com (Postfix) with ESMTP id D40307F37
+	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 13:43:12 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id B5DBC8F8050
+	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 11:43:09 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id fCHAz2GAm82ggePt (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 25 Jul 2013 10:52:02 -0700 (PDT)
-From: Dave Kleikamp <dave.kleikamp@oracle.com>
-Subject: [PATCH V8 27/33] xfs: add support for read_iter and write_iter
-Date: Thu, 25 Jul 2013 12:50:53 -0500
-Message-Id: <1374774659-13121-28-git-send-email-dave.kleikamp@oracle.com>
-In-Reply-To: <1374774659-13121-1-git-send-email-dave.kleikamp@oracle.com>
-References: <1374774659-13121-1-git-send-email-dave.kleikamp@oracle.com>
+	Thu, 25 Jul 2013 11:43:08 -0700 (PDT)
+Date: Thu, 25 Jul 2013 14:43:08 -0400
+From: Dwight Engen <dwight.engen@oracle.com>
+Subject: Re: [PATCH] xfstests: 091, 240, 268 fix for xfs on 4k sector hard
+	drive
+Message-ID: <20130725144308.4c4a5f79@oracle.com>
+In-Reply-To: <51F142E7.4050500@sandeen.net>
+References: <20130724143208.34b77534@oracle.com>
+	<20130724235739.GR19986@dastard>
+	<51F0AB56.7020705@hardwarefreak.com>
+	<20130725102754.7c564098@oracle.com> <51F142E7.4050500@sandeen.net>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,181 +28,69 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-kernel@vger.kernel.org
-Cc: Alex Elder <elder@kernel.org>, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, Dave Kleikamp <dave.kleikamp@oracle.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Zach Brown <zab@zabbo.net>, "Maxim V. Patlasov" <mpatlasov@parallels.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Jeff Moyer <jmoyer@redhat.com>, stan@hardwarefreak.com, xfs@oss.sgi.com
 
-Signed-off-by: Dave Kleikamp <dave.kleikamp@oracle.com>
-Cc: Ben Myers <bpm@sgi.com>
-Cc: Alex Elder <elder@kernel.org>
-Cc: xfs@oss.sgi.com
----
- fs/xfs/xfs_file.c | 51 ++++++++++++++++++++-------------------------------
- 1 file changed, 20 insertions(+), 31 deletions(-)
+On Thu, 25 Jul 2013 10:23:19 -0500
+Eric Sandeen <sandeen@sandeen.net> wrote:
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index de3dc98..1716b6a 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -226,10 +226,9 @@ xfs_file_fsync(
- }
- 
- STATIC ssize_t
--xfs_file_aio_read(
-+xfs_file_read_iter(
- 	struct kiocb		*iocb,
--	const struct iovec	*iovp,
--	unsigned long		nr_segs,
-+	struct iov_iter		*iter,
- 	loff_t			pos)
- {
- 	struct file		*file = iocb->ki_filp;
-@@ -250,9 +249,7 @@ xfs_file_aio_read(
- 	if (file->f_mode & FMODE_NOCMTIME)
- 		ioflags |= IO_INVIS;
- 
--	ret = generic_segment_checks(iovp, &nr_segs, &size, VERIFY_WRITE);
--	if (ret < 0)
--		return ret;
-+	size = iov_iter_count(iter);
- 
- 	if (unlikely(ioflags & IO_ISDIRECT)) {
- 		xfs_buftarg_t	*target =
-@@ -305,7 +302,7 @@ xfs_file_aio_read(
- 
- 	trace_xfs_file_read(ip, size, pos, ioflags);
- 
--	ret = generic_file_aio_read(iocb, iovp, nr_segs, pos);
-+	ret = generic_file_read_iter(iocb, iter, pos);
- 	if (ret > 0)
- 		XFS_STATS_ADD(xs_read_bytes, ret);
- 
-@@ -621,10 +618,9 @@ restart:
- STATIC ssize_t
- xfs_file_dio_aio_write(
- 	struct kiocb		*iocb,
--	const struct iovec	*iovp,
--	unsigned long		nr_segs,
-+	struct iov_iter		*iter,
- 	loff_t			pos,
--	size_t			ocount)
-+	size_t			count)
- {
- 	struct file		*file = iocb->ki_filp;
- 	struct address_space	*mapping = file->f_mapping;
-@@ -632,7 +628,6 @@ xfs_file_dio_aio_write(
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	struct xfs_mount	*mp = ip->i_mount;
- 	ssize_t			ret = 0;
--	size_t			count = ocount;
- 	int			unaligned_io = 0;
- 	int			iolock;
- 	struct xfs_buftarg	*target = XFS_IS_REALTIME_INODE(ip) ?
-@@ -692,8 +687,8 @@ xfs_file_dio_aio_write(
- 	}
- 
- 	trace_xfs_file_direct_write(ip, count, iocb->ki_pos, 0);
--	ret = generic_file_direct_write(iocb, iovp,
--			&nr_segs, pos, &iocb->ki_pos, count, ocount);
-+	ret = generic_file_direct_write_iter(iocb, iter,
-+			pos, &iocb->ki_pos, count);
- 
- out:
- 	xfs_rw_iunlock(ip, iolock);
-@@ -706,10 +701,9 @@ out:
- STATIC ssize_t
- xfs_file_buffered_aio_write(
- 	struct kiocb		*iocb,
--	const struct iovec	*iovp,
--	unsigned long		nr_segs,
-+	struct iov_iter		*iter,
- 	loff_t			pos,
--	size_t			ocount)
-+	size_t			count)
- {
- 	struct file		*file = iocb->ki_filp;
- 	struct address_space	*mapping = file->f_mapping;
-@@ -718,7 +712,6 @@ xfs_file_buffered_aio_write(
- 	ssize_t			ret;
- 	int			enospc = 0;
- 	int			iolock = XFS_IOLOCK_EXCL;
--	size_t			count = ocount;
- 
- 	xfs_rw_ilock(ip, iolock);
- 
-@@ -731,7 +724,7 @@ xfs_file_buffered_aio_write(
- 
- write_retry:
- 	trace_xfs_file_buffered_write(ip, count, iocb->ki_pos, 0);
--	ret = generic_file_buffered_write(iocb, iovp, nr_segs,
-+	ret = generic_file_buffered_write_iter(iocb, iter,
- 			pos, &iocb->ki_pos, count, 0);
- 
- 	/*
-@@ -752,10 +745,9 @@ out:
- }
- 
- STATIC ssize_t
--xfs_file_aio_write(
-+xfs_file_write_iter(
- 	struct kiocb		*iocb,
--	const struct iovec	*iovp,
--	unsigned long		nr_segs,
-+	struct iov_iter		*iter,
- 	loff_t			pos)
- {
- 	struct file		*file = iocb->ki_filp;
-@@ -763,17 +755,15 @@ xfs_file_aio_write(
- 	struct inode		*inode = mapping->host;
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	ssize_t			ret;
--	size_t			ocount = 0;
-+	size_t			count = 0;
- 
- 	XFS_STATS_INC(xs_write_calls);
- 
- 	BUG_ON(iocb->ki_pos != pos);
- 
--	ret = generic_segment_checks(iovp, &nr_segs, &ocount, VERIFY_READ);
--	if (ret)
--		return ret;
-+	count = iov_iter_count(iter);
- 
--	if (ocount == 0)
-+	if (count == 0)
- 		return 0;
- 
- 	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) {
-@@ -782,10 +772,9 @@ xfs_file_aio_write(
- 	}
- 
- 	if (unlikely(file->f_flags & O_DIRECT))
--		ret = xfs_file_dio_aio_write(iocb, iovp, nr_segs, pos, ocount);
-+		ret = xfs_file_dio_aio_write(iocb, iter, pos, count);
- 	else
--		ret = xfs_file_buffered_aio_write(iocb, iovp, nr_segs, pos,
--						  ocount);
-+		ret = xfs_file_buffered_aio_write(iocb, iter, pos, count);
- 
- 	if (ret > 0) {
- 		ssize_t err;
-@@ -1410,8 +1399,8 @@ const struct file_operations xfs_file_operations = {
- 	.llseek		= xfs_file_llseek,
- 	.read		= do_sync_read,
- 	.write		= do_sync_write,
--	.aio_read	= xfs_file_aio_read,
--	.aio_write	= xfs_file_aio_write,
-+	.read_iter	= xfs_file_read_iter,
-+	.write_iter	= xfs_file_write_iter,
- 	.splice_read	= xfs_file_splice_read,
- 	.splice_write	= xfs_file_splice_write,
- 	.unlocked_ioctl	= xfs_file_ioctl,
--- 
-1.8.3.4
+[...]
+> (You can probably mkfs w/ an explicit 512 sector size, and confirm
+> that 512-byte DIOs work again)
+
+Hi Eric, yep, confirmed that doing mkfs.xfs -b size=1024 (used 1024
+instead of 512 so that 240 would run) makes 091, 240, and 268 work
+without my changes.
+
+> bleah, perhaps that was a mistake - or perhaps we need to fix
+> kernelspace to prefer physical-size IOs, but allow logical-size if a
+> DIO requests it.
+
+ext4 and btrfs did work, so perhaps that is what they are doing, I
+have not looked yet.
+
+[... test 240]
+> >>>> -logical_block_size=`blockdev --getss $TEST_DEV`
+> >>>> +logical_block_size=`blockdev --getpbsz $TEST_DEV`
+> >>>
+> >>> FWIW, that doesn't make much sense - putting the physical block
+> >>> size into a variable named "logical_block_size".....
+> > 
+> > Yeah, that name wouldn't make much sense with this change. Its
+> > actually being used to compare to the fs block size and then its
+> > passed into aiodio_sparse2 as offset. 091 and 268 use the more
+> > generic name bsize, should I can change it to that?
+> 
+> Well, that was put there with:
+> 
+> commit 2dbd21dc152d89715263990c881025f17c7b632e
+> Author: Jeff Moyer <jmoyer@redhat.com>
+> Date:   Fri Feb 11 15:20:02 2011 -0500
+> 
+>     240: only run when the file system block size is larger than the
+> disk sector size 
+>     This test really wants to test partial file-system block I/Os.
+> Thus, if the device has a 4K sector size, and the file system has a
+> 4K block size, there's really no point in running the test.  In the
+> attached patch, I check that the fs block size is larger than the
+> device's logical block size, which should cover a 4k device block
+> size with a 16k fs block size.
+>     
+>     I verified that the patched test does not run on my 4k sector
+> device with a 4k file system.  I also verified that it continues to
+> run on a 512 byte logical sector device with a 4k file system block
+> size. 
+>     Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
+>     Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+The name was added in this commit, and the message would lead me to
+believe that Jeff intended for the test to not run on a 4k physical
+sector disk with a 4k fs, so is the "logical_block_size" name a
+misnomer?
 
 _______________________________________________
 xfs mailing list
