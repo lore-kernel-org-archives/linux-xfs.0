@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A3CB17F4E
-	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 06:51:58 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 913FE8F8033
-	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 04:51:58 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	LxQbgibHKLghwHB5 for <xfs@oss.sgi.com>;
-	Fri, 26 Jul 2013 04:51:57 -0700 (PDT)
-Date: Fri, 26 Jul 2013 21:51:36 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH V8 27/33] xfs: add support for read_iter and write_iter
-Message-ID: <20130726115136.GP13468@dastard>
-References: <1374774659-13121-1-git-send-email-dave.kleikamp@oracle.com>
-	<1374774659-13121-28-git-send-email-dave.kleikamp@oracle.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 38FFB29E03
+	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 07:45:14 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 2958330408A
+	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 05:45:11 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id uD8EHdCoXdI8sjkZ for
+	<xfs@oss.sgi.com>; Fri, 26 Jul 2013 05:45:09 -0700 (PDT)
+Message-ID: <51F26E8E.4080703@redhat.com>
+Date: Fri, 26 Jul 2013 08:41:50 -0400
+From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1374774659-13121-28-git-send-email-dave.kleikamp@oracle.com>
+Subject: Re: [PATCH 14/49] xfs: introduce xfs_inode_buf.c for inode buffer
+	operations
+References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
+	<1374215120-7271-15-git-send-email-david@fromorbit.com>
+In-Reply-To: <1374215120-7271-15-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,22 +29,1059 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Kleikamp <dave.kleikamp@oracle.com>
-Cc: Alex Elder <elder@kernel.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Zach Brown <zab@zabbo.net>, "Maxim V. Patlasov" <mpatlasov@parallels.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, Jul 25, 2013 at 12:50:53PM -0500, Dave Kleikamp wrote:
-> Signed-off-by: Dave Kleikamp <dave.kleikamp@oracle.com>
-> Cc: Ben Myers <bpm@sgi.com>
-> Cc: Alex Elder <elder@kernel.org>
-> Cc: xfs@oss.sgi.com
+On 07/19/2013 02:24 AM, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> The only thing remaining in xfs_inode.[ch] are the operations that
+> read, write or verify physical inodes in their underlying buffers.
+> Move all this code to xfs_inode_buf.[ch] and so we can stop sharing
+> xfs_inode.[ch] with userspace.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
 
-Looks fine.
+I noticed Mark mentioned something about this being stale. That aside, I
+see some whitespace fixups and a clean move otherwise:
 
-Acked-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
--- 
-Dave Chinner
-david@fromorbit.com
+>  fs/xfs/Makefile        |   1 +
+>  fs/xfs/xfs_inode.c     | 413 ---------------------------------------------
+>  fs/xfs/xfs_inode.h     |  41 +----
+>  fs/xfs/xfs_inode_buf.c | 444 +++++++++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_inode_buf.h |  53 ++++++
+>  5 files changed, 505 insertions(+), 447 deletions(-)
+>  create mode 100644 fs/xfs/xfs_inode_buf.c
+>  create mode 100644 fs/xfs/xfs_inode_buf.h
+> 
+> diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+> index ce0b87e..7f2319d 100644
+> --- a/fs/xfs/Makefile
+> +++ b/fs/xfs/Makefile
+> @@ -75,6 +75,7 @@ xfs-y				+= xfs_alloc.o \
+>  				   xfs_icreate_item.o \
+>  				   xfs_inode.o \
+>  				   xfs_inode_fork.o \
+> +				   xfs_inode_buf.o \
+>  				   xfs_log_recover.o \
+>  				   xfs_mount.o \
+>  				   xfs_symlink.o \
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 51e4eb2..cf35d86 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -322,234 +322,6 @@ __xfs_iflock(
+>  	finish_wait(wq, &wait.wait);
+>  }
+>  
+> -/*
+> - * Check that none of the inode's in the buffer have a next
+> - * unlinked field of 0.
+> - */
+> -#if defined(DEBUG)
+> -void
+> -xfs_inobp_check(
+> -	xfs_mount_t	*mp,
+> -	xfs_buf_t	*bp)
+> -{
+> -	int		i;
+> -	int		j;
+> -	xfs_dinode_t	*dip;
+> -
+> -	j = mp->m_inode_cluster_size >> mp->m_sb.sb_inodelog;
+> -
+> -	for (i = 0; i < j; i++) {
+> -		dip = (xfs_dinode_t *)xfs_buf_offset(bp,
+> -					i * mp->m_sb.sb_inodesize);
+> -		if (!dip->di_next_unlinked)  {
+> -			xfs_alert(mp,
+> -	"Detected bogus zero next_unlinked field in incore inode buffer 0x%p.",
+> -				bp);
+> -			ASSERT(dip->di_next_unlinked);
+> -		}
+> -	}
+> -}
+> -#endif
+> -
+> -static void
+> -xfs_inode_buf_verify(
+> -	struct xfs_buf	*bp)
+> -{
+> -	struct xfs_mount *mp = bp->b_target->bt_mount;
+> -	int		i;
+> -	int		ni;
+> -
+> -	/*
+> -	 * Validate the magic number and version of every inode in the buffer
+> -	 */
+> -	ni = XFS_BB_TO_FSB(mp, bp->b_length) * mp->m_sb.sb_inopblock;
+> -	for (i = 0; i < ni; i++) {
+> -		int		di_ok;
+> -		xfs_dinode_t	*dip;
+> -
+> -		dip = (struct xfs_dinode *)xfs_buf_offset(bp,
+> -					(i << mp->m_sb.sb_inodelog));
+> -		di_ok = dip->di_magic == cpu_to_be16(XFS_DINODE_MAGIC) &&
+> -			    XFS_DINODE_GOOD_VERSION(dip->di_version);
+> -		if (unlikely(XFS_TEST_ERROR(!di_ok, mp,
+> -						XFS_ERRTAG_ITOBP_INOTOBP,
+> -						XFS_RANDOM_ITOBP_INOTOBP))) {
+> -			xfs_buf_ioerror(bp, EFSCORRUPTED);
+> -			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_HIGH,
+> -					     mp, dip);
+> -#ifdef DEBUG
+> -			xfs_emerg(mp,
+> -				"bad inode magic/vsn daddr %lld #%d (magic=%x)",
+> -				(unsigned long long)bp->b_bn, i,
+> -				be16_to_cpu(dip->di_magic));
+> -			ASSERT(0);
+> -#endif
+> -		}
+> -	}
+> -	xfs_inobp_check(mp, bp);
+> -}
+> -
+> -
+> -static void
+> -xfs_inode_buf_read_verify(
+> -	struct xfs_buf	*bp)
+> -{
+> -	xfs_inode_buf_verify(bp);
+> -}
+> -
+> -static void
+> -xfs_inode_buf_write_verify(
+> -	struct xfs_buf	*bp)
+> -{
+> -	xfs_inode_buf_verify(bp);
+> -}
+> -
+> -const struct xfs_buf_ops xfs_inode_buf_ops = {
+> -	.verify_read = xfs_inode_buf_read_verify,
+> -	.verify_write = xfs_inode_buf_write_verify,
+> -};
+> -
+> -
+> -/*
+> - * This routine is called to map an inode to the buffer containing the on-disk
+> - * version of the inode.  It returns a pointer to the buffer containing the
+> - * on-disk inode in the bpp parameter, and in the dipp parameter it returns a
+> - * pointer to the on-disk inode within that buffer.
+> - *
+> - * If a non-zero error is returned, then the contents of bpp and dipp are
+> - * undefined.
+> - */
+> -int
+> -xfs_imap_to_bp(
+> -	struct xfs_mount	*mp,
+> -	struct xfs_trans	*tp,
+> -	struct xfs_imap		*imap,
+> -	struct xfs_dinode       **dipp,
+> -	struct xfs_buf		**bpp,
+> -	uint			buf_flags,
+> -	uint			iget_flags)
+> -{
+> -	struct xfs_buf		*bp;
+> -	int			error;
+> -
+> -	buf_flags |= XBF_UNMAPPED;
+> -	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp, imap->im_blkno,
+> -				   (int)imap->im_len, buf_flags, &bp,
+> -				   &xfs_inode_buf_ops);
+> -	if (error) {
+> -		if (error == EAGAIN) {
+> -			ASSERT(buf_flags & XBF_TRYLOCK);
+> -			return error;
+> -		}
+> -
+> -		if (error == EFSCORRUPTED &&
+> -		    (iget_flags & XFS_IGET_UNTRUSTED))
+> -			return XFS_ERROR(EINVAL);
+> -
+> -		xfs_warn(mp, "%s: xfs_trans_read_buf() returned error %d.",
+> -			__func__, error);
+> -		return error;
+> -	}
+> -
+> -	*bpp = bp;
+> -	*dipp = (struct xfs_dinode *)xfs_buf_offset(bp, imap->im_boffset);
+> -	return 0;
+> -}
+> -
+> -STATIC void
+> -xfs_dinode_from_disk(
+> -	xfs_icdinode_t		*to,
+> -	xfs_dinode_t		*from)
+> -{
+> -	to->di_magic = be16_to_cpu(from->di_magic);
+> -	to->di_mode = be16_to_cpu(from->di_mode);
+> -	to->di_version = from ->di_version;
+> -	to->di_format = from->di_format;
+> -	to->di_onlink = be16_to_cpu(from->di_onlink);
+> -	to->di_uid = be32_to_cpu(from->di_uid);
+> -	to->di_gid = be32_to_cpu(from->di_gid);
+> -	to->di_nlink = be32_to_cpu(from->di_nlink);
+> -	to->di_projid_lo = be16_to_cpu(from->di_projid_lo);
+> -	to->di_projid_hi = be16_to_cpu(from->di_projid_hi);
+> -	memcpy(to->di_pad, from->di_pad, sizeof(to->di_pad));
+> -	to->di_flushiter = be16_to_cpu(from->di_flushiter);
+> -	to->di_atime.t_sec = be32_to_cpu(from->di_atime.t_sec);
+> -	to->di_atime.t_nsec = be32_to_cpu(from->di_atime.t_nsec);
+> -	to->di_mtime.t_sec = be32_to_cpu(from->di_mtime.t_sec);
+> -	to->di_mtime.t_nsec = be32_to_cpu(from->di_mtime.t_nsec);
+> -	to->di_ctime.t_sec = be32_to_cpu(from->di_ctime.t_sec);
+> -	to->di_ctime.t_nsec = be32_to_cpu(from->di_ctime.t_nsec);
+> -	to->di_size = be64_to_cpu(from->di_size);
+> -	to->di_nblocks = be64_to_cpu(from->di_nblocks);
+> -	to->di_extsize = be32_to_cpu(from->di_extsize);
+> -	to->di_nextents = be32_to_cpu(from->di_nextents);
+> -	to->di_anextents = be16_to_cpu(from->di_anextents);
+> -	to->di_forkoff = from->di_forkoff;
+> -	to->di_aformat	= from->di_aformat;
+> -	to->di_dmevmask	= be32_to_cpu(from->di_dmevmask);
+> -	to->di_dmstate	= be16_to_cpu(from->di_dmstate);
+> -	to->di_flags	= be16_to_cpu(from->di_flags);
+> -	to->di_gen	= be32_to_cpu(from->di_gen);
+> -
+> -	if (to->di_version == 3) {
+> -		to->di_changecount = be64_to_cpu(from->di_changecount);
+> -		to->di_crtime.t_sec = be32_to_cpu(from->di_crtime.t_sec);
+> -		to->di_crtime.t_nsec = be32_to_cpu(from->di_crtime.t_nsec);
+> -		to->di_flags2 = be64_to_cpu(from->di_flags2);
+> -		to->di_ino = be64_to_cpu(from->di_ino);
+> -		to->di_lsn = be64_to_cpu(from->di_lsn);
+> -		memcpy(to->di_pad2, from->di_pad2, sizeof(to->di_pad2));
+> -		uuid_copy(&to->di_uuid, &from->di_uuid);
+> -	}
+> -}
+> -
+> -void
+> -xfs_dinode_to_disk(
+> -	xfs_dinode_t		*to,
+> -	xfs_icdinode_t		*from)
+> -{
+> -	to->di_magic = cpu_to_be16(from->di_magic);
+> -	to->di_mode = cpu_to_be16(from->di_mode);
+> -	to->di_version = from ->di_version;
+> -	to->di_format = from->di_format;
+> -	to->di_onlink = cpu_to_be16(from->di_onlink);
+> -	to->di_uid = cpu_to_be32(from->di_uid);
+> -	to->di_gid = cpu_to_be32(from->di_gid);
+> -	to->di_nlink = cpu_to_be32(from->di_nlink);
+> -	to->di_projid_lo = cpu_to_be16(from->di_projid_lo);
+> -	to->di_projid_hi = cpu_to_be16(from->di_projid_hi);
+> -	memcpy(to->di_pad, from->di_pad, sizeof(to->di_pad));
+> -	to->di_flushiter = cpu_to_be16(from->di_flushiter);
+> -	to->di_atime.t_sec = cpu_to_be32(from->di_atime.t_sec);
+> -	to->di_atime.t_nsec = cpu_to_be32(from->di_atime.t_nsec);
+> -	to->di_mtime.t_sec = cpu_to_be32(from->di_mtime.t_sec);
+> -	to->di_mtime.t_nsec = cpu_to_be32(from->di_mtime.t_nsec);
+> -	to->di_ctime.t_sec = cpu_to_be32(from->di_ctime.t_sec);
+> -	to->di_ctime.t_nsec = cpu_to_be32(from->di_ctime.t_nsec);
+> -	to->di_size = cpu_to_be64(from->di_size);
+> -	to->di_nblocks = cpu_to_be64(from->di_nblocks);
+> -	to->di_extsize = cpu_to_be32(from->di_extsize);
+> -	to->di_nextents = cpu_to_be32(from->di_nextents);
+> -	to->di_anextents = cpu_to_be16(from->di_anextents);
+> -	to->di_forkoff = from->di_forkoff;
+> -	to->di_aformat = from->di_aformat;
+> -	to->di_dmevmask = cpu_to_be32(from->di_dmevmask);
+> -	to->di_dmstate = cpu_to_be16(from->di_dmstate);
+> -	to->di_flags = cpu_to_be16(from->di_flags);
+> -	to->di_gen = cpu_to_be32(from->di_gen);
+> -
+> -	if (from->di_version == 3) {
+> -		to->di_changecount = cpu_to_be64(from->di_changecount);
+> -		to->di_crtime.t_sec = cpu_to_be32(from->di_crtime.t_sec);
+> -		to->di_crtime.t_nsec = cpu_to_be32(from->di_crtime.t_nsec);
+> -		to->di_flags2 = cpu_to_be64(from->di_flags2);
+> -		to->di_ino = cpu_to_be64(from->di_ino);
+> -		to->di_lsn = cpu_to_be64(from->di_lsn);
+> -		memcpy(to->di_pad2, from->di_pad2, sizeof(to->di_pad2));
+> -		uuid_copy(&to->di_uuid, &from->di_uuid);
+> -	}
+> -}
+> -
+>  STATIC uint
+>  _xfs_dic2xflags(
+>  	__uint16_t		di_flags)
+> @@ -608,191 +380,6 @@ xfs_dic2xflags(
+>  				(XFS_DFORK_Q(dip) ? XFS_XFLAG_HASATTR : 0);
+>  }
+>  
+> -static bool
+> -xfs_dinode_verify(
+> -	struct xfs_mount	*mp,
+> -	struct xfs_inode	*ip,
+> -	struct xfs_dinode	*dip)
+> -{
+> -	if (dip->di_magic != cpu_to_be16(XFS_DINODE_MAGIC))
+> -		return false;
+> -
+> -	/* only version 3 or greater inodes are extensively verified here */
+> -	if (dip->di_version < 3)
+> -		return true;
+> -
+> -	if (!xfs_sb_version_hascrc(&mp->m_sb))
+> -		return false;
+> -	if (!xfs_verify_cksum((char *)dip, mp->m_sb.sb_inodesize,
+> -			      offsetof(struct xfs_dinode, di_crc)))
+> -		return false;
+> -	if (be64_to_cpu(dip->di_ino) != ip->i_ino)
+> -		return false;
+> -	if (!uuid_equal(&dip->di_uuid, &mp->m_sb.sb_uuid))
+> -		return false;
+> -	return true;
+> -}
+> -
+> -void
+> -xfs_dinode_calc_crc(
+> -	struct xfs_mount	*mp,
+> -	struct xfs_dinode	*dip)
+> -{
+> -	__uint32_t		crc;
+> -
+> -	if (dip->di_version < 3)
+> -		return;
+> -
+> -	ASSERT(xfs_sb_version_hascrc(&mp->m_sb));
+> -	crc = xfs_start_cksum((char *)dip, mp->m_sb.sb_inodesize,
+> -			      offsetof(struct xfs_dinode, di_crc));
+> -	dip->di_crc = xfs_end_cksum(crc);
+> -}
+> -
+> -/*
+> - * Read the disk inode attributes into the in-core inode structure.
+> - *
+> - * If we are initialising a new inode and we are not utilising the
+> - * XFS_MOUNT_IKEEP inode cluster mode, we can simple build the new inode core
+> - * with a random generation number. If we are keeping inodes around, we need to
+> - * read the inode cluster to get the existing generation number off disk.
+> - */
+> -int
+> -xfs_iread(
+> -	xfs_mount_t	*mp,
+> -	xfs_trans_t	*tp,
+> -	xfs_inode_t	*ip,
+> -	uint		iget_flags)
+> -{
+> -	xfs_buf_t	*bp;
+> -	xfs_dinode_t	*dip;
+> -	int		error;
+> -
+> -	/*
+> -	 * Fill in the location information in the in-core inode.
+> -	 */
+> -	error = xfs_imap(mp, tp, ip->i_ino, &ip->i_imap, iget_flags);
+> -	if (error)
+> -		return error;
+> -
+> -	/* shortcut IO on inode allocation if possible */
+> -	if ((iget_flags & XFS_IGET_CREATE) &&
+> -	    !(mp->m_flags & XFS_MOUNT_IKEEP)) {
+> -		/* initialise the on-disk inode core */
+> -		memset(&ip->i_d, 0, sizeof(ip->i_d));
+> -		ip->i_d.di_magic = XFS_DINODE_MAGIC;
+> -		ip->i_d.di_gen = prandom_u32();
+> -		if (xfs_sb_version_hascrc(&mp->m_sb)) {
+> -			ip->i_d.di_version = 3;
+> -			ip->i_d.di_ino = ip->i_ino;
+> -			uuid_copy(&ip->i_d.di_uuid, &mp->m_sb.sb_uuid);
+> -		} else
+> -			ip->i_d.di_version = 2;
+> -		return 0;
+> -	}
+> -
+> -	/*
+> -	 * Get pointers to the on-disk inode and the buffer containing it.
+> -	 */
+> -	error = xfs_imap_to_bp(mp, tp, &ip->i_imap, &dip, &bp, 0, iget_flags);
+> -	if (error)
+> -		return error;
+> -
+> -	/* even unallocated inodes are verified */
+> -	if (!xfs_dinode_verify(mp, ip, dip)) {
+> -		xfs_alert(mp, "%s: validation failed for inode %lld failed",
+> -				__func__, ip->i_ino);
+> -
+> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, dip);
+> -		error = XFS_ERROR(EFSCORRUPTED);
+> -		goto out_brelse;
+> -	}
+> -
+> -	/*
+> -	 * If the on-disk inode is already linked to a directory
+> -	 * entry, copy all of the inode into the in-core inode.
+> -	 * xfs_iformat_fork() handles copying in the inode format
+> -	 * specific information.
+> -	 * Otherwise, just get the truly permanent information.
+> -	 */
+> -	if (dip->di_mode) {
+> -		xfs_dinode_from_disk(&ip->i_d, dip);
+> -		error = xfs_iformat_fork(ip, dip);
+> -		if (error)  {
+> -#ifdef DEBUG
+> -			xfs_alert(mp, "%s: xfs_iformat() returned error %d",
+> -				__func__, error);
+> -#endif /* DEBUG */
+> -			goto out_brelse;
+> -		}
+> -	} else {
+> -		/*
+> -		 * Partial initialisation of the in-core inode. Just the bits
+> -		 * that xfs_ialloc won't overwrite or relies on being correct.
+> -		 */
+> -		ip->i_d.di_magic = be16_to_cpu(dip->di_magic);
+> -		ip->i_d.di_version = dip->di_version;
+> -		ip->i_d.di_gen = be32_to_cpu(dip->di_gen);
+> -		ip->i_d.di_flushiter = be16_to_cpu(dip->di_flushiter);
+> -
+> -		if (dip->di_version == 3) {
+> -			ip->i_d.di_ino = be64_to_cpu(dip->di_ino);
+> -			uuid_copy(&ip->i_d.di_uuid, &dip->di_uuid);
+> -		}
+> -
+> -		/*
+> -		 * Make sure to pull in the mode here as well in
+> -		 * case the inode is released without being used.
+> -		 * This ensures that xfs_inactive() will see that
+> -		 * the inode is already free and not try to mess
+> -		 * with the uninitialized part of it.
+> -		 */
+> -		ip->i_d.di_mode = 0;
+> -	}
+> -
+> -	/*
+> -	 * The inode format changed when we moved the link count and
+> -	 * made it 32 bits long.  If this is an old format inode,
+> -	 * convert it in memory to look like a new one.  If it gets
+> -	 * flushed to disk we will convert back before flushing or
+> -	 * logging it.  We zero out the new projid field and the old link
+> -	 * count field.  We'll handle clearing the pad field (the remains
+> -	 * of the old uuid field) when we actually convert the inode to
+> -	 * the new format. We don't change the version number so that we
+> -	 * can distinguish this from a real new format inode.
+> -	 */
+> -	if (ip->i_d.di_version == 1) {
+> -		ip->i_d.di_nlink = ip->i_d.di_onlink;
+> -		ip->i_d.di_onlink = 0;
+> -		xfs_set_projid(ip, 0);
+> -	}
+> -
+> -	ip->i_delayed_blks = 0;
+> -
+> -	/*
+> -	 * Mark the buffer containing the inode as something to keep
+> -	 * around for a while.  This helps to keep recently accessed
+> -	 * meta-data in-core longer.
+> -	 */
+> -	xfs_buf_set_ref(bp, XFS_INO_REF);
+> -
+> -	/*
+> -	 * Use xfs_trans_brelse() to release the buffer containing the on-disk
+> -	 * inode, because it was acquired with xfs_trans_read_buf() in
+> -	 * xfs_imap_to_bp() above.  If tp is NULL, this is just a normal
+> -	 * brelse().  If we're within a transaction, then xfs_trans_brelse()
+> -	 * will only release the buffer if it is not dirty within the
+> -	 * transaction.  It will be OK to release the buffer in this case,
+> -	 * because inodes on disk are never destroyed and we will be locking the
+> -	 * new in-core inode before putting it in the cache where other
+> -	 * processes can find it.  Thus we don't have to worry about the inode
+> -	 * being changed just because we released the buffer.
+> -	 */
+> - out_brelse:
+> -	xfs_trans_brelse(tp, bp);
+> -	return error;
+> -}
+> -
+>  /*
+>   * Allocate an inode on disk and return a copy of its in-core version.
+>   * The in-core inode is locked exclusively.  Set mode, nlink, and rdev
+> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+> index 0bd034a..8f775ed 100644
+> --- a/fs/xfs/xfs_inode.h
+> +++ b/fs/xfs/xfs_inode.h
+> @@ -18,24 +18,15 @@
+>  #ifndef	__XFS_INODE_H__
+>  #define	__XFS_INODE_H__
+>  
+> -struct posix_acl;
+> -struct xfs_dinode;
+> -struct xfs_inode;
+> -
+> +#include "xfs_inode_buf.h"
+>  #include "xfs_inode_fork.h"
+>  
+>  /*
+> - * Inode location information.  Stored in the inode and passed to
+> - * xfs_imap_to_bp() to get a buffer and dinode for a given inode.
+> + * Kernel only inode definitions
+>   */
+> -struct xfs_imap {
+> -	xfs_daddr_t	im_blkno;	/* starting BB of inode chunk */
+> -	ushort		im_len;		/* length in BBs of inode chunk */
+> -	ushort		im_boffset;	/* inode offset in block in bytes */
+> -};
+> -
+> -#ifdef __KERNEL__
+>  
+> +struct xfs_dinode;
+> +struct xfs_inode;
+>  struct xfs_buf;
+>  struct xfs_bmap_free;
+>  struct xfs_bmbt_irec;
+> @@ -347,7 +338,10 @@ int		xfs_itruncate_extents(struct xfs_trans **, struct xfs_inode *,
+>  int		xfs_iunlink(struct xfs_trans *, xfs_inode_t *);
+>  
+>  void		xfs_iext_realloc(xfs_inode_t *, int, int);
+> +
+>  void		xfs_iunpin_wait(xfs_inode_t *);
+> +#define xfs_ipincount(ip)	((unsigned int) atomic_read(&ip->i_pincount))
+> +
+>  int		xfs_iflush(struct xfs_inode *, struct xfs_buf **);
+>  void		xfs_lock_inodes(xfs_inode_t **, int, uint);
+>  void		xfs_lock_two_inodes(xfs_inode_t *, xfs_inode_t *, uint);
+> @@ -367,27 +361,6 @@ do { \
+>  	iput(VFS_I(ip)); \
+>  } while (0)
+>  
+> -#endif /* __KERNEL__ */
+> -
+> -int		xfs_imap_to_bp(struct xfs_mount *, struct xfs_trans *,
+> -			       struct xfs_imap *, struct xfs_dinode **,
+> -			       struct xfs_buf **, uint, uint);
+> -int		xfs_iread(struct xfs_mount *, struct xfs_trans *,
+> -			  struct xfs_inode *, uint);
+> -void		xfs_dinode_calc_crc(struct xfs_mount *, struct xfs_dinode *);
+> -void		xfs_dinode_to_disk(struct xfs_dinode *,
+> -				   struct xfs_icdinode *);
+> -bool		xfs_can_free_eofblocks(struct xfs_inode *, bool);
+> -
+> -#define xfs_ipincount(ip)	((unsigned int) atomic_read(&ip->i_pincount))
+> -
+> -#if defined(DEBUG)
+> -void		xfs_inobp_check(struct xfs_mount *, struct xfs_buf *);
+> -#else
+> -#define	xfs_inobp_check(mp, bp)
+> -#endif /* DEBUG */
+> -
+>  extern struct kmem_zone	*xfs_inode_zone;
+> -extern const struct xfs_buf_ops xfs_inode_buf_ops;
+>  
+>  #endif	/* __XFS_INODE_H__ */
+> diff --git a/fs/xfs/xfs_inode_buf.c b/fs/xfs/xfs_inode_buf.c
+> new file mode 100644
+> index 0000000..4abbaf3
+> --- /dev/null
+> +++ b/fs/xfs/xfs_inode_buf.c
+> @@ -0,0 +1,444 @@
+> +/*
+> + * Copyright (c) 2000-2006 Silicon Graphics, Inc.
+> + * All Rights Reserved.
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of the GNU General Public License as
+> + * published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope that it would be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program; if not, write the Free Software Foundation,
+> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> + */
+> +#include "xfs.h"
+> +#include "xfs_fs.h"
+> +#include "xfs_format.h"
+> +#include "xfs_log.h"
+> +#include "xfs_trans.h"
+> +#include "xfs_sb.h"
+> +#include "xfs_ag.h"
+> +#include "xfs_mount.h"
+> +#include "xfs_bmap_btree.h"
+> +#include "xfs_ialloc_btree.h"
+> +#include "xfs_dinode.h"
+> +#include "xfs_inode.h"
+> +#include "xfs_error.h"
+> +#include "xfs_cksum.h"
+> +#include "xfs_icache.h"
+> +#include "xfs_ialloc.h"
+> +
+> +/*
+> + * Check that none of the inode's in the buffer have a next
+> + * unlinked field of 0.
+> + */
+> +#if defined(DEBUG)
+> +void
+> +xfs_inobp_check(
+> +	xfs_mount_t	*mp,
+> +	xfs_buf_t	*bp)
+> +{
+> +	int		i;
+> +	int		j;
+> +	xfs_dinode_t	*dip;
+> +
+> +	j = mp->m_inode_cluster_size >> mp->m_sb.sb_inodelog;
+> +
+> +	for (i = 0; i < j; i++) {
+> +		dip = (xfs_dinode_t *)xfs_buf_offset(bp,
+> +					i * mp->m_sb.sb_inodesize);
+> +		if (!dip->di_next_unlinked)  {
+> +			xfs_alert(mp,
+> +	"Detected bogus zero next_unlinked field in incore inode buffer 0x%p.",
+> +				bp);
+> +			ASSERT(dip->di_next_unlinked);
+> +		}
+> +	}
+> +}
+> +#endif
+> +
+> +static void
+> +xfs_inode_buf_verify(
+> +	struct xfs_buf	*bp)
+> +{
+> +	struct xfs_mount *mp = bp->b_target->bt_mount;
+> +	int		i;
+> +	int		ni;
+> +
+> +	/*
+> +	 * Validate the magic number and version of every inode in the buffer
+> +	 */
+> +	ni = XFS_BB_TO_FSB(mp, bp->b_length) * mp->m_sb.sb_inopblock;
+> +	for (i = 0; i < ni; i++) {
+> +		int		di_ok;
+> +		xfs_dinode_t	*dip;
+> +
+> +		dip = (struct xfs_dinode *)xfs_buf_offset(bp,
+> +					(i << mp->m_sb.sb_inodelog));
+> +		di_ok = dip->di_magic == cpu_to_be16(XFS_DINODE_MAGIC) &&
+> +			    XFS_DINODE_GOOD_VERSION(dip->di_version);
+> +		if (unlikely(XFS_TEST_ERROR(!di_ok, mp,
+> +						XFS_ERRTAG_ITOBP_INOTOBP,
+> +						XFS_RANDOM_ITOBP_INOTOBP))) {
+> +			xfs_buf_ioerror(bp, EFSCORRUPTED);
+> +			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_HIGH,
+> +					     mp, dip);
+> +#ifdef DEBUG
+> +			xfs_emerg(mp,
+> +				"bad inode magic/vsn daddr %lld #%d (magic=%x)",
+> +				(unsigned long long)bp->b_bn, i,
+> +				be16_to_cpu(dip->di_magic));
+> +			ASSERT(0);
+> +#endif
+> +		}
+> +	}
+> +	xfs_inobp_check(mp, bp);
+> +}
+> +
+> +static void
+> +xfs_inode_buf_read_verify(
+> +	struct xfs_buf	*bp)
+> +{
+> +	xfs_inode_buf_verify(bp);
+> +}
+> +
+> +static void
+> +xfs_inode_buf_write_verify(
+> +	struct xfs_buf	*bp)
+> +{
+> +	xfs_inode_buf_verify(bp);
+> +}
+> +
+> +const struct xfs_buf_ops xfs_inode_buf_ops = {
+> +	.verify_read = xfs_inode_buf_read_verify,
+> +	.verify_write = xfs_inode_buf_write_verify,
+> +};
+> +
+> +/*
+> + * This routine is called to map an inode to the buffer containing the on-disk
+> + * version of the inode.  It returns a pointer to the buffer containing the
+> + * on-disk inode in the bpp parameter, and in the dipp parameter it returns a
+> + * pointer to the on-disk inode within that buffer.
+> + *
+> + * If a non-zero error is returned, then the contents of bpp and dipp are
+> + * undefined.
+> + */
+> +int
+> +xfs_imap_to_bp(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_trans	*tp,
+> +	struct xfs_imap		*imap,
+> +	struct xfs_dinode       **dipp,
+> +	struct xfs_buf		**bpp,
+> +	uint			buf_flags,
+> +	uint			iget_flags)
+> +{
+> +	struct xfs_buf		*bp;
+> +	int			error;
+> +
+> +	buf_flags |= XBF_UNMAPPED;
+> +	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp, imap->im_blkno,
+> +				   (int)imap->im_len, buf_flags, &bp,
+> +				   &xfs_inode_buf_ops);
+> +	if (error) {
+> +		if (error == EAGAIN) {
+> +			ASSERT(buf_flags & XBF_TRYLOCK);
+> +			return error;
+> +		}
+> +
+> +		if (error == EFSCORRUPTED &&
+> +		    (iget_flags & XFS_IGET_UNTRUSTED))
+> +			return XFS_ERROR(EINVAL);
+> +
+> +		xfs_warn(mp, "%s: xfs_trans_read_buf() returned error %d.",
+> +			__func__, error);
+> +		return error;
+> +	}
+> +
+> +	*bpp = bp;
+> +	*dipp = (struct xfs_dinode *)xfs_buf_offset(bp, imap->im_boffset);
+> +	return 0;
+> +}
+> +
+> +STATIC void
+> +xfs_dinode_from_disk(
+> +	xfs_icdinode_t		*to,
+> +	xfs_dinode_t		*from)
+> +{
+> +	to->di_magic = be16_to_cpu(from->di_magic);
+> +	to->di_mode = be16_to_cpu(from->di_mode);
+> +	to->di_version = from ->di_version;
+> +	to->di_format = from->di_format;
+> +	to->di_onlink = be16_to_cpu(from->di_onlink);
+> +	to->di_uid = be32_to_cpu(from->di_uid);
+> +	to->di_gid = be32_to_cpu(from->di_gid);
+> +	to->di_nlink = be32_to_cpu(from->di_nlink);
+> +	to->di_projid_lo = be16_to_cpu(from->di_projid_lo);
+> +	to->di_projid_hi = be16_to_cpu(from->di_projid_hi);
+> +	memcpy(to->di_pad, from->di_pad, sizeof(to->di_pad));
+> +	to->di_flushiter = be16_to_cpu(from->di_flushiter);
+> +	to->di_atime.t_sec = be32_to_cpu(from->di_atime.t_sec);
+> +	to->di_atime.t_nsec = be32_to_cpu(from->di_atime.t_nsec);
+> +	to->di_mtime.t_sec = be32_to_cpu(from->di_mtime.t_sec);
+> +	to->di_mtime.t_nsec = be32_to_cpu(from->di_mtime.t_nsec);
+> +	to->di_ctime.t_sec = be32_to_cpu(from->di_ctime.t_sec);
+> +	to->di_ctime.t_nsec = be32_to_cpu(from->di_ctime.t_nsec);
+> +	to->di_size = be64_to_cpu(from->di_size);
+> +	to->di_nblocks = be64_to_cpu(from->di_nblocks);
+> +	to->di_extsize = be32_to_cpu(from->di_extsize);
+> +	to->di_nextents = be32_to_cpu(from->di_nextents);
+> +	to->di_anextents = be16_to_cpu(from->di_anextents);
+> +	to->di_forkoff = from->di_forkoff;
+> +	to->di_aformat	= from->di_aformat;
+> +	to->di_dmevmask	= be32_to_cpu(from->di_dmevmask);
+> +	to->di_dmstate	= be16_to_cpu(from->di_dmstate);
+> +	to->di_flags	= be16_to_cpu(from->di_flags);
+> +	to->di_gen	= be32_to_cpu(from->di_gen);
+> +
+> +	if (to->di_version == 3) {
+> +		to->di_changecount = be64_to_cpu(from->di_changecount);
+> +		to->di_crtime.t_sec = be32_to_cpu(from->di_crtime.t_sec);
+> +		to->di_crtime.t_nsec = be32_to_cpu(from->di_crtime.t_nsec);
+> +		to->di_flags2 = be64_to_cpu(from->di_flags2);
+> +		to->di_ino = be64_to_cpu(from->di_ino);
+> +		to->di_lsn = be64_to_cpu(from->di_lsn);
+> +		memcpy(to->di_pad2, from->di_pad2, sizeof(to->di_pad2));
+> +		uuid_copy(&to->di_uuid, &from->di_uuid);
+> +	}
+> +}
+> +
+> +void
+> +xfs_dinode_to_disk(
+> +	xfs_dinode_t		*to,
+> +	xfs_icdinode_t		*from)
+> +{
+> +	to->di_magic = cpu_to_be16(from->di_magic);
+> +	to->di_mode = cpu_to_be16(from->di_mode);
+> +	to->di_version = from ->di_version;
+> +	to->di_format = from->di_format;
+> +	to->di_onlink = cpu_to_be16(from->di_onlink);
+> +	to->di_uid = cpu_to_be32(from->di_uid);
+> +	to->di_gid = cpu_to_be32(from->di_gid);
+> +	to->di_nlink = cpu_to_be32(from->di_nlink);
+> +	to->di_projid_lo = cpu_to_be16(from->di_projid_lo);
+> +	to->di_projid_hi = cpu_to_be16(from->di_projid_hi);
+> +	memcpy(to->di_pad, from->di_pad, sizeof(to->di_pad));
+> +	to->di_flushiter = cpu_to_be16(from->di_flushiter);
+> +	to->di_atime.t_sec = cpu_to_be32(from->di_atime.t_sec);
+> +	to->di_atime.t_nsec = cpu_to_be32(from->di_atime.t_nsec);
+> +	to->di_mtime.t_sec = cpu_to_be32(from->di_mtime.t_sec);
+> +	to->di_mtime.t_nsec = cpu_to_be32(from->di_mtime.t_nsec);
+> +	to->di_ctime.t_sec = cpu_to_be32(from->di_ctime.t_sec);
+> +	to->di_ctime.t_nsec = cpu_to_be32(from->di_ctime.t_nsec);
+> +	to->di_size = cpu_to_be64(from->di_size);
+> +	to->di_nblocks = cpu_to_be64(from->di_nblocks);
+> +	to->di_extsize = cpu_to_be32(from->di_extsize);
+> +	to->di_nextents = cpu_to_be32(from->di_nextents);
+> +	to->di_anextents = cpu_to_be16(from->di_anextents);
+> +	to->di_forkoff = from->di_forkoff;
+> +	to->di_aformat = from->di_aformat;
+> +	to->di_dmevmask = cpu_to_be32(from->di_dmevmask);
+> +	to->di_dmstate = cpu_to_be16(from->di_dmstate);
+> +	to->di_flags = cpu_to_be16(from->di_flags);
+> +	to->di_gen = cpu_to_be32(from->di_gen);
+> +
+> +	if (from->di_version == 3) {
+> +		to->di_changecount = cpu_to_be64(from->di_changecount);
+> +		to->di_crtime.t_sec = cpu_to_be32(from->di_crtime.t_sec);
+> +		to->di_crtime.t_nsec = cpu_to_be32(from->di_crtime.t_nsec);
+> +		to->di_flags2 = cpu_to_be64(from->di_flags2);
+> +		to->di_ino = cpu_to_be64(from->di_ino);
+> +		to->di_lsn = cpu_to_be64(from->di_lsn);
+> +		memcpy(to->di_pad2, from->di_pad2, sizeof(to->di_pad2));
+> +		uuid_copy(&to->di_uuid, &from->di_uuid);
+> +	}
+> +}
+> +
+> +static bool
+> +xfs_dinode_verify(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_inode	*ip,
+> +	struct xfs_dinode	*dip)
+> +{
+> +	if (dip->di_magic != cpu_to_be16(XFS_DINODE_MAGIC))
+> +		return false;
+> +
+> +	/* only version 3 or greater inodes are extensively verified here */
+> +	if (dip->di_version < 3)
+> +		return true;
+> +
+> +	if (!xfs_sb_version_hascrc(&mp->m_sb))
+> +		return false;
+> +	if (!xfs_verify_cksum((char *)dip, mp->m_sb.sb_inodesize,
+> +			      offsetof(struct xfs_dinode, di_crc)))
+> +		return false;
+> +	if (be64_to_cpu(dip->di_ino) != ip->i_ino)
+> +		return false;
+> +	if (!uuid_equal(&dip->di_uuid, &mp->m_sb.sb_uuid))
+> +		return false;
+> +	return true;
+> +}
+> +
+> +void
+> +xfs_dinode_calc_crc(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_dinode	*dip)
+> +{
+> +	__uint32_t		crc;
+> +
+> +	if (dip->di_version < 3)
+> +		return;
+> +
+> +	ASSERT(xfs_sb_version_hascrc(&mp->m_sb));
+> +	crc = xfs_start_cksum((char *)dip, mp->m_sb.sb_inodesize,
+> +			      offsetof(struct xfs_dinode, di_crc));
+> +	dip->di_crc = xfs_end_cksum(crc);
+> +}
+> +
+> +/*
+> + * Read the disk inode attributes into the in-core inode structure.
+> + *
+> + * If we are initialising a new inode and we are not utilising the
+> + * XFS_MOUNT_IKEEP inode cluster mode, we can simple build the new inode core
+> + * with a random generation number. If we are keeping inodes around, we need to
+> + * read the inode cluster to get the existing generation number off disk.
+> + */
+> +int
+> +xfs_iread(
+> +	xfs_mount_t	*mp,
+> +	xfs_trans_t	*tp,
+> +	xfs_inode_t	*ip,
+> +	uint		iget_flags)
+> +{
+> +	xfs_buf_t	*bp;
+> +	xfs_dinode_t	*dip;
+> +	int		error;
+> +
+> +	/*
+> +	 * Fill in the location information in the in-core inode.
+> +	 */
+> +	error = xfs_imap(mp, tp, ip->i_ino, &ip->i_imap, iget_flags);
+> +	if (error)
+> +		return error;
+> +
+> +	/* shortcut IO on inode allocation if possible */
+> +	if ((iget_flags & XFS_IGET_CREATE) &&
+> +	    !(mp->m_flags & XFS_MOUNT_IKEEP)) {
+> +		/* initialise the on-disk inode core */
+> +		memset(&ip->i_d, 0, sizeof(ip->i_d));
+> +		ip->i_d.di_magic = XFS_DINODE_MAGIC;
+> +		ip->i_d.di_gen = prandom_u32();
+> +		if (xfs_sb_version_hascrc(&mp->m_sb)) {
+> +			ip->i_d.di_version = 3;
+> +			ip->i_d.di_ino = ip->i_ino;
+> +			uuid_copy(&ip->i_d.di_uuid, &mp->m_sb.sb_uuid);
+> +		} else
+> +			ip->i_d.di_version = 2;
+> +		return 0;
+> +	}
+> +
+> +	/*
+> +	 * Get pointers to the on-disk inode and the buffer containing it.
+> +	 */
+> +	error = xfs_imap_to_bp(mp, tp, &ip->i_imap, &dip, &bp, 0, iget_flags);
+> +	if (error)
+> +		return error;
+> +
+> +	/* even unallocated inodes are verified */
+> +	if (!xfs_dinode_verify(mp, ip, dip)) {
+> +		xfs_alert(mp, "%s: validation failed for inode %lld failed",
+> +				__func__, ip->i_ino);
+> +
+> +		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, dip);
+> +		error = XFS_ERROR(EFSCORRUPTED);
+> +		goto out_brelse;
+> +	}
+> +
+> +	/*
+> +	 * If the on-disk inode is already linked to a directory
+> +	 * entry, copy all of the inode into the in-core inode.
+> +	 * xfs_iformat_fork() handles copying in the inode format
+> +	 * specific information.
+> +	 * Otherwise, just get the truly permanent information.
+> +	 */
+> +	if (dip->di_mode) {
+> +		xfs_dinode_from_disk(&ip->i_d, dip);
+> +		error = xfs_iformat_fork(ip, dip);
+> +		if (error)  {
+> +#ifdef DEBUG
+> +			xfs_alert(mp, "%s: xfs_iformat() returned error %d",
+> +				__func__, error);
+> +#endif /* DEBUG */
+> +			goto out_brelse;
+> +		}
+> +	} else {
+> +		/*
+> +		 * Partial initialisation of the in-core inode. Just the bits
+> +		 * that xfs_ialloc won't overwrite or relies on being correct.
+> +		 */
+> +		ip->i_d.di_magic = be16_to_cpu(dip->di_magic);
+> +		ip->i_d.di_version = dip->di_version;
+> +		ip->i_d.di_gen = be32_to_cpu(dip->di_gen);
+> +		ip->i_d.di_flushiter = be16_to_cpu(dip->di_flushiter);
+> +
+> +		if (dip->di_version == 3) {
+> +			ip->i_d.di_ino = be64_to_cpu(dip->di_ino);
+> +			uuid_copy(&ip->i_d.di_uuid, &dip->di_uuid);
+> +		}
+> +
+> +		/*
+> +		 * Make sure to pull in the mode here as well in
+> +		 * case the inode is released without being used.
+> +		 * This ensures that xfs_inactive() will see that
+> +		 * the inode is already free and not try to mess
+> +		 * with the uninitialized part of it.
+> +		 */
+> +		ip->i_d.di_mode = 0;
+> +	}
+> +
+> +	/*
+> +	 * The inode format changed when we moved the link count and
+> +	 * made it 32 bits long.  If this is an old format inode,
+> +	 * convert it in memory to look like a new one.  If it gets
+> +	 * flushed to disk we will convert back before flushing or
+> +	 * logging it.  We zero out the new projid field and the old link
+> +	 * count field.  We'll handle clearing the pad field (the remains
+> +	 * of the old uuid field) when we actually convert the inode to
+> +	 * the new format. We don't change the version number so that we
+> +	 * can distinguish this from a real new format inode.
+> +	 */
+> +	if (ip->i_d.di_version == 1) {
+> +		ip->i_d.di_nlink = ip->i_d.di_onlink;
+> +		ip->i_d.di_onlink = 0;
+> +		xfs_set_projid(ip, 0);
+> +	}
+> +
+> +	ip->i_delayed_blks = 0;
+> +
+> +	/*
+> +	 * Mark the buffer containing the inode as something to keep
+> +	 * around for a while.  This helps to keep recently accessed
+> +	 * meta-data in-core longer.
+> +	 */
+> +	xfs_buf_set_ref(bp, XFS_INO_REF);
+> +
+> +	/*
+> +	 * Use xfs_trans_brelse() to release the buffer containing the on-disk
+> +	 * inode, because it was acquired with xfs_trans_read_buf() in
+> +	 * xfs_imap_to_bp() above.  If tp is NULL, this is just a normal
+> +	 * brelse().  If we're within a transaction, then xfs_trans_brelse()
+> +	 * will only release the buffer if it is not dirty within the
+> +	 * transaction.  It will be OK to release the buffer in this case,
+> +	 * because inodes on disk are never destroyed and we will be locking the
+> +	 * new in-core inode before putting it in the cache where other
+> +	 * processes can find it.  Thus we don't have to worry about the inode
+> +	 * being changed just because we released the buffer.
+> +	 */
+> + out_brelse:
+> +	xfs_trans_brelse(tp, bp);
+> +	return error;
+> +}
+> diff --git a/fs/xfs/xfs_inode_buf.h b/fs/xfs/xfs_inode_buf.h
+> new file mode 100644
+> index 0000000..b5f1e22
+> --- /dev/null
+> +++ b/fs/xfs/xfs_inode_buf.h
+> @@ -0,0 +1,53 @@
+> +/*
+> + * Copyright (c) 2000-2003,2005 Silicon Graphics, Inc.
+> + * All Rights Reserved.
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of the GNU General Public License as
+> + * published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope that it would be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program; if not, write the Free Software Foundation,
+> + * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> + */
+> +#ifndef	__XFS_INODE_BUF_H__
+> +#define	__XFS_INODE_BUF_H__
+> +
+> +struct xfs_inode;
+> +struct xfs_dinode;
+> +struct xfs_icdinode;
+> +
+> +/*
+> + * Inode location information.  Stored in the inode and passed to
+> + * xfs_imap_to_bp() to get a buffer and dinode for a given inode.
+> + */
+> +struct xfs_imap {
+> +	xfs_daddr_t	im_blkno;	/* starting BB of inode chunk */
+> +	ushort		im_len;		/* length in BBs of inode chunk */
+> +	ushort		im_boffset;	/* inode offset in block in bytes */
+> +};
+> +
+> +int		xfs_imap_to_bp(struct xfs_mount *, struct xfs_trans *,
+> +			       struct xfs_imap *, struct xfs_dinode **,
+> +			       struct xfs_buf **, uint, uint);
+> +int		xfs_iread(struct xfs_mount *, struct xfs_trans *,
+> +			  struct xfs_inode *, uint);
+> +void		xfs_dinode_calc_crc(struct xfs_mount *, struct xfs_dinode *);
+> +void		xfs_dinode_to_disk(struct xfs_dinode *,
+> +				   struct xfs_icdinode *);
+> +bool		xfs_can_free_eofblocks(struct xfs_inode *, bool);
+> +
+> +#if defined(DEBUG)
+> +void		xfs_inobp_check(struct xfs_mount *, struct xfs_buf *);
+> +#else
+> +#define	xfs_inobp_check(mp, bp)
+> +#endif /* DEBUG */
+> +
+> +extern const struct xfs_buf_ops xfs_inode_buf_ops;
+> +
+> +#endif	/* __XFS_INODE_BUF_H__ */
+> 
 
 _______________________________________________
 xfs mailing list
