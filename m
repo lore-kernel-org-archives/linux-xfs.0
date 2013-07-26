@@ -1,16 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id D13F17F50
-	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 16:58:20 -0500 (CDT)
-Date: Fri, 26 Jul 2013 16:58:20 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 22/48] xfsprogs: Add verifiers to libxfs buffer interfaces.
-Message-ID: <20130726215820.GN3111@sgi.com>
-References: <1370564771-4929-1-git-send-email-david@fromorbit.com>
-	<1370564771-4929-23-git-send-email-david@fromorbit.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 1189829E0D
+	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 17:20:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 902A0AC002
+	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 15:20:09 -0700 (PDT)
+Received: from mail-yh0-f41.google.com (mail-yh0-f41.google.com
+	[209.85.213.41]) by cuda.sgi.com with ESMTP id M9LwCKUXW0EOwuSb
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 26 Jul 2013 15:20:08 -0700 (PDT)
+Received: by mail-yh0-f41.google.com with SMTP id b12so451534yha.0
+	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 15:20:07 -0700 (PDT)
+Message-ID: <51F2F60E.7080005@gmail.com>
+Date: Fri, 26 Jul 2013 18:19:58 -0400
+From: "Michael L. Semon" <mlsemon35@gmail.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1370564771-4929-23-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 44/49] xfs: Reduce allocations during CIL insertion
+References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
+	<1374215120-7271-45-git-send-email-david@fromorbit.com>
+	<51EEF26F.5040001@sgi.com> <51EEF949.9020104@gmail.com>
+	<51EFD68A.40400@sgi.com> <51F2E011.5020904@gmail.com>
+	<51F2E4DD.4020301@sgi.com>
+In-Reply-To: <51F2E4DD.4020301@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,174 +34,117 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Mark Tinguely <tinguely@sgi.com>
 Cc: xfs@oss.sgi.com
 
-Dave,
-
-On Fri, Jun 07, 2013 at 10:25:45AM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On 07/26/2013 05:06 PM, Mark Tinguely wrote:
+> On 07/26/13 15:46, Michael L. Semon wrote:
+>> On 07/24/2013 09:28 AM, Mark Tinguely wrote:
+>>> On 07/23/13 16:44, Michael L. Semon wrote:
+>>>> On 07/23/2013 05:15 PM, Mark Tinguely wrote:
+>>>>> On 07/19/13 01:25, Dave Chinner wrote:
+>>>>>> From: Dave Chinner<dchinner@redhat.com>
+>>>>>>
+>>>>>> Now that we have the size of the object before the formatting pass
+>>>>>> is called, we can allocation the log vector and it's buffer in a
+>>>>>> single allocation rather than two separate allocations.
+>>>>>>
+>>>>>> Store the size of the allocated buffer in the log vector so that
+>>>>>> we potentially avoid allocation for future modifications of the
+>>>>>> object.
+>>>>>>
+>>>>>> While touching this code, remove the IOP_FORMAT definition.
+>>>>
+>>>>>> Signed-off-by: Dave Chinner<dchinner@redhat.com>
+>>>>>
+>>>>> Looks good.
+>>>>>
+>>>>> Reviewed-by: Mark Tinguely<tinguely@sgi.com>
+>>>>>
+>>>>> _______________________________________________
+>>>>> xfs mailing list
+>>>>> xfs@oss.sgi.com
+>>>>> http://oss.sgi.com/mailman/listinfo/xfs
+>>>>
+>>>> I'd like to register a gentle "test this well" protest on this patch.
+>>>> While trying to figure out the origin of an unrelated lockdep, I
+>>>> tried to copy 3 kernel gits from one 2k non-CRC XFS filesystem to
+>>>> another one.  With at least this patch used, the cp operatin stops,
+>>>> leading to not-umountable, not-syncable filesystems.  It might be
+>>>> while copying the 2nd git, or the 3rd git, while copying header files,
+>>>> or while copying those large *.pack files, but it will happen
+>>>> somewhere.
+>>>>
+>>>> A bisect of the issue ends on this patch, but its removal means that
+>>>> 45_49 and 46_49 cannot be applied without good knowledge of the code
+>>>> to be patched.
+>>>>
+>>>> This one's on me for not being able to get good information to Dave.
+>>>> If I can find a way to get trace-cmd to pipe over ssh or something
+>>>> like that, then maybe there's a chance to make a file that `trace-cmd
+>>>> report` can read.  Previous attempts to save to different filesystems
+>>>> or save over NFS and CIFS have all failed.  Will keep trying...
+>>>>
+>>>> For diagnosing this patch, is there an effective trace that is rather
+>>>> small?  And would you need more than just the XFS events?
+>>>>
+>>>> Thanks!
+>>>>
+>>>> Michael
+>>>>
+>>>
+>>> Thanks for the heads up.
+>>>
+>>> If you could please redo the test and get the stack traces with /proc/sysrq-trigger and if you kernel works with crash, a core dump. For the stack trace, I mostly want to know if it has several "xlog_grant_head_wait" entries in it, because ...
+>>>
+>>> ...I seemed to have triggered a couple log space reservation hangs with fsstress one XFS partition and a mega-copy on another partition, but will have to graft the new XFS tree onto a Linux 3.10 kernel to get crash (and one of my sata controllers) to work again.
+>>>
+>>> Thanks.
+>>>
+>>> --Mark.
+>>
+>> Well, I tried.  Here's a Google Drive link, and hopefully it works:
+>>
+>> https://drive.google.com/folderview?id=0B41268QKoNjtckwzVTJqWnIydEE
+>>
+>> The instructions in Documentation/kdump/kdump.txt were followed
+>> fairly well.  The dump was taken from /proc/vmcore and extracted
+>> like this:
+>>
+>> $ cat /proc/vmcore | gzip -9vc>  4git-cp-kernel-dump-1.gz
+>>
+>> You seem to have things well under control, so it all might not be
+>> needed, anyway.  It does mean that kernel core dumps will go more
+>> quickly next time.
+>>
+>> BTW, there's a "crash" program referenced in kdump.txt, and it's been
+>> downloaded but not built yet.  Were you looking for output from the
+>> crash program?
+>>
+>> Thanks!
+>>
+>> Michael
 > 
-> Verifiers need to be used everywhere to enable calculation of CRCs
-> during writeback of modified metadata. Add then to the libxfs buffer
-> interfaces conver the internal use of devices to be buftarg aware.
+> Thanks more data. I will take a look. I will need the vmlinux, System.map, and xfs.ko (if xfs is a module).
 > 
-> Verifiers also require that the buffer has a back pointer to the
-> struct xfs_mount. To make this source level comaptible between
-> kernel and userspace, convert userspace to pass struct xfs_buftargs
-> around rather than a "device".
+> I can reproduce a problem in patch 44 too. It takes my copy test 20 minutes to deplete the log space with patch 44, Same test with patch 43 has been running a day and a half. I do not think that patch 44 is 100 times faster than patch 43 but I will let patch 43 spin all weekend on a couple machines to verify that patch 43 does not hang.
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Whatever the cause, it has to be fixed before bringing in patches 43-47.
+> 
+> --Mark.
 
+OK, I uploaded vmlinuz and System.map for both the system and capture 
+kernels, plus the configs for both kernels.  They're at the same link 
+as the kernel core dump:
 
-> @@ -507,7 +527,7 @@ typedef struct xfs_inode {
->  	xfs_mount_t		*i_mount;	/* fs mount struct ptr */
->  	xfs_ino_t		i_ino;		/* inode number (agno/agino) */
->  	struct xfs_imap		i_imap;		/* location for xfs_imap() */
-> -	dev_t			i_dev;		/* dev for this inode */
-> +	struct xfs_buftarg			i_dev;		/* dev for this inode */
+https://drive.google.com/folderview?id=0B41268QKoNjtckwzVTJqWnIydEE
 
-Got a little jumpy with the tabs there...
+These are taken from a 32-bit i686 Pentium 4 PC; I hope you won't 
+have to drag a boat anchor out of storage in order to use them.
 
-> diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-> index e9cc7b1..f91a5d0 100644
-> --- a/libxfs/rdwr.c
-> +++ b/libxfs/rdwr.c
-> @@ -200,12 +200,15 @@ libxfs_log_header(
->  #undef libxfs_getbuf_flags
->  #undef libxfs_putbuf
->  
-> -xfs_buf_t	*libxfs_readbuf(dev_t, xfs_daddr_t, int, int);
-> -xfs_buf_t	*libxfs_readbuf_map(dev_t, struct xfs_buf_map *, int, int);
-> +xfs_buf_t	*libxfs_readbuf(struct xfs_buftarg *, xfs_daddr_t, int, int,
-> +				const struct xfs_buf_map *);
+Thanks again!
 
-				const struct xfs_buf_ops *);
-
-> +xfs_buf_t	*libxfs_readbuf_map(struct xfs_buftarg *, struct xfs_buf_map *,
-> +				int, int, const struct xfs_buf_map *);
-
-					  const struct xfs_buf_ops *);
-
-> @@ -612,9 +622,9 @@ libxfs_purgebuf(xfs_buf_t *bp)
->  {
->  	struct xfs_bufkey key = {0};
->  
-> -	key.device = bp->b_dev;
-> +	key.buftarg = bp->b_target;
->  	key.blkno = bp->b_bn;
-> -	key.bblen = bp->b_bcount >> BBSHIFT;
-> +	key.bblen = bp->b_length;
-
-Why was this change necessary?  b_bcount to b_length?  It doesn't seem to be
-related to the rest of the patch.
-
-> @@ -767,9 +803,42 @@ __write_buf(int fd, void *buf, int len, off64_t offset, int flags)
->  int
->  libxfs_writebufr(xfs_buf_t *bp)
->  {
-> -	int	fd = libxfs_device_to_fd(bp->b_dev);
-> +	int	fd = libxfs_device_to_fd(bp->b_target->dev);
->  	int	error = 0;
->  
-> +	/*
-> +	 * we never write buffers that are marked stale. This indicates they
-> +	 * contain data that has been invalidated, and even if the buffer is
-> +	 * dirty it must *never* be written. Verifiers are wonderful for finding
-> +	 * bugs like this. Make sure the error is obvious as to the cause.
-> +	 */
-> +	if (bp->b_flags & LIBXFS_B_STALE) {
-> +		bp->b_error = ESTALE;
-> +		return bp->b_error;
-> +	}
-
-What led to this?
-
-> +
-> +	/*
-> +	 * clear any pre-existing error status on the buffer. This can occur if
-> +	 * the buffer is corrupt on disk and the repair process doesn't clear
-> +	 * the error before fixing and writing it back.
-> +	 */
-> +	bp->b_error = 0;
-> +	if (bp->b_ops) {
-> +		bp->b_ops->verify_write(bp);
-> +		if (bp->b_error) {
-> +			fprintf(stderr,
-> +	_("%s: write verifer failed on bno 0x%llx/0x%x\n"),
-> +				__func__, (long long)bp->b_bn, bp->b_bcount);
-> +			return bp->b_error;
-> +		}
-> +	}
-> +
-> +	if (bp->b_ops) {
-> +		bp->b_ops->verify_write(bp);
-> +		if (bp->b_error)
-> +			return bp->b_error;
-> +	}
-> +
-
-Calling the verifier twice?  Maybe I'm seeing double again...
-
-> @@ -187,11 +184,7 @@ roundup_pow_of_two(uint v)
->  	NULL;						\
->  })
->  #define xfs_buf_relse(bp)		libxfs_putbuf(bp)
-> -#define xfs_read_buf(mp,devp,blkno,len,f,bpp)	\
-> -					(*(bpp) = libxfs_readbuf((devp), \
-> -							(blkno), (len), 1), 0)
-
-Yeah, nobody is using this macro anymore.
-
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index a393607..3864932 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -2487,13 +2488,19 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
->  		exit(1);
->  	}
->  
-> +	/*
-> +	 * XXX: this code is effectively shared with the kernel growfs code.
-> +	 * These initialisations should be pulled into libxfs to keep the
-> +	 * kernel/userspace header initialisation code the same.
-> +	 */
->  	for (agno = 0; agno < agcount; agno++) {
-
-Nice idea.
-
->  		/*
->  		 * Superblock.
->  		 */
-> -		buf = libxfs_getbuf(xi.ddev,
-> +		buf = libxfs_getbuf(mp->m_ddev_targp,
->  				XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
->  				XFS_FSS_TO_BB(mp, 1));
-> +		buf->b_ops = &xfs_sb_buf_ops;
->  		memset(XFS_BUF_PTR(buf), 0, sectorsize);
->  		libxfs_sb_to_disk((void *)XFS_BUF_PTR(buf), sbp, XFS_SB_ALL_BITS);
->  		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
-
-...
-
-> @@ -1353,7 +1353,8 @@ scan_ags(
->  	}
->  	memset(agcnts, 0, mp->m_sb.sb_agcount * sizeof(*agcnts));
->  
-> -	create_work_queue(&wq, mp, scan_threads);
-> +	create_work_queue(&wq, mp, 1);
-> +	//create_work_queue(&wq, mp, scan_threads);
-
-What's this all about?  Were you having trouble with a multithreaded scan?
-
-Looks fine for the most part...  I did get a little uncomfortable with using
-verifiers on reads in repair.  Not sure whether setting b_error = EFSCORRUPTED
-would have ill effect later.
-
-Reviewed-by: Ben Myers <bpm@sgi.com>
-
-Regards,
-Ben
+Michael
 
 _______________________________________________
 xfs mailing list
