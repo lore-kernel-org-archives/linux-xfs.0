@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1EC837F37
-	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 19:32:27 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A0C6AAC006
-	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 17:32:23 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 4B6D67F37
+	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 19:39:59 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2E9B78F8033
+	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 17:39:59 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	iwbmlm8XJY1kus3e for <xfs@oss.sgi.com>;
-	Thu, 25 Jul 2013 17:32:22 -0700 (PDT)
-Date: Fri, 26 Jul 2013 10:32:08 +1000
+	xgZPuAtlt7Iwlwu1 for <xfs@oss.sgi.com>;
+	Thu, 25 Jul 2013 17:39:57 -0700 (PDT)
+Date: Fri, 26 Jul 2013 10:39:53 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 44/49] xfs: Reduce allocations during CIL insertion
-Message-ID: <20130726003208.GK13468@dastard>
-References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
-	<1374215120-7271-45-git-send-email-david@fromorbit.com>
-	<51EEF26F.5040001@sgi.com> <51EEF949.9020104@gmail.com>
-	<51EFD68A.40400@sgi.com> <20130725002108.GA11222@dastard>
-	<51F13E10.1010805@sgi.com>
+Subject: Re: [PATCH 03/48] libxfs: add crc format changes to generic btrees
+Message-ID: <20130726003953.GA21982@dastard>
+References: <1370564771-4929-1-git-send-email-david@fromorbit.com>
+	<1370564771-4929-4-git-send-email-david@fromorbit.com>
+	<20130723182648.GI3111@sgi.com> <20130725004821.GC11222@dastard>
+	<20130725171509.GZ3111@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <51F13E10.1010805@sgi.com>
+In-Reply-To: <20130725171509.GZ3111@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,61 +32,64 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: "Michael L. Semon" <mlsemon35@gmail.com>, xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, Jul 25, 2013 at 10:02:40AM -0500, Mark Tinguely wrote:
-> On 07/24/13 19:21, Dave Chinner wrote:
-> >On Wed, Jul 24, 2013 at 08:28:42AM -0500, Mark Tinguely wrote:
-> >>If you could please redo the test and get the stack traces with
-> >>/proc/sysrq-trigger and if you kernel works with crash, a core dump.
-> >>For the stack trace, I mostly want to know if it has several
-> >>"xlog_grant_head_wait" entries in it, because ...
-> >>
-> >>...I seemed to have triggered a couple log space reservation hangs
-> >>with fsstress one XFS partition and a mega-copy on another
-> >>partition, but will have to graft the new XFS tree onto a Linux 3.10
-> >>kernel to get crash (and one of my sata controllers) to work again.
-> >
-> >They are unrelated to this patchset.
-> >
-> >Somewhere in the code there
-> >is a mismatch between what we reserve as the base requirement for an
-> >actual log write and what the CIL actually steals, and that is, most
-> >likely, what is leading to log hangs.
-> >
-> >This is demonstratable in the fact that generic/070 on 512 byte
-> >block size filesystems regularly hits a transaction reservation
-> >exhausted assert failure on transaction commit of the periodic log
-> >dummy transaction on my test rigs.
-> >
-> >Cheers,
-> >
-> >Dave.
+On Thu, Jul 25, 2013 at 12:15:09PM -0500, Ben Myers wrote:
+> Dave,
 > 
-> In testing patch 44, I did not trip over any cil stealing asserts
-> before the hang. I think the cil steal assert is a different and a
-> legitimate complaint. When I tripped over the ASSERT in with the v3
-> inode enabled, the writeid only reserves space for the sb but there
-> were occasions of root btree and attribute fork entry that were also
-> logged.
+> On Thu, Jul 25, 2013 at 10:48:21AM +1000, Dave Chinner wrote:
+> > On Tue, Jul 23, 2013 at 01:26:48PM -0500, Ben Myers wrote:
+> > > On Fri, Jun 07, 2013 at 10:25:26AM +1000, Dave Chinner wrote:
+> > > > From: Dave Chinner <dchinner@redhat.com>
+> > > > 
+> > > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > > 
+> > > This patch mostly corresponds to commit ee1a47ab0e, and in some areas it is
+> > > equivalent but slightly different.  There are some other things in here too:
+> > > 
+> > > * Addition of XFS_BUF_DADDR_NULL
+> > > * rename of b_blkno to b_bn in struct xfs_buf
+> > > * rename of b_fsprivate to b_fspriv in struct xfs_buf
+> > > * addition of uuid_copy and uuid_equal, and libuuid to build
+> > > 
+> > > It all looks fine to me, except as below:
+> > 
+> > I think you'll find they are fixed up in later patches in the
+> > series.
+> > 
+> > Indeed, I think it's a little late to asking for these patches to be
+> > changed, considering that making significant changes to these first
+> > few patches will mean that I have to rebase a 100 or so subsequent
+> > patches.
 > 
-> patch 43 runs for hours without incident. Previous to this series, I
-> ran the same tests with parent pointer testing with much higher log
-> reservations for day or two and never got a hang.
-> 
-> I tested patch 44 with copy like tests and both times it hung both
-> times - not a convincing number of tests. A quick look, I see an
-> empty AIL, empty CIL, the CTX is using 0 bytes, doesn't look like
-> there are any cil pushes going nor any older ctx, the ctx has an
-> empty ticket reservation. The log tail is  0xd000014d7 and
-> reserve/grant is 0xe00204d04. The next reservation is for a rename
-> transaction that uses just over the log space left. There has to be
-> a log space leak. I will go back patch 43 on one machine and patch
-> 44 on another and make sure it is patch 44 is causing the problem.
+> You are mistaken...
 
-Right, a patch that makes transaction commits go faster is likely to
-cause a pre-existing reservation leak to leak faster....
+Mistaken about what, exactly? That a rebase will take days to do and
+retest, while an additional patch will take minutes? 
+
+I don't even have this series set up with guilt anymore - it's
+been so long since it was committed to the crc-dev branch that I
+moved over to working on that branch and adding patches on top of it
+to fix issues. I've simply assumed that this patchset is fixed in
+concrete and any problems will be layered on top.
+
+People are already using this code, so we've already got a
+significant amount of test exposure to it. Going back and modifying
+and completely rebasing it invalidates all that test coverage.
+Rebasing is not a risk-free operation, and when that is combined
+with the amount of time needed for a rebase of such a series, I'd
+much prefer that code that is in the crc-dev tree remains untouched
+and we layer fixes on top of it...
+
+> > For issues that aren't fixed in later patches, I'll add new patches
+> > to the end of the current series to fix them.
+> 
+> ...but I have no objection to taking this approach, so long as my
+> concerns are addressed.
+
+Which, for this patch, have already been addressed in subsequent
+patches....
 
 Cheers,
 
