@@ -1,26 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 523DD29E21
-	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 15:38:23 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 41476304082
-	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 13:38:23 -0700 (PDT)
-Received: from mail-vb0-f43.google.com (mail-vb0-f43.google.com
-	[209.85.212.43]) by cuda.sgi.com with ESMTP id oy7ZH6KTBo8xPyhG
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 26 Jul 2013 13:38:21 -0700 (PDT)
-Received: by mail-vb0-f43.google.com with SMTP id h11so616259vbh.2
-	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 13:38:21 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 8EC3529E21
+	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 15:46:24 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6CFFB30407B
+	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 13:46:24 -0700 (PDT)
+Received: from mail-ye0-f175.google.com (mail-ye0-f175.google.com
+	[209.85.213.175]) by cuda.sgi.com with ESMTP id
+	fxOkLQb9DW3qw81C (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 26 Jul 2013 13:46:23 -0700 (PDT)
+Received: by mail-ye0-f175.google.com with SMTP id m9so700800yen.34
+	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 13:46:22 -0700 (PDT)
+Message-ID: <51F2E011.5020904@gmail.com>
+Date: Fri, 26 Jul 2013 16:46:09 -0400
+From: "Michael L. Semon" <mlsemon35@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <51F2CD8B.8080207@hardwarefreak.com>
-References: <1374823420041-35002.post@n7.nabble.com>
-	<20130726115021.GO13468@dastard>
-	<CAA+BczQesNL2VmFmrcBNKXcM-Sfx0bXkXPRP5xMx6=Bv+NWrUA@mail.gmail.com>
-	<51F2CD8B.8080207@hardwarefreak.com>
-Date: Fri, 26 Jul 2013 16:38:21 -0400
-Message-ID: <CAA+BczQGYoJVL0twvz2GRhH30teFPSJOsKWtofbXBrom4_Q6hg@mail.gmail.com>
-Subject: Re: understanding speculative preallocation
-From: Jason Rosenberg <jbr@squareup.com>
+Subject: Re: [PATCH 44/49] xfs: Reduce allocations during CIL insertion
+References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
+	<1374215120-7271-45-git-send-email-david@fromorbit.com>
+	<51EEF26F.5040001@sgi.com> <51EEF949.9020104@gmail.com>
+	<51EFD68A.40400@sgi.com>
+In-Reply-To: <51EFD68A.40400@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,240 +30,100 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============1698775293579144864=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: stan@hardwarefreak.com
+To: Mark Tinguely <tinguely@sgi.com>
 Cc: xfs@oss.sgi.com
 
---===============1698775293579144864==
-Content-Type: multipart/alternative; boundary=20cf307f33cc985e2304e2701f29
+On 07/24/2013 09:28 AM, Mark Tinguely wrote:
+> On 07/23/13 16:44, Michael L. Semon wrote:
+>> On 07/23/2013 05:15 PM, Mark Tinguely wrote:
+>>> On 07/19/13 01:25, Dave Chinner wrote:
+>>>> From: Dave Chinner<dchinner@redhat.com>
+>>>>
+>>>> Now that we have the size of the object before the formatting pass
+>>>> is called, we can allocation the log vector and it's buffer in a
+>>>> single allocation rather than two separate allocations.
+>>>>
+>>>> Store the size of the allocated buffer in the log vector so that
+>>>> we potentially avoid allocation for future modifications of the
+>>>> object.
+>>>>
+>>>> While touching this code, remove the IOP_FORMAT definition.
+>>
+>>>> Signed-off-by: Dave Chinner<dchinner@redhat.com>
+>>>
+>>> Looks good.
+>>>
+>>> Reviewed-by: Mark Tinguely<tinguely@sgi.com>
+>>>
+>>> _______________________________________________
+>>> xfs mailing list
+>>> xfs@oss.sgi.com
+>>> http://oss.sgi.com/mailman/listinfo/xfs
+>>
+>> I'd like to register a gentle "test this well" protest on this patch.
+>> While trying to figure out the origin of an unrelated lockdep, I
+>> tried to copy 3 kernel gits from one 2k non-CRC XFS filesystem to
+>> another one.  With at least this patch used, the cp operatin stops,
+>> leading to not-umountable, not-syncable filesystems.  It might be
+>> while copying the 2nd git, or the 3rd git, while copying header files,
+>> or while copying those large *.pack files, but it will happen
+>> somewhere.
+>>
+>> A bisect of the issue ends on this patch, but its removal means that
+>> 45_49 and 46_49 cannot be applied without good knowledge of the code
+>> to be patched.
+>>
+>> This one's on me for not being able to get good information to Dave.
+>> If I can find a way to get trace-cmd to pipe over ssh or something
+>> like that, then maybe there's a chance to make a file that `trace-cmd
+>> report` can read.  Previous attempts to save to different filesystems
+>> or save over NFS and CIFS have all failed.  Will keep trying...
+>>
+>> For diagnosing this patch, is there an effective trace that is rather
+>> small?  And would you need more than just the XFS events?
+>>
+>> Thanks!
+>>
+>> Michael
+>>
+> 
+> Thanks for the heads up.
+> 
+> If you could please redo the test and get the stack traces with /proc/sysrq-trigger and if you kernel works with crash, a core dump. For the stack trace, I mostly want to know if it has several "xlog_grant_head_wait" entries in it, because ...
+> 
+> ...I seemed to have triggered a couple log space reservation hangs with fsstress one XFS partition and a mega-copy on another partition, but will have to graft the new XFS tree onto a Linux 3.10 kernel to get crash (and one of my sata controllers) to work again.
+> 
+> Thanks.
+> 
+> --Mark.
 
---20cf307f33cc985e2304e2701f29
-Content-Type: text/plain; charset=ISO-8859-1
+Well, I tried.  Here's a Google Drive link, and hopefully it works:
 
-Hi Stan,
+https://drive.google.com/folderview?id=0B41268QKoNjtckwzVTJqWnIydEE
 
-Thanks for the info (most of it was, in fact, news to me).  I'm an
-application developer trying to debug a disk space problem, that's all.  So
-far, I've tracked it down to being an XFS issue.
+The instructions in Documentation/kdump/kdump.txt were followed 
+fairly well.  The dump was taken from /proc/vmcore and extracted 
+like this:
 
-So you are saying there's no public information that can correlate XFS
-versioning to CentOS (or RHEL) versioning?
+$ cat /proc/vmcore | gzip -9vc > 4git-cp-kernel-dump-1.gz
 
-Sad state of affairs.
+You seem to have things well under control, so it all might not be 
+needed, anyway.  It does mean that kernel core dumps will go more 
+quickly next time.
 
-If anyone can volunteer this info (if available to you) I'd be much
-appreciative.
+BTW, there's a "crash" program referenced in kdump.txt, and it's been 
+downloaded but not built yet.  Were you looking for output from the 
+crash program?
 
-Regardless, is there a version history for XFS vis-a-via mainline Linux?
+Thanks!
 
-Thanks,
-
-Jason
-
-
-On Fri, Jul 26, 2013 at 3:27 PM, Stan Hoeppner <stan@hardwarefreak.com>wrote:
-
-> On 7/26/2013 12:40 PM, Jason Rosenberg wrote:
->
-> > Anyway, I'm surprised that you don't have some list or other way to
-> > correlate version history of XFS, with os release versions.  I'm guessing
-> > the version I have is not using the latest/greatest.  We actually have
-> > another system that uses an older version of the kernel (2.6.32-279), and
->
-> 2.6.32-279  - this is not a mainline kernel version.  This is a Red Hat
-> specific string describing their internal kernel release.  It has zero
-> correlation to any version number of anything else in the world of
-> mainline Linux.
->
-> > If, say you tell me, the mainline xfs code has improved behavior, it
-> would
-> > be nice to have a way to know which version of CentOS might include that?
->
-> IMNSHO, CentOS is a free proprietary chrome plated dog turd.  It's
-> flashy on the outside and claims it's "ENTERPRISE", "just like RHEL!".
-> Then you crack it open and find nothing but crap inside.  So you take it
-> back to the store that gave it away for free and the doors are barred,
-> the place out of business.  The chrome has peeled off and you're stuck
-> with crap that difficult to use.  Every time you touch it you get dirty
-> in some fashion.
->
-> RHEL is a proprietary solid chrome turd you pay for.  You can't get to
-> the inside, but if you find a scratch and 'return' it Red Hat will say
-> "we can help you fix that".
->
-> If you avoid the flashy turds altogether while still plunking down no
-> cash, and use a distro based entirely on mainline Linux and GNU user
-> space source, you can get help directly from the folks who wrote the
-> code you're running because they know what is where.  Whether it be
-> Linux proper, the XFS subsystem, NFS, Samba, Postix, etc.  Such
-> distributions are too numerous to mention.  None of them are chrome
-> plated, none claim to be "just like ENTERPRISE distro X".  I tell all
-> users of RHEL knock offs every time I see a situation like this:
->
-> Either pay for and receive the support that's required for the
-> proprietary distribution you're running, or use a completely open source
-> distro based on mainline kernel source and GNU user space.  By using a
-> RHEL knock off, you're simply locking yourself into an outdated
-> proprietary code base for which there is no viable support option,
-> because so few people in the community understand the packaging of the
-> constituent parts of the RHEL kernels.  This is entirely intentional on
-> the part of Red Hat, specifically to make the life of CentOS users
-> painful, and rightfully so.
->
-> FYI, many of the folks on the XFS list are Red Hat employees, including
-> Dave.  They'll gladly assist RHEL customers here if needed.  However, to
-> support CentOS users, especially in your situation, they'd have to use
-> Red Hat Inc resources to hunt down the information related to the CentOS
-> kernel you have that correlates to the RHEL kernel it is copied from.
-> So they've just consumed Red Hat Inc resources to directly assist a free
-> competitor who copied their distro.
->
-> Thus there's not much incentive to assist CentOS users as they'd in
-> essence be taking money out of their employer's pocket.  Taken to the
-> extreme this results in pay cuts, possibly furloughs or pink slips, etc.
->
-> Surely this can't be the first time you've run into a free community
-> support issue with the CentOS kernel.  Surely what I've written isn't
-> news to you.  Pay Red Hat for RHEL, or switch to Debian, Ubuntu, Open
-> Suse, etc.  Either way you'll be able to get much better support.
->
-> --
-> Stan
->
->
-
---20cf307f33cc985e2304e2701f29
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr">Hi Stan,<div><br></div><div>Thanks for the info (most of i=
-t was, in fact, news to me). =A0I&#39;m an application developer trying to =
-debug a disk space problem, that&#39;s all. =A0So far, I&#39;ve tracked it =
-down to being an XFS issue.</div>
-<div><br></div><div>So you are saying there&#39;s no public information tha=
-t can correlate XFS versioning to CentOS (or RHEL) versioning?</div><div><b=
-r></div><div>Sad state of affairs.</div><div><br></div><div>If anyone can v=
-olunteer this info (if available to you) I&#39;d be much appreciative.</div=
->
-<div><br></div><div>Regardless, is there a version history for XFS vis-a-vi=
-a mainline Linux?</div><div><br></div><div>Thanks,</div><div><br></div><div=
->Jason</div></div><div class=3D"gmail_extra"><br><br><div class=3D"gmail_qu=
-ote">
-On Fri, Jul 26, 2013 at 3:27 PM, Stan Hoeppner <span dir=3D"ltr">&lt;<a hre=
-f=3D"mailto:stan@hardwarefreak.com" target=3D"_blank">stan@hardwarefreak.co=
-m</a>&gt;</span> wrote:<br><blockquote class=3D"gmail_quote" style=3D"margi=
-n:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex">
-<div class=3D"im">On 7/26/2013 12:40 PM, Jason Rosenberg wrote:<br>
-<br>
-</div><div class=3D"im">&gt; Anyway, I&#39;m surprised that you don&#39;t h=
-ave some list or other way to<br>
-&gt; correlate version history of XFS, with os release versions. =A0I&#39;m=
- guessing<br>
-&gt; the version I have is not using the latest/greatest. =A0We actually ha=
-ve<br>
-&gt; another system that uses an older version of the kernel (2.6.32-279), =
-and<br>
-<br>
-</div>2.6.32-279 =A0- this is not a mainline kernel version. =A0This is a R=
-ed Hat<br>
-specific string describing their internal kernel release. =A0It has zero<br=
->
-correlation to any version number of anything else in the world of<br>
-mainline Linux.<br>
-<div class=3D"im"><br>
-&gt; If, say you tell me, the mainline xfs code has improved behavior, it w=
-ould<br>
-&gt; be nice to have a way to know which version of CentOS might include th=
-at?<br>
-<br>
-</div>IMNSHO, CentOS is a free proprietary chrome plated dog turd. =A0It&#3=
-9;s<br>
-flashy on the outside and claims it&#39;s &quot;ENTERPRISE&quot;, &quot;jus=
-t like RHEL!&quot;.<br>
-Then you crack it open and find nothing but crap inside. =A0So you take it<=
-br>
-back to the store that gave it away for free and the doors are barred,<br>
-the place out of business. =A0The chrome has peeled off and you&#39;re stuc=
-k<br>
-with crap that difficult to use. =A0Every time you touch it you get dirty<b=
-r>
-in some fashion.<br>
-<br>
-RHEL is a proprietary solid chrome turd you pay for. =A0You can&#39;t get t=
-o<br>
-the inside, but if you find a scratch and &#39;return&#39; it Red Hat will =
-say<br>
-&quot;we can help you fix that&quot;.<br>
-<br>
-If you avoid the flashy turds altogether while still plunking down no<br>
-cash, and use a distro based entirely on mainline Linux and GNU user<br>
-space source, you can get help directly from the folks who wrote the<br>
-code you&#39;re running because they know what is where. =A0Whether it be<b=
-r>
-Linux proper, the XFS subsystem, NFS, Samba, Postix, etc. =A0Such<br>
-distributions are too numerous to mention. =A0None of them are chrome<br>
-plated, none claim to be &quot;just like ENTERPRISE distro X&quot;. =A0I te=
-ll all<br>
-users of RHEL knock offs every time I see a situation like this:<br>
-<br>
-Either pay for and receive the support that&#39;s required for the<br>
-proprietary distribution you&#39;re running, or use a completely open sourc=
-e<br>
-distro based on mainline kernel source and GNU user space. =A0By using a<br=
->
-RHEL knock off, you&#39;re simply locking yourself into an outdated<br>
-proprietary code base for which there is no viable support option,<br>
-because so few people in the community understand the packaging of the<br>
-constituent parts of the RHEL kernels. =A0This is entirely intentional on<b=
-r>
-the part of Red Hat, specifically to make the life of CentOS users<br>
-painful, and rightfully so.<br>
-<br>
-FYI, many of the folks on the XFS list are Red Hat employees, including<br>
-Dave. =A0They&#39;ll gladly assist RHEL customers here if needed. =A0Howeve=
-r, to<br>
-support CentOS users, especially in your situation, they&#39;d have to use<=
-br>
-Red Hat Inc resources to hunt down the information related to the CentOS<br=
->
-kernel you have that correlates to the RHEL kernel it is copied from.<br>
-So they&#39;ve just consumed Red Hat Inc resources to directly assist a fre=
-e<br>
-competitor who copied their distro.<br>
-<br>
-Thus there&#39;s not much incentive to assist CentOS users as they&#39;d in=
-<br>
-essence be taking money out of their employer&#39;s pocket. =A0Taken to the=
-<br>
-extreme this results in pay cuts, possibly furloughs or pink slips, etc.<br=
->
-<br>
-Surely this can&#39;t be the first time you&#39;ve run into a free communit=
-y<br>
-support issue with the CentOS kernel. =A0Surely what I&#39;ve written isn&#=
-39;t<br>
-news to you. =A0Pay Red Hat for RHEL, or switch to Debian, Ubuntu, Open<br>
-Suse, etc. =A0Either way you&#39;ll be able to get much better support.<br>
-<span class=3D"HOEnZb"><font color=3D"#888888"><br>
---<br>
-Stan<br>
-<br>
-</font></span></blockquote></div><br></div>
-
---20cf307f33cc985e2304e2701f29--
-
-
---===============1698775293579144864==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Michael
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============1698775293579144864==--
