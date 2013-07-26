@@ -1,20 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 19D2B29E1D
-	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 10:58:10 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A68B5AC001
-	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 08:58:09 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id gFH0PbWV7kehZmDP for <xfs@oss.sgi.com>;
-	Fri, 26 Jul 2013 08:58:08 -0700 (PDT)
-Message-ID: <51F29C8E.2070102@sandeen.net>
-Date: Fri, 26 Jul 2013 10:58:06 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E5A8A29E1D
+	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 11:12:38 -0500 (CDT)
+Date: Fri, 26 Jul 2013 11:12:35 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH] xfstests: exit out if _scratch_mount fails
+Message-ID: <20130726161235.GK3111@sgi.com>
+References: <1373396847-7975-1-git-send-email-jbacik@fusionio.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: generic/314 filter out total from ls -l output
-References: <1374853532-19253-1-git-send-email-jbacik@fusionio.com>
-In-Reply-To: <1374853532-19253-1-git-send-email-jbacik@fusionio.com>
+Content-Disposition: inline
+In-Reply-To: <1373396847-7975-1-git-send-email-jbacik@fusionio.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,49 +23,24 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Josef Bacik <jbacik@fusionio.com>
-Cc: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+Cc: linxu-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On 7/26/13 10:45 AM, Josef Bacik wrote:
-> ls -l will show the nblocks for the directory, and this made it into the golden
-> output for 314.  The problem is nblocks is 0 for btrfs directories because we're
-> awesome, which makes us fail this test.  So filter out the "total blah" line of
-> ls -l so btrfs can pass this test too.  Thanks,
+Hey Josef,
+
+On Tue, Jul 09, 2013 at 03:07:27PM -0400, Josef Bacik wrote:
+> I test some of the different mkfs options for btrfs, one set doesn't work
+> properly with small file systems, so the fs won't mount.  This is fine from a
+> btrfs point of view, but tests that fail to mount the scratch fs will run
+> anyway, so if it's a "fill the fs" sort of test this will wreak havoc.  To fix
+> this just error out of _scratch_mount fails.  Thanks,
 > 
 > Signed-off-by: Josef Bacik <jbacik@fusionio.com>
 
-I don't know for sure that that makes brtfs awesome ;), but its' not what
-we're testing here, so ignoring it seems reasonable. 
+I noticed that this change causes dmapi tests to try to be run on systems that
+don't have dmapi supported, and they fail.  Have you seen this?
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-> ---
->  tests/generic/314     |    2 +-
->  tests/generic/314.out |    1 -
->  2 files changed, 1 insertions(+), 2 deletions(-)
-> 
-> diff --git a/tests/generic/314 b/tests/generic/314
-> index 2d34ea8..0dd98a3 100644
-> --- a/tests/generic/314
-> +++ b/tests/generic/314
-> @@ -62,7 +62,7 @@ su $qa_user -c "setfacl -m u:$qa_user:rwx,d:u:$qa_user:rwx $TEST_DIR/$seq-dir"
->  su $qa_user -c "mkdir $TEST_DIR/$seq-dir/subdir2"
->  
->  # Both subdirs should have inherited sgid
-> -_ls_l $TEST_DIR/$seq-dir/ | _filter_test_dir | awk '{print $1,$NF}'
-> +_ls_l $TEST_DIR/$seq-dir/ | grep -v total | _filter_test_dir | awk '{print $1,$NF}'
->  
->  status=0
->  exit
-> diff --git a/tests/generic/314.out b/tests/generic/314.out
-> index 180be80..b2db82b 100644
-> --- a/tests/generic/314.out
-> +++ b/tests/generic/314.out
-> @@ -1,4 +1,3 @@
->  QA output created by 314
-> -total 4
->  drwxr-sr-x subdir
->  drwxrwsr-x+ subdir2
-> 
+Thanks,
+	Ben
 
 _______________________________________________
 xfs mailing list
