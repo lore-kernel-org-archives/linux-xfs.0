@@ -1,15 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4829129E21
-	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 14:18:42 -0500 (CDT)
-Message-ID: <51F2CB91.3020801@sgi.com>
-Date: Fri, 26 Jul 2013 14:18:41 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 6D47B29E21
+	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 14:27:09 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 406F230407E
+	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 12:27:05 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id ryQCuZypq2wyChk8
+	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 12:27:04 -0700 (PDT)
+Message-ID: <51F2CD8B.8080207@hardwarefreak.com>
+Date: Fri, 26 Jul 2013 14:27:07 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 24/49] xfs: kill xfs_vnodeops.[ch]
-References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
-	<1374215120-7271-25-git-send-email-david@fromorbit.com>
-In-Reply-To: <1374215120-7271-25-git-send-email-david@fromorbit.com>
+Subject: Re: understanding speculative preallocation
+References: <1374823420041-35002.post@n7.nabble.com>
+	<20130726115021.GO13468@dastard>
+	<CAA+BczQesNL2VmFmrcBNKXcM-Sfx0bXkXPRP5xMx6=Bv+NWrUA@mail.gmail.com>
+In-Reply-To: <CAA+BczQesNL2VmFmrcBNKXcM-Sfx0bXkXPRP5xMx6=Bv+NWrUA@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,164 +26,78 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Jason Rosenberg <jbr@squareup.com>
 Cc: xfs@oss.sgi.com
 
-On 07/19/13 01:24, Dave Chinner wrote:
-> From: Dave Chinner<dchinner@redhat.com>
->
-> Now we have xfs_inode.c for holding kernel-only XFS inode
-> operations, move all the inode operations from xfs_vnodeops.c to
-> this new file as it holds another set of kernel-only inode
-> operations. The name of this file traces back to the days of Irix
-> and it's vnodes which we don't have anymore.
->
-> Essentially this move consolidates the inode locking functions
-> and a bunch of XFS inode operations into the one file. Eventually
-> the high level functions will be merged into the VFS interface
-> functions in xfs_iops.c.
->
-> This leaves only internal preallocation, EOF block manipulation and
-> hole punching functions in vnodeops.c. Move these to xfs_bmap_util.c
-> where we are already consolidating various in-kernel physical extent
-> manipulation and querying functions.
->
-> Signed-off-by: Dave Chinner<dchinner@redhat.com>
-> ---
+On 7/26/2013 12:40 PM, Jason Rosenberg wrote:
 
-As already mentioned, xfs_inode_fork.c still has a unwanted include of 
-now removed xfs_vnodeops.h.
+> Anyway, I'm surprised that you don't have some list or other way to
+> correlate version history of XFS, with os release versions.  I'm guessing
+> the version I have is not using the latest/greatest.  We actually have
+> another system that uses an older version of the kernel (2.6.32-279), and
 
-A xfs_qm_dqrele(pdqp) does not exist in the copied code:
-> +int
-> +xfs_create(
-> +	xfs_inode_t		*dp,
-> +	struct xfs_name		*name,
-> +	umode_t			mode,
-> +	xfs_dev_t		rdev,
-> +	xfs_inode_t		**ipp)
-> +{
+2.6.32-279  - this is not a mainline kernel version.  This is a Red Hat
+specific string describing their internal kernel release.  It has zero
+correlation to any version number of anything else in the world of
+mainline Linux.
 
-...
+> If, say you tell me, the mainline xfs code has improved behavior, it would
+> be nice to have a way to know which version of CentOS might include that?
 
-> +	/*
-> +	 * Attach the dquot(s) to the inodes and modify them incore.
-> +	 * These ids of the inode couldn't have changed since the new
-> +	 * inode has been locked ever since it was created.
-> +	 */
-> +	xfs_qm_vop_create_dqattach(tp, ip, udqp, gdqp, pdqp);
-> +
-> +	error = xfs_bmap_finish(&tp,&free_list,&committed);
-> +	if (error)
-> +		goto out_bmap_cancel;
-> +
-> +	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
-> +	if (error)
-> +		goto out_release_inode;
-> +
-> +	xfs_qm_dqrele(udqp);
-> +	xfs_qm_dqrele(gdqp);
+IMNSHO, CentOS is a free proprietary chrome plated dog turd.  It's
+flashy on the outside and claims it's "ENTERPRISE", "just like RHEL!".
+Then you crack it open and find nothing but crap inside.  So you take it
+back to the store that gave it away for free and the doors are barred,
+the place out of business.  The chrome has peeled off and you're stuck
+with crap that difficult to use.  Every time you touch it you get dirty
+in some fashion.
 
-^^^ does not exist here,
-> +
-> +	*ipp = ip;
-> +	return 0;
-> +
-> + out_bmap_cancel:
-> +	xfs_bmap_cancel(&free_list);
-> + out_trans_abort:
-> +	cancel_flags |= XFS_TRANS_ABORT;
-> + out_trans_cancel:
-> +	xfs_trans_cancel(tp, cancel_flags);
-> + out_release_inode:
-> +	/*
-> +	 * Wait until after the current transaction is aborted to
-> +	 * release the inode.  This prevents recursive transactions
-> +	 * and deadlocks from xfs_inactive.
-> +	 */
-> +	if (ip)
-> +		IRELE(ip);
-> +
-> +	xfs_qm_dqrele(udqp);
-> +	xfs_qm_dqrele(gdqp);
-> +	xfs_qm_dqrele(pdqp);
-> +
-> +	if (unlock_dp_on_error)
-> +		xfs_iunlock(dp, XFS_ILOCK_EXCL);
-> +	return error;
-> +}
-> +
->
+RHEL is a proprietary solid chrome turd you pay for.  You can't get to
+the inside, but if you find a scratch and 'return' it Red Hat will say
+"we can help you fix that".
 
-> -
-> -int
-> -xfs_create(
-> -	xfs_inode_t		*dp,
-> -	struct xfs_name		*name,
-> -	umode_t			mode,
-> -	xfs_dev_t		rdev,
-> -	xfs_inode_t		**ipp)
-> -{
+If you avoid the flashy turds altogether while still plunking down no
+cash, and use a distro based entirely on mainline Linux and GNU user
+space source, you can get help directly from the folks who wrote the
+code you're running because they know what is where.  Whether it be
+Linux proper, the XFS subsystem, NFS, Samba, Postix, etc.  Such
+distributions are too numerous to mention.  None of them are chrome
+plated, none claim to be "just like ENTERPRISE distro X".  I tell all
+users of RHEL knock offs every time I see a situation like this:
 
-...
-> -
-> -	/*
-> -	 * Attach the dquot(s) to the inodes and modify them incore.
-> -	 * These ids of the inode couldn't have changed since the new
-> -	 * inode has been locked ever since it was created.
-> -	 */
-> -	xfs_qm_vop_create_dqattach(tp, ip, udqp, gdqp, pdqp);
-> -
-> -	error = xfs_bmap_finish(&tp,&free_list,&committed);
-> -	if (error)
-> -		goto out_bmap_cancel;
-> -
-> -	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
-> -	if (error)
-> -		goto out_release_inode;
-> -
-> -	xfs_qm_dqrele(udqp);
-> -	xfs_qm_dqrele(gdqp);
-> -	xfs_qm_dqrele(pdqp);
+Either pay for and receive the support that's required for the
+proprietary distribution you're running, or use a completely open source
+distro based on mainline kernel source and GNU user space.  By using a
+RHEL knock off, you're simply locking yourself into an outdated
+proprietary code base for which there is no viable support option,
+because so few people in the community understand the packaging of the
+constituent parts of the RHEL kernels.  This is entirely intentional on
+the part of Red Hat, specifically to make the life of CentOS users
+painful, and rightfully so.
 
-exists here
-> -
-> -	*ipp = ip;
-> -	return 0;
-> -
-> - out_bmap_cancel:
-> -	xfs_bmap_cancel(&free_list);
-> - out_trans_abort:
-> -	cancel_flags |= XFS_TRANS_ABORT;
-> - out_trans_cancel:
-> -	xfs_trans_cancel(tp, cancel_flags);
-> - out_release_inode:
-> -	/*
-> -	 * Wait until after the current transaction is aborted to
-> -	 * release the inode.  This prevents recursive transactions
-> -	 * and deadlocks from xfs_inactive.
-> -	 */
-> -	if (ip)
-> -		IRELE(ip);
-> -
-> -	xfs_qm_dqrele(udqp);
-> -	xfs_qm_dqrele(gdqp);
-> -	xfs_qm_dqrele(pdqp);
-> -
-> -	if (unlock_dp_on_error)
-> -		xfs_iunlock(dp, XFS_ILOCK_EXCL);
-> -	return error;
-> -}
+FYI, many of the folks on the XFS list are Red Hat employees, including
+Dave.  They'll gladly assist RHEL customers here if needed.  However, to
+support CentOS users, especially in your situation, they'd have to use
+Red Hat Inc resources to hunt down the information related to the CentOS
+kernel you have that correlates to the RHEL kernel it is copied from.
+So they've just consumed Red Hat Inc resources to directly assist a free
+competitor who copied their distro.
 
-The format for xfs_rename() in xfs_inode.h is funky.
+Thus there's not much incentive to assist CentOS users as they'd in
+essence be taking money out of their employer's pocket.  Taken to the
+extreme this results in pay cuts, possibly furloughs or pink slips, etc.
 
-Hopefully I caught everything.
+Surely this can't be the first time you've run into a free community
+support issue with the CentOS kernel.  Surely what I've written isn't
+news to you.  Pay Red Hat for RHEL, or switch to Debian, Ubuntu, Open
+Suse, etc.  Either way you'll be able to get much better support.
 
---Mark.
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
