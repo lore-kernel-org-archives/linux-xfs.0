@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id AF76429E03
-	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 08:32:09 -0500 (CDT)
-Message-ID: <51F27A59.6060809@sgi.com>
-Date: Fri, 26 Jul 2013 08:32:09 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 130FF29E11
+	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 08:51:20 -0500 (CDT)
+Message-ID: <51F27ED7.9040009@sgi.com>
+Date: Fri, 26 Jul 2013 08:51:19 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 34/49] xfs: make struct xfs_perag kernel only
+Subject: Re: [PATCH 33/49] xfs: move kernel specific type definitions to xfs.h
 References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
-	<1374215120-7271-35-git-send-email-david@fromorbit.com>
-In-Reply-To: <1374215120-7271-35-git-send-email-david@fromorbit.com>
+	<1374215120-7271-34-git-send-email-david@fromorbit.com>
+In-Reply-To: <1374215120-7271-34-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,18 +28,15 @@ Cc: xfs@oss.sgi.com
 On 07/19/13 01:25, Dave Chinner wrote:
 > From: Dave Chinner<dchinner@redhat.com>
 >
-> The struct xfs_perag has many kernel-only definitions in it,
-> requiring a __KERNEL__ guard so userspace can use it to. Move it to
-> xfs_mount.h so that it it kernel-only, and let userspace redefine
-> it's own version of the structure containing only what it needs.
-> This gets rid of another __KERNEL__ check in the XFS header files.
+> xfs_types.h is shared with userspace, so having kernel specific
+> types defined in it is problematic. Move all the kernel specific
+> defines to xfs_linux.h so we can remove the __KERNEL__ guards from
+> xfs_types.h
 >
 > Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > ---
 
-moves the xfs_perag structure and adds a comment to why it is moved.
-
-looks good.
+Looks good.
 
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
