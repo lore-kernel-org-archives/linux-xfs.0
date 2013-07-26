@@ -1,18 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 29D9329E11
-	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 10:22:27 -0500 (CDT)
-Date: Fri, 26 Jul 2013 10:22:26 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 03/48] libxfs: add crc format changes to generic btrees
-Message-ID: <20130726152226.GJ3111@sgi.com>
-References: <1370564771-4929-1-git-send-email-david@fromorbit.com>
-	<1370564771-4929-4-git-send-email-david@fromorbit.com>
-	<20130723182648.GI3111@sgi.com> <20130725004821.GC11222@dastard>
-	<20130725171509.GZ3111@sgi.com> <20130726003953.GA21982@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130726003953.GA21982@dastard>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 3A0E329E11
+	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 10:26:08 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 2852E30405F
+	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 08:26:08 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id zvAODI1ByfTbJIfY (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 26 Jul 2013 08:26:07 -0700 (PDT)
+Date: Fri, 26 Jul 2013 11:25:59 -0400
+From: Dwight Engen <dwight.engen@oracle.com>
+Subject: Re: [PATCH v6 1/7] xfs: create wrappers for converting kuid_t
+	to/from uid_t
+Message-ID: <20130726112559.459d3ed0@oracle.com>
+In-Reply-To: <20130726004211.GB21982@dastard>
+References: <20130725114921.0d860cc4@oracle.com>
+	<20130726004211.GB21982@dastard>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,50 +33,26 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-Dave,
+On Fri, 26 Jul 2013 10:42:11 +1000
+Dave Chinner <david@fromorbit.com> wrote:
 
-On Fri, Jul 26, 2013 at 10:39:53AM +1000, Dave Chinner wrote:
-> On Thu, Jul 25, 2013 at 12:15:09PM -0500, Ben Myers wrote:
-> > On Thu, Jul 25, 2013 at 10:48:21AM +1000, Dave Chinner wrote:
-> > > On Tue, Jul 23, 2013 at 01:26:48PM -0500, Ben Myers wrote:
-> > > > On Fri, Jun 07, 2013 at 10:25:26AM +1000, Dave Chinner wrote:
-> > > > > From: Dave Chinner <dchinner@redhat.com>
-> > > > > 
-> > > > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > > > 
-> > > > This patch mostly corresponds to commit ee1a47ab0e, and in some areas it is
-> > > > equivalent but slightly different.  There are some other things in here too:
-> > > > 
-> > > > * Addition of XFS_BUF_DADDR_NULL
-> > > > * rename of b_blkno to b_bn in struct xfs_buf
-> > > > * rename of b_fsprivate to b_fspriv in struct xfs_buf
-> > > > * addition of uuid_copy and uuid_equal, and libuuid to build
-> > > > 
-> > > > It all looks fine to me, except as below:
-> > > 
-> > > I think you'll find they are fixed up in later patches in the
-> > > series.
-> > > 
-> > > Indeed, I think it's a little late to asking for these patches to be
-> > > changed, considering that making significant changes to these first
-> > > few patches will mean that I have to rebase a 100 or so subsequent
-> > > patches.
-> > 
-> > You are mistaken...
+> On Thu, Jul 25, 2013 at 11:49:21AM -0400, Dwight Engen wrote:
+> > Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
 > 
-> Mistaken about what, exactly?
+> Dwight, can you add the reviewed-by tags people have sent to the
+> commit messages?
 
-You are mistaken to assume that I will not require changes be made to patches
-at the beginning of your series regardless of the quantity of work you have on
-top.  Pulling these into crc-dev without review did not imply that these
-patches are set in concrete.
+Sure can, sorry I didn't realize I was supposed to carry those but it
+makes total sense.
 
-Having said that, I'm not doing these reviews to make your life difficult.
-Unless we find something egregious (such as the mismatched commit message in
-patch 7), I have no objection to taking the approach that minor issues can be
-fixed at the end of the series.
-
--Ben
+> When you repost a patch series, that's a reminder to everyone who
+> has already looked at this code. It's also a reminder to the
+> reviewers of where in the patch set they need to concentrate new
+> reviews...
+> 
+> Cheers,
+> 
+> Dave.
 
 _______________________________________________
 xfs mailing list
