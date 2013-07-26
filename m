@@ -1,24 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 362AF29E11
-	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 16:45:55 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C9CADAC001
-	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 14:45:54 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id qAFhpPcOEwLxEqrg for <xfs@oss.sgi.com>;
-	Fri, 26 Jul 2013 14:45:53 -0700 (PDT)
-Message-ID: <51F2EE0F.4060305@sandeen.net>
-Date: Fri, 26 Jul 2013 16:45:51 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id D13F17F50
+	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 16:58:20 -0500 (CDT)
+Date: Fri, 26 Jul 2013 16:58:20 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 22/48] xfsprogs: Add verifiers to libxfs buffer interfaces.
+Message-ID: <20130726215820.GN3111@sgi.com>
+References: <1370564771-4929-1-git-send-email-david@fromorbit.com>
+	<1370564771-4929-23-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Subject: Re: understanding speculative preallocation
-References: <1374823420041-35002.post@n7.nabble.com>
-	<20130726115021.GO13468@dastard>
-	<CAA+BczQesNL2VmFmrcBNKXcM-Sfx0bXkXPRP5xMx6=Bv+NWrUA@mail.gmail.com>
-	<51F2CD8B.8080207@hardwarefreak.com>
-	<CAA+BczQGYoJVL0twvz2GRhH30teFPSJOsKWtofbXBrom4_Q6hg@mail.gmail.com>
-In-Reply-To: <CAA+BczQGYoJVL0twvz2GRhH30teFPSJOsKWtofbXBrom4_Q6hg@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <1370564771-4929-23-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,132 +23,174 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jason Rosenberg <jbr@squareup.com>
-Cc: stan@hardwarefreak.com, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On 7/26/13 3:38 PM, Jason Rosenberg wrote:
-> Hi Stan,
-> 
-> Thanks for the info (most of it was, in fact, news to me). I'm an
-> application developer trying to debug a disk space problem, that's
-> all. So far, I've tracked it down to being an XFS issue.
-> 
-> So you are saying there's no public information that can correlate
-> XFS versioning to CentOS (or RHEL) versioning?
-> 
-> Sad state of affairs.
-> 
-> If anyone can volunteer this info (if available to you) I'd be much
-> appreciative.
-> 
-> Regardless, is there a version history for XFS vis-a-via mainline
-> Linux?
+Dave,
 
-There is no exact version history per se, ie. no "XFS version 2.51"
+On Fri, Jun 07, 2013 at 10:25:45AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Verifiers need to be used everywhere to enable calculation of CRCs
+> during writeback of modified metadata. Add then to the libxfs buffer
+> interfaces conver the internal use of devices to be buftarg aware.
+> 
+> Verifiers also require that the buffer has a back pointer to the
+> struct xfs_mount. To make this source level comaptible between
+> kernel and userspace, convert userspace to pass struct xfs_buftargs
+> around rather than a "device".
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Instead, the best point of reference upstream is the kernel release number,
-i.e. kernel 2.6.32, kernel 3.2, etc.  Ben pointed you at changelogs
-for that, which you can peruse...
 
-Once you get into RHEL, you're into a land of backports - originally
-2.6.32, but various & sundry updates & backports, to the point where
-it is a bit of a special snowflake, based on the requirements of RHEL
-customers and the RHEL maintainers (who, incidentally, are also major
-upstream XFS developers).
+> @@ -507,7 +527,7 @@ typedef struct xfs_inode {
+>  	xfs_mount_t		*i_mount;	/* fs mount struct ptr */
+>  	xfs_ino_t		i_ino;		/* inode number (agno/agino) */
+>  	struct xfs_imap		i_imap;		/* location for xfs_imap() */
+> -	dev_t			i_dev;		/* dev for this inode */
+> +	struct xfs_buftarg			i_dev;		/* dev for this inode */
 
-Your best bet for a distro kernel is to look at i.e. the kernel RPM
-changelog to see what's been going on.  But you won't be able
-to correlate that exactly with any one upstream version, unless maybe
-you see a "rebase $SUBSYSTEM to $KERNEL_VERSION" code type changelog.
+Got a little jumpy with the tabs there...
 
-Back to your original problem, you may find that just setting a fixed
-allocsize as a mount option has more pros than cons for your usecase.
+> diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+> index e9cc7b1..f91a5d0 100644
+> --- a/libxfs/rdwr.c
+> +++ b/libxfs/rdwr.c
+> @@ -200,12 +200,15 @@ libxfs_log_header(
+>  #undef libxfs_getbuf_flags
+>  #undef libxfs_putbuf
+>  
+> -xfs_buf_t	*libxfs_readbuf(dev_t, xfs_daddr_t, int, int);
+> -xfs_buf_t	*libxfs_readbuf_map(dev_t, struct xfs_buf_map *, int, int);
+> +xfs_buf_t	*libxfs_readbuf(struct xfs_buftarg *, xfs_daddr_t, int, int,
+> +				const struct xfs_buf_map *);
 
-HTH,
+				const struct xfs_buf_ops *);
 
--Eric
+> +xfs_buf_t	*libxfs_readbuf_map(struct xfs_buftarg *, struct xfs_buf_map *,
+> +				int, int, const struct xfs_buf_map *);
 
-> Thanks,
-> 
-> Jason
-> 
-> 
-> On Fri, Jul 26, 2013 at 3:27 PM, Stan Hoeppner <stan@hardwarefreak.com <mailto:stan@hardwarefreak.com>> wrote:
-> 
->     On 7/26/2013 12:40 PM, Jason Rosenberg wrote:
-> 
->     > Anyway, I'm surprised that you don't have some list or other way to
->     > correlate version history of XFS, with os release versions.  I'm guessing
->     > the version I have is not using the latest/greatest.  We actually have
->     > another system that uses an older version of the kernel (2.6.32-279), and
-> 
->     2.6.32-279  - this is not a mainline kernel version.  This is a Red Hat
->     specific string describing their internal kernel release.  It has zero
->     correlation to any version number of anything else in the world of
->     mainline Linux.
-> 
->     > If, say you tell me, the mainline xfs code has improved behavior, it would
->     > be nice to have a way to know which version of CentOS might include that?
-> 
->     IMNSHO, CentOS is a free proprietary chrome plated dog turd.  It's
->     flashy on the outside and claims it's "ENTERPRISE", "just like RHEL!".
->     Then you crack it open and find nothing but crap inside.  So you take it
->     back to the store that gave it away for free and the doors are barred,
->     the place out of business.  The chrome has peeled off and you're stuck
->     with crap that difficult to use.  Every time you touch it you get dirty
->     in some fashion.
-> 
->     RHEL is a proprietary solid chrome turd you pay for.  You can't get to
->     the inside, but if you find a scratch and 'return' it Red Hat will say
->     "we can help you fix that".
-> 
->     If you avoid the flashy turds altogether while still plunking down no
->     cash, and use a distro based entirely on mainline Linux and GNU user
->     space source, you can get help directly from the folks who wrote the
->     code you're running because they know what is where.  Whether it be
->     Linux proper, the XFS subsystem, NFS, Samba, Postix, etc.  Such
->     distributions are too numerous to mention.  None of them are chrome
->     plated, none claim to be "just like ENTERPRISE distro X".  I tell all
->     users of RHEL knock offs every time I see a situation like this:
-> 
->     Either pay for and receive the support that's required for the
->     proprietary distribution you're running, or use a completely open source
->     distro based on mainline kernel source and GNU user space.  By using a
->     RHEL knock off, you're simply locking yourself into an outdated
->     proprietary code base for which there is no viable support option,
->     because so few people in the community understand the packaging of the
->     constituent parts of the RHEL kernels.  This is entirely intentional on
->     the part of Red Hat, specifically to make the life of CentOS users
->     painful, and rightfully so.
-> 
->     FYI, many of the folks on the XFS list are Red Hat employees, including
->     Dave.  They'll gladly assist RHEL customers here if needed.  However, to
->     support CentOS users, especially in your situation, they'd have to use
->     Red Hat Inc resources to hunt down the information related to the CentOS
->     kernel you have that correlates to the RHEL kernel it is copied from.
->     So they've just consumed Red Hat Inc resources to directly assist a free
->     competitor who copied their distro.
-> 
->     Thus there's not much incentive to assist CentOS users as they'd in
->     essence be taking money out of their employer's pocket.  Taken to the
->     extreme this results in pay cuts, possibly furloughs or pink slips, etc.
-> 
->     Surely this can't be the first time you've run into a free community
->     support issue with the CentOS kernel.  Surely what I've written isn't
->     news to you.  Pay Red Hat for RHEL, or switch to Debian, Ubuntu, Open
->     Suse, etc.  Either way you'll be able to get much better support.
-> 
->     --
->     Stan
-> 
-> 
-> 
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+					  const struct xfs_buf_ops *);
+
+> @@ -612,9 +622,9 @@ libxfs_purgebuf(xfs_buf_t *bp)
+>  {
+>  	struct xfs_bufkey key = {0};
+>  
+> -	key.device = bp->b_dev;
+> +	key.buftarg = bp->b_target;
+>  	key.blkno = bp->b_bn;
+> -	key.bblen = bp->b_bcount >> BBSHIFT;
+> +	key.bblen = bp->b_length;
+
+Why was this change necessary?  b_bcount to b_length?  It doesn't seem to be
+related to the rest of the patch.
+
+> @@ -767,9 +803,42 @@ __write_buf(int fd, void *buf, int len, off64_t offset, int flags)
+>  int
+>  libxfs_writebufr(xfs_buf_t *bp)
+>  {
+> -	int	fd = libxfs_device_to_fd(bp->b_dev);
+> +	int	fd = libxfs_device_to_fd(bp->b_target->dev);
+>  	int	error = 0;
+>  
+> +	/*
+> +	 * we never write buffers that are marked stale. This indicates they
+> +	 * contain data that has been invalidated, and even if the buffer is
+> +	 * dirty it must *never* be written. Verifiers are wonderful for finding
+> +	 * bugs like this. Make sure the error is obvious as to the cause.
+> +	 */
+> +	if (bp->b_flags & LIBXFS_B_STALE) {
+> +		bp->b_error = ESTALE;
+> +		return bp->b_error;
+> +	}
+
+What led to this?
+
+> +
+> +	/*
+> +	 * clear any pre-existing error status on the buffer. This can occur if
+> +	 * the buffer is corrupt on disk and the repair process doesn't clear
+> +	 * the error before fixing and writing it back.
+> +	 */
+> +	bp->b_error = 0;
+> +	if (bp->b_ops) {
+> +		bp->b_ops->verify_write(bp);
+> +		if (bp->b_error) {
+> +			fprintf(stderr,
+> +	_("%s: write verifer failed on bno 0x%llx/0x%x\n"),
+> +				__func__, (long long)bp->b_bn, bp->b_bcount);
+> +			return bp->b_error;
+> +		}
+> +	}
+> +
+> +	if (bp->b_ops) {
+> +		bp->b_ops->verify_write(bp);
+> +		if (bp->b_error)
+> +			return bp->b_error;
+> +	}
+> +
+
+Calling the verifier twice?  Maybe I'm seeing double again...
+
+> @@ -187,11 +184,7 @@ roundup_pow_of_two(uint v)
+>  	NULL;						\
+>  })
+>  #define xfs_buf_relse(bp)		libxfs_putbuf(bp)
+> -#define xfs_read_buf(mp,devp,blkno,len,f,bpp)	\
+> -					(*(bpp) = libxfs_readbuf((devp), \
+> -							(blkno), (len), 1), 0)
+
+Yeah, nobody is using this macro anymore.
+
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index a393607..3864932 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -2487,13 +2488,19 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
+>  		exit(1);
+>  	}
+>  
+> +	/*
+> +	 * XXX: this code is effectively shared with the kernel growfs code.
+> +	 * These initialisations should be pulled into libxfs to keep the
+> +	 * kernel/userspace header initialisation code the same.
+> +	 */
+>  	for (agno = 0; agno < agcount; agno++) {
+
+Nice idea.
+
+>  		/*
+>  		 * Superblock.
+>  		 */
+> -		buf = libxfs_getbuf(xi.ddev,
+> +		buf = libxfs_getbuf(mp->m_ddev_targp,
+>  				XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
+>  				XFS_FSS_TO_BB(mp, 1));
+> +		buf->b_ops = &xfs_sb_buf_ops;
+>  		memset(XFS_BUF_PTR(buf), 0, sectorsize);
+>  		libxfs_sb_to_disk((void *)XFS_BUF_PTR(buf), sbp, XFS_SB_ALL_BITS);
+>  		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
+
+...
+
+> @@ -1353,7 +1353,8 @@ scan_ags(
+>  	}
+>  	memset(agcnts, 0, mp->m_sb.sb_agcount * sizeof(*agcnts));
+>  
+> -	create_work_queue(&wq, mp, scan_threads);
+> +	create_work_queue(&wq, mp, 1);
+> +	//create_work_queue(&wq, mp, scan_threads);
+
+What's this all about?  Were you having trouble with a multithreaded scan?
+
+Looks fine for the most part...  I did get a little uncomfortable with using
+verifiers on reads in repair.  Not sure whether setting b_error = EFSCORRUPTED
+would have ill effect later.
+
+Reviewed-by: Ben Myers <bpm@sgi.com>
+
+Regards,
+Ben
 
 _______________________________________________
 xfs mailing list
