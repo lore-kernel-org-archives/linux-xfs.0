@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DC7D57CBF
-	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 01:01:28 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CD0778F8033
-	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 23:01:25 -0700 (PDT)
-Received: from mail-qa0-f44.google.com (mail-qa0-f44.google.com
-	[209.85.216.44]) by cuda.sgi.com with ESMTP id YcTLDtrhrUo0xuj0
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 039FA7F4E
+	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 01:36:21 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B2DE830409A
+	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 23:36:20 -0700 (PDT)
+Received: from mail-qe0-f54.google.com (mail-qe0-f54.google.com
+	[209.85.128.54]) by cuda.sgi.com with ESMTP id aCk8PWoaGxiAAarC
 	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 25 Jul 2013 23:01:24 -0700 (PDT)
-Received: by mail-qa0-f44.google.com with SMTP id hu16so229787qab.3
-	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 23:01:23 -0700 (PDT)
+	<xfs@oss.sgi.com>; Thu, 25 Jul 2013 23:36:15 -0700 (PDT)
+Received: by mail-qe0-f54.google.com with SMTP id 1so819613qee.27
+	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 23:36:15 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20130726020318.GD21982@dastard>
-References: <1374759524-10061-1-git-send-email-zwu.kernel@gmail.com>
-	<20130726020318.GD21982@dastard>
-Date: Fri, 26 Jul 2013 14:01:23 +0800
-Message-ID: <CAEH94LiXtG=DD+Qn4kbNT_Y_Qn65wVYrpYvHKXOob6wru3SeDw@mail.gmail.com>
-Subject: Re: [PATCH] xfs: fix an assertion failure
+In-Reply-To: <20130726025009.GE21982@dastard>
+References: <1374740619-29797-1-git-send-email-zwu.kernel@gmail.com>
+	<20130726025009.GE21982@dastard>
+Date: Fri, 26 Jul 2013 14:36:15 +0800
+Message-ID: <CAEH94Lh-UCCEs7hQi_t5v+X+ER1DH9dCtjr6e9GVNX5KJ-f1hQ@mail.gmail.com>
+Subject: Re: [PATCH] xfs: introduce object readahead to log recovery
 From: Zhi Yong Wu <zwu.kernel@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -34,156 +34,251 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, linux-kernel mlist <linux-kernel@vger.kernel.org>, xfstests <xfs@oss.sgi.com>
 
-No, it still raised the same assertion as below:
+Dave,
 
-[  521.715103] XFS: Assertion failed: !(bip->bli_item.li_flags &
-XFS_LI_IN_AIL), file: fs/xfs/xfs_buf_item.c, line: 940
-[  521.716378] ------------[ cut here ]------------
-[  521.716934] kernel BUG at fs/xfs/xfs_message.c:108!
-[  521.717364] invalid opcode: 0000 [#1] SMP
-[  521.717364] Modules linked in:
-[  521.717364] CPU: 0 PID: 6 Comm: kworker/u2:0 Not tainted 3.11.0-rc2+ #959
-[  521.717364] Hardware name: Bochs Bochs, BIOS Bochs 01/01/2011
-[  521.717364] Workqueue: writeback bdi_writeback_workfn (flush-8:0)
-[  521.717364] task: ffff880293531fd0 ti: ffff88029353c000 task.ti:
-ffff88029353c000
-[  521.717364] RIP: 0010:[<ffffffff812dc6f2>]  [<ffffffff812dc6f2>]
-assfail+0x22/0x30
-[  521.717364] RSP: 0018:ffff88029353d5f8  EFLAGS: 00010292
-[  521.717364] RAX: 0000000000000068 RBX: ffff880289f603a0 RCX: 0000000000000006
-[  521.717364] RDX: 0000000000000006 RSI: ffff880293532758 RDI: ffff880293531fd0
-[  521.717364] RBP: ffff88029353d5f8 R08: 0000000000000000 R09: 0000000000000001
-[  521.717364] R10: 0000000000000000 R11: 0000000000000000 R12: ffff880291e4a480
-[  521.717364] R13: ffff880289f603a0 R14: ffffffff81342b2f R15: ffff8801b43a0810
-[  521.717364] FS:  0000000000000000(0000) GS:ffff88029fc00000(0000)
-knlGS:0000000000000000
-[  521.717364] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-[  521.717364] CR2: 00000000f75045e4 CR3: 000000029094c000 CR4: 00000000000006f0
-[  521.717364] Stack:
-[  521.717364]  ffff88029353d628 ffffffff813428df ffff880289f603a0
-0000000000000002
-[  521.717364]  ffff880291e4a480 0000000000000001 ffff88029353d668
-ffffffff81342b2f
-[  521.717364]  0000000000000000 ffff880289f603a0 ffff880276231fc0
-ffffffffffffffff
-[  521.717364] Call Trace:
-[  521.717364]  [<ffffffff813428df>] xfs_buf_item_relse+0x4f/0xd0
-[  521.717364]  [<ffffffff81342b2f>] xfs_buf_item_unlock+0x1cf/0x1f0
-[  521.717364]  [<ffffffff8133ac3d>] xfs_trans_free_items+0x7d/0xb0
-[  521.717364]  [<ffffffff8133b35c>] xfs_trans_cancel+0x13c/0x1b0
-[  521.717364]  [<ffffffff812d8d89>] xfs_iomap_write_allocate+0x249/0x350
-[  521.717364]  [<ffffffff812c6af2>] xfs_map_blocks+0x2e2/0x350
-[  521.717364]  [<ffffffff812c7a76>] xfs_vm_writepage+0x236/0x5e0
-[  521.717364]  [<ffffffff8115174a>] __writepage+0x1a/0x50
-[  521.717364]  [<ffffffff81152065>] write_cache_pages+0x225/0x4a0
-[  521.717364]  [<ffffffff81151730>] ? mapping_tagged+0x20/0x20
-[  521.717364]  [<ffffffff8115232d>] generic_writepages+0x4d/0x70
-[  521.717364]  [<ffffffff812c5e60>] xfs_vm_writepages+0x50/0x70
-[  521.717364]  [<ffffffff81153cb1>] do_writepages+0x21/0x50
-[  521.717364]  [<ffffffff811d4050>] __writeback_single_inode+0x40/0x230
-[  521.717364]  [<ffffffff811d52b1>] writeback_sb_inodes+0x291/0x460
-[  521.717364]  [<ffffffff811d551f>] __writeback_inodes_wb+0x9f/0xd0
-[  521.717364]  [<ffffffff811d579b>] wb_writeback+0x24b/0x2e0
-[  521.717364]  [<ffffffff8115185a>] ? global_dirtyable_memory+0x1a/0x60
-[  521.717364]  [<ffffffff811d7386>] bdi_writeback_workfn+0x1d6/0x3d0
-[  521.717364]  [<ffffffff8107734b>] process_one_work+0x1eb/0x4f0
-[  521.717364]  [<ffffffff810772e9>] ? process_one_work+0x189/0x4f0
-[  521.717364]  [<ffffffff81077adb>] worker_thread+0x11b/0x370
-[  521.717364]  [<ffffffff810779c0>] ? rescuer_thread+0x330/0x330
-[  521.717364]  [<ffffffff8107ff8a>] kthread+0xea/0xf0
-[  521.717364]  [<ffffffff8107fea0>] ? flush_kthread_work+0x1b0/0x1b0
-[  521.717364]  [<ffffffff818b6adc>] ret_from_fork+0x7c/0xb0
-[  521.717364]  [<ffffffff8107fea0>] ? flush_kthread_work+0x1b0/0x1b0
-[  521.717364] Code: 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 55 48
-89 f1 41 89 d0 48 c7 c6 f0 b5 c7 81 48 89 fa 31 c0 48 89 e5 31 ff e8
-de fb ff ff <0f> 0b 66 66 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00
-55 48
-[  521.717364] RIP  [<ffffffff812dc6f2>] assfail+0x22/0x30
-[  521.717364]  RSP <ffff88029353d5f8>
-[  521.754783] ---[ end trace e13298ca69cdb092 ]---
+All comments are good to me, and will be applied to next version, thanks a lot.
 
-I applied your patch as below:
-
-[root@f17 linux-2.6]# git diff
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index bfc4e0c..98308f4 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -601,11 +601,9 @@ xfs_buf_item_unlock(
-                        }
-                }
-        }
--       if (clean)
--               xfs_buf_item_relse(bp);
--       else if (aborted) {
-+       if (clean || aborted) {
-                if (atomic_dec_and_test(&bip->bli_refcount)) {
--                       ASSERT(XFS_FORCED_SHUTDOWN(lip->li_mountp));
-+                       ASSERT(!aborted || XFS_FORCED_SHUTDOWN(lip->li_mountp));
-                        xfs_buf_item_relse(bp);
-                }
-        } else
-[root@f17 linux-2.6]#
-
-On Fri, Jul 26, 2013 at 10:03 AM, Dave Chinner <david@fromorbit.com> wrote:
-> On Thu, Jul 25, 2013 at 09:38:44PM +0800, zwu.kernel@gmail.com wrote:
+On Fri, Jul 26, 2013 at 10:50 AM, Dave Chinner <david@fromorbit.com> wrote:
+> On Thu, Jul 25, 2013 at 04:23:39PM +0800, zwu.kernel@gmail.com wrote:
 >> From: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
 >>
->>   When running the compilebench, one assertion failure was found.
->> This related line of code was introduced by commit 5f6bed76c0.
+>>   It can take a long time to run log recovery operation because it is
+>> single threaded and is bound by read latency. We can find that it took
+>> most of the time to wait for the read IO to occur, so if one object
+>> readahead is introduced to log recovery, it will obviously reduce the
+>> log recovery time.
 >>
->> commit 5f6bed76c0c85cb4d04885a5de00b629deee550b
->> Author: Dave Chinner <david@fromorbit.com>
->> Date:   Thu Jun 27 16:04:52 2013 +1000
+>>   In dirty log case as below:
+>>     data device: 0xfd10
+>>     log device: 0xfd10 daddr: 20480032 length: 20480
 >>
->>     xfs: Introduce an ordered buffer item
+>>     log tail: 7941 head: 11077 state: <DIRTY>
 >
-> Ok, so the assert was introduced there, and for good reason: if we
-> are about to free the xfs_buf_log_item, then it better not still be
-> referenced by the AIL.
+> That's only a small log (10MB). As I've said on irc, readahead won't
+Yeah, it is one 10MB log, but how do you calculate it based on the above info?
+
+> show any real difference on this and you need to be testing with
+> large logs.
 >
->> XFS: Assertion failed: !(bip->bli_item.li_flags & XFS_LI_IN_AIL), file: fs/xfs/xfs_buf_item.c, line: 942
->> ------------[ cut here ]------------
->> kernel BUG at fs/xfs/xfs_message.c:108!
->> invalid opcode: 0000 [#1] SMP
->> Modules linked in:
->> CPU: 0 PID: 40 Comm: kworker/u2:1 Not tainted 3.11.0-rc2+ #955
->> Hardware name: Bochs Bochs, BIOS Bochs 01/01/2011
->> Workqueue: writeback bdi_writeback_workfn (flush-8:0)
+>>
+>> This dirty ratio is about 15%. I am trying to do tests in larger scale
+>> and dirtier filesystem environment.
+>>
+>> Log recovery time stat:
+>>
+>>             w/o this patch        w/ this patch
+>>   real         0m1.051s             0m0.965s
+>>   sys          0m0.033s             0m0.035s
+>>
+>>   iowait       0m1.018s             0m0.930s
+>
+> Well, it's not made much of a difference there. That's probably
+> within the noise of repeated log recovery runs.
+>
+> My simple test is:
+>
+> $ cat recovery_time.sh
+> #!/bin/bash
+>
+> cd /home/dave/src/compilebench-0.6/
+>
+> mkfs.xfs -f /dev/vdc;
+> mount /dev/vdc /mnt/scratch
+> chmod 777 /mnt/scratch;
+> ./compilebench --no-sync -D /mnt/scratch &
+> sleep 55
+> /home/dave/src/xfstests-dev/src/godown /mnt/scratch
+> umount /mnt/scratch
+> xfs_logprint -t /dev/vdc |head -20
+> time mount /dev/vdc /mnt/scratch
+> umount /mnt/scratch
+> $
+>
+> And the recovery time from this is between 15-17s:
+>
 > ....
->>  [<ffffffff813428df>] xfs_buf_item_relse+0x4f/0xd0
->>  [<ffffffff81342aeb>] xfs_buf_item_unlock+0x18b/0x1e0
->>  [<ffffffff8133ac3d>] xfs_trans_free_items+0x7d/0xb0
->>  [<ffffffff8133b35c>] xfs_trans_cancel+0x13c/0x1b0
->>  [<ffffffff812d8d89>] xfs_iomap_write_allocate+0x249/0x350
->>  [<ffffffff812c6af2>] xfs_map_blocks+0x2e2/0x350
->>  [<ffffffff812c7a76>] xfs_vm_writepage+0x236/0x5e0
+>     log device: 0xfd20 daddr: 107374182032 length: 4173824
+>                                                    ^^^^^^^ almost 2GB
+>         log tail: 19288 head: 264809 state: <DIRTY>
+> ....
+> real    0m17.913s
+> user    0m0.000s
+> sys     0m2.381s
 >
-> And what we see here is a buffer item being released and freed after
-> a cancelled allocation transaction while it is in the AIL. That's
-> indicative of a bug in the buffer item code, and will cause
-> user-after-free issues. Hence:
+> And runs at 3-4000 read IOPs for most of that time. It's largely IO
+> bound, even on SSDs.
 >
->> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
->> index bfc4e0c..b4d42ae 100644
->> --- a/fs/xfs/xfs_buf_item.c
->> +++ b/fs/xfs/xfs_buf_item.c
->> @@ -939,7 +939,6 @@ xfs_buf_item_relse(
->>       xfs_buf_log_item_t      *bip = bp->b_fspriv;
+> With your patch:
+>
+> log tail: 35871 head: 308393 state: <DIRTY>
+> real    0m12.715s
+> user    0m0.000s
+> sys     0m2.247s
+>
+> And it peaked at ~5000 read IOPS.
+How do you know its READ IOPS is ~5000?
+
+>
+> It's definitely an improvement, but there's a lot of dead time still
+> spent waiting for IO that we should be able to remove. Let's have a
+> look at the code...
+>
+>
+>> +STATIC void
+>> +xlog_recover_inode_ra_pass2(
+>> +     struct xlog                     *log,
+>> +     struct xlog_recover_item        *item)
+>> +{
+>> +     xfs_inode_log_format_t  *in_f;
+>> +     xfs_mount_t             *mp = log->l_mp;
+>> +     int                     error;
+>> +     int                     need_free = 0;
+>> +
+>> +     if (item->ri_buf[0].i_len == sizeof(xfs_inode_log_format_t)) {
+>> +             in_f = item->ri_buf[0].i_addr;
+>> +     } else {
+>> +             in_f = kmem_alloc(sizeof(xfs_inode_log_format_t), KM_SLEEP);
+>> +             need_free = 1;
+>> +             error = xfs_inode_item_format_convert(&item->ri_buf[0], in_f);
+>> +             if (error)
+>> +                     goto error;
+>> +     }
+>
+> I'd just put the conversion buffer on stack and avoid the need to
+> alloc/free memory here. There's plenty of stack space available
+> during recovery here, so let's use it to keep the overhead of
+> readahead down.
+OK, will use the buffer on stack.
+>
+>> +STATIC void
+>> +xlog_recover_dquot_ra_pass2(
+>> +     struct xlog                     *log,
+>> +     struct xlog_recover_item        *item)
+>> +{
+>> +     xfs_mount_t             *mp = log->l_mp;
+>> +     xfs_buf_t               *bp;
+>> +     struct xfs_disk_dquot   *recddq;
+>> +     int                     error;
+>> +     xfs_dq_logformat_t      *dq_f;
+>> +     uint                    type;
+>> +
+>> +
+>> +     if (mp->m_qflags == 0)
+>> +             return;
+>> +
+>> +     recddq = item->ri_buf[1].i_addr;
+>> +     if (recddq == NULL)
+>> +             return;
+>> +     if (item->ri_buf[1].i_len < sizeof(xfs_disk_dquot_t))
+>> +             return;
+>> +
+>> +     type = recddq->d_flags & (XFS_DQ_USER | XFS_DQ_PROJ | XFS_DQ_GROUP);
+>> +     ASSERT(type);
+>> +     if (log->l_quotaoffs_flag & type)
+>> +             return;
+>> +
+>> +     dq_f = item->ri_buf[0].i_addr;
+>> +     ASSERT(dq_f);
+>> +     error = xfs_qm_dqcheck(mp, recddq, dq_f->qlf_id, 0, XFS_QMOPT_DOWARN,
+>> +                        "xlog_recover_dquot_ra_pass2 (log copy)");
+>> +     if (error)
+>> +             return;
+>> +     ASSERT(dq_f->qlf_len == 1);
+>> +
+>> +     error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp, dq_f->qlf_blkno,
+>> +                                XFS_FSB_TO_BB(mp, dq_f->qlf_len), 0, &bp,
+>> +                                NULL);
+>> +     if (!error)
+>> +             xfs_buf_relse(bp);
+>> +}
+>
+> That's not doing readahead - that's an integrity check followed by a
+> blocking read.  Shouldn't it just be calling xfs_buf_readahead() on
+> dq_f->qlf_blkno/dq_f->qlf_len, after checking whether it had been
+> cancelled?
+ah, i miss tha it is one blocking read. will fix it
+>
+>>  STATIC int
+>>  xlog_recover_commit_pass1(
+>>       struct xlog                     *log,
+>> @@ -3140,10 +3255,14 @@ xlog_recover_commit_pass2(
+>>       struct xlog                     *log,
+>>       struct xlog_recover             *trans,
+>>       struct list_head                *buffer_list,
+>> -     struct xlog_recover_item        *item)
+>> +     struct xlog_recover_item        *item,
+>> +     struct xlog_recover_item        *next_item)
+>>  {
+>>       trace_xfs_log_recover_item_recover(log, trans, item, XLOG_RECOVER_PASS2);
 >>
->>       trace_xfs_buf_item_relse(bp, _RET_IP_);
->> -     ASSERT(!(bip->bli_item.li_flags & XFS_LI_IN_AIL));
+>> +     if (next_item)
+>> +             xlog_recover_ra_pass2(log, next_item);
+>> +
 >
-> Removing the assert is not going to fix the bug that it is telling
-> us is ocurring.
+> Ah, that explains the limited improvement - it's only doing
+> readahead of a single item at a time. IOWs, we are completing
+> recovery of the current object before IO completion of the next
+> object has occurred. This generally means the read-ahead queue is
+Yes.
+> not deep enough...
 >
-> Indeed, it points out that the calling code - xfs_buf_item_unlock()
-> - is probably doing the wrong this. i.e. that it assumes that a
-> clean buffer item is only referenced in this transaction and so it
-> can unconditionally free it. That's an invalid assumption, and
-> exactly the situation that the above assert was designed to catch.
+>>       switch (ITEM_TYPE(item)) {
+>>       case XFS_LI_BUF:
+>>               return xlog_recover_buffer_pass2(log, buffer_list, item);
+>> @@ -3181,7 +3300,7 @@ xlog_recover_commit_trans(
+>>       int                     pass)
+>>  {
+>>       int                     error = 0, error2;
+>> -     xlog_recover_item_t     *item;
+>> +     xlog_recover_item_t     *item, *next_item, *temp_item;
+>>       LIST_HEAD               (buffer_list);
+>>
+>>       hlist_del(&trans->r_list);
+>> @@ -3190,14 +3309,18 @@ xlog_recover_commit_trans(
+>>       if (error)
+>>               return error;
+>>
+>> -     list_for_each_entry(item, &trans->r_itemq, ri_list) {
+>> +     list_for_each_entry_safe(item, temp_item, &trans->r_itemq, ri_list) {
+>>               switch (pass) {
+>>               case XLOG_RECOVER_PASS1:
+>>                       error = xlog_recover_commit_pass1(log, trans, item);
+>>                       break;
+>>               case XLOG_RECOVER_PASS2:
+>> +                     if (&temp_item->ri_list != &trans->r_itemq)
+>> +                             next_item = temp_item;
+>> +                     else
+>> +                             next_item = NULL;
+>>                       error = xlog_recover_commit_pass2(log, trans,
+>> -                                                       &buffer_list, item);
+>> +                                       &buffer_list, item, next_item);
 >
-> Can you try the patch below? It should fix the problem....
+> Ok, so you've based the readahead on the transaction item list
+> having a next pointer. What I think you should do is turn this into
+> a readahead queue by moving objects to a new list. i.e.
+>
+>         list_for_each_entry_safe(item, next, &trans->r_itemq, ri_list) {
+>
+>                 case XLOG_RECOVER_PASS2:
+>                         if (ra_qdepth++ >= MAX_QDEPTH) {
+>                                 recover_items(log, trans, &buffer_list, &ra_item_list);
+>                                 ra_qdepth = 0;
+>                         } else {
+>                                 xlog_recover_item_readahead(log, item);
+>                                 list_move_tail(&item->ri_list, &ra_item_list);
+>                         }
+>                         break;
+>                 ...
+>                 }
+>         }
+>         if (!list_empty(&ra_item_list))
+>                 recover_items(log, trans, &buffer_list, &ra_item_list);
+>
+> I'd suggest that a queue depth somewhere between 10 and 100 will
+> be necessary to keep enough IO in flight to keep the pipeline full
+> and prevent recovery from having to wait on IO...
+Good suggestion, will apply it to next version, thanks.
+
 >
 > Cheers,
 >
@@ -191,44 +286,6 @@ On Fri, Jul 26, 2013 at 10:03 AM, Dave Chinner <david@fromorbit.com> wrote:
 > --
 > Dave Chinner
 > david@fromorbit.com
->
-> xfs: use reference counts to free clean buffer items
->
-> From: Dave Chinner <dchinner@redhat.com>
->
-> When a transaction is cancelled and the buffer log item is clean in
-> the transaction, the buffer log item is unconditionally freed. If
-> the log item is in the AIL, however, this leads to a use after free
-> condition as the item still has other users.
->
-> In this case, xfs_buf_item_relse() should only be called on clean
-> buffer items if the reference count has dropped to zero. This
-> ensures only the last user frees the item.
->
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_buf_item.c | 6 ++----
->  1 file changed, 2 insertions(+), 4 deletions(-)
->
-> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> index 9358504..3a944b1 100644
-> --- a/fs/xfs/xfs_buf_item.c
-> +++ b/fs/xfs/xfs_buf_item.c
-> @@ -613,11 +613,9 @@ xfs_buf_item_unlock(
->                         }
->                 }
->         }
-> -       if (clean)
-> -               xfs_buf_item_relse(bp);
-> -       else if (aborted) {
-> +       if (clean || aborted) {
->                 if (atomic_dec_and_test(&bip->bli_refcount)) {
-> -                       ASSERT(XFS_FORCED_SHUTDOWN(lip->li_mountp));
-> +                       ASSERT(!aborted || XFS_FORCED_SHUTDOWN(lip->li_mountp));
->                         xfs_buf_item_relse(bp);
->                 }
->         } else
-
 
 
 -- 
