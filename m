@@ -1,15 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id B4D2F29E30
-	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 16:16:56 -0500 (CDT)
-Message-ID: <51F2E747.8070105@sgi.com>
-Date: Fri, 26 Jul 2013 16:16:55 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 77A7D29E0E
+	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 16:37:45 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 03978AC002
+	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 14:37:41 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id QFTc0G65QaDmmcmG for <xfs@oss.sgi.com>;
+	Fri, 26 Jul 2013 14:37:40 -0700 (PDT)
+Message-ID: <51F2EC21.6000208@sandeen.net>
+Date: Fri, 26 Jul 2013 16:37:37 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH 27/49] xfs: consolidate extent swap code
-References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
-	<1374215120-7271-28-git-send-email-david@fromorbit.com>
-In-Reply-To: <1374215120-7271-28-git-send-email-david@fromorbit.com>
+Subject: Re: how to use fstrim?
+References: <51F2BD31.5060301@profihost.ag>
+In-Reply-To: <51F2BD31.5060301@profihost.ag>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,33 +23,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Stefan Priebe <s.priebe@profihost.ag>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 07/19/13 01:24, Dave Chinner wrote:
-> From: Dave Chinner<dchinner@redhat.com>
->
-> So we don't need xfs_dfrag.h in userspace anymore, move the
-> extent swap ioctl structure definition to xfs_fs.h
-> where most of the other ioctl structure definitions are.
->
-> Now that we don't need separate files for extent swapping,
-> separate the basic file descriptor checking code to xfs_ioctl.c,
-> and the code that does the extent swap operation to xfs_bmap_util.c.
-> This cleanly separates the user interface code from the physical
-> mechanism used to do the extent swap.
->
-> Signed-off-by: Dave Chinner<dchinner@redhat.com>
-> ---
+On 7/26/13 1:17 PM, Stefan Priebe wrote:
+> Hi,
+> 
+> what is the right way to use fstrim on top of XFS? just doing fstrim -v -m 4194304 /
+> 
+> results sometimes (might depend on disk i/o) to hanging tasks and stack traces - fstrim needs > 5 min in these cases.
 
-Looks good. Only change is xfs_swapext() is rename xfs_ioc_swapext() 
-when moved to xfs_ioctl.c.
+As always, it's better to include things like the actual stack traces you got, so we have some idea what's going on ...
 
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+How fast it goes probably depends quite a lot on the storage underneath.
+
+So including storage information as well would also help us give you a meaningful answer...
+
+And kernel version... etc.
+
+http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+
+-Eric
 
 _______________________________________________
 xfs mailing list
