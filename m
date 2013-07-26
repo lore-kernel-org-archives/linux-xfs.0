@@ -1,21 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A070C29E1D
-	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 11:26:03 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6A2168F8035
-	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 09:26:03 -0700 (PDT)
-Received: from dkim1.fusionio.com (dkim1.fusionio.com [66.114.96.53]) by
-	cuda.sgi.com with ESMTP id xSp5KBBhgThLxKsu (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 26 Jul 2013 09:26:02 -0700 (PDT)
-Received: from mx2.fusionio.com (unknown [10.101.1.160])
-	by dkim1.fusionio.com (Postfix) with ESMTP id F015E7C069D
-	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 10:26:01 -0600 (MDT)
-Date: Fri, 26 Jul 2013 12:25:58 -0400
-From: Josef Bacik <jbacik@fusionio.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id A2A1429E1D
+	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 11:33:52 -0500 (CDT)
+Date: Fri, 26 Jul 2013 11:33:52 -0500
+From: Ben Myers <bpm@sgi.com>
 Subject: Re: [PATCH] xfstests: exit out if _scratch_mount fails
-Message-ID: <20130726162558.GB24583@localhost.localdomain>
+Message-ID: <20130726163352.GL1681@sgi.com>
 References: <1373396847-7975-1-git-send-email-jbacik@fusionio.com>
 	<20130726161235.GK3111@sgi.com> <51F2A091.3010407@sandeen.net>
 MIME-Version: 1.0
@@ -33,8 +23,10 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linxu-btrfs@vger.kernel.org, Ben Myers <bpm@sgi.com>, Josef Bacik <jbacik@fusionio.com>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>, Josef Bacik <jbacik@fusionio.com>
+Cc: linxu-btrfs@vger.kernel.org, xfs@oss.sgi.com
+
+Josef, Eric,
 
 On Fri, Jul 26, 2013 at 11:15:13AM -0500, Eric Sandeen wrote:
 > On 7/26/13 11:12 AM, Ben Myers wrote:
@@ -61,11 +53,24 @@ On Fri, Jul 26, 2013 at 11:15:13AM -0500, Eric Sandeen wrote:
 > 
 > work any better?
 
-Well thats cleaner but I'm not sure why this patch is making that happen.  I
-don't have dmapi on my main box (at least afaik) and I've not had that sort of
-issue running with this patch.  Thanks,
+This still fails like so:
 
-Josef
+xfs/142  [failed, exit status 1] - output mismatch (see /root/xfstests/results/xfs/142.out.bad)
+--- tests/xfs/142.out       2013-05-17 14:23:16.000000000 -0500
++++ /root/xfstests/results/xfs/142.out.bad  2013-07-26 11:31:00.128200302 -0500
+@@ -1,232 +1,8 @@
+QA output created by 142
+-Attribute tests beginning...
+-Report: success with set #0.
+-Report: success with set #1.
+-Report: success with set #2.
+-Report: success with set #3.
+-Report: success with set #4.
+...
+(Run 'diff -u tests/xfs/142.out /root/xfstests/results/xfs/142.out.bad' to see the entire diff)
+
+Thanks,
+	Ben
 
 _______________________________________________
 xfs mailing list
