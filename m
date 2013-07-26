@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A1F687F4E
-	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 06:37:26 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 1A0BF7F4E
+	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 06:47:34 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 791658F8033
-	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 04:37:26 -0700 (PDT)
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	n3aEDoeGLAI5dNIt for <xfs@oss.sgi.com>;
-	Fri, 26 Jul 2013 04:37:25 -0700 (PDT)
-Date: Fri, 26 Jul 2013 21:37:17 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: fix an assertion failure
-Message-ID: <20130726113717.GN13468@dastard>
-References: <1374759524-10061-1-git-send-email-zwu.kernel@gmail.com>
-	<20130726020318.GD21982@dastard>
-	<CAEH94LiXtG=DD+Qn4kbNT_Y_Qn65wVYrpYvHKXOob6wru3SeDw@mail.gmail.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 8F4DBAC004
+	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 04:47:30 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id HYppyhwQXh90fQqZ for
+	<xfs@oss.sgi.com>; Fri, 26 Jul 2013 04:47:29 -0700 (PDT)
+Message-ID: <51F2610C.4050709@redhat.com>
+Date: Fri, 26 Jul 2013 07:44:12 -0400
+From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAEH94LiXtG=DD+Qn4kbNT_Y_Qn65wVYrpYvHKXOob6wru3SeDw@mail.gmail.com>
+Subject: Re: [PATCH v6 5/7] xfs: create internal eofblocks structure with
+	kuid_t types
+References: <20130725114942.673238a8@oracle.com>
+In-Reply-To: <20130725114942.673238a8@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,26 +28,167 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Zhi Yong Wu <zwu.kernel@gmail.com>
-Cc: "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, linux-kernel mlist <linux-kernel@vger.kernel.org>, xfstests <xfs@oss.sgi.com>
+To: Dwight Engen <dwight.engen@oracle.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, Jul 26, 2013 at 02:01:23PM +0800, Zhi Yong Wu wrote:
-> No, it still raised the same assertion as below:
+On 07/25/2013 11:49 AM, Dwight Engen wrote:
+> Have eofblocks ioctl convert uid_t to kuid_t into internal structure.
+> Update internal filter matching to compare ids with kuid_t types.
 > 
-> [  521.715103] XFS: Assertion failed: !(bip->bli_item.li_flags &
-> XFS_LI_IN_AIL), file: fs/xfs/xfs_buf_item.c, line: 940
+> Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
+> ---
 
-How are you reproducing it?
+Looks good.
 
-Can you take an event trace with trace-cmd and attach the output of
-the report?
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+>  fs/xfs/xfs_fs.h     |  2 +-
+>  fs/xfs/xfs_icache.c | 12 ++++++------
+>  fs/xfs/xfs_icache.h | 43 +++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_ioctl.c  | 18 ++++++------------
+>  4 files changed, 56 insertions(+), 19 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
+> index d046955..7eb4a5e 100644
+> --- a/fs/xfs/xfs_fs.h
+> +++ b/fs/xfs/xfs_fs.h
+> @@ -344,7 +344,7 @@ typedef struct xfs_error_injection {
+>   * Speculative preallocation trimming.
+>   */
+>  #define XFS_EOFBLOCKS_VERSION		1
+> -struct xfs_eofblocks {
+> +struct xfs_fs_eofblocks {
+>  	__u32		eof_version;
+>  	__u32		eof_flags;
+>  	uid_t		eof_uid;
+> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> index 3f90e1c..ed35584 100644
+> --- a/fs/xfs/xfs_icache.c
+> +++ b/fs/xfs/xfs_icache.c
+> @@ -619,7 +619,7 @@ restart:
+>  
+>  /*
+>   * Background scanning to trim post-EOF preallocated space. This is queued
+> - * based on the 'background_prealloc_discard_period' tunable (5m by default).
+> + * based on the 'speculative_prealloc_lifetime' tunable (5m by default).
+>   */
+>  STATIC void
+>  xfs_queue_eofblocks(
+> @@ -1203,15 +1203,15 @@ xfs_inode_match_id(
+>  	struct xfs_inode	*ip,
+>  	struct xfs_eofblocks	*eofb)
+>  {
+> -	if (eofb->eof_flags & XFS_EOF_FLAGS_UID &&
+> -	    ip->i_d.di_uid != eofb->eof_uid)
+> +	if ((eofb->eof_flags & XFS_EOF_FLAGS_UID) &&
+> +	    !uid_eq(VFS_I(ip)->i_uid, eofb->eof_uid))
+>  		return 0;
+>  
+> -	if (eofb->eof_flags & XFS_EOF_FLAGS_GID &&
+> -	    ip->i_d.di_gid != eofb->eof_gid)
+> +	if ((eofb->eof_flags & XFS_EOF_FLAGS_GID) &&
+> +	    !gid_eq(VFS_I(ip)->i_gid, eofb->eof_gid))
+>  		return 0;
+>  
+> -	if (eofb->eof_flags & XFS_EOF_FLAGS_PRID &&
+> +	if ((eofb->eof_flags & XFS_EOF_FLAGS_PRID) &&
+>  	    xfs_get_projid(ip) != eofb->eof_prid)
+>  		return 0;
+>  
+> diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
+> index a01afbb..66a1a22 100644
+> --- a/fs/xfs/xfs_icache.h
+> +++ b/fs/xfs/xfs_icache.h
+> @@ -21,6 +21,14 @@
+>  struct xfs_mount;
+>  struct xfs_perag;
+>  
+> +struct xfs_eofblocks {
+> +	__u32		eof_flags;
+> +	kuid_t		eof_uid;
+> +	kgid_t		eof_gid;
+> +	prid_t		eof_prid;
+> +	__u64		eof_min_file_size;
+> +};
+> +
+>  #define SYNC_WAIT		0x0001	/* wait for i/o to complete */
+>  #define SYNC_TRYLOCK		0x0002  /* only try to lock inodes */
+>  
+> @@ -49,4 +57,39 @@ int xfs_inode_ag_iterator_tag(struct xfs_mount *mp,
+>  		int flags, void *args),
+>  	int flags, void *args, int tag);
+>  
+> +static inline int
+> +xfs_fs_eofblocks_from_user(
+> +	struct xfs_fs_eofblocks		*src,
+> +	struct xfs_eofblocks		*dst)
+> +{
+> +	if (src->eof_version != XFS_EOFBLOCKS_VERSION)
+> +		return EINVAL;
+> +
+> +	if (src->eof_flags & ~XFS_EOF_FLAGS_VALID)
+> +		return EINVAL;
+> +
+> +	if (memchr_inv(&src->pad32, 0, sizeof(src->pad32)) ||
+> +	    memchr_inv(src->pad64, 0, sizeof(src->pad64)))
+> +		return EINVAL;
+> +
+> +	dst->eof_flags = src->eof_flags;
+> +	dst->eof_prid = src->eof_prid;
+> +	dst->eof_min_file_size = src->eof_min_file_size;
+> +
+> +	dst->eof_uid = INVALID_UID;
+> +	if (src->eof_flags & XFS_EOF_FLAGS_UID) {
+> +		dst->eof_uid = make_kuid(current_user_ns(), src->eof_uid);
+> +		if (!uid_valid(dst->eof_uid))
+> +			return EINVAL;
+> +	}
+> +
+> +	dst->eof_gid = INVALID_GID;
+> +	if (src->eof_flags & XFS_EOF_FLAGS_GID) {
+> +		dst->eof_gid = make_kgid(current_user_ns(), src->eof_gid);
+> +		if (!gid_valid(dst->eof_gid))
+> +			return EINVAL;
+> +	}
+> +	return 0;
+> +}
+> +
+>  #endif
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 8edc780..6e72eff 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -1610,23 +1610,17 @@ xfs_file_ioctl(
+>  		return -error;
+>  
+>  	case XFS_IOC_FREE_EOFBLOCKS: {
+> -		struct xfs_eofblocks eofb;
+> +		struct xfs_fs_eofblocks eofb;
+> +		struct xfs_eofblocks keofb;
+>  
+>  		if (copy_from_user(&eofb, arg, sizeof(eofb)))
+>  			return -XFS_ERROR(EFAULT);
+>  
+> -		if (eofb.eof_version != XFS_EOFBLOCKS_VERSION)
+> -			return -XFS_ERROR(EINVAL);
+> -
+> -		if (eofb.eof_flags & ~XFS_EOF_FLAGS_VALID)
+> -			return -XFS_ERROR(EINVAL);
+> -
+> -		if (memchr_inv(&eofb.pad32, 0, sizeof(eofb.pad32)) ||
+> -		    memchr_inv(eofb.pad64, 0, sizeof(eofb.pad64)))
+> -			return -XFS_ERROR(EINVAL);
+> +		error = xfs_fs_eofblocks_from_user(&eofb, &keofb);
+> +		if (error)
+> +			return -error;
+>  
+> -		error = xfs_icache_free_eofblocks(mp, &eofb);
+> -		return -error;
+> +		return -xfs_icache_free_eofblocks(mp, &keofb);
+>  	}
+>  
+>  	default:
+> 
 
 _______________________________________________
 xfs mailing list
