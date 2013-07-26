@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1A0BF7F4E
-	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 06:47:34 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 651F77F4E
+	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 06:50:26 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 8F4DBAC004
-	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 04:47:30 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id HYppyhwQXh90fQqZ for
-	<xfs@oss.sgi.com>; Fri, 26 Jul 2013 04:47:29 -0700 (PDT)
-Message-ID: <51F2610C.4050709@redhat.com>
-Date: Fri, 26 Jul 2013 07:44:12 -0400
-From: Brian Foster <bfoster@redhat.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 470778F8033
+	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 04:50:26 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	YSPemxFWWws0mQFI for <xfs@oss.sgi.com>;
+	Fri, 26 Jul 2013 04:50:24 -0700 (PDT)
+Date: Fri, 26 Jul 2013 21:50:21 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: understanding speculative preallocation
+Message-ID: <20130726115021.GO13468@dastard>
+References: <1374823420041-35002.post@n7.nabble.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH v6 5/7] xfs: create internal eofblocks structure with
-	kuid_t types
-References: <20130725114942.673238a8@oracle.com>
-In-Reply-To: <20130725114942.673238a8@oracle.com>
+Content-Disposition: inline
+In-Reply-To: <1374823420041-35002.post@n7.nabble.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,167 +29,132 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dwight Engen <dwight.engen@oracle.com>
+To: jbr <jbr@squareup.com>
 Cc: xfs@oss.sgi.com
 
-On 07/25/2013 11:49 AM, Dwight Engen wrote:
-> Have eofblocks ioctl convert uid_t to kuid_t into internal structure.
-> Update internal filter matching to compare ids with kuid_t types.
+On Fri, Jul 26, 2013 at 12:23:40AM -0700, jbr wrote:
+> Hello,
 > 
-> Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
-> ---
+> I'm looking for general documentation/help with the speculative
+> preallocation feature in xfs.  So far, I haven't really been able to find
+> any definitive, up to date documentation on it.
 
-Looks good.
+Read the code - it's documented in the comments. ;)
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Or ask questions here, because the code changes and the only up to
+date reference is the code and/or the developers that work on it...
 
->  fs/xfs/xfs_fs.h     |  2 +-
->  fs/xfs/xfs_icache.c | 12 ++++++------
->  fs/xfs/xfs_icache.h | 43 +++++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/xfs_ioctl.c  | 18 ++++++------------
->  4 files changed, 56 insertions(+), 19 deletions(-)
+> I'm wondering how I can find out definitively which version of xfs I am
+> using, and what the preallocation scheme in use is.
+
+Look at the kernel version, then look at the corresponding source
+code.
+
+> We are running apache kafka on our servers, and kafka uses sequential io to
+> write data log files.  Kafka uses, by default, a maximum log file size of
+> 1Gb.  However, most of the log files end up being 2Gb, and thus the disk
+> fills up twice as fast as it should.
 > 
-> diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
-> index d046955..7eb4a5e 100644
-> --- a/fs/xfs/xfs_fs.h
-> +++ b/fs/xfs/xfs_fs.h
-> @@ -344,7 +344,7 @@ typedef struct xfs_error_injection {
->   * Speculative preallocation trimming.
->   */
->  #define XFS_EOFBLOCKS_VERSION		1
-> -struct xfs_eofblocks {
-> +struct xfs_fs_eofblocks {
->  	__u32		eof_version;
->  	__u32		eof_flags;
->  	uid_t		eof_uid;
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index 3f90e1c..ed35584 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -619,7 +619,7 @@ restart:
->  
->  /*
->   * Background scanning to trim post-EOF preallocated space. This is queued
-> - * based on the 'background_prealloc_discard_period' tunable (5m by default).
-> + * based on the 'speculative_prealloc_lifetime' tunable (5m by default).
->   */
->  STATIC void
->  xfs_queue_eofblocks(
-> @@ -1203,15 +1203,15 @@ xfs_inode_match_id(
->  	struct xfs_inode	*ip,
->  	struct xfs_eofblocks	*eofb)
->  {
-> -	if (eofb->eof_flags & XFS_EOF_FLAGS_UID &&
-> -	    ip->i_d.di_uid != eofb->eof_uid)
-> +	if ((eofb->eof_flags & XFS_EOF_FLAGS_UID) &&
-> +	    !uid_eq(VFS_I(ip)->i_uid, eofb->eof_uid))
->  		return 0;
->  
-> -	if (eofb->eof_flags & XFS_EOF_FLAGS_GID &&
-> -	    ip->i_d.di_gid != eofb->eof_gid)
-> +	if ((eofb->eof_flags & XFS_EOF_FLAGS_GID) &&
-> +	    !gid_eq(VFS_I(ip)->i_gid, eofb->eof_gid))
->  		return 0;
->  
-> -	if (eofb->eof_flags & XFS_EOF_FLAGS_PRID &&
-> +	if ((eofb->eof_flags & XFS_EOF_FLAGS_PRID) &&
->  	    xfs_get_projid(ip) != eofb->eof_prid)
->  		return 0;
->  
-> diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
-> index a01afbb..66a1a22 100644
-> --- a/fs/xfs/xfs_icache.h
-> +++ b/fs/xfs/xfs_icache.h
-> @@ -21,6 +21,14 @@
->  struct xfs_mount;
->  struct xfs_perag;
->  
-> +struct xfs_eofblocks {
-> +	__u32		eof_flags;
-> +	kuid_t		eof_uid;
-> +	kgid_t		eof_gid;
-> +	prid_t		eof_prid;
-> +	__u64		eof_min_file_size;
-> +};
-> +
->  #define SYNC_WAIT		0x0001	/* wait for i/o to complete */
->  #define SYNC_TRYLOCK		0x0002  /* only try to lock inodes */
->  
-> @@ -49,4 +57,39 @@ int xfs_inode_ag_iterator_tag(struct xfs_mount *mp,
->  		int flags, void *args),
->  	int flags, void *args, int tag);
->  
-> +static inline int
-> +xfs_fs_eofblocks_from_user(
-> +	struct xfs_fs_eofblocks		*src,
-> +	struct xfs_eofblocks		*dst)
-> +{
-> +	if (src->eof_version != XFS_EOFBLOCKS_VERSION)
-> +		return EINVAL;
-> +
-> +	if (src->eof_flags & ~XFS_EOF_FLAGS_VALID)
-> +		return EINVAL;
-> +
-> +	if (memchr_inv(&src->pad32, 0, sizeof(src->pad32)) ||
-> +	    memchr_inv(src->pad64, 0, sizeof(src->pad64)))
-> +		return EINVAL;
-> +
-> +	dst->eof_flags = src->eof_flags;
-> +	dst->eof_prid = src->eof_prid;
-> +	dst->eof_min_file_size = src->eof_min_file_size;
-> +
-> +	dst->eof_uid = INVALID_UID;
-> +	if (src->eof_flags & XFS_EOF_FLAGS_UID) {
-> +		dst->eof_uid = make_kuid(current_user_ns(), src->eof_uid);
-> +		if (!uid_valid(dst->eof_uid))
-> +			return EINVAL;
-> +	}
-> +
-> +	dst->eof_gid = INVALID_GID;
-> +	if (src->eof_flags & XFS_EOF_FLAGS_GID) {
-> +		dst->eof_gid = make_kgid(current_user_ns(), src->eof_gid);
-> +		if (!gid_valid(dst->eof_gid))
-> +			return EINVAL;
-> +	}
-> +	return 0;
-> +}
-> +
->  #endif
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 8edc780..6e72eff 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -1610,23 +1610,17 @@ xfs_file_ioctl(
->  		return -error;
->  
->  	case XFS_IOC_FREE_EOFBLOCKS: {
-> -		struct xfs_eofblocks eofb;
-> +		struct xfs_fs_eofblocks eofb;
-> +		struct xfs_eofblocks keofb;
->  
->  		if (copy_from_user(&eofb, arg, sizeof(eofb)))
->  			return -XFS_ERROR(EFAULT);
->  
-> -		if (eofb.eof_version != XFS_EOFBLOCKS_VERSION)
-> -			return -XFS_ERROR(EINVAL);
-> -
-> -		if (eofb.eof_flags & ~XFS_EOF_FLAGS_VALID)
-> -			return -XFS_ERROR(EINVAL);
-> -
-> -		if (memchr_inv(&eofb.pad32, 0, sizeof(eofb.pad32)) ||
-> -		    memchr_inv(eofb.pad64, 0, sizeof(eofb.pad64)))
-> -			return -XFS_ERROR(EINVAL);
-> +		error = xfs_fs_eofblocks_from_user(&eofb, &keofb);
-> +		if (error)
-> +			return -error;
->  
-> -		error = xfs_icache_free_eofblocks(mp, &eofb);
-> -		return -error;
-> +		return -xfs_icache_free_eofblocks(mp, &keofb);
->  	}
->  
->  	default:
+> We are using xfs on CentOS 2.6.32-358.  Is there a way I can know which
+> version of xfs is built into this version of the kernel?
+
+The XFS code is part of the kernel, so look at the kernel source
+code that CentOS ships.
+
+> We are using xfs (mounted with no allocsize specified).  I've seen varying
+> info suggesting this means it either defaults to an allocsize of 64K (which
+> doesn't seem to match my observations), or that it will use dynamic
+> preallocation.
 > 
+> I've also seen hints (but no actual canonical documentation) suggesting that
+> the dynamic preallocation works by progressively doubling the current file
+> size (which does match my observations).
+
+Well, it started off that way, but it has been refined since to
+handle many different cases where this behaviour is sub-optimal.
+
+> What I'm not clear on, is the scheduling for the preallocation. At what
+> point does it decide to preallocate the next doubling of space.
+
+Depends on the type of IO being done.
+
+> Is it when
+> the current preallocated space is used up,
+
+Usually.
+
+> or does it happen when the
+> current space is used up within some threshold.
+
+No.
+
+> What I'd like to do, is
+> keep the doubling behavior in tact, but have it capped so it never increases
+> the file beyond 1Gb.  Is there a way to do that?
+
+No.
+
+> Can I trick the
+> preallocation to not do a final doubling, if I cap my kafka log files at
+> say, 900Mb (or some percentage under 1Gb)?
+
+No.
+
+> There are numerous references to an allocation schedule like this:
+> 
+> freespace       max prealloc size
+>   >5%             full extent (8GB)
+>   4-5%             2GB (8GB >> 2)
+>   3-4%             1GB (8GB >> 3)
+>   2-3%           512MB (8GB >> 4)
+>   1-2%           256MB (8GB >> 5)
+>   <1%            128MB (8GB >> 6)
+> 
+> I'm just not sure I understand what this is telling me.  It seems to tell me
+> what the max prealloc size is, with being reduced if the disk is nearly
+> full.
+
+Yes, that's correct. Mainline also does this for quota exhaustion,
+too.
+
+> But it doesn't tell me about the progressive doubling in
+> preallocation (I assume up to a max of 8Gb).  Is any of this configurable? 
+
+No.
+
+> Can we specify a max prealloc size somewhere?
+
+Use the allocsize mount option. It turns off dynamic behaviour and
+fixes the pre-allocation size.
+
+> The other issue seems to be that after the files are closed (from within the
+> java jvm), they still don't seem to have their pre-allocated space
+> reclaimed.  Are there known issues with closing the files in java not
+> properly causing a flush of the preallocated space?
+
+Possibly. There's a heuristic that turns of truncation at close - if
+your applicatin keeps doing "open-write-close" it will not truncate
+preallocation. Log files typically see this IO pattern from
+applications, and hence triggering that "no truncate" heuristic is
+exactly what you want to have happen to avoid severe fragmentation
+of the log files.
+
+> Any help pointing me to any documentation/user guides which accurately
+> describes this would be appreciated!
+
+The mechanism is not documented outside the code as it changes from
+kernel release to kernel release and supposed to be transparent to
+userspace. It's being refined and optimisaed as issues are reported.
+Indeed, I suspect that all your problems would disappear on mainline
+due to the background removal of preallocation that is no longer
+needed, and Centos doesn't have that...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
