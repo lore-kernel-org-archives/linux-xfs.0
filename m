@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id AB7567F37
-	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 19:25:02 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 8E0CD304043
-	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 17:24:59 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 1EC837F37
+	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 19:32:27 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A0C6AAC006
+	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 17:32:23 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	w23NCX1HrR8XEvM7 for <xfs@oss.sgi.com>;
-	Thu, 25 Jul 2013 17:24:58 -0700 (PDT)
-Date: Fri, 26 Jul 2013 10:24:50 +1000
+	iwbmlm8XJY1kus3e for <xfs@oss.sgi.com>;
+	Thu, 25 Jul 2013 17:32:22 -0700 (PDT)
+Date: Fri, 26 Jul 2013 10:32:08 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 14/49] xfs: introduce xfs_inode_buf.c for inode buffer
-	operations
-Message-ID: <20130726002450.GJ13468@dastard>
+Subject: Re: [PATCH 44/49] xfs: Reduce allocations during CIL insertion
+Message-ID: <20130726003208.GK13468@dastard>
 References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
-	<1374215120-7271-15-git-send-email-david@fromorbit.com>
-	<51F179BE.4040506@sgi.com>
+	<1374215120-7271-45-git-send-email-david@fromorbit.com>
+	<51EEF26F.5040001@sgi.com> <51EEF949.9020104@gmail.com>
+	<51EFD68A.40400@sgi.com> <20130725002108.GA11222@dastard>
+	<51F13E10.1010805@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <51F179BE.4040506@sgi.com>
+In-Reply-To: <51F13E10.1010805@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,37 +34,60 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Mark Tinguely <tinguely@sgi.com>
-Cc: xfs@oss.sgi.com
+Cc: "Michael L. Semon" <mlsemon35@gmail.com>, xfs@oss.sgi.com
 
-On Thu, Jul 25, 2013 at 02:17:18PM -0500, Mark Tinguely wrote:
-> On 07/19/13 01:24, Dave Chinner wrote:
-> >From: Dave Chinner<dchinner@redhat.com>
+On Thu, Jul 25, 2013 at 10:02:40AM -0500, Mark Tinguely wrote:
+> On 07/24/13 19:21, Dave Chinner wrote:
+> >On Wed, Jul 24, 2013 at 08:28:42AM -0500, Mark Tinguely wrote:
+> >>If you could please redo the test and get the stack traces with
+> >>/proc/sysrq-trigger and if you kernel works with crash, a core dump.
+> >>For the stack trace, I mostly want to know if it has several
+> >>"xlog_grant_head_wait" entries in it, because ...
+> >>
+> >>...I seemed to have triggered a couple log space reservation hangs
+> >>with fsstress one XFS partition and a mega-copy on another
+> >>partition, but will have to graft the new XFS tree onto a Linux 3.10
+> >>kernel to get crash (and one of my sata controllers) to work again.
 > >
-> >The only thing remaining in xfs_inode.[ch] are the operations that
-> >read, write or verify physical inodes in their underlying buffers.
-> >Move all this code to xfs_inode_buf.[ch] and so we can stop sharing
-> >xfs_inode.[ch] with userspace.
+> >They are unrelated to this patchset.
 > >
-> >Signed-off-by: Dave Chinner<dchinner@redhat.com>
-> >---
+> >Somewhere in the code there
+> >is a mismatch between what we reserve as the base requirement for an
+> >actual log write and what the CIL actually steals, and that is, most
+> >likely, what is leading to log hangs.
+> >
+> >This is demonstratable in the fact that generic/070 on 512 byte
+> >block size filesystems regularly hits a transaction reservation
+> >exhausted assert failure on transaction commit of the periodic log
+> >dummy transaction on my test rigs.
+> >
+> >Cheers,
+> >
+> >Dave.
 > 
-> Bug patches committed in the last couple days make this patch no
-> longer current.
+> In testing patch 44, I did not trip over any cil stealing asserts
+> before the hang. I think the cil steal assert is a different and a
+> legitimate complaint. When I tripped over the ASSERT in with the v3
+> inode enabled, the writeid only reserves space for the sb but there
+> were occasions of root btree and attribute fork entry that were also
+> logged.
+> 
+> patch 43 runs for hours without incident. Previous to this series, I
+> ran the same tests with parent pointer testing with much higher log
+> reservations for day or two and never got a hang.
+> 
+> I tested patch 44 with copy like tests and both times it hung both
+> times - not a convincing number of tests. A quick look, I see an
+> empty AIL, empty CIL, the CTX is using 0 bytes, doesn't look like
+> there are any cil pushes going nor any older ctx, the ctx has an
+> empty ticket reservation. The log tail is  0xd000014d7 and
+> reserve/grant is 0xe00204d04. The next reservation is for a rename
+> transaction that uses just over the log space left. There has to be
+> a log space leak. I will go back patch 43 on one machine and patch
+> 44 on another and make sure it is patch 44 is causing the problem.
 
-Right, which is why I've had to rebase it (yet again). The changes
-are minor, though, and shouldn't prevent review of this version of
-the patch.
-
-I haven't reposted the new series yet, because I'm waiting on
-reviews for the current series to be done and I don't want to have
-to continually rebase and repost the series. There is a risk that
-every time I do a rebase that I screw something up, so I want to
-minimise the number of rebases I have to do.
-
-This is yet another reason why I'd like to see this code reviewed
-quickly and committed because I've already rebased it several times
-and it's not fun. Repeated rebasing simply because review of slow is
-a waste of everyone's time...
+Right, a patch that makes transaction commits go faster is likely to
+cause a pre-existing reservation leak to leak faster....
 
 Cheers,
 
