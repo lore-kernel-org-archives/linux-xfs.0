@@ -1,27 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8EC3529E21
-	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 15:46:24 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 6CFFB30407B
-	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 13:46:24 -0700 (PDT)
-Received: from mail-ye0-f175.google.com (mail-ye0-f175.google.com
-	[209.85.213.175]) by cuda.sgi.com with ESMTP id
-	fxOkLQb9DW3qw81C (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 26 Jul 2013 13:46:23 -0700 (PDT)
-Received: by mail-ye0-f175.google.com with SMTP id m9so700800yen.34
-	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 13:46:22 -0700 (PDT)
-Message-ID: <51F2E011.5020904@gmail.com>
-Date: Fri, 26 Jul 2013 16:46:09 -0400
-From: "Michael L. Semon" <mlsemon35@gmail.com>
+	by oss.sgi.com (Postfix) with ESMTP id 42BA029E21
+	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 15:50:19 -0500 (CDT)
+Date: Fri, 26 Jul 2013 15:50:18 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: understanding speculative preallocation
+Message-ID: <20130726205018.GM3111@sgi.com>
+References: <1374823420041-35002.post@n7.nabble.com>
+	<20130726115021.GO13468@dastard>
+	<CAA+BczQesNL2VmFmrcBNKXcM-Sfx0bXkXPRP5xMx6=Bv+NWrUA@mail.gmail.com>
+	<51F2CD8B.8080207@hardwarefreak.com>
+	<CAA+BczQGYoJVL0twvz2GRhH30teFPSJOsKWtofbXBrom4_Q6hg@mail.gmail.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 44/49] xfs: Reduce allocations during CIL insertion
-References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
-	<1374215120-7271-45-git-send-email-david@fromorbit.com>
-	<51EEF26F.5040001@sgi.com> <51EEF949.9020104@gmail.com>
-	<51EFD68A.40400@sgi.com>
-In-Reply-To: <51EFD68A.40400@sgi.com>
+Content-Disposition: inline
+In-Reply-To: <CAA+BczQGYoJVL0twvz2GRhH30teFPSJOsKWtofbXBrom4_Q6hg@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,94 +26,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Jason Rosenberg <jbr@squareup.com>
+Cc: stan@hardwarefreak.com, xfs@oss.sgi.com
 
-On 07/24/2013 09:28 AM, Mark Tinguely wrote:
-> On 07/23/13 16:44, Michael L. Semon wrote:
->> On 07/23/2013 05:15 PM, Mark Tinguely wrote:
->>> On 07/19/13 01:25, Dave Chinner wrote:
->>>> From: Dave Chinner<dchinner@redhat.com>
->>>>
->>>> Now that we have the size of the object before the formatting pass
->>>> is called, we can allocation the log vector and it's buffer in a
->>>> single allocation rather than two separate allocations.
->>>>
->>>> Store the size of the allocated buffer in the log vector so that
->>>> we potentially avoid allocation for future modifications of the
->>>> object.
->>>>
->>>> While touching this code, remove the IOP_FORMAT definition.
->>
->>>> Signed-off-by: Dave Chinner<dchinner@redhat.com>
->>>
->>> Looks good.
->>>
->>> Reviewed-by: Mark Tinguely<tinguely@sgi.com>
->>>
->>> _______________________________________________
->>> xfs mailing list
->>> xfs@oss.sgi.com
->>> http://oss.sgi.com/mailman/listinfo/xfs
->>
->> I'd like to register a gentle "test this well" protest on this patch.
->> While trying to figure out the origin of an unrelated lockdep, I
->> tried to copy 3 kernel gits from one 2k non-CRC XFS filesystem to
->> another one.  With at least this patch used, the cp operatin stops,
->> leading to not-umountable, not-syncable filesystems.  It might be
->> while copying the 2nd git, or the 3rd git, while copying header files,
->> or while copying those large *.pack files, but it will happen
->> somewhere.
->>
->> A bisect of the issue ends on this patch, but its removal means that
->> 45_49 and 46_49 cannot be applied without good knowledge of the code
->> to be patched.
->>
->> This one's on me for not being able to get good information to Dave.
->> If I can find a way to get trace-cmd to pipe over ssh or something
->> like that, then maybe there's a chance to make a file that `trace-cmd
->> report` can read.  Previous attempts to save to different filesystems
->> or save over NFS and CIFS have all failed.  Will keep trying...
->>
->> For diagnosing this patch, is there an effective trace that is rather
->> small?  And would you need more than just the XFS events?
->>
->> Thanks!
->>
->> Michael
->>
-> 
-> Thanks for the heads up.
-> 
-> If you could please redo the test and get the stack traces with /proc/sysrq-trigger and if you kernel works with crash, a core dump. For the stack trace, I mostly want to know if it has several "xlog_grant_head_wait" entries in it, because ...
-> 
-> ...I seemed to have triggered a couple log space reservation hangs with fsstress one XFS partition and a mega-copy on another partition, but will have to graft the new XFS tree onto a Linux 3.10 kernel to get crash (and one of my sata controllers) to work again.
-> 
-> Thanks.
-> 
-> --Mark.
+Hi Jason,
 
-Well, I tried.  Here's a Google Drive link, and hopefully it works:
+On Fri, Jul 26, 2013 at 04:38:21PM -0400, Jason Rosenberg wrote:
+> Thanks for the info (most of it was, in fact, news to me).  I'm an
+> application developer trying to debug a disk space problem, that's all.  So
+> far, I've tracked it down to being an XFS issue.
 
-https://drive.google.com/folderview?id=0B41268QKoNjtckwzVTJqWnIydEE
+The speculative block reservations have been an issue for awhile.  You are not
+the first person to take issue with it.
 
-The instructions in Documentation/kdump/kdump.txt were followed 
-fairly well.  The dump was taken from /proc/vmcore and extracted 
-like this:
+> Regardless, is there a version history for XFS vis-a-via mainline Linux?
 
-$ cat /proc/vmcore | gzip -9vc > 4git-cp-kernel-dump-1.gz
+You can find a full version history for XFS back to 2.6.12 or so here:
+http://oss.sgi.com/cgi-bin/gitweb.cgi?p=xfs/xfs.git;a=summary
 
-You seem to have things well under control, so it all might not be 
-needed, anyway.  It does mean that kernel core dumps will go more 
-quickly next time.
+If you're interested in going older than that look here:
+http://oss.sgi.com/cgi-bin/gitweb.cgi?p=archive/xfs-import.git;a=summary
 
-BTW, there's a "crash" program referenced in kdump.txt, and it's been 
-downloaded but not built yet.  Were you looking for output from the 
-crash program?
+The function you'll most likely want to track is xfs_iomap_write_delay, which
+calls xfs_iomap_eof_want_preallocate, both of which are in fs/xfs/xfs_iomap.c.
 
-Thanks!
+Recently Brian Foster added a scanner to remove the speculative block
+reservations on a timer which may give you some relief.  See
+xfs_queue_eofblocks in fs/xfs/xfs_icache.c
 
-Michael
+Regards,
+	Ben
 
 _______________________________________________
 xfs mailing list
