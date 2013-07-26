@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 130FF29E11
-	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 08:51:20 -0500 (CDT)
-Message-ID: <51F27ED7.9040009@sgi.com>
-Date: Fri, 26 Jul 2013 08:51:19 -0500
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id BCF4629E11
+	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 09:10:15 -0500 (CDT)
+Message-ID: <51F28344.1080708@sgi.com>
+Date: Fri, 26 Jul 2013 09:10:12 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 33/49] xfs: move kernel specific type definitions to xfs.h
+Subject: Re: [PATCH 32/49] xfs: xfs_filestreams.h doesn't need __KERNEL__
 References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
-	<1374215120-7271-34-git-send-email-david@fromorbit.com>
-In-Reply-To: <1374215120-7271-34-git-send-email-david@fromorbit.com>
+	<1374215120-7271-33-git-send-email-david@fromorbit.com>
+In-Reply-To: <1374215120-7271-33-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,10 +28,7 @@ Cc: xfs@oss.sgi.com
 On 07/19/13 01:25, Dave Chinner wrote:
 > From: Dave Chinner<dchinner@redhat.com>
 >
-> xfs_types.h is shared with userspace, so having kernel specific
-> types defined in it is problematic. Move all the kernel specific
-> defines to xfs_linux.h so we can remove the __KERNEL__ guards from
-> xfs_types.h
+> Because it is only used within the kernel.
 >
 > Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > ---
