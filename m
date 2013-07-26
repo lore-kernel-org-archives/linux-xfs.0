@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id BCF4629E11
-	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 09:10:15 -0500 (CDT)
-Message-ID: <51F28344.1080708@sgi.com>
-Date: Fri, 26 Jul 2013 09:10:12 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 62E2129E11
+	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 09:16:48 -0500 (CDT)
+Message-ID: <51F284CD.4070006@sgi.com>
+Date: Fri, 26 Jul 2013 09:16:45 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 32/49] xfs: xfs_filestreams.h doesn't need __KERNEL__
+Subject: Re: [PATCH 31/49] xfs: remove __KERNEL__ check from xfs_dir2_leaf.c
 References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
-	<1374215120-7271-33-git-send-email-david@fromorbit.com>
-In-Reply-To: <1374215120-7271-33-git-send-email-david@fromorbit.com>
+	<1374215120-7271-32-git-send-email-david@fromorbit.com>
+In-Reply-To: <1374215120-7271-32-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,14 +28,19 @@ Cc: xfs@oss.sgi.com
 On 07/19/13 01:25, Dave Chinner wrote:
 > From: Dave Chinner<dchinner@redhat.com>
 >
-> Because it is only used within the kernel.
+> It's actually an ifndef section, which means it is only included in
+> userspace. however, it's deep within the libxfs code, so it's
+> unlikely that the condition checked in userspace can actually occur
+> (search an empty leaf) through the libxfs interfaces. i.e. if it can
+> happen in usrspace, it can happen in the kernel, so remove it from
+> userspace too....
 >
 > Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > ---
 
-Looks good.
+Looks good for the kernel.
 
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+Reviewed-by: Mark Tinguely <tinuguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
