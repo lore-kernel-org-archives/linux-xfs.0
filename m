@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 77A7D29E0E
-	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 16:37:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 03978AC002
-	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 14:37:41 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id QFTc0G65QaDmmcmG for <xfs@oss.sgi.com>;
-	Fri, 26 Jul 2013 14:37:40 -0700 (PDT)
-Message-ID: <51F2EC21.6000208@sandeen.net>
-Date: Fri, 26 Jul 2013 16:37:37 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 38D5029E11
+	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 16:42:42 -0500 (CDT)
+Date: Fri, 26 Jul 2013 16:42:38 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: understanding speculative preallocation
+Message-ID: <20130726214238.GM1681@sgi.com>
+References: <1374823420041-35002.post@n7.nabble.com>
+	<20130726115021.GO13468@dastard>
+	<CAA+BczQesNL2VmFmrcBNKXcM-Sfx0bXkXPRP5xMx6=Bv+NWrUA@mail.gmail.com>
+	<51F2CD8B.8080207@hardwarefreak.com>
+	<CAA+BczQGYoJVL0twvz2GRhH30teFPSJOsKWtofbXBrom4_Q6hg@mail.gmail.com>
+	<20130726205018.GM3111@sgi.com>
+	<CAA+BczSpn7Cu2rZWJ9Q2b1-Xh0365R9ykGxKHHymtRm2Q7xCuA@mail.gmail.com>
+	<CAA+BczTt-ZN7DU8gpWAY0SdL0KWL2Z_y8qKvmxMn7b+T9frK4Q@mail.gmail.com>
 MIME-Version: 1.0
-Subject: Re: how to use fstrim?
-References: <51F2BD31.5060301@profihost.ag>
-In-Reply-To: <51F2BD31.5060301@profihost.ag>
+Content-Disposition: inline
+In-Reply-To: <CAA+BczTt-ZN7DU8gpWAY0SdL0KWL2Z_y8qKvmxMn7b+T9frK4Q@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,27 +29,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Stefan Priebe <s.priebe@profihost.ag>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Jason Rosenberg <jbr@squareup.com>
+Cc: stan@hardwarefreak.com, xfs@oss.sgi.com
 
-On 7/26/13 1:17 PM, Stefan Priebe wrote:
-> Hi,
-> 
-> what is the right way to use fstrim on top of XFS? just doing fstrim -v -m 4194304 /
-> 
-> results sometimes (might depend on disk i/o) to hanging tasks and stack traces - fstrim needs > 5 min in these cases.
+Hi Jason,
 
-As always, it's better to include things like the actual stack traces you got, so we have some idea what's going on ...
+On Fri, Jul 26, 2013 at 05:11:55PM -0400, Jason Rosenberg wrote:
+> Is it safe to say that speculative preallocation will not be used if a file
+> is opened read-only?
 
-How fast it goes probably depends quite a lot on the storage underneath.
+The blocks will only be reserved on an appending write.
 
-So including storage information as well would also help us give you a meaningful answer...
+> It turns out that the kafka server does indeed write lots of log files, and
+> rotate them after they reach a max size, but never closes the files until
+> the app exits, or until it deletes the files.  This is because it needs to
+> make them available for reading, etc.   So, an obvious change for kafka
+> might be to close each log file after rotating, and then re-open it
+> read-only for consumers of the data.  Does that sound like a solution that
+> would pro-actively release pre-allocated storage?
 
-And kernel version... etc.
+An interesting idea, and I'm not quite sure.  The blocks past EOF are freed in
+xfs_release on close in some circumstances, and it looks like you have a chance
+to call xfs_free_eofblocks (at least in the most uptodate codebase) if you did
+not use explicit preallocation (e.g. fallocate or an xfs ioctl) and did not
+open it append-only.  You could reopen with read-write flags and it wouldn't
+make a difference vs read-only, so long as you don't do an appending write.
 
-http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+Seems like it's worth a try.  Another possibility is to look into what would
+happen if you do a truncate up to i_size when you're ready to stop appending to
+the file.  I haven't checked that out though.
 
--Eric
+Regards,
+	Ben
 
 _______________________________________________
 xfs mailing list
