@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 039FA7F4E
-	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 01:36:21 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 9DD0D7F51
+	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 02:23:45 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B2DE830409A
-	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 23:36:20 -0700 (PDT)
-Received: from mail-qe0-f54.google.com (mail-qe0-f54.google.com
-	[209.85.128.54]) by cuda.sgi.com with ESMTP id aCk8PWoaGxiAAarC
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 25 Jul 2013 23:36:15 -0700 (PDT)
-Received: by mail-qe0-f54.google.com with SMTP id 1so819613qee.27
-	for <xfs@oss.sgi.com>; Thu, 25 Jul 2013 23:36:15 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 63F183040A4
+	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 00:23:42 -0700 (PDT)
+Received: from sam.nabble.com (sam.nabble.com [216.139.236.26]) by
+	cuda.sgi.com with ESMTP id mZJmeC92uHhAtHn5 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 26 Jul 2013 00:23:41 -0700 (PDT)
+Received: from tom.nabble.com ([192.168.236.105])
+	by sam.nabble.com with esmtp (Exim 4.72)
+	(envelope-from <jbr@squareup.com>) id 1V2cNI-0006Vw-Hw
+	for xfs@oss.sgi.com; Fri, 26 Jul 2013 00:23:40 -0700
+Date: Fri, 26 Jul 2013 00:23:40 -0700 (PDT)
+From: jbr <jbr@squareup.com>
+Message-ID: <1374823420041-35002.post@n7.nabble.com>
+Subject: understanding speculative preallocation
 MIME-Version: 1.0
-In-Reply-To: <20130726025009.GE21982@dastard>
-References: <1374740619-29797-1-git-send-email-zwu.kernel@gmail.com>
-	<20130726025009.GE21982@dastard>
-Date: Fri, 26 Jul 2013 14:36:15 +0800
-Message-ID: <CAEH94Lh-UCCEs7hQi_t5v+X+ER1DH9dCtjr6e9GVNX5KJ-f1hQ@mail.gmail.com>
-Subject: Re: [PATCH] xfs: introduce object readahead to log recovery
-From: Zhi Yong Wu <zwu.kernel@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,267 +30,77 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, linux-kernel mlist <linux-kernel@vger.kernel.org>, xfstests <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-Dave,
+Hello,
 
-All comments are good to me, and will be applied to next version, thanks a lot.
+I'm looking for general documentation/help with the speculative
+preallocation feature in xfs.  So far, I haven't really been able to find
+any definitive, up to date documentation on it.
 
-On Fri, Jul 26, 2013 at 10:50 AM, Dave Chinner <david@fromorbit.com> wrote:
-> On Thu, Jul 25, 2013 at 04:23:39PM +0800, zwu.kernel@gmail.com wrote:
->> From: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
->>
->>   It can take a long time to run log recovery operation because it is
->> single threaded and is bound by read latency. We can find that it took
->> most of the time to wait for the read IO to occur, so if one object
->> readahead is introduced to log recovery, it will obviously reduce the
->> log recovery time.
->>
->>   In dirty log case as below:
->>     data device: 0xfd10
->>     log device: 0xfd10 daddr: 20480032 length: 20480
->>
->>     log tail: 7941 head: 11077 state: <DIRTY>
->
-> That's only a small log (10MB). As I've said on irc, readahead won't
-Yeah, it is one 10MB log, but how do you calculate it based on the above info?
+I'm wondering how I can find out definitively which version of xfs I am
+using, and what the preallocation scheme in use is.
 
-> show any real difference on this and you need to be testing with
-> large logs.
->
->>
->> This dirty ratio is about 15%. I am trying to do tests in larger scale
->> and dirtier filesystem environment.
->>
->> Log recovery time stat:
->>
->>             w/o this patch        w/ this patch
->>   real         0m1.051s             0m0.965s
->>   sys          0m0.033s             0m0.035s
->>
->>   iowait       0m1.018s             0m0.930s
->
-> Well, it's not made much of a difference there. That's probably
-> within the noise of repeated log recovery runs.
->
-> My simple test is:
->
-> $ cat recovery_time.sh
-> #!/bin/bash
->
-> cd /home/dave/src/compilebench-0.6/
->
-> mkfs.xfs -f /dev/vdc;
-> mount /dev/vdc /mnt/scratch
-> chmod 777 /mnt/scratch;
-> ./compilebench --no-sync -D /mnt/scratch &
-> sleep 55
-> /home/dave/src/xfstests-dev/src/godown /mnt/scratch
-> umount /mnt/scratch
-> xfs_logprint -t /dev/vdc |head -20
-> time mount /dev/vdc /mnt/scratch
-> umount /mnt/scratch
-> $
->
-> And the recovery time from this is between 15-17s:
->
-> ....
->     log device: 0xfd20 daddr: 107374182032 length: 4173824
->                                                    ^^^^^^^ almost 2GB
->         log tail: 19288 head: 264809 state: <DIRTY>
-> ....
-> real    0m17.913s
-> user    0m0.000s
-> sys     0m2.381s
->
-> And runs at 3-4000 read IOPs for most of that time. It's largely IO
-> bound, even on SSDs.
->
-> With your patch:
->
-> log tail: 35871 head: 308393 state: <DIRTY>
-> real    0m12.715s
-> user    0m0.000s
-> sys     0m2.247s
->
-> And it peaked at ~5000 read IOPS.
-How do you know its READ IOPS is ~5000?
+We are running apache kafka on our servers, and kafka uses sequential io to
+write data log files.  Kafka uses, by default, a maximum log file size of
+1Gb.  However, most of the log files end up being 2Gb, and thus the disk
+fills up twice as fast as it should.
 
->
-> It's definitely an improvement, but there's a lot of dead time still
-> spent waiting for IO that we should be able to remove. Let's have a
-> look at the code...
->
->
->> +STATIC void
->> +xlog_recover_inode_ra_pass2(
->> +     struct xlog                     *log,
->> +     struct xlog_recover_item        *item)
->> +{
->> +     xfs_inode_log_format_t  *in_f;
->> +     xfs_mount_t             *mp = log->l_mp;
->> +     int                     error;
->> +     int                     need_free = 0;
->> +
->> +     if (item->ri_buf[0].i_len == sizeof(xfs_inode_log_format_t)) {
->> +             in_f = item->ri_buf[0].i_addr;
->> +     } else {
->> +             in_f = kmem_alloc(sizeof(xfs_inode_log_format_t), KM_SLEEP);
->> +             need_free = 1;
->> +             error = xfs_inode_item_format_convert(&item->ri_buf[0], in_f);
->> +             if (error)
->> +                     goto error;
->> +     }
->
-> I'd just put the conversion buffer on stack and avoid the need to
-> alloc/free memory here. There's plenty of stack space available
-> during recovery here, so let's use it to keep the overhead of
-> readahead down.
-OK, will use the buffer on stack.
->
->> +STATIC void
->> +xlog_recover_dquot_ra_pass2(
->> +     struct xlog                     *log,
->> +     struct xlog_recover_item        *item)
->> +{
->> +     xfs_mount_t             *mp = log->l_mp;
->> +     xfs_buf_t               *bp;
->> +     struct xfs_disk_dquot   *recddq;
->> +     int                     error;
->> +     xfs_dq_logformat_t      *dq_f;
->> +     uint                    type;
->> +
->> +
->> +     if (mp->m_qflags == 0)
->> +             return;
->> +
->> +     recddq = item->ri_buf[1].i_addr;
->> +     if (recddq == NULL)
->> +             return;
->> +     if (item->ri_buf[1].i_len < sizeof(xfs_disk_dquot_t))
->> +             return;
->> +
->> +     type = recddq->d_flags & (XFS_DQ_USER | XFS_DQ_PROJ | XFS_DQ_GROUP);
->> +     ASSERT(type);
->> +     if (log->l_quotaoffs_flag & type)
->> +             return;
->> +
->> +     dq_f = item->ri_buf[0].i_addr;
->> +     ASSERT(dq_f);
->> +     error = xfs_qm_dqcheck(mp, recddq, dq_f->qlf_id, 0, XFS_QMOPT_DOWARN,
->> +                        "xlog_recover_dquot_ra_pass2 (log copy)");
->> +     if (error)
->> +             return;
->> +     ASSERT(dq_f->qlf_len == 1);
->> +
->> +     error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp, dq_f->qlf_blkno,
->> +                                XFS_FSB_TO_BB(mp, dq_f->qlf_len), 0, &bp,
->> +                                NULL);
->> +     if (!error)
->> +             xfs_buf_relse(bp);
->> +}
->
-> That's not doing readahead - that's an integrity check followed by a
-> blocking read.  Shouldn't it just be calling xfs_buf_readahead() on
-> dq_f->qlf_blkno/dq_f->qlf_len, after checking whether it had been
-> cancelled?
-ah, i miss tha it is one blocking read. will fix it
->
->>  STATIC int
->>  xlog_recover_commit_pass1(
->>       struct xlog                     *log,
->> @@ -3140,10 +3255,14 @@ xlog_recover_commit_pass2(
->>       struct xlog                     *log,
->>       struct xlog_recover             *trans,
->>       struct list_head                *buffer_list,
->> -     struct xlog_recover_item        *item)
->> +     struct xlog_recover_item        *item,
->> +     struct xlog_recover_item        *next_item)
->>  {
->>       trace_xfs_log_recover_item_recover(log, trans, item, XLOG_RECOVER_PASS2);
->>
->> +     if (next_item)
->> +             xlog_recover_ra_pass2(log, next_item);
->> +
->
-> Ah, that explains the limited improvement - it's only doing
-> readahead of a single item at a time. IOWs, we are completing
-> recovery of the current object before IO completion of the next
-> object has occurred. This generally means the read-ahead queue is
-Yes.
-> not deep enough...
->
->>       switch (ITEM_TYPE(item)) {
->>       case XFS_LI_BUF:
->>               return xlog_recover_buffer_pass2(log, buffer_list, item);
->> @@ -3181,7 +3300,7 @@ xlog_recover_commit_trans(
->>       int                     pass)
->>  {
->>       int                     error = 0, error2;
->> -     xlog_recover_item_t     *item;
->> +     xlog_recover_item_t     *item, *next_item, *temp_item;
->>       LIST_HEAD               (buffer_list);
->>
->>       hlist_del(&trans->r_list);
->> @@ -3190,14 +3309,18 @@ xlog_recover_commit_trans(
->>       if (error)
->>               return error;
->>
->> -     list_for_each_entry(item, &trans->r_itemq, ri_list) {
->> +     list_for_each_entry_safe(item, temp_item, &trans->r_itemq, ri_list) {
->>               switch (pass) {
->>               case XLOG_RECOVER_PASS1:
->>                       error = xlog_recover_commit_pass1(log, trans, item);
->>                       break;
->>               case XLOG_RECOVER_PASS2:
->> +                     if (&temp_item->ri_list != &trans->r_itemq)
->> +                             next_item = temp_item;
->> +                     else
->> +                             next_item = NULL;
->>                       error = xlog_recover_commit_pass2(log, trans,
->> -                                                       &buffer_list, item);
->> +                                       &buffer_list, item, next_item);
->
-> Ok, so you've based the readahead on the transaction item list
-> having a next pointer. What I think you should do is turn this into
-> a readahead queue by moving objects to a new list. i.e.
->
->         list_for_each_entry_safe(item, next, &trans->r_itemq, ri_list) {
->
->                 case XLOG_RECOVER_PASS2:
->                         if (ra_qdepth++ >= MAX_QDEPTH) {
->                                 recover_items(log, trans, &buffer_list, &ra_item_list);
->                                 ra_qdepth = 0;
->                         } else {
->                                 xlog_recover_item_readahead(log, item);
->                                 list_move_tail(&item->ri_list, &ra_item_list);
->                         }
->                         break;
->                 ...
->                 }
->         }
->         if (!list_empty(&ra_item_list))
->                 recover_items(log, trans, &buffer_list, &ra_item_list);
->
-> I'd suggest that a queue depth somewhere between 10 and 100 will
-> be necessary to keep enough IO in flight to keep the pipeline full
-> and prevent recovery from having to wait on IO...
-Good suggestion, will apply it to next version, thanks.
+We are using xfs on CentOS 2.6.32-358.  Is there a way I can know which
+version of xfs is built into this version of the kernel?  What preallocation
+schedule does it use?  If I do a xfs_info -V, it reports 3.1.1.
 
->
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
+We are using xfs (mounted with no allocsize specified).  I've seen varying
+info suggesting this means it either defaults to an allocsize of 64K (which
+doesn't seem to match my observations), or that it will use dynamic
+preallocation.
+
+I've also seen hints (but no actual canonical documentation) suggesting that
+the dynamic preallocation works by progressively doubling the current file
+size (which does match my observations).
+
+What I'm not clear on, is the scheduling for the preallocation. At what
+point does it decide to preallocate the next doubling of space.  Is it when
+the current preallocated space is used up, or does it happen when the
+current space is used up within some threshold.  What I'd like to do, is
+keep the doubling behavior in tact, but have it capped so it never increases
+the file beyond 1Gb.  Is there a way to do that?  Can I trick the
+preallocation to not do a final doubling, if I cap my kafka log files at
+say, 900Mb (or some percentage under 1Gb)?
+
+There are numerous references to an allocation schedule like this:
+
+freespace       max prealloc size
+  >5%             full extent (8GB)
+  4-5%             2GB (8GB >> 2)
+  3-4%             1GB (8GB >> 3)
+  2-3%           512MB (8GB >> 4)
+  1-2%           256MB (8GB >> 5)
+  <1%            128MB (8GB >> 6)
+
+I'm just not sure I understand what this is telling me.  It seems to tell me
+what the max prealloc size is, with being reduced if the disk is nearly
+full.  But it doesn't tell me about the progressive doubling in
+preallocation (I assume up to a max of 8Gb).  Is any of this configurable? 
+Can we specify a max prealloc size somewhere?
+
+The other issue seems to be that after the files are closed (from within the
+java jvm), they still don't seem to have their pre-allocated space
+reclaimed.  Are there known issues with closing the files in java not
+properly causing a flush of the preallocated space?
+
+Any help pointing me to any documentation/user guides which accurately
+describes this would be appreciated!
+
+Thanks,
+
+Jason
 
 
--- 
-Regards,
 
-Zhi Yong Wu
+--
+View this message in context: http://xfs.9218.n7.nabble.com/understanding-speculative-preallocation-tp35002.html
+Sent from the Xfs - General mailing list archive at Nabble.com.
 
 _______________________________________________
 xfs mailing list
