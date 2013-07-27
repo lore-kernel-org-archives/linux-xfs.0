@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CDB527F76
-	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 20:58:30 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id ACD2B29E03
+	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 22:52:26 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 73A63AC004
-	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 18:58:27 -0700 (PDT)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	DRfPpzxDrqRqAWMz for <xfs@oss.sgi.com>;
-	Fri, 26 Jul 2013 18:58:25 -0700 (PDT)
-Date: Sat, 27 Jul 2013 11:58:22 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 44/49] xfs: Reduce allocations during CIL insertion
-Message-ID: <20130727015822.GV13468@dastard>
-References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
-	<1374215120-7271-45-git-send-email-david@fromorbit.com>
-	<51EEF26F.5040001@sgi.com> <51EEF949.9020104@gmail.com>
-	<51EFD68A.40400@sgi.com> <51F2E011.5020904@gmail.com>
-	<51F2E4DD.4020301@sgi.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 8D6FD8F8033
+	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 20:52:23 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id rJgGV2WC0bH7F0zv
+	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 20:52:22 -0700 (PDT)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id F40436C058
+	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 22:52:21 -0500 (CDT)
+Message-ID: <51F343F5.5080709@hardwarefreak.com>
+Date: Fri, 26 Jul 2013 22:52:21 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <51F2E4DD.4020301@sgi.com>
+Subject: Re: A short digression on FOSS (Re: understanding speculative
+	preallocation)
+References: <21422056.2320.1374867822351.JavaMail.root@benjamin.baylink.com>
+In-Reply-To: <21422056.2320.1374867822351.JavaMail.root@benjamin.baylink.com>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,27 +32,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: "Michael L. Semon" <mlsemon35@gmail.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, Jul 26, 2013 at 04:06:37PM -0500, Mark Tinguely wrote:
-> 
-> I can reproduce a problem in patch 44 too. It takes my copy test 20
-> minutes to deplete the log space with patch 44, Same test with patch
-> 43 has been running a day and a half. I do not think that patch 44
-> is 100 times faster than patch 43 but I will let patch 43 spin all
-> weekend on a couple machines to verify that patch 43 does not hang.
+On 7/26/2013 2:43 PM, Jay Ashworth wrote:
 
-Details, please. What's your "copy test"?
+> But to address your specific point, I don't believe that RH is going to 
+> base its opinion on what time its employees spend supporting the remainder
+> of the FOSS ecosystem on whether the relevant distro was copied from theirs,
+> or not -- and I will be disappointed, publicly, and vocally, if they do.
 
-http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+On 7/26/2013 8:26 PM, Dave Chinner wrote:
+>
+> Disclaimer: I'm the primary RHEL XFS developer, employed by Red Hat.
+>
+> CentOS is a rebadged RHEL product that is released for free. If you
+> want bugs fixed in CentOS, then generally you are on your own. If
+> you want paid support where people will fix problems you have, you
+> need to pay for RHEL.
+>
+> You get what you pay for.
 
-Cheers,
 
-Dave.
+Jay, I'm awaiting your public and vocal disappointment.  BTW, Dave has
+stated this position regarding CentOS many times.  I'm guessing you're
+new to the XFS list (July 13 maybe) or simply missed such prior posts if
+you've been lurking much longer.
+
 -- 
-Dave Chinner
-david@fromorbit.com
+Stan
 
 _______________________________________________
 xfs mailing list
