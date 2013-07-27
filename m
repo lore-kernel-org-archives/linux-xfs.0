@@ -1,33 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 16CCA29E10
-	for <linux-xfs@oss.sgi.com>; Fri, 26 Jul 2013 23:28:44 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 94483AC002
-	for <linux-xfs@oss.sgi.com>; Fri, 26 Jul 2013 21:28:40 -0700 (PDT)
-Received: from plane.gmane.org (plane.gmane.org [80.91.229.3]) by cuda.sgi.com
-	with ESMTP id yCZI0CFp1YKdgghf (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <linux-xfs@oss.sgi.com>;
-	Fri, 26 Jul 2013 21:28:38 -0700 (PDT)
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1V2w7R-0001sX-AK
-	for linux-xfs@oss.sgi.com; Sat, 27 Jul 2013 06:28:37 +0200
-Received: from wombat.san-francisco.ca.us ([75.101.60.140])
-	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-	id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Sat, 27 Jul 2013 06:28:37 +0200
-Received: from kkeller by wombat.san-francisco.ca.us with local (Gmexim 0.1
-	(Debian)) id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Sat, 27 Jul 2013 06:28:37 +0200
-From: Keith Keller <kkeller@wombat.san-francisco.ca.us>
-Subject: Re: understanding speculative preallocation
-Date: Fri, 26 Jul 2013 21:26:11 -0700
-Message-ID: <3oubcax643.ln2@goaway.wombat.san-francisco.ca.us>
-References: <1374823420041-35002.post@n7.nabble.com>
-	<20130726115021.GO13468@dastard>
-	<CAA+BczQesNL2VmFmrcBNKXcM-Sfx0bXkXPRP5xMx6=Bv+NWrUA@mail.gmail.com>
-	<51F2CD8B.8080207@hardwarefreak.com>
-Mime-Version: 1.0
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 857FC7F3F
+	for <xfs@oss.sgi.com>; Sat, 27 Jul 2013 12:54:05 -0500 (CDT)
+Message-ID: <51F4093A.6070308@sgi.com>
+Date: Sat, 27 Jul 2013 12:54:02 -0500
+From: Mark Tinguely <tinguely@sgi.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH 20/49] xfs: introduce xfs_sb.c for sharing with libxfs
+References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
+	<1374215120-7271-21-git-send-email-david@fromorbit.com>
+In-Reply-To: <1374215120-7271-21-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,31 +18,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On 2013-07-26, Stan Hoeppner <stan@hardwarefreak.com> wrote:
-> Either pay for and receive the support that's required for the
-> proprietary distribution you're running, or use a completely open source
-> distro based on mainline kernel source and GNU user space.
+On 07/19/13 01:24, Dave Chinner wrote:
+> From: Dave Chinner<dchinner@redhat.com>
+>
+> xfs_mount.c is shared with userspace, but the only functions that
+> are shared are to do with physical superblock manipulations. This
+> means that less than 25% of the xfs_mount.c code is actually shared
+> with userspace. Move all the superblock functions to xfs_sb.c and
+> share that instead with libxfs.
+>
+> Note that this will leave all the in-core transaction related
+> superblock counter modifications in xfs_mount.c as none of that is
+> shared with userspace. With a few more small changes, xfs_mount.h
+> won't need to be shared with userspace anymore, either.
+>
+> Signed-off-by: Dave Chinner<dchinner@redhat.com>
+> ---
 
-Couldn't you simply run a mainline kernel on CentOS?  elrepo supports
-both the mainline kernel and the longterm kernel.
+okay, moves the user sharable functions/headers from xfs_mount.c/h to
+  xfs_sb.c/h
 
-http://elrepo.org/tiki/kernel-ml
-http://elrepo.org/tiki/kernel-lt
+couple comments:
 
-It's not perfect, of course, but at least it's closer to what the XFS
-developers (RH employees and others) are working on.
+   a struct xfs_mount got converted to a xfs_mount_t typedef in
+   xfs_initialize_perag() def in xfs_mount.h
 
---keith
+  brackets were added to a single line if statements in
+  xfs_sb_quota_from_disk()
 
--- 
-kkeller@wombat.san-francisco.ca.us
+beyond these two comments consider it:
 
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
