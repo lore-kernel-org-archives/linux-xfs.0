@@ -1,25 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id ACD2B29E03
-	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 22:52:26 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 8D6FD8F8033
-	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 20:52:23 -0700 (PDT)
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id rJgGV2WC0bH7F0zv
-	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 20:52:22 -0700 (PDT)
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id F40436C058
-	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 22:52:21 -0500 (CDT)
-Message-ID: <51F343F5.5080709@hardwarefreak.com>
-Date: Fri, 26 Jul 2013 22:52:21 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
-MIME-Version: 1.0
-Subject: Re: A short digression on FOSS (Re: understanding speculative
-	preallocation)
-References: <21422056.2320.1374867822351.JavaMail.root@benjamin.baylink.com>
-In-Reply-To: <21422056.2320.1374867822351.JavaMail.root@benjamin.baylink.com>
-Reply-To: stan@hardwarefreak.com
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 16CCA29E10
+	for <linux-xfs@oss.sgi.com>; Fri, 26 Jul 2013 23:28:44 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 94483AC002
+	for <linux-xfs@oss.sgi.com>; Fri, 26 Jul 2013 21:28:40 -0700 (PDT)
+Received: from plane.gmane.org (plane.gmane.org [80.91.229.3]) by cuda.sgi.com
+	with ESMTP id yCZI0CFp1YKdgghf (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <linux-xfs@oss.sgi.com>;
+	Fri, 26 Jul 2013 21:28:38 -0700 (PDT)
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1V2w7R-0001sX-AK
+	for linux-xfs@oss.sgi.com; Sat, 27 Jul 2013 06:28:37 +0200
+Received: from wombat.san-francisco.ca.us ([75.101.60.140])
+	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+	id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Sat, 27 Jul 2013 06:28:37 +0200
+Received: from kkeller by wombat.san-francisco.ca.us with local (Gmexim 0.1
+	(Debian)) id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Sat, 27 Jul 2013 06:28:37 +0200
+From: Keith Keller <kkeller@wombat.san-francisco.ca.us>
+Subject: Re: understanding speculative preallocation
+Date: Fri, 26 Jul 2013 21:26:11 -0700
+Message-ID: <3oubcax643.ln2@goaway.wombat.san-francisco.ca.us>
+References: <1374823420041-35002.post@n7.nabble.com>
+	<20130726115021.GO13468@dastard>
+	<CAA+BczQesNL2VmFmrcBNKXcM-Sfx0bXkXPRP5xMx6=Bv+NWrUA@mail.gmail.com>
+	<51F2CD8B.8080207@hardwarefreak.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,34 +40,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-On 7/26/2013 2:43 PM, Jay Ashworth wrote:
+On 2013-07-26, Stan Hoeppner <stan@hardwarefreak.com> wrote:
+> Either pay for and receive the support that's required for the
+> proprietary distribution you're running, or use a completely open source
+> distro based on mainline kernel source and GNU user space.
 
-> But to address your specific point, I don't believe that RH is going to 
-> base its opinion on what time its employees spend supporting the remainder
-> of the FOSS ecosystem on whether the relevant distro was copied from theirs,
-> or not -- and I will be disappointed, publicly, and vocally, if they do.
+Couldn't you simply run a mainline kernel on CentOS?  elrepo supports
+both the mainline kernel and the longterm kernel.
 
-On 7/26/2013 8:26 PM, Dave Chinner wrote:
->
-> Disclaimer: I'm the primary RHEL XFS developer, employed by Red Hat.
->
-> CentOS is a rebadged RHEL product that is released for free. If you
-> want bugs fixed in CentOS, then generally you are on your own. If
-> you want paid support where people will fix problems you have, you
-> need to pay for RHEL.
->
-> You get what you pay for.
+http://elrepo.org/tiki/kernel-ml
+http://elrepo.org/tiki/kernel-lt
 
+It's not perfect, of course, but at least it's closer to what the XFS
+developers (RH employees and others) are working on.
 
-Jay, I'm awaiting your public and vocal disappointment.  BTW, Dave has
-stated this position regarding CentOS many times.  I'm guessing you're
-new to the XFS list (July 13 maybe) or simply missed such prior posts if
-you've been lurking much longer.
+--keith
 
 -- 
-Stan
+kkeller@wombat.san-francisco.ca.us
+
 
 _______________________________________________
 xfs mailing list
