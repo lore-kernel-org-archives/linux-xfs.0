@@ -1,24 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 79C397F51
-	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 20:26:57 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3231E8F8035
-	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 18:26:57 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 1CA227F6A
+	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 20:30:30 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 013148F8035
+	for <xfs@oss.sgi.com>; Fri, 26 Jul 2013 18:30:29 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	kIi9YQ5jyGmlniXN for <xfs@oss.sgi.com>;
-	Fri, 26 Jul 2013 18:26:55 -0700 (PDT)
-Date: Sat, 27 Jul 2013 11:26:53 +1000
+	cRfHU0H80ZAPEWvB for <xfs@oss.sgi.com>;
+	Fri, 26 Jul 2013 18:30:28 -0700 (PDT)
+Date: Sat, 27 Jul 2013 11:30:24 +1000
 From: Dave Chinner <david@fromorbit.com>
 Subject: Re: understanding speculative preallocation
-Message-ID: <20130727012653.GR13468@dastard>
+Message-ID: <20130727013024.GS13468@dastard>
 References: <1374823420041-35002.post@n7.nabble.com>
 	<20130726115021.GO13468@dastard>
 	<CAA+BczQesNL2VmFmrcBNKXcM-Sfx0bXkXPRP5xMx6=Bv+NWrUA@mail.gmail.com>
+	<51F2CD8B.8080207@hardwarefreak.com>
+	<CAA+BczQGYoJVL0twvz2GRhH30teFPSJOsKWtofbXBrom4_Q6hg@mail.gmail.com>
+	<20130726205018.GM3111@sgi.com>
+	<CAA+BczSpn7Cu2rZWJ9Q2b1-Xh0365R9ykGxKHHymtRm2Q7xCuA@mail.gmail.com>
+	<CAA+BczTt-ZN7DU8gpWAY0SdL0KWL2Z_y8qKvmxMn7b+T9frK4Q@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAA+BczQesNL2VmFmrcBNKXcM-Sfx0bXkXPRP5xMx6=Bv+NWrUA@mail.gmail.com>
+In-Reply-To: <CAA+BczTt-ZN7DU8gpWAY0SdL0KWL2Z_y8qKvmxMn7b+T9frK4Q@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,89 +37,27 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Jason Rosenberg <jbr@squareup.com>
-Cc: xfs@oss.sgi.com
+Cc: Ben Myers <bpm@sgi.com>, stan@hardwarefreak.com, xfs@oss.sgi.com
 
-On Fri, Jul 26, 2013 at 01:40:16PM -0400, Jason Rosenberg wrote:
-> Hi Dave,
+On Fri, Jul 26, 2013 at 05:11:55PM -0400, Jason Rosenberg wrote:
+> Is it safe to say that speculative preallocation will not be used if a file
+> is opened read-only?
 > 
-> Thanks for your responses.  I'm a bit confused, as I didn't see your
-> responses on the actual forum (only in my email inbox).
+> It turns out that the kafka server does indeed write lots of log files, and
+> rotate them after they reach a max size, but never closes the files until
+> the app exits, or until it deletes the files.  This is because it needs to
+> make them available for reading, etc.   So, an obvious change for kafka
+> might be to close each log file after rotating, and then re-open it
+> read-only for consumers of the data.  Does that sound like a solution that
+> would pro-actively release pre-allocated storage?
 
-I'm replying from the list ;)
-
-[ If you have a dup filter like I do, then I only get one copy of
-anything that is sent to me when there are multiple cc's. My
-procmail rules determine where it gets stored.... ]
-
-> Anyway, I'm surprised that you don't have some list or other way to
-> correlate version history of XFS, with os release versions.
-
-Of course we do.
-
-> I'm guessing
-> the version I have is not using the latest/greatest.  We actually have
-> another system that uses an older version of the kernel (2.6.32-279), and
-> it behaves differently (it still preallocates space beyond what will ever
-> be used, but not by quite as much).  When we rolled out our newer machines
-> to 2.6.32-358, we started seeing a marked increase in disk full problems.
-
-Disclaimer: I'm the primary RHEL XFS developer, employed by Red Hat.
-
-CentOS is a rebadged RHEL product that is released for free. If you
-want bugs fixed in CentOS, then generally you are on your own. If
-you want paid support where people will fix problems you have, you
-need to pay for RHEL.
-
-You get what you pay for.
-
-> If, say you tell me, the mainline xfs code has improved behavior, it would
-> be nice to have a way to know which version of CentOS might include that?
-
-Well, that depends on what Red Hat do with RHEL, because CentOS
-simply rebuild what Red Hat releases.
-
->  Telling me to read source code across multiple kernel versions sounds like
-> an interesting endeavor, but not something that is the most efficient use
-> of my time, unless there truly is no one who can easily tell me anything
-> about xfs version history.
-
-So, you want me to read it for you instead, then document it for
-you? i.e. spend a day not fixing bugs and developing new code to
-document the history of something that you can find out by looking
-in git and rpms yourself? Unless you are offering to pay someone to
-do it, I don't see it happening...
-
-Open source != free lunch.
-
-> Do you have any plans to have some sort of improved documentation story
-> around this?
-
-No.
-
-> This speculative preallocation behavior is truly unexpected
-> and not transparent to the user.
-
-Which is why we've been fixing it. The problems you are reporting
-are already fixed in the mainline kernel.
-
-> I can see that it's probably a great
-> performance boost (especially for something like kafka), but kafka does
-> have predictable log file rotation capped at fixed sizes, so it would be
-> great if that could be factored in.
-
-Mainline already does handle this, in a much more generic manner. If
-any file with speculative prealloc beyond EOF remains clean for 5
-minutes, then the specualtive prealloc is removed. Hence 5 minutes
-after you log file is rotated, it will have the excess space
-removed.
-
-> I suppose using the allocsize setting might work in the short term.  But I
-> probably don't want to set allocsize to 1Gb, since that would mean every
-> single file created would start with that size, is that right?  Does the
-> allocsize setting basically work by always keeping the file size ahead of
-> consumed space by the allocsize amount?
-
-Effectively.
+No need - the mainline code that has a periodic background scan that
+stops buildup of unused prealocation. i.e. if the file is clean for
+5 minutes, then the prealloc will be removed. Hence it doesn't
+matter what the application does with it - if it holds it open and
+doesn't write to the file, then the prealloc will get removed. More
+will be added the next time the file is written, but until then it
+won't use excessive space.
 
 Cheers,
 
