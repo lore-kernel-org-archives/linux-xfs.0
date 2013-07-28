@@ -1,31 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 84C2E7F3F
-	for <xfs@oss.sgi.com>; Sat, 27 Jul 2013 16:00:31 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 04C47AC001
-	for <xfs@oss.sgi.com>; Sat, 27 Jul 2013 14:00:27 -0700 (PDT)
-Received: from benjamin.baylink.com (rrcs-24-129-180-187.se.biz.rr.com
-	[24.129.180.187]) by cuda.sgi.com with ESMTP id
-	tD6VkE6vDr5Ra1Wo for <xfs@oss.sgi.com>;
-	Sat, 27 Jul 2013 14:00:26 -0700 (PDT)
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by benjamin.baylink.com (Postfix) with ESMTP id 056A91F002CC
-	for <xfs@oss.sgi.com>; Sat, 27 Jul 2013 17:00:26 -0400 (EDT)
-Received: from benjamin.baylink.com ([127.0.0.1])
-	by localhost (benjamin.baylink.com [127.0.0.1]) (amavisd-new,
-	port 10024) with ESMTP id agAsJOC78Ass for <xfs@oss.sgi.com>;
-	Sat, 27 Jul 2013 17:00:21 -0400 (EDT)
-Received: from benjamin.baylink.com (benjamin.baylink.com [192.168.253.10])
-	by benjamin.baylink.com (Postfix) with ESMTP id CBEB41F00210
-	for <xfs@oss.sgi.com>; Sat, 27 Jul 2013 17:00:21 -0400 (EDT)
-Date: Sat, 27 Jul 2013 17:00:21 -0400 (EDT)
-From: Jay Ashworth <jra@baylink.com>
-Message-ID: <6869770.2390.1374958821773.JavaMail.root@benjamin.baylink.com>
-In-Reply-To: <51F343F5.5080709@hardwarefreak.com>
-Subject: Re: A short digression on FOSS (Re: understanding speculative
-	preallocation)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 75E157F5F
+	for <xfs@oss.sgi.com>; Sat, 27 Jul 2013 20:07:53 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 557D0304053
+	for <xfs@oss.sgi.com>; Sat, 27 Jul 2013 18:07:50 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	VnngBGx8iK6cSW5q for <xfs@oss.sgi.com>;
+	Sat, 27 Jul 2013 18:07:48 -0700 (PDT)
+Date: Sun, 28 Jul 2013 11:07:44 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 22/49] xfs: minor cleanups
+Message-ID: <20130728010744.GW13468@dastard>
+References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
+	<1374215120-7271-23-git-send-email-david@fromorbit.com>
+	<51F40ACA.40601@sgi.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <51F40ACA.40601@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,76 +31,46 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: xfs@oss.sgi.com
 
------ Original Message -----
-> From: "Stan Hoeppner" <stan@hardwarefreak.com>
-
-> On 7/26/2013 2:43 PM, Jay Ashworth wrote:
-> 
-> > But to address your specific point, I don't believe that RH is going
-> > to
-> > base its opinion on what time its employees spend supporting the
-> > remainder
-> > of the FOSS ecosystem on whether the relevant distro was copied from
-> > theirs,
-> > or not -- and I will be disappointed, publicly, and vocally, if they
-> > do.
-> 
-> On 7/26/2013 8:26 PM, Dave Chinner wrote:
-
-In a message which, for some reason, I do not see here in my list folder;
-(it wasn't in my inbox either; this seems a running thing)
-
-> > Disclaimer: I'm the primary RHEL XFS developer, employed by Red Hat.
+On Sat, Jul 27, 2013 at 01:00:42PM -0500, Mark Tinguely wrote:
+> On 07/19/13 01:24, Dave Chinner wrote:
+> >From: Dave Chinner<dchinner@redhat.com>
 > >
-> > CentOS is a rebadged RHEL product that is released for free. If you
-> > want bugs fixed in CentOS, then generally you are on your own. If
-> > you want paid support where people will fix problems you have, you
-> > need to pay for RHEL.
+> >These come from syncing the shared userspace and kernel code. Small
+> >whitespace and trivial cleanups.
 > >
-> > You get what you pay for.
+> >Signed-off-by: Dave Chinner<dchinner@redhat.com>
+> >---
 > 
-> Jay, I'm awaiting your public and vocal disappointment. BTW, Dave has
-> stated this position regarding CentOS many times. I'm guessing you're
-> new to the XFS list (July 13 maybe) or simply missed such prior posts
-> if you've been lurking much longer.
+> okay, minor clean-ups
+> 
+> Don't understand the change from min_t to min:
+> 
+> >diff --git a/fs/xfs/xfs_attr_remote.c b/fs/xfs/xfs_attr_remote.c
+> >index 13a0ed9..b42926a 100644
+> >--- a/fs/xfs/xfs_attr_remote.c
+> >+++ b/fs/xfs/xfs_attr_remote.c
+> >@@ -251,7 +251,7 @@ xfs_attr_rmtval_copyout(
+> >  		int hdr_size = 0;
+> >  		int byte_cnt = XFS_ATTR3_RMT_BUF_SPACE(mp, XFS_LBSIZE(mp));
+> >
+> >-		byte_cnt = min_t(int, *valuelen, byte_cnt);
+> >+		byte_cnt = min(*valuelen, byte_cnt);
 
-I am new to the list, yes.  But -- and I can only reply to what you 
-quoted here; apologies to DC if it's less than what he wrote -- I am
-in fact disappointed: in Dave for the strawman reply.  No one, that I 
-saw, *reported bugs or asked for support* with CentOS.
-
-The question -- and it was coming from someone who sounded like
-they had read their Raymond, Moen, and Tatham, was "how do I 
-determine *which version of the XFS drivers* is in the kernel
-I'm running, so that I can helpfully report my problems to the list".
-
-If Dave thinks *that* question is out of bounds, then when I do my 
-rotating reformat to recover from my recent power supply induced 
-crash, XFS will not be the file system I pick off the pulldown menu
-to reformat with.
-
-As I've just had to explain to the openSUSE release configuration 
-people over sysVinit and packaging, the policies of the developers
-underneath the code are *much* more important to me than the code
-is, or what the code does.
-
-If the implication of Dave's comment above is that he's not interested
-in bug reports from people who aren't paid customers of RH, I'm fine
-with that as well; his call.  Clearly, I won't be one of those,
-either; my sister isn't interested in paying $1200/yr for the OS on
-her DVR.
-
-Perhaps I'm misinterpreting one of you.
+min_t is only needed when the types being compared are different.
+I.e. it ensures the comparison is done with the appropriate casts on
+the items being compared. However, both variables being compared
+here are of the same type (int) and so the type casting of min_t is
+not necessary.
 
 Cheers,
--- jra
+
+Dave.
 -- 
-Jay R. Ashworth                  Baylink                       jra@baylink.com
-Designer                     The Things I Think                       RFC 2100
-Ashworth & Associates     http://baylink.pitas.com         2000 Land Rover DII
-St Petersburg FL USA               #natog                      +1 727 647 1274
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
