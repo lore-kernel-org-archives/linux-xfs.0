@@ -1,24 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D80B57F61
-	for <xfs@oss.sgi.com>; Sat, 27 Jul 2013 21:08:41 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 65D0CAC001
-	for <xfs@oss.sgi.com>; Sat, 27 Jul 2013 19:08:38 -0700 (PDT)
-Received: from mail-oa0-f42.google.com (mail-oa0-f42.google.com
-	[209.85.219.42]) by cuda.sgi.com with ESMTP id tioPVnHCscAtjwd7
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 27 Jul 2013 19:08:37 -0700 (PDT)
-Received: by mail-oa0-f42.google.com with SMTP id i18so2141023oag.29
-	for <xfs@oss.sgi.com>; Sat, 27 Jul 2013 19:08:36 -0700 (PDT)
-Subject: Re: A short digression on FOSS (Re: understanding speculative
-	preallocation)
-Mime-Version: 1.0 (Apple Message framework v1085)
-From: aurfalien <aurfalien@gmail.com>
-In-Reply-To: <6559720.2408.1374976243593.JavaMail.root@benjamin.baylink.com>
-Date: Sat, 27 Jul 2013 19:08:32 -0700
-Message-Id: <52C3E9E6-61DD-4537-9A64-C8CBFC86F6E3@gmail.com>
-References: <6559720.2408.1374976243593.JavaMail.root@benjamin.baylink.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id E4C6E7F6C
+	for <xfs@oss.sgi.com>; Sat, 27 Jul 2013 21:19:22 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id A7B7D304059
+	for <xfs@oss.sgi.com>; Sat, 27 Jul 2013 19:19:19 -0700 (PDT)
+Received: from mail-ve0-f179.google.com (mail-ve0-f179.google.com
+	[209.85.128.179]) by cuda.sgi.com with ESMTP id
+	TRioGASY1cPqeQ5A (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 27 Jul 2013 19:19:18 -0700 (PDT)
+Received: by mail-ve0-f179.google.com with SMTP id d10so2170677vea.10
+	for <xfs@oss.sgi.com>; Sat, 27 Jul 2013 19:19:17 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20130727013024.GS13468@dastard>
+References: <1374823420041-35002.post@n7.nabble.com>
+	<20130726115021.GO13468@dastard>
+	<CAA+BczQesNL2VmFmrcBNKXcM-Sfx0bXkXPRP5xMx6=Bv+NWrUA@mail.gmail.com>
+	<51F2CD8B.8080207@hardwarefreak.com>
+	<CAA+BczQGYoJVL0twvz2GRhH30teFPSJOsKWtofbXBrom4_Q6hg@mail.gmail.com>
+	<20130726205018.GM3111@sgi.com>
+	<CAA+BczSpn7Cu2rZWJ9Q2b1-Xh0365R9ykGxKHHymtRm2Q7xCuA@mail.gmail.com>
+	<CAA+BczTt-ZN7DU8gpWAY0SdL0KWL2Z_y8qKvmxMn7b+T9frK4Q@mail.gmail.com>
+	<20130727013024.GS13468@dastard>
+Date: Sat, 27 Jul 2013 22:19:17 -0400
+Message-ID: <CAA+BczTywXKd_76dAtT9DkSk=zKdoFOjHfXzF+bhrj_F54DnJQ@mail.gmail.com>
+Subject: Re: understanding speculative preallocation
+From: Jason Rosenberg <jbr@squareup.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,60 +35,137 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============2399631285166381695=="
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jay Ashworth <jra@baylink.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Ben Myers <bpm@sgi.com>, stan@hardwarefreak.com, xfs@oss.sgi.com
+
+--===============2399631285166381695==
+Content-Type: multipart/alternative; boundary=20cf3079bd9ab969dd04e2890070
+
+--20cf3079bd9ab969dd04e2890070
+Content-Type: text/plain; charset=ISO-8859-1
+
+Thanks Dave,
+
+The automatic prealloc removal, if no new writes after 5 minutes, sounds
+perfect for my use case.  But realistically, I'm not likely to get our org
+to push/find an os update just for this purpose too easily.
+
+So, in the meantime, the question remains, assuming I have the version I
+have currently (dynamic preallocation, persists indefinitely until the file
+is closed/app quits, etc.), will this idea work (e.g. close the file after
+writing, then re-open read-only?).  Currently, the app does keep the files
+open indefinitely long after writing has stopped, and this is of course
+resulting in the preallocation persisting indefinitely.
+
+Jason
 
 
-On Jul 27, 2013, at 6:50 PM, Jay Ashworth wrote:
+On Fri, Jul 26, 2013 at 9:30 PM, Dave Chinner <david@fromorbit.com> wrote:
 
-> ----- Original Message -----
->> From: "aurfalien" <aurfalien@gmail.com>
-> 
->>> If Dave thinks *that* question is out of bounds, then when I do my
->>> rotating reformat to recover from my recent power supply induced
->>> crash, XFS will not be the file system I pick off the pulldown menu
->>> to reformat with.
->> 
->> Well, you'll be missing out. Who cares what any one thinks in terms of
->> Free vs Fee paradigms, XFS is simply a rockin FS.
-> 
-> You bet; we've put dozens of TB on and off it in 9 years of running
-> MythTV.  And in the 2 instances where it's blown its brains out, 
-> Dave, in particular, has been very helpful in putting it back together;
-> it's a little unnerving, actually, to look the handle up after an 
-> IRC chat and discover you had the lead dev on the phone.
-> 
->> I was really intrigued by his and Linus's back and forth not to long
->> ago, some great knowledge for sure.
-> 
-> I was watching that; I didn't see it end.  Did it?
+> On Fri, Jul 26, 2013 at 05:11:55PM -0400, Jason Rosenberg wrote:
+> > Is it safe to say that speculative preallocation will not be used if a
+> file
+> > is opened read-only?
+> >
+> > It turns out that the kafka server does indeed write lots of log files,
+> and
+> > rotate them after they reach a max size, but never closes the files until
+> > the app exits, or until it deletes the files.  This is because it needs
+> to
+> > make them available for reading, etc.   So, an obvious change for kafka
+> > might be to close each log file after rotating, and then re-open it
+> > read-only for consumers of the data.  Does that sound like a solution
+> that
+> > would pro-actively release pre-allocated storage?
+>
+> No need - the mainline code that has a periodic background scan that
+> stops buildup of unused prealocation. i.e. if the file is clean for
+> 5 minutes, then the prealloc will be removed. Hence it doesn't
+> matter what the application does with it - if it holds it open and
+> doesn't write to the file, then the prealloc will get removed. More
+> will be added the next time the file is written, but until then it
+> won't use excessive space.
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
+>
 
-Not really but I'm waiting :)
+--20cf3079bd9ab969dd04e2890070
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
->> This list is great so filter whats applicable and toss the rest in a
->> bit bucket.
-> 
-> As it happens, though, My Sister's DVR is *not* the only machine with
-> Really Big Filesystems on it*, and it really does matter to me what the
-> development policies are on critical subsystems like this; hence my 
-> query above.
-> 
-> I really really *love* SuSE, after 8 years, but they've made a critical 
-> change I simply can't tolerate for commercial use, and I'm going to have
-> to pick a new distro.  (And anyone who says "well, just switch to SLES" 
-> either forgets that that's $1200/server/year, or forgets where Linux came
-> from in the first place...)
-> 
-> CentOS is the only thing that's anywhere close.
+<div dir=3D"ltr">Thanks Dave,<div><br></div><div>The automatic prealloc rem=
+oval, if no new writes after 5 minutes, sounds perfect for my use case. =A0=
+But realistically, I&#39;m not likely to get our org to push/find an os upd=
+ate just for this purpose too easily.</div>
+<div><br></div><div>So, in the meantime, the question remains, assuming I h=
+ave the version I have currently (dynamic preallocation, persists indefinit=
+ely until the file is closed/app quits, etc.), will this idea work (e.g. cl=
+ose the file after writing, then re-open read-only?). =A0Currently, the app=
+ does keep the files open indefinitely long after writing has stopped, and =
+this is of course resulting in the preallocation persisting indefinitely.</=
+div>
+<div><br></div><div>Jason</div></div><div class=3D"gmail_extra"><br><br><di=
+v class=3D"gmail_quote">On Fri, Jul 26, 2013 at 9:30 PM, Dave Chinner <span=
+ dir=3D"ltr">&lt;<a href=3D"mailto:david@fromorbit.com" target=3D"_blank">d=
+avid@fromorbit.com</a>&gt;</span> wrote:<br>
+<blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
+x #ccc solid;padding-left:1ex"><div class=3D"im">On Fri, Jul 26, 2013 at 05=
+:11:55PM -0400, Jason Rosenberg wrote:<br>
+</div><div class=3D"im">&gt; Is it safe to say that speculative preallocati=
+on will not be used if a file<br>
+&gt; is opened read-only?<br>
+&gt;<br>
+&gt; It turns out that the kafka server does indeed write lots of log files=
+, and<br>
+&gt; rotate them after they reach a max size, but never closes the files un=
+til<br>
+&gt; the app exits, or until it deletes the files. =A0This is because it ne=
+eds to<br>
+&gt; make them available for reading, etc. =A0 So, an obvious change for ka=
+fka<br>
+&gt; might be to close each log file after rotating, and then re-open it<br=
+>
+&gt; read-only for consumers of the data. =A0Does that sound like a solutio=
+n that<br>
+&gt; would pro-actively release pre-allocated storage?<br>
+<br>
+</div>No need - the mainline code that has a periodic background scan that<=
+br>
+stops buildup of unused prealocation. i.e. if the file is clean for<br>
+5 minutes, then the prealloc will be removed. Hence it doesn&#39;t<br>
+matter what the application does with it - if it holds it open and<br>
+doesn&#39;t write to the file, then the prealloc will get removed. More<br>
+will be added the next time the file is written, but until then it<br>
+won&#39;t use excessive space.<br>
+<div class=3D"HOEnZb"><div class=3D"h5"><br>
+Cheers,<br>
+<br>
+Dave.<br>
+--<br>
+Dave Chinner<br>
+<a href=3D"mailto:david@fromorbit.com">david@fromorbit.com</a><br>
+</div></div></blockquote></div><br></div>
 
-If it RHEL/CentOS really is the only option, then perhaps get one box on RHEL and submit bugs for it.
+--20cf3079bd9ab969dd04e2890070--
 
-- aurf
+
+--===============2399631285166381695==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============2399631285166381695==--
