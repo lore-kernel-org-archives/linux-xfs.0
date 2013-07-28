@@ -1,32 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E4C6E7F6C
-	for <xfs@oss.sgi.com>; Sat, 27 Jul 2013 21:19:22 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 366337F6C
+	for <xfs@oss.sgi.com>; Sat, 27 Jul 2013 21:21:41 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A7B7D304059
-	for <xfs@oss.sgi.com>; Sat, 27 Jul 2013 19:19:19 -0700 (PDT)
-Received: from mail-ve0-f179.google.com (mail-ve0-f179.google.com
-	[209.85.128.179]) by cuda.sgi.com with ESMTP id
-	TRioGASY1cPqeQ5A (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 27 Jul 2013 19:19:18 -0700 (PDT)
-Received: by mail-ve0-f179.google.com with SMTP id d10so2170677vea.10
-	for <xfs@oss.sgi.com>; Sat, 27 Jul 2013 19:19:17 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 023E7304059
+	for <xfs@oss.sgi.com>; Sat, 27 Jul 2013 19:21:40 -0700 (PDT)
+Received: from benjamin.baylink.com (rrcs-24-129-180-187.se.biz.rr.com
+	[24.129.180.187]) by cuda.sgi.com with ESMTP id
+	siJoTkCgcdXSpjcf for <xfs@oss.sgi.com>;
+	Sat, 27 Jul 2013 19:21:39 -0700 (PDT)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by benjamin.baylink.com (Postfix) with ESMTP id 28FF01F002F5
+	for <xfs@oss.sgi.com>; Sat, 27 Jul 2013 22:21:39 -0400 (EDT)
+Received: from benjamin.baylink.com ([127.0.0.1])
+	by localhost (benjamin.baylink.com [127.0.0.1]) (amavisd-new,
+	port 10024) with ESMTP id EI+zvIfG7U8J for <xfs@oss.sgi.com>;
+	Sat, 27 Jul 2013 22:21:34 -0400 (EDT)
+Received: from benjamin.baylink.com (benjamin.baylink.com [192.168.253.10])
+	by benjamin.baylink.com (Postfix) with ESMTP id B89851F00318
+	for <xfs@oss.sgi.com>; Sat, 27 Jul 2013 22:21:34 -0400 (EDT)
+Date: Sat, 27 Jul 2013 22:21:34 -0400 (EDT)
+From: Jay Ashworth <jra@baylink.com>
+Message-ID: <31450470.2412.1374978094689.JavaMail.root@benjamin.baylink.com>
+In-Reply-To: <52C3E9E6-61DD-4537-9A64-C8CBFC86F6E3@gmail.com>
+Subject: Re: A short digression on FOSS (Re: understanding speculative
+	preallocation)
 MIME-Version: 1.0
-In-Reply-To: <20130727013024.GS13468@dastard>
-References: <1374823420041-35002.post@n7.nabble.com>
-	<20130726115021.GO13468@dastard>
-	<CAA+BczQesNL2VmFmrcBNKXcM-Sfx0bXkXPRP5xMx6=Bv+NWrUA@mail.gmail.com>
-	<51F2CD8B.8080207@hardwarefreak.com>
-	<CAA+BczQGYoJVL0twvz2GRhH30teFPSJOsKWtofbXBrom4_Q6hg@mail.gmail.com>
-	<20130726205018.GM3111@sgi.com>
-	<CAA+BczSpn7Cu2rZWJ9Q2b1-Xh0365R9ykGxKHHymtRm2Q7xCuA@mail.gmail.com>
-	<CAA+BczTt-ZN7DU8gpWAY0SdL0KWL2Z_y8qKvmxMn7b+T9frK4Q@mail.gmail.com>
-	<20130727013024.GS13468@dastard>
-Date: Sat, 27 Jul 2013 22:19:17 -0400
-Message-ID: <CAA+BczTywXKd_76dAtT9DkSk=zKdoFOjHfXzF+bhrj_F54DnJQ@mail.gmail.com>
-Subject: Re: understanding speculative preallocation
-From: Jason Rosenberg <jbr@squareup.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,137 +34,65 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============2399631285166381695=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Ben Myers <bpm@sgi.com>, stan@hardwarefreak.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
---===============2399631285166381695==
-Content-Type: multipart/alternative; boundary=20cf3079bd9ab969dd04e2890070
+----- Original Message -----
+> From: "aurfalien" <aurfalien@gmail.com>
 
---20cf3079bd9ab969dd04e2890070
-Content-Type: text/plain; charset=ISO-8859-1
+> If it RHEL/CentOS really is the only option, then perhaps get one box
+> on RHEL and submit bugs for it.
 
-Thanks Dave,
+Sure, but "submit bugs" was a straw man the entire time  The OP wasn't talking
+about how and where to submit bugs, and neither was I.
 
-The automatic prealloc removal, if no new writes after 5 minutes, sounds
-perfect for my use case.  But realistically, I'm not likely to get our org
-to push/find an os update just for this purpose too easily.
+The OP was trying to determine how he got from Distro/Kernel Version to
+XFS checkout ID, so that he could *talk to the XFS devs* about his problem.
 
-So, in the meantime, the question remains, assuming I have the version I
-have currently (dynamic preallocation, persists indefinitely until the file
-is closed/app quits, etc.), will this idea work (e.g. close the file after
-writing, then re-open read-only?).  Currently, the app does keep the files
-open indefinitely long after writing has stopped, and this is of course
-resulting in the preallocation persisting indefinitely.
+And no one had a straight answer for him, which straight answer *is*:
 
-Jason
+"You have to talk to whomever builds the kernel packages for the distro 
+you're working on; they should be able to tell you which XFS {version|
+release|checkout} is built into that particular kernel RPM."
 
+>From there, we veered *very* close to "we don't talk to people unless 
+they're paying Red Had customers", and I'm relatively certain that was
+*not* the takeaway Dave was aiming for with us.
 
-On Fri, Jul 26, 2013 at 9:30 PM, Dave Chinner <david@fromorbit.com> wrote:
+Those kernel packagers *should* (be able to) tell the XFS people those answers
+off hand.  If I were a developer on a major kernel subsystem project where
+that actually mattered, I think I'd probably get with the kernel builders
+at at least the major distros and kernel.org, and get them to tell me...
 
-> On Fri, Jul 26, 2013 at 05:11:55PM -0400, Jason Rosenberg wrote:
-> > Is it safe to say that speculative preallocation will not be used if a
-> file
-> > is opened read-only?
-> >
-> > It turns out that the kafka server does indeed write lots of log files,
-> and
-> > rotate them after they reach a max size, but never closes the files until
-> > the app exits, or until it deletes the files.  This is because it needs
-> to
-> > make them available for reading, etc.   So, an obvious change for kafka
-> > might be to close each log file after rotating, and then re-open it
-> > read-only for consumers of the data.  Does that sound like a solution
-> that
-> > would pro-actively release pre-allocated storage?
->
-> No need - the mainline code that has a periodic background scan that
-> stops buildup of unused prealocation. i.e. if the file is clean for
-> 5 minutes, then the prealloc will be removed. Hence it doesn't
-> matter what the application does with it - if it holds it open and
-> doesn't write to the file, then the prealloc will get removed. More
-> will be added the next time the file is written, but until then it
-> won't use excessive space.
->
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
->
+but that is a pretty far cry from my even *suggesting* that the XFS devs do
+so, much less -- as it feels like Stan believes I already have -- saying that
+I *expect* they should do so.
 
---20cf3079bd9ab969dd04e2890070
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+To any event that I "expect" that -- I expect it as a professional system
+administrator with 30 years experience and lots of practice dealing with
+systems at both the micro and macro level.  
 
-<div dir=3D"ltr">Thanks Dave,<div><br></div><div>The automatic prealloc rem=
-oval, if no new writes after 5 minutes, sounds perfect for my use case. =A0=
-But realistically, I&#39;m not likely to get our org to push/find an os upd=
-ate just for this purpose too easily.</div>
-<div><br></div><div>So, in the meantime, the question remains, assuming I h=
-ave the version I have currently (dynamic preallocation, persists indefinit=
-ely until the file is closed/app quits, etc.), will this idea work (e.g. cl=
-ose the file after writing, then re-open read-only?). =A0Currently, the app=
- does keep the files open indefinitely long after writing has stopped, and =
-this is of course resulting in the preallocation persisting indefinitely.</=
-div>
-<div><br></div><div>Jason</div></div><div class=3D"gmail_extra"><br><br><di=
-v class=3D"gmail_quote">On Fri, Jul 26, 2013 at 9:30 PM, Dave Chinner <span=
- dir=3D"ltr">&lt;<a href=3D"mailto:david@fromorbit.com" target=3D"_blank">d=
-avid@fromorbit.com</a>&gt;</span> wrote:<br>
-<blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
-x #ccc solid;padding-left:1ex"><div class=3D"im">On Fri, Jul 26, 2013 at 05=
-:11:55PM -0400, Jason Rosenberg wrote:<br>
-</div><div class=3D"im">&gt; Is it safe to say that speculative preallocati=
-on will not be used if a file<br>
-&gt; is opened read-only?<br>
-&gt;<br>
-&gt; It turns out that the kafka server does indeed write lots of log files=
-, and<br>
-&gt; rotate them after they reach a max size, but never closes the files un=
-til<br>
-&gt; the app exits, or until it deletes the files. =A0This is because it ne=
-eds to<br>
-&gt; make them available for reading, etc. =A0 So, an obvious change for ka=
-fka<br>
-&gt; might be to close each log file after rotating, and then re-open it<br=
->
-&gt; read-only for consumers of the data. =A0Does that sound like a solutio=
-n that<br>
-&gt; would pro-actively release pre-allocated storage?<br>
-<br>
-</div>No need - the mainline code that has a periodic background scan that<=
-br>
-stops buildup of unused prealocation. i.e. if the file is clean for<br>
-5 minutes, then the prealloc will be removed. Hence it doesn&#39;t<br>
-matter what the application does with it - if it holds it open and<br>
-doesn&#39;t write to the file, then the prealloc will get removed. More<br>
-will be added the next time the file is written, but until then it<br>
-won&#39;t use excessive space.<br>
-<div class=3D"HOEnZb"><div class=3D"h5"><br>
-Cheers,<br>
-<br>
-Dave.<br>
---<br>
-Dave Chinner<br>
-<a href=3D"mailto:david@fromorbit.com">david@fromorbit.com</a><br>
-</div></div></blockquote></div><br></div>
+Not as any kind of "customer".
 
---20cf3079bd9ab969dd04e2890070--
+*I* *have* read my Raymond and Moen, for all the good it's doing me. :-}
 
+But I still do have those professional SA reflexes, and they still inform
+the way that I make strategic decisions and choices about distros and 
+their various components.  And not all of those decisions are strictly
+technological.
 
---===============2399631285166381695==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Cheers,
+-- jra
+-- 
+Jay R. Ashworth                  Baylink                       jra@baylink.com
+Designer                     The Things I Think                       RFC 2100
+Ashworth & Associates     http://baylink.pitas.com         2000 Land Rover DII
+St Petersburg FL USA               #natog                      +1 727 647 1274
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============2399631285166381695==--
