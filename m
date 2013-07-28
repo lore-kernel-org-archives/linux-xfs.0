@@ -1,25 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 24EBB7F7E
-	for <xfs@oss.sgi.com>; Sun, 28 Jul 2013 02:18:58 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 0FA2229DFC
+	for <xfs@oss.sgi.com>; Sun, 28 Jul 2013 10:46:04 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id B4453AC002
-	for <xfs@oss.sgi.com>; Sun, 28 Jul 2013 00:18:54 -0700 (PDT)
-Received: from mail-we0-f172.google.com (mail-we0-f172.google.com
-	[74.125.82.172]) by cuda.sgi.com with ESMTP id DRA9t9bKFtGDVGo9
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 28 Jul 2013 00:18:53 -0700 (PDT)
-Received: by mail-we0-f172.google.com with SMTP id t61so3096813wes.3
-	for <xfs@oss.sgi.com>; Sun, 28 Jul 2013 00:18:52 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D4B458F8037
+	for <xfs@oss.sgi.com>; Sun, 28 Jul 2013 08:46:00 -0700 (PDT)
+Received: from benjamin.baylink.com (rrcs-24-129-180-187.se.biz.rr.com
+	[24.129.180.187]) by cuda.sgi.com with ESMTP id
+	ABNB1DfLw3DmLipH for <xfs@oss.sgi.com>;
+	Sun, 28 Jul 2013 08:45:59 -0700 (PDT)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by benjamin.baylink.com (Postfix) with ESMTP id 76CEC1F00362
+	for <xfs@oss.sgi.com>; Sun, 28 Jul 2013 11:45:58 -0400 (EDT)
+Received: from benjamin.baylink.com ([127.0.0.1])
+	by localhost (benjamin.baylink.com [127.0.0.1]) (amavisd-new,
+	port 10024) with ESMTP id 3dRAAb6J7AbK for <xfs@oss.sgi.com>;
+	Sun, 28 Jul 2013 11:45:54 -0400 (EDT)
+Received: from benjamin.baylink.com (benjamin.baylink.com [192.168.253.10])
+	by benjamin.baylink.com (Postfix) with ESMTP id 4F7AF1F00206
+	for <xfs@oss.sgi.com>; Sun, 28 Jul 2013 11:45:54 -0400 (EDT)
+Date: Sun, 28 Jul 2013 11:45:54 -0400 (EDT)
+From: Jay Ashworth <jra@baylink.com>
+Message-ID: <22300590.2458.1375026354258.JavaMail.root@benjamin.baylink.com>
+In-Reply-To: <51F4A77A.30502@hardwarefreak.com>
+Subject: Re: Purpose of the XFS list -- was: A short digression on FOSS (Re:
+	understanding speculative preallocation)
 MIME-Version: 1.0
-In-Reply-To: <31450470.2412.1374978094689.JavaMail.root@benjamin.baylink.com>
-References: <52C3E9E6-61DD-4537-9A64-C8CBFC86F6E3@gmail.com>
-	<31450470.2412.1374978094689.JavaMail.root@benjamin.baylink.com>
-Date: Sun, 28 Jul 2013 09:18:52 +0200
-Message-ID: <CAAxjCEwwmu_4Xxc8xyPw5Jk2LLTag93698M_EQZb7TxnsVSqXw@mail.gmail.com>
-Subject: Re: A short digression on FOSS (Re: understanding speculative
-	preallocation)
-From: Stefan Ring <stefanrin@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,21 +38,55 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jay Ashworth <jra@baylink.com>
-Cc: Linux fs XFS <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-> "You have to talk to whomever builds the kernel packages for the distro
-> you're working on; they should be able to tell you which XFS {version|
-> release|checkout} is built into that particular kernel RPM."
+----- Original Message -----
+> From: "Stan Hoeppner" <stan@hardwarefreak.com>
 
-For what it's worth, you can try to pry this info out of Oracle's
-RedPatch <https://oss.oracle.com/projects/RedPatch/>, which actually
-doesn't look all that active anymore recently, but given that it's
-Oracle, one cannot seriously be surprised about anything.
+> CentOS is a direct clone of RHEL. It uses the RHEL kernel. Thus XFS in
+> the CentOS kernel is not generally supported on this mailing list.
+> CentOS (and RHEL) userland XFS tools yes, kernel no. If there were some
+> other custom distro kernel out there that was non mainline, it wouldn't
+> get support here either.
 
-The thing is, that RHEL XFS and mainline XFS seem to have drifted
-apart a good deal, and as result, for an outsider, it is very
-difficult to correlate patches between the two branches.
+Like, um, SuSE.  Which hasn't used "mainline kernels" in years, if ever.
+
+What, exactly, Stan, *is* a mainline kernel?  kernel.org kernels?
+
+No distribution worth its oats is using those; it isn't just CentOS.
+
+> The reason "we" (and I'm not a Red Hat employee, nor a RHEL user)
+> suggest to CentOS users that they become paying RHEL customers is
+> obvious: they already use the software and are familiar and presumably
+> comfortable with it and prefer it. If they pay they get Red Hat support
+> for XFS in the kernel, along with anything else kernel related. If they
+> want to continue to use a "no cost" OS and get support on this mailing
+> list, they must have a distro with a mainline kernel. So the other
+> obvious option is move to a distro that uses a mainline kernel. They
+> may also be able to install a mainline kernel on CentOS, as someone
+> suggested previously.
+
+Or, they could use any other distro that isn't RHEL.
+
+Or, well, SuSE, if your assertion is actually accurate, which I think it's
+not, clearly.
+
+> Nobody here is aiming guns at CentOS users heads. They have plenty of
+> support options. It just so happens that using the stock CentOS (RHEL)
+> kernel isn't one of them.
+
+Ok.  Got it.  Then, since CentOS is the only realistic non-$1200/server/yr
+distro available, I won't be using XFS anymore.
+
+Note that you are pretty wildly violating the spirit of FOSS here.
+
+Cheers,
+-- jra
+-- 
+Jay R. Ashworth                  Baylink                       jra@baylink.com
+Designer                     The Things I Think                       RFC 2100
+Ashworth & Associates     http://baylink.pitas.com         2000 Land Rover DII
+St Petersburg FL USA               #natog                      +1 727 647 1274
 
 _______________________________________________
 xfs mailing list
