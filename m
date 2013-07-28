@@ -1,31 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2571A7F6A
-	for <xfs@oss.sgi.com>; Sat, 27 Jul 2013 20:50:51 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id D80B57F61
+	for <xfs@oss.sgi.com>; Sat, 27 Jul 2013 21:08:41 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A3AF3AC001
-	for <xfs@oss.sgi.com>; Sat, 27 Jul 2013 18:50:50 -0700 (PDT)
-Received: from benjamin.baylink.com (rrcs-24-129-180-187.se.biz.rr.com
-	[24.129.180.187]) by cuda.sgi.com with ESMTP id
-	huZBXsrCsUMGa0Pu for <xfs@oss.sgi.com>;
-	Sat, 27 Jul 2013 18:50:48 -0700 (PDT)
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by benjamin.baylink.com (Postfix) with ESMTP id 134121F0090B
-	for <xfs@oss.sgi.com>; Sat, 27 Jul 2013 21:50:48 -0400 (EDT)
-Received: from benjamin.baylink.com ([127.0.0.1])
-	by localhost (benjamin.baylink.com [127.0.0.1]) (amavisd-new,
-	port 10024) with ESMTP id MR7RZ3rgX8cX for <xfs@oss.sgi.com>;
-	Sat, 27 Jul 2013 21:50:43 -0400 (EDT)
-Received: from benjamin.baylink.com (benjamin.baylink.com [192.168.253.10])
-	by benjamin.baylink.com (Postfix) with ESMTP id A3B3C1F008DC
-	for <xfs@oss.sgi.com>; Sat, 27 Jul 2013 21:50:43 -0400 (EDT)
-Date: Sat, 27 Jul 2013 21:50:43 -0400 (EDT)
-From: Jay Ashworth <jra@baylink.com>
-Message-ID: <6559720.2408.1374976243593.JavaMail.root@benjamin.baylink.com>
-In-Reply-To: <043835EA-08D4-4945-92F0-173BFE2C604C@gmail.com>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 65D0CAC001
+	for <xfs@oss.sgi.com>; Sat, 27 Jul 2013 19:08:38 -0700 (PDT)
+Received: from mail-oa0-f42.google.com (mail-oa0-f42.google.com
+	[209.85.219.42]) by cuda.sgi.com with ESMTP id tioPVnHCscAtjwd7
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sat, 27 Jul 2013 19:08:37 -0700 (PDT)
+Received: by mail-oa0-f42.google.com with SMTP id i18so2141023oag.29
+	for <xfs@oss.sgi.com>; Sat, 27 Jul 2013 19:08:36 -0700 (PDT)
 Subject: Re: A short digression on FOSS (Re: understanding speculative
 	preallocation)
-MIME-Version: 1.0
+Mime-Version: 1.0 (Apple Message framework v1085)
+From: aurfalien <aurfalien@gmail.com>
+In-Reply-To: <6559720.2408.1374976243593.JavaMail.root@benjamin.baylink.com>
+Date: Sat, 27 Jul 2013 19:08:32 -0700
+Message-Id: <52C3E9E6-61DD-4537-9A64-C8CBFC86F6E3@gmail.com>
+References: <6559720.2408.1374976243593.JavaMail.root@benjamin.baylink.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,56 +31,55 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Jay Ashworth <jra@baylink.com>
+Cc: xfs@oss.sgi.com
 
------ Original Message -----
-> From: "aurfalien" <aurfalien@gmail.com>
 
-> > If Dave thinks *that* question is out of bounds, then when I do my
-> > rotating reformat to recover from my recent power supply induced
-> > crash, XFS will not be the file system I pick off the pulldown menu
-> > to reformat with.
+On Jul 27, 2013, at 6:50 PM, Jay Ashworth wrote:
+
+> ----- Original Message -----
+>> From: "aurfalien" <aurfalien@gmail.com>
 > 
-> Well, you'll be missing out. Who cares what any one thinks in terms of
-> Free vs Fee paradigms, XFS is simply a rockin FS.
+>>> If Dave thinks *that* question is out of bounds, then when I do my
+>>> rotating reformat to recover from my recent power supply induced
+>>> crash, XFS will not be the file system I pick off the pulldown menu
+>>> to reformat with.
+>> 
+>> Well, you'll be missing out. Who cares what any one thinks in terms of
+>> Free vs Fee paradigms, XFS is simply a rockin FS.
+> 
+> You bet; we've put dozens of TB on and off it in 9 years of running
+> MythTV.  And in the 2 instances where it's blown its brains out, 
+> Dave, in particular, has been very helpful in putting it back together;
+> it's a little unnerving, actually, to look the handle up after an 
+> IRC chat and discover you had the lead dev on the phone.
+> 
+>> I was really intrigued by his and Linus's back and forth not to long
+>> ago, some great knowledge for sure.
+> 
+> I was watching that; I didn't see it end.  Did it?
 
-You bet; we've put dozens of TB on and off it in 9 years of running
-MythTV.  And in the 2 instances where it's blown its brains out, 
-Dave, in particular, has been very helpful in putting it back together;
-it's a little unnerving, actually, to look the handle up after an 
-IRC chat and discover you had the lead dev on the phone.
+Not really but I'm waiting :)
 
-> I was really intrigued by his and Linus's back and forth not to long
-> ago, some great knowledge for sure.
+>> This list is great so filter whats applicable and toss the rest in a
+>> bit bucket.
+> 
+> As it happens, though, My Sister's DVR is *not* the only machine with
+> Really Big Filesystems on it*, and it really does matter to me what the
+> development policies are on critical subsystems like this; hence my 
+> query above.
+> 
+> I really really *love* SuSE, after 8 years, but they've made a critical 
+> change I simply can't tolerate for commercial use, and I'm going to have
+> to pick a new distro.  (And anyone who says "well, just switch to SLES" 
+> either forgets that that's $1200/server/year, or forgets where Linux came
+> from in the first place...)
+> 
+> CentOS is the only thing that's anywhere close.
 
-I was watching that; I didn't see it end.  Did it?
+If it RHEL/CentOS really is the only option, then perhaps get one box on RHEL and submit bugs for it.
 
-> This list is great so filter whats applicable and toss the rest in a
-> bit bucket.
-
-As it happens, though, My Sister's DVR is *not* the only machine with
-Really Big Filesystems on it*, and it really does matter to me what the
-development policies are on critical subsystems like this; hence my 
-query above.
-
-I really really *love* SuSE, after 8 years, but they've made a critical 
-change I simply can't tolerate for commercial use, and I'm going to have
-to pick a new distro.  (And anyone who says "well, just switch to SLES" 
-either forgets that that's $1200/server/year, or forgets where Linux came
-from in the first place...)
-
-CentOS is the only thing that's anywhere close.
-
-* ... for which I'm responsible ...
-
-Cheers
--- jra
--- 
-Jay R. Ashworth                  Baylink                       jra@baylink.com
-Designer                     The Things I Think                       RFC 2100
-Ashworth & Associates     http://baylink.pitas.com         2000 Land Rover DII
-St Petersburg FL USA               #natog                      +1 727 647 1274
-
+- aurf
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
