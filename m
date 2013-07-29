@@ -1,26 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E62257F3F
-	for <linux-xfs@oss.sgi.com>; Mon, 29 Jul 2013 08:38:43 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D48C28F8050
-	for <linux-xfs@oss.sgi.com>; Mon, 29 Jul 2013 06:38:40 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id jNX5lhAW0wsITa27 for <linux-xfs@oss.sgi.com>;
-	Mon, 29 Jul 2013 06:38:39 -0700 (PDT)
-Message-ID: <51F6705E.5040309@sandeen.net>
-Date: Mon, 29 Jul 2013 08:38:38 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by oss.sgi.com (Postfix) with ESMTP id 5476D7F3F
+	for <xfs@oss.sgi.com>; Mon, 29 Jul 2013 09:15:20 -0500 (CDT)
+Message-ID: <51F678F4.2020003@sgi.com>
+Date: Mon, 29 Jul 2013 09:15:16 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: A short digression on FOSS (Re: understanding speculative
-	preallocation)
-References: <20130729000247.GA13468@dastard>
-	<32553786.2492.1375056392388.JavaMail.root@benjamin.baylink.com>
-	<20130729024105.GC13468@dastard>
-	<2m4hcax0nv.ln2@goaway.wombat.san-francisco.ca.us>
-	<109D380F-F26C-4DA1-87DC-27466198AE22@sandeen.net>
-	<2b9hcaxru.ln2@goaway.wombat.san-francisco.ca.us>
-In-Reply-To: <2b9hcaxru.ln2@goaway.wombat.san-francisco.ca.us>
+Subject: Re: [PATCH 44/49] xfs: Reduce allocations during CIL insertion
+References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
+	<1374215120-7271-45-git-send-email-david@fromorbit.com>
+	<51EEF26F.5040001@sgi.com> <51EEF949.9020104@gmail.com>
+	<51EFD68A.40400@sgi.com> <51F2E011.5020904@gmail.com>
+	<51F2E4DD.4020301@sgi.com> <20130727015822.GV13468@dastard>
+	<51F41250.9010703@sgi.com> <20130728011255.GY13468@dastard>
+In-Reply-To: <20130728011255.GY13468@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,82 +22,79 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Keith Keller <kkeller@wombat.san-francisco.ca.us>
-Cc: linux-xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Michael L. Semon" <mlsemon35@gmail.com>, xfs@oss.sgi.com
 
-On 7/28/13 11:57 PM, Keith Keller wrote:
-> On 2013-07-29, Eric Sandeen <sandeen@sandeen.net> wrote:
+On 07/27/13 20:12, Dave Chinner wrote:
+> On Sat, Jul 27, 2013 at 01:32:48PM -0500, Mark Tinguely wrote:
+>> On 07/26/13 20:58, Dave Chinner wrote:
+>>> On Fri, Jul 26, 2013 at 04:06:37PM -0500, Mark Tinguely wrote:
+>>>>
+>>>> I can reproduce a problem in patch 44 too. It takes my copy test 20
+>>>> minutes to deplete the log space with patch 44, Same test with patch
+>>>> 43 has been running a day and a half. I do not think that patch 44
+>>>> is 100 times faster than patch 43 but I will let patch 43 spin all
+>>>> weekend on a couple machines to verify that patch 43 does not hang.
+>>>
+>>> Details, please. What's your "copy test"?
+>>>
+>>> http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+>>>
+>>> Cheers,
+>>>
+>>> Dave.
 >>
->> In general, no. There are a lot of moving parts that interface with
->> the filesystem - one does not simply drop fs/xfs from, say, kernel
->> 3.2 into a 2.6.32 kernel.
-> 
-> I apologize for the confusion, this was not what I was implying was
-> possible.  Let me try to be more explicit.  Unfortunately, I no longer
-> have a history of what I did, because I ultimately abandoned it, so my
-> example will be hypothetical.
-> 
-> The current stable kernel is 3.10.4.  Let's suppose that 3.10.5 comes
-> out tomorrow with some interesting patches to fs/xfs.  Is it possible
-> using dkms to build the 3.10.5 version of the xfs module for a running
-> 3.10.4 kernel?  
+>> Micheal found the problem using a simple copy, so I am using copy-like test.
+>>
+>> I have hung patch 44 with fsstress but I am currently using the
+>> simple perl scripts from bugzilla bug 922, but I do not do the silly
+>> step of reducing the log to an abnormal amount.
+>>
+>> Just mkfs the filesystem
+>>
+>> Create the the test files. the creation script:
+>>    http://oss.sgi.com/bugzilla/attachment.cgi?id=304
+>>
+>> Run the test script:
+>>    http://oss.sgi.com/bugzilla/attachment.cgi?id=305
+>>            ----
+>> This test seems to stress the log much like xfstest 273 only it runs
+>> forever.
+>
+> Ok, thanks, for the info, Mark. I'll try to reproduce it here. FWIW,
+> we should probably add this to xfstests as a "stress" test. i.e. not
+> part of the auto group, but something that uses the scale parameters
+> to determine runtime. then add all the other tests that have scale
+> parameters to the same group, and if we run ./check --stress<scale>
+> it runs through all the stress tests with that given scale factor...
+>
+> Cheers,
+>
+> Dave.
 
-"Probably / Maybe"
+BTW, the long term run of the copy.pl from bug 922 with patch 43 results:
+  tail            0x601000055d7
+  grant/reserve   0x60100abb200
+  ctx t_unit_res  0x834
 
-It really depends on what changed from 3.10.4 to 3.10.5, but odds are,
-kernel interfaces did not change, so - probably fine.  If not, you
-get to keep all the pieces, etc.
+My log math may be off, tail/reserve diff is 1024, but the CTX holds 
+more than that (2100 bytes).
 
-> And if so, is there a way for the module to report its
-> own version?
+Looking at patch 44, it is the first time we use the calculation for the 
+number of bytes in patch 43. So I am looking at where the new 
+calculation in iop_size differs from the previous len calculation in 
+xlog_cil_prepare_log_vecs(). So far, I am that inode entry is 140 bytes 
+larger with the new calculation (former len 164 vrs new nbytes 304 type 
+123b - non-crc filesystem).
 
-Say it with me: there is no xfs module version.  :)
+I will see if I can substitute the nbytes for len (without triggering 
+the ptr being exceeded assert) to see that will cause the hang.
 
-The "module version" is inherited from the kernel it's built against.
-
-$ modinfo xfs
-...
-vermagic:       2.6.32-279.22.1.el6.x86_64 SMP mod_unload modversions 
-
-> There should (in theory) be much less wizardry involved in
-> this scenario than in the difficult scenario of porting 3.10's xfs back
-> to 2.6, and is more along the lines of what I remember doing a short
-> time back).  (To be specific, IIRC what I did was took a proposed patch
-> against my running kernel version, which had not yet been incorporated
-> in the distro kernel, and tested it by replacing the distro kernel's
-> module with one I built via DKMS.  But as I mentioned, I have no docs on
-> this, so I could be misremembering the process.)
-
-Yeah, short version hops are more likely to be ok.
-
-And taking kernel version X's xfs, and applying a bugfix patch, and
-rebuilding it against the same kernel headers should be fine.  Still
-a little wizardry, but not bad for a kernel-savvy person.
-
-> I am not intentionally trying to be difficult.  :)  I am genuinely
-> just curious about the answer.  If it's "no" (or perhaps, in this
-> specific scenario, it's "use the dkms tools"), it still provides me with
-> valuable information I did not previously have.
-
-Sure, I don't think you're being difficult.
-
-The further you go off the reservation, the less tested things are, and
-the less likely they are to work.  Building a tweaked, same-era module
-against a slightly different kernel is likely to be fine; it's when
-you get more & more changed / moving parts that it becomes trickier.
-
-But you need to know enough to know what you're changing and/or what
-has changed in the kernel, to know if what you're doing is completely
-safe, probably safe, or unlikely to be safe...
-
--Eric
-
-> --keith
-> 
+--Mark.
 
 _______________________________________________
 xfs mailing list
