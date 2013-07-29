@@ -1,31 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 3E5BE7F52
-	for <xfs@oss.sgi.com>; Sun, 28 Jul 2013 19:06:40 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id C9B31AC002
-	for <xfs@oss.sgi.com>; Sun, 28 Jul 2013 17:06:39 -0700 (PDT)
-Received: from benjamin.baylink.com (rrcs-24-129-180-187.se.biz.rr.com
-	[24.129.180.187]) by cuda.sgi.com with ESMTP id
-	8OVXKvtjYZ0ysSuh for <xfs@oss.sgi.com>;
-	Sun, 28 Jul 2013 17:06:38 -0700 (PDT)
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by benjamin.baylink.com (Postfix) with ESMTP id F168E1F003D6
-	for <xfs@oss.sgi.com>; Sun, 28 Jul 2013 20:06:37 -0400 (EDT)
-Received: from benjamin.baylink.com ([127.0.0.1])
-	by localhost (benjamin.baylink.com [127.0.0.1]) (amavisd-new,
-	port 10024) with ESMTP id ANQsBrcfeLV5 for <xfs@oss.sgi.com>;
-	Sun, 28 Jul 2013 20:06:32 -0400 (EDT)
-Received: from benjamin.baylink.com (benjamin.baylink.com [192.168.253.10])
-	by benjamin.baylink.com (Postfix) with ESMTP id 9AA7C1F003BB
-	for <xfs@oss.sgi.com>; Sun, 28 Jul 2013 20:06:32 -0400 (EDT)
-Date: Sun, 28 Jul 2013 20:06:32 -0400 (EDT)
-From: Jay Ashworth <jra@baylink.com>
-Message-ID: <32553786.2492.1375056392388.JavaMail.root@benjamin.baylink.com>
-In-Reply-To: <20130729000247.GA13468@dastard>
-Subject: Re: A short digression on FOSS (Re: understanding speculative
-	preallocation)
+	by oss.sgi.com (Postfix) with ESMTP id D0E547F37
+	for <xfs@oss.sgi.com>; Sun, 28 Jul 2013 20:38:16 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 4E25FAC002
+	for <xfs@oss.sgi.com>; Sun, 28 Jul 2013 18:38:13 -0700 (PDT)
+Received: from mail-qc0-f182.google.com (mail-qc0-f182.google.com
+	[209.85.216.182]) by cuda.sgi.com with ESMTP id
+	sSIhoDjasceW6vBD (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 28 Jul 2013 18:38:12 -0700 (PDT)
+Received: by mail-qc0-f182.google.com with SMTP id c11so1517912qcv.41
+	for <xfs@oss.sgi.com>; Sun, 28 Jul 2013 18:38:11 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <20130726113521.GM13468@dastard>
+References: <1374740619-29797-1-git-send-email-zwu.kernel@gmail.com>
+	<20130726025009.GE21982@dastard>
+	<CAEH94Lh-UCCEs7hQi_t5v+X+ER1DH9dCtjr6e9GVNX5KJ-f1hQ@mail.gmail.com>
+	<20130726113521.GM13468@dastard>
+Date: Mon, 29 Jul 2013 09:38:11 +0800
+Message-ID: <CAEH94Ljpih875VOEdCY9Z9CdMF_1DesW7dsz_k7Zm=xt165w5A@mail.gmail.com>
+Subject: Re: [PATCH] xfs: introduce object readahead to log recovery
+From: Zhi Yong Wu <zwu.kernel@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,30 +34,114 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, linux-kernel mlist <linux-kernel@vger.kernel.org>, xfstests <xfs@oss.sgi.com>
 
------ Original Message -----
-> From: "Dave Chinner" <david@fromorbit.com>
+On Fri, Jul 26, 2013 at 7:35 PM, Dave Chinner <david@fromorbit.com> wrote:
+> On Fri, Jul 26, 2013 at 02:36:15PM +0800, Zhi Yong Wu wrote:
+>> Dave,
+>>
+>> All comments are good to me, and will be applied to next version, thanks a lot.
+>>
+>> On Fri, Jul 26, 2013 at 10:50 AM, Dave Chinner <david@fromorbit.com> wrote:
+>> > On Thu, Jul 25, 2013 at 04:23:39PM +0800, zwu.kernel@gmail.com wrote:
+>> >> From: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
+>> >>
+>> >>   It can take a long time to run log recovery operation because it is
+>> >> single threaded and is bound by read latency. We can find that it took
+>> >> most of the time to wait for the read IO to occur, so if one object
+>> >> readahead is introduced to log recovery, it will obviously reduce the
+>> >> log recovery time.
+>> >>
+>> >>   In dirty log case as below:
+>> >>     data device: 0xfd10
+>> >>     log device: 0xfd10 daddr: 20480032 length: 20480
+>> >>
+>> >>     log tail: 7941 head: 11077 state: <DIRTY>
+>> >
+>> > That's only a small log (10MB). As I've said on irc, readahead won't
+>> Yeah, it is one 10MB log, but how do you calculate it based on the above info?
+>
+> length = 20480 blocks. 20480 * 512 = 10MB....
+Thanks.
+>
+>> > And the recovery time from this is between 15-17s:
+>> >
+>> > ....
+>> >     log device: 0xfd20 daddr: 107374182032 length: 4173824
+>> >                                                    ^^^^^^^ almost 2GB
+>> >         log tail: 19288 head: 264809 state: <DIRTY>
+>> > ....
+>> > real    0m17.913s
+>> > user    0m0.000s
+>> > sys     0m2.381s
+>> >
+>> > And runs at 3-4000 read IOPs for most of that time. It's largely IO
+>> > bound, even on SSDs.
+>> >
+>> > With your patch:
+>> >
+>> > log tail: 35871 head: 308393 state: <DIRTY>
+>> > real    0m12.715s
+>> > user    0m0.000s
+>> > sys     0m2.247s
+>> >
+>> > And it peaked at ~5000 read IOPS.
+>> How do you know its READ IOPS is ~5000?
+>
+> Other monitoring. iostat can tell you this, though I use PCP...
+thanks.
+>
+>> > Ok, so you've based the readahead on the transaction item list
+>> > having a next pointer. What I think you should do is turn this into
+>> > a readahead queue by moving objects to a new list. i.e.
+>> >
+>> >         list_for_each_entry_safe(item, next, &trans->r_itemq, ri_list) {
+>> >
+>> >                 case XLOG_RECOVER_PASS2:
+>> >                         if (ra_qdepth++ >= MAX_QDEPTH) {
+>> >                                 recover_items(log, trans, &buffer_list, &ra_item_list);
+>> >                                 ra_qdepth = 0;
+>> >                         } else {
+>> >                                 xlog_recover_item_readahead(log, item);
+>> >                                 list_move_tail(&item->ri_list, &ra_item_list);
+>> >                         }
+>> >                         break;
+>> >                 ...
+>> >                 }
+>> >         }
+>> >         if (!list_empty(&ra_item_list))
+>> >                 recover_items(log, trans, &buffer_list, &ra_item_list);
+>> >
+>> > I'd suggest that a queue depth somewhere between 10 and 100 will
+>> > be necessary to keep enough IO in flight to keep the pipeline full
+>> > and prevent recovery from having to wait on IO...
+>> Good suggestion, will apply it to next version, thanks.
+>
+> FWIW, I hacked a quick test of this into your patch here and a depth
+> of 100 brought the reocvery time down to under 8s. For other
+> workloads which have nothing but dirty inodes (like fsmark) a depth
+> of 100 drops the recovery time from ~100s to ~25s, and the iop rate
+> is peaking at well over 15,000 IOPS. So we definitely want to queue
+> up more than a single readahead...
+Excited, I will try it.
+By the way, how do you try the workload which has nothing but dirty
+dquote objects?
 
-> Sure, they have diverged signficant;y as we've backported various
-> bits of XFs fetaures and bug fixes back into RHEL6. As have every
-> other distro that doesn't track mainline directly. That's why you
-> need to look at the kernel source package to know what code the
-> distro is running.
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
 
-And... all the way back to Jason's original question:
 
-The way that you get the information out of a kernel/kernel RPM to 
-determine which XFS version it's running... is?  Cause it's clearly
-not obvious to either him or me.
 
-Cheers,
--- jra
 -- 
-Jay R. Ashworth                  Baylink                       jra@baylink.com
-Designer                     The Things I Think                       RFC 2100
-Ashworth & Associates     http://baylink.pitas.com         2000 Land Rover DII
-St Petersburg FL USA               #natog                      +1 727 647 1274
+Regards,
+
+Zhi Yong Wu
 
 _______________________________________________
 xfs mailing list
