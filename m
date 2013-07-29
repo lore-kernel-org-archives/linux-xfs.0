@@ -1,31 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C12197F3F
-	for <xfs@oss.sgi.com>; Mon, 29 Jul 2013 10:25:06 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 9F1FA304043
-	for <xfs@oss.sgi.com>; Mon, 29 Jul 2013 08:25:06 -0700 (PDT)
-Received: from ppsw-33.csi.cam.ac.uk (ppsw-33.csi.cam.ac.uk [131.111.8.133])
-	by cuda.sgi.com with ESMTP id TFoMHPNSQzi8ONbq for
-	<xfs@oss.sgi.com>; Mon, 29 Jul 2013 08:25:03 -0700 (PDT)
-Received: from nat.mrc-lmb.cam.ac.uk ([131.111.85.79]:31023
-	helo=mail.lmb.internal)
-	by ppsw-33.csi.cam.ac.uk (ppsw.cam.ac.uk [131.111.8.137]:25)
-	with esmtp id 1V3pJn-0004FH-hI (Exim 4.80_167-5a66dd3) for
-	xfs@oss.sgi.com (return-path <dhoworth@mrc-lmb.cam.ac.uk>);
-	Mon, 29 Jul 2013 16:25:03 +0100
-Received: from cpepc210-3.lmb.internal ([10.21.64.91])
-	by mail.lmb.internal with esmtp (Exim 4.63)
-	(envelope-from <dhoworth@mrc-lmb.cam.ac.uk>) id 1V3pJn-0003cx-5V
-	for xfs@oss.sgi.com; Mon, 29 Jul 2013 16:25:03 +0100
-Message-ID: <51F68952.8020603@mrc-lmb.cam.ac.uk>
-Date: Mon, 29 Jul 2013 16:25:06 +0100
-From: Dave Howorth <dhoworth@mrc-lmb.cam.ac.uk>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 95B677F3F
+	for <xfs@oss.sgi.com>; Mon, 29 Jul 2013 10:30:16 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 3CBD3AC002
+	for <xfs@oss.sgi.com>; Mon, 29 Jul 2013 08:30:13 -0700 (PDT)
+Received: from benjamin.baylink.com (rrcs-24-129-180-187.se.biz.rr.com
+	[24.129.180.187]) by cuda.sgi.com with ESMTP id
+	0BxqHsS4CjBCxpvN for <xfs@oss.sgi.com>;
+	Mon, 29 Jul 2013 08:30:11 -0700 (PDT)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by benjamin.baylink.com (Postfix) with ESMTP id 684701F0019D
+	for <xfs@oss.sgi.com>; Mon, 29 Jul 2013 11:30:08 -0400 (EDT)
+Received: from benjamin.baylink.com ([127.0.0.1])
+	by localhost (benjamin.baylink.com [127.0.0.1]) (amavisd-new,
+	port 10024) with ESMTP id t7Zxnmsn-10B for <xfs@oss.sgi.com>;
+	Mon, 29 Jul 2013 11:30:02 -0400 (EDT)
+Received: from benjamin.baylink.com (benjamin.baylink.com [192.168.253.10])
+	by benjamin.baylink.com (Postfix) with ESMTP id 354EC1F00532
+	for <xfs@oss.sgi.com>; Mon, 29 Jul 2013 11:30:02 -0400 (EDT)
+Date: Mon, 29 Jul 2013 11:30:02 -0400 (EDT)
+From: Jay Ashworth <jra@baylink.com>
+Message-ID: <15781090.2540.1375111802121.JavaMail.root@benjamin.baylink.com>
+In-Reply-To: <51F682CC.1080100@sandeen.net>
+Subject: Re: A short digression on FOSS (Re: understanding speculative
+	preallocation)
 MIME-Version: 1.0
-Subject: Re: A short digression on FOSS (Re: understanding
-	speculative	preallocation)
-References: <22688573.2526.1375108427119.JavaMail.root@benjamin.baylink.com>
-In-Reply-To: <22688573.2526.1375108427119.JavaMail.root@benjamin.baylink.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,41 +40,43 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Jay Ashworth wrote:
-> I really do apologize for sounding so combative about this stuff; I'm not really
-> trying to be, but "things have version numbers" has been best practice for 3 
-> decades for a reason, and I think it's a pretty good one: avoiding fights like
-> this.
+----- Original Message -----
+> From: "Eric Sandeen" <sandeen@sandeen.net>
 
-I think you're missing a fundamental point. If you go back and look at
-what you've quoted, you've been asked e.g. for which kernel you're
-running, rather than what kernel version, because a kernel doesn't
-really have a version either. As you yourself have pointed out there are
-package versions. There are multiple trees and within each tree somebody
-may have chosen to apply or not particular patches.
+> >> From: "Dave Chinner" <david@fromorbit.com>
+> >
+> >> The "version" of XFS that you are running is that of the
+> >> kernel you are running. i.e. 2.6.32-279.x.y or 2.6.32-358.x.y.
+> >
+> > Those aren't kernel versions; those are kernel *package* versions.
+> 
+> Those are RHEL kernel version numbers, which 100% uniquely identify
+> the code contained in those kernels.
 
-So the easiest way for a non-expert to describe the kernel they're using
-is most likely to name a distro and release, plus whatever updates have
-been applied. A distro-expert can translate that into the general age of
-the code and the commit numbers of the exact patches that have been
-applied if necessary. And that's why the FAQ
+So how, Eric, would that help, say, SuSE users -- which the XFS website makes 
+special note to point out that there's a specific agreement in place to 
+support.  Even SLES users vice openSUSE, though the XFS.org website doesn't 
+make that distinction.
 
-http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+I'm sticking with "those are kernel package versions", and I was yelled
+at the other day because I was interested in things that weren't "mainline
+kernel versions".  RHEL kernels are the *best available example* of "not
+a mainline kernel version", so I find these conflicting reports most
+conflicting.
 
-asks people to report the uname -a amongst a lot of other stuff.
+> > Kernel versions are w.x.y or w.x.y.z.
+> 
+> ^Upstream.
 
-So arguing about semantics of whether or not there are or should be
-version numbers for various things is a bit pointless. And as well as
-being combative, it's also insulting to the good folks that are trying
-to help you, IMHO. They've set up a reporting system to give them the
-best chance of accurately diagnosing problems with minimal wasted time.
-So most people who want to solve problems are happy to go along with
-that procedure, instead of going out of their way to challenge it.
+"Mainline".  Which was not my choice of term.
 
-If you really care about this issue and believe that it is significant,
-then I think you need to go away and do a bunch of quiet research until
-you understand it deeply, and then come back with specific, detailed
-proposals to improve it. Otherwise, it's better to let it rest, IMHO.
+Cheers,
+-- jra
+-- 
+Jay R. Ashworth                  Baylink                       jra@baylink.com
+Designer                     The Things I Think                       RFC 2100
+Ashworth & Associates     http://baylink.pitas.com         2000 Land Rover DII
+St Petersburg FL USA               #natog                      +1 727 647 1274
 
 _______________________________________________
 xfs mailing list
