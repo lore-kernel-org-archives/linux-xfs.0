@@ -1,23 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 1A76B7F37
+	by oss.sgi.com (Postfix) with ESMTP id 689A07F3F
 	for <xfs@oss.sgi.com>; Sun, 28 Jul 2013 22:13:00 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A9E43AC002
-	for <xfs@oss.sgi.com>; Sun, 28 Jul 2013 20:12:59 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id EBKZjpfYCHZ6b8Wv for <xfs@oss.sgi.com>;
-	Sun, 28 Jul 2013 20:12:55 -0700 (PDT)
-Message-ID: <51F5DDB3.7010109@sandeen.net>
-Date: Sun, 28 Jul 2013 22:12:51 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 12BE7AC003
+	for <xfs@oss.sgi.com>; Sun, 28 Jul 2013 20:12:57 -0700 (PDT)
+Received: from mail-qa0-f43.google.com (mail-qa0-f43.google.com
+	[209.85.216.43]) by cuda.sgi.com with ESMTP id MyHZKv3vMUwoqa4X
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sun, 28 Jul 2013 20:12:56 -0700 (PDT)
+Received: by mail-qa0-f43.google.com with SMTP id cl20so1413786qab.2
+	for <xfs@oss.sgi.com>; Sun, 28 Jul 2013 20:12:55 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: A short digression on FOSS (Re: understanding speculative
-	preallocation)
-References: <20130729000247.GA13468@dastard>
-	<32553786.2492.1375056392388.JavaMail.root@benjamin.baylink.com>
-	<20130729024105.GC13468@dastard>
-In-Reply-To: <20130729024105.GC13468@dastard>
+In-Reply-To: <20130729024546.GD13468@dastard>
+References: <1374740619-29797-1-git-send-email-zwu.kernel@gmail.com>
+	<20130726025009.GE21982@dastard>
+	<CAEH94Lh-UCCEs7hQi_t5v+X+ER1DH9dCtjr6e9GVNX5KJ-f1hQ@mail.gmail.com>
+	<20130726113521.GM13468@dastard>
+	<CAEH94Ljpih875VOEdCY9Z9CdMF_1DesW7dsz_k7Zm=xt165w5A@mail.gmail.com>
+	<20130729024546.GD13468@dastard>
+Date: Mon, 29 Jul 2013 11:12:55 +0800
+Message-ID: <CAEH94LgBN70u8+jnd4y3jsxf53U07CG=HWfB9VOvE-VoZG9SKw@mail.gmail.com>
+Subject: Re: [PATCH] xfs: introduce object readahead to log recovery
+From: Zhi Yong Wu <zwu.kernel@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,36 +36,33 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Jay Ashworth <jra@baylink.com>, xfs@oss.sgi.com
+Cc: "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, linux-kernel mlist <linux-kernel@vger.kernel.org>, xfstests <xfs@oss.sgi.com>
 
-On 7/28/13 9:41 PM, Dave Chinner wrote:
-> On Sun, Jul 28, 2013 at 08:06:32PM -0400, Jay Ashworth wrote:
->> ----- Original Message -----
->>> From: "Dave Chinner" <david@fromorbit.com>
->>
->>> Sure, they have diverged signficant;y as we've backported various
->>> bits of XFs fetaures and bug fixes back into RHEL6. As have every
->>> other distro that doesn't track mainline directly. That's why you
->>> need to look at the kernel source package to know what code the
->>> distro is running.
->>
->> And... all the way back to Jason's original question:
->>
->> The way that you get the information out of a kernel/kernel RPM to 
->> determine which XFS version it's running... is?  Cause it's clearly
->> not obvious to either him or me.
-> 
-> The "version" of XFS that you are running is that of the
-> kernel you are running. i.e. 2.6.32-279.x.y or 2.6.32-358.x.y.
-
-IOWS:  There is no spoon.  ;)
-
--Eric
-
+On Mon, Jul 29, 2013 at 10:45 AM, Dave Chinner <david@fromorbit.com> wrote:
+> On Mon, Jul 29, 2013 at 09:38:11AM +0800, Zhi Yong Wu wrote:
+>> By the way, how do you try the workload which has nothing but dirty
+>> dquote objects?
+>
+> Create quota limits for non-existent users. That will allocate the
+> dquots and dirty them.
+>
+> Or if you already have a few hundred thousand dquots, just change
+> the limits on them all to get them logged and dirty...
+OK, thanks.
+>
 > Cheers,
-> 
+>
 > Dave.
-> 
+> --
+> Dave Chinner
+> david@fromorbit.com
+
+
+
+-- 
+Regards,
+
+Zhi Yong Wu
 
 _______________________________________________
 xfs mailing list
