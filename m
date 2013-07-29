@@ -1,33 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id AA0007F3F
-	for <linux-xfs@oss.sgi.com>; Sun, 28 Jul 2013 22:42:42 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 8DEBC7F3F
+	for <xfs@oss.sgi.com>; Sun, 28 Jul 2013 23:11:08 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 9A64F8F8033
-	for <linux-xfs@oss.sgi.com>; Sun, 28 Jul 2013 20:42:39 -0700 (PDT)
-Received: from plane.gmane.org (plane.gmane.org [80.91.229.3]) by cuda.sgi.com
-	with ESMTP id 6Dbn3iODfvRUj44g (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <linux-xfs@oss.sgi.com>;
-	Sun, 28 Jul 2013 20:42:38 -0700 (PDT)
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1V3eM0-0000mV-Kw
-	for linux-xfs@oss.sgi.com; Mon, 29 Jul 2013 05:42:36 +0200
-Received: from wombat.san-francisco.ca.us ([75.101.60.140])
-	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-	id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Mon, 29 Jul 2013 05:42:36 +0200
-Received: from kkeller by wombat.san-francisco.ca.us with local (Gmexim 0.1
-	(Debian)) id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Mon, 29 Jul 2013 05:42:36 +0200
-From: Keith Keller <kkeller@wombat.san-francisco.ca.us>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1A110AC003
+	for <xfs@oss.sgi.com>; Sun, 28 Jul 2013 21:11:04 -0700 (PDT)
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id CC8P4q5LFr2gE3ch
+	for <xfs@oss.sgi.com>; Sun, 28 Jul 2013 21:11:04 -0700 (PDT)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id BAE5C6C114
+	for <xfs@oss.sgi.com>; Sun, 28 Jul 2013 23:11:03 -0500 (CDT)
+Message-ID: <51F5EB56.5040909@hardwarefreak.com>
+Date: Sun, 28 Jul 2013 23:11:02 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
+MIME-Version: 1.0
 Subject: Re: A short digression on FOSS (Re: understanding speculative
 	preallocation)
-Date: Sun, 28 Jul 2013 20:38:10 -0700
-Message-ID: <2m4hcax0nv.ln2@goaway.wombat.san-francisco.ca.us>
 References: <20130729000247.GA13468@dastard>
 	<32553786.2492.1375056392388.JavaMail.root@benjamin.baylink.com>
-	<20130729024105.GC13468@dastard>
-Mime-Version: 1.0
+	<20130729024105.GC13468@dastard> <51F5DDB3.7010109@sandeen.net>
+In-Reply-To: <51F5DDB3.7010109@sandeen.net>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,24 +34,46 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 2013-07-29, Dave Chinner <david@fromorbit.com> wrote:
->
-> The "version" of XFS that you are running is that of the
-> kernel you are running. i.e. 2.6.32-279.x.y or 2.6.32-358.x.y.
+On 7/28/2013 10:12 PM, Eric Sandeen wrote:
+> On 7/28/13 9:41 PM, Dave Chinner wrote:
+>> On Sun, Jul 28, 2013 at 08:06:32PM -0400, Jay Ashworth wrote:
+>>> ----- Original Message -----
+>>>> From: "Dave Chinner" <david@fromorbit.com>
+>>>
+>>>> Sure, they have diverged signficant;y as we've backported various
+>>>> bits of XFs fetaures and bug fixes back into RHEL6. As have every
+>>>> other distro that doesn't track mainline directly. That's why you
+>>>> need to look at the kernel source package to know what code the
+>>>> distro is running.
+>>>
+>>> And... all the way back to Jason's original question:
+>>>
+>>> The way that you get the information out of a kernel/kernel RPM to 
+>>> determine which XFS version it's running... is?  Cause it's clearly
+>>> not obvious to either him or me.
+>>
+>> The "version" of XFS that you are running is that of the
+>> kernel you are running. i.e. 2.6.32-279.x.y or 2.6.32-358.x.y.
+> 
+> IOWS:  There is no spoon.  ;)
 
-Can't you fairly easily replace a kernel module with a different version
-using something like DKMS?  I feel like I did that with xfs a few months
-ago.  If accurate, then it's theoretically possible to run a different
-version of the xfs kernel module than the running kernel version.  (And
-if I'm misremembering then there really is no spoon!)
+Excellent quote Eric, love the Matrix movies.
 
---keith
+I think the problem here is a lack of understanding of the kernel
+development and commit process.  AFAIK there's not a single Linux
+subsystem that has a standalone version number or versioning scheme.
+Not the other filesystems, not the USB subsystem, SCSI, ATA, etc.  The
+version of each is simply the version of the kernel they are included in.
+
+I've been wondering throughout this thread where anyone got the idea
+that there is an XFS version that can be traced/tracked.  Maybe because
+xfsprogs have a version number?  The way to track XFS changes from
+kernel to kernel is to look at the commits, as others have already stated.
 
 -- 
-kkeller@wombat.san-francisco.ca.us
-
+Stan
 
 _______________________________________________
 xfs mailing list
