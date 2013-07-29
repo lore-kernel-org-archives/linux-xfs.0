@@ -1,31 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DF7DC7F3F
-	for <xfs@oss.sgi.com>; Mon, 29 Jul 2013 09:36:45 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CBA668F804C
-	for <xfs@oss.sgi.com>; Mon, 29 Jul 2013 07:36:45 -0700 (PDT)
-Received: from benjamin.baylink.com (rrcs-24-129-180-187.se.biz.rr.com
-	[24.129.180.187]) by cuda.sgi.com with ESMTP id
-	foz1sK7E9glFFdA4 for <xfs@oss.sgi.com>;
-	Mon, 29 Jul 2013 07:36:44 -0700 (PDT)
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by benjamin.baylink.com (Postfix) with ESMTP id EC16C1F00535
-	for <xfs@oss.sgi.com>; Mon, 29 Jul 2013 10:36:43 -0400 (EDT)
-Received: from benjamin.baylink.com ([127.0.0.1])
-	by localhost (benjamin.baylink.com [127.0.0.1]) (amavisd-new,
-	port 10024) with ESMTP id LkStE0NNoM3B for <xfs@oss.sgi.com>;
-	Mon, 29 Jul 2013 10:36:39 -0400 (EDT)
-Received: from benjamin.baylink.com (benjamin.baylink.com [192.168.253.10])
-	by benjamin.baylink.com (Postfix) with ESMTP id E3F2D1F0046E
-	for <xfs@oss.sgi.com>; Mon, 29 Jul 2013 10:36:39 -0400 (EDT)
-Date: Mon, 29 Jul 2013 10:36:39 -0400 (EDT)
-From: Jay Ashworth <jra@baylink.com>
-Message-ID: <24152742.2528.1375108599905.JavaMail.root@benjamin.baylink.com>
-In-Reply-To: <4422459.2522.1375107885083.JavaMail.root@benjamin.baylink.com>
+	by oss.sgi.com (Postfix) with ESMTP id 6641F7F3F
+	for <xfs@oss.sgi.com>; Mon, 29 Jul 2013 09:57:23 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4F60B8F804C
+	for <xfs@oss.sgi.com>; Mon, 29 Jul 2013 07:57:23 -0700 (PDT)
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id 0GO1OLOQYoQwFSDR for <xfs@oss.sgi.com>;
+	Mon, 29 Jul 2013 07:57:21 -0700 (PDT)
+Message-ID: <51F682CC.1080100@sandeen.net>
+Date: Mon, 29 Jul 2013 09:57:16 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
 Subject: Re: A short digression on FOSS (Re: understanding speculative
 	preallocation)
-MIME-Version: 1.0
+References: <4422459.2522.1375107885083.JavaMail.root@benjamin.baylink.com>
+In-Reply-To: <4422459.2522.1375107885083.JavaMail.root@benjamin.baylink.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,30 +28,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Jay Ashworth <jra@baylink.com>
+Cc: xfs@oss.sgi.com
 
------ Original Message -----
-> From: "Jay Ashworth" <jra@baylink.com>
-
-> > From: "Dave Chinner" <david@fromorbit.com>
+On 7/29/13 9:24 AM, Jay Ashworth wrote:
+> ----- Original Message -----
+>> From: "Dave Chinner" <david@fromorbit.com>
 > 
-> > The "version" of XFS that you are running is that of the
-> > kernel you are running. i.e. 2.6.32-279.x.y or 2.6.32-358.x.y.
+>> The "version" of XFS that you are running is that of the
+>> kernel you are running. i.e. 2.6.32-279.x.y or 2.6.32-358.x.y.
 > 
 > Those aren't kernel versions; those are kernel *package* versions.
-> 
+
+Those are RHEL kernel version numbers, which 100% uniquely identify
+the code contained in those kernels.
+
 > Kernel versions are w.x.y or w.x.y.z.
 
-And as a further followup: it matters which kernel tree you're talking about
-too.
+^Upstream.
 
-Cheers,
--- jra
--- 
-Jay R. Ashworth                  Baylink                       jra@baylink.com
-Designer                     The Things I Think                       RFC 2100
-Ashworth & Associates     http://baylink.pitas.com         2000 Land Rover DII
-St Petersburg FL USA               #natog                      +1 727 647 1274
+-Eric
+
+> Cheers,
+> -- jra
+> 
 
 _______________________________________________
 xfs mailing list
