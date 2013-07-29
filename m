@@ -1,23 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C60367F3F
-	for <xfs@oss.sgi.com>; Mon, 29 Jul 2013 13:56:00 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id B214C304070
-	for <xfs@oss.sgi.com>; Mon, 29 Jul 2013 11:56:00 -0700 (PDT)
-Received: from dkim2.fusionio.com (dkim2.fusionio.com [66.114.96.54]) by
-	cuda.sgi.com with ESMTP id BRkENOXNIZU2S22A (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 29 Jul 2013 11:55:59 -0700 (PDT)
-Received: from mx1.fusionio.com (unknown [10.101.1.160])
-	by dkim2.fusionio.com (Postfix) with ESMTP id 5DA979A0407
-	for <xfs@oss.sgi.com>; Mon, 29 Jul 2013 12:55:59 -0600 (MDT)
-From: Josef Bacik <jbacik@fusionio.com>
-Subject: [PATCH] xfstests: generic/315: allow a little tolerance for our used
-	check
-Date: Mon, 29 Jul 2013 14:55:56 -0400
-Message-ID: <1375124156-17620-1-git-send-email-jbacik@fusionio.com>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 4A7CB7F3F
+	for <xfs@oss.sgi.com>; Mon, 29 Jul 2013 16:07:28 -0500 (CDT)
+Message-ID: <51F6D98C.4090300@sgi.com>
+Date: Mon, 29 Jul 2013 16:07:24 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
+Subject: Re: [PATCH 46/49] xfs: Combine CIL insert and prepare passes
+References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
+	<1374215120-7271-47-git-send-email-david@fromorbit.com>
+In-Reply-To: <1374215120-7271-47-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,39 +18,46 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com, jeff.liu@oracle.com, sandeen@redhat.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-So df in btrfs is tricky at best, and relying on it for accurate information is
-not great, but it's the best way to verify this test.  To get around btrfs being
-inconsistent sometimes just use _within_tolerance to check our new df value to
-make sure that our truncate did something.  With this patch I no longer see
-transient failures of this test.  Thanks,
+On 07/19/13 01:25, Dave Chinner wrote:
+> From: Dave Chinner<dchinner@redhat.com>
+>
+> Now that all the log item preparation and formatting is done under
+> the CIL lock, we can get rid of the intermediate log vector chain
+> used to track items to be inserted into the CIL.
+>
+> We can already find all the items to be committed from the
+> transaction handle, so as long as we attach the log vectors to the
+> item before we insert the items into the CIL, we don't need to
+> create a log vector chain to pass around.
+>
+> This means we can move all the item insertion code into and optimise
+> it into a pair of simple passes across all the items in the
+> transaction. The first pass does the formatting and accounting, the
+> second inserts them all into the CIL.
+>
+> We keep this two pass split so that we can separate the CIL
+> insertion - which must be done under the CIL spinlock - from the
+> formatting. We could insert each item into the CIL with a single
+> pass, but that massively increases the number of times we have to
+> grab the CIL spinlock. It is much more efficient (and hence
+> scalable) to do a batch operation and insert all objects in a single
+> lock grab.
+>
+> Signed-off-by: Dave Chinner<dchinner@redhat.com>
+> ---
 
-Signed-off-by: Josef Bacik <jbacik@fusionio.com>
----
- tests/generic/315 |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+Removed the old log commit vector chain interface.
 
-diff --git a/tests/generic/315 b/tests/generic/315
-index 7cfc40d..9c01b5e 100644
---- a/tests/generic/315
-+++ b/tests/generic/315
-@@ -73,7 +73,8 @@ sync
- 
- # Preallocated disk space should be released
- avail_done=`df -P $TEST_DIR | awk 'END {print $4}'`
--[ "$avail_done" -eq "$avail_begin" ] || _fail "Available disk space ($avail_done KiB)"
-+_within_tolerance "df" $avail_done $avail_begin 1%
-+[ $? -eq 0 ] || _fail "Available disk space ($avail_done KiB) wanted ($avail_begin KiB)"
- 
- # success, all done
- exit
--- 
-1.7.7.6
+Looks good. Still like the additional assert for cil space stealing.
+
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
