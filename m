@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 880747F3F
-	for <xfs@oss.sgi.com>; Mon, 29 Jul 2013 13:25:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3AB6B304051
-	for <xfs@oss.sgi.com>; Mon, 29 Jul 2013 11:25:29 -0700 (PDT)
-Received: from dkim1.fusionio.com (dkim1.fusionio.com [66.114.96.53]) by
-	cuda.sgi.com with ESMTP id bvUNhmTtJuqHCGuc (version=TLSv1
+	by oss.sgi.com (Postfix) with ESMTP id C60367F3F
+	for <xfs@oss.sgi.com>; Mon, 29 Jul 2013 13:56:00 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B214C304070
+	for <xfs@oss.sgi.com>; Mon, 29 Jul 2013 11:56:00 -0700 (PDT)
+Received: from dkim2.fusionio.com (dkim2.fusionio.com [66.114.96.54]) by
+	cuda.sgi.com with ESMTP id BRkENOXNIZU2S22A (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 29 Jul 2013 11:25:28 -0700 (PDT)
+	Mon, 29 Jul 2013 11:55:59 -0700 (PDT)
 Received: from mx1.fusionio.com (unknown [10.101.1.160])
-	by dkim1.fusionio.com (Postfix) with ESMTP id AAF097C0645
-	for <xfs@oss.sgi.com>; Mon, 29 Jul 2013 12:25:27 -0600 (MDT)
-Date: Mon, 29 Jul 2013 14:25:25 -0400
+	by dkim2.fusionio.com (Postfix) with ESMTP id 5DA979A0407
+	for <xfs@oss.sgi.com>; Mon, 29 Jul 2013 12:55:59 -0600 (MDT)
 From: Josef Bacik <jbacik@fusionio.com>
-Subject: Re: [PATCH] xfstests: generic/315: add one more sync and more output
-Message-ID: <20130729182525.GD24583@localhost.localdomain>
-References: <1375118463-29654-1-git-send-email-jbacik@fusionio.com>
-	<51F6A6DA.3080102@redhat.com> <51F6A891.7070608@sandeen.net>
+Subject: [PATCH] xfstests: generic/315: allow a little tolerance for our used
+	check
+Date: Mon, 29 Jul 2013 14:55:56 -0400
+Message-ID: <1375124156-17620-1-git-send-email-jbacik@fusionio.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <51F6A891.7070608@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,34 +30,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs@oss.sgi.com, linux-btrfs@vger.kernel.org, Josef Bacik <jbacik@fusionio.com>, jeff.liu@oracle.com
+To: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com, jeff.liu@oracle.com, sandeen@redhat.com
 
-On Mon, Jul 29, 2013 at 12:38:25PM -0500, Eric Sandeen wrote:
-> On 7/29/13 12:31 PM, Eric Sandeen wrote:
-> > Honest question: does one more sync make this deterministic, or is it a best-effort, um, hack?
-> 
-> I'm not quite sure why even 1 sync is needed.  :(
-> 
+So df in btrfs is tricky at best, and relying on it for accurate information is
+not great, but it's the best way to verify this test.  To get around btrfs being
+inconsistent sometimes just use _within_tolerance to check our new df value to
+make sure that our truncate did something.  With this patch I no longer see
+transient failures of this test.  Thanks,
 
-Because of COW, we won't free up the data space until the transaction commits
-because it is pinned, so doing the truncate and then immediately doing df will
-show no difference.
+Signed-off-by: Josef Bacik <jbacik@fusionio.com>
+---
+ tests/generic/315 |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-> I'm not sure what bug this is trying to test; if you need 2 syncs for global space stats to accurately reflect the fact that you chopped off the end of a block, maybe that's ... still a bug?
-> 
-
-No, it's just COW for you, in this case we do our sync, stuff gets updated and
-some metadata is cow'ed for once reason or another and now df doesn't quite
-match up (in my case it was off by like 9 blocks), doing a second sync clears
-these out and then df's match.
-
-> Or if it's just the big-hammer question of "does the truncated space *ever* get freed?" then maybe umount/remount/check would tell you that more definitively.
-
-Yeah but I think I'll do what you suggested on IRC and just use _within_range.
-Thanks,
-
-Josef
+diff --git a/tests/generic/315 b/tests/generic/315
+index 7cfc40d..9c01b5e 100644
+--- a/tests/generic/315
++++ b/tests/generic/315
+@@ -73,7 +73,8 @@ sync
+ 
+ # Preallocated disk space should be released
+ avail_done=`df -P $TEST_DIR | awk 'END {print $4}'`
+-[ "$avail_done" -eq "$avail_begin" ] || _fail "Available disk space ($avail_done KiB)"
++_within_tolerance "df" $avail_done $avail_begin 1%
++[ $? -eq 0 ] || _fail "Available disk space ($avail_done KiB) wanted ($avail_begin KiB)"
+ 
+ # success, all done
+ exit
+-- 
+1.7.7.6
 
 _______________________________________________
 xfs mailing list
