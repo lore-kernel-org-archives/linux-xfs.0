@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4A7CB7F3F
-	for <xfs@oss.sgi.com>; Mon, 29 Jul 2013 16:07:28 -0500 (CDT)
-Message-ID: <51F6D98C.4090300@sgi.com>
-Date: Mon, 29 Jul 2013 16:07:24 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 42FAF7F3F
+	for <xfs@oss.sgi.com>; Mon, 29 Jul 2013 17:24:18 -0500 (CDT)
+Message-ID: <51F6EB8E.4060706@sgi.com>
+Date: Mon, 29 Jul 2013 17:24:14 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 46/49] xfs: Combine CIL insert and prepare passes
+Subject: Re: [PATCH 47/49] xfs: split the CIL lock
 References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
-	<1374215120-7271-47-git-send-email-david@fromorbit.com>
-In-Reply-To: <1374215120-7271-47-git-send-email-david@fromorbit.com>
+	<1374215120-7271-48-git-send-email-david@fromorbit.com>
+In-Reply-To: <1374215120-7271-48-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,36 +28,23 @@ Cc: xfs@oss.sgi.com
 On 07/19/13 01:25, Dave Chinner wrote:
 > From: Dave Chinner<dchinner@redhat.com>
 >
-> Now that all the log item preparation and formatting is done under
-> the CIL lock, we can get rid of the intermediate log vector chain
-> used to track items to be inserted into the CIL.
->
-> We can already find all the items to be committed from the
-> transaction handle, so as long as we attach the log vectors to the
-> item before we insert the items into the CIL, we don't need to
-> create a log vector chain to pass around.
->
-> This means we can move all the item insertion code into and optimise
-> it into a pair of simple passes across all the items in the
-> transaction. The first pass does the formatting and accounting, the
-> second inserts them all into the CIL.
->
-> We keep this two pass split so that we can separate the CIL
-> insertion - which must be done under the CIL spinlock - from the
-> formatting. We could insert each item into the CIL with a single
-> pass, but that massively increases the number of times we have to
-> grab the CIL spinlock. It is much more efficient (and hence
-> scalable) to do a batch operation and insert all objects in a single
-> lock grab.
+> The xc_cil_lock is used for two purposes - to protect the CIL
+> itself, and to protect the push/commit state and lists. These are
+> two logically separate structures and operations, so can have their
+> own locks. This means that pushing on the CIL and the commit wait
+> ordering won't contend for a lock with other transactions that are
+> completing concurrently. As the CIL insertion is the hottest path
+> throught eh CIL, this is a big win.
 >
 > Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > ---
 
-Removed the old log commit vector chain interface.
+read semaphore/xc_cil_lock (original lock) protects cil entries
+write semaphore/xc_push_lock (new lock) protects the cil push
 
-Looks good. Still like the additional assert for cil space stealing.
+Looks good.
 
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+Review-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
