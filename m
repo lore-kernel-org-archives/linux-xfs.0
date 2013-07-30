@@ -1,31 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 80F0E7CBF
-	for <xfs@oss.sgi.com>; Mon, 29 Jul 2013 22:06:57 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 61E66304067
-	for <xfs@oss.sgi.com>; Mon, 29 Jul 2013 20:06:57 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id CKRYMgYrZBWgiIFP (version=TLSv1
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 0156E7F51
+	for <xfs@oss.sgi.com>; Mon, 29 Jul 2013 22:07:00 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D47DA8F8033
+	for <xfs@oss.sgi.com>; Mon, 29 Jul 2013 20:06:56 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id nGxEZvKmdVI3FjKE (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 29 Jul 2013 20:06:56 -0700 (PDT)
+	Mon, 29 Jul 2013 20:06:52 -0700 (PDT)
 Received: from ucsinet22.oracle.com (ucsinet22.oracle.com [156.151.31.94])
-	by userp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
-	ESMTP id r6U36t4L011503
+	by aserp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
+	ESMTP id r6U36oe3029342
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Tue, 30 Jul 2013 03:06:55 GMT
-Received: from userz7022.oracle.com (userz7022.oracle.com [156.151.31.86])
+	for <xfs@oss.sgi.com>; Tue, 30 Jul 2013 03:06:51 GMT
+Received: from userz7021.oracle.com (userz7021.oracle.com [156.151.31.85])
 	by ucsinet22.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r6U36sks015025
+	r6U36o43014829
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Tue, 30 Jul 2013 03:06:55 GMT
-Received: from abhmt103.oracle.com (abhmt103.oracle.com [141.146.116.55])
-	by userz7022.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r6U36srm015013 for <xfs@oss.sgi.com>; Tue, 30 Jul 2013 03:06:54 GMT
-Date: Mon, 29 Jul 2013 23:06:46 -0400
+	for <xfs@oss.sgi.com>; Tue, 30 Jul 2013 03:06:50 GMT
+Received: from abhmt101.oracle.com (abhmt101.oracle.com [141.146.116.53])
+	by userz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	r6U36ncV016737 for <xfs@oss.sgi.com>; Tue, 30 Jul 2013 03:06:50 GMT
+Date: Mon, 29 Jul 2013 23:06:40 -0400
 From: Dwight Engen <dwight.engen@oracle.com>
-Subject: [PATCH v7 2/7] xfs: convert kuid_t to/from uid_t in ACLs
-Message-ID: <20130729230646.715303ed@oracle.com>
+Subject: [PATCH v7 1/7] xfs: create wrappers for converting kuid_t to/from
+	uid_t
+Message-ID: <20130729230640.5131f5cc@oracle.com>
 Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -41,67 +42,49 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Change permission check for setting ACL to use inode_owner_or_capable()
-which will additionally allow a CAP_FOWNER user in a user namespace to
-be able to set an ACL on an inode covered by the user namespace mapping.
-
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
 ---
- fs/xfs/xfs_acl.c | 20 ++++++++++++++++----
- 1 file changed, 16 insertions(+), 4 deletions(-)
+ fs/xfs/xfs_linux.h | 26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
 
-diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
-index 306d883..32e4972 100644
---- a/fs/xfs/xfs_acl.c
-+++ b/fs/xfs/xfs_acl.c
-@@ -68,14 +68,15 @@ xfs_acl_from_disk(
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index 800f896..761e4c0 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -159,6 +159,32 @@
+ #define MAX(a,b)	(max(a,b))
+ #define howmany(x, y)	(((x)+((y)-1))/(y))
  
- 		switch (acl_e->e_tag) {
- 		case ACL_USER:
-+			acl_e->e_uid = xfs_uid_to_kuid(be32_to_cpu(ace->ae_id));
-+			break;
- 		case ACL_GROUP:
--			acl_e->e_id = be32_to_cpu(ace->ae_id);
-+			acl_e->e_gid = xfs_gid_to_kgid(be32_to_cpu(ace->ae_id));
- 			break;
- 		case ACL_USER_OBJ:
- 		case ACL_GROUP_OBJ:
- 		case ACL_MASK:
- 		case ACL_OTHER:
--			acl_e->e_id = ACL_UNDEFINED_ID;
- 			break;
- 		default:
- 			goto fail;
-@@ -101,7 +102,18 @@ xfs_acl_to_disk(struct xfs_acl *aclp, const struct posix_acl *acl)
- 		acl_e = &acl->a_entries[i];
- 
- 		ace->ae_tag = cpu_to_be32(acl_e->e_tag);
--		ace->ae_id = cpu_to_be32(acl_e->e_id);
-+		switch (acl_e->e_tag) {
-+		case ACL_USER:
-+			ace->ae_id = cpu_to_be32(xfs_kuid_to_uid(acl_e->e_uid));
-+			break;
-+		case ACL_GROUP:
-+			ace->ae_id = cpu_to_be32(xfs_kgid_to_gid(acl_e->e_gid));
-+			break;
-+		default:
-+			ace->ae_id = cpu_to_be32(ACL_UNDEFINED_ID);
-+			break;
-+		}
++/* Kernel uid/gid conversion. These are used to convert to/from the on disk
++ * uid_t/gid_t types to the kuid_t/kgid_t types that the kernel uses internally.
++ * The conversion here is type only, the value will remain the same since we
++ * are converting to the init_user_ns. The uid is later mapped to a particular
++ * user namespace value when crossing the kernel/user boundary.
++ */
++static inline __uint32_t xfs_kuid_to_uid(kuid_t uid)
++{
++	return from_kuid(&init_user_ns, uid);
++}
 +
- 		ace->ae_perm = cpu_to_be16(acl_e->e_perm);
- 	}
- }
-@@ -360,7 +372,7 @@ xfs_xattr_acl_set(struct dentry *dentry, const char *name,
- 		return -EINVAL;
- 	if (type == ACL_TYPE_DEFAULT && !S_ISDIR(inode->i_mode))
- 		return value ? -EACCES : 0;
--	if ((current_fsuid() != inode->i_uid) && !capable(CAP_FOWNER))
-+	if (!inode_owner_or_capable(inode))
- 		return -EPERM;
- 
- 	if (!value)
++static inline kuid_t xfs_uid_to_kuid(__uint32_t uid)
++{
++	return make_kuid(&init_user_ns, uid);
++}
++
++static inline __uint32_t xfs_kgid_to_gid(kgid_t gid)
++{
++	return from_kgid(&init_user_ns, gid);
++}
++
++static inline kgid_t xfs_gid_to_kgid(__uint32_t gid)
++{
++	return make_kgid(&init_user_ns, gid);
++}
++
+ /*
+  * Various platform dependent calls that don't fit anywhere else
+  */
 -- 
 1.8.1.4
 
