@@ -1,17 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 85C017CBF
-	for <xfs@oss.sgi.com>; Tue, 30 Jul 2013 13:51:47 -0500 (CDT)
-Date: Tue, 30 Jul 2013 13:51:47 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] xfstests: generic/315: allow a little tolerance for
-	our used check
-Message-ID: <20130730185147.GP3111@sgi.com>
-References: <1375124156-17620-1-git-send-email-jbacik@fusionio.com>
-	<51F7377A.9090707@oracle.com>
+	by oss.sgi.com (Postfix) with ESMTP id D2D217CBF
+	for <xfs@oss.sgi.com>; Tue, 30 Jul 2013 14:10:36 -0500 (CDT)
+Message-ID: <51F80FA8.4060304@sgi.com>
+Date: Tue, 30 Jul 2013 14:10:32 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <51F7377A.9090707@oracle.com>
+Subject: Re: [PATCH 48/49] xfs: Add read-only support for dirent filetype field
+References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
+	<1374215120-7271-49-git-send-email-david@fromorbit.com>
+In-Reply-To: <1374215120-7271-49-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,43 +18,59 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
-Cc: sandeen@redhat.com, linux-btrfs@vger.kernel.org, Josef Bacik <jbacik@fusionio.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Jul 30, 2013 at 11:48:10AM +0800, Jeff Liu wrote:
-> On 07/30/2013 02:55 AM, Josef Bacik wrote:
-> 
-> > So df in btrfs is tricky at best, and relying on it for accurate information is
-> > not great, but it's the best way to verify this test.  To get around btrfs being
-> > inconsistent sometimes just use _within_tolerance to check our new df value to
-> > make sure that our truncate did something.  With this patch I no longer see
-> > transient failures of this test.  Thanks,
-> > 
-> > Signed-off-by: Josef Bacik <jbacik@fusionio.com>
-> > ---
-> >  tests/generic/315 |    3 ++-
-> >  1 files changed, 2 insertions(+), 1 deletions(-)
-> > 
-> > diff --git a/tests/generic/315 b/tests/generic/315
-> > index 7cfc40d..9c01b5e 100644
-> > --- a/tests/generic/315
-> > +++ b/tests/generic/315
-> > @@ -73,7 +73,8 @@ sync
-> >  
-> >  # Preallocated disk space should be released
-> >  avail_done=`df -P $TEST_DIR | awk 'END {print $4}'`
-> > -[ "$avail_done" -eq "$avail_begin" ] || _fail "Available disk space ($avail_done KiB)"
-> > +_within_tolerance "df" $avail_done $avail_begin 1%
-> > +[ $? -eq 0 ] || _fail "Available disk space ($avail_done KiB) wanted ($avail_begin KiB)"
-> 
-> Looks good to me.
-> Reviewed-by: Jie Liu <jeff.liu@oracle.com>
+On 07/19/13 01:25, Dave Chinner wrote:
+> From: Dave Chinner<dchinner@redhat.com>
+>
+> Add support for the file type field in directory entries so that
+> readdir can return the type of the inode the dirent points to to
+> userspace without first having to read the inode off disk.
+>
+> The encoding of the type field is a single byte that is added to the
+> end of the directory entry name length. For all intents and
+> purposes, it appends a "hidden" byte to the name field which
+> contains the type information. As the directory entry is already of
+> dynamic size, helpers are already required to access and decode the
+> direct entry structures.
+>
+> Hence the relevent extraction and iteration helpers are updated to
+> understand the hidden byte.  Helpers for reading and writing the
+> filetype field from the directory entries are also added. Only the
+> read helpers are used by this patch.  It also adds all the code
+> necessary to read the type information out of the dirents on disk.
+>
+> Further we add the superblock feature bit and helpers to indicate
+> that we understand the on-disk format change. This is not a
+> compatible change - existing kernels cannot read the new format
+> successfully - so an incompatible feature flag is added. We don't
+> yet allow filesystems to mount with this flag yet - that will be
+> added once write support is added.
+>
+> Finally, the code to take the type from the VFS, convert it to an
+> XFS on-disk type and put it into the xfs_name structures passed
+> around is added, but the directory code does not use this field yet.
+> That will be in the next patch.
+>
+> Signed-off-by: Dave Chinner<dchinner@redhat.com>
+> ---
+>
 
-Applied.
+> +static inline int xfs_sb_version_hasftype(struct xfs_sb *sbp)
+> +{
+> +	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5&&
+> +		xfs_sb_has_incompat_feature(sbp, XFS_SB_FEAT_INCOMPAT_FTYPE);
+>   }
+>
+
+This feature should support inode version 2 and 3.
+
+--Mark.
 
 _______________________________________________
 xfs mailing list
