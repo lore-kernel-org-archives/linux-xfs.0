@@ -1,15 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2A17B29DFC
-	for <xfs@oss.sgi.com>; Tue, 30 Jul 2013 11:20:19 -0500 (CDT)
-Message-ID: <51F7E7BF.6020108@sgi.com>
-Date: Tue, 30 Jul 2013 11:20:15 -0500
-From: Mark Tinguely <tinguely@sgi.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH 02/49] xfs: split out inode log item format definition
-References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
-	<1374215120-7271-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1374215120-7271-3-git-send-email-david@fromorbit.com>
+From: xfs@oss.sgi.com
+Subject: [XFS updates] XFS development tree branch, master,
+	updated. for-linus-v3.11-rc1-2-12119-g7a378c9
+Message-Id: <20130730181245.C48DF7F3F@oss.sgi.com>
+Date: Tue, 30 Jul 2013 13:12:45 -0500 (CDT)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,103 +12,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 07/19/13 01:24, Dave Chinner wrote:
-> From: Dave Chinner<dchinner@redhat.com>
->
-> Th elog item format definitions are shared with userspace. split the
-> out of header files that contain kernel only defintions to make it
-> simple to shared them.
->
-> Signed-off-by: Dave Chinner<dchinner@redhat.com>
-> ---
+This is an automated email from the git hooks/post-receive script. It was
+generated because a ref change was pushed to the repository containing
+the project "XFS development tree".
 
->   #include "xfs_mount.h"
-> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-> index b55fd34..de4f963 100644
-> --- a/fs/xfs/xfs_inode.h
-> +++ b/fs/xfs/xfs_inode.h
+The branch, master has been updated
+  7a378c9 xfs: WQ_NON_REENTRANT is meaningless and going away
+      from  e60896d8f2b81412421953e14d3feb14177edb56 (commit)
 
-...
+Those revisions listed above that are new to this repository have
+not appeared on any other notification email; so we list those
+revisions in full, below.
 
-> - * NOTE:  This structure must be kept identical to struct xfs_dinode
-> - * 	  in xfs_dinode.h except for the endianness annotations.
-> - */
-> -typedef struct xfs_icdinode {
-> -	__uint16_t	di_magic;	/* inode magic # = XFS_DINODE_MAGIC */
+- Log -----------------------------------------------------------------
+commit 7a378c9aeab3782a5f998c17313bc7027cee3454
+Author: Tejun Heo <tj@kernel.org>
+Date:   Tue Jul 30 08:40:26 2013 -0400
 
-...
+    xfs: WQ_NON_REENTRANT is meaningless and going away
+    
+    dbf2576e37 ("workqueue: make all workqueues non-reentrant") made
+    WQ_NON_REENTRANT no-op and the flag is going away.  Remove its usages.
+    
+    This patch doesn't introduce any behavior changes.
+    
+    Signed-off-by: Tejun Heo <tj@kernel.org>
+    Cc: Ben Myers <bpm@sgi.com>
+    Cc: Alex Elder <elder@kernel.org>
+    Cc: xfs@oss.sgi.com
+    Reviewed-by: Ben Myers <bpm@sgi.com>
+    Signed-off-by: Ben Myers <bpm@sgi.com>
 
-> -	uuid_t		di_uuid;	/* UUID of the filesystem */
-> -
-> -	/* structure must be padded to 64 bit alignment */
-> -} xfs_icdinode_t;
-> -
+-----------------------------------------------------------------------
 
-...
-> diff --git a/fs/xfs/xfs_log_format.h b/fs/xfs/xfs_log_format.h
-> index 9f9aeb6..fd46a7f 100644
-> --- a/fs/xfs/xfs_log_format.h
-> +++ b/fs/xfs/xfs_log_format.h
-> @@ -18,6 +18,16 @@
->   #ifndef	__XFS_LOG_FORMAT_H__
->   #define __XFS_LOG_FORMAT_H__
->
-> +/*
-> + * On-disk Log Format definitions.
-> + *
-> + * This file contains all the on-disk format definitions used within the log. It
-> + * includes the physical log structure itself, as well as all the log item
-> + * format structures that are written into the log and intepreted by log
-> + * recovery. We start with the physical log format definitions, and then work
-> + * through all the log items definitions and everything they encode into the
-> + * log.
-> + */
-
-...
-
-> +static inline int xfs_ilog_fdata(int w)
-> +{
-> +	return (w == XFS_DATA_FORK ? XFS_ILOG_DDATA : XFS_ILOG_ADATA);
-> +}
-> +
-> +/*
-> + * Incore version of the on-disk inode core structures. We log this directly
-> + * into the journal in host CPU format (for better or worse) and as such
-> + * directly mirrors the xfs_dinode structure as it must contain all the same
-> + * information.
-> + */
-> +typedef struct xfs_ictimestamp {
-> +	__int32_t	t_sec;		/* timestamp seconds */
-> +	__int32_t	t_nsec;		/* timestamp nanoseconds */
-> +} xfs_ictimestamp_t;
-> +
-> +/*
-> + * NOTE:  This structure must be kept identical to struct xfs_dinode
-> + *	  in xfs_dinode.h except for the endianness annotations.
-> + */
-> +typedef struct xfs_icdinode {
-> +	__uint16_t	di_magic;	/* inode magic # = XFS_DINODE_MAGIC */
-> +	__uint16_t	di_mode;	/* mode and type of file */
-
-...
-
-> +	uuid_t		di_uuid;	/* UUID of the filesystem */
-> +
-> +	/* structure must be padded to 64 bit alignment */
-> +} xfs_icdinode_t;
+Summary of changes:
+ fs/xfs/xfs_super.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
 
-A log header file does not strike me as the place for the internal 
-representation of the on disk inode structure.
-
---Mark.
+hooks/post-receive
+-- 
+XFS development tree
 
 _______________________________________________
 xfs mailing list
