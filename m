@@ -1,22 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 03ADA7F5E
-	for <xfs@oss.sgi.com>; Mon, 29 Jul 2013 22:48:03 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id E36358F8035
-	for <xfs@oss.sgi.com>; Mon, 29 Jul 2013 20:48:02 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id ankfy1ktA3S6SYEu (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 29 Jul 2013 20:48:02 -0700 (PDT)
-Message-ID: <51F7377A.9090707@oracle.com>
-Date: Tue, 30 Jul 2013 11:48:10 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 227967F60
+	for <xfs@oss.sgi.com>; Mon, 29 Jul 2013 22:57:53 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A9C58AC004
+	for <xfs@oss.sgi.com>; Mon, 29 Jul 2013 20:57:52 -0700 (PDT)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	TQelJDNLNEFMiCLz for <xfs@oss.sgi.com>;
+	Mon, 29 Jul 2013 20:57:50 -0700 (PDT)
+Date: Tue, 30 Jul 2013 13:57:48 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH review 05/16] xfs: Update xfs_ioctl_setattr to handle
+	projids in any user namespace
+Message-ID: <20130730035748.GJ21982@dastard>
+References: <87txpaph4n.fsf@xmission.com>
+	<1361149870-27732-1-git-send-email-ebiederm@xmission.com>
+	<1361149870-27732-5-git-send-email-ebiederm@xmission.com>
+	<20130219015550.GJ26694@dastard> <51F616F2.5040906@cn.fujitsu.com>
+	<20130729075109.GF13468@dastard> <51F72FE6.4080202@cn.fujitsu.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: generic/315: allow a little tolerance for our
-	used check
-References: <1375124156-17620-1-git-send-email-jbacik@fusionio.com>
-In-Reply-To: <1375124156-17620-1-git-send-email-jbacik@fusionio.com>
+Content-Disposition: inline
+In-Reply-To: <51F72FE6.4080202@cn.fujitsu.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,39 +34,39 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Josef Bacik <jbacik@fusionio.com>
-Cc: sandeen@redhat.com, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: Gao feng <gaofeng@cn.fujitsu.com>
+Cc: Alex Elder <elder@kernel.org>, Linux Containers <containers@lists.linux-foundation.org>, dwight.engen@oracle.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, "Eric W. Biederman" <ebiederm@xmission.com>, linux-fsdevel@vger.kernel.org, "Serge E. Hallyn" <serge@hallyn.com>
 
-On 07/30/2013 02:55 AM, Josef Bacik wrote:
-
-> So df in btrfs is tricky at best, and relying on it for accurate information is
-> not great, but it's the best way to verify this test.  To get around btrfs being
-> inconsistent sometimes just use _within_tolerance to check our new df value to
-> make sure that our truncate did something.  With this patch I no longer see
-> transient failures of this test.  Thanks,
+On Tue, Jul 30, 2013 at 11:15:50AM +0800, Gao feng wrote:
+> On 07/29/2013 03:51 PM, Dave Chinner wrote:
+> > http://oss.sgi.com/pipermail/xfs/2013-July/028467.html
+> > 
+> > Basically, the discussion we are currently having is whether project
+> > IDs should be exposed to user namespaces at all. e.g:
+> > 
+> > http://oss.sgi.com/pipermail/xfs/2013-July/028497.html
+> > http://oss.sgi.com/pipermail/xfs/2013-July/028551.html
+> > 
+> > "Basically, until we have worked out *if* project quotas can be used
+> > safely within user namespaces, we need to reject any attempt to use
+> > them from within a user namespace container."
+> > 
 > 
-> Signed-off-by: Josef Bacik <jbacik@fusionio.com>
-> ---
->  tests/generic/315 |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
-> 
-> diff --git a/tests/generic/315 b/tests/generic/315
-> index 7cfc40d..9c01b5e 100644
-> --- a/tests/generic/315
-> +++ b/tests/generic/315
-> @@ -73,7 +73,8 @@ sync
->  
->  # Preallocated disk space should be released
->  avail_done=`df -P $TEST_DIR | awk 'END {print $4}'`
-> -[ "$avail_done" -eq "$avail_begin" ] || _fail "Available disk space ($avail_done KiB)"
-> +_within_tolerance "df" $avail_done $avail_begin 1%
-> +[ $? -eq 0 ] || _fail "Available disk space ($avail_done KiB) wanted ($avail_begin KiB)"
+> yes, seems this v6 patchset allows user in un-init user namespace to setup proj quota
+> through ioctl, and the projid hasn't been converted to kprojid in this patchset.
+> Doesn't this will cause user in container has the ability to change the proj quota
+> which is set by root user in host?
 
-Looks good to me.
-Reviewed-by: Jie Liu <jeff.liu@oracle.com>
+Dwight just posted v7. can you discuss your concerns in reposnse to
+the relevant patch in that series, please? it's much easier for
+everyone if we keep the discussion int eh one thread ;)
 
-Thanks,
--Jeff
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
