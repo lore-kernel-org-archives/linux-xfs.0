@@ -1,32 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 0156E7F51
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 181757F52
 	for <xfs@oss.sgi.com>; Mon, 29 Jul 2013 22:07:00 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id D47DA8F8033
+	by relay2.corp.sgi.com (Postfix) with ESMTP id CE42D304067
 	for <xfs@oss.sgi.com>; Mon, 29 Jul 2013 20:06:56 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id nGxEZvKmdVI3FjKE (version=TLSv1
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id 8IMqfAnVEKk0ns2P (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 29 Jul 2013 20:06:52 -0700 (PDT)
-Received: from ucsinet22.oracle.com (ucsinet22.oracle.com [156.151.31.94])
-	by aserp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
-	ESMTP id r6U36oe3029342
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Tue, 30 Jul 2013 03:06:51 GMT
-Received: from userz7021.oracle.com (userz7021.oracle.com [156.151.31.85])
-	by ucsinet22.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r6U36o43014829
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Tue, 30 Jul 2013 03:06:50 GMT
-Received: from abhmt101.oracle.com (abhmt101.oracle.com [141.146.116.53])
-	by userz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r6U36ncV016737 for <xfs@oss.sgi.com>; Tue, 30 Jul 2013 03:06:50 GMT
-Date: Mon, 29 Jul 2013 23:06:40 -0400
+	Mon, 29 Jul 2013 20:06:55 -0700 (PDT)
+Date: Mon, 29 Jul 2013 23:06:33 -0400
 From: Dwight Engen <dwight.engen@oracle.com>
-Subject: [PATCH v7 1/7] xfs: create wrappers for converting kuid_t to/from
-	uid_t
-Message-ID: <20130729230640.5131f5cc@oracle.com>
+Subject: [PATCH v7 0/7] userns: Convert xfs to use kuid_t/kgid_t where
+	appropriate
+Message-ID: <20130729230633.725a282e@oracle.com>
 Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -40,53 +27,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: xfs@oss.sgi.com, Dave Chinner <david@fromorbit.com>, Brian Foster <bfoster@redhat.com>
+Cc: Serge Hallyn <serge.hallyn@ubuntu.com>, "Eric W. Biederman" <ebiederm@gmail.com>
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
----
- fs/xfs/xfs_linux.h | 26 ++++++++++++++++++++++++++
- 1 file changed, 26 insertions(+)
+Hi All,
 
-diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-index 800f896..761e4c0 100644
---- a/fs/xfs/xfs_linux.h
-+++ b/fs/xfs/xfs_linux.h
-@@ -159,6 +159,32 @@
- #define MAX(a,b)	(max(a,b))
- #define howmany(x, y)	(((x)+((y)-1))/(y))
- 
-+/* Kernel uid/gid conversion. These are used to convert to/from the on disk
-+ * uid_t/gid_t types to the kuid_t/kgid_t types that the kernel uses internally.
-+ * The conversion here is type only, the value will remain the same since we
-+ * are converting to the init_user_ns. The uid is later mapped to a particular
-+ * user namespace value when crossing the kernel/user boundary.
-+ */
-+static inline __uint32_t xfs_kuid_to_uid(kuid_t uid)
-+{
-+	return from_kuid(&init_user_ns, uid);
-+}
-+
-+static inline kuid_t xfs_uid_to_kuid(__uint32_t uid)
-+{
-+	return make_kuid(&init_user_ns, uid);
-+}
-+
-+static inline __uint32_t xfs_kgid_to_gid(kgid_t gid)
-+{
-+	return from_kgid(&init_user_ns, gid);
-+}
-+
-+static inline kgid_t xfs_gid_to_kgid(__uint32_t gid)
-+{
-+	return make_kgid(&init_user_ns, gid);
-+}
-+
- /*
-  * Various platform dependent calls that don't fit anywhere else
-  */
--- 
-1.8.1.4
+This updated patchset is on top of ad81f054 of xfs git (3.11-rc1). The
+patches do not convert the id's returned from bulkstat, since bulkstat
+cannot be called from inside a userns right now anyway since the caller
+must be CAP_SYS_ADMIN in init_user_ns.
+
+Changes since v6 patchset (addressing Dave's comments)
+- 0006 just do a capable(CAP_SYS_ADMIN) check for XFS_IOC_FREE_EOFBLOCKS
+
+Changes since v5 patchset (addressing Brian's comments,
+only 0005 and 0006 are changed):
+ - 0005 put all eofblocks validation in xfs_fs_eofblocks_from_user()
+ - 0006 don't export internal flag, add K to internal flag name,
+   start internal flags bits at msb (with the intention that other internal
+   flags would be in descending order) and ensure that it doesn't accidentally
+   collide with external flags
+
+Changes since v4 patchset (addressing Dave's comments):
+ - add parenthesis in if with binary and logical and (EOFBLOCKS flags)
+ - rename xfs_fs_eofblocks_to_internal -> xfs_fs_eofblocks_from_user and
+   move conversion validation into it
+ - fix negative error returns from XFS_IOC_FREE_EOFBLOCKS
+ - add check for read-only filesystem to XFS_IOC_FREE_EOFBLOCKS
+
+Changes since v3 patchset:
+ - export inode_capable() for building xfs as a module
+ - implement Brian's proposal for an internal flag to indicate to
+   xfs_inode_free_eofblocks() that it should do a permission check.
+   ioctl callers will always set this flag, which is simpler than
+   making them specify XFS_EOF_FLAGS_UID or XFS_EOF_FLAGS_GID,
+   internal callers can leave it unset so no permission checking is
+   done
+ - take Brian's suggestion on moving the policy from the conversion
+   function into the ioctl code, and moving stuff to xfs_icache.h
 
 _______________________________________________
 xfs mailing list
