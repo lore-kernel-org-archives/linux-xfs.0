@@ -1,19 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 181757F52
-	for <xfs@oss.sgi.com>; Mon, 29 Jul 2013 22:07:00 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CE42D304067
-	for <xfs@oss.sgi.com>; Mon, 29 Jul 2013 20:06:56 -0700 (PDT)
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
-	cuda.sgi.com with ESMTP id 8IMqfAnVEKk0ns2P (version=TLSv1
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 4530A7F55
+	for <xfs@oss.sgi.com>; Mon, 29 Jul 2013 22:07:03 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C62FCAC002
+	for <xfs@oss.sgi.com>; Mon, 29 Jul 2013 20:07:02 -0700 (PDT)
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id yzzXvE8oXw60UBgh (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 29 Jul 2013 20:06:55 -0700 (PDT)
-Date: Mon, 29 Jul 2013 23:06:33 -0400
+	Mon, 29 Jul 2013 20:07:01 -0700 (PDT)
+Received: from ucsinet21.oracle.com (ucsinet21.oracle.com [156.151.31.93])
+	by aserp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
+	ESMTP id r6U370Eb029419
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Tue, 30 Jul 2013 03:07:01 GMT
+Received: from aserz7022.oracle.com (aserz7022.oracle.com [141.146.126.231])
+	by ucsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	r6U36xCY017068
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Tue, 30 Jul 2013 03:06:59 GMT
+Received: from abhmt117.oracle.com (abhmt117.oracle.com [141.146.116.69])
+	by aserz7022.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	r6U36xEA016208 for <xfs@oss.sgi.com>; Tue, 30 Jul 2013 03:06:59 GMT
+Date: Mon, 29 Jul 2013 23:06:50 -0400
 From: Dwight Engen <dwight.engen@oracle.com>
-Subject: [PATCH v7 0/7] userns: Convert xfs to use kuid_t/kgid_t where
-	appropriate
-Message-ID: <20130729230633.725a282e@oracle.com>
+Subject: [PATCH v7 3/7] xfs: ioctl check for capabilities in the current
+	user namespace
+Message-ID: <20130729230650.5db8228a@oracle.com>
 Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -27,44 +40,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, Dave Chinner <david@fromorbit.com>, Brian Foster <bfoster@redhat.com>
-Cc: Serge Hallyn <serge.hallyn@ubuntu.com>, "Eric W. Biederman" <ebiederm@gmail.com>
+To: xfs@oss.sgi.com
 
-Hi All,
+Use inode_capable() to check if SUID|SGID bits should be cleared to match
+similar check in inode_change_ok().
 
-This updated patchset is on top of ad81f054 of xfs git (3.11-rc1). The
-patches do not convert the id's returned from bulkstat, since bulkstat
-cannot be called from inside a userns right now anyway since the caller
-must be CAP_SYS_ADMIN in init_user_ns.
+The check for CAP_LINUX_IMMUTABLE was not modified since all other file
+systems also check against init_user_ns rather than current_user_ns.
 
-Changes since v6 patchset (addressing Dave's comments)
-- 0006 just do a capable(CAP_SYS_ADMIN) check for XFS_IOC_FREE_EOFBLOCKS
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
+---
+ fs/xfs/xfs_ioctl.c  | 4 ++--
+ kernel/capability.c | 1 +
+ 2 files changed, 3 insertions(+), 2 deletions(-)
 
-Changes since v5 patchset (addressing Brian's comments,
-only 0005 and 0006 are changed):
- - 0005 put all eofblocks validation in xfs_fs_eofblocks_from_user()
- - 0006 don't export internal flag, add K to internal flag name,
-   start internal flags bits at msb (with the intention that other internal
-   flags would be in descending order) and ensure that it doesn't accidentally
-   collide with external flags
-
-Changes since v4 patchset (addressing Dave's comments):
- - add parenthesis in if with binary and logical and (EOFBLOCKS flags)
- - rename xfs_fs_eofblocks_to_internal -> xfs_fs_eofblocks_from_user and
-   move conversion validation into it
- - fix negative error returns from XFS_IOC_FREE_EOFBLOCKS
- - add check for read-only filesystem to XFS_IOC_FREE_EOFBLOCKS
-
-Changes since v3 patchset:
- - export inode_capable() for building xfs as a module
- - implement Brian's proposal for an internal flag to indicate to
-   xfs_inode_free_eofblocks() that it should do a permission check.
-   ioctl callers will always set this flag, which is simpler than
-   making them specify XFS_EOF_FLAGS_UID or XFS_EOF_FLAGS_GID,
-   internal callers can leave it unset so no permission checking is
-   done
- - take Brian's suggestion on moving the policy from the conversion
-   function into the ioctl code, and moving stuff to xfs_icache.h
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 6e2bca5..8edc780 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -981,7 +981,7 @@ xfs_ioctl_setattr(
+ 	 * to the file owner ID, except in cases where the
+ 	 * CAP_FSETID capability is applicable.
+ 	 */
+-	if (current_fsuid() != ip->i_d.di_uid && !capable(CAP_FOWNER)) {
++	if (!inode_owner_or_capable(VFS_I(ip))) {
+ 		code = XFS_ERROR(EPERM);
+ 		goto error_return;
+ 	}
+@@ -1103,7 +1103,7 @@ xfs_ioctl_setattr(
+ 		 * cleared upon successful return from chown()
+ 		 */
+ 		if ((ip->i_d.di_mode & (S_ISUID|S_ISGID)) &&
+-		    !capable(CAP_FSETID))
++		    !inode_capable(VFS_I(ip), CAP_FSETID))
+ 			ip->i_d.di_mode &= ~(S_ISUID|S_ISGID);
+ 
+ 		/*
+diff --git a/kernel/capability.c b/kernel/capability.c
+index f6c2ce5..a4b6744 100644
+--- a/kernel/capability.c
++++ b/kernel/capability.c
+@@ -464,3 +464,4 @@ bool inode_capable(const struct inode *inode, int cap)
+ 
+ 	return ns_capable(ns, cap) && kuid_has_mapping(ns, inode->i_uid);
+ }
++EXPORT_SYMBOL(inode_capable);
+-- 
+1.8.1.4
 
 _______________________________________________
 xfs mailing list
