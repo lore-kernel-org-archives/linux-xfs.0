@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 2FBDA29E10
-	for <xfs@oss.sgi.com>; Wed, 31 Jul 2013 01:11:36 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 32C3D7F51
+	for <xfs@oss.sgi.com>; Wed, 31 Jul 2013 01:29:26 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 1ECC330408C
-	for <xfs@oss.sgi.com>; Tue, 30 Jul 2013 23:11:32 -0700 (PDT)
-Received: from mail.ud10.udmedia.de (ud10.udmedia.de [194.117.254.50]) by
-	cuda.sgi.com with ESMTP id I4OGyg8vxyL10yyv (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 30 Jul 2013 23:11:31 -0700 (PDT)
-Date: Wed, 31 Jul 2013 08:11:29 +0200
-From: Markus Trippelsdorf <markus@trippelsdorf.de>
-Subject: Re: XFS undeletable files. (3.11rc3)
-Message-ID: <20130731061129.GA354@x4>
-References: <20130712023930.GA6473@redhat.com> <20130725041538.GH13468@dastard>
-	<20130730202628.GA16356@redhat.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 21EAB8F804C
+	for <xfs@oss.sgi.com>; Tue, 30 Jul 2013 23:29:23 -0700 (PDT)
+Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
+	cuda.sgi.com with ESMTP id oCACGo0p1PPcuF7L for
+	<xfs@oss.sgi.com>; Tue, 30 Jul 2013 23:29:21 -0700 (PDT)
+Message-ID: <51F8AF0E.3020409@cn.fujitsu.com>
+Date: Wed, 31 Jul 2013 14:30:38 +0800
+From: Gao feng <gaofeng@cn.fujitsu.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130730202628.GA16356@redhat.com>
+Subject: Re: [PATCH v7 0/7] userns: Convert xfs to use kuid_t/kgid_t where
+	appropriate
+References: <20130729230633.725a282e@oracle.com>
+In-Reply-To: <20130729230633.725a282e@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,38 +24,95 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Jones <davej@redhat.com>, Dave Chinner <david@fromorbit.com>, Linux Kernel <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: Dwight Engen <dwight.engen@oracle.com>
+Cc: "Eric W. Biederman" <ebiederm@gmail.com>, Brian Foster <bfoster@redhat.com>, Serge Hallyn <serge.hallyn@ubuntu.com>, xfs@oss.sgi.com
 
-T24gMjAxMy4wNy4zMCBhdCAxNjoyNiAtMDQwMCwgRGF2ZSBKb25lcyB3cm90ZToKPiBPbiBUaHUs
-IEp1bCAyNSwgMjAxMyBhdCAwMjoxNTozOFBNICsxMDAwLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4g
-ID4gT24gVGh1LCBKdWwgMTEsIDIwMTMgYXQgMTA6Mzk6MzBQTSAtMDQwMCwgRGF2ZSBKb25lcyB3
-cm90ZToKPiAgPiA+IEp1c3Qgc2F3IHRoaXMgZHVyaW5nIGJvb3QgYWZ0ZXIgYW4gdW5jbGVhbiBz
-aHV0ZG93bi4gSXQgaHVuZyBhZnRlcndhcmRzLgo+ICA+ID4gCj4gID4gPiBbICAgOTcuMTYyNjY1
-XSBYRlM6IEFzc2VydGlvbiBmYWlsZWQ6IHhmc19kaXIyX3NmX2xvb2t1cChhcmdzKSA9PSBFTk9F
-TlQsIGZpbGU6IGZzL3hmcy94ZnNfZGlyMl9zZi5jLCBsaW5lOiAzNTgKPiAgPiA+IFsgICA5Ny4x
-NjQ2NDZdIC0tLS0tLS0tLS0tLVsgY3V0IGhlcmUgXS0tLS0tLS0tLS0tLQo+ICA+IAo+ICA+IEkg
-anVzdCByZXByb2R1Y2VkIHRoaXMgYnkgY2hhbmNlLiBJIGtub3cgZXhhY3RseSB3aGF0IEkgd2Fz
-IGRvaW5nCj4gID4gd2hlbiBpdCB3ZW50IGJhbmcsIHNvIEkgbWlnaHQgYmUgYWJsZSB0byByZWR1
-Y2UgaXQgZnJvbSBzY2F0dGVyZ3VuCj4gID4gYmxhc3QgdGVzdGluZyB0byBiZSBhYmxlIHRvIHJl
-cHJvZHVjZSBpdCBvbiBkZW1hbmQuCj4gCj4gSSB4ZnNfcmVwYWlyJ2QgdGhhdCBkaXNrIGEgd2Vl
-ayBvciBzbyBiYWNrLCBhbmQgaGF2ZSBiZWVuIGZpbmUgdW50aWwgdG9kYXkgd2hlbi4uCj4gCj4g
-KDE2OjIyOjU3OnJvb3RAemVyb3N1bTp0bXAuNikjIGxsCj4gbHM6IGNhbm5vdCBhY2Nlc3MgOiBO
-byBzdWNoIGZpbGUgb3IgZGlyZWN0b3J5Cj4gdG90YWwgMAo+ID8/Pz8/Pz8/Pz8gPyA/ID8gPyAg
-ICAgICAgICAgID8gPwo+ICgxNjoyMjo1ODpyb290QHplcm9zdW06dG1wLjYpIyBjZCAuLgo+ICgx
-NjoyMzowNjpyb290QHplcm9zdW06dG1wKSMgcm0gLXJmIHRtcC42Cj4gcm06IGNhbm5vdCByZW1v
-dmUg4oCYdG1wLjbigJk6IERpcmVjdG9yeSBub3QgZW1wdHkKPiAoMTY6MjM6MTQ6cm9vdEB6ZXJv
-c3VtOnRtcCkjIGNkIC0KPiAvaG9tZS9kYXZlai9zcmMvdHJpbml0eS90bXAvdG1wLjYKPiAoMTY6
-MjM6MjM6cm9vdEB6ZXJvc3VtOnRtcC42KSMgc3RhdCAqCj4gc3RhdDogY2Fubm90IHN0YXQg4oCY
-XDAyMOKAmTogTm8gc3VjaCBmaWxlIG9yIGRpcmVjdG9yeQo+IAo+IEkgZG9uJ3Qga25vdyBpZiB0
-aGlzIGlzIHJlc2lkdWFsIGNyYXAgZnJvbSB0aGF0IGZpcnN0IHByb2JsZW0gdGhhdCBuZXZlciBn
-b3QgZml4ZWQgdXAsCj4gb3Igc29tZXRoaW5nIG5ldy4KPiAKPiBBbnkgaWRlYXMgPwoKSWYgeW91
-IGhhdmUgY3Jhc2hlZCB5b3VyIHRlc3QgbWFjaGluZSBydW5uaW5nIGFuIHJjMSBvciByYzIga2Vy
-bmVsLCB5b3UKbXVzdCBydW4geGZzX3JlcGFpciBhZ2FpbiB0byBjbGVhbiB1cCBwb3NzaWJsZSBj
-b3JydXB0aW9uICh0aGF0IGhhcHBlbmVkCmR1cmluZyBsb2cgcmVwbGF5KS4gVGhlIGZpeCAoY29t
-bWl0IGUxYjQyNzFhYzI2KSBpcyBpbiByYzMuCgotLSAKTWFya3VzCgpfX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Mu
-c2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+Hi Dwight,
+
+On 07/30/2013 11:06 AM, Dwight Engen wrote:
+> Hi All,
+> 
+> This updated patchset is on top of ad81f054 of xfs git (3.11-rc1). The
+> patches do not convert the id's returned from bulkstat, since bulkstat
+> cannot be called from inside a userns right now anyway since the caller
+> must be CAP_SYS_ADMIN in init_user_ns.
+
+
+As I method in another mail thread, I found the changing projid of file in container
+hasn't been disallowed. it means the user in container can change file's projid.
+so the project quota won't take effect.
+
+the project quota info before I change file's projid in container:
+
+Project quota on /media/lw (/dev/sdc1)
+                        Blocks
+Project ID   Used   Soft   Hard Warn/Grace
+---------- ---------------------------------
+testproj      64K   100M   110M  00 [------]
+
+
+and after I use a simple program which execs the below code.
+
+fa.fsx_projid = 21; // different projid from testproj
+fa.fsx_xflags &= ~XFS_XFLAG_IMMUTABLE;
+ret = xfsctl("/mount_point_of_xfs", fd, XFS_IOC_FSSETXATTR, &fa);
+
+the project quota becomes to:
+
+Project quota on /media/lw (/dev/sdc1)
+                        Blocks
+Project ID   Used   Soft   Hard Warn/Grace
+---------- ---------------------------------
+testproj      60K   100M   110M  00 [------]
+
+
+So I think we still need a patch to reduce the changing-project-id
+rights of un-init user namespace.
+
+Thanks
+
+
+> 
+> Changes since v6 patchset (addressing Dave's comments)
+> - 0006 just do a capable(CAP_SYS_ADMIN) check for XFS_IOC_FREE_EOFBLOCKS
+> 
+> Changes since v5 patchset (addressing Brian's comments,
+> only 0005 and 0006 are changed):
+>  - 0005 put all eofblocks validation in xfs_fs_eofblocks_from_user()
+>  - 0006 don't export internal flag, add K to internal flag name,
+>    start internal flags bits at msb (with the intention that other internal
+>    flags would be in descending order) and ensure that it doesn't accidentally
+>    collide with external flags
+> 
+> Changes since v4 patchset (addressing Dave's comments):
+>  - add parenthesis in if with binary and logical and (EOFBLOCKS flags)
+>  - rename xfs_fs_eofblocks_to_internal -> xfs_fs_eofblocks_from_user and
+>    move conversion validation into it
+>  - fix negative error returns from XFS_IOC_FREE_EOFBLOCKS
+>  - add check for read-only filesystem to XFS_IOC_FREE_EOFBLOCKS
+> 
+> Changes since v3 patchset:
+>  - export inode_capable() for building xfs as a module
+>  - implement Brian's proposal for an internal flag to indicate to
+>    xfs_inode_free_eofblocks() that it should do a permission check.
+>    ioctl callers will always set this flag, which is simpler than
+>    making them specify XFS_EOF_FLAGS_UID or XFS_EOF_FLAGS_GID,
+>    internal callers can leave it unset so no permission checking is
+>    done
+>  - take Brian's suggestion on moving the policy from the conversion
+>    function into the ioctl code, and moving stuff to xfs_icache.h
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
