@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 282DC7F5E
-	for <xfs@oss.sgi.com>; Wed, 31 Jul 2013 09:42:43 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id B808A7CBF
+	for <xfs@oss.sgi.com>; Wed, 31 Jul 2013 10:52:31 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 9C1EEAC003
-	for <xfs@oss.sgi.com>; Wed, 31 Jul 2013 07:42:39 -0700 (PDT)
-Received: from mail-pa0-f50.google.com (mail-pa0-f50.google.com
-	[209.85.220.50]) by cuda.sgi.com with ESMTP id UY3rcMHkNd4BWzYj
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 31 Jul 2013 07:42:37 -0700 (PDT)
-Received: by mail-pa0-f50.google.com with SMTP id fb10so947648pad.9
-	for <xfs@oss.sgi.com>; Wed, 31 Jul 2013 07:42:37 -0700 (PDT)
-From: Namjae Jeon <linkinjeon@gmail.com>
-Subject: [PATCH 3/3] ext4: Implement FALLOC_FL_COLLAPSE_RANGE
-Date: Wed, 31 Jul 2013 23:42:26 +0900
-Message-Id: <1375281746-15908-1-git-send-email-linkinjeon@gmail.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id A401C8F8035
+	for <xfs@oss.sgi.com>; Wed, 31 Jul 2013 08:52:31 -0700 (PDT)
+Received: from mo-p00-ob.rzone.de (mo-p00-ob.rzone.de [81.169.146.161]) by
+	cuda.sgi.com with ESMTP id gyBnKRT8EVbuVDtI (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 31 Jul 2013 08:52:27 -0700 (PDT)
+Message-ID: <51F932B6.80203@giantdisaster.de>
+Date: Wed, 31 Jul 2013 17:52:22 +0200
+From: Stefan Behrens <sbehrens@giantdisaster.de>
+MIME-Version: 1.0
+Subject: Re: [PATCH] xfstest: add a test for btrfs device replace operation
+References: <1374830885-26966-1-git-send-email-sbehrens@giantdisaster.de>
+	<51F293E8.3080601@redhat.com>
+In-Reply-To: <51F293E8.3080601@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,374 +25,419 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: tytso@mit.edu, adilger.kernel@dilger.ca, bpm@sgi.com, elder@kernel.org, hch@infradead.org, david@fromorbit.com
-Cc: Namjae Jeon <linkinjeon@gmail.com>, Namjae Jeon <namjae.jeon@samsung.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, a.sangwan@samsung.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-From: Namjae Jeon <namjae.jeon@samsung.com>
+On Fri, 26 Jul 2013 10:21:12 -0500, Eric Sandeen wrote:
+> On 7/26/13 4:28 AM, Stefan Behrens wrote:
+>> Unfortunately this test takes 6 minutes on my SSD equiped test box since
+>> it runs all possible single/dup/raid0/raid1/raid10/mixed profiles, one
+>> round with the '-f' option to 'btrfs replace start' and one round
+>> without this option. The cancelation is tested only once and with the
+>> dup/single profile for metadata/data.
+>>
+>> Almost all the time is spent when the filesystem is populated with test
+>> data. The replace operation itself takes one second for all the tests,
+>> and 20 seconds for the test that is marked as 'thorough' (this one
+>> spends more than a minute to populate the filesystem with data).
+> 
+> Can you tell it to make a smaller filesystem so this doesn't take
+> as long?  Would that still be spread across all devices properly?
+> All you really need is data across all devices, right - whether it's
+> 2G or 200G or 2000G in total shouldn't _really_ matter?
+> 
+>> The amount of tests done depends on the number of devices in the
+>> SCRATCH_DEV_POOL. For full test coverage, at least 5 devices should
+>> be available (e.g. 5 partitions).
+>>
+>> For the first round, the last device in the SCRATCH_DEV_POOL string
+>> is taken as the target device for the replace operation, the first
+>> device is the source device. For the second round it is the other way
+>> round. Therefore make sure that both devices have _exactly_ the same
+>> size, otherwise the tests fail! The target device for a replace
+>> operation always needs to be larger or of equal size than the source
+>> device.
+>>
+>> If SCRATCH_DEV_POOL is set to "A B C D E" for example, the first
+>> round creates a filesystem on "A B C D" and replaces A with E in the
+>> first round, and E again with A in the second round. E and A need to
+>> have the same size for the tests to succeed.
+>>
+>> To check the filesystems after replacing a device, a scrub run is
+>> performed, a btrfsck run, and finally the filesystem is remounted.
+>>
+>> This commit depends on my other commit:
+>> "xfstest: don't remove the two first devices from SCRATCH_DEV_POOL"
+>>
+>> Signed-off-by: Stefan Behrens <sbehrens@giantdisaster.de>
+>> ---
+>>  tests/btrfs/317     | 209 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+>>  tests/btrfs/317.out |   3 +
+>>  tests/btrfs/group   |   1 +
+>>  3 files changed, 213 insertions(+)
+>>
+>> diff --git a/tests/btrfs/317 b/tests/btrfs/317
+>> new file mode 100755
+>> index 0000000..b4f0d8c
+>> --- /dev/null
+>> +++ b/tests/btrfs/317
+>> @@ -0,0 +1,209 @@
+>> +#! /bin/bash
+>> +# FSQA Test No. 317
+>> +#
+>> +# Test of the btrfs replace operation.
+>> +#
+>> +# The amount of tests done depends on the number of devices in the
+>> +# SCRATCH_DEV_POOL. For full test coverage, at least 5 devices should
+>> +# be available (e.g. 5 partitions).
+>> +#
+>> +# For the first round, the last device in the SCRATCH_DEV_POOL string
+>> +# is taken as the target device for the replace operation, the first
+>> +# device is the source device. For the second round it is the other way
+>> +# round.
+>> +#
+>> +# THEREFORE MAKE SURE THAT BOTH DEVICES HAVE _EXACTLY_ THE SAME
+>> +# SIZE, OTHERWISE THE TESTS FAIL!
+> 
+> I sure hope the script enforces that, and does _notrun if they
+> differ?  I'll look.  If not, that's a problem.  If so, please
+> change above to "OTHERWISE THE TEST WILL BE SKIPPED."
+> 
+> (coming back after reading it all: nothing enforces this - you
+> need to do that, tests should be _notrun, not failed, due to
+> incompatible configurations)
 
-New fallocate flag FALLOC_FL_COLLAPSE_RANGE implementation for Ext4
+Thank you for the review! All your comments are addressed in the V2 of
+the patch.
 
-Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
-Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
----
- fs/ext4/ext4.h              |    3 +
- fs/ext4/extents.c           |  255 ++++++++++++++++++++++++++++++++++++++++++-
- fs/ext4/move_extent.c       |    2 +-
- include/trace/events/ext4.h |   25 +++++
- 4 files changed, 283 insertions(+), 2 deletions(-)
+All tests except for one work populate the test filesystem with only
+12MB in V2, thus spend less time. And to assure that the test is not
+running the replace operation on an empty source disk, the number of
+devices that are included in the filesystem is adapted and reduced to
+the minimum number (1 for single/dup, 2 for RAID0/1, 4 for RAID10).
 
-diff --git a/fs/ext4/ext4.h b/fs/ext4/ext4.h
-index b577e45..35eed6a 100644
---- a/fs/ext4/ext4.h
-+++ b/fs/ext4/ext4.h
-@@ -2692,6 +2692,7 @@ extern int ext4_find_delalloc_range(struct inode *inode,
- extern int ext4_find_delalloc_cluster(struct inode *inode, ext4_lblk_t lblk);
- extern int ext4_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
- 			__u64 start, __u64 len);
-+extern int ext4_collapse_range(struct inode *inode, loff_t offset, loff_t len);
- 
- 
- /* move_extent.c */
-@@ -2704,6 +2705,8 @@ void ext4_inode_double_unlock(struct inode *inode1, struct inode *inode2);
- extern int ext4_move_extents(struct file *o_filp, struct file *d_filp,
- 			     __u64 start_orig, __u64 start_donor,
- 			     __u64 len, __u64 *moved_len);
-+extern int mext_next_extent(struct inode *inode, struct ext4_ext_path *path,
-+			    struct ext4_extent **extent);
- 
- /* page-io.c */
- extern int __init ext4_init_pageio(void);
-diff --git a/fs/ext4/extents.c b/fs/ext4/extents.c
-index a618738..8df082d 100644
---- a/fs/ext4/extents.c
-+++ b/fs/ext4/extents.c
-@@ -4476,12 +4476,16 @@ long ext4_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
- 	unsigned int credits, blkbits = inode->i_blkbits;
- 
- 	/* Return error if mode is not supported */
--	if (mode & ~(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE))
-+	if (mode & ~(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE |
-+		     FALLOC_FL_COLLAPSE_RANGE))
- 		return -EOPNOTSUPP;
- 
- 	if (mode & FALLOC_FL_PUNCH_HOLE)
- 		return ext4_punch_hole(inode, offset, len);
- 
-+	if (mode & FALLOC_FL_COLLAPSE_RANGE)
-+		return ext4_collapse_range(inode, offset, len);
-+
- 	ret = ext4_convert_inline_data(inode);
- 	if (ret)
- 		return ret;
-@@ -4774,3 +4778,252 @@ int ext4_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
- 
- 	return error;
- }
-+
-+/*
-+ * ext4_access_path:
-+ * Function to access the path buffer for marking it dirty.
-+ * It also checks if there are sufficient credits left in the journal handle
-+ * to update path.
-+ */
-+static int
-+ext4_access_path(handle_t *handle, struct inode *inode,
-+		 struct ext4_ext_path *path)
-+{
-+	int credits, err;
-+
-+	/*
-+	 * Check if need to extend journal credits
-+	 * 3 for leaf, sb, and inode plus 2 (bmap and group
-+	 * descriptor) for each block group; assume two block
-+	 * groups
-+	 */
-+	if (handle->h_buffer_credits < 7) {
-+		credits = ext4_writepage_trans_blocks(inode);
-+		err = ext4_ext_truncate_extend_restart(handle, inode, credits);
-+		/* EAGAIN is success */
-+		if (err && err != -EAGAIN)
-+			return err;
-+	}
-+
-+	err = ext4_ext_get_access(handle, inode, path);
-+	return err;
-+}
-+
-+/*
-+ * ext4_ext_update_path:
-+ * Update the extents of a path structure lying between path[depth].p_ext
-+ * and EXT_LAST_EXTENT(path[depth].p_hdr) by subtracting shift from starting
-+ * block for each extent.
-+ */
-+static int
-+ext4_ext_update_path(struct ext4_ext_path *path, ext4_lblk_t shift,
-+		     struct inode *inode, handle_t *handle, ext4_lblk_t *start)
-+{
-+	int depth, err = 0;
-+	struct ext4_extent *ex_start, *ex_last;
-+	bool update = 0;
-+	depth = path->p_depth;
-+
-+	while (depth >= 0) {
-+		if (depth == path->p_depth) {
-+			ex_start = path[depth].p_ext;
-+			if (!ex_start)
-+				return -EIO;
-+
-+			ex_last = EXT_LAST_EXTENT(path[depth].p_hdr);
-+			if (!ex_last)
-+				return -EIO;
-+
-+			err = ext4_access_path(handle, inode, path + depth);
-+			if (err)
-+				goto out;
-+
-+			if (ex_start == EXT_FIRST_EXTENT(path[depth].p_hdr))
-+				update = 1;
-+
-+			*start = ex_last->ee_block +
-+					ext4_ext_get_actual_len(ex_last);
-+
-+			while (ex_start <= ex_last) {
-+				ex_start->ee_block -= shift;
-+				ex_start++;
-+			}
-+			err = ext4_ext_dirty(handle, inode, path + depth);
-+			if (err)
-+				goto out;
-+
-+			if (--depth < 0 || !update)
-+				break;
-+		}
-+
-+		/* Update index too */
-+		err = ext4_access_path(handle, inode, path + depth);
-+		if (err)
-+			goto out;
-+
-+		path[depth].p_idx->ei_block -= shift;
-+		err = ext4_ext_dirty(handle, inode, path + depth);
-+		if (err)
-+			goto out;
-+
-+		/* we are done if current index is not a starting index */
-+		if (path[depth].p_idx != EXT_FIRST_INDEX(path[depth].p_hdr))
-+			break;
-+
-+		depth--;
-+	}
-+
-+out:
-+	return err;
-+}
-+
-+/*
-+ * ext4_ext_update_logical:
-+ * All the extents which lies in the range from start to the last allocated
-+ * block for the file are updated by moving them shift blocks to the left.
-+ */
-+static int
-+ext4_ext_update_logical(struct inode *inode, handle_t *handle,
-+			ext4_lblk_t start, ext4_lblk_t shift)
-+{
-+	struct ext4_ext_path *path;
-+	int ret = 0, depth;
-+	struct ext4_extent *extent;
-+	ext4_lblk_t stop_block, current_block;
-+
-+	/* Let path point to the last extent */
-+	path = ext4_ext_find_extent(inode, EXT_MAX_BLOCKS - 1, NULL);
-+	if (IS_ERR(path))
-+		return PTR_ERR(path);
-+
-+	depth = path->p_depth;
-+	extent = path[depth].p_ext;
-+	stop_block = extent->ee_block + ext4_ext_get_actual_len(extent);
-+	ext4_ext_drop_refs(path);
-+	kfree(path);
-+
-+	while (start < stop_block) {
-+		path = ext4_ext_find_extent(inode, start, NULL);
-+		if (IS_ERR(path))
-+			return PTR_ERR(path);
-+		depth = path->p_depth;
-+		extent = path[depth].p_ext;
-+		current_block = extent->ee_block;
-+		if (start > current_block) {
-+			/* Hole, move to the next extent */
-+			ret = mext_next_extent(inode, path, &extent);
-+			if (ret < 0) {
-+				ext4_ext_drop_refs(path);
-+				kfree(path);
-+				break;
-+			}
-+		}
-+		ret = ext4_ext_update_path(path, shift, inode, handle, &start);
-+		ext4_ext_drop_refs(path);
-+		kfree(path);
-+		if (ret)
-+			break;
-+	}
-+
-+	return ret;
-+}
-+
-+/*
-+ * ext4_collapse_range:
-+ * This implements the fallocate's collapse range functionality for ext4
-+ * Returns: 0 on success or negative on error
-+ */
-+int ext4_collapse_range(struct inode *inode, loff_t offset, loff_t len)
-+{
-+	struct super_block *sb = inode->i_sb;
-+	ext4_lblk_t punch_start, punch_stop;
-+	handle_t *handle;
-+	unsigned int credits;
-+	unsigned int rounding;
-+	loff_t ioffset, new_size;
-+	int ret;
-+
-+	if (!S_ISREG(inode->i_mode))
-+		return -EOPNOTSUPP;
-+
-+	if (EXT4_SB(sb)->s_cluster_ratio > 1)
-+		return -EOPNOTSUPP;
-+
-+	/* Currently just for extent based files */
-+	if (!ext4_test_inode_flag(inode, EXT4_INODE_EXTENTS))
-+		return -EOPNOTSUPP;
-+
-+	if (IS_SWAPFILE(inode))
-+		return -ETXTBSY;
-+
-+	trace_ext4_collapse_range(inode, offset, len);
-+
-+	punch_start = offset >> EXT4_BLOCK_SIZE_BITS(sb);
-+	punch_stop = (offset + len) >> EXT4_BLOCK_SIZE_BITS(sb);
-+
-+	rounding = max_t(uint, 1 << EXT4_BLOCK_SIZE_BITS(sb), PAGE_CACHE_SIZE);
-+	ioffset = offset & ~(rounding - 1);
-+
-+	/* Write out all dirty pages */
-+	ret = filemap_write_and_wait_range(inode->i_mapping, ioffset, -1);
-+	if (ret)
-+		return ret;
-+
-+	/* Take mutex lock */
-+	mutex_lock(&inode->i_mutex);
-+
-+	truncate_pagecache_range(inode, ioffset, -1);
-+
-+	/* Wait for existing dio to complete */
-+	ext4_inode_block_unlocked_dio(inode);
-+	inode_dio_wait(inode);
-+
-+	credits = ext4_writepage_trans_blocks(inode);
-+	handle = ext4_journal_start(inode, EXT4_HT_TRUNCATE, credits);
-+	if (IS_ERR(handle)) {
-+		ret = PTR_ERR(handle);
-+		goto out_dio;
-+	}
-+
-+	down_write(&EXT4_I(inode)->i_data_sem);
-+
-+	ext4_discard_preallocations(inode);
-+
-+	ret = ext4_es_remove_extent(inode, punch_start,
-+				    EXT_MAX_BLOCKS - punch_start - 1);
-+	if (ret)
-+		goto journal_stop;
-+
-+	ret = ext4_ext_remove_space(inode, punch_start, punch_stop - 1);
-+	if (ret)
-+		goto journal_stop;
-+
-+	ret = ext4_ext_update_logical(inode, handle, punch_stop,
-+				      punch_stop - punch_start);
-+	if (ret)
-+		goto journal_stop;
-+
-+	if (offset >= i_size_read(inode))
-+		goto update_time;
-+
-+	if ((offset + len) > i_size_read(inode))
-+		new_size = offset;
-+	else
-+		new_size = i_size_read(inode) - len;
-+
-+	truncate_setsize(inode, new_size);
-+	EXT4_I(inode)->i_disksize = new_size;
-+
-+update_time:
-+	inode->i_mtime = inode->i_ctime = ext4_current_time(inode);
-+	ext4_mark_inode_dirty(handle, inode);
-+
-+journal_stop:
-+	ext4_journal_stop(handle);
-+	up_write(&EXT4_I(inode)->i_data_sem);
-+
-+out_dio:
-+	ext4_inode_resume_unlocked_dio(inode);
-+	mutex_unlock(&inode->i_mutex);
-+	return ret;
-+}
-diff --git a/fs/ext4/move_extent.c b/fs/ext4/move_extent.c
-index e86dddb..c3a5ccf 100644
---- a/fs/ext4/move_extent.c
-+++ b/fs/ext4/move_extent.c
-@@ -76,7 +76,7 @@ copy_extent_status(struct ext4_extent *src, struct ext4_extent *dest)
-  * ext4_ext_path structure refers to the last extent, or a negative error
-  * value on failure.
-  */
--static int
-+int
- mext_next_extent(struct inode *inode, struct ext4_ext_path *path,
- 		      struct ext4_extent **extent)
- {
-diff --git a/include/trace/events/ext4.h b/include/trace/events/ext4.h
-index 2068db2..a1f357c 100644
---- a/include/trace/events/ext4.h
-+++ b/include/trace/events/ext4.h
-@@ -2399,6 +2399,31 @@ TRACE_EVENT(ext4_es_shrink_exit,
- 		  __entry->shrunk_nr, __entry->cache_cnt)
- );
- 
-+TRACE_EVENT(ext4_collapse_range,
-+	TP_PROTO(struct inode *inode, loff_t offset, loff_t len),
-+
-+	TP_ARGS(inode, offset, len),
-+
-+	TP_STRUCT__entry(
-+		__field(dev_t,	dev)
-+		__field(ino_t,	ino)
-+		__field(loff_t,	offset)
-+		__field(loff_t, len)
-+	),
-+
-+	TP_fast_assign(
-+		__entry->dev	= inode->i_sb->s_dev;
-+		__entry->ino	= inode->i_ino;
-+		__entry->offset	= offset;
-+		__entry->len	= len;
-+	),
-+
-+	TP_printk("dev %d,%d ino %lu offset %lld len %lld",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  (unsigned long) __entry->ino,
-+		  __entry->offset, __entry->len)
-+);
-+
- #endif /* _TRACE_EXT4_H */
- 
- /* This part must be outside protection */
--- 
-1.7.9.5
+> 
+>> +#
+>> +# The target device for a replace operation always needs to be larger
+>> +# or of equal size than the source device.
+>> +#
+>> +# If SCRATCH_DEV_POOL is set to "A B C D E" for example, the first
+>> +# round creates a filesystem on "A B C D" and replaces A with E in the
+>> +# first round, and E again with A in the second round. E and A need to
+>> +# have the same size for the tests to succeed.
+>> +#
+>> +# To check the filesystems after replacing a device, a scrub run is
+>> +# performed, a btrfsck run, and finally the filesystem is remounted.
+>> +#
+>> +#-----------------------------------------------------------------------
+>> +# Copyright (C) 2013 STRATO.  All rights reserved.
+>> +#
+>> +# This program is free software; you can redistribute it and/or
+>> +# modify it under the terms of the GNU General Public License as
+>> +# published by the Free Software Foundation.
+>> +#
+>> +# This program is distributed in the hope that it would be useful,
+>> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+>> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+>> +# GNU General Public License for more details.
+>> +#
+>> +# You should have received a copy of the GNU General Public License
+>> +# along with this program; if not, write the Free Software Foundation,
+>> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+>> +#
+>> +#-----------------------------------------------------------------------
+>> +#
+>> +
+>> +seq=`basename $0`
+>> +seqres=$RESULT_DIR/$seq
+>> +echo "QA output created by $seq"
+>> +
+>> +here=`pwd`
+>> +tmp=/tmp/$$
+>> +status=1
+>> +noise_pid=0
+>> +
+>> +_cleanup()
+>> +{
+>> +	if [ $noise_pid -ne 0 ] && ps -p $noise_pid | grep -q $noise_pid; then
+>> +		kill -TERM $noise_pid
+>> +	fi
+>> +	wait
+>> +	rm -f $tmp.tmp
+>> +}
+>> +trap "_cleanup; exit \$status" 0 1 2 3 15
+>> +
+>> +# get standard environment, filters and checks
+>> +. ./common/rc
+>> +. ./common/filter
+>> +
+>> +# real QA test starts here
+>> +_need_to_be_root
+>> +_supported_fs btrfs
+>> +_require_scratch
+>> +_require_scratch_dev_pool
+>> +
+>> +rm -f $seqres.full
+>> +rm -f $tmp.tmp
+>> +
+>> +echo "*** test btrfs replace"
+>> +
+>> +workout()
+>> +{
+>> +	mkfs_options=$1
+>> +	num_devs4raid=$2
+>> +	with_cancel=$3
+>> +	quick=$4
+>> +	local first_dev=`echo ${SCRATCH_DEV_POOL} | awk '{print $1}'`
+>> +	local last_dev=`echo ${SCRATCH_DEV_POOL} | awk '{print $NF}'`
+>> +	local without_1stnlast_dev=`echo $SCRATCH_DEV_POOL | \
+>> +		awk '{ORS=" "; for (i = 2; i < NF; i++) print $i}'`
+>> +
+>> +	if [ "`echo $SCRATCH_DEV_POOL | wc -w`" -lt `expr $num_devs4raid + 1` ]; then
+>> +		echo "skip workout $1 $2 $3 $4" >> $seqres.full
+>> +		echo "Too less devices in SCRATCH_DEV_POOL $SCRATCH_DEV_POOL" >> $seqres.full
+> 
+> "Too few devices" or "Not enough devices"
+> 
+> Would be nice to echo how many are needed too.
+> 
+> (although nobody will see this output, since unless there are other problems,
+> the test will succeed anyway...)
+
+done
+
+> 
+>> +		return 0
+>> +	fi
+>> +
+>> +	# dup works only on a single disk
+>> +	if echo $mkfs_options | grep -q dup; then
+>> +		without_1stnlast_dev=""
+>> +	fi
+>> +
+>> +	# _scratch_mkfs adds the 1st device again (which is $SCRATCH_DEV)
+>> +	_scratch_mkfs $mkfs_options $without_1stnlast_dev >> $seqres.full 2>&1 || _fail "mkfs failed"
+>> +	_scratch_mount
+>> +
+>> +	_populate_fs -r $SCRATCH_MNT/zero       -s 130  -f 1000 -d 0 -n 0
+>> +	_populate_fs -r $SCRATCH_MNT/urandom -x -s 1300 -f 10   -d 0 -n 0
+> 
+> ok so one dir full of zeroed files, one full of random files.
+> 
+> what happens if the fs fills during this, is it a problem, or is it ok?
+> 
+> I think it will emit output that would cause the test to fail.  Can you check?
+
+The V2 is using dd instead of _populate_fs for speed reasons, and
+redirects the output to prevent errors in the ENOSPC case.
+
+> 
+> You could do i.e. _require_fs_space $SCRATCH_MNT <XXXX> after _scratch_mount
+> to be sure there is sufficient space before proceeding.
+> 
+>> +	if [ "${quick}Q" = "quickQ" ]; then
+>> +		dd if=/dev/urandom of=$SCRATCH_MNT/r bs=1M count=10 >> $seqres.full 2>&1 &
+>> +		dd if=/dev/zero of=$SCRATCH_MNT/0 bs=1M count=250 >> $seqres.full 2>&1
+>> +		wait
+>> +	else
+>> +		dd if=/dev/urandom of=$SCRATCH_MNT/r bs=1M count=100 >> $seqres.full 2>&1 &
+>> +		dd if=/dev/zero of=$SCRATCH_MNT/0 bs=1M count=2500 >> $seqres.full 2>&1
+>> +		wait
+>> +	fi
+> 
+> so "quick" means do 1/10 of the IO vs. otherwise; 2.3G difference.
+> 
+> It'd be *nice* if we could scale everything down to speed up the test?
+
+I hope the 3 minutes that it takes with V2 is not too much anymore? The
+test tries to cover as much as possible.
+
+> 
+>> +	echo 3 > /proc/sys/vm/drop_caches; echo 3 > /proc/sys/vm/drop_caches
+>> +	sync
+>> +
+>> +	# generate some (slow) background traffic in parallel to the
+>> +	# replace operation. It is not a problem if cat fails early
+>> +	# with ENOSPC.
+>> +	cat /dev/urandom > $SCRATCH_MNT/noise 2> $seqres.full 2>&1 &
+>> +	noise_pid=$!
+>> +
+>> +	if [ "${with_cancel}Q" = "cancelQ" ]; then
+>> +		$BTRFS_UTIL_PROG replace start -f $first_dev $last_dev $SCRATCH_MNT >> $seqres.full 2>&1 || _fail "btrfs replace start failed"
+>> +		sleep 1
+>> +		$BTRFS_UTIL_PROG replace cancel $SCRATCH_MNT >> $seqres.full 2>&1 || _fail "btrfs replace cancel failed"
+>> +
+>> +		$BTRFS_UTIL_PROG replace status $SCRATCH_MNT > $tmp.tmp 2>&1
+>> +		cat $tmp.tmp >> $seqres.full
+>> +		egrep -q "canceled|finished" $tmp.tmp || _fail "btrfs replace status failed"
+>> +	else
+>> +		$BTRFS_UTIL_PROG replace start -Bf $first_dev $last_dev $SCRATCH_MNT >> $seqres.full 2>&1 || _fail "btrfs replace start failed"
+> 
+> ok, -B means don't background.  (of course!) ;)  So we wait...
+
+That's similar to the meaning of '-B' in the scrub command.
+
+> 
+>> +
+>> +		$BTRFS_UTIL_PROG replace status $SCRATCH_MNT > $tmp.tmp 2>&1
+>> +		cat $tmp.tmp >> $seqres.full
+>> +		grep -q finished $tmp.tmp || _fail "btrfs replace status failed"
+> 
+> and make sure it finished. ok.
+> 
+>> +	fi
+>> +
+>> +	$BTRFS_UTIL_PROG scrub start -B $SCRATCH_MNT > $tmp.tmp 2>&1
+>> +	cat $tmp.tmp >> $seqres.full
+>> +	grep -q finished $tmp.tmp || _fail "btrfs scrub failed"
+>> +	grep -q "with 0 errors" $tmp.tmp || _fail "btrfs scrub failed"
+> 
+> Just curious, do you need to grep output to determine failure in all these cases?
+> Does exit status not suffice?  (if not, seems like that should be fixed)
+
+Right, the exit status of scrub suffices if started with -B option to
+prevent the backgrounding. When scrub detects disk errors, the exit
+status indicates it.
+
+The exit status of 'btrfs replace start -B' is also indicating errors,
+but since this is part of the thing to test, V2 is still evaluating the
+output of 'btrfs replace status' in addition to checking the status code.
+
+> 
+>> +
+>> +	if ps -p $noise_pid | grep -q $noise_pid; then
+>> +		kill -TERM $noise_pid 2> /dev/null
+>> +	fi
+>> +	noise_pid=0
+>> +	wait
+>> +	umount $SCRATCH_MNT
+>> +	if [ "${with_cancel}Q" = "cancelQ" ]; then
+>> +		_check_btrfs_filesystem $first_dev
+>> +		return 0
+>> +	else
+>> +		_check_btrfs_filesystem $last_dev
+>> +	fi
+> 
+> Can you add a comment here?  I'm confused about why we do first vs last dev on the cmdline.
+
+done
+
+After running the replace procedure to replace $first_dev with
+$last_dev, the script needs to run all the checks on the $last_dev since
+the $first_dev is not a part of the filesystem anymore.
+
+If the operation was canceled, it's still the $first_dev that needs to
+be dealt with.
+
+> 
+>> +
+>> +	# now one more time without the -f option. Instead of wasting
+>> +	# time to populate the filesystem with data again, use the
+>> +	# existing filesystem in the state as it is after the previous
+>> +	# replace operation.
+>> +	umount $SCRATCH_MNT > /dev/null 2>&1
+> 
+> Didn't you just unmount this already?  Prior to the fsck?
+
+done
+
+> 
+>> +	_mount -t $FSTYP `_scratch_mount_options | sed "s&${SCRATCH_DEV}&${last_dev}&"`
+> 
+> oof, can you at least comment to say what the above line is doing?  That makes my brain hurt.
+
+done (added a comment to explain the "why" which also makes clear "what"
+is done).
+
+> 
+>> +	if [ $? -ne 0 ]; then
+>> +		echo "mount failed"
+>> +		exit 1
+>> +	fi
+>> +
+>> +	cat /dev/urandom > $SCRATCH_MNT/noise2 2> $seqres.full 2>&1 &
+>> +	noise_pid=$!
+> 
+> If the last noise generator filled the fs, this'll do nothing, right?
+> Better to remove the existing noise file & restart the noise generator on the same filename?
+
+done
+
+> 
+>> +	$BTRFS_UTIL_PROG replace start -B $last_dev $first_dev $SCRATCH_MNT >> $seqres.full 2>&1 || _fail "btrfs replace start failed"
+>> +
+>> +	$BTRFS_UTIL_PROG replace status $SCRATCH_MNT > $tmp.tmp 2>&1
+>> +	cat $tmp.tmp >> $seqres.full
+>> +	grep -q finished $tmp.tmp || _fail "btrfs replace status failed"
+>> +
+>> +	$BTRFS_UTIL_PROG scrub start -B $SCRATCH_MNT > $tmp.tmp 2>&1
+>> +	cat $tmp.tmp >> $seqres.full
+>> +	grep -q finished $tmp.tmp || _fail "btrfs scrub failed"
+>> +	grep -q "with 0 errors" $tmp.tmp || _fail "btrfs scrub failed"
+>> +
+>> +	if ps -p $noise_pid | grep -q $noise_pid; then
+>> +		kill -TERM $noise_pid 2> /dev/null
+>> +	fi
+>> +	noise_pid=0
+>> +	wait
+>> +	umount $SCRATCH_MNT
+> 
+> There's an awful lot of cut & paste here from the first run with -f; can you maybe make it functions?
+
+done
+
+> 
+>> +	_check_btrfs_filesystem $first_dev
+>> +}
+>> +
+>> +workout "-m single -d single" 1 no quick
+>> +workout "-m single -d single -M" 1 no quick
+>> +workout "-m dup -d single" 1 no quick
+>> +workout "-m dup -d single" 1 cancel quick
+>> +workout "-m dup -d dup -M" 1 no quick
+>> +workout "-m raid0 -d raid0" 2 no quick
+>> +workout "-m raid1 -d raid1" 2 no thorough
+>> +#workout "-m raid5 -d raid5" 2 no quick
+>> +#workout "-m raid6 -d raid6" 3 no quick
+> 
+> Why commented out?
+
+The replace operation depends on scrub and makes use of the scrub code.
+And scrub does not yet support RAID5/6. Therefore 'btrfs replace start'
+fails with EINVAL on RAID5/6 filesystems.
+
+> 
+>> +workout "-m raid10 -d raid10" 4 no quick
+>> +
+>> +echo "*** done"
+>> +status=0
+>> +exit
+>> diff --git a/tests/btrfs/317.out b/tests/btrfs/317.out
+>> new file mode 100644
+>> index 0000000..4bda623
+>> --- /dev/null
+>> +++ b/tests/btrfs/317.out
+>> @@ -0,0 +1,3 @@
+>> +QA output created by 317
+>> +*** test btrfs replace
+>> +*** done
+>> diff --git a/tests/btrfs/group b/tests/btrfs/group
+>> index bc6c256..1b64321 100644
+>> --- a/tests/btrfs/group
+>> +++ b/tests/btrfs/group
+>> @@ -9,3 +9,4 @@
+>>  276 auto rw metadata
+>>  284 auto
+>>  307 auto quick
+>> +317 auto
+>>
+> 
+
+Thanks again!
 
 _______________________________________________
 xfs mailing list
