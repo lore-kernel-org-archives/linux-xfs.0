@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 149E57F51
-	for <xfs@oss.sgi.com>; Wed, 31 Jul 2013 10:52:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id EA03F8F8035
-	for <xfs@oss.sgi.com>; Wed, 31 Jul 2013 08:52:47 -0700 (PDT)
-Received: from xp-ob.rzone.de (xp-ob.rzone.de [81.169.146.141]) by
-	cuda.sgi.com with ESMTP id 8q5OlggnwYlE8Xju (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 31 Jul 2013 08:52:45 -0700 (PDT)
-From: Stefan Behrens <sbehrens@giantdisaster.de>
-Subject: [PATCH V2] xfstest: add a test for btrfs device replace operation
-Date: Wed, 31 Jul 2013 17:52:40 +0200
-Message-Id: <1375285960-4039-1-git-send-email-sbehrens@giantdisaster.de>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 709347CBF
+	for <xfs@oss.sgi.com>; Wed, 31 Jul 2013 12:09:24 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id E5709AC001
+	for <xfs@oss.sgi.com>; Wed, 31 Jul 2013 10:09:20 -0700 (PDT)
+Date: Wed, 31 Jul 2013 13:09:04 -0400
+From: Dwight Engen <dwight.engen@oracle.com>
+Subject: Re: [PATCH v7 7/7] enable building user namespace with xfs
+Message-ID: <20130731130904.1a96246a@oracle.com>
+In-Reply-To: <20130731132523.GS3111@sgi.com>
+References: <20130729230709.11033b2d@oracle.com>
+	<20130730234021.GR3111@sgi.com> <20130731002119.GR13468@dastard>
+	<20130731132523.GS3111@sgi.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,366 +22,64 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: linux-btrfs@vger.kernel.org
+To: Ben Myers <bpm@sgi.com>
+Cc: xfs@oss.sgi.com
 
-This test performs btrfs device replace tests with all possible profiles
-(single/dup/mixed/raid0/raid1/raid10), one round with the '-r' option
-to 'btrfs replace start' and one round without this option. The
-cancelation is tested only once and with the dup/single profile for
-metadata/data.
+On Wed, 31 Jul 2013 08:25:23 -0500
+Ben Myers <bpm@sgi.com> wrote:
 
-This test takes 181 seconds on my SSD equiped test box and 237s on
-spinning disks. Almost all the time is spent when the filesystem is
-populated with test data. The replace operation itself takes less than
-a second for all the tests, except for the test that is marked as
-'thorough' which will run for about 8 seconds on my test box.
+> Hey,
+> 
+> On Wed, Jul 31, 2013 at 10:21:19AM +1000, Dave Chinner wrote:
+> > On Tue, Jul 30, 2013 at 06:40:21PM -0500, Ben Myers wrote:
+> > > On Mon, Jul 29, 2013 at 11:07:09PM -0400, Dwight Engen wrote:
+> > > > >From e6a9ee0cfa0ed40484f66bc1726dc19de36038b8 Mon Sep 17
+> > > > >00:00:00 2001
+> > > > From: Dwight Engen <dwight.engen@oracle.com>
+> > > > Date: Tue, 2 Jul 2013 09:52:54 -0400
+> > > > Subject: [PATCH 7/7] enable building user namespace with xfs
+> > > > 
+> > > > Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
+> > > 
+> > > Was there a patch running around to limit bulkstat to
+> > > init_user_ns?  Any other items that needed to be addressed before
+> > > applying this patch?
+> > 
+> > Bulkstat has a capable(CAP_SYS_ADMIN) check and therefore can only
+> > be executed in the init name space. Similarly, all the
+> > open-by-handle interfaces have the same capable() checks so they
+> > can only be executed int he init name space, too.
+> 
+> Gah.  I was under the impression that you could have a process with
+> CAP_SYS_ADMIN in a namespace other than init_user_ns.
 
-The amount of tests done depends on the number of devices in the
-SCRATCH_DEV_POOL. For full test coverage, at least 5 devices should
-be available (e.g. 5 partitions). With less than 2 entries in
-SCRATCH_DEV_POOL, the test is not executed.
+Hi Ben, a process can be CAP_SYS_ADMIN in its own userns, but the
+check for that would be ns_capable(CAP_SYS_ADMIN) not
+capable(CAP_SYS_ADMIN) which checks against init_user_ns. The checks
+Dave was mentioning are all against init_user_ns so bulkstat
+and open-by-handle effectively cannot be used from inside a
+non-init_user_ns.
 
-The source and target devices for the replace operation are arbitrarily
-chosen out of SCRATCH_DEV_POOl. Since the target device mustn't be
-smaller than the source device, the requirement for this test is that
-all devices have _exactly_ the same size. If this is not the case, the
-test terminates with _notrun.
+> > The only thing I think we still need to address is whether
+> > xfs_ioc_setattr() should allow users within a namespace to change
+> > the project ID of a file they otherwise own. That function is
+> > currently changed to use a inode_owner_or_capable() check and so if
+> > the uids match inside the namespace the modification is allowed.
+> > 
+> > However, right now for project IDs I think we have decided to limit
+> > manipulations to the init user namespace and not expose project IDs
+> > inside user namespaces at all. Hence I think that xfs_ioc_setattr()
+> > needs a further check for this...
+>
+> Looks like that should be added to patch 3.  Dwight, if you prefer to
+> repost only patch 3 that's fine.
 
-To check the filesystems after replacing a device, a scrub run is
-performed, a btrfsck run, and finally the filesystem is remounted.
-
-This commit depends on my other commit:
-"xfstest: don't remove the two first devices from SCRATCH_DEV_POOL"
-
-Signed-off-by: Stefan Behrens <sbehrens@giantdisaster.de>
----
-V1 -> V2:
-Major reworking in order to address all the comments from Eric Sandeen's
-review.
-
- common/config       |   1 +
- tests/btrfs/317     | 273 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/btrfs/317.out |   3 +
- tests/btrfs/group   |   1 +
- 4 files changed, 278 insertions(+)
-
-diff --git a/common/config b/common/config
-index 1bc9233..8c2d750 100644
---- a/common/config
-+++ b/common/config
-@@ -207,6 +207,7 @@ case "$HOSTOS" in
-         export MKFS_UDF_PROG="`set_prog_path mkudffs`"
-         export MKFS_BTRFS_PROG="`set_btrfs_mkfs_prog_path_with_opts`"
-         export BTRFS_UTIL_PROG="`set_prog_path btrfs`"
-+        export BTRFS_SHOW_SUPER_PROG="`set_prog_path btrfs-show-super`"
-         export XFS_FSR_PROG="`set_prog_path xfs_fsr`"
-         export MKFS_NFS_PROG="false"
-         ;;
-diff --git a/tests/btrfs/317 b/tests/btrfs/317
-new file mode 100755
-index 0000000..a78c6f1
---- /dev/null
-+++ b/tests/btrfs/317
-@@ -0,0 +1,273 @@
-+#! /bin/bash
-+# FSQA Test No. 317
-+#
-+# Test of the btrfs replace operation.
-+#
-+# The amount of tests done depends on the number of devices in the
-+# SCRATCH_DEV_POOL. For full test coverage, at least 5 devices should
-+# be available (e.g. 5 partitions).
-+#
-+# The source and target devices for the replace operation are
-+# arbitrarily chosen out of SCRATCH_DEV_POOl. Since the target device
-+# mustn't be smaller than the source device, the requirement for this
-+# test is that all devices have _exactly_ the same size. If this is
-+# not the case, this test is not run.
-+#
-+# To check the filesystems after replacing a device, a scrub run is
-+# performed, a btrfsck run, and finally the filesystem is remounted.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (C) 2013 STRATO.  All rights reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#-----------------------------------------------------------------------
-+#
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1
-+noise_pid=0
-+
-+_cleanup()
-+{
-+	if [ $noise_pid -ne 0 ] && ps -p $noise_pid | grep -q $noise_pid; then
-+		kill -TERM $noise_pid
-+	fi
-+	wait
-+	rm -f $tmp.tmp
-+}
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_need_to_be_root
-+_supported_fs btrfs
-+_require_scratch
-+_require_scratch_dev_pool
-+_require_command $BTRFS_SHOW_SUPER_PROG btrfs-show-super
-+
-+rm -f $seqres.full
-+rm -f $tmp.tmp
-+
-+echo "*** test btrfs replace"
-+
-+workout()
-+{
-+	local mkfs_options="$1"
-+	local num_devs4raid="$2"
-+	local with_cancel="$3"
-+	local quick="$4"
-+	local source_dev="`echo ${SCRATCH_DEV_POOL} | awk '{print $1}'`"
-+	local target_dev="`echo ${SCRATCH_DEV_POOL} | awk '{print $NF}'`"
-+
-+	if [ "`echo $SCRATCH_DEV_POOL | wc -w`" -lt `expr $num_devs4raid + 1` ]; then
-+		echo "Skip workout $1 $2 $3 $4" >> $seqres.full
-+		echo "Too few devices in SCRATCH_DEV_POOL $SCRATCH_DEV_POOL, required: " `expr $num_devs4raid + 1` >> $seqres.full
-+		return 0
-+	fi
-+
-+	# use min number of disks in order to fill up the disk to replace
-+	# as much as possible
-+	local used_devs_without_1st="`echo $SCRATCH_DEV_POOL | \
-+		awk '{ORS=\" \"; for (i = 2; i <= (NF - 1 < '$num_devs4raid' ? NF - 1 : '$num_devs4raid'); i++) print $i}'`"
-+
-+	# _scratch_mkfs adds the 1st device again (which is $SCRATCH_DEV)
-+	_scratch_mkfs $mkfs_options $used_devs_without_1st >> $seqres.full 2>&1 || _fail "mkfs failed"
-+
-+	# The source and target devices for the replace operation are
-+	# arbitrarily chosen out of the pool. Since the target device mustn't
-+	# be smaller than the source device, the requirement for this test is
-+	# that all devices have _exactly_ the same size. If this is not the
-+	# case, this test is not run.
-+	local num_lines=`$BTRFS_SHOW_SUPER_PROG $SCRATCH_DEV $used_devs_without_1st | grep dev_item.total_bytes | uniq | wc -l`
-+	if [ $num_lines -gt 1 ]; then
-+		_notrun "Different device sizes detected"
-+	fi
-+
-+	_scratch_mount
-+
-+	# Generate 500 times 20K extents in the data chunk and fill up
-+	# metadata with inline extents. Ignore ENOSPC.
-+	for i in `seq 1 500`; do
-+		dd if=/dev/urandom of=/mnt/l$i bs=16385 count=1
-+		dd if=/dev/urandom of=/mnt/s$i bs=3800 count=1
-+	done > /dev/null 2>&1
-+
-+	if [ "${quick}Q" = "thoroughQ" ]; then
-+		# The intention of this "thorough" test is to increase
-+		# the probability of random errors, in particular in
-+		# conjunction with the background noise generator and
-+		# a sync call while the replace operation in ongoing.
-+		# Unfortunately it takes quite some time to generate
-+		# the test filesystem, therefore most data consists out
-+		# of zeros although this data is not very useful for
-+		# detecting misplaced read/write requests.
-+		# Ignore ENOSPC, it's not a problem..
-+		dd if=/dev/urandom of=$SCRATCH_MNT/r bs=1M count=200 >> $seqres.full 2>&1 &
-+		dd if=/dev/zero of=$SCRATCH_MNT/0 bs=1M count=2000 >> $seqres.full 2>&1
-+		wait
-+	elif [ "${with_cancel}Q" = "cancelQ" ]; then
-+		# produce some data to prevent that the replace operation
-+		# finishes before the cancel request is started
-+		dd if=/dev/zero of=$SCRATCH_MNT/0 bs=1M count=1000 >> $seqres.full 2>&1
-+	fi
-+	sync; sync
-+
-+	btrfs_replace_test $source_dev $target_dev "" $with_cancel $quick
-+	umount $SCRATCH_MNT > /dev/null 2>&1
-+
-+	if echo $mkfs_options | egrep -qv "raid1|raid5|raid6|raid10" || \
-+	   [ "${with_cancel}Q" = "cancelQ" ]; then
-+		# the -r option has no effect without mirrors, skip -r test
-+		# in this case, and if only the canceling should be tested
-+		# as well
-+		return 0
-+	fi
-+
-+	# One more time with the '-r' option this time. Instead of wasting
-+	# time to populate the filesystem with data again, use the
-+	# existing filesystem in the state as it is after the previous
-+	# replace operation.
-+	# If possible, use a strategy to select the source and target
-+	# device so that we really change bits on the target disk, see
-+	# below.
-+
-+	# The default: For the 2nd run, the new target drive is the old
-+	# source drive, and the new source drive is the old target drive.
-+	# Since except for the noise data, the copied data is already on
-+	# the new target disk (which is the old source disk), this is not
-+	# optimal to check whether data is copied correctly.
-+	local tmp_dev="$source_dev"
-+	source_dev="$target_dev"
-+	target_dev="$tmp_dev"
-+
-+	# If we have at least one more device in the SCRATCH_DEV_POOL than
-+	# used so far, use one of those for the new target devive.
-+	if [ "`echo $SCRATCH_DEV_POOL | wc -w`" -gt `expr $num_devs4raid + 1` ]; then
-+		target_dev="`echo ${SCRATCH_DEV_POOL} | awk '{print $(NF-1)}'`"
-+	fi
-+
-+	# If the filesystem is built out of more than one devices, use a
-+	# different source device for this round.
-+	if [ $num_devs4raid -gt 1 ]; then
-+		source_dev="`echo ${SCRATCH_DEV_POOL} | awk '{print $2}'`"
-+	fi
-+
-+	# Mount similar to _scratch_mount, but since the SCRATCH_DEV (the
-+	# 1st device in SCRATCH_DEV_POOL) was replaced by the previous
-+	# btrfs replace operation, substitute SCRATCH_DEV with a device
-+	# that is known to be part of the SCRATCH_MNT filesystem.
-+	_mount -t $FSTYP `_scratch_mount_options | sed "s&${SCRATCH_DEV}&${source_dev}&"`
-+	if [ $? -ne 0 ]; then
-+		echo "mount failed"
-+		return 1
-+	fi
-+
-+	btrfs_replace_test $source_dev $target_dev "-r" $with_cancel $quick
-+	umount $SCRATCH_MNT > /dev/null 2>&1
-+}
-+
-+btrfs_replace_test()
-+{
-+	local source_dev="$1"
-+	local target_dev="$2"
-+	local replace_options="$3"
-+	local with_cancel="$4"
-+	local quick="$5"
-+
-+	# generate some (slow) background traffic in parallel to the
-+	# replace operation. It is not a problem if cat fails early
-+	# with ENOSPC.
-+	cat /dev/urandom > $SCRATCH_MNT/noise 2>> $seqres.full &
-+	noise_pid=$!
-+
-+	if [ "${with_cancel}Q" = "cancelQ" ]; then
-+		# background the replace operation (no '-B' option given)
-+		$BTRFS_UTIL_PROG replace start -f $source_dev $target_dev $SCRATCH_MNT >> $seqres.full 2>&1 || _fail "btrfs replace start failed"
-+		sleep 1
-+		$BTRFS_UTIL_PROG replace cancel $SCRATCH_MNT >> $seqres.full 2>&1 || _fail "btrfs replace cancel failed"
-+
-+		# 'replace status' waits for the replace operation to finish
-+		# before the status is printed
-+		$BTRFS_UTIL_PROG replace status $SCRATCH_MNT > $tmp.tmp 2>&1
-+		cat $tmp.tmp >> $seqres.full
-+		grep -q canceled $tmp.tmp || _fail "btrfs replace status failed"
-+	else
-+		if [ "${quick}Q" = "thoroughQ" ]; then
-+			# On current hardware, the thorough test runs
-+			# more than a second. This is a chance to force
-+			# a sync in the middle of the replace operation.
-+			(sleep 1; sync) > /dev/null 2>&1 &
-+		fi
-+		$BTRFS_UTIL_PROG replace start -Bf $source_dev $target_dev $SCRATCH_MNT >> $seqres.full 2>&1 || _fail "btrfs replace start failed"
-+
-+		$BTRFS_UTIL_PROG replace status $SCRATCH_MNT > $tmp.tmp 2>&1
-+		cat $tmp.tmp >> $seqres.full
-+		grep -q finished $tmp.tmp || _fail "btrfs replace status failed"
-+	fi
-+
-+	if ps -p $noise_pid | grep -q $noise_pid; then
-+		kill -TERM $noise_pid 2> /dev/null
-+	fi
-+	noise_pid=0
-+	wait
-+
-+	# scrub tests on-disk data, that's the reason for the sync.
-+	# With the '-B' option (don't background), any type of error causes
-+	# exit values != 0, including detected correctable and uncorrectable
-+	# errors on the device.
-+	sync; sync
-+	$BTRFS_UTIL_PROG scrub start -B $SCRATCH_MNT >> $seqres.full 2>&1 || _fail "btrfs scrub failed"
-+
-+	# Two tests are performed, the 1st is to btrfsck the filesystem,
-+	# and the 2nd test is to mount the filesystem.
-+	# Usually _check_btrfs_filesystem would perform the mount test,
-+	# but it gets confused by the mount output that shows SCRATCH_MNT
-+	# mounted but not being mounted to SCRATCH_DEV. This happens
-+	# because in /proc/mounts the 2nd device of the filesystem is
-+	# shown after the replace operation. Let's just do the mount
-+	# test manually after _check_btrfs_filesystem is finished.
-+	umount $SCRATCH_MNT > /dev/null 2>&1
-+	if [ "${with_cancel}Q" != "cancelQ" ]; then
-+		# after the replace operation, use the target_dev for everything
-+		_check_btrfs_filesystem $target_dev
-+		_mount -t $FSTYP `_scratch_mount_options | sed "s&${SCRATCH_DEV}&${target_dev}&"`
-+	else
-+		_check_btrfs_filesystem $source_dev
-+		_scratch_mount
-+	fi
-+}
-+
-+workout "-m single -d single" 1 no quick
-+workout "-m single -d single -M" 1 no quick
-+workout "-m dup -d single" 1 no quick
-+workout "-m dup -d single" 1 cancel quick
-+workout "-m dup -d dup -M" 1 no quick
-+workout "-m raid0 -d raid0" 2 no quick
-+workout "-m raid1 -d raid1" 2 no thorough
-+#workout "-m raid5 -d raid5" 2 no quick # not yet supported for btrfs replace
-+#workout "-m raid6 -d raid6" 3 no quick # not yet supported for btrfs replace
-+workout "-m raid10 -d raid10" 4 no quick
-+
-+echo "*** done"
-+status=0
-+exit
-diff --git a/tests/btrfs/317.out b/tests/btrfs/317.out
-new file mode 100644
-index 0000000..4bda623
---- /dev/null
-+++ b/tests/btrfs/317.out
-@@ -0,0 +1,3 @@
-+QA output created by 317
-+*** test btrfs replace
-+*** done
-diff --git a/tests/btrfs/group b/tests/btrfs/group
-index bc6c256..1b64321 100644
---- a/tests/btrfs/group
-+++ b/tests/btrfs/group
-@@ -9,3 +9,4 @@
- 276 auto rw metadata
- 284 auto
- 307 auto quick
-+317 auto
--- 
-1.8.3.4
+I'll add this into patch 3 once we get it sorted out and then repost
+with Gao's reviewed-by tags. Thanks.
 
 _______________________________________________
 xfs mailing list
