@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id D32EB7F69
-	for <xfs@oss.sgi.com>; Wed, 31 Jul 2013 08:27:14 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 5CC19AC006
-	for <xfs@oss.sgi.com>; Wed, 31 Jul 2013 06:27:11 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id BDDD77F6B
+	for <xfs@oss.sgi.com>; Wed, 31 Jul 2013 08:35:08 -0500 (CDT)
+Date: Wed, 31 Jul 2013 08:35:07 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH v2] xfs: introduce object readahead to log recovery
+Message-ID: <20130731133506.GT3111@sgi.com>
+References: <1375178347-29037-1-git-send-email-zwu.kernel@gmail.com>
+	<20130730231155.GM13468@dastard>
+	<CAEH94LjXRG755cTsuGN_R0V+J9aRvEJaS+0aQSAOkNWL1UbXTA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20130727015029.GT13468@dastard>
-References: <51F2BD31.5060301@profihost.ag> <20130727015029.GT13468@dastard>
-From: Greg Freemyer <greg.freemyer@gmail.com>
-Date: Wed, 31 Jul 2013 09:26:35 -0400
-Message-ID: <CAGpXXZ+no_YcepmwMopFDYO_6PR6jOop9UpY_mAcaPbLA6CYkg@mail.gmail.com>
-Subject: Re: [xfs-masters] how to use fstrim?
+Content-Disposition: inline
+In-Reply-To: <CAEH94LjXRG755cTsuGN_R0V+J9aRvEJaS+0aQSAOkNWL1UbXTA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,22 +24,62 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: "xfs-masters@oss.sgi.com" <xfs-masters@oss.sgi.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, Stefan Priebe <s.priebe@profihost.ag>
+To: Zhi Yong Wu <zwu.kernel@gmail.com>
+Cc: "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, linux-kernel mlist <linux-kernel@vger.kernel.org>, xfstests <xfs@oss.sgi.com>
 
-On Fri, Jul 26, 2013 at 9:50 PM, Dave Chinner <david@fromorbit.com> wrote:
-> IOWs, the behaviour of fstrim on XFS is entirely dependent on the
-> speed of the block layer and hardware implementations of discards.
+Hey Zhi,
 
-And on a lot of SSDs, trim seems to act like a cache flush so it can
-hit performance hard.  It should be scheduled for off-peak times
-afaik.  It's not critical to run hourly or even daily.  If you can
-schedule it once a week when other i/o is light that should be enough
-for most workloads.
+On Wed, Jul 31, 2013 at 12:07:32PM +0800, Zhi Yong Wu wrote:
+> On Wed, Jul 31, 2013 at 7:11 AM, Dave Chinner <david@fromorbit.com> wrote:
+> > On Tue, Jul 30, 2013 at 05:59:07PM +0800, zwu.kernel@gmail.com wrote:
+> >> From: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
+> >>
+> >>   It can take a long time to run log recovery operation because it is
+> >> single threaded and is bound by read latency. We can find that it took
+> >> most of the time to wait for the read IO to occur, so if one object
+> >> readahead is introduced to log recovery, it will obviously reduce the
+> >> log recovery time.
+> >>
+> >> Log recovery time stat:
+> >>
+> >>           w/o this patch        w/ this patch
+> >>
+> >> real:        0m15.023s             0m7.802s
+> >> user:        0m0.001s              0m0.001s
+> >> sys:         0m0.246s              0m0.107s
+> >>
+> >> Signed-off-by: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
+> >> ---
+> >>  fs/xfs/xfs_log_recover.c | 162 +++++++++++++++++++++++++++++++++++++++++++++--
+> >>  fs/xfs/xfs_log_recover.h |   2 +
+> >>  2 files changed, 159 insertions(+), 5 deletions(-)
+> >>
+> >> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> >> index 7681b19..029826f 100644
+> >> --- a/fs/xfs/xfs_log_recover.c
+> >> +++ b/fs/xfs/xfs_log_recover.c
+> >> @@ -3116,6 +3116,111 @@ xlog_recover_free_trans(
+> >>       kmem_free(trans);
+> >>  }
+> >>
+> >> +STATIC void
+> >> +xlog_recover_buffer_ra_pass2(
+> >> +     struct xlog                     *log,
+> >> +     struct xlog_recover_item        *item)
+> >> +{
+> >> +     xfs_buf_log_format_t    *buf_f = item->ri_buf[0].i_addr;
+> >> +     xfs_mount_t             *mp = log->l_mp;
+> >
+> >         struct xfs_buf_log_format
+> >         struct xfs_mount
+> Why? *_t is also used in a lot of other places.
 
-Greg
---
-Greg Freemyer
+It is just a general style preference for using the struct instead of the _t in
+the xfs codebase.  Over the course of the past few years they've slowly been
+converted in this direction, and we prefer not to add any more _t if it can be
+avoided.
+
+-Ben
 
 _______________________________________________
 xfs mailing list
