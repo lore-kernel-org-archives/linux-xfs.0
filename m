@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 1CF5C7CBF
-	for <xfs@oss.sgi.com>; Wed, 31 Jul 2013 18:12:00 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id F12977CBF
+	for <xfs@oss.sgi.com>; Wed, 31 Jul 2013 18:29:01 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id E1F323040BF
-	for <xfs@oss.sgi.com>; Wed, 31 Jul 2013 16:11:56 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D398C8F8033
+	for <xfs@oss.sgi.com>; Wed, 31 Jul 2013 16:28:58 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	NAqy8oIxj7APZrBt for <xfs@oss.sgi.com>;
-	Wed, 31 Jul 2013 16:11:55 -0700 (PDT)
-Date: Thu, 1 Aug 2013 09:11:51 +1000
+	7TM0VuOyXq4sXocD for <xfs@oss.sgi.com>;
+	Wed, 31 Jul 2013 16:28:54 -0700 (PDT)
+Date: Thu, 1 Aug 2013 09:28:52 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2] xfs: introduce object readahead to log recovery
-Message-ID: <20130731231151.GD7118@dastard>
-References: <1375178347-29037-1-git-send-email-zwu.kernel@gmail.com>
-	<20130730231155.GM13468@dastard>
-	<CAEH94LjXRG755cTsuGN_R0V+J9aRvEJaS+0aQSAOkNWL1UbXTA@mail.gmail.com>
-	<20130731133506.GT3111@sgi.com>
+Subject: Re: [PATCH v7 7/7] enable building user namespace with xfs
+Message-ID: <20130731232852.GE7118@dastard>
+References: <20130729230709.11033b2d@oracle.com>
+	<20130730234021.GR3111@sgi.com> <20130731002119.GR13468@dastard>
+	<20130731132523.GS3111@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130731133506.GT3111@sgi.com>
+In-Reply-To: <20130731132523.GS3111@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,73 +32,37 @@ Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Ben Myers <bpm@sgi.com>
-Cc: Zhi Yong Wu <zwu.kernel@gmail.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, linux-kernel mlist <linux-kernel@vger.kernel.org>, xfstests <xfs@oss.sgi.com>
+Cc: Dwight Engen <dwight.engen@oracle.com>, xfs@oss.sgi.com
 
-On Wed, Jul 31, 2013 at 08:35:07AM -0500, Ben Myers wrote:
-> Hey Zhi,
+On Wed, Jul 31, 2013 at 08:25:23AM -0500, Ben Myers wrote:
+> Hey,
 > 
-> On Wed, Jul 31, 2013 at 12:07:32PM +0800, Zhi Yong Wu wrote:
-> > On Wed, Jul 31, 2013 at 7:11 AM, Dave Chinner <david@fromorbit.com> wrote:
-> > > On Tue, Jul 30, 2013 at 05:59:07PM +0800, zwu.kernel@gmail.com wrote:
-> > >> From: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
-> > >>
-> > >>   It can take a long time to run log recovery operation because it is
-> > >> single threaded and is bound by read latency. We can find that it took
-> > >> most of the time to wait for the read IO to occur, so if one object
-> > >> readahead is introduced to log recovery, it will obviously reduce the
-> > >> log recovery time.
-> > >>
-> > >> Log recovery time stat:
-> > >>
-> > >>           w/o this patch        w/ this patch
-> > >>
-> > >> real:        0m15.023s             0m7.802s
-> > >> user:        0m0.001s              0m0.001s
-> > >> sys:         0m0.246s              0m0.107s
-> > >>
-> > >> Signed-off-by: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
-> > >> ---
-> > >>  fs/xfs/xfs_log_recover.c | 162 +++++++++++++++++++++++++++++++++++++++++++++--
-> > >>  fs/xfs/xfs_log_recover.h |   2 +
-> > >>  2 files changed, 159 insertions(+), 5 deletions(-)
-> > >>
-> > >> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> > >> index 7681b19..029826f 100644
-> > >> --- a/fs/xfs/xfs_log_recover.c
-> > >> +++ b/fs/xfs/xfs_log_recover.c
-> > >> @@ -3116,6 +3116,111 @@ xlog_recover_free_trans(
-> > >>       kmem_free(trans);
-> > >>  }
-> > >>
-> > >> +STATIC void
-> > >> +xlog_recover_buffer_ra_pass2(
-> > >> +     struct xlog                     *log,
-> > >> +     struct xlog_recover_item        *item)
-> > >> +{
-> > >> +     xfs_buf_log_format_t    *buf_f = item->ri_buf[0].i_addr;
-> > >> +     xfs_mount_t             *mp = log->l_mp;
-> > >
-> > >         struct xfs_buf_log_format
-> > >         struct xfs_mount
-> > Why? *_t is also used in a lot of other places.
+> On Wed, Jul 31, 2013 at 10:21:19AM +1000, Dave Chinner wrote:
+> > On Tue, Jul 30, 2013 at 06:40:21PM -0500, Ben Myers wrote:
+> > > On Mon, Jul 29, 2013 at 11:07:09PM -0400, Dwight Engen wrote:
+> > > > >From e6a9ee0cfa0ed40484f66bc1726dc19de36038b8 Mon Sep 17 00:00:00 2001
+> > > > From: Dwight Engen <dwight.engen@oracle.com>
+> > > > Date: Tue, 2 Jul 2013 09:52:54 -0400
+> > > > Subject: [PATCH 7/7] enable building user namespace with xfs
+> > > > 
+> > > > Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
+> > > 
+> > > Was there a patch running around to limit bulkstat to init_user_ns?  Any other
+> > > items that needed to be addressed before applying this patch?
+> > 
+> > Bulkstat has a capable(CAP_SYS_ADMIN) check and therefore can only be
+> > executed in the init name space. Similarly, all the open-by-handle
+> > interfaces have the same capable() checks so they can only be
+> > executed int he init name space, too.
 > 
-> It is just a general style preference for using the struct instead of the _t in
-> the xfs codebase.  Over the course of the past few years they've slowly been
-> converted in this direction, and we prefer not to add any more _t if it can be
-> avoided.
+> Gah.  I was under the impression that you could have a process with
+> CAP_SYS_ADMIN in a namespace other than init_user_ns.
 
-Actually, it's not so much a preference but a long term code
-maintenance direction. Documentation/CodingStyle says:
-
-			Chapter 5: Typedefs
-
-	Please don't use things like "vps_t".
-
-	It's a _mistake_ to use typedef for structures and pointers.
-,,,,
-
-The original XFS code inherited from Irix used typedefs, and we are
-slowly removing them as we modify the code that uses the them.
+Ben, until about a week and a half ago I was also working under that
+same understanding as you.  So don't feel bad about not knowing
+about this basic, fundamental rule because it is completely
+undocumented and it's not obvious to anyone reading the code until
+someone points it out....
 
 Cheers,
 
