@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id CCD9A7CBF
-	for <xfs@oss.sgi.com>; Wed, 31 Jul 2013 13:19:56 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id F011A7CBF
+	for <xfs@oss.sgi.com>; Wed, 31 Jul 2013 15:34:25 -0500 (CDT)
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 696A3AC003
-	for <xfs@oss.sgi.com>; Wed, 31 Jul 2013 11:19:53 -0700 (PDT)
-Date: Wed, 31 Jul 2013 14:19:31 -0400
-From: Dwight Engen <dwight.engen@oracle.com>
-Subject: Re: [PATCH v7 7/7] enable building user namespace with xfs
-Message-ID: <20130731141931.2e1c77d4@oracle.com>
-In-Reply-To: <20130731002119.GR13468@dastard>
-References: <20130729230709.11033b2d@oracle.com>
-	<20130730234021.GR3111@sgi.com> <20130731002119.GR13468@dastard>
-Mime-Version: 1.0
+	by relay2.corp.sgi.com (Postfix) with ESMTP id C214E30408C
+	for <xfs@oss.sgi.com>; Wed, 31 Jul 2013 13:34:25 -0700 (PDT)
+Date: Wed, 31 Jul 2013 16:34:16 -0400 (EDT)
+From: Nathan Scott <nathans@redhat.com>
+Message-ID: <74641529.7203019.1375302856174.JavaMail.root@redhat.com>
+In-Reply-To: <51F90B6A.6050809@sgi.com>
+References: <51F90B6A.6050809@sgi.com>
+Subject: Re: [pcp] Suggestions for SGI ICE where we need to get quota
+	information
+MIME-Version: 1.0
+Reply-To: Nathan Scott <nathans@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,44 +26,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, Gao feng <gaofeng@cn.fujitsu.com>
-Cc: Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com
+To: Jeff Hanson <jhanson@sgi.com>, mikeh@sgi.com
+Cc: XFS <xfs@oss.sgi.com>, PCP <pcp@oss.sgi.com>
 
-On Wed, 31 Jul 2013 10:21:19 +1000
-Dave Chinner <david@fromorbit.com> wrote:
+Hi guys,
 
-[...]
-> The only thing I think we still need to address is whether
-> xfs_ioc_setattr() should allow users within a namespace to change
-> the project ID of a file they otherwise own. That function is
-> currently changed to use a inode_owner_or_capable() check and so if
-> the uids match inside the namespace the modification is allowed.
+----- Original Message -----
+> In SGI's ICE product we have a script that uses pcp to gather quota
+> information to feed to ganglia and to alert the admin if a project is
+> over quota.  With newer pcp where pmcd is run as user pcp and not as
+> root we get failures to obtain the quota information.  Changing back
+> to root or other similar techniques works (as expected).  Since the
+> hosts that run this are cluster infrastructure nodes this may be the
+> hack we decide on but we'd like other suggestions.
 
-Right, so before this change the caller has to own the file or be
-CAP_FOWNER in init_user_ns. Changing to using inode_owner_or_capable()
-means the caller has to own the file (and the inode's uid must be valid
-in current_user_ns) or be CAP_FOWNER in current_user_ns. I don't
-see how this lets the user the user do something inside the userns that
-they can't do outside.
+[ http://oss.sgi.com/bugzilla/show_bug.cgi?id=985 ]
 
-Basically I think we want to treat projids as a non namespace aware
-identifier, but it sounds like maybe we don't want them manipulated
-from userns context at all.
+Hmm, interesting - sorry about that, its unintended fallout and it did
+not occur to me that the XFS quota metrics would be affected.  I would
+strongly recommend not going back to running pmcd as root, kittens will
+surely die (although it is likely to be your only solution currently).
 
-> However, right now for project IDs I think we have decided to limit
-> manipulations to the init user namespace and not expose project IDs
-> inside user namespaces at all. Hence I think that xfs_ioc_setattr()
-> needs a further check for this...
+There is a better way we can tackle this - we should isolate those
+parts that need to run as root, and run them that way.  This means we
+need to transition these quota metrics into a new PMDA which runs as
+root, separately to pmcd.
 
-If we don't want to allow setting the projid from a userns, the check
-I would propose inside the if (mask & FSX_EXTSIZE) block is:
-  if (current_user_ns() != &init_user_ns)
-Is the appropriate error return for this EINVAL? (thats what a similar
-check in kernel/taskstats.c returns)
+In a quirky twist, I happened to come across a very similar problem
+recently with the xfs.control.reset metric - this needs root access
+too in order to function (it provides a reset-stats-back-to-zero
+mechanism by writing to a procfs file), so it also was an unintended
+victim of the unprivileged-pmcd changes.
 
-> Cheers,
-> 
-> Dave.
+Thus, I propose we abstract out the xfs.* and quota.* (which, despite
+being generically named "quota" metrics, are all XFS-specific) into a
+new pmdaxfs which we run as root, in exactly the same way pmdaproc is
+now run as root.  We will need to manage the PMID transition (domain
+number on these metrics will change) via pmlogrewrite, but that is a
+well-trod path now and happily pmdaproc is an existence-proof that we
+can successfully make these transitions.
+
+If we do it correctly, we should be able to do this transparently so
+that nobody notices.  However, Murphy being Murphy ... I've CC'd the
+XFS list to let 'em know this is coming.
+
+cheers.
+
+--
+Nathan
 
 _______________________________________________
 xfs mailing list
