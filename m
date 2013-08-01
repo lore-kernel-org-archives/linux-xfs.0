@@ -1,36 +1,37 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 4824B29E0E
-	for <xfs@oss.sgi.com>; Thu,  1 Aug 2013 14:25:30 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 1A00F8F804C
-	for <xfs@oss.sgi.com>; Thu,  1 Aug 2013 12:25:30 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id BA15229DFB
+	for <xfs@oss.sgi.com>; Thu,  1 Aug 2013 14:52:33 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 735628F8040
+	for <xfs@oss.sgi.com>; Thu,  1 Aug 2013 12:52:33 -0700 (PDT)
 Received: from e8.ny.us.ibm.com (e8.ny.us.ibm.com [32.97.182.138]) by
-	cuda.sgi.com with ESMTP id YXFIL6H6mFoorgF4 (version=TLSv1
+	cuda.sgi.com with ESMTP id LgLrJfNgrfzKj4ls (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 01 Aug 2013 12:25:23 -0700 (PDT)
+	Thu, 01 Aug 2013 12:52:31 -0700 (PDT)
 Received: from /spool/local
 	by e8.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
 	Violators will be prosecuted
 	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
-	Thu, 1 Aug 2013 20:25:22 +0100
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id B9FDF38C8039
-	for <xfs@oss.sgi.com>; Thu,  1 Aug 2013 15:25:17 -0400 (EDT)
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	r71JPIm5177992 for <xfs@oss.sgi.com>; Thu, 1 Aug 2013 15:25:18 -0400
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
-	id r71JPFwR018492
-	for <xfs@oss.sgi.com>; Thu, 1 Aug 2013 13:25:15 -0600
+	Thu, 1 Aug 2013 20:52:31 +0100
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 740306E803A
+	for <xfs@oss.sgi.com>; Thu,  1 Aug 2013 15:52:22 -0400 (EDT)
+Received: from d01av05.pok.ibm.com (d01av05.pok.ibm.com [9.56.224.195])
+	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	r71JqRt2183240 for <xfs@oss.sgi.com>; Thu, 1 Aug 2013 15:52:27 -0400
+Received: from d01av05.pok.ibm.com (loopback [127.0.0.1])
+	by d01av05.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
+	r71JqRLv013456 for <xfs@oss.sgi.com>; Thu, 1 Aug 2013 15:52:27 -0400
+Received: from [9.41.106.170] (chandra-dt.austin.ibm.com [9.41.106.170])
+	by d01av05.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVin) with ESMTP id
+	r71JqQCk013447 for <xfs@oss.sgi.com>; Thu, 1 Aug 2013 15:52:27 -0400
+Subject: Subject: [PATCH] xfstests: Test all 3 quotas simultaneously.
 From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: [PATCH 1/2] xfsprogs: Remove incore use of XFS_OQUOTA_ENFD and
-	XFS_OQUOTA_CHKD
-Date: Thu,  1 Aug 2013 14:25:00 -0500
-Message-Id: <1375385101-3673-2-git-send-email-sekharan@us.ibm.com>
-In-Reply-To: <1375385101-3673-1-git-send-email-sekharan@us.ibm.com>
-References: <1375385101-3673-1-git-send-email-sekharan@us.ibm.com>
+Date: Thu, 01 Aug 2013 14:52:26 -0500
+Message-ID: <1375386746.4155.6.camel@chandra-dt.ibm.com>
+Mime-Version: 1.0
+Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,299 +40,468 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Chandra Seetharaman <sekharan@us.ibm.com>
+To: XFS mailing list <xfs@oss.sgi.com>
 
-Remove incore use of XFS_OQUOTA_ENFD and XFS_OQUOTA_CHKD. Instead,
-start using XFS_GQUOTA_.* XFS_PQUOTA_.* counterparts.
+Add a test for testing all 3 (user, group and project) quotas together.
 
-On disk version still uses XFS_OQUOTA_ENFD and XFS_OQUOTA_CHKD.
+This is a modified version of xfstest 050.
 
 Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
 ---
- db/check.c          |    8 +++---
- include/xfs_quota.h |   59 ++++++++++++++++++++++++++------------------------
- libxfs/xfs_mount.c  |   52 ++++++++++++++++++++++++++++++++++++++++++++
- repair/versions.c   |   18 +++------------
- repair/xfs_repair.c |    5 +--
- 5 files changed, 93 insertions(+), 49 deletions(-)
+ tests/xfs/299     |  248 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/299.out |  170 ++++++++++++++++++++++++++++++++++++
+ tests/xfs/group   |    1 +
+ 3 files changed, 419 insertions(+), 0 deletions(-)
+ create mode 100755 tests/xfs/299
+ create mode 100644 tests/xfs/299.out
 
-diff --git a/db/check.c b/db/check.c
-index d490f81..d66dc68 100644
---- a/db/check.c
-+++ b/db/check.c
-@@ -2851,11 +2851,11 @@ process_inode(
- 			process_quota(IS_USER_QUOTA, id, blkmap);
- 		else if (id->ino == mp->m_sb.sb_gquotino &&
- 			 (mp->m_sb.sb_qflags & XFS_GQUOTA_ACCT) &&
--			 (mp->m_sb.sb_qflags & XFS_OQUOTA_CHKD))
-+			 (mp->m_sb.sb_qflags & XFS_GQUOTA_CHKD))
- 			process_quota(IS_GROUP_QUOTA, id, blkmap);
- 		else if (id->ino == mp->m_sb.sb_gquotino &&
- 			 (mp->m_sb.sb_qflags & XFS_PQUOTA_ACCT) &&
--			 (mp->m_sb.sb_qflags & XFS_OQUOTA_CHKD))
-+			 (mp->m_sb.sb_qflags & XFS_PQUOTA_CHKD))
- 			process_quota(IS_PROJECT_QUOTA, id, blkmap);
- 	}
- 	if (blkmap)
-@@ -3623,11 +3623,11 @@ quota_init(void)
- 	qgdo = mp->m_sb.sb_gquotino != 0 &&
- 	       mp->m_sb.sb_gquotino != NULLFSINO &&
- 	       (mp->m_sb.sb_qflags & XFS_GQUOTA_ACCT) &&
--	       (mp->m_sb.sb_qflags & XFS_OQUOTA_CHKD);
-+	       (mp->m_sb.sb_qflags & XFS_GQUOTA_CHKD);
- 	qpdo = mp->m_sb.sb_gquotino != 0 &&
- 	       mp->m_sb.sb_gquotino != NULLFSINO &&
- 	       (mp->m_sb.sb_qflags & XFS_PQUOTA_ACCT) &&
--	       (mp->m_sb.sb_qflags & XFS_OQUOTA_CHKD);
-+	       (mp->m_sb.sb_qflags & XFS_PQUOTA_CHKD);
- 	if (qudo)
- 		qudata = xcalloc(QDATA_HASH_SIZE, sizeof(qdata_t *));
- 	if (qgdo)
-diff --git a/include/xfs_quota.h b/include/xfs_quota.h
-index c61e31c..3ac9da5 100644
---- a/include/xfs_quota.h
-+++ b/include/xfs_quota.h
-@@ -159,30 +159,51 @@ typedef struct xfs_qoff_logformat {
- #define XFS_GQUOTA_ACCT	0x0040  /* group quota accounting ON */
- 
- /*
-+ * Start differentiating group quota and project quota in-core
-+ * using distinct flags, instead of using the combined OQUOTA flags.
-+ *
-+ * Conversion to and from the combined OQUOTA flag (if necessary)
-+ * is done only in xfs_sb_{to,from}_disk()
-+ */
-+#define XFS_GQUOTA_ENFD 0x0080  /* group quota limits enforced */
-+#define XFS_GQUOTA_CHKD 0x0100  /* quotacheck run on group quotas */
-+#define XFS_PQUOTA_ENFD 0x0200  /* project quota limits enforced */
-+#define XFS_PQUOTA_CHKD 0x0400  /* quotacheck run on project quotas */
+diff --git a/tests/xfs/299 b/tests/xfs/299
+new file mode 100755
+index 0000000..1436575
+--- /dev/null
++++ b/tests/xfs/299
+@@ -0,0 +1,248 @@
++#! /bin/bash
++# FS QA Test No. 299
++#
++# Exercises basic XFS quota functionality, with all 3 quotas together
++#       uquota, gquota, pquota
++#       uqnoenforce, gqnoenforce, pqnoenforce
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
 +
-+#define XFS_MOUNT_QUOTA_ALL	(XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD|\
-+				 XFS_UQUOTA_CHKD|XFS_GQUOTA_ACCT|\
-+				 XFS_GQUOTA_ENFD|XFS_GQUOTA_CHKD|\
-+				 XFS_PQUOTA_ACCT|XFS_PQUOTA_ENFD|\
-+				 XFS_PQUOTA_CHKD)
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
 +
-+/*
-  * Quota Accounting/Enforcement flags
-  */
- #define XFS_ALL_QUOTA_ACCT	\
- 		(XFS_UQUOTA_ACCT | XFS_GQUOTA_ACCT | XFS_PQUOTA_ACCT)
--#define XFS_ALL_QUOTA_ENFD	(XFS_UQUOTA_ENFD | XFS_OQUOTA_ENFD)
--#define XFS_ALL_QUOTA_CHKD	(XFS_UQUOTA_CHKD | XFS_OQUOTA_CHKD)
-+#define XFS_ALL_QUOTA_ENFD	\
-+		(XFS_UQUOTA_ENFD | XFS_GQUOTA_ENFD | XFS_PQUOTA_ENFD)
-+#define XFS_ALL_QUOTA_CHKD	\
-+		(XFS_UQUOTA_CHKD | XFS_GQUOTA_CHKD | XFS_PQUOTA_CHKD)
- 
- #define XFS_IS_QUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_ALL_QUOTA_ACCT)
- #define XFS_IS_UQUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_UQUOTA_ACCT)
--#define XFS_IS_PQUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_PQUOTA_ACCT)
- #define XFS_IS_GQUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_GQUOTA_ACCT)
-+#define XFS_IS_PQUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_PQUOTA_ACCT)
- #define XFS_IS_UQUOTA_ENFORCED(mp)	((mp)->m_qflags & XFS_UQUOTA_ENFD)
--#define XFS_IS_OQUOTA_ENFORCED(mp)	((mp)->m_qflags & XFS_OQUOTA_ENFD)
-+#define XFS_IS_GQUOTA_ENFORCED(mp)	((mp)->m_qflags & XFS_GQUOTA_ENFD)
-+#define XFS_IS_PQUOTA_ENFORCED(mp)	((mp)->m_qflags & XFS_PQUOTA_ENFD)
- 
- /*
-  * Incore only flags for quotaoff - these bits get cleared when quota(s)
-  * are in the process of getting turned off. These flags are in m_qflags but
-  * never in sb_qflags.
-  */
--#define XFS_UQUOTA_ACTIVE	0x0100  /* uquotas are being turned off */
--#define XFS_PQUOTA_ACTIVE	0x0200  /* pquotas are being turned off */
--#define XFS_GQUOTA_ACTIVE	0x0400  /* gquotas are being turned off */
-+#define XFS_UQUOTA_ACTIVE	0x1000  /* uquotas are being turned off */
-+#define XFS_GQUOTA_ACTIVE	0x4000  /* gquotas are being turned off */
-+#define XFS_PQUOTA_ACTIVE	0x2000  /* pquotas are being turned off */
- #define XFS_ALL_QUOTA_ACTIVE	\
--	(XFS_UQUOTA_ACTIVE | XFS_PQUOTA_ACTIVE | XFS_GQUOTA_ACTIVE)
-+	(XFS_UQUOTA_ACTIVE | XFS_GQUOTA_ACTIVE | XFS_PQUOTA_ACTIVE)
- 
- /*
-  * Checking XFS_IS_*QUOTA_ON() while holding any inode lock guarantees
-@@ -191,8 +212,6 @@ typedef struct xfs_qoff_logformat {
- #define XFS_IS_QUOTA_ON(mp)	((mp)->m_qflags & (XFS_UQUOTA_ACTIVE | \
- 						   XFS_GQUOTA_ACTIVE | \
- 						   XFS_PQUOTA_ACTIVE))
--#define XFS_IS_OQUOTA_ON(mp)	((mp)->m_qflags & (XFS_GQUOTA_ACTIVE | \
--						   XFS_PQUOTA_ACTIVE))
- #define XFS_IS_UQUOTA_ON(mp)	((mp)->m_qflags & XFS_UQUOTA_ACTIVE)
- #define XFS_IS_GQUOTA_ON(mp)	((mp)->m_qflags & XFS_GQUOTA_ACTIVE)
- #define XFS_IS_PQUOTA_ON(mp)	((mp)->m_qflags & XFS_PQUOTA_ACTIVE)
-@@ -266,25 +285,9 @@ typedef struct xfs_qoff_logformat {
- 	((XFS_IS_UQUOTA_ON(mp) && \
- 		(mp->m_sb.sb_qflags & XFS_UQUOTA_CHKD) == 0) || \
- 	 (XFS_IS_GQUOTA_ON(mp) && \
--		((mp->m_sb.sb_qflags & XFS_OQUOTA_CHKD) == 0 || \
--		 (mp->m_sb.sb_qflags & XFS_PQUOTA_ACCT))) || \
-+		(mp->m_sb.sb_qflags & XFS_GQUOTA_CHKD) == 0) || \
- 	 (XFS_IS_PQUOTA_ON(mp) && \
--		((mp->m_sb.sb_qflags & XFS_OQUOTA_CHKD) == 0 || \
--		 (mp->m_sb.sb_qflags & XFS_GQUOTA_ACCT))))
--
--#define XFS_MOUNT_QUOTA_SET1	(XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD|\
--				 XFS_UQUOTA_CHKD|XFS_PQUOTA_ACCT|\
--				 XFS_OQUOTA_ENFD|XFS_OQUOTA_CHKD)
--
--#define XFS_MOUNT_QUOTA_SET2	(XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD|\
--				 XFS_UQUOTA_CHKD|XFS_GQUOTA_ACCT|\
--				 XFS_OQUOTA_ENFD|XFS_OQUOTA_CHKD)
--
--#define XFS_MOUNT_QUOTA_ALL	(XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD|\
--				 XFS_UQUOTA_CHKD|XFS_PQUOTA_ACCT|\
--				 XFS_OQUOTA_ENFD|XFS_OQUOTA_CHKD|\
--				 XFS_GQUOTA_ACCT)
--
-+		(mp->m_sb.sb_qflags & XFS_PQUOTA_CHKD) == 0))
- 
- /*
-  * The structure kept inside the xfs_trans_t keep track of dquot changes
-diff --git a/libxfs/xfs_mount.c b/libxfs/xfs_mount.c
-index db3785d..e7a9003 100644
---- a/libxfs/xfs_mount.c
-+++ b/libxfs/xfs_mount.c
-@@ -179,6 +179,14 @@ xfs_mount_validate_sb(
- 		}
- 	}
- 
-+	if ((sbp->sb_qflags & (XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD)) &&
-+			(sbp->sb_qflags & (XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD |
-+				XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD))) {
-+		xfs_warn(mp,
-+"Super block has XFS_OQUOTA bits along with XFS_PQUOTA and/or XFS_GQUOTA bits.\n");
-+		return XFS_ERROR(EFSCORRUPTED);
-+	}
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
 +
- 	if (unlikely(
- 	    sbp->sb_logstart == 0 && mp->m_logdev_targp == mp->m_ddev_targp)) {
- 		xfs_warn(mp,
-@@ -315,6 +323,47 @@ xfs_sb_from_disk(
- 	to->sb_lsn = be64_to_cpu(from->sb_lsn);
- }
- 
-+static void
-+xfs_sb_quota_from_disk(struct xfs_sb *sbp)
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/quota
++
++_cleanup()
 +{
-+	if (sbp->sb_qflags & XFS_OQUOTA_ENFD)
-+		sbp->sb_qflags |= (sbp->sb_qflags & XFS_PQUOTA_ACCT) ?
-+					XFS_PQUOTA_ENFD : XFS_GQUOTA_ENFD;
-+	if (sbp->sb_qflags & XFS_OQUOTA_CHKD)
-+		sbp->sb_qflags |= (sbp->sb_qflags & XFS_PQUOTA_ACCT) ?
-+					XFS_PQUOTA_CHKD : XFS_GQUOTA_CHKD;
-+	sbp->sb_qflags &= ~(XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD);
++	cd /
++	umount $SCRATCH_MNT 2>/dev/null
++	rm -f $tmp.*
++}
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++# real QA test starts here
++_supported_fs xfs
++_supported_os Linux
++
++cp /dev/null $seqres.full
++chmod a+rwx $seqres.full	# arbitrary users will write here
++
++_require_scratch
++_require_xfs_quota
++
++bsoft=100
++bhard=500
++isoft=4
++ihard=10
++
++_filter_report()
++{
++	tr -s '[:space:]' | \
++	perl -npe '
++		s/^\#'$id' /[NAME] /g;
++		s/^\#0 \d+ /[ROOT] 0 /g;
++		s/6 days/7 days/g' |
++	perl -npe '
++		$val = 0;
++		if ($ENV{'LARGE_SCRATCH_DEV'}) {
++			$val = $ENV{'NUM_SPACE_FILES'};
++		}
++		s/(^\[ROOT\] \S+ \S+ \S+ \S+ \[--------\] )(\S+)/$1@{[$2 - $val]}/g'
 +}
 +
-+static inline void
-+xfs_sb_quota_to_disk(
-+	xfs_dsb_t	*to,
-+	xfs_sb_t	*from,
-+	__int64_t	*fields)
++# The actual point at which limit enforcement takes place for the
++# hard block limit is variable depending on filesystem blocksize,
++# and iosize.  What we want to test is that the limit is enforced
++# (ie. blksize less than limit but not unduly less - ~85% is kind)
++# nowadays we actually get much closer to the limit before EDQUOT.
++#
++_filter_and_check_blks()
 +{
-+	__uint16_t	qflags = from->sb_qflags;
-+
-+	if (*fields & XFS_SB_QFLAGS) {
-+		/*
-+		 * The in-core version of sb_qflags do not have
-+		 * XFS_OQUOTA_* flags, whereas the on-disk version
-+		 * does.  So, convert incore XFS_{PG}QUOTA_* flags
-+		 * to on-disk XFS_OQUOTA_* flags.
-+		 */
-+		qflags &= ~(XFS_PQUOTA_ENFD | XFS_PQUOTA_CHKD |
-+				XFS_GQUOTA_ENFD | XFS_GQUOTA_CHKD);
-+
-+		if (from->sb_qflags &
-+				(XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD))
-+			qflags |= XFS_OQUOTA_ENFD;
-+		if (from->sb_qflags &
-+				(XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD))
-+			qflags |= XFS_OQUOTA_CHKD;
-+		to->sb_qflags = cpu_to_be16(qflags);
-+		*fields &= ~XFS_SB_QFLAGS;
-+	}
++	perl -npe '
++		if (/^\#'$id'\s+(\d+)/ && '$enforce') {
++			$maximum = '$bhard';
++			$minimum = '$bhard' * 85/100;
++			if (($1 < $minimum || $1 > $maximum) && '$noextsz') {
++				printf(" URK %d: %d is out of range! [%d,%d]\n",
++					'$id', $1, $minimum, $maximum);
++			}
++			s/^(\#'$id'\s+)(\d+)/\1 =OK=/g;
++		}
++	' | _filter_report
 +}
 +
- /*
-  * Copy in core superblock to ondisk one.
-  *
-@@ -336,6 +385,7 @@ xfs_sb_to_disk(
- 	if (!fields)
- 		return;
- 
-+	xfs_sb_quota_to_disk(to, from, &fields);
- 	while (fields) {
- 		f = (xfs_sb_field_t)xfs_lowbit64((__uint64_t)fields);
- 		first = xfs_sb_info[f].offset;
-@@ -378,6 +428,8 @@ xfs_sb_verify(
- 
- 	xfs_sb_from_disk(&sb, XFS_BUF_TO_SBP(bp));
- 
-+	xfs_sb_quota_from_disk(&sb);
++_qsetup()
++{
++	opt=$1
++	enforce=0
++	if [ $opt = "u" -o $opt = "uno" ]; then
++		type=u
++		eval `_choose_uid`
++	elif [ $opt = "g" -o $opt = "gno" ]; then
++		type=g
++		eval `_choose_gid`
++	elif [ $opt = "p" -o $opt = "pno" ]; then
++		type=p
++		eval `_choose_prid`
++	fi
++	[ $opt = "u" -o $opt = "g" -o $opt = "p" ] && enforce=1
 +
- 	/*
- 	 * Only check the in progress field for the primary superblock as
- 	 * mkfs.xfs doesn't clear it from secondary superblocks.
-diff --git a/repair/versions.c b/repair/versions.c
-index c11a728..b65747a 100644
---- a/repair/versions.c
-+++ b/repair/versions.c
-@@ -61,26 +61,16 @@ update_sb_version(xfs_mount_t *mp)
- 		/*
- 		 * protect against stray bits in the quota flag field
- 		 */
--		if (sb->sb_qflags & ~(XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD|
--				XFS_UQUOTA_CHKD|XFS_GQUOTA_ACCT|
--				XFS_OQUOTA_ENFD|XFS_OQUOTA_CHKD|
--				XFS_PQUOTA_ACCT))  {
-+		if (sb->sb_qflags & ~XFS_MOUNT_QUOTA_ALL) {
- 			/*
- 			 * update the incore superblock, if we're in
- 			 * no_modify mode, it'll never get flushed out
- 			 * so this is ok.
- 			 */
- 			do_warn(_("bogus quota flags 0x%x set in superblock"),
--				sb->sb_qflags & ~(XFS_UQUOTA_ACCT|
--				XFS_UQUOTA_ENFD|
--				XFS_UQUOTA_CHKD|XFS_GQUOTA_ACCT|
--				XFS_OQUOTA_ENFD|XFS_OQUOTA_CHKD|
--				XFS_PQUOTA_ACCT));
-+				sb->sb_qflags & ~XFS_MOUNT_QUOTA_ALL);
- 
--			sb->sb_qflags &= (XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD|
--				XFS_UQUOTA_CHKD|XFS_GQUOTA_ACCT|
--				XFS_OQUOTA_ENFD|XFS_OQUOTA_CHKD|
--				XFS_PQUOTA_ACCT);
-+			sb->sb_qflags &= XFS_MOUNT_QUOTA_ALL;
- 
- 			if (!no_modify)
- 				do_warn(_(", bogus flags will be cleared\n"));
-diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-index 4708c5c..ab06201 100644
---- a/repair/xfs_repair.c
-+++ b/repair/xfs_repair.c
-@@ -852,11 +852,10 @@ _("Warning:  project quota information would be cleared.\n"
- 
- 	dsb = XFS_BUF_TO_SBP(sbp);
- 
--	if (be16_to_cpu(dsb->sb_qflags) & (XFS_UQUOTA_CHKD | XFS_OQUOTA_CHKD)) {
-+	if (be16_to_cpu(dsb->sb_qflags) & XFS_ALL_QUOTA_CHKD) {
- 		do_warn(_("Note - quota info will be regenerated on next "
- 			"quota mount.\n"));
--		dsb->sb_qflags &= cpu_to_be16(~(XFS_UQUOTA_CHKD |
--							XFS_OQUOTA_CHKD));
-+		dsb->sb_qflags &= cpu_to_be16(~XFS_ALL_QUOTA_CHKD);
- 	}
- 
- 	if (clear_sunit) {
++	echo "Using type=$type id=$id" >> $seqres.full
++}
++
++_exercise()
++{
++
++	# Figure out whether we're doing large allocations
++	# (bail out if they're so large they stuff the test up)
++	_test_inode_flag extsz-inherit $SCRATCH_MNT
++	noextsz=$?
++	extsize=`_test_inode_extsz $SCRATCH_MNT`
++	[ $extsize -ge 512000 ] && \
++		_notrun "Extent size hint is too large ($extsize bytes)"
++
++	_qsetup $1
++
++	echo "Using type=$type id=$id" >>$seqres.full
++
++	echo
++	echo "*** report no quota settings" | tee -a $seqres.full
++	xfs_quota -D $tmp.projects -P $tmp.projid -x \
++		-c "repquota -birnN -$type" $SCRATCH_DEV |
++		_filter_report | LC_COLLATE=POSIX sort -ru
++
++	echo
++	echo "*** report initial settings" | tee -a $seqres.full
++	_file_as_id $SCRATCH_MNT/initme $id $type 1024 0
++	echo "ls -l $SCRATCH_MNT" >>$seqres.full
++	ls -l $SCRATCH_MNT >>$seqres.full
++	xfs_quota -D $tmp.projects -P $temp.projid -x \
++		-c "limit -$type bsoft=${bsoft}k bhard=${bhard}k $id" \
++		-c "limit -$type isoft=$isoft ihard=$ihard $id" \
++		$SCRATCH_DEV
++	xfs_quota -D $tmp.projects -P $tmp.projid -x \
++		-c "repquota -birnN -$type" $SCRATCH_DEV |
++		_filter_report | LC_COLLATE=POSIX sort -ru
++
++	echo
++	echo "*** push past the soft inode limit" | tee -a $seqres.full
++	_file_as_id $SCRATCH_MNT/softie1 $id $type 1024 0
++	_file_as_id $SCRATCH_MNT/softie2 $id $type 1024 0
++	_qmount
++	xfs_quota -D $tmp.projects -P $tmp.projid -x \
++		-c "repquota -birnN -$type" $SCRATCH_DEV |
++		_filter_report | LC_COLLATE=POSIX sort -ru
++
++	echo
++	echo "*** push past the soft block limit" | tee -a $seqres.full
++	_file_as_id $SCRATCH_MNT/softie $id $type 1024 140
++	_qmount
++	xfs_quota -D $tmp.projects -P $tmp.projid -x \
++		-c "repquota -birnN -$type" $SCRATCH_DEV |
++		_filter_report | LC_COLLATE=POSIX sort -ru
++
++	echo
++	# Note: for quota accounting (not enforcement), EDQUOT is not expected
++	echo "*** push past the hard inode limit (expect EDQUOT)" | tee -a $seqres.full
++	for i in 1 2 3 4 5 6 7 8 9 10 11 12
++	do
++		_file_as_id $SCRATCH_MNT/hard$i $id $type 1024 0
++	done
++	_qmount
++	xfs_quota -D $tmp.projects -P $tmp.projid -x \
++		-c "repquota -birnN -$type" $SCRATCH_DEV |
++		_filter_report | LC_COLLATE=POSIX sort -ru
++
++	echo
++	# Note: for quota accounting (not enforcement), EDQUOT is not expected
++	echo "*** push past the hard block limit (expect EDQUOT)" | tee -a $seqres.full
++	_file_as_id $SCRATCH_MNT/softie $id $type 1024 540
++	echo "ls -l $SCRATCH_MNT" >>$seqres.full
++	ls -l $SCRATCH_MNT >>$seqres.full
++	_qmount
++	xfs_quota -D $tmp.projects -P $tmp.projid -x \
++		-c "repquota -birnN -$type" $SCRATCH_DEV |
++		_filter_and_check_blks | LC_COLLATE=POSIX sort -ru
++
++	echo
++
++}
++
++_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs
++cat $tmp.mkfs >>$seqres.full
++# keep the blocksize and data size for dd later
++. $tmp.mkfs
++
++sb_ver=`$XFS_DB_PROG -r -c version $SCRATCH_DEV | awk -F= '{print $2}' | awk -F, '{print $1}' |cut -c3-`
++echo $sb_ver
++
++if [ $sb_ver -lt 5 ]
++then
++	_notrun "Can't run with older versions of superblock"
++fi
++
++cat >$tmp.projects <<EOF
++1:$SCRATCH_MNT
++EOF
++
++cat >$tmp.projid <<EOF
++root:0
++scrach:1
++EOF
++
++projid_file="$tmp.projid"
++
++echo "*** user, group, and project"
++_qmount_option "uquota,gquota,pquota"
++_qmount
++_exercise p
++_exercise g
++_exercise u
++
++echo "*** unmount"
++umount $SCRATCH_MNT
++
++
++_scratch_mkfs_xfs | _filter_mkfs 2>$tmp.mkfs
++cat $tmp.mkfs >>$seqres.full
++# keep the blocksize and data size for dd later
++. $tmp.mkfs
++
++echo "*** uqnoenforce, gqnoenforce, and pqnoenforce"
++_qmount_option "uqnoenforce,gqnoenforce,pqnoenforce"
++_qmount
++_exercise uno
++_exercise gno
++_exercise pno
++
++echo "*** unmount"
++umount $SCRATCH_MNT
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/299.out b/tests/xfs/299.out
+new file mode 100644
+index 0000000..b2699b4
+--- /dev/null
++++ b/tests/xfs/299.out
+@@ -0,0 +1,170 @@
++QA output created by 299
++meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
++data     = bsize=XXX blocks=XXX, imaxpct=PCT
++         = sunit=XXX swidth=XXX, unwritten=X
++naming   =VERN bsize=XXX
++log      =LDEV bsize=XXX blocks=XXX
++realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
++5
++*** user, group, and project
++
++*** report no quota settings
++[ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
++
++*** report initial settings
++[ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
++[NAME] 0 100 500 00 [--------] 1 4 10 00 [--------] 0 0 0 00 [--------]
++
++*** push past the soft inode limit
++[ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
++[NAME] 0 100 500 00 [--------] 3 4 10 00 [--------] 0 0 0 00 [--------]
++
++*** push past the soft block limit
++[ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
++[NAME] 140 100 500 00 [7 days] 4 4 10 00 [--------] 0 0 0 00 [--------]
++
++*** push past the hard inode limit (expect EDQUOT)
++[ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
++[NAME] 140 100 500 00 [7 days] 9 4 10 00 [7 days] 0 0 0 00 [--------]
++
++*** push past the hard block limit (expect EDQUOT)
++[ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
++[NAME] =OK= 100 500 00 [7 days] 9 4 10 00 [7 days] 0 0 0 00 [--------]
++
++
++*** report no quota settings
++[ROOT] 0 0 0 00 [--------] 12 0 0 00 [--------] 0 0 0 00 [--------]
++
++*** report initial settings
++[ROOT] 0 0 0 00 [--------] 12 0 0 00 [--------] 0 0 0 00 [--------]
++[NAME] 0 100 500 00 [--------] 0 4 10 00 [--------] 0 0 0 00 [--------]
++
++*** push past the soft inode limit
++[ROOT] 0 0 0 00 [--------] 12 0 0 00 [--------] 0 0 0 00 [--------]
++[NAME] 0 100 500 00 [--------] 0 4 10 00 [--------] 0 0 0 00 [--------]
++
++*** push past the soft block limit
++[ROOT] 0 0 0 00 [--------] 12 0 0 00 [--------] 0 0 0 00 [--------]
++[NAME] 0 100 500 00 [--------] 0 4 10 00 [--------] 0 0 0 00 [--------]
++
++*** push past the hard inode limit (expect EDQUOT)
++[ROOT] 0 0 0 00 [--------] 12 0 0 00 [--------] 0 0 0 00 [--------]
++[NAME] 0 100 500 00 [--------] 7 4 10 00 [7 days] 0 0 0 00 [--------]
++
++*** push past the hard block limit (expect EDQUOT)
++[ROOT] 0 0 0 00 [--------] 12 0 0 00 [--------] 0 0 0 00 [--------]
++[NAME] =OK= 100 500 00 [--------] 7 4 10 00 [7 days] 0 0 0 00 [--------]
++ URK 99: 0 is out of range! [425,500]
++
++
++*** report no quota settings
++[ROOT] 0 0 0 00 [--------] 10 0 0 00 [--------] 0 0 0 00 [--------]
++#1 500 0 0 00 [--------] 9 0 0 00 [--------] 0 0 0 00 [--------]
++
++*** report initial settings
++[ROOT] 0 0 0 00 [--------] 10 0 0 00 [--------] 0 0 0 00 [--------]
++[NAME] 0 100 500 00 [--------] 0 4 10 00 [--------] 0 0 0 00 [--------]
++#1 500 0 0 00 [--------] 9 0 0 00 [--------] 0 0 0 00 [--------]
++
++*** push past the soft inode limit
++[ROOT] 0 0 0 00 [--------] 10 0 0 00 [--------] 0 0 0 00 [--------]
++[NAME] 0 100 500 00 [--------] 0 4 10 00 [--------] 0 0 0 00 [--------]
++#1 500 0 0 00 [--------] 9 0 0 00 [--------] 0 0 0 00 [--------]
++
++*** push past the soft block limit
++[ROOT] 0 0 0 00 [--------] 10 0 0 00 [--------] 0 0 0 00 [--------]
++[NAME] 0 100 500 00 [--------] 0 4 10 00 [--------] 0 0 0 00 [--------]
++#1 500 0 0 00 [--------] 9 0 0 00 [--------] 0 0 0 00 [--------]
++
++*** push past the hard inode limit (expect EDQUOT)
++[ROOT] 0 0 0 00 [--------] 10 0 0 00 [--------] 0 0 0 00 [--------]
++[NAME] 0 100 500 00 [--------] 0 4 10 00 [--------] 0 0 0 00 [--------]
++#1 500 0 0 00 [--------] 9 0 0 00 [--------] 0 0 0 00 [--------]
++
++*** push past the hard block limit (expect EDQUOT)
++[ROOT] 0 0 0 00 [--------] 10 0 0 00 [--------] 0 0 0 00 [--------]
++[NAME] =OK= 100 500 00 [--------] 0 4 10 00 [--------] 0 0 0 00 [--------]
++#1 500 0 0 00 [--------] 9 0 0 00 [--------] 0 0 0 00 [--------]
++ URK 99: 0 is out of range! [425,500]
++
++*** unmount
++meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
++data     = bsize=XXX blocks=XXX, imaxpct=PCT
++         = sunit=XXX swidth=XXX, unwritten=X
++naming   =VERN bsize=XXX
++log      =LDEV bsize=XXX blocks=XXX
++realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
++*** uqnoenforce, gqnoenforce, and pqnoenforce
++
++*** report no quota settings
++[ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
++
++*** report initial settings
++[ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
++[NAME] 0 100 500 00 [--------] 1 4 10 00 [--------] 0 0 0 00 [--------]
++
++*** push past the soft inode limit
++[ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
++[NAME] 0 100 500 00 [--------] 3 4 10 00 [--------] 0 0 0 00 [--------]
++
++*** push past the soft block limit
++[ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
++[NAME] 140 100 500 00 [--------] 4 4 10 00 [--------] 0 0 0 00 [--------]
++
++*** push past the hard inode limit (expect EDQUOT)
++[ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
++[NAME] 140 100 500 00 [--------] 16 4 10 00 [--none--] 0 0 0 00 [--------]
++
++*** push past the hard block limit (expect EDQUOT)
++[ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
++[NAME] 540 100 500 00 [--none--] 16 4 10 00 [--none--] 0 0 0 00 [--------]
++
++
++*** report no quota settings
++[ROOT] 0 0 0 00 [--------] 19 0 0 00 [--------] 0 0 0 00 [--------]
++
++*** report initial settings
++[ROOT] 0 0 0 00 [--------] 19 0 0 00 [--------] 0 0 0 00 [--------]
++[NAME] 0 100 500 00 [--------] 0 4 10 00 [--------] 0 0 0 00 [--------]
++
++*** push past the soft inode limit
++[ROOT] 0 0 0 00 [--------] 19 0 0 00 [--------] 0 0 0 00 [--------]
++[NAME] 0 100 500 00 [--------] 0 4 10 00 [--------] 0 0 0 00 [--------]
++
++*** push past the soft block limit
++[ROOT] 0 0 0 00 [--------] 19 0 0 00 [--------] 0 0 0 00 [--------]
++[NAME] 0 100 500 00 [--------] 0 4 10 00 [--------] 0 0 0 00 [--------]
++
++*** push past the hard inode limit (expect EDQUOT)
++[ROOT] 0 0 0 00 [--------] 19 0 0 00 [--------] 0 0 0 00 [--------]
++[NAME] 0 100 500 00 [--------] 0 4 10 00 [--------] 0 0 0 00 [--------]
++
++*** push past the hard block limit (expect EDQUOT)
++[ROOT] 0 0 0 00 [--------] 19 0 0 00 [--------] 0 0 0 00 [--------]
++[NAME] 0 100 500 00 [--------] 0 4 10 00 [--------] 0 0 0 00 [--------]
++
++
++*** report no quota settings
++[ROOT] 0 0 0 00 [--------] 19 0 0 00 [--------] 0 0 0 00 [--------]
++
++*** report initial settings
++[ROOT] 0 0 0 00 [--------] 19 0 0 00 [--------] 0 0 0 00 [--------]
++[NAME] 0 100 500 00 [--------] 0 4 10 00 [--------] 0 0 0 00 [--------]
++
++*** push past the soft inode limit
++[ROOT] 0 0 0 00 [--------] 19 0 0 00 [--------] 0 0 0 00 [--------]
++[NAME] 0 100 500 00 [--------] 0 4 10 00 [--------] 0 0 0 00 [--------]
++
++*** push past the soft block limit
++[ROOT] 0 0 0 00 [--------] 19 0 0 00 [--------] 0 0 0 00 [--------]
++[NAME] 0 100 500 00 [--------] 0 4 10 00 [--------] 0 0 0 00 [--------]
++
++*** push past the hard inode limit (expect EDQUOT)
++[ROOT] 0 0 0 00 [--------] 19 0 0 00 [--------] 0 0 0 00 [--------]
++[NAME] 0 100 500 00 [--------] 0 4 10 00 [--------] 0 0 0 00 [--------]
++
++*** push past the hard block limit (expect EDQUOT)
++[ROOT] 0 0 0 00 [--------] 19 0 0 00 [--------] 0 0 0 00 [--------]
++[NAME] 0 100 500 00 [--------] 0 4 10 00 [--------] 0 0 0 00 [--------]
++
++*** unmount
+diff --git a/tests/xfs/group b/tests/xfs/group
+index b4f4eb9..352a4c5 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -178,3 +178,4 @@
+ 296 dump auto quick
+ 297 auto freeze
+ 298 auto attr symlink quick
++299 auto quota
 -- 
 1.7.1
+
+
 
 _______________________________________________
 xfs mailing list
