@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 098077CBF
-	for <linux-xfs@oss.sgi.com>; Wed, 31 Jul 2013 21:25:28 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 57FD37CBF
+	for <xfs@oss.sgi.com>; Wed, 31 Jul 2013 21:48:09 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id DDB1E3040A4
-	for <linux-xfs@oss.sgi.com>; Wed, 31 Jul 2013 19:25:24 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id bElCkeeSsQalXBXs for <linux-xfs@oss.sgi.com>;
-	Wed, 31 Jul 2013 19:25:20 -0700 (PDT)
-Received: from Liberator.local (c-98-240-249-49.hsd1.mn.comcast.net
-	[98.240.249.49])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(No client certificate requested)
-	by sandeen.net (Postfix) with ESMTPSA id 9D649609D8D8
-	for <linux-xfs@oss.sgi.com>; Wed, 31 Jul 2013 21:25:19 -0500 (CDT)
-Message-ID: <51F9C70E.30702@sandeen.net>
-Date: Wed, 31 Jul 2013 21:25:18 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 3C3D83040BF
+	for <xfs@oss.sgi.com>; Wed, 31 Jul 2013 19:48:06 -0700 (PDT)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	j8CfakWBI3GqThJq for <xfs@oss.sgi.com>;
+	Wed, 31 Jul 2013 19:48:04 -0700 (PDT)
+Date: Thu, 1 Aug 2013 12:48:00 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 3/3] ext4: Implement FALLOC_FL_COLLAPSE_RANGE
+Message-ID: <20130801024800.GK7118@dastard>
+References: <1375281746-15908-1-git-send-email-linkinjeon@gmail.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfsprogs: fix agcnts leak in xfs_repair's scan_ags
+Content-Disposition: inline
+In-Reply-To: <1375281746-15908-1-git-send-email-linkinjeon@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,28 +29,74 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "'linux-xfs@oss.sgi.com'" <linux-xfs@oss.sgi.com>
+To: Namjae Jeon <linkinjeon@gmail.com>
+Cc: elder@kernel.org, tytso@mit.edu, Namjae Jeon <namjae.jeon@samsung.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, bpm@sgi.com, adilger.kernel@dilger.ca, a.sangwan@samsung.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
-agcnts is malloc'd but never freed in this function.
+On Wed, Jul 31, 2013 at 11:42:26PM +0900, Namjae Jeon wrote:
+> From: Namjae Jeon <namjae.jeon@samsung.com>
+> 
+> New fallocate flag FALLOC_FL_COLLAPSE_RANGE implementation for Ext4
+.....
+> +
+> +	punch_start = offset >> EXT4_BLOCK_SIZE_BITS(sb);
+> +	punch_stop = (offset + len) >> EXT4_BLOCK_SIZE_BITS(sb);
+> +
+> +	rounding = max_t(uint, 1 << EXT4_BLOCK_SIZE_BITS(sb), PAGE_CACHE_SIZE);
+> +	ioffset = offset & ~(rounding - 1);
+> +
+> +	/* Write out all dirty pages */
+> +	ret = filemap_write_and_wait_range(inode->i_mapping, ioffset, -1);
+> +	if (ret)
+> +		return ret;
+> +
+> +	/* Take mutex lock */
+> +	mutex_lock(&inode->i_mutex);
+> +
+> +	truncate_pagecache_range(inode, ioffset, -1);
 
-Coverity found this.
+Ted, that's invalidating the page cache from the start of the
+collaspse range to the end of the file. So the ext4 code is doing
+this bit correctly.  Why isn't this in the XFS patches? Clearly the
+need for this was understood, and, well, this code is obviously
+copied from the XFS hole punching code. i.e. from
+xfs_free_file_space().
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+> +	/* Wait for existing dio to complete */
+> +	ext4_inode_block_unlocked_dio(inode);
+> +	inode_dio_wait(inode);
 
-diff --git a/repair/scan.c b/repair/scan.c
-index 76bb7f1..4040f53 100644
---- a/repair/scan.c
-+++ b/repair/scan.c
-@@ -1367,6 +1367,8 @@ scan_ags(
- 		ifreecount += agcnts[i].ifreecount;
- 	}
- 
-+	free(agcnts);
-+
- 	/*
- 	 * Validate that our manual counts match the superblock.
- 	 */
+That should be done before invalidating the pagecache....
+
+> +	credits = ext4_writepage_trans_blocks(inode);
+> +	handle = ext4_journal_start(inode, EXT4_HT_TRUNCATE, credits);
+> +	if (IS_ERR(handle)) {
+> +		ret = PTR_ERR(handle);
+> +		goto out_dio;
+> +	}
+> +
+> +	down_write(&EXT4_I(inode)->i_data_sem);
+> +
+> +	ext4_discard_preallocations(inode);
+> +
+> +	ret = ext4_es_remove_extent(inode, punch_start,
+> +				    EXT_MAX_BLOCKS - punch_start - 1);
+> +	if (ret)
+> +		goto journal_stop;
+> +
+> +	ret = ext4_ext_remove_space(inode, punch_start, punch_stop - 1);
+> +	if (ret)
+> +		goto journal_stop;
+
+So, this code punches out the existing space in the file so that the
+extent shifting is moving extents into a hole. Why is this in the
+ext4 code, but not the XFS code?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
