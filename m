@@ -1,14 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Date: Thu, 1 Aug 2013 10:11:28 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [pcp] Suggestions for SGI ICE where we need to get quota
-	information
-Message-ID: <20130801151128.GW3111@sgi.com>
-References: <51F90B6A.6050809@sgi.com>
-	<74641529.7203019.1375302856174.JavaMail.root@redhat.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <74641529.7203019.1375302856174.JavaMail.root@redhat.com>
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 8D25729DFB
+	for <xfs@oss.sgi.com>; Thu,  1 Aug 2013 10:30:13 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 6FCA43040DD
+	for <xfs@oss.sgi.com>; Thu,  1 Aug 2013 08:30:13 -0700 (PDT)
+Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81]) by
+	cuda.sgi.com with ESMTP id g97mFZcRvSukDSFX (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 01 Aug 2013 08:30:12 -0700 (PDT)
+Received: from ucsinet21.oracle.com (ucsinet21.oracle.com [156.151.31.93])
+	by userp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
+	ESMTP id r71FUBBu001470
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Thu, 1 Aug 2013 15:30:11 GMT
+Received: from userz7021.oracle.com (userz7021.oracle.com [156.151.31.85])
+	by ucsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	r71FUAhx028326
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Thu, 1 Aug 2013 15:30:11 GMT
+Received: from abhmt106.oracle.com (abhmt106.oracle.com [141.146.116.58])
+	by userz7021.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	r71FUAMU028300 for <xfs@oss.sgi.com>; Thu, 1 Aug 2013 15:30:10 GMT
+Date: Thu, 1 Aug 2013 11:29:58 -0400
+From: Dwight Engen <dwight.engen@oracle.com>
+Subject: [PATCH v8 1/7] xfs: create wrappers for converting kuid_t to/from
+	uid_t
+Message-ID: <20130801112958.497c5fe6@oracle.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,50 +40,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Nathan Scott <nathans@redhat.com>
-Cc: Jeff Hanson <jhanson@sgi.com>, PCP <pcp@oss.sgi.com>, mikeh@sgi.com, XFS <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Wed, Jul 31, 2013 at 04:34:16PM -0400, Nathan Scott wrote:
-> ----- Original Message -----
-> > In SGI's ICE product we have a script that uses pcp to gather quota
-> > information to feed to ganglia and to alert the admin if a project is
-> > over quota.  With newer pcp where pmcd is run as user pcp and not as
-> > root we get failures to obtain the quota information.  Changing back
-> > to root or other similar techniques works (as expected).  Since the
-> > hosts that run this are cluster infrastructure nodes this may be the
-> > hack we decide on but we'd like other suggestions.
-> 
-> [ http://oss.sgi.com/bugzilla/show_bug.cgi?id=985 ]
-> 
-> Hmm, interesting - sorry about that, its unintended fallout and it did
-> not occur to me that the XFS quota metrics would be affected.  I would
-> strongly recommend not going back to running pmcd as root, kittens will
-> surely die (although it is likely to be your only solution currently).
-> 
-> There is a better way we can tackle this - we should isolate those
-> parts that need to run as root, and run them that way.  This means we
-> need to transition these quota metrics into a new PMDA which runs as
-> root, separately to pmcd.
-> 
-> In a quirky twist, I happened to come across a very similar problem
-> recently with the xfs.control.reset metric - this needs root access
-> too in order to function (it provides a reset-stats-back-to-zero
-> mechanism by writing to a procfs file), so it also was an unintended
-> victim of the unprivileged-pmcd changes.
-> 
-> Thus, I propose we abstract out the xfs.* and quota.* (which, despite
-> being generically named "quota" metrics, are all XFS-specific) into a
-> new pmdaxfs which we run as root, in exactly the same way pmdaproc is
-> now run as root.  We will need to manage the PMID transition (domain
-> number on these metrics will change) via pmlogrewrite, but that is a
-> well-trod path now and happily pmdaproc is an existence-proof that we
-> can successfully make these transitions.
-> 
-> If we do it correctly, we should be able to do this transparently so
-> that nobody notices.  However, Murphy being Murphy ... I've CC'd the
-> XFS list to let 'em know this is coming.
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Gao feng <gaofeng@cn.fujitsu.com>
+Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
+---
+ fs/xfs/xfs_linux.h | 26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
 
-Thanks Nathan, we'll keep an eye out.
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index 800f896..761e4c0 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -159,6 +159,32 @@
+ #define MAX(a,b)	(max(a,b))
+ #define howmany(x, y)	(((x)+((y)-1))/(y))
+ 
++/* Kernel uid/gid conversion. These are used to convert to/from the on disk
++ * uid_t/gid_t types to the kuid_t/kgid_t types that the kernel uses internally.
++ * The conversion here is type only, the value will remain the same since we
++ * are converting to the init_user_ns. The uid is later mapped to a particular
++ * user namespace value when crossing the kernel/user boundary.
++ */
++static inline __uint32_t xfs_kuid_to_uid(kuid_t uid)
++{
++	return from_kuid(&init_user_ns, uid);
++}
++
++static inline kuid_t xfs_uid_to_kuid(__uint32_t uid)
++{
++	return make_kuid(&init_user_ns, uid);
++}
++
++static inline __uint32_t xfs_kgid_to_gid(kgid_t gid)
++{
++	return from_kgid(&init_user_ns, gid);
++}
++
++static inline kgid_t xfs_gid_to_kgid(__uint32_t gid)
++{
++	return make_kgid(&init_user_ns, gid);
++}
++
+ /*
+  * Various platform dependent calls that don't fit anywhere else
+  */
+-- 
+1.8.1.4
 
 _______________________________________________
 xfs mailing list
