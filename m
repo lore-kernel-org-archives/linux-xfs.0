@@ -1,20 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id AA09029DFB
-	for <xfs@oss.sgi.com>; Thu,  1 Aug 2013 15:21:15 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 98F24304051
-	for <xfs@oss.sgi.com>; Thu,  1 Aug 2013 13:21:12 -0700 (PDT)
-Received: from mail.ud10.udmedia.de (ud10.udmedia.de [194.117.254.50]) by
-	cuda.sgi.com with ESMTP id 5Hl9LKxpBnfOSSSC (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 01 Aug 2013 13:21:10 -0700 (PDT)
-Date: Thu, 1 Aug 2013 22:21:08 +0200
-From: Markus Trippelsdorf <markus@trippelsdorf.de>
-Subject: Performance decrease over time
-Message-ID: <20130801202108.GA355@x4>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 61CCA29DFB
+	for <xfs@oss.sgi.com>; Thu,  1 Aug 2013 16:21:46 -0500 (CDT)
+Date: Thu, 1 Aug 2013 16:21:42 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 00/49] current patch queue for 3.12
+Message-ID: <20130801212142.GB3111@sgi.com>
+References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <1374215120-7271-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,68 +22,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Yesterday I noticed that the nightly rsync run that backups my root
-fs took over 8 minutes to complete. Half a year ago when the backup disk
-was freshly formated it only took 2 minutes. (The size of my root fs stayed
-constant during this time).
+Hey Dave,
 
-So I decided to reformat the drive, but first took some measurements.
-The drive in question also contains my film and music collection,
-several git trees and is used to compile projects quite often.
+We missed you on the call today.  We discussed 3.12 content:
 
-Model Family:     Seagate Barracuda Green (AF)
-Device Model:     ST1500DL003-9VT16L
+This series remains the primary focus for 3.12.  Mark has completed the review
+of the 3.12 kernel work, and sent a couple patches related to patches 44 and 46
+of this series to you via private email.  It sounds like there are still a
+couple of issues that need to be addressed and this doesn't apply starting
+around patch 14.  Sounds like if you resolve that and repost we can start
+pulling this series in...
 
-/dev/sdb on /var type xfs (rw,relatime,attr2,inode64,logbsize=256k,noquota)
-/dev/sdb       xfs       1.4T  702G  695G  51% /var
+Mark has moved on to reviewing the most recent xfsprogs series for the libxfs
+sync.
 
- # xfs_db -c frag -r /dev/sdb
-actual 1540833, ideal 1529956, fragmentation factor 0.71%
+I am still working on review of the crc-dev series, and will be pulling them
+into the master branch as my concerns are addressed.  No objection to adding
+patches on the end, I just need to match them up with the issues they address.
+I'll probably try to resolve some of them myself once I'm through my first pass
+of review.
 
-# iozone -I -a -s 100M -r 4k -r 64k -r 512k -i 0 -i 1 -i 2
-        Iozone: Performance Test of File I/O
-                Version $Revision: 3.408 $
-                Compiled for 64 bit mode.
-                Build: linux-AMD64 
-...
-        Run began: Thu Aug  1 12:55:09 2013
+We'll be holding off on Eric's recent posts as well as Dwight and Zhi's work
+until after all three series have been committed.  If someone objects we'll
+have that conversation.
 
-        O_DIRECT feature enabled
-        Auto Mode
-        File size set to 102400 KB
-        Record Size 4 KB
-        Record Size 64 KB
-        Record Size 512 KB
-        Command line used: iozone -I -a -s 100M -r 4k -r 64k -r 512k -i 0 -i 1 -i 2
-        Output is in Kbytes/sec
-        Time Resolution = 0.000001 seconds.
-        Processor cache size set to 1024 Kbytes.
-        Processor cache line size set to 32 bytes.
-        File stride size set to 17 * record size.
-                                                            random  random    bkwd   record   stride                                   
-              KB  reclen   write rewrite    read    reread    read   write    read  rewrite     read   fwrite frewrite   fread  freread
-          102400       4    8083    9218     3817     3786     515     789                                                          
-          102400      64   56905   48177    17239    26347    7381   15643                                                          
-          102400     512  113689   86344    84583    83192   37136   63275                                                          
+Chandra has posted some quota related work that would be nice to have in
+xfsprogs for the release.  He may need to rebase after we pull your work in.
 
-After fresh format and restore from another backup, performance is much
-better again:
+That's about it.  I'll post my notes from the meeting on the xfs.org wiki.
 
-# iozone -I -a -s 100M -r 4k -r 64k -r 512k -i 0 -i 1 -i 2
-                                                            random  random    bkwd   record   stride                                   
-              KB  reclen   write rewrite    read    reread    read   write    read  rewrite     read   fwrite frewrite   fread  freread
-          102400       4   13923   18760    19461    27305     761     652                                                          
-          102400      64   95822   95724    82331    90763   10455   11944                                                          
-          102400     512   93343   95386    94504    95073   43282   69179 
-
-Couple of questions. Is it normal that throughput decreases this much in
-half a year on a heavily used disk that is only half full? What can be
-done (as a user) to mitigate this effect? 
-
--- 
-Markus
+Regards,
+Ben
 
 _______________________________________________
 xfs mailing list
