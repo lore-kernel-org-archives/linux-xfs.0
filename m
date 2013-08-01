@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 57FD37CBF
-	for <xfs@oss.sgi.com>; Wed, 31 Jul 2013 21:48:09 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3C3D83040BF
-	for <xfs@oss.sgi.com>; Wed, 31 Jul 2013 19:48:06 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 30F2C7CBF
+	for <xfs@oss.sgi.com>; Wed, 31 Jul 2013 21:59:37 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id C26948F8033
+	for <xfs@oss.sgi.com>; Wed, 31 Jul 2013 19:59:36 -0700 (PDT)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	j8CfakWBI3GqThJq for <xfs@oss.sgi.com>;
-	Wed, 31 Jul 2013 19:48:04 -0700 (PDT)
-Date: Thu, 1 Aug 2013 12:48:00 +1000
+	W98XnUNe4MRYZf6Y for <xfs@oss.sgi.com>;
+	Wed, 31 Jul 2013 19:59:30 -0700 (PDT)
+Date: Thu, 1 Aug 2013 12:59:14 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/3] ext4: Implement FALLOC_FL_COLLAPSE_RANGE
-Message-ID: <20130801024800.GK7118@dastard>
-References: <1375281746-15908-1-git-send-email-linkinjeon@gmail.com>
+Subject: Re: [PATCH 1/3] fs: Introduce new flag FALLOC_FL_COLLAPSE_RANGE
+Message-ID: <20130801025914.GL7118@dastard>
+References: <1375281721-15840-1-git-send-email-linkinjeon@gmail.com>
+	<20130731220154.GA11378@thunk.org> <20130801002341.GI7118@dastard>
+	<20130801004645.GC11378@thunk.org> <20130801005447.GS13468@dastard>
+	<20130801010751.GD11378@thunk.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1375281746-15908-1-git-send-email-linkinjeon@gmail.com>
+In-Reply-To: <20130801010751.GD11378@thunk.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,67 +32,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Namjae Jeon <linkinjeon@gmail.com>
-Cc: elder@kernel.org, tytso@mit.edu, Namjae Jeon <namjae.jeon@samsung.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, bpm@sgi.com, adilger.kernel@dilger.ca, a.sangwan@samsung.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+To: Theodore Ts'o <tytso@mit.edu>, Namjae Jeon <linkinjeon@gmail.com>, adilger.kernel@dilger.ca, bpm@sgi.com, elder@kernel.org, hch@infradead.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, a.sangwan@samsung.com, Namjae Jeon <namjae.jeon@samsung.com>
 
-On Wed, Jul 31, 2013 at 11:42:26PM +0900, Namjae Jeon wrote:
-> From: Namjae Jeon <namjae.jeon@samsung.com>
+On Wed, Jul 31, 2013 at 09:07:52PM -0400, Theodore Ts'o wrote:
+> On Thu, Aug 01, 2013 at 10:54:47AM +1000, Dave Chinner wrote:
+> > > It's not just the range that it's operating on, but also the region
+> > > beyond the range that's been collapsed out.
+> > 
+> > Yes, that's part of "the range that it is operating over".
+> > 
+> > > A quick eyeball of the patch didn't seem to show any code that handled
+> > > this, which is why I asked the question.
+> > 
+> > Right, but really it's the least of the problems I've noticed - the
+> > XFS code is fundamentally broken in many ways - once I've finished
+> > commenting on it, I'll have a quick look to see if the ext4 code has
+> > the same fundamental flaws....
 > 
-> New fallocate flag FALLOC_FL_COLLAPSE_RANGE implementation for Ext4
-.....
-> +
-> +	punch_start = offset >> EXT4_BLOCK_SIZE_BITS(sb);
-> +	punch_stop = (offset + len) >> EXT4_BLOCK_SIZE_BITS(sb);
-> +
-> +	rounding = max_t(uint, 1 << EXT4_BLOCK_SIZE_BITS(sb), PAGE_CACHE_SIZE);
-> +	ioffset = offset & ~(rounding - 1);
-> +
-> +	/* Write out all dirty pages */
-> +	ret = filemap_write_and_wait_range(inode->i_mapping, ioffset, -1);
-> +	if (ret)
-> +		return ret;
-> +
-> +	/* Take mutex lock */
-> +	mutex_lock(&inode->i_mutex);
-> +
-> +	truncate_pagecache_range(inode, ioffset, -1);
+> Well, the fundamental flaw of potential races if the file being
+> collapsed has been mmap'ed and there is another process making changes
+> beyond the range that is being collapsed is I suspect one that is
+> going to be very hard to solve, short of not allowing the collapse
+> while there are any read/write mmap's for the file in question.
 
-Ted, that's invalidating the page cache from the start of the
-collaspse range to the end of the file. So the ext4 code is doing
-this bit correctly.  Why isn't this in the XFS patches? Clearly the
-need for this was understood, and, well, this code is obviously
-copied from the XFS hole punching code. i.e. from
-xfs_free_file_space().
+This funtionality is not introducing any new problems w.r.t. mmap().
+In terms of truncating a mmap'd file, that can already occur and
+the behaviour is well known. The current patches don't do the
+operations in the correct order to ensure this is handled correctly
+(i.e. the inode size has to be changed before the page cache
+invalidation, not after), but otherwise there is no new issues
+introduced here.
 
-> +	/* Wait for existing dio to complete */
-> +	ext4_inode_block_unlocked_dio(inode);
-> +	inode_dio_wait(inode);
+The real problem is that it has the same problem as hole punching
+w.r.t. not being able to serialise page faults against the extent
+manipulations after the page cache invalidation has occurred.
+That's what Jan Kara's range locking patches we talked about at
+LSFMM will address, and so is beyond the scope of this patchset.
 
-That should be done before invalidating the pagecache....
+> And I would think these sorts of VM issues should be handled with some
+> generic library functions, instead of reimplementing them from scratch
+> in each file system.
 
-> +	credits = ext4_writepage_trans_blocks(inode);
-> +	handle = ext4_journal_start(inode, EXT4_HT_TRUNCATE, credits);
-> +	if (IS_ERR(handle)) {
-> +		ret = PTR_ERR(handle);
-> +		goto out_dio;
-> +	}
-> +
-> +	down_write(&EXT4_I(inode)->i_data_sem);
-> +
-> +	ext4_discard_preallocations(inode);
-> +
-> +	ret = ext4_es_remove_extent(inode, punch_start,
-> +				    EXT_MAX_BLOCKS - punch_start - 1);
-> +	if (ret)
-> +		goto journal_stop;
-> +
-> +	ret = ext4_ext_remove_space(inode, punch_start, punch_stop - 1);
-> +	if (ret)
-> +		goto journal_stop;
-
-So, this code punches out the existing space in the file so that the
-extent shifting is moving extents into a hole. Why is this in the
-ext4 code, but not the XFS code?
+Well, yes, we have one - truncate_page_cache_range(), and it's used
+correctly in the ext4 patch....
 
 Cheers,
 
