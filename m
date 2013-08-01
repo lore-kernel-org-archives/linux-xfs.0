@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 15B2D29DFB
-	for <linux-xfs@oss.sgi.com>; Thu,  1 Aug 2013 09:21:06 -0500 (CDT)
-Message-ID: <51FA6ED1.1060806@sgi.com>
-Date: Thu, 01 Aug 2013 09:21:05 -0500
+	by oss.sgi.com (Postfix) with ESMTP id 9319F29DFB
+	for <linux-xfs@oss.sgi.com>; Thu,  1 Aug 2013 09:50:38 -0500 (CDT)
+Message-ID: <51FA75BE.9080705@sgi.com>
+Date: Thu, 01 Aug 2013 09:50:38 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfsprogs: fix buffer leak in xlog_print_find_oldest
-References: <51F9BD22.8060102@redhat.com>
-In-Reply-To: <51F9BD22.8060102@redhat.com>
+Subject: Re: [PATCH] xfsprogs: fix unint var in repair phase6
+References: <51F9B626.4010707@redhat.com>
+In-Reply-To: <51F9B626.4010707@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,11 +24,20 @@ Sender: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@redhat.com>
 Cc: "'linux-xfs@oss.sgi.com'" <linux-xfs@oss.sgi.com>
 
-On 07/31/13 20:42, Eric Sandeen wrote:
-> The error path in this function did not free the buffer
-> before returning.
+On 07/31/13 20:13, Eric Sandeen wrote:
+> 2 calls to libxfs_bmapi_write exist in repair's phase6
+> where "first" is uninitialized, but is accessed
+> in that function.
 >
-> Coverity found this one.
+> Normally we call xfs_bmap_init() first to initialize
+> both the free list and the first block, but in these
+> cases, the free list var is sent as NULL.
+>
+> So in these 2 cases, explicitly initialize the "first"
+> variable to NULLFSBLOCK as xfs_bmap_init() does
+> elsewhere.
+>
+> Coverity caught this.
 >
 > Signed-off-by: Eric Sandeen<sandeen@redhat.com>
 > ---
