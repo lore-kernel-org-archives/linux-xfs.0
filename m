@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 9319F29DFB
-	for <linux-xfs@oss.sgi.com>; Thu,  1 Aug 2013 09:50:38 -0500 (CDT)
-Message-ID: <51FA75BE.9080705@sgi.com>
-Date: Thu, 01 Aug 2013 09:50:38 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 9E3FE29DFB
+	for <linux-xfs@oss.sgi.com>; Thu,  1 Aug 2013 09:56:15 -0500 (CDT)
+Message-ID: <51FA770F.2060801@sgi.com>
+Date: Thu, 01 Aug 2013 09:56:15 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfsprogs: fix unint var in repair phase6
-References: <51F9B626.4010707@redhat.com>
-In-Reply-To: <51F9B626.4010707@redhat.com>
+Subject: Re: [PATCH] xfsprogs: fix agcnts leak in xfs_repair's scan_ags
+References: <51F9C70E.30702@sandeen.net>
+In-Reply-To: <51F9C70E.30702@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,26 +21,17 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: "'linux-xfs@oss.sgi.com'" <linux-xfs@oss.sgi.com>
 
-On 07/31/13 20:13, Eric Sandeen wrote:
-> 2 calls to libxfs_bmapi_write exist in repair's phase6
-> where "first" is uninitialized, but is accessed
-> in that function.
+On 07/31/13 21:25, Eric Sandeen wrote:
+> agcnts is malloc'd but never freed in this function.
 >
-> Normally we call xfs_bmap_init() first to initialize
-> both the free list and the first block, but in these
-> cases, the free list var is sent as NULL.
->
-> So in these 2 cases, explicitly initialize the "first"
-> variable to NULLFSBLOCK as xfs_bmap_init() does
-> elsewhere.
->
-> Coverity caught this.
+> Coverity found this.
 >
 > Signed-off-by: Eric Sandeen<sandeen@redhat.com>
 > ---
+>
 
 Looks good.
 
