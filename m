@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 735677CBF
-	for <xfs@oss.sgi.com>; Thu,  1 Aug 2013 00:33:13 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id BC514AC001
-	for <xfs@oss.sgi.com>; Wed, 31 Jul 2013 22:33:12 -0700 (PDT)
-Received: from mail-pa0-f45.google.com (mail-pa0-f45.google.com
-	[209.85.220.45]) by cuda.sgi.com with ESMTP id z6mawmm7YhlEo8Kb
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 289057F37
+	for <xfs@oss.sgi.com>; Thu,  1 Aug 2013 01:20:27 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 1003E8F8033
+	for <xfs@oss.sgi.com>; Wed, 31 Jul 2013 23:20:23 -0700 (PDT)
+Received: from mail-pa0-f54.google.com (mail-pa0-f54.google.com
+	[209.85.220.54]) by cuda.sgi.com with ESMTP id St97lpnaVKnASYKv
 	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 31 Jul 2013 22:33:10 -0700 (PDT)
-Received: by mail-pa0-f45.google.com with SMTP id bg4so1712210pad.18
-	for <xfs@oss.sgi.com>; Wed, 31 Jul 2013 22:33:10 -0700 (PDT)
+	<xfs@oss.sgi.com>; Wed, 31 Jul 2013 23:20:19 -0700 (PDT)
+Received: by mail-pa0-f54.google.com with SMTP id kx1so1757768pab.13
+	for <xfs@oss.sgi.com>; Wed, 31 Jul 2013 23:20:18 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20130801011812.GJ7118@dastard>
+In-Reply-To: <20130731211115.GU3111@sgi.com>
 References: <1375281734-15874-1-git-send-email-linkinjeon@gmail.com>
-	<20130801011812.GJ7118@dastard>
-Date: Thu, 1 Aug 2013 14:33:09 +0900
-Message-ID: <CAKYAXd-miJBmDs3aArkhoFwGuVYDc9FSnX2gabbmX86Yu78amA@mail.gmail.com>
+	<20130731211115.GU3111@sgi.com>
+Date: Thu, 1 Aug 2013 15:20:18 +0900
+Message-ID: <CAKYAXd9pfvZy8PTukyO5AOM3boitdWVXAu8TQTPrh-Zbt7RLGQ@mail.gmail.com>
 Subject: Re: [PATCH 2/3] xfs: Implement FALLOC_FL_COLLAPSE_RANGE
 From: Namjae Jeon <linkinjeon@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,23 +31,26 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: elder@kernel.org, tytso@mit.edu, Namjae Jeon <namjae.jeon@samsung.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, bpm@sgi.com, adilger.kernel@dilger.ca, a.sangwan@samsung.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+To: Ben Myers <bpm@sgi.com>
+Cc: elder@kernel.org, tytso@mit.edu, Namjae Jeon <namjae.jeon@samsung.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, adilger.kernel@dilger.ca, a.sangwan@samsung.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
-2013/8/1, Dave Chinner <david@fromorbit.com>:
+2013/8/1, Ben Myers <bpm@sgi.com>:
+> Hey Namjae,
+>
 > On Wed, Jul 31, 2013 at 11:42:14PM +0900, Namjae Jeon wrote:
 >> From: Namjae Jeon <namjae.jeon@samsung.com>
 >>
 >> New fallocate flag FALLOC_FL_COLLAPSE_RANGE implementation for XFS.
->
-Hi Dave.
-> A good start, but there's lots of work needed to make this safe for
-> general use.
-First, Thanks for your advice and help.
-
->
+>>
 >> Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
 >> Signed-off-by: Ashish Sangwan <a.sangwan@samsung.com>
+>
+Hi Ben.
+> Very cool feature!  ;)
+Thank you :)
+>
+> I have a couple initial suggestions/questions:
+>
 >> ---
 >>  fs/xfs/xfs_bmap.c     |   92
 >> +++++++++++++++++++++++++++++++++++++++++++++++++
@@ -73,15 +76,6 @@ First, Thanks for your advice and help.
 >> + *	shift from them. At max XFS_LINEAR_EXTS number extents
 >> + *	will be updated and *current_ext is the extent number which
 >> + *	is currently being updated.
->
-> Single space after the "*" in the comments. Also, format them out to
-> 80 columns.
->
-Single space after * followed by a tab gives checkpath warning:
-WARNING: please, no space before tabs
-#29: FILE: fs/xfs/xfs_bmap.c:6151:
-+ * ^IUpdates starting logical block of extents by subtracting$
-
 >> + */
 >> +int
 >> +xfs_update_logical(
@@ -92,25 +86,32 @@ WARNING: please, no space before tabs
 >> +	xfs_fileoff_t		shift,
 >> +	xfs_extnum_t		*current_ext)
 >
-> This belongs in xfs_bmap_btree.c, named something like
-> xfs_bmbt_shift_rec_offsets().
-Okay.
-
+> Could we find a better name for this function?  Maybe something like
+> xfs_shift_extent_startblocks or xfs_shift_extent_offsets?
+Sure, Dave suggessted  xfs_bmbt_shift_rec_offsets().
 >
-> Also, not typedefs for structures, please. (i.e. struct xfs_trans).
-Okay.
+> Also, is there also a case for being able to shift extent offsets upward in
+> the
+> file's address space so that you can splice in a chunk of data?  For that I
+> think maybe you'd want to be able to shift on sub-block boundaries too, and
+> there would be some copying and zeroing involved on the boundary block.  Not
+> sure.
+Currently no such case where we need to shift extents upward.
+Also, no need to zero out anything as the offsets are fs block size aligned.
+However, for Ext4, previously we submitted this ioctl which moves
+extent blocks between files.
+https://lkml.org/lkml/2013/6/23/10
+This ioctl moves a range of data blocks from one file and appends them
+at the end of other file.
+This (appending at the end) seems a limitation, as we could easily
+insert metadata blocks anywhere in the extent tree of second file.
+This operation of inserting new extents in the middle will surely
+require the extents of the second file to be moved upward.
+We are planning to work on it.
 
->
 >
 >> +{
 >> +	xfs_btree_cur_t		*cur;
->
-> 	struct xfs_btree_cur	*cur;
->
-> And for all the other structures, too.
-Okay.
-
->
 >> +	xfs_bmbt_rec_host_t	*gotp;
 >> +	xfs_mount_t		*mp;
 >> +	xfs_ifork_t		*ifp;
@@ -121,22 +122,10 @@ Okay.
 >> +
 >> +	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
 >> +	mp = ip->i_mount;
->
-> Do the assigment in the declaration on mp.
-Okay.
-
->
-> 	struct xfs_mount	*mp = ip->i_mount;
->
 >> +
 >> +	if (!(ifp->if_flags & XFS_IFEXTENTS) &&
 >> +		(error = xfs_iread_extents(tp, ip, XFS_DATA_FORK)))
 >> +		return error;
->
-> Hmmmm - that rings alarm bells.
-ok, we will remove the alarm.
-
->
 >> +
 >> +	if (!*current_ext) {
 >> +		gotp = xfs_iext_bno_to_ext(ifp, start_fsb, current_ext);
@@ -150,10 +139,6 @@ ok, we will remove the alarm.
 >> +			return 0;
 >> +		}
 >> +	}
->
-> So, you do a lookup on an extent index, which returns a incore
-> extent record.
->
 >> +
 >> +	if (ifp->if_flags & XFS_IFBROOT)
 >> +		cur = xfs_bmbt_init_cursor(mp, tp, ip, XFS_DATA_FORK);
@@ -161,16 +146,6 @@ ok, we will remove the alarm.
 >> +		cur = NULL;
 >> +
 >> +	while (nexts++ < XFS_LINEAR_EXTS &&
->
-> What has XFS_LINEAR_EXTS got to do with how many extents can be moved
-> in a single transaction at a time?
-We are also not sure how many extents to move in 1 transaction.
-xfs_bunmapi deletes 3 extents in 1 iteration.
-But deletion and updation are 2 different tasks.
-BTW, we tested this patch with 10,000 extents and it is working fine.
-Could you help us out here? What number would be appropriate?
-
->
 >> +	       *current_ext <  XFS_IFORK_NEXTENTS(ip, XFS_DATA_FORK)) {
 >> +		gotp = xfs_iext_get_ext(ifp, (*current_ext)++);
 >> +		startoff = xfs_bmbt_get_startoff(gotp);
@@ -180,24 +155,11 @@ Could you help us out here? What number would be appropriate?
 >> +					xfs_bmbt_get_startblock(gotp),
 >> +					xfs_bmbt_get_blockcount(gotp),
 >> +					&i)))
->
-> Please don't put assignments inside if() statements where possible.
-> i.e.
-> 			error = xfs_bmbt_lookup_eq(cur, ....
-> 			if (error)
->
-> Is the normal way of doing this.
-Okay:)
-
->
 >> +				goto del_cursor;
 >> +			XFS_WANT_CORRUPTED_GOTO(i == 1, del_cursor);
 >> +		}
 >> +		startoff -= shift;
 >> +		xfs_bmbt_set_startoff(gotp, startoff);
->
-> So, we've looked up and extent, and reduced it's offset by shift.
->
 >> +		if (cur) {
 >> +			error = xfs_bmbt_update(cur, startoff,
 >> +						xfs_bmbt_get_startblock(gotp),
@@ -205,42 +167,6 @@ Okay:)
 >> +						xfs_bmbt_get_state(gotp));
 >> +			if (error)
 >> +				goto del_cursor;
->
-> And then we update the btree record in place.
->
-> Ok, major alarm bells are going off at this point. Is the record
-> still in the right place? Where did you validate that the shift
-> downwards didn't overlap the previous extent in the tree?
->
-> What happens if the start or end of the range to be shifted partially
-> overlaps an extent? The shift can only be done into a hole in the
-> file offset, so any attempt to shift downwards that overlaps an
-> existing extent is immediately invalid and indicates something is
-> wrong (pssobily corruption).
->
-> And if the end of the range being shifted partially overlaps an
-> extent, then that extent needs to be split - it requires two records
-> in the tree to track the part that was shifted and the part that was
-> not.
-Your concern is correct.
-There can be 2 approach of updating the extent tree.
-
-Approach1: (The way truncate works): We start from the last allocated
-extent and move towards the last offset which was punched out.
-It mean start updating extents from right side and move towards left
-and update btree in between
-Approach2: We start from the extent just after the punched area and
-move towards the last extent of the file.
-It means moving from left to right and update btree in between.
-When we used approach 1, we were getting btree corruption but there
-seems to be no problem in approach2.
-And, that holds true even in the case where 2 extents have _exactly_
-same starting offset and length.
-So, in approach2, attempt to shift extent that overlaps an existing
-extent is working correctly without requiring any extent split.
-we will check the reason for it.
-
->
 >> +		}
 >> +	}
 >> +
@@ -252,10 +178,37 @@ we will check the reason for it.
 >> +	if (cur) {
 >> +		if (!error)
 >> +			cur->bc_private.b.allocated = 0;
->
-> Um, why?
-Okay, will remove.
->
+>> +		 xfs_btree_del_cursor(cur,
+>> +				error ? XFS_BTREE_ERROR : XFS_BTREE_NOERROR);
+>> +	}
+>> +
+>> +	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE | XFS_ILOG_DEXT);
+>> +
+>> +	return error;
+>> +}
+>> diff --git a/fs/xfs/xfs_bmap.h b/fs/xfs/xfs_bmap.h
+>> index 1cf1292..f923734 100644
+>> --- a/fs/xfs/xfs_bmap.h
+>> +++ b/fs/xfs/xfs_bmap.h
+>> @@ -204,6 +204,9 @@ int	xfs_bunmapi(struct xfs_trans *tp, struct xfs_inode
+>> *ip,
+>>  int	xfs_check_nostate_extents(struct xfs_ifork *ifp, xfs_extnum_t idx,
+>>  		xfs_extnum_t num);
+>>  uint	xfs_default_attroffset(struct xfs_inode *ip);
+>> +int	xfs_update_logical(xfs_trans_t *tp, struct xfs_inode *ip, int *done,
+>> +		xfs_fileoff_t start_fsb, xfs_fileoff_t shift,
+>> +		xfs_extnum_t *current_ext);
+>>
+>>  #ifdef __KERNEL__
+>>  /* bmap to userspace formatter - copy to user & advance pointer */
+>> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+>> index de3dc98..7d871bc 100644
+>> --- a/fs/xfs/xfs_file.c
+>> +++ b/fs/xfs/xfs_file.c
+>> @@ -817,7 +817,12 @@ xfs_file_fallocate(
+>>  	int		cmd = XFS_IOC_RESVSP;
+>>  	int		attr_flags = XFS_ATTR_NOLOCK;
+>>
 >> -	if (mode & ~(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE))
 >> +	if (mode & ~(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE |
 >> +		     FALLOC_FL_COLLAPSE_RANGE))
@@ -264,10 +217,22 @@ Okay, will remove.
 >> +	/* not just yet for rt inodes */
 >> +	if ((mode & FALLOC_FL_COLLAPSE_RANGE) && XFS_IS_REALTIME_INODE(ip))
 >>  		return -EOPNOTSUPP;
->
-> Why not? The extent manipulations are identical....
-Okay, Agree. we will remove this check in next release.
->
+>>
+>>  	bf.l_whence = 0;
+>> @@ -826,11 +831,11 @@ xfs_file_fallocate(
+>>
+>>  	xfs_ilock(ip, XFS_IOLOCK_EXCL);
+>>
+>> -	if (mode & FALLOC_FL_PUNCH_HOLE)
+>> +	if (mode & (FALLOC_FL_PUNCH_HOLE | FALLOC_FL_COLLAPSE_RANGE))
+>>  		cmd = XFS_IOC_UNRESVSP;
+>>
+>>  	/* check the new inode size is valid before allocating */
+>> -	if (!(mode & FALLOC_FL_KEEP_SIZE) &&
+>> +	if (!(mode & (FALLOC_FL_KEEP_SIZE | FALLOC_FL_COLLAPSE_RANGE)) &&
+>>  	    offset + len > i_size_read(inode)) {
+>>  		new_size = offset + len;
+>>  		error = inode_newsize_ok(inode, new_size);
 >> @@ -845,6 +850,21 @@ xfs_file_fallocate(
 >>  	if (error)
 >>  		goto out_unlock;
@@ -286,22 +251,42 @@ Okay, Agree. we will remove this check in next release.
 >> +
 >> +		goto out_unlock;
 >> +	}
+>> +
 >
-> This needs to vector through xfs_change_file_space() - it already
-> has code for doing offset/range validity checks, attaching
-> appropriate dquots for accounting, post-op file size and timestamp
-> updates, etc.
-It already is going through xfs_change_file_space(). Check this=>
-@@ -826,11 +831,11 @@ xfs_file_fallocate(
-
-        xfs_ilock(ip, XFS_IOLOCK_EXCL);
-
--       if (mode & FALLOC_FL_PUNCH_HOLE)
-+       if (mode & (FALLOC_FL_PUNCH_HOLE | FALLOC_FL_COLLAPSE_RANGE))
-                cmd = XFS_IOC_UNRESVSP;
-So rightly said, we do not need to do validity checks etc for collapse range.
+> Since you're not implementing an XFS_IOC_COLLAPSE_RANGE flag for the
+> xfs_change_file_space interface, it might be cleaner not to use change_space
+> at
+> all... e.g. call xfs_free_file_space directly from xfs_collapse_file_space
+> or
+> in the above conditional (making the conditional exclusive with the
+> change_space call).
+>
+> Alternatively, you could implement this fully through
+> xfs_change_file_space.
+>
+> Either way I think it would be best for it to be all or nothing with respect
+> to
+> the xfs_change_file_space interface, and my preference is that you
+> implement
+> this through xfs_collapse_file_space interface just as the rest of these
+> operations are implemented in xfs.
+OK, we will try to call xfs_change_file_space interface from within
+collapse space.
+All or nothing approach makes sense, but its just for avoiding code
+duplicacy we decided to uses XFS_IOC_UNRESVSP.
 
 >
+>>  	/* Change file size if needed */
+>>  	if (new_size) {
+>>  		struct iattr iattr;
+>> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+>> index 96dda62..16b20f1 100644
+>> --- a/fs/xfs/xfs_iops.c
+>> +++ b/fs/xfs/xfs_iops.c
+>> @@ -1236,3 +1236,38 @@ xfs_setup_inode(
+>>
+>>  	unlock_new_inode(inode);
+>>  }
 >> +
 >> +/*
 >> + * xfs_update_file_size()
@@ -311,106 +296,40 @@ So rightly said, we do not need to do validity checks etc for collapse range.
 >> +xfs_update_file_size(
 >> +	struct xfs_inode        *ip,
 >> +	loff_t			newsize)
->
-> This function should be nuked from orbit. I stopped looking at it
-> when the bug count got past 5. If you use xfs_change_file_space,
-> it's not necessary, either.
-we are using xfs_change_file_space(). See my comment above. :)
-But, xfs_change_file_space does not change logical file size.
-Neither can we use xfs_setattr, because it will truncate the
-preallocated extents beyond EOF.
-
->
->> diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
->> index dc730ac..95b46e7 100644
->> --- a/fs/xfs/xfs_vnodeops.c
->> +++ b/fs/xfs/xfs_vnodeops.c
->> @@ -1868,3 +1868,65 @@ xfs_change_file_space(
->>  		xfs_trans_set_sync(tp);
->>  	return xfs_trans_commit(tp, 0);
->>  }
->> +
->> +/*
->> + * xfs_collapse_file_space()
->> + *	This implements the fallocate collapse range functionlaity.
->> + *	It removes the hole from file by shifting all the extents which
->> + *	lies beyond start block.
->> + */
->> +int
->> +xfs_collapse_file_space(
->> +	xfs_inode_t	*ip,
->> +	loff_t		start,
->> +	loff_t		shift)
 >> +{
->> +	int		done = 0;
->> +	xfs_mount_t	*mp = ip->i_mount;
->> +	uint		resblks;
->> +	xfs_trans_t	*tp;
->> +	int		error = 0;
->> +	xfs_extnum_t	current_ext = 0;
->> +	xfs_fileoff_t	start_fsb = XFS_B_TO_FSB(mp, start);
->> +	xfs_fileoff_t	shift_fsb = XFS_B_TO_FSB(mp, shift);
->> +	resblks = XFS_DIOSTRAT_SPACE_RES(mp, 0);
+>> +	xfs_mount_t		*mp = ip->i_mount;
+>> +	struct inode		*inode = VFS_I(ip);
+>> +	struct xfs_trans	*tp;
+>> +	int			error;
 >> +
->> +	while (!error && !done) {
->> +		tp = xfs_trans_alloc(mp, XFS_TRANS_DIOSTRAT);
->> +		tp->t_flags |= XFS_TRANS_RESERVE;
->> +		error = xfs_trans_reserve(tp, resblks, XFS_WRITE_LOG_RES(mp),
->> +					  0, XFS_TRANS_PERM_LOG_RES,
->> +					  XFS_WRITE_LOG_COUNT);
+>> +	tp = xfs_trans_alloc(mp, XFS_TRANS_SETATTR_NOT_SIZE);
+>> +
+>> +	error = xfs_trans_reserve(tp, 0, XFS_ICHANGE_LOG_RES(mp), 0, 0, 0);
+>> +	if (error)
+>> +		return error;
+>> +
+>> +	xfs_trans_ijoin(tp, ip, 0);
+>> +	truncate_setsize(inode, newsize);
+>> +	ip->i_d.di_size = newsize;
+>> +
+>> +	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
+>> +
+>> +	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+>> +
+>> +	if (mp->m_flags & XFS_MOUNT_WSYNC)
+>> +		xfs_trans_set_sync(tp);
+>> +
+>> +	return xfs_trans_commit(tp, 0);
+>> +
+>> +}
 >
-> Why a permanent log reservation for a single, non-nested transaction?
-XFS transaction log reservation code is becoming our major problem.
-Could you suggest a proper way?
+> Did you consider xfs_setattr_size for this?
+Yeah we did, but it will also truncate any preallocated extent beyond EOF.
 
+Thanks for review!
 >
->> +		if (error) {
->> +			ASSERT(error == ENOSPC || XFS_FORCED_SHUTDOWN(mp));
->> +			xfs_trans_cancel(tp, 0);
->> +			break;
->> +		}
->> +
->> +		xfs_ilock(ip, XFS_ILOCK_EXCL);
->> +
->> +		error = xfs_trans_reserve_quota(tp, mp, ip->i_udquot,
->> +						ip->i_gdquot, ip->i_pdquot,
->> +						resblks, 0,
->> +						XFS_QMOPT_RES_REGBLKS);
->> +		if (error)
->> +			goto out;
->> +
->> +		xfs_trans_ijoin(tp, ip, 0);
->> +
->> +		error = xfs_update_logical(tp, ip, &done, start_fsb,
->> +					   shift_fsb, &current_ext);
->> +		if (error)
->> +			goto out;
->> +
->> +		error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
->> +		xfs_iunlock(ip, XFS_ILOCK_EXCL);
->> +	}
->
-> Where are you punching out the blocks in the range we are shifting
-> the down into? i.e. before you can do this shift operation, you have
-We are calling xfs_free_file_space via xfs_change_file_space.
-
-> to ensure that the range being shifted into has no extents in it.
-> IOWs, the first operation that needs to be done is a hole punch of
-> the range being removed - we need xfs_free_file_space() call on the
-> range first.
->
-> And as Ted pointed out, we also need to invalidate the page cache
-> over the range being moved.
-xfs_free_file_space does that for us.
-
-Thanks Dave!
->
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
+> Thanks,
+> 	Ben
 >
 
 _______________________________________________
