@@ -1,17 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 7052429DFB
-	for <xfs@oss.sgi.com>; Thu,  1 Aug 2013 10:06:47 -0500 (CDT)
-Date: Thu, 1 Aug 2013 10:06:43 -0500
+Date: Thu, 1 Aug 2013 10:11:28 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH v7 7/7] enable building user namespace with xfs
-Message-ID: <20130801150643.GV3111@sgi.com>
-References: <20130729230709.11033b2d@oracle.com>
-	<20130730234021.GR3111@sgi.com> <20130731002119.GR13468@dastard>
-	<20130731132523.GS3111@sgi.com> <20130731232852.GE7118@dastard>
+Subject: Re: [pcp] Suggestions for SGI ICE where we need to get quota
+	information
+Message-ID: <20130801151128.GW3111@sgi.com>
+References: <51F90B6A.6050809@sgi.com>
+	<74641529.7203019.1375302856174.JavaMail.root@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130731232852.GE7118@dastard>
+In-Reply-To: <74641529.7203019.1375302856174.JavaMail.root@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,43 +21,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Dwight Engen <dwight.engen@oracle.com>, xfs@oss.sgi.com
+To: Nathan Scott <nathans@redhat.com>
+Cc: Jeff Hanson <jhanson@sgi.com>, PCP <pcp@oss.sgi.com>, mikeh@sgi.com, XFS <xfs@oss.sgi.com>
 
-Dave,
-
-On Thu, Aug 01, 2013 at 09:28:52AM +1000, Dave Chinner wrote:
-> On Wed, Jul 31, 2013 at 08:25:23AM -0500, Ben Myers wrote:
-> > Hey,
-> > 
-> > On Wed, Jul 31, 2013 at 10:21:19AM +1000, Dave Chinner wrote:
-> > > On Tue, Jul 30, 2013 at 06:40:21PM -0500, Ben Myers wrote:
-> > > > On Mon, Jul 29, 2013 at 11:07:09PM -0400, Dwight Engen wrote:
-> > > > > >From e6a9ee0cfa0ed40484f66bc1726dc19de36038b8 Mon Sep 17 00:00:00 2001
-> > > > > From: Dwight Engen <dwight.engen@oracle.com>
-> > > > > Date: Tue, 2 Jul 2013 09:52:54 -0400
-> > > > > Subject: [PATCH 7/7] enable building user namespace with xfs
-> > > > > 
-> > > > > Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
-> > > > 
-> > > > Was there a patch running around to limit bulkstat to init_user_ns?  Any other
-> > > > items that needed to be addressed before applying this patch?
-> > > 
-> > > Bulkstat has a capable(CAP_SYS_ADMIN) check and therefore can only be
-> > > executed in the init name space. Similarly, all the open-by-handle
-> > > interfaces have the same capable() checks so they can only be
-> > > executed int he init name space, too.
-> > 
-> > Gah.  I was under the impression that you could have a process with
-> > CAP_SYS_ADMIN in a namespace other than init_user_ns.
+On Wed, Jul 31, 2013 at 04:34:16PM -0400, Nathan Scott wrote:
+> ----- Original Message -----
+> > In SGI's ICE product we have a script that uses pcp to gather quota
+> > information to feed to ganglia and to alert the admin if a project is
+> > over quota.  With newer pcp where pmcd is run as user pcp and not as
+> > root we get failures to obtain the quota information.  Changing back
+> > to root or other similar techniques works (as expected).  Since the
+> > hosts that run this are cluster infrastructure nodes this may be the
+> > hack we decide on but we'd like other suggestions.
 > 
-> Ben, until about a week and a half ago I was also working under that
-> same understanding as you.
+> [ http://oss.sgi.com/bugzilla/show_bug.cgi?id=985 ]
+> 
+> Hmm, interesting - sorry about that, its unintended fallout and it did
+> not occur to me that the XFS quota metrics would be affected.  I would
+> strongly recommend not going back to running pmcd as root, kittens will
+> surely die (although it is likely to be your only solution currently).
+> 
+> There is a better way we can tackle this - we should isolate those
+> parts that need to run as root, and run them that way.  This means we
+> need to transition these quota metrics into a new PMDA which runs as
+> root, separately to pmcd.
+> 
+> In a quirky twist, I happened to come across a very similar problem
+> recently with the xfs.control.reset metric - this needs root access
+> too in order to function (it provides a reset-stats-back-to-zero
+> mechanism by writing to a procfs file), so it also was an unintended
+> victim of the unprivileged-pmcd changes.
+> 
+> Thus, I propose we abstract out the xfs.* and quota.* (which, despite
+> being generically named "quota" metrics, are all XFS-specific) into a
+> new pmdaxfs which we run as root, in exactly the same way pmdaproc is
+> now run as root.  We will need to manage the PMID transition (domain
+> number on these metrics will change) via pmlogrewrite, but that is a
+> well-trod path now and happily pmdaproc is an existence-proof that we
+> can successfully make these transitions.
+> 
+> If we do it correctly, we should be able to do this transparently so
+> that nobody notices.  However, Murphy being Murphy ... I've CC'd the
+> XFS list to let 'em know this is coming.
 
-Well huh.  According to Dwight you can have a process with CAP_SYS_ADMIN in a
-namespace other than init_user_ns.  Kinda cool, IMO.
-
--Ben
+Thanks Nathan, we'll keep an eye out.
 
 _______________________________________________
 xfs mailing list
