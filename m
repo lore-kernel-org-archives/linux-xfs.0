@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C234A7F37
-	for <xfs@oss.sgi.com>; Thu,  1 Aug 2013 01:23:18 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id B49087F37
+	for <xfs@oss.sgi.com>; Thu,  1 Aug 2013 03:17:27 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id A49903040CE
-	for <xfs@oss.sgi.com>; Wed, 31 Jul 2013 23:23:18 -0700 (PDT)
-Received: from mail-pa0-f48.google.com (mail-pa0-f48.google.com
-	[209.85.220.48]) by cuda.sgi.com with ESMTP id E8rMo42NX1zljKDG
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 31 Jul 2013 23:23:17 -0700 (PDT)
-Received: by mail-pa0-f48.google.com with SMTP id kp13so1752516pab.35
-	for <xfs@oss.sgi.com>; Wed, 31 Jul 2013 23:23:17 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 9EBFA3040CB
+	for <xfs@oss.sgi.com>; Thu,  1 Aug 2013 01:17:24 -0700 (PDT)
+Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
+	cuda.sgi.com with ESMTP id DyNsGzxzJTff1HOn (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 01 Aug 2013 01:17:23 -0700 (PDT)
+Date: Thu, 1 Aug 2013 10:17:20 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 1/2] direct-io: Implement generic deferred AIO completions
+Message-ID: <20130801081720.GA29497@lst.de>
+References: <1373493739-2243-1-git-send-email-jack@suse.cz>
+	<20130712004421.GE3438@dastard>
 MIME-Version: 1.0
-In-Reply-To: <20130801024800.GK7118@dastard>
-References: <1375281746-15908-1-git-send-email-linkinjeon@gmail.com>
-	<20130801024800.GK7118@dastard>
-Date: Thu, 1 Aug 2013 15:23:16 +0900
-Message-ID: <CAKYAXd-Ja1JraEA95GKq7c=nzHF0KkgNeRy5vKL4KnjymuXPsw@mail.gmail.com>
-Subject: Re: [PATCH 3/3] ext4: Implement FALLOC_FL_COLLAPSE_RANGE
-From: Namjae Jeon <linkinjeon@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20130712004421.GE3438@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,111 +26,35 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: elder@kernel.org, tytso@mit.edu, Namjae Jeon <namjae.jeon@samsung.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, hch@infradead.org, bpm@sgi.com, adilger.kernel@dilger.ca, a.sangwan@samsung.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+Cc: Jan Kara <jack@suse.cz>, xfs@oss.sgi.com, hch@infradead.org, Jeff Moyer <jmoyer@redhat.com>, Al Viro <viro@ZenIV.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-2013/8/1, Dave Chinner <david@fromorbit.com>:
-> On Wed, Jul 31, 2013 at 11:42:26PM +0900, Namjae Jeon wrote:
->> From: Namjae Jeon <namjae.jeon@samsung.com>
->>
->> New fallocate flag FALLOC_FL_COLLAPSE_RANGE implementation for Ext4
-> .....
->> +
->> +	punch_start = offset >> EXT4_BLOCK_SIZE_BITS(sb);
->> +	punch_stop = (offset + len) >> EXT4_BLOCK_SIZE_BITS(sb);
->> +
->> +	rounding = max_t(uint, 1 << EXT4_BLOCK_SIZE_BITS(sb), PAGE_CACHE_SIZE);
->> +	ioffset = offset & ~(rounding - 1);
->> +
->> +	/* Write out all dirty pages */
->> +	ret = filemap_write_and_wait_range(inode->i_mapping, ioffset, -1);
->> +	if (ret)
->> +		return ret;
->> +
->> +	/* Take mutex lock */
->> +	mutex_lock(&inode->i_mutex);
->> +
->> +	truncate_pagecache_range(inode, ioffset, -1);
->
-> Ted, that's invalidating the page cache from the start of the
-> collaspse range to the end of the file. So the ext4 code is doing
-> this bit correctly.  Why isn't this in the XFS patches? Clearly the
-> need for this was understood, and, well, this code is obviously
-> copied from the XFS hole punching code. i.e. from
-> xfs_free_file_space().
-we already called xfs_free_file_space for collpase range in XFS patch.
-So invalidate page cache has been calling from xfs_free_file_space in
-this patch :)
->
->> +	/* Wait for existing dio to complete */
->> +	ext4_inode_block_unlocked_dio(inode);
->> +	inode_dio_wait(inode);
->
-> That should be done before invalidating the pagecache....
-Ah, correct. will move it before invalidating.
->
->> +	credits = ext4_writepage_trans_blocks(inode);
->> +	handle = ext4_journal_start(inode, EXT4_HT_TRUNCATE, credits);
->> +	if (IS_ERR(handle)) {
->> +		ret = PTR_ERR(handle);
->> +		goto out_dio;
->> +	}
->> +
->> +	down_write(&EXT4_I(inode)->i_data_sem);
->> +
->> +	ext4_discard_preallocations(inode);
->> +
->> +	ret = ext4_es_remove_extent(inode, punch_start,
->> +				    EXT_MAX_BLOCKS - punch_start - 1);
->> +	if (ret)
->> +		goto journal_stop;
->> +
->> +	ret = ext4_ext_remove_space(inode, punch_start, punch_stop - 1);
->> +	if (ret)
->> +		goto journal_stop;
->
-> So, this code punches out the existing space in the file so that the
-> extent shifting is moving extents into a hole. Why is this in the
-> ext4 code, but not the XFS code?
-for Ext4, we are calling ext4_ext_remove_space directly from collapse
-range function while in xfs we are using its punch hole functionality.
-This is because Ext4 punch hole does not work beyond EOF. Moreover,
-there is i_mutex acquired within ext4_punch_hole which can leads to
-race.
-
-Something like:
-ext4_fallocate {
-    ext4_punch_hole{
-        grab i_mutex;
-        do punching;
-        release i_mutex:
-        }
-    ext4_collapse_space{
-        sync dirty pages
-        grab i_mutex;
-        update extent;
-        release i_mutex;
-    }
-} // ext4_fallocate_ends
-
-XFS has no such problem as xfs_iolock is taken after entering in
-xfs_file_fallocate and released on exit.
-
-Thanks for review :)
->
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
->
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gRnJpLCBKdWwgMTIsIDIwMTMgYXQgMTA6NDQ6MjFBTSArMTAwMCwgRGF2ZSBDaGlubmVyIHdy
+b3RlOgo+IE9uIFRodSwgSnVsIDExLCAyMDEzIGF0IDEyOjAyOjE4QU0gKzAyMDAsIEphbiBLYXJh
+IHdyb3RlOgo+ID4gRnJvbTogQ2hyaXN0b3BoIEhlbGx3aWcgPGhjaEBpbmZyYWRlYWQub3JnPgo+
+ID4gCj4gPiBBZGQgc3VwcG9ydCB0byB0aGUgY29yZSBkaXJlY3QtaW8gY29kZSB0byBkZWZlciBB
+SU8gY29tcGxldGlvbnMgdG8gdXNlcgo+ID4gY29udGV4dCB1c2luZyBhIHdvcmtxdWV1ZS4gIFRo
+aXMgcmVwbGFjZXMgb3BlbmNvZGVkIGFuZCBsZXNzIGVmZmljaWVudAo+ID4gY29kZSBpbiBYRlMg
+YW5kIGV4dDQgYW5kIHdpbGwgYmUgbmVlZGVkIHRvIHByb3Blcmx5IHN1cHBvcnQgT18oRClTWU5D
+Cj4gPiBmb3IgQUlPLgo+IAo+IEkgZG9uJ3Qgc2VlIGhvdyB0aGlzIGlzIGFueSBtb3JlIGVmZmlj
+aWVudCB0aGFuIHRoZSBkZWZlcnJhbAo+IHRoYXQgWEZTIGFscmVhZHkgZG9lcyBmb3IgZGlyZWN0
+IElPIGNvbXBsZXRpb24gLSBpdCBqdXN0IGNoYW5nZXMKPiB3aGF0IHF1ZXVlcyBJTyBmb3IgY29t
+cGxldGlvbnMuIEFuZCBvbiB0aGF0IHRvcGljOgoKSXQgYXZvaWRlZCBhIG1lbW9yeSBhbGxvY2F0
+aW9uIGZvciBlYWNoIGTRlnJlY3QgSS9PIHdyaXRlLgoKPiBGV0lXLCBpbiBYRlMgd2UgcXVldWUg
+dW53cml0dGVuIGV4dGVudCBjb252ZXJzaW9uIGNvbXBsZXRpb25zIG9uIGEKPiBkaWZmZXJlbnQg
+d29ya3F1ZXVlIHRvIEVPRiBzaXplIHVwZGF0ZSBjb21wbGV0aW9ucyBiZWNhdXNlIHRoZQo+IGxh
+dHRlciBhcmUgc21hbGwsIGZhc3QgYW5kIHJhcmVseSByZXF1aXJlIElPIG9yIGdldCBibG9ja2Vk
+LiBUaGUKPiBkYXRhIElPIGNvbXBsZXRpb24gd29ya3F1ZXVlIGZvciBFT0YgdXBkYXRlcyBoYXMg
+dGhlIHNhbWUKPiBjb25jdXJyZW5jeSBhbmQgZGVwdGggYXMgdGhlIHVud3JpdHRlbiBleHRlbnQg
+d29yayBxdWV1ZSAoaS5lLiAyNTYKPiB3b3JrZXJzIHBlciBjcHUgcGVyIHN1cGVyYmxvY2spLiBT
+byBwdXNoaW5nIGFsbCBvZiB0aGlzIERJTyBhbmQgRU9GCj4gY29tcGxldGlvbiB3b3JrIGludG8g
+YSBzaW5nbGUgdGhyZWFkZWQgZ2xvYmFsIHdvcmtxdWV1ZSB0aGF0IGNhbgo+IGJsb2NrIGluIGV2
+ZXJ5IElPIGNvbXBsZXRpb24gZG9lc24ndCBzZWVtIGxpa2UgYSB2ZXJ5IHNtYXJ0IGlkZWEgdG8K
+PiBtZS4uLgoKQ3VycmVudGx5IHRoZSBkaXJlY3QgSS9PIGNvZGUgZG9lc24ndCBzdXBwb3J0IGFz
+eW5jIGV4dGVuZGluZyB3cml0ZXMuCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3Nz
+LnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
