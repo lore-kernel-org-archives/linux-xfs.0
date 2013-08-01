@@ -1,15 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7268729DFB
-	for <xfs@oss.sgi.com>; Thu,  1 Aug 2013 13:07:17 -0500 (CDT)
-Message-ID: <51FAA3D1.5030406@sgi.com>
-Date: Thu, 01 Aug 2013 13:07:13 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 7C78029DFB
+	for <xfs@oss.sgi.com>; Thu,  1 Aug 2013 13:44:51 -0500 (CDT)
+Date: Thu, 1 Aug 2013 13:44:47 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 25/48] xfs_repair: update for dir/attr crc format changes.
+Message-ID: <20130801184447.GY3111@sgi.com>
+References: <1370564771-4929-1-git-send-email-david@fromorbit.com>
+	<1370564771-4929-26-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 01/49] xfsprogs: introduce xfs_icreate.h
-References: <1374216324-8781-1-git-send-email-david@fromorbit.com>
-	<1374216324-8781-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1374216324-8781-2-git-send-email-david@fromorbit.com>
+Content-Disposition: inline
+In-Reply-To: <1370564771-4929-26-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,25 +19,21 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On 07/19/13 01:44, Dave Chinner wrote:
-> From: Dave Chinner<dchinner@redhat.com>
->
-> Bring the new inode create item definitions across from kernel space
-> for xfs_logprint to be able to parse.
->
+On Fri, Jun 07, 2013 at 10:25:48AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
 
-okay, sync with kernel commit 3ebe7d.
+Looks good.
 
-Reviewed-by: Mark Tinguely <tinguely.sgi.com>
+Reviewed-by: Ben Myers <bpm@sgi.com>
 
 _______________________________________________
 xfs mailing list
