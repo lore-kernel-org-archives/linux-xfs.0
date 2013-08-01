@@ -1,31 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id C3E6C29E25
-	for <xfs@oss.sgi.com>; Thu,  1 Aug 2013 10:30:39 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 6DBA229DFB
+	for <xfs@oss.sgi.com>; Thu,  1 Aug 2013 11:17:47 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id ABDD43040D9
-	for <xfs@oss.sgi.com>; Thu,  1 Aug 2013 08:30:39 -0700 (PDT)
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id MlPcxGv84EulOCLF (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 01 Aug 2013 08:30:38 -0700 (PDT)
-Received: from ucsinet21.oracle.com (ucsinet21.oracle.com [156.151.31.93])
-	by aserp1040.oracle.com (Sentrion-MTA-4.3.1/Sentrion-MTA-4.3.1) with
-	ESMTP id r71FUbe7030916
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 1 Aug 2013 15:30:38 GMT
-Received: from aserz7022.oracle.com (aserz7022.oracle.com [141.146.126.231])
-	by ucsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r71FUakn029695
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Thu, 1 Aug 2013 15:30:37 GMT
-Received: from abhmt119.oracle.com (abhmt119.oracle.com [141.146.116.71])
-	by aserz7022.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	r71FUa5L006870 for <xfs@oss.sgi.com>; Thu, 1 Aug 2013 15:30:36 GMT
-Date: Thu, 1 Aug 2013 11:30:25 -0400
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 541243040D0
+	for <xfs@oss.sgi.com>; Thu,  1 Aug 2013 09:17:44 -0700 (PDT)
+Date: Thu, 1 Aug 2013 12:17:26 -0400
 From: Dwight Engen <dwight.engen@oracle.com>
-Subject: [PATCH v8 7/7] enable building user namespace with xfs
-Message-ID: <20130801113025.5d579a28@oracle.com>
+Subject: Re: [PATCH v7 7/7] enable building user namespace with xfs
+Message-ID: <20130801121726.08dd3123@oracle.com>
+In-Reply-To: <20130801150643.GV3111@sgi.com>
+References: <20130729230709.11033b2d@oracle.com>
+	<20130730234021.GR3111@sgi.com> <20130731002119.GR13468@dastard>
+	<20130731132523.GS3111@sgi.com> <20130731232852.GE7118@dastard>
+	<20130801150643.GV3111@sgi.com>
 Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -39,48 +27,60 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: xfs@oss.sgi.com
 
-Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
----
- init/Kconfig | 13 -------------
- 1 file changed, 13 deletions(-)
+On Thu, 1 Aug 2013 10:06:43 -0500
+Ben Myers <bpm@sgi.com> wrote:
 
-diff --git a/init/Kconfig b/init/Kconfig
-index 247084b..a7bcd87 100644
---- a/init/Kconfig
-+++ b/init/Kconfig
-@@ -1106,7 +1106,6 @@ config IPC_NS
- 
- config USER_NS
- 	bool "User namespace"
--	depends on UIDGID_CONVERTED
- 	select UIDGID_STRICT_TYPE_CHECKS
- 
- 	default n
-@@ -1140,20 +1139,8 @@ config NET_NS
- 
- endif # NAMESPACES
- 
--config UIDGID_CONVERTED
--	# True if all of the selected software conmponents are known
--	# to have uid_t and gid_t converted to kuid_t and kgid_t
--	# where appropriate and are otherwise safe to use with
--	# the user namespace.
--	bool
--	default y
--
--	# Filesystems
--	depends on XFS_FS = n
--
- config UIDGID_STRICT_TYPE_CHECKS
- 	bool "Require conversions between uid/gids and their internal representation"
--	depends on UIDGID_CONVERTED
- 	default n
- 	help
- 	 While the nececessary conversions are being added to all subsystems this option allows
--- 
-1.8.1.4
+> Dave,
+> 
+> On Thu, Aug 01, 2013 at 09:28:52AM +1000, Dave Chinner wrote:
+> > On Wed, Jul 31, 2013 at 08:25:23AM -0500, Ben Myers wrote:
+> > > Hey,
+> > > 
+> > > On Wed, Jul 31, 2013 at 10:21:19AM +1000, Dave Chinner wrote:
+> > > > On Tue, Jul 30, 2013 at 06:40:21PM -0500, Ben Myers wrote:
+> > > > > On Mon, Jul 29, 2013 at 11:07:09PM -0400, Dwight Engen wrote:
+> > > > > > >From e6a9ee0cfa0ed40484f66bc1726dc19de36038b8 Mon Sep 17
+> > > > > > >00:00:00 2001
+> > > > > > From: Dwight Engen <dwight.engen@oracle.com>
+> > > > > > Date: Tue, 2 Jul 2013 09:52:54 -0400
+> > > > > > Subject: [PATCH 7/7] enable building user namespace with xfs
+> > > > > > 
+> > > > > > Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
+> > > > > 
+> > > > > Was there a patch running around to limit bulkstat to
+> > > > > init_user_ns?  Any other items that needed to be addressed
+> > > > > before applying this patch?
+> > > > 
+> > > > Bulkstat has a capable(CAP_SYS_ADMIN) check and therefore can
+> > > > only be executed in the init name space. Similarly, all the
+> > > > open-by-handle interfaces have the same capable() checks so
+> > > > they can only be executed int he init name space, too.
+> > > 
+> > > Gah.  I was under the impression that you could have a process
+> > > with CAP_SYS_ADMIN in a namespace other than init_user_ns.
+> > 
+> > Ben, until about a week and a half ago I was also working under that
+> > same understanding as you.
+> 
+> Well huh.  According to Dwight you can have a process with
+> CAP_SYS_ADMIN in a namespace other than init_user_ns.  Kinda cool,
+> IMO.
+
+Yeah, see commit 3486740a and cap_capable(). Took me a bit to grok
+that for loop, but I think the semantics are that if you are in a non
+init_user_ns, you can start from current_user_ns() looking for a cap
+and walk back the heirarchy (userns's can be nested) but it won't ever
+check in init_user_ns, and so by definition you have no capabilities
+in init_user_ns.
+
+ie. if you are in a userns, you might be nsown_capable(CAP_SYS_ADMIN)
+but you cannot ever be capable(CAP_SYS_ADMIN). Thats my understanding
+anyway :)
+
+> -Ben
 
 _______________________________________________
 xfs mailing list
