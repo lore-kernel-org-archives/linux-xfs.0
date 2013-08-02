@@ -1,26 +1,38 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5574A7F52
-	for <xfs@oss.sgi.com>; Fri,  2 Aug 2013 18:00:15 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 017B97F52
+	for <xfs@oss.sgi.com>; Fri,  2 Aug 2013 18:48:29 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 3A558304070
-	for <xfs@oss.sgi.com>; Fri,  2 Aug 2013 16:00:15 -0700 (PDT)
-Received: from mail-ob0-f182.google.com (mail-ob0-f182.google.com
-	[209.85.214.182]) by cuda.sgi.com with ESMTP id
-	DKmro35LiQMWESET (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 02 Aug 2013 16:00:14 -0700 (PDT)
-Received: by mail-ob0-f182.google.com with SMTP id wo10so2257639obc.13
-	for <xfs@oss.sgi.com>; Fri, 02 Aug 2013 16:00:13 -0700 (PDT)
-Subject: Re: Performance decrease over time
-Mime-Version: 1.0 (Apple Message framework v1085)
-From: aurfalien <aurfalien@gmail.com>
-In-Reply-To: <20130802223007.GY13468@dastard>
-Date: Fri, 2 Aug 2013 16:00:09 -0700
-Message-Id: <E83C0048-3E7D-4F8E-8FD8-0ECC89F83424@gmail.com>
-References: <20130801202108.GA355@x4> <20130802022518.GZ7118@dastard>
-	<51FB6A4C.5040103@hardwarefreak.com>
-	<20130802223007.GY13468@dastard>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id DC8D08F8037
+	for <xfs@oss.sgi.com>; Fri,  2 Aug 2013 16:48:25 -0700 (PDT)
+Received: from e9.ny.us.ibm.com (e9.ny.us.ibm.com [32.97.182.139]) by
+	cuda.sgi.com with ESMTP id gaTEco8W2ZSZJEcP (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 02 Aug 2013 16:48:24 -0700 (PDT)
+Received: from /spool/local
+	by e9.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	Violators will be prosecuted
+	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
+	Fri, 2 Aug 2013 19:48:22 -0400
+Received: from d01relay06.pok.ibm.com (d01relay06.pok.ibm.com [9.56.227.116])
+	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id 84E3DC90026
+	for <xfs@oss.sgi.com>; Fri,  2 Aug 2013 19:48:19 -0400 (EDT)
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay06.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	r72NmLha37224450
+	for <xfs@oss.sgi.com>; Fri, 2 Aug 2013 19:48:21 -0400
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
+	r72NmKVR003181 for <xfs@oss.sgi.com>; Fri, 2 Aug 2013 19:48:20 -0400
+Subject: Re: [PATCH 01/10 v2] xfstests: Run all tests when nothing is specified
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+In-Reply-To: <1373539085-8577-2-git-send-email-lczerner@redhat.com>
+References: <1373539085-8577-1-git-send-email-lczerner@redhat.com>
+	<1373539085-8577-2-git-send-email-lczerner@redhat.com>
+Date: Fri, 02 Aug 2013 18:48:19 -0500
+Message-ID: <1375487299.4155.68.camel@chandra-dt.ibm.com>
+Mime-Version: 1.0
+Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,68 +45,71 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Markus Trippelsdorf <markus@trippelsdorf.de>, Stan Hoeppner <stan@hardwarefreak.com>, xfs@oss.sgi.com
+To: Lukas Czerner <lczerner@redhat.com>
+Cc: xfs@oss.sgi.com
 
+On Thu, 2013-07-11 at 12:37 +0200, Lukas Czerner wrote:
 
-On Aug 2, 2013, at 3:30 PM, Dave Chinner wrote:
+small nits. Otherwise,
 
-> On Fri, Aug 02, 2013 at 03:14:04AM -0500, Stan Hoeppner wrote:
->> On 8/1/2013 9:25 PM, Dave Chinner wrote:
->> ...
->> 
->>> So really, the numbers only reflect a difference in layout of the
->>> files being tested. And using small direct IO means that the
->>> filesystem will tend to fill small free spaces close to the
->>> inode first, and so will fragment the file based on the locality of
->>> fragmented free space to the owner inode. In the case of the new
->>> filesystem, there is only large, contiguous free space near the
->>> inode....
->> ...
->>>> What can be
->>>> done (as a user) to mitigate this effect? 
->>> 
->>> Buy faster disks ;)
->>> 
->>> Seriously, all filesystems age and get significantly slower as they
->>> get used. XFS is not really designed for single spindles - it's
->>> algorithms are designed to spread data out over the entire device
->>> and so be able to make use of many, many spindles that make up the
->>> device. The behaviour it has works extremely well for this sort of
->>> large scale scenario, but it's close to the worst case aging
->>> behaviour for a single, very slow spindle like you are using.  Hence
->>> once the filesystem is over the "we have pristine, contiguous
->>> freespace" hump on your hardware, it's all downhill and there's not
->>> much you can do about it....
->> 
->> Wouldn't the inode32 allocator yield somewhat better results with this
->> direct IO workload?
+Reviewed-by: Chandra Seetharaman <sekharan@us.ibm.com>
+
+> Currently when no tests or test groups is specified xfstests will
+s/is/are/
+
+> silently test nothing. Interestingly enough when test groups to exclude
+> is specified the rest of the tests will be run.
+s/is/are/
+
 > 
-> What direct IO workload? Oh, you mean the IOZone test? 
+> This commit changes that to run all possible tests (for a given file
+> system) when no specific tests has been specified. This matches the old
+> xfstests behaviour.
 > 
-> What's the point of trying to optimise IOzone throughput? it matters
-> nothing to Marcus - he's just using it to demonstrate a point that
-> free space is not as contiguous as it once was...
+> Signed-off-by: Lukas Czerner <lczerner@redhat.com>
+> ---
+>  check | 6 +++---
+>  group | 5 -----
+>  2 files changed, 3 insertions(+), 8 deletions(-)
+>  delete mode 100644 group
 > 
-> As it is, inode32 will do nothing to speed up performance on a
-> single spindle - it spreads all files out across the entire disk, so
-> locality between the inode and the data is guaranteed to be worse
-> than an aged inode64 filesystem. inode32 intentionally spreads data
-> across the disk without caring about access locality so the average
-> seek from inode read to data read is half the spindle. That's why
-> inode64 is so much faster than inode32 on general workloads - the
-> seek between inode and data is closer to the track-to-track seek
-> time than the average seek time.
+> diff --git a/check b/check
+> index ff8fbcf..71b179b 100755
+> --- a/check
+> +++ b/check
+> @@ -115,7 +115,7 @@ get_all_tests()
+>  	for d in $SRC_GROUPS $FSTYP; do
+>  		ls $SRC_DIR/$d/* | \
+>  			grep -v "\..*" | \
+> -			grep -v group >> $tmp.list 2>/dev/null
+> +			grep -v "group\|Makefile" >> $tmp.list 2>/dev/null
+>  	done
+>  }
+> 
+> @@ -263,8 +263,8 @@ elif $have_test_arg; then
+>  	# had test numbers, but none in group file ... do nothing
+>  	touch $tmp.list
+>  else
+> -	# no test numbers, do everything from group file
+> -	sed -n -e '/^[0-9][0-9][0-9]*/s/[ 	].*//p' <group >$tmp.list
+> +	# no test numbers, do everything
+> +	get_all_tests
+>  fi
+> 
+>  # sort the list of tests into numeric order
+> diff --git a/group b/group
+> deleted file mode 100644
+> index 4e01f0c..0000000
+> --- a/group
+> +++ /dev/null
+> @@ -1,5 +0,0 @@
+> -# QA groups control file
+> -# Defines test groups and nominal group owners
+> -# - do not start group names with a digit
+> -# - comment line before each group is "new" description
+> -#
 
-Totally concur 100%.
 
-In fact I've either obsoleted or made local 32 bit apps as we run most everything off a NAS type setup using XFS.
-
-The benies of inode64 in our env were just too much to side line, especially with our older SATA 2 disks in use.
-
-In fact, for slower disks, I'd say inode64 is a must.  But I'm talking several in a RAID config as I don't do single disk XFS.
-
-- aurf
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
