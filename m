@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id CFA6B7F52
-	for <xfs@oss.sgi.com>; Fri,  2 Aug 2013 08:51:52 -0500 (CDT)
-Message-ID: <51FBB978.2040207@sgi.com>
-Date: Fri, 02 Aug 2013 08:51:52 -0500
+	by oss.sgi.com (Postfix) with ESMTP id EED767F52
+	for <xfs@oss.sgi.com>; Fri,  2 Aug 2013 09:22:43 -0500 (CDT)
+Message-ID: <51FBC0B0.9020002@sgi.com>
+Date: Fri, 02 Aug 2013 09:22:40 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 06/49] libxfs: fix byte swapping on constants
+Subject: Re: [PATCH 07/49] libxfs: sync xfs_da_btree.c
 References: <1374216324-8781-1-git-send-email-david@fromorbit.com>
-	<1374216324-8781-7-git-send-email-david@fromorbit.com>
-In-Reply-To: <1374216324-8781-7-git-send-email-david@fromorbit.com>
+	<1374216324-8781-8-git-send-email-david@fromorbit.com>
+In-Reply-To: <1374216324-8781-8-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,17 +28,14 @@ Cc: xfs@oss.sgi.com
 On 07/19/13 01:44, Dave Chinner wrote:
 > From: Dave Chinner<dchinner@redhat.com>
 >
-> The kernel code uses cpu_to_beXX() on constants in switch()
-> statements for magic numbers in the btree code. Th ebyte swapping
-> infratructure isn't hooked up to the proper byte swap macros to make
-> this work, so fix it and then swap all the generic btree code over
-> to match the kernel code.
+> Some variables we renamed in the kernel code, and there are a few
+> other minor differences. Fix them up.
 >
 > Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > ---
 
-sync to include/uapi/linux/swab.h and (IMO backwards) switch/case 
-statements in xfs_allocbt_verify() like kernel commit ee1a47ab.
+changed variable names in xfs_da3_node_unbalance().
+add directory allocation NOFS per kernel commit b17cb364
 
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
