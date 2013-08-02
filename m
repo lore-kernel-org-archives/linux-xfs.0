@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 7ED7E29DFB
-	for <xfs@oss.sgi.com>; Thu,  1 Aug 2013 20:47:05 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 5AD2F3040BA
-	for <xfs@oss.sgi.com>; Thu,  1 Aug 2013 18:47:02 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id CE4C729E11
+	for <xfs@oss.sgi.com>; Thu,  1 Aug 2013 20:47:31 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 9BCF18F8040
+	for <xfs@oss.sgi.com>; Thu,  1 Aug 2013 18:47:28 -0700 (PDT)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	cM0IOJnIK3GiJZ14 for <xfs@oss.sgi.com>;
-	Thu, 01 Aug 2013 18:47:00 -0700 (PDT)
-Date: Fri, 2 Aug 2013 11:46:59 +1000
+	KFMCym4GtP3kYu33 for <xfs@oss.sgi.com>;
+	Thu, 01 Aug 2013 18:47:27 -0700 (PDT)
+Date: Fri, 2 Aug 2013 11:47:25 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v8 3/7] xfs: ioctl check for capabilities in the current
-	user namespace
-Message-ID: <20130802014659.GV7118@dastard>
-References: <20130801113006.13370058@oracle.com>
+Subject: Re: [PATCH v8 6/7] xfs: add capability check to free eofblocks ioctl
+Message-ID: <20130802014725.GW7118@dastard>
+References: <20130801113020.0d43302f@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20130801113006.13370058@oracle.com>
+In-Reply-To: <20130801113020.0d43302f@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,14 +32,15 @@ Sender: xfs-bounces@oss.sgi.com
 To: Dwight Engen <dwight.engen@oracle.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Aug 01, 2013 at 11:30:06AM -0400, Dwight Engen wrote:
-> Use inode_capable() to check if SUID|SGID bits should be cleared to match
-> similar check in inode_change_ok().
+On Thu, Aug 01, 2013 at 11:30:20AM -0400, Dwight Engen wrote:
+> Check for CAP_SYS_ADMIN since the caller can truncate preallocated
+> blocks from files they do not own nor have write access to. A more
+> fine grained access check was considered: require the caller to
+> specify their own uid/gid and to use inode_permission to check for
+> write, but this would not catch the case of an inode not reachable
+> via path traversal from the callers mount namespace.
 > 
-> The check for CAP_LINUX_IMMUTABLE was not modified since all other file
-> systems also check against init_user_ns rather than current_user_ns.
-> 
-> Only allow changing of projid from init_user_ns.
+> Add check for read-only filesystem to free eofblocks ioctl.
 > 
 > Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
 
