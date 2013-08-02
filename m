@@ -1,36 +1,38 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 017B97F52
-	for <xfs@oss.sgi.com>; Fri,  2 Aug 2013 18:48:29 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id DC8D08F8037
-	for <xfs@oss.sgi.com>; Fri,  2 Aug 2013 16:48:25 -0700 (PDT)
-Received: from e9.ny.us.ibm.com (e9.ny.us.ibm.com [32.97.182.139]) by
-	cuda.sgi.com with ESMTP id gaTEco8W2ZSZJEcP (version=TLSv1
+	by oss.sgi.com (Postfix) with ESMTP id 07C4B7F52
+	for <xfs@oss.sgi.com>; Fri,  2 Aug 2013 18:49:07 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id DF2178F8037
+	for <xfs@oss.sgi.com>; Fri,  2 Aug 2013 16:49:06 -0700 (PDT)
+Received: from e31.co.us.ibm.com (e31.co.us.ibm.com [32.97.110.149]) by
+	cuda.sgi.com with ESMTP id DsbP0DEOwOAF85Na (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 02 Aug 2013 16:48:24 -0700 (PDT)
+	Fri, 02 Aug 2013 16:49:06 -0700 (PDT)
 Received: from /spool/local
-	by e9.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	by e31.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
 	Violators will be prosecuted
 	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
-	Fri, 2 Aug 2013 19:48:22 -0400
-Received: from d01relay06.pok.ibm.com (d01relay06.pok.ibm.com [9.56.227.116])
-	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id 84E3DC90026
-	for <xfs@oss.sgi.com>; Fri,  2 Aug 2013 19:48:19 -0400 (EDT)
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay06.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	r72NmLha37224450
-	for <xfs@oss.sgi.com>; Fri, 2 Aug 2013 19:48:21 -0400
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
-	r72NmKVR003181 for <xfs@oss.sgi.com>; Fri, 2 Aug 2013 19:48:20 -0400
-Subject: Re: [PATCH 01/10 v2] xfstests: Run all tests when nothing is specified
+	Fri, 2 Aug 2013 17:49:05 -0600
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com
+	[9.17.195.106])
+	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id E19E13E4003F
+	for <xfs@oss.sgi.com>; Fri,  2 Aug 2013 17:48:38 -0600 (MDT)
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	r72Nn1vg378280 for <xfs@oss.sgi.com>; Fri, 2 Aug 2013 17:49:01 -0600
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id r72Nn0lT026844
+	for <xfs@oss.sgi.com>; Fri, 2 Aug 2013 17:49:01 -0600
+Subject: Re: [PATCH 02/10 v2] xfstests: Export all important variables in
+	common/config
 From: Chandra Seetharaman <sekharan@us.ibm.com>
-In-Reply-To: <1373539085-8577-2-git-send-email-lczerner@redhat.com>
+In-Reply-To: <1373539085-8577-3-git-send-email-lczerner@redhat.com>
 References: <1373539085-8577-1-git-send-email-lczerner@redhat.com>
-	<1373539085-8577-2-git-send-email-lczerner@redhat.com>
-Date: Fri, 02 Aug 2013 18:48:19 -0500
-Message-ID: <1375487299.4155.68.camel@chandra-dt.ibm.com>
+	<1373539085-8577-3-git-send-email-lczerner@redhat.com>
+Date: Fri, 02 Aug 2013 18:49:00 -0500
+Message-ID: <1375487340.4155.69.camel@chandra-dt.ibm.com>
 Mime-Version: 1.0
 Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -48,66 +50,51 @@ Sender: xfs-bounces@oss.sgi.com
 To: Lukas Czerner <lczerner@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, 2013-07-11 at 12:37 +0200, Lukas Czerner wrote:
-
-small nits. Otherwise,
 
 Reviewed-by: Chandra Seetharaman <sekharan@us.ibm.com>
 
-> Currently when no tests or test groups is specified xfstests will
-s/is/are/
-
-> silently test nothing. Interestingly enough when test groups to exclude
-> is specified the rest of the tests will be run.
-s/is/are/
-
-> 
-> This commit changes that to run all possible tests (for a given file
-> system) when no specific tests has been specified. This matches the old
-> xfstests behaviour.
+On Thu, 2013-07-11 at 12:37 +0200, Lukas Czerner wrote:
+> Currently we do not export some of the important variables in
+> common/config. Fix this.
 > 
 > Signed-off-by: Lukas Czerner <lczerner@redhat.com>
 > ---
->  check | 6 +++---
->  group | 5 -----
->  2 files changed, 3 insertions(+), 8 deletions(-)
->  delete mode 100644 group
+>  common/config | 18 +++++++++---------
+>  1 file changed, 9 insertions(+), 9 deletions(-)
 > 
-> diff --git a/check b/check
-> index ff8fbcf..71b179b 100755
-> --- a/check
-> +++ b/check
-> @@ -115,7 +115,7 @@ get_all_tests()
->  	for d in $SRC_GROUPS $FSTYP; do
->  		ls $SRC_DIR/$d/* | \
->  			grep -v "\..*" | \
-> -			grep -v group >> $tmp.list 2>/dev/null
-> +			grep -v "group\|Makefile" >> $tmp.list 2>/dev/null
->  	done
->  }
+> diff --git a/common/config b/common/config
+> index 67c1498..1679acf 100644
+> --- a/common/config
+> +++ b/common/config
+> @@ -56,19 +56,19 @@ export LANG=C
+>  [ -d /usr/freeware/bin ] && PATH=$PATH:/usr/freeware/bin
+>  PATH=".:$PATH"
 > 
-> @@ -263,8 +263,8 @@ elif $have_test_arg; then
->  	# had test numbers, but none in group file ... do nothing
->  	touch $tmp.list
->  else
-> -	# no test numbers, do everything from group file
-> -	sed -n -e '/^[0-9][0-9][0-9]*/s/[ 	].*//p' <group >$tmp.list
-> +	# no test numbers, do everything
-> +	get_all_tests
->  fi
+> -HOST=`hostname -s`
+> -HOSTOS=`uname -s`
+> -[ "$HOSTOS" = "IRIX64" ] && HOSTOS="IRIX"
+> +export HOST=`hostname -s`
+> +export HOSTOS=`uname -s`
+> +[ "$HOSTOS" = "IRIX64" ] && export HOSTOS="IRIX"
 > 
->  # sort the list of tests into numeric order
-> diff --git a/group b/group
-> deleted file mode 100644
-> index 4e01f0c..0000000
-> --- a/group
-> +++ /dev/null
-> @@ -1,5 +0,0 @@
-> -# QA groups control file
-> -# Defines test groups and nominal group owners
-> -# - do not start group names with a digit
-> -# - comment line before each group is "new" description
-> -#
+> -MODULAR=0               # using XFS as a module or not
+> -BOOT="/boot"            # install target for kernels
+> +export MODULAR=0               # using XFS as a module or not
+> +export BOOT="/boot"            # install target for kernels
+>  export EXTRA=${EXTRA:=xfs-qa}
+> 
+>  # general parameters (mainly for auto-qa)
+> -SOAK_PROC=3             # -p option to fsstress
+> -SOAK_STRESS=10000       # -n option to fsstress
+> -SOAK_PASSES=-1          # count of repetitions of fsstress (while soaking)
+> -EMAIL=root@localhost    # where auto-qa will send its status messages
+> +export SOAK_PROC=3             # -p option to fsstress
+> +export SOAK_STRESS=10000       # -n option to fsstress
+> +export SOAK_PASSES=-1          # count of repetitions of fsstress (while soaking)
+> +export EMAIL=root@localhost    # where auto-qa will send its status messages
+>  export HOST_OPTIONS=${HOST_OPTIONS:=local.config}
+>  export CHECK_OPTIONS=${CHECK_OPTIONS:="-g auto"}
+>  export BENCH_PASSES=${BENCH_PASSES:=5}
 
 
 _______________________________________________
