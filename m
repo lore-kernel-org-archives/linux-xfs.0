@@ -1,35 +1,36 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B7B527F52
-	for <xfs@oss.sgi.com>; Fri,  2 Aug 2013 18:51:59 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4B649AC002
-	for <xfs@oss.sgi.com>; Fri,  2 Aug 2013 16:51:59 -0700 (PDT)
-Received: from e39.co.us.ibm.com (e39.co.us.ibm.com [32.97.110.160]) by
-	cuda.sgi.com with ESMTP id u0HWnt2IlhxVEE65 (version=TLSv1
+	by oss.sgi.com (Postfix) with ESMTP id 9A5417F52
+	for <xfs@oss.sgi.com>; Fri,  2 Aug 2013 18:53:57 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 07DEBAC002
+	for <xfs@oss.sgi.com>; Fri,  2 Aug 2013 16:53:56 -0700 (PDT)
+Received: from e7.ny.us.ibm.com (e7.ny.us.ibm.com [32.97.182.137]) by
+	cuda.sgi.com with ESMTP id g4FqgrZt9pnEi7kC (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 02 Aug 2013 16:51:58 -0700 (PDT)
+	Fri, 02 Aug 2013 16:53:55 -0700 (PDT)
 Received: from /spool/local
-	by e39.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	by e7.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
 	Violators will be prosecuted
 	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
-	Fri, 2 Aug 2013 17:51:57 -0600
+	Fri, 2 Aug 2013 19:53:55 -0400
 Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id 3C22DC90026
-	for <xfs@oss.sgi.com>; Fri,  2 Aug 2013 19:51:52 -0400 (EDT)
-Received: from d01av05.pok.ibm.com (d01av05.pok.ibm.com [9.56.224.195])
+	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 037956E803C
+	for <xfs@oss.sgi.com>; Fri,  2 Aug 2013 19:53:48 -0400 (EDT)
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
 	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	r72Npr3R157538 for <xfs@oss.sgi.com>; Fri, 2 Aug 2013 19:51:53 -0400
-Received: from d01av05.pok.ibm.com (loopback [127.0.0.1])
-	by d01av05.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
-	r72NprXc022636 for <xfs@oss.sgi.com>; Fri, 2 Aug 2013 19:51:53 -0400
-Subject: Re: [PATCH 06/10 v2] xfstests: Allow to specify RESULT_BASE directory
+	r72NrqWS197252 for <xfs@oss.sgi.com>; Fri, 2 Aug 2013 19:53:53 -0400
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id r72NrqQS005659
+	for <xfs@oss.sgi.com>; Fri, 2 Aug 2013 17:53:52 -0600
+Subject: Re: [PATCH 07/10 v2] xfstests: Prepare for config section
 From: Chandra Seetharaman <sekharan@us.ibm.com>
-In-Reply-To: <1373539085-8577-7-git-send-email-lczerner@redhat.com>
+In-Reply-To: <1373539085-8577-8-git-send-email-lczerner@redhat.com>
 References: <1373539085-8577-1-git-send-email-lczerner@redhat.com>
-	<1373539085-8577-7-git-send-email-lczerner@redhat.com>
-Date: Fri, 02 Aug 2013 18:51:52 -0500
-Message-ID: <1375487512.4155.73.camel@chandra-dt.ibm.com>
+	<1373539085-8577-8-git-send-email-lczerner@redhat.com>
+Date: Fri, 02 Aug 2013 18:53:51 -0500
+Message-ID: <1375487631.4155.75.camel@chandra-dt.ibm.com>
 Mime-Version: 1.0
 Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -48,47 +49,377 @@ To: Lukas Czerner <lczerner@redhat.com>
 Cc: xfs@oss.sgi.com
 
 On Thu, 2013-07-11 at 12:38 +0200, Lukas Czerner wrote:
-> This commit adds the possibility to specify RESULT_BASE directory from
-> the config file, or with environment variable. The default remains the
-> same "$here/results/".
+> This stupid patch only put the indentation in place so we will be able
+
+I would suggest to remove "stupid" :).
+
+You can simply say that this patch just indents the script to make the
+review of next patch easier.
+ 
+> to clearly see and review changes made in the second patch which will
+
+s/second/next/
+
+> add a loop (instead of allways-true condition introduced in this patch)
+
+s/allways/always/
+
+> adding support for config sections. There are no changes in the logic,
+> only indentation changes.
 > 
 > Signed-off-by: Lukas Czerner <lczerner@redhat.com>
-
-Reviewed-by: Chandra Seetharaman <sekharan@us.ibm.com>
-
 > ---
->  check         | 1 -
->  common/config | 5 +++++
->  2 files changed, 5 insertions(+), 1 deletion(-)
+>  check | 314 +++++++++++++++++++++++++++++++++---------------------------------
+>  1 file changed, 157 insertions(+), 157 deletions(-)
 > 
 > diff --git a/check b/check
-> index dc972d7..428eba1 100755
+> index 428eba1..677650c 100755
 > --- a/check
 > +++ b/check
-> @@ -66,7 +66,6 @@ export FSTYP
->  SUPPORTED_TESTS="[0-9][0-9][0-9] [0-9][0-9][0-9][0-9]"
->  SRC_GROUPS="generic shared"
->  export SRC_DIR="tests"
-> -export RESULT_BASE=${RESULT_BASE:="$here/results"}
+> @@ -356,186 +356,186 @@ END	{ if (NR > 0) {
 > 
->  usage()
->  {
-> diff --git a/common/config b/common/config
-> index 34c99e1..39dd469 100644
-> --- a/common/config
-> +++ b/common/config
-> @@ -230,6 +230,11 @@ if [ -f "$HOST_OPTIONS" ]; then
->  fi
+>  trap "_wrapup; exit \$status" 0 1 2 3 15
 > 
->  get_next_config() {
-> +	# set default RESULT_BASE
-> +	if [ -z "$RESULT_BASE" ]; then
-> +		export RESULT_BASE="$here/results/"
+> -mkdir -p $RESULT_BASE
+> -if [ ! -d $RESULT_BASE ]; then
+> -	echo "failed to create results directory $RESULTS_BASE"
+> -	exit 1;
+> -fi
+> +if true; then
+> +	mkdir -p $RESULT_BASE
+> +	if [ ! -d $RESULT_BASE ]; then
+> +		echo "failed to create results directory $RESULTS_BASE"
+> +		exit 1;
 > +	fi
+> 
+> -seq="check"
+> -check="$RESULT_BASE/check"
+> +	seq="check"
+> +	check="$RESULT_BASE/check"
+> 
+>  # don't leave old full output behind on a clean run
+> -rm -f $check.full
+> +	rm -f $check.full
+> 
+> -[ -f $check.time ] || touch $check.time
+> +	[ -f $check.time ] || touch $check.time
+> 
+>  # print out our test configuration
+> -echo "FSTYP         -- `_full_fstyp_details`"
+> -echo "PLATFORM      -- `_full_platform_details`"
+> -if [ ! -z "$SCRATCH_DEV" ]; then
+> -  echo "MKFS_OPTIONS  -- `_scratch_mkfs_options`"
+> -  echo "MOUNT_OPTIONS -- `_scratch_mount_options`"
+> -fi
+> -echo
+> -
+> -
+> -if [ ! -z "$SCRATCH_DEV" ]; then
+> -  umount $SCRATCH_DEV 2>/dev/null
+> -  # call the overridden mkfs - make sure the FS is built
+> -  # the same as we'll create it later.
+> -
+> -  if ! _scratch_mkfs $flag >$tmp.err 2>&1
+> -  then
+> -      echo "our local _scratch_mkfs routine ..."
+> -      cat $tmp.err
+> -      echo "check: failed to mkfs \$SCRATCH_DEV using specified options"
+> -      exit 1
+> -  fi
+> -
+> -  # call the overridden mount - make sure the FS mounts with
+> -  # the same options that we'll mount with later.
+> -  if ! _scratch_mount >$tmp.err 2>&1
+> -  then
+> -      echo "our local mount routine ..."
+> -      cat $tmp.err
+> -      echo "check: failed to mount \$SCRATCH_DEV using specified options"
+> -      exit 1
+> -  fi
+> -fi
+> -
+> -seqres="$check"
+> -_check_test_fs
+> -
+> -for seq in $list
+> -do
+> -    err=false
+> +	echo "FSTYP         -- `_full_fstyp_details`"
+> +	echo "PLATFORM      -- `_full_platform_details`"
+> +	if [ ! -z "$SCRATCH_DEV" ]; then
+> +		echo "MKFS_OPTIONS  -- `_scratch_mkfs_options`"
+> +		echo "MOUNT_OPTIONS -- `_scratch_mount_options`"
+> +	fi
+> +	echo
+> 
+> -    # the filename for the test and the name output are different.
+> -    # we don't include the tests/ directory in the name output.
+> -    seqnum=`echo $seq | sed -e "s;$SRC_DIR/;;"`
+> 
+> -    # Similarly, the result directory needs to replace the tests/
+> -    # part of the test location.
+> -    group=`dirname $seq`
+> -    export RESULT_DIR=`echo $group | sed -e "s;$SRC_DIR;$RESULT_BASE;"`
+> -    mkdir -p $RESULT_DIR
+> -    seqres="$RESULT_BASE/$seqnum"
+> +	if [ ! -z "$SCRATCH_DEV" ]; then
+> +		umount $SCRATCH_DEV 2>/dev/null
+> +		# call the overridden mkfs - make sure the FS is built
+> +		# the same as we'll create it later.
+> 
+> -    echo -n "$seqnum"
+> +		if ! _scratch_mkfs $flag >$tmp.err 2>&1
+> +		then
+> +			echo "our local _scratch_mkfs routine ..."
+> +			cat $tmp.err
+> +			echo "check: failed to mkfs \$SCRATCH_DEV using specified options"
+> +			exit 1
+> +		fi
+> 
+> -    if $showme
+> -    then
+> -	echo
+> -	continue
+> -    elif [ ! -f $seq ]
+> -    then
+> -	echo " - no such test?"
+> -    else
+> -	# really going to try and run this one
+> -	#
+> -	rm -f $seqres.out.bad
+> -
+> -	# check if we really should run it
+> -	if [ -s $tmp.xlist ]; then
+> -		if grep $seqnum $tmp.xlist > /dev/null 2>&1 ; then
+> -			echo "       [expunged]"
+> -			continue
+> +		# call the overridden mount - make sure the FS mounts with
+> +		# the same options that we'll mount with later.
+> +		if ! _scratch_mount >$tmp.err 2>&1
+> +		then
+> +			echo "our local mount routine ..."
+> +			cat $tmp.err
+> +			echo "check: failed to mount \$SCRATCH_DEV using specified options"
+> +			exit 1
+>  		fi
+>  	fi
+> 
+> -	# slashes now in names, sed barfs on them so use grep
+> -	lasttime=`grep -w ^$seqnum $check.time | awk '// {print $2}'`
+> -	if [ "X$lasttime" != X ]; then
+> -		echo -n " ${lasttime}s ..."
+> -	else
+> -		echo -n "	"	# prettier output with timestamps.
+> -	fi
+> -	rm -f core $seqres.notrun
+> +	seqres="$check"
+> +	_check_test_fs
+> 
+> -	start=`_wallclock`
+> -	$timestamp && echo -n "	["`date "+%T"`"]"
+> -	[ ! -x $seq ] && chmod u+x $seq # ensure we can run it
+> -	$LOGGER_PROG "run xfstest $seqnum"
+> -	./$seq >$tmp.rawout 2>&1
+> -	sts=$?
+> -	$timestamp && _timestamp
+> -	stop=`_wallclock`
+> +	for seq in $list
+> +	do
+> +		err=false
+> 
+> -	_fix_malloc <$tmp.rawout >$tmp.out
+> -	rm -f $tmp.rawout
+> +		# the filename for the test and the name output are different.
+> +		# we don't include the tests/ directory in the name output.
+> +		seqnum=`echo $seq | sed -e "s;$SRC_DIR/;;"`
+> 
+> -	if [ -f core ]
+> -	then
+> -	    echo -n " [dumped core]"
+> -	    mv core $RESULT_BASE/$seqnum.core
+> -	    err=true
+> -	fi
+> +		# Similarly, the result directory needs to replace the tests/
+> +		# part of the test location.
+> +		group=`dirname $seq`
+> +		export RESULT_DIR=`echo $group | sed -e "s;$SRC_DIR;$RESULT_BASE;"`
+> +		mkdir -p $RESULT_DIR
+> +		seqres="$RESULT_BASE/$seqnum"
+> 
+> -	if [ -f $seqres.notrun ]
+> -	then
+> -	    $timestamp || echo -n " [not run] "
+> -	    $timestamp && echo " [not run]" && echo -n "	$seqnum -- "
+> -	    cat $seqres.notrun
+> -	    notrun="$notrun $seqnum"
+> -	else
+> -	    if [ $sts -ne 0 ]
+> -	    then
+> -		echo -n " [failed, exit status $sts]"
+> -		err=true
+> -	    fi
+> -	    if [ ! -f $seq.out ]
+> -	    then
+> -		echo " - no qualified output"
+> -		err=true
+> -	    else
+> -		if diff $seq.out $tmp.out >/dev/null 2>&1
+> +		echo -n "$seqnum"
 > +
->  	#  Mandatory Config values.
->  	MC=""
->  	[ -z "$EMAIL" ]          && MC="$MC EMAIL"
+> +		if $showme
+> +		then
+> +			echo
+> +			continue
+> +		elif [ ! -f $seq ]
+>  		then
+> -		    if $err
+> -		    then
+> -			:
+> -		    else
+> -			echo "$seqnum `expr $stop - $start`" >>$tmp.time
+> -			echo -n " `expr $stop - $start`s"
+> -		    fi
+> -		    echo ""
+> +			echo " - no such test?"
+>  		else
+> -		    echo " - output mismatch (see $seqres.out.bad)"
+> -		    mv $tmp.out $seqres.out.bad
+> -		    $diff $seq.out $seqres.out.bad | {
+> -		        if test "$DIFF_LENGTH" -le 0; then
+> -				cat
+> +			# really going to try and run this one
+> +			#
+> +			rm -f $seqres.out.bad
+> +
+> +			# check if we really should run it
+> +			if [ -s $tmp.xlist ]; then
+> +				if grep $seqnum $tmp.xlist > /dev/null 2>&1 ; then
+> +					echo "       [expunged]"
+> +					continue
+> +				fi
+> +			fi
+> +
+> +			# slashes now in names, sed barfs on them so use grep
+> +			lasttime=`grep -w ^$seqnum $check.time | awk '// {print $2}'`
+> +			if [ "X$lasttime" != X ]; then
+> +				echo -n " ${lasttime}s ..."
+>  			else
+> -				head -n "$DIFF_LENGTH"
+> -			fi; } | \
+> -			sed -e 's/^\(.\)/    \1/'
+> -		    echo "     ..."
+> -		    echo "     (Run '$diff $seq.out $seqres.out.bad' to see the" \
+> -			 "entire diff)"
+> -		    err=true
+> -		fi
+> -	    fi
+> -	fi
+> +				echo -n "	"	# prettier output with timestamps.
+> +			fi
+> +			rm -f core $seqres.notrun
+> +
+> +			start=`_wallclock`
+> +			$timestamp && echo -n "	["`date "+%T"`"]"
+> +			[ ! -x $seq ] && chmod u+x $seq # ensure we can run it
+> +			$LOGGER_PROG "run xfstest $seqnum"
+> +			./$seq >$tmp.rawout 2>&1
+> +			sts=$?
+> +			$timestamp && _timestamp
+> +			stop=`_wallclock`
+> +
+> +			_fix_malloc <$tmp.rawout >$tmp.out
+> +			rm -f $tmp.rawout
+> +
+> +			if [ -f core ]
+> +			then
+> +				echo -n " [dumped core]"
+> +				mv core $RESULT_BASE/$seqnum.core
+> +			    err=true
+> +			fi
+> 
+> -    fi
+> +			if [ -f $seqres.notrun ]
+> +			then
+> +				$timestamp || echo -n " [not run] "
+> +				$timestamp && echo " [not run]" && echo -n "	$seqnum -- "
+> +				cat $seqres.notrun
+> +				notrun="$notrun $seqnum"
+> +			else
+> +				if [ $sts -ne 0 ]
+> +				then
+> +					echo -n " [failed, exit status $sts]"
+> +					err=true
+> +				fi
+> +				if [ ! -f $seq.out ]
+> +				then
+> +					echo " - no qualified output"
+> +					err=true
+> +				else
+> +					if diff $seq.out $tmp.out >/dev/null 2>&1
+> +					then
+> +						if $err
+> +						then
+> +							:
+> +						else
+> +							echo "$seqnum `expr $stop - $start`" >>$tmp.time
+> +							echo -n " `expr $stop - $start`s"
+> +						fi
+> +						echo ""
+> +					else
+> +						echo " - output mismatch (see $seqres.out.bad)"
+> +						mv $tmp.out $seqres.out.bad
+> +						$diff $seq.out $seqres.out.bad | {
+> +						if test "$DIFF_LENGTH" -le 0; then
+> +							cat
+> +						else
+> +							head -n "$DIFF_LENGTH"
+> +						fi; } | \
+> +						sed -e 's/^\(.\)/    \1/'
+> +						echo "     ..."
+> +						echo "     (Run '$diff $seq.out $seqres.out.bad' to see the entire diff)"
+> +						err=true
+> +					fi
+> +				fi
+> +			fi
+> +		fi
+> 
+> -    # come here for each test, except when $showme is true
+> -    #
+> -    if $err
+> -    then
+> -	bad="$bad $seqnum"
+> -	n_bad=`expr $n_bad + 1`
+> -	quick=false
+> -    fi
+> -    if [ ! -f $seqres.notrun ]
+> -    then
+> -	try="$try $seqnum"
+> -	n_try=`expr $n_try + 1`
+> -        _check_test_fs
+> -    fi
+> +		# come here for each test, except when $showme is true
+> +		#
+> +		if $err
+> +		then
+> +			bad="$bad $seqnum"
+> +			n_bad=`expr $n_bad + 1`
+> +			quick=false
+> +		fi
+> +		if [ ! -f $seqres.notrun ]
+> +		then
+> +			try="$try $seqnum"
+> +			n_try=`expr $n_try + 1`
+> +			_check_test_fs
+> +		fi
+> 
+> -    seq="after_$seqnum"
+> -done
+> +		 seq="after_$seqnum"
+> +	done
+> +fi
+> 
+>  interrupt=false
+>  status=`expr $n_bad`
 
 
 _______________________________________________
