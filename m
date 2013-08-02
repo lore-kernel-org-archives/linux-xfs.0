@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 5DF4B7F95
-	for <xfs@oss.sgi.com>; Wed, 21 Aug 2013 01:44:01 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 4738C3040BD
-	for <xfs@oss.sgi.com>; Tue, 20 Aug 2013 23:44:01 -0700 (PDT)
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.9])
-	by cuda.sgi.com with ESMTP id mOd8eYnnSiTBdecS (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 20 Aug 2013 23:43:59 -0700 (PDT)
-Date: Tue, 20 Aug 2013 23:43:57 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/3] quota: Add a new quotactl command Q_XGETQSTATV
-Message-ID: <20130821064357.GA8822@infradead.org>
-References: <1375828029-26360-1-git-send-email-sekharan@us.ibm.com>
-	<1375828029-26360-2-git-send-email-sekharan@us.ibm.com>
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 8315929DFB
+	for <xfs@oss.sgi.com>; Thu,  1 Aug 2013 20:48:15 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 1DA7FAC006
+	for <xfs@oss.sgi.com>; Thu,  1 Aug 2013 18:48:15 -0700 (PDT)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	3JBam1XocYlDJUZc for <xfs@oss.sgi.com>;
+	Thu, 01 Aug 2013 18:48:13 -0700 (PDT)
+Date: Fri, 2 Aug 2013 11:48:12 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v8 7/7] enable building user namespace with xfs
+Message-ID: <20130802014812.GX7118@dastard>
+References: <20130801113025.5d579a28@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1375828029-26360-2-git-send-email-sekharan@us.ibm.com>
+In-Reply-To: <20130801113025.5d579a28@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,16 +29,61 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Chandra Seetharaman <sekharan@us.ibm.com>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, Abhijith Das <adas@redhat.com>, Jan Kara <jack@suse.cz>, Steven Whitehouse <swhiteho@redhat.com>, xfs@oss.sgi.com
+To: Dwight Engen <dwight.engen@oracle.com>
+Cc: xfs@oss.sgi.com
 
-Sorry for being late to the game, but I don not like the in-kernel
-interface here at all.  Given that Q_XGETQSTATV is a strict superset
-of Q_XGETQSTAT there is no need for the second method - just always
-fill out the larger in-kernel structure and only copy the smaller
-information to userspace for the Q_XGETSTAT case.  That keeps the amount
-of code required in the implementations of the methods low and follows
-the model used elsewhere in the kernel (e.g. stat and statfs)
+On Thu, Aug 01, 2013 at 11:30:25AM -0400, Dwight Engen wrote:
+> Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
+> ---
+>  init/Kconfig | 13 -------------
+>  1 file changed, 13 deletions(-)
+> 
+> diff --git a/init/Kconfig b/init/Kconfig
+> index 247084b..a7bcd87 100644
+> --- a/init/Kconfig
+> +++ b/init/Kconfig
+> @@ -1106,7 +1106,6 @@ config IPC_NS
+>  
+>  config USER_NS
+>  	bool "User namespace"
+> -	depends on UIDGID_CONVERTED
+>  	select UIDGID_STRICT_TYPE_CHECKS
+>  
+>  	default n
+> @@ -1140,20 +1139,8 @@ config NET_NS
+>  
+>  endif # NAMESPACES
+>  
+> -config UIDGID_CONVERTED
+> -	# True if all of the selected software conmponents are known
+> -	# to have uid_t and gid_t converted to kuid_t and kgid_t
+> -	# where appropriate and are otherwise safe to use with
+> -	# the user namespace.
+> -	bool
+> -	default y
+> -
+> -	# Filesystems
+> -	depends on XFS_FS = n
+> -
+>  config UIDGID_STRICT_TYPE_CHECKS
+>  	bool "Require conversions between uid/gids and their internal representation"
+> -	depends on UIDGID_CONVERTED
+>  	default n
+>  	help
+>  	 While the nececessary conversions are being added to all subsystems this option allows
+
+Looks good, I think we can run with this now...
+
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
+Good work, Dwight :)
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
