@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 74E2E7F52
-	for <xfs@oss.sgi.com>; Fri,  2 Aug 2013 11:02:13 -0500 (CDT)
-Message-ID: <51FBD801.8040104@sgi.com>
-Date: Fri, 02 Aug 2013 11:02:09 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 1CB487F56
+	for <xfs@oss.sgi.com>; Fri,  2 Aug 2013 11:25:49 -0500 (CDT)
+Message-ID: <51FBDD89.7070803@sgi.com>
+Date: Fri, 02 Aug 2013 11:25:45 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 09/49] libxfs: sync attr code with kernel
+Subject: Re: [PATCH 10/49] libxfs: sync dir2 kernel differences
 References: <1374216324-8781-1-git-send-email-david@fromorbit.com>
-	<1374216324-8781-10-git-send-email-david@fromorbit.com>
-In-Reply-To: <1374216324-8781-10-git-send-email-david@fromorbit.com>
+	<1374216324-8781-11-git-send-email-david@fromorbit.com>
+In-Reply-To: <1374216324-8781-11-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,16 +30,12 @@ On 07/19/13 01:44, Dave Chinner wrote:
 >
 > Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > ---
->   libxfs/xfs_attr.c      | 6 +++---
->   libxfs/xfs_attr_leaf.c | 7 +++----
->   2 files changed, 6 insertions(+), 7 deletions(-)
->
 
-syncs the code in libxfs/xfs_attr.c and libxfs/xfs_attr_leaf.c to kernel 
-files with exception of the part in xfs_attr_shortform_to_leaf() that 
-gets updated by patch 14/49.
+syncs the libxfs/xfs_dir2.c, libxfs/xfs_dir2_data.c, 
+libxfs/xfs_dir2_leaf.c, and libxfs/xfs_dir2_node.c to the Linux 3.12 
+series before kernel patch 31/49.
 
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+Reviewed-by: Mark Tinguely: <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
