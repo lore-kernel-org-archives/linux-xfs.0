@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E558A7F4E
-	for <xfs@oss.sgi.com>; Sun,  4 Aug 2013 18:37:13 -0500 (CDT)
-Message-ID: <51FEE5A6.6030908@sgi.com>
-Date: Sun, 04 Aug 2013 18:37:10 -0500
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 198F27F4E
+	for <xfs@oss.sgi.com>; Sun,  4 Aug 2013 18:41:42 -0500 (CDT)
+Message-ID: <51FEE6B2.1080006@sgi.com>
+Date: Sun, 04 Aug 2013 18:41:38 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 18/49] xfs: split out buf log item format definitions
+Subject: Re: [PATCH 19/49] xfs: split out inode log item format definition
 References: <1374216324-8781-1-git-send-email-david@fromorbit.com>
-	<1374216324-8781-19-git-send-email-david@fromorbit.com>
-In-Reply-To: <1374216324-8781-19-git-send-email-david@fromorbit.com>
+	<1374216324-8781-20-git-send-email-david@fromorbit.com>
+In-Reply-To: <1374216324-8781-20-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,11 +28,16 @@ Cc: xfs@oss.sgi.com
 On 07/19/13 01:44, Dave Chinner wrote:
 > From: Dave Chinner<dchinner@redhat.com>
 >
+> The EFI/EFD item format definitions are shared with userspace. Split
+> the out of header files that contain kernel only defintions to make
+> it simple to shared them.
+>
 > Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > ---
 
-sync the new user/kernel xfs_buf_log_item to 03/49 of the for Linux 3.12 
-kernel patch series which also means remove kernel-only in xfs_buf_item.h
+sync the shared user/kernel extent free items to xfs_log_format.h. The 
+kernel only extent free items remain in the header file, 
+xfs_extfree_item.h, which is removed from xfsprogs.
 
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
