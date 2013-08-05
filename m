@@ -1,15 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 198F27F4E
-	for <xfs@oss.sgi.com>; Sun,  4 Aug 2013 18:41:42 -0500 (CDT)
-Message-ID: <51FEE6B2.1080006@sgi.com>
-Date: Sun, 04 Aug 2013 18:41:38 -0500
+	by oss.sgi.com (Postfix) with ESMTP id 8AAC57CBF
+	for <xfs@oss.sgi.com>; Mon,  5 Aug 2013 09:18:30 -0500 (CDT)
+Message-ID: <51FFB434.6000304@sgi.com>
+Date: Mon, 05 Aug 2013 09:18:28 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 19/49] xfs: split out inode log item format definition
+Subject: Re: [PATCH 20/49] xfs: separate dquot on disk format definitions
+	out of xfs_quota.h
 References: <1374216324-8781-1-git-send-email-david@fromorbit.com>
-	<1374216324-8781-20-git-send-email-david@fromorbit.com>
-In-Reply-To: <1374216324-8781-20-git-send-email-david@fromorbit.com>
+	<1374216324-8781-21-git-send-email-david@fromorbit.com>
+In-Reply-To: <1374216324-8781-21-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,16 +29,20 @@ Cc: xfs@oss.sgi.com
 On 07/19/13 01:44, Dave Chinner wrote:
 > From: Dave Chinner<dchinner@redhat.com>
 >
-> The EFI/EFD item format definitions are shared with userspace. Split
-> the out of header files that contain kernel only defintions to make
-> it simple to shared them.
+> The on disk format definitions of the on-disk dquot, log formats and
+> quota off log formats are all intertwined with other definitions for
+> quotas. Separate them out into their own header file so they can
+> easily be shared with userspace.
 >
 > Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > ---
 
-sync the shared user/kernel extent free items to xfs_log_format.h. The 
-kernel only extent free items remain in the header file, 
-xfs_extfree_item.h, which is removed from xfsprogs.
+xfsprogs equivalent of the for 3.12 kernel patch 05/49.
+
+quota entries moved to new xfs_format.h. quota log entries to 
+xfs_log_format.h and a def to xfs_types.h - all synced to kernel patch 
+05/49. xfs_quota.h is not synced to kernel 05/49, but in user patch 
+24/49 is removed.
 
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
