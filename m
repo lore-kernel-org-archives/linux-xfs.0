@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 709BA7CBF
-	for <xfs@oss.sgi.com>; Mon,  5 Aug 2013 16:39:12 -0500 (CDT)
-Message-ID: <52001B7F.5020906@sgi.com>
-Date: Mon, 05 Aug 2013 16:39:11 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+	by oss.sgi.com (Postfix) with ESMTP id 7A20C7CBF
+	for <xfs@oss.sgi.com>; Mon,  5 Aug 2013 16:40:41 -0500 (CDT)
+Date: Mon, 5 Aug 2013 16:40:41 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 47/48] xfs_repair: support CRC enabled remote symlinks
+Message-ID: <20130805214041.GW3111@sgi.com>
+References: <1370564771-4929-1-git-send-email-david@fromorbit.com>
+	<1370564771-4929-48-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 27/49] xfs: move inode fork definitions to a new header
-	file
-References: <1374216324-8781-1-git-send-email-david@fromorbit.com>
-	<1374216324-8781-28-git-send-email-david@fromorbit.com>
-In-Reply-To: <1374216324-8781-28-git-send-email-david@fromorbit.com>
+Content-Disposition: inline
+In-Reply-To: <1370564771-4929-48-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,34 +19,30 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On 07/19/13 01:45, Dave Chinner wrote:
-> From: Dave Chinner<dchinner@redhat.com>
->
-> The inode fork definitions are a combination of on-disk format
-> definition and in-memory tracking and manipulation. They are both
-> shared with userspace, so move them all into their own file so
-> sharing is easy to do and track.  This removes all inode fork
-> related information from xfs_inode.h.
->
-> Do the same for the all the C code that currently resides in
-> xfs_inode.c for the same reason.
->
-> Signed-off-by: Dave Chinner<dchinner@redhat.com>
-> ---
+On Fri, Jun 07, 2013 at 10:26:10AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Add support for verifying the contents of remote symlinks with CRCs.
+> Factor the remote symlink checking code out of the symlink function
+> so that it is clear what it is checking. This also reduces the
+> indentation and makes the code clearer.
+> 
+> Then add support for the CRC format by modelling the checking
+> function directly on the code that is used in the kernel for reading
+> and checking both remote symlink formats.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-xfsprogs equivalent of the for 3.12 kernel patch 12/49.
+This goes with commit 321a95839e65.
 
-move remaining shared inode to new xfs_inode_fork.c/h. new function 
-prototypes.
-
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+Reviewed-by: Ben Myers <bpm@sgi.com>
 
 _______________________________________________
 xfs mailing list
