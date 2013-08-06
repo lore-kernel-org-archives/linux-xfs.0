@@ -1,16 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 174327F37
-	for <xfs@oss.sgi.com>; Tue,  6 Aug 2013 13:23:12 -0500 (CDT)
-Message-ID: <52013F0C.2060206@sgi.com>
-Date: Tue, 06 Aug 2013 13:23:08 -0500
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5B4127F37
+	for <xfs@oss.sgi.com>; Tue,  6 Aug 2013 13:33:07 -0500 (CDT)
+Message-ID: <5201415F.4090909@sgi.com>
+Date: Tue, 06 Aug 2013 13:33:03 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 41/49] xfs: Introduce a new structure to hold transaction
-	reservation items
+Subject: Re: [PATCH 42/49] xfs: Introduce tr_fsyncts to m_reservation
 References: <1374216324-8781-1-git-send-email-david@fromorbit.com>
-	<1374216324-8781-42-git-send-email-david@fromorbit.com>
-In-Reply-To: <1374216324-8781-42-git-send-email-david@fromorbit.com>
+	<1374216324-8781-43-git-send-email-david@fromorbit.com>
+In-Reply-To: <1374216324-8781-43-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,20 +28,19 @@ Cc: xfs@oss.sgi.com
 On 07/19/13 01:45, Dave Chinner wrote:
 > From: Jie Liu<jeff.liu@oracle.com>
 >
-> Introduce a new structure xfs_trans_res to hold transaction
-> reservation item info per log ticket.
+> A preparation step.
 >
-> We also need to improve xfs_trans_resv_calc() by initializing the
-> log count as well as log flags for permanent log reservation.
+> For now fsync_ts transaction use the pre-calculated log reservation
+> size of tr_swrite.
+> This patch introduce a new item tr_fsyncts to mp->m_reservations
+> structure so that we can fetch the log reservation value for it
+> in a same manner to others.
 >
 > Signed-off-by: Jie Liu<jeff.liu@oracle.com>
-> Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > ---
 
-user equivalent of the for Linux 3.12 kernel patch 35/49
-plus find max log reservation for mkfs.
-
-Looks good.
+user equivalent of the for Linux 3.12 kernel patch 36/49.
+tr_fsyncts get it's own reservation function.
 
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
