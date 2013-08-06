@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id AFCEB29DFB
-	for <xfs@oss.sgi.com>; Tue,  6 Aug 2013 11:12:19 -0500 (CDT)
-Message-ID: <52012062.7030803@sgi.com>
-Date: Tue, 06 Aug 2013 11:12:18 -0500
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id C6F8729DFB
+	for <xfs@oss.sgi.com>; Tue,  6 Aug 2013 11:16:49 -0500 (CDT)
+Message-ID: <52012170.5060203@sgi.com>
+Date: Tue, 06 Aug 2013 11:16:48 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 38/49] xfs: remove __KERNEL__ check from xfs_dir2_leaf.c
+Subject: Re: [PATCH 39/49] xfs: move kernel specific type definitions to xfs.h
 References: <1374216324-8781-1-git-send-email-david@fromorbit.com>
-	<1374216324-8781-39-git-send-email-david@fromorbit.com>
-In-Reply-To: <1374216324-8781-39-git-send-email-david@fromorbit.com>
+	<1374216324-8781-40-git-send-email-david@fromorbit.com>
+In-Reply-To: <1374216324-8781-40-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,19 +28,18 @@ Cc: xfs@oss.sgi.com
 On 07/19/13 01:45, Dave Chinner wrote:
 > From: Dave Chinner<dchinner@redhat.com>
 >
-> It's actually an ifndef section, which means it is only included in
-> userspace. however, it's deep within the libxfs code, so it's
-> unlikely that the condition checked in userspace can actually occur
-> (search an empty leaf) through the libxfs interfaces. i.e. if it can
-> happen in usrspace, it can happen in the kernel, so remove it from
-> userspace too....
+> xfs_types.h is shared with userspace, so having kernel specific
+> types defined in it is problematic. Move all the kernel specific
+> defines to xfs_linux.h so we can remove the __KERNEL__ guards from
+> xfs_types.h
 >
 > Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > ---
 
 
-user equivalent of the for Linux 3.12 kernel patch 31/49.
-compares okay to the kernel patch.
+user equivalent of the for Linux 3.12 kernel patch 33/49.
+
+patches are the same,
 
 _______________________________________________
 xfs mailing list
