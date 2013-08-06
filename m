@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id DE59329DFB
-	for <xfs@oss.sgi.com>; Tue,  6 Aug 2013 10:26:35 -0500 (CDT)
-Message-ID: <520115AB.5030704@sgi.com>
-Date: Tue, 06 Aug 2013 10:26:35 -0500
+	by oss.sgi.com (Postfix) with ESMTP id A964429DFB
+	for <xfs@oss.sgi.com>; Tue,  6 Aug 2013 10:33:09 -0500 (CDT)
+Message-ID: <52011734.3040307@sgi.com>
+Date: Tue, 06 Aug 2013 10:33:08 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 33/49] xfsprogs: sync minor kernel header differences
+Subject: Re: [PATCH 34/49] xfs: don't special case shared superblock mounts
 References: <1374216324-8781-1-git-send-email-david@fromorbit.com>
-	<1374216324-8781-34-git-send-email-david@fromorbit.com>
-In-Reply-To: <1374216324-8781-34-git-send-email-david@fromorbit.com>
+	<1374216324-8781-35-git-send-email-david@fromorbit.com>
+In-Reply-To: <1374216324-8781-35-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,26 +28,17 @@ Cc: xfs@oss.sgi.com
 On 07/19/13 01:45, Dave Chinner wrote:
 > From: Dave Chinner<dchinner@redhat.com>
 >
-> There are lots of little differences between kernel and userspace
-> headers noticable now that the files are largely the same. Clean up
-> all the formatting, whitespace and other minor differences in the
-> userspace headers.
+> Neither kernel or userspace support shared read-only mounts, so
+> don't beother special casing the support check to be different
+> between kernel and userspace. The same check canbe used as neither
+> like it...
 >
 > Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > ---
 
-  This patch is the user equivalent of the for Linux 3.12 kernel patch 
-22/49.
+matches kernel patch 28/49.
 
-  xfs_dir2.h kernel file has entry not in user:
-extern int xfs_dir3_data_readahead(struct xfs_trans *tp, struct 
-xfs_inode *dp,
-		xfs_dablk_t bno, xfs_daddr_t mapped_bno);
-
-  xfs_inode_buf.h kernel file has entry not in user:
-bool		xfs_can_free_eofblocks(struct xfs_inode *, bool);
-
-  xfs_trans.h user has several entries mentioned in previous patches.
+--Mark.
 
 _______________________________________________
 xfs mailing list
