@@ -1,27 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6821D7F37
-	for <xfs@oss.sgi.com>; Wed,  7 Aug 2013 09:41:58 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 46D818F80C4
-	for <xfs@oss.sgi.com>; Wed,  7 Aug 2013 07:41:55 -0700 (PDT)
-Received: from mail-qa0-f53.google.com (mail-qa0-f53.google.com
-	[209.85.216.53]) by cuda.sgi.com with ESMTP id 4V7FcSWvxZxKbP0e
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 07 Aug 2013 07:41:53 -0700 (PDT)
-Received: by mail-qa0-f53.google.com with SMTP id hu14so1083948qab.19
-	for <xfs@oss.sgi.com>; Wed, 07 Aug 2013 07:41:53 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 92DA47F4E
+	for <xfs@oss.sgi.com>; Wed,  7 Aug 2013 09:59:32 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6F72D8F8033
+	for <xfs@oss.sgi.com>; Wed,  7 Aug 2013 07:59:32 -0700 (PDT)
+Received: from hallynmail2 (static.92.5.9.176.clients.your-server.de
+	[176.9.5.92]) by cuda.sgi.com with ESMTP id 57neETzbF3c9mz1z
+	for <xfs@oss.sgi.com>; Wed, 07 Aug 2013 07:59:30 -0700 (PDT)
+Date: Wed, 7 Aug 2013 14:59:30 +0000
+From: "Serge E. Hallyn" <serge@hallyn.com>
+Subject: Re: [PATCH v7 7/7] enable building user namespace with xfs
+Message-ID: <20130807145930.GA28565@mail.hallyn.com>
+References: <20130729230709.11033b2d@oracle.com>
+	<20130730234021.GR3111@sgi.com> <20130731002119.GR13468@dastard>
+	<20130731132523.GS3111@sgi.com> <20130731232852.GE7118@dastard>
 MIME-Version: 1.0
-In-Reply-To: <520259EA.1050801@sgi.com>
-References: <1375870269-13157-1-git-send-email-zwu.kernel@gmail.com>
-	<1375870269-13157-8-git-send-email-zwu.kernel@gmail.com>
-	<52024BB4.5060109@sgi.com>
-	<CAEH94LixsQOOGpcuyMNOxi+_FscL5sE8Q2KoPYgdf0JESnPaSA@mail.gmail.com>
-	<520259EA.1050801@sgi.com>
-Date: Wed, 7 Aug 2013 22:41:53 +0800
-Message-ID: <CAEH94Lh+QR5uHWB5HBpCf7UJShisfiHxDGex663gyvnWTj16Hg@mail.gmail.com>
-Subject: Re: [PATCH 07/12] xfs: fix the comment of xfs_iroot_realloc()
-From: Zhi Yong Wu <zwu.kernel@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20130731232852.GE7118@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,70 +30,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>, xfstests <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Ben Myers <bpm@sgi.com>, Dwight Engen <dwight.engen@oracle.com>, xfs@oss.sgi.com
 
-On Wed, Aug 7, 2013 at 10:30 PM, Mark Tinguely <tinguely@sgi.com> wrote:
-> On 08/07/13 09:01, Zhi Yong Wu wrote:
->>
->> On Wed, Aug 7, 2013 at 9:29 PM, Mark Tinguely<tinguely@sgi.com>  wrote:
->>>
->>> On 08/07/13 05:11, zwu.kernel@gmail.com wrote:
->>>>
->>>>
->>>> From: Zhi Yong Wu<wuzhy@linux.vnet.ibm.com>
->>>>
->>>> Signed-off-by: Zhi Yong Wu<wuzhy@linux.vnet.ibm.com>
->>>> ---
->>>>    fs/xfs/xfs_inode.c | 2 +-
->>>>    1 file changed, 1 insertion(+), 1 deletion(-)
->>>>
->>>> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
->>>> index bb262c2..ccca9cd 100644
->>>> --- a/fs/xfs/xfs_inode.c
->>>> +++ b/fs/xfs/xfs_inode.c
->>>> @@ -2103,7 +2103,7 @@ xfs_ifree(
->>>>     *
->>>>     * The caller must not request to add more records than would fit in
->>>>     * the on-disk inode root.  If the if_broot is currently NULL, then
->>>> - * if we adding records one will be allocated.  The caller must also
->>>> + * if we are adding records, one will be allocated.  The caller must
->>>> also
->>>>     * not request that the number of records go below zero, although
->>>>     * it can go to zero.
->>>>     *
->>>
->>>
->>>
->>>
->>> Change this to xfs_inode_fork.c and the series will apply on top of
->>> Dave's
->>> "current patch queue for Linux 3.12":
->>
->> Do you mean that you have done this or i need to do this? If i need to do
->> this,
->> can you let me know where i can get xfs git repo which has applied
->> Dave's patchset?
->>
->>>
->>>    http://oss.sgi.com/archives/xfs/2013-07/msg00411.html
->
->
->
-> If approved, we can make the change on commit.
-Please feel free to do it, thanks a lot.
->
-> The patches look okay to me.
->
-> --Mark.
->
+Quoting Dave Chinner (david@fromorbit.com):
+> On Wed, Jul 31, 2013 at 08:25:23AM -0500, Ben Myers wrote:
+> > Hey,
+> > 
+> > On Wed, Jul 31, 2013 at 10:21:19AM +1000, Dave Chinner wrote:
+> > > On Tue, Jul 30, 2013 at 06:40:21PM -0500, Ben Myers wrote:
+> > > > On Mon, Jul 29, 2013 at 11:07:09PM -0400, Dwight Engen wrote:
+> > > > > >From e6a9ee0cfa0ed40484f66bc1726dc19de36038b8 Mon Sep 17 00:00:00 2001
+> > > > > From: Dwight Engen <dwight.engen@oracle.com>
+> > > > > Date: Tue, 2 Jul 2013 09:52:54 -0400
+> > > > > Subject: [PATCH 7/7] enable building user namespace with xfs
+> > > > > 
+> > > > > Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
+> > > > 
+> > > > Was there a patch running around to limit bulkstat to init_user_ns?  Any other
+> > > > items that needed to be addressed before applying this patch?
+> > > 
+> > > Bulkstat has a capable(CAP_SYS_ADMIN) check and therefore can only be
+> > > executed in the init name space. Similarly, all the open-by-handle
+> > > interfaces have the same capable() checks so they can only be
+> > > executed int he init name space, too.
+> > 
+> > Gah.  I was under the impression that you could have a process with
+> > CAP_SYS_ADMIN in a namespace other than init_user_ns.
+> 
+> Ben, until about a week and a half ago I was also working under that
+> same understanding as you.  So don't feel bad about not knowing
+> about this basic, fundamental rule because it is completely
+> undocumented and it's not obvious to anyone reading the code until
+> someone points it out....
 
+It's actually all documented in new manpages like namespaces(7) and
+user_namespaces(7).  Unfortunately those don't seem to have been released yet.
 
+Michael, I don't see any git development/experimental git branch at
+kernel.org/pub/scm/docs/man-pages - do you have those pages up
+somewhere?
 
--- 
-Regards,
-
-Zhi Yong Wu
+thanks,
+-serge
 
 _______________________________________________
 xfs mailing list
