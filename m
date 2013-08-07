@@ -1,23 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 2B1327CBF
-	for <xfs@oss.sgi.com>; Wed,  7 Aug 2013 01:00:47 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id CE9F07F37
+	for <xfs@oss.sgi.com>; Wed,  7 Aug 2013 05:10:12 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 152328F8071
-	for <xfs@oss.sgi.com>; Tue,  6 Aug 2013 23:00:47 -0700 (PDT)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id NhfsTHxFZRbq8vsy for
-	<xfs@oss.sgi.com>; Tue, 06 Aug 2013 23:00:46 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id r7760jDo014422
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 7 Aug 2013 02:00:45 -0400
-Message-ID: <5201E28B.1050800@redhat.com>
-Date: Wed, 07 Aug 2013 01:00:43 -0500
-From: Eric Sandeen <sandeen@redhat.com>
-MIME-Version: 1.0
-Subject: [PATCH] mkfs.xfs: fix protofile name create block reservation
+	by relay1.corp.sgi.com (Postfix) with ESMTP id AEBA48F808E
+	for <xfs@oss.sgi.com>; Wed,  7 Aug 2013 03:10:09 -0700 (PDT)
+Received: from e9.ny.us.ibm.com (e9.ny.us.ibm.com [32.97.182.139]) by
+	cuda.sgi.com with ESMTP id bhd5Bfe5vtk0YNuk (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 07 Aug 2013 03:10:08 -0700 (PDT)
+Received: from /spool/local
+	by e9.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	Violators will be prosecuted
+	for <xfs@oss.sgi.com> from <zwu.kernel@gmail.com>;
+	Wed, 7 Aug 2013 06:10:07 -0400
+Received: from d01relay07.pok.ibm.com (d01relay07.pok.ibm.com [9.56.227.147])
+	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id ECF956E803C
+	for <xfs@oss.sgi.com>; Wed,  7 Aug 2013 06:10:00 -0400 (EDT)
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay07.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	r77AA5ch31457528
+	for <xfs@oss.sgi.com>; Wed, 7 Aug 2013 06:10:05 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
+	r77AA5cO001881 for <xfs@oss.sgi.com>; Wed, 7 Aug 2013 07:10:05 -0300
+From: zwu.kernel@gmail.com
+Subject: [PATCH 00/12] xfs: a chunk of comment fixes
+Date: Wed,  7 Aug 2013 18:10:57 +0800
+Message-Id: <1375870269-13157-1-git-send-email-zwu.kernel@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,150 +36,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Boris Ranto <branto@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
+Cc: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
 
-A large protofile which creates a large directory and requires
-a a dir tree split, can fail:
+From: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
 
-  mkfs.xfs: directory createname error [28 - No space left on device]
+  Submit a chunk of xfs commnt fixes.
 
-This is because when we've split a block once, we decrement args->total:
-(see kernel commit a7444053fb3ebd3d905e3c7a7bd5ea80a54b083a for the
-rationale)
+Zhi Yong Wu (12):
+  xfs: fix the comment of xfs_check_sizes()
+  xfs: fix the comment of xfs_buf_free()
+  xfs: fix the comment of xfs_btree_lookup()
+  xfs: fix the comment of xfs_mod_incore_sb_unlocked()
+  xfs: fix the comment of xlog_write_setup_copy()
+  xfs: remove one blank line in xfs_btree_make_block_unfull()
+  xfs: fix the comment of xfs_iroot_realloc()
+  xfs: fix the comment of xfs_btree_get_iroot()
+  xfs: remove two unused macro definitions in xfs_linux.h
+  xfs: fix the comment of xlog_recover_buffer_pass2()
+  xfs: fix the comment of xlog_find_head()
+  xfs: rename bio_add_buffer() to xfs_bio_add_buffer()
 
-       /* account for newly allocated blocks in reserved blocks total */
-       args->total -= dp->i_d.di_nblocks - nblks;
+ fs/xfs/xfs_aops.c        | 4 ++--
+ fs/xfs/xfs_btree.c       | 5 ++---
+ fs/xfs/xfs_buf.c         | 2 +-
+ fs/xfs/xfs_inode.c       | 2 +-
+ fs/xfs/xfs_linux.h       | 2 --
+ fs/xfs/xfs_log.c         | 2 +-
+ fs/xfs/xfs_log_recover.c | 4 ++--
+ fs/xfs/xfs_mount.c       | 4 ++--
+ 8 files changed, 11 insertions(+), 14 deletions(-)
 
-but every call into this path from proto file parsing started
-reserved / args->total as only "1" as passed tro newdirent() -
-so if we allocate a block, args->total hits 0, and then in
-xfs_dir2_node_addname():
-
-        /*
-         * Add the new leaf entry.
-         */
-        rval = xfs_dir2_leafn_add(blk->bp, args, blk->index);
-        if (rval == 0) {
-		...
-        } else {
-                /*
-                 * It didn't work, we need to split the leaf block.
-                 */
-                if (args->total == 0) {
-                        ASSERT(rval == ENOSPC);
-                        goto done;
-                }
-                /*
-                 * Split the leaf block and insert the new entry.
-                 */
-
-we hit the args->total == 0 special case, and don't do the next
-split, and ENOSPC gets returned all the way up, and we fail.
-
-So rather than calling newdirent with a total of "1" in every case,
-which doesn't account for possible tree splits, we should call it
-with a more appropriate value: XFS_DIRENTER_SPACE_RES(mp, name->len),
-which will handle the maximum nr of block allocations that might be
-needed during a directory entry insert.
-
-Since the reservation required doesn't depend on entry type,
-just push this down a level, into newdirent() itself.
-
-Reported-by: Boris Ranto <branto@redhat.com>
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-diff --git a/mkfs/proto.c b/mkfs/proto.c
-index f201096..7d96b46 100644
---- a/mkfs/proto.c
-+++ b/mkfs/proto.c
-@@ -306,12 +306,14 @@ newdirent(
- 	struct xfs_name	*name,
- 	xfs_ino_t	inum,
- 	xfs_fsblock_t	*first,
--	xfs_bmap_free_t	*flist,
--	xfs_extlen_t	total)
-+	xfs_bmap_free_t	*flist)
- {
- 	int	error;
-+	int	rsv;
-+
-+	rsv = XFS_DIRENTER_SPACE_RES(mp, name->len);
- 
--	error = libxfs_dir_createname(tp, pip, name, inum, first, flist, total);
-+	error = libxfs_dir_createname(tp, pip, name, inum, first, flist, rsv);
- 	if (error)
- 		fail(_("directory createname error"), error);
- }
-@@ -449,7 +451,7 @@ parseproto(
- 		if (buf)
- 			free(buf);
- 		libxfs_trans_ijoin(tp, pip, 0);
--		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &flist, 1);
-+		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &flist);
- 		libxfs_trans_ihold(tp, pip);
- 		break;
- 
-@@ -465,7 +467,7 @@ parseproto(
- 
- 		libxfs_trans_ijoin(tp, pip, 0);
- 
--		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &flist, 1);
-+		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &flist);
- 		libxfs_trans_ihold(tp, pip);
- 		libxfs_trans_log_inode(tp, ip, flags);
- 
-@@ -486,7 +488,7 @@ parseproto(
- 			fail(_("Inode allocation failed"), error);
- 		}
- 		libxfs_trans_ijoin(tp, pip, 0);
--		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &flist, 1);
-+		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &flist);
- 		libxfs_trans_ihold(tp, pip);
- 		flags |= XFS_ILOG_DEV;
- 		break;
-@@ -500,7 +502,7 @@ parseproto(
- 		if (error)
- 			fail(_("Inode allocation failed"), error);
- 		libxfs_trans_ijoin(tp, pip, 0);
--		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &flist, 1);
-+		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &flist);
- 		libxfs_trans_ihold(tp, pip);
- 		flags |= XFS_ILOG_DEV;
- 		break;
-@@ -512,7 +514,7 @@ parseproto(
- 		if (error)
- 			fail(_("Inode allocation failed"), error);
- 		libxfs_trans_ijoin(tp, pip, 0);
--		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &flist, 1);
-+		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &flist);
- 		libxfs_trans_ihold(tp, pip);
- 		break;
- 	case IF_SYMLINK:
-@@ -525,7 +527,7 @@ parseproto(
- 			fail(_("Inode allocation failed"), error);
- 		flags |= newfile(tp, ip, &flist, &first, 1, 1, buf, len);
- 		libxfs_trans_ijoin(tp, pip, 0);
--		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &flist, 1);
-+		newdirent(mp, tp, pip, &xname, ip->i_ino, &first, &flist);
- 		libxfs_trans_ihold(tp, pip);
- 		break;
- 	case IF_DIRECTORY:
-@@ -544,7 +546,7 @@ parseproto(
- 		} else {
- 			libxfs_trans_ijoin(tp, pip, 0);
- 			newdirent(mp, tp, pip, &xname, ip->i_ino,
--				  &first, &flist, 1);
-+				  &first, &flist);
- 			pip->i_d.di_nlink++;
- 			libxfs_trans_ihold(tp, pip);
- 			libxfs_trans_log_inode(tp, pip, XFS_ILOG_CORE);
-
+-- 
+1.7.11.7
 
 _______________________________________________
 xfs mailing list
