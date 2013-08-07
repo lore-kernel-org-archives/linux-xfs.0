@@ -1,33 +1,36 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id CE9F07F37
-	for <xfs@oss.sgi.com>; Wed,  7 Aug 2013 05:10:12 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id EB8247F51
+	for <xfs@oss.sgi.com>; Wed,  7 Aug 2013 05:10:16 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id AEBA48F808E
-	for <xfs@oss.sgi.com>; Wed,  7 Aug 2013 03:10:09 -0700 (PDT)
-Received: from e9.ny.us.ibm.com (e9.ny.us.ibm.com [32.97.182.139]) by
-	cuda.sgi.com with ESMTP id bhd5Bfe5vtk0YNuk (version=TLSv1
+	by relay2.corp.sgi.com (Postfix) with ESMTP id D925A304062
+	for <xfs@oss.sgi.com>; Wed,  7 Aug 2013 03:10:16 -0700 (PDT)
+Received: from e39.co.us.ibm.com (e39.co.us.ibm.com [32.97.110.160]) by
+	cuda.sgi.com with ESMTP id YbqmyDmK18y0jQ6w (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 07 Aug 2013 03:10:08 -0700 (PDT)
+	Wed, 07 Aug 2013 03:10:16 -0700 (PDT)
 Received: from /spool/local
-	by e9.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	by e39.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
 	Violators will be prosecuted
 	for <xfs@oss.sgi.com> from <zwu.kernel@gmail.com>;
-	Wed, 7 Aug 2013 06:10:07 -0400
-Received: from d01relay07.pok.ibm.com (d01relay07.pok.ibm.com [9.56.227.147])
-	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id ECF956E803C
-	for <xfs@oss.sgi.com>; Wed,  7 Aug 2013 06:10:00 -0400 (EDT)
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay07.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	r77AA5ch31457528
-	for <xfs@oss.sgi.com>; Wed, 7 Aug 2013 06:10:05 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
-	r77AA5cO001881 for <xfs@oss.sgi.com>; Wed, 7 Aug 2013 07:10:05 -0300
+	Wed, 7 Aug 2013 04:10:15 -0600
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com
+	[9.17.195.227])
+	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id EEA821FF001C
+	for <xfs@oss.sgi.com>; Wed,  7 Aug 2013 04:04:47 -0600 (MDT)
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	r77AACkn070746 for <xfs@oss.sgi.com>; Wed, 7 Aug 2013 04:10:12 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id r77AAB6M007516
+	for <xfs@oss.sgi.com>; Wed, 7 Aug 2013 04:10:11 -0600
 From: zwu.kernel@gmail.com
-Subject: [PATCH 00/12] xfs: a chunk of comment fixes
-Date: Wed,  7 Aug 2013 18:10:57 +0800
-Message-Id: <1375870269-13157-1-git-send-email-zwu.kernel@gmail.com>
+Subject: [PATCH 02/12] xfs: fix the comment of xfs_buf_free()
+Date: Wed,  7 Aug 2013 18:10:59 +0800
+Message-Id: <1375870269-13157-3-git-send-email-zwu.kernel@gmail.com>
+In-Reply-To: <1375870269-13157-1-git-send-email-zwu.kernel@gmail.com>
+References: <1375870269-13157-1-git-send-email-zwu.kernel@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -46,32 +49,24 @@ Cc: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
 
 From: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
 
-  Submit a chunk of xfs commnt fixes.
+Signed-off-by: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
+---
+ fs/xfs/xfs_buf.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Zhi Yong Wu (12):
-  xfs: fix the comment of xfs_check_sizes()
-  xfs: fix the comment of xfs_buf_free()
-  xfs: fix the comment of xfs_btree_lookup()
-  xfs: fix the comment of xfs_mod_incore_sb_unlocked()
-  xfs: fix the comment of xlog_write_setup_copy()
-  xfs: remove one blank line in xfs_btree_make_block_unfull()
-  xfs: fix the comment of xfs_iroot_realloc()
-  xfs: fix the comment of xfs_btree_get_iroot()
-  xfs: remove two unused macro definitions in xfs_linux.h
-  xfs: fix the comment of xlog_recover_buffer_pass2()
-  xfs: fix the comment of xlog_find_head()
-  xfs: rename bio_add_buffer() to xfs_bio_add_buffer()
-
- fs/xfs/xfs_aops.c        | 4 ++--
- fs/xfs/xfs_btree.c       | 5 ++---
- fs/xfs/xfs_buf.c         | 2 +-
- fs/xfs/xfs_inode.c       | 2 +-
- fs/xfs/xfs_linux.h       | 2 --
- fs/xfs/xfs_log.c         | 2 +-
- fs/xfs/xfs_log_recover.c | 4 ++--
- fs/xfs/xfs_mount.c       | 4 ++--
- 8 files changed, 11 insertions(+), 14 deletions(-)
-
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 1b2472a..3997571 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -303,7 +303,7 @@ _xfs_buf_free_pages(
+  *	Releases the specified buffer.
+  *
+  * 	The modification state of any associated pages is left unchanged.
+- * 	The buffer most not be on any hash - use xfs_buf_rele instead for
++ * 	The buffer must not be on any hash - use xfs_buf_rele instead for
+  * 	hashed and refcounted buffers
+  */
+ void
 -- 
 1.7.11.7
 
