@@ -1,34 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 6C0547F67
-	for <xfs@oss.sgi.com>; Wed,  7 Aug 2013 05:10:31 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 3D6C08F80BA
-	for <xfs@oss.sgi.com>; Wed,  7 Aug 2013 03:10:31 -0700 (PDT)
-Received: from e7.ny.us.ibm.com (e7.ny.us.ibm.com [32.97.182.137]) by
-	cuda.sgi.com with ESMTP id 9EkwJTliNz97jHJa (version=TLSv1
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id A713F7F66
+	for <xfs@oss.sgi.com>; Wed,  7 Aug 2013 05:10:32 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 400CBAC007
+	for <xfs@oss.sgi.com>; Wed,  7 Aug 2013 03:10:32 -0700 (PDT)
+Received: from e9.ny.us.ibm.com (e9.ny.us.ibm.com [32.97.182.139]) by
+	cuda.sgi.com with ESMTP id ojNdZt8ECGFZKnar (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 07 Aug 2013 03:10:30 -0700 (PDT)
+	Wed, 07 Aug 2013 03:10:31 -0700 (PDT)
 Received: from /spool/local
-	by e7.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	by e9.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
 	Violators will be prosecuted
 	for <xfs@oss.sgi.com> from <zwu.kernel@gmail.com>;
-	Wed, 7 Aug 2013 06:10:29 -0400
-Received: from d01relay06.pok.ibm.com (d01relay06.pok.ibm.com [9.56.227.116])
-	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 0ECE86E803A
-	for <xfs@oss.sgi.com>; Wed,  7 Aug 2013 06:10:22 -0400 (EDT)
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay06.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	r77AARmZ38142200
-	for <xfs@oss.sgi.com>; Wed, 7 Aug 2013 06:10:27 -0400
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
-	r77AARlK020644 for <xfs@oss.sgi.com>; Wed, 7 Aug 2013 06:10:27 -0400
+	Wed, 7 Aug 2013 06:10:27 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id 20CFD38C8027
+	for <xfs@oss.sgi.com>; Wed,  7 Aug 2013 06:10:24 -0400 (EDT)
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	r77AAPfP211922 for <xfs@oss.sgi.com>; Wed, 7 Aug 2013 06:10:25 -0400
+Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id r77AANAQ005564
+	for <xfs@oss.sgi.com>; Wed, 7 Aug 2013 04:10:24 -0600
 From: zwu.kernel@gmail.com
-Subject: [PATCH 06/12] xfs: remove one blank line in
-	xfs_btree_make_block_unfull()
-Date: Wed,  7 Aug 2013 18:11:03 +0800
-Message-Id: <1375870269-13157-7-git-send-email-zwu.kernel@gmail.com>
+Subject: [PATCH 05/12] xfs: fix the comment of xlog_write_setup_copy()
+Date: Wed,  7 Aug 2013 18:11:02 +0800
+Message-Id: <1375870269-13157-6-git-send-email-zwu.kernel@gmail.com>
 In-Reply-To: <1375870269-13157-1-git-send-email-zwu.kernel@gmail.com>
 References: <1375870269-13157-1-git-send-email-zwu.kernel@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -51,21 +50,22 @@ From: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
 
 Signed-off-by: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
 ---
- fs/xfs/xfs_btree.c | 1 -
- 1 file changed, 1 deletion(-)
+ fs/xfs/xfs_log.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_btree.c b/fs/xfs/xfs_btree.c
-index 1ecc041..eccc788 100644
---- a/fs/xfs/xfs_btree.c
-+++ b/fs/xfs/xfs_btree.c
-@@ -2756,7 +2756,6 @@ xfs_btree_make_block_unfull(
- 
- 		if (numrecs < cur->bc_ops->get_dmaxrecs(cur, level)) {
- 			/* A root block that can be made bigger. */
--
- 			xfs_iroot_realloc(ip, 1, cur->bc_private.b.whichfork);
- 		} else {
- 			/* A root block that needs replacing */
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index d852a2b..0fd27dc 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -2044,7 +2044,7 @@ xlog_write_setup_ophdr(
+  * Set up the parameters of the region copy into the log. This has
+  * to handle region write split across multiple log buffers - this
+  * state is kept external to this function so that this code can
+- * can be written in an obvious, self documenting manner.
++ * be written in an obvious, self documenting manner.
+  */
+ static int
+ xlog_write_setup_copy(
 -- 
 1.7.11.7
 
