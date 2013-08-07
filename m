@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 898A67F4E
-	for <xfs@oss.sgi.com>; Wed,  7 Aug 2013 10:01:41 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A87217F37
+	for <xfs@oss.sgi.com>; Wed,  7 Aug 2013 11:16:05 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 089DEAC009
-	for <xfs@oss.sgi.com>; Wed,  7 Aug 2013 08:01:37 -0700 (PDT)
-Received: from hallynmail2 (static.92.5.9.176.clients.your-server.de
-	[176.9.5.92]) by cuda.sgi.com with ESMTP id VVunGoKOE8qzQcUa
-	for <xfs@oss.sgi.com>; Wed, 07 Aug 2013 08:01:19 -0700 (PDT)
-Date: Wed, 7 Aug 2013 15:01:19 +0000
-From: "Serge E. Hallyn" <serge@hallyn.com>
-Subject: Re: [PATCH v7 7/7] enable building user namespace with xfs
-Message-ID: <20130807150119.GA28730@mail.hallyn.com>
-References: <20130729230709.11033b2d@oracle.com>
-	<20130730234021.GR3111@sgi.com> <20130731002119.GR13468@dastard>
-	<20130731132523.GS3111@sgi.com> <20130731232852.GE7118@dastard>
-	<20130807145930.GA28565@mail.hallyn.com>
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 87CBC8F809B
+	for <xfs@oss.sgi.com>; Wed,  7 Aug 2013 09:16:02 -0700 (PDT)
+Received: from dkim2.fusionio.com (dkim2.fusionio.com [66.114.96.54]) by
+	cuda.sgi.com with ESMTP id WyQFMrAf1eGcDxvU (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 07 Aug 2013 09:15:57 -0700 (PDT)
+Received: from mx1.fusionio.com (unknown [10.101.1.160])
+	by dkim2.fusionio.com (Postfix) with ESMTP id 5D5279A0406
+	for <xfs@oss.sgi.com>; Wed,  7 Aug 2013 10:15:57 -0600 (MDT)
+From: Josef Bacik <jbacik@fusionio.com>
+Subject: [PATCH] xfstests: add regression test for kernel bz 60673
+Date: Wed, 7 Aug 2013 12:15:54 -0400
+Message-ID: <1375892154-11548-1-git-send-email-jbacik@fusionio.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20130807145930.GA28565@mail.hallyn.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,57 +29,160 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: "Serge E. Hallyn" <serge@hallyn.com>
-Cc: Dwight Engen <dwight.engen@oracle.com>, Ben Myers <bpm@sgi.com>, "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com, linux-btrfs@vger.kernel.org
 
-Gah, forgot to actually add Michael to the cc:, sorry.
+There was a problem with send trying to overwrite a file that wasn't actually
+the same.  This is a test to check this particular case where receive fails when
+it should succeed properly.  I tested this to verify it fails without my fix and
+passes with my fix.  Thanks,
 
-Quoting Serge E. Hallyn (serge@hallyn.com):
-> Quoting Dave Chinner (david@fromorbit.com):
-> > On Wed, Jul 31, 2013 at 08:25:23AM -0500, Ben Myers wrote:
-> > > Hey,
-> > > 
-> > > On Wed, Jul 31, 2013 at 10:21:19AM +1000, Dave Chinner wrote:
-> > > > On Tue, Jul 30, 2013 at 06:40:21PM -0500, Ben Myers wrote:
-> > > > > On Mon, Jul 29, 2013 at 11:07:09PM -0400, Dwight Engen wrote:
-> > > > > > >From e6a9ee0cfa0ed40484f66bc1726dc19de36038b8 Mon Sep 17 00:00:00 2001
-> > > > > > From: Dwight Engen <dwight.engen@oracle.com>
-> > > > > > Date: Tue, 2 Jul 2013 09:52:54 -0400
-> > > > > > Subject: [PATCH 7/7] enable building user namespace with xfs
-> > > > > > 
-> > > > > > Signed-off-by: Dwight Engen <dwight.engen@oracle.com>
-> > > > > 
-> > > > > Was there a patch running around to limit bulkstat to init_user_ns?  Any other
-> > > > > items that needed to be addressed before applying this patch?
-> > > > 
-> > > > Bulkstat has a capable(CAP_SYS_ADMIN) check and therefore can only be
-> > > > executed in the init name space. Similarly, all the open-by-handle
-> > > > interfaces have the same capable() checks so they can only be
-> > > > executed int he init name space, too.
-> > > 
-> > > Gah.  I was under the impression that you could have a process with
-> > > CAP_SYS_ADMIN in a namespace other than init_user_ns.
-> > 
-> > Ben, until about a week and a half ago I was also working under that
-> > same understanding as you.  So don't feel bad about not knowing
-> > about this basic, fundamental rule because it is completely
-> > undocumented and it's not obvious to anyone reading the code until
-> > someone points it out....
-> 
-> It's actually all documented in new manpages like namespaces(7) and
-> user_namespaces(7).  Unfortunately those don't seem to have been released yet.
-> 
-> Michael, I don't see any git development/experimental git branch at
-> kernel.org/pub/scm/docs/man-pages - do you have those pages up
-> somewhere?
-> 
-> thanks,
-> -serge
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Signed-off-by: Josef Bacik <jbacik@fusionio.com>
+---
+ tests/btrfs/001     |  110 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/btrfs/001.out |    2 +
+ tests/btrfs/group   |    1 +
+ 3 files changed, 113 insertions(+), 0 deletions(-)
+ create mode 100755 tests/btrfs/001
+ create mode 100644 tests/btrfs/001.out
+
+diff --git a/tests/btrfs/001 b/tests/btrfs/001
+new file mode 100755
+index 0000000..453db95
+--- /dev/null
++++ b/tests/btrfs/001
+@@ -0,0 +1,110 @@
++#! /bin/bash
++# FS QA Test No. btrfs/001
++#
++# btrfs send ENOENT regression test, kernel bugzilla 60673
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2013 Fusion IO.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++tmp_dir=send_temp_$seq
++
++status=1	# failure is the default!
++
++_cleanup()
++{
++	$BTRFS_UTIL_PROG subvol del $TEST_DIR/$tmp_dir/snap1 > /dev/null 2>&1
++	$BTRFS_UTIL_PROG subvol del $TEST_DIR/$tmp_dir/snap2 > /dev/null 2>&1
++	$BTRFS_UTIL_PROG subvol del $TEST_DIR/$tmp_dir/send > /dev/null 2>&1
++	rm -rf $TEST_DIR/$tmp_dir
++	rm -f $tmp.*
++}
++
++trap "_cleanup ; exit \$status" 0 1 2 3 15
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# real QA test starts here
++_supported_fs btrfs
++_supported_os Linux
++_require_scratch
++
++_scratch_mkfs > /dev/null 2>&1
++
++#receive needs to be able to setxattrs, including the selinux context, if we use
++#the normal nfs context thing it screws up our ability to set the
++#security.selinux xattrs so we need to disable this for this test
++export SELINUX_MOUNT_OPTIONS=""
++
++_scratch_mount
++
++mkdir $TEST_DIR/$tmp_dir
++$BTRFS_UTIL_PROG subvol create $TEST_DIR/$tmp_dir/send \
++	> $seqres.full 2>&1 || _fail "failed subvol create"
++
++cd $TEST_DIR/$tmp_dir/send
++
++mkdir test
++touch test/baz
++touch test/blah
++mkdir test/foo
++touch test/foo/bar
++
++# cd out in case any of this fails
++cd /
++
++$BTRFS_UTIL_PROG subvol snap -r $TEST_DIR/$tmp_dir/send \
++	$TEST_DIR/$tmp_dir/snap1 >> $seqres.full 2>&1 || _fail "failed snap1"
++
++$BTRFS_UTIL_PROG send -f $TEST_DIR/$tmp_dir/send1.dump \
++	$TEST_DIR/$tmp_dir/snap1 >> $seqres.full 2>&1 || _fail "failed send"
++
++$BTRFS_UTIL_PROG receive -f $TEST_DIR/$tmp_dir/send1.dump $SCRATCH_MNT \
++	>> $seqres.full 2>&1 || _fail "failed receive"
++
++#recreate everything exactly the way it was exceptn in a different order so we
++#get different inode numbers
++cd $TEST_DIR/$tmp_dir/send
++rm -rf test
++mkdir test
++touch test/baz
++mkdir test/foo
++touch test/foo/bar
++touch test/blah
++cd /
++
++$BTRFS_UTIL_PROG subvol snap -r $TEST_DIR/$tmp_dir/send \
++	$TEST_DIR/$tmp_dir/snap2 >> $seqres.full 2>&1 || _fail "failed snap2"
++
++$BTRFS_UTIL_PROG send -f $TEST_DIR/$tmp_dir/send2.dump \
++	$TEST_DIR/$tmp_dir/snap2 -p $TEST_DIR/$tmp_dir/snap1 \
++	>> $seqres.full 2>&1 || _fail "failed second send"
++
++$BTRFS_UTIL_PROG receive -f $TEST_DIR/$tmp_dir/send2.dump $SCRATCH_MNT \
++	>> $seqres.full 2>&1 || _fail "failed second receive"
++
++echo "Silence is golden"
++status=0 ; exit
+diff --git a/tests/btrfs/001.out b/tests/btrfs/001.out
+new file mode 100644
+index 0000000..88678b8
+--- /dev/null
++++ b/tests/btrfs/001.out
+@@ -0,0 +1,2 @@
++QA output created by 001
++Silence is golden
+diff --git a/tests/btrfs/group b/tests/btrfs/group
+index c8fb502..3afa04f 100644
+--- a/tests/btrfs/group
++++ b/tests/btrfs/group
+@@ -3,6 +3,7 @@
+ # - do not start group names with a digit
+ # - comment line before each group is "new" description
+ #
++001 auto quick
+ 254 auto quick
+ 264 auto
+ 265 auto
+-- 
+1.7.7.6
 
 _______________________________________________
 xfs mailing list
