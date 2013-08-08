@@ -1,11 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 05E237F7B
-	for <xfs@oss.sgi.com>; Thu,  8 Aug 2013 16:08:54 -0500 (CDT)
-Date: Thu, 8 Aug 2013 16:08:50 -0500
+	by oss.sgi.com (Postfix) with ESMTP id 069D57F7B
+	for <xfs@oss.sgi.com>; Thu,  8 Aug 2013 16:13:53 -0500 (CDT)
+Date: Thu, 8 Aug 2013 16:13:52 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: [PATCH 2/14] xfsprogs: XFS_AGF_NUM_BITS should be 13
-Message-ID: <20130808210850.GP3111@sgi.com>
+Subject: [PATCH 3/14] xfsprogs: pull in the rest of 93848a999cf
+Message-ID: <20130808211352.GQ3111@sgi.com>
 References: <1370564771-4929-1-git-send-email-david@fromorbit.com>
 	<20130806214154.GM3111@sgi.com> <20130808210600.GN3111@sgi.com>
 MIME-Version: 1.0
@@ -26,29 +26,25 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Eric Sandeen <sandeen@sandeen.net>
 
-commit 4e0e6040c4052aff15a494ac05778f4086d24c33 changed XFS_AGF_NUM_BITS
-to be 13, however when this commit was applied to userspace the change
-was not pulled over.
-
-Signed-off-by: Ben Myers <bpm@sgi.com>
+XXX Maybe I missed some more...
 
 ---
- include/xfs_ag.h |    2 +-
+ libxfs/xfs_ialloc.c |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-Index: b/include/xfs_ag.h
+Index: b/libxfs/xfs_ialloc.c
 ===================================================================
---- a/include/xfs_ag.h	2013-08-06 10:41:02.850817460 -0500
-+++ b/include/xfs_ag.h	2013-08-06 10:41:07.360857099 -0500
-@@ -102,7 +102,7 @@ typedef struct xfs_agf {
- #define	XFS_AGF_LONGEST		0x00000400
- #define	XFS_AGF_BTREEBLKS	0x00000800
- #define	XFS_AGF_UUID		0x00001000
--#define	XFS_AGF_NUM_BITS	12
-+#define	XFS_AGF_NUM_BITS	13
- #define	XFS_AGF_ALL_BITS	((1 << XFS_AGF_NUM_BITS) - 1)
- 
- #define XFS_AGF_FLAGS \
+--- a/libxfs/xfs_ialloc.c	2013-08-06 11:25:54.400817879 -0500
++++ b/libxfs/xfs_ialloc.c	2013-08-06 11:26:32.420897946 -0500
+@@ -204,7 +204,7 @@ xfs_ialloc_inode_init(
+ 		 *	individual transactions causing a lot of log traffic.
+ 		 */
+ 		fbuf->b_ops = &xfs_inode_buf_ops;
+-		xfs_buf_zero(fbuf, 0, ninodes << mp->m_sb.sb_inodelog);
++		xfs_buf_zero(fbuf, 0, BBTOB(fbuf->b_length));
+ 		for (i = 0; i < ninodes; i++) {
+ 			int	ioffset = i << mp->m_sb.sb_inodelog;
+ 			uint	isize = xfs_dinode_size(version);
 
 _______________________________________________
 xfs mailing list
