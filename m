@@ -1,21 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 6FDFA7F5D
-	for <xfs@oss.sgi.com>; Thu,  8 Aug 2013 12:45:09 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 0DE2CAC002
-	for <xfs@oss.sgi.com>; Thu,  8 Aug 2013 10:45:05 -0700 (PDT)
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id pIyuFdrwfzTUpZcM for <xfs@oss.sgi.com>;
-	Thu, 08 Aug 2013 10:45:04 -0700 (PDT)
-Message-ID: <5203D91E.1060806@sandeen.net>
-Date: Thu, 08 Aug 2013 12:45:02 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 968FC7F69
+	for <xfs@oss.sgi.com>; Thu,  8 Aug 2013 13:36:48 -0500 (CDT)
+Message-ID: <5203E53C.2000402@sgi.com>
+Date: Thu, 08 Aug 2013 13:36:44 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH v3 2/2] xfstests btrfs/316: test send / receive
-References: <1375949833-1104-1-git-send-email-list.xfs@jan-o-sch.net>
-	<1375949833-1104-3-git-send-email-list.xfs@jan-o-sch.net>
-In-Reply-To: <1375949833-1104-3-git-send-email-list.xfs@jan-o-sch.net>
+Subject: Re: [PATCH v2] xfsprogs/io: add readdir command
+References: <1374669868-14075-1-git-send-email-bfoster@redhat.com>
+	<5203A5B7.4020102@sgi.com> <5203D784.7070900@redhat.com>
+In-Reply-To: <5203D784.7070900@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,184 +18,78 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Jan Schmidt <list.xfs@jan-o-sch.net>
-Cc: linux-btrfs@vger.kernel.org, sbehrens@giantdisaster.de, xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On 8/8/13 3:17 AM, Jan Schmidt wrote:
-> Basic send / receive functionality test for btrfs. Requires current
-> version of fsstress built (-x support). Relies on fssum tool but can
-> skip the test if it failed to build.
-> 
-> Signed-off-by: Jan Schmidt <list.xfs@jan-o-sch.net>
-> Reviewed-by: Josef Bacik <jbacik@fusionio.com>
-> ---
->  tests/btrfs/316     |  113 +++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/btrfs/316.out |    4 ++
->  tests/btrfs/group   |    1 +
->  3 files changed, 118 insertions(+), 0 deletions(-)
->  create mode 100755 tests/btrfs/316
->  create mode 100644 tests/btrfs/316.out
-> 
-> diff --git a/tests/btrfs/316 b/tests/btrfs/316
-> new file mode 100755
-> index 0000000..087978a
-> --- /dev/null
-> +++ b/tests/btrfs/316
-> @@ -0,0 +1,113 @@
-> +#! /bin/bash
-> +# FSQA Test No. 316
-> +#
-> +# Run fsstress to create a reasonably strange file system, make a
-> +# snapshot (base) and run more fsstress. Then take another snapshot
-> +# (incr) and send both snapshots to a temp file. Remake the file
-> +# system and receive from the files. Check both states with fssum.
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (C) 2013 STRATO.  All rights reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-> +#
-> +#-----------------------------------------------------------------------
-> +#
-> +# creator
-> +owner=list.btrfs@jan-o-sch.net
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=`mktemp -d`
-> +status=1
-> +
-> +_cleanup()
-> +{
-> +	echo "*** unmount"
-> +	umount $SCRATCH_MNT 2>/dev/null
-> +	rm -f $tmp.*
-> +}
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +# real QA test starts here
-> +_need_to_be_root
-> +_supported_fs btrfs
-> +_supported_os Linux
-> +_require_scratch
+On 08/08/13 12:38, Brian Foster wrote:
+> On 08/08/2013 10:05 AM, Mark Tinguely wrote:
+>> On 07/24/13 07:44, Brian Foster wrote:
+>>> readdir reads the directory entries from an open directory from
+>>> the provided offset (or 0 if not specified). On completion,
+>>> readdir prints summary information regarding the number of
+>>> operations and bytes transferred. Options are available to specify
+>>> the starting offset, length and verbose mode to dump directory
+>>> entry information.
+>>>
+>>> Signed-off-by: Brian Foster<bfoster@redhat.com>
+>>> ---
+>>>
+>>> v2:
+>>> - Convert from getdents to readdir.
+>>> - Use configure mechanism for libc readdir() availability (zab).
+>>> - Add extra dirent fields to verbose output (zab).
+>>>
+>>
+>> Just started to look at this.
+>>
+>
+> Hi Mark,
+>
+> Thanks for looking at this...
+>
+>> Shouldn't there be a "closedir(dir);" to close the directory stream and
+>> release the directory structure?
+>>
+>
+> According to the man page, closedir() would also close the fd. I gave it
+> a quick test to be sure and I end up with behavior like this:
+>
+> xfs_io>  open /export/test
+> xfs_io>  readdir
+> [00000000 [00000004 [00000006 [00000009 [00000200 read 104 bytes from
+> offset 0
+> 104.000000 bytes, 4 ops, 0.0000 sec (5.220 MiB/sec and 210526.3158 ops/sec)
+> xfs_io>  close
+> close: Bad file descriptor
+>
+> That said, I'm not sure what the ramifications of repeated readdir
+> commands might be (i.e., repeated fdopendir() calls on the same fd).
+> Perhaps the right thing to do here is dup() file->fd prior to
+> fdopendir() and then add the closedir().
+>
+>> Could we get a little info for the xfs_io man page?
+>>
+>
+> Ok.
+>
+> Brian
+>
+>> Looks like a nice feature.
+>>
+>> Thanks.
+>>
+>> --Mark.
+>
 
-_require_seek_data_hole
+I was thinking multiple commands in a xfs_io session.
 
-> +_require_command $FSSUM_PROG fssum
+Thanks for the offset clarification.
 
-Usually for local binaries in src/ we'd just do:
-
-FSSUM_PROG=$here/src/fssum
-[ -x $FSSUM_PROG ] || _notrun "fssum not built"
-
-There's no other src/* binary that gets set in common/config;
-every test just does it locally, so probably best to
-stick with that convention.
-
-I think we're almost there!  :)
-
--Eric
-
-> +
-> +rm -f $seqres.full
-> +
-> +workout()
-> +{
-> +	fsz=$1
-> +	ops=$2
-> +
-> +	umount $SCRATCH_DEV >/dev/null 2>&1
-> +	echo "*** mkfs -dsize=$fsz"    >>$seqres.full
-> +	echo ""                                     >>$seqres.full
-> +	_scratch_mkfs_sized $fsz >>$seqres.full 2>&1 \
-> +		|| _fail "size=$fsz mkfs failed"
-> +	run_check _scratch_mount "-o noatime"
-> +
-> +	run_check $FSSTRESS_PROG -d $SCRATCH_MNT -n $ops $FSSTRESS_AVOID -x \
-> +		"$BTRFS_UTIL_PROG subvol snap -r $SCRATCH_MNT $SCRATCH_MNT/base"
-> +
-> +	run_check $BTRFS_UTIL_PROG subvol snap -r $SCRATCH_MNT $SCRATCH_MNT/incr
-> +
-> +	echo "# $BTRFS_UTIL_PROG send $SCRATCH_MNT/base > $tmp/base.snap" \
-> +		>> $seqres.full
-> +	$BTRFS_UTIL_PROG send $SCRATCH_MNT/base > $tmp/base.snap 2>> $seqres.full \
-> +		|| _fail "failed: '$@'"
-> +	echo "# $BTRFS_UTIL_PROG send -p $SCRATCH_MNT/base\
-> +		$SCRATCH_MNT/incr > $tmp/incr.snap" >> $seqres.full
-> +	$BTRFS_UTIL_PROG send -p $SCRATCH_MNT/base \
-> +		$SCRATCH_MNT/incr > $tmp/incr.snap 2>> $seqres.full \
-> +		|| _fail "failed: '$@'"
-> +
-> +	run_check $FSSUM_PROG -A -f -w $tmp/base.fssum $SCRATCH_MNT/base
-> +	run_check $FSSUM_PROG -A -f -w $tmp/incr.fssum -x $SCRATCH_MNT/incr/base \
-> +		$SCRATCH_MNT/incr
-> +
-> +	umount $SCRATCH_DEV >/dev/null 2>&1
-> +	echo "*** mkfs -dsize=$fsz"    >>$seqres.full
-> +	echo ""                                     >>$seqres.full
-> +	_scratch_mkfs_sized $fsz >>$seqres.full 2>&1 \
-> +		|| _fail "size=$fsz mkfs failed"
-> +	run_check _scratch_mount "-o noatime"
-> +
-> +	run_check $BTRFS_UTIL_PROG receive $SCRATCH_MNT < $tmp/base.snap
-> +	run_check $FSSUM_PROG -r $tmp/base.fssum $SCRATCH_MNT/base
-> +
-> +	run_check $BTRFS_UTIL_PROG receive $SCRATCH_MNT < $tmp/incr.snap
-> +	run_check $FSSUM_PROG -r $tmp/incr.fssum $SCRATCH_MNT/incr
-> +}
-> +
-> +echo "*** test send / receive"
-> +
-> +fssize=`expr 2000 \* 1024 \* 1024`
-> +ops=200
-> +
-> +workout $fssize $ops
-> +
-> +echo "*** done"
-> +status=0
-> +exit
-> diff --git a/tests/btrfs/316.out b/tests/btrfs/316.out
-> new file mode 100644
-> index 0000000..4564c85
-> --- /dev/null
-> +++ b/tests/btrfs/316.out
-> @@ -0,0 +1,4 @@
-> +QA output created by 316
-> +*** test send / receive
-> +*** done
-> +*** unmount
-> diff --git a/tests/btrfs/group b/tests/btrfs/group
-> index bc6c256..11d708a 100644
-> --- a/tests/btrfs/group
-> +++ b/tests/btrfs/group
-> @@ -9,3 +9,4 @@
->  276 auto rw metadata
->  284 auto
->  307 auto quick
-> +316 auto rw metadata
-> 
+--Mark.
 
 _______________________________________________
 xfs mailing list
