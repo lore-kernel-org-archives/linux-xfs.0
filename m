@@ -1,11 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id E32797F74
-	for <xfs@oss.sgi.com>; Thu,  8 Aug 2013 16:20:12 -0500 (CDT)
-Date: Thu, 8 Aug 2013 16:20:12 -0500
+	by oss.sgi.com (Postfix) with ESMTP id 5410C7F77
+	for <xfs@oss.sgi.com>; Thu,  8 Aug 2013 16:24:16 -0500 (CDT)
+Date: Thu, 8 Aug 2013 16:24:15 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: [PATCH 5/14] xfsprogs: sync commit f5f3d9b016 completely
-Message-ID: <20130808212012.GS3111@sgi.com>
+Subject: [PATCH 6/14] xfsprogs: cleanup some whitespace
+Message-ID: <20130808212415.GT3111@sgi.com>
 References: <1370564771-4929-1-git-send-email-david@fromorbit.com>
 	<20130806214154.GM3111@sgi.com> <20130808210600.GN3111@sgi.com>
 MIME-Version: 1.0
@@ -26,46 +26,44 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Eric Sandeen <sandeen@sandeen.net>
 
-TODO
+This whitespace was added in patch 10 of the crc-dev series.
+
+The extra ; in xfs_dir3_free_get_buf was taken care of in another patch.
+
+Signed-off-by: Ben Myers <bpm@sgi.com>
 
 ---
- include/xfs_dir2_format.h |    2 +-
- libxfs/xfs_dir2_data.c    |    2 ++
- 2 files changed, 3 insertions(+), 1 deletion(-)
+ libxfs/xfs_dir2_node.c |    3 ---
+ 1 file changed, 3 deletions(-)
 
-Index: b/include/xfs_dir2_format.h
+Index: b/libxfs/xfs_dir2_node.c
 ===================================================================
---- a/include/xfs_dir2_format.h	2013-08-06 12:52:58.830818621 -0500
-+++ b/include/xfs_dir2_format.h	2013-08-06 12:53:38.550877679 -0500
-@@ -247,7 +247,7 @@ typedef struct xfs_dir2_data_free {
-  */
- typedef struct xfs_dir2_data_hdr {
- 	__be32			magic;		/* XFS_DIR2_DATA_MAGIC or */
--	/* XFS_DIR2_BLOCK_MAGIC */
-+						/* XFS_DIR2_BLOCK_MAGIC */
- 	xfs_dir2_data_free_t	bestfree[XFS_DIR2_DATA_FD_COUNT];
- } xfs_dir2_data_hdr_t;
+--- a/libxfs/xfs_dir2_node.c	2013-08-06 16:17:36.570193682 -0500
++++ b/libxfs/xfs_dir2_node.c	2013-08-06 16:44:23.730877972 -0500
+@@ -257,7 +257,6 @@ xfs_dir3_free_get_buf(
+ 		hdr3->hdr.blkno = cpu_to_be64(bp->b_bn);
+ 		hdr3->hdr.owner = cpu_to_be64(dp->i_ino);
+ 		uuid_copy(&hdr3->hdr.uuid, &mp->m_sb.sb_uuid);
+-
+ 	} else
+ 		hdr.magic = XFS_DIR2_FREE_MAGIC;
+ 	xfs_dir3_free_hdr_to_disk(bp->b_addr, &hdr);
+@@ -1101,7 +1100,6 @@ xfs_dir3_data_block_free(
+ 	__be16			*bests;
+ 	struct xfs_dir3_icfree_hdr freehdr;
  
-Index: b/libxfs/xfs_dir2_data.c
-===================================================================
---- a/libxfs/xfs_dir2_data.c	2013-08-06 12:54:17.540817693 -0500
-+++ b/libxfs/xfs_dir2_data.c	2013-08-06 12:55:10.460877745 -0500
-@@ -54,6 +54,7 @@ __xfs_dir2_data_check(
- 	p = (char *)xfs_dir3_data_entry_p(hdr);
+-
+ 	xfs_dir3_free_hdr_from_disk(&freehdr, free);
  
- 	switch (be32_to_cpu(hdr->magic)) {
-+		/* XXX bpm endian switch does not match commit */
- 	case XFS_DIR2_BLOCK_MAGIC:
- 	case XFS_DIR3_BLOCK_MAGIC:
- 		btp = xfs_dir2_block_tail_p(mp, hdr);
-@@ -203,6 +204,7 @@ xfs_dir2_data_reada_verify(
- 	struct xfs_dir2_data_hdr *hdr = bp->b_addr;
+ 	bests = xfs_dir3_free_bests_p(tp->t_mountp, free);
+@@ -1159,7 +1157,6 @@ xfs_dir3_data_block_free(
+ 		 */
+ 	}
  
- 	switch (be32_to_cpu(hdr->magic)) {
-+		/* XXX bpm: endian switch does not match kernel commit */
- 	case XFS_DIR2_BLOCK_MAGIC:
- 	case XFS_DIR3_BLOCK_MAGIC:
- 		bp->b_ops = &xfs_dir3_block_buf_ops;
+-
+ 	/* Log the free entry that changed, unless we got rid of it.  */
+ 	if (logfree)
+ 		xfs_dir2_free_log_bests(tp, fbp, findex, findex);
 
 _______________________________________________
 xfs mailing list
