@@ -1,11 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id A4D997F7B
-	for <xfs@oss.sgi.com>; Thu,  8 Aug 2013 16:16:17 -0500 (CDT)
-Date: Thu, 8 Aug 2013 16:16:17 -0500
+	by oss.sgi.com (Postfix) with ESMTP id E32797F74
+	for <xfs@oss.sgi.com>; Thu,  8 Aug 2013 16:20:12 -0500 (CDT)
+Date: Thu, 8 Aug 2013 16:20:12 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: [PATCH 04/14] xfsprogs: fix gpl headers in xfs_symlink
-Message-ID: <20130808211617.GR3111@sgi.com>
+Subject: [PATCH 5/14] xfsprogs: sync commit f5f3d9b016 completely
+Message-ID: <20130808212012.GS3111@sgi.com>
 References: <1370564771-4929-1-git-send-email-david@fromorbit.com>
 	<20130806214154.GM3111@sgi.com> <20130808210600.GN3111@sgi.com>
 MIME-Version: 1.0
@@ -26,37 +26,46 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Eric Sandeen <sandeen@sandeen.net>
 
-Just a reminder to make sure this is done, as I think it may be in the 2nd
-series.
+TODO
 
 ---
- include/xfs_symlink.h |    1 +
- libxfs/xfs_symlink.c  |    1 +
- 2 files changed, 2 insertions(+)
+ include/xfs_dir2_format.h |    2 +-
+ libxfs/xfs_dir2_data.c    |    2 ++
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
-Index: b/include/xfs_symlink.h
+Index: b/include/xfs_dir2_format.h
 ===================================================================
---- a/include/xfs_symlink.h	2013-08-06 11:35:20.780818113 -0500
-+++ b/include/xfs_symlink.h	2013-08-06 11:35:33.250877623 -0500
-@@ -1,5 +1,6 @@
- /*
-  * Copyright (c) 2012 Red Hat, Inc. All rights reserved.
-+ * XXX fix gpl header 
+--- a/include/xfs_dir2_format.h	2013-08-06 12:52:58.830818621 -0500
++++ b/include/xfs_dir2_format.h	2013-08-06 12:53:38.550877679 -0500
+@@ -247,7 +247,7 @@ typedef struct xfs_dir2_data_free {
   */
- #ifndef __XFS_SYMLINK_H
- #define __XFS_SYMLINK_H 1
-Index: b/libxfs/xfs_symlink.c
-===================================================================
---- a/libxfs/xfs_symlink.c	2013-08-06 11:34:22.690818407 -0500
-+++ b/libxfs/xfs_symlink.c	2013-08-06 11:34:41.220857196 -0500
-@@ -1,6 +1,7 @@
- /*
-  * Copyright 2013 Red Hat, Inc.
-  * All rights reserved.
-+ * XXX gpl header needs to be fixed
-  */
+ typedef struct xfs_dir2_data_hdr {
+ 	__be32			magic;		/* XFS_DIR2_DATA_MAGIC or */
+-	/* XFS_DIR2_BLOCK_MAGIC */
++						/* XFS_DIR2_BLOCK_MAGIC */
+ 	xfs_dir2_data_free_t	bestfree[XFS_DIR2_DATA_FD_COUNT];
+ } xfs_dir2_data_hdr_t;
  
- #include "xfs.h"
+Index: b/libxfs/xfs_dir2_data.c
+===================================================================
+--- a/libxfs/xfs_dir2_data.c	2013-08-06 12:54:17.540817693 -0500
++++ b/libxfs/xfs_dir2_data.c	2013-08-06 12:55:10.460877745 -0500
+@@ -54,6 +54,7 @@ __xfs_dir2_data_check(
+ 	p = (char *)xfs_dir3_data_entry_p(hdr);
+ 
+ 	switch (be32_to_cpu(hdr->magic)) {
++		/* XXX bpm endian switch does not match commit */
+ 	case XFS_DIR2_BLOCK_MAGIC:
+ 	case XFS_DIR3_BLOCK_MAGIC:
+ 		btp = xfs_dir2_block_tail_p(mp, hdr);
+@@ -203,6 +204,7 @@ xfs_dir2_data_reada_verify(
+ 	struct xfs_dir2_data_hdr *hdr = bp->b_addr;
+ 
+ 	switch (be32_to_cpu(hdr->magic)) {
++		/* XXX bpm: endian switch does not match kernel commit */
+ 	case XFS_DIR2_BLOCK_MAGIC:
+ 	case XFS_DIR3_BLOCK_MAGIC:
+ 		bp->b_ops = &xfs_dir3_block_buf_ops;
 
 _______________________________________________
 xfs mailing list
