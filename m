@@ -1,11 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 069D57F7B
-	for <xfs@oss.sgi.com>; Thu,  8 Aug 2013 16:13:53 -0500 (CDT)
-Date: Thu, 8 Aug 2013 16:13:52 -0500
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id A4D997F7B
+	for <xfs@oss.sgi.com>; Thu,  8 Aug 2013 16:16:17 -0500 (CDT)
+Date: Thu, 8 Aug 2013 16:16:17 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: [PATCH 3/14] xfsprogs: pull in the rest of 93848a999cf
-Message-ID: <20130808211352.GQ3111@sgi.com>
+Subject: [PATCH 04/14] xfsprogs: fix gpl headers in xfs_symlink
+Message-ID: <20130808211617.GR3111@sgi.com>
 References: <1370564771-4929-1-git-send-email-david@fromorbit.com>
 	<20130806214154.GM3111@sgi.com> <20130808210600.GN3111@sgi.com>
 MIME-Version: 1.0
@@ -26,25 +26,37 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Eric Sandeen <sandeen@sandeen.net>
 
-XXX Maybe I missed some more...
+Just a reminder to make sure this is done, as I think it may be in the 2nd
+series.
 
 ---
- libxfs/xfs_ialloc.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/xfs_symlink.h |    1 +
+ libxfs/xfs_symlink.c  |    1 +
+ 2 files changed, 2 insertions(+)
 
-Index: b/libxfs/xfs_ialloc.c
+Index: b/include/xfs_symlink.h
 ===================================================================
---- a/libxfs/xfs_ialloc.c	2013-08-06 11:25:54.400817879 -0500
-+++ b/libxfs/xfs_ialloc.c	2013-08-06 11:26:32.420897946 -0500
-@@ -204,7 +204,7 @@ xfs_ialloc_inode_init(
- 		 *	individual transactions causing a lot of log traffic.
- 		 */
- 		fbuf->b_ops = &xfs_inode_buf_ops;
--		xfs_buf_zero(fbuf, 0, ninodes << mp->m_sb.sb_inodelog);
-+		xfs_buf_zero(fbuf, 0, BBTOB(fbuf->b_length));
- 		for (i = 0; i < ninodes; i++) {
- 			int	ioffset = i << mp->m_sb.sb_inodelog;
- 			uint	isize = xfs_dinode_size(version);
+--- a/include/xfs_symlink.h	2013-08-06 11:35:20.780818113 -0500
++++ b/include/xfs_symlink.h	2013-08-06 11:35:33.250877623 -0500
+@@ -1,5 +1,6 @@
+ /*
+  * Copyright (c) 2012 Red Hat, Inc. All rights reserved.
++ * XXX fix gpl header 
+  */
+ #ifndef __XFS_SYMLINK_H
+ #define __XFS_SYMLINK_H 1
+Index: b/libxfs/xfs_symlink.c
+===================================================================
+--- a/libxfs/xfs_symlink.c	2013-08-06 11:34:22.690818407 -0500
++++ b/libxfs/xfs_symlink.c	2013-08-06 11:34:41.220857196 -0500
+@@ -1,6 +1,7 @@
+ /*
+  * Copyright 2013 Red Hat, Inc.
+  * All rights reserved.
++ * XXX gpl header needs to be fixed
+  */
+ 
+ #include "xfs.h"
 
 _______________________________________________
 xfs mailing list
