@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 47C9E7F5F
-	for <xfs@oss.sgi.com>; Thu,  8 Aug 2013 17:05:15 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 0A9808F8081
-	for <xfs@oss.sgi.com>; Thu,  8 Aug 2013 15:05:13 -0700 (PDT)
+	by oss.sgi.com (Postfix) with ESMTP id 14CD17F8C
+	for <xfs@oss.sgi.com>; Thu,  8 Aug 2013 17:07:09 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id E774C8F8033
+	for <xfs@oss.sgi.com>; Thu,  8 Aug 2013 15:07:08 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id didFgOdRQcNlswtF for <xfs@oss.sgi.com>;
-	Thu, 08 Aug 2013 15:05:12 -0700 (PDT)
-Message-ID: <52041617.1020508@sandeen.net>
-Date: Thu, 08 Aug 2013 17:05:11 -0500
+	ESMTP id qeHQqYWkDzwCwgDH for <xfs@oss.sgi.com>;
+	Thu, 08 Aug 2013 15:07:04 -0700 (PDT)
+Message-ID: <52041686.4040703@sandeen.net>
+Date: Thu, 08 Aug 2013 17:07:02 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH 5/14] xfsprogs: sync commit f5f3d9b016 completely
+Subject: Re: [PATCH 8/14] xfsprogs: fix issues with e0607266f23
 References: <1370564771-4929-1-git-send-email-david@fromorbit.com>
 	<20130806214154.GM3111@sgi.com> <20130808210600.GN3111@sgi.com>
-	<20130808212012.GS3111@sgi.com>
-In-Reply-To: <20130808212012.GS3111@sgi.com>
+	<20130808215330.GV3111@sgi.com>
+In-Reply-To: <20130808215330.GV3111@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,63 +32,49 @@ Sender: xfs-bounces@oss.sgi.com
 To: Ben Myers <bpm@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On 8/8/13 4:20 PM, Ben Myers wrote:
-> TODO
+On 8/8/13 4:53 PM, Ben Myers wrote:
+> A couple of issues found in review.
+> 
+> Signed-off-by: Ben Myers <bpm@sgi.com>
 > 
 > ---
->  include/xfs_dir2_format.h |    2 +-
->  libxfs/xfs_dir2_data.c    |    2 ++
->  2 files changed, 3 insertions(+), 1 deletion(-)
-> 
-> Index: b/include/xfs_dir2_format.h
+>  libxfs/xfs_alloc.c |    9 ++-------
+>  repair/dinode.c    |    9 +++------
+>  2 files changed, 5 insertions(+), 13 deletions(-)
+
+...
+
+
+> Index: b/repair/dinode.c
 > ===================================================================
-> --- a/include/xfs_dir2_format.h	2013-08-06 12:52:58.830818621 -0500
-> +++ b/include/xfs_dir2_format.h	2013-08-06 12:53:38.550877679 -0500
-> @@ -247,7 +247,7 @@ typedef struct xfs_dir2_data_free {
->   */
->  typedef struct xfs_dir2_data_hdr {
->  	__be32			magic;		/* XFS_DIR2_DATA_MAGIC or */
-> -	/* XFS_DIR2_BLOCK_MAGIC */
-> +						/* XFS_DIR2_BLOCK_MAGIC */
->  	xfs_dir2_data_free_t	bestfree[XFS_DIR2_DATA_FD_COUNT];
->  } xfs_dir2_data_hdr_t;
+> --- a/repair/dinode.c	2013-08-06 14:43:09.910817602 -0500
+> +++ b/repair/dinode.c	2013-08-06 14:44:49.660857353 -0500
+> @@ -182,12 +182,9 @@ clear_dinode_core(struct xfs_mount *mp, 
+>  		platform_uuid_copy(&dinoc->di_uuid, &mp->m_sb.sb_uuid);
+>  	}
 >  
-> Index: b/libxfs/xfs_dir2_data.c
-> ===================================================================
-> --- a/libxfs/xfs_dir2_data.c	2013-08-06 12:54:17.540817693 -0500
-> +++ b/libxfs/xfs_dir2_data.c	2013-08-06 12:55:10.460877745 -0500
-> @@ -54,6 +54,7 @@ __xfs_dir2_data_check(
->  	p = (char *)xfs_dir3_data_entry_p(hdr);
->  
->  	switch (be32_to_cpu(hdr->magic)) {
-> +		/* XXX bpm endian switch does not match commit */
+> -	for (i = 0; i < 16; i++) {
+> -		if (dinoc->di_pad[i] != 0) {
+> -			__dirty_no_modify_ret(dirty);
+> -			memset(dinoc->di_pad, 0, 16);
+> -			break;
+> -		}
+> +	if (dinoc->di_pad2 != 0) {
+> +		__dirty_no_modify_ret(dirty);
+> +		dinoc->di_pad2 = 0;
 
-in userspace, for some reason, doing it the "kernel way"
+this probably needs to be fixed pronto, it's a memory corruptor right?
 
-(i.e. 
+w/ a proper commit log, 
 
-switch (hdr->magic) {
-case cpu_to_be32(XFS_DIR2_BLOCK_MAGIC):
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
- ...)
-
-yields:
-
-xfs_dir2_data.c:57: error: case label does not reduce to an integer constant
-
+Thanks,
 -Eric
 
->  	case XFS_DIR2_BLOCK_MAGIC:
->  	case XFS_DIR3_BLOCK_MAGIC:
->  		btp = xfs_dir2_block_tail_p(mp, hdr);
-> @@ -203,6 +204,7 @@ xfs_dir2_data_reada_verify(
->  	struct xfs_dir2_data_hdr *hdr = bp->b_addr;
+>  	}
 >  
->  	switch (be32_to_cpu(hdr->magic)) {
-> +		/* XXX bpm: endian switch does not match kernel commit */
->  	case XFS_DIR2_BLOCK_MAGIC:
->  	case XFS_DIR3_BLOCK_MAGIC:
->  		bp->b_ops = &xfs_dir3_block_buf_ops;
+>  	if (be64_to_cpu(dinoc->di_flags2) != 0)  {
 > 
 
 _______________________________________________
