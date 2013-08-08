@@ -1,11 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 793C07F85
-	for <xfs@oss.sgi.com>; Thu,  8 Aug 2013 17:00:08 -0500 (CDT)
-Date: Thu, 8 Aug 2013 17:00:07 -0500
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 64F1F7F5F
+	for <xfs@oss.sgi.com>; Thu,  8 Aug 2013 17:02:27 -0500 (CDT)
+Date: Thu, 8 Aug 2013 17:02:24 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: [PATCH 9] xfsprogs: issues with a24374f41c9
-Message-ID: <20130808220007.GW3111@sgi.com>
+Subject: Re: [PATCH 0/14] xfsprogs: various issues from review
+Message-ID: <20130808220224.GX3111@sgi.com>
 References: <1370564771-4929-1-git-send-email-david@fromorbit.com>
 	<20130806214154.GM3111@sgi.com> <20130808210600.GN3111@sgi.com>
 MIME-Version: 1.0
@@ -26,48 +26,49 @@ Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Eric Sandeen <sandeen@sandeen.net>
 
-This patch corresponds with kernel commit 517c22207b04.  There were a couple
-bits that didn't match when it was copied to libxfs.
+On Thu, Aug 08, 2013 at 04:06:01PM -0500, Ben Myers wrote:
+> On Tue, Aug 06, 2013 at 04:41:54PM -0500, Ben Myers wrote:
+> > On Fri, Jun 07, 2013 at 10:25:23AM +1000, Dave Chinner wrote:
+> > > Hi folks,
+> > > 
+> > > This is the latest update of the series of patches tht introduces
+> > > CRC support into xfsprogs. Of note, for CRC enabled filesystems;
+> > > 
+> > > 	- write support for xfs-db is disabled
+> > > 	- obfuscation for metadump is disabled
+> > > 	- xfs_check does nothing ("always succeed") so that xfstests
+> > > 	  can run without needing this
+> > > 	- all structures shoul dbe supported for printing in xfs_db
+> > > 	- xfs_repair should be able to fully validate the structure
+> > > 	  of a CRC enabled filesystem.
+> > > 	- xfs_repair still ignores CRC validation errors when
+> > > 	  reading metadata
+> > > 	- mkfs.xfs enforces limitations on the format of CRC enabled
+> > > 	  filesystems (inode size, attr format, projid32bit, etc).
+> > > 	- whenever a v5 superblock is parsed on read by any utility,
+> > > 	  it outputs a wanring about it being an experimental
+> > > 	  format.
+> > > 
+> > > Bug reports, patches, comments, reviews, etc all welcome.
+> > 
+> > Pulled in 1-48 of the first series and 1-12 of the second.
+> 
+> Here is a patch series that addresses some of my outstanding concerns from
+> review.  Some may be already fixed in the 2nd series, I'm not sure.  Eric also
+> mentioned that he put the updated branch through coverity and found some
+> defects.  There may be some overlap there too.
+> 
+> Some of these are just reminders for myself to make sure certain items are
+> addressed eventually.  Sorry for the noise.
 
----
- libxfs/xfs_attr.c      |    2 +-
- libxfs/xfs_attr_leaf.c |    3 +--
- 2 files changed, 2 insertions(+), 3 deletions(-)
+I'll stop at 9.  The rest of them are notes to myself:
 
-Index: b/libxfs/xfs_attr.c
-===================================================================
---- a/libxfs/xfs_attr.c	2013-08-06 13:38:35.480817970 -0500
-+++ b/libxfs/xfs_attr.c	2013-08-06 13:38:56.660877582 -0500
-@@ -861,7 +861,7 @@ xfs_attr_leaf_removename(xfs_da_args_t *
- 	error = xfs_attr3_leaf_lookup_int(bp, args);
- 	if (error == ENOATTR) {
- 		xfs_trans_brelse(args->trans, bp);
--		return(error);
-+		return error;
- 	}
- 
- 	xfs_attr3_leaf_remove(bp, args);
-Index: b/libxfs/xfs_attr_leaf.c
-===================================================================
---- a/libxfs/xfs_attr_leaf.c	2013-08-06 13:39:07.140818083 -0500
-+++ b/libxfs/xfs_attr_leaf.c	2013-08-06 13:39:29.450857207 -0500
-@@ -1111,7 +1111,6 @@ xfs_attr3_leaf_add_work(
- 	struct xfs_attr_leaf_entry *entry;
- 	struct xfs_attr_leaf_name_local *name_loc;
- 	struct xfs_attr_leaf_name_remote *name_rmt;
--	struct xfs_attr_leaf_map *map;
- 	struct xfs_mount	*mp;
- 	int			tmp;
- 	int			i;
-@@ -1210,7 +1209,7 @@ xfs_attr3_leaf_add_work(
- 	tmp = (ichdr->count - 1) * sizeof(xfs_attr_leaf_entry_t)
- 					+ xfs_attr3_leaf_hdr_size(leaf);
- 
--	for (i = 0; i < XFS_ATTR_LEAF_MAPSIZE; map++, i++) {
-+	for (i = 0; i < XFS_ATTR_LEAF_MAPSIZE; i++) {
- 		if (ichdr->freemap[i].base == tmp) {
- 			ichdr->freemap[i].base += sizeof(xfs_attr_leaf_entry_t);
- 			ichdr->freemap[i].size -= sizeof(xfs_attr_leaf_entry_t);
+* xfs_db write support needs to be done
+* xfs_metadump obfuscation needs to be done
+* xfs_mdrestore needs to work 
+* xfs_check needs work
+
+-Ben
 
 _______________________________________________
 xfs mailing list
