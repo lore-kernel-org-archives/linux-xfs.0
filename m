@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id E40947F37
-	for <xfs@oss.sgi.com>; Thu,  8 Aug 2013 12:40:58 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id BD74F304053
-	for <xfs@oss.sgi.com>; Thu,  8 Aug 2013 10:40:58 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 6FDFA7F5D
+	for <xfs@oss.sgi.com>; Thu,  8 Aug 2013 12:45:09 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 0DE2CAC002
+	for <xfs@oss.sgi.com>; Thu,  8 Aug 2013 10:45:05 -0700 (PDT)
 Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id gvjTEQaddhHrDHZt for <xfs@oss.sgi.com>;
-	Thu, 08 Aug 2013 10:40:57 -0700 (PDT)
-Message-ID: <5203D827.3050909@sandeen.net>
-Date: Thu, 08 Aug 2013 12:40:55 -0500
+	ESMTP id pIyuFdrwfzTUpZcM for <xfs@oss.sgi.com>;
+	Thu, 08 Aug 2013 10:45:04 -0700 (PDT)
+Message-ID: <5203D91E.1060806@sandeen.net>
+Date: Thu, 08 Aug 2013 12:45:02 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH v3 1/2] xfstests: add fssum tool
+Subject: Re: [PATCH v3 2/2] xfstests btrfs/316: test send / receive
 References: <1375949833-1104-1-git-send-email-list.xfs@jan-o-sch.net>
-	<1375949833-1104-2-git-send-email-list.xfs@jan-o-sch.net>
-In-Reply-To: <1375949833-1104-2-git-send-email-list.xfs@jan-o-sch.net>
+	<1375949833-1104-3-git-send-email-list.xfs@jan-o-sch.net>
+In-Reply-To: <1375949833-1104-3-git-send-email-list.xfs@jan-o-sch.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,116 +32,176 @@ To: Jan Schmidt <list.xfs@jan-o-sch.net>
 Cc: linux-btrfs@vger.kernel.org, sbehrens@giantdisaster.de, xfs@oss.sgi.com
 
 On 8/8/13 3:17 AM, Jan Schmidt wrote:
-> fssum is a tool to build a recursive checksum for a file system. The home
-> repository of fssum is
-> 
->     git://git.kernel.org/pub/scm/linux/kernel/git/arne/far-progs.git
-> 
-> It is added as an optional target, because it depends on glibc >= 2.15 for
-> SEEK_HOLE / SEEK_DATA. The test to be added using fssum will just be skipped
-> if fssum wasn't built.
+> Basic send / receive functionality test for btrfs. Requires current
+> version of fsstress built (-x support). Relies on fssum tool but can
+> skip the test if it failed to build.
 > 
 > Signed-off-by: Jan Schmidt <list.xfs@jan-o-sch.net>
+> Reviewed-by: Josef Bacik <jbacik@fusionio.com>
 > ---
->  .gitignore    |    1 +
->  common/config |    2 +
->  src/Makefile  |   11 +-
->  src/fssum.c   |  819 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  4 files changed, 832 insertions(+), 1 deletions(-)
->  create mode 100644 src/fssum.c
+>  tests/btrfs/316     |  113 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/btrfs/316.out |    4 ++
+>  tests/btrfs/group   |    1 +
+>  3 files changed, 118 insertions(+), 0 deletions(-)
+>  create mode 100755 tests/btrfs/316
+>  create mode 100644 tests/btrfs/316.out
 > 
-> diff --git a/.gitignore b/.gitignore
-> index 11594aa..c2fc6e3 100644
-> --- a/.gitignore
-> +++ b/.gitignore
-> @@ -45,6 +45,7 @@
->  /src/fill
->  /src/fill2
->  /src/fs_perms
-> +/src/fssum
->  /src/fstest
->  /src/fsync-tester
->  /src/ftrunc
-> diff --git a/common/config b/common/config
-> index 67c1498..c8bee29 100644
-> --- a/common/config
-> +++ b/common/config
-> @@ -146,6 +146,8 @@ export SED_PROG="`set_prog_path sed`"
->  export BC_PROG="`set_prog_path bc`"
->  [ "$BC_PROG" = "" ] && _fatal "bc not found"
->  
-> +export FSSUM_PROG="`set_prog_path fssum $here/src/fssum`"
-
-So this will pick up a local copy of fssum if it exists;
-is that really desired?  (If there's any difference in
-behavior, then the one in src/ presumably would need to
-be fixed...)
-
+> diff --git a/tests/btrfs/316 b/tests/btrfs/316
+> new file mode 100755
+> index 0000000..087978a
+> --- /dev/null
+> +++ b/tests/btrfs/316
+> @@ -0,0 +1,113 @@
+> +#! /bin/bash
+> +# FSQA Test No. 316
+> +#
+> +# Run fsstress to create a reasonably strange file system, make a
+> +# snapshot (base) and run more fsstress. Then take another snapshot
+> +# (incr) and send both snapshots to a temp file. Remake the file
+> +# system and receive from the files. Check both states with fssum.
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (C) 2013 STRATO.  All rights reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#
+> +#-----------------------------------------------------------------------
+> +#
+> +# creator
+> +owner=list.btrfs@jan-o-sch.net
 > +
->  export PS_ALL_FLAGS="-ef"
->  
->  export DF_PROG="`set_prog_path df`"
-> diff --git a/src/Makefile b/src/Makefile
-> index cc679e8..10a4d3c 100644
-> --- a/src/Makefile
-> +++ b/src/Makefile
-> @@ -20,10 +20,14 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
->  	stale_handle pwrite_mmap_blocked t_dir_offset2 seek_sanity_test \
->  	seek_copy_test t_readdir_1 t_readdir_2 fsync-tester
->  
-> +OPT_TARGETS = fssum
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
 > +
+> +here=`pwd`
+> +tmp=`mktemp -d`
+> +status=1
+> +
+> +_cleanup()
+> +{
+> +	echo "*** unmount"
+> +	umount $SCRATCH_MNT 2>/dev/null
+> +	rm -f $tmp.*
+> +}
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +
+> +# real QA test starts here
+> +_need_to_be_root
+> +_supported_fs btrfs
+> +_supported_os Linux
+> +_require_scratch
 
-I'm not sure how this helps . . .
+_require_seek_data_hole
 
->  SUBDIRS =
->  
->  LLDLIBS = $(LIBATTR) $(LIBHANDLE) $(LIBACL)
->  
-> +OPT_LDLIBS = -lssl -lcrypto
+> +_require_command $FSSUM_PROG fssum
 
-Hm, new deps.  I guess it's not a huge problem, these should always
-be available, right?
+Usually for local binaries in src/ we'd just do:
 
->  ifeq ($(HAVE_XLOG_ASSIGN_LSN), true)
->  LINUX_TARGETS += loggen
->  endif
-> @@ -60,7 +64,7 @@ CFILES = $(TARGETS:=.c)
->  LDIRT = $(TARGETS)
->  
->  
-> -default: depend $(TARGETS) $(SUBDIRS)
-> +default: depend $(TARGETS) $(OPT_TARGETS) $(SUBDIRS)
+FSSUM_PROG=$here/src/fssum
+[ -x $FSSUM_PROG ] || _notrun "fssum not built"
 
-Anyway, OPT_TARGETS isn't optional, because you still build it by default.  :)
+There's no other src/* binary that gets set in common/config;
+every test just does it locally, so probably best to
+stick with that convention.
 
->  depend: .dep
->  
-> @@ -70,11 +74,16 @@ $(TARGETS): $(LIBTEST)
->  	@echo "    [CC]    $@"
->  	$(Q)$(LTLINK) $@.c -o $@ $(CFLAGS) $(LDFLAGS) $(LDLIBS) $(LIBTEST)
->  
-> +$(OPT_TARGETS): $(LIBTEST)
-> +	@echo "    [CC]    $@"
-> +	-$(Q)$(LTLINK) $@.c -o $@ $(CFLAGS) $(LDFLAGS) $(LDLIBS) $(OPT_LDLIBS) $(LIBTEST)
+I think we're almost there!  :)
 
-Oh, I see, you ignore the error.  Well, that's still pretty ugly.
-I'd really rather you just add the #defines as I suggested in my
-reply to [PATCH 0/2], so it'll build for everyone.
-
-Thanks,
 -Eric
 
 > +
->  LINKTEST = $(LTLINK) $@.c -o $@ $(CFLAGS) $(LDFLAGS)
->  
->  install: default $(addsuffix -install,$(SUBDIRS))
->  	$(INSTALL) -m 755 -d $(PKG_LIB_DIR)/src
->  	$(LTINSTALL) -m 755 $(TARGETS) $(PKG_LIB_DIR)/src
-> +	-$(LTINSTALL) -m 755 $(OPT_TARGETS) $(PKG_LIB_DIR)/src
->  	$(LTINSTALL) -m 755 fill2attr fill2fs fill2fs_check scaleread.sh $(PKG_LIB_DIR)/src
->  	$(LTINSTALL) -m 644 dumpfile $(PKG_LIB_DIR)/src
->  
+> +rm -f $seqres.full
+> +
+> +workout()
+> +{
+> +	fsz=$1
+> +	ops=$2
+> +
+> +	umount $SCRATCH_DEV >/dev/null 2>&1
+> +	echo "*** mkfs -dsize=$fsz"    >>$seqres.full
+> +	echo ""                                     >>$seqres.full
+> +	_scratch_mkfs_sized $fsz >>$seqres.full 2>&1 \
+> +		|| _fail "size=$fsz mkfs failed"
+> +	run_check _scratch_mount "-o noatime"
+> +
+> +	run_check $FSSTRESS_PROG -d $SCRATCH_MNT -n $ops $FSSTRESS_AVOID -x \
+> +		"$BTRFS_UTIL_PROG subvol snap -r $SCRATCH_MNT $SCRATCH_MNT/base"
+> +
+> +	run_check $BTRFS_UTIL_PROG subvol snap -r $SCRATCH_MNT $SCRATCH_MNT/incr
+> +
+> +	echo "# $BTRFS_UTIL_PROG send $SCRATCH_MNT/base > $tmp/base.snap" \
+> +		>> $seqres.full
+> +	$BTRFS_UTIL_PROG send $SCRATCH_MNT/base > $tmp/base.snap 2>> $seqres.full \
+> +		|| _fail "failed: '$@'"
+> +	echo "# $BTRFS_UTIL_PROG send -p $SCRATCH_MNT/base\
+> +		$SCRATCH_MNT/incr > $tmp/incr.snap" >> $seqres.full
+> +	$BTRFS_UTIL_PROG send -p $SCRATCH_MNT/base \
+> +		$SCRATCH_MNT/incr > $tmp/incr.snap 2>> $seqres.full \
+> +		|| _fail "failed: '$@'"
+> +
+> +	run_check $FSSUM_PROG -A -f -w $tmp/base.fssum $SCRATCH_MNT/base
+> +	run_check $FSSUM_PROG -A -f -w $tmp/incr.fssum -x $SCRATCH_MNT/incr/base \
+> +		$SCRATCH_MNT/incr
+> +
+> +	umount $SCRATCH_DEV >/dev/null 2>&1
+> +	echo "*** mkfs -dsize=$fsz"    >>$seqres.full
+> +	echo ""                                     >>$seqres.full
+> +	_scratch_mkfs_sized $fsz >>$seqres.full 2>&1 \
+> +		|| _fail "size=$fsz mkfs failed"
+> +	run_check _scratch_mount "-o noatime"
+> +
+> +	run_check $BTRFS_UTIL_PROG receive $SCRATCH_MNT < $tmp/base.snap
+> +	run_check $FSSUM_PROG -r $tmp/base.fssum $SCRATCH_MNT/base
+> +
+> +	run_check $BTRFS_UTIL_PROG receive $SCRATCH_MNT < $tmp/incr.snap
+> +	run_check $FSSUM_PROG -r $tmp/incr.fssum $SCRATCH_MNT/incr
+> +}
+> +
+> +echo "*** test send / receive"
+> +
+> +fssize=`expr 2000 \* 1024 \* 1024`
+> +ops=200
+> +
+> +workout $fssize $ops
+> +
+> +echo "*** done"
+> +status=0
+> +exit
+> diff --git a/tests/btrfs/316.out b/tests/btrfs/316.out
+> new file mode 100644
+> index 0000000..4564c85
+> --- /dev/null
+> +++ b/tests/btrfs/316.out
+> @@ -0,0 +1,4 @@
+> +QA output created by 316
+> +*** test send / receive
+> +*** done
+> +*** unmount
+> diff --git a/tests/btrfs/group b/tests/btrfs/group
+> index bc6c256..11d708a 100644
+> --- a/tests/btrfs/group
+> +++ b/tests/btrfs/group
+> @@ -9,3 +9,4 @@
+>  276 auto rw metadata
+>  284 auto
+>  307 auto quick
+> +316 auto rw metadata
+> 
 
 _______________________________________________
 xfs mailing list
