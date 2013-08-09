@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 556BE7F9A
-	for <xfs@oss.sgi.com>; Fri,  9 Aug 2013 08:21:15 -0500 (CDT)
-Message-ID: <5204ECC7.2090502@sgi.com>
-Date: Fri, 09 Aug 2013 08:21:11 -0500
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id CEBF97F9C
+	for <xfs@oss.sgi.com>; Fri,  9 Aug 2013 08:34:44 -0500 (CDT)
+Message-ID: <5204EFF0.1090402@sgi.com>
+Date: Fri, 09 Aug 2013 08:34:40 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH v3] xfsprogs/io: add readdir command
-References: <1376051546-31578-1-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1376051546-31578-1-git-send-email-bfoster@redhat.com>
+Subject: Re: [PATCH] mkfs.xfs: fix protofile name create block reservation
+References: <5201E28B.1050800@redhat.com>
+In-Reply-To: <5201E28B.1050800@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,32 +21,113 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On 08/09/13 07:32, Brian Foster wrote:
-> readdir reads the directory entries from an open directory from
-> the provided offset (or 0 if not specified). On completion,
-> readdir prints summary information regarding the number of
-> operations and bytes transferred. Options are available to specify
-> the starting offset, length and verbose mode to dump directory
-> entry information.
+On 08/07/13 01:00, Eric Sandeen wrote:
+> A large protofile which creates a large directory and requires
+> a a dir tree split, can fail:
 >
-> Signed-off-by: Brian Foster<bfoster@redhat.com>
+>    mkfs.xfs: directory createname error [28 - No space left on device]
+>
+> This is because when we've split a block once, we decrement args->total:
+> (see kernel commit a7444053fb3ebd3d905e3c7a7bd5ea80a54b083a for the
+> rationale)
+>
+>         /* account for newly allocated blocks in reserved blocks total */
+>         args->total -= dp->i_d.di_nblocks - nblks;
+>
+> but every call into this path from proto file parsing started
+> reserved / args->total as only "1" as passed tro newdirent() -
+> so if we allocate a block, args->total hits 0, and then in
+> xfs_dir2_node_addname():
+>
+>          /*
+>           * Add the new leaf entry.
+>           */
+>          rval = xfs_dir2_leafn_add(blk->bp, args, blk->index);
+>          if (rval == 0) {
+> 		...
+>          } else {
+>                  /*
+>                   * It didn't work, we need to split the leaf block.
+>                   */
+>                  if (args->total == 0) {
+>                          ASSERT(rval == ENOSPC);
+>                          goto done;
+>                  }
+>                  /*
+>                   * Split the leaf block and insert the new entry.
+>                   */
+>
+> we hit the args->total == 0 special case, and don't do the next
+> split, and ENOSPC gets returned all the way up, and we fail.
+>
+> So rather than calling newdirent with a total of "1" in every case,
+> which doesn't account for possible tree splits, we should call it
+> with a more appropriate value: XFS_DIRENTER_SPACE_RES(mp, name->len),
+> which will handle the maximum nr of block allocations that might be
+> needed during a directory entry insert.
+>
+> Since the reservation required doesn't depend on entry type,
+> just push this down a level, into newdirent() itself.
+>
+> Reported-by: Boris Ranto<branto@redhat.com>
+> Signed-off-by: Eric Sandeen<sandeen@redhat.com>
 > ---
->
-> v3:
-> - dup() file->fd and add corresponding closedir() (mark).
-> - add readdir section to xfs_io manpage (mark).
->
-> v2:
-> - Convert from getdents to readdir.
-> - Use configure mechanism for libc readdir() availability (zab).
-> - Add extra dirent fields to verbose output (zab).
 
-Thank-you, looks great. We can get it in right away.
+This patches and the Coverity xfsprog patches have been commited to the 
+master branch:
 
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+commit 312592defb8b6051389a56a5c780819b4239dab4
+Author: Eric Sandeen <sandeen@redhat.com>
+Date:   Thu Aug 1 01:13:10 2013 +0000
+
+     xfsprogs: fix unint var in repair phase6
+
+commit aba29588f81dad52129037c15fe584ec89b36a4f
+Author: Eric Sandeen <sandeen@sandeen.net>
+Date:   Thu Aug 1 02:25:18 2013 +0000
+
+     xfsprogs: fix agcnts leak in xfs_repair's scan_ags
+
+commit dc93954aa6f13963bcc87fc00ce55a4745dc7b93
+Author: Eric Sandeen <sandeen@redhat.com>
+Date:   Thu Aug 1 01:33:47 2013 +0000
+
+     xfsprogs:free bp in xlog_find_tail() error path
+
+commit 4623d1041dd34d73aeab4b51002fc9ca6d543415
+Author: Eric Sandeen <sandeen@redhat.com>
+Date:   Thu Aug 1 01:32:30 2013 +0000
+
+     xfsprogs: free bp in xlog_find_zeroed() error path
+
+commit a134873e2903837bdbeab261b6d0ceee2fd499ba
+Author: Eric Sandeen <sandeen@redhat.com>
+Date:   Thu Aug 1 01:42:58 2013 +0000
+
+     xfsprogs: fix buffer leak in xlog_print_find_oldest
+
+commit 504dbe46549d462e79565514d86ce69b74b96893
+Author: Eric Sandeen <sandeen@redhat.com>
+Date:   Thu Aug 1 01:18:54 2013 +0000
+
+     xfsprogs: avoid double-free in xfs_attr_node_addname
+
+commit 1b6bf714a7179942b8523cc966124249b74381da
+Author: Eric Sandeen <sandeen@redhat.com>
+Date:   Wed Aug 7 06:00:43 2013 +0000
+
+     mkfs.xfs: fix protofile name create block reservation
+
+
+None collide with the for Linux 3.12 kernel/user sync series.
+
+The kernel patches should make Linux 3.12.
+
+--Mark.
+
 
 _______________________________________________
 xfs mailing list
