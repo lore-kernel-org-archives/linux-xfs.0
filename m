@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 8CB3D7F86
-	for <xfs@oss.sgi.com>; Mon, 12 Aug 2013 05:50:52 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 78FF18F804B
-	for <xfs@oss.sgi.com>; Mon, 12 Aug 2013 03:50:52 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 606C57F7B
+	for <xfs@oss.sgi.com>; Mon, 12 Aug 2013 05:50:53 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 4ED20304043
+	for <xfs@oss.sgi.com>; Mon, 12 Aug 2013 03:50:53 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	S5UW9QWtVENsBc08 for <xfs@oss.sgi.com>;
-	Mon, 12 Aug 2013 03:50:48 -0700 (PDT)
+	T7oO3syjzhcAwyA1 for <xfs@oss.sgi.com>;
+	Mon, 12 Aug 2013 03:50:51 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1V8phX-0004Xu-00
-	for xfs@oss.sgi.com; Mon, 12 Aug 2013 20:50:15 +1000
+	(envelope-from <dave@fromorbit.com>) id 1V8phW-0004Xb-Qx
+	for xfs@oss.sgi.com; Mon, 12 Aug 2013 20:50:14 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1V8phW-00061e-V5
+	(envelope-from <dave@disappointment.disaster>) id 1V8phW-000610-OU
 	for xfs@oss.sgi.com; Mon, 12 Aug 2013 20:50:14 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: ***** SUSPECTED SPAM ***** [PATCH 15/50] xfs: move getdents code into
-	it's own file
-Date: Mon, 12 Aug 2013 20:49:36 +1000
-Message-Id: <1376304611-22994-16-git-send-email-david@fromorbit.com>
+Subject: ***** SUSPECTED SPAM ***** [PATCH 07/50] xfs: split out on-disk
+	transaction definitions
+Date: Mon, 12 Aug 2013 20:49:28 +1000
+Message-Id: <1376304611-22994-8-git-send-email-david@fromorbit.com>
 In-Reply-To: <1376304611-22994-1-git-send-email-david@fromorbit.com>
 References: <1376304611-22994-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -40,1386 +40,485 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The directory readdir code is not used by userspace, but it is
-intermingled with files that are shared with userspace. This makes
-it difficult to compare the differences between the userspac eand
-kernel files are the userspace files don't have the getdents code in
-them. Move all the kernel getdents code to a separate file to bring
-the shared content between userspace and kernel files closer
-together.
+There's a bunch of definitions in xfs_trans.h that define on-disk
+formats - transaction headers that get written into the log, log
+item type definitions, etc. Split out everything into a separate
+file so that all which remains in xfs_trans.h are kernel only
+definitions.
+
+Also, remove the duplicate magic number definitions for
+XFS_TRANS_MAGIC...
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/Makefile           |   1 +
- fs/xfs/xfs_dir2.c         |  31 ---
- fs/xfs/xfs_dir2_block.c   |  97 +------
- fs/xfs/xfs_dir2_leaf.c    | 390 ----------------------------
- fs/xfs/xfs_dir2_priv.h    |   7 +-
- fs/xfs/xfs_dir2_readdir.c | 645 ++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_dir2_sf.c      |  94 -------
- 7 files changed, 649 insertions(+), 616 deletions(-)
- create mode 100644 fs/xfs/xfs_dir2_readdir.c
+ fs/xfs/xfs_log_format.h | 206 ++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_trans.c      |   4 +-
+ fs/xfs/xfs_trans.h      | 205 -----------------------------------------------
+ 3 files changed, 208 insertions(+), 207 deletions(-)
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 7f2319d..b6158af 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -30,6 +30,7 @@ xfs-y				+= xfs_aops.o \
- 				   xfs_bit.o \
- 				   xfs_buf.o \
- 				   xfs_dfrag.o \
-+				   xfs_dir2_readdir.o \
- 				   xfs_discard.o \
- 				   xfs_error.o \
- 				   xfs_export.o \
-diff --git a/fs/xfs/xfs_dir2.c b/fs/xfs/xfs_dir2.c
-index 8f023de..431be44 100644
---- a/fs/xfs/xfs_dir2.c
-+++ b/fs/xfs/xfs_dir2.c
-@@ -363,37 +363,6 @@ xfs_dir_removename(
- }
+diff --git a/fs/xfs/xfs_log_format.h b/fs/xfs/xfs_log_format.h
+index 02639c7..faf3f43 100644
+--- a/fs/xfs/xfs_log_format.h
++++ b/fs/xfs/xfs_log_format.h
+@@ -187,6 +187,212 @@ typedef struct xfs_log_iovec {
+ 
  
  /*
-- * Read a directory.
-- */
--int
--xfs_readdir(
--	xfs_inode_t	*dp,
--	struct dir_context *ctx,
--	size_t		bufsize)
--{
--	int		rval;		/* return value */
--	int		v;		/* type-checking value */
--
--	trace_xfs_readdir(dp);
--
--	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
--		return XFS_ERROR(EIO);
--
--	ASSERT(S_ISDIR(dp->i_d.di_mode));
--	XFS_STATS_INC(xs_dir_getdents);
--
--	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
--		rval = xfs_dir2_sf_getdents(dp, ctx);
--	else if ((rval = xfs_dir2_isblock(NULL, dp, &v)))
--		;
--	else if (v)
--		rval = xfs_dir2_block_getdents(dp, ctx);
--	else
--		rval = xfs_dir2_leaf_getdents(dp, ctx, bufsize);
--	return rval;
--}
--
--/*
-  * Replace the inode number of a directory entry.
-  */
- int
-diff --git a/fs/xfs/xfs_dir2_block.c b/fs/xfs/xfs_dir2_block.c
-index 5e7fbd7..5e84000 100644
---- a/fs/xfs/xfs_dir2_block.c
-+++ b/fs/xfs/xfs_dir2_block.c
-@@ -126,7 +126,7 @@ const struct xfs_buf_ops xfs_dir3_block_buf_ops = {
- 	.verify_write = xfs_dir3_block_write_verify,
- };
- 
--static int
-+int
- xfs_dir3_block_read(
- 	struct xfs_trans	*tp,
- 	struct xfs_inode	*dp,
-@@ -565,101 +565,6 @@ xfs_dir2_block_addname(
- }
- 
- /*
-- * Readdir for block directories.
-- */
--int						/* error */
--xfs_dir2_block_getdents(
--	xfs_inode_t		*dp,		/* incore inode */
--	struct dir_context	*ctx)
--{
--	xfs_dir2_data_hdr_t	*hdr;		/* block header */
--	struct xfs_buf		*bp;		/* buffer for block */
--	xfs_dir2_block_tail_t	*btp;		/* block tail */
--	xfs_dir2_data_entry_t	*dep;		/* block data entry */
--	xfs_dir2_data_unused_t	*dup;		/* block unused entry */
--	char			*endptr;	/* end of the data entries */
--	int			error;		/* error return value */
--	xfs_mount_t		*mp;		/* filesystem mount point */
--	char			*ptr;		/* current data entry */
--	int			wantoff;	/* starting block offset */
--	xfs_off_t		cook;
--
--	mp = dp->i_mount;
--	/*
--	 * If the block number in the offset is out of range, we're done.
--	 */
--	if (xfs_dir2_dataptr_to_db(mp, ctx->pos) > mp->m_dirdatablk)
--		return 0;
--
--	error = xfs_dir3_block_read(NULL, dp, &bp);
--	if (error)
--		return error;
--
--	/*
--	 * Extract the byte offset we start at from the seek pointer.
--	 * We'll skip entries before this.
--	 */
--	wantoff = xfs_dir2_dataptr_to_off(mp, ctx->pos);
--	hdr = bp->b_addr;
--	xfs_dir3_data_check(dp, bp);
--	/*
--	 * Set up values for the loop.
--	 */
--	btp = xfs_dir2_block_tail_p(mp, hdr);
--	ptr = (char *)xfs_dir3_data_entry_p(hdr);
--	endptr = (char *)xfs_dir2_block_leaf_p(btp);
--
--	/*
--	 * Loop over the data portion of the block.
--	 * Each object is a real entry (dep) or an unused one (dup).
--	 */
--	while (ptr < endptr) {
--		dup = (xfs_dir2_data_unused_t *)ptr;
--		/*
--		 * Unused, skip it.
--		 */
--		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
--			ptr += be16_to_cpu(dup->length);
--			continue;
--		}
--
--		dep = (xfs_dir2_data_entry_t *)ptr;
--
--		/*
--		 * Bump pointer for the next iteration.
--		 */
--		ptr += xfs_dir2_data_entsize(dep->namelen);
--		/*
--		 * The entry is before the desired starting point, skip it.
--		 */
--		if ((char *)dep - (char *)hdr < wantoff)
--			continue;
--
--		cook = xfs_dir2_db_off_to_dataptr(mp, mp->m_dirdatablk,
--					    (char *)dep - (char *)hdr);
--
--		ctx->pos = cook & 0x7fffffff;
--		/*
--		 * If it didn't fit, set the final offset to here & return.
--		 */
--		if (!dir_emit(ctx, (char *)dep->name, dep->namelen,
--			    be64_to_cpu(dep->inumber), DT_UNKNOWN)) {
--			xfs_trans_brelse(NULL, bp);
--			return 0;
--		}
--	}
--
--	/*
--	 * Reached the end of the block.
--	 * Set the offset to a non-existent block 1 and return.
--	 */
--	ctx->pos = xfs_dir2_db_off_to_dataptr(mp, mp->m_dirdatablk + 1, 0) &
--			0x7fffffff;
--	xfs_trans_brelse(NULL, bp);
--	return 0;
--}
--
--/*
-  * Log leaf entries from the block.
-  */
- static void
-diff --git a/fs/xfs/xfs_dir2_leaf.c b/fs/xfs/xfs_dir2_leaf.c
-index 2aed25c..e1386aa 100644
---- a/fs/xfs/xfs_dir2_leaf.c
-+++ b/fs/xfs/xfs_dir2_leaf.c
-@@ -1083,396 +1083,6 @@ xfs_dir3_leaf_compact_x1(
- 	*highstalep = highstale;
- }
- 
--struct xfs_dir2_leaf_map_info {
--	xfs_extlen_t	map_blocks;	/* number of fsbs in map */
--	xfs_dablk_t	map_off;	/* last mapped file offset */
--	int		map_size;	/* total entries in *map */
--	int		map_valid;	/* valid entries in *map */
--	int		nmap;		/* mappings to ask xfs_bmapi */
--	xfs_dir2_db_t	curdb;		/* db for current block */
--	int		ra_current;	/* number of read-ahead blks */
--	int		ra_index;	/* *map index for read-ahead */
--	int		ra_offset;	/* map entry offset for ra */
--	int		ra_want;	/* readahead count wanted */
--	struct xfs_bmbt_irec map[];	/* map vector for blocks */
--};
--
--STATIC int
--xfs_dir2_leaf_readbuf(
--	struct xfs_inode	*dp,
--	size_t			bufsize,
--	struct xfs_dir2_leaf_map_info *mip,
--	xfs_dir2_off_t		*curoff,
--	struct xfs_buf		**bpp)
--{
--	struct xfs_mount	*mp = dp->i_mount;
--	struct xfs_buf		*bp = *bpp;
--	struct xfs_bmbt_irec	*map = mip->map;
--	struct blk_plug		plug;
--	int			error = 0;
--	int			length;
--	int			i;
--	int			j;
--
--	/*
--	 * If we have a buffer, we need to release it and
--	 * take it out of the mapping.
--	 */
--
--	if (bp) {
--		xfs_trans_brelse(NULL, bp);
--		bp = NULL;
--		mip->map_blocks -= mp->m_dirblkfsbs;
--		/*
--		 * Loop to get rid of the extents for the
--		 * directory block.
--		 */
--		for (i = mp->m_dirblkfsbs; i > 0; ) {
--			j = min_t(int, map->br_blockcount, i);
--			map->br_blockcount -= j;
--			map->br_startblock += j;
--			map->br_startoff += j;
--			/*
--			 * If mapping is done, pitch it from
--			 * the table.
--			 */
--			if (!map->br_blockcount && --mip->map_valid)
--				memmove(&map[0], &map[1],
--					sizeof(map[0]) * mip->map_valid);
--			i -= j;
--		}
--	}
--
--	/*
--	 * Recalculate the readahead blocks wanted.
--	 */
--	mip->ra_want = howmany(bufsize + mp->m_dirblksize,
--			       mp->m_sb.sb_blocksize) - 1;
--	ASSERT(mip->ra_want >= 0);
--
--	/*
--	 * If we don't have as many as we want, and we haven't
--	 * run out of data blocks, get some more mappings.
--	 */
--	if (1 + mip->ra_want > mip->map_blocks &&
--	    mip->map_off < xfs_dir2_byte_to_da(mp, XFS_DIR2_LEAF_OFFSET)) {
--		/*
--		 * Get more bmaps, fill in after the ones
--		 * we already have in the table.
--		 */
--		mip->nmap = mip->map_size - mip->map_valid;
--		error = xfs_bmapi_read(dp, mip->map_off,
--				xfs_dir2_byte_to_da(mp, XFS_DIR2_LEAF_OFFSET) -
--								mip->map_off,
--				&map[mip->map_valid], &mip->nmap, 0);
--
--		/*
--		 * Don't know if we should ignore this or try to return an
--		 * error.  The trouble with returning errors is that readdir
--		 * will just stop without actually passing the error through.
--		 */
--		if (error)
--			goto out;	/* XXX */
--
--		/*
--		 * If we got all the mappings we asked for, set the final map
--		 * offset based on the last bmap value received.  Otherwise,
--		 * we've reached the end.
--		 */
--		if (mip->nmap == mip->map_size - mip->map_valid) {
--			i = mip->map_valid + mip->nmap - 1;
--			mip->map_off = map[i].br_startoff + map[i].br_blockcount;
--		} else
--			mip->map_off = xfs_dir2_byte_to_da(mp,
--							XFS_DIR2_LEAF_OFFSET);
--
--		/*
--		 * Look for holes in the mapping, and eliminate them.  Count up
--		 * the valid blocks.
--		 */
--		for (i = mip->map_valid; i < mip->map_valid + mip->nmap; ) {
--			if (map[i].br_startblock == HOLESTARTBLOCK) {
--				mip->nmap--;
--				length = mip->map_valid + mip->nmap - i;
--				if (length)
--					memmove(&map[i], &map[i + 1],
--						sizeof(map[i]) * length);
--			} else {
--				mip->map_blocks += map[i].br_blockcount;
--				i++;
--			}
--		}
--		mip->map_valid += mip->nmap;
--	}
--
--	/*
--	 * No valid mappings, so no more data blocks.
--	 */
--	if (!mip->map_valid) {
--		*curoff = xfs_dir2_da_to_byte(mp, mip->map_off);
--		goto out;
--	}
--
--	/*
--	 * Read the directory block starting at the first mapping.
--	 */
--	mip->curdb = xfs_dir2_da_to_db(mp, map->br_startoff);
--	error = xfs_dir3_data_read(NULL, dp, map->br_startoff,
--			map->br_blockcount >= mp->m_dirblkfsbs ?
--			    XFS_FSB_TO_DADDR(mp, map->br_startblock) : -1, &bp);
--
--	/*
--	 * Should just skip over the data block instead of giving up.
--	 */
--	if (error)
--		goto out;	/* XXX */
--
--	/*
--	 * Adjust the current amount of read-ahead: we just read a block that
--	 * was previously ra.
--	 */
--	if (mip->ra_current)
--		mip->ra_current -= mp->m_dirblkfsbs;
--
--	/*
--	 * Do we need more readahead?
--	 */
--	blk_start_plug(&plug);
--	for (mip->ra_index = mip->ra_offset = i = 0;
--	     mip->ra_want > mip->ra_current && i < mip->map_blocks;
--	     i += mp->m_dirblkfsbs) {
--		ASSERT(mip->ra_index < mip->map_valid);
--		/*
--		 * Read-ahead a contiguous directory block.
--		 */
--		if (i > mip->ra_current &&
--		    map[mip->ra_index].br_blockcount >= mp->m_dirblkfsbs) {
--			xfs_dir3_data_readahead(NULL, dp,
--				map[mip->ra_index].br_startoff + mip->ra_offset,
--				XFS_FSB_TO_DADDR(mp,
--					map[mip->ra_index].br_startblock +
--							mip->ra_offset));
--			mip->ra_current = i;
--		}
--
--		/*
--		 * Read-ahead a non-contiguous directory block.  This doesn't
--		 * use our mapping, but this is a very rare case.
--		 */
--		else if (i > mip->ra_current) {
--			xfs_dir3_data_readahead(NULL, dp,
--					map[mip->ra_index].br_startoff +
--							mip->ra_offset, -1);
--			mip->ra_current = i;
--		}
--
--		/*
--		 * Advance offset through the mapping table.
--		 */
--		for (j = 0; j < mp->m_dirblkfsbs; j++) {
--			/*
--			 * The rest of this extent but not more than a dir
--			 * block.
--			 */
--			length = min_t(int, mp->m_dirblkfsbs,
--					map[mip->ra_index].br_blockcount -
--							mip->ra_offset);
--			j += length;
--			mip->ra_offset += length;
--
--			/*
--			 * Advance to the next mapping if this one is used up.
--			 */
--			if (mip->ra_offset == map[mip->ra_index].br_blockcount) {
--				mip->ra_offset = 0;
--				mip->ra_index++;
--			}
--		}
--	}
--	blk_finish_plug(&plug);
--
--out:
--	*bpp = bp;
--	return error;
--}
--
--/*
-- * Getdents (readdir) for leaf and node directories.
-- * This reads the data blocks only, so is the same for both forms.
-- */
--int						/* error */
--xfs_dir2_leaf_getdents(
--	xfs_inode_t		*dp,		/* incore directory inode */
--	struct dir_context	*ctx,
--	size_t			bufsize)
--{
--	struct xfs_buf		*bp = NULL;	/* data block buffer */
--	xfs_dir2_data_hdr_t	*hdr;		/* data block header */
--	xfs_dir2_data_entry_t	*dep;		/* data entry */
--	xfs_dir2_data_unused_t	*dup;		/* unused entry */
--	int			error = 0;	/* error return value */
--	int			length;		/* temporary length value */
--	xfs_mount_t		*mp;		/* filesystem mount point */
--	int			byteoff;	/* offset in current block */
--	xfs_dir2_off_t		curoff;		/* current overall offset */
--	xfs_dir2_off_t		newoff;		/* new curoff after new blk */
--	char			*ptr = NULL;	/* pointer to current data */
--	struct xfs_dir2_leaf_map_info *map_info;
--
--	/*
--	 * If the offset is at or past the largest allowed value,
--	 * give up right away.
--	 */
--	if (ctx->pos >= XFS_DIR2_MAX_DATAPTR)
--		return 0;
--
--	mp = dp->i_mount;
--
--	/*
--	 * Set up to bmap a number of blocks based on the caller's
--	 * buffer size, the directory block size, and the filesystem
--	 * block size.
--	 */
--	length = howmany(bufsize + mp->m_dirblksize,
--				     mp->m_sb.sb_blocksize);
--	map_info = kmem_zalloc(offsetof(struct xfs_dir2_leaf_map_info, map) +
--				(length * sizeof(struct xfs_bmbt_irec)),
--			       KM_SLEEP | KM_NOFS);
--	map_info->map_size = length;
--
--	/*
--	 * Inside the loop we keep the main offset value as a byte offset
--	 * in the directory file.
--	 */
--	curoff = xfs_dir2_dataptr_to_byte(mp, ctx->pos);
--
--	/*
--	 * Force this conversion through db so we truncate the offset
--	 * down to get the start of the data block.
--	 */
--	map_info->map_off = xfs_dir2_db_to_da(mp,
--					      xfs_dir2_byte_to_db(mp, curoff));
--
--	/*
--	 * Loop over directory entries until we reach the end offset.
--	 * Get more blocks and readahead as necessary.
--	 */
--	while (curoff < XFS_DIR2_LEAF_OFFSET) {
--		/*
--		 * If we have no buffer, or we're off the end of the
--		 * current buffer, need to get another one.
--		 */
--		if (!bp || ptr >= (char *)bp->b_addr + mp->m_dirblksize) {
--
--			error = xfs_dir2_leaf_readbuf(dp, bufsize, map_info,
--						      &curoff, &bp);
--			if (error || !map_info->map_valid)
--				break;
--
--			/*
--			 * Having done a read, we need to set a new offset.
--			 */
--			newoff = xfs_dir2_db_off_to_byte(mp, map_info->curdb, 0);
--			/*
--			 * Start of the current block.
--			 */
--			if (curoff < newoff)
--				curoff = newoff;
--			/*
--			 * Make sure we're in the right block.
--			 */
--			else if (curoff > newoff)
--				ASSERT(xfs_dir2_byte_to_db(mp, curoff) ==
--				       map_info->curdb);
--			hdr = bp->b_addr;
--			xfs_dir3_data_check(dp, bp);
--			/*
--			 * Find our position in the block.
--			 */
--			ptr = (char *)xfs_dir3_data_entry_p(hdr);
--			byteoff = xfs_dir2_byte_to_off(mp, curoff);
--			/*
--			 * Skip past the header.
--			 */
--			if (byteoff == 0)
--				curoff += xfs_dir3_data_entry_offset(hdr);
--			/*
--			 * Skip past entries until we reach our offset.
--			 */
--			else {
--				while ((char *)ptr - (char *)hdr < byteoff) {
--					dup = (xfs_dir2_data_unused_t *)ptr;
--
--					if (be16_to_cpu(dup->freetag)
--						  == XFS_DIR2_DATA_FREE_TAG) {
--
--						length = be16_to_cpu(dup->length);
--						ptr += length;
--						continue;
--					}
--					dep = (xfs_dir2_data_entry_t *)ptr;
--					length =
--					   xfs_dir2_data_entsize(dep->namelen);
--					ptr += length;
--				}
--				/*
--				 * Now set our real offset.
--				 */
--				curoff =
--					xfs_dir2_db_off_to_byte(mp,
--					    xfs_dir2_byte_to_db(mp, curoff),
--					    (char *)ptr - (char *)hdr);
--				if (ptr >= (char *)hdr + mp->m_dirblksize) {
--					continue;
--				}
--			}
--		}
--		/*
--		 * We have a pointer to an entry.
--		 * Is it a live one?
--		 */
--		dup = (xfs_dir2_data_unused_t *)ptr;
--		/*
--		 * No, it's unused, skip over it.
--		 */
--		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
--			length = be16_to_cpu(dup->length);
--			ptr += length;
--			curoff += length;
--			continue;
--		}
--
--		dep = (xfs_dir2_data_entry_t *)ptr;
--		length = xfs_dir2_data_entsize(dep->namelen);
--
--		ctx->pos = xfs_dir2_byte_to_dataptr(mp, curoff) & 0x7fffffff;
--		if (!dir_emit(ctx, (char *)dep->name, dep->namelen,
--			    be64_to_cpu(dep->inumber), DT_UNKNOWN))
--			break;
--
--		/*
--		 * Advance to next entry in the block.
--		 */
--		ptr += length;
--		curoff += length;
--		/* bufsize may have just been a guess; don't go negative */
--		bufsize = bufsize > length ? bufsize - length : 0;
--	}
--
--	/*
--	 * All done.  Set output offset value to current offset.
--	 */
--	if (curoff > xfs_dir2_dataptr_to_byte(mp, XFS_DIR2_MAX_DATAPTR))
--		ctx->pos = XFS_DIR2_MAX_DATAPTR & 0x7fffffff;
--	else
--		ctx->pos = xfs_dir2_byte_to_dataptr(mp, curoff) & 0x7fffffff;
--	kmem_free(map_info);
--	if (bp)
--		xfs_trans_brelse(NULL, bp);
--	return error;
--}
--
--
- /*
-  * Log the bests entries indicated from a leaf1 block.
-  */
-diff --git a/fs/xfs/xfs_dir2_priv.h b/fs/xfs/xfs_dir2_priv.h
-index 0511cda..72ff8d7 100644
---- a/fs/xfs/xfs_dir2_priv.h
-+++ b/fs/xfs/xfs_dir2_priv.h
-@@ -32,9 +32,9 @@ extern int xfs_dir_cilookup_result(struct xfs_da_args *args,
- /* xfs_dir2_block.c */
- extern const struct xfs_buf_ops xfs_dir3_block_buf_ops;
- 
-+extern int xfs_dir3_block_read(struct xfs_trans *tp, struct xfs_inode *dp,
-+			       struct xfs_buf **bpp);
- extern int xfs_dir2_block_addname(struct xfs_da_args *args);
--extern int xfs_dir2_block_getdents(struct xfs_inode *dp,
--		struct dir_context *ctx);
- extern int xfs_dir2_block_lookup(struct xfs_da_args *args);
- extern int xfs_dir2_block_removename(struct xfs_da_args *args);
- extern int xfs_dir2_block_replace(struct xfs_da_args *args);
-@@ -91,8 +91,6 @@ extern void xfs_dir3_leaf_compact(struct xfs_da_args *args,
- extern void xfs_dir3_leaf_compact_x1(struct xfs_dir3_icleaf_hdr *leafhdr,
- 		struct xfs_dir2_leaf_entry *ents, int *indexp,
- 		int *lowstalep, int *highstalep, int *lowlogp, int *highlogp);
--extern int xfs_dir2_leaf_getdents(struct xfs_inode *dp, struct dir_context *ctx,
--		size_t bufsize);
- extern int xfs_dir3_leaf_get_buf(struct xfs_da_args *args, xfs_dir2_db_t bno,
- 		struct xfs_buf **bpp, __uint16_t magic);
- extern void xfs_dir3_leaf_log_ents(struct xfs_trans *tp, struct xfs_buf *bp,
-@@ -153,7 +151,6 @@ extern int xfs_dir2_block_to_sf(struct xfs_da_args *args, struct xfs_buf *bp,
- 		int size, xfs_dir2_sf_hdr_t *sfhp);
- extern int xfs_dir2_sf_addname(struct xfs_da_args *args);
- extern int xfs_dir2_sf_create(struct xfs_da_args *args, xfs_ino_t pino);
--extern int xfs_dir2_sf_getdents(struct xfs_inode *dp, struct dir_context *ctx);
- extern int xfs_dir2_sf_lookup(struct xfs_da_args *args);
- extern int xfs_dir2_sf_removename(struct xfs_da_args *args);
- extern int xfs_dir2_sf_replace(struct xfs_da_args *args);
-diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-new file mode 100644
-index 0000000..2bc4b32
---- /dev/null
-+++ b/fs/xfs/xfs_dir2_readdir.c
-@@ -0,0 +1,645 @@
-+/*
-+ * Copyright (c) 2000-2005 Silicon Graphics, Inc.
-+ * Copyright (c) 2013 Red Hat, Inc.
-+ * All Rights Reserved.
++ * Transaction Header definitions.
 + *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
++ * This is the structure written in the log at the head of every transaction. It
++ * identifies the type and id of the transaction, and contains the number of
++ * items logged by the transaction so we know how many to expect during
++ * recovery.
 + *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ * Do not change the below structure without redoing the code in
++ * xlog_recover_add_to_trans() and xlog_recover_add_to_cont_trans().
 + */
-+#include "xfs.h"
-+#include "xfs_fs.h"
-+#include "xfs_types.h"
-+#include "xfs_bit.h"
-+#include "xfs_log.h"
-+#include "xfs_trans.h"
-+#include "xfs_sb.h"
-+#include "xfs_ag.h"
-+#include "xfs_mount.h"
-+#include "xfs_da_btree.h"
-+#include "xfs_bmap_btree.h"
-+#include "xfs_dinode.h"
-+#include "xfs_inode.h"
-+#include "xfs_dir2_format.h"
-+#include "xfs_dir2_priv.h"
-+#include "xfs_error.h"
-+#include "xfs_trace.h"
-+#include "xfs_bmap.h"
++typedef struct xfs_trans_header {
++	uint		th_magic;		/* magic number */
++	uint		th_type;		/* transaction type */
++	__int32_t	th_tid;			/* transaction id (unused) */
++	uint		th_num_items;		/* num items logged by trans */
++} xfs_trans_header_t;
 +
-+STATIC int
-+xfs_dir2_sf_getdents(
-+	xfs_inode_t		*dp,		/* incore directory inode */
-+	struct dir_context	*ctx)
-+{
-+	int			i;		/* shortform entry number */
-+	xfs_mount_t		*mp;		/* filesystem mount point */
-+	xfs_dir2_dataptr_t	off;		/* current entry's offset */
-+	xfs_dir2_sf_entry_t	*sfep;		/* shortform directory entry */
-+	xfs_dir2_sf_hdr_t	*sfp;		/* shortform structure */
-+	xfs_dir2_dataptr_t	dot_offset;
-+	xfs_dir2_dataptr_t	dotdot_offset;
-+	xfs_ino_t		ino;
-+
-+	mp = dp->i_mount;
-+
-+	ASSERT(dp->i_df.if_flags & XFS_IFINLINE);
-+	/*
-+	 * Give up if the directory is way too short.
-+	 */
-+	if (dp->i_d.di_size < offsetof(xfs_dir2_sf_hdr_t, parent)) {
-+		ASSERT(XFS_FORCED_SHUTDOWN(mp));
-+		return XFS_ERROR(EIO);
-+	}
-+
-+	ASSERT(dp->i_df.if_bytes == dp->i_d.di_size);
-+	ASSERT(dp->i_df.if_u1.if_data != NULL);
-+
-+	sfp = (xfs_dir2_sf_hdr_t *)dp->i_df.if_u1.if_data;
-+
-+	ASSERT(dp->i_d.di_size >= xfs_dir2_sf_hdr_size(sfp->i8count));
-+
-+	/*
-+	 * If the block number in the offset is out of range, we're done.
-+	 */
-+	if (xfs_dir2_dataptr_to_db(mp, ctx->pos) > mp->m_dirdatablk)
-+		return 0;
-+
-+	/*
-+	 * Precalculate offsets for . and .. as we will always need them.
-+	 *
-+	 * XXX(hch): the second argument is sometimes 0 and sometimes
-+	 * mp->m_dirdatablk.
-+	 */
-+	dot_offset = xfs_dir2_db_off_to_dataptr(mp, mp->m_dirdatablk,
-+					     XFS_DIR3_DATA_DOT_OFFSET(mp));
-+	dotdot_offset = xfs_dir2_db_off_to_dataptr(mp, mp->m_dirdatablk,
-+						XFS_DIR3_DATA_DOTDOT_OFFSET(mp));
-+
-+	/*
-+	 * Put . entry unless we're starting past it.
-+	 */
-+	if (ctx->pos <= dot_offset) {
-+		ctx->pos = dot_offset & 0x7fffffff;
-+		if (!dir_emit(ctx, ".", 1, dp->i_ino, DT_DIR))
-+			return 0;
-+	}
-+
-+	/*
-+	 * Put .. entry unless we're starting past it.
-+	 */
-+	if (ctx->pos <= dotdot_offset) {
-+		ino = xfs_dir2_sf_get_parent_ino(sfp);
-+		ctx->pos = dotdot_offset & 0x7fffffff;
-+		if (!dir_emit(ctx, "..", 2, ino, DT_DIR))
-+			return 0;
-+	}
-+
-+	/*
-+	 * Loop while there are more entries and put'ing works.
-+	 */
-+	sfep = xfs_dir2_sf_firstentry(sfp);
-+	for (i = 0; i < sfp->count; i++) {
-+		off = xfs_dir2_db_off_to_dataptr(mp, mp->m_dirdatablk,
-+				xfs_dir2_sf_get_offset(sfep));
-+
-+		if (ctx->pos > off) {
-+			sfep = xfs_dir2_sf_nextentry(sfp, sfep);
-+			continue;
-+		}
-+
-+		ino = xfs_dir2_sfe_get_ino(sfp, sfep);
-+		ctx->pos = off & 0x7fffffff;
-+		if (!dir_emit(ctx, (char *)sfep->name, sfep->namelen,
-+			    ino, DT_UNKNOWN))
-+			return 0;
-+		sfep = xfs_dir2_sf_nextentry(sfp, sfep);
-+	}
-+
-+	ctx->pos = xfs_dir2_db_off_to_dataptr(mp, mp->m_dirdatablk + 1, 0) &
-+			0x7fffffff;
-+	return 0;
-+}
++#define	XFS_TRANS_HEADER_MAGIC	0x5452414e	/* TRAN */
 +
 +/*
-+ * Readdir for block directories.
++ * Log item types.
 + */
-+STATIC int
-+xfs_dir2_block_getdents(
-+	xfs_inode_t		*dp,		/* incore inode */
-+	struct dir_context	*ctx)
-+{
-+	xfs_dir2_data_hdr_t	*hdr;		/* block header */
-+	struct xfs_buf		*bp;		/* buffer for block */
-+	xfs_dir2_block_tail_t	*btp;		/* block tail */
-+	xfs_dir2_data_entry_t	*dep;		/* block data entry */
-+	xfs_dir2_data_unused_t	*dup;		/* block unused entry */
-+	char			*endptr;	/* end of the data entries */
-+	int			error;		/* error return value */
-+	xfs_mount_t		*mp;		/* filesystem mount point */
-+	char			*ptr;		/* current data entry */
-+	int			wantoff;	/* starting block offset */
-+	xfs_off_t		cook;
++#define	XFS_LI_EFI		0x1236
++#define	XFS_LI_EFD		0x1237
++#define	XFS_LI_IUNLINK		0x1238
++#define	XFS_LI_INODE		0x123b	/* aligned ino chunks, var-size ibufs */
++#define	XFS_LI_BUF		0x123c	/* v2 bufs, variable sized inode bufs */
++#define	XFS_LI_DQUOT		0x123d
++#define	XFS_LI_QUOTAOFF		0x123e
++#define	XFS_LI_ICREATE		0x123f
 +
-+	mp = dp->i_mount;
-+	/*
-+	 * If the block number in the offset is out of range, we're done.
-+	 */
-+	if (xfs_dir2_dataptr_to_db(mp, ctx->pos) > mp->m_dirdatablk)
-+		return 0;
++#define XFS_LI_TYPE_DESC \
++	{ XFS_LI_EFI,		"XFS_LI_EFI" }, \
++	{ XFS_LI_EFD,		"XFS_LI_EFD" }, \
++	{ XFS_LI_IUNLINK,	"XFS_LI_IUNLINK" }, \
++	{ XFS_LI_INODE,		"XFS_LI_INODE" }, \
++	{ XFS_LI_BUF,		"XFS_LI_BUF" }, \
++	{ XFS_LI_DQUOT,		"XFS_LI_DQUOT" }, \
++	{ XFS_LI_QUOTAOFF,	"XFS_LI_QUOTAOFF" }, \
++	{ XFS_LI_ICREATE,	"XFS_LI_ICREATE" }
 +
-+	error = xfs_dir3_block_read(NULL, dp, &bp);
-+	if (error)
-+		return error;
++/*
++ * Transaction types.  Used to distinguish types of buffers.
++ */
++#define XFS_TRANS_SETATTR_NOT_SIZE	1
++#define XFS_TRANS_SETATTR_SIZE		2
++#define XFS_TRANS_INACTIVE		3
++#define XFS_TRANS_CREATE		4
++#define XFS_TRANS_CREATE_TRUNC		5
++#define XFS_TRANS_TRUNCATE_FILE		6
++#define XFS_TRANS_REMOVE		7
++#define XFS_TRANS_LINK			8
++#define XFS_TRANS_RENAME		9
++#define XFS_TRANS_MKDIR			10
++#define XFS_TRANS_RMDIR			11
++#define XFS_TRANS_SYMLINK		12
++#define XFS_TRANS_SET_DMATTRS		13
++#define XFS_TRANS_GROWFS		14
++#define XFS_TRANS_STRAT_WRITE		15
++#define XFS_TRANS_DIOSTRAT		16
++/* 17 was XFS_TRANS_WRITE_SYNC */
++#define	XFS_TRANS_WRITEID		18
++#define	XFS_TRANS_ADDAFORK		19
++#define	XFS_TRANS_ATTRINVAL		20
++#define	XFS_TRANS_ATRUNCATE		21
++#define	XFS_TRANS_ATTR_SET		22
++#define	XFS_TRANS_ATTR_RM		23
++#define	XFS_TRANS_ATTR_FLAG		24
++#define	XFS_TRANS_CLEAR_AGI_BUCKET	25
++#define XFS_TRANS_QM_SBCHANGE		26
++/*
++ * Dummy entries since we use the transaction type to index into the
++ * trans_type[] in xlog_recover_print_trans_head()
++ */
++#define XFS_TRANS_DUMMY1		27
++#define XFS_TRANS_DUMMY2		28
++#define XFS_TRANS_QM_QUOTAOFF		29
++#define XFS_TRANS_QM_DQALLOC		30
++#define XFS_TRANS_QM_SETQLIM		31
++#define XFS_TRANS_QM_DQCLUSTER		32
++#define XFS_TRANS_QM_QINOCREATE		33
++#define XFS_TRANS_QM_QUOTAOFF_END	34
++#define XFS_TRANS_SB_UNIT		35
++#define XFS_TRANS_FSYNC_TS		36
++#define	XFS_TRANS_GROWFSRT_ALLOC	37
++#define	XFS_TRANS_GROWFSRT_ZERO		38
++#define	XFS_TRANS_GROWFSRT_FREE		39
++#define	XFS_TRANS_SWAPEXT		40
++#define	XFS_TRANS_SB_COUNT		41
++#define	XFS_TRANS_CHECKPOINT		42
++#define	XFS_TRANS_ICREATE		43
++#define	XFS_TRANS_TYPE_MAX		43
++/* new transaction types need to be reflected in xfs_logprint(8) */
 +
-+	/*
-+	 * Extract the byte offset we start at from the seek pointer.
-+	 * We'll skip entries before this.
-+	 */
-+	wantoff = xfs_dir2_dataptr_to_off(mp, ctx->pos);
-+	hdr = bp->b_addr;
-+	xfs_dir3_data_check(dp, bp);
-+	/*
-+	 * Set up values for the loop.
-+	 */
-+	btp = xfs_dir2_block_tail_p(mp, hdr);
-+	ptr = (char *)xfs_dir3_data_entry_p(hdr);
-+	endptr = (char *)xfs_dir2_block_leaf_p(btp);
++#define XFS_TRANS_TYPES \
++	{ XFS_TRANS_SETATTR_NOT_SIZE,	"SETATTR_NOT_SIZE" }, \
++	{ XFS_TRANS_SETATTR_SIZE,	"SETATTR_SIZE" }, \
++	{ XFS_TRANS_INACTIVE,		"INACTIVE" }, \
++	{ XFS_TRANS_CREATE,		"CREATE" }, \
++	{ XFS_TRANS_CREATE_TRUNC,	"CREATE_TRUNC" }, \
++	{ XFS_TRANS_TRUNCATE_FILE,	"TRUNCATE_FILE" }, \
++	{ XFS_TRANS_REMOVE,		"REMOVE" }, \
++	{ XFS_TRANS_LINK,		"LINK" }, \
++	{ XFS_TRANS_RENAME,		"RENAME" }, \
++	{ XFS_TRANS_MKDIR,		"MKDIR" }, \
++	{ XFS_TRANS_RMDIR,		"RMDIR" }, \
++	{ XFS_TRANS_SYMLINK,		"SYMLINK" }, \
++	{ XFS_TRANS_SET_DMATTRS,	"SET_DMATTRS" }, \
++	{ XFS_TRANS_GROWFS,		"GROWFS" }, \
++	{ XFS_TRANS_STRAT_WRITE,	"STRAT_WRITE" }, \
++	{ XFS_TRANS_DIOSTRAT,		"DIOSTRAT" }, \
++	{ XFS_TRANS_WRITEID,		"WRITEID" }, \
++	{ XFS_TRANS_ADDAFORK,		"ADDAFORK" }, \
++	{ XFS_TRANS_ATTRINVAL,		"ATTRINVAL" }, \
++	{ XFS_TRANS_ATRUNCATE,		"ATRUNCATE" }, \
++	{ XFS_TRANS_ATTR_SET,		"ATTR_SET" }, \
++	{ XFS_TRANS_ATTR_RM,		"ATTR_RM" }, \
++	{ XFS_TRANS_ATTR_FLAG,		"ATTR_FLAG" }, \
++	{ XFS_TRANS_CLEAR_AGI_BUCKET,	"CLEAR_AGI_BUCKET" }, \
++	{ XFS_TRANS_QM_SBCHANGE,	"QM_SBCHANGE" }, \
++	{ XFS_TRANS_QM_QUOTAOFF,	"QM_QUOTAOFF" }, \
++	{ XFS_TRANS_QM_DQALLOC,		"QM_DQALLOC" }, \
++	{ XFS_TRANS_QM_SETQLIM,		"QM_SETQLIM" }, \
++	{ XFS_TRANS_QM_DQCLUSTER,	"QM_DQCLUSTER" }, \
++	{ XFS_TRANS_QM_QINOCREATE,	"QM_QINOCREATE" }, \
++	{ XFS_TRANS_QM_QUOTAOFF_END,	"QM_QOFF_END" }, \
++	{ XFS_TRANS_SB_UNIT,		"SB_UNIT" }, \
++	{ XFS_TRANS_FSYNC_TS,		"FSYNC_TS" }, \
++	{ XFS_TRANS_GROWFSRT_ALLOC,	"GROWFSRT_ALLOC" }, \
++	{ XFS_TRANS_GROWFSRT_ZERO,	"GROWFSRT_ZERO" }, \
++	{ XFS_TRANS_GROWFSRT_FREE,	"GROWFSRT_FREE" }, \
++	{ XFS_TRANS_SWAPEXT,		"SWAPEXT" }, \
++	{ XFS_TRANS_SB_COUNT,		"SB_COUNT" }, \
++	{ XFS_TRANS_CHECKPOINT,		"CHECKPOINT" }, \
++	{ XFS_TRANS_DUMMY1,		"DUMMY1" }, \
++	{ XFS_TRANS_DUMMY2,		"DUMMY2" }, \
++	{ XLOG_UNMOUNT_REC_TYPE,	"UNMOUNT" }
 +
-+	/*
-+	 * Loop over the data portion of the block.
-+	 * Each object is a real entry (dep) or an unused one (dup).
-+	 */
-+	while (ptr < endptr) {
-+		dup = (xfs_dir2_data_unused_t *)ptr;
-+		/*
-+		 * Unused, skip it.
-+		 */
-+		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
-+			ptr += be16_to_cpu(dup->length);
-+			continue;
-+		}
-+
-+		dep = (xfs_dir2_data_entry_t *)ptr;
-+
-+		/*
-+		 * Bump pointer for the next iteration.
-+		 */
-+		ptr += xfs_dir2_data_entsize(dep->namelen);
-+		/*
-+		 * The entry is before the desired starting point, skip it.
-+		 */
-+		if ((char *)dep - (char *)hdr < wantoff)
-+			continue;
-+
-+		cook = xfs_dir2_db_off_to_dataptr(mp, mp->m_dirdatablk,
-+					    (char *)dep - (char *)hdr);
-+
-+		ctx->pos = cook & 0x7fffffff;
-+		/*
-+		 * If it didn't fit, set the final offset to here & return.
-+		 */
-+		if (!dir_emit(ctx, (char *)dep->name, dep->namelen,
-+			    be64_to_cpu(dep->inumber), DT_UNKNOWN)) {
-+			xfs_trans_brelse(NULL, bp);
-+			return 0;
-+		}
-+	}
-+
-+	/*
-+	 * Reached the end of the block.
-+	 * Set the offset to a non-existent block 1 and return.
-+	 */
-+	ctx->pos = xfs_dir2_db_off_to_dataptr(mp, mp->m_dirdatablk + 1, 0) &
-+			0x7fffffff;
-+	xfs_trans_brelse(NULL, bp);
-+	return 0;
-+}
-+
-+struct xfs_dir2_leaf_map_info {
-+	xfs_extlen_t	map_blocks;	/* number of fsbs in map */
-+	xfs_dablk_t	map_off;	/* last mapped file offset */
-+	int		map_size;	/* total entries in *map */
-+	int		map_valid;	/* valid entries in *map */
-+	int		nmap;		/* mappings to ask xfs_bmapi */
-+	xfs_dir2_db_t	curdb;		/* db for current block */
-+	int		ra_current;	/* number of read-ahead blks */
-+	int		ra_index;	/* *map index for read-ahead */
-+	int		ra_offset;	/* map entry offset for ra */
-+	int		ra_want;	/* readahead count wanted */
-+	struct xfs_bmbt_irec map[];	/* map vector for blocks */
++/*
++ * This structure is used to track log items associated with
++ * a transaction.  It points to the log item and keeps some
++ * flags to track the state of the log item.  It also tracks
++ * the amount of space needed to log the item it describes
++ * once we get to commit processing (see xfs_trans_commit()).
++ */
++struct xfs_log_item_desc {
++	struct xfs_log_item	*lid_item;
++	struct list_head	lid_trans;
++	unsigned char		lid_flags;
 +};
 +
-+STATIC int
-+xfs_dir2_leaf_readbuf(
-+	struct xfs_inode	*dp,
-+	size_t			bufsize,
-+	struct xfs_dir2_leaf_map_info *mip,
-+	xfs_dir2_off_t		*curoff,
-+	struct xfs_buf		**bpp)
-+{
-+	struct xfs_mount	*mp = dp->i_mount;
-+	struct xfs_buf		*bp = *bpp;
-+	struct xfs_bmbt_irec	*map = mip->map;
-+	struct blk_plug		plug;
-+	int			error = 0;
-+	int			length;
-+	int			i;
-+	int			j;
-+
-+	/*
-+	 * If we have a buffer, we need to release it and
-+	 * take it out of the mapping.
-+	 */
-+
-+	if (bp) {
-+		xfs_trans_brelse(NULL, bp);
-+		bp = NULL;
-+		mip->map_blocks -= mp->m_dirblkfsbs;
-+		/*
-+		 * Loop to get rid of the extents for the
-+		 * directory block.
-+		 */
-+		for (i = mp->m_dirblkfsbs; i > 0; ) {
-+			j = min_t(int, map->br_blockcount, i);
-+			map->br_blockcount -= j;
-+			map->br_startblock += j;
-+			map->br_startoff += j;
-+			/*
-+			 * If mapping is done, pitch it from
-+			 * the table.
-+			 */
-+			if (!map->br_blockcount && --mip->map_valid)
-+				memmove(&map[0], &map[1],
-+					sizeof(map[0]) * mip->map_valid);
-+			i -= j;
-+		}
-+	}
-+
-+	/*
-+	 * Recalculate the readahead blocks wanted.
-+	 */
-+	mip->ra_want = howmany(bufsize + mp->m_dirblksize,
-+			       mp->m_sb.sb_blocksize) - 1;
-+	ASSERT(mip->ra_want >= 0);
-+
-+	/*
-+	 * If we don't have as many as we want, and we haven't
-+	 * run out of data blocks, get some more mappings.
-+	 */
-+	if (1 + mip->ra_want > mip->map_blocks &&
-+	    mip->map_off < xfs_dir2_byte_to_da(mp, XFS_DIR2_LEAF_OFFSET)) {
-+		/*
-+		 * Get more bmaps, fill in after the ones
-+		 * we already have in the table.
-+		 */
-+		mip->nmap = mip->map_size - mip->map_valid;
-+		error = xfs_bmapi_read(dp, mip->map_off,
-+				xfs_dir2_byte_to_da(mp, XFS_DIR2_LEAF_OFFSET) -
-+								mip->map_off,
-+				&map[mip->map_valid], &mip->nmap, 0);
-+
-+		/*
-+		 * Don't know if we should ignore this or try to return an
-+		 * error.  The trouble with returning errors is that readdir
-+		 * will just stop without actually passing the error through.
-+		 */
-+		if (error)
-+			goto out;	/* XXX */
-+
-+		/*
-+		 * If we got all the mappings we asked for, set the final map
-+		 * offset based on the last bmap value received.  Otherwise,
-+		 * we've reached the end.
-+		 */
-+		if (mip->nmap == mip->map_size - mip->map_valid) {
-+			i = mip->map_valid + mip->nmap - 1;
-+			mip->map_off = map[i].br_startoff + map[i].br_blockcount;
-+		} else
-+			mip->map_off = xfs_dir2_byte_to_da(mp,
-+							XFS_DIR2_LEAF_OFFSET);
-+
-+		/*
-+		 * Look for holes in the mapping, and eliminate them.  Count up
-+		 * the valid blocks.
-+		 */
-+		for (i = mip->map_valid; i < mip->map_valid + mip->nmap; ) {
-+			if (map[i].br_startblock == HOLESTARTBLOCK) {
-+				mip->nmap--;
-+				length = mip->map_valid + mip->nmap - i;
-+				if (length)
-+					memmove(&map[i], &map[i + 1],
-+						sizeof(map[i]) * length);
-+			} else {
-+				mip->map_blocks += map[i].br_blockcount;
-+				i++;
-+			}
-+		}
-+		mip->map_valid += mip->nmap;
-+	}
-+
-+	/*
-+	 * No valid mappings, so no more data blocks.
-+	 */
-+	if (!mip->map_valid) {
-+		*curoff = xfs_dir2_da_to_byte(mp, mip->map_off);
-+		goto out;
-+	}
-+
-+	/*
-+	 * Read the directory block starting at the first mapping.
-+	 */
-+	mip->curdb = xfs_dir2_da_to_db(mp, map->br_startoff);
-+	error = xfs_dir3_data_read(NULL, dp, map->br_startoff,
-+			map->br_blockcount >= mp->m_dirblkfsbs ?
-+			    XFS_FSB_TO_DADDR(mp, map->br_startblock) : -1, &bp);
-+
-+	/*
-+	 * Should just skip over the data block instead of giving up.
-+	 */
-+	if (error)
-+		goto out;	/* XXX */
-+
-+	/*
-+	 * Adjust the current amount of read-ahead: we just read a block that
-+	 * was previously ra.
-+	 */
-+	if (mip->ra_current)
-+		mip->ra_current -= mp->m_dirblkfsbs;
-+
-+	/*
-+	 * Do we need more readahead?
-+	 */
-+	blk_start_plug(&plug);
-+	for (mip->ra_index = mip->ra_offset = i = 0;
-+	     mip->ra_want > mip->ra_current && i < mip->map_blocks;
-+	     i += mp->m_dirblkfsbs) {
-+		ASSERT(mip->ra_index < mip->map_valid);
-+		/*
-+		 * Read-ahead a contiguous directory block.
-+		 */
-+		if (i > mip->ra_current &&
-+		    map[mip->ra_index].br_blockcount >= mp->m_dirblkfsbs) {
-+			xfs_dir3_data_readahead(NULL, dp,
-+				map[mip->ra_index].br_startoff + mip->ra_offset,
-+				XFS_FSB_TO_DADDR(mp,
-+					map[mip->ra_index].br_startblock +
-+							mip->ra_offset));
-+			mip->ra_current = i;
-+		}
-+
-+		/*
-+		 * Read-ahead a non-contiguous directory block.  This doesn't
-+		 * use our mapping, but this is a very rare case.
-+		 */
-+		else if (i > mip->ra_current) {
-+			xfs_dir3_data_readahead(NULL, dp,
-+					map[mip->ra_index].br_startoff +
-+							mip->ra_offset, -1);
-+			mip->ra_current = i;
-+		}
-+
-+		/*
-+		 * Advance offset through the mapping table.
-+		 */
-+		for (j = 0; j < mp->m_dirblkfsbs; j++) {
-+			/*
-+			 * The rest of this extent but not more than a dir
-+			 * block.
-+			 */
-+			length = min_t(int, mp->m_dirblkfsbs,
-+					map[mip->ra_index].br_blockcount -
-+							mip->ra_offset);
-+			j += length;
-+			mip->ra_offset += length;
-+
-+			/*
-+			 * Advance to the next mapping if this one is used up.
-+			 */
-+			if (mip->ra_offset == map[mip->ra_index].br_blockcount) {
-+				mip->ra_offset = 0;
-+				mip->ra_index++;
-+			}
-+		}
-+	}
-+	blk_finish_plug(&plug);
-+
-+out:
-+	*bpp = bp;
-+	return error;
-+}
++#define XFS_LID_DIRTY		0x1
 +
 +/*
-+ * Getdents (readdir) for leaf and node directories.
-+ * This reads the data blocks only, so is the same for both forms.
++ * Values for t_flags.
 + */
-+STATIC int
-+xfs_dir2_leaf_getdents(
-+	xfs_inode_t		*dp,		/* incore directory inode */
-+	struct dir_context	*ctx,
-+	size_t			bufsize)
-+{
-+	struct xfs_buf		*bp = NULL;	/* data block buffer */
-+	xfs_dir2_data_hdr_t	*hdr;		/* data block header */
-+	xfs_dir2_data_entry_t	*dep;		/* data entry */
-+	xfs_dir2_data_unused_t	*dup;		/* unused entry */
-+	int			error = 0;	/* error return value */
-+	int			length;		/* temporary length value */
-+	xfs_mount_t		*mp;		/* filesystem mount point */
-+	int			byteoff;	/* offset in current block */
-+	xfs_dir2_off_t		curoff;		/* current overall offset */
-+	xfs_dir2_off_t		newoff;		/* new curoff after new blk */
-+	char			*ptr = NULL;	/* pointer to current data */
-+	struct xfs_dir2_leaf_map_info *map_info;
-+
-+	/*
-+	 * If the offset is at or past the largest allowed value,
-+	 * give up right away.
-+	 */
-+	if (ctx->pos >= XFS_DIR2_MAX_DATAPTR)
-+		return 0;
-+
-+	mp = dp->i_mount;
-+
-+	/*
-+	 * Set up to bmap a number of blocks based on the caller's
-+	 * buffer size, the directory block size, and the filesystem
-+	 * block size.
-+	 */
-+	length = howmany(bufsize + mp->m_dirblksize,
-+				     mp->m_sb.sb_blocksize);
-+	map_info = kmem_zalloc(offsetof(struct xfs_dir2_leaf_map_info, map) +
-+				(length * sizeof(struct xfs_bmbt_irec)),
-+			       KM_SLEEP | KM_NOFS);
-+	map_info->map_size = length;
-+
-+	/*
-+	 * Inside the loop we keep the main offset value as a byte offset
-+	 * in the directory file.
-+	 */
-+	curoff = xfs_dir2_dataptr_to_byte(mp, ctx->pos);
-+
-+	/*
-+	 * Force this conversion through db so we truncate the offset
-+	 * down to get the start of the data block.
-+	 */
-+	map_info->map_off = xfs_dir2_db_to_da(mp,
-+					      xfs_dir2_byte_to_db(mp, curoff));
-+
-+	/*
-+	 * Loop over directory entries until we reach the end offset.
-+	 * Get more blocks and readahead as necessary.
-+	 */
-+	while (curoff < XFS_DIR2_LEAF_OFFSET) {
-+		/*
-+		 * If we have no buffer, or we're off the end of the
-+		 * current buffer, need to get another one.
-+		 */
-+		if (!bp || ptr >= (char *)bp->b_addr + mp->m_dirblksize) {
-+
-+			error = xfs_dir2_leaf_readbuf(dp, bufsize, map_info,
-+						      &curoff, &bp);
-+			if (error || !map_info->map_valid)
-+				break;
-+
-+			/*
-+			 * Having done a read, we need to set a new offset.
-+			 */
-+			newoff = xfs_dir2_db_off_to_byte(mp, map_info->curdb, 0);
-+			/*
-+			 * Start of the current block.
-+			 */
-+			if (curoff < newoff)
-+				curoff = newoff;
-+			/*
-+			 * Make sure we're in the right block.
-+			 */
-+			else if (curoff > newoff)
-+				ASSERT(xfs_dir2_byte_to_db(mp, curoff) ==
-+				       map_info->curdb);
-+			hdr = bp->b_addr;
-+			xfs_dir3_data_check(dp, bp);
-+			/*
-+			 * Find our position in the block.
-+			 */
-+			ptr = (char *)xfs_dir3_data_entry_p(hdr);
-+			byteoff = xfs_dir2_byte_to_off(mp, curoff);
-+			/*
-+			 * Skip past the header.
-+			 */
-+			if (byteoff == 0)
-+				curoff += xfs_dir3_data_entry_offset(hdr);
-+			/*
-+			 * Skip past entries until we reach our offset.
-+			 */
-+			else {
-+				while ((char *)ptr - (char *)hdr < byteoff) {
-+					dup = (xfs_dir2_data_unused_t *)ptr;
-+
-+					if (be16_to_cpu(dup->freetag)
-+						  == XFS_DIR2_DATA_FREE_TAG) {
-+
-+						length = be16_to_cpu(dup->length);
-+						ptr += length;
-+						continue;
-+					}
-+					dep = (xfs_dir2_data_entry_t *)ptr;
-+					length =
-+					   xfs_dir2_data_entsize(dep->namelen);
-+					ptr += length;
-+				}
-+				/*
-+				 * Now set our real offset.
-+				 */
-+				curoff =
-+					xfs_dir2_db_off_to_byte(mp,
-+					    xfs_dir2_byte_to_db(mp, curoff),
-+					    (char *)ptr - (char *)hdr);
-+				if (ptr >= (char *)hdr + mp->m_dirblksize) {
-+					continue;
-+				}
-+			}
-+		}
-+		/*
-+		 * We have a pointer to an entry.
-+		 * Is it a live one?
-+		 */
-+		dup = (xfs_dir2_data_unused_t *)ptr;
-+		/*
-+		 * No, it's unused, skip over it.
-+		 */
-+		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
-+			length = be16_to_cpu(dup->length);
-+			ptr += length;
-+			curoff += length;
-+			continue;
-+		}
-+
-+		dep = (xfs_dir2_data_entry_t *)ptr;
-+		length = xfs_dir2_data_entsize(dep->namelen);
-+
-+		ctx->pos = xfs_dir2_byte_to_dataptr(mp, curoff) & 0x7fffffff;
-+		if (!dir_emit(ctx, (char *)dep->name, dep->namelen,
-+			    be64_to_cpu(dep->inumber), DT_UNKNOWN))
-+			break;
-+
-+		/*
-+		 * Advance to next entry in the block.
-+		 */
-+		ptr += length;
-+		curoff += length;
-+		/* bufsize may have just been a guess; don't go negative */
-+		bufsize = bufsize > length ? bufsize - length : 0;
-+	}
-+
-+	/*
-+	 * All done.  Set output offset value to current offset.
-+	 */
-+	if (curoff > xfs_dir2_dataptr_to_byte(mp, XFS_DIR2_MAX_DATAPTR))
-+		ctx->pos = XFS_DIR2_MAX_DATAPTR & 0x7fffffff;
-+	else
-+		ctx->pos = xfs_dir2_byte_to_dataptr(mp, curoff) & 0x7fffffff;
-+	kmem_free(map_info);
-+	if (bp)
-+		xfs_trans_brelse(NULL, bp);
-+	return error;
-+}
++#define	XFS_TRANS_DIRTY		0x01	/* something needs to be logged */
++#define	XFS_TRANS_SB_DIRTY	0x02	/* superblock is modified */
++#define	XFS_TRANS_PERM_LOG_RES	0x04	/* xact took a permanent log res */
++#define	XFS_TRANS_SYNC		0x08	/* make commit synchronous */
++#define XFS_TRANS_DQ_DIRTY	0x10	/* at least one dquot in trx dirty */
++#define XFS_TRANS_RESERVE	0x20    /* OK to use reserved data blocks */
++#define XFS_TRANS_FREEZE_PROT	0x40	/* Transaction has elevated writer
++					   count in superblock */
 +
 +/*
-+ * Read a directory.
++ * Values for call flags parameter.
 + */
-+int
-+xfs_readdir(
-+	xfs_inode_t	*dp,
-+	struct dir_context *ctx,
-+	size_t		bufsize)
-+{
-+	int		rval;		/* return value */
-+	int		v;		/* type-checking value */
++#define	XFS_TRANS_RELEASE_LOG_RES	0x4
++#define	XFS_TRANS_ABORT			0x8
 +
-+	trace_xfs_readdir(dp);
++/*
++ * Field values for xfs_trans_mod_sb.
++ */
++#define	XFS_TRANS_SB_ICOUNT		0x00000001
++#define	XFS_TRANS_SB_IFREE		0x00000002
++#define	XFS_TRANS_SB_FDBLOCKS		0x00000004
++#define	XFS_TRANS_SB_RES_FDBLOCKS	0x00000008
++#define	XFS_TRANS_SB_FREXTENTS		0x00000010
++#define	XFS_TRANS_SB_RES_FREXTENTS	0x00000020
++#define	XFS_TRANS_SB_DBLOCKS		0x00000040
++#define	XFS_TRANS_SB_AGCOUNT		0x00000080
++#define	XFS_TRANS_SB_IMAXPCT		0x00000100
++#define	XFS_TRANS_SB_REXTSIZE		0x00000200
++#define	XFS_TRANS_SB_RBMBLOCKS		0x00000400
++#define	XFS_TRANS_SB_RBLOCKS		0x00000800
++#define	XFS_TRANS_SB_REXTENTS		0x00001000
++#define	XFS_TRANS_SB_REXTSLOG		0x00002000
 +
-+	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
-+		return XFS_ERROR(EIO);
++/*
++ * Here we centralize the specification of XFS meta-data buffer
++ * reference count values.  This determine how hard the buffer
++ * cache tries to hold onto the buffer.
++ */
++#define	XFS_AGF_REF		4
++#define	XFS_AGI_REF		4
++#define	XFS_AGFL_REF		3
++#define	XFS_INO_BTREE_REF	3
++#define	XFS_ALLOC_BTREE_REF	2
++#define	XFS_BMAP_BTREE_REF	2
++#define	XFS_DIR_BTREE_REF	2
++#define	XFS_INO_REF		2
++#define	XFS_ATTR_BTREE_REF	1
++#define	XFS_DQUOT_REF		1
 +
-+	ASSERT(S_ISDIR(dp->i_d.di_mode));
-+	XFS_STATS_INC(xs_dir_getdents);
-+
-+	if (dp->i_d.di_format == XFS_DINODE_FMT_LOCAL)
-+		rval = xfs_dir2_sf_getdents(dp, ctx);
-+	else if ((rval = xfs_dir2_isblock(NULL, dp, &v)))
-+		;
-+	else if (v)
-+		rval = xfs_dir2_block_getdents(dp, ctx);
-+	else
-+		rval = xfs_dir2_leaf_getdents(dp, ctx, bufsize);
-+	return rval;
-+}
-diff --git a/fs/xfs/xfs_dir2_sf.c b/fs/xfs/xfs_dir2_sf.c
-index 97676a3..f24ce90 100644
---- a/fs/xfs/xfs_dir2_sf.c
-+++ b/fs/xfs/xfs_dir2_sf.c
-@@ -765,100 +765,6 @@ xfs_dir2_sf_create(
- 	return 0;
- }
++/*
+  * Inode Log Item Format definitions.
+  *
+  * This is the structure used to lay out an inode log item in the
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index 1d2a061..9b70df3 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -744,7 +744,7 @@ _xfs_trans_alloc(
+ 	atomic_inc(&mp->m_active_trans);
  
--int						/* error */
--xfs_dir2_sf_getdents(
--	xfs_inode_t		*dp,		/* incore directory inode */
--	struct dir_context	*ctx)
--{
--	int			i;		/* shortform entry number */
--	xfs_mount_t		*mp;		/* filesystem mount point */
--	xfs_dir2_dataptr_t	off;		/* current entry's offset */
--	xfs_dir2_sf_entry_t	*sfep;		/* shortform directory entry */
--	xfs_dir2_sf_hdr_t	*sfp;		/* shortform structure */
--	xfs_dir2_dataptr_t	dot_offset;
--	xfs_dir2_dataptr_t	dotdot_offset;
--	xfs_ino_t		ino;
--
--	mp = dp->i_mount;
--
--	ASSERT(dp->i_df.if_flags & XFS_IFINLINE);
--	/*
--	 * Give up if the directory is way too short.
--	 */
--	if (dp->i_d.di_size < offsetof(xfs_dir2_sf_hdr_t, parent)) {
--		ASSERT(XFS_FORCED_SHUTDOWN(mp));
--		return XFS_ERROR(EIO);
--	}
--
--	ASSERT(dp->i_df.if_bytes == dp->i_d.di_size);
--	ASSERT(dp->i_df.if_u1.if_data != NULL);
--
--	sfp = (xfs_dir2_sf_hdr_t *)dp->i_df.if_u1.if_data;
--
--	ASSERT(dp->i_d.di_size >= xfs_dir2_sf_hdr_size(sfp->i8count));
--
--	/*
--	 * If the block number in the offset is out of range, we're done.
--	 */
--	if (xfs_dir2_dataptr_to_db(mp, ctx->pos) > mp->m_dirdatablk)
--		return 0;
--
--	/*
--	 * Precalculate offsets for . and .. as we will always need them.
--	 *
--	 * XXX(hch): the second argument is sometimes 0 and sometimes
--	 * mp->m_dirdatablk.
--	 */
--	dot_offset = xfs_dir2_db_off_to_dataptr(mp, mp->m_dirdatablk,
--					     XFS_DIR3_DATA_DOT_OFFSET(mp));
--	dotdot_offset = xfs_dir2_db_off_to_dataptr(mp, mp->m_dirdatablk,
--						XFS_DIR3_DATA_DOTDOT_OFFSET(mp));
--
--	/*
--	 * Put . entry unless we're starting past it.
--	 */
--	if (ctx->pos <= dot_offset) {
--		ctx->pos = dot_offset & 0x7fffffff;
--		if (!dir_emit(ctx, ".", 1, dp->i_ino, DT_DIR))
--			return 0;
--	}
--
--	/*
--	 * Put .. entry unless we're starting past it.
--	 */
--	if (ctx->pos <= dotdot_offset) {
--		ino = xfs_dir2_sf_get_parent_ino(sfp);
--		ctx->pos = dotdot_offset & 0x7fffffff;
--		if (!dir_emit(ctx, "..", 2, ino, DT_DIR))
--			return 0;
--	}
--
--	/*
--	 * Loop while there are more entries and put'ing works.
--	 */
--	sfep = xfs_dir2_sf_firstentry(sfp);
--	for (i = 0; i < sfp->count; i++) {
--		off = xfs_dir2_db_off_to_dataptr(mp, mp->m_dirdatablk,
--				xfs_dir2_sf_get_offset(sfep));
--
--		if (ctx->pos > off) {
--			sfep = xfs_dir2_sf_nextentry(sfp, sfep);
--			continue;
--		}
--
--		ino = xfs_dir2_sfe_get_ino(sfp, sfep);
--		ctx->pos = off & 0x7fffffff;
--		if (!dir_emit(ctx, (char *)sfep->name, sfep->namelen,
--			    ino, DT_UNKNOWN))
--			return 0;
--		sfep = xfs_dir2_sf_nextentry(sfp, sfep);
--	}
--
--	ctx->pos = xfs_dir2_db_off_to_dataptr(mp, mp->m_dirdatablk + 1, 0) &
--			0x7fffffff;
--	return 0;
--}
--
+ 	tp = kmem_zone_zalloc(xfs_trans_zone, memflags);
+-	tp->t_magic = XFS_TRANS_MAGIC;
++	tp->t_magic = XFS_TRANS_HEADER_MAGIC;
+ 	tp->t_type = type;
+ 	tp->t_mountp = mp;
+ 	INIT_LIST_HEAD(&tp->t_items);
+@@ -789,7 +789,7 @@ xfs_trans_dup(
+ 	/*
+ 	 * Initialize the new transaction structure.
+ 	 */
+-	ntp->t_magic = XFS_TRANS_MAGIC;
++	ntp->t_magic = XFS_TRANS_HEADER_MAGIC;
+ 	ntp->t_type = tp->t_type;
+ 	ntp->t_mountp = tp->t_mountp;
+ 	INIT_LIST_HEAD(&ntp->t_items);
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index 2b49463..ffaa584 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -21,195 +21,6 @@
+ struct xfs_log_item;
+ 
  /*
-  * Lookup an entry in a shortform directory.
-  * Returns EEXIST if found, ENOENT if not found.
+- * This is the structure written in the log at the head of
+- * every transaction. It identifies the type and id of the
+- * transaction, and contains the number of items logged by
+- * the transaction so we know how many to expect during recovery.
+- *
+- * Do not change the below structure without redoing the code in
+- * xlog_recover_add_to_trans() and xlog_recover_add_to_cont_trans().
+- */
+-typedef struct xfs_trans_header {
+-	uint		th_magic;		/* magic number */
+-	uint		th_type;		/* transaction type */
+-	__int32_t	th_tid;			/* transaction id (unused) */
+-	uint		th_num_items;		/* num items logged by trans */
+-} xfs_trans_header_t;
+-
+-#define	XFS_TRANS_HEADER_MAGIC	0x5452414e	/* TRAN */
+-
+-/*
+- * Log item types.
+- */
+-#define	XFS_LI_EFI		0x1236
+-#define	XFS_LI_EFD		0x1237
+-#define	XFS_LI_IUNLINK		0x1238
+-#define	XFS_LI_INODE		0x123b	/* aligned ino chunks, var-size ibufs */
+-#define	XFS_LI_BUF		0x123c	/* v2 bufs, variable sized inode bufs */
+-#define	XFS_LI_DQUOT		0x123d
+-#define	XFS_LI_QUOTAOFF		0x123e
+-#define	XFS_LI_ICREATE		0x123f
+-
+-#define XFS_LI_TYPE_DESC \
+-	{ XFS_LI_EFI,		"XFS_LI_EFI" }, \
+-	{ XFS_LI_EFD,		"XFS_LI_EFD" }, \
+-	{ XFS_LI_IUNLINK,	"XFS_LI_IUNLINK" }, \
+-	{ XFS_LI_INODE,		"XFS_LI_INODE" }, \
+-	{ XFS_LI_BUF,		"XFS_LI_BUF" }, \
+-	{ XFS_LI_DQUOT,		"XFS_LI_DQUOT" }, \
+-	{ XFS_LI_QUOTAOFF,	"XFS_LI_QUOTAOFF" }
+-
+-/*
+- * Transaction types.  Used to distinguish types of buffers.
+- */
+-#define XFS_TRANS_SETATTR_NOT_SIZE	1
+-#define XFS_TRANS_SETATTR_SIZE		2
+-#define XFS_TRANS_INACTIVE		3
+-#define XFS_TRANS_CREATE		4
+-#define XFS_TRANS_CREATE_TRUNC		5
+-#define XFS_TRANS_TRUNCATE_FILE		6
+-#define XFS_TRANS_REMOVE		7
+-#define XFS_TRANS_LINK			8
+-#define XFS_TRANS_RENAME		9
+-#define XFS_TRANS_MKDIR			10
+-#define XFS_TRANS_RMDIR			11
+-#define XFS_TRANS_SYMLINK		12
+-#define XFS_TRANS_SET_DMATTRS		13
+-#define XFS_TRANS_GROWFS		14
+-#define XFS_TRANS_STRAT_WRITE		15
+-#define XFS_TRANS_DIOSTRAT		16
+-/* 17 was XFS_TRANS_WRITE_SYNC */
+-#define	XFS_TRANS_WRITEID		18
+-#define	XFS_TRANS_ADDAFORK		19
+-#define	XFS_TRANS_ATTRINVAL		20
+-#define	XFS_TRANS_ATRUNCATE		21
+-#define	XFS_TRANS_ATTR_SET		22
+-#define	XFS_TRANS_ATTR_RM		23
+-#define	XFS_TRANS_ATTR_FLAG		24
+-#define	XFS_TRANS_CLEAR_AGI_BUCKET	25
+-#define XFS_TRANS_QM_SBCHANGE		26
+-/*
+- * Dummy entries since we use the transaction type to index into the
+- * trans_type[] in xlog_recover_print_trans_head()
+- */
+-#define XFS_TRANS_DUMMY1		27
+-#define XFS_TRANS_DUMMY2		28
+-#define XFS_TRANS_QM_QUOTAOFF		29
+-#define XFS_TRANS_QM_DQALLOC		30
+-#define XFS_TRANS_QM_SETQLIM		31
+-#define XFS_TRANS_QM_DQCLUSTER		32
+-#define XFS_TRANS_QM_QINOCREATE		33
+-#define XFS_TRANS_QM_QUOTAOFF_END	34
+-#define XFS_TRANS_SB_UNIT		35
+-#define XFS_TRANS_FSYNC_TS		36
+-#define	XFS_TRANS_GROWFSRT_ALLOC	37
+-#define	XFS_TRANS_GROWFSRT_ZERO		38
+-#define	XFS_TRANS_GROWFSRT_FREE		39
+-#define	XFS_TRANS_SWAPEXT		40
+-#define	XFS_TRANS_SB_COUNT		41
+-#define	XFS_TRANS_CHECKPOINT		42
+-#define	XFS_TRANS_ICREATE		43
+-#define	XFS_TRANS_TYPE_MAX		43
+-/* new transaction types need to be reflected in xfs_logprint(8) */
+-
+-#define XFS_TRANS_TYPES \
+-	{ XFS_TRANS_SETATTR_NOT_SIZE,	"SETATTR_NOT_SIZE" }, \
+-	{ XFS_TRANS_SETATTR_SIZE,	"SETATTR_SIZE" }, \
+-	{ XFS_TRANS_INACTIVE,		"INACTIVE" }, \
+-	{ XFS_TRANS_CREATE,		"CREATE" }, \
+-	{ XFS_TRANS_CREATE_TRUNC,	"CREATE_TRUNC" }, \
+-	{ XFS_TRANS_TRUNCATE_FILE,	"TRUNCATE_FILE" }, \
+-	{ XFS_TRANS_REMOVE,		"REMOVE" }, \
+-	{ XFS_TRANS_LINK,		"LINK" }, \
+-	{ XFS_TRANS_RENAME,		"RENAME" }, \
+-	{ XFS_TRANS_MKDIR,		"MKDIR" }, \
+-	{ XFS_TRANS_RMDIR,		"RMDIR" }, \
+-	{ XFS_TRANS_SYMLINK,		"SYMLINK" }, \
+-	{ XFS_TRANS_SET_DMATTRS,	"SET_DMATTRS" }, \
+-	{ XFS_TRANS_GROWFS,		"GROWFS" }, \
+-	{ XFS_TRANS_STRAT_WRITE,	"STRAT_WRITE" }, \
+-	{ XFS_TRANS_DIOSTRAT,		"DIOSTRAT" }, \
+-	{ XFS_TRANS_WRITEID,		"WRITEID" }, \
+-	{ XFS_TRANS_ADDAFORK,		"ADDAFORK" }, \
+-	{ XFS_TRANS_ATTRINVAL,		"ATTRINVAL" }, \
+-	{ XFS_TRANS_ATRUNCATE,		"ATRUNCATE" }, \
+-	{ XFS_TRANS_ATTR_SET,		"ATTR_SET" }, \
+-	{ XFS_TRANS_ATTR_RM,		"ATTR_RM" }, \
+-	{ XFS_TRANS_ATTR_FLAG,		"ATTR_FLAG" }, \
+-	{ XFS_TRANS_CLEAR_AGI_BUCKET,	"CLEAR_AGI_BUCKET" }, \
+-	{ XFS_TRANS_QM_SBCHANGE,	"QM_SBCHANGE" }, \
+-	{ XFS_TRANS_QM_QUOTAOFF,	"QM_QUOTAOFF" }, \
+-	{ XFS_TRANS_QM_DQALLOC,		"QM_DQALLOC" }, \
+-	{ XFS_TRANS_QM_SETQLIM,		"QM_SETQLIM" }, \
+-	{ XFS_TRANS_QM_DQCLUSTER,	"QM_DQCLUSTER" }, \
+-	{ XFS_TRANS_QM_QINOCREATE,	"QM_QINOCREATE" }, \
+-	{ XFS_TRANS_QM_QUOTAOFF_END,	"QM_QOFF_END" }, \
+-	{ XFS_TRANS_SB_UNIT,		"SB_UNIT" }, \
+-	{ XFS_TRANS_FSYNC_TS,		"FSYNC_TS" }, \
+-	{ XFS_TRANS_GROWFSRT_ALLOC,	"GROWFSRT_ALLOC" }, \
+-	{ XFS_TRANS_GROWFSRT_ZERO,	"GROWFSRT_ZERO" }, \
+-	{ XFS_TRANS_GROWFSRT_FREE,	"GROWFSRT_FREE" }, \
+-	{ XFS_TRANS_SWAPEXT,		"SWAPEXT" }, \
+-	{ XFS_TRANS_SB_COUNT,		"SB_COUNT" }, \
+-	{ XFS_TRANS_CHECKPOINT,		"CHECKPOINT" }, \
+-	{ XFS_TRANS_DUMMY1,		"DUMMY1" }, \
+-	{ XFS_TRANS_DUMMY2,		"DUMMY2" }, \
+-	{ XLOG_UNMOUNT_REC_TYPE,	"UNMOUNT" }
+-
+-/*
+- * This structure is used to track log items associated with
+- * a transaction.  It points to the log item and keeps some
+- * flags to track the state of the log item.  It also tracks
+- * the amount of space needed to log the item it describes
+- * once we get to commit processing (see xfs_trans_commit()).
+- */
+-struct xfs_log_item_desc {
+-	struct xfs_log_item	*lid_item;
+-	struct list_head	lid_trans;
+-	unsigned char		lid_flags;
+-};
+-
+-#define XFS_LID_DIRTY		0x1
+-
+-#define	XFS_TRANS_MAGIC		0x5452414E	/* 'TRAN' */
+-/*
+- * Values for t_flags.
+- */
+-#define	XFS_TRANS_DIRTY		0x01	/* something needs to be logged */
+-#define	XFS_TRANS_SB_DIRTY	0x02	/* superblock is modified */
+-#define	XFS_TRANS_PERM_LOG_RES	0x04	/* xact took a permanent log res */
+-#define	XFS_TRANS_SYNC		0x08	/* make commit synchronous */
+-#define XFS_TRANS_DQ_DIRTY	0x10	/* at least one dquot in trx dirty */
+-#define XFS_TRANS_RESERVE	0x20    /* OK to use reserved data blocks */
+-#define XFS_TRANS_FREEZE_PROT	0x40	/* Transaction has elevated writer
+-					   count in superblock */
+-
+-/*
+- * Values for call flags parameter.
+- */
+-#define	XFS_TRANS_RELEASE_LOG_RES	0x4
+-#define	XFS_TRANS_ABORT			0x8
+-
+-/*
+- * Field values for xfs_trans_mod_sb.
+- */
+-#define	XFS_TRANS_SB_ICOUNT		0x00000001
+-#define	XFS_TRANS_SB_IFREE		0x00000002
+-#define	XFS_TRANS_SB_FDBLOCKS		0x00000004
+-#define	XFS_TRANS_SB_RES_FDBLOCKS	0x00000008
+-#define	XFS_TRANS_SB_FREXTENTS		0x00000010
+-#define	XFS_TRANS_SB_RES_FREXTENTS	0x00000020
+-#define	XFS_TRANS_SB_DBLOCKS		0x00000040
+-#define	XFS_TRANS_SB_AGCOUNT		0x00000080
+-#define	XFS_TRANS_SB_IMAXPCT		0x00000100
+-#define	XFS_TRANS_SB_REXTSIZE		0x00000200
+-#define	XFS_TRANS_SB_RBMBLOCKS		0x00000400
+-#define	XFS_TRANS_SB_RBLOCKS		0x00000800
+-#define	XFS_TRANS_SB_REXTENTS		0x00001000
+-#define	XFS_TRANS_SB_REXTSLOG		0x00002000
+-
+-
+-/*
+  * Per-extent log reservation for the allocation btree changes
+  * involved in freeing or allocating an extent.
+  * 2 trees * (2 blocks/level * max depth - 1)
+@@ -282,22 +93,6 @@ struct xfs_log_item_desc {
+ #define	XFS_ATTRSET_LOG_COUNT		3
+ #define	XFS_ATTRRM_LOG_COUNT		3
+ 
+-/*
+- * Here we centralize the specification of XFS meta-data buffer
+- * reference count values.  This determine how hard the buffer
+- * cache tries to hold onto the buffer.
+- */
+-#define	XFS_AGF_REF		4
+-#define	XFS_AGI_REF		4
+-#define	XFS_AGFL_REF		3
+-#define	XFS_INO_BTREE_REF	3
+-#define	XFS_ALLOC_BTREE_REF	2
+-#define	XFS_BMAP_BTREE_REF	2
+-#define	XFS_DIR_BTREE_REF	2
+-#define	XFS_INO_REF		2
+-#define	XFS_ATTR_BTREE_REF	1
+-#define	XFS_DQUOT_REF		1
+-
+ #ifdef __KERNEL__
+ 
+ struct xfs_buf;
 -- 
 1.8.3.2
 
