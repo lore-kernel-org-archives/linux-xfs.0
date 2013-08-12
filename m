@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0C6667F86
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 625EF7F81
 	for <xfs@oss.sgi.com>; Mon, 12 Aug 2013 08:20:51 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 7EEA4AC006
-	for <xfs@oss.sgi.com>; Mon, 12 Aug 2013 06:20:50 -0700 (PDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 43616304043
+	for <xfs@oss.sgi.com>; Mon, 12 Aug 2013 06:20:51 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	lBlhc6kq7wxEUXCa for <xfs@oss.sgi.com>;
+	0rXjZoEFUKUolDeW for <xfs@oss.sgi.com>;
 	Mon, 12 Aug 2013 06:20:49 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1V8s2g-0004xv-Uy
+	(envelope-from <dave@fromorbit.com>) id 1V8s2h-0004xy-04
 	for xfs@oss.sgi.com; Mon, 12 Aug 2013 23:20:15 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1V8s2g-0007MY-Tv
+	(envelope-from <dave@disappointment.disaster>) id 1V8s2g-0007Mi-V6
 	for xfs@oss.sgi.com; Mon, 12 Aug 2013 23:20:14 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: ***** SUSPECTED SPAM ***** [RFD 13/17] xfs: allow linkat() on
-	O_TMPFILE files
-Date: Mon, 12 Aug 2013 23:20:03 +1000
-Message-Id: <1376313607-28133-14-git-send-email-david@fromorbit.com>
+Subject: ***** SUSPECTED SPAM ***** [RFD 15/17] xfs: introduce a method vector
+	for unlinked list operations
+Date: Mon, 12 Aug 2013 23:20:05 +1000
+Message-Id: <1376313607-28133-16-git-send-email-david@fromorbit.com>
 In-Reply-To: <1376313607-28133-1-git-send-email-david@fromorbit.com>
 References: <1376313607-28133-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -40,49 +40,36 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The VFS allows an anonymous temporary file to be named at a later
-time via a linkat() syscall. Inodes that are created as O_TMPFILE
-are marked with a special flag I_LINKABLE that tells the VFS that it
-is OK to add a link to the inode even though it currently has a zero
-link count.
+Filesystems with V3 inodes can log unlinked inode list modifications
+as part of the inode core without needing to use the inode buffers
+to log the list modifications or walk the list. However, this
+requires a very different method of implementing the unlinked lists,
+and so it makes sense to factor out the unlinked list implementation
+into a pair of vectored operations for adding and removing the inode
+from the current unlinked list.
 
-To support this in XFS, we need to have xfs_link() detect this flag
-is set and behave appropriately when detected. When this situation
-is detected, we have ot ensure that the transaciton reservation
-takes into account the additional overhead of removing the inode
-from the unlinked list.
-
-Once we have determined that we can add the directory entry for the
-new link, we can remove the inode from the unlinked list and then
-add the directory entry. We do the operation in this order so that
-the AGI locking versus directory block allocation (and hence AGF
-locking) is the same as xfs_create() does.
-
-Finally, when we bump the link count, we need to ensure we don't
-assert fail on the zero link count that the O_TMPFILE inode has.
-This is the only case where incremeting the link count when it is
-zero is now valid, so we need to make sure that xfs_bumplink()
-checks this precisely. The VFS should ensure that I_LINKABLE is
-removed on the first link of an anonymous file so care is needed to
-ensure that the checks capture this behaviour, too.
+Add an operations vector to the struct xfs_inode and hook it up so
+that all inodes use it to call the current linked list manipulation
+functions.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_utils.c | 1 +
- 1 file changed, 1 insertion(+)
+ fs/xfs/xfs_inode.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/fs/xfs/xfs_utils.c b/fs/xfs/xfs_utils.c
-index 0025c78..fb2fa6c 100644
---- a/fs/xfs/xfs_utils.c
-+++ b/fs/xfs/xfs_utils.c
-@@ -293,6 +293,7 @@ xfs_bumplink(
- {
- 	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index b55fd34..2bb7060 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -22,6 +22,8 @@ struct posix_acl;
+ struct xfs_dinode;
+ struct xfs_inode;
  
-+	/* tmpfiles won't like this */
- 	ASSERT(ip->i_d.di_nlink > 0);
- 	ip->i_d.di_nlink++;
- 	inc_nlink(VFS_I(ip));
++struct xfs_iops;
++
+ /*
+  * Fork identifiers.
+  */
 -- 
 1.8.3.2
 
