@@ -1,25 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id C5B6829E2D
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id B9E5729E1B
 	for <xfs@oss.sgi.com>; Mon, 12 Aug 2013 05:51:05 -0500 (CDT)
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 7E25C8F804B
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 2C431AC002
 	for <xfs@oss.sgi.com>; Mon, 12 Aug 2013 03:51:05 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	qP9JioQgn5oiNJRU for <xfs@oss.sgi.com>;
+	KdfnlZkvJwtbe3jT for <xfs@oss.sgi.com>;
 	Mon, 12 Aug 2013 03:51:02 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1V8phX-0004YO-80
+	(envelope-from <dave@fromorbit.com>) id 1V8phX-0004Yd-CT
 	for xfs@oss.sgi.com; Mon, 12 Aug 2013 20:50:15 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1V8phX-00062X-6V
+	(envelope-from <dave@disappointment.disaster>) id 1V8phX-00063G-Be
 	for xfs@oss.sgi.com; Mon, 12 Aug 2013 20:50:15 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: ***** SUSPECTED SPAM ***** [PATCH 26/50] xfs: consolidate xfs_utils.c
-Date: Mon, 12 Aug 2013 20:49:47 +1000
-Message-Id: <1376304611-22994-27-git-send-email-david@fromorbit.com>
+Subject: ***** SUSPECTED SPAM ***** [PATCH 35/50] xfs: Introduce a new
+	structure to hold transaction reservation items
+Date: Mon, 12 Aug 2013 20:49:56 +1000
+Message-Id: <1376304611-22994-36-git-send-email-david@fromorbit.com>
 In-Reply-To: <1376304611-22994-1-git-send-email-david@fromorbit.com>
 References: <1376304611-22994-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -37,875 +38,328 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Jie Liu <jeff.liu@oracle.com>
 
-There are a few small helper functions in xfs_util, all related to
-xfs_inode modifications. Move them all to xfs_inode.c so all
-xfs_inode operations are consiolidated in the one place.
+Introduce a new structure xfs_trans_res to hold transaction
+reservation item info per log ticket.
 
+We also need to improve xfs_trans_resv_calc() by initializing the
+log count as well as log flags for permanent log reservation.
+
+Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 ---
- fs/xfs/Makefile          |   1 -
- fs/xfs/xfs_error.c       |   1 -
- fs/xfs/xfs_filestream.c  |   1 -
- fs/xfs/xfs_inode.c       | 279 ++++++++++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_inode.h       |   7 ++
- fs/xfs/xfs_inode_fork.c  |   1 -
- fs/xfs/xfs_ioctl.c       |   1 -
- fs/xfs/xfs_iomap.c       |   1 -
- fs/xfs/xfs_iops.c        |   1 -
- fs/xfs/xfs_log_recover.c |   1 -
- fs/xfs/xfs_mount.c       |   1 -
- fs/xfs/xfs_qm.c          |   1 -
- fs/xfs/xfs_qm_syscalls.c |   1 -
- fs/xfs/xfs_rtalloc.c     |   1 -
- fs/xfs/xfs_super.c       |   1 -
- fs/xfs/xfs_symlink.c     |   1 -
- fs/xfs/xfs_utils.c       | 316 -----------------------------------------------
- fs/xfs/xfs_utils.h       |  27 ----
- 18 files changed, 285 insertions(+), 358 deletions(-)
- delete mode 100644 fs/xfs/xfs_utils.c
- delete mode 100644 fs/xfs/xfs_utils.h
+ fs/xfs/xfs_mount.h      |   2 +-
+ fs/xfs/xfs_trans.c      |   2 +-
+ fs/xfs/xfs_trans_resv.c | 121 +++++++++++++++++++++++++++++++++++-----------
+ fs/xfs/xfs_trans_resv.h | 125 ++++++++++++++++++++++++++----------------------
+ 4 files changed, 163 insertions(+), 87 deletions(-)
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index e5a0758..201c61d 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -53,7 +53,6 @@ xfs-y				+= xfs_aops.o \
- 				   xfs_super.o \
- 				   xfs_symlink.o \
- 				   xfs_trans.o \
--				   xfs_utils.o \
- 				   xfs_xattr.o \
- 				   kmem.o \
- 				   uuid.o
-diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-index 35d3f5b..1123d93f 100644
---- a/fs/xfs/xfs_error.c
-+++ b/fs/xfs/xfs_error.c
-@@ -26,7 +26,6 @@
- #include "xfs_bmap_btree.h"
- #include "xfs_dinode.h"
- #include "xfs_inode.h"
--#include "xfs_utils.h"
- #include "xfs_error.h"
- 
- #ifdef DEBUG
-diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
-index d0e8890..ce78e65 100644
---- a/fs/xfs/xfs_filestream.c
-+++ b/fs/xfs/xfs_filestream.c
-@@ -28,7 +28,6 @@
- #include "xfs_bmap.h"
- #include "xfs_bmap_util.h"
- #include "xfs_alloc.h"
--#include "xfs_utils.h"
- #include "xfs_mru_cache.h"
- #include "xfs_filestream.h"
- #include "xfs_trace.h"
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 279ac3f..e83d3af 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -46,7 +46,6 @@
- #include "xfs_bmap.h"
- #include "xfs_bmap_util.h"
- #include "xfs_error.h"
--#include "xfs_utils.h"
- #include "xfs_quota.h"
- #include "xfs_filestream.h"
- #include "xfs_cksum.h"
-@@ -862,6 +861,284 @@ xfs_ialloc(
- 	return 0;
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 829035f6..1fa0584 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -136,7 +136,7 @@ typedef struct xfs_mount {
+ 	int			m_ialloc_blks;	/* blocks in inode allocation */
+ 	int			m_inoalign_mask;/* mask sb_inoalignmt if used */
+ 	uint			m_qflags;	/* quota status flags */
+-	struct xfs_trans_resv	m_reservations;	/* precomputed res values */
++	struct xfs_trans_resv	m_resv;		/* precomputed res values */
+ 	__uint64_t		m_maxicount;	/* maximum inode count */
+ 	__uint64_t		m_resblks;	/* total reserved blocks */
+ 	__uint64_t		m_resblks_avail;/* available reserved blocks */
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index cc824eff..e0f93f9 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -56,7 +56,7 @@ void
+ xfs_trans_init(
+ 	struct xfs_mount	*mp)
+ {
+-	xfs_trans_resv_calc(mp, &mp->m_reservations);
++	xfs_trans_resv_calc(mp, &mp->m_resv);
  }
  
-+/*
-+ * Allocates a new inode from disk and return a pointer to the
-+ * incore copy. This routine will internally commit the current
-+ * transaction and allocate a new one if the Space Manager needed
-+ * to do an allocation to replenish the inode free-list.
-+ *
-+ * This routine is designed to be called from xfs_create and
-+ * xfs_create_dir.
-+ *
-+ */
-+int
-+xfs_dir_ialloc(
-+	xfs_trans_t	**tpp,		/* input: current transaction;
-+					   output: may be a new transaction. */
-+	xfs_inode_t	*dp,		/* directory within whose allocate
-+					   the inode. */
-+	umode_t		mode,
-+	xfs_nlink_t	nlink,
-+	xfs_dev_t	rdev,
-+	prid_t		prid,		/* project id */
-+	int		okalloc,	/* ok to allocate new space */
-+	xfs_inode_t	**ipp,		/* pointer to inode; it will be
-+					   locked. */
-+	int		*committed)
+ /*
+diff --git a/fs/xfs/xfs_trans_resv.c b/fs/xfs/xfs_trans_resv.c
+index ed6446e..3761481 100644
+--- a/fs/xfs/xfs_trans_resv.c
++++ b/fs/xfs/xfs_trans_resv.c
+@@ -671,32 +671,97 @@ xfs_trans_resv_calc(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_trans_resv	*resp)
+ {
+-	resp->tr_write = xfs_calc_write_reservation(mp);
+-	resp->tr_itruncate = xfs_calc_itruncate_reservation(mp);
+-	resp->tr_rename = xfs_calc_rename_reservation(mp);
+-	resp->tr_link = xfs_calc_link_reservation(mp);
+-	resp->tr_remove = xfs_calc_remove_reservation(mp);
+-	resp->tr_symlink = xfs_calc_symlink_reservation(mp);
+-	resp->tr_create = xfs_calc_create_reservation(mp);
+-	resp->tr_mkdir = xfs_calc_mkdir_reservation(mp);
+-	resp->tr_ifree = xfs_calc_ifree_reservation(mp);
+-	resp->tr_ichange = xfs_calc_ichange_reservation(mp);
+-	resp->tr_growdata = xfs_calc_growdata_reservation(mp);
+-	resp->tr_swrite = xfs_calc_swrite_reservation(mp);
+-	resp->tr_writeid = xfs_calc_writeid_reservation(mp);
+-	resp->tr_addafork = xfs_calc_addafork_reservation(mp);
+-	resp->tr_attrinval = xfs_calc_attrinval_reservation(mp);
+-	resp->tr_attrsetm = xfs_calc_attrsetm_reservation(mp);
+-	resp->tr_attrsetrt = xfs_calc_attrsetrt_reservation(mp);
+-	resp->tr_attrrm = xfs_calc_attrrm_reservation(mp);
+-	resp->tr_clearagi = xfs_calc_clear_agi_bucket_reservation(mp);
+-	resp->tr_growrtalloc = xfs_calc_growrtalloc_reservation(mp);
+-	resp->tr_growrtzero = xfs_calc_growrtzero_reservation(mp);
+-	resp->tr_growrtfree = xfs_calc_growrtfree_reservation(mp);
+-	resp->tr_qm_sbchange = xfs_calc_qm_sbchange_reservation(mp);
+-	resp->tr_qm_setqlim = xfs_calc_qm_setqlim_reservation(mp);
+-	resp->tr_qm_dqalloc = xfs_calc_qm_dqalloc_reservation(mp);
+-	resp->tr_qm_quotaoff = xfs_calc_qm_quotaoff_reservation(mp);
+-	resp->tr_qm_equotaoff = xfs_calc_qm_quotaoff_end_reservation(mp);
+-	resp->tr_sb = xfs_calc_sb_reservation(mp);
++	/*
++	 * The following transactions are logged in physical format and
++	 * require a permanent reservation on space.
++	 */
++	resp->tr_write.tr_logres = xfs_calc_write_reservation(mp);
++	resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
++	resp->tr_write.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
 +
-+{
-+	xfs_trans_t	*tp;
-+	xfs_trans_t	*ntp;
-+	xfs_inode_t	*ip;
-+	xfs_buf_t	*ialloc_context = NULL;
-+	int		code;
-+	uint		log_res;
-+	uint		log_count;
-+	void		*dqinfo;
-+	uint		tflags;
++	resp->tr_itruncate.tr_logres = xfs_calc_itruncate_reservation(mp);
++	resp->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
++	resp->tr_itruncate.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
 +
-+	tp = *tpp;
-+	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
++	resp->tr_rename.tr_logres = xfs_calc_rename_reservation(mp);
++	resp->tr_rename.tr_logcount = XFS_RENAME_LOG_COUNT;
++	resp->tr_rename.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++
++	resp->tr_link.tr_logres = xfs_calc_link_reservation(mp);
++	resp->tr_link.tr_logcount = XFS_LINK_LOG_COUNT;
++	resp->tr_link.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++
++	resp->tr_remove.tr_logres = xfs_calc_remove_reservation(mp);
++	resp->tr_remove.tr_logcount = XFS_REMOVE_LOG_COUNT;
++	resp->tr_remove.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++
++	resp->tr_symlink.tr_logres = xfs_calc_symlink_reservation(mp);
++	resp->tr_symlink.tr_logcount = XFS_SYMLINK_LOG_COUNT;
++	resp->tr_symlink.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++
++	resp->tr_create.tr_logres = xfs_calc_create_reservation(mp);
++	resp->tr_create.tr_logcount = XFS_CREATE_LOG_COUNT;
++	resp->tr_create.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++
++	resp->tr_mkdir.tr_logres = xfs_calc_mkdir_reservation(mp);
++	resp->tr_mkdir.tr_logcount = XFS_MKDIR_LOG_COUNT;
++	resp->tr_mkdir.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++
++	resp->tr_ifree.tr_logres = xfs_calc_ifree_reservation(mp);
++	resp->tr_ifree.tr_logcount = XFS_INACTIVE_LOG_COUNT;
++	resp->tr_ifree.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++
++	resp->tr_addafork.tr_logres = xfs_calc_addafork_reservation(mp);
++	resp->tr_addafork.tr_logcount = XFS_ADDAFORK_LOG_COUNT;
++	resp->tr_addafork.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++
++	resp->tr_attrinval.tr_logres = xfs_calc_attrinval_reservation(mp);
++	resp->tr_attrinval.tr_logcount = XFS_ATTRINVAL_LOG_COUNT;
++	resp->tr_attrinval.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++
++	resp->tr_attrsetm.tr_logres = xfs_calc_attrsetm_reservation(mp);
++	resp->tr_attrsetm.tr_logcount = XFS_ATTRSET_LOG_COUNT;
++	resp->tr_attrsetm.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++
++	resp->tr_attrrm.tr_logres = xfs_calc_attrrm_reservation(mp);
++	resp->tr_attrrm.tr_logcount = XFS_ATTRRM_LOG_COUNT;
++	resp->tr_attrrm.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++
++	resp->tr_growrtalloc.tr_logres = xfs_calc_growrtalloc_reservation(mp);
++	resp->tr_growrtalloc.tr_logcount = XFS_DEFAULT_PERM_LOG_COUNT;
++	resp->tr_growrtalloc.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++
++	resp->tr_qm_dqalloc.tr_logres = xfs_calc_qm_dqalloc_reservation(mp);
++	resp->tr_qm_dqalloc.tr_logcount = XFS_WRITE_LOG_COUNT;
++	resp->tr_qm_dqalloc.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
 +
 +	/*
-+	 * xfs_ialloc will return a pointer to an incore inode if
-+	 * the Space Manager has an available inode on the free
-+	 * list. Otherwise, it will do an allocation and replenish
-+	 * the freelist.  Since we can only do one allocation per
-+	 * transaction without deadlocks, we will need to commit the
-+	 * current transaction and start a new one.  We will then
-+	 * need to call xfs_ialloc again to get the inode.
-+	 *
-+	 * If xfs_ialloc did an allocation to replenish the freelist,
-+	 * it returns the bp containing the head of the freelist as
-+	 * ialloc_context. We will hold a lock on it across the
-+	 * transaction commit so that no other process can steal
-+	 * the inode(s) that we've just allocated.
++	 * The following transactions are logged in logical format with
++	 * a default log count.
 +	 */
-+	code = xfs_ialloc(tp, dp, mode, nlink, rdev, prid, okalloc,
-+			  &ialloc_context, &ip);
++	resp->tr_qm_sbchange.tr_logres = xfs_calc_qm_sbchange_reservation(mp);
++	resp->tr_qm_sbchange.tr_logcount = XFS_DEFAULT_LOG_COUNT;
 +
-+	/*
-+	 * Return an error if we were unable to allocate a new inode.
-+	 * This should only happen if we run out of space on disk or
-+	 * encounter a disk error.
-+	 */
-+	if (code) {
-+		*ipp = NULL;
-+		return code;
-+	}
-+	if (!ialloc_context && !ip) {
-+		*ipp = NULL;
-+		return XFS_ERROR(ENOSPC);
-+	}
++	resp->tr_qm_setqlim.tr_logres = xfs_calc_qm_setqlim_reservation(mp);
++	resp->tr_qm_setqlim.tr_logcount = XFS_DEFAULT_LOG_COUNT;
 +
-+	/*
-+	 * If the AGI buffer is non-NULL, then we were unable to get an
-+	 * inode in one operation.  We need to commit the current
-+	 * transaction and call xfs_ialloc() again.  It is guaranteed
-+	 * to succeed the second time.
-+	 */
-+	if (ialloc_context) {
-+		/*
-+		 * Normally, xfs_trans_commit releases all the locks.
-+		 * We call bhold to hang on to the ialloc_context across
-+		 * the commit.  Holding this buffer prevents any other
-+		 * processes from doing any allocations in this
-+		 * allocation group.
-+		 */
-+		xfs_trans_bhold(tp, ialloc_context);
-+		/*
-+		 * Save the log reservation so we can use
-+		 * them in the next transaction.
-+		 */
-+		log_res = xfs_trans_get_log_res(tp);
-+		log_count = xfs_trans_get_log_count(tp);
++	resp->tr_qm_quotaoff.tr_logres = xfs_calc_qm_quotaoff_reservation(mp);
++	resp->tr_qm_quotaoff.tr_logcount = XFS_DEFAULT_LOG_COUNT;
 +
-+		/*
-+		 * We want the quota changes to be associated with the next
-+		 * transaction, NOT this one. So, detach the dqinfo from this
-+		 * and attach it to the next transaction.
-+		 */
-+		dqinfo = NULL;
-+		tflags = 0;
-+		if (tp->t_dqinfo) {
-+			dqinfo = (void *)tp->t_dqinfo;
-+			tp->t_dqinfo = NULL;
-+			tflags = tp->t_flags & XFS_TRANS_DQ_DIRTY;
-+			tp->t_flags &= ~(XFS_TRANS_DQ_DIRTY);
-+		}
++	resp->tr_qm_equotaoff.tr_logres =
++		xfs_calc_qm_quotaoff_end_reservation(mp);
++	resp->tr_qm_equotaoff.tr_logcount = XFS_DEFAULT_LOG_COUNT;
 +
-+		ntp = xfs_trans_dup(tp);
-+		code = xfs_trans_commit(tp, 0);
-+		tp = ntp;
-+		if (committed != NULL) {
-+			*committed = 1;
-+		}
-+		/*
-+		 * If we get an error during the commit processing,
-+		 * release the buffer that is still held and return
-+		 * to the caller.
-+		 */
-+		if (code) {
-+			xfs_buf_relse(ialloc_context);
-+			if (dqinfo) {
-+				tp->t_dqinfo = dqinfo;
-+				xfs_trans_free_dqinfo(tp);
-+			}
-+			*tpp = ntp;
-+			*ipp = NULL;
-+			return code;
-+		}
++	resp->tr_sb.tr_logres = xfs_calc_sb_reservation(mp);
++	resp->tr_sb.tr_logcount = XFS_DEFAULT_LOG_COUNT;
 +
-+		/*
-+		 * transaction commit worked ok so we can drop the extra ticket
-+		 * reference that we gained in xfs_trans_dup()
-+		 */
-+		xfs_log_ticket_put(tp->t_ticket);
-+		code = xfs_trans_reserve(tp, 0, log_res, 0,
-+					 XFS_TRANS_PERM_LOG_RES, log_count);
-+		/*
-+		 * Re-attach the quota info that we detached from prev trx.
-+		 */
-+		if (dqinfo) {
-+			tp->t_dqinfo = dqinfo;
-+			tp->t_flags |= tflags;
-+		}
++	/* The following transaction are logged in logical format */
++	resp->tr_ichange.tr_logres = xfs_calc_ichange_reservation(mp);
++	resp->tr_growdata.tr_logres = xfs_calc_growdata_reservation(mp);
++	resp->tr_swrite.tr_logres = xfs_calc_swrite_reservation(mp);
++	resp->tr_writeid.tr_logres = xfs_calc_writeid_reservation(mp);
++	resp->tr_attrsetrt.tr_logres = xfs_calc_attrsetrt_reservation(mp);
++	resp->tr_clearagi.tr_logres = xfs_calc_clear_agi_bucket_reservation(mp);
++	resp->tr_growrtzero.tr_logres = xfs_calc_growrtzero_reservation(mp);
++	resp->tr_growrtfree.tr_logres = xfs_calc_growrtfree_reservation(mp);
+ }
+diff --git a/fs/xfs/xfs_trans_resv.h b/fs/xfs/xfs_trans_resv.h
+index cc8260e..0aac1fa 100644
+--- a/fs/xfs/xfs_trans_resv.h
++++ b/fs/xfs/xfs_trans_resv.h
+@@ -23,35 +23,45 @@ struct xfs_mount;
+ /*
+  * structure for maintaining pre-calculated transaction reservations.
+  */
++struct xfs_trans_res {
++	uint	tr_logres;	/* log space unit in bytes per log ticket */
++	int	tr_logcount;	/* number of log operations per log ticket */
++	int	tr_logflags;	/* log flags, currently only used for indicating
++				 * a reservation request is permanent or not */
++};
 +
-+		if (code) {
-+			xfs_buf_relse(ialloc_context);
-+			*tpp = ntp;
-+			*ipp = NULL;
-+			return code;
-+		}
-+		xfs_trans_bjoin(tp, ialloc_context);
-+
-+		/*
-+		 * Call ialloc again. Since we've locked out all
-+		 * other allocations in this allocation group,
-+		 * this call should always succeed.
-+		 */
-+		code = xfs_ialloc(tp, dp, mode, nlink, rdev, prid,
-+				  okalloc, &ialloc_context, &ip);
-+
-+		/*
-+		 * If we get an error at this point, return to the caller
-+		 * so that the current transaction can be aborted.
-+		 */
-+		if (code) {
-+			*tpp = tp;
-+			*ipp = NULL;
-+			return code;
-+		}
-+		ASSERT(!ialloc_context && ip);
-+
-+	} else {
-+		if (committed != NULL)
-+			*committed = 0;
-+	}
-+
-+	*ipp = ip;
-+	*tpp = tp;
-+
-+	return 0;
-+}
-+
-+/*
-+ * Decrement the link count on an inode & log the change.
-+ * If this causes the link count to go to zero, initiate the
-+ * logging activity required to truncate a file.
-+ */
-+int				/* error */
-+xfs_droplink(
-+	xfs_trans_t *tp,
-+	xfs_inode_t *ip)
-+{
-+	int	error;
-+
-+	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
-+
-+	ASSERT (ip->i_d.di_nlink > 0);
-+	ip->i_d.di_nlink--;
-+	drop_nlink(VFS_I(ip));
-+	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+
-+	error = 0;
-+	if (ip->i_d.di_nlink == 0) {
-+		/*
-+		 * We're dropping the last link to this file.
-+		 * Move the on-disk inode to the AGI unlinked list.
-+		 * From xfs_inactive() we will pull the inode from
-+		 * the list and free it.
-+		 */
-+		error = xfs_iunlink(tp, ip);
-+	}
-+	return error;
-+}
-+
-+/*
-+ * This gets called when the inode's version needs to be changed from 1 to 2.
-+ * Currently this happens when the nlink field overflows the old 16-bit value
-+ * or when chproj is called to change the project for the first time.
-+ * As a side effect the superblock version will also get rev'd
-+ * to contain the NLINK bit.
-+ */
-+void
-+xfs_bump_ino_vers2(
-+	xfs_trans_t	*tp,
-+	xfs_inode_t	*ip)
-+{
-+	xfs_mount_t	*mp;
-+
-+	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-+	ASSERT(ip->i_d.di_version == 1);
-+
-+	ip->i_d.di_version = 2;
-+	ip->i_d.di_onlink = 0;
-+	memset(&(ip->i_d.di_pad[0]), 0, sizeof(ip->i_d.di_pad));
-+	mp = tp->t_mountp;
-+	if (!xfs_sb_version_hasnlink(&mp->m_sb)) {
-+		spin_lock(&mp->m_sb_lock);
-+		if (!xfs_sb_version_hasnlink(&mp->m_sb)) {
-+			xfs_sb_version_addnlink(&mp->m_sb);
-+			spin_unlock(&mp->m_sb_lock);
-+			xfs_mod_sb(tp, XFS_SB_VERSIONNUM);
-+		} else {
-+			spin_unlock(&mp->m_sb_lock);
-+		}
-+	}
-+	/* Caller must log the inode */
-+}
-+
-+/*
-+ * Increment the link count on an inode & log the change.
-+ */
-+int
-+xfs_bumplink(
-+	xfs_trans_t *tp,
-+	xfs_inode_t *ip)
-+{
-+	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
-+
-+	ASSERT(ip->i_d.di_nlink > 0);
-+	ip->i_d.di_nlink++;
-+	inc_nlink(VFS_I(ip));
-+	if ((ip->i_d.di_version == 1) &&
-+	    (ip->i_d.di_nlink > XFS_MAXLINK_1)) {
-+		/*
-+		 * The inode has increased its number of links beyond
-+		 * what can fit in an old format inode.  It now needs
-+		 * to be converted to a version 2 inode with a 32 bit
-+		 * link count.  If this is the first inode in the file
-+		 * system to do this, then we need to bump the superblock
-+		 * version number as well.
-+		 */
-+		xfs_bump_ino_vers2(tp, ip);
-+	}
-+
-+	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+	return 0;
-+}
-+
- int
- xfs_create(
- 	xfs_inode_t		*dp,
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 2a63470..4a91358 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -360,6 +360,13 @@ void		xfs_lock_two_inodes(xfs_inode_t *, xfs_inode_t *, uint);
+ struct xfs_trans_resv {
+-	uint	tr_write;	/* extent alloc trans */
+-	uint	tr_itruncate;	/* truncate trans */
+-	uint	tr_rename;	/* rename trans */
+-	uint	tr_link;	/* link trans */
+-	uint	tr_remove;	/* unlink trans */
+-	uint	tr_symlink;	/* symlink trans */
+-	uint	tr_create;	/* create trans */
+-	uint	tr_mkdir;	/* mkdir trans */
+-	uint	tr_ifree;	/* inode free trans */
+-	uint	tr_ichange;	/* inode update trans */
+-	uint	tr_growdata;	/* fs data section grow trans */
+-	uint	tr_swrite;	/* sync write inode trans */
+-	uint	tr_addafork;	/* cvt inode to attributed trans */
+-	uint	tr_writeid;	/* write setuid/setgid file */
+-	uint	tr_attrinval;	/* attr fork buffer invalidation */
+-	uint	tr_attrsetm;	/* set/create an attribute at mount time */
+-	uint	tr_attrsetrt;	/* set/create an attribute at runtime */
+-	uint	tr_attrrm;	/* remove an attribute */
+-	uint	tr_clearagi;	/* clear bad agi unlinked ino bucket */
+-	uint	tr_growrtalloc;	/* grow realtime allocations */
+-	uint	tr_growrtzero;	/* grow realtime zeroing */
+-	uint	tr_growrtfree;	/* grow realtime freeing */
+-	uint	tr_qm_sbchange;	/* change quota flags */
+-	uint	tr_qm_setqlim;	/* adjust quota limits */
+-	uint	tr_qm_dqalloc;	/* allocate quota on disk */
+-	uint	tr_qm_quotaoff;	/* turn quota off */
+-	uint	tr_qm_equotaoff;/* end of turn quota off */
+-	uint	tr_sb;		/* modify superblock */
++	struct xfs_trans_res	tr_write;	/* extent alloc trans */
++	struct xfs_trans_res	tr_itruncate;	/* truncate trans */
++	struct xfs_trans_res	tr_rename;	/* rename trans */
++	struct xfs_trans_res	tr_link;	/* link trans */
++	struct xfs_trans_res	tr_remove;	/* unlink trans */
++	struct xfs_trans_res	tr_symlink;	/* symlink trans */
++	struct xfs_trans_res	tr_create;	/* create trans */
++	struct xfs_trans_res	tr_mkdir;	/* mkdir trans */
++	struct xfs_trans_res	tr_ifree;	/* inode free trans */
++	struct xfs_trans_res	tr_ichange;	/* inode update trans */
++	struct xfs_trans_res	tr_growdata;	/* fs data section grow trans */
++	struct xfs_trans_res	tr_swrite;	/* sync write inode trans */
++	struct xfs_trans_res	tr_addafork;	/* add inode attr fork trans */
++	struct xfs_trans_res	tr_writeid;	/* write setuid/setgid file */
++	struct xfs_trans_res	tr_attrinval;	/* attr fork buffer
++						 * invalidation */
++	struct xfs_trans_res	tr_attrsetm;	/* set/create an attribute at
++						 * mount time */
++	struct xfs_trans_res	tr_attrsetrt;	/* set/create an attribute at
++						 * runtime */
++	struct xfs_trans_res	tr_attrrm;	/* remove an attribute */
++	struct xfs_trans_res	tr_clearagi;	/* clear agi unlinked bucket */
++	struct xfs_trans_res	tr_growrtalloc;	/* grow realtime allocations */
++	struct xfs_trans_res	tr_growrtzero;	/* grow realtime zeroing */
++	struct xfs_trans_res	tr_growrtfree;	/* grow realtime freeing */
++	struct xfs_trans_res	tr_qm_sbchange;	/* change quota flags */
++	struct xfs_trans_res	tr_qm_setqlim;	/* adjust quota limits */
++	struct xfs_trans_res	tr_qm_dqalloc;	/* allocate quota on disk */
++	struct xfs_trans_res	tr_qm_quotaoff;	/* turn quota off */
++	struct xfs_trans_res	tr_qm_equotaoff;/* end of turn quota off */
++	struct xfs_trans_res	tr_sb;		/* modify superblock */
+ };
  
- xfs_extlen_t	xfs_get_extsz_hint(struct xfs_inode *ip);
+ /*
+@@ -79,39 +89,40 @@ struct xfs_trans_resv {
+ 	 XFS_DAENTER_BMAPS(mp, XFS_DATA_FORK) + 1)
  
-+int		xfs_dir_ialloc(struct xfs_trans **, struct xfs_inode *, umode_t,
-+			       xfs_nlink_t, xfs_dev_t, prid_t, int,
-+			       struct xfs_inode **, int *);
-+int		xfs_droplink(struct xfs_trans *, struct xfs_inode *);
-+int		xfs_bumplink(struct xfs_trans *, struct xfs_inode *);
-+void		xfs_bump_ino_vers2(struct xfs_trans *, struct xfs_inode *);
+ 
+-#define	XFS_WRITE_LOG_RES(mp)	((mp)->m_reservations.tr_write)
+-#define	XFS_ITRUNCATE_LOG_RES(mp)   ((mp)->m_reservations.tr_itruncate)
+-#define	XFS_RENAME_LOG_RES(mp)	((mp)->m_reservations.tr_rename)
+-#define	XFS_LINK_LOG_RES(mp)	((mp)->m_reservations.tr_link)
+-#define	XFS_REMOVE_LOG_RES(mp)	((mp)->m_reservations.tr_remove)
+-#define	XFS_SYMLINK_LOG_RES(mp)	((mp)->m_reservations.tr_symlink)
+-#define	XFS_CREATE_LOG_RES(mp)	((mp)->m_reservations.tr_create)
+-#define	XFS_MKDIR_LOG_RES(mp)	((mp)->m_reservations.tr_mkdir)
+-#define	XFS_IFREE_LOG_RES(mp)	((mp)->m_reservations.tr_ifree)
+-#define	XFS_ICHANGE_LOG_RES(mp)	((mp)->m_reservations.tr_ichange)
+-#define	XFS_GROWDATA_LOG_RES(mp)    ((mp)->m_reservations.tr_growdata)
+-#define	XFS_GROWRTALLOC_LOG_RES(mp)	((mp)->m_reservations.tr_growrtalloc)
+-#define	XFS_GROWRTZERO_LOG_RES(mp)	((mp)->m_reservations.tr_growrtzero)
+-#define	XFS_GROWRTFREE_LOG_RES(mp)	((mp)->m_reservations.tr_growrtfree)
+-#define	XFS_SWRITE_LOG_RES(mp)	((mp)->m_reservations.tr_swrite)
++#define XFS_WRITE_LOG_RES(mp)	((mp)->m_resv.tr_write.tr_logres)
++#define XFS_RENAME_LOG_RES(mp)	((mp)->m_resv.tr_rename.tr_logres)
++#define XFS_LINK_LOG_RES(mp)	((mp)->m_resv.tr_link.tr_logres)
++#define XFS_REMOVE_LOG_RES(mp)	((mp)->m_resv.tr_remove.tr_logres)
++#define XFS_SYMLINK_LOG_RES(mp)	((mp)->m_resv.tr_symlink.tr_logres)
++#define XFS_CREATE_LOG_RES(mp)	((mp)->m_resv.tr_create.tr_logres)
++#define XFS_MKDIR_LOG_RES(mp)	((mp)->m_resv.tr_mkdir.tr_logres)
++#define XFS_IFREE_LOG_RES(mp)	((mp)->m_resv.tr_ifree.tr_logres)
++#define XFS_SWRITE_LOG_RES(mp)	((mp)->m_resv.tr_swrite.tr_logres)
++#define XFS_ICHANGE_LOG_RES(mp)	((mp)->m_resv.tr_ichange.tr_logres)
++#define XFS_GROWDATA_LOG_RES(mp)  ((mp)->m_resv.tr_growdata.tr_logres)
++#define XFS_ITRUNCATE_LOG_RES(mp) ((mp)->m_resv.tr_itruncate.tr_logres)
++#define XFS_GROWRTZERO_LOG_RES(mp) ((mp)->m_resv.tr_growrtzero.tr_logres)
++#define XFS_GROWRTFREE_LOG_RES(mp) ((mp)->m_resv.tr_growrtfree.tr_logres)
++#define XFS_GROWRTALLOC_LOG_RES(mp) ((mp)->m_resv.tr_growrtalloc.tr_logres)
 +
- /* from xfs_file.c */
- int		xfs_zero_eof(struct xfs_inode *, xfs_off_t, xfs_fsize_t);
- int		xfs_iozero(struct xfs_inode *, loff_t, size_t);
-diff --git a/fs/xfs/xfs_inode_fork.c b/fs/xfs/xfs_inode_fork.c
-index 3f9ff99..123971b 100644
---- a/fs/xfs/xfs_inode_fork.c
-+++ b/fs/xfs/xfs_inode_fork.c
-@@ -40,7 +40,6 @@
- #include "xfs_ialloc.h"
- #include "xfs_bmap.h"
- #include "xfs_error.h"
--#include "xfs_utils.h"
- #include "xfs_quota.h"
- #include "xfs_filestream.h"
- #include "xfs_cksum.h"
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index ce636bf..557c7b8 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -35,7 +35,6 @@
- #include "xfs_bmap.h"
- #include "xfs_bmap_util.h"
- #include "xfs_buf_item.h"
--#include "xfs_utils.h"
- #include "xfs_dfrag.h"
- #include "xfs_fsops.h"
- #include "xfs_discard.h"
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index b04a60f..cf8f744 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -40,7 +40,6 @@
- #include "xfs_attr.h"
- #include "xfs_buf_item.h"
- #include "xfs_trans_space.h"
--#include "xfs_utils.h"
- #include "xfs_iomap.h"
- #include "xfs_trace.h"
- #include "xfs_icache.h"
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index e0cefd4..24be68d 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -36,7 +36,6 @@
- #include "xfs_itable.h"
- #include "xfs_attr.h"
- #include "xfs_buf_item.h"
--#include "xfs_utils.h"
- #include "xfs_inode_item.h"
- #include "xfs_trace.h"
- #include "xfs_icache.h"
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 62ddae3..81c04eb 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -41,7 +41,6 @@
- #include "xfs_extfree_item.h"
- #include "xfs_trans_priv.h"
- #include "xfs_quota.h"
--#include "xfs_utils.h"
- #include "xfs_cksum.h"
- #include "xfs_trace.h"
- #include "xfs_icache.h"
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 3b6fe4f..7a9986d 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -42,7 +42,6 @@
- #include "xfs_error.h"
- #include "xfs_quota.h"
- #include "xfs_fsops.h"
--#include "xfs_utils.h"
- #include "xfs_trace.h"
- #include "xfs_icache.h"
- #include "xfs_cksum.h"
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index 92c36ac..35a6f56 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -38,7 +38,6 @@
- #include "xfs_attr.h"
- #include "xfs_buf_item.h"
- #include "xfs_trans_space.h"
--#include "xfs_utils.h"
- #include "xfs_qm.h"
- #include "xfs_trace.h"
- #include "xfs_icache.h"
-diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-index 1851939..6fdccc3 100644
---- a/fs/xfs/xfs_qm_syscalls.c
-+++ b/fs/xfs/xfs_qm_syscalls.c
-@@ -38,7 +38,6 @@
- #include "xfs_error.h"
- #include "xfs_attr.h"
- #include "xfs_buf_item.h"
--#include "xfs_utils.h"
- #include "xfs_qm.h"
- #include "xfs_trace.h"
- #include "xfs_icache.h"
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 7a445e6..4822806 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -35,7 +35,6 @@
- #include "xfs_error.h"
- #include "xfs_inode_item.h"
- #include "xfs_trans_space.h"
--#include "xfs_utils.h"
- #include "xfs_trace.h"
- #include "xfs_buf.h"
- #include "xfs_icache.h"
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 978a284..979a77d 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -40,7 +40,6 @@
- #include "xfs_fsops.h"
- #include "xfs_attr.h"
- #include "xfs_buf_item.h"
--#include "xfs_utils.h"
- #include "xfs_log_priv.h"
- #include "xfs_trans_priv.h"
- #include "xfs_filestream.h"
-diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-index 1ce2756..e6facbf 100644
---- a/fs/xfs/xfs_symlink.c
-+++ b/fs/xfs/xfs_symlink.c
-@@ -38,7 +38,6 @@
- #include "xfs_bmap_util.h"
- #include "xfs_error.h"
- #include "xfs_quota.h"
--#include "xfs_utils.h"
- #include "xfs_trans_space.h"
- #include "xfs_trace.h"
- #include "xfs_symlink.h"
-diff --git a/fs/xfs/xfs_utils.c b/fs/xfs/xfs_utils.c
-deleted file mode 100644
-index fde7d22..0000000
---- a/fs/xfs/xfs_utils.c
-+++ /dev/null
-@@ -1,316 +0,0 @@
--/*
-- * Copyright (c) 2000-2002,2005 Silicon Graphics, Inc.
-- * All Rights Reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it would be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write the Free Software Foundation,
-- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-- */
--#include "xfs.h"
--#include "xfs_fs.h"
--#include "xfs_format.h"
--#include "xfs_log.h"
--#include "xfs_trans.h"
--#include "xfs_sb.h"
--#include "xfs_ag.h"
--#include "xfs_mount.h"
--#include "xfs_da_btree.h"
--#include "xfs_dir2_format.h"
--#include "xfs_dir2.h"
--#include "xfs_bmap_btree.h"
--#include "xfs_dinode.h"
--#include "xfs_inode.h"
--#include "xfs_inode_item.h"
--#include "xfs_bmap.h"
--#include "xfs_error.h"
--#include "xfs_quota.h"
--#include "xfs_itable.h"
--#include "xfs_utils.h"
--
--
--/*
-- * Allocates a new inode from disk and return a pointer to the
-- * incore copy. This routine will internally commit the current
-- * transaction and allocate a new one if the Space Manager needed
-- * to do an allocation to replenish the inode free-list.
-- *
-- * This routine is designed to be called from xfs_create and
-- * xfs_create_dir.
-- *
-- */
--int
--xfs_dir_ialloc(
--	xfs_trans_t	**tpp,		/* input: current transaction;
--					   output: may be a new transaction. */
--	xfs_inode_t	*dp,		/* directory within whose allocate
--					   the inode. */
--	umode_t		mode,
--	xfs_nlink_t	nlink,
--	xfs_dev_t	rdev,
--	prid_t		prid,		/* project id */
--	int		okalloc,	/* ok to allocate new space */
--	xfs_inode_t	**ipp,		/* pointer to inode; it will be
--					   locked. */
--	int		*committed)
--
--{
--	xfs_trans_t	*tp;
--	xfs_trans_t	*ntp;
--	xfs_inode_t	*ip;
--	xfs_buf_t	*ialloc_context = NULL;
--	int		code;
--	uint		log_res;
--	uint		log_count;
--	void		*dqinfo;
--	uint		tflags;
--
--	tp = *tpp;
--	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
--
--	/*
--	 * xfs_ialloc will return a pointer to an incore inode if
--	 * the Space Manager has an available inode on the free
--	 * list. Otherwise, it will do an allocation and replenish
--	 * the freelist.  Since we can only do one allocation per
--	 * transaction without deadlocks, we will need to commit the
--	 * current transaction and start a new one.  We will then
--	 * need to call xfs_ialloc again to get the inode.
--	 *
--	 * If xfs_ialloc did an allocation to replenish the freelist,
--	 * it returns the bp containing the head of the freelist as
--	 * ialloc_context. We will hold a lock on it across the
--	 * transaction commit so that no other process can steal
--	 * the inode(s) that we've just allocated.
--	 */
--	code = xfs_ialloc(tp, dp, mode, nlink, rdev, prid, okalloc,
--			  &ialloc_context, &ip);
--
--	/*
--	 * Return an error if we were unable to allocate a new inode.
--	 * This should only happen if we run out of space on disk or
--	 * encounter a disk error.
--	 */
--	if (code) {
--		*ipp = NULL;
--		return code;
--	}
--	if (!ialloc_context && !ip) {
--		*ipp = NULL;
--		return XFS_ERROR(ENOSPC);
--	}
--
--	/*
--	 * If the AGI buffer is non-NULL, then we were unable to get an
--	 * inode in one operation.  We need to commit the current
--	 * transaction and call xfs_ialloc() again.  It is guaranteed
--	 * to succeed the second time.
--	 */
--	if (ialloc_context) {
--		/*
--		 * Normally, xfs_trans_commit releases all the locks.
--		 * We call bhold to hang on to the ialloc_context across
--		 * the commit.  Holding this buffer prevents any other
--		 * processes from doing any allocations in this
--		 * allocation group.
--		 */
--		xfs_trans_bhold(tp, ialloc_context);
--		/*
--		 * Save the log reservation so we can use
--		 * them in the next transaction.
--		 */
--		log_res = xfs_trans_get_log_res(tp);
--		log_count = xfs_trans_get_log_count(tp);
--
--		/*
--		 * We want the quota changes to be associated with the next
--		 * transaction, NOT this one. So, detach the dqinfo from this
--		 * and attach it to the next transaction.
--		 */
--		dqinfo = NULL;
--		tflags = 0;
--		if (tp->t_dqinfo) {
--			dqinfo = (void *)tp->t_dqinfo;
--			tp->t_dqinfo = NULL;
--			tflags = tp->t_flags & XFS_TRANS_DQ_DIRTY;
--			tp->t_flags &= ~(XFS_TRANS_DQ_DIRTY);
--		}
--
--		ntp = xfs_trans_dup(tp);
--		code = xfs_trans_commit(tp, 0);
--		tp = ntp;
--		if (committed != NULL) {
--			*committed = 1;
--		}
--		/*
--		 * If we get an error during the commit processing,
--		 * release the buffer that is still held and return
--		 * to the caller.
--		 */
--		if (code) {
--			xfs_buf_relse(ialloc_context);
--			if (dqinfo) {
--				tp->t_dqinfo = dqinfo;
--				xfs_trans_free_dqinfo(tp);
--			}
--			*tpp = ntp;
--			*ipp = NULL;
--			return code;
--		}
--
--		/*
--		 * transaction commit worked ok so we can drop the extra ticket
--		 * reference that we gained in xfs_trans_dup()
--		 */
--		xfs_log_ticket_put(tp->t_ticket);
--		code = xfs_trans_reserve(tp, 0, log_res, 0,
--					 XFS_TRANS_PERM_LOG_RES, log_count);
--		/*
--		 * Re-attach the quota info that we detached from prev trx.
--		 */
--		if (dqinfo) {
--			tp->t_dqinfo = dqinfo;
--			tp->t_flags |= tflags;
--		}
--
--		if (code) {
--			xfs_buf_relse(ialloc_context);
--			*tpp = ntp;
--			*ipp = NULL;
--			return code;
--		}
--		xfs_trans_bjoin(tp, ialloc_context);
--
--		/*
--		 * Call ialloc again. Since we've locked out all
--		 * other allocations in this allocation group,
--		 * this call should always succeed.
--		 */
--		code = xfs_ialloc(tp, dp, mode, nlink, rdev, prid,
--				  okalloc, &ialloc_context, &ip);
--
--		/*
--		 * If we get an error at this point, return to the caller
--		 * so that the current transaction can be aborted.
--		 */
--		if (code) {
--			*tpp = tp;
--			*ipp = NULL;
--			return code;
--		}
--		ASSERT(!ialloc_context && ip);
--
--	} else {
--		if (committed != NULL)
--			*committed = 0;
--	}
--
--	*ipp = ip;
--	*tpp = tp;
--
--	return 0;
--}
--
--/*
-- * Decrement the link count on an inode & log the change.
-- * If this causes the link count to go to zero, initiate the
-- * logging activity required to truncate a file.
-- */
--int				/* error */
--xfs_droplink(
--	xfs_trans_t *tp,
--	xfs_inode_t *ip)
--{
--	int	error;
--
--	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
--
--	ASSERT (ip->i_d.di_nlink > 0);
--	ip->i_d.di_nlink--;
--	drop_nlink(VFS_I(ip));
--	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
--
--	error = 0;
--	if (ip->i_d.di_nlink == 0) {
--		/*
--		 * We're dropping the last link to this file.
--		 * Move the on-disk inode to the AGI unlinked list.
--		 * From xfs_inactive() we will pull the inode from
--		 * the list and free it.
--		 */
--		error = xfs_iunlink(tp, ip);
--	}
--	return error;
--}
--
--/*
-- * This gets called when the inode's version needs to be changed from 1 to 2.
-- * Currently this happens when the nlink field overflows the old 16-bit value
-- * or when chproj is called to change the project for the first time.
-- * As a side effect the superblock version will also get rev'd
-- * to contain the NLINK bit.
-- */
--void
--xfs_bump_ino_vers2(
--	xfs_trans_t	*tp,
--	xfs_inode_t	*ip)
--{
--	xfs_mount_t	*mp;
--
--	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
--	ASSERT(ip->i_d.di_version == 1);
--
--	ip->i_d.di_version = 2;
--	ip->i_d.di_onlink = 0;
--	memset(&(ip->i_d.di_pad[0]), 0, sizeof(ip->i_d.di_pad));
--	mp = tp->t_mountp;
--	if (!xfs_sb_version_hasnlink(&mp->m_sb)) {
--		spin_lock(&mp->m_sb_lock);
--		if (!xfs_sb_version_hasnlink(&mp->m_sb)) {
--			xfs_sb_version_addnlink(&mp->m_sb);
--			spin_unlock(&mp->m_sb_lock);
--			xfs_mod_sb(tp, XFS_SB_VERSIONNUM);
--		} else {
--			spin_unlock(&mp->m_sb_lock);
--		}
--	}
--	/* Caller must log the inode */
--}
--
--/*
-- * Increment the link count on an inode & log the change.
-- */
--int
--xfs_bumplink(
--	xfs_trans_t *tp,
--	xfs_inode_t *ip)
--{
--	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
--
--	ASSERT(ip->i_d.di_nlink > 0);
--	ip->i_d.di_nlink++;
--	inc_nlink(VFS_I(ip));
--	if ((ip->i_d.di_version == 1) &&
--	    (ip->i_d.di_nlink > XFS_MAXLINK_1)) {
--		/*
--		 * The inode has increased its number of links beyond
--		 * what can fit in an old format inode.  It now needs
--		 * to be converted to a version 2 inode with a 32 bit
--		 * link count.  If this is the first inode in the file
--		 * system to do this, then we need to bump the superblock
--		 * version number as well.
--		 */
--		xfs_bump_ino_vers2(tp, ip);
--	}
--
--	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
--	return 0;
--}
-diff --git a/fs/xfs/xfs_utils.h b/fs/xfs/xfs_utils.h
-deleted file mode 100644
-index 5eeab46..0000000
---- a/fs/xfs/xfs_utils.h
-+++ /dev/null
-@@ -1,27 +0,0 @@
--/*
-- * Copyright (c) 2000-2002,2005 Silicon Graphics, Inc.
-- * All Rights Reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it would be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write the Free Software Foundation,
-- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-- */
--#ifndef __XFS_UTILS_H__
--#define __XFS_UTILS_H__
--
--extern int xfs_dir_ialloc(xfs_trans_t **, xfs_inode_t *, umode_t, xfs_nlink_t,
--				xfs_dev_t, prid_t, int, xfs_inode_t **, int *);
--extern int xfs_droplink(xfs_trans_t *, xfs_inode_t *);
--extern int xfs_bumplink(xfs_trans_t *, xfs_inode_t *);
--extern void xfs_bump_ino_vers2(xfs_trans_t *, xfs_inode_t *);
--
--#endif	/* __XFS_UTILS_H__ */
+ /*
+  * Logging the inode timestamps on an fsync -- same as SWRITE
+  * as long as SWRITE logs the entire inode core
+  */
+-#define XFS_FSYNC_TS_LOG_RES(mp)        ((mp)->m_reservations.tr_swrite)
+-#define	XFS_WRITEID_LOG_RES(mp)		((mp)->m_reservations.tr_swrite)
+-#define	XFS_ADDAFORK_LOG_RES(mp)	((mp)->m_reservations.tr_addafork)
+-#define	XFS_ATTRINVAL_LOG_RES(mp)	((mp)->m_reservations.tr_attrinval)
+-#define	XFS_ATTRSETM_LOG_RES(mp)	((mp)->m_reservations.tr_attrsetm)
+-#define	XFS_ATTRSETRT_LOG_RES(mp)	((mp)->m_reservations.tr_attrsetrt)
+-#define	XFS_ATTRRM_LOG_RES(mp)		((mp)->m_reservations.tr_attrrm)
+-#define	XFS_CLEAR_AGI_BUCKET_LOG_RES(mp)  ((mp)->m_reservations.tr_clearagi)
+-#define XFS_QM_SBCHANGE_LOG_RES(mp)	((mp)->m_reservations.tr_qm_sbchange)
+-#define XFS_QM_SETQLIM_LOG_RES(mp)	((mp)->m_reservations.tr_qm_setqlim)
+-#define XFS_QM_DQALLOC_LOG_RES(mp)	((mp)->m_reservations.tr_qm_dqalloc)
+-#define XFS_QM_QUOTAOFF_LOG_RES(mp)	((mp)->m_reservations.tr_qm_quotaoff)
+-#define XFS_QM_QUOTAOFF_END_LOG_RES(mp)	((mp)->m_reservations.tr_qm_equotaoff)
+-#define XFS_SB_LOG_RES(mp)		((mp)->m_reservations.tr_sb)
++#define XFS_FSYNC_TS_LOG_RES(mp) ((mp)->m_resv.tr_swrite.tr_logres)
++#define XFS_WRITEID_LOG_RES(mp)	 ((mp)->m_resv.tr_swrite.tr_logres)
++#define XFS_ADDAFORK_LOG_RES(mp) ((mp)->m_resv.tr_addafork.tr_logres)
++#define XFS_ATTRSETM_LOG_RES(mp) ((mp)->m_resv.tr_attrsetm.tr_logres)
++#define XFS_ATTRINVAL_LOG_RES(mp) ((mp)->m_resv.tr_attrinval.tr_logres)
++#define XFS_ATTRSETRT_LOG_RES(mp) ((mp)->m_resv.tr_attrsetrt.tr_logres)
++#define XFS_ATTRRM_LOG_RES(mp)	  ((mp)->m_resv.tr_attrrm.tr_logres)
++#define XFS_SB_LOG_RES(mp)	  ((mp)->m_resv.tr_sb.tr_logres)
++#define XFS_QM_SETQLIM_LOG_RES(mp) ((mp)->m_resv.tr_qm_setqlim.tr_logres)
++#define XFS_QM_DQALLOC_LOG_RES(mp) ((mp)->m_resv.tr_qm_dqalloc.tr_logres)
++#define XFS_QM_SBCHANGE_LOG_RES(mp) ((mp)->m_resv.tr_qm_sbchange.tr_logres)
++#define XFS_QM_QUOTAOFF_LOG_RES(mp) ((mp)->m_resv.tr_qm_quotaoff.tr_logres)
++#define XFS_QM_QUOTAOFF_END_LOG_RES(mp) ((mp)->m_resv.tr_qm_equotaoff.tr_logres)
++#define XFS_CLEAR_AGI_BUCKET_LOG_RES(mp) ((mp)->m_resv.tr_clearagi.tr_logres)
+ 
+ /*
+  * Various log count values.
 -- 
 1.8.3.2
 
