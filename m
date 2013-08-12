@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id A52D67F51
-	for <xfs@oss.sgi.com>; Sun, 11 Aug 2013 19:34:06 -0500 (CDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id CBC597CBE
+	for <xfs@oss.sgi.com>; Sun, 11 Aug 2013 19:59:13 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 31CF6AC006
-	for <xfs@oss.sgi.com>; Sun, 11 Aug 2013 17:34:06 -0700 (PDT)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	Bo62OOhFD9vxBAbo for <xfs@oss.sgi.com>;
-	Sun, 11 Aug 2013 17:34:04 -0700 (PDT)
-Date: Mon, 12 Aug 2013 10:33:37 +1000
+	by relay2.corp.sgi.com (Postfix) with ESMTP id B9D60304032
+	for <xfs@oss.sgi.com>; Sun, 11 Aug 2013 17:59:10 -0700 (PDT)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	FHVdInNIzsekl1i0 for <xfs@oss.sgi.com>;
+	Sun, 11 Aug 2013 17:59:09 -0700 (PDT)
+Date: Mon, 12 Aug 2013 10:59:05 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: ***** SUSPECTED SPAM ***** Re: [PATCH 47/49] xfs: Add read-only
+Subject: ***** SUSPECTED SPAM ***** Re: [PATCH 48/49] xfs: Add read-only
 	support for dirent filetype field
-Message-ID: <20130812003337.GJ12779@dastard>
-References: <1374216324-8781-1-git-send-email-david@fromorbit.com>
-	<1374216324-8781-48-git-send-email-david@fromorbit.com>
-	<52016716.3080807@sgi.com>
+Message-ID: <20130812005905.GK12779@dastard>
+References: <1374215120-7271-1-git-send-email-david@fromorbit.com>
+	<1374215120-7271-49-git-send-email-david@fromorbit.com>
+	<51F80FA8.4060304@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <52016716.3080807@sgi.com>
+In-Reply-To: <51F80FA8.4060304@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,8 +35,8 @@ Sender: xfs-bounces@oss.sgi.com
 To: Mark Tinguely <tinguely@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Aug 06, 2013 at 04:13:58PM -0500, Mark Tinguely wrote:
-> On 07/19/13 01:45, Dave Chinner wrote:
+On Tue, Jul 30, 2013 at 02:10:32PM -0500, Mark Tinguely wrote:
+> On 07/19/13 01:25, Dave Chinner wrote:
 > >From: Dave Chinner<dchinner@redhat.com>
 > >
 > >Add support for the file type field in directory entries so that
@@ -70,12 +70,49 @@ On Tue, Aug 06, 2013 at 04:13:58PM -0500, Mark Tinguely wrote:
 > >
 > >Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > >---
+> >
 > 
-> Same as kernel patch (48/49) - written to support only v3 inodes. This
-> should support v2 and v3 inodes.
+> >+static inline int xfs_sb_version_hasftype(struct xfs_sb *sbp)
+> >+{
+> >+	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5&&
+> >+		xfs_sb_has_incompat_feature(sbp, XFS_SB_FEAT_INCOMPAT_FTYPE);
+> >  }
+> >
+> 
+> This feature should support inode version 2 and 3.
 
-It's a directory entry format change - it has nothing to do with the
-version of the inode.
+Has nothing to do with the inode version number - it has to do with
+the directory structure being modified.
+
+We're changing the directory structure for CRCs, and this builds on
+top of that. It is essentially part of the V3 directory format, and
+should be treated as such. Suggesting that we retrofit and support a
+modified v2 directory format is close to insane - instead of only
+having to test v2 vs v3 directory formats, you're suggesting we
+support v2 vs v2+dtype vs v3 vs v3+dtype. We simply do not have the
+resources to adequately test and support such an explosion of
+filesystem configurations.
+
+We've had this discussion before - new on-disk features go into the
+v5 superblock format - the v4 superblock format from this point
+onwards is essentially legacy support from an upstream development
+perspective.  Upstream development is about moving forward as
+quickly and cleanly as possible - quadrupling the test matrix for
+every minor on-disk change is simply not something we can sustain,
+and that's why I'm pushing back *hard* on any suggestion that we
+shoul dbe supporting new on-disk format changes on both v4 and v5
+superblocks formats. v5 is the future and so all new features need
+to target v5 filesystem formats and ignore the restrictions that v4
+filesystem formats might place on them.
+
+That said, there's nothing to stop anyone from backporting such a
+feature to an older kernel and maintaining it themselves - it's open
+source software. But the idea that development should be constrained
+by having to support both old and new formats is wrong - the old v4
+format should be considered stable and we need think very hard about
+changing it at all now, especially as much of the development focus
+is now shifting to taking advantage of the additions to the v5
+format....
 
 Cheers,
 
