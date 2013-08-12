@@ -1,28 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id F195A7F6D
-	for <xfs@oss.sgi.com>; Mon, 12 Aug 2013 08:20:48 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 7FAECAC003
-	for <xfs@oss.sgi.com>; Mon, 12 Aug 2013 06:20:48 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 5627B7F6D
+	for <xfs@oss.sgi.com>; Mon, 12 Aug 2013 08:20:49 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 3C5658F8054
+	for <xfs@oss.sgi.com>; Mon, 12 Aug 2013 06:20:49 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	fDRThpYGld1yWWUY for <xfs@oss.sgi.com>;
-	Mon, 12 Aug 2013 06:20:46 -0700 (PDT)
+	AxGCKPAXGAxHghzI for <xfs@oss.sgi.com>;
+	Mon, 12 Aug 2013 06:20:47 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1V8s2g-0004xj-ON
+	(envelope-from <dave@fromorbit.com>) id 1V8s2g-0004xf-Mj
 	for xfs@oss.sgi.com; Mon, 12 Aug 2013 23:20:14 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1V8s2g-0007Lk-NS
+	(envelope-from <dave@disappointment.disaster>) id 1V8s2g-0007LU-LX
 	for xfs@oss.sgi.com; Mon, 12 Aug 2013 23:20:14 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: ***** SUSPECTED SPAM ***** [RFD 03/17] xfs: move inode chunk
-	allocation into a workqueue
-Date: Mon, 12 Aug 2013 23:19:53 +1000
-Message-Id: <1376313607-28133-4-git-send-email-david@fromorbit.com>
-In-Reply-To: <1376313607-28133-1-git-send-email-david@fromorbit.com>
-References: <1376313607-28133-1-git-send-email-david@fromorbit.com>
+Subject: ***** SUSPECTED SPAM ***** [RFD 00/17] xfs: inode management
+	development direction
+Date: Mon, 12 Aug 2013 23:19:50 +1000
+Message-Id: <1376313607-28133-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,38 +36,61 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi folks,
 
-Now that inode chunk allocation has been separated from free inode allocation,
-we no longer need to do it in-line with the high level operation that requires
-a free inode. As such, we can move inode chunk allocation into a workqueue and
-trigger it to run asynchronously.
+Call this a 'request for discussion' or a 'request for developers',
+however you want to look at it. I know there are people asking me
+for bits of work that can be done, so I spent a little bit of spare
+time I had sitting around in waiting rooms documenting the inode
+development direction I'm planning to take for inode allocation and
+freeing over the next few months.
 
-The inode allocation ticket will need to block the foreground operation if there
-aren't sufficent free inodes available. It also needs to kick the inode
-chunk allocation worker into action to ensure that free inodes will become
-available in the not-to-distant future and wait for free inodes become
-available.
+There are a bunch of things that have lead to this:
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_ialloc.h | 1 +
- 1 file changed, 1 insertion(+)
+	- allocation speed when free inodes are sparse
+	- free space fragmentation preventing inode allocation
+	- inability to cluster large numbers of inodes close
+	  together
+	- inode allocation transaction reservations being larger
+	  than then need to be for 98% of allocations
+	- unlinked list processing having a high cost when we have
+	  lots of unlinked inodes waiting for reclaim
+	- inode freeing being tied to VFS inode cache eviction
+	- inability to recycle free inodes directly from the
+	  unlinked list
+	- support for O_TMPFILE
 
-diff --git a/fs/xfs/xfs_ialloc.h b/fs/xfs/xfs_ialloc.h
-index 1da16f5..0494855 100644
---- a/fs/xfs/xfs_ialloc.h
-+++ b/fs/xfs/xfs_ialloc.h
-@@ -24,6 +24,7 @@ struct xfs_imap;
- struct xfs_mount;
- struct xfs_trans;
- 
-+/* blocks when empty */
- struct xfs_ialloc_ticket;
- 
- /*
--- 
-1.8.3.2
+Basically, this started from me looking at what O_TMPFILE needed
+to be supported, and grew from there. O_TMPFILE needs separation of
+the inode allocation from the namespace operations, and link_at()
+needs to be able to remove an inode from the unlinked list and link
+it to the namespace.
+
+That leads to inode allocation having very distinct operations that
+are currently commingled by the transaction subsystem and the need
+to guarantee enough log space for inode allocation and namespace
+modification to happen atomically. Breaking this all up leads to a
+bunch of optimisations that center around either avoiding
+unnecessary work or being able to do it in batches asynchronously to
+the foreground context that is running.
+
+There's a lot of work here, some is dependent on other bits, and
+some is completely separate. If anyone wants to pick up one (or
+more) of the pieces and work on it, then I'm happy to help people
+work through the changes and test them. I'll be slowly peeling off
+pieces of this myself even if nobody else does.
+
+Note that a good deal of these changes are only ever going to work
+effectively on v5 filesystems e.g. atomic multi-chunk inode
+allocation and incore inode unlinked lists and logging. Hence I've
+only really focussed on optimisations and modifications that make
+sense from a v5 filesystem POV. 
+
+Comments, flames and volunteers welcome.
+
+Cheers,
+
+Dave.
 
 _______________________________________________
 xfs mailing list
