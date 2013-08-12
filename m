@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 692447F56
-	for <xfs@oss.sgi.com>; Mon, 12 Aug 2013 05:50:50 -0500 (CDT)
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id CCC6AAC003
-	for <xfs@oss.sgi.com>; Mon, 12 Aug 2013 03:50:49 -0700 (PDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id E00E57F7B
+	for <xfs@oss.sgi.com>; Mon, 12 Aug 2013 05:50:51 -0500 (CDT)
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id CF3978F8049
+	for <xfs@oss.sgi.com>; Mon, 12 Aug 2013 03:50:51 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	cz7ExEl1Xyxh0U9z for <xfs@oss.sgi.com>;
-	Mon, 12 Aug 2013 03:50:46 -0700 (PDT)
+	PtNOZHtf8GzxRX8r for <xfs@oss.sgi.com>;
+	Mon, 12 Aug 2013 03:50:50 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1V8phX-0004Y9-IH
-	for xfs@oss.sgi.com; Mon, 12 Aug 2013 20:50:15 +1000
+	(envelope-from <dave@fromorbit.com>) id 1V8phW-0004Xd-Rf
+	for xfs@oss.sgi.com; Mon, 12 Aug 2013 20:50:14 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1V8phX-00063u-Gk
-	for xfs@oss.sgi.com; Mon, 12 Aug 2013 20:50:15 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1V8phW-000615-QY
+	for xfs@oss.sgi.com; Mon, 12 Aug 2013 20:50:14 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: ***** SUSPECTED SPAM ***** [PATCH 43/50] xfs: return log item size in
-	IOP_SIZE
-Date: Mon, 12 Aug 2013 20:50:04 +1000
-Message-Id: <1376304611-22994-44-git-send-email-david@fromorbit.com>
+Subject: ***** SUSPECTED SPAM ***** [PATCH 08/50] xfs: introduce
+	xfs_rtalloc_defs.h
+Date: Mon, 12 Aug 2013 20:49:29 +1000
+Message-Id: <1376304611-22994-9-git-send-email-david@fromorbit.com>
 In-Reply-To: <1376304611-22994-1-git-send-email-david@fromorbit.com>
 References: <1376304611-22994-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -40,504 +40,175 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-To begin optimising the CIL commit process, we need to have IOP_SIZE
-return both the number of vectors and the size of the data pointed
-to by the vectors. This enables us to calculate the size ofthe
-memory allocation needed before the formatting step and reduces the
-number of memory allocations per item by one.
-
-While there, kill the IOP_SIZE macro.
+There are quite a few realtime device definitions shared with
+userspace. Move them from xfs_rtalloc.h to xfs_rt_alloc_defs.h
+so we don't need to share xfs_rtalloc.h with userspace anymore.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_buf_item.c     | 52 ++++++++++++++++++++++++++++------------------
- fs/xfs/xfs_dquot_item.c   | 22 ++++++++++++--------
- fs/xfs/xfs_extfree_item.c | 50 ++++++++++++++++++++++++++++----------------
- fs/xfs/xfs_icreate_item.c |  9 +++++---
- fs/xfs/xfs_inode_item.c   | 53 +++++++++++++++++++++++++++++++----------------
- fs/xfs/xfs_log_cil.c      | 10 ++++++---
- fs/xfs/xfs_trans.h        |  3 +--
- 7 files changed, 126 insertions(+), 73 deletions(-)
+ fs/xfs/xfs_format.h  | 41 ++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_rtalloc.c |  2 +-
+ fs/xfs/xfs_rtalloc.h | 53 ++--------------------------------------------------
+ fs/xfs/xfs_types.h   | 10 ++++++++++
+ 4 files changed, 54 insertions(+), 52 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index bfc4e0c..9358504 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -39,6 +39,14 @@ static inline struct xfs_buf_log_item *BUF_ITEM(struct xfs_log_item *lip)
+diff --git a/fs/xfs/xfs_format.h b/fs/xfs/xfs_format.h
+index 2b4f166..6205374 100644
+--- a/fs/xfs/xfs_format.h
++++ b/fs/xfs/xfs_format.h
+@@ -28,6 +28,47 @@
+  */
  
- STATIC void	xfs_buf_do_callbacks(struct xfs_buf *bp);
- 
-+static inline int
-+xfs_buf_log_format_size(
-+	struct xfs_buf_log_format *blfp)
-+{
-+	return offsetof(struct xfs_buf_log_format, blf_data_map) +
-+			(blfp->blf_map_size * sizeof(blfp->blf_data_map[0]));
-+}
+ /*
++ * RealTime Device format definitions
++ */
 +
- /*
-  * This returns the number of log iovecs needed to log the
-  * given buf log item.
-@@ -49,25 +57,27 @@ STATIC void	xfs_buf_do_callbacks(struct xfs_buf *bp);
-  *
-  * If the XFS_BLI_STALE flag has been set, then log nothing.
-  */
--STATIC uint
-+STATIC void
- xfs_buf_item_size_segment(
- 	struct xfs_buf_log_item	*bip,
--	struct xfs_buf_log_format *blfp)
-+	struct xfs_buf_log_format *blfp,
-+	int			*nvecs,
-+	int			*nbytes)
- {
- 	struct xfs_buf		*bp = bip->bli_buf;
--	uint			nvecs;
- 	int			next_bit;
- 	int			last_bit;
- 
- 	last_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size, 0);
- 	if (last_bit == -1)
--		return 0;
-+		return;
- 
- 	/*
- 	 * initial count for a dirty buffer is 2 vectors - the format structure
- 	 * and the first dirty region.
- 	 */
--	nvecs = 2;
-+	*nvecs += 2;
-+	*nbytes += xfs_buf_log_format_size(blfp) + XFS_BLF_CHUNK;
- 
- 	while (last_bit != -1) {
- 		/*
-@@ -87,18 +97,17 @@ xfs_buf_item_size_segment(
- 			break;
- 		} else if (next_bit != last_bit + 1) {
- 			last_bit = next_bit;
--			nvecs++;
-+			(*nvecs)++;
- 		} else if (xfs_buf_offset(bp, next_bit * XFS_BLF_CHUNK) !=
- 			   (xfs_buf_offset(bp, last_bit * XFS_BLF_CHUNK) +
- 			    XFS_BLF_CHUNK)) {
- 			last_bit = next_bit;
--			nvecs++;
-+			(*nvecs)++;
- 		} else {
- 			last_bit++;
- 		}
-+		*nbytes += XFS_BLF_CHUNK;
- 	}
--
--	return nvecs;
- }
- 
- /*
-@@ -118,12 +127,13 @@ xfs_buf_item_size_segment(
-  * If the XFS_BLI_STALE flag has been set, then log nothing but the buf log
-  * format structures.
-  */
--STATIC uint
-+STATIC void
- xfs_buf_item_size(
--	struct xfs_log_item	*lip)
-+	struct xfs_log_item	*lip,
-+	int			*nvecs,
-+	int			*nbytes)
- {
- 	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
--	uint			nvecs;
- 	int			i;
- 
- 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
-@@ -135,7 +145,11 @@ xfs_buf_item_size(
- 		 */
- 		trace_xfs_buf_item_size_stale(bip);
- 		ASSERT(bip->__bli_format.blf_flags & XFS_BLF_CANCEL);
--		return bip->bli_format_count;
-+		*nvecs += bip->bli_format_count;
-+		for (i = 0; i < bip->bli_format_count; i++) {
-+			*nbytes += xfs_buf_log_format_size(&bip->bli_formats[i]);
-+		}
-+		return;
- 	}
- 
- 	ASSERT(bip->bli_flags & XFS_BLI_LOGGED);
-@@ -147,7 +161,8 @@ xfs_buf_item_size(
- 		 * commit, so no vectors are used at all.
- 		 */
- 		trace_xfs_buf_item_size_ordered(bip);
--		return XFS_LOG_VEC_ORDERED;
-+		*nvecs = XFS_LOG_VEC_ORDERED;
-+		return;
- 	}
- 
- 	/*
-@@ -159,13 +174,11 @@ xfs_buf_item_size(
- 	 * count for the extra buf log format structure that will need to be
- 	 * written.
- 	 */
--	nvecs = 0;
- 	for (i = 0; i < bip->bli_format_count; i++) {
--		nvecs += xfs_buf_item_size_segment(bip, &bip->bli_formats[i]);
-+		xfs_buf_item_size_segment(bip, &bip->bli_formats[i],
-+					  nvecs, nbytes);
- 	}
--
- 	trace_xfs_buf_item_size(bip);
--	return nvecs;
- }
- 
- static struct xfs_log_iovec *
-@@ -192,8 +205,7 @@ xfs_buf_item_format_segment(
- 	 * the actual size of the dirty bitmap rather than the size of the in
- 	 * memory structure.
- 	 */
--	base_size = offsetof(struct xfs_buf_log_format, blf_data_map) +
--			(blfp->blf_map_size * sizeof(blfp->blf_data_map[0]));
-+	base_size = xfs_buf_log_format_size(blfp);
- 
- 	nvecs = 0;
- 	first_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size, 0);
-diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
-index f07a436..60c6e1f 100644
---- a/fs/xfs/xfs_dquot_item.c
-+++ b/fs/xfs/xfs_dquot_item.c
-@@ -44,14 +44,15 @@ static inline struct xfs_dq_logitem *DQUOT_ITEM(struct xfs_log_item *lip)
- /*
-  * returns the number of iovecs needed to log the given dquot item.
-  */
--STATIC uint
-+STATIC void
- xfs_qm_dquot_logitem_size(
--	struct xfs_log_item	*lip)
-+	struct xfs_log_item	*lip,
-+	int			*nvecs,
-+	int			*nbytes)
- {
--	/*
--	 * we need only two iovecs, one for the format, one for the real thing
--	 */
--	return 2;
-+	*nvecs += 2;
-+	*nbytes += sizeof(struct xfs_dq_logformat) +
-+		   sizeof(struct xfs_disk_dquot);
- }
- 
- /*
-@@ -286,11 +287,14 @@ static inline struct xfs_qoff_logitem *QOFF_ITEM(struct xfs_log_item *lip)
-  * We only need 1 iovec for an quotaoff item.  It just logs the
-  * quotaoff_log_format structure.
-  */
--STATIC uint
-+STATIC void
- xfs_qm_qoff_logitem_size(
--	struct xfs_log_item	*lip)
-+	struct xfs_log_item	*lip,
-+	int			*nvecs,
-+	int			*nbytes)
- {
--	return 1;
-+	*nvecs += 1;
-+	*nbytes += sizeof(struct xfs_qoff_logitem);
- }
- 
- /*
-diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-index 452920a..dc53e8f 100644
---- a/fs/xfs/xfs_extfree_item.c
-+++ b/fs/xfs/xfs_extfree_item.c
-@@ -73,11 +73,22 @@ __xfs_efi_release(
-  * We only need 1 iovec for an efi item.  It just logs the efi_log_format
-  * structure.
-  */
--STATIC uint
-+static inline int
-+xfs_efi_item_sizeof(
-+	struct xfs_efi_log_item *efip)
-+{
-+	return sizeof(struct xfs_efi_log_format) +
-+	       (efip->efi_format.efi_nextents - 1) * sizeof(xfs_extent_t);
-+}
++/* Min and max rt extent sizes, specified in bytes */
++#define	XFS_MAX_RTEXTSIZE	(1024 * 1024 * 1024)	/* 1GB */
++#define	XFS_DFL_RTEXTSIZE	(64 * 1024)	        /* 64kB */
++#define	XFS_MIN_RTEXTSIZE	(4 * 1024)		/* 4kB */
 +
-+STATIC void
- xfs_efi_item_size(
--	struct xfs_log_item	*lip)
-+	struct xfs_log_item	*lip,
-+	int			*nvecs,
-+	int			*nbytes)
- {
--	return 1;
-+	*nvecs += 1;
-+	*nbytes += xfs_efi_item_sizeof(EFI_ITEM(lip));
- }
- 
- /*
-@@ -93,21 +104,17 @@ xfs_efi_item_format(
- 	struct xfs_log_iovec	*log_vector)
- {
- 	struct xfs_efi_log_item	*efip = EFI_ITEM(lip);
--	uint			size;
- 
- 	ASSERT(atomic_read(&efip->efi_next_extent) ==
- 				efip->efi_format.efi_nextents);
- 
- 	efip->efi_format.efi_type = XFS_LI_EFI;
--
--	size = sizeof(xfs_efi_log_format_t);
--	size += (efip->efi_format.efi_nextents - 1) * sizeof(xfs_extent_t);
- 	efip->efi_format.efi_size = 1;
- 
- 	log_vector->i_addr = &efip->efi_format;
--	log_vector->i_len = size;
-+	log_vector->i_len = xfs_efi_item_sizeof(efip);
- 	log_vector->i_type = XLOG_REG_TYPE_EFI_FORMAT;
--	ASSERT(size >= sizeof(xfs_efi_log_format_t));
-+	ASSERT(log_vector->i_len >= sizeof(xfs_efi_log_format_t));
- }
- 
- 
-@@ -333,11 +340,22 @@ xfs_efd_item_free(struct xfs_efd_log_item *efdp)
-  * We only need 1 iovec for an efd item.  It just logs the efd_log_format
-  * structure.
-  */
--STATIC uint
-+static inline int
-+xfs_efd_item_sizeof(
-+	struct xfs_efd_log_item *efdp)
-+{
-+	return sizeof(xfs_efd_log_format_t) +
-+	       (efdp->efd_format.efd_nextents - 1) * sizeof(xfs_extent_t);
-+}
++#define	XFS_BLOCKSIZE(mp)	((mp)->m_sb.sb_blocksize)
++#define	XFS_BLOCKMASK(mp)	((mp)->m_blockmask)
++#define	XFS_BLOCKWSIZE(mp)	((mp)->m_blockwsize)
++#define	XFS_BLOCKWMASK(mp)	((mp)->m_blockwmask)
 +
-+STATIC void
- xfs_efd_item_size(
--	struct xfs_log_item	*lip)
-+	struct xfs_log_item	*lip,
-+	int			*nvecs,
-+	int			*nbytes)
- {
--	return 1;
-+	*nvecs += 1;
-+	*nbytes += xfs_efd_item_sizeof(EFD_ITEM(lip));
- }
- 
- /*
-@@ -353,20 +371,16 @@ xfs_efd_item_format(
- 	struct xfs_log_iovec	*log_vector)
- {
- 	struct xfs_efd_log_item	*efdp = EFD_ITEM(lip);
--	uint			size;
- 
- 	ASSERT(efdp->efd_next_extent == efdp->efd_format.efd_nextents);
- 
- 	efdp->efd_format.efd_type = XFS_LI_EFD;
--
--	size = sizeof(xfs_efd_log_format_t);
--	size += (efdp->efd_format.efd_nextents - 1) * sizeof(xfs_extent_t);
- 	efdp->efd_format.efd_size = 1;
- 
- 	log_vector->i_addr = &efdp->efd_format;
--	log_vector->i_len = size;
-+	log_vector->i_len = xfs_efd_item_sizeof(efdp);
- 	log_vector->i_type = XLOG_REG_TYPE_EFD_FORMAT;
--	ASSERT(size >= sizeof(xfs_efd_log_format_t));
-+	ASSERT(log_vector->i_len >= sizeof(xfs_efd_log_format_t));
- }
- 
- /*
-diff --git a/fs/xfs/xfs_icreate_item.c b/fs/xfs/xfs_icreate_item.c
-index 441a78a..5a5a593 100644
---- a/fs/xfs/xfs_icreate_item.c
-+++ b/fs/xfs/xfs_icreate_item.c
-@@ -40,11 +40,14 @@ static inline struct xfs_icreate_item *ICR_ITEM(struct xfs_log_item *lip)
-  *
-  * We only need one iovec for the icreate log structure.
-  */
--STATIC uint
-+STATIC void
- xfs_icreate_item_size(
--	struct xfs_log_item	*lip)
-+	struct xfs_log_item	*lip,
-+	int			*nvecs,
-+	int			*nbytes)
- {
--	return 1;
-+	*nvecs += 1;
-+	*nbytes += sizeof(struct xfs_icreate_log);
- }
- 
- /*
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index f76ff52..3780811 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -47,32 +47,44 @@ static inline struct xfs_inode_log_item *INODE_ITEM(struct xfs_log_item *lip)
-  * inode core, and possibly one for the inode data/extents/b-tree root
-  * and one for the inode attribute data/extents/b-tree root.
-  */
--STATIC uint
-+STATIC void
- xfs_inode_item_size(
--	struct xfs_log_item	*lip)
-+	struct xfs_log_item	*lip,
-+	int			*nvecs,
-+	int			*nbytes)
- {
- 	struct xfs_inode_log_item *iip = INODE_ITEM(lip);
- 	struct xfs_inode	*ip = iip->ili_inode;
--	uint			nvecs = 2;
++/*
++ * RT Summary and bit manipulation macros.
++ */
++#define	XFS_SUMOFFS(mp,ls,bb)	((int)((ls) * (mp)->m_sb.sb_rbmblocks + (bb)))
++#define	XFS_SUMOFFSTOBLOCK(mp,s)	\
++	(((s) * (uint)sizeof(xfs_suminfo_t)) >> (mp)->m_sb.sb_blocklog)
++#define	XFS_SUMPTR(mp,bp,so)	\
++	((xfs_suminfo_t *)((bp)->b_addr + \
++		(((so) * (uint)sizeof(xfs_suminfo_t)) & XFS_BLOCKMASK(mp))))
 +
-+	*nvecs += 2;
-+	*nbytes += sizeof(struct xfs_inode_log_format) +
-+		   xfs_icdinode_size(ip->i_d.di_version);
- 
- 	switch (ip->i_d.di_format) {
- 	case XFS_DINODE_FMT_EXTENTS:
- 		if ((iip->ili_fields & XFS_ILOG_DEXT) &&
- 		    ip->i_d.di_nextents > 0 &&
--		    ip->i_df.if_bytes > 0)
--			nvecs++;
-+		    ip->i_df.if_bytes > 0) {
-+			/* worst case, doesn't subtract delalloc extents */
-+			*nbytes += XFS_IFORK_DSIZE(ip);
-+			*nvecs += 1;
-+		}
- 		break;
- 
- 	case XFS_DINODE_FMT_BTREE:
- 		if ((iip->ili_fields & XFS_ILOG_DBROOT) &&
--		    ip->i_df.if_broot_bytes > 0)
--			nvecs++;
-+		    ip->i_df.if_broot_bytes > 0) {
-+			*nbytes += ip->i_df.if_broot_bytes;
-+			*nvecs += 1;
-+		}
- 		break;
- 
- 	case XFS_DINODE_FMT_LOCAL:
- 		if ((iip->ili_fields & XFS_ILOG_DDATA) &&
--		    ip->i_df.if_bytes > 0)
--			nvecs++;
-+		    ip->i_df.if_bytes > 0) {
-+			*nbytes += roundup(ip->i_df.if_bytes, 4);
-+			*nvecs += 1;
-+		}
- 		break;
- 
- 	case XFS_DINODE_FMT_DEV:
-@@ -85,7 +97,7 @@ xfs_inode_item_size(
- 	}
- 
- 	if (!XFS_IFORK_Q(ip))
--		return nvecs;
-+		return;
- 
- 
- 	/*
-@@ -95,28 +107,33 @@ xfs_inode_item_size(
- 	case XFS_DINODE_FMT_EXTENTS:
- 		if ((iip->ili_fields & XFS_ILOG_AEXT) &&
- 		    ip->i_d.di_anextents > 0 &&
--		    ip->i_afp->if_bytes > 0)
--			nvecs++;
-+		    ip->i_afp->if_bytes > 0) {
-+			/* worst case, doesn't subtract unused space */
-+			*nbytes += XFS_IFORK_ASIZE(ip);
-+			*nvecs += 1;
-+		}
- 		break;
- 
- 	case XFS_DINODE_FMT_BTREE:
- 		if ((iip->ili_fields & XFS_ILOG_ABROOT) &&
--		    ip->i_afp->if_broot_bytes > 0)
--			nvecs++;
-+		    ip->i_afp->if_broot_bytes > 0) {
-+			*nbytes += ip->i_afp->if_broot_bytes;
-+			*nvecs += 1;
-+		}
- 		break;
- 
- 	case XFS_DINODE_FMT_LOCAL:
- 		if ((iip->ili_fields & XFS_ILOG_ADATA) &&
--		    ip->i_afp->if_bytes > 0)
--			nvecs++;
-+		    ip->i_afp->if_bytes > 0) {
-+			*nbytes += roundup(ip->i_afp->if_bytes, 4);
-+			*nvecs += 1;
-+		}
- 		break;
- 
- 	default:
- 		ASSERT(0);
- 		break;
- 	}
--
--	return nvecs;
- }
- 
- /*
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 02b9cf3..4e10872 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -122,19 +122,23 @@ xlog_cil_prepare_log_vecs(
- 	}
- 
- 	list_for_each_entry(lidp, &tp->t_items, lid_trans) {
-+		struct xfs_log_item *lip = lidp->lid_item;
- 		struct xfs_log_vec *new_lv;
- 		void	*ptr;
- 		int	index;
- 		int	len = 0;
--		uint	niovecs;
-+		uint	niovecs = 0;
-+		uint	nbytes = 0;
- 		bool	ordered = false;
- 
- 		/* Skip items which aren't dirty in this transaction. */
- 		if (!(lidp->lid_flags & XFS_LID_DIRTY))
- 			continue;
- 
-+		/* get number of vecs and size of data to be stored */
-+		lip->li_ops->iop_size(lip, &niovecs, &nbytes);
++#define	XFS_BITTOBLOCK(mp,bi)	((bi) >> (mp)->m_blkbit_log)
++#define	XFS_BLOCKTOBIT(mp,bb)	((bb) << (mp)->m_blkbit_log)
++#define	XFS_BITTOWORD(mp,bi)	\
++	((int)(((bi) >> XFS_NBWORDLOG) & XFS_BLOCKWMASK(mp)))
 +
- 		/* Skip items that do not have any vectors for writing */
--		niovecs = IOP_SIZE(lidp->lid_item);
- 		if (!niovecs)
- 			continue;
++#define	XFS_RTMIN(a,b)	((a) < (b) ? (a) : (b))
++#define	XFS_RTMAX(a,b)	((a) > (b) ? (a) : (b))
++
++#define	XFS_RTLOBIT(w)	xfs_lowbit32(w)
++#define	XFS_RTHIBIT(w)	xfs_highbit32(w)
++
++#if XFS_BIG_BLKNOS
++#define	XFS_RTBLOCKLOG(b)	xfs_highbit64(b)
++#else
++#define	XFS_RTBLOCKLOG(b)	xfs_highbit32(b)
++#endif
++
++/*
+  * Dquot and dquot block format definitions
+  */
+ #define XFS_DQUOT_MAGIC		0x4451		/* 'DQ' */
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index 98dc670..5d900ec 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -17,7 +17,7 @@
+  */
+ #include "xfs.h"
+ #include "xfs_fs.h"
+-#include "xfs_types.h"
++#include "xfs_format.h"
+ #include "xfs_bit.h"
+ #include "xfs_log.h"
+ #include "xfs_trans.h"
+diff --git a/fs/xfs/xfs_rtalloc.h b/fs/xfs/xfs_rtalloc.h
+index f7f3a35..b2a1a24 100644
+--- a/fs/xfs/xfs_rtalloc.h
++++ b/fs/xfs/xfs_rtalloc.h
+@@ -18,58 +18,11 @@
+ #ifndef __XFS_RTALLOC_H__
+ #define	__XFS_RTALLOC_H__
  
-@@ -152,7 +156,7 @@ xlog_cil_prepare_log_vecs(
- 				niovecs * sizeof(struct xfs_log_iovec),
- 				KM_SLEEP|KM_NOFS);
++/* kernel only definitions and functions */
++
+ struct xfs_mount;
+ struct xfs_trans;
  
--		new_lv->lv_item = lidp->lid_item;
-+		new_lv->lv_item = lip;
- 		new_lv->lv_niovecs = niovecs;
- 		if (ordered) {
- 			/* track as an ordered logvec */
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 7eb81cc..97144ec 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -67,7 +67,7 @@ typedef struct xfs_log_item {
- 	{ XFS_LI_ABORTED,	"ABORTED" }
+-/* Min and max rt extent sizes, specified in bytes */
+-#define	XFS_MAX_RTEXTSIZE	(1024 * 1024 * 1024)	/* 1GB */
+-#define	XFS_DFL_RTEXTSIZE	(64 * 1024)	        /* 64kB */
+-#define	XFS_MIN_RTEXTSIZE	(4 * 1024)		/* 4kB */
+-
+-/*
+- * Constants for bit manipulations.
+- */
+-#define	XFS_NBBYLOG	3		/* log2(NBBY) */
+-#define	XFS_WORDLOG	2		/* log2(sizeof(xfs_rtword_t)) */
+-#define	XFS_NBWORDLOG	(XFS_NBBYLOG + XFS_WORDLOG)
+-#define	XFS_NBWORD	(1 << XFS_NBWORDLOG)
+-#define	XFS_WORDMASK	((1 << XFS_WORDLOG) - 1)
+-
+-#define	XFS_BLOCKSIZE(mp)	((mp)->m_sb.sb_blocksize)
+-#define	XFS_BLOCKMASK(mp)	((mp)->m_blockmask)
+-#define	XFS_BLOCKWSIZE(mp)	((mp)->m_blockwsize)
+-#define	XFS_BLOCKWMASK(mp)	((mp)->m_blockwmask)
+-
+-/*
+- * Summary and bit manipulation macros.
+- */
+-#define	XFS_SUMOFFS(mp,ls,bb)	((int)((ls) * (mp)->m_sb.sb_rbmblocks + (bb)))
+-#define	XFS_SUMOFFSTOBLOCK(mp,s)	\
+-	(((s) * (uint)sizeof(xfs_suminfo_t)) >> (mp)->m_sb.sb_blocklog)
+-#define	XFS_SUMPTR(mp,bp,so)	\
+-	((xfs_suminfo_t *)((bp)->b_addr + \
+-		(((so) * (uint)sizeof(xfs_suminfo_t)) & XFS_BLOCKMASK(mp))))
+-
+-#define	XFS_BITTOBLOCK(mp,bi)	((bi) >> (mp)->m_blkbit_log)
+-#define	XFS_BLOCKTOBIT(mp,bb)	((bb) << (mp)->m_blkbit_log)
+-#define	XFS_BITTOWORD(mp,bi)	\
+-	((int)(((bi) >> XFS_NBWORDLOG) & XFS_BLOCKWMASK(mp)))
+-
+-#define	XFS_RTMIN(a,b)	((a) < (b) ? (a) : (b))
+-#define	XFS_RTMAX(a,b)	((a) > (b) ? (a) : (b))
+-
+-#define	XFS_RTLOBIT(w)	xfs_lowbit32(w)
+-#define	XFS_RTHIBIT(w)	xfs_highbit32(w)
+-
+-#if XFS_BIG_BLKNOS
+-#define	XFS_RTBLOCKLOG(b)	xfs_highbit64(b)
+-#else
+-#define	XFS_RTBLOCKLOG(b)	xfs_highbit32(b)
+-#endif
+-
+-
+-#ifdef __KERNEL__
+-
+ #ifdef CONFIG_XFS_RT
+ /*
+  * Function prototypes for exported functions.
+@@ -161,6 +114,4 @@ xfs_rtmount_init(
+ # define xfs_rtunmount_inodes(m)
+ #endif	/* CONFIG_XFS_RT */
  
- struct xfs_item_ops {
--	uint (*iop_size)(xfs_log_item_t *);
-+	void (*iop_size)(xfs_log_item_t *, int *, int *);
- 	void (*iop_format)(xfs_log_item_t *, struct xfs_log_iovec *);
- 	void (*iop_pin)(xfs_log_item_t *);
- 	void (*iop_unpin)(xfs_log_item_t *, int remove);
-@@ -77,7 +77,6 @@ struct xfs_item_ops {
- 	void (*iop_committing)(xfs_log_item_t *, xfs_lsn_t);
- };
+-#endif	/* __KERNEL__ */
+-
+ #endif	/* __XFS_RTALLOC_H__ */
+diff --git a/fs/xfs/xfs_types.h b/fs/xfs/xfs_types.h
+index 69074ac..781772c 100644
+--- a/fs/xfs/xfs_types.h
++++ b/fs/xfs/xfs_types.h
+@@ -183,4 +183,14 @@ struct xfs_name {
+  */
+ typedef __uint32_t	xfs_dqid_t;
  
--#define IOP_SIZE(ip)		(*(ip)->li_ops->iop_size)(ip)
- #define IOP_FORMAT(ip,vp)	(*(ip)->li_ops->iop_format)(ip, vp)
- #define IOP_PIN(ip)		(*(ip)->li_ops->iop_pin)(ip)
- #define IOP_UNPIN(ip, remove)	(*(ip)->li_ops->iop_unpin)(ip, remove)
++/*
++ * Constants for bit manipulations.
++ */
++#define	XFS_NBBYLOG	3		/* log2(NBBY) */
++#define	XFS_WORDLOG	2		/* log2(sizeof(xfs_rtword_t)) */
++#define	XFS_NBWORDLOG	(XFS_NBBYLOG + XFS_WORDLOG)
++#define	XFS_NBWORD	(1 << XFS_NBWORDLOG)
++#define	XFS_WORDMASK	((1 << XFS_WORDLOG) - 1)
++
++
+ #endif	/* __XFS_TYPES_H__ */
 -- 
 1.8.3.2
 
