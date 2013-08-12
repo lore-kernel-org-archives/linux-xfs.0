@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B9E5729E1B
-	for <xfs@oss.sgi.com>; Mon, 12 Aug 2013 05:51:05 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 2C431AC002
-	for <xfs@oss.sgi.com>; Mon, 12 Aug 2013 03:51:05 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id 943EA29E1D
+	for <xfs@oss.sgi.com>; Mon, 12 Aug 2013 05:51:06 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 7518A304039
+	for <xfs@oss.sgi.com>; Mon, 12 Aug 2013 03:51:06 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	KdfnlZkvJwtbe3jT for <xfs@oss.sgi.com>;
-	Mon, 12 Aug 2013 03:51:02 -0700 (PDT)
+	8g0PGqJgkd6WXufr for <xfs@oss.sgi.com>;
+	Mon, 12 Aug 2013 03:51:03 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1V8phX-0004Yd-CT
+	(envelope-from <dave@fromorbit.com>) id 1V8phX-0004YP-8i
 	for xfs@oss.sgi.com; Mon, 12 Aug 2013 20:50:15 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1V8phX-00063G-Be
+	(envelope-from <dave@disappointment.disaster>) id 1V8phX-00062c-7b
 	for xfs@oss.sgi.com; Mon, 12 Aug 2013 20:50:15 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: ***** SUSPECTED SPAM ***** [PATCH 35/50] xfs: Introduce a new
-	structure to hold transaction reservation items
-Date: Mon, 12 Aug 2013 20:49:56 +1000
-Message-Id: <1376304611-22994-36-git-send-email-david@fromorbit.com>
+Subject: ***** SUSPECTED SPAM ***** [PATCH 27/50] xfs: consolidate extent swap
+	code
+Date: Mon, 12 Aug 2013 20:49:48 +1000
+Message-Id: <1376304611-22994-28-git-send-email-david@fromorbit.com>
 In-Reply-To: <1376304611-22994-1-git-send-email-david@fromorbit.com>
 References: <1376304611-22994-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,328 +38,1094 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Jie Liu <jeff.liu@oracle.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-Introduce a new structure xfs_trans_res to hold transaction
-reservation item info per log ticket.
+So we don't need xfs_dfrag.h in userspace anymore, move the extent
+swap ioctl structure definition to xfs_fs.h where most of the other
+ioctl structure definitions are.
 
-We also need to improve xfs_trans_resv_calc() by initializing the
-log count as well as log flags for permanent log reservation.
+Now that we don't need separate files for extent swapping, separate
+the basic file descriptor checking code to xfs_ioctl.c, and the code
+that does the extent swap operation to xfs_bmap_util.c.  This
+cleanly separates the user interface code from the physical
+mechanism used to do the extent swap.
 
-Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 ---
- fs/xfs/xfs_mount.h      |   2 +-
- fs/xfs/xfs_trans.c      |   2 +-
- fs/xfs/xfs_trans_resv.c | 121 +++++++++++++++++++++++++++++++++++-----------
- fs/xfs/xfs_trans_resv.h | 125 ++++++++++++++++++++++++++----------------------
- 4 files changed, 163 insertions(+), 87 deletions(-)
+ fs/xfs/Makefile        |   1 -
+ fs/xfs/xfs_bmap_util.c | 343 ++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_bmap_util.h |   3 +
+ fs/xfs/xfs_dfrag.c     | 459 -------------------------------------------------
+ fs/xfs/xfs_dfrag.h     |  53 ------
+ fs/xfs/xfs_fs.h        |  15 ++
+ fs/xfs/xfs_ioctl.c     |  72 +++++++-
+ fs/xfs/xfs_ioctl.h     |   4 +
+ fs/xfs/xfs_ioctl32.c   |   3 +-
+ 9 files changed, 436 insertions(+), 517 deletions(-)
+ delete mode 100644 fs/xfs/xfs_dfrag.c
+ delete mode 100644 fs/xfs/xfs_dfrag.h
 
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 829035f6..1fa0584 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -136,7 +136,7 @@ typedef struct xfs_mount {
- 	int			m_ialloc_blks;	/* blocks in inode allocation */
- 	int			m_inoalign_mask;/* mask sb_inoalignmt if used */
- 	uint			m_qflags;	/* quota status flags */
--	struct xfs_trans_resv	m_reservations;	/* precomputed res values */
-+	struct xfs_trans_resv	m_resv;		/* precomputed res values */
- 	__uint64_t		m_maxicount;	/* maximum inode count */
- 	__uint64_t		m_resblks;	/* total reserved blocks */
- 	__uint64_t		m_resblks_avail;/* available reserved blocks */
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index cc824eff..e0f93f9 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -56,7 +56,7 @@ void
- xfs_trans_init(
- 	struct xfs_mount	*mp)
- {
--	xfs_trans_resv_calc(mp, &mp->m_reservations);
-+	xfs_trans_resv_calc(mp, &mp->m_resv);
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index 201c61d..d6ccf57 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -32,7 +32,6 @@ xfs-y				+= xfs_aops.o \
+ 				   xfs_bit.o \
+ 				   xfs_bmap_util.o \
+ 				   xfs_buf.o \
+-				   xfs_dfrag.o \
+ 				   xfs_dir2_readdir.o \
+ 				   xfs_discard.o \
+ 				   xfs_error.o \
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index f557022..b5232d0 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1693,3 +1693,346 @@ xfs_change_file_space(
+ 		xfs_trans_set_sync(tp);
+ 	return xfs_trans_commit(tp, 0);
  }
- 
- /*
-diff --git a/fs/xfs/xfs_trans_resv.c b/fs/xfs/xfs_trans_resv.c
-index ed6446e..3761481 100644
---- a/fs/xfs/xfs_trans_resv.c
-+++ b/fs/xfs/xfs_trans_resv.c
-@@ -671,32 +671,97 @@ xfs_trans_resv_calc(
- 	struct xfs_mount	*mp,
- 	struct xfs_trans_resv	*resp)
- {
--	resp->tr_write = xfs_calc_write_reservation(mp);
--	resp->tr_itruncate = xfs_calc_itruncate_reservation(mp);
--	resp->tr_rename = xfs_calc_rename_reservation(mp);
--	resp->tr_link = xfs_calc_link_reservation(mp);
--	resp->tr_remove = xfs_calc_remove_reservation(mp);
--	resp->tr_symlink = xfs_calc_symlink_reservation(mp);
--	resp->tr_create = xfs_calc_create_reservation(mp);
--	resp->tr_mkdir = xfs_calc_mkdir_reservation(mp);
--	resp->tr_ifree = xfs_calc_ifree_reservation(mp);
--	resp->tr_ichange = xfs_calc_ichange_reservation(mp);
--	resp->tr_growdata = xfs_calc_growdata_reservation(mp);
--	resp->tr_swrite = xfs_calc_swrite_reservation(mp);
--	resp->tr_writeid = xfs_calc_writeid_reservation(mp);
--	resp->tr_addafork = xfs_calc_addafork_reservation(mp);
--	resp->tr_attrinval = xfs_calc_attrinval_reservation(mp);
--	resp->tr_attrsetm = xfs_calc_attrsetm_reservation(mp);
--	resp->tr_attrsetrt = xfs_calc_attrsetrt_reservation(mp);
--	resp->tr_attrrm = xfs_calc_attrrm_reservation(mp);
--	resp->tr_clearagi = xfs_calc_clear_agi_bucket_reservation(mp);
--	resp->tr_growrtalloc = xfs_calc_growrtalloc_reservation(mp);
--	resp->tr_growrtzero = xfs_calc_growrtzero_reservation(mp);
--	resp->tr_growrtfree = xfs_calc_growrtfree_reservation(mp);
--	resp->tr_qm_sbchange = xfs_calc_qm_sbchange_reservation(mp);
--	resp->tr_qm_setqlim = xfs_calc_qm_setqlim_reservation(mp);
--	resp->tr_qm_dqalloc = xfs_calc_qm_dqalloc_reservation(mp);
--	resp->tr_qm_quotaoff = xfs_calc_qm_quotaoff_reservation(mp);
--	resp->tr_qm_equotaoff = xfs_calc_qm_quotaoff_end_reservation(mp);
--	resp->tr_sb = xfs_calc_sb_reservation(mp);
-+	/*
-+	 * The following transactions are logged in physical format and
-+	 * require a permanent reservation on space.
-+	 */
-+	resp->tr_write.tr_logres = xfs_calc_write_reservation(mp);
-+	resp->tr_write.tr_logcount = XFS_WRITE_LOG_COUNT;
-+	resp->tr_write.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
 +
-+	resp->tr_itruncate.tr_logres = xfs_calc_itruncate_reservation(mp);
-+	resp->tr_itruncate.tr_logcount = XFS_ITRUNCATE_LOG_COUNT;
-+	resp->tr_itruncate.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++/*
++ * We need to check that the format of the data fork in the temporary inode is
++ * valid for the target inode before doing the swap. This is not a problem with
++ * attr1 because of the fixed fork offset, but attr2 has a dynamically sized
++ * data fork depending on the space the attribute fork is taking so we can get
++ * invalid formats on the target inode.
++ *
++ * E.g. target has space for 7 extents in extent format, temp inode only has
++ * space for 6.  If we defragment down to 7 extents, then the tmp format is a
++ * btree, but when swapped it needs to be in extent format. Hence we can't just
++ * blindly swap data forks on attr2 filesystems.
++ *
++ * Note that we check the swap in both directions so that we don't end up with
++ * a corrupt temporary inode, either.
++ *
++ * Note that fixing the way xfs_fsr sets up the attribute fork in the source
++ * inode will prevent this situation from occurring, so all we do here is
++ * reject and log the attempt. basically we are putting the responsibility on
++ * userspace to get this right.
++ */
++static int
++xfs_swap_extents_check_format(
++	xfs_inode_t	*ip,	/* target inode */
++	xfs_inode_t	*tip)	/* tmp inode */
++{
 +
-+	resp->tr_rename.tr_logres = xfs_calc_rename_reservation(mp);
-+	resp->tr_rename.tr_logcount = XFS_RENAME_LOG_COUNT;
-+	resp->tr_rename.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-+
-+	resp->tr_link.tr_logres = xfs_calc_link_reservation(mp);
-+	resp->tr_link.tr_logcount = XFS_LINK_LOG_COUNT;
-+	resp->tr_link.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-+
-+	resp->tr_remove.tr_logres = xfs_calc_remove_reservation(mp);
-+	resp->tr_remove.tr_logcount = XFS_REMOVE_LOG_COUNT;
-+	resp->tr_remove.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-+
-+	resp->tr_symlink.tr_logres = xfs_calc_symlink_reservation(mp);
-+	resp->tr_symlink.tr_logcount = XFS_SYMLINK_LOG_COUNT;
-+	resp->tr_symlink.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-+
-+	resp->tr_create.tr_logres = xfs_calc_create_reservation(mp);
-+	resp->tr_create.tr_logcount = XFS_CREATE_LOG_COUNT;
-+	resp->tr_create.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-+
-+	resp->tr_mkdir.tr_logres = xfs_calc_mkdir_reservation(mp);
-+	resp->tr_mkdir.tr_logcount = XFS_MKDIR_LOG_COUNT;
-+	resp->tr_mkdir.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-+
-+	resp->tr_ifree.tr_logres = xfs_calc_ifree_reservation(mp);
-+	resp->tr_ifree.tr_logcount = XFS_INACTIVE_LOG_COUNT;
-+	resp->tr_ifree.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-+
-+	resp->tr_addafork.tr_logres = xfs_calc_addafork_reservation(mp);
-+	resp->tr_addafork.tr_logcount = XFS_ADDAFORK_LOG_COUNT;
-+	resp->tr_addafork.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-+
-+	resp->tr_attrinval.tr_logres = xfs_calc_attrinval_reservation(mp);
-+	resp->tr_attrinval.tr_logcount = XFS_ATTRINVAL_LOG_COUNT;
-+	resp->tr_attrinval.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-+
-+	resp->tr_attrsetm.tr_logres = xfs_calc_attrsetm_reservation(mp);
-+	resp->tr_attrsetm.tr_logcount = XFS_ATTRSET_LOG_COUNT;
-+	resp->tr_attrsetm.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-+
-+	resp->tr_attrrm.tr_logres = xfs_calc_attrrm_reservation(mp);
-+	resp->tr_attrrm.tr_logcount = XFS_ATTRRM_LOG_COUNT;
-+	resp->tr_attrrm.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-+
-+	resp->tr_growrtalloc.tr_logres = xfs_calc_growrtalloc_reservation(mp);
-+	resp->tr_growrtalloc.tr_logcount = XFS_DEFAULT_PERM_LOG_COUNT;
-+	resp->tr_growrtalloc.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
-+
-+	resp->tr_qm_dqalloc.tr_logres = xfs_calc_qm_dqalloc_reservation(mp);
-+	resp->tr_qm_dqalloc.tr_logcount = XFS_WRITE_LOG_COUNT;
-+	resp->tr_qm_dqalloc.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
++	/* Should never get a local format */
++	if (ip->i_d.di_format == XFS_DINODE_FMT_LOCAL ||
++	    tip->i_d.di_format == XFS_DINODE_FMT_LOCAL)
++		return EINVAL;
 +
 +	/*
-+	 * The following transactions are logged in logical format with
-+	 * a default log count.
++	 * if the target inode has less extents that then temporary inode then
++	 * why did userspace call us?
 +	 */
-+	resp->tr_qm_sbchange.tr_logres = xfs_calc_qm_sbchange_reservation(mp);
-+	resp->tr_qm_sbchange.tr_logcount = XFS_DEFAULT_LOG_COUNT;
++	if (ip->i_d.di_nextents < tip->i_d.di_nextents)
++		return EINVAL;
 +
-+	resp->tr_qm_setqlim.tr_logres = xfs_calc_qm_setqlim_reservation(mp);
-+	resp->tr_qm_setqlim.tr_logcount = XFS_DEFAULT_LOG_COUNT;
++	/*
++	 * if the target inode is in extent form and the temp inode is in btree
++	 * form then we will end up with the target inode in the wrong format
++	 * as we already know there are less extents in the temp inode.
++	 */
++	if (ip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
++	    tip->i_d.di_format == XFS_DINODE_FMT_BTREE)
++		return EINVAL;
 +
-+	resp->tr_qm_quotaoff.tr_logres = xfs_calc_qm_quotaoff_reservation(mp);
-+	resp->tr_qm_quotaoff.tr_logcount = XFS_DEFAULT_LOG_COUNT;
++	/* Check temp in extent form to max in target */
++	if (tip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
++	    XFS_IFORK_NEXTENTS(tip, XFS_DATA_FORK) >
++			XFS_IFORK_MAXEXT(ip, XFS_DATA_FORK))
++		return EINVAL;
 +
-+	resp->tr_qm_equotaoff.tr_logres =
-+		xfs_calc_qm_quotaoff_end_reservation(mp);
-+	resp->tr_qm_equotaoff.tr_logcount = XFS_DEFAULT_LOG_COUNT;
++	/* Check target in extent form to max in temp */
++	if (ip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
++	    XFS_IFORK_NEXTENTS(ip, XFS_DATA_FORK) >
++			XFS_IFORK_MAXEXT(tip, XFS_DATA_FORK))
++		return EINVAL;
 +
-+	resp->tr_sb.tr_logres = xfs_calc_sb_reservation(mp);
-+	resp->tr_sb.tr_logcount = XFS_DEFAULT_LOG_COUNT;
++	/*
++	 * If we are in a btree format, check that the temp root block will fit
++	 * in the target and that it has enough extents to be in btree format
++	 * in the target.
++	 *
++	 * Note that we have to be careful to allow btree->extent conversions
++	 * (a common defrag case) which will occur when the temp inode is in
++	 * extent format...
++	 */
++	if (tip->i_d.di_format == XFS_DINODE_FMT_BTREE) {
++		if (XFS_IFORK_BOFF(ip) &&
++		    XFS_BMAP_BMDR_SPACE(tip->i_df.if_broot) > XFS_IFORK_BOFF(ip))
++			return EINVAL;
++		if (XFS_IFORK_NEXTENTS(tip, XFS_DATA_FORK) <=
++		    XFS_IFORK_MAXEXT(ip, XFS_DATA_FORK))
++			return EINVAL;
++	}
 +
-+	/* The following transaction are logged in logical format */
-+	resp->tr_ichange.tr_logres = xfs_calc_ichange_reservation(mp);
-+	resp->tr_growdata.tr_logres = xfs_calc_growdata_reservation(mp);
-+	resp->tr_swrite.tr_logres = xfs_calc_swrite_reservation(mp);
-+	resp->tr_writeid.tr_logres = xfs_calc_writeid_reservation(mp);
-+	resp->tr_attrsetrt.tr_logres = xfs_calc_attrsetrt_reservation(mp);
-+	resp->tr_clearagi.tr_logres = xfs_calc_clear_agi_bucket_reservation(mp);
-+	resp->tr_growrtzero.tr_logres = xfs_calc_growrtzero_reservation(mp);
-+	resp->tr_growrtfree.tr_logres = xfs_calc_growrtfree_reservation(mp);
++	/* Reciprocal target->temp btree format checks */
++	if (ip->i_d.di_format == XFS_DINODE_FMT_BTREE) {
++		if (XFS_IFORK_BOFF(tip) &&
++		    XFS_BMAP_BMDR_SPACE(ip->i_df.if_broot) > XFS_IFORK_BOFF(tip))
++			return EINVAL;
++		if (XFS_IFORK_NEXTENTS(ip, XFS_DATA_FORK) <=
++		    XFS_IFORK_MAXEXT(tip, XFS_DATA_FORK))
++			return EINVAL;
++	}
++
++	return 0;
++}
++
++int
++xfs_swap_extents(
++	xfs_inode_t	*ip,	/* target inode */
++	xfs_inode_t	*tip,	/* tmp inode */
++	xfs_swapext_t	*sxp)
++{
++	xfs_mount_t	*mp = ip->i_mount;
++	xfs_trans_t	*tp;
++	xfs_bstat_t	*sbp = &sxp->sx_stat;
++	xfs_ifork_t	*tempifp, *ifp, *tifp;
++	int		src_log_flags, target_log_flags;
++	int		error = 0;
++	int		aforkblks = 0;
++	int		taforkblks = 0;
++	__uint64_t	tmp;
++
++	/*
++	 * We have no way of updating owner information in the BMBT blocks for
++	 * each inode on CRC enabled filesystems, so to avoid corrupting the
++	 * this metadata we simply don't allow extent swaps to occur.
++	 */
++	if (xfs_sb_version_hascrc(&mp->m_sb))
++		return XFS_ERROR(EINVAL);
++
++	tempifp = kmem_alloc(sizeof(xfs_ifork_t), KM_MAYFAIL);
++	if (!tempifp) {
++		error = XFS_ERROR(ENOMEM);
++		goto out;
++	}
++
++	/*
++	 * we have to do two separate lock calls here to keep lockdep
++	 * happy. If we try to get all the locks in one call, lock will
++	 * report false positives when we drop the ILOCK and regain them
++	 * below.
++	 */
++	xfs_lock_two_inodes(ip, tip, XFS_IOLOCK_EXCL);
++	xfs_lock_two_inodes(ip, tip, XFS_ILOCK_EXCL);
++
++	/* Verify that both files have the same format */
++	if ((ip->i_d.di_mode & S_IFMT) != (tip->i_d.di_mode & S_IFMT)) {
++		error = XFS_ERROR(EINVAL);
++		goto out_unlock;
++	}
++
++	/* Verify both files are either real-time or non-realtime */
++	if (XFS_IS_REALTIME_INODE(ip) != XFS_IS_REALTIME_INODE(tip)) {
++		error = XFS_ERROR(EINVAL);
++		goto out_unlock;
++	}
++
++	error = -filemap_write_and_wait(VFS_I(tip)->i_mapping);
++	if (error)
++		goto out_unlock;
++	truncate_pagecache_range(VFS_I(tip), 0, -1);
++
++	/* Verify O_DIRECT for ftmp */
++	if (VN_CACHED(VFS_I(tip)) != 0) {
++		error = XFS_ERROR(EINVAL);
++		goto out_unlock;
++	}
++
++	/* Verify all data are being swapped */
++	if (sxp->sx_offset != 0 ||
++	    sxp->sx_length != ip->i_d.di_size ||
++	    sxp->sx_length != tip->i_d.di_size) {
++		error = XFS_ERROR(EFAULT);
++		goto out_unlock;
++	}
++
++	trace_xfs_swap_extent_before(ip, 0);
++	trace_xfs_swap_extent_before(tip, 1);
++
++	/* check inode formats now that data is flushed */
++	error = xfs_swap_extents_check_format(ip, tip);
++	if (error) {
++		xfs_notice(mp,
++		    "%s: inode 0x%llx format is incompatible for exchanging.",
++				__func__, ip->i_ino);
++		goto out_unlock;
++	}
++
++	/*
++	 * Compare the current change & modify times with that
++	 * passed in.  If they differ, we abort this swap.
++	 * This is the mechanism used to ensure the calling
++	 * process that the file was not changed out from
++	 * under it.
++	 */
++	if ((sbp->bs_ctime.tv_sec != VFS_I(ip)->i_ctime.tv_sec) ||
++	    (sbp->bs_ctime.tv_nsec != VFS_I(ip)->i_ctime.tv_nsec) ||
++	    (sbp->bs_mtime.tv_sec != VFS_I(ip)->i_mtime.tv_sec) ||
++	    (sbp->bs_mtime.tv_nsec != VFS_I(ip)->i_mtime.tv_nsec)) {
++		error = XFS_ERROR(EBUSY);
++		goto out_unlock;
++	}
++
++	/* We need to fail if the file is memory mapped.  Once we have tossed
++	 * all existing pages, the page fault will have no option
++	 * but to go to the filesystem for pages. By making the page fault call
++	 * vop_read (or write in the case of autogrow) they block on the iolock
++	 * until we have switched the extents.
++	 */
++	if (VN_MAPPED(VFS_I(ip))) {
++		error = XFS_ERROR(EBUSY);
++		goto out_unlock;
++	}
++
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	xfs_iunlock(tip, XFS_ILOCK_EXCL);
++
++	/*
++	 * There is a race condition here since we gave up the
++	 * ilock.  However, the data fork will not change since
++	 * we have the iolock (locked for truncation too) so we
++	 * are safe.  We don't really care if non-io related
++	 * fields change.
++	 */
++	truncate_pagecache_range(VFS_I(ip), 0, -1);
++
++	tp = xfs_trans_alloc(mp, XFS_TRANS_SWAPEXT);
++	if ((error = xfs_trans_reserve(tp, 0,
++				     XFS_ICHANGE_LOG_RES(mp), 0,
++				     0, 0))) {
++		xfs_iunlock(ip,  XFS_IOLOCK_EXCL);
++		xfs_iunlock(tip, XFS_IOLOCK_EXCL);
++		xfs_trans_cancel(tp, 0);
++		goto out;
++	}
++	xfs_lock_two_inodes(ip, tip, XFS_ILOCK_EXCL);
++
++	/*
++	 * Count the number of extended attribute blocks
++	 */
++	if ( ((XFS_IFORK_Q(ip) != 0) && (ip->i_d.di_anextents > 0)) &&
++	     (ip->i_d.di_aformat != XFS_DINODE_FMT_LOCAL)) {
++		error = xfs_bmap_count_blocks(tp, ip, XFS_ATTR_FORK, &aforkblks);
++		if (error)
++			goto out_trans_cancel;
++	}
++	if ( ((XFS_IFORK_Q(tip) != 0) && (tip->i_d.di_anextents > 0)) &&
++	     (tip->i_d.di_aformat != XFS_DINODE_FMT_LOCAL)) {
++		error = xfs_bmap_count_blocks(tp, tip, XFS_ATTR_FORK,
++			&taforkblks);
++		if (error)
++			goto out_trans_cancel;
++	}
++
++	/*
++	 * Swap the data forks of the inodes
++	 */
++	ifp = &ip->i_df;
++	tifp = &tip->i_df;
++	*tempifp = *ifp;	/* struct copy */
++	*ifp = *tifp;		/* struct copy */
++	*tifp = *tempifp;	/* struct copy */
++
++	/*
++	 * Fix the on-disk inode values
++	 */
++	tmp = (__uint64_t)ip->i_d.di_nblocks;
++	ip->i_d.di_nblocks = tip->i_d.di_nblocks - taforkblks + aforkblks;
++	tip->i_d.di_nblocks = tmp + taforkblks - aforkblks;
++
++	tmp = (__uint64_t) ip->i_d.di_nextents;
++	ip->i_d.di_nextents = tip->i_d.di_nextents;
++	tip->i_d.di_nextents = tmp;
++
++	tmp = (__uint64_t) ip->i_d.di_format;
++	ip->i_d.di_format = tip->i_d.di_format;
++	tip->i_d.di_format = tmp;
++
++	/*
++	 * The extents in the source inode could still contain speculative
++	 * preallocation beyond EOF (e.g. the file is open but not modified
++	 * while defrag is in progress). In that case, we need to copy over the
++	 * number of delalloc blocks the data fork in the source inode is
++	 * tracking beyond EOF so that when the fork is truncated away when the
++	 * temporary inode is unlinked we don't underrun the i_delayed_blks
++	 * counter on that inode.
++	 */
++	ASSERT(tip->i_delayed_blks == 0);
++	tip->i_delayed_blks = ip->i_delayed_blks;
++	ip->i_delayed_blks = 0;
++
++	src_log_flags = XFS_ILOG_CORE;
++	switch (ip->i_d.di_format) {
++	case XFS_DINODE_FMT_EXTENTS:
++		/* If the extents fit in the inode, fix the
++		 * pointer.  Otherwise it's already NULL or
++		 * pointing to the extent.
++		 */
++		if (ip->i_d.di_nextents <= XFS_INLINE_EXTS) {
++			ifp->if_u1.if_extents =
++				ifp->if_u2.if_inline_ext;
++		}
++		src_log_flags |= XFS_ILOG_DEXT;
++		break;
++	case XFS_DINODE_FMT_BTREE:
++		src_log_flags |= XFS_ILOG_DBROOT;
++		break;
++	}
++
++	target_log_flags = XFS_ILOG_CORE;
++	switch (tip->i_d.di_format) {
++	case XFS_DINODE_FMT_EXTENTS:
++		/* If the extents fit in the inode, fix the
++		 * pointer.  Otherwise it's already NULL or
++		 * pointing to the extent.
++		 */
++		if (tip->i_d.di_nextents <= XFS_INLINE_EXTS) {
++			tifp->if_u1.if_extents =
++				tifp->if_u2.if_inline_ext;
++		}
++		target_log_flags |= XFS_ILOG_DEXT;
++		break;
++	case XFS_DINODE_FMT_BTREE:
++		target_log_flags |= XFS_ILOG_DBROOT;
++		break;
++	}
++
++
++	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
++	xfs_trans_ijoin(tp, tip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
++
++	xfs_trans_log_inode(tp, ip,  src_log_flags);
++	xfs_trans_log_inode(tp, tip, target_log_flags);
++
++	/*
++	 * If this is a synchronous mount, make sure that the
++	 * transaction goes to disk before returning to the user.
++	 */
++	if (mp->m_flags & XFS_MOUNT_WSYNC)
++		xfs_trans_set_sync(tp);
++
++	error = xfs_trans_commit(tp, 0);
++
++	trace_xfs_swap_extent_after(ip, 0);
++	trace_xfs_swap_extent_after(tip, 1);
++out:
++	kmem_free(tempifp);
++	return error;
++
++out_unlock:
++	xfs_iunlock(ip,  XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
++	xfs_iunlock(tip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
++	goto out;
++
++out_trans_cancel:
++	xfs_trans_cancel(tp, 0);
++	goto out_unlock;
++}
+diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
+index a6d2077..0612609 100644
+--- a/fs/xfs/xfs_bmap_util.h
++++ b/fs/xfs/xfs_bmap_util.h
+@@ -102,6 +102,9 @@ bool	xfs_can_free_eofblocks(struct xfs_inode *ip, bool force);
+ int	xfs_free_eofblocks(struct xfs_mount *mp, struct xfs_inode *ip,
+ 			   bool need_iolock);
+ 
++int	xfs_swap_extents(struct xfs_inode *ip, struct xfs_inode *tip,
++			 struct xfs_swapext *sx);
++
+ xfs_daddr_t xfs_fsb_to_db(struct xfs_inode *ip, xfs_fsblock_t fsb);
+ 
+ #endif	/* __XFS_BMAP_UTIL_H__ */
+diff --git a/fs/xfs/xfs_dfrag.c b/fs/xfs/xfs_dfrag.c
+deleted file mode 100644
+index b83d45f..0000000
+--- a/fs/xfs/xfs_dfrag.c
++++ /dev/null
+@@ -1,459 +0,0 @@
+-/*
+- * Copyright (c) 2000-2006 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it would be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write the Free Software Foundation,
+- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- */
+-#include "xfs.h"
+-#include "xfs_fs.h"
+-#include "xfs_types.h"
+-#include "xfs_log.h"
+-#include "xfs_trans.h"
+-#include "xfs_sb.h"
+-#include "xfs_ag.h"
+-#include "xfs_mount.h"
+-#include "xfs_bmap_btree.h"
+-#include "xfs_alloc_btree.h"
+-#include "xfs_ialloc_btree.h"
+-#include "xfs_btree.h"
+-#include "xfs_dinode.h"
+-#include "xfs_inode.h"
+-#include "xfs_inode_item.h"
+-#include "xfs_bmap.h"
+-#include "xfs_bmap_util.h"
+-#include "xfs_itable.h"
+-#include "xfs_dfrag.h"
+-#include "xfs_error.h"
+-#include "xfs_trace.h"
+-
+-
+-static int xfs_swap_extents(
+-	xfs_inode_t	*ip,	/* target inode */
+-	xfs_inode_t	*tip,	/* tmp inode */
+-	xfs_swapext_t	*sxp);
+-
+-/*
+- * ioctl interface for swapext
+- */
+-int
+-xfs_swapext(
+-	xfs_swapext_t	*sxp)
+-{
+-	xfs_inode_t     *ip, *tip;
+-	struct fd	f, tmp;
+-	int		error = 0;
+-
+-	/* Pull information for the target fd */
+-	f = fdget((int)sxp->sx_fdtarget);
+-	if (!f.file) {
+-		error = XFS_ERROR(EINVAL);
+-		goto out;
+-	}
+-
+-	if (!(f.file->f_mode & FMODE_WRITE) ||
+-	    !(f.file->f_mode & FMODE_READ) ||
+-	    (f.file->f_flags & O_APPEND)) {
+-		error = XFS_ERROR(EBADF);
+-		goto out_put_file;
+-	}
+-
+-	tmp = fdget((int)sxp->sx_fdtmp);
+-	if (!tmp.file) {
+-		error = XFS_ERROR(EINVAL);
+-		goto out_put_file;
+-	}
+-
+-	if (!(tmp.file->f_mode & FMODE_WRITE) ||
+-	    !(tmp.file->f_mode & FMODE_READ) ||
+-	    (tmp.file->f_flags & O_APPEND)) {
+-		error = XFS_ERROR(EBADF);
+-		goto out_put_tmp_file;
+-	}
+-
+-	if (IS_SWAPFILE(file_inode(f.file)) ||
+-	    IS_SWAPFILE(file_inode(tmp.file))) {
+-		error = XFS_ERROR(EINVAL);
+-		goto out_put_tmp_file;
+-	}
+-
+-	ip = XFS_I(file_inode(f.file));
+-	tip = XFS_I(file_inode(tmp.file));
+-
+-	if (ip->i_mount != tip->i_mount) {
+-		error = XFS_ERROR(EINVAL);
+-		goto out_put_tmp_file;
+-	}
+-
+-	if (ip->i_ino == tip->i_ino) {
+-		error = XFS_ERROR(EINVAL);
+-		goto out_put_tmp_file;
+-	}
+-
+-	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) {
+-		error = XFS_ERROR(EIO);
+-		goto out_put_tmp_file;
+-	}
+-
+-	error = xfs_swap_extents(ip, tip, sxp);
+-
+- out_put_tmp_file:
+-	fdput(tmp);
+- out_put_file:
+-	fdput(f);
+- out:
+-	return error;
+-}
+-
+-/*
+- * We need to check that the format of the data fork in the temporary inode is
+- * valid for the target inode before doing the swap. This is not a problem with
+- * attr1 because of the fixed fork offset, but attr2 has a dynamically sized
+- * data fork depending on the space the attribute fork is taking so we can get
+- * invalid formats on the target inode.
+- *
+- * E.g. target has space for 7 extents in extent format, temp inode only has
+- * space for 6.  If we defragment down to 7 extents, then the tmp format is a
+- * btree, but when swapped it needs to be in extent format. Hence we can't just
+- * blindly swap data forks on attr2 filesystems.
+- *
+- * Note that we check the swap in both directions so that we don't end up with
+- * a corrupt temporary inode, either.
+- *
+- * Note that fixing the way xfs_fsr sets up the attribute fork in the source
+- * inode will prevent this situation from occurring, so all we do here is
+- * reject and log the attempt. basically we are putting the responsibility on
+- * userspace to get this right.
+- */
+-static int
+-xfs_swap_extents_check_format(
+-	xfs_inode_t	*ip,	/* target inode */
+-	xfs_inode_t	*tip)	/* tmp inode */
+-{
+-
+-	/* Should never get a local format */
+-	if (ip->i_d.di_format == XFS_DINODE_FMT_LOCAL ||
+-	    tip->i_d.di_format == XFS_DINODE_FMT_LOCAL)
+-		return EINVAL;
+-
+-	/*
+-	 * if the target inode has less extents that then temporary inode then
+-	 * why did userspace call us?
+-	 */
+-	if (ip->i_d.di_nextents < tip->i_d.di_nextents)
+-		return EINVAL;
+-
+-	/*
+-	 * if the target inode is in extent form and the temp inode is in btree
+-	 * form then we will end up with the target inode in the wrong format
+-	 * as we already know there are less extents in the temp inode.
+-	 */
+-	if (ip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
+-	    tip->i_d.di_format == XFS_DINODE_FMT_BTREE)
+-		return EINVAL;
+-
+-	/* Check temp in extent form to max in target */
+-	if (tip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
+-	    XFS_IFORK_NEXTENTS(tip, XFS_DATA_FORK) >
+-			XFS_IFORK_MAXEXT(ip, XFS_DATA_FORK))
+-		return EINVAL;
+-
+-	/* Check target in extent form to max in temp */
+-	if (ip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
+-	    XFS_IFORK_NEXTENTS(ip, XFS_DATA_FORK) >
+-			XFS_IFORK_MAXEXT(tip, XFS_DATA_FORK))
+-		return EINVAL;
+-
+-	/*
+-	 * If we are in a btree format, check that the temp root block will fit
+-	 * in the target and that it has enough extents to be in btree format
+-	 * in the target.
+-	 *
+-	 * Note that we have to be careful to allow btree->extent conversions
+-	 * (a common defrag case) which will occur when the temp inode is in
+-	 * extent format...
+-	 */
+-	if (tip->i_d.di_format == XFS_DINODE_FMT_BTREE) {
+-		if (XFS_IFORK_BOFF(ip) &&
+-		    XFS_BMAP_BMDR_SPACE(tip->i_df.if_broot) > XFS_IFORK_BOFF(ip))
+-			return EINVAL;
+-		if (XFS_IFORK_NEXTENTS(tip, XFS_DATA_FORK) <=
+-		    XFS_IFORK_MAXEXT(ip, XFS_DATA_FORK))
+-			return EINVAL;
+-	}
+-
+-	/* Reciprocal target->temp btree format checks */
+-	if (ip->i_d.di_format == XFS_DINODE_FMT_BTREE) {
+-		if (XFS_IFORK_BOFF(tip) &&
+-		    XFS_BMAP_BMDR_SPACE(ip->i_df.if_broot) > XFS_IFORK_BOFF(tip))
+-			return EINVAL;
+-		if (XFS_IFORK_NEXTENTS(ip, XFS_DATA_FORK) <=
+-		    XFS_IFORK_MAXEXT(tip, XFS_DATA_FORK))
+-			return EINVAL;
+-	}
+-
+-	return 0;
+-}
+-
+-static int
+-xfs_swap_extents(
+-	xfs_inode_t	*ip,	/* target inode */
+-	xfs_inode_t	*tip,	/* tmp inode */
+-	xfs_swapext_t	*sxp)
+-{
+-	xfs_mount_t	*mp = ip->i_mount;
+-	xfs_trans_t	*tp;
+-	xfs_bstat_t	*sbp = &sxp->sx_stat;
+-	xfs_ifork_t	*tempifp, *ifp, *tifp;
+-	int		src_log_flags, target_log_flags;
+-	int		error = 0;
+-	int		aforkblks = 0;
+-	int		taforkblks = 0;
+-	__uint64_t	tmp;
+-
+-	/*
+-	 * We have no way of updating owner information in the BMBT blocks for
+-	 * each inode on CRC enabled filesystems, so to avoid corrupting the
+-	 * this metadata we simply don't allow extent swaps to occur.
+-	 */
+-	if (xfs_sb_version_hascrc(&mp->m_sb))
+-		return XFS_ERROR(EINVAL);
+-
+-	tempifp = kmem_alloc(sizeof(xfs_ifork_t), KM_MAYFAIL);
+-	if (!tempifp) {
+-		error = XFS_ERROR(ENOMEM);
+-		goto out;
+-	}
+-
+-	/*
+-	 * we have to do two separate lock calls here to keep lockdep
+-	 * happy. If we try to get all the locks in one call, lock will
+-	 * report false positives when we drop the ILOCK and regain them
+-	 * below.
+-	 */
+-	xfs_lock_two_inodes(ip, tip, XFS_IOLOCK_EXCL);
+-	xfs_lock_two_inodes(ip, tip, XFS_ILOCK_EXCL);
+-
+-	/* Verify that both files have the same format */
+-	if ((ip->i_d.di_mode & S_IFMT) != (tip->i_d.di_mode & S_IFMT)) {
+-		error = XFS_ERROR(EINVAL);
+-		goto out_unlock;
+-	}
+-
+-	/* Verify both files are either real-time or non-realtime */
+-	if (XFS_IS_REALTIME_INODE(ip) != XFS_IS_REALTIME_INODE(tip)) {
+-		error = XFS_ERROR(EINVAL);
+-		goto out_unlock;
+-	}
+-
+-	error = -filemap_write_and_wait(VFS_I(tip)->i_mapping);
+-	if (error)
+-		goto out_unlock;
+-	truncate_pagecache_range(VFS_I(tip), 0, -1);
+-
+-	/* Verify O_DIRECT for ftmp */
+-	if (VN_CACHED(VFS_I(tip)) != 0) {
+-		error = XFS_ERROR(EINVAL);
+-		goto out_unlock;
+-	}
+-
+-	/* Verify all data are being swapped */
+-	if (sxp->sx_offset != 0 ||
+-	    sxp->sx_length != ip->i_d.di_size ||
+-	    sxp->sx_length != tip->i_d.di_size) {
+-		error = XFS_ERROR(EFAULT);
+-		goto out_unlock;
+-	}
+-
+-	trace_xfs_swap_extent_before(ip, 0);
+-	trace_xfs_swap_extent_before(tip, 1);
+-
+-	/* check inode formats now that data is flushed */
+-	error = xfs_swap_extents_check_format(ip, tip);
+-	if (error) {
+-		xfs_notice(mp,
+-		    "%s: inode 0x%llx format is incompatible for exchanging.",
+-				__func__, ip->i_ino);
+-		goto out_unlock;
+-	}
+-
+-	/*
+-	 * Compare the current change & modify times with that
+-	 * passed in.  If they differ, we abort this swap.
+-	 * This is the mechanism used to ensure the calling
+-	 * process that the file was not changed out from
+-	 * under it.
+-	 */
+-	if ((sbp->bs_ctime.tv_sec != VFS_I(ip)->i_ctime.tv_sec) ||
+-	    (sbp->bs_ctime.tv_nsec != VFS_I(ip)->i_ctime.tv_nsec) ||
+-	    (sbp->bs_mtime.tv_sec != VFS_I(ip)->i_mtime.tv_sec) ||
+-	    (sbp->bs_mtime.tv_nsec != VFS_I(ip)->i_mtime.tv_nsec)) {
+-		error = XFS_ERROR(EBUSY);
+-		goto out_unlock;
+-	}
+-
+-	/* We need to fail if the file is memory mapped.  Once we have tossed
+-	 * all existing pages, the page fault will have no option
+-	 * but to go to the filesystem for pages. By making the page fault call
+-	 * vop_read (or write in the case of autogrow) they block on the iolock
+-	 * until we have switched the extents.
+-	 */
+-	if (VN_MAPPED(VFS_I(ip))) {
+-		error = XFS_ERROR(EBUSY);
+-		goto out_unlock;
+-	}
+-
+-	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-	xfs_iunlock(tip, XFS_ILOCK_EXCL);
+-
+-	/*
+-	 * There is a race condition here since we gave up the
+-	 * ilock.  However, the data fork will not change since
+-	 * we have the iolock (locked for truncation too) so we
+-	 * are safe.  We don't really care if non-io related
+-	 * fields change.
+-	 */
+-	truncate_pagecache_range(VFS_I(ip), 0, -1);
+-
+-	tp = xfs_trans_alloc(mp, XFS_TRANS_SWAPEXT);
+-	if ((error = xfs_trans_reserve(tp, 0,
+-				     XFS_ICHANGE_LOG_RES(mp), 0,
+-				     0, 0))) {
+-		xfs_iunlock(ip,  XFS_IOLOCK_EXCL);
+-		xfs_iunlock(tip, XFS_IOLOCK_EXCL);
+-		xfs_trans_cancel(tp, 0);
+-		goto out;
+-	}
+-	xfs_lock_two_inodes(ip, tip, XFS_ILOCK_EXCL);
+-
+-	/*
+-	 * Count the number of extended attribute blocks
+-	 */
+-	if ( ((XFS_IFORK_Q(ip) != 0) && (ip->i_d.di_anextents > 0)) &&
+-	     (ip->i_d.di_aformat != XFS_DINODE_FMT_LOCAL)) {
+-		error = xfs_bmap_count_blocks(tp, ip, XFS_ATTR_FORK, &aforkblks);
+-		if (error)
+-			goto out_trans_cancel;
+-	}
+-	if ( ((XFS_IFORK_Q(tip) != 0) && (tip->i_d.di_anextents > 0)) &&
+-	     (tip->i_d.di_aformat != XFS_DINODE_FMT_LOCAL)) {
+-		error = xfs_bmap_count_blocks(tp, tip, XFS_ATTR_FORK,
+-			&taforkblks);
+-		if (error)
+-			goto out_trans_cancel;
+-	}
+-
+-	/*
+-	 * Swap the data forks of the inodes
+-	 */
+-	ifp = &ip->i_df;
+-	tifp = &tip->i_df;
+-	*tempifp = *ifp;	/* struct copy */
+-	*ifp = *tifp;		/* struct copy */
+-	*tifp = *tempifp;	/* struct copy */
+-
+-	/*
+-	 * Fix the on-disk inode values
+-	 */
+-	tmp = (__uint64_t)ip->i_d.di_nblocks;
+-	ip->i_d.di_nblocks = tip->i_d.di_nblocks - taforkblks + aforkblks;
+-	tip->i_d.di_nblocks = tmp + taforkblks - aforkblks;
+-
+-	tmp = (__uint64_t) ip->i_d.di_nextents;
+-	ip->i_d.di_nextents = tip->i_d.di_nextents;
+-	tip->i_d.di_nextents = tmp;
+-
+-	tmp = (__uint64_t) ip->i_d.di_format;
+-	ip->i_d.di_format = tip->i_d.di_format;
+-	tip->i_d.di_format = tmp;
+-
+-	/*
+-	 * The extents in the source inode could still contain speculative
+-	 * preallocation beyond EOF (e.g. the file is open but not modified
+-	 * while defrag is in progress). In that case, we need to copy over the
+-	 * number of delalloc blocks the data fork in the source inode is
+-	 * tracking beyond EOF so that when the fork is truncated away when the
+-	 * temporary inode is unlinked we don't underrun the i_delayed_blks
+-	 * counter on that inode.
+-	 */
+-	ASSERT(tip->i_delayed_blks == 0);
+-	tip->i_delayed_blks = ip->i_delayed_blks;
+-	ip->i_delayed_blks = 0;
+-
+-	src_log_flags = XFS_ILOG_CORE;
+-	switch (ip->i_d.di_format) {
+-	case XFS_DINODE_FMT_EXTENTS:
+-		/* If the extents fit in the inode, fix the
+-		 * pointer.  Otherwise it's already NULL or
+-		 * pointing to the extent.
+-		 */
+-		if (ip->i_d.di_nextents <= XFS_INLINE_EXTS) {
+-			ifp->if_u1.if_extents =
+-				ifp->if_u2.if_inline_ext;
+-		}
+-		src_log_flags |= XFS_ILOG_DEXT;
+-		break;
+-	case XFS_DINODE_FMT_BTREE:
+-		src_log_flags |= XFS_ILOG_DBROOT;
+-		break;
+-	}
+-
+-	target_log_flags = XFS_ILOG_CORE;
+-	switch (tip->i_d.di_format) {
+-	case XFS_DINODE_FMT_EXTENTS:
+-		/* If the extents fit in the inode, fix the
+-		 * pointer.  Otherwise it's already NULL or
+-		 * pointing to the extent.
+-		 */
+-		if (tip->i_d.di_nextents <= XFS_INLINE_EXTS) {
+-			tifp->if_u1.if_extents =
+-				tifp->if_u2.if_inline_ext;
+-		}
+-		target_log_flags |= XFS_ILOG_DEXT;
+-		break;
+-	case XFS_DINODE_FMT_BTREE:
+-		target_log_flags |= XFS_ILOG_DBROOT;
+-		break;
+-	}
+-
+-
+-	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
+-	xfs_trans_ijoin(tp, tip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
+-
+-	xfs_trans_log_inode(tp, ip,  src_log_flags);
+-	xfs_trans_log_inode(tp, tip, target_log_flags);
+-
+-	/*
+-	 * If this is a synchronous mount, make sure that the
+-	 * transaction goes to disk before returning to the user.
+-	 */
+-	if (mp->m_flags & XFS_MOUNT_WSYNC)
+-		xfs_trans_set_sync(tp);
+-
+-	error = xfs_trans_commit(tp, 0);
+-
+-	trace_xfs_swap_extent_after(ip, 0);
+-	trace_xfs_swap_extent_after(tip, 1);
+-out:
+-	kmem_free(tempifp);
+-	return error;
+-
+-out_unlock:
+-	xfs_iunlock(ip,  XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
+-	xfs_iunlock(tip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
+-	goto out;
+-
+-out_trans_cancel:
+-	xfs_trans_cancel(tp, 0);
+-	goto out_unlock;
+-}
+diff --git a/fs/xfs/xfs_dfrag.h b/fs/xfs/xfs_dfrag.h
+deleted file mode 100644
+index 20bdd93..0000000
+--- a/fs/xfs/xfs_dfrag.h
++++ /dev/null
+@@ -1,53 +0,0 @@
+-/*
+- * Copyright (c) 2000,2005 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it would be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write the Free Software Foundation,
+- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- */
+-#ifndef __XFS_DFRAG_H__
+-#define	__XFS_DFRAG_H__
+-
+-/*
+- * Structure passed to xfs_swapext
+- */
+-
+-typedef struct xfs_swapext
+-{
+-	__int64_t	sx_version;	/* version */
+-	__int64_t	sx_fdtarget;	/* fd of target file */
+-	__int64_t	sx_fdtmp;	/* fd of tmp file */
+-	xfs_off_t	sx_offset;	/* offset into file */
+-	xfs_off_t	sx_length;	/* leng from offset */
+-	char		sx_pad[16];	/* pad space, unused */
+-	xfs_bstat_t	sx_stat;	/* stat of target b4 copy */
+-} xfs_swapext_t;
+-
+-/*
+- * Version flag
+- */
+-#define XFS_SX_VERSION		0
+-
+-#ifdef __KERNEL__
+-/*
+- * Prototypes for visible xfs_dfrag.c routines.
+- */
+-
+-/*
+- * Syscall interface for xfs_swapext
+- */
+-int	xfs_swapext(struct xfs_swapext *sx);
+-
+-#endif	/* __KERNEL__ */
+-
+-#endif	/* __XFS_DFRAG_H__ */
+diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
+index 68c2e18..74b24b2 100644
+--- a/fs/xfs/xfs_fs.h
++++ b/fs/xfs/xfs_fs.h
+@@ -461,6 +461,21 @@ typedef struct xfs_handle {
+ 				 + (handle).ha_fid.fid_len)
+ 
+ /*
++ * Structure passed to XFS_IOC_SWAPEXT
++ */
++typedef struct xfs_swapext
++{
++	__int64_t	sx_version;	/* version */
++#define XFS_SX_VERSION		0
++	__int64_t	sx_fdtarget;	/* fd of target file */
++	__int64_t	sx_fdtmp;	/* fd of tmp file */
++	xfs_off_t	sx_offset;	/* offset into file */
++	xfs_off_t	sx_length;	/* leng from offset */
++	char		sx_pad[16];	/* pad space, unused */
++	xfs_bstat_t	sx_stat;	/* stat of target b4 copy */
++} xfs_swapext_t;
++
++/*
+  * Flags for going down operation
+  */
+ #define XFS_FSOP_GOING_FLAGS_DEFAULT		0x0	/* going down */
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 557c7b8..efb216d 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -35,7 +35,6 @@
+ #include "xfs_bmap.h"
+ #include "xfs_bmap_util.h"
+ #include "xfs_buf_item.h"
+-#include "xfs_dfrag.h"
+ #include "xfs_fsops.h"
+ #include "xfs_discard.h"
+ #include "xfs_quota.h"
+@@ -1363,6 +1362,75 @@ xfs_ioc_getbmapx(
+ 	return 0;
  }
-diff --git a/fs/xfs/xfs_trans_resv.h b/fs/xfs/xfs_trans_resv.h
-index cc8260e..0aac1fa 100644
---- a/fs/xfs/xfs_trans_resv.h
-+++ b/fs/xfs/xfs_trans_resv.h
-@@ -23,35 +23,45 @@ struct xfs_mount;
- /*
-  * structure for maintaining pre-calculated transaction reservations.
-  */
-+struct xfs_trans_res {
-+	uint	tr_logres;	/* log space unit in bytes per log ticket */
-+	int	tr_logcount;	/* number of log operations per log ticket */
-+	int	tr_logflags;	/* log flags, currently only used for indicating
-+				 * a reservation request is permanent or not */
-+};
+ 
++int
++xfs_ioc_swapext(
++	xfs_swapext_t	*sxp)
++{
++	xfs_inode_t     *ip, *tip;
++	struct fd	f, tmp;
++	int		error = 0;
 +
- struct xfs_trans_resv {
--	uint	tr_write;	/* extent alloc trans */
--	uint	tr_itruncate;	/* truncate trans */
--	uint	tr_rename;	/* rename trans */
--	uint	tr_link;	/* link trans */
--	uint	tr_remove;	/* unlink trans */
--	uint	tr_symlink;	/* symlink trans */
--	uint	tr_create;	/* create trans */
--	uint	tr_mkdir;	/* mkdir trans */
--	uint	tr_ifree;	/* inode free trans */
--	uint	tr_ichange;	/* inode update trans */
--	uint	tr_growdata;	/* fs data section grow trans */
--	uint	tr_swrite;	/* sync write inode trans */
--	uint	tr_addafork;	/* cvt inode to attributed trans */
--	uint	tr_writeid;	/* write setuid/setgid file */
--	uint	tr_attrinval;	/* attr fork buffer invalidation */
--	uint	tr_attrsetm;	/* set/create an attribute at mount time */
--	uint	tr_attrsetrt;	/* set/create an attribute at runtime */
--	uint	tr_attrrm;	/* remove an attribute */
--	uint	tr_clearagi;	/* clear bad agi unlinked ino bucket */
--	uint	tr_growrtalloc;	/* grow realtime allocations */
--	uint	tr_growrtzero;	/* grow realtime zeroing */
--	uint	tr_growrtfree;	/* grow realtime freeing */
--	uint	tr_qm_sbchange;	/* change quota flags */
--	uint	tr_qm_setqlim;	/* adjust quota limits */
--	uint	tr_qm_dqalloc;	/* allocate quota on disk */
--	uint	tr_qm_quotaoff;	/* turn quota off */
--	uint	tr_qm_equotaoff;/* end of turn quota off */
--	uint	tr_sb;		/* modify superblock */
-+	struct xfs_trans_res	tr_write;	/* extent alloc trans */
-+	struct xfs_trans_res	tr_itruncate;	/* truncate trans */
-+	struct xfs_trans_res	tr_rename;	/* rename trans */
-+	struct xfs_trans_res	tr_link;	/* link trans */
-+	struct xfs_trans_res	tr_remove;	/* unlink trans */
-+	struct xfs_trans_res	tr_symlink;	/* symlink trans */
-+	struct xfs_trans_res	tr_create;	/* create trans */
-+	struct xfs_trans_res	tr_mkdir;	/* mkdir trans */
-+	struct xfs_trans_res	tr_ifree;	/* inode free trans */
-+	struct xfs_trans_res	tr_ichange;	/* inode update trans */
-+	struct xfs_trans_res	tr_growdata;	/* fs data section grow trans */
-+	struct xfs_trans_res	tr_swrite;	/* sync write inode trans */
-+	struct xfs_trans_res	tr_addafork;	/* add inode attr fork trans */
-+	struct xfs_trans_res	tr_writeid;	/* write setuid/setgid file */
-+	struct xfs_trans_res	tr_attrinval;	/* attr fork buffer
-+						 * invalidation */
-+	struct xfs_trans_res	tr_attrsetm;	/* set/create an attribute at
-+						 * mount time */
-+	struct xfs_trans_res	tr_attrsetrt;	/* set/create an attribute at
-+						 * runtime */
-+	struct xfs_trans_res	tr_attrrm;	/* remove an attribute */
-+	struct xfs_trans_res	tr_clearagi;	/* clear agi unlinked bucket */
-+	struct xfs_trans_res	tr_growrtalloc;	/* grow realtime allocations */
-+	struct xfs_trans_res	tr_growrtzero;	/* grow realtime zeroing */
-+	struct xfs_trans_res	tr_growrtfree;	/* grow realtime freeing */
-+	struct xfs_trans_res	tr_qm_sbchange;	/* change quota flags */
-+	struct xfs_trans_res	tr_qm_setqlim;	/* adjust quota limits */
-+	struct xfs_trans_res	tr_qm_dqalloc;	/* allocate quota on disk */
-+	struct xfs_trans_res	tr_qm_quotaoff;	/* turn quota off */
-+	struct xfs_trans_res	tr_qm_equotaoff;/* end of turn quota off */
-+	struct xfs_trans_res	tr_sb;		/* modify superblock */
- };
- 
- /*
-@@ -79,39 +89,40 @@ struct xfs_trans_resv {
- 	 XFS_DAENTER_BMAPS(mp, XFS_DATA_FORK) + 1)
- 
- 
--#define	XFS_WRITE_LOG_RES(mp)	((mp)->m_reservations.tr_write)
--#define	XFS_ITRUNCATE_LOG_RES(mp)   ((mp)->m_reservations.tr_itruncate)
--#define	XFS_RENAME_LOG_RES(mp)	((mp)->m_reservations.tr_rename)
--#define	XFS_LINK_LOG_RES(mp)	((mp)->m_reservations.tr_link)
--#define	XFS_REMOVE_LOG_RES(mp)	((mp)->m_reservations.tr_remove)
--#define	XFS_SYMLINK_LOG_RES(mp)	((mp)->m_reservations.tr_symlink)
--#define	XFS_CREATE_LOG_RES(mp)	((mp)->m_reservations.tr_create)
--#define	XFS_MKDIR_LOG_RES(mp)	((mp)->m_reservations.tr_mkdir)
--#define	XFS_IFREE_LOG_RES(mp)	((mp)->m_reservations.tr_ifree)
--#define	XFS_ICHANGE_LOG_RES(mp)	((mp)->m_reservations.tr_ichange)
--#define	XFS_GROWDATA_LOG_RES(mp)    ((mp)->m_reservations.tr_growdata)
--#define	XFS_GROWRTALLOC_LOG_RES(mp)	((mp)->m_reservations.tr_growrtalloc)
--#define	XFS_GROWRTZERO_LOG_RES(mp)	((mp)->m_reservations.tr_growrtzero)
--#define	XFS_GROWRTFREE_LOG_RES(mp)	((mp)->m_reservations.tr_growrtfree)
--#define	XFS_SWRITE_LOG_RES(mp)	((mp)->m_reservations.tr_swrite)
-+#define XFS_WRITE_LOG_RES(mp)	((mp)->m_resv.tr_write.tr_logres)
-+#define XFS_RENAME_LOG_RES(mp)	((mp)->m_resv.tr_rename.tr_logres)
-+#define XFS_LINK_LOG_RES(mp)	((mp)->m_resv.tr_link.tr_logres)
-+#define XFS_REMOVE_LOG_RES(mp)	((mp)->m_resv.tr_remove.tr_logres)
-+#define XFS_SYMLINK_LOG_RES(mp)	((mp)->m_resv.tr_symlink.tr_logres)
-+#define XFS_CREATE_LOG_RES(mp)	((mp)->m_resv.tr_create.tr_logres)
-+#define XFS_MKDIR_LOG_RES(mp)	((mp)->m_resv.tr_mkdir.tr_logres)
-+#define XFS_IFREE_LOG_RES(mp)	((mp)->m_resv.tr_ifree.tr_logres)
-+#define XFS_SWRITE_LOG_RES(mp)	((mp)->m_resv.tr_swrite.tr_logres)
-+#define XFS_ICHANGE_LOG_RES(mp)	((mp)->m_resv.tr_ichange.tr_logres)
-+#define XFS_GROWDATA_LOG_RES(mp)  ((mp)->m_resv.tr_growdata.tr_logres)
-+#define XFS_ITRUNCATE_LOG_RES(mp) ((mp)->m_resv.tr_itruncate.tr_logres)
-+#define XFS_GROWRTZERO_LOG_RES(mp) ((mp)->m_resv.tr_growrtzero.tr_logres)
-+#define XFS_GROWRTFREE_LOG_RES(mp) ((mp)->m_resv.tr_growrtfree.tr_logres)
-+#define XFS_GROWRTALLOC_LOG_RES(mp) ((mp)->m_resv.tr_growrtalloc.tr_logres)
++	/* Pull information for the target fd */
++	f = fdget((int)sxp->sx_fdtarget);
++	if (!f.file) {
++		error = XFS_ERROR(EINVAL);
++		goto out;
++	}
++
++	if (!(f.file->f_mode & FMODE_WRITE) ||
++	    !(f.file->f_mode & FMODE_READ) ||
++	    (f.file->f_flags & O_APPEND)) {
++		error = XFS_ERROR(EBADF);
++		goto out_put_file;
++	}
++
++	tmp = fdget((int)sxp->sx_fdtmp);
++	if (!tmp.file) {
++		error = XFS_ERROR(EINVAL);
++		goto out_put_file;
++	}
++
++	if (!(tmp.file->f_mode & FMODE_WRITE) ||
++	    !(tmp.file->f_mode & FMODE_READ) ||
++	    (tmp.file->f_flags & O_APPEND)) {
++		error = XFS_ERROR(EBADF);
++		goto out_put_tmp_file;
++	}
++
++	if (IS_SWAPFILE(file_inode(f.file)) ||
++	    IS_SWAPFILE(file_inode(tmp.file))) {
++		error = XFS_ERROR(EINVAL);
++		goto out_put_tmp_file;
++	}
++
++	ip = XFS_I(file_inode(f.file));
++	tip = XFS_I(file_inode(tmp.file));
++
++	if (ip->i_mount != tip->i_mount) {
++		error = XFS_ERROR(EINVAL);
++		goto out_put_tmp_file;
++	}
++
++	if (ip->i_ino == tip->i_ino) {
++		error = XFS_ERROR(EINVAL);
++		goto out_put_tmp_file;
++	}
++
++	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) {
++		error = XFS_ERROR(EIO);
++		goto out_put_tmp_file;
++	}
++
++	error = xfs_swap_extents(ip, tip, sxp);
++
++ out_put_tmp_file:
++	fdput(tmp);
++ out_put_file:
++	fdput(f);
++ out:
++	return error;
++}
 +
  /*
-  * Logging the inode timestamps on an fsync -- same as SWRITE
-  * as long as SWRITE logs the entire inode core
-  */
--#define XFS_FSYNC_TS_LOG_RES(mp)        ((mp)->m_reservations.tr_swrite)
--#define	XFS_WRITEID_LOG_RES(mp)		((mp)->m_reservations.tr_swrite)
--#define	XFS_ADDAFORK_LOG_RES(mp)	((mp)->m_reservations.tr_addafork)
--#define	XFS_ATTRINVAL_LOG_RES(mp)	((mp)->m_reservations.tr_attrinval)
--#define	XFS_ATTRSETM_LOG_RES(mp)	((mp)->m_reservations.tr_attrsetm)
--#define	XFS_ATTRSETRT_LOG_RES(mp)	((mp)->m_reservations.tr_attrsetrt)
--#define	XFS_ATTRRM_LOG_RES(mp)		((mp)->m_reservations.tr_attrrm)
--#define	XFS_CLEAR_AGI_BUCKET_LOG_RES(mp)  ((mp)->m_reservations.tr_clearagi)
--#define XFS_QM_SBCHANGE_LOG_RES(mp)	((mp)->m_reservations.tr_qm_sbchange)
--#define XFS_QM_SETQLIM_LOG_RES(mp)	((mp)->m_reservations.tr_qm_setqlim)
--#define XFS_QM_DQALLOC_LOG_RES(mp)	((mp)->m_reservations.tr_qm_dqalloc)
--#define XFS_QM_QUOTAOFF_LOG_RES(mp)	((mp)->m_reservations.tr_qm_quotaoff)
--#define XFS_QM_QUOTAOFF_END_LOG_RES(mp)	((mp)->m_reservations.tr_qm_equotaoff)
--#define XFS_SB_LOG_RES(mp)		((mp)->m_reservations.tr_sb)
-+#define XFS_FSYNC_TS_LOG_RES(mp) ((mp)->m_resv.tr_swrite.tr_logres)
-+#define XFS_WRITEID_LOG_RES(mp)	 ((mp)->m_resv.tr_swrite.tr_logres)
-+#define XFS_ADDAFORK_LOG_RES(mp) ((mp)->m_resv.tr_addafork.tr_logres)
-+#define XFS_ATTRSETM_LOG_RES(mp) ((mp)->m_resv.tr_attrsetm.tr_logres)
-+#define XFS_ATTRINVAL_LOG_RES(mp) ((mp)->m_resv.tr_attrinval.tr_logres)
-+#define XFS_ATTRSETRT_LOG_RES(mp) ((mp)->m_resv.tr_attrsetrt.tr_logres)
-+#define XFS_ATTRRM_LOG_RES(mp)	  ((mp)->m_resv.tr_attrrm.tr_logres)
-+#define XFS_SB_LOG_RES(mp)	  ((mp)->m_resv.tr_sb.tr_logres)
-+#define XFS_QM_SETQLIM_LOG_RES(mp) ((mp)->m_resv.tr_qm_setqlim.tr_logres)
-+#define XFS_QM_DQALLOC_LOG_RES(mp) ((mp)->m_resv.tr_qm_dqalloc.tr_logres)
-+#define XFS_QM_SBCHANGE_LOG_RES(mp) ((mp)->m_resv.tr_qm_sbchange.tr_logres)
-+#define XFS_QM_QUOTAOFF_LOG_RES(mp) ((mp)->m_resv.tr_qm_quotaoff.tr_logres)
-+#define XFS_QM_QUOTAOFF_END_LOG_RES(mp) ((mp)->m_resv.tr_qm_equotaoff.tr_logres)
-+#define XFS_CLEAR_AGI_BUCKET_LOG_RES(mp) ((mp)->m_resv.tr_clearagi.tr_logres)
+  * Note: some of the ioctl's return positive numbers as a
+  * byte count indicating success, such as readlink_by_handle.
+@@ -1507,7 +1575,7 @@ xfs_file_ioctl(
+ 		error = mnt_want_write_file(filp);
+ 		if (error)
+ 			return error;
+-		error = xfs_swapext(&sxp);
++		error = xfs_ioc_swapext(&sxp);
+ 		mnt_drop_write_file(filp);
+ 		return -error;
+ 	}
+diff --git a/fs/xfs/xfs_ioctl.h b/fs/xfs/xfs_ioctl.h
+index 1233dee..77c02c7 100644
+--- a/fs/xfs/xfs_ioctl.h
++++ b/fs/xfs/xfs_ioctl.h
+@@ -27,6 +27,10 @@ xfs_ioc_space(
+ 	unsigned int		cmd,
+ 	xfs_flock64_t		*bf);
  
- /*
-  * Various log count values.
++int
++xfs_ioc_swapext(
++	xfs_swapext_t	*sxp);
++
+ extern int
+ xfs_find_handle(
+ 	unsigned int		cmd,
+diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+index 55a3072..d3ab953 100644
+--- a/fs/xfs/xfs_ioctl32.c
++++ b/fs/xfs/xfs_ioctl32.c
+@@ -33,7 +33,6 @@
+ #include "xfs_inode.h"
+ #include "xfs_itable.h"
+ #include "xfs_error.h"
+-#include "xfs_dfrag.h"
+ #include "xfs_fsops.h"
+ #include "xfs_alloc.h"
+ #include "xfs_rtalloc.h"
+@@ -643,7 +642,7 @@ xfs_file_compat_ioctl(
+ 		error = mnt_want_write_file(filp);
+ 		if (error)
+ 			return error;
+-		error = xfs_swapext(&sxp);
++		error = xfs_ioc_swapext(&sxp);
+ 		mnt_drop_write_file(filp);
+ 		return -error;
+ 	}
 -- 
 1.8.3.2
 
