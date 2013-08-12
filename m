@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 87B177F37
-	for <xfs@oss.sgi.com>; Sun, 11 Aug 2013 19:30:46 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 76C908F804B
-	for <xfs@oss.sgi.com>; Sun, 11 Aug 2013 17:30:43 -0700 (PDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id A52D67F51
+	for <xfs@oss.sgi.com>; Sun, 11 Aug 2013 19:34:06 -0500 (CDT)
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 31CF6AC006
+	for <xfs@oss.sgi.com>; Sun, 11 Aug 2013 17:34:06 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	a75o1i2YNNNhOuEN for <xfs@oss.sgi.com>;
-	Sun, 11 Aug 2013 17:30:41 -0700 (PDT)
-Date: Mon, 12 Aug 2013 10:30:39 +1000
+	Bo62OOhFD9vxBAbo for <xfs@oss.sgi.com>;
+	Sun, 11 Aug 2013 17:34:04 -0700 (PDT)
+Date: Mon, 12 Aug 2013 10:33:37 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: ***** SUSPECTED SPAM ***** Re: [PATCH 28/49] xfs: move unrealted
-	definitions out of xfs_inode.h
-Message-ID: <20130812003039.GI12779@dastard>
+Subject: ***** SUSPECTED SPAM ***** Re: [PATCH 47/49] xfs: Add read-only
+	support for dirent filetype field
+Message-ID: <20130812003337.GJ12779@dastard>
 References: <1374216324-8781-1-git-send-email-david@fromorbit.com>
-	<1374216324-8781-29-git-send-email-david@fromorbit.com>
-	<52001FB7.3010901@sgi.com>
+	<1374216324-8781-48-git-send-email-david@fromorbit.com>
+	<52016716.3080807@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <52001FB7.3010901@sgi.com>
+In-Reply-To: <52016716.3080807@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,64 +35,51 @@ Sender: xfs-bounces@oss.sgi.com
 To: Mark Tinguely <tinguely@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Aug 05, 2013 at 04:57:11PM -0500, Mark Tinguely wrote:
+On Tue, Aug 06, 2013 at 04:13:58PM -0500, Mark Tinguely wrote:
 > On 07/19/13 01:45, Dave Chinner wrote:
 > >From: Dave Chinner<dchinner@redhat.com>
+> >
+> >Add support for the file type field in directory entries so that
+> >readdir can return the type of the inode the dirent points to to
+> >userspace without first having to read the inode off disk.
+> >
+> >The encoding of the type field is a single byte that is added to the
+> >end of the directory entry name length. For all intents and
+> >purposes, it appends a "hidden" byte to the name field which
+> >contains the type information. As the directory entry is already of
+> >dynamic size, helpers are already required to access and decode the
+> >direct entry structures.
+> >
+> >Hence the relevent extraction and iteration helpers are updated to
+> >understand the hidden byte.  Helpers for reading and writing the
+> >filetype field from the directory entries are also added. Only the
+> >read helpers are used by this patch.  It also adds all the code
+> >necessary to read the type information out of the dirents on disk.
+> >
+> >Further we add the superblock feature bit and helpers to indicate
+> >that we understand the on-disk format change. This is not a
+> >compatible change - existing kernels cannot read the new format
+> >successfully - so an incompatible feature flag is added. We don't
+> >yet allow filesystems to mount with this flag yet - that will be
+> >added once write support is added.
+> >
+> >Finally, the code to take the type from the VFS, convert it to an
+> >XFS on-disk type and put it into the xfs_name structures passed
+> >around is added, but the directory code does not use this field yet.
+> >That will be in the next patch.
 > >
 > >Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > >---
 > 
-> 
-> >diff --git a/include/xfs_trans.h b/include/xfs_trans.h
-> >index e504103..37aca08 100644
-> >--- a/include/xfs_trans.h
-> >+++ b/include/xfs_trans.h
-> >@@ -89,6 +89,13 @@ struct xfs_log_item_desc {
-> >  #define	XFS_ATTR_BTREE_REF	1
-> >  #define	XFS_DQUOT_REF		1
-> >
-> >+/*
-> >+ * Flags for xfs_trans_ichgtime().
-> >+ */
-> >+#define	XFS_ICHGTIME_MOD	0x1	/* data fork modification timestamp */
-> >+#define	XFS_ICHGTIME_CHG	0x2	/* inode field change timestamp */
-> >+#define	XFS_ICHGTIME_CREATE	0x4	/* inode create timestamp */
-> >+
-> 
-> in the kernel patch 13/49 these entries go into xfs_log_format.h
+> Same as kernel patch (48/49) - written to support only v3 inodes. This
+> should support v2 and v3 inodes.
 
-Right, in the updated kernel series xfs_trans.h is no longer shared
-with userspace, and this patch series doesn't reflect that. it needs
-updating.
+It's a directory entry format change - it has nothing to do with the
+version of the inode.
 
-> >  #ifdef __KERNEL__
-> >
-> >  struct xfs_buf;
-> >diff --git a/libxfs/xfs.h b/libxfs/xfs.h
-> >index 7149c09..1a01c61 100644
-> >--- a/libxfs/xfs.h
-> >+++ b/libxfs/xfs.h
-> >@@ -68,6 +68,9 @@ typedef __uint32_t		inst_t;		/* an instruction */
-> >
-> >  #define IHOLD(ip)			((void) 0)
-> >
-> >+#define XFS_IGET_CREATE			0x1
-> >+#define XFS_IGET_UNTRUSTED		0x2
-> >+
-> >  /* stop unused var warnings by assigning mp to itself */
-> >  #define XFS_CORRUPTION_ERROR(e,l,mp,m)	do { \
-> >  	(mp) = (mp); \
-> 
-> in the kernel patch 13/49 these entries go into xfs_icache.h
+Cheers,
 
-Yup, they go into a kernel only header file. Userspace can define
-them how they want as xfs_iget() has different requirements and a
-completely different implementation in userspace.
-
-> 
-> --Mark.
-> 
-
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
