@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 2C3877F6B
-	for <xfs@oss.sgi.com>; Mon, 12 Aug 2013 05:50:51 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 5D09E7F7E
+	for <xfs@oss.sgi.com>; Mon, 12 Aug 2013 05:50:52 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id A18D7AC004
-	for <xfs@oss.sgi.com>; Mon, 12 Aug 2013 03:50:47 -0700 (PDT)
+	by relay3.corp.sgi.com (Postfix) with ESMTP id C27C7AC003
+	for <xfs@oss.sgi.com>; Mon, 12 Aug 2013 03:50:51 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	x3bAsX0YWtaEqr7N for <xfs@oss.sgi.com>;
-	Mon, 12 Aug 2013 03:50:44 -0700 (PDT)
+	zCNFVCvBUW4elWEv for <xfs@oss.sgi.com>;
+	Mon, 12 Aug 2013 03:50:49 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1V8phX-0004YR-Pf
+	(envelope-from <dave@fromorbit.com>) id 1V8phX-0004Y7-2j
 	for xfs@oss.sgi.com; Mon, 12 Aug 2013 20:50:15 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1V8phX-00064D-Iy
+	(envelope-from <dave@disappointment.disaster>) id 1V8phX-00061y-1q
 	for xfs@oss.sgi.com; Mon, 12 Aug 2013 20:50:15 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: ***** SUSPECTED SPAM ***** [PATCH 46/50] xfs: Combine CIL insert and
-	prepare passes
-Date: Mon, 12 Aug 2013 20:50:07 +1000
-Message-Id: <1376304611-22994-47-git-send-email-david@fromorbit.com>
+Subject: ***** SUSPECTED SPAM ***** [PATCH 19/50] xfs: split out the remote
+	symlink handling
+Date: Mon, 12 Aug 2013 20:49:40 +1000
+Message-Id: <1376304611-22994-20-git-send-email-david@fromorbit.com>
 In-Reply-To: <1376304611-22994-1-git-send-email-david@fromorbit.com>
 References: <1376304611-22994-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -40,388 +40,556 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Now that all the log item preparation and formatting is done under
-the CIL lock, we can get rid of the intermediate log vector chain
-used to track items to be inserted into the CIL.
-
-We can already find all the items to be committed from the
-transaction handle, so as long as we attach the log vectors to the
-item before we insert the items into the CIL, we don't need to
-create a log vector chain to pass around.
-
-This means we can move all the item insertion code into and optimise
-it into a pair of simple passes across all the items in the
-transaction. The first pass does the formatting and accounting, the
-second inserts them all into the CIL.
-
-We keep this two pass split so that we can separate the CIL
-insertion - which must be done under the CIL spinlock - from the
-formatting. We could insert each item into the CIL with a single
-pass, but that massively increases the number of times we have to
-grab the CIL spinlock. It is much more efficient (and hence
-scalable) to do a batch operation and insert all objects in a single
-lock grab.
+The remote symlink format definition and manipulation needs to be
+shared with userspace, but the in-kernel interfaces do not. Split
+the remote symlink format handling out into xfs_symlink_remote.[ch]
+fo it can easily be shared with userspace.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 ---
- fs/xfs/xfs_log_cil.c | 227 +++++++++++++++++++++++----------------------------
- 1 file changed, 100 insertions(+), 127 deletions(-)
+ fs/xfs/Makefile             |   3 +-
+ fs/xfs/xfs_format.h         |  42 ++++++++++
+ fs/xfs/xfs_symlink.c        | 172 --------------------------------------
+ fs/xfs/xfs_symlink.h        |  42 +---------
+ fs/xfs/xfs_symlink_remote.c | 199 ++++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 244 insertions(+), 214 deletions(-)
+ create mode 100644 fs/xfs/xfs_symlink_remote.c
 
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index b20b157..c1a3384 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -111,6 +111,53 @@ xlog_cil_lv_item_format(
- }
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index a73af1c..20b1d94 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -50,6 +50,7 @@ xfs-y				+= xfs_aops.o \
+ 				   xfs_mru_cache.o \
+ 				   xfs_rename.o \
+ 				   xfs_super.o \
++				   xfs_symlink.o \
+ 				   xfs_trans.o \
+ 				   xfs_utils.o \
+ 				   xfs_vnodeops.o \
+@@ -81,7 +82,7 @@ xfs-y				+= xfs_alloc.o \
+ 				   xfs_inode_buf.o \
+ 				   xfs_log_recover.o \
+ 				   xfs_mount.o \
+-				   xfs_symlink.o \
++				   xfs_symlink_remote.o \
+ 				   xfs_trans_resv.o
  
+ # low-level transaction/log code
+diff --git a/fs/xfs/xfs_format.h b/fs/xfs/xfs_format.h
+index 6205374..35c08ff 100644
+--- a/fs/xfs/xfs_format.h
++++ b/fs/xfs/xfs_format.h
+@@ -27,6 +27,12 @@
+  * xfs_log_format.h. Everything else goes here.
+  */
+ 
++struct xfs_mount;
++struct xfs_trans;
++struct xfs_inode;
++struct xfs_buf;
++struct xfs_ifork;
++
  /*
-+ * Prepare the log item for insertion into the CIL. Calculate the difference in
-+ * log space and vectors it will consume, and if it is a new item pin it as
-+ * well.
+  * RealTime Device format definitions
+  */
+@@ -123,5 +129,41 @@ typedef struct xfs_dqblk {
+ 
+ #define XFS_DQUOT_CRC_OFF	offsetof(struct xfs_dqblk, dd_crc)
+ 
++/*
++ * Remote symlink format and access functions.
 + */
-+STATIC void
-+xfs_cil_prepare_item(
-+	struct xlog		*log,
-+	struct xfs_log_vec	*lv,
-+	struct xfs_log_vec	*old_lv,
-+	int			*diff_len,
-+	int			*diff_iovecs)
-+{
-+	/* Account for the new LV being passed in */
-+	if (lv->lv_buf_len != XFS_LOG_VEC_ORDERED) {
-+		*diff_len += lv->lv_buf_len;
-+		*diff_iovecs += lv->lv_niovecs;
-+	}
++#define XFS_SYMLINK_MAGIC	0x58534c4d	/* XSLM */
 +
-+	/*
-+	 * If there is no old LV, this is the first time we've seen the item in
-+	 * this CIL context and so we need to pin it. If we are replacing the
-+	 * old_lv, then remove the space it accounts for and free it.
-+	 */
-+	if (!old_lv)
-+		lv->lv_item->li_ops->iop_pin(lv->lv_item);
-+	else if (old_lv != lv) {
-+		ASSERT(lv->lv_buf_len != XFS_LOG_VEC_ORDERED);
-+
-+		*diff_len -= old_lv->lv_buf_len;
-+		*diff_iovecs -= old_lv->lv_niovecs;
-+		kmem_free(old_lv);
-+	}
-+
-+	/* attach new log vector to log item */
-+	lv->lv_item->li_lv = lv;
-+
-+	/*
-+	 * If this is the first time the item is being committed to the
-+	 * CIL, store the sequence number on the log item so we can
-+	 * tell in future commits whether this is the first checkpoint
-+	 * the item is being committed into.
-+	 */
-+	if (!lv->lv_item->li_seq)
-+		lv->lv_item->li_seq = log->l_cilp->xc_ctx->sequence;
-+}
++struct xfs_dsymlink_hdr {
++	__be32	sl_magic;
++	__be32	sl_offset;
++	__be32	sl_bytes;
++	__be32	sl_crc;
++	uuid_t	sl_uuid;
++	__be64	sl_owner;
++	__be64	sl_blkno;
++	__be64	sl_lsn;
++};
 +
 +/*
-  * Format log item into a flat buffers
-  *
-  * For delayed logging, we need to hold a formatted buffer containing all the
-@@ -136,24 +183,26 @@ xlog_cil_lv_item_format(
-  * format the regions into the iclog as though they are being formatted
-  * directly out of the objects themselves.
-  */
--static struct xfs_log_vec *
--xlog_cil_prepare_log_vecs(
--	struct xfs_trans	*tp)
-+static void
-+xlog_cil_insert_format_items(
-+	struct xlog		*log,
-+	struct xfs_trans	*tp,
-+	int			*diff_len,
-+	int			*diff_iovecs)
- {
- 	struct xfs_log_item_desc *lidp;
--	struct xfs_log_vec	*prev_lv = NULL;
--	struct xfs_log_vec	*ret_lv = NULL;
- 
- 
- 	/* Bail out if we didn't find a log item.  */
- 	if (list_empty(&tp->t_items)) {
- 		ASSERT(0);
--		return NULL;
-+		return;
- 	}
- 
- 	list_for_each_entry(lidp, &tp->t_items, lid_trans) {
- 		struct xfs_log_item *lip = lidp->lid_item;
- 		struct xfs_log_vec *lv;
-+		struct xfs_log_vec *old_lv;
- 		int	niovecs = 0;
- 		int	nbytes = 0;
- 		int	buf_size;
-@@ -181,6 +230,9 @@ xlog_cil_prepare_log_vecs(
- 			nbytes = 0;
- 		}
- 
-+		/* grab the old item if it exists for reservation accounting */
-+		old_lv = lip->li_lv;
++ * The maximum pathlen is 1024 bytes. Since the minimum file system
++ * blocksize is 512 bytes, we can get a max of 3 extents back from
++ * bmapi when crc headers are taken into account.
++ */
++#define XFS_SYMLINK_MAPS 3
 +
- 		/* calc buffer size */
- 		buf_size = sizeof(struct xfs_log_vec) + nbytes +
- 				niovecs * sizeof(struct xfs_log_iovec);
-@@ -194,9 +246,17 @@ xlog_cil_prepare_log_vecs(
- 			if (ordered)
- 				goto insert;
++#define XFS_SYMLINK_BUF_SPACE(mp, bufsize)	\
++	((bufsize) - (xfs_sb_version_hascrc(&(mp)->m_sb) ? \
++			sizeof(struct xfs_dsymlink_hdr) : 0))
++
++int xfs_symlink_blocks(struct xfs_mount *mp, int pathlen);
++int xfs_symlink_hdr_set(struct xfs_mount *mp, xfs_ino_t ino, uint32_t offset,
++			uint32_t size, struct xfs_buf *bp);
++bool xfs_symlink_hdr_ok(struct xfs_mount *mp, xfs_ino_t ino, uint32_t offset,
++			uint32_t size, struct xfs_buf *bp);
++void xfs_symlink_local_to_remote(struct xfs_trans *tp, struct xfs_buf *bp,
++				 struct xfs_inode *ip, struct xfs_ifork *ifp);
++
++extern const struct xfs_buf_ops xfs_symlink_buf_ops;
  
-+			/*
-+			 * set the item up as though it is a new insertion so
-+			 * that the space reservation accounting is correct.
-+			 */
-+			*diff_iovecs -= lv->lv_niovecs;
-+			*diff_len -= lv->lv_buf_len;
-+
- 			/* Ensure the lv is set up according to ->iop_size */
- 			lv->lv_niovecs = niovecs;
- 			lv->lv_buf = (char *)lv + buf_size - nbytes;
-+
- 			lv->lv_buf_len = xlog_cil_lv_item_format(lip, lv);
- 			goto insert;
- 		}
-@@ -222,74 +282,8 @@ xlog_cil_prepare_log_vecs(
- 		lv->lv_buf_len = xlog_cil_lv_item_format(lip, lv);
- insert:
- 		ASSERT(lv->lv_buf_len <= nbytes);
--		if (!ret_lv)
--			ret_lv = lv;
--		else
--			prev_lv->lv_next = lv;
--		prev_lv = lv;
--	}
+ #endif /* __XFS_FORMAT_H__ */
+diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
+index dd7c099..18f24de 100644
+--- a/fs/xfs/xfs_symlink.c
++++ b/fs/xfs/xfs_symlink.c
+@@ -32,8 +32,6 @@
+ #include "xfs_ialloc_btree.h"
+ #include "xfs_dinode.h"
+ #include "xfs_inode.h"
+-#include "xfs_inode_item.h"
+-#include "xfs_itable.h"
+ #include "xfs_ialloc.h"
+ #include "xfs_alloc.h"
+ #include "xfs_bmap.h"
+@@ -41,178 +39,8 @@
+ #include "xfs_quota.h"
+ #include "xfs_utils.h"
+ #include "xfs_trans_space.h"
+-#include "xfs_log_priv.h"
+ #include "xfs_trace.h"
+ #include "xfs_symlink.h"
+-#include "xfs_cksum.h"
+-#include "xfs_buf_item.h"
 -
--	return ret_lv;
+-
+-/*
+- * Each contiguous block has a header, so it is not just a simple pathlen
+- * to FSB conversion.
+- */
+-int
+-xfs_symlink_blocks(
+-	struct xfs_mount *mp,
+-	int		pathlen)
+-{
+-	int buflen = XFS_SYMLINK_BUF_SPACE(mp, mp->m_sb.sb_blocksize);
+-
+-	return (pathlen + buflen - 1) / buflen;
+-}
+-
+-static int
+-xfs_symlink_hdr_set(
+-	struct xfs_mount	*mp,
+-	xfs_ino_t		ino,
+-	uint32_t		offset,
+-	uint32_t		size,
+-	struct xfs_buf		*bp)
+-{
+-	struct xfs_dsymlink_hdr	*dsl = bp->b_addr;
+-
+-	if (!xfs_sb_version_hascrc(&mp->m_sb))
+-		return 0;
+-
+-	dsl->sl_magic = cpu_to_be32(XFS_SYMLINK_MAGIC);
+-	dsl->sl_offset = cpu_to_be32(offset);
+-	dsl->sl_bytes = cpu_to_be32(size);
+-	uuid_copy(&dsl->sl_uuid, &mp->m_sb.sb_uuid);
+-	dsl->sl_owner = cpu_to_be64(ino);
+-	dsl->sl_blkno = cpu_to_be64(bp->b_bn);
+-	bp->b_ops = &xfs_symlink_buf_ops;
+-
+-	return sizeof(struct xfs_dsymlink_hdr);
 -}
 -
 -/*
-- * Prepare the log item for insertion into the CIL. Calculate the difference in
-- * log space and vectors it will consume, and if it is a new item pin it as
-- * well.
+- * Checking of the symlink header is split into two parts. the verifier does
+- * CRC, location and bounds checking, the unpacking function checks the path
+- * parameters and owner.
 - */
--STATIC void
--xfs_cil_prepare_item(
--	struct xlog		*log,
--	struct xfs_log_vec	*lv,
--	int			*len,
--	int			*diff_iovecs)
+-bool
+-xfs_symlink_hdr_ok(
+-	struct xfs_mount	*mp,
+-	xfs_ino_t		ino,
+-	uint32_t		offset,
+-	uint32_t		size,
+-	struct xfs_buf		*bp)
 -{
--	struct xfs_log_vec	*old = lv->lv_item->li_lv;
+-	struct xfs_dsymlink_hdr *dsl = bp->b_addr;
 -
--	if (!old) {
--		/* new lv, must pin the log item */
--		ASSERT(!lv->lv_item->li_lv);
+-	if (offset != be32_to_cpu(dsl->sl_offset))
+-		return false;
+-	if (size != be32_to_cpu(dsl->sl_bytes))
+-		return false;
+-	if (ino != be64_to_cpu(dsl->sl_owner))
+-		return false;
 -
--		if (lv->lv_buf_len != XFS_LOG_VEC_ORDERED) {
--			*len += lv->lv_buf_len;
--			*diff_iovecs += lv->lv_niovecs;
--		}
--		lv->lv_item->li_ops->iop_pin(lv->lv_item);
+-	/* ok */
+-	return true;
+-}
 -
--	} else if (old != lv) {
--		/* existing lv on log item, space used is a delta */
--		ASSERT((old->lv_buf && old->lv_buf_len && old->lv_niovecs) ||
--			old->lv_buf_len == XFS_LOG_VEC_ORDERED);
+-static bool
+-xfs_symlink_verify(
+-	struct xfs_buf		*bp)
+-{
+-	struct xfs_mount	*mp = bp->b_target->bt_mount;
+-	struct xfs_dsymlink_hdr	*dsl = bp->b_addr;
 -
--		/*
--		 * If the new item is ordered, keep the old one that is already
--		 * tracking dirty or ordered regions
--		 */
--		if (lv->lv_buf_len == XFS_LOG_VEC_ORDERED) {
--			ASSERT(!lv->lv_buf);
--			kmem_free(lv);
--			return;
--		}
+-	if (!xfs_sb_version_hascrc(&mp->m_sb))
+-		return false;
+-	if (dsl->sl_magic != cpu_to_be32(XFS_SYMLINK_MAGIC))
+-		return false;
+-	if (!uuid_equal(&dsl->sl_uuid, &mp->m_sb.sb_uuid))
+-		return false;
+-	if (bp->b_bn != be64_to_cpu(dsl->sl_blkno))
+-		return false;
+-	if (be32_to_cpu(dsl->sl_offset) +
+-				be32_to_cpu(dsl->sl_bytes) >= MAXPATHLEN)
+-		return false;
+-	if (dsl->sl_owner == 0)
+-		return false;
 -
--		*len += lv->lv_buf_len - old->lv_buf_len;
--		*diff_iovecs += lv->lv_niovecs - old->lv_niovecs;
--		kmem_free(old);
--	} else {
--		/* re-used lv */
--		/* XXX: can't account for len/diff_iovecs yet */
-+		xfs_cil_prepare_item(log, lv, old_lv, diff_len, diff_iovecs);
- 	}
+-	return true;
+-}
 -
--	/* attach new log vector to log item */
--	lv->lv_item->li_lv = lv;
+-static void
+-xfs_symlink_read_verify(
+-	struct xfs_buf	*bp)
+-{
+-	struct xfs_mount *mp = bp->b_target->bt_mount;
+-
+-	/* no verification of non-crc buffers */
+-	if (!xfs_sb_version_hascrc(&mp->m_sb))
+-		return;
+-
+-	if (!xfs_verify_cksum(bp->b_addr, BBTOB(bp->b_length),
+-				  offsetof(struct xfs_dsymlink_hdr, sl_crc)) ||
+-	    !xfs_symlink_verify(bp)) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+-		xfs_buf_ioerror(bp, EFSCORRUPTED);
+-	}
+-}
+-
+-static void
+-xfs_symlink_write_verify(
+-	struct xfs_buf	*bp)
+-{
+-	struct xfs_mount *mp = bp->b_target->bt_mount;
+-	struct xfs_buf_log_item	*bip = bp->b_fspriv;
+-
+-	/* no verification of non-crc buffers */
+-	if (!xfs_sb_version_hascrc(&mp->m_sb))
+-		return;
+-
+-	if (!xfs_symlink_verify(bp)) {
+-		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
+-		xfs_buf_ioerror(bp, EFSCORRUPTED);
+-		return;
+-	}
+-
+-	if (bip) {
+-		struct xfs_dsymlink_hdr *dsl = bp->b_addr;
+-		dsl->sl_lsn = cpu_to_be64(bip->bli_item.li_lsn);
+-	}
+-	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length),
+-			 offsetof(struct xfs_dsymlink_hdr, sl_crc));
+-}
+-
+-const struct xfs_buf_ops xfs_symlink_buf_ops = {
+-	.verify_read = xfs_symlink_read_verify,
+-	.verify_write = xfs_symlink_write_verify,
+-};
+-
+-void
+-xfs_symlink_local_to_remote(
+-	struct xfs_trans	*tp,
+-	struct xfs_buf		*bp,
+-	struct xfs_inode	*ip,
+-	struct xfs_ifork	*ifp)
+-{
+-	struct xfs_mount	*mp = ip->i_mount;
+-	char			*buf;
+-
+-	if (!xfs_sb_version_hascrc(&mp->m_sb)) {
+-		bp->b_ops = NULL;
+-		memcpy(bp->b_addr, ifp->if_u1.if_data, ifp->if_bytes);
+-		return;
+-	}
 -
 -	/*
--	 * If this is the first time the item is being committed to the
--	 * CIL, store the sequence number on the log item so we can
--	 * tell in future commits whether this is the first checkpoint
--	 * the item is being committed into.
+-	 * As this symlink fits in an inode literal area, it must also fit in
+-	 * the smallest buffer the filesystem supports.
 -	 */
--	if (!lv->lv_item->li_seq)
--		lv->lv_item->li_seq = log->l_cilp->xc_ctx->sequence;
- }
+-	ASSERT(BBTOB(bp->b_length) >=
+-			ifp->if_bytes + sizeof(struct xfs_dsymlink_hdr));
+-
+-	bp->b_ops = &xfs_symlink_buf_ops;
+-
+-	buf = bp->b_addr;
+-	buf += xfs_symlink_hdr_set(mp, ip->i_ino, 0, ifp->if_bytes, bp);
+-	memcpy(buf, ifp->if_u1.if_data, ifp->if_bytes);
+-}
  
- /*
-@@ -302,53 +296,47 @@ xfs_cil_prepare_item(
- static void
- xlog_cil_insert_items(
- 	struct xlog		*log,
--	struct xfs_log_vec	*log_vector,
--	struct xlog_ticket	*ticket)
-+	struct xfs_trans	*tp)
- {
- 	struct xfs_cil		*cil = log->l_cilp;
- 	struct xfs_cil_ctx	*ctx = cil->xc_ctx;
--	struct xfs_log_vec	*lv;
-+	struct xfs_log_item_desc *lidp;
- 	int			len = 0;
- 	int			diff_iovecs = 0;
- 	int			iclog_space;
+ /* ----- Kernel only functions below ----- */
+ STATIC int
+diff --git a/fs/xfs/xfs_symlink.h b/fs/xfs/xfs_symlink.h
+index c8e3a02..99338ba 100644
+--- a/fs/xfs/xfs_symlink.h
++++ b/fs/xfs/xfs_symlink.h
+@@ -17,51 +17,11 @@
+ #ifndef __XFS_SYMLINK_H
+ #define __XFS_SYMLINK_H 1
  
--	ASSERT(log_vector);
-+	ASSERT(tp);
+-struct xfs_mount;
+-struct xfs_trans;
+-struct xfs_inode;
+-struct xfs_buf;
+-struct xfs_ifork;
+-struct xfs_name;
+-
+-#define XFS_SYMLINK_MAGIC	0x58534c4d	/* XSLM */
+-
+-struct xfs_dsymlink_hdr {
+-	__be32	sl_magic;
+-	__be32	sl_offset;
+-	__be32	sl_bytes;
+-	__be32	sl_crc;
+-	uuid_t	sl_uuid;
+-	__be64	sl_owner;
+-	__be64	sl_blkno;
+-	__be64	sl_lsn;
+-};
+-
+-/*
+- * The maximum pathlen is 1024 bytes. Since the minimum file system
+- * blocksize is 512 bytes, we can get a max of 3 extents back from
+- * bmapi when crc headers are taken into account.
+- */
+-#define XFS_SYMLINK_MAPS 3
+-
+-#define XFS_SYMLINK_BUF_SPACE(mp, bufsize)	\
+-	((bufsize) - (xfs_sb_version_hascrc(&(mp)->m_sb) ? \
+-			sizeof(struct xfs_dsymlink_hdr) : 0))
+-
+-int xfs_symlink_blocks(struct xfs_mount *mp, int pathlen);
+-bool xfs_symlink_hdr_ok(struct xfs_mount *mp, xfs_ino_t ino, uint32_t offset,
+-			uint32_t size, struct xfs_buf *bp);
+-void xfs_symlink_local_to_remote(struct xfs_trans *tp, struct xfs_buf *bp,
+-				 struct xfs_inode *ip, struct xfs_ifork *ifp);
+-
+-extern const struct xfs_buf_ops xfs_symlink_buf_ops;
+-
+-#ifdef __KERNEL__
++/* Kernel only symlink defintions */
  
- 	/*
--	 * Do all the accounting aggregation and switching of log vectors
--	 * around in a separate loop to the insertion of items into the CIL.
--	 * Then we can do a separate loop to update the CIL within a single
--	 * lock/unlock pair. This reduces the number of round trips on the CIL
--	 * lock from O(nr_logvectors) to O(1) and greatly reduces the overall
--	 * hold time for the transaction commit.
--	 *
--	 * If this is the first time the item is being placed into the CIL in
--	 * this context, pin it so it can't be written to disk until the CIL is
--	 * flushed to the iclog and the iclog written to disk.
--	 *
- 	 * We can do this safely because the context can't checkpoint until we
- 	 * are done so it doesn't matter exactly how we update the CIL.
- 	 */
-+	xlog_cil_insert_format_items(log, tp, &len, &diff_iovecs);
+ int xfs_symlink(struct xfs_inode *dp, struct xfs_name *link_name,
+ 		const char *target_path, umode_t mode, struct xfs_inode **ipp);
+ int xfs_readlink(struct xfs_inode *ip, char *link);
+ int xfs_inactive_symlink(struct xfs_inode *ip, struct xfs_trans **tpp);
+ 
+-#endif /* __KERNEL__ */
+ #endif /* __XFS_SYMLINK_H */
+diff --git a/fs/xfs/xfs_symlink_remote.c b/fs/xfs/xfs_symlink_remote.c
+new file mode 100644
+index 0000000..a318524
+--- /dev/null
++++ b/fs/xfs/xfs_symlink_remote.c
+@@ -0,0 +1,199 @@
++/*
++ * Copyright (c) 2000-2006 Silicon Graphics, Inc.
++ * Copyright (c) 2012-2013 Red Hat, Inc.
++ * All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_format.h"
++#include "xfs_log.h"
++#include "xfs_trans.h"
++#include "xfs_sb.h"
++#include "xfs_mount.h"
++#include "xfs_bmap_btree.h"
++#include "xfs_inode.h"
++#include "xfs_error.h"
++#include "xfs_trace.h"
++#include "xfs_symlink.h"
++#include "xfs_cksum.h"
++#include "xfs_buf_item.h"
++
++
++/*
++ * Each contiguous block has a header, so it is not just a simple pathlen
++ * to FSB conversion.
++ */
++int
++xfs_symlink_blocks(
++	struct xfs_mount *mp,
++	int		pathlen)
++{
++	int buflen = XFS_SYMLINK_BUF_SPACE(mp, mp->m_sb.sb_blocksize);
++
++	return (pathlen + buflen - 1) / buflen;
++}
++
++int
++xfs_symlink_hdr_set(
++	struct xfs_mount	*mp,
++	xfs_ino_t		ino,
++	uint32_t		offset,
++	uint32_t		size,
++	struct xfs_buf		*bp)
++{
++	struct xfs_dsymlink_hdr	*dsl = bp->b_addr;
++
++	if (!xfs_sb_version_hascrc(&mp->m_sb))
++		return 0;
++
++	dsl->sl_magic = cpu_to_be32(XFS_SYMLINK_MAGIC);
++	dsl->sl_offset = cpu_to_be32(offset);
++	dsl->sl_bytes = cpu_to_be32(size);
++	uuid_copy(&dsl->sl_uuid, &mp->m_sb.sb_uuid);
++	dsl->sl_owner = cpu_to_be64(ino);
++	dsl->sl_blkno = cpu_to_be64(bp->b_bn);
++	bp->b_ops = &xfs_symlink_buf_ops;
++
++	return sizeof(struct xfs_dsymlink_hdr);
++}
++
++/*
++ * Checking of the symlink header is split into two parts. the verifier does
++ * CRC, location and bounds checking, the unpacking function checks the path
++ * parameters and owner.
++ */
++bool
++xfs_symlink_hdr_ok(
++	struct xfs_mount	*mp,
++	xfs_ino_t		ino,
++	uint32_t		offset,
++	uint32_t		size,
++	struct xfs_buf		*bp)
++{
++	struct xfs_dsymlink_hdr *dsl = bp->b_addr;
++
++	if (offset != be32_to_cpu(dsl->sl_offset))
++		return false;
++	if (size != be32_to_cpu(dsl->sl_bytes))
++		return false;
++	if (ino != be64_to_cpu(dsl->sl_owner))
++		return false;
++
++	/* ok */
++	return true;
++}
++
++static bool
++xfs_symlink_verify(
++	struct xfs_buf		*bp)
++{
++	struct xfs_mount	*mp = bp->b_target->bt_mount;
++	struct xfs_dsymlink_hdr	*dsl = bp->b_addr;
++
++	if (!xfs_sb_version_hascrc(&mp->m_sb))
++		return false;
++	if (dsl->sl_magic != cpu_to_be32(XFS_SYMLINK_MAGIC))
++		return false;
++	if (!uuid_equal(&dsl->sl_uuid, &mp->m_sb.sb_uuid))
++		return false;
++	if (bp->b_bn != be64_to_cpu(dsl->sl_blkno))
++		return false;
++	if (be32_to_cpu(dsl->sl_offset) +
++				be32_to_cpu(dsl->sl_bytes) >= MAXPATHLEN)
++		return false;
++	if (dsl->sl_owner == 0)
++		return false;
++
++	return true;
++}
++
++static void
++xfs_symlink_read_verify(
++	struct xfs_buf	*bp)
++{
++	struct xfs_mount *mp = bp->b_target->bt_mount;
++
++	/* no verification of non-crc buffers */
++	if (!xfs_sb_version_hascrc(&mp->m_sb))
++		return;
++
++	if (!xfs_verify_cksum(bp->b_addr, BBTOB(bp->b_length),
++				  offsetof(struct xfs_dsymlink_hdr, sl_crc)) ||
++	    !xfs_symlink_verify(bp)) {
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
++		xfs_buf_ioerror(bp, EFSCORRUPTED);
++	}
++}
++
++static void
++xfs_symlink_write_verify(
++	struct xfs_buf	*bp)
++{
++	struct xfs_mount *mp = bp->b_target->bt_mount;
++	struct xfs_buf_log_item	*bip = bp->b_fspriv;
++
++	/* no verification of non-crc buffers */
++	if (!xfs_sb_version_hascrc(&mp->m_sb))
++		return;
++
++	if (!xfs_symlink_verify(bp)) {
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, bp->b_addr);
++		xfs_buf_ioerror(bp, EFSCORRUPTED);
++		return;
++	}
++
++	if (bip) {
++		struct xfs_dsymlink_hdr *dsl = bp->b_addr;
++		dsl->sl_lsn = cpu_to_be64(bip->bli_item.li_lsn);
++	}
++	xfs_update_cksum(bp->b_addr, BBTOB(bp->b_length),
++			 offsetof(struct xfs_dsymlink_hdr, sl_crc));
++}
++
++const struct xfs_buf_ops xfs_symlink_buf_ops = {
++	.verify_read = xfs_symlink_read_verify,
++	.verify_write = xfs_symlink_write_verify,
++};
++
++void
++xfs_symlink_local_to_remote(
++	struct xfs_trans	*tp,
++	struct xfs_buf		*bp,
++	struct xfs_inode	*ip,
++	struct xfs_ifork	*ifp)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++	char			*buf;
++
++	if (!xfs_sb_version_hascrc(&mp->m_sb)) {
++		bp->b_ops = NULL;
++		memcpy(bp->b_addr, ifp->if_u1.if_data, ifp->if_bytes);
++		return;
++	}
 +
 +	/*
-+	 * Now (re-)position everything modified at the tail of the CIL.
-+	 * We do this here so we only need to take the CIL lock once during
-+	 * the transaction commit.
++	 * As this symlink fits in an inode literal area, it must also fit in
++	 * the smallest buffer the filesystem supports.
 +	 */
- 	spin_lock(&cil->xc_cil_lock);
--	for (lv = log_vector; lv; ) {
--		struct xfs_log_vec *next = lv->lv_next;
-+	list_for_each_entry(lidp, &tp->t_items, lid_trans) {
-+		struct xfs_log_item	*lip = lidp->lid_item;
- 
--		ASSERT(lv->lv_item->li_lv || list_empty(&lv->lv_item->li_cil));
--		lv->lv_next = NULL;
-+		/* Skip items which aren't dirty in this transaction. */
-+		if (!(lidp->lid_flags & XFS_LID_DIRTY))
-+			continue;
- 
--		/*
--		 * xfs_cil_prepare_item() may free the lv, so move the item on
--		 * the CIL first.
--		 */
--		list_move_tail(&lv->lv_item->li_cil, &cil->xc_cil);
--		xfs_cil_prepare_item(log, lv, &len, &diff_iovecs);
--		lv = next;
-+		list_move_tail(&lip->li_cil, &cil->xc_cil);
- 	}
- 
- 	/* account for space used by new iovec headers  */
- 	len += diff_iovecs * sizeof(xlog_op_header_t);
- 	ctx->nvecs += diff_iovecs;
- 
-+	/* attach the transaction to the CIL if it has any busy extents */
-+	if (!list_empty(&tp->t_busy))
-+		list_splice_init(&tp->t_busy, &ctx->busy_extents);
++	ASSERT(BBTOB(bp->b_length) >=
++			ifp->if_bytes + sizeof(struct xfs_dsymlink_hdr));
 +
- 	/*
- 	 * Now transfer enough transaction reservation to the context ticket
- 	 * for the checkpoint. The context ticket is special - the unit
-@@ -357,10 +345,8 @@ xlog_cil_insert_items(
- 	 * during the transaction commit.
- 	 */
- 	if (ctx->ticket->t_curr_res == 0) {
--		/* first commit in checkpoint, steal the header reservation */
--		ASSERT(ticket->t_curr_res >= ctx->ticket->t_unit_res + len);
- 		ctx->ticket->t_curr_res = ctx->ticket->t_unit_res;
--		ticket->t_curr_res -= ctx->ticket->t_unit_res;
-+		tp->t_ticket->t_curr_res -= ctx->ticket->t_unit_res;
- 	}
- 
- 	/* do we need space for more log record headers? */
-@@ -374,10 +360,10 @@ xlog_cil_insert_items(
- 		hdrs *= log->l_iclog_hsize + sizeof(struct xlog_op_header);
- 		ctx->ticket->t_unit_res += hdrs;
- 		ctx->ticket->t_curr_res += hdrs;
--		ticket->t_curr_res -= hdrs;
--		ASSERT(ticket->t_curr_res >= len);
-+		tp->t_ticket->t_curr_res -= hdrs;
-+		ASSERT(tp->t_ticket->t_curr_res >= len);
- 	}
--	ticket->t_curr_res -= len;
-+	tp->t_ticket->t_curr_res -= len;
- 	ctx->space_used += len;
- 
- 	spin_unlock(&cil->xc_cil_lock);
-@@ -746,38 +732,25 @@ xfs_log_commit_cil(
- 	int			flags)
- {
- 	struct xlog		*log = mp->m_log;
-+	struct xfs_cil		*cil = log->l_cilp;
- 	int			log_flags = 0;
--	struct xfs_log_vec	*log_vector;
- 
- 	if (flags & XFS_TRANS_RELEASE_LOG_RES)
- 		log_flags = XFS_LOG_REL_PERM_RESERV;
- 
- 	/* lock out background commit */
--	down_read(&log->l_cilp->xc_ctx_lock);
-+	down_read(&cil->xc_ctx_lock);
- 
--	log_vector = xlog_cil_prepare_log_vecs(tp);
--	if (!log_vector)
--		return ENOMEM;
--
--	if (commit_lsn)
--		*commit_lsn = log->l_cilp->xc_ctx->sequence;
--
--	/* xlog_cil_insert_items() destroys log_vector list */
--	xlog_cil_insert_items(log, log_vector, tp->t_ticket);
-+	xlog_cil_insert_items(log, tp);
- 
- 	/* check we didn't blow the reservation */
- 	if (tp->t_ticket->t_curr_res < 0)
--		xlog_print_tic_res(log->l_mp, tp->t_ticket);
-+		xlog_print_tic_res(mp, tp->t_ticket);
- 
--	/* attach the transaction to the CIL if it has any busy extents */
--	if (!list_empty(&tp->t_busy)) {
--		spin_lock(&log->l_cilp->xc_cil_lock);
--		list_splice_init(&tp->t_busy,
--					&log->l_cilp->xc_ctx->busy_extents);
--		spin_unlock(&log->l_cilp->xc_cil_lock);
--	}
-+	tp->t_commit_lsn = cil->xc_ctx->sequence;
-+	if (commit_lsn)
-+		*commit_lsn = tp->t_commit_lsn;
- 
--	tp->t_commit_lsn = *commit_lsn;
- 	xfs_log_done(mp, tp->t_ticket, NULL, log_flags);
- 	xfs_trans_unreserve_and_mod_sb(tp);
- 
-@@ -792,11 +765,11 @@ xfs_log_commit_cil(
- 	 * the log items. This affects (at least) processing of stale buffers,
- 	 * inodes and EFIs.
- 	 */
--	xfs_trans_free_items(tp, *commit_lsn, 0);
-+	xfs_trans_free_items(tp, tp->t_commit_lsn, 0);
- 
- 	xlog_cil_push_background(log);
- 
--	up_read(&log->l_cilp->xc_ctx_lock);
-+	up_read(&cil->xc_ctx_lock);
- 	return 0;
- }
- 
++	bp->b_ops = &xfs_symlink_buf_ops;
++
++	buf = bp->b_addr;
++	buf += xfs_symlink_hdr_set(mp, ip->i_ino, 0, ifp->if_bytes, bp);
++	memcpy(buf, ifp->if_u1.if_data, ifp->if_bytes);
++}
 -- 
 1.8.3.2
 
