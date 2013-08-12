@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 64D3D7FA6
-	for <xfs@oss.sgi.com>; Mon, 12 Aug 2013 05:50:56 -0500 (CDT)
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 548B08F804B
-	for <xfs@oss.sgi.com>; Mon, 12 Aug 2013 03:50:56 -0700 (PDT)
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+	by oss.sgi.com (Postfix) with ESMTP id D99CA7F6B
+	for <xfs@oss.sgi.com>; Mon, 12 Aug 2013 05:50:57 -0500 (CDT)
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id AC1BA304039
+	for <xfs@oss.sgi.com>; Mon, 12 Aug 2013 03:50:57 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	RHX7G5xJReo7wxYe for <xfs@oss.sgi.com>;
-	Mon, 12 Aug 2013 03:50:54 -0700 (PDT)
+	76e5HiAY8QoO7zwF for <xfs@oss.sgi.com>;
+	Mon, 12 Aug 2013 03:50:55 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1V8phX-0004Yb-C0
+	(envelope-from <dave@fromorbit.com>) id 1V8phX-0004YP-Je
 	for xfs@oss.sgi.com; Mon, 12 Aug 2013 20:50:15 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1V8phX-00063B-B3
+	(envelope-from <dave@disappointment.disaster>) id 1V8phX-000646-IF
 	for xfs@oss.sgi.com; Mon, 12 Aug 2013 20:50:15 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: ***** SUSPECTED SPAM ***** [PATCH 34/50] xfs: make struct xfs_perag
-	kernel only
-Date: Mon, 12 Aug 2013 20:49:55 +1000
-Message-Id: <1376304611-22994-35-git-send-email-david@fromorbit.com>
+Subject: ***** SUSPECTED SPAM ***** [PATCH 45/50] xfs: avoid CIL allocation
+	during insert
+Date: Mon, 12 Aug 2013 20:50:06 +1000
+Message-Id: <1376304611-22994-46-git-send-email-david@fromorbit.com>
 In-Reply-To: <1376304611-22994-1-git-send-email-david@fromorbit.com>
 References: <1376304611-22994-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -40,172 +40,133 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The struct xfs_perag has many kernel-only definitions in it,
-requiring a __KERNEL__ guard so userspace can use it to. Move it to
-xfs_mount.h so that it it kernel-only, and let userspace redefine
-it's own version of the structure containing only what it needs.
-This gets rid of another __KERNEL__ check in the XFS header files.
+Now that we have the size of the log vector that has been allocated,
+we can determine if we need to allocate a new log vector for
+formatting and insertion. We only need to allocate a new vector if
+it won't fit into the existing buffer.
+
+However, we need to hold the CIL context lock while we do this so
+that we can't race with a push draining the currently queued log
+vectors. It is safe to do this as long as we do GFP_NOFS allocation
+to avoid avoid memory allocation recursing into the filesystem.
+Hence we can safely overwrite the existing log vector on the CIL if
+it is large enough to hold all the dirty regions of the current
+item.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 ---
- fs/xfs/xfs_acl.c            |  1 +
- fs/xfs/xfs_ag.h             | 53 ---------------------------------------------
- fs/xfs/xfs_mount.h          | 52 ++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_symlink_remote.c |  1 +
- 4 files changed, 54 insertions(+), 53 deletions(-)
+ fs/xfs/xfs_log_cil.c | 52 +++++++++++++++++++++++++++++++++-------------------
+ fs/xfs/xfs_trans.h   |  1 -
+ 2 files changed, 33 insertions(+), 20 deletions(-)
 
-diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
-index 0c4368a..2f77db8 100644
---- a/fs/xfs/xfs_acl.c
-+++ b/fs/xfs/xfs_acl.c
-@@ -22,6 +22,7 @@
- #include "xfs_attr.h"
- #include "xfs_bmap_btree.h"
- #include "xfs_inode.h"
-+#include "xfs_ag.h"
- #include "xfs_sb.h"
- #include "xfs_mount.h"
- #include "xfs_trace.h"
-diff --git a/fs/xfs/xfs_ag.h b/fs/xfs/xfs_ag.h
-index 317aa86..1cb740a 100644
---- a/fs/xfs/xfs_ag.h
-+++ b/fs/xfs/xfs_ag.h
-@@ -227,59 +227,6 @@ typedef struct xfs_agfl {
- } xfs_agfl_t;
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index 423ceaf..b20b157 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -185,6 +185,22 @@ xlog_cil_prepare_log_vecs(
+ 		buf_size = sizeof(struct xfs_log_vec) + nbytes +
+ 				niovecs * sizeof(struct xfs_log_iovec);
  
- /*
-- * Per-ag incore structure, copies of information in agf and agi,
-- * to improve the performance of allocation group selection.
-- */
--#define XFS_PAGB_NUM_SLOTS	128
++		/* compare to existing item size */
++		if (lip->li_lv && buf_size <= lip->li_lv->lv_size) {
++			/* same or smaller, optimise common overwrite case */
++			lv = lip->li_lv;
++			lv->lv_next = NULL;
++
++			if (ordered)
++				goto insert;
++
++			/* Ensure the lv is set up according to ->iop_size */
++			lv->lv_niovecs = niovecs;
++			lv->lv_buf = (char *)lv + buf_size - nbytes;
++			lv->lv_buf_len = xlog_cil_lv_item_format(lip, lv);
++			goto insert;
++		}
++
+ 		/* allocate new data chunk */
+ 		lv = kmem_zalloc(buf_size, KM_SLEEP|KM_NOFS);
+ 		lv->lv_item = lip;
+@@ -204,8 +220,8 @@ xlog_cil_prepare_log_vecs(
+ 		lv->lv_buf = (char *)lv + buf_size - nbytes;
+ 
+ 		lv->lv_buf_len = xlog_cil_lv_item_format(lip, lv);
+-		ASSERT(lv->lv_buf_len <= nbytes);
+ insert:
++		ASSERT(lv->lv_buf_len <= nbytes);
+ 		if (!ret_lv)
+ 			ret_lv = lv;
+ 		else
+@@ -230,7 +246,17 @@ xfs_cil_prepare_item(
+ {
+ 	struct xfs_log_vec	*old = lv->lv_item->li_lv;
+ 
+-	if (old) {
++	if (!old) {
++		/* new lv, must pin the log item */
++		ASSERT(!lv->lv_item->li_lv);
++
++		if (lv->lv_buf_len != XFS_LOG_VEC_ORDERED) {
++			*len += lv->lv_buf_len;
++			*diff_iovecs += lv->lv_niovecs;
++		}
++		lv->lv_item->li_ops->iop_pin(lv->lv_item);
++
++	} else if (old != lv) {
+ 		/* existing lv on log item, space used is a delta */
+ 		ASSERT((old->lv_buf && old->lv_buf_len && old->lv_niovecs) ||
+ 			old->lv_buf_len == XFS_LOG_VEC_ORDERED);
+@@ -249,15 +275,8 @@ xfs_cil_prepare_item(
+ 		*diff_iovecs += lv->lv_niovecs - old->lv_niovecs;
+ 		kmem_free(old);
+ 	} else {
+-		/* new lv, must pin the log item */
+-		ASSERT(!lv->lv_item->li_lv);
 -
--typedef struct xfs_perag {
--	struct xfs_mount *pag_mount;	/* owner filesystem */
--	xfs_agnumber_t	pag_agno;	/* AG this structure belongs to */
--	atomic_t	pag_ref;	/* perag reference count */
--	char		pagf_init;	/* this agf's entry is initialized */
--	char		pagi_init;	/* this agi's entry is initialized */
--	char		pagf_metadata;	/* the agf is preferred to be metadata */
--	char		pagi_inodeok;	/* The agi is ok for inodes */
--	__uint8_t	pagf_levels[XFS_BTNUM_AGF];
--					/* # of levels in bno & cnt btree */
--	__uint32_t	pagf_flcount;	/* count of blocks in freelist */
--	xfs_extlen_t	pagf_freeblks;	/* total free blocks */
--	xfs_extlen_t	pagf_longest;	/* longest free space */
--	__uint32_t	pagf_btreeblks;	/* # of blocks held in AGF btrees */
--	xfs_agino_t	pagi_freecount;	/* number of free inodes */
--	xfs_agino_t	pagi_count;	/* number of allocated inodes */
+-		if (lv->lv_buf_len != XFS_LOG_VEC_ORDERED) {
+-			*len += lv->lv_buf_len;
+-			*diff_iovecs += lv->lv_niovecs;
+-		}
+-		IOP_PIN(lv->lv_item);
 -
++		/* re-used lv */
++		/* XXX: can't account for len/diff_iovecs yet */
+ 	}
+ 
+ 	/* attach new log vector to log item */
+@@ -733,18 +752,13 @@ xfs_log_commit_cil(
+ 	if (flags & XFS_TRANS_RELEASE_LOG_RES)
+ 		log_flags = XFS_LOG_REL_PERM_RESERV;
+ 
 -	/*
--	 * Inode allocation search lookup optimisation.
--	 * If the pagino matches, the search for new inodes
--	 * doesn't need to search the near ones again straight away
+-	 * Do all the hard work of formatting items (including memory
+-	 * allocation) outside the CIL context lock. This prevents stalling CIL
+-	 * pushes when we are low on memory and a transaction commit spends a
+-	 * lot of time in memory reclaim.
 -	 */
--	xfs_agino_t	pagl_pagino;
--	xfs_agino_t	pagl_leftrec;
--	xfs_agino_t	pagl_rightrec;
--#ifdef __KERNEL__
--	spinlock_t	pagb_lock;	/* lock for pagb_tree */
--	struct rb_root	pagb_tree;	/* ordered tree of busy extents */
--
--	atomic_t        pagf_fstrms;    /* # of filestreams active in this AG */
--
--	spinlock_t	pag_ici_lock;	/* incore inode cache lock */
--	struct radix_tree_root pag_ici_root;	/* incore inode cache root */
--	int		pag_ici_reclaimable;	/* reclaimable inodes */
--	struct mutex	pag_ici_reclaim_lock;	/* serialisation point */
--	unsigned long	pag_ici_reclaim_cursor;	/* reclaim restart point */
--
--	/* buffer cache index */
--	spinlock_t	pag_buf_lock;	/* lock for pag_buf_tree */
--	struct rb_root	pag_buf_tree;	/* ordered tree of active buffers */
--
--	/* for rcu-safe freeing */
--	struct rcu_head	rcu_head;
--#endif
--	int		pagb_count;	/* pagb slots in use */
--} xfs_perag_t;
--
--/*
-  * tags for inode radix tree
-  */
- #define XFS_ICI_NO_TAG		(-1)	/* special flag for an untagged lookup
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 5488df1..829035f6 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -320,6 +320,58 @@ typedef struct xfs_mod_sb {
- 	int64_t		msb_delta;	/* Change to make to specified field */
- } xfs_mod_sb_t;
++	/* lock out background commit */
++	down_read(&log->l_cilp->xc_ctx_lock);
++
+ 	log_vector = xlog_cil_prepare_log_vecs(tp);
+ 	if (!log_vector)
+ 		return ENOMEM;
  
-+/*
-+ * Per-ag incore structure, copies of information in agf and agi, to improve the
-+ * performance of allocation group selection. This is defined for the kernel
-+ * only, and hence is defined here instead of in xfs_ag.h. You need the struct
-+ * xfs_mount to be defined to look up a xfs_perag anyway (via mp->m_perag_tree),
-+ * so this doesn't introduce any strange header file dependencies.
-+ */
-+typedef struct xfs_perag {
-+	struct xfs_mount *pag_mount;	/* owner filesystem */
-+	xfs_agnumber_t	pag_agno;	/* AG this structure belongs to */
-+	atomic_t	pag_ref;	/* perag reference count */
-+	char		pagf_init;	/* this agf's entry is initialized */
-+	char		pagi_init;	/* this agi's entry is initialized */
-+	char		pagf_metadata;	/* the agf is preferred to be metadata */
-+	char		pagi_inodeok;	/* The agi is ok for inodes */
-+	__uint8_t	pagf_levels[XFS_BTNUM_AGF];
-+					/* # of levels in bno & cnt btree */
-+	__uint32_t	pagf_flcount;	/* count of blocks in freelist */
-+	xfs_extlen_t	pagf_freeblks;	/* total free blocks */
-+	xfs_extlen_t	pagf_longest;	/* longest free space */
-+	__uint32_t	pagf_btreeblks;	/* # of blocks held in AGF btrees */
-+	xfs_agino_t	pagi_freecount;	/* number of free inodes */
-+	xfs_agino_t	pagi_count;	/* number of allocated inodes */
-+
-+	/*
-+	 * Inode allocation search lookup optimisation.
-+	 * If the pagino matches, the search for new inodes
-+	 * doesn't need to search the near ones again straight away
-+	 */
-+	xfs_agino_t	pagl_pagino;
-+	xfs_agino_t	pagl_leftrec;
-+	xfs_agino_t	pagl_rightrec;
-+	spinlock_t	pagb_lock;	/* lock for pagb_tree */
-+	struct rb_root	pagb_tree;	/* ordered tree of busy extents */
-+
-+	atomic_t        pagf_fstrms;    /* # of filestreams active in this AG */
-+
-+	spinlock_t	pag_ici_lock;	/* incore inode cache lock */
-+	struct radix_tree_root pag_ici_root;	/* incore inode cache root */
-+	int		pag_ici_reclaimable;	/* reclaimable inodes */
-+	struct mutex	pag_ici_reclaim_lock;	/* serialisation point */
-+	unsigned long	pag_ici_reclaim_cursor;	/* reclaim restart point */
-+
-+	/* buffer cache index */
-+	spinlock_t	pag_buf_lock;	/* lock for pag_buf_tree */
-+	struct rb_root	pag_buf_tree;	/* ordered tree of active buffers */
-+
-+	/* for rcu-safe freeing */
-+	struct rcu_head	rcu_head;
-+	int		pagb_count;	/* pagb slots in use */
-+} xfs_perag_t;
-+
- extern int	xfs_log_sbcount(xfs_mount_t *);
- extern __uint64_t xfs_default_resblks(xfs_mount_t *mp);
- extern int	xfs_mountfs(xfs_mount_t *mp);
-diff --git a/fs/xfs/xfs_symlink_remote.c b/fs/xfs/xfs_symlink_remote.c
-index a318524..01c85e3 100644
---- a/fs/xfs/xfs_symlink_remote.c
-+++ b/fs/xfs/xfs_symlink_remote.c
-@@ -21,6 +21,7 @@
- #include "xfs_format.h"
- #include "xfs_log.h"
- #include "xfs_trans.h"
-+#include "xfs_ag.h"
- #include "xfs_sb.h"
- #include "xfs_mount.h"
- #include "xfs_bmap_btree.h"
+-	/* lock out background commit */
+-	down_read(&log->l_cilp->xc_ctx_lock);
+ 	if (commit_lsn)
+ 		*commit_lsn = log->l_cilp->xc_ctx->sequence;
+ 
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index 24bbdcd..4786170 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -77,7 +77,6 @@ struct xfs_item_ops {
+ 	void (*iop_committing)(xfs_log_item_t *, xfs_lsn_t);
+ };
+ 
+-#define IOP_PIN(ip)		(*(ip)->li_ops->iop_pin)(ip)
+ #define IOP_UNPIN(ip, remove)	(*(ip)->li_ops->iop_unpin)(ip, remove)
+ #define IOP_PUSH(ip, list)	(*(ip)->li_ops->iop_push)(ip, list)
+ #define IOP_UNLOCK(ip)		(*(ip)->li_ops->iop_unlock)(ip)
 -- 
 1.8.3.2
 
