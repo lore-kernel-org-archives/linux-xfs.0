@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id B41A97CBE
-	for <xfs@oss.sgi.com>; Sun, 11 Aug 2013 19:24:24 -0500 (CDT)
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 87B177F37
+	for <xfs@oss.sgi.com>; Sun, 11 Aug 2013 19:30:46 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 4D789AC002
-	for <xfs@oss.sgi.com>; Sun, 11 Aug 2013 17:24:24 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 76C908F804B
+	for <xfs@oss.sgi.com>; Sun, 11 Aug 2013 17:30:43 -0700 (PDT)
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	q4CuIE5htYejMJJA for <xfs@oss.sgi.com>;
-	Sun, 11 Aug 2013 17:24:22 -0700 (PDT)
-Date: Mon, 12 Aug 2013 10:24:18 +1000
+	a75o1i2YNNNhOuEN for <xfs@oss.sgi.com>;
+	Sun, 11 Aug 2013 17:30:41 -0700 (PDT)
+Date: Mon, 12 Aug 2013 10:30:39 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: ***** SUSPECTED SPAM ***** Re: [PATCH 24/49] xfs: introduce
-	xfs_quota_defs.h
-Message-ID: <20130812002418.GH12779@dastard>
+Subject: ***** SUSPECTED SPAM ***** Re: [PATCH 28/49] xfs: move unrealted
+	definitions out of xfs_inode.h
+Message-ID: <20130812003039.GI12779@dastard>
 References: <1374216324-8781-1-git-send-email-david@fromorbit.com>
-	<1374216324-8781-25-git-send-email-david@fromorbit.com>
-	<51FFF856.1050600@sgi.com>
+	<1374216324-8781-29-git-send-email-david@fromorbit.com>
+	<52001FB7.3010901@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <51FFF856.1050600@sgi.com>
+In-Reply-To: <52001FB7.3010901@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,33 +35,64 @@ Sender: xfs-bounces@oss.sgi.com
 To: Mark Tinguely <tinguely@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Aug 05, 2013 at 02:09:10PM -0500, Mark Tinguely wrote:
-> On 07/19/13 01:44, Dave Chinner wrote:
+On Mon, Aug 05, 2013 at 04:57:11PM -0500, Mark Tinguely wrote:
+> On 07/19/13 01:45, Dave Chinner wrote:
 > >From: Dave Chinner<dchinner@redhat.com>
-> >
-> >There are a lot of quota flag definitions that are shared by user
-> >and kernel space. Move them all to xfs_quota_defs.h so we can
-> >unshare xfs_quota.h and remove the __KERNEL__ regions from it.
 > >
 > >Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > >---
 > 
 > 
-> xfsprogs equivalent of the for 3.12 kernel patch 09/49.
+> >diff --git a/include/xfs_trans.h b/include/xfs_trans.h
+> >index e504103..37aca08 100644
+> >--- a/include/xfs_trans.h
+> >+++ b/include/xfs_trans.h
+> >@@ -89,6 +89,13 @@ struct xfs_log_item_desc {
+> >  #define	XFS_ATTR_BTREE_REF	1
+> >  #define	XFS_DQUOT_REF		1
+> >
+> >+/*
+> >+ * Flags for xfs_trans_ichgtime().
+> >+ */
+> >+#define	XFS_ICHGTIME_MOD	0x1	/* data fork modification timestamp */
+> >+#define	XFS_ICHGTIME_CHG	0x2	/* inode field change timestamp */
+> >+#define	XFS_ICHGTIME_CREATE	0x4	/* inode create timestamp */
+> >+
 > 
-> move remaining quota shared entries from xfs_quota.h to
-> xfs_quota_defs.h - as mentioned in patch 20, xfs_quota.h is now
-> kernel-only and removed.
->            ----
+> in the kernel patch 13/49 these entries go into xfs_log_format.h
+
+Right, in the updated kernel series xfs_trans.h is no longer shared
+with userspace, and this patch series doesn't reflect that. it needs
+updating.
+
+> >  #ifdef __KERNEL__
+> >
+> >  struct xfs_buf;
+> >diff --git a/libxfs/xfs.h b/libxfs/xfs.h
+> >index 7149c09..1a01c61 100644
+> >--- a/libxfs/xfs.h
+> >+++ b/libxfs/xfs.h
+> >@@ -68,6 +68,9 @@ typedef __uint32_t		inst_t;		/* an instruction */
+> >
+> >  #define IHOLD(ip)			((void) 0)
+> >
+> >+#define XFS_IGET_CREATE			0x1
+> >+#define XFS_IGET_UNTRUSTED		0x2
+> >+
+> >  /* stop unused var warnings by assigning mp to itself */
+> >  #define XFS_CORRUPTION_ERROR(e,l,mp,m)	do { \
+> >  	(mp) = (mp); \
 > 
->   should shared files have a common name? - so far the ended in -format.X
+> in the kernel patch 13/49 these entries go into xfs_icache.h
 
-No. The -format.h suffix is used specifically for on-disk format
-definitions.
+Yup, they go into a kernel only header file. Userspace can define
+them how they want as xfs_iget() has different requirements and a
+completely different implementation in userspace.
 
-Cheers,
+> 
+> --Mark.
+> 
 
-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
