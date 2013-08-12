@@ -1,34 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 675617F69
-	for <xfs@oss.sgi.com>; Sun, 11 Aug 2013 22:26:16 -0500 (CDT)
+	by oss.sgi.com (Postfix) with ESMTP id 236E77F7B
+	for <xfs@oss.sgi.com>; Sun, 11 Aug 2013 22:26:26 -0500 (CDT)
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id E15ABAC003
-	for <xfs@oss.sgi.com>; Sun, 11 Aug 2013 20:26:15 -0700 (PDT)
-Received: from e36.co.us.ibm.com (e36.co.us.ibm.com [32.97.110.154]) by
-	cuda.sgi.com with ESMTP id TaHPtijFYcyse0Tv (version=TLSv1
+	by relay3.corp.sgi.com (Postfix) with ESMTP id A1046AC003
+	for <xfs@oss.sgi.com>; Sun, 11 Aug 2013 20:26:25 -0700 (PDT)
+Received: from e39.co.us.ibm.com (e39.co.us.ibm.com [32.97.110.160]) by
+	cuda.sgi.com with ESMTP id VmJ8mZKExylOedda (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 11 Aug 2013 20:26:14 -0700 (PDT)
+	Sun, 11 Aug 2013 20:26:24 -0700 (PDT)
 Received: from /spool/local
-	by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	by e39.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
 	Violators will be prosecuted
 	for <xfs@oss.sgi.com> from <zwu.kernel@gmail.com>;
-	Sun, 11 Aug 2013 21:26:14 -0600
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com
-	[9.17.195.227])
-	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id 9726619D8041
-	for <xfs@oss.sgi.com>; Sun, 11 Aug 2013 21:25:54 -0600 (MDT)
-Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	r7C3Q7xS174884 for <xfs@oss.sgi.com>; Sun, 11 Aug 2013 21:26:07 -0600
-Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av04.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
-	id r7C3Q00P023953
-	for <xfs@oss.sgi.com>; Sun, 11 Aug 2013 21:26:06 -0600
+	Sun, 11 Aug 2013 21:26:23 -0600
+Received: from d01relay07.pok.ibm.com (d01relay07.pok.ibm.com [9.56.227.147])
+	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id B87C338C8027
+	for <xfs@oss.sgi.com>; Sun, 11 Aug 2013 23:26:18 -0400 (EDT)
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay07.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	r7C3QJUG28442868
+	for <xfs@oss.sgi.com>; Sun, 11 Aug 2013 23:26:19 -0400
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
+	r7C3QFGC003324 for <xfs@oss.sgi.com>; Sun, 11 Aug 2013 23:26:19 -0400
 From: zwu.kernel@gmail.com
-Subject: [PATCH 06/12] xfs: fix the comment of xfs_extent_busy_update_extent()
-Date: Mon, 12 Aug 2013 11:14:57 +0800
-Message-Id: <1376277303-29455-7-git-send-email-zwu.kernel@gmail.com>
+Subject: [PATCH 11/12] xfs: fix the comment of xfs_sb_quiet_read_verify()
+Date: Mon, 12 Aug 2013 11:15:02 +0800
+Message-Id: <1376277303-29455-12-git-send-email-zwu.kernel@gmail.com>
 In-Reply-To: <1376277303-29455-1-git-send-email-zwu.kernel@gmail.com>
 References: <1376277303-29455-1-git-send-email-zwu.kernel@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -51,22 +50,22 @@ From: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
 
 Signed-off-by: Zhi Yong Wu <wuzhy@linux.vnet.ibm.com>
 ---
- fs/xfs/xfs_extent_busy.c | 2 +-
+ fs/xfs/xfs_mount.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
-index 85e9f87..4ad8fee 100644
---- a/fs/xfs/xfs_extent_busy.c
-+++ b/fs/xfs/xfs_extent_busy.c
-@@ -147,7 +147,7 @@ xfs_extent_busy_search(
-  * extent.  If the overlap covers the beginning, the end, or all of the busy
-  * extent, the overlapping portion can be made unbusy and used for the
-  * allocation.  We can't split a busy extent because we can't modify a
-- * transaction/CIL context busy list, but we can update an entries block
-+ * transaction/CIL context busy list, but we can update an entrie's block
-  * number or length.
-  *
-  * Returns true if the extent can safely be reused, or false if the search
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 5642be3..1981be9 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -785,7 +785,7 @@ out_error:
+ /*
+  * We may be probed for a filesystem match, so we may not want to emit
+  * messages when the superblock buffer is not actually an XFS superblock.
+- * If we find an XFS superblock, the run a normal, noisy mount because we are
++ * If we find an XFS superblock, then run a normal, noisy mount because we are
+  * really going to mount it and want to know about errors.
+  */
+ static void
 -- 
 1.7.11.7
 
