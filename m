@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
-	by oss.sgi.com (Postfix) with ESMTP id 0F0E67F59
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+	by oss.sgi.com (Postfix) with ESMTP id 76D157F59
 	for <xfs@oss.sgi.com>; Mon, 12 Aug 2013 05:50:49 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 84AAFAC004
-	for <xfs@oss.sgi.com>; Mon, 12 Aug 2013 03:50:48 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 66DFF8F8049
+	for <xfs@oss.sgi.com>; Mon, 12 Aug 2013 03:50:49 -0700 (PDT)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	iv6Ak0nbmhfxC5mp for <xfs@oss.sgi.com>;
-	Mon, 12 Aug 2013 03:50:46 -0700 (PDT)
+	uwu6cPEfArO27zH2 for <xfs@oss.sgi.com>;
+	Mon, 12 Aug 2013 03:50:48 -0700 (PDT)
 Received: from disappointment.disaster.area ([192.168.1.110]
 	helo=disappointment) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1V8phX-0004Yo-FS
-	for xfs@oss.sgi.com; Mon, 12 Aug 2013 20:50:15 +1000
+	(envelope-from <dave@fromorbit.com>) id 1V8phW-0004XZ-Op
+	for xfs@oss.sgi.com; Mon, 12 Aug 2013 20:50:14 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1V8phX-00063a-EE
-	for xfs@oss.sgi.com; Mon, 12 Aug 2013 20:50:15 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1V8phW-00060v-O4
+	for xfs@oss.sgi.com; Mon, 12 Aug 2013 20:50:14 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: ***** SUSPECTED SPAM ***** [PATCH 39/50] xfs: Get rid of all
-	XFS_XXX_LOG_RES() macro
-Date: Mon, 12 Aug 2013 20:50:00 +1000
-Message-Id: <1376304611-22994-40-git-send-email-david@fromorbit.com>
+Subject: ***** SUSPECTED SPAM ***** [PATCH 06/50] xfs: separate icreate log
+	format definitions from xfs_icreate_item.h
+Date: Mon, 12 Aug 2013 20:49:27 +1000
+Message-Id: <1376304611-22994-7-git-send-email-david@fromorbit.com>
 In-Reply-To: <1376304611-22994-1-git-send-email-david@fromorbit.com>
 References: <1376304611-22994-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,64 +38,76 @@ Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Jie Liu <jeff.liu@oracle.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-Get rid of all XFS_XXX_LOG_RES() macros since they are obsoleted now.
+The on disk log format definitions for the icreate log item are
+intertwined with the kernel-only in-memory log item definitions.
+Separate the log format definitions out into their own header file
+so they can easily be shared with userspace.
 
-Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_trans_resv.h | 36 ------------------------------------
- 1 file changed, 36 deletions(-)
+ fs/xfs/xfs_icreate_item.h | 18 ------------------
+ fs/xfs/xfs_log_format.h   | 18 ++++++++++++++++++
+ 2 files changed, 18 insertions(+), 18 deletions(-)
 
-diff --git a/fs/xfs/xfs_trans_resv.h b/fs/xfs/xfs_trans_resv.h
-index 140d3f3..de7de9a 100644
---- a/fs/xfs/xfs_trans_resv.h
-+++ b/fs/xfs/xfs_trans_resv.h
-@@ -92,42 +92,6 @@ struct xfs_trans_resv {
- 	(XFS_DAENTER_BLOCKS(mp, XFS_DATA_FORK) + \
- 	 XFS_DAENTER_BMAPS(mp, XFS_DATA_FORK) + 1)
+diff --git a/fs/xfs/xfs_icreate_item.h b/fs/xfs/xfs_icreate_item.h
+index 88ba8aa..59e89f8 100644
+--- a/fs/xfs/xfs_icreate_item.h
++++ b/fs/xfs/xfs_icreate_item.h
+@@ -18,24 +18,6 @@
+ #ifndef XFS_ICREATE_ITEM_H
+ #define XFS_ICREATE_ITEM_H	1
  
--
--#define XFS_WRITE_LOG_RES(mp)	((mp)->m_resv.tr_write.tr_logres)
--#define XFS_RENAME_LOG_RES(mp)	((mp)->m_resv.tr_rename.tr_logres)
--#define XFS_LINK_LOG_RES(mp)	((mp)->m_resv.tr_link.tr_logres)
--#define XFS_REMOVE_LOG_RES(mp)	((mp)->m_resv.tr_remove.tr_logres)
--#define XFS_SYMLINK_LOG_RES(mp)	((mp)->m_resv.tr_symlink.tr_logres)
--#define XFS_CREATE_LOG_RES(mp)	((mp)->m_resv.tr_create.tr_logres)
--#define XFS_MKDIR_LOG_RES(mp)	((mp)->m_resv.tr_mkdir.tr_logres)
--#define XFS_IFREE_LOG_RES(mp)	((mp)->m_resv.tr_ifree.tr_logres)
--#define XFS_SWRITE_LOG_RES(mp)	((mp)->m_resv.tr_swrite.tr_logres)
--#define XFS_ICHANGE_LOG_RES(mp)	((mp)->m_resv.tr_ichange.tr_logres)
--#define XFS_GROWDATA_LOG_RES(mp)  ((mp)->m_resv.tr_growdata.tr_logres)
--#define XFS_ITRUNCATE_LOG_RES(mp) ((mp)->m_resv.tr_itruncate.tr_logres)
--#define XFS_GROWRTZERO_LOG_RES(mp) ((mp)->m_resv.tr_growrtzero.tr_logres)
--#define XFS_GROWRTFREE_LOG_RES(mp) ((mp)->m_resv.tr_growrtfree.tr_logres)
--#define XFS_GROWRTALLOC_LOG_RES(mp) ((mp)->m_resv.tr_growrtalloc.tr_logres)
--
 -/*
-- * Logging the inode timestamps on an fsync -- same as SWRITE
-- * as long as SWRITE logs the entire inode core
+- * on disk log item structure
+- *
+- * Log recovery assumes the first two entries are the type and size and they fit
+- * in 32 bits. Also in host order (ugh) so they have to be 32 bit aligned so
+- * decoding can be done correctly.
 - */
--#define XFS_FSYNC_TS_LOG_RES(mp) ((mp)->m_resv.tr_fsyncts.tr_logres)
--#define XFS_WRITEID_LOG_RES(mp)	 ((mp)->m_resv.tr_writeid.tr_logres)
--#define XFS_ADDAFORK_LOG_RES(mp) ((mp)->m_resv.tr_addafork.tr_logres)
--#define XFS_ATTRSETM_LOG_RES(mp) ((mp)->m_resv.tr_attrsetm.tr_logres)
--#define XFS_ATTRINVAL_LOG_RES(mp) ((mp)->m_resv.tr_attrinval.tr_logres)
--#define XFS_ATTRSETRT_LOG_RES(mp) ((mp)->m_resv.tr_attrsetrt.tr_logres)
--#define XFS_ATTRRM_LOG_RES(mp)	  ((mp)->m_resv.tr_attrrm.tr_logres)
--#define XFS_SB_LOG_RES(mp)	  ((mp)->m_resv.tr_sb.tr_logres)
--#define XFS_QM_SETQLIM_LOG_RES(mp) ((mp)->m_resv.tr_qm_setqlim.tr_logres)
--#define XFS_QM_DQALLOC_LOG_RES(mp) ((mp)->m_resv.tr_qm_dqalloc.tr_logres)
--#define XFS_QM_SBCHANGE_LOG_RES(mp) ((mp)->m_resv.tr_qm_sbchange.tr_logres)
--#define XFS_QM_QUOTAOFF_LOG_RES(mp) ((mp)->m_resv.tr_qm_quotaoff.tr_logres)
--#define XFS_QM_QUOTAOFF_END_LOG_RES(mp) ((mp)->m_resv.tr_qm_equotaoff.tr_logres)
--#define XFS_CLEAR_AGI_BUCKET_LOG_RES(mp) ((mp)->m_resv.tr_clearagi.tr_logres)
+-struct xfs_icreate_log {
+-	__uint16_t	icl_type;	/* type of log format structure */
+-	__uint16_t	icl_size;	/* size of log format structure */
+-	__be32		icl_ag;		/* ag being allocated in */
+-	__be32		icl_agbno;	/* start block of inode range */
+-	__be32		icl_count;	/* number of inodes to initialise */
+-	__be32		icl_isize;	/* size of inodes */
+-	__be32		icl_length;	/* length of extent to initialise */
+-	__be32		icl_gen;	/* inode generation number to use */
+-};
 -
- /*
-  * Various log count values.
-  */
+ /* in memory log item structure */
+ struct xfs_icreate_item {
+ 	struct xfs_log_item	ic_item;
+diff --git a/fs/xfs/xfs_log_format.h b/fs/xfs/xfs_log_format.h
+index 5963ec7..02639c7 100644
+--- a/fs/xfs/xfs_log_format.h
++++ b/fs/xfs/xfs_log_format.h
+@@ -602,4 +602,22 @@ typedef struct xfs_qoff_logformat {
+ #define XFS_ALL_QUOTA_CHKD	\
+ 		(XFS_UQUOTA_CHKD | XFS_GQUOTA_CHKD | XFS_PQUOTA_CHKD)
+ 
++/*
++ * Inode create log item structure
++ *
++ * Log recovery assumes the first two entries are the type and size and they fit
++ * in 32 bits. Also in host order (ugh) so they have to be 32 bit aligned so
++ * decoding can be done correctly.
++ */
++struct xfs_icreate_log {
++	__uint16_t	icl_type;	/* type of log format structure */
++	__uint16_t	icl_size;	/* size of log format structure */
++	__be32		icl_ag;		/* ag being allocated in */
++	__be32		icl_agbno;	/* start block of inode range */
++	__be32		icl_count;	/* number of inodes to initialise */
++	__be32		icl_isize;	/* size of inodes */
++	__be32		icl_length;	/* length of extent to initialise */
++	__be32		icl_gen;	/* inode generation number to use */
++};
++
+ #endif /* __XFS_LOG_FORMAT_H__ */
 -- 
 1.8.3.2
 
