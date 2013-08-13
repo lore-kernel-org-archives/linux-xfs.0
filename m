@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
-	by oss.sgi.com (Postfix) with ESMTP id 3E0087F51
-	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 08:28:24 -0500 (CDT)
-Message-ID: <520A3474.3070501@sgi.com>
-Date: Tue, 13 Aug 2013 08:28:20 -0500
+	by oss.sgi.com (Postfix) with ESMTP id 7D02D7F51
+	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 08:37:47 -0500 (CDT)
+Message-ID: <520A36AB.1070607@sgi.com>
+Date: Tue, 13 Aug 2013 08:37:47 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 44/50] xfs: Reduce allocations during CIL insertion
+Subject: Re:  [PATCH 45/50] xfs: avoid CIL allocation during insert
 References: <1376304611-22994-1-git-send-email-david@fromorbit.com>
-	<1376304611-22994-45-git-send-email-david@fromorbit.com>
-In-Reply-To: <1376304611-22994-45-git-send-email-david@fromorbit.com>
+	<1376304611-22994-46-git-send-email-david@fromorbit.com>
+In-Reply-To: <1376304611-22994-46-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,30 +28,23 @@ Cc: xfs@oss.sgi.com
 On 08/12/13 05:50, Dave Chinner wrote:
 > From: Dave Chinner<dchinner@redhat.com>
 >
-> Now that we have the size of the object before the formatting pass
-> is called, we can allocation the log vector and it's buffer in a
-> single allocation rather than two separate allocations.
+> Now that we have the size of the log vector that has been allocated,
+> we can determine if we need to allocate a new log vector for
+> formatting and insertion. We only need to allocate a new vector if
+> it won't fit into the existing buffer.
 >
-> Store the size of the allocated buffer in the log vector so that
-> we potentially avoid allocation for future modifications of the
-> object.
->
-> While touching this code, remove the IOP_FORMAT definition.
+> However, we need to hold the CIL context lock while we do this so
+> that we can't race with a push draining the currently queued log
+> vectors. It is safe to do this as long as we do GFP_NOFS allocation
+> to avoid avoid memory allocation recursing into the filesystem.
+> Hence we can safely overwrite the existing log vector on the CIL if
+> it is large enough to hold all the dirty regions of the current
+> item.
 >
 > Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > ---
 
-...
-
->
->   		/* Skip items which aren't dirty in this transaction. */
-> @@ -150,48 +178,39 @@ xlog_cil_prepare_log_vecs(
-
-...
-
-> +		lv->lv_buf_len = xlog_cil_lv_item_format(lip, lv);
-
-Looks good
+Looks good.
 
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
