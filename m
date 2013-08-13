@@ -1,28 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
-	by oss.sgi.com (Postfix) with ESMTP id 8A3EB29DFB
-	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 10:28:29 -0500 (CDT)
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+	by oss.sgi.com (Postfix) with ESMTP id 4459F29DFB
+	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 10:31:27 -0500 (CDT)
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 740EB304032
-	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 08:28:29 -0700 (PDT)
-Received: from dkim1.fusionio.com (dkim1.fusionio.com [66.114.96.53]) by
-	cuda.sgi.com with ESMTP id DL7U6LQjA2WcqIhs (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 13 Aug 2013 08:28:24 -0700 (PDT)
-Received: from mx1.fusionio.com (unknown [10.101.1.160])
-	by dkim1.fusionio.com (Postfix) with ESMTP id 2739F7C06A1
-	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 09:28:24 -0600 (MDT)
-Date: Tue, 13 Aug 2013 11:28:22 -0400
-From: Josef Bacik <jbacik@fusionio.com>
-Subject: Re: [PATCH v3 1/2] xfstests: add fssum tool
-Message-ID: <20130813152822.GG2150@localhost.localdomain>
-References: <1375949833-1104-1-git-send-email-list.xfs@jan-o-sch.net>
-	<1375949833-1104-2-git-send-email-list.xfs@jan-o-sch.net>
-	<5203D827.3050909@sandeen.net> <20130812011539.GM12779@dastard>
-	<BB446B35-F3DA-462E-9E2C-9E4B780BC6B9@sandeen.net>
+	by relay3.corp.sgi.com (Postfix) with ESMTP id AAE3CAC006
+	for <xfs@oss.sgi.com>; Tue, 13 Aug 2013 08:31:26 -0700 (PDT)
+Received: from mx1.vr-web.de (mx0.vr-web.de [195.200.35.198]) by cuda.sgi.com
+	with ESMTP id 5l0DMOzDm4qOyBE5 for <xfs@oss.sgi.com>;
+	Tue, 13 Aug 2013 08:31:25 -0700 (PDT)
+Message-ID: <520A5132.6090608@allmail.net>
+Date: Tue, 13 Aug 2013 17:30:58 +0200
+From: Michael Maier <m1278468@allmail.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <BB446B35-F3DA-462E-9E2C-9E4B780BC6B9@sandeen.net>
+Subject: Re: Failure growing xfs with linux 3.10.5
+References: <52073905.8010608@allmail.net> <5207D9C4.7020102@sandeen.net>
+	<52090C6C.6060604@allmail.net> <20130813000453.GQ12779@dastard>
+In-Reply-To: <20130813000453.GQ12779@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,40 +28,150 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Errors-To: xfs-bounces@oss.sgi.com
 Sender: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Jan Schmidt <list.xfs@jan-o-sch.net>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, "sbehrens@giantdisaster.de" <sbehrens@giantdisaster.de>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-On Sun, Aug 11, 2013 at 09:54:41PM -0500, Eric Sandeen wrote:
-> On Aug 11, 2013, at 8:15 PM, Dave Chinner <david@fromorbit.com> wrote:
+Dave Chinner wrote:
+> [ re-ccing the list, because finding this is in everyone's interest ]
 > 
-> > On Thu, Aug 08, 2013 at 12:40:55PM -0500, Eric Sandeen wrote:
-> >> On 8/8/13 3:17 AM, Jan Schmidt wrote:
-> >>> SUBDIRS =
-> >>> 
-> >>> LLDLIBS = $(LIBATTR) $(LIBHANDLE) $(LIBACL)
-> >>> 
-> >>> +OPT_LDLIBS = -lssl -lcrypto
-> >> 
-> >> Hm, new deps.  I guess it's not a huge problem, these should always
-> >> be available, right?
-> > 
-> > Please, let's keep crypto out of xfstests if we can. That's just
-> > going to add a nightmare of US export compliance garbage to any
-> > distro that wants to package and ship this....
-> > 
-> It's ssl that's (optionally) required for check summing I believe.  But it's optional if done properly...
+> On Mon, Aug 12, 2013 at 06:25:16PM +0200, Michael Maier wrote:
+>> Eric Sandeen wrote:
+>>> On 8/11/13 2:11 AM, Michael Maier wrote:
+>>>> Hello!
+>>>>
+>>>> I think I'm facing the same problem as already described here:
+>>>> http://thread.gmane.org/gmane.comp.file-systems.xfs.general/54428
+>>>
+>>> Maybe you can try the tracing Dave suggested in that thread?
+>>> It certainly does look similar.
+>>
+>> I attached a trace report while executing xfs_growfs /mnt on linux 3.10.5 (does not happen with 3.9.8).
+>>
+>> xfs_growfs /mnt
+>> meta-data=/dev/mapper/backupMy-daten3 isize=256    agcount=42, agsize=7700480 blks
+>>          =                       sectsz=512   attr=2
+>> data     =                       bsize=4096   blocks=319815680, imaxpct=25
+>>          =                       sunit=0      swidth=0 blks
+>> naming   =version 2              bsize=4096   ascii-ci=0
+>> log      =internal               bsize=4096   blocks=60160, version=2
+>>          =                       sectsz=512   sunit=0 blks, lazy-count=1
+>> realtime =none                   extsz=4096   blocks=0, rtextents=0
+>> xfs_growfs: XFS_IOC_FSGROWFSDATA xfsctl failed: Structure needs cleaning
+>> data blocks changed from 319815680 to 346030080
+>>
+>> The entry in messages was:
+>>
+>> Aug 12 18:09:50 dualc kernel: [  257.368030] ffff8801e8dbd400: 58 46 53 42 00 00 10 00 00 00 00 00 13 10 00 00  XFSB............
+>> Aug 12 18:09:50 dualc kernel: [  257.368037] ffff8801e8dbd410: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+>> Aug 12 18:09:50 dualc kernel: [  257.368042] ffff8801e8dbd420: 46 91 c6 80 a9 a9 4d 8c 8f e2 18 fd e8 7f 66 e1  F.....M.......f.
+>> Aug 12 18:09:50 dualc kernel: [  257.368045] ffff8801e8dbd430: 00 00 00 00 04 00 00 04 00 00 00 00 00 00 00 80  ................
+>> Aug 12 18:09:50 dualc kernel: [  257.368051] XFS (dm-33): Internal error xfs_sb_read_verify at line 730 of file
+>> /daten2/tmp/rpm/BUILD/kernel-desktop-3.10.5/linux-3.10/fs/xfs/xfs_mount.c.  Caller 0xffffffffa099a2fd
+> .....
+>> Aug 12 18:09:50 dualc kernel: [  257.368533] XFS (dm-33): Corruption detected. Unmount and run xfs_repair
+>> Aug 12 18:09:50 dualc kernel: [  257.368611] XFS (dm-33): metadata I/O error: block 0x3ac00000 ("xfs_trans_read_buf_map") error 117 numblks 1
+>> Aug 12 18:09:50 dualc kernel: [  257.368623] XFS (dm-33): error 117 reading secondary superblock for ag 16
 > 
+> Ok, so that's reading the secondary superblock for AG 16. You're
+> growing the filesystem from 42 to 45 AGs, so this problem is not
+> related to the actual grow operation - it's tripping over a problem
+> that already exists on disk before the grow operation is started.
+> i.e. this is likely to be a real corruption being seen, and it
+> happened some time in the distant past and so we probably won't ever
+> be able to pinpoint the cause of the problem.
+> 
+> That said, let's have a look at the broken superblock. Can you post
+> the output of the commands:
+> 
+> # xfs_db -r -c "sb 16" -c p <dev>
 
-It doesn't build without -lcrypto for me, so either we have an external
-dependancy (which I'm fine with), or we add it to xfstests (which is what you
-wanted).  Does a config option alleviate your concerns?  And I it's just linking
-it in at build time, I don't think we have to work about export compliance as
-long as we aren't shipping actual crytpo stuff right?  Anybody who is going to
-be running this stuff is going to have libssl installed, which installs
-libcrypto (at least on my box) so I don't think it's a huge deal to have us
-linking it.  Thanks,
+done after the failed growfs mentioned above:
 
-Josef
+magicnum = 0x58465342
+blocksize = 4096
+dblocks = 319815680
+rblocks = 0
+rextents = 0
+uuid = 4691c680-a9a9-4d8c-8fe2-18fde87f66e1
+logstart = 67108868
+rootino = 128
+rbmino = 129
+rsumino = 130
+rextsize = 1
+agblocks = 7700480
+agcount = 42
+rbmblocks = 0
+logblocks = 60160
+versionnum = 0xb4a4
+sectsize = 512
+inodesize = 256
+inopblock = 16
+fname = "\000\000\000\000\000\000\000\000\000\000\000\000"
+blocklog = 12
+sectlog = 9
+inodelog = 8
+inopblog = 4
+agblklog = 23
+rextslog = 0
+inprogress = 0
+imax_pct = 25
+icount = 6464
+ifree = 631
+fdblocks = 1124026
+frextents = 0
+uquotino = 0
+gquotino = 0
+qflags = 0
+flags = 0
+shared_vn = 0
+inoalignmt = 2
+unit = 0
+width = 0
+dirblklog = 0
+logsectlog = 0
+logsectsize = 0
+logsunit = 1
+features2 = 0xa
+bad_features2 = 0xa
+
+> 
+> and
+> 
+> # xfs_db -r -c "sb 16" -c "type data" -c p <dev>
+
+000: 58465342 00001000 00000000 13100000 00000000 00000000 00000000 00000000
+020: 4691c680 a9a94d8c 8fe218fd e87f66e1 00000000 04000004 00000000 00000080
+040: 00000000 00000081 00000000 00000082 00000001 00758000 0000002a 00000000
+060: 0000eb00 b4a40200 01000010 00000000 00000000 00000000 0c090804 17000019
+080: 00000000 00001940 00000000 00000277 00000000 001126ba 00000000 00000000
+0a0: 00000000 00000000 00000000 00000000 00000000 00000002 00000000 00000000
+0c0: 00000000 00000001 0000000a 0000000a 8f980320 73987e9e db829704 ef73fe2e
+0e0: 8f980320 73987e9e db829704 ef73fe2e 8f980320 73987e9e db829704 ef73fe2e
+100: 8f980320 73987e9e db829704 ef73fe2e 8f980320 73987e9e db829704 ef73fe2e
+120: 8f980320 73987e9e db829704 ef73fe2e 8f980320 73987e9e db829704 ef73fe2e
+140: 8f980320 73987e9e db829704 ef73fe2e 8f980320 73987e9e db829704 ef73fe2e
+160: 8f980320 73987e9e db829704 ef73fe2e 8f980320 73987e9e db829704 ef73fe2e
+180: 8f980320 73987e9e db829704 ef73fe2e 8f980320 73987e9e db829704 ef73fe2e
+1a0: 8f980320 73987e9e db829704 ef73fe2e 8f980320 73987e9e db829704 ef73fe2e
+1c0: 8f980320 73987e9e db829704 ef73fe2e 8f980320 73987e9e db829704 ef73fe2e
+1e0: 8f980320 73987e9e db829704 ef73fe2e 8f980320 73987e9e db829704 ef73fe2e
+> 
+> so we can see the exact contents of that superblock?
+> 
+> FWIW, how many times has this filesystem ben grown?
+
+I can't say for sure, about 4 or 5 times?
+
+> Did it start
+> with only 32 AGs (i.e. 10TB in size)?
+
+10TB? No. The device just has 3 TB. You most probably meant 10GB?
+I'm not sure, but it definitely started with > 100GB.
+
+
+Thanks,
+kind regards,
+Michael
 
 _______________________________________________
 xfs mailing list
